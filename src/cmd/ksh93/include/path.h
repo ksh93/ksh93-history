@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2004 AT&T Corp.                  *
+*                  Copyright (c) 1982-2005 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -35,11 +35,13 @@
 #   endif
 #endif /* !SHOPT_SPAWN */
 
-#define PATH_PATH	1
-#define PATH_FPATH	2
-#define PATH_CDPATH	4
-#define PATH_BFPATH	010
-#define PATH_SKIP	020
+#define PATH_PATH		0001
+#define PATH_FPATH		0002
+#define PATH_CDPATH		0004
+#define PATH_BFPATH		0010
+#define PATH_SKIP		0020
+#define PATH_BUILTIN_LIB	0040
+#define PATH_BUILTIN_SH		0100
 
 #define PATH_OFFSET	2		/* path offset for path_join */
 #define MAXDEPTH	(sizeof(char*)==2?64:4096) /* maximum recursion depth*/

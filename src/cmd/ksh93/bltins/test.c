@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2004 AT&T Corp.                  *
+*                  Copyright (c) 1982-2005 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -287,6 +287,7 @@ skip:
 int test_unop(register int op,register const char *arg)
 {
 	struct stat statb;
+	int f;
 	switch(op)
 	{
 	    case 'r':
@@ -387,8 +388,9 @@ int test_unop(register int op,register const char *arg)
 	    case 'e':
 		return(permission(arg, F_OK));
 	    case 'o':
-		op = sh_lookup(arg,shtab_options);
-		return(op && sh_isoption(op)!=0);
+		f=1;
+		op = sh_lookopt(arg,&f);
+		return(op && f==(sh_isoption(op)!=0));
 	    case 't':
 		if(isdigit(*arg) && arg[1]==0)
 			 return(tty_check(*arg-'0'));

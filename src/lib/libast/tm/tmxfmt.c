@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2004 AT&T Corp.                  *
+*                  Copyright (c) 1985-2005 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -46,8 +46,8 @@ number(register char* s, register char* e, register long n, register int p, int 
 {
 	char*	b;
 
-	if (w)
-		p = (p < 0) ? -w : w;
+	if (w && w > p)
+		p = w;
 	switch (pad)
 	{
 	case '-':
@@ -67,8 +67,6 @@ number(register char* s, register char* e, register long n, register int p, int 
 		s += sfsprintf(s, e - s, "%0*lu", p, n);
 	else if (p < 0)
 		s += sfsprintf(s, e - s, "%*lu", -p, n);
-	else if (w)
-		s += sfsprintf(s, e - s, "%*lu", w, n);
 	else
 		s += sfsprintf(s, e - s, "%lu", n);
 	if (w && (s - b) > w)
@@ -248,12 +246,28 @@ tmxfmt(char* buf, size_t len, const char* format, Time_t t)
 		case 'O':	/* OBSOLETE */
 			p = tm_info.format[TM_DEFAULT];
 			goto push;
-		case 'g':	/* `ls -l' recent date */
-			p = tm_info.format[TM_RECENT];
-			goto push;
-		case 'G':	/* `ls -l' distant date */
-			p = tm_info.format[TM_DISTANT];
-			goto push;
+		case 'g':	/* %V 2 digit year */
+		case 'G':	/* %V 4 digit year */
+			n = tp->tm_year + 1900;
+			if (tp->tm_yday < 7)
+			{
+				if (tmweek(tp, 2, -1, -1) >= 52)
+					n--;
+			}
+			else if (tp->tm_yday > 358)
+			{
+				if (tmweek(tp, 2, -1, -1) <= 1)
+					n++;
+			}
+			if (c == 'g')
+			{
+				n %= 100;
+				c = 2;
+			}
+			else
+				c = 4;
+			cp = number(cp, ep, (long)n, c, width, pad);
+			continue;
 		case 'H':	/* hour (0 - 23) */
 			cp = number(cp, ep, (long)tp->tm_hour, 2, width, pad);
 			continue;
@@ -316,27 +330,45 @@ tmxfmt(char* buf, size_t len, const char* format, Time_t t)
 					goto string;
 			}
 			continue;
-		case 'Q':	/* %Q<delim>recent<delim>distant<delim> */
+		case 'Q':	/* %Q<alpha> or %Q<delim>recent<delim>distant<delim> */
 			if (c = *format)
 			{
 				format++;
-				if (t)
+				if (isalpha(c))
 				{
-					now = tmxgettime();
-					p = warped(t, now) ? (char*)0 : (char*)format;
+					switch (c)
+					{
+					case 'd':	/* `ls -l' distant date */
+						p = tm_info.format[TM_DISTANT];
+						goto push;
+					case 'r':	/* `ls -l' recent date */
+						p = tm_info.format[TM_RECENT];
+						goto push;
+					default:
+						format--;
+						break;
+					}
 				}
 				else
-					p = (char*)format;
-				i = 0;
-				while (n = *format)
 				{
-					format++;
-					if (n == c)
+					if (t)
 					{
-						if (!p)
-							p = (char*)format;
-						if (++i == 2)
-							goto push_delimiter;
+						now = tmxgettime();
+						p = warped(t, now) ? (char*)0 : (char*)format;
+					}
+					else
+						p = (char*)format;
+					i = 0;
+					while (n = *format)
+					{
+						format++;
+						if (n == c)
+						{
+							if (!p)
+								p = (char*)format;
+							if (++i == 2)
+								goto push_delimiter;
+						}
 					}
 				}
 			}
@@ -390,25 +422,14 @@ tmxfmt(char* buf, size_t len, const char* format, Time_t t)
 			cp = number(cp, ep, (long)i, 0, width, pad);
 			continue;
 		case 'U':	/* week number, Sunday as first day */
-			i = tp->tm_yday - tp->tm_wday;
-		week:
-			n = (i >= 0) ? (i + 1) / 7 + 1 : 0;
-			cp = number(cp, ep, (long)n, 2, width, pad);
+			cp = number(cp, ep, (long)tmweek(tp, 0, -1, -1), 2, width, pad);
 			continue;
 		case 'V':	/* ISO week number */
-			if (tp->tm_wday == 0)
-				i = tp->tm_yday - 6;
-			else
-				i = tp->tm_yday - tp->tm_wday + 1;
-			n = (i >= -3) ? (i + 1) / 7 + 1 : 53;
-			cp = number(cp, ep, (long)n, 2, width, pad);
+			cp = number(cp, ep, (long)tmweek(tp, 2, -1, -1), 2, width, pad);
 			continue;
 		case 'W':	/* week number, Monday as first day */
-			if (tp->tm_wday == 0)
-				i = tp->tm_yday - 6;
-			else
-				i = tp->tm_yday - tp->tm_wday + 1;
-			goto week;
+			cp = number(cp, ep, (long)tmweek(tp, 1, -1, -1), 2, width, pad);
+			continue;
 		case 'w':	/* weekday number [0(Sunday)-6] */
 			cp = number(cp, ep, (long)tp->tm_wday, 0, width, pad);
 			continue;

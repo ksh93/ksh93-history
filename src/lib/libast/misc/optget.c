@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2004 AT&T Corp.                  *
+*                  Copyright (c) 1985-2005 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -72,6 +72,8 @@
 #define FONT_BOLD	1
 #define FONT_ITALIC	2
 #define FONT_LITERAL	4
+
+#define sep(c)		((c)=='-'||(c)=='_')
 
 typedef struct Attr_s
 {
@@ -512,7 +514,7 @@ skip(register char* s, register int t1, register int t2, register int t3, regist
 /*
  * match s with t
  * t translated if possible
- * imbedded { - ' } ignored
+ * imbedded { - _ ' } ignored
  * * separates required prefix from optional suffix
  * otherwise prefix match
  */
@@ -572,20 +574,24 @@ match(char* s, char* t, int version, const char* catalog)
 						while (*w)
 							w++;
 				}
-				else if (*x == *w)
+				else if (*x == *w || sep(*x) && sep(*w))
 					w++;
-				else if (*x != '-' || x == b)
+				else if (!sep(*x) || x == b)
 				{
-					if (*w == '-')
+					if (sep(*w))
 					{
-						if (*s == '-')
+						if (sep(*s))
 							break;
-						w++;
+						if (*++w == *x)
+						{
+							w++;
+							continue;
+						}
 					}
-					else if (w == s || *(w - 1) == '-' || isupper(*(w - 1)) && islower(*w))
+					else if (w == s || sep(*(w - 1)) || isupper(*(w - 1)) && islower(*w))
 						break;
-					for (q = x; *q && *q != '-' && *q != '|' && *q != '?' && *q != ']'; q++);
-					if (*q != '-')
+					for (q = x; *q && !sep(*q) && *q != '|' && *q != '?' && *q != ']'; q++);
+					if (!sep(*q))
 						break;
 					for (x = q; w > s && *w != *(x + 1); w--);
 				}
@@ -4072,18 +4078,24 @@ optget(register char** argv, const char* oopts)
 									}
 									m = 1;
 								}
-								else if (*s == *w)
+								else if (*s == *w || sep(*s) && sep(*w))
 									w++;
 								else if (*w == 0)
 									break;
-								else if (*s != '-')
+								else if (!sep(*s))
 								{
-									if (*w == '-')
-										w++;
-									else if (w == y || *(w - 1) == '-' || isupper(*(w - 1)) && islower(*w))
+									if (sep(*w))
+									{
+										if (*++w == *s)
+										{
+											w++;
+											continue;
+										}
+									}
+									else if (w == y || sep(*(w - 1)) || isupper(*(w - 1)) && islower(*w))
 										break;
-									for (q = s; *q && *q != '-' && *q != '|' && *q != '?' && *q != ']'; q++);
-									if (*q != '-')
+									for (q = s; *q && !sep(*q) && *q != '|' && *q != '?' && *q != ']'; q++);
+									if (!sep(*q))
 										break;
 									for (s = q; w > y && *w != *(s + 1); w--);
 								}
@@ -4123,18 +4135,24 @@ optget(register char** argv, const char* oopts)
 										}
 										m = 1;
 									}
-									else if (*s == *w)
+									else if (*s == *w || sep(*s) && sep(*w))
 										w++;
 									else if (*w == 0)
 										break;
-									else if (*s != '-')
+									else if (!sep(*s))
 									{
-										if (*w == '-')
-											w++;
-										else if (w == y || *(w - 1) == '-' || isupper(*(w - 1)) && islower(*w))
+										if (sep(*w))
+										{
+											if (*++w == *s)
+											{
+												w++;
+												continue;
+											}
+										}
+										else if (w == y || sep(*(w - 1)) || isupper(*(w - 1)) && islower(*w))
 											break;
-										for (q = s; *q && *q != '-' && *q != '|' && *q != '?' && *q != ']'; q++);
-										if (*q != '-')
+										for (q = s; *q && !sep(*q) && *q != '|' && *q != '?' && *q != ']'; q++);
+										if (!sep(*q))
 											break;
 										for (s = q; w > y && *w != *(s + 1); w--);
 									}
@@ -4630,18 +4648,24 @@ optget(register char** argv, const char* oopts)
 										}
 										m = 1;
 									}
-									else if (*s == *w)
+									else if (*s == *w || sep(*s) && sep(*w))
 										w++;
 									else if (*w == 0)
 										break;
-									else if (*s != '-')
+									else if (!sep(*s))
 									{
-										if (*w == '-')
-											w++;
-										else if (w == y || *(w - 1) == '-' || isupper(*(w - 1)) && islower(*w))
+										if (sep(*w))
+										{
+											if (*++w == *s)
+											{
+												w++;
+												continue;
+											}
+										}
+										else if (w == y || sep(*(w - 1)) || isupper(*(w - 1)) && islower(*w))
 											break;
-										for (q = s; *q && *q != '-' && *q != '|' && *q != '?' && *q != ']'; q++);
-										if (*q != '-')
+										for (q = s; *q && !sep(*q) && *q != '|' && *q != '?' && *q != ']'; q++);
+										if (!sep(*q))
 											break;
 										for (s = q; w > y && *w != *(s + 1); w--);
 									}

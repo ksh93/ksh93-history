@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2004 AT&T Corp.                  *
+*                  Copyright (c) 1985-2005 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -51,7 +51,7 @@ reg Sfio_t	*f;
 
 	/* let sfseek() handle the hard case */
 	if(f->extent >= 0 && (f->flags&(SF_SHARE|SF_APPENDWR)) )
-		p = sfseek(f,(Sfoff_t)0,1);
+		p = sfseek(f,(Sfoff_t)0,SEEK_CUR);
 	else	p = f->here + ((f->mode&SF_WRITE) ? f->next-f->data : f->next-f->endb);
 
 	SFMTXRETURN(f,p);

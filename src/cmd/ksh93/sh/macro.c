@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2004 AT&T Corp.                  *
+*                  Copyright (c) 1982-2005 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -763,7 +763,7 @@ static char *prefix(char *id)
 			sh.argaddr = 0;
 			while(nv_isref(np))
 				np = nv_refnode(np);
-			id = (char*)malloc((cp-id)+(n=strlen(sp=nv_name(np)))+1);
+			id = (char*)malloc(strlen(cp)+1+(n=strlen(sp=nv_name(np)))+1);
 			strcpy(&id[n],cp);
 			memcpy(id,sp,n);
 			return(id);

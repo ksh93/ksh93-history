@@ -1,3 +1,4 @@
+05-01-11 cat.c: restore output stream to binary mode on exit
 04-12-15 cp.c: add --preserve high resolution time support
 04-12-08 date.c: add high resolution time support
 04-12-01 cmp.c: fix %6I*ld => %6I*d -- doh

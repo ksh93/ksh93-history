@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2004 AT&T Corp.                  *
+*                  Copyright (c) 1982-2005 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -200,7 +200,7 @@ const Namdisc_t SH_FUNCNAME_disc  = { sizeof(struct funcname), put_funcname };
 int     b_shopt(int argc,register char *argv[],void *extra)
 {
         Shell_t *shp = (Shell_t*)extra;
-	int n, ret=0;
+	int n, f, ret=0;
 	Shopt_t newflags=shp->options, opt;
 	int verbose=PRINT_SHOPT|PRINT_ALL|PRINT_NO_HEADER|PRINT_VERBOSE;
 	int setflag=0, quietflag=0, oflag=0;
@@ -257,7 +257,8 @@ int     b_shopt(int argc,register char *argv[],void *extra)
 	}
 	while(argc>0)
 	{
-		n=sh_lookup(argv[opt_info.index],shtab_options);
+		f=1;
+		n=sh_lookopt(argv[opt_info.index],&f);
 		if(n<=0||(setflag 
 			&& (is_option(&opt,SH_INTERACTIVE)
 			    || is_option(&opt,SH_RESTRICTED)
@@ -270,8 +271,10 @@ int     b_shopt(int argc,register char *argv[],void *extra)
 			error_info.errors++;
 			ret=1;
 		}
-		else
+		else if(f)
 			on_option(&opt,n&0xff);
+		else
+			off_option(&opt,n&0xff);
 		opt_info.index++;
 		argc--;
 	}

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2004 AT&T Corp.                  *
+*                  Copyright (c) 1982-2005 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -45,9 +45,9 @@
 
 int sh_locate(register const char *sp,const Shtable_t *table,int size)
 {
-	register int first;
+	register int			first;
 	register const Shtable_t	*tp;
-	register int c;
+	register int			c;
 	if(sp==0 || (first= *sp)==0)
 		return(0);
 	tp=table;
@@ -58,6 +58,101 @@ int sh_locate(register const char *sp,const Shtable_t *table,int size)
 		tp = (Shtable_t*)((char*)tp+size);
 	}
 	return(0);
+}
+
+/*
+ *  shtab_options lookup routine
+ */
+
+int sh_lookopt(register const char *sp, int *invert)
+{
+	register int			first;
+	register const Shtable_t	*tp;
+	register int			c;
+	register const char		*s, *t, *b;
+	int				amb;
+	int				hit;
+	int				inv;
+	int				no;
+	if(sp==0)
+		return(0);
+	if(*sp=='n' && *(sp+1)=='o' && (*(sp+2)!='t' || *(sp+3)!='i'))
+	{
+		sp+=2;
+		*invert = !*invert;
+	}
+	if((first= *sp)==0)
+		return(0);
+	tp=shtab_options;
+	amb=hit=0;
+	for(;;)
+	{
+		t=tp->sh_name;
+		if(no = *t=='n' && *(t+1)=='o' && *(t+2)!='t')
+			t+=2;
+		if(!(c= *t))
+			break;
+		if(first == c)
+		{
+			if(strcmp(sp,t)==0)
+			{
+				*invert ^= no;
+				return(tp->sh_number);
+			}
+			s=sp;
+			b=t;
+			for(;;)
+			{
+				if(!*s)
+				{
+					if (!*t)
+					{
+						*invert ^= no;
+						return(tp->sh_number);
+					}
+					if (hit || amb)
+					{
+						hit = 0;
+						amb = 1;
+					}
+					else
+					{
+						hit = tp->sh_number;
+						inv = no;
+					}
+					break;
+				}
+				else if(!*t)
+					break;
+				else if(*s==*t || (*s=='-' || *s=='_') && (*t=='-' || *t=='_'))
+				{
+					s++;
+					t++;
+				}
+				else if(*t=='-' || *t=='_')
+					t++;
+				else if(*t!='-' && *t != '_' || t==b)
+				{
+					if(*s=='-' || *s=='_')
+						s++;
+					else if(s==sp || *(s-1)=='-' || *(s-1)=='_')
+						break;
+					while(*t && *t!='-' && *t!='_')
+						t++;
+					if(*t!='-' && *t!='_')
+						break;
+					for(t++; s>sp && *s != *t; s--);
+				}
+				else
+					while (*s && *s != *t)
+						s++;
+			}
+		}
+		tp = (Shtable_t*)((char*)tp+sizeof(*shtab_options));
+	}
+	if(hit)
+		*invert ^= inv;
+	return(hit);
 }
 
 /*

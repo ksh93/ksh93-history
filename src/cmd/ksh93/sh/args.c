@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2004 AT&T Corp.                  *
+*                  Copyright (c) 1982-2005 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -41,7 +41,7 @@
 #   define PFSHOPT
 #endif
 #if SHOPT_BASH
-#   define BASHOPT	"l\375\374\373"
+#   define BASHOPT	"\375\374\373"
 #else
 #   define BASHOPT
 #endif
@@ -50,7 +50,6 @@
 #else
 #   define HFLAG        ""
 #endif
-
 
 #define SORT		1
 #define PRINT		2
@@ -62,19 +61,20 @@ static int 		arg_expand(struct argnod*,struct argnod**,int);
 static	char		*null;
 
 /* The following order is determined by sh_optset */
-static  const char optksh[] =  PFSHOPT BASHOPT "DircabefhkmnpstuvxCGE" HFLAG;
+static  const char optksh[] =  PFSHOPT BASHOPT "DircabefhkmnpstuvxCGEl" HFLAG;
 static const int flagval[]  =
 {
 #if SHOPT_PFSH
 	SH_PFSH,
 #endif
 #if SHOPT_BASH
-	SH_LOGIN_SHELL, SH_NOPROFILE, SH_RC, SH_POSIX,
+	SH_NOPROFILE, SH_RC, SH_POSIX,
 #endif
 	SH_DICTIONARY, SH_INTERACTIVE, SH_RESTRICTED, SH_CFLAG,
 	SH_ALLEXPORT, SH_NOTIFY, SH_ERREXIT, SH_NOGLOB, SH_TRACKALL,
 	SH_KEYWORD, SH_MONITOR, SH_NOEXEC, SH_PRIVILEGED, SH_SFLAG, SH_TFLAG,
 	SH_NOUNSET, SH_VERBOSE,  SH_XTRACE, SH_NOCLOBBER, SH_GLOBSTARS, SH_RC,
+	SH_LOGIN_SHELL,
 #if SHOPT_HISTEXPAND
         SH_HISTEXPAND,
 #endif
@@ -183,14 +183,7 @@ int sh_argopts(int argc,register char *argv[])
 				continue;
 			}
 		    byname:
-			if ((o = sh_lookup(opt_info.arg,shtab_options)) <= 0)
-			{
-				f = !f;
-				if (opt_info.arg[0] == 'n' && opt_info.arg[1] == 'o')
-					o = sh_lookup(opt_info.arg+2,shtab_options);
-				else
-					o = sh_lookup(sfprints("no%s", opt_info.arg),shtab_options);
-			}
+			o = sh_lookopt(opt_info.arg,&f);
 			if(o<=0
 				|| (!sh_isoption(SH_BASH) && (o&SH_BASHEXTRA))
 				|| ((!sh_isoption(SH_BASH) || n=='o') && (o&SH_BASHOPT))
@@ -363,22 +356,24 @@ void sh_applyopts(Shopt_t newflags)
 	/* cannot set -n for interactive shells since there is no way out */
 	if(sh_isoption(SH_INTERACTIVE))
 		off_option(&newflags,SH_NOEXEC);
-	if(is_option(&newflags,SH_PRIVILEGED) && !sh_isoption(SH_PRIVILEGED))
+	if(is_option(&newflags,SH_PRIVILEGED))
+		on_option(&newflags,SH_NOUSRPROFILE);
+	if(is_option(&newflags,SH_PRIVILEGED) != sh_isoption(SH_PRIVILEGED))
 	{
-		if((sh.userid!=sh.euserid && setuid(sh.euserid)<0) ||
+		if(sh_isoption(SH_PRIVILEGED))
+		{
+			setuid(sh.userid);
+			setgid(sh.groupid);
+			if(sh.euserid==0)
+			{
+				sh.euserid = sh.userid;
+				sh.egroupid = sh.groupid;
+			}
+		}
+		else if((sh.userid!=sh.euserid && setuid(sh.euserid)<0) ||
 			(sh.groupid!=sh.egroupid && setgid(sh.egroupid)<0) ||
 			(sh.userid==sh.euserid && sh.groupid==sh.egroupid))
-			off_option(&newflags,SH_PRIVILEGED);
-	}
-	else if(!is_option(&newflags,SH_PRIVILEGED) && sh_isoption(SH_PRIVILEGED))
-	{
-		setuid(sh.userid);
-		setgid(sh.groupid);
-		if(sh.euserid==0)
-		{
-			sh.euserid = sh.userid;
-			sh.egroupid = sh.groupid;
-		}
+				off_option(&newflags,SH_PRIVILEGED);
 	}
 #if SHOPT_BASH
 	on_option(&newflags,SH_CMDHIST);

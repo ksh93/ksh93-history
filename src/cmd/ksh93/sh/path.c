@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2004 AT&T Corp.                  *
+*                  Copyright (c) 1982-2005 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -48,7 +48,7 @@
 static int		canexecute(char*,int);
 static void		funload(Shell_t*,int,const char*);
 static void		exscript(Shell_t*,char*, char*[], char**);
-static int		path_chkfpath(Pathcomp_t*,Pathcomp_t*,Pathcomp_t*,int);
+static int		path_chkpaths(Pathcomp_t*,Pathcomp_t*,Pathcomp_t*,int);
 
 
 static int path_pfexecve(const char *path, char *argv[],char *const envp[])
@@ -251,7 +251,7 @@ void  path_delete(Pathcomp_t *first)
 		{
 			if(pp->lib)
 				free((void*)pp->lib);
-			if(pp->bltin_lib && pp->bltin_lib != (void*)e_dot)
+			if(pp->bltin_lib)
 			{
 				nv_scan(sh_bltin_tree(),free_bltin,pp->bltin_lib,0,0);
 				dlclose(pp->bltin_lib);
@@ -267,7 +267,7 @@ void  path_delete(Pathcomp_t *first)
 }
 
 /*
- * returns library variable from .fpath
+ * returns library variable from .paths
  * The value might be returned on the stack overwriting path
  */
 static char *path_lib(Pathcomp_t *pp, char *path)
@@ -295,7 +295,7 @@ static char *path_lib(Pathcomp_t *pp, char *path)
 		if(last)
 			pcomp.len = last-path;
 		memcpy((void*)save, (void*)stakptr(PATH_OFFSET+pcomp.len),sizeof(save));
-		if(path_chkfpath((Pathcomp_t*)0,(Pathcomp_t*)0,&pcomp,PATH_OFFSET))
+		if(path_chkpaths((Pathcomp_t*)0,(Pathcomp_t*)0,&pcomp,PATH_OFFSET))
 			return(stakfreeze(1));
 		memcpy((void*)stakptr(PATH_OFFSET+pcomp.len),(void*)save,sizeof(save));
 	}
@@ -606,7 +606,7 @@ Pathcomp_t *path_absolute(register const char *name, Pathcomp_t *endpath)
 	register int	f,isfun;
 	int		noexec=0;
 	Pathcomp_t	*pp,*oldpp;
-	Shell_t *shp = &sh;
+	Shell_t		*shp = &sh;
 	shp->path_err = ENOENT;
 	if(!(pp=path_get("")))
 		return(0);
@@ -619,26 +619,29 @@ Pathcomp_t *path_absolute(register const char *name, Pathcomp_t *endpath)
 			pp = path_nextcomp(pp,name,0);
 		if(endpath)
 			return(endpath);
-		if(!isfun && oldpp->bltin_lib && oldpp->bltin_lib != (void*)e_dot)
+		if(!isfun)
 		{
-			typedef int (*Fptr_t)(int, char*[], void*);
-			Fptr_t addr;
-			int n = staktell();
-			stakputs("b_");
-			stakputs(name);
-			stakputc(0);
-			if(addr=(Fptr_t)dlllook(oldpp->bltin_lib,stakptr(n)))
+			if(oldpp->bltin_lib)
 			{
-				Namval_t *np = sh_addbuiltin(stakptr(PATH_OFFSET),addr,(void*)0);
-				np->nvenv = oldpp->bltin_lib;
-				return(oldpp);
+				typedef int (*Fptr_t)(int, char*[], void*);
+				Fptr_t addr;
+				int n = staktell();
+				stakputs("b_");
+				stakputs(name);
+				stakputc(0);
+				if(addr=(Fptr_t)dlllook(oldpp->bltin_lib,stakptr(n)))
+				{
+					sh_addbuiltin(stakptr(PATH_OFFSET),addr,(void*)0)->nvenv = oldpp->bltin_lib;
+					return(oldpp);
+				}
 			}
+			else if((oldpp->flags & PATH_BUILTIN_SH) && nv_search(stakptr(PATH_OFFSET),sh.bltin_tree,0))
+				return(oldpp);
 		}
 		f = canexecute(stakptr(PATH_OFFSET),isfun);
 		if(isfun && f>=0)
 		{
-			Namval_t *np = nv_open(name,shp->fun_tree,NV_NOARRAY|NV_IDENT|NV_NOSCOPE);
-			nv_onattr(np,NV_LTOU|NV_FUNCTION);
+			nv_onattr(nv_open(name,shp->fun_tree,NV_NOARRAY|NV_IDENT|NV_NOSCOPE),NV_LTOU|NV_FUNCTION);
 			close(f);
 			f = -1;
 			return(0);
@@ -1252,7 +1255,7 @@ static Pathcomp_t *path_addcomp(Pathcomp_t *first, Pathcomp_t *old,const char *n
 	pp->flags = flag;
 	if(flag!=PATH_PATH)
 		return(first);
-	path_chkfpath(first,old,pp,offset);
+	path_chkpaths(first,old,pp,offset);
 	return(first);
 }
 
@@ -1260,7 +1263,7 @@ static Pathcomp_t *path_addcomp(Pathcomp_t *first, Pathcomp_t *old,const char *n
  * This function checks for the .paths file in directory in <pp>
  * it assumes that the directory is on the stack at <offset> 
  */
-static int path_chkfpath(Pathcomp_t *first, Pathcomp_t* old,Pathcomp_t *pp, int offset)
+static int path_chkpaths(Pathcomp_t *first, Pathcomp_t* old,Pathcomp_t *pp, int offset)
 {
 	struct stat statb;
 	int k,m,n,fd;
@@ -1305,21 +1308,25 @@ static int path_chkfpath(Pathcomp_t *first, Pathcomp_t* old,Pathcomp_t *pp, int 
 			}
 			else if(m==12 && memcmp((void*)sp,(void*)"BUILTIN_LIB=",12)==0)
 			{
-				if(!pp->bltin_lib)
+				if(!(pp->flags & PATH_BUILTIN_LIB))
 				{
-#if (_AST_VERSION>=20040404)
-					if (*ep != '/' && (sp = malloc(k = pp->len + strlen(ep) + 2)))
-						sfsprintf(sp, k, "%s/%s", pp->name, ep);
+					pp->flags |= PATH_BUILTIN_LIB;
+					if (*ep == '.' && !*(ep + 1))
+						pp->flags |= PATH_BUILTIN_SH;
 					else
-						sp = ep;
-					pp->bltin_lib = dllplug("ksh", sp, NiL, RTLD_LAZY, NiL, 0);
-					if (sp != ep)
-						free(sp);
+					{
+#if (_AST_VERSION>=20040404)
+						if (*ep != '/' && (sp = malloc(k = pp->len + strlen(ep) + 2)))
+							sfsprintf(sp, k, "%s/%s", pp->name, ep);
+						else
+							sp = ep;
+						pp->bltin_lib = dllplug("ksh", sp, NiL, RTLD_LAZY, NiL, 0);
+						if (sp != ep)
+							free(sp);
 #else
-					pp->bltin_lib = dllfind(ep, NiL, RTLD_LAZY, NiL, 0);
+						pp->bltin_lib = dllfind(ep, NiL, RTLD_LAZY, NiL, 0);
 #endif
-					if (!pp->bltin_lib)
-						pp->bltin_lib = (void*)e_dot;
+					}
 				}
 			}
 			else if(m)
@@ -1429,7 +1436,7 @@ void path_newdir(Pathcomp_t *first)
 		pp->flags &= ~PATH_SKIP;
 		if(*pp->name=='/')
 			continue;
-		/* delete .fpath component */
+		/* delete .paths component */
 		if((next=pp->next) && (next->flags&PATH_BFPATH))
 		{
 			pp->next = next->next;
@@ -1456,13 +1463,13 @@ void path_newdir(Pathcomp_t *first)
 		}
 		if(pp->flags==PATH_PATH)
 		{
-			/* try to insert .fpath component */
+			/* try to insert .paths component */
 			int offset = staktell();
 			stakputs(pp->name);
 			stakseek(offset);
 			next = pp->next;
 			pp->next = 0;
-			path_chkfpath(first,(Pathcomp_t*)0,pp,offset);
+			path_chkpaths(first,(Pathcomp_t*)0,pp,offset);
 			if(pp->next)
 				pp = pp->next;
 			pp->next = next;

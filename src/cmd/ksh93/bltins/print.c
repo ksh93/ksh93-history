@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2004 AT&T Corp.                  *
+*                  Copyright (c) 1982-2005 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -87,7 +87,7 @@ static int outexceptf(Sfio_t* iop, int mode, void* data, Sfdisc_t* dp)
 {
 	if(mode==SF_DPOP || mode==SF_FINAL)
 		free((void*)dp);
-	else if(mode==SF_WRITE && (errno!= EINTR || !sh.trapnote))
+	else if(mode==SF_WRITE && (errno!= EINTR || sh.trapnote))
 	{
 		int save = errno;
 		sfpurge(iop);

@@ -20,6 +20,16 @@ lib	clock_gettime execute{
 	}
 }end
 
+lib	utimets link{
+	#include <time.h>
+	#include <sys/time.h>
+	static struct timespec	tv;
+	main()
+	{
+		return utimets(".", &tv) != 0;
+	}
+}end
+
 tst	- -DN=1 - -DN=2 - -DN=3 - -DN=4 output{
 	#include <sys/types.h>
 	#include <sys/time.h>

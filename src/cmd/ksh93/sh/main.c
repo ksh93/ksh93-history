@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2004 AT&T Corp.                  *
+*                  Copyright (c) 1982-2005 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -103,7 +103,6 @@ int sh_main(int ac, char *av[], void (*userinit)(int))
 	register Sfio_t  *iop;
 	register int 	rshflag;	/* set for restricted shell */
 	register Shell_t *shp;
-	int prof;
 	int i;
 	char *command;
 #ifdef _lib_sigvec
@@ -117,7 +116,6 @@ int sh_main(int ac, char *av[], void (*userinit)(int))
 #endif	/* _hdr_nc */
 	fixargs(av,0);
 	shp = sh_init(ac,av,userinit);
-	prof = !sh_isoption(SH_PRIVILEGED);
 	time(&mailtime);
 	if(rshflag=sh_isoption(SH_RESTRICTED))
 		sh_offoption(SH_RESTRICTED);
@@ -147,6 +145,8 @@ int sh_main(int ac, char *av[], void (*userinit)(int))
 		sh_onstate(SH_PROFILE);
 		if(shp->ppid==1)
 			shp->login_sh++;
+		if(shp->login_sh >= 2)
+			sh_onoption(SH_LOGIN_SHELL);
 		/* decide whether shell is interactive */
 		if(!sh_isoption(SH_TFLAG) && !sh_isoption(SH_CFLAG) && sh_isoption(SH_SFLAG) &&
 			tty_check(0) && tty_check(ERRIO))
@@ -169,8 +169,8 @@ int sh_main(int ac, char *av[], void (*userinit)(int))
 #endif /* SIGXFSZ */
 			sh_onoption(SH_MONITOR);
 		}
-		job_init(shp->login_sh >= 2);
-		if(shp->login_sh >= 2 && !sh_isoption(SH_NOPROFILE))
+		job_init(sh_isoption(SH_LOGIN_SHELL));
+		if(sh_isoption(SH_LOGIN_SHELL) && !sh_isoption(SH_NOPROFILE))
 		{
 			/*	system profile	*/
 #ifdef PATH_BFPATH
@@ -183,7 +183,7 @@ int sh_main(int ac, char *av[], void (*userinit)(int))
 				shp->st.filename = path_fullname(stakptr(PATH_OFFSET));
 				exfile(shp,iop,fdin);	/* file exists */
 			}
-			if(prof)
+			if(!sh_isoption(SH_NOUSRPROFILE) && !sh_isoption(SH_PRIVILEGED))
 			{
 				char **files = shp->login_files;
 				while(name = *files++)
@@ -207,7 +207,7 @@ int sh_main(int ac, char *av[], void (*userinit)(int))
 		name = "";
 		if(!sh_isoption(SH_NOEXEC))
 		{
-			if(prof && sh_isoption(SH_RC))
+			if(!sh_isoption(SH_NOUSRPROFILE) && !sh_isoption(SH_PRIVILEGED) && sh_isoption(SH_RC))
 #ifdef SHOPT_BASH
 				name = shp->rcfile ? shp->rcfile : sh_mactry("$HOME/.bashrc");
 #else

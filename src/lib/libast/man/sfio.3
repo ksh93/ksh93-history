@@ -491,14 +491,16 @@ being simultaneously accessed by multiple threads.
 
 .Ss "  Sfio_t* sfopen(Sfio_t* f, const char* string, const char* mode)"
 
-If \f5string\fP is \f5NULL\fP and \f5f\fP is a file stream
-that has not been operated on,
+If \f5string\fP is \f5NULL\fP,
+\f5f\fP is a file stream and
+\f5mode\fP does not imply a string stream,
 \f5sfopen()\fP changes the modes of \f5f\fP according to \f5mode\fP.
 In this case, \f5sfopen()\fP returns \f5f\fP on success and \f5NULL\fP on error.
 This somewhat unusual usage of \f5sfopen()\fP is good for
 resetting certain predefined modes in standard streams including
-\fItext/binary\fP and
-\fIappend\fP that are inherited from some parent process.
+\fItext/binary\fP and \fIappend\fP that are inherited from some parent process.
+Note also that \f5SF_READ\fP and \f5SF_WRITE\fP can only be reset if the stream
+is not yet initialized.
 
 \f5sfopen()\fP is normally used to create a new stream or renew a stream.
 In this case, it returns the new stream on success and \f5NULL\fP on error.

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2004 AT&T Corp.                  *
+*                  Copyright (c) 1985-2005 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -44,7 +44,7 @@ reg int		rc;	/* record separator */
 	reg ssize_t	r, w;
 	reg uchar	*endb;
 	reg int		direct;
-	Sfoff_t		n_move;
+	Sfoff_t		n_move, sk, cur;
 	uchar		*rbuf = NIL(uchar*);
 	ssize_t		rsize = 0;
 
@@ -61,9 +61,9 @@ reg int		rc;	/* record separator */
 			{	r = sfvalue(fr);
 				if(fw && (w = SFWRITE(fw, cp, r)) != r)
 				{	if(fr->extent >= 0 )
-						(void)SFSEEK(fr,(Sfoff_t)(-r),1);
+						(void)SFSEEK(fr,(Sfoff_t)(-r),SEEK_CUR);
 					if(fw->extent >= 0 && w > 0)
-						(void)SFSEEK(fw,(Sfoff_t)(-w),1);
+						(void)SFSEEK(fw,(Sfoff_t)(-w),SEEK_CUR);
 					n = 0;
 				}
 				else
@@ -77,7 +77,7 @@ reg int		rc;	/* record separator */
 
 		/* get the streams into the right mode */
 		if(fr->mode != SF_READ && _sfmode(fr,SF_READ,0) < 0)
-			goto done;
+			break;
 
 		SFLOCK(fr,0);
 
@@ -91,6 +91,16 @@ reg int		rc;	/* record separator */
 			    (fw->extent < 0 || (fw->flags&SF_SHARE)) ) )
 				if(SFFLSBUF(fw,-1) < 0 )
 					break;
+		}
+		else if((cur = SFSEEK(fr, (Sfoff_t)0, SEEK_CUR)) >= 0 )
+		{	sk = n > 0 ? SFSEEK(fr, n, SEEK_CUR) : SFSEEK(fr, 0, SEEK_END);
+			if(sk > cur) /* safe to skip over data in current stream */
+			{	n_move += sk - cur;
+				if(n > 0)
+					n -= sk - cur;
+				continue;
+			}
+			/* else: stream unstacking may happen below */
 		}
 
 		/* about to move all, set map to a large amount */
@@ -147,7 +157,6 @@ reg int		rc;	/* record separator */
 				else	r = -1;
 				if((r = SFFILBUF(fr,r)) <= 0)
 					break;
-			done_filbuf:
 				next = fr->next;
 			}
 			else
@@ -199,7 +208,7 @@ reg int		rc;	/* record separator */
 					n_move -= r;
 				}
 				if(fr->extent >= 0)
-					(void)SFSEEK(fr,(Sfoff_t)(-r),1);
+					(void)SFSEEK(fr,(Sfoff_t)(-r),SEEK_CUR);
 				break;
 			}
 		}
@@ -210,7 +219,6 @@ reg int		rc;	/* record separator */
 			SFOPEN(fw,0);
 	}
 
-done:
 	if(n < 0 && (fr->bits&SF_MMAP) && (fr->bits&SF_MVSIZE))
 	{	/* back to normal access mode */
 		SFMVUNSET(fr);

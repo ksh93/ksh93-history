@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2004 AT&T Corp.                  *
+*                  Copyright (c) 1985-2005 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -32,6 +32,7 @@
 #include <tmx.h>
 #include <ctype.h>
 
+#define dig1(s,n)	((n)=((*(s)++)-'0'))
 #define dig2(s,n)	((n)=((*(s)++)-'0')*10,(n)+=(*(s)++)-'0')
 #define dig3(s,n)	((n)=((*(s)++)-'0')*100,(n)+=((*(s)++)-'0')*10,(n)+=(*(s)++)-'0')
 #define dig4(s,n)	((n)=((*(s)++)-'0')*1000,(n)+=((*(s)++)-'0')*100,(n)+=((*(s)++)-'0')*10,(n)+=(*(s)++)-'0')
@@ -416,7 +417,97 @@ tmxdate(register const char* s, char** e, Time_t now)
 		{
 			n = strtol(s, &t, 10);
 			w = t - s;
-			if (f == -1 && isalpha(*t) && tmlex(t, &t, tm_info.format + TM_ORDINAL, TM_ORDINALS - TM_ORDINAL, NiL, 0) >= 0)
+			u = t + (*t == '-');
+			if ((w == 2 || w == 4) && (*u == 'W' || *u == 'w') && isdigit(*(u + 1)))
+			{
+				t = u;
+				if (w == 4)
+				{
+					if ((n -= 1900) < TM_WINDOW)
+						break;
+				}
+				else if (n < TM_WINDOW)
+					n += 100;
+				m = n;
+				n = strtol(s = t + 1, &t, 0);
+				if ((i = (t - s)) < 2 || i > 3)
+					break;
+				if (dig2(s, j) < 0 || j > 53)
+					break;
+				if (!(t - s) && *t == '-')
+					n = strtol(s = t + 1, &t, 0);
+				if (!(i = (t - s)))
+					k = 1;
+				else if (i != 1 || dig1(s, k) < 1 || k > 7)
+					break;
+				else if (k == 7)
+					k = 0;
+				tm->tm_year = m;
+				tmweek(tm, 2, j, k);
+				set |= YEAR|MONTH|DAY;
+				continue;
+			}
+			else if ((w == 6 || w == 8) && (*u == 'T' || *u == 't') && isdigit(*(u + 1)))
+			{
+				t = u;
+				flags = 0;
+				if (w == 8)
+				{
+					dig4(s, m);
+					if ((m -= 1900) < TM_WINDOW)
+						break;
+				}
+				else
+				{
+					dig2(s, m);
+					if (m < TM_WINDOW)
+						m += 100;
+				}
+				flags |= YEAR;
+				if (dig2(s, l) <= 0 || l > 12)
+					break;
+				flags |= MONTH;
+				if (dig2(s, k) < 1 || k > 31)
+					break;
+				n = strtol(s = t + 1, &t, 0);
+				if ((t - s) < 2)
+					break;
+				if (dig2(s, j) > 24)
+					break;
+				if ((t - s) < 2)
+				{
+					if ((t - s) == 1 || *t++ != '-')
+						break;
+					n = strtol(s = t, &t, 0);
+					if ((t - s) < 2)
+						break;
+				}
+				if (dig2(s, i) > 59)
+					break;
+				flags |= HOUR|MINUTE;
+				if ((t - s) == 2)
+				{
+					if (dig2(s, n) > (59 + TM_MAXLEAP))
+						break;
+					flags |= SECOND;
+				}
+				else if (t - s)
+					break;
+				else
+					n = 0;
+				p = 0;
+				if (*t == '.')
+				{
+					q = 1000000000;
+					while (isdigit(*++t))
+						p += (*t - '0') * (q /= 10);
+					set |= NSEC;
+				}
+				if (n > (59 + TM_MAXLEAP))
+					break;
+				goto save;
+			}
+			else if (f == -1 && isalpha(*t) && tmlex(t, &t, tm_info.format + TM_ORDINAL, TM_ORDINALS - TM_ORDINAL, NiL, 0) >= 0)
 			{
  ordinal:
 				state |= (f = n) ? NEXT : THIS;
@@ -441,7 +532,7 @@ tmxdate(register const char* s, char** e, Time_t now)
 					 * various { date(1) touch(1) } formats
 					 *
 					 *	[[cc]yy[mm]]ddhhmm[.ss[.nn...]]
-					 *	[cc]yyddd
+					 *	[cc]yyjjj
 					 *	hhmm[.ss[.nn...]]
 					 */
 
@@ -547,6 +638,7 @@ tmxdate(register const char* s, char** e, Time_t now)
 						if (n > (59 + TM_MAXLEAP))
 							break;
 					}
+				save:
 					tm->tm_year = m;
 					tm->tm_mon = l - 1;
 					tm->tm_mday = k;

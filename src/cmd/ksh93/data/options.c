@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2004 AT&T Corp.                  *
+*                  Copyright (c) 1982-2005 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -74,7 +74,7 @@ const Shtable_t shtab_options[] =
 	bashextra("interactive_comments",	SH_INTERACTIVE_COMM)
 	"keyword",			SH_KEYWORD,
 	bashopt("lithist",		SH_LITHIST)
-	bashopt("login_shell",		SH_LOGIN_SHELL|SH_COMMANDLINE)
+	"login_shell",			SH_LOGIN_SHELL|SH_COMMANDLINE,
 	bashopt("mailwarn",		SH_MAILWARN)
 	"markdirs",			SH_MARKDIRS,
 	"monitor",			SH_MONITOR,
@@ -97,7 +97,7 @@ const Shtable_t shtab_options[] =
 #endif
 	bashopt("progcomp",		SH_PROGCOMP)
 	bashopt("promptvars",		SH_PROMPTVARS)
-	"rc",				SH_RC,
+	"rc",				SH_RC|SH_COMMANDLINE,
 	"restricted",			SH_RESTRICTED|SH_COMMANDLINE,
 	bashopt("restricted_shell",	SH_RESTRICTED2|SH_COMMANDLINE)
 	bashopt("shift_verbose",	SH_SHIFT_VERBOSE)

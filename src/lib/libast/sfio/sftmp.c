@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2004 AT&T Corp.                  *
+*                  Copyright (c) 1985-2005 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -349,7 +349,7 @@ Sfdisc_t*	disc;
 			(void)sfsetbuf(f,(Void_t*)savf.data,savf.size);
 		if(savf.extent > 0)
 			(void)sfwrite(f,(Void_t*)savf.data,(size_t)savf.extent);
-		(void)sfseek(f,(Sfoff_t)(savf.next - savf.data),0);
+		(void)sfseek(f,(Sfoff_t)(savf.next - savf.data),SEEK_SET);
 		if((savf.flags&SF_MALLOC) )
 			free((Void_t*)savf.data);
 	}

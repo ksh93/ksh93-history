@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#                  Copyright (c) 1982-2004 AT&T Corp.                  #
+#                  Copyright (c) 1982-2005 AT&T Corp.                  #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                            by AT&T Corp.                             #
@@ -104,4 +104,59 @@ then	mkdir /tmp/ksh$$
 	cd ~-
 	rm -rf /tmp/ksh$$
 fi
+
+mkdir /tmp/ksh$$
+cd /tmp/ksh$$
+echo 'echo .profile' > .profile
+[[ $(HOME=$PWD $SHELL -l </dev/null 2>&1) == *.profile ]] || err_exit '-l ignores .profile'
+[[ $(HOME=$PWD $SHELL --login </dev/null 2>&1) == *.profile ]] || err_exit '--login ignores .profile'
+[[ $(HOME=$PWD $SHELL --login-shell </dev/null 2>&1) == *.profile ]] || err_exit '--login-shell ignores .profile'
+[[ $(HOME=$PWD $SHELL --login_shell </dev/null 2>&1) == *.profile ]] || err_exit '--login_shell ignores .profile'
+[[ $(HOME=$PWD exec -a -ksh $SHELL </dev/null 2>&1) == *.profile ]]  || err_exit 'exec -a -ksh ksh ignores .profile'
+cp $SHELL ./-ksh
+[[ $(HOME=$PWD ./-ksh -i </dev/null 2>&1) == *.profile ]] || err_exit './-ksh ignores .profile'
+[[ $(HOME=$PWD ./-ksh -ip </dev/null 2>&1) == *.profile ]] && err_exit './-ksh -p does not ignore .profile'
+cd ~-
+rm -rf /tmp/ksh$$
+
+# { exec interactive login_shell restricted xtrace } skipped
+
+for opt in \
+	allexport bgnice clobber emacs errexit glob globstar gmacs \
+	ignoreeof keyword log markdirs monitor notify pipefail \
+	trackall unset verbose vi viraw
+do	old=$opt
+	if [[ ! -o $opt ]]
+	then	old=no$opt
+	fi
+	set --$opt || err_exit "set --$opt failed"
+	[[ -o $opt ]] || err_exit "[[ -o $opt ]] failed"
+	[[ -o no$opt ]] && err_exit "[[ -o no$opt ]] failed"
+	set --no$opt || err_exit "set --no$opt failed"
+	[[ -o no$opt ]] || err_exit "[[ -o no$opt ]] failed"
+	[[ -o $opt ]] && err_exit "[[ -o $opt ]] failed"
+	set -o $opt || err_exit "set -o $opt failed"
+	[[ -o $opt ]] || err_exit "[[ -o $opt ]] failed"
+	set -o no$opt || err_exit "set -o no$opt failed"
+	[[ -o no$opt ]] || err_exit "[[ -o no$opt ]] failed"
+	set +o $opt || err_exit "set +o $opt failed"
+	[[ -o no$opt ]] || err_exit "[[ -o no$opt ]] failed"
+	set +o no$opt || err_exit "set +o no$opt failed"
+	[[ -o $opt ]] || err_exit "[[ -o $opt ]] failed"
+	set --$old
+done
+
+for opt in \
+	exec interactive login_shell login-shell logi privileged \
+	rc restricted xtrace
+do	[[ -o $opt ]]
+	y=$?
+	[[ -o no$opt ]]
+	n=$?
+	case $y$n in
+	10|01)	;;
+	*)	err_exit "[[ -o $opt ]] == [[ -o no$opt ]]" ;;
+	esac
+done
+
 exit $((Errors))

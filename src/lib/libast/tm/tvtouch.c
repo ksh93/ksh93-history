@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2004 AT&T Corp.                  *
+*                  Copyright (c) 1985-2005 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -26,7 +26,6 @@
  *
  * Tv_t conversion support
  */
-
 
 #if defined(__STDPP__directive) && defined(__STDPP__hide)
 __STDPP__directive pragma pp:hide utime
@@ -79,6 +78,9 @@ tvtouch(const char* path, register const Tv_t* av, register const Tv_t* mv, cons
 	int		fd;
 	int		mode;
 	int		oerrno;
+#if _lib_utimets
+	struct timespec	am[2];
+#else
 #if _lib_utimes
 	struct timeval	am[2];
 #else
@@ -86,6 +88,7 @@ tvtouch(const char* path, register const Tv_t* av, register const Tv_t* mv, cons
 	struct utimbuf	am;
 #else
 	time_t		am[2];
+#endif
 #endif
 #endif
 
@@ -106,6 +109,35 @@ tvtouch(const char* path, register const Tv_t* av, register const Tv_t* mv, cons
 		if (!mv)
 			mv = (const Tv_t*)&now;
 	}
+#if _lib_utimets
+	if (av == TV_TOUCH_RETAIN)
+	{
+		am[0].tv_sec = st.st_atime;
+		am[0].tv_nsec = ST_ATIME_NSEC_GET(&st);
+	}
+	else
+	{
+		am[0].tv_sec = av->tv_sec;
+		am[0].tv_nsec = NS(av->tv_nsec);
+	}
+	if (mv == TV_TOUCH_RETAIN)
+	{
+		am[1].tv_sec = st.st_mtime;
+		am[1].tv_nsec = ST_MTIME_NSEC_GET(&st);
+	}
+	else
+	{
+		am[1].tv_sec = mv->tv_sec;
+		am[1].tv_nsec = NS(mv->tv_nsec);
+	}
+	if (!utimets(path, am))
+		return 0;
+	if (errno != ENOENT && av == (const Tv_t*)&now && mv == (const Tv_t*)&now && !utimets(path, NiL))
+	{
+		errno = oerrno;
+		return 0;
+	}
+#else
 #if _lib_utimes
 	if (av == TV_TOUCH_RETAIN)
 	{
@@ -148,6 +180,7 @@ tvtouch(const char* path, register const Tv_t* av, register const Tv_t* mv, cons
 	}
 #endif
 #endif
+#endif
 	if (!access(path, F_OK))
 	{
 		if (av != (const Tv_t*)&now || mv != (const Tv_t*)&now)
@@ -181,6 +214,9 @@ tvtouch(const char* path, register const Tv_t* av, register const Tv_t* mv, cons
 	errno = oerrno;
 	if (av == (const Tv_t*)&now && mv == (const Tv_t*)&now)
 		return 0;
+#if _lib_utimets
+	return utimets(path, am);
+#else
 #if _lib_utimes
 	return utimes(path, am);
 #else
@@ -189,6 +225,7 @@ tvtouch(const char* path, register const Tv_t* av, register const Tv_t* mv, cons
 #else
 	errno = EINVAL;
 	return -1;
+#endif
 #endif
 #endif
 

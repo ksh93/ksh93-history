@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2004 AT&T Corp.                  *
+*                  Copyright (c) 1985-2005 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -2582,7 +2582,7 @@ seq(Cenv_t* env)
 }
 
 static Rex_t*
-conj(Cenv_t* env)
+con(Cenv_t* env)
 {
 	Rex_t*	e;
 	Rex_t*	f;
@@ -2591,7 +2591,7 @@ conj(Cenv_t* env)
 	if (!(e = seq(env)) || !(env->flags & REG_AUGMENTED) || token(env) != T_AND)
 		return e;
 	eat(env);
-	if (!(f = conj(env)))
+	if (!(f = con(env)))
 	{
 		drop(env->disc, e);
 		return 0;
@@ -2614,7 +2614,7 @@ alt(Cenv_t* env, int number, int cond)
 	Rex_t*	f;
 	Rex_t*	g;
 
-	if (!(e = conj(env)))
+	if (!(e = con(env)))
 		return 0;
 	else if (token(env) != T_BAR)
 	{

@@ -1,52 +1,24 @@
 /*
  * ksh makefile
- * This makefile should work with nmake 2.3 and higher 
  */
 
 SH = ksh		/* name of the shell program */
 VERSION = 1.1
-
-if CC.HOSTTYPE == "linux.alpha"
-	/* workaround for "BUG IN DYNAMIC LINKER ld.so" */
-	:PACKAGE: - m:static:noinclude noCC.EXPORT.DYNAMIC
-end
-
-if "$(CC.DIALECT:N=EXPORT=DLL)" || "$(PACKAGE_OPTIMIZE:N=space)"
-	CCFLAGS += $$(CC.DLL)
-	LIBS_req = -lshell
-else
-	CCLDFLAGS += $$(CC.EXPORT.DYNAMIC)
-	LIBS_req = +lshell
-	if ! VARIANT
-		libtype = :static
-	end
-end
-
-:PACKAGE: ast$(libtype) --clobber=!($(SH))
-
 LICENSE = since=1982,author=dgk
-
 CATALOG = libshell
 
-.SOURCE : edit sh bltins data tests fun
-.SOURCE.h : include 
-
-/* documentation files */
-DOCFILES = sh.memo builtins.mm README RELEASE PROMO.mm COMPATIBILITY \
-		DESIGN OBSOLETE RELEASE93 RELEASE88
-
-KSHELL == 1			/* this is ksh */
-
-SH_DICT ==			/* message catalog */
-DEBUG ==			/* debugging purposes only */
-
-/* set these variables to 1 to enable, 0 to disable, null to probe */
+/*
+ * set these variables to 1 to enable, 0 to disable, null to probe
+ * override SHOPT_foo=1 can be placed one per line in the build dir Makeargs
+ */
 
 SHOPT_ACCT ==  			/* accounting */
 SHOPT_ACCTFILE ==  		/* per user accounting info */
 SHOPT_APPEND == 1		/* var+=val string append */
 SHOPT_BASH ==			/* bash compatibility code */
 SHOPT_BRACEPAT == 1		/* C-shell {...,...} expansions (, required) */
+SHOPT_CMDLIB_BLTIN == 0		/* all -lcmd commands builtin */
+SHOPT_CMDLIB_DIR ==		/* SHOPT_CMDLIB_BLTIN prefix SH_CMDLIB_DIR */
 SHOPT_COMPOUND_ARRAY == 1	/* allow compound arrays */
 SHOPT_CRNL ==			/* accept <cr><nl> for <nl> */
 SHOPT_DYNAMIC == 1		/* dynamic loading for builtins */
@@ -69,6 +41,41 @@ SHOPT_SPAWN ==			/* use spawnveg for fork/exec */
 SHOPT_SUID_EXEC == 1		/* allow (safe) suid/sgid shell scripts */
 SHOPT_TIMEOUT ==		/* number of seconds for shell timeout */
 SHOPT_VSH == 1			/* vi edit mode */
+
+if CC.HOSTTYPE == "linux.alpha"
+	/* workaround for "BUG IN DYNAMIC LINKER ld.so" */
+	:PACKAGE: - m:static:noinclude /*noCC.EXPORT.DYNAMIC*/
+end
+
+if SHOPT_DYNAMIC && ( "$(CC.DIALECT:N=EXPORT=DLL)" || "$(PACKAGE_OPTIMIZE:N=space)" )
+	CCFLAGS += $$(CC.DLL)
+	LIBS_req = -lshell
+else
+	if VARIANT
+		SHOPT_DYNAMIC = 1
+	else
+		libtype = :static
+	end
+	if SHOPT_DYNAMIC
+		CCLDFLAGS += $$(CC.EXPORT.DYNAMIC)
+	end
+	LIBS_req = +lshell
+end
+
+:PACKAGE: ast$(libtype) --clobber=!($(SH))
+
+.SOURCE : edit sh bltins data tests fun
+.SOURCE.h : include 
+
+/* documentation files */
+DOCFILES = sh.memo builtins.mm README RELEASE PROMO.mm COMPATIBILITY \
+		DESIGN OBSOLETE RELEASE93 RELEASE88
+
+KSHELL == 1			/* this is ksh */
+
+SH_CMDLIB_DIR == "/opt/ast/bin"	/* SHOPT_CMDLIB_DIR dir prefix */
+SH_DICT ==			/* message catalog */
+DEBUG ==			/* debugging purposes only */
 
 if  CC.HOSTTYPE == "*win*"
 	SHOPT_CRNL == 1		/* <cr><nl> is eqivalent to <nl> */
@@ -106,15 +113,26 @@ $(LIBS_opt)	: .DONTCARE
 LDLIBRARIES = $(LIBS_opt)
 
 FILES_opt =		/* optional file list enabled by vars above */
-FILES_opt += $(SHOPT_ESH:T=V?emacs.c)
-FILES_opt += $(SHOPT_VSH:T=V?vi.c)
-FILES_opt += $(SHOPT_BASH:T=V?bash.c bash_pre_rc.c)
-FILES_opt += $(SHOPT_HISTEXPAND:T=V?hexpand.c)
+if SHOPT_ESH
+	FILES_opt += emacs.c
+end
+if SHOPT_VSH
+	FILES_opt += vi.c
+end
+if SHOPT_BASH
+	FILES_opt += bash.c bash_pre_rc.c
+end
+if SHOPT_HISTEXPAND
+	FILES_opt += hexpand.c
+end
+if SHOPT_DYNAMIC
+	FILES_opt += -ldll
+end
 if SHOPT_X
-LDFLAGS += -u  _XtAppInitialize -L/usr/add-on/X11/lib
+	LDFLAGS += -u _XtAppInitialize -L/usr/add-on/X11/lib
 end
 
-:ALL: $(SH) shcomp $(SHOPT_SUID_EXEC:T=V?suid_exec.c) $(SHOPT_BASH:T=V?bash)
+:ALL: $(SH) shcomp $(SHOPT_SUID_EXEC:+suid_exec) $(SHOPT_BASH:+bash)
 
 $(SH) :: sh.1 pmain.c $(LIBS_req)
 
@@ -128,7 +146,7 @@ shell $(VERSION) :LIBRARY: shell.3 nval.3 alarm.c cd_pwd.c cflow.c deparse.c \
 	fault.c fcin.c history.c init.c io.c jobs.c lex.c macro.c name.c \
 	nvtree.c parse.c path.c string.c streval.c subshell.c tdump.c timers.c \
 	trestore.c waitevent.c xec.c env.c $(DATAFILES) $(FILES_opt) \
-	-lcmd -ldll -last -lm
+	-lcmd -last -lm
 
 "sol*.i386" :NOOPTIMIZE: main.c
 "win32*" :NOOPTIMIZE: trestore.c

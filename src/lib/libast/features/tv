@@ -41,11 +41,6 @@ elif mem stat.st_mtimensec sys/stat.h {
 	#define ST_CTIME_NSEC_GET(st)	((st)->st_ctimensec)
 	#define ST_MTIME_NSEC_GET(st)	((st)->st_mtimensec)
 }
-elif mem stat.st_spare1,stat.st_spare2,stat.st_spare3 sys/stat.h {
-	#define ST_ATIME_NSEC_GET(st)	((st)->st_spare1)
-	#define ST_CTIME_NSEC_GET(st)	((st)->st_spare2)
-	#define ST_MTIME_NSEC_GET(st)	((st)->st_spare3)
-}
 else pass{ no_stat_nsec=1 }end {
 	#define ST_ATIME_NSEC_GET(st)	0
 	#define ST_CTIME_NSEC_GET(st)	0

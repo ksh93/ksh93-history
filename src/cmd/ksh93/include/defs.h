@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2004 AT&T Corp.                  *
+*                  Copyright (c) 1982-2005 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -216,6 +216,7 @@ struct limits
 #define SH_BRACEEXPAND		42
 #define SH_POSIX		46
 #define SH_NOPROFILE		78
+#define SH_NOUSRPROFILE		79
 #define SH_LOGIN_SHELL		67
 #define SH_COMMANDLINE		0x100
 #define SH_BASHEXTRA		0x200

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2004 AT&T Corp.                  *
+*                  Copyright (c) 1985-2005 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -107,6 +107,7 @@ tmxtime(register Tm_t* tm, int west)
 			{
 				y = tm->tm_year;
 				tm->tm_year = tmequiv(tm) - 1900;
+				tm->tm_isdst = 0;
 				now = tmxsec(tmxtime(tm, tm_info.zone->west));
 				tm->tm_year = y;
 				if (!(tl = localtime(&now)))

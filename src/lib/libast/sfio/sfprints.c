@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2004 AT&T Corp.                  *
+*                  Copyright (c) 1985-2005 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -53,7 +53,7 @@ va_dcl
 			-1,SF_WRITE|SF_STRING)) )
 		return NIL(char*);
 
-	sfseek(f,(Sfoff_t)0,0);
+	sfseek(f,(Sfoff_t)0,SEEK_SET);
 	rv = sfvprintf(f,form,args);
 	va_end(args);
 

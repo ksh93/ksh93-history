@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2004 AT&T Corp.                  *
+*                  Copyright (c) 1985-2005 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -58,9 +58,31 @@ NoN(mktime)
 #endif
 
 extern time_t
-mktime(Tm_t* tm)
+mktime(struct tm* ts)
 {
-	return tmtime(tm, TM_LOCALZONE);
+	time_t	t;
+	Tm_t	tm;
+
+	tm.tm_sec = ts->tm_sec;
+	tm.tm_min = ts->tm_min;
+	tm.tm_hour = ts->tm_hour;
+	tm.tm_mday = ts->tm_mday;
+	tm.tm_mon = ts->tm_mon;
+	tm.tm_year = ts->tm_year;
+	tm.tm_wday = ts->tm_wday;
+	tm.tm_yday = ts->tm_yday;
+	tm.tm_isdst = ts->tm_isdst;
+	t = tmtime(&tm, TM_LOCALZONE);
+	ts->tm_sec = tm.tm_sec;
+	ts->tm_min = tm.tm_min;
+	ts->tm_hour = tm.tm_hour;
+	ts->tm_mday = tm.tm_mday;
+	ts->tm_mon = tm.tm_mon;
+	ts->tm_year = tm.tm_year;
+	ts->tm_wday = tm.tm_wday;
+	ts->tm_yday = tm.tm_yday;
+	ts->tm_isdst = tm.tm_isdst;
+	return t;
 }
 
 #endif

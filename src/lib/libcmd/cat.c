@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1992-2004 AT&T Corp.                  *
+*                  Copyright (c) 1992-2005 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -31,7 +31,7 @@
 #include <fcntl.h>
 
 static const char usage[] =
-"[-?\n@(#)$Id: cat (AT&T Labs Research) 2001-05-07 $\n]"
+"[-?\n@(#)$Id: cat (AT&T Labs Research) 2005-01-11 $\n]"
 USAGE_LICENSE
 "[+NAME?cat - concatenate files]"
 "[+DESCRIPTION?\bcat\b copies each \afile\a in sequence to the standard"
@@ -368,5 +368,7 @@ b_cat(int argc, char** argv, void* context)
 	} while (cp = *argv++);
 	if (sfsync(sfstdout))
 		error(ERROR_system(0), "write error");
+	if (flags&d_FLAG)
+		sfopen(sfstdout, NiL, "w");
 	return error_info.errors;
 }

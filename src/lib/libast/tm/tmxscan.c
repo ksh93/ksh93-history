@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2004 AT&T Corp.                  *
+*                  Copyright (c) 1985-2005 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -41,6 +41,7 @@ typedef struct
 	int		year;
 	int		mon;
 	int		week;
+	int		weektype;
 	int		yday;
 	int		mday;
 	int		wday;
@@ -51,7 +52,7 @@ typedef struct
 	int		zone;
 } Set_t;
 
-#define CLEAR(s)	(s.year=s.mon=s.week=s.yday=s.mday=s.wday=s.hour=s.min=s.sec=s.meridian=(-1),s.nsec=1000000000L,s.zone=TM_LOCALZONE)
+#define CLEAR(s)	(s.year=s.mon=s.week=s.weektype=s.yday=s.mday=s.wday=s.hour=s.min=s.sec=s.meridian=(-1),s.nsec=1000000000L,s.zone=TM_LOCALZONE)
 
 #define INDEX(m,x)	(((n)>=((x)-(m)))?((n)-=((x)-(m))):(n))
 
@@ -89,14 +90,17 @@ gen(register Tm_t* tm, register Set_t* set)
 	{
 		if (set->mon < 0)
 		{
-			tm->tm_mon = 0;
-			tm->tm_mday = (set->week >> 1) * 7 + 1;
+			tmweek(tm, set->weektype, set->week, set->wday);
+			set->wday = -1;
 		}
 	}
 	else if (set->yday >= 0)
 	{
 		if (set->mon < 0)
-			tm->tm_mday += set->yday - tm->tm_yday;
+		{
+			tm->tm_mon = 0;
+			tm->tm_mday = set->yday + 1;
+		}
 	}
 	else if (set->mday >= 0)
 		tm->tm_mday = set->mday;
@@ -115,6 +119,8 @@ gen(register Tm_t* tm, register Set_t* set)
 	}
 	else if (set->sec >= 0)
 		tm->tm_sec = set->sec;
+	if (set->nsec < 1000000000L)
+		tm->tm_nsec = set->nsec;
 	if (set->meridian > 0)
 	{
 		if (tm->tm_hour < 12)
@@ -132,10 +138,6 @@ gen(register Tm_t* tm, register Set_t* set)
 		tm = tmxmake(t);
 		tm->tm_mday += set->yday - tm->tm_yday;
 	}
-	else if (set->week >= 0)
-	{
-		/*HERE*/
-	}
 	else if (set->wday >= 0)
 	{
 		tm = tmxmake(t);
@@ -144,7 +146,11 @@ gen(register Tm_t* tm, register Set_t* set)
 		tm->tm_mday += n;
 	}
 	if (set->nsec < 1000000000L)
+	{
+		if (!tm)
+			tm = tmxmake(t);
 		tm->tm_nsec = set->nsec;
+	}
 	return tm ? tmxtime(tm, set->zone) : t;
 }
 
@@ -315,24 +321,27 @@ scan(register const char* s, char** e, const char* format, char** f, Time_t t, l
 				set.sec = n;
 				continue;
 			case 'u':
-				if (pedantic)
-					while (*s == '\n')
-						s++;
-				else
-					while (isspace(*s))
-						s++;
+				NUMBER(2, 1, 7);
+				set.wday = n % 7;
 				continue;
 			case 'U':
-				NUMBER(2, 0, 53);
-				set.week = (n << 1);
+				NUMBER(2, 0, 52);
+				set.week = n;
+				set.weektype = 0;
+				continue;
+			case 'V':
+				NUMBER(2, 1, 53);
+				set.week = n;
+				set.weektype = 2;
 				continue;
 			case 'w':
 				NUMBER(2, 0, 6);
 				set.wday = n;
 				continue;
 			case 'W':
-				NUMBER(2, 0, 53);
-				set.week = (n << 1) | 1;
+				NUMBER(2, 0, 52);
+				set.week = n;
+				set.weektype = 1;
 				continue;
 			case 'x':
 				p = tm_info.format[TM_DATE];

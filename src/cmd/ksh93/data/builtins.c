@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2004 AT&T Corp.                  *
+*                  Copyright (c) 1982-2005 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -34,6 +34,14 @@
 #   define	Bltin(x)	(B_##x)
 #else
 #   define bltin(x)	0
+#endif
+
+#if SHOPT_CMDLIB_DIR
+#   undef  SHOPT_CMDLIB_BLTIN
+#   define SHOPT_CMDLIB_BLTIN	1
+#   define BDIR		SH_CMDLIB_DIR "/"
+#else
+#   define BDIR
 #endif
 
 /*
@@ -112,31 +120,69 @@ const struct shtable3 shtab_builtins[] =
 	"wait",		NV_BLTIN|BLT_ENV|BLT_EXIT,	bltin(wait),
 	"type",		NV_BLTIN|BLT_ENV,		bltin(whence),
 	"whence",	NV_BLTIN|BLT_ENV,		bltin(whence),
+#if SHOPT_CMDLIB_BLTIN
+	BDIR "basename",NV_BLTIN|NV_NOFREE,	 	bltin(basename),
+	BDIR "cat",	NV_BLTIN|NV_NOFREE,	 	bltin(cat),
+	BDIR "chgrp",	NV_BLTIN|NV_NOFREE,	 	bltin(chgrp),
+	BDIR "chmod",	NV_BLTIN|NV_NOFREE,	 	bltin(chmod),
+	BDIR "chown",	NV_BLTIN|NV_NOFREE,	 	bltin(chown),
+	BDIR "cmp",	NV_BLTIN|NV_NOFREE,	 	bltin(cmp),
+	BDIR "comm",	NV_BLTIN|NV_NOFREE,	 	bltin(comm),
+	BDIR "cp",	NV_BLTIN|NV_NOFREE,	 	bltin(cp),
+	BDIR "cut",	NV_BLTIN|NV_NOFREE,	 	bltin(cut),
+	BDIR "date",	NV_BLTIN|NV_NOFREE,	 	bltin(date),
+	BDIR "dirname",	NV_BLTIN|NV_NOFREE,	 	bltin(dirname),
+	BDIR "expr",	NV_BLTIN|NV_NOFREE,	 	bltin(expr),
+	BDIR "fmt",	NV_BLTIN|NV_NOFREE,	 	bltin(fmt),
+	BDIR "fold",	NV_BLTIN|NV_NOFREE,	 	bltin(fold),
+	BDIR "getconf",	NV_BLTIN|NV_NOFREE,	 	bltin(getconf),
+	BDIR "head",	NV_BLTIN|NV_NOFREE,	 	bltin(head),
+	BDIR "id",	NV_BLTIN|NV_NOFREE,	 	bltin(id),
+	BDIR "join",	NV_BLTIN|NV_NOFREE,	 	bltin(join),
+	BDIR "ln",	NV_BLTIN|NV_NOFREE,	 	bltin(ln),
+	BDIR "logname",	NV_BLTIN|NV_NOFREE,	 	bltin(logname),
+	BDIR "mkdir",	NV_BLTIN|NV_NOFREE,	 	bltin(mkdir),
+	BDIR "mkfifo",	NV_BLTIN|NV_NOFREE,	 	bltin(mkfifo),
+	BDIR "mv",	NV_BLTIN|NV_NOFREE,	 	bltin(mv),
+	BDIR "paste",	NV_BLTIN|NV_NOFREE,	 	bltin(paste),
+	BDIR "pathchk",	NV_BLTIN|NV_NOFREE,	 	bltin(pathchk),
+	BDIR "rev",	NV_BLTIN|NV_NOFREE,	 	bltin(rev),
+	BDIR "rm",	NV_BLTIN|NV_NOFREE,	 	bltin(rm),
+	BDIR "rmdir",	NV_BLTIN|NV_NOFREE,	 	bltin(rmdir),
+	BDIR "stty",	NV_BLTIN|NV_NOFREE,	 	bltin(stty),
+	BDIR "tail",	NV_BLTIN|NV_NOFREE,	 	bltin(tail),
+	BDIR "tee",	NV_BLTIN|NV_NOFREE,	 	bltin(tee),
+	BDIR "tty",	NV_BLTIN|NV_NOFREE,	 	bltin(tty),
+	BDIR "uname",	NV_BLTIN|NV_NOFREE,	 	bltin(uname),
+	BDIR "uniq",	NV_BLTIN|NV_NOFREE,	 	bltin(uniq),
+	BDIR "wc",	NV_BLTIN|NV_NOFREE,	 	bltin(wc),
+#else
 	"/bin/basename",NV_BLTIN|NV_NOFREE,		bltin(basename),
 	"/bin/chmod",	NV_BLTIN|NV_NOFREE,		bltin(chmod),
 	"/bin/dirname",	NV_BLTIN|NV_NOFREE,		bltin(dirname),
 	"/bin/head",	NV_BLTIN|NV_NOFREE,		bltin(head),
 	"/bin/mkdir",	NV_BLTIN|NV_NOFREE,		bltin(mkdir),
-#if defined(_usr_bin_logname)  && !defined(_bin_logname)
+#   if defined(_usr_bin_logname)  && !defined(_bin_logname)
 	"/usr/bin/logname",	NV_BLTIN|NV_NOFREE,	bltin(logname),
-#else
+#   else
 	"/bin/logname",	NV_BLTIN|NV_NOFREE,		bltin(logname),
-#endif
+#   endif
 	"/bin/cat",	NV_BLTIN|NV_NOFREE,		bltin(cat),
 	"/bin/cmp",	NV_BLTIN|NV_NOFREE,		bltin(cmp),
-#if defined(_usr_bin_cut)  && !defined(_bin_cut)
+#   if defined(_usr_bin_cut)  && !defined(_bin_cut)
 	"/usr/bin/cut",	NV_BLTIN|NV_NOFREE,		bltin(cut),
-#else
-	"/bin/cut",	NV_BLTIN|NV_NOFREE,		bltin(cut),
-#endif
-	"/bin/uname",	NV_BLTIN|NV_NOFREE,		bltin(uname),
-#if defined(_usr_bin_wc)  && !defined(_bin_wc)
-	"/usr/bin/wc",	NV_BLTIN|NV_NOFREE,		bltin(wc),
-#else
-#   if defined(_usr_ucb_wc)  && !defined(_bin_wc)
-	   "/usr/ucb/wc", NV_BLTIN|NV_NOFREE,		bltin(wc),
 #   else
+	"/bin/cut",	NV_BLTIN|NV_NOFREE,		bltin(cut),
+#   endif
+	"/bin/uname",	NV_BLTIN|NV_NOFREE,		bltin(uname),
+#   if defined(_usr_bin_wc)  && !defined(_bin_wc)
+	"/usr/bin/wc",	NV_BLTIN|NV_NOFREE,		bltin(wc),
+#   else
+#	if defined(_usr_ucb_wc)  && !defined(_bin_wc)
+	   "/usr/ucb/wc", NV_BLTIN|NV_NOFREE,		bltin(wc),
+#	else
 	   "/bin/wc",	NV_BLTIN|NV_NOFREE,		bltin(wc),
+#	endif
 #   endif
 #endif
 	"",		0, 0 
@@ -187,8 +233,8 @@ const char sh_set[] =
 			"editing mode is the same as \bemacs\b editing mode "
 			"except for the handling of \b^T\b.]"
 #if SHOPT_BASH
-		"[+hashall?Equivalent to \b-h\b and \b-o trackall\b. Available"
-		" in bash compatibility mode only.]"
+		"[+hashall?Equivalent to \b-h\b and \b-o trackall\b. Available "
+		"in bash compatibility mode only.]"
 		"[+history?Enable command history. Available in bash "
 		"compatibility mode only. On by default in interactive "
 		"shells.]"
@@ -1325,6 +1371,8 @@ USAGE_LICENSE
 	"option.]"
 "[c?Read the commands from the first \aarg\a.]"
 "[i?Specifies that the shell is interactive.]"
+"[l?Invoke the shell as a login shell; \b/etc/profile\b and \b$HOME/.profile\b, "
+	"if they exist, are read before the first command.]"
 "[r\f:restricted\f?Invoke the shell in a restricted mode.  A restricted "
 	"shell does not permit any of the following:]{"
 	"[+-?Changing the working directory.]"

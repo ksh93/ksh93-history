@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2004 AT&T Corp.                  *
+*                  Copyright (c) 1982-2005 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -159,11 +159,7 @@ int	b_kill(int argc,char *argv[],void *extra)
 	{
 		case ':':
 			if((signame=argv[opt_info.index++]) && (sig=sig_number(signame+1))>=0)
-			{
-				if(argv[opt_info.index] && strcmp(argv[opt_info.index],"--")==0)
-					opt_info.index++;
 				goto endopts;
-			}
 			opt_info.index--;
 			errormsg(SH_DICT,2, "%s", opt_info.arg);
 			break;
@@ -183,6 +179,8 @@ int	b_kill(int argc,char *argv[],void *extra)
 	}
 endopts:
 	argv += opt_info.index;
+	if(*argv && strcmp(*argv,"--")==0 && strcmp(*(argv-1),"--")!=0)
+		argv++;
 	if(error_info.errors || flag==(L_FLAG|S_FLAG) || (!(*argv) && !(flag&L_FLAG)))
 		errormsg(SH_DICT,ERROR_usage(2),"%s", optusage((char*)0));
 	/* just in case we send a kill -9 $$ */

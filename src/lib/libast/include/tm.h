@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2004 AT&T Corp.                  *
+*                  Copyright (c) 1985-2005 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -182,6 +182,7 @@ extern time_t		tmscan(const char*, char**, const char*, char**, time_t*, long);
 extern int		tmsleep(time_t, time_t);
 extern time_t		tmtime(Tm_t*, int);
 extern Tm_zone_t*	tmtype(const char*, char**);
+extern int		tmweek(Tm_t*, int, int, int);
 extern int		tmword(const char*, char**, const char*, char**, int);
 extern Tm_zone_t*	tmzone(const char*, char**, const char*, int*);
 

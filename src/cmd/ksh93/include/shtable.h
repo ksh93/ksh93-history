@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2004 AT&T Corp.                  *
+*                  Copyright (c) 1982-2005 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -60,5 +60,6 @@ extern const struct shtable2	shtab_signals[];
 extern const struct shtable3	shtab_builtins[];
 extern const Shtable_t		shtab_reserved[];
 extern int	sh_locate(const char*, const Shtable_t*, int);
+extern int	sh_lookopt(const char*, int*);
 
 #endif /* SH_TABLE_H */
