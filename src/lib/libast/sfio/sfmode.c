@@ -20,7 +20,7 @@
 *                                                                      *
 ***********************************************************************/
 #include	"sfhdr.h"
-static char*	Version = "\n@(#)$Id: sfio (AT&T Research) 2004-09-01 $\0\n";
+static char*	Version = "\n@(#)$Id: sfio (AT&T Research) 2005-01-01 $\0\n";
 
 /*	Functions to set a given stream to some desired mode
 **
@@ -365,6 +365,14 @@ reg int		local;	/* a local call */
 	reg int	rv = 0;
 
 	SFONCE();	/* initialize mutexes */
+
+	if(wanted&SF_SYNCED) /* for (SF_SYNCED|SF_READ) stream, just junk data */
+	{	wanted &= ~SF_SYNCED;
+		if((f->mode&(SF_SYNCED|SF_READ)) == (SF_SYNCED|SF_READ) )
+		{	f->next = f->endb = f->endr = f->data;
+			f->mode &= ~SF_SYNCED;
+		}
+	}
 
 	if((!local && SFFROZEN(f)) || (!(f->flags&SF_STRING) && f->file < 0))
 	{	if(local || !f->disc || !f->disc->exceptf)

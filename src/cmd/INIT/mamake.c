@@ -25,7 +25,7 @@
  * coded for portability
  */
 
-static char id[] = "\n@(#)$Id: mamake (AT&T Labs Research) 2005-01-05 $\0\n";
+static char id[] = "\n@(#)$Id: mamake (AT&T Labs Research) 2005-01-11 $\0\n";
 
 #if _PACKAGE_ast
 
@@ -33,7 +33,7 @@ static char id[] = "\n@(#)$Id: mamake (AT&T Labs Research) 2005-01-05 $\0\n";
 #include <error.h>
 
 static const char usage[] =
-"[-?\n@(#)$Id: mamake (AT&T Labs Research) 2005-01-05 $\n]"
+"[-?\n@(#)$Id: mamake (AT&T Labs Research) 2005-01-11 $\n]"
 USAGE_LICENSE
 "[+NAME?mamake - make abstract machine make]"
 "[+DESCRIPTION?\bmamake\b reads \amake abstract machine\a target and"
@@ -1520,6 +1520,7 @@ make(Rule_t* r)
 	unsigned long		z;
 	unsigned long		x;
 	Buf_t*			buf;
+	Buf_t*			cmd;
 
 	if (r->flags & RULE_active)
 		state.active++;
@@ -1532,6 +1533,7 @@ make(Rule_t* r)
 	else
 		z = 0;
 	buf = buffer();
+	cmd = 0;
 	while (s = input())
 	{
 		for (; *s == ' '; s++);
@@ -1578,8 +1580,15 @@ make(Rule_t* r)
 			q = rule(expand(buf, t));
 			if (q != r)
 				report(2, "improper done statement", t, (unsigned long)0);
-			r->flags |= RULE_made;
 			attributes(r, v);
+			if (cmd && state.active && (state.force || r->time < z || !r->time && !z))
+			{
+				substitute(buf, use(cmd));
+				x = run(r, use(buf));
+				if (z < x)
+					z = x;
+			}
+			r->flags |= RULE_made;
 			if (!(r->flags & (RULE_dontcare|RULE_error|RULE_exists|RULE_generated|RULE_implicit|RULE_virtual)))
 				dont(r, 0, state.keepgoing);
 			break;
@@ -1591,28 +1600,13 @@ make(Rule_t* r)
 				r->path = 0;
 				r->time = 0;
 			}
-			x = state.active && (state.force || r->time < z || !r->time && !z);
-			if (x)
-				substitute(buf, v);
-			while (s = input())
+			if (state.active)
 			{
-				if (strncmp(s, "exec ", 5))
-					break;
-				for (s += 5; *s == ' '; s++);
-				for (; *s && *s != ' '; s++);
-				for (; *s == ' '; s++);
-				if (x)
-				{
-					add(buf, '\n');
-					substitute(buf, s);
-				}
-			}
-			state.peek = 1;
-			if (x)
-			{
-				x = run(r, use(buf));
-				if (z < x)
-					z = x;
+				if (cmd)
+					add(cmd, '\n');
+				else
+					cmd = buffer();
+				append(cmd, v);
 			}
 			continue;
 		case KEY('m','a','k','e'):
@@ -1660,6 +1654,8 @@ make(Rule_t* r)
 		break;
 	}
 	drop(buf);
+	if (cmd)
+		drop(cmd);
 	if (*r->name)
 	{
 		report(-1, r->name, "done", z);

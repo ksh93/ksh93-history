@@ -416,4 +416,15 @@ chmod +x /tmp/script$$
 unset foo
 typeset -F1 foo=123456789.19
 [[ $foo == 123456789.2 ]] || err_exit 'typeset -F1 not working correctly'
+
+# divide by zero
+
+for expr in '1/(1/2)' '8%(1/2)' '8%(1.0/2)'
+do	[[ $( ( $SHELL -c "( (($expr)) )  || print ok" ) 2>/dev/null ) == ok ]] || err_exit "divide by zero not trapped: $expr"
+done
+
+for expr in '1/(1.0/2)' '1/(1/2.0)'
+do	[[ $( ( $SHELL -c "( print -r -- \$(($expr)) )" ) 2>/dev/null ) == 2 ]] || err_exit "invalid value for: $expr"
+done
+
 exit $((Errors))

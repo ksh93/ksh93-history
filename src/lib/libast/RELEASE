@@ -4,6 +4,7 @@
 	 features/tvlib,tm/tvtouch.c: check for utimets()
 	 misc/optget.c: handle '-' or '_' option word separators
 	 sfio/_sfopen.c: allow stream mode changes after initialization
+	 sfio: sync with kpv: SF_SYNCED fix for ksh input loss bug
 05-01-09 tm/tmxfmt.c: fix %6N for n<100000000
 05-01-08 regex/regcomp.c: conj() => con() to avoid C99 clash
 05-01-05 tm/*: fix { %U %V %W } logic -- my head hurts

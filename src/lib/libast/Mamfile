@@ -2338,7 +2338,7 @@ prev misc/univlib.h implicit
 done misc/univdata.c
 meta univdata.o %.c>%.o misc/univdata.c univdata
 prev misc/univdata.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Imisc -Iinclude -Istd -D_PACKAGE_ast -c misc/univdata.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Imisc -Iinclude -Istd -D_PACKAGE_ast  -c misc/univdata.c
 done univdata.o generated
 make touch.o
 make port/touch.c
@@ -2979,7 +2979,7 @@ prev include/ast.h implicit
 done conftab.c
 meta conftab.o %.c>%.o conftab.c conftab
 prev conftab.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c conftab.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast  -c conftab.c
 done conftab.o generated
 make confstr.o
 make confstr.c
@@ -3172,7 +3172,7 @@ prev string/modelib.h implicit
 done string/modedata.c
 meta modedata.o %.c>%.o string/modedata.c modedata
 prev string/modedata.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Istring -Iinclude -Istd -D_PACKAGE_ast -c string/modedata.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Istring -Iinclude -Istd -D_PACKAGE_ast  -c string/modedata.c
 done modedata.o generated
 make tmdata.o
 make tm/tmdata.c
@@ -3181,7 +3181,7 @@ prev include/ast.h implicit
 done tm/tmdata.c
 meta tmdata.o %.c>%.o tm/tmdata.c tmdata
 prev tm/tmdata.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c tm/tmdata.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast  -c tm/tmdata.c
 done tmdata.o generated
 make memfatal.o
 make disc/memfatal.c

@@ -293,7 +293,7 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 			num = pow(sp[-1],num);
 			break;
 		    case A_MOD:
-			if(!num)
+			if(!(Sflong_t)num)
 				arith_error(e_divzero,ep->expr,ep->emode);
 			if(type==2 || tp[-1]==2)
 				num = U2F((Sfulong_t)(sp[-1]) % (Sfulong_t)(num));
@@ -301,10 +301,16 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 				num = (Sflong_t)(sp[-1]) % (Sflong_t)(num);
 			break;
 		    case A_DIV:
-			if(!num)
-				arith_error(e_divzero,ep->expr,ep->emode);
 			if(type==1 || tp[-1]==1)
-				num = sp[-1]/num;
+			{
+				if(!num)
+					arith_error(e_divzero,ep->expr,ep->emode);
+				else
+					num = sp[-1]/num;
+				type = 1;
+			}
+			else if((Sfulong_t)(num)==0)
+				arith_error(e_divzero,ep->expr,ep->emode);
 			else if(type==2 || tp[-1]==2)
 				num = U2F((Sfulong_t)(sp[-1]) / (Sfulong_t)(num));
 			else

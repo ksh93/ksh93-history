@@ -178,9 +178,9 @@ strperm(const char* aexpr, char** e, register int perm)
 								if (typ & S_IXGRP)
 									perm |= who & S_IXUSR;
 								if (typ & S_IWGRP)
-									perm |= who &S_IWUSR;
+									perm |= who & S_IWUSR;
 								if (typ & S_IRGRP)
-									perm |= who &S_IRUSR;
+									perm |= who & S_IRUSR;
 
 								/*
 								 * if any execute then read => execute

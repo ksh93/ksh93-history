@@ -667,7 +667,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optgetopts[] =
-":[-1c?\n@(#)$Id: getopts (AT&T Labs Research) 1999-07-20 $\n]"
+":[-1c?\n@(#)$Id: getopts (AT&T Labs Research) 2005-01-01 $\n]"
 "[-author?Glenn Fowler <gsf@research.att.com>]"
 USAGE_LICENSE
 "[+NAME?\f?\f - parse utility options]"
@@ -708,9 +708,10 @@ USAGE_LICENSE
 "[+?All output from this interface is written to the standard error.]"
 "[+?There are several group types:]{"
   "[+1.?A group of the form "
-    "[-\aversion\a[\aflag\a[\anumber\a]]]]...[?\atext\a]]]] "
+    "[-[\aversion\a]][\aflag\a[\anumber\a]]]]...[?\atext\a]]]] "
     "appearing as the first group enables the extended interface. \aversion\a "
-    "specifies the interface version, currently \b1\b. Future enhancements "
+    "specifies the interface version, currently \b1\b. The latest version is "
+    "assumed if \aversion\a is omitted. Future enhancements "
     "may increment \aversion\a, but all versions will be supported. \atext\a "
     "typcally specifies an SCCS or CVS identification string. Zero or more "
     "\aflags\a with optional \anumber\a values may be specified to control "

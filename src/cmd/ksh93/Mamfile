@@ -1155,7 +1155,7 @@ prev ${INSTALLROOT}/include/ast/ast.h implicit
 done data/limits.c
 meta limits.o %.c>%.o data/limits.c limits
 prev data/limits.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${INSTALLROOT}/include/ast -D_PACKAGE_ast -c data/limits.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${INSTALLROOT}/include/ast -D_PACKAGE_ast  -c data/limits.c
 done limits.o generated
 make msg.o
 make data/msg.c
@@ -1172,7 +1172,7 @@ prev ${INSTALLROOT}/include/ast/ast.h implicit
 done data/msg.c
 meta msg.o %.c>%.o data/msg.c msg
 prev data/msg.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${INSTALLROOT}/include/ast -DSHOPT_SUID_EXEC -DSHOPT_MULTIBYTE -DKSHELL -DSHOPT_ESH -DSHOPT_VSH -D_PACKAGE_ast -DSHOPT_PFSH -D_BLD_shell -DSHOPT_KIA -DSHOPT_BRACEPAT -DSHOPT_DYNAMIC -DSHOPT_OO -c data/msg.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${INSTALLROOT}/include/ast -DSHOPT_SUID_EXEC -DSHOPT_MULTIBYTE -DKSHELL -DSHOPT_ESH -DSHOPT_VSH -D_PACKAGE_ast -DSHOPT_PFSH -D_BLD_shell -DSHOPT_KIA -DSHOPT_BRACEPAT -DSHOPT_DYNAMIC -DSHOPT_OO  -c data/msg.c
 done msg.o generated
 make strdata.o
 make data/strdata.c
@@ -1193,7 +1193,7 @@ prev FEATURE/options implicit
 done data/strdata.c
 meta strdata.o %.c>%.o data/strdata.c strdata
 prev data/strdata.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${INSTALLROOT}/include/ast -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_PFSH -c data/strdata.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${INSTALLROOT}/include/ast -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_PFSH  -c data/strdata.c
 done strdata.o generated
 make testops.o
 make data/testops.c
@@ -1203,7 +1203,7 @@ prev ${INSTALLROOT}/include/ast/ast.h implicit
 done data/testops.c
 meta testops.o %.c>%.o data/testops.c testops
 prev data/testops.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${INSTALLROOT}/include/ast -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2005 AT&T Corp.][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libshell]"\" -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -c data/testops.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${INSTALLROOT}/include/ast -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2005 AT&T Corp.][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libshell]"\" -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH  -c data/testops.c
 done testops.o generated
 make keywords.o
 make data/keywords.c
@@ -1214,7 +1214,7 @@ prev include/shtable.h implicit
 done data/keywords.c
 meta keywords.o %.c>%.o data/keywords.c keywords
 prev data/keywords.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${INSTALLROOT}/include/ast -DSHOPT_NAMESPACE -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_KIA -D_BLD_shell -DSHOPT_DYNAMIC -DSHOPT_OO -c data/keywords.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${INSTALLROOT}/include/ast -DSHOPT_NAMESPACE -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_KIA -D_BLD_shell -DSHOPT_DYNAMIC -DSHOPT_OO  -c data/keywords.c
 done keywords.o generated
 make options.o
 make data/options.c
@@ -1225,7 +1225,7 @@ prev include/defs.h implicit
 done data/options.c
 meta options.o %.c>%.o data/options.c options
 prev data/options.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${INSTALLROOT}/include/ast -DSHOPT_PFSH -DSHOPT_OO -D_BLD_shell -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_DYNAMIC -DSHOPT_ESH -c data/options.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${INSTALLROOT}/include/ast -DSHOPT_PFSH -DSHOPT_OO -D_BLD_shell -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_DYNAMIC -DSHOPT_ESH  -c data/options.c
 done options.o generated
 make signals.o
 make data/signals.c
@@ -1235,7 +1235,7 @@ prev ${INSTALLROOT}/include/ast/ast.h implicit
 done data/signals.c
 meta signals.o %.c>%.o data/signals.c signals
 prev data/signals.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${INSTALLROOT}/include/ast -D_PACKAGE_ast -c data/signals.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${INSTALLROOT}/include/ast -D_PACKAGE_ast  -c data/signals.c
 done signals.o generated
 make aliases.o
 make data/aliases.c
@@ -1247,7 +1247,7 @@ prev ${INSTALLROOT}/include/ast/ast.h implicit
 done data/aliases.c
 meta aliases.o %.c>%.o data/aliases.c aliases
 prev data/aliases.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${INSTALLROOT}/include/ast -DSHOPT_OO -D_BLD_shell -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_PFSH -c data/aliases.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${INSTALLROOT}/include/ast -DSHOPT_OO -D_BLD_shell -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_PFSH  -c data/aliases.c
 done aliases.o generated
 make builtins.o
 make data/builtins.c
@@ -1273,7 +1273,7 @@ prev include/shell.h implicit
 done data/builtins.c
 meta builtins.o %.c>%.o data/builtins.c builtins
 prev data/builtins.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${INSTALLROOT}/include/ast -DSHOPT_KIA -DSHOPT_PFSH -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2005 AT&T Corp.][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libshell]"\" -DSH_CMDLIB_DIR=\""/opt/ast/bin"\" -DSHOPT_CMDLIB_BLTIN=0 -DSHOPT_MULTIBYTE -D_PACKAGE_ast -D_BLD_shell -DKSHELL -DSHOPT_OO -DSHOPT_DYNAMIC -c data/builtins.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${INSTALLROOT}/include/ast -DSHOPT_KIA -DSHOPT_PFSH -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2005 AT&T Corp.][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libshell]"\" -DSH_CMDLIB_DIR=\""/opt/ast/bin"\" -DSHOPT_CMDLIB_BLTIN=0 -DSHOPT_MULTIBYTE -D_PACKAGE_ast -D_BLD_shell -DKSHELL -DSHOPT_OO -DSHOPT_DYNAMIC  -c data/builtins.c
 done builtins.o generated
 make variables.o
 make data/variables.c
@@ -1286,7 +1286,7 @@ prev ${INSTALLROOT}/include/ast/ast.h implicit
 done data/variables.c
 meta variables.o %.c>%.o data/variables.c variables
 prev data/variables.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${INSTALLROOT}/include/ast -DSHOPT_MULTIBYTE -DSHOPT_OO -D_BLD_shell -D_PACKAGE_ast -DSHOPT_DYNAMIC -DSHOPT_PFSH -c data/variables.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${INSTALLROOT}/include/ast -DSHOPT_MULTIBYTE -DSHOPT_OO -D_BLD_shell -D_PACKAGE_ast -DSHOPT_DYNAMIC -DSHOPT_PFSH  -c data/variables.c
 done variables.o generated
 make lexstates.o
 make data/lexstates.c
@@ -1296,7 +1296,7 @@ prev ${INSTALLROOT}/include/ast/ast.h implicit
 done data/lexstates.c
 meta lexstates.o %.c>%.o data/lexstates.c lexstates
 prev data/lexstates.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${INSTALLROOT}/include/ast -DSHOPT_BRACEPAT -DSHOPT_OO -DSHOPT_NAMESPACE -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -c data/lexstates.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${INSTALLROOT}/include/ast -DSHOPT_BRACEPAT -DSHOPT_OO -DSHOPT_NAMESPACE -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH  -c data/lexstates.c
 done lexstates.o generated
 make emacs.o
 make edit/emacs.c
