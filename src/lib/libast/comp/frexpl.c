@@ -64,6 +64,8 @@ init(void)
 
 #if !_lib_frexpl
 
+#undef	frexpl
+
 extern _ast_fltmax_t
 frexpl(_ast_fltmax_t f, int* p)
 {
@@ -131,6 +133,8 @@ frexpl(_ast_fltmax_t f, int* p)
 #endif
 
 #if !_lib_ldexpl
+
+#undef	ldexpl
 
 extern _ast_fltmax_t
 ldexpl(_ast_fltmax_t f, register int x)

@@ -132,7 +132,7 @@ tst	- output{
 			f *= 2;
 			pw = w;
 			w *= 2;
-		} while (w == f);
+		} while (w == (_ast_intmax_t)f);
 		w = (pw - 1) + pw;
 		u = ~0;
 		if (u > w)
@@ -263,7 +263,7 @@ tst	- output{
 			d *= 2;
 			pw = w;
 			w *= 2;
-		} while (w == d);
+		} while (w == (_ast_intmax_t)d);
 		w = (pw - 1) + pw;
 		u = ~0;
 		if (u > w)
@@ -391,7 +391,7 @@ tst	- output{
 			l *= 2;
 			pw = w;
 			w *= 2;
-		} while (w == l);
+		} while (w == (_ast_intmax_t)l);
 		w = (pw - 1) + pw;
 		u = ~0;
 		if (u > w)
@@ -549,8 +549,9 @@ tst	- -DN=1 - -DN=2 output{
 		long double		f = 123.456;
 
 		m = f;
-		if (m)
-			printf("#define _ast_flt_unsigned_max_t	unsigned long long\n");
+		if (!m || f == m)
+			return 1;
+		printf("#define _ast_flt_unsigned_max_t	unsigned long long\n");
 	#else
 		printf("#define _ast_flt_unsigned_max_t	unsigned long\n");
 	#endif

@@ -26,11 +26,11 @@
 # Glenn Fowler <gsf@research.att.com>
 
 case $-:$BASH_VERSION in
-*x*:[0-9]*)	: bash set -x is broken :; set +ex ;;
+*x*:[0123456789]*)	: bash set -x is broken :; set +ex ;;
 esac
 
 command=package
-version=2001-02-02
+version=2001-08-11
 
 src="cmd contrib etc lib"
 use="/home /usr/common /exp /usr/local /usr/add-on /usr/addon /usr/tools /usr /opt"
@@ -38,6 +38,8 @@ lib="/usr/local/lib /usr/local/shlib"
 ccs="/usr/kvm /usr/ccs/bin"
 org="gnu GNU"
 makefiles="Mamfile Nmakefile nmakefile Makefile makefile"
+
+package_use='=$HOSTTYPE=$PACKAGEROOT=$INSTALLROOT=$EXECROOT=$CC='
 
 admin_db=admin.db
 admin_env=admin.env
@@ -139,6 +141,8 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 		dependent host information on the standard output. \btype\b is
 		listed if no attributes are specified. Information is listed on
 		a single line in \aattribute\a order. The attributes are:]{
+			[+canon \aname\a?An external host type name to be
+				converted to \bpackage\b syntax.]
 			[+cpu?The number of cpus; 1 if the host is not a
 				multiprocessor.]
 			[+name?The host name.]
@@ -169,7 +173,8 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 		be installed in \adirectory\a without the \barch/\b\aHOSTTYPE\a
 		directory prefixes. Otherwise each architecture will be
 		installed in a separate \barch/\b\aHOSTTYPE\a subdirectory of
-		\adirectory\a. \adirectory\a must be an existing directory.]
+		\adirectory\a. The \aarchitecture\a \b-\b names the current
+		architecture. \adirectory\a must be an existing directory.]
 	[+license\b [ \apackage\a ... ]]?List the source license(s) for
 		\apackage\a on the standard output. Note that individual
 		components in \apackage\a may contain additional or replacement
@@ -187,7 +192,8 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 		\blib/package/tgz\b. Each package archive is read only once.
 		The file \blib/package/tgz/\b\apackage\a[.\atype\a]]\b.tim\b tracks
 		the read time. See the \bwrite\b action for archive naming
-		conventions.]
+		conventions. Text file archive member are assumed to be ASCII
+		or UTF-8 encoded.]
 	[+release\b [ [\aCC\a]]\aYY-MM-DD\a [ [\acc\a]]\ayy-mm-dd\a ]] ]]
 		[ \apackage\a ]]?Display recent changes for the date range
 		[\aCC\a]]\aYY-MM-DD\a (up to [\acc\a]]\ayy-mm-dd\a.), where
@@ -217,7 +223,8 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 		determine a \b$PACKAGEROOT\b, possibly different from the
 		current directory. For example, to try out bozo`s package:
 		\bpackage use bozo\b. The \buse\b action may be run from any
-		directory.]
+		directory. If the file \b$INSTALLROOT/lib/package/profile\b
+		is readable then it is sourced to initialize the environment.]
 	[+verify\b [ \apackage\a ]]?Verify installed binary files against the
 		checksum files in
 		\b$INSTALLROOT/lib/\b\apackage\a\b/gen/*.sum\b.
@@ -527,7 +534,7 @@ ${bT}(4)${bD}If the ${bB}bin/package${eB} command does not exist then manually r
       install it, and manually read the ${bB}INIT${eB} binary command:${bX}
 		mkdir bin
 		cp lib/package/tgz/ratz.${bI}YYYY-MM-DD${eI}.0000.${bI}HOSTTYPE${eI}${bB}.exe${eB} bin/ratz
-		bin/ratz -lv < lib/package/tgz/INIT.YYYY-MM-DD.0000.${bI}HOSTTYPE${eI}.tgz${eX}${eD}
+		bin/ratz -lm < lib/package/tgz/INIT.YYYY-MM-DD.0000.${bI}HOSTTYPE${eI}.tgz${eX}${eD}
 ${bT}(5)${bD}Read all unread package archive(s):${bX}
 		bin/package read${eX}
       Both binary and source packages will be read by this step.${eD}
@@ -654,7 +661,7 @@ ${bT}(4)${bD}If the ${bB}bin/package${eB} command does not exist then manually r
 		mkdir bin
 		cp lib/package/tgz/ratz.${bI}YYYY-MM-DD${eI}.0000.c lib/package/tgz/ratz.c
 		cc -o bin/ratz lib/package/tgz/ratz.c
-		bin/ratz -lv < lib/package/tgz/INIT.${bI}YYYY-MM-DD${eI}.0000.tgz
+		bin/ratz -lm < lib/package/tgz/INIT.${bI}YYYY-MM-DD${eI}.0000.tgz
 ${bT}(5)${bD}Read all unread package archive(s):${bX}
 		bin/package read${eX}
       Both source and binary packages will be read by this step.${eD}
@@ -753,11 +760,13 @@ ${eL}${eO}"
 		may contain additional or replacement notices.
 	help [ ACTION ]
 		Display help text [ for ACTION ] on the standard output.
-	host [ cpu name rating type ... ]
+	host [ canon cpu name rating type ... ]
 		List architecture/implementation dependent host information
 		on the standard output. type is listed if no attributes are
 		specified. Information is listed on a single line in attributes
 		order. The attributes are:
+		   canon   The next argument is a host type name to be
+			   converted to package syntax.
 		   cpu     The number of cpus; 1 if the host is not a
 			   multiprocessor.
 		   name    The host name.
@@ -784,7 +793,8 @@ ${eL}${eO}"
 		specified; this architecture will be installed in DIR without
 		the \"arch/HOSTTYPE\" directory prefixes. Otherwise each
 		architecture will be installed in a separate \"arch/HOSTTYPE\"
-		subdirectory of DIR. DIR must be an existing directory.
+		subdirectory of DIR. The ARCHITECTURE - names the current
+		architecture. DIR must be an existing directory.
 	license [ package ... ]
 		List the source license(s) for PACKAGE on the standard output.
 		Note that individual components in PACKAGE may contain
@@ -802,7 +812,8 @@ ${eL}${eO}"
 		package root directory. Archives are searched for in .
 		and lib/package/tgz. Each package is read only once. The
 		file lib/package/tgz/package[.type].tim tracks the read time.
-		See the write action for archive naming conventions.
+		See the write action for archive naming conventions. Text
+		file archive member are assumed to be ASCII or UTF-8 encoded.
 	release [ [CC]YY-MM-DD [ [cc]yy-mm-dd ] ] [ package ]
 		Display recent changes since [CC]YY-MM-DD (up to [cc]yy-mm-dd), 		where - means lowest (or highest.) If no dates are specified
 		then changes for the last 4 months are listed. PACKAGE may
@@ -828,7 +839,9 @@ ${eL}${eO}"
 		specified then it is used to determine a \$PACKAGEROOT,
 		possibly different from the current directory. For example, to
 		try out bozo's package: \"package use bozo\". In this case the
-		command may be run from any directory.
+		command may be run from any directory. If the file
+		\$INSTALLROOT/lib/package/profile is readable then it is
+		sourced to initialize the environment.]
 	verify [ PACKAGE ]
 		Verify installed binary files against the checksum files in
 		\$INSTALLROOT/lib/package/gen/*.sum. The checksum files contain
@@ -863,6 +876,7 @@ ${eL}${eO}"
 		packages is generated. If only is specified then only named
 		packages will be written; otherwise prerequisite packages are
 		written first. Package components must be listed in PACKAGE.pkg.
+		Text file archive members are written with ASCII encoding.
 		Other package styles are supported, but only the lcl style
 		supports deltas:
 		   exp  create an exptools(1) maintainer source archive
@@ -934,6 +948,10 @@ do	case $i in
 		;;
 	esac
 done
+case $CC in
+''|cc)	;;
+*)	export CC ;;
+esac
 
 # grab action specific args
 
@@ -984,7 +1002,7 @@ packageroot() # dir
 
 nonmake() # nmake
 {
-	_nonmake_version=`$1 -n -f - 'print $(MAKEVERSION:@/.* //:/-//G)' . 2>/dev/null || echo 19840919`
+	_nonmake_version=`( $1 -n -f - 'print $(MAKEVERSION:@/.* //:/-//G)' . ) </dev/null 2>/dev/null || echo 19840919`
 	if	test $_nonmake_version -ge 20001031
 	then	case " $assign " in
 		*" physical=1 "*)	;;
@@ -1022,19 +1040,34 @@ hostinfo() # attribute ...
 
 	# validate the args
 
+	canon=
+	cc=$CC
 	for info
-	do	case $info in
-		*/*|*[cC][cC])
-			cc=$info
+	do	case $canon in
+		-)	canon=$info
 			;;
-		cpu|name|rating|type)
-			something=1
-			;;
-		*)	echo "$command: $action: $info: unknown attribute" >&2
-			exit 1
+		*)	case $info in
+			*/*|*[cC][cC])
+				cc=$info
+				;;
+			canon)	canon=-
+				something=1
+				;;
+			cpu|name|rating|type)
+				something=1
+				;;
+			*)	echo "$command: $action: $info: unknown attribute" >&2
+				exit 1
+				;;
+			esac
 			;;
 		esac
 	done
+	case $canon in
+	-)	echo "$command: $action: canon: host type name expected" >&2
+		exit 1
+		;;
+	esac
 	case $something in
 	"")	set "$@" type ;;
 	esac
@@ -1050,16 +1083,17 @@ hostinfo() # attribute ...
 	for info
 	do	
 	case $info in
-	cpu)	cpu=`grep -ic '^processor[ 	][ 	]*:[ 	]*[0-9]' /proc/cpuinfo`
+	cpu)	cpu=`grep -ic '^processor[ 	][ 	]*:[ 	]*[0123456789]' /proc/cpuinfo`
 		case $cpu in
-		[1-9]*)	_hostinfo_="$_hostinfo_ $cpu"
+		[123456789]*)
+			_hostinfo_="$_hostinfo_ $cpu"
 			continue
 			;;
 		esac
 		cpu=1
 		# exact match
 		set							\
-			hinv			'^Processor [0-9]'	\
+			hinv			'^Processor [0123456789]'	\
 			psrinfo			'on-line'		\
 
 		while	:
@@ -1068,11 +1102,12 @@ hostinfo() # attribute ...
 			esac
 			i=`$1 2>/dev/null | grep -c "$2"`
 			case $i in
-			[1-9]*)	cpu=$i
+			[123456789]*)
+				cpu=$i
 				break
 				;;
 			esac
-			shift 2
+			shift;shift
 		done
 		case $cpu in
 		0|1)	set						\
@@ -1084,7 +1119,7 @@ hostinfo() # attribute ...
 				esac
 				if	test -x $1
 				then	case `$1 | grep -ic '^cpu '` in
-					1)	cpu=`$1 | grep -ic '^ *[0-9][0-9]* '`
+					1)	cpu=`$1 | grep -ic '^ *[0123456789][0123456789]* '`
 						break
 						;;
 					esac
@@ -1096,7 +1131,7 @@ hostinfo() # attribute ...
 		case $cpu in
 		0|1)	# token match
 			set						\
-			/usr/kvm/mpstat			'cpu[0-9]'	\
+			/usr/kvm/mpstat			'cpu[0123456789]'	\
 			/usr/etc/cpustatus		'enable'	\
 			/usr/alliant/showsched		'CE'		\
 			'ls /config/hw/system/cpu'	'cpu'		\
@@ -1110,11 +1145,12 @@ hostinfo() # attribute ...
 
 ' | grep -c "^$2"`
 				case $i in
-				[1-9]*)	cpu=$i
+				[123456789]*)
+					cpu=$i
 					break
 					;;
 				esac
-				shift 2
+				shift;shift
 			done
 			;;
 		esac
@@ -1123,11 +1159,11 @@ hostinfo() # attribute ...
 			set						\
 									\
 			hinv						\
-			'/^[0-9][0-9]* .* Processors*$/'		\
+			'/^[0123456789][0123456789]* .* Processors*$/'		\
 			'/[ 	].*//'					\
 									\
 			/usr/bin/hostinfo				\
-			'/^[0-9][0-9]* .* physically available\.*$/'	\
+			'/^[0123456789][0123456789]* .* physically available\.*$/'	\
 			'/[ 	].*//'					\
 
 			while	:
@@ -1136,11 +1172,12 @@ hostinfo() # attribute ...
 				esac
 				i=`$1 2>/dev/null | sed -e "${2}!d" -e "s${3}"`
 				case $i in
-				[1-9]*)	cpu=$i
+				[123456789]*)
+					cpu=$i
 					break
 					;;
 				esac
-				shift 3
+				shift;shift;shift
 			done
 			;;
 		esac
@@ -1154,11 +1191,11 @@ hostinfo() # attribute ...
 		;;
 	rating)	for rating in `grep -i ^bogomips /proc/cpuinfo 2>/dev/null | sed -e 's,.*:[ 	]*,,' -e 's,\(...*\)\..*,\1,' -e 's,\(\..\).*,\1,'`
 		do	case $rating in
-			[0-9]*)	break ;;
+			[0123456789]*)	break ;;
 			esac
 		done
 		case $rating in
-		[0-9]*)	;;
+		[0123456789]*)	;;
 		*)	cd ${TMPDIR:-/tmp}
 			tmp=hi$$
 			trap 'rm -f $tmp.*' 0 1 2
@@ -1246,20 +1283,48 @@ main()
 				fi
 			done
 			case $rating in
-			[0-9]*)	;;
+			[0123456789]*)	;;
 			*)	rating=1 ;;
 			esac
 			;;
 		esac
 		_hostinfo_="$_hostinfo_ $rating"
 		;;
-	type)	case $KEEP_HOSTTYPE in
-		1)	_hostinfo_="$_hostinfo_ $HOSTTYPE"
-			continue
+	type|canon)
+		case $canon in
+		'')	case $cc in
+			cc)	case $KEEP_HOSTTYPE:$HOSTTYPE in
+				0:?*)	if	test -d $PACKAGEROOT/arch/$HOSTTYPE
+					then	KEEP_HOSTTYPE=1
+					fi
+					;;
+				esac
+				;;
+			esac
+			case $KEEP_HOSTTYPE in
+			1)	_hostinfo_="$_hostinfo_ $HOSTTYPE"
+				continue
+				;;
+			esac
+			;;
+		esac
+		case $cc in
+		/*)	a=`$cc -dumpmachine 2>/dev/null`
+			case $a in
+			''|*' '*|*/*:*)
+				;;
+			*-*)	case $canon in
+				'')	canon=$a ;;
+				esac
+				;;
+			*)	_hostinfo_="$_hostinfo_ $a"
+				continue
+				;;
+			esac
 			;;
 		esac
 		IFS=:
-		set /:$PATH
+		set /$IFS$PATH
 		IFS=$ifs
 		shift
 		f=../lib/hostinfo/typemap
@@ -1267,22 +1332,63 @@ main()
 		do	case $i in
 			"")	i=. ;;
 			esac
+			case $canon in
+			'')	case $cc in
+				/*|cc)	;;
+				*)	if	test -x $i/$cc
+					then	a=`$i/$cc -dumpmachine 2>/dev/null`
+						case $a in
+						''|*' '*|*/*:*)
+							;;
+						*-*)	canon=$a
+							;;
+						*)	_hostinfo_="$_hostinfo_ $a"
+							continue 2
+							;;
+						esac
+					fi
+					;;
+				esac
+				;;
+			esac
 			if	test -f $i/$f
 			then	map="`grep -v '^#' $i/$f` $map"
 			fi
 		done
-		h=`hostname || uname -n || cat /etc/whoami || echo local`
-		a=`arch || uname -m || att uname -m || uname -s || att uname -s || echo unknown`
-		case $a in 
-		*[\ \	]*)	a=`echo $a | sed "s/[ 	]/-/g"` ;;
+		case $canon in
+		'')	h=`hostname || uname -n || cat /etc/whoami || echo local`
+			a=`arch || uname -m || att uname -m || uname -s || att uname -s || echo unknown`
+			case $a in 
+			*[\ \	]*)	a=`echo $a | sed "s/[ 	]/-/g"` ;;
+			esac
+			m=`mach || machine || uname -p || att uname -p || echo unknown`
+			case $m in 
+			*[\ \	]*)	m=`echo $m | sed "s/[ 	]/-/g"` ;;
+			esac
+			x=`uname -a || att uname -a || echo unknown $host unknown unknown unknown unknown unknown`
+			set "" $h $a $m $x
+			expected=$1 host=$2 arch=$3 mach=$4 os=$5 sys=$6 rel=$7 ver=$8
+			;;
+		*)	case $canon in
+			*-*)	IFS=-
+				set "" $canon
+				shift
+				IFS=$ifs
+				case $# in
+				2)	host= mach= arch=$1 os=$2 sys= rel= ;;
+				*)	host= mach=$2 arch=$1 os=$3 sys= rel= ;;
+				esac
+				case $os in
+				[abcdefghijklmnopqrstuvwxyz]*[0123456789])
+					eval `echo $os | sed -e 's/^\([^0123456789.]*\)\.*\(.*\)/os=\1 rel=\2/'`
+					;;
+				esac
+				;;
+			*)	arch=$canon mach= os= sys= rel=
+				;;
+			esac
+			;;
 		esac
-		m=`mach || machine || uname -p || att uname -p || echo unknown`
-		case $m in 
-		*[\ \	]*)	m=`echo $m | sed "s/[ 	]/-/g"` ;;
-		esac
-		x=`uname -a || att uname -a || echo unknown $host unknown unknown unknown unknown unknown`
-		set "" $h $a $m $x
-		expected=$1 host=$2 arch=$3 mach=$4 os=$5 sys=$6 rel=$7 ver=$8
 		type=unknown
 		case $host in
 		*.*)	host=`echo $host | sed -e 's/\..*//'` ;;
@@ -1291,42 +1397,45 @@ main()
 		unknown)
 			mach=
 			;;
-		[Rr][0-3][0-9][0-9][0-9])
+		[Rr][0123][0123456789][0123456789][0123456789])
 			mach=mips1
 			;;
-		[Rr][4][0-9][0-9][0-9])
+		[Rr][4][0123456789][0123456789][0123456789])
 			mach=mips2
 			;;
-		[Rr][5-9][0-9][0-9][0-9]|[Rr][1-9][0-9][0-9][0-9][0-9])
+		[Rr][56789][0123456789][0123456789][0123456789]|[Rr][123456789][0123456789][0123456789][0123456789][0123456789])
 			mach=mips4
 			;;
 		*)	case $arch in
-			34[0-9][0-9])
+			34[0123456789][0123456789])
 				os=ncr
 				arch=i386
 				;;
 			esac
 			;;
 		esac
-		set						\
-								\
-		/NextDeveloper		-d	next	-	\
-		/config/hw/system/cpu	-d	tandem	mach	\
+		case $canon in
+		'')	set						\
+									\
+			/NextDeveloper		-d	next	-	\
+			/config/hw/system/cpu	-d	tandem	mach	\
 
-		while	:
-		do	case $# in
-			0)	break ;;
-			esac
-			if	test $2 $1
-			then	os=$3
-				case $4 in
-				arch)	mach=$arch ;;
-				mach)	arch=$mach ;;
+			while	:
+			do	case $# in
+				0)	break ;;
 				esac
-				break
-			fi
-			shift 4
-		done
+				if	test $2 $1
+				then	os=$3
+					case $4 in
+					arch)	mach=$arch ;;
+					mach)	arch=$mach ;;
+					esac
+					break
+				fi
+				shift;shift;shift;shift
+			done
+			;;
+		esac
 		case $os in
 		AIX*|aix*)
 			type=ibm.risc
@@ -1340,26 +1449,26 @@ main()
 			esac
 			;;
 		[Ii][Rr][Ii][Xx]*)
-			set xx `hinv | sed -e '/^CPU:/!d' -e 's/CPU:[ 	]*\([^ 	]*\)[ 	]*\([^ 	]*\).*/\1 \2/' -e q | tr '[A-Z]' '[a-z]'`
+			set xx `hinv | sed -e '/^CPU:/!d' -e 's/CPU:[ 	]*\([^ 	]*\)[ 	]*\([^ 	]*\).*/\1 \2/' -e q | tr ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz`
 			shift
 			type=$1
 			n=
 			case $2 in
-			r[0-3][0-9][0-9][0-9])
+			r[0123][0123456789][0123456789][0123456789])
 				n=1
 				;;
-			r[4][0-3][0-9][0-9])
+			r[4][0123][0123456789][0123456789])
 				n=2
 				;;
-			r[4][4-9][0-9][0-9]|r[5][0-9][0-9][0-9])
+			r[4][456789][0123456789][0123456789]|r[5][0123456789][0123456789][0123456789])
 				n=3
 				;;
-			r[6-9][0-9][0-9][0-9]|r[1-9][0-9][0-9][0-9][0-9])
+			r[6789][0123456789][0123456789][0123456789]|r[123456789][0123456789][0123456789][0123456789][0123456789])
 				n=4
 				;;
 			esac
 			case $rel in
-			[0-4].*|5.[0-2]|5.[0-2].*)
+			[01234].*|5.[012]|5.[012].*)
 				case $n in
 				1)	;;
 				*)	n=2 ;;
@@ -1370,14 +1479,14 @@ main()
 				esac
 				;;
 			esac
-			if	test -x $CC
-			then	a=$CC
+			if	test -x $cc
+			then	a=$cc
 			else	IFS=:
 				set /$IFS$PATH
 				IFS=$ifs
 				shift
 				for i
-				do	a=$i/$CC
+				do	a=$i/$cc
 					if	test -x $a
 					then	break
 					fi
@@ -1385,12 +1494,12 @@ main()
 			fi
 			split='
 '
-			a=`strings $a < /dev/null | sed -e 's/[^a-z0-9]/ /g' -e 's/[ 	][ 	]*/\'"$split"'/g' | sed -e "/^${type}[0-9]$/!d" -e "s/^${type}//" -e q`
+			a=`strings $a < /dev/null | sed -e 's/[^abcdefghijklmnopqrstuvwxyz0123456789]/ /g' -e 's/[ 	][ 	]*/\'"$split"'/g' | sed -e "/^${type}[0123456789]$/!d" -e "s/^${type}//" -e q`
 			case $a in
-			[0-9])	n=$a ;;
+			[0123456789])	n=$a ;;
 			esac
 			case $n in
-			4)	a=`$CC -${type}3 2>&1`
+			4)	a=`$cc -${type}3 2>&1`
 				case $a in
 				*unknown*|*install*|*conflict*)
 					;;
@@ -1405,7 +1514,7 @@ main()
 			4)	x='-o32 -n32' ;;
 			esac
 			for i in $x
-			do	a=`$CC -${type}$n $i 2>&1`
+			do	a=`$cc -${type}$n $i 2>&1`
 				case $a in
 				*conflict*|*mix*|*used*)
 					;;
@@ -1420,20 +1529,33 @@ main()
 		OSx*|SMP*|pyramid)
 			type=pyr
 			;;
+		OS/390)	type=mvs.390
+			;;
 		[Ss][Cc][Oo]*)
 			type=sco
 			;;
 		[Ss]ol*)
 			v=`echo $rel | sed -e 's/^[25]\.//' -e 's/\.[^.]*$//'`
 			case $v in
-			[6-9])	;;
+			[6789])	;;
 			*)	v= ;;
 			esac
 			type=sol$v.sun4
 			;;
 		[Ss]un*)type=`echo $arch | sed -e 's/\(sun.\).*/\1/'`
+			case $type in
+			sparc)	type=sun4 ;;
+			esac
 			case $rel in
-			[0-4]*)	;;
+			[01234]*)
+				;;
+			'')	case $os in
+				*[Oo][Ss])
+					;;
+				*)	type=sol.$type
+					;;
+				esac
+				;;
 			*)	case $type in
 				'')	case $mach in
 					sparc*)	type=sun4 ;;
@@ -1443,10 +1565,16 @@ main()
 				esac
 				v=`echo $rel | sed -e 's/^[25]\.//' -e 's/\.[^.]*$//'`
 				case $v in
-				[6-9])	;;
+				[6789])	;;
 				*)	v= ;;
 				esac
 				type=sol$v.$type
+				;;
+			esac
+			case $type in
+			sun*|*.*)
+				;;
+			*)	type=sun.$type
 				;;
 			esac
 			;;
@@ -1455,10 +1583,10 @@ main()
 			;;
 		$host)	type=$arch
 			case $type in
-			*.*|*[0-9]*86|*68*)
+			*.*|*[0123456789]*86|*68*)
 				;;
 			*)	case $mach in
-				*[0-9]*86|*68*|mips)
+				*[0123456789]*86|*68*|mips)
 					type=$type.$mach
 					;;
 				esac
@@ -1480,15 +1608,15 @@ main()
 		*)	case $ver in
 			FTX*|ftx*)
 				case $mach in
-				*[0-9][a-zA-Z]*)
-					mach=`echo $mach | sed -e 's/[a-zA-Z]*$//'`
+				*[0123456789][abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ]*)
+					mach=`echo $mach | sed -e 's/[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ]*$//'`
 					;;
 				esac
 				type=stratus.$mach
 				;;
-			*)	type=`echo $os | sed -e 's/[0-9].*//' -e 's/[^A-Za-z_0-9.].*//'`
+			*)	type=`echo $os | sed -e 's/[0123456789].*//' -e 's/[^ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_0123456789.].*//'`
 				case $type in
-				[Uu][Ww][Ii][Nn]*|[Ww]indows_[0-9][0-9]|[Ww]indows_[Nn][Tt])
+				[Uu][Ww][Ii][Nn]*|[Ww]indows_[0123456789][0123456789]|[Ww]indows_[Nn][Tt])
 					type=win32
 					arch=`echo $arch | sed -e 's/_[^_]*$//'`
 					;;
@@ -1504,7 +1632,8 @@ main()
 			esac
 		esac
 		case $type in
-		[0-9]*)	case $mach in
+		[0123456789]*)
+			case $mach in
 			?*)	type=$mach ;;
 			esac
 			case $type in
@@ -1512,16 +1641,16 @@ main()
 			esac
 			;;
 		*.*)	;;
-		*[0-9]*86|*68*)
+		*[0123456789]*86|*68*)
 			case $rel in
-			[34].[0-9]*)
+			[34].[0123456789]*)
 				type=att.$type
 				;;
 			esac
 			;;
-		[a-z]*[0-9])
+		[abcdefghijklmnopqrstuvwxyz]*[0123456789])
 			;;
-		[a-z]*)	case $mach in
+		[abcdefghijklmnopqrstuvwxyz]*)	case $mach in
 			$type)	case $ver in
 				Fault*|fault*|FAULT*)
 					type=ft.$type
@@ -1536,36 +1665,34 @@ main()
 			esac
 			;;
 		esac
-		type=`echo $type | sed -e 's%[-+/].*%%'`
+		type=`echo $type | sed -e 's%[-+/].*%%' | tr ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz`
 		case $type in
 		*.*)	lhs=`echo $type | sed -e 's/\..*//'`
 			rhs=`echo $type | sed -e 's/.*\.//'`
 			case $rhs in
-			[x0-9]*86)		rhs=i$rhs ;;
+			[x0123456789]*86)	rhs=i$rhs ;;
 			68*)			rhs=m$rhs ;;
 			esac
 			case $rhs in
-			i[x2-9]86|*86pc)	rhs=i386 ;;
+			i[x23456789]86|*86pc)	rhs=i386 ;;
+			esac
+			case $rhs in
+			arm[abcdefghijklmnopqrstuvwxyz_][0123456789]*)
+						rhs=arm ;;
+			hppa)			rhs=pa ;;
 			esac
 			case $lhs in
-			[Mm][Vv][Ss])		rhs=390 ;;
+			hpux)			lhs=hp ;;
+			mvs)			rhs=390 ;;
 			esac
 			case $lhs in
+			'')			type=$rhs ;;
 			$rhs)			type=$lhs ;;
 			*)			type=$lhs.$rhs ;;
 			esac
 			;;
 		esac
-		type=`echo $type | tr '[A-Z]' '[a-z]'`
 		case $type in
-		linux.*)x=`echo /lib/libdl.*`
-			case $x in
-			*libdl.so*)
-				;;
-			*)	type=`echo $type | sed 's/linux/&-aout/'`
-				;;
-			esac
-			;;
 		sgi.mips*)
 			case $mach in
 			mips2)	type=sgi.$mach
@@ -1574,7 +1701,7 @@ main()
 			mips3)	type=sgi.$mach
 				abi=-n32
 				;;
-			mips[4-9])
+			mips[456789])
 				type=sgi.$mach
 				case $abi in
 				*-n32) ;;
@@ -1592,10 +1719,10 @@ main() { return b(); }
 int b() { return 0; }
 !
 				abi=
-				if	$CC -c $tmp.a.c
+				if	$cc -c $tmp.a.c
 				then	for i in -n32 -o32 -64
-					do	if	$CC $i -c $tmp.b.c &&
-							$CC -o $tmp.exe $tmp.a.o $tmp.b.o
+					do	if	$cc $i -c $tmp.b.c &&
+							$cc -o $tmp.exe $tmp.a.o $tmp.b.o
 						then	abi=$i
 							for i in 2 3 4 5 6 7 8 9
 							do	case $i:$abi in
@@ -1603,8 +1730,8 @@ int b() { return 0; }
 									continue
 									;;
 								esac
-								if	$CC $abi -mips$i -c $tmp.b.c &&
-									$CC -o $tmp.exe $tmp.a.o $tmp.b.o
+								if	$cc $abi -mips$i -c $tmp.b.c &&
+									$cc -o $tmp.exe $tmp.a.o $tmp.b.o
 								then	type=`echo $type | sed -e 's/.$//'`$i
 									break
 								fi
@@ -1626,7 +1753,7 @@ int b() { return 0; }
 			sgi.mips4)
 				type=$type-o32
 				;;
-			sgi.mips[4-9]-64)
+			sgi.mips[456789]-64)
 				;;
 			*)	type=$type$abi
 				;;
@@ -1641,7 +1768,7 @@ int b() { return 0; }
 		do	case $# in
 			[012])	break ;;
 			esac
-			shift 2
+			shift;shift
 			eval "	case \$type in
 				$1)	type=\$2; break ;;
 				esac"
@@ -1701,405 +1828,486 @@ executable() # command
 
 # some actions have their own PACKAGEROOT or kick out early
 
-case $KEEP_PACKAGEROOT in
-0)	PACKAGEROOT=
-	case $action in
-	host)	hostinfo $args
-		echo $_hostinfo_
-		exit 0
-		;;
-	use)	case $show in
-		echo)	exec=echo make=echo show=echo ;;
-		esac
-		set '' $args
-		shift
-		case $# in
-		0)	;;
-		*)	case $1 in
-			-)	;;
-			/*)	PACKAGEROOT=$1
-				;;
-			*)	for i in `echo $HOME | sed -e 's,/[^/]*,,'` $use
-				do	if	packageroot $i/$1
-					then	PACKAGEROOT=$i/$1
-						break
-					fi
-				done
-				case $PACKAGEROOT in
-				'')	echo "$command: $1: package root not found" >&2
-					exit 1
-					;;
-				esac
-				;;
+case $action in
+host)	eval x=$package_use
+	case $x in
+	$PACKAGE_USE)	;;
+	*)		KEEP_HOSTTYPE=0 ;;
+	esac
+	hostinfo $args
+	echo $_hostinfo_
+	exit 0
+	;;
+use)	x=X$PACKAGE_USE
+	;;
+*)	eval x=$package_use
+	;;
+esac
+case $x in
+$PACKAGE_USE)
+	: accept the current package use environment
+
+	OK=ok
+	KSH=$EXECROOT/bin/ksh
+	MAKE=nmake
+	NMAKE=$EXECROOT/bin/$MAKE
+	SUM=$EXECROOT/bin/sum
+	TEE=$EXECROOT/bin/tee
+	;;
+*)	hosttype=
+	case $KEEP_PACKAGEROOT in
+	0)	case $action in
+		use)	PACKAGEROOT=
+			case $show in
+			echo)	exec=echo make=echo show=echo ;;
 			esac
+			set '' $args
 			shift
+			case $# in
+			0)	;;
+			*)	case $1 in
+				-|.)	;;
+				/*)	PACKAGEROOT=$1
+					;;
+				*)	i=`echo ~$1`
+					if	packageroot $i
+					then	PACKAGEROOT=$i
+					else	for i in `echo $HOME | sed -e 's,/[^/]*$,,'` $use
+						do	if	packageroot $i/$1
+							then	PACKAGEROOT=$i/$1
+								break
+							fi
+						done
+						case $PACKAGEROOT in
+						'')	hosttype=$1 ;;
+						esac
+					fi
+					;;
+				esac
+				shift
+				;;
+			esac
+			run="$@"
 			;;
 		esac
-		run="$@"
+		case $PACKAGEROOT in
+		'')	PACKAGEROOT=${PWD:-`pwd`} ;;
+		esac
 		;;
 	esac
+
+	# . must be within the PACKAGEROOT tree
+
+	i=X$PACKAGEROOT
+	IFS=/
+	set $i
+	IFS=$ifs
+	while	:
+	do	i=$1
+		shift
+		case $i in
+		X)	break ;;
+		esac
+	done
 	case $PACKAGEROOT in
-	'')	PACKAGEROOT=`pwd` ;;
+	//*)	d=/ ;;
+	*)	d= ;;
 	esac
-	;;
-esac
-
-# . must be within the PACKAGEROOT tree
-
-i=X$PACKAGEROOT
-IFS=/
-set $i
-IFS=$ifs
-while	:
-do	i=$1
-	shift
-	case $i in
-	X)	break ;;
-	esac
-done
-case $PACKAGEROOT in
-//*)	d=/ ;;
-*)	d= ;;
-esac
-k=0
-for i
-do	case $i in
-	'')	continue ;;
-	esac
-	d=$d/$i
-	case $k in
-	2)	k=1
-		;;
-	1)	k=0
-		;;
-	0)	case $i in
-		arch)	k=2
-			;;
-		*)	if	packageroot $d
-			then	PACKAGEROOT=$d
-			fi
-			;;
+	k=0
+	for i
+	do	case $i in
+		'')	continue ;;
 		esac
-		;;
-	esac
-done
-INITROOT=$PACKAGEROOT/src/cmd/INIT
-$show PACKAGEROOT=$PACKAGEROOT
-$show export PACKAGEROOT
-export PACKAGEROOT
-case $action in
-use)	packageroot $PACKAGEROOT || {
-		echo "$command: $PACKAGEROOT: invalid package root directory" >&2
-		exit 1
-	}
-	;;
-*)	packageroot $PACKAGEROOT || {
-		echo "$command: must be run within the package root directory tree" >&2
-		exit 1
-	}
-
-	# update the basic package commands
-
-	for i in ignore mamprobe silent
-	do	test -h $PACKAGEROOT/bin/$i 2>/dev/null ||
-		case `ls -t $INITROOT/$i.sh $PACKAGEROOT/bin/$i 2>/dev/null` in
-		"$INITROOT/$i.sh"*)
-			note update $PACKAGEROOT/bin/$i
-			$exec cp $INITROOT/$i.sh $PACKAGEROOT/bin/$i || exit
-			$exec chmod +x $PACKAGEROOT/bin/$i || exit
+		d=$d/$i
+		case $k in
+		2)	k=1
 			;;
-		esac
-	done
-	;;
-esac
-
-# initialize the package environment
-
-case $KEEP_HOSTTYPE in
-0)	hostinfo type
-	HOSTTYPE=$_hostinfo_
-	;;
-1)	_PACKAGE_HOSTTYPE_=$HOSTTYPE
-	export _PACKAGE_HOSTTYPE_
-	;;
-esac
-$show HOSTTYPE=$HOSTTYPE
-$show export HOSTTYPE
-export HOSTTYPE
-INSTALLROOT=$PACKAGEROOT/arch/$HOSTTYPE
-case $action in
-admin|install|make|read|remove|test|verify|write)
-	;;
-*)	if	test ! -d $INSTALLROOT
-	then	INSTALLROOT=$PACKAGEROOT
-	fi
-	;;
-esac
-$show INSTALLROOT=$INSTALLROOT
-$show export INSTALLROOT
-export INSTALLROOT
-PACKAGESRC=$PACKAGEROOT/lib/package
-PACKAGEBIN=$INSTALLROOT/lib/package
-
-# dll hackery -- why is this so complicated?
-
-abi=
-case $HOSTTYPE in
-sgi.mips[0-9]*)
-	x=rld
-	if	test -x /lib32/$x -o -x /lib64/$x
-	then	case $INSTALLROOT in
-		*/sgi.mips[0-9]*)
-			u=`echo $INSTALLROOT | sed -e 's,-[^-/]*$,,' -e 's,.$,,'`
+		1)	k=0
 			;;
-		*)	u=
-			;;
-		esac
-		for a in "n=2 v= l=" "n=3 v=N32 l=lib32" "n=4-n32 v=N32 l=lib32" "n=4 v=64 l=lib64"
-		do	eval $a
-			case $v in
-			N32)	case $n:$HOSTTYPE in
-				*-n32:*-n32)	;;
-				*-n32:*)	continue ;;
-				*:*-n32)	continue ;;
-				esac
+		0)	case $i in
+			arch)	k=2
 				;;
-			esac
-			case $l in
-			?*)	if	test ! -x /$l/$x
-				then	continue
+			*)	if	packageroot $d
+				then	PACKAGEROOT=$d
 				fi
 				;;
 			esac
-			case $u in
-			'')	case $HOSTTYPE in
-				sgi.mips$n|sgi.mips$n-*)
-					abi="$abi 'd=$INSTALLROOT v=$v'"
-					;;
-				*)	continue
-					;;
-				esac
-				;;
-			*)	if	test -d $u$n
-				then	abi="$abi 'd=$u$n v=$v'"
-				fi
-				;;
-			esac
-		done
-	fi
-	;;
-esac
-case $abi in
-'')	abi="'d=$INSTALLROOT v='" ;;
-esac
-eval "
-	for a in $abi
-	do	eval \$a
-		eval \"
-			case \\\$LD_LIBRARY\${v}_PATH: in
-			\\\$d/lib:*)
-				;;
-			*)	x=\\\$LD_LIBRARY\${v}_PATH
-				case \\\$x in
-				''|:*)	;;
-				*)	x=:\\\$x ;;
-				esac
-				LD_LIBRARY\${v}_PATH=\$d/lib\\\$x
-				$show LD_LIBRARY\${v}_PATH=\\\$LD_LIBRARY\${v}_PATH
-				$show export LD_LIBRARY\${v}_PATH
-				export LD_LIBRARY\${v}_PATH
-				;;
-			esac
-		\"
-	done
-"
-case $LD_LIBRARY_PATH in
-'')	;;
-*)	a=0
-	for d in $lib
-	do	case :$LD_LIBRARY_PATH: in
-		*:$d:*)	;;
-		*)	if	test -d $d
-			then	LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$d
-				a=1
-			fi
 			;;
 		esac
 	done
-	case $a in
-	1)	$show LD_LIBRARY_PATH=$LD_LIBRARY_PATH
-		$show export LD_LIBRARY_PATH
-		export LD_LIBRARY_PATH
-		;;
-	esac
-	;;
-esac
-case $LIBPATH: in
-$INSTALLROOT/bin:$INSTALLROOT/lib:*)
-	;;
-*)	case $LIBPATH in
-	'')	LIBPATH=/usr/lib:/lib ;;
-	esac
-	LIBPATH=$INSTALLROOT/bin:$INSTALLROOT/lib:$LIBPATH
-	$show LIBPATH=$LIBPATH
-	$show export LIBPATH
-	export LIBPATH
-	;;
-esac
-case $SHLIB_PATH: in
-$INSTALLROOT/lib:*)
-	;;
-*)	SHLIB_PATH=$INSTALLROOT/lib${SHLIB_PATH:+:$SHLIB_PATH}
-	$show SHLIB_PATH=$SHLIB_PATH
-	$show export SHLIB_PATH
-	export SHLIB_PATH
-	;;
-esac
-case $DYLD_LIBRARY_PATH: in
-$INSTALLROOT/lib:*)
-	;;
-*)	DYLD_LIBRARY_PATH=$INSTALLROOT/lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}
-	$show DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH
-	$show export DYLD_LIBRARY_PATH
-	export DYLD_LIBRARY_PATH
-	;;
-esac
-case $_RLD_ROOT in
-$INSTALLROOT/arch*)	;;
-':')	_RLD_ROOT=$INSTALLROOT/arch:/ ;;
-/|*:/)	_RLD_ROOT=$INSTALLROOT/arch:$_RLD_ROOT ;;
-*)	_RLD_ROOT=$INSTALLROOT/arch:$_RLD_ROOT:/ ;;
-esac
-$show _RLD_ROOT=$_RLD_ROOT
-$show export _RLD_ROOT
-export _RLD_ROOT
-
-# now set up PATH
-#
-# NOTE: PACKAGEROOT==INSTALLROOT is possible for binary installations
-
-case :$PATH: in
-*:$PACKAGEROOT/bin:*)
-	;;
-*)	PATH=$PACKAGEROOT/bin:$PATH
-	;;
-esac
-case :$PATH: in
-*:$INSTALLROOT/bin:*)
-	;;
-*)	PATH=$INSTALLROOT/bin:$PATH
-	;;
-esac
-$show PATH=$PATH
-$show export PATH
-export PATH
-
-# use these if possible
-
-KSH=$INSTALLROOT/bin/ksh
-MAKE=nmake
-NMAKE=$INSTALLROOT/bin/$MAKE
-SUM=$INSTALLROOT/bin/sum
-TEE=$INSTALLROOT/bin/tee
-
-# grab a decent default shell
-
-case $KEEP_SHELL in
-0)	case $SHELL in
-	''|/bin/*|/usr/bin/*)
-		case $SHELL in
-		'')	SHELL=/bin/sh ;;
-		esac
-		for i in ksh sh bash
-		do	if	executable $i
-			then	case `$_executable_ -c 'echo $KSH_VERSION'` in
-				*[Pp][Dd]*)
-					: pd ksh is unreliable
-					;;
-				*)	SHELL=$_executable_
-					break
-					;;
-				esac
+	INITROOT=$PACKAGEROOT/src/cmd/INIT
+	$show PACKAGEROOT=$PACKAGEROOT
+	$show export PACKAGEROOT
+	export PACKAGEROOT
+	case $action in
+	use)	packageroot $PACKAGEROOT || {
+			echo "$command: $PACKAGEROOT: invalid package root directory" >&2
+			exit 1
+		}
+		case $KEEP_HOSTTYPE:$hosttype in
+		0:?*)	if	test -d $PACKAGEROOT/arch/$hosttype
+			then	KEEP_HOSTTYPE=1
+				HOSTTYPE=$hosttype
+			else	echo "$command: $hosttype: package root not found" >&2
+				exit 1
 			fi
+			;;
+		esac
+		;;
+	*)	packageroot $PACKAGEROOT || {
+			echo "$command: must be run within the package root directory tree" >&2
+			exit 1
+		}
+
+		# update the basic package commands
+
+		for i in ignore mamprobe silent
+		do	test -h $PACKAGEROOT/bin/$i 2>/dev/null ||
+			case `ls -t $INITROOT/$i.sh $PACKAGEROOT/bin/$i 2>/dev/null` in
+			"$INITROOT/$i.sh"*)
+				note update $PACKAGEROOT/bin/$i
+				$exec cp $INITROOT/$i.sh $PACKAGEROOT/bin/$i || exit
+				$exec chmod +x $PACKAGEROOT/bin/$i || exit
+				;;
+			esac
 		done
 		;;
-	*/*ksh)	if	test -x $KSH
-		then	SHELL=$KSH
+	esac
+
+	# initialize the package environment
+
+	case $KEEP_HOSTTYPE in
+	0)	hostinfo type
+		HOSTTYPE=$_hostinfo_
+		;;
+	1)	_PACKAGE_HOSTTYPE_=$HOSTTYPE
+		export _PACKAGE_HOSTTYPE_
+		;;
+	esac
+	$show HOSTTYPE=$HOSTTYPE
+	$show export HOSTTYPE
+	export HOSTTYPE
+	INSTALLROOT=$PACKAGEROOT/arch/$HOSTTYPE
+	case $action in
+	admin|install|make|read|remove|test|verify|write)
+		;;
+	*)	if	test ! -d $INSTALLROOT
+		then	INSTALLROOT=$PACKAGEROOT
 		fi
 		;;
 	esac
-	;;
-esac
-export SHELL
-$show SHELL=$SHELL
-$show export SHELL
-COSHELL=$SHELL
-export COSHELL
-$show COSHELL=$COSHELL
-$show export COSHELL
+	$show INSTALLROOT=$INSTALLROOT
+	$show export INSTALLROOT
+	export INSTALLROOT
 
-# tame the environment
+	# HOSTTYPE specific package profile
 
-case $action in
-use)	;;
-*)	ENV=
-	ERROR_OPTIONS=
-	export ENV ERROR_OPTIONS
-	;;
-esac
+	if	test -r $INSTALLROOT/lib/package/profile
+	then	. $INSTALLROOT/lib/package/profile
+	fi
 
-# $INSTALLROOT may be an obsolete shipment
+	# check if $CC is a cross compiler
 
-PAX=
-if	executable pax
-then	case `$_executable_ -rw --?meter 2>&1` in
-	*--meter*)	PAX=pax ;;
-	esac
-fi
+	CROSS=0
+	if	test -f $INITROOT/hello.c
+	then	(
+		cd /tmp
+		cp $INITROOT/hello.c pkg$$.c
+		if $CC -o pkg$$.exe pkg$$.c && ./pkg$$.exe 
+		then	code=0
+		else	code=1
+		fi
+		rm -f pkg$$.*
+		exit $code
+		) >/dev/null 2>&1 || CROSS=1
+	fi
+	EXECROOT=$INSTALLROOT
+	case $CROSS in
+	0) 	# dll hackery -- why is this so complicated?
 
-# finalize the views
-
-case $USER_VPATH in
-'')	case $VPATH in
-	?*)	IFS=':'
-		set '' $VPATH
-		shift
-		IFS=$ifs
-		USER_VPATH=
-		for i
-		do	if	packageroot $i
-			then	case $USER_VPATH in
-				'')	USER_VPATH=$i ;;
-				?*)	USER_VPATH=$USER_VPATH:$i ;;
+		abi=
+		case $HOSTTYPE in
+		sgi.mips[0123456789]*)
+			x=rld
+			if	test -x /lib32/$x -o -x /lib64/$x
+			then	case $INSTALLROOT in
+				*/sgi.mips[0123456789]*)
+					u=`echo $INSTALLROOT | sed -e 's,-[^-/]*$,,' -e 's,.$,,'`
+					;;
+				*)	u=
+					;;
 				esac
+				for a in "n=2 v= l=" "n=3 v=N32 l=lib32" "n=4-n32 v=N32 l=lib32" "n=4 v=64 l=lib64"
+				do	eval $a
+					case $v in
+					N32)	case $n:$HOSTTYPE in
+						*-n32:*-n32)	;;
+						*-n32:*)	continue ;;
+						*:*-n32)	continue ;;
+						esac
+						;;
+					esac
+					case $l in
+					?*)	if	test ! -x /$l/$x
+						then	continue
+						fi
+						;;
+					esac
+					case $u in
+					'')	case $HOSTTYPE in
+						sgi.mips$n|sgi.mips$n-*)
+							abi="$abi 'd=$INSTALLROOT v=$v'"
+							;;
+						*)	continue
+							;;
+						esac
+						;;
+					*)	if	test -d $u$n
+						then	abi="$abi 'd=$u$n v=$v'"
+						fi
+						;;
+					esac
+				done
 			fi
-		done
-	esac
-	;;
-esac
-case $USER_VPATH in
-?*)	IFS=':'
-	set '' $USER_VPATH
-	shift
-	IFS=$ifs
-	USER_VPATH=
-	USER_VPATH_CHAIN=
-	p=$PACKAGEROOT
-	for i
-	do	case $i in
-		''|$PACKAGEROOT|$INSTALLROOT)
 			;;
-		?*)	USER_VPATH=$USER_VPATH:$i
-			USER_VPATH_CHAIN="$USER_VPATH_CHAIN $p $i"
-			p=$i
-			case $PROTOROOT in
-			-)	test -x $i/bin/mamake && PROTOROOT= ;;
+		esac
+		case $abi in
+		'')	abi="'d=$INSTALLROOT v='" ;;
+		esac
+		eval "
+			for a in $abi
+			do	eval \$a
+				eval \"
+					case \\\$LD_LIBRARY\${v}_PATH: in
+					\\\$d/lib:*)
+						;;
+					*)	x=\\\$LD_LIBRARY\${v}_PATH
+						case \\\$x in
+						''|:*)	;;
+						*)	x=:\\\$x ;;
+						esac
+						LD_LIBRARY\${v}_PATH=\$d/lib\\\$x
+						$show LD_LIBRARY\${v}_PATH=\\\$LD_LIBRARY\${v}_PATH
+						$show export LD_LIBRARY\${v}_PATH
+						export LD_LIBRARY\${v}_PATH
+						;;
+					esac
+				\"
+			done
+		"
+		case $LD_LIBRARY_PATH in
+		'')	;;
+		*)	a=0
+			for d in $lib
+			do	case :$LD_LIBRARY_PATH: in
+				*:$d:*)	;;
+				*)	if	test -d $d
+					then	LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$d
+						a=1
+					fi
+					;;
+				esac
+			done
+			case $a in
+			1)	$show LD_LIBRARY_PATH=$LD_LIBRARY_PATH
+				$show export LD_LIBRARY_PATH
+				export LD_LIBRARY_PATH
+				;;
 			esac
 			;;
 		esac
-	done
+		case $LIBPATH: in
+		$INSTALLROOT/bin:$INSTALLROOT/lib:*)
+			;;
+		*)	case $LIBPATH in
+			'')	LIBPATH=/usr/lib:/lib ;;
+			esac
+			LIBPATH=$INSTALLROOT/bin:$INSTALLROOT/lib:$LIBPATH
+			$show LIBPATH=$LIBPATH
+			$show export LIBPATH
+			export LIBPATH
+			;;
+		esac
+		case $SHLIB_PATH: in
+		$INSTALLROOT/lib:*)
+			;;
+		*)	SHLIB_PATH=$INSTALLROOT/lib${SHLIB_PATH:+:$SHLIB_PATH}
+			$show SHLIB_PATH=$SHLIB_PATH
+			$show export SHLIB_PATH
+			export SHLIB_PATH
+			;;
+		esac
+		case $DYLD_LIBRARY_PATH: in
+		$INSTALLROOT/lib:*)
+			;;
+		*)	DYLD_LIBRARY_PATH=$INSTALLROOT/lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}
+			$show DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH
+			$show export DYLD_LIBRARY_PATH
+			export DYLD_LIBRARY_PATH
+			;;
+		esac
+		case $_RLD_ROOT in
+		$INSTALLROOT/arch*)	;;
+		':')	_RLD_ROOT=$INSTALLROOT/arch:/ ;;
+		/|*:/)	_RLD_ROOT=$INSTALLROOT/arch:$_RLD_ROOT ;;
+		*)	_RLD_ROOT=$INSTALLROOT/arch:$_RLD_ROOT:/ ;;
+		esac
+		$show _RLD_ROOT=$_RLD_ROOT
+		$show export _RLD_ROOT
+		export _RLD_ROOT
+
+		# now set up PATH
+		#
+		# NOTE: PACKAGEROOT==INSTALLROOT is possible for binary installations
+
+		case :$PATH: in
+		*:$PACKAGEROOT/bin:*)
+			;;
+		*)	PATH=$PACKAGEROOT/bin:$PATH
+			;;
+		esac
+		case :$PATH: in
+		*:$INSTALLROOT/bin:*)
+			;;
+		*)	PATH=$INSTALLROOT/bin:$PATH
+			;;
+		esac
+		$show PATH=$PATH
+		$show export PATH
+		export PATH
+		;;
+	*)	for i in package proto nmake
+		do	if	executable package
+			then	EXECROOT=`echo $_executable_ | sed -e 's,//*[^/]*//*[^/]*$,,'`
+				break
+			fi
+		done
+		;;
+	esac
+	$show EXECROOT=$EXECROOT
+	$show export EXECROOT
+	export EXECROOT
+
+	# use these if possible
+
+	OK=ok
+	KSH=$EXECROOT/bin/ksh
+	MAKE=nmake
+	NMAKE=$EXECROOT/bin/$MAKE
+	SUM=$EXECROOT/bin/sum
+	TEE=$EXECROOT/bin/tee
+
+	# grab a decent default shell
+
+	case $KEEP_SHELL in
+	0)	test -x "$SHELL" || SHELL=
+		case $SHELL in
+		''|/bin/*|/usr/bin/*)
+			case $SHELL in
+			'')	SHELL=/bin/sh ;;
+			esac
+			for i in ksh sh bash
+			do	if	executable $i
+				then	case `$_executable_ -c 'echo $KSH_VERSION'` in
+					*[Pp][Dd]*)
+						: pd ksh is unreliable
+						;;
+					*)	SHELL=$_executable_
+						break
+						;;
+					esac
+				fi
+			done
+			;;
+		*/*ksh)	if	test -x $KSH
+			then	SHELL=$KSH
+			fi
+			;;
+		esac
+		;;
+	esac
+	export SHELL
+	$show SHELL=$SHELL
+	$show export SHELL
+	COSHELL=$SHELL
+	export COSHELL
+	$show COSHELL=$COSHELL
+	$show export COSHELL
+
+	# tame the environment
+
+	case $action in
+	use)	;;
+	*)	ENV=
+		ERROR_OPTIONS=
+		export ENV ERROR_OPTIONS
+		;;
+	esac
+
+	# $INSTALLROOT may be an obsolete shipment
+
+	PAX=
+	if	executable pax
+	then	case `$_executable_ -rw --?meter 2>&1` in
+		*--meter*)	PAX=pax ;;
+		esac
+	fi
+
+	# finalize the views
+
+	case $USER_VPATH in
+	'')	case $VPATH in
+		?*)	IFS=':'
+			set '' $VPATH
+			shift
+			IFS=$ifs
+			USER_VPATH=
+			for i
+			do	case $i in
+				*/arch/$HOSTTYPE)	;;
+				*/arch/*/*)		;;
+				*/arch/*)		continue ;;
+				esac
+				if	packageroot $i
+				then	case $USER_VPATH in
+					'')	USER_VPATH=$i ;;
+					?*)	USER_VPATH=$USER_VPATH:$i ;;
+					esac
+				fi
+			done
+		esac
+		;;
+	esac
+	case $USER_VPATH in
+	?*)	IFS=':'
+		set '' $USER_VPATH
+		shift
+		IFS=$ifs
+		USER_VPATH=
+		USER_VPATH_CHAIN=
+		p=$PACKAGEROOT
+		for i
+		do	case $i in
+			''|$PACKAGEROOT|$INSTALLROOT)
+				;;
+			?*)	USER_VPATH=$USER_VPATH:$i
+				USER_VPATH_CHAIN="$USER_VPATH_CHAIN $p $i"
+				p=$i
+				case $PROTOROOT in
+				-)	test -x $i/bin/mamake && PROTOROOT= ;;
+				esac
+				;;
+			esac
+		done
+		;;
+	esac
 	;;
 esac
+PACKAGESRC=$PACKAGEROOT/lib/package
+PACKAGEBIN=$INSTALLROOT/lib/package
+
+# set up the view state
+
 VIEW_bin=$INSTALLROOT VIEW_src=$PACKAGEROOT VIEW_all="$INSTALLROOT $PACKAGEROOT"
 if	(vpath) >/dev/null 2>&1 && vpath $INSTALLROOT $PACKAGEROOT $USER_VPATH_CHAIN
 then	$show vpath $INSTALLROOT $PACKAGEROOT $USER_VPATH_CHAIN
@@ -2173,7 +2381,7 @@ case $action in
 admin)	case $admin_action in
 	results)action=$admin_action
 		set '' $admin_args
-		shift 2
+		shift;shift
 		admin_args="admin $*"
 		case $admin_on in
 		'')	target=$admin_args ;;
@@ -2226,13 +2434,6 @@ checkaout()	# cmd ...
 				# check for prototyping cc
 				# NOTE: proto.c must be K&R compatible
 
-				$CC -o hello.exe $INITROOT/hello.c && ./hello.exe >/dev/null 2>&1
-				c=$?
-				rm -f hello.*
-				test 0 != "$c" && {
-					echo "$command: $CC: not a C compiler for $HOSTTYPE" >&2
-					exit 1
-				}
 				checkaout proto
 				$CC -c $INITROOT/p.c >/dev/null 2>&1
 				c=$?
@@ -2323,14 +2524,22 @@ checkaout()	# cmd ...
 		case `ls -t $INITROOT/$i.c $INSTALLROOT/bin/$i 2>/dev/null` in
 		"$INITROOT/$i.c"*)
 			note update $INSTALLROOT/bin/$i
-			if	test ! -d $INSTALLROOT/bin
-			then	for j in arch arch/$HOSTTYPE arch/$HOSTTYPE/bin
-				do	test -d $PACKAGEROOT/$j || $exec mkdir $PACKAGEROOT/$j || exit
-				done
-			fi
-			if	test '' != "$PROTOROOT" -a -f $INITPROTO/$i.c
-			then	$exec $CC $CCFLAGS -o $INSTALLROOT/bin/$i $INITPROTO/$i.c || exit
-			else	$exec $CC $CCFLAGS -o $INSTALLROOT/bin/$i $INITROOT/$i.c || exit
+			if	test -x $INSTALLROOT/bin/proto
+			then	case $exec in
+				'')	$INSTALLROOT/bin/proto -p $INITROOT/$i.c > $i.c || exit ;;
+				*)	$exec "$INSTALLROOT/bin/proto -p $INITROOT/$i.c > $i.c" ;;
+				esac
+				$exec $CC $CCFLAGS -o $INSTALLROOT/bin/$i $i.c || exit
+				$exec rm -f $i.c
+			else	if	test ! -d $INSTALLROOT/bin
+				then	for j in arch arch/$HOSTTYPE arch/$HOSTTYPE/bin
+					do	test -d $PACKAGEROOT/$j || $exec mkdir $PACKAGEROOT/$j || exit
+					done
+				fi
+				if	test '' != "$PROTOROOT" -a -f $INITPROTO/$i.c
+				then	$exec $CC $CCFLAGS -o $INSTALLROOT/bin/$i $INITPROTO/$i.c || exit
+				else	$exec $CC $CCFLAGS -o $INSTALLROOT/bin/$i $INITROOT/$i.c || exit
+				fi
 			fi
 			test -f $i.o && $exec rm -f $i.o
 			;;
@@ -2704,14 +2913,14 @@ package_install() # dest sum
 	code=0
 	sed -e '/ /!d' -e 's,[^ ]* ,,' -e 's, \(arch/[^/]*\)/, \1 ,' -e '/ arch\//!s,^[^ ]* [^ ]* [^ ]*,& .,' -e 's,/\([^ /]*\)$, \1,' $sum |
 	while	read mode user group arch dir file
-	do	case $only:$arch in
+	do	case $flat:$arch in
 		1:*|?:.)t=$dest/$dir ;;
 		*)	t=$dest/$arch/$dir ;;
 		esac
 		case $t in
 		$ot)	;;
 		*)	if	test ! -d $t
-			then	$exec mkdir $t || exit
+			then	$exec mkdir -p $t || exit
 			fi
 			ot=$t
 			;;
@@ -2823,10 +3032,10 @@ admin)	checklicenses
 			hosts="$hosts $name"
 			case $exec in
 			'')	echo package "$admin_args" $host
-				rsh $host ". ./.profile && cd $root && { test -f lib/package/admin/$admin_env && . ./lib/package/admin/$admin_env || true; } && bin/package $admin_args PACKAGEROOT=$root HOSTTYPE=$type" < /dev/null > $admin_log/$name 2>&1 &
+				rsh $host ". ./.profile && cd $root && { test -f lib/package/admin/$admin_env && . ./lib/package/admin/$admin_env || true; } && \${SHELL:-/bin/sh} -c 'bin/package $admin_args PACKAGEROOT=$root HOSTTYPE=$type'" < /dev/null > $admin_log/$name 2>&1 &
 				pids="$pids $!"
 				;;
-			*)	$exec rsh $host ". ./.profile && cd $root && bin/package $admin_args PACKAGEROOT=$root HOSTTYPE=$type < /dev/null > $admin_log/$name 2>&1 &"
+			*)	$exec rsh $host ". ./.profile && cd $root && \${SHELL:-/bin/sh} -c 'bin/package $admin_args PACKAGEROOT=$root HOSTTYPE=$type' < /dev/null > $admin_log/$name 2>&1 &"
 				;;
 			esac
 		esac
@@ -2859,7 +3068,7 @@ admin)	checklicenses
 					case $admin_action in
 					make)	M=`grep -c ']: \*\*\*.* code ' $admin_log/$2` ;;
 					test)	T=`grep -ci 'failed' $admin_log/$2` ;;
-					*)	W=`grep '^[a-z][a-z]*:' $admin_log/$2 | egrep -cv 'start at|done  at|output captured|warning:'` ;;
+					*)	W=`grep '^[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz]*:' $admin_log/$2 | egrep -cv 'start at|done  at|output captured|warning:'` ;;
 					esac
 					case $1 in
 					?|??|???|????|?????|??????|???????)
@@ -3005,6 +3214,9 @@ contents|list)
 					case $txt in
 					?*)	txt="$nl$txt" ;;
 					esac
+					case :$pkg:$ver:$req:$txt: in
+					*::*)	break ;;
+					esac
 					case $action in
 					list)	case $sts in
 						'')	case `ls -t "tgz/$pkg.$ver.0000" "tgz/$pkg.tim" 2>/dev/null` in
@@ -3041,8 +3253,8 @@ contents|list)
 	0:list)	if	test -d tgz
 		then	cd tgz
 			# f:file p:package v:version r:release t:type u:update
-			for f in `ls -r *[._][0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][._]* 2>/dev/null`
-			do	eval `echo "$f" | sed -e 's,\.c$,,' -e 's,\.exe$,,' -e 's,\.tgz$,,' -e 's,\([^._]*\)[._]\([0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]\)[._]\([^._]*\)[._]*\(.*\),p=\1 v=\2 r=\3 t=\4,'`
+			for f in `find . -name '*?[_.][0123456789][0123456789][0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789][_.]*' -print | sed 's,^\./,,' | sort -r`
+			do	eval `echo "$f" | sed -e 's,\.c$,,' -e 's,\.gz$,,' -e 's,\.exe$,,' -e 's,\.tgz$,,' -e 's,\([^_.]*\)[_.]\([0123456789][0123456789][0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789]\)[_.]\([^_.]*\)[_.]*\(.*\),p=\1 v=\2 r=\3 t=\4,'`
 				case $t in
 				'')	case $omit in
 					*:$p.$v.$r:*)	continue ;;
@@ -3176,11 +3388,6 @@ install)checklicenses
 	then	echo "$command: $action: $directory: target directory not found" >&2
 		exit 1
 	fi
-	if	executable $MAKE
-	then	MAKE=$_executable_
-	else	echo "$command: $MAKE: not found" >&2
-		exit 1
-	fi
 	case $target in
 	'')	cd arch
 		set '' *
@@ -3190,8 +3397,12 @@ install)checklicenses
 		;;
 	esac
 	code=0
+	makecheck=1
 	for a in $target
-	do	case $flat:$a in
+	do	case $a in
+		-)	a=$HOSTTYPE ;;
+		esac
+		case $flat:$a in
 		1:*|?:.)dest=$directory ;;
 		*)	dest=$directory/arch/$a ;;
 		esac
@@ -3204,28 +3415,36 @@ install)checklicenses
 			then	echo "$command: $a: invalid architecture" >&2
 			elif	test ! -d $dest
 			then	echo "$command: $dest: destination directory must exist" >&2
-			elif	test "" != "$exec"
-			then	(
-					echo "=== $i installation manifest ==="
-					cd arch/$a
-					(
-					cd lib/package
-					INSTALLROOT=$PACKAGEROOT/arch/$a
-					VPATH=$INSTALLROOT:$PACKAGEROOT:$VPATH
-					export INSTALLROOT VPATH
-					$MAKE -s $makeflags -f $i.pkg $qualifier list.install $assign
-					) | sort -u
-				)
-			else	(
-					cd arch/$a
-					(
-					cd lib/package
-					INSTALLROOT=$PACKAGEROOT/arch/$a
-					VPATH=$INSTALLROOT:$PACKAGEROOT:$VPATH
-					export INSTALLROOT VPATH
-					eval capture \$MAKE -s \$makeflags -f \$i.pkg \$qualifier list.install $assign
-					) | sort -u | pax -drw $dest
-				)
+			else	if	test "" != "$makecheck"
+				then	if	executable $MAKE
+					then	MAKE=$_executable_
+					else	echo "$command: $MAKE: not found" >&2
+						exit 1
+					fi
+				fi
+				if	test "" != "$exec"
+				then	(
+						echo "=== $i installation manifest ==="
+						cd arch/$a
+						(
+						cd lib/package
+						INSTALLROOT=$PACKAGEROOT/arch/$a
+						VPATH=$INSTALLROOT:$PACKAGEROOT:$VPATH
+						export INSTALLROOT VPATH
+						$MAKE -s $makeflags -f $i.pkg $qualifier list.install $assign
+						) | sort -u
+					)
+				else	(
+						cd arch/$a
+						(
+						cd lib/package
+						INSTALLROOT=$PACKAGEROOT/arch/$a
+						VPATH=$INSTALLROOT:$PACKAGEROOT:$VPATH
+						export INSTALLROOT VPATH
+						eval capture \$MAKE -s \$makeflags -f \$i.pkg \$qualifier list.install $assign
+						) | sort -u | pax -drw $dest
+					)
+				fi
 			fi
 		done
 	done
@@ -3256,7 +3475,7 @@ make)	checklicenses
 	for i in arch arch/$HOSTTYPE
 	do	test -d $PACKAGEROOT/$i || $exec mkdir $PACKAGEROOT/$i || exit
 	done
-	for i in bin fun include lib lib/package lib/package/gen src man man/man1 man/man3 man/man8
+	for i in bin bin/$OK fun include lib lib/package lib/package/gen src man man/man1 man/man3 man/man8
 	do	test -d $INSTALLROOT/$i || $exec mkdir $INSTALLROOT/$i || exit
 	done
 	make_recurse src
@@ -3329,6 +3548,14 @@ make)	checklicenses
 			*)	make=echo
 				;;
 			esac
+			if	test '' != "$PROTOROOT"
+			then	if (vpath) >/dev/null 2>&1 && vpath $INSTALLROOT - && vpath $PROTOROOT - && vpath $INSTALLROOT $PACKAGEROOT
+				then	$show vpath $INSTALLROOT $PACKAGEROOT $USER_VPATH_CHAIN
+				else	VPATH=$INSTALLROOT:$PACKAGEROOT$USER_VPATH
+					$show VPATH=$VPATH
+					export VPATH
+				fi
+			fi
 			note accept generated files for $NMAKE
 			eval capture \$NMAKE \$makeflags \$noexec -t recurse install nmake $assign
 			note make the remaining targets with $NMAKE
@@ -3364,26 +3591,32 @@ make)	checklicenses
 		esac
 	fi
 
-	# run from *-ok copies since this may build nmake and ksh
+	# run from separate copies since nmake and ksh may be rebuilt
 
-	if	test -x $NMAKE
-	then	cmp -s $NMAKE $NMAKE-ok 2>/dev/null ||
-		$exec cp $NMAKE $NMAKE-ok
-		MAKE=$NMAKE-ok
-		if	test -x $TEE
-		then	cmp -s $TEE $TEE-ok 2>/dev/null ||
-			$exec cp $TEE $TEE-ok
-			TEE=$TEE-ok
+	case $EXECROOT in
+	$INSTALLROOT)
+		$make cd $INSTALLROOT/bin
+		for i in ksh nmake tee ast*.* cmd*.* dll*.* shell*.*
+		do	if	test -x $i
+			then	cmp -s $i $OK/$i ||
+				$exec cp $i $OK/$i
+			fi
+		done
+		if	test -x $OK/nmake
+		then	MAKE=$INSTALLROOT/bin/$OK/nmake
 		fi
-		if	test "$KEEP_SHELL" != 1 -a -x $KSH
-		then	cmp -s $KSH $KSH-ok 2>/dev/null ||
-			$exec cp $KSH $KSH-ok
-			SHELL=$KSH-ok
+		if	test -x $OK/tee
+		then	TEE=$INSTALLROOT/bin/$OK/tee
+		fi
+		if	test "$KEEP_SHELL" != 1 -a -x $OK/ksh
+		then	SHELL=$INSTALLROOT/bin/$OK/ksh
 			export SHELL
 			COSHELL=$SHELL
 			export COSHELL
 		fi
-	fi
+		$make cd $INSTALLROOT/src
+		;;
+	esac
 
 	# fall back to mamake if nmake not found or too old
 
@@ -3455,7 +3688,7 @@ read)	checklicenses
 	set '' $package $target
 	case $# in
 	1)	verbose=:
-		set '' `ls lib/package/tgz/*[._][0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][._]* 2>/dev/null`
+		set '' `ls lib/package/tgz/*?[_.][0123456789][0123456789][0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789][_.]* 2>/dev/null`
 		;;
 	*)	verbose=
 		;;
@@ -3463,11 +3696,14 @@ read)	checklicenses
 	shift
 	files=
 	for f
-	do	if	test ! -f "$f"
-		then	set '' `ls -r ${f}[._][0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][._]* 2>/dev/null`
+	do	if	test -f "$f"
+		then	: ok
+		elif	test -f "lib/package/tgz/$f"
+		then	f=lib/package/tgz/$f
+		else	set '' `ls -r ${f}[_.][0123456789][0123456789][0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789][_.]* 2>/dev/null`
 			if	test '' != "$2" -a -f "$2"
 			then	f=$2
-			else	set '' `ls -r lib/package/tgz/${f}[._][0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][._]* 2>/dev/null`
+			else	set '' `ls -r lib/package/tgz/${f}[_.][0123456789][0123456789][0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789][_.]* 2>/dev/null`
 				if	test '' != "$2" -a -f "$2"
 				then	f=$2
 				else	echo "$command: $f: package archive not found" >&2
@@ -3502,7 +3738,10 @@ read)	checklicenses
 	done
 	for f in $f1 $f2 $f3 $f4
 	do	case $f in
-		*[._][0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][._]*)
+		*.gz)	: standalone packages unbundled manually
+			continue
+			;;
+		*?[_.][0123456789][0123456789][0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789][_.]*)
 			;;
 		*)	echo "$command: $f: not a package archive" >&2
 			code=1
@@ -3514,7 +3753,7 @@ read)	checklicenses
 		*)	d= a=$f ;;
 		esac
 		# f:file d:dir a:base p:package v:version r:release t:type
-		eval `echo "$a" | sed -e 's,\.c$,,' -e 's,\.exe$,,' -e 's,\.tgz$,,' -e 's,\([^._]*\)[._]\([0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]\)[._]\([^._]*\)[._]*\(.*\),p=\1 v=\2 r=\3 t=\4,'`
+		eval `echo "$a" | sed -e 's,\.c$,,' -e 's,\.gz$,,' -e 's,\.exe$,,' -e 's,\.tgz$,,' -e 's,\([^_.]*\)[_.]\([0123456789][0123456789][0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789]\)[_.]\([^_.]*\)[_.]*\(.*\),p=\1 v=\2 r=\3 t=\4,'`
 		case " $x " in
 		*" $p "*)
 			continue
@@ -3529,7 +3768,7 @@ read)	checklicenses
 		*)	w=$PACKAGEROOT/arch/$t/lib/package
 			q=".$t"
 			Q="_$t"
-			m="[._]$t"
+			m="[_.]$t"
 			;;
 		esac
 		u=$d$p$q.tim
@@ -3565,7 +3804,7 @@ read)	checklicenses
 					;;
 				esac
 			elif	test "" != "$PAX"
-			then	$exec pax -lm -ps -rvf "$f" || {
+			then	$exec pax --from=ascii -lm -ps -rvf "$f" || {
 					code=1
 					continue
 				}
@@ -3579,8 +3818,11 @@ read)	checklicenses
 					}
 				else	checkaout ratz
 					case $exec in
-					'')	$exec ratz -lv < "$f" ;;
-					*)	$exec "ratz -lv < $f" ;;
+					'')	echo $f:
+						$exec ratz -lm < "$f"
+						;;
+					*)	$exec "ratz -lm < $f"
+						;;
 					esac || {
 						code=1
 						continue
@@ -3617,12 +3859,12 @@ read)	checklicenses
 				code=1
 				continue
 			}
-			$exec pax -lm -ps -rvf "$f" -z "$b" || {
+			$exec pax --from=ascii -lm -ps -rvf "$f" -z "$b" || {
 				code=1
 				continue
 			}
 			case $r in
-			[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9])
+			[0123456789][0123456789][0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789])
 				note $f: generate new base $d$p.$r.0000$q.tgz
 				$exec pax -rf "$f" -z "$b" -wf $d$p.$r.0000$q.tgz -x tgz || {
 					code=1
@@ -3631,7 +3873,7 @@ read)	checklicenses
 				case $exec in
 				'')	echo $p $r 0000 1 > $w/gen/$p.ver
 					;;
-				*)	z=$d$p[._]$r[._]0000$q.tgz
+				*)	z=$d$p[_.]$r[_.]0000$q.tgz
 					$exec "echo $p $r 0000 1 > $w/gen/$p.ver"
 					;;
 				esac
@@ -3657,9 +3899,9 @@ read)	checklicenses
 		# add to the obsolete list
 
 		k=
-		for i in `ls $d$p[._][0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][._]????$m* $z 2>/dev/null`
+		for i in `ls $d$p[_.][0123456789][0123456789][0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789][_.]????$m* $z 2>/dev/null`
 		do	case $i in
-			$d$p[._][0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][._]0000$m*)
+			$d$p[_.][0123456789][0123456789][0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789][_.]0000$m*)
 				continue
 				;;
 			esac
@@ -3702,14 +3944,14 @@ release)count= lo= hi=
 	case $# in
 	0)	;;
 	*)	case $1 in
-		-|[0-9][0-9]-[0-9][0-9]-[0-9][0-9]|[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9])
+		-|[0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789]|[0123456789][0123456789][0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789])
 			case $1 in
 			-)	lo= release= ;;
 			*)	lo=$1 release="-f $1" ;;
 			esac
 			shift
 			case $1 in
-			-|[0-9][0-9]-[0-9][0-9]-[0-9][0-9]|[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9])
+			-|[0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789]|[0123456789][0123456789][0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789])
 				case $1 in
 				-)	hi= ;;
 				*)	hi=$1 release="$release -t $1" ;;
@@ -3718,7 +3960,7 @@ release)count= lo= hi=
 				;;
 			esac
 			;;
-		[0-9]|[0-9][0-9]|[0-9][0-9][0-9]|[0-9][0-9][0-9][0-9]|[0-9][0-9][0-9][0-9][0-9]*)
+		[0123456789]|[0123456789][0123456789]|[0123456789][0123456789][0123456789]|[0123456789][0123456789][0123456789][0123456789]|[0123456789][0123456789][0123456789][0123456789][0123456789]*)
 			count=$1
 			release="-r $count"
 			shift
@@ -3765,7 +4007,7 @@ release)count= lo= hi=
 					esac
 					for f in RELEASE CHANGES ChangeLog
 					do	if	test -f $i/$f
-						then	$exec $INSTALLROOT/bin/release $release $i/$f
+						then	$exec $EXECROOT/bin/release $release $i/$f
 							x="$x $i"
 							break
 						fi
@@ -3881,7 +4123,7 @@ results)set '' $target
 				for j in $m
 				do	echo "$sep==> $j <=="
 					sep=$nl
-					$exec egrep -iv '^($||[\+\[]|cc[^-:]|kill |make: .*file system time|so|[0-9]+ error|uncrate |[0-9]+ block|ar: creat|iffe: test: |conf: (check|generate|test)|[a-zA-Z_][a-zA-Z_0-9]*=|gsf@research|ar:.*warning|cpio:|[0-9]*$|(checking|creating|touch) [/a-zA-Z_0-9])| obsolete predefined symbol | is dangerous | is not implemented| trigraph| assigned to | passed as |::__builtin|pragma.*prototyped|^creating.*\.a$|warning.*not optimized|exceeds size thresh|ld:.*preempts|is unchanged|with value >=|(-l|lib)\*|/(ast|sys)/(dir|limits|param|stropts)\.h.*redefined|usage|base registers|`\.\.\.` obsolete'"$i" $j
+					$exec egrep -iv '^($||[\+\[]|cc[^-:]|kill |make: .*file system time|so|[0123456789]+ error|uncrate |[0123456789]+ block|ar: creat|iffe: test: |conf: (check|generate|test)|[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_][abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789]*=|gsf@research|ar:.*warning|cpio:|[0123456789]*$|(checking|creating|touch) [/abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789])| obsolete predefined symbol | is dangerous | is not implemented| trigraph| assigned to | passed as |::__builtin|pragma.*prototyped|^creating.*\.a$|warning.*not optimized|exceeds size thresh|ld:.*preempts|is unchanged|with value >=|(-l|lib)\*|/(ast|sys)/(dir|limits|param|stropts)\.h.*redefined|usage|base registers|`\.\.\.` obsolete'"$i" $j
 				done
 				;;
 			1)	cat $m
@@ -3944,6 +4186,8 @@ use)	# finalize the environment
 		esac
 		;;
 	esac
+	eval PACKAGE_USE=$package_use
+	export PACKAGE_USE
 
 	# run the command
 

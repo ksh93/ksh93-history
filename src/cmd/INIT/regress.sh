@@ -26,7 +26,9 @@
 command=regress
 case $(getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt) in
 0123)	USAGE=$'
-[-?@(#)regress (AT&T Labs Research) 2001-01-01]
+[-?
+@(#)$Id: regress (AT&T Labs Research) 2001-04-01 $
+]
 '$USAGE_LICENSE$'
 [+NAME?regress - run regression tests]
 [+DESCRIPTION?\bregress\b runs the tests in \aunit\a, or \aunit\a\b.tst\b
@@ -234,7 +236,6 @@ function RUN # void
 		esac
 		file=""
 		exec >/dev/null
-		compare=""
 		#DEBUG#PS4='+$LINENO+ '; set -x
 		for i in $INPUT
 		do	case " $OUTPUT " in
@@ -307,7 +308,7 @@ function RUN # void
 			case $failed in
 			"")	case $STATUS in
 				$EXIT)	;;
-				*)	failed="exit code $EXIT expected" ;;
+				*)	failed="exit code $EXIT expected -- got $STATUS" ;;
 				esac
 				;;
 			esac
@@ -341,6 +342,7 @@ function RUN # void
 		for i in $DONE
 		do	$i $TEST DONE $STATUS
 		done
+		compare=""
 		#DEBUG#set +x
 		;;
 	esac
@@ -391,8 +393,8 @@ function TEST # number description arg ...
 	RUN
 	case $1 in
 	-)		((LAST++)); TEST=$LAST ;;
-	+([0-9]))	LAST=$1 TEST=$1 ;;
-	*)		LAST=0${1/[!0-9]/} TEST=$1 ;;
+	+([0123456789]))	LAST=$1 TEST=$1 ;;
+	*)		LAST=0${1/[!0123456789]/} TEST=$1 ;;
 	esac
 	NOTE=
 	case $TEST in
@@ -407,7 +409,7 @@ function TEST # number description arg ...
 	case $TEST in
 	${GROUP}*)
 		;;
-	*)	GROUP=${TEST%%+([a-zA-Z])}
+	*)	GROUP=${TEST%%+([abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ])}
 		case $GROUP in
 		$select)INITIALIZE ;;
 		esac
@@ -505,7 +507,8 @@ function IO # INPUT|OUTPUT|ERROR [-n] file|- data ...
 	case $op in
 	OUTPUT|ERROR)	file=$file.ex ;;
 	esac
-	unset SAME[$op]
+	#unset SAME[$op]
+	SAME[$op]=
 	rm -f $file.sav
 	case $#:$f in
 	0:)	: > $file ;;
@@ -538,6 +541,7 @@ function SAME # new old
 		esac
 		SAME[$1]=$2
 		file=$1
+		compare="$compare $1"
 		;;
 	3)	SAME[$2]=$3
 		file=$2
@@ -548,6 +552,7 @@ function SAME # new old
 		*)	eval $1='"$'$1' $2"'
 			;;
 		esac
+		compare="$compare $2"
 		;;
 	esac
 	case " $IGNORE " in
@@ -751,7 +756,7 @@ case $# in
 0)	FATAL test unit name omitted ;;
 esac
 SOURCE=$PWD
-PATH=$SOURCE:$PATH
+PATH=$SOURCE:${PATH#:}
 UNIT=$1
 shift
 if	test -f $UNIT -a ! -x $UNIT
@@ -765,7 +770,7 @@ UNIT=${UNIT%.tst}
 TMP=$UNIT.tmp
 ARGV=("$@")
 case $select in
-"")	select="[0-9]*" ;;
+"")	select="[0123456789]*" ;;
 *'|'*)	select="@($select)" ;;
 esac
 

@@ -49,9 +49,9 @@
 #include	"national.h"
 
 #ifdef SHOPT_MULTIBYTE
-    char e_version[]	= "\n@(#)$Id: Version M 1993-12-28 l $\0\n";
+    char e_version[]	= "\n@(#)$Id: Version M 1993-12-28 l+ $\0\n";
 #else
-    char e_version[]	= "\n@(#)$Id: Version 1993-12-28 l $\0\n";
+    char e_version[]	= "\n@(#)$Id: Version 1993-12-28 l+ $\0\n";
 #endif /* SHOPT_MULTIBYTE */
 
 #if _hdr_wchar && _lib_wctype && _lib_iswctype
@@ -134,12 +134,11 @@ struct shell
 struct match
 {
 	Namfun_t	hdr;
-	Namval_t	*np;
 	char		*val;
-	char		*subp;
-	int		sub;
+	char		*rval;
+	int		vsize;
 	int		nmatch;
-	int		match[20];
+	int		match[40];
 };
 
 typedef struct _init_
@@ -663,48 +662,25 @@ static int hasgetdisc(register Namfun_t *fp)
 }
 
 /*
- * store the most recent node or value for use in .sh.match
- * size==-2 when node is given
+ * store the most recent value for use in .sh.match
  */
-void sh_setmatch(Namval_t *np, int size, int nmatch, int match[])
+void sh_setmatch(const char *v, int vsize, int nmatch, int match[])
 {
 	struct match *mp = (struct match*)(SH_MATCHNOD->nvfun);
-	Namarr_t *ap;
-	if(mp->val)
-	{
-		free((void*)mp->val);
-		mp->val = 0;
-	}
-	if(mp->np)
-		nv_unsetnotify(mp->np,(char**)&mp->np);
-	if(mp->sub>= -1 && mp->subp)
-		free((void*)mp->subp);
-	mp->subp = 0;
-	if(size >= -1)
-	{
-		mp->np = 0;
-		if(size==-1)
-			mp->subp = strdup((char*)np);
-		else
-		{
-			mp->subp = (char*)malloc(size+1);
-			memcpy(mp->subp,(void*)np,size);
-			mp->subp[size] = 0;
-		}
-	}
-	else if(mp->np = np)
-	{
-		if(nv_isarray(np))
-		{
-			if((mp->sub = nv_aindex(np)) < 0)
-				mp->subp = nv_getsub(np);
-		}
-		if(ap = nv_arrayptr(SH_MATCHNOD))
-			ap->nelem = nmatch;
-		nv_setnotify(np,(char**)&mp->np);
-	}
 	if(mp->nmatch = nmatch)
+	{
 		memcpy(mp->match,match,nmatch*2*sizeof(int));
+		if(vsize > mp->vsize)
+		{
+			if(mp->vsize)
+				mp->val = (char*)realloc(mp->val,vsize+1);
+			else
+				mp->val = (char*)malloc(vsize+1);
+			mp->vsize = vsize;
+		}
+		memcpy(mp->val,v,vsize);
+		mp->val[vsize] = 0;
+	}
 } 
 
 #define array_scan(np)	((nv_arrayptr(np)->nelem&ARRAY_SCAN))
@@ -712,46 +688,26 @@ void sh_setmatch(Namval_t *np, int size, int nmatch, int match[])
 static char* get_match(register Namval_t* np, Namfun_t *fp)
 {
 	struct match *mp = (struct match*)fp;
-	char *val;
 	int sub,n;
-	if(mp->val)
+	char *val;
+	if(mp->rval)
 	{
 		free((void*)mp->val);
-		mp->val = 0;
+		mp->rval = 0;
 	}
-	if(!mp->np && !mp->subp)
-		return(0);
-	if(mp->np  && (mp->np->nvfun && hasgetdisc(mp->np->nvfun)))
-		return(0);
 	sub = nv_aindex(np);
 	if(sub>=mp->nmatch)
 		return(0);
 	n = mp->match[2*sub+1]-mp->match[2*sub];
-	if(n==0)
+	if(n<=0)
 		return("");
-	mp->val = (char*)malloc(n+1);
-	if(mp->np)
-	{
-		int osub=0,scan=0;
-		char *osubp=0;
-		if(nv_isarray(mp->np))
-		{
-			scan = array_scan(mp->np);
-			if(mp->subp)
-				osubp = nv_getsub(mp->np);
-			else
-				osub = nv_aindex(mp->np);
-			nv_putsub(mp->np,mp->subp,mp->sub);
-		}
-		val = nv_getval(mp->np);
-		if(nv_isarray(mp->np))
-			nv_putsub(mp->np,osubp,osub|scan);
-	}
-	else
-		val = mp->subp;
-	memcpy(mp->val,val+mp->match[2*sub],n);
-	mp->val[n] = 0;
-	return(mp->val);
+	val = mp->val+mp->match[2*sub];
+	if(mp->val[mp->match[2*sub+1]]==0)
+		return(val);
+	mp->rval = (char*)malloc(n+1);
+	memcpy(mp->rval,val,n);
+	mp->rval[n] = 0;
+	return(mp->rval);
 }
 
 static const Namdisc_t SH_MATCH_disc  = {  0, 0, get_match };

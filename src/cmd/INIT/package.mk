@@ -1,7 +1,7 @@
 /*
  * source and binary package support
  *
- * @(#)package.mk (AT&T Labs Research) 2001-01-01
+ * @(#)package.mk (AT&T Labs Research) 2001-08-11
  *
  * usage:
  *
@@ -37,8 +37,11 @@
  *	release=NNNN
  *		package release (delta number)
  *
- *	variants=cc-
- *		include variants in binary packages
+ *	strip=0
+ *		don't strip non-lcl binary package members
+ *
+ *	variants=pattern
+ *		include variants matching pattern in binary packages
  *
  * NOTE: the Makerules.mk :PACKAGE: operator defers to :package: when
  *	 a target is specified
@@ -50,11 +53,11 @@ index =
 init = INIT
 licenses = ast
 name =
-ratz = ratz
+strip = 0
 style = tgz
 suffix = tgz
 type =
-variants =
+variants = !(cc-g)
 version = $("":T=R%Y-%m-%d)
 release = 0000
 
@@ -87,8 +90,8 @@ new.old.binary = $(PACKAGEDIR)/$(name).$(version).$(old.version).$(CC.HOSTTYPE).
 source.list = $("$(PACKAGEDIR)/$(name).*.[0-9][0-9][0-9][0-9].$(suffix)":P=G:H>)
 binary.list = $("$(PACKAGEDIR)/$(name).*.[0-9][0-9][0-9][0-9].$(CC.HOSTTYPE).$(suffix)":P=G:H>)
 
-source.ratz = $("$(INSTALLROOT)/src/cmd/$(init)/$(ratz).c":T=F)
-binary.ratz = $("$(INSTALLROOT)/src/cmd/$(init)/$(ratz)":T=F)
+source.ratz = $("$(INSTALLROOT)/src/cmd/$(init)/ratz.c":T=F)
+binary.ratz = $("$(INSTALLROOT)/src/cmd/$(init)/ratz":T=F)
 
 $(init) : .VIRTUAL $(init)
 
@@ -120,7 +123,7 @@ $(init) : .VIRTUAL $(init)
 		end
 		I := $(name)
 		while 1
-			LICENSEFILE := $(LICENSEFILE):$(I:D=$(LIBDIR)/package:B:S=.lic)
+			LICENSEFILE := $(LICENSEFILE):$(I:D=${PACKAGEROOT}/lib/package:B:S=.lic)
 			if I != "*-*"
 				break
 			end
@@ -130,7 +133,7 @@ $(init) : .VIRTUAL $(init)
 	end
 	if "$(>)"
 		for I $(>:V)
-			if R = "$(I:D:B:S=.pkg:T=F)"
+			if I != "$(P)" && ( R = "$(I:D:B:S=.pkg:T=F)" )
 				if I == "$(init)"
 					package.omit = -
 				else
@@ -173,7 +176,7 @@ source : .source.init .source.gen .source.$$(style)
 .source.init : .MAKE
 	local A B D P V I
 	type := source
-	if name == "$(ratz)"
+	if "$(source.$(name))"
 		suffix = c
 	end
 	A := $(source.list)
@@ -205,7 +208,7 @@ source : .source.init .source.gen .source.$$(style)
 		if op == "base"
 			for I $(B) $(P)
 				V := $(I:B:/$(name)\.\([^.]*\).*/\1/)
-				if V != "$(version)"
+				if V == "[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]" && V != "$(version)"
 					old.version := $(V)
 					old.source := $(I)
 					if "$(old.version)" >= "$(version)"
@@ -245,7 +248,7 @@ $$(PACKAGEGEN)/DETAILS.html : $$(INSTALLROOT)/bin/package
 	error 3 $(style): source package style not supported yet
 
 .source.lcl :
-	if	test '$(ratz)' != '$(name)'
+	if	test '' != '$(~$(name))'
 	then	tmp=/tmp/pkg$(tmp)
 		mkdir $tmp
 		{
@@ -262,6 +265,7 @@ $$(PACKAGEGEN)/DETAILS.html : $$(INSTALLROOT)/bin/package
 			done
 		} |
 		$(PAX)	--filter=- \
+			--to=ascii \
 			$(op:N=delta:??--format=$(format)?) \
 			--local \
 			-wvf $(source) $(base) \
@@ -273,37 +277,8 @@ $$(PACKAGEGEN)/DETAILS.html : $$(INSTALLROOT)/bin/package
 	fi
 
 .source.tgz :
-	if	test '$(ratz)' = '$(name)'
-	then	if	test '' != '$(old.source)' &&
-			cmp -s $(source.ratz) $(source)
-		then	: $(name) is up to date
-		else	echo $(name) $(version) $(release) 1 > $(PACKAGEGEN)/$(name).ver
-			: > $(PACKAGEGEN)/$(name).req
-			{
-				echo "name='$(name)'"
-				echo "index='$(index)'"
-				echo "covers='$(~covers)'"
-				echo "requires='$(~req)'"
-			} > $(PACKAGEGEN)/$(name).inx
-			{
-				echo '$($(name).txt)'
-				package help source
-			} > $(PACKAGEGEN)/$(name).txt
-			{
-				echo '.xx title="$(name) package"'
-				echo '.xx meta.description="$(name) package"'
-				echo '.xx meta.keywords="software, package"'
-				echo '.MT 4'
-				echo '.TL'
-				echo '$(name) package'
-				echo '.H 1'
-				echo '$($(name).txt)'
-			} |
-			$(MM2HTML) $(MM2HTMLFLAGS) -o nohtml.ident > $(PACKAGEGEN)/$(name).html
-			cp $(source.ratz) $(source)
-			echo local > $(source:D:B=$(name):S=.tim)
-		fi
-	else	tmp=/tmp/pkg$(tmp)
+	if	test '' != '$(~$(name))'
+	then	tmp=/tmp/pkg$(tmp)
 		mkdir $tmp
 		{
 			integer m
@@ -445,7 +420,7 @@ $$(PACKAGEGEN)/DETAILS.html : $$(INSTALLROOT)/bin/package
 				echo '.xx index'
 				echo '.nf'
 				package release $(name) |
-				sed -e 's/:::::::: \(.*\) ::::::::/.H 1 "\1 changes"/'
+				sed -e 's/:::::::: \(.*\) ::::::::/.fi\$("\n").H 1 "\1 changes"\$("\n").nf/'
 				echo '.fi'
 			} |
 			$(MM2HTML) $(MM2HTMLFLAGS) -o nohtml.ident > $(PACKAGEGEN)/$(name).html
@@ -487,6 +462,7 @@ $$(PACKAGEGEN)/DETAILS.html : $$(INSTALLROOT)/bin/package
 			done
 		} |
 		$(PAX)	--filter=- \
+			--to=ascii \
 			$(op:N=delta:??--format=$(format)?) \
 			--local \
 			-wvf $(source) $(base) \
@@ -496,6 +472,37 @@ $$(PACKAGEGEN)/DETAILS.html : $$(INSTALLROOT)/bin/package
 		$(PAX) -rf $(source) -wvf $(old.new.source) -z $(old.source) &&
 		$(PAX) -rf $(old.source) -wvf $(new.old.source) -z $(source)
 		rm -rf $tmp
+	else	if	test '' != '$(old.source)' &&
+			cmp -s $(source.$(name)) $(source)
+		then	: $(name) is up to date
+		else	echo $(name) $(version) $(release) 1 > $(PACKAGEGEN)/$(name).ver
+			: > $(PACKAGEGEN)/$(name).req
+			{
+				echo "name='$(name)'"
+				echo "index='$(index)'"
+				echo "covers='$(~covers)'"
+				echo "requires='$(~req)'"
+			} > $(PACKAGEGEN)/$(name).inx
+			{
+				echo '.xx title="$(name) package"'
+				echo '.xx meta.description="$(name) package"'
+				echo '.xx meta.keywords="software, package"'
+				echo '.MT 4'
+				echo '.TL'
+				echo '$(name) package'
+				echo '.H 1'
+				echo '$($(name).txt)'
+			} |
+			$(MM2HTML) $(MM2HTMLFLAGS) -o nohtml.ident > $(PACKAGEGEN)/$(name).html
+			if	test '' != '$(source.$(name))'
+			then	{
+					echo '$($(name).txt)'
+					package help source
+				} > $(PACKAGEGEN)/$(name).txt
+				cp $(source.$(name)) $(source)
+			fi
+			echo local > $(source:D:B=$(name):S=.tim)
+		fi
 	fi
 
 binary : .binary.init .binary.gen .binary.$$(style)
@@ -503,8 +510,12 @@ binary : .binary.init .binary.gen .binary.$$(style)
 .binary.init : .MAKE
 	local A B D I P V
 	type := binary
-	if name == "$(ratz)"
-		suffix = exe
+	if ! "$(~$(name))"
+		if name == "ratz"
+			suffix = exe
+		else
+			suffix = gz
+		end
 	end
 	A := $(binary.list)
 	B := $(A:N=*.0000.*:O=1:T=F)
@@ -531,7 +542,7 @@ binary : .binary.init .binary.gen .binary.$$(style)
 		if op == "base"
 			for I $(B) $(P)
 				V := $(I:B:/$(name)\.\([^.]*\).*/\1/)
-				if V != "$(version)"
+				if V == "[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]" && V != "$(version)"
 					old.version := $(V)
 					old.binary := $(I)
 					if "$(old.version)" >= "$(version)"
@@ -559,7 +570,7 @@ binary : .binary.init .binary.gen .binary.$$(style)
 	error 3 $(style): binary package style not supported yet
 
 .binary.lcl :
-	if	test '$(ratz)' != '$(name)'
+	if	test '' != '$(~$(name))'
 	then	tmp=/tmp/pkg$(tmp)
 		mkdir $tmp
 		{
@@ -568,11 +579,12 @@ binary : .binary.init .binary.gen .binary.$$(style)
 			set -- $(package.closure)
 			for i
 			do	cd $(INSTALLROOT)/$i
-				$(MAKE) --noexec $(-) $(=) list.package.$(type) $(variants)
+				$(MAKE) --noexec $(-) $(=) list.package.$(type) variants=$(variants:Q) cc-
 			done
 		} |
 		sort -u |
 		$(PAX)	--filter=- \
+			--to=ascii \
 			$(op:N=delta:??--format=$(format)?) \
 			--local \
 			--checksum=md5:$(PACKAGEGEN)/$(name).sum \
@@ -588,27 +600,8 @@ binary : .binary.init .binary.gen .binary.$$(style)
 	fi
 
 .binary.tgz :
-	if	test '$(ratz)' = '$(name)'
-	then	if	test '' != '$(old.binary)' &&
-			cmp -s $(binary.ratz) $(binary)
-		then	: $(name) is up to date
-		else	echo $(name) $(version) $(release) 1 > $(PACKAGEGEN)/$(name).ver
-			echo $(name) $(version) $(release) 1 > $(PACKAGEGEN)/$(name).ver
-			: > $(PACKAGEGEN)/$(name).req
-			{
-				echo "name='$(name)'"
-				echo "index='$(index)'"
-				echo "covers='$(~covers)'"
-				echo "requires='$(~req)'"
-			} > $(PACKAGEGEN)/$(name).inx
-			{
-				echo '$($(name).txt)'
-				package help binary
-			} > $(PACKAGEGEN)/$(name).txt
-			cp $(binary.ratz) $(binary)
-			echo local > $(binary:D:B=$(name):S=.$(CC.HOSTTYPE).tim)
-		fi
-	else	tmp=/tmp/pkg$(tmp)
+	if	test '' != '$(~$(name))'
+	then	tmp=/tmp/pkg$(tmp)
 		mkdir $tmp
 		{
 			if	test '$(init)' = '$(name)'
@@ -654,11 +647,12 @@ binary : .binary.init .binary.gen .binary.$$(style)
 			set -- $(package.closure)
 			for i
 			do	cd $(INSTALLROOT)/$i
-				$(MAKE) --noexec $(-) $(=) list.package.$(type) $(variants)
+				$(MAKE) --noexec $(-) $(=) package.strip=$(strip) list.package.$(type) variants=$(variants:Q) cc-
 			done
 		} |
 		sort -u |
 		$(PAX)	--filter=- \
+			--to=ascii \
 			$(op:N=delta:??--format=$(format)?) \
 			--local \
 			--checksum=md5:$(PACKAGEGEN)/$(name).sum \
@@ -671,6 +665,32 @@ binary : .binary.init .binary.gen .binary.$$(style)
 		$(PAX) -rf $(binary) -wvf $(old.new.binary) -z $(old.binary) &&
 		$(PAX) -rf $(old.binary) -wvf $(new.old.binary) -z $(binary)
 		rm -rf $tmp
+	else	if	test '' != '$(binary.$(name))'
+		then	exe=$(binary.$(name))
+		else	exe=$(INSTALLROOT)/bin/$(name)
+		fi
+		if	test '' != '$(old.binary)' &&
+			cmp -s $exe $(binary)
+		then	: $(name) is up to date
+		else	echo $(name) $(version) $(release) 1 > $(PACKAGEGEN)/$(name).ver
+			echo $(name) $(version) $(release) 1 > $(PACKAGEGEN)/$(name).ver
+			: > $(PACKAGEGEN)/$(name).req
+			{
+				echo "name='$(name)'"
+				echo "index='$(index)'"
+				echo "covers='$(~covers)'"
+				echo "requires='$(~req)'"
+			} > $(PACKAGEGEN)/$(name).inx
+			{
+				echo '$($(name).txt)'
+				package help binary
+			} > $(PACKAGEGEN)/$(name).txt
+			case "$(binary)" in
+			*.gz)	gzip < $exe > $(binary) ;;
+			*)	cp $exe $(binary) ;;
+			esac
+			echo local > $(binary:D:B=$(name):S=.$(CC.HOSTTYPE).tim)
+		fi
 	fi
 
 list.install list.manifest :

@@ -1,9 +1,13 @@
-: next.i386 cc wrapper for unix message and exit code semantics
+: next.i386 cc wrapper for unix message and exit code semantics : 1995-05-09 :
 
-# @(#)cc.next.i386 (AT&T Labs Research) 05/09/95
+HOSTTYPE=next.i386
 
-# 05/09/95	-lposix termios.o waitpid.o setpgid.o *do* work
-# 11/04/94	-posix has old redirection hole bug
+case $* in
+-dumpmachine) echo $HOSTTYPE; exit ;;
+esac
+
+# 1995-05-09	-lposix termios.o waitpid.o setpgid.o *do* work
+# 1994-11-04	-posix has old redirection hole bug
 #		-D_POSIX_SOURCE requires <sys/dirent.h> manual fixes
 #		libexpr/exeval.c bombs -O, no -O ok
 

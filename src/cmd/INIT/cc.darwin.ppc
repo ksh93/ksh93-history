@@ -1,4 +1,11 @@
-: unix wrapper for mac os10 cc
+: unix wrapper for mac os10 cc : 2001-05-31 :
+
+HOSTTYPE=darwin.ppc
+
+case $* in
+-dumpmachine) echo $HOSTTYPE; exit ;;
+esac
+
 cc=/usr/bin/cc
 op=init
 for arg
@@ -31,12 +38,7 @@ case $op in
 init)	echo "cc: arguments expected" >&2
 	exit 1
 	;;
-cpp)	/usr/libexec/ppc/cpp -smart -lang-c -v -arch ppc -undef \
-		-D__GNUC__=2 -D__GNUC_MINOR__=95 -D__ppc__ \
-		-D__NATURAL_ALIGNMENT__ -D__MACH__ -D__BIG_ENDIAN__ \
-		-D__APPLE__ -D__ppc__ -D__NATURAL_ALIGNMENT__ -D__MACH__ \
-		-D__BIG_ENDIAN__ -D__APPLE__ -D__STDC__ -D__APPLE_CC__=912 \
-		-D__DYNAMIC__ -DCLK_TCK=100 "$@"
+cpp)	$cc -E "$@"
 	;;
 cc)	$cc -DCLK_TCK=100 "$@"
 	;;

@@ -28,6 +28,13 @@
  * getdate implementation
  */
 
+#include <ast_map.h>
+
+#ifdef getdate
+#undef	getdate
+#define _map_getdate	1
+#endif
+
 #if defined(__STDPP__directive) && defined(__STDPP__hide)
 __STDPP__directive pragma pp:hide getdate
 #else
@@ -50,6 +57,11 @@ __STDPP__directive pragma pp:nohide getdate
 NoN(getdate)
 
 #else
+
+#if _map_getdate
+#undef	getdate
+#define getdate	_ast_getdate
+#endif
 
 #ifndef getdate_err
 __DEFINE__(int, getdate_err, 0);

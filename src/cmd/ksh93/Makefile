@@ -3,13 +3,21 @@
  * This makefile should work with nmake 2.3 and higher 
  */
 
-:PACKAGE:	ast
+if CC.HOSTTYPE == "win32.*" || "$(PACKAGE_OPTIMIZE:N=space)"
+	CCFLAGS = $(CC.OPTIMIZE) $(CC.DLL)
+	LIBS_req = -lshell
+else
+	LIBS_req = +lshell
+	if ! VARIANT
+		libtype = :static
+	end
+end
+
+:PACKAGE:	ast$(libtype)
 
 LICENSE = since=1982,author=dgk
 
 CATALOG = libshell
-
-SH_DICT         == (void*)e_dict
 
 .SOURCE : edit sh bltins data tests fun
 .SOURCE.h : include 
@@ -64,12 +72,6 @@ if SHOPT_X
 LDFLAGS += -u  _XtAppInitialize -L/usr/add-on/X11/lib
 end
 
-if CC.HOSTTYPE == "win32.*" || "$(PACKAGE_OPTIMIZE:N=space)"
-	CCFLAGS = $(CC.OPTIMIZE) $(CC.DLL)
-	LIBS_req = -lshell
-else
-	LIBS_req = +lshell
-end
 
 :ALL: $(SH) shcomp $(SHOPT_SUID_EXEC:T=V?suid_exec.c)
 
@@ -113,7 +115,11 @@ shcomp.o : _BLD_shell=
 	quoting2.sh return.sh select.sh substring.sh tilde.sh variables.sh \
 	shtests
 
-if VARIANT != "DLL"
+if VARIANT
+
+test : .NULL
+
+else
 
 test : ksh shtests
 	KSH=$(*:O=1:P=A)

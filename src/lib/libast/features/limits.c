@@ -64,9 +64,6 @@ __STDPP__directive pragma pp:hide getpagesize getdtablesize printf spawnve
 #define _timespec	timespec
 #endif
 
-#define _LIBC_LIMITS_H_
-#define _GCC_NEXT_LIMITS_H
-
 #include <sys/types.h>
 
 #undef	_SGIAPI
@@ -352,7 +349,7 @@ main()
 #else
 		vll = ull;
 #endif
-		printf("#if defined(__STDC__)\n");
+		printf("#if defined(__STDC__) && _ast_LL\n");
 		printf("#define ULONGLONG_MAX	%lluLLU\n", vll);
 		printf("#else\n");
 		printf("#define ULONGLONG_MAX	%llu\n", vll);
@@ -364,7 +361,7 @@ main()
 #else
 		vll = (unsigned _ast_int8_t)(ull >> 1) + 1;
 #endif
-		printf("#if defined(__STDC__)\n");
+		printf("#if defined(__STDC__) && _ast_LL\n");
 		printf("#define LONGLONG_MIN	(-%lluLL-1LL)\n", vll - 1);
 		printf("#else\n");
 		printf("#define LONGLONG_MIN	(-%llu-1)\n", vll - 1);
@@ -376,7 +373,7 @@ main()
 #else
 		vll = (unsigned _ast_int8_t)(ull >> 1);
 #endif
-		printf("#if defined(__STDC__)\n");
+		printf("#if defined(__STDC__) && _ast_LL\n");
 		printf("#define LONGLONG_MAX	%lluLL\n", vll);
 		printf("#else\n");
 		printf("#define LONGLONG_MAX	%llu\n", vll);

@@ -31,12 +31,9 @@
  *
  */
 
-#include	<ast.h>	
-#include	<sfio.h>	
-#include	<error.h>	
+#include	"defs.h"
 #include	<ctype.h>	
 #include	<ls.h>	
-#include	<shell.h>	
 #include	"builtins.h"
 
 int	b_umask(int argc,char *argv[],void *extra)

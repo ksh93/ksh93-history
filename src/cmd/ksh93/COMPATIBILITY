@@ -103,5 +103,10 @@ omitted features that are completely upward compatible.
 	recongnized, doing arithmetic on typeset -Z variables can
 	yield different results that with ksh88.
 
+24.	Starting after ksh93l, If you run ksh name, where name does
+	not contain a /, the current directory will be searched
+	before doing a path search on name as required by the POSIX
+	shell standard.  
+
 I am interested in expanding this list so please let me know if you
 uncover any others.

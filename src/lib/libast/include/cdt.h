@@ -101,6 +101,12 @@ struct _dtdisc_s
 	Dtevent_f	eventf;	/* to process events			*/
 };
 
+#define DTDISC(dc,ky,sz,lk,mkf,frf,cmpf,hshf,memf,evf) \
+	( (dc)->key = (ky), (dc)->size = (sz), (dc)->link = (lk), \
+	  (dc)->makef = (mkf), (dc)->freef = (frf), \
+	  (dc)->comparf = (cmpf), (dc)->hashf = (hshf), \
+	  (dc)->memoryf = (memf), (dc)->eventf = (evf) )
+
 /* the dictionary structure itself */
 struct _dt_s
 {	Dtsearch_f	searchf;/* search function			*/

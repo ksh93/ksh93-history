@@ -359,7 +359,7 @@ sh_exec(register const union anynode *t, int flags)
 					stakwrite(com0,cp-com0);
 					stakputc(0);
 					stakseek(type);
-					if(nq=nv_search(stakptr(type),sh.var_tree,0))
+					if(nq=nv_search(stakptr(type),sh.var_base,0))
 					{
 						Namval_t *nr=nq;
 						char *name = com0;
@@ -1317,7 +1317,7 @@ sh_exec(register const union anynode *t, int flags)
 				stakputc('.');
 				stakputs(fname);
 				stakputc(0);
-				np = nv_open(stakptr(offset),sh.var_tree,NV_NOASSIGN|NV_ARRAY|NV_VARNAME);
+				np = nv_open(stakptr(offset),sh.var_base,NV_NOASSIGN|NV_ARRAY|NV_VARNAME);
 				offset = staktell();
 				sh.namespace = np;
 				if(!(root=np->nvalue.hp))
@@ -1356,7 +1356,7 @@ sh_exec(register const union anynode *t, int flags)
 				int offset = staktell();
 				stakwrite(fname,cp-fname);
 				stakputc(0);
-				npv = nv_open(stakptr(offset),sh.var_tree,NV_NOASSIGN|NV_ARRAY|NV_VARNAME);
+				npv = nv_open(stakptr(offset),sh.var_base,NV_NOASSIGN|NV_ARRAY|NV_VARNAME);
 				offset = staktell();
 				stakputs(nv_name(npv));
 				stakputs(cp);
@@ -1374,7 +1374,7 @@ sh_exec(register const union anynode *t, int flags)
 				fname = stakptr(offset);
 			}
 #endif /* SHOPT_NAMESPACE */
-			np = nv_open(fname,sh_subfuntree(),NV_NOASSIGN|NV_ARRAY|NV_VARNAME|NV_NOSCOPE);
+			np = nv_open(fname,sh_subfuntree(1),NV_NOASSIGN|NV_ARRAY|NV_VARNAME|NV_NOSCOPE);
 			if(np->nvalue.rp)
 			{
 				slp = (struct slnod*)np->nvenv;
@@ -1607,6 +1607,8 @@ static char *word_trim(register struct argnod *arg, int flags)
 	register char *sp = arg->argval;
 	if((arg->argflag&ARG_RAW))
 		return(sp);
+	if(flags&ARG_OPTIMIZE)
+		arg->argchn.ap=0;
 	if(!(sp=arg->argchn.cp))
 	{
 		sh_macexpand(arg,NIL(struct argnod**),flags);

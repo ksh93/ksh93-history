@@ -33,6 +33,10 @@ Command=$0
 mkdir /tmp/ksh$$
 cd /tmp/ksh$$
 trap 'rm -rf /tmp/ksh$$' EXIT
+print 'print hi' > ls
+if	[[ $($SHELL ls 2> /dev/null) != hi ]]
+then	err_exit "$SHELL name not executing version in current directory"
+fi
 pwd=$PWD
 # get rid of leading and trailing : and trailing :.
 PATH=${PATH%.}

@@ -36,7 +36,9 @@ void _STUB_stdfun(){}
 #include <windows.h>
 #include <uwin.h>
 
+#if 0 /* this is in <wchar.h> now */
 __declspec(dllimport) extern char* __cdecl __p__iob(void);
+#endif
 
 #define IOBMAX	(512*32)
 
@@ -50,7 +52,7 @@ _stdfun(Sfio_t* f, Funvec_t* vp)
 	static HANDLE	bp;
 	static HANDLE	np;
 
-	if (!iob && !(iob = __p__iob()))
+	if (!iob && !(iob = (char*)__p__iob()))
 		return 0;
 	if (f && ((char*)f < iob || (char*)f > iob+IOBMAX))
 		return 0;

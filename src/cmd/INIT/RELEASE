@@ -1,3 +1,52 @@
+01-08-11 package.mk: handle single gz executable packages (e.g., for ksh)
+	 package.sh: fix package install to require nmake only if no *.sum
+	 iffe.sh: drop ancient menu and prompt actions; check ./hdr.h clash
+01-07-17 package: fix use cross compile test to generate files in /tmp 
+01-06-27 ratz: handle hard and soft links if possible
+01-06-07 Makefile: fix :MAPLIB: for sco
+01-05-31 crossexec.sh: add
+	 iffe.sh: add -x crosstype to run crossexec
+	 iffe.sh: exp test now handles pass{}end fail{}end yes{}end no{}end
+	 package.sh: add package host canon external-host-type-name
+	 package.sh: fix `use USER' lookup for shells that support ~USER
+	 cc.*: add -dumpmachine to dump target HOSTTYPE
+01-05-18 iffe.sh: drop $HOME/tmp/t.sh debug trace -- oops
+01-05-01 mamake.c: scan() now handles :PACKAGE: foo:command
+01-04-26 *.sh: expand [a-z][A-Z][0-9] for non-contiguous character codes
+	 iffe.sh: fix run *.sh for shells that don't $* across . command
+	 cc.mvs.390: recode for /bin/sh
+01-04-25 package.mk: include non cc-g variants by default
+	 package.sh: *[._]* => *?[_.]* for mvs.390 /bin/sh
+01-04-24 TEST.mk: no tests for VARIANT=="DLL"
+01-04-22 package.mk,package.sh: tarball text members are ascii encoded
+01-04-18 package.mk: allow package name to be the same as one of its components
+         cc.mvs.390: handle .C .cpp .cxx
+         cc.mvs.390: compensate for -o that does not overwrite
+01-04-01 regress: fix SAME that just skipped it -- we should regress regress!
+	 iffe: fix bug that didn't emit _hdr_foo for internal hdr tests
+	 iffe: fix lcl bug for cc -E that doesn't emit line syncs
+	 ratz: add ascii=>ebcdic conversion for text archive members
+	 mamake: fix buffer overlap bug that clobbered the probe file path
+01-03-17 iffe: handle : separator as first arg
+01-03-15 mamake.c,ratz.c,release.c: add <stdlib.h> and <string.h>
+01-02-26 iffe.sh: fix bug that omitted runtime #define for `mac' op
+01-02-22 cc.ibm.risc: handle SF_CLOSE clash in <sfio.h>
+01-02-14 cc.sgi.mips3,cc.sgi.mips4: handle -mips2 -mips3 -mips4 for cross cc
+	 C+probe: quote "$cc" when its an argument!
+	 mamake: execute actions with $SHELL, ignored signals back to default
+	 package.sh: nmake check error output to /dev/null
+	 package.sh: fix INIT a.out updates for knr cc
+	 package.sh: package list now handle large tgz dirs
+	 package.sh: *-ok executables moved to ok/* for *.dll systems
+	 iffe.sh: change "exec >&-" to "exec >/dev/null" else linux mkdir fails!
+	 mamake: handle `bind -lx [dontcare]'
+01-02-12 ratz.c: fix _PACKAGE_ast includes
+	 package.sh: $HOSTTYPE env overrides if $PACKAGEROOT/arch/$HOSTTYPE/
+	 package.sh: $CC ^HOSTTYPE=[A-Za-z_0-9.]*$ overrides HOSTTYPE
+	 iffe.sh: fix dat code that used previous $tmp.exe
+	 iffe.sh: fix dat code for _DLL imports
+01-02-09 iffe.sh: add copy() for shells with the dissappearing here doc bug
+01-02-08 Makefile: guard against null $(CC.HOSTTYPE)
 01-02-06 Makefile: separate out cc,ld,ldd workarounds (so they will be packaged)
 01-02-02 package.sh: fix package use for $INSTALLROOT != */$HOSTTYPE
 	 package.sh: create intermediate recursion makefiles when needed

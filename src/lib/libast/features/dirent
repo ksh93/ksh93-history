@@ -20,7 +20,7 @@ tst	botch_d_ino_dirent64 note{ dirent64.d_ino vs. readdir64 mismatch }end compil
 	}
 }end
 
-exp	_int_dirent !_lib_opendir yes{
+exp	_inc_dirent !_lib_opendir yes{
 	/*
 	 * <dirent.h> for systems with no opendir()
 	 */
@@ -62,7 +62,7 @@ exp	_int_dirent !_lib_opendir yes{
 	#endif
 }end
 
-exp	_int_dirent _lib_stat64&&_typ_off64_t&&_botch_d_ino_dirent64 yes{
+exp	_inc_dirent !_inc_dirent&_lib_stat64&&_typ_off64_t&&_botch_d_ino_dirent64 yes{
 	/*
 	 * <dirent.h> for [fl]stat64 and off64_t with sizeof(ino64_t)==4
 	 */
@@ -100,7 +100,7 @@ exp	_int_dirent _lib_stat64&&_typ_off64_t&&_botch_d_ino_dirent64 yes{
 	#endif
 }end
 
-exp	_int_dirent _lib_stat64&&_typ_off64_t yes{
+exp	_inc_dirent !_inc_dirent&_lib_stat64&&_typ_off64_t yes{
 	/*
 	 * <dirent.h> for [fl]stat64 and off64_t
 	 */
@@ -132,7 +132,7 @@ exp	_int_dirent _lib_stat64&&_typ_off64_t yes{
 	#endif
 }end
 
-exp	_int_dirent _hdr_dirent yes{
+exp	_inc_dirent !_inc_dirent&_hdr_dirent yes{
 	/*
 	 * <dirent.h> for systems with ok <dirent.h>
 	 */
@@ -148,7 +148,7 @@ exp	_int_dirent _hdr_dirent yes{
 	#endif
 }end
 
-exp	_int_dirent _hdr_ndir yes{
+exp	_inc_dirent !_inc_dirent&_hdr_ndir yes{
 	/*
 	 * <dirent.h> for systems with opendir() and <ndir.h>
 	 */
@@ -200,7 +200,7 @@ exp	_int_dirent _hdr_ndir yes{
 	#endif
 }end
 
-exp	_int_dirent _sys_dir yes{
+exp	_inc_dirent !_inc_dirent&_sys_dir yes{
 	/*
 	 * <dirent.h> for systems with opendir() and no <ndir.h>
 	 */

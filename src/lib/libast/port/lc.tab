@@ -14,7 +14,13 @@
 	iso8859-8	hebrew				1255
 	iso8859-9	latin5|turkish			1254
 	iso8859-10	latin6|nordic
+	iso8859-13	latin7
+	iso8859-14	latin8|celtic
 	iso8859-15	latin0
+	iso2022		japanese|korean
+	iso4873		japanese-ascii|korean-ascii
+	koi8-r		russian
+	utf8		plan9
 
 :language:
 
@@ -53,8 +59,8 @@
 	fo	faeroese
 	fr	french			fra|fre
 	fy	frisian
-	ga	irish
-	gd	scots-gaelic
+	ga	irish			-	iso8859-14
+	gd	scots-gaelic		-	iso8859-14
 	gl	galician
 	gn	guarani
 	gu	gujarati
@@ -87,8 +93,8 @@
 	la	latin
 	ln	lingala
 	lo	laothian
-	lt	lithuanian		lit	iso8859-3
-	lv	latvian			lav	iso8859-3
+	lt	lithuanian		lit	iso8859-13
+	lv	latvian			lav	iso8859-13
 	mg	malagasy
 	mi	maori
 	mk	macedonian		mkd|mac

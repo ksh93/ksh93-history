@@ -82,8 +82,10 @@ extern _Ast_state_t		old;
 
 #endif
 
-#if _hdr_wctype && _lib_wcwidth
+#if _lib_wcwidth
+#if _hdr_wctype
 #include <wctype.h>
+#endif
 #undef	wcwidth
 #else
 #define wcwidth			0
@@ -96,6 +98,10 @@ extern _Ast_state_t		old;
 #undef	strcoll
 #undef	strxfrm
 #undef	valid
+
+#ifndef AST_LC_CANONICAL
+#define AST_LC_CANONICAL	LC_abbreviated
+#endif
 
 #if _UWIN
 
@@ -459,20 +465,15 @@ set_ctype(Lc_category_t* cp)
 		ast.mb_towc = debug_mbtowc;
 		ast.mb_width = debug_wcwidth;
 	}
-	else if (locales[cp->internal]->flags & LC_default)
+	else if ((locales[cp->internal]->flags & LC_default) || (ast.mb_cur_max = MB_CUR_MAX) <= 1 || !(ast.mb_len = mblen) || !(ast.mb_towc = mbtowc))
 	{
 		ast.mb_cur_max = 1;
 		ast.mb_len = 0;
 		ast.mb_towc = 0;
 		ast.mb_width = default_wcwidth;
 	}
-	else
-	{
-		ast.mb_cur_max = MB_CUR_MAX;
-		ast.mb_len = mblen;
-		ast.mb_towc = mbtowc;
-		ast.mb_width = wcwidth;
-	}
+	else if (!(ast.mb_width = wcwidth))
+		ast.mb_width = default_wcwidth;
 	return 0;
 }
 
@@ -563,7 +564,7 @@ default_setlocale(int category, const char* locale)
 		info_default[0].native &= ~lc->set;
 		info_default[1].native &= ~lc->set;
 		lc->native |= lc->set;
-		return lc->code;
+		return lc->name;
 	}
 	return (info_default[1].native & (1<<category)) ? info_default[1].name : info_default[0].name;
 }
@@ -579,23 +580,20 @@ default_setlocale(int category, const char* locale)
 static char*
 single(int category, Lc_t* lc)
 {
-	const char*	usr;
 	const char*	sys;
 
 	if (!lc && !(lc = categories[category].prev))
 		lc = lcmake(NiL);
 	if (locales[category] != lc)
 	{
-		usr = lc->code;
 		if (lc->flags & (LC_debug|LC_local))
-			sys = setlocale(categories[category].external, lcmake(NiL)->code);
-		else if (!(sys = setlocale(categories[category].external, usr)) && !streq(lc->code, lc->language->code))
-		{
-			usr = lc->language->code;
-			sys = setlocale(categories[category].external, usr);
-		}
+			sys = setlocale(categories[category].external, lcmake(NiL)->name);
+		else if (!(sys = setlocale(categories[category].external, lc->name)) &&
+			 (streq(lc->name, lc->code) || !(sys = setlocale(categories[category].external, lc->code))) &&
+			 !streq(lc->code, lc->language->code))
+				sys = setlocale(categories[category].external, lc->language->code);
 		if (ast.locale.set & (AST_LC_debug|AST_LC_setlocale))
-			sfprintf(sfstderr, "locale set  %11s %-27s %-27s\n", categories[category].name, usr, sys);
+			sfprintf(sfstderr, "locale set  %11s %-27s %-27s\n", categories[category].name, lc->name, sys);
 		if (!sys)
 		{
 			/*
@@ -613,7 +611,7 @@ single(int category, Lc_t* lc)
 			}
 			if (!(lc->flags & LC_local))
 				return 0;
-			setlocale(categories[category].external, lcmake(NiL)->code);
+			setlocale(categories[category].external, lcmake(NiL)->name);
 		}
 		locales[category] = lc;
 		if (categories[category].setf && (*categories[category].setf)(&categories[category]))
@@ -627,7 +625,7 @@ single(int category, Lc_t* lc)
 			ast.locale.set |= (1<<category);
 		OLD(old.locale.set = ast.locale.set;)
 	}
-	return (char*)lc->code;
+	return (char*)lc->name;
 }
 
 /*
@@ -765,7 +763,7 @@ _ast_setlocale(int category, const char* locale)
 
 	compose:
 		if (category != AST_LC_ALL)
-			return (char*)locales[category]->code;
+			return (char*)locales[category]->name;
 		for (i = 1; i < AST_LC_COUNT; i++)
 			cat[i] = (locales[i]->flags & LC_default) ? AST_LC_COUNT : -1;
 		if (!sp && !(sp = sfstropen()))
@@ -782,7 +780,7 @@ _ast_setlocale(int category, const char* locale)
 						cat[j] = i;
 					}
 				if (j == AST_LC_COUNT && !sfstrtell(sp))
-					return (char*)locales[i]->code;
+					return (char*)locales[i]->name;
 				if (!sp && !(sp = sfstropen()))
 					return 0;
 				if (!(locales[i]->flags & LC_default))
@@ -792,11 +790,11 @@ _ast_setlocale(int category, const char* locale)
 					for (j = i; j < AST_LC_COUNT; j++)
 						if (cat[j] == i)
 							sfprintf(sp, "%s=", categories[j].name);
-					sfprintf(sp, "%s", locales[i]->code);
+					sfprintf(sp, "%s", locales[i]->name);
 				}
 			}
 		if (!sfstrtell(sp))
-			return (char*)locales[0]->code;
+			return (char*)locales[0]->name;
 		return sfstruse(sp);
 	}
 	if (!ast.locale.serial++)
@@ -850,7 +848,7 @@ _ast_setlocale(int category, const char* locale)
 			}
 			if (ast.locale.set & AST_LC_debug)
 				for (i = 1; i < AST_LC_COUNT; i++)
-					sfprintf(sfstderr, "locale env  %11s %s\n", categories[i].name, locales[i]->code);
+					sfprintf(sfstderr, "locale env  %11s %s\n", categories[i].name, locales[i]->name);
 			initialized = 1;
 		}
 		goto compose;

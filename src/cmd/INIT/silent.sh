@@ -25,7 +25,7 @@
 # @(#)silent (AT&T Research) 1992-08-11
 
 case $-:$BASH_VERSION in
-*x*:[0-9]*)	: bash set -x is broken :; set +ex ;;
+*x*:[01234567899]*)	: bash set -x is broken :; set +ex ;;
 esac
 
 while	:

@@ -345,6 +345,8 @@ extern size_t		wcstombs(char*, const wchar_t*, size_t);
 
 #endif
 
+#if !_UWIN || !_BLD_ast
+
 extern long			strtol(const char*, char**, int);
 extern unsigned long		strtoul(const char*, char**, int);
 extern _ast_intmax_t		strtoll(const char*, char**, int);
@@ -352,6 +354,8 @@ extern unsigned _ast_intmax_t	strtoull(const char*, char**, int);
 
 extern double			strtod(const char*, char**);
 extern _ast_fltmax_t		strtold(const char*, char**);
+
+#endif
 
 #if !_std_def_calloc
 extern void*		calloc(size_t, size_t);

@@ -1,3 +1,15 @@
+01-08-11 features/common: some compilers have long long but no LL constants!
+	 features/lib: add mmap64 implementation test (for linux.s390)
+	 regex/regcomp.c: fix \ in [...] parse
+	 setlocale: retain user locale spelling in setlocale() return value
+	 features/limits.c: don't include ./limits.h -- duh
+	 fmtesc: don't escape multibyte chars
+01-08-08 features/float: some compilers (msdev) forget long long vs. double
+01-07-31 misc/optget.c: handle suboptions
+01-07-27 cdt.h: add DTDISC()
+01-07-17 iffeio.h: move to include for stdio bootstrap iffe workarounds
+01-06-25 regex: perl extensions added and tested
+01-06-21 misc/error: add ERROR_OPTIONS=prefix=string for message processing
 01-06-15 string/chresc: only 2 hex digits max for \xxx
 	 regex/regsub: handle REG_SHELL ~(nnn) rhs backrefs
 01-06-11 regex: handle embedded \0 in pattern and subject string

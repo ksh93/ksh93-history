@@ -1,6 +1,10 @@
-: mvs.390 cc wrapper for unix message and exit code semantics
+: mvs.390 cc wrapper for unix message and exit code semantics : 2001-04-26 :
 
-# @(#)cc.mvs.390 (AT&T Labs Research) 05/31/97
+HOSTTYPE=mvs.390
+
+case $* in
+-dumpmachine) echo $HOSTTYPE; exit ;;
+esac
 
 ar=ar
 cc=/bin/c89
@@ -13,13 +17,15 @@ objmax=60
 # -Bdynamic => .c,.o dynamic
 # -Bstatic => .c,.o static
 # *.C => cc=$CC
+# *.cpp => cc=$CC
+# *.cxx => cc=$CC
 # no optimization until the optimizer is fixed:
 #	-O	dropped (no optimization)
 #	-0	dropped (no optimization)
 #	-1	-O (default level 1 optimization)
 #	-2	-2 (maximal level 2 optimization)
 
-integer argc=0 cmp=0 dll=0 libc=0 dynamic=1 dynamic_objc=0 static_objc=0 relc=0
+let argc=0 cmp=0 dll=0 libc=0 dynamic=1 dynamic_objc=0 static_objc=0 relc=0
 case $1 in
 -n)	exec=print
 	shift
@@ -28,8 +34,17 @@ case $1 in
 	;;
 esac
 case " $* " in
-*.C" "*)((dll=2))
+*.C" "*)let dll=2
 	cc=$CC
+	export _CXXSUFFIX=C
+	;;
+*.cpp" "*)let dll=2
+	cc=$CC
+	export _CXXSUFFIX=cpp
+	;;
+*.cxx" "*)let dll=2
+	cc=$CC
+	export _CXXSUFFIX=cxx
 	;;
 esac
 exe=
@@ -42,40 +57,43 @@ do	case $# in
 	case $arg in
 	-1)	arg=-O
 		;;
-	-Bdynamic)		
-		((dynamic=1))
+	-Bdynamic)
+		let dynamic=1
 		;;
-	-Bstatic)		
-		((dynamic=0))
+	-Bstatic)
+		let dynamic=0
 		;;
-	-c)	((cmp=1))
+	-c)	let cmp=1
 		;;
 	-D_ALL_SOURCE|-D_ALL_SOURCE=*)
 		arg=
 		;;
-	-o)	argv[argc++]=$arg
+	-o)	argv[argc]=$arg
+		let argc=argc+1
 		shift
 		arg=$1
 		exe=$arg
+		rm -f "$exe"
 		;;
 	-[O0])	arg=
 		;;
 	-Wc,dll)arg=
 		;;
-	-Wc,exportall)		
-		((dll=1))
+	-Wc,exportall)
+		let dll=1
 		;;
 	-Wl,dll)arg=
-		((dll=1))
+		let dll=1
 		;;
-	*.o)	if	((dynamic))
-		then	((dynamic_objc++))
-		else	((static_objc++))
+	*.o)	if	test 0 != $dynamic
+		then	let dynamic_objc=dynamic_objc+1
+		else	let static_objc=static_objc+1
 		fi
 		;;
 	*.x)	a=${arg%.x}.a
 		if	test -f $a
-		then	argv[argc++]=$a
+		then	argv[argc]=$a
+			let argc=argc+1
 			xxx=-Wl,dll
 			case $a in
 			ast.a|*/ast.a)
@@ -86,7 +104,9 @@ do	case $# in
 		;;
 	esac
 	case $arg in
-	?*)	argv[argc++]=$arg ;;
+	?*)	argv[argc]=$arg
+		let argc=argc+1
+		;;
 	esac
 	shift
 done
@@ -98,7 +118,7 @@ tmpfiles="$tmp"
 # but the native cc doesn't jcl for the .x
 # -Wl,dll does that, so we nuke the .x and keep the exe
 
-((dll)) && xxx=
+test 0 != $dll && xxx=
 case $xxx in
 ?*)	case $exe in
 	?*)	a=${exe##*/}
@@ -111,8 +131,11 @@ case $xxx in
 	esac
 	;;
 esac
-if	((dll==1)) && ((cmp==0))
-then	xxx="-Wl,dll $xxx"
+if	test 0 != $dll
+then	if	test 0 != $cmp
+	then	xxx="-D_SHARE_EXT_VARS $xxx"
+	else	xxx="-Wl,dll $xxx"
+	fi
 fi
 set -- $xxx "${argv[@]}"
 
@@ -120,7 +143,7 @@ set -- $xxx "${argv[@]}"
 # -r into intermediates doesn't work, but the cat trick does
 # also, the runtime dll file must be executable but cc -Wl,dll forgets
 
-if	((dll && (dynamic_objc>=objmax || static_objc>0)))
+if	test 0 != $dll -a \( $dynamic_objc -ge $objmax -o 0 != $static_objc \)
 then	unset argv
 	argc=0 libc=0 dynamic=1 dynamic_objc=0 static_objc=0 endc=0
 	while	:
@@ -129,34 +152,40 @@ then	unset argv
 		esac
 		case $1 in
 		-Bdynamic)
-			((dynamic=1))
+			let dynamic=1
 			;;
 		-Bstatic)
-			((dynamic=0))
+			let dynamic=0
 			;;
-		*.o)	if	((dynamic))
-			then	dynamic_objv[dynamic_objc++]=$1
-			else	static_objv[static_objc++]=$1
+		*.o)	if	test 0 != $dynamic
+			then	dynamic_objv[dynamic_objc]=$1
+				let dynamic_objc=dynamic_objc+1
+			else	static_objv[static_objc]=$1
+				let static_objc=static_objc+1
 			fi
 			;;
-		-l*)	libv[libc++]=$1
+		-l*)	libv[libc]=$1
+			let libc=libc+1
 			;;
-		-o)	argv[argc++]=$1
+		-o)	argv[argc]=$1
+			let argc=argc+1
 			shift
-			argv[argc++]=$1
+			argv[argc]=$1
+			let argc=argc+1
 			exe=$1
 			;;
-		*)	argv[argc++]=$1
+		*)	argv[argc]=$1
+			let argc=argc+1
 			;;
 		esac
 		shift
 	done
-	if	((static_objc>0))
+	if	test 0 != $static_objc
 	then	case $exe in
 		?*)	$exec $ar cr ${exe%.*}.a "${static_objv[@]}" ;;
 		esac
 	fi
-	if	((dynamic_objc>0))
+	if	test 0 != $dynamic_objc
 	then	cat=0.0.o
 		tmpfiles="$tmpfiles $cat"
 		cat "${dynamic_objv[@]}" > $cat || exit
@@ -171,17 +200,19 @@ fi
 trap 'rm -f $tmpfiles' 0 1 2 15
 $exec $cc $ccflags "$@" 2> $tmp
 code=$?
+typeset -l lc
 while	:
 do	if	read line
-	then	case $line in
+	then	lc=$line
+		case $lc in
 		*'#include file'*'not found'*)
 			code=1
 			;;
 		*'#pragma ignored'*)
 			continue
 			;;
-		*'nresolved writable static references are detected'*)
-			((dll)) && continue
+		*'definition side file is not defined'*)
+			continue
 			;;
 		*'step ended with return code 4'*)
 			continue
@@ -193,6 +224,19 @@ do	if	read line
 		*'try again'*)
 			code=1
 			continue
+			;;
+		*'unknown preprocessing directive'*)
+			code=1
+			case $lc in
+			'warning '*)
+				set -- $line
+				shift
+				line=$*
+				;;
+			esac
+			;;
+		*'unresolved writable static references are detected'*)
+			test 0 != $dll && continue
 			;;
 		esac
 	else	case $code:$exe in

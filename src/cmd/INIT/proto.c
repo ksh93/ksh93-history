@@ -270,8 +270,16 @@ replace __PARAM__((const char* newfile, const char* oldfile, int preserve), (new
 	struct stat	st;
 	time_t		ut[2];
 
-	if (preserve && stat(oldfile, &st) || remove(oldfile) || rename(newfile, oldfile))
+	if (stat(oldfile, &st))
+	{
+		if (preserve)
+			return -1;
+		st.st_mode = 0;
+	}
+	if (remove(oldfile) || rename(newfile, oldfile))
 		return -1;
+	if (st.st_mode &= (S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IWGRP|S_IXGRP|S_IROTH|S_IWOTH|S_IXOTH))
+		chmod(oldfile, st.st_mode);
 	if (preserve)
 	{
 		ut[0] = st.st_atime;
@@ -294,7 +302,7 @@ replace __PARAM__((const char* newfile, const char* oldfile, int preserve), (new
 
 
 
-static const char id[] = "\n@(#)$Id: proto (AT&T Research) 2000-09-01 $\000\n";
+static const char id[] = "\n@(#)$Id: proto (AT&T Research) 2001-08-06 $\000\n";
 
 
 
@@ -505,24 +513,24 @@ struct pptuple
 
 
 
-#line 238
+#line 242
 
 
-#line 285
-
-
-
-
-#line 300
+#line 290
 
 
 
+
+#line 305
 
 
 
 
 
-#line 318
+
+
+
+#line 323
 
 
 
@@ -534,6 +542,10 @@ struct pptuple
 #line 1 "../../lib/libpp/pp.h"
 
  
+
+
+
+
 
 
 
@@ -923,11 +935,11 @@ struct ppglobals
 
 
 
-	struct ppcontext* context; long state; long mode; long option; long test; char* filedeps; struct ppdirs* firstdir; struct ppdirs* lastdir; int hide; int column; int pending; char* firstfile; char* lastfile; char* ignore; char* probe; char* filtab; char* prdtab; char* date; char* time; char* maps; long ro_state; long ro_mode; long ro_option; char* cdir; char* hostdir; char* ppdefault; struct ppindex* firstindex; struct ppindex* lastindex; struct oplist* firstop; struct oplist* lastop; struct oplist* firsttx; struct oplist* lasttx; unsigned char arg_file; unsigned char arg_mode; unsigned char arg_style; unsigned char c; unsigned char hosted; unsigned char ignoresrc; unsigned char initialized; unsigned char standalone; unsigned char spare_1;		 
+	struct ppcontext* context; long state; long mode; long option; long test; struct { char* sp; long flags; } filedeps; struct ppdirs* firstdir; struct ppdirs* lastdir; int hide; int column; int pending; char* firstfile; char* lastfile; char* ignore; char* probe; char* filtab; char* prdtab; char* date; char* time; char* maps; long ro_state; long ro_mode; long ro_option; char* cdir; char* hostdir; char* ppdefault; struct ppindex* firstindex; struct ppindex* lastindex; struct oplist* firstop; struct oplist* lastop; struct oplist* firsttx; struct oplist* lasttx; unsigned char arg_file; unsigned char arg_mode; unsigned char arg_style; unsigned char c; unsigned char hosted; unsigned char ignoresrc; unsigned char initialized; unsigned char standalone; unsigned char spare_1;		 
 
 
 
-	char* checkpoint; int constack; struct ppinstk* in; char* addp; char* args; char* addbuf; char* catbuf; char* hdrbuf; char* hidebuf; char* path; char* tmpbuf; char* valbuf; char* include; char* prefix; struct ppmember* member; int hidden; int hiding; int level; struct { int input; int output; } pool; int truncate; struct ppmacstk* macp; char* maxmac; char* mactop; char* toknxt; long* control; long* maxcon; struct oplist* chop; struct ppfile* insert; struct ppfile* original; char* dirtab; char* strtab; PPBUILTIN builtin; PPCOMMENT comment; PPINCREF incref; PPLINESYNC linesync; PPLINESYNC olinesync; PPMACREF macref; PPOPTARG optarg; PPPRAGMA pragma; struct counter counter;		 
+	char* checkpoint; int constack; struct ppinstk* in; char* addp; char* args; char* addbuf; char* catbuf; char* hdrbuf; char* hidebuf; char* path; char* tmpbuf; char* valbuf; char* include; char* prefix; struct ppmember* member; int hidden; int hiding; int level; struct { int input; int output; } pool; int truncate; struct ppmacstk* macp; char* maxmac; char* mactop; char* toknxt; long* control; long* maxcon; struct oplist* chop; struct ppfile* insert; struct ppfile* original; char* dirtab; char* strtab; PPBUILTIN builtin; PPCOMMENT comment; PPINCREF incref; PPLINESYNC linesync; PPLINESYNC olinesync; PPMACREF macref; PPOPTARG optarg; PPPRAGMA pragma; struct counter counter; char funbuf[256];		 
 
 
 };
@@ -956,7 +968,7 @@ extern __MANGLE__ void		pppragma __PROTO__((char*, char*, char*, char*, int));
 extern __MANGLE__ int		ppprintf __PROTO__((char*, ...));
 
 
-#line 327 "../../lib/libpp/pplib.h"
+#line 332 "../../lib/libpp/pplib.h"
 
 #line 1 "../../lib/libpp/ppdef.h"
  
@@ -1147,7 +1159,13 @@ extern __MANGLE__ int		ppprintf __PROTO__((char*, ...));
 
 
 
-#line 328 "../../lib/libpp/pplib.h"
+
+
+
+
+
+
+#line 333 "../../lib/libpp/pplib.h"
 
 #line 1 "../../lib/libpp/ppkey.h"
 
@@ -1277,7 +1295,7 @@ extern __MANGLE__ int		ppprintf __PROTO__((char*, ...));
 extern __MANGLE__ struct ppkeyword	ppkey[];
 
 
-#line 329 "../../lib/libpp/pplib.h"
+#line 334 "../../lib/libpp/pplib.h"
 
 
 
@@ -1319,7 +1337,7 @@ extern __MANGLE__ struct ppkeyword	ppkey[];
 
 
 
-#line 381
+#line 386
 
 
 
@@ -1423,40 +1441,44 @@ extern __MANGLE__ struct ppkeyword	ppkey[];
 
 
 
-#line 496
 
 
 
 
+#line 505
 
-#line 511
 
 
-#line 525
 
 
+#line 520
 
 
+#line 534
 
 
 
 
-#line 544
 
 
-#line 556
 
 
-#line 578
+#line 553
 
 
-#line 590
+#line 565
 
 
+#line 587
 
 
+#line 599
 
-#line 605
+
+
+
+
+#line 614
 
 
 
@@ -1488,7 +1510,7 @@ extern __MANGLE__ struct ppkeyword	ppkey[];
 struct ppcontext			 
 {
 	struct ppdirs* lcldirs; struct ppdirs* stddirs; int flags; char* symtab;
-	struct ppcontext* context; long state; long mode; long option; long test; char* filedeps; struct ppdirs* firstdir; struct ppdirs* lastdir; int hide; int column; int pending; char* firstfile; char* lastfile; char* ignore; char* probe; char* filtab; char* prdtab; char* date; char* time; char* maps; long ro_state; long ro_mode; long ro_option; char* cdir; char* hostdir; char* ppdefault; struct ppindex* firstindex; struct ppindex* lastindex; struct oplist* firstop; struct oplist* lastop; struct oplist* firsttx; struct oplist* lasttx; unsigned char arg_file; unsigned char arg_mode; unsigned char arg_style; unsigned char c; unsigned char hosted; unsigned char ignoresrc; unsigned char initialized; unsigned char standalone; unsigned char spare_1;
+	struct ppcontext* context; long state; long mode; long option; long test; struct { char* sp; long flags; } filedeps; struct ppdirs* firstdir; struct ppdirs* lastdir; int hide; int column; int pending; char* firstfile; char* lastfile; char* ignore; char* probe; char* filtab; char* prdtab; char* date; char* time; char* maps; long ro_state; long ro_mode; long ro_option; char* cdir; char* hostdir; char* ppdefault; struct ppindex* firstindex; struct ppindex* lastindex; struct oplist* firstop; struct oplist* lastop; struct oplist* firsttx; struct oplist* lasttx; unsigned char arg_file; unsigned char arg_mode; unsigned char arg_style; unsigned char c; unsigned char hosted; unsigned char ignoresrc; unsigned char initialized; unsigned char standalone; unsigned char spare_1;
 };
 
 struct ppfile 
@@ -1531,6 +1553,7 @@ struct ppsymkey
 
 
 
+extern __MANGLE__ __V_*		realloc __PROTO__((__V_*, int));
 extern __MANGLE__ __V_*		calloc __PROTO__((int, int));
 extern __MANGLE__ char*		ctime __PROTO__((time_t*));
 extern __MANGLE__ void		free __PROTO__((__V_*));
@@ -1558,7 +1581,7 @@ extern __MANGLE__ int		write __PROTO__((int, const __V_*, int));
 
 
 
-#line 737
+#line 747
 
 
 extern __MANGLE__ void		ppassert __PROTO__((int, char*, char*));
@@ -1645,57 +1668,6 @@ extern __MANGLE__ void		pptrace __PROTO__((int));
 
 
 
- 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#line 107
-
-
-
-
-#line 149
-
-
-
 
  
 
@@ -1713,7 +1685,6 @@ extern __MANGLE__ void		pptrace __PROTO__((int));
 
 
 
- 
 
 
 
@@ -1725,14 +1696,27 @@ extern __MANGLE__ void		pptrace __PROTO__((int));
 
 
 
- 
 
 
 
 
 
- 
 
+
+
+
+
+
+
+
+
+
+#line 108
+
+
+
+
+#line 150
 
 
 
@@ -1752,7 +1736,47 @@ extern __MANGLE__ void		pptrace __PROTO__((int));
 
 
 
-#line 226
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+ 
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#line 227
 
 
 
@@ -2679,6 +2703,7 @@ ppfsm __PARAM__((int op, register char* s), (op, s)) __OTORP__(int op; register 
 struct proto 
 {
 	int		brace;		 
+	int		call;		 
 	int		fd;		 
 	char*		file;		 
 	long		flags;		 
@@ -2811,6 +2836,10 @@ static int		errors;
 
 
  
+
+
+
+
 
 
 
@@ -3750,7 +3779,7 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 	}
 	return (*(( &buf)->nxt>=( &buf)->end?(( &buf)->nxt=( &buf)->end-1):( &buf)->nxt)=0,( &buf)->nxt-( &buf)->buf);
 }
-#line 293 "../../lib/libpp/ppproto.c"
+#line 298 "../../lib/libpp/ppproto.c"
 
 
 
@@ -3766,7 +3795,7 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 static char*
 linesync __PARAM__((register struct proto* proto, register char* p, register long n), (proto, p, n)) __OTORP__(register struct proto* proto; register char* p; register long n;){
 
-	if (proto->flags & (1l<<12))
+	if (proto->flags & (1L<<12))
 
 	{
 		p = strcopy(p, "\n#line ");
@@ -3789,7 +3818,7 @@ static char*
 init __PARAM__((struct proto* proto, char* op, int flags), (proto, op, flags)) __OTORP__(struct proto* proto; char* op; int flags;){
 	register char*	s;
 
-	if (flags & (1l<<9))
+	if (flags & (1L<<9))
 	{
 		op = strcopy(op, "\
 \n\
@@ -3951,9 +3980,9 @@ lex __PARAM__((register struct proto* proto, register long flags), (proto, flags
 	int			args = 0;
 
 
-	((ip=proto->ip),(op=proto->op));
+	do{(ip=proto->ip);(op=proto->op);call=proto->call;}while(0);
 
-	if (flags & (1l<<5)) (ko=op);
+	if (flags & (1L<<5)) (ko=op);
 
  fsm_start:
 	proto->tp = ip;
@@ -3970,7 +3999,7 @@ lex __PARAM__((register struct proto* proto, register long flags), (proto, flags
 	if ((n = ip - bp - 1) > 0)
 	{
 		ip = bp;
-		do switch( n) { default : memcpy( op, ip, n); op += n; ip += n; break; case 7 : * op++ = * ip++; case 6 : * op++ = * ip++; case 5 : * op++ = * ip++; case 4 : * op++ = * ip++; case 3 : * op++ = * ip++; case 2 : * op++ = * ip++; case 1 : * op++ = * ip++; case 0 : break; } while (0);
+		do switch( n) { default : memcopy( op, ip, n); op += n; ip += n; break; case 7 : * op++ = * ip++; case 6 : * op++ = * ip++; case 5 : * op++ = * ip++; case 4 : * op++ = * ip++; case 3 : * op++ = * ip++; case 2 : * op++ = * ip++; case 1 : * op++ = * ip++; case 0 : break; } while (0);
 		ip++;
 	}
 	state = ~state;
@@ -4006,7 +4035,7 @@ lex __PARAM__((register struct proto* proto, register long flags), (proto, flags
 			break;
 		case '/':
 
-			if ((flags & ((1l<<5)|(1l<<14))) == (1l<<5)) (op=ko);
+			if ((flags & ((1L<<5)|(1L<<14))) == (1L<<5)) (op=ko);
 			else
 
 			(*op++=( c));
@@ -4020,7 +4049,7 @@ lex __PARAM__((register struct proto* proto, register long flags), (proto, flags
 			break;
 		default:
 
-			if ((flags & ((1l<<5)|(1l<<14))) == (1l<<5)) (op=ko);
+			if ((flags & ((1L<<5)|(1L<<14))) == (1L<<5)) (op=ko);
 			else
 
 			(*op++=( c));
@@ -4035,59 +4064,64 @@ lex __PARAM__((register struct proto* proto, register long flags), (proto, flags
 		{
 			if (state = _pp_fsmtab[(0+27)][((( rp)-_pp_fsmtab[0])/(255+1))+1])
 				goto fsm_terminal;
-			do{(proto->ip=ip);(proto->op=op);proto->flags&=~((1l<<8)|(1l<<26)|(1l<<27));proto->flags|=flags&((1l<<8)|(1l<<26)|(1l<<27));}while(0);
+			do{(proto->ip=ip);(proto->op=op);proto->flags&=~((1L<<5)|(1L<<8)|(1L<<16)|(1L<<26)|(1L<<27));proto->flags|=flags&((1L<<5)|(1L<<8)|(1L<<16)|(1L<<26)|(1L<<27));proto->call=call;}while(0);
 			return 0;
 		}
 		(ip--);
  fsm_eob:
-		if ((flags & ((1l<<1)|((1l<<15))|(1l<<20))) == ((1l<<15)) && (proto->flags & (1l<<15)))
+		if ((flags & ((1L<<1)|((1L<<15))|(1L<<20))) == ((1L<<15)) && (proto->flags & (1L<<15)))
 		{
 
-			if (!(flags & (1l<<5)))  
+			if (!(flags & (1L<<5)))  
 
-			flags |= (1l<<23);
+			flags |= (1L<<23);
 			c = ip - proto->ib;
-			if (!(flags & (1l<<14))) im = proto->tp;
+			if (!(flags & (1L<<14)))
+				im = proto->tp;
 			if (ip > proto->ib)
 			{
 				n = ip - im;
 				if (ip - n < proto->ib)
-					proto->flags |= (1l<<4);
+					proto->flags |= (1L<<4);
 				memcopy(proto->ib - n, ip - n, n);
 				ip = proto->ib;
 			}
 			proto->tp -= c;
-			if (flags & (1l<<14))
+			if (flags & (1L<<14))
 			{
 				im -= c;
 				ie -= c;
 			}
-			if (aim) aim -= c;
-			if (aie) aie -= c;
+			if (aim)
+				aim -= c;
+			if (aie)
+				aie -= c;
 			if ((n = read(proto->fd, ip, proto->iz)) > 0)
 			{
-				if ((proto->options & (1l<<0)) && n < proto->iz)
+				if ((proto->options & (1L<<0)) && n < proto->iz)
 				{
-					proto->flags &= ~(1l<<15);
+					proto->flags &= ~(1L<<15);
 					close(proto->fd);
 				}
 				*(ip + n) = 0;
-				if (state & (1<<7)) goto fsm_splice;
+				if (state & (1<<7))
+					goto fsm_splice;
 				bp = ip;
 				goto fsm_get;
 			}
 			*ip = 0;
-			proto->flags &= ~(1l<<15);
+			proto->flags &= ~(1L<<15);
 			close(proto->fd);
 		}
-		if (state & (1<<7)) goto fsm_splice;
+		if (state & (1<<7))
+			goto fsm_splice;
  
-		if (!(flags & (1l<<20)) && (state = rp[c = (255+1)]))
+		if (!(flags & (1L<<20)) && (state = rp[c = (255+1)]))
 		{
 			bp = ip;
 			goto fsm_next;
 		}
-		do{(proto->ip=ip);(proto->op=op);proto->flags&=~((1l<<8)|(1l<<26)|(1l<<27));proto->flags|=flags&((1l<<8)|(1l<<26)|(1l<<27));}while(0);
+		do{(proto->ip=ip);(proto->op=op);proto->flags&=~((1L<<5)|(1L<<8)|(1L<<16)|(1L<<26)|(1L<<27));proto->flags|=flags&((1L<<5)|(1L<<8)|(1L<<16)|(1L<<26)|(1L<<27));proto->call=call;}while(0);
 		return 0;
 
 	case ((0+27)+3):
@@ -4115,7 +4149,7 @@ lex __PARAM__((register struct proto* proto, register long flags), (proto, flags
 		if (c == quot)
 		{
 
-			if (!(flags & (1l<<3)))
+			if (!(flags & (1L<<3)))
 				qe = (c == '"') ? op : (char*)0;
 
 			(*op++=( c));
@@ -4149,24 +4183,23 @@ lex __PARAM__((register struct proto* proto, register long flags), (proto, flags
 
 	case ((0+27)+5):
 
-		if (flags & (1l<<0)) (*op++=( c));
+		if (flags & (1L<<0)) (*op++=( c));
 		else
 
 		switch (c)
 		{
 		case 'a':
-			(*op++=( '0'));
-			(*op++=( '0'));
-			(*op++=( '7'));
-			break;
+			n = (('A'==0301)?0057:0007);
+			goto fsm_oct;
+		case 'E':
+			n = (('A'==0301)?0047:0033);
+			goto fsm_oct;
 		case 'v':
-			(*op++=( '0'));
-			(*op++=( '1'));
-			(*op++=( '3'));
-			break;
+			n = 0013;
+			goto fsm_oct;
 		case 'x':
-			do{(proto->ip=ip);(proto->op=op);proto->flags&=~((1l<<8)|(1l<<26)|(1l<<27));proto->flags|=flags&((1l<<8)|(1l<<26)|(1l<<27));}while(0);
-			lex(proto, (flags & ((1l<<15))) | (1l<<20));
+			do{(proto->ip=ip);(proto->op=op);proto->flags&=~((1L<<5)|(1L<<8)|(1L<<16)|(1L<<26)|(1L<<27));proto->flags|=flags&((1L<<5)|(1L<<8)|(1L<<16)|(1L<<26)|(1L<<27));proto->call=call;}while(0);
+			lex(proto, (flags & ((1L<<15))) | (1L<<20));
 			for (n = x = 0; (c = (*(unsigned char*)ip++)), x < 3; x++) switch (c)
 			{
 			case '0': case '1': case '2': case '3':
@@ -4187,6 +4220,7 @@ lex __PARAM__((register struct proto* proto, register long flags), (proto, flags
 			}
  fsm_hex:
 			(ip--);
+ fsm_oct:
 			(*op++=( ((n >> 6) & 07) + '0'));
 			(*op++=( ((n >> 3) & 07) + '0'));
 			(*op++=( (n & 07) + '0'));
@@ -4202,7 +4236,7 @@ lex __PARAM__((register struct proto* proto, register long flags), (proto, flags
 	case ((0+27)+6):
 		(ip--);
 
-		if ((flags & (1l<<5)) && *proto->tp == 's' && !sstrncmp( proto->tp, "static", 6))
+		if ((flags & (1L<<5)) && *proto->tp == 's' && !sstrncmp( proto->tp, "static", 6))
 		{
 			c = ((0500+4)+9);
 			break;
@@ -4217,7 +4251,7 @@ lex __PARAM__((register struct proto* proto, register long flags), (proto, flags
  fsm_newline:
 		proto->line++;
 
-		if (flags & (1l<<5))
+		if (flags & (1L<<5))
 		{
 			if (op != proto->ob && (*(op-1)) != ' ' && (*(op-1)) != '\n')
 				(*op++=( ' '));
@@ -4225,25 +4259,25 @@ lex __PARAM__((register struct proto* proto, register long flags), (proto, flags
 		else
 
 		(*op++=( c));
-		if (flags & (1l<<3))
+		if (flags & (1L<<3))
 		{
 
-			if (flags & (1l<<0))
+			if (flags & (1L<<0))
 			{
-				if (flags & (1l<<5)) (op=ko);
-				if (flags & (1l<<11))
+				if (flags & (1L<<5)) (op=ko);
+				if (flags & (1L<<11))
 				{
 					*(ip - 1) = 0;
 					op = strcopy(om, "/* ");
 					op = strcopy(op, im);
 					op = strcopy(op, " */\n");
 				}
-				flags &= ~((1l<<2)|(1l<<3)|(1l<<6)|(1l<<7)|(1l<<11)|(1l<<14)|(1l<<21)|(1l<<25));
+				flags &= ~((1L<<2)|(1L<<3)|(1L<<6)|(1L<<7)|(1L<<11)|(1L<<14)|(1L<<21)|(1L<<25));
 			}
 			else
 
 			{
-				if ((flags & ((1l<<2)|(1l<<21))) == ((1l<<2)|(1l<<21)))
+				if ((flags & ((1L<<2)|(1L<<21))) == ((1L<<2)|(1L<<21)))
 				{
 					*(ip - 1) = 0;
 					op = strcopy(om, "#if defined(__STDC__) || defined(__STDPP__)\n");
@@ -4277,19 +4311,19 @@ lex __PARAM__((register struct proto* proto, register long flags), (proto, flags
 					op = strcopy(op, "\n#endif\n");
 					op = linesync(proto, op, proto->line);
 				}
-				flags &= ~((1l<<2)|(1l<<3)|(1l<<6)|(1l<<7)|(1l<<14)|(1l<<16)|(1l<<21)|(1l<<22)|(1l<<24)|(1l<<25));
+				flags &= ~((1L<<2)|(1L<<3)|(1L<<6)|(1L<<7)|(1L<<14)|(1L<<16)|(1L<<21)|(1L<<22)|(1L<<24)|(1L<<25));
 			}
 			call = 0;
 			group = 0;
 			paren = 0;
 			last = '\n';
 		}
-		if (paren == 0 && (flags & ((1l<<14)|(1l<<20)|(1l<<22)|(1l<<23))) == (1l<<23))
+		if (paren == 0 && (flags & ((1L<<14)|(1L<<20)|(1L<<22)|(1L<<23))) == (1L<<23))
 		{
 
-			if (flags & (1l<<5)) (op=ko);
+			if (flags & (1L<<5)) (op=ko);
 
-			do{(proto->ip=ip);(proto->op=op);proto->flags&=~((1l<<8)|(1l<<26)|(1l<<27));proto->flags|=flags&((1l<<8)|(1l<<26)|(1l<<27));}while(0);
+			do{(proto->ip=ip);(proto->op=op);proto->flags&=~((1L<<5)|(1L<<8)|(1L<<16)|(1L<<26)|(1L<<27));proto->flags|=flags&((1L<<5)|(1L<<8)|(1L<<16)|(1L<<26)|(1L<<27));proto->call=call;}while(0);
 			return 0;
 		}
 		goto fsm_start;
@@ -4313,7 +4347,7 @@ lex __PARAM__((register struct proto* proto, register long flags), (proto, flags
 	case (((0+27)+12)):
 		(ip--);
 		c = (0401+0);
-		if (!(flags & (1l<<1))) switch (((((long)( *proto->tp))<<16)|(((long)( *(ip - 1)))<<8)|((long)( ip - proto->tp))))
+		if (!(flags & (1L<<1))) switch (((((long)( *proto->tp))<<16)|(((long)( *(ip - 1)))<<8)|((long)( ip - proto->tp))))
 		{
 		case ((((long)( 'N'))<<16)|(((long)( 'N'))<<8)|((long)( 3))):
 			if (proto->tp[1] == 'o')
@@ -4323,7 +4357,7 @@ lex __PARAM__((register struct proto* proto, register long flags), (proto, flags
 			c = ((0500+4)+6);
 			break;
 		case ((((long)( 'e'))<<16)|(((long)( 'e'))<<8)|((long)( 4))):
-			if (!(flags & (1l<<20)) && (flags & ((1l<<3)|(1l<<24))) != (1l<<3) && !sstrncmp( proto->tp, "else", 4))
+			if (!(flags & (1L<<20)) && (flags & ((1L<<3)|(1L<<24))) != (1L<<3) && !sstrncmp( proto->tp, "else", 4))
 			{
 				c = ((0500+4)+8);
 				goto fsm_id;
@@ -4334,7 +4368,7 @@ lex __PARAM__((register struct proto* proto, register long flags), (proto, flags
 				c = ((0500+4)+9);
 			break;
 		case ((((long)( 'f'))<<16)|(((long)( 'r'))<<8)|((long)( 3))):
-			if (!(flags & (1l<<20)) && !sstrncmp( proto->tp, "for", 3))
+			if (!(flags & (1L<<20)) && !sstrncmp( proto->tp, "for", 3))
 			{
 				c = ((0500+4)+11);
 				goto fsm_id;
@@ -4344,26 +4378,26 @@ lex __PARAM__((register struct proto* proto, register long flags), (proto, flags
 			c = ((0500+4)+13);
 			break;
 		case ((((long)( 'i'))<<16)|(((long)( 'e'))<<8)|((long)( 6))):
-			if (!sstrncmp( proto->tp, "inline", 6) && !(flags & ((1l<<14)|(1l<<22)|(1l<<24)|(1l<<25))) && proto->brace == 0 && paren == 0 && group == 0 && (last == ';' || last == '}' || last == '\n' || last == 0))
+			if (!sstrncmp( proto->tp, "inline", 6) && !(flags & ((1L<<14)|(1L<<22)|(1L<<24)|(1L<<25))) && proto->brace == 0 && paren == 0 && group == 0 && (last == ';' || last == '}' || last == '\n' || last == 0))
 			{
-				flags |= (1l<<22);
-				do{(proto->ip=ip);(proto->op=op);proto->flags&=~((1l<<8)|(1l<<26)|(1l<<27));proto->flags|=flags&((1l<<8)|(1l<<26)|(1l<<27));}while(0);
+				flags |= (1L<<22);
+				do{(proto->ip=ip);(proto->op=op);proto->flags&=~((1L<<5)|(1L<<8)|(1L<<16)|(1L<<26)|(1L<<27));proto->flags|=flags&((1L<<5)|(1L<<8)|(1L<<16)|(1L<<26)|(1L<<27));proto->call=call;}while(0);
 				line = proto->line;
 				op = strcopy(op - 6, "__INLINE__");
-				do{(proto->ip=ip);(proto->op=op);proto->flags&=~((1l<<8)|(1l<<26)|(1l<<27));proto->flags|=flags&((1l<<8)|(1l<<26)|(1l<<27));}while(0);
+				do{(proto->ip=ip);(proto->op=op);proto->flags&=~((1L<<5)|(1L<<8)|(1L<<16)|(1L<<26)|(1L<<27));proto->flags|=flags&((1L<<5)|(1L<<8)|(1L<<16)|(1L<<26)|(1L<<27));proto->call=call;}while(0);
 			}
 			break;
 		case ((((long)( 'r'))<<16)|(((long)( 'n'))<<8)|((long)( 6))):
-			if (!(flags & (1l<<20)) && !sstrncmp( proto->tp, "return", 6))
+			if (!(flags & (1L<<20)) && !sstrncmp( proto->tp, "return", 6))
 			{
 				c = ((0500+4)+17);
 				goto fsm_id;
 			}
 			break;
 		case ((((long)( 't'))<<16)|(((long)( 'f'))<<8)|((long)( 7))):
-			if (!(flags & (1l<<20)) && !sstrncmp( proto->tp, "typedef", 7))
+			if (!(flags & (1L<<20)) && !sstrncmp( proto->tp, "typedef", 7))
 			{
-				flags |= (1l<<25);
+				flags |= (1L<<25);
 				c = ((0500+4)+9);
 			}
 			break;
@@ -4373,25 +4407,25 @@ lex __PARAM__((register struct proto* proto, register long flags), (proto, flags
 		case ((((long)( 'v'))<<16)|(((long)( 'd'))<<8)|((long)( 4))):
 			if (!sstrncmp( proto->tp, "void", 4))
 			{
-				if (flags & ((1l<<0)|(1l<<18)|(1l<<9)|(1l<<10))) c = ((0500+4)+30);
+				if (flags & ((1L<<0)|(1L<<18)|(1L<<9)|(1L<<10))) c = ((0500+4)+30);
 				else
 				{
-					do{(proto->ip=ip);(proto->op=op);proto->flags&=~((1l<<8)|(1l<<26)|(1l<<27));proto->flags|=flags&((1l<<8)|(1l<<26)|(1l<<27));}while(0);
+					do{(proto->ip=ip);(proto->op=op);proto->flags&=~((1L<<5)|(1L<<8)|(1L<<16)|(1L<<26)|(1L<<27));proto->flags|=flags&((1L<<5)|(1L<<8)|(1L<<16)|(1L<<26)|(1L<<27));proto->call=call;}while(0);
 					line = proto->line;
-					if (lex(proto, (flags & ((1l<<15))) | (1l<<20)) == '*')
+					if (lex(proto, (flags & ((1L<<15))) | (1L<<20)) == '*')
 					{
 						memcopy(op - 4, "__V_", 4);
 						memcopy(ip - 4, "__V_", 4);
 					}
 					else c = ((0500+4)+30);
 					proto->line = line;
-					do{(proto->ip=ip);(proto->op=op);proto->flags&=~((1l<<8)|(1l<<26)|(1l<<27));proto->flags|=flags&((1l<<8)|(1l<<26)|(1l<<27));}while(0);
+					do{(proto->ip=ip);(proto->op=op);proto->flags&=~((1L<<5)|(1L<<8)|(1L<<16)|(1L<<26)|(1L<<27));proto->flags|=flags&((1L<<5)|(1L<<8)|(1L<<16)|(1L<<26)|(1L<<27));proto->call=call;}while(0);
 					bp = ip;
 				}
 			}
 			break;
 		case ((((long)( 'w'))<<16)|(((long)( 'e'))<<8)|((long)( 5))):
-			if (!(flags & (1l<<20)) && !sstrncmp( proto->tp, "while", 5))
+			if (!(flags & (1L<<20)) && !sstrncmp( proto->tp, "while", 5))
 			{
 				c = ((0500+4)+26);
 				goto fsm_id;
@@ -4399,7 +4433,7 @@ lex __PARAM__((register struct proto* proto, register long flags), (proto, flags
 			break;
 		}
 
-		if ((flags & (1l<<0)) && c != ((0500+4)+9))
+		if ((flags & (1L<<0)) && c != ((0500+4)+9))
 			c = (0401+0);
 
 		break;
@@ -4410,7 +4444,7 @@ lex __PARAM__((register struct proto* proto, register long flags), (proto, flags
 	case ((0+27)+15):
 		(ip--);
 
-		if ((flags & ((1l<<5)|(1l<<14))) == (1l<<5))
+		if ((flags & ((1L<<5)|(1L<<14))) == (1L<<5))
 		{
 			while (op > proto->ob && (*(op - 1) == ' ' || *(op - 1) == '\t'))
 				op--;
@@ -4446,59 +4480,59 @@ lex __PARAM__((register struct proto* proto, register long flags), (proto, flags
 		bp = ip;
 		goto fsm_get;
 	}
-	if (!(flags & ((1l<<9)|(1l<<10)|(1l<<20))))
+	if (!(flags & ((1L<<9)|(1L<<10)|(1L<<20))))
 	{
-		if (!(flags & (1l<<3))) switch (c)
+		if (!(flags & (1L<<3))) switch (c)
 		{
 		case '(':
 
-			if (!(flags & (1l<<0)) || proto->brace == 0)
+			if (!(flags & (1L<<0)) || proto->brace == 0)
 
 			{
 				if (paren++ == 0)
 				{
 
-					if (!(flags & (1l<<0)) || group <= 1)
+					if (!(flags & (1L<<0)) || group <= 1)
 
 					{
 
 						args = 0;
 
 						if (group++ == 0) group++;
-						else if (flags & (1l<<7)) call++;
-						flags |= (1l<<14);
+						else if (flags & (1L<<7)) call++;
+						flags |= (1L<<14);
 						im = ip - 1;
 						om = op - 1;
 					}
 				}
 				else if (paren == 2 && !aim)
 				{
-					if (flags & (1l<<7))
+					if (flags & (1L<<7))
 					{
 						aim = ip - 1;
 						aom = op - 1;
 					}
-					else if ((flags & ((1l<<14)|(1l<<24))) == (1l<<14))
+					else if ((flags & ((1L<<14)|(1L<<24))) == (1L<<14))
 					{
 						for (m = ip - 2; m > im && (*m == ' ' || *m == '\t'); m--);
 						if (m == im)
 						{
-							flags &= ~(1l<<14);
+							flags &= ~(1L<<14);
 							om = 0;
 						}
 					}
 				}
-				flags &= ~(1l<<24);
+				flags &= ~(1L<<24);
 			}
 			break;
 		case ')':
 
-			if (!(flags & (1l<<0)) || proto->brace == 0)
+			if (!(flags & (1L<<0)) || proto->brace == 0)
 
 			if (--paren == 0)
 			{
 
-				if (flags & (1l<<0))
+				if (flags & (1L<<0))
 				{
 					if (group != 2)
 					{
@@ -4510,7 +4544,7 @@ lex __PARAM__((register struct proto* proto, register long flags), (proto, flags
 
 				ie = ip;
 			}
-			else if (paren == 1 && (flags & (1l<<7)) && !aie)
+			else if (paren == 1 && (flags & (1L<<7)) && !aie)
 				aie = ip;
 			break;
 		case '*':
@@ -4519,20 +4553,20 @@ lex __PARAM__((register struct proto* proto, register long flags), (proto, flags
 				group--;
 				if (paren == 1)
 				{
-					flags |= (1l<<7);
+					flags |= (1L<<7);
 					aim = aie = 0;
 				}
 			}
 			break;
 		case '#':
-			if (proto->brace == 0 && paren == 0 && last != '=' && (flags & ((1l<<0)|(1l<<1)|(1l<<3)|(1l<<14)|(1l<<18)|(1l<<22)|(1l<<24))) == ((1l<<14)|(1l<<24)) && *ip == 'e')
+			if (proto->brace == 0 && paren == 0 && last != '=' && (flags & ((1L<<0)|(1L<<1)|(1L<<3)|(1L<<14)|(1L<<18)|(1L<<22)|(1L<<24))) == ((1L<<14)|(1L<<24)) && *ip == 'e')
 			{
-				flags |= (1l<<3);
+				flags |= (1L<<3);
 			}
-			else if (!(flags & ((1l<<1)|(1l<<3))))
+			else if (!(flags & ((1L<<1)|(1L<<3))))
 			{
-				flags |= (1l<<3);
-				if (!(flags & (1l<<18)))
+				flags |= (1L<<3);
+				if (!(flags & (1L<<18)))
 				{
 					bp = ip;
 					while (*ip == ' ' || *ip == '\t') ip++;
@@ -4547,7 +4581,7 @@ lex __PARAM__((register struct proto* proto, register long flags), (proto, flags
 						}
 					}
 
-					else if ((flags & ((1l<<0)|(1l<<5))) == (1l<<0))
+					else if ((flags & ((1L<<0)|(1L<<5))) == (1L<<0))
 					{
 						n = 0;
 						t = ip + 6;
@@ -4560,7 +4594,7 @@ lex __PARAM__((register struct proto* proto, register long flags), (proto, flags
 							while (*ip == ' ' || *ip == '\t') ip++;
 							if (*ip != '\n' && *ip != '/' && *(ip + 1) != '*')
 							{
-								flags |= (1l<<11)|(1l<<14);
+								flags |= (1L<<11)|(1L<<14);
 								im = ip;
 								om = op + (ip - bp);
 							}
@@ -4580,7 +4614,7 @@ lex __PARAM__((register struct proto* proto, register long flags), (proto, flags
 							if (*ip < 'a' || *ip > 'z') break;
  
 						default:
-							flags |= (1l<<11)|(1l<<14);
+							flags |= (1L<<11)|(1L<<14);
 							im = bp - 1;
 							om = op - 1;
 							break;
@@ -4609,7 +4643,7 @@ if !defined(va_start)\n\
 						}
 						else if (*ip == 'd' && *++ip == 'e' && *++ ip == 'f' && *++ip == 'i' && *++ip == 'n' && *++ip == 'e' && (*++ip == ' ' || *ip == '\t'))
 						{
-							flags |= (1l<<2)|(1l<<14);
+							flags |= (1L<<2)|(1L<<14);
 							im = bp - 1;
 							om = op - 1;
 						}
@@ -4623,11 +4657,11 @@ if !defined(va_start)\n\
 		case '{':
 			if (proto->brace++ == 0 && paren == 0)
 			{
-				if (last == '=') flags |= (1l<<8);
+				if (last == '=') flags |= (1L<<8);
 
-				else if (flags & (1l<<0))
+				else if (flags & (1L<<0))
 				{
-					if ((flags & ((1l<<14)|(1l<<16)|(1l<<22))) == (1l<<14))
+					if ((flags & ((1L<<14)|(1L<<16)|(1L<<22))) == (1L<<14))
 					{
 						if (args)
 						{
@@ -4667,7 +4701,7 @@ if !defined(va_start)\n\
 	ie = v;
  
 						op = om++;
-						if (flags & (1l<<5))
+						if (flags & (1L<<5))
 						{
 							v = op;
 							while (v > ko && *--v != ' ');
@@ -4718,7 +4752,7 @@ if !defined(va_start)\n\
 		}
 		if ((n = ((c = *ie) == ',')) || c == ';')
 		{
-			if (flags & (1l<<5))
+			if (flags & (1L<<5))
 			{
 				m = op;
 				while (op > om && ((c = *(op - 1)) == '(' || c == ')' || c == '[' || c == ']'))
@@ -4791,7 +4825,7 @@ if !defined(va_start)\n\
 			(*op++=( *ie++));
 			while (*ie == ' ' || *ie == '\t' || *ie == '\n') ie++;
 		}
-		else if ((flags & (1l<<5)) && (op == om || *(op - 1) == ' ') && *ie == 'r' && !sstrncmp( ie, "register", 8) && (*(ie + 8) == ' ' || *(ie + 8) == '\t' || *(ie + 8) == '\n'))
+		else if ((flags & (1L<<5)) && (op == om || *(op - 1) == ' ') && *ie == 'r' && !sstrncmp( ie, "register", 8) && (*(ie + 8) == ' ' || *(ie + 8) == '\t' || *(ie + 8) == '\n'))
 		{
 			ie += 8;
 			if (op > om) (op--);
@@ -4801,7 +4835,7 @@ if !defined(va_start)\n\
  
 						if (op <= om) op = strcopy(op, "void");
 						(*op++=( ')'));
-						if (flags & (1l<<5))
+						if (flags & (1L<<5))
 						{
 							(*op++=( ';'));
 							(*op++=( '\n'));
@@ -4814,11 +4848,11 @@ if !defined(va_start)\n\
 							(*op++=( *ip));
 						}
 						ip++;
-						flags &= ~((1l<<14)|(1l<<22));
+						flags &= ~((1L<<14)|(1L<<22));
 					}
 				}
 
-				else if ((flags & ((1l<<14)|(1l<<18)|(1l<<22)|(1l<<24))) == ((1l<<14)|(1l<<24)))
+				else if ((flags & ((1L<<14)|(1L<<18)|(1L<<22)|(1L<<24))) == ((1L<<14)|(1L<<24)))
 				{
 					line = proto->line;
 					op = strcopy(om, " __PARAM__(");
@@ -4826,8 +4860,8 @@ if !defined(va_start)\n\
 					(*op++=( ','));
 					(*op++=( ' '));
 					(*op++=( '('));
-					flags &= ~((1l<<14)|(1l<<22));
-					if (flags & (1l<<26))
+					flags &= ~((1L<<14)|(1L<<22));
+					if (flags & (1L<<26))
 					{
 						if ((vc = ie - im + 1) > sizeof(proto->variadic)) vc = sizeof(proto->variadic);
 						memcopy(proto->variadic, im, vc);
@@ -4835,13 +4869,13 @@ if !defined(va_start)\n\
 					}
 					else
 					{
-						flags |= (1l<<22);
+						flags |= (1L<<22);
 						proto->ip = im;
 						proto->op = op;
 						group = 0;
 						for (;;)
 						{
-							switch (lex(proto, (flags & ((1l<<15))) | (1l<<20)))
+							switch (lex(proto, (flags & ((1L<<15))) | (1L<<20)))
 							{
 							case '(':
 								if (paren++) group++;
@@ -4850,9 +4884,9 @@ if !defined(va_start)\n\
 								if (--paren == 0)
 								{
 									group = 0;
-									if (flags & (1l<<14))
+									if (flags & (1L<<14))
 									{
-										flags &= ~((1l<<14)|(1l<<22));
+										flags &= ~((1L<<14)|(1L<<22));
 										op = memcopy(op, m, e - m);
 									}
 									break;
@@ -4862,9 +4896,9 @@ if !defined(va_start)\n\
 								if (paren == 1)
 								{
 									group = 0;
-									if (flags & (1l<<14))
+									if (flags & (1L<<14))
 									{
-										flags &= ~((1l<<14)|(1l<<22));
+										flags &= ~((1L<<14)|(1L<<22));
 										op = memcopy(op, m, e - m);
 									}
 									(*op++=( ','));
@@ -4875,7 +4909,7 @@ if !defined(va_start)\n\
 							case (0401+0):
 								if (group <= 1)
 								{
-									flags |= (1l<<14);
+									flags |= (1L<<14);
 									m = proto->tp;
 									e = proto->ip;
 								}
@@ -4888,16 +4922,16 @@ if !defined(va_start)\n\
 						(*op++=( ')'));
 						(*op++=( ')'));
 					}
-					if (!(flags & (1l<<22)))
+					if (!(flags & (1L<<22)))
 					{
-						flags |= (1l<<22);
+						flags |= (1L<<22);
 						proto->op = strcopy(op, " __OTORP__(");
 						proto->ip = im + 1;
 						n = *(ie - 1);
 						*(ie - 1) = ';';
 						c = *ie;
 						*ie = 0;
-						lex(proto, (flags & ((1l<<15))) | (1l<<1));
+						lex(proto, (flags & ((1L<<15))) | (1L<<1));
 						*(ie - 1) = n;
 						*ie = c;
 						proto->ip = ie;
@@ -4905,26 +4939,26 @@ if !defined(va_start)\n\
 						(*op++=( ')'));
 					}
 					op = linesync(proto, op, proto->line = line);
-					if (flags & (1l<<3))
+					if (flags & (1L<<3))
 					{
 						proto->brace = 0;
 						(*op++=( '\n'));
 						(*op++=( '#'));
 					}
-					else if (!(flags & (1l<<26))) (*op++=( '{'));
+					else if (!(flags & (1L<<26))) (*op++=( '{'));
 				}
 			}
-			flags &= ~((1l<<6)|(1l<<7)|(1l<<14)|(1l<<16)|(1l<<22));
+			flags &= ~((1L<<6)|(1L<<7)|(1L<<14)|(1L<<16)|(1L<<22));
 			call = 0;
 			group = 0;
 			break;
 		case '}':
-			flags &= ~((1l<<6)|(1l<<7)|(1l<<14)|(1l<<16)|(1l<<22)|(1l<<24));
+			flags &= ~((1L<<6)|(1L<<7)|(1L<<14)|(1L<<16)|(1L<<22)|(1L<<24));
 			if (--proto->brace == 0)
 			{
-				flags &= ~((1l<<8)|(1l<<26)|(1l<<27));
+				flags &= ~((1L<<8)|(1L<<26)|(1L<<27));
 
-				if (flags & (1l<<5)) (op=ko);
+				if (flags & (1L<<5)) (op=ko);
 
 			}
 			call = 0;
@@ -4932,50 +4966,50 @@ if !defined(va_start)\n\
 			paren = 0;
 			break;
 		case '=':
-			if (last == '?') flags |= (1l<<3);
-			else if (paren == 0 && (flags & ((1l<<8)|(1l<<14)|(1l<<22))) == (1l<<14)) goto fsm_statement;
+			if (last == '?') flags |= (1L<<3);
+			else if (paren == 0 && (flags & ((1L<<8)|(1L<<14)|(1L<<22))) == (1L<<14)) goto fsm_statement;
 			goto fsm_other;
 		case ',':
 
-			if (flags & (1l<<0))
+			if (flags & (1L<<0))
 			{
 				if (paren == 1) args++;
 				else
 				{
 					args--;
-					flags &= ~(1l<<14);
+					flags &= ~(1L<<14);
 				}
 				break;
 			}
 
-			if (paren == 0 && (flags & (1l<<1))) *(op - 1) = c = ';';
+			if (paren == 0 && (flags & (1L<<1))) *(op - 1) = c = ';';
  
 		case ';':
  fsm_statement:
-			if (flags & (1l<<8))  ;
+			if (flags & (1L<<8))  ;
 
-			else if (flags & (1l<<0))
+			else if (flags & (1L<<0))
 			{
 				if (paren == 0)
 				{
-					if ((flags & (1l<<14)) && last == ')')
-						flags &= ~(1l<<14);
-					if (!(flags & (1l<<14)))
+					if ((flags & (1L<<14)) && last == ')')
+						flags &= ~(1L<<14);
+					if (!(flags & (1L<<14)))
 					{
 						call = 0;
 						group = 0;
-						flags &= ~(1l<<22);
-						if (flags & (1l<<5)) (op=ko);
-						if (flags & (1l<<23))
+						flags &= ~(1L<<22);
+						if (flags & (1L<<5)) (op=ko);
+						if (flags & (1L<<23))
 						{
-							do{(proto->ip=ip);(proto->op=op);proto->flags&=~((1l<<8)|(1l<<26)|(1l<<27));proto->flags|=flags&((1l<<8)|(1l<<26)|(1l<<27));}while(0);
+							do{(proto->ip=ip);(proto->op=op);proto->flags&=~((1L<<5)|(1L<<8)|(1L<<16)|(1L<<26)|(1L<<27));proto->flags|=flags&((1L<<5)|(1L<<8)|(1L<<16)|(1L<<26)|(1L<<27));proto->call=call;}while(0);
 							return 0;
 						}
 					}
 					else
 					{
 						args--;
-						if ((flags & ((1l<<5)|(1l<<22))) == ((1l<<5)|(1l<<22)))
+						if ((flags & ((1L<<5)|(1L<<22))) == ((1L<<5)|(1L<<22)))
 							(op=ko);
 					}
 				}
@@ -4983,9 +5017,9 @@ if !defined(va_start)\n\
 
 			else if (paren == 0)
 			{
-				if ((flags & ((1l<<14)|(1l<<16)|(1l<<22))) == (1l<<14) && call > 1)
+				if ((flags & ((1L<<14)|(1L<<16)|(1L<<22))) == (1L<<14) && call > 1)
 				{
-					if ((flags & (1l<<13)) && func)
+					if ((flags & (1L<<13)) && func)
 					{
 						func[0] = 'F';
 						func[1] = 'U';
@@ -4993,16 +5027,16 @@ if !defined(va_start)\n\
 						func[3] = 'C';
 						func = 0;
 					}
-					if ((flags & ((1l<<1)|(1l<<7))) == (1l<<7) && aim && aie < im)
+					if ((flags & ((1L<<1)|(1L<<7))) == (1L<<7) && aim && aie < im)
 					{
 						while (aie < ip && (*aie == ' ' || *aie == '\t' || *aie == '\n')) aie++;
 						v = aim;
 						while (v < aie)
 							if (*v++ == ')') break;
 						while (v < aie && (*v == ' ' || *v == '\t' || *v == '\n')) v++;
-						if (v == aie || !(flags & (1l<<19)))
+						if (v == aie || !(flags & (1L<<19)))
 						{
-							if (flags & (1l<<19)) n = 3;
+							if (flags & (1L<<19)) n = 3;
 							else if (v == aie && *v == '(') n = 10;
 							else n = 11;
 							ko = op;
@@ -5013,7 +5047,7 @@ if !defined(va_start)\n\
 								*v = *(v - n);
 								v--;
 							}
-							if (flags & (1l<<19)) memcopy(aom, "(...))", 6);
+							if (flags & (1L<<19)) memcopy(aom, "(...))", 6);
 							else if (n == 10) memcopy(aom, "(__VARARG__))", 13);
 							else
 							{
@@ -5028,7 +5062,7 @@ if !defined(va_start)\n\
 							}
 						}
 					}
-					else if (flags & (1l<<25))
+					else if (flags & (1L<<25))
 					{
 						op = om;
 						while (*--op == ' ' || *op == '\t' || *op == '\n');
@@ -5041,17 +5075,19 @@ if !defined(va_start)\n\
 							memcopy(op - 13, "(__OTORP__(*)", 13);
 						}
 					}
-					if (flags & (1l<<19))
+					if (flags & (1L<<16))
+						;
+					else if (flags & (1L<<19))
 					{
 						op = om;
-						if (!(flags & (1l<<24))) op = strcopy(op, "(...)");
+						if (!(flags & (1L<<24))) op = strcopy(op, "(...)");
 						else op = memcopy(op, im, ie - im);
 						(*op++=( c));
 					}
 					else
 					{
-						if (flags & (1l<<1)) op = strcopy(om, "()");
-						else if (!(flags & (1l<<24))) op = strcopy(om, "(__VARARG__)");
+						if (flags & (1L<<1)) op = strcopy(om, "()");
+						else if (!(flags & (1L<<24))) op = strcopy(om, "(__VARARG__)");
 						else
 						{
 							op = strcopy(om, " __PROTO__(");
@@ -5060,48 +5096,48 @@ if !defined(va_start)\n\
 						}
 						(*op++=( c));
 					}
-					flags &= ~((1l<<14)|(1l<<26)|(1l<<27));
-					if (c == ',' && !(flags & (1l<<7)))
+					flags &= ~((1L<<14)|(1L<<26)|(1L<<27));
+					if (c == ',' && !(flags & (1L<<7)))
 					{
 						call = 1;
 						group = 0;
 						break;
 					}
 				}
-				else if (flags & ((1l<<16)|(1l<<22))) call = 0;
+				else if (flags & ((1L<<16)|(1L<<22))) call = 0;
 				if (c == ';')
 				{
-					flags &= ~((1l<<13)|(1l<<24)|(1l<<25));
-					if (flags & (1l<<23))
+					flags &= ~((1L<<13)|(1L<<24)|(1L<<25));
+					call = 0;
+					if (flags & (1L<<23))
 					{
-						do{(proto->ip=ip);(proto->op=op);proto->flags&=~((1l<<8)|(1l<<26)|(1l<<27));proto->flags|=flags&((1l<<8)|(1l<<26)|(1l<<27));}while(0);
+						do{(proto->ip=ip);(proto->op=op);proto->flags&=~((1L<<5)|(1L<<8)|(1L<<16)|(1L<<26)|(1L<<27));proto->flags|=flags&((1L<<5)|(1L<<8)|(1L<<16)|(1L<<26)|(1L<<27));proto->call=call;}while(0);
 						return 0;
 					}
-					call = 0;
 				}
 				else call = call > 1 && c == ',';
 				group = 0;
-				flags &= ~((1l<<6)|(1l<<7)|(1l<<14)|(1l<<16)|(1l<<22));
+				flags &= ~((1L<<6)|(1L<<7)|(1L<<14)|(1L<<16)|(1L<<22));
 			}
-			else if (paren == 1 && group == 1 && !(flags & ((1l<<6)|(1l<<13)))) flags |= (1l<<24)|(1l<<16);
+			else if (paren == 1 && group == 1 && !(flags & ((1L<<6)|(1L<<13)))) flags |= (1L<<24)|(1L<<16);
 			break;
 		case ((0500+4)+6):
 		case ((0500+4)+13):
-			flags |= (1l<<24)|(1l<<22);
+			flags |= (1L<<24)|(1L<<22);
 			break;
 		case ((0500+4)+9):
 
-			if (flags & (1l<<0))
+			if (flags & (1L<<0))
 			{
 				if (proto->brace == 0)
-					flags |= (1l<<22);
+					flags |= (1L<<22);
 			}
 			else
 
-			if (paren == 0 && !(flags & (1l<<25)))
+			if (paren == 0 && !(flags & (1L<<25)))
 			{
-				flags |= (1l<<13);
-				if (!(flags & (1l<<18)) || proto->package)
+				flags |= (1L<<13);
+				if (!(flags & (1L<<18)) || proto->package)
 				{
 					op = strcopy(op, " __MANGLE__");
 					if (proto->package)
@@ -5116,36 +5152,36 @@ if !defined(va_start)\n\
 			}
 			break;
 		case (0401+29):
-			if (paren == 0 && (flags & ((1l<<1)|(1l<<26))) == (1l<<1))
+			if (paren == 0 && (flags & ((1L<<1)|(1L<<26))) == (1L<<1))
 			{
 				op -= 3;
-				do{(proto->ip=ip);(proto->op=op);proto->flags&=~((1l<<8)|(1l<<26)|(1l<<27));proto->flags|=flags&((1l<<8)|(1l<<26)|(1l<<27));}while(0);
+				do{(proto->ip=ip);(proto->op=op);proto->flags&=~((1L<<5)|(1L<<8)|(1L<<16)|(1L<<26)|(1L<<27));proto->flags|=flags&((1L<<5)|(1L<<8)|(1L<<16)|(1L<<26)|(1L<<27));proto->call=call;}while(0);
 				return c;
 			}
-			if (paren == 1 && !(flags & (1l<<22)))
-				flags |= (1l<<26);
-			flags |= (1l<<24);
+			if (paren == 1 && !(flags & (1L<<22)))
+				flags |= (1L<<26);
+			flags |= (1L<<24);
 			break;
 		case ((0500+4)+30):
 			goto fsm_id;
 		case (0500+1):
-			if ((flags & ((1l<<18)|(1l<<26))) == (1l<<26))
+			if ((flags & ((1L<<18)|(1L<<26))) == (1L<<26))
 			{
-				flags &= ~(1l<<14);
+				flags &= ~(1L<<14);
 				line = proto->line;
 				op = strcopy(op - 8, "__VA_START__");
-				do{(proto->ip=ip);(proto->op=op);proto->flags&=~((1l<<8)|(1l<<26)|(1l<<27));proto->flags|=flags&((1l<<8)|(1l<<26)|(1l<<27));}while(0);
+				do{(proto->ip=ip);(proto->op=op);proto->flags&=~((1L<<5)|(1L<<8)|(1L<<16)|(1L<<26)|(1L<<27));proto->flags|=flags&((1L<<5)|(1L<<8)|(1L<<16)|(1L<<26)|(1L<<27));proto->call=call;}while(0);
 				for (;;)
 				{
-					switch (lex(proto, (flags & ((1l<<15))) | (1l<<20)))
+					switch (lex(proto, (flags & ((1L<<15))) | (1L<<20)))
 					{
 					case 0:
 					case ';':
 						break;
 					case (0401+0):
-						if (!(flags & (1l<<14)))
+						if (!(flags & (1L<<14)))
 						{
-							flags |= (1l<<14);
+							flags |= (1L<<14);
 							m = proto->tp;
 							e = proto->ip;
 						}
@@ -5155,8 +5191,8 @@ if !defined(va_start)\n\
 					}
 					break;
 				}
-				((ip=proto->ip),(op=proto->op));
-				if (flags & (1l<<14))
+				do{(ip=proto->ip);(op=proto->op);call=proto->call;}while(0);
+				if (flags & (1L<<14))
 				{
 					v = m;
 					n = e - m;
@@ -5169,13 +5205,13 @@ if !defined(va_start)\n\
 				op = strcopy(op, " __OTORP__(");
 				proto->ip = proto->variadic;
 				proto->op = op;
-				flags &= ~(1l<<14);
+				flags &= ~(1L<<14);
 				group = 0;
 				bp = proto->ip + 1;
 				if (*bp == 'r' && !sstrncmp( bp, "register", 8) && (*(bp + 8) == ' ' || *(bp + 8) == '\t')) bp += 9;
 				for (;;)
 				{
-					switch (lex(proto, (flags & ((1l<<15))) | (1l<<20)))
+					switch (lex(proto, (flags & ((1L<<15))) | (1L<<20)))
 					{
 					case '(':
 						if (paren++) group++;
@@ -5183,10 +5219,10 @@ if !defined(va_start)\n\
 					case ')':
 						if (--paren == 0)
 						{
-							if (flags & (1l<<14))
+							if (flags & (1L<<14))
 							{
-								flags &= ~(1l<<14);
-								if (!(flags & (1l<<27)))
+								flags &= ~(1L<<14);
+								if (!(flags & (1L<<27)))
 								{
 									op = memcopy(op, m, e - m);
 									op = strcopy(op, " = ");
@@ -5209,10 +5245,10 @@ if !defined(va_start)\n\
 					case ',':
 						if (paren == 1)
 						{
-							if (flags & (1l<<14))
+							if (flags & (1L<<14))
 							{
-								flags &= ~(1l<<14);
-								if (!(flags & (1l<<27)))
+								flags &= ~(1L<<14);
+								if (!(flags & (1L<<27)))
 								{
 									op = memcopy(op, m, e - m);
 									op = strcopy(op, " = ");
@@ -5237,7 +5273,7 @@ if !defined(va_start)\n\
 					case (0401+0):
 						if (group <= 1)
 						{
-							flags |= (1l<<14);
+							flags |= (1L<<14);
 							m = proto->tp;
 							e = proto->ip;
 						}
@@ -5248,7 +5284,7 @@ if !defined(va_start)\n\
 					break;
 				}
 				op = strcopy(op, ")");
-				flags |= (1l<<27);
+				flags |= (1L<<27);
 				proto->line = line;
 				call = 0;
 				break;
@@ -5257,7 +5293,7 @@ if !defined(va_start)\n\
 		case (0401+0):
  fsm_id:
 
-			if (flags & (1l<<0))
+			if (flags & (1L<<0))
 			{
 				if (!args && paren == 1) args++;
 				break;
@@ -5267,15 +5303,15 @@ if !defined(va_start)\n\
 			{
 				if (last == ')')
 				{
-					if (proto->brace == 0 && !(flags & (1l<<1))) flags |= (1l<<22);
+					if (proto->brace == 0 && !(flags & (1L<<1))) flags |= (1L<<22);
 					call = !call;
 				}
-				else if ((flags & (1l<<22)) || c == (0401+0) || c == ((0500+4)+30)) call++;
-				else flags |= (1l<<22);
-				if (last == (0401+0)) flags |= (1l<<6);
+				else if ((flags & (1L<<22)) || c == (0401+0) || c == ((0500+4)+30)) call++;
+				else flags |= (1L<<22);
+				if (last == (0401+0)) flags |= (1L<<6);
 			}
 			c = (0401+0);
-			flags |= (1l<<24);
+			flags |= (1L<<24);
 			break;
 		case (0401+1):
 			if (*proto->tp >= '0' && *proto->tp <= '9')
@@ -5285,9 +5321,28 @@ if !defined(va_start)\n\
 				{
 					switch (*(op - 1))
 					{
+					case 'f':
+					case 'F':
+						t = op;
+						while ((c = *--t) >= '0' && c <= '9' || c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z');
+						if (*t == '.')
+							op--;
+						n = 0;
+						break;
 					case 'l':
 					case 'L':
-						n |= 01;
+						if (!(n & 01))
+						{
+							n |= 01;
+							t = op;
+							while ((c = *--t) >= '0' && c <= '9' || c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z');
+							if (*t == '.')
+							{
+								n = 0;
+								op--;
+								break;
+							}
+						}
 						continue;
 					case 'u':
 					case 'U':
@@ -5296,12 +5351,13 @@ if !defined(va_start)\n\
 					}
 					break;
 				}
-				if (n & 01) *op++ = 'l';
+				if (n & 01)
+					*op++ = 'L';
 				if (n & 02)
 				{
 					m = op;
 					t = op = m + 10;
-					while ((c = *--m) >= '0' && c <= '9'|| c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z')
+					while ((c = *--m) >= '0' && c <= '9' || c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z')
 						*--t = c;
 					c = *t;
 					strcopy(m + 1, "(unsigned)");
@@ -5312,32 +5368,32 @@ if !defined(va_start)\n\
 			goto fsm_other;
 
 		case '[':
-			if ((flags & (1l<<0)) && paren == 0 && group <= 2) flags |= (1l<<22);
+			if ((flags & (1L<<0)) && paren == 0 && group <= 2) flags |= (1L<<22);
  
 
 		default:
  fsm_other:
 
-			if (flags & (1l<<0)) break;
+			if (flags & (1L<<0)) break;
 
-			flags |= (1l<<24);
-			if (paren == 0) flags |= (1l<<16);
+			flags |= (1L<<24);
+			if (paren == 0) flags |= (1L<<16);
 			break;
 		}
-		else if (c == '#' && *ip != '(') flags |= (1l<<21);
+		else if (c == '#' && *ip != '(') flags |= (1L<<21);
 		last = c;
 
-		if ((flags & ((1l<<5)|(1l<<14))) == ((1l<<5)|(1l<<14)) && ((flags & ((1l<<3)|(1l<<22))) || proto->brace || c != '(' && c != ')' && c != '*' && c != (0401+0)))
+		if ((flags & ((1L<<5)|(1L<<14))) == ((1L<<5)|(1L<<14)) && ((flags & ((1L<<3)|(1L<<22))) || proto->brace || c != '(' && c != ')' && c != '*' && c != (0401+0)))
 			(op=proto->op);
 		else
 
 		(proto->op=op);
 		goto fsm_start;
 	}
-	else if (flags & ((1l<<9)|(1l<<10)))
+	else if (flags & ((1L<<9)|(1L<<10)))
 	{
 
-		if ((flags & (1l<<28)) && c == '%' && *ip == '{') t = 0;
+		if ((flags & (1L<<28)) && c == '%' && *ip == '{') t = 0;
 		else
 
 		{
@@ -5360,11 +5416,11 @@ if !defined(va_start)\n\
 		else while (*ip != '\n') *op++ = *ip++;
 		op = init(proto, op, flags);
 		op = linesync(proto, op, proto->line);
-		flags &= ~((1l<<9)|(1l<<10));
-		proto->flags &= ~((1l<<9)|(1l<<10));
+		flags &= ~((1L<<9)|(1L<<10));
+		proto->flags &= ~((1L<<9)|(1L<<10));
 		goto fsm_start;
 	}
-	do{(proto->ip=ip);(proto->op=op);proto->flags&=~((1l<<8)|(1l<<26)|(1l<<27));proto->flags|=flags&((1l<<8)|(1l<<26)|(1l<<27));}while(0);
+	do{(proto->ip=ip);(proto->op=op);proto->flags&=~((1L<<5)|(1L<<8)|(1L<<16)|(1L<<26)|(1L<<27));proto->flags|=flags&((1L<<5)|(1L<<8)|(1L<<16)|(1L<<26)|(1L<<27));proto->call=call;}while(0);
 	return c;
 }
 
@@ -5376,13 +5432,13 @@ void
 pppclose __PARAM__((char* iob), (iob)) __OTORP__(char* iob;){
 	register struct proto*	proto = (struct proto*)(iob - sizeof(struct proto));
 
-	if (proto->flags & (1l<<15)) close(proto->fd);
+	if (proto->flags & (1L<<15)) close(proto->fd);
 	free((char*)proto);  
 }
 
  
 
-#line 1938
+#line 1970
 char*
 pppopen __PARAM__((char* file, int fd, char* notice, char* options, char* package, char* comment, int flags), (file, fd, notice, options, package, comment, flags)) __OTORP__(char* file; int fd; char* notice; char* options; char* package; char* comment; int flags;){
 	register struct proto*	proto;
@@ -5441,14 +5497,14 @@ pppopen __PARAM__((char* file, int fd, char* notice, char* options, char* packag
 			return 0;
 		proto->iz = n;
 		proto->oz = 3 * n;
-		proto->flags |= (1l<<15);
+		proto->flags |= (1L<<15);
 	}
 	proto->fd = fd;
 	proto->package = package;
 	iob = (char*)proto + sizeof(struct proto);
 	proto->op = proto->ob = iob;
 	proto->ip = proto->ib = iob + proto->oz + n;
-	if (m) proto->options |= (1l<<0);
+	if (m) proto->options |= (1L<<0);
 	if (!comment || !comment[0])
 		comment = "/*";
 	proto->cc[0] = comment[0];
@@ -5465,7 +5521,7 @@ pppopen __PARAM__((char* file, int fd, char* notice, char* options, char* packag
 
 
 	n = read(fd, proto->ip, proto->iz);
-	if (!(proto->flags & (1l<<15)))
+	if (!(proto->flags & (1L<<15)))
 		close(fd);
 	if (n < 0)
 	{
@@ -5530,7 +5586,7 @@ pppopen __PARAM__((char* file, int fd, char* notice, char* options, char* packag
 		}
 
 		else if (*s == '%' && *(s + 1) == '{')
-			proto->flags |= (1l<<28);
+			proto->flags |= (1L<<28);
 		else if (notice || options)
 		{
 			if (*s == *com && !sstrncmp( s, com, comlen))
@@ -5557,21 +5613,21 @@ pppopen __PARAM__((char* file, int fd, char* notice, char* options, char* packag
 		while (*s && *s++ != '\n');
 	}
  magic:
-	if (flags & (1<<9)) proto->flags |= (1l<<19);
+	if (flags & (1<<9)) proto->flags |= (1L<<19);
 	if (flags & (1<<12)) proto->test = 1;
 
 	if (flags & (1<<0)) pragma = -pragma;
 	if (flags & (1<<1)) pragma = 0;
-	if (flags & (1<<6)) proto->flags |= (1l<<12);
-	if (!(proto->flags & (1l<<28)) && file && (m = sstrlen( file)) > 2 && file[--m] == 'y' && file[--m] == '.')
-		proto->flags |= (1l<<28);
+	if (flags & (1<<6)) proto->flags |= (1L<<12);
+	if (!(proto->flags & (1L<<28)) && file && (m = sstrlen( file)) > 2 && file[--m] == 'y' && file[--m] == '.')
+		proto->flags |= (1L<<28);
 
 	if (pragma <= 0)
 	{
 		if (flags & (1<<9))
 		{
 			flags &= ~((1<<3)|(1<<4));
-			proto->flags |= (1l<<18);
+			proto->flags |= (1L<<18);
 		}
 		else if (!(flags & ((1<<2)|(1<<8))))
 		{
@@ -5580,18 +5636,25 @@ pppopen __PARAM__((char* file, int fd, char* notice, char* options, char* packag
 		}
 		else if ((flags & (1<<8)) || !pragma)
 		{
-			proto->flags |= (1l<<17);
-			if (proto->flags & (1l<<15))
+			proto->flags |= (1L<<17);
+			if (proto->flags & (1L<<15))
 				proto->oz += proto->iz;
 			proto->iz = n;
 			if (notice || options)
 			{
+				if (proto->cc[0] == '#' && proto->ip[0] == '#' && proto->ip[1] == '!')
+				{
+					s = proto->ip;
+					while (*s && *s++ != '\n');
+					proto->op = memcopy(proto->op, proto->ip, s - proto->ip);
+					proto->ip = s;
+				}
 
 				if ((comlen = astlicense(proto->op, proto->oz, notice, options, proto->cc[0], proto->cc[1], proto->cc[2])) < 0)
 					proto_error((char*)proto + sizeof(struct proto), 1, proto->op, ((char*)0));
 				else
 					proto->op += comlen;
-				if (!(flags & (1<<0)) && !(proto->flags & (1l<<28)))
+				if (!(flags & (1<<0)) && !(proto->flags & (1L<<28)))
 
 				proto->op = linesync(proto, proto->op, 1);
 				proto->iz += proto->op - proto->ob;
@@ -5622,7 +5685,7 @@ pppopen __PARAM__((char* file, int fd, char* notice, char* options, char* packag
 
 		if (flags & (1<<4))
 		{
-			proto->flags |= (1l<<10);
+			proto->flags |= (1L<<10);
 			if (flags & (1<<10))
 				retain |= (1<<4);
 		}
@@ -5640,12 +5703,12 @@ pppopen __PARAM__((char* file, int fd, char* notice, char* options, char* packag
 			}
 			else
 
-			proto->flags |= (1l<<9);
+			proto->flags |= (1L<<9);
 		}
 
 		if (!(flags & (1<<0)))
 		{
-			if (proto->flags & (1l<<28))
+			if (proto->flags & (1L<<28))
 			{
 				proto->op = strcopy(proto->op, "\n%{\n"+ !notice);
 				proto->op = strcopy(proto->op, "/* : : generated by proto : : */\n");
@@ -5658,7 +5721,7 @@ pppopen __PARAM__((char* file, int fd, char* notice, char* options, char* packag
 				proto->op = strcopy(proto->op, "/* : : generated by proto : : */\n");
 				if (n)
 					proto->op = linesync(proto, proto->op, proto->line);
-				else if (proto->flags & ((1l<<9)|(1l<<10)))
+				else if (proto->flags & ((1L<<9)|(1L<<10)))
 					proto->op = init(proto, proto->op, proto->flags);
 			}
 		}
@@ -5669,8 +5732,8 @@ pppopen __PARAM__((char* file, int fd, char* notice, char* options, char* packag
 	proto->file = file;
 	if (flags & (1<<0))
 	{
-		proto->flags |= (1l<<0);
-		if (!(flags & (1<<3))) proto->flags |= (1l<<5);
+		proto->flags |= (1L<<0);
+		if (!(flags & (1<<3))) proto->flags |= (1L<<5);
 	}
 
 	return iob;
@@ -5686,17 +5749,17 @@ pppread __PARAM__((char* iob), (iob)) __OTORP__(char* iob;){
 	register struct proto*	proto = (struct proto*)(iob - sizeof(struct proto));
 	register int		n;
 
-	if (proto->flags & (1l<<17))
+	if (proto->flags & (1L<<17))
 	{
 		if (proto->iz)
 		{
 			n = proto->iz;
 			proto->iz = 0;
 		}
-		else if (!(proto->flags & (1l<<15))) n = 0;
-		else if ((n = read(proto->fd, proto->ob, proto->oz)) <= 0 || (proto->options & (1l<<0)) && n < proto->oz)
+		else if (!(proto->flags & (1L<<15))) n = 0;
+		else if ((n = read(proto->fd, proto->ob, proto->oz)) <= 0 || (proto->options & (1L<<0)) && n < proto->oz)
 		{
-			proto->flags &= ~(1l<<15);
+			proto->flags &= ~(1L<<15);
 			close(proto->fd);
 		}
 	}
@@ -5704,9 +5767,9 @@ pppread __PARAM__((char* iob), (iob)) __OTORP__(char* iob;){
 	{
 		if (proto->op == proto->ob)
 		{
-			if (proto->flags & (1l<<4)) return -1;
+			if (proto->flags & (1L<<4)) return -1;
 
-			if (proto->flags & (1l<<28))
+			if (proto->flags & (1L<<28))
 			{
 				register char*	ip = proto->ip;
 				register char*	op = proto->ob;
@@ -5715,26 +5778,26 @@ pppread __PARAM__((char* iob), (iob)) __OTORP__(char* iob;){
 				if (!*ip)
 				{
 					ip = proto->ip = proto->ib;
-					if (!(proto->flags & (1l<<15))) n = 0;
-					else if ((n = read(proto->fd, ip, proto->iz)) <= 0 || (proto->options & (1l<<0)) && n < proto->iz)
+					if (!(proto->flags & (1L<<15))) n = 0;
+					else if ((n = read(proto->fd, ip, proto->iz)) <= 0 || (proto->options & (1L<<0)) && n < proto->iz)
 					{
 						if (n < 0) n = 0;
-						proto->flags &= ~(1l<<15);
+						proto->flags &= ~(1L<<15);
 						close(proto->fd);
 					}
 					ip[n] = 0;
 				}
-				if (proto->flags & (1l<<29))
+				if (proto->flags & (1L<<29))
 				{
-					proto->flags &= ~(1l<<29);
+					proto->flags &= ~(1L<<29);
 					if (*ip == '%')
 					{
 						*op++ = *ip++;
-						if (proto->flags & (1l<<30)) proto->flags &= ~(1l<<28);
-						else proto->flags |= (1l<<30);
+						if (proto->flags & (1L<<30)) proto->flags &= ~(1L<<28);
+						else proto->flags |= (1L<<30);
 					}
 				}
-				if (proto->flags & (1l<<28))
+				if (proto->flags & (1L<<28))
 					while (op < ep && (n = *op++ = *ip))
 					{
 						ip++;
@@ -5743,14 +5806,14 @@ pppread __PARAM__((char* iob), (iob)) __OTORP__(char* iob;){
 							if (*ip == '%' && (ip == proto->ip + 1 || *(ip - 2) == '\n'))
 							{
 								*op++ = *ip++;
-								if (proto->flags & (1l<<30)) proto->flags &= ~(1l<<28);
-								else proto->flags |= (1l<<30);
+								if (proto->flags & (1L<<30)) proto->flags &= ~(1L<<28);
+								else proto->flags |= (1L<<30);
 								break;
 							}
 							if (!*ip)
 							{
 								*op++ = '%';
-								proto->flags |= (1l<<29);
+								proto->flags |= (1L<<29);
 								break;
 							}
 						}
@@ -5762,7 +5825,7 @@ pppread __PARAM__((char* iob), (iob)) __OTORP__(char* iob;){
 			else
 
 			lex(proto, proto->flags);
-			if ((proto->flags & ((1l<<4)|(1l<<15))) == (1l<<4))
+			if ((proto->flags & ((1L<<4)|(1L<<15))) == (1L<<4))
 				proto->op = strcopy(proto->op, "/* NOTE: some constructs may not have been converted */\n");
 		}
 		n = proto->op - proto->ob;
@@ -5793,7 +5856,7 @@ pppread __PARAM__((char* iob), (iob)) __OTORP__(char* iob;){
 
 
 
-#line 206 "../proto/proto.c"
+#line 214 "../proto/proto.c"
 
 
 
@@ -5840,11 +5903,11 @@ proto __PARAM__((char* file, char* license, char* options, char* package, char* 
 				pppclose(b);
 				return flags | ((1<<13)<<0);
 			}
-			strcpy(buf, copy);
+			strcopy( buf, copy);
 			e = buf + n;
 			if (*file != '/')
 				*e++ = '/';
-			strcpy(e, file);
+			strcopy( e, file);
 			if ((fd = creat(buf, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH)) < 0)
 			{
 				for (e = buf; *e == '/'; e++);
@@ -5887,7 +5950,7 @@ proto __PARAM__((char* file, char* license, char* options, char* package, char* 
 		if (file && (flags & ((1<<13)<<1)))
 		{
 			*e = '_';
-			strcpy(b, file);
+			strcopy( b, file);
 			*e = x;
 			if (replace(b, file, !(flags & (1<<0))))
 				proto_error(b, 2, "cannot rename to", file);
@@ -5982,7 +6045,7 @@ main __PARAM__((int argc, char** argv), (argc, argv)) __OTORP__(int argc; char**
 				else
 				{
 					*op++ = '\n';
-					memcpy(op, b, n + 1);
+					memcopy( op, b, n + 1);
 					op += n;
 				}
 				break;

@@ -62,6 +62,8 @@ Error_info_t	_error_info_ =
 
 __EXTERN__(Error_info_t, _error_info_);
 
+static char*	error_info_prefix;	/* should this be in error_info? */
+
 #undef	ERROR_CATALOG
 #define ERROR_CATALOG	(ERROR_LIBRARY<<1)
 
@@ -70,9 +72,10 @@ __EXTERN__(Error_info_t, _error_info_);
 #define OPT_FD		3
 #define OPT_LIBRARY	4
 #define OPT_MASK	5
-#define OPT_SYSTEM	6
-#define OPT_TIME	7
-#define OPT_TRACE	8
+#define OPT_PREFIX	6
+#define OPT_SYSTEM	7
+#define OPT_TIME	8
+#define OPT_TRACE	9
 
 static const Namval_t		options[] =
 {
@@ -82,6 +85,7 @@ static const Namval_t		options[] =
 	"fd",		OPT_FD,
 	"library",	OPT_LIBRARY,
 	"mask",		OPT_MASK,
+	"prefix",	OPT_PREFIX,
 	"system",	OPT_SYSTEM,
 	"time",		OPT_TIME,
 	"trace",	OPT_TRACE,
@@ -140,6 +144,15 @@ setopt(void* a, const void* p, register int n, register const char* v)
 				error_info.mask = strtol(v, NiL, 0);
 			else
 				error_info.mask = 0;
+			break;
+		case OPT_PREFIX:
+			if (n)
+				error_info_prefix = strdup(v);
+			else if (error_info_prefix)
+			{
+				free(error_info_prefix);
+				error_info_prefix = 0;
+			}
 			break;
 		case OPT_SYSTEM:
 			if (n)
@@ -304,6 +317,8 @@ errorv(const char* id, int level, va_list ap)
 		if (off = stktell(stkstd))
 			stkfreeze(stkstd, 0);
 		file = error_info.id;
+		if (error_info_prefix)
+			sfprintf(stkstd, "%s: ", error_info_prefix);
 		if (flags & ERROR_USAGE)
 		{
 			if (flags & ERROR_NOID)

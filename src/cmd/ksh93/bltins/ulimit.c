@@ -31,10 +31,7 @@
  *
  */
 
-#include	<ast.h>
-#include	<sfio.h>
-#include	<error.h>
-#include	<shell.h>
+#include	"defs.h"
 #include	"builtins.h"
 #include	"ulimit.h"
 

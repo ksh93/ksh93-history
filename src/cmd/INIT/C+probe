@@ -2,7 +2,7 @@
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)C.probe (AT&T Research) 2001-01-01
+# @(#)C.probe (AT&T Research) 2001-02-14
 #
 # probe [ -d ] c-compiler-path [ attributes ]
 #
@@ -74,7 +74,7 @@ esac
 
 cc=$1
 case $cc in
-[\\/]*|[A-Za-z]:\\*)
+[\\/]*|[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz]:\\*)
 	;;
 *)	echo "Usage: $0 [ -d ] c-compiler-path [ attributes ]" >&2; exit 1 ;;
 esac
@@ -90,8 +90,11 @@ esac
 $executable . 2>/dev/null || executable='test -r'
 
 case $SHELL in
-[\\/]*|[A-Za-z]:\\*)	sh=$SHELL ;;
-*)			sh=/bin/sh ;;
+[\\/]*|[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz]:\\*)
+	sh=$SHELL
+	;;
+*)	sh=/bin/sh
+	;;
 esac
 
 trap 'code=$?; cd ..; rm -rf $tmpdir; exit $code' 0 1 2 3
@@ -231,10 +234,10 @@ do	shift
 	esac
 done
 
-hosttype=`package CC=$cc || $SHELL -c "package CC=$cc"`
+hosttype=`package CC="$cc" || $SHELL -c "package CC='$cc'"`
 case $hosttype in
 *[Uu][Ss][Aa][Gg][Ee]:*)
-	hosttype=`PATH=$_probe_PATH; export PATH; package CC=$cc || $SHELL -c "package CC=$cc"`
+	hosttype=`PATH=$_probe_PATH; export PATH; package CC="$cc" || $SHELL -c "package CC='$cc'"`
 	;;
 esac
 
@@ -396,7 +399,7 @@ else	{
 	} 2>&1 | sed -e "s/['\"]//g" > cpp.out
 fi
 
-set x `sed -e 's,[A-Za-z]:\\\\,/,g' -e 's,\\\\,/,g' cpp.out`
+set x `sed -e 's,[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz]:\\\\,/,g' -e 's,\\\\,/,g' cpp.out`
 def=
 definclude="-I+C -I-H"
 stdinclude=$definclude
@@ -420,7 +423,7 @@ do	case $# in
 	-A\(*\))
 		prepred="$prepred `echo $1 | sed 's/-A\(.*\)(\(.*\))/\1 \2/'`"
 		;;
-	-[DI][-+][A-Z]*)
+	-[DI][-+][ABCDEFGHIJKLMNOPQRSTUVWXYZ]*)
 		stdpp=1
 		case $1 in
 		-I?[CH])	case $def in
@@ -435,18 +438,26 @@ do	case $# in
 		;;
 	-D)	shift
 		case $1 in
-		[A-Za-z_]*=*)	predef="$predef
-`echo $1 | sed -e 's/=.*//'`" ;;
-		[A-Za-z_]*)	predef="$predef
-$1" ;;
+		[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_]*=*)
+			predef="$predef
+`echo $1 | sed -e 's/=.*//'`"
+			;;
+		[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_]*)
+			predef="$predef
+$1"
+			;;
 		esac
 		;;
 	-Dprobe);;
 	-D*)	case $1 in
-		-D[A-Za-z_]*=*)	predef="$predef
-`echo $1 | sed -e 's/^-D//' -e 's/=.*//'`" ;;
-		-D[A-Za-z_]*)	predef="$predef
-`echo $1 | sed -e 's/^-D//'`" ;;
+		-D[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_]*=*)
+			predef="$predef
+`echo $1 | sed -e 's/^-D//' -e 's/=.*//'`"
+			;;
+		-D[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_]*)
+			predef="$predef
+`echo $1 | sed -e 's/^-D//'`"
+			;;
 		esac
 		;;
 	-I)	shift
@@ -594,7 +605,7 @@ case $good in
 	x=$stdinclude
 	stdinclude=
 	subinclude=
-	for f in $x $tstinclude `sed -e 's,\\\\,/,g' -e 's,///*,/,g' -e 's,"[A-Za-z]:/,"/,g' -e '/^#[line 	]*[0-9][0-9]*[ 	][ 	]*"[\\/]/!d' -e 's/^#[line 	]*[0-9][0-9]*[ 	][ 	]*"\(.*\)[\\/].*".*/\1/' include.out | sort -u`
+	for f in $x $tstinclude `sed -e 's,\\\\,/,g' -e 's,///*,/,g' -e 's,"[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz]:/,"/,g' -e '/^#[line 	]*[0123456789][0123456789]*[ 	][ 	]*"[\\/]/!d' -e 's/^#[line 	]*[0123456789][0123456789]*[ 	][ 	]*"\(.*\)[\\/].*".*/\1/' include.out | sort -u`
 	do	case $f in
 		-*)	;;
 		*/)	f=`echo $f | sed -e 's,//*\$,,'` ;;
@@ -707,7 +718,7 @@ case $good in
 		esac
 		echo "#include <$1>" > t.c
 		p=
-		for j in `$cc -E t.c | grep "$1" | sed -e 's,\\\\,/,g' -e 's,"[A-Za-z]:/,"/,g' -e '/^#[line 	]*1[ 	][ 	]*"[\\/]/!d' -e 's/^#[line 	]*1[ 	][ 	]*"\(.*\)[\\/].*".*/\1/'`
+		for j in `$cc -E t.c | grep "$1" | sed -e 's,\\\\,/,g' -e 's,"[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz]:/,"/,g' -e '/^#[line 	]*1[ 	][ 	]*"[\\/]/!d' -e 's/^#[line 	]*1[ 	][ 	]*"\(.*\)[\\/].*".*/\1/'`
 		do	j=`echo $j | sed -e 's,///*,/,g' -e 's,/$,,'`
 			case $p in
 			?*)	echo $p $j ;;

@@ -1,22 +1,11 @@
-: cc wrapper for aix risc xlc
-STDROOT=/usr
-if	test "" != "$INSTALLROOT"
-then	if	test ! -f $INSTALLROOT/include/botch/sys/socket.h -a -f $STDROOT/include/sys/socket.h
-	then	for d in $INSTALLROOT/include $INSTALLROOT/include/botch $INSTALLROOT/include/botch/sys
-		do	if	test ! -d $d
-			then	mkdir $d || exit
-			fi
-		done
-		cat > $INSTALLROOT/include/botch/sys/socket.h <<!
-#undef	SF_CLOSE
-#include <../include/sys/socket.h>
-#undef	SF_CLOSE
-#define	SF_CLOSE	_SF_CLOSE
-!
-	fi
-	set x -I$INSTALLROOT/include/botch "$@"
-	shift
-fi
+: cc wrapper for aix risc xlc : 2000-12-25 :
+
+HOSTTYPE=ibm.risc
+
+case $* in
+-dumpmachine) echo $HOSTTYPE; exit ;;
+esac
+
 case " $@ " in
 *" -G "*)      
 	set x -berok "$@"

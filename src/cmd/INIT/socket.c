@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2001 AT&T Corp.                *
+*                Copyright (c) 1999-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -20,64 +20,15 @@
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
-*                David Korn <dgk@research.att.com>                 *
-*                 Phong Vo <kpv@research.att.com>                  *
 *******************************************************************/
-#pragma prototyped
 /*
- * strptime implementation
+ * small test for -lnsl
  */
 
-#include <ast_map.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 
-#ifdef strptime
-#undef	strptime
-#define _map_strptime	1
-#endif
-
-#if defined(__STDPP__directive) && defined(__STDPP__hide)
-__STDPP__directive pragma pp:hide strptime
-#else
-#define strptime	______strptime
-#endif
-
-#include <ast.h>
-#include <tm.h>
-
-#if defined(__STDPP__directive) && defined(__STDPP__hide)
-__STDPP__directive pragma pp:nohide strptime
-#else
-#undef	strptime
-#endif
-
-#if _lib_strptime
-
-NoN(strptime)
-
-#else
-
-#if _map_strptime
-#undef	strptime
-#define strptime	_ast_strptime
-#endif
-
-#if defined(__EXPORT__)
-#define extern	__EXPORT__
-#endif
-
-extern char*
-strptime(const char* s, const char* format, struct tm* tm)
+main()
 {
-	char*	e;
-	char*	f;
-	time_t	t;
-
-	t = tmtime(tm, TM_LOCALZONE);
-	t = tmscan(s, &e, format, &f, &t, 0);
-	if (e == (char*)s || *f)
-		return 0;
-	*tm = *tmmake(&t);
-	return e;
+	return socket(0, 0, 0) < 0;
 }
-
-#endif

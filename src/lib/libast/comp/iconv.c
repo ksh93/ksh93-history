@@ -510,9 +510,7 @@ _ast_iconv_name(register const char* m, register char* b, size_t n)
 		}
 		else if (cp->ccode == CC_NATIVE)
 		{
-			if (locales[AST_LC_CTYPE]->charset)
-				m = locales[AST_LC_CTYPE]->charset->code;
-			else
+			if ((locales[AST_LC_CTYPE]->flags & LC_default) || !locales[AST_LC_CTYPE]->charset || !(m = locales[AST_LC_CTYPE]->charset->code) || streq(m, "iso8859-1"))
 				switch (CC_NATIVE)
 				{
 				case CC_EBCDIC1:

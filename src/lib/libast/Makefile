@@ -17,6 +17,8 @@ CCFLAGS = $(CC.OPTIMIZE) -D_BLD_ast $(CC.DLL)
 
 .SOURCE.h : include comp
 
+CP = $(STDCP|"cp")
+
 PARANOID ==
 CONF_LIBSUFFIX == "$(CC.SUFFIX.DYNAMIC|CC.SUFFIX.SHARED)"
 DEBUG ==
@@ -237,7 +239,7 @@ $(INCLUDEDIR)/stdio.h :INSTALL: FEATURE/stdio
 
 $(HEADERGEN) :COPY: FEATURE/$$(<:B:/$(ID)_//)
 
-iffeio.h :COPY: FEATURE/stdio.lcl
+iffeio.h :COPY: FEATURE/iffeio
 
 stdio.h :COPY: FEATURE/stdio
 

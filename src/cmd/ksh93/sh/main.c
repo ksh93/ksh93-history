@@ -259,31 +259,32 @@ sh_main(int ac, char *av[], void (*userinit)(int))
 				}
 				else
 				{
+					sp = 0;
+					if((fdin=sh_open(name,O_RDONLY,0))<0 && !strchr(name,'/'))
+					{
 #ifdef PATH_BFPATH
-					if(!strchr(name,'/') && path_absolute(name,NIL(Pathcomp_t*)))
-						sp = stakptr(PATH_OFFSET);
-					else
-						sp = 0;
-					
+						if(path_absolute(name,NIL(Pathcomp_t*)))
+							sp = stakptr(PATH_OFFSET);
 #else
-					sp = path_absolute(name,NIL(char*));
+							sp = path_absolute(name,NIL(char*));
 #endif
-					if(sp==0 || (fdin=sh_open(sp,O_RDONLY,0))<0)
-						/* for compatibility with bsh */
-						if((fdin=sh_open(name,O_RDONLY,0))<0)
-						{
-							if(sp || errno!=ENOENT)
-								errormsg(SH_DICT,ERROR_system(ERROR_NOEXEC),e_open,name);
-							/* try sh -c 'name "$@"' */
-							sh_onoption(SH_CFLAG);
-							sh.comdiv = (char*)malloc(strlen(name)+7);
-							name = strcopy(sh.comdiv,name);
-							if(sh.st.dolc)
-								strcopy(name," \"$@\"");
-							goto shell_c;
-						}
-						if(fdin==0)
-							fdin = sh_iomovefd(fdin);
+						if(sp)
+							fdin=sh_open(sp,O_RDONLY,0);
+					}
+					if(fdin<0)
+					{
+						if(sp || errno!=ENOENT)
+							errormsg(SH_DICT,ERROR_system(ERROR_NOEXEC),e_open,name);
+						/* try sh -c 'name "$@"' */
+						sh_onoption(SH_CFLAG);
+						sh.comdiv = (char*)malloc(strlen(name)+7);
+						name = strcopy(sh.comdiv,name);
+						if(sh.st.dolc)
+							strcopy(name," \"$@\"");
+						goto shell_c;
+					}
+					if(fdin==0)
+						fdin = sh_iomovefd(fdin);
 				}
 				sh.readscript = sh.shname;
 			}

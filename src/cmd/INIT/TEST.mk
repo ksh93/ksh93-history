@@ -1,7 +1,7 @@
 /*
  * regression test support
  *
- * @(#)TEST.mk (AT&T Labs Research) 1999-06-07
+ * @(#)TEST.mk (AT&T Labs Research) 2001-04-30
  *
  * test management is still in the design phase
  */
@@ -26,7 +26,7 @@
 
 ":TEST:" : .MAKE .OPERATOR
 	local B P S T
-	test : .SET.keepgoing
+	test : .INSERT .TESTINIT
 	P := $(>:O=1)
 	if "$(P:N=*.tst)" && ! "$(@:V)"
 		B := $(P:B)
@@ -60,7 +60,7 @@
 	elif ! "$(<:V)"
 		for B $(>)
 			if ! "$(B:A=.TARGET)"
-				for S in .c .sh
+				for S .c .sh
 					if "$(B:B:S=$(S):T=F)"
 						:INSTALLDIR: $(B)
 						$(B) :: $(B:B:S=$(S))
@@ -103,5 +103,9 @@
 		end
 	end
 
-.SET.keepgoing : .MAKE .VIRTUAL .FORCE .REPEAT
+.TESTINIT : .MAKE .VIRTUAL .FORCE .REPEAT
+	if VARIANT == "DLL"
+		error 1 :DLL: tests skipped
+		exit 0
+	end
 	set keepgoing

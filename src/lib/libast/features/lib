@@ -33,7 +33,7 @@ lib	strxfrm,strftime,swab,symlink,sysconf,syslog
 lib	telldir,tmpnam,tzset,universe,unlink,utime,vfork,wctype
 lib	ftruncate,truncate
 lib	creat64,fstat64,fstatvfs64,ftruncate64 -D_LARGEFILE64_SOURCE
-lib	lseek64,lstat64,mmap64 -D_LARGEFILE64_SOURCE
+lib	lseek64,lstat64 -D_LARGEFILE64_SOURCE
 lib	open64,readdir64,stat64,statvfs64,truncate64 -D_LARGEFILE64_SOURCE
 
 mem	direct.d_reclen sys/types.h sys/dir.h
@@ -314,6 +314,61 @@ tst	ptr_dd_buf sys/types.h - dirent.h - ndir.h - sys/dir.h note{ DIR.dd_buf is a
 		DIR*	dirp;
 		dirp->dd_buf = 0;
 		return 0;
+	}
+}end
+
+tst	lib_mmap64 note{ mmap64 interface and implementation work }end execute{
+	#define _LARGEFILE64_SOURCE     1
+	
+	#include <unistd.h>
+	#include <sys/types.h>
+	#include <sys/mman.h>
+	#include <sys/fcntl.h>
+	
+	main()
+	{
+	        off64_t         off;
+	        int             fd;
+	        int             n;
+	        char*           s;
+	        char            file[32] = {'/','t','m','p','/','m','m','X','X','X','X','X','X'};
+	
+	        if (!mktemp(file) || (fd = open64(file, O_CREAT|O_WRONLY, 0600)) < 0)
+	        {
+	                remove(file);
+	                return 1;
+	        }
+	        off = (1<<8);
+	        off *= off;
+	        if (lseek64(fd, off, SEEK_SET) != off)
+	        {
+	                remove(file);
+	                return 1;
+	        }
+	        n = strlen(file) + 1;
+	        if (write(fd, file, n) != n)
+	        {
+	                remove(file);
+	                return 1;
+	        }
+	        if (close(fd) < 0 || (fd = open64(file, O_RDONLY)) < 0)
+	        {
+	                remove(file);
+	                return 1;
+	        }
+	        if (!(s = mmap64((caddr_t)0, (size_t)n, PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, off)))
+	        {
+	                remove(file);
+	                return 1;
+	        }
+	        if (strcmp(s, file))
+	        {
+	                remove(file);
+	                return 1;
+	        }
+	        close(fd);
+	        remove(file);
+	        return 0;
 	}
 }end
 

@@ -16,6 +16,10 @@ $(PACKAGEROOT)/lib/package :INSTALLDIR: package.mk
 
 $(PACKAGEROOT)/bin :INSTALLDIR: ignore mamprobe package silent
 
+crossexec :: crossexec.sh
+
+filter :: filter.sh
+
 ignore :: ignore.sh
 
 mamprobe :: mamprobe.sh
@@ -38,12 +42,13 @@ $(BINDIR)/.fpath :INSTALL:
  */
 
 if ! CC.HOSTTYPE
-	CC.HOSTTYPE := $(_hosttype_)
+	CC.HOSTTYPE := $(_hosttype_|HOSTTYPE)
 end
 
 $(BINDIR)/cc :INSTALL: (CC.HOSTTYPE) package hello.c \
 		cc.darwin.ppc \
 		cc.hp.pa \
+		cc.hp.pa64 \
 		cc.ibm.risc \
 		cc.mvs.390 \
 		cc.next.i386 \
@@ -55,43 +60,29 @@ $(BINDIR)/cc :INSTALL: (CC.HOSTTYPE) package hello.c \
 		cc.sgi.mips3-o32 \
 		cc.sgi.mips4 \
 		cc.sgi.mips4-n32
-	set x $(*:N=*cc.*.*)
-	shift
-	while	:
-	do	case $# in
-		0)	break ;;
-		esac
-		cc=$1 # hp /bin/sh scripts modify parent args!
-		shift
-		export cc
-		case $cc in
+	for cc in $(*:N=*cc.*.*)
+	do	case $cc in
 		*cc.$(CC.HOSTTYPE))
-			test -f $cc &&
-			$cc -o hello.exe $(*:O=2) >/dev/null 2>&1 &&
-			hello.exe >/dev/null 2>&1 && {
-				case $(CC.HOSTTYPE) in
-				*.mips*)$cc -version >/dev/null 2>&1 || {
-						: no $(CC.HOSTTYPE) cc workaround needed
-						break
-					}
-					;;
+			if	$(SILENT) test -f $cc &&
+				$cc -o hello.exe $(*:O=2) >/dev/null 2>&1 &&
+				hello.exe >/dev/null 2>&1
+			then	case "$(CC.HOSTTYPE)" in
+				*.mips*)$cc -version >/dev/null 2>&1 || break ;;
 				esac
 				cmp -s $cc $(<) ||
 				cp $cc $(<)
-			} ||
-			: no $(CC.HOSTTYPE) cc workaround needed
-			break
+			fi
 		esac
 	done
-	rm -f hello.exe hello$(CC.SUFFIX.OBJECT)
+	$(SILENT) rm -f hello.exe hello$(CC.SUFFIX.OBJECT)
 	case "$(CC.HOSTTYPE)" in
 	sgi.mips3)
-		if test ! -d $(INSTALLROOT)/lib32
+		if	$(SILENT) test ! -d $(INSTALLROOT)/lib32
 		then	$(LN) -s lib $(INSTALLROOT)/lib32
 		fi
 		;;
 	sgi.mips4)
-		if test ! -d $(INSTALLROOT)/lib64
+		if	$(SILENT) test ! -d $(INSTALLROOT)/lib64
 		then	$(LN) -s lib $(INSTALLROOT)/lib64
 		fi
 		;;
@@ -99,49 +90,36 @@ $(BINDIR)/cc :INSTALL: (CC.HOSTTYPE) package hello.c \
 
 $(BINDIR)/ld :INSTALL: (CC.HOSTTYPE) package $(BINDIR)/cc \
 		ld.hp.pa
-	set x $(*:N=*ld.*.*)
-	while	:
-	do	case $# in
-		0)	break ;;
-		esac
-		ld=$1 # hp /bin/sh scripts modify parent args!
-		shift
-		export ld
-		case $ld in
-		*ld.$(CC.HOSTTYPE))
-			if	test -f $ld -a -x $(BINDIR)/cc
-			then	cmp -s $ld $(<) ||
-				cp $ld $(<)
-			else	: no $(CC.HOSTTYPE) ld workaround needed
-			fi
-			break
-		esac
-	done
+	if	$(SILENT) test -x $(BINDIR)/cc
+	then	for ld in $(*:N=*ld.*.*)
+		do	case $ld in
+			*ld.$(CC.HOSTTYPE))
+				if	$(SILENT) test -f $ld
+				then	cmp -s $ld $(<) ||
+					cp $ld $(<)
+				fi
+			esac
+		done
+	fi
 
-$(BINDIR)/ldd :INSTALL: (CC.HOSTTYPE) package $(BINDIR)/cc \
+$(BINDIR)/ldd :INSTALL: .VIRTUAL (CC.HOSTTYPE) package $(BINDIR)/cc \
 		ldd.darwin.ppc \
 		ldd.ibm.risc \
+		ldd.mvs.390 \
 		ldd.sgi.mips2 \
 		ldd.sgi.mips3 \
 		ldd.sgi.mips4
-	set x $(*:N=*ldd.*.*)
-	while	:
-	do	case $# in
-		0)	break ;;
-		esac
-		ldd=$1 # hp /bin/sh scripts modify parent args!
-		shift
-		export ldd
-		case $ldd in
-		*ldd.$(CC.HOSTTYPE))
-			if	test -f $ldd -a -x $(BINDIR)/cc -a ! -x /usr/bin/ldd -a ! -x /bin/ldd
-			then	cmp -s $ldd $(<) ||
-				cp $ldd $(<)
-			else	: no $(CC.HOSTTYPE) ldd workaround needed
-			fi
-			break
-		esac
-	done
+	if	$(SILENT) test -x $(BINDIR)/cc
+	then	for ldd in $(*:N=*ldd.*.*)
+		do	case $ldd in
+			*ldd.$(CC.HOSTTYPE))
+				if	$(SILENT) test -f $ldd -a ! -x /usr/bin/ldd -a ! -x /bin/ldd
+				then	cmp -s $ldd $(<) ||
+					cp $ldd $(<)
+				fi
+			esac
+		done
+	fi
 
 /*
  * probe initialization
@@ -163,7 +141,7 @@ $(LIBDIR)/make :INSTALLDIR: PROBE.mk TEST.mk WWW.mk MSGFUN.mk MSGKEY.mk
 $(INCLUDEDIR) :INSTALLDIR: prototyped.h
 
 prototyped.h : $(BINDIR)/proto
-	$(*) -f /dev/null > h.$(tmp).h
+	proto -f /dev/null > h.$(tmp).h
 	if	$(CMP) -s h.$(tmp).h $(<)
 	then	$(RM) -f h.$(tmp).h
 	else	$(MV) h.$(tmp).h $(<)
@@ -174,19 +152,19 @@ prototyped.h : $(BINDIR)/proto
  */
 
 ":MAPLIB:" : .MAKE .OPERATOR
-	local L
-	for L $(>)
-		$(LIBDIR)/lib :INSTALLDIR: $(L)
-		$(L) : (CC) $(L).c
-			if	$(CC) -o $(<).exe $(*) -l$(<) > /dev/null
-			then	if	$(CC) -o $(<).exe $(*) > /dev/null
-				then	echo ' -'
-				else	echo ' -l$(<)'
-				fi
-			else	echo ' -'
-			fi 2> /dev/null > $(<)
-			rm -f $(<).exe $(<)$(CC.SUFFIX.OBJECT)
-	end
+	$(LIBDIR)/lib/$(<) :INSTALL: $(<).req
+	$(<).req : (CC) $(>)
+		r='-'
+		for i in $(*)
+		do	if	$(CC) -o $(<:B).exe $i -l$(<:B) > /dev/null
+			then	$(CC) -o $(<:B).exe $i > /dev/null || {
+					r='-l$(<:B)'
+					break
+				}
+			fi
+		done 2>/dev/null
+		echo " $r" > $(<)
+		rm -f $(<:B).exe $(<:B)$(CC.SUFFIX.OBJECT)
 
 /*
  * check if -ldl is required
@@ -199,14 +177,24 @@ prototyped.h : $(BINDIR)/proto
  *           at runtime on irix 6.* because -ldl is not there
  */
 
-:MAPLIB: dl
+dl :MAPLIB: dl.c
 
 /*
- * check if -lm is required
- * this allows makefiles to use -lm on all systems
+ * miscellaneous -l* checks
  */
 
-:MAPLIB: m
+m :MAPLIB: m.c
+
+nsl :MAPLIB: nsl.c
+
+/*
+ * what was sco smoking
+ * almost all of gethost* are in -lnsl except gethostbyname which
+ * is in -lsocket which isn't neede to resolve socket() but seems
+ * to do the -lnsl job
+ */
+
+socket :MAPLIB: socket.c nsl.c
 
 /*
  * proto.c is snarfed from the standalone src
@@ -233,7 +221,7 @@ proto.c : ../proto/proto.c
 		-e '/\/\*NODELAY_CONTROL\*\//s/^/#undef	DELAY_CONTROL /' \
 		$(*)
 		} > c.$(tmp).c
-		$(CC) $(CCFLAGS) -I$(INSTALLROOT)/include/ast -DPROTO_STANDALONE -D-F$(*) -D-L -I-D -E c.$(tmp).c | $(PROTO) $(PROTOFLAGS:N!=-s) -f > $(<)
+		$(CPP) $(CPPFLAGS) -I$(INSTALLROOT)/include/ast -DPROTO_STANDALONE -D-F$(*) -D-L -I-D -E c.$(tmp).c | $(PROTO) $(PROTOFLAGS:N!=-s) -f > $(<)
 		$(RM) -f c.$(tmp).c
 	fi
 

@@ -26,7 +26,7 @@
 # Glenn Fowler <gsf@research.att.com>
 
 case $-:$BASH_VERSION in
-*x*:[0-9]*)	: bash set -x is broken :; set +ex ;;
+*x*:[0123456789]*)	: bash set -x is broken :; set +ex ;;
 esac
 
 command=mamprobe
@@ -36,7 +36,7 @@ command=mamprobe
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)mamprobe (AT&T Labs Research) 2000-12-15
+@(#)$Id: mamprobe (AT&T Labs Research) 2000-12-15 $
 ]
 [+NAME?mamprobe - generate MAM cc probe info]
 [+DESCRIPTION?\bmamprobe\b generates MAM (make abstract machine) \bcc\b(1)
@@ -160,7 +160,7 @@ int main(){FILE* fp=stdin;return(f());}' > dll$src
 				$cc -o dll$exe dll$obj && test -f dll$exe && continue
 			}
 			case $opt in
-			*-D[a-z]*=*)
+			*-D[abcdefghijklmnopqrstuvwxyz]*=*)
 				dll=$opt
 				break
 				;;

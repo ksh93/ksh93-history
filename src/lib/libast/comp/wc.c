@@ -64,6 +64,7 @@ wcrtomb(char* s, wchar_t c, mbstate_t* q)
 {
 #if _lib_wctomb
 	*q = 0;
+	memset(q, 0, sizeof(*q));
 	return wctomb(s, c);
 #else
 	if (s)

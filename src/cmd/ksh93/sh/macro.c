@@ -249,6 +249,7 @@ void sh_machere(Sfio_t *infile, Sfio_t *outfile, char *string)
 	mp->sp = outfile;
 	mp->split = mp->assign = mp->pattern = mp->patfound = mp->lit = mp->arith = 0;
 	mp->quote = 1;
+	mp->ifsp = nv_getval(nv_scoped(IFSNOD));
 	mp->ifs = ' ';
 	fcsave(&save);
 	if(infile)
@@ -1246,7 +1247,8 @@ retry2:
 	if(v && (!nulflg || *v ) && c!='+')
 	{
 		register int d = (mode=='@'?' ':mp->ifs);
-		int match[20], nmatch;
+		int match[40], nmatch, vsize_last;
+		char *vlast;
 		while(1)
 		{
 			if(!v)
@@ -1262,13 +1264,15 @@ retry2:
 					if(c=='%')
 						nmatch=substring(v,pattern,match,flag&STR_MAXIMAL);
 					else
-						nmatch=strgrpmatch(v,pattern,match,10,flag);
-					if(np)
-						sh_setmatch(np,-2,nmatch,match);
-					else
-						sh_setmatch((Namval_t*)v,vsize,nmatch,match);
+						nmatch=strgrpmatch(v,pattern,match,sizeof(match)/(2*sizeof(int)),flag);
+					if(replen>0)
+						sh_setmatch(v,vsize,nmatch,match);
 					if(nmatch)
+					{
+						vlast = v;
+						vsize_last = vsize;
 						vsize = match[0];
+					}
 					else if(c=='#')
 						vsize = 0;
 					if(vsize)
@@ -1289,6 +1293,8 @@ retry2:
 					vsize = -1;
 					break;
 				}
+				if(replen==0)
+					sh_setmatch(vlast,vsize_last,nmatch,match);
 			}
 			if(vsize)
 				mac_copy(mp,v,vsize>0?vsize:strlen(v));
@@ -1848,7 +1854,7 @@ static char *sh_tilde(register const char *string)
 	register char		*cp;
 	register int		c;
 	register struct passwd	*pw;
-	register Namval_t *np;
+	register Namval_t *np=0;
 	static Dt_t *logins_tree;
 	if(*string++!='~')
 		return(NIL(char*));

@@ -87,6 +87,7 @@ dllfind(const char* lib, const char* ver, int flags)
 	char*			p;
 	char*			suf;
 	int			dot;
+	int			try;
 	void*			dll;
 	char			bas[64];
 	char			gen[64];
@@ -249,6 +250,7 @@ sfprintf(sfstderr, "dllfind: lib=%s ver=%s\n", lib, ver);
 	}
 	*nv = 0;
 	*sv = 0;
+	try = 0;
 	dll = 0;
 	x = &tmp[sizeof(tmp) - 1];
 #if DEBUG
@@ -333,8 +335,8 @@ sfprintf(sfstderr, "dllfind: access(%s)\n", tmp);
 #if DEBUG
 sfprintf(sfstderr, "dllfind: access(%s) dot=%d nv=%s sv=%s\n", tmp, dot, *nv, *sv);
 #endif
-						if (!access(tmp, 0) && (dll = dlopen(tmp, flags)))
-							goto found;
+						if (!access(tmp, 0))
+							return dlopen(tmp, flags);
 					}
 					else
 					{
@@ -367,13 +369,14 @@ sfprintf(sfstderr, "dllfind: fts_child=%s\n", ent->fts_name);
 #if DEBUG
 sfprintf(sfstderr, "dllfind: attempt dlopen %s\n", tmp);
 #endif
-					if (dll = dlopen(tmp, flags))
-						break;
+					try = 1;
+					dll = dlopen(tmp, flags);
+					break;
 				}
 			}
 		fts_close(fts);
-		if (dll)
-			goto found;
+		if (try)
+			return dll;
 	}
 
 						/*...INDENT*/
@@ -384,6 +387,5 @@ sfprintf(sfstderr, "dllfind: attempt dlopen %s\n", tmp);
 			} while (*sv && *++sv);
 		}
 	} while (*(nv = nam) != pat && *(*nv++ = pat));
- found:
-	return dll;
+	return dlopen(lib, flags);
 }

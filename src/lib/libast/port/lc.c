@@ -276,7 +276,7 @@ canonical(const Lc_language_t* lp, const Lc_territory_t* tp, const Lc_charset_t*
 	register char*		e;
 	register const char*	t;
 
-	if (!(flags & (LC_abbreviated|LC_qualified|LC_local|LC_verbose)))
+	if (!(flags & (LC_abbreviated|LC_default|LC_local|LC_qualified|LC_verbose)))
 		flags |= LC_abbreviated;
 	s = buf;
 	e = &buf[siz - 3];
@@ -309,7 +309,7 @@ canonical(const Lc_language_t* lp, const Lc_territory_t* tp, const Lc_charset_t*
 	}
 	if (s < e)
 	{
-		if (tp && (!(flags & LC_abbreviated) || !lp || !streq(lp->code, tp->code)))
+		if (tp && tp != &territory[0] && (!(flags & (LC_abbreviated|LC_default)) || !lp || !streq(lp->code, tp->code)))
 		{
 			if (lp)
 				*s++ = '_';
@@ -332,7 +332,7 @@ canonical(const Lc_language_t* lp, const Lc_territory_t* tp, const Lc_charset_t*
 			else
 				for (t = tp->code; s < e && (*s = toupper(*t++)); s++);
 		}
-		if (lp && (!(flags & LC_abbreviated) || cp != lp->charset) && s < e)
+		if (lp && (!(flags & (LC_abbreviated|LC_default)) || cp != lp->charset) && s < e)
 		{
 			*s++ = '.';
 			for (t = cp->code; s < e && (c = *t++); s++)
@@ -343,7 +343,7 @@ canonical(const Lc_language_t* lp, const Lc_territory_t* tp, const Lc_charset_t*
 			}
 		}
 		for (c = '@'; ap && s < e; ap = ap->next)
-			if (!(flags & (LC_abbreviated|LC_verbose)) || !(ap->attribute->flags & LC_default))
+			if (!(flags & (LC_abbreviated|LC_default|LC_verbose)) || !(ap->attribute->flags & LC_default))
 			{
 				*s++ = c;
 				c = ',';

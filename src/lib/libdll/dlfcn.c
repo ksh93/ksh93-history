@@ -30,11 +30,13 @@
  * AT&T Labs Research
  */
 
-static const char id[] = "\n@(#)$Id: dll library (AT&T Labs Research) 2001-05-29 $\0\n";
+static const char id[] = "\n@(#)$Id: dll library (AT&T Labs Research) 2001-07-17 $\0\n";
 
 #include <ast.h>
 #include <dlldefs.h>
 #include <error.h>
+
+#define T(x)	ERROR_dictionary(x)
 
 #if _BLD_dll && defined(__EXPORT__)
 #define extern	__EXPORT__
@@ -64,14 +66,19 @@ static const char id[] = "\n@(#)$Id: dll library (AT&T Labs Research) 2001-05-29
 #	endif
 
 	static shl_t	all;
+	static int	err;
 
 	extern void* dlopen(const char* path, int mode)
 	{
+		void*	dll;
+
 		if (!path)
 			return (void*)&all;
 		if (mode)
 			mode = (BIND_IMMEDIATE|BIND_FIRST|BIND_NOSTART);
-		return (void*)shl_load(path, mode, 0L);
+		if (!(dll = (void*)shl_load(path, mode, 0L)))
+			err = errno;
+		return dll;
 	}
 
 	extern int dlclose(void* dll)
@@ -85,12 +92,23 @@ static const char id[] = "\n@(#)$Id: dll library (AT&T Labs Research) 2001-05-29
 		long	addr;
 
 		handle = dll == (void*)&all ? (shl_t)0 : (shl_t)dll;
-		return shl_findsym(&handle, name, TYPE_UNDEFINED, &addr) ? (void*)0 : (void*)addr;
+		if (shl_findsym(&handle, name, TYPE_UNDEFINED, &addr))
+		{
+			err = errno;
+			return 0;
+		}
+		return (void*)addr;
 	}
 
 	extern char* dlerror(void)
 	{
-		return fmterror(errno);
+		char*	msg;
+
+		if (!err)
+			return 0;
+		msg = fmterror(err);
+		err = 0;
+		return msg;
 	}
 
 #else
@@ -114,10 +132,15 @@ static const char id[] = "\n@(#)$Id: dll library (AT&T Labs Research) 2001-05-29
 	static struct ld_info*	ld_info;
 	static unsigned int	ld_info_size = 1024;
 	static void*		last_module;
+	static int		err;
 
 	extern void* dlopen(const char* path, int mode)
 	{
-		return (void*)load((char*)path, mode, getenv("LIBPATH"));
+		void*	dll;
+
+		if (!(dll = (void*)load((char*)path, mode, getenv("LIBPATH"))))
+			err = errno;
+		return dll;
 	}
 
 	extern int dlclose(void* dll)
@@ -222,16 +245,26 @@ static const char id[] = "\n@(#)$Id: dll library (AT&T Labs Research) 2001-05-29
 
 	extern void* dlsym(void* handle, const char* name)
 	{
+		void*		addr;
 		struct ld_info*	info;
 
-		if (info = getinfo(handle))
-			return getloc(info->ldinfo_textorg,info->ldinfo_dataorg,(char*)name);
-		return 0;
+		if (!(info = getinfo(handle)) || !(addr = getloc(info->ldinfo_textorg,info->ldinfo_dataorg,(char*)name)))
+		{
+			err = errno;
+			return 0;
+		}
+		return addr;
 	}
 
 	extern char* dlerror(void)
 	{
-		return fmterror(errno);
+		char*	msg;
+
+		if (!err)
+			return 0;
+		msg = fmterror(err);
+		err = 0;
+		return msg;
 	}
 
 #else
@@ -243,10 +276,16 @@ static const char id[] = "\n@(#)$Id: dll library (AT&T Labs Research) 2001-05-29
 
 #	include <dll.h>
 
+	static int	err;
+
 	extern void* dlopen(const char* path, int mode)
 	{
+		void*	dll;
+
 		NoP(mode);
-		return (void*)dllload(path);
+		if (!(dll = (void*)dllload(path)))
+			err = errno;
+		return dll;
 	}
 
 	extern int dlclose(void* dll)
@@ -256,12 +295,22 @@ static const char id[] = "\n@(#)$Id: dll library (AT&T Labs Research) 2001-05-29
 
 	extern void* dlsym(void* handle, const char* name)
 	{
-		return (void*)dllqueryfn(handle, (char*)name);
+		void*	addr;
+
+		if (!(addr = (void*)dllqueryfn(handle, (char*)name)))
+			err = errno;
+		return addr;
 	}
 
 	extern char* dlerror(void)
 	{
-		return fmterror(errno);
+		char*	msg;
+
+		if (!err)
+			return 0;
+		msg = fmterror(err);
+		err = 0;
+		return msg;
 	}
 
 #else
@@ -285,11 +334,11 @@ static const char id[] = "\n@(#)$Id: dll library (AT&T Labs Research) 2001-05-29
 
 	static const char*	dlmessage = "no error";
 
-	static const char	e_cover[] = "cannot access covered library";
-	static const char	e_handle[] = "invalid handle";
-	static const char	e_space[] = "out of space";
-	static const char	e_static[] = "image statically linked";
-	static const char	e_undefined[] = "undefined symbol";
+	static const char	e_cover[] = T("cannot access covered library");
+	static const char	e_handle[] = T("invalid handle");
+	static const char	e_space[] = T("out of space");
+	static const char	e_static[] = T("image statically linked");
+	static const char	e_undefined[] = T("undefined symbol");
 
 	static void undefined(const char* name)
 	{
@@ -408,7 +457,11 @@ static const char id[] = "\n@(#)$Id: dll library (AT&T Labs Research) 2001-05-29
 
 	extern char* dlerror(void)
 	{
-		return (char*)dlmessage;
+		char*	msg;
+
+		msg = (char*)dlmessage;
+		dlmessage = 0;
+		return msg;
 	}
 
 #else
@@ -416,23 +469,31 @@ static const char id[] = "\n@(#)$Id: dll library (AT&T Labs Research) 2001-05-29
 	 * punt
 	 */
 
+	static int	err;
+
 	extern void* dlopen(const char* path, int mode)
 	{
+		err = 1;
 		return 0;
 	}
 
 	extern int dlclose(void* dll)
 	{
+		err = 1;
 		return 0;
 	}
 
 	extern void* dlsym(void* handle, const char* name)
 	{
+		err = 1;
 		return 0;
 	}
 
 	extern char* dlerror(void)
 	{
+		if (!err)
+			return 0;
+		err = 0;
 		return "dynamic linking not supported";
 	}
 

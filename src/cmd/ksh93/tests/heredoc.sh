@@ -127,4 +127,9 @@ $0
 $SHELL -c 'x=$(
 cat << EOF
 EOF)' 2> /dev/null || err_exit 'here-doc cannot be terminated by )'
+if	[[ $( IFS=:;cat <<-!
+			$IFS$(print hi)$IFS
+		!) != :hi: ]]
+then	err_exit '$IFS unset by command substitution in here docs'
+fi
 exit $((Errors))

@@ -4,7 +4,7 @@
  * coded for portability
  */
 
-static char id[] = "\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 2001-04-01 $\0\n";
+static char id[] = "\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 2001-08-11 $\0\n";
 
 #if _PACKAGE_ast
 
@@ -12,7 +12,7 @@ static char id[] = "\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler)
 #include <error.h>
 
 static const char usage[] =
-"[-?\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 2001-04-01 $\n]"
+"[-?\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 2001-08-11 $\n]"
 "[-author?Jean-loup Gailly]"
 "[-author?Mark Adler]"
 "[-author?Glenn Fowler <gsf@research.att.com>]"
@@ -29,6 +29,7 @@ static const char usage[] =
 "[m:meter?Display a one line text meter showing archive read progress.]"
 "[n!:convert?In ebcdic environments convert text archive members from ascii"
 "	to the native ebcdic.]"
+"[t:list?List each file path on the standard output but do not extract.]"
 "[v:verbose?List each file path on the standard output as it is extracted.]"
 "[V?Print the program version and exit.]"
 "[+SEE ALSO?\bgunzip\b(1), \bpackage\b(1), \bpax\b(1), \btar\b(1)]"
@@ -2688,7 +2689,7 @@ static struct
 static void
 usage()
 {
-	fprintf(stderr, "Usage: %s [-clmnvV] < input.tgz\n", state.id);
+	fprintf(stderr, "Usage: %s [-clmntvV] < input.tgz\n", state.id);
 	exit(2);
 }
 
@@ -2814,6 +2815,22 @@ static const unsigned char a2o[] =
 	0160,0335,0336,0333,0334,0215,0216,0337,
 };
 
+/*
+ * ascii text vs. control
+ */
+
+static const unsigned char ascii_text[] =
+{
+	0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,
+	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+};
+
 static int
 block(fp, gz, buf)
 FILE*	fp;
@@ -2829,6 +2846,27 @@ char*	buf;
 	if (r)
 		state.blocks++;
 	return r;
+}
+
+static int
+skip(fp, gz, buf, n)
+FILE*		fp;
+gzFile		gz;
+char*		buf;
+unsigned long	n;
+{
+	while (n > 0)
+	{
+		if (!block(fp, gz, buf))
+		{
+			fprintf(stderr, "%s: unexpected EOF\n", state.id);
+			return 1;
+		}
+		if (n <= sizeof(Header_t))
+			break;
+		n -= sizeof(Header_t);
+	}
+	return 0;
 }
 
 static unsigned long
@@ -2858,10 +2896,12 @@ char**	argv;
 	const unsigned char*	a2x;
 	int			clear;
 	int			escape;
+	int			list;
 	int			local;
 	int			meter;
 	int			unzip;
 	int			verbose;
+	unsigned int		mode;
 	unsigned long		total;
 	off_t			pos;
 	gzFile			gz;
@@ -2871,8 +2911,8 @@ char**	argv;
 	char			path[sizeof(header.prefix) + sizeof(header.name) + 4];
 	char			buf[sizeof(header)];
 
-	a2x = 0;
 	clear = 0;
+	list = 0;
 	local = 0;
 	meter = 0;
 	unzip = 0;
@@ -2905,8 +2945,13 @@ char**	argv;
 	case 0137:
 		a2x = a2i;
 		break;
+	default:
+		a2x = 0;
+		break;
 	}
-	escape = a2x ? 047 : 033;
+	escape = 033;
+	if (a2x)
+		escape = a2x[escape];
 #if _PACKAGE_ast
 	error_info.id = state.id;
 	for (;;)
@@ -2924,6 +2969,9 @@ char**	argv;
 			continue;
 		case 'n':
 			a2x = 0;
+			continue;
+		case 't':
+			list = 1;
 			continue;
 		case 'v':
 			verbose = 1;
@@ -2973,6 +3021,9 @@ char**	argv;
 				continue;
 			case 'n':
 				a2x = 0;
+				continue;
+			case 't':
+				list = 1;
 				continue;
 			case 'v':
 				verbose = 1;
@@ -3129,7 +3180,7 @@ char**	argv;
 		if (t)
 		{
 			*--t = 0;
-			if (access(path, 0))
+			if (!list && access(path, 0))
 			{
 				s = path;
 				do
@@ -3178,6 +3229,78 @@ char**	argv;
 		 * create and grab the data
 		 */
 
+		n = number(header.mode);
+		mode = 0;
+		if (n & TUREAD)
+			mode |= S_IRUSR;
+		if (n & TUWRITE)
+			mode |= S_IWUSR;
+		if (n & TUEXEC)
+			mode |= S_IXUSR;
+		if (n & TGREAD)
+			mode |= S_IRGRP;
+		if (n & TGWRITE)
+			mode |= S_IWGRP;
+		if (n & TGEXEC)
+			mode |= S_IXGRP;
+		if (n & TOREAD)
+			mode |= S_IROTH;
+		if (n & TOWRITE)
+			mode |= S_IWOTH;
+		if (n & TOEXEC)
+			mode |= S_IXOTH;
+		if (list)
+		{
+			if (verbose)
+			{
+				switch (header.typeflag)
+				{
+				case REGTYPE:
+				case AREGTYPE:
+					c = '-';
+					break;
+				case DIRTYPE:
+					c = 'd';
+					break;
+				case LNKTYPE:
+					c = 'h';
+					break;
+				case SYMTYPE:
+					c = 'l';
+					break;
+				default:
+					c = '?';
+					break;
+				}
+				printf("%c", c);
+				m = 0400; 
+				while (m)
+				{
+					printf("%c", (n & m) ? 'r' : '-');
+					m >>= 1;
+					printf("%c", (n & m) ? 'w' : '-');
+					m >>= 1;
+					printf("%c", (n & m) ? 'x' : '-');
+					m >>= 1;
+				}
+				printf(" %10lu ", number(header.size));
+			}
+			switch (header.typeflag)
+			{
+			case LNKTYPE:
+				printf("%s == %s\n", path, header.linkname);
+				break;
+			case SYMTYPE:
+				printf("%s => %s\n", path, header.linkname);
+				break;
+			default:
+				printf("%s\n", path);
+				break;
+			}
+			if (skip(stdin, gz, buf, number(header.size)))
+				return 1;
+			continue;
+		}
 		if (meter)
 		{
 			int	i;
@@ -3238,14 +3361,18 @@ char**	argv;
 				case 0:
 					if ((m = n) < 4)
 					{
-						c = -1;
-						break;
+						for (e = (s = buf) + m; s < e; s++)
+							if (a2x[*(unsigned char*)s] != '\n')
+								break;
 					}
-					else if (m > 256)
-						m = 256;
-					for (e = (s = buf) + m; s < e; s++)
-						if ((c = *(unsigned char*)s) >= 0177 || c < 010 || c > 012 && c < 040)
-							break;
+					else
+					{
+						if (m > 256)
+							m = 256;
+						for (e = (s = buf) + m; s < e; s++)
+							if (!ascii_text[*(unsigned char*)s])
+								break;
+					}
 					if (s < e)
 					{
 						c = -1;
@@ -3280,32 +3407,32 @@ char**	argv;
 				return 1;
 			}
 			break;
+		case SYMTYPE:
+#if defined(S_IFLNK) || defined(S_ISLNK)
+			while (symlink(header.linkname, path))
+				if (unlink(path))
+				{
+					fprintf(stderr, "%s: %s: cannot symlink to %s\n", state.id, path, header.linkname);
+					return 1;
+				}
+			continue;
+#endif
+		case LNKTYPE:
+			while (link(header.linkname, path))
+				if (unlink(path))
+				{
+					fprintf(stderr, "%s: %s: cannot link to %s\n", state.id, path, header.linkname);
+					return 1;
+				}
+			continue;
 		default:
 			fprintf(stderr, "%s: %s: file type %c ignored\n", state.id, path, header.typeflag);
+			if (skip(stdin, gz, buf, number(header.size)))
+				return 1;
 			continue;
 		}
-		n = number(header.mode);
-		m = 0;
-		if (n & TUREAD)
-			m |= S_IRUSR;
-		if (n & TUWRITE)
-			m |= S_IWUSR;
-		if (n & TUEXEC)
-			m |= S_IXUSR;
-		if (n & TGREAD)
-			m |= S_IRGRP;
-		if (n & TGWRITE)
-			m |= S_IWGRP;
-		if (n & TGEXEC)
-			m |= S_IXGRP;
-		if (n & TOREAD)
-			m |= S_IROTH;
-		if (n & TOWRITE)
-			m |= S_IWOTH;
-		if (n & TOEXEC)
-			m |= S_IXOTH;
-		if (chmod(path, m))
-			fprintf(stderr, "%s: %s: cannot change mode to %03o\n", state.id, path, n & 0777);
+		if (chmod(path, mode))
+			fprintf(stderr, "%s: %s: cannot change mode to %03o\n", state.id, path, mode);
 	}
 	if (clear)
 		fprintf(stderr, "%*s", clear, "\r");

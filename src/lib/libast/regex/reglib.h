@@ -69,40 +69,43 @@
 #define REX_BEG			4	/* initial ^			*/
 #define REX_BEG_STR		5	/* initial ^ w/ no newline	*/
 #define REX_BM			6	/* Boyer-Moore			*/
-#define REX_CLASS		7	/* [...]			*/
-#define REX_COLL_CLASS		8	/* collation order [...]	*/
-#define REX_CONJ		9	/* a&b				*/
-#define REX_CONJ_LEFT		10	/* REX_CONJ left catcher	*/
-#define REX_CONJ_RIGHT		11	/* REX_CONJ right catcher	*/
-#define REX_DONE		12	/* completed match (internal)	*/
-#define REX_DOT			13	/* .				*/
-#define REX_END			14	/* final $			*/
-#define REX_END_STR		15	/* final $ before tail newline	*/
-#define REX_EXEC		16	/* call re.re_exec()		*/
-#define REX_FIN_STR		17	/* final $ w/ no newline	*/
-#define REX_GROUP		18	/* \(...\)			*/
-#define REX_GROUP_CATCH		19	/* REX_GROUP catcher		*/
-#define REX_GROUP_AHEAD		20	/* 0-width lookahead		*/
-#define REX_GROUP_AHEAD_NOT	21	/* inverted 0-width lookahead	*/
-#define REX_GROUP_BEHIND	22	/* 0-width lookbehind		*/
-#define REX_GROUP_BEHIND_NOT	23	/* inverted 0-width lookbehind	*/
-#define REX_GROUP_BEHIND_CATCH	24	/* REX_GROUP_BEHIND catcher	*/
-#define REX_GROUP_COND		25	/* conditional group		*/
-#define REX_GROUP_CUT		26	/* don't backtrack over this	*/
-#define REX_GROUP_CUT_CATCH	27	/* REX_GROUP_CUT catcher	*/
-#define REX_GROUP_DONE		28	/* zero width group done	*/
-#define REX_KMP			29	/* Knuth-Morris-Pratt		*/
-#define REX_NEG			30	/* negation			*/
-#define REX_NEG_CATCH		31	/* REX_NEG catcher		*/
-#define REX_ONECHAR		32	/* a single-character literal	*/
-#define REX_REP			33	/* Kleene closure		*/
-#define REX_REP_CATCH		34	/* REX_REP catcher		*/
-#define REX_STRING		35	/* some chars			*/
-#define REX_TRIE		36	/* alternation of strings	*/
-#define REX_WBEG		37	/* \<				*/
-#define REX_WEND		38	/* \>				*/
-#define REX_WORD		39	/* word boundary		*/
-#define REX_WORD_NOT		40	/* not word boundary		*/
+#define REX_CAT			7	/* catenation catcher		*/
+#define REX_CLASS		8	/* [...]			*/
+#define REX_COLL_CLASS		9	/* collation order [...]	*/
+#define REX_CONJ		10	/* a&b				*/
+#define REX_CONJ_LEFT		11	/* REX_CONJ left catcher	*/
+#define REX_CONJ_RIGHT		12	/* REX_CONJ right catcher	*/
+#define REX_DONE		13	/* completed match (internal)	*/
+#define REX_DOT			14	/* .				*/
+#define REX_END			15	/* final $			*/
+#define REX_END_STR		16	/* final $ before tail newline	*/
+#define REX_EXEC		17	/* call re.re_exec()		*/
+#define REX_FIN_STR		18	/* final $ w/ no newline	*/
+#define REX_GROUP		19	/* \(...\)			*/
+#define REX_GROUP_CATCH		20	/* REX_GROUP catcher		*/
+#define REX_GROUP_AHEAD		21	/* 0-width lookahead		*/
+#define REX_GROUP_AHEAD_CATCH	22	/* REX_GROUP_AHEAD catcher	*/
+#define REX_GROUP_AHEAD_NOT	23	/* inverted 0-width lookahead	*/
+#define REX_GROUP_BEHIND	24	/* 0-width lookbehind		*/
+#define REX_GROUP_BEHIND_CATCH	25	/* REX_GROUP_BEHIND catcher	*/
+#define REX_GROUP_BEHIND_NOT	26	/* inverted 0-width lookbehind	*/
+#define REX_GROUP_BEHIND_NOT_CATCH 27	/* REX_GROUP_BEHIND_NOT catcher	*/
+#define REX_GROUP_COND		28	/* conditional group		*/
+#define REX_GROUP_COND_CATCH	29	/* conditional group catcher	*/
+#define REX_GROUP_CUT		30	/* don't backtrack over this	*/
+#define REX_GROUP_CUT_CATCH	31	/* REX_GROUP_CUT catcher	*/
+#define REX_KMP			32	/* Knuth-Morris-Pratt		*/
+#define REX_NEG			33	/* negation			*/
+#define REX_NEG_CATCH		34	/* REX_NEG catcher		*/
+#define REX_ONECHAR		35	/* a single-character literal	*/
+#define REX_REP			36	/* Kleene closure		*/
+#define REX_REP_CATCH		37	/* REX_REP catcher		*/
+#define REX_STRING		38	/* some chars			*/
+#define REX_TRIE		39	/* alternation of strings	*/
+#define REX_WBEG		40	/* \<				*/
+#define REX_WEND		41	/* \>				*/
+#define REX_WORD		42	/* word boundary		*/
+#define REX_WORD_NOT		43	/* not word boundary		*/
 
 #define T_META		(UCHAR_MAX+1)
 #define T_STAR		(T_META+0)
@@ -127,7 +130,8 @@
 #define T_LT		(T_OPEN+12)
 #define T_GT		(T_OPEN+13)
 #define T_SLASHPLUS	(T_OPEN+14)
-#define T_WORD		(T_OPEN+15)
+#define T_GROUP		(T_OPEN+15)
+#define T_WORD		(T_OPEN+16)
 #define T_WORD_NOT	(T_WORD+1)
 #define T_BEG_STR	(T_WORD+2)
 #define T_END_STR	(T_WORD+3)
@@ -275,6 +279,14 @@ typedef struct Vector_s
  * Rex_t subtypes
  */
 
+typedef struct Cond_s
+{
+	unsigned char*	beg;		/* beginning of next match	*/
+	struct Rex_s*	next[2];	/* 0:no 1:yes next pattern	*/
+	struct Rex_s*	cont;		/* right catcher		*/
+	int		yes;		/* yes condition hit		*/
+} Cond_t;
+
 typedef struct Conj_left_s
 {
 	unsigned char*	beg;		/* beginning of left match	*/
@@ -362,6 +374,13 @@ typedef struct Group_catch_s
 	regoff_t*	eo;
 } Group_catch_t;
 
+typedef struct Behind_catch_s
+{
+	struct Rex_s*	cont;
+	unsigned char*	beg;
+	unsigned char*	end;
+} Behind_catch_t;
+
 /*
  * REX_NEG catcher determines what string lengths can be matched,
  * then Neg investigates continuations of other lengths.
@@ -431,8 +450,10 @@ typedef struct Rex_s
 	{
 	Alt_catch_t	alt_catch;		/* alt catcher		*/
 	Bm_t		bm;			/* bm			*/
+	Behind_catch_t	behind_catch;		/* behind catcher	*/
 	Set_t*		charclass;		/* char class		*/
 	Collate_t	collate;		/* collation class	*/
+	Cond_t		cond_catch;		/* cond catcher		*/
 	Conj_left_t	conj_left;		/* conj left catcher	*/
 	Conj_right_t	conj_right;		/* conj right catcher	*/
 	void*		data;			/* data after Rex_t	*/
@@ -458,7 +479,6 @@ typedef struct Reginfo			/* library private regex_t info	*/
 	Vector_t*	bestpos;	/* ditto for best match		*/
 	regmatch_t*	match;		/* subexrs in current match 	*/
 	regmatch_t*	best;		/* ditto in best match yet	*/
-	regmatch_t*	zero;		/* ditto for zero width exprs	*/
 	Stk_pos_t	stk;		/* exec stack pos		*/
 	size_t		min;		/* minimum match length		*/
 	size_t		nsub;		/* internal re_nsub		*/
@@ -471,7 +491,6 @@ typedef struct Reginfo			/* library private regex_t info	*/
 	unsigned char	once;		/* if 1st parse fails, quit	*/
 	unsigned char	stack;		/* hard comp or exec		*/
 	unsigned char	test;		/* debug/test bitmask		*/
-	unsigned char	zeroes;		/* labeled zero width subexprs	*/
 } Env_t;
 
 typedef struct State_s				/* shared state		*/

@@ -128,10 +128,16 @@ __STDPP__directive pragma pp:nohide DIR closedir opendir readdir seekdir telldir
 	int		dd_size;	/* valid data in block		*/ \
 	char*		dd_buf;		/* directory block		*/
 
+#ifdef _BLD_3d
+#define DIR		DIRDIR
+#endif
 #undef	_DIRENT_H
 #include "dirstd.h"
 #ifndef _DIRENT_H
 #define _DIRENT_H	1
+#endif
+#ifdef _BLD_3d
+#undef	DIR
 #endif
 
 #ifndef	DIRBLKSIZ

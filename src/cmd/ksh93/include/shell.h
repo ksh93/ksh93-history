@@ -201,7 +201,7 @@ extern Shopt_t		sh_offoption(Shopt_t);
 /*
  * direct access to sh is obsolete, use sh_getinterp() instead
  */
-#if !defined(_SH_PRIVATE) && defined(__IMPORT__) && !defined(_BLD_shell)
+#if defined(__IMPORT__) && !defined(_BLD_shell)
 	__IMPORT__  Shell_t sh;
 #else
 	extern Shell_t sh;

@@ -33,9 +33,9 @@
  *	 and has a separate executor
  */
 
+#include	"defs.h"
 #include	"streval.h"
 #include	<ctype.h>
-#include	<error.h>
 #include	<stak.h>
 #include	"FEATURE/externs"
 

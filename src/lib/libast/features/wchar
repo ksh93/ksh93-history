@@ -1,13 +1,13 @@
 set	prototyped
-lib	mbstowcs
-lib	wctomb,wcrtomb
-lib	wcslen,wcstombs
+lib	mbstowcs,wctomb,wcrtomb,wcslen,wcstombs,wcwidth wchar.h
 lib	towlower,towupper stdio.h wchar.h
 typ	mbstate_t stdio.h wchar.h
 
 cat{
+	#ifndef _SFSTDIO_H
 	#include <ast_std.h>
 	#include <stdio.h>
+	#endif
 	#if _hdr_wchar
 	#include <../include/wchar.h>	/* the real wchar.h */
 	#endif

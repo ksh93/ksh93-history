@@ -28,6 +28,13 @@
  * mktime implementation
  */
 
+#include <ast_map.h>
+
+#ifdef mktime
+#undef	mktime
+#define _map_mktime	1
+#endif
+
 #if defined(__STDPP__directive) && defined(__STDPP__hide)
 __STDPP__directive pragma pp:hide mktime
 #else
@@ -50,6 +57,11 @@ __STDPP__directive pragma pp:nohide mktime
 NoN(mktime)
 
 #else
+
+#if _map_mktime
+#undef	mktime
+#define mktime		_ast_mktime
+#endif
 
 #if defined(__EXPORT__)
 #define extern	__EXPORT__

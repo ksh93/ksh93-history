@@ -96,6 +96,10 @@ abc() print hi
 if	[[ $(abc) != hi ]]
 then	err_exit 'abc() print hi not working'
 fi
+( unset -f abc )
+if	[[ $(abc 2>/dev/null) != hi ]]
+then	err_exit 'abc() print hi not working after subshell unset'
+fi
 (
 	function f
 	{
@@ -325,5 +329,15 @@ function foo
 }
 if	[[ $(foo)$(foo) != ABCABC ]]
 then	err_exit 'attributes on unset variables not saved/restored'
+fi
+function xpd {
+	typeset i j=$1
+                for i
+                        do print i=$i j=$j
+                        [[ $i == a ]] && xpd b
+                        done
+                }
+if	[[ $(xpd a c) != $'i=a j=a\ni=b j=b\ni=c j=a' ]]
+then	err_exit 'for loop function optimization error'
 fi
 exit $((Errors))

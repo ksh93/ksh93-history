@@ -30,9 +30,9 @@
  */
 
 static const char usage[] =
-"[-?@(#)$Id: stty (AT&T Labs Research) 2001-05-31 $\n]"
+"[-?@(#)$Id: stty (AT&T Labs Research) 2001-06-21 $\n]"
 USAGE_LICENSE
-"[+NAME?stty - sets the modes for a terminal ]"
+"[+NAME?stty - set or get terminal modes]"
 "[+DESCRIPTION?\bstty\b sets certain terminal I/O modes for the device "
 	"that is the current standard input; without arguments, it writes "
 	"the settings of certain modes to standard output.]"
@@ -50,7 +50,7 @@ USAGE_LICENSE
 	"Modes are listed by group corresponding to field in the "
 	"\btermios\b structure defined in \b<termios.h>\b.  Modes "
 	"in the last group are implemented using options in the previous "
-	"groups.  Note that many combinations of modes make no sense, but"
+	"groups.  Note that many combinations of modes make no sense, but "
 	"no sanity checking is performed.  The modes are selected from the "
 	"following:]{\fabc\f}"
 
@@ -76,12 +76,6 @@ USAGE_LICENSE
 
 #ifndef _POSIX_VDISABLE
 #   define _POSIX_VDISABLE 0
-#endif
-
-#if CC_NATIVE == CC_ASCII
-#define cntl(x)		(x&037)
-#else
-#define cntl(x)		ccmapc(ccmapc(x,CC_NATIVE,CC_ASCII)&037,CC_ASCII,CC_NATIVE)
 #endif
 
 /* command options */
@@ -156,11 +150,11 @@ static const Tty_t Ttable[] =
 { "cols",	WIND,	W_SIZE,	IG,	1, 80, C("\an\a is the number of columns for display") },
 { "columns",	WIND,	W_SIZE,	IG,	1, 80, C("Same as \bcols\b") },
 #endif
-{ "intr",	CHAR,	T_CHAR,	SS,	VINTR, cntl('C'), C("Send an interrupt signal") },
-{ "quit",	CHAR,	T_CHAR,	SS,	VQUIT, cntl('|'), C("Send a quit signal") },
-{ "erase",	CHAR,	T_CHAR,	SS,	VERASE, cntl('H'), C("Erase the last character entered") },
-{ "kill",	CHAR,	T_CHAR,	NL|SS,	VKILL, cntl('U'), C("Erase the current line") },
-{ "eof",	CHAR,	T_CHAR,	SS,	VEOF, cntl('D'), C("Send an end of file") },
+{ "intr",	CHAR,	T_CHAR,	SS,	VINTR, 'C', C("Send an interrupt signal") },
+{ "quit",	CHAR,	T_CHAR,	SS,	VQUIT, '|', C("Send a quit signal") },
+{ "erase",	CHAR,	T_CHAR,	SS,	VERASE, 'H', C("Erase the last character entered") },
+{ "kill",	CHAR,	T_CHAR,	NL|SS,	VKILL, 'U', C("Erase the current line") },
+{ "eof",	CHAR,	T_CHAR,	SS,	VEOF, 'D', C("Send an end of file") },
 #ifdef VEOL2
 { "eol2",	CHAR,	T_CHAR,	US,	VEOL2, _POSIX_VDISABLE, C("Alternate character to end the line") },
 #endif /* VEOL2 */
@@ -168,23 +162,23 @@ static const Tty_t Ttable[] =
 { "swtch",	CHAR,	T_CHAR,	US,	VSWTCH, _POSIX_VDISABLE, C("Switch to a different shell layer") },
 #endif /* VSWTCH */
 { "eol",	CHAR,	T_CHAR,	NL|US,	VEOL, _POSIX_VDISABLE, C("End the line") },
-{ "start",	CHAR,	T_CHAR,	SS,	VSTART, cntl('Q'), C("Restart the output after stopping it") },
-{ "stop",	CHAR,	T_CHAR,	SS,	VSTOP, cntl('S'), C("Stop the output") },
+{ "start",	CHAR,	T_CHAR,	SS,	VSTART, 'Q', C("Restart the output after stopping it") },
+{ "stop",	CHAR,	T_CHAR,	SS,	VSTOP, 'S', C("Stop the output") },
 #ifdef VDUSP
-{ "dsusp",	CHAR,	T_CHAR,	SS,	VDSUSP, cntl('Y'), C("Send a terminal stop signal  after flushing the input.") },
+{ "dsusp",	CHAR,	T_CHAR,	SS,	VDSUSP, 'Y', C("Send a terminal stop signal  after flushing the input.") },
 #endif /* VDUSP */
-{ "susp",	CHAR,	T_CHAR,	NL|SS,	VSUSP, cntl('Z'), C("Send a terminal stop signal") },
+{ "susp",	CHAR,	T_CHAR,	NL|SS,	VSUSP, 'Z', C("Send a terminal stop signal") },
 #ifdef VREPRINT
-{ "rprnt",	CHAR,	T_CHAR,	SS,	VREPRINT, cntl('R'), C("Redraw the current line") },
+{ "rprnt",	CHAR,	T_CHAR,	SS,	VREPRINT, 'R', C("Redraw the current line") },
 #endif /* VREPRINT */
 #ifdef VDISCARD
-{ "flush",	CHAR,	T_CHAR,	SS,	VDISCARD, cntl('O'), C("Discard output.") },
+{ "flush",	CHAR,	T_CHAR,	SS,	VDISCARD, 'O', C("Discard output.") },
 #endif /* VDISCARD */
 #ifdef VWERASE
-{ "werase",	CHAR,	T_CHAR,	SS,	VWERASE, cntl('W'), C("Erase the last word entered") },
+{ "werase",	CHAR,	T_CHAR,	SS,	VWERASE, 'W', C("Erase the last word entered") },
 #endif /* VWERASE */
 #ifdef VLNEXT
-{ "lnext",	CHAR,	T_CHAR,	NL|SS,	VLNEXT, cntl('V'), C("Enter the next character typed literally, even  if it is a special character") },
+{ "lnext",	CHAR,	T_CHAR,	NL|SS,	VLNEXT, 'V', C("Enter the next character typed literally, even  if it is a special character") },
 #endif /* VLNEXT */
 	
 #if _mem_c_line_termios
@@ -336,6 +330,12 @@ static const Tty_t Ttable[] =
 { "LCASE",	CASE,	C_FLAG,	IG,	0 , 0, C("Same as \blcase\b")}
 };
 
+#if CC_NATIVE == CC_ASCII
+#define cntl(x)		(((x)=='?')?0177:((x)&037))
+#else
+#define cntl(x)		(((x)=='?')?ccmapc(0177,CC_ASCII,CC_NATIVE):ccmapc(ccmapc(x,CC_NATIVE,CC_ASCII)&037,CC_ASCII,CC_NATIVE))
+#endif
+
 static void sane(register struct termios *sp)
 {
 	register const Tty_t*	tp;
@@ -375,7 +375,7 @@ static void sane(register struct termios *sp)
 				}
 				break;
 			case CHAR:
-				sp->c_cc[tp->mask] = tp->val;
+				sp->c_cc[tp->mask] = cntl(tp->val);
 				break;
 			}
 }
@@ -520,19 +520,13 @@ static void output(struct termios *sp, int flags)
 				sfprintf(sfstdout,"%s = <undef>;%c",tp->name,delim);
 			else if(isprint(off&0xff))
 				sfprintf(sfstdout,"%s = %c;%c",tp->name,off,delim);
+			else
 #if CC_NATIVE == CC_ASCII
-			else if(off==0177)
-				sfprintf(sfstdout,"%s = ^?;%c",tp->name,delim);
-			else
-				sfprintf(sfstdout,"%s = ^%c;%c",tp->name,off^0100,delim);
+			sfprintf(sfstdout,"%s = ^%c;%c",tp->name,off==0177?'?':(off^0100),delim);
 #else
-			else
 			{
 				off = ccmapc(off, CC_NATIVE, CC_ASCII);
-				if(off==0177)
-					sfprintf(sfstdout,"%s = ^?;%c",tp->name,delim);
-				else
-					sfprintf(sfstdout,"%s = ^%c;%c",tp->name,ccmapc(off^0100,CC_ASCII,CC_NATIVE),delim);
+				sfprintf(sfstdout,"%s = ^%c;%c",tp->name,off==0177?'?':ccmapc(off^0100,CC_ASCII,CC_NATIVE),delim);
 			}
 #endif
 			delim = ' ';
@@ -606,8 +600,6 @@ static int gettchar(register const char *cp)
 		{
 		    case '-':
 			return(-1);
-		    case '?':
-			return(0177);
 		    default:
 			return(cntl(cp[1]));
 		}

@@ -29,7 +29,7 @@
  * posix regex error message handler
  */
 
-const char id[] = "\n@(#)$Id: regex (AT&T Research) 2001-06-18 $\0\n";
+const char id[] = "\n@(#)$Id: regex (AT&T Research) 2001-06-25 $\0\n";
 
 #include "reglib.h"
 

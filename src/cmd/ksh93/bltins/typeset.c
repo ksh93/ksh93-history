@@ -52,6 +52,7 @@
     extern void	*dlopen(const char*,int);
     extern void	*dlsym(void*, const char*);
     extern char	*dlerror(void);
+#   define dlllook	dlsym
 #   define DL_MODE	1
 #endif
 
@@ -587,17 +588,13 @@ int	b_builtin(int argc,char *argv[],void *extra)
 	{
 #ifdef _hdr_dlldefs
 		if(!(library = dllfind(arg,NIL(char*),RTLD_LAZY)))
-		{
-			errormsg(SH_DICT,ERROR_exit(0),"%s: cannot load library",arg);
-			return(1);
-		}
 #else
 		if(!(library = dlopen(arg,DL_MODE)))
+#endif
 		{
 			errormsg(SH_DICT,ERROR_exit(0),"%s: %s",arg,dlerror());
 			return(1);
 		}
-#endif
 		/* 
 		 * see if library is already on search list
 		 * if it is, move to head of search list
@@ -615,7 +612,7 @@ int	b_builtin(int argc,char *argv[],void *extra)
 		{
 			typedef void (*Iptr_t)(int);
 			Iptr_t initfn;
-			if((initfn = (Iptr_t)dlsym(library,"lib_init")))
+			if((initfn = (Iptr_t)dlllook(library,"lib_init")))
 				(*initfn)(0);
 		}
 		if(nlib >= maxlib)
@@ -647,7 +644,7 @@ int	b_builtin(int argc,char *argv[],void *extra)
 		for(n=(nlib?nlib:dlete); --n>=0;)
 		{
 			/* (char*) added for some sgi-mips compilers */ 
-			if(dlete || (addr = (Fptr_t)dlsym(liblist[n],stakptr(flag))))
+			if(dlete || (addr = (Fptr_t)dlllook(liblist[n],stakptr(flag))))
 			{
 				if(np = sh_addbuiltin(arg, addr,(void*)dlete))
 				{
@@ -722,17 +719,18 @@ static int b_unall(int argc, char **argv, register Dt_t *troot, Shell_t* shp)
 	int nflag = 0;
 	int all=0;
 	NOT_USED(argc);
-	if(troot!=shp->var_tree && shp->subshell)
-		sh_subfork();
 	if(troot==shp->alias_tree)
+	{
 		name = sh_optunalias;
+		if(shp->subshell)
+			troot = sh_subaliastree(0);
+	}
 	else
 		name = sh_optunset;
 	while(r = optget(argv,name)) switch(r)
 	{
 		case 'f':
-			troot = shp->fun_tree;
-			nflag = NV_NOSCOPE;
+			troot = sh_subfuntree(0);
 			break;
 		case 'a':
 			all=1;
@@ -752,9 +750,13 @@ static int b_unall(int argc, char **argv, register Dt_t *troot, Shell_t* shp)
 	argv += opt_info.index;
 	if(error_info.errors || (*argv==0 &&!all))
 		errormsg(SH_DICT,ERROR_usage(2),"%s",optusage(NIL(char*)));
+	if(!troot)
+		return(1);
 	r = 0;
 	if(troot==shp->var_tree)
 		nflag |= NV_VARNAME;
+	else
+		nflag = NV_NOSCOPE;
 	if(all)
 		dtclear(troot);
 	else while(name = *argv++)

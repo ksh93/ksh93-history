@@ -526,7 +526,7 @@ Namval_t	*nv_open(const char *name,Dt_t *root,int flags)
 		sh.last_table = 0;
 		if(!root)
 			root = sh.var_tree;
-		else if(root==sh_subfuntree())
+		else if(root==sh_subfuntree(1))
 		{
 			fun=1;
 			if(sh.namespace && !strchr(name,'.'))
@@ -703,7 +703,7 @@ Namval_t	*nv_open(const char *name,Dt_t *root,int flags)
 	if(cp!=name)
 	{
 		if(sep && sh.subshell && root==sh.alias_tree)
-			root = sh_subaliastree();
+			root = sh_subaliastree(1);
 		if(sep)
 			*cp = 0;
 		if((flags&NV_NOSCOPE) && dtvnext(root) && root==sh.var_tree 
@@ -1586,10 +1586,9 @@ struct optimize
 
 static struct optimize *opt_free;
 
-static void put_optimize(Namval_t* np,const char *val,int flags,Namfun_t *fp)
+static void optimize_clear(Namval_t* np, Namfun_t *fp)
 {
 	struct optimize *op = (struct optimize*)fp;
-	nv_putv(np,val,flags,fp);
 	nv_stack(np,fp);
 	nv_stack(np,(Namfun_t*)0);
 	for(;op && op->np==np; op=op->next)
@@ -1600,6 +1599,12 @@ static void put_optimize(Namval_t* np,const char *val,int flags,Namfun_t *fp)
 			op->ptr = 0;
 		}
 	}
+}
+
+static void put_optimize(Namval_t* np,const char *val,int flags,Namfun_t *fp)
+{
+	nv_putv(np,val,flags,fp);
+	optimize_clear(np,fp);
 }
 
 static const Namdisc_t optimize_disc  = {  0, put_optimize };
@@ -1661,6 +1666,8 @@ void sh_optclear(Shell_t *shp, void *old)
 	shp->optlist = old;
 }
 
+#else
+#   define	optimize_clear(np,fp)
 #endif /* SHOPT_OPTIMIZE */
 
 /*
@@ -2554,12 +2561,25 @@ void nv_unscope(void)
  */
 void nv_unref(register Namval_t *np)
 {
+	Namval_t *nq = nv_refnode(np);
 	if(!nv_isref(np))
 		return;
 	nv_offattr(np,NV_NOFREE|NV_REF);
-	np->nvalue.cp = strdup(nv_name(nv_refnode(np)));
+	np->nvalue.cp = strdup(nv_name(nq=nv_refnode(np)));
 	np->nvfun = 0;
-	return;
+#ifdef SHOPT_OPTIMIZE
+	{
+		Namfun_t *fp;
+		for(fp=nq->nvfun; fp; fp = fp->next)
+		{
+			if(fp->disc== &optimize_disc)
+			{
+				optimize_clear(nq,fp);
+				return;
+			}
+		}
+	}
+#endif
 }
 
 /*

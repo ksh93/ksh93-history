@@ -77,59 +77,67 @@ fmtquote(const char* as, const char* qb, const char* qe, size_t n, int flags)
 	}
 	while (s < e)
 	{
-		c = *s++;
-		if (iscntrl(c) || !isprint(c) || c == '\\')
+		if ((c = mbsize(s)) > 1)
 		{
-			k = 0;
-			*b++ = '\\';
-			switch (c)
+			while (c-- && s < e)
+				*b++ = *s++;
+		}
+		else
+		{
+			c = *s++;
+			if (iscntrl(c) || !isprint(c) || c == '\\')
 			{
-			case CC_bel:
-				c = 'a';
-				break;
-			case '\b':
-				c = 'b';
-				break;
-			case '\f':
-				c = 'f';
-				break;
-			case '\n':
-				c = 'n';
-				break;
-			case '\r':
-				c = 'r';
-				break;
-			case '\t':
-				c = 't';
-				break;
-			case CC_vt:
-				c = 'v';
-				break;
-			case CC_esc:
-				c = 'E';
-				break;
-			case '\\':
-				break;
-			default:
-				if (!(flags & 2) || !(c & 0200))
+				k = 0;
+				*b++ = '\\';
+				switch (c)
 				{
-					*b++ = '0' + ((c >> 6) & 07);
-					*b++ = '0' + ((c >> 3) & 07);
-					c = '0' + (c & 07);
+				case CC_bel:
+					c = 'a';
+					break;
+				case '\b':
+					c = 'b';
+					break;
+				case '\f':
+					c = 'f';
+					break;
+				case '\n':
+					c = 'n';
+					break;
+				case '\r':
+					c = 'r';
+					break;
+				case '\t':
+					c = 't';
+					break;
+				case CC_vt:
+					c = 'v';
+					break;
+				case CC_esc:
+					c = 'E';
+					break;
+				case '\\':
+					break;
+				default:
+					if (!(flags & 2) || !(c & 0200))
+					{
+						*b++ = '0' + ((c >> 6) & 07);
+						*b++ = '0' + ((c >> 3) & 07);
+						c = '0' + (c & 07);
+					}
+					else
+						b--;
+					break;
 				}
-				else
-					b--;
-				break;
 			}
+			else if (qe && strchr(qe, c) || (flags & 4) && (c == '$' || c == '`'))
+			{
+				k = 0;
+				*b++ = '\\';
+			}
+			else if (qb && isspace(c))
+				k = q;
+			*b++ = c;
 		}
-		else if (qe && strchr(qe, c) || (flags & 4) && (c == '$' || c == '`'))
-		{
-			k = 0;
-			*b++ = '\\';
-		}
-		else if (qb && isspace(c))
-			k = q;
-		*b++ = c;
 	}
 	if (qb && k <= q && qe)
 		while (*b = *qe++)

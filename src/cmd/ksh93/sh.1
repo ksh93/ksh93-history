@@ -6304,12 +6304,19 @@ If the
 .B \-s
 option is not present and
 .I arg\^
-is, then a path search is performed on the first
+and a file by the name of
+.I arg\^
+exits, then it reads and executes this script.
+Otherwise, if the first 
+.I arg\^
+does not contain a
+.BR / ,
+a path search is performed on the first
 .I arg\^
 to determine the name of the script to execute.
 The script
 .I arg\^
-must have read permission and any
+must have execute permission and any
 .I setuid
 and
 .I setgid

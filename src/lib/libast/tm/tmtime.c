@@ -48,7 +48,7 @@
 time_t
 tmtime(register Tm_t* tm, int west)
 {
-	register time_t		clock;
+	register _ast_int4_t	clock;
 	register Tm_leap_t*	lp;
 	register Tm_t*		tn;
 	Tm_t*			to;
@@ -109,6 +109,8 @@ tmtime(register Tm_t* tm, int west)
 	}
 	else if (tm->tm_isdst)
 		tm->tm_isdst = 0;
+	if (clock < 0)
+		return -1;
 	if (!tn)
 	{
 		now = clock;

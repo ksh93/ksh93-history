@@ -557,8 +557,10 @@ static int arg_expand(register struct argnod *argp, struct argnod **argchain,int
 	if(!(argp->argflag&ARG_RAW))
 	{
 #ifdef SHOPT_OPTIMIZE
-		struct argnod *ap=argp->argchn.ap;
-		if(ap)
+		struct argnod *ap;
+		if(flag&ARG_OPTIMIZE)
+			argp->argchn.ap=0;
+		if(ap=argp->argchn.ap)
 		{
 			sh.optcount++;
 			count = 1;

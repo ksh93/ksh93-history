@@ -1,3 +1,22 @@
+01-08-09  --- Release ksh93l+  ---
+01-08-09  Another bug in the optimization of for loops in ksh93l caused
+	  errors in recursive functions using local variables that
+	  contained for loops has been fixed.
+01-07-27  A bug in which IFS would be unset after a command substituion
+	  inside a here document has been fixed.
+01-07-26  To conform to the POSIX standard, if you invoked ksh name,
+	  and name does not contain a /,  it will first try to run
+	  one in the current directory whether it is executable or not
+	  before doing a path search for an executable script.  Earlier
+	  versions first checked for an executable script using the
+	  PATH variable.
+01-07-23  A bug in which unset -f invoked in a subshell could unset a
+	  function defined in the parent has been fixed.
+01-07-16  A bug in the optimization of for loops in ksh93l caused
+	  name references to be treated as invariantes has been fixed.
+01-07-09  A bug in which a discipline function applied to a local variable
+	  could cause a shell exception has been fixed.  Discipline
+	  functions can only be specified for global variables. 
 
 01-06-18  --- Release ksh93l  ---
 01-06-18  A bug in assigning integers larger than can be represented as

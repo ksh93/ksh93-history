@@ -143,4 +143,12 @@ foobar 2> /dev/null || err_exit 'nameref not unsetting previous reference'
 	then	err_exit 'nameref short to longname compound assignment error'
 	fi
 ) 2> /dev/null|| err_exit 'nameref short to longname compound assignment error'
+unset x
+if	[[	$(var1=1 var2=2
+		for i in var1 var2
+		do	nameref x=$i
+			print $x
+		done) != $'1\n2' ]]
+then	err_exit 'for loop nameref optimization error'
+fi
 exit $((Errors))

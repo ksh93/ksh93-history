@@ -171,6 +171,9 @@ typedef void (*Sh_init_f)(int);
 
 #define exitset()	(sh.savexit=sh.exitval)
 
+#ifndef SH_DICT
+#define SH_DICT		(void*)e_dict
+#endif
 
 /* states */
 /* low numbered states are same as options */
@@ -204,9 +207,9 @@ extern void 		*sh_macopen(Shell_t*);
 extern char 		*sh_mactry(char*);
 extern int 		sh_readline(Shell_t*,char**,int,int,long);
 extern Sfio_t		*sh_sfeval(char*[]);
-extern void		sh_setmatch(Namval_t*,int,int,int[]);
-extern Dt_t		*sh_subaliastree(void);
-extern Dt_t		*sh_subfuntree(void);
+extern void		sh_setmatch(const char*,int,int,int[]);
+extern Dt_t		*sh_subaliastree(int);
+extern Dt_t		*sh_subfuntree(int);
 extern void		sh_subtmpfile(void);
 extern char 		*sh_substitute(const char*,const char*,char*);
 extern const char	*_sh_translate(const char*);

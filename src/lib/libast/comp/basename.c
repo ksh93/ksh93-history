@@ -28,6 +28,7 @@
  * basename(3) implementation
  */
 
+#include <ast_map.h>
 #include <libgen.h>
 
 char *basename(register char *pathname)

@@ -73,7 +73,7 @@ mcfind(char* path, const char* locale, const char* catalog, int category, int nl
 	int			oerrno;
 	Lc_t*			lc;
 	char			file[PATH_MAX];
-	char*			paths[4];
+	char*			paths[5];
 
 	static char		lc_messages[] = "LC_MESSAGES";
 
@@ -97,6 +97,7 @@ mcfind(char* path, const char* locale, const char* catalog, int category, int nl
 		paths[i++] = p;
 #endif
 	paths[i++] = "share/lib/locale/%l/%C/%N";
+	paths[i++] = "share/locale/%l/%C/%N";
 	paths[i++] = "lib/locale/%l/%C/%N";
 	paths[i] = 0;
 	next = 1;
@@ -628,8 +629,7 @@ mcindex(register const char* s, char** e, int* set, int* msg)
 	{
 		SFCVINIT();
 		cv = _Sfcv36;
-		n = m = 0;
-		while ((c = cv[*s++]) < 36)
+		for (n = m = 0; (c = cv[*s]) < 36; s++)
 		{
 			m++;
 			n ^= c;

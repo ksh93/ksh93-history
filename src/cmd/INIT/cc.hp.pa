@@ -1,5 +1,9 @@
-: hp.pa cc wrapper for reasonable ansi C defaults
+: hp.pa cc wrapper for reasonable ansi C defaults : 1998-05-11 :
 
-# @(#)cc.hp.pa (AT&T Labs Research) 1998-05-11
+HOSTTYPE=hp.pa
+
+case $* in
+-dumpmachine) echo $HOSTTYPE; exit ;;
+esac
 
 /opt/ansic/bin/cc -Ae +e -Wl,+s -Wl,+vnocompatwarnings "$@"

@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 4.1 2001-01-01
+info mam static 00000 1994-07-17 make (AT&T Research) 4.2 2001-07-17
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ar
@@ -41,7 +41,7 @@ setv LICENSE -DLICENSE="since=1994,author=gsf+kpv"
 exec - case static,port:$OPTIND:$RANDOM in
 exec - ?*:*:*|*::*|*:*:$RANDOM)
 exec - 	;;
-exec - *)	if	ENV= x= $SHELL -n -c '${list[level]} ' 2>/dev/null
+exec - *)	if	ENV= x= $SHELL -nc ': ${list[level]}  !(pattern)' 2>/dev/null
 exec - 	then	ENV= $SHELL -n iffe.sh
 exec - 	fi
 exec - 	;;
@@ -68,7 +68,7 @@ prev package.sh
 exec - case static,port:$OPTIND:$RANDOM in
 exec - ?*:*:*|*::*|*:*:$RANDOM)
 exec - 	;;
-exec - *)	if	ENV= x= $SHELL -n -c '${list[level]} ' 2>/dev/null
+exec - *)	if	ENV= x= $SHELL -nc ': ${list[level]}  !(pattern)' 2>/dev/null
 exec - 	then	ENV= $SHELL -n package.sh
 exec - 	fi
 exec - 	;;
@@ -96,7 +96,7 @@ setv LICENSE -DLICENSE="since=1995,author=gsf"
 exec - case static,port:$OPTIND:$RANDOM in
 exec - ?*:*:*|*::*|*:*:$RANDOM)
 exec - 	;;
-exec - *)	if	ENV= x= $SHELL -n -c '${list[level]} ' 2>/dev/null
+exec - *)	if	ENV= x= $SHELL -nc ': ${list[level]}  !(pattern)' 2>/dev/null
 exec - 	then	ENV= $SHELL -n regress.sh
 exec - 	fi
 exec - 	;;
@@ -116,6 +116,60 @@ exec - 	;;
 exec - esac
 exec - chmod u+w,+x regress
 done regress generated
+make crossexec
+make crossexec.sh
+done crossexec.sh
+prev crossexec.sh
+exec - case static,port:$OPTIND:$RANDOM in
+exec - ?*:*:*|*::*|*:*:$RANDOM)
+exec - 	;;
+exec - *)	if	ENV= x= $SHELL -nc ': ${list[level]}  !(pattern)' 2>/dev/null
+exec - 	then	ENV= $SHELL -n crossexec.sh
+exec - 	fi
+exec - 	;;
+exec - esac
+exec - case 'USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1999-2001 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"' in
+exec - "")	cp crossexec.sh crossexec
+exec - 	;;
+exec - *)	{
+exec - 	i=`(read x; echo $x) < crossexec.sh`
+exec - 	case $i in
+exec - 	'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo $i ;;
+exec - 	esac
+exec - 	echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1999-2001 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"
+exec - 	cat crossexec.sh
+exec - 	} > crossexec
+exec - 	;;
+exec - esac
+exec - chmod u+w,+x crossexec
+done crossexec generated
+make filter
+make filter.sh
+done filter.sh
+prev filter.sh
+exec - case static,port:$OPTIND:$RANDOM in
+exec - ?*:*:*|*::*|*:*:$RANDOM)
+exec - 	;;
+exec - *)	if	ENV= x= $SHELL -nc ': ${list[level]}  !(pattern)' 2>/dev/null
+exec - 	then	ENV= $SHELL -n filter.sh
+exec - 	fi
+exec - 	;;
+exec - esac
+exec - case 'USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1999-2001 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"' in
+exec - "")	cp filter.sh filter
+exec - 	;;
+exec - *)	{
+exec - 	i=`(read x; echo $x) < filter.sh`
+exec - 	case $i in
+exec - 	'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo $i ;;
+exec - 	esac
+exec - 	echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1999-2001 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"
+exec - 	cat filter.sh
+exec - 	} > filter
+exec - 	;;
+exec - esac
+exec - chmod u+w,+x filter
+done filter generated
 make ignore
 make ignore.sh
 done ignore.sh
@@ -123,7 +177,7 @@ prev ignore.sh
 exec - case static,port:$OPTIND:$RANDOM in
 exec - ?*:*:*|*::*|*:*:$RANDOM)
 exec - 	;;
-exec - *)	if	ENV= x= $SHELL -n -c '${list[level]} ' 2>/dev/null
+exec - *)	if	ENV= x= $SHELL -nc ': ${list[level]}  !(pattern)' 2>/dev/null
 exec - 	then	ENV= $SHELL -n ignore.sh
 exec - 	fi
 exec - 	;;
@@ -150,7 +204,7 @@ prev mamprobe.sh
 exec - case static,port:$OPTIND:$RANDOM in
 exec - ?*:*:*|*::*|*:*:$RANDOM)
 exec - 	;;
-exec - *)	if	ENV= x= $SHELL -n -c '${list[level]} ' 2>/dev/null
+exec - *)	if	ENV= x= $SHELL -nc ': ${list[level]}  !(pattern)' 2>/dev/null
 exec - 	then	ENV= $SHELL -n mamprobe.sh
 exec - 	fi
 exec - 	;;
@@ -177,7 +231,7 @@ prev silent.sh
 exec - case static,port:$OPTIND:$RANDOM in
 exec - ?*:*:*|*::*|*:*:$RANDOM)
 exec - 	;;
-exec - *)	if	ENV= x= $SHELL -n -c '${list[level]} ' 2>/dev/null
+exec - *)	if	ENV= x= $SHELL -nc ': ${list[level]}  !(pattern)' 2>/dev/null
 exec - 	then	ENV= $SHELL -n silent.sh
 exec - 	fi
 exec - 	;;
@@ -251,12 +305,12 @@ exec - ${CC} ${CCFLAGS}   -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research
 done release.o generated
 exec - ${CC} ${CCFLAGS} ${LDFLAGS}   -o release release.o
 done release generated
-make ${INSTALLROOT}/bin
+make ../../../bin
 exec - set -
 exec - if	test ! -d ${INSTALLROOT}/bin
 exec - then	set -x && mkdir -p ${INSTALLROOT}/bin 2>/dev/null && set - ||
 exec - 	{
-exec - 		test -d ./-p && rm -rf ./-p
+exec - 		test -d ./-p && rm -Rf ./-p
 exec - 		p=
 exec - 		for d in `echo ${INSTALLROOT}/bin | sed -e 's%\\(.\\)/%\\1 %g'`
 exec - 		do	case $p in
@@ -274,25 +328,25 @@ exec - 			esac
 exec - 		done
 exec - 	} && set -x 		    		   
 exec - fi
-done ${INSTALLROOT}/bin generated
-make ${INSTALLROOT}/bin/iffe
+done ../../../bin generated
+make ../../../bin/iffe
 prev iffe
 exec - mv ${INSTALLROOT}/bin/iffe ${INSTALLROOT}/bin/iffe.old 2>/dev/null || true; test '' = 'iffe' || { cp iffe ${INSTALLROOT}/bin/iffe  		    		    ;}
-done ${INSTALLROOT}/bin/iffe generated
-make ${INSTALLROOT}/bin/package
+done ../../../bin/iffe generated
+make ../../../bin/package
 prev package
 exec - mv ${INSTALLROOT}/bin/package ${INSTALLROOT}/bin/package.old 2>/dev/null || true; test '' = 'package' || { cp package ${INSTALLROOT}/bin/package  		    		    ;}
-done ${INSTALLROOT}/bin/package generated
-make ${INSTALLROOT}/bin/regress
+done ../../../bin/package generated
+make ../../../bin/regress
 prev regress
 exec - mv ${INSTALLROOT}/bin/regress ${INSTALLROOT}/bin/regress.old 2>/dev/null || true; test '' = 'regress' || { cp regress ${INSTALLROOT}/bin/regress  		    		    ;}
-done ${INSTALLROOT}/bin/regress generated
-make ${PACKAGEROOT}/lib/package
+done ../../../bin/regress generated
+make ../../../../../lib/package
 exec - set -
 exec - if	test ! -d ${PACKAGEROOT}/lib/package
 exec - then	set -x && mkdir -p ${PACKAGEROOT}/lib/package 2>/dev/null && set - ||
 exec - 	{
-exec - 		test -d ./-p && rm -rf ./-p
+exec - 		test -d ./-p && rm -Rf ./-p
 exec - 		p=
 exec - 		for d in `echo ${PACKAGEROOT}/lib/package | sed -e 's%\\(.\\)/%\\1 %g'`
 exec - 		do	case $p in
@@ -310,18 +364,18 @@ exec - 			esac
 exec - 		done
 exec - 	} && set -x 		    		   
 exec - fi
-done ${PACKAGEROOT}/lib/package generated
-make ${PACKAGEROOT}/lib/package/package.mk
+done ../../../../../lib/package generated
+make ../../../../../lib/package/package.mk
 make package.mk
 done package.mk
 exec - mv ${PACKAGEROOT}/lib/package/package.mk ${PACKAGEROOT}/lib/package/package.mk.old 2>/dev/null || true; test '' = 'package.mk' || { cp package.mk ${PACKAGEROOT}/lib/package/package.mk  		    		    ;}
-done ${PACKAGEROOT}/lib/package/package.mk generated
-make ${PACKAGEROOT}/bin
+done ../../../../../lib/package/package.mk generated
+make ../../../../../bin
 exec - set -
 exec - if	test ! -d ${PACKAGEROOT}/bin
 exec - then	set -x && mkdir -p ${PACKAGEROOT}/bin 2>/dev/null && set - ||
 exec - 	{
-exec - 		test -d ./-p && rm -rf ./-p
+exec - 		test -d ./-p && rm -Rf ./-p
 exec - 		p=
 exec - 		for d in `echo ${PACKAGEROOT}/bin | sed -e 's%\\(.\\)/%\\1 %g'`
 exec - 		do	case $p in
@@ -339,51 +393,59 @@ exec - 			esac
 exec - 		done
 exec - 	} && set -x 		    		   
 exec - fi
-done ${PACKAGEROOT}/bin generated
-make ${PACKAGEROOT}/bin/ignore
+done ../../../../../bin generated
+make ../../../../../bin/ignore
 prev ignore
 exec - mv ${PACKAGEROOT}/bin/ignore ${PACKAGEROOT}/bin/ignore.old 2>/dev/null || true; test '' = 'ignore' || { cp ignore ${PACKAGEROOT}/bin/ignore  		    		    ;}
-done ${PACKAGEROOT}/bin/ignore generated
-make ${PACKAGEROOT}/bin/mamprobe
+done ../../../../../bin/ignore generated
+make ../../../../../bin/mamprobe
 prev mamprobe
 exec - mv ${PACKAGEROOT}/bin/mamprobe ${PACKAGEROOT}/bin/mamprobe.old 2>/dev/null || true; test '' = 'mamprobe' || { cp mamprobe ${PACKAGEROOT}/bin/mamprobe  		    		    ;}
-done ${PACKAGEROOT}/bin/mamprobe generated
-make ${PACKAGEROOT}/bin/package
+done ../../../../../bin/mamprobe generated
+make ../../../../../bin/package
 prev package
 exec - mv ${PACKAGEROOT}/bin/package ${PACKAGEROOT}/bin/package.old 2>/dev/null || true; test '' = 'package' || { cp package ${PACKAGEROOT}/bin/package  		    		    ;}
-done ${PACKAGEROOT}/bin/package generated
-make ${PACKAGEROOT}/bin/silent
+done ../../../../../bin/package generated
+make ../../../../../bin/silent
 prev silent
 exec - mv ${PACKAGEROOT}/bin/silent ${PACKAGEROOT}/bin/silent.old 2>/dev/null || true; test '' = 'silent' || { cp silent ${PACKAGEROOT}/bin/silent  		    		    ;}
-done ${PACKAGEROOT}/bin/silent generated
-make ${INSTALLROOT}/bin/mamake
+done ../../../../../bin/silent generated
+make ../../../bin/crossexec
+prev crossexec
+exec - mv ${INSTALLROOT}/bin/crossexec ${INSTALLROOT}/bin/crossexec.old 2>/dev/null || true; test '' = 'crossexec' || { cp crossexec ${INSTALLROOT}/bin/crossexec  		    		    ;}
+done ../../../bin/crossexec generated
+make ../../../bin/filter
+prev filter
+exec - mv ${INSTALLROOT}/bin/filter ${INSTALLROOT}/bin/filter.old 2>/dev/null || true; test '' = 'filter' || { cp filter ${INSTALLROOT}/bin/filter  		    		    ;}
+done ../../../bin/filter generated
+make ../../../bin/mamake
 prev mamake
 exec - if	test ! -f ${INSTALLROOT}/bin/mamake
 exec - then	cp mamake ${INSTALLROOT}/bin/mamake
 exec - fi
-done ${INSTALLROOT}/bin/mamake generated
-make ${INSTALLROOT}/bin/proto
+done ../../../bin/mamake generated
+make ../../../bin/proto
 prev proto
 exec - if	test ! -f ${INSTALLROOT}/bin/proto
 exec - then	cp proto ${INSTALLROOT}/bin/proto
 exec - fi
-done ${INSTALLROOT}/bin/proto generated
-make ${INSTALLROOT}/bin/ratz
+done ../../../bin/proto generated
+make ../../../bin/ratz
 prev ratz
 exec - if	test ! -f ${INSTALLROOT}/bin/ratz
 exec - then	cp ratz ${INSTALLROOT}/bin/ratz
 exec - fi
-done ${INSTALLROOT}/bin/ratz generated
-make ${INSTALLROOT}/bin/release
+done ../../../bin/ratz generated
+make ../../../bin/release
 prev release
 exec - if	test ! -f ${INSTALLROOT}/bin/release
 exec - then	cp release ${INSTALLROOT}/bin/release
 exec - fi
-done ${INSTALLROOT}/bin/release generated
-make ${INSTALLROOT}/bin/.fpath
+done ../../../bin/release generated
+make ../../../bin/.fpath
 exec - echo ../fun > ${INSTALLROOT}/bin/.fpath
-done ${INSTALLROOT}/bin/.fpath generated
-make ${INSTALLROOT}/bin/cc
+done ../../../bin/.fpath generated
+make ../../../bin/cc
 prev package
 make hello.c
 done hello.c
@@ -391,6 +453,8 @@ make cc.darwin.ppc
 done cc.darwin.ppc
 make cc.hp.pa
 done cc.hp.pa
+make cc.hp.pa64
+done cc.hp.pa64
 make cc.ibm.risc
 done cc.ibm.risc
 make cc.mvs.390
@@ -413,110 +477,80 @@ make cc.sgi.mips4
 done cc.sgi.mips4
 make cc.sgi.mips4-n32
 done cc.sgi.mips4-n32
-exec - set x cc.darwin.ppc cc.hp.pa cc.ibm.risc cc.mvs.390 cc.next.i386 cc.next.m68k cc.osf.alpha cc.sco.i386 cc.sgi.mips2 cc.sgi.mips3 cc.sgi.mips3-o32 cc.sgi.mips4 cc.sgi.mips4-n32
-exec - shift
-exec - while	:
-exec - do	case $# in
-exec - 	0)	break ;;
-exec - 	esac
-exec - 	cc=$1
-exec - 	shift
-exec - 	export cc
-exec - 	case $cc in
+exec - for cc in cc.darwin.ppc cc.hp.pa cc.hp.pa64 cc.ibm.risc cc.mvs.390 cc.next.i386 cc.next.m68k cc.osf.alpha cc.sco.i386 cc.sgi.mips2 cc.sgi.mips3 cc.sgi.mips3-o32 cc.sgi.mips4 cc.sgi.mips4-n32
+exec - do	case $cc in
 exec - 	*cc.${_hosttype_=`package`})
-exec - 		test -f $cc &&
-exec - 		$cc -o hello.exe hello.c >/dev/null 2>&1 &&
-exec - 		hello.exe >/dev/null 2>&1 && {
-exec - 			case ${_hosttype_=`package`} in
-exec - 			*.mips*)$cc -version >/dev/null 2>&1 || {
-exec - 					: no ${_hosttype_=`package`} cc workaround needed
-exec - 					break
-exec - 				}
-exec - 				;;
+exec - 		if	silent test -f $cc &&
+exec - 			$cc -o hello.exe hello.c >/dev/null 2>&1 &&
+exec - 			hello.exe >/dev/null 2>&1
+exec - 		then	case "${_hosttype_=`package`}" in
+exec - 			*.mips*)$cc -version >/dev/null 2>&1 || break ;;
 exec - 			esac
 exec - 			cmp -s $cc ${INSTALLROOT}/bin/cc ||
 exec - 			cp $cc ${INSTALLROOT}/bin/cc
-exec - 		} ||
-exec - 		: no ${_hosttype_=`package`} cc workaround needed
-exec - 		break
+exec - 		fi
 exec - 	esac
 exec - done
-exec - rm -f hello.exe hello.o
+exec - silent rm -f hello.exe hello.o
 exec - case "${_hosttype_=`package`}" in
 exec - sgi.mips3)
-exec - 	if test ! -d ${INSTALLROOT}/lib32
+exec - 	if	silent test ! -d ${INSTALLROOT}/lib32
 exec - 	then	ln -s lib ${INSTALLROOT}/lib32
 exec - 	fi
 exec - 	;;
 exec - sgi.mips4)
-exec - 	if test ! -d ${INSTALLROOT}/lib64
+exec - 	if	silent test ! -d ${INSTALLROOT}/lib64
 exec - 	then	ln -s lib ${INSTALLROOT}/lib64
 exec - 	fi
 exec - 	;;
 exec - esac
-done ${INSTALLROOT}/bin/cc generated
-make ${INSTALLROOT}/bin/ld
+done ../../../bin/cc generated
 prev package
-prev ${INSTALLROOT}/bin/cc
+prev ../../../bin/cc
 make ld.hp.pa
 done ld.hp.pa
-exec - set x ld.hp.pa
-exec - while	:
-exec - do	case $# in
-exec - 	0)	break ;;
-exec - 	esac
-exec - 	ld=$1
-exec - 	shift
-exec - 	export ld
-exec - 	case $ld in
-exec - 	*ld.${_hosttype_=`package`})
-exec - 		if	test -f $ld -a -x ${INSTALLROOT}/bin/cc
-exec - 		then	cmp -s $ld ${INSTALLROOT}/bin/ld ||
-exec - 			cp $ld ${INSTALLROOT}/bin/ld
-exec - 		else	: no ${_hosttype_=`package`} ld workaround needed
-exec - 		fi
-exec - 		break
-exec - 	esac
-exec - done
-done ${INSTALLROOT}/bin/ld virtual
-make ${INSTALLROOT}/bin/ldd
+exec - if	silent test -x ${INSTALLROOT}/bin/cc
+exec - then	for ld in ld.hp.pa
+exec - 	do	case $ld in
+exec - 		*ld.${_hosttype_=`package`})
+exec - 			if	silent test -f $ld
+exec - 			then	cmp -s $ld ${INSTALLROOT}/bin/ld ||
+exec - 				cp $ld ${INSTALLROOT}/bin/ld
+exec - 			fi
+exec - 		esac
+exec - 	done
+exec - fi
 prev package
-prev ${INSTALLROOT}/bin/cc
+prev ../../../bin/cc
 make ldd.darwin.ppc
 done ldd.darwin.ppc
 make ldd.ibm.risc
 done ldd.ibm.risc
+make ldd.mvs.390
+done ldd.mvs.390
 make ldd.sgi.mips2
 done ldd.sgi.mips2
 make ldd.sgi.mips3
 done ldd.sgi.mips3
 make ldd.sgi.mips4
 done ldd.sgi.mips4
-exec - set x ldd.darwin.ppc ldd.ibm.risc ldd.sgi.mips2 ldd.sgi.mips3 ldd.sgi.mips4
-exec - while	:
-exec - do	case $# in
-exec - 	0)	break ;;
-exec - 	esac
-exec - 	ldd=$1
-exec - 	shift
-exec - 	export ldd
-exec - 	case $ldd in
-exec - 	*ldd.${_hosttype_=`package`})
-exec - 		if	test -f $ldd -a -x ${INSTALLROOT}/bin/cc -a ! -x /usr/bin/ldd -a ! -x /bin/ldd
-exec - 		then	cmp -s $ldd ${INSTALLROOT}/bin/ldd ||
-exec - 			cp $ldd ${INSTALLROOT}/bin/ldd
-exec - 		else	: no ${_hosttype_=`package`} ldd workaround needed
-exec - 		fi
-exec - 		break
-exec - 	esac
-exec - done
-done ${INSTALLROOT}/bin/ldd virtual
-make ${INSTALLROOT}/lib/probe/C
+exec - if	silent test -x ${INSTALLROOT}/bin/cc
+exec - then	for ldd in ldd.darwin.ppc ldd.ibm.risc ldd.mvs.390 ldd.sgi.mips2 ldd.sgi.mips3 ldd.sgi.mips4
+exec - 	do	case $ldd in
+exec - 		*ldd.${_hosttype_=`package`})
+exec - 			if	silent test -f $ldd -a ! -x /usr/bin/ldd -a ! -x /bin/ldd
+exec - 			then	cmp -s $ldd ${INSTALLROOT}/bin/ldd ||
+exec - 				cp $ldd ${INSTALLROOT}/bin/ldd
+exec - 			fi
+exec - 		esac
+exec - 	done
+exec - fi
+make ../../../lib/probe/C
 exec - set -
 exec - if	test ! -d ${INSTALLROOT}/lib/probe/C
 exec - then	set -x && mkdir -p ${INSTALLROOT}/lib/probe/C 2>/dev/null && set - ||
 exec - 	{
-exec - 		test -d ./-p && rm -rf ./-p
+exec - 		test -d ./-p && rm -Rf ./-p
 exec - 		p=
 exec - 		for d in `echo ${INSTALLROOT}/lib/probe/C | sed -e 's%\\(.\\)/%\\1 %g'`
 exec - 		do	case $p in
@@ -534,18 +568,18 @@ exec - 			esac
 exec - 		done
 exec - 	} && set -x 		    		   
 exec - fi
-done ${INSTALLROOT}/lib/probe/C generated
-make ${INSTALLROOT}/lib/probe/C/probe
+done ../../../lib/probe/C generated
+make ../../../lib/probe/C/probe
 make C+probe
 done C+probe
 exec - mv ${INSTALLROOT}/lib/probe/C/probe ${INSTALLROOT}/lib/probe/C/probe.old 2>/dev/null || true; test '' = 'C+probe' || { cp C+probe ${INSTALLROOT}/lib/probe/C/probe  		    		    ;}
-done ${INSTALLROOT}/lib/probe/C/probe generated
-make ${INSTALLROOT}/lib/probe/C/make
+done ../../../lib/probe/C/probe generated
+make ../../../lib/probe/C/make
 exec - set -
 exec - if	test ! -d ${INSTALLROOT}/lib/probe/C/make
 exec - then	set -x && mkdir -p ${INSTALLROOT}/lib/probe/C/make 2>/dev/null && set - ||
 exec - 	{
-exec - 		test -d ./-p && rm -rf ./-p
+exec - 		test -d ./-p && rm -Rf ./-p
 exec - 		p=
 exec - 		for d in `echo ${INSTALLROOT}/lib/probe/C/make | sed -e 's%\\(.\\)/%\\1 %g'`
 exec - 		do	case $p in
@@ -563,18 +597,16 @@ exec - 			esac
 exec - 		done
 exec - 	} && set -x 		    		   
 exec - fi
-done ${INSTALLROOT}/lib/probe/C/make generated
-make ${INSTALLROOT}/lib/probe/C/make/probe.lcl
+done ../../../lib/probe/C/make generated
 make C+make+probe.lcl
 done C+make+probe.lcl dontcare virtual
 exec - mv ${INSTALLROOT}/lib/probe/C/make/probe.lcl ${INSTALLROOT}/lib/probe/C/make/probe.lcl.old 2>/dev/null || true; test '' = '' || { cp  ${INSTALLROOT}/lib/probe/C/make/probe.lcl  		    		    ;}
-done ${INSTALLROOT}/lib/probe/C/make/probe.lcl virtual
-make ${INSTALLROOT}/lib/make
+make ../../../lib/make
 exec - set -
 exec - if	test ! -d ${INSTALLROOT}/lib/make
 exec - then	set -x && mkdir -p ${INSTALLROOT}/lib/make 2>/dev/null && set - ||
 exec - 	{
-exec - 		test -d ./-p && rm -rf ./-p
+exec - 		test -d ./-p && rm -Rf ./-p
 exec - 		p=
 exec - 		for d in `echo ${INSTALLROOT}/lib/make | sed -e 's%\\(.\\)/%\\1 %g'`
 exec - 		do	case $p in
@@ -592,38 +624,38 @@ exec - 			esac
 exec - 		done
 exec - 	} && set -x 		    		   
 exec - fi
-done ${INSTALLROOT}/lib/make generated
-make ${INSTALLROOT}/lib/make/PROBE.mk
+done ../../../lib/make generated
+make ../../../lib/make/PROBE.mk
 make PROBE.mk
 done PROBE.mk
 exec - mv ${INSTALLROOT}/lib/make/PROBE.mk ${INSTALLROOT}/lib/make/PROBE.mk.old 2>/dev/null || true; test '' = 'PROBE.mk' || { cp PROBE.mk ${INSTALLROOT}/lib/make/PROBE.mk  		    		    ;}
-done ${INSTALLROOT}/lib/make/PROBE.mk generated
-make ${INSTALLROOT}/lib/make/TEST.mk
+done ../../../lib/make/PROBE.mk generated
+make ../../../lib/make/TEST.mk
 make TEST.mk
 done TEST.mk
 exec - mv ${INSTALLROOT}/lib/make/TEST.mk ${INSTALLROOT}/lib/make/TEST.mk.old 2>/dev/null || true; test '' = 'TEST.mk' || { cp TEST.mk ${INSTALLROOT}/lib/make/TEST.mk  		    		    ;}
-done ${INSTALLROOT}/lib/make/TEST.mk generated
-make ${INSTALLROOT}/lib/make/WWW.mk
+done ../../../lib/make/TEST.mk generated
+make ../../../lib/make/WWW.mk
 make WWW.mk
 done WWW.mk
 exec - mv ${INSTALLROOT}/lib/make/WWW.mk ${INSTALLROOT}/lib/make/WWW.mk.old 2>/dev/null || true; test '' = 'WWW.mk' || { cp WWW.mk ${INSTALLROOT}/lib/make/WWW.mk  		    		    ;}
-done ${INSTALLROOT}/lib/make/WWW.mk generated
-make ${INSTALLROOT}/lib/make/MSGFUN.mk
+done ../../../lib/make/WWW.mk generated
+make ../../../lib/make/MSGFUN.mk
 make MSGFUN.mk
 done MSGFUN.mk
 exec - mv ${INSTALLROOT}/lib/make/MSGFUN.mk ${INSTALLROOT}/lib/make/MSGFUN.mk.old 2>/dev/null || true; test '' = 'MSGFUN.mk' || { cp MSGFUN.mk ${INSTALLROOT}/lib/make/MSGFUN.mk  		    		    ;}
-done ${INSTALLROOT}/lib/make/MSGFUN.mk generated
-make ${INSTALLROOT}/lib/make/MSGKEY.mk
+done ../../../lib/make/MSGFUN.mk generated
+make ../../../lib/make/MSGKEY.mk
 make MSGKEY.mk
 done MSGKEY.mk
 exec - mv ${INSTALLROOT}/lib/make/MSGKEY.mk ${INSTALLROOT}/lib/make/MSGKEY.mk.old 2>/dev/null || true; test '' = 'MSGKEY.mk' || { cp MSGKEY.mk ${INSTALLROOT}/lib/make/MSGKEY.mk  		    		    ;}
-done ${INSTALLROOT}/lib/make/MSGKEY.mk generated
-make ${INSTALLROOT}/include
+done ../../../lib/make/MSGKEY.mk generated
+make ../../../include
 exec - set -
 exec - if	test ! -d ${INSTALLROOT}/include
 exec - then	set -x && mkdir -p ${INSTALLROOT}/include 2>/dev/null && set - ||
 exec - 	{
-exec - 		test -d ./-p && rm -rf ./-p
+exec - 		test -d ./-p && rm -Rf ./-p
 exec - 		p=
 exec - 		for d in `echo ${INSTALLROOT}/include | sed -e 's%\\(.\\)/%\\1 %g'`
 exec - 		do	case $p in
@@ -641,24 +673,24 @@ exec - 			esac
 exec - 		done
 exec - 	} && set -x 		    		   
 exec - fi
-done ${INSTALLROOT}/include generated
-make ${INSTALLROOT}/include/prototyped.h
+done ../../../include generated
+make ../../../include/prototyped.h
 make prototyped.h
-prev ${INSTALLROOT}/bin/proto
-exec - ${INSTALLROOT}/bin/proto -f /dev/null > h.${COTEMP}.h
+prev ../../../bin/proto
+exec - proto -f /dev/null > h.${COTEMP}.h
 exec - if	cmp 2>/dev/null -s h.${COTEMP}.h prototyped.h
 exec - then	rm -f h.${COTEMP}.h
 exec - else	mv h.${COTEMP}.h prototyped.h
 exec - fi
 done prototyped.h generated
 exec - mv ${INSTALLROOT}/include/prototyped.h ${INSTALLROOT}/include/prototyped.h.old 2>/dev/null || true; test '' = 'prototyped.h' || { cp prototyped.h ${INSTALLROOT}/include/prototyped.h  		    		    ;}
-done ${INSTALLROOT}/include/prototyped.h generated
-make ${INSTALLROOT}/lib/lib
+done ../../../include/prototyped.h generated
+make ../../../lib/lib
 exec - set -
 exec - if	test ! -d ${INSTALLROOT}/lib/lib
 exec - then	set -x && mkdir -p ${INSTALLROOT}/lib/lib 2>/dev/null && set - ||
 exec - 	{
-exec - 		test -d ./-p && rm -rf ./-p
+exec - 		test -d ./-p && rm -Rf ./-p
 exec - 		p=
 exec - 		for d in `echo ${INSTALLROOT}/lib/lib | sed -e 's%\\(.\\)/%\\1 %g'`
 exec - 		do	case $p in
@@ -676,37 +708,80 @@ exec - 			esac
 exec - 		done
 exec - 	} && set -x 		    		   
 exec - fi
-done ${INSTALLROOT}/lib/lib generated
-make ${INSTALLROOT}/lib/lib/dl
-make dl
+done ../../../lib/lib generated
+make ../../../lib/lib/dl
+make dl.req
 make dl.c
 done dl.c
-exec - if	${CC} -o dl.exe dl.c -ldl > /dev/null
-exec - then	if	${CC} -o dl.exe dl.c > /dev/null
-exec - 	then	echo ' -'
-exec - 	else	echo ' -ldl'
+exec - r='-'
+exec - for i in dl.c
+exec - do	if	${CC} -o dl.exe $i -ldl > /dev/null
+exec - 	then	${CC} -o dl.exe $i > /dev/null || {
+exec - 			r='-ldl'
+exec - 			break
+exec - 		}
 exec - 	fi
-exec - else	echo ' -'
-exec - fi 2> /dev/null > dl
+exec - done 2>/dev/null
+exec - echo " $r" > dl.req
 exec - rm -f dl.exe dl.o
-done dl generated
-exec - mv ${INSTALLROOT}/lib/lib/dl ${INSTALLROOT}/lib/lib/dl.old 2>/dev/null || true; test '' = 'dl' || { cp dl ${INSTALLROOT}/lib/lib/dl  		    		    ;}
-done ${INSTALLROOT}/lib/lib/dl generated
-make ${INSTALLROOT}/lib/lib/m
-make m
+done dl.req generated
+exec - mv ${INSTALLROOT}/lib/lib/dl ${INSTALLROOT}/lib/lib/dl.old 2>/dev/null || true; test '' = 'dl.req' || { cp dl.req ${INSTALLROOT}/lib/lib/dl  		    		    ;}
+done ../../../lib/lib/dl generated
+make ../../../lib/lib/m
+make m.req
 make m.c
 done m.c
-exec - if	${CC} -o m.exe m.c -lm > /dev/null
-exec - then	if	${CC} -o m.exe m.c > /dev/null
-exec - 	then	echo ' -'
-exec - 	else	echo ' -lm'
+exec - r='-'
+exec - for i in m.c
+exec - do	if	${CC} -o m.exe $i -lm > /dev/null
+exec - 	then	${CC} -o m.exe $i > /dev/null || {
+exec - 			r='-lm'
+exec - 			break
+exec - 		}
 exec - 	fi
-exec - else	echo ' -'
-exec - fi 2> /dev/null > m
+exec - done 2>/dev/null
+exec - echo " $r" > m.req
 exec - rm -f m.exe m.o
-done m generated
-exec - mv ${INSTALLROOT}/lib/lib/m ${INSTALLROOT}/lib/lib/m.old 2>/dev/null || true; test '' = 'm' || { cp m ${INSTALLROOT}/lib/lib/m  		    		    ;}
-done ${INSTALLROOT}/lib/lib/m generated
+done m.req generated
+exec - mv ${INSTALLROOT}/lib/lib/m ${INSTALLROOT}/lib/lib/m.old 2>/dev/null || true; test '' = 'm.req' || { cp m.req ${INSTALLROOT}/lib/lib/m  		    		    ;}
+done ../../../lib/lib/m generated
+make ../../../lib/lib/nsl
+make nsl.req
+make nsl.c
+done nsl.c
+exec - r='-'
+exec - for i in nsl.c
+exec - do	if	${CC} -o nsl.exe $i -lnsl > /dev/null
+exec - 	then	${CC} -o nsl.exe $i > /dev/null || {
+exec - 			r='-lnsl'
+exec - 			break
+exec - 		}
+exec - 	fi
+exec - done 2>/dev/null
+exec - echo " $r" > nsl.req
+exec - rm -f nsl.exe nsl.o
+done nsl.req generated
+exec - mv ${INSTALLROOT}/lib/lib/nsl ${INSTALLROOT}/lib/lib/nsl.old 2>/dev/null || true; test '' = 'nsl.req' || { cp nsl.req ${INSTALLROOT}/lib/lib/nsl  		    		    ;}
+done ../../../lib/lib/nsl generated
+make ../../../lib/lib/socket
+make socket.req
+make socket.c
+done socket.c
+prev nsl.c
+exec - r='-'
+exec - for i in socket.c nsl.c
+exec - do	if	${CC} -o socket.exe $i -lsocket > /dev/null
+exec - 	then	${CC} -o socket.exe $i > /dev/null || {
+exec - 			r='-lsocket'
+exec - 			break
+exec - 		}
+exec - 	fi
+exec - done 2>/dev/null
+exec - echo " $r" > socket.req
+exec - rm -f socket.exe socket.o
+done socket.req generated
+exec - mv ${INSTALLROOT}/lib/lib/socket ${INSTALLROOT}/lib/lib/socket.old 2>/dev/null || true; test '' = 'socket.req' || { cp socket.req ${INSTALLROOT}/lib/lib/socket  		    		    ;}
+done ../../../lib/lib/socket generated
 done install virtual
 make test
 done test dontcare virtual

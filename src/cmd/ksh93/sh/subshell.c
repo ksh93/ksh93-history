@@ -265,14 +265,14 @@ static void nv_restore(struct subshell *sp)
 
 /*
  * return pointer to alias tree
- * create a new one if necessary
+ * create new one if in a subshell and one doesn't exist and create is non-zero
  */
-Dt_t *sh_subaliastree(void)
+Dt_t *sh_subaliastree(int create)
 {
 	register struct subshell *sp = subshell_data;
 	if(!sp || sh.curenv==0)
 		return(sh.alias_tree);
-	if(!sp->salias)
+	if(!sp->salias && create)
 	{
 		sp->salias = dtopen(&_Nvdisc,Dtbag);
 		dtview(sp->salias,sh.alias_tree);
@@ -283,14 +283,14 @@ Dt_t *sh_subaliastree(void)
 
 /*
  * return pointer to function tree
- * create a new one if necessary
+ * create new one if in a subshell and one doesn't exist and create is non-zero
  */
-Dt_t *sh_subfuntree(void)
+Dt_t *sh_subfuntree(int create)
 {
 	register struct subshell *sp = subshell_data;
 	if(!sp || sh.curenv==0)
 		return(sh.fun_tree);
-	if(!sp->sfun)
+	if(!sp->sfun && create)
 	{
 		sp->sfun = dtopen(&_Nvdisc,Dtbag);
 		dtview(sp->sfun,sh.fun_tree);
