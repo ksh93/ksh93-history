@@ -29,7 +29,7 @@
  * man this is sum library
  */
 
-static const char id[] = "\n@(#)$Id: sumlib (AT&T Research) 2003-04-28 $\0\n";
+static const char id[] = "\n@(#)$Id: sumlib (AT&T Research) 2003-09-29 $\0\n";
 
 #define _SUM_PRIVATE_	\
 			struct Algorithm*	algorithm;	\
@@ -890,6 +890,8 @@ md5_print(Sum_t* p, Sfio_t* sp, register int flags)
  * fnv
  */
 
+#include <fnv.h>
+
 #define fnv_description \
 	"The Fowler-Noll-Vo 32 bit PRNG hash with non-zero initializer (FNV-1)."
 #define fnv_notice	0
@@ -902,7 +904,7 @@ md5_print(Sum_t* p, Sfio_t* sp, register int flags)
 static int
 fnv_init(Sum_t* p)
 {
-	((Integral_t*)p)->sum = 0x811c9dc5;
+	((Integral_t*)p)->sum = FNV_INIT;
 	return 0;
 }
 
@@ -915,7 +917,7 @@ fnv_block(register Sum_t* p, const void* s, size_t n)
 
 	while (b < e)
 	{
-		c *= 0x01000193;
+		c *= FNV_MULT;
 		c ^= *b++;
 	}
 	((Integral_t*)p)->sum = c;

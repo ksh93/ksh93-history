@@ -1811,7 +1811,7 @@ regnexec(const regex_t* p, const char* s, size_t len, size_t nmatch, regmatch_t*
 			DEBUG_TEST(0x0080,(sfprintf(sfstdout, "AHA#%04d REG_NOMATCH %d %d\n", __LINE__, len, e->re.bm.right)),(0));
 			goto done;
 		}
-		else
+		else if (!(flags & REG_LEFT))
 		{
 			register unsigned char*	buf = (unsigned char*)s;
 			register size_t		index = e->re.bm.left + e->re.bm.size;
@@ -1870,10 +1870,10 @@ regnexec(const regex_t* p, const char* s, size_t len, size_t nmatch, regmatch_t*
 				if ((index += fail[n + 1]) >= len)
 					goto done;
 			}
- possible:
-			n = env->nsub;
-			e = e->next;
 		}
+ possible:
+		n = env->nsub;
+		e = e->next;
 	}
 	DEBUG_TEST(0x0080,(sfprintf(sfstdout, "AHA#%04d parse\n", __LINE__)),(0));
 	j = env->once || (flags & REG_LEFT);
@@ -1888,6 +1888,8 @@ regnexec(const regex_t* p, const char* s, size_t len, size_t nmatch, regmatch_t*
 		if (env->stack)
 			env->best[0].rm_so += i;
 	}
+	if ((flags & REG_LEFT) && env->stack && env->best[0].rm_so)
+		goto done;
  hit:
 	if (k = env->error)
 		goto done;

@@ -1529,8 +1529,14 @@ static int here_copy(Lex_t *lp,register struct ionod *iop)
 	register const char	*state;
 	register int		c,n;
 	register char		*bufp,*cp;
-	register Sfio_t		*sp=shlex.sh->heredocs;
+	register Sfio_t		*sp=shlex.sh->heredocs, *funlog;
 	int			stripflg, nsave, special=0;
+	if(funlog=shlex.sh->funlog)
+	{
+		if(fcfill()>0)
+			fcseek(-1);
+		shlex.sh->funlog = 0;
+	}
 	if(iop->iolst)
 		here_copy(lp,iop->iolst);
 	iop->iooffset = sfseek(sp,(off_t)0,SEEK_END);
@@ -1708,6 +1714,7 @@ static int here_copy(Lex_t *lp,register struct ionod *iop)
 		n=0;
 	}
 done:
+	shlex.sh->funlog = funlog;
 	if(lexd.dolparen)
 		free((void*)iop);
 	else if(!special)

@@ -361,4 +361,10 @@ then    for i in $(command command -x ${SHELL:-ksh} -c 'print $#;[[ $1 != argume
 	command -p command -x ${SHELL:-ksh} -c 'print $#;[[ $1 != argument0 ]]' count $(longline $n) > /dev/null  2>&1
 	[[ $? != 1 ]] && err_exit 'incorrect exit status for command -x'
 fi
+# test for debug trap
+[[ $(typeset -i i=0
+	trap 'print $i' DEBUG
+	while (( i <2))
+	do	(( i++))
+	done) == $'0\n0\n1\n1\n2' ]]  || print -r "DEBUG trap not working"
 exit $((Errors))

@@ -77,7 +77,7 @@ extern void*		ccnative(void*, const void*, size_t);
 #define CCMAP(i,o)		((i)==(o)?(unsigned char*)0:_ccmap(i,o))
 #define CCMAPCHR(m,c)		((m)?m[c]:(c))
 #define CCMAPCPY(m,t,f,n)	((m)?_ccmapcpy(m,t,f,n):memcpy(t,f,n))
-#define CCMAPSTR(m,s,n)		((m)?_ccmapstr(m,s,n):(s))
+#define CCMAPSTR(m,s,n)		((m)?_ccmapstr(m,s,n):(void*)(s))
 
 #define ccmap(i,o)		CCMAP(i,o)
 #define ccmapchr(m,c)		CCMAPCHR(m,c)

@@ -416,7 +416,7 @@ static void	exfile(register Shell_t *shp, register Sfio_t *iop,register int fno)
 	if(jmpval)
 	{
 		Sfio_t *top;
-		sh_iorestore(0);
+		sh_iorestore(0,jmpval);
 		hist_flush(shp->hist_ptr);
 		sfsync(shp->outpool);
 		shp->st.execbrk = shp->st.breakcnt = 0;

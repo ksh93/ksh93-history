@@ -103,12 +103,12 @@ typedef int (*Stat_f)(const char*, struct stat*);
 
 
 #if MAXNAMLEN > 16
-#define MINNAME		24
+#define MINNAME		32
 #else
 #define MINNAME		16
 #endif
 
-#define drop(p,f)	((f)->fts_link = (p)->free, (p)->free = (f))
+#define drop(p,f)	(((f)->fts_namelen < MINNAME) ? ((f)->fts_link = (p)->free, (p)->free = (f)) : (free(f), (p)->free))
 
 #define ACCESS(p,f)	((p)->cd==0?(f)->fts_name:(f)->fts_path)
 #define PATH(f,p,l)	((!((f)->flags&FTS_SEEDOTDIR)&&(l)>0&&(p)[0]=='.'&&(p)[1]=='/')?((p)+2):(p))

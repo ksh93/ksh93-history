@@ -41,7 +41,7 @@
  * qe and the usual suspects are \... escaped
  * (flags&FMT_WIDE) doesn't escape 8 bit chars
  * (flags&FMT_ESCAPED) doesn't \... escape the usual suspects
- * (flags&FMT_SHELL) escape $ and `
+ * (flags&FMT_SHELL) escape $`"#;~&|()<>[]*?
  */
 
 char*
@@ -54,6 +54,7 @@ fmtquote(const char* as, const char* qb, const char* qe, size_t n, int flags)
 	register int		escaped;
 	register int		spaced;
 	int			shell;
+	char*			f;
 	char*			buf;
 
 	c = 4 * (n + 1);
@@ -70,6 +71,7 @@ fmtquote(const char* as, const char* qb, const char* qe, size_t n, int flags)
 		while (*b = *qb++)
 			b++;
 	}
+	f = b;
 	escaped = spaced = !!(flags & FMT_ALWAYS);
 	while (s < e)
 	{
@@ -132,12 +134,12 @@ fmtquote(const char* as, const char* qb, const char* qe, size_t n, int flags)
 				if (*s)
 					c = *s++;
 			}
-			else if (qe && strchr(qe, c) || (flags & FMT_SHELL) && (c == '$' || c == '`'))
+			else if (qe && strchr(qe, c) || (flags & FMT_SHELL) && !shell && (c == '$' || c == '`'))
 			{
 				escaped = 1;
 				*b++ = '\\';
 			}
-			else if (!spaced && isspace(c))
+			else if (!spaced && !escaped && (isspace(c) || ((flags & FMT_SHELL) || shell) && (strchr("\";~&|()<>[]*?", c) || c == '#' && (b == f || isspace(*(b - 1))))))
 				spaced = 1;
 			*b++ = c;
 		}

@@ -5,7 +5,7 @@
  * _SEAR_* macros for win32 self extracting archives -- see sear(1).
  */
 
-static char id[] = "\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 2003-02-14 $\0\n";
+static char id[] = "\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 2003-09-23 $\0\n";
 
 #if _PACKAGE_ast
 
@@ -13,7 +13,7 @@ static char id[] = "\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler)
 #include <error.h>
 
 static const char usage[] =
-"[-?\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 2003-02-14 $\n]"
+"[-?\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 2003-09-23 $\n]"
 "[-author?Jean-loup Gailly]"
 "[-author?Mark Adler]"
 "[-author?Glenn Fowler <gsf@research.att.com>]"
@@ -2914,10 +2914,10 @@ register char*	s;
 {
 	unsigned long	n = 0;
 
-	while (*s == ' ' || *s == '0')
+	while (*s == ' ')
 		s++;
 	while (*s >= '0' && *s <= '7')
-		n = n * 8 + (*s++ - '0');
+		n = (n << 3) + (*s++ - '0');
 	return n;
 }
 

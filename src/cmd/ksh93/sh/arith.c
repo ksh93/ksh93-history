@@ -235,7 +235,9 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 			return(0);
 		}
 		r = nv_getnum(np);
-		if(nv_isattr(np,NV_INTEGER|NV_DOUBLE)==(NV_INTEGER|NV_DOUBLE))
+		if(nv_isattr(np,NV_INTEGER|NV_BINARY)==(NV_INTEGER|NV_BINARY))
+			lvalue->isfloat= (r!=(Sflong_t)r);
+		else if(nv_isattr(np,NV_INTEGER|NV_DOUBLE)==(NV_INTEGER|NV_DOUBLE))
 			lvalue->isfloat=1;
 		return(r);
 	    }

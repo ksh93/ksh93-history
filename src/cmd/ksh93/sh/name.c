@@ -805,7 +805,8 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 #if !SHOPT_BSH
 	if(nv_isattr(np,NV_EXPORT))
 		nv_offattr(np,NV_IMPORT);
-	np->nvenv = 0;
+	if(!nv_isattr(np,NV_MINIMAL))
+		np->nvenv = 0;
 #endif /* SHOPT_BSH */
 	if(nv_isattr (np, NV_INTEGER))
 	{

@@ -84,7 +84,7 @@ static char *nextdot(const char *str)
 		return(strchr(str,'.'));
 }
 
-static  const Namdisc_t *nextdisc(Namval_t *np)
+static  Namfun_t *nextdisc(Namval_t *np)
 {
 	register Namfun_t *fp;
 	if(nv_isref(np))
@@ -92,7 +92,7 @@ static  const Namdisc_t *nextdisc(Namval_t *np)
         for(fp=np->nvfun;fp;fp=fp->next)
 	{
 		if(fp && fp->disc && fp->disc->nextf)
-			return(fp->disc);
+			return(fp);
 	}
 	return(0);
 }
@@ -103,7 +103,7 @@ void *nv_diropen(const char *name)
 	int len=strlen(name);
 	struct nvdir *save, *dp = new_of(struct nvdir,len);
 	Namval_t *np;
-	const Namdisc_t *disc;
+	Namfun_t *nfp;
 	if(!dp)
 		return(0);
 	memset((void*)dp, 0, sizeof(*dp));
@@ -121,7 +121,7 @@ void *nv_diropen(const char *name)
 		*next = 0;
 		np = nv_search(last,dp->root,0);
 		*next = '.';
-		if(np && ((disc=nextdisc(np)) || nv_istable(np)))
+		if(np && ((nfp=nextdisc(np)) || nv_istable(np)))
 		{
 			if(!(save = new_of(struct nvdir,0)))
 				return(0);
@@ -136,12 +136,12 @@ void *nv_diropen(const char *name)
 				dp->len = len-dp->offset;
 			else
 				dp->len = 0;
-			if(disc)
+			if(nfp)
 			{
-				dp->nextnode = disc->nextf;
+				dp->nextnode = nfp->disc->nextf;
 				dp->table = np;
-				dp->fun = np->nvfun;
-				dp->hp = (*dp->nextnode)(np,(Dt_t*)0,dp->fun);
+				dp->fun = nfp;
+				dp->hp = (*dp->nextnode)(np,(Dt_t*)0,nfp);
 			}
 			else
 				dp->nextnode = 0;
@@ -166,7 +166,7 @@ char *nv_dirnext(void *dir)
 	register struct nvdir *save, *dp = (struct nvdir*)dir;
 	register Namval_t *np, *last_table;
 	register char *cp;
-	const Namdisc_t *disc;
+	Namfun_t *nfp;
 	while(1)
 	{
 		while(np=dp->hp)
@@ -180,7 +180,7 @@ char *nv_dirnext(void *dir)
 			sh.last_table = last_table;
 			if(!dp->len || memcmp(cp+dp->offset,dp->data,dp->len)==0)
 			{
-				if((disc=nextdisc(np)) || nv_istable(np))
+				if((nfp=nextdisc(np)) || nv_istable(np))
 				{
 					Dt_t *root;
 					if(nv_istable(np))
@@ -203,10 +203,10 @@ char *nv_dirnext(void *dir)
 					dp->len = 0;
 					if(np->nvfun)
 					{
-						dp->nextnode = disc->nextf;
+						dp->nextnode = nfp->disc->nextf;
 						dp->table = np;
-						dp->fun = np->nvfun;
-						dp->hp = (*dp->nextnode)(np,(Dt_t*)0,dp->fun);
+						dp->fun = nfp;
+						dp->hp = (*dp->nextnode)(np,(Dt_t*)0,nfp);
 					}
 					else
 						dp->nextnode = 0;
@@ -590,33 +590,8 @@ void nv_setvtree(register Namval_t *np)
 }
 
 /*
- * the following three functions is for creating types
+ * the following three functions are for creating types
  */
-
-/*
- * This is the default function used to create and stack a type
- * discipline
- */
-static Namfun_t *deffun(Namval_t* np, Namval_t *tp)
-{
-	Namdisc_t *dp;
-	Namfun_t *nfp;
-	if(dp=(Namdisc_t*)tp->nvalue.disp)
-	{
-		size_t size= nv_size(tp);
-		if(size==0)
-			size= dp->dsize?dp->dsize:sizeof(Namfun_t);
-		if(nfp = (Namfun_t*)calloc(size,1))
-		{
-			nfp->disc = dp;
-			if(nv_isattr(tp,NV_TABLE))
-				nv_setvtree(np);
-			nv_stack(np,nfp);
-			return(nfp);
-		}
-	}
-	return(0);
-}
 
 int nv_settype(Namval_t* np, Namval_t *tp, int flags)
 {

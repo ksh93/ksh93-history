@@ -1,5 +1,5 @@
 #
-# @(#)magic (AT&T Research) 2003-01-17
+# @(#)magic (AT&T Research) 2003-11-25
 #
 # magic number database for file(1) and magic(3)
 #
@@ -47,11 +47,12 @@
 0	long		0x04034b50	zip archive			application/zip
 +2	byte		>0		, version %d
 &3	byte		*		.%d
-0	long		0x223e9f78	ms outlook tnef archive
-0	string		MSCF
+0	long		0x223e9f78	ms outlook tnef archive		application/pax
+0	string		MSCF						application/pax
 &4	long		0		ms cabinet archive
 +25	byte		*		, version %d
 +24	byte		*		.%d
+0	string		\x52\x61\x72\x21\x1a\x07	rar archive	application/pax
 0	long		0x0d010b05	make object			application/x-nmake
 o{
 +4	byte		<037		(version %ld)
@@ -1010,14 +1011,24 @@ v{
 0	long		0x14031004		tcpdump cons data	application/x-tcpdump
 v()
 
+257	string		ustar		pax archive			application/pax
+&156	match		[gx]
+o{
+&99	byte		0
+&107	byte		' '
+&115	byte		' '
+&100	match		+([ 0-7])[gx]
+}
+
 257	string		ustar		ustar archive			application/pax
 o{
 &99	byte		0
-&107	byte		0
-&115	byte		0
-&100	string		+([ 0-7])
+&107	byte		' '
+&115	byte		' '
+&100	match		+([ 0-7])
 &0	string		*		, [ %s ... ]
 }
+
 99	byte		0		tar archive			application/pax
 o()
 

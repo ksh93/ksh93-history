@@ -841,7 +841,7 @@ void	sh_iounsave(void)
 /*
  *  restore saved file descriptors from <last> on
  */
-void	sh_iorestore(int last)
+void	sh_iorestore(int last, int jmpval)
 {
 	register int 	origfd, savefd, fd;
 	int flag = (last&IOSUBSHELL);
@@ -850,6 +850,12 @@ void	sh_iorestore(int last)
 	{
 		if(!flag && filemap[fd].subshell)
 			continue;
+		if(jmpval==SH_JMPSCRIPT)
+		{
+			if ((savefd = filemap[fd].save_fd) >= 0)
+				sh_close(savefd);
+			continue;
+		}
 		origfd = filemap[fd].orig_fd;
 		sh_close(origfd);
 		if ((savefd = filemap[fd].save_fd) >= 0)

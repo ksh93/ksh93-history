@@ -517,7 +517,7 @@ S2I_function(a, e, base) const char* a; char** e; int base;
 				v = 2;
 				break;
 			default:
-				if (c == decimal)
+				if (c == decimal && *s >= '0' && *s <= '9')
 				{
 					if (MPYOVER(n, 100))
 						overflow = 1;
@@ -530,14 +530,11 @@ S2I_function(a, e, base) const char* a; char** e; int base;
 					n += v;
 					v = 0;
 				}
+				else if (m > 1)
+					v = m;
 				else
-				{
-					s--;
-					if (m > 1)
-						v = m;
-					else
-						v = 0;
-				}
+					v = 0;
+				s--;
 				break;
 			}
 			if (v)

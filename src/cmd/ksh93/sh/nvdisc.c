@@ -89,14 +89,18 @@ Sfdouble_t nv_getn(Namval_t *np, register Namfun_t *nfp)
 		nv_local = 1;
 		d =  nv_getnum(np);
 	}
-	else if((str=nv_getv(np,fp?fp:nfp)) && *str!=0)
+	else
 	{
-	     	if(nv_isattr (np, NV_ZFILL))
+		if(fp && fp->disc->getval)
+			str = (*fp->disc->getval)(np,fp);
+		else
+			str = nv_getv(np,fp?fp:nfp);
+		if(*str)
 		{
 			while(*str=='0')
 				str++;
+			d = sh_arith(str);
 		}
-		d = sh_arith(str);
 	}
 	return(d);
 }
@@ -375,7 +379,7 @@ char *nv_setdisc(register Namval_t* np,register const char *event,Namval_t *acti
  */
 static char *setdisc(register Namval_t* np,register const char *event,Namval_t *action,register Namfun_t *fp)
 {
-	register Nambfun_t *vp = (Nambfun_t*)np->nvfun;
+	register Nambfun_t *vp = (Nambfun_t*)fp;
 	register int type,getname=0;
 	register const char *name;
 	const char **discnames = vp->bnames;
@@ -428,7 +432,7 @@ static void putdisc(Namval_t* np, const char* val, int flag, Namfun_t* fp)
 	{
 		register Nambfun_t *vp = (Nambfun_t*)fp;
 		register int i;
-		for(i=0; i < vp->num; i++)
+		for(i=0; vp->bnames[i]; i++)
 		{
 			register Namval_t *mp;
 			if(mp=vp->bltins[i])
@@ -476,7 +480,6 @@ int nv_adddisc(Namval_t *np, const char **names)
 	}
 	if(!(vp = newof(NIL(Nambfun_t*),Nambfun_t,1,n*sizeof(Namval_t*))))
 		return(0);
-	vp->num = n;
 	vp->fun.dsize = sizeof(Nambfun_t)+n*sizeof(Namval_t*);
 	while(n>=0)
 		vp->bltins[n--] = 0;
@@ -702,17 +705,17 @@ int nv_clone(Namval_t *np, Namval_t *mp, int flags)
 		return(1);
 skip:
         nv_setsize(mp,nv_size(np));
-	if(!nv_isattr(np,NV_MINIMAL))
-	        mp->nvenv = np->nvenv;
+	if(!nv_isattr(mp,NV_MINIMAL))
+	        mp->nvenv = nv_isattr(np,NV_MINIMAL)?np->nvenv:0;
         mp->nvalue.cp = np->nvalue.cp;
         mp->nvflag = np->nvflag;
 	if(flags&NV_MOVE)
 	{
 		np->nvfun = 0;
 		np->nvalue.cp = 0;
-		np->nvflag = 0;
 		if(!nv_isattr(np,NV_MINIMAL))
 		        np->nvenv = 0;
+		np->nvflag = 0;
 	        nv_setsize(np,0);
 		return(1);
 	}
@@ -847,10 +850,9 @@ Namval_t *nv_search(const char *name, Dt_t *root, int mode)
  */ 
 Namval_t *nv_bfsearch(const char *name, Dt_t *root, Namval_t **var, char **last)
 {
-	int		len, offset = staktell();
+	int		offset = staktell();
 	register char	*cp;
-	Namval_t	*np, *nq, *tp;
-	Namfun_t	*fp;
+	Namval_t	*np, *nq;
 	if(var)
 		*var = 0;
 	/* check for . in the name */
@@ -873,47 +875,7 @@ Namval_t *nv_bfsearch(const char *name, Dt_t *root, Namval_t **var, char **last)
 		np = nq;
 		goto done;
 	}
-	if(!last && *name!='.')
-	{
-		char *first = strchr(stakptr(offset),'.');
-		*first = 0;
-		np=nv_open(stakptr(offset),0,NV_IDENT|NV_NOARRAY|NV_NOASSIGN|NV_NOREF|NV_NOFAIL);
-		*first = '.';
-		if(nv_isref(np))
-		{
-			np = 0;
-			goto done;
-		}
-	}
-	*var = nq;
-	if(np = nv_search(stakptr(offset),root,0))
-		goto done;
-	/* now see if there is a discipline defined */
-	len = strlen(cp)+1;
-	memcpy(stakptr(offset),cp,len);
-	if(*name!='.')
-	{
-		/* check to see whether a name reference is involved */
-		stakseek(offset+len);
-		stakputs(nv_name(nq));
-		stakputs(stakptr(offset));
-		if(np = nv_search(stakptr(offset+len),root,0))
-			goto done;
-	}
-	for(fp= nq->nvfun; fp; fp=fp->next)
-	{
-		if(!(tp=fp->type) && fp->disc && fp->disc->typef)
-			tp = (*fp->disc->typef)(nq,fp);
-		if(tp)
-		{
-			stakseek(offset+len);
-			stakputs(NV_CLASS);
-			stakputs(nv_name(tp));
-			stakputs(stakptr(offset));
-			if(np = nv_search(stakptr(offset+len),root,0))
-				goto done;
-		}
-	}
+	return((Namval_t*)nv_setdisc(nq,cp+1,nq,(Namfun_t*)nq));
 done:
 	stakseek(offset);
 	return(np);

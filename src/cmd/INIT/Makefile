@@ -32,7 +32,7 @@ silent :: silent.sh
 
 :PACKAGE_INIT: mamake.c proto.c ratz.c release.c
 
-:: RELEASE hosttype.tst p.c \
+:: RELEASE hosttype.tst p.c hello.c \
 	cc.darwin.ppc cc.hp.pa cc.hp.pa64 cc.ibm.risc cc.mvs.390 \
 	cc.next.i386 cc.next.m68k cc.osf.alpha cc.sco.i386 cc.sgi.mips2 \
 	cc.sgi.mips3 cc.sgi.mips3-o32 cc.sgi.mips4 cc.sgi.mips4-n32 \

@@ -398,7 +398,6 @@ int sh_debug(const char *trap, const char *name, const char *subscript, char *co
 		sfputc(iop,')');
 	else if(iop==stkstd)
 		*stakptr(staktell()-1) = 0;
-	sh.st.trap[SH_DEBUGTRAP] = 0;
 	np->nvalue.cp = stakfreeze(1);
 	sh.st.lineno = error_info.line;
 	/* now setup .sh.level variable */
@@ -413,8 +412,8 @@ int sh_debug(const char *trap, const char *name, const char *subscript, char *co
 	nv_putval(SH_LEVELNOD,(char*)&level,NV_INTEGER|NV_SHORT);
 	nv_disc(SH_LEVELNOD,&lev.hdr,NV_FIRST);
 	savst = sh.st;
+	sh.st.trap[SH_DEBUGTRAP] = 0;
 	n = sh_trap(trap,0);
-	sh.st.trap[SH_DEBUGTRAP] = (char*)trap;
 	np->nvalue.cp = 0;
 	nv_putval(SH_LEVELNOD,(char*)&level,NV_INTEGER|NV_SHORT);
 	nv_disc(SH_LEVELNOD,&lev.hdr,NV_POP);
@@ -507,7 +506,7 @@ static int pipe_exec(int pv[], union anynode *t, int errorflg)
 	sh.fdstatus[pv[0]] = IOREAD|IODUP|IOSEEK;
 	sfset(iop,SF_WRITE,0);
 	sfseek(iop,0L,SEEK_SET);
-	sh_iorestore(buff.topfd);
+	sh_iorestore(buff.topfd,jmpval);
 	if(jmpval>SH_JMPIO)
 		siglongjmp(*sh.jmplist,jmpval);
 	return(r);
@@ -830,7 +829,7 @@ sh_exec(register const union anynode *t, int flags)
 						nv_unscope();
 					/* don't restore for subshell exec */
 					if(io && !sh.subshell || np!=SYSEXEC)
-						sh_iorestore(buff.topfd);
+						sh_iorestore(buff.topfd,jmpval);
 					if(jmpval)
 						siglongjmp(*sh.jmplist,jmpval);
 					if(sh.exitval >=0)
@@ -841,7 +840,8 @@ sh_exec(register const union anynode *t, int flags)
 				/* check for functions */
 				if(!command && np && nv_isattr(np,NV_FUNCTION))
 				{
-					int indx;
+					int indx,jmpval=0;
+					struct checkpt buff;
 					register struct slnod *slp;
 					if(!np->nvalue.ip)
 					{
@@ -871,22 +871,33 @@ sh_exec(register const union anynode *t, int flags)
 					slp = (struct slnod*)np->nvenv;
 					sh_funstaks(slp->slchild,1);
 					staklink(slp->slptr);
-					if(io)
-						indx = sh_redirect(io,execflg);
 					if(nq)
 					{
 						nv_putval(SH_NAMENOD, nv_name(nq), NV_NOFREE);
 						if(nv_arrayptr(nq))
 							nv_putval(SH_SUBSCRNOD,nv_getsub(nq),NV_NOFREE);
 					}
-					sh_funct(np,argn,com,t->com.comset,(flags&~OPTIMIZE_FLAG));
+					if(io)
+					{
+						sh_pushcontext(&buff,SH_JMPCMD);
+						jmpval = sigsetjmp(buff.buff,0);
+					}
+					if(jmpval == 0)
+					{
+						if(io)
+							indx = sh_redirect(io,execflg);
+						sh_funct(np,argn,com,t->com.comset,(flags&~OPTIMIZE_FLAG));
+					}
+					if(io)
+					{
+						sh_popcontext(&buff);
+						sh_iorestore(indx,jmpval);
+					}
 					if(nq)
 					{
 						nv_unset(SH_NAMENOD);
 						nv_unset(SH_SUBSCRNOD);
 					}
-					if(io)
-						sh_iorestore(indx);
 					sh_funstaks(slp->slchild,-1);
 					stakdelete(slp->slptr);
 					goto setexit;
@@ -963,7 +974,7 @@ sh_exec(register const union anynode *t, int flags)
 				if(!(type&(FAMP|FPOU)))
 				{
 					if(sh.topfd > topfd)
-						sh_iorestore(topfd);
+						sh_iorestore(topfd,0);
 					job_wait(parent);
 				}
 				if(type&FAMP)
@@ -1091,7 +1102,7 @@ sh_exec(register const union anynode *t, int flags)
 				sh_exec(t->fork.forktre,flags);
 			}
 			sh_popcontext(&buff);
-			sh_iorestore(buff.topfd);
+			sh_iorestore(buff.topfd,jmpval);
 			if(type&FPIN)
 			{
 				job.waitall = waitall;
@@ -2573,7 +2584,7 @@ static pid_t sh_ntfork(const union anynode *t,char *argv[],int *jobid,int flag)
 		if((otype&FPIN) && (!(otype&FPOU) || (otype&FCOOP)) && fcntl(shp->inpipe[1],F_SETFD,FD_CLOEXEC)>=0)
 			shp->fdstatus[shp->inpipe[1]] &= ~IOCLEX;
 		if(t->fork.forkio || otype)
-			sh_iorestore(buff.topfd);
+			sh_iorestore(buff.topfd,jmpval);
 		if(optimize==0)
 		{
 #ifdef SIGTSTP
@@ -2719,7 +2730,7 @@ static pid_t sh_ntfork(const union anynode *t,char *argv[],int *jobid,int flag)
 	if(scope)
 		nv_unscope();
 	if(t->com.comio)
-		sh_iorestore(buff.topfd);
+		sh_iorestore(buff.topfd,jmpval);
 	if(jmpval>SH_JMPCMD)
 		siglongjmp(*shp->jmplist,jmpval);
 	if(spawnpid>0)

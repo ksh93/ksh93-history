@@ -55,6 +55,7 @@
 #define T_OP		0x3f		/* mask for operator number */
 #define T_BINARY	0x40		/* binary operators */
 #define T_NOFLOAT	0x80		/* non floating point operator */
+#define A_LVALUE	(2*MAXPREC+2)
 
 #define pow2size(x)		((x)<=2?2:(x)<=4?4:(x)<=8?8:(x)<=16?16:(x)<=32?32:64)
 #define round(x,size)		(((x)+(size)-1)&~((size)-1))
@@ -472,6 +473,7 @@ static int expr(register struct vars *vp,register int precedence)
 	lvalue.fun = 0;
 again:
 	op = gettok(vp);
+	c = 2*MAXPREC+1;
 	switch(op)
 	{
 	    case A_PLUS:
@@ -486,15 +488,17 @@ again:
 	    case A_NOT:
 		goto common;
 	    case A_MINUSMINUS:
+		c = A_LVALUE;
 		op = A_DECR|T_NOFLOAT;
 		goto common;
 	    case A_PLUSPLUS:
+		c = A_LVALUE;
 		op = A_INCR|T_NOFLOAT;
 		/* FALL THRU */
 	    case A_TILDE:
 		op |= T_NOFLOAT;
 	    common:
-		if(!expr(vp,2*MAXPREC+1))
+		if(!expr(vp,c))
 			return(0);
 		stakputc(op);
 		break;
@@ -547,6 +551,8 @@ again:
 				lvalue.value = 0;
 			invalid = 0;
 		}
+		else if(precedence==A_LVALUE)
+			ERROR(vp,e_notlvalue);
 		if(invalid && op>A_ASSIGN)
 			ERROR(vp,e_synbad);
 		if(precedence >= c)

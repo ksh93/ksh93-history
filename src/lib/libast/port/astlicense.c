@@ -74,7 +74,7 @@
 #define COMLONG			(COMDATA-32)
 #define COMMENT(x,b,s,u)	comment(x,b,s,sizeof(s)-1,u)
 
-#define PUT(b,c)		(((b)->nxt<(b)->end)?(*(b)->nxt++=(c)):(-1))
+#define PUT(b,c)		(((b)->nxt<(b)->end)?(*(b)->nxt++=(c)):((c),(-1)))
 #define BUF(b)			((b)->buf)
 #define USE(b)			((b)->siz=(b)->nxt-(b)->buf,(b)->nxt=(b)->buf,(b)->siz)
 #define SIZ(b)			((b)->nxt-(b)->buf)
@@ -792,9 +792,11 @@ astlicense(char* p, int size, char* file, char* options, int cc1, int cc2, int c
 				while (v < x && *v != ',' && *v != '+' && *v++ != '>');
 				n = v - s;
 			}
+			h = 0;
 			for (i = 0; i < notice.ids; i++)
 				if (q || n == notice.id[i].name.size && !strncmp(s, notice.id[i].name.data, n))
 				{
+					h = 1;
 					s = notice.id[i].value.data;
 					n = notice.id[i].value.size;
 					if (notice.type == USAGE)
@@ -819,6 +821,26 @@ astlicense(char* p, int size, char* file, char* options, int cc1, int cc2, int c
 				}
 			if (q)
 				break;
+			if (!h)
+			{
+				if (notice.type == USAGE)
+				{
+					copy(&buf, "[-author?", -1);
+					expand(&notice, &buf, s, n);
+					PUT(&buf, ']');
+				}
+				else
+				{
+					if (k < 0)
+					{
+						COMMENT(&notice, &buf, "CONTRIBUTORS", 0);
+						comment(&notice, &buf, NiL, 0, 0);
+					}
+					k = 1;
+					expand(&notice, &tmp, s, n);
+					comment(&notice, &buf, BUF(&tmp), USE(&tmp), 0);
+				}
+			}
 		}
 		if (k > 0)
 			comment(&notice, &buf, NiL, 0, 0);

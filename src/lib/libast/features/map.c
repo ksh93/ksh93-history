@@ -25,7 +25,6 @@
 *******************************************************************/
 #pragma prototyped
 
-#include "FEATURE/mem"
 #include "FEATURE/vmalloc"
 
 extern int	printf(const char*, ...);
@@ -102,7 +101,7 @@ main()
 	printf("/* no local malloc override */\n");
 	printf("#define	_std_malloc	1\n");
 #else
-#if _map_malloc || !_mem_method
+#if _map_malloc
 	printf("\n");
 	printf("/* cannot override local malloc */\n");
 	printf("#define	_map_malloc	1\n");

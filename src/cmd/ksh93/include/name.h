@@ -53,7 +53,7 @@ union Value
 	struct Namval	*np;	/* for Namval_t node */
 	union Value	*up;	/* for indirect node */
 	struct Ufunction *rp;	/* shell user defined functions */
-	struct Namdisc	*disp;	/* type discipline pointer */
+	struct Namfun	*funp;	/* discipline pointer */
 	int (*bfp)(int,char*[],void*);/* builtin entry point function pointer */
 };
 
@@ -106,7 +106,7 @@ struct Ufunction
 #define BLT_EXIT	(NV_RJUST)		/* exit value can be > 255 */
 #define BLT_DCL		(NV_TAGGED)		/* declaration command */
 #define nv_isref(n)	(nv_isattr((n),NV_REF)==NV_REF)
-#define nv_istable(n)	(nv_isattr((n),NV_TABLE)==NV_TABLE)
+#define nv_istable(n)	(nv_isattr((n),NV_TABLE|NV_LJUST|NV_RJUST)==NV_TABLE)
 #define is_abuiltin(n)	(nv_isattr(n,NV_BLTIN)==NV_BLTIN)
 #define is_afunction(n)	(nv_isattr(n,NV_FUNCTION)==NV_FUNCTION)
 #define	nv_funtree(n)	((n)->nvalue.rp->ptree)

@@ -913,7 +913,14 @@ retry:
 		errno = ENOEXEC;
 		if(spawn)
 		{
+#ifdef _lib_fork
+			if(sh.subshell)
+				return(-1);
+			if(pid=fork())
+				return(pid);
+#else
 			return(-1);
+#endif
 		}
 		exscript(shp,path,argv,envp);
 #ifndef apollo

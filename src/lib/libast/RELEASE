@@ -1,7 +1,31 @@
+03-12-05 vmalloc: sync with kpv, adding exceptf announcements
+03-12-04 port/astlicense.c: fix expand() loop sentinel bug
+03-12-02 include/ast.h: mbchar() advances by 1 on mbtowc() error
+	 misc/fts.c: increase MINNAME to 32
+03-11-21 vmalloc/vmbest.c: export VMCHECK=1 to enable $(CC.DEBUG) vmcheck()
+         vmalloc/vmbest.c: export VMCHECK=2 to disable KPVCOMPACT
+	 misc/magic.c: add { cobol copybook pl1 } and suffix preference
+03-11-12 features/stdio: drop cuserid,getopt for SUSV3
+03-11-11 vmalloc/*: merge kpv update -- this should stomp the compaction bug
+03-10-23 comp/iconv.c: fix sfreserve lock fallback
+03-10-20 sfio/_sfopen.c: add to allow user sfopen() intercept
+03-10-17 regnexec.c: fix exec time REG_LEFT, \x.... => wctomb()
+03-10-12 string/strtoi.h: fix strton '.' overconsumption
+03-10-12 comp/iconv.c: identity is always (iconv_t)0
+03-10-09 string/fmtesc.c: fix FMT_SHELL to check for all shell magic chars
+03-10-01 port/astlicense.c: unknown authors copied verbatim (instead of ignored)
+03-09-30 string/chresc.c: handle \u..., \x... consumes all trailing hex digits
+	 string/stresc.c: \u... and \x... > UCHAR_MAX => wctomb()
+03-09-29 fnv.h: add
+03-09-23 modedata.c: table is for external modes, so no arch specific hacks
+	 optget.c: fix option prefix match translation bug
+	 optget.c: add `<length> <name>=<value>\n' to optstr()
+	 features/lib: add memcmp() test for sgi optimzation bug
 03-09-22 regex.h,regcomp.c: add regncomp()
 	 regclass.c: fix for loop dangling ; in regaddclass()
 03-09-20 sftable.c,sfvprintf.c: fix SFFMT_CHAR handling to match extf api
 03-09-19 sfmode.c: update release to kpv's
+03-09-17 regcomp.c: add pedantic backref error checks
 03-09-16 regnexec.c: exec time REG_LEFT => don't advance past initial position
 	 regclass.c: add regaddclass() for user defined [:class:]
 	 regexec.h: REG_VERSION_N2X, add redisc_t {re_map} ccode map

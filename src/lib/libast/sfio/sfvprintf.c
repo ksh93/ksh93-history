@@ -551,6 +551,10 @@ loop_fmt :
 				{	if(size == sizeof(float) )
 						argv.d = argv.f;
 				}
+				else if(_Sftype[fmt]&SFFMT_CHAR)
+				{	if(base < 0)
+						argv.i = (int)argv.c;
+				}
 			}
 		}
 		else
@@ -588,7 +592,7 @@ loop_fmt :
 					else	argv.wc = va_arg(args,wchar_t);
 				}
 #endif
-				else	argv.c = (char)va_arg(args,int);
+				else	argv.i = va_arg(args,int);
 				break;
 			 default: /* unknown pattern */
 				break;
@@ -736,7 +740,8 @@ loop_fmt :
 					size = strlen(sp);
 				}
 				else
-				{	sp = &argv.c;
+				{	argv.c = (char)(argv.i);
+					sp = &argv.c;
 					size = 1;
 				}
 			}

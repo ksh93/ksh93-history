@@ -14,74 +14,31 @@ mem	mallinfo.arena,mstats.bytes_total malloc.h
 sys	stat
 typ	ssize_t
 
-tst	lib_sbrk note{ sbrk() exists and it works }end execute{
-	#if _hdr_unistd
-	#include <unistd.h>
-	#else
-	_BEGIN_EXTERNS_
-	extern void* sbrk _ARG_((int));
-	#endif
-	#define BAD ((char*)(-1))
+tst	mem_sbrk note{ brk()/sbrk() work as expected }end execute{
+	#include        <sys/types.h>
+	#include        <unistd.h>
+	#undef	uchar
+	#define	uchar	unsigned char
 	main()
-	{
-		char*	o;
-		char*	p;
-		int	z;
-		z = 32767;
-		p = (char*)sbrk(0);
-		if (p == BAD)
-			return 1;
-		o = (char*)sbrk(z);
-		p = (char*)sbrk(0);
-		if (o == BAD || p == BAD || (p - o) < z)
-			return 1;
-		o = (char*)sbrk(-z);
-		p = (char*)sbrk(0);
-		if (o == BAD || p == BAD || p > o)
-			return 1;
-		z = 65535;
-		o = (char*)sbrk(z);
-		p = (char*)sbrk(0);
-		if (o == BAD || p == BAD || (p - o) < z)
-			return 1;
-		return 0;
-	}
-}end
+	{	uchar	*brk0, *brk1;
 
-tst	lib_brk note{ brk() exists and it works }end execute{
-	#if _hdr_unistd
-	#include <unistd.h>
-	#else
-	_BEGIN_EXTERNS_
-	#if _lib_sbrk
-	extern void* sbrk _ARG_((int));
-	#endif
-	extern int brk _ARG_((void*));
-	#endif
-	#if !_lib_sbrk
-	extern int _end[];
-	#endif
-	#define BAD ((char*)(-1))
-	main()
-	{
-		char*	o;
-		char*	p;
-		int	z;
-		z = 0x1000;
-	#if _lib_sbrk
-		o = sbrk(0);
-	#else
-		o = (char*)_end;
-	#endif
-		if (o == BAD || brk(o) || brk(o + z))
-			return 1;
-		*(o + z - 1) = 'X';
-	#if _lib_sbrk
-		p = sbrk(0);
-		return p == BAD || (p - o) < z;
-	#else
-		return 0;
-	#endif
+		/* allocate a big chunk */
+		if(!(brk0 = (uchar*)sbrk(0)) || brk0 == (uchar*)(-1))
+			exit(1);
+		brk0 += 256*1024;
+		if(brk(brk0) != 0)
+			exit(1);
+		if((brk1 = (uchar*)sbrk(0)) != brk0)
+			exit(1);
+
+		/* now return half of it */
+		brk1 -= 128*1024;
+		if(brk(brk1) != 0 )
+			exit(1);
+		if((brk0 = (uchar*)sbrk(0)) != brk1)
+			exit(1);
+
+		exit(0);
 	}
 }end
 
@@ -189,8 +146,15 @@ tst	stk_down note{ stack grows downward }end execute{
 }end
 
 cat{
+	#include "FEATURE/mmap"
 	#if _BLD_INSTRUMENT || cray || _UWIN && _BLD_ast
 	#undef	_map_malloc
 	#define _std_malloc	1	/* defer to standard malloc */
+	#endif
+	#if _mmap_anon
+	#define _mem_mmap_anon	1
+	#endif
+	#if _mmap_zero
+	#define _mem_mmap_zero	1
 	#endif
 }end

@@ -74,7 +74,7 @@ extern void 	sh_ioinit(void);
 extern int 	sh_iomovefd(int);
 extern int	sh_iorenumber(int,int);
 extern void 	sh_pclose(int[]);
-extern void 	sh_iorestore(int);
+extern void 	sh_iorestore(int,int);
 #if defined(__EXPORT__) && defined(_BLD_DLL) && defined(_BLD_shell) 
    __EXPORT__
 #endif

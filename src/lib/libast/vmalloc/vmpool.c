@@ -65,9 +65,10 @@ reg size_t	size;
 	}
 
 	if(!(local = vd->mode&VM_TRUST) )
-	{	if(ISLOCK(vd,0))
+	{	GETLOCAL(vd,local);
+		if(ISLOCK(vd, local))
 			return NIL(Void_t*);
-		SETLOCK(vd,0);
+		SETLOCK(vd, local);
 	}
 
 	if((tp = vd->free) ) /* there is a ready free block */
@@ -116,7 +117,8 @@ done:
 	if(!local && (vd->mode&VM_TRACE) && _Vmtrace && tp)
 		(*_Vmtrace)(vm,NIL(Vmuchar_t*),(Vmuchar_t*)tp,vd->pool,0);
 
-	CLRLOCK(vd,0);
+	CLRLOCK(vd, local);
+	ANNOUNCE(local, vm, VM_ALLOC, (Void_t*)tp, vm->disc);
 	return (Void_t*)tp;
 }
 
@@ -185,7 +187,9 @@ reg Void_t*	data;
 		return 0;
 
 	if(!(local = vd->mode&VM_TRUST))
-	{	if(ISLOCK(vd,0) || vd->pool <= 0)
+	{	GETLOCAL(vd, local);
+
+		if(ISLOCK(vd, local) || vd->pool <= 0)
 			return -1;
 
 		if(KPVADDR(vm,data,pooladdr) != 0)
@@ -194,7 +198,7 @@ reg Void_t*	data;
 			return -1;
 		}
 
-		SETLOCK(vd,0);
+		SETLOCK(vd, local);
 	}
 
 	bp = (Block_t*)data;
@@ -206,6 +210,7 @@ reg Void_t*	data;
 		(*_Vmtrace)(vm, (Vmuchar_t*)data, NIL(Vmuchar_t*), vd->pool, 0);
 
 	CLRLOCK(vd,local);
+	ANNOUNCE(local, vm, VM_FREE, data, vm->disc);
 	return 0;
 }
 
@@ -219,6 +224,7 @@ size_t		size;
 int		type;
 #endif
 {
+	int		local;
 	reg Vmdata_t*	vd = vm->data;
 
 	NOTUSED(type);
@@ -235,8 +241,10 @@ int		type;
 		return NIL(Void_t*);
 	}
 
-	if(!(vd->mode&VM_TRUST) )
-	{	if(ISLOCK(vd,0) )
+	if(!(local = vd->mode&VM_TRUST) )
+	{	GETLOCAL(vd, local);
+
+		if(ISLOCK(vd, local) )
 			return NIL(Void_t*);
 
 		if(size != vd->pool || KPVADDR(vm,data,pooladdr) != 0)
@@ -249,6 +257,7 @@ int		type;
 			(*_Vmtrace)(vm, (Vmuchar_t*)data, (Vmuchar_t*)data, size, 0);
 	}
 
+	ANNOUNCE(local, vm, VM_RESIZE, data, vm->disc);
 	return data;
 }
 
@@ -292,7 +301,7 @@ Vmalloc_t*	vm;
 			s = seg->extent;
 		else	s += sizeof(Head_t);
 
-		if((*_Vmtruncate)(vm,seg,s,1) < 0)
+		if((*_Vmtruncate)(vm,seg,s,1) == s)
 			seg->free = fp;
 	}
 

@@ -81,7 +81,6 @@ make ../../../include/ast/ast_map.h implicit
 done ../../../include/ast/ast_map.h dontcare
 make ../../../include/ast/stdio.h implicit
 make ../../../include/ast/ast_stdio.h implicit
-prev ../../../include/ast/ast_getopt.h implicit
 make ../../../include/ast/sfio_s.h implicit
 done ../../../include/ast/sfio_s.h dontcare
 prev ../../../include/ast/ast_common.h implicit
@@ -751,6 +750,7 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} 
 done expand.o generated
 make fault.o
 make sh/fault.c
+prev ../../../include/ast/vmalloc.h implicit
 prev include/path.h implicit
 prev include/jobs.h implicit
 prev include/shnodes.h implicit
@@ -760,7 +760,7 @@ prev include/fcin.h implicit
 prev include/defs.h implicit
 done sh/fault.c
 prev sh/fault.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_KIA -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -D_BLD_shell -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DKSHELL -DSHOPT_DYNAMIC -DSHOPT_OO -c sh/fault.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_KIA -DSHOPT_ESH -DSHOPT_VSH -D_PACKAGE_ast -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -D_BLD_shell -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DKSHELL -DSHOPT_DYNAMIC -DSHOPT_OO -c sh/fault.c
 done fault.o generated
 make fcin.o
 make sh/fcin.c

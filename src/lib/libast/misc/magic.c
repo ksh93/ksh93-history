@@ -33,7 +33,7 @@
  * the sum of the hacks {s5,v10,planix} is _____ than the parts
  */
 
-static const char id[] = "\n@(#)$Id: magic library (AT&T Labs Research) 2003-07-17 $\0\n";
+static const char id[] = "\n@(#)$Id: magic library (AT&T Labs Research) 2003-11-21 $\0\n";
 
 static const char lib[] = "libast:magic";
 
@@ -49,7 +49,7 @@ static const char lib[] = "libast:magic";
 
 #define T(m)		(*m?ERROR_translate(NiL,NiL,lib,m):m)
 
-#define match(s,p)	strgrpmatch(s,p,NiL,0,REG_LEFT|REG_RIGHT|REG_ICASE)
+#define match(s,p)	strgrpmatch(s,p,NiL,0,STR_LEFT|STR_RIGHT|STR_ICASE)
 
 #define MAXNEST		10		/* { ... } nesting limit	*/
 #define MINITEM		4		/* magic buffer rounding	*/
@@ -123,17 +123,20 @@ typedef unsigned long Cctype_t;
 #define ID_NONE		0
 #define ID_ASM		1
 #define ID_C		2
-#define ID_CPLUSPLUS	3
-#define ID_FORTRAN	4
-#define ID_HTML		5
-#define ID_INCL1	6
-#define ID_INCL2	7
-#define ID_INCL3	8
-#define ID_MAM1		9
-#define ID_MAM2		10
-#define ID_MAM3		11
-#define ID_NOTEXT	12
-#define ID_YACC		13
+#define ID_COBOL	3
+#define ID_COPYBOOK	4
+#define ID_CPLUSPLUS	5
+#define ID_FORTRAN	6
+#define ID_HTML		7
+#define ID_INCL1	8
+#define ID_INCL2	9
+#define ID_INCL3	10
+#define ID_MAM1		11
+#define ID_MAM2		12
+#define ID_MAM3		13
+#define ID_NOTEXT	14
+#define ID_PL1		15
+#define ID_YACC		16
 
 #define ID_MAX		ID_YACC
 
@@ -185,10 +188,33 @@ typedef unsigned long Cctype_t;
 
 #include <magic.h>
 
-static Info_t		dict[] =		/* sorted dictionary	*/
+static Info_t		dict[] =		/* keyword dictionary	*/
 {
+	{ 	"COMMON",	ID_FORTRAN	},
+	{ 	"COMPUTE",	ID_COBOL	},
+	{ 	"COMP",		ID_COPYBOOK	},
+	{ 	"COMPUTATIONAL",ID_COPYBOOK	},
+	{ 	"DCL",		ID_PL1		},
+	{ 	"DEFINED",	ID_PL1		},
+	{ 	"DIMENSION",	ID_FORTRAN	},
+	{ 	"DIVISION",	ID_COBOL	},
+	{ 	"FILLER",	ID_COPYBOOK	},
+	{ 	"FIXED",	ID_PL1		},
+	{ 	"FUNCTION",	ID_FORTRAN	},
 	{ 	"HTML",		ID_HTML		},
+	{ 	"INTEGER",	ID_FORTRAN	},
+	{ 	"MAIN",		ID_PL1		},
+	{ 	"OPTIONS",	ID_PL1		},
+	{ 	"PERFORM",	ID_COBOL	},
+	{ 	"PIC",		ID_COPYBOOK	},
+	{ 	"REAL",		ID_FORTRAN	},
+	{ 	"REDEFINES",	ID_COPYBOOK	},
+	{ 	"S9",		ID_COPYBOOK	},
+	{ 	"SECTION",	ID_COBOL	},
+	{ 	"SELECT",	ID_COBOL	},
+	{ 	"SUBROUTINE",	ID_FORTRAN	},
 	{ 	"TEXT",		ID_ASM		},
+	{ 	"VALUE",	ID_COPYBOOK	},
 	{ 	"attr",		ID_MAM3		},
 	{ 	"binary",	ID_YACC		},
 	{ 	"block",	ID_FORTRAN	},
@@ -1095,8 +1121,33 @@ cklang(register Magic_t* mp, const char* file, char* buf, struct stat* st)
 	suff = (t1 = strrchr(base, '.')) ? t1 + 1 : "";
 	if (!flags)
 	{
-		if ((st->st_mode & (S_IXUSR|S_IXGRP|S_IXOTH)) && (!suff || suff != strchr(suff, '.')) || match(suff, "*sh|bat|cmd"))
+		if (match(suff, "*sh|bat|cmd"))
+			goto id_sh;
+		if (match(base, "*@(mkfile)"))
+			goto id_mk;
+		if (match(base, "*@(makefile|.mk)"))
+			goto id_make;
+		if (match(base, "*@(mamfile|.mam)"))
+			goto id_mam;
+		if (match(suff, "[cly]?(pp|xx|++)|cc|ll|yy"))
+			goto id_c;
+		if (match(suff, "f"))
+			goto id_fortran;
+		if (match(suff, "htm+(l)"))
+			goto id_html;
+		if (match(suff, "cpy"))
+			goto id_copybook;
+		if (match(suff, "cob|cbl|cb2"))
+			goto id_cobol;
+		if (match(suff, "pl[1i]"))
+			goto id_pl1;
+		if (match(suff, "tex"))
+			goto id_tex;
+		if (match(suff, "asm|s"))
+			goto id_asm;
+		if ((st->st_mode & (S_IXUSR|S_IXGRP|S_IXOTH)) && (!suff || suff != strchr(suff, '.')))
 		{
+		id_sh:
 			s = T("command script");
 			mp->mime = "application/sh";
 			goto qualify;
@@ -1109,12 +1160,14 @@ cklang(register Magic_t* mp, const char* file, char* buf, struct stat* st)
 		}
 		if (match(base, "*@(mkfile)"))
 		{
+		id_mk:
 			s = "mkfile";
 			mp->mime = "application/mk";
 			goto qualify;
 		}
 		if (match(base, "*@(makefile|.mk)") || mp->multi['\t'] >= mp->count[':'] && (mp->multi['$'] > 0 || mp->multi[':'] > 0))
 		{
+		id_make:
 			s = "makefile";
 			mp->mime = "application/make";
 			goto qualify;
@@ -1143,9 +1196,9 @@ cklang(register Magic_t* mp, const char* file, char* buf, struct stat* st)
 			c = mp->identifier[ID_INCL1];
 			if (c >= 2 && mp->identifier[ID_INCL2] >= c && mp->identifier[ID_INCL3] >= c && mp->count['.'] >= c ||
 			    mp->identifier[ID_C] >= 5 && mp->count[';'] >= 5 ||
-			    mp->count['='] >= 20 && mp->count[';'] >= 20 ||
-			    match(suff, "[cly]?(pp|xx|++)|cc|ll|yy"))
+			    mp->count['='] >= 20 && mp->count[';'] >= 20)
 			{
+			id_c:
 				t1 = "";
 				t2 = "c ";
 				t3 = T("program");
@@ -1188,30 +1241,56 @@ cklang(register Magic_t* mp, const char* file, char* buf, struct stat* st)
 		    (mp->fbsz < SF_BUFSIZE && mp->identifier[ID_MAM1] == mp->identifier[ID_MAM2] ||
 		     mp->fbsz >= SF_BUFSIZE && mp->identifier[ID_MAM1] >= mp->identifier[ID_MAM2]))
 		{
+		id_mam:
 			s = T("mam program");
 			mp->mime = "application/x-mam";
 			goto qualify;
 		}
-		if (mp->identifier[ID_FORTRAN] >= 8 || mp->identifier[ID_FORTRAN] > 0 && (*suff == 'f' || *suff == 'F'))
+		if (mp->identifier[ID_FORTRAN] >= 8)
 		{
+		id_fortran:
 			s = T("fortran program");
 			mp->mime = "application/x-fortran";
 			goto qualify;
 		}
-		if (match(suff, "htm+(l)") || mp->identifier[ID_HTML] > 0 && mp->count['<'] >= 8 && (c = mp->count['<'] - mp->count['>']) >= -2 && c <= 2)
+		if (mp->identifier[ID_HTML] > 0 && mp->count['<'] >= 8 && (c = mp->count['<'] - mp->count['>']) >= -2 && c <= 2)
 		{
+		id_html:
 			s = T("html input");
 			mp->mime = "text/html";
 			goto qualify;
 		}
-		if (match(suff, "tex") || mp->count['{'] >= 6 && (c = mp->count['{'] - mp->count['}']) >= -2 && c <= 2 && mp->count['\\'] >= mp->count['{'])
+		if (mp->identifier[ID_COPYBOOK] > 0 && mp->identifier[ID_COBOL] == 0 && (c = mp->count['('] - mp->count[')']) >= -2 && c <= 2)
 		{
+		id_copybook:
+			s = T("cobol copybook");
+			mp->mime = "application/x-cobol";
+			goto qualify;
+		}
+		if (mp->identifier[ID_COBOL] > 0 && mp->identifier[ID_COPYBOOK] > 0 && (c = mp->count['('] - mp->count[')']) >= -2 && c <= 2)
+		{
+		id_cobol:
+			s = T("cobol program");
+			mp->mime = "application/x-cobol";
+			goto qualify;
+		}
+		if (mp->identifier[ID_PL1] > 0 && (c = mp->count['('] - mp->count[')']) >= -2 && c <= 2)
+		{
+		id_pl1:
+			s = T("pl1 program");
+			mp->mime = "application/x-pl1";
+			goto qualify;
+		}
+		if (mp->count['{'] >= 6 && (c = mp->count['{'] - mp->count['}']) >= -2 && c <= 2 && mp->count['\\'] >= mp->count['{'])
+		{
+		id_tex:
 			s = T("TeX input");
 			mp->mime = "text/tex";
 			goto qualify;
 		}
-		if (mp->identifier[ID_ASM] >= 4 || mp->identifier[ID_ASM] > 0 && (*suff == 's' || *suff == 'S'))
+		if (mp->identifier[ID_ASM] >= 4)
 		{
+		id_asm:
 			s = T("as program");
 			mp->mime = "application/x-as";
 			goto qualify;

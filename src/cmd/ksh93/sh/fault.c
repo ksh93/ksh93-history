@@ -40,6 +40,21 @@
 
 static char	indone;
 
+#if !_std_malloc
+#   include	<vmalloc.h>
+#endif
+#if  defined(VMFL) && (VMALLOC_VERSION>=20031205L)
+    /*
+     * This exception handler is called after vmalloc() unlocks the region
+     */
+    static int malloc_done(Vmalloc_t* vm, int type, Void_t* val, Vmdisc_t* dp)
+    {
+	dp->exceptf = 0;
+	sh_exit(SH_EXITSIG);
+	return(0);
+    }
+#endif
+
 /*
  * Most signals caught or ignored by the shell come here
 */
@@ -67,6 +82,7 @@ void	sh_fault(register int sig)
 			return;
 		if(flag&SH_SIGDONE)
 		{
+			void *ptr;
 			if((flag&SH_SIGINTERACTIVE) && sh_isstate(SH_INTERACTIVE) && !sh_isstate(SH_FORKED) && ! sh.subshell)
 			{
 				/* check for TERM signal between fork/exec */
@@ -80,7 +96,24 @@ void	sh_fault(register int sig)
 				pp->mode = SH_JMPFUN;
 			else
 				pp->mode = SH_JMPEXIT;
-			sh_exit(SH_EXITSIG);
+			if(ptr = malloc(1))
+			{
+				free(ptr);
+				sh_exit(SH_EXITSIG);
+			}
+			/* interrupt with malloc() locked, delay cleanup */
+			sh.trapnote |= SH_SIGSET;
+			if(sig < sh.sigmax)
+				sh.sigflag[sig] |= SH_SIGSET;
+#if  defined(VMFL) && (VMALLOC_VERSION>=20031205L)
+			{
+				/* VMFL defined when using vmalloc() */
+				Vmdisc_t* dp = vmdisc(Vmregion,0);
+				if(dp)
+					dp->exceptf = malloc_done;
+			}
+#endif
+			return;
 		}
 	}
 	errno = 0;

@@ -398,6 +398,7 @@ size_t		size;
 
 done:
 	CLRLOCK(vd,0);
+	ANNOUNCE(0, vm, VM_ALLOC, (Void_t*)data, vm->disc);
 	return (Void_t*)data;
 }
 
@@ -414,7 +415,7 @@ Void_t*		data;
 	int		line;
 	const Void_t*	func;
 	reg long	offset;
-	reg int		*ip, *endip;
+	reg int		rv, *ip, *endip;
 	reg Vmdata_t*	vd = vm->data;
 
 	VMFLF(vm,file,line,func);
@@ -453,8 +454,10 @@ Void_t*		data;
 	while(ip < endip)
 		*ip++ = 0;
 
+	rv = KPVFREE((vm), (Void_t*)DB2BEST(data), (*Vmbest->freef));
 	CLRLOCK(vd,0);
-	return (*(Vmbest->freef))(vm,(Void_t*)DB2BEST(data));
+	ANNOUNCE(0, vm, VM_FREE, data, vm->disc);
+	return rv;
 }
 
 /*	Resizing an existing block */
@@ -537,6 +540,7 @@ int		type;		/* !=0 for movable, >0 for copy	*/
 	}
 
 	CLRLOCK(vd,0);
+	ANNOUNCE(0, vm, VM_RESIZE, (Void_t*)data, vm->disc);
 
 done:	if(data && (type&VM_RSZERO) && size > oldsize)
 	{	reg Vmuchar_t *d = data+oldsize, *ed = data+size;
@@ -665,11 +669,9 @@ size_t		align;
 	if(size <= 0 || align <= 0)
 		return NIL(Void_t*);
 
-	if(!(vd->mode&VM_TRUST) )
-	{	if(ISLOCK(vd,0) )
-			return NIL(Void_t*);
-		SETLOCK(vd,0);
-	}
+	if(ISLOCK(vd,0) )
+		return NIL(Void_t*);
+	SETLOCK(vd,0);
 
 	if((s = ROUND(size,ALIGN) + DB_EXTRA) < sizeof(Body_t))
 		s = sizeof(Body_t);
@@ -687,6 +689,7 @@ size_t		align;
 
 done:
 	CLRLOCK(vd,0);
+	ANNOUNCE(0, vm, VM_ALLOC, (Void_t*)data, vm->disc);
 	return (Void_t*)data;
 }
 

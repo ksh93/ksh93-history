@@ -122,7 +122,7 @@ typedef struct regsubop_s
 #define REX_WORD		42	/* word boundary		*/
 #define REX_WORD_NOT		43	/* not word boundary		*/
 
-#define T_META		(UCHAR_MAX+1)
+#define T_META		((int)UCHAR_MAX+1)
 #define T_STAR		(T_META+0)
 #define T_PLUS		(T_META+1)
 #define T_QUES		(T_META+2)

@@ -43,7 +43,7 @@ void _STUB_vmbest(){}
 #if DEBUG || CHECK
 static int	Vmcheck=0;	/* check=01 nocompact=02		*/
 #endif
-#if DEBUG
+#ifdef DEBUG
 static int	N_free;		/* # of free calls			*/
 static int	N_alloc;	/* # of alloc calls			*/
 static int	N_resize;	/* # of resize calls			*/
@@ -586,7 +586,7 @@ Vmalloc_t*	vm;
 		if(size < (segsize = seg->size))
 			size += sizeof(Head_t);
 
-		if((*_Vmtruncate)(vm,seg,size,1) >= 0)
+		if((size = (*_Vmtruncate)(vm,seg,size,0)) > 0)
 		{	if(size >= segsize) /* entire segment deleted */
 				continue;
 			/**/ASSERT(SEG(BLOCK(seg->baddr)) == seg);
@@ -735,12 +735,10 @@ reg size_t	size;	/* desired block size		*/
 		}
 	
 		/**/ASSERT(vmcheck(vd,size,0) );
-#if !__MVS__ /* NOTE: recheck this 2003-08-01 */
 #if DEBUG || CHECK
 		if (!(Vmcheck & 02))
 #endif
 		KPVCOMPACT(vm,bestcompact);
-#endif
 		if((tp = (*_Vmextend)(vm,size,bestsearch)) )
 			goto got_block;
 		else if(vd->mode&VM_AGAIN)
@@ -786,6 +784,7 @@ done:
 	/**/ASSERT(!vd->root || vmchktree(vd->root));
 
 	CLRLOCK(vd,local);
+	ANNOUNCE(local, vm, VM_ALLOC, DATA(tp), vm->disc);
 	return DATA(tp);
 }
 
@@ -866,11 +865,12 @@ Void_t*		data;
 		return 0;
 
 	if(!(local = vd->mode&VM_TRUST) )
-	{	if(ISLOCK(vd,0) )
+	{	GETLOCAL(vd,local);
+		if(ISLOCK(vd,local) )
 			return -1;
 		if(KPVADDR(vm,data,bestaddr) != 0 )
 			return -1;
-		SETLOCK(vd,0);
+		SETLOCK(vd,local);
 	}
 
 	bp = BLOCK(data);	/**/ASSERT(ISBUSY(SIZE(bp)) && !ISJUNK(SIZE(bp)));
@@ -897,7 +897,8 @@ Void_t*		data;
 
 	/**/ASSERT(!vd->root || vmchktree(vd->root));
 
-	CLRLOCK(vd,0);
+	CLRLOCK(vd,local);
+	ANNOUNCE(local, vm, VM_FREE, data, vm->disc);
 	return 0;
 }
 
@@ -1026,6 +1027,7 @@ int		type;		/* !=0 to move, <0 for not copy */
 	if(!local && _Vmtrace && data && (vd->mode&VM_TRACE) && VMETHOD(vd) == VM_MTBEST)
 		(*_Vmtrace)(vm, (Vmuchar_t*)orgdata, (Vmuchar_t*)data, orgsize, 0);
 	CLRLOCK(vd,local);
+	ANNOUNCE(local, vm, VM_RESIZE, data, vm->disc);
 
 done:	if(data && (type&VM_RSZERO) && size > oldsize )
 		memset((Void_t*)((Vmuchar_t*)data + oldsize), 0, size-oldsize);
@@ -1170,73 +1172,57 @@ size_t		align;
 
 done:
 	CLRLOCK(vd,local);
+	ANNOUNCE(local, vm, VM_ALLOC, (Void_t*)data, vm->disc);
 
 	/**/ASSERT(!vd->root || vmchktree(vd->root));
 
 	return (Void_t*)data;
 }
 
-/* _mem_method initialization */
-
-#if _AST_mem_method
-#undef	_mem_method
-#define _mem_method	_AST_mem_method
-#endif
-
-#if (_mem_method) & _mem_malloc
 #if _map_malloc
 #undef	free
 extern void		free _ARG_((Void_t*));
 #undef	malloc
 extern Void_t*		malloc _ARG_((size_t));
 #endif
-#endif
 
-#if (_mem_method) & (_mem_mmap_anon|_mem_mmap_dev)
-#include		<fcntl.h>
+#if _mem_win32
+#if _PACKAGE_ast
+#include		<ast_windows.h>
+#else
+#include		<windows.h>
+#endif
+#endif /* _lib_win32 */
+
+#if _mem_mmap_anon
+#include		<sys/mman.h>
+#ifndef MAP_ANON
+#define	MAP_ANON	MAP_ANONYMOUS
+#endif
+#endif /* _mem_mmap_anon */
+
+#if _mem_mmap_zero
+#include		<sys/fcntl.h>
 #include		<sys/mman.h>
 typedef struct _mmapdisc_s
 {	Vmdisc_t	disc;
 	int		fd;
 	off_t		offset;
 } Mmapdisc_t;
-#ifndef MAP_ANON
-#define MAP_ANON	MAP_ANONYMOUS
+
+#ifndef OPEN_MAX
+#define	OPEN_MAX	64
 #endif
+#define OPEN_PRIVATE	(3*OPEN_MAX/4)
+#endif /* _mem_mmap_zero */
+
+/* failure mode of mmap, sbrk and brk */
 #ifndef MAP_FAILED
 #define MAP_FAILED	((Void_t*)(-1))
 #endif
-#ifndef OPEN_MAX
-#define OPEN_MAX	64
-#endif
-#define	OPEN_PRIVATE	((OPEN_MAX*3)/4)
-#endif
-
-#if _mem_sbrk
-#define SBRK(z)		((Void_t*)sbrk(z))
-#if _lib_brk
-#define BRK(a,z)	brk((a)+(ssize_t)(z))
-#else
-#define BRK(a,z)	(SBRK((ssize_t)(z))==BRK_FAILED?-1:0)
-#endif
-#ifndef BRK_FAILED
 #define BRK_FAILED	((Void_t*)(-1))
-#endif
-#endif
 
-#if (_mem_method) & _mem_win32
-#if _PACKAGE_ast
-#include		<ast_windows.h>
-#else
-#include		<windows.h>
-#endif
-#endif
-
-#if !(_mem_method)
-#include "ERROR-vmalloc-cannot-determine-raw-memory-allocator"
-#endif
-
-/*	A discipline to get memory using _mem_method */
+/* A discipline to get raw memory using sbrk/VirtualAlloc/mmap */
 #if __STD_C
 static Void_t* sbrkmem(Vmalloc_t* vm, Void_t* caddr,
 			size_t csize, size_t nsize, Vmdisc_t* disc)
@@ -1249,122 +1235,114 @@ size_t		nsize;	/* new size				*/
 Vmdisc_t*	disc;	/* discipline structure			*/
 #endif
 {
+#undef _done_sbrkmem
 
-#if (_mem_method) & _mem_malloc
-	NOTUSED(disc);
+#if !defined(_done_sbrkmem) && defined(_mem_win32)
+#define _done_sbrkmem	1
 	NOTUSED(vm);
-
-	if(csize == 0)
-		return (Void_t*)malloc(nsize);
-	else if(nsize == 0)
-		free(caddr);
-#endif /* _mem_malloc */
-
-#if (_mem_method) & _mem_win32
 	NOTUSED(disc);
-	NOTUSED(vm);
-
 	if(csize == 0)
 		return (Void_t*)VirtualAlloc(0,nsize,MEM_COMMIT,PAGE_READWRITE);
 	else if(nsize == 0)
 		return VirtualFree((LPVOID)caddr,0,MEM_RELEASE) ? caddr : NIL(Void_t*);
-#endif /* _mem_win32 */
+	else	return NIL(Void_t*);
+#endif /* MUST_WIN32 */
 
-#if (_mem_method) & (_mem_sbrk|_mem_mmap_anon|_mem_mmap_dev)
+#if !defined(_done_sbrkmem) && (_mem_sbrk || _mem_mmap_zero || _mem_mmap_anon)
+#define _done_sbrkmem	1
 	Vmuchar_t	*addr;
-#if (_mem_method) & (_mem_mmap_anon|_mem_mmap_dev)
+#if _mem_mmap_zero
 	Mmapdisc_t	*mmdc = (Mmapdisc_t*)disc;
 #else
 	NOTUSED(disc);
-#endif /* _mem_mmap_anon|_mem_mmap_dev */
+#endif
 	NOTUSED(vm);
 
-#if (_mem_method) & _mem_sbrk
-	addr = (Vmuchar_t*)SBRK(0);
-	if(addr == (Vmuchar_t*)BRK_FAILED)
+	if(csize == 0) /* allocating new memory */
+	{
+#if _mem_sbrk	/* try using sbrk() and brk() */
+		addr = (Vmuchar_t*)sbrk(0); /* old break value */
+		if(addr && addr != (Vmuchar_t*)BRK_FAILED )
+			if(brk(addr+nsize) == 0 ) 
+				return addr;
 #endif /* _mem_sbrk */
-		addr = NIL(Vmuchar_t*);
-	if(csize == 0)
-	{	
-#if (_mem_method) & _mem_sbrk
-		if(addr && BRK(addr,nsize) == 0)
-			return (Void_t*)addr;
-#endif /* _mem_sbrk */
-#if (_mem_method) & _mem_mmap_anon
-		addr = (Vmuchar_t*)mmap(0, nsize,
-					PROT_READ|PROT_WRITE,
-					MAP_ANON|MAP_PRIVATE,
-			    		-1, mmdc->offset);
+
+#if _mem_mmap_anon /* anonymous mmap */
+		addr = (Vmuchar_t*)mmap(0, nsize, PROT_READ|PROT_WRITE,
+                                        MAP_ANON|MAP_PRIVATE, -1, 0);
+		if(addr && addr != (Vmuchar_t*)MAP_FAILED)
+			return addr;
 #endif /* _mem_mmap_anon */
-#if (_mem_method) & _mem_mmap_dev
+
+#if _mem_mmap_zero /* mmap from /dev/zero */
 		if(mmdc->fd < 0)
 		{	int	fd;
 			if(mmdc->fd != -1)
 				return NIL(Void_t*);
-			if((fd = open("/dev/zero", O_RDWR)) < 0)
+			if((fd = open("/dev/zero", O_RDONLY)) < 0 )
 			{	mmdc->fd = -2;
 				return NIL(Void_t*);
 			}
-			if(fd >= OPEN_PRIVATE || (mmdc->fd = dup2(fd, OPEN_PRIVATE)) < 0)
+			if(fd >= OPEN_PRIVATE || (mmdc->fd = dup2(fd,OPEN_PRIVATE)) < 0 )
 				mmdc->fd = fd;
-			else
-				close(fd);
+			else	close(fd);
 #ifdef FD_CLOEXEC
 			fcntl(mmdc->fd, F_SETFD, FD_CLOEXEC);
-#endif /* FD_CLOEXEC */
-		}
-		addr = (Vmuchar_t*)mmap(0, nsize,
-					PROT_READ|PROT_WRITE,
-					MAP_PRIVATE,
-			    		mmdc->fd, mmdc->offset);
-#endif /* _mem_mmap_anon */
-#if (_mem_method) & (_mem_mmap_anon|_mem_mmap_dev)
-		if(addr == (Vmuchar_t*)MAP_FAILED)
-			addr = NIL(Vmuchar_t*);
-		if(addr)
-		{	mmdc->offset += nsize;
-			return (Void_t*)addr;
-		}
-#endif /* _mem_mmap_anon|_mem_mmap_dev */
-#if _mem_sbrk && !((_mem_method) & _mem_sbrk)
-		addr = (Vmuchar_t*)SBRK(0);
-		if(addr == (Vmuchar_t*)BRK_FAILED)
-			addr = NIL(Vmuchar_t*);
-		if(addr && BRK(addr,nsize) == 0)
-			return (Void_t*)addr;
 #endif
+		}
+		addr = (Vmuchar_t*)mmap(0, nsize, PROT_READ|PROT_WRITE,
+					MAP_PRIVATE, mmdc->fd, mmdc->offset);
+		if(addr && addr != (Vmuchar_t*)MAP_FAILED)
+		{	mmdc->offset += nsize;
+			return addr;
+		}
+#endif /* _mem_mmap_zero */
+
+		return NIL(Void_t*);
 	}
 	else
-	{	
+	{	addr = caddr; /* in case !_mem_sbrk */
 #if _mem_sbrk
-#if !((_mem_method) & _mem_sbrk)
-		addr = (Vmuchar_t*)SBRK(0);
-		if(addr == (Vmuchar_t*)BRK_FAILED)
-			addr = NIL(Vmuchar_t*);
-#endif /* _mem_sbrk */
-		if(((Vmuchar_t*)caddr+csize) == addr) /* in sbrk-space */
-		{	if(BRK(addr,nsize-csize) == 0)
-				return caddr;
+		addr = (Vmuchar_t*)sbrk(0);
+		if(!addr || addr == (Vmuchar_t*)BRK_FAILED)
+			addr = caddr;
+		else if(((Vmuchar_t*)caddr+csize) == addr) /* in sbrk-space */
+		{	if(nsize > csize)
+				addr += nsize-csize;
+			else	addr -= csize-nsize;
+			return brk(addr) == 0 ? caddr : NIL(Void_t*);
 		}
 #endif /* _mem_sbrk */
-#if (_mem_method) & (_mem_mmap_anon|_mem_mmap_dev)
-#if _mem_sbrk
-		else if(((Vmuchar_t*)caddr+csize) > addr)
-#endif /* _mem_sbrk */
-		if(nsize == 0 && munmap(caddr,csize) == 0)
-			return caddr;
-#endif /* _mem_mmap_anon|_mem_mmap_dev */
-	}
-#endif /* _mem_sbrk|_mem_mmap_anon|_mem_mmap_dev */
 
-	return NIL(Void_t*);
+#if _mem_mmap_zero || _mem_mmap_anon
+		if(((Vmuchar_t*)caddr+csize) > addr) /* in mmap-space */
+			if(nsize == 0 && munmap(caddr,csize) == 0)
+				return caddr;
+#endif /* _mem_mmap_zero || _mem_mmap_anon */
+
+		return NIL(Void_t*);
+	}
+#endif /*_done_sbrkmem*/
+
+#if !_done_sbrkmem /* use native malloc/free as a last resource */
+	/**/ASSERT(_std_malloc); /* _std_malloc should be well-defined */
+	NOTUSED(vm);
+	NOTUSED(disc);
+	if(csize == 0)
+		return (Void_t*)malloc(nsize);
+	else if(nsize == 0)
+	{	free(caddr);
+		return caddr;
+	}
+	else	return NIL(Void_t*);
+#endif /* _done_sbrkmem */
 }
 
-#if (_mem_method) & (_mem_mmap_anon|_mem_mmap_dev)
+#if _mem_mmap_zero
 static Mmapdisc_t _Vmdcsbrk = { { sbrkmem, NIL(Vmexcept_f), 64*1024 }, -1, 0 };
 #else
 static Vmdisc_t _Vmdcsbrk = { sbrkmem, NIL(Vmexcept_f), 0 };
-#endif /* (_mem_mmap_anon|_mem_mmap_dev) */
+#endif
 
 static Vmethod_t _Vmbest =
 {
@@ -1389,7 +1367,7 @@ static Vmdata_t	_Vmdata =
 	NIL(Block_t*),			/* wild		*/
 	NIL(Block_t*),			/* root		*/
 };
-static Vmalloc_t _Vmheap =
+Vmalloc_t _Vmheap =
 {
 	{ bestalloc,
 	  bestresize,

@@ -69,15 +69,19 @@ exec - rm -f 1.${COTEMP}.*
 done sum.req generated
 make sumlib.o
 make sumlib.c
-make ../../../include/ast/hashpart.h implicit
+make ../../../include/ast/fnv.h implicit
+make ../../../include/ast/ast_common.h implicit
+done ../../../include/ast/ast_common.h dontcare
 make ../../../include/ast/prototyped.h implicit
 make ../../../include/prototyped.h implicit
 done ../../../include/prototyped.h dontcare
 done ../../../include/ast/prototyped.h dontcare
+done ../../../include/ast/fnv.h
+make ../../../include/ast/hashpart.h implicit
+prev ../../../include/ast/prototyped.h implicit
 done ../../../include/ast/hashpart.h
 make ../../../include/ast/int.h implicit
-make ../../../include/ast/ast_common.h implicit
-done ../../../include/ast/ast_common.h dontcare
+prev ../../../include/ast/ast_common.h implicit
 done ../../../include/ast/int.h
 make sum.h implicit
 make ../../../include/ast/ast.h implicit
@@ -116,7 +120,6 @@ make ../../../include/ast/ast_map.h implicit
 done ../../../include/ast/ast_map.h dontcare
 make ../../../include/ast/stdio.h implicit
 make ../../../include/ast/ast_stdio.h implicit
-prev ../../../include/ast/ast_getopt.h implicit
 make ../../../include/ast/sfio_s.h implicit
 done ../../../include/ast/sfio_s.h dontcare
 prev ../../../include/ast/ast_common.h implicit

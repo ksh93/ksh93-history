@@ -75,11 +75,30 @@
 #define _npt_sbrk		1
 #endif
 
+#undef free
+#undef malloc
+#undef realloc
+
 #endif /*_PACKAGE_ast*/
 
-#include	"FEATURE/mem"
-#include	"FEATURE/mmap"
 #include	"FEATURE/vmalloc"
+
+/* the below macros decide which combinations of sbrk() or mmap() to used */
+#if defined(_WIN32)
+#define _mem_win32	1
+#undef _mem_sbrk
+#undef _mem_mmap_anon
+#undef _mem_mmap_zero
+#endif
+
+#if _mem_mmap_anon
+#undef _mem_mmap_zero
+#endif
+
+#if !_mem_win32 && !_mem_sbrk && !_mem_mmap_anon && !_mem_mmap_zero
+#undef _std_malloc
+#define _std_malloc	1	/* do not define malloc/free/realloc */
+#endif
 
 typedef unsigned char	Vmuchar_t;
 typedef unsigned long	Vmulong_t;
@@ -174,6 +193,12 @@ extern void		_Vmessage _ARG_((const char*, long, const char*, long));
 #define SETLOCK(vd,l)	((l) ? 0 : ((vd)->mode |= VM_LOCK) )
 #define CLRLOCK(vd,l)	((l) ? 0 : ((vd)->mode &= ~VM_LOCK) )
 
+/* announcing entry/exit of allocation calls */
+#define ANNOUNCE(lc, vm,ev,dt,dc) \
+		(( ((lc)&VM_LOCAL) || !(dc) || !(dc)->exceptf ) ? 0 : \
+			(*(dc)->exceptf)((vm), (ev), (Void_t*)(dt), (dc)) )
+			
+
 /* local calls */
 #define KPVALLOC(vm,sz,func)		(SETLOCAL((vm)->data), func((vm),(sz)) )
 #define KPVALIGN(vm,sz,al,func)		(SETLOCAL((vm)->data), func((vm),(sz),(al)) )
@@ -264,7 +289,7 @@ struct _tiny_s
 	Block_t*	self;
 };
 #define TINYSIZE	ROUND(sizeof(struct _tiny_s),ALIGN)
-#define S_TINY		7				/* # of tiny blocks	*/
+#define S_TINY		1				/* # of tiny blocks	*/
 #define MAXTINY		(S_TINY*ALIGN + TINYSIZE)
 #define TLEFT(b)	((b)->head.head.seg.link)	/* instead of LEFT	*/
 #define TINIEST(b)	(SIZE(b) == TINYSIZE)		/* this type uses TLEFT	*/
@@ -300,6 +325,13 @@ typedef struct _vmdata_s
 	Vmalloc_t*	next;		/* linked list of regions		*/
 
 #include	"vmalloc.h"
+
+#if !_PACKAGE_ast
+/* we don't use these here and they interfere with some local names */
+#undef malloc
+#undef free
+#undef realloc
+#endif
 
 /* segment structure */
 struct _seg_s
@@ -457,18 +489,12 @@ extern Void_t*		sbrk _ARG_(( ssize_t ));
 
 #else
 
-/* for vmdcsbrk.c */
-#if !_typ_ssize_t
-typedef int		ssize_t;
-#endif
-
 #if _hdr_unistd
 #include	<unistd.h>
 #else
 extern void		abort _ARG_(( void ));
 extern ssize_t		write _ARG_(( int, const void*, size_t ));
 extern int		getpagesize _ARG_((void));
-extern int		brk _ARG_((Void_t*));
 extern Void_t*		sbrk _ARG_((ssize_t));
 #endif
 
@@ -491,6 +517,11 @@ extern void		_exit _ARG_(( int ));
 extern void		_cleanup _ARG_(( void ));
 
 #endif /*_PACKAGE_ast*/
+
+/* for vmdcsbrk.c */
+#if !_typ_ssize_t
+typedef int		ssize_t;
+#endif
 
 _END_EXTERNS_
 

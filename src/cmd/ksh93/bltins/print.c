@@ -560,6 +560,7 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 		default:
 			fe->fmt = 'd';
 			value->ll = 0;
+			errormsg(SH_DICT,ERROR_exit(1),e_formspec,format);
 			break;
 		}
 	}

@@ -534,7 +534,7 @@ Sfio_t *sh_subshell(union anynode *t, int flags, int comsub)
 	sh_argfree(argsav,0);
 	shp->trapnote = 0;
 	if(shp->topfd != buff.topfd)
-		sh_iorestore(buff.topfd|IOSUBSHELL);
+		sh_iorestore(buff.topfd|IOSUBSHELL,jmpval);
 	if(shp->exitval > SH_EXITSIG)
 	{
 		int sig = shp->exitval&SH_EXITMASK;

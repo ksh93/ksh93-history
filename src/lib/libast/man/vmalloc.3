@@ -302,6 +302,15 @@ If negative, the allocation request will fail.
 Address \fIobj\fP, given to \fIvmfree\fP or \fIvmresize\fP,
 does not point to an allocated block from the region.
 The respective call will fail.
+.TP
+.MW VM_ALLOC
+Announce that a memory allocation request is finished and returning.
+.TP
+.MW VM_FREE
+Announce that a memory freeing request is finished and returning.
+.TP
+.MW VM_RESIZE
+Announce that a memory resizing request is finished and returning.
 
 .SS "Allocation methods"
 There are five methods, of type \f5Vmethod_t*\fP:

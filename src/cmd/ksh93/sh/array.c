@@ -122,10 +122,19 @@ static union Value *array_find(Namval_t *np,Namarr_t *arp, int flag)
 			const char *cp = up->cp;
 			if(cp && is_associative(ap))
 				(*ap->header.fun)(np, NIL(char*), NV_AFREE);
-			up->cp = 0;
 			nv_offattr(np,NV_ARRAY);
-			np->nvalue.cp = cp;
-			up = &np->nvalue;
+			if(nv_isattr(np,NV_TABLE))
+			{
+				np->nvfun = up->funp;
+				up->cp = 0;
+				up = (union Value*)&np->nvfun;
+			}
+			else
+			{
+				np->nvalue.cp = cp;
+				up->cp = 0;
+				up = &np->nvalue;
+			}
 		}
 	}
 	else if(!up->cp)
@@ -156,7 +165,10 @@ static char *array_getval(Namval_t *np, Namfun_t *disc)
 	ap = array_check(np,ap,ARRAY_LOOKUP);
 	if(!(up = array_find(np,ap,ARRAY_LOOKUP)))
 		 return (NIL(char*));
-	np->nvalue.cp = up->cp;
+	if(nv_isattr(np,NV_TABLE))
+		np->nvfun = up->funp;
+	else
+		np->nvalue.cp = up->cp;
 	return(nv_getv(np,&ap->hdr));
 }
 
@@ -167,7 +179,10 @@ static Sfdouble_t array_getnum(Namval_t *np, Namfun_t *disc)
 	ap = array_check(np,ap,ARRAY_LOOKUP);
 	if(!(up = array_find(np,ap,ARRAY_LOOKUP)))
 		 return(0);
-	np->nvalue.cp = up->cp;
+	if(nv_isattr(np,NV_TABLE))
+		np->nvfun = up->funp;
+	else
+		np->nvalue.cp = up->cp;
 	return(nv_getn(np,&ap->hdr));
 }
 
@@ -180,9 +195,15 @@ static void array_putval(Namval_t *np, const char *string, int flags, Namfun_t *
 	{
 		if(!(up = array_find(np,ap,string?ARRAY_ASSIGN:ARRAY_DELETE)))
 			continue;
-		np->nvalue.cp = up->cp;
+		if(nv_isattr(np,NV_TABLE))
+			np->nvfun = up->funp;
+		else
+			np->nvalue.cp = up->cp;
 		nv_putv(np,string,flags,&ap->hdr);
-		up->cp = np->nvalue.cp;
+		if(nv_isattr(np,NV_TABLE))
+			up->funp = np->nvfun;
+		else
+			up->cp = np->nvalue.cp;
 	}
 	while(!string && nv_nextsub(np));
 	if(!string && !nv_isattr(np,NV_ARRAY))
@@ -236,7 +257,12 @@ static struct index_array *array_grow(Namval_t *np, register struct index_array 
 	else
 	{
 		ap->header.fun = 0;
-		if((ap->val[0].cp=np->nvalue.cp))
+		if(nv_isattr(np,NV_TABLE))
+		{
+			ap->val[0].funp = np->nvfun;
+			i++;
+		}
+		else if((ap->val[0].cp=np->nvalue.cp))
 			i++;
 		ap->header.nelem = i;
 		ap->header.hdr.nofree = 1;

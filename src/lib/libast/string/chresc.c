@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -115,11 +115,12 @@ chresc(register const char* s, char** p)
 		case 'v':
 			c = CC_vt;
 			break;
+		case 'u':
 		case 'x':
 			c = 0;
-			q = s + 2;
+			q = c == 'u' ? (s + 4) : (char*)0;
 			e = s;
-			while (!e || s < q)
+			while (!e || !q || s < q)
 			{
 				switch (*s)
 				{
@@ -134,12 +135,14 @@ chresc(register const char* s, char** p)
 					c = (c << 4) + *s++ - '0';
 					continue;
 				case '{':
+				case '[':
 					if (s != e)
 						break;
 					e = 0;
 					s++;
 					continue;
 				case '}':
+				case ']':
 					if (!e)
 						s++;
 					break;

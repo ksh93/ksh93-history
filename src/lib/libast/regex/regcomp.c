@@ -35,6 +35,9 @@
 #include "lclib.h"
 #endif
 
+#define C_ESC			(-1)
+#define C_MB			(-2)
+
 #if _AST_REGEX_DEBUG
 
 #define DEBUG_TEST(f,y,n)	((debug&(debug_flag=f))?(y):(n))
@@ -732,6 +735,11 @@ magic(register Cenv_t* env, register int c, int escaped)
 				if (ep < sp)
 					goto bad;
 				env->token.len += ep - sp;
+				if (c >= T_META)
+				{
+					env->token.lex = c;
+					c = C_ESC;
+				}
 				return c;
 			case T_BACK+0:
 			case T_BACK+1:
@@ -886,7 +894,7 @@ token(register Cenv_t* env)
 		return env->token.lex;
 	env->token.att = env->token.esc = 0;
 	if ((env->token.len = mbsize(env->cursor)) > 1)
-		return env->token.lex = -1;
+		return env->token.lex = C_MB;
 	env->token.lex = 0;
 	for (;;)
 	{
@@ -2212,7 +2220,6 @@ grp(Cenv_t* env, int parno)
 		env->parnest--;
 		if (env->disc->re_version < REG_VERSION_EXEC)
 		{
-sfprintf(sfstderr, "AHA regcomp re_version=%lu REG_VERSION_EXEC=%lu\n", env->disc->re_version, REG_VERSION_EXEC);
 			env->error = REG_BADRPT;
 			return 0;
 		}
@@ -2327,6 +2334,23 @@ seq(Cenv_t* env)
 			{
 				n = 1;
 				*s++ = (env->flags & REG_ICASE) ? toupper(c) : c;
+			}
+			else if (c == C_ESC)
+			{
+				if ((n = wctomb(NiL, env->token.lex)) < 0)
+					continue;
+				if (!n)
+				{
+					n = 1;
+					*s++ = 0;
+				}
+				else if (s < &buf[sizeof(buf) - n])
+				{
+					wctomb((char*)s, c);
+					s += n;
+				}
+				else
+					break;
 			}
 			else
 			{

@@ -1108,18 +1108,25 @@ error(DEBUG_TRACE, "AHA#%d _ast_iconv_open f=%s t=%s\n", __LINE__, f, t);
 		f = name_native;
 
 	/*
-	 * (soft) fail if to is native and conversion is the identity
+	 * the ast identify is always (iconv_t)(0)
 	 */
 
-	if (t == name_native && t == f)
-		return (iconv_t)(-1);
+	if (t == f)
+		return (iconv_t)(0);
+	fc = _ast_iconv_name(f, fr, sizeof(fr));
+	tc = _ast_iconv_name(t, to, sizeof(to));
+#if DEBUG_TRACE
+error(DEBUG_TRACE, "AHA#%d _ast_iconv_open f=%s:%s:%d t=%s:%s:%d\n", __LINE__, f, fr, fc, t, to, tc);
+#endif
+	if (fc != CC_ICONV && fc == tc || streq(fr, to))
+		return (iconv_t)(0);
 
 	/*
 	 * first check the free list
 	 */
 
 	for (i = 0; i < elementsof(freelist); i++)
-		if ((cc = freelist[i]) && streq(t, cc->to.name) && streq(f, cc->from.name))
+		if ((cc = freelist[i]) && streq(to, cc->to.name) && streq(fr, cc->from.name))
 		{
 			freelist[i] = 0;
 #if _lib_iconv_open
@@ -1137,35 +1144,18 @@ error(DEBUG_TRACE, "AHA#%d _ast_iconv_open f=%s t=%s\n", __LINE__, f, t);
 	 * allocate a new one
 	 */
 
-	if (!(cc = newof(0, Conv_t, 1, strlen(t) + strlen(f) + 2)))
+	if (!(cc = newof(0, Conv_t, 1, strlen(to) + strlen(fr) + 2)))
 		return (iconv_t)(-1);
 	cc->to.name = (char*)(cc + 1);
-	cc->from.name = strcopy(cc->to.name, t) + 1;
-	strcpy(cc->from.name, f);
+	cc->from.name = strcopy(cc->to.name, to) + 1;
+	strcpy(cc->from.name, fr);
 	cc->cvt = (iconv_t)(-1);
-	fc = _ast_iconv_name(f, fr, sizeof(fr));
-	tc = _ast_iconv_name(t, to, sizeof(to));
-#if DEBUG_TRACE
-error(DEBUG_TRACE, "AHA#%d _ast_iconv_open f=%s:%s:%d t=%s:%s:%d\n", __LINE__, f, fr, fc, t, to, tc);
-#endif
-
-	/*
-	 * (soft) fail if to is native and conversion is the identity
-	 */
-
-	if (t == name_native && streq(fr, to))
-	{
-		free(cc);
-		return (iconv_t)(-1);
-	}
 
 	/*
 	 * 8 bit maps are the easiest
 	 */
 
-	if (fc == tc)
-		/*identity*/;
-	else if (fc >= 0 && tc >= 0)
+	if (fc >= 0 && tc >= 0)
 		cc->from.map = ccmap(fc, tc);
 #if _lib_iconv_open
 	else if ((cc->cvt = iconv_open(to, fr)) != (iconv_t)(-1))
@@ -1241,7 +1231,8 @@ _ast_iconv_close(_ast_iconv_t cd)
 
 	if (cd == (_ast_iconv_t)(-1))
 		return -1;
-	cc = (Conv_t*)cd;
+	if (!(cc = (Conv_t*)cd))
+		return 0;
 
 	/*
 	 * add to the free list
@@ -1308,63 +1299,66 @@ _ast_iconv(_ast_iconv_t cd, char** fb, size_t* fn, char** tb, size_t* tn)
 		return 0;
 	}
 	n = *tn;
-	if (cc->from.fun)
+	if (cc)
 	{
-		if (cc->to.fun)
+		if (cc->from.fun)
 		{
+			if (cc->to.fun)
+			{
+				if (!cc->buf && !(cc->buf = oldof(0, char, cc->size = SF_BUFSIZE, 0)))
+				{
+					errno = ENOMEM;
+					return -1;
+				}
+				b = cc->buf;
+				i = cc->size;
+				tfb = *fb;
+				tfn = *fn;
+				if ((*cc->from.fun)(cc->cvt, &tfb, &tfn, &b, &i) == (size_t)(-1))
+					return -1;
+				tfn = b - cc->buf;
+				tfb = cc->buf;
+				n = (*cc->to.fun)(cc->cvt, &tfb, &tfn, tb, tn);
+				i = tfb - cc->buf;
+				*fb += i;
+				*fn -= i;
+				return n;
+			}
+			if ((*cc->from.fun)(cc->cvt, fb, fn, tb, tn) == (size_t)(-1))
+				return -1;
+			n -= *tn;
+			if (m = cc->to.map)
+			{
+				e = (unsigned char*)(*tb);
+				for (t = e - n; t < e; t++)
+					*t = m[*t];
+			}
+			return n;
+		}
+		else if (cc->to.fun)
+		{
+			if (!(m = cc->from.map))
+				return (*cc->to.fun)(cc->cvt, fb, fn, tb, tn);
 			if (!cc->buf && !(cc->buf = oldof(0, char, cc->size = SF_BUFSIZE, 0)))
 			{
 				errno = ENOMEM;
 				return -1;
 			}
-			b = cc->buf;
-			i = cc->size;
-			tfb = *fb;
-			tfn = *fn;
-			if ((*cc->from.fun)(cc->cvt, &tfb, &tfn, &b, &i) == (size_t)(-1))
-				return -1;
-			tfn = b - cc->buf;
-			tfb = cc->buf;
-			n = (*cc->to.fun)(cc->cvt, &tfb, &tfn, tb, tn);
-			i = tfb - cc->buf;
-			*fb += i;
-			*fn -= i;
+			if ((n = *fn) > cc->size)
+				n = cc->size;
+			f = (unsigned char*)(*fb);
+			e = f + n;
+			t = (unsigned char*)(b = cc->buf);
+			while (f < e)
+				*t++ = m[*f++];
+			n = (*cc->to.fun)(cc->cvt, &b, fn, tb, tn);
+			*fb += b - cc->buf;
 			return n;
 		}
-		if ((*cc->from.fun)(cc->cvt, fb, fn, tb, tn) == (size_t)(-1))
-			return -1;
-		n -= *tn;
-		if (m = cc->to.map)
-		{
-			e = (unsigned char*)(*tb);
-			for (t = e - n; t < e; t++)
-				*t = m[*t];
-		}
-		return n;
-	}
-	else if (cc->to.fun)
-	{
-		if (!(m = cc->from.map))
-			return (*cc->to.fun)(cc->cvt, fb, fn, tb, tn);
-		if (!cc->buf && !(cc->buf = oldof(0, char, cc->size = SF_BUFSIZE, 0)))
-		{
-			errno = ENOMEM;
-			return -1;
-		}
-		if ((n = *fn) > cc->size)
-			n = cc->size;
-		f = (unsigned char*)(*fb);
-		e = f + n;
-		t = (unsigned char*)(b = cc->buf);
-		while (f < e)
-			*t++ = m[*f++];
-		n = (*cc->to.fun)(cc->cvt, &b, fn, tb, tn);
-		*fb += b - cc->buf;
-		return n;
 	}
 	if (n > *fn)
 		n = *fn;
-	if (m = cc->from.map)
+	if (cc && (m = cc->from.map))
 	{
 		f = (unsigned char*)(*fb);
 		e = f + n;
@@ -1452,14 +1446,17 @@ _ast_iconv_move(_ast_iconv_t cd, Sfio_t* ip, Sfio_t* op, size_t n, size_t* e)
 	size_t		fn;
 	size_t		fo;
 	size_t		tn;
+	size_t		i;
 	ssize_t		r = 0;
+	int		locked;
 
 	fn = n;
 	for (;;)
 	{
 		if (fn != SF_UNBOUND)
 			fn = -((ssize_t)(fn & (((size_t)(~0))>>1)));
-		if (!(fb = (char*)sfreserve(ip, fn, SF_LOCKR)))
+		if (!(fb = (char*)sfreserve(ip, fn, locked = SF_LOCKR)) &&
+		    !(fb = (char*)sfreserve(ip, fn, locked = 0)))
 			break;
 		fs = fb;
 		fn = fo = sfvalue(ip);
@@ -1484,7 +1481,11 @@ _ast_iconv_move(_ast_iconv_t cd, Sfio_t* ip, Sfio_t* op, size_t n, size_t* e)
 		}
 		sfwrite(op, tb, ts - tb);
 		r += ts - tb;
-		sfread(ip, fb, fs - fb);
+		if (locked)
+			sfread(ip, fb, fs - fb);
+		else
+			for (i = fn; --i >= (fs - fb);)
+				sfungetc(ip, fb[i]);
 		if (n != SF_UNBOUND)
 		{
 			if (n <= (fs - fb))

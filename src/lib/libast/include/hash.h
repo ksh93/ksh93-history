@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -29,6 +29,8 @@
  * AT&T Research
  *
  * hash table library interface definitions
+ *
+ * NOTE: new code should use the more general <cdt.h>
  */
 
 #ifndef _HASH_H

@@ -1,3 +1,11 @@
+03-10-11 regress.sh: add EXPORT, export COLUMNS=80 for message consistency
+03-09-23 ratz.c: fix tar header number parse bug that skipped to next number
+	 regress.sh: rm cleanup now handles files matching -*
+03-09-11 iffe.sh: add if-elif-else and unnamed { ... } blocks
+	 regress.sh: add COPY from to, like MOVE but comprison still done
+	 regress.sh: rm -rfu to handle test dirs w/o u+rwx
+03-08-14 Makfile: add hello.c to the manifest
+03-08-11 package.sh: fix `html binary' generation
 03-06-21 package.sh: fix INITROOT initialization bug
 	 package.sh: make sure admin logs exists before tail'ing
 03-06-11 probe.win32: fix $(BINDIR) typo that expanded in sh instead of make

@@ -88,7 +88,8 @@ is() # op name
 			cmd)	mm="a command" ;;
 			dat)	mm="a library data symbol" ;;
 			dfn)	mm="a macro with extractable value" ;;
-			exp)	mm="true" ;;
+			exp|if|elif|else)
+				mm="true" ;;
 			hdr)	mm="a header" ;;
 			id)	mm="an identifier" ;;
 			lcl)	mm="a native header" ;;
@@ -225,7 +226,7 @@ $2
 
 checkread()
 {
-	posix_read=`(read -r line; echo $line) 2>/dev/null <<!
+	posix_read=`(read -r _checkread_line; echo $_checkread_line) 2>/dev/null <<!
 a z
 !
 `
@@ -424,7 +425,7 @@ set=
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: iffe (AT&T Labs Research) 2003-03-06 $
+@(#)$Id: iffe (AT&T Labs Research) 2003-09-11 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?iffe - host C compilation environment feature probe]
@@ -603,6 +604,12 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 	[+hdr \aname\a?Defines \b_hdr_\b\aname\a if the header
 		\b<\b\aname\a\b.h>\b exists. The \b--config\b macro name is
 		\bHAVE_\b\aNAME\a\b_H\b.]
+	[+if \aexpression\a | elif \aexpression\a | else?Non-nested if-else
+		control. The test is true if the \bexpr\b(1) evaluation of
+		\aexpression\a is not 0. Identifiers in \aexpression\a may
+		be previously defined names from other \biffe\b commands;
+		undefined names evaluate to 0. if-else commands typcally
+		control unnamed \b{\b ... \b{\b blocks.]
 	[+iff \aname\a?The generated header \b#ifndef-#endif\b macro guard is
 		\b_\b\aname\a\b_H\b.]
 	[+key \aname\a?Defines \b_key_\b\aname\a if \aname\a is a reserved
@@ -701,7 +708,8 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 		within the block. Likewise, failed test macros are defined
 		as shell variables with value \b0\b.]
 	[+yes?If the test succeeds then the block text is copied to the
-		output file.]
+		output file. \byes{\b ... \b}end\b is equivalent to the
+		unnamed block \b{\b ... \b}\b.]
 }
 [+SEE ALSO?\bautoconfig\b(1), \bconfig\b(1), \bcrossexec\b(1), \bnmake\b(1),
 	\bpackage\b(1), \bproto\b(1), \bsh\b(1)]
@@ -942,7 +950,10 @@ cur=.
 can=
 cansep=
 cctest=
+ifelse=0:error
+file=
 hdrtest=
+line=0
 while	:
 do	case $in in
 	"")	case $argx:$* in
@@ -956,7 +967,13 @@ do	case $in in
 		0)	set set out + ;;
 		esac
 		;;
-	*)	read lin || lin="set out +"
+	*)	if	read lin
+		then	case $shell in
+			ksh)	let line=line+1 ;;
+			*)	line=`expr $line + 1` ;;
+			esac
+		else	lin="set out +"
+		fi
 		set x $lin
 		shift
 		;;
@@ -1139,6 +1156,7 @@ do	case $in in
 					exit 1
 				fi
 				exec < $in
+				file=$in:
 				case $out in
 				"")	case $in in
 					*[.\\/]*)
@@ -1260,6 +1278,7 @@ do	case $in in
 				esac
 				;;
 			esac
+			sline=$line
 			while	:
 			do	case $# in
 				0)	break ;;
@@ -1281,13 +1300,17 @@ do	case $in in
 					done
 					break
 					;;
-				[abcdefghijklmnopqrstuvwxyz]*\{)
+				[abcdefghijklmnopqrstuvwxyz]*\{|\{)
 					v=$1
 					shift
 					x=
 					case $v in
 					note\{)	sep=" " ;;
 					*)	sep=$nl ;;
+					esac
+					case $v in
+					\{)	e='}' ;;
+					*)	e='}end' ;;
 					esac
 					SEP=
 					while	:
@@ -1296,7 +1319,7 @@ do	case $in in
 							'')	checkread ;;
 							esac
 							case $in in
-							"")	echo "$command: missing }end" >&$stderr
+							"")	echo "$command: $file$line: missing }end" >&$stderr
 								exit 1
 								;;
 							esac
@@ -1306,18 +1329,22 @@ do	case $in in
 								*)	lin=`$posix_read` ;;
 								esac
 								case $? in
-								0)	$posix_noglob
+								0)	case $shell in
+									ksh)	let line=line+1 ;;
+									*)	line=`expr $line + 1` ;;
+									esac
+									$posix_noglob
 									set x $lin
 									$posix_glob
 									case $2 in
-									\}end)	shift
+									$e)	shift
 										break 2
 										;;
 									esac
 									x="$x$SEP$lin"
 									SEP=$sep
 									;;
-								*)	echo "$command: missing }end" >&$stderr
+								*)	echo "$command: $file$line: missing $e" >&$stderr
 									exit 1
 									;;
 								esac
@@ -1325,12 +1352,11 @@ do	case $in in
 							;;
 						esac
 						case $1 in
-						\}end)	break
-							;;
-						*)	x="$x$SEP$1"
-							SEP=$sep
+						$e)	break
 							;;
 						esac
+						x="$x$SEP$1"
+						SEP=$sep
 						shift
 					done
 					x="$x$nl" # \r\n bash needs this barf #
@@ -1342,7 +1368,7 @@ do	case $in in
 					note\{)		note=$x ;;
 					pass\{)		pass=$x ;;
 					test\{)		test=$x ;;
-					yes\{)		yes=$x ;;
+					yes\{|\{)	yes=$x ;;
 					*)		src=$x run=$v ;;
 					esac
 					;;
@@ -1882,7 +1908,15 @@ do	case $in in
 			esac
 			M=$m
 			case $o in
-			out)	;;
+			if|elif|else|out)
+				case $a in
+				-)	a=-
+					;;
+				?*)	test="$a $test"
+					a=
+					;;
+				esac
+				;;
 			*)	case " $idyes " in
 				*" $m "*)
 					i=1
@@ -2360,7 +2394,7 @@ main(){printf("hello");return(0);}' > ${tmp}s.c
 					;;
 				esac
 				case $user_pf in
-				?*)	(eval "$user_pf") <&$nullin ;;
+				?*)	eval "$user_pf" <&$nullin ;;
 				esac
 				case $user_yn in
 				?*)	case $note in
@@ -2526,8 +2560,41 @@ $inc
 				else	failure
 				fi
 				;;
-			exp)	case $a in
-				-)	;;
+			exp|if|elif|else)
+				case $o in
+				else)	case $test in
+					?*)	echo "$command: $file$sline: test expression invalid for $o" >&$stderr
+						exit 1
+						;;
+					esac
+					;;
+				*)	case $test in
+					'')	echo "$command: $file$sline: test expression expected for $o" >&$stderr
+						exit 1
+						;;
+					esac
+					;;
+				esac
+				case $o in
+				exp|if)	ifelse=0:$o
+					;;
+				elif|else)
+					case $ifelse in
+					?:error)echo "$command: $file$sline: no if for $o" >&$stderr
+						exit 1
+						;;
+					?:else)	echo "$command: $file$sline: $o after else" >&$stderr
+						exit 1
+						;;
+					1:*)	ifelse=1:$o
+						continue
+						;;
+					esac
+					ifelse=0:$o
+					;;
+				esac
+				case $a in
+				-|'')	;;
 				*)	eval x='$'$a
 					case $x in
 					1)	continue ;;
@@ -2537,7 +2604,7 @@ $inc
 				case $test in
 				\ \"*\"|\ [01])
 					case $a in
-					-)	;;
+					-|'')	;;
 					*)	case $note in
 						'')	echo "#define $a	$test" ;;
 						*)	echo "#define $a	$test	/* $note */" ;;
@@ -2545,35 +2612,40 @@ $inc
 						;;
 					esac
 					;;
-				*)	
-					case $note in
-					'')	note=$test ;;
-					*)	note=' '$note ;;
-					esac
-					is exp "$note"
-					x=
-					for i in `echo '' $test | sed 's,[^abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_], & ,g'`
-					do	case $i in
-						[\ \	])
-							;;
-						[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_]*)
-							x="$x \${$i:-0}"
-							;;
-						'!')	x="$x 0 ="
-							;;
-						'&'|'|')case $x in
-							*"$i")	;;
-							*)	x="$x \\$i" ;;
-							esac
-							;;
-						*)	x="$x \\$i"
-							;;
+				*)	case $test in
+					'')	v=1
+						;;
+					*)	case $note in
+						'')	x=$test ;;
+						*)	x=' '$note ;;
 						esac
-					done
-					case `eval expr $x 2>&$stderr` in
+						is exp "$x"
+						x=
+						for i in `echo '' $test | sed 's,[^abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_], & ,g'`
+						do	case $i in
+							[\ \	])
+								;;
+							[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_]*)
+								x="$x \${$i:-0}"
+								;;
+							'!')	x="$x 0 ="
+								;;
+							'&'|'|')case $x in
+								*"$i")	;;
+								*)	x="$x \\$i" ;;
+								esac
+								;;
+							*)	x="$x \\$i"
+								;;
+							esac
+						done
+						v=`eval expr $x 2>&$stderr`
+						;;
+					esac
+					case $v in
 					0)	failure
 						case $a in
-						-)	;;
+						-|'')	;;
 						*)	case $all$config$undef in
 							?1?|??1)echo "#undef	$a		/*$note is false */" ;;
 							1??)	echo "#define	$a	0	/*$note is false */" ;;
@@ -2583,9 +2655,10 @@ $inc
 						esac
 						user_pf=$fail user_yn=$no
 						;;
-					*)	success
+					*)	ifelse=1:$o
+						success
 						case $a in
-						-)	;;
+						-|'')	;;
 						*)	usr="$usr$nl#define $a 1"
 							echo "#define $a	1	/*$note is true */"
 							eval $a=1
@@ -3197,7 +3270,7 @@ _END_EXTERNS_
 				if	test ! -r $a
 				then	failure not found
 					case $verbose in
-					0)	echo "$command: $a: not found" >&$stderr ;;
+					0)	echo "$command: $file$line: $a: not found" >&$stderr ;;
 					esac
 					exit 1
 				fi
@@ -3227,7 +3300,7 @@ set "cc='$cc' executable='$executable' id='$m' static='$static' tmp='$tmp'" $opt
 					;;
 				*)	failure cannot run
 					case $verbose in
-					0)	echo "$command: $a: cannot run" >&$stderr ;;
+					0)	echo "$command: $file$line: $a: cannot run" >&$stderr ;;
 					esac
 					exit 1
 					;;
@@ -3391,16 +3464,20 @@ struct xxx* f() { return &v; }"
 				;;
 			:)	shift
 				;;
-			*)	echo "$command: $o: unknown feature test" >&$stderr
+			*)	echo "$command: $file$line: $o: unknown feature test" >&$stderr
 				status=1
 				;;
 			esac
 			case $user_pf in
-			?*)	(eval "$user_pf") <&$nullin ;;
+			?*)	eval "$user_pf" <&$nullin ;;
 			esac
 			case $user_yn in
 			?*)	case $note in
-				?*) user_yn="$user_yn	/* $note */" ;;
+				?*)	case $user_yn in
+					*$nl*)	user_yn="/* $note */$nl$user_yn" ;;
+					*)	user_yn="$user_yn	/* $note */" ;;
+					esac
+					;;
 				esac
 				copy - "$user_yn"
 				;;

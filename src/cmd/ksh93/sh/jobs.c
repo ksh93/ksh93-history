@@ -450,7 +450,8 @@ void job_init(int lflag)
 
 #ifdef SIGTSTP
 	/* make sure that we are a process group leader */
-	setpgid(0,sh.pid);
+	if(setpgid(0,sh.pid)==0)
+		job.mypgid = sh.pid;
 #   if defined(SA_NOCLDWAIT) && defined(_lib_sigflag)
 	sigflag(SIGCHLD, SA_NOCLDSTOP|SA_NOCLDWAIT, 0);
 #   endif /* SA_NOCLDWAIT */

@@ -31,7 +31,7 @@
 **	Written by Kiem-Phong Vo, kpv@research.att.com, 01/16/94.
 */
 
-#define VMALLOC_VERSION	20020531L
+#define VMALLOC_VERSION	20031205L
 
 #if _PACKAGE_ast
 #include	<ast_std.h>
@@ -107,6 +107,9 @@ struct _vmalloc_s
 #define VM_NOMEM	2		/* can't obtain memory		*/
 #define VM_BADADDR	3		/* bad addr in vmfree/vmresize	*/
 #define VM_DISC		4		/* discipline being changed	*/
+#define VM_ALLOC	5		/* announcement from vmalloc()	*/
+#define VM_FREE		6		/* announcement from vmfree()	*/
+#define VM_RESIZE	7		/* announcement from vmresize()	*/
 
 _BEGIN_EXTERNS_	 /* public data */
 #if _BLD_vmalloc && defined(__EXPORT__)
@@ -116,17 +119,17 @@ _BEGIN_EXTERNS_	 /* public data */
 #define extern		extern __IMPORT__
 #endif
 
-extern Vmethod_t* Vmbest;	/* best allocation	*/
-extern Vmethod_t* Vmlast;	/* last-block allocation*/
-extern Vmethod_t* Vmpool;	/* pool allocation	*/
-extern Vmethod_t* Vmdebug;	/* debug allocation	*/
-extern Vmethod_t* Vmprofile;	/* memory usage profile	*/
+extern Vmethod_t*	Vmbest;		/* best allocation		*/
+extern Vmethod_t*	Vmlast;		/* last-block allocation	*/
+extern Vmethod_t*	Vmpool;		/* pool allocation		*/
+extern Vmethod_t*	Vmdebug;	/* allocation with debugging	*/
+extern Vmethod_t*	Vmprofile;	/* profiling memory usage	*/
 
-extern Vmdisc_t* Vmdcheap;	/* heap discipline	*/
-extern Vmdisc_t* Vmdcsbrk;	/* sbrk discipline	*/
+extern Vmdisc_t*	Vmdcheap;	/* heap discipline		*/
+extern Vmdisc_t*	Vmdcsbrk;	/* sbrk discipline		*/
 
-extern Vmalloc_t* Vmheap;	/* heap region		*/
-extern Vmalloc_t* Vmregion;	/* malloc region	*/
+extern Vmalloc_t*	Vmheap;		/* heap region			*/
+extern Vmalloc_t*	Vmregion;	/* malloc region		*/
 
 #undef extern
 _END_EXTERNS_

@@ -51,7 +51,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Labs Research) 2003-06-21 $
+@(#)$Id: package (AT&T Labs Research) 2003-08-11 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary packages.
@@ -636,7 +636,7 @@ ${bT}(7)${bD}You can run the binaries directly from the package root, or you can
 		cp -p -r bin lib include ${bI}DIRECTORY${eI}${eX}${eD}
 ${bT}(8)${bD}To summarize, after the first time, the download cycle for the latest
       binary release is:${bX}
-		bin/package setup binary
+		bin/package setup binary${eX}${eD}${eL}
 
 ${bH}Binary Package Installation Instructions -- Plan B${eH}
 ${bL}

@@ -1,4 +1,31 @@
-03-09-12  --- Release ksh93p-  ---
+03-12-05  --- Release ksh93p-  ---
+03-12-05  A bug in which the shell could hang when set -x tracing a command
+	  when an invalid multibyte character is encountered has been fixed. 
+03-12-05  On some systems, if the KEYBD trap is set, then commands that use
+	  the meta key were not processed until return was hit.  This
+	  has been fixed.
+03-12-05  A problem which occured when the login shell was not a group
+	  leader that could cause it to fail has been fixed.
+03-12-05  A problem in which a shell could core dump after receiving a signal
+	  that should cause it to terminate while it was in the process
+	  of acquiring more space has been fixed.
+03-12-05  If ENV is not specified, the shell will default to $HOME/.kshrc
+	  for interactive shells.
+03-11-21  A bug introduced in ksh93o in which the DEBUG trap could get
+	  disabled after it triggered has been fixed. 
+03-11-04  A bug in which using arithetic prefix opertors ++ or -- on a
+	  non-lvalue could cause a core dump has been fixed.
+03-11-04  A bug in which leading zeros were stripped from variable
+	  expansions within arithmetic compution to avoid being treated
+	  as octal constants when they should not have, has been fixed.
+03-10-08  A bug introduced in ksh93o in which a large here document inside
+	  a function definition could get corrupted has been fixed.
+03-09-22  A bug in which the .get discipline function was not being
+	  called when a string variable was implictly referenced from
+	  within a numerical expression has been fixed.
+03-09-22  A bug in which a script without a leading #! could get executed
+	  by /bin/sh rather than the current shell on some systems has
+	  been fixed.
 03-09-12  To improve conformance with ksh88, leading zeros will be ignored
 	  when getting the numerical value of a string variable so that
 	  they will not be treated as octal constants.

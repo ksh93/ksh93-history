@@ -349,4 +349,8 @@ x=010
 (( $x == 10 )) || err_exit 'leading zeros not ignored for arithmetic with $x'
 typeset -i i=x
 (( i == 10 )) || err_exit 'leading zeros not ignored for arithmetic assignment'
+(( ${x:0:1} == 0 )) || err_exit 'leading zero should not be stripped for x:a:b'
+c010=3
+(( c$x  == 3 )) || err_exit 'leading zero with variable should not be stripped'
+[[ $( ($SHELL -c '((++1))' 2>&1)2>/dev/null ) == *lvalue* ]] || err_exit "((--1)) not generating error message"
 exit $((Errors))

@@ -69,6 +69,7 @@ typedef struct  _mac_
 	char		assign;		/* set for assignments */
 	char		arith;		/* set for ((...)) */
 	char		let;		/* set when expanding let arguments */
+	char		zeros;		/* strip leading zeros when set */
 	void		*nvwalk;	/* for name space walking*/
 } Mac_t;
 
@@ -835,6 +836,7 @@ static int varsub(Mac_t *mp)
 	int		oldpat=mp->pattern,idnum=0;
 	*id = 0;
 retry1:
+	mp->zeros = 0;
 	switch(sh_lexstates[ST_DOL][c=fcget()])
 	{
 	    case S_RBRA:
@@ -1081,13 +1083,8 @@ retry1:
 			{
 				v = nv_getval(np);
 				/* special case --- ignore leading zeros */  
-				if(type!=M_SIZE && v && *v && (mp->arith||mp->let) && !nv_isattr(np,NV_INTEGER) && (offset==0 || !isadigit(*((unsigned char*)stakptr(offset-1)))))
-				{
-					while(*v=='0')
-						v++;
-					if(*v==0)
-						v--;
-				}
+				if( (mp->arith||mp->let) && !nv_isattr(np,NV_INTEGER) && (offset==0 || !isalnum(*((unsigned char*)stakptr(offset-1)))))
+					mp->zeros = 1;
 			}
 		}
 		else
@@ -1709,6 +1706,14 @@ static void mac_copy(register Mac_t *mp,register const char *str, register int s
 	register const char	*cp=str;
 	register int		c,n,nopat;
 	nopat = (mp->quote||mp->assign==1||mp->arith);
+	if(mp->zeros)
+	{
+		/* prevent leading 0's from becomming octal constants */
+		while(size>1 && *str=='0')
+			str++,size--;
+		mp->zeros = 0;
+		cp = str;
+	}
 	if(mp->sp)
 		sfwrite(mp->sp,str,size);
 	else if(mp->pattern>=2 || (mp->pattern && nopat))

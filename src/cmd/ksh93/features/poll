@@ -14,17 +14,32 @@ tst	pipe_socketpair note{ use socketpair() for peekable pipe() }end execute{
 	}
 	main()
 	{
+		int		devfd;
 		int		n;
 		int		pfd[2];
 		int		sfd[2];
 		char		buf[256];
 		pid_t		pid;
 		static char	msg[] = "hello world\n";
+		close(0);
+		open("/dev/null", O_RDONLY);
+		if ((devfd = open("/dev/fd/0", O_RDONLY)) >= 0)
+			close(devfd);
 		if (pipe(pfd) < 0 ||
 		    socketpair(AF_UNIX, SOCK_STREAM, 0, sfd) < 0 ||
 		    shutdown(sfd[0], 1) < 0 ||
 		    shutdown(sfd[1], 0) < 0)
 			_exit(1);
+		if (devfd >= 0)
+		{
+			close(0);
+			dup(sfd[0]);
+			close(sfd[0]);
+			sfd[0] = 0;
+			if ((n = open("/dev/fd/0", O_RDONLY)) < 0)
+				_exit(1);
+			close(n);
+		}
 		if ((pid = fork()) < 0)
 			_exit(1);
 		if (pid)

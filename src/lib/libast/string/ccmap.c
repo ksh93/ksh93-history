@@ -494,6 +494,8 @@ _ccmap(int i, int o)
 	register int		n;
 	int			op;
 
+	if (!i && !o)
+		return (unsigned char*)tab;
 	if (CCCONVERT(i))
 	{
 		o = CCOUT(i);

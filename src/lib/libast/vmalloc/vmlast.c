@@ -98,6 +98,7 @@ got_block:
 
 done:
 	CLRLOCK(vd,local);
+	ANNOUNCE(local, vm, VM_ALLOC, (Void_t*)tp, vm->disc);
 	return (Void_t*)tp;
 }
 
@@ -118,14 +119,15 @@ reg Void_t*	data;
 	if(!data)
 		return 0;
 	if(!(local = vd->mode&VM_TRUST) )
-	{	if(ISLOCK(vd,0))
+	{	GETLOCAL(vd, local);
+		if(ISLOCK(vd, local))
 			return -1;
-		SETLOCK(vd,0);
+		SETLOCK(vd, local);
 	}
 	if(data != (Void_t*)vd->free)
 	{	if(!local && vm->disc->exceptf)
 			(void)(*vm->disc->exceptf)(vm,VM_BADADDR,data,vm->disc);
-		CLRLOCK(vd,0);
+		CLRLOCK(vd, local);
 		return -1;
 	}
 
@@ -144,7 +146,8 @@ reg Void_t*	data;
 	seg->free = fp;
 	seg->last = NIL(Block_t*);
 
-	CLRLOCK(vd,0);
+	CLRLOCK(vd, local);
+	ANNOUNCE(local, vm, VM_FREE, data, vm->disc);
 	return 0;
 }
 
@@ -179,9 +182,10 @@ int		type;
 	}
 
 	if(!(local = vd->mode&VM_TRUST))
-	{	if(ISLOCK(vd,0))
+	{	GETLOCAL(vd, local);
+		if(ISLOCK(vd, local))
 			return NIL(Void_t*);
-		SETLOCK(vd,0);
+		SETLOCK(vd, local);
 		orgdata = data;
 		orgsize = size;
 	}
@@ -280,7 +284,8 @@ int		type;
 			(*_Vmtrace)(vm,(Vmuchar_t*)orgdata,(Vmuchar_t*)data,orgsize,0);
 	}
 
-	CLRLOCK(vd,0);
+	CLRLOCK(vd, local);
+	ANNOUNCE(local, vm, VM_RESIZE, data, vm->disc);
 
 done:	if(data && (type&VM_RSZERO) && size > oldsize)
 		memset((Void_t*)((Vmuchar_t*)data + oldsize), 0, size-oldsize);
@@ -354,7 +359,7 @@ Vmalloc_t*	vm;
 			s = seg->extent;
 		else	s += sizeof(Head_t);
 
-		if((*_Vmtruncate)(vm,seg,s,1) < 0)
+		if((*_Vmtruncate)(vm,seg,s,1) == s)
 			seg->free = fp;
 	}
 
@@ -425,6 +430,7 @@ size_t		align;
 
 done:
 	CLRLOCK(vd,local);
+	ANNOUNCE(local, vm, VM_ALLOC, (Void_t*)data, vm->disc);
 
 	return (Void_t*)data;
 }

@@ -3486,11 +3486,12 @@ optget(register char** argv, const char* oopts)
 	register int	c;
 	register char*	s;
 	char*		a;
+	char*		b;
 	char*		e;
 	char*		f;
+	char*		g;
 	char*		v;
 	char*		w;
-	char*		b;
 	char*		p;
 	char*		t;
 	char*		numopt;
@@ -3956,12 +3957,12 @@ optget(register char** argv, const char* oopts)
 						{
 							p = skip(s + 1, '?', 0, 0, 1, 0, 0, version);
 							e = sfprints("%-.*s", p - (s + 1), s + 1);
-							b = T(error_info.id, catalog, e);
-							if (b == e)
+							g = T(error_info.id, catalog, e);
+							if (g == e)
 								p = 0;
 							else
 							{
-								sfprintf(xp, ":%s|%s?", b, e);
+								sfprintf(xp, ":%s|%s?", g, e);
 								s = sfstruse(xp);
 							}
 						}
@@ -4633,11 +4634,15 @@ optget(register char** argv, const char* oopts)
 
 /*
  * parse long options sans leading -- from string and pass to optget()
- * syntax is
+ * syntax is the unquoted
+ *
+ *	<length> <name>[[-+:|&=]=<value>\n (or \0 for the last)
+ *
+ * or the quoted
  *
  *	[no]name[[-+:|&=]=['"{(]value[)}"']][, ]...
  *
- * \x escapes passed to chresc()
+ *	with \x escapes passed to chresc()
  *
  * return '#' for `label:', with opt_info.name==label
  * str[opt_info.offset]	next arg
@@ -4675,67 +4680,76 @@ optstr(const char* str, const char* opts)
 			return 0;
 		sfputc(mp, '-');
 		sfputc(mp, '-');
-		while (*s && *s != ',' && *s != ' ' && *s != '\t' && *s != '\n' && *s != '\r' && *s != '=' && *s != ':')
-			sfputc(mp, *s++);
-		if ((c = *s) == ':' && *(s + 1) != '=')
+		if (isdigit(*s) && (v = (int)strtol(s, &e, 10)) > 1 && isspace(*e) && --v <= strlen(s) && (s[v] == 0 || s[v] == '\n'))
 		{
-			opt_info.index = 1;
-			opt_info.offset = ++s - (char*)str;
-			s = sfstruse(mp) + 2;
-			e = opt_info.name;
-			while (e < &opt_info.name[sizeof(opt_info.name)-1] && (*e++ = *s++));
-			opt_info.arg = 0;
-			opt_info.num = opt_info.number = 0;
-			opt_info.option[0] = ':';
-			opt_info.option[1] = 0;
-			return '#';
+			s += v;
+			while (isspace(*++e));
+			sfwrite(mp, e, s - e);
 		}
-		if (c == ':' || c == '=')
+		else
 		{
-			sfputc(mp, c);
-			ql = qr = 0;
-			while (c = *++s)
+			while (*s && *s != ',' && *s != ' ' && *s != '\t' && *s != '\n' && *s != '\r' && *s != '=' && *s != ':')
+				sfputc(mp, *s++);
+			if ((c = *s) == ':' && *(s + 1) != '=')
 			{
-				if (c == '\\')
+				opt_info.index = 1;
+				opt_info.offset = ++s - (char*)str;
+				s = sfstruse(mp) + 2;
+				e = opt_info.name;
+				while (e < &opt_info.name[sizeof(opt_info.name)-1] && (*e++ = *s++));
+				opt_info.arg = 0;
+				opt_info.num = opt_info.number = 0;
+				opt_info.option[0] = ':';
+				opt_info.option[1] = 0;
+				return '#';
+			}
+			if (c == ':' || c == '=')
+			{
+				sfputc(mp, c);
+				ql = qr = 0;
+				while (c = *++s)
 				{
-					sfputc(mp, chresc(s, &e));
-					s = e - 1;
-				}
-				else if (c == qr)
-				{
-					if (qr != ql)
-						sfputc(mp, c);
-					if (--qc <= 0)
-						qr = ql = 0;
-				}
-				else if (c == ql)
-				{
-					sfputc(mp, c);
-					qc++;
-				}
-				else if (qr)
-					sfputc(mp, c);
-				else if (c == ',' || c == ' ' || c == '\t' || c == '\n' || c == '\r')
-					break;
-				else if (c == '"' || c == '\'')
-				{
-					ql = qr = c;
-					qc = 1;
-				}
-				else
-				{
-					sfputc(mp, c);
-					if (c == GO)
+					if (c == '\\')
 					{
-						ql = c;
-						qr = OG;
+						sfputc(mp, chresc(s, &e));
+						s = e - 1;
+					}
+					else if (c == qr)
+					{
+						if (qr != ql)
+							sfputc(mp, c);
+						if (--qc <= 0)
+							qr = ql = 0;
+					}
+					else if (c == ql)
+					{
+						sfputc(mp, c);
+						qc++;
+					}
+					else if (qr)
+						sfputc(mp, c);
+					else if (c == ',' || c == ' ' || c == '\t' || c == '\n' || c == '\r')
+						break;
+					else if (c == '"' || c == '\'')
+					{
+						ql = qr = c;
 						qc = 1;
 					}
-					else if (c == '(')
+					else
 					{
-						ql = c;
-						qr = ')';
-						qc = 1;
+						sfputc(mp, c);
+						if (c == GO)
+						{
+							ql = c;
+							qr = OG;
+							qc = 1;
+						}
+						else if (c == '(')
+						{
+							ql = c;
+							qr = ')';
+							qc = 1;
+						}
 					}
 				}
 			}

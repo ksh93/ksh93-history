@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -29,17 +29,14 @@
  * AT&T Bell Laboratories
  *
  * fmtmode() and strperm() readonly data
+ * for external format modes
  */
 
 #include "modelib.h"
 
 struct modeop	modetab[MODELEN] =
 {
-#if S_IFMT == 0xFF000000 /* mvs.390 */
-	S_IFMT,  24, 0000000, 0, "-dc-plbs????????",
-#else
 	0170000, 12, 0000000, 0, "-pc?d?b?-Cl?sD??",
-#endif
 	0000400,  8, 0000000, 0, "-r",
 	0000200,  7, 0000000, 0, "-w",
 	0004000, 10, 0000100, 6, "-xSs",

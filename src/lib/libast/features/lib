@@ -21,7 +21,7 @@ lib	fchmod,fcntl,fmtmsg,fnmatch,fork,fsync
 lib	getconf,getdents,getdirentries,getdtablesize,getdate
 lib	getgroups,gethostname,getlogin,getpagesize,getrlimit,getuniverse
 lib	glob,index,iswblank,iswctype,killpg,link,localeconv,madvise
-lib	mbtowc,mbrtowc,memalign,memchr,memcmp,memcpy,memdup,memmove,memset
+lib	mbtowc,mbrtowc,memalign,memchr,memcpy,memdup,memmove,memset
 lib	mkdir,mkfifo,mktemp,mktime
 lib	mount,on_exit,onexit,opendir,pathconf
 lib	readlink,remove,rename,rewinddir,rindex,rmdir,setlocale
@@ -327,6 +327,17 @@ tst	socket_peek note{ recv(MSG_PEEK) works }end execute{
 			if (buf[i] != msg[i])
 				return 1;
 		return 0;
+	}
+}end
+
+tst	lib_memcmp string.h note{ standard memcmp interface that works }end execute{
+	/* sgi again -- we're sick of being their regression test */
+	#define L	8
+	char		a[L] = { '0' };
+	char		b[L] = { '1' };
+	main()
+	{
+		return memcmp(a, b, L) >= 0;
 	}
 }end
 

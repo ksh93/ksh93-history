@@ -77,7 +77,7 @@
 #    endif
 #  endif
 #endif
-#line 1 "proto.c"
+#line 1 "/home/gsf/src/cmd/proto/proto.c"
 
 
 
@@ -290,7 +290,7 @@ replace __PARAM__((const char* newfile, const char* oldfile, int preserve), (new
 	return preserve;
 }
 
-#line 1 "../../lib/libpp/ppproto.c"
+#line 1 "/home/gsf/src/lib/libpp/ppproto.c"
 
  
 
@@ -307,7 +307,7 @@ static const char id[] = "\n@(#)$Id: proto (AT&T Research) 2003-06-21 $\000\n";
 
 
 
-#line 1 "../../lib/libpp/ppfsm.c"
+#line 1 "/home/gsf/src/lib/libpp/ppfsm.c"
 
  
 
@@ -317,7 +317,7 @@ static const char id[] = "\n@(#)$Id: proto (AT&T Research) 2003-06-21 $\000\n";
 
 
 
-#line 1 "../../lib/libpp/pplib.h"
+#line 1 "/home/gsf/src/lib/libpp/pplib.h"
 
  
 
@@ -551,7 +551,7 @@ struct pptuple
 
 
 
-#line 1 "../../lib/libpp/pp.h"
+#line 1 "/home/gsf/src/lib/libpp/pp.h"
 
  
 
@@ -981,7 +981,7 @@ extern __MANGLE__ void		pppragma __PROTO__((char*, char*, char*, char*, int));
 extern __MANGLE__ int		ppprintf __PROTO__((char*, ...));
 
 
-#line 336 "../../lib/libpp/pplib.h"
+#line 336 "/home/gsf/src/lib/libpp/pplib.h"
 
 #line 1 "../../lib/libpp/ppdef.h"
  
@@ -1189,9 +1189,9 @@ extern __MANGLE__ int		ppprintf __PROTO__((char*, ...));
 
 
 
-#line 337 "../../lib/libpp/pplib.h"
+#line 337 "/home/gsf/src/lib/libpp/pplib.h"
 
-#line 1 "../../lib/libpp/ppkey.h"
+#line 1 "/home/gsf/src/lib/libpp/ppkey.h"
 
  
 
@@ -1319,7 +1319,7 @@ extern __MANGLE__ int		ppprintf __PROTO__((char*, ...));
 extern __MANGLE__ struct ppkeyword	ppkey[];
 
 
-#line 338 "../../lib/libpp/pplib.h"
+#line 338 "/home/gsf/src/lib/libpp/pplib.h"
 
 
 
@@ -1660,9 +1660,9 @@ extern __MANGLE__ void		pptrace __PROTO__((int));
 
 
 
-#line 11 "../../lib/libpp/ppfsm.c"
+#line 11 "/home/gsf/src/lib/libpp/ppfsm.c"
 
-#line 1 "../../lib/libpp/ppfsm.h"
+#line 1 "/home/gsf/src/lib/libpp/ppfsm.h"
 
  
 
@@ -1854,7 +1854,7 @@ extern __MANGLE__ char		_pp_trigraph[255+1];
 extern __MANGLE__ void		_pp_refill __PROTO__((int));
 
 
-#line 12 "../../lib/libpp/ppfsm.c"
+#line 12 "/home/gsf/src/lib/libpp/ppfsm.c"
 
  
 
@@ -2726,7 +2726,7 @@ ppfsm __PARAM__((int op, register char* s), (op, s)) __OTORP__(int op; register 
 
 
 
-#line 18 "../../lib/libpp/ppproto.c"
+#line 18 "/home/gsf/src/lib/libpp/ppproto.c"
 
 
 
@@ -3001,7 +3001,7 @@ memcopy __PARAM__((register char* s, register char* t, int n), (s, t, n)) __OTOR
 	return s;
 }
 
-#line 1 "../../lib/libast/port/astlicense.c"
+#line 1 "/home/gsf/src/lib/libast/port/astlicense.c"
 
 
  
@@ -3069,7 +3069,7 @@ extern __MANGLE__  long	strkey  __PROTO__((const char*));
 
 
 
-#line 19 "../../lib/libast/port/astlicense.c"
+#line 19 "/home/gsf/src/lib/libast/port/astlicense.c"
 
 
 
@@ -3187,7 +3187,7 @@ copy __PARAM__((register Buffer_t* b, register char* s, int n), (b, s, n)) __OTO
 	if (n < 0)
 		n = sstrlen( s);
 	while (n--)
-		((( b)->nxt<( b)->end)?(*( b)->nxt++=( *s++)):(-1));
+		((( b)->nxt<( b)->end)?(*( b)->nxt++=( *s++)):(( *s++),(-1)));
 }
 
  
@@ -3211,10 +3211,10 @@ comment __PARAM__((Notice_t* notice, register Buffer_t* b, register char* s, reg
 	{
 		if (n)
 		{
-			((( b)->nxt<( b)->end)?(*( b)->nxt++=( notice->cc[n > 0 ? 0 : 1])):(-1));
+			((( b)->nxt<( b)->end)?(*( b)->nxt++=( notice->cc[n > 0 ? 0 : 1])):(( notice->cc[n > 0 ? 0 : 1]),(-1)));
 			for (i = 0; i < 66; i++)
-				((( b)->nxt<( b)->end)?(*( b)->nxt++=( cc)):(-1));
-			((( b)->nxt<( b)->end)?(*( b)->nxt++=( notice->cc[n > 0 ? 1 : 2])):(-1));
+				((( b)->nxt<( b)->end)?(*( b)->nxt++=( cc)):(( cc),(-1)));
+			((( b)->nxt<( b)->end)?(*( b)->nxt++=( notice->cc[n > 0 ? 1 : 2])):(( notice->cc[n > 0 ? 1 : 2]),(-1)));
 		}
 		else
 			s = "";
@@ -3223,23 +3223,23 @@ comment __PARAM__((Notice_t* notice, register Buffer_t* b, register char* s, reg
 	{
 		if (n > 66)
 			n = 66;
-		((( b)->nxt<( b)->end)?(*( b)->nxt++=( cc)):(-1));
+		((( b)->nxt<( b)->end)?(*( b)->nxt++=( cc)):(( cc),(-1)));
 		m = (66 - n) / 2;
 		x = 66 - m - n;
 		while (m--)
-			((( b)->nxt<( b)->end)?(*( b)->nxt++=( ' ')):(-1));
+			((( b)->nxt<( b)->end)?(*( b)->nxt++=( ' ')):(( ' '),(-1)));
 		while (n--)
 		{
 			i = *s++;
 			if (u && i >= 'a' && i <= 'z')
 				i = i - 'a' + 'A';
-			((( b)->nxt<( b)->end)?(*( b)->nxt++=( i)):(-1));
+			((( b)->nxt<( b)->end)?(*( b)->nxt++=( i)):(( i),(-1)));
 		}
 		while (x--)
-			((( b)->nxt<( b)->end)?(*( b)->nxt++=( ' ')):(-1));
-		((( b)->nxt<( b)->end)?(*( b)->nxt++=( cc)):(-1));
+			((( b)->nxt<( b)->end)?(*( b)->nxt++=( ' ')):(( ' '),(-1)));
+		((( b)->nxt<( b)->end)?(*( b)->nxt++=( cc)):(( cc),(-1)));
 	}
-	((( b)->nxt<( b)->end)?(*( b)->nxt++=( '\n')):(-1));
+	((( b)->nxt<( b)->end)?(*( b)->nxt++=( '\n')):(( '\n'),(-1)));
 }
 
  
@@ -3276,11 +3276,11 @@ expand __PARAM__((Notice_t* notice, register Buffer_t* b, register char* t, int 
 				x = notice->item[c].data;
 				z = x + notice->item[c].size;
 				while (x < z)
-					((( b)->nxt<( b)->end)?(*( b)->nxt++=( *x++)):(-1));
+					((( b)->nxt<( b)->end)?(*( b)->nxt++=( *x++)):(( *x++),(-1)));
 			}
 		}
 		else
-			((( b)->nxt<( b)->end)?(*( b)->nxt++=( *t++)):(-1));
+			((( b)->nxt<( b)->end)?(*( b)->nxt++=( *t++)):(( *t++),(-1)));
 	}
 }
 
@@ -3300,19 +3300,19 @@ copyright __PARAM__((Notice_t* notice, register Buffer_t* b), (notice, b)) __OTO
 	if ((x = notice->item[8].data) && sstrncmp( x, t, 4))
 	{
 		expand(notice, b, x, notice->item[8].size);
-		((( b)->nxt<( b)->end)?(*( b)->nxt++=( '-')):(-1));
+		((( b)->nxt<( b)->end)?(*( b)->nxt++=( '-')):(( '-'),(-1)));
 	}
 	copy(b, t, 4);
 	if (x = notice->item[2].data)
 	{
-		((( b)->nxt<( b)->end)?(*( b)->nxt++=( ' ')):(-1));
+		((( b)->nxt<( b)->end)?(*( b)->nxt++=( ' ')):(( ' '),(-1)));
 		expand(notice, b, x, notice->item[2].size);
-		((( b)->nxt<( b)->end)?(*( b)->nxt++=( ' ')):(-1));
+		((( b)->nxt<( b)->end)?(*( b)->nxt++=( ' ')):(( ' '),(-1)));
 		copy(b, "Corp.", -1);
 	}
 	else if (x = notice->item[1].data)
 	{
-		((( b)->nxt<( b)->end)?(*( b)->nxt++=( ' ')):(-1));
+		((( b)->nxt<( b)->end)?(*( b)->nxt++=( ' ')):(( ' '),(-1)));
 		expand(notice, b, x, notice->item[1].size);
 	}
 }
@@ -3349,7 +3349,7 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 		{
 			copy(&buf, file, -1);
 			copy(&buf, ": cannot open", -1);
-			((( &buf)->nxt<( &buf)->end)?(*( &buf)->nxt++=( 0)):(-1));
+			((( &buf)->nxt<( &buf)->end)?(*( &buf)->nxt++=( 0)):(( 0),(-1)));
 			return -1;
 		}
 		n = read(i, info, sizeof(info) - 1);
@@ -3358,7 +3358,7 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 		{
 			copy(&buf, file, -1);
 			copy(&buf, ": cannot read", -1);
-			((( &buf)->nxt<( &buf)->end)?(*( &buf)->nxt++=( 0)):(-1));
+			((( &buf)->nxt<( &buf)->end)?(*( &buf)->nxt++=( 0)):(( 0),(-1)));
 			return -1;
 		}
 		s = info;
@@ -3518,7 +3518,7 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 			{
 				copy(&buf, file, -1);
 				copy(&buf, ": syntax error: assignment expected", -1);
-				((( &buf)->nxt<( &buf)->end)?(*( &buf)->nxt++=( 0)):(-1));
+				((( &buf)->nxt<( &buf)->end)?(*( &buf)->nxt++=( 0)):(( 0),(-1)));
 				return -1;
 			}
 			if (*s)
@@ -3590,7 +3590,7 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 			if (n >= (66-32))
 				comment(&notice, &buf, (( &tmp)->buf), (( &tmp)->siz=( &tmp)->nxt-( &tmp)->buf,( &tmp)->nxt=( &tmp)->buf,( &tmp)->siz), 0);
 			else
-				((( &tmp)->nxt<( &tmp)->end)?(*( &tmp)->nxt++=( ' ')):(-1));
+				((( &tmp)->nxt<( &tmp)->end)?(*( &tmp)->nxt++=( ' ')):(( ' '),(-1)));
 			copy(&tmp, "intellectual property rights.", -1);
 			comment(&notice, &buf, (( &tmp)->buf), (( &tmp)->siz=( &tmp)->nxt-( &tmp)->buf,( &tmp)->nxt=( &tmp)->buf,( &tmp)->siz), 0);
 			comment(&notice, &buf, ((char*)0), 0, 0);
@@ -3711,7 +3711,7 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 					if (x = notice.item[1].data)
 					{
 						if ((( &tmp)->nxt-( &tmp)->buf))
-							((( &tmp)->nxt<( &tmp)->end)?(*( &tmp)->nxt++=( ' ')):(-1));
+							((( &tmp)->nxt<( &tmp)->end)?(*( &tmp)->nxt++=( ' ')):(( ' '),(-1)));
 						expand(&notice, &tmp, x, notice.item[1].size);
 					}
 					if ((( &tmp)->nxt-( &tmp)->buf))
@@ -3749,9 +3749,9 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 					if (notice.item[2].size >= ((66-32) - 6))
 						comment(&notice, &buf, (( &tmp)->buf), (( &tmp)->siz=( &tmp)->nxt-( &tmp)->buf,( &tmp)->nxt=( &tmp)->buf,( &tmp)->siz), 0);
 					else
-						((( &tmp)->nxt<( &tmp)->end)?(*( &tmp)->nxt++=( ' ')):(-1));
+						((( &tmp)->nxt<( &tmp)->end)?(*( &tmp)->nxt++=( ' ')):(( ' '),(-1)));
 					expand(&notice, &tmp, x, notice.item[2].size);
-					((( &tmp)->nxt<( &tmp)->end)?(*( &tmp)->nxt++=( ' ')):(-1));
+					((( &tmp)->nxt<( &tmp)->end)?(*( &tmp)->nxt++=( ' ')):(( ' '),(-1)));
 					copy(&tmp, "Corp.", -1);
 				}
 				else if (x = notice.item[1].data)
@@ -3760,7 +3760,7 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 					if (notice.item[1].size >= (66-32))
 						comment(&notice, &buf, (( &tmp)->buf), (( &tmp)->siz=( &tmp)->nxt-( &tmp)->buf,( &tmp)->nxt=( &tmp)->buf,( &tmp)->siz), 0);
 					else
-						((( &tmp)->nxt<( &tmp)->end)?(*( &tmp)->nxt++=( ' ')):(-1));
+						((( &tmp)->nxt<( &tmp)->end)?(*( &tmp)->nxt++=( ' ')):(( ' '),(-1)));
 					expand(&notice, &tmp, x, notice.item[1].size);
 				}
 				comment(&notice, &buf, (( &tmp)->buf), (( &tmp)->siz=( &tmp)->nxt-( &tmp)->buf,( &tmp)->nxt=( &tmp)->buf,( &tmp)->siz), 0);
@@ -3785,7 +3785,7 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 			if (x = notice.item[1].data)
 			{
 				if ((( &tmp)->nxt-( &tmp)->buf))
-					((( &tmp)->nxt<( &tmp)->end)?(*( &tmp)->nxt++=( ' ')):(-1));
+					((( &tmp)->nxt<( &tmp)->end)?(*( &tmp)->nxt++=( ' ')):(( ' '),(-1)));
 				expand(&notice, &tmp, x, notice.item[1].size);
 			}
 			if ((( &tmp)->nxt-( &tmp)->buf))
@@ -3815,16 +3815,18 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 				while (v < x && *v != ',' && *v != '+' && *v++ != '>');
 				n = v - s;
 			}
+			h = 0;
 			for (i = 0; i < notice.ids; i++)
 				if (q || n == notice.id[i].name.size && !sstrncmp( s, notice.id[i].name.data, n))
 				{
+					h = 1;
 					s = notice.id[i].value.data;
 					n = notice.id[i].value.size;
 					if (notice.type == 1)
 					{
 						copy(&buf, "[-author?", -1);
 						expand(&notice, &buf, s, n);
-						((( &buf)->nxt<( &buf)->end)?(*( &buf)->nxt++=( ']')):(-1));
+						((( &buf)->nxt<( &buf)->end)?(*( &buf)->nxt++=( ']')):(( ']'),(-1)));
 					}
 					else
 					{
@@ -3842,6 +3844,26 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 				}
 			if (q)
 				break;
+			if (!h)
+			{
+				if (notice.type == 1)
+				{
+					copy(&buf, "[-author?", -1);
+					expand(&notice, &buf, s, n);
+					((( &buf)->nxt<( &buf)->end)?(*( &buf)->nxt++=( ']')):(( ']'),(-1)));
+				}
+				else
+				{
+					if (k < 0)
+					{
+						comment( &notice, &buf, "CONTRIBUTORS",sizeof( "CONTRIBUTORS")-1, 0);
+						comment(&notice, &buf, ((char*)0), 0, 0);
+					}
+					k = 1;
+					expand(&notice, &tmp, s, n);
+					comment(&notice, &buf, (( &tmp)->buf), (( &tmp)->siz=( &tmp)->nxt-( &tmp)->buf,( &tmp)->nxt=( &tmp)->buf,( &tmp)->siz), 0);
+				}
+			}
 		}
 		if (k > 0)
 			comment(&notice, &buf, ((char*)0), 0, 0);
@@ -3850,14 +3872,14 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 	{
 		copy(&buf, "[-copyright?", -1);
 		copyright(&notice, &buf);
-		((( &buf)->nxt<( &buf)->end)?(*( &buf)->nxt++=( ']')):(-1));
+		((( &buf)->nxt<( &buf)->end)?(*( &buf)->nxt++=( ']')):(( ']'),(-1)));
 		if (x = notice.item[10].data)
 		{
 			copy(&buf, "[-license?", -1);
 			expand(&notice, &buf, x, notice.item[10].size);
-			((( &buf)->nxt<( &buf)->end)?(*( &buf)->nxt++=( ']')):(-1));
+			((( &buf)->nxt<( &buf)->end)?(*( &buf)->nxt++=( ']')):(( ']'),(-1)));
 		}
-		((( &buf)->nxt<( &buf)->end)?(*( &buf)->nxt++=( '\n')):(-1));
+		((( &buf)->nxt<( &buf)->end)?(*( &buf)->nxt++=( '\n')):(( '\n'),(-1)));
 	}
 	else
 	{
@@ -3878,7 +3900,7 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 	}
 	return (*(( &buf)->nxt>=( &buf)->end?(( &buf)->nxt=( &buf)->end-1):( &buf)->nxt)=0,( &buf)->nxt-( &buf)->buf);
 }
-#line 299 "../../lib/libpp/ppproto.c"
+#line 299 "/home/gsf/src/lib/libpp/ppproto.c"
 
 
 
@@ -5968,7 +5990,7 @@ pppread __PARAM__((char* iob), (iob)) __OTORP__(char* iob;){
 
 
 
-#line 215 "proto.c"
+#line 215 "/home/gsf/src/cmd/proto/proto.c"
 
 
 
