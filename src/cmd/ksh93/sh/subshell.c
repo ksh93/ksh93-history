@@ -352,7 +352,7 @@ Sfio_t *sh_subshell(union anynode *t, int flags, int comsub)
 	sp->jobs = job_subsave();
 #ifdef PATH_BFPATH
 	/* make sure initialization has occurred */ 
-	if(!shp->defpathlist)
+	if(!shp->pathlist)
 		path_get("/");
 	sp->pathlist = path_dup((Pathcomp_t*)shp->pathlist);
 #endif

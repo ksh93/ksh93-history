@@ -30,7 +30,7 @@
  */
 
 static const char usage[] =
-"[-?@(#)$Id: stty (AT&T Labs Research) 2002-01-24 $\n]"
+"[-?@(#)$Id: stty (AT&T Labs Research) 2003-06-04 $\n]"
 USAGE_LICENSE
 "[+NAME?stty - set or get terminal modes]"
 "[+DESCRIPTION?\bstty\b sets certain terminal I/O modes for the device "
@@ -619,7 +619,7 @@ static int gettchar(register const char *cp)
 			return(cntl(cp[1]));
 		}
 	}
-	if(strcmp("undef",cp)==0)
+	if(streq(cp,"undef") || streq(cp,"<undef>"))
 		return(-1);
 	return(*((unsigned char*)cp));
 }
@@ -863,7 +863,8 @@ static int infof(Opt_t* op, Sfio_t* sp, const char* s, Optdisc_t* dp)
 #endif
 	sfprintf(sp,"}[+Local Modes.]{");
 	listfields(sp,L_FLAG);
-	sfprintf(sp,"}[+Control Assignments.]{");
+	sfprintf(sp,"}[+Control Assignments.?If \ac\a is \bundef\b or an empty "
+		"string then the control assignment is disabled.]{");
 	listchars(sp,WIND);
 	listchars(sp,CHAR);
 	sfprintf(sp,"}[+Combination Modes.]{");

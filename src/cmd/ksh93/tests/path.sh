@@ -156,4 +156,10 @@ x=$(whence rm)
 typeset foo=$(PATH=/xyz:/abc :)
 y=$(whence rm)
 [[ $x != "$y" ]] && err_exit 'PATH not restored after command substitution'
+PATH=$(getconf PATH)
+x=$(whence ls)
+PATH=.:$PWD:${x%/ls}
+[[ $(whence ls) == "$x" ]] || err_exit 'PATH search bug when .:$PWD in path'
+PATH=$PWD:.:${x%/ls}
+[[ $(whence ls) == "$x" ]] || err_exit 'PATH search bug when :$PWD:. in path'
 exit $((Errors))

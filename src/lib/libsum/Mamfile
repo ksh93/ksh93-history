@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 4.3 2003-04-15
+info mam static 00000 1994-07-17 make (AT&T Research) 4.3 2003-06-21
 setv INSTALLROOT ../../..
 setv PACKAGE_ast ${INSTALLROOT}
 setv PACKAGE_ast_INCLUDE ${PACKAGE_ast}/include/ast
@@ -9,7 +9,8 @@ setv ARFLAGS cr
 setv AS as
 setv ASFLAGS
 setv CC cc
-setv CCFLAGS  ${debug?1?${mam_cc_DEBUG}?${mam_cc_OPTIMIZE}?}
+setv mam_cc_FLAGS 
+setv CCFLAGS ${debug?1?${mam_cc_DEBUG} -D_BLD_DEBUG?${mam_cc_OPTIMIZE}?}
 setv COTEMP $$
 setv CPIO cpio
 setv CPIOFLAGS
@@ -41,8 +42,8 @@ make libsum.a archive
 make sum.req
 exec - set -
 exec - echo 'main(){return(0);}' > 1.${COTEMP}.c
-exec - ${CC} ${CCFLAGS}    -c 1.${COTEMP}.c &&
-exec - x=`${CC} ${CCFLAGS}    ${LDFLAGS}  -o 1.${COTEMP}.x 1.${COTEMP}.o -l'*' 2>&1 | sed -e 's/[][()+@?]/#/g' || :` &&
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}    -c 1.${COTEMP}.c &&
+exec - x=`${CC} ${mam_cc_FLAGS} ${CCFLAGS}    ${LDFLAGS}  -o 1.${COTEMP}.x 1.${COTEMP}.o -l'*' 2>&1 | sed -e 's/[][()+@?]/#/g' || :` &&
 exec - {
 exec - case "" in
 exec - *?)	echo " " ;;
@@ -52,8 +53,8 @@ exec - do	case $i in
 exec - 	"sum"|sum)
 exec - 		;;
 exec - 	*)	if	test ! -f ${INSTALLROOT}/lib/lib$i.a
-exec - 		then	case `{ ${CC} ${CCFLAGS}     ${LDFLAGS}  -o 1.${COTEMP}.x 1.${COTEMP}.o  -l$i 2>&1 || echo '' $x ;} | sed -e 's/[][()+@?]/#/g' || :` in
-exec - 			*$x*)	case `{ ${CC} ${CCFLAGS}    ${LDFLAGS}  -o 1.${COTEMP}.x 1.${COTEMP}.o  -l$i 2>&1 || echo '' $x ;} | sed -e 's/[][()+@?]/#/g' || :` in
+exec - 		then	case `{ ${CC} ${mam_cc_FLAGS} ${CCFLAGS}     ${LDFLAGS}  -o 1.${COTEMP}.x 1.${COTEMP}.o  -l$i 2>&1 || echo '' $x ;} | sed -e 's/[][()+@?]/#/g' || :` in
+exec - 			*$x*)	case `{ ${CC} ${mam_cc_FLAGS} ${CCFLAGS}    ${LDFLAGS}  -o 1.${COTEMP}.x 1.${COTEMP}.o  -l$i 2>&1 || echo '' $x ;} | sed -e 's/[][()+@?]/#/g' || :` in
 exec - 				*$x*) continue ;;
 exec - 				esac
 exec - 				;;
@@ -80,9 +81,7 @@ done ../../../include/ast/ast_common.h dontcare
 done ../../../include/ast/int.h
 make sum.h implicit
 make ../../../include/ast/ast.h implicit
-make ../../../include/ast/sfio.h implicit
-make ../../../include/ast/sfio_s.h implicit
-done ../../../include/ast/sfio_s.h dontcare
+make ../../../include/ast/vmalloc.h implicit
 prev ../../../include/ast/ast_common.h implicit
 make ../../../include/ast/ast_std.h implicit
 make ../../../include/ast/ast_botch.h implicit
@@ -118,7 +117,8 @@ done ../../../include/ast/ast_map.h dontcare
 make ../../../include/ast/stdio.h implicit
 make ../../../include/ast/ast_stdio.h implicit
 prev ../../../include/ast/ast_getopt.h implicit
-prev ../../../include/ast/sfio_s.h implicit
+make ../../../include/ast/sfio_s.h implicit
+done ../../../include/ast/sfio_s.h dontcare
 prev ../../../include/ast/ast_common.h implicit
 done ../../../include/ast/ast_stdio.h dontcare
 done ../../../include/ast/stdio.h dontcare
@@ -135,6 +135,11 @@ done ../../../include/ast/ast_lib.h dontcare
 prev ../../../include/ast/ast_common.h implicit
 prev ../../../include/ast/prototyped.h implicit
 done ../../../include/ast/ast_std.h dontcare
+done ../../../include/ast/vmalloc.h dontcare
+make ../../../include/ast/sfio.h implicit
+prev ../../../include/ast/sfio_s.h implicit
+prev ../../../include/ast/ast_common.h implicit
+prev ../../../include/ast/ast_std.h implicit
 done ../../../include/ast/sfio.h dontcare
 prev ../../../include/ast/ast_std.h implicit
 make ../../../include/ast/ast_version.h implicit
@@ -145,7 +150,7 @@ done ../../../include/ast/ast.h dontcare
 done sum.h
 done sumlib.c
 prev sumlib.c
-exec - ${CC} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c sumlib.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c sumlib.c
 done sumlib.o generated
 exec - ${AR} cr libsum.a sumlib.o
 exec - (ranlib libsum.a) >/dev/null 2>&1 || true

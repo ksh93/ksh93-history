@@ -136,19 +136,16 @@ typedef struct				/* tm library global info	*/
 typedef struct tm Tm_t;
 
 #if _BLD_ast && defined(__EXPORT__)
-#define __PUBLIC_DATA__		__EXPORT__
-#else
+#define extern		extern __EXPORT__
+#endif
 #if !_BLD_ast && defined(__IMPORT__)
-#define __PUBLIC_DATA__		__IMPORT__
-#else
-#define __PUBLIC_DATA__
-#endif
+#define extern		extern __IMPORT__
 #endif
 
-extern __PUBLIC_DATA__ Tm_data_t	tm_data;
-extern __PUBLIC_DATA__ Tm_info_t	tm_info;
+extern Tm_data_t	tm_data;
+extern Tm_info_t	tm_info;
 
-#undef	__PUBLIC_DATA__
+#undef	extern
 
 #if _BLD_ast && defined(__EXPORT__)
 #define extern		__EXPORT__

@@ -91,6 +91,22 @@ struct _sfio_s;
 #define EXITED_TERM(x)	((x)&((1<<EXIT_BITS)|(1<<(EXIT_BITS-1))))
 
 /*
+ * astconflist() flags
+ */
+
+#define ASTCONF_parse		0x001
+#define ASTCONF_write		0x002
+#define ASTCONF_read		0x004
+#define ASTCONF_lower		0x008
+#define ASTCONF_base		0x010
+#define ASTCONF_defined		0x020
+#define ASTCONF_quote		0x040
+#define ASTCONF_table		0x080
+#define ASTCONF_matchcall	0x100
+#define ASTCONF_matchname	0x200
+#define ASTCONF_matchstandard	0x400
+
+/*
  * pathcanon() flags
  */
 
@@ -213,7 +229,7 @@ typedef int (*Strcmp_f)(const char*, const char*);
 extern char*		astgetconf(const char*, const char*, const char*, Error_f);
 extern char*		astconf(const char*, const char*, const char*);
 extern Ast_confdisc_f	astconfdisc(Ast_confdisc_f);
-extern void		astconflist(Sfio_t*, const char*, int);
+extern void		astconflist(Sfio_t*, const char*, int, const char*);
 extern off_t		astcopy(int, int, off_t);
 extern int		astlicense(char*, int, char*, char*, int, int, int);
 extern int		astquery(int, const char*, ...);
@@ -308,13 +324,6 @@ extern _ast_intmax_t	strtonll(const char*, char**, char*, int);
 extern int		struid(const char*);
 extern int		struniq(char**, int);
 
-/*
- * obsolete ast symbols
- */
-
-extern void*		mematoe(void*, const void*, size_t);
-extern void*		memetoa(void*, const void*, size_t);
-
 #undef			extern
 
 /*
@@ -325,6 +334,67 @@ extern void*		memetoa(void*, const void*, size_t);
 #define	environ		__DYNAMIC__(environ)
 #else
 extern char**		environ;
+#endif
+
+/*
+ * really handy malloc()/free() (__FILE__,__LINE__,__FUNCTION__) tracing
+ * make with VMDEBUG==1 or debug=1 or CCFLAGS=$(CC.DEBUG)
+ * VMDEBUG==0 disables
+ * at runtime export VMDEBUG or VMTRACE per vmalloc.3
+ * to list originating call locations
+ */
+
+#if !_std_malloc && !defined(VMFL) && !defined(_VMHDR_H) && \
+	(!defined(VMDEBUG) || VMDEBUG) && (VMDEBUG || _BLD_DEBUG)
+
+#define VMFL	1
+#include <vmalloc.h>
+
+#if defined(__STDPP__directive) && defined(__STDPP__ignore)
+
+__STDPP__directive pragma pp:ignore "malloc.h"
+
+#else
+
+#ifndef _malloc_h
+#define _malloc_h
+#endif
+#ifndef _malloc_h_
+#define _malloc_h_
+#endif
+#ifndef __malloc_h
+#define __malloc_h
+#endif
+#ifndef __malloc_h__
+#define __malloc_h__
+#endif
+#ifndef _MALLOC_H
+#define _MALLOC_H
+#endif
+#ifndef _MALLOC_H_
+#define _MALLOC_H_
+#endif
+#ifndef __MALLOC_H
+#define __MALLOC_H
+#endif
+#ifndef __MALLOC_H__
+#define __MALLOC_H__
+#endif
+#ifndef _MALLOC_INCLUDED
+#define _MALLOC_INCLUDED
+#endif
+#ifndef __MALLOC_INCLUDED
+#define __MALLOC_INCLUDED
+#endif
+#ifndef _H_MALLOC
+#define _H_MALLOC
+#endif
+#ifndef __H_MALLOC
+#define __H_MALLOC
+#endif
+
+#endif
+
 #endif
 
 #endif

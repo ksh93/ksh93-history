@@ -28,14 +28,28 @@
  * ast library system(3)
  */
 
+#define _def_map_ast	1
+
+#if defined(__STDPP__directive) && defined(__STDPP__hide)
+__STDPP__directive pragma pp:hide system
+#else
 #define system		______system
+#endif
 
 #define _STDLIB_H_	1	/* uwin workaround */
 
 #include <ast.h>
 #include <proc.h>
 
+#if defined(__STDPP__directive) && defined(__STDPP__hide)
+__STDPP__directive pragma pp:nohide system
+#else
 #undef	system
+#endif
+
+#undef	_def_map_ast
+
+#include <ast_map.h>
 
 #if defined(__EXPORT__)
 #define extern	__EXPORT__

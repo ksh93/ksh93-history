@@ -464,7 +464,7 @@ Namval_t	*nv_open(const char *name,Dt_t *root,int flags)
 					goto failed;
 				if(root==sh.var_tree)
 					flags &= ~(NV_NOSCOPE|NV_EXPORT);
-				if(!lastdot && cp!=name && (flags&NV_VARNAME) && !(flags&NV_NOREF))
+				if(!lastdot && cp!=name && (flags&NV_VARNAME))
 				{
 					/* see whether first component is ref */
 					*cp = 0;
@@ -946,7 +946,7 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 	else
 	{
 		const char *tofree=0;
-		char numbuf[20];
+		char numbuf[40];
 #if SHOPT_APPEND
 		int offset;
 #endif /* SHOPT_APPEND */

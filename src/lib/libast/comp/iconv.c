@@ -114,29 +114,47 @@ static const _ast_iconv_list_t	codes[] =
 
 	{
 	"ebcdic",
-	"(e|ebcdic?(-)?(1))",
+	"(e|ebcdic?(-)?([1e]))",
 	"X/Open ebcdic",
 	"EBCDIC",
 	0,
-	CC_EBCDIC1,
+	CC_EBCDIC_E,
+	},
+
+	{
+	"ebcdic-o",
+	"(o|ebcdic?(-)[3o]|?(cp|ibm)1047|mvs|openedition)",
+	"mvs OpenEdition ebcdic",
+	"EBCDIC-O",
+	0,
+	CC_EBCDIC_O,
+	},
+
+	{
+	"ebcdic-h",
+	"(h|ebcdic?(-)h|?(cp|ibm)?(00)37|[oa]s?(/-)400)",
+	"ibm OS/400 AS/400 ebcdic",
+	"EBCDIC-H",
+	0,
+	CC_EBCDIC_H,
+	},
+
+	{
+	"ebcdic-s",
+	"(s|ebcdic?(-)s|siemens|posix-bc)",
+	"siemens posix-bc ebcdic",
+	"EBCDIC-S",
+	0,
+	CC_EBCDIC_S,
 	},
 
 	{
 	"ebcdic-2",
-	"(i|ebcdic?(-)2|ibm)",
+	"(i|ebcdic?(-)[2i]|ibm)",
 	"X/Open ibm",
-	"EBCDIC-2",
+	"EBCDIC-I",
 	0,
-	CC_EBCDIC2,
-	},
-
-	{
-	"ebcdic-3",
-	"(o|ebcdic?(-)3|?(cp|ibm)1047|mvs|openedition)",
-	"mvs OpenEdition ebcdic",
-	"EBCDIC-3",
-	0,
-	CC_EBCDIC3,
+	CC_EBCDIC_I,
 	},
 
 	{
@@ -522,14 +540,14 @@ _ast_iconv_name(register const char* m, register char* b, size_t n)
 			if ((locales[AST_LC_CTYPE]->flags & LC_default) || !locales[AST_LC_CTYPE]->charset || !(m = locales[AST_LC_CTYPE]->charset->code) || streq(m, "iso8859-1"))
 				switch (CC_NATIVE)
 				{
-				case CC_EBCDIC1:
+				case CC_EBCDIC:
 					m = (const char*)"EBCDIC";
 					break;
-				case CC_EBCDIC2:
-					m = (const char*)"EBCDIC-2";
+				case CC_EBCDIC_I:
+					m = (const char*)"EBCDIC-I";
 					break;
-				case CC_EBCDIC3:
-					m = (const char*)"EBCDIC-3";
+				case CC_EBCDIC_O:
+					m = (const char*)"EBCDIC-O";
 					break;
 				default:
 					m = (const char*)"ISO-8859-1";
@@ -1148,7 +1166,7 @@ error(DEBUG_TRACE, "AHA#%d _ast_iconv_open f=%s:%s:%d t=%s:%s:%d\n", __LINE__, f
 	if (fc == tc)
 		/*identity*/;
 	else if (fc >= 0 && tc >= 0)
-		cc->from.map = CCMAP(fc, tc);
+		cc->from.map = ccmap(fc, tc);
 #if _lib_iconv_open
 	else if ((cc->cvt = iconv_open(to, fr)) != (iconv_t)(-1))
 		cc->from.fun = (_ast_iconv_f)iconv;
@@ -1178,7 +1196,7 @@ error(DEBUG_TRACE, "AHA#%d _ast_iconv_open f=%s:%s:%d t=%s:%s:%d\n", __LINE__, f
 		default:
 			if (fc < 0)
 				goto nope;
-			cc->from.map = CCMAP(fc, CC_ASCII);
+			cc->from.map = ccmap(fc, CC_ASCII);
 			break;
 		}
 		switch (tc)
@@ -1200,7 +1218,7 @@ error(DEBUG_TRACE, "AHA#%d _ast_iconv_open f=%s:%s:%d t=%s:%s:%d\n", __LINE__, f
 		default:
 			if (tc < 0)
 				goto nope;
-			cc->to.map = CCMAP(CC_ASCII, tc);
+			cc->to.map = ccmap(CC_ASCII, tc);
 			break;
 		}
 	}

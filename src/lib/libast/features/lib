@@ -30,7 +30,7 @@ lib	sigprocmask,sigsetmask,sigunblock,sigvec,socketpair
 lib	spawn,spawnve,spawnveg
 lib	strchr,strcoll,strdup,strerror,strcasecmp,strncasecmp,strrchr,strstr
 lib	strtod,strtold,strtol,strtoll,strtoul,strtoull
-lib	strxfrm,strftime,swab,symlink,sysconf,syslog
+lib	strxfrm,strftime,swab,symlink,sysconf,sysinfo,syslog
 lib	telldir,tmpnam,tzset,universe,unlink,utime,wctype
 lib	ftruncate,truncate
 lib	creat64,fstat64,fstatvfs64,ftruncate64 -D_LARGEFILE64_SOURCE
@@ -44,7 +44,7 @@ mem	DIR.dd_fd sys/types.h - dirent.h - sys/dir.h
 mem	inheritance.pgroup spawn.h
 
 sys	dir,filio,jioctl,localedef,ptem,resource
-sys	socket,stream,universe,vfork
+sys	socket,stream,systeminfo,universe,vfork
 
 typ	off64_t -D_LARGEFILE64_SOURCE
 typ	struct.dirent64 -D_LARGEFILE64_SOURCE dirent.h

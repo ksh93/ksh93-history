@@ -185,15 +185,15 @@ typedef struct edit
 extern void	ed_crlf(Edit_t*);
 extern void	ed_putchar(Edit_t*, int);
 extern void	ed_ringbell(void);
-extern void	ed_setup(Edit_t*,int);
+extern void	ed_setup(Edit_t*,int, int);
 extern void	ed_flush(Edit_t*);
 extern int	ed_getchar(Edit_t*,int);
 extern int	ed_virt_to_phys(Edit_t*,genchar*,genchar*,int,int,int);
 extern int	ed_window(void);
 extern void	ed_ungetchar(Edit_t*,int);
-extern int	ed_viread(int, char*, int);
-extern int	ed_read(int, char*, int);
-extern int	ed_emacsread(int, char*, int);
+extern int	ed_viread(void*, int, char*, int, int);
+extern int	ed_read(void*, int, char*, int, int);
+extern int	ed_emacsread(void*, int, char*, int, int);
 #if KSHELL
 	extern int	ed_macro(Edit_t*,int);
 	extern int	ed_expand(Edit_t*, char[],int*,int*,int,int);
@@ -213,6 +213,34 @@ extern const char	e_runvi[];
 #if !KSHELL
    extern const char	e_version[];
 #endif /* KSHELL */
+
+#if SHOPT_HISTEXPAND
+
+/* flags */
+
+#define	HIST_EVENT	0x1	/* event designator seen */
+#define HIST_QUESTION	0x2	/* question mark event designator */
+#define	HIST_HASH	0x4	/* hash event designator */
+#define HIST_WORDDSGN	0x8	/* word designator seen */
+#define HIST_QUICKSUBST	0x10	/* quick substition designator seen */
+#define HIST_SUBSTITUTE	0x20	/* for substition loop */
+#define	HIST_NEWLINE	0x40	/* newline in squashed white space */
+
+/* modifier flags */
+
+#define	HIST_PRINT		0x100	/* print new command */
+#define	HIST_QUOTE		0x200	/* quote resulting history line */
+#define	HIST_QUOTE_BR		0x400	/* quote every word on space break */
+#define	HIST_GLOBALSUBST	0x800	/* apply substition globally */
+
+#define	HIST_ERROR		0x1000	/* an error ocurred */
+
+/* flags to be returned */
+
+#define	HIST_FLAG_RETURN_MASK	(HIST_EVENT|HIST_PRINT|HIST_ERROR)
+
+extern int hist_expand(const char *, char **);
+#endif
 
 #endif
 #endif

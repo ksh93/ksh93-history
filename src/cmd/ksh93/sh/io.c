@@ -27,10 +27,6 @@
  *
  *   David Korn
  *   AT&T Labs
- *   Room 2B-102
- *   Murray Hill, N. J. 07974
- *   Tel. x7975
- *   research!dgk
  *
  */
 
@@ -104,25 +100,14 @@ struct fdsave
 };
 
 
-#ifdef SF_BUFCONST
-    static int  	subexcept(Sfio_t*, int, void*, Sfdisc_t*);
-    static int  	eval_exceptf(Sfio_t*, int, void*, Sfdisc_t*);
-    static int  	slowexcept(Sfio_t*, int, void*, Sfdisc_t*);
-    static int  	pipeexcept(Sfio_t*, int, void*, Sfdisc_t*);
-    static ssize_t	piperead(Sfio_t*, void*, size_t, Sfdisc_t*);
-    static ssize_t	slowread(Sfio_t*, void*, size_t, Sfdisc_t*);
-    static ssize_t	subread(Sfio_t*, void*, size_t, Sfdisc_t*);
-    static ssize_t	tee_write(Sfio_t*,const void*,size_t,Sfdisc_t*);
-#else
-    static int	subexcept(Sfio_t*, int, Sfdisc_t*);
-    static int 	eval_exceptf(Sfio_t*, int, Sfdisc_t*);
-    static int	slowexcept(Sfio_t*, int, Sfdisc_t*);
-    static int	pipeexcept(Sfio_t*, int, Sfdisc_t*);
-    static int	piperead(Sfio_t*, void*, int, Sfdisc_t*);
-    static int	slowread(Sfio_t*, void*, int, Sfdisc_t*);
-    static int	subread(Sfio_t*, void*, int, Sfdisc_t*);
-    static int	tee_write(Sfio_t*,const void*,int,Sfdisc_t*);
-#endif
+static int  	subexcept(Sfio_t*, int, void*, Sfdisc_t*);
+static int  	eval_exceptf(Sfio_t*, int, void*, Sfdisc_t*);
+static int  	slowexcept(Sfio_t*, int, void*, Sfdisc_t*);
+static int  	pipeexcept(Sfio_t*, int, void*, Sfdisc_t*);
+static ssize_t	piperead(Sfio_t*, void*, size_t, Sfdisc_t*);
+static ssize_t	slowread(Sfio_t*, void*, size_t, Sfdisc_t*);
+static ssize_t	subread(Sfio_t*, void*, size_t, Sfdisc_t*);
+static ssize_t	tee_write(Sfio_t*,const void*,size_t,Sfdisc_t*);
 static int	io_prompt(Sfio_t*,int);
 static int	io_heredoc(register struct ionod*);
 static void	sftrack(Sfio_t*,int,int);
@@ -760,11 +745,7 @@ static int io_heredoc(register struct ionod *iop)
  * This write discipline also writes the output on standard error
  * This is used when tracing here-documents
  */
-#ifdef SF_BUFCONST
 static ssize_t tee_write(Sfio_t *iop,const void *buff,size_t n,Sfdisc_t *unused)
-#else
-static int tee_write(Sfio_t *iop,const void *buff,int n,Sfdisc_t *unused)
-#endif
 {
 	NOT_USED(unused);
 	sfwrite(sfstderr,buff,n);
@@ -1004,11 +985,7 @@ static int str2inet(register const char *sp, struct sockaddr_in *addr)
 /*
  *  Handle interrupts for slow streams
  */
-#ifdef SF_BUFCONST
 static int slowexcept(register Sfio_t *iop,int type,void *data,Sfdisc_t *handle)
-#else
-static int slowexcept(register Sfio_t *iop, int type, Sfdisc_t *handle)
-#endif
 {
 	register int	n,fno;
 	NOT_USED(handle);
@@ -1078,18 +1055,14 @@ static void time_grace(void *handle)
 	sh.trapnote |= SH_SIGTRAP;
 }
 
-#ifdef SF_BUFCONST
 static ssize_t piperead(Sfio_t *iop,void *buff,register size_t size,Sfdisc_t *handle)
-#else
-static int piperead(Sfio_t *iop,void *buff,register int size,Sfdisc_t *handle)
-#endif
 {
 	int fd = sffileno(iop);
 	NOT_USED(handle);
 	if(sh_isstate(SH_INTERACTIVE) && io_prompt(iop,sh.nextprompt)<0 && errno==EIO)
 		return(0);
 	if(!(sh.fdstatus[sffileno(iop)]&IOCLEX) && sfset(iop,0,0)&SF_SHARE)
-		size = ed_read(fd, (char*)buff, size);
+		size = ed_read(sh.ed_context, fd, (char*)buff, size,0);
 	else
 		size = read(fd, (char*)buff, size);
 	return(size);
@@ -1098,18 +1071,14 @@ static int piperead(Sfio_t *iop,void *buff,register int size,Sfdisc_t *handle)
  * This is the read discipline that is applied to slow devices
  * This routine takes care of prompting for input
  */
-#ifdef SF_BUFCONST
 static ssize_t slowread(Sfio_t *iop,void *buff,register size_t size,Sfdisc_t *handle)
-#else
-static int slowread(Sfio_t *iop,void *buff,register int size,Sfdisc_t *handle)
-#endif
 {
-	int	(*readf)(int, char*, int);
+	int	(*readf)(void*, int, char*, int, int);
+	int	reedit=0, rsize;
+#if SHOPT_HISTEXPAND
+	char    *xp=0;
+#endif
 	NOT_USED(handle);
-	if(io_prompt(iop,sh.nextprompt)<0 && errno==EIO)
-		return(0);
-	if(sh.timeout)
-		timeout = (void*)sh_timeradd(sh_isstate(SH_GRACE)?1000L*TGRACE:1000L*sh.timeout,0,time_grace,NIL(void*));
 #   if SHOPT_ESH
 	if(sh_isoption(SH_EMACS) || sh_isoption(SH_GMACS))
 		readf = ed_emacsread;
@@ -1125,11 +1094,54 @@ static int slowread(Sfio_t *iop,void *buff,register int size,Sfdisc_t *handle)
 	else
 #   endif	/* SHOPT_VSH */
 		readf = ed_read;
-	size = (*readf)(sffileno(iop), (char*)buff, size);
-	if(timeout)
-		timerdel(timeout);
-	timeout=0;
-	return(size);
+	while(1)
+	{
+		if(io_prompt(iop,sh.nextprompt)<0 && errno==EIO)
+			return(0);
+		if(sh.timeout)
+			timeout = (void*)sh_timeradd(sh_isstate(SH_GRACE)?1000L*TGRACE:1000L*sh.timeout,0,time_grace,NIL(void*));
+		rsize = (*readf)(sh.ed_context, sffileno(iop), (char*)buff, size, reedit);
+		if(timeout)
+			timerdel(timeout);
+		timeout=0;
+#if SHOPT_HISTEXPAND
+		if(rsize && *(char*)buff != '\n' && sh.nextprompt==1 && sh_isoption(SH_HISTEXPAND))
+		{
+			int r;
+			((char*)buff)[rsize] = '\0';
+			if(xp)
+			{
+				free(xp);
+				xp = 0;
+			}
+			r = hist_expand(buff, &xp);
+			if((r & (HIST_EVENT|HIST_PRINT)) && !(r & HIST_ERROR) && xp)
+			{
+				strlcpy(buff, xp, size);
+				rsize = strlen(buff);
+				if(!sh_isoption(SH_HISTVERIFY) || readf==ed_read)
+				{
+					sfputr(sfstderr, xp, -1);
+					break;
+				}
+				reedit = rsize - 1;
+				continue;
+			}
+			if((r & HIST_ERROR) && sh_isoption(SH_HISTREEDIT))
+			{
+				reedit  = rsize - 1;
+				continue;
+			}
+			if(r & (HIST_ERROR|HIST_PRINT))
+			{
+				*(char*)buff = '\n';
+				rsize = 1;
+			}
+		}
+#endif
+		break;
+	}
+	return(rsize);
 }
 
 /*
@@ -1274,11 +1286,7 @@ done:
  * This discipline is inserted on write pipes to prevent SIGPIPE
  * from causing an infinite loop
  */
-#ifdef SF_BUFCONST
 static int pipeexcept(Sfio_t* iop, int mode, void *data, Sfdisc_t* handle)
-#else
-static int pipeexcept(Sfio_t* iop, int mode, Sfdisc_t* handle)
-#endif
 {
 	NOT_USED(iop);
 	if(mode==SF_DPOP || mode==SF_FINAL)
@@ -1422,11 +1430,7 @@ Sfio_t *sh_sfeval(register char *argv[])
  * This code gets called whenever an end of string is found with eval
  */
 
-#ifdef SF_BUFCONST
 static int eval_exceptf(Sfio_t *iop,int type, void *data, Sfdisc_t *handle)
-#else
-static int eval_exceptf(Sfio_t *iop,int type, Sfdisc_t *handle)
-#endif
 {
 	register struct eval *ep = (struct eval*)handle;
 	register char	*cp;
@@ -1485,11 +1489,7 @@ static Sfio_t *subopen(Sfio_t* sp, off_t offset, long size)
 /*
  * read function for subfile discipline
  */
-#ifdef SF_BUFCONST
 static ssize_t subread(Sfio_t* sp,void* buff,register size_t size,Sfdisc_t* handle)
-#else
-static int subread(Sfio_t* sp,void* buff,register int size,Sfdisc_t* handle)
-#endif
 {
 	register struct subfile *disp = (struct subfile*)handle;
 	NOT_USED(sp);
@@ -1504,11 +1504,7 @@ static int subread(Sfio_t* sp,void* buff,register int size,Sfdisc_t* handle)
 /*
  * exception handler for subfile discipline
  */
-#ifdef SF_BUFCONST
 static int subexcept(Sfio_t* sp,register int mode, void *data, Sfdisc_t* handle)
-#else
-static int subexcept(Sfio_t* sp,register int mode, Sfdisc_t* handle)
-#endif
 {
 	register struct subfile *disp = (struct subfile*)handle;
 	if(mode==SF_CLOSING)

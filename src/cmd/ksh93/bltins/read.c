@@ -41,7 +41,7 @@
 #include	"builtins.h"
 #include	"history.h"
 #include	"terminal.h"
-#include	"national.h"
+#include	"edit.h"
 
 #define	R_FLAG	1	/* raw mode */
 #define	S_FLAG	2	/* save in history file */
@@ -57,6 +57,7 @@ int	b_read(int argc,char *argv[], void *extra)
 	register Shell_t *shp = (Shell_t*)extra;
 	long timeout = 1000*shp->st.tmout;
 	int save_prompt;
+	static char default_prompt[3] = {ESC,ESC};
 	NOT_USED(argc);
 	while((r = optget(argv,sh_optread))) switch(r)
 	{
@@ -112,6 +113,7 @@ int	b_read(int argc,char *argv[], void *extra)
 	if(fd<0 || !(r&IOREAD))
 		errormsg(SH_DICT,ERROR_system(1),e_file+4);
 	/* look for prompt */
+	shp->prompt = default_prompt;
 	if((name = *argv) && (name=strchr(name,'?')) && (r&IOTTY))
 	{
 		r = strlen(++name)+1;
@@ -167,7 +169,7 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 	char			was_escape = 0;
 	char			use_stak = 0;
 	char			was_write = 0;
-	char			was_share = 0;
+	char			was_share = 1;
 	int			rel;
 	long			array_index = 0;
 	void			*timeslot=0;
@@ -251,27 +253,19 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 			if(!(var = (char*)malloc(c+1)))
 				sh_exit(1);
 		}
-		if(sfset(iop,SF_SHARE,0)&SF_SHARE)
-			was_share = 2;
+		if((sfset(iop,SF_SHARE,1)&SF_SHARE) && fd!=0)
+			was_share = 1;
 		if(size==0)
 		{
 			cp = sfreserve(iop,0,0);
 			c = 0;
 		}
-		else if(flags&NN_FLAG)
-		{
-			for(cp=(unsigned char*)var; size>0; cp+=c,size-=c)
-			{
-				*cp = 0;
-				c = sfread(iop,(void*)cp,size);
-				if(c<=0)
-					break;
-			}
-			*cp = 0;
-		}
 		else
 		{
-			if(cp = sfreserve(iop,SF_UNBOUND,1))
+			c= (shp->fdstatus[fd]&(IOTTY|IONOSEEK))?1:-1;
+			if(flags&NN_FLAG)
+				c = size;
+			if(cp = sfreserve(iop,c,!(flags&NN_FLAG)))
 				c = sfvalue(iop);
 			else
 				c = 0;
@@ -280,9 +274,12 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 			if(c>0)
 			{
 				memcpy((void*)var,cp,c);
-				sfread(iop,cp,c);
+				if(flags&N_FLAG)
+					sfread(iop,cp,c);
 			}
 			var[c] = 0;
+			if(c>=size)
+				sfclrerr(iop);
 		}
 		if(timeslot)
 			timerdel(timeslot);
@@ -545,10 +542,8 @@ done:
 		sh_popcontext(&buff);
 	if(was_write)
 		sfset(iop,SF_WRITE,1);
-	if(fd==0 && !was_share)
+	if(!was_share)
 		sfset(iop,SF_SHARE,0);
-	else if (was_share==2)
-		sfset(iop,SF_SHARE,1);
 	nv_close(np);
 	if((flags>>D_FLAG) && (shp->fdstatus[fd]&IOTTY))
 		tty_cooked(fd);

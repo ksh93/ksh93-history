@@ -937,14 +937,14 @@ col(Celt_t* ce, int ic, unsigned char* bp, int bw, int bc, unsigned char* ep, in
 			c = bc;
 			if (ic)
 			{
-				if (isupper(c))
+				if (iswupper(c))
 				{
-					c = tolower(c);
+					c = towlower(c);
 					cc = 1;
 				}
-				else if (islower(c))
+				else if (iswlower(c))
 				{
-					c = toupper(c);
+					c = towupper(c);
 					cc = 1;
 				}
 			}
@@ -979,9 +979,9 @@ col(Celt_t* ce, int ic, unsigned char* bp, int bw, int bc, unsigned char* ep, in
 		{
 			k = key;
 			c = mbchar(k);
-			if (isupper(c))
+			if (iswupper(c))
 				bt = COLL_range_uc;
-			else if (islower(c))
+			else if (iswlower(c))
 				bt = COLL_range_lc;
 			else
 				bt = COLL_range;
@@ -991,14 +991,14 @@ col(Celt_t* ce, int ic, unsigned char* bp, int bw, int bc, unsigned char* ep, in
 				c = ec;
 				if (ic)
 				{
-					if (isupper(c))
+					if (iswupper(c))
 					{
-						c = tolower(c);
+						c = towlower(c);
 						cc = 1;
 					}
-					else if (islower(c))
+					else if (iswlower(c))
 					{
-						c = toupper(c);
+						c = towupper(c);
 						cc = 1;
 					}
 				}
@@ -1031,9 +1031,9 @@ col(Celt_t* ce, int ic, unsigned char* bp, int bw, int bc, unsigned char* ep, in
 			mbxfrm(ce->end, key, COLL_KEY_MAX);
 			k = key;
 			c = mbchar(k);
-			if (isupper(c))
+			if (iswupper(c))
 				et = COLL_range_uc;
-			else if (islower(c))
+			else if (iswlower(c))
 				et = COLL_range_lc;
 			else
 				et = COLL_range;

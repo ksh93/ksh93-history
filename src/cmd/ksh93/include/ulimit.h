@@ -28,7 +28,6 @@
  * This is for the ulimit built-in command
  */
 
-#include	"shtable.h"
 #include	"FEATURE/time"
 #include	"FEATURE/rlimits"
 #if defined(_sys_resource) && defined(_lib_getrlimit)
@@ -101,6 +100,80 @@
 #ifndef _typ_rlim_t
     typedef long rlim_t;
 #endif
-extern const char		e_unlimited[];
+
+#if !defined(RLIMIT_NOFILE) && defined(RLIMIT_OFILE)
+#define RLIMIT_NOFILE	RLIMIT_OFILE
+#endif
+
+#ifndef RLIMIT_UNKNOWN
+#define RLIMIT_UNKNOWN	(-9999)
+#endif
+#ifndef RLIMIT_AS
+#define RLIMIT_AS	RLIMIT_UNKNOWN
+#endif
+#ifndef RLIMIT_CORE
+#define RLIMIT_CORE	RLIMIT_UNKNOWN
+#endif
+#ifndef RLIMIT_CPU
+#define RLIMIT_CPU	RLIMIT_UNKNOWN
+#endif
+#ifndef RLIMIT_DATA
+#define RLIMIT_DATA	RLIMIT_UNKNOWN
+#endif
+#ifndef RLIMIT_FSIZE
+#define RLIMIT_FSIZE	RLIMIT_UNKNOWN
+#endif
+#ifndef RLIMIT_LOCKS
+#define RLIMIT_LOCKS	RLIMIT_UNKNOWN
+#endif
+#ifndef RLIMIT_MEMLOCK
+#define RLIMIT_MEMLOCK	RLIMIT_UNKNOWN
+#endif
+#ifndef RLIMIT_NOFILE
+#define RLIMIT_NOFILE	RLIMIT_UNKNOWN
+#endif
+#ifndef RLIMIT_NPROC
+#define RLIMIT_NPROC	RLIMIT_UNKNOWN
+#endif
+#ifndef RLIMIT_PIPE
+#define RLIMIT_PIPE	RLIMIT_UNKNOWN
+#endif
+#ifndef RLIMIT_RSS
+#define RLIMIT_RSS	RLIMIT_UNKNOWN
+#endif
+#ifndef RLIMIT_SBSIZE
+#define RLIMIT_SBSIZE	RLIMIT_UNKNOWN
+#endif
+#ifndef RLIMIT_STACK
+#define RLIMIT_STACK	RLIMIT_UNKNOWN
+#endif
+#ifndef RLIMIT_PTHREAD
+#define RLIMIT_PTHREAD	RLIMIT_UNKNOWN
+#endif
+#ifndef RLIMIT_VMEM
+#define RLIMIT_VMEM	RLIMIT_UNKNOWN
+#endif
+
+#define LIM_COUNT	0
+#define LIM_BLOCK	1
+#define LIM_BYTE	2
+#define LIM_KBYTE	3
+#define LIM_SECOND	4
+
+typedef struct Limit_s
+{
+	const char	name[8];
+	const char*	description;
+	int		index;
+	const char*	conf;
+	unsigned char	option;
+	unsigned char	type;
+} Limit_t;
+
+extern const Limit_t	shtab_limits[];
+extern const int	shtab_units[];
+
+extern const char	e_unlimited[];
+extern const char*	e_units[];
 
 #endif /* _ULIMIT_H */

@@ -87,6 +87,7 @@ typedef int (*Stat_f)(const char*, struct stat*);
 	FTSENT*		left;			/* left child		*/ \
 	FTSENT*		right;			/* right child		*/ \
 	FTSENT*		pwd;			/* pwd parent		*/ \
+	FTSENT*		stack;			/* getlist() stack	*/ \
 	FTS*		fts;			/* for fts verification	*/ \
 	long		nlink;			/* FTS_D link count	*/ \
 	unsigned char	must;			/* must stat		*/ \
@@ -358,23 +359,43 @@ deleteroot(register FTSENT* root)
 }
 
 /*
- * convert a binary search tree into a sorted todo (link) list
+ * generate ordered fts_link list from binary tree at root
+ * FTSENT.stack instead of recursion to avoid blowing the real
+ * stack on big directories
  */
 
 static void
 getlist(register FTSENT** top, register FTSENT** bot, register FTSENT* root)
 {
-	if (root->left)
-		getlist(top, bot, root->left);
-	if (*top)
+	register FTSENT*	stack = 0;
+
+	for (;;)
 	{
-		(*bot)->fts_link = root;
-		*bot = root;
+		if (root->left)
+		{
+			root->stack = stack;
+			stack = root;
+			root = root->left;
+		}
+		else
+		{
+			for (;;)
+			{
+				if (*top)
+					*bot = (*bot)->fts_link = root;
+				else
+					*bot = *top = root;
+				if (root->right)
+				{
+					root = root->right;
+					break;
+				}
+				if (!(root = stack))
+					return;
+				stack = stack->stack;
+			}
+		}
 	}
-	else
-		*top = *bot = root;
-	if (root->right)
-		getlist(top, bot, root->right);
 }
 
 /*
@@ -1140,6 +1161,12 @@ fts_read(register FTS* fts)
 					f->fts_path = PATH(fts, fts->path, f->fts_level);
 					f->fts_pathlen = (fts->base - f->fts_path) + f->fts_namelen;
 					f->fts_accpath = ACCESS(fts, f);
+
+					/*
+					 * re-stat to update nlink/times
+					 */
+
+					stat(f->fts_accpath, f->fts_statp);
 					fts->link = f->fts_link;
 					f->fts_link = 0;
 					fts->state = FTS_popstack_return;

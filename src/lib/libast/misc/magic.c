@@ -155,6 +155,7 @@ typedef unsigned long Cctype_t;
 	Entry_t*	magic;			/* parsed magic table	*/ \
 	Entry_t*	magiclast;		/* last entry in magic	*/ \
 	char*		mime;			/* MIME type		*/ \
+	unsigned char*	x2n;			/* CC_ALIEN=>CC_NATIVE	*/ \
 	char		fbuf[SF_BUFSIZE + 1];	/* file data		*/ \
 	char		xbuf[SF_BUFSIZE + 1];	/* indirect file data	*/ \
 	char		nbuf[256];		/* !CC_NATIVE data	*/ \
@@ -573,7 +574,7 @@ ckmagic(register Magic_t* mp, const char* file, char* buf, struct stat* st, unsi
 					c = sizeof(mp->nbuf) - 1;
 				p = (char*)memcpy(mp->nbuf, p, c);
 				p[c] = 0;
-				ccmaps(p, c, !CC_NATIVE, CC_NATIVE);
+				ccmapstr(mp->x2n, p, c);
 				if ((c = regexec(ep->value.sub, p, elementsof(matches), matches, 0)) || (c = regsubexec(ep->value.sub, p, elementsof(matches), matches)))
 				{
 					if (c != REG_NOMATCH)
@@ -612,7 +613,7 @@ ckmagic(register Magic_t* mp, const char* file, char* buf, struct stat* st, unsi
 					goto next;
 				p = (char*)memcpy(mp->nbuf, p, ep->mask);
 				p[ep->mask] = 0;
-				ccmaps(p, ep->mask, !CC_NATIVE, CC_NATIVE);
+				ccmapstr(mp->x2n, p, ep->mask);
 			}
 			q = T(ep->desc);
 			if (mp->keep[level]++ && b > buf && *(b - 1) != ' ' && *q && *q != ',' && *q != '.' && *q != '\b')
@@ -905,8 +906,8 @@ cklang(register Magic_t* mp, const char* file, char* buf, struct stat* st)
 	while (b < e)
 		flags |= mp->cctype[*b++];
 	b = (unsigned char*)mp->fbuf;
-	code = -1;
-	q = 0;
+	code = 0;
+	q = CC_ASCII;
 	n = CC_MASK;
 	for (c = 0; c < CC_MAPS; c++)
 	{
@@ -1272,15 +1273,16 @@ cklang(register Magic_t* mp, const char* file, char* buf, struct stat* st)
 	}
 	else
 		t = "";
-	if (code >= 0)
+	if (code)
 	{
-		if (code)
-			sfsprintf(buf, PATH_MAX, "ebcdic%d %s%s", code, t, s);
-		else
+		if (code == CC_ASCII)
 			sfsprintf(buf, PATH_MAX, "ascii %s%s", t, s);
-		s = buf;
-		if (code)
+		else
+		{
+			sfsprintf(buf, PATH_MAX, "ebcdic%d %s%s", code - 1, t, s);
 			mp->mime = "text/ebcdic";
+		}
+		s = buf;
 	}
 	else if (*t)
 	{
@@ -2052,13 +2054,13 @@ magicload(register Magic_t* mp, const char* file, unsigned long flags)
 Magic_t*
 magicopen(Magicdisc_t* disc)
 {
-	register Magic_t*		mp;
-	register int			i;
-	register int			n;
-	register int			f;
-	register int			c;
-	register Vmalloc_t*		vm;
-	const unsigned char*		map[CC_MAPS + 1];
+	register Magic_t*	mp;
+	register int		i;
+	register int		n;
+	register int		f;
+	register int		c;
+	register Vmalloc_t*	vm;
+	unsigned char*		map[CC_MAPS + 1];
 
 	if (!(vm = vmopen(Vmdcheap, Vmbest, 0)))
 		return 0;
@@ -2082,14 +2084,15 @@ magicopen(Magicdisc_t* disc)
 	for (n = 0; n < elementsof(info); n++)
 		dtinsert(mp->infotab, &info[n]);
 	for (i = 0; i < CC_MAPS; i++)
-		map[i] = CCMAP(i, CC_ASCII);
+		map[i] = ccmap(i, CC_ASCII);
+	mp->x2n = ccmap(CC_ALIEN, CC_NATIVE);
 	for (n = 0; n <= UCHAR_MAX; n++)
 	{
 		f = 0;
 		i = CC_MAPS;
 		while (--i >= 0)
 		{
-			c = (map[i])[n];
+			c = ccmapchr(map[i], n);
 			f = (f << CC_BIT) | CCTYPE(c);
 		}
 		mp->cctype[n] = f;

@@ -292,4 +292,55 @@ getopts 'n#num' opt  -n 3
 if	[[ $($SHELL -c $'printf \'%2$s %1$s\n\' world hello') != 'hello world' ]]
 then	err_exit 'printf %2$s %1$s not working'
 fi
+unset a
+{ read -N3 a; read -N1 b;}  <<!
+abcdefg
+!
+[[ $a == abc ]] || err_exit 'read -N3 here-document not working'
+[[ $b == d ]] || err_exit 'read -N1 here-document not working'
+read -n3 a <<!
+abcdefg
+!
+[[ $a == abc ]] || err_exit 'read -n3 here-document not working'
+(print -n a;sleep 1; print -n bcde) | { read -N3 a; read -N1 b;}
+[[ $a == abc ]] || err_exit 'read -N3 from pipe not working'
+[[ $b == d ]] || err_exit 'read -N1 from pipe not working'
+(print -n a;sleep 1; print -n bcde) |read -n3 a
+[[ $a == a ]] || err_exit 'read -n3 from pipe not working'
+rm -f /tmp/fifo$$
+if	mkfifo /tmp/fifo$$ 2> /dev/null
+then	(print -n a; sleep 1;print -n bcde)  > /tmp/fifo$$ &
+	{
+	read -u5 -n3  -t2 a  || err_exit 'read -n3 from fifo timedout'
+	read -u5 -n1 -t2 b || err_exit 'read -n1 from fifo timedout'
+	} 5< /tmp/fifo$$
+	[[ $a == a ]] || err_exit 'read -n3 from fifo not working'
+	rm -f /tmp/fifo$$
+	mkfifo /tmp/fifo$$ 2> /dev/null
+	(print -n a; sleep 1;print -n bcde)  > /tmp/fifo$$ &
+	{
+	read -u5 -N3 -t2 a || err_exit 'read -N3 from fifo timed out'
+	read -u5 -N1 -t2 b || err_exit 'read -N1 from fifo timedout'
+	} 5< /tmp/fifo$$
+	[[ $a == abc ]] || err_exit 'read -N3 from fifo not working'
+	[[ $b == d ]] || err_exit 'read -N1 from fifo not working'
+fi
+rm -f /tmp/fifo$$
+function longline
+{
+	integer i
+	for((i=0; i < $1; i++))
+	do	print argument$i
+	done
+}
+# test command -x option
+integer sum=0 n=10000
+if	! ${SHELL:-ksh} -c 'print $#' count $(longline $n) > /dev/null  2>&1
+then	for i in $(command command -x ${SHELL:-ksh} -c 'print $#;[[ $1 != argument0 ]]' count $(longline $n) 2> /dev/null)
+	do	((sum += $i))
+	done
+	(( sum == n )) || err_exit "command -x processed only $sum arguments"
+	command -p command -x ${SHELL:-ksh} -c 'print $#;[[ $1 != argument0 ]]' count $(longline $n) > /dev/null  2>&1
+	[[ $? != 1 ]] && err_exit 'incorrect exit status for command -x'
+fi
 exit $((Errors))

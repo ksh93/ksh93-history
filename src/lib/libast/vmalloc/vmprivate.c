@@ -31,7 +31,7 @@ void _STUB_vmprivate(){}
 
 #include	"vmhdr.h"
 
-static char*	Version = "\n@(#)$Id: Vmalloc (AT&T Labs - Research) 2002-05-31 $\0\n";
+static char*	Version = "\n@(#)$Id: Vmalloc (AT&T Labs - Research) 2003-06-21 $\0\n";
 
 
 /*	Private code used in the vmalloc library
@@ -58,6 +58,17 @@ Vmsearch_f	searchf;	/* tree search function		*/
 	reg Vmexcept_f	exceptf = vm->disc->exceptf;
 
 	GETPAGESIZE(_Vmpagesize);
+
+#if DEBUG /* trace all allocation calls through the heap */
+	if(!_Vmtrace && vm == Vmheap && (vd->mode&VM_TRUST) )
+	{	char	*env;
+		int	fd;
+		vd->mode = (vd->mode&~VM_TRUST)|VM_TRACE;
+		if((fd = vmtrace(-1)) >= 0 ||
+		   ((env = getenv("VMTRACE")) && (fd = creat(env, 0666)) >= 0 ) )
+			vmtrace(fd);
+	}
+#endif
 
 	if(vd->incr <= 0) /* this is just _Vmheap on the first call */
 		vd->incr = _Vmpagesize;
@@ -238,6 +249,7 @@ int		exact;	/* amount given was exact	*/
 		seg->extent -= less;
 		seg->size -= less;
 		seg->baddr -= less;
+		SEG(BLOCK(seg->baddr)) = seg;
 		SIZE(BLOCK(seg->baddr)) = BUSY;
 		return 0;
 	}
@@ -274,7 +286,7 @@ Vmextern_t	_Vmextern =
 {	vmextend,						/* _Vmextend	*/
 	vmtruncate,						/* _Vmtruncate	*/
 	0,							/* _Vmpagesize	*/
-	NIL(char*(*)_ARG_((char*,const char*,int))),		/* _Vmstrcpy	*/
+	NIL(char*(*)_ARG_((char*,const char*,int))),			/* _Vmstrcpy	*/
 	NIL(char*(*)_ARG_((Vmulong_t,int))),			/* _Vmitoa	*/
 	NIL(void(*)_ARG_((Vmalloc_t*,
 			  Vmuchar_t*,Vmuchar_t*,size_t,size_t))), /* _Vmtrace	*/

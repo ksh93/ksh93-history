@@ -43,25 +43,30 @@ NoN(strnacmp)
 #undef	strnacmp
 
 int
-strnacmp(register const char* a, register const char* b, size_t n)
+strnacmp(const char* a, const char* b, size_t n)
 {
-	register const char*	e;
+#if CC_NATIVE == CC_ASCII
+	return strncmp(a, b, n);
+#else
+	register unsigned char*	ua = (unsigned char*)a;
+	register unsigned char*	ub = (unsigned char*)b;
+	register unsigned char*	ue;
+	register unsigned char*	m;
 	register int		c;
 	register int		d;
 
-	if (CC_NATIVE == CC_ASCII)
-		return strncmp(a, b, n);
-	e = a + n;
-	for (;;)
+	m = ccmap(CC_NATIVE, CC_ASCII);
+	ue = ua + n;
+	while (ua < ue)
 	{
-		if (a >= e)
-			return 0;
-		c = ccmapc(*a++, CC_NATIVE, CC_ASCII);
-		if (d = c - ccmapc(*b++, CC_NATIVE, CC_ASCII))
+		c = m[*ua++];
+		if (d = c - m[*ub++])
 			return d;
 		if (!c)
 			return 0;
 	}
+	return 0;
+#endif
 }
 
 #endif

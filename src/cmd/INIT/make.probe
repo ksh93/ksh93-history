@@ -2,7 +2,7 @@
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)make.probe (AT&T Research) 2002-12-17
+# @(#)make.probe (AT&T Research) 2003-06-11
 #
 # C probe for make
 #
@@ -12,14 +12,16 @@
 probe_arflags="-xar"
 probe_debug="-g"
 probe_ld='ld "$cc"'
+probe_ldlazy='-zlazyload -znolazyload -Wl,-zlazyload -Wl,-znolazyload'
 probe_ldlib="LD_LIBRARY_PATH LIBPATH LPATH"
 probe_ldmap="'-Wl,-M' '-Qoption ld -M' '-Wl,-m' '-m'"
 probe_ldorigin="-Wl,-z,origin"
+probe_ldrecord='-zrecord -zignore -Wl,-zrecord -Wl,-zignore'
 probe_ldrunpath="-Wl,-R, -R -Wl,-rpath, -L"
 probe_ldstrip="'-s -mr' -Wl,-s"
 probe_lib="a lib"
 probe_lib_append="/usr/lib/pa1.1"
-probe_lib_all_undef="-all -notall -all -none -Bwhole-archive -Bno-whole-archive -whole-archive -no-whole-archive -Wl,-whole-archive -Wl,-no-whole-archive -all_load '' -Wl,-zallextract -Wl,-zdefaultextract"
+probe_lib_all_undef="-all -notall -all -none -Bwhole-archive -Bno-whole-archive -whole-archive -no-whole-archive -Wl,-whole-archive -Wl,-no-whole-archive -all_load '' -Wl,-zallextract -Wl,-zdefaultextract +forceload +noforceload"
 probe_lib_multiple="-Wl,-zmuldefs"
 probe_libdir="shlib lib"
 probe_nm="nm"
@@ -40,6 +42,7 @@ probe_unresolved="'-expect_unresolved \"*\"'"
 probe_warn="-Wall -fullwarn -w3 '-A -A' +w1"
 
 echo '#pragma pp:version' > libpp.$src
+echo '#define dDflag on' > dDflag.$src
 echo 'main(){return 0;}' > doti.$src
 echo '#include <stdio.h>' > imstd.$src
 echo '#include "_i_.h"' > imusr.$src
@@ -98,19 +101,27 @@ warn_enum="1 2 3 4"
 chmod -w *.$src
 
 arflags=
+dDflag=
 debug=
 dialect=
+dll_dir='$(LIBDIR)'
 dll_libraries=
 dll_variants=
 doti=
 exectype=
+gnu=
 iminus=
 implicitc=
 lddynamic=
+ldlazy=
+ldnolazy=
+ldnorecord=
 ldorigin=
+ldrecord=
 ldrunpath=
 ldscript=
 ldstatic=
+ldstrip=
 Lflag=
 lib_dll=
 lib_all=
@@ -293,6 +304,7 @@ then	e=`wc -l e`
 			so=.x
 			sd=.dll
 			shared=-Wl,dll
+			prefix_shared=
 			probe_sd=
 			probe_shared=
 			#unused# lddynamic=-Bdynamic
@@ -351,6 +363,13 @@ then	e=`wc -l e`
 	done
 fi
 $cc -c plusplus.$src && plusplus=1
+$cc -E -dD dDflag.$src > t
+case `grep '#define[ 	][ 	]*dDflag[ 	][ 	]*on' t` in
+?*)	dDflag=1 ;;
+esac
+case `grep '#define.*_GNUC_' t` in
+?*)	gnu=1 ;;
+esac
 case $plusplus in
 "")	$cc -c stdc.$src && stdc=1 ;;
 *)	mkdir ptr
@@ -498,6 +517,38 @@ then	z=`wc -c < strip.exe`
 	done
 fi
 
+rm -f strip.exe strip.$obj
+if	$cc -c strip.$src && $cc -o strip.exe strip.$obj 2>e
+then	eval set x x $probe_ldlazy
+	while	:
+	do	shift
+		shift
+		case $# in
+		0)	break ;;
+		esac
+		rm -f strip.$exe
+		$cc -o strip.$exe $1 strip.$obj $2 2>f && test -f strip.$exe || continue
+		cmp -s e f || continue
+		ldlazy=$1
+		ldnolazy=$2
+		break
+	done
+	eval set x x $probe_ldrecord
+	while	:
+	do	shift
+		shift
+		case $# in
+		0)	break ;;
+		esac
+		rm -f strip.$exe
+		$cc -o strip.$exe $1 strip.$obj $2 2>f && test -f strip.$exe || continue
+		cmp -s e f || continue
+		ldrecord=$1
+		ldnorecord=$2
+		break
+	done
+fi
+
 case $pic:$so:$dynamic:$static in
 :::)	: lets get specifical
 	while	:
@@ -512,6 +563,7 @@ case $pic:$so:$dynamic:$static in
 				ld=$cc
 				pic=-D_BLD_DLL
 				PIC=$pic
+				dll_dir='$(BINDIR)'
 				sd=.dll
 				so=.dll.a
 				ldscript=".def .exp .ign .res"
@@ -1068,18 +1120,38 @@ case $stdlibroot in
 	tstlib="$d $tstlib"
 	;;
 esac
+$cc -c doti.$src > all.tmp
 for f in $probe_libdir
 do	for d in $tstlib
 	do	case " $stdlib $libstd " in
-		*\ ${d}${f}\ *)
+		*" ${d}${f} "*)
 			;;
 		*)	if	test -d ${d}${f} &&
-				ls ${d}lib ${PREROOT+$PREROOT/../${d}${f}} > tmp.tmp &&
+				ls ${d}${f} ${PREROOT:+$PREROOT/../${d}${f}} > tmp.tmp &&
 				test -s tmp.tmp
-			then	if	grep -i "\\.$lib\$" tmp.tmp >/dev/null ||
-					grep -i "\\.$obj\$" tmp.tmp >/dev/null ||
-					grep -i "\\$so\$" tmp.tmp >/dev/null
-				then	if	test -d ${d}${f}/fsoft
+			then	if	egrep -i "\\.$lib\$" tmp.tmp >lib.tmp ||
+					egrep -i "\\.$obj\$" tmp.tmp >/dev/null ||
+					egrep -i "\\$so(.[0-9]+)*\$" tmp.tmp >>lib.tmp
+				then	if	test -s lib.tmp
+					then	sed -e "s,.*/,," -e 's,^'${prefix_archive}'\(.*\)\.'$lib'$,\1,g' -e 's,^'${prefix_shared}'\(.*\)\'$so'[.0-9]*,\1,g' lib.tmp | sort -u > tmp.tmp
+						xs=`sort all.tmp all.tmp tmp.tmp | uniq -u`
+						case $xs in
+						'')	continue ;;
+						esac
+						ok=0
+						for x in $xs
+						do	if	$cc -o doti.$exe doti.$obj -l$x
+							then	ok=1
+								break
+							fi
+						done
+						case $ok in
+						0)	continue ;;
+						esac
+						sort -u all.tmp tmp.tmp > lib.tmp
+						mv lib.tmp all.tmp
+					fi
+					if	test -d ${d}${f}/fsoft
 					then	stdlib="$stdlib ${d}${f}/"'$(FLOAT_OPTION)'
 					fi
 					stdlib="$stdlib ${d}${f}"
@@ -1269,6 +1341,9 @@ esac
 case $doti in
 ?*)	dialect="$dialect DOTI" ;;
 esac
+case $gnu in
+?*)	dialect="$dialect GNU" ;;
+esac
 case $so:$dynamic:$static in
 ::)	;;
 *)	dialect="$dialect DYNAMIC"
@@ -1294,6 +1369,9 @@ case $libpp in
 esac
 case $toucho in
 ?*)	dialect="$dialect TOUCHO" ;;
+esac
+case $dDflag in
+?*)	dialect="$dialect -dD" ;;
 esac
 case $iminus in
 ?*)	dialect="$dialect -I-" ;;
@@ -1431,6 +1509,7 @@ CC_DEBUG=$debug
 CC_DIALECT=$dialect
 CC_DLL=$pic
 CC_DLLBIG=$PIC
+CC_DLL_DIR=$dll_dir
 CC_DLL_LIBRARIES=$dll_libraries
 CC_DLL_VARIANTS=$dll_variants
 CC_DYNAMIC=$dynamic
@@ -1438,7 +1517,11 @@ CC_EXECTYPE=$exectype
 CC_HOSTTYPE=$hosttype
 CC_LD=$ld
 CC_LD_DYNAMIC=$lddynamic
+CC_LD_LAZY=$ldlazy
+CC_LD_NOLAZY=$ldnolazy
 CC_LD_ORIGIN=$ldorigin
+CC_LD_RECORD=$ldrecord
+CC_LD_NORECORD=$ldnorecord
 CC_LD_RUNPATH=$ldrunpath
 CC_LD_STATIC=$ldstatic
 CC_LD_STRIP=$ldstrip
@@ -1504,14 +1587,19 @@ echo CC.DEBUG = $CC_DEBUG
 echo CC.DIALECT = $CC_DIALECT
 echo CC.DLL = $CC_DLL
 echo CC.DLLBIG = $CC_DLLBIG
-echo CC.DLL.VARIANTS = $CC_DLL_VARIANTS
+echo CC.DLL.DIR = $CC_DLL_DIR
 echo CC.DLL.LIBRARIES = $CC_DLL_LIBRARIES
+echo CC.DLL.VARIANTS = $CC_DLL_VARIANTS
 echo CC.DYNAMIC = $CC_DYNAMIC
 echo CC.EXECTYPE = $CC_EXECTYPE
 echo CC.HOSTTYPE = $CC_HOSTTYPE
 echo CC.LD = $CC_LD
 echo CC.LD.DYNAMIC = $CC_LD_DYNAMIC
+echo CC.LD.LAZY = $CC_LD_LAZY
+echo CC.LD.NOLAZY = $CC_LD_NOLAZY
 echo CC.LD.ORIGIN = $CC_LD_ORIGIN
+echo CC.LD.RECORD = $CC_LD_RECORD
+echo CC.LD.NORECORD = $CC_LD_NORECORD
 echo CC.LD.RUNPATH = $CC_LD_RUNPATH
 echo CC.LD.STATIC = $CC_LD_STATIC
 echo CC.LD.STRIP = $CC_LD_STRIP

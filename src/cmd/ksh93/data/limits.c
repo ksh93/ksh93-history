@@ -26,30 +26,36 @@
 #include	<ast.h>
 #include	"ulimit.h"
 
-#define size_resource(a,b) ((a)|((b)<<11))	
-
 /*
  * This is the list of resouce limits controlled by ulimit
  * This command requires getrlimit(), vlimit(), or ulimit()
  */
 
 #ifndef _no_ulimit 
-const Shtable_t shtab_limits[] =
-{
-	{"time(seconds)       ",	size_resource(1,RLIMIT_CPU)},
-#   ifdef RLIMIT_FSIZE
-	{"file(blocks)        ",	size_resource(512,RLIMIT_FSIZE)},
-#   else
-	{"file(blocks)        ",	size_resource(1,2)},
-#   endif /* RLIMIT_FSIZE */
-	{"data(kbytes)        ",	size_resource(1024,RLIMIT_DATA)},
-	{"stack(kbytes)       ",	size_resource(1024,RLIMIT_STACK)},
-	{"memory(kbytes)      ",	size_resource(1024,RLIMIT_RSS)},
-	{"coredump(blocks)    ",	size_resource(512,RLIMIT_CORE)},
-	{"nofiles(descriptors)",	size_resource(1,RLIMIT_NOFILE)},
-	{"vmemory(kbytes)     ",	size_resource(1024,RLIMIT_VMEM)}
-};
 
-const char e_unlimited[] = "unlimited";
+const char	e_unlimited[] = "unlimited";
+const char*	e_units[] = { 0, "block", "byte", "kbyte", "second" };
+
+const int	shtab_units[] = { 1, 512, 1, 1024, 1 };
+
+const Limit_t	shtab_limits[] =
+{
+"as",		"address space limit",	RLIMIT_AS,	0,		'M',	LIM_KBYTE,
+"core",		"core file size",	RLIMIT_CORE,	0,		'c',	LIM_BLOCK,
+"cpu",		"cpu time",		RLIMIT_CPU,	0,		't',	LIM_SECOND,
+"data",		"data size",		RLIMIT_DATA,	0,		'd',	LIM_KBYTE,
+"fsize",	"file size",		RLIMIT_FSIZE,	0,		'f',	LIM_BLOCK,
+"locks",	"number of file locks",	RLIMIT_LOCKS,	0,		'L',	LIM_COUNT,
+"memlock",	"locked address space",	RLIMIT_MEMLOCK,	0,		'l',	LIM_KBYTE,
+"nofile",	"number of open files",	RLIMIT_NOFILE,	"OPEN_MAX",	'n',	LIM_COUNT,
+"nproc",	"number of processes",	RLIMIT_NPROC,	"CHILD_MAX",	'u',	LIM_COUNT,
+"pipe",		"pipe buffer size",	RLIMIT_PIPE,	"PIPE_BUF",	'p',	LIM_BYTE,
+"rss",		"resident set size",	RLIMIT_RSS,	0,		'm',	LIM_KBYTE,
+"sbsize",	"socket buffer size",	RLIMIT_SBSIZE,	"PIPE_BUF",	'b',	LIM_BYTE,
+"stack",	"stack size",		RLIMIT_STACK,	0,		's',	LIM_KBYTE,
+"threads",	"number of threads",	RLIMIT_PTHREAD,	"THREADS_MAX",	'T',	LIM_COUNT,
+"vmem",		"process size",		RLIMIT_VMEM,	0,		'v',	LIM_KBYTE,
+{ 0 }
+};
 
 #endif

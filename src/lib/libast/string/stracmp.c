@@ -26,7 +26,7 @@
 #pragma prototyped
 
 /*
- * ccmapc(c, CC_NATIVE, CC_ASCII) and strcmp
+ * ccmapchr(ccmap(CC_NATIVE,CC_ASCII),c) and strcmp
  */
 
 #include <ast.h>
@@ -43,17 +43,22 @@ NoN(stracmp)
 #undef	stracmp
 
 int
-stracmp(register const char* a, register const char* b)
+stracmp(const char* aa, const char* ab)
 {
-	register int	c;
-	register int	d;
+	register unsigned char*	a;
+	register unsigned char*	b;
+	register unsigned char*	m;
+	register int		c;
+	register int		d;
 
-	if (CC_NATIVE == CC_ASCII)
-		return strcmp(a, b);
+	if (!(m = ccmap(CC_NATIVE, CC_ASCII)))
+		return strcmp(aa, ab);
+	a = (unsigned char*)aa;
+	b = (unsigned char*)ab;
 	for (;;)
 	{
-		c = ccmapc(*a++, CC_NATIVE, CC_ASCII);
-		if (d = c - ccmapc(*b++, CC_NATIVE, CC_ASCII))
+		c = m[*a++];
+		if (d = c - m[*b++])
 			return d;
 		if (!c)
 			return 0;

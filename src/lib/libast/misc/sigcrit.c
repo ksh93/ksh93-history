@@ -51,7 +51,7 @@ signals[] =		/* held inside critical region	*/
 #ifdef SIGHUP
 	SIGHUP,		SIG_REG_EXEC,
 #endif
-#if defined(SIGCHLD) && ( !defined(SIGCLD) || SIGCHLD != SIGCLD )
+#if defined(SIGCHLD) && ( !defined(SIGCLD) || SIGCHLD != SIGCLD || _lib_sigprocmask || _lib_sigsetmask )
 	SIGCHLD,	SIG_REG_PROC,
 #endif
 #ifdef SIGTSTP
@@ -144,7 +144,7 @@ sigcritical(int op)
 #endif
 #endif
 		}
-		return(level);
+		return level;
 	}
 	else if (op < 0)
 	{
@@ -154,15 +154,15 @@ sigcritical(int op)
 			if (region & signals[i].op)
 			{
 				if (sigismember(&nmask, signals[i].sig))
-					return(1);
+					return 1;
 			}
-		return(0);
+		return 0;
 #else
 #if _lib_sigsetmask
 		/* no way to get pending signals without installing handler */
-		return(0);
+		return 0;
 #else
-		return(hold != 0);
+		return hold != 0;
 #endif
 #endif
 	}
@@ -198,6 +198,6 @@ sigcritical(int op)
 #endif
 #endif
 		}
-		return(level);
+		return level;
 	}
 }

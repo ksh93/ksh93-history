@@ -23,7 +23,7 @@
 *******************************************************************/
 #pragma prototyped
 /*
- * command [-pvV] name [arg...]
+ * command [-pvVx] name [arg...]
  * whence [-afvp] name...
  *
  *   David Korn
@@ -67,6 +67,9 @@ int	b_command(register int argc,char *argv[],void *extra)
 		break;
 	    case 'V':
 		flags |= V_FLAG;
+		break;
+	    case 'x':
+		shp->xargexit = 1;
 		break;
 	    case ':':
 		if(argc==0)

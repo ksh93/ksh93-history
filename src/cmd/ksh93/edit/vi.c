@@ -71,7 +71,7 @@
 #   define genlen(str)	ed_genlen(str)
 #   define digit(c)	((c&~STRIP)==0 && isdigit(c))
 #   define is_print(c)	((c&~STRIP) || isprint(c))
-#   ifndef _lib_iswprint
+#   if !_lib_iswprint && !defined(iswprint)
 #	define iswprint(c)	is_print((c))
 #   endif
     static int _isalph(int);
@@ -213,9 +213,12 @@ static int	textmod(Vi_t*,int,int);
  *
 -*/
 
-ed_viread(int fd, register char *shbuf, int nchar)
+/*
+ * if reedit is non-zero, initialize edit buffer with reedit chars
+ */
+ed_viread(void *context, int fd, register char *shbuf, int nchar, int reedit)
 {
-	Edit_t *ed = (Edit_t*)sh_getinterp()->ed_context;
+	Edit_t *ed = (Edit_t*)context;
 	register int i;			/* general variable */
 	register int term_char;		/* read() termination character */
 	register Vi_t *vp = ed->e_vi;
@@ -246,7 +249,8 @@ ed_viread(int fd, register char *shbuf, int nchar)
 	/*** setup prompt ***/
 
 	Prompt = prompt;
-	ed_setup(vp->ed,fd);
+	ed_setup(vp->ed,fd, reedit);
+	shbuf[reedit] = 0;
 
 #if !SHOPT_RAWONLY
 	if(!viraw)
@@ -254,7 +258,7 @@ ed_viread(int fd, register char *shbuf, int nchar)
 		/*** Change the eol characters to '\r' and eof  ***/
 		/* in addition to '\n' and make eof an ESC	*/
 		if(tty_alt(ERRIO) < 0)
-			return(ed_read(fd, shbuf, nchar));
+			return(reexit?reedit:ed_read(context, fd, shbuf, nchar,0));
 
 #ifdef FIORDCHK
 		ioctl(fd,FIORDCHK,&vp->typeahead);
@@ -269,7 +273,7 @@ ed_viread(int fd, register char *shbuf, int nchar)
 		else
 #endif /* KSHELL */
 		/*** Read the line ***/
-		i = ed_read(fd, shbuf, nchar);
+		i = ed_read(context, fd, shbuf, nchar, 0);
 #ifndef FIORDCHK
 		newtime = times(&dummy);
 		vp->typeahead = ((newtime-oldtime) < NTICKS);
@@ -352,8 +356,8 @@ ed_viread(int fd, register char *shbuf, int nchar)
 		}
 #endif /* SHOPT_RAWONLY */
 		if(tty_raw(ERRIO,0) < 0 )
-			return(ed_read(fd, shbuf, nchar));
-		i = INVALID;
+			return(reedit?reedit:ed_read(context, fd, shbuf, nchar,0));
+		i = last_virt-1;
 	}
 
 	/*** Initialize some things ***/
@@ -387,13 +391,13 @@ ed_viread(int fd, register char *shbuf, int nchar)
 	window[0] = '\0';
 
 #if KSHELL && (2*CHARSIZE*MAXLINE)<IOBSIZE
-	yankbuf = (genchar*)shbuf + MAXLINE*sizeof(genchar);
+	yankbuf = (genchar*)(shbuf + MAXLINE*sizeof(genchar));
 #else
 	if(yankbuf==0)
 		yankbuf = (genchar*)malloc(sizeof(genchar)*(MAXLINE));
 #endif
 #if KSHELL && (3*CHARSIZE*MAXLINE)<IOBSIZE
-	vp->lastline = (genchar*)shbuf + (MAXLINE+MAXLINE)*sizeof(genchar);
+	vp->lastline = (genchar*)(shbuf + (MAXLINE+MAXLINE)*sizeof(genchar));
 #else
 	if(vp->lastline==0)
 		vp->lastline = (genchar*)malloc(sizeof(genchar)*(MAXLINE));
@@ -558,8 +562,6 @@ ed_viread(int fd, register char *shbuf, int nchar)
 			refresh(vp,TRANSLATE);
 		}
 	}
-	else
-		virtual[0] = '\0';
 
 	/*** Handle usrintr, usrquit, or EOF ***/
 
@@ -585,6 +587,8 @@ ed_viread(int fd, register char *shbuf, int nchar)
 	/*** Get a line from the terminal ***/
 
 	vp->U_saved = 0;
+	if(reedit)
+		refresh(vp,INPUT);
 	if(viraw)
 		getline(vp,APPEND);
 	else if(last_virt>=0 && virtual[last_virt]==term_char)

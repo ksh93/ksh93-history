@@ -41,59 +41,55 @@
 #include <ast.h>
 #include <ast_ccode.h>
 
-typedef struct
-{
-	const unsigned char*	map;
-#ifdef _CC_PRIVATE_
-	_CC_PRIVATE_
-#endif
-} Cc_t;
-
-typedef struct
-{
-	const char*		name;
-	const char*		description;
-} Ccset_t;
+/* _cc_map[] for backwards compatibility -- drop 20050101 */
 
 #if _BLD_ast && defined(__EXPORT__)
-#define __PUBLIC_DATA__		__EXPORT__
-#else
+#define extern		extern __EXPORT__
+#endif
 #if !_BLD_ast && defined(__IMPORT__)
-#define __PUBLIC_DATA__		__IMPORT__
-#else
-#define __PUBLIC_DATA__
-#endif
+#define extern		extern __IMPORT__
 #endif
 
-extern __PUBLIC_DATA__ const unsigned char*	_cc_map[];
+extern const unsigned char*	_cc_map[];
 
-#undef	__PUBLIC_DATA__
+#undef	extern
 
 #if _BLD_ast && defined(__EXPORT__)
 #define extern		__EXPORT__
 #endif
 
-extern Cc_t*	ccopen(const char*, const char*);
-extern size_t	cccopy(Cc_t*, char**, size_t*, char**, size_t*);
-extern int	ccclose(Cc_t*);
-extern Ccset_t*	ccsets(void);
+extern unsigned char*	_ccmap(int, int);
+extern void*		_ccmapcpy(unsigned char*, void*, const void*, size_t);
+extern void*		_ccmapstr(unsigned char*, void*, size_t);
 
-extern int	ccmapc(int, int, int);
-extern void*	ccmapcpy(void*, const void*, size_t, int, int);
-extern int	ccmapid(const char*);
-extern char*	ccmapname(int);
-extern void*	ccmaps(void*, size_t, int, int);
-extern void*	_ccmaps(void*, size_t, int, int);
-extern void*	ccnative(void*, const void*, size_t);
+extern int		ccmapid(const char*);
+extern char*		ccmapname(int);
+extern void*		ccnative(void*, const void*, size_t);
 
 #undef	extern
 
-#define CCMAP(i,o)	_cc_map[(i)*CC_MAPS+(o)]
+#define CCOP(i,o)		((i)==(o)?0:(((o)<<8)|(i)))
+#define CCIN(x)			((x)&0xFF)
+#define CCOUT(x)		(((x)>>8)&0xFF)
+#define CCCONVERT(x)		((x)&0xFF00)
 
-#define ccmapc(c,i,o)	CCMAPC(c,i,o)
-#define CCMAPC(c,i,o)	((i)==(o)?(c):CCMAP(i,o)[c])
+#define CCCVT(x)		CCMAP(x,0)
+#define CCMAP(i,o)		((i)==(o)?(unsigned char*)0:_ccmap(i,o))
+#define CCMAPCHR(m,c)		((m)?m[c]:(c))
+#define CCMAPCPY(m,t,f,n)	((m)?_ccmapcpy(m,t,f,n):memcpy(t,f,n))
+#define CCMAPSTR(m,s,n)		((m)?_ccmapstr(m,s,n):(s))
 
-#define ccmaps(s,n,i,o)	CCMAPS(s,n,i,o)
-#define CCMAPS(s,n,i,o)	((i)==(o)?(void*)(s):_ccmaps(s,n,i,o))
+#define ccmap(i,o)		CCMAP(i,o)
+#define ccmapchr(m,c)		CCMAPCHR(m,c)
+#define ccmapcpy(m,t,f,n)	CCMAPCPY(m,t,f,n)
+#define ccmapstr(m,s,n)		CCMAPSTR(m,s,n)
+
+#define CCMAPC(c,i,o)		((i)==(o)?(c):CCMAP(i,o)[c])
+#define CCMAPM(t,f,n,i,o)	((i)==(o)?memcpy(t,f,n):_ccmapcpy(CCMAP(i,o),t,f,n))
+#define CCMAPS(s,n,i,o)		((i)==(o)?(void*)(s):_ccmapstr(CCMAP(i,o),s,n))
+
+#define ccmapc(c,i,o)		CCMAPC(c,i,o)
+#define ccmapm(t,f,n,i,o)	CCMAPM(t,f,n,i,o)
+#define ccmaps(s,n,i,o)		CCMAPS(s,n,i,o)
 
 #endif

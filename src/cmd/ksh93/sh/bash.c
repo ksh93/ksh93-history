@@ -41,14 +41,12 @@
 #   define BASH_BUILD	"0"
 #   define BASH_RELEASE	"experimental"
 #endif 
-#define BASH_VERSION	BASH_MAJOR BASH_MINOR BASH_PATCH BASH_RELEASE 
+#define BASH_VERSION	BASH_MAJOR "." BASH_MINOR "." BASH_PATCH "(" BASH_BUILD ")-" BASH_RELEASE 
 
 
 void	sh_applyopts(Shopt_t);
 
 extern const char	bash_pre_rc[];
-
-static char *varlist[] = { "EUID", "UID", "SHELLOPTS", 0};
 
 static const char	e_bash_logout[] = "$HOME/.bash_logout";
 static char *login_files[4];
@@ -56,10 +54,8 @@ static char *login_files[4];
 const char sh_bash1[] =
 	"[B?Enable brace group expansion. This option is only availabe in bash "
 	"compatibility mode. In ksh mode, brace group expansion is always on.]"
-	"[H?Only available in bash compatibility mode, but currently ignored.]"
 	"[P?Do not follow symbolic links, use physical directory structure "
-	"instead. Only available in bash compatibility mode. The same effect "
-	"can be achieved by \bgetconf PATH_RESOLVE - physical\b.]";
+	"instead. Only available in bash compatibility mode.]";
 const char sh_bash2[] =
 "[l:login?Make the shell act as if it had been invoked as a login shell. "
 "Only available if invoked as \bbash\b.]"
@@ -95,36 +91,49 @@ USAGE_LICENSE
 "[p?Causes output to be displayed in a form that may be reused as input.]"
 "[s?Set each \aoptname\a.]"
 "[u?Unset each \aoptname\a.]"
-"[q:Suppress output (quiet mode). The return status indicates whether the "
+"[q?Suppress output (quiet mode). The return status indicates whether the "
 	"\aoptname\a is set or unset. If multiple \aoptname\a arguments are "
 	"given with \b-q\b, the return status is zero if all \aoptname\as are "
 	"enabled; non-zero otherwise.]"
-"[o:Restricts the values of \aoptname\a to be those defined for the \b-o\b "
+"[o?Restricts the values of \aoptname\a to be those defined for the \b-o\b "
 	"option to the set builtin.]"
 "[+?If either \b-s\b or \b-u\b is used with no \aoptname\a arguments, the "
 	"display is limited to those options which are set or unset.]"
-"+?The value of \aoptname\a must be one of the following:]{"
-		"[+cdable_vars?Currently ignored.]"
+"[+?\bshopt\b supports all bash options. Some settings do not have any effect "
+	"or are are always on and cannot be changed."
+"[+?The value of \aoptname\a must be one of the following:]{"
+		"[+cdable_vars?If set, arguments to the \bcd\b command are "
+			"assumed to be names of variables whose values are to "
+			"be used if the usual \bcd\b proceeding fails.]"
 		"[+cdspell?Currently ignored.]"
-		"[+checkhash?Currently ignored.]"
+		"[+checkhash?Always on.]"
 		"[+checkwinsize?Currently ignored.]"
-		"[+cmdhist?Currently ignored.]"
-		"[+dotglob?Currently ignored.]"
-		"[+execfail?Currently ignored.]"
-		"[+expand_aliases?Currently ignored.]"
-		"[+extglob?Currently ignored.]"
-		"[+histappend?Currently ignored.]"
-		"[+histreedit?Currently ignored.]"
+		"[+cmdhist?Always on.]"
+		"[+dotglob?If set, include filenames beginning with a \b.\b "
+			"in the results of pathname expansion.]"
+		"[+execfail?Always on.]"
+		"[+expand_aliases?Always on.]"
+		"[+extglob?Enable extended pattern matching features.]"
+		"[+histappend?Always on.]"
+		"[+histreedit?If set and an edit mode is selected, the user "
+			"is given the opportunity to re-edit a failed history "
+			"substitution.]"
+		"[+histverify?If set and an edit mode is selected, the result "
+			"of a history substitution will not be executed "
+			"immediately but be placed in the edit buffer for "
+			"further modifications.]"
 		"[+hostcomplete?Currently ignored.]"
 		"[+huponexit?Currently ignored.]"
-		"[+interactive_comments?Currently ignored.]"
-		"[+lithist?Currently ignored.]"
+		"[+interactive_comments?Always on.]"
+		"[+lithist?Always on.]"
 		"[+login_shell?This option is set if the shell is started as "
 			"a login shell. The value cannot be changed.]"
 		"[+mailwarn?Currently ignored.]"
-		"[+no_empty_cmd_completion?Currently ignored.]"
-		"[+nocaseglob?Currently ignored.]"
-		"[+nullglob?Currently ignored.]"
+		"[+no_empty_cmd_completion?Always on.]"
+		"[+nocaseglob?Match filenames in a case-insensitive fashion "
+			"when performing filename expansion.]"
+		"[+nullglob?Allows filename patterns which match no files to "
+			"expand to a null string, rather than themselves.]"
 		"[+progcomp?Currently ignored.]"
 		"[+promptvars?Currently ignored.]"
 		"[+restricted_shell?This option is set if the shell is started "
@@ -136,22 +145,35 @@ USAGE_LICENSE
 		"[+sourcepath?If set, the \b.\b builtin uses the value of PATH "
 			"to find the directory containing the file supplied "
 			"as an argument.]"
-		"[+xpg_echo?If set, the echo builtin expands backslash-escape "
-			"sequences by default.]"
+		"[+xpg_echo?If set, the \becho\b and \bprint\b builtins "
+			"expand backslash-escape sequences.]"
 "}"
-"\fabc\f"
 "\n"
 "\n[optname ...]\n"
 "\n"
 "[+EXIT STATUS?]{"
 	"[+?The return status when listing options is zero if all \aoptnames\a "
 	"are enabled, non-zero otherwise. When setting or unsetting options, "
-	"the return status is zero unless an optname is not a valid shell "
+	"the return status is zero unless an \aoptname\a is not a valid shell "
 	"option.]"
 "}"
 
 "[+SEE ALSO?\bset\b(1)]"
 ;
+
+/* GLOBIGNORE discipline. Turn on SH_DOTGLOB on set, turn off on unset. */
+
+static void put_globignore(register Namval_t* np, const char *val, int flags, Namfun_t *fp)
+{
+	if(val)
+		sh_onoption(SH_DOTGLOB);
+	else
+		sh_offoption(SH_DOTGLOB);
+
+	nv_putv(np,val,flags,fp);
+}
+
+const Namdisc_t SH_GLOBIGNORE_disc  = { sizeof(Namfun_t), put_globignore };
 
 /* FUNCNAME discipline */
 
@@ -170,12 +192,13 @@ static void put_funcname(register Namval_t* np,const char *val,int flags,Namfun_
 	nv_putv(np,val,flags,fp);
 }
 
-const Namdisc_t SH_FUNCNAME_disc  = {  sizeof(struct funcname), put_funcname};
-
+const Namdisc_t SH_FUNCNAME_disc  = { sizeof(struct funcname), put_funcname };
 
 #define	SET_SET		1
 #define	SET_UNSET	2
 #define	SET_NOARGS	4
+
+/* shopt builtin */
 
 int     b_shopt(int argc,register char *argv[],void *extra)
 {
@@ -185,7 +208,7 @@ int     b_shopt(int argc,register char *argv[],void *extra)
 	int verbose=PRINT_SHOPT|PRINT_ALL|PRINT_NO_HEADER|PRINT_VERBOSE;
 	int setflag=0, quietflag=0, oflag=0;
 	memset(&opt,0,sizeof(opt));
-#if SHOPT_RAWONLY
+#ifdef SHOPT_RAWONLY
 	on_option(&newflags,SH_VIRAW);
 #endif
 	while((n = optget(argv,sh_optshopt)))
@@ -288,8 +311,9 @@ int     b_shopt(int argc,register char *argv[],void *extra)
 	return(ret);
 }
 
-/* mode = 0: pre-init before parsing shell args
-   mode = 1: initialize after parsing shell args
+/* mode = 0: init, called two times
+        before parsing shell args with SH_PREINIT state turned on
+	second time after sh_init() is through and with SH_PREINIT state turned off
    mode > 1: re-init
    mode < 0: shutdown
 */
@@ -322,7 +346,7 @@ void bash_init(int mode)
 		return;	
 	}
 
-	if(mode == 0)
+	if(sh_isstate(SH_PREINIT))
 	{	/* pre-init stage */
 		if(sh_isoption(SH_RESTRICTED))
 			sh_onoption(SH_RESTRICTED2);
@@ -332,11 +356,12 @@ void bash_init(int mode)
 		sh_onoption(SH_HISTAPPEND);
 		sh_onoption(SH_CMDHIST);
 		sh_onoption(SH_LITHIST);
+		sh_onoption(SH_NOEMPTYCMDCOMPL);
 		if(sh.login_sh==2)
 			sh_onoption(SH_LOGIN_SHELL);
 		if(strcmp(astgetconf("CONFORMANCE",0,0,0),"standard")==0)
 			sh_onoption(SH_POSIX);
-		if(strcmp(astgetconf("UNIVERSE",0,0,0),"ucb")==0)
+		if(strcmp(astgetconf("UNIVERSE",0,0,0),"att")==0)
 			sh_onoption(SH_XPG_ECHO);
 		else
 			sh_offoption(SH_XPG_ECHO);
@@ -350,8 +375,6 @@ void bash_init(int mode)
 
 		/* set up some variables needed for --version
 		 * needs to go here because --version option is parsed before the init script.
-		 * The macros BASH_(MAJOR|MINOR|PATCH|BUILD|RELEASE|MACHTYPE|HOSTTYPE)
-		 * are state variables in the Makefile.
 		 */
 		if(np=nv_open("HOSTTYPE",sh.var_tree,0))
 			nv_putval(np, BASH_HOSTTYPE, NV_NOFREE);
@@ -372,6 +395,7 @@ void bash_init(int mode)
 			nv_setvec(np, 0, 6, argv);
 			nv_onattr(np,NV_RDONLY);
 		}
+		return;
 	}
 
 	/* rest of init stage */
@@ -380,6 +404,15 @@ void bash_init(int mode)
 	if(np=nv_open("BASH_ENV",sh.var_tree,0))
 	{
 		const Namdisc_t *dp = nv_discfun(NV_DCRESTRICT);
+		Namfun_t *fp = calloc(dp->dsize,1);
+		fp->disc = dp;
+		nv_disc(np, fp, 0);
+	}
+
+	/* open GLOBIGNORE node */
+	if(np=nv_open("GLOBIGNORE",sh.var_tree,0))
+	{
+		const Namdisc_t *dp = &SH_GLOBIGNORE_disc;
 		Namfun_t *fp = calloc(dp->dsize,1);
 		fp->disc = dp;
 		nv_disc(np, fp, 0);

@@ -108,7 +108,7 @@ pathshell(void)
  defshell:
 	if (!(sh = val))
 	{
-		if (!*(sh = astconf("SHELL", NiL, NiL)) || !(sh = strdup(sh)))
+		if (!*(sh = astconf("SHELL", NiL, NiL)) || *sh != '/' || access(sh, X_OK) || !(sh = strdup(sh)))
 			sh = "/bin/sh";
 		val = sh;
 	}

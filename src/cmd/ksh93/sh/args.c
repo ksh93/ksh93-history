@@ -45,9 +45,14 @@
 #   define PFSHOPT
 #endif
 #if SHOPT_BASH
-#   define BASHOPT	"l\376\375\374\373"
+#   define BASHOPT	"l\375\374\373"
 #else
 #   define BASHOPT
+#endif
+#if SHOPT_HISTEXPAND
+#   define HFLAG        "H"
+#else
+#   define HFLAG        ""
 #endif
 
 
@@ -61,19 +66,23 @@ static int 		arg_expand(struct argnod*,struct argnod**,int);
 static	char		*null;
 
 /* The following order is determined by sh_optset */
-static  const char optksh[]     =  PFSHOPT BASHOPT "DircabefhkmnpstuvxC";
+static  const char optksh[] =  PFSHOPT BASHOPT "DircabefhkmnpstuvxCG" HFLAG;
 static const int flagval[]  =
 {
 #if SHOPT_PFSH
 	SH_PFSH,
 #endif
 #if SHOPT_BASH
-	SH_LOGIN_SHELL, SH_NOEDITING, SH_NOPROFILE, SH_NORC, SH_POSIX,
+	SH_LOGIN_SHELL, SH_NOPROFILE, SH_NORC, SH_POSIX,
 #endif
 	SH_DICTIONARY, SH_INTERACTIVE, SH_RESTRICTED, SH_CFLAG,
 	SH_ALLEXPORT, SH_NOTIFY, SH_ERREXIT, SH_NOGLOB, SH_TRACKALL,
 	SH_KEYWORD, SH_MONITOR, SH_NOEXEC, SH_PRIVILEGED, SH_SFLAG, SH_TFLAG,
-	SH_NOUNSET, SH_VERBOSE,  SH_XTRACE, SH_NOCLOBBER, 0 
+	SH_NOUNSET, SH_VERBOSE,  SH_XTRACE, SH_NOCLOBBER, SH_GLOBSTARS,
+#if SHOPT_HISTEXPAND
+        SH_HISTEXPAND,
+#endif
+	0 
 };
 
 #define NUM_OPTS	(sizeof(flagval)/sizeof(*flagval))
@@ -200,6 +209,11 @@ int sh_argopts(int argc,register char *argv[])
 			sh_exit(0);
 
 		    case -2:	/* --noediting */
+			off_option(&newflags,SH_VI);
+			off_option(&newflags,SH_EMACS);
+			off_option(&newflags,SH_GMACS);
+			continue;
+
 		    case -3:	/* --noprofile */
 		    case -4:	/* --norc */
 		    case -5:	/* --posix */
@@ -351,10 +365,19 @@ void sh_applyopts(Shopt_t newflags)
 		}
 	}
 #if SHOPT_BASH
+	on_option(&newflags,SH_CMDHIST);
+	on_option(&newflags,SH_CHECKHASH);
+	on_option(&newflags,SH_EXECFAIL);
+	on_option(&newflags,SH_EXPAND_ALIASES);
+	on_option(&newflags,SH_HISTAPPEND);
+	on_option(&newflags,SH_INTERACTIVE_COMM);
+	on_option(&newflags,SH_LITHIST);
+	on_option(&newflags,SH_NOEMPTYCMDCOMPL);
+
 	if(!is_option(&newflags,SH_XPG_ECHO) && sh_isoption(SH_XPG_ECHO))
-		astgetconf("UNIVERSE", 0, "att", 0);
-	if(is_option(&newflags,SH_XPG_ECHO) && !sh_isoption(SH_XPG_ECHO))
 		astgetconf("UNIVERSE", 0, "ucb", 0);
+	if(is_option(&newflags,SH_XPG_ECHO) && !sh_isoption(SH_XPG_ECHO))
+		astgetconf("UNIVERSE", 0, "att", 0);
 	if(!is_option(&newflags,SH_PHYSICAL) && sh_isoption(SH_PHYSICAL))
 		astgetconf("PATH_RESOLVE", 0, "metaphysical", 0);
 	if(is_option(&newflags,SH_PHYSICAL) && !sh_isoption(SH_PHYSICAL))
@@ -587,8 +610,10 @@ char **sh_argbuild(int *nargs, const struct comnod *comptr,int flag)
 {
 	register struct argnod	*argp;
 	struct argnod *arghead=0;
+	sh.xargs = 0;
 	{
 		register const struct comnod	*ac = comptr;
+		register int n;
 		/* see if the arguments have already been expanded */
 		if(!ac->comarg)
 		{
@@ -611,7 +636,10 @@ char **sh_argbuild(int *nargs, const struct comnod *comptr,int flag)
 			argp = ac->comarg;
 			while(argp)
 			{
-				*nargs += arg_expand(argp,&arghead,flag);
+				n = arg_expand(argp,&arghead,flag);
+				if(n>1 && sh.xargs==0)
+					sh.xargs = *nargs;
+				*nargs += n;
 				argp = argp->argnxt.ap;
 			}
 			argp = arghead;

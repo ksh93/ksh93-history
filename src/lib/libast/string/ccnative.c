@@ -40,13 +40,14 @@
 void*
 ccnative(void* b, const void* a, size_t n)
 {
+#if CC_ASCII == CC_NATIVE
+	return memcpy(b, a, n * (UCHAR_MAX + 1));
+#else
 	register int			c;
 	register const unsigned char*	m;
 	register unsigned char*		cb = (unsigned char*)b;
 	register unsigned char*		ca = (unsigned char*)a;
 
-	if (CC_ASCII == CC_NATIVE)
-		return memcpy(b, a, n * (UCHAR_MAX + 1));
 	m = CCMAP(CC_ASCII, CC_NATIVE);
 	if (n == sizeof(char))
 		for (c = 0; c <= UCHAR_MAX; c++)
@@ -55,4 +56,5 @@ ccnative(void* b, const void* a, size_t n)
 		for (c = 0; c <= UCHAR_MAX; c++)
 			memcpy(cb + n * c, ca + n * m[c], n);
 	return b;
+#endif
 }

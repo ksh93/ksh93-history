@@ -30,12 +30,9 @@ void _STUB_vmmopen(){}
 #else
 
 #include	"vmhdr.h"
-#include	<fcntl.h>
-#if _hdr_unistd
-#include	<unistd.h>
-#endif
 
 #if _lib_mmap
+#include	<fcntl.h>
 #include	<sys/mman.h>
 #else
 #define mmap(a,b,c,d,e,f)	MAP_FAILED
@@ -270,7 +267,7 @@ size_t		round;	/* amount to round requests	*/
 	if((fd = mmvminit(file, base, round, &mm)) < 0)
 		return NIL(Vmalloc_t*);
 
-	if(!(mmdc = vmalloc(Vmheap, sizeof(Mmvmdisc_t))) )
+	if(!(mmdc = (Mmvmdisc_t*)vmalloc(Vmheap, sizeof(Mmvmdisc_t))) )
 	{	close(fd);
 		return NIL(Vmalloc_t*);
 	}
@@ -313,7 +310,7 @@ int		set;	/* 1 for setting, 0 for getting	*/
 		u->data = data;
 		return old;
 	}
-	else if(!(u = vmalloc(vm, sizeof(User_t))) )
+	else if(!(u = (User_t*)vmalloc(vm, sizeof(User_t))) )
 		return NIL(Void_t*);
 	else
 	{	u->data = data;

@@ -148,18 +148,15 @@ extern int	errno;			/* system call error status	*/
 #endif
 
 #if _BLD_ast && defined(__EXPORT__)
-#define __PUBLIC_DATA__		__EXPORT__
-#else
+#define extern		extern __EXPORT__
+#endif
 #if !_BLD_ast && defined(__IMPORT__)
-#define __PUBLIC_DATA__		__IMPORT__
-#else
-#define __PUBLIC_DATA__
-#endif
+#define extern		extern __IMPORT__
 #endif
 
-extern __PUBLIC_DATA__ Error_info_t	error_info;
+extern Error_info_t	error_info;
 
-#undef	__PUBLIC_DATA__
+#undef	extern
 
 #if _BLD_ast && defined(__EXPORT__)
 #define extern		__EXPORT__

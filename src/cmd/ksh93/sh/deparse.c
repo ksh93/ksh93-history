@@ -165,9 +165,9 @@ static void p_tree(register const union anynode *t,register int tflags)
 				struct argnod *arg = (t->wh.whtre)->ar.arexpr;
 				sfprintf(outfile,"(( %s; ",forinit);
 				forinit = "";
-				sfputr(outfile,arg->argflag&ARG_RAW?sh_fmtq(arg->argval):arg->argval,';');
+				sfputr(outfile,arg->argval,';');
 				arg = (t->wh.whinc)->arexpr;
-				sfprintf(outfile," %s))\n",arg->argflag&ARG_RAW?sh_fmtq(arg->argval):arg->argval);
+				sfprintf(outfile," %s))\n",arg->argval);
 			}
 			else
 				p_tree(t->wh.whtre,0);
@@ -181,7 +181,7 @@ static void p_tree(register const union anynode *t,register int tflags)
 			{
 				/* arithmetic for statement */
 				struct argnod *init = (t->lst.lstlef)->ar.arexpr;
-				forinit= (init->argflag&ARG_RAW)?sh_fmtq(init->argval):tr->arg.argval;
+				forinit= init->argval;
 				p_tree(t->lst.lstrit,tflags);
 				break;
 			}
@@ -243,7 +243,7 @@ static void p_tree(register const union anynode *t,register int tflags)
 			register struct argnod *ap = t->ar.arexpr;
 			if(begin_line && level)
 				sfnputc(outfile,'\t',level);
-			sfprintf(outfile,"(( %s ))%c",ap->argflag&ARG_RAW?sh_fmtq(ap->argval):ap->argval,end_line);
+			sfprintf(outfile,"(( %s ))%c",ap->argval,end_line);
 			if(!(tflags&NO_NEWLINE))
 				begin_line=1;
 			break;

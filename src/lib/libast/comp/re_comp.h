@@ -26,6 +26,8 @@
 #pragma prototyped
 /*
  * re_comp interface definitions
+ *
+ * OBSOLETE: use <regex.h>
  */
 
 #ifndef _RE_COMP_H

@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 4.3 2003-04-15
+info mam static 00000 1994-07-17 make (AT&T Research) 4.3 2003-06-21
 setv INSTALLROOT ../../..
 setv PACKAGE_ast ${INSTALLROOT}
 setv PACKAGE_ast_INCLUDE ${PACKAGE_ast}/include/ast
@@ -9,7 +9,8 @@ setv ARFLAGS cr
 setv AS as
 setv ASFLAGS
 setv CC cc
-setv CCFLAGS  ${debug?1?${mam_cc_DEBUG}?${mam_cc_OPTIMIZE}?}
+setv mam_cc_FLAGS 
+setv CCFLAGS ${debug?1?${mam_cc_DEBUG} -D_BLD_DEBUG?${mam_cc_OPTIMIZE}?}
 setv COTEMP $$
 setv CPIO cpio
 setv CPIOFLAGS
@@ -41,8 +42,8 @@ make libcoshell.a archive
 make coshell.req
 exec - set -
 exec - echo 'main(){return(0);}' > 1.${COTEMP}.c
-exec - ${CC} ${CCFLAGS}    -c 1.${COTEMP}.c &&
-exec - x=`${CC} ${CCFLAGS}    ${LDFLAGS}  -o 1.${COTEMP}.x 1.${COTEMP}.o -l'*' 2>&1 | sed -e 's/[][()+@?]/#/g' || :` &&
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}    -c 1.${COTEMP}.c &&
+exec - x=`${CC} ${mam_cc_FLAGS} ${CCFLAGS}    ${LDFLAGS}  -o 1.${COTEMP}.x 1.${COTEMP}.o -l'*' 2>&1 | sed -e 's/[][()+@?]/#/g' || :` &&
 exec - {
 exec - case "" in
 exec - *?)	echo " " ;;
@@ -52,8 +53,8 @@ exec - do	case $i in
 exec - 	"coshell"|coshell)
 exec - 		;;
 exec - 	*)	if	test ! -f ${INSTALLROOT}/lib/lib$i.a
-exec - 		then	case `{ ${CC} ${CCFLAGS}     ${LDFLAGS}  -o 1.${COTEMP}.x 1.${COTEMP}.o  -l$i 2>&1 || echo '' $x ;} | sed -e 's/[][()+@?]/#/g' || :` in
-exec - 			*$x*)	case `{ ${CC} ${CCFLAGS}    ${LDFLAGS}  -o 1.${COTEMP}.x 1.${COTEMP}.o  -l$i 2>&1 || echo '' $x ;} | sed -e 's/[][()+@?]/#/g' || :` in
+exec - 		then	case `{ ${CC} ${mam_cc_FLAGS} ${CCFLAGS}     ${LDFLAGS}  -o 1.${COTEMP}.x 1.${COTEMP}.o  -l$i 2>&1 || echo '' $x ;} | sed -e 's/[][()+@?]/#/g' || :` in
+exec - 			*$x*)	case `{ ${CC} ${mam_cc_FLAGS} ${CCFLAGS}    ${LDFLAGS}  -o 1.${COTEMP}.x 1.${COTEMP}.o  -l$i 2>&1 || echo '' $x ;} | sed -e 's/[][()+@?]/#/g' || :` in
 exec - 				*$x*) continue ;;
 exec - 				esac
 exec - 				;;
@@ -70,9 +71,7 @@ make coopen.o
 make coopen.c
 make ../../../include/ast/tok.h implicit
 make ../../../include/ast/ast.h implicit
-make ../../../include/ast/sfio.h implicit
-make ../../../include/ast/sfio_s.h implicit
-done ../../../include/ast/sfio_s.h dontcare
+make ../../../include/ast/vmalloc.h implicit
 make ../../../include/ast/ast_common.h implicit
 done ../../../include/ast/ast_common.h dontcare
 make ../../../include/ast/ast_std.h implicit
@@ -112,7 +111,8 @@ done ../../../include/ast/ast_map.h dontcare
 make ../../../include/ast/stdio.h implicit
 make ../../../include/ast/ast_stdio.h implicit
 prev ../../../include/ast/ast_getopt.h implicit
-prev ../../../include/ast/sfio_s.h implicit
+make ../../../include/ast/sfio_s.h implicit
+done ../../../include/ast/sfio_s.h dontcare
 prev ../../../include/ast/ast_common.h implicit
 done ../../../include/ast/ast_stdio.h dontcare
 done ../../../include/ast/stdio.h dontcare
@@ -129,6 +129,11 @@ done ../../../include/ast/ast_lib.h dontcare
 prev ../../../include/ast/ast_common.h implicit
 prev ../../../include/ast/prototyped.h implicit
 done ../../../include/ast/ast_std.h dontcare
+done ../../../include/ast/vmalloc.h dontcare
+make ../../../include/ast/sfio.h implicit
+prev ../../../include/ast/sfio_s.h implicit
+prev ../../../include/ast/ast_common.h implicit
+prev ../../../include/ast/ast_std.h implicit
 done ../../../include/ast/sfio.h dontcare
 prev ../../../include/ast/ast_std.h implicit
 make ../../../include/ast/ast_version.h implicit
@@ -177,14 +182,14 @@ prev ../../../include/ast/ast.h implicit
 done colib.h
 done coopen.c
 prev coopen.c
-exec - ${CC} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c coopen.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c coopen.c
 done coopen.o generated
 make coclose.o
 make coclose.c
 prev colib.h implicit
 done coclose.c
 prev coclose.c
-exec - ${CC} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c coclose.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c coclose.c
 done coclose.o generated
 make coinit.o
 make coinit.c
@@ -196,55 +201,56 @@ done ../../../include/ast/fs3d.h
 prev colib.h implicit
 done coinit.c
 prev coinit.c
-exec - ${CC} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c coinit.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c coinit.c
 done coinit.o generated
 make coexec.o
 make coexec.c
 prev colib.h implicit
 done coexec.c
 prev coexec.c
-exec - ${CC} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c coexec.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c coexec.c
 done coexec.o generated
 make cowait.o
 make cowait.c
 prev colib.h implicit
 done cowait.c
 prev cowait.c
-exec - ${CC} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c cowait.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c cowait.c
 done cowait.o generated
 make cokill.o
 make cokill.c
 prev colib.h implicit
 done cokill.c
 prev cokill.c
-exec - ${CC} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c cokill.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c cokill.c
 done cokill.o generated
 make cosync.o
 make cosync.c
 make FEATURE/nfsd implicit
 prev coshell.req
 bind -last
-exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} ${mam_libast} : def nfsd
+bind -lm dontcare
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} ${mam_libm} ${mam_libast} ${mam_libm} : def nfsd
 done FEATURE/nfsd generated
 prev ../../../include/ast/ls.h implicit
 prev colib.h implicit
 done cosync.c
 prev cosync.c
-exec - ${CC} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c cosync.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c cosync.c
 done cosync.o generated
 make coquote.o
 make coquote.c
 prev colib.h implicit
 done coquote.c
 prev coquote.c
-exec - ${CC} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c coquote.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c coquote.c
 done coquote.o generated
 make codata.o
 make codata.c
 prev colib.h implicit
 done codata.c
 prev codata.c
-exec - ${CC} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c codata.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c codata.c
 done codata.o generated
 make procrun.o
 make procrun.c
@@ -253,14 +259,14 @@ prev ../../../include/ast/proc.h implicit
 prev colib.h implicit
 done procrun.c
 prev procrun.c
-exec - ${CC} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c procrun.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c procrun.c
 done procrun.o generated
 make system.o
 make system.c
 prev colib.h implicit
 done system.c
 prev system.c
-exec - ${CC} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c system.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c system.c
 done system.o generated
 exec - ${AR} cr libcoshell.a coopen.o coclose.o coinit.o coexec.o cowait.o cokill.o cosync.o coquote.o codata.o procrun.o system.o
 exec - (ranlib libcoshell.a) >/dev/null 2>&1 || true

@@ -114,11 +114,20 @@ struct _sfio_s;
 #if !_std_def_calloc
 __STDPP__directive pragma pp:hide calloc
 #endif
+#if !_std_def_cfree
+__STDPP__directive pragma pp:hide cfree
+#endif
 #if !_std_def_free
 __STDPP__directive pragma pp:hide free
 #endif
 #if !_std_def_malloc
 __STDPP__directive pragma pp:hide malloc
+#endif
+#if !_std_def_memalign
+__STDPP__directive pragma pp:hide memalign
+#endif
+#if !_std_def_pvalloc
+__STDPP__directive pragma pp:hide pvalloc
 #endif
 #if !_std_def_realloc
 __STDPP__directive pragma pp:hide realloc
@@ -137,11 +146,20 @@ __STDPP__directive pragma pp:hide strdup unsetenv vfprintf vprintf vsprintf
 #if !_std_def_calloc
 #define calloc		______calloc
 #endif
+#if !_std_def_cfree
+#define cfree		______cfree
+#endif
 #if !_std_def_free
 #define free		______free
 #endif
 #if !_std_def_malloc
 #define malloc		______malloc
+#endif
+#if !_std_def_memalign
+#define memalign	______memalign
+#endif
+#if !_std_def_pvalloc
+#define pvalloc		______pvalloc
 #endif
 #if !_std_def_realloc
 #define realloc		______realloc
@@ -231,11 +249,20 @@ __STDPP__directive pragma pp:noinitial
 #if !_std_def_calloc
 __STDPP__directive pragma pp:nohide calloc
 #endif
+#if !_std_def_cfree
+__STDPP__directive pragma pp:nohide cfree
+#endif
 #if !_std_def_free
 __STDPP__directive pragma pp:nohide free
 #endif
 #if !_std_def_malloc
 __STDPP__directive pragma pp:nohide malloc
+#endif
+#if !_std_def_memalign
+__STDPP__directive pragma pp:nohide memalign
+#endif
+#if !_std_def_pvalloc
+__STDPP__directive pragma pp:nohide pvalloc
 #endif
 #if !_std_def_realloc
 __STDPP__directive pragma pp:nohide realloc
@@ -254,11 +281,20 @@ __STDPP__directive pragma pp:nohide strdup unsetenv vfprintf vprintf vsprintf
 #if !_std_def_calloc
 #undef	calloc	
 #endif
+#if !_std_def_cfree
+#undef	cfree	
+#endif
 #if !_std_def_free
 #undef	free	
 #endif
 #if !_std_def_malloc
 #undef	malloc	
+#endif
+#if !_std_def_memalign
+#undef	memalign	
+#endif
+#if !_std_def_pvalloc
+#undef	pvalloc	
 #endif
 #if !_std_def_realloc
 #undef	realloc	
@@ -364,14 +400,26 @@ extern unsigned _ast_intmax_t	strtoull(const char*, char**, int);
 #if !_std_def_calloc
 extern void*		calloc(size_t, size_t);
 #endif
+#if !_std_def_cfree
+extern void		cfree(void*);
+#endif
 #if !_std_def_free
 extern void		free(void*);
 #endif
 #if !_std_def_malloc
 extern void*		malloc(size_t);
 #endif
+#if !_std_def_memalign
+extern void*		memalign(size_t, size_t);
+#endif
+#if !_std_def_pvalloc
+extern void*		pvalloc(size_t);
+#endif
 #if !_std_def_realloc
 extern void*		realloc(void*, size_t);
+#endif
+#if !_std_def_valloc
+extern void*		valloc(size_t);
 #endif
 
 #if _std_string
@@ -1055,18 +1103,15 @@ typedef struct
 } _Ast_info_t;
 
 #if _BLD_ast && defined(__EXPORT__)
-#define __PUBLIC_DATA__		__EXPORT__
-#else
+#define extern		extern __EXPORT__
+#endif
 #if !_BLD_ast && defined(__IMPORT__)
-#define __PUBLIC_DATA__		__IMPORT__
-#else
-#define __PUBLIC_DATA__
-#endif
+#define extern		extern __IMPORT__
 #endif
 
-extern __PUBLIC_DATA__ _Ast_info_t	_ast_info;
+extern _Ast_info_t	_ast_info;
 
-#undef	__PUBLIC_DATA__
+#undef	extern
 
 /* stuff from std headers not used by ast, e.g., <stdio.h> */
 

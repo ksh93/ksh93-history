@@ -49,7 +49,7 @@ size_t		size;
 	reg size_t	s;
 	reg Vmdata_t*	vd = vm->data;
 	reg int		local;
-	size_t		orgsize;
+	size_t		orgsize = 0;
 
 	if(!(local = vd->mode&VM_TRUST))
 	{	GETLOCAL(vd,local);
@@ -165,8 +165,8 @@ int		type;
 	reg Vmdata_t*	vd = vm->data;
 	reg int		local;
 	reg Void_t*	addr;
-	Void_t*		orgdata;
-	size_t		orgsize;
+	Void_t*		orgdata = NIL(Void_t*);
+	size_t		orgsize = 0;
 
 	if(!data)
 	{	oldsize = 0;
@@ -375,10 +375,10 @@ size_t		align;
 #endif
 {
 	reg Vmuchar_t*	data;
-	reg size_t	s, orgsize, orgalign;
 	reg Seg_t*	seg;
 	reg Block_t*	next;
 	reg int		local;
+	reg size_t	s, orgsize = 0, orgalign = 0;
 	reg Vmdata_t*	vd = vm->data;
 
 	if(size <= 0 || align <= 0)

@@ -56,6 +56,9 @@ __STDPP__directive pragma pp:hide getpagesize getdtablesize printf
 #ifndef _POSIX_SOURCE
 #define _POSIX_SOURCE	1
 #endif
+#ifndef _XOPEN_SOURCE
+#define _XOPEN_SOURCE	1
+#endif
 #ifndef __EXTENSIONS__
 #define __EXTENSIONS__	1
 #endif

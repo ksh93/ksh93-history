@@ -35,7 +35,7 @@
 #define extern		__EXPORT__
 #endif
 #if !_BLD_ast && defined(__IMPORT__)
-#define extern		__IMPORT__
+#define extern		extern __IMPORT__
 #endif
 
 extern char*	__loc1;

@@ -274,4 +274,7 @@ unset a b
 a='\[abc @(*) def\]'
 b='[abc 123 def]'
 [[ ${b//$a/\1} == 123 ]] || err_exit "\${var/pattern} not working with \[ in pattern"
+unset X
+$SHELL -c '[[ ! ${X[@]:0:300} ]]' 2> /dev/null || err_exit '${X[@]:0:300} with X undefined fails'
+$SHELL -c '[[ ${@:0:300} == "$0" ]]' 2> /dev/null || err_exit '${@:0:300} with no arguments fails'
 exit $((Errors))

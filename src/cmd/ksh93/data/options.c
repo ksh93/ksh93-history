@@ -59,10 +59,15 @@ const Shtable_t shtab_options[] =
 	bashopt("execfail",		SH_EXECFAIL)
 	bashopt("expand_aliases",	SH_EXPAND_ALIASES)
 	bashopt("extglob",		SH_EXTGLOB)
+	"globstar",			SH_GLOBSTARS,
 	"gmacs",			SH_GMACS,
 	bashextra("hashall",		SH_TRACKALL)
 	bashopt("histappend",		SH_HISTAPPEND)
-	bashopt("histexpand",		SH_HISTEXPAND)
+#if SHOPT_HISTEXPAND
+	"histexpand",			SH_HISTEXPAND,
+#else
+	bashextra("histexpand",		SH_HISTEXPAND)
+#endif
 	bashextra("history",		SH_HISTORY2)
 	bashopt("histreedit",		SH_HISTREEDIT)
 	bashopt("histverify",		SH_HISTVERIFY)
@@ -70,17 +75,17 @@ const Shtable_t shtab_options[] =
 	bashopt("huponexit",		SH_HUPONEXIT)
 	"ignoreeof",			SH_IGNOREEOF,
 	"interactive",			SH_INTERACTIVE|SH_COMMANDLINE,
-	bashopt("interactive_comments",	SH_INTERACTIVE_COMM)
+	bashextra("interactive_comments",	SH_INTERACTIVE_COMM)
 	"keyword",			SH_KEYWORD,
-	bashopt("listhist",		SH_LITHIST)
+	bashopt("lithist",		SH_LITHIST)
 	bashopt("login_shell",		SH_LOGIN_SHELL|SH_COMMANDLINE)
 	bashopt("mailwarn",		SH_MAILWARN)
 	"markdirs",			SH_MARKDIRS,
 	"monitor",			SH_MONITOR,
 	bashopt("no_empty_cmd_completion", SH_NOEMPTYCMDCOMPL)
 	bashopt("nocaseglob",		SH_NOCASEGLOB)
-	"noexec",			SH_NOEXEC,
 	"noclobber",			SH_NOCLOBBER,
+	"noexec",			SH_NOEXEC,
 	"noglob",			SH_NOGLOB,
 	"nolog",			SH_NOLOG,
 	"notify",			SH_NOTIFY,

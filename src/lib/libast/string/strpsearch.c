@@ -33,6 +33,12 @@
 #include <ccode.h>
 #include <ctype.h>
 
+#if CC_NATIVE == CC_ASCII
+#define MAP(m,c)	(c)
+#else
+#define MAP(m,c)	m[c]
+#endif
+
 /*
  * return a pointer to the isalpha() identifier matching
  * name in the CC_ASCII sorted tab of num elements of
@@ -53,17 +59,23 @@ strpsearch(const void* tab, size_t num, size_t siz, const char* name, char** nex
 	register char*		lo = (char*)tab;
 	register char*		hi = lo + (num - 1) * siz;
 	register char*		mid;
+#if CC_NATIVE != CC_ASCII
+	register unsigned char*	m;
+#endif
 	register unsigned char*	s;
 	register unsigned char*	t;
 	register int		c;
 	register int		v;
 	int			sequential = 0;
 
-	c = ccmapc(*((unsigned char*)name), CC_NATIVE, CC_ASCII);
+#if CC_NATIVE != CC_ASCII
+	m = ccmap(CC_NATIVE, CC_ASCII);
+#endif
+	c = MAP(m, *((unsigned char*)name));
 	while (lo <= hi)
 	{
 		mid = lo + (sequential ? 0 : (((hi - lo) / siz) / 2) * siz);
-		if (!(v = c - ccmapc(*(s = *((unsigned char**)mid)), CC_NATIVE, CC_ASCII)) || *s == '[' && !(v = c - ccmapc(*++s, CC_NATIVE, CC_ASCII)) && (v = 1))
+		if (!(v = c - MAP(m, *(s = *((unsigned char**)mid)))) || *s == '[' && !(v = c - MAP(m, *++s)) && (v = 1))
 		{
 			t = (unsigned char*)name;
 			for (;;)
@@ -88,7 +100,7 @@ strpsearch(const void* tab, size_t num, size_t siz, const char* name, char** nex
 					}
 					if (!sequential)
 					{
-						while ((mid -= siz) >= lo && (s = *((unsigned char**)mid)) && ((c == ccmapc(*s, CC_NATIVE, CC_ASCII)) || *s == '[' && c == ccmapc(*(s + 1), CC_NATIVE, CC_ASCII)));
+						while ((mid -= siz) >= lo && (s = *((unsigned char**)mid)) && ((c == MAP(m, *s)) || *s == '[' && c == MAP(m, *(s + 1))));
 						sequential = 1;
 					}
 					v = 1;
@@ -96,7 +108,7 @@ strpsearch(const void* tab, size_t num, size_t siz, const char* name, char** nex
 				}
 				else if (*t != *s)
 				{
-					v = ccmapc(*t, CC_NATIVE, CC_ASCII) - ccmapc(*s, CC_NATIVE, CC_ASCII);
+					v = MAP(m, *t) - MAP(m, *s);
 					break;
 				}
 				else

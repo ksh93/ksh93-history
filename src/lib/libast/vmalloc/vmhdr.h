@@ -51,6 +51,7 @@
 #if !_UWIN
 #define getpagesize		______getpagesize
 #define _npt_getpagesize	1
+#define brk			______brk
 #define sbrk			______sbrk
 #define _npt_sbrk		1
 #endif
@@ -61,6 +62,7 @@
 #undef				getpagesize
 #endif
 #if _npt_sbrk
+#undef				brk
 #undef				sbrk
 #endif
 
@@ -75,12 +77,9 @@
 
 #endif /*_PACKAGE_ast*/
 
-#include	"FEATURE/vmalloc"
+#include	"FEATURE/mem"
 #include	"FEATURE/mmap"
-
-#undef free
-#undef malloc
-#undef realloc
+#include	"FEATURE/vmalloc"
 
 typedef unsigned char	Vmuchar_t;
 typedef unsigned long	Vmulong_t;
@@ -113,24 +112,17 @@ typedef struct _pfobj_s	Pfobj_t;
 #ifndef DEBUG
 #ifdef _BLD_DEBUG
 #define DEBUG		1
-#endif
-#endif
-#ifndef DEBUG
+#endif /*_BLD_DEBUG*/
+#endif /*DEBUG*/
+#if DEBUG
+extern void		_Vmessage _ARG_((const char*, long, const char*, long));
+#define MESSAGE(s)	_Vmessage(__FILE__,__LINE__,s,0)
+#define ASSERT(p)	((p) ? 0 : (MESSAGE("assertion failed"), abort(), 0))
+#define COUNT(n)	((n) += 1)
+#else
 #define ASSERT(p)
 #define COUNT(n)
-#else
-#if defined(__LINE__) && defined(__FILE__)
-#if _PACKAGE_ast
-#define PRFILELINE	sfprintf(sfstdout,"Assertion failed at %s:%d\n",__FILE__,__LINE__)
-#else
-extern int printf _ARG_((const char*, ...));
-#define PRFILELINE	printf("Assertion failed at %s:%d\n",__FILE__,__LINE__)
-#endif
-#else
-#define PRFILELINE	0
-#endif
-#define ASSERT(p)	((p) ? 0 : (PRFILELINE, abort(), 0) )
-#define COUNT(n)	((n) += 1)
+#define MESSAGE(s)	0
 #endif /*DEBUG*/
 
 #define VMPAGESIZE	8192
@@ -309,11 +301,6 @@ typedef struct _vmdata_s
 
 #include	"vmalloc.h"
 
-/* we don't use these here and they interfere with some local names */
-#undef malloc
-#undef free
-#undef realloc
-
 /* segment structure */
 struct _seg_s
 {	Vmalloc_t*	vm;	/* the region that holds this	*/
@@ -464,10 +451,16 @@ extern Vmextern_t	_Vmextern;
 extern int		getpagesize _ARG_((void));
 #endif
 #if _npt_sbrk
+extern int		brk _ARG_(( void* ));
 extern Void_t*		sbrk _ARG_(( ssize_t ));
 #endif
 
 #else
+
+/* for vmdcsbrk.c */
+#if !_typ_ssize_t
+typedef int		ssize_t;
+#endif
 
 #if _hdr_unistd
 #include	<unistd.h>
@@ -475,6 +468,7 @@ extern Void_t*		sbrk _ARG_(( ssize_t ));
 extern void		abort _ARG_(( void ));
 extern ssize_t		write _ARG_(( int, const void*, size_t ));
 extern int		getpagesize _ARG_((void));
+extern int		brk _ARG_((Void_t*));
 extern Void_t*		sbrk _ARG_((ssize_t));
 #endif
 
@@ -497,11 +491,6 @@ extern void		_exit _ARG_(( int ));
 extern void		_cleanup _ARG_(( void ));
 
 #endif /*_PACKAGE_ast*/
-
-/* for vmdcsbrk.c */
-#if !_typ_ssize_t
-typedef int		ssize_t;
-#endif
 
 _END_EXTERNS_
 

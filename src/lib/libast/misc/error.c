@@ -180,24 +180,49 @@ setopt(void* a, const void* p, register int n, register const char* v)
 static void
 print(register Sfio_t* sp, register char* name, char* delim)
 {
-	register int	c;
+	register int		c;
+#if CC_NATIVE != CC_ASCII
+	register unsigned char*	n2a;
+	register unsigned char*	a2n;
+	register int		aa;
+	register int		as;
 
+	n2a = ccmap(CC_NATIVE, CC_ASCII);
+	a2n = ccmap(CC_ASCII, CC_NATIVE);
+	aa = n2a['A'];
+	as = n2a[' '];
 	while (c = *name++)
 	{
-		c = ccmapc(c, CC_NATIVE, CC_ASCII);
+		c = n2a[c];
 		if (c & 0200)
 		{
 			c &= 0177;
 			sfputc(sp, '?');
 		}
-		if (c < ccmapc(' ', CC_NATIVE, CC_ASCII))
+		if (c < as)
 		{
-			c += ccmapc('A', CC_NATIVE, CC_ASCII) - 1;
+			c += aa - 1;
 			sfputc(sp, '^');
 		}
-		c = ccmapc(c, CC_ASCII, CC_NATIVE);
+		c = a2n[c];
 		sfputc(sp, c);
 	}
+#else
+	while (c = *name++)
+	{
+		if (c & 0200)
+		{
+			c &= 0177;
+			sfputc(sp, '?');
+		}
+		if (c < ' ')
+		{
+			c += 'A' - 1;
+			sfputc(sp, '^');
+		}
+		sfputc(sp, c);
+	}
+#endif
 	if (delim)
 		sfputr(sp, delim, -1);
 }

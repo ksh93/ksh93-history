@@ -87,6 +87,7 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 	int strip;
 	int var=0;
 	int nomarkdirs = !sh_isoption(SH_MARKDIRS);
+	sh_onstate(SH_FCOMPLETE);
 	if(ep->e_nlist)
 	{
 		if(mode=='=' && count>0)
@@ -146,9 +147,9 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 				else if(!isaname(c))
 					var = 0;
 			}
-			while(out>outbuff && !ismeta(c) && c!='`');
+			while(out>outbuff && !ismeta(c) && c!='`' && c!='=');
 			/* copy word into arg */
-			if(ismeta(c) || c=='`')
+			if(ismeta(c) || c=='`' || c=='=')
 				out++;
 			/* special handling for leading quotes */
 			if(*out=='\'' || *out=='"')
@@ -376,6 +377,7 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 		*eol = (out-outbuff);
 	}
  done:
+	sh_offstate(SH_FCOMPLETE);
 	if(!ep->e_nlist)
 		stakset(ep->e_stkptr,ep->e_stkoff);
 	if(nomarkdirs)

@@ -26,7 +26,7 @@
 #ifndef _SFIO_H
 #define _SFIO_H	1
 
-#define SFIO_VERSION	20020906L
+#define SFIO_VERSION	20030519L
 
 /*	Public header file for the sfio library
 **
@@ -202,29 +202,25 @@ extern ssize_t		_Sfi;
 /* standard in/out/err streams */
 
 #if _BLD_sfio && defined(__EXPORT__)
-#define __PUBLIC_DATA__		__EXPORT__
-#else
-#if !_BLD_sfio && defined(__IMPORT__)
-#define __PUBLIC_DATA__		__IMPORT__
-#else
-#define __PUBLIC_DATA__
+#define extern		extern __EXPORT__
 #endif
+#if !_BLD_sfio && defined(__IMPORT__)
+#define extern		extern __IMPORT__
 #endif
 
-extern __PUBLIC_DATA__ Sfio_t*		sfstdin;
-extern __PUBLIC_DATA__ Sfio_t*		sfstdout;
-extern __PUBLIC_DATA__ Sfio_t*		sfstderr;
+extern Sfio_t*		sfstdin;
+extern Sfio_t*		sfstdout;
+extern Sfio_t*		sfstderr;
 
 #if _UWIN
-#undef	__PUBLIC_DATA__
-#define	__PUBLIC_DATA__
+#undef	extern
 #endif
 
-extern __PUBLIC_DATA__ Sfio_t		_Sfstdin;
-extern __PUBLIC_DATA__ Sfio_t		_Sfstdout;
-extern __PUBLIC_DATA__ Sfio_t		_Sfstderr;
+extern Sfio_t		_Sfstdin;
+extern Sfio_t		_Sfstdout;
+extern Sfio_t		_Sfstderr;
 
-#undef	__PUBLIC_DATA__
+#undef	extern
 
 #if _BLD_sfio && defined(__EXPORT__)
 #define extern	__EXPORT__

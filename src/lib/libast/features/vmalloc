@@ -6,43 +6,133 @@
 # repeating them here allows for single standalone and AST sources.
 #
 
-lib	atexit,getpagesize,mallopt,mallinfo,mstats,onexit,sbrk,vmalloc
+lib	atexit,getpagesize,mallinfo,mallopt,memalign,mstats
+lib	onexit,pvalloc,strdup,valloc,vmalloc
+lib	_malloc,__malloc,__libc_malloc
 hdr	alloca,malloc,stat,stdlib,unistd
+mem	mallinfo.arena,mstats.bytes_total malloc.h
 sys	stat
 typ	ssize_t
 
-libc	malloc note{ GNU __libc_malloc is defined }end  compile{
+tst	lib_sbrk note{ sbrk() exists and it works }end execute{
+	#if _hdr_unistd
+	#include <unistd.h>
+	#else
 	_BEGIN_EXTERNS_
-	void* __libc_malloc(unsigned int);
-	_END_EXTERNS_
-	main() { __libc_malloc(10); return 0; }
+	extern void* sbrk _ARG_((int));
+	#endif
+	#define BAD ((char*)(-1))
+	main()
+	{
+		char*	o;
+		char*	p;
+		int	z;
+		z = 32767;
+		p = (char*)sbrk(0);
+		if (p == BAD)
+			return 1;
+		o = (char*)sbrk(z);
+		p = (char*)sbrk(0);
+		if (o == BAD || p == BAD || (p - o) < z)
+			return 1;
+		o = (char*)sbrk(-z);
+		p = (char*)sbrk(0);
+		if (o == BAD || p == BAD || p > o)
+			return 1;
+		z = 65535;
+		o = (char*)sbrk(z);
+		p = (char*)sbrk(0);
+		if (o == BAD || p == BAD || (p - o) < z)
+			return 1;
+		return 0;
+	}
 }end
 
-std	malloc note{ stuck with standard malloc }end noexecute{
-	#if defined(_UWIN) || defined(__CYGWIN__)
+tst	lib_brk note{ brk() exists and it works }end execute{
+	#if _hdr_unistd
+	#include <unistd.h>
+	#else
+	_BEGIN_EXTERNS_
+	#if _lib_sbrk
+	extern void* sbrk _ARG_((int));
+	#endif
+	extern int brk _ARG_((void*));
+	#endif
+	#if !_lib_sbrk
+	extern int _end[];
+	#endif
+	#define BAD ((char*)(-1))
+	main()
+	{
+		char*	o;
+		char*	p;
+		int	z;
+		z = 0x1000;
+	#if _lib_sbrk
+		o = sbrk(0);
+	#else
+		o = (char*)_end;
+	#endif
+		if (o == BAD || brk(o) || brk(o + z))
+			return 1;
+		*(o + z - 1) = 'X';
+	#if _lib_sbrk
+		p = sbrk(0);
+		return p == BAD || (p - o) < z;
+	#else
+		return 0;
+	#endif
+	}
+}end
+
+tst	map_malloc note{ map malloc to _ast_malloc }end noexecute{
+	#if __CYGWIN__
 	main() { return 1; }
 	#else
+	static int user = 0;
 	_BEGIN_EXTERNS_
-	extern void _exit _ARG_((int));
-	extern void* calloc _ARG_((unsigned int, unsigned int));
-	#if _STD_
-	void free(void* p) { }
-	void __libc_free(void* p) { }
-	void* malloc(unsigned int n) { _exit(0); return 0; }
-	void* __libc_malloc(unsigned int n) { _exit(0); return 0; }
+	#if _lib_strdup
+	extern char* strdup _ARG_((const char*));
+	#define LOCAL()	strdup("s")
 	#else
-	void free(p) char* p; { }
-	void __libc_free(p) char* p; { }
-	void* malloc(n) unsigned int n; { _exit(0); return 0; }
-	void* __libc_malloc(n) unsigned int n; { _exit(0); return 0; }
+	extern void* calloc _ARG_((unsigned int, unsigned int));
+	#define LOCAL()	calloc(1,1)
+	#endif
+	#if __CYGWIN__
+	#define extern __declspec(dllexport)
+	#endif
+	#define HT double
+	static HT heap[1024 * 4];
+	static HT* hp = &heap[1];
+	static HT* op;
+	#define MALLOC(n) if(user)return&heap[0];op=hp;hp+=(n+sizeof(HT)-1)/sizeof(HT);return(void*)op;
+	#define INTERCEPTED(p) (((char*)(p))==((char*)&heap[0]))
+	#if _STD_
+	extern void free(void* p) { }
+	extern void _free(void* p) { }
+	extern void __free(void* p) { }
+	extern void __libc_free(void* p) { }
+	extern void* malloc(unsigned int n) { MALLOC(n); }
+	extern void* _malloc(unsigned int n) { MALLOC(n); }
+	extern void* __malloc(unsigned int n) { MALLOC(n); }
+	extern void* __libc_malloc(unsigned int n) { MALLOC(n); }
+	#else
+	extern void free(p) char* p; { }
+	extern void _free(p) char* p; { }
+	extern void __free(p) char* p; { }
+	extern void __libc_free(p) char* p; { }
+	extern void* malloc(n) unsigned int n; { MALLOC(n); }
+	extern void* _malloc(n) unsigned int n; { MALLOC(n); }
+	extern void* __malloc(n) unsigned int n; { MALLOC(n); }
+	extern void* __libc_malloc(n) unsigned int n; { MALLOC(n); }
 	#endif
 	_END_EXTERNS_
-	main() { calloc(1,1); _exit(1); }
+	main() { user = 1; return !INTERCEPTED(LOCAL()); }
 	#endif
 }end
 
-std	malloc note{ stuck with standard malloc -- wimp-o mach? }end noexecute{
-	#if _std_malloc
+tst	map_malloc note{ map malloc to _ast_malloc -- wimp-o mach? }end noexecute{
+	#if _map_malloc
 	main() { return 0; }
 	#else
 	_BEGIN_EXTERNS_
@@ -65,7 +155,7 @@ lib	alloca note{ alloca exists }end link{
 	}
 }end
 
-mal	alloca note{ alloca is based on malloc() }end execute{
+tst	mal_alloca note{ alloca is based on malloc() }end execute{
 	#if _hdr_alloca
 	#include	<alloca.h>
 	#endif
@@ -83,7 +173,7 @@ mal	alloca note{ alloca is based on malloc() }end execute{
 	}
 }end
 
-stk	down note{ stack grows downward }end execute{
+tst	stk_down note{ stack grows downward }end execute{
 	static growdown()
 	{	static char*	addr = 0;
 		char		array[4];
@@ -96,4 +186,11 @@ stk	down note{ stack grows downward }end execute{
 		else	return 1;	
 	}
 	main() { return growdown() ? 0 : 1; }
+}end
+
+cat{
+	#if _BLD_INSTRUMENT || cray || _UWIN && _BLD_ast
+	#undef	_map_malloc
+	#define _std_malloc	1	/* defer to standard malloc */
+	#endif
 }end

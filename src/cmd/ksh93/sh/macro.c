@@ -88,9 +88,9 @@ typedef struct  _mac_
 #define M_VNAME		4	/* ${!var}	*/
 #define M_SUBNAME	5	/* ${!var[sub]}	*/
 #define M_NAMESCAN	6	/* ${!var*)	*/
-#define M_CLASS		7	/* ${-var)	*/
+#define M_NAMECOUNT	7	/* ${#var*)	*/
+#define M_CLASS		8	/* ${-var)	*/
 
-static char	*nextname(Mac_t*,const char*, int);
 static int	substring(const char*, const char*, int[], int);
 static void	copyto(Mac_t*, int, int);
 static void	comsubst(Mac_t*,int);
@@ -216,7 +216,10 @@ int sh_macexpand(register struct argnod *argp, struct argnod **arghead,int flag)
 		stakseek(0);
 	}
 	else
+	{
 		stakseek(ARGVAL);
+		*stakptr(ARGVAL-1) = 0;
+	}
 	mp->patfound = 0;
 	copyto(mp,0,mp->arith);
 	if(!arghead)
@@ -747,6 +750,8 @@ static char *prefix(char *id)
 		*cp = 0;
 		np = nv_search(id, sh.var_tree,0);
 		*cp = '.';
+		if(isastchar(cp[1]))
+			cp[1] = 0;
 		if(np && nv_isref(np))
 		{
 			int n;
@@ -780,6 +785,29 @@ static int subcopy(Mac_t *mp, int flag)
 	mp->split = split;
 	mp->arith = xarith;
 	return(loc);
+}
+
+static int namecount(Mac_t *mp,const char *prefix)
+{
+	int count = 0;
+	mp->nvwalk = nv_diropen(prefix);
+	while(nv_dirnext(mp->nvwalk))
+		count++;
+	nv_dirclose(mp->nvwalk);
+	return(count);
+}
+
+static char *nextname(Mac_t *mp,const char *prefix, int len)
+{
+	char *cp;
+	if(len==0)
+	{
+		mp->nvwalk = nv_diropen(prefix);
+		return((char*)mp->nvwalk);
+	}
+	if(!(cp=nv_dirnext(mp->nvwalk)))
+		nv_dirclose(mp->nvwalk);
+	return(cp);
 }
 
 /*
@@ -911,25 +939,47 @@ retry1:
 			{
 				char *last;
 				sh.argaddr=0;
-				stakputc(c);
-				v = stakptr(subcopy(mp,1));
-				stakputc(']');
-				last = stakptr(staktell());
-				if(sh_checkid(v,last)!=last)
-					stakseek(staktell()-2);
+				if((type==M_VNAME || type==M_SIZE) && (c=fcget(),isastchar(c)) && fcpeek(0)==RBRACT)
+				{
+					if(type==M_VNAME)
+						type = M_NAMESCAN;
+					else
+						type = M_NAMECOUNT;
+					idbuff[0] = mode = c;
+					stakputc(c);
+					fcget();
+				}
+				else
+				{
+					if(type==M_VNAME || type==M_SIZE)
+						fcseek(-1);
+					stakputc(LBRACT);
+					v = stakptr(subcopy(mp,1));
+					stakputc(']');
+					last = stakptr(staktell());
+					if(sh_checkid(v,last)!=last)
+						stakseek(staktell()-2);
+				}
 				if((c=fcget())=='.')
 					goto more;
 			}
 		}
 		stakputc(0);
 		id=stakptr(offset);
+		if(type==M_NAMESCAN || type==M_NAMECOUNT)
+		{
+			fcseek(-1);
+			break;
+		}
 		if(isastchar(c) && type)
 		{
-			if(type==M_VNAME)
+			if(type==M_VNAME || type==M_SIZE)
 			{
 				idbuff[0] = mode = c;
-				type = M_NAMESCAN;
-				dolg = -1;
+				if(type==M_VNAME)
+					type = M_NAMESCAN;
+				else
+					type = M_NAMECOUNT;
 				break;
 			}
 			goto nosub;
@@ -1024,7 +1074,7 @@ retry1:
 			{
 				v = nv_getval(np);
 				/* special case --- ignore leading zeros */  
-				if(type!=M_SIZE && v && *v && (mp->arith||mp->let) && !nv_isattr(np,NV_INTEGER))
+				if(type!=M_SIZE && v && *v && (mp->arith||mp->let) && !nv_isattr(np,NV_INTEGER) && (offset==0 || !isadigit(*((unsigned char*)stakptr(offset-1)))))
 				{
 					while(*v=='0')
 						v++;
@@ -1056,13 +1106,22 @@ retry1:
 	{
 		if(c!=RBRACE)
 			mac_error(np);
-		if(type==M_NAMESCAN)
+		if(type==M_NAMESCAN || type==M_NAMECOUNT)
 		{
 			id = prefix(id);
 			dolmax = strlen(id);
 			stakseek(offset);
-			nextname(mp,id,0);
-			v = nextname(mp,id,dolmax);
+			if(type==M_NAMECOUNT)
+			{
+				c = namecount(mp,id);
+				v = ltos(c);
+			}
+			else
+			{
+				dolg = -1;
+				nextname(mp,id,0);
+				v = nextname(mp,id,dolmax);
+			}
 		}
 		else if(type==M_SUBNAME)
 		{
@@ -1183,7 +1242,7 @@ retry1:
 		type = (int)sh_strnum(argp,&ptr,1);
 		if(isastchar(mode))
 		{
-			if(!ap)  /* ${@} or ${*} */
+			if(!np)  /* ${@} or ${*} */
 			{
 				if(type<0 && (type+= dolmax)<0)
 					type = 0;
@@ -1202,7 +1261,7 @@ retry1:
 				else
 					v =  0;
 			}
-			else
+			else if(ap)
 			{
 				if(type<0)
 				{
@@ -1244,7 +1303,7 @@ retry1:
 				v = 0;
 			else if(isastchar(mode))
 			{
-				if(dolg>0)
+				if(dolg>=0)
 				{
 					if(dolg+type < dolmax)
 						dolmax = dolg+type;
@@ -2060,17 +2119,4 @@ static char *mac_getstring(char *pattern)
 		}
 	}
 	return(NIL(char*));
-}
-
-static char *nextname(Mac_t *mp,const char *prefix, int len)
-{
-	char *cp;
-	if(len==0)
-	{
-		mp->nvwalk = nv_diropen(prefix);
-		return((char*)mp->nvwalk);
-	}
-	if(!(cp=nv_dirnext(mp->nvwalk)))
-		nv_dirclose(mp->nvwalk);
-	return(cp);
 }

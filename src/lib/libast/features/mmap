@@ -1,6 +1,13 @@
 sys	mman
 
-tst	lib_mmap sys/types.h sys/stat.h unistd.h fcntl.h sys/mman.h sys/times.h note{ standard mmap interface that works }end execute{
+tst	lib_mmap note{ standard mmap interface that works }end execute{
+	#include <unistd.h>
+	#include <fcntl.h>
+	#include <sys/types.h>
+	#include <sys/mman.h>
+	#include <sys/stat.h>
+	#include <sys/times.h>
+	
 	#define MAPSIZE (64*1024)
 	#define BUFSIZE	(8*1024)
 	#define WRITE   (64)
@@ -39,7 +46,7 @@ tst	lib_mmap sys/types.h sys/stat.h unistd.h fcntl.h sys/mman.h sys/times.h note
 			else if (*t != '.')
 				t++;
 		*t++ = '.'; *t++ = 'D'; *t = 0;
-		if ((fd = creat(file,0666)) < 0)
+		if ((fd = open(file, O_CREAT|O_TRUNC|O_WRONLY, 0666)) < 0)
 			return 1;
 
 		for (i = 0; i < sizeof(buf); ++i)
@@ -53,7 +60,7 @@ tst	lib_mmap sys/types.h sys/stat.h unistd.h fcntl.h sys/mman.h sys/times.h note
 	#ifndef MAP_VARIABLE
 	#define MAP_VARIABLE	0
 	#endif
-		if ((fd = open(file,0)) < 0)
+		if ((fd = open(file, O_RDWR)) < 0)
 			return Failed(file);
 
 		mm = mmap((caddr_t)0, sizeof(buf), (PROT_READ|PROT_WRITE),
@@ -67,7 +74,7 @@ tst	lib_mmap sys/types.h sys/stat.h unistd.h fcntl.h sys/mman.h sys/times.h note
 		close(fd);
 
 		/* read time */
-		if((fd = open(file, 0)) < 0)
+		if((fd = open(file,  O_RDWR)) < 0)
 			return Failed(file);
 		times(&stm);
 		for (i = 0; i < WRITE; ++i)
@@ -75,10 +82,10 @@ tst	lib_mmap sys/types.h sys/stat.h unistd.h fcntl.h sys/mman.h sys/times.h note
 				return Failed(file);
 		times(&etm);
 		close(fd);
-		rdtm = (etm.tms_utime-stm.tms_utime) + (etm.tms_stime-stm.tms_utime);
+		rdtm = (etm.tms_utime-stm.tms_utime) + (etm.tms_stime-stm.tms_stime);
 
 		/* mmap time */
-		if ((fd = open(file,0)) < 0)
+		if ((fd = open(file, O_RDWR)) < 0)
 			return Failed(file);
 		times(&stm);
 		for(i = 0, mm = (caddr_t)0; i < WRITE; ++i)
@@ -102,7 +109,7 @@ tst	lib_mmap sys/types.h sys/stat.h unistd.h fcntl.h sys/mman.h sys/times.h note
 		times(&etm);
 		close(fd);
 		remove(file);
-		mmtm = (etm.tms_utime-stm.tms_utime) + (etm.tms_stime-stm.tms_utime);
+		mmtm = (etm.tms_utime-stm.tms_utime) + (etm.tms_stime-stm.tms_stime);
 
 		return rdtm+60 < mmtm ? 1 : 0;
 	}
@@ -115,9 +122,9 @@ tst	lib_mmap64 note{ mmap64 interface and implementation work }end execute{
 	#define _LARGEFILE64_SOURCE     1
 	
 	#include <unistd.h>
+	#include <fcntl.h>
 	#include <sys/types.h>
 	#include <sys/mman.h>
-	#include <sys/fcntl.h>
 	#include <sys/stat.h>
 	
 	main()
@@ -150,7 +157,7 @@ tst	lib_mmap64 note{ mmap64 interface and implementation work }end execute{
 	                remove(file);
 	                return 1;
 	        }
-	        if (close(fd) < 0 || (fd = open64(file, O_RDONLY)) < 0)
+	        if (close(fd) < 0 || (fd = open64(file, O_RDWR)) < 0)
 	        {
 	                remove(file);
 	                return 1;
@@ -171,18 +178,36 @@ tst	lib_mmap64 note{ mmap64 interface and implementation work }end execute{
 	}
 }end
 
+tst	mmap_anon note{ use mmap MAP_ANON to get raw memory }end execute{
+	#if !_lib_mmap
+	(
+	#endif
+	#include <unistd.h>
+	#include <fcntl.h>
+	#include <sys/types.h>
+	#include <sys/mman.h>
+	#if defined(MAP_ANONYMOUS) && !defined(MAP_ANON)
+	#define MAP_ANON	MAP_ANONYMOUS
+	#endif
+	main()
+	{	void	*addr;
+		addr = mmap(0,1024*1024,PROT_READ|PROT_WRITE,MAP_ANON|MAP_PRIVATE,-1,0);
+		return (addr && addr != (void*)(-1)) ? 0 : 1;
+	}
+}end
+
 tst	mmap_devzero note{ use mmap on /dev/zero to get raw memory }end execute{
 	#if !_lib_mmap
 	(
 	#endif
 	#include <unistd.h>
+	#include <fcntl.h>
 	#include <sys/types.h>
 	#include <sys/mman.h>
-	#include <sys/fcntl.h>
 	main()
 	{	int	fd;
 		void	*addr;
-		if((fd = open("/dev/zero", O_RDONLY)) < 0)
+		if((fd = open("/dev/zero", O_RDWR)) < 0)
 			return 1;
 		addr = mmap(0,1024*1024,PROT_READ|PROT_WRITE,MAP_PRIVATE,fd,0);
 		return (addr && addr != (void*)(-1)) ? 0 : 1;
@@ -195,9 +220,9 @@ tst	note{ mmap is worth using }end output{
 	#endif
 	#include <stdio.h>
 	#include <unistd.h>
+	#include <fcntl.h>
 	#include <sys/types.h>
 	#include <sys/mman.h>
-	#include <sys/fcntl.h>
 	#include <sys/stat.h>
 	#include <sys/times.h>
 	
@@ -228,7 +253,7 @@ tst	note{ mmap is worth using }end output{
 		while (*t = *f++)
 			t++;
 		*t++ = '.'; *t++ = 'D'; *t = 0;
-		if ((fd = creat(file,0666)) < 0)
+		if ((fd = open(file, O_CREAT|O_TRUNC|O_WRONLY, 0666)) < 0)
 			return 1;
 	
 		for (i = 0; i < sizeof(buf); ++i)
@@ -241,7 +266,7 @@ tst	note{ mmap is worth using }end output{
 		/* read time */
 		times(&stm);
 		for(run = 0; run < RUN; ++run)
-		{	if((fd = open(file, 0)) < 0)
+		{	if((fd = open(file, O_RDWR)) < 0)
 				return Failed(file);
 			for (i = 0; i < WRITE; ++i)
 			{	for(k = 0; k < MAPSIZE; k += BUFSIZE)
@@ -256,7 +281,7 @@ tst	note{ mmap is worth using }end output{
 		/* mmap time */
 		times(&stm);
 		for(run = 0; run < RUN; ++run)
-		{	if ((fd = open(file,0)) < 0)
+		{	if ((fd = open(file, O_RDWR)) < 0)
 				return Failed(file);
 			for(i = 0, mm = (caddr_t)0; i < WRITE; ++i)
 			{	if(mm)
@@ -305,6 +330,7 @@ cat{
 	#if _NO_MMAP
 	#undef	_lib_mmap
 	#undef	_lib_mmap64
+	#undef	_mmap_anon
 	#undef	_mmap_devzero
 	#undef	_mmap_worthy
 	#endif

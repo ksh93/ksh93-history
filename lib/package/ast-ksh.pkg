@@ -1,5 +1,7 @@
 ast-ksh :PACKAGE: ksh93 libast libcmd libdll
 
+:COVERS: ksh
+
 :CATEGORY: shells
 
 :INDEX: ksh and support libraries

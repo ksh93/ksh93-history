@@ -38,7 +38,12 @@ void _STUB_vmbest(){}
 **	Written by Kiem-Phong Vo, kpv@research.att.com, 01/16/94.
 */
 
-#ifdef DEBUG
+#define CHECK	1		/* 1 to control KPVCOMPACT		*/
+
+#if DEBUG || CHECK
+static int	Vmcheck=0;	/* check=01 nocompact=02		*/
+#endif
+#if DEBUG
 static int	N_free;		/* # of free calls			*/
 static int	N_alloc;	/* # of alloc calls			*/
 static int	N_resize;	/* # of resize calls			*/
@@ -53,7 +58,6 @@ static size_t	M_free;		/* max size of a free piece		*/
 static size_t	M_busy;		/* max size of a busy piece		*/
 static size_t	S_free;		/* total free space			*/
 static size_t	S_junk;		/* total junk space			*/
-static int	Vmcheck=0;	/* check=0x1 compact=0x2		*/
 
 /* Check to see if a block is in the free tree */
 #if __STD_C
@@ -368,7 +372,7 @@ int		c;
 {
 	reg size_t	size, s;
 	reg Block_t	*fp, *np, *t, *list, **cache;
-	reg int		n, count;
+	reg int		n, count, saw_wanted;
 	reg Seg_t	*seg;
 	Block_t		tree;
 
@@ -380,7 +384,7 @@ int		c;
 	}
 
 	LINK(&tree) = NIL(Block_t*);
-	count = 0;
+	saw_wanted = 0; count = saw_wanted;
 	for(n = S_CACHE; n >= c; --n)
 	{	list = *(cache = CACHE(vd) + n);
 		*cache = NIL(Block_t*);
@@ -445,7 +449,9 @@ int		c;
 			SIZE(fp) = size;
 
 			if(fp == wanted) /* about to be consumed by bestresize */
+			{	saw_wanted = 1;
 				continue;
+			}
 
 			/* tell next block that this one is free */
 			SETPFREE(SIZE(np)); /**/ ASSERT(ISBUSY(SIZE(np)) );
@@ -537,6 +543,7 @@ int		c;
 	}
 
 	/**/ ASSERT(!vd->root || vmchktree(vd->root));
+	/**/ ASSERT(!wanted || saw_wanted);
 	return count;
 }
 
@@ -582,6 +589,7 @@ Vmalloc_t*	vm;
 		if((*_Vmtruncate)(vm,seg,size,1) >= 0)
 		{	if(size >= segsize) /* entire segment deleted */
 				continue;
+			/**/ASSERT(SEG(BLOCK(seg->baddr)) == seg);
 
 			if((size = (seg->baddr - ((Vmuchar_t*)bp) - sizeof(Head_t))) > 0)
 				SIZE(bp) = size - sizeof(Head_t);
@@ -617,11 +625,11 @@ reg size_t	size;	/* desired block size		*/
 	reg Vmdata_t*	vd = vm->data;
 	reg size_t	s;
 	reg int		n;
-	reg Block_t	*tp, *np, **cache;
+	reg Block_t	*tp, *np, *lp, **cache;
 	reg int		local;
-	size_t		orgsize;
+	size_t		orgsize = 0;
 
-#if DEBUG
+#if DEBUG || CHECK
 	if (!(Vmcheck & 0x8000))
 	{
 		char*	v;
@@ -659,21 +667,24 @@ reg size_t	size;	/* desired block size		*/
 
 			/* create a bunch for fast allocations */
 			s = size + (size + sizeof(Head_t))*(N_CACHE-1);
-			if((tp = (Block_t*)KPVALLOC(vm,s,bestalloc)) )
-			{	tp = BLOCK(tp);
+			if((lp = (Block_t*)KPVALLOC(vm,s,bestalloc)) )
+			{	lp = BLOCK(lp);
 
-				/* make a linked list of these blocks */
-				*cache = tp; s = SIZE(tp);
-				for(n = 0; n < N_CACHE-1; ++n, tp = np)
+				/* note that at this point *cache may not be NULL
+				** because KPVMALLOC() may have called KPVCOMPACT()
+				** which may have reclaimed a small free block.
+				*/
+				s = SIZE(lp);
+				for(n = 0, tp = lp; n < N_CACHE-1; ++n, tp = np)
 				{	SIZE(tp) = size;
 					LINK(tp) = np = NEXT(tp);
 					SIZE(tp) |= JUNK|BUSY;
 					SEG(np) = SEG(tp);
 				}
 				SIZE(tp) = (s - n*(size + sizeof(Head_t))) | JUNK|BUSY;
-				LINK(tp) = NIL(Block_t*);
+				LINK(tp) = *cache; /* attach current list to the tail */
 
-				tp = *cache;
+				*cache = tp = lp;
 				goto has_cache;
 			}
 		}
@@ -724,10 +735,10 @@ reg size_t	size;	/* desired block size		*/
 		}
 	
 		/**/ASSERT(vmcheck(vd,size,0) );
-#if DEBUG
-		if (Vmcheck & 02)
-			KPVCOMPACT(vm,bestcompact);
+#if DEBUG || CHECK
+		if (!(Vmcheck & 02))
 #endif
+		KPVCOMPACT(vm,bestcompact);
 		if((tp = (*_Vmextend)(vm,size,bestsearch)) )
 			goto got_block;
 		else if(vd->mode&VM_AGAIN)
@@ -797,7 +808,7 @@ Void_t*		addr;	/* address to check		*/
 		SETLOCK(vd,local);
 	}
 
-	offset = -1L;
+	offset = -1L; b = endb = NIL(Block_t*);
 	for(seg = vd->seg; seg; seg = seg->next)
 	{	b = SEGBLOCK(seg);
 		endb = (Block_t*)(seg->baddr - sizeof(Head_t));
@@ -900,8 +911,8 @@ int		type;		/* !=0 to move, <0 for not copy */
 {
 	reg Block_t	*rp, *np, *t, **cache;
 	int		local;
-	size_t		s, bs, oldsize, orgsize;
-	Void_t		*orgdata, *oldd;
+	size_t		s, bs, oldsize = 0, orgsize = 0;
+	Void_t		*oldd, *orgdata = NIL(Void_t*);
 	Vmdata_t	*vd = vm->data;
 
 	/**/ COUNT(N_resize);
@@ -958,7 +969,7 @@ int		type;		/* !=0 to move, <0 for not copy */
 			}
 			else	break;
 
-			SIZE(rp) += (s += sizeof(Head_t));
+			SIZE(rp) += (s += sizeof(Head_t)); /**/ASSERT((s%ALIGN) == 0);
 			np = (Block_t*)((Vmuchar_t*)np + s);
 			CLRPFREE(SIZE(np));
 		} while(SIZE(rp) < size);
@@ -1079,8 +1090,8 @@ size_t		align;
 	reg Vmuchar_t	*data;
 	reg Block_t	*tp, *np;
 	reg Seg_t*	seg;
-	reg size_t	s, orgsize, orgalign, extra;
 	reg int		local;
+	reg size_t	s, extra, orgsize = 0, orgalign = 0;
 	reg Vmdata_t*	vd = vm->data;
 
 	if(size <= 0 || align <= 0)
@@ -1163,51 +1174,67 @@ done:
 	return (Void_t*)data;
 }
 
+/* _mem_method initialization */
 
-/* different modes of getting raw memory */
-#define USE_SBRK	0	/* use sbrk			*/
-#define USE_MALLOC	1	/* use native malloc		*/
-#define USE_WIN32	2	/* WIN32 VirtualAlloc		*/
-#define USE_MMAP	3	/* mmap on /dev/zero is ok	*/
-#undef	GET_MEMORY
-
-#if !defined(GET_MEMORY) && _BLD_INSTRUMENT
-#define GET_MEMORY	USE_MALLOC
-#endif /* _BLD_INSTRUMENT */
-
-#if !defined(GET_MEMORY) && ( defined(_WIN32) || _WINIX && !__CYGWIN__ )
-#define GET_MEMORY	USE_WIN32
-#if _PACKAGE_ast
-#include		<ast_windows.h>
-#else
-#include		<windows.h>
+#if _AST_mem_method
+#undef	_mem_method
+#define _mem_method	_AST_mem_method
 #endif
-#endif /* _WIN32 || _WINIX */
 
-#if !defined(GET_MEMORY) && _mmap_devzero
-#define GET_MEMORY	USE_MMAP
-#include		<sys/fcntl.h>
+#if (_mem_method) & _mem_malloc
+#if _map_malloc
+#undef	free
+extern void		free _ARG_((Void_t*));
+#undef	malloc
+extern Void_t*		malloc _ARG_((size_t));
+#endif
+#endif
+
+#if (_mem_method) & (_mem_mmap_anon|_mem_mmap_dev)
+#include		<fcntl.h>
 #include		<sys/mman.h>
 typedef struct _mmapdisc_s
 {	Vmdisc_t	disc;
 	int		fd;
 	off_t		offset;
 } Mmapdisc_t;
-
+#ifndef MAP_ANON
+#define MAP_ANON	MAP_ANONYMOUS
+#endif
 #ifndef MAP_FAILED
-#define MAP_FAILED	(void*)(-1)
+#define MAP_FAILED	((Void_t*)(-1))
 #endif
-#endif /* _mmap_devzero */
-
-#if !defined(GET_MEMORY) && ( _std_malloc || !_lib_sbrk )
-#define GET_MEMORY	USE_MALLOC
-#endif /* _std_malloc || !_lib_sbrk */
-
-#if !defined(GET_MEMORY)
-#define GET_MEMORY	USE_SBRK
+#ifndef OPEN_MAX
+#define OPEN_MAX	64
+#endif
+#define	OPEN_PRIVATE	((OPEN_MAX*3)/4)
 #endif
 
-/*	A discipline to get memory using GET_MEMORY */
+#if (_mem_method) & _mem_sbrk
+#define SBRK(z)		((Void_t*)sbrk(z))
+#if _lib_brk
+#define BRK(a,z)	brk((a)+(ssize_t)(z))
+#else
+#define BRK(a,z)	(SBRK((ssize_t)(z))==BRK_FAILED?-1:0)
+#endif
+#ifndef BRK_FAILED
+#define BRK_FAILED	((Void_t*)(-1))
+#endif
+#endif
+
+#if (_mem_method) & _mem_win32
+#if _PACKAGE_ast
+#include		<ast_windows.h>
+#else
+#include		<windows.h>
+#endif
+#endif
+
+#if !(_mem_method)
+#include "ERROR-vmalloc-cannot-determine-raw-memory-allocator"
+#endif
+
+/*	A discipline to get memory using _mem_method */
 #if __STD_C
 static Void_t* sbrkmem(Vmalloc_t* vm, Void_t* caddr,
 			size_t csize, size_t nsize, Vmdisc_t* disc)
@@ -1220,8 +1247,8 @@ size_t		nsize;	/* new size				*/
 Vmdisc_t*	disc;	/* discipline structure			*/
 #endif
 {
-#if !_done_sbrkmem && GET_MEMORY == USE_MALLOC
-#define _done_sbrkmem	1
+
+#if (_mem_method) & _mem_malloc
 	NOTUSED(disc);
 	NOTUSED(vm);
 
@@ -1229,10 +1256,9 @@ Vmdisc_t*	disc;	/* discipline structure			*/
 		return (Void_t*)malloc(nsize);
 	else if(nsize == 0)
 		free(caddr);
-#endif /* USE_MALLOC */
+#endif /* _mem_malloc */
 
-#if !_done_sbrkmem && GET_MEMORY == USE_WIN32
-#define _done_sbrkmem	1
+#if (_mem_method) & _mem_win32
 	NOTUSED(disc);
 	NOTUSED(vm);
 
@@ -1240,59 +1266,91 @@ Vmdisc_t*	disc;	/* discipline structure			*/
 		return (Void_t*)VirtualAlloc(0,nsize,MEM_COMMIT,PAGE_READWRITE);
 	else if(nsize == 0)
 		return VirtualFree((LPVOID)caddr,0,MEM_RELEASE) ? caddr : NIL(Void_t*);
-#endif /* USE_WIN32 */
+#endif /* _mem_win32 */
 
-#if !_done_sbrkmem
+#if (_mem_method) & (_mem_sbrk|_mem_mmap_anon|_mem_mmap_dev)
 	Vmuchar_t	*addr;
-	ssize_t		size;
-#if GET_MEMORY == USE_MMAP
+#if (_mem_method) & (_mem_mmap_anon|_mem_mmap_dev)
 	Mmapdisc_t	*mmdc = (Mmapdisc_t*)disc;
 #else
 	NOTUSED(disc);
-#endif
+#endif /* _mem_mmap_anon|_mem_mmap_dev */
 	NOTUSED(vm);
 
-	if(csize == 0) /* allocating new memory */
-	{	if((addr = (Vmuchar_t*)sbrk((ssize_t)nsize)) != (Vmuchar_t*)(-1) )
-			return addr;
-#if GET_MEMORY == USE_MMAP
-		if(mmdc->fd < 0 && (mmdc->fd = open("/dev/zero", O_RDONLY)) < 0)
-			return NIL(Void_t*);
-		addr = (Vmuchar_t*)mmap(0, nsize, PROT_READ|PROT_WRITE, MAP_PRIVATE,
-			    mmdc->fd, mmdc->offset);
-		if(addr == (Vmuchar_t*)MAP_FAILED )
+#if (_mem_method) & _mem_sbrk
+	addr = (Vmuchar_t*)SBRK(0);
+	if(addr == (Vmuchar_t*)BRK_FAILED)
+#endif /* _mem_sbrk */
+		addr = NIL(Vmuchar_t*);
+	if(csize == 0)
+	{	
+#if (_mem_method) & _mem_sbrk
+		if(addr && BRK(addr,nsize) == 0)
+			return (Void_t*)addr;
+#endif /* _mem_sbrk */
+#if (_mem_method) & _mem_mmap_anon
+		addr = (Vmuchar_t*)mmap(0, nsize,
+					PROT_READ|PROT_WRITE,
+					MAP_ANON|MAP_PRIVATE,
+			    		-1, mmdc->offset);
+#endif /* _mem_mmap_anon */
+#if (_mem_method) & _mem_mmap_dev
+		if(mmdc->fd < 0)
+		{	int	fd;
+			if(mmdc->fd != -1)
+				return NIL(Void_t*);
+			if((fd = open("/dev/zero", O_RDWR)) < 0)
+			{	mmdc->fd = -2;
+				return NIL(Void_t*);
+			}
+			if(fd >= OPEN_PRIVATE || (mmdc->fd = dup2(fd, OPEN_PRIVATE)) < 0)
+				mmdc->fd = fd;
+			else
+				close(fd);
+#ifdef FD_CLOEXEC
+			fcntl(mmdc->fd, F_SETFD, FD_CLOEXEC);
+#endif /* FD_CLOEXEC */
+		}
+		addr = (Vmuchar_t*)mmap(0, nsize,
+					PROT_READ|PROT_WRITE,
+					MAP_PRIVATE,
+			    		mmdc->fd, mmdc->offset);
+#endif /* _mem_mmap_anon */
+#if (_mem_method) & (_mem_mmap_anon|_mem_mmap_dev)
+		if(addr == (Vmuchar_t*)MAP_FAILED)
 			addr = NIL(Vmuchar_t*);
 		if(addr)
 		{	mmdc->offset += nsize;
-			return addr;
+			return (Void_t*)addr;
 		}
-#endif
+#endif /* _mem_mmap_anon|_mem_mmap_dev */
 	}
 	else
-	{	addr = (Vmuchar_t*)sbrk(0);
+	{	
+#if (_mem_method) & _mem_sbrk
 		if(((Vmuchar_t*)caddr+csize) == addr) /* in sbrk-space */
-		{	if(nsize < csize)
-				size = -(ssize_t)(csize - nsize);
-			else	size =  (ssize_t)(nsize - csize);
-			if((Void_t*)sbrk(size) != (Void_t*)(-1))
+		{	if(BRK(addr,nsize-csize) == 0)
 				return caddr;
 		}
-#if GET_MEMORY == USE_MMAP
-		else if(((Vmuchar_t*)caddr+csize) > addr && nsize == 0 &&
-			munmap(caddr,csize) == 0)
-				return caddr;
-#endif
+#endif /* _mem_sbrk */
+#if (_mem_method) & (_mem_mmap_anon|_mem_mmap_dev)
+#if (_mem_method) & _mem_sbrk
+		else if(((Vmuchar_t*)caddr+csize) > addr)
+#endif /* _mem_sbrk */
+		if(nsize == 0 && munmap(caddr,csize) == 0)
+			return caddr;
+#endif /* _mem_mmap_anon|_mem_mmap_dev */
 	}
-#endif /*_done_sbrkmem*/
+#endif /* _mem_sbrk|_mem_mmap_anon|_mem_mmap_dev */
 
 	return NIL(Void_t*);
 }
 
-#if GET_MEMORY == USE_MMAP
+#if (_mem_method) & (_mem_mmap_anon|_mem_mmap_dev)
 static Mmapdisc_t _Vmdcsbrk = { { sbrkmem, NIL(Vmexcept_f), 64*1024 }, -1, 0 };
 #else
 static Vmdisc_t _Vmdcsbrk = { sbrkmem, NIL(Vmexcept_f), 0 };
-#endif
+#endif /* (_mem_mmap_anon|_mem_mmap_dev) */
 
 static Vmethod_t _Vmbest =
 {

@@ -28,6 +28,8 @@
  * regexp interface and partial implementation
  * what a novel approach
  * don't do it again
+ *
+ * OBSOLETE: use <regex.h>
  */
 
 #ifndef _REGEXP_H

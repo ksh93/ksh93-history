@@ -39,7 +39,7 @@
 #   include	<nval.h>
 #endif /* _SH_PRIVATE */
 
-#define SH_VERSION	20030304
+#define SH_VERSION	20030620
 
 /*
  *  The following will disappear in a future release so change all sh_fun
@@ -93,7 +93,9 @@ typedef int	(*Shwait_f)(int, long, int);
 #define SH_NOLOG	28
 #define SH_NOTIFY	29
 #define SH_DICTIONARY	30
-#define SH_PIPEFAIL	31
+#define SH_PIPEFAIL	32
+#define SH_GLOBSTARS	33
+#define SH_XARGS	34
 
 /*
  * passed as flags to builtins in Nambltin_t struct when BLT_OPTIM is on

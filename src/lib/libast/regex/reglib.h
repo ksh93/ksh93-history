@@ -190,58 +190,47 @@ typedef struct regsubop_s
 #include <wctype.h>
 #endif
 
-#undef	isalnum
-#define isalnum(x)	iswalnum(x)
-#undef	isalpha
-#define isalpha(x)	iswalpha(x)
-#undef	iscntrl
-#define iscntrl(x)	iswcntrl(x)
-#undef	isblank
 #if !defined(iswblank) && !_lib_iswblank
-#define isblank(x)	_reg_iswblank(x)
+#define _need_iswblank	1
+#define iswblank(x)	_reg_iswblank(x)
 extern int		_reg_iswblank(wint_t);
-#else
-#define isblank(x)	iswblank(x)
-#endif
-#undef	isdigit
-#define isdigit(x)	iswdigit(x)
-#undef	isgraph
-#define isgraph(x)	iswgraph(x)
-#undef	islower
-#define islower(x)	iswlower(x)
-#undef	isprint
-#define isprint(x)	iswprint(x)
-#undef	ispunct
-#define ispunct(x)	iswpunct(x)
-#undef	isspace
-#define isspace(x)	iswspace(x)
-#undef	isupper
-#define isupper(x)	iswupper(x)
-#undef	isxdigit
-#define isxdigit(x)	iswxdigit(x)
-
-#if _lib_towlower
-#undef	tolower
-#define tolower(x)	towlower(x)
 #endif
 
-#if _lib_towupper
-#undef	toupper
-#define toupper(x)	towupper(x)
+#if !defined(towupper) && !_lib_towupper
+#define towupper(x)	toupper(x)
+#endif
+
+#if !defined(towlower) && !_lib_towlower
+#define towlower(x)	tolower(x)
 #endif
 
 #else
 
 #undef	_lib_wctype
 
-#ifndef	isblank
-#define	isblank(x)	((x)==' '||(x)=='\t')
+#define iswalnum(x)	isalnum(x)
+#define iswalpha(x)	isalpha(x)
+#define iswcntrl(x)	iscntrl(x)
+#define iswdigit(x)	isdigit(x)
+#define iswgraph(x)	isgraph(x)
+#define iswlower(x)	islower(x)
+#define iswprint(x)	isprint(x)
+#define iswpunct(x)	ispunct(x)
+#define iswspace(x)	isspace(x)
+#define iswupper(x)	isupper(x)
+#define iswxdigit(x)	isxdigit(x)
+
+#define towlower(x)	tolower(x)
+#define towupper(x)	toupper(x)
+
 #endif
 
-#ifndef isgraph
-#define	isgraph(x)	(isprint(x)&&!isblank(x))
+#ifndef	iswblank
+#define	iswblank(x)	((x)==' '||(x)=='\t')
 #endif
 
+#ifndef iswgraph
+#define	iswgraph(x)	(iswprint(x)&&!iswblank(x))
 #endif
 
 #define isword(x)	(isalnum(x)||(x)=='_')

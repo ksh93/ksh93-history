@@ -31,6 +31,8 @@
 
 #ifdef _UWIN
 
+#define _std_def_cfree	1
+
 #include <sfio_t.h>
 #include <ast.h>
 
@@ -56,11 +58,10 @@ extern Sfio_t	_Sfstderr;
  * for backward compatibility with early UNIX
  */
 
-extern int
+extern void
 cfree(void* addr)
 {
 	free(addr);
-	return 1;
 }
 
 extern void
@@ -112,7 +113,7 @@ DllMain(HINSTANCE hinst, DWORD reason, VOID* reserved)
 
 #include <ast.h>
 
-#if _dll_intercept_data && ( _DLL_BLD || _BLD_DLL )
+#if _dll_data_intercept && ( _DLL_BLD || _BLD_DLL )
 
 #undef	environ
 

@@ -55,9 +55,9 @@ reg char*	mode;		/* mode of the stream */
 		{	if(f->file >= 0 && !(f->flags&SF_STRING) &&
 			   (oflags &= (O_TEXT|O_BINARY|O_APPEND)) != 0 )
 			{	/* set the wanted file access control flags */
-				int ctl = fcntl(f->file, F_GETFL, 0);
+				int ctl = sysfcntlf(f->file, F_GETFL, 0);
 				ctl = (ctl & ~(O_TEXT|O_BINARY|O_APPEND)) | oflags;
-				fcntl(f->file, F_SETFL, ctl);
+				sysfcntlf(f->file, F_SETFL, ctl);
 			}
 
 			/* set all non read-write flags */
@@ -91,10 +91,10 @@ reg char*	mode;		/* mode of the stream */
 			return NIL(Sfio_t*);
 
 #if _has_oflags /* open the file */
-		while((fd = open((char*)file,oflags,SF_CREATMODE)) < 0 && errno == EINTR)
+		while((fd = sysopenf((char*)file,oflags,SF_CREATMODE)) < 0 && errno == EINTR)
 			errno = 0;
 #else
-		while((fd = open(file,oflags&(O_WRONLY|O_RDWR))) < 0 && errno == EINTR)
+		while((fd = sysopenf(file,oflags&(O_WRONLY|O_RDWR))) < 0 && errno == EINTR)
 			errno = 0;
 		if(fd >= 0)
 		{	if((oflags&(O_CREAT|O_EXCL)) == (O_CREAT|O_EXCL) )
@@ -103,19 +103,19 @@ reg char*	mode;		/* mode of the stream */
 			}
 			if(oflags&O_TRUNC )	/* truncate file */
 			{	reg int	tf;
-				while((tf = creat(file,SF_CREATMODE)) < 0 &&
+				while((tf = syscreatf(file,SF_CREATMODE)) < 0 &&
 				      errno == EINTR)
 					errno = 0;
 				CLOSE(tf);
 			}
 		}
 		else if(oflags&O_CREAT)
-		{	while((fd = creat(file,SF_CREATMODE)) < 0 && errno == EINTR)
+		{	while((fd = syscreatf(file,SF_CREATMODE)) < 0 && errno == EINTR)
 				errno = 0;
 			if(!(oflags&O_WRONLY))
 			{	/* the file now exists, reopen it for read/write */
 				CLOSE(fd);
-				while((fd = open(file,oflags&(O_WRONLY|O_RDWR))) < 0 &&
+				while((fd = sysopenf(file,oflags&(O_WRONLY|O_RDWR))) < 0 &&
 				      errno == EINTR)
 					errno = 0;
 			}

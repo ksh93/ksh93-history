@@ -69,7 +69,7 @@ reg size_t	n;	/* number of bytes. 		*/
 			for(w = n; w > 0; )
 			{	if((r = w) > sizeof(buf))
 					r = sizeof(buf);
-				if((r = read(f->file,buf,r)) <= 0)
+				if((r = sysreadf(f->file,buf,r)) <= 0)
 				{	n -= w;
 					break;
 				}

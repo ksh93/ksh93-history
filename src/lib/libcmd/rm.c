@@ -31,7 +31,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: rm (AT&T Labs Research) 2002-11-14 $\n]"
+"[-?\n@(#)$Id: rm (AT&T Labs Research) 2003-05-27 $\n]"
 USAGE_LICENSE
 "[+NAME?rm - remove files]"
 "[+DESCRIPTION?\brm\b removes the named \afile\a arguments. By default it"
@@ -71,14 +71,13 @@ USAGE_LICENSE
 #include <ftwalk.h>
 #include <fs3d.h>
 
-#define RM_AGAIN	(1<<0)
-#define RM_ENTRY	(1<<1)
+#define RM_ENTRY	1
 
-#define beenhere(f)	((f)->local.number&RM_AGAIN)
+#define beenhere(f)	(((f)->local.number>>1)==(f)->statb.st_nlink)
 #define isempty(f)	(!((f)->local.number&RM_ENTRY))
 #define nonempty(f)	((f)->parent->local.number|=RM_ENTRY)
 #define pathchunk(n)	roundof(n,1024)
-#define retry(f)	((f)->local.number|=RM_AGAIN)
+#define retry(f)	((f)->local.number=((f)->statb.st_nlink<<1))
 
 static struct				/* program state		*/
 {
@@ -152,16 +151,17 @@ rm(register Ftw_t* ftw)
 		{
 			if (ftw->level > 0)
 			{
-				if (ftw->status == FTW_NAME)
-					n = ftw->namelen;
+				char*	s;
+
+				if (ftw->status == FTW_NAME || !(s = strrchr(ftw->path, '/')))
+					v = !stat(".", &st);
 				else
 				{
 					path = ftw->path;
-					n = ftw->pathlen;
+					*s = 0;
+					v = !stat(path, &st);
+					*s = '/';
 				}
-				memcpy(path + n, "/..", 4);
-				v = !stat(path, &st);
-				path[n] = 0;
 				if (v)
 					v = st.st_nlink <= 2 || st.st_ino == ftw->parent->statb.st_ino && st.st_dev == ftw->parent->statb.st_dev || strchr(astconf("PATH_ATTRIBUTES", path, NiL), 'l');
 			}

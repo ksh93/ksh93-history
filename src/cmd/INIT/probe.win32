@@ -1,5 +1,5 @@
 :
-# @(#)probe.win32 (AT&T Labs Research) 2003-04-22
+# @(#)probe.win32 (AT&T Labs Research) 2003-06-11
 #
 # win32 specific make C probe initialization
 # ms vc is easy on uwin
@@ -106,6 +106,7 @@ CC.DEBUG = -g
 CC.DIALECT = $dialect
 CC.DLL = -D_BLD_DLL
 CC.DLLBIG = -D_BLD_DLL
+CC.DLL.DIR = \$(BINDIR)
 CC.DLL.VARIANTS =
 CC.DLL.LIBRARIES =
 CC.DYNAMIC =
@@ -113,6 +114,10 @@ CC.EXECTYPE = $typ
 CC.HOSTTYPE = $typ
 CC.LD = /usr/bin/ld
 CC.LD.DYNAMIC = -Bdynamic
+CC.LD.LAZY =
+CC.LD.NOLAZY =
+CC.LD.RECORD =
+CC.LD.NORECORD =
 CC.LD.RUNPATH =
 CC.LD.STATIC = -Bstatic
 CC.LIB.DLL = option

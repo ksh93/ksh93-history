@@ -151,6 +151,9 @@ spawnveg(const char* path, char* const argv[], char* const envv[], pid_t pgid)
 	int	err[2];
 #endif
 #endif
+#if _AST_DEBUG_spawnveg
+	int	debug;
+#endif
 
 	if (!envv)
 		envv = environ;
@@ -182,9 +185,16 @@ spawnveg(const char* path, char* const argv[], char* const envv[], pid_t pgid)
 #else
 	pid = fork();
 #endif
+#if _AST_DEBUG_spawnveg
+	debug = streq(path, "/bin/_ast_debug_spawnveg_");
+#endif
 	sigcritical(0);
 	if (!pid)
 	{
+#if _AST_DEBUG_spawnveg
+		if (debug)
+			_exit(argv[1] ? (int)strtol(argv[1], NiL, 0) : 0);
+#endif
 		if (pgid < 0)
 			setsid();
 		else if (pgid > 0)
@@ -195,32 +205,6 @@ spawnveg(const char* path, char* const argv[], char* const envv[], pid_t pgid)
 				setpgid(0, 0);
 		}
 		execve(path, argv, envv);
-		if (errno == ENOEXEC)
-		{
-			register char**	o;
-			register char**	p;
-			register char**	v;
-
-			for (p = o = (char**)argv; *p; p++);
-			if (v = newof(0, char*, p - o + 2, 0))
-			{
-#if _real_vfork
-				*exec_free_ptr = v;
-#endif
-				p = v;
-				if (*p = *o)
-					o++;
-				else
-					*p = (char*)path;
-				*++p = (char*)path;
-				while (*++p = *o++);
-				execve(pathshell(), v, envv);
-			}
-#ifdef ENOMEM
-			else
-				errno = ENOMEM;
-#endif
-		}
 #if _real_vfork
 		*exec_errno_ptr = errno;
 #else
@@ -256,6 +240,10 @@ spawnveg(const char* path, char* const argv[], char* const envv[], pid_t pgid)
 			free(exec_free);
 #endif
 		errno = n;
+#if _AST_DEBUG_spawnveg
+		if (!n && debug)
+			pause();
+#endif
 	}
 #if !_real_vfork
 	if (err[0] != -1)

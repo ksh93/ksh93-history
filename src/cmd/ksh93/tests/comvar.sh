@@ -183,4 +183,7 @@ suitable=(
   )
 )
 [[ "${suitable}" == *entrylist=* ]] || err_exit 'compound variable expansion omitting fields'
+foo=( bar=foo  barbar=bar)
+[[ $foo == *bar=foo* ]] || err_exit 'no prefix elements in compound variable output'
 exit $((Errors))
+

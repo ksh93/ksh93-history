@@ -112,6 +112,7 @@ struct limits
 	char		*errbuff;	/* pointer to stderr buffer */ \
 	char		*prompt;	/* pointer to prompt string */ \
 	char		*shname;	/* shell name */ \
+	char		*shpath;	/* path name of shell */ \
 	char		*user;		/* name of real user for pfsh */ \
 	char		*comdiv;	/* points to sh -c argument */ \
 	char		*prefix;	/* prefix for compound assignment */ \
@@ -143,6 +144,8 @@ struct limits
 	struct dolnod	*arglist; \
 	int		fn_depth; \
 	int		dot_depth; \
+	int		xargs; \
+	int		xargexit; \
 	long		nforks; \
 	Env_t		*env; \
 	void		*init_context; \
@@ -202,6 +205,8 @@ struct limits
 #define SH_DEFPATH	14	/* set when using default path */
 #define SH_INIT		15	/* set when initializing the shell */
 #define SH_TTYWAIT	16	/* waiting for keyboard input */ 
+#define	SH_FCOMPLETE	17	/* set for filename completion */
+#define	SH_PREINIT	18	/* set with SH_INIT before parsing options */
 
 #define SH_BASH			41
 #define SH_BRACEEXPAND		42
@@ -213,6 +218,9 @@ struct limits
 #define SH_BASHOPT		0x400
 
 #if SHOPT_BASH
+#   ifndef SHOPT_HISTEXPAND
+#	define SHOPT_HISTEXPAND	1
+#   endif
 /*
  *  define for all the bash options
  */
@@ -225,11 +233,6 @@ struct limits
 #   define SH_EXECFAIL		57
 #   define SH_EXPAND_ALIASES	58
 #   define SH_EXTGLOB		59
-#   define SH_HISTAPPEND	60
-#   define SH_HISTEXPAND	43
-#   define SH_HISTORY2		44
-#   define SH_HISTREEDIT	61
-#   define SH_HISTVERIFY	62
 #   define SH_HOSTCOMPLETE	63
 #   define SH_HUPONEXIT		64
 #   define SH_INTERACTIVE_COMM	65
@@ -245,8 +248,15 @@ struct limits
 #   define SH_SHIFT_VERBOSE	75
 #   define SH_SOURCEPATH	76
 #   define SH_XPG_ECHO		77
-#   define SH_NOEDITING		79
-#   define SH_NORC		80
+#   define SH_NORC		79
+#endif
+
+#if SHOPT_HISTEXPAND
+#   define SH_HISTAPPEND	60
+#   define SH_HISTEXPAND	43
+#   define SH_HISTORY2		44
+#   define SH_HISTREEDIT	61
+#   define SH_HISTVERIFY	62
 #endif
 
 extern void 		*sh_argopen(Shell_t*);

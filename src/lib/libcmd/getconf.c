@@ -31,7 +31,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: getconf (AT&T Labs Research) 2000-10-31 $\n]"
+"[-?\n@(#)$Id: getconf (AT&T Labs Research) 2003-05-31 $\n]"
 USAGE_LICENSE
 "[+NAME?getconf - get configuration values]"
 "[+DESCRIPTION?\bgetconf\b displays the system configuration value for"
@@ -43,24 +43,53 @@ USAGE_LICENSE
 "	Only \bwritable\b variables may be set; \breadonly\b variables"
 "	cannot be changed.]"
 "[+?The current value for \aname\a is written to the standard output. If"
-"	\aname\a s valid but undefined then \bundefined\b is written to"
+"	\aname\a is valid but undefined then \bundefined\b is written to"
 "	the standard output. If \aname\a is invalid or an error occurs in"
 "	determining its value, then a diagnostic written to the standard error"
 "	and \bgetconf\b exits with a non-zero exit status.]"
 "[+?More than one variable may be set or queried by providing the \aname\a"
 "	\apath\a \avalue\a 3-tuple for each variable, specifying \b-\b for"
 "	\avalue\a when querying.]"
-"[+?If no arguments are specified then all known variables are written in"
-"	\aname\a=\avalue\a form to the standard output, one per line.]"
+"[+?If no operands are specified then all known variables are written in"
+"	\aname\a=\avalue\a form to the standard output, one per line."
+"	Only one of \b--call\b, \b--name\b or \b--standard\b may be specified.]"
 
 "[a:all?All known variables are written in \aname\a=\avalue\a form to the"
 "	standard output, one per line. Present for compatibility with other"
 "	implementations.]"
+"[b:base?List base variable name sans call and standard prefixes.]"
+"[c:call?Display variables with call prefix that matches \aRE\a. The call"
+"	prefixes are:]:[RE]{"
+"		[+CS?\bconfstr\b(2)]"
+"		[+PC?\bpathconf\b(2)]"
+"		[+SC?\bsysconf\b(2)]"
+"		[+SI?\bsysinfo\b(2)]"
+"		[+XX?Constant value.]"
+"}"
+"[d:defined?Only display defined values when no operands are specified.]"
+"[l:lowercase?List variable names in lower case.]"
+"[n:name?Display variables with name that match \aRE\a.]:[RE]"
 "[p:portable?Display the named \bwritable\b variables and values in a form that"
 "	can be directly executed by \bsh\b(1) to set the values. If \aname\a"
 "	is omitted then all \bwritable\b variables are listed.]"
+"[q:quote?\"...\" quote values.]"
 "[r:readonly?Display the named \breadonly\b variables in \aname\a=\avalue\a form."
 "	If \aname\a is omitted then all \breadonly\b variables are listed.]"
+"[s:standard?Display variables with standard prefix that matches \aRE\a."
+"	Use the \b--table\b option to view all standard prefixes, including"
+"	local additions. The standard prefixes available on all systems"
+"	are:]:[RE]{"
+"		[+AES]"
+"		[+AST]"
+"		[+C]"
+"		[+POSIX]"
+"		[+SVID]"
+"		[+XBS5]"
+"		[+XOPEN]"
+"		[+XPG]"
+"}"
+"[t:table?Display the internal table that contains the name, standard,"
+"	standard section, and system call symbol prefix for each variable.]"
 "[w:writable?Display the named \bwritable\b variables in \aname\a=\avalue\a"
 "	form. If \aname\a is omitted then all \bwritable\b variables are"
 "	listed.]"
@@ -92,6 +121,7 @@ b_getconf(int argc, char** argv, void* context)
 	register char*	path;
 	register char*	value;
 	register char*	s;
+	char*		pattern;
 	int		all;
 	int		flags;
 
@@ -101,6 +131,7 @@ b_getconf(int argc, char** argv, void* context)
 	cmdinit(argv, context, ERROR_CATALOG, 0);
 	all = 0;
 	flags = 0;
+	pattern = 0;
 	for (;;)
 	{
 		switch (optget(argv, usage))
@@ -108,14 +139,41 @@ b_getconf(int argc, char** argv, void* context)
 		case 'a':
 			all = opt_info.num;
 			continue;
+		case 'b':
+			flags |= ASTCONF_base;
+			continue;
+		case 'c':
+			flags |= ASTCONF_matchcall;
+			pattern = opt_info.arg;
+			continue;
+		case 'd':
+			flags |= ASTCONF_defined;
+			continue;
+		case 'l':
+			flags |= ASTCONF_lower;
+			continue;
+		case 'n':
+			flags |= ASTCONF_matchname;
+			pattern = opt_info.arg;
+			continue;
 		case 'p':
-			flags |= X_OK;
+			flags |= ASTCONF_parse;
+			continue;
+		case 'q':
+			flags |= ASTCONF_quote;
 			continue;
 		case 'r':
-			flags |= R_OK;
+			flags |= ASTCONF_read;
+			continue;
+		case 's':
+			flags |= ASTCONF_matchstandard;
+			pattern = opt_info.arg;
+			continue;
+		case 't':
+			flags |= ASTCONF_table;
 			continue;
 		case 'w':
-			flags |= W_OK;
+			flags |= ASTCONF_write;
 			continue;
 		case ':':
 			error(2, "%s", opt_info.arg);
@@ -151,7 +209,7 @@ b_getconf(int argc, char** argv, void* context)
 			}
 		}
 		if (!name)
-			astconflist(sfstdout, path, flags);
+			astconflist(sfstdout, path, flags, pattern);
 		else if (!(s = astgetconf(name, path, value, errorf)))
 			break;
 		else if (!value)

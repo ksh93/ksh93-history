@@ -180,7 +180,11 @@ size_t		align;		/* alignment			*/
 	{	if(comma)
 			*bufp++ = ',';
 		bufp = trstrcpy(bufp, "func", '=');
+#if _PACKAGE_ast
+		bufp = trstrcpy(bufp, (const char*)func, 0);
+#else
 		bufp = trstrcpy(bufp, tritoa((Vmulong_t)func,0), 0);
+#endif
 		comma = 1;
 	}
 	if(comma)
@@ -191,6 +195,38 @@ size_t		align;		/* alignment			*/
 
 	write(Trfile,buf,(bufp-buf));
 }
+
+#if DEBUG
+#if __STD_C
+void _Vmessage(const char* s1, long n1, const char* s2, long n2)
+#else
+void _Vmessage(s1, n1, s2, n2)
+const char*	s1;
+long		n1;
+const char*	s2;
+long		n2;
+#endif
+{
+	char	buf[1024], *bufp;
+
+	bufp = buf;
+	bufp = trstrcpy(bufp, "vmalloc", ':');
+	if (s1)
+	{
+		bufp = trstrcpy(bufp, s1, ':');
+		if (n1)
+			bufp = trstrcpy(bufp, tritoa(n1, 1), ':');
+	}
+	if (s2)
+	{
+		bufp = trstrcpy(bufp, s2, ':');
+		if (n2)
+			bufp = trstrcpy(bufp, tritoa(n2, 0), ':');
+	}
+	*bufp++ = '\n';
+	write(2,buf,(bufp-buf));
+}
+#endif
 
 #if __STD_C
 int vmtrace(int file)

@@ -43,6 +43,7 @@
 #endif
 
 #define NOCAT			((nl_catd)-1)
+#define GAP			100
 
 typedef	struct 
 {	
@@ -187,6 +188,11 @@ init(register char* s)
 		 * different packages can share the same message catalog
 		 * name by using different message set numbers
 		 * see <mc.h> mcindex()
+		 *
+		 * this method requires a scan of each catalog, and the
+		 * catalog do not advertize the max message number, so
+		 * we assume there are no messages after a gap of GAP
+		 * missing messages
 		 */
 
 		if (cp->messages = dtopen(&state.message_disc, Dtset))
@@ -195,6 +201,8 @@ init(register char* s)
 			for (n = 1; n < NL_MSGMAX; n++) 
 				if ((s = catgets(d, AST_MESSAGE_SET, n, state.null)) != state.null && entry(cp->messages, AST_MESSAGE_SET, n, s))
 					m = n;
+				else if ((n - m) > GAP)
+					break;
 			if (!m)
 			{
 				dtclose(cp->messages);

@@ -100,8 +100,8 @@ Sfdisc_t*	disc;	/* discipline */
 static ssize_t filterwrite(Sfio_t* f, const Void_t* buf, size_t n, Sfdisc_t* disc)
 #else
 static ssize_t filterwrite(f, buf, n, disc)
-Sfio_t*		f;	/* stream reading from */
-Void_t*		buf;	/* buffer to read into */
+Sfio_t*		f;	/* stream writing to */
+Void_t*		buf;	/* buffer to write into */
 size_t		n;	/* number of bytes requested */
 Sfdisc_t*	disc;	/* discipline */
 #endif

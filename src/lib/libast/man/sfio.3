@@ -822,33 +822,33 @@ Otherwise, the current position is the logical stream position.
 
 .Ss "  Void_t* sfreserve(Sfio_t* f, ssize_t n, int type)"
 This function reserves a data block from the stream \f5f\fP.
-If \f5f\fP is a \f5SF_READ\fP stream, the data block is a segment of input data
-and if it is a \f5SF_WRITE\fP stream, the data block is a buffer
+If \f5f\fP is a \f5SF_READ\fP stream, the data block is a segment of input data.
+If \f5f\fP is a \f5SF_WRITE\fP stream, the data block is a buffer
 suitable for writing output data.
 For consistency, if \f5f\fP is opened with \f5SF_READ|SF_WRITE\fP,
 it will be treated as if it is a \f5SF_READ\fP stream
-(see \f5sfset()\fP for forcing a particular mode.)
-Note that a reserved data block is only valid until
+(see \f5sfset()\fP for forcing a particular mode) but the returned
+buffer can also be written into (more below).
+A \f5sfreserve()\fP call is successful if it can reserve a data block 
+of size at least the absolute value of \f5n\fP.
+\f5sfreserve()\fP returns the reserved data block on success
+and \f5NULL\fP on failure.
+Any partially reserved data block can be obtained in
+a subsequent \f5sfreserve()\fP call with \f5type\fP being \f5SF_LASTR\fP.
+
+After a \f5sfreserve()\fP call, whether or not it succeeds,
+\f5sfvalue(f)\fP gives the size of the available data block.
+A successfully reserved data block is valid only until
 a future access to the stream \f5f\fP. Thus, after a successful reservation,
 the application should process the reserved data block before
 accessing the stream \f5f\fP again.
 
-A \f5sfreserve()\fP call is successful if it can reserve a data block 
-of size at least the absolute value of \f5n\fP when \f5n\fP is negative
-or exactly \f5n\fP when \f5n\fP is non-negative.
-After a \f5sfreserve()\fP call, whether or not it succeeds,
-\f5sfvalue(f)\fP can be used to obtain the size of the would-have-been
-available data block.
-\f5sfreserve()\fP returns the reserved data block on success
-and \f5NULL\fP on failure.
-
-When \f5type <= 0\fP and \f5f\fP is in \f5SF_READ\fP mode,
-even if \f5sfreserve()\fP fails to obtain a large enough data block,
-the I/O position of \f5f\fP will be advanced
-by the size of the available data block
-(but only up to \f5n\fP if \f5n\fP is positive.)
-Such a partial data block can be obtained using a subsequent \f5sfreserve()\fP
-call with \f5type\fP being \f5SF_LASTR\fP.
+When \f5type <= 0\fP, if \f5f\fP is in \f5SF_READ\fP mode,
+the I/O position of \f5f\fP will be advanced by an amount as follows.
+Let \fIa\fP be the size of the available data block.
+If \f5n\fP is negative, the I/O position is advanced by \fIa\fP.
+If \f5n\fP is non-negative, the I/O position is advanced by
+the lesser value between \f5n\fP and \fIa\fP.
 
 When \f5type > 0\fP, there are two cases:
 .Tp
@@ -868,7 +868,8 @@ data to be consumed. For example, if \f5f\fP is a locked \f5SF_READ\fP stream,
 the call \f5sfread(f,rsrv,0)\fP will reopen the stream without advancing the
 stream I/O position. Finally, a stream opened for both reading and writing
 can release the lock with either call (with associated operational semantics!)
-For example, the below code modify data in place:
+For example, the below code modify data in place if \f5f\fP was
+opened for both reading and writing:
 
 .nf
 .ft 5

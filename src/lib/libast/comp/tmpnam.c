@@ -28,12 +28,7 @@
  * tmpnam implementation
  */
 
-#include <ast_map.h>
-
-#ifdef tmpnam
-#undef	tmpnam
-#define _map_tmpnam	1
-#endif
+#define _def_map_ast	1
 
 #if defined(__STDPP__directive) && defined(__STDPP__hide)
 __STDPP__directive pragma pp:hide tmpnam
@@ -50,13 +45,12 @@ __STDPP__directive pragma pp:nohide tmpnam
 #undef	tmpnam
 #endif
 
+#undef	_def_map_ast
+
+#include <ast_map.h>
+
 #ifndef L_tmpnam
 #define L_tmpnam	25
-#endif
-
-#if _map_tmpnam
-#undef	tmpnam
-#define tmpnam		_ast_tmpnam
 #endif
 
 #if defined(__EXPORT__)

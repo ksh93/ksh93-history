@@ -151,7 +151,7 @@ static const Font_t	fonts[] =
 	"</TT>","<TT>","\\fP",	"\\f5",	"",			"",
 };
 
-#define OPT_INFO_STATE	0 /* drop this after the 2003-03-15 release */
+#define OPT_INFO_STATE	0 /* drop this after the 2003-06-14 release */
 #if OPT_INFO_STATE
 #define STATE		opt_info.state
 #else
@@ -3700,6 +3700,8 @@ optget(register char** argv, const char* oopts)
 			}
 			opt_info.offset++;
 		}
+		if (!argv[opt_info.index])
+			return 0;
 		if (c = argv[opt_info.index][opt_info.offset++])
 		{
 			if ((k = argv[opt_info.index][0]) != '-' && k != '+')
@@ -4085,6 +4087,15 @@ optget(register char** argv, const char* oopts)
 						}
 						w = &opt_info.name[prefix];
 					}
+					else if (k == c && prefix == 1)
+					{
+						w = 0;
+						opt_info.name[1] = c;
+						opt_info.name[2] = 0;
+						opt_info.offset = 2;
+						opt_info.index--;
+						break;
+					}
 					if (t)
 					{
 						s = t;
@@ -4126,10 +4137,10 @@ optget(register char** argv, const char* oopts)
 							if (isdigit(*f) && isdigit(*(f + 1)))
 								while (isdigit(*(f + 1)))
 									f++;
+							else if (*(f + 1) == '=')
+								break;
 							else
-							{
 								cache->flags[map[*f]] = m;
-							}
 							while (*(f + 1) == '|')
 							{
 								f += 2;
@@ -4570,30 +4581,25 @@ optget(register char** argv, const char* oopts)
 				return '?';
 			}
 			STATE->force = hp->style;
-			psp = pop(psp);
-			goto again;
 		}
-		if (match(s, "ESC", -1, NiL) || match(s, "EMPHASIS", -1, NiL))
-		{
+		else if (match(s, "ESC", -1, NiL) || match(s, "EMPHASIS", -1, NiL))
 			STATE->emphasis = n;
-			psp = pop(psp);
-			goto again;
-		}
-		if (match(s, "PREFORMAT", -1, NiL))
-		{
+		else if (match(s, "PREFORMAT", -1, NiL))
 			STATE->flags |= OPT_preformat;
-			psp = pop(psp);
-			goto again;
-		}
-		if (match(s, "TEST", -1, NiL))
+		else if (match(s, "TEST", -1, NiL))
 		{
 			STATE->width = OPT_WIDTH;
 			STATE->emphasis = 1;
-			psp = pop(psp);
-			goto again;
 		}
-		pop(psp);
-		return opterror(v, version, catalog);
+		else
+		{
+			pop(psp);
+			return opterror(v, version, catalog);
+		}
+		psp = pop(psp);
+		if (argv == STATE->strv)
+			return '#';
+		goto again;
 	}
 	if ((opt_info.arg = opthelp(NiL, v)) == (char*)unknown)
 	{
@@ -4634,6 +4640,7 @@ optstr(const char* str, const char* opts)
 	int			v;
 	char*			e;
 
+ again:
 	if (s)
 	{
 		if (!(mp = STATE->strp) && !(mp = STATE->strp = sfstropen()))
@@ -4656,9 +4663,13 @@ optstr(const char* str, const char* opts)
 		{
 			opt_info.index = 1;
 			opt_info.offset = s - (char*)str;
-			s = sfstruse(mp);
+			s = sfstruse(mp) + 2;
 			e = opt_info.name;
 			while (e < &opt_info.name[sizeof(opt_info.name)-1] && (*e++ = *s++));
+			opt_info.arg = 0;
+			opt_info.number = opt_info.num = 0;
+			opt_info.option[0] = ':';
+			opt_info.option[1] = 0;
 			return '#';
 		}
 		else
@@ -4729,6 +4740,11 @@ optstr(const char* str, const char* opts)
 		c = optget(STATE->strv, opts);
 		opt_info.index = 1;
 		opt_info.offset = v;
+		if (c == '#')
+		{
+			s = STATE->str;
+			goto again;
+		}
 		if ((c == '?' || c == ':') && (opt_info.arg[0] == '-' && opt_info.arg[1] == '-'))
 			opt_info.arg += 2;
 		s = opt_info.name;

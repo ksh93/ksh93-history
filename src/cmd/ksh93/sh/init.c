@@ -260,12 +260,12 @@ static void put_restricted(register Namval_t* np,const char *val,int flags,Namfu
 	if(val && !(flags&NV_RDONLY) && np->nvalue.cp && strcmp(val,np->nvalue.cp)==0)
 		 return;
 #ifdef PATH_BFPATH
-	if(shp->defpathlist  && name==(FPATHNOD)->nvname)
+	if(shp->pathlist  && name==(FPATHNOD)->nvname)
 		shp->pathlist = (void*)path_unsetfpath((Pathcomp_t*)shp->pathlist);
 #endif
 	nv_putv(np, val, flags, fp);
 #ifdef PATH_BFPATH
-	if(shp->defpathlist)
+	if(shp->pathlist)
 	{
 		val = np->nvalue.cp;
 		if(name==(PATHNOD)->nvname)
@@ -650,9 +650,21 @@ static int hasgetdisc(register Namfun_t *fp)
 void sh_setmatch(const char *v, int vsize, int nmatch, int match[])
 {
 	struct match *mp = (struct match*)(SH_MATCHNOD->nvfun);
+	register int i,n;
 	if(mp->nmatch = nmatch)
 	{
 		memcpy(mp->match,match,nmatch*2*sizeof(int));
+		for(n=match[0],i=1; i < 2*nmatch; i++)
+		{
+			if(mp->match[i] < n)
+				n = mp->match[i];
+		}
+		for(vsize=0,i=0; i < 2*nmatch; i++)
+		{
+			if((mp->match[i] -= n) > vsize)
+				vsize = mp->match[i];
+		}
+		v += n;
 		if(vsize >= mp->vsize)
 		{
 			if(mp->vsize)
@@ -878,6 +890,38 @@ Shell_t *sh_init(register int argc,register char *argv[], void(*userinit)(int))
 		}
 	}
 	env_init(&sh);
+#if SHOPT_SPAWN
+	{
+		/*
+		 * try to find the pathname for this interpreter
+		 * try using environment variable _ or argv[0]
+		 */
+		char *last, *cp=nv_getval(L_ARGNOD);
+		char path[50],buff[PATH_MAX+1];
+		sh.shpath = 0;
+		sfsprintf(path,sizeof(path),"/proc/%d/exe\0",getpid());
+		if((n=readlink(path,buff,sizeof(buff)-1))>0)
+		{
+			buff[n] = 0;
+			sh.shpath = strdup(buff);
+		}
+		else if((cp && (last=strrchr(cp,'/')) && strcmp((last[1]=='-'?&last[2]:&last[1]),name)==0) || (argc>0 && (last=strrchr(cp= *argv,'/'))))
+		{
+			if(*cp=='/')
+				sh.shpath = strdup(cp);
+			else if(cp = nv_getval(PWDNOD))
+			{
+				int offset = staktell();
+				stakputs(cp);
+				stakputc('/');
+				stakputs(argv[0]);
+				pathcanon(stakptr(offset),PATH_DOTDOT);
+				sh.shpath = strdup(stakptr(offset));
+				stakseek(offset);
+			}
+		}
+	}
+#endif
 	nv_putval(IFSNOD,(char*)e_sptbnl,NV_RDONLY);
 #if SHOPT_FS_3D
 	nv_stack(VPATHNOD, &VPATH_init);
@@ -1312,7 +1356,7 @@ static void env_init(Shell_t *shp)
 #ifdef _ENV_H
 	env_delete(sh.env,e_envmarker);
 #endif
-	if(nv_isattr(PWDNOD,NV_TAGGED))
+	if(nv_isnull(PWDNOD) || nv_isattr(PWDNOD,NV_TAGGED))
 	{
 		nv_offattr(PWDNOD,NV_TAGGED);
 		path_pwd(0);

@@ -47,7 +47,7 @@
 #   include	"variables.h"
 #else
     extern char ed_errbuf[];
-    char e_version[] = "\n@(#)$Id: Editlib version 1993-12-28 o $\0\n";
+    char e_version[] = "\n@(#)$Id: Editlib version 1993-12-28 o+ $\0\n";
 #endif	/* KSHELL */
 #include	"io.h"
 #include	"terminal.h"
@@ -580,7 +580,7 @@ void ed_crlf(register Edit_t *ep)
  *	    are not counted as part of the prompt length.
  */
 
-void	ed_setup(register Edit_t *ep, int fd)
+void	ed_setup(register Edit_t *ep, int fd, int reedit)
 {
 	register char *pp;
 	register char *last;
@@ -611,6 +611,7 @@ void	ed_setup(register Edit_t *ep, int fd)
 	ep->e_hline = ep->e_hismax;
 	ep->e_wsize = ed_window()-2;
 	ep->e_crlf = 1;
+	ep->e_plen = 0;
 	pp = ep->e_prompt;
 	ppmax = pp+PRSIZE-1;
 	*pp++ = '\r';
@@ -620,15 +621,22 @@ void	ed_setup(register Edit_t *ep, int fd)
 		{
 			case ESC:
 			{
+				int skip=0;
 				ep->e_crlf = 0;
+				*pp++ = c;
 				for(n=1; c = *last++; n++)
 				{
-					if(c>='0' && c<='9' && n>2)
+					*pp++ = c;
+					if(c=='\a')
+						break;
+					if(skip || (c>='0' && c<='9'))
 						continue;
-					if(n>2 || (c!= '['  &&  c!= 'O'))
+					if(n>1 && c==';')
+						skip = 1;
+					else if(n>2 || (c!= '[' &&  c!= ']'))
 						break;
 				}
-				qlen += n;
+				qlen += (n+1);
 				break;
 			}
 			case '\r':
@@ -673,7 +681,8 @@ void	ed_setup(register Edit_t *ep, int fd)
 				}
 		}
 	}
-	ep->e_plen = pp - ep->e_prompt - qlen;
+	if(pp-ep->e_prompt > qlen)
+		ep->e_plen = pp - ep->e_prompt - qlen;
 	*pp = 0;
 	if((ep->e_wsize -= ep->e_plen) < 7)
 	{
@@ -702,6 +711,7 @@ void	ed_setup(register Edit_t *ep, int fd)
 	if(qlen)
 		sfset(sfstderr,SF_READ,1);
 	sfwrite(sfstderr,ep->e_outptr,0);
+	ep->e_eol = reedit;
 }
 
 /*
@@ -713,9 +723,9 @@ void	ed_setup(register Edit_t *ep, int fd)
  * this case.  This is not necessary for systems that can handle
  * sfpkrd() correctly (i,e., those that support poll() or select()
  */
-int ed_read(int fd, char *buff, int size)
+int ed_read(void *context, int fd, char *buff, int size, int reedit)
 {
-	register Edit_t *ep = (Edit_t*)(sh_getinterp()->ed_context);
+	register Edit_t *ep = (Edit_t*)context;
 	register int rv= -1;
 	register int delim = (ep->e_raw==RAWMODE?'\r':'\n');
 	int mode = -1;
@@ -828,7 +838,7 @@ static int putstack(Edit_t *ep,char string[], register int nbyte, int type)
 #endif
 			else if((endp-p) < mbmax())
 			{
-				if ((c=ed_read(ep->e_fd,endp, 1)) == 1)
+				if ((c=ed_read(ep,ep->e_fd,endp, 1,0)) == 1)
 				{
 					*++endp = 0;
 					goto again;
@@ -892,7 +902,7 @@ int ed_getchar(register Edit_t *ep,int mode)
 		ed_flush(ep);
 		ep->e_inmacro = 0;
 		/* The while is necessary for reads of partial multbyte chars */
-		if((n=ed_read(ep->e_fd,readin,-LOOKAHEAD)) > 0)
+		if((n=ed_read(ep,ep->e_fd,readin,-LOOKAHEAD,0)) > 0)
 			n = putstack(ep,readin,n,1);
 	}
 	if(ep->e_lookahead)

@@ -46,4 +46,22 @@ if	[[ $x != good ]]
 then	err_exit 'sh -e not workuing'
 fi
 [[ $($SHELL -D -c 'print hi; print $"hello"') == '"hello"' ]] || err_exit 'ksh -D not working'
+if	command set -G 2> /dev/null
+then	mkdir /tmp/ksh$$
+	cd /tmp/ksh$$
+	mkdir bar foo
+	> bar.c  > bam.c
+	> bar/foo.c > bar/bam.c
+	> foo/bam.c
+	set -- **.c
+	[[ $* == 'bam.c bar.c' ]] || err_exit '**.c not working with -G option'
+	set -- **
+	[[ $* == 'bam.c bar bar.c bar/bam.c bar/foo.c foo foo/bam.c' ]] || err_exit '** not working with -G option'
+	set -- **/*.c
+	[[ $* == 'bam.c bar.c bar/bam.c bar/foo.c foo/bam.c' ]] || err_exit '**/*.c not working with -G option'
+	set -- **/bam.c
+	[[ $* == 'bam.c bar/bam.c foo/bam.c' ]] || err_exit '**/bam.c not working with -G option'
+	cd ~-
+	rm -rf /tmp/ksh$$
+fi
 exit $((Errors))

@@ -335,6 +335,7 @@ runve(int mode, const char* path, char* const* argv, char* const* envv)
 				sfprintf(sfstderr, " '%s'", envv[n]);
 		}
 		sfprintf(sfstderr, " ]\n");
+		sfsync(sfstderr);
 	}
 #endif
 
@@ -379,16 +380,13 @@ runve(int mode, const char* path, char* const* argv, char* const* envv)
 			}
 		if (n)
 		{
-			if (envv)
-			{
-				n = p - (char**)envv + 1;
-				p = (char**)envv;
-			}
+			n = p - (char**)envv + 1;
+			p = (char**)envv;
 			if (v = (char**)malloc(n * sizeof(char*)))
 			{
 				m2 = v;
 				envv = (char* const*)v;
-				*v++ = "PATH=/bin";
+				*v++ = strcpy(tmp, "PATH=/bin");
 				while (*v++ = *p++);
 			}
 		}
@@ -473,7 +471,7 @@ typedef struct Exe_test_s
 {
 	int		test;
 	ino_t		ino;
-	char		path[1];
+	char		path[PATH_MAX];
 } Exe_test_t;
 
 static Exe_test_t*	exe[16];
@@ -488,14 +486,12 @@ close(int fd)
 
 	if (fd >= 0 && fd < elementsof(exe) && exe[fd])
 	{
-		if (!fstat(fd, &st) && st.st_ino == exe[fd]->ino)
+		r = exe[fd]->test;
+		exe[fd]->test = 0;
+		if (r > 0 && !fstat(fd, &st) && st.st_ino == exe[fd]->ino)
 		{
 			if (r = _close(fd))
-			{
-				free(exe[fd]);
-				exe[fd] = 0;
 				return r;
-			}
 			oerrno = errno;
 			if (!stat(exe[fd]->path, &st) && st.st_ino == exe[fd]->ino)
 			{
@@ -503,12 +499,8 @@ close(int fd)
 				_rename(exe[fd]->path, buf);
 			}
 			errno = oerrno;
-			free(exe[fd]);
-			exe[fd] = 0;
 			return 0;
 		}
-		free(exe[fd]);
-		exe[fd] = 0;
 	}
 	return _close(fd);
 }
@@ -516,16 +508,8 @@ close(int fd)
 extern ssize_t
 write(int fd, const void* buf, size_t n)
 {
-	if (fd >= 0 && fd < elementsof(exe) && exe[fd] && exe[fd]->test)
-	{
-		if (n >= 2 && ((unsigned char*)buf)[1] == 0x5a && (((unsigned char*)buf)[0] == 0x4c || ((unsigned char*)buf)[0] == 0x4d) && !lseek(fd, (off_t)0, SEEK_CUR))
-			exe[fd]->test = 0;
-		else
-		{
-			free(exe[fd]);
-			exe[fd] = 0;
-		}
-	}
+	if (fd >= 0 && fd < elementsof(exe) && exe[fd] && exe[fd]->test < 0)
+		exe[fd]->test = n >= 2 && ((unsigned char*)buf)[1] == 0x5a && (((unsigned char*)buf)[0] == 0x4c || ((unsigned char*)buf)[0] == 0x4d) && !lseek(fd, (off_t)0, SEEK_CUR);
 	return _write(fd, buf, n);
 }
 
@@ -555,16 +539,12 @@ open(const char* path, int flags, ...)
 	}
 #endif
 #if _win32_botch_copy
-	if (fd >= 0 && fd < elementsof(exe))
+	if (fd >= 0 && fd < elementsof(exe) && strlen(path) < PATH_MAX &&
+	    (flags & (O_CREAT|O_TRUNC)) == (O_CREAT|O_TRUNC) && (mode & 0111))
 	{
-		if (exe[fd])
+		if (!suffix(path) && !fstat(fd, &st) && (exe[fd] || (exe[fd] = (Exe_test_t*)malloc(sizeof(Exe_test_t)))))
 		{
-			free(exe[fd]);
-			exe[fd] = 0;
-		}
-		if ((flags & (O_CREAT|O_TRUNC)) == (O_CREAT|O_TRUNC) && (mode & 0111) && !suffix(path) && !fstat(fd, &st) && (exe[fd] = (Exe_test_t*)malloc(sizeof(Exe_test_t) + strlen(path))))
-		{
-			exe[fd]->test = 1;
+			exe[fd]->test = -1;
 			exe[fd]->ino = st.st_ino;
 			strcpy(exe[fd]->path, path);
 		}
@@ -892,6 +872,23 @@ getpagesize()
 {
 	return PAGESIZE;
 }
+
+#endif
+
+#if __CYGWIN__ && defined(__IMPORT__) && defined(__EXPORT__)
+
+#ifndef OMITTED
+#define OMITTED	1
+#endif
+
+/*
+ * a few _imp__FUNCTION symbols are needed to avoid
+ * static link multiple definitions
+ */
+
+#ifndef strtod
+__EXPORT__ double (*_imp__strtod)(const char*, char**) = strtod;
+#endif
 
 #endif
 

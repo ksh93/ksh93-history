@@ -23,11 +23,10 @@
 *******************************************************************/
 #pragma prototyped
 /*
- * ulimit [-HSacdfmnstv] [limit]
+ * ulimit [-HSacdfmnstuv] [limit]
  *
  *   David Korn
  *   AT&T Labs
- *   research!dgk
  *
  */
 
@@ -36,6 +35,7 @@
 #include	<error.h>
 #include	<shell.h>
 #include	"builtins.h"
+#include	"name.h"
 #include	"ulimit.h"
 #ifndef SH_DICT
 #   define SH_DICT	"libshell"
@@ -52,20 +52,42 @@
 	}
 #else
 
-#define HARD	1
-#define SOFT	2
+static int infof(Opt_t* op, Sfio_t* sp, const char* s, Optdisc_t* dp)
+{
+	register const Limit_t*	tp;
+
+	for (tp = shtab_limits; tp->option; tp++)
+	{
+		sfprintf(sp, "[%c=%d:%s?The %s", tp->option, tp - shtab_limits + 1, tp->name, tp->description);
+		if(tp->type != LIM_COUNT)
+			sfprintf(sp, " in %ss", e_units[tp->type]);
+		sfprintf(sp, ".]");
+	}
+        return(1);
+}
+
+#define HARD	2
+#define SOFT	4
 
 int	b_ulimit(int argc,char *argv[],void *extra)
 {
 	register char *limit;
-	register int flag = 0, mode=0, n;
+	register int mode=0, n;
+	register unsigned long hit = 0;
 	Shell_t *shp = (Shell_t*)extra;
 #ifdef _lib_getrlimit
 	struct rlimit rlp;
 #endif /* _lib_getrlimit */
-	const Shtable_t *tp;
-	int label, unit, noargs;
+	const Limit_t* tp;
+	char* conf;
+	int label, unit, noargs, nosupport;
 	rlim_t i;
+	char tmp[32];
+        Optdisc_t disc;
+        memset(&disc, 0, sizeof(disc));
+        disc.version = OPT_VERSION;
+        disc.infof = infof;
+	opt_info.disc = &disc;
 	while((n = optget(argv,sh_optulimit))) switch(n)
 	{
 		case 'H':
@@ -74,56 +96,14 @@ int	b_ulimit(int argc,char *argv[],void *extra)
 		case 'S':
 			mode |= SOFT;
 			continue;
-		case 'f':
-			flag |= (1<<1);
-			break;
 		case 'a':
-#ifdef _lib_ulimit
-			flag = (1<<1);
+			hit = ~0;
 			break;
-#else
-			flag = (0x2f
-#   ifdef RLIMIT_RSS
-			|(1<<4)
-#   endif /* RLIMIT_RSS */
-#   ifdef RLIMIT_NOFILE
-			|(1<<6)
-#   endif /* RLIMIT_NOFILE */
-#   ifdef RLIMIT_VMEM
-			|(1<<7)
-#   endif /* RLIMIT_VMEM */
-				);
-			break;
-		case 't':
-			flag |= 1;
-			break;
-#   ifdef RLIMIT_RSS
-		case 'm':
-			flag |= (1<<4);
-			break;
-#   endif /* RLIMIT_RSS */
-		case 'd':
-			flag |= (1<<2);
-			break;
-		case 's':
-			flag |= (1<<3);
-			break;
-		case 'c':
-			flag |= (1<<5);
-			break;
-#   ifdef RLIMIT_NOFILE
-		case 'n':
-			flag |= (1<<6);
-			break;
-#   endif /* RLIMIT_NOFILE */
-#   ifdef RLIMIT_VMEM
-		case 'v':
-			flag |= (1<<7);
-			break;
-#   endif /* RLIMIT_VMEM */
-#endif /* _lib_ulimit */
 		default:
-			errormsg(SH_DICT,2, e_notimp, opt_info.name);
+			if(n < 0)
+				hit |= (1L<<(-(n+1)));
+			else
+				errormsg(SH_DICT,2, e_notimp, opt_info.name);
 			break;
 		case ':':
 			errormsg(SH_DICT,2, "%s", opt_info.arg);
@@ -132,23 +112,28 @@ int	b_ulimit(int argc,char *argv[],void *extra)
 			errormsg(SH_DICT,ERROR_usage(2), "%s", opt_info.arg);
 			break;
 	}
+	opt_info.disc = 0;
 	limit = argv[opt_info.index];
 	/* default to -f */
-	if(noargs=(flag==0))
-		flag |= (1<<1);
+	if(noargs=(hit==0))
+		for(n=0; shtab_limits[n].option; n++)
+			if(shtab_limits[n].index == RLIMIT_FSIZE)
+			{
+				hit |= (1L<<n);
+				break;
+			}
 	/* only one option at a time for setting */
-	label = (flag&(flag-1));
+	label = (hit&(hit-1));
 	if(error_info.errors || (limit && label) || argc>opt_info.index+1)
 		errormsg(SH_DICT,ERROR_usage(2),optusage((char*)0));
-	tp = shtab_limits;
 	if(mode==0)
 		mode = (HARD|SOFT);
-	for(; flag; tp++,flag>>=1)
+	for(tp = shtab_limits; tp->option && hit; tp++,hit>>=1)
 	{
-		if(!(flag&1))
+		if(!(hit&1))
 			continue;
-		n = tp->sh_number>>11;
-		unit = tp->sh_number&0x7ff;
+		nosupport = (n = tp->index) == RLIMIT_UNKNOWN;
+		unit = shtab_units[tp->type];
 		if(limit)
 		{
 			if(shp->subshell)
@@ -162,44 +147,64 @@ int	b_ulimit(int argc,char *argv[],void *extra)
 					errormsg(SH_DICT,ERROR_system(1),e_number,limit);
 				i *= unit;
 			}
+			if(nosupport)
+				errormsg(SH_DICT,ERROR_system(1),e_readonly,tp->name);
+			else
+			{
 #ifdef _lib_getrlimit
-			if(getrlimit(n,&rlp) <0)
-				errormsg(SH_DICT,ERROR_system(1),e_number,limit);
-			if(mode&HARD)
-				rlp.rlim_max = i;
-			if(mode&SOFT)
-				rlp.rlim_cur = i;
-			if(setrlimit(n,&rlp) <0)
-				errormsg(SH_DICT,ERROR_system(1),e_overlimit,limit);
+				if(getrlimit(n,&rlp) <0)
+					errormsg(SH_DICT,ERROR_system(1),e_number,limit);
+				if(mode&HARD)
+					rlp.rlim_max = i;
+				if(mode&SOFT)
+					rlp.rlim_cur = i;
+				if(setrlimit(n,&rlp) <0)
+					errormsg(SH_DICT,ERROR_system(1),e_overlimit,limit);
 #else
-			if((i=vlimit(n,i)) < 0)
-				errormsg(SH_DICT,ERROR_system(1),e_number,limit);
+				if((i=vlimit(n,i)) < 0)
+					errormsg(SH_DICT,ERROR_system(1),e_number,limit);
 #endif /* _lib_getrlimit */
+			}
 		}
 		else
 		{
+			if(!nosupport)
+			{
 #ifdef  _lib_getrlimit
-			if(getrlimit(n,&rlp) <0)
-				errormsg(SH_DICT,ERROR_system(1),e_number,limit);
-			if(mode&HARD)
-				i = rlp.rlim_max;
-			if(mode&SOFT)
-				i = rlp.rlim_cur;
+				if(getrlimit(n,&rlp) <0)
+					errormsg(SH_DICT,ERROR_system(1),e_number,limit);
+				if(mode&HARD)
+					i = rlp.rlim_max;
+				if(mode&SOFT)
+					i = rlp.rlim_cur;
 #else
 #   ifdef _lib_ulimit
-			n--;
+				n--;
 #   endif /* _lib_ulimit */
-			i = -1;
-			if((i=vlimit(n,i)) < 0)
-				errormsg(SH_DICT,ERROR_system(1),e_number,limit);
+				i = -1;
+				if((i=vlimit(n,i)) < 0)
+					errormsg(SH_DICT,ERROR_system(1),e_number,limit);
 #endif /* _lib_getrlimit */
+			}
 			if(label)
-				sfputr(sfstdout,tp->sh_name,' ');
-			if(i!=INFINITY || noargs)
+			{
+				if(tp->type != LIM_COUNT)
+					sfsprintf(tmp,sizeof(tmp),"%s (%ss)", tp->description, e_units[tp->type]);
+				else
+					sfsprintf(tmp,sizeof(tmp),"%s", tp->name);
+				sfprintf(sfstdout,"%-30s (-%c)  ",tmp,tp->option);
+			}
+			if(nosupport)
+			{
+				if(!tp->conf || !*(conf = astconf(tp->conf, NiL, NiL)))
+					conf = (char*)e_nosupport;
+				sfputr(sfstdout,conf,'\n');
+			}
+			else if(i!=INFINITY || noargs)
 			{
 				if(!noargs)
 					i += (unit-1);
-				sfprintf(sfstdout,"%d\n",i/unit);
+				sfprintf(sfstdout,"%I*d\n",sizeof(i),i/unit);
 			}
 			else
 				sfputr(sfstdout,e_unlimited,'\n');

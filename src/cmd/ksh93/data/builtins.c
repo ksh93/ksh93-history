@@ -26,6 +26,7 @@
 #include	<shell.h>
 #include	<signal.h>
 #include	"shtable.h"
+#include	"ulimit.h"
 #include	"name.h"
 #if KSHELL
 #   include	"builtins.h"
@@ -234,17 +235,19 @@ const char sh_set[] =
 		"[+bgnice?Runs background jobs at lower priorities.]"
 		"[+emacs?Enables/disables \bemacs\b editing mode.]"
 		"[+errexit?Equivalent to \b-e\b.]"
+		"[+globstar?Equivalent to \b-G\b.]"
 		"[+gmacs?Enables/disables \bgmacs\b editing mode.  \bgmacs\b "
 			"editing mode is the same as \bemacs\b editing mode "
 			"except for the handling of \b^T\b.]"
 #if SHOPT_BASH
 		"[+hashall?Equivalent to \b-h\b and \b-o trackall\b. Available"
 		" in bash compatibility mode only.]"
-		"[+histexpand?Equivalent to \b-H\b. Available in bash "
-		"compatibility mode only, but currently ignored.]"
 		"[+history?Enable command history. Available in bash "
 		"compatibility mode only. On by default in interactive "
 		"shells.]"
+#endif
+#if SHOPT_HISTEXPAND
+		"[+histexpand?Equivalent to \b-H\b.]"
 #endif
 		"[+ignoreeof?Prevents an interactive shell from exiting on "
 			"reading an end-of-file.]"
@@ -301,7 +304,13 @@ const char sh_set[] =
 #endif
 "[C?Prevents existing regular files from being overwritten using the \b>\b "
 	"redirection operator.  The \b>|\b redirection overrides this "
-	"\bnoclobber\b option.]";
+	"\bnoclobber\b option.]"
+"[G?Causes \b**\b by itself to also match all sub-directories during pathname "
+	"expansion.]"
+#if SHOPT_HISTEXPAND
+   "[H?Enable \b!\b-style history expansion similar to \bcsh\b.]"
+#endif
+;
 
 const char sh_optbreak[] =
 "[-1c?\n@(#)$Id: break (AT&T Labs Research) 1999-04-07 $\n]"
@@ -490,7 +499,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optcommand[] =
-"[-1c?\n@(#)$Id: command (AT&T Labs Research) 1999-04-07 $\n]"
+"[-1c?\n@(#)$Id: command (AT&T Labs Research) 2003-06-21 $\n]"
 USAGE_LICENSE
 "[+NAME?command - execute a simple command]"
 "[+DESCRIPTION?Without \b-v\b or \b-V\b,  \bcommand\b executes \acommand\a "
@@ -503,6 +512,11 @@ USAGE_LICENSE
 "[p?Causes a default path to be searched rather than the one defined by the "
 	"value of \bPATH\b.]"
 "[v?Equivalent to \bwhence\b \acommand\a [\aarg\a ...]].]"
+"[x?If \acommand\a fails because there are too many \aarg\as, it will be "
+	"invoked multiple times with a subset of the arguments on each "
+	"invocation.  Arguments that occur prior to the first word that "
+	"expands to multiple arguments will be passed on each invocation. "
+	"The exit status will be the maximum invocation exit status.]"
 "[V?Equivalent to \bwhence \b-v\b \acommand\a [\aarg\a ...]].]"
 "\n"
 "\n[command [arg ...]]\n"
@@ -941,6 +955,10 @@ USAGE_LICENSE
 "[l?List the commands rather than editing and reexecuting them.]"
 "[N]#[num?Start at \anum\a commands back.]" 
 "[n?Suppress the command numbers when the commands are listed.]"
+#if SHOPT_HISTEXPAND
+"[p?Writes the result of history expansion for each operand to standard "
+	"output.  All other options are ignored.]"
+#endif
 "[r?Reverse the order of the commands.]"
 "[s?Reexecute the command without invoking an editor.  In this case "
 	"an operand of the form \aold\a\b-\b\anew\a can be specified "
@@ -1197,7 +1215,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optread[] =
-"[-1c?\n@(#)$Id: read (AT&T Labs Research) 1999-04-07 $\n]"
+"[-1c?\n@(#)$Id: read (AT&T Labs Research) 2003-05-19 $\n]"
 USAGE_LICENSE
 "[+NAME?read - read a line from standard input]"
 "[+DESCRIPTION?\bread\b reads a line from standard input and breaks it "
@@ -1222,8 +1240,8 @@ USAGE_LICENSE
 "[r?Do not treat \b\\\b specially when processing the input line.]"
 "[s?Save a copy of the input as an entry in the shell history file.]"
 "[u]#[fd:=0?Read from file descriptor number \afd\a instead of standard input.]"
-"[t]#[timeout?Specify a timeout \atimeout\a in seconds when reading from a "
-	"terminal or pipe.]"
+"[t]#[timeout?Specify a timeout \atimeout\a in seconds when reading from "
+	"a terminal or pipe.]"
 "[n]#[nbyte?Read at most \anbyte\a bytes.]"
 "[N]#[nbyte?Read exactly \anbyte\a bytes.]"
 "\n"
@@ -1586,14 +1604,14 @@ USAGE_LICENSE
 ;
 
 const char sh_optulimit[] =
-"[-1c?@(#)$Id: ulimit (AT&T Labs Research) 2000-04-02 $\n]"
+"[-1c?@(#)$Id: ulimit (AT&T Labs Research) 2003-06-21 $\n]"
 USAGE_LICENSE
 "[+NAME?ulimit - set or display resource limits]"
 "[+DESCRIPTION?\bulimit\b sets or displays resource limits.  These "
 	"limits apply to the current process and to each child process "
 	"created after the resource limit has been set.  If \alimit\a "
-	"specified, the resource limit is set, otherwise, its current value is "
-	"displayed on standard output.]"
+	"is specified, the resource limit is set, otherwise, its current value "
+	"is displayed on standard output.]"
 "[+?Increasing the limit for a resource usually requires special privileges.  "
 	"Some systems allow you to lower resource limits and later increase "
 	"them.  These are called soft limits.  Once a hard limit is "
@@ -1609,16 +1627,7 @@ USAGE_LICENSE
 "[H?A hard limit is set or displayed.]"
 "[S?A soft limit is set or displayed.]"
 "[a?Displays all current resource limits]"
-"[c?Core dump size.  Number of 512 byte blocks used for core dumps.]"
-"[d?Data region size.  Number of 1024 byte blocks for data region.]"
-"[f?File size.  Number of 512 byte blocks that can be written to a file.]"
-"[m?Physical memory.  Number of 1024 byte blocks of physical memory that a "
-	"process can use.]"
-"[n?Number of file descriptors that can be opened by a process.]"
-"[s?Stack size.  Number of 1024 byte blocks for program stack region.]"
-"[t?Time.  Time limit in seconds to be used by each process.]"
-"[v?Virtual memory.  Number of 1024 byte blocks of virtual memory that a "
-	"process can use.]"
+"\flimits\f"
 "\n"
 "\n[limit]\n"
 "\n"

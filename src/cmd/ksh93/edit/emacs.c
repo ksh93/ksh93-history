@@ -181,9 +181,9 @@ static void setcursor(Emacs_t*,int, int);
 static void show_info(Emacs_t*,const char*);
 static void xcommands(Emacs_t*,int);
 
-ed_emacsread(int fd,char *buff,int scend)
+ed_emacsread(void *context, int fd,char *buff,int scend, int reedit)
 {
-	Edit_t *ed = (Edit_t*)(sh_getinterp()->ed_context);
+	Edit_t *ed = (Edit_t*)context;
 	register int c;
 	register int i;
 	register genchar *out;
@@ -202,7 +202,7 @@ ed_emacsread(int fd,char *buff,int scend)
 		location.hist_command =  -5;
 	}
 #if KSHELL && (2*CHARSIZE*MAXLINE)<IOBSIZE
-	kstack = (genchar*)buff + MAXLINE*sizeof(genchar);
+	kstack = (genchar*)(buff + MAXLINE*sizeof(genchar));
 #else
 	if(kstack==0)
 	{
@@ -215,12 +215,15 @@ ed_emacsread(int fd,char *buff,int scend)
 	drawbuff = out = (genchar*)buff;
 	if(tty_raw(ERRIO,0) < 0)
 	{
-		 return(ed_read(fd,buff,scend));
+		 return(reedit?reedit:ed_read(context, fd,buff,scend,0));
 	}
 	raw = 1;
 	/* This mess in case the read system call fails */
 	
-	ed_setup(ep->ed,fd);
+	ed_setup(ep->ed,fd,reedit);
+#if SHOPT_MULTIBYTE
+	ed_internal(buff,out);
+#endif /* SHOPT_MULTIBYTE */
 #ifdef ESH_NFIRST
 	if (location.hist_command == -5)		/* to be initialized */
 	{
@@ -245,11 +248,12 @@ ed_emacsread(int fd,char *buff,int scend)
 		}
 		return(-1); /* some other error */
 	}
-	*out = 0;
+	out[reedit] = 0;
 	if(scend+plen > (MAXLINE-2))
 		scend = (MAXLINE-2)-plen;
-	ep->mark = eol = cur = 0;
-	draw(ep,FIRST);
+	ep->mark = 0;
+	cur = eol;
+	draw(ep,reedit?REFRESH:FIRST);
 	adjust = -1;
 	backslash = 0;
 	if (ep->CntrlO)

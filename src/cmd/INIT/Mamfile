@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 4.3 2003-04-15
+info mam static 00000 1994-07-17 make (AT&T Research) 4.3 2003-06-21
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ar
@@ -6,7 +6,8 @@ setv ARFLAGS cr
 setv AS as
 setv ASFLAGS
 setv CC cc
-setv CCFLAGS  ${debug?1?${mam_cc_DEBUG}?${mam_cc_OPTIMIZE}?}
+setv mam_cc_FLAGS 
+setv CCFLAGS ${debug?1?${mam_cc_DEBUG} -D_BLD_DEBUG?${mam_cc_OPTIMIZE}?}
 setv COTEMP $$
 setv CPIO cpio
 setv CPIOFLAGS
@@ -55,7 +56,7 @@ exec - 		i=`(read x; echo $x) < hurl.sh`
 exec - 		case $i in
 exec - 		'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo $i ;;
 exec - 		esac
-exec - 		echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"
+exec - 		echo USAGE_LICENSE='\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"'
 exec - 		cat hurl.sh
 exec - 		} > hurl
 exec - 		;;
@@ -65,7 +66,7 @@ exec - *)	{
 exec - 	echo '${mam_cc_SHELLMAGIC}'
 exec - 	case 186 in
 exec - 	0)	;;
-exec - 	*)	echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\" ;;
+exec - 	*)	echo USAGE_LICENSE='\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"' ;;
 exec - 	esac
 exec - 	cat hurl.sh
 exec - 	} > hurl
@@ -95,7 +96,7 @@ exec - 		i=`(read x; echo $x) < iffe.sh`
 exec - 		case $i in
 exec - 		'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo $i ;;
 exec - 		esac
-exec - 		echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?Phong Vo <kpv@research.att.com>][-copyright?Copyright (c) 1994-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"
+exec - 		echo USAGE_LICENSE='\""[-author?Glenn Fowler <gsf@research.att.com>][-author?Phong Vo <kpv@research.att.com>][-copyright?Copyright (c) 1994-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"'
 exec - 		cat iffe.sh
 exec - 		} > iffe
 exec - 		;;
@@ -105,7 +106,7 @@ exec - *)	{
 exec - 	echo '${mam_cc_SHELLMAGIC}'
 exec - 	case 232 in
 exec - 	0)	;;
-exec - 	*)	echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?Phong Vo <kpv@research.att.com>][-copyright?Copyright (c) 1994-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\" ;;
+exec - 	*)	echo USAGE_LICENSE='\""[-author?Glenn Fowler <gsf@research.att.com>][-author?Phong Vo <kpv@research.att.com>][-copyright?Copyright (c) 1994-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"' ;;
 exec - 	esac
 exec - 	cat iffe.sh
 exec - 	} > iffe
@@ -134,7 +135,7 @@ exec - 		i=`(read x; echo $x) < package.sh`
 exec - 		case $i in
 exec - 		'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo $i ;;
 exec - 		esac
-exec - 		echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"
+exec - 		echo USAGE_LICENSE='\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"'
 exec - 		cat package.sh
 exec - 		} > package
 exec - 		;;
@@ -144,7 +145,7 @@ exec - *)	{
 exec - 	echo '${mam_cc_SHELLMAGIC}'
 exec - 	case 191 in
 exec - 	0)	;;
-exec - 	*)	echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\" ;;
+exec - 	*)	echo USAGE_LICENSE='\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"' ;;
 exec - 	esac
 exec - 	cat package.sh
 exec - 	} > package
@@ -174,7 +175,7 @@ exec - 		i=`(read x; echo $x) < regress.sh`
 exec - 		case $i in
 exec - 		'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo $i ;;
 exec - 		esac
-exec - 		echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1995-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"
+exec - 		echo USAGE_LICENSE='\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1995-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"'
 exec - 		cat regress.sh
 exec - 		} > regress
 exec - 		;;
@@ -184,7 +185,7 @@ exec - *)	{
 exec - 	echo '${mam_cc_SHELLMAGIC}'
 exec - 	case 191 in
 exec - 	0)	;;
-exec - 	*)	echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1995-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\" ;;
+exec - 	*)	echo USAGE_LICENSE='\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1995-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"' ;;
 exec - 	esac
 exec - 	cat regress.sh
 exec - 	} > regress
@@ -213,7 +214,7 @@ exec - 		i=`(read x; echo $x) < crossexec.sh`
 exec - 		case $i in
 exec - 		'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo $i ;;
 exec - 		esac
-exec - 		echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"
+exec - 		echo USAGE_LICENSE='\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"'
 exec - 		cat crossexec.sh
 exec - 		} > crossexec
 exec - 		;;
@@ -223,7 +224,7 @@ exec - *)	{
 exec - 	echo '${mam_cc_SHELLMAGIC}'
 exec - 	case 191 in
 exec - 	0)	;;
-exec - 	*)	echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\" ;;
+exec - 	*)	echo USAGE_LICENSE='\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"' ;;
 exec - 	esac
 exec - 	cat crossexec.sh
 exec - 	} > crossexec
@@ -253,7 +254,7 @@ exec - 		i=`(read x; echo $x) < ditto.sh`
 exec - 		case $i in
 exec - 		'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo $i ;;
 exec - 		esac
-exec - 		echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 2001-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"
+exec - 		echo USAGE_LICENSE='\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 2001-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"'
 exec - 		cat ditto.sh
 exec - 		} > ditto
 exec - 		;;
@@ -263,7 +264,7 @@ exec - *)	{
 exec - 	echo '${mam_cc_SHELLMAGIC}'
 exec - 	case 191 in
 exec - 	0)	;;
-exec - 	*)	echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 2001-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\" ;;
+exec - 	*)	echo USAGE_LICENSE='\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 2001-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"' ;;
 exec - 	esac
 exec - 	cat ditto.sh
 exec - 	} > ditto
@@ -293,7 +294,7 @@ exec - 		i=`(read x; echo $x) < execrate.sh`
 exec - 		case $i in
 exec - 		'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo $i ;;
 exec - 		esac
-exec - 		echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 2002-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"
+exec - 		echo USAGE_LICENSE='\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 2002-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"'
 exec - 		cat execrate.sh
 exec - 		} > execrate
 exec - 		;;
@@ -303,7 +304,7 @@ exec - *)	{
 exec - 	echo '${mam_cc_SHELLMAGIC}'
 exec - 	case 191 in
 exec - 	0)	;;
-exec - 	*)	echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 2002-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\" ;;
+exec - 	*)	echo USAGE_LICENSE='\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 2002-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"' ;;
 exec - 	esac
 exec - 	cat execrate.sh
 exec - 	} > execrate
@@ -332,7 +333,7 @@ exec - 		i=`(read x; echo $x) < filter.sh`
 exec - 		case $i in
 exec - 		'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo $i ;;
 exec - 		esac
-exec - 		echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"
+exec - 		echo USAGE_LICENSE='\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"'
 exec - 		cat filter.sh
 exec - 		} > filter
 exec - 		;;
@@ -342,7 +343,7 @@ exec - *)	{
 exec - 	echo '${mam_cc_SHELLMAGIC}'
 exec - 	case 191 in
 exec - 	0)	;;
-exec - 	*)	echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\" ;;
+exec - 	*)	echo USAGE_LICENSE='\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"' ;;
 exec - 	esac
 exec - 	cat filter.sh
 exec - 	} > filter
@@ -439,18 +440,18 @@ make ast.h implicit
 done ast.h dontcare virtual
 done mamake.c
 prev mamake.c
-exec - ${CC} ${CCFLAGS}   -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\" -c mamake.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}   -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\" -c mamake.c
 done mamake.o generated
-exec - ${CC} ${CCFLAGS} ${LDFLAGS}    -o mamake mamake.o
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS}    -o mamake mamake.o
 done mamake generated
 make proto
 make proto.o
 make proto.c
 done proto.c
 prev proto.c
-exec - ${CC} ${CCFLAGS}    -c proto.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}    -c proto.c
 done proto.o generated
-exec - ${CC} ${CCFLAGS} ${LDFLAGS}    -o proto proto.o
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS}    -o proto proto.o
 done proto generated
 make ratz
 make ratz.o
@@ -467,9 +468,9 @@ prev error.h implicit
 prev ast.h implicit
 done ratz.c
 prev ratz.c
-exec - ${CC} ${CCFLAGS}    -c ratz.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}    -c ratz.c
 done ratz.o generated
-exec - ${CC} ${CCFLAGS} ${LDFLAGS}    -o ratz ratz.o
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS}    -o ratz ratz.o
 done ratz generated
 make release
 make release.o
@@ -478,9 +479,9 @@ prev error.h implicit
 prev ast.h implicit
 done release.c
 prev release.c
-exec - ${CC} ${CCFLAGS}   -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\" -c release.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}   -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\" -c release.c
 done release.o generated
-exec - ${CC} ${CCFLAGS} ${LDFLAGS}    -o release release.o
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS}    -o release release.o
 done release generated
 make mprobe
 make mprobe.sh
@@ -708,107 +709,6 @@ exec - if	test ! -f ${INSTALLROOT}/bin/release
 exec - then	cp release ${INSTALLROOT}/bin/release
 exec - fi
 done ../../../bin/release generated
-make ../../../bin/cc
-prev package
-make hello.c
-done hello.c
-make cc.darwin.ppc
-done cc.darwin.ppc
-make cc.hp.pa
-done cc.hp.pa
-make cc.hp.pa64
-done cc.hp.pa64
-make cc.ibm.risc
-done cc.ibm.risc
-make cc.mvs.390
-done cc.mvs.390
-make cc.next.i386
-done cc.next.i386
-make cc.next.m68k
-done cc.next.m68k
-make cc.osf.alpha
-done cc.osf.alpha
-make cc.sco.i386
-done cc.sco.i386
-make cc.sgi.mips2
-done cc.sgi.mips2
-make cc.sgi.mips3
-done cc.sgi.mips3
-make cc.sgi.mips3-o32
-done cc.sgi.mips3-o32
-make cc.sgi.mips4
-done cc.sgi.mips4
-make cc.sgi.mips4-n32
-done cc.sgi.mips4-n32
-make cc.unix.mc68k
-done cc.unix.mc68k
-exec - for cc in cc.darwin.ppc cc.hp.pa cc.hp.pa64 cc.ibm.risc cc.mvs.390 cc.next.i386 cc.next.m68k cc.osf.alpha cc.sco.i386 cc.sgi.mips2 cc.sgi.mips3 cc.sgi.mips3-o32 cc.sgi.mips4 cc.sgi.mips4-n32 cc.unix.mc68k ''
-exec - do	case $cc in
-exec - 	*cc.${mam_cc_HOSTTYPE})
-exec - 		if	silent test -f $cc &&
-exec - 			silent $cc -o hello.exe hello.c >/dev/null 2>&1 &&
-exec - 			silent hello.exe >/dev/null 2>&1
-exec - 		then	case "${mam_cc_HOSTTYPE}" in
-exec - 			*.mips*)$cc -version >/dev/null 2>&1 || cc= ;;
-exec - 			esac
-exec - 			break
-exec - 		fi
-exec - 		;;
-exec - 	'')	silent cc -o hello.exe hello.c &&
-exec - 		silent hello.exe >/dev/null 2>&1 || {
-exec - 			if	silent gcc -o hello.exe hello.c >/dev/null 2>&1 &&
-exec - 				silent hello.exe >/dev/null 2>&1
-exec - 			then	cc=cc.gcc
-exec - 				echo 'gcc "$@"' > $cc
-exec - 				chmod +x $cc
-exec - 			fi
-exec - 		}
-exec - 		;;
-exec - 	esac
-exec - done
-exec - case $cc in
-exec - ?*)	silent cmp -s $cc ${INSTALLROOT}/bin/cc || cp $cc ${INSTALLROOT}/bin/cc ;;
-exec - esac
-exec - silent rm -f hello.exe hello.o
-done ../../../bin/cc generated
-prev package
-prev ../../../bin/cc
-make ld.hp.pa
-done ld.hp.pa
-exec - if	silent test -x ${INSTALLROOT}/bin/cc
-exec - then	for ld in ld.hp.pa
-exec - 	do	case $ld in
-exec - 		*ld.${mam_cc_HOSTTYPE})
-exec - 			if	silent test -f $ld
-exec - 			then	silent cmp -s $ld ${INSTALLROOT}/bin/ld || cp $ld ${INSTALLROOT}/bin/ld
-exec - 			fi
-exec - 		esac
-exec - 	done
-exec - fi
-prev package
-prev ../../../bin/cc
-make ldd.cygwin.i386
-done ldd.cygwin.i386
-make ldd.darwin.ppc
-done ldd.darwin.ppc
-make ldd.ibm.risc
-done ldd.ibm.risc
-make ldd.mvs.390
-done ldd.mvs.390
-make ldd.sgi.mips2
-done ldd.sgi.mips2
-make ldd.sgi.mips3
-done ldd.sgi.mips3
-make ldd.sgi.mips4
-done ldd.sgi.mips4
-exec - for ldd in ldd.cygwin.i386 ldd.darwin.ppc ldd.ibm.risc ldd.mvs.390 ldd.sgi.mips2 ldd.sgi.mips3 ldd.sgi.mips4
-exec - do	case $ldd in
-exec - 	*ldd.${mam_cc_HOSTTYPE})
-exec - 		if	silent test -f $ldd -a ! -x /usr/bin/ldd -a ! -x /bin/ldd
-exec - 		then	silent cmp -s $ldd ${INSTALLROOT}/bin/ldd || cp $ldd ${INSTALLROOT}/bin/ldd
-exec - 		fi
-exec - 	esac
-exec - done
 make ../../../bin/mkdir
 make mkdir.sh
 done mkdir.sh

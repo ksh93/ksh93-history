@@ -274,7 +274,7 @@ reg Sfio_t*	f;	/* stream to close */
 
 		/* wait for process termination */
 #if _PACKAGE_ast
-		sigcritical(1);
+		sigcritical(SIG_REG_EXEC|SIG_REG_PROC);
 #endif
 		while ((pid = waitpid(p->pid,&status,0)) == -1 && errno == EINTR)
 			;

@@ -2111,6 +2111,17 @@ are not treated specially.
 .TP
 .B \(**
 Matches any string, including the null string.
+When used for filename expansion,
+if the
+.B globstart
+option is on, two adjacent
+.BR \(** 's
+by itself
+will match all files and zero or more directories
+and subdirectories.
+If followed by a
+.B /
+than only directories and subdirectories will match.
 .TP
 .B ?
 Matches any single character.
@@ -4834,7 +4845,7 @@ command may not be executed by
 .if \nZ=0 .B rsh\^.
 .if \nZ=1 .B rksh\^.
 .TP
-\f3command\fP \*(OK \f3\-pvV\fP \*(CK \f2name\^\fP \*(OK \f2arg\^\fP .\|.\|. \*(CK
+\f3command\fP \*(OK \f3\-pvxV\fP \*(CK \f2name\^\fP \*(OK \f2arg\^\fP .\|.\|. \*(CK
 Without the
 .B \-v
 or
@@ -4863,6 +4874,19 @@ daggers will be honored.
 .B "redirect=\(fmcommand exec\(fm"
 prevents a script from terminating when an invalid
 redirection is given.)
+With the
+.B \-x
+option, 
+if command execution would result in a failure because
+there are too many arguments, errno
+.SM
+.BR E2BIG ,
+the shell will invoke command
+.I name\^
+multiple times with a subset of the arguments on each invocation.
+Arguments that occur prior to the first word that
+expands to multiple arguments will be passed on each invocation.
+The exit status will be the maximum invocation exit status.
 With the
 .B \-v
 option,
@@ -5659,7 +5683,7 @@ script,
 then it behaves the same as
 .BR exit .
 .TP
-\(dg \f3set\fP \*(OK \f3\(+-Cabefhkmnopstuvx\fP \*(CK \*(OK \f3\(+-o\fP \*(OK \f2option\^\fP \*(CK \*(CK .\|.\|. \*(OK \f3\(+-A\fP \f2vname\^\fP \*(CK  \*(OK \f2arg\^\fP .\|.\|. \*(CK
+\(dg \f3set\fP \*(OK \f3\(+-CGabefhkmnopstuvx\fP \*(CK \*(OK \f3\(+-o\fP \*(OK \f2option\^\fP \*(CK \*(CK .\|.\|. \*(OK \f3\(+-A\fP \f2vname\^\fP \*(CK  \*(OK \f2arg\^\fP .\|.\|. \*(CK
 The options for this command have meaning as follows:
 .RS
 .PD 0
@@ -5685,6 +5709,15 @@ Files that are created are opened with the O_EXCL mode.
 Requires
 .B >\(bv
 to truncate a file when turned on.
+.TP 8
+.B \-G
+Causes the pattern
+.B \(**\(**
+by itself to match files and zero or more directories and sub-directories
+when used for file name generation.
+If followed by a
+.B /
+only directories and sub-directories are matched.
 .TP 8
 .B \-a
 All subsequent variables that are defined are automatically exported.
@@ -5745,6 +5778,10 @@ This is the default mode.
 Puts you in an
 .I emacs
 style in-line editor for command entry.
+.TP 8
+.B globstar
+Same as
+.BR \-G .
 .TP 8
 .B gmacs
 Puts you in a

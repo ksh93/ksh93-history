@@ -175,10 +175,10 @@ struct _dtstat_s
 
 _BEGIN_EXTERNS_	/* public data */
 #if _BLD_cdt && defined(__EXPORT__)
-#define extern	__EXPORT__
+#define extern		extern __EXPORT__
 #endif
 #if !_BLD_cdt && defined(__IMPORT__)
-#define extern	__IMPORT__
+#define extern		extern __IMPORT__
 #endif
 
 extern Dtmethod_t* 	Dtset;

@@ -67,8 +67,9 @@ va_list	args;
 {
 	Sfio_t	f;
 	reg int	rv;
+	int zero;
 
-	if(!s || n <= 0)
+	if(!s || !n)
 		return -1;
 
 	/* make a fake stream */
@@ -76,12 +77,16 @@ va_list	args;
 	f.flags = SF_STRING|SF_WRITE;
 	f.bits = SF_PRIVATE;
 	f.mode = SF_WRITE;
-	f.size = n-1;
+	if(zero = (n > 0))
+		f.size = n-1;
+	else
+		f.size = -n;
 	f.data = f.next = f.endr = (uchar*)s;
 	f.endb = f.endw = f.data+f.size;
 
 	rv = sfvprintf(&f,form,args);
-	*f.next = '\0';
+	if(zero)
+		*f.next = '\0';
 	_Sfi = f.next - f.data;
 
 	return rv;

@@ -32,7 +32,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: uname (AT&T Labs Research) 2002-09-30 $\n]"
+"[-?\n@(#)$Id: uname (AT&T Labs Research) 2003-06-20 $\n]"
 USAGE_LICENSE
 "[+NAME?uname - identify the current system ]"
 "[+DESCRIPTION?By default \buname\b writes the operating system name to"
@@ -42,8 +42,14 @@ USAGE_LICENSE
 "	the output is in the order specfied by the \b-A\b option below."
 "	Unsupported option values are listed as \a[option]]\a. If any unknown"
 "	options are specified then the local \b/usr/bin/uname\b is called.]"
+"[+?If any \aname\a operands are specified then the \bsysinfo\b(2) values"
+"	for each \aname\a are listed, separated by space, on one line."
+"	\bgetconf\b(1), a pre-existing \astandard\a interface, provides"
+"	access to the same information; do vendors read standards or just"
+"	worry about making new ones?]"
 "[a:all?Equivalent to \b-snrvm\b.]"
 "[d:domain?The domain name returned by \agetdomainname\a(2).]"
+"[f:list?List all \bsysinfo\b(2) names and values, one per line.]"
 "[h:host-id|id?The host id in hex.]"
 "[i:implementation|platform?The hardware implementation (platform);"
 "	this is \b--host-id\b on some systems.]"
@@ -58,7 +64,8 @@ USAGE_LICENSE
 "[S:sethost?Set the hostname or nodename to \aname\a. No output is"
 "	written to standard output.]:[name]"
 
-"[+SEE ALSO?\bhostname\b(1), \bgetconf\b(1), \buname\b(2), \bsysconf\b(2)]"
+"[+SEE ALSO?\bhostname\b(1), \bgetconf\b(1), \buname\b(2),"
+"	\bsysconf\b(2), \bsysinfo\b(2)]"
 ;
 
 #if defined(__STDPP__directive) && defined(__STDPP__hide)
@@ -82,28 +89,6 @@ __STDPP__directive pragma pp:hide getdomainname gethostid gethostname sethostnam
 
 #include <sys/utsname.h>
 
-#endif
-
-#if _lib_syssgi && _sys_syssgi
-
-#include <sys/syssgi.h>
-
-#endif
-
-#if _sys_systeminfo
-#if !_lib_systeminfo && _lib_syscall && _sys_syscall
-#include <sys/syscall.h>
-#if defined(SYS_systeminfo)
-#define _lib_systeminfo		1
-#define systeminfo(a,b,c)	syscall(SYS_systeminfo,a,b,c)
-#endif
-#endif
-#if _lib_systeminfo
-#if !defined(SYS_NMLEN)
-#define SYS_NMLEN	9
-#endif
-#include <sys/systeminfo.h>
-#endif
 #endif
 
 #if defined(__STDPP__directive) && defined(__STDPP__hide)
@@ -263,7 +248,9 @@ b_uname(int argc, char** argv, void* context)
 	register int	n;
 	register char*	s;
 	char*		t;
+	char*		e;
 	char*		sethost = 0;
+	int		list = 0;
 	struct utsname	ut;
 	char		buf[257];
 
@@ -284,6 +271,9 @@ b_uname(int argc, char** argv, void* context)
 			continue;
 		case 'd':
 			flags |= OPT_domain;
+			continue;
+		case 'f':
+			list = 1;
 			continue;
 		case 'h':
 			flags |= OPT_hostid;
@@ -340,7 +330,7 @@ b_uname(int argc, char** argv, void* context)
 		break;
 	}
 	argv += opt_info.index;
-	if (error_info.errors || *argv || sethost && flags)
+	if (error_info.errors || *argv && (flags || sethost) || sethost && flags)
 		error(ERROR_usage(2), "%s", optusage(NiL));
 	if (sethost)
 	{
@@ -354,6 +344,23 @@ b_uname(int argc, char** argv, void* context)
 #endif
 #endif
 		error(ERROR_system(1), "%s: cannot set host name", sethost);
+	}
+	else if (list)
+		astconflist(sfstdout, NiL, ASTCONF_base|ASTCONF_defined|ASTCONF_lower|ASTCONF_quote|ASTCONF_matchcall, "CS|SI");
+	else if (*argv)
+	{
+		e = &buf[sizeof(buf)-1];
+		while (s = *argv++)
+		{
+			t = buf;
+			*t++ = 'C';
+			*t++ = 'S';
+			*t++ = '_';
+			while (t < e && (n = *s++))
+				*t++ = islower(n) ? toupper(n) : n;
+			*t = 0;
+			sfprintf(sfstdout, "%s%c", *(t = astconf(buf, NiL, NiL)) ? t : "unknown", *argv ? ' ' : '\n');
+		}
 	}
 	else
 	{
@@ -377,36 +384,25 @@ b_uname(int argc, char** argv, void* context)
 		output(OPT_machine, ut.machine, "machine");
 		if (flags & OPT_processor)
 		{
-#if defined(SI_ARCHITECTURE)
-			if ((n = systeminfo(SI_ARCHITECTURE, s, sizeof(buf) - 1)) > 0)
-				s[n] = 0;
-			else
-#endif
+			if (!*(s = astconf("ARCHITECTURE", NiL, NiL)))
 			{
 				if (t = strchr(hosttype, '.'))
 					t++;
 				else
 					t = hosttype;
-				strncpy(s, t, sizeof(buf) - 1);
+				strncpy(s = buf, t, sizeof(buf) - 1);
 			}
 			output(OPT_processor, s, "processor");
 		}
 		if (flags & OPT_implementation)
 		{
-#if defined(SI_PLATFORM)
-			if ((n = systeminfo(SI_PLATFORM, s, sizeof(buf) - 1)) > 0)
-				s[n] = 0;
-			else
-#endif
-				*s = 0;
+			if (!*(s = astconf("PLATFORM", NiL, NiL)))
+				s = astconf("HW_NAME", NiL, NiL);
 			output(OPT_implementation, s, "implementation");
 		}
 		if (flags & OPT_extended_release)
 		{
-#if _lib_syssgi && defined(SGI_RELEASE_NAME)
-			if ((n = syssgi(SGI_RELEASE_NAME, sizeof(buf), s)) < 0)
-#endif
-				*s = 0;
+			s = astconf("RELEASE", NiL, NiL);
 			output(OPT_extended_release, s, "extended-release");
 		}
 #if _mem_idnumber_utsname
@@ -414,55 +410,42 @@ b_uname(int argc, char** argv, void* context)
 #else
 		if (flags & OPT_hostid)
 		{
+			if (!*(s = astconf("HW_SERIAL", NiL, NiL)))
 #if _lib_gethostid
-			sfsprintf(s, sizeof(buf), "%08x", gethostid());
+				sfsprintf(s, sizeof(buf), "%08x", gethostid());
 #else
-#if _lib_gethostid || defined(SI_HW_SERIAL)
-			if ((n = systeminfo(SI_HW_SERIAL, s, sizeof(buf) - 1)) > 0)
-				s[n] = 0;
-			else
-#endif
-				*s = 0;
+				/*NOP*/;
 #endif
 			output(OPT_hostid, s, "hostid");
 		}
 #endif
 		if (flags & OPT_vendor)
 		{
-#if defined(SI_HW_PROVIDER)
-			if ((n = systeminfo(SI_HW_PROVIDER, s, sizeof(buf) - 1)) > 0)
-				s[n] = 0;
-			else
-#endif
-				*s = 0;
+			s = astconf("HW_PROVIDER", NiL, NiL);
 			output(OPT_vendor, s, "vendor");
 		}
 		if (flags & OPT_domain)
 		{
+			if (!*(s = astconf("SRPC_DOMAIN", NiL, NiL)))
 #if _lib_getdomainname
-			if (getdomainname(s, sizeof(buf)) < 0)
+				getdomainname(s, sizeof(buf));
 #else
-#if defined(SI_SRPC_DOMAIN)
-			if ((n = systeminfo(SI_SRPC_DOMAIN, s, sizeof(buf) - 1)) > 0)
-				s[n] = 0;
-			else
+				/*NOP*/;
 #endif
-#endif
-				*s = 0;
 			output(OPT_domain, s, "domain");
 		}
 #if _mem_m_type_utsname
-		output(OPT_machine_type, ut.m_type, "m_type");
+		s = ut.m_type;
 #else
-		*s = 0;
+		s = astconf("MACHINE", NiL, NiL);
+#endif
 		output(OPT_machine_type, s, "m_type");
-#endif
 #if _mem_base_rel_utsname
-		output(OPT_base, ut.base_rel, "base_rel");
+		s = ut.base_rel;
 #else
-		*s = 0;
-		output(OPT_base, s, "base_rel");
+		s = astconf("BASE", NiL, NiL);
 #endif
+		output(OPT_base, s, "base_rel");
 		if (flags & OPT_extra)
 		{
 			char*	last = (char*)&ut;

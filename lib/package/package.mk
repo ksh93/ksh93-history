@@ -1,7 +1,7 @@
 /*$(PACKAGESRC)/$i.pkg
  * source and binary package support
  *
- * @(#)package.mk (AT&T Labs Research) 2003-04-21
+ * @(#)package.mk (AT&T Labs Research) 2003-06-11
  *
  * usage:
  *
@@ -231,15 +231,33 @@ $(init) : .VIRTUAL $(init)
 ":CATEGORY:" : .MAKE .OPERATOR
 	category := $(>)
 
-":COVERS:" : .MAKE .OPERATOR
-	local I R
-	for I $(>)
-		if R = "$(I:D:B:S=.pkg:T=F)"
-			covers : $(I:B)
-		else
-			error $(--exec:?3?1?) $(I): unknown package $(I)
+.covers. : .FUNCTION
+	local I C D F K=0 L
+	for I $(%)
+		if ! "$(~covers:N=$(I:B))"
+			if F = "$(I:D:B:S=.pkg:T=F)"
+				if D = "$(F:T=I)"
+					covers : $(I:B)
+					for L $(D)
+						if L == ":COVERS:"
+							K = 1
+						elif L == ":*:"
+							if K
+								break
+							end
+						elif K
+							: $(.covers. $(L))
+						end
+					end
+				end
+			else
+				error $(--exec:?3?1?) $(I): unknown package $(I)
+			end
 		end
 	end
+
+":COVERS:" : .MAKE .OPERATOR
+	: $(.covers. $(>))
 
 ":DESCRIPTION:" : .MAKE .OPERATOR
 	$(name).txt := $(@:V)
@@ -257,7 +275,7 @@ $(init) : .VIRTUAL $(init)
 	export.$(style) := $(@:/$$("\n")/ /G)
 
 ":INSTALL:" : .MAKE .OPERATOR
-	local T S
+	local T S F X
 	S := $(>)
 	T := $(<)
 	if "$(exe.$(style))" && "$(T)" == "bin/*([!./])"
@@ -272,30 +290,51 @@ $(init) : .VIRTUAL $(init)
 	if strip && "$(T:N=*.exe)"
 		install.$(style) := $(install.$(style):V)$("\n\t")strip $@ 2>/dev/null
 	end
+	X := $(PACKAGEROOT)/arch/$(CC.HOSTTYPE)/$(S)
+	if strip && "$(X:T=Y)" == "*/?(x-)(dll|exe)"
+		F := filter $(STRIP) $(STRIPFLAGS) $(X)
+	end
 	if "$(filter.$(style):V)"
 		filter.$(style) := $(filter.$(style):V)$$("\n")
 	end
-	filter.$(style) := $(filter.$(style):V);;;$(PACKAGEROOT)/arch/$(CC.HOSTTYPE)/$(S);usr/$(T)
+	filter.$(style) := $(filter.$(style):V);;$(F);$(X);usr/$(T)
 
-":REQUIRES:" : .MAKE .OPERATOR
-	local I R V
-	for I $(>)
-		if R = "$(I:D:B:S=.pkg:T=F)"
-			if I == "$(init)"
-				package.omit = -
+.requires. : .FUNCTION
+	local I C D F K=0 L V
+	for I $(%)
+		if ! "$(~requires:N=$(I:B))"
+			if F = "$(I:D:B:S=.pkg:T=F)"
+				if D = "$(F:T=I)"
+					if I == "$(init)"
+						package.omit = -
+					else
+						requires : $(I:B)
+					end
+					if V = "$(I:D:B=gen/$(I:B):S=.ver:T=F)"
+						req : $(V)
+					else
+						error $(--exec:?3?1?) package $(I) must be written before $(P)
+					end
+					for L $(D)
+						if L == ":REQUIRES:"
+							K = 1
+						elif L == ":*:"
+							if K
+								break
+							end
+						elif K
+							: $(.requires. $(L))
+						end
+					end
+				end
 			else
-				requires : $(I:B)
+				error $(--exec:?3?1?) $(I): unknown package $(I)
 			end
-			if V = "$(I:D:B=gen/$(I:B):S=.ver:T=F)"
-				req : $(V)
-			else
-				error $(--exec:?3?1?) package $(I) must be written before $(P)
-			end
-			include $(R)
-		else
-			error $(--exec:?3?1?) $(I): unknown package $(I)
 		end
 	end
+
+":REQUIRES:" : .MAKE .OPERATOR
+	: $(.requires. $(>))
 
 ":TEST:" : .MAKE .OPERATOR
 	local T
@@ -307,6 +346,9 @@ $(init) : .VIRTUAL $(init)
 		T := $$(PWD)/$$(ARCH)/$(T)
 	end
 	test.$(style) := $(test.$(style):V)$("\n")test : $(T:V)$("\n\t")$(@)
+
+":POSTINSTALL:" : .MAKE .OPERATOR
+	postinstall.$(style) := $(@:V)
 
 base delta : .MAKE .VIRTUAL .FORCE
 	op := $(<)
@@ -441,8 +483,9 @@ vendor.cyg = gnu
 	end
 	if type == "source"
 		version := $(version)-src
+		source = $(PACKAGEDIR)/$(name)-$(version)$(release:?.$(release)??).$(suffix)
 	else
-		binary = $(PACKAGEDIR)/$(name).$(version)$(release:?.$(release)??).$(suffix)
+		binary = $(PACKAGEDIR)/$(name)-$(version)$(release:?.$(release)??).$(suffix)
 	end
 
 .source.cyg :
@@ -582,7 +625,7 @@ vendor.cyg = gnu
 			set -- $(package.closure)
 			for i
 			do	cd $(INSTALLROOT)/$i
-				$(MAKE) --noexec $(-) $(=) recurse list.package.local
+				$(MAKE) --noexec $(-) $(=) .FILES.+=Mamfile recurse list.package.local
 			done
 			set -- $(package.dir:P=G)
 			for i
@@ -719,8 +762,8 @@ vendor.cyg = gnu
 				then	echo 'It requires the following package$(~requires:O=2:?s??): $(~requires).'
 				fi
 				case $(name) in
-				$(init))set -- $(licenses:B:S=.lic:T=F) ;;
-				*)	set -- $(package.src:N=*.lic:T=F) ;;
+				$(init))set -- $(licenses:B:S=.lic:U:T=F) ;;
+				*)	set -- $(package.src:N=*.lic:U:T=F) ;;
 				esac
 				case $# in
 				0)	;;
@@ -938,6 +981,13 @@ binary : .binary.init .binary.gen .binary.$$(style)
 			cat <<'!'
 	$(filter.$(style))
 	!
+			if	test '' != '$(postinstall.$(style):V:O=1:?1??)'
+			then	cat >$tmp/postinstall <<'!'
+	$("#")!/bin/sh
+	$(postinstall.$(style))
+	!
+				echo ";;;$tmp/postinstall;etc/postinstall/$(name).sh"
+			fi
 			: > $tmp/TAIL
 			echo ";;;$tmp/TAIL;usr/doc/$(opt)$(package.notice)"
 		} |

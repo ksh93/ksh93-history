@@ -235,6 +235,7 @@ S2I_function(a, e, base) const char* a; char** e; int base;
 	register unsigned char*	p;
 	register unsigned char*	cv;
 	unsigned char*		b;
+	unsigned char*		k;
 	S2I_utype		v;
 #if S2I_multiplier
 	register int		base;
@@ -268,7 +269,9 @@ S2I_function(a, e, base) const char* a; char** e; int base;
 	while (S2I_valid(s) && isspace(*s))
 		s++;
 	if ((negative = S2I_valid(s) && (*s == '-')) || S2I_valid(s) && *s == '+')
-		s++;
+		k = ++s;
+	else
+		k = 0;
 	p = s;
 	if (!base)
 	{
@@ -284,7 +287,7 @@ S2I_function(a, e, base) const char* a; char** e; int base;
 			{
 				if (n >= 2 && n <= 64)
 				{
-					s = p + 1;
+					k = s = p + 1;
 					base = n;
 				}
 			}
@@ -294,7 +297,7 @@ S2I_function(a, e, base) const char* a; char** e; int base;
 			{
 				if ((c = *(s + 1)) == 'x' || c == 'X')
 				{
-					s += 2;
+					k = s += 2;
 					base = 16;
 				}
 				else if (c >= '0' && c <= '7')
@@ -358,7 +361,7 @@ S2I_function(a, e, base) const char* a; char** e; int base;
 				c = 0;
 				break;
 			}
-			else if (c != thousand)
+			else if (c != thousand || !S2I_valid(s))
 				break;
 			else if (!p && (s - b) > 4)
 			{
@@ -548,8 +551,16 @@ S2I_function(a, e, base) const char* a; char** e; int base;
 		s--;
 #endif
 	}
+	if (s == k)
+	{
+		s--;
+#if S2I_multiplier
+		if (basep)
+			*basep = 10;
+#endif
+	}
 #if !S2I_unsigned
-	if (!(qualifier & QU) && (n - negative) > S2I_max)
+	else if (!(qualifier & QU) && (n - negative) > S2I_max)
 		overflow = 1;
 #endif
 	if (e)

@@ -468,7 +468,7 @@ static char **genvalue(char **argv, register Sfio_t *outfile, const char *prefix
 					continue;
 				break;
 			}
-			else if(!outfile || !argv[1] || memcmp(*argv,argv[1],strlen(arg)))
+			else
 				outval(cp,arg,outfile,indent);
 		}
 		else

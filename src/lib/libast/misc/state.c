@@ -25,7 +25,7 @@
 *******************************************************************/
 #pragma prototyped
 
-static const char id[] = "\n@(#)$Id: ast (AT&T Labs Research) 2001-10-18 $\0\n";
+static const char id[] = "\n@(#)$Id: ast (AT&T Labs Research) 2003-06-11 $\0\n";
 
 #include <ast.h>
 

@@ -170,14 +170,14 @@ static int p_time(Sfio_t *out, const char *format, clock_t *tm)
 /*
  * clear argument pointers that point into the stack
  */
-static void p_arg(struct argnod*);
+static void p_arg(struct argnod*,int);
 static void p_switch(struct regnod*);
 static void p_comarg(register struct comnod *com)
 {
 	Namval_t *np;
-	p_arg(com->comset);
+	p_arg(com->comset,ARG_ASSIGN);
 	if(com->comarg && (com->comtyp&COMSCAN))
-		p_arg(com->comarg);
+		p_arg(com->comarg,0);
 	if(com->comstate  && (np=com->comnamp))
 	{
 		/* call builtin to cleanup state */
@@ -230,14 +230,14 @@ static void sh_tclear(register union anynode *t)
 			sh_tclear(t->lst.lstrit);
 			return;
 		case TARITH:
-			p_arg(t->ar.arexpr);
+			p_arg(t->ar.arexpr,ARG_ARITH);
 			return;
 		case TFOR:
 			sh_tclear(t->for_.fortre);
 			sh_tclear((union anynode*)t->for_.forlst);
 			return;
 		case TSW:
-			p_arg(t->sw.swarg);
+			p_arg(t->sw.swarg,0);
 			p_switch(t->sw.swlst);
 			return;
 		case TFUN:
@@ -249,20 +249,20 @@ static void sh_tclear(register union anynode *t)
 				sh_tclear(t->lst.lstlef); 
 			else
 			{
-				p_arg(&(t->lst.lstlef->arg));
+				p_arg(&(t->lst.lstlef->arg),0);
 				if(t->tre.tretyp&TBINARY)
-					p_arg(&(t->lst.lstrit->arg));
+					p_arg(&(t->lst.lstrit->arg),0);
 			}
 			return;
 	}
 	return;
 }
 
-static void p_arg(register struct argnod *arg)
+static void p_arg(register struct argnod *arg,int flag)
 {
 	while(arg)
 	{
-		if(strlen(arg->argval) || (arg->argflag&~ARG_APPEND))
+		if(strlen(arg->argval) || (flag==0 && (arg->argflag&~ARG_APPEND)))
 			arg->argchn.ap = 0;
 		else
 			sh_tclear(((struct fornod*)arg->argchn.ap)->fortre);
@@ -274,7 +274,7 @@ static void p_switch(register struct regnod *reg)
 {
 	while(reg)
 	{
-		p_arg(reg->regptr);
+		p_arg(reg->regptr,0);
 		sh_tclear(reg->regcom);
 		reg = reg->regnxt;
 	}
@@ -601,20 +601,23 @@ sh_exec(register const union anynode *t, int flags)
 			np = (Namval_t*)(t->com.comnamp);
 			nq = (Namval_t*)(t->com.comnamq);
 			com0 = com[0];
+			sh.xargexit = 0;
 			while(np==SYSCOMMAND)
 			{
-				register int n = b_command(0,com,0);
+				register int n = b_command(0,com,&sh);
 				if(n==0)
 					break;
 				command += n;
 				np = 0;
 				if(!(com0= *(com+=n)))
 					break;
+				np = nv_bfsearch(com0, sh.bltin_tree, &nq, &cp); 
 			}
+			sh.xargs = sh.xargexit?sh.xargs-command:0;
 			argn -= command;
-			if(np && is_abuiltin(np))
+			if(!command && np && is_abuiltin(np))
 				np = dtsearch(sh.fun_tree,np);
-			if(com0 && !np)
+			if(com0 && !np && !strchr(com0,'/'))
 			{
 				Dt_t *root = command?sh.bltin_tree:sh.fun_tree;
 				np = nv_bfsearch(com0, root, &nq, &cp); 
@@ -668,6 +671,7 @@ sh_exec(register const union anynode *t, int flags)
 					argp = NULL;
 				}
 			}
+			sh.last_table = 0;
 			if((io||argn))
 			{
 				static char *argv[1];
@@ -924,6 +928,14 @@ sh_exec(register const union anynode *t, int flags)
 				if(type&FCOOP)
 					coproc_init(pipes);
 				nv_getval(RANDNOD);
+#ifdef SHOPT_AMP
+				if((type&(FAMP|FINT)) == (FAMP|FINT))
+					parent = sh_ntfork(t,com,&jobid,ntflag);
+				else
+					parent = sh_fork(type,&jobid);
+				if(parent<0)
+					break;
+#else
 #if SHOPT_SPAWN
 #   ifdef _lib_fork
 				if(com)
@@ -939,6 +951,7 @@ sh_exec(register const union anynode *t, int flags)
 #else
 				parent = sh_fork(type,&jobid);
 #endif /* SHOPT_SPAWN */
+#endif
 			}
 			if(job.parent=parent)
 			/* This is the parent branch of fork
@@ -1172,7 +1185,7 @@ sh_exec(register const union anynode *t, int flags)
 				sh_pclose(pvn);
 			pipejob = savepipe;
 #ifdef SIGTSTP
-			if(!pipejob && sh_isstate(SH_MONITOR) && mainloop)
+			if(!pipejob && sh_isstate(SH_MONITOR))
 				tcsetpgrp(JOBTTY,sh.pid);
 #endif /*SIGTSTP */
 			job.curpgid = savepgid;
@@ -2334,7 +2347,7 @@ static void coproc_init(int pipes[])
 #if SHOPT_SPAWN
 
 
-#ifndef _lib_fork
+#if defined(SHOPT_AMP) || !defined(_lib_fork)
 /*
  * print out function definition
  */
@@ -2362,8 +2375,10 @@ static int run_subshell(const union anynode *t,pid_t grp)
 	register int i, fd, trace = sh_isoption(SH_XTRACE);
 	int pin,pout;
 	pid_t pid;
-	char *arglist[3], devfd[12], *cp;
+	char *arglist[2], *envlist[2], devfd[12], *cp;
 	Sfio_t *sp = sftmp(0);
+	envlist[0] = "_=ksh";
+	envlist[1] = 0;
 	arglist[0] = error_info.id?error_info.id:sh.shname;
 	if(*arglist[0]=='-')
 		arglist[0]++;
@@ -2403,16 +2418,18 @@ static int run_subshell(const union anynode *t,pid_t grp)
 	}
 	sfstack(sfstdout,NIL(Sfio_t*));
 	sh_deparse(sp,t->fork.forktre,0);
-	sfseek(sp,0L,SEEK_SET);
+	sfseek(sp,(Sfoff_t)0,SEEK_SET);
 	fd = sh_dup(sffileno(sp));
-	sfclose(sp);
 	cp = devfd+8;
 	if(fd>9)
 		*cp++ = '0' + (fd/10);
 	*cp++ = '0' + fd%10;
 	*cp = 0;
+	sfclose(sp);
 	sfsync(NIL(Sfio_t*));
-	pid = spawnveg(pathshell(),arglist,arglist+2,grp);
+	if(!sh.shpath)
+		sh.shpath = pathshell();
+	pid = spawnveg(sh.shpath,arglist,envlist,grp);
 	close(fd);
 	for(i=3; i < 10; i++)
 	{
@@ -2450,12 +2467,13 @@ static pid_t sh_ntfork(const union anynode *t,char *argv[],int *jobid,int flag)
 	int jobwasset=0, sigwasset=0;
 	char **arge, *path;
 	pid_t grp = 0;
+	Pathcomp_t *pp;
 	if(flag)
 	{
 		otype = savetype;
 		savetype=0;
 	}
-#   ifndef _lib_fork
+#   if defined(SHOPT_AMP) || !defined(_lib_fork)
 	if(!argv)
 	{
 		register union anynode *tchild = t->fork.forktre;
@@ -2463,6 +2481,7 @@ static pid_t sh_ntfork(const union anynode *t,char *argv[],int *jobid,int flag)
 		otype = t->tre.tretyp;
 		savetype = otype;
 		spawnpid = 0;
+#	ifndef _lib_fork
 		if((tchild->tre.tretyp&COMMSK)==TCOM)
 		{
 			Namval_t *np = (Namval_t*)(tchild->com.comnamp);
@@ -2488,6 +2507,7 @@ static pid_t sh_ntfork(const union anynode *t,char *argv[],int *jobid,int flag)
 			if(!np && path && !nv_search(path,shp->fun_tree,0))
 				optimize=1;
 		}
+#	endif
 		sh_pushcontext(&buff,SH_JMPIO);
 		jmpval = sigsetjmp(buff.buff,0);
 		{
@@ -2567,8 +2587,11 @@ static pid_t sh_ntfork(const union anynode *t,char *argv[],int *jobid,int flag)
 #endif /* SIGTSTP */
 			if(spawnpid>0)
 				_sh_fork(spawnpid,otype,jobid);
-			if(grp==1 && !(otype&FAMP))
-				tcsetpgrp(job.fd,job.curpgid);
+			if(grp>0 && !(otype&FAMP))
+			{
+				while(tcsetpgrp(job.fd,job.curpgid)<0 && job.curpgid!=spawnpid)
+					job.curpgid = spawnpid;
+			}
 		}
 		savetype=0;
 		if(jmpval>SH_JMPIO)
@@ -2613,7 +2636,7 @@ static pid_t sh_ntfork(const union anynode *t,char *argv[],int *jobid,int flag)
 				path = stakptr(PATH_OFFSET);
 			else
 			{
-				Pathcomp_t *pp=path_get(path);
+				pp=path_get(path);
 				while(pp)
 				{
 					if(pp->len==1 && *pp->name=='.')
@@ -2630,7 +2653,6 @@ static pid_t sh_ntfork(const union anynode *t,char *argv[],int *jobid,int flag)
 		if(!path)
 		{
 			spawnpid = -1;
-			errno = shp->path_err;
 			goto fail;
 		}
 		arge = sh_envgen();
@@ -2656,30 +2678,20 @@ static pid_t sh_ntfork(const union anynode *t,char *argv[],int *jobid,int flag)
 		sfsync(NIL(Sfio_t*));
 		sigreset(0);	/* set signals to ignore */
 		sigwasset++;
-		spawnpid = spawnveg(path,argv,arge,grp);
+	        /* find first path that has a library component */
+		for(pp=path_get(argv[0]); pp && !pp->lib ; pp=pp->next);
+		spawnpid = path_spawn(path,argv,arge,pp,(grp<<1)|1);
 		if(spawnpid < 0 && errno==ENOEXEC)
 		{
 			char *sp = argv[0];
-			char *shell=0;
-#ifdef PATH_BFPATH
-			Namval_t *np;
-			if((np=nv_search("ksh",shp->track_tree,0)) && !nv_isattr(np,NV_NOALIAS) && np->nvalue.cp)
-				shell = nv_getval(np);
-			else if(path_absolute("ksh",NIL(Pathcomp_t*)))
-				shell = stakptr(PATH_OFFSET);
-#else
-			if(shp->lastpath)
-				*argv = path;
-			shell = path_absolute("ksh",NIL(char*));
-#endif
-			if(!shell)
-				shell = pathshell();
+			if(!shp->shpath)
+				shp->shpath = pathshell();
 			*--argv = "ksh";
-			spawnpid = spawnveg(shell,argv,arge,grp);
+			spawnpid = path_spawn(shp->shpath,argv,arge,pp,(grp<<1)|1);
 			*++argv = sp;
 		}
 	fail:
-		if(spawnpid < 0) switch(errno)
+		if(spawnpid < 0) switch(errno=shp->path_err)
 		{
 		    case ENOENT:
 			errormsg(SH_DICT,ERROR_system(ERROR_NOENT),e_found+4);
@@ -2707,14 +2719,15 @@ static pid_t sh_ntfork(const union anynode *t,char *argv[],int *jobid,int flag)
 	{
 		_sh_fork(spawnpid,otype,jobid);
 #ifdef JOBS
-		if(grp == 1)
-		{
+		if(grp==1)
 			job.curpgid = spawnpid;
 #   ifdef SIGTSTP
-			if(!(otype&FAMP))
-				tcsetpgrp(job.fd,job.curpgid);
-#   endif /* SIGTSTP */
+		if(grp>0 && !(otype&FAMP))
+		{
+			while(tcsetpgrp(job.fd,job.curpgid)<0 && job.curpgid!=spawnpid)
+				job.curpgid = spawnpid;
 		}
+#   endif /* SIGTSTP */
 #endif /* JOBS */
 		savejobid = *jobid;
 		if(otype)
@@ -2734,3 +2747,15 @@ static pid_t sh_ntfork(const union anynode *t,char *argv[],int *jobid,int flag)
 	}
 #   endif /* _lib_fork */
 #endif /* SHOPT_SPAWN */
+
+/*
+ * override procrun() since it is used in libcmd
+ */
+#include	<proc.h>
+int procrun(const char *path, char *argv[])
+{
+	if(sh.subshell)
+		sh_subtmpfile();
+	return(procclose(procopen(path, argv, NiL, NiL, PROC_FOREGROUND|PROC_GID
+|PROC_UID)));
+}

@@ -77,7 +77,7 @@
 #    endif
 #  endif
 #endif
-#line 1 "/home/gsf/src/cmd/proto/proto.c"
+#line 1 "proto.c"
 
 
 
@@ -290,7 +290,7 @@ replace __PARAM__((const char* newfile, const char* oldfile, int preserve), (new
 	return preserve;
 }
 
-#line 1 "/home/gsf/src/lib/libpp/ppproto.c"
+#line 1 "../../lib/libpp/ppproto.c"
 
  
 
@@ -303,21 +303,11 @@ replace __PARAM__((const char* newfile, const char* oldfile, int preserve), (new
 
 
 
-static const char id[] = "\n@(#)$Id: proto (AT&T Research) 2002-04-12 $\000\n";
+static const char id[] = "\n@(#)$Id: proto (AT&T Research) 2003-06-21 $\000\n";
 
 
 
-#line 1 "/home/gsf/src/lib/libpp/ppfsm.c"
-
- 
-
-
-
-
-
-
-
-#line 1 "/home/gsf/src/lib/libpp/pplib.h"
+#line 1 "../../lib/libpp/ppfsm.c"
 
  
 
@@ -327,7 +317,7 @@ static const char id[] = "\n@(#)$Id: proto (AT&T Research) 2002-04-12 $\000\n";
 
 
 
-
+#line 1 "../../lib/libpp/pplib.h"
 
  
 
@@ -339,6 +329,16 @@ static const char id[] = "\n@(#)$Id: proto (AT&T Research) 2002-04-12 $\000\n";
 
 
 
+ 
+
+
+
+
+
+
+
+
+
 
 
 
@@ -367,6 +367,8 @@ static const char id[] = "\n@(#)$Id: proto (AT&T Research) 2002-04-12 $\000\n";
 
 
  
+
+
 
 
 
@@ -445,6 +447,7 @@ struct ppinstk
 	int		buflen;		 
 
 	int		line;		 
+	int		vendor;		 
 	short		fd;		 
 	short		hide;		 
 	short		flags;		 
@@ -514,24 +517,15 @@ struct pptuple
 
 
 
-#line 242
+#line 245
 
 
-#line 290
-
-
-
-
-#line 305
+#line 295
 
 
 
 
-
-
-
-
-#line 323
+#line 310
 
 
 
@@ -540,9 +534,27 @@ struct pptuple
 
 
 
-#line 1 "/home/gsf/src/lib/libpp/pp.h"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#line 1 "../../lib/libpp/pp.h"
 
  
+
 
 
 
@@ -871,7 +883,7 @@ struct ppdirs
 	struct ppdirs*	next;		 
 
 
-	unsigned char c; unsigned char hosted; unsigned char index; unsigned char type; union { char* buffer; char* sp; struct ppdirs* subdir; } info;
+	unsigned char c; unsigned char index; unsigned char type; union { char* buffer; char* sp; struct ppdirs* subdir; } info;
 
 
 };
@@ -940,7 +952,7 @@ struct ppglobals
 
 
 
-	char* checkpoint; int constack; struct ppinstk* in; char* addp; char* args; char* addbuf; char* catbuf; char* hdrbuf; char* hidebuf; char* path; char* tmpbuf; char* valbuf; char* include; char* prefix; struct ppmember* member; int hidden; int hiding; int level; struct { int input; int output; } pool; int truncate; struct ppmacstk* macp; char* maxmac; char* mactop; char* toknxt; long* control; long* maxcon; struct oplist* chop; struct ppfile* insert; struct ppfile* original; char* dirtab; char* strtab; PPBUILTIN builtin; PPCOMMENT comment; PPINCREF incref; PPLINESYNC linesync; PPLINESYNC olinesync; PPMACREF macref; PPOPTARG optarg; PPPRAGMA pragma; struct counter counter; char funbuf[256];		 
+	char* checkpoint; int constack; struct ppinstk* in; char* addp; char* args; char* addbuf; char* catbuf; char* hdrbuf; char* hidebuf; char* path; char* tmpbuf; char* valbuf; char* include; char* prefix; struct ppmember* member; int hidden; int hiding; int level; struct { int input; int output; } pool; int truncate; struct ppmacstk* macp; char* maxmac; char* mactop; char* toknxt; long* control; long* maxcon; struct oplist* chop; struct ppfile* insert; struct ppfile* original; struct ppdirs* found; int vendor; char* dirtab; char* strtab; PPBUILTIN builtin; PPCOMMENT comment; PPINCREF incref; PPLINESYNC linesync; PPLINESYNC olinesync; PPMACREF macref; PPOPTARG optarg; PPPRAGMA pragma; struct counter counter; char funbuf[256];		 
 
 
 };
@@ -969,7 +981,7 @@ extern __MANGLE__ void		pppragma __PROTO__((char*, char*, char*, char*, int));
 extern __MANGLE__ int		ppprintf __PROTO__((char*, ...));
 
 
-#line 332 "/home/gsf/src/lib/libpp/pplib.h"
+#line 336 "../../lib/libpp/pplib.h"
 
 #line 1 "../../lib/libpp/ppdef.h"
  
@@ -1173,9 +1185,13 @@ extern __MANGLE__ int		ppprintf __PROTO__((char*, ...));
 
 
 
-#line 333 "/home/gsf/src/lib/libpp/pplib.h"
 
-#line 1 "/home/gsf/src/lib/libpp/ppkey.h"
+
+
+
+#line 337 "../../lib/libpp/pplib.h"
+
+#line 1 "../../lib/libpp/ppkey.h"
 
  
 
@@ -1303,7 +1319,7 @@ extern __MANGLE__ int		ppprintf __PROTO__((char*, ...));
 extern __MANGLE__ struct ppkeyword	ppkey[];
 
 
-#line 334 "/home/gsf/src/lib/libpp/pplib.h"
+#line 338 "../../lib/libpp/pplib.h"
 
 
 
@@ -1345,7 +1361,7 @@ extern __MANGLE__ struct ppkeyword	ppkey[];
 
 
 
-#line 386
+#line 390
 
 
 
@@ -1453,40 +1469,46 @@ extern __MANGLE__ struct ppkeyword	ppkey[];
 
 
 
-#line 505
 
 
 
 
 
-#line 520
 
+#line 515
 
-#line 534
 
 
 
 
+#line 530
 
 
+#line 544
 
 
-#line 553
 
 
-#line 565
 
 
-#line 588
 
 
-#line 600
+#line 563
 
 
+#line 575
 
 
+#line 598
 
-#line 615
+
+#line 610
+
+
+
+
+
+#line 625
 
 
 
@@ -1525,7 +1547,7 @@ struct ppfile
 {
 	int hash_header;			 
 	struct ppsymbol* guard;		 
-	struct ppfile*	bound[3];	 
+	struct ppfile*	bound[4];	 
 	int		flags;		 
 };
 
@@ -1589,7 +1611,7 @@ extern __MANGLE__ int		write __PROTO__((int, const __V_*, int));
 
 
 
-#line 748
+#line 758
 
 
 extern __MANGLE__ void		ppassert __PROTO__((int, char*, char*));
@@ -1604,6 +1626,7 @@ extern __MANGLE__ char*		ppinstr __PROTO__((struct ppinstk*));
 extern __MANGLE__ char*		ppkeyname __PROTO__((int, int));
 extern __MANGLE__ char*		pplexstr __PROTO__((int));
 extern __MANGLE__ void		ppload __PROTO__((char*));
+extern __MANGLE__ void		ppmapinclude __PROTO__((char*, char*));
 extern __MANGLE__ char*		ppmodestr __PROTO__((long));
 extern __MANGLE__ int		ppmultiple __PROTO__((struct ppfile*, struct ppsymbol*));
 extern __MANGLE__ void		ppnest __PROTO__((void));
@@ -1637,9 +1660,9 @@ extern __MANGLE__ void		pptrace __PROTO__((int));
 
 
 
-#line 11 "/home/gsf/src/lib/libpp/ppfsm.c"
+#line 11 "../../lib/libpp/ppfsm.c"
 
-#line 1 "/home/gsf/src/lib/libpp/ppfsm.h"
+#line 1 "../../lib/libpp/ppfsm.h"
 
  
 
@@ -1831,7 +1854,7 @@ extern __MANGLE__ char		_pp_trigraph[255+1];
 extern __MANGLE__ void		_pp_refill __PROTO__((int));
 
 
-#line 12 "/home/gsf/src/lib/libpp/ppfsm.c"
+#line 12 "../../lib/libpp/ppfsm.c"
 
  
 
@@ -2703,7 +2726,7 @@ ppfsm __PARAM__((int op, register char* s), (op, s)) __OTORP__(int op; register 
 
 
 
-#line 18 "/home/gsf/src/lib/libpp/ppproto.c"
+#line 18 "../../lib/libpp/ppproto.c"
 
 
 
@@ -2978,7 +3001,7 @@ memcopy __PARAM__((register char* s, register char* t, int n), (s, t, n)) __OTOR
 	return s;
 }
 
-#line 1 "/home/gsf/src/lib/libast/port/astlicense.c"
+#line 1 "../../lib/libast/port/astlicense.c"
 
 
  
@@ -3046,7 +3069,7 @@ extern __MANGLE__  long	strkey  __PROTO__((const char*));
 
 
 
-#line 19 "/home/gsf/src/lib/libast/port/astlicense.c"
+#line 19 "../../lib/libast/port/astlicense.c"
 
 
 
@@ -3855,7 +3878,7 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 	}
 	return (*(( &buf)->nxt>=( &buf)->end?(( &buf)->nxt=( &buf)->end-1):( &buf)->nxt)=0,( &buf)->nxt-( &buf)->buf);
 }
-#line 299 "/home/gsf/src/lib/libpp/ppproto.c"
+#line 299 "../../lib/libpp/ppproto.c"
 
 
 
@@ -4530,26 +4553,30 @@ lex __PARAM__((register struct proto* proto, register long flags), (proto, flags
 		goto fsm_start;
 
 	default:
-		if (c == '\\' && (state & (1<<7)))
+		if (state & (1<<7))
 		{
-			if (!(n = (*(unsigned char*)ip++)))
+			if (c == '\\')
 			{
-				goto fsm_eob;
+				if (!(n = (*(unsigned char*)ip++)))
+				{
+					goto fsm_eob;
  fsm_splice:
-				c = '\\';
-				n = (*(unsigned char*)ip++);
+					c = '\\';
+					n = (*(unsigned char*)ip++);
+				}
+				if (n == '\n')
+				{
+					proto->line++;
+					(*op++=( '\\'));
+					(*op++=( '\n'));
+					bp = ip;
+					goto fsm_get;
+				}
+				(ip--);
 			}
-			if (n == '\n')
-			{
-				proto->line++;
-				(*op++=( '\\'));
-				(*op++=( '\n'));
-				bp = ip;
-				goto fsm_get;
-			}
-			(ip--);
 			state &= ~(1<<7);
-			if (state >= (0+27)) goto fsm_terminal;
+			if (state >= (0+27))
+				goto fsm_terminal;
 			rp = _pp_fsmtab[state];
 		}
 		(*op++=( c));
@@ -5514,7 +5541,7 @@ pppclose __PARAM__((char* iob), (iob)) __OTORP__(char* iob;){
 
  
 
-#line 1971
+#line 1975
 char*
 pppopen __PARAM__((char* file, int fd, char* notice, char* options, char* package, char* comment, int flags), (file, fd, notice, options, package, comment, flags)) __OTORP__(char* file; int fd; char* notice; char* options; char* package; char* comment; int flags;){
 	register struct proto*	proto;
@@ -5941,7 +5968,7 @@ pppread __PARAM__((char* iob), (iob)) __OTORP__(char* iob;){
 
 
 
-#line 215 "/home/gsf/src/cmd/proto/proto.c"
+#line 215 "proto.c"
 
 
 

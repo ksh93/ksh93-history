@@ -24,19 +24,21 @@
 : copy http url data
 
 command=hurl
+agent="$command/2003-05-11 (AT&T Labs Research)"
 verbose=0
 
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	ARGV0="-a $command"
 	USAGE=$'
 [-?
-@(#)$Id: hurl (AT&T Labs Research) 2003-03-07 $
+@(#)$Id: hurl (AT&T Labs Research) 2003-05-11 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?hurl - copy http url data]
 [+DESCRIPTION?\bhurl\b copies the data for the \bhttp\b \aurl\a operand
 	to the standard output. The \aurl\a must be of the form
-	\bhttp://\b\ahost\a\b/\b\apath\a.]
+	\bhttp://\b\ahost\a[\b:\b\aport\a]]\b/\b\apath\a. The default
+	\aport\a is \b80\b.]
 [+?\bhurl\b is a shell script that attempts to access the \aurl\a by
 	these methods:]{
 	[+/dev/tcp/\ahost\a\b/80\b?Supported by \bksh\b(1) and recent
@@ -102,18 +104,27 @@ do	test 0 != $verbose && echo "$command: url=$url" >&2
 		host=${url#*://}
 		path=/${host#*/}
 		host=${host%%/*}
+		case $host in
+		*:+([0-9]))
+			port=${host##*:}
+			host=${host%:*}
+			;;
+		*)	port=80
+			;;
+		esac
 		;;
 	*)	echo "$command: protocol://host/path expected" >&2
 		exit 1
 		;;
 	esac
-	test 0 != $verbose && echo "$command: prot=$prot host=$host path=$path" >&2
+	test 0 != $verbose && echo "$command: prot=$prot host=$host port=$port path=$path" >&2
 	case $prot in
 	http)	if	(eval "exec >" || exit 0) 2>/dev/null &&
-			eval "exec 8<> /dev/tcp/\$host/80" 2>/dev/null
-		then	test 0 != $verbose && echo "$command: using /dev/tcp/$host/80" >&2
+			eval "exec 8<> /dev/tcp/\$host/$port" 2>/dev/null
+		then	test 0 != $verbose && echo "$command: using /dev/tcp/$host/$port" >&2
 			if	! echo "GET $path HTTP/1.0
 Host: $host
+User-Agent: $agent
 " >&8
 			then	echo "$command: $host: write error"
 				exit 1
@@ -158,7 +169,7 @@ Host: $host
 		elif	curl -s -L -o - $url 2>/dev/null
 		then	test 0 != $verbose && echo "$command: using curl" >&2
 			exit
-		else	echo "$command: $url: { /dev/tcp/$host/80 wget curl } failed" >&2
+		else	echo "$command: $url: { /dev/tcp/$host/$port wget curl } failed" >&2
 			exit 1
 		fi
 		;;

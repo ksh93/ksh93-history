@@ -58,7 +58,6 @@ struct shtable3
 extern const Shtable_t		shtab_testops[];
 extern const Shtable_t		shtab_options[];
 extern const Shtable_t		shtab_attributes[];
-extern const Shtable_t		shtab_limits[];
 extern const struct shtable2	shtab_variables[];
 extern const struct shtable2	shtab_aliases[];
 extern const struct shtable2	shtab_signals[];

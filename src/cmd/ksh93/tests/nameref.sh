@@ -185,4 +185,13 @@ do	typeset -n x=$i
 	fi
 	typeset +n x
 done) != ok ]] && err_exit 'invalid for loop optimization of name references'
+function setval # name value
+{
+        nameref arg=$1
+	nameref var=arg.bar
+	var=$2
+}
+foo=( integer bar=0)
+setval foo 5
+(( foo.bar == 5)) || err_exit 'nested nameref not working'
 exit $((Errors))

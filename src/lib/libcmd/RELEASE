@@ -1,3 +1,11 @@
+03-06-20 uname.c: fix -p constant string overwrite
+03-06-04 stty.c: add undef to control assignment docs
+03-05-31 uname.c: add -f and sysinfo()/confstr() compatibility via astconf()
+03-05-27 rm.c: fix inappropriate "/.." append path overflow
+	 cut.c: snarf from dgk
+03-05-18 rm.c: check st_nlink to verify progress w.r.t. ftwalk/fts
+03-05-15 join.c: fix stealth -v2 bug (thanks ahs)
+03-05-04 wc.c: drop trailing space for `wc -l < file'
 03-03-21 date.c: add %Q/recent/distant/ docs
 03-02-19 date.c: fix %+|!flag docs
 02-11-14 update for cmdinit() 4th arg and ERROR_NOTIFY for interrupt cleanup

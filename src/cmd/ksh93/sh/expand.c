@@ -98,10 +98,26 @@ int path_expand(const char *pattern, struct argnod **arghead)
 	register struct argnod *ap;
 	register glob_t *gp= &gdata;
 	register int flags,extra=0;
+#if SHOPT_BASH
+	register int off;
+	register char *sp, *cp, *cp2;
+#endif
 	memset(gp,0,sizeof(gdata));
 	flags = GLOB_AUGMENTED|GLOB_NOCHECK|GLOB_NOSORT|GLOB_STACK|GLOB_LIST|GLOB_DISC;
 	if(sh_isoption(SH_MARKDIRS))
 		flags |= GLOB_MARK;
+	if(sh_isoption(SH_GLOBSTARS))
+		flags |= GLOB_STARSTAR;
+#if SHOPT_BASH
+#if 0
+	if(sh_isoption(SH_BASH) && !sh_isoption(SH_EXTGLOB))
+		flags &= ~GLOB_AUGMENTED;
+#endif
+	if(sh_isoption(SH_NULLGLOB))
+		flags &= ~GLOB_NOCHECK;
+	if(sh_isoption(SH_NOCASEGLOB))
+		flags |= GLOB_ICASE;
+#endif
 	if(sh_isstate(SH_COMPLETE))
 	{
 #if KSHELL
@@ -113,12 +129,74 @@ int path_expand(const char *pattern, struct argnod **arghead)
 #endif /* KSHELL */
 		flags |= GLOB_COMPLETE;
 	}
+#if SHOPT_BASH
+	if(off = staktell())
+		sp = stakfreeze(0);
+	if(sh_isoption(SH_BASH))
+	{
+		/*
+		 * For bash, FIGNORE is a colon separated list of suffixes to
+		 * ignore when doing filename/command completion.
+		 * GLOBIGNORE is similar to ksh FIGNORE, but colon separated
+		 * instead of being an augmented shell pattern.
+		 * Generate shell patterns out of those here.
+		 */
+		if(sh_isstate(SH_FCOMPLETE))
+			cp=nv_getval(nv_scoped(FIGNORENOD));
+		else
+		{
+			static Namval_t *GLOBIGNORENOD;
+			if(!GLOBIGNORENOD)
+				GLOBIGNORENOD = nv_open("GLOBIGNORE",sh.var_tree,0);
+			cp=nv_getval(nv_scoped(GLOBIGNORENOD));
+		}
+		if(cp)
+		{
+			flags |= GLOB_AUGMENTED;
+			stakputs("@(");
+			if(!sh_isstate(SH_FCOMPLETE))
+			{
+				stakputs(cp);
+				for(cp=stakptr(off); *cp; cp++)
+					if(*cp == ':')
+						*cp='|';
+			}
+			else
+			{
+				cp2 = strtok(cp, ":");
+				if(!cp2)
+					cp2=cp;
+				do
+				{
+					stakputc('*');
+					stakputs(cp2);
+					if(cp2 = strtok(NULL, ":"))
+					{
+						*(cp2-1)=':';
+						stakputc('|');
+					}
+				} while(cp2);
+			}
+			stakputc(')');
+			gp->gl_fignore = stakfreeze(1);
+		}
+		else if(!sh_isstate(SH_FCOMPLETE) && sh_isoption(SH_DOTGLOB))
+			gp->gl_fignore = "";
+	}
+	else
+#endif
 	gp->gl_fignore = nv_getval(nv_scoped(FIGNORENOD));
 	if(suflen)
 		gp->gl_suffix = sufstr;
 	gp->gl_intr = &sh.trapnote; 
 	suflen = 0;
 	glob(pattern, flags, 0, gp);
+#if SHOPT_BASH
+	if(off)
+		stakset(sp,off);
+	else
+		stakseek(0);
+#endif
 	sh_sigcheck();
 	for(ap= (struct argnod*)gp->gl_list; ap; ap = ap->argnxt.ap)
 	{
@@ -127,9 +205,10 @@ int path_expand(const char *pattern, struct argnod **arghead)
 			ap->argchn.ap = *arghead;
 	}
 	*arghead = (struct argnod*)gp->gl_list;
+	if(gp->gl_list)
+		*arghead = (struct argnod*)gp->gl_list;
 	return(gp->gl_pathc+extra);
 }
-
 
 #if KSHELL
 

@@ -28,12 +28,7 @@
  * strftime implementation
  */
 
-#include <ast_map.h>
-
-#ifdef strftime
-#undef	strftime
-#define _map_strftime	1
-#endif
+#define _def_map_ast	1
 
 #if defined(__STDPP__directive) && defined(__STDPP__hide)
 __STDPP__directive pragma pp:hide strftime
@@ -50,6 +45,10 @@ __STDPP__directive pragma pp:nohide strftime
 #undef	strftime
 #endif
 
+#undef	_def_map_ast
+
+#include <ast_map.h>
+
 #undef	_lib_strftime	/* we can pass X/Open */
 
 #if _lib_strftime
@@ -57,11 +56,6 @@ __STDPP__directive pragma pp:nohide strftime
 NoN(strftime)
 
 #else
-
-#if _map_strftime
-#undef	strftime
-#define strftime	_ast_strftime
-#endif
 
 #if defined(__EXPORT__)
 #define extern	__EXPORT__
@@ -79,21 +73,29 @@ strftime(char* buf, size_t len, const char* format, const struct tm* tm)
 	 * one value -- what a way to go
 	 */
 
-	if (tm->tm_sec < 0 || tm->tm_sec > 61 ||
+	if (tm->tm_sec < 0 || tm->tm_sec > 60 ||
 	    tm->tm_min < 0 || tm->tm_min > 59 ||
-	    tm->tm_hour < 0 || tm->tm_hour > 59 ||
+	    tm->tm_hour < 0 || tm->tm_hour > 23 ||
 	    tm->tm_wday < 0 || tm->tm_wday > 6 ||
 	    tm->tm_mday < 1 || tm->tm_mday > 31 ||
 	    tm->tm_mon < 0 || tm->tm_mon > 11 ||
 	    tm->tm_year < 0 || tm->tm_year > (2138 - 1900))
 	{
 		memset(&tl, 0, sizeof(tl));
+		if (tm->tm_sec >= 0 && tm->tm_sec <= 60)
+			tl.tm_sec = tm->tm_sec;
+		if (tm->tm_min >= 0 && tm->tm_min <= 59)
+			tl.tm_min = tm->tm_min;
 		if (tm->tm_hour >= 0 && tm->tm_hour <= 23)
 			tl.tm_hour = tm->tm_hour;
 		if (tm->tm_wday >= 0 && tm->tm_wday <= 6)
 			tl.tm_wday = tm->tm_wday;
+		if (tm->tm_mday >= 0 && tm->tm_mday <= 31)
+			tl.tm_mday = tm->tm_mday;
 		if (tm->tm_mon >= 0 && tm->tm_mon <= 11)
 			tl.tm_mon = tm->tm_mon;
+		if (tm->tm_year >= 0 && tm->tm_year <= (2138 - 1900))
+			tl.tm_year = tm->tm_year;
 		tm = (const struct tm*)&tl;
 	}
 	t = tmtime((struct tm*)tm, TM_LOCALZONE);

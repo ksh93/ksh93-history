@@ -1,0 +1,2 @@
+03-04-28 sumlib.c: drop md5 `zeroize' for performance
+	 sumlib.c: add FIPS 180-1 SHA-1

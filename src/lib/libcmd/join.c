@@ -32,7 +32,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: join (AT&T Labs Research) 2002-11-14 $\n]"
+"[-?\n@(#)$Id: join (AT&T Labs Research) 2003-05-15 $\n]"
 USAGE_LICENSE
 "[+NAME?join - relational database operator]"
 "[+DESCRIPTION?\bjoin\b performs an \aequality join\a on the files \afile1\a "
@@ -139,6 +139,8 @@ typedef struct
 	int		delim;
 	int		buffered;
 	int		ignorecase;
+	char*		same;
+	int		samesize;
 	File_t		file[2];
 } Join_t;
 
@@ -160,6 +162,8 @@ done(register Join_t* jp)
 		free(jp->file[0].fieldlist);
 	if (jp->file[1].fieldlist)
 		free(jp->file[1].fieldlist);
+	if (jp->same)
+		free(jp->same);
 	free(jp);
 }
 
@@ -482,8 +486,8 @@ join(Join_t* jp)
 	register int		n2;
 	register int		n;
 	register int		cmp;
-	register int		same = 0;
-	int			samecmp;
+	register int		same;
+	int			o2;
 	Sfoff_t			lo = -1;
 	Sfoff_t			hi = -1;
 
@@ -491,16 +495,17 @@ join(Join_t* jp)
 	{
 		n1 = jp->file[0].fieldlen;
 		n2 = jp->file[1].fieldlen;
+		same = 0;
 		for (;;)
 		{
 			n = n1 < n2 ? n1 : n2;
 #if DEBUG_TRACE
-			if (!n && !(cmp = n1 < n2 ? -1 : (n1 > n2)) || n && !(cmp = *cp1 - *cp2) && !(cmp = jp->ignorecase ? strncasecmp((char*)cp1, (char*)cp2, n) : memcmp(cp1, cp2, n)))
+			if (!n && !(cmp = n1 < n2 ? -1 : (n1 > n2)) || n && !(cmp = (int)*cp1 - (int)*cp2) && !(cmp = jp->ignorecase ? strncasecmp((char*)cp1, (char*)cp2, n) : memcmp(cp1, cp2, n)))
 				cmp = n1 - n2;
-sfprintf(sfstdout, "[C#%d:%d,%lld,%lld%s]", __LINE__, cmp, lo, hi, (jp->outmode & C_COMMON) ? ",COMMON" : "");
+sfprintf(sfstdout, "[C#%d:%d(%c-%c),%d,%lld,%lld%s]", __LINE__, cmp, *cp1, *cp2, same, lo, hi, (jp->outmode & C_COMMON) ? ",COMMON" : "");
 			if (!cmp)
 #else
-			if (!n && !(cmp = n1 < n2 ? -1 : (n1 > n2)) || n && !(cmp = *cp1 - *cp2) && !(cmp = jp->ignorecase ? strncasecmp((char*)cp1, (char*)cp2, n) : memcmp(cp1, cp2, n)) && !(cmp = n1 - n2))
+			if (!n && !(cmp = n1 < n2 ? -1 : (n1 > n2)) || n && !(cmp = (int)*cp1 - (int)*cp2) && !(cmp = jp->ignorecase ? strncasecmp((char*)cp1, (char*)cp2, n) : memcmp(cp1, cp2, n)) && !(cmp = n1 - n2))
 #endif
 			{
 				if (!(jp->outmode & C_COMMON))
@@ -509,7 +514,6 @@ sfprintf(sfstdout, "[C#%d:%d,%lld,%lld%s]", __LINE__, cmp, lo, hi, (jp->outmode 
 					{
 						n1 = jp->file[0].fieldlen;
 						same = 1;
-						samecmp = 0;
 						continue;
 					}
 					if ((jp->ooutmode & (C_FILE1|C_FILE2)) != C_FILE2)
@@ -545,15 +549,22 @@ sfprintf(sfstdout, "[2#%d:0,%lld,%lld]", __LINE__, lo, hi);
 				if (same)
 				{
 					same = 0;
-					if (cmp != samecmp)
+				next:
+					if (n2 > jp->samesize)
 					{
-						if (samecmp && (jp->outmode & C_FILE2) && outrec(jp, 1) < 0)
+						jp->samesize = roundof(n2, 16);
+						if (!(jp->same = newof(jp->same, char, jp->samesize, 0)))
+						{
+							error(ERROR_SYSTEM|2, "out of space");
 							return -1;
-						samecmp = cmp;
+						}
 					}
+					memcpy(jp->same, cp2, o2 = n2);
 					if (!(cp2 = getrec(jp, 1)))
 						break;
 					n2 = jp->file[1].fieldlen;
+					if (n2 == o2 && *cp2 == *jp->same && !memcmp(cp2, jp->same, n2))
+						goto next;
 					continue;
 				}
 				if (hi >= 0)
@@ -577,8 +588,14 @@ sfprintf(sfstdout, "[2#%d:0,%lld,%lld]", __LINE__, lo, hi);
 sfprintf(sfstdout, "[2#%d:0,%lld,%lld]", __LINE__, lo, hi);
 #endif
 			}
-			else
+			else if (same)
+			{
 				same = 0;
+				if (!(cp1 = getrec(jp, 0)))
+					break;
+				n1 = jp->file[0].fieldlen;
+				continue;
+			}
 			if (lo >= 0)
 			{
 				hi = sfseek(jp->file[1].iop, (Sfoff_t)0, SEEK_CUR) - jp->file[1].reclen;
@@ -709,13 +726,13 @@ b_join(int argc, char** argv, void* context)
 				error(2,"field number must positive");
 			jp->file[n-'1'].field = (int)(opt_info.num-1);
 			continue;
-		case 'a':
 		case 'v':
+			jp->outmode &= ~C_COMMON;
+			/*FALLTHROUGH*/
+		case 'a':
 			if (opt_info.num!=1 && opt_info.num!=2)
-				error(2,"-a fileno: number must be 1 or 2");
+				error(2,"%s: file number must be 1 or 2", opt_info.name);
 			jp->outmode |= 1<<(opt_info.num-1);
-			if (n=='v')
-				jp->outmode &= ~C_COMMON;
 			continue;
 		case 'e':
 			jp->nullfield = opt_info.arg;

@@ -56,11 +56,13 @@ struct stat
 {	int	st_mode;
 	int	st_size;
 };
-#define fstat(fd,st)	(-1)
+#undef sysfstatf
+#define sysfstatf(fd,st)	(-1)
 #endif /*_sys_stat*/
 
 static int setlinemode()
-{	char			*astsfio, *endw;
+{	char*			astsfio;
+	char*			endw;
 
 	static int		linemode = -1;
 	static const char	sf_line[] = "SF_LINE";
@@ -68,7 +70,7 @@ static int setlinemode()
 #define ISSEPAR(c)	((c) == ',' || (c) == ' ' || (c) == '\t')
 	if (linemode < 0)
 	{	linemode = 0;
-		if((astsfio = getenv("_AST_SFIO_OPTIONS")))
+		if(astsfio = getenv("_AST_SFIO_OPTIONS"))
 		{	for(; *astsfio != 0; astsfio = endw)
 			{	while(ISSEPAR(*astsfio) )
 					*astsfio++;
@@ -200,16 +202,17 @@ reg size_t	size;	/* buffer size, -1 for default size */
 		}
 
 		/* get file descriptor status */
-		if(fstat((int)f->file,&st) < 0)
+		if(sysfstatf((int)f->file,&st) < 0)
 			f->here = -1;
 		else
 		{
 #if _sys_stat && _stat_blksize	/* preferred io block size */
-			if((blksize = (ssize_t)st.st_blksize) > 0)
+			if((blksize = 2*((ssize_t)st.st_blksize) ) > 0)
 				while((blksize + (ssize_t)st.st_blksize) <= SF_PAGE)
 					blksize += (ssize_t)st.st_blksize;
+			f->blksz = (size_t)st.st_blksize;
 #endif
-			if(S_ISDIR(st.st_mode) || (int)st.st_size < SF_GRAIN)
+			if(S_ISDIR(st.st_mode) || (Sfoff_t)st.st_size < (Sfoff_t)SF_GRAIN)
 				okmmap = 0;
 			if(S_ISREG(st.st_mode) || S_ISDIR(st.st_mode))
 				f->here = SFSK(f,(Sfoff_t)0,SEEK_CUR,f->disc);
@@ -217,10 +220,13 @@ reg size_t	size;	/* buffer size, -1 for default size */
 
 #if O_TEXT /* no memory mapping with O_TEXT because read()/write() alter data stream */
 			if(okmmap && f->here >= 0 &&
-			   (fcntl((int)f->file,F_GETFL,0) & O_TEXT) )
+			   (sysfcntlf((int)f->file,F_GETFL,0) & O_TEXT) )
 				okmmap = 0;
 #endif
 		}
+
+		if(f->blksz <= 0)
+			f->blksz = SF_GRAIN;
 
 		if(init && setlinemode())
 			f->flags |= SF_LINE;
@@ -252,7 +258,7 @@ reg size_t	size;	/* buffer size, -1 for default size */
 					{	reg int	dev, ino;
 						dev = (int)st.st_dev;	
 						ino = (int)st.st_ino;	
-						if(stat(DEVNULL,&st) >= 0 &&
+						if(sysstatf(DEVNULL,&st) >= 0 &&
 						   dev == (int)st.st_dev &&
 						   ino == (int)st.st_ino)
 							SFSETNULL(f);
@@ -365,6 +371,18 @@ setbuf:
 	}
 
 	_Sfi = f->val = obuf ? osize : 0;
+
+	/* blksz is used for aligning disk block boundary while reading data to
+	** optimize data transfer from disk (eg, via direct I/O). For sfio,
+	** the buffer size, f->size, must be at least twice as large as the
+	** alignment requirement to optimize various algorithms. The alignment
+	** requirement should be normally given by stat/fstat but for file
+	** system such as Veritas, that value could be too large. The below code
+	** allows an app to set a buffer size that it thinks is right. Then we
+	** use min(f->size/2, fstat-size) for alignment.
+	*/
+	if(!(f->bits&SF_MMAP) && f->size > 0 && (f->size & (f->size-1)) == 0 )
+		f->blksz = f->blksz <= f->size/2 ? f->blksz : f->size/2;
 
 	SFOPEN(f,local);
 

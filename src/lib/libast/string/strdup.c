@@ -25,21 +25,10 @@
 *******************************************************************/
 #pragma prototyped
 
-#if defined(__STDPP__directive) && defined(__STDPP__hide)
-__STDPP__directive pragma pp:hide strdup
-#else
-#define strdup	______strdup
-#endif
+#undef	VMDEBUG
+#define	VMDEBUG		0
 
 #include <ast.h>
-
-#include "FEATURE/vmalloc"
-
-#if defined(__STDPP__directive) && defined(__STDPP__hide)
-__STDPP__directive pragma pp:nohide strdup
-#else
-#undef	strdup
-#endif
 
 /*
  * return a copy of s using malloc
@@ -57,10 +46,3 @@ strdup(register const char* s)
 
 	return (t = newof(0, char, n = strlen(s) + 1, 0)) ? (char*)memcpy(t, s, n) : 0;
 }
-
-#if _libc_malloc && !_std_malloc
-
-char*	__libc_strdup(const char* s) { return strdup(s); }
-char*	__strdup(const char* s) { return strdup(s); }
-
-#endif

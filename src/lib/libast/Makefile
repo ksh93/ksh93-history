@@ -25,17 +25,17 @@ PARANOID ==
 CONF_LIBPREFIX == "$(CC.PREFIX.DYNAMIC|CC.PREFIX.SHARED)"
 CONF_LIBSUFFIX == "$(CC.SUFFIX.DYNAMIC|CC.SUFFIX.SHARED)"
 DEBUG ==
-__OBSOLETE__ == 20020101
+__OBSOLETE__ == 20030101
 
 HEADERSRC = ast.h ast_dir.h ast_getopt.h ast_std.h \
 	ast_version.h ast_windows.h \
 	ccode.h cdt.h debug.h dt.h error.h find.h ftw.h ftwalk.h fts.h \
 	fs3d.h getopt.h glob.h hash.h hashkey.h hashpart.h int.h lc.h ls.h \
 	magic.h mc.h mime.h mnt.h modecanon.h modex.h namval.h option.h \
-	proc.h re.h re_comp.h regex.h regexp.h \
+	proc.h re_comp.h regex.h regexp.h \
 	sfio.h sfio_s.h sfio_t.h sfdisc.h sfstr.h \
 	stack.h stak.h stk.h swap.h tar.h times.h tm.h \
-	tok.h usage.h vdb.h vecargs.h vmalloc.h vmtrace.h wait.h wordexp.h \
+	tok.h usage.h vdb.h vecargs.h vmalloc.h wait.h wordexp.h \
 	bytesex.h endian.h fnmatch.h magicid.h \
 	$(HEADERSTD)
 
@@ -67,7 +67,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	hashlook.c hashscan.c hashsize.c hashview.c hashwalk.c \
 	memhash.c memsum.c strhash.c strkey.c strsum.c \
 	stracmp.c strnacmp.c \
-	_ccmaps.c ccmapc.c ccmapcpy.c ccmapid.c ccmaps.c ccnative.c \
+	ccmap.c ccmapid.c ccnative.c \
 	chresc.c chrtoi.c streval.c strexpr.c strmatch.c strcopy.c \
 	modelib.h modei.c modex.c strmode.c \
 	strlcat.c strlcpy.c strlook.c strncopy.c strsearch.c strpsearch.c \
@@ -195,8 +195,8 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	err.c exp.c exp__E.c expm1.c gamma.c getpass.c lgamma.c log.c log1p.c \
 	log__L.c rand48.c random.c rcmd.c rint.c support.c \
 	/* obsolete */ \
-	obsolete/mematoe.c obsolete/memetoa.c spawn.c \
-	-liconv /* please OSF, this *has* to be wrong */
+	spawn.c \
+	-liconv /* this *has* to be wrong */
 
 /*
  * man is stdio.h problematic

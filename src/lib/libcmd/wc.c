@@ -33,7 +33,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: wc (AT&T Labs Research) 2002-09-06 $\n]"
+"[-?\n@(#)$Id: wc (AT&T Labs Research) 2003-05-04 $\n]"
 USAGE_LICENSE
 "[+NAME?wc - print the number of bytes, words, and lines in files]"
 "[+DESCRIPTION?\bwc\b reads one or more input files and, by default, "
@@ -80,7 +80,9 @@ static void printout(register Wc_t *wp, register char *name,register int mode)
 		sfprintf(sfstdout," %7I*d",sizeof(wp->words),wp->words);
 	if(mode&WC_CHARS)
 		sfprintf(sfstdout," %7I*d",sizeof(wp->chars),wp->chars);
-	sfprintf(sfstdout," %s\n",name?name:"");
+	if(name)
+		sfprintf(sfstdout," %s",name);
+	sfputc(sfstdout,'\n');
 }
 
 int

@@ -273,8 +273,8 @@ sh_main(int ac, char *av[], void (*userinit)(int))
 					cp = path_basename(*av);
 					if(strcmp(cp,"sh")==0 || strcmp(cp,"ksh")==0)
 					{
-						name = nv_getval(L_ARGNOD);
-						cp = path_basename(name);
+						if(name=nv_getval(L_ARGNOD))
+							cp = path_basename(name);
 						if(strcmp(cp,"sh")!=0 && strcmp(cp,"ksh")!=0)
 						{
 							av[0] = cp;

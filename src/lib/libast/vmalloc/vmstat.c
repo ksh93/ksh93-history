@@ -46,7 +46,7 @@ Vmstat_t*	st;
 {
 	reg Seg_t*	seg;
 	reg Block_t	*b, *endb;
-	reg size_t	s;
+	reg size_t	s = 0;
 	reg Vmdata_t*	vd = vm->data;
 
 	if(!st)

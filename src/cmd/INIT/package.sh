@@ -51,7 +51,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Labs Research) 2003-04-22 $
+@(#)$Id: package (AT&T Labs Research) 2003-06-21 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary packages.
@@ -136,7 +136,7 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 				\bditto\b(1) is used to sync the remote \bsrc\b
 				directory hierarchy to the local one. These
 				directories must exist on the remote side:
-				\blib/package\b, \bsrc/cmd\b, \bsrc/lib\b.
+				\blib/package\b, \bsrc/cmd\b, \bsrc/lib\b.]
 			[+date?\aYYMMDD\a of the last action.]
 			[+time?Elapsed wall time for the last action.]
 			[+M T W?The \badmin\b action \bmake\b, \btest\b and
@@ -597,24 +597,27 @@ ${bT}(1)${bD}Do not install packages as ${bI}root/super-user${eI}. Although some
       changed manually when the security implications are understood.${eD}
 ${bT}(2)${bD}Choose a package root directory and cd to it. This will be a local work
       area for all packages.${eD}
-${bT}(3)${bD}If your system does not have ${Mcurl}, ${Mhurl}, or ${Mwget} then use
-      the alternate instructions for (3),(4),(5) in plan ${bB}B${eB} below. Plan ${bB}B${eB}
-      will install the ${Mhurl} script which works with ksh and modern bash.
+${bT}(3)${bD}These instructions bypass the ${bI}click to download${eI} package links on the
+      download site. If you already clicked, or if your system does not have
+      ${Mcurl}, ${Mhurl}, or ${Mwget} then use the alternate instructions for
+      (3),(4),(5) in plan ${bB}B${eB} below. Plan ${bB}B${eB} installs the ${Mhurl}
+      script which works with ksh and modern bash. The top level URL is:${bX}
+		URL=http://www.research.att.com/sw/download${eX}${eD}
 ${bT}(4)${bD}If the ${bB}bin/package${eB} script does not exist then run:${bX}
 		test -d bin || mkdir bin
-		url=http://www.research.att.com/sw/download/package
+		url=\$URL/package
 		(curl \$url||wget -O bin/package \$url||hurl \$url) > bin/package
 		chmod +x bin/package${eX}${eD}
 ${bT}(5)${bD}Determine the list of package names you want from the download site, then
       use the ${Mpackage} command to do the actual download:${bX}
-		bin/package setup binary \\
-			http://www.research.att.com/sw/download \\
+		bin/package setup binary \$URL \\
 			${bB}package-name${eB} ...${eX}
+      This downloads the latest binary package(s); up-to-date local packages
+      are not downloaded again unless ${bB}package force ...${eB} is specified.
       If the package root will contain only one architecture then you can
       install in ${bB}bin${eB} and ${bB}lib${eB} instead of ${bB}arch/${eB}${bI}HOSTTYPE${eI}${bB}/bin${eB} and ${bB}arch/${eB}${bI}HOSTTYPE${eI}${bB}/lib${eB}
       by running this instead:${bX}
-		bin/package setup flat binary \\
-			http://www.research.att.com/sw/download \\
+		bin/package setup flat binary \$URL \\
 			${bI}PACKAGE${eI} ...${eX}
       To update the same packages from the same URL run:${bX}
 			bin/package setup binary${eX}${eD}
@@ -631,7 +634,8 @@ ${bT}(7)${bD}You can run the binaries directly from the package root, or you can
       flat install:${bX}
 		cd \$INSTALLROOT
 		cp -p -r bin lib include ${bI}DIRECTORY${eI}${eX}${eD}
-${bT}(8)${bD}To summarize, after the first time, the download cycle is:${bX}
+${bT}(8)${bD}To summarize, after the first time, the download cycle for the latest
+      binary release is:${bX}
 		bin/package setup binary
 
 ${bH}Binary Package Installation Instructions -- Plan B${eH}
@@ -745,24 +749,27 @@ ${bT}(1)${bD}Do not install packages as ${bI}root/super-user${eI}. Although some
       changed manually when the security implications are understood.${eD}
 ${bT}(2)${bD}Choose a package root directory and cd to it. This will be a local work
       area for all packages.
-${bT}(3)${bD}If your system does not have ${Mcurl}, ${Mhurl}, or ${Mwget} then use
-      the alternate instructions for (3),(4),(5) in plan ${bB}B${eB} below. Plan ${bB}B${eB}
-      will install the ${Mhurl} script which works with ksh and modern bash.
+${bT}(3)${bD}These instructions bypass the ${bI}click to download${eI} package links on the
+      download site. If you already clicked, or if your system does not have
+      ${Mcurl}, ${Mhurl}, or ${Mwget} then use the alternate instructions for
+      (3),(4),(5) in plan ${bB}B${eB} below. Plan ${bB}B${eB} installs the ${Mhurl}
+      script which works with ksh and modern bash. The top level URL is:${bX}
+		URL=http://www.research.att.com/sw/download${eX}${eD}
 ${bT}(4)${bD}If the ${bB}bin/package${eB} script does not exist then run:${bX}
 		test -d bin || mkdir bin
-		url=http://www.research.att.com/sw/download/package
+		url=\$URL/package
 		(curl \$url||wget -O bin/package \$url||hurl \$url) > bin/package
 		chmod +x bin/package${eX}${eD}
 ${bT}(5)${bD}Determine the list of package names you want from the download site, then
       use the ${Mpackage} command to do the actual download:${bX}
-		bin/package setup source \\
-			http://www.research.att.com/sw/download \\
+		bin/package setup source \$URL \\
 			${bB}package-name${eB} ...${eX}
+      This downloads the latest source package(s); up-to-date local packages
+      are not downloaded again unless ${bB}package force ...${eB} is specified.
       If the package root will contain only one architecture then you can
       install in ${bB}bin${eB} and ${bB}lib${eB} instead of ${bB}arch/${eB}${bI}HOSTTYPE${eI}${bB}/bin${eB} and ${bB}arch/${eB}${bI}HOSTTYPE${eI}${bB}/lib${eB}
       by running this instead:${bX}
-		bin/package setup flat source \\
-			http://www.research.att.com/sw/download \\
+		bin/package setup flat source \$URL \\
 			${bI}PACKAGE${eI} ...${eX}
       To update the same packages from the same URL run:${bX}
 			bin/package setup source${eX}${eD}
@@ -792,8 +799,8 @@ ${bT}(9)${bD}You can run the binaries directly from the package root, or you can
       flat install:${bX}
 		cd \$INSTALLROOT
 		cp -p -r bin lib include ${bI}DIRECTORY${eI}${eX}${eD}
-${bT}(10)${bD}To summarize, after the first download the download, build, and
-      test cycle is:${bX}
+${bT}(10)${bD}To summarize, after the first time the download, build, and test cycle
+      for the latest source release is:${bX}
 		bin/package setup source
 		bin/package make
 		bin/package test${eX}${eD}${eL}
@@ -1161,61 +1168,9 @@ admin)	while	:
 		esac
 	done
 	;;
-setup)	# { update read } with optional (bin|fun|include|lib) symlinks
-	# flat option sets up { bin fun include lib } symlinks from
-	# $INSTALLROOT to $PACKAGEROOT
-
-	# . is the package root
-
-	PACKAGEROOT=${PWD:-`pwd`}
-	INSTALLROOT=$PACKAGEROOT/arch/$HOSTTYPE
-	export PACKAGEROOT INSTALLROOT
-	flat=
-	types=
-	url=
-	while	:
-	do	case $# in
-		0)	break ;;
-		esac
-		case $1 in
-		*://*|*.url)
-			url=$1
-			shift
-			break
-			;;
-		flat)	flat=1
-			;;
-		*)	types="$types $1"
-			;;
-		esac
-		shift
-	done
-	if	test ! -d $PACKAGEROOT/lib/package/tgz
-	then	$exec mkdir -p $PACKAGEROOT/lib/package/tgz || exit
-	fi
-	case $flat in
-	1)	if	test ! -d $INSTALLROOT
-		then	$exec mkdir -p $INSTALLROOT || exit
-		fi
-		for i in bin include lib fun
-		do	if	test ! -d $INSTALLROOT/$i
-			then	$exec ln -s ../../$i $INSTALLROOT/$i
-			fi
-		done
-		;;
-	esac
-	case " $* " in
-	'')	;;
-	*" INIT "*)
-		;;
-	*)	if	test ! -d $PACKAGEROOT/src/cmd/INIT
-		then	set INIT "$@"
-		fi
-		;;
-	esac
-	$0 $global update $types $url "$@" || exit
-	$0 $global read "$@" || exit
-	exit
+setup)	PACKAGEROOT=${PWD:-`pwd`}
+	export PACKAGEROOT
+	KEEP_PACKAGEROOT=1
 	;;
 esac
 
@@ -1257,24 +1212,25 @@ shellmagic()
 
 onpath() # command
 {
-	b=$1
-	case $b in
-	/*)	if	executable $b
-		then	_onpath_=$b
+	_onpath_b=$1
+	case $_onpath_b in
+	/*)	if	executable $_onpath_b
+		then	_onpath_=$_onpath_b
 			return 0
 		fi
+		return 1
 		;;
 	esac
 	IFS=':'
 	set '' $PATH
 	IFS=$ifs
 	shift
-	for d
-	do	case $d in
-		'')	d=. ;;
+	for _onpath_d
+	do	case $_onpath_d in
+		'')	_onpath_d=. ;;
 		esac
-		if	executable "$d/$b"
-		then	_onpath_=$d/$b
+		if	executable "$_onpath_d/$_onpath_b"
+		then	_onpath_=$_onpath_d/$_onpath_b
 			return 0
 		fi
 	done
@@ -1665,17 +1621,33 @@ main()
 			then	map="`grep -v '^#' $i/$f` $map"
 			fi
 		done
-		case $canon in
-		'')	h=`hostname || uname -n || cat /etc/whoami || echo local`
-			a=`arch || uname -m || att uname -m || uname -s || att uname -s || echo unknown`
+
+		# inconsistent -dumpmachine filtered here
+
+		case -${canon}- in
+		--|*-powerpc-*)
+			h=`hostname || uname -n || cat /etc/whoami`
+			case $h in
+			'')	h=local ;;
+			esac
+			a=`arch || uname -m || att uname -m || uname -s || att uname -s`
 			case $a in 
 			*[\ \	]*)	a=`echo $a | sed "s/[ 	]/-/g"` ;;
 			esac
-			m=`mach || machine || uname -p || att uname -p || echo unknown`
+			case $a in
+			'')	a=unknown ;;
+			esac
+			m=`mach || machine || uname -p || att uname -p`
 			case $m in 
 			*[\ \	]*)	m=`echo $m | sed "s/[ 	]/-/g"` ;;
 			esac
-			x=`uname -a || att uname -a || echo unknown $host unknown unknown unknown unknown unknown`
+			case $m in
+			'')	m=unknown ;;
+			esac
+			x=`uname -a || att uname -a`
+			case $x in
+			'')	x="unknown $host unknown unknown unknown unknown unknown" ;;
+			esac
 			set "" $h $a $m $x
 			expected=$1 host=$2 arch=$3 mach=$4 os=$5 sys=$6 rel=$7 ver=$8
 			;;
@@ -1717,6 +1689,10 @@ main()
 			mach=mips4
 			;;
 		pc)	arch=i386
+			mach=
+			;;
+		[Pp][Oo][Ww][Ee][Rr][Pp][Cc])
+			arch=ppc
 			mach=
 			;;
 		*)	case $arch in
@@ -2018,6 +1994,8 @@ main()
 			case $rhs in
 			i[x23456789]86|i?[x23456789]86|*86pc)
 						rhs=i386 ;;
+			s[0123456789]*[0123456789]x)
+						rhs=`echo $rhs | sed -e 's/x$/-64/'` ;;
 			esac
 			case $rhs in
 			arm[abcdefghijklmnopqrstuvwxyz_][0123456789]*)
@@ -2164,7 +2142,8 @@ host)	eval u=$package_use
 	echo $_hostinfo_
 	exit 0
 	;;
-use)	x=
+setup|use)
+	x=
 	;;
 *)	x=
 	eval u=$package_use
@@ -2196,6 +2175,7 @@ case $x in
 	NMAKE=$EXECROOT/bin/$MAKE
 	SUM=$EXECROOT/bin/sum
 	TEE=$EXECROOT/bin/tee
+	INITROOT=$PACKAGEROOT/src/cmd/INIT
 	;;
 *)	hosttype=
 	case $KEEP_PACKAGEROOT in
@@ -2236,48 +2216,48 @@ case $x in
 		case $PACKAGEROOT in
 		'')	PACKAGEROOT=${PWD:-`pwd`} ;;
 		esac
-		;;
-	esac
 
-	# . must be within the PACKAGEROOT tree
+		# . must be within the PACKAGEROOT tree
 
-	i=X$PACKAGEROOT
-	IFS=/
-	set $i
-	IFS=$ifs
-	while	:
-	do	i=$1
-		shift
-		case $i in
-		X)	break ;;
+		i=X$PACKAGEROOT
+		IFS=/
+		set $i
+		IFS=$ifs
+		while	:
+		do	i=$1
+			shift
+			case $i in
+			X)	break ;;
+			esac
+		done
+		case $PACKAGEROOT in
+		//*)	d=/ ;;
+		*)	d= ;;
 		esac
-	done
-	case $PACKAGEROOT in
-	//*)	d=/ ;;
-	*)	d= ;;
-	esac
-	k=0
-	for i
-	do	case $i in
-		'')	continue ;;
-		esac
-		d=$d/$i
-		case $k in
-		2)	k=1
-			;;
-		1)	k=0
-			;;
-		0)	case $i in
-			arch)	k=2
+		k=0
+		for i
+		do	case $i in
+			'')	continue ;;
+			esac
+			d=$d/$i
+			case $k in
+			2)	k=1
 				;;
-			*)	if	packageroot $d
-				then	PACKAGEROOT=$d
-				fi
+			1)	k=0
+				;;
+			0)	case $i in
+				arch)	k=2
+					;;
+				*)	if	packageroot $d
+					then	PACKAGEROOT=$d
+					fi
+					;;
+				esac
 				;;
 			esac
-			;;
-		esac
-	done
+		done
+		;;
+	esac
 	INITROOT=$PACKAGEROOT/src/cmd/INIT
 	$show PACKAGEROOT=$PACKAGEROOT
 	$show export PACKAGEROOT
@@ -2333,8 +2313,12 @@ case $x in
 		esac
 		;;
 	*)	packageroot $PACKAGEROOT || {
-			echo "$command: must be run within the package root directory tree" >&2
-			exit 1
+			case $KEEP_PACKAGEROOT in
+			1)	;;
+			*)	echo "$command: $PACKAGEROOT: must be in the package root directory tree" >&2
+				exit 1
+				;;
+			esac
 		}
 
 		for i in arch arch/$HOSTTYPE
@@ -2348,7 +2332,6 @@ case $x in
 
 		if	test -d $INITROOT
 		then	
-
 			# update the basic package commands
 
 			for i in execrate ignore mamprobe silent
@@ -2378,35 +2361,6 @@ cat $INITROOT/$i.sh
 					;;
 				esac
 			done
-			for i in lib/probe lib/probe/C lib/probe/C/make
-			do	test -d $INSTALLROOT/$i || $exec mkdir $INSTALLROOT/$i || exit
-			done
-			i=$INSTALLROOT/lib/probe/C/make/probe
-			j=$INITROOT/C+probe
-			k=$INITROOT/make.probe
-			case `ls -t $i $j $k 2>/dev/null` in
-			$i*)	;;
-			*)	if	test -f $j -a -f $k
-				then	note update $i
-					shellmagic
-					case $exec in
-					'')	{
-						case $SHELLMAGIC in
-						?*)	echo "$SHELLMAGIC" ;;
-						esac
-						cat $j $k
-						} > $i || exit
-						;;
-					*)	echo "{
-echo $SHELLMAGIC
-cat $j $k
-} > $i"
-						;;
-					esac
-					$exec chmod +x $i || exit
-				fi
-				;;
-			esac
 		fi
 		;;
 	esac
@@ -2844,6 +2798,64 @@ release)set '' $args
 		esac
 	done
 	package=$*
+	;;
+setup)	# { update read } with optional (bin|fun|include|lib) symlinks
+	# flat option sets up { bin fun include lib } symlinks from
+	# $INSTALLROOT to $PACKAGEROOT
+
+	# . is the package root
+
+	set '' $args
+	shift
+	flat=
+	types=
+	url=
+	while	:
+	do	case $# in
+		0)	break ;;
+		esac
+		case $1 in
+		*://*|*.url)
+			url=$1
+			shift
+			break
+			;;
+		flat)	flat=1
+			;;
+		*)	types="$types $1"
+			;;
+		esac
+		shift
+	done
+	if	test ! -d $PACKAGEROOT/lib/package/tgz
+	then	$exec mkdir -p $PACKAGEROOT/lib/package/tgz || exit
+	fi
+	case $flat in
+	1)	if	test ! -d $INSTALLROOT
+		then	$exec mkdir -p $INSTALLROOT || exit
+		fi
+		for i in bin include lib fun
+		do	if	test ! -d $INSTALLROOT/$i
+			then	$exec ln -s ../../$i $INSTALLROOT/$i
+			fi
+		done
+		;;
+	esac
+	case " $types " in
+	*" source "*)
+		case " $* " in
+		'  ')	;;
+		*" INIT "*)
+			;;
+		*)	view - all src/cmd/INIT ||
+			set INIT "$@"
+			;;
+		esac
+		;;
+	esac
+	$0 $global update $types $url "$@" PACKAGEROOT=$PACKAGEROOT || exit
+	$0 $global read "$@" PACKAGEROOT=$PACKAGEROOT || exit
+	exit
 	;;
 *)	package=
 	target=
@@ -3503,12 +3515,12 @@ copyright()
 
 # run remote make on host
 
-remote() # host
+remote() # host background
 {
 	host=$1
-	case $exec in
+	case $2 in
 	'')	amp= ;;
-	*)	amp=$2 ;;
+	*)	amp="&" ;;
 	esac
 	eval name=\$${host}_name user=\$${host}_user snarf=\$${host}_snarf type=\$${host}_type rsh=\$${host}_rsh root=\$${host}_root keep=\$${host}_keep
 	case $keep in
@@ -3701,7 +3713,13 @@ admin)	while	test ! -f $admin_db
 			;;
 		esac
 		main=$host
-		echo package "$admin_args" "[ $host $type ]"
+		for i in $host $share
+		do	eval t='$'${i}_type
+			echo package "$admin_args" "[ $i $t ]"
+			case $exec in
+			'')	: > $admin_log/$i ;;
+			esac
+		done
 		case $exec in
 		'')	{
 			case $admin_binary:$sync in
@@ -3726,7 +3744,7 @@ admin)	while	test ! -f $admin_db
 						;;
 					1)	remote $1
 						;;
-					*)	remote $1 &
+					*)	remote $1 1 &
 						pids="$pids $!"
 						;;
 					esac
@@ -3736,7 +3754,7 @@ admin)	while	test ! -f $admin_db
 				esac
 				;;
 			esac
-			} < /dev/null > $admin_log/$host 2>&1 &
+			} < /dev/null > $admin_log/$main 2>&1 &
 			pids="$pids $!"
 			;;
 		*)	echo "{"
@@ -3762,7 +3780,7 @@ admin)	while	test ! -f $admin_db
 						;;
 					1)	remote $1
 						;;
-					*)	remote $1 "&"
+					*)	remote $1 1
 						pids=1
 						;;
 					esac
@@ -3775,7 +3793,7 @@ admin)	while	test ! -f $admin_db
 			echo "} < /dev/null > $admin_log/$main 2>&1 &"
 			;;
 		esac
-		hosts="$hosts $host"
+		hosts="$hosts $main"
 		for share in $share
 		do	eval keep=\$${share}_keep
 			case $keep in
@@ -4240,7 +4258,7 @@ make|view)
 
 	# check for some required commands
 
-	must="$CC ar"
+	must="ar"
 	warn="nm yacc bison"
 	test="$must $warn"
 	have=
@@ -4289,34 +4307,6 @@ make|view)
 		esac
 	done
 
-	# check $CC
-
-	case $exec in
-	'')	tmp=pk$$
-		trap 'rm -f $tmp.*' 0 1 2
-		cat > $tmp.c <<'!'
-#include <stdio.h>
-main()
-{
-	printf("hello world\n");
-	return 0;
-}
-!
-		$CC -o $tmp.exe $tmp.c >/dev/null 2>&1
-		case `(./$tmp.exe) 2>/dev/null` in
-		'hello world')
-			;;
-		*)	echo "$command: $CC: failed to compile this program:" >&2
-			cat $tmp.c >&2
-			echo "$command: $CC: not a C compiler" >&2
-			exit 1
-			;;
-		esac
-		rm -f $tmp.*
-		trap - 0 1 2
-		;;
-	esac
-
 	# verify the top view
 
 	if	test ! -d $INSTALLROOT/src
@@ -4364,6 +4354,89 @@ main()
 		esac
 	fi
 
+	# check $CC
+
+	if	onpath $CC
+	then	cc=$_onpath_
+	else	cc=$CC
+	fi
+	case $CC in
+	cc)	s=$INITROOT/cc.$HOSTTYPE
+		b=$INSTALLROOT/bin/cc
+		t=$INSTALLROOT/lib/package/gen/cc.tim
+		if	cmp -s "$s" "$b" >/dev/null 2>&1
+		then	intercept=1
+		else	intercept=0
+			case `ls -t "$t" "$b" "$s" 2>/dev/null` in
+			$t*)	;;
+			$b*)	cc=$b
+				;;
+			$s*)	cd $INSTALLROOT/lib/package/gen
+				if	$exec $s -o tmp.exe $INITROOT/hello.c >/dev/null 2>&1 &&
+					test -x tmp.exe
+				then	case $HOSTTYPE in
+					*.mips*)$s -version >/dev/null 2>&1 || s= ;;
+					esac
+					case $s in
+					?*)	$exec cp "$s" "$b" || exit
+						cc=$b
+						intercept=1
+						;;
+					esac
+				fi
+				$exec rm -f tmp.*
+				$exec touch "$t"
+				cd $PACKAGEROOT
+				;;
+			esac
+		fi
+		case $cc in
+		cc)	if	onpath gcc
+			then	CC=gcc
+				cc=$_onpath_
+			fi
+			;;
+		esac
+		s=$INITROOT/ld.$HOSTTYPE
+		b=$INSTALLROOT/bin/ld
+		if	test 0 != "$intercept" -a -x "$s"
+		then	case `ls -t "$b" "$s" 2>/dev/null` in
+			$b*)	;;
+			$s*)	$exec cp "$s" "$b" ;;
+			esac
+		fi
+		;;
+	esac
+	s=$INITROOT/ldd.$HOSTTYPE
+	b=$INSTALLROOT/bin/ldd
+	if	test -x "$s"
+	then	onpath ldd ||
+		case `ls -t "$b" "$s" 2>/dev/null` in
+		$b*)	;;
+		$s*)	$exec cp "$s" "$b" ;;
+		esac
+	fi
+	case $cc in
+	/*)	;;
+	*)	echo "$command: $CC: not found -- set CC=C-compiler" >&2
+		exit 1
+		;;
+	esac
+	case $exec in
+	'')	cd $INSTALLROOT/lib/package/gen
+		if	$CC -o tmp.exe $INITROOT/hello.c >/dev/null 2>&1 &&
+			test -x tmp.exe
+		then	: ok
+		else	echo "$command: $CC: failed to compile this program:" >&2
+			cat $INITROOT/hello.c >&2
+			echo "$command: $CC: not a C compiler" >&2
+			exit 1
+		fi
+		rm -f tmp.*
+		cd $PACKAGEROOT
+		;;
+	esac
+
 	# remember the default $CC
 
 	case $CC in
@@ -4392,6 +4465,43 @@ main()
 		fi
 		;;
 	esac
+
+	# no $INITROOT means INIT already installed elsewhere
+
+	if	test -d $INITROOT
+	then	
+		# update probe scripts
+
+		for i in lib/probe lib/probe/C lib/probe/C/make
+		do	test -d $INSTALLROOT/$i || $exec mkdir $INSTALLROOT/$i || exit
+		done
+		i=$INSTALLROOT/lib/probe/C/make/probe
+		j=$INITROOT/C+probe
+		k=$INITROOT/make.probe
+		case `ls -t $i $j $k 2>/dev/null` in
+		$i*)	;;
+		*)	if	test -f $j -a -f $k
+			then	note update $i
+				shellmagic
+				case $exec in
+				'')	{
+					case $SHELLMAGIC in
+					?*)	echo "$SHELLMAGIC" ;;
+					esac
+					cat $j $k
+					} > $i || exit
+					;;
+				*)	echo "{
+echo $SHELLMAGIC
+cat $j $k
+} > $i"
+					;;
+				esac
+				$exec chmod +x $i || exit
+			fi
+			;;
+		esac
+	fi
 
 	# initialize a few mamake related commands
 
@@ -5377,7 +5487,7 @@ update)	# download the latest release.version for selected packages
 					then	continue
 					fi
 					if	test -f $name.$base.$suffix
-					then	size=`wc -c < $name.$base.$suffix`
+					then	size=`wc -c < $name.$base.$suffix  | sed 's/[ 	]//g'`
 					else	size=X
 					fi
 					if	test "0" != "$force" -a "X-" = "X$delta" -o ! -f $name.$base.$suffix -o "$base_size" != "$size"

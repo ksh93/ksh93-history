@@ -1,3 +1,45 @@
+03-06-21 misc/sigcrit.c: block SIGCHLD if _lib_sigprocmask || _lib_sigsetmask
+	 comp/spawnveg.c,sfio/sfmode.c: use sigcritical() SIG_REG_* macros
+	 comp/spawnveg.c: drop ENOEXEC logic
+	 vmalloc/*: snarf kpv KPVCOMPACT() fix
+	 vmalloc/vmbest.c: export VMCHECK=2 to disable KPVCOMPACT (just in case)
+	 string/strdup.c: drop __strdup() etc. intercepts -- malloc gets it
+	 features/mem: define _mem_method and _mem_* possible values
+	 vmalloc/malloc.c: _AST_mem_method==_mem_* to force mem get method
+	 sfio/sfputr.c: __ia64 memccpy is bogus -- how many tries do they get?
+	 path/pathshell.c: verify abs path and access(path,X_OK) -- duh
+	 vmalloc/vmhdr.h: add private _Vmessage() for non-sfio ASSERT() 
+	 port/astconf.c: fix bug that always returned the minmax value
+03-06-11 comp/*.c: reorder macro hding for mvs.390 and <ast_map.h> 
+	 features/vmalloc: add _lib_brk and _lib_sbrk verification
+	 include/ast_std.h,etc.: add _map_malloc for malloc => _ast_malloc
+	 comp/conf.sh: fix SI_* and *_SI_* macro redefs
+	 ast.h: VMDEBUG or _BLD_DEBUG enable <vmalloc.h> and VMFL tracing
+	 vmalloc/vmtrace.c: _PACKAGE_ast __FUNCTION__ is a string
+	 vmalloc/vmtrace.c: set trace file fd FD_CLOEXEC
+	 vmalloc/vmbest.c: set /dev/zero mmap fd FD_CLOEXEC
+	 features/mmap: fix ancient read() vs. mmap() time arithmetic typo
+	 vmalloc/malloc.c: _AST_std_malloc==1 to force standard malloc
+03-06-09 comp/omitted.c: add _imp__FUNCTION sybols for __CYGWIN__ static link
+	 vmalloc/vmbest.c: handle systems with sbrk() but no brk()
+03-06-04 port/astconf.c: drop non-standard diagnostics
+03-06-03 comp/conf.sh: rework symbol collision logic
+03-05-30 conf.tab,conf.sh,astconf.c: add <sys/systeminfo.h> sysinfo() SI_*
+03-05-29 ccode.h: rework for extensibility, drop obsolete mematoe(), memetoa()
+03-05-28 regex/*: recode to use isw*() directly when needed, is*() otherwise
+03-05-27 features/vmalloc: fix _std_malloc test
+03-05-25 misc/optget.c: fix optstr() ???* internal options
+03-05-24 misc/optget.c: fix (ancient) argv null dereference
+03-05-23 comp/getcwd.c: don't intercept on _WINIX -- unreliable st_ino
+03-05-22 sfio/sfsprintf.c: n<0 => don't append '\0'
+03-05-18 misc/fts.c: re-stat FTS_DP to update nlink/times 
+	 misc/fts.c: add FTSENT.stack to eliminate getlist() recursion
+	 regex/ucs_names.h: use "..." catenation to placate some cc's
+03-05-11 string/strtoi.h: handle "-" "+" "0x" "11#"
+03-05-09 vmalloc/vmbest.c: large memory allocation tweaks
+03-05-06 misc/optget.c: fix getopt_long() prefix==1 bug that missed short flags
+03-04-27 comp/system.c: handle <ast_map.h>
+03-04-24 vmalloc/vmmopen.c: drop dup <unistd.h>
 03-04-21 tm/tmdate.c: fix next hour/min logic
 03-04-15 vmalloc/malloc.c: intercept __malloc() along with __libc_malloc()
 	 string/strdup.c: intercept __strdup() along with __libc_strdup()

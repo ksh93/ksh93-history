@@ -27,13 +27,13 @@
  * David Korn
  * AT&T Bell Laboratories
  *
- * cut [-s] [-f flist] [-c clist] [-d delim] [file] ...
+ * cut [-sN] [-f flist] [-c clist] [-d delim] [-D delim] [-r reclen] [file] ...
  *
  * cut fields or columns from fields from a file
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: cut (AT&T Labs Research) 2000-12-01 $\n]"
+"[-?\n@(#)$Id: cut (AT&T Labs Research) 2003-05-27 $\n]"
 USAGE_LICENSE
 "[+NAME?cut - cut out selected columns or fields of each line of a file]"
 "[+DESCRIPTION?\bcut\b bytes, characters, or character-delimited fields "
@@ -60,12 +60,17 @@ USAGE_LICENSE
 "[f:fields]:[list?\bcut\b based on fields separated by the delimiter "
 	"character specified with the \b-d\b optiion.]"
 "[n:nosplit?Do not split characters.  Currently ignored.]"
+"[r:reclen]#[reclen?If \areclen\a > 0, the input will be read as fixed length "
+	"records of length \areclen\a when used with the \b-b\b or \b-c\b "
+	"option.]"
 "[s:suppress|only-delimited?Suppress lines with no delimiter characters, "
 	"when used with the \b-f\b option.  By default, lines with no "
 	"delimiters will be passsed in untouched.]"
 "[D:line-delimeter]:[ldelim?The line delimiter character for the \b-f\b "
 	"option is set to \aldelim\a.  The default is the \bnewline\b "
 	"character.]"
+"[N:nonewline?Do not output new-lines at end of each record when used "
+	"with the \b-b\b or \b-c\b option.]"
 "\n"
 "\n[file ...]\n"
 "\n"
@@ -83,9 +88,11 @@ typedef struct
 {
 	int	cflag;
 	int	sflag;
+	int	nlflag;
 	int	wdelim;
 	int	ldelim;
 	int	seqno;
+	int	reclen;
 	int	list[2];
 } Cut_t;
 
@@ -96,6 +103,7 @@ typedef struct
 #define C_FIELDS	4
 #define C_SUPRESS	8
 #define C_NOCHOP	16
+#define C_NONEWLINE	32
 
 static int seqno;
 
@@ -108,7 +116,7 @@ static int mycomp(register const void *a,register const void *b)
 	return(*((int*)a) - *((int*)b));
 }
 
-static Cut_t *cutinit(int mode,char *str,int wdelim,int ldelim)
+static Cut_t *cutinit(int mode,char *str,int wdelim,int ldelim,size_t reclen)
 {
 	register int *lp, c, n=0;
 	register int range = 0;
@@ -116,10 +124,12 @@ static Cut_t *cutinit(int mode,char *str,int wdelim,int ldelim)
 	Cut_t *cuthdr;
 	if (!(cuthdr = (Cut_t*)stakalloc(sizeof(Cut_t)+strlen(cp)*sizeof(int))))
 		error(ERROR_exit(1), "out of space");
-	cuthdr->cflag = ((mode&C_CHARS)!=0 && (MB_CUR_MAX>=1));
+	cuthdr->cflag = ((mode&C_CHARS)!=0 && mbwide());
 	cuthdr->sflag = ((mode&C_SUPRESS)!=0);
+	cuthdr->nlflag = ((mode&C_NONEWLINE)!=0);
 	cuthdr->wdelim = wdelim;
 	cuthdr->ldelim = ldelim;
+	cuthdr->reclen = reclen;
 	cuthdr->seqno = ++seqno;
 	lp = cuthdr->list;
 	while(1) switch(c= *cp++)
@@ -236,9 +246,16 @@ static int cutcols(const Cut_t *cuthdr,Sfio_t *fdin,Sfio_t *fdout)
 	register const int	*lp = cuthdr->list;
 	register char		*inp;
 	register int		skip; /* non-zero for don't copy */
-	while(inp = sfgetr(fdin,'\n', 0))
+	while(1)
 	{
-		len = sfvalue(fdin);
+		if(cuthdr->reclen)
+			inp = sfreserve(fdin,cuthdr->reclen, -1);
+		else
+			inp = sfgetr(fdin, '\n', 0);
+		if(!inp)
+			break;
+		if(!(len=cuthdr->reclen))
+			len = sfvalue(fdin);
 		if((ncol = skip  = *(lp = cuthdr->list)) == 0)
 			ncol = *++lp;
 		while(1)
@@ -257,8 +274,8 @@ static int cutcols(const Cut_t *cuthdr,Sfio_t *fdin,Sfio_t *fdout)
 			ncol = *++lp;
 			skip = !skip;
 		}
-		if(skip)
-			sfputc(fdout,'\n');
+		if(!cuthdr->nlflag && (skip || cuthdr->reclen))
+			sfputc(fdout,cuthdr->ldelim);
 	}
 	return(c);
 }
@@ -399,6 +416,7 @@ b_cut(int argc,char *argv[], void* context)
 	int	mode = 0;
 	int	wdelim = '\t';
 	int	ldelim = '\n';
+	size_t	reclen = 0;
 
 	NoP(argc);
 	cmdinit(argv, context, ERROR_CATALOG, 0);
@@ -435,6 +453,13 @@ b_cut(int argc,char *argv[], void* context)
 	  case 'n':
 		mode |= C_NOCHOP;
 		break;
+	  case 'N':
+		mode |= C_NONEWLINE;
+		break;
+	  case 'r':
+		if(opt_info.num>0)
+			reclen = opt_info.num;
+		break;
 	  case 's':
 		mode |= C_SUPRESS;
 		break;
@@ -457,7 +482,7 @@ b_cut(int argc,char *argv[], void* context)
 		error(3, "non-empty b, c or f option must be specified");
 	if((mode & (C_FIELDS|C_SUPRESS)) == C_SUPRESS)
 		error(3, "s option requires f option");
-	cuthdr = cutinit(mode,cp,wdelim,ldelim);
+	cuthdr = cutinit(mode,cp,wdelim,ldelim,reclen);
 	if(cp = *argv)
 		argv++;
 	do

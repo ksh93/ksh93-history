@@ -109,10 +109,10 @@ extern int		kill(pid_t, int);
 extern int		killpg(pid_t, int);
 
 #if _BLD_ast && defined(__EXPORT__)
-#define extern		__EXPORT__
+#define extern		extern __EXPORT__
 #endif
 #if !_BLD_ast && defined(__IMPORT__)
-#define extern		__IMPORT__
+#define extern		extern __IMPORT__
 #endif
 
 extern Sig_info_t	sig_info;

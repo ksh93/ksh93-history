@@ -24,6 +24,16 @@ tst std_def_calloc note{ <std*.h> defines calloc macro }end compile{
 	(
 	#endif
 }end
+tst std_def_cfree note{ <std*.h> defines cfree macro }end compile{
+	#include <sys/types.h>
+	#if _std_stddef
+	#include <stddef.h>
+	#endif
+	#include <stdlib.h>
+	#ifndef cfree
+	(
+	#endif
+}end
 tst std_def_free note{ <std*.h> defines free macro }end compile{
 	#include <sys/types.h>
 	#if _std_stddef
@@ -41,6 +51,26 @@ tst std_def_malloc note{ <std*.h> defines malloc macro }end compile{
 	#endif
 	#include <stdlib.h>
 	#ifndef malloc
+	(
+	#endif
+}end
+tst std_def_memalign note{ <std*.h> defines memalign macro }end compile{
+	#include <sys/types.h>
+	#if _std_stddef
+	#include <stddef.h>
+	#endif
+	#include <stdlib.h>
+	#ifndef memalign
+	(
+	#endif
+}end
+tst std_def_pvalloc note{ <std*.h> defines pvalloc macro }end compile{
+	#include <sys/types.h>
+	#if _std_stddef
+	#include <stddef.h>
+	#endif
+	#include <stdlib.h>
+	#ifndef pvalloc
 	(
 	#endif
 }end

@@ -58,6 +58,9 @@ static struct Local_s
 	Dt_t*		attrs;
 	Dt_t*		names;
 	Dtdisc_t	dtdisc;
+#if CC_NATIVE != CC_ASCII
+	unsigned char*	a2n;
+#endif
 } local;
 
 /*
@@ -116,6 +119,9 @@ initialize(void)
 		else
 			dtinsert(local.names, w);
 	}
+#if CC_NATIVE != CC_ASCII
+	local.a2n = ccmap(CC_ASCII, CC_NATIVE);
+#endif
 	return 0;
 }
 
@@ -243,7 +249,11 @@ regcollate(register const char* s, char** e, char* buf, int size)
 							{
 								if (a->code <= 0xff)
 								{
-									buf[0] = ccmapc(a->code, CC_ASCII, CC_NATIVE);
+#if CC_NATIVE != CC_ASCII
+									buf[0] = local.a2n[a->code];
+#else
+									buf[0] = a->code;
+#endif
 									buf[r = 1] = 0;
 									ul = 0;
 									break;

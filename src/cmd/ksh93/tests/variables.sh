@@ -324,4 +324,12 @@ chmod +x /tmp/script$$
     [[ $(fun .sh.subshell) == 2 ]]  || err_exit ".sh.subshell not working for functions in subshells"
     (( .sh.subshell == 1 )) || err_exit ".sh.subshell not working in a subshell"
 )
+TIMEFORMAT='this is a test'
+[[ $({ { time :;} 2>&1;}) == "$TIMEFORMAT" ]] || err_exit 'TIMEFORMAT not working'
+: ${.sh.version}
+[[ $(alias integer) == *.sh.* ]] && err_exit '.sh. prefixed to alias name'
+: ${.sh.version}
+[[ $(whence rm) == *.sh.* ]] && err_exit '.sh. prefixed to tracked alias name'
+: ${.sh.version}
+[[ $(cd /bin;env | grep PWD) == *.sh.* ]] && err_exit '.sh. prefixed to PWD'
 exit $((Errors))

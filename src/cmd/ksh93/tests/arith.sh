@@ -327,6 +327,10 @@ do	let "x = $x+1"
 done
 (( x == n ))  || err_exit 'let with zero filled fields not working'
 (( y == n ))  || err_exit '((...)) with zero filled fields not working'
+typeset -LZ3 x=10
+[[ $(($x)) == 10 && $((1$x)) == 1010 ]] || err_exit 'zero filled fields not preserving leading zeros'
+unset y
+[[ $(let y=$x;print $y) == 10 && $(let y=1$x;print $y) == 1010 ]] || err_exit 'zero filled fields not preserving leading zeros with let'
 unset i ip ipx
 typeset -i hex=( 172 30 18 1)
 typeset -iu ip=0 ipx=0

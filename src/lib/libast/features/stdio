@@ -486,17 +486,20 @@ cat{
 
 	#else
 
-	#if !_BLD_ast && defined(__IMPORT__) && !_UWIN
-	#define __PUBLIC_DATA__	__IMPORT__
-	#else
-	#define __PUBLIC_DATA__
+	#if !_UWIN
+	#if _BLD_ast && defined(__EXPORT__)
+	#define extern		extern __EXPORT__
+	#endif
+	#if !_BLD_ast && defined(__IMPORT__)
+	#define extern		extern __IMPORT__
+	#endif
 	#endif
 
-	extern __PUBLIC_DATA__ FILE	_Sfstdin;
-	extern __PUBLIC_DATA__ FILE	_Sfstdout;
-	extern __PUBLIC_DATA__ FILE	_Sfstderr;
+	extern FILE	_Sfstdin;
+	extern FILE	_Sfstdout;
+	extern FILE	_Sfstderr;
 
-	#undef	__PUBLIC_DATA__
+	#undef	extern
 
 	#define feof(f)		(_sf_(f)->_flags&_SF_EOF)
 	#define ferror(f)	(_sf_(f)->_flags&_SF_ERROR)

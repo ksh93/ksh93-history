@@ -32,93 +32,20 @@ silent :: silent.sh
 
 :PACKAGE_INIT: mamake.c proto.c ratz.c release.c
 
-:: RELEASE hosttype.tst p.c
+:: RELEASE hosttype.tst p.c \
+	cc.darwin.ppc cc.hp.pa cc.hp.pa64 cc.ibm.risc cc.mvs.390 \
+	cc.next.i386 cc.next.m68k cc.osf.alpha cc.sco.i386 cc.sgi.mips2 \
+	cc.sgi.mips3 cc.sgi.mips3-o32 cc.sgi.mips4 cc.sgi.mips4-n32 \
+	cc.unix.mc68k \
+	ld.hp.pa \
+	ldd.cygwin.i386 ldd.darwin.ppc ldd.hp.pa ldd.ibm.risc \
+	ldd.mvs.390 ldd.sgi.mips2 ldd.sgi.mips3 ldd.sgi.mips4
 
 LICENSE : .DONTCARE
-
-/*
- * hosttype specific cc workaround initialization
- * these are coded for mam's benefit
- */
 
 if ! CC.HOSTTYPE
 	CC.HOSTTYPE := $(_hosttype_|HOSTTYPE)
 end
-
-$(BINDIR)/cc :INSTALL: (CC.HOSTTYPE) package hello.c \
-		cc.darwin.ppc \
-		cc.hp.pa \
-		cc.hp.pa64 \
-		cc.ibm.risc \
-		cc.mvs.390 \
-		cc.next.i386 \
-		cc.next.m68k \
-		cc.osf.alpha \
-		cc.sco.i386 \
-		cc.sgi.mips2 \
-		cc.sgi.mips3 \
-		cc.sgi.mips3-o32 \
-		cc.sgi.mips4 \
-		cc.sgi.mips4-n32 \
-		cc.unix.mc68k
-	for cc in $(*:N=*cc.*.*) ''
-	do	case $cc in
-		*cc.$(CC.HOSTTYPE))
-			if	$(SILENT) test -f $cc &&
-				$(SILENT) $cc -o hello.exe $(*:O=2) >/dev/null 2>&1 &&
-				$(SILENT) hello.exe >/dev/null 2>&1
-			then	case "$(CC.HOSTTYPE)" in
-				*.mips*)$cc -version >/dev/null 2>&1 || cc= ;;
-				esac
-				break
-			fi
-			;;
-		'')	$(SILENT) cc -o hello.exe $(*:O=2) &&
-			$(SILENT) hello.exe >/dev/null 2>&1 || {
-				if	$(SILENT) gcc -o hello.exe $(*:O=2) >/dev/null 2>&1 &&
-					$(SILENT) hello.exe >/dev/null 2>&1
-				then	cc=cc.gcc
-					echo 'gcc "$@"' > $cc
-					chmod +x $cc
-				fi
-			}
-			;;
-		esac
-	done
-	case $cc in
-	?*)	$(SILENT) cmp -s $cc $(<) || cp $cc $(<) ;;
-	esac
-	$(SILENT) rm -f hello.exe hello$(CC.SUFFIX.OBJECT)
-
-$(BINDIR)/ld :INSTALL: (CC.HOSTTYPE) package $(BINDIR)/cc \
-		ld.hp.pa
-	if	$(SILENT) test -x $(BINDIR)/cc
-	then	for ld in $(*:N=*ld.*.*)
-		do	case $ld in
-			*ld.$(CC.HOSTTYPE))
-				if	$(SILENT) test -f $ld
-				then	$(SILENT) cmp -s $ld $(<) || cp $ld $(<)
-				fi
-			esac
-		done
-	fi
-
-$(BINDIR)/ldd :INSTALL: .VIRTUAL (CC.HOSTTYPE) package $(BINDIR)/cc \
-		ldd.cygwin.i386 \
-		ldd.darwin.ppc \
-		ldd.ibm.risc \
-		ldd.mvs.390 \
-		ldd.sgi.mips2 \
-		ldd.sgi.mips3 \
-		ldd.sgi.mips4
-	for ldd in $(*:N=*ldd.*.*)
-	do	case $ldd in
-		*ldd.$(CC.HOSTTYPE))
-			if	$(SILENT) test -f $ldd -a ! -x /usr/bin/ldd -a ! -x /bin/ldd
-			then	$(SILENT) cmp -s $ldd $(<) || cp $ldd $(<)
-			fi
-		esac
-	done
 
 $(BINDIR)/mkdir :INSTALL: mkdir.sh
 	if	test ! -x $(<) -a -x /bin/mkdir

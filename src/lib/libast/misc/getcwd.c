@@ -33,7 +33,7 @@
 
 #include <ast.h>
 
-#if _UWIN
+#if _WINIX
 
 NoN(getcwd)
 

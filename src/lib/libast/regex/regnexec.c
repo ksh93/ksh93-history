@@ -609,11 +609,11 @@ collelt(register Celt_t* ce, char* key, int c, int x)
 				return 1;
 			continue;
 		case COLL_range_lc:
-			if (strcmp((char*)ce->beg, (char*)elt) <= ce->min && strcmp((char*)elt, (char*)ce->end) <= ce->max && (islower(c) || !isupper(c)))
+			if (strcmp((char*)ce->beg, (char*)elt) <= ce->min && strcmp((char*)elt, (char*)ce->end) <= ce->max && (iswlower(c) || !iswupper(c)))
 				return 1;
 			continue;
 		case COLL_range_uc:
-			if (strcmp((char*)ce->beg, (char*)elt) <= ce->min && strcmp((char*)elt, (char*)ce->end) <= ce->max && (isupper(c) || !islower(c)))
+			if (strcmp((char*)ce->beg, (char*)elt) <= ce->min && strcmp((char*)elt, (char*)ce->end) <= ce->max && (iswupper(c) || !iswlower(c)))
 				return 1;
 			continue;
 		}
@@ -629,10 +629,10 @@ collic(register Celt_t* ce, char* key, register char* nxt, int c, int x)
 	{
 		if (collelt(ce, key, c, x))
 			return 1;
-		if (islower(c))
-			c = toupper(c);
-		else if (isupper(c))
-			c = tolower(c);
+		if (iswlower(c))
+			c = towupper(c);
+		else if (iswupper(c))
+			c = towlower(c);
 		else
 			return 0;
 		x = wctomb(key, c);
@@ -806,7 +806,7 @@ DEBUG_TEST(0x0008,(sfprintf(sfstdout, "AHA#%04d 0x%04x parse %s `%-.*s'\n", __LI
 				{
 					c = mbchar(s);
 					d = mbchar(t);
-					if (toupper(c) != toupper(d))
+					if (towupper(c) != towupper(d))
 						return NONE;
 				}
 			}
@@ -1445,7 +1445,7 @@ DEBUG_TEST(0x0200,(sfprintf(sfstdout,"AHA#%04d 0x%04x parse %s=>%s `%-.*s'\n", _
 						for (i = 0; s < e && i < n; i++, s = t)
 						{
 							t = s;
-							if (toupper(mbchar(t)) != c)
+							if (towupper(mbchar(t)) != c)
 								break;
 							b[i] = t - s;
 						}
@@ -1551,7 +1551,7 @@ DEBUG_TEST(0x0200,(sfprintf(sfstdout,"AHA#%04d 0x%04x parse %s=>%s `%-.*s'\n", _
 						for (i = 0; i < m && s < e; i++, s = t)
 						{
 							t = s;
-							if (toupper(mbchar(t)) != c)
+							if (towupper(mbchar(t)) != c)
 								return r;
 						}
 						while (i++ <= n)
@@ -1566,7 +1566,7 @@ DEBUG_TEST(0x0200,(sfprintf(sfstdout,"AHA#%04d 0x%04x parse %s=>%s `%-.*s'\n", _
 							case GOOD:
 								return BEST;
 							}
-							if (s >= e || toupper(mbchar(s)) != c)
+							if (s >= e || towupper(mbchar(s)) != c)
 								break;
 						}
 					}
@@ -1631,7 +1631,7 @@ DEBUG_TEST(0x0200,(sfprintf(sfstdout,"AHA#%04d 0x%04x parse %s \"%-.*s\" `%-.*s'
 				{
 					c = mbchar(s);
 					d = mbchar(t);
-					if (toupper(c) != d)
+					if (towupper(c) != d)
 						return NONE;
 				}
 			}

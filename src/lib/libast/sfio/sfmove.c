@@ -208,7 +208,7 @@ reg int		rc;	/* record separator */
 			if(fr->mode&SF_PKRD)
 			{	/* advance the read point by proper amount */
 				fr->mode &= ~SF_PKRD;
-				(void)read(fr->file,(Void_t*)next,r);
+				(void)sysreadf(fr->file,(Void_t*)next,r);
 				fr->here += r;
 				if(!direct)
 					fr->endb = cp;

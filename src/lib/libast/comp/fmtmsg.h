@@ -113,19 +113,16 @@ typedef struct
 #define MM_default	(MM_action|MM_label|MM_severity|MM_tag|MM_text)
 
 #if _BLD_ast && defined(__EXPORT__)
-#define __PUBLIC_DATA__		__EXPORT__
-#else
+#define extern		__EXPORT__
+#endif
 #if !_BLD_ast && defined(__IMPORT__)
-#define __PUBLIC_DATA__		__IMPORT__
-#else
-#define __PUBLIC_DATA__
-#endif
+#define extern		extern __IMPORT__
 #endif
 
-extern __PUBLIC_DATA__ const MM_table_t		mm_class[];
-extern __PUBLIC_DATA__ const MM_table_t		mm_verb[];
+extern const MM_table_t		mm_class[];
+extern const MM_table_t		mm_verb[];
 
-#undef	__PUBLIC_DATA__
+#undef	extern
 
 #if _BLD_ast && defined(__EXPORT__)
 #define extern		__EXPORT__

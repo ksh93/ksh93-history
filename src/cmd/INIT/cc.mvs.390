@@ -1,4 +1,4 @@
-: mvs.390 cc wrapper for unix message and exit code semantics : 2001-04-26 :
+: mvs.390 cc wrapper for unix message and exit code semantics : 2003-06-11 :
 
 HOSTTYPE=mvs.390
 
@@ -33,6 +33,9 @@ case $1 in
 *)	exec=
 	;;
 esac
+export _CC_ACCEPTABLE_RC=1
+export _C89_ACCEPTABLE_RC=$_CC_ACCEPTABLE_RC
+export _CXX_ACCEPTABLE_RC=$_CC_ACCEPTABLE_RC
 case " $* " in
 *.C" "*)let dll=2
 	cc=$CC
@@ -215,6 +218,7 @@ do	if	read line
 			continue
 			;;
 		*'step ended with return code 4'*)
+			code=0
 			continue
 			;;
 		*'step ended with return code'*)

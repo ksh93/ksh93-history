@@ -61,7 +61,7 @@ esac
 test -x /bin/pfexec -o -x /usr/bin/pfexec
 option PFSH $?
 /bin/test ! -l . 2> /dev/null
-options TEST_L $?
+option TEST_L $?
 test -f /bin/universe && univ=`/bin/universe` > /dev/null 2>&1 -a ucb = "$univ"
 option UCB $?
 

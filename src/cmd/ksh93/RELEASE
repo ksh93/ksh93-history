@@ -1,3 +1,64 @@
+03-06-26  --- Release ksh93o+  ---
+03-06-26  Additional fields were added to the ulimit builtin.  Fields not
+	  supported by the local system are listed with reasonable sysconf(3),
+	  pathconf(3), or confstr(3) counterparts. Otherwise unsupported
+	  values are listed as "not supported".
+03-06-26  A bug in ulimit that improperly printed long long limit values
+	  has been fixed.
+03-06-23  A bug in which ${@:offset:len} could core dump when there
+	  were no arguments has been fixed.
+03-06-23  A bug in which ${X[@]:offset:len} could core dump when X
+	  was unset has been fixed.
+03-06-22  The -x option was added to the command builtin.  If this
+	  option is on, and the number of arguments would exceed ARG_MAX,
+	  the command will be invoked multiple times with a subset of
+	  the arguments.  For example, with alias grep='command -x grep,
+	  any number of arguments can be specified.
+03-06-14  A bug in which could cause a core dump on some systems with
+	  vi and emacs editors with the MULTIBYTE option has been fixed.
+03-06-06  A bug in which the shell could core dump when a script was
+	  run from its directory, and the script name a symlink to a file
+	  beginning with .., has been fixed.
+03-06-05  A bug in which the shell could core dump when a child process
+	  that it is unaware of terminates while it is calling malloc()
+	  has been fixed.
+03-06-02  An option named globstar (set -G) has been added.  When enabled,
+	  during pathname expansion, any component that consists only of ** is
+	  matches all files and any number of directory levels.
+03-05-30  A bug in which the PATH search could give incorrect results when
+	  run from directory foo and PATH contained .:foo:xxx has been fixed.
+03-05-29  Some changes were made to the code that displays the prompt in edit 
+	  mode to better handle escape sequences in the prompt.
+03-05-27  I added = to the list of characters that mark the beginning of
+	  a word for edit completion so that filenames in assignments
+	  can be completed.
+03-05-20  A bug in which read -N could hang on some systems when reading
+	  from a terminal or a pipe has been fixed.
+03-05-19  A bug in which the ouput of uname from a command substitution
+	  would go to the standard output of the invoking command when
+	  uname was invoked with a non-standard option has been fixed.
+03-05-19  A job control bug which would cause the shell to exit because 
+	  it hadn't take back the terminal has been fixed.  The bug
+	  could occur when running a function that contained a pipeline
+	  whose last element was a function.
+03-05-19  A job control timing bug introduced in ksh93o on some systems
+	  which could cause a pipeline to hang if the first component
+	  completed quickly has been fixed.
+03-05-13  The read builtin has been modified so that the builtin editors
+	  will not overwrite output from a previous incomplete line. 
+03-05-13  A bug in which the name of an identifier could have the string
+	  .sh. prefixed to it after expanding a variable whose name begins
+	  with .sh. has been fixed.
+03-05-13  A bug in the expansion of $var for compound variables in which
+	  some elements would not be output when the name was a prefix
+	  of another name in the compound variable has been fixed.
+03-05-08  The last item in the ksh93o release on 03-01-02 has been
+	  altered sligthly to preserve the leading 0's when the
+	  preceding character is a digit.  Thus, with typeset -LZ3 x=10,
+	  $(( 1$x)) will be 1010 whereas $(( $x) will be 10.
+03-04-25  A bug in which if x is a name reference, then nameref y=x.foo
+	  did not follow x has been fixed.
+
 03-03-18  --- Release ksh93o  ---
 03-03-18  A -N unary operator was added to test and [[...]] which returns
 	  true if the file exists and the file has been modified since it

@@ -62,7 +62,6 @@ int	type;	/* 0: from org, 1: from here, 2: from end */
 #endif
 {
 	Sfoff_t	r, s;
-	size_t	a, b, c;
 	int	mode, local, hardseek, mustsync;
 
 	SFMTXSTART(f, (Sfoff_t)(-1));
@@ -223,25 +222,11 @@ int	type;	/* 0: from org, 1: from here, 2: from end */
 	}
 #endif
 
-	b = f->endb - f->data;	/* amount of buffered data */
-	c = f->next - f->data;	/* amount of data consumed */
-
-	if(b > 0)
-	{	/* gradually reduce wastage */
-		if(b <= SF_GRAIN)
-			f->iosz = SF_GRAIN;
-		else
-		{	c *= 2;
-			a = c + 3*(b-c)/4;
-			a = ((a + SF_GRAIN-1)/SF_GRAIN)*SF_GRAIN;
-
-			b = ((b + SF_GRAIN-1)/SF_GRAIN)*SF_GRAIN;
-
-			f->iosz = a < b ? a : c < b/2 ? b/2 : b;
-		}
+	if(f->endb > f->next)
+	{	/* reduce wastage in future buffer fillings */
+		f->iosz = (f->next - f->data) + (f->endb - f->next)/2;
+		f->iosz = ((f->iosz + f->blksz-1)/f->blksz)*f->blksz;
 	}
-	/* else, believe previous setting of f->iosz */
-
 	if(f->iosz >= f->size)
 		f->iosz = 0;
 
@@ -249,10 +234,13 @@ int	type;	/* 0: from org, 1: from here, 2: from end */
 	f->next = f->endr = f->endb = f->data;
 
 	/* small backseeks often come in bunches, so seek back as far as possible */
-	if(p < f->lpos && f->size > SF_GRAIN && (p + SF_GRAIN) > s)
+	if(p < f->lpos && f->size > f->blksz && (p + f->blksz) > s)
 	{	if((r = s - f->size) < 0)
 			r = 0;
 	}
+	/* try to align buffer to block boundary to enhance I/O speed */
+	else if(f->blksz > 0 && f->size >= 2*f->blksz)
+		r = p - (p%f->blksz);
 	else
 	{	r = p;
 

@@ -32,6 +32,9 @@
 #include	"name.h"
 #include	"history.h"
 #include	"builtins.h"
+#if SHOPT_HISTEXPAND
+#   include	"edit.h"
+#endif
 
 static void hist_subst(const char*, int fd, char*);
 
@@ -51,6 +54,9 @@ int	b_hist(int argc,char *argv[], void *extra)
 	char *edit = 0;		/* name of editor */
 	char *replace = 0;		/* replace old=new */
 	int lflag = 0, nflag = 0, rflag = 0;
+#if SHOPT_HISTEXPAND
+	int pflag = 0;
+#endif
 	Histloc_t location;
 	NOT_USED(argc);
 	if(!sh_histinit())
@@ -73,6 +79,11 @@ int	b_hist(int argc,char *argv[], void *extra)
 	    case 's':
 		edit = "-";
 		break;
+#if SHOPT_HISTEXPAND
+	    case 'p':
+		pflag++;
+		break;
+#endif
 	    case 'N':
 		if(indx<=0)
 		{
@@ -91,6 +102,25 @@ int	b_hist(int argc,char *argv[], void *extra)
 	if(error_info.errors)
 		errormsg(SH_DICT,ERROR_usage(2),"%s",optusage((char*)0));
 	argv += (opt_info.index-1);
+#if SHOPT_HISTEXPAND
+	if(pflag)
+	{
+		hist_cancel(hp);
+		pflag = 0;
+		while(arg=argv[1])
+		{
+			flag = hist_expand(arg,&replace);
+			if(!(flag & HIST_ERROR))
+				sfputr(sfstdout, replace, '\n');
+			else
+				pflag = 1;
+			if(replace)
+				free(replace);
+			argv++;
+		}
+		return pflag;
+	}
+#endif
 	flag = indx;
 	while(flag<1 && (arg=argv[1]))
 	{

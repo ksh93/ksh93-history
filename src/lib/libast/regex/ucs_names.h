@@ -120,7 +120,8 @@ vertical\0\
 white\0\
 of\0\
 stop\0\
-black\0\
+"
+"black\0\
 fraction\0\
 vulgar\0\
 superscript\0\
@@ -195,7 +196,8 @@ si\0\
 data link escape\0\
 dl\0\
 dle\0\
-device control\0\
+"
+"device control\0\
 d1\0\
 dc1\0\
 device control two\0\
@@ -267,7 +269,8 @@ three\0\
 four\0\
 five\0\
 six\0\
-seven\0\
+"
+"seven\0\
 eight\0\
 nine\0\
 colon\0\
@@ -349,7 +352,8 @@ es\0\
 esa\0\
 character tabulation set\0\
 hs\0\
-hts\0\
+"
+"hts\0\
 character tabulation justification\0\
 hj\0\
 htj\0\
@@ -412,7 +416,8 @@ osc\0\
 privacy message\0\
 pm\0\
 application program command\0\
-ac\0\
+"
+"ac\0\
 apc\0\
 no break\0\
 ns\0\
@@ -495,7 +500,8 @@ o'\0\
 o>\0\
 o?\0\
 o:\0\
-multiplication\0\
+"
+"multiplication\0\
 *x\0\
 o/\0\
 u!\0\
@@ -609,7 +615,8 @@ a<\0\
 i<\0\
 o<\0\
 u<\0\
-u:-\0\
+"
+"u:-\0\
 u:'\0\
 u:<\0\
 u:!\0\
@@ -696,7 +703,8 @@ y*\0\
 theta\0\
 h*\0\
 i*\0\
-kappa\0\
+"
+"kappa\0\
 k*\0\
 lamda\0\
 l*\0\
@@ -792,7 +800,8 @@ ha\0\
 h=\0\
 tse\0\
 c=\0\
-che\0\
+"
+"che\0\
 c%\0\
 sha\0\
 s%\0\
@@ -884,7 +893,8 @@ theh\0\
 tk\0\
 jeem\0\
 hah\0\
-hk\0\
+"
+"hk\0\
 khah\0\
 dal\0\
 thal\0\
@@ -975,7 +985,8 @@ g-\0\
 h.\0\
 h-.\0\
 h:\0\
-h,\0\
+"
+"h,\0\
 h-(\0\
 i-?\0\
 i:'\0\
@@ -1068,7 +1079,8 @@ u-.\0\
 u2\0\
 u9'\0\
 u9!\0\
-u92\0\
+"
+"u92\0\
 u9?\0\
 u9-.\0\
 y!\0\
@@ -1154,7 +1166,8 @@ y*;j\0\
 y*,!j\0\
 y*;!j\0\
 y*,'j\0\
-y*;'j\0\
+"
+"y*;'j\0\
 y*,?j\0\
 y*;?j\0\
 w*,j\0\
@@ -1239,7 +1252,8 @@ em dash\0\
 '9\0\
 low-9 quotation\0\
 .9\0\
-high reversed-9 quotation\0\
+"
+"high reversed-9 quotation\0\
 9'\0\
 \"6\0\
 \"9\0\
@@ -1313,7 +1327,8 @@ numero\0\
 n0\0\
 sound recording copyright\0\
 po\0\
-prescription take\0\
+"
+"prescription take\0\
 rx\0\
 service\0\
 sm\0\
@@ -1389,7 +1404,8 @@ ud\0\
 north west\0\
 <!!\0\
 north east\0\
-//>\0\
+"
+"//>\0\
 south east\0\
 !!>\0\
 south west\0\
@@ -1460,7 +1476,8 @@ proportion\0\
 lazy s\0\
 cg\0\
 asymptotically\0\
-?-\0\
+"
+"?-\0\
 approximately\0\
 ?=\0\
 almost\0\
@@ -1537,7 +1554,8 @@ customer account\0\
 4-o\0\
 5-o\0\
 6-o\0\
-7-o\0\
+"
+"7-o\0\
 8-o\0\
 9-o\0\
 10-o\0\
@@ -1624,7 +1642,8 @@ twenty\0\
 (w)\0\
 (x)\0\
 (y)\0\
-(z)\0\
+"
+"(z)\0\
 a o\0\
 b o\0\
 c o\0\
@@ -1713,7 +1732,8 @@ lower block\0\
 lb\0\
 block\0\
 fb\0\
-rb\0\
+"
+"rb\0\
 shade\0\
 .s\0\
 medium shade\0\
@@ -1786,7 +1806,8 @@ ch-\0\
 cd-\0\
 cc-\0\
 quarter note\0\
-md\0\
+"
+"md\0\
 eighth note\0\
 m8\0\
 _d!\0\
@@ -1867,7 +1888,8 @@ na\0\
 ne\0\
 ba\0\
 bi\0\
-hu\0\
+"
+"hu\0\
 bu\0\
 bo\0\
 ma\0\
@@ -1957,7 +1979,8 @@ long s t\0\
 3+;\0\
 h'-\0\
 am-\0\
-am.\0\
+"
+"am.\0\
 ah-\0\
 ah.\0\
 wh-\0\
@@ -2048,7 +2071,8 @@ l+,\0\
 l+;\0\
 m+-\0\
 m+.\0\
-m+,\0\
+"
+"m+,\0\
 m+;\0\
 n+-\0\
 n+.\0\

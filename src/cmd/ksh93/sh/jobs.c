@@ -27,9 +27,6 @@
  *
  *   David Korn
  *   AT&T Labs
- *   Room 2B-102
- *   Murray Hill, N. J. 07974
- *   Tel. x7975
  *
  *  Written October, 1982
  *  Rewritten April, 1988
@@ -63,6 +60,26 @@ struct jobsave
 	pid_t		pid;
 	unsigned short	exitval;
 };
+
+static struct jobsave *job_savelist;
+
+/*
+ * try to keep at least one jobsave on the free list
+ */
+static struct jobsave *jobsave_create(pid_t pid)
+{
+	register struct jobsave *jp = job_savelist;
+	if(jp && jp->next)
+		job_savelist = jp->next;
+	else if(!(jp = new_of(struct jobsave,0)))
+	{
+		jp = job_savelist;
+		job_savelist = 0;
+	}
+	if(jp)
+		jp->pid = pid;
+	return(jp);
+}
 
 struct back_save
 {
@@ -217,14 +234,16 @@ static void job_waitsafe(register int sig)
 			pw->p_pgrp = 0;
 			if(bck.count++ > sh.lim.child_max)
 				job_chksave(0);
-			jp = new_of(struct jobsave,0);
-			jp->next = bck.list;
-			bck.list = jp;
-			lastpid = pw->p_pid = jp->pid = pid;
+			if(jp = jobsave_create(pid))
+			{
+				jp->next = bck.list;
+				bck.list = jp;
+				jp->exitval = 0;
+			}
 			pw->p_flag = 0;
-			jp->exitval = 0;
+			lastpid = pw->p_pid = pid;
 			px = 0;
-			if(WIFSTOPPED(wstat))
+			if(jp && WIFSTOPPED(wstat))
 			{
 				jp->exitval = SH_STOPSIG;
 				continue;
@@ -279,7 +298,8 @@ static void job_waitsafe(register int sig)
 			else
 			{
 				pw->p_flag |= (P_DONE|P_NOTIFY);
-				pw->p_exit = WEXITSTATUS(wstat);
+				if(WEXITSTATUS(wstat) > pw->p_exit)
+					pw->p_exit = WEXITSTATUS(wstat);
 			}
 			if(pw->p_pgrp==0)
 				pw->p_flag &= ~P_NOTIFY;
@@ -323,6 +343,9 @@ void job_init(int lflag)
 {
 	register int ntry=0;
 
+	/* create a jobsave freelist */
+	jobsave_create(1);
+	job_chksave(1);
 	job.fd = JOBTTY;
 	signal(SIGCHLD,job_waitsafe);
 #   if defined(SIGCLD) && (SIGCLD!=SIGCHLD)
@@ -996,9 +1019,14 @@ int job_post(pid_t pid, pid_t join)
 	pw->p_env = sh.curenv;
 	pw->p_pid = pid;
 	pw->p_flag = P_EXITSAVE;
-	pw->p_exit = 0;
+	pw->p_exit = sh.xargexit;
+	sh.xargexit = 0;
 	if(sh_isstate(SH_MONITOR))
+	{
+		if(killpg(job.curpgid,0)<0 && errno==ESRCH)
+			job.curpgid = pid;
 		pw->p_fgrp = job.curpgid;
+	}
 	else
 		pw->p_fgrp = 0;
 	pw->p_pgrp = pw->p_fgrp;
@@ -1015,7 +1043,8 @@ int job_post(pid_t pid, pid_t join)
 #endif /* JOBS */
 	if(pid==lastpid)
 	{
-		pw->p_exit= job_chksave(pid);
+		int val =  job_chksave(pid);
+		pw->p_exit = val>0?val:0;
 		if(pw->p_exit==SH_STOPSIG)
 		{
 			pw->p_flag |= (P_SIGNALLED|P_STOPPED);
@@ -1376,13 +1405,14 @@ static struct process *job_unpost(register struct process *pwtop,int notify)
 			/* save status for future wait */
 			if(bck.count++ > sh.lim.child_max)
 				job_chksave(0);
-			jp = new_of(struct jobsave,0);
-			jp->next = bck.list;
-			bck.list = jp;
-			jp->pid = pw->p_pid;
-			jp->exitval = pw->p_exit;
-			if(pw->p_flag&P_SIGNALLED)
-				jp->exitval |= SH_EXITSIG;
+			if(jp = jobsave_create(pw->p_pid))
+			{
+				jp->next = bck.list;
+				bck.list = jp;
+				jp->exitval = pw->p_exit;
+				if(pw->p_flag&P_SIGNALLED)
+					jp->exitval |= SH_EXITSIG;
+			}
 			pw->p_flag &= ~P_EXITSAVE;
 		}
 		pw->p_flag &= ~P_DONE;
@@ -1518,7 +1548,8 @@ static int job_chksave(register pid_t pid)
 		else
 			bck.list = jp->next;
 		bck.count--;
-		free((char*)jp);
+		jp->next = job_savelist; 
+		job_savelist = jp;
 	}
 	return(r);
 }

@@ -205,9 +205,9 @@ char*	mode;		/* mode of the stream */
 	/* make pipes */
 	parent[0] = parent[1] = child[0] = child[1] = -1;
 	if(sflags&SF_RDWR)
-	{	if(pipe(parent) < 0)
+	{	if(syspipef(parent) < 0)
 			goto error;
-		if((sflags&SF_RDWR) == SF_RDWR && pipe(child) < 0)
+		if((sflags&SF_RDWR) == SF_RDWR && syspipef(child) < 0)
 			goto error;
 	}
 
@@ -264,7 +264,7 @@ char*	mode;		/* mode of the stream */
 
 		/* must be careful so not to close something useful */
 		if((sflags&SF_RDWR) == SF_RDWR && pkeep == child[ckeep])
-			if((child[ckeep] = dup(pkeep)) < 0)
+			if((child[ckeep] = sysdupf(pkeep)) < 0)
 				_exit(EXIT_NOTFOUND);
 
 		if(sflags&SF_RDWR)

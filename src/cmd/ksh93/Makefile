@@ -53,6 +53,7 @@ SHOPT_ECHOPRINT ==		/* make echo equivalent to print */
 SHOPT_ESH == 1			/* emacs/gmacs edit mode */
 SHOPT_FILESCAN == 1		/* fast file scan */
 SHOPT_FS_3D == 			/* 3d file system */
+SHOPT_HISTEXPAND == 		/* csh-style history file expansions */
 SHOPT_KIA == 1			/* shell information database generation */
 SHOPT_MULTIBYTE == 1		/* multibyte character handling */
 SHOPT_NAMESPACE == 1		/* allow namespaces */
@@ -82,7 +83,7 @@ LIBS_opt := +ljobs +li
 
 if  CC.HOSTTYPE == "sol[89].*"
 	LIBS_opt += -lsecdb
-	LDFLAGS  += -zlazyload -zignore
+	LDFLAGS  += $(CC.LD.LAZY) $(CC.LD.NORECORD)
 end
 
 if ! "$(-mam:N=static*)" && CC.HOSTTYPE != "sgi.mips*"
@@ -105,6 +106,7 @@ FILES_opt =		/* optional file list enabled by vars above */
 FILES_opt += $(SHOPT_ESH:T=V?emacs.c)
 FILES_opt += $(SHOPT_VSH:T=V?vi.c)
 FILES_opt += $(SHOPT_BASH:T=V?bash.c bash_pre_rc.c)
+FILES_opt += $(SHOPT_HISTEXPAND:T=V?hexpand.c)
 if SHOPT_X
 LDFLAGS += -u  _XtAppInitialize -L/usr/add-on/X11/lib
 end
@@ -156,7 +158,7 @@ bash_pre_rc.c : bash_pre_rc.sh
 end
 
 :: syscall.s mamexec mamstate.c deparse.c shopen.c $(DOCFILES) \
-	bash.c bash_pre_rc.sh
+	bash.c bash_pre_rc.sh hexpand.c
 
 :: alias.sh append.sh arith.sh arrays.sh attributes.sh basic.sh bracket.sh \
 	builtins.sh case.sh comvar.sh coprocess.sh exit.sh functions.sh \

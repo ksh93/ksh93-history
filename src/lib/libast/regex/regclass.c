@@ -53,7 +53,7 @@ typedef struct Ctype_s
  * and any local extensions that may not even have functions or macros
  */
 
-#if _lib_wctype && !defined(iswblank) && !_lib_iswblank
+#if _need_iswblank
 
 int
 _reg_iswblank(wint_t wc)
@@ -71,22 +71,22 @@ _reg_iswblank(wint_t wc)
 
 #endif
 
-static int  Isalnum(int c) { return  isalnum(c); }
-static int  Isalpha(int c) { return  isalpha(c); }
-static int  Isblank(int c) { return  isblank(c); }
-static int  Iscntrl(int c) { return  iscntrl(c); }
-static int  Isdigit(int c) { return  isdigit(c); }
-static int Notdigit(int c) { return !isdigit(c); }
-static int  Isgraph(int c) { return  isgraph(c); }
-static int  Islower(int c) { return  islower(c); }
-static int  Isprint(int c) { return  isprint(c); }
-static int  Ispunct(int c) { return  ispunct(c); }
-static int  Isspace(int c) { return  isspace(c); }
-static int Notspace(int c) { return !isspace(c); }
-static int  Isupper(int c) { return  isupper(c); }
-static int   Isword(int c) { return  isalnum(c) || c == '_'; }
-static int  Notword(int c) { return !isalnum(c) && c != '_'; }
-static int Isxdigit(int c) { return  isxdigit(c);}
+static int  Isalnum(int c) { return  iswalnum(c); }
+static int  Isalpha(int c) { return  iswalpha(c); }
+static int  Isblank(int c) { return  iswblank(c); }
+static int  Iscntrl(int c) { return  iswcntrl(c); }
+static int  Isdigit(int c) { return  iswdigit(c); }
+static int Notdigit(int c) { return !iswdigit(c); }
+static int  Isgraph(int c) { return  iswgraph(c); }
+static int  Islower(int c) { return  iswlower(c); }
+static int  Isprint(int c) { return  iswprint(c); }
+static int  Ispunct(int c) { return  iswpunct(c); }
+static int  Isspace(int c) { return  iswspace(c); }
+static int Notspace(int c) { return !iswspace(c); }
+static int  Isupper(int c) { return  iswupper(c); }
+static int   Isword(int c) { return  iswalnum(c) || c == '_'; }
+static int  Notword(int c) { return !iswalnum(c) && c != '_'; }
+static int Isxdigit(int c) { return  iswxdigit(c);}
 
 #if _lib_wctype
 
@@ -170,7 +170,8 @@ regclass(const char* s, char** e)
 			if (!ctype[i].size && (ctype[i].name = (const char*)memdup(s, n + 1)))
 			{
 				*((char*)ctype[i].name + n) = 0;
-				if (!(ctype[i].wtype = wctype(ctype[i].name)))
+				/* mvs.390 needs the (char*) cast -- barf */
+				if (!(ctype[i].wtype = wctype((char*)ctype[i].name)))
 				{
 					free((char*)ctype[i].name);
 					return 0;

@@ -88,7 +88,7 @@ Sfdisc_t*	disc;
 				(*_Sfnotify)(f,SF_CLOSING,f->file);
 			CLOSE(f->file);
 			f->file = -1;
-			while(remove(ff->name) < 0 && errno == EINTR)
+			while(sysremovef(ff->name) < 0 && errno == EINTR)
 				errno = 0;
 
 			free((Void_t*)ff);
@@ -143,7 +143,7 @@ char*	file;
 	(void)vtmtxunlock(_Sfmutex);
 
 #else	/* can remove now */
-	while(remove(file) < 0 && errno == EINTR)
+	while(sysremovef(file) < 0 && errno == EINTR)
 		errno = 0;
 #endif
 
@@ -259,22 +259,22 @@ Sfio_t*	f;
 		if(!file)
 			return -1;
 #if _has_oflags
-		if((fd = open(file,O_RDWR|O_CREAT|O_EXCL|O_TEMPORARY,SF_CREATMODE)) >= 0)
+		if((fd = sysopenf(file,O_RDWR|O_CREAT|O_EXCL|O_TEMPORARY,SF_CREATMODE)) >= 0)
 			break;
 #else
-		if((fd = open(file,O_RDONLY)) >= 0)
+		if((fd = sysopenf(file,O_RDONLY)) >= 0)
 		{	/* file already exists */
 			CLOSE(fd);
 			fd = -1;
 		}
-		else if((fd = creat(file,SF_CREATMODE)) >= 0)
+		else if((fd = syscreatf(file,SF_CREATMODE)) >= 0)
 		{	/* reopen for read and write */
 			CLOSE(fd);
-			if((fd = open(file,O_RDWR)) >= 0)
+			if((fd = sysopenf(file,O_RDWR)) >= 0)
 				break;
 
 			/* don't know what happened but must remove file */
-			while(remove(file) < 0 && errno == EINTR)
+			while(sysremovef(file) < 0 && errno == EINTR)
 				errno = 0;
 		}
 #endif /* _has_oflags */
