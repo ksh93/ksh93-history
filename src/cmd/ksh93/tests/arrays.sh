@@ -15,7 +15,7 @@
 #               AT&T's intellectual property rights.               #
 #                                                                  #
 #            Information and Software Systems Research             #
-#                        AT&T Labs Research                        #
+#                          AT&T Research                           #
 #                         Florham Park NJ                          #
 #                                                                  #
 #                David Korn <dgk@research.att.com>                 #
@@ -344,4 +344,12 @@ foo=one
 foo[1]=two
 foo[0]=three
 [[ $foo == three ]] || err_exit 'export all not working with arrays'
+cat > /tmp/sharr$$ <<- \!
+	typeset -A foo
+	print foo${foo[abc]}
+!
+# 04-05-24 bug fix
+unset foo
+[[ $($SHELL -c "typeset -A foo;/tmp/sharr$$")  == foo ]] 2> /dev/null || err_exit 'empty associative arrays not being cleared correctly before scripts'
+[[ $($SHELL -c "typeset -A foo;foo[abc]=abc;/tmp/sharr$$") == foo ]] 2> /dev/null || err_exit 'associative arrays not being cleared correctly before scripts'
 exit $((Errors))

@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -47,7 +47,7 @@ mvdir(const char* from, const char* to)
 	static const char	mvdir[] = "/usr/lib/mv_dir";
 
 	oerrno = errno;
-	if (!access(mvdir, X_OK))
+	if (!eaccess(mvdir, X_OK))
 	{
 		argv[0] = mvdir;
 		argv[1] = from;

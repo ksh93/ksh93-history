@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -36,10 +36,17 @@
 int
 main()
 {
-	double	value = 0;
-	int	exp = 0;
-	int	r = 0;
+#if LD
+	long double	valuel = 0;
+#endif
+	double		value = 0;
+	int		exp = 0;
+	int		r = 0;
 
+#if LD
+	r |= ldexpl(valuel, exp) != 0;
+	r |= frexpl(valuel, &exp) != 0;
+#endif
 	r |= ldexp(value, exp) != 0;
 	r |= frexp(value, &exp) != 0;
 	return r;

@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -78,7 +78,7 @@
 #define TMP1		"/tmp"
 #define TMP2		"/usr/tmp"
 
-#define VALID(d)	(*(d)&&!access(d,W_OK|X_OK))
+#define VALID(d)	(*(d)&&!eaccess(d,W_OK|X_OK))
 
 static struct
 {
@@ -159,7 +159,7 @@ pathtemp(char* buf, size_t len, const char* dir, const char* pfx, int* fdp)
 		}
 		return 0;
 	}
-	if (!(d = (char*)dir) || *d && access(d, W_OK|X_OK))
+	if (!(d = (char*)dir) || *d && eaccess(d, W_OK|X_OK))
 	{
 		if (!tmp.vec)
 		{
@@ -204,7 +204,7 @@ pathtemp(char* buf, size_t len, const char* dir, const char* pfx, int* fdp)
 			tmp.dir = tmp.vec;
 			d = *tmp.dir++;
 		}
-		if (!d && (!*(d = astconf("TMP", NiL, NiL)) || access(d, W_OK|X_OK)) && access(d = TMP1, W_OK|X_OK) && access(d = TMP2, W_OK|X_OK))
+		if (!d && (!*(d = astconf("TMP", NiL, NiL)) || eaccess(d, W_OK|X_OK)) && eaccess(d = TMP1, W_OK|X_OK) && eaccess(d = TMP2, W_OK|X_OK))
 			return 0;
 	}
 	if (!len)

@@ -7,7 +7,7 @@ mac	SF_APPEND,SF_CLOSE	sys/stat.h sys/socket.h
 
 dll	import note{ Microsoft import/export nonsense }end execute{
 	__declspec(dllimport) int foo;
-	main() { return foo == 5 ? 0 : 1; }
+	int main() { return foo == 5 ? 0 : 1; }
 	int	bar = 5;
 	int*	_imp__foo = &bar;
 }end
@@ -94,7 +94,7 @@ cat{
 	#ifdef __DYNAMIC__
 	#	undef	__DYNAMIC__
 	#	ifndef _DLL
-	#		define _DLL
+	#		define _DLL		1
 	#	endif
 	#endif
 	#if _dll_import
@@ -138,6 +138,7 @@ cat{
 
 tst	ast_LL note{ LL numeric suffix supported }end compile{
 	int i = 1LL;
+	unsigned int u = 1ULL; /* NOTE: some compilers choke on 1LLU */
 }end
 
 tst	- -DN=1 - -DN=2 - -DN=3 - -DN=4 - -DN=5 - -DN=6 - -DN=7 - -DN=8 - -DN=0 output{
@@ -194,7 +195,7 @@ tst	- -DN=1 - -DN=2 - -DN=3 - -DN=4 - -DN=5 - -DN=6 - -DN=7 - -DN=8 - -DN=0 outp
 	#ifdef _ast_int8_t
 	#if _ast_LL
 	static _ast_int8_t		i_long_long = 1LL;
-	static unsigned _ast_int8_t	u_long_long = 18446744073709551615LLU;
+	static unsigned _ast_int8_t	u_long_long = 18446744073709551615ULL;
 	#else
 	static _ast_int8_t		i_long_long = 1;
 	static unsigned _ast_int8_t	u_long_long = 18446744073709551615;
@@ -219,6 +220,7 @@ tst	- -DN=1 - -DN=2 - -DN=3 - -DN=4 - -DN=5 - -DN=6 - -DN=7 - -DN=8 - -DN=0 outp
 	
 	static int	int_size[] = { 1, 2, 4, 8 };
 	
+	int
 	main()
 	{
 		register int	t;
@@ -304,6 +306,7 @@ tst	- -DN=1 - -DN=0 output{
 	#endif
 	};
 	
+	int
 	main()
 	{
 		register int	t;
@@ -377,11 +380,12 @@ tst	- -DTRY=1 - -DTRY=1 -Dvoid=char - -DTRY=2 - -DTRY=3 - -DTRY=4 output{
 	}
 	#endif
 	#undef	printf
+	int
 	main()
 	{
 		int	r;
-	#if TRY == 4
 		printf("\n#ifndef va_listref\n");
+	#if TRY == 4
 		printf("#define va_listref(p) (&(p))\t");
 			printf("/* pass va_list to varargs function */\n");
 		printf("#define va_listval(p) (*(p))\t");
@@ -390,7 +394,6 @@ tst	- -DTRY=1 - -DTRY=1 -Dvoid=char - -DTRY=2 - -DTRY=3 - -DTRY=4 output{
 			printf("/* va_arg() va_list type */\n");
 	#else
 		varyfunny(&r);
-		printf("\n#ifndef va_listref\n");
 		printf("#define va_listref(p) (p)\t");
 			printf("/* pass va_list to varargs function */\n");
 		if (sizeof(va_list) > sizeof(void*))
@@ -427,34 +430,38 @@ tst	- -DTRY=1 - -DTRY=1 -Dvoid=char - -DTRY=2 - -DTRY=3 - -DTRY=4 output{
 	#endif
 	#endif
 	
+		r = 1;
 		printf("#undef	_ast_va_list\n");
 		printf("#ifdef	va_start\n");
 		printf("#define _ast_va_list va_list\n");
 		printf("#else\n");
 	#if TRY == 1 || TRY == 2
-		printf("#define _ast_va_list void*\t");
+		printf("#define _ast_va_list void*");
 	#else
 	#if TRY == 3
 		if (sizeof(va_list) == sizeof(long))
-			printf("#define _ast_va_list long\t");
+			printf("#define _ast_va_list long");
 		else if (sizeof(va_list) == sizeof(short))
-			printf("#define _ast_va_list short\t");
+			printf("#define _ast_va_list short");
 		else
-			printf("#define _ast_va_list int\t");
+			printf("#define _ast_va_list int");
 	#else
 	#if defined(_M_ALPHA) && defined(_VA_LIST_DEFINED)
-		printf("#ifndef _VA_LIST_DEFINED\n");
-		printf("#define _VA_LIST_DEFINED\n");
-		printf("typedef struct { char *a0; int offset; } va_list;\n");
-		printf("#endif\n");
-		printf("#define _ast_va_list va_list\t");
+		printf("typedef struct { char *a0; int offset; } _ast_va_list_t;\n");
+		printf("#define _ast_va_list _ast_va_list_t");
 	#else
-		printf("typedef struct { char fill[%d]; } _ast_va_list_s;\n", sizeof(va_list));
-		printf("#define _ast_va_list _ast_va_list_s\t");
+		printf("#if __STD_C\n");
+		printf("#include <stdarg.h>\n");
+		printf("#else\n");
+		printf("#include <varargs.h>\n");
+		printf("#endif\n");
+		printf("#define _ast_va_list va_list\n");
+		r = 0;
 	#endif
 	#endif
 	#endif
-		printf("/* va_list that avoids #include */\n");
+		if (r)
+			printf("\t/* va_list that avoids #include */\n");
 		printf("#endif\n");
 		printf("#endif\n");
 		return 0;

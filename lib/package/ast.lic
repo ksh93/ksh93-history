@@ -39,7 +39,7 @@ license=(
 
 	domain=research.att.com
 	corporation="AT&T"
-	company="Labs Research"
+	company="Research"
 	location="Florham Park NJ"
 
 	url=http://www.${license.domain}/sw/license/${license.package}-${license.type}.html

@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -31,7 +31,7 @@
 #ifndef _WORDEXP_H
 #define _WORDEXP_H
 
-#include	<ast.h>
+#include <ast_common.h>
 
 #define WRDE_APPEND	01
 #define WRDE_DOOFFS	02

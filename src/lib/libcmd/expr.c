@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -31,7 +31,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: expr (AT&T Labs Research) 2003-07-28 $\n]"
+"[-?\n@(#)$Id: expr (AT&T Labs Research) 2004-05-27 $\n]"
 USAGE_LICENSE
 "[+NAME?expr - evaluate arguments as an expression]"
 "[+DESCRIPTION?\bexpr\b evaluates an expression given as arguments and writes "
@@ -315,23 +315,24 @@ static int expr_cond(State_t* state, Node_t *np)
 		np->type = T_NUM;
 		if (n = regcomp(&re, rp.str, REG_LEFT|REG_LENIENT))
 			regfatal(&re, ERROR_exit(2), n);
-		if (re.re_nsub>1)
-		{
-			regfree(&re);
-			error(ERROR_exit(2),"too many re sub-expressions");
-		}
 		if (!(n = regexec(&re, cp, elementsof(match), match, 0)))
 		{
-			if (match[1].rm_so != -1)
+			if (re.re_nsub > 0)
 			{
-				np->str = cp + match[1].rm_so;
-				np->str[match[1].rm_eo - match[1].rm_so] = 0;
 				np->type = T_STR;
-				np->num = strtol(np->str,&cp,10);
-				if (cp!=np->str && *cp==0)
-					np->type |= T_NUM;
+				if (match[1].rm_so >= 0)
+				{
+					np->str = cp + match[1].rm_so;
+					np->str[match[1].rm_eo - match[1].rm_so] = 0;
+					np->num = strtol(np->str,&cp,10);
+					if (cp!=np->str && *cp==0)
+						np->type |= T_NUM;
+				}
+				else
+					np->str = "";
 			}
-			else np->num = match[0].rm_eo - match[0].rm_so;
+			else
+				np->num = match[0].rm_eo - match[0].rm_so;
 		}
 		else if (n != REG_NOMATCH)
 			regfatal(&re, ERROR_exit(2), n);

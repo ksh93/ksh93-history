@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
@@ -36,7 +36,11 @@
 #include	"FEATURE/options"
 #include	<cdt.h>
 #include	<history.h>
-#include	<env.h>
+#ifdef SHOPT_ENV
+#   include	<env.h>
+#else
+#   define Env_t	void
+#endif
 #include	"fault.h"
 #include	"argnod.h"
 
@@ -141,6 +145,7 @@ struct limits
 	int		*outpipe;	/* output pipe pointer */ \
 	int		cpipe[2]; \
 	int		coutpipe; \
+	int		inuse_bits; \
 	struct argnod	*envlist; \
 	struct dolnod	*arglist; \
 	int		fn_depth; \
@@ -261,6 +266,8 @@ struct limits
 #   define SH_HISTVERIFY	62
 #endif
 
+#define MATCH_MAX		64
+
 extern void 		*sh_argopen(Shell_t*);
 extern Namval_t		*sh_assignok(Namval_t*,int);
 extern char		*sh_checkid(char*,char*);
@@ -268,7 +275,9 @@ extern int		sh_debug(const char*,const char*,const char*,char *const[],int);
 extern int 		sh_echolist(Sfio_t*, int, char**);
 extern struct argnod	*sh_endword(int);
 extern char 		**sh_envgen(void);
+#ifdef SHOPT_ENV
 extern void 		sh_envput(Env_t*, Namval_t*);
+#endif
 extern void 		sh_envnolocal(Namval_t*,void*);
 extern Sfdouble_t	sh_arith(const char*);
 extern void		*sh_arithcomp(char*);

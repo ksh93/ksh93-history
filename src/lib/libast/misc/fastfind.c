@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -196,7 +196,7 @@ findopen(const char* file, const char* pattern, const char* type, Finddisc_t* di
 							for (k = 0; k < elementsof(findnames); k++)
 							{
 								sfsprintf(fp->encode.file, sizeof(fp->encode.file), "%s/%s", path, findnames[k]);
-								if (!access(fp->encode.file, R_OK|W_OK))
+								if (!eaccess(fp->encode.file, R_OK|W_OK))
 								{
 									path = fp->encode.file;
 									break;

@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
@@ -66,6 +66,7 @@ union Value
 
 #define ARRAY_INCR	32	/* number of elements to grow when array 
 				   bound exceeded.  Must be a power of 2 */
+#define ARRAY_FILL	(8L<<ARRAY_BITS)	/* used with nv_putsub() */
 
 /* These flags are used as options to array_get() */
 #define ARRAY_ASSIGN	0

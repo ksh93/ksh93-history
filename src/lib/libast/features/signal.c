@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -222,6 +222,7 @@ static int		index[64];
 
 extern int		printf(const char*, ...);
 
+int
 main()
 {
 	register int	i;
@@ -279,5 +280,5 @@ main()
 		else printf("	\"%s\",\n", map[j].text);
 	printf("	0\n");
 	printf("};\n");
-	return(0);
+	return 0;
 }

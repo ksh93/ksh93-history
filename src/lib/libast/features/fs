@@ -23,6 +23,7 @@ lcl	xstat link{
 		return _xstat(_STAT_VER, path, st);
 	#endif
 	}
+	int
 	main()
 	{
 		struct stat	st;
@@ -48,6 +49,7 @@ lcl	xstat64 link{
 		return _xstat64(_STAT_VER, path, st);
 	#endif
 	}
+	int
 	main()
 	{
 		struct stat64	st;

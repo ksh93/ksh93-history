@@ -32,7 +32,7 @@ HEADERSRC = ast.h ast_dir.h ast_getopt.h ast_std.h \
 	ccode.h cdt.h debug.h dt.h error.h find.h ftw.h ftwalk.h fts.h \
 	fs3d.h getopt.h glob.h hash.h hashkey.h hashpart.h int.h lc.h ls.h \
 	magic.h mc.h mime.h mnt.h modecanon.h modex.h namval.h option.h \
-	proc.h re_comp.h regex.h regexp.h \
+	proc.h re_comp.h recfmt.h regex.h regexp.h \
 	sfio.h sfio_s.h sfio_t.h sfdisc.h sfstr.h \
 	stack.h stak.h stk.h swap.h tar.h times.h tm.h \
 	tok.h usage.h vdb.h vecargs.h vmalloc.h wait.h wordexp.h \
@@ -83,7 +83,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	localeconv.c setlocale.c translate.c \
 	catopen.c iconv.c lc.c mc.c \
 	liberror.c libevent.c \
-	base64.c \
+	base64.c recfmt.c \
 	fmtbase.c fmtbuf.c fmtclock.c fmtdev.c fmtelapsed.c fmterror.c \
 	fmtesc.c fmtfmt.c fmtfs.c fmtident.c fmtip4.c fmtls.c fmtmatch.c \
 	fmtmode.c fmtnum.c fmtperm.c fmtre.c fmttime.c fmtuid.c fmtgid.c \
@@ -111,7 +111,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	hsearch.c tsearch.c \
 	getlogin.c putenv.c \
 	lstat.c statvfs.c \
-	gross.c gross_sgi.h omitted.c \
+	eaccess.c gross.c gross_sgi.h omitted.c \
 	fakelink.h readlink.c symlink.c \
 	getpgrp.c setpgid.c setsid.c waitpid.c \
 	confmap.c conftab.c confstr.c pathconf.c sysconf.c \
@@ -211,7 +211,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 .AST.INIT : .MAKE
 	CCFLAGS += -D_BLD_ast
 
-parameter	(_BLD_ast) ast_version.h
+parameter	(_BLD_ast) (_AST_VERSION) ast_version.h
 ignore		iffeio.h
 scan.ignore	iffeio.h
 virtual		ast/stdio.h
@@ -290,7 +290,7 @@ $(INCLUDEDIR)/prototyped.h :INSTALL: $(INCLUDEDIR)
 	else	$(MV) 1.$(tmp).x $(<)
 	fi
 
-ast.req : .check.hdr .check.lib
+ast.req : astmath.exe .check.hdr .check.lib
 
 /*
  * atmain.C is the only C++ and only for a few systems
@@ -316,8 +316,8 @@ atmain.o : atmain.C
  */
 
 .check.hdr : .IGNORE .VIRTUAL \
-		ast_common.h - iffeio.h - ast_limits.h - ast_stdio.h \
-		ast_nl_types.h - ast_wchar.h
+		FEATURE/standards - ast_common.h - iffeio.h - \
+		ast_limits.h - ast_stdio.h ast_nl_types.h - ast_wchar.h
 	rm -f $(HEADERSTD)	/* clean up pre-2002-03-17 headers */
 
 /*
@@ -332,10 +332,17 @@ atmain.o : atmain.C
 	fi
 
 astmath.exe : .DONTCARE astmath.c
-	$(CC) $(CCFLAGS) -o $(*:N=*.c:B:S=.exe) $(*) 2>/dev/null ||
-	rm -f $(*:N=*.c:B:S=.exe)
+	if	$(CC) -DLD $(CCFLAGS) -o $(*:N=*.c:B:S=.exe) $(*) 2>/dev/null
+	then	: implicit "{ frexpl ldexpl }"
+	elif	$(CC) -DLD $(CCFLAGS) -o $(*:N=*.c:B:S=.exe) $(*) -lm 2>/dev/null
+	then	$(RM) -f $(*:N=*.c:B:S=.exe)
+	elif	$(CC) $(CCFLAGS) -o $(*:N=*.c:B:S=.exe) $(*) 2>/dev/null
+	then	: implicit "{ frexp ldexp }"
+	else	$(RM) -f $(*:N=*.c:B:S=.exe)
+	fi
+	$(RM) -f $(*:N=*.c:B:S=$(CC.SUFFIX.OBJECT))
 
-/* libmini.a is a bootstrap dll uwin cc -D_BLD_ast that exports part of ast */
+/* libmini.a is a bootstrap dll for uwin cc -D_BLD_ast that exports part of ast */
 
 MINI = mini
 

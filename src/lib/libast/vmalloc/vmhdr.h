@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -75,10 +75,6 @@
 #define _npt_sbrk		1
 #endif
 
-#undef free
-#undef malloc
-#undef realloc
-
 #endif /*_PACKAGE_ast*/
 
 #include	"FEATURE/vmalloc"
@@ -132,9 +128,16 @@ typedef int		ssize_t;
 /* compute a value that is a common multiple of x and y */
 #define MULTIPLE(x,y)	((x)%(y) == 0 ? (x) : (y)%(x) == 0 ? (y) : (y)*(x))
 
-#define VM_check	0x1	/* enable detailed checks		*/
-#define VM_abort	0x2	/* abort() on assertion failure		*/
-#define VM_init		0x8	/* VMCHECK env var checked		*/
+#define VM_check	0x0001	/* enable detailed checks		*/
+#define VM_abort	0x0002	/* abort() on assertion failure		*/
+#define VM_primary	0x0004	/* enable primary native allocation	*/
+#define VM_region	0x0008	/* enable region segment checks		*/
+#define VM_secondary	0x0010	/* enable secondary native allocation	*/
+#define VM_init		0x8000	/* VMCHECK env var checked		*/
+
+#if _UWIN
+#include <ast_windows.h>
+#endif
 
 #ifndef DEBUG
 #ifdef _BLD_DEBUG
@@ -535,5 +538,9 @@ extern void		_cleanup _ARG_(( void ));
 #endif /*_PACKAGE_ast*/
 
 _END_EXTERNS_
+
+#if _UWIN
+#define abort()		(DebugBreak(),abort())
+#endif
 
 #endif /* _VMHDR_H */

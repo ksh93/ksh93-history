@@ -6,6 +6,7 @@ key	signed
 tst	tmp_rmfail note{ open files cannot be removed }end execute{
 	#include "iffeio.h"
 	#include <string.h>
+	int
 	main()
 	{	
 		int		n;
@@ -51,6 +52,7 @@ tst	tmp_rmfail note{ open files cannot be removed }end execute{
 }end
 
 more void_int note{ voidptr is larger than int }end execute{
+	int
 	main()
 	{
 		return sizeof(char*) > sizeof(int) ? 0 : 1;
@@ -58,6 +60,7 @@ more void_int note{ voidptr is larger than int }end execute{
 }end
 
 more long_int note{ long is larger than int }end execute{
+	int
 	main()
 	{
 		return sizeof(long) > sizeof(int) ? 0 : 1;
@@ -65,6 +68,7 @@ more long_int note{ long is larger than int }end execute{
 }end
 
 tst	vax_asm note{ register layout ok for vax string operations }end execute{
+	int
 	main()
 	{
 	#ifndef vax
@@ -91,6 +95,7 @@ tst	lib_cvt note{ native floating point conversions ok }end link{
 	extern char* fcvt _ARG_((double, int, int*, int*));
 	extern double strtod _ARG_((const char*, char**));
 	_END_EXTERNS_
+	int
 	main()
 	{
 		ecvt(0.0, 0, 0, 0);
@@ -103,7 +108,10 @@ tst	lib_cvt note{ native floating point conversions ok }end link{
 tst	xopen_stdio note{ Stdio fseek/fflush are X/Open-compliant }end execute{
 	#include	"iffeio.h"
 	#define Failed(file)	(unlink(file),1)
-	main(int argc, char** argv)
+	int
+	main(argc, argv)
+	int	argc;
+	char**	argv;
 	{	FILE	*f1, *f2;
 		char	file[1024], buf[1024], *f, *t;
 		int	i, fd;

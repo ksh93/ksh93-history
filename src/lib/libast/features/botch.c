@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -39,6 +39,7 @@
 extern int		getgroups(int, gid_t*);
 extern int		printf(const char*, ...);
 
+int
 main()
 {
 #if _lib_getgroups
@@ -65,10 +66,10 @@ main()
 					goto botched;
 			}
 	}
-	return(0);
+	return 0;
  botched:
 	printf("#undef	getgroups\n");
 	printf("#define getgroups	_ast_getgroups /* implementation botches gid_t* arg */\n");
 #endif
-	return(0);
+	return 0;
 }

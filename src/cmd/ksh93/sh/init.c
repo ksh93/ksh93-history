@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
@@ -137,7 +137,7 @@ struct match
 	char		*rval;
 	int		vsize;
 	int		nmatch;
-	int		match[40];
+	int		match[2*(MATCH_MAX+1)];
 };
 
 typedef struct _init_
@@ -654,7 +654,7 @@ void sh_setmatch(const char *v, int vsize, int nmatch, int match[])
 	register int i,n;
 	if(mp->nmatch = nmatch)
 	{
-		memcpy(mp->match,match,nmatch*2*sizeof(int));
+		memcpy(mp->match,match,nmatch*2*sizeof(match[0]));
 		for(n=match[0],i=1; i < 2*nmatch; i++)
 		{
 			if(mp->match[i] < n)
@@ -676,6 +676,7 @@ void sh_setmatch(const char *v, int vsize, int nmatch, int match[])
 		}
 		memcpy(mp->val,v,vsize);
 		mp->val[vsize] = 0;
+		nv_putsub(SH_MATCHNOD, NIL(char*), nmatch|ARRAY_FILL);
 	}
 } 
 
@@ -1060,6 +1061,7 @@ int sh_reinit(char *argv[])
 	dtclose(sh.alias_tree);
 	sh.alias_tree = inittree(&sh,shtab_aliases);
 	sh.namespace = 0;
+	sh.inuse_bits = 0;
 	if(sh.userinit)
 		(*sh.userinit)(1);
 	if(sh.heredocs)

@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -1146,13 +1146,21 @@ extern int		errno;
 #endif
 
 /* for portable encoding of double values */
+#ifndef frexpl
 #if _ast_fltmax_double
 #define frexpl		frexp
-#define ldexpl		ldexp
 #endif
 #if !__STDC__
 extern Sfdouble_t	frexpl _ARG_((Sfdouble_t, int*));
+#endif
+#endif
+#ifndef ldexpl
+#if _ast_fltmax_double
+#define ldexpl		ldexp
+#endif
+#if !__STDC__
 extern Sfdouble_t	ldexpl _ARG_((Sfdouble_t, int));
+#endif
 #endif
 
 #if !_PACKAGE_ast

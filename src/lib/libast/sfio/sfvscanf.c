@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -32,24 +32,11 @@
 
 #define MAXWIDTH	(int)(((uint)~0)>>1)	/* max amount to scan	*/
 
-#if _PACKAGE_ast
-
 /*
  * pull in a private strtold()
  */
 
-#define S2F_function	_sfdscan
-#if _PACKAGE_ast
-#define S2F_static	0
-#else
-#define S2F_static	1
-#endif
-#define S2F_type	2
-#define S2F_scan	1
-
 #include "sfstrtof.h"
-
-#endif
 
 /* refresh stream buffer - taking care of unseekable/share streams too */
 #if __STD_C

@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -31,7 +31,7 @@
  */
 
 static const char usage_head[] =
-"[-?@(#)$Id: cp (AT&T Labs Research) 2004-02-29 $\n]"
+"[-?@(#)$Id: cp (AT&T Labs Research) 2004-08-27 $\n]"
 USAGE_LICENSE
 ;
 
@@ -237,6 +237,12 @@ visit(register Ftw_t* ftw)
 
 	if (state.interrupt)
 		return -1;
+	if (ftw->info == FTW_DC)
+	{
+		error(2, "%s: directory causes cycle", ftw->path);
+		ftw->status = FTW_SKIP;
+		return 0;
+	}
 	if (ftw->level == 0)
 	{
 		base = ftw->name;
@@ -279,7 +285,7 @@ visit(register Ftw_t* ftw)
 			while (e = strchr(s, '/'))
 			{
 				*e = 0;
-				if (access(state.path, 0))
+				if (access(state.path, F_OK))
 				{
 					st.st_mode = state.missmode;
 					if (s = strrchr(s, '/'))

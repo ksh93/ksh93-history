@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -316,7 +316,7 @@ b_uname(int argc, char** argv, void* context)
 			continue;
 		case ':':
 			s = "/usr/bin/uname";
-			if (!streq(argv[0], s) && (!access(s, X_OK) || !access(s+=4, X_OK)))
+			if (!streq(argv[0], s) && (!eaccess(s, X_OK) || !eaccess(s+=4, X_OK)))
 			{
 				argv[0] = s;
 				return procrun(s, argv);

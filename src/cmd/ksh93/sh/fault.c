@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
@@ -395,7 +395,7 @@ int sh_trap(const char *trap, int mode)
 	if(jmpval == 0)
 	{
 		if(mode==2)
-			sh_exec((union anynode*)trap,sh_isstate(SH_ERREXIT));
+			sh_exec((Shnode_t*)trap,sh_isstate(SH_ERREXIT));
 		else
 		{
 			Sfio_t *sp;

@@ -15,7 +15,7 @@
 #               AT&T's intellectual property rights.               #
 #                                                                  #
 #            Information and Software Systems Research             #
-#                        AT&T Labs Research                        #
+#                          AT&T Research                           #
 #                         Florham Park NJ                          #
 #                                                                  #
 #                David Korn <dgk@research.att.com>                 #
@@ -286,4 +286,14 @@ i="   ."
 unset x
 x=foo
 [[ "${x%o}(1)" == "fo(1)" ]] ||  err_exit 'print ${}() treated as pattern'
+unset i pattern string
+string=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghigklmnopqrstuvwxyz
+integer i
+for((i=0; i < ${#string}; i++))
+do	pattern+='@(?)'
+done
+[[ $(string=$string $SHELL -c  ": \${string/$pattern/}; print \${.sh.match[26]}") == Z ]] || err_exit -u2 'sh.match[26] not Z'
+: ${string/$pattern/}
+(( ${#.sh.match[@]} == 53 )) || err_exit '.sh.match has wrong number of elements'
+[[ ${.sh.match[@]:2:4} == 'B C D E'  ]] || err_exit '${.sh.match[@]:2:4} incorrect' 
 exit $((Errors))

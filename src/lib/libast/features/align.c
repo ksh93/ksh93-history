@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -61,6 +61,7 @@ extern int		printf(const char*, ...);
 static union _u_	u;
 static union _u_	v;
 
+int
 main()
 {
 	register int	i;
@@ -165,5 +166,5 @@ main()
 	printf("#define ALIGN_SETBIT2(x)	ALIGN_POINTER(ALIGN_INTEGER(x)|0x%lx)\n", bit2);
 	printf("#define ALIGN_TSTBIT2(x)	ALIGN_POINTER(ALIGN_INTEGER(x)&0x%lx)\n", bit2);
 	printf("\n");
-	return(0);
+	return 0;
 }

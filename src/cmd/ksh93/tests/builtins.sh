@@ -15,7 +15,7 @@
 #               AT&T's intellectual property rights.               #
 #                                                                  #
 #            Information and Software Systems Research             #
-#                        AT&T Labs Research                        #
+#                          AT&T Research                           #
 #                         Florham Park NJ                          #
 #                                                                  #
 #                David Korn <dgk@research.att.com>                 #
@@ -261,6 +261,8 @@ fi
 if	[[ $(printf '%..*s\n' : abc def) != abc:def ]]
 then	err_exit	"printf '%..*s' not working"
 fi
+[[ $(printf '%q\n') == '' ]] || err_exit 'printf "%q" with missing arguments'
+[[ $(printf '%T\n' now) == "$(date)" ]] || err_exit 'printf "%T" now'
 behead()
 {
 	read line

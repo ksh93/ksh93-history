@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
@@ -149,8 +149,14 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 				np = L_ARGNOD;
 			else
 			{
+				int offset = staktell();
+				char *saveptr = stakfreeze(0);
 				Dt_t  *root = (lvalue->emode&ARITH_COMP)?sh.var_base:sh.var_tree;
 				np = nv_open(*ptr,root,NV_NOASSIGN|NV_VARNAME);
+				if(saveptr != stakptr(0))
+					stakset(saveptr,offset);
+				else
+					stakseek(offset);
 			}
 			*str = c;
 			lvalue->value = (char*)np;

@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -65,7 +65,7 @@ pathshell(void)
 
 	if ((sh = getenv("SHELL")) && *sh == '/' && strmatch(sh, "*/(sh|*[!cC]sh)?(-+([a-zA-Z0-9.]))?(.exe)"))
 	{
-		if (!(ru = getuid()) || !access("/bin", W_OK))
+		if (!(ru = getuid()) || !eaccess("/bin", W_OK))
 		{
 			if (stat(sh, &st))
 				goto defshell;
@@ -108,7 +108,7 @@ pathshell(void)
  defshell:
 	if (!(sh = val))
 	{
-		if (!*(sh = astconf("SHELL", NiL, NiL)) || *sh != '/' || access(sh, X_OK) || !(sh = strdup(sh)))
+		if (!*(sh = astconf("SHELL", NiL, NiL)) || *sh != '/' || eaccess(sh, X_OK) || !(sh = strdup(sh)))
 			sh = "/bin/sh";
 		val = sh;
 	}

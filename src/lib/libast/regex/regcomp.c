@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -2898,6 +2898,8 @@ special(Cenv_t* env, regex_t* p)
 				return 0;
 			break;
 		case REX_GROUP:
+			if (env->stats.b)
+				return 0;
 			e = e->re.group.expr.rex;
 			if (e->type != REX_DOT)
 				return 0;

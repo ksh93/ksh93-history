@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -176,6 +176,10 @@ USAGE_LICENSE
 
 #include "FEATURE/time"
 
+#if _lib_stime
+extern int		stime(const time_t*);
+#endif
+
 typedef struct Fmt
 {
 	struct Fmt*	next;
@@ -220,7 +224,7 @@ settime(const char* cmd, time_t clock, int adjust, int network)
 #endif
 	argv = args;
 	s = "/usr/bin/date";
-	if (!streq(cmd, s) && (!access(s, X_OK) || !access(s+=4, X_OK)))
+	if (!streq(cmd, s) && (!eaccess(s, X_OK) || !eaccess(s+=4, X_OK)))
 	{
 		*argv++ = s;
 		if (streq(astconf("UNIVERSE", NiL, NiL), "att"))

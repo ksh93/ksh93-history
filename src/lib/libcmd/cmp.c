@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -51,7 +51,7 @@ USAGE_LICENSE
 	"\bM-\b as with \bcat\b(1).]"
 "[i:ignore-initial]#[skip:=0?Sets default skip values for the operands "
 	"\askip1\a and \askip2\a to \askip\a.]"
-"[ [l:verbose?Write the decimal byte number and the differing bytes (in octal) "
+"[l:verbose?Write the decimal byte number and the differing bytes (in octal) "
 	"for each difference.]"
 "[s:quiet|silent?Write nothing for differing files; return non-zero "
 	"exit status only.] ]"

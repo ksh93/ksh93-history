@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -31,11 +31,15 @@
  * return small format buffer chunk of size n
  * spin lock for thread access
  * format buffers are short lived
+ * only one concurrent buffer with size > sizeof(buf)
  */
 
 static char		buf[16 * 1024];
 static char*		nxt = buf;
 static int		lck = -1;
+
+static char*		big;
+static size_t		bigsiz;
 
 char*
 fmtbuf(size_t n)
@@ -47,7 +51,15 @@ fmtbuf(size_t n)
 	if (n > (&buf[elementsof(buf)] - nxt))
 	{
 		if (n > elementsof(buf))
-			return 0;
+		{
+			if (n > bigsiz)
+			{
+				bigsiz = roundof(n, 8 * 1024);
+				if (!(big = newof(big, char, bigsiz, 0)))
+					return 0;
+			}
+			return big;
+		}
 		nxt = buf;
 	}
 	cur = nxt;

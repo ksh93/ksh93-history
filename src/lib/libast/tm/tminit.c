@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -365,7 +365,7 @@ tmlocal(void)
 void
 tminit(register Tm_zone_t* zp)
 {
-	static unsigned _ast_int4_t	serial = ~(_ast_int4_t)0;
+	static unsigned _ast_int4_t	serial = ~(unsigned _ast_int4_t)0;
 
 	if (serial != ast.env_serial)
 	{

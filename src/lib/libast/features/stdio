@@ -214,6 +214,7 @@ output{
 	#ifndef TMP_MAX
 	#define TMP_MAX		33520641
 	#endif
+	int
 	main()
 	{
 		printf("#ifndef FILENAME_MAX\n");

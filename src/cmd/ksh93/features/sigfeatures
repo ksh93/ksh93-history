@@ -28,7 +28,7 @@ cat{
 }end
 tst	output{
 	#include <signal.h>
-	main()
+	int main()
 	{
 	#ifdef SIGRTMIN
 		printf("#undef	_SIGRTMIN\n");

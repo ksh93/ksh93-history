@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -1387,10 +1387,10 @@ item(Sfio_t* sp, char* s, int level, int style, Sfio_t* ip, int version, char* c
  */
 
 static char*
-text(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip, int version, char* catalog)
+textout(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip, int version, char* catalog)
 {
 #if 0
-#define text(a,b,c,d,e,f,g,h)	(sfprintf(a,"(%d)",__LINE__),text(a,b,c,d,e,f,g,h))
+#define textout(a,b,c,d,e,f,g,h)	(sfprintf(a,"(%d)",__LINE__),textout(a,b,c,d,e,f,g,h))
 #endif
 	register char*	t;
 	register int	c;
@@ -1508,7 +1508,7 @@ text(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip, i
 	if (c == ':')
 		c = *(p = skip(p, '?', 0, 0, 1, 0, 0, version));
 	if ((c == ']' || c == '?' && *(p + 1) == ']' && *(p + 2) != ']' && p++) && (c = *(p = next(p + 1, version))) == GO)
-		p = text(sp, p, style, level + bump + par + 1, 0, ip, version, catalog);
+		p = textout(sp, p, style, level + bump + par + 1, 0, ip, version, catalog);
 	else if (c == '?' || c == ' ')
 	{
 		p++;
@@ -1607,7 +1607,7 @@ text(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip, i
 							p = skip(p, 0, 0, 0, 1, 0, 1, version);
 						}
 						if (*(p = next(p, version)) == GO)
-							p = text(sp, p, style, level + bump + !level, 0, ip, version, catalog);
+							p = textout(sp, p, style, level + bump + !level, 0, ip, version, catalog);
 						else if (*p == '[' && level > lev)
 						{
 							p++;
@@ -2427,7 +2427,7 @@ opthelp(const char* oopts, const char* what)
 							if (!sp_misc && !(sp_misc = sfstropen()))
 								goto nospace;
 							else
-								p = text(sp_misc, p, style, 1, 3, sp_info, version, catalog);
+								p = textout(sp_misc, p, style, 1, 3, sp_info, version, catalog);
 							continue;
 						}
 					}
@@ -2448,7 +2448,7 @@ opthelp(const char* oopts, const char* what)
 							{
 								if (*(p + 1) == '-')
 									p++;
-								p = text(sp, p, style, 1, 3, sp_info, version, catalog);
+								p = textout(sp, p, style, 1, 3, sp_info, version, catalog);
 								matched = -1;
 								continue;
 							}
@@ -2461,7 +2461,7 @@ opthelp(const char* oopts, const char* what)
 				{
 					if (style >= STYLE_man)
 					{
-						p = text(sp_body, p, style, 0, 0, sp_info, version, catalog);
+						p = textout(sp_body, p, style, 0, 0, sp_info, version, catalog);
 						if (!sp_head)
 						{
 							sp_head = sp_body;
@@ -2476,14 +2476,14 @@ opthelp(const char* oopts, const char* what)
 						{
 							if (p[1] == '?')
 							{
-								p = text(sp, p, style, 1, 3, sp_info, version, catalog);
+								p = textout(sp, p, style, 1, 3, sp_info, version, catalog);
 								continue;
 							}
 							paragraph = 0;
 						}
 						if (match((char*)what + 1, p + 1, version, catalog))
 						{
-							p = text(sp, p, style, 1, 3, sp_info, version, catalog);
+							p = textout(sp, p, style, 1, 3, sp_info, version, catalog);
 							matched = -1;
 							paragraph = 1;
 							continue;
@@ -2832,9 +2832,9 @@ opthelp(const char* oopts, const char* what)
 					if (style >= STYLE_match)
 					{
 						if (d)
-							text(sp_body, d, style, 0, 3, sp_info, version, catalog);
+							textout(sp_body, d, style, 0, 3, sp_info, version, catalog);
 						if (u)
-							text(sp_body, u, style, 0, 3, sp_info, version, catalog);
+							textout(sp_body, u, style, 0, 3, sp_info, version, catalog);
 						if ((a & OPT_invert) && w && (d || u))
 						{
 							u = skip(w, ':', '?', 0, 1, 0, 0, version);
@@ -2842,11 +2842,11 @@ opthelp(const char* oopts, const char* what)
 								sfprintf(sp_info, " %s; -\b%c\b %s --\bno%-.*s\b.", T(NiL, ast.id, "On by default"), f, T(NiL, ast.id, "means"), u - w, w);
 							else
 								sfprintf(sp_info, " %s %s\bno%-.*s\b %s.", T(NiL, ast.id, "On by default; use"), "--"+2-prefix, u - w, w, T(NiL, ast.id, "to turn off"));
-							text(sp_body, sfstruse(sp_info), style, 0, 0, sp_info, version, NiL);
+							textout(sp_body, sfstruse(sp_info), style, 0, 0, sp_info, version, NiL);
 						}
 						if (*p == GO)
 						{
-							p = u ? skip(p + 1, 0, 0, 0, 0, 1, 1, version) : text(sp_body, p, style, 4, 0, sp_info, version, catalog);
+							p = u ? skip(p + 1, 0, 0, 0, 0, 1, 1, version) : textout(sp_body, p, style, 4, 0, sp_info, version, catalog);
 							y = "+?";
 						}
 						else
@@ -2854,7 +2854,7 @@ opthelp(const char* oopts, const char* what)
 						if (a & OPT_optional)
 						{
 							sfprintf(sp_info, "%s%s", y, T(NiL, ast.id, "The option value may be omitted."));
-							text(sp_body, sfstruse(sp_info), style, 4, 0, sp_info, version, NiL);
+							textout(sp_body, sfstruse(sp_info), style, 4, 0, sp_info, version, NiL);
 							y = " ";
 						}
 						if (v)
@@ -2869,7 +2869,7 @@ opthelp(const char* oopts, const char* what)
 							}
 							sfputc(sp_info, '\b');
 							sfputc(sp_info, '.');
-							text(sp_body, sfstruse(sp_info), style, 4, 0, sp_info, version, NiL);
+							textout(sp_body, sfstruse(sp_info), style, 4, 0, sp_info, version, NiL);
 						}
 					}
 					else if (!mutex)
@@ -2878,7 +2878,7 @@ opthelp(const char* oopts, const char* what)
 				if (*p == GO)
 				{
 					if (style >= STYLE_match)
-						p = text(sp_body, p, style, 4, 0, sp_info, version, catalog);
+						p = textout(sp_body, p, style, 4, 0, sp_info, version, catalog);
 					else
 						p = skip(p + 1, 0, 0, 0, 0, 1, 1, version);
 				}
@@ -3433,7 +3433,7 @@ opterror(register char* p, int version, char* catalog)
 			p = C("section not found");
 		else
 		{
-			if (opt_info.option[0] != '?' && opt_info.option[0] != '-' || opt_info.option[1] != '?' && opt_info.option[1] != '-' || opt_info.option[1] != '?')
+			if (opt_info.option[0] != '?' && opt_info.option[0] != '-' || opt_info.option[1] != '?' && opt_info.option[1] != '-')
 				opt_info.option[0] = 0;
 			p = C("unknown option");
 		}
@@ -3601,7 +3601,7 @@ optget(register char** argv, const char* oopts)
 			 * finished with the previous arg
 			 */
 
-			if (opt_info.index == 1)
+			if (opt_info.index == 1 && opt_info.argv != opt_info.state->strv)
 			{
 				opt_info.argv = 0;
 				opt_info.state->argv[0] = 0;
@@ -4637,16 +4637,16 @@ optget(register char** argv, const char* oopts)
 }
 
 /*
- * parse long options sans leading -- from string and pass to optget()
+ * parse long options with 0,1,2 leading '-' or '+' from string and pass to optget()
  * syntax is the unquoted
  *
- *	<length> <name>[[-+:|&=]=<value>\n (or \0 for the last)
+ *	<length> [-|+|--|++]<name>[[-+:|&=]=<value>\n (or \0 for the last)
  *
  * or the quoted
  *
- *	[no]name[[-+:|&=]=['"{(]value[)}"']][, ]...
+ *	[-|+|--|++][no]name[[-+:|&=]=['"{(]value[)}"']][, ]...
  *
- *	with \x escapes passed to chresc()
+ * with \x escapes passed to chresc()
  *
  * return '#' for `label:', with opt_info.name==label
  * str[opt_info.offset]	next arg
@@ -4681,9 +4681,25 @@ optstr(const char* str, const char* opts)
 		while (*s == ',' || *s == ' ' || *s == '\t' || *s == '\n' || *s == '\r')
 			s++;
 		if (!*s)
+		{
+			opt_info.state->str = 0;
 			return 0;
-		sfputc(mp, '-');
-		sfputc(mp, '-');
+		}
+		if (*s == '-' || *s == '+')
+		{
+			c = *s++;
+			sfputc(mp, c);
+			if (*s == c)
+			{
+				sfputc(mp, c);
+				s++;
+			}
+		}
+		else
+		{
+			sfputc(mp, '-');
+			sfputc(mp, '-');
+		}
 		if (isdigit(*s) && (v = (int)strtol(s, &e, 10)) > 1 && isspace(*e) && --v <= strlen(s) && (s[v] == 0 || s[v] == '\n'))
 		{
 			s += v;
@@ -4767,7 +4783,10 @@ optstr(const char* str, const char* opts)
 	if (opts)
 	{
 		if (!opt_info.state->strv[1])
+		{
+			opt_info.state->str = 0;
 			return 0;
+		}
 		opt_info.index = 1;
 		v = opt_info.offset;
 		opt_info.offset = 0;

@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
@@ -55,7 +55,7 @@ static void p_keyword(const char*,int);
 static void p_redirect(const struct ionod*);
 static void p_switch(const struct regnod*);
 static void here_body(const struct ionod*);
-static void p_tree(const union anynode*,int);
+static void p_tree(const Shnode_t*,int);
 
 static int level;
 static int begin_line;
@@ -66,9 +66,9 @@ static const struct ionod *here_doc;
 static Sfio_t *outfile;
 static const char *forinit = "";
 
-extern void sh_deparse(Sfio_t*, const union anynode*,int);
+extern void sh_deparse(Sfio_t*, const Shnode_t*,int);
 
-void sh_deparse(Sfio_t *out, const union anynode *t,int tflags)
+void sh_deparse(Sfio_t *out, const Shnode_t *t,int tflags)
 {
 	outfile = out;
 	p_tree(t,tflags);
@@ -76,7 +76,7 @@ void sh_deparse(Sfio_t *out, const union anynode *t,int tflags)
 /*
  * print script corresponding to shell tree <t>
  */
-static void p_tree(register const union anynode *t,register int tflags)
+static void p_tree(register const Shnode_t *t,register int tflags)
 {
 	register char *cp;
 	int save = end_line;
@@ -176,7 +176,7 @@ static void p_tree(register const union anynode *t,register int tflags)
 
 		case TLST:
 		{
-			union anynode *tr = t->lst.lstrit;
+			Shnode_t *tr = t->lst.lstrit;
 			if(tr->tre.tretyp==TWH && tr->wh.whinc && t->lst.lstlef->tre.tretyp==TARITH)
 			{
 				/* arithmetic for statement */

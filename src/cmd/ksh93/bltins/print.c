@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
@@ -522,8 +522,10 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 			value->c = 0;
 			fe->flags &= ~SFFMT_LONG;
 			break;
-		case 's':
 		case 'q':
+			format = 's';
+			/* FALL THROUGH */
+		case 's':
 		case 'H':
 		case 'B':
 		case 'P':
@@ -558,9 +560,10 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 			value->ll = time(NIL(time_t*));
 			break;
 		default:
+			if(!strchr("DdXxoUu",format))
+				errormsg(SH_DICT,ERROR_exit(1),e_formspec,format);
 			fe->fmt = 'd';
 			value->ll = 0;
-			errormsg(SH_DICT,ERROR_exit(1),e_formspec,format);
 			break;
 		}
 	}

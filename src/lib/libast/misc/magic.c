@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -960,7 +960,7 @@ cklang(register Magic_t* mp, const char* file, char* buf, struct stat* st)
 			for (s = (char*)b; b < e && isprint(*b); b++);
 			c = *b;
 			*b = 0;
-			if ((st->st_mode & (S_IXUSR|S_IXGRP|S_IXOTH)) || match(s, "/*bin*/*") || !access(s, 0))
+			if ((st->st_mode & (S_IXUSR|S_IXGRP|S_IXOTH)) || match(s, "/*bin*/*") || !access(s, F_OK))
 			{
 				if (t = strrchr(s, '/'))
 					s = t + 1;

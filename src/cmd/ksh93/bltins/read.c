@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
@@ -52,6 +52,7 @@
 
 int	b_read(int argc,char *argv[], void *extra)
 {
+	Sfdouble_t sec;
 	register char *name;
 	register int r, flags=0, fd=0;
 	register Shell_t *shp = (Shell_t*)extra;
@@ -65,7 +66,8 @@ int	b_read(int argc,char *argv[], void *extra)
 		flags |= A_FLAG;
 		break;
 	    case 't':
-		timeout = 1000*opt_info.num+1;
+		sec = sh_strnum(opt_info.arg, (char**)0,1);
+		timeout = 1000*sec+1;
 		break;
 	    case 'd':
 		if(opt_info.arg && *opt_info.arg!='\n')
@@ -82,7 +84,7 @@ int	b_read(int argc,char *argv[], void *extra)
 		flags &= ~((1<<D_FLAG)-1);
 		flags |= (r=='n'?N_FLAG:NN_FLAG);
 		r = (int)opt_info.num;
-		if((unsigned)r> 0xfff)
+		if((unsigned)r > (1<<((8*sizeof(int))-D_FLAG))-1)
 			errormsg(SH_DICT,ERROR_exit(1),e_overlimit,"n");
 		flags |= (r<< D_FLAG);
 		break;
@@ -283,9 +285,19 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 		}
 		if(timeslot)
 			timerdel(timeslot);
-		nv_putval(np,var,0);
-		if(c>=sizeof(buf))
-			free((void*)var);
+		if(nv_isattr(np,NV_BINARY))
+		{
+			if(c<sizeof(buf))
+				var = strdup(var);
+			nv_putval(np,var, NV_RAW);
+			nv_setsize(np,c);
+		}
+		else
+		{
+			nv_putval(np,var,0);
+			if(c>=sizeof(buf))
+				free((void*)var);
+		}
 		goto done;
 	}
 	else if(cp = (unsigned char*)sfgetr(iop,delim,0))

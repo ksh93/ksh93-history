@@ -823,6 +823,8 @@ Otherwise, the current position is the logical stream position.
 
 .Ss "  Void_t* sfreserve(Sfio_t* f, ssize_t n, int type)"
 This function reserves a data block from the stream \f5f\fP.
+It returns the reserved data block on success and \f5NULL\fP on failure.
+
 If \f5f\fP is a \f5SF_READ\fP stream, the data block is a segment of input data.
 If \f5f\fP is a \f5SF_WRITE\fP stream, the data block is a buffer
 suitable for writing output data.
@@ -830,65 +832,88 @@ For consistency, if \f5f\fP is opened with \f5SF_READ|SF_WRITE\fP,
 it will be treated as if it is a \f5SF_READ\fP stream
 (see \f5sfset()\fP for forcing a particular mode) but the returned
 buffer can also be written into (more below).
-A \f5sfreserve()\fP call is successful if it can reserve a data block 
-of size at least the absolute value of \f5n\fP.
-\f5sfreserve()\fP returns the reserved data block on success
-and \f5NULL\fP on failure.
-Any partially reserved data block can be obtained in
-a subsequent \f5sfreserve()\fP call with \f5type\fP being \f5SF_LASTR\fP.
+Such a reserved data block is guaranteed to be valid only until
+a future access to the stream \f5f\fP.
+
+When \f5f\fP is \f5SF_READ\fP, \f5SF_SHARE\fP and unseekable,
+\f5sfreserve()\fP will attempt to peek at input data without
+consuming it. This enables separate processes to share in reading
+input from unseekable file descriptors (e.g., pipes or devices).
+However, this use of \f5sfreserve()\fP may fail
+on certain platforms that do not properly support
+peeking on unseekable file descriptors.
 
 After a \f5sfreserve()\fP call, whether or not it succeeds,
 \f5sfvalue(f)\fP gives the size of the available data block.
-A successfully reserved data block is valid only until
-a future access to the stream \f5f\fP. Thus, after a successful reservation,
-the application should process the reserved data block before
-accessing the stream \f5f\fP again.
+Any partially reserved data block after a failed \f5sfreserve()\fP
+call can be obtained in another \f5sfreserve()\fP call with the argument
+\f5type\fP being \f5SF_LASTR\fP. The second argument \f5n\fP
+to \f5sfreserve()\fP will be ignored in this case.
 
-When \f5type <= 0\fP, if \f5f\fP is in \f5SF_READ\fP mode,
-the I/O position of \f5f\fP will be advanced by an amount as follows.
-Let \fIa\fP be the size of the available data block.
-If \f5n\fP is negative, the I/O position is advanced by \fIa\fP.
-If \f5n\fP is non-negative, the I/O position is advanced by
-the lesser value between \f5n\fP and \fIa\fP.
+A \f5sfreserve()\fP call is successful if it can reserve a data block 
+of size at least the absolute value of \f5n\fP.
+For a \f5SF_READ\fP atream, the argument \f5n\fP is treated as follows:
+.Tp
+\f5n < 0\fP:
+\f5sfreserve()\fP attempts to get \fIat least\fP \f5|n|\fP bytes
+into the buffer. If not possible, \f5sfreserve()\fP returns failure.
+.Tp
+\f5n == 0\fP:
+If the argument \f5type\fP is \f50\fP or \f5SF_LOCKR\fP,
+\f5sfreserve()\fP attempts to get \fIat least\fP \f51\fP byte into
+the buffer. If not possible, \f5sfreserve()\fP returns failure.
+See the case of \f5type < 0\fP below.
+.Tp
+\f5n > 0\fP:
+\f5sfreserve()\fP will use attempt to get at most \f5n\fP bytes into the buffer.
+In addition, if \f5type == \f5SF_LOCKR\fP (see below), system calls are attempted
+only until a positive amount of data is obtained.
+\f5sfreserve()\fP returns failure if less than \f5n\fP bytes are read.
 
-When \f5type > 0\fP, there are two cases:
+For a successful reservation, the argument \f5type\fP dictates treatment
+as follows:
 .Tp
 \f5type == SF_LASTR\fP:
-The last partially reserved data block, if any, is returned.
-This call should be used only after a failed \f5sfreserve()\fP call.
-The second argument to \f5sfreserve()\fP will be ignored.
+This should be used only after the immediately preceding
+\f5sfreserve()\fP returned \f5NULL\fP. In this case,
+\f5sfreserve()\fP returns currently buffered data and
+also advances the stream I/O position by that amount.
 .Tp
-\f5type == 1\fP or \f5type == SF_LOCKR\fP:
-The I/O position of stream \f5f\fP remains unchanged after the \f5sfreserve()\fP call.
-In addition, if the reservation is successful, \f5f\fP will be locked from further access.
+\f5type < 0\fP:
+If \f5n == 0\fP, only the current status of the stream buffer is returned.
+That is, the pointer to already buffered data, if any, is returned
+and the data size can be obtained \f5sfvalue(f)\fP.
+If \f5n > 0\fP, the stream I/O position is advanced by \f5n\fP.
+If \f5n < 0\fP, the stream I/O position is advanced by the amount
+of available data.
+For example, a successful \f5sfreserve(f, -1, -1)\fP call will return a
+buffer of data and simultanously advance the stream I/O position by the amount
+indicated by \f5sfvalue(f)\fP.
+.Tp
+\f5type == SF_LOCKR\fP:
+The stream I/O position remains unchanged.
+In addition, \f5f\fP will be locked from further access.
 As appropriate to the stream type (\f5SF_READ\fP, \f5SF_WRITE\fP or both),
 \f5f\fP can be unlocked later
 with one of \f5sfread(f,rsrv,size)\fP or \f5sfwrite(f,rsrv,size)\fP
 where \f5rsrv\fP is the reserved data block and \f5size\fP is the amount of
 data to be consumed. For example, if \f5f\fP is a locked \f5SF_READ\fP stream,
-the call \f5sfread(f,rsrv,0)\fP will reopen the stream without advancing the
-stream I/O position. Finally, a stream opened for both reading and writing
+the call \f5sfread(f,rsrv,1)\fP will reopen the stream and simultaneously
+advance the stream I/O position by \f51\fP.
+Finally, a stream opened for both reading and writing
 can release the lock with either call (with associated operational semantics!)
-For example, the below code modify data in place if \f5f\fP was
-opened for both reading and writing:
+For example, the below code reads 10 bytes of data from a stream
+opened with both \f5SF_READ\fP and \f5SF_WRITE\fP, modifies the data in place,
+then rewrites the new data back to the stream:
 
 .nf
 .ft 5
     rsrv = sfreserve(f, 10, 1);
-    memset(rsrv, 0, 10);
+    for(i = 0; i < 10; ++i)
+        rsrv[i] = toupper(rsrv[i]);
     sfwrite(f, rsrv, 10);
 .ft 1
 .fi
-
-Note that when \f5f\fP is \f5SF_SHARE\fP and unseekable,
-\f5sfreserve()\fP will attempt to peek at input data without
-consuming it. This allows processes that share unseekable file
-descriptors (e.g., pipes or devices) to properly share input data.
-Since peeking on unseekable file descriptors is not uniformly
-supported on all platforms, \f5sfreserve()\fP may fail in some cases.
-Finally, since \f5SF_SHARE\fP is automatically on for \f5sfstdin\fP,
-applications that do not share \f5sffileno(sfstdin)\fP with other processes
-should turn this bit off to reduce system calls.
 
 .ne 6
 .PP

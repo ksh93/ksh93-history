@@ -4,6 +4,7 @@ hdr	dirent,direntry,filio,fmtmsg,fnmatch,jioctl,libgen,locale
 hdr	ndir,nl_types,process,spawn,syslog,utime,vfork,wctype
 hdr	wchar note{ <wchar.h> and isw*() really work }end execute{
 	#include <wchar.h>
+	int
 	main()
 	{
 		wchar_t	w = 'a';
@@ -55,7 +56,7 @@ tst	tst_errno note{ errno can be assigned }end link{
 	error() { }
 	strerror() { }
 	_END_EXTERNS_
-	main() { errno = 0; error(); strerror(); }
+	int main() { errno = 0; error(); strerror(); }
 }end
 
 tst	lib_poll_fd_1 note{ fd is first arg to poll() }end execute{
@@ -63,6 +64,7 @@ tst	lib_poll_fd_1 note{ fd is first arg to poll() }end execute{
 	_BEGIN_EXTERNS_
 	extern int	pipe _ARG_((int*));
 	_END_EXTERNS_
+	int
 	main()
 	{	int		rw[2];
 		struct pollfd	fd;
@@ -82,6 +84,7 @@ tst	lib_poll_fd_2 note{ fd is second arg to poll() }end execute{
 	_BEGIN_EXTERNS_
 	extern int	pipe _ARG_((int*));
 	_END_EXTERNS_
+	int
 	main()
 	{	int		rw[2];
 		struct pollfd	fd;
@@ -106,6 +109,7 @@ tst	lib_poll_notimer note{ poll with no fds ignores timeout }end execute{
 	extern time_t	time _ARG_((time_t*));
 	_END_EXTERNS_
 	#define TIMEOUT		4
+	int
 	main()
 	{
 		unsigned long	start;
@@ -123,6 +127,7 @@ tst	lib_select note{ select() has standard 5 arg interface }end link{
 	#include <sys/types.h>
 	#include <sys/time.h>
 	#include <sys/socket.h>
+	int
 	main()
 	{	struct timeval	tmb;
 		fd_set		rd;
@@ -142,6 +147,7 @@ tst	pipe_rw note{ full duplex pipes }end execute{
 	extern int	strcmp _ARG_((const char*, const char*));
 	extern int	write _ARG_((int, void*, int));
 	_END_EXTERNS_
+	int
 	main()
 	{
 	#if defined(__sgi) || defined(_sgi) || defined(sgi)
@@ -165,6 +171,7 @@ tst	pipe_rw note{ full duplex pipes }end execute{
 
 tst	lib_vfork unistd.h stdlib.h vfork.h note{ vfork exists and it works }end execute{
 	#include <signal.h>
+	int
 	main(argc, argv)
 	int	argc;
 	char**	argv;
@@ -196,6 +203,7 @@ tst	real_vfork note{ vfork child shares data with parent }end execute{
 	extern int	vfork _ARG_((void));
 	_END_EXTERNS_
 	int		code;
+	int
 	main()
 	{
 		code = 1;
@@ -213,6 +221,7 @@ tst	lib_posix_spawn unistd.h stdlib.h spawn.h note{ posix_spawn exists and it wo
 	int fork() { return -1; }
 	int _fork() { return -1; }
 	int __fork() { return -1; }
+	int
 	main(argc, argv)
 	int	argc;
 	char**	argv;
@@ -267,6 +276,7 @@ tst	lib_spawn_mode unistd.h stdlib.h note{ first spawn arg is mode and it works 
 	#ifndef P_NOWAIT
 	#define P_NOWAIT _P_NOWAIT
 	#endif
+	int
 	main(argc, argv)
 	int	argc;
 	char**	argv;
@@ -289,6 +299,7 @@ tst	lib_spawn_mode unistd.h stdlib.h note{ first spawn arg is mode and it works 
 tst	stream_peek note{ ioctl(I_PEEK) works }end link{
 	#include <sys/types.h>
 	#include <stropts.h>
+	int
 	main()
 	{	struct strpeek	pbuf;
 		pbuf.flags = 0;
@@ -304,6 +315,7 @@ tst	socket_peek note{ recv(MSG_PEEK) works }end execute{
 	#include <unistd.h>
 	#include <sys/types.h>
 	#include <sys/socket.h>
+	int
 	main()
 	{	
 		int		i;
@@ -335,6 +347,7 @@ tst	lib_memcmp string.h note{ standard memcmp interface that works }end execute{
 	#define L	8
 	char		a[L] = { '0' };
 	char		b[L] = { '1' };
+	int
 	main()
 	{
 		return memcmp(a, b, L) >= 0;
@@ -351,6 +364,7 @@ tst	lib_memccpy string.h unistd.h stdlib.h fcntl.h signal.h sys/types.h sys/stat
 		exit(1);
 	}
 
+	int
 	main ()
 	{
 		char	buf[1024];
@@ -404,6 +418,7 @@ tst	lib_utime_now note{ utime works with 0 time vector }end execute{
 	_BEGIN_EXTERNS_
 	extern int	utime _ARG_((const char*, void*));
 	_END_EXTERNS_
+	int
 	main()
 	{
 		return utime(".", (void*)0) == -1;
@@ -429,7 +444,7 @@ std	cleanup note{ stuck with standard _cleanup }end noexecute{
 	extern void _cleanup();
 	void _cleanup() { _exit(0); }
 	_END_EXTERNS_
-	main() { printf("cleanup\n"); exit(1); }
+	int main() { printf("cleanup\n"); exit(1); }
 }end
 
 std	remove note{ stuck with standard remove() }end nostatic{
@@ -441,7 +456,7 @@ std	remove note{ stuck with standard remove() }end nostatic{
 	#else
 	int remove(path) char* path; { return 0; }
 	#endif
-	main() { return unlink("foo"); }
+	int main() { return unlink("foo"); }
 }end
 
 std	signal note{ stuck with standard signal }end nolink{
@@ -449,12 +464,13 @@ std	signal note{ stuck with standard signal }end nolink{
 	extern int abort();
 	int signal() { return 0; }
 	_END_EXTERNS_
-	main() { signal(); abort(); return 0; }
+	int main() { signal(); abort(); return 0; }
 }end
 
 std	strcoll note{ standard strcoll works }end execute{
 	#include <string.h>
 	#define S	"hello world"
+	int
 	main()
 	{
 		char	s[] = S;
@@ -471,10 +487,11 @@ std	strtod note{ stuck with standard strtod }end nostatic{
 	double strtod(s, e) char* s; char** e; { return 0.0; }
 	#endif
 	_END_EXTERNS_
-	main() { printf(""); return strtod("1",0) != 0; }
+	int main() { printf(""); return strtod("1",0) != 0; }
 }end
 
 tst	- output{
+	int
 	main()
 	{
 	#if _UWIN
@@ -506,6 +523,7 @@ tst	no64 note{ largefile 64 broken }end execute{
 	#define _LARGEFILE64_SOURCE 1
 	#include <sys/types.h>
 	#include <sys/stat.h>
+	int
 	main()
 	{
 		struct stat64	st;

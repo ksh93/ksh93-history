@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
@@ -97,7 +97,7 @@ static gid_t rgroupid;
 static gid_t egroupid;
 static struct stat statb;
 
-main(int argc,char *argv[])
+int main(int argc,char *argv[])
 {
 	register int m,n;
 	register char *p;
@@ -291,7 +291,7 @@ static void error_exit(const char *message)
  * This version of access checks against effective uid and effective gid
  */
 
-eaccess(register const char *name, register int mode)
+int eaccess(register const char *name, register int mode)
 {	
 	struct stat statb;
 	if (stat(name, &statb) == 0)

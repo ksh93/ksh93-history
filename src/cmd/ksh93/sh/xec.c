@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
@@ -58,7 +58,7 @@
 #   define spawnveg(a,b,c,d)    spawnve(a,b,c)
 #endif /* !_lib_spawnveg */
 #if SHOPT_SPAWN
-    static pid_t sh_ntfork(const union anynode*,char*[],int*,int);
+    static pid_t sh_ntfork(const Shnode_t*,char*[],int*,int);
 #endif /* SHOPT_SPAWN */
 
 static void	sh_funct(Namval_t*, int, char*[], struct argnod*,int);
@@ -190,7 +190,7 @@ static void p_comarg(register struct comnod *com)
 
 extern void sh_optclear(Shell_t*, void*);
 
-static void sh_tclear(register union anynode *t)
+static void sh_tclear(register Shnode_t *t)
 {
 	if(!t)
 		return;
@@ -214,7 +214,7 @@ static void sh_tclear(register union anynode *t)
 			return;
 		case TWH:
 			if(t->wh.whinc)
-				sh_tclear((union anynode*)(t->wh.whinc));
+				sh_tclear((Shnode_t*)(t->wh.whinc));
 			sh_tclear(t->wh.whtre);
 			sh_tclear(t->wh.dotre);
 			return;
@@ -230,7 +230,7 @@ static void sh_tclear(register union anynode *t)
 			return;
 		case TFOR:
 			sh_tclear(t->for_.fortre);
-			sh_tclear((union anynode*)t->for_.forlst);
+			sh_tclear((Shnode_t*)t->for_.forlst);
 			return;
 		case TSW:
 			p_arg(t->sw.swarg,0);
@@ -238,7 +238,7 @@ static void sh_tclear(register union anynode *t)
 			return;
 		case TFUN:
 			sh_tclear(t->funct.functtre);
-			sh_tclear((union anynode*)t->funct.functargs);
+			sh_tclear((Shnode_t*)t->funct.functargs);
 			return;
 		case TTST:
 			if((t->tre.tretyp&TPAREN)==TPAREN)
@@ -436,7 +436,7 @@ int sh_debug(const char *trap, const char *name, const char *subscript, char *co
  */
 int sh_eval(register Sfio_t *iop, int mode)
 {
-	register union anynode *t;
+	register Shnode_t *t;
 	Shell_t  *shp = sh_getinterp();
 	struct slnod *saveslp = shp->st.staklist;
 	int jmpval;
@@ -449,7 +449,7 @@ int sh_eval(register Sfio_t *iop, int mode)
 	jmpval = sigsetjmp(buff.buff,0);
 	if(jmpval==0)
 	{
-		t = (union anynode*)sh_parse(shp,iop,SH_NL);
+		t = (Shnode_t*)sh_parse(shp,iop,SH_NL);
 		sfclose(iop);
 		io_save = 0;
 		if(!sh_isoption(SH_VERBOSE))
@@ -472,10 +472,10 @@ int sh_eval(register Sfio_t *iop, int mode)
 }
 
 #if SHOPT_FASTPIPE
-static int pipe_exec(int pv[], union anynode *t, int errorflg)
+static int pipe_exec(int pv[], Shnode_t *t, int errorflg)
 {
 	struct checkpt buff;
-	register union anynode *tchild = t->fork.forktre;
+	register Shnode_t *tchild = t->fork.forktre;
 	Namval_t *np;
 	Sfio_t *iop;
 	int jmpval,r;
@@ -535,7 +535,17 @@ static int checkopt(char *argv[], int c)
 	return(0);
 }
 
-int sh_exec(register const union anynode *t, int flags)
+static void free_list(struct openlist *olist)
+{
+	struct openlist *item,*next;
+	for(item=olist;item;item=next)
+	{
+		next = item->next;
+		free((void*)item);
+	}
+}
+
+int sh_exec(register const Shnode_t *t, int flags)
 {
 	sh_sigcheck();
 	if(t && !sh.st.execbrk && !sh_isoption(SH_NOEXEC))
@@ -782,7 +792,7 @@ int sh_exec(register const union anynode *t, int flags)
 						}
 						sh.exitval = (*sh.bltinfun)(argn,com,context);
 						if(nv_isattr(np,NV_BLTINOPT))
-							((union anynode*)t)->com.comstate = bdata.data;
+							((Shnode_t*)t)->com.comstate = bdata.data;
 						if(!nv_isattr(np,BLT_EXIT) && sh.exitval!=SH_RUNPROG)
 							sh.exitval &= SH_EXITMASK;
 					}
@@ -814,15 +824,7 @@ int sh_exec(register const union anynode *t, int flags)
 					errorpop(&buff.err);
 					sh.bltinfun = 0;
 					if(buff.olist)
-					{
-						/* free list */
-						struct openlist *item,*next;
-						for(item=buff.olist;item;item=next)
-						{
-							next = item->next;
-							free((void*)item);
-						}
-					}
+						free_list(buff.olist);
 					if(was_vi)
 						sh_onoption(SH_VI);
 					else if(was_emacs)
@@ -883,6 +885,7 @@ int sh_exec(register const union anynode *t, int flags)
 					}
 					if(io)
 					{
+						indx = sh.topfd;
 						sh_pushcontext(&buff,SH_JMPCMD);
 						jmpval = sigsetjmp(buff.buff,0);
 					}
@@ -894,6 +897,8 @@ int sh_exec(register const union anynode *t, int flags)
 					}
 					if(io)
 					{
+						if(buff.olist)
+							free_list(buff.olist);
 						sh_popcontext(&buff);
 						sh_iorestore(indx,jmpval);
 					}
@@ -1363,7 +1368,7 @@ int sh_exec(register const union anynode *t, int flags)
 		    {
 			register int 	r=0;
 			int first = OPTIMIZE_FLAG;
-			union anynode *tt = t->wh.whtre;
+			Shnode_t *tt = t->wh.whtre;
 #if SHOPT_FILESCAN
 			Sfio_t *iop=0;
 			int savein,fd;
@@ -1414,7 +1419,7 @@ int sh_exec(register const union anynode *t, int flags)
 					sh.st.execbrk = (++sh.st.breakcnt !=0);
 				/* This is for the arithmetic for */
 				if(sh.st.execbrk==0 && t->wh.whinc)
-					sh_exec((union anynode*)t->wh.whinc,first);
+					sh_exec((Shnode_t*)t->wh.whinc,first);
 				first = 0;
 				errorflg &= ~OPTIMIZE_FLAG;
 #if SHOPT_FILESCAN
@@ -1480,10 +1485,10 @@ int sh_exec(register const union anynode *t, int flags)
 
 		    case TSW:
 		    {
-			union anynode *tt = (union anynode*)t;
+			Shnode_t *tt = (Shnode_t*)t;
 			char *trap, *r = word_trim(tt->sw.swarg,OPTIMIZE);
 			error_info.line = t->sw.swline-sh.st.firstline;
-			t= (union anynode*)(tt->sw.swlst);
+			t= (Shnode_t*)(tt->sw.swlst);
 			if(trap=sh.st.trap[SH_DEBUGTRAP])
 			{
 				static char *av[4] = {"case", 0, "in" };
@@ -1511,7 +1516,7 @@ int sh_exec(register const union anynode *t, int flags)
 					{
 						do	sh_exec(t->reg.regcom,(t->reg.regflag?0:flags));
 						while(t->reg.regflag &&
-							(t=(union anynode*)t->reg.regnxt));
+							(t=(Shnode_t*)t->reg.regnxt));
 						t=0;
 						break;
 					}
@@ -1519,7 +1524,7 @@ int sh_exec(register const union anynode *t, int flags)
 						rex=rex->argnxt.ap;
 				}
 				if(t)
-					t=(union anynode*)t->reg.regnxt;
+					t=(Shnode_t*)t->reg.regnxt;
 			}
 			break;
 		    }
@@ -2186,7 +2191,7 @@ int sh_funscope(int argn, char *argv[],int(*fun)(void*),void *arg,int execflg)
 			r= (*fun)(arg);
 		else
 		{
-			sh_exec((union anynode*)(nv_funtree((fp->node))),execflg|SH_ERREXIT);
+			sh_exec((Shnode_t*)(nv_funtree((fp->node))),execflg|SH_ERREXIT);
 			r = sh.exitval;
 		}
 	}
@@ -2382,14 +2387,14 @@ static void print_fun(register Namval_t* np, void *data)
 	else
 		format="function %s\n{ ";
 	sfprintf(sfstdout,format,nv_name(np));
-	sh_deparse(sfstdout,(union anynode*)(nv_funtree(np)),0);
+	sh_deparse(sfstdout,(Shnode_t*)(nv_funtree(np)),0);
 	sfwrite(sfstdout,"}\n",2);
 }
 
 /*
  * create a shell script consisting of t->fork.forktre and execute it
  */
-static int run_subshell(const union anynode *t,pid_t grp)
+static int run_subshell(const Shnode_t *t,pid_t grp)
 {
 	static char prolog[] = "(print $(typeset +A);set; typeset -p; print .sh.dollar=$$;set +o)";
 	register int i, fd, trace = sh_isoption(SH_XTRACE);
@@ -2476,7 +2481,7 @@ static void sigreset(int mode)
 /*
  * A combined fork/exec for systems with slow or non-existent fork()
  */
-static pid_t sh_ntfork(const union anynode *t,char *argv[],int *jobid,int flag)
+static pid_t sh_ntfork(const Shnode_t *t,char *argv[],int *jobid,int flag)
 {
 	static pid_t	spawnpid;
 	static int	savetype;
@@ -2496,7 +2501,7 @@ static pid_t sh_ntfork(const union anynode *t,char *argv[],int *jobid,int flag)
 #   if defined(SHOPT_AMP) || !defined(_lib_fork)
 	if(!argv)
 	{
-		register union anynode *tchild = t->fork.forktre;
+		register Shnode_t *tchild = t->fork.forktre;
 		int optimize=0;
 		otype = t->tre.tretyp;
 		savetype = otype;
@@ -2653,7 +2658,10 @@ static pid_t sh_ntfork(const union anynode *t,char *argv[],int *jobid,int flag)
 			if((np=nv_search(path,shp->track_tree,0)) && !nv_isattr(np,NV_NOALIAS) && np->nvalue.cp)
 				path = nv_getval(np);
 			else if(path_absolute(path,NIL(Pathcomp_t*)))
+			{
 				path = stakptr(PATH_OFFSET);
+				stakfreeze(0);
+			}
 			else
 			{
 				pp=path_get(path);

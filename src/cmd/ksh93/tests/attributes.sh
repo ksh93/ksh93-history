@@ -15,7 +15,7 @@
 #               AT&T's intellectual property rights.               #
 #                                                                  #
 #            Information and Software Systems Research             #
-#                        AT&T Labs Research                        #
+#                          AT&T Research                           #
 #                         Florham Park NJ                          #
 #                                                                  #
 #                David Korn <dgk@research.att.com>                 #
@@ -185,4 +185,13 @@ x+=$b1
 [[  $(printf "%B" x) == $t1$t1 ]] || err_exit 'typeset -b append not working'
 typeset -b -Z20 z=$b1
 (( $(printf "%B" z | wc -c) == 20 )) || err_exit 'typeset -b -Z20 not storing 20 bytes'
+{
+	typeset -b v1 v2
+	read -N11 v1
+	read -N22 v2
+} << !
+hello worldhello worldhello world
+!
+[[ $v1 == "$b1" ]] || err_exit "v1=$v1 should be $b1"
+[[ $v2 == "$x" ]] || err_exit "v1=$v2 should be $x"
 exit	$((Errors))

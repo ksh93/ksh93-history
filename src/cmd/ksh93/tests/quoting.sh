@@ -15,7 +15,7 @@
 #               AT&T's intellectual property rights.               #
 #                                                                  #
 #            Information and Software Systems Research             #
-#                        AT&T Labs Research                        #
+#                          AT&T Research                           #
 #                         Florham Park NJ                          #
 #                                                                  #
 #                David Korn <dgk@research.att.com>                 #
@@ -313,7 +313,9 @@ re='(?*)/(?*)/(?*)'
 [[ ${subject/${re}/"\3"} != '\3' ]] && err_exit 'string replacement with "\3" not working'
 string='\3'
 [[ ${subject/${re}/${string}} != words ]] && err_exit 'string replacement with $string not working with string=\3'
+[[ $(print -r "${subject/${re}/${string}}") != words ]] && err_exit 'string replacement with $string not working with string=\3 using print'
 [[ ${subject/${re}/"${string}"} != '\3' ]] && err_exit 'string replacement with "$string" not working with  string=\3'
+[[ $(print -r "${subject/${re}/"${string}"}") != '\3' ]] && err_exit 'string replacement with "$string" not working with  string=\3 using print'
 string='\\3'
 [[ ${subject/${re}/${string}} != '\3' ]] && err_exit 'string replacement with $string not working with string=\\3'
 [[ ${subject/${re}/"${string}"} != '\\3' ]] && err_exit 'string replacement with "$string" not working with  string=\\3'
@@ -322,4 +324,7 @@ string='\\3'
 string='\4'
 [[ ${subject/${re}/${string}} != '\4' ]] && err_exit 'string replacement with $string not working with string=\4'
 [[ ${subject/${re}/"${string}"} != '\4' ]] && err_exit 'string replacement with "$string" not working with  string=\4'
+string='&foo'
+[[ ${subject/${re}/${string}} != '&foo' ]] && err_exit 'string replacement with $string not working with string=&foo'
+[[ ${subject/${re}/"${string}"} != '&foo' ]] && err_exit 'string replacement with "$string" not working with  string=&foo'
 exit $((Errors))

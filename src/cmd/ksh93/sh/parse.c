@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
@@ -52,21 +52,21 @@
 
 /* These routines are local to this module */
 
-static union anynode	*makeparent(int, union anynode*);
-static union anynode	*makelist(int, union anynode*, union anynode*);
+static Shnode_t	*makeparent(int, Shnode_t*);
+static Shnode_t	*makelist(int, Shnode_t*, Shnode_t*);
 static struct argnod	*qscan(struct comnod*, int);
 static struct ionod	*inout(struct ionod*, int);
-static union anynode	*sh_cmd(int,int);
-static union anynode	*term(int);
-static union anynode	*list(int);
+static Shnode_t	*sh_cmd(int,int);
+static Shnode_t	*term(int);
+static Shnode_t	*list(int);
 static struct regnod	*syncase(int);
-static union anynode	*item(int);
-static union anynode	*simple(int, struct ionod*);
+static Shnode_t	*item(int);
+static Shnode_t	*simple(int, struct ionod*);
 static int		skipnl(void);
-static union anynode	*test_expr(int);
-static union anynode	*test_and(void);
-static union anynode	*test_or(void);
-static union anynode	*test_primary(void);
+static Shnode_t	*test_expr(int);
+static Shnode_t	*test_and(void);
+static Shnode_t	*test_or(void);
+static Shnode_t	*test_primary(void);
 
 #define	sh_getlineno()	(shlex.lastline)
 
@@ -88,7 +88,7 @@ static int		loop_level;
 static struct argnod	*label_list;
 static struct argnod	*label_last;
 
-#define getnode(type)	((union anynode*)stakalloc(sizeof(struct type)))
+#define getnode(type)	((Shnode_t*)stakalloc(sizeof(struct type)))
 
 #if SHOPT_KIA
 #include	"path.h"
@@ -163,9 +163,9 @@ static unsigned long writedefs(struct argnod *arglist, int line, int type, struc
 /*
  * Make a parent node for fork() or io-redirection
  */
-static union anynode	*makeparent(int flag, union anynode *child)
+static Shnode_t	*makeparent(int flag, Shnode_t *child)
 {
-	register union anynode	*par = getnode(forknod);
+	register Shnode_t	*par = getnode(forknod);
 	par->fork.forktyp = flag;
 	par->fork.forktre = child;
 	par->fork.forkio = 0;
@@ -173,9 +173,9 @@ static union anynode	*makeparent(int flag, union anynode *child)
 	return(par);
 }
 
-static union anynode *getanode(struct argnod *ap)
+static Shnode_t *getanode(struct argnod *ap)
 {
-	register union anynode *t = getnode(arithnod);
+	register Shnode_t *t = getnode(arithnod);
 	t->ar.artyp = TARITH;
 	t->ar.arline = sh_getlineno();
 	t->ar.arexpr = ap;
@@ -189,9 +189,9 @@ static union anynode *getanode(struct argnod *ap)
 /*
  *  Make a node corresponding to a command list
  */
-static union anynode	*makelist(int type, union anynode *l, union anynode *r)
+static Shnode_t	*makelist(int type, Shnode_t *l, Shnode_t *r)
 {
-	register union anynode	*t;
+	register Shnode_t	*t;
 	if(!l || !r)
 		sh_syntax();
 	else
@@ -214,7 +214,7 @@ static union anynode	*makelist(int type, union anynode *l, union anynode *r)
 
 void	*sh_parse(Shell_t *shp, Sfio_t *iop, int flag)
 {
-	register union anynode	*t;
+	register Shnode_t	*t;
 	Fcin_t	sav_input;
 	struct argnod *sav_arg = shlex.arg;
 	int	sav_prompt = shp->nextprompt;
@@ -284,9 +284,9 @@ void	*sh_parse(Shell_t *shp, Sfio_t *iop, int flag)
  * This routine parses up the matching right parenthesis and returns
  * the parse tree
  */
-union anynode *sh_dolparen(void)
+Shnode_t *sh_dolparen(void)
 {
-	register union anynode *t=0;
+	register Shnode_t *t=0;
 	register Lex_t *lp = (Lex_t*)sh.lex_context;
 	Sfio_t *sp = fcfile();
 	int line = sh.inlineno;
@@ -360,9 +360,9 @@ void sh_funstaks(register struct slnod *slp,int flag)
  *	list [ ; cmd ]
  */
 
-static union anynode	*sh_cmd(register int sym, int flag)
+static Shnode_t	*sh_cmd(register int sym, int flag)
 {
-	register union anynode	*left, *right;
+	register Shnode_t	*left, *right;
 	register int type = FINT|FAMP;
 	if(sym==NL)
 		shlex.lasttok = 0;
@@ -414,9 +414,9 @@ static union anynode	*sh_cmd(register int sym, int flag)
  *	list || term
  *      unfortunately, these are equal precedence
  */
-static union anynode	*list(register int flag)
+static Shnode_t	*list(register int flag)
 {
-	register union anynode	*t = term(flag);
+	register Shnode_t	*t = term(flag);
 	register int 	token;
 	while(t && ((token=shlex.token)==ANDFSYM || token==ORFSYM))
 		t = makelist((token==ANDFSYM?TAND:TORF), t, term(SH_NL));
@@ -428,9 +428,9 @@ static union anynode	*list(register int flag)
  *	item
  *	item | term
  */
-static union anynode	*term(register int flag)
+static Shnode_t	*term(register int flag)
 {
-	register union anynode	*t;
+	register Shnode_t	*t;
 	register int token;
 	if(flag&SH_NL)
 		token = skipnl();
@@ -447,7 +447,7 @@ static union anynode	*term(register int flag)
 	}
 	else if((t=item(SH_NL|SH_EMPTY)) && shlex.token=='|')
 	{
-		register union anynode	*tt;
+		register Shnode_t	*tt;
 		t = makeparent(TFORK|FPOU,t);
 		if(tt=term(SH_NL))
 		{
@@ -523,9 +523,9 @@ static struct regnod*	syncase(register int esym)
  * Otherise a list containing an arithmetic command and a while
  * is returned.
  */
-static union anynode	*arithfor(register union anynode *tf)
+static Shnode_t	*arithfor(register Shnode_t *tf)
 {
-	register union anynode	*t, *tw = tf;
+	register Shnode_t	*t, *tw = tf;
 	register int	offset;
 	register struct argnod *argp;
 	register int n;
@@ -597,9 +597,9 @@ static union anynode	*arithfor(register union anynode *tf)
 
 }
 
-static union anynode *funct(void)
+static Shnode_t *funct(void)
 {
-	register union anynode *t;
+	register Shnode_t *t;
 	register int flag;
 	struct slnod *volatile slp=0;
 	Stak_t *savstak;
@@ -753,7 +753,7 @@ static union anynode *funct(void)
 static struct argnod *assign(register struct argnod *ap)
 {
 	register int n;
-	register union anynode *t ,**tp;
+	register Shnode_t *t ,**tp;
 	register struct comnod *ac;
 	int array=0;
 	Namval_t *np;
@@ -815,11 +815,11 @@ static struct argnod *assign(register struct argnod *ap)
 		}
 		if(!(shlex.arg->argflag&ARG_ASSIGN) && !((np=nv_search(shlex.arg->argval,sh.fun_tree,0)) && nv_isattr(np,BLT_DCL)))
 			sh_syntax();
-		t = makelist(TLST,(union anynode*)ac,t);
+		t = makelist(TLST,(Shnode_t*)ac,t);
 		*tp = t;
 		tp = &t->lst.lstrit;
 	}
-	*tp = (union anynode*)ac;
+	*tp = (Shnode_t*)ac;
 	shlex.assignok = 0;
 	return(ap);
 }
@@ -835,9 +835,9 @@ static struct argnod *assign(register struct argnod *ap)
  *	begin ... end
  */
 
-static union anynode	*item(int flag)
+static Shnode_t	*item(int flag)
 {
-	register union anynode	*t;
+	register Shnode_t	*t;
 	register struct ionod	*io;
 	register int tok = (shlex.token&0xff);
 	int savwdval = shlex.lasttok;
@@ -891,7 +891,7 @@ static union anynode	*item(int flag)
 	    /* if statement */
 	    case IFSYM:
 	    {
-		register union anynode	*tt;
+		register Shnode_t	*tt;
 		t = getnode(ifnod);
 		t->if_.iftyp=TIF;
 		t->if_.iftre=sh_cmd(THENSYM,SH_NL);
@@ -1041,7 +1041,7 @@ static union anynode	*item(int flag)
 
 	    /* simple command */
 	    case 0:
-		return((union anynode*)simple(flag,io));
+		return((Shnode_t*)simple(flag,io));
 	}
 	sh_lex();
 	if(io=inout(io,0))
@@ -1060,7 +1060,7 @@ done:
 /*
  * This is for a simple command, for list, or compound assignment
  */
-static union anynode *simple(int flag, struct ionod *io)
+static Shnode_t *simple(int flag, struct ionod *io)
 {
 	register struct comnod *t;
 	register struct argnod	*argp;
@@ -1153,7 +1153,7 @@ static union anynode *simple(int flag, struct ionod *io)
 #if SHOPT_DEVFD
 		if((tok==IPROCSYM || tok==OPROCSYM))
 		{
-			union anynode *t;
+			Shnode_t *t;
 			int mode = (tok==OPROCSYM);
 			t = sh_cmd(RPAREN,SH_NL);
 			argp = (struct argnod*)stakalloc(sizeof(struct argnod));
@@ -1276,7 +1276,7 @@ static union anynode *simple(int flag, struct ionod *io)
 	else if(t->comarg)
 		t->comtyp |= COMSCAN;
 	shlex.aliasok = 0;
-	return((union anynode*)t);
+	return((Shnode_t*)t);
 }
 
 /*
@@ -1470,34 +1470,34 @@ static struct argnod *qscan(struct comnod *ac,int argn)
 	return((struct argnod*)dp);
 }
 
-static union anynode *test_expr(int sym)
+static Shnode_t *test_expr(int sym)
 {
-	register union anynode *t = test_or();
+	register Shnode_t *t = test_or();
 	if(shlex.token!=sym)
 		sh_syntax();
 	return(t);
 }
 
-static union anynode *test_or(void)
+static Shnode_t *test_or(void)
 {
-	register union anynode *t = test_and();
+	register Shnode_t *t = test_and();
 	while(shlex.token==ORFSYM)
 		t = makelist(TORF|TTEST,t,test_and());
 	return(t);
 }
 
-static union anynode *test_and(void)
+static Shnode_t *test_and(void)
 {
-	register union anynode *t = test_primary();
+	register Shnode_t *t = test_primary();
 	while(shlex.token==ANDFSYM)
 		t = makelist(TAND|TTEST,t,test_primary());
 	return(t);
 }
 
-static union anynode *test_primary(void)
+static Shnode_t *test_primary(void)
 {
 	register struct argnod *arg;
-	register union anynode *t;
+	register Shnode_t *t;
 	register int num,token;
 	token = skipnl();
 	num = shlex.digits;
@@ -1505,7 +1505,7 @@ static union anynode *test_primary(void)
 	{
 	    case '(':
 		t = test_expr(')');
-		t = makelist(TTST|TTEST|TPAREN ,t, (union anynode*)sh.inlineno);
+		t = makelist(TTST|TTEST|TPAREN ,t, (Shnode_t*)sh.inlineno);
 		break;
 	    case '!':
 		t = test_primary();
@@ -1524,7 +1524,7 @@ static union anynode *test_primary(void)
 		}
 #endif /* SHOPT_KIA */
 		t = makelist(TTST|TTEST|TUNARY|(num<<TSHIFT),
-			(union anynode*)shlex.arg,(union anynode*)shlex.arg);
+			(Shnode_t*)shlex.arg,(Shnode_t*)shlex.arg);
 		t->tst.tstline =  sh.inlineno;
 		break;
 	    /* binary test operators */
@@ -1539,7 +1539,7 @@ static union anynode *test_primary(void)
 		else if(token==ANDFSYM||token==ORFSYM||token==ETESTSYM||token==RPAREN)
 		{
 			t = makelist(TTST|TTEST|TUNARY|('n'<<TSHIFT),
-				(union anynode*)arg,(union anynode*)arg);
+				(Shnode_t*)arg,(Shnode_t*)arg);
 			t->tst.tstline =  sh.inlineno;
 			return(t);
 		}
@@ -1563,8 +1563,8 @@ static union anynode *test_primary(void)
 		}
 		t = getnode(tstnod);
 		t->lst.lsttyp = TTST|TTEST|TBINARY|(num<<TSHIFT);
-		t->lst.lstlef = (union anynode*)arg;
-		t->lst.lstrit = (union anynode*)shlex.arg;
+		t->lst.lstlef = (Shnode_t*)arg;
+		t->lst.lstrit = (Shnode_t*)shlex.arg;
 		t->tst.tstline =  sh.inlineno;
 #if SHOPT_KIA
 		if(shlex.kiafile && (num==TEST_EF||num==TEST_NT||num==TEST_OT))

@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -100,7 +100,7 @@ reg char*	mode;		/* mode of the stream */
 		while((fd = sysopenf((char*)file,oflags,SF_CREATMODE)) < 0 && errno == EINTR)
 			errno = 0;
 #else
-		while((fd = sysopenf(file,oflags&(O_WRONLY|O_RDWR))) < 0 && errno == EINTR)
+		while((fd = sysopenf(file,oflags&O_ACCMODE)) < 0 && errno == EINTR)
 			errno = 0;
 		if(fd >= 0)
 		{	if((oflags&(O_CREAT|O_EXCL)) == (O_CREAT|O_EXCL) )
@@ -118,10 +118,10 @@ reg char*	mode;		/* mode of the stream */
 		else if(oflags&O_CREAT)
 		{	while((fd = syscreatf(file,SF_CREATMODE)) < 0 && errno == EINTR)
 				errno = 0;
-			if(!(oflags&O_WRONLY))
+			if((oflags&O_ACCMODE) != O_WRONLY)
 			{	/* the file now exists, reopen it for read/write */
 				CLOSE(fd);
-				while((fd = sysopenf(file,oflags&(O_WRONLY|O_RDWR))) < 0 &&
+				while((fd = sysopenf(file,oflags&O_ACCMODE)) < 0 &&
 				      errno == EINTR)
 					errno = 0;
 			}
@@ -203,7 +203,7 @@ int*		uflagp;
 			oflags |= O_BINARY;
 #endif
 		if((sflags&SF_RDWR) == SF_RDWR)
-			oflags = (oflags&~(O_RDONLY|O_WRONLY))|O_RDWR;
+			oflags = (oflags&~O_ACCMODE)|O_RDWR;
 		if(oflagsp)
 			*oflagsp = oflags;
 		if(uflagp)

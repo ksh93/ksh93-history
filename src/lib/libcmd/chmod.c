@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -32,7 +32,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: chmod (AT&T Labs Research) 2004-04-15 $\n]"
+"[-?\n@(#)$Id: chmod (AT&T Labs Research) 2004-08-26 $\n]"
 USAGE_LICENSE
 "[+NAME?chmod - change the access permissions of files]"
 "[+DESCRIPTION?\bchmod\b changes the permission of each file "
@@ -68,6 +68,8 @@ USAGE_LICENSE
 	"[+=?Cause the permission to be set to the given permissions.]"
 	"[+&?Cause the permission selected to be \aand\aed with the existing "
 		"permissions.]"
+	"[+^?Cause the permission selected to be propagated to more "
+		"restrictive groups.]"
 	"}"
 "[+?Symbolic modes with the \auser\a portion omitted are subject to "
 	"\bumask\b(2) settings unless the \b=\b \aop\a or the "

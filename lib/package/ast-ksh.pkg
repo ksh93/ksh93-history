@@ -7,9 +7,9 @@ ast-ksh :PACKAGE: ksh93 libast libcmd libdll
 :INDEX: ksh and support libraries
 
 :DESCRIPTION:
-	The AT&T Software Technology ast-ksh package from AT&T Labs
-	Research contains ksh and support libraries. This is the
-	minimal set of components needed to build ksh.
+	The AT&T Software Technology ast-ksh package from AT&T Research
+	contains ksh and support libraries. This is the minimal set of
+	components needed to build ksh.
 
 :DETAILS: cyg
 	:README:

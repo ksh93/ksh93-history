@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -240,6 +240,7 @@ extern ssize_t		base64encode(const void*, size_t, void**, void*, size_t, void**)
 extern ssize_t		base64decode(const void*, size_t, void**, void*, size_t, void**);
 extern int		chresc(const char*, char**);
 extern int		chrtoi(const char*);
+extern int		eaccess(const char*, int);
 extern char*		fmtbase(long, int, int);
 extern char*		fmtbasell(_ast_intmax_t, int, int);
 #define fmtbase(a,b,c)	fmtbasell((_ast_intmax_t)(a),b,c) /* until 2003-09-01 */

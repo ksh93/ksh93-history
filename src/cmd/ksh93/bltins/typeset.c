@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
@@ -124,7 +124,6 @@ int    b_readonly(int argc,char *argv[],void *extra)
 	else
 		flag = (NV_ASSIGN|NV_EXPORT|NV_IDENT);
 	return(b_common(argv,flag,tdata.sh->var_tree, &tdata));
-	return(0);
 }
 
 

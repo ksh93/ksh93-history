@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -61,7 +61,7 @@ system(const char* cmd)
 	char*	sh[4];
 
 	if (!cmd)
-		return !access(pathshell(), X_OK);
+		return !eaccess(pathshell(), X_OK);
 	sh[0] = "sh";
 	sh[1] = "-c";
 	sh[2] = (char*)cmd;

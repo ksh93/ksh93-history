@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
@@ -193,7 +193,7 @@ void nv_setlist(register struct argnod *arg,register int flags)
 				int flag = (NV_VARNAME|NV_ARRAY|NV_ASSIGN);
 #endif /* SHOPT_COMPOUND_ARRAY */
 				struct fornod *fp=(struct fornod*)arg->argchn.ap;
-				register union anynode *tp=fp->fortre;
+				register Shnode_t *tp=fp->fortre;
 				char *prefix = sh.prefix;
 				if(arg->argflag&ARG_QUOTED)
 					cp = sh_mactrim(fp->fornam,-1);
@@ -633,7 +633,7 @@ Namval_t	*nv_open(const char *name,Dt_t *root,int flags)
 		{
 			Namfun_t *disc = nv_cover(np);
 			char *name = nv_name(np);
-			if(np=nv_search((char*)np,root,mode|HASH_NOSCOPE|HASH_SCOPE|HASH_BUCKET))
+			if((np=nv_search((char*)np,root,mode|HASH_NOSCOPE|HASH_SCOPE|HASH_BUCKET)) && nv_isnull(np))
 			{
 				np->nvfun = disc;
 				np->nvname = name;
@@ -769,7 +769,9 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 	register char *cp;
 	register int size = 0;
 	register int dot;
+#ifdef _ENV_H
 	int	was_local = nv_local;
+#endif
 	if(!(flags&NV_RDONLY) && nv_isattr (np, NV_RDONLY))
 		errormsg(SH_DICT,ERROR_exit(1),e_readonly, nv_name(np));
 	/* The following could cause the shell to fork if assignment
@@ -808,7 +810,7 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 #if !SHOPT_BSH
 	if(nv_isattr(np,NV_EXPORT))
 		nv_offattr(np,NV_IMPORT);
-	if(!nv_isattr(np,NV_MINIMAL))
+	else if(!nv_isattr(np,NV_MINIMAL))
 		np->nvenv = 0;
 #endif /* SHOPT_BSH */
 	if(nv_isattr (np, NV_INTEGER))
@@ -1026,6 +1028,8 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 				int oldsize = (flags&NV_APPEND)?nv_size(np):0;
 				if(flags&NV_RAW)
 				{
+					if(tofree)
+						free((void*)tofree);
 					up->cp = sp;
 					return;
 				}
@@ -1434,7 +1438,7 @@ void	sh_envnolocal (register Namval_t *np, void *data)
 			return;
 	}
 	if(nv_isarray(np))
-		nv_putsub(np,NIL(char*),ARRAY_SCAN);
+		nv_putsub(np,NIL(char*),ARRAY_UNDEF);
 	_nv_unset(np,NV_RDONLY);
 	nv_setattr(np,0);
 	if(cp)
@@ -1500,6 +1504,7 @@ void	_nv_unset(register Namval_t *np,int flags)
 					nv_setdisc(npv,cp,NIL(Namval_t*),(Namfun_t*)npv);
 			}
 			stakdelete(slp->slptr);
+			free((void*)np->nvalue.ip);
 			np->nvalue.ip = 0;
 		}
 		goto done;

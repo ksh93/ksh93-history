@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
@@ -62,6 +62,9 @@ Shopt_t;
 typedef void	(*Shinit_f)(int);
 typedef int     (*Shbltin_f)(int, char*[], void*);
 typedef int	(*Shwait_f)(int, long, int);
+
+union Shnode_u;
+typedef union Shnode_u Shnode_t;
 
 #define SH_CFLAG	0
 #define SH_HISTORY	1	/* used also as a state */
@@ -203,8 +206,7 @@ extern unsigned long	sh_isoption(int);
 extern unsigned long	sh_onoption(int);
 extern unsigned long	sh_offoption(int);
 extern int 		sh_waitsafe(void);
-
-
+extern int		sh_exec(const Shnode_t*,int);
 
 #if SHOPT_DYNAMIC
     extern void		**sh_getliblist(void);

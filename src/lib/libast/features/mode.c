@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -39,6 +39,7 @@
 
 extern int		printf(const char*, ...);
 
+int
 main()
 {
 	int	n;
@@ -219,5 +220,5 @@ main()
 #endif
 	printf("#define BUFFERSIZE	%u\n", n);
 	printf("\n");
-	return(0);
+	return 0;
 }

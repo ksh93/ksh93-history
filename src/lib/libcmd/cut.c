@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -60,7 +60,7 @@ USAGE_LICENSE
 "[f:fields]:[list?\bcut\b based on fields separated by the delimiter "
 	"character specified with the \b-d\b optiion.]"
 "[n:nosplit?Do not split characters.  Currently ignored.]"
-"[r:reclen]#[reclen?If \areclen\a > 0, the input will be read as fixed length "
+"[R|r:reclen]#[reclen?If \areclen\a > 0, the input will be read as fixed length "
 	"records of length \areclen\a when used with the \b-b\b or \b-c\b "
 	"option.]"
 "[s:suppress|only-delimited?Suppress lines with no delimiter characters, "
@@ -456,6 +456,7 @@ b_cut(int argc,char *argv[], void* context)
 	  case 'N':
 		mode |= C_NONEWLINE;
 		break;
+	  case 'R':
 	  case 'r':
 		if(opt_info.num>0)
 			reclen = opt_info.num;

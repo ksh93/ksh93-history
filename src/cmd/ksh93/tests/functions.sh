@@ -15,7 +15,7 @@
 #               AT&T's intellectual property rights.               #
 #                                                                  #
 #            Information and Software Systems Research             #
-#                        AT&T Labs Research                        #
+#                          AT&T Research                           #
 #                         Florham Park NJ                          #
 #                                                                  #
 #                David Korn <dgk@research.att.com>                 #
@@ -719,4 +719,15 @@ cat /tmp/data$$.1 >> /tmp/script$$
 printf 'M\n}\n\nf\n\n' >> /tmp/script$$
 $SHELL -c /tmp/script$$  > /tmp/data$$.2
 cmp -s /tmp/data$$.[12] || err_exit 'error with long functions'
+v=1
+function f
+{
+	typeset i
+	for i in 0 1
+	do	typeset v
+		v=$i
+		[[ $v == $i ]] || return 1
+	done
+}
+f || err_exit "typeset optimization bug"
 exit $((Errors))

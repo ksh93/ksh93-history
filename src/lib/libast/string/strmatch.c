@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -65,18 +65,21 @@
 typedef struct Cache_s
 {
 	regex_t		re;
-	regmatch_t	match[32];
 	unsigned long	serial;
 	int		flags;
 	int		n;
 	int		keep;
 	int		reflags;
-	char		pattern[128];
+	char		pattern[256];
 } Cache_t;
 
 static Cache_t*		cache[8];
 
 static unsigned long	serial;
+
+static regmatch_t*	match;
+
+static int		nmatch;
 
 /*
  * subgroup match
@@ -176,7 +179,7 @@ strgrpmatch(const char* b, const char* p, int* sub, int n, int flags)
 			cp->reflags |= REG_RIGHT;
 		if (flags & STR_ICASE)
 			cp->reflags |= REG_ICASE;
-		if (!sub)
+		if (!sub || n <= 0)
 			cp->reflags |= REG_NOSUB;
 		if (regcomp(&cp->re, p, cp->reflags))
 			return 0;
@@ -188,7 +191,13 @@ strgrpmatch(const char* b, const char* p, int* sub, int n, int flags)
 error(-1, "AHA strmatch b=`%s' p=`%s' sub=%p n=%d flags=%08x cp=%d\n", b, p, sub, n, flags, cp - &cache[0]);
 #endif
 	cp->serial = ++serial;
-	m = regexec(&cp->re, b, cp->n, cp->match, cp->reflags);
+	if (n > nmatch)
+	{
+		if (!(match = newof(match, regmatch_t, n, 0)))
+			return 0;
+		nmatch = n;
+	}
+	m = regexec(&cp->re, b, n, match, cp->reflags);
 	i = cp->re.re_nsub;
 	if (once)
 	{
@@ -197,13 +206,13 @@ error(-1, "AHA strmatch b=`%s' p=`%s' sub=%p n=%d flags=%08x cp=%d\n", b, p, sub
 	}
 	if (m)
 		return 0;
-	if (!sub)
+	if (!sub || n <= 0)
 		return 1;
 	end = sub + n * 2;
 	for (n = 0; sub < end && n <= i; n++)
 	{
-		*sub++ = cp->match[n].rm_so;
-		*sub++ = cp->match[n].rm_eo;
+		*sub++ = match[n].rm_so;
+		*sub++ = match[n].rm_eo;
 	}
 	return i + 1;
 }

@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -39,9 +39,7 @@ __STDPP__directive pragma pp:hide getpagesize getdtablesize printf
 #define printf		______printf
 #endif
 
-#ifndef _POSIX_SOURCE
-#define _POSIX_SOURCE	1
-#endif
+#include "FEATURE/standards"
 
 #include <sys/types.h>
 
@@ -63,7 +61,7 @@ extern int		printf(const char*, ...);
 
 #include "conflib.h"
 
-main()
+int main()
 {
 #include "confuni.h"
 #if _dll_data_intercept
@@ -75,5 +73,5 @@ main()
 	printf("extern struct _astdll* _ast_getdll(void);\n");
 	printf("#endif\n");
 #endif
-	return(0);
+	return 0;
 }

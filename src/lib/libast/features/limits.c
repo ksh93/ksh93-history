@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -53,15 +53,8 @@ __STDPP__directive pragma pp:hide getpagesize getdtablesize printf
  * kick that in
  */
 
-#ifndef _POSIX_SOURCE
-#define _POSIX_SOURCE	1
-#endif
-#ifndef _XOPEN_SOURCE
-#define _XOPEN_SOURCE	1
-#endif
-#ifndef __EXTENSIONS__
-#define __EXTENSIONS__	1
-#endif
+#include "FEATURE/standards"
+
 #ifdef __sun
 #define _timespec	timespec
 #endif
@@ -95,7 +88,7 @@ extern int		printf(const char*, ...);
 
 #include "conflib.h"
 
-main()
+int main()
 {
 	char			c;
 	unsigned char		uc;
@@ -351,7 +344,7 @@ main()
 		vll = ull;
 #endif
 		printf("#if defined(__STDC__) && _ast_LL\n");
-		printf("#define ULONGLONG_MAX	%lluLLU\n", vll);
+		printf("#define ULONGLONG_MAX	%lluULL\n", vll);
 		printf("#else\n");
 		printf("#define ULONGLONG_MAX	%llu\n", vll);
 		printf("#endif\n");
@@ -480,5 +473,5 @@ main()
 	printf("#endif\n");
 	printf("\n");
 
-	return(0);
+	return 0;
 }

@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
@@ -235,14 +235,14 @@ static void nv_restore(struct subshell *sp)
 			 nv_putsub(mp,NIL(char*),ARRAY_SCAN);
 		nv_unset(mp);
 		nv_setsize(mp,nv_size(np));
-		if(!nv_isattr(np,NV_MINIMAL))
+		if(!nv_isattr(np,NV_MINIMAL) || nv_isattr(np,NV_EXPORT))
 			mp->nvenv = np->nvenv;
 		mp->nvfun = np->nvfun;
+		mp->nvflag = np->nvflag;
 		if(mp==nv_scoped(PATHNOD))
 			nv_putval(mp, np->nvalue.cp,0);
 		else
 			mp->nvalue.cp = np->nvalue.cp;
-		mp->nvflag = np->nvflag;
 		np->nvfun = 0;
 		if(nv_isattr(mp,NV_EXPORT))
 		{
@@ -298,6 +298,18 @@ Dt_t *sh_subfuntree(int create)
 	return(sp->sfun);
 }
 
+static void table_unset(register Dt_t *root)
+{
+	register Namval_t *np,*nq;
+	for(np=(Namval_t*)dtfirst(root);np;np=nq)
+	{
+		_nv_unset(np,1);
+		nq = (Namval_t*)dtnext(root,np);
+		dtdelete(root,np);
+		free((void*)np);
+	}
+}
+
 int sh_subsavefd(register int fd)
 {
 	register struct subshell *sp = subshell_data;
@@ -317,7 +329,7 @@ int sh_subsavefd(register int fd)
  * output of command <t>.  Otherwise, NULL will be returned.
  */
 
-Sfio_t *sh_subshell(union anynode *t, int flags, int comsub)
+Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 {
 	Shell_t *shp = &sh;
 	struct subshell sub_data;
@@ -353,7 +365,7 @@ Sfio_t *sh_subshell(union anynode *t, int flags, int comsub)
 #ifdef PATH_BFPATH
 	/* make sure initialization has occurred */ 
 	if(!shp->pathlist)
-		path_get("/");
+		path_get(".");
 	sp->pathlist = path_dup((Pathcomp_t*)shp->pathlist);
 #endif
 	if(!shp->pwd)
@@ -490,11 +502,13 @@ Sfio_t *sh_subshell(union anynode *t, int flags, int comsub)
 		if(sp->salias)
 		{
 			shp->alias_tree = dtview(sp->salias,0);
+			table_unset(sp->salias);
 			dtclose(sp->salias);
 		}
 		if(sp->sfun)
 		{
 			shp->fun_tree = dtview(sp->sfun,0);
+			table_unset(sp->sfun);
 			dtclose(sp->sfun);
 		}
 		sh_sigreset(1);

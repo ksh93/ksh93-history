@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
@@ -716,12 +716,12 @@ static int arg_expand(register struct argnod *argp, struct argnod **argchain,int
 		if(fd)
 		{
 			sh.inpipe = pv;
-			sh_exec((union anynode*)argp->argchn.ap,(int)sh_isstate(SH_ERREXIT));
+			sh_exec((Shnode_t*)argp->argchn.ap,(int)sh_isstate(SH_ERREXIT));
 		}
 		else
 		{
 			sh.outpipe = pv;
-			sh_exec((union anynode*)argp->argchn.ap,(int)sh_isstate(SH_ERREXIT));
+			sh_exec((Shnode_t*)argp->argchn.ap,(int)sh_isstate(SH_ERREXIT));
 		}
 		if(monitor)
 			sh_onstate(SH_MONITOR);

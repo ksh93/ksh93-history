@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -410,13 +410,15 @@ int		c;
 			if(!ISJUNK(size))	/* already done */
 				continue;
 
-			/* see if this address is from region */
-			for(seg = vd->seg; seg; seg = seg->next)
-				if(fp >= SEGBLOCK(seg) && fp < (Block_t*)seg->baddr )
-					break;
-			if(!seg) /* must be a bug in application code! */
-			{	/**/ ASSERT(seg != NIL(Seg_t*));
-				continue;
+			if(_Vmassert & VM_region)
+			{	/* see if this address is from region */
+				for(seg = vd->seg; seg; seg = seg->next)
+					if(fp >= SEGBLOCK(seg) && fp < (Block_t*)seg->baddr )
+						break;
+				if(!seg) /* must be a bug in application code! */
+				{	/**/ ASSERT(seg != NIL(Seg_t*));
+					continue;
+				}
 			}
 
 			if(ISPFREE(size))	/* backward merge */
@@ -615,41 +617,63 @@ reg size_t	size;	/* desired block size		*/
 	reg int		local;
 	size_t		orgsize = 0;
 
-#ifdef DEBUG
 	if(!(_Vmassert & VM_init))
 	{	char	*chk = getenv("VMCHECK");
-		_Vmassert = VM_init;
+		_Vmassert = VM_init|VM_primary|VM_secondary;
 		if(chk)
-			for(;;)
+		{	int	set = 1;
+			for(;; set ? (_Vmassert |= n) : (_Vmassert &= ~n))
 			{
 				switch (*chk++)
 				{
 				case 0:
 					break;
+				case '-':
+				case '!':
+					set = 0;
+					n = 0;
+					continue;
+				case '+':
+					set = 1;
+					n = 0;
+					continue;
 				case '1':
-					_Vmassert |= VM_check;
+					n = VM_check;
 					continue;
 				case '2':
-					_Vmassert |= VM_abort;
+					n = VM_abort;
 					continue;
 				case '3':
-					_Vmassert |= VM_check|VM_abort;
+					n = VM_check|VM_abort;
 					continue;
 				case 'a':
 				case 'A':
-					_Vmassert |= VM_abort;
+					n = VM_abort;
 					continue;
 				case 'c':
 				case 'C':
-					_Vmassert |= VM_check;
+					n = VM_check;
+					continue;
+				case 'p':
+				case 'P':
+					n = VM_primary;
+					continue;
+				case 'r':
+				case 'R':
+					n = VM_region;
+					continue;
+				case 's':
+				case 'S':
+					n = VM_secondary;
 					continue;
 				default:
+					n = 0;
 					continue;
 				}
 				break;
 			}
+		}
 	}
-#endif
 	/**/COUNT(N_alloc);
 
 	if(!(local = vd->mode&VM_TRUST))
@@ -830,7 +854,7 @@ Void_t*		data;
 	reg int		local;
 
 #ifdef DEBUG
-	if((local = (int)data) >= 0 && local <= 3)
+	if((local = (int)data) >= 0 && local <= 0xf)
 	{	int	vmassert = _Vmassert;
 		_Vmassert = local ? local : vmassert ? vmassert : (VM_check|VM_abort);
 		_vmbestcheck(vd, NIL(Block_t*));
@@ -1235,41 +1259,65 @@ Vmdisc_t*	disc;	/* discipline structure			*/
 
 	if(csize == 0) /* allocating new memory */
 	{
+#if ( _mem_sbrk || _mem_mmap_anon || _mem_mmap_zero )
+#define ALTERNATES	VM_primary
+#endif
 #if _mem_sbrk	/* try using sbrk() and brk() */
-		addr = (Vmuchar_t*)sbrk(0); /* old break value */
-		if(addr && addr != (Vmuchar_t*)BRK_FAILED )
-			if(brk(addr+nsize) == 0 ) 
-				return addr;
+#if ALTERNATES
+		if (_Vmassert & ALTERNATES)
+#undef	ALTERNATES
+#define ALTERNATES	VM_secondary
+#endif
+		{
+			addr = (Vmuchar_t*)sbrk(0); /* old break value */
+			if(addr && addr != (Vmuchar_t*)BRK_FAILED )
+				if(brk(addr+nsize) == 0 ) 
+					return addr;
+		}
 #endif /* _mem_sbrk */
 
 #if _mem_mmap_anon /* anonymous mmap */
-		addr = (Vmuchar_t*)mmap(0, nsize, PROT_READ|PROT_WRITE,
-                                        MAP_ANON|MAP_PRIVATE, -1, 0);
-		if(addr && addr != (Vmuchar_t*)MAP_FAILED)
-			return addr;
+#if ALTERNATES
+		if (_Vmassert & ALTERNATES)
+#undef	ALTERNATES
+#define ALTERNATES	VM_secondary
+#endif
+		{
+			addr = (Vmuchar_t*)mmap(0, nsize, PROT_READ|PROT_WRITE,
+                                        	MAP_ANON|MAP_PRIVATE, -1, 0);
+			if(addr && addr != (Vmuchar_t*)MAP_FAILED)
+				return addr;
+		}
 #endif /* _mem_mmap_anon */
 
 #if _mem_mmap_zero /* mmap from /dev/zero */
-		if(mmdc->fd < 0)
-		{	int	fd;
-			if(mmdc->fd != -1)
-				return NIL(Void_t*);
-			if((fd = open("/dev/zero", O_RDONLY)) < 0 )
-			{	mmdc->fd = -2;
-				return NIL(Void_t*);
-			}
-			if(fd >= OPEN_PRIVATE || (mmdc->fd = dup2(fd,OPEN_PRIVATE)) < 0 )
-				mmdc->fd = fd;
-			else	close(fd);
-#ifdef FD_CLOEXEC
-			fcntl(mmdc->fd, F_SETFD, FD_CLOEXEC);
+#if ALTERNATES
+		if (_Vmassert & ALTERNATES)
+#undef	ALTERNATES
+#define ALTERNATES	VM_secondary
 #endif
-		}
-		addr = (Vmuchar_t*)mmap(0, nsize, PROT_READ|PROT_WRITE,
-					MAP_PRIVATE, mmdc->fd, mmdc->offset);
-		if(addr && addr != (Vmuchar_t*)MAP_FAILED)
-		{	mmdc->offset += nsize;
-			return addr;
+		{
+			if(mmdc->fd < 0)
+			{	int	fd;
+				if(mmdc->fd != -1)
+					return NIL(Void_t*);
+				if((fd = open("/dev/zero", O_RDONLY)) < 0 )
+				{	mmdc->fd = -2;
+					return NIL(Void_t*);
+				}
+				if(fd >= OPEN_PRIVATE || (mmdc->fd = dup2(fd,OPEN_PRIVATE)) < 0 )
+					mmdc->fd = fd;
+				else	close(fd);
+#ifdef FD_CLOEXEC
+				fcntl(mmdc->fd, F_SETFD, FD_CLOEXEC);
+#endif
+			}
+			addr = (Vmuchar_t*)mmap(0, nsize, PROT_READ|PROT_WRITE,
+						MAP_PRIVATE, mmdc->fd, mmdc->offset);
+			if(addr && addr != (Vmuchar_t*)MAP_FAILED)
+			{	mmdc->offset += nsize;
+				return addr;
+			}
 		}
 #endif /* _mem_mmap_zero */
 
@@ -1277,22 +1325,40 @@ Vmdisc_t*	disc;	/* discipline structure			*/
 	}
 	else
 	{	addr = caddr; /* in case !_mem_sbrk */
+#if ( _mem_sbrk || _mem_mmap_anon || _mem_mmap_zero )
+#undef	ALTERNATES
+#define ALTERNATES	VM_primary
+#endif
 #if _mem_sbrk
-		addr = (Vmuchar_t*)sbrk(0);
-		if(!addr || addr == (Vmuchar_t*)BRK_FAILED)
-			addr = caddr;
-		else if(((Vmuchar_t*)caddr+csize) == addr) /* in sbrk-space */
-		{	if(nsize > csize)
-				addr += nsize-csize;
-			else	addr -= csize-nsize;
-			return brk(addr) == 0 ? caddr : NIL(Void_t*);
+#if ALTERNATES
+		if (_Vmassert & ALTERNATES)
+#undef	ALTERNATES
+#define ALTERNATES	VM_secondary
+#endif
+		{
+			addr = (Vmuchar_t*)sbrk(0);
+			if(!addr || addr == (Vmuchar_t*)BRK_FAILED)
+				addr = caddr;
+			else if(((Vmuchar_t*)caddr+csize) == addr) /* in sbrk-space */
+			{	if(nsize > csize)
+					addr += nsize-csize;
+				else	addr -= csize-nsize;
+				return brk(addr) == 0 ? caddr : NIL(Void_t*);
+			}
 		}
 #endif /* _mem_sbrk */
 
 #if _mem_mmap_zero || _mem_mmap_anon
-		if(((Vmuchar_t*)caddr+csize) > addr) /* in mmap-space */
-			if(nsize == 0 && munmap(caddr,csize) == 0)
-				return caddr;
+#if ALTERNATES
+		if (_Vmassert & ALTERNATES)
+#undef	ALTERNATES
+#define ALTERNATES	VM_secondary
+#endif
+		{
+			if(((Vmuchar_t*)caddr+csize) > addr) /* in mmap-space */
+				if(nsize == 0 && munmap(caddr,csize) == 0)
+					return caddr;
+		}
 #endif /* _mem_mmap_zero || _mem_mmap_anon */
 
 		return NIL(Void_t*);

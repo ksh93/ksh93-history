@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
@@ -100,7 +100,7 @@ static char	beenhere = 0;
     }
 #endif /* _lib_fts_notify */
 
-sh_main(int ac, char *av[], void (*userinit)(int))
+int sh_main(int ac, char *av[], void (*userinit)(int))
 {
 	register char	*name;
 	register int	fdin;
@@ -368,7 +368,7 @@ sh_main(int ac, char *av[], void (*userinit)(int))
 static void	exfile(register Shell_t *shp, register Sfio_t *iop,register int fno)
 {
 	time_t curtime;
-	union anynode *t;
+	Shnode_t *t;
 	int maxtry=IOMAXTRY, tdone=0, execflags;
 	int states,jmpval;
 	struct checkpt buff;
@@ -555,7 +555,7 @@ static void	exfile(register Shell_t *shp, register Sfio_t *iop,register int fno)
 			sh_onstate(SH_HISTORY);
 		job.waitall = job.curpgid = 0;
 		error_info.flags |= ERROR_INTERACTIVE;
-		t = (union anynode*)sh_parse(shp,iop,0);
+		t = (Shnode_t*)sh_parse(shp,iop,0);
 		if(!sh_isstate(SH_INTERACTIVE) && !sh_isstate(SH_CFLAG))
 			error_info.flags &= ~ERROR_INTERACTIVE;
 		shp->readscript = 0;

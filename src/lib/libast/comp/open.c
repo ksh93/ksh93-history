@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -91,7 +91,7 @@ _ast_open(const char* path, int op, ...)
 #endif
 						errno = save_errno;
 				}
-				if (op & O_RDWR)
+				if ((op & O_ACCMODE) == O_RDWR)
 				{
 					close(fd);
 					op &= ~(O_CREAT|O_TRUNC);

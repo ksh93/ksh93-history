@@ -15,7 +15,7 @@
 #               AT&T's intellectual property rights.               #
 #                                                                  #
 #            Information and Software Systems Research             #
-#                        AT&T Labs Research                        #
+#                          AT&T Research                           #
 #                         Florham Park NJ                          #
 #                                                                  #
 #               Glenn Fowler <gsf@research.att.com>                #
@@ -25,7 +25,7 @@
 ####################################################################
 : generate conf info
 #
-# @(#)conf.sh (AT&T Research) 2004-05-05
+# @(#)conf.sh (AT&T Research) 2004-08-11
 #
 # this script generates these files from the table file in the first arg
 # the remaining args are the C compiler name and flags
@@ -583,9 +583,7 @@ do	eval name=\"'$'CONF_name_$key\"
 	QQ)	call=XX
 		for c in SC PC CS
 		do	cat > $tmp.c <<!
-#ifndef _POSIX_SOURCE
-#define _POSIX_SOURCE	1
-#endif
+#include "FEATURE/standards"
 #include <sys/types.h>
 #include <limits.h>
 #include <unistd.h>$systeminfo$headers
@@ -710,9 +708,7 @@ main()
 		*)	continue ;;
 		esac
 		cat > $tmp.c <<!
-#ifndef _POSIX_SOURCE
-#define _POSIX_SOURCE	1
-#endif
+#include "FEATURE/standards"
 #include <sys/types.h>
 #include <limits.h>
 #include <unistd.h>$systeminfo$headers
@@ -956,9 +952,7 @@ case ${conf_op}:"
 		do	case $i in
 			$sym)	case $something in
 				'')	cat > $tmp.c <<!
-#ifndef _POSIX_SOURCE
-#define _POSIX_SOURCE	1
-#endif
+#include "FEATURE/standards"
 #include <sys/types.h>
 #include <limits.h>
 #include <unistd.h>$systeminfo$headers

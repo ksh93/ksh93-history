@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
@@ -40,17 +40,17 @@ static struct dolnod	*r_comlist(void);
 static struct argnod	*r_arg(void);
 static struct ionod	*r_redirect(void);
 static struct regnod	*r_switch(void);
-static union anynode	*r_tree(void);
+static Shnode_t	*r_tree(void);
 static char		*r_string(void);
 static void		r_comarg(struct comnod*);
 
 static Sfio_t *infile;
 
-#define getnode(type)   ((union anynode*)stakalloc(sizeof(struct type)))
+#define getnode(type)   ((Shnode_t*)stakalloc(sizeof(struct type)))
 
-union anynode *sh_trestore(Sfio_t *in)
+Shnode_t *sh_trestore(Sfio_t *in)
 {
-	union anynode *t;
+	Shnode_t *t;
 	infile = in;
 	t = r_tree();
 	return(t);
@@ -58,11 +58,11 @@ union anynode *sh_trestore(Sfio_t *in)
 /*
  * read in a shell tree
  */
-static union anynode *r_tree()
+static Shnode_t *r_tree()
 {
 	long l = sfgetl(infile); 
 	register int type;
-	register union anynode *t=0;
+	register Shnode_t *t=0;
 	if(l<0)
 		return(t);
 	type = l;
@@ -162,9 +162,9 @@ static union anynode *r_tree()
 				t->lst.lstlef = r_tree(); 
 			else
 			{
-				t->lst.lstlef = (union anynode*)r_arg();
+				t->lst.lstlef = (Shnode_t*)r_arg();
 				if((type&TBINARY))
-					t->lst.lstrit = (union anynode*)r_arg();
+					t->lst.lstrit = (Shnode_t*)r_arg();
 			}
 	}
 	t->tre.tretyp = type;

@@ -15,7 +15,7 @@
 #               AT&T's intellectual property rights.               #
 #                                                                  #
 #            Information and Software Systems Research             #
-#                        AT&T Labs Research                        #
+#                          AT&T Research                           #
 #                         Florham Park NJ                          #
 #                                                                  #
 #                David Korn <dgk@research.att.com>                 #
@@ -130,5 +130,24 @@ line 1
 line 2
 line 3
 !) == $'line 1\nline 2\nline 3' ]] || err_exit 'read error with subshells'
-
+# 04-05-11 bug fix
+cat > /tmp/io$$.1 <<- \++EOF++  
+	script=/tmp/io$$.2
+	trap 'rm -f $script' EXIT
+	exec 9> $script
+	for ((i=3; i<9; i++))
+	do	eval "while read -u$i; do : ;done $i</dev/null"
+		print -u9 "exec $i< /dev/null" 
+	done
+	for ((i=0; i < 60; i++))
+	do	print -u9 -f "%.80c\n"  ' '
+	done
+	print -u9 'print ok'
+	exec 9<&-
+	chmod +x $script
+	$script
+++EOF++
+chmod +x /tmp/io$$.1
+[[ $($SHELL  /tmp/io$$.1) == ok ]]  || err_exit "parent i/o causes child script to fail"
+rm -rf /tmp/io$$.[12]
 exit $((Errors))

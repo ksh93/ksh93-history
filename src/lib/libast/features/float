@@ -4,6 +4,7 @@ lib	frexp,frexpl,ldexp,ldexpl -lm
 
 tst	ast_no_um2fm note{ no unsigned intmax => floatmax cast }end nolink{
 	#include "FEATURE/common"
+	int
 	main()
 	{
 		_ast_fltmax_t		f = 0;
@@ -15,6 +16,7 @@ tst	ast_no_um2fm note{ no unsigned intmax => floatmax cast }end nolink{
 }end
 
 tst	ast_mpy_overflow_fpe note{ fpe on mpy overflow }end noexecute{
+	int
 	main()
 	{
 		float	f;
@@ -33,6 +35,7 @@ tst	ast_mpy_overflow_fpe note{ fpe on mpy overflow }end noexecute{
 }end
 
 tst	ast_div_underflow_fpe note{ fpe on div underflow }end noexecute{
+	int
 	main()
 	{
 		float	f;
@@ -233,6 +236,7 @@ tst	- note{ missing floating point limits }end output{
 		caught++;
 	}
 	#endif
+	int
 	main()
 	{
 		register int		i;
@@ -862,6 +866,7 @@ tst	- note{ double exponent bitfoolery }end output{
 		unsigned _ast_int4_t	e[sizeof(double) / 4];
 		double			f;
 	} _ast_dbl_exp_t;
+	int
 	main()
 	{
 		int			i;
@@ -894,6 +899,7 @@ tst	- note{ long double exponent bitfoolery }end output{
 		unsigned _ast_int4_t	e[sizeof(_ast_fltmax_t) / 4];
 		_ast_fltmax_t		f;
 	} _ast_fltmax_exp_t;
+	int
 	main()
 	{
 		int			i;
@@ -920,6 +926,7 @@ tst	- note{ long double exponent bitfoolery }end output{
 }end
 
 tst	- -DN=1 - -DN=2 note{ _ast_fltmax_t maximum integral type }end output{
+	int
 	main()
 	{
 	#if N == 1
@@ -980,6 +987,7 @@ tst	- -lm -DSCAN=1 - -DEXP=1 - -DADD=1 - -DMPY=1 note{ nan memory representation
 			printf(",0x%02x", *u);
 		printf("\n");
 	}
+	int
 	main()
 	{
 	#if SCAN

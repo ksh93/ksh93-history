@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1990-2002 AT&T Corp.                *
+*                Copyright (c) 1990-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -39,7 +39,7 @@ system(const char* cmd)
 	int		status;
 
 	if (!cmd)
-		return !access(pathshell(), X_OK);
+		return !eaccess(pathshell(), X_OK);
 	if (!(co = coopen(NiL, CO_ANY, NiL)))
 		return -1;
 	if (cj = coexec(co, cmd, CO_SILENT, NiL, NiL, NiL))

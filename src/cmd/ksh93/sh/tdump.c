@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
@@ -41,12 +41,12 @@ static int p_arg(const struct argnod*);
 static int p_comarg(const struct comnod*);
 static int p_redirect(const struct ionod*);
 static int p_switch(const struct regnod*);
-static int p_tree(const union anynode*);
+static int p_tree(const Shnode_t*);
 static int p_string(const char*);
 
 static Sfio_t *outfile;
 
-int sh_tdump(Sfio_t *out, const union anynode *t)
+int sh_tdump(Sfio_t *out, const Shnode_t *t)
 {
 	outfile = out;
 	return(p_tree(t));
@@ -68,7 +68,7 @@ static int outstring(Sfio_t *out, const char *string, int n)
 /*
  * print script corresponding to shell tree <t>
  */
-static int p_tree(register const union anynode *t)
+static int p_tree(register const Shnode_t *t)
 {
 	if(!t)
 		return(sfputl(outfile,-1));
@@ -97,7 +97,7 @@ static int p_tree(register const union anynode *t)
 		case TWH:
 			if(t->wh.whinc)
 			{
-				if(p_tree((union anynode*)(t->wh.whinc))<0)
+				if(p_tree((Shnode_t*)(t->wh.whinc))<0)
 					return(-1);
 			}
 			else
@@ -126,7 +126,7 @@ static int p_tree(register const union anynode *t)
 				return(-1);
 			if(p_string(t->for_.fornam)<0)
 				return(-1);
-			return(p_tree((union anynode*)t->for_.forlst));
+			return(p_tree((Shnode_t*)t->for_.forlst));
 		case TSW:
 			if(sfputu(outfile,t->sw.swline)<0)
 				return(-1);
@@ -140,7 +140,7 @@ static int p_tree(register const union anynode *t)
 				return(-1);
 			if(p_tree(t->funct.functtre)<0)
 				return(-1);
-			return(p_tree((union anynode*)t->funct.functargs));
+			return(p_tree((Shnode_t*)t->funct.functargs));
 		case TTST:
 			if(sfputu(outfile,t->tst.tstline)<0)
 				return(-1);

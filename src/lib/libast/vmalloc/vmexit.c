@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -23,7 +23,7 @@
 *                 Phong Vo <kpv@research.att.com>                  *
 *                                                                  *
 *******************************************************************/
-#if defined(_UWIN) && defined(_BLD_ast)
+#if defined(_UWIN)
 
 void _STUB_vmexit(){}
 

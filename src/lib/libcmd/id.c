@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -32,7 +32,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: id (AT&T Labs Research) 1999-06-17 $\n]"
+"[-?\n@(#)$Id: id (AT&T Labs Research) 2004-06-11 $\n]"
 USAGE_LICENSE
 "[+NAME?id - return user identity]"
 "[+DESCRIPTION?If no \auser\a operand is specified \bid\b writes user and "
@@ -463,7 +463,7 @@ b_id(int argc, char *argv[], void* context)
 		error(2, "incompatible options selected");
 	if (error_info.errors || argc > 1)
 		error(ERROR_usage(2), "%s", optusage(NiL));
-	if (!(flags & ~N_FLAG))
+	if (!(flags & ~(N_FLAG|R_FLAG)))
 	{
 		if (flags & N_FLAG) flags |= O_FLAG;
 		flags |= (U_FLAG|G_FLAG|N_FLAG|R_FLAG|S_FLAG|GG_FLAG);

@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
@@ -38,6 +38,8 @@ USAGE_LICENSE
 	"\ainfile\a, and creates a binary format file, \aoutfile\a, that "
 	"\bksh\b can read and execute with the same effect as the original "
 	"script.]"
+"[+?Since aliases are processed as the script is read, alias definitions "
+	"whose value requires variable expansion will not work correctly.]"
 "[+?If \b-D\b is specifed, all double quoted strings that are preceded by "
 	"\b$\b are output.  These are the messages that need to be "
 	"translated to locale specific versions for internationalization.]"
@@ -72,7 +74,7 @@ int main(int argc, char *argv[])
 	Sfio_t *in, *out;
 	Shell_t	*shp;
 	Namval_t *np;
-	union anynode *t;
+	Shnode_t *t;
 	char *cp;
 	int n, nflag=0, vflag=0, dflag=0;
 	error_info.id = argv[0];
@@ -131,8 +133,10 @@ int main(int argc, char *argv[])
 	while(1)
 	{
 		stakset((char*)0,0);
-		if(t = (union anynode*)sh_parse(shp,in,0))
+		if(t = (Shnode_t*)sh_parse(shp,in,0))
 		{
+			if(t->tre.tretyp==0 && t->com.comnamp && strcmp(nv_name((Namval_t*)t->com.comnamp),"alias")==0)
+				sh_exec(t,0);
 			if(!dflag && sh_tdump(out,t) < 0)
 				errormsg(SH_DICT,ERROR_exit(1),"dump failed");
 		}

@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -30,7 +30,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: fmt (AT&T Labs Research) 2003-07-15 $\n]"
+"[-?\n@(#)$Id: fmt (AT&T Labs Research) 2004-08-01 $\n]"
 USAGE_LICENSE
 "[+NAME?fmt - simple text formatter]"
 "[+DESCRIPTION?\bfmt\b reads the input files and left justifies space separated"
@@ -169,15 +169,21 @@ static void split(Fmt_t *fp, char *buff)
 static int dofmt(Fmt_t *fp)
 {
 	char buff[8192];
-	char *cp, *dp, *ep;
+	char *cp, *dp, *ep, *bp, *lp;
 	register int c;
-	while((cp=sfgetr(fp->in,'\n',0)))
+	cp = 0;
+	while(cp || (cp=sfgetr(fp->in,'\n',0)) && (lp = cp + sfvalue(fp->in) - 1) || (cp=sfgetr(fp->in,'\n',SF_LASTR)) && (lp = cp + sfvalue(fp->in)))
 	{
 		ep = 0;
 		dp = buff;
-		while(c=*cp++)
+		for(;;)
 		{
-			if(c=='\b')
+			if(cp >= lp)
+			{
+				cp = 0;
+				break;
+			}
+			else if((c=*cp++) == '\b')
 			{
 				if(dp>buff)
 				{
@@ -186,7 +192,6 @@ static int dofmt(Fmt_t *fp)
 						ep--;
 						
 				}
-				continue;
 			}
 			else if(c=='\t')
 			{
@@ -194,15 +199,28 @@ static int dofmt(Fmt_t *fp)
 				if(!ep)
 					ep = dp;
 				c = TABSZ - (dp-buff)%TABSZ;
+				if(dp >= &buff[sizeof(buff) - c - 1])
+				{
+					cp--;
+					break;
+				}
 				while(c-->0)
 					*dp++ = ' ';
 			}
-			else if(c=='\n')
-				break;
-			else if(!isprint(c))
-				continue;
-			else
+			else if(isprint(c))
 			{
+				if(dp >= &buff[sizeof(buff) - 1])
+				{
+					bp = dp;
+					while (--bp > buff)
+						if (isspace(*bp))
+						{
+							cp -= dp - bp;
+							dp = bp;
+							break;
+						}
+					break;
+				}
 				if(c!=' ')
 					ep = 0;
 				else if(!ep)
@@ -232,6 +250,7 @@ b_fmt(int argc, char** argv, void *context)
 	fmt.endbuff = &outbuff[72];
 	fmt.outp = 0;
 	fmt.nwords = 0;
+	fmt.prefix = 0;
 	cmdinit(argv, context, ERROR_CATALOG, 0);
 	while (n = optget(argv, usage)) switch (n)
 	{

@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -57,7 +57,7 @@
 
 #if !defined(S2F_function)
 #define S2F_function	_sfdscan
-#define S2F_static	0
+#define S2F_static	1
 #define S2F_type	2
 #define S2F_scan	1
 #ifndef elementsof

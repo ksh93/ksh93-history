@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
@@ -84,7 +84,7 @@ struct forknod
 {
 	int		forktyp;
 	struct ionod	*forkio;
-	union anynode	*forktre;
+	Shnode_t	*forktre;
 	int		forkline;
 };
 
@@ -92,16 +92,16 @@ struct forknod
 struct ifnod
 {
 	int		iftyp;
-	union anynode	*iftre;
-	union anynode	*thtre;
-	union anynode	*eltre;
+	Shnode_t	*iftre;
+	Shnode_t	*thtre;
+	Shnode_t	*eltre;
 };
 
 struct whnod
 {
 	int		whtyp;
-	union anynode	*whtre;
-	union anynode	*dotre;
+	Shnode_t	*whtre;
+	Shnode_t	*dotre;
 	struct arithnod	*whinc;
 };
 
@@ -109,7 +109,7 @@ struct fornod
 {
 	int		fortyp;
 	char	 	*fornam;
-	union anynode	*fortre;
+	Shnode_t	*fortre;
 	struct comnod	*forlst;
 	int		forline;
 };
@@ -126,7 +126,7 @@ struct swnod
 struct regnod
 {
 	struct argnod	*regptr;
-	union anynode	*regcom;
+	Shnode_t	*regcom;
 	struct regnod	*regnxt;
 	char		regflag;
 };
@@ -134,14 +134,14 @@ struct regnod
 struct parnod
 {
 	int		partyp;
-	union anynode	*partre;
+	Shnode_t	*partre;
 };
 
 struct lstnod
 {
 	int		lsttyp;
-	union anynode	*lstlef;
-	union anynode	*lstrit;
+	Shnode_t	*lstlef;
+	Shnode_t	*lstrit;
 };
 
 /* tst is same as lst, but with extra field for line number */
@@ -155,7 +155,7 @@ struct functnod
 {
 	int		functtyp;
 	char		*functnam;
-	union anynode	*functtre;
+	Shnode_t	*functtre;
 	int		functline;
 	off_t		functloc;
 	struct slnod	*functstak;
@@ -184,7 +184,7 @@ struct arithnod
 #define IOSTRIP 0x4000		/* strip leading tabs for here-document */
 #define IOQUOTE	0x8000		/* here-document delimiter was quoted */
 
-union anynode
+union Shnode_u
 {
 	struct argnod	arg;
 	struct ionod	io;
@@ -206,14 +206,13 @@ union anynode
 
 extern void			sh_freeup(void);
 extern void			sh_funstaks(struct slnod*,int);
-extern Sfio_t 			*sh_subshell(union anynode*, int, int);
-extern int			sh_exec(const union anynode*,int);
+extern Sfio_t 			*sh_subshell(Shnode_t*, int, int);
 #if defined(__EXPORT__) && defined(_BLD_DLL) && defined(_BLD_shell) 
    __EXPORT__
 #endif
-extern int			sh_tdump(Sfio_t*, const union anynode*);
-extern union anynode		*sh_dolparen(void);
-extern union anynode		*sh_trestore(Sfio_t*);
+extern int			sh_tdump(Sfio_t*, const Shnode_t*);
+extern Shnode_t			*sh_dolparen(void);
+extern Shnode_t			*sh_trestore(Sfio_t*);
 #if SHOPT_KIA
     extern int 			kiaclose(void);
     extern unsigned long 	kiaentity(const char*,int,int,int,int,unsigned long,int,int,const char*);

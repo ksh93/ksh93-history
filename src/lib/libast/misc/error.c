@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -395,11 +395,9 @@ errorv(const char* id, int level, va_list ap)
 			flags &= ~ERROR_SYSTEM;
 			break;
 		case ERROR_WARNING:
-			error_info.warnings++;
 			sfprintf(stkstd, "%s: ", ERROR_translate(NiL, NiL, ast.id, "warning"));
 			break;
 		case ERROR_PANIC:
-			error_info.errors++;
 			sfprintf(stkstd, "%s: ", ERROR_translate(NiL, NiL, ast.id, "panic"));
 			break;
 		default:
@@ -416,8 +414,6 @@ errorv(const char* id, int level, va_list ap)
 					sfputc(stkstd, ' ');
 				}
 			}
-			else
-				error_info.errors++;
 			break;
 		}
 		if (flags & ERROR_SOURCE)
@@ -457,6 +453,13 @@ errorv(const char* id, int level, va_list ap)
 			if (error_info.auxilliary && level >= 0)
 				level = (*error_info.auxilliary)(stkstd, level, flags);
 			sfputc(stkstd, '\n');
+		}
+		if (level > 0)
+		{
+			if ((level & ~ERROR_OUTPUT) > 1)
+				error_info.errors++;
+			else
+				error_info.warnings++;
 		}
 		if (level < 0 || !(level & ERROR_OUTPUT))
 		{

@@ -1,3 +1,9 @@
+04-08-27 cp.c: add FTW_DC check -- duh
+04-08-01 fmt.c: handle last char != '\n'
+04-07-22 date.c,uname.c: access() => eaccess()
+04-07-01 fmt.c: handle large input lines -- ouch
+04-06-11 id.c: fix -r to output something!
+04-05-27 expr.c: fix `:' op subexpression output
 04-04-15 chmod.c: follow symlink for relative mode
 04-04-12 Makefile: add STDCHMOD (for osf.alpha)
 04-03-19 tail.c: handle -f sfreserve() large chunk failure

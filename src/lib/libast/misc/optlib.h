@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -75,12 +75,6 @@ typedef struct Optcache_s
 	int			caching;
 	unsigned char		flags[sizeof(OPT_FLAGS)];
 } Optcache_t;
-
-typedef struct Optstr_s
-{
-	char*			argv[3];
-	char*			str;
-} Optstr_t;
 
 typedef struct Optstate_s
 {

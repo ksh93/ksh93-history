@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -33,6 +33,16 @@ void _STUB_vmprivate(){}
 
 static char*	Version = "\n@(#)$Id: Vmalloc (AT&T Labs - Research) 2004-02-06 $\0\n";
 
+#if _sys_stat
+#include	<sys/stat.h>
+#endif
+#include	<fcntl.h>
+
+#ifdef S_IRUSR
+#define CREAT_MODE	(S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH)
+#else
+#define CREAT_MODE	0644
+#endif
 
 /*	Private code used in the vmalloc library
 **
@@ -65,7 +75,7 @@ Vmsearch_f	searchf;	/* tree search function		*/
 		int	fd;
 		vd->mode = (vd->mode&~VM_TRUST)|VM_TRACE;
 		if((fd = vmtrace(-1)) >= 0 ||
-		   ((env = getenv("VMTRACE")) && (fd = creat(env, 0666)) >= 0 ) )
+		   ((env = getenv("VMTRACE")) && (fd = creat(env, CREAT_MODE)) >= 0 ) )
 			vmtrace(fd);
 	}
 #endif

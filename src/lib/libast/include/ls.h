@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -77,7 +77,7 @@
 #define LS_W_MARK	1		/* LS_MARK field width		*/
 #define LS_W_NAME	9		/* group|user name field width	*/
 
-#if defined(_AST_H) || defined(_POSIX_SOURCE)
+#if defined(_AST_H) || defined(_POSIX_SOURCE) || defined(_XOPEN_SOURCE)
 #define _AST_mode_t	mode_t
 #else
 #define _AST_mode_t	int

@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -315,6 +315,7 @@ astlicense(char* p, int size, char* file, char* options, int cc1, int cc2, int c
 	int		n;
 	int		q;
 	int		contributor;
+	int		first;
 	unsigned long	h;
 	char		tmpbuf[COMLINE];
 	char		info[8 * 1024];
@@ -364,7 +365,7 @@ astlicense(char* p, int size, char* file, char* options, int cc1, int cc2, int c
 	contributor = i = k = 0;
 	for (;;)
 	{
-		while (c = *s)
+		for (first = 1; c = *s; first = 0)
 		{
 			while (c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == ',' || c == ';' || c == ')')
 				c = *++s;
@@ -498,7 +499,7 @@ astlicense(char* p, int size, char* file, char* options, int cc1, int cc2, int c
 					}
 				}
 			}
-			else
+			else if (!first)
 			{
 				if (file)
 				{

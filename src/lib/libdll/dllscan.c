@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -226,7 +226,7 @@ dllsopen(const char* lib, const char* name, const char* version)
 
 	if (!(vm = vmopen(Vmdcheap, Vmlast, 0)))
 		return 0;
-	if (lib)
+	if (lib && *lib && (*lib != '-' || *(lib + 1)))
 	{
 		/*
 		 * grab the local part of the library id
@@ -237,7 +237,10 @@ dllsopen(const char* lib, const char* name, const char* version)
 		i = 2 * sizeof(char**) + strlen(lib) + 5;
 	}
 	else
+	{
+		lib = 0;
 		i = 0;
+	}
 	if (!(scan = vmnewof(vm, 0, Dllscan_t, 1, i)) || !(scan->tmp = sfstropen()))
 	{
 		vmclose(vm);
@@ -375,7 +378,7 @@ dllsread(register Dllscan_t* scan)
 			{
 				sfprintf(scan->tmp, "/%s", scan->nam);
 				p = sfstruse(scan->tmp);
-				if (!access(p, R_OK))
+				if (!eaccess(p, R_OK))
 				{
 					b = scan->nam;
 					goto found;

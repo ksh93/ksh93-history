@@ -1,3 +1,23 @@
+04-08-26 string/strperm.c: add who^mode to propagate least restrictive up
+	 astmath.c: add { frexpl ldexpl } checks for ast.req
+	 port/astlicense.c: ignore first option if non-assignment
+04-08-24 vmalloc/vmbest.c: add {VM_region} VMCHECK=+r for region segment checks
+	 misc/recfmt.c,include/recfmt.h: add
+04-08-23 vmalloc/vmbest.c: add {VM_primary VM_secondary} VMCHECK=-s for primary
+	 features/common: punt to <stdarg.h> for unknown va_list
+04-08-11 vmalloc: sync _UWIN libposix hooks
+04-07-27 features/common,features/limits.c: ULL suffix for unsigned _ast_int8_t
+04-07-22 include/ast.h,comp/eaccess.c: add eaccess() for effective access()
+04-07-19 comp/open.c,sfio/_sfopen.c: { O_RDONLY O_WRONLY O_RDWR } are values
+04-06-28 misc/error.c: check level after error_info.auxilliary
+04-06-24 string/strmatch.c: strgrpmatch() match[] now variable size array
+04-06-17 features/common: change _DLL null define to (the standard ast) 1
+04-06-11 misc/optget.c: allow optional [-|+|--|++] optstr() option prefix
+	 misc/optget.c: reset optstr() state on 0 return
+	 misc/optget.c: text()=>textout() linux.ppc symbol hijack workaround
+04-05-31 sfio/sfreserve.c: no side buffer if user buffer is large enough
+04-05-27 string/fmtbuf.c: handle one concurrent buf > sizeof(buf)
+04-05-24 regcomp.c: fix no-advance initialization
 04-05-05 conf.tab,conf.sh: update to align with standards
 	 magic.tab: ms suffix update
 04-05-04 port/lcgen.c: fix territory initialization

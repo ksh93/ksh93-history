@@ -1,0 +1,49 @@
+if tst note{ _POSIX_SOURCE & _XOPEN_SOURCE & __EXTENSIONS__ works }end compile{
+		#define _POSIX_SOURCE	1
+		#define _XOPEN_SOURCE	1
+		#define __EXTENSIONS__	1
+		#include <sys/types.h>
+		#include <sys/stat.h>
+	}end {
+		#ifndef _POSIX_SOURCE
+		#define _POSIX_SOURCE	1
+		#endif
+		#ifndef _XOPEN_SOURCE
+		#define _XOPEN_SOURCE	1
+		#endif
+		#ifndef __EXTENSIONS__
+		#define __EXTENSIONS__	1
+		#endif
+	}
+elif tst note{ _XOPEN_SOURCE & __EXTENSIONS__ works }end compile{
+		#define _XOPEN_SOURCE	1
+		#define __EXTENSIONS__	1
+		#include <sys/types.h>
+		#include <sys/stat.h>
+	}end {
+		#ifndef _XOPEN_SOURCE
+		#define _XOPEN_SOURCE	1
+		#endif
+		#ifndef __EXTENSIONS__
+		#define __EXTENSIONS__	1
+		#endif
+	}
+elif tst note{ _XOPEN_SOURCE works }end compile{
+		#define _XOPEN_SOURCE	1
+		#include <sys/types.h>
+		#include <sys/stat.h>
+	}end {
+		#ifndef _XOPEN_SOURCE
+		#define _XOPEN_SOURCE	1
+		#endif
+	}
+else tst note{ __EXTENSIONS__ works }end compile{
+		#define __EXTENSIONS__	1
+		#include <sys/types.h>
+		#include <sys/stat.h>
+	}end {
+		#ifndef __EXTENSIONS__
+		#define __EXTENSIONS__	1
+		#endif
+	}
+endif

@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -1486,7 +1486,7 @@ require(char* lib, int dontcare)
 		{
 			append(tmp, "set -\n");
 			append(tmp, "cd /tmp\n");
-			append(tmp, "echo 'main(){return(0);}' > x.${!-$$}.c\n");
+			append(tmp, "echo 'int main(){return 0;}' > x.${!-$$}.c\n");
 			append(tmp, "${CC} ${CCFLAGS} -o x.${!-$$}.x x.${!-$$}.c ");
 			append(tmp, r);
 			append(tmp, " >/dev/null 2>&1\n");

@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
@@ -504,7 +504,6 @@ int	sh_redirect(struct ionod *iop, int flag)
 	const char *message = ERROR_dictionary(e_open);
 	int o_mode;		/* mode flag for open */
 	static char io_op[5];	/* used for -x trace info */
-	static int	inuse_bits;	/* keep track of 3-9 in use */
 	int clexec=0, fn, traceon;
 	int indx = sh.topfd;
 	char *trace = sh.st.trap[SH_DEBUGTRAP];
@@ -667,12 +666,12 @@ int	sh_redirect(struct ionod *iop, int flag)
 			{
 				if(sh_inuse(fn) || fn==sh.infd)
 				{
-					if(fn>9 || !(inuse_bits&(1<<fn)))
+					if(fn>9 || !(sh.inuse_bits&(1<<fn)))
 						io_preserve(sh.sftable[fn],fn);
 				}
 				sh_close(fn);
 				if(fn<10)
-					inuse_bits &= ~(1<<fn);
+					sh.inuse_bits &= ~(1<<fn);
 			}
 			if(flag==3)
 				return(fd);
@@ -680,9 +679,9 @@ int	sh_redirect(struct ionod *iop, int flag)
 			{
 				if(fn>2 && fn<10)
 				{
-					if(inuse_bits&(1<<fn))
+					if(sh.inuse_bits&(1<<fn))
 						sh_close(fn);
-					inuse_bits |= (1<<fn);
+					sh.inuse_bits |= (1<<fn);
 				}
 				fd = sh_iorenumber(sh_iomovefd(fd),fn);
 			}

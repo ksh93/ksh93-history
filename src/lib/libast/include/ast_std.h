@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -710,6 +710,7 @@ extern int		close(int);
 extern size_t		confstr(int, char*, size_t);
 extern int		dup(int);
 extern int		dup2(int, int);
+extern int		eaccess(const char*, int);
 extern int		execl(const char*, const char*, ...);
 extern int		execle(const char*, const char*, ...);
 extern int		execlp(const char*, const char*, ...);

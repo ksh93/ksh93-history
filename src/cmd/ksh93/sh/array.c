@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
@@ -490,6 +490,15 @@ Namval_t *nv_putsub(Namval_t *np,register char *sp,register long mode)
 		ap->cur = size;
 		if((mode&ARRAY_SCAN) && !ap->val[size].cp && nv_nextsub(np))
 			np = 0;
+		if(mode&ARRAY_FILL)
+		{
+			int n;
+			for(n=0; n < size; n++)
+				ap->val[n].cp = "";
+			ap->header.nelem = n|(ap->header.nelem&(ARRAY_SCAN|ARRAY_UNDEF));
+			if(n=ap->maxi-ap->maxi)
+				memset(&ap->val[size],0,n*sizeof(union Value));
+		}
 		return((Namval_t*)np);
 	}
 	ap->header.nelem &= ~(ARRAY_SCAN|ARRAY_UNDEF);

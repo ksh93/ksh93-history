@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -66,6 +66,7 @@
 
 extern int		printf(const char*, ...);
 
+int
 main()
 {
 	int		f_local = 0;
@@ -130,7 +131,7 @@ main()
 #endif
 #endif
 	printf("\n");
-	printf("#if defined(_AST_STD_H) || defined(_POSIX_SOURCE)\n");
+	printf("#if defined(_AST_STD_H) || defined(_POSIX_SOURCE) || defined(_XOPEN_SOURCE)\n");
 	printf("#define _AST_mode_t	mode_t\n");
 	printf("#else\n");
 	printf("#define _AST_mode_t	int\n");
@@ -448,5 +449,5 @@ main()
 	printf("#endif\n");
 	printf("#endif\n");
 
-	return(0);
+	return 0;
 }

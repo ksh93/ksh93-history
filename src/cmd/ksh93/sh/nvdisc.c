@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
@@ -722,15 +722,15 @@ int nv_clone(Namval_t *np, Namval_t *mp, int flags)
 		return(1);
 skip:
         nv_setsize(mp,nv_size(np));
-	if(!nv_isattr(mp,NV_MINIMAL))
-	        mp->nvenv = nv_isattr(np,NV_MINIMAL)?np->nvenv:0;
+	if(!nv_isattr(mp,NV_MINIMAL) || nv_isattr(mp,NV_EXPORT))
+	        mp->nvenv = (!nv_isattr(np,NV_MINIMAL)||nv_isattr(np,NV_EXPORT))?np->nvenv:0;
         mp->nvalue.cp = np->nvalue.cp;
         mp->nvflag = np->nvflag;
 	if(flags&NV_MOVE)
 	{
 		np->nvfun = 0;
 		np->nvalue.cp = 0;
-		if(!nv_isattr(np,NV_MINIMAL))
+		if(!nv_isattr(np,NV_MINIMAL) || nv_isattr(mp,NV_EXPORT))
 		        np->nvenv = 0;
 		np->nvflag = 0;
 	        nv_setsize(np,0);

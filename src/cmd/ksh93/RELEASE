@@ -1,4 +1,35 @@
-04-04-28  --- Release ksh93p+  ---
+04-08-08  --- Release ksh93p+  ---
+04-08-08  The maximum size for read -n and and read -N was increased from
+	  4095 to 32M.
+04-08-04  printf %q was modified so that if an no operand was supplied, no
+	  no output would be generated rather than a quoted empty string.
+04-08-01  The -n and -N options of the read builtin has been modified
+	  when reading variables with the binary attribute so that the
+	  data is stored directly rather than through assignment.
+04-08-01  The shcomp command has been modified to process alias commands
+	  under some conditions.
+04-07-31  The .sh.match variable added in ksh93l, now works like other
+	  indexed arrays.
+04-07-08  A loop optimizer bug which occurs when typeset is used in
+	  a for or while loop inside a function has been fixed.
+04-06-24  The number of subexpressions in a pattern was increased to 64
+	  from the current number of 20.
+04-06-17  The -t option to read was modified to allow seconds to be
+	  specified as any arithmetic expression rather than just
+	  an integral number of seconds, for example even -t 'sin(.5)'
+	  is now valid.
+04-06-16  Two small memory leak problems were fixed.
+04-06-15  A bug in ${var/pattern/"string"} which occured when string
+	  contained pattern matching characters has been fixed.
+04-05-08  printf $'%d\n' produced an erroneous error message and has
+	  been fixed.
+04-05-24  A bug in which an associative array without any elements could
+	  cause a core dump when a script with an associative array with
+	  the same name was declared in a script invoked by name has
+	  been fixed.
+04-05-11  A bug in which an exec statement could close the script that
+	  is being proccessed in a script that is run by name causing
+	  a failure has been fixed.
 04-04-28  If the first character of assigment to an integer variable was 0,
           the variable had been treated as unsigned.  This behavior was
           undocumented and has been removed.

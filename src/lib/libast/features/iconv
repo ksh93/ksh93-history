@@ -17,6 +17,7 @@ tst	output{
 	#include <iconv.h>
 	#endif
 
+	int
 	main()
 	{
 		char*	lib;

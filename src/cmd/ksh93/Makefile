@@ -87,12 +87,12 @@ end
 /* use the following libraries only if they exist */
 LIBS_opt := +ljobs +li
 
-if  CC.HOSTTYPE == "sol[89].*"
+if  CC.HOSTTYPE == "sol([89]|[1-9][0-9]).*"
 	LDFLAGS  += $(CC.LD.LAZY) $(CC.LD.NORECORD)
 end
 
 if ! "$(-mam:N=static*)" && CC.HOSTTYPE != "sgi.mips*"
-	if CC.HOSTTYPE == "sol[789].*"
+	if CC.HOSTTYPE == "sol([789]|[1-9][0-9]).*"
 		LIBS_opt += +lsocket -lnsl
 	else
 		LIBS_opt += +lsocket +lnsl
@@ -150,7 +150,7 @@ $(INCLUDEDIR) :INSTALLPROTO: nval.h shell.h history.h
 
 suid_exec ::	CC.DLL= suid_exec.c +last
 
-shcomp	::	CC.DLL= SH_DICT='"libshell"' shcomp.c -lshell
+shcomp	::	CC.DLL= SH_DICT='"libshell"' shcomp.c $(LIBS_req)
 
 $(FUNDIR) :INSTALLDIR: mode=+x dirs popd pushd
 

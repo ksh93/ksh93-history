@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -31,8 +31,18 @@ void _STUB_vmmopen(){}
 
 #include	"vmhdr.h"
 
-#if _lib_mmap
+#if _sys_stat
+#include	<sys/stat.h>
+#endif
 #include	<fcntl.h>
+
+#ifdef S_IRUSR
+#define CREAT_MODE	(S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH)
+#else
+#define CREAT_MODE	0644
+#endif
+
+#if _lib_mmap
 #include	<sys/mman.h>
 #else
 #define mmap(a,b,c,d,e,f)	MAP_FAILED
@@ -51,12 +61,6 @@ void _STUB_vmmopen(){}
 #define	MM_MAGIC	(('V'<<24) | ('M'<<16) | ('A'<<8) | ('P'))
 #define MM_ROUND	(64*1024)
 #define MM_START	ROUND(sizeof(Mmvm_t),ALIGN)
-
-#ifdef S_IRUSR
-#define CREAT_MODE	(S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH)
-#else
-#define CREAT_MODE	0644
-#endif
 
 typedef struct _user_s
 {	struct _user_s*	next;	/* link list		*/
