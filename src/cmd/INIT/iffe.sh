@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#                  Copyright (c) 1994-2004 AT&T Corp.                  #
+#                  Copyright (c) 1994-2005 AT&T Corp.                  #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                            by AT&T Corp.                             #
@@ -30,7 +30,7 @@ case $-:$BASH_VERSION in
 esac
 
 command=iffe
-version=2004-12-08 # update in USAGE too #
+version=2005-01-11 # update in USAGE too #
 
 pkg() # package
 {
@@ -339,10 +339,14 @@ $2
 
 checkread()
 {
-	posix_read=`(read -r _checkread_line; echo $_checkread_line) 2>/dev/null <<!
+	case $posix_read in
+	-no)	;;
+	*)	posix_read=`(read -r _checkread_line; echo $_checkread_line) 2>/dev/null <<!
 a z
 !
 `
+		;;
+	esac
 	case $posix_read in
 	"a z")	posix_read=1
 		;;
@@ -354,19 +358,26 @@ a z
 			char	c;
 			char	r;
 			int	k;
-			k = 1;
+			char	s[32];
+			k = 0;
 			while (read(0, &c, 1) == 1)
 			{
-				if (k)
+				if (k >= 0)
 				{
-					k = 0;
-					if (c == '\\t')
+					if (c == ' ' || c == '\\t')
+					{
+						if (k < sizeof(s))
+							s[k++] = c;
 						continue;
+					}
+					if (k > 1 && c != '#' && c != '\\n' && c != '\\r')
+						write(1, s + 1, k - 1);
+					k = -1;
 				}
 				if (c == '\\r')
 				{
 					r = c;
-					if (read(0, &c, 1) == 1 && c != '\n')
+					if (read(0, &c, 1) == 1 && c != '\\n')
 						write(1, &r, 1);
 				}
 				write(1, &c, 1);
@@ -375,7 +386,7 @@ a z
 			}
 			return 1;
 		}"
-		if	$cc -o ${tmp}r.exe ${tmp}r.c <&$nullin >&$nullout
+		if	$cc -o ${tmp}r.exe ${tmp}r.c >&$nullout
 		then	posix_read=${tmp}r.exe
 		else	echo "$command: cannot compile read -r workaround" >&$stderr
 			exit 1
@@ -398,9 +409,9 @@ execute()
 	then	crossexec $cross "$@"
 		_execute_=$?
 	elif	test -d /NextDeveloper
-	then	"$@" <&$nullin >&$nullout
+	then	"$@" >&$nullout
 		_execute_=$?
-		"$@" <&$nullin | cat
+		"$@" | cat
 	else	"$@"
 		_execute_=$?
 	fi
@@ -461,7 +472,8 @@ gothdr=
 gotlib=
 idno=
 idyes=
-ifs=$IFS
+ifs=${IFS-'
+	 '}
 in=
 includes=
 intrinsic=
@@ -476,7 +488,7 @@ nl="
 occ=cc
 one=
 out=
-posix_read=
+posix_read=-check
 protoflags=
 puthdr=
 putlib=
@@ -541,7 +553,7 @@ set=
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: iffe (AT&T Research) 2004-12-08 $
+@(#)$Id: iffe (AT&T Research) 2005-01-11 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?iffe - C compilation environment feature probe]
@@ -595,8 +607,10 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 [r:regress?Massage output for regression testing.]
 [s:shell?Sets the internal shell name to \aname\a. Used for debugging
 	Bourne shell compatibility (otherwise \biffe\b uses \aksh\a constructs
-	if available). The supported names are \bksh\b, \bbsh\b, \bbash\b.
-	The default is determined by probing the shell at startup.]:[name]
+	if available). The supported names are \bksh\b, \bbsh\b, \bbash\b, and
+	\bosh\b. \bosh\b forces the \bread -r\b compatibility read command to
+	be compiled and used instead of \bread -r\b. The default is determined
+	by probing the shell at startup.]:[name]
 [S:static?Sets the C compiler flags that force static linking. If not set
 	then \biffe\b probes the compiler to determine the flags. \biffe\b
 	must use static linking (no dlls) because on some systems missing
@@ -1026,13 +1040,14 @@ esac
 # standard error to /dev/null unless debugging
 # standard output to the current output file
 #
+#	stdin	original standard input
 #	stdout	original standard output
 #	stderr	original standard error
-#	nullin	/dev/null input
 #	nullout	/dev/null output
 
-stdout=5 stderr=6 nullin=7 nullout=8
-eval "exec $nullin</dev/null $nullout>/dev/null $stdout>&1 $stderr>&2"
+stdin=5 stdout=6 stderr=7 nullout=8
+eval "exec $stdin<&0 $stdout>&1 $stderr>&2"
+eval "exec 0</dev/null $nullout>/dev/null"
 case " $* " in
 *" set debug "[3456789]*)
 	;;
@@ -1127,7 +1142,7 @@ do	case $in in
 			;;
 		esac
 		;;
-	*)	if	read lin
+	*)	if	read lin <&$stdin
 		then	case $shell in
 			ksh)	let line=line+1 ;;
 			*)	line=`expr $line + 1` ;;
@@ -1435,7 +1450,7 @@ do	case $in in
 				then	echo "$command: $in: not found" >&$stderr
 					exit 1
 				fi
-				exec < $in
+				eval "exec $stdin<$in"
 				file=$in:
 				case $out in
 				"")	case $in in
@@ -1506,7 +1521,12 @@ do	case $in in
 			version=1995-03-19
 			continue
 			;;
-		shell)	shell=$arg
+		shell)	case $arg in
+			osh)	posix_read=-no
+				shell=bsh
+				;;
+			esac
+			shell=$arg
 			continue
 			;;
 		static)	static=$arg
@@ -1684,7 +1704,7 @@ do	case $in in
 					while	:
 					do	case $# in
 						0)	case $posix_read in
-							'')	checkread ;;
+							-*)	checkread ;;
 							esac
 							case $in in
 							"")	echo "$command: $file$line: missing }end" >&$stderr
@@ -1694,16 +1714,28 @@ do	case $in in
 							while	:
 							do	case $posix_read in
 								1)	case $shell in
-									ksh)	IFS= read -r lin
+									ksh)	IFS= read -r lin <&$stdin
 										eof=$?
-										lin=${lin#'	'}
+										case $lin in
+										*[' 	']'#'*)	lin=${lin##*([' 	'])} ;;
+										*)		lin=${lin#[' 	']} ;;
+										esac
 										;;
-									*)	read -r lin
+									*)	IFS=
+										read -r lin <&$stdin
 										eof=$?
+										IFS=$ifs
+										case $lin in
+										[' 	']*) lin=`sed -e 's,^[ 	],,' -e 's,^[ 	]*#,#,' <<!
+$lin
+!
+`
+											;;
+										esac
 										;;
 									esac
 									;;
-								*)	lin=`$posix_read`
+								*)	lin=`$posix_read <&$stdin`
 									eof=$?
 									;;
 								esac
@@ -1932,9 +1964,9 @@ do	case $in in
 
 	case $cctest in
 	"")	echo "int i = 1;" > $tmp.c
-		if	$cc -c $tmp.c <&$nullin >&$nullout
+		if	$cc -c $tmp.c >&$nullout
 		then	echo "(;" > $tmp.c
-			if	$cc -c $tmp.c <&$nullin >&$nullout
+			if	$cc -c $tmp.c >&$nullout
 			then	cctest="should not compile '(;'"
 			fi
 		else	cctest="should compile 'int i = 1;'"
@@ -1968,7 +2000,7 @@ do	case $in in
 			x=sys/$x.h
 			echo "${allinc}#include <$x>" > $tmp.c
 			is hdr $x
-			if	$cc -E $tmp.c <&$nullin >&$nullout
+			if	$cc -E $tmp.c >&$nullout
 			then	success
 				gothdr="$gothdr + $x"
 				case $explicit in
@@ -2063,7 +2095,7 @@ do	case $in in
 					esac
 					echo "${allinc}#include <$x>" > $tmp.c
 					is hdr $x
-					if	$cc -E $tmp.c <&$nullin >&$nullout
+					if	$cc -E $tmp.c >&$nullout
 					then	success
 						gothdr="$gothdr + $x"
 						case $dis in
@@ -2139,14 +2171,43 @@ do	case $in in
 				;;
 			*)	rm -f $tmp.exe
 				is LIB $p
-				if	$cc -o $tmp.exe $tmp.c $p <&$nullin >&$nullout
+				if	$cc -o $tmp.exe $tmp.c $p >&$nullout
 				then	success
 					gotlib="$gotlib + $p"
 					lib="$lib $p"
 					e=0
-				else	failure
-					gotlib="$gotlib - $p"
+				else	a=
 					e=1
+					for l in $z
+					do	case $l in
+						-)	a=
+							continue
+							;;
+						$p)	a=$p
+							continue
+							;;
+						*)	case $gotlib in
+							*" $l "*)	continue ;;
+							esac
+							;;
+						esac
+						case $a in
+						$p)	a="$a $l"
+							if	$cc -o $tmp.exe $tmp.c $a >&$nullout
+							then	success
+								gotlib="$gotlib + $p"
+								lib="$lib $p"
+								e=0
+								break
+							fi
+							;;
+						esac
+					done
+					case $e in
+					1)	failure
+						gotlib="$gotlib - $p"
+						;;
+					esac
 				fi
 				y=
 				for x in $p
@@ -2729,20 +2790,20 @@ $src"
 				cross*|nocross*)
 					copy $tmp.sh "$src"
 					chmod +x $tmp.sh
-					execute $tmp.sh <&$nullin || e=1
+					execute $tmp.sh || e=1
 					;;
 				run*|norun*)
-					(eval "$src") <&$nullin || e=1
+					(eval "$src") || e=1
 					;;
 				mac*|nomac*)
-					if	$cc -E $tmp.c <&$nullin >$tmp.i
+					if	$cc -E $tmp.c >$tmp.i
 					then	sed -e '/<<[ 	]*".*"[ 	]*>>/!d' -e 's/<<[ 	]*"//g' -e 's/"[ 	]*>>//g' $tmp.i
 					else	e=1
 					fi
 					;;
-				p*|nop*)$cc -DTEST=$p -DID=$v -E $tmp.c <&$nullin >&$nullout || e=1
+				p*|nop*)$cc -DTEST=$p -DID=$v -E $tmp.c >&$nullout || e=1
 					;;
-				c*|noc*)$cc -DTEST=$p -DID=$v -c $tmp.c <&$nullin >&$nullout || e=1
+				c*|noc*)$cc -DTEST=$p -DID=$v -c $tmp.c >&$nullout || e=1
 					;;
 				*)	case $run in
 					s*|nos*)case $reallystatictest in
@@ -2752,7 +2813,7 @@ $src"
 		echo '#include <stdio.h>
 int main(){printf("hello");return(0);}' > ${tmp}s.c
 		rm -f ${tmp}s.exe
-		if	$cc -c ${tmp}s.c <&$nullin >&$nullout && $cc -o ${tmp}s.exe ${tmp}s.o <&$nullin >&$nullout 2>${tmp}s.e && $executable ${tmp}s.exe
+		if	$cc -c ${tmp}s.c >&$nullout && $cc -o ${tmp}s.exe ${tmp}s.o >&$nullout 2>${tmp}s.e && $executable ${tmp}s.exe
 		then	e=`wc -l ${tmp}s.e`
 			eval set x x $binding
 			while	:
@@ -2762,14 +2823,14 @@ int main(){printf("hello");return(0);}' > ${tmp}s.c
 				0)	break ;;
 				esac
 				rm -f ${tmp}s.exe
-				$cc -o ${tmp}s.exe $1 ${tmp}s.o <&$nullin >&$nullout 2>${tmp}s.e && $executable ${tmp}s.exe || continue
+				$cc -o ${tmp}s.exe $1 ${tmp}s.o >&$nullout 2>${tmp}s.e && $executable ${tmp}s.exe || continue
 				case `wc -l ${tmp}s.e` in
 				$e)	;;
 				*)	continue ;;
 				esac
 				d=`ls -s ${tmp}s.exe`
 				rm -f ${tmp}s.exe
-				$cc -o ${tmp}s.exe $2 ${tmp}s.o <&$nullin >&$nullout 2>${tmp}s.e && $executable ${tmp}s.exe || continue
+				$cc -o ${tmp}s.exe $2 ${tmp}s.o >&$nullout 2>${tmp}s.e && $executable ${tmp}s.exe || continue
 				case `wc -l ${tmp}s.e` in
 				$e)	;;
 				*)	continue ;;
@@ -2809,15 +2870,15 @@ int main(){printf("hello");return(0);}' > ${tmp}s.c
 							shift
 						done
 						rm -f $tmp.exe
-						if	$cc $ccflags $o -DTEST=$p -DID=$v -o $tmp.exe $tmp.c $lib $deflib <&$nullin >&$nullout && $executable $tmp.exe
+						if	$cc $ccflags $o -DTEST=$p -DID=$v -o $tmp.exe $tmp.c $lib $deflib >&$nullout && $executable $tmp.exe
 						then	case $run in
 
 			no[ls]*);;
 			[ls]*)	e=0 && break ;;
-			noo*)	execute $tmp.exe <&$nullin || break ;;
-			o*)	execute $tmp.exe <&$nullin && e=0 && break ;;
-			no*)	execute $tmp.exe <&$nullin >&$nullout || break ;;
-			*)	execute $tmp.exe <&$nullin >&$nullout && e=0 && break ;;
+			noo*)	execute $tmp.exe || break ;;
+			o*)	execute $tmp.exe && e=0 && break ;;
+			no*)	execute $tmp.exe >&$nullout || break ;;
+			*)	execute $tmp.exe >&$nullout && e=0 && break ;;
 
 							esac
 						else	case $run in
@@ -2859,16 +2920,16 @@ $ext
 _BEGIN_EXTERNS_
 extern int $statictest;
 _END_EXTERNS_
-int main(){char* i = (char*)&$statictest; return i!=0;}
+int main(){char* i = (char*)&$statictest; return ((unsigned int)i)^0xaaaa;}
 "
 					rm -f $tmp.exe
-					if	$cc -o $tmp.exe $tmp.c <&$nullin >&$nullout && $executable $tmp.exe
+					if	$cc -o $tmp.exe $tmp.c >&$nullout && $executable $tmp.exe
 					then	case $static in
 						.)	static=
 							echo '#include <stdio.h>
 int main(){printf("hello");return(0);}' > $tmp.c
 							rm -f $tmp.exe
-							if	$cc -c $tmp.c <&$nullin >&$nullout && $cc -o $tmp.exe $tmp.o <&$nullin >&$nullout 2>$tmp.e && $executable $tmp.exe
+							if	$cc -c $tmp.c >&$nullout && $cc -o $tmp.exe $tmp.o >&$nullout 2>$tmp.e && $executable $tmp.exe
 							then	e=`wc -l $tmp.e`
 								eval set x x $binding
 								while	:
@@ -2878,14 +2939,14 @@ int main(){printf("hello");return(0);}' > $tmp.c
 									0)	break ;;
 									esac
 									rm -f $tmp.exe
-									$cc -o $tmp.exe $1 $tmp.o <&$nullin >&$nullout 2>$tmp.e && $executable $tmp.exe || continue
+									$cc -o $tmp.exe $1 $tmp.o >&$nullout 2>$tmp.e && $executable $tmp.exe || continue
 									case `wc -l $tmp.e` in
 									$e)	;;
 									*)	continue ;;
 									esac
 									d=`ls -s $tmp.exe`
 									rm -f $tmp.exe
-									$cc -o $tmp.exe $2 $tmp.o <&$nullin >&$nullout 2>$tmp.e && $executable $tmp.exe || continue
+									$cc -o $tmp.exe $2 $tmp.o >&$nullout 2>$tmp.e && $executable $tmp.exe || continue
 									case `wc -l $tmp.e` in
 									$e)	;;
 									*)	continue ;;
@@ -2967,13 +3028,12 @@ _END_EXTERNS_"
 #else
 #define _REF_	&
 #endif
-int main(){char* i = (char*) _REF_ $v; return (unsigned int)i^0xaaaa;}"
+int main(){char* i = (char*) _REF_ $v; return ((unsigned int)i)^0xaaaa;}"
 				} > $tmp.c
 				is $o $v
 				rm -f $tmp.exe
-				$cc -c $tmp.c <&$nullin >&$nullout &&
-				$cc -o $tmp.exe $tmp.o $lib $deflib <&$nullin >&$nullout &&
-				$cc $static -o $tmp.exe $tmp.o $lib $deflib <&$nullin >&$nullout &&
+				$cc -c $tmp.c >&$nullout &&
+				$cc $static -o $tmp.exe $tmp.o $lib $deflib >&$nullout &&
 				$executable $tmp.exe
 				report $? 1 "$v in default lib(s)" "$v not in default lib(s)"
 				;;
@@ -2988,7 +3048,7 @@ $inc
 <<\"#define $v\">>	$v	<<\"/* native $v */\">>
 <<\"#endif\">>
 #endif" > $tmp.c
-				if	$cc -E $tmp.c <&$nullin >$tmp.i
+				if	$cc -E $tmp.c >$tmp.i
 				then	sed -e '/<<[ 	]*".*"[ 	]*>>/!d' -e 's/<<[ 	]*"//g' -e 's/"[ 	]*>>//g' $tmp.i > $tmp.t
 					if	test -s $tmp.t
 					then	success
@@ -3094,7 +3154,7 @@ $inc
 					sys/*)	e= ;;
 					*)	e='-e /[\\\\\/]sys[\\\\\/]'$f'\\.h"/d' ;;
 					esac
-					if	$cc -E $tmp.c <&$nullin >$tmp.i
+					if	$cc -E $tmp.c >$tmp.i
 					then	i=`sed -e '/^#[line 	]*[0123456789][0123456789]*[ 	][ 	]*"[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:]*[\\\\\/].*[\\\\\/]'$f'\\.h"/!d' $e -e s'/.*"\\(.*\\)".*/\\1/' -e 's,\\\\,/,g' -e 's,///*,/,g' $tmp.i | sed 1q`
 						case $i in
 						[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ]:[\\/]*)
@@ -3103,7 +3163,7 @@ $inc
 							echo "$pre
 $inc
 #include <$k>" > $tmp.c
-							if	$cc -E $tmp.c <&$nullin >$tmp.i
+							if	$cc -E $tmp.c >$tmp.i
 							then	j=`sed -e '/^#[line 	]*[0123456789][0123456789]*[ 	][ 	]*"[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:]*[\\\\\/].*[\\\\\/]'$f'\\.h"/!d' $e -e s'/.*"\\(.*\\)".*/\\1/' -e 's,\\\\,/,g' -e 's,///*,/,g' $tmp.i | sed 1q`
 								wi=`wc < "$i"`
 								wj=`wc < "$j"`
@@ -3115,7 +3175,7 @@ $inc
 						*)	echo "$pre
 $inc
 #include <../include/$f.h>" > $tmp.c
-							if	$cc -E $tmp.c <&$nullin >&$nullout
+							if	$cc -E $tmp.c >&$nullout
 							then	i=../include/$f.h
 							fi
 							;;
@@ -3187,7 +3247,7 @@ $inc
 						;;
 					*)	echo "${allinc}#include <$x>" > $tmp.c
 						is hdr $x
-						if	$cc -E $tmp.c <&$nullin >&$nullout
+						if	$cc -E $tmp.c >&$nullout
 						then	success
 							gothdr="$gothdr + $x"
 							case $M in
@@ -3232,7 +3292,7 @@ $inc
 				do	is $o $w
 					echo "$pre
 int f(){int $w = 1;return($w);}" > $tmp.c
-					if	$cc -c $tmp.c <&$nullin >&$nullout
+					if	$cc -c $tmp.c >&$nullout
 					then	failure
 						case $set in
 						*" ="|*" = "*)
@@ -3313,19 +3373,18 @@ _BEGIN_EXTERNS_
 extern int $v();
 _END_EXTERNS_
 #endif
-static _IFFE_fun i=(_IFFE_fun)$v;int main(){return(i==0);}
+static _IFFE_fun i=(_IFFE_fun)$v;int main(){return ((unsigned int)i)^0xaaaa;}
 "
 				d=-D_IFFE_extern
-				if	$cc -c $tmp.c <&$nullin >&$nullout
+				if	$cc -c $tmp.c >&$nullout
 				then	d=
-				elif	$cc $d -c $tmp.c <&$nullin >&$nullout
+				elif	$cc $d -c $tmp.c >&$nullout
 				then	:
 				else	d=error
 				fi
 				if	test error != "$d"
 				then	rm -f $tmp.exe
-					if	$cc $d -o $tmp.exe $tmp.o $lib $deflib <&$nullin >&$nullout &&
-						$cc $d $static -o $tmp.exe $tmp.o $lib $deflib <&$nullin >&$nullout &&
+					if	$cc $d $static -o $tmp.exe $tmp.o $lib $deflib >&$nullout &&
 						$executable $tmp.exe
 					then	case $o in
 						lib)	c=0 ;;
@@ -3334,8 +3393,7 @@ static _IFFE_fun i=(_IFFE_fun)$v;int main(){return(i==0);}
 						report $c 1 "$v() in default lib(s)" "$v() not in default lib(s)" "default for function $v()"
 					else	case $o in
 						mth)	rm -f $tmp.exe
-							$cc $d -o $tmp.exe $tmp.o -lm <&$nullin >&$nullout &&
-							$cc $d $static -o $tmp.exe $tmp.o -lm <&$nullin >&$nullout &&
+							$cc $d $static -o $tmp.exe $tmp.o -lm >&$nullout &&
 							$executable $tmp.exe
 							report $? 1 "$v() in math lib" "$v() not in math lib" "default for function $v()"
 							;;
@@ -3355,7 +3413,7 @@ extern int foo();
 _END_EXTERNS_
 static int ((*i)())=foo;int main(){return(i==0);}
 "
-						$cc -c $tmp.c <&$nullin >&$nullout
+						$cc -c $tmp.c >&$nullout
 						intrinsic=$?
 						;;
 					esac
@@ -3374,7 +3432,7 @@ $inc
 #ifdef $v
 '$m:$v'
 #endif" > $tmp.c
-				$cc -E $tmp.c <&$nullin | grep -c "'$m:$v'" >&$nullout
+				$cc -E $tmp.c | grep -c "'$m:$v'" >&$nullout
 				report $? 1 "$v is a macro" "$v is not a macro" "default for macro $v"
 				;;
 			mem)	case $p in
@@ -3386,7 +3444,7 @@ $inc
 static $p i;
 int n = sizeof(i);" > $tmp.c
 						is typ $p
-						if	$cc -c $tmp.c <&$nullin >&$nullout
+						if	$cc -c $tmp.c >&$nullout
 						then	success -
 							eval _iffe_typedef_$p=1
 							i=1
@@ -3405,7 +3463,7 @@ int n = sizeof(i);" > $tmp.c
 $inc
 static $p i;
 int n = sizeof(i.$v);" > $tmp.c
-					$cc -c $tmp.c <&$nullin >&$nullout
+					$cc -c $tmp.c >&$nullout
 					report $? 1 "$v is a member of $p" "$i"
 					;;
 				*)	p=$v
@@ -3417,7 +3475,7 @@ $inc
 static $p i;
 int n = sizeof(i);" > $tmp.c
 						is typ $p
-						if	$cc -c $tmp.c <&$nullin >&$nullout
+						if	$cc -c $tmp.c >&$nullout
 						then	success -
 							eval _iffe_typedef_$p=1
 							i=1
@@ -3436,12 +3494,12 @@ int n = sizeof(i);" > $tmp.c
 $inc
 static $p i;
 int n = sizeof(i);" > $tmp.c
-					if	$cc -c $tmp.c <&$nullin >&$nullout
+					if	$cc -c $tmp.c >&$nullout
 					then	echo "$pre
 $inc
 static $p i;
 unsigned long f() { return (unsigned long)i; }" > $tmp.c
-						if	$cc -c $tmp.c <&$nullin >&$nullout
+						if	$cc -c $tmp.c >&$nullout
 						then	c=1
 						else	c=0
 						fi
@@ -3463,7 +3521,7 @@ struct _iffe_struct { int _iffe_member; };
 extern struct _iffe_struct* $v _ARG_((struct _iffe_struct*));
 _END_EXTERNS_
 "
-				$cc -c $tmp.c <&$nullin >&$nullout
+				$cc -c $tmp.c >&$nullout
 				report -$config $? 1 "$v() needs a prototype" "$v() does not need a prototype"
 				;;
 			num)	is num $v
@@ -3477,7 +3535,7 @@ _BEGIN_EXTERNS_
 int _iffe_int = $v / 2;
 _END_EXTERNS_
 "
-				$cc -c $tmp.c <&$nullin >&$nullout
+				$cc -c $tmp.c >&$nullout
 				report $? 1 "$v is a numeric constant" "$v is not a numeric constant"
 				;;
 			one)	for i in $a $hdr
@@ -3490,7 +3548,7 @@ _END_EXTERNS_
 						;;
 					*)	is hdr $x
 						echo "$x" > $tmp.c
-						if	$cc -E $tmp.c <&$nullin >&$nullout
+						if	$cc -E $tmp.c >&$nullout
 						then	success
 							gothdr="$gothdr + $x"
 						else	failure -
@@ -3505,7 +3563,7 @@ _END_EXTERNS_
 					*"$x"*)	break
 						;;
 					*)	echo "$one" > $tmp.c
-						if	$cc -E $tmp.c <&$nullin >$tmp.i
+						if	$cc -E $tmp.c >$tmp.i
 						then	c=$i
 							case $c in
 							*[\\/]*)	c=`echo $c | sed 's,[\\\\/],[\\\\/],g'` ;;
@@ -3595,9 +3653,9 @@ _END_EXTERNS_
 				case $a in
 				*.c)	rm -f $tmp.exe
 					cp $a $tmp.c
-					$cc -o $tmp.exe $tmp.c $lib $deflib <&$nullin >&$stderr 2>&$stderr &&
+					$cc -o $tmp.exe $tmp.c $lib $deflib >&$stderr 2>&$stderr &&
 					$executable $tmp.exe &&
-					execute $tmp.exe $opt <&$nullin
+					execute $tmp.exe $opt
 					;;
 				*.sh)	{
 					cat <<!
@@ -3607,7 +3665,7 @@ set "cc='$cc' executable='$executable' id='$m' static='$static' tmp='$tmp'" $opt
 					cat $a
 					} > $tmp.sh
 					chmod +x $tmp.sh
-					( . $tmp.sh ) <&$nullin
+					( . $tmp.sh )
 					;;
 				*)	false
 					;;
@@ -3666,7 +3724,7 @@ int main() {
 }"
 				} > $tmp.c
 				rm -f $tmp.exe $tmp.dat
-				if	$cc -o $tmp.exe $tmp.c $lib $deflib <&$nullin >&$nullout &&
+				if	$cc -o $tmp.exe $tmp.c $lib $deflib >&$nullout &&
 					$executable $tmp.exe &&
 					execute $tmp.exe > $tmp.dat
 				then	z=`cat $tmp.dat`
@@ -3683,7 +3741,7 @@ int main() {
 				echo "$pre
 $inc
 '=' $x '='" > $tmp.c
-				$cc -E $tmp.c <&$nullin \
+				$cc -E $tmp.c \
 				| sed \
 					-e "/'='/!d" \
 					-e "s/'='//g" \
@@ -3746,7 +3804,7 @@ struct xxx* f() { return &v; }"
 				esac
 				} > $tmp.c
 				rm -f $tmp.exe
-				$cc -o $tmp.exe $tmp.c $lib $deflib <&$nullin >&$nullout &&
+				$cc -o $tmp.exe $tmp.c $lib $deflib >&$nullout &&
 				$executable $tmp.exe &&
 				execute $tmp.exe
 				report $? 1 "$x$v is a type" "$x$v is not a type" "default for type $x$v"
@@ -3780,7 +3838,7 @@ struct xxx* f() { return &v; }"
 	*)		user_pf=$pass user_yn=$yes ;;
 	esac
 	case $user_pf in
-	?*)	eval "$user_pf" <&$nullin ;;
+	?*)	eval "$user_pf" ;;
 	esac
 	case $user_yn in
 	?*)	case $def in

@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#                  Copyright (c) 1994-2004 AT&T Corp.                  #
+#                  Copyright (c) 1994-2005 AT&T Corp.                  #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                            by AT&T Corp.                             #
@@ -126,7 +126,8 @@ cc=$*
 
 # find the make probe script
 
-ifs=$IFS
+ifs=${IFS-'
+	 '}
 IFS=:
 set $PATH
 IFS=$ifs
@@ -151,7 +152,8 @@ done
 
 case $info in
 /*)	i=X$info
-	ifs=$IFS
+	ifs=${IFS-'
+	 '}
 	IFS=/
 	set $i
 	IFS=$ifs

@@ -1,3 +1,17 @@
+05-02-02 *.sh,*probe: IFS may be unset and { ash bsh } don't on startup -- wow
+05-01-11 package.sh: update setup docs to include authorize+password
+	 package.mk: fix .source.cyg final directory edit
+	 package.mk: notice=1 for conspicuous empty NOTICE file
+	 WWW.mk: fix *-index.html installation
+	 filter.sh: retain input file suffix in tmp copy
+	 mamexec.c: fix non-contiguous "exec" bug that skipped lines
+	 iffe.sh: fix candidate lib test to try grouping subsequent libs
+	 iffe.sh: fix child process stdin hijack that skipped input lines
+	 iffe.sh: --shell=osh to force read -r compatibility command
+	 iffe.sh: chop iffe input leading space before # for KnR compatibility
+05-01-05 package.sh: add ${TAR} ${TARFLAGS} and tar B flag for pipes
+	 mamake.c: fix makefile scan to ignore lib*.[hH]
+	 iffe.sh: immunize function/symbol tests from aggressive -O
 04-12-28 WWW.mk: add :WWWPAGE: faq.*.mm index generator
 04-12-21 ratz.c: make sure tmp dir is writable -- doh
 04-12-08 iffe.sh: fix dat test for aggressive -O

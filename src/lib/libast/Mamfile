@@ -32,8 +32,8 @@ setv SILENT
 setv TAR tar
 setv YACC yacc
 setv YACCFLAGS -d
-make ${PACKAGEROOT}/lib/package/ast.lic
-done ${PACKAGEROOT}/lib/package/ast.lic
+make ${INSTALLROOT}/lib/package/ast.lic
+done ${INSTALLROOT}/lib/package/ast.lic
 make include/ast_version.h
 done include/ast_version.h ignore
 make install
@@ -970,7 +970,7 @@ done lcgen generated
 make port/lc.tab
 done port/lc.tab
 exec - ./lcgen ${COTEMP}.1 ${COTEMP}.2 < port/lc.tab
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ${COTEMP}.1 > ${COTEMP}.3
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ${COTEMP}.1 > ${COTEMP}.3
 exec - rm -f ${COTEMP}.1
 exec - if	cmp -s ${COTEMP}.3 lc.h
 exec - then	rm ${COTEMP}.3
@@ -6105,7 +6105,7 @@ done ${INSTALLROOT}/include/ast generated
 make ${INSTALLROOT}/include/ast/ast.h
 prev ${INSTALLROOT}/include/ast
 prev include/ast.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/ast.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/ast.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast.h
@@ -6113,7 +6113,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast.h generated
 make ${INSTALLROOT}/include/ast/ast_dir.h
 prev include/ast_dir.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/ast_dir.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/ast_dir.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_dir.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_dir.h
@@ -6121,7 +6121,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_dir.h generated
 make ${INSTALLROOT}/include/ast/ast_getopt.h
 prev include/ast_getopt.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/ast_getopt.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/ast_getopt.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_getopt.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_getopt.h
@@ -6129,7 +6129,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_getopt.h generated
 make ${INSTALLROOT}/include/ast/ast_std.h
 prev include/ast_std.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/ast_std.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/ast_std.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_std.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_std.h
@@ -6137,7 +6137,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_std.h generated
 make ${INSTALLROOT}/include/ast/ast_version.h
 prev include/ast_version.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/ast_version.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/ast_version.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_version.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_version.h
@@ -6145,7 +6145,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_version.h generated
 make ${INSTALLROOT}/include/ast/ast_windows.h
 prev include/ast_windows.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/ast_windows.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/ast_windows.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_windows.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_windows.h
@@ -6153,7 +6153,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_windows.h generated
 make ${INSTALLROOT}/include/ast/ccode.h
 prev include/ccode.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/ccode.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/ccode.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ccode.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ccode.h
@@ -6161,7 +6161,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ccode.h generated
 make ${INSTALLROOT}/include/ast/cdt.h
 prev include/cdt.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/cdt.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/cdt.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/cdt.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/cdt.h
@@ -6169,7 +6169,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/cdt.h generated
 make ${INSTALLROOT}/include/ast/debug.h
 prev include/debug.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/debug.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/debug.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/debug.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/debug.h
@@ -6177,7 +6177,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/debug.h generated
 make ${INSTALLROOT}/include/ast/dt.h
 prev include/dt.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/dt.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/dt.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/dt.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/dt.h
@@ -6185,7 +6185,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/dt.h generated
 make ${INSTALLROOT}/include/ast/error.h
 prev include/error.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/error.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/error.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/error.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/error.h
@@ -6193,7 +6193,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/error.h generated
 make ${INSTALLROOT}/include/ast/find.h
 prev include/find.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/find.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/find.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/find.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/find.h
@@ -6201,7 +6201,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/find.h generated
 make ${INSTALLROOT}/include/ast/ftw.h
 prev comp/ftw.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  comp/ftw.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  comp/ftw.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ftw.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ftw.h
@@ -6209,7 +6209,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ftw.h generated
 make ${INSTALLROOT}/include/ast/ftwalk.h
 prev include/ftwalk.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/ftwalk.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/ftwalk.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ftwalk.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ftwalk.h
@@ -6217,7 +6217,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ftwalk.h generated
 make ${INSTALLROOT}/include/ast/fts.h
 prev include/fts.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/fts.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/fts.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/fts.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/fts.h
@@ -6225,7 +6225,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/fts.h generated
 make ${INSTALLROOT}/include/ast/fs3d.h
 prev include/fs3d.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/fs3d.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/fs3d.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/fs3d.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/fs3d.h
@@ -6233,7 +6233,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/fs3d.h generated
 make ${INSTALLROOT}/include/ast/getopt.h
 prev comp/getopt.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  comp/getopt.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  comp/getopt.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/getopt.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/getopt.h
@@ -6241,7 +6241,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/getopt.h generated
 make ${INSTALLROOT}/include/ast/glob.h
 prev include/glob.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/glob.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/glob.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/glob.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/glob.h
@@ -6249,7 +6249,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/glob.h generated
 make ${INSTALLROOT}/include/ast/hash.h
 prev include/hash.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/hash.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/hash.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/hash.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/hash.h
@@ -6257,7 +6257,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/hash.h generated
 make ${INSTALLROOT}/include/ast/hashkey.h
 prev include/hashkey.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/hashkey.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/hashkey.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/hashkey.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/hashkey.h
@@ -6265,7 +6265,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/hashkey.h generated
 make ${INSTALLROOT}/include/ast/hashpart.h
 prev include/hashpart.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/hashpart.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/hashpart.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/hashpart.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/hashpart.h
@@ -6273,7 +6273,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/hashpart.h generated
 make ${INSTALLROOT}/include/ast/int.h
 prev include/int.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/int.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/int.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/int.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/int.h
@@ -6281,7 +6281,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/int.h generated
 make ${INSTALLROOT}/include/ast/lc.h
 prev lc.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  lc.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  lc.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/lc.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/lc.h
@@ -6289,7 +6289,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/lc.h generated
 make ${INSTALLROOT}/include/ast/ls.h
 prev include/ls.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/ls.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/ls.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ls.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ls.h
@@ -6297,7 +6297,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ls.h generated
 make ${INSTALLROOT}/include/ast/magic.h
 prev include/magic.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/magic.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/magic.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/magic.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/magic.h
@@ -6305,7 +6305,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/magic.h generated
 make ${INSTALLROOT}/include/ast/mc.h
 prev include/mc.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/mc.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/mc.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/mc.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/mc.h
@@ -6313,7 +6313,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/mc.h generated
 make ${INSTALLROOT}/include/ast/mime.h
 prev include/mime.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/mime.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/mime.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/mime.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/mime.h
@@ -6321,7 +6321,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/mime.h generated
 make ${INSTALLROOT}/include/ast/mnt.h
 prev include/mnt.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/mnt.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/mnt.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/mnt.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/mnt.h
@@ -6329,7 +6329,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/mnt.h generated
 make ${INSTALLROOT}/include/ast/modecanon.h
 prev include/modecanon.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/modecanon.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/modecanon.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/modecanon.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/modecanon.h
@@ -6337,7 +6337,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/modecanon.h generated
 make ${INSTALLROOT}/include/ast/modex.h
 prev include/modex.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/modex.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/modex.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/modex.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/modex.h
@@ -6345,7 +6345,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/modex.h generated
 make ${INSTALLROOT}/include/ast/namval.h
 prev include/namval.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/namval.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/namval.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/namval.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/namval.h
@@ -6353,7 +6353,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/namval.h generated
 make ${INSTALLROOT}/include/ast/option.h
 prev include/option.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/option.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/option.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/option.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/option.h
@@ -6361,7 +6361,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/option.h generated
 make ${INSTALLROOT}/include/ast/proc.h
 prev include/proc.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/proc.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/proc.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/proc.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/proc.h
@@ -6369,7 +6369,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/proc.h generated
 make ${INSTALLROOT}/include/ast/re_comp.h
 prev comp/re_comp.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  comp/re_comp.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  comp/re_comp.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/re_comp.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/re_comp.h
@@ -6377,7 +6377,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/re_comp.h generated
 make ${INSTALLROOT}/include/ast/recfmt.h
 prev include/recfmt.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/recfmt.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/recfmt.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/recfmt.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/recfmt.h
@@ -6385,7 +6385,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/recfmt.h generated
 make ${INSTALLROOT}/include/ast/regex.h
 prev include/regex.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/regex.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/regex.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/regex.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/regex.h
@@ -6393,7 +6393,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/regex.h generated
 make ${INSTALLROOT}/include/ast/regexp.h
 prev comp/regexp.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  comp/regexp.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  comp/regexp.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/regexp.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/regexp.h
@@ -6401,7 +6401,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/regexp.h generated
 make ${INSTALLROOT}/include/ast/sfio.h
 prev include/sfio.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/sfio.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/sfio.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/sfio.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/sfio.h
@@ -6409,7 +6409,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/sfio.h generated
 make ${INSTALLROOT}/include/ast/sfio_s.h
 prev include/sfio_s.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/sfio_s.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/sfio_s.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/sfio_s.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/sfio_s.h
@@ -6417,7 +6417,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/sfio_s.h generated
 make ${INSTALLROOT}/include/ast/sfio_t.h
 prev include/sfio_t.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/sfio_t.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/sfio_t.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/sfio_t.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/sfio_t.h
@@ -6425,7 +6425,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/sfio_t.h generated
 make ${INSTALLROOT}/include/ast/sfdisc.h
 prev include/sfdisc.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/sfdisc.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/sfdisc.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/sfdisc.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/sfdisc.h
@@ -6433,7 +6433,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/sfdisc.h generated
 make ${INSTALLROOT}/include/ast/stack.h
 prev include/stack.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/stack.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/stack.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/stack.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/stack.h
@@ -6441,7 +6441,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/stack.h generated
 make ${INSTALLROOT}/include/ast/stak.h
 prev include/stak.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/stak.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/stak.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/stak.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/stak.h
@@ -6449,7 +6449,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/stak.h generated
 make ${INSTALLROOT}/include/ast/stk.h
 prev include/stk.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/stk.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/stk.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/stk.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/stk.h
@@ -6457,7 +6457,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/stk.h generated
 make ${INSTALLROOT}/include/ast/swap.h
 prev include/swap.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/swap.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/swap.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/swap.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/swap.h
@@ -6466,7 +6466,7 @@ done ${INSTALLROOT}/include/ast/swap.h generated
 make ${INSTALLROOT}/include/ast/tar.h
 make include/tar.h
 done include/tar.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/tar.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/tar.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/tar.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/tar.h
@@ -6474,7 +6474,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/tar.h generated
 make ${INSTALLROOT}/include/ast/times.h
 prev include/times.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/times.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/times.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/times.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/times.h
@@ -6482,7 +6482,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/times.h generated
 make ${INSTALLROOT}/include/ast/tm.h
 prev include/tm.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/tm.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/tm.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/tm.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/tm.h
@@ -6490,7 +6490,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/tm.h generated
 make ${INSTALLROOT}/include/ast/tok.h
 prev include/tok.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/tok.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/tok.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/tok.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/tok.h
@@ -6499,7 +6499,7 @@ done ${INSTALLROOT}/include/ast/tok.h generated
 make ${INSTALLROOT}/include/ast/usage.h
 make include/usage.h
 done include/usage.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/usage.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/usage.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/usage.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/usage.h
@@ -6508,7 +6508,7 @@ done ${INSTALLROOT}/include/ast/usage.h generated
 make ${INSTALLROOT}/include/ast/vdb.h
 make include/vdb.h
 done include/vdb.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/vdb.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/vdb.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/vdb.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/vdb.h
@@ -6516,7 +6516,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/vdb.h generated
 make ${INSTALLROOT}/include/ast/vecargs.h
 prev include/vecargs.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/vecargs.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/vecargs.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/vecargs.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/vecargs.h
@@ -6524,7 +6524,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/vecargs.h generated
 make ${INSTALLROOT}/include/ast/vmalloc.h
 prev include/vmalloc.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/vmalloc.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/vmalloc.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/vmalloc.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/vmalloc.h
@@ -6532,7 +6532,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/vmalloc.h generated
 make ${INSTALLROOT}/include/ast/wait.h
 prev include/wait.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/wait.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/wait.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/wait.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/wait.h
@@ -6540,7 +6540,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/wait.h generated
 make ${INSTALLROOT}/include/ast/wordexp.h
 prev comp/wordexp.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  comp/wordexp.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  comp/wordexp.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/wordexp.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/wordexp.h
@@ -6548,7 +6548,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/wordexp.h generated
 make ${INSTALLROOT}/include/ast/bytesex.h
 prev include/bytesex.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/bytesex.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/bytesex.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/bytesex.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/bytesex.h
@@ -6556,7 +6556,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/bytesex.h generated
 make ${INSTALLROOT}/include/ast/endian.h
 prev include/endian.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/endian.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/endian.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/endian.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/endian.h
@@ -6564,7 +6564,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/endian.h generated
 make ${INSTALLROOT}/include/ast/fnmatch.h
 prev comp/fnmatch.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  comp/fnmatch.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  comp/fnmatch.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/fnmatch.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/fnmatch.h
@@ -6574,7 +6574,7 @@ make ${INSTALLROOT}/include/ast/magicid.h
 make include/magicid.h
 prev ast_common.h implicit
 done include/magicid.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/magicid.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/magicid.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/magicid.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/magicid.h
@@ -6584,7 +6584,7 @@ make ${INSTALLROOT}/include/ast/fnv.h
 make include/fnv.h
 prev ast_common.h implicit
 done include/fnv.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/fnv.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/fnv.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/fnv.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/fnv.h
@@ -6592,7 +6592,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/fnv.h generated
 make ${INSTALLROOT}/include/ast/dirent.h
 prev std/dirent.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  std/dirent.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  std/dirent.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/dirent.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/dirent.h
@@ -6600,7 +6600,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/dirent.h generated
 make ${INSTALLROOT}/include/ast/iconv.h
 prev std/iconv.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  std/iconv.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  std/iconv.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/iconv.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/iconv.h
@@ -6608,7 +6608,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/iconv.h generated
 make ${INSTALLROOT}/include/ast/limits.h
 prev std/limits.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  std/limits.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  std/limits.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/limits.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/limits.h
@@ -6616,7 +6616,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/limits.h generated
 make ${INSTALLROOT}/include/ast/nl_types.h
 prev std/nl_types.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  std/nl_types.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  std/nl_types.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/nl_types.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/nl_types.h
@@ -6624,7 +6624,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/nl_types.h generated
 make ${INSTALLROOT}/include/ast/stdio.h
 prev std/stdio.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  std/stdio.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  std/stdio.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/stdio.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/stdio.h
@@ -6632,7 +6632,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/stdio.h generated
 make ${INSTALLROOT}/include/ast/wchar.h
 prev std/wchar.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  std/wchar.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  std/wchar.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/wchar.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/wchar.h
@@ -6640,7 +6640,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/wchar.h generated
 make ${INSTALLROOT}/include/ast/align.h
 prev align.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  align.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  align.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/align.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/align.h
@@ -6648,7 +6648,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/align.h generated
 make ${INSTALLROOT}/include/ast/preroot.h
 prev preroot.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  preroot.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  preroot.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/preroot.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/preroot.h
@@ -6656,7 +6656,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/preroot.h generated
 make ${INSTALLROOT}/include/ast/sig.h
 prev sig.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  sig.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  sig.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/sig.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/sig.h
@@ -6664,7 +6664,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/sig.h generated
 make ${INSTALLROOT}/include/ast/tmx.h
 prev tmx.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  tmx.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  tmx.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/tmx.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/tmx.h
@@ -6672,7 +6672,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/tmx.h generated
 make ${INSTALLROOT}/include/ast/tv.h
 prev tv.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  tv.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  tv.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/tv.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/tv.h
@@ -6680,7 +6680,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/tv.h generated
 make ${INSTALLROOT}/include/ast/ast_botch.h
 prev ast_botch.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_botch.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_botch.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_botch.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_botch.h
@@ -6688,7 +6688,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_botch.h generated
 make ${INSTALLROOT}/include/ast/ast_ccode.h
 prev ast_ccode.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_ccode.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_ccode.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_ccode.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_ccode.h
@@ -6696,7 +6696,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_ccode.h generated
 make ${INSTALLROOT}/include/ast/ast_common.h
 prev ast_common.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_common.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_common.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_common.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_common.h
@@ -6704,7 +6704,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_common.h generated
 make ${INSTALLROOT}/include/ast/ast_fcntl.h
 prev ast_fcntl.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_fcntl.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_fcntl.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_fcntl.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_fcntl.h
@@ -6716,7 +6716,7 @@ prev FEATURE/float
 exec - cmp 2>/dev/null -s FEATURE/float ast_float.h || { rm -f ast_float.h; silent test -d . || mkdir .; ${STDCP} FEATURE/float ast_float.h; }
 prev ast_common.h implicit
 done ast_float.h generated
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_float.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_float.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_float.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_float.h
@@ -6724,7 +6724,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_float.h generated
 make ${INSTALLROOT}/include/ast/ast_fs.h
 prev ast_fs.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_fs.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_fs.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_fs.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_fs.h
@@ -6732,7 +6732,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_fs.h generated
 make ${INSTALLROOT}/include/ast/ast_hdr.h
 prev ast_hdr.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_hdr.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_hdr.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_hdr.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_hdr.h
@@ -6740,7 +6740,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_hdr.h generated
 make ${INSTALLROOT}/include/ast/ast_lib.h
 prev ast_lib.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_lib.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_lib.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_lib.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_lib.h
@@ -6748,7 +6748,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_lib.h generated
 make ${INSTALLROOT}/include/ast/ast_map.h
 prev ast_map.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_map.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_map.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_map.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_map.h
@@ -6756,7 +6756,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_map.h generated
 make ${INSTALLROOT}/include/ast/ast_mmap.h
 prev ast_mmap.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_mmap.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_mmap.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_mmap.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_mmap.h
@@ -6764,7 +6764,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_mmap.h generated
 make ${INSTALLROOT}/include/ast/ast_mode.h
 prev ast_mode.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_mode.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_mode.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_mode.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_mode.h
@@ -6772,7 +6772,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_mode.h generated
 make ${INSTALLROOT}/include/ast/ast_param.h
 prev ast_param.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_param.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_param.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_param.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_param.h
@@ -6780,7 +6780,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_param.h generated
 make ${INSTALLROOT}/include/ast/ast_time.h
 prev ast_time.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_time.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_time.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_time.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_time.h
@@ -6788,7 +6788,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_time.h generated
 make ${INSTALLROOT}/include/ast/ast_tty.h
 prev ast_tty.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_tty.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_tty.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_tty.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_tty.h
@@ -6796,7 +6796,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_tty.h generated
 make ${INSTALLROOT}/include/ast/ast_types.h
 prev ast_types.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_types.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_types.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_types.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_types.h
@@ -6804,7 +6804,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_types.h generated
 make ${INSTALLROOT}/include/ast/ast_unistd.h
 prev ast_unistd.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_unistd.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_unistd.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_unistd.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_unistd.h
@@ -6812,7 +6812,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_unistd.h generated
 make ${INSTALLROOT}/include/ast/ast_vfork.h
 prev ast_vfork.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_vfork.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_vfork.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_vfork.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_vfork.h
@@ -6820,7 +6820,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_vfork.h generated
 make ${INSTALLROOT}/include/ast/ast_wait.h
 prev ast_wait.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_wait.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_wait.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_wait.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_wait.h
@@ -6828,7 +6828,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_wait.h generated
 make ${INSTALLROOT}/include/ast/ast_dirent.h
 prev ast_dirent.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_dirent.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_dirent.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_dirent.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_dirent.h
@@ -6836,7 +6836,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_dirent.h generated
 make ${INSTALLROOT}/include/ast/ast_iconv.h
 prev ast_iconv.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_iconv.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_iconv.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_iconv.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_iconv.h
@@ -6844,7 +6844,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_iconv.h generated
 make ${INSTALLROOT}/include/ast/ast_limits.h
 prev ast_limits.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_limits.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_limits.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_limits.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_limits.h
@@ -6852,7 +6852,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_limits.h generated
 make ${INSTALLROOT}/include/ast/ast_nl_types.h
 prev ast_nl_types.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_nl_types.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_nl_types.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_nl_types.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_nl_types.h
@@ -6860,7 +6860,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_nl_types.h generated
 make ${INSTALLROOT}/include/ast/ast_stdio.h
 prev ast_stdio.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_stdio.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_stdio.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_stdio.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_stdio.h
@@ -6868,7 +6868,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_stdio.h generated
 make ${INSTALLROOT}/include/ast/ast_wchar.h
 prev ast_wchar.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_wchar.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_wchar.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_wchar.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_wchar.h
@@ -6889,14 +6889,14 @@ make ${INSTALLROOT}/include/ast/fmtmsg.h
 prev comp/fmtmsg.h
 prev ast_lib.h
 exec - case ${mam_cc_HOSTTYPE} in
-exec - win32.*)proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/fmtmsg.h > 1.${COTEMP}.x
+exec - win32.*)proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/fmtmsg.h > 1.${COTEMP}.x
 exec - 	if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/fmtmsg.h 1.${COTEMP}.x
 exec - 	then	rm -f 1.${COTEMP}.x
 exec - 	else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/fmtmsg.h
 exec - 	fi
 exec - 	;;
 exec - *)	silent grep -l 'define[ 	][ 	]*_[hl][di][rb]_fmtmsg' ast_lib.h > /dev/null || {
-exec - 	proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/fmtmsg.h > 1.${COTEMP}.x
+exec - 	proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/fmtmsg.h > 1.${COTEMP}.x
 exec - 	if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/fmtmsg.h 1.${COTEMP}.x
 exec - 	then	rm -f 1.${COTEMP}.x
 exec - 	else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/fmtmsg.h
@@ -6910,14 +6910,14 @@ make ${INSTALLROOT}/include/ast/libgen.h
 prev comp/libgen.h
 prev ast_lib.h
 exec - case ${mam_cc_HOSTTYPE} in
-exec - win32.*)proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/libgen.h > 1.${COTEMP}.x
+exec - win32.*)proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/libgen.h > 1.${COTEMP}.x
 exec - 	if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/libgen.h 1.${COTEMP}.x
 exec - 	then	rm -f 1.${COTEMP}.x
 exec - 	else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/libgen.h
 exec - 	fi
 exec - 	;;
 exec - *)	silent grep -l 'define[ 	][ 	]*_[hl][di][rb]_libgen' ast_lib.h > /dev/null || {
-exec - 	proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/libgen.h > 1.${COTEMP}.x
+exec - 	proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/libgen.h > 1.${COTEMP}.x
 exec - 	if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/libgen.h 1.${COTEMP}.x
 exec - 	then	rm -f 1.${COTEMP}.x
 exec - 	else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/libgen.h
@@ -6931,14 +6931,14 @@ make ${INSTALLROOT}/include/ast/syslog.h
 prev comp/syslog.h
 prev ast_lib.h
 exec - case ${mam_cc_HOSTTYPE} in
-exec - win32.*)proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/syslog.h > 1.${COTEMP}.x
+exec - win32.*)proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/syslog.h > 1.${COTEMP}.x
 exec - 	if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/syslog.h 1.${COTEMP}.x
 exec - 	then	rm -f 1.${COTEMP}.x
 exec - 	else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/syslog.h
 exec - 	fi
 exec - 	;;
 exec - *)	silent grep -l 'define[ 	][ 	]*_[hl][di][rb]_syslog' ast_lib.h > /dev/null || {
-exec - 	proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/syslog.h > 1.${COTEMP}.x
+exec - 	proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/syslog.h > 1.${COTEMP}.x
 exec - 	if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/syslog.h 1.${COTEMP}.x
 exec - 	then	rm -f 1.${COTEMP}.x
 exec - 	else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/syslog.h

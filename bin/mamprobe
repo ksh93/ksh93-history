@@ -107,7 +107,8 @@ cc=$*
 
 # find the make probe script
 
-ifs=$IFS
+ifs=${IFS-'
+	 '}
 IFS=:
 set $PATH
 IFS=$ifs
@@ -132,7 +133,8 @@ done
 
 case $info in
 /*)	i=X$info
-	ifs=$IFS
+	ifs=${IFS-'
+	 '}
 	IFS=/
 	set $i
 	IFS=$ifs

@@ -2,7 +2,7 @@
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)make.probe (AT&T Research) 2004-10-01
+# @(#)make.probe (AT&T Research) 2005-02-02
 #
 # C probe for make
 #
@@ -201,7 +201,6 @@ then	eval set x $probe_verbose
 		fi
 	done
 fi
-ifs=$IFS
 IFS=:
 set x $PATH
 IFS=$ifs

@@ -35,7 +35,7 @@ WWWTYPES =
 	(html_info) : $$(MM2HTMLINFO) $$(MM2HTMLINIT)
 	if WWWSTYLE == "frame"
 		%.html %-index.html : %.mm (html_info)
-			$(MM2HTML) $(MM2HTMLFLAGS) -f $(%) -x -o WWWTYPES=$(WWWTYPES:@Q:@Q) $(>)
+			$(MM2HTML) $(MM2HTMLFLAGS) $(%:N=faq.*:?> $(<:O=1)?-f $(%) -x?) -o WWWTYPES=$(WWWTYPES:@Q:@Q) $(>)
 	else
 		%.html : %.mm (html_info)
 			$(MM2HTML) $(MM2HTMLFLAGS) -o WWWTYPES=$(WWWTYPES:@Q:@Q) $(>) > $(<)
@@ -285,7 +285,7 @@ WWWTYPES =
  * [ dir ] :WWWPAGE: [ source ... ] file.mm file
  *
  *	*.mm generates *.html
- *	faq.*.mm generqtes faq.mm
+ *	faq.*.mm generates faq.mm
  *	other files copied to $(WWWDIR)[/dir]
  *	files after - (toggle) are just asserted on ::
  */
@@ -333,7 +333,10 @@ WWWTYPES =
 				$(G) : .IMPLICIT $(S) $(I)
 				if $(G:O) > 1
 					for J $(G)
-						if J == "*-index.html" && ! X
+						if J == "*-index.html"
+							if J == "faq.*.*"
+								continue
+							end
 							O := index.html
 						else
 							O := $(J)

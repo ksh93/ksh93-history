@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#                  Copyright (c) 1994-2004 AT&T Corp.                  #
+#                  Copyright (c) 1994-2005 AT&T Corp.                  #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                            by AT&T Corp.                             #
@@ -22,6 +22,7 @@
 command=filter
 
 tmp=/tmp/$command$$
+suf=
 
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	ARGV0="-a $command"
@@ -76,16 +77,22 @@ do	shift
 	*)	break ;;
 	esac
 done
-trap "rm -f $tmp" 0 1 2 3 15
+trap 'rm -f $tmp$suf' 0 1 2 3 15
 case $# in
 0)	cat > $tmp
 	$cmd $tmp
 	;;
 *)	for file
-	do	cp $file $tmp || exit 1
-		chmod u+rwx $tmp || exit 1
-		$cmd $tmp || exit 1
-		cat $tmp
+	do	suf=${file##*/}
+		case $suf in
+		*.*)	suf=.${suf#*.} ;;
+		*)	suf= ;;
+		esac
+		cp $file $tmp$suf || exit 1
+		chmod u+rwx $tmp$suf || exit 1
+		$cmd $tmp$suf || exit 1
+		cat $tmp$suf
+		rm -f $tmp$suf
 	done
 	;;
 esac

@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#                  Copyright (c) 1994-2004 AT&T Corp.                  #
+#                  Copyright (c) 1994-2005 AT&T Corp.                  #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                            by AT&T Corp.                             #
@@ -45,13 +45,15 @@ admin_ditto_skip="OFFICIAL|core|old|*.core|*.tmp|.nfs*"
 admin_ping="ping -c 1 -w 5"
 default_url=default.url
 MAKESKIP=${MAKESKIP:-"*[-.]*"}
+TAR=tar
+TARFLAGS=xvhB
 
 all_types='*.*|sun4'		# all but sun4 match *.*
 
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2004-12-05 $
+@(#)$Id: package (AT&T Research) 2005-01-11 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -497,7 +499,8 @@ force=0
 global=
 hi=
 html=0
-ifs=$IFS
+ifs=${IFS-'
+	 '}
 lo=
 make=
 makeflags='-k -K'
@@ -666,16 +669,16 @@ ${bT}(4)${bD}If the ${bB}bin/package${eB} script does not exist then run:${bX}
 		chmod +x bin/package${eX}${eD}
 ${bT}(5)${bD}Determine the list of package names you want from the download site, then
       use the ${Mpackage} command to do the actual download:${bX}
-		bin/package setup binary \$URL \\
-			${bB}package-name${eB} ...${eX}
+		bin/package authorize "${bI}NAME${eI}" password "${bI}PASSWORD${eI}" \\
+			setup binary \$URL ${bB}PACKAGE${eB} ...${eX}
       This downloads the closure of the latest binary package(s); covered and
       up-to-date packages are not downloaded again unless ${bB}package force ...${eB}
       is specified. Package content is verified using ${bB}${checksum}${eB}. If the package
       root will contain only one architecture then you can install in ${bB}bin${eB} and
       ${bB}lib${eB} instead of ${bB}arch/${eB}${bI}HOSTTYPE${eI}${bB}/bin${eB} and ${bB}arch/${eB}${bI}HOSTTYPE${eI}${bB}/lib${eB} by running this
       instead:${bX}
-		bin/package flat setup binary \$URL \\
-			${bI}PACKAGE${eI} ...${eX}
+		bin/package authorize "${bI}NAME${eI}" password "${bI}PASSWORD${eI}" \\
+			flat setup binary \$URL ${bB}PACKAGE${eB} ...${eX}
       To update the same packages from the same URL run:${bX}
 		bin/package setup binary${eX}${eD}
 ${bT}(6)${bD}The packaged binaries are position independent, i.e., they do not
@@ -702,7 +705,7 @@ ${bT}(3)${bD}Create the subdirectory ${bB}lib/package/tgz${eB} and download all 
 ${bT}(4)${bD}If the ${bB}bin/package${eB} script does not exist then manually read the ${bB}INIT${eB}
       binary package:${bX}
 		gunzip < lib/package/tgz/INIT.${bI}YYYY-MM-DD.HOSTTYPE${eI}.tgz |
-			tar xvf -${eX}
+			${TAR} ${TARFLAGS}f -${eX}
       If your system does not have ${Mtar} or ${Mgunzip} then download the ${Mratz}
       binary package:${bX}
 		mkdir bin
@@ -819,16 +822,16 @@ ${bT}(4)${bD}If the ${bB}bin/package${eB} script does not exist then run:${bX}
 		chmod +x bin/package${eX}${eD}
 ${bT}(5)${bD}Determine the list of package names you want from the download site, then
       use the ${Mpackage} command to do the actual download:${bX}
-		bin/package setup source \$URL \\
-			${bB}package-name${eB} ...${eX}
+		bin/package authorize "${bI}NAME${eI}" password "${bI}PASSWORD${eI}" \\
+			setup source \$URL ${bB}PACKAGE${eB} ...${eX}
       This downloads the closure of latest source package(s); covered and
       up-to-date packages are not downloaded again unless ${bB}package force ...${eB}
       is specified. Package content is verified using ${bB}${checksum}${eB}. If the package
       root will contain only one architecture then you can install in ${bB}bin${eB} and
       ${bB}lib${eB} instead of ${bB}arch/${eB}${bI}HOSTTYPE${eI}${bB}/bin${eB} and ${bB}arch/${eB}${bI}HOSTTYPE${eI}${bB}/lib${eB} by running this
       instead:${bX}
-		bin/package flat setup source \$URL \\
-			${bI}PACKAGE${eI} ...${eX}
+		bin/package authorize "${bI}NAME${eI}" password "${bI}PASSWORD${eI}" \\
+			flat setup source \$URL ${bB}PACKAGE${eB} ...${eX}
       To update the same packages from the same URL run:${bX}
 		bin/package setup source${eX}${eD}
 ${bT}(6)${bD}Build and install; all generated files are placed under ${bB}arch/${eB}${bI}HOSTTYPE${eI}
@@ -869,7 +872,7 @@ ${bT}(3)${bD}Create the subdirectory ${bB}lib/package/tgz${eB} and download all 
       into that directory.${eD}
 ${bT}(4)${bD}If the ${bB}bin/package${eB} script does not exist then manually read the ${bB}INIT${eB}
       source package:${bX}
-		gunzip < lib/package/tgz/INIT.${bI}YYYY-MM-DD${eI}.tgz | tar xvf -${eX}
+		gunzip < lib/package/tgz/INIT.${bI}YYYY-MM-DD${eI}.tgz | ${TAR} ${TARFLAGS}f -${eX}
       If your system does not have ${Mtar} or ${Mgunzip} then download the ${Mratz}
       source package, compile it, and manually read the ${bB}INIT${eB}
       source package:${bX}
@@ -1212,6 +1215,11 @@ do	case $i in
 		case $SHELL in
 		?*)	KEEP_SHELL=1 ;;
 		esac
+		;;
+	TAR=*)	eval $i
+		;;
+	TARFLAGS=*)
+		eval $i
 		;;
 	VPATH=*)eval USER_$i
 		;;
@@ -3016,7 +3024,7 @@ case $flat in
 		for i in bin include lib fun
 		do	if	test ! -d $INSTALLROOT/$i
 			then	$exec ln -s ../../$i $INSTALLROOT/$i
-			elif	test ! -L $INSTALLROOT/$i
+			elif	test ! -h $INSTALLROOT/$i
 			then	for x in $INSTALLROOT/$i/.[a-z]* $INSTALLROOT/$i/*
 				do	if	test ! -d $INSTALLROOT/$i/$x || test ! -d ../../$i/$x
 					then	$exec mv $x ../../$i
@@ -5294,10 +5302,10 @@ read)	case ${PWD:-`pwd`} in
 					code=1
 					continue
 				}
-			else	if	onpath gunzip && onpath tar
+			else	if	onpath gunzip && onpath $TAR
 				then	case $exec in
-					'')	$exec gunzip < "$f" | tar xvhf - ;;
-					*)	$exec "gunzip < $f | tar xvhf -" ;;
+					'')	$exec gunzip < "$f" | $TAR ${TARFLAGS}f - ;;
+					*)	$exec "gunzip < $f | $TAR ${TARFLAGS}f -" ;;
 					esac || {
 						code=1
 						continue

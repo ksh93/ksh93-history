@@ -2,7 +2,7 @@
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)C probe (AT&T Research) 2004-04-01
+# @(#)C probe (AT&T Research) 2005-02-02
 #
 # probe [ -d ] c-compiler-path [ attributes ]
 #
@@ -42,6 +42,8 @@ dynamic=
 exe=exe
 executable="test -x"
 hosted=
+ifs=${IFS-'
+	 '}
 obj=o
 ppenv=
 ppopt=

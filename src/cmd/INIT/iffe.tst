@@ -137,15 +137,6 @@ iffe: test: is stdio.h a header ... yes
 iffe: test: is open a library function ... yes'
 
 	EXEC	-r -v -s bsh - t.iffe
-		OUTPUT - $'/* : : generated from t.iffe by iffe version 1995-03-19 : : */
-#ifndef _ifelse_H
-#define _ifelse_H	1
-#define _sys_types	1	/* #include <sys/types.h> ok */
-#define _hdr_stdio	1	/* #include <stdio.h> ok */
-#define _lib_open	1	/* open() in default lib(s) */
-HIT 1
-
-#endif'
 
 	EXEC	-r -v - t.iffe
 		INPUT t.iffe $'iff ifelse
@@ -249,15 +240,6 @@ iffe: test: is _XXX_open a library function ... no
 iffe: test: is close a library function ... yes'
 
 	EXEC	-r -v -s bsh - t.iffe
-		OUTPUT - $'/* : : generated from t.iffe by iffe version 1995-03-19 : : */
-#ifndef _ifelse_H
-#define _ifelse_H	1
-#define _sys_types	1	/* #include <sys/types.h> ok */
-#define _hdr_stdio	1	/* #include <stdio.h> ok */
-#define _lib_close	1	/* close() in default lib(s) */
-HIT 2
-
-#endif'
 
 	EXEC	-r -v - t.iffe
 		INPUT t.iffe $'iff ifelse
@@ -293,14 +275,6 @@ iffe: test: is _XXX_open a library function ... no
 iffe: test: is _XXX_close a library function ... no'
 
 	EXEC	-r -v -s bsh - t.iffe
-		OUTPUT - $'/* : : generated from t.iffe by iffe version 1995-03-19 : : */
-#ifndef _ifelse_H
-#define _ifelse_H	1
-#define _sys_types	1	/* #include <sys/types.h> ok */
-#define _hdr_stdio	1	/* #include <stdio.h> ok */
-HIT 3
-
-#endif'
 
 	EXEC	-r -v - t.iffe
 		INPUT t.iffe $'iff ifelse
@@ -1432,3 +1406,52 @@ iffe: test: is ( bar_foo ) true ... yes'
 	EXEC	-r -v - t.iffe
 		INPUT t.iffe $'include'
 		ERROR - $'iffe: t.iffe:1: include path expected'
+
+TEST 15 'KnR compatibility'
+
+	EXEC	-r -v - t.iffe
+		INPUT t.iffe $'
+if ( 1 ) {
+		#define all 1
+}
+endif
+if ( 2 ) {
+                #define some 1
+}
+endif
+cat{
+#define a 1
+ #define b 2
+  #define c 3
+	 #define d 4
+}end'
+#define _foo_bar SOME'
+		OUTPUT - $'/* : : generated from t.iffe by iffe version 1995-03-19 : : */
+#ifndef _REGRESS
+#define _REGRESS	1
+#define _sys_types	1	/* #include <sys/types.h> ok */
+#define some 1
+
+#endif'
+		OUTPUT - $'/* : : generated from t.iffe by iffe version 1995-03-19 : : */
+#ifndef _REGRESS
+#define _REGRESS	1
+#define _sys_types	1	/* #include <sys/types.h> ok */
+#define all 1
+
+#define some 1
+
+#define a 1
+#define b 2
+#define c 3
+#define d 4
+
+#endif'
+		ERROR - $'iffe: test: is sys/types.h a header ... yes
+iffe: test: is ( 1 ) true ... yes
+iffe: test: is ( 2 ) true ... yes
+iffe: test: cat{ ... }end ... yes'
+
+	EXEC	-r -v -s bsh - t.iffe
+
+	EXEC	-r -v -s osh - t.iffe

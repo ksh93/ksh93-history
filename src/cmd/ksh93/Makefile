@@ -47,6 +47,10 @@ if CC.HOSTTYPE == "linux.alpha"
 	:PACKAGE: - m:static:noinclude /*noCC.EXPORT.DYNAMIC*/
 end
 
+if CC.HOSTTYPE == "*.s390-64"
+	CC.DLL = $(CC.DLLBIG)
+end
+
 if SHOPT_DYNAMIC && ( "$(CC.DIALECT:N=EXPORT=DLL)" || "$(PACKAGE_OPTIMIZE:N=space)" )
 	CCFLAGS += $$(CC.DLL)
 	LIBS_req = -lshell

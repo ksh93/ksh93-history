@@ -1,7 +1,7 @@
 /*
  * source and binary package support
  *
- * @(#)package.mk (AT&T Research) 2004-10-22
+ * @(#)package.mk (AT&T Research) 2005-01-11
  *
  * usage:
  *
@@ -55,6 +55,9 @@
  *	license=type.class
  *		:LICENSE: type.class pattern override
  *
+ *	notice=1
+ *		include the conspcuous enpty notice file
+ *
  *	strip=0
  *		don't strip non-lcl binary package members
  *
@@ -90,6 +93,7 @@ licenses = $(org)
 mamfile = 1
 opt =
 name =
+notice =
 release =
 strip = 0
 style = tgz
@@ -144,9 +148,7 @@ package.readme = $(@.package.readme.)
 	$()
 	Any archives, distributions or packages made from source or
 	binaries covered by license(s) must contain the corresponding
-	license file(s), this README file, and the empty file
-	$()
-	$(package.notice)
+	license file(s)$(notice:?, this README file, and the empty file$$("\n")$$(package.notice)?.?)
 
 .package.licenses. : .FUNCTION
 	local I L R
@@ -222,7 +224,7 @@ package.closure = $(closure:?$$(package.all)?$$(package.pkg)?)
 package.init = $(.package.glob. $("$(init)$(name)":P=U):C%.*%$(INSTALLROOT)/src/*/&/($(MAKEFILES:/:/|/G))%:P=G:T=F:D::B)
 package.ini = ignore mamprobe manmake package silent
 package.src.pat = $(PACKAGESRC)/($(name).(ini|lic|pkg))
-package.src = $(package.src.pat:P=G) $(.package.licenses. $(name))
+package.src = $(package.src.pat:P=G)
 package.bin = $(PACKAGEBIN)/$(name).ini
 
 op = current
@@ -624,15 +626,16 @@ vendor.cyg = gnu
 	$()
 		PATH=/opt/$(org)/bin:$PATH
 		cd /opt/$(org)
-		package setup flat source $("\\")
+		package authorize "NAME" password "PASSWORD" setup flat source $("\\")
 			$(url) $("\\")
 			$(org)-base
 		package make
 	$()
-	and export /opt/$(org)/bin in PATH to use. If multiple architectures
-	may be built under /opt/$(org) then drop "flat" and export
-	/opt/$(org)/arch/`package`/bin in PATH to use. To update
-	previously downloaded packages from the same url simply run:
+	and export /opt/$(org)/bin in PATH to use. The NAME and PASSWORD signify your
+	agreement to the software license(s). All users get the same NAME and PASSWORD.
+	See $(url) for details. If multiple architectures may be built under
+	/opt/$(org) then drop "flat" and export /opt/$(org)/arch/`package`/bin in PATH
+	to use. To update previously downloaded packages from the same url simply run:
 	$()
 		cd /opt/$(org)
 		package setup
@@ -679,7 +682,7 @@ vendor.cyg = gnu
 				echo ";;;$tmp/Mamfile2;src/cmd/Mamfile"
 				echo ";;;$tmp/Mamfile2;src/lib/Mamfile"
 			fi
-			$(package.src:U:U:T=F:/.*/echo ";;;&"$("\n")/)
+			$(package.src:U:T=F:/.*/echo ";;;&"$("\n")/)
 			echo ";;;$(PACKAGEGEN)/$(name.original).req"
 			set -- $(package.closure)
 			for i
@@ -689,25 +692,20 @@ vendor.cyg = gnu
 					then	(( o=m ))
 						s=$( $(MAKE) --noexec --recurse=list recurse 2>/dev/null )
 						if	test "" != "$s"
-						then	
-							for j in $s
+						then	for j in $s
 							do	if	test -d $j
 								then	cd $j
 									if	[[ ! '$(license)' ]] || $(MAKE) --noexec --silent 'exit $$(LICENSECLASS:N=$(license):?0?1?)' .
 									then	(( m++ ))
-										$(MAKE) --never --force --mam=static --corrupt=accept CC=$(CC.DIALECT:N=C++:?CC?cc?) $(=) 'dontcare test' install test > $tmp/$m.mam
+										$(MAKE) --never --force --mam=static --corrupt=accept CC=$(CC.DIALECT:N=C++:?CC?cc?) $(=) 'dontcare test' install test $(export.$(style):Q) > $tmp/$m.mam
 										echo ";;;$tmp/$m.mam;$i/$j/Mamfile"
 									fi
 									cd $(INSTALLROOT)/$i
 								fi
 							done
-						else	(( m++ ))
-							$(MAKE) --never --force --mam=static --corrupt=accept CC=$(CC.DIALECT:N=C++:?CC?cc?) $(=) 'dontcare test' install test > $tmp/$m.mam
-							echo ";;;$tmp/$m.mam;$i/Mamfile"
-						fi
-						if	(( o != m ))
-						then	(( m++ ))
-							cat > $tmp/$m.mam <<'!'
+							if	(( o != m ))
+							then	(( m++ ))
+								cat > $tmp/$m.mam <<'!'
 	info mam static
 	note subcomponent level :MAKE: equivalent
 	make install
@@ -716,6 +714,10 @@ vendor.cyg = gnu
 	done all virtual
 	done install virtual
 	!
+								echo ";;;$tmp/$m.mam;$i/Mamfile"
+							fi
+						else	(( m++ ))
+							$(MAKE) --never --force --mam=static --corrupt=accept CC=$(CC.DIALECT:N=C++:?CC?cc?) $(=) 'dontcare test' install test $(export.$(style):Q) > $tmp/$m.mam
 							echo ";;;$tmp/$m.mam;$i/Mamfile"
 						fi
 					fi
@@ -730,14 +732,13 @@ vendor.cyg = gnu
 		sort -u |
 		{
 			: > $tmp/HEAD
-			echo ";;;$tmp/HEAD;$(package.notice)"
 			cat > $tmp/README <<'!'
 	$(package.readme)
 	!
 			echo ";;;$tmp/README;README"
 			cat
 			: > $tmp/TAIL
-			echo ";;;$tmp/TAIL;$(package.notice)"
+			[[ "$(notice)" ]] && echo ";;;$tmp/TAIL;$(package.notice)"
 		} |
 		$(PAX)	--filter=- \
 			--to=ascii \
@@ -745,7 +746,7 @@ vendor.cyg = gnu
 			--local \
 			-wvf $(source) $(base) \
 			$(PACKAGEVIEW:C%.*%-s",^&/,,"%) \
-			$(vendor:?-s",^[^/],$(opt),"??)
+			$(vendor:?-s",^[^/],$(opt)&,"??)
 		$(SUM) -x $(checksum) < $(source) > $(source:D:B:S=.$(checksum))
 		rm -rf $tmp
 	fi
@@ -997,14 +998,14 @@ vendor.cyg = gnu
 		sort -u |
 		{
 			: > $tmp/HEAD
-			echo ";;;$tmp/HEAD;$(package.notice)"
+			[[ "$(notice)" ]] && echo ";;;$tmp/HEAD;$(package.notice)"
 			cat > $tmp/README <<'!'
 	$(package.readme)
 	!
 			echo ";;;$tmp/README;README"
 			cat
 			: > $tmp/TAIL
-			echo ";;;$tmp/TAIL;$(package.notice)"
+			[[ "$(notice)" ]] && echo ";;;$tmp/TAIL;$(package.notice)"
 		} |
 		$(PAX)	--filter=- \
 			--to=ascii \
@@ -1144,7 +1145,7 @@ binary : .binary.init .binary.gen .binary.$$(style)
 			echo ";;;$tmp/RELEASE;usr/doc/$(opt)RELEASE"
 			cat > $(binary:/.$(suffix)//).setup.hint <<'!'
 	category: $(category:/\(.\).*/\1/U)$(category:/.\(.*\)/\1/L)
-	requires:
+	requires: cygwin
 	sdesc: "$(index)"
 	ldesc: "$($(name.original).README)"
 	!
@@ -1166,10 +1167,10 @@ binary : .binary.init .binary.gen .binary.$$(style)
 		sort -u |
 		{
 			: > $tmp/HEAD
-			echo ";;;$tmp/HEAD;$(package.notice)"
+			[[ "$(notice)" ]] && echo ";;;$tmp/HEAD;$(package.notice)"
 			cat
 			: > $tmp/TAIL
-			echo ";;;$tmp/TAIL;$(package.notice)"
+			[[ "$(notice)" ]] && echo ";;;$tmp/TAIL;$(package.notice)"
 		} |
 		$(PAX)	--filter=- \
 			--to=ascii \
@@ -1269,14 +1270,14 @@ binary : .binary.init .binary.gen .binary.$$(style)
 		sort -u |
 		{
 			: > $tmp/HEAD
-			echo ";;;$tmp/HEAD;$(package.notice)"
+			[[ "$(notice)" ]] && echo ";;;$tmp/HEAD;$(package.notice)"
 			cat > $tmp/README <<'!'
 	$(package.readme)
 	!
 			echo ";;;$tmp/README;README"
 			cat
 			: > $tmp/TAIL
-			echo ";;;$tmp/TAIL;$(package.notice)"
+			[[ "$(notice)" ]] && echo ";;;$tmp/TAIL;$(package.notice)"
 		} |
 		$(PAX)	--filter=- \
 			--to=ascii \
@@ -1454,14 +1455,14 @@ runtime : .runtime.init .runtime.gen .runtime.$$(style)
 		sort -u |
 		{
 			: > $tmp/HEAD
-			echo ";;;$tmp/HEAD;$(package.notice)"
+			[[ "$(notice)" ]] && echo ";;;$tmp/HEAD;$(package.notice)"
 			cat > $tmp/README <<'!'
 	$(package.readme)
 	!
 			echo ";;;$tmp/README;README"
 			cat
 			: > $tmp/TAIL
-			echo ";;;$tmp/TAIL;$(package.notice)"
+			[[ "$(notice)" ]] && echo ";;;$tmp/TAIL;$(package.notice)"
 		} |
 		$(PAX)	--filter=- \
 			--to=ascii \

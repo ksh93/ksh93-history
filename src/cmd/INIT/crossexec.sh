@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#                  Copyright (c) 1994-2004 AT&T Corp.                  #
+#                  Copyright (c) 1994-2005 AT&T Corp.                  #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                            by AT&T Corp.                             #
@@ -97,7 +97,8 @@ if	test ! -r $info
 then	echo "$command: $info: not found" >&2
 	exit 1
 fi
-ifs=$IFS
+ifs=${IFS-'
+	 '}
 while	:
 do	IFS='	'
 	read hosttype hostname usr dir sh cp
