@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 4.4 2004-02-29
+info mam static 00000 1994-07-17 make (AT&T Research) 4.4 2004-03-17
 setv INSTALLROOT ../../..
 setv PACKAGE_ast ${INSTALLROOT}
 setv PACKAGE_ast_INCLUDE ${PACKAGE_ast}/include/ast
@@ -34,8 +34,6 @@ setv SILENT
 setv TAR tar
 setv YACC yacc
 setv YACCFLAGS -d
-make ../../../lib/package/ast.lic
-done ../../../lib/package/ast.lic
 make install
 make ksh
 make pmain.o
@@ -848,13 +846,14 @@ prev include/history.h implicit
 prev include/shnodes.h implicit
 prev include/jobs.h implicit
 prev include/io.h implicit
+prev include/path.h implicit
 prev include/variables.h implicit
 prev ../../../include/ast/ls.h implicit
 prev include/fcin.h implicit
 prev include/defs.h implicit
 done sh/io.c
 prev sh/io.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_RAWONLY -DSHOPT_VSH -DSHOPT_ESH -DSHOPT_MULTIBYTE -DKSHELL -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_KIA -D_BLD_shell -DSHOPT_DYNAMIC -DSHOPT_OO -c sh/io.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_RAWONLY -DSHOPT_VSH -DSHOPT_ESH -DSHOPT_MULTIBYTE -DKSHELL -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_KIA -D_BLD_shell -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_DYNAMIC -DSHOPT_OO -c sh/io.c
 done io.o generated
 make jobs.o
 make sh/jobs.c
@@ -1050,6 +1049,7 @@ make ../../../include/ast/proc.h implicit
 prev ../../../include/ast/ast.h implicit
 prev ../../../include/ast/prototyped.h implicit
 done ../../../include/ast/proc.h
+prev ../../../include/ast/vmalloc.h implicit
 prev include/streval.h implicit
 prev FEATURE/locale implicit
 prev FEATURE/externs implicit
@@ -1375,7 +1375,7 @@ done ../../../include/ast generated
 make ../../../include/ast/nval.h
 prev ../../../include/ast
 prev include/nval.h
-exec - proto -p -s -l ${PACKAGE_ast_LIB}/package/ast.lic '-o since=1982,author=dgk'  include/nval.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/lib/package/ast.lic '-o since=1982,author=dgk'  include/nval.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${PACKAGE_ast_INCLUDE}/nval.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${PACKAGE_ast_INCLUDE}/nval.h
@@ -1383,7 +1383,7 @@ exec - fi
 done ../../../include/ast/nval.h generated
 make ../../../include/ast/shell.h
 prev include/shell.h
-exec - proto -p -s -l ${PACKAGE_ast_LIB}/package/ast.lic '-o since=1982,author=dgk'  include/shell.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/lib/package/ast.lic '-o since=1982,author=dgk'  include/shell.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${PACKAGE_ast_INCLUDE}/shell.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${PACKAGE_ast_INCLUDE}/shell.h
@@ -1391,7 +1391,7 @@ exec - fi
 done ../../../include/ast/shell.h generated
 make ../../../include/ast/history.h
 prev include/history.h
-exec - proto -p -s -l ${PACKAGE_ast_LIB}/package/ast.lic '-o since=1982,author=dgk'  include/history.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/lib/package/ast.lic '-o since=1982,author=dgk'  include/history.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${PACKAGE_ast_INCLUDE}/history.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${PACKAGE_ast_INCLUDE}/history.h

@@ -257,7 +257,7 @@ void tty_cooked(register int fd)
  *
 }*/
 
-tty_raw(register int fd, int echomode)
+int tty_raw(register int fd, int echomode)
 {
 	int echo = echomode;
 #ifdef L_MASK
@@ -1016,7 +1016,7 @@ void	ed_putchar(register Edit_t *ep,register int c)
  * copy virtual to physical and return the index for cursor in physical buffer
  */
 
-ed_virt_to_phys(Edit_t *ep,genchar *virt,genchar *phys,int cur,int voff,int poff)
+int ed_virt_to_phys(Edit_t *ep,genchar *virt,genchar *phys,int cur,int voff,int poff)
 {
 	register genchar *sp = virt;
 	register genchar *dp = phys;

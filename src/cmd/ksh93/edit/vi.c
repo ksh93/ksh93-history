@@ -216,7 +216,7 @@ static int	textmod(Vi_t*,int,int);
 /*
  * if reedit is non-zero, initialize edit buffer with reedit chars
  */
-ed_viread(void *context, int fd, register char *shbuf, int nchar, int reedit)
+int ed_viread(void *context, int fd, register char *shbuf, int nchar, int reedit)
 {
 	Edit_t *ed = (Edit_t*)context;
 	register int i;			/* general variable */

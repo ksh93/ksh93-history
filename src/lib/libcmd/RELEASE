@@ -1,3 +1,4 @@
+04-03-19 tail.c: handle -f sfreserve() large chunk failure
 04-02-29 cp.c: decouple -f and -i for standard CONFORMANCE
 	 cp.c: mv attempts rename() before remove()+rename()
 	 date.c: -f format or +format disables system clock set

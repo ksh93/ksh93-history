@@ -181,7 +181,7 @@ static void setcursor(Emacs_t*,int, int);
 static void show_info(Emacs_t*,const char*);
 static void xcommands(Emacs_t*,int);
 
-ed_emacsread(void *context, int fd,char *buff,int scend, int reedit)
+int ed_emacsread(void *context, int fd,char *buff,int scend, int reedit)
 {
 	Edit_t *ed = (Edit_t*)context;
 	register int c;

@@ -12,7 +12,6 @@ cat{
 
 	#undef	FILE
 	#undef	_FILE
-	#undef	__FILE
 	#undef	fpos_t
 	#undef	fpos64_t
 
@@ -20,7 +19,11 @@ cat{
 
 	#define FILE		_sfio_FILE
 	#define _FILE		FILE
+
+	#if !defined(__FILE) && !__CYGWIN__
+	#undef	__FILE
 	#define __FILE		FILE
+	#endif
 
 	#if defined(_AST_H) || defined(_SFIO_H)
 

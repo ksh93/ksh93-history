@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 4.4 2004-02-29
+info mam static 00000 1994-07-17 make (AT&T Research) 4.4 2004-03-17
 setv INSTALLROOT ../../..
 setv PACKAGE_ast ${INSTALLROOT}
 setv PACKAGE_ast_INCLUDE ${PACKAGE_ast}/include/ast
@@ -34,8 +34,6 @@ setv SILENT
 setv TAR tar
 setv YACC yacc
 setv YACCFLAGS -d
-make ../../../lib/package/ast.lic
-done ../../../lib/package/ast.lic
 make install
 make dll
 make libdll.a archive
@@ -261,7 +259,7 @@ done ../../../include/ast generated
 make ../../../include/ast/dlldefs.h
 prev ../../../include/ast
 prev dlldefs.h
-exec - proto -p -s -l ${PACKAGE_ast_LIB}/package/ast.lic '-o since=1997,author=gsf'  dlldefs.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/lib/package/ast.lic '-o since=1997,author=gsf'  dlldefs.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${PACKAGE_ast_INCLUDE}/dlldefs.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${PACKAGE_ast_INCLUDE}/dlldefs.h

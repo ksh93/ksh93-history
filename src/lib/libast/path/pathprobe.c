@@ -190,7 +190,7 @@ pathprobe(char* path, char* attr, const char* lang, const char* tool, const char
 	{
 		if (!(p = getenv("HOME")))
 			return 0;
-		p = path + sfsprintf(path, PATH_MAX - 1, "%s/.%s/", p, probe);
+		p = path + sfsprintf(path, PATH_MAX - 1, "%s/.%s/%s/", p, probe, HOSTTYPE);
 	}
 	strncopy(p, k, x - p);
 	if (op >= 0 && !stat(path, &st))

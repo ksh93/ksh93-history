@@ -1,3 +1,8 @@
+04-03-25 vmalloc/malloc.c: _AST_std_malloc=1 for __alpha
+	 path/pathprobe.c: per-user probe dir => $HOME/.probe/$HOSTTYPE
+04-03-23 regex/reglib.h: fix isw*() redefines
+04-03-17 features/stdio: no __FILE override for __CYGWIN_ (sys/reent.h clash)
+	 sfio/sfhdr.h,sfio/sfsetbuf.c: lower sfmove() default buf size 4x
 04-02-29 comp/omitted.c: move env trace after PATH fixup
 	 comp/omitted.c: cygwin spawn _P_DETACH => _P_NOWAIT+setpgid(pid,0)
 	 misc/optget.c: fix html mailto: match

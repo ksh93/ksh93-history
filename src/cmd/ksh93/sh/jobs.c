@@ -216,7 +216,10 @@ static void job_waitsafe(register int sig)
 		}
 		pid = waitpid((pid_t)-1,&wstat,flags);
 		if(sig && pid<0 && errno==EINTR)
+		{
+			sh_sigcheck();
 			continue;
+		}
 		if(pid<=0)
 			break;
 		flags |= WNOHANG;
@@ -468,6 +471,7 @@ void job_init(int lflag)
 #   endif /* CNSUSP */
 	sh_onoption(SH_MONITOR);
 	job.jobcontrol++;
+	job.mypid = sh.pid;
 #endif /* SIGTSTP */
 	return;
 }
@@ -484,6 +488,8 @@ int job_close(void)
 	if(possible && !job.jobcontrol)
 		return(0);
 	else if(!possible && (!sh_isstate(SH_MONITOR) || sh_isstate(SH_FORKED)))
+		return(0);
+	else if(getpid() != job.mypid)
 		return(0);
 	if(!tty_check(0))
 		beenhere++;
@@ -1295,7 +1301,7 @@ done:
  * disown job if bgflag == 'd'
  */
 
-job_switch(register struct process *pw,int bgflag)
+int job_switch(register struct process *pw,int bgflag)
 {
 	register const char *msg;
 	if(!pw || !(pw=job_byjid((int)pw->p_job)))
@@ -1586,8 +1592,7 @@ void job_subrestore(void* ptr)
 	free(ptr);
 }
 
-sh_waitsafe(void)
+int sh_waitsafe(void)
 {
 	return(job.waitsafe);
 }
-

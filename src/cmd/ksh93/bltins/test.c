@@ -493,7 +493,7 @@ int test_inode(const char *file1,const char *file2)
  * The static buffer statb is shared with test_mode.
  */
 
-sh_access(register const char *name, register int mode)
+int sh_access(register const char *name, register int mode)
 {
 	struct stat statb;
 	if(*name==0)

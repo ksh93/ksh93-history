@@ -223,7 +223,7 @@ reg size_t	size;	/* buffer size, -1 for default size */
 		else
 		{
 #if _sys_stat && _stat_blksize	/* preferred io block size */
-			if((bufsize = 2*((ssize_t)st.st_blksize) ) > 0)
+			if((bufsize = (ssize_t)st.st_blksize) > 0)
 				while((bufsize + (ssize_t)st.st_blksize) <= SF_PAGE)
 					bufsize += (ssize_t)st.st_blksize;
 			f->blksz = (size_t)st.st_blksize;

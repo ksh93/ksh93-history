@@ -204,20 +204,46 @@ extern int		_reg_iswblank(wint_t);
 
 #undef	_lib_wctype
 
+#ifndef iswalnum
 #define iswalnum(x)	isalnum(x)
+#endif
+#ifndef iswalpha
 #define iswalpha(x)	isalpha(x)
+#endif
+#ifndef iswcntrl
 #define iswcntrl(x)	iscntrl(x)
+#endif
+#ifndef iswdigit
 #define iswdigit(x)	isdigit(x)
+#endif
+#ifndef iswgraph
 #define iswgraph(x)	isgraph(x)
+#endif
+#ifndef iswlower
 #define iswlower(x)	islower(x)
+#endif
+#ifndef iswprint
 #define iswprint(x)	isprint(x)
+#endif
+#ifndef iswpunct
 #define iswpunct(x)	ispunct(x)
+#endif
+#ifndef iswspace
 #define iswspace(x)	isspace(x)
+#endif
+#ifndef iswupper
 #define iswupper(x)	isupper(x)
+#endif
+#ifndef iswxdigit
 #define iswxdigit(x)	isxdigit(x)
+#endif
 
+#ifndef towlower
 #define towlower(x)	tolower(x)
+#endif
+#ifndef towupper
 #define towupper(x)	toupper(x)
+#endif
 
 #endif
 

@@ -403,7 +403,7 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
  * look for edit macro named _i
  * if found, puts the macro definition into lookahead buffer and returns 1
  */
-ed_macro(Edit_t *ep, register int i)
+int ed_macro(Edit_t *ep, register int i)
 {
 	register char *out;
 	Namval_t *np;
@@ -443,7 +443,7 @@ ed_macro(Edit_t *ep, register int i)
 /*
  * Enter the fc command on the current history line
  */
-ed_fulledit(Edit_t *ep)
+int ed_fulledit(Edit_t *ep)
 {
 	register char *cp;
 	if(!sh.hist_ptr)

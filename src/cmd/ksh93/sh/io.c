@@ -36,6 +36,7 @@
 #include	<stdarg.h>
 #include	<ctype.h>
 #include	"variables.h"
+#include	"path.h"
 #include	"io.h"
 #include	"jobs.h"
 #include	"shnodes.h"
@@ -900,7 +901,7 @@ void	sh_iorestore(int last, int jmpval)
  * returns -1 for failure, 0 for success
  * <mode> is the same as for access()
  */
-sh_ioaccess(int fd,register int mode)
+int sh_ioaccess(int fd,register int mode)
 {
 	register int flags;
 	if(mode==X_OK)

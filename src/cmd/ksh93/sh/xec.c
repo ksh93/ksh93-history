@@ -45,6 +45,10 @@
 #include	"FEATURE/locale"
 #include	"streval.h"
 
+#if !_std_malloc
+#   include	<vmalloc.h>
+#endif
+
 #define SH_NTFORK	SH_TIMING
 
 #if _lib_nice
@@ -531,7 +535,7 @@ static int checkopt(char *argv[], int c)
 	return(0);
 }
 
-sh_exec(register const union anynode *t, int flags)
+int sh_exec(register const union anynode *t, int flags)
 {
 	sh_sigcheck();
 	if(t && !sh.st.execbrk && !sh_isoption(SH_NOEXEC))
@@ -1853,7 +1857,7 @@ sh_exec(register const union anynode *t, int flags)
  * returns 1 if r == trim(s) otherwise 0
  */
 
-static trim_eq(register const char *r,register const char *s)
+static int trim_eq(register const char *r,register const char *s)
 {
 	register char c;
 	while(c = *s++)
@@ -2018,7 +2022,9 @@ pid_t _sh_fork(register pid_t parent,int flags,int *jobid)
 			*jobid = myjob;
 		return(parent);
 	}
-vmtrace(-1);
+#if !_std_malloc
+	vmtrace(-1);
+#endif
 	/* This is the child process */
 	if(sh.trapnote&SH_SIGTERM)
 		sh_exit(SH_EXITSIG|SIGTERM);

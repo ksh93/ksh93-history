@@ -47,7 +47,7 @@ void _STUB_malloc(){}
  * will simply call malloc etc.
  */
 
-#if !defined(_AST_std_malloc) && ( __CYGWIN__ || __osf__ && __alpha )
+#if !defined(_AST_std_malloc) && ( __CYGWIN__ || __alpha )
 #define _AST_std_malloc	1
 #endif
 

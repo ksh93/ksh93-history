@@ -32,7 +32,7 @@
  */
 
 static const char usage[] =
-"+[-?\n@(#)$Id: tail (AT&T Labs Research) 2003-09-18 $\n]"
+"+[-?\n@(#)$Id: tail (AT&T Labs Research) 2004-03-19 $\n]"
 USAGE_LICENSE
 "[+NAME?tail - output trailing portion of one or more files ]"
 "[+DESCRIPTION?\btail\b copies one or more input files to standard output "
@@ -120,8 +120,8 @@ struct Tail_s
 	Tail_t*		next;
 	char*		name;
 	Sfio_t*		sp;
-	size_t		size;
-	size_t		last;
+	Sfoff_t		size;
+	Sfoff_t		last;
 	unsigned long	expire;
 	long		dev;
 	long		ino;
@@ -490,13 +490,14 @@ b_tail(int argc, char** argv, void* context)
 						fp->expire = NOW + timeout;
 					fp->last = st.st_size;
 					z = st.st_size - fp->size;
-					if (s = sfreserve(fp->sp, z, 1))
+					i = 0;
+					if ((s = sfreserve(fp->sp, z, 1)) || (z = sfvalue(fp->sp)) && (s = sfreserve(fp->sp, z, 1)) && (i = 1))
 					{
 						r = 0;
 						for (e = (t = s) + z; t < e; t++)
 							if (*t == '\n')
 								r = t;
-						if (r)
+						if (r || i && (r = e))
 						{
 							if ((flags & (HEADERS|VERBOSE)) && hp != fp)
 							{

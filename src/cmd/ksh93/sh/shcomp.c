@@ -67,7 +67,7 @@ USAGE_LICENSE
 #define VERSION	3
 static const char header[6] = { CNTL('k'),CNTL('s'),CNTL('h'),0,VERSION,0 };
 
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
 	Sfio_t *in, *out;
 	Shell_t	*shp;

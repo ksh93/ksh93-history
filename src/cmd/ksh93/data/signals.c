@@ -136,20 +136,30 @@ const struct shtable2 shtab_signals[] =
 #endif	/* SIGPWR */
 #ifdef SIGQUIT
 	"QUIT",		VAL(SIGQUIT,SH_SIGDONE|SH_SIGINTERACTIVE),	S("Quit"),
+#ifdef __SIGRTMIN
+#undef	SIGRTMIN
+#define SIGRTMIN	__SIGRTMIN
+#else
 #ifdef _SIGRTMIN
-	"RTMIN",	VAL(_SIGRTMIN,0),		S("Lowest priority realtime signal"),
-#else
-#   ifdef SIGRTMIN
+#undef	SIGRTMIN
+#define SIGRTMIN	_SIGRTMIN
+#endif 
+#endif
+#ifdef SIGRTMIN
 	"RTMIN",	VAL(SIGRTMIN,0),		S("Lowest priority realtime signal"),
-#   endif /* SIGRTMIN */
-#endif	/* _SIGRTMIN */
-#ifdef _SIGRTMAX
-	"RTMAX",	VAL(_SIGRTMAX,0),		S("Highest priority realtime signal"),
+#endif	/* SIGRTMIN */
+#ifdef __SIGRTMAX
+#undef	SIGRTMAX
+#define SIGRTMAX	__SIGRTMAX
 #else
-#   ifdef SIGRTMAX
+#ifdef _SIGRTMAX
+#undef	SIGRTMAX
+#define SIGRTMAX	_SIGRTMAX
+#endif 
+#endif
+#ifdef SIGRTMAX
 	"RTMAX",	VAL(SIGRTMAX,0),		S("Highest priority realtime signal"),
-#   endif /* SIGRTMAX */
-#endif	/* _SIGRTMAX */
+#endif	/* SIGRTMAX */
 #endif	/* SIGQUIT */
 	"SEGV",		VAL(SIGSEGV,0),			S("Memory fault"),
 #ifdef SIGSTOP
