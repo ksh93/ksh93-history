@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 
@@ -28,7 +29,7 @@
  * posix regex error message handler
  */
 
-const char id[] = "\n@(#)$Id: regex (AT&T Research) 2002-02-14 $\0\n";
+const char id[] = "\n@(#)$Id: regex (AT&T Research) 2002-05-17 $\0\n";
 
 #include "reglib.h"
 
@@ -53,6 +54,8 @@ static const char*	reg_error[] =
 	/* REG_ECOUNT	*/	"re component count overflow",
 	/* REG_BADESC	*/	"invalid \\char escape",
 	/* REG_VERSIONID*/	&id[10],
+	/* REG_EFLAGS	*/	"conflicting flags",
+	/* REG_EDELIM	*/	"invalid or omitted delimiter",
 	/* REG_PANIC	*/	"unrecoverable internal error",
 };
 

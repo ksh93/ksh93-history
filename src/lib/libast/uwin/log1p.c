@@ -1,4 +1,6 @@
-#ifndef _UWIN
+#include "FEATURE/uwin"
+
+#if !_UWIN || _lib_log1p
 
 void _STUB_log1p(){}
 

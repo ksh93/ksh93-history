@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 
@@ -64,7 +65,8 @@ typedef int (*GL_stat_f)(const char*, struct stat*);
 	regex_t*	gl_ignore; \
 	regex_t*	gl_ignorei; \
 	regex_t		re_ignore; \
-	regex_t		re_ignorei;
+	regex_t		re_ignorei; \
+	char*		gl_pad[7];
 
 #include <glob.h>
 
@@ -118,7 +120,7 @@ gl_type(glob_t* gp, const char* path)
 	else if (S_ISDIR(st.st_mode))
 		type = GLOB_DIR;
 	else if (!S_ISREG(st.st_mode))
-		type |= GLOB_DEV;
+		type = GLOB_DEV;
 	else if (st.st_mode & (S_IXUSR|S_IXGRP|S_IXOTH))
 		type = GLOB_EXE;
 	else
@@ -218,7 +220,7 @@ trim(register char* sp, register char* p1, int* n1, register char* p2, int* n2)
 }
 
 static void
-addmatch(register glob_t* gp, const char* dir, const char* pat, const register char* rescan, char* endslash)
+addmatch(register glob_t* gp, const char* dir, const char* pat, register const char* rescan, char* endslash)
 {
 	register globlist_t*	ap;
 	int			offset;
@@ -303,6 +305,8 @@ glob_dir(glob_t* gp, globlist_t* ap)
 	int			meta = 0;
 	int			quote = 0;
 	int			savequote = 0;
+	char*			restore1 = 0;
+	char*			restore2 = 0;
 	regex_t*		prec = 0;
 	regex_t*		prei = 0;
 
@@ -337,7 +341,7 @@ glob_dir(glob_t* gp, globlist_t* ap)
 				if (c == GLOB_DIR)
 					addmatch(gp, NiL, prefix, NiL, rescan - 1);
 			}
-			else if (first && (gp->gl_flags & (GLOB_NOCHECK|GLOB_COMPLETE|GLOB_MARK)) == GLOB_NOCHECK || (*gp->gl_type)(gp, prefix))
+			else if ((*gp->gl_type)(gp, prefix))
 				addmatch(gp, NiL, prefix, NiL, NiL);
 			return;
 		case '[':
@@ -397,10 +401,10 @@ glob_dir(glob_t* gp, globlist_t* ap)
 			if (rescan)
 				rescan -= t2;
 		}
-		*(pat - 1) = 0;
+		*(restore1 = pat - 1) = 0;
 	}
 	if (rescan)
-		*(rescan - 1) = 0;
+		*(restore2 = rescan - 1) = 0;
 	for (;;)
 	{
 		if (complete)
@@ -469,32 +473,17 @@ glob_dir(glob_t* gp, globlist_t* ap)
 			break;
 		}
 	}
-	if (pat != prefix)
-		*(pat - 1) = gp->gl_delim;
-	if (rescan)
-		*(rescan - 1) = gp->gl_delim;
+	if (restore1)
+		*restore1 = gp->gl_delim;
+	if (restore2)
+		*restore2 = gp->gl_delim;
 	if (prec)
 		regfree(prec);
 	if (prei)
 		regfree(prei);
 	if (err == REG_ESPACE)
 		gp->gl_error = GLOB_NOSPACE;
-	if (first && (gp->gl_flags & GLOB_NOCHECK) && !gp->gl_rescan && !gp->gl_pathc)
-	{
-		if (quote)
-		{
-			if (prefix)
-				trim(ap->gl_path, NiL, NiL, NiL, NiL);
-			else
-				trim(pat, NiL, NiL, NiL, NiL);
-		}
-		addmatch(gp, NiL, ap->gl_path, NiL, NiL);
-	}
 }
-
-#if _UWIN /* hack for dll consistency -- drop in 20010101 */
-static glob_t		gl;
-#endif
 
 int
 glob(const char* pattern, int flags, int (*errfn)(const char*, int), register glob_t* gp)
@@ -505,26 +494,12 @@ glob(const char* pattern, int flags, int (*errfn)(const char*, int), register gl
 	Stak_t*			oldstak;
 	char**			argv;
 	char**			av;
+	size_t			skip;
 
-	size_t			skip = 0;
 	int			suflen = 0;
 	int			extra = 1;
 	unsigned char		intr = 0;
 
-#if _UWIN /* hack for dll consistency -- drop in 20010101 */
-	glob_t*			up;
-
-	if (!(flags & (GLOB_DISC|GLOB_ALTDIRFUNC)))
-	{
-		up = gp;
-		gp = &gl;
-		if (!(flags & GLOB_APPEND))
-			memset(gp, 0, sizeof(*gp));
-		gp->gl_pathc = up->gl_pathc;
-		gp->gl_pathv = up->gl_pathv;
-		gp->gl_offs = up->gl_offs;
-	}
-#endif
 	gp->gl_rescan = 0;
 	gp->gl_error = 0;
 	gp->gl_errfn = errfn;
@@ -534,7 +509,6 @@ glob(const char* pattern, int flags, int (*errfn)(const char*, int), register gl
 			return GLOB_APPERR;
 		if (((gp->gl_flags & GLOB_STACK) == 0) == (gp->gl_stak == 0))
 			return GLOB_APPERR;
-		skip = gp->gl_pathc;
 	}
 	else
 	{
@@ -595,6 +569,7 @@ glob(const char* pattern, int flags, int (*errfn)(const char*, int), register gl
 		if ((gp->gl_flags & GLOB_COMPLETE) && !gp->gl_nextdir)
 			gp->gl_nextdir = gl_nextdir;
 	}
+	skip = gp->gl_pathc;
 	if (gp->gl_stak)
 		oldstak = stakinstall(gp->gl_stak, 0);
 	if (flags & GLOB_DOOFFS)
@@ -604,6 +579,7 @@ glob(const char* pattern, int flags, int (*errfn)(const char*, int), register gl
 	top = ap = (globlist_t*)stakalloc(strlen(pattern) + sizeof(globlist_t) + suflen);
 	ap->gl_begin = ap->gl_path;
 	ap->gl_next = 0;
+	ap->gl_flags = 0;
 	pat = strcopy(ap->gl_path, pattern);
 	if (suflen)
 		strcpy(pat, gp->gl_suffix);
@@ -622,6 +598,7 @@ glob(const char* pattern, int flags, int (*errfn)(const char*, int), register gl
 			gp->gl_pathc++;
 			top->gl_next = gp->gl_match;
 			gp->gl_match = top;
+			strcopy(top->gl_path, pattern);
 		}
 		else
 			gp->gl_error = GLOB_NOMATCH;
@@ -657,29 +634,12 @@ glob(const char* pattern, int flags, int (*errfn)(const char*, int), register gl
 	}
 	if (gp->gl_stak)
 		stakinstall(oldstak, 0);
-#if _UWIN /* hack for dll consistency -- drop in 20010101 */
-	if (!(gp->gl_flags & (GLOB_DISC|GLOB_ALTDIRFUNC)))
-	{
-		up->gl_flags = gp->gl_flags;
-		if (flags & GLOB_LIST)
-			up->gl_list = gp->gl_match;
-		else
-		{
-			up->gl_pathc = gp->gl_pathc;
-			up->gl_pathv = gp->gl_pathv;
-		}
-	}
-#endif
 	return gp->gl_error;
 }
 
 void
 globfree(glob_t* gp)
 {
-#if _UWIN /* hack for dll consistency -- drop in 20010101 */
-	if (!(gp->gl_flags & (GLOB_DISC|GLOB_ALTDIRFUNC)))
-		gp = &gl;
-#endif
 	if ((gp->gl_flags & GLOB_MAGIC) == GLOB_MAGIC)
 	{
 		gp->gl_flags &= ~GLOB_MAGIC;

@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #include	"sfhdr.h"
 #include	"FEATURE/float"
@@ -29,14 +30,6 @@
 **
 **	Written by Kiem-Phong Vo.
 */
-
-#if _PACKAGE_ast
-#include		<sig.h>
-#define Sfsignal_f	Sig_handler_t
-#else
-#include		<signal.h>
-typedef void(*		Sfsignal_f)_ARG_((int));
-#endif
 
 #if __STD_C
 static char* sffmtint(const char* str, int* v)
@@ -53,34 +46,42 @@ int*	v;
 }
 
 #if __STD_C
-static Fmtpos_t* sffmtpos(Sfio_t* f, const char* form, va_list args, int type)
+static Fmtpos_t* sffmtpos(Sfio_t* f,const char* form,va_list args,Sffmt_t* ft,int type)
 #else
-static Fmtpos_t* sffmtpos(f,form,args,type)
+static Fmtpos_t* sffmtpos(f,form,args,ft,type)
 Sfio_t*		f;
 char*		form;
 va_list		args;
-int		type;
+Sffmt_t*	ft;
+int		type;	/* >0: scanf, =0: printf, -1: internal	*/
 #endif
 {
 	int		base, fmt, flags, dot, width, precis;
 	ssize_t		n_str, size;
 	char		*t_str, *sp;
 	int		v, n, skip, dollar, decimal, thousand;
-	Sffmt_t		*ft, savft;
+	Sffmt_t		savft;
 	Fmtpos_t*	fp;	/* position array of arguments	*/
 	int		argp, argn, maxp, need[FP_INDEX];
+#if _has_multibyte
+	SFMBDCL(fmbs)
+#endif
 
 	if(type < 0)
 		fp = NIL(Fmtpos_t*);
-	else if(!(fp = sffmtpos(f,form,args,-1)) )
+	else if(!(fp = sffmtpos(f,form,args,ft,-1)) )
 		return NIL(Fmtpos_t*);
 
 	dollar = decimal = thousand = 0; argn = maxp = -1;
+	SFMBCLR(&fmbs);
 	while((n = *form) )
 	{	if(n != '%') /* collect the non-pattern chars */
-		{	sp = (char*)form++;
-			while(*form && *form != '%')
-				form += 1;
+		{	sp = (char*)form;
+			for(;;)
+			{	form += SFMBLEN(form, &fmbs);
+				if(*form == 0 || *form == '%')
+					break;
+			}
 			continue;
 		}
 		else	form += 1;
@@ -218,10 +219,9 @@ int		type;
 			goto loop_flags;
 
 		case 'I' : /* object length */
-			size = 0;
-			flags = (flags & ~SFFMT_TYPES) | SFFMT_IFLAG;
+			size = -1; flags = (flags & ~SFFMT_TYPES) | SFFMT_IFLAG;
 			if(isdigit(*form) )
-			{	for(n = *form; isdigit(n); n = *++form)
+			{	for(size = 0, n = *form; isdigit(n); n = *++form)
 					size = size*10 + (n - '0');
 			}
 			else if(*form == '*')
@@ -243,8 +243,7 @@ int		type;
 			goto loop_flags;
 
 		case 'l' :
-			size = -1;
-			flags &= ~SFFMT_TYPES;
+			size = -1; flags &= ~SFFMT_TYPES;
 			if(*form == 'l')
 			{	form += 1;
 				flags |= SFFMT_LLONG;
@@ -252,8 +251,7 @@ int		type;
 			else	flags |= SFFMT_LONG;
 			goto loop_flags;
 		case 'h' :
-			size = -1;
-			flags &= ~SFFMT_TYPES;
+			size = -1; flags &= ~SFFMT_TYPES;
 			if(*form == 'h')
 			{	form += 1;
 				flags |= SFFMT_SSHORT;
@@ -261,26 +259,55 @@ int		type;
 			else	flags |= SFFMT_SHORT;
 			goto loop_flags;
 		case 'L' :
-			size = -1;
-			flags = (flags & ~SFFMT_TYPES) | SFFMT_LDOUBLE;
+			size = -1; flags = (flags & ~SFFMT_TYPES) | SFFMT_LDOUBLE;
 			goto loop_flags;
 		}
 
-		if(flags & (SFFMT_TYPES & ~SFFMT_IFLAG) )
+		/* set object size for scalars */
+		if(flags & SFFMT_TYPES)
 		{	if((_Sftype[fmt]&(SFFMT_INT|SFFMT_UINT)) || fmt == 'n')
-			{	size =	(flags&SFFMT_LLONG) ? sizeof(Sflong_t) :
-					(flags&SFFMT_LONG) ? sizeof(long) :
-					(flags&SFFMT_SHORT) ? sizeof(short) :
-					(flags&SFFMT_SSHORT) ? sizeof(char) :
-					(flags&SFFMT_JFLAG) ? sizeof(Sflong_t) :
-					(flags&SFFMT_TFLAG) ? sizeof(ptrdiff_t) :
-					(flags&SFFMT_ZFLAG) ? sizeof(size_t) :
-					-1;
+			{	if(flags&SFFMT_LONG)
+					size = sizeof(long);
+				else if(flags&SFFMT_SHORT)
+					size = sizeof(short);
+				else if(flags&SFFMT_SSHORT)
+					size = sizeof(char);
+				else if(flags&SFFMT_TFLAG)
+					size = sizeof(ptrdiff_t);
+				else if(flags&SFFMT_ZFLAG) 
+					size = sizeof(size_t);
+				else if(flags&(SFFMT_LLONG|SFFMT_JFLAG) )
+					size = sizeof(Sflong_t);
+				else if(flags&SFFMT_IFLAG)
+				{	if(size <= 0 ||
+					   size == sizeof(Sflong_t)*CHAR_BIT )
+						size = sizeof(Sflong_t);
+				}
+				else if(size < 0)
+					size = sizeof(int);
 			}
 			else if(_Sftype[fmt]&SFFMT_FLOAT)
-			{	size = (flags&SFFMT_LDOUBLE) ? sizeof(Sfdouble_t) :
-				       (flags&(SFFMT_LONG|SFFMT_LLONG)) ?
-						sizeof(double) : -1;
+			{	if(flags&(SFFMT_LONG|SFFMT_LLONG))
+					size = sizeof(double);
+				else if(flags&SFFMT_LDOUBLE)
+					size = sizeof(Sfdouble_t);
+				else if(flags&SFFMT_IFLAG)
+				{	if(size <= 0)
+						size = sizeof(Sfdouble_t);
+				}
+				else if(size < 0)
+					size = sizeof(float);
+			}
+			else if(_Sftype[fmt]&SFFMT_CHAR)
+			{
+#if _has_multibyte
+				if((flags&SFFMT_LONG) || fmt == 'C')
+				{	size = sizeof(wchar_t) > sizeof(int) ?
+						sizeof(wchar_t) : sizeof(int);
+				} else
+#endif
+				if(size < 0)
+					size = sizeof(int);
 			}
 		}
 
@@ -317,7 +344,7 @@ int		type;
 	}
 
 	/* get value for positions */
-	for(n = 0, ft = NIL(Sffmt_t*); n <= maxp; ++n)
+	for(n = 0; n <= maxp; ++n)
 	{	if(fp[n].ft.fmt == 0) /* gap: pretend it's a 'd' pattern */
 		{	fp[n].ft.fmt = 'd';
 			fp[n].ft.width = 0;
@@ -359,6 +386,22 @@ int		type;
 
 			if(!(fp[n].ft.flags&SFFMT_VALUE) )
 				goto arg_list;
+			else if(_Sftype[fp[n].ft.fmt]&(SFFMT_INT|SFFMT_UINT) )
+			{	if(fp[n].ft.size == sizeof(short))
+				{	if(_Sftype[fp[n].ft.fmt]&SFFMT_INT)
+						fp[n].argv.i = fp[n].argv.h;
+					else	fp[n].argv.i = fp[n].argv.uh;
+				}
+				else if(fp[n].ft.size == sizeof(char))
+				{	if(_Sftype[fp[n].ft.fmt]&SFFMT_INT)
+						fp[n].argv.i = fp[n].argv.c;
+					else	fp[n].argv.i = fp[n].argv.uc;
+				}
+			}
+			else if(_Sftype[fp[n].ft.fmt]&SFFMT_FLOAT )
+			{	if(fp[n].ft.size == sizeof(float) )
+					fp[n].argv.d = fp[n].argv.f;
+			}
 		}
 		else
 		{ arg_list:
@@ -383,17 +426,17 @@ int		type;
 			{ case SFFMT_INT:
 			  case SFFMT_UINT:
 #if !_ast_intmax_long
-				if(FMTCMP(size, Sflong_t, Sflong_t))
+				if(size == sizeof(Sflong_t) )
 					fp[n].argv.ll = va_arg(args, Sflong_t);
 				else
 #endif
-				if(FMTCMP(size, long, Sflong_t) )
+				if(size == sizeof(long) )
 					fp[n].argv.l = va_arg(args, long);
 				else	fp[n].argv.i = va_arg(args, int);
 				break;
 			  case SFFMT_FLOAT:
 #if !_ast_fltmax_double
-				if(FMTCMP(size, Sfdouble_t, Sfdouble_t))
+				if(size == sizeof(Sfdouble_t) )
 					fp[n].argv.ld = va_arg(args,Sfdouble_t);
 				else
 #endif
@@ -402,9 +445,17 @@ int		type;
 	 		  case SFFMT_POINTER:
 					fp[n].argv.vp = va_arg(args,Void_t*);
 				break;
-			  case SFFMT_BYTE:
+			  case SFFMT_CHAR:
 				if(fp[n].ft.base >= 0)
 					fp[n].argv.s = va_arg(args,char*);
+#if _has_multibyte
+				else if((fp[n].ft.flags & SFFMT_LONG) ||
+					fp[n].ft.fmt == 'C' )
+				{	if(sizeof(wchar_t) <= sizeof(int) )
+					     fp[n].argv.wc = (wchar_t)va_arg(args,int);
+					else fp[n].argv.wc = va_arg(args,wchar_t);
+				}
+#endif
 				else	fp[n].argv.c = (char)va_arg(args,int);
 				break;
 			  default: /* unknown pattern */
@@ -418,16 +469,15 @@ int		type;
 	return fp;
 }
 
+static const unsigned char	flt_nan[] = { _ast_flt_nan_init };
+static const unsigned char	dbl_nan[] = { _ast_dbl_nan_init };
+#ifdef LDBL_MAX
+static const unsigned char	ldbl_nan[] = { _ast_ldbl_nan_init };
+#endif
 
 /* function to initialize conversion tables */
 static int sfcvinit()
 {	reg int		d, l;
-	float		fn;
-	double		dn;
-	Sfdouble_t	ln;
-#ifdef SIGFPE
-	Sfsignal_f	fpe;
-#endif
 
 	for(d = 0; d <= SF_MAXCHAR; ++d)
 	{	_Sfcv36[d] = SF_RADIX;
@@ -463,39 +513,21 @@ static int sfcvinit()
 	_Sftype['e'] = _Sftype['E'] = _Sftype['a'] = _Sftype['A'] =
 	_Sftype['g'] = _Sftype['G'] = _Sftype['f'] = SFFMT_FLOAT;
 	_Sftype['s'] = _Sftype['n'] = _Sftype['p'] = _Sftype['!'] = SFFMT_POINTER;
-	_Sftype['c'] = SFFMT_BYTE;
+	_Sftype['c'] = SFFMT_CHAR;
 	_Sftype['['] = SFFMT_CLASS;
+#if _has_multibyte
+	_Sftype['S'] = SFFMT_POINTER;
+	_Sftype['C'] = SFFMT_CHAR;
+#endif
 
 	/* floating point huge values */
 
-#ifdef SIGFPE
-	fpe = signal(SIGFPE, SIG_IGN);
-#endif
-
-	fn = FLT_MAX;
-#if !defined(_WIN32) || !defined(_ALPHA_)
-	fn *= 2;
-#endif
-	_Sffhuge = fn;
-
-	dn = DBL_MAX;
-#if !defined(_WIN32) || !defined(_ALPHA_)
-	dn *= 2;
-#endif
-	_Sfdhuge = dn;
-
+	memcpy((char*)&_Sffhuge, (char*)flt_nan, sizeof(_Sffhuge));
+	memcpy((char*)&_Sfdhuge, (char*)dbl_nan, sizeof(_Sfdhuge));
 #ifdef LDBL_MAX
-	ln = LDBL_MAX;
+	memcpy((char*)&_Sflhuge, (char*)ldbl_nan, sizeof(_Sflhuge));
 #else
-	ln = DBL_MAX;
-#endif
-#if !defined(_WIN32) || !defined(_ALPHA_)
-	ln *= 2;
-#endif
-	_Sflhuge = ln;
-
-#ifdef SIGFPE
-	signal(SIGFPE, fpe);
+	memcpy((char*)&_Sflhuge, (char*)dbl_nan, sizeof(_Sfdhuge));
 #endif
 
 	return 1;

@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -19,6 +19,7 @@
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 #ifndef _NV_PRIVATE
@@ -27,9 +28,9 @@
  */
 
 #define _NV_PRIVATE	\
+	Namfun_t	*nvfun;		/* pointer to trap functions */ \
 	union Value	nvalue; 	/* value field */ \
 	char		*nvenv;		/* pointer to environment name */ \
-	Namfun_t	*nvfun;		/* pointer to trap functions */ \
 	int		nvsize;	
 
 #include	<ast.h>

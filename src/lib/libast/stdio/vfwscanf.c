@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 
@@ -70,10 +71,21 @@ wideread(Sfio_t* f, Void_t* buf, size_t size, Sfdisc_t* dp)
 	register Wide_t*	w = (Wide_t*)dp;
 	wchar_t			wuf[2];
 
+#if 0
 	if (sfread(w->f, wuf, sizeof(wuf[0])) != sizeof(wuf[0]))
 		return -1;
 	wuf[1] = 0;
 	return wcstombs(buf, wuf, size);
+#else
+	ssize_t	r;
+
+	r = sfread(w->f, wuf, sizeof(wuf[0]));
+	if (r != sizeof(wuf[0]))
+		return -1;
+	wuf[1] = 0;
+	r = wcstombs(buf, wuf, size);
+	return r;
+#endif
 }
 
 int
@@ -83,6 +95,7 @@ vfwscanf(Sfio_t* f, const wchar_t* fmt, va_list args)
 	int	v;
 	Sfio_t*	t;
 	Wide_t*	w;
+	char	buf[1024];
 
 	STDIO_INT(f, "vfwscanf", int, (Sfio_t*, const wchar_t*, va_list), (f, fmt, args))
 
@@ -90,19 +103,11 @@ vfwscanf(Sfio_t* f, const wchar_t* fmt, va_list args)
 	n = wcstombs(NiL, fmt, 0);
 	if (w = newof(0, Wide_t, 1, n))
 	{
-		if (t = sfnew(NiL, NiL, SF_UNBOUND, -1, SF_READ))
+		if (t = sfnew(NiL, buf, sizeof(buf), OPEN_MAX+1, SF_READ))
 		{
 			w->sfdisc.exceptf = wideexcept;
 			w->sfdisc.readf = wideread;
 			w->f = f;
-
-			/*
-			 * reset the fd because fd<0 locks the stream
-			 * no io will be done on this fd
-			 * wideread() will redirect all io to f
-			 */
-
-			sfsetfd(t, 0);
 			if (sfdisc(t, &w->sfdisc) == &w->sfdisc)
 			{
 				wcstombs(w->fmt, fmt, n + 1);

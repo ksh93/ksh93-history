@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #include	"dthdr.h"
 
@@ -35,6 +36,8 @@ int dtclose(dt)
 reg Dt_t*	dt;
 #endif
 {
+	int	ev = 0;
+
 	if(dt->nview > 0 ) /* can't close if being viewed */
 		return -1;
 
@@ -43,17 +46,18 @@ reg Dt_t*	dt;
 
 	/* announce the close event */
 	if(dt->disc->eventf &&
-	   (*dt->disc->eventf)(dt,DT_CLOSE,NIL(Void_t*),dt->disc) < 0)
+	   (ev = (*dt->disc->eventf)(dt,DT_CLOSE,NIL(Void_t*),dt->disc)) < 0)
 		return -1;
 
-	/* release all allocated data */
-	(void)(*(dt->meth->searchf))(dt,NIL(Void_t*),DT_CLEAR);
-	if(dtsize(dt) > 0)
-		return -1;
+	if(ev == 0) /* release all allocated data */
+	{	(void)(*(dt->meth->searchf))(dt,NIL(Void_t*),DT_CLEAR);
+		if(dtsize(dt) > 0)
+			return -1;
 
-	if(dt->data->ntab > 0)
-		(*dt->memoryf)(dt,(Void_t*)dt->data->htab,0,dt->disc);
-	(*dt->memoryf)(dt,(Void_t*)dt->data,0,dt->disc);
+		if(dt->data->ntab > 0)
+			(*dt->memoryf)(dt,(Void_t*)dt->data->htab,0,dt->disc);
+		(*dt->memoryf)(dt,(Void_t*)dt->data,0,dt->disc);
+	}
 
 	free((Void_t*)dt);
 

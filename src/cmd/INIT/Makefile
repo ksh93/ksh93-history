@@ -14,9 +14,13 @@ regress :: regress.sh LICENSE=since=1995,author=gsf
 
 $(PACKAGEROOT)/lib/package :INSTALLDIR: package.mk
 
-$(PACKAGEROOT)/bin :INSTALLDIR: ignore mamprobe package silent
+$(PACKAGEROOT)/bin :INSTALLDIR: execrate ignore mamprobe package silent
 
 crossexec :: crossexec.sh
+
+ditto :: ditto.sh LICENSE=since=2001,author=gsf+ek
+
+execrate :: execrate.sh LICENSE=since=2002,author=gsf
 
 filter :: filter.sh
 
@@ -227,34 +231,3 @@ nsl :MAPLIB: nsl.c
  */
 
 socket :MAPLIB: socket.c nsl.c
-
-/*
- * proto.c is snarfed from the standalone src
- * this is a gross hack to allow only one copy of the source
- */
-
-if ! "$(-mam)"
-
-:SAVE: proto.c
-
-.SOURCE.c : ../../lib/libpp
-
-../proto/proto.c : .DONTCARE
-
-proto.c : ../proto/proto.c
-	if	grep '^#pragma prototyped' $(*) >/dev/null 2>/dev/null
-	then	{
-		echo "#define __PROTO__(x) x"
-		echo "#define __MANGLE__"
-		$(SED) \
-		-e '/\/\*DELAY_CONTROL\*\//,/\/\*NODELAY_CONTROL\*\//s/^#/DELAY_CONTROL /' \
-		-e '/\/\*DELAY_CONTROL\*\//s/^/#define DELAY_CONTROL # \
-	#undef	__STDC__/' \
-		-e '/\/\*NODELAY_CONTROL\*\//s/^/#undef	DELAY_CONTROL /' \
-		$(*)
-		} > c.$(tmp).c
-		$(CPP) $(CPPFLAGS) -I$(INSTALLROOT)/include/ast -DPROTO_STANDALONE -D-F$(*) -D-L -I-D -E c.$(tmp).c | $(PROTO) $(PROTOFLAGS:N!=-s) -f > $(<)
-		$(RM) -f c.$(tmp).c
-	fi
-
-end

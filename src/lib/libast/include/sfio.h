@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #ifndef _SFIO_H
 #define _SFIO_H	1
@@ -153,7 +154,9 @@ struct _sffmt_s
 	char*		t_str;	/* type string 				*/
 	ssize_t		n_str;	/* length of t_str 			*/
 
-	Void_t*		noop;	/* as yet unused			*/
+	Void_t*		mbs;	/* multibyte state for format string	*/
+
+	Void_t*		none;	/* as yet unused			*/
 };
 #define sffmtversion(fe,type) \
 		(type ? ((fe)->version = SFIO_VERSION) : (fe)->version)

@@ -1,4 +1,6 @@
-#ifndef _UWIN
+#include "FEATURE/uwin"
+
+#if !_UWIN || (_lib__copysign||_lib_copysign) && _lib_logb && (_lib__finite||_lib_finite) && (_lib_drem||_lib_remainder) && _lib_sqrt && _lib_ilogb && (_lib__scalb||_lib_scalb)
 
 void _STUB_support(){}
 
@@ -92,8 +94,9 @@ static char sccsid[] = "@(#)support.c	8.1 (Berkeley) 6/4/93";
     static const double novf=1.7E308, nunf=3.0E-308,zero=0.0;
 #endif	/* defined(vax)||defined(tahoe) */
 
-#ifndef  _UWIN
-extern double scalb(x,N)
+#if !_lib__scalb || !_lib_scalb
+
+extern double _scalb(x,N)
 double x; double N;
 {
         int k;
@@ -133,7 +136,21 @@ double x; double N;
         return(x);
 }
 
-extern double copysign(x,y)
+#endif
+
+#if !_lib_scalb
+
+extern double scalb(x,N)
+double x; double N;
+{
+	return _scalb(x, N);
+}
+
+#endif
+
+#if !_lib__copysign
+
+extern double _copysign(x,y)
 double x,y;
 {
 #ifdef national
@@ -151,6 +168,20 @@ double x,y;
         *px = ( *px & msign ) | ( *py & ~msign );
         return(x);
 }
+
+#endif
+
+#if !_lib_copysign
+
+extern double copysign(x,y)
+double x,y;
+{
+	return _copysign(x,y);
+}
+
+#endif
+
+#if !_lib_logb
 
 extern double logb(x)
 double x; 
@@ -179,7 +210,11 @@ double x;
 #endif	/* defined(vax)||defined(tahoe) */
 }
 
-extern void finite(x)
+#endif
+
+#if !_lib__finite
+
+extern int _finite(x)
 double x;    
 {
 #if defined(vax)||defined(tahoe)
@@ -192,11 +227,27 @@ double x;
 #endif	/* national */
 #endif	/* defined(vax)||defined(tahoe) */
 }
-#endif /*!_UWIN */
+
+#endif
+
+#if !_lib_finite
+
+extern int finite(x)
+double x;    
+{
+	return _finite(x);
+}
+
+#endif
+
+#if !_lib_drem
 
 extern double drem(x,p)
 double x,p;
 {
+#if _lib_remainder
+	return remainder(x,p);
+#else
         short sign;
         double hp,dp,tmp;
         unsigned short  k; 
@@ -272,10 +323,23 @@ double x,p;
                 return( x);
 
             }
+#endif
 }
 
+#endif
 
-#if 0
+#if !_lib_remainder
+
+extern double remainder(x,p)
+double x,p;
+{
+	return drem(x,p);
+}
+
+#endif
+
+#if !_lib_sqrt
+
 extern double sqrt(x)
 double x;
 {
@@ -340,6 +404,7 @@ double x;
             
 end:        return(scalb(q,n));
 }
+
 #endif
 
 #if 0
@@ -532,17 +597,13 @@ end:    py[n0]=py[n0]+scalx;            /* ...scale back y */
 }
 #endif
 
-#ifdef _UWIN
+#if !_lib_ilogb
+
 extern int ilogb(double x)
 {
 	return((int)logb(x));
 }
 
-#undef scalb
-extern double scalb(double x,double n)
-{
-	return(_scalb(x,(long)n));
-}
-#endif /* _UWIN */
+#endif
 
 #endif

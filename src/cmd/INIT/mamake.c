@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1990-2002 AT&T Corp.                *
+*                Copyright (c) 1999-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -19,6 +19,7 @@
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 
@@ -28,7 +29,7 @@
  * coded for portability
  */
 
-static char id[] = "\n@(#)$Id: mamake (AT&T Labs Research) 2002-02-02 $\0\n";
+static char id[] = "\n@(#)$Id: mamake (AT&T Labs Research) 2002-05-22 $\0\n";
 
 #if _PACKAGE_ast
 
@@ -36,7 +37,7 @@ static char id[] = "\n@(#)$Id: mamake (AT&T Labs Research) 2002-02-02 $\0\n";
 #include <error.h>
 
 static const char usage[] =
-"[-?\n@(#)$Id: mamake (AT&T Labs Research) 2002-02-02 $\n]"
+"[-?\n@(#)$Id: mamake (AT&T Labs Research) 2002-05-22 $\n]"
 USAGE_LICENSE
 "[+NAME?mamake - make abstract machine make]"
 "[+DESCRIPTION?\bmamake\b reads \amake abstract machine\a target and"
@@ -135,8 +136,14 @@ USAGE_LICENSE
 #define STREAM_MUST	0x0002		/* push() file must exist	*/
 #define STREAM_PIPE	0x0004		/* pclose() on pop()		*/
 
+#ifndef S_IXUSR
+#define S_IXUSR		0100		/* owner execute permission	*/
+#endif
+#ifndef S_IXGRP
+#define S_IXGRP		0010		/* group execute permission	*/
+#endif
 #ifndef S_IXOTH
-#define S_IXOTH		0001		/* world execute permission	*/
+#define S_IXOTH		0001		/* other execute permission	*/
 #endif
 
 struct Rule_s;
@@ -1008,6 +1015,8 @@ input(void)
 
 /*
  * pass shell action s to ${SHELL:-/bin/sh}
+ * the -c wrapper ensures that scripts are run in the selected shell
+ * even on systems that otherwise demand #! magic (can you say cygwin)
  */
 
 static int
@@ -1019,26 +1028,23 @@ execute(register char* s)
 	if (!state.shell && (!(state.shell = (char*)search(state.vars, "SHELL", NiL)) || !strcmp(state.shell, sh)))
 		state.shell = sh;
 	buf = buffer();
-	if (state.shell != sh)
+	append(buf, state.shell);
+	append(buf, " -c '");
+	while (c = *s++)
 	{
-		append(buf, state.shell);
-		append(buf, " -c '");
-		while (c = *s++)
+		if (c == '\'')
 		{
-			if (c == '\'')
-			{
-				add(buf, c);
-				for (s--; *s == c; s++)
-				{
-					add(buf, '\\');
-					add(buf, c);
-				} 
-			}
 			add(buf, c);
+			for (s--; *s == c; s++)
+			{
+				add(buf, '\\');
+				add(buf, c);
+			} 
 		}
-		add(buf, '\'');
-		s = use(buf);
+		add(buf, c);
 	}
+	add(buf, '\'');
+	s = use(buf);
 	if ((c = system(s)) > 255)
 		c >>= 8;
 	drop(buf);
@@ -1172,7 +1178,7 @@ path(Buf_t* buf, char* s, int must)
 
 	for (e = s; *e && *e != ' ' && *e != '\t'; e++);
 	t = *e;
-	if ((x = status(buf, 0, s, &st)) && (st.st_mode & S_IXOTH))
+	if ((x = status(buf, 0, s, &st)) && (st.st_mode & (S_IXUSR|S_IXGRP|S_IXOTH)))
 		return x;
 	if (!(p = (char*)search(state.vars, "PATH", NiL)))
 		report(3, "variable not defined", "PATH");
@@ -1194,7 +1200,7 @@ path(Buf_t* buf, char* s, int must)
 			*e = t;
 		o = get(buf);
 		x = use(buf);
-		if ((x = status(buf, o, x, &st)) && (st.st_mode & S_IXOTH))
+		if ((x = status(buf, o, x, &st)) && (st.st_mode & (S_IXUSR|S_IXGRP|S_IXOTH)))
 			return x;
 	} while (*p++);
 	if (must)

@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -19,6 +19,7 @@
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -159,9 +160,12 @@ void sh_siginit(void)
 		if(sig==_SIGRTMAX)
 			sig = SIGRTMAX;
 #endif
-		sh.sigflag[sig] = n;
-		if(*tp->sh_name)
-			sh.sigmsg[sig] = (char*)tp->sh_value;
+		if(sig>=0)
+		{
+			sh.sigflag[sig] = n;
+			if(*tp->sh_name)
+				sh.sigmsg[sig] = (char*)tp->sh_value;
+		}
 	}
 }
 

@@ -1,4 +1,6 @@
-#ifndef _UWIN
+#include "FEATURE/uwin"
+
+#if !_UWIN || _lib_rcmd
 
 void _STUB_rcmd(){}
 

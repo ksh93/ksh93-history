@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -32,7 +33,7 @@
  * the sum of the hacks {s5,v10,planix} is _____ than the parts
  */
 
-static const char id[] = "\n@(#)$Id: magic library (AT&T Labs Research) 2002-01-16 $\0\n";
+static const char id[] = "\n@(#)$Id: magic library (AT&T Labs Research) 2002-05-24 $\0\n";
 
 static const char lib[] = "libast:magic";
 
@@ -168,8 +169,6 @@ typedef struct Edit			/* edit substitution		*/
 {
 	struct Edit*	next;		/* next in list			*/
 	regex_t*	from;		/* from pattern			*/
-	char*		into;		/* into this			*/
-	int		flags;		/* REG_SUB_* flags		*/
 } Edit_t;
 
 struct Entry;
@@ -192,7 +191,7 @@ typedef struct Entry			/* magic file entry		*/
 	unsigned long	num;
 	char*		str;
 	struct Entry*	lab;
-	Edit_t*		sub;
+	regex_t*	sub;
 	Loop_t*		loop;
 	}		value;		/* comparison value		*/
 	char*		desc;		/* file description		*/
@@ -644,8 +643,8 @@ ckmagic(register Magic_t* mp, const char* file, char* buf, struct stat* st, unsi
 			if (!(p = getdata(mp, num, 0))) goto next;
 			/*FALLTHROUGH*/
 		case 'E':
-			if (!ep->value.sub->from) goto next;
-			if ((c = regexec(ep->value.sub->from, p, elementsof(matches), matches, 0)) || (c = regsub(ep->value.sub->from, mp->tmp, p, ep->value.sub->into, elementsof(matches), matches, ep->value.sub->flags)))
+			if (!ep->value.sub) goto next;
+			if ((c = regexec(ep->value.sub, p, elementsof(matches), matches, 0)) || (c = regsubexec(ep->value.sub, p, elementsof(matches), matches)))
 			{
 				c = mp->fbsz;
 				if (c >= sizeof(mp->nbuf))
@@ -653,14 +652,14 @@ ckmagic(register Magic_t* mp, const char* file, char* buf, struct stat* st, unsi
 				p = (char*)memcpy(mp->nbuf, p, c);
 				p[c] = 0;
 				ccmaps(p, c, !CC_NATIVE, CC_NATIVE);
-				if ((c = regexec(ep->value.sub->from, p, elementsof(matches), matches, 0)) || (c = regsub(ep->value.sub->from, mp->tmp, p, ep->value.sub->into, elementsof(matches), matches, ep->value.sub->flags)))
+				if ((c = regexec(ep->value.sub, p, elementsof(matches), matches, 0)) || (c = regsubexec(ep->value.sub, p, elementsof(matches), matches)))
 				{
 					if (c != REG_NOMATCH)
-						regmessage(mp, ep->value.sub->from, c);
+						regmessage(mp, ep->value.sub, c);
 					goto next;
 				}
 			}
-			p = sfstruse(mp->tmp);
+			p = ep->value.sub->re_sub->re_buf;
 			q = T(ep->desc);
 			t = *q ? q : p;
 			if (mp->keep[level]++ && b > buf && *(b - 1) != ' ' && *t && *t != ',' && *t != '.' && *t != '\b')
@@ -1181,7 +1180,7 @@ cklang(register Magic_t* mp, const char* file, char* buf, struct stat* st)
 			mp->mime = "message/rfc822";
 			goto qualify;
 		}
-		if (match(base, "*(mkfile)"))
+		if (match(base, "*@(mkfile)"))
 		{
 			s = "mkfile";
 			mp->mime = "application/mk";
@@ -1849,71 +1848,23 @@ load(register Magic_t* mp, char* file, register Sfio_t* fp, unsigned long flags)
 		{
 			if (ep->type == 'e')
 			{
-				char*	b;
-				int	d;
-				int	r;
-
-				ep->value.sub = vmnewof(mp->region, 0, Edit_t, 1, 0);
-				b = p;
-				if (!(d = *p++))
+				if (ep->value.sub = vmnewof(mp->region, 0, regex_t, 1, 0))
 				{
-					if (mp->disc->errorf)
-						(*mp->disc->errorf)(mp, mp->disc, 3, "empty substitution");
-					return -1;
-				}
-				while (*p && *p != d)
-					if (*p++ == '\\' && !*p++)
+					vmpush(mp->region);
+					if (!(n = regcomp(ep->value.sub, p, REG_DELIMITED|REG_LENIENT|REG_NULL)))
 					{
-						if (mp->disc->errorf)
-							(*mp->disc->errorf)(mp, mp->disc, 3, "`\\' cannot terminate lhs of substitution");
-						return -1;
+						p += ep->value.sub->re_npat;
+						if (!(n = regsubcomp(ep->value.sub, p, NiL, 0, 0)))
+							p += ep->value.sub->re_npat;
 					}
-				if (*p != d)
-				{
-					if (mp->disc->errorf)
-						(*mp->disc->errorf)(mp, mp->disc, 3, "missing `%c' delimiter for lhs of substitution", d);
-					return -1;
-				}
-				*p++ = 0;
-				vmpush(mp->region);
-				if ((ep->value.sub->from = newof(0, regex_t, 1, 0)) && (r = regcomp(ep->value.sub->from, b + 1, 0)))
-				{
-					regmessage(mp, ep->value.sub->from, r);
-					free(ep->value.sub->from);
-					ep->value.sub->from = 0;
-				}
-				vmpop();
-				b = p;
-				while (*p && *p != d)
-					if (*p++ == '\\' && !*p++)
+					vmpop();
+					if (n)
 					{
-						if (mp->disc->errorf)
-							(*mp->disc->errorf)(mp, mp->disc, 3, "`\\' cannot terminate rhs of substitution");
-						return -1;
+						regmessage(mp, ep->value.sub, n);
+						ep->value.sub = 0;
 					}
-				if (*p != d)
-				{
-					if (mp->disc->errorf)
-						(*mp->disc->errorf)(mp, mp->disc, 3, "missing `%c' delimiter for rhs of substitution", d);
-					return -1;
-				}
-				*p++ = 0;
-				ep->value.sub->into = vmstrdup(mp->region, b);
-				while (*p) switch (*p++)
-				{
-				case 'g':
-					ep->value.sub->flags |= REG_SUB_ALL;
-					break;
-				case 'l':
-					ep->value.sub->flags |= REG_SUB_LOWER;
-					break;
-				case 'u':
-					ep->value.sub->flags |= REG_SUB_UPPER;
-					break;
-				default:
-					if (mp->disc->errorf)
-						(*mp->disc->errorf)(mp, mp->disc, 3, "extra character%s `%s' after substitution", *p ? "s" : "", p - 1);
-					return -1;
+					else if (*p && mp->disc->errorf)
+						(*mp->disc->errorf)(mp, mp->disc, 1, "invalid characters after substitution: %s", p);
 				}
 			}
 			else if (ep->type == 'm')

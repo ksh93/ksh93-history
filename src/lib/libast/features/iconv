@@ -8,6 +8,7 @@ tst	output{
 	#undef	_hdr_iconv
 	#endif
 	#if _hdr_iconv
+	#include <sys/types.h>
 	#include <iconv.h>
 	#endif
 

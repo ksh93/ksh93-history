@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #if defined(__STDPP__directive) && defined(__STDPP__hide)
 __STDPP__directive pragma pp:hide getpagesize
@@ -72,7 +73,7 @@ reg size_t	size;	/* buffer size, -1 for default size */
 	reg Sfdisc_t*	disc;
 	reg ssize_t	osize, blksize;
 	reg int		oflags, init, okmmap, local;
-	Stat_t		st;
+	sfstat_t	st;
 
 	SFONCE();
 

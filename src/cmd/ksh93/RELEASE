@@ -1,4 +1,41 @@
-02-02-18  --- Release ksh93m+  ---
+02-06-17  --- Release ksh93n-  ---
+02-06-17  A bug in which user defined macros could cause a core dump in
+	  with MULTIBYE mode has been fixed.
+02-06-17  A bug in which printf format specifiers of the form %2$s were causing
+	  a core dump has been fixed.
+02-06-17  A bug in which setting stty to noecho mode did not prevent the
+	  echoing of characters by ksh when emacs or viraw mode
+	  was enabled has been fixed.
+02-06-17  A bug in which background job completion could cause the sleep
+	  builtin to terminate prematurely has been fixed.
+02-06-17  A bug in which the shell could core dump if getopts was called
+	  when the OPTIND variable contained a negative value has been fixed. 
+02-06-10  The edit mode prompt has been modified to hande escape sequences.  
+02-06-10  A bug which occured for interactive shells in which the builtin
+	  cat command was used in command substitution on a file whose
+	  size was larger than PIPE_BUF has been fixed.
+02-06-10  A bug in which the trap on ERR was not being processed when
+	  set inside a function has been fixed.
+02-06-07  A bug in which function definitions could cause the history count
+	  to be decremented by one (and even become negative) has been fixed.
+02-06-05  A bug in read in which share mode could be enabled has been fixed.
+02-05-28  A bug which could occur when the last command of a script was
+	  a case statement and the action selected ended in ;& instead of ;;
+	  has been fixed.
+02-05-23  A bug with unary + introduced in ksh93k has been fixed.
+02-05-07  A bug in substitutions of the form ${var/pattern/string} in which
+	  a backslash was inserted in the replacement string when it contained
+	  a special pattern character has been fixed.
+02-05-01  A bug in the emacs edit mode which occured in versions compiled
+	  for multibyte character sets which occurred when a repeated search
+	  was requested after a long line had been returned for the previous
+	  search has been fixed.
+02-04-02  vi and emacs edit modes were modified so that tab completion is
+	  disabled when invoked from the read built-in.
+
+02-03-26  --- Release ksh93m+  ---
+02-03-26  A bug in which \ was not handled correctly when used in file
+	  expansion has been fixed.
 02-02-18  A bug in which lines beginning with a # were deleted from here
 	  documents when the here-document delimiter was followed by
 	  a comment has been fixed.

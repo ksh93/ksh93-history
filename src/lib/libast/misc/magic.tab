@@ -1,5 +1,5 @@
 #
-# @(#)magic (AT&T Research) 2002-01-30
+# @(#)magic (AT&T Research) 2002-04-30
 #
 # magic number database for file(1) and magic(3)
 #
@@ -1195,8 +1195,8 @@ o()
 +2	byte		&037>0		, with %d bits
 
 0	short		0x1f10		pzip compressed data		application/zip
-+2	byte		*		, version %d
-&3	byte		*		.%d
+&2	byte		>0		, version %d
+&3	byte		<10		.%d
 
 0	short		0x1f8b		pzip compressed data		application/zip
 &10	short		0x9217

@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -19,6 +19,7 @@
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 
@@ -29,7 +30,7 @@
 #include	"FEATURE/dynamic"
 #include	"shtable.h"
 
-#define SH_RELEASE	"1993-12-28 m+"
+#define SH_RELEASE	"1993-12-28 n-"
 
 #define	SYSLOGIN	(sh.bltin_cmds)
 #define SYSEXEC		(sh.bltin_cmds+1)

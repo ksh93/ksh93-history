@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #ifdef _UWIN
 
@@ -76,7 +77,7 @@ static Pfobj_t**	Pftable;	/* hash table		*/
 static Vmalloc_t*	Vmpf;		/* heap for our own use	*/
 
 #if __STD_C
-static Pfobj_t* pfsearch(Vmalloc_t* vm, char* file, int line )
+static Pfobj_t* pfsearch(Vmalloc_t* vm, char* file, int line)
 #else
 static Pfobj_t* pfsearch(vm, file, line)
 Vmalloc_t*	vm;	/* region allocating from			*/
@@ -475,9 +476,10 @@ size_t		size;
 	reg Void_t*	data;
 	reg char*	file;
 	reg int		line;
+	reg Void_t*	func;
 	reg Vmdata_t*	vd = vm->data;
 
-	VMFILELINE(vm,file,line);
+	VMFLF(vm,file,line,func);
 	if(!(vd->mode&VM_TRUST) && ISLOCK(vd,0))
 		return NIL(Void_t*);
 	SETLOCK(vd,0);
@@ -489,7 +491,7 @@ size_t		size;
 	pfsetinfo(vm,(Vmuchar_t*)data,size,file,line);
 
 	if(!(vd->mode&VM_TRUST) && (vd->mode&VM_TRACE) && _Vmtrace)
-	{	vm->file = file; vm->line = line;
+	{	vm->file = file; vm->line = line; vm->func = func;
 		(*_Vmtrace)(vm,NIL(Vmuchar_t*),(Vmuchar_t*)data,size,0);
 	}
 done:
@@ -509,9 +511,10 @@ Void_t*		data;
 	reg size_t	s;
 	reg char*	file;
 	reg int		line;
+	reg Void_t*	func;
 	reg Vmdata_t*	vd = vm->data;
 
-	VMFILELINE(vm,file,line);
+	VMFLF(vm,file,line,func);
 
 	if(!data)
 		return 0;
@@ -540,7 +543,7 @@ Void_t*		data;
 	}
 
 	if(!(vd->mode&VM_TRUST) && (vd->mode&VM_TRACE) && _Vmtrace)
-	{	vm->file = file; vm->line = line;
+	{	vm->file = file; vm->line = line; vm->func = func;
 		(*_Vmtrace)(vm,(Vmuchar_t*)data,NIL(Vmuchar_t*),s,0);
 	}
 
@@ -563,6 +566,7 @@ int		type;
 	reg Void_t*	addr;
 	reg char*	file;
 	reg int		line;
+	reg Void_t*	func;
 	reg size_t	oldsize;
 	reg Vmdata_t*	vd = vm->data;
 
@@ -576,7 +580,7 @@ int		type;
 		return NIL(Void_t*);
 	}
 
-	VMFILELINE(vm,file,line);
+	VMFLF(vm,file,line,func);
 	if(!(vd->mode&VM_TRUST))
 	{	if(ISLOCK(vd,0))
 			return NIL(Void_t*);
@@ -605,7 +609,7 @@ int		type;
 		}
 
 		if(!(vd->mode&VM_TRUST) && (vd->mode&VM_TRACE) && _Vmtrace)
-		{	vm->file = file; vm->line = line;
+		{	vm->file = file; vm->line = line; vm->func = func;
 			(*_Vmtrace)(vm,(Vmuchar_t*)data,(Vmuchar_t*)addr,size,0);
 		}
 	}
@@ -675,9 +679,10 @@ size_t		align;
 	reg Void_t*	data;
 	reg char*	file;
 	reg int		line;
+	reg Void_t*	func;
 	reg Vmdata_t*	vd = vm->data;
 
-	VMFILELINE(vm,file,line);
+	VMFLF(vm,file,line,func);
 
 	if(!(vd->mode&VM_TRUST) && ISLOCK(vd,0))
 		return NIL(Void_t*);
@@ -690,7 +695,7 @@ size_t		align;
 	pfsetinfo(vm,(Vmuchar_t*)data,size,file,line);
 
 	if(!(vd->mode&VM_TRUST) && (vd->mode&VM_TRACE) && _Vmtrace)
-	{	vm->file = file; vm->line = line;
+	{	vm->file = file; vm->line = line; vm->func = func;
 		(*_Vmtrace)(vm,NIL(Vmuchar_t*),(Vmuchar_t*)data,size,align);
 	}
 done:

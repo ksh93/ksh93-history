@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 
@@ -35,15 +36,9 @@
 #ifndef _REGLIB_H
 #define _REGLIB_H
 
-#define REG_VERSION_EXEC	20010509L
+#define REG_VERSION_EXEC	20020509L
 
 #define re_info		env
-
-#include <ast.h>
-#include <cdt.h>
-#include <stk.h>
-#include <ctype.h>
-#include <errno.h>
 
 #define alloc		_reg_alloc
 #define classfun	_reg_classfun
@@ -51,15 +46,40 @@
 #define fatal		_reg_fatal
 #define state		_reg_state
 
+typedef struct regsubop_s
+{
+	int		op;		/* REG_SUB_LOWER,REG_SUB_UPPER	*/
+	int		off;		/* re_rhs or match[] offset	*/
+	int		len;		/* re_rhs len or len==0 match[]	*/
+} regsubop_t;
+
+#define _REG_SUB_PRIVATE_ \
+	char*		re_cur;		/* re_buf cursor		*/ \
+	char*		re_end;		/* re_buf end			*/ \
+	regsubop_t*	re_ops;		/* rhs ops			*/ \
+	char		re_rhs[1];	/* substitution rhs		*/
+
+#include <ast.h>
+
 #include "regex.h"
+
+#include <cdt.h>
+#include <stk.h>
+#include <ctype.h>
+#include <errno.h>
+
+#if __OBSOLETE__ && __OBSOLETE__ < 20040101
+/* old REG_DELIMITED that did not skip past delimiter */
+#define REG_DELIMITED_OLD	0x00008000
+#endif
 
 #undef	RE_DUP_MAX			/* posix puts this in limits.h!	*/
 #define RE_DUP_MAX	(INT_MAX/2-1)	/* 2*RE_DUP_MAX won't overflow	*/
 #define RE_DUP_INF	(RE_DUP_MAX+1)	/* infinity, for *		*/
 #define BACK_REF_MAX	9
 
-#define REG_COMP	(REG_EXTENDED|REG_ICASE|REG_NOSUB|REG_NEWLINE|REG_SHELL|REG_AUGMENTED|REG_LEFT|REG_LITERAL|REG_MINIMAL|REG_NULL|REG_RIGHT|REG_LENIENT)
-#define REG_EXEC	(REG_INVERT|REG_NOTBOL|REG_NOTEOL|REG_STARTEND)
+#define REG_COMP	(REG_DELIMITED|REG_DELIMITED_OLD|REG_EXTENDED|REG_ICASE|REG_NOSUB|REG_NEWLINE|REG_SHELL|REG_AUGMENTED|REG_LEFT|REG_LITERAL|REG_MINIMAL|REG_NULL|REG_RIGHT|REG_LENIENT|REG_MUSTDELIM)
+#define REG_EXEC	(REG_ADVANCE|REG_INVERT|REG_NOTBOL|REG_NOTEOL|REG_STARTEND)
 
 #define REX_NULL		0	/* null string (internal)	*/
 #define REX_ALT			1	/* a|b				*/
@@ -342,6 +362,7 @@ typedef struct Group_s
 	int		number;		/* group number			*/
 	int		last;		/* last contained group number	*/
 	int		size;		/* lookbehind size		*/
+	int		back;		/* backreferenced		*/
 	regflags_t	flags;		/* group flags			*/
 	union
 	{
@@ -467,7 +488,7 @@ typedef struct Rex_s
 	}		re;
 } Rex_t;
 
-typedef struct Reginfo			/* library private regex_t info	*/
+typedef struct reglib_s			/* library private regex_t info	*/
 {
 	struct Rex_s*	rex;		/* compiled expression		*/
 	regdisc_t*	disc;		/* REG_DISCIPLINE discipline	*/
@@ -484,12 +505,14 @@ typedef struct Reginfo			/* library private regex_t info	*/
 	regflags_t	flags;		/* flags from regcomp()		*/
 	int		error;		/* last error			*/
 	int		explicit;	/* explicit match on this char	*/
+	int		refs;		/* regcomp()+regdup() references*/
 	Rex_t		done;		/* the last continuation	*/
 	unsigned char	hard;		/* hard comp			*/
 	unsigned char	leading;	/* explicit match on leading .	*/
 	unsigned char	once;		/* if 1st parse fails, quit	*/
 	unsigned char	separate;	/* cannot combine		*/
 	unsigned char	stack;		/* hard comp or exec		*/
+	unsigned char	sub;		/* re_sub is valid		*/
 	unsigned char	test;		/* debug/test bitmask		*/
 } Env_t;
 

@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -118,6 +119,7 @@ pathkey(char* key, char* attr, const char* lang, const char* apath)
 	/*
 	 * environment
 	 *
+	 *	${PROBE_ATTRIBUTES} || ${VERSION_ENVIRONMENT} : list of alternate env vars
 	 *	${VERSION_ENVIRONMENT}	: list of alternate env vars
 	 *	${VERSION_<lang>}
 	 *	${VERSION_<base(path)>}
@@ -128,12 +130,20 @@ pathkey(char* key, char* attr, const char* lang, const char* apath)
 	if (attr) *attr++ = '\'';
 	c = 0;
 	usr[c++] = "OBJTYPE";
-	k = getenv("VERSION_ENVIRONMENT");
-	while (c < elementsof(usr) && (usr[c++] = k))
-	{
-		while (*k && *k++ != ':');
-		if (!*k) k = 0;
-	}
+	if (!(k = getenv("PROBE_ATTRIBUTES")))
+		k = getenv("VERSION_ENVIRONMENT");
+	if (k)
+		while (c < elementsof(usr))
+		{
+			while (*k && (*k == ':' || *k == ' '))
+				k++;
+			if (!*k)
+				break;
+			usr[c++] = k;
+			while (*k && *k != ':' && *k != ' ')
+				k++;
+		}
+	usr[c] = 0;
 	ver[0] = (char*)lang;
 	ver[1] = k = (s = strrchr(path, '/')) ? s + 1 : path;
 	s = buf;
@@ -190,7 +200,7 @@ pathkey(char* key, char* attr, const char* lang, const char* apath)
 			if (!env[c + elementsof(env) - elementsof(usr)])
 			{
 				for (k = *p; *k && *k == *s; k++, s++);
-				if (*k == '=' && (!*s || *s == ':'))
+				if (*k == '=' && (!*s || *s == ':' || *s == ' '))
 				{
 					env[c + elementsof(env) - elementsof(usr)] = *p;
 					goto found;

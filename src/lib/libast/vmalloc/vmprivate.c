@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #ifdef _UWIN
 
@@ -30,7 +31,7 @@ void _STUB_vmprivate(){}
 
 #include	"vmhdr.h"
 
-static char*	Version = "\n@(#)$Id: Vmalloc (AT&T Labs - kpv) 1999-08-05 $\0\n";
+static char*	Version = "\n@(#)$Id: Vmalloc (AT&T Labs Research) 2002-05-31 $\0\n";
 
 
 /*	Private code used in the vmalloc library
@@ -59,7 +60,7 @@ Vmsearch_f	searchf;	/* tree search function		*/
 	GETPAGESIZE(_Vmpagesize);
 
 	if(vd->incr <= 0) /* this is just _Vmheap on the first call */
-		vd->incr = 4*_Vmpagesize;
+		vd->incr = _Vmpagesize;
 
 	/* Get slightly more for administrative data */
 	s = size + sizeof(Seg_t) + sizeof(Block_t) + sizeof(Head_t) + 2*ALIGN;

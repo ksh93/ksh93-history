@@ -1,4 +1,6 @@
-#ifndef _UWIN
+#include "FEATURE/uwin"
+
+#if !_UWIN || _lib_lgamma
 
 void _STUB_lgamma(){}
 
@@ -149,8 +151,7 @@ int signgam;
 #define pb6	 5.69394463439411649408050664078e-03
 #define pb7	-1.44705562421428915453880392761e-02
 
-extern __pure double
-lgamma(double x)
+extern __pure double lgamma(double x)
 {
 	double r;
 

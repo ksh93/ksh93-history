@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -59,7 +60,6 @@ ftwalk(const char* path, int (*userf)(Ftw_t*), int flags, int (*comparf)(Ftw_t*,
 	register FTSENT*	e;
 	register int		children;
 	register int		rv;
-	int			delay;
 	int			oi;
 	int			ns;
 	int			os;
@@ -76,8 +76,6 @@ ftwalk(const char* path, int (*userf)(Ftw_t*), int flags, int (*comparf)(Ftw_t*,
 		flags |= FTS_NOPOSTORDER;
 	if (children = flags & FTW_CHILDREN)
 		flags |= FTS_SEEDOT;
-	if (delay = flags & FTW_DELAY)
-		flags &= ~FTW_DELAY;
 	state.comparf = comparf;
 	if (!(f = fts_open((char* const*)path, flags, comparf ? ftscompare : 0)))
 	{
@@ -86,7 +84,7 @@ ftwalk(const char* path, int (*userf)(Ftw_t*), int flags, int (*comparf)(Ftw_t*,
 		ns = strlen(path) + 1;
 		if (!(e = newof(0, FTSENT, 1, ns)))
 			return -1;
-		e->fts_accpath = e->fts_name = e->fts_path = strcpy((char*)e + sizeof(FTSENT), path);
+		e->fts_accpath = e->fts_name = e->fts_path = strcpy((char*)(e + 1), path);
 		e->fts_namelen = e->fts_pathlen = ns;
 		e->fts_info = FTS_NS;
 		e->parent = e;
@@ -128,7 +126,7 @@ ftwalk(const char* path, int (*userf)(Ftw_t*), int flags, int (*comparf)(Ftw_t*,
 		case FTS_D:
 		case FTS_DNX:
 			if (children)
-				for (x = fts_children(f, delay); x; x = x->link)
+				for (x = fts_children(f, 0); x; x = x->link)
 					if (x->info & FTS_DD)
 					{
 						x->statb = *x->fts_statp;
@@ -141,9 +139,11 @@ ftwalk(const char* path, int (*userf)(Ftw_t*), int flags, int (*comparf)(Ftw_t*,
 		case FTS_DOT:
 			continue;
 		case FTS_ERR:
-		case FTS_NSOK:
 		case FTS_SLNONE:
 			e->info = FTS_NS;
+			break;
+		case FTS_NSOK:
+			e->info = FTS_NSOK;
 			break;
 		}
 		rv = (*userf)((Ftw_t*)e);

@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -19,6 +19,7 @@
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -30,7 +31,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: shcomp (AT&T Labs Research) 2001-03-20$\n]"
+"[-?\n@(#)$Id: shcomp (AT&T Labs Research) 2001-03-20 $\n]"
 USAGE_LICENSE
 "[+NAME?shcomp - compile a shell script]"
 "[+DESCRIPTION?Unless \b-D\b is specified, \bshcomp\b takes a shell script, "

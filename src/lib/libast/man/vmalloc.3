@@ -14,6 +14,9 @@ vmalloc \- virtual memory allocation
 .MW "int vmcompact(Vmalloc_t* region);"
 .MW "int vmset(Vmalloc_t* region, int flags, int type);"
 .MW "Vmalloc_t* Vmheap;"
+.MW "Vmdisc_t* vmdisc(Vmalloc_t* region, Vmdisc_t* disc);"
+.MW "Vmalloc_t* vmmopen(char* file, Void_t* base);"
+.MW "Void_t* vmmset(Vmalloc_t* vm, int key, Void_t* data, int set);"
 .fi
 .SS "Allocation functions"
 .nf
@@ -124,6 +127,25 @@ In addition to the settable flags, one of
 \f5VM_MTBEST\fP, \f5VM_MTDEBUG\fP, \f5VM_MTPROFILE\fP,
 \f5VM_MTPOOL\fP, or \f5VM_MTLAST\fP
 is returned to indicate the method used in creating the \fIregion\fP.
+.PP
+.I vmdisc
+changes the discipline of \fIregion\fP to the given new discipline
+\fIdisc\fP if \fIdisc\fP is not \f5NULL\fP and its \f5memoryf\fP function
+is the same as the current discipline. If the current discipline
+has an \f5exceptf\fP function, it will be called with event \f5VM_DISC\fP.
+This function always returns the current discipline.
+.PP
+.I vmmopen
+creates a region to allocate memory given by the system call \fImmap(2)\fP.
+The given \fIfile\fP is the backing store for the map.
+If \fIbase\fP is not \f5NULL\fP, it is the address to map the data to.
+.PP
+.I vmmset
+sets a \fIdata\fP value associated with a \fIkey\fP if \f5set\fP is non-zero.
+In this case, it returns the current data (before setting)
+if \fIkey\fP is previously set; otherwise, it returns the new \fIdata\fP value.
+If the argument \fIset\fP is zero,
+the call returns the current data value associated with \fIkey\fP, if any.
 
 .SS "Allocation functions"
 .I vmalloc
@@ -231,8 +253,12 @@ has not been properly initialized.
 .TP
 .MW VM_CLOSE
 The region is being closed.
-If the \fIexceptf\fP
-function returns a negative value, the close will fail.
+The return value of \f5exceptf\fP is significant as follows.
+If negative, \fIvmclose\fP immediately returns with failure.
+If zero, \fIvmclose\fP proceeds normally by calling \f5memoryf\fP to free
+all allocated memory segments and also freeing the region itself.
+Finally, if positive, \fIvmclose\fP will only free the region
+without deallocating the allocated segments.
 .TP
 .MW VM_NOMEM
 An attempt to extend the region by the amount

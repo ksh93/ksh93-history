@@ -1,4 +1,6 @@
-#ifndef _UWIN
+#include "FEATURE/uwin"
+
+#if !_UWIN
 
 void _STUB_log(){}
 
@@ -371,7 +373,8 @@ static double logF_tail[N+1] = {
 	-.00000000000017239444525614834
 };
 
-#ifndef _UWIN
+#if !_lib_log
+
 extern double
 #ifdef _ANSI_SOURCE
 log(double x)
@@ -442,7 +445,8 @@ log(x) double x;
 	u2 += logF_tail[N]*m;
 	return (u1 + u2);
 }
-#endif /* _UWIN */
+
+#endif
 
 /*
  * Extra precision variant, returning struct {double a, b;};

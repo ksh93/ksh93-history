@@ -9,7 +9,7 @@
 #                                                                  #
 #       http://www.research.att.com/sw/license/ast-open.html       #
 #                                                                  #
-#        If you have copied this software without agreeing         #
+#    If you have copied or used this software without agreeing     #
 #        to the terms of the license you are infringing on         #
 #           the license and copyright and are violating            #
 #               AT&T's intellectual property rights.               #
@@ -19,6 +19,7 @@
 #                         Florham Park NJ                          #
 #                                                                  #
 #                David Korn <dgk@research.att.com>                 #
+#                                                                  #
 ####################################################################
 : check for shell magic #!
 : include OPTIONS
@@ -48,11 +49,11 @@ then	echo "#define SHOPT_TEST_L	1"
 fi
 sh -c	'function foo
 	{
-		local bar=0 2> /dev/null || return 1
+		local bar=0 >/dev/null 2>&1 || return 1
 		return ${bar=1}
 	}
 	foo
-	' && echo "#define SHOPT_ALIASLOCAL	1"
+	' >/dev/null 2>&1 && echo "#define SHOPT_ALIASLOCAL	1"
 
 : get the option settings from the options file
 . $OPTIONS

@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #ifdef _UWIN
 
@@ -159,7 +160,6 @@ int		type;
 {
 	reg Block_t*	tp;
 	reg Seg_t	*seg;
-	reg int		*d, *ed;
 	reg size_t	oldsize;
 	reg ssize_t	s, ds;
 	reg Vmdata_t*	vd = vm->data;
@@ -244,10 +244,8 @@ int		type;
 				}
 				else
 				{	if(type&VM_RSCOPY)
-					{	ed = (int*)data;
-						d = (int*)addr;
-						ds = oldsize < size ? oldsize : size;
-						INTCOPY(d,ed,ds);
+					{	ds = oldsize < size ? oldsize : size;
+						memcpy(addr, data, ds);
 					}
 
 					if(s >= 0 && seg != vd->seg)
@@ -285,10 +283,7 @@ int		type;
 	CLRLOCK(vd,0);
 
 done:	if(data && (type&VM_RSZERO) && size > oldsize)
-	{	d  = (int*)((char*)data + oldsize);
-		size -= oldsize;
-		INTZERO(d,size);
-	}
+		memset((Void_t*)((Vmuchar_t*)data + oldsize), 0, size-oldsize);
 
 	return data;
 }

@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 
@@ -558,7 +559,7 @@ astlicense(char* p, int size, char* file, char* options, int cc1, int cc2, int c
 				comment(&notice, &buf, BUF(&tmp), USE(&tmp), 0);
 				comment(&notice, &buf, NiL, 0, 0);
 			}
-			COMMENT(&notice, &buf, "If you have copied this software without agreeing", 0);
+			COMMENT(&notice, &buf, "If you have copied or used this software without agreeing", 0);
 			COMMENT(&notice, &buf, "to the terms of the license you are infringing on", 0);
 			COMMENT(&notice, &buf, "the license and copyright and are violating", 0);
 			expand(&notice, &tmp, x, n);
@@ -789,33 +790,28 @@ astlicense(char* p, int size, char* file, char* options, int cc1, int cc2, int c
 			n = v - s;
 			q = n == 1 && (*s == '*' || *s == '-');
 			for (i = 0; i < notice.ids; i++)
-			{
 				if (q || n == notice.id[i].name.size && !strncmp(s, notice.id[i].name.data, n))
 				{
 					s = notice.id[i].value.data;
 					n = notice.id[i].value.size;
-				}
-				else if (!q && i < (notice.ids - 1))
-					continue;
-				if (notice.type == USAGE)
-				{
-					copy(&buf, "[-author?", -1);
-					expand(&notice, &buf, s, n);
-					PUT(&buf, ']');
-				}
-				else
-				{
-					if (k < 0)
-					{
-						k = 1;
-						COMMENT(&notice, &buf, "CONTRIBUTORS", 0);
-						comment(&notice, &buf, NiL, 0, 0);
-					}
-					expand(&notice, &tmp, s, n);
-					comment(&notice, &buf, BUF(&tmp), USE(&tmp), 0);
-				}
-				if (!q)
 					break;
+				}
+			if (notice.type == USAGE)
+			{
+				copy(&buf, "[-author?", -1);
+				expand(&notice, &buf, s, n);
+				PUT(&buf, ']');
+			}
+			else
+			{
+				if (k < 0)
+				{
+					COMMENT(&notice, &buf, "CONTRIBUTORS", 0);
+					comment(&notice, &buf, NiL, 0, 0);
+				}
+				k = 1;
+				expand(&notice, &tmp, s, n);
+				comment(&notice, &buf, BUF(&tmp), USE(&tmp), 0);
 			}
 		}
 		if (k > 0)

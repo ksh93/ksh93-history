@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -19,6 +19,7 @@
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -397,6 +398,7 @@ Sfio_t *sh_subshell(union anynode *t, int flags, int comsub)
 				errormsg(SH_DICT,ERROR_system(1),e_tmpcreate);
 			}
 			sfswap(iop,sfstdout);
+			sfset(sfstdout,SF_READ,0);
 			shp->fdstatus[1] = IOWRITE;
 		}
 		else if(sp->prev)
@@ -456,6 +458,7 @@ Sfio_t *sh_subshell(union anynode *t, int flags, int comsub)
 				shp->fdstatus[fd] = (shp->fdstatus[1]|IOCLEX);
 				shp->fdstatus[1] = IOCLOSE;
 			}
+			sfset(iop,SF_READ,1);
 		}
 		sfswap(sp->saveout,sfstdout);
 		/*  check if standard output was preserved */

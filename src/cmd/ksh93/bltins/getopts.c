@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -19,6 +19,7 @@
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -111,7 +112,7 @@ int	b_getopts(int argc,char *argv[],void *extra)
 		sh_exit(2);
 	}
         opt_info.disc = &disc;
-	switch(opt_info.index<=argc?(opt_info.num= LONG_MIN,flag=optget(argv,options)):0)
+	switch(opt_info.index>=0 && opt_info.index<=argc?(opt_info.num= LONG_MIN,flag=optget(argv,options)):0)
 	{
 	    case '?':
 		if(mode==0)

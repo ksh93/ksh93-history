@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -57,6 +58,12 @@ pathpath(register char* path, const char* p, const char* a, int mode)
 			free(cmd);
 		cmd = a ? strdup(a) : (char*)0;
 		return 0;
+	}
+	if (strlen(p) < PATH_MAX)
+	{
+		strcpy(path, p);
+		if (pathexists(path, mode))
+			return (path == buf) ? strdup(path) : path;
 	}
 	if (*p == '/')
 		a = 0;

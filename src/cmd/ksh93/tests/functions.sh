@@ -9,7 +9,7 @@
 #                                                                  #
 #       http://www.research.att.com/sw/license/ast-open.html       #
 #                                                                  #
-#        If you have copied this software without agreeing         #
+#    If you have copied or used this software without agreeing     #
 #        to the terms of the license you are infringing on         #
 #           the license and copyright and are violating            #
 #               AT&T's intellectual property rights.               #
@@ -19,6 +19,7 @@
 #                         Florham Park NJ                          #
 #                                                                  #
 #                David Korn <dgk@research.att.com>                 #
+#                                                                  #
 ####################################################################
 function err_exit
 {
@@ -376,5 +377,13 @@ then	err_exit 'ERR trap not cleared'
 fi
 cd ~- || err_exit "cd back failed"
 rm -r /tmp/ksh$$ || err_exit "rm -r /tmp/ksh$$ failed"
+function errcheck
+{
+	trap 'print ERR; return 1' ERR
+	false
+	print ok
+}
+err=$(errcheck)
+[[ $err == ERR ]] || err_exit 'trap on ERR not working in a function'
 
 exit $((Errors))

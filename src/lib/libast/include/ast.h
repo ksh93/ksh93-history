@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -266,7 +267,6 @@ extern char*		setenviron(const char*);
 extern int		stracmp(const char*, const char*);
 extern char*		strcopy(char*, const char*);
 extern unsigned long	strelapsed(const char*, char**, int);
-extern char*		strerror(int);
 extern int		stresc(char*);
 extern long		streval(const char*, char**, long(*)(const char*, char**));
 extern long		strexpr(const char*, char**, long(*)(const char*, char**, void*), void*);

@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -150,19 +151,100 @@ typedef struct
 	Header_t	hdr;
 	struct statfs*	next;
 	struct statfs*	last;
+	char		opt[256];
 } Handle_t;
 
+#ifdef MFSNAMELEN
+#define TYPE(f)		((f)->f_fstypename)
+#else
 #ifdef INITMOUNTNAMES
-#define TYPE(f,x)	((char*)type[x])
+#define TYPE(f)		((char*)type[(f)->f_type])
 static const char*	type[] = INITMOUNTNAMES;
 #else
 #if _sys_fs_types
-#define TYPE(f,x)	((char*)mnt_names[x])
+#define TYPE(f)		((char*)mnt_names[(f)->f_type])
 #include <sys/fs_types.h>
 #else
-#define TYPE(f,x)	(strchr(f,':')?"nfs":"ufs")
+#define TYPE(f)		(strchr((f)->f_mntfromname,':')?"nfs":"ufs")
 #endif
 #endif
+#endif
+
+static struct Mnt_options_t
+{
+	unsigned long	flag;
+	const char*	name;
+}
+options[] =
+{
+#ifdef MNT_RDONLY
+	MNT_RDONLY,	"rdonly",
+#endif
+#ifdef MNT_SYNCHRONOUS
+	MNT_SYNCHRONOUS,"synchronous",
+#endif
+#ifdef MNT_NOEXEC
+	MNT_NOEXEC,	"noexec",
+#endif
+#ifdef MNT_NOSUID
+	MNT_NOSUID,	"nosuid",
+#endif
+#ifdef MNT_NODEV
+	MNT_NODEV,	"nodev",
+#endif
+#ifdef MNT_UNION
+	MNT_UNION,	"union",
+#endif
+#ifdef MNT_ASYNC
+	MNT_ASYNC,	"async",
+#endif
+#ifdef MNT_NOCOREDUMP
+	MNT_NOCOREDUMP,	"nocoredump",
+#endif
+#ifdef MNT_NOATIME
+	MNT_NOATIME,	"noatime",
+#endif
+#ifdef MNT_SYMPERM
+	MNT_SYMPERM,	"symperm",
+#endif
+#ifdef MNT_NODEVMTIME
+	MNT_NODEVMTIME,	"nodevmtime",
+#endif
+#ifdef MNT_SOFTDEP
+	MNT_SOFTDEP,	"softdep",
+#endif
+#ifdef MNT_EXRDONLY
+	MNT_EXRDONLY,	"exrdonly",
+#endif
+#ifdef MNT_EXPORTED
+	MNT_EXPORTED,	"exported",
+#endif
+#ifdef MNT_DEFEXPORTED
+	MNT_DEFEXPORTED,"defexported",
+#endif
+#ifdef MNT_EXPORTANON
+	MNT_EXPORTANON,	"exportanon",
+#endif
+#ifdef MNT_EXKERB
+	MNT_EXKERB,	"exkerb",
+#endif
+#ifdef MNT_EXNORESPORT
+	MNT_EXNORESPORT,"exnoresport",
+#endif
+#ifdef MNT_EXPUBLIC
+	MNT_EXPUBLIC,	"expublic",
+#endif
+#ifdef MNT_LOCAL
+	MNT_LOCAL,	"local",
+#endif
+#ifdef MNT_QUOTA
+	MNT_QUOTA,	"quota",
+#endif
+#ifdef MNT_ROOTFS
+	MNT_ROOTFS,	"rootfs",
+#endif
+	0,		"unknown",
+};
 
 void*
 mntopen(const char* path, const char* mode)
@@ -186,10 +268,18 @@ Mnt_t*
 mntread(void* handle)
 {
 	register Handle_t*	mp = (Handle_t*)handle;
+	register int		i;
+	register int		n;
+	register unsigned long	flags;
 
 	if (mp->next < mp->last)
 	{
-		set(&mp->hdr, mp->next->f_mntfromname, mp->next->f_mntonname, TYPE(mp->next->f_mntfromname, mp->next->f_type), NiL);
+		flags = mp->next->f_flags;
+		n = 0;
+		for (i = 0; i < elementsof(options); i++)
+			if (flags & options[i].flag)
+				n += sfsprintf(mp->opt + n, sizeof(mp->opt) - n - 1, ",%s", options[i].name);
+		set(&mp->hdr, mp->next->f_mntfromname, mp->next->f_mntonname, TYPE(mp->next), n ? (mp->opt + 1) : (char*)0);
 		mp->next++;
 		return &mp->hdr.mnt;
 	}

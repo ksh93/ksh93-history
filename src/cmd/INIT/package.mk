@@ -1,7 +1,7 @@
 /*
  * source and binary package support
  *
- * @(#)package.mk (AT&T Labs Research) 2001-10-20
+ * @(#)package.mk (AT&T Labs Research) 2002-02-14
  *
  * usage:
  *
@@ -21,10 +21,14 @@
  *
  * generated archive member files are $(PACKAGEROOT) relative
  *
- * main assertion:
+ * main assertions:
  *
- *	NAME [ covers ... ] [ name=value ] :PACKAGE: component ...
- *		[ promo ]
+ *	NAME [ name=value ] :PACKAGE: component ...
+ *	:COVERS: package ...
+ *	:REQURES: package ...
+ *	:INDEX: index description line
+ *	:DESCRIPTZION:
+ *		[ verbose description ]
  *
  * option variables, shown with default values
  *
@@ -61,9 +65,7 @@ variants = !(cc-g)
 version = $("":T=R%Y-%m-%d)
 release =
 
-package.notice.text = NOTICE -- LICENSED SOFTWARE -- SEE README FOR DETAILS
-package.notice.delimiter = $("\r\v\v")
-package.notice = $(package.notice.delimiter)$(package.notice.text)$(package.notice.delimiter)
+package.notice = ------------ NOTICE -- LICENSED SOFTWARE -- SEE README FOR DETAILS ------------
 
 package.readme = $(@.package.readme.)
 
@@ -102,7 +104,22 @@ package.readme = $(@.package.readme.)
 	binaries covered by license(s) must contain the corresponding
 	license file(s), this README file, and the empty file
 	$()
-		$(package.notice.text)
+	$(package.notice)
+
+.package.licenses. : .FUNCTION
+	local I L R
+	L := $(%)
+	if "$(%)" == "*-*"
+		L += $(%:/[^-]*-//) $(%:/-.*//)
+	end
+	L += $(licenses)
+	for I $(L:U)
+		if R = "$(I:D=$(PACKAGESRC):B:S=.lic:T=F)"
+			R += $(I:D=$(PACKAGESRC)/LICENSES:B)
+			break
+		end
+	end
+	return $(R)
 
 PACKAGEROOT = $(VROOT:T=F:P=L*:N!=*/arch/+([!/]):O=1)
 PACKAGESRC = $(PACKAGEROOT)/lib/package
@@ -112,14 +129,14 @@ INSTALLOFFSET = $(INSTALLROOT:C%$(PACKAGEROOT)/%%)
 
 package.omit = -|*/$(init)
 package.glob.all = $(INSTALLROOT)/src/($(MAKEDIRS:/:/|/G))/*/($(MAKEFILES:/:/|/G))
-package.all = $(package.glob.all:P=G:W=O=$(?$(name):A=.VIRTUAL):N!=$(package.omit):T=F:$(VROOT:T=F:P=L*:C,.*,C;^&/;;,:/ /:/G))
+package.all = $(package.glob.all:P=G:W=O=$(?$(name):A=.VIRTUAL):N!=$(package.omit):T=F:$(VROOT:T=F:P=L*:C,.*,C;^&/;;,:/ /:/G):U)
 package.glob.pkg = $(INSTALLROOT)/src/($(MAKEDIRS:/:/|/G))/($(~$(name):/ /|/G))/($(MAKEFILES:/:/|/G))
-package.pkg = $(package.glob.pkg:P=G:D:N!=$(package.omit):T=F:$(VROOT:T=F:P=L*:C,.*,C;^&/;;,:/ /:/G))
+package.pkg = $(package.glob.pkg:P=G:D:N!=$(package.omit):T=F:$(VROOT:T=F:P=L*:C,.*,C;^&/;;,:/ /:/G):U)
 package.closure = $(closure:?$(package.all)?$(package.pkg)?)
 
 package.ini = ignore mamprobe manmake package silent
-package.src.pat = $(PACKAGESRC)/($(name).(ini|lic|pkg)|($(name:N=*-*:/-.*/|/)$(licenses:/ /|/G)).lic) $(PACKAGESRC)/LICENSES/($(name)|$(licenses:/ /|/G)|$(name:N=*-*:/-.*//)|$(package.closure:B:/ /|/G))
-package.src = $(package.src.pat:P=G)
+package.src.pat = $(PACKAGESRC)/($(name).(ini|lic|pkg))
+package.src = $(package.src.pat:P=G) $(.package.licenses. $(name))
 package.bin = $(PACKAGEBIN)/$(name).ini
 
 op = current
@@ -138,7 +155,7 @@ binary.ratz = $("$(INSTALLROOT)/src/cmd/$(init)/ratz":T=F)
 $(init) : .VIRTUAL $(init)
 
 ":package:" : .MAKE .OPERATOR
-	local P I R V
+	local P I J R V
 	P := $(<:O=1)
 	$(P) : $(>:V)
 	if ! name
@@ -153,45 +170,31 @@ $(init) : .VIRTUAL $(init)
 				eval
 				$(I)
 				end
-			elif R = "$(I:D:B:S=.pkg:T=F)"
-				if "$(I:D:B=gen/$(I:B):S=.ver:T=F)"
-					covers : $(I:B)
-				else
-					error $(--exec:?3?1?) package $(I) must be written before $(P)
-				end
 			else
 				version := $(I)
 			end
 		end
-		I := $(name)
-		while 1
-			LICENSEFILE := $(LICENSEFILE):$(I:D=${PACKAGEROOT}/lib/package:B:S=.lic)
-			if I != "*-*"
-				break
+		if name == "*-*"
+			J := $(name:/[^-]*-//) $(name)
+		else
+			J := $(name)
+		end
+		for I $(J)
+			while 1
+				LICENSEFILE := $(LICENSEFILE):$(I:D=${PACKAGEROOT}/lib/package:B:S=.lic)
+				if I != "*-*"
+					break
+				end
+				I := $(I:/-[^-]*$//)
 			end
-			I := $(I:/-[^-]*$//)
 		end
 		export LICENSEFILE
 	end
 	if "$(>)"
 		for I $(>:V)
-			if I != "$(P)" && ( R = "$(I:D:B:S=.pkg:T=F)" )
-				if I == "$(init)"
-					package.omit = -
-				else
-					requires : $(I:B)
-				end
-				if V = "$(I:D:B=gen/$(I:B):S=.ver:T=F)"
-					req : $(V)
-				else
-					error $(--exec:?3?1?) package $(I) must be written before $(P)
-				end
-				include $(R)
-			else
-				$(I) : .VIRTUAL
-				if I == "/*"
-					package.dir += $(I:V)
-				end
+			$(I) : .VIRTUAL
+			if I == "/*"
+				package.dir += $(I:V)
 			end
 		end
 	end
@@ -201,8 +204,41 @@ $(init) : .VIRTUAL $(init)
 		$(P).txt := This is the $(P) package.
 	end
 
+":COVERS:" : .MAKE .OPERATOR
+	local I R
+	for I $(>)
+		if R = "$(I:D:B:S=.pkg:T=F)"
+			covers : $(I:B)
+		else
+			error $(--exec:?3?1?) $(I): unknown package $(I)
+		end
+	end
+
+":DESCRIPTION:" : .MAKE .OPERATOR
+	$(name).txt := $(@)
+
 ":INDEX:" : .MAKE .OPERATOR
 	index := $(>)
+
+":REQUIRES:" : .MAKE .OPERATOR
+	local I R V
+	for I $(>)
+		if R = "$(I:D:B:S=.pkg:T=F)"
+			if I == "$(init)"
+				package.omit = -
+			else
+				requires : $(I:B)
+			end
+			if V = "$(I:D:B=gen/$(I:B):S=.ver:T=F)"
+				req : $(V)
+			else
+				error $(--exec:?3?1?) package $(I) must be written before $(P)
+			end
+			include $(R)
+		else
+			error $(--exec:?3?1?) $(I): unknown package $(I)
+		end
+	end
 
 base delta : .MAKE .VIRTUAL .FORCE
 	op := $(<)
@@ -423,7 +459,7 @@ $$(PACKAGEGEN)/DETAILS.html : $$(INSTALLROOT)/bin/package
 				fi
 				case $(name) in
 				$(init))set -- $(licenses:B:S=.lic:T=F) ;;
-				*)	set -- $(package.src:N=*.lic) ;;
+				*)	set -- $(package.src:N=*.lic:T=F) ;;
 				esac
 				case $# in
 				0)	;;

@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #ifdef _UWIN
 
@@ -84,14 +85,16 @@ int		n;
 
 /* issue a warning of some type */
 #if __STD_C
-static void dbwarn(Vmalloc_t* vm, Void_t* data, int where, char* file, int line, int type)
+static void dbwarn(Vmalloc_t* vm, Void_t* data, int where,
+		   char* file, int line, Void_t* func, int type)
 #else
-static void dbwarn(vm, data, where, file, line, type)
+static void dbwarn(vm, data, where, file, line, func, type)
 Vmalloc_t*	vm;	/* region holding the block	*/
 Void_t*		data;	/* data block			*/
 int		where;	/* byte that was corrupted	*/
 char*		file;	/* file where call originates	*/
 int		line;	/* line number of call		*/
+Void_t*		func;	/* function called from		*/
 int		type;	/* operation being done		*/
 #endif
 {
@@ -159,7 +162,8 @@ int		type;	/* operation being done		*/
 	if(file && file[0] && line > 0 && (bufp + strlen(file) + SLOP) < endbuf)
 	{	bufp = (*_Vmstrcpy)(bufp, "detected at", '=');
 		bufp = (*_Vmstrcpy)(bufp, file, ',');
-		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VLONG(line),-1), ':');
+		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VLONG(line),-1), ',');
+		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VLONG(func),-1), ':');
 	}
 
 	*bufp++ = '\n';
@@ -170,13 +174,15 @@ int		type;	/* operation being done		*/
 
 /* check for watched address and issue warnings */
 #if __STD_C
-static void dbwatch(Vmalloc_t* vm, Void_t* data, char* file, int line, int type)
+static void dbwatch(Vmalloc_t* vm, Void_t* data,
+		    char* file, int line, Void_t* func, int type)
 #else
-static void dbwatch(vm, data, file, line, type)
+static void dbwatch(vm, data, file, line, func, type)
 Vmalloc_t*	vm;
 Void_t*		data;
 char*		file;
 int		line;
+Void_t*		func;
 int		type;
 #endif
 {
@@ -184,7 +190,7 @@ int		type;
 
 	for(n = Dbnwatch; n >= 0; --n)
 	{	if(Dbwatch[n] == data)
-		{	dbwarn(vm,data,type,file,line,DB_WATCH);
+		{	dbwarn(vm,data,type,file,line,func,DB_WATCH);
 			return;
 		}
 	}
@@ -195,7 +201,7 @@ int		type;
 static void dbsetinfo(Vmuchar_t* data, size_t size, char* file, int line)
 #else
 static void dbsetinfo(data, size, file, line)
-Vmuchar_t*		data;	/* real address not the one from Vmbest	*/
+Vmuchar_t*	data;	/* real address not the one from Vmbest	*/
 size_t		size;	/* the actual requested size		*/
 char*		file;	/* file where the request came from	*/
 int		line;	/* and line number			*/
@@ -356,12 +362,13 @@ size_t		size;
 	reg Vmuchar_t*	data;
 	reg char*	file;
 	reg int		line;
+	reg Void_t*	func;
 	reg Vmdata_t*	vd = vm->data;
 
-	VMFILELINE(vm,file,line);
+	VMFLF(vm,file,line,func);
 
 	if(ISLOCK(vd,0) )
-	{	dbwarn(vm,NIL(Vmuchar_t*),0,file,line,DB_ALLOC);
+	{	dbwarn(vm,NIL(Vmuchar_t*),0,file,line,func,DB_ALLOC);
 		return NIL(Void_t*);
 	}
 	SETLOCK(vd,0);
@@ -374,7 +381,7 @@ size_t		size;
 		s = sizeof(Body_t);
 
 	if(!(data = (Vmuchar_t*)KPVALLOC(vm,s,(*(Vmbest->allocf))) ) )
-	{	dbwarn(vm,NIL(Vmuchar_t*),DB_ALLOC,file,line,DB_ALLOC);
+	{	dbwarn(vm,NIL(Vmuchar_t*),DB_ALLOC,file,line,func,DB_ALLOC);
 		goto done;
 	}
 
@@ -382,12 +389,12 @@ size_t		size;
 	dbsetinfo(data,size,file,line);
 
 	if((vd->mode&VM_TRACE) && _Vmtrace)
-	{	vm->file = file; vm->line = line;
+	{	vm->file = file; vm->line = line; vm->func = func;
 		(*_Vmtrace)(vm,NIL(Vmuchar_t*),data,size,0);
 	}
 
 	if(Dbnwatch > 0 )
-		dbwatch(vm,data,file,line,DB_ALLOC);
+		dbwatch(vm,data,file,line,func,DB_ALLOC);
 
 done:
 	CLRLOCK(vd,0);
@@ -405,17 +412,18 @@ Void_t*		data;
 {
 	char*		file;
 	int		line;
+	Void_t*		func;
 	reg long	offset;
 	reg int		*ip, *endip;
 	reg Vmdata_t*	vd = vm->data;
 
-	VMFILELINE(vm,file,line);
+	VMFLF(vm,file,line,func);
 
 	if(!data)
 		return 0;
 
 	if(ISLOCK(vd,0) )
-	{	dbwarn(vm,NIL(Vmuchar_t*),0,file,line,DB_FREE);
+	{	dbwarn(vm,NIL(Vmuchar_t*),0,file,line,func,DB_FREE);
 		return -1;
 	}
 	SETLOCK(vd,0);
@@ -426,16 +434,16 @@ Void_t*		data;
 	if((offset = KPVADDR(vm,data,dbaddr)) != 0)
 	{	if(vm->disc->exceptf)
 			(void)(*vm->disc->exceptf)(vm,VM_BADADDR,data,vm->disc);
-		dbwarn(vm,(Vmuchar_t*)data,offset == -1L ? 0 : 1,file,line,DB_FREE);
+		dbwarn(vm,(Vmuchar_t*)data,offset == -1L ? 0 : 1,file,line,func,DB_FREE);
 		CLRLOCK(vd,0);
 		return -1;
 	}
 
 	if(Dbnwatch > 0)
-		dbwatch(vm,data,file,line,DB_FREE);
+		dbwatch(vm,data,file,line,func,DB_FREE);
 
 	if((vd->mode&VM_TRACE) && _Vmtrace)
-	{	vm->file = file; vm->line = line;
+	{	vm->file = file; vm->line = line; vm->func = func;
 		(*_Vmtrace)(vm,(Vmuchar_t*)data,NIL(Vmuchar_t*),DBSIZE(data),0);
 	}
 
@@ -465,6 +473,7 @@ int		type;		/* !=0 for movable, >0 for copy	*/
 	reg long	offset;
 	char		*file, *oldfile;
 	int		line, oldline;
+	Void_t*		func;
 	reg Vmdata_t*	vd = vm->data;
 
 	if(!addr)
@@ -477,10 +486,10 @@ int		type;		/* !=0 for movable, >0 for copy	*/
 		return NIL(Void_t*);
 	}
 
-	VMFILELINE(vm,file,line);
+	VMFLF(vm,file,line,func);
 
 	if(ISLOCK(vd,0) )
-	{	dbwarn(vm,NIL(Vmuchar_t*),0,file,line,DB_RESIZE);
+	{	dbwarn(vm,NIL(Vmuchar_t*),0,file,line,func,DB_RESIZE);
 		return NIL(Void_t*);
 	}
 	SETLOCK(vd,0);
@@ -491,13 +500,13 @@ int		type;		/* !=0 for movable, >0 for copy	*/
 	if((offset = KPVADDR(vm,addr,dbaddr)) != 0)
 	{	if(vm->disc->exceptf)
 			(void)(*vm->disc->exceptf)(vm,VM_BADADDR,addr,vm->disc);
-		dbwarn(vm,(Vmuchar_t*)addr,offset == -1L ? 0 : 1,file,line,DB_RESIZE);
+		dbwarn(vm,(Vmuchar_t*)addr,offset == -1L ? 0 : 1,file,line,func,DB_RESIZE);
 		CLRLOCK(vd,0);
 		return NIL(Void_t*);
 	}
 
 	if(Dbnwatch > 0)
-		dbwatch(vm,addr,file,line,DB_RESIZE);
+		dbwatch(vm,addr,file,line,func,DB_RESIZE);
 
 	/* Vmbest data block */
 	data = DB2BEST(addr);
@@ -512,7 +521,7 @@ int		type;		/* !=0 for movable, >0 for copy	*/
 	data = (Vmuchar_t*)KPVRESIZE(vm,(Void_t*)data,s,
 				 (type&~VM_RSZERO),(*(Vmbest->resizef)) );
 	if(!data) /* failed, reset data for old block */
-	{	dbwarn(vm,NIL(Vmuchar_t*),DB_ALLOC,file,line,DB_RESIZE);
+	{	dbwarn(vm,NIL(Vmuchar_t*),DB_ALLOC,file,line,func,DB_RESIZE);
 		dbsetinfo((Vmuchar_t*)addr,oldsize,oldfile,oldline);
 	}
 	else
@@ -524,7 +533,7 @@ int		type;		/* !=0 for movable, >0 for copy	*/
 			(*_Vmtrace)(vm,(Vmuchar_t*)addr,data,size,0);
 		}
 		if(Dbnwatch > 0)
-			dbwatch(vm,data,file,line,DB_RESIZED);
+			dbwatch(vm,data,file,line,func,DB_RESIZED);
 	}
 
 	CLRLOCK(vd,0);
@@ -589,7 +598,7 @@ Vmalloc_t*	vm;
 			{	if(*begp == DB_MAGIC)
 					continue;
 			set_bad:
-				dbwarn(vm,data,begp-data,NIL(char*),0,DB_CHECK);
+				dbwarn(vm,data,begp-data,NIL(char*),0,0,DB_CHECK);
 				DBSETBAD(data);
 				rv += 1;
 				goto next;
@@ -648,9 +657,10 @@ size_t		align;
 	reg size_t	s;
 	reg char*	file;
 	reg int		line;
+	reg Void_t*	func;
 	reg Vmdata_t*	vd = vm->data;
 
-	VMFILELINE(vm,file,line);
+	VMFLF(vm,file,line,func);
 
 	if(size <= 0 || align <= 0)
 		return NIL(Void_t*);
@@ -671,7 +681,7 @@ size_t		align;
 	dbsetinfo(data,size,file,line);
 
 	if((vd->mode&VM_TRACE) && _Vmtrace)
-	{	vm->file = file; vm->line = line;
+	{	vm->file = file; vm->line = line; vm->func = func;
 		(*_Vmtrace)(vm,NIL(Vmuchar_t*),data,size,align);
 	}
 

@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -19,6 +19,7 @@
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /* Adapted for ksh by David Korn */
@@ -1515,7 +1516,7 @@ static void getline(register Vi_t* vp,register int mode)
 			return;
 
 		case '\t':		/** command completion **/
-			if(mode!=SEARCH && last_virt>=0 && cur_virt>=last_virt && !isblank(cur_virt))
+			if(mode!=SEARCH && last_virt>=0 && cur_virt>=last_virt && !isblank(cur_virt) && vp->ed->sh->nextprompt)
 			{
 				ed_ungetchar(vp->ed,'\\');
 				goto escape;

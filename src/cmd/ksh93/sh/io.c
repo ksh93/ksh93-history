@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -19,6 +19,7 @@
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -1258,24 +1259,25 @@ static void	sftrack(Sfio_t* sp,int flag, int newfd)
 	if(sh_isstate(SH_NOTRACK))
 		return;
 	mode = sfset(sp,0,0);
-	if(flag==SF_NEW && (mode&SF_WRITE) && (sh_iocheckfd(fd)&IONOSEEK))
-	{
-		Sfdisc_t *dp = newof(0,Sfdisc_t,1,0);
-		dp->exceptf = pipeexcept;
-		sfdisc(sp,dp);
-	}
 	if(fd < 3)
 		return;
 	if(flag==SF_NEW)
 	{
-		sh.sftable[fd] = sp;
-		if(sh.fdstatus[fd]==IOCLOSE)
+		if(!sh.fdstatus[fd] && sh.fdstatus[fd]==IOCLOSE)
 		{
+			sh.sftable[fd] = sp;
 			flag = (mode&SF_WRITE)?IOWRITE:0;
 			if(mode&SF_READ)
 				flag |= IOREAD;
 			sh.fdstatus[fd] = flag;
-			sh_iostream(fd);
+#if 0
+			if(flag==IOWRITE)
+				sfpool(sp,sh.outpool,SF_WRITE);
+			else
+#else
+			if(flag!=IOWRITE)
+#endif
+				sh_iostream(fd);
 		}
 		if((pp=(struct checkpt*)sh.jmplist) && pp->mode==SH_JMPCMD)
 		{

@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 
@@ -33,7 +34,7 @@
 
 #include <ast_common.h>
 
-#define REG_VERSION	20010509L
+#define REG_VERSION	20020509L
 
 /* regcomp flags */
 
@@ -53,12 +54,13 @@
 #define REG_RIGHT	0x00001000	/* implicit ...$		*/
 #define REG_LENIENT	0x00002000	/* look the other way		*/
 #define REG_ESCAPE	0x00004000	/* \ escapes delimiter in [...]	*/
-#define REG_DELIMITED	0x00008000	/* pattern[0] is delimiter	*/
 #define REG_MULTIPLE	0x00010000	/* multiple \n sep patterns	*/
 #define REG_DISCIPLINE	0x00020000	/* regex_t.re_disc is valid	*/
 #define REG_SPAN	0x00040000	/* . matches \n			*/
 #define REG_COMMENT	0x00080000	/* ignore pattern space & #...\n*/
 #define REG_MULTIREF	0x00100000	/* multiple digit backrefs	*/
+#define REG_MUSTDELIM	0x08000000	/* all delimiters required	*/
+#define REG_DELIMITED	0x10000000	/* pattern[0] is delimiter	*/
 
 #define REG_SHELL_DOT	0x00200000	/* explicit leading . match	*/
 #define REG_SHELL_ESCAPED 0x00400000	/* \ not special		*/
@@ -73,6 +75,7 @@
 
 #define REG_INVERT	0x01000000	/* invert regrexec match sense	*/
 #define REG_STARTEND	0x02000000	/* subject==match[0].rm_{so,eo} */
+#define REG_ADVANCE	0x04000000	/* advance match[0].rm_{so,eo}	*/
 
 /* regalloc flags */
 
@@ -83,7 +86,13 @@
 #define REG_SUB_ALL	0x00000001	/* substitute all occurrences	*/
 #define REG_SUB_LOWER	0x00000002	/* substitute to lower case	*/
 #define REG_SUB_UPPER	0x00000004	/* substitute to upper case	*/
-#define REG_SUB_USER	0x00000008	/* first user flag bit		*/
+#define REG_SUB_PRINT	0x00000010	/* internal no-op		*/
+#define REG_SUB_NUMBER	0x00000020	/* internal no-op		*/
+#define REG_SUB_STOP	0x00000040	/* internal no-op		*/
+#define REG_SUB_WRITE	0x00000080	/* internal no-op		*/
+#define REG_SUB_LAST	0x00000100	/* last substitution option	*/
+#define REG_SUB_FULL	0x00000200	/* fully delimited		*/
+#define REG_SUB_USER	0x00001000	/* first user flag bit		*/
 
 /* regex error codes */
 
@@ -105,7 +114,9 @@
 #define REG_ECOUNT	15		/* re component count overflow	*/
 #define REG_BADESC	16		/* invalid \char escape		*/
 #define REG_VERSIONID	17		/* version id (pseudo error)	*/
-#define REG_PANIC	18		/* unrecoverable internal error	*/
+#define REG_EFLAGS	18		/* flags conflict		*/
+#define REG_EDELIM	19		/* invalid or omitted delimiter	*/
+#define REG_PANIC	20		/* unrecoverable internal error	*/
 
 struct regex_s;
 struct regdisc_s;
@@ -125,6 +136,17 @@ typedef struct regmatch_s
 	regoff_t	rm_eo;		/* offset of end		*/
 } regmatch_t;
 
+typedef struct regsub_s
+{
+	regflags_t	re_flags;	/* regsubcomp() flags		*/
+	char*		re_buf;		/* regsubexec() output buffer	*/
+	size_t		re_len;		/* re_buf length		*/
+	int		re_min;		/* regsubcomp() min matches	*/
+#ifdef _REG_SUB_PRIVATE_
+	_REG_SUB_PRIVATE_
+#endif
+} regsub_t;
+
 typedef struct regdisc_s
 {
 	unsigned long	re_version;	/* discipline version		*/
@@ -140,9 +162,10 @@ typedef struct regdisc_s
 typedef struct regex_s
 {
 	size_t		re_nsub;	/* number of subexpressions	*/
-	struct Reginfo*	re_info;	/* library private info		*/
+	struct reglib_s*re_info;	/* library private info		*/
 	size_t		re_npat;	/* number of pattern chars used	*/
-	struct regdisc_s*re_disc;	/* REG_DISCIPLINE discipline	*/
+	regdisc_t*	re_disc;	/* REG_DISCIPLINE discipline	*/
+	regsub_t*	re_sub;		/* regsubcomp() data		*/
 } regex_t;
 
 #define reginit(disc)	(memset(disc,0,sizeof(*disc)),disc->re_version=REG_VERSION)
@@ -158,26 +181,35 @@ extern void	regfree(regex_t*);
 
 /* nonstandard hooks */
 
-#ifndef _SFIO_H
-struct _sfio_s;
-#endif
-
 #define _REG_collate	1	/* have regcollate(), regclass()	*/
 #define _REG_comb	1	/* have regcomb()			*/
 #define _REG_fatal	1	/* have regfatal(), regfatalpat()	*/
 #define _REG_nexec	1	/* have regnexec()			*/
 #define _REG_rexec	1	/* have regrexec(), regrecord()		*/
-#define _REG_sub	1	/* have regsub()			*/
+#define _REG_subcomp	1	/* have regsubcomp(), regsubexec()	*/
 
 extern void	regalloc(void*, regresize_t, regflags_t); /*OBSOLETE*/
 extern regclass_t regclass(const char*, char**);
 extern int	regcollate(const char*, char**, char*, int);
 extern int	regcomb(regex_t*, regex_t*);
+extern int	regdup(regex_t*, regex_t*);
 extern int	regnexec(const regex_t*, const char*, size_t, size_t, regmatch_t*, regflags_t);
 extern void	regfatal(regex_t*, int, int);
 extern void	regfatalpat(regex_t*, int, int, const char*);
 extern int	regrecord(const regex_t*);
 extern int	regrexec(const regex_t*, const char*, size_t, size_t, regmatch_t*, regflags_t, int, void*, regrecord_t);
+
+extern int	regsubcomp(regex_t*, const char*, const regflags_t*, int, regflags_t);
+extern int	regsubexec(const regex_t*, const char*, size_t, regmatch_t*);
+extern int	regsubflags(regex_t*, const char*, char**, int, const regflags_t*, int*, regflags_t*);
+extern void	regsubfree(regex_t*);
+
+/* obsolete hooks */
+
+#ifndef _SFIO_H
+struct _sfio_s;
+#endif
+
 extern int	regsub(const regex_t*, struct _sfio_s*, const char*, const char*, size_t, regmatch_t*, regflags_t);
 
 #undef	extern

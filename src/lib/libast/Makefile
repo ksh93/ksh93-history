@@ -25,7 +25,7 @@ PARANOID ==
 CONF_LIBPREFIX == "$(CC.PREFIX.DYNAMIC|CC.PREFIX.SHARED)"
 CONF_LIBSUFFIX == "$(CC.SUFFIX.DYNAMIC|CC.SUFFIX.SHARED)"
 DEBUG ==
-__OBSOLETE__ == 20010101
+__OBSOLETE__ == 20020101
 
 HEADERSRC = ast.h ast_dir.h ast_std.h ast_version.h \
 	ccode.h cdt.h debug.h error.h find.h ftw.h ftwalk.h fts.h \
@@ -131,7 +131,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	/* regex */ \
 	reglib.h regalloc.c regclass.c regcoll.c regcomp.c \
 	regerror.c regexec.c regfatal.c reginit.c regnexec.c \
-	regsub.c regrecord.c regrexec.c \
+	regsubcomp.c regsubexec.c regsub.c regrecord.c regrexec.c \
 	/* cdt */ \
 	dthdr.h dtclose.c dtdisc.c dtextract.c dtflatten.c dthash.c \
 	dtlist.c dtmethod.c dtopen.c dtrenew.c dtrestore.c dtsize.c \
@@ -185,7 +185,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	vmalloc.h vmhdr.h vmbest.c vmclear.c vmclose.c vmdcheap.c vmdebug.c \
 	vmdisc.c vmexit.c vmlast.c vmopen.c vmpool.c vmprivate.c vmprofile.c \
 	vmregion.c vmsegment.c vmset.c vmstat.c vmstrdup.c vmtrace.c vmwalk.c \
-	malloc.c \
+	vmmopen.c malloc.c \
 	/* uwin */ \
 	mathimpl.h rlib.h ufc-crypt.h \
 	a64l.c acosh.c asinh.c atanh.c cbrt.c crypt.c crypt_util.c erf.c \
@@ -304,6 +304,7 @@ atmain.o : atmain.C
 	fi
 
 /*
+ * more stdio.h complications ...
  * prepare for compilation by generating these headers first;
  * this helps mam by catching headers that might be indirectly
  * included on other systems; it also catches iffeio.h early in
@@ -312,7 +313,7 @@ atmain.o : atmain.C
 
 .check.hdr : .IGNORE .VIRTUAL \
 		ast_common.h - iffeio.h - ast_limits.h - ast_stdio.h \
-		ast_nl_types.h
+		ast_nl_types.h - ast_wchar.h
 	rm -f $(HEADERSTD)	/* clean up pre-2002-03-17 headers */
 
 /*
@@ -344,7 +345,7 @@ $(MINI)$$(CC.SUFFIX.SHARED) : $(MINI).sym $(ID)
 	rm -rf $(MINI).tmp
 	mkdir $(MINI).tmp
 	{
-	echo LIBRARY $(DLL:F=%(upper)S)
+	echo LIBRARY $(DLL:F=%(upper)s)
 	echo
 	echo SECTIONS
 	echo .data READ WRITE

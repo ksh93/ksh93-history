@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -19,6 +19,7 @@
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -694,10 +695,6 @@ static union anynode *funct(void)
 	{
 		if(fcfill()>0)
 			fcseek(-1);
-		/* add 0 byte (or bytes if on odd boundary */
-		sfputc(sh.hist_ptr->histfp,0);
-		if(sftell(sh.hist_ptr->histfp)&1)
-			sfputc(sh.hist_ptr->histfp,0);
 		hist_flush(sh.hist_ptr);
 		hist_cancel(sh.hist_ptr);
 		sh_offstate(SH_HISTORY);

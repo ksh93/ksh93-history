@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #ifndef _VTHREAD_H
 #define _VTHREAD_H	1
@@ -31,7 +32,7 @@
 **	Note that the macro vt_threaded may be defined
 **	outside of vthread.h to suppress threading.
 **
-**	Written by Kiem-Phong Vo
+**	Written by Kiem-Phong Vo, kpv@research.att.com
 */
 
 #include	<ast_common.h>
@@ -64,7 +65,7 @@ typedef pthread_attr_t		_vtattr_t;
 
 #endif
 
-#if _may_use_threads && !defined(vt_threaded) && _UWIN
+#if _may_use_threads && !defined(vt_threaded) && _WIN32
 #define vt_threaded		1
 #include			<windows.h>
 typedef CRITICAL_SECTION	_vtmtx_t;
@@ -160,7 +161,7 @@ struct _vtonce_s
 	int		error;
 };
 
-#if _UWIN
+#if _WIN32
 #define VTONCE_INITDATA		{0, 0}
 #else
 #define VTONCE_INITDATA		{0, PTHREAD_ONCE_INIT }
@@ -187,6 +188,12 @@ struct _vthread_s
 struct _vtonce_s
 {	int	error;
 };
+
+typedef int		_vtmtx_t;
+typedef int		_vtonce_t;
+typedef int		_vtself_t;
+typedef int		_vtid_t;
+typedef int		_vtattr_t;
 
 #define VTONCE_INITDATA		{0}
 

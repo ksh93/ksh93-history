@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #include	"sfhdr.h"
 
@@ -67,7 +68,7 @@ reg Sfio_t*	f;
 			}
 #if _sys_stat
 			else
-			{	Stat_t	st;
+			{	sfstat_t	st;
 				if(fstat(f->file,&st) < 0)
 					f->extent = -1;
 				else if((f->extent = st.st_size) < f->here)

@@ -9,7 +9,7 @@
 #                                                                  #
 #       http://www.research.att.com/sw/license/ast-open.html       #
 #                                                                  #
-#        If you have copied this software without agreeing         #
+#    If you have copied or used this software without agreeing     #
 #        to the terms of the license you are infringing on         #
 #           the license and copyright and are violating            #
 #               AT&T's intellectual property rights.               #
@@ -19,6 +19,7 @@
 #                         Florham Park NJ                          #
 #                                                                  #
 #                David Korn <dgk@research.att.com>                 #
+#                                                                  #
 ####################################################################
 function err_exit
 {
@@ -279,5 +280,10 @@ wait $pid2
 (( $? == 127 )) || err_exit "subshell job known to parent"
 if	[[ $(foo=bar;foo=$foo exec -c $SHELL -c 'print $foo') != bar ]]
 then	err_exit '"name=value exec -c ..." not working'
+fi
+$SHELL -c 'OPTIND=-1000000; getopts a opt -a' 2> /dev/null
+[[ $? == 1 ]] || err_exit 'getopts with negative OPTIND not working'
+if	[[ $($SHELL -c $'printf \'%2$s %1$s\n\' world hello') != 'hello world' ]]
+then	err_exit 'printf %2$s %1$s not working'
 fi
 exit $((Errors))

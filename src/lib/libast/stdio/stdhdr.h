@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,18 +21,20 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 
 #ifndef _STDHDR_H
 #define _STDHDR_H	1
 
+#define _ast_fseeko	______fseeko
+#define _ast_ftello	______ftello
 #include "sfhdr.h"
-
-#undef	off_t
+#undef	_ast_fseeko
+#undef	_ast_ftello
 
 #include "stdio.h"
-#include "wchar.h"
 
 #define SF_MB		010000
 #define SF_WC		020000

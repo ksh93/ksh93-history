@@ -9,7 +9,7 @@
 #                                                                  #
 #       http://www.research.att.com/sw/license/ast-open.html       #
 #                                                                  #
-#        If you have copied this software without agreeing         #
+#    If you have copied or used this software without agreeing     #
 #        to the terms of the license you are infringing on         #
 #           the license and copyright and are violating            #
 #               AT&T's intellectual property rights.               #
@@ -19,6 +19,7 @@
 #                         Florham Park NJ                          #
 #                                                                  #
 #                David Korn <dgk@research.att.com>                 #
+#                                                                  #
 ####################################################################
 function err_exit
 {
@@ -308,4 +309,7 @@ then	err_exit 'display of unsigned integers in non-decimal bases wrong'
 fi
 $SHELL -c 'i=0;(( ofiles[i] != -1 && (ofiles[i] < mins || mins == -1) ));exit 0' 2> /dev/null || err_exit 'lexical error with arithemtic expression'
 rm -f core
+$SHELL -c '(( +1 == 1))' 2> /dev/null || err_exit 'unary + not working'
+typeset -E17 val=123.01234567890
+[[ $val == 123.0123456789 ]] || err_exit "rounding error val=$val"
 exit $((Errors))

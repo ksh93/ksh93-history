@@ -9,7 +9,7 @@
 #                                                                  #
 #       http://www.research.att.com/sw/license/ast-open.html       #
 #                                                                  #
-#        If you have copied this software without agreeing         #
+#    If you have copied or used this software without agreeing     #
 #        to the terms of the license you are infringing on         #
 #           the license and copyright and are violating            #
 #               AT&T's intellectual property rights.               #
@@ -19,6 +19,7 @@
 #                         Florham Park NJ                          #
 #                                                                  #
 #                David Korn <dgk@research.att.com>                 #
+#                                                                  #
 ####################################################################
 function err_exit
 {
@@ -320,4 +321,11 @@ unset IFS
 if	[[ $($x) != $'s/\\(\\<3d\\>\\)/\\\\h\'0*1\'\\1\\\\h\'0\'/' ]]
 then	err_exit 'complex quoting with pattern chars not working'
 fi
+x=hi
+set -- "$x[$x]\c"
+[[ $1 == 'hi[hi]\c' ]] ||  err_exit "double quotes with [] error"
+set -- "$x{}\c"
+[[ $1 == 'hi{}\c' ]] || err_exit "double quotes with {} error"
+[[ $(print -r -- /*'/$x)') ==  '/*/$x)' ]] || err_exit $'/*\'/$x)\' not correct' 
+[[ $(print -r -- /*'-/$x)')  ==  '/*-/$x)' ]] || err_exit $'/*\'-/$x)\' not correct'
 exit $((Errors))

@@ -9,7 +9,7 @@
 #                                                                  #
 #       http://www.research.att.com/sw/license/ast-open.html       #
 #                                                                  #
-#        If you have copied this software without agreeing         #
+#    If you have copied or used this software without agreeing     #
 #        to the terms of the license you are infringing on         #
 #           the license and copyright and are violating            #
 #               AT&T's intellectual property rights.               #
@@ -19,13 +19,15 @@
 #                         Florham Park NJ                          #
 #                                                                  #
 #                David Korn <dgk@research.att.com>                 #
+#                                                                  #
 ####################################################################
 function err_exit
 {
 	print -u2 -n "\t"
-	print -u2 -r $Command: "$@"
+	print -u2 -r $Command[$1]: "${@:2}"
 	let Errors+=1
 }
+alias err_exit='err_exit $LINENO'
 
 Command=$0
 integer Errors=0
@@ -63,4 +65,8 @@ if	[[ $($SHELL -c '
 		print -r -- "$x"' 2> /dev/null) != yes ]]
 then err_exit 'case abc {...} not working'
 fi
+[[ $($SHELL -c 'case a in
+a)      print -n a > /dev/null ;&
+b)      print b;;
+esac') != b ]] && err_exit 'bug in ;& at end of script'
 exit $((Errors))

@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #ifdef _UWIN
 
@@ -450,6 +451,7 @@ int		c;
 			SETPFREE(SIZE(np)); /**/ ASSERT(ISBUSY(SIZE(np)) );
 			*(SELF(fp)) = fp;
 
+			/* wilderness preservation */
 			if(np->body.data >= vd->seg->baddr)
 			{	vd->wild = fp;
 				continue;
@@ -548,6 +550,7 @@ reg size_t	size;	/* desired block size		*/
 {
 	reg Vmdata_t*	vd = vm->data;
 	reg size_t	s;
+	reg int		n;
 	reg Block_t	*tp, *np, **cache;
 	reg int		local;
 	size_t		orgsize;
@@ -573,24 +576,45 @@ reg size_t	size;	/* desired block size		*/
 	/* for ANSI requirement that malloc(0) returns non-NULL pointer */
 	size = size <= TINYSIZE ? TINYSIZE : ROUND(size,ALIGN);
 
-	if(size < MAXCACHE && (tp = *(cache = CACHE(vd) + INDEX(size)) ) )
-	{	*cache = LINK(tp);
-		CLRJUNK(SIZE(tp));
-		/**/COUNT(N_cache);
-		goto done;
+	if(size < MAXCACHE )
+	{	if(!(tp = *(cache = CACHE(vd) + INDEX(size))) )
+		{	bestreclaim(vd,NIL(Block_t*),S_CACHE);
+
+			/* create a bunch for fast allocations */
+			s = size + (size + sizeof(Head_t))*(N_CACHE-1);
+			if((tp = (Block_t*)KPVALLOC(vm,s,bestalloc)) )
+			{	tp = BLOCK(tp);
+
+				/* make a linked list of these blocks */
+				*cache = tp; s = SIZE(tp);
+				for(n = 0; n < N_CACHE-1; ++n, tp = np)
+				{	SIZE(tp) = size;
+					LINK(tp) = np = NEXT(tp);
+					SIZE(tp) |= JUNK|BUSY;
+					SEG(np) = SEG(tp);
+				}
+				SIZE(tp) = (s - n*(size + sizeof(Head_t))) | JUNK|BUSY;
+				LINK(tp) = NIL(Block_t*);
+
+				tp = *cache;
+				goto has_cache;
+			}
+		}
+		else
+		{ has_cache: /**/ COUNT(N_cache);
+			*cache = LINK(tp);
+			CLRJUNK(SIZE(tp));
+			goto done;
+		}
 	}
 
-	if((tp = vd->free) )	/* allocate from last free piece */
+	if((tp = vd->free) )	/* reuse last free piece if appropriate */
 	{	/**/ASSERT(ISBUSY(SIZE(tp)) );
 		/**/ASSERT(ISJUNK(SIZE(tp)) );
 		/**/COUNT(N_last);
 
 		vd->free = NIL(Block_t*);
-		if((s = SIZE(tp)) < size)
-		{	LINK(tp) = *(cache = CACHE(vd)+S_CACHE);
-			*cache = tp;
-		}
-		else
+		if((s = SIZE(tp)) >= size && s < (size << 1) )
 		{	if(s >= size + (sizeof(Head_t)+TINYSIZE) )
 			{	SIZE(tp) = size;
 				np = NEXT(tp);
@@ -602,24 +626,16 @@ reg size_t	size;	/* desired block size		*/
 			CLRJUNK(SIZE(tp));
 			goto done;
 		}
+
+		LINK(tp) = *(cache = CACHE(vd) + S_CACHE);
+		*cache = tp;
 	}
 
 	for(;;)
-	{	for(;;)	/* best-fit - more or less */
-		{	for(s = INDEX(size); s < S_TINY; ++s)
-			{	if((tp = TINY(vd)[s]) )
-				{	REMOVE(vd,tp,s,np,bestsearch);
-					CLRPFREE(SIZE(NEXT(tp)));
-					goto got_block;
-				}
-			}
-
-			if(CACHE(vd)[S_CACHE])	/* reclaim big pieces */
-				bestreclaim(vd,NIL(Block_t*),S_CACHE);
+	{	for(n = S_CACHE; n >= 0; --n)	/* best-fit except for coalescing */
+		{	bestreclaim(vd,NIL(Block_t*),n);
 			if(vd->root && (tp = bestsearch(vd,size,NIL(Block_t*))) )
 				goto got_block;
-			if(bestreclaim(vd,NIL(Block_t*),0) == 0)
-				break;
 		}
 
 		/**/ASSERT(!vd->free);
@@ -765,22 +781,22 @@ Void_t*		data;
 
 	bp = BLOCK(data);	/**/ASSERT(ISBUSY(SIZE(bp)) && !ISJUNK(SIZE(bp)));
 	SETJUNK(SIZE(bp));
-	if((s = SIZE(bp)) < MAXCACHE)
-	{	/**/ASSERT(!vmonlist(CACHE(vd)[INDEX(s)], bp) );
-		LINK(bp) = *(cache = CACHE(vd) + INDEX(s));
-		*cache = bp;
-	}
-	else if(!vd->free)
-		vd->free = bp;
-	else
-	{	/**/ASSERT(!vmonlist(CACHE(vd)[S_CACHE], bp) );
-		LINK(bp) = *(cache = CACHE(vd) + S_CACHE);
-		*cache = bp;
-	}
+        if((s = SIZE(bp)) < MAXCACHE)
+        {       /**/ASSERT(!vmonlist(CACHE(vd)[INDEX(s)], bp) );
+                LINK(bp) = *(cache = CACHE(vd) + INDEX(s));
+                *cache = bp;
+        }
+        else if(!vd->free)
+                vd->free = bp;
+        else
+        {       /**/ASSERT(!vmonlist(CACHE(vd)[S_CACHE], bp) );
+                LINK(bp) = *(cache = CACHE(vd) + S_CACHE);
+                *cache = bp;
+        }
 
 	/* coalesce large free blocks to avoid fragmentation */
-	if(s >= _Vmpagesize && ISPFREE(s))
-		bestreclaim(vd,NIL(Block_t*),0);
+	if(SIZE(bp) >= vd->incr)
+		bestreclaim(vd,NIL(Block_t*),S_CACHE);
 
 	if(!local && _Vmtrace && (vd->mode&VM_TRACE) && VMETHOD(vd) == VM_MTBEST )
 		(*_Vmtrace)(vm,(Vmuchar_t*)data,NIL(Vmuchar_t*), (s&~BITS), 0);
@@ -801,12 +817,11 @@ reg size_t	size;		/* new size			*/
 int		type;		/* !=0 to move, <0 for not copy */
 #endif
 {
-	reg Vmdata_t*	vd = vm->data;
 	reg Block_t	*rp, *np, *t, **cache;
-	reg size_t	s, bs;
-	reg int		local, *d, *ed;
-	size_t		oldsize, orgsize;
-	Void_t*		orgdata;
+	int		local;
+	size_t		s, bs, oldsize, orgsize;
+	Void_t		*orgdata, *oldd;
+	Vmdata_t	*vd = vm->data;
 
 	/**/ COUNT(N_resize);
 
@@ -838,7 +853,8 @@ int		type;		/* !=0 to move, <0 for not copy */
 
 	size = size <= TINYSIZE ? TINYSIZE : ROUND(size,ALIGN);
 	rp = BLOCK(data);	/**/ASSERT(ISBUSY(SIZE(rp)) && !ISJUNK(SIZE(rp)));
-	if((bs = oldsize = SIZE(rp)) < size)
+	bs = oldsize = SIZE(rp); CLRBITS(oldsize);
+	if(bs < size)
 	{	CLRBITS(SIZE(rp));
 		np = NEXT(rp);
 		do	/* forward merge as much as possible */
@@ -886,10 +902,7 @@ int		type;		/* !=0 to move, <0 for not copy */
 		CPYBITS(SIZE(rp),bs);
 	}
 
-	/* If a buffer is resized, it is likely to be resized again.
-	   So we increase a bit more to reduce future work */
-	bs = size < (BODYSIZE<<1) ? size : size < 1024 ? (size>>1) : 1024;
-	if((s = SIZE(rp)) >= (size + bs + (TINYSIZE+sizeof(Head_t))) )
+	if((s = SIZE(rp)) >= (size + (BODYSIZE+sizeof(Head_t))) )
 	{	SIZE(rp) = size;
 		np = NEXT(rp);
 		SEG(np) = SEG(rp);
@@ -898,26 +911,20 @@ int		type;		/* !=0 to move, <0 for not copy */
 		rp = np;
 		goto do_free;
 	}
-	else if(s < size)
-	{	if(!(type&(VM_RSMOVE|VM_RSCOPY)) )	/* see if old data is moveable */
-			data = NIL(Void_t*);
+	else if((bs = s&~BITS) < size)
+	{	if(!(type&(VM_RSMOVE|VM_RSCOPY)) )
+			data = NIL(Void_t*); /* old data is not moveable */
 		else
-		{	ed = (int*)data;
-			if(size < ((s&~BITS)+bs) )
-				size = (s&~BITS)+bs;
+		{	oldd = data;
 			if((data = KPVALLOC(vm,size,bestalloc)) )
-			{	if(type&VM_RSCOPY)	/* old data must be copied */
-				{	d = (int*)data;
-					INTCOPY(d,ed,s);
-				}
+			{	if(type&VM_RSCOPY)
+					memcpy(data, oldd, bs);
+
 			do_free: /* delay reusing these blocks as long as possible */
 				SETJUNK(SIZE(rp));
 				LINK(rp) = *(cache = CACHE(vd) + S_CACHE);
 				*cache = rp;
-				if((rp = vd->free) )
-				{	vd->free = NIL(Block_t*);
-					LINK(rp) = *cache; *cache = rp;
-				}
+				bestreclaim(vd, NIL(Block_t*), S_CACHE);
 			}
 		}
 	}
@@ -926,11 +933,8 @@ int		type;		/* !=0 to move, <0 for not copy */
 		(*_Vmtrace)(vm, (Vmuchar_t*)orgdata, (Vmuchar_t*)data, orgsize, 0);
 	CLRLOCK(vd,local);
 
-done:	if(data && (type&VM_RSZERO) && size > CLRBITS(oldsize) )
-	{	d  = (int*)((char*)data + oldsize);
-		size -= oldsize;
-		INTZERO(d,size);
-	}
+done:	if(data && (type&VM_RSZERO) && size > oldsize )
+		memset((Void_t*)((Vmuchar_t*)data + oldsize), 0, size-oldsize);
 
 	/**/ASSERT(!vd->root || vmchktree(vd->root));
 
@@ -1142,9 +1146,9 @@ done:
 	return (Void_t*)data;
 }
 
-#if defined(_UWIN)
+#if defined(_WIN32)
 #include	<windows.h>
-#endif /*_UWIN*/
+#endif /*_WIN32*/
 
 /*	A discipline to get memory using sbrk() or VirtualAlloc on win32 */
 #if __STD_C
@@ -1170,7 +1174,7 @@ Vmdisc_t*	disc;	/* discipline structure			*/
 		free(caddr);
 	return NIL(Void_t*);
 #else
-#if defined(_UWIN)
+#if defined(_WIN32)
 	NOTUSED(vm);
 	NOTUSED(disc);
 
@@ -1237,6 +1241,7 @@ static Vmalloc_t _Vmheap =
 	},
 	NIL(char*),			/* file		*/
 	0,				/* line		*/
+	0,				/* func		*/
 	&_Vmdcsbrk,			/* disc		*/
 	&_Vmdata,			/* data		*/
 	NIL(Vmalloc_t*)			/* next		*/

@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -160,18 +161,10 @@ __STDPP__directive pragma pp:nohide getdents getdirentries
 #undef	getdirentries
 #endif
 
-#ifdef	__EXPORT__
-#undef	extern
-#endif
-
 #ifndef errno
 extern int	errno;
 #endif
 
 extern ssize_t		getdents(int, void*, size_t);
-
-#ifdef	__EXPORT__
-#define	extern	__EXPORT__
-#endif
 
 #endif

@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 
@@ -120,6 +121,8 @@ strtoip4(register const char* s, char** e, unsigned _ast_int4_t* paddr, unsigned
 				bits = z;
 			else if (z)
 			{
+				if (part == 4 && (z & 0x8000001) == 1)
+					z = ~z;
 				while (!(z & 1))
 					z >>= 1;
 				while (z & 1)

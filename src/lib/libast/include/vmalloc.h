@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #ifndef _VMALLOC_H
 #define _VMALLOC_H	1
@@ -30,18 +31,12 @@
 **	Written by Kiem-Phong Vo, kpv@research.att.com, 01/16/94.
 */
 
-#define VMALLOC_VERSION	19990805L
+#define VMALLOC_VERSION	20020531L
 
 #if _PACKAGE_ast
 #include	<ast_std.h>
 #else
 #include	<ast_common.h>
-#if _hdr_stdlib
-#include	<stdlib.h>
-#ifndef _STDLIB_H
-#define _STDLIB_H	1
-#endif
-#endif
 #endif
 
 typedef struct _vmalloc_s	Vmalloc_t;
@@ -83,6 +78,7 @@ struct _vmalloc_s
 {	Vmethod_t	meth;		/* method for allocation	*/
 	char*		file;		/* file name			*/
 	int		line;		/* line number			*/
+	Void_t*		func;		/* calling function		*/
 #ifdef _VM_PRIVATE_
 	_VM_PRIVATE_
 #endif
@@ -107,7 +103,7 @@ struct _vmalloc_s
 
 /* exception types */
 #define VM_OPEN		0		/* region being opened		*/
-#define VM_CLOSE	1		/* region being closed		*/
+#define VM_CLOSE	1		/* announce being closed	*/
 #define VM_NOMEM	2		/* can't obtain memory		*/
 #define VM_BADADDR	3		/* bad addr in vmfree/vmresize	*/
 #define VM_DISC		4		/* discipline being changed	*/
@@ -147,6 +143,9 @@ extern int		vmcompact _ARG_(( Vmalloc_t* ));
 
 extern Vmdisc_t*	vmdisc _ARG_(( Vmalloc_t*, Vmdisc_t* ));
 
+extern Vmalloc_t*	vmmopen _ARG_(( char*, Void_t* ));
+extern Void_t*		vmmset _ARG_((Vmalloc_t*, int, Void_t*, int));
+
 extern Void_t*		vmalloc _ARG_(( Vmalloc_t*, size_t ));
 extern Void_t*		vmalign _ARG_(( Vmalloc_t*, size_t, size_t ));
 extern Void_t*		vmresize _ARG_(( Vmalloc_t*, Void_t*, size_t, int ));
@@ -173,7 +172,7 @@ extern int		vmwalk _ARG_((Vmalloc_t*,
 					int(*)(Vmalloc_t*,Void_t*,size_t,Vmdisc_t*)));
 extern char*		vmstrdup _ARG_((Vmalloc_t*, const char*));
 
-#if !defined(_AST_STD_H) && !defined(_STDLIB_H) && \
+#if !defined(_AST_STD_H) && \
 	!defined(__stdlib_h) && !defined(__STDLIB_H) && \
 	!defined(_STDLIB_INCLUDED) && !defined(_INC_STDLIB)
 extern Void_t*		malloc _ARG_(( size_t ));
@@ -192,9 +191,28 @@ _END_EXTERNS_
 #define _VM_(vm)	((Vmalloc_t*)(vm))
 
 /* enable recording of where a call originates from */
-#if defined(VMFL) && defined(__FILE__) && defined(__LINE__)
+#ifdef VMFL
 
-#define _VMFL_(vm)		(_VM_(vm)->file = __FILE__, _VM_(vm)->line = __LINE__)
+#if defined(__FILE__)
+#define _VMFILE_(vm)	(_VM_(vm)->file = (char*)__FILE__)
+#else
+#define _VMFILE_(vm)	(_VM_(vm)->file = (char*)0)
+#endif
+
+#if defined(__LINE__)
+#define _VMLINE_(vm)	(_VM_(vm)->line = __LINE__)
+#else
+#define _VMLINE_(vm)	(_VM_(vm)->line = 0)
+#endif
+
+#if defined(__FUNCTION__)
+#define _VMFUNC_(vm)	(_VM_(vm)->func = (Void_t*)__FUNCTION__)
+#else
+#define _VMFUNC_(vm)	(_VM_(vm)->func = (Void_t*)0)
+#endif
+
+#define _VMFL_(vm)	(_VMFILE_(vm), _VMLINE_(vm), _VMFUNC_(vm))
+
 #define vmalloc(vm,sz)		(_VMFL_(vm), \
 				 (*(_VM_(vm)->meth.allocf))((vm),(sz)) )
 #define vmresize(vm,d,sz,type)	(_VMFL_(vm), \
@@ -229,7 +247,7 @@ _END_EXTERNS_
 
 #define cfree(d)		free(d)
 
-#endif /*defined(VMFL) && defined(__FILE__) && defined(__LINE__)*/
+#endif /*VMFL*/
 
 /* non-debugging/profiling allocation calls */
 #ifndef vmalloc

@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #ifdef _UWIN
 
@@ -76,8 +77,6 @@ int		type;	/* =0 base-16, >0: unsigned base-10, <0: signed base-10	*/
 		{	*s-- = digit[v&0xf];
 			v >>= 4;
 		} while(v);
-		*s-- = 'x';
-		*s-- = '0';
 	}
 	else if(type > 0)	/* unsigned base-10 */
 	{	do
@@ -114,11 +113,16 @@ size_t		align;		/* alignment			*/
 #endif
 {
 	char		buf[1024], *bufp, *endbuf;
-	reg Vmdata_t*	vd = vm->data;
-	reg char*	file = NIL(char*);
-	reg int		line = 0;
+	Vmdata_t*	vd = vm->data;
+	char*		file = NIL(char*);
+	int		line = 0;
+	Void_t*		func = NIL(Void_t*);
+	int		comma;
+	int		n;
+	int		m;
+	
 	int		type;
-#define SLOP	32
+#define SLOP	64
 
 	if(oldaddr == (Vmuchar_t*)(-1)) /* printing busy blocks */
 	{	type = 0;
@@ -126,7 +130,7 @@ size_t		align;		/* alignment			*/
 	}
 	else
 	{	type = vd->mode&VM_METHODS;
-		VMFILELINE(vm,file,line);
+		VMFLF(vm,file,line,func);
 	}
 
 	if(Trfile < 0)
@@ -139,20 +143,49 @@ size_t		align;		/* alignment			*/
 	bufp = trstrcpy(bufp, tritoa((Vmulong_t)align, 1), ':');
 	bufp = trstrcpy(bufp, tritoa(VLONG(vm), 0), ':');
 	if(type&VM_MTBEST)
-		bufp = trstrcpy(bufp, "best", ':');
+		bufp = trstrcpy(bufp, "b", ':');
 	else if(type&VM_MTLAST)
-		bufp = trstrcpy(bufp, "last", ':');
+		bufp = trstrcpy(bufp, "l", ':');
 	else if(type&VM_MTPOOL)
-		bufp = trstrcpy(bufp, "pool", ':');
+		bufp = trstrcpy(bufp, "p", ':');
 	else if(type&VM_MTPROFILE)
-		bufp = trstrcpy(bufp, "profile", ':');
+		bufp = trstrcpy(bufp, "s", ':');
 	else if(type&VM_MTDEBUG)
-		bufp = trstrcpy(bufp, "debug", ':');
-	else	bufp = trstrcpy(bufp, "busy", ':');
-	if(file && file[0] && line > 0 && (bufp + strlen(file) + SLOP) < endbuf)
-	{	bufp = trstrcpy(bufp, file, ',');
-		bufp = trstrcpy(bufp, tritoa((Vmulong_t)line,1), ':');
+		bufp = trstrcpy(bufp, "d", ':');
+	else	bufp = trstrcpy(bufp, "u", ':');
+
+	comma = 0;
+	if(file && file[0] && line > 0)
+	{	if((bufp + strlen(file) + SLOP) >= endbuf)
+		{	char*	f;
+			for(f = bufp + strlen(file); f > file; --f)
+				if(f[-1] == '/' || f[-1] == '\\')
+					break; 
+			file = f;
+		}
+
+		bufp = trstrcpy(bufp, "file", '=');
+		n = endbuf - bufp - SLOP - 3;
+		m = strlen(file);
+		if(m > n)
+		{	file += (m - n);
+			bufp = trstrcpy(bufp, "..", '.');
+		}
+		bufp = trstrcpy(bufp, file, ',');
+		bufp = trstrcpy(bufp, "line", '=');
+		bufp = trstrcpy(bufp, tritoa((Vmulong_t)line,1), 0);
+		comma = 1;
 	}
+	if(func)
+	{	if(comma)
+			*bufp++ = ',';
+		bufp = trstrcpy(bufp, "func", '=');
+		bufp = trstrcpy(bufp, tritoa((Vmulong_t)func,0), 0);
+		comma = 1;
+	}
+	if(comma)
+		*bufp++ = ':';
+
 	*bufp++ = '\n';
 	*bufp = '\0';
 

@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -71,7 +72,7 @@ tmfix(register Tm_t* tm)
 
 	if ((n = tm->tm_sec) < 0)
 	{
-		tm->tm_min -= (59 - n) / 60;
+		tm->tm_min -= (60 - n) / 60;
 		tm->tm_sec = 60 - (-n) % 60;
 	}
 	else if (n > (59 + TM_MAXLEAP))
@@ -81,7 +82,7 @@ tmfix(register Tm_t* tm)
 	}
 	if ((n = tm->tm_min) < 0)
 	{
-		tm->tm_hour -= (59 - n) / 60;
+		tm->tm_hour -= (60 - n) / 60;
 		tm->tm_min = 60 - (-n) % 60;
 	}
 	else if (n > 59)

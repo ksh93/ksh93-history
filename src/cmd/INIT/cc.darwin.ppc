@@ -1,4 +1,4 @@
-: unix wrapper for mac os10 cc : 2001-10-04 :
+: unix wrapper for mac os10 cc : 2002-06-12 :
 
 HOSTTYPE=darwin.ppc
 
@@ -46,14 +46,14 @@ dll)	tmp=/tmp/cc.$$.err
 	ld -m -flat_namespace -undefined suppress -dylib -dynamic \
 		-ldylib1.o "$@" -lcc_dynamic -framework System >$tmp 2>&1
 	status=$?
-	egrep -v ' (warning multiple definitions|definition) of ' $tmp >&2
+	egrep -v ' (warning .*multiple definitions|definition) of ' $tmp >&2
 	rm -f $tmp
 	exit $status
 	;;
 ld)	tmp=/tmp/cc.$$.err
 	$cc -Wl,-m -DCLK_TCK=100 "$@" >$tmp 2>&1
 	status=$?
-	egrep -v ' (warning multiple definitions of|definition of|as lazy binding|not from earlier dynamic) ' $tmp >&2
+	egrep -v ' (warning .*multiple definitions of|definition of|as lazy binding|not from earlier dynamic) ' $tmp >&2
 	rm -f $tmp
 	exit $status
 	;;

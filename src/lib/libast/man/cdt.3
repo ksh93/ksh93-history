@@ -55,6 +55,8 @@ Dtmethod_t* Dtqueue;
 .Ce
 .Ss "DISCIPLINE"
 .Cs
+#define DTOFFSET(struct_s,member)
+#define DTDISC(disc,key,size,link,makef,freef,comparf,hashf,memoryf,eventf)
 typedef Void_t*      (*Dtmake_f)(Dt_t*, Void_t*, Dtdisc_t*);
 typedef void         (*Dtfree_f)(Dt_t*, Void_t*, Dtdisc_t*);
 typedef int          (*Dtcompar_f)(Dt_t*, Void_t*, Void_t*, Dtdisc_t*);
@@ -322,6 +324,15 @@ The discipline of \f5dt\fP is being changed to a new one given in
 \f5DT_METH\fP:
 The method of \f5dt\fP is being changed to a new one given in
 \f5(Dtmethod_t*)data\fP.
+.PP
+.Ss "#define DTOFFSET(struct_s,member)"
+This macro function computes the offset of \f5member\fP from the start
+of structure \f5struct_s\fP. It is useful for getting the offset of
+a \f5Dtlink_t\fP embedded inside an object.
+.PP
+.Ss "#define DTDISC(disc,key,size,link,makef,freef,comparf,hashf,memoryf,eventf)"
+This macro function initializes the discipline pointed to by \f5disc\fP
+with the given values.
 .PP
 .Ss "OBJECT OPERATIONS"
 .PP

@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -19,6 +19,7 @@
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -66,6 +67,8 @@ typedef struct  _mac_
 	char		assign;		/* set for assignments */
 	char		arith;		/* set for ((...)) */
 	Namval_t	*hp;		/* position for tree walk */
+	Namval_t        *(*nextnode)(Namval_t*,Dt_t*,Namfun_t*);
+	Dt_t		*root;		/* tree root for nextname */
 } Mac_t;
 
 #define mac	(*((Mac_t*)(sh.mac_context)))
@@ -149,7 +152,7 @@ char *sh_mactrim(char *str, register int mode)
 	mp->pattern = (mode==1||mode==2);
 	mp->patfound = 0;
 	mp->assign = (mode<0);
-	mp->quote = mp->lit = mp->split = mp->quoted = 0;
+	mp->quoted = mp->lit = mp->split = mp->quote = 0;
 	mp->sp = 0;
 	if(mp->ifsp=nv_getval(nv_scoped(IFSNOD)))
 		mp->ifs = *mp->ifsp;
@@ -194,7 +197,7 @@ int sh_macexpand(register struct argnod *argp, struct argnod **arghead,int flag)
 	else
 		sh.argaddr = 0;
 	mp->arghead = arghead;
-	mp->quote = mp->lit = mp->quoted = 0;
+	mp->quoted = mp->lit = mp->quote = 0;
 	mp->arith = ((flag&ARG_ARITH)!=0);
 	mp->split = !(flag&ARG_ASSIGN);
 	mp->assign = !mp->split;
@@ -548,7 +551,8 @@ static void copyto(register Mac_t *mp,int endch, int newquote)
 					--paren;
 			}
 		    case S_BRACE:
-			mp->patfound = mp->pattern;
+			if(!(mp->quote || mp->lit))
+				mp->patfound = mp->pattern;
 		    pattern:
 			if(!mp->pattern || !(mp->quote || mp->lit))
 			{
@@ -559,6 +563,8 @@ static void copyto(register Mac_t *mp,int endch, int newquote)
 					mp->pattern=3;
 				break;
 			}
+			if(mp->pattern==3)
+				break;
 			if(c)
 				stakwrite(first,c);
 			first = fcseek(c);
@@ -1027,7 +1033,7 @@ retry1:
 			id = prefix(id);
 			dolmax = strlen(id);
 			stakseek(offset);
-			nextname(mp,NIL(char*),0);
+			nextname(mp,id,0);
 			v = nextname(mp,id,dolmax);
 		}
 		else if(type==M_SUBNAME)
@@ -1637,19 +1643,7 @@ static void mac_copy(register Mac_t *mp,register const char *str, register int s
 		}
 		while(size-->0)
 		{
-			if((n=state[c= *(unsigned char*)cp++])==S_ESC)
-			{
-				mp->patfound = mp->pattern;
-				stakputc(ESCAPE);
-				if((n=sh_lexstates[ST_MACRO][*(unsigned char*)cp])==S_PAT || n==S_DIG || *cp=='-' || *cp=='\\')
-				{
-					stakputc(ESCAPE);
-					stakputc(ESCAPE);
-					size--;
-					c = *cp++;
-				}
-			}
-			else if(n==S_EPAT)
+			if((n=state[c= *(unsigned char*)cp++])==S_ESC || n==S_EPAT)
 			{
 				/* don't allow extended patterns in this case */
 				mp->patfound = mp->pattern;
@@ -1981,29 +1975,63 @@ static char *mac_getstring(char *pattern)
 }
 
 /*
+ * this needs to be modified to handle virtual nodes
+ */
+static Namval_t *firstnode(Mac_t *mp, const char *prefix)
+{
+	register Namval_t *np, *xp;
+	register  char *cp = (char*)prefix;
+	mp->root = mp->shp->var_tree;
+	mp->nextnode = 0;
+	while(1)
+	{
+		while(*++cp && *cp!='.');
+		if(*cp==0)
+			break;
+		*cp = 0;
+		if((np = nv_search(prefix,mp->root,0)) && nv_istable(np))
+		{
+			if(np->nvfun && (mp->nextnode = np->nvfun->disc->nextf))
+				xp = np;
+			mp->root = np->nvalue.hp;
+		}
+		*cp++ = '.';
+	}
+	if(mp->nextnode)
+		return((*mp->nextnode)(0,(Dt_t*)xp,(Namfun_t*)0));
+	return((Namval_t*)dtfirst(mp->root));
+}
+
+static Namval_t *nextnode(Mac_t *mp)
+{
+	if(mp->nextnode)
+		return((*mp->nextnode)(mp->hp,mp->root,(Namfun_t*)0));
+	return((Namval_t*)dtnext(mp->root,mp->hp));
+}
+
+/*
  * return the next name starting with the given prefix
  */
 static char *nextname(Mac_t *mp,const char *prefix, int len)
 {
 	register Namval_t *np;
 	register char *cp;
-	register Dt_t *root = sh.var_tree;
-	if(!prefix)
-		mp->hp = (Namval_t*)dtfirst(root);
+	if(len==0)
+		mp->hp = firstnode(mp,prefix);
 	else if(mp->hp)
 	{
 		while(np=mp->hp)
 		{
 #ifdef SHOPT_OO
 			Namval_t *nq=np;
-			mp->hp = (Namval_t*)dtnext(root,np);
+			mp->hp = nextnode(mp);
 			while(nq && nv_isnull(nq))
 				nq = nv_class(nq);
 			if(!nq)
 				continue;
 				
 #else
-			mp->hp = (Namval_t*)dtnext(root,np);
+			mp->hp = nextnode(mp);
 			if(nv_isnull(np))
 				continue;
 #endif /* SHOPT_OO */

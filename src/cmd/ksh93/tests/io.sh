@@ -9,7 +9,7 @@
 #                                                                  #
 #       http://www.research.att.com/sw/license/ast-open.html       #
 #                                                                  #
-#        If you have copied this software without agreeing         #
+#    If you have copied or used this software without agreeing     #
 #        to the terms of the license you are infringing on         #
 #           the license and copyright and are violating            #
 #               AT&T's intellectual property rights.               #
@@ -19,13 +19,16 @@
 #                         Florham Park NJ                          #
 #                                                                  #
 #                David Korn <dgk@research.att.com>                 #
+#                                                                  #
 ####################################################################
 function err_exit
 {
 	print -u2 -n "\t"
-	print -u2 -r $Command: "$@"
+	print -u2 -r ${Command}[$1]: "${@:2}"
 	let Errors+=1
 }
+alias err_exit='err_exit $LINENO'
+
 Command=$0
 integer Errors=0
 # cut here
@@ -70,6 +73,19 @@ cat > close0 <<\!
 	exit 0
 !
 ./close0 2> /dev/null || err_exit "multiple exec 4< /dev/null can fail"
+$SHELL -c '
+	trap "rm -f in$$ out$$" EXIT
+	for ((i = 0; i < 1000; i++))
+	do	print -r -- "This is a test"
+	done > in$$
+	> out$$
+	exec 1<> out$$
+	builtin cat
+	print -r -- "$(cat in$$)"
+cp in$$ /tmp/dgk.in
+cp out$$ /tmp/dgk.out
+	cmp -s in$$ out$$'  2> /dev/null
+[[ $? == 0 ]] || err_exit 'builtin cat truncates files'
 cd ~- || err_exit "cd back failed"
 ( exec  > '' ) 2> /dev/null  && err_exit '> "" does not fail'
 unset x
@@ -84,3 +100,4 @@ if	[[ $line != foo ]]
 then	err_exit 'file descriptor not restored after exec in subshell'
 fi
 rm -r /tmp/ksh$$ || err_exit "rm -r /tmp/ksh$$ failed"
+exit $((Errors))

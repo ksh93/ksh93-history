@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #ifndef _VMHDR_H
 #define _VMHDR_H	1
@@ -263,8 +264,9 @@ struct _tiny_s
 #define DIV(x,y)	((y) == 8 ? ((x)>>3) : (x)/(y) )
 #define INDEX(s)	DIV((s)-TINYSIZE,ALIGN)
 
-/* number of small block types that can be cached after free */
-#define S_CACHE		7
+/* small block types kept in separate caches for quick allocation */
+#define S_CACHE		6	/* # of types of small blocks to be cached	*/
+#define N_CACHE		32	/* on allocation, create this many at a time	*/
 #define MAXCACHE	(S_CACHE*ALIGN + TINYSIZE)
 #define C_INDEX(s)	(s < MAXCACHE ? INDEX(s) : S_CACHE)
 
@@ -351,8 +353,9 @@ struct _seg_s
 #define SEGWILD(b)	(((b)->body.data+SIZE(b)+sizeof(Head_t)) >= SEG(b)->baddr)
 #define VMWILD(vd,b)	(((b)->body.data+SIZE(b)+sizeof(Head_t)) >= vd->seg->baddr)
 
-#define VMFILELINE(vm,f,l)	((f) = (vm)->file, (vm)->file = NIL(char*), \
-		 		 (l) = (vm)->line, (vm)->line = 0 )
+#define VMFLF(vm,fi,ln,fn)	((fi) = (vm)->file, (vm)->file = NIL(char*), \
+		 		 (ln) = (vm)->line, (vm)->line = 0 , \
+		 		 (fn) = (vm)->func, (vm)->func = NIL(Void_t*) )
 
 /* The lay-out of a Vmprofile block is this:
 **	seg_ size ----data---- _pf_ size
@@ -414,30 +417,6 @@ struct _seg_s
 #define DBTAIL(d,begp,endp) \
 		(((begp) = (Vmuchar_t*)(d)+DBSIZE(d)), ((endp) = (Vmuchar_t*)(&DBLN(d))) )
 
-/* clear and copy functions */
-#define INTCOPY(to,fr,n) \
-	switch(n/sizeof(int)) \
-	{ default: memcpy((Void_t*)to,(Void_t*)fr,n); break; \
-	  case 7:	*to++ = *fr++; \
-	  case 6:	*to++ = *fr++; \
-	  case 5:	*to++ = *fr++; \
-	  case 4:	*to++ = *fr++; \
-	  case 3:	*to++ = *fr++; \
-	  case 2:	*to++ = *fr++; \
-	  case 1:	*to++ = *fr++; \
-	}
-#define INTZERO(d,n) \
-	switch(n/sizeof(int)) \
-	{ default: memset((Void_t*)d,0,n); break; \
-	  case 7:	*d++ = 0; \
-	  case 6:	*d++ = 0; \
-	  case 5:	*d++ = 0; \
-	  case 4:	*d++ = 0; \
-	  case 3:	*d++ = 0; \
-	  case 2:	*d++ = 0; \
-	  case 1:	*d++ = 0; \
-	}
-
 /* external symbols for internal use by vmalloc */
 typedef Block_t*	(*Vmsearch_f)_ARG_((Vmdata_t*, size_t, Block_t*));
 typedef struct _vmextern_
@@ -463,14 +442,25 @@ _BEGIN_EXTERNS_
 
 extern Vmextern_t	_Vmextern;
 
+#if _PACKAGE_ast
+
 #if _npt_getpagesize
 extern size_t		getpagesize _ARG_((void));
 #endif
+#if _npt_sbrk
+extern Void_t*		sbrk _ARG_(( ssize_t ));
+#endif
 
-#if !_PACKAGE_ast
+#else
 
+#if _hdr_unistd
+#include	<unistd.h>
+#else
 extern void		abort _ARG_(( void ));
 extern ssize_t		write _ARG_(( int, const void*, size_t ));
+extern int		getpagesize _ARG_((void));
+extern Void_t*		sbrk _ARG_((ssize_t));
+#endif
 
 #if !__STDC__ && !_hdr_stdlib
 extern size_t		strlen _ARG_(( const char* ));
@@ -485,24 +475,16 @@ extern Void_t*		memset _ARG_(( Void_t*, int, size_t ));
 #include	<string.h>
 #endif
 
-/* for malloc.c */
-extern int		creat _ARG_(( const char*, int ));
-extern int		close _ARG_(( int ));
-extern int		getpid _ARG_(( void ));
-
 /* for vmexit.c */
 extern int		onexit _ARG_(( void(*)(void) ));
 extern void		_exit _ARG_(( int ));
 extern void		_cleanup _ARG_(( void ));
 
-#endif /*!PACKAGE_ast*/
+#endif /*_PACKAGE_ast*/
 
 /* for vmdcsbrk.c */
 #if !_typ_ssize_t
 typedef int		ssize_t;
-#endif
-#if _npt_sbrk
-extern Vmuchar_t*	sbrk _ARG_(( ssize_t ));
 #endif
 
 _END_EXTERNS_

@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #include	"sfhdr.h"
 
@@ -109,17 +110,25 @@ reg size_t	n;	/* number of bytes. 		*/
 		{	if(f->flags&SF_STRING) /* extend buffer */
 			{	(void)SFWR(f, s, n-w, f->disc);
 				if((w = f->endb - f->next) < (ssize_t)n)
-					break;
+				{	if(!(f->flags&SF_STRING)) /* maybe sftmp */
+					{	if(f->next > f->data)
+							goto fls_buf;
+					}
+					else if(w == 0)
+						break;
+				}
 			}
 			else if(f->next > f->data)
-			{	(void)SFFLSBUF(f, -1);
+			{ fls_buf:
+				(void)SFFLSBUF(f, -1);
 				if((w = f->endb - f->next) < (ssize_t)n &&
 				   (f->flags&SF_WHOLE) && f->next > f->data )
-					break;
+						break;
 			}
 		}
 
-		if(!(f->flags&SF_STRING) && f->next == f->data && SFDIRECT(f,n) )
+		if(!(f->flags&SF_STRING) && f->next == f->data &&
+		   (((f->flags&SF_WHOLE) && w <= n) || SFDIRECT(f,n)) )
 		{	/* bypass buffering */
 			if((w = SFWR(f,s,n,f->disc)) <= 0 )
 				break;

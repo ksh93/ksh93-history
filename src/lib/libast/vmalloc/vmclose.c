@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #ifdef _UWIN
 
@@ -41,10 +42,10 @@ int vmclose(vm)
 Vmalloc_t*	vm;
 #endif
 {
-	reg Seg_t	*seg, *vmseg;
-	reg Vmemory_f	memoryf;
-	reg Vmdata_t*	vd = vm->data;
-	reg Vmalloc_t	*v, *last;
+	Seg_t		*seg, *vmseg, *next;
+	Vmalloc_t	*v, *last;
+	Vmdata_t*	vd = vm->data;
+	int		ev = 0;
 
 	if(vm == Vmheap)
 		return -1;
@@ -53,7 +54,7 @@ Vmalloc_t*	vm;
 		return -1;
 
 	if(vm->disc->exceptf &&
-	   (*vm->disc->exceptf)(vm,VM_CLOSE,NIL(Void_t*),vm->disc) < 0)
+	   (ev = (*vm->disc->exceptf)(vm,VM_CLOSE,NIL(Void_t*),vm->disc)) < 0 )
 		return -1;
 
 	/* make this region inaccessible until it disappears */
@@ -71,27 +72,19 @@ Vmalloc_t*	vm;
 		}
 	}
 
-	/* free all non-region segments */
-	memoryf = vm->disc->memoryf;
-	vmseg = NIL(Seg_t*);
-	for(seg = vd->seg; seg; )
-	{	reg Seg_t*	next = seg->next;
-		if(seg->extent != seg->size)
-			(void)(*memoryf)(vm,seg->addr,seg->extent,0,vm->disc);
-		else	vmseg = seg;
-		seg = next;
+	if(ev == 0)
+	{	vmseg = NIL(Seg_t*);
+		for(seg = vd->seg; seg; seg = next)
+		{	next = seg->next;
+			if(seg->extent == seg->size)
+				vmseg = seg;
+			else	(*vm->disc->memoryf)(vm,seg->addr,seg->extent,0,vm->disc);
+		}
+		if(vmseg)
+			(*vm->disc->memoryf)(vm,vmseg->addr,vmseg->extent,0,vm->disc);
 	}
+	else	CLRLOCK(vd,0);
 
-	/* this must be done here because even though this region is freed,
-	   there may still be others that share this space.
-	*/
-	CLRLOCK(vd,0);
-
-	/* free the segment that contains the region data */
-	if(vmseg)
-		(void)(*memoryf)(vm,vmseg->addr,vmseg->extent,0,vm->disc);
-
-	/* free the region itself */
 	vmfree(Vmheap,vm);
 
 	return 0;

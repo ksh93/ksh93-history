@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 
@@ -41,8 +42,6 @@
 #define FMT_case	1
 #define FMT_edit	2
 
-#define REG_SUB_STOP	REG_SUB_USER
-
 /* drop after 20010301 */
 typedef int (*Of_key_lookup_t)(void*, const char*, const char*, int, char**, Sflong_t*);
 typedef char* (*Of_key_convert_t)(void*, const char*, const char*, int, char*, Sflong_t);
@@ -54,6 +53,8 @@ typedef struct
 	Sf_key_lookup_t		lookup;
 	Sf_key_convert_t	convert;
 	Sfio_t*			tmp[2];
+	regex_t			red[2];
+	regex_t*		re[2];
 	int			invisible;
 	int			level;
 	int			version;
@@ -154,12 +155,9 @@ getfmt(Sfio_t* sp, void* vp, Sffmt_t* dp)
 	int		h = 0;
 	int		i = 0;
 	int		x = 0;
-	char*		e;
-	char*		t;
 	int		c;
 	int		d;
 	Field_t		f;
-	regex_t		re;
 	regmatch_t	match[10];
 
 	fp->level++;
@@ -218,7 +216,7 @@ getfmt(Sfio_t* sp, void* vp, Sffmt_t* dp)
 	switch (fp->fmt.fmt)
 	{
 	case 'c':
-		value->c = s ? *s : c;
+		value->c = s ? *s : n;
 		break;
 	case 'd':
 		fp->fmt.size = sizeof(Sflong_t);
@@ -300,57 +298,23 @@ getfmt(Sfio_t* sp, void* vp, Sffmt_t* dp)
 				}
 				break;
 			case FMT_edit:
-				x = 1;
-				while ((a = getfield(&f, 1)) && (v = getfield(&f, 0)))
+				for (x = 0; *f.next; x ^= 1)
 				{
-					x ^= 1;
-					i = 0;
-					if (t = e = getfield(&f, 0))
-					{
-						for (;;)
-						{
-							switch (*t++)
-							{
-							case 0:
-								break;
-							case 'g':
-								i |= REG_SUB_ALL;
-								continue;
-							case 'l':
-								i |= REG_SUB_LOWER;
-								continue;
-							case 's':
-								i |= REG_SUB_STOP;
-								continue;
-							case 'u':
-								i |= REG_SUB_UPPER;
-								continue;
-							}
-							break;
-						}
-					}
-					if ((fp->tmp[x] || (fp->tmp[x] = sfstropen())) && !regcomp(&re, a, 0))
-					{
-						if (!regexec(&re, s, elementsof(match), match, 0))
-							regsub(&re, fp->tmp[x], s, v, elementsof(match), match, i);
-						else
-						{
-							i = 0;
-							sfputr(fp->tmp[x], s, -1);
-						}
-						regfree(&re);
-						s = sfstruse(fp->tmp[x]);
-					}
+					if (fp->re[x])
+						regfree(fp->re[x]);
 					else
-						i = 0;
-					*(v - 1) = d;
-					if (e)
-						*(e - 1) = d;
-					if (i & REG_SUB_STOP)
-					{
-						if (f.delimiter)
-							*f.next = d;
+						fp->re[x] = &fp->red[x];
+					if (regcomp(fp->re[x], f.next, REG_DELIMITED|REG_NULL))
 						break;
+					f.next += fp->re[x]->re_npat;
+					if (regsubcomp(fp->re[x], f.next, NiL, 0, 0))
+						break;
+					f.next += fp->re[x]->re_npat;
+					if (!regexec(fp->re[x], s, elementsof(match), match, 0) && !regsubexec(fp->re[x], s, elementsof(match), match))
+					{
+						s = fp->re[x]->re_sub->re_buf;
+						if (fp->re[x]->re_sub->re_flags & REG_SUB_STOP)
+							break;
 					}
 				}
 				h = 1;
@@ -437,5 +401,8 @@ sfkeyprintf(Sfio_t* sp, void* handle, const char* format, Sf_key_lookup_t lookup
 	for (i = 0; i < elementsof(fmt.tmp); i++)
 		if (fmt.tmp[i])
 			sfclose(fmt.tmp[i]);
+	for (i = 0; i < elementsof(fmt.re); i++)
+		if (fmt.re[i])
+			regfree(fmt.re[i]);
 	return r;
 }

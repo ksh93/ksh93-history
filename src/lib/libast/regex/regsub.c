@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,11 +21,12 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 
 /*
- * posix regex ed-style substitute
+ * OBSOLETE Sfio_t buffer interface -- use regsubcomp(),regsubexec()
  */
 
 #include "reglib.h"
@@ -35,7 +36,7 @@
  */
 
 static int
-sub(register Sfio_t* dp, const char* op, register const char* sp, size_t nmatch, register regmatch_t* match, register regflags_t flags, int sre)
+subold(register Sfio_t* dp, const char* op, register const char* sp, size_t nmatch, register regmatch_t* match, register regflags_t flags, int sre)
 {
 	register int	c;
 	char*		s;
@@ -244,19 +245,28 @@ sub(register Sfio_t* dp, const char* op, register const char* sp, size_t nmatch,
 int
 regsub(const regex_t* p, Sfio_t* dp, const char* op, const char* sp, size_t nmatch, regmatch_t* match, regflags_t flags)
 {
+	int	m;
 	int	r;
 	int	sre;
 
 	if ((p->env->flags & REG_NOSUB) || !nmatch)
-		return REG_BADPAT;
+		return fatal(p->env->disc, REG_BADPAT, NiL);
+	m = (flags >> 16) & 0x3fff;
 	sre = !!(p->env->flags & REG_SHELL);
 	do
 	{
-		sfwrite(dp, op, match->rm_so);
-		if (r = sub(dp, op, sp, nmatch, match, flags, sre))
-			return fatal(p->env->disc, r, NiL);
+		if (--m > 0)
+			sfwrite(dp, op, match->rm_eo);
+		else
+		{
+			sfwrite(dp, op, match->rm_so);
+			if (r = subold(dp, op, sp, nmatch, match, flags, sre))
+				return fatal(p->env->disc, r, NiL);
+		}
 		op += match->rm_eo;
-	} while ((flags & REG_SUB_ALL) && *op && match->rm_so != match->rm_eo && !(r = regexec(p, op, nmatch, match, p->env->flags)));
+	} while ((m > 0 || (flags & REG_SUB_ALL)) && !(r = regexec(p, op, nmatch, match, p->env->flags|(match->rm_so == match->rm_eo ? REG_ADVANCE : 0))));
+	if (r && r != REG_NOMATCH)
+		return fatal(p->env->disc, r, NiL);
 	sfputr(dp, op, -1);
-	return r == REG_NOMATCH ? 0 : r;
+	return 0;
 }

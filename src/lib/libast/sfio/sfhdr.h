@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #ifndef _SFHDR_H
 #define _SFHDR_H	1
@@ -45,6 +46,20 @@
 #define _val		val
 
 #include	"FEATURE/sfio"
+
+/* define va_list, _ARG_, etc. before including sfio_t.h (sfio.h) */
+#if !_PACKAGE_ast
+#if _hdr_stdarg
+#include	<stdarg.h>
+#else
+#include	<varargs.h>
+#endif
+#include	"FEATURE/common"
+#if !__STD_C
+#define const	
+#endif
+#endif /* !_PACKAGE_ast */
+
 #include	"sfio_t.h"
 
 /* note that the macro vt_threaded has effect on vthread.h */
@@ -58,31 +73,37 @@
 #include	<ast_tty.h>
 #include	<ls.h>
 
+/* ast always provides multibyte handling */
+#undef _hdr_wchar
+#undef _lib_mbrtowc
+#undef _lib_wcrtomb
+#define _hdr_wchar	1
+#define _lib_mbrtowc	1
+#define _lib_wcrtomb	1
+
 #if _mem_st_blksize_stat
-#define _stat_blksize		1
+#define _stat_blksize	1
 #endif
 
-#define _lib_locale		1
-#define _has_multibyte		1
+#if _lib_localeconv && _hdr_locale
+#define _lib_locale	1
+#endif
 
-#define SFMBLEN(s,x)		mbsize(s)
+#define sfoff_t		off_t
+#define sfstat_t	struct stat
 
 #else /*!_PACKAGE_ast*/
 
-#ifndef elementsof
-#define elementsof(x)		(sizeof(x)/sizeof(x[0]))
+/* these guys don't know large files */
+#if (__hppa || __mips == 2) && !defined(NO_LARGEFILE64_SOURCE)
+#define NO_LARGEFILE64_SOURCE	1
+#undef	_LARGEFILE64_SOURCE
 #endif
 
-#if __mips == 2 && !defined(_NO_LARGEFILE64_SOURCE)
-#define _NO_LARGEFILE64_SOURCE  1
+#if !defined(_NO_LARGEFILE64_SOURCE) && _typ_off64_t && _lib_lseek64 && _lib_stat64
+#if !defined(_LARGEFILE64_SOURCE)
+#define _LARGEFILE64_SOURCE	1	/* enabling the *64 stuff */
 #endif
-#if !defined(_NO_LARGEFILE64_SOURCE) && \
-	_lib_lseek64 && _lib_stat64 && _lib_mmap64 && _typ_off64_t && _typ_struct_stat64
-#	if !defined(_LARGEFILE64_SOURCE)
-#	define _LARGEFILE64_SOURCE     1
-#	endif
-#else
-#	undef  _LARGEFILE64_SOURCE
 #endif
 
 /* when building the binary compatibility package, a number of header files
@@ -101,8 +122,6 @@
 #undef  _hdr_vfork
 #undef  _sys_vfork
 #undef  _lib_vfork
-#undef  _hdr_floatingpoint
-#undef  _hdr_float
 #undef  _hdr_values
 #undef  _hdr_math
 #undef  _sys_mman
@@ -158,18 +177,136 @@
 #include	<unistd.h>
 #endif
 
-/* to deal with multibyte characters */
-#if defined(MB_CUR_MAX) && _lib_mblen
-#define _has_multibyte		1
-#define SFMBLEN(s,mbmax)	((mbmax) > 1 ? mblen(s,mbmax) : 1)
-#else
-#define _has_multibyte		0
-#define SFMBLEN(s,mbmax)	(1)
+#if !_LARGEFILE64_SOURCE	/* turn off the *64 stuff */
+#undef	_typ_off64_t
+#undef	_typ_struct_stat64
+#undef	_lib_creat64
+#undef	_lib_open64
+#undef	_lib_close64
+#undef	_lib_stat64
+#undef	_lib_fstat64
+#undef	_lib_ftruncate64
+#undef	_lib_lseek64
+#undef	_lib_mmap64
+#undef	_lib_munmap64
+#endif /*!_LARGEFILE64_SOURCE */
+
+/* see if we can use memory mapping for io */
+#if _LARGEFILE64_SOURCE && !_lib_mmap64
+#undef _mmap_worthy
 #endif
+#if !_mmap_worthy
+#undef _hdr_mman
+#undef _sys_mman
+#endif
+#if _hdr_man
+#include	<mman.h>
+#endif
+#if _sys_mman
+#include	<sys/mman.h>
+#endif
+
+#if _typ_off64_t
+#define sfoff_t		off64_t
+#else
+#define sfoff_t		off_t
+#endif
+#if _typ_struct_stat64
+#define sfstat_t	struct stat64
+#else
+#define sfstat_t	struct stat
+#endif
+#if _lib_lseek64
+#define lseek		lseek64
+#endif
+#if _lib_stat64
+#define stat		stat64
+#endif
+#if _lib_fstat64
+#define fstat		fstat64
+#endif
+#if _lib_mmap64
+#define mmap		mmap64
+#endif
+#if _lib_munmap64
+#define munmap		munmap64
+#endif
+#if _lib_open64
+#define open		open64
+#endif
+#if _lib_creat64
+#define creat		creat64
+#endif
+#if _lib_close64
+#define close		close64
+#endif
+#if _lib_ftruncate64
+#define ftruncate	ftruncate64
+#endif
+
 #endif /*_PACKAGE_ast*/
+
+#include	"FEATURE/float"
 
 #include	<errno.h>
 #include	<ctype.h>
+
+/* deal with multi-byte character and string conversions */
+#if _PACKAGE_ast
+
+#include	<wchar.h>
+
+#define _has_multibyte		1
+
+#define SFMBMAX			mbmax()
+#define SFMBCPY(to,fr)		memcpy((to), (fr), sizeof(mbstate_t))
+#define SFMBCLR(mb)		memset((mb), 0,  sizeof(mbstate_t))
+#define SFMBSET(lhs,v)		(lhs = (v))
+#define SFMBLEN(s,mb)		mbsize(s)
+#define SFMBDCL(ms)		mbstate_t ms;
+
+#else
+
+#if _hdr_wchar && _typ_mbstate_t && _lib_wcrtomb && _lib_mbrtowc
+#define _has_multibyte		1	/* Xopen-compliant	*/
+#include	<wchar.h>
+#define SFMBCPY(to,fr)		memcpy((to), (fr), sizeof(mbstate_t))
+#define SFMBCLR(mb)		memset((mb), 0,  sizeof(mbstate_t))
+#define SFMBSET(lhs,v)		(lhs = (v))
+#define SFMBLEN(s,mb)		mbrtowc(0, (s), SFMBMAX, (mb) )
+#define SFMBDCL(mb)		mbstate_t mb;
+#endif /*_hdr_wchar && _typ_mbstate_t && _lib_wcrtomb && _lib_mbrtowc*/
+
+#if !_has_multibyte && _hdr_wchar && _lib_mbtowc && _lib_wctomb
+#define _has_multibyte		2	/* no shift states	*/
+#include	<wchar.h>
+#undef mbrtowc
+#define mbrtowc(wp,s,n,mb)	mbtowc(wp, s, n)
+#undef wcrtomb
+#define wcrtomb(s,wc,mb)	wctomb(s, wc)
+#define SFMBCPY(to,fr)
+#define SFMBCLR(mb)
+#define SFMBSET(lhs,v)
+#define SFMBLEN(s,mb)		mbrtowc(0, (s), SFMBMAX, (mb) )
+#define SFMBDCL(mb)
+#endif /*!_has_multibyte && _hdr_wchar && _lib_mbtowc && _lib_wctomb*/
+
+#ifdef MB_CUR_MAX
+#define SFMBMAX			MB_CUR_MAX
+#else
+#define SFMBMAX			sizeof(Sflong_t)
+#endif
+
+#endif /* _PACKAGE_ast */
+
+#if !_has_multibyte
+#define _has_multibyte		0	/* no multibyte support	*/
+#define SFMBCPY(to,fr)
+#define SFMBCLR(mb)
+#define SFMBSET(lhs,v)
+#define SFMBLEN(s,mb)		(*(s) ? 1 : 0)
+#define SFMBDCL(mb)
+#endif /* _has_multibyte */
 
 #if vt_threaded
 
@@ -251,90 +388,8 @@
 #define fork	vfork
 #endif
 
-#if _lib_unlink && !defined(remove)
+#if _lib_unlink
 #define remove	unlink
-#endif
-
-#if _hdr_math
-#include	<math.h>
-#if !defined(SF_MAXDOUBLE) && defined(MAXDOUBLE)
-#define SF_MAXDOUBLE	MAXDOUBLE
-#endif
-#if !defined(SF_MAXDOUBLE) && defined(DBL_MAX)
-#define SF_MAXDOUBLE	DBL_MAX
-#endif
-#endif
-
-#ifdef MAXFLOAT	/* on some platforms, these are defined in both values.h and math.h */
-#undef MAXFLOAT	/* we don't need them so we zap them here to avoid compiler warnings */
-#endif
-#ifdef MAXSHORT
-#undef MAXSHORT
-#endif
-#ifdef MAXINT
-#undef MAXINT
-#endif
-#ifdef MAXLONG
-#undef MAXLONG
-#endif
-
-#if _hdr_values
-#include	<values.h>
-#if !defined(SF_MAXDOUBLE) && defined(MAXDOUBLE)
-#define SF_MAXDOUBLE	MAXDOUBLE
-#endif
-#if !defined(SF_MAXDOUBLE) && defined(DBL_MAX)
-#define SF_MAXDOUBLE	DBL_MAX
-#endif
-#endif
-
-#if !defined(SF_MAXDOUBLE) && _hdr_floatingpoint
-#include	<floatingpoint.h>
-#if !defined(SF_MAXDOUBLE) && defined(MAXDOUBLE)
-#define SF_MAXDOUBLE	MAXDOUBLE
-#endif
-#if !defined(SF_MAXDOUBLE) && defined(DBL_MAX)
-#define SF_MAXDOUBLE	DBL_MAX
-#endif
-#endif
-
-#if !defined(SF_MAXDOUBLE) && _hdr_float
-#include	<float.h>
-#if !defined(SF_MAXDOUBLE) && defined(MAXDOUBLE)
-#define SF_MAXDOUBLE	MAXDOUBLE
-#endif
-#if !defined(SF_MAXDOUBLE) && defined(DBL_MAX)
-#define SF_MAXDOUBLE	DBL_MAX
-#endif
-#endif
-
-#if !_ast_fltmax_double
-
-#if !defined(SF_MAXDOUBLE)
-#define SF_MAXDOUBLE	1.79769313486231570e+308
-#endif
-
-#if _lib_qfrexp && _lib_qldexp
-#define _has_expfuncs	1
-#define frexp		qfrexp
-#define ldexp		qldexp
-#else
-#define _has_expfuncs	0
-#endif
-
-#endif/*_ast_fltmax_double*/
-
-/* 64-bit vs 32-bit file stuff */
-#if _sys_stat
-#ifdef _LARGEFILE64_SOURCE
-typedef struct stat64	Stat_t;
-#define	lseek		lseek64
-#define stat		stat64
-#define fstat		fstat64
-#define off_t		off64_t
-#else
-typedef struct stat	Stat_t;
-#endif
 #endif
 
 /* to get rid of pesky compiler warnings */
@@ -351,20 +406,30 @@ typedef struct stat	Stat_t;
 #define SF_NULL		00000010	/* stream is /dev/null			*/
 #define SF_SEQUENTIAL	00000020	/* sequential access			*/
 #define SF_JUSTSEEK	00000040	/* just did a sfseek			*/
+#define SF_PRIVATE	00000100	/* private stream to Sfio, no mutex	*/
+#define SF_ENDING	00000200	/* no re-io on interrupts at closing	*/
+#define SF_WIDE		00000400	/* in wide mode - stdio only		*/
 
-/* this bit signals sfmutex() not to create a mutex for a private stream */
-#define SF_PRIVATE	00000200	/* private stream to Sfio		*/
+/* "bits" flags that must be cleared in sfclrlock */
+#define SF_TMPBITS	00170000
+#define SF_DCDOWN	00010000	/* recurse down the discipline stack	*/
 
-/* on closing, don't be a hero about reread/rewrite on interrupts */
-#define SF_ENDING	00000400
+#define SF_WCFORMAT	00020000	/* wchar_t formatting - stdio only	*/
+#if _has_multibyte
+#define SFWCSET(f)	((f)->bits |= SF_WCFORMAT)
+#define SFWCGET(f,v)	(((v) = (f)->bits & SF_WCFORMAT), ((f)->bits &= ~SF_WCFORMAT) )
+#else
+#define SFWCSET(f)
+#define SFWCGET(f,v)
+#endif
 
-/* private flags that must be cleared in sfclrlock */
-#define SF_DCDOWN	00001000	/* recurse down the discipline stack	*/
-#define SF_MVSIZE	00002000
+#define SF_MVSIZE	00040000	/* f->size was reset in sfmove()	*/
 #define SFMVSET(f)	(((f)->size *= SF_NMAP), ((f)->bits |= SF_MVSIZE) )
 #define SFMVUNSET(f)	(!((f)->bits&SF_MVSIZE) ? 0 : \
 				(((f)->bits &= ~SF_MVSIZE), ((f)->size /= SF_NMAP)) )
-#define SFCLRBITS(f)	(SFMVUNSET(f), ((f)->bits &= ~(SF_DCDOWN|SF_MVSIZE)) )
+
+#define SFCLRBITS(f)	(SFMVUNSET(f), ((f)->bits &= ~SF_TMPBITS) )
+
 
 /* bits for the mode field, SF_INIT defined in sfio_t.h */
 #define SF_RC		00000010	/* peeking for a record			*/
@@ -404,7 +469,7 @@ typedef struct stat	Stat_t;
 
 #define SECOND		1000	/* millisecond units */
 
-/* macros do determine stream types from Stat_t data */
+/* macros do determine stream types from sfstat_t data */
 #ifndef S_IFMT
 #define S_IFMT	0
 #endif
@@ -479,40 +544,8 @@ typedef struct stat	Stat_t;
 #define ESPIPE	29
 #endif
 
-/* see if we can use memory mapping for io */
-#if !_PACKAGE_ast && _mmap_worthy
-#	ifdef _LARGEFILE64_SOURCE
-#		undef	mmap
-#	endif
-#	if _hdr_mman
-#		include	<mman.h>
-#	endif
-#	if _sys_mman
-#		include	<sys/mman.h>
-#	endif
-#	ifdef _LARGEFILE64_SOURCE
-#		ifndef off_t
-#			define off_t		off64_t
-#		endif
-#		define mmap		mmap64
-#	endif
-#endif
-
-#ifdef MAXFLOAT	/* we don't need these, so we zap them to avoid compiler warnings */
-#undef MAXFLOAT
-#endif
-#ifdef MAXSHORT
-#undef MAXSHORT
-#endif
-#ifdef MAXINT
-#undef MAXINT
-#endif
-#ifdef MAXLONG
-#undef MAXLONG
-#endif
-
 /* function to get the decimal point for local environment */
-#if _PACKAGE_ast
+#if !defined(SFSETLOCALE) && _PACKAGE_ast
 #include "lclib.h"
 #define SFSETLOCALE(dp,tp) \
 	do if (*(dp) == 0) { \
@@ -520,14 +553,15 @@ typedef struct stat	Stat_t;
 		*(dp) = lv->decimal; \
 		*(tp) = lv->thousand; \
 	} while (0)
-#else
-#if _lib_locale
+#endif /*!defined(SFSETLOCALE) && _PACKAGE_ast*/
+
+#if !defined(SFSETLOCALE) && _lib_locale
 #include	<locale.h>
 #define SFSETLOCALE(decimal,thousand) \
 	do { struct lconv*	lv; \
 	  if(*(decimal) == 0) \
 	  { *(decimal) = '.'; \
-	    *(thousand) = -1; \
+	    *(thousand) = 0; \
 	    if((lv = localeconv())) \
 	    { if(lv->decimal_point && lv->decimal_point[0]) \
 	    	*(decimal) = lv->decimal_point[0]; \
@@ -536,9 +570,10 @@ typedef struct stat	Stat_t;
 	    } \
 	  } \
 	} while (0)
-#else
+#endif /*!defined(SFSETLOCALE) && _lib_locale*/
+
+#if !defined(SFSETLOCALE)
 #define SFSETLOCALE(decimal,thousand)	(*(decimal)='.')
-#endif
 #endif
 
 /* stream pool structure. */
@@ -595,7 +630,12 @@ typedef union
 	Sfdouble_t	ld;
 	double		d;
 	float		f;
+#if _has_multibyte
+	wchar_t		wc;
+	wchar_t		*ws, **wsp;
+#endif
 	char		c, *s, **sp;
+	uchar		uc, *us, **usp;
 	Void_t		*vp;
 	Sffmt_t		*ft;
 } Argv_t;
@@ -603,6 +643,7 @@ typedef union
 struct _fmt_s
 {	char*		form;		/* format string		*/
 	va_list		args;		/* corresponding arglist	*/
+	SFMBDCL(mbs)			/* multibyte parsing state	*/
 
 	char*		oform;		/* original format string	*/
 	va_list		oargs;		/* original arg list		*/
@@ -636,12 +677,10 @@ struct _fmtpos_s
 	 (ft->width = wid), (ft->precis = pr), (ft->base = bs), \
 	 (ft->t_str = ts), (ft->n_str = ns) )
 #define FMTGET(ft, frm,ags, fv, sz, flgs, wid,pr,bs) \
-	((frm = ft->form), va_copy(ags,ft->args), (fv = ft->fmt), (sz = ft->size), \
+	((frm = ft->form), va_copy(ags,ft->args), \
+	 (fv = ft->fmt), (sz = ft->size), \
 	 (flgs = (flgs&~(SFFMT_SET))|(ft->flags&SFFMT_SET)), \
 	 (wid = ft->width), (pr = ft->precis), (bs = ft->base) )
-#define FMTCMP(sz, type, maxtype) \
-	(sz == sizeof(type) || (sz == 0 && sizeof(type) == sizeof(maxtype)) || \
-	 (sz == 64 && sz == sizeof(type)*CHAR_BIT) )
 
 /* format flags&types, must coexist with those in sfio.h */
 #define SFFMT_FORBIDDEN 000077777777	/* for sfio.h only		*/
@@ -658,8 +697,8 @@ struct _fmtpos_s
 #define SFFMT_INT	001		/* %d,%i 		*/
 #define SFFMT_UINT	002		/* %u,o,x etc.		*/
 #define SFFMT_FLOAT	004		/* %f,e,g etc.		*/
-#define SFFMT_BYTE	010		/* %c			*/
-#define SFFMT_POINTER	020		/* %p, %n		*/
+#define SFFMT_CHAR	010		/* %c,C			*/
+#define SFFMT_POINTER	020		/* %p,n,s,S		*/
 #define SFFMT_CLASS	040		/* %[			*/
 
 /* local variables used across sf-functions */
@@ -697,8 +736,8 @@ typedef struct _sfextern_s
 #define SFSVALUE(v)	((( long)(v))&(SF_SIGN-1))
 #define SFBVALUE(v)	(((ulong)(v))&(SF_BYTE-1))
 
-/* amount of precision to get in each iteration during coding of doubles */
-#define SF_PRECIS	(SF_UBITS-1)
+/* pick this many bits in each iteration of double encoding */
+#define SF_PRECIS	7
 
 /* grain size for buffer increment */
 #define SF_GRAIN	1024
@@ -715,8 +754,16 @@ typedef struct _sfextern_s
 
 /* set/unset sequential states for mmap */
 #if _lib_madvise && defined(MADV_SEQUENTIAL) && defined(MADV_NORMAL)
-#define SFMMSEQON(f,a,s)	do{ int oerrno=errno; (void)madvise((caddr_t)(a),(size_t)(s),MADV_SEQUENTIAL); errno=oerrno; }while(0)
-#define SFMMSEQOFF(f,a,s)	do{ int oerrno=errno; (void)madvise((caddr_t)(a),(size_t)(s),MADV_NORMAL); errno=oerrno; }while(0)
+#define SFMMSEQON(f,a,s) \
+		do { int oerrno = errno; \
+		     (void)madvise((caddr_t)(a),(size_t)(s),MADV_SEQUENTIAL); \
+		     errno = oerrno; \
+		} while(0)
+#define SFMMSEQOFF(f,a,s) \
+		do { int oerrno = errno; \
+		     (void)madvise((caddr_t)(a),(size_t)(s),MADV_NORMAL); \
+		     errno = oerrno; \
+		} while(0)
 #else
 #define SFMMSEQON(f,a,s)
 #define SFMMSEQOFF(f,a,s)
@@ -907,14 +954,14 @@ typedef struct _sftab_
 	char*		sf_digits;		/* digits for general bases	*/ 
 	int		(*sf_cvinitf)();	/* initialization function	*/
 	int		sf_cvinit;		/* initialization state		*/
-	Fmtpos_t*	(*sf_fmtposf)_ARG_((Sfio_t*,const char*,va_list,int));
+	Fmtpos_t*	(*sf_fmtposf)_ARG_((Sfio_t*,const char*,va_list,Sffmt_t*,int));
 	char*		(*sf_fmtintf)_ARG_((const char*,int*));
 	float*		sf_flt_pow10;		/* float powers of 10		*/
 	double*		sf_dbl_pow10;		/* double powers of 10		*/
-	Sfdouble_t*	sf_ldbl_pow10;		/* Sfdouble_t powers of 10		*/
+	Sfdouble_t*	sf_ldbl_pow10;		/* Sfdouble_t powers of 10	*/
 	float		sf_flt_huge;		/* float HUGE_VALUE		*/
 	double		sf_dbl_huge;		/* double HUGE_VALUE		*/
-	Sfdouble_t	sf_ldbl_huge;		/* Sfdouble_t HUGE_VALUE		*/
+	Sfdouble_t	sf_ldbl_huge;		/* Sfdouble_t HUGE_VALUE	*/
 	uchar		sf_cv36[SF_MAXCHAR+1];	/* conversion for base [2-36]	*/
 	uchar		sf_cv64[SF_MAXCHAR+1];	/* conversion for base [37-64]	*/
 	uchar		sf_type[SF_MAXCHAR+1];	/* conversion formats&types	*/
@@ -1022,9 +1069,9 @@ extern int		_sfpclose _ARG_((Sfio_t*));
 extern int		_sfexcept _ARG_((Sfio_t*, int, ssize_t, Sfdisc_t*));
 extern Sfrsrv_t*	_sfrsrv _ARG_((Sfio_t*, ssize_t));
 extern int		_sfsetpool _ARG_((Sfio_t*));
-extern char*		_sfcvt _ARG_((Void_t*, char*, size_t, int, int*, int*, int));
+extern char*		_sfcvt _ARG_((Sfdouble_t,char*,size_t,int,int*,int*,int*,int));
 extern char**		_sfgetpath _ARG_((char*));
-extern Sfdouble_t	_sfstrtod _ARG_((const char*, char**));
+extern Sfdouble_t	_sfdscan _ARG_((Void_t*, int(*)(Void_t*)));
 
 #if _BLD_sfio && defined(__EXPORT__)
 #define extern	__EXPORT__
@@ -1040,23 +1087,18 @@ extern int		_sftype _ARG_((const char*, int*, int*));
 
 #undef	extern
 
-#if !_lib_strtod
-#define strtod		_sfstrtod
-#endif
-
 #ifndef errno
 extern int		errno;
 #endif
 
 /* for portable encoding of double values */
-#if !__STDC__
-extern double	frexp _ARG_((double, int*));
-extern double	ldexp _ARG_((double,int));
+#if _ast_fltmax_double
+#define frexpl		frexp
+#define ldexpl		ldexp
 #endif
-
-#if !_hdr_mman && !_sys_mman
-extern Void_t*	mmap _ARG_((Void_t*, size_t, int, int, int, off_t));
-extern int	munmap _ARG_((Void_t*, size_t));
+#if !__STDC__
+extern Sfdouble_t	frexpl _ARG_((Sfdouble_t, int*));
+extern Sfdouble_t	ldexpl _ARG_((Sfdouble_t, int));
 #endif
 
 #if !_PACKAGE_ast
@@ -1089,7 +1131,7 @@ extern int	remove _ARG_((const char*));
 extern int	close _ARG_((int));
 extern ssize_t	read _ARG_((int, void*, size_t));
 extern ssize_t	write _ARG_((int, const void*, size_t));
-extern off_t	lseek _ARG_((int, off_t, int));
+extern sfoff_t	lseek _ARG_((int, sfoff_t, int));
 extern int	dup _ARG_((int));
 extern int	isatty _ARG_((int));
 extern int	wait _ARG_((int*));
@@ -1121,7 +1163,7 @@ typedef int(*	Onexit_f)_ARG_((void));
 extern Onexit_f	onexit _ARG_((Onexit_f));
 
 #if _sys_stat
-extern int	fstat _ARG_((int, Stat_t*));
+extern int	fstat _ARG_((int, sfstat_t*));
 #endif
 
 #if _lib_vfork && !_hdr_vfork && !_sys_vfork

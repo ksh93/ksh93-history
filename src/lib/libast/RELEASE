@@ -1,5 +1,44 @@
+02-06-27 ast_std.h: map _sysconf => _ast_sysconf for sun
+02-06-26 cdt,sfio,vmalloc: kpv sync -- is this ever easy?
+02-06-24 sfio: kpv sync, vfwscanf(),fputw() fix (wcslen(x)*sizeof(wchar_t)!!)
+	 misc/fts.c: fix symlink chdir() optimzation bug
+02-06-11 sfio/sfwrite.c: string to file fix
+	 Makefile: __OBSOLETE__==20020101
+02-06-01 regex/regcomp.c: REG_DELIMITED now consumes the delimiter
+02-05-31 regex/reglib.h,regcomp.c,regnexec.c: null subexpression fixes
+02-05-24 misc/fts.c: disable dir link counts in 3d
+	 misc/magic.c: fix "*(mkfile)" sh pattern to "*@(mkfile)"
+02-05-20 regex.h,regex/regsubcomp.c,regex/regsubexec.c: add
+	 regex/regsub.c: deprecate
+02-05-16 tm/tmfix.c: fix '60+n min/sec ago' bug for n min/sec after the hour
+02-05-14 regex/regsub.c: fix (^|x) null match early termination bug
+02-05-13 dir/dirlib.h: drop errant extern==__EXPORT__
+	 features/uwin: add uwin lib tests
+	 uwin/*.c: check features/uwin for stubs
+	 features/float: add nan representation generation
+	 sfio/sftable.h: used _ast_*_nan_init for huge values
+02-05-09 misc/fts.c: fix virtual top to force ``child'' stat()
+	 features/common: define va_copy() only if not in <stdarg.h>
+02-05-01 string/strtoip4.c: cisco inverted quad mask must have 4 parts
+02-04-30 misc/magic.tab: fix pzip version check
+02-04-19 string/strtoip4.c: handle cisco inverted quad mask n.n.n.n/i.i.i.i
+02-04-18 misc/fts.c: add chdir() verification stat() optimizations
+	 path/pathkey.c: check PROBE_ATTRIBUTES for list of vars
+02-04-12 port/astlicense.c: type=open tweak, fix author list spacing
+02-04-11 regex/regcomp.c: check for pattern number overflow
+02-04-05 tm/tmfmt.c: add %u
+02-04-04 sfkeyprintf.c: fix %c numeric value
+	 path/pathpath.c: check plain path first -- duh
+02-04-03 misc/fts.c: fix (FTS_PHYSICAL|FTS_NOSTAT) stat optimizations
+	 ftwalk.c: only clear FTW_DELAY if FTW_CHILDREN
+	 ftwalk.h: add FTW_NSOK for FTW_DELAY
+02-03-29 ast.h: drop strerror() prototype -- already in <ast_std.h>
+	 features/stdio: check for _SFIO_H redundant _Sfstd* declarations
+02-03-26 misc/glob.c: fix GLOB_LIST gl_flags values
+02-03-24 port/mnt.c: update bsd fstype name and mount option logic
+02-03-23 Makefile: add ast_wchar.h to the .check.hdr list (for mamake)
 02-03-17 features/stdio: hack around g++ 3.* clashes
-	 Makefile: add ast_nl_types.h to the .check.hdr list
+	 Makefile: add ast_nl_types.h to the .check.hdr list (for mamake)
 	 string/strtoip4.c: fix validity check bug that only checked last part
 02-03-14 misc/optget.c: fix --keys to not expand inline \f...\f
 02-03-12 port/astlicense.c: add type=free

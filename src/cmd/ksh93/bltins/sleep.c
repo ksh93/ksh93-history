@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -19,6 +19,7 @@
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -30,7 +31,9 @@
  *
  */
 
+#define sleep	______sleep
 #include	"defs.h"
+#undef	sleep
 #include	<error.h>
 #include	<errno.h>
 #include	"builtins.h"
@@ -61,7 +64,7 @@ int	b_sleep(register int argc,char *argv[],void *extra)
 	argv += opt_info.index;
 	if(error_info.errors || !(cp= *argv) || !(strmatch(cp,e_numeric)))
 		errormsg(SH_DICT,ERROR_usage(2),"%s",optusage((char*)0));
-	if((d=strtod(cp, (char**)0)) > 1.0)
+	if((d=strtod(cp, (char**)0)) > .10)
 	{
 		sfsync(shp->outpool);
 		time(&tloc);

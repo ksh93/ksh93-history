@@ -1,4 +1,6 @@
-#ifndef _UWIN
+#include "FEATURE/uwin"
+
+#if !_UWIN || _lib_ceil && _lib_floor && _lib_rint
 
 void _STUB_rint(){}
 
@@ -51,7 +53,8 @@ ic(L, 4503599627370496.0E0, 52, 1.0)			  /* 2**52 */
 #define	L	vccast(L)
 #endif
 
-#ifndef _UWIN
+#if !_lib_floor
+
 /*
  * floor(x) := the largest integer no larger than x;
  * ceil(x) := -floor(-x), for all real x.
@@ -79,6 +82,10 @@ double x;
 	}
 }
 
+#endif
+
+#if !_lib_ceil
+
 extern double ceil(x)
 double x;
 {
@@ -98,9 +105,11 @@ double x;
 		return x > y ? y+(double)1 : y;
 	}
 }
-#endif /* _UWIN */
 
-#ifndef ns32000			/* rint() is in ./NATIONAL/support.s */
+#endif
+
+#if !_lib_rint
+
 /*
  * algorithm for rint(x) in pseudo-pascal form ...
  *
@@ -139,6 +148,7 @@ double x;
 	t = x + s;				/* x+s rounded to integer */
 	return (t - s);
 }
-#endif	/* not national */
+
+#endif
 
 #endif

@@ -516,9 +516,9 @@ std	malloc note{ stuck with standard malloc }end noexecute{
 std	malloc note{ stuck with standard malloc -- wimp-o mach? }end noexecute{
 	_BEGIN_EXTERNS_
 	#if _STD_
-	void* calloc(unsigned n, unsigned m) { return 0; }
+	void* calloc(unsigned n, unsigned m) { exit(1); }
 	#else
-	void* calloc(n, m) unsigned n, m; { return 0; }
+	void* calloc(n, m) unsigned n, m; { exit(1); }
 	#endif
 	_END_EXTERNS_
 	main() { return 0; }

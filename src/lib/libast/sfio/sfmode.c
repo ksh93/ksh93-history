@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,9 +21,10 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #include	"sfhdr.h"
-static char*	Version = "\n@(#)$Id: sfio (AT&T Labs Research - kpv) 2001-02-01 $\0\n";
+static char*	Version = "\n@(#)sfio (AT&T Labs - kpv) 2002-05-31\0\n";
 
 /*	Functions to set a given stream to some desired mode
 **
@@ -42,6 +43,7 @@ static char*	Version = "\n@(#)$Id: sfio (AT&T Labs Research - kpv) 2001-02-01 $\
 **		08/01/1998 (extended formatting)
 **		09/09/1999 (thread-safe)
 **		02/01/2001 (adaptive buffering)
+**		05/31/2002 (multi-byte handling in sfvprintf/vscanf)
 */
 
 /* the below is for protecting the application from SIGPIPE */
@@ -205,13 +207,13 @@ int sig;
 #endif
 
 #if __STD_C
-int _sfpopen(reg Sfio_t* f, int fd, int pid, int pflags)
+int _sfpopen(reg Sfio_t* f, int fd, int pid, int stdio)
 #else
-int _sfpopen(f, fd, pid, pflags)
+int _sfpopen(f, fd, pid, stdio)
 reg Sfio_t*	f;
 int		fd;
 int		pid;
-int		pflags;
+int		stdio;	/* stdio popen() does not reset SIGPIPE handler */
 #endif
 {
 	reg Sfproc_t*	p;
@@ -226,7 +228,11 @@ int		pflags;
 	p->size = p->ndata = 0;
 	p->rdata = NIL(uchar*);
 	p->file = fd;
-	p->sigp = (!(pflags&SF_STDIO) && pid >= 0 && (f->flags&SF_WRITE)) ? 1 : 0;
+	p->sigp = (!stdio && pid >= 0 && (f->flags&SF_WRITE)) ? 1 : 0;
+#if _PACKAGE_ast
+	if(stdio)
+		f->mode |= SF_STDIO;
+#endif
 
 #ifdef SIGPIPE	/* protect from broken pipe signal */
 	if(p->sigp)

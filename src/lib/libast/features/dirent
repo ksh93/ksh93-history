@@ -69,6 +69,12 @@ cat <<!
 	 * <dirent.h> for [fl]stat64 and off64_t with sizeof(ino64_t)==4
 	 */
 
+	#ifndef _AST_STD_H
+
+	#include $_nxt_dirent	/* the native <dirent.h> */
+
+	#else
+
 	#ifndef _DIR64_H
 	#define _DIR64_H
 
@@ -100,6 +106,8 @@ cat <<!
 	#endif
 
 	#endif
+
+	#endif
 !
 }end
 
@@ -108,6 +116,12 @@ cat <<!
 	/*
 	 * <dirent.h> for [fl]stat64 and off64_t
 	 */
+
+	#ifndef _AST_STD_H
+
+	#include $_nxt_dirent	/* the native <dirent.h> */
+
+	#else
 
 	#ifndef _DIR64_H
 	#define _DIR64_H
@@ -131,6 +145,8 @@ cat <<!
 	#ifndef	readdir
 	#define readdir		readdir64
 	#endif
+	#endif
+
 	#endif
 
 	#endif

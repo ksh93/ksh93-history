@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -19,6 +19,7 @@
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -226,9 +227,9 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 			np = REPLYNOD;
 	}
 	sfclrerr(iop);
-	was_write = sfset(iop,SF_WRITE,0);
+	was_write = (sfset(iop,SF_WRITE,0)&SF_WRITE)!=0;
 	if(fd==0)
-		was_share = sfset(iop,SF_SHARE,1);
+		was_share = (sfset(iop,SF_SHARE,1)&SF_SHARE)!=0;
 	if(timeout || was_write || ((flags>>D_FLAG) && (shp->fdstatus[fd]&IOTTY)))
 	{
 		sh_pushcontext(&buff,1);

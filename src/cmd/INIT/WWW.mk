@@ -28,7 +28,7 @@ WWWTYPES =
 	M := $(WWWDIR)/man/man1
 	R := $(>:N!=*=*)
 	for I $(>:N=*=*)
-		A := WWW$(I:/=.*//:F=%(upper)S)
+		A := WWW$(I:/=.*//:F=%(upper)s)
 		$(A) := $(I:/.*=//)
 	end
 	(html_info) : $$(MM2HTMLINFO) $$(MM2HTMLINIT)
@@ -215,7 +215,7 @@ WWWTYPES =
 		pax -wvf $(<:P=A) .
 	.base.list. : .FUNCTION
 		local X
-		X := $(sh pax -f $(%:N=*.pax):C,$("\n"), ,G:C,^,$$(WWWDIR)/,)
+		X := $(sh pax -f $(%:N=*.pax):C,\n, ,G:C,^,$$(WWWDIR)/,)
 		$(X) : .DONTCARE
 		return $(X)
 	delta.pax : .WWW.ALL base.pax $$(.base.list. $$(*))

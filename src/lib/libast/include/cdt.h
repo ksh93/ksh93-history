@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,16 +21,17 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #ifndef _CDT_H
 #define _CDT_H		1
 
 /*	Public interface for the dictionary library
 **
-**      Written by Kiem-Phong Vo (05/25/96)
+**      Written by Kiem-Phong Vo
 */
 
-#define CDT_VERSION	20010919L
+#define CDT_VERSION	20020531L
 
 #if _PACKAGE_ast
 #include	<ast_std.h>
@@ -107,6 +108,12 @@ struct _dtdisc_s
 	  (dc)->comparf = (cmpf), (dc)->hashf = (hshf), \
 	  (dc)->memoryf = (memf), (dc)->eventf = (evf) )
 
+#ifdef offsetof
+#define DTOFFSET(struct_s, member)	offsetof(struct_s, member)
+#else
+#define DTOFFSET(struct_s, member)	((int)(&((struct_s*)0)->member))
+#endif
+
 /* the dictionary structure itself */
 struct _dt_s
 {	Dtsearch_f	searchf;/* search function			*/
@@ -156,7 +163,7 @@ struct _dtstat_s
 #define DT_MATCH	0001000	/* find object matching key		*/
 #define DT_VSEARCH	0002000	/* search using internal representation	*/
 #define DT_ATTACH	0004000	/* attach an object to the dictionary	*/
-#define DT_DETACH	0010000	/* detach an object to the dictionary	*/
+#define DT_DETACH	0010000	/* detach an object from the dictionary	*/
 
 /* events */
 #define DT_OPEN		1	/* a dictionary is being opened		*/
@@ -252,20 +259,20 @@ _END_EXTERNS_
 		if((_cmp = _DTCMP((dt), _key, _k, _dc, _cmpf, _sz)) == 0) \
 			break; \
 	     } \
-	     action (_e ? _o : NIL(Void_t*)); \
+	     action (_e ? _o : (Void_t*)0); \
 	} while(0)
 
 #define _DTSRCH(dt,obj,action) \
 	do { Dtlink_t* _e; Void_t *_o, *_k, *_key; Dtdisc_t* _dc; \
 	     int _ky, _sz, _lk, _cmp; Dtcompar_f _cmpf; \
 	     _dc = (dt)->disc; _DTDSC(_dc, _ky, _sz, _lk, _cmpf); \
-	     _key = _DTOBJ(obj, _lk); _key = _DTKEY(_key, _ky, _sz); \
+	     _key = _DTKEY(obj, _ky, _sz); \
 	     for(_e = (dt)->data->here; _e; _e = _cmp < 0 ? _e->hl._left : _e->right) \
 	     {	_o = _DTOBJ(_e, _lk); _k = _DTKEY(_o, _ky, _sz); \
 		if((_cmp = _DTCMP((dt), _key, _k, _dc, _cmpf, _sz)) == 0) \
 			break; \
 	     } \
-	     action (_e ? _o : NIL(Void_t*)); \
+	     action (_e ? _o : (Void_t*)0); \
 	} while(0)
 
 #define DTTREEMATCH(dt,key,action)	_DTMTCH(_DT(dt),(Void_t*)(key),action)

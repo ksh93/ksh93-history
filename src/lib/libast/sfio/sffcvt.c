@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #include	"sfhdr.h"
 
@@ -34,7 +35,8 @@ int*	decpt;		/* to return decimal point */
 int*	sign;		/* to return sign */
 #endif
 {
+	int		len;
 	static char	buf[SF_MAXDIGITS];
 
-	return _sfcvt(&dval,buf,sizeof(buf),n_digit,decpt,sign,0);
+	return _sfcvt((Sfdouble_t)dval,buf,sizeof(buf),n_digit,decpt,sign,&len,0);
 }

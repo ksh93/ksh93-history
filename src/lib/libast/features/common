@@ -374,7 +374,7 @@ tst	- -DTRY=1 - -DTRY=1 -Dvoid=char - -DTRY=2 - -DTRY=3 - -DTRY=4 output{
 			printf("/* va_arg() va_list type */\n");
 	#endif /*TRY == 4*/
 
-	#if defined(_WIN32) || !defined(va_copy)
+	#if !defined(va_copy)
 	#if defined(__va_copy)
 		printf("#define va_copy(to,fr) __va_copy(to,fr)\t");
 			printf("/* copy va_list fr -> to */\n");

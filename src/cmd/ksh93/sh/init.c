@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -19,6 +19,7 @@
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -674,7 +675,7 @@ void sh_setmatch(const char *v, int vsize, int nmatch, int match[])
 	if(mp->nmatch = nmatch)
 	{
 		memcpy(mp->match,match,nmatch*2*sizeof(int));
-		if(vsize > mp->vsize)
+		if(vsize >= mp->vsize)
 		{
 			if(mp->vsize)
 				mp->val = (char*)realloc(mp->val,vsize+1);

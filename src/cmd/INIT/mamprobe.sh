@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1999-2001 AT&T Corp.                #
+#                Copyright (c) 1999-2002 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -9,17 +9,17 @@
 #                                                                  #
 #       http://www.research.att.com/sw/license/ast-open.html       #
 #                                                                  #
-#        If you have copied this software without agreeing         #
+#    If you have copied or used this software without agreeing     #
 #        to the terms of the license you are infringing on         #
 #           the license and copyright and are violating            #
 #               AT&T's intellectual property rights.               #
 #                                                                  #
-#                 This software was created by the                 #
-#                 Network Services Research Center                 #
+#            Information and Software Systems Research             #
 #                        AT&T Labs Research                        #
 #                         Florham Park NJ                          #
 #                                                                  #
 #               Glenn Fowler <gsf@research.att.com>                #
+#                                                                  #
 ####################################################################
 # mamprobe - generate MAM cc probe info
 # this script written to make it through all sh variants
@@ -36,7 +36,7 @@ command=mamprobe
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: mamprobe (AT&T Labs Research) 2001-10-31 $
+@(#)$Id: mamprobe (AT&T Labs Research) 2002-02-02 $
 ]
 [+NAME?mamprobe - generate MAM cc probe info]
 [+DESCRIPTION?\bmamprobe\b generates MAM (make abstract machine) \bcc\b(1)
@@ -52,11 +52,26 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 		[+mam_cc_L?\b-L\b\adir\a supported]
 		[+mam_cc_SHELLMAGIC?a magic line to be placed at the top
 			of installed shell scripts]
+		[+STDCAT?command to execute for \bcat\b(1); prefixed by
+			\bexecrate\b(1) on \b.exe\b challenged systems]
+		[+STDCMP?command to execute for \bcmp\b(1); prefixed by
+			\bexecrate\b(1) on \b.exe\b challenged systems]
+		[+STDCP?command to execute for \bcp\b(1); prefixed by
+			\bexecrate\b(1) on \b.exe\b challenged systems]
+		[+STDED?command to execute for \bed\b(1) or \bex\b(1)]
+		[+STDEDFLAGS?flags for \bSTDED\b]
+		[+STDLN?command to execute for \bln\b(1); prefixed by
+			\bexecrate\b(1) on \b.exe\b challenged systems]
+		[+STDMV?command to execute for \bmv\b(1); prefixed by
+			\bexecrate\b(1) on \b.exe\b challenged systems]
+		[+STDRM?command to execute for \brm\b(1); prefixed by
+			\bexecrate\b(1) on \b.exe\b challenged systems]
 }
 
 info-path cc-path
 
-[+SEE ALSO?\bpackage\b(1), \bmamake\b(1), \bnmake\b(1), \bprobe\b(1)]
+[+SEE ALSO?\bexecrate\b(1), \bpackage\b(1), \bmamake\b(1), \bnmake\b(1),
+	\bprobe\b(1)]
 '
 	while	getopts -a "$command" "$USAGE" OPT
 	do	:
@@ -289,6 +304,38 @@ echo ok' > ok
 	esac
 	;;
 esac
+
+# STD* are standard commands/flags with possible execrate(1)
+
+if	( ed ) < /dev/null > /dev/null 2>&1
+then	STDED=ed
+else	STDED=ex
+fi
+STDEDFLAGS=-
+set STDCAT cat STDCMP cmp STDCP cp STDLN ln STDMV mv STDRM rm
+while	:
+do	case $# in
+	0|1)	break ;;
+	esac
+	p=$2
+	for d in /bin /usr/bin /usr/sbin
+	do	if	test -x $d/$p
+		then	p=$d/$p
+			break
+		fi
+	done
+	eval $1=\$p
+	shift
+	shift
+done
+if	execrate
+then	for n in STDCAT STDCMP STDCP STDLN STDMV STDRM
+	do	eval $n=\"execrate \$$n\"
+	done
+fi
+for n in STDCAT STDCMP STDCP STDED STDEDFLAGS STDLN STDMV STDRM
+do	eval echo setv \$n \$$n
+done
 
 # all done
 

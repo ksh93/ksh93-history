@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 
@@ -47,6 +48,11 @@
 
 #if _lib_catopen
 
+#undef	nl_catd
+#undef	catopen
+#undef	catgets
+#undef	catclose
+
 typedef struct
 {
 	Mcset_t*	set;
@@ -54,11 +60,6 @@ typedef struct
 	iconv_t		cvt;
 	Sfio_t*		tmp;
 } Cc_t;
-
-#undef	nl_catd
-#undef	catopen
-#undef	catgets
-#undef	catclose
 
 #else
 

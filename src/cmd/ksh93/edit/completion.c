@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -19,6 +19,7 @@
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -210,7 +211,7 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 		register int size;
 		while(cp>outbuff && ((size=cp[-1])==' ' || size=='\t'))
 			cp--;
-		if(!var && ((cp==outbuff || strchr(";&|(",size)) && *begin!='~' && !strchr(ap->argval,'/')))
+		if(!var && ((cp==outbuff || (strchr(";&|(",size)) && (cp==outbuff+1||size=='('||cp[-2]!='>') && *begin!='~' && !strchr(ap->argval,'/'))))
 		{
 			cmd_completion=1;
 			sh_onstate(SH_COMPLETE);
@@ -410,12 +411,18 @@ ed_macro(Edit_t *ep, register int i)
 	{
 #ifdef SHOPT_MULTIBYTE
 		/* copy to buff in internal representation */
-		int c = out[LOOKAHEAD];
-		out[LOOKAHEAD] = 0;
+		int c = 0;
+		if( strlen(out) > LOOKAHEAD )
+		{
+			c = out[LOOKAHEAD];
+			out[LOOKAHEAD] = 0;
+		}
 		i = ed_internal(out,buff);
-		out[LOOKAHEAD] = c;
+		if(c)
+			out[LOOKAHEAD] = c;
 #else
 		strncpy((char*)buff,out,LOOKAHEAD);
+		buff[LOOKAHEAD] = 0;
 		i = strlen((char*)buff);
 #endif /* SHOPT_MULTIBYTE */
 		while(i-- > 0)

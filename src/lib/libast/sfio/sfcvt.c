@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,11 +21,11 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #include	"sfhdr.h"
-#include	"FEATURE/float"
 
-/*	Convert a floating point value to ASCII
+/*	Convert a floating point value to ASCII.
 **
 **	Written by Kiem-Phong Vo and Glenn Fowler (SFFMT_AFORMAT)
 */
@@ -36,16 +36,18 @@ static char		*Inf = "Inf", *Zero = "0";
 #define SF_ZERO		((_Sfi = 1), Zero)
 
 #if __STD_C
-char* _sfcvt(Void_t* dv, char* buf, size_t size, int n_digit, int* decpt, int* sign, int format)
+char* _sfcvt(Sfdouble_t dv, char* buf, size_t size, int n_digit,
+		int* decpt, int* sign, int* len, int format)
 #else
-char* _sfcvt(dv,buf,size,n_digit,decpt,sign,format)
-Void_t*	dv;		/* value to convert		*/
-char*	buf;		/* conversion goes here		*/
-size_t	size;		/* size of buf			*/
-int	n_digit;	/* number of digits wanted	*/
-int*	decpt;		/* to return decimal point	*/
-int*	sign;		/* to return sign		*/
-int	format;		/* conversion format		*/
+char* _sfcvt(dv,buf,size,n_digit,decpt,sign,len,format)
+Sfdouble_t	dv;		/* value to convert		*/
+char*		buf;		/* conversion goes here		*/
+size_t		size;		/* size of buf			*/
+int		n_digit;	/* number of digits wanted	*/
+int*		decpt;		/* to return decimal point	*/
+int*		sign;		/* to return sign		*/
+int*		len;		/* return string length		*/
+int		format;		/* conversion format		*/
 #endif
 {
 	reg char		*sp;
@@ -60,7 +62,7 @@ int	format;		/* conversion format		*/
 
 #if !_ast_fltmax_double
 	if(format&SFFMT_LDOUBLE)
-	{	Sfdouble_t	f = *((Sfdouble_t*)dv);
+	{	Sfdouble_t	f = dv;
 
 		if(f == 0.)
 			return SF_ZERO;
@@ -97,8 +99,6 @@ int	format;		/* conversion format		*/
 				f -= m;
 				f = ldexpl(f, 8 * sizeof(m));
 			}
-			ep = sp + 1;
-			goto done;
 		}
 
 		n = 0;
@@ -173,7 +173,7 @@ int	format;		/* conversion format		*/
 		}
 	} else
 #endif
-	{	double	f = *((double*)dv);
+	{	double	f = (double)dv;
 
 		if(f == 0.)
 			return SF_ZERO;
@@ -210,8 +210,6 @@ int	format;		/* conversion format		*/
 				f -= m;
 				f = ldexp(f, 8 * sizeof(m));
 			}
-			ep = sp + 1;
-			goto done;
 		}
 		n = 0;
 		if(f >= (double)SF_MAXLONG)
@@ -247,9 +245,8 @@ int	format;		/* conversion format		*/
 		/* remaining number of digits to compute; add 1 for later rounding */
 		n = (((format&SFFMT_EFORMAT) || *decpt <= 0) ? 1 : *decpt+1) - n;
 		if(n_digit > 0)
-		{	v = (format & SFFMT_EFORMAT) ? DBL_DIG : FLT_DIG;
-			if(n_digit > v)
-				n_digit = v;
+		{	if(n_digit > DBL_DIG)
+				n_digit = DBL_DIG;
 			n += n_digit;
 		}
 
@@ -309,6 +306,7 @@ int	format;		/* conversion format		*/
 
 done:
 	*--ep = '\0';
-	_Sfi = ep-b;
+	if(len)
+		*len = ep-b;
 	return b;
 }

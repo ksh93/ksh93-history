@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -19,6 +19,7 @@
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -278,7 +279,11 @@ tty_raw(register int fd, int echomode)
 	if(ttyparm.sg_flags&LCASE)
 		return(-1);
 	if(!(ttyparm.sg_flags&ECHO))
+	{
+		if(!echomode)
+			return(-1);
 		echo = 0;
+	}
 	nttyparm = ttyparm;
 	if(!echo)
 		nttyparm.sg_flags &= ~(ECHO | TBDELAY);
@@ -309,7 +314,11 @@ tty_raw(register int fd, int echomode)
 #   endif	/* TIOCGLTC */
 #else
 	if (!(ttyparm.c_lflag & ECHO ))
+	{
+		if(!echomode)
+			return(-1);
 		echo = 0;
+	}
 #   ifdef FLUSHO
 	ttyparm.c_lflag &= ~FLUSHO;
 #   endif /* FLUSHO */
@@ -576,7 +585,7 @@ void	ed_setup(register Edit_t *ep, int fd)
 	register char *pp;
 	register char *last;
 	char *ppmax;
-	int myquote = 0;
+	int myquote = 0, n;
 	register int qlen = 1;
 	char inquote = 0;
 	ep->e_fd = fd;
@@ -609,6 +618,19 @@ void	ed_setup(register Edit_t *ep, int fd)
 		register int c;
 		while(c= *last++) switch(c)
 		{
+			case ESC:
+			{
+				ep->e_crlf = 0;
+				for(n=1; c = *last++; n++)
+				{
+					if(c>='0' && c<='9' && n>2)
+						continue;
+					if(n>2 || (c!= '['  &&  c!= 'O'))
+						break;
+				}
+				qlen += n;
+				break;
+			}
 			case '\r':
 				if(pp == (ep->e_prompt+2)) /* quote char */
 					myquote = *(pp-1);

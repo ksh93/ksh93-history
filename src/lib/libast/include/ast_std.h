@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -725,6 +726,15 @@ extern ssize_t		write(int, const void*, size_t);
 extern char*		strerror(int);
 
 #if !_UWIN
+
+#undef	_confstr
+#define	_confstr	_ast_confstr
+#undef	_fpathconf
+#define	_fpathconf	_ast_fpathconf
+#undef	_pathconf
+#define	_pathconf	_ast_pathconf
+#undef	_sysconf
+#define	_sysconf	_ast_sysconf
 
 #undef	confstr
 #define confstr		_ast_confstr

@@ -1,3 +1,64 @@
+02-06-28 package.sh: handle multiple packages for release action
+02-06-27 package.sh: catch sol*.sparc=>sol*.sun4 when CC=gcc
+02-06-14 package.sh: fix admin_action to not include qualifiers
+	 package.sh: fix help/html doc typo
+02-06-11 package.sh: fix ditto update doc to `PACKAGEROOT field matching *:*'
+02-06-07 WWW.mk: change substitute $("\n") to \n
+02-06-06 package.sh: clarify output streams for help/html
+02-05-22 mamake.c: fix executable file check to use (S_IXUSR|S_IXGRP|S_IXOTH)
+02-04-04 package.sh: fix update to differentiate *.sun4 and sun4
+02-03-27 package.sh: yacc/bison warning only if both missing
+02-03-24 mamake.c: all shell actions wrapped with -c to avoid #! problems
+02-03-23 package.sh: recover $PACKAGEROOT/bin/package if not in INIT package
+	 package.sh: precheck $CC, not `cc'
+	 package.sh: fix install to use pax -ps to preserve set-uid/gid
+	 package.sh: fix install to use list.installed for existing files only
+02-03-17 package.sh: fix PAX initialization that was sometimes omitted for read
+	 package.sh: fix update delta sync fetch
+02-02-14 iffe.sh: fix macro{ }end docs to include "
+	 iffe.sh: add dfn to extract #define from headers
+	 iffe.sh: handle nxt #include ok but no line sync
+	 iffe.sh: drop local header clash logic
+	 iffe.sh: add -X, --exclude=dir to exclude -I dirs
+	 iffe.sh: lcl,nxt now generate <...> headers instead of "..."
+	 package.sh: admin.db root dir matching -* disables host
+	 package.mk: fix package.src.pat typo -- too many )
+	 package.mk: add { :COVERS: :DESCRIPTION: :REQUIRES: }
+	 package.sh: handle { :COVERS: :DESCRIPTION: :REQUIRES: }
+	 Makefile: move proto.c generation to the proto component dir
+02-02-02 execrate.sh: add for .exe challenged win32 systems/commands
+	 mamprobe.sh: add STD* commands/flags
+	 mamake.c: update mamprobe info when older than mamprobe executable
+	 package.sh: move ed/ex workaround to mamprobe.sh
+	 package.sh: fix `host type' bug that incorrectly assumed sun4 for sol
+	 package.sh: add execrate(1) hooks for challenged systems
+	 package.sh: add check for { cc ar nm yacc/bison } before make
+	 ratz.c: fix "rb" vs. "r" macro tests
+	 iffe.sh: add nxt, similar to lcl but defines _nxt_foo for #include
+	 iffe.sh,package.sh: remove vaibale from sccs,cvs ident strings -- duh
+02-01-24 C+probe: check CC.DYNAMIC to handle cc that accept but ignore -B*
+	 iffe.sh: handle 'mem struct.a.b'
+02-01-22 iffe.sh: cache (internal) `foo vs. struct foo' test results
+	 package.sh: uts.370 => uts.390
+02-01-18 package.sh: fix uts hosttype
+02-01-17 package.sh: add 'results failed ...' to list failures only
+	 package.sh: change ARCH internal var to all_types to avoid env conflict
+	 iffe.sh: fix hdr/lib precheck that missed some -- ouch
+	 iffe.sh: fix noexecute test that forgot to check compile first!
+02-01-15 ratz.c: fix path[] type typo
+02-01-01 package.mk: tighten license search
+02-01-08 package.sh: `pwd` => ${PWD:-`pwd`}
+	 package.mk: expand license file pattern match
+02-01-04 iffe.sh: fix `exp name "value"' bug that duped "value"
+	 iffe.sh: fix initial <sys/types.h> check to honor --config
+01-12-25 iffe.sh: fix bug where -o file restored old file
+01-12-23 package.mk: uniq the closure lists
+01-12-07 ratz.c: fix --meter to retain paths containing " -- "
+01-11-30 ratz.c: use sear_system() to execute; should work on all windows
+01-11-28 ratz.c: fix sear_rm_r() to check SetCurrentDirectory() status
+01-11-26 ditto.sh: drop n+=v for ksh compatibility
+01-11-21 ditto.sh: add rsync script replacement [hey, it works!]
+	 package.sh: add [ditto]:directory notation to admin.db
 01-10-31 package.sh: handle *.sum paths with embedded space
 	 package.sh: change executable() to onpath()
 	 package.sh: executable([!] foo) replaces test [!] -x foo (.exe hack)
@@ -20,7 +81,7 @@
 	 ratz.c: add recursive sear_rm_r() to sear_exec() tmp dir cleanup
 01-10-10 mamprobe.sh: add mam_cc_SHELLMAGIC
 	 package.sh: add nfs wakeup call to admin to avoid stale file handles
-01-10-04 cc.darin.ppc: -flat_namespace is not longer the default (huh)
+01-10-04 cc.darwin.ppc: -flat_namespace is not longer the default (huh)
 01-10-01 package make: prepend $INSTALLROOT/bin/ok to PATH
 	 package read: save cpy of bin/package when reading the INIT package
 	 mamprobe.sh: allow cc path with optional arguments
@@ -68,7 +129,7 @@
 	 mamake: execute actions with $SHELL, ignored signals back to default
 	 package.sh: nmake check error output to /dev/null
 	 package.sh: fix INIT a.out updates for knr cc
-	 package.sh: package list now handle large tgz dirs
+	 package.sh: package list now handles large tgz dirs
 	 package.sh: *-ok executables moved to ok/* for *.dll systems
 	 iffe.sh: change "exec >&-" to "exec >/dev/null" else linux mkdir fails!
 	 mamake: handle `bind -lx [dontcare]'

@@ -1,3 +1,4 @@
+02-04-05 date.c: add %u
 02-01-24 stty.c: ifdef a few more macros for uts (yes, its still running)
 01-12-14 date.c: clarify %z doc
 01-10-31 mkdir.c: mkdir() on existing dir could fail with errno!=EEXIST

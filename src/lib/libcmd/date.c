@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -20,6 +20,7 @@
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -30,7 +31,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: date (AT&T Labs Research) 2001-12-14 $\n]"
+"[-?\n@(#)$Id: date (AT&T Labs Research) 2002-04-05 $\n]"
 USAGE_LICENSE
 "[+NAME?date - set/list/convert dates]"
 "[+DESCRIPTION?\bdate\b sets the current date and time (with appropriate"
@@ -121,9 +122,10 @@ USAGE_LICENSE
 "		[+S?seconds]"
 "		[+t?tab character]"
 "		[+T?24-hour time as \ahh:mm:ss\a]"
+"		[+u?weekday number 1(Monday)-7]"
 "		[+U?week number with Sunday as the first day]"
 "		[+V?ISO week number (i18n is \afun\a)]"
-"		[+w?weekday number]"
+"		[+w?weekday number 0(Sunday)-6]"
 "		[+W?week number with Monday as the first day]"
 "		[+x?locale date style that includes month, day and year]"
 "		[+X?locale time style that includes hours and minutes]"

@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #ifdef _UWIN
 
@@ -59,6 +60,7 @@ void _STUB_malloc(){}
 #include	<sys/stat.h>
 #endif
 #endif
+#include	<fcntl.h>
 
 #ifdef S_IRUSR
 #define CREAT_MODE	(S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH)
@@ -207,12 +209,13 @@ static int vmflinit()
 	Vmulong_t	addr;
 	char*		file;
 	int		line;
+	Void_t*		func;
 
 	/* this must be done now to avoid any inadvertent recursion (more below) */
 	_Vmflinit = 1;
-	VMFILELINE(Vmregion,file,line);
+	VMFLF(Vmregion,file,line,func);
 
-	/* if getenv() calls malloc(), this may not be caught by the eventual region */
+	/* if getenv() calls malloc(), the eventual region may not see this */
 	vm = NIL(Vmalloc_t*);
 	if((env = getenv("VMETHOD")) )
 	{	if(strcmp(env,"Vmdebug") == 0 || strcmp(env,"vmdebug") == 0)
@@ -285,6 +288,7 @@ static int vmflinit()
 	/* reset file and line number to correct values for the call */
 	Vmregion->file = file;
 	Vmregion->line = line;
+	Vmregion->func = func;
 
 	return 0;
 }
@@ -309,6 +313,8 @@ reg size_t	size;	/* new size			*/
 #endif
 {
 	VMFLINIT();
+
+#if _PACKAGE_ast
 	if(data && !(Vmregion->data->mode&VM_TRUST) &&
 	   (*Vmregion->meth.addrf)(Vmregion,data) != 0 )
 	{	Void_t*	newdata;
@@ -316,7 +322,9 @@ reg size_t	size;	/* new size			*/
 			memcpy(newdata,data,size);
 		return newdata;
 	}
-	else	return (*Vmregion->meth.resizef)(Vmregion,data,size,VM_RSCOPY|VM_RSMOVE);
+#endif
+
+	return (*Vmregion->meth.resizef)(Vmregion,data,size,VM_RSCOPY|VM_RSMOVE);
 }
 
 #if __STD_C
@@ -327,6 +335,13 @@ reg Void_t*	data;
 #endif
 {
 	VMFLINIT();
+
+#if _PACKAGE_ast
+	if(data && !(Vmregion->data->mode&VM_TRUST) &&
+	   (*Vmregion->meth.addrf)(Vmregion,data) != 0 )
+		return;
+#endif
+
 	(void)(*Vmregion->meth.freef)(Vmregion,data);
 }
 
@@ -350,6 +365,13 @@ reg Void_t*	data;
 #endif
 {
 	VMFLINIT();
+
+#if _PACKAGE_ast
+	if(data && !(Vmregion->data->mode&VM_TRUST) &&
+	   (*Vmregion->meth.addrf)(Vmregion,data) != 0 )
+		return;
+#endif
+
 	(void)(*Vmregion->meth.freef)(Vmregion,data);
 }
 
@@ -473,11 +495,12 @@ size_t	size;
 {	char		array[ALIGN];
 	char*		file;
 	int		line;
+	Void_t*		func;
 	reg Alloca_t*	f;
 	static Alloca_t* Frame;
 
 	VMFLINIT();
-	VMFILELINE(Vmregion,file,line);
+	VMFLF(Vmregion,file,line,func);
 	while(Frame)
 	{	if(( _stk_down && &array[0] > Frame->head.head.addr) ||
 		   (!_stk_down && &array[0] < Frame->head.head.addr) )
@@ -490,6 +513,7 @@ size_t	size;
 
 	Vmregion->file = file;
 	Vmregion->line = line;
+	Vmregion->func = func;
 	f = (Alloca_t*)(*Vmregion->meth.allocf)(Vmregion,size+sizeof(Alloca_t)-1);
 
 	f->head.head.addr = &array[0];
@@ -502,4 +526,4 @@ size_t	size;
 
 #endif /*_std_malloc || _BLD_INSTRUMENT || cray*/
 
-#endif
+#endif /* _UWIN */

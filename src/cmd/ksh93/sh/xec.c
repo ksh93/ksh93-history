@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -19,6 +19,7 @@
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -1221,7 +1222,7 @@ sh_exec(register const union anynode *t, int flags)
 						(!type && (strmatch(r,s)
 						|| trim_eq(r,s))))
 					{
-						do	sh_exec(t->reg.regcom,flags);
+						do	sh_exec(t->reg.regcom,(t->reg.regflag?0:flags));
 						while(t->reg.regflag &&
 							(t=(union anynode*)t->reg.regnxt));
 						t=0;
@@ -1379,6 +1380,13 @@ sh_exec(register const union anynode *t, int flags)
 			}
 #endif /* SHOPT_NAMESPACE */
 			np = nv_open(fname,sh_subfuntree(1),NV_NOASSIGN|NV_ARRAY|NV_VARNAME|NV_NOSCOPE);
+			if(npv)
+			{
+				cp = nv_setdisc(npv,cp+1,np,(Namfun_t*)npv);
+				nv_close(npv);
+				if(!cp)
+					errormsg(SH_DICT,ERROR_exit(1),e_baddisc,fname);
+			}
 			if(np->nvalue.rp)
 			{
 				slp = (struct slnod*)np->nvenv;
@@ -1405,13 +1413,6 @@ sh_exec(register const union anynode *t, int flags)
 				nv_onattr(np,NV_FUNCTION|NV_FPOSIX);
 			else
 				nv_onattr(np,NV_FUNCTION);
-			if(npv)
-			{
-				cp = nv_setdisc(npv,cp+1,np,(Namfun_t*)npv);
-				nv_close(npv);
-				if(!cp)
-					errormsg(SH_DICT,ERROR_exit(1),e_baddisc,fname);
-			}
 			break;
 		    }
 
@@ -1794,7 +1795,6 @@ int sh_funscope(int argn, char *argv[],int(*fun)(void*),void *arg,int execflg)
 	savopt = sh.options;
 	*prevscope = sh.st;
 	sh_offoption(SH_ERREXIT);
-	sh_offstate(SH_ERREXIT);
 	sh.st.prevst = prevscope;
 	sh.st.self = &savst;
 	sh.topscope = (Shscope_t*)sh.st.self;

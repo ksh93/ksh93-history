@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -280,6 +281,11 @@ tmfmt(char* buf, size_t len, const char* format, time_t* clock)
 		case 'T':
 			p = tm_info.format[TM_TIME];
 			goto push;
+		case 'u':	/* weekday number [1(Monday)-7] */
+			if (!(i = tp->tm_wday))
+				i = 7;
+			cp = number(cp, ep, (long)i, 0, pad);
+			continue;
 		case 'U':	/* week number, Sunday as first day */
 			i = tp->tm_yday - tp->tm_wday;
 		week:
@@ -300,7 +306,7 @@ tmfmt(char* buf, size_t len, const char* format, time_t* clock)
 			else
 				i = tp->tm_yday - tp->tm_wday + 1;
 			goto week;
-		case 'w':	/* weekday number */
+		case 'w':	/* weekday number [0(Sunday)-6] */
 			cp = number(cp, ep, (long)tp->tm_wday, 0, pad);
 			continue;
 		case 'x':

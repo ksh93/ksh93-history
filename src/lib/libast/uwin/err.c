@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,8 +21,11 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
-#ifndef _UWIN
+#include "FEATURE/uwin"
+
+#if !_UWIN
 
 void _STUB_err(){}
 
@@ -66,14 +69,12 @@ errmsg(int level, int code, const char* fmt, va_list ap)
 		exit(code);
 }
 
-extern void
-verr(int code, const char* fmt, va_list ap)
+extern void verr(int code, const char* fmt, va_list ap)
 {
 	errmsg(ERROR_ERROR|ERROR_SYSTEM, code, fmt, ap);
 }
 
-extern void
-err(int code, const char* fmt, ...)
+extern void err(int code, const char* fmt, ...)
 {
 	va_list	ap;
 
@@ -82,14 +83,12 @@ err(int code, const char* fmt, ...)
 	va_end(ap);
 }
 
-extern void
-verrx(int code, const char* fmt, va_list ap)
+extern void verrx(int code, const char* fmt, va_list ap)
 {
 	errmsg(ERROR_ERROR, code, fmt, ap);
 }
 
-extern void
-errx(int code, const char* fmt, ...)
+extern void errx(int code, const char* fmt, ...)
 {
 	va_list	ap;
 
@@ -98,14 +97,12 @@ errx(int code, const char* fmt, ...)
 	va_end(ap);
 }
 
-extern void
-vwarn(const char* fmt, va_list ap)
+extern void vwarn(const char* fmt, va_list ap)
 {
 	errmsg(ERROR_WARNING|ERROR_SYSTEM, 0, fmt, ap);
 }
 
-extern void
-warn(const char* fmt, ...)
+extern void warn(const char* fmt, ...)
 {
 	va_list	ap;
 
@@ -114,14 +111,12 @@ warn(const char* fmt, ...)
 	va_end(ap);
 }
 
-extern void
-vwarnx(const char* fmt, va_list ap)
+extern void vwarnx(const char* fmt, va_list ap)
 {
 	errmsg(ERROR_WARNING, 0, fmt, ap);
 }
 
-extern void
-warnx(const char* fmt, ...)
+extern void warnx(const char* fmt, ...)
 {
 	va_list	ap;
 

@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -19,6 +19,7 @@
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -617,6 +618,11 @@ Namval_t	*nv_open(const char *name,Dt_t *root,int flags)
 				}
 				if(!ptr || *ptr!='.')
 					break;
+				if((ptr-cp)==3 && cp[1]=='0')
+				{
+					strcpy(cp,ptr);
+					ptr = cp;
+				}
 				*ptr = 0;
 				np = nv_search(name,root,0);
 				*ptr = '.';
@@ -683,11 +689,6 @@ Namval_t	*nv_open(const char *name,Dt_t *root,int flags)
 			{
 				char *sp;
 				Namval_t *nq;
-				if(!fun && nv_istable(np))
-				{
-					sh.last_table = np;
-					return(nv_open(lastdot+1,np->nvalue.hp,flags|NV_NOSCOPE));
-				}
 				if(np->nvfun && !nv_isref(np) && (np->nvfun)->disc->create)
 				{
 					c = *ptr;
@@ -696,6 +697,11 @@ Namval_t	*nv_open(const char *name,Dt_t *root,int flags)
 					*ptr = c;
 					if(np==nq)
 						errormsg(SH_DICT,ERROR_exit(1),e_varname,name);
+				}
+				else if(!fun && nv_istable(np))
+				{
+					sh.last_table = np;
+					return(nv_open(lastdot+1,np->nvalue.hp,flags|NV_NOSCOPE));
 				}
 				else if((sp=strchr(lastdot+1,'.')) && sp<cp)
 					errormsg(SH_DICT,ERROR_exit(1),e_noparent,name);
@@ -2650,6 +2656,8 @@ char *nv_name(register Namval_t *np)
 {
 	register int len;
 	register Namval_t *table;
+	if(np->nvfun && np->nvfun->disc->name)
+		return((*np->nvfun->disc->name)(np,np->nvfun));
 	if(!(table = sh.last_table) || *np->nvname=='.' || table==sh.namespace)
 		return(np->nvname);
 	len = strlen(table->nvname) + strlen(np->nvname) + 2;

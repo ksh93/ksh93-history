@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -19,6 +19,7 @@
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /* Adapted for ksh by David Korn */
@@ -328,7 +329,7 @@ ed_emacsread(int fd,char *buff,int scend)
 			continue;
 #endif	/* u370 */
 		case '\t':
-			if(cur>0 && cur>=eol && out[cur-1]!='\t' && out[cur-1]!=' ')
+			if(cur>0 && cur>=eol && out[cur-1]!='\t' && out[cur-1]!=' ' && ep->ed->sh->nextprompt)
 			{
 				ed_ungetchar(ep->ed,ESC);
 				ed_ungetchar(ep->ed,ESC);
@@ -685,7 +686,7 @@ static void show_info(Emacs_t *ep,const char *str)
 	genchar string[LBUF];
 	int sav_cur = cur;
 	/* save current line */
-	genncpy(string,out,sizeof(string)/CHARSIZE-1);
+	genncpy(string,out,sizeof(string)/sizeof(*string));
 	*out = 0;
 	cur = 0;
 #ifdef SHOPT_MULTIBYTE
@@ -699,7 +700,7 @@ static void show_info(Emacs_t *ep,const char *str)
 		ed_ungetchar(ep->ed,c);
 	/* restore line */
 	cur = sav_cur;
-	genncpy(out,string,sizeof(string)/CHARSIZE-1);
+	genncpy(out,string,sizeof(string)/sizeof(*string));
 	draw(ep,UPDATE);
 }
 
@@ -1100,8 +1101,8 @@ static void search(Emacs_t* ep,genchar *out,int direction)
 	genchar str_buff[LBUF];
 	register genchar *string = drawbuff;
 	/* save current line */
-	char sav_cur = cur;
-	genncpy(str_buff,string,sizeof(str_buff)/CHARSIZE-1);
+	int sav_cur = cur;
+	genncpy(str_buff,string,sizeof(str_buff)/sizeof(*str_buff));
 	string[0] = '^';
 	string[1] = 'R';
 	string[2] = '\0';
@@ -1188,7 +1189,7 @@ static void search(Emacs_t* ep,genchar *out,int direction)
 #endif /* ESH_NFIRST */
 	}
 restore:
-	genncpy(string,str_buff,sizeof(str_buff)/CHARSIZE-1);
+	genncpy(string,str_buff,sizeof(str_buff)/sizeof(*str_buff));
 	cur = sav_cur;
 	return;
 }

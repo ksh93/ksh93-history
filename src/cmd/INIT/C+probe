@@ -2,7 +2,7 @@
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)C.probe (AT&T Research) 2001-02-14
+# @(#)C.probe (AT&T Research) 2002-01-24
 #
 # probe [ -d ] c-compiler-path [ attributes ]
 #
@@ -343,7 +343,18 @@ then	eval set x $probe_so
 		done
 		case $maybe in
 		""|--)	;;
-		*)	dynamic=$maybe ;;
+		*)	rm -f dynamic.$exe
+			if	$cc -o dynamic.$exe $maybe dynamic.$obj 2>e && $executable dynamic.$exe
+			then	e=`wc -l e`
+				if	$cc -o dynamic.$exe $maybe-bogus-bogus-bogus dynamic.$obj 2>e && $executable dynamic.$exe
+				then	case `wc -l e` in
+					$e)	;;
+					*)	dynamic=$maybe ;;
+					esac
+				else	dynamic=$maybe
+				fi
+			fi
+			;;
 		esac
 	fi
 fi
@@ -590,7 +601,7 @@ case $good in
 		chmod u+w cpp
 		;;
 	esac
-	
+
 	eval set x $probe_include
 	while	:
 	do	shift
@@ -600,7 +611,7 @@ case $good in
 		echo "#include <$1>" > include.$src
 		$cc -E include.$src
 	done > include.out
-	
+
 	ccinclude=
 	x=$stdinclude
 	stdinclude=
@@ -699,9 +710,9 @@ case $good in
 		done
 		;;
 	esac
-	
+
 	{
-	
+
 	for i in $stdinclude
 	do
 		case $i in
@@ -709,7 +720,7 @@ case $good in
 		*)		echo $i $i ;;
 		esac
 	done
-	
+
 	eval set x $probe_include
 	while	:
 	do	shift
@@ -726,11 +737,11 @@ case $good in
 			p=$j
 		done
 	done
-	
+
 	case $usrinclude in
 	?*)	echo $usrinclude $usrinclude ;;
 	esac
-	
+
 	} | tsort > tmp.tmp
 	tstinclude=`cat tmp.tmp`
 	bad=

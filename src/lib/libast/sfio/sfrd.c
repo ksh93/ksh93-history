@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #include	"sfhdr.h"
 
@@ -133,7 +134,7 @@ Sfdisc_t*	disc;
 #ifdef MAP_TYPE
 		if(f->bits&SF_MMAP)
 		{	reg ssize_t	a, round;
-			Stat_t		st;
+			sfstat_t	st;
 
 			/* determine if we have to copy data to buffer */
 			if((uchar*)buf >= f->data && (uchar*)buf <= f->endb)
@@ -174,7 +175,7 @@ Sfdisc_t*	disc;
 			{	f->data = (uchar*) mmap((caddr_t)0, (size_t)r,
 							(PROT_READ|PROT_WRITE),
 							MAP_PRIVATE,
-							f->file, (off_t)f->here);
+							f->file, (sfoff_t)f->here);
 				if(f->data && (caddr_t)f->data != (caddr_t)(-1))
 					break;
 				else

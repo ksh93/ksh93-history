@@ -36,16 +36,6 @@
 #include <sys/cdefs.h>
 #include <math.h>
 
-#ifdef _UWIN
-#define drem	remainder
-#define finite	_finite
-#define scalb	_scalb
-#define copysign _copysign
-int finite(double);
-double copysign(double,double);
-double scalb(double,long);
-#endif /* _UWIN */
-
 #if defined(vax)||defined(tahoe)
 
 /* Deal with different ways to concatenate in cpp */

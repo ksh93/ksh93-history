@@ -48,7 +48,7 @@ SHOPT_FILESCAN==1		/* fast file scan */
 SHOPT_OPTIMIZE==1		/* optimize loop invariants */
 SHOPT_MULTIBYTE==1		/* multibyte character handling */
 
-if  CC.HOSTTYPE == "win32.*"
+if  CC.HOSTTYPE == "*win*"
 	SHOPT_CRNL == 1		/* <cr><nl> is eqivalent to <nl> */
 	SHOPT_NOCASE == 1	/* do case insensitive file compare */
 end
@@ -91,7 +91,7 @@ shell $(VERSION) :LIBRARY: shell.3 nval.3 alarm.c cd_pwd.c cflow.c deparse.c \
 	trestore.c waitevent.c xec.c env.c $(DATAFILES) $(FILES_opt) \
 	-lcmd -ldll -last -lm
 
-if CC.HOSTTYPE == "win32*" || "$(-mam)" == "static*"
+if CC.HOSTTYPE == "win32.*" || "$(-mam)" == "static*"
 trestore.o : .CC.NOOPTIMIZE
 end
 

@@ -469,18 +469,6 @@ cat{
 	#define	stdout		(&_Sfstdout)
 	#define	stderr		(&_Sfstderr)
 
-	#if !_BLD_ast && defined(__IMPORT__) && !_UWIN
-	#define __PUBLIC_DATA__	__IMPORT__
-	#else
-	#define __PUBLIC_DATA__
-	#endif
-
-	extern __PUBLIC_DATA__ FILE	_Sfstdin;
-	extern __PUBLIC_DATA__ FILE	_Sfstdout;
-	extern __PUBLIC_DATA__ FILE	_Sfstderr;
-
-	#undef	__PUBLIC_DATA__
-
 	#endif
 
 	#if defined(_AST_H) || defined(_SFIO_H)
@@ -495,6 +483,18 @@ cat{
 	#define putchar(c)	sfputc(sfstdout,c)
 
 	#else
+
+	#if !_BLD_ast && defined(__IMPORT__) && !_UWIN
+	#define __PUBLIC_DATA__	__IMPORT__
+	#else
+	#define __PUBLIC_DATA__
+	#endif
+
+	extern __PUBLIC_DATA__ FILE	_Sfstdin;
+	extern __PUBLIC_DATA__ FILE	_Sfstdout;
+	extern __PUBLIC_DATA__ FILE	_Sfstderr;
+
+	#undef	__PUBLIC_DATA__
 
 	#define feof(f)		(_sf_(f)->_flags&_SF_EOF)
 	#define ferror(f)	(_sf_(f)->_flags&_SF_ERROR)

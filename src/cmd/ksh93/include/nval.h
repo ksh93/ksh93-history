@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -19,6 +19,7 @@
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 #ifndef NV_DEFAULT
@@ -60,6 +61,8 @@ struct Namdisc
 	Namval_t *(*create)(Namval_t*, const char*, int, Namfun_t*);
 	Namfun_t *(*clone)(Namval_t*, Namval_t*, int, Namfun_t*);
 	char	*(*name)(Namval_t*, Namfun_t*);
+	int	(*readf)(Namval_t*, Sfio_t*, int, Namfun_t*);
+	Namval_t *(*nextf)(Namval_t*, Dt_t*, Namfun_t*);
 };
 
 struct Namfun
@@ -89,9 +92,9 @@ struct Namval
 #ifdef _NV_PRIVATE
 	_NV_PRIVATE
 #else
+	Namfun_t	*nvfun;
 	char		*nvalue;
 	char		*nvprivate;
-	Namfun_t	*nvfun;
 	int		nvreserved;
 #endif /* _NV_PRIVATE */
 };

@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 
@@ -34,6 +35,6 @@ fputws(const wchar_t* s, Sfio_t* f)
 	STDIO_INT(f, "fputws", int, (const wchar_t*, Sfio_t*), (s, f))
 
 	FWIDE(f, WEOF);
-	n = wcslen(s);
+	n = wcslen(s) * sizeof(wchar_t);
 	return (sfwrite(f, s, n) == n) ? 0 : -1;
 }

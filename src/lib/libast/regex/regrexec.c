@@ -9,7 +9,7 @@
 *                                                                  *
 *       http://www.research.att.com/sw/license/ast-open.html       *
 *                                                                  *
-*        If you have copied this software without agreeing         *
+*    If you have copied or used this software without agreeing     *
 *        to the terms of the license you are infringing on         *
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
@@ -21,6 +21,7 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
 *******************************************************************/
 #pragma prototyped
 
@@ -61,22 +62,6 @@ regrexec(const regex_t* p, const char* s, size_t len, size_t nmatch, regmatch_t*
 
 	if (!s || !p || !(env = p->env) || (e = env->rex)->type != REX_BM)
 		return REG_BADPAT;
-#if __OBSOLETE__ && __OBSOLETE__ < 20030101
-	/*
-	 * repeat 1000x: sharing bits is never worth it
-	 */
-
-	if (flags & REG_MULTIPLE)
-	{
-		flags &= ~REG_MULTIPLE;
-		flags |= REG_INVERT;
-	}
-	if (flags & REG_DELIMITED)
-	{
-		flags &= ~REG_DELIMITED;
-		flags |= REG_STARTEND;
-	}
-#endif
 	inv = (flags & REG_INVERT) != 0;
 	buf = beg = (unsigned char*)s;
 	end = buf + len;

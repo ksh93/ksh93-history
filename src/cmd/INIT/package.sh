@@ -1,4 +1,26 @@
-USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1999-2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"
+####################################################################
+#                                                                  #
+#             This software is part of the ast package             #
+#                Copyright (c) 1999-2002 AT&T Corp.                #
+#        and it may only be used by you under license from         #
+#                       AT&T Corp. ("AT&T")                        #
+#         A copy of the Source Code Agreement is available         #
+#                at the AT&T Internet web site URL                 #
+#                                                                  #
+#       http://www.research.att.com/sw/license/ast-open.html       #
+#                                                                  #
+#    If you have copied or used this software without agreeing     #
+#        to the terms of the license you are infringing on         #
+#           the license and copyright and are violating            #
+#               AT&T's intellectual property rights.               #
+#                                                                  #
+#            Information and Software Systems Research             #
+#                        AT&T Labs Research                        #
+#                         Florham Park NJ                          #
+#                                                                  #
+#               Glenn Fowler <gsf@research.att.com>                #
+#                                                                  #
+####################################################################
 # package - source and binary package control
 # this script written to make it through all sh variants
 # Glenn Fowler <gsf@research.att.com>
@@ -29,7 +51,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Labs Research) 2002-03-17 $
+@(#)$Id: package (AT&T Labs Research) 2002-06-28 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary packages.
@@ -107,7 +129,7 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 				under this directory then it is sourced by
 				\bsh\b(1) before \aaction\a is done. If this
 				field begins with \b-\b then the host is
-				ignored. If this field begins with \b:\b then
+				ignored. If this field contains \b:\b then
 				\bditto\b(1) is used to sync the remote \bsrc\b
 				directory hierarchy to the local one.
 			[+date?\aYYMMDD\a of the last action.]
@@ -121,8 +143,8 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 		for \apackage\a on the standard output. Note that individual
 		components in \apackage\a may contain additional or replacement
 		notices.]
-	[+help\b [ \aaction\a ]]?Display help text (for \aaction\a) on the
-		standard output.]
+	[+help\b [ \aaction\a ]]?Display help text on the standard error
+		(standard output for \aaction\a).]
 	[+host\b [ \aattribute\a... ]]?List architecture/implementation
 		dependent host information on the standard output. \btype\b is
 		listed if no attributes are specified. Information is listed on
@@ -149,8 +171,8 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 				incompatibilities has for the most part
 				been futile.]
 		}
-	[+html\b [ \aaction\a ]]?Display html help  text (for \aaction\a) on the
-		standard output.]
+	[+html\b [ \aaction\a ]]?Display html help text on the standard error
+		(stamdard output for \aaction\a).]
 	[+install\b [ flat ]] [ \aarchitecture\a ... ]] \adirectory\a [ \apackage\a ... ]]?Copy
 		the package binary hierarchy to \adirectory\a. If
 		\aarchitecture\a is omitted then all architectures are
@@ -468,9 +490,16 @@ do	case $# in
 		;;
 	help|HELP|html|man|--[?m]*)
 		case $1 in
-		help)	code=0 ;;
-		html)	code=0 html=1 ;;
-		*)	code=2; exec 1>&2 ;;
+		help)	code=0
+			case $2 in
+			'')	exec 1>&2 ;;
+			esac
+			;;
+		html)	code=0 html=1
+			;;
+		*)	code=2
+			exec 1>&2
+			;;
 		esac
 		case $html in
 		1)	bO="<HTML>
@@ -763,7 +792,7 @@ ${eL}${eO}"
 			   directory. If lib/package/admin/'$admin_env$' exists
 			   under this directory then it is sourced by sh(1)
 			   before ACTION is done. If this field begins with -
-			   then the host is ignored. If this field begins with
+			   then the host is ignored. If this field contains
 			   : then ditto(1) is used to sync the remote src
 			   directory hierarchy to the local one.
 		   date    YYMMDD of the last action.
@@ -778,7 +807,8 @@ ${eL}${eO}"
 		standard output. Note that individual components in PACKAGE
 		may contain additional or replacement notices.
 	help [ ACTION ]
-		Display help text [ for ACTION ] on the standard output.
+		Display help text on the standard error [ standard output
+		for ACTION ].
 	host [ canon cpu name rating type ... ]
 		List architecture/implementation dependent host information
 		on the standard output. type is listed if no attributes are
@@ -804,7 +834,8 @@ ${eL}${eO}"
 			   to release incompatibilities has for the most part
 			   been futile.
 	html [ ACTION ]
-		Display html help text [ for ACTION ] on the standard output.
+		Display html help text on the standard error [ standard output
+		for ACTION ].
 	install [ flat ] [ ARCHITECTURE ... ] DIR [ PACKAGE ... ]
 		Copy the package binary hierarchy to DIR. If ARCHITECTURE is
 		omitted then all architectures are installed. If the \"flat\"
@@ -1029,6 +1060,15 @@ admin)	while	:
 	done
 	admin_action=$1
 	admin_args=$*
+	for i
+	do	case $i in
+		debug|environment|force|never|only|quiet|show|DEBUG)
+			;;
+		*)	admin_action=$i
+			break
+			;;
+		esac
+	done
 	;;
 esac
 
@@ -1628,6 +1668,9 @@ main()
 				*)	arch=$mach ;;
 				esac
 				;;
+			esac
+			case $arch in
+			sparc)	arch=sun4 ;;
 			esac
 			type=sol$v.$arch
 			;;
@@ -2461,6 +2504,20 @@ admin)	case $admin_action in
 		;;
 	esac
 	;;
+release)set '' $args
+	target=
+	while	:
+	do	shift
+		case $1 in
+		-|[0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789]|[0123456789][0123456789][0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789])
+			target="$target $1"
+			;;
+		*)	break
+			;;
+		esac
+	done
+	package=$*
+	;;
 *)	package=
 	target=
 	set '' $args
@@ -2828,48 +2885,55 @@ order() # [ package ]
 	} | tsort
 }
 
-# write package component list to the standard output
+# generate the package component list in _components_
 
 components() # [ package ]
 {
-	case $1 in
-	'')	;;
-	INIT)	echo $1
-		;;
-	*)	view package src lib/package/$1.pkg || return 1
-		p=$_view_
-		{
-		cmp= cmp_sep=
-		req= req_sep=
-		op=::
-		while	read line
-		do	IFS=' 	\\'
-			set '' $line
-			IFS=$ifs
-			while	:
-			do	shift
-				case $# in
-				0)	break ;;
-				esac
-				case $1 in
-				:*:)	op=$1
-					;;
-				INIT|'$('*|*')')
-					;;
-				*)	case $op in
-					:PACKAGE:)
-						cmp="$cmp$cmp_sep$1"
-						cmp_sep=$nl
-						;;
-					esac
-					;;
-				esac
-			done
-		done
-		echo $cmp
-		} < $p
-		;;
-	esac
+	_components_=
+	for p
+	do	case $p in
+		'')	;;
+		INIT)	case " $_components_ " in
+			*" $p "*)	;;
+			*)		_components_="$_components_ $p" ;;
+			esac
+			;;
+		*)	
+			if	view package src lib/package/$p.pkg
+			then	p=$_view_
+				op=::
+				exec < $p
+				while	read line
+				do	IFS=' 	\\'
+					set '' $line
+					IFS=$ifs
+					while	:
+					do	shift
+						case $# in
+						0)	break ;;
+						esac
+						case $1 in
+						:*:)	op=$1
+							;;
+						INIT|'$('*|*')')
+							;;
+						*)	case $op in
+							:PACKAGE:)
+								case " $_components_ " in
+								*" $1 "*)	;;
+								*)		_components_="$_components_ $1" ;;
+								esac
+								;;
+							esac
+							;;
+						esac
+					done
+				done
+				exec < /dev/null
+			fi
+			;;
+		esac
+	done
 }
 
 # capture command output
@@ -3253,6 +3317,7 @@ contents|list)
 			cmp= cmp_sep=
 			req= req_sep=
 			op=::
+			exec < $pkg.pkg
 			while	read line
 			do	IFS=' 	\\'
 				set '' $line
@@ -3284,7 +3349,8 @@ contents|list)
 						;;
 					esac
 				done
-			done < $pkg.pkg
+			done
+			exec < /dev/null
 			case $txt in
 			?*)	txt="$nl$txt" ;;
 			esac
@@ -3511,7 +3577,8 @@ install)cd $PACKAGEROOT
 						INSTALLROOT=$PACKAGEROOT/arch/$a
 						VPATH=$INSTALLROOT:$PACKAGEROOT:$VPATH
 						export INSTALLROOT VPATH
-						$MAKE -s $makeflags -f $i.pkg $qualifier list.install $assign
+						echo lib/$command
+						$MAKE -s $makeflags -f $i.pkg $qualifier list.installed $assign
 						) | sort -u
 					)
 				else	(
@@ -3522,8 +3589,9 @@ install)cd $PACKAGEROOT
 						INSTALLROOT=$PACKAGEROOT/arch/$a
 						VPATH=$INSTALLROOT:$PACKAGEROOT:$VPATH
 						export INSTALLROOT VPATH
-						$MAKE -s $makeflags -f $i.pkg $qualifier list.install $assign
-						) | sort -u | pax -drw $dest
+						echo lib/$command
+						$MAKE -s $makeflags -f $i.pkg $qualifier list.installed $assign
+						) | sort -u | pax -drw -ps $dest
 					)
 				fi
 			fi
@@ -3589,13 +3657,14 @@ make)	cd $PACKAGEROOT
 		;;
 	esac
 	requirements source $package
-	package=`components $package`
+	components $package
+	package=$_components_
 
 	# check for some required commands
 
-	must="cc ar"
+	must="$CC ar"
 	warn="nm yacc bison"
-	test="$must $awrn"
+	test="$must $warn"
 	have=
 	IFS=:
 	set /$IFS$PATH
@@ -3618,6 +3687,14 @@ make)	cd $PACKAGEROOT
 			esac
 		done
 	done
+	case " $have " in
+	*" bison "*)	;;
+	*" yacc "*)	have="$have bison" ;;
+	esac
+	case " $have " in
+	*" yacc "*)	;;
+	*" bison "*)	have="$have yacc" ;;
+	esac
 	for t in $test
 	do	case " $have " in
 		*" $t "*)
@@ -3986,7 +4063,10 @@ read)	case ${PWD:-`pwd`} in
 			esac
 		fi
 		case $p in
-		INIT)	$exec mv $PACKAGEROOT/bin/package $PACKAGEROOT/bin/package.old ;;
+		INIT)	if	test -f $PACKAGEROOT/bin/package
+			then	$exec mv $PACKAGEROOT/bin/package $PACKAGEROOT/bin/package.old
+			fi
+			;;
 		esac
 		z=
 		case $r in
@@ -4166,6 +4246,9 @@ $r:" | sort` in
 		*)		touch="$touch $u" ;;
 		esac
 	done
+	if	test ! -f $PACKAGEROOT/bin/package -a -f $PACKAGEROOT/bin/package.old
+	then	$exec cp $PACKAGEROOT/bin/package.old $PACKAGEROOT/bin/package
+	fi
 
 	# drop obsolete archives
 
@@ -4190,7 +4273,8 @@ $r:" | sort` in
 release)count= lo= hi=
 	checkaout release
 	requirements source $package
-	package=`components $package`
+	components $package
+	package=$_components_
 	set '' $target
 	shift
 	case $# in
@@ -4411,7 +4495,8 @@ results)set '' $target
 	;;
 
 test)	requirements source $package
-	package=`components $package`
+	components $package
+	package=$_components_
 
 	# must have nmake
 
@@ -4650,7 +4735,7 @@ update)	# download the latest release.version for selected packages
 					*" $type "*)
 						;;
 					*)	types_test="$types_test $type"
-						for i in *.????-??-??*.$type.*
+						for i in *.????-??-??.$type.* *.????-??-??.????-??-??.$type.*
 						do	if	test -f $i
 							then	types_local="$types_local $type"
 							fi
