@@ -13,7 +13,15 @@ ast-ksh :PACKAGE: ksh93 libast libcmd libdll
 
 :DETAILS: cyg
 	:README:
-		This package installs a standalone ksh and its man page ksh.1.
+		This package installs a standalone ksh93 executable ksh93.exe
+		and its man page ksh93.1.  If /bin/ksh.exe does not exist then
+		these symlinks
+			/bin/ksh.exe => ksh93.exe
+			/usr/share/man/man1/ksh93.1 => ksh.1
+		are created.  This allows alternative ksh impelementations,
+		e.g., /bin/pdksh.exe, to be selected by changing the ksh.exe
+		and ksh.1 symbolic links.  In addition, ksh and ksh93 paths are
+		added to /etc/shells if not already present.
 		$()
 		Each builtin or special command accepts the --man and --html
 		options to list the man page on the standard error. The --???
@@ -56,7 +64,24 @@ ast-ksh :PACKAGE: ksh93 libast libcmd libdll
 		   http://www.research.att.com/sw/download/
 	:EXPORT:
 		SHOPT_CMDLIB_DIR=1
-	bin/ksh :INSTALL:
-	man/man1/ksh.1 :INSTALL: man/man1/sh.1
+	bin/ksh93.exe :INSTALL: bin/ksh.exe
+	share/man/man1/ksh93.1 :INSTALL: man/man1/sh.1
+	:POSTINSTALL:
+		if	[ ! -e /bin/ksh.exe ]
+		then	ln -fs ksh93.exe /bin/ksh.exe
+			ln -fs ksh93.1 /usr/share/man/man1/ksh.1
+		else	echo "/bin/ksh.exe already exists"
+		fi
+		if [ -f /etc/shells ]
+		then	for i in /bin/ksh93 /bin/ksh /usr/bin/ksh93 /usr/bin/ksh
+			do	if	grep $i /etc/shells >/dev/null 2>&1
+				then	echo "$i already in /etc/shells"
+				else	echo $i >> /etc/shells
+					echo "$i added to /etc/shells"
+				fi
+			done
+		else	echo "no /etc/shells file"
+		fi
+		exit 0
 	:TEST: bin/ksh
 		KSH=$<; cd src/cmd/ksh93/tests; CYGWIN="$$CYGWIN ntsec binmode" SHELL=$$KSH $$KSH shtests

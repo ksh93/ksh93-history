@@ -164,11 +164,12 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 	register Sfio_t	*iop;
 	char			*ifs;
 	unsigned char		*cpmax;
+	unsigned char		*del;
 	char			was_escape = 0;
 	char			use_stak = 0;
 	char			was_write = 0;
 	char			was_share = 1;
-	int			rel;
+	int			rel, wrd;
 	long			array_index = 0;
 	void			*timeslot=0;
 	int			delim = '\n';
@@ -329,13 +330,14 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 			/* strip trailing delimiters */
 			if(cpmax[-1] == '\n')
 				cpmax--;
-			*cpmax =0;
 			if(cpmax>cp)
 			{
 				while((c=shp->ifstable[*--cpmax])==S_DELIM || c==S_SPACE);
 				cpmax[1] = 0;
 			}
-			if(nv_isattr (np, NV_RDONLY))
+			else
+				*cpmax =0;
+			if(nv_isattr(np, NV_RDONLY))
 			{
 				errormsg(SH_DICT,ERROR_warn(0),e_readonly, nv_name(np));
 				jmpval = 1;
@@ -352,6 +354,7 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 	rel= staktell();
 	/* val==0 at the start of a field */
 	val = 0;
+	del = 0;
 	while(1)
 	{
 		switch(c)
@@ -431,8 +434,7 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 
 		    case S_SPACE:
 			/* skip over blanks */
-			while(c==S_SPACE)
-				c = shp->ifstable[*cp++];
+			while((c=shp->ifstable[*cp++])==S_SPACE);
 			if(!val)
 				continue;
 #if SHOPT_MULTIBYTE
@@ -451,13 +453,17 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 			if(c!=S_DELIM)
 				break;
 			/* FALL THRU */
+
 		    case S_DELIM:
+			if(!del)
+				del = cp - 1;
 			if(name)
 			{
 				/* skip over trailing blanks */
 				while((c=shp->ifstable[*cp++])==S_SPACE);
 				break;
 			}
+			/* FALL THRU */
 
 		    case 0:
 			if(val==0 || was_escape)
@@ -466,12 +472,21 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 				was_escape = 0;
 			}
 			/* skip over word characters */
+			wrd = -1;
 			while(1)
 			{
-				while((c=shp->ifstable[*cp++])==0);
+				while((c=shp->ifstable[*cp++])==0)
+					if(!wrd)
+						wrd = 1;
+				if(!del&&c==S_DELIM)
+					del = cp - 1;
 				if(name || c==S_NL || c==S_ESC || c==S_EOF || c==S_MBYTE)
 					break;
+				if(wrd<0)
+					wrd = 0;
 			}
+			if(wrd>0)
+				del = (unsigned char*)"";
 			if(c!=S_MBYTE)
 				cp[-1] = 0;
 			continue;
@@ -487,13 +502,19 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 		}
 		if(!name && *val)
 		{
-			/* strip off trailing delimiters */
-			register char	*cp = val + strlen(val);
-			register int n;
-			while((n=shp->ifstable[*--cp])==S_DELIM || n==S_SPACE);
-			cp[1] = 0;
+			/* strip off trailing space delimiters */
+			register unsigned char	*vp = (unsigned char*)val + strlen(val);
+			while(shp->ifstable[*--vp]==S_SPACE);
+			if(vp==del)
+			{
+				if(vp==(unsigned char*)val)
+					vp--;
+				else
+					while(shp->ifstable[*--vp]==S_SPACE);
+			}
+			vp[1] = 0;
 		}
-		if(nv_isattr (np, NV_RDONLY))
+		if(nv_isattr(np, NV_RDONLY))
 		{
 			errormsg(SH_DICT,ERROR_warn(0),e_readonly, nv_name(np));
 			jmpval = 1;
@@ -501,6 +522,7 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 		else
 			nv_putval(np,val,0);
 		val = 0;
+		del = 0;
 		if(use_stak)
 		{
 			stakseek(rel);
@@ -515,13 +537,10 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 		}
 		while(1)
 		{
-			if(sh_isoption(SH_ALLEXPORT)&&!strchr(nv_name(np),'.'))
+			if(sh_isoption(SH_ALLEXPORT)&&!strchr(nv_name(np),'.') && !nv_isattr(np,NV_EXPORT))
 			{
-#ifdef _ENV_H
-				if(!nv_isattr(np,NV_EXPORT))
-					sh_envput(sh.env,np);
-#endif
 				nv_onattr(np,NV_EXPORT);
+				sh_envput(sh.env,np);
 			}
 			if(name)
 			{
@@ -535,7 +554,7 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 				break;
 			if(!np)
 				goto done;
-			if(nv_isattr (np, NV_RDONLY))
+			if(nv_isattr(np, NV_RDONLY))
 			{
 				errormsg(SH_DICT,ERROR_warn(0),e_readonly, nv_name(np));
 				jmpval = 1;
@@ -543,7 +562,6 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 			else
 				nv_putval(np, "", 0);
 		}
-		val = 0;
 	}
 done:
 	if(timeout || (shp->fdstatus[fd]&(IOTTY|IONOSEEK)))

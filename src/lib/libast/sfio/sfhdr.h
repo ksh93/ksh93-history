@@ -991,9 +991,13 @@ typedef struct _sfextern_s
 #define _Sfcv36		(_Sftable.sf_cv36)
 #define _Sfcv64		(_Sftable.sf_cv64)
 #define _Sftype		(_Sftable.sf_type)
-#define _Sffhuge	(_Sftable.sf_flt_huge)
-#define _Sfdhuge	(_Sftable.sf_dbl_huge)
-#define _Sflhuge	(_Sftable.sf_ldbl_huge)
+#define _Sfieee		(&_Sftable.sf_ieee)
+#define _Sffinf		(_Sftable.sf_ieee.fltinf)
+#define _Sfdinf		(_Sftable.sf_ieee.dblinf)
+#define _Sflinf		(_Sftable.sf_ieee.ldblinf)
+#define _Sffnan		(_Sftable.sf_ieee.fltnan)
+#define _Sfdnan		(_Sftable.sf_ieee.dblnan)
+#define _Sflnan		(_Sftable.sf_ieee.ldblnan)
 #define _Sffpow10	(_Sftable.sf_flt_pow10)
 #define _Sfdpow10	(_Sftable.sf_dbl_pow10)
 #define _Sflpow10	(_Sftable.sf_ldbl_pow10)
@@ -1009,12 +1013,10 @@ typedef struct _sftab_
 	float*		sf_flt_pow10;		/* float powers of 10		*/
 	double*		sf_dbl_pow10;		/* double powers of 10		*/
 	Sfdouble_t*	sf_ldbl_pow10;		/* Sfdouble_t powers of 10	*/
-	float		sf_flt_huge;		/* float HUGE_VALUE		*/
-	double		sf_dbl_huge;		/* double HUGE_VALUE		*/
-	Sfdouble_t	sf_ldbl_huge;		/* Sfdouble_t HUGE_VALUE	*/
 	uchar		sf_cv36[SF_MAXCHAR+1];	/* conversion for base [2-36]	*/
 	uchar		sf_cv64[SF_MAXCHAR+1];	/* conversion for base [37-64]	*/
 	uchar		sf_type[SF_MAXCHAR+1];	/* conversion formats&types	*/
+	Sfieee_t	sf_ieee;		/* IEEE floating point constants*/
 } Sftab_t;
 
 /* thread-safe macro/function to initialize _Sfcv* conversion tables */
@@ -1121,7 +1123,6 @@ extern Sfrsrv_t*	_sfrsrv _ARG_((Sfio_t*, ssize_t));
 extern int		_sfsetpool _ARG_((Sfio_t*));
 extern char*		_sfcvt _ARG_((Sfdouble_t,char*,size_t,int,int*,int*,int*,int));
 extern char**		_sfgetpath _ARG_((char*));
-extern Sfdouble_t	_sfdscan _ARG_((Void_t*, int(*)(Void_t*,int)));
 
 #if _BLD_sfio && defined(__EXPORT__)
 #define extern		__EXPORT__

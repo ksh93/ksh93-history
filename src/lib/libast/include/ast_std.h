@@ -354,7 +354,7 @@ extern void		swab(const void*, void*, ssize_t);
 extern int		system(const char*);
 
 extern void*		bsearch(const void*, const void*, size_t, size_t,
-		 		int(*)(const void*, const void*));
+				int(*)(const void*, const void*));
 extern void		qsort(void*, size_t, size_t,
 				int(*)(const void*, const void*));
 
@@ -375,6 +375,22 @@ extern size_t		wcstombs(char*, const wchar_t*, size_t);
 
 #if !_BLD_ast && defined(__IMPORT__)
 #define extern		__IMPORT__
+#endif
+
+#if _std_strtod
+#undef	strtod
+#define strtod			_ast_strtod
+#endif
+
+#if _std_strtol
+#undef	strtol
+#undef	strtoul
+#undef	strtoll
+#undef	strtoull
+#define strtol			_ast_strtol
+#define strtoul			_ast_strtoul
+#define strtoll			_ast_strtoll
+#define strtoull		_ast_strtoull
 #endif
 
 extern long			strtol(const char*, char**, int);
@@ -951,7 +967,7 @@ __STDPP__directive pragma pp:ignore "sysent.h"
 
 #else
 
-struct lconv 	
+struct lconv
 {
 	char*	decimal_point;
 	char*	thousands_sep;

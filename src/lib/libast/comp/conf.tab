@@ -1,7 +1,7 @@
 #
 # posix limits,unistd,confstr,fpathconf,pathconf,sysconf macro table
 #
-# @(#)conf.tab (AT&T Research) 2004-05-05
+# @(#)conf.tab (AT&T Research) 2005-03-11
 #
 # name index standard section call flags [ value ... ]
 # [ <tab> _LOCAL_name macro definition ... ]
@@ -280,7 +280,26 @@ PASS_MAX		130	SVID	SC 1 LMU	8
 PATH			52	POSIX	CS 1 MU		"/bin:/usr/bin"
 PATH_MAX		53	POSIX	PC 1 LMUX	MAXPATHLEN 1024 256
 PHYS_PAGES		125	SUN	SC 1 0
-PID_MAX			54	SVID	SC 1 LMU	30000
+PID_MAX			54	SVID	SC 1 LMU
+	#define _LOCAL_PID_MAX_DEFAULT	30000
+	#define _LOCAL_PID_MAX		local_pid_max()
+	static int
+	local_pid_max(void)
+	{
+		int	fd;
+		int	n;
+		char	buf[1024];
+		if ((fd = open("/proc/sys/kernel/pid_max", 0)) < 0)
+			return _LOCAL_PID_MAX_DEFAULT;
+		if ((n = read(fd, buf, sizeof(buf)-1)) < 2)
+			return _LOCAL_PID_MAX_DEFAULT;
+		buf[n] = 0;
+		n = (int)strtol(buf, (char**)0, 0);
+		close(fd);
+		if (n <= 0)
+			return _LOCAL_PID_MAX_DEFAULT;
+		return n;
+	}
 PIPE_BUF		55	POSIX	PC 1 LMU	512
 PRIORITIZED_IO		57	POSIX	SC 1 FU
 PRIORITY_SCHEDULING	58	POSIX	SC 1 FU

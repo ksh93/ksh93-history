@@ -243,16 +243,12 @@ static void nv_restore(struct subshell *sp)
 		if(nv_isattr(mp,NV_EXPORT))
 		{
 			char *name = nv_name(mp);
-#ifdef _ENV_H
 			sh_envput(sh.env,mp);
-#endif
 			if(*name=='_' && strcmp(name,"_AST_FEATURES")==0)
 				astconf(NiL, NiL, NiL);
 		}
-#ifdef _ENV_H
 		else if(nv_isattr(np,NV_EXPORT))
 			env_delete(sh.env,nv_name(mp));
-#endif
 		free((void*)np);
 	}
 	sp->shpwd=save;

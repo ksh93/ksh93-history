@@ -65,9 +65,9 @@ const struct shtable3 shtab_builtins[] =
 #if SHOPT_BASH
 	"local",	NV_BLTIN|BLT_ENV|BLT_SPC|BLT_DCL,bltin(typeset),
 #endif
-#ifdef _bin_newgrp
+#if _bin_newgrp || _usr_bin_newgrp
 	"newgrp",	NV_BLTIN|BLT_ENV|BLT_SPC,	Bltin(login),
-#endif	/* _bin_newgrp */
+#endif	/* _bin_newgrp || _usr_bin_newgrp */
 	".",		NV_BLTIN|BLT_ENV|BLT_SPC,	bltin(dot_cmd),
 	"alias",	NV_BLTIN|BLT_SPC|BLT_DCL,	bltin(alias),
 	"hash",		NV_BLTIN|BLT_SPC|BLT_DCL,	bltin(alias),
@@ -105,7 +105,7 @@ const struct shtable3 shtab_builtins[] =
 	"print",	NV_BLTIN|BLT_ENV,		bltin(print),
 	"printf",	NV_BLTIN|NV_NOFREE,		bltin(printf),
 	"pwd",		NV_BLTIN|NV_NOFREE,		bltin(pwd),
-	"read",		NV_BLTIN,			bltin(read),
+	"read",		NV_BLTIN|BLT_ENV,		bltin(read),
 	"sleep",	NV_BLTIN|NV_NOFREE,		bltin(sleep),
 	"alarm",	NV_BLTIN,			bltin(alarm),
 	"ulimit",	NV_BLTIN|BLT_ENV,		bltin(ulimit),

@@ -21,7 +21,7 @@
 ########################################################################
 : generate conf info
 #
-# @(#)conf.sh (AT&T Research) 2004-08-11
+# @(#)conf.sh (AT&T Research) 2005-02-04
 #
 # this script generates these files from the table file in the first arg
 # the remaining args are the C compiler name and flags
@@ -1175,6 +1175,7 @@ esac
 cat <<!
 #pragma prototyped
 #include <ast.h>
+#include <time.h>
 #include "${base}.h"
 
 ${generated}

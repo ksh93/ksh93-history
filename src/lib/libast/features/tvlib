@@ -42,19 +42,25 @@ tst	- -DN=1 - -DN=2 - -DN=3 - -DN=4 output{
 		if (gettimeofday(&tv, (struct timezone*)0) < 0)
 			return 1;
 		printf("#define tmgettimeofday(p)	gettimeofday(p,(struct timezone*)0)\n");
+#if _lib_settimeofday
 		printf("#define tmsettimeofday(p)	settimeofday(p,(struct timezone*)0)\n");
+#endif
 #endif
 #if N == 2
 		if (gettimeofday(&tv, (void*)0) < 0)
 			return 1;
 		printf("#define tmgettimeofday(p)	gettimeofday(p,(void*)0)\n");
+#if _lib_settimeofday
 		printf("#define tmsettimeofday(p)	gettimeofday(p,(void*)0)\n");
+#endif
 #endif
 #if N == 3
 		if (gettimeofday(&tv) < 0)
 			return 1;
 		printf("#define tmgettimeofday(p)	gettimeofday(p)\n");
+#if _lib_settimeofday
 		printf("#define tmsettimeofday(p)	settimeofday(p)\n");
+#endif
 #endif
 		return 0;
 	}

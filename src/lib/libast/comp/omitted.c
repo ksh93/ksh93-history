@@ -4,6 +4,13 @@
  * workarounds to bring the native interface close to posix and x/open
  */
 
+#if defined(__STDPP__directive) && defined(__STDPP__hide)
+__STDPP__directive pragma pp:hide utime utimes
+#else
+#define utime		______utime
+#define utimes		______utimes
+#endif
+
 #include <ast.h>
 #include <error.h>
 #include <tm.h>
@@ -24,6 +31,13 @@
 #if _win32_botch_execve || _lib_spawn_mode
 #define CONVERT		1
 #endif
+#endif
+
+#if defined(__STDPP__directive) && defined(__STDPP__hide)
+__STDPP__directive pragma pp:nohide utime utimes
+#else
+#undef	utime
+#undef	utimes
 #endif
 
 #ifndef MAX_PATH
@@ -63,8 +77,8 @@ extern int		_rename(const char*, const char*);
 extern pid_t		_spawnve(int, const char*, char* const*, char* const*);
 extern int		_stat(const char*, struct stat*);
 extern int		_unlink(const char*);
-extern int		_utime(const char*, struct utimbuf*);
-extern int		_utimes(const char*, struct timeval*);
+extern int		_utime(const char*, const struct utimbuf*);
+extern int		_utimes(const char*, const struct timeval*);
 extern ssize_t		_write(int, const void*, size_t);
 
 #if defined(__EXPORT__)
@@ -947,7 +961,7 @@ ctime_now(const char* path)
 #endif
 
 extern int
-utimes(const char* path, struct timeval* ut)
+utimes(const char* path, const struct timeval* ut)
 {
 	int	r;
 	int	oerrno;
@@ -965,7 +979,7 @@ utimes(const char* path, struct timeval* ut)
 }
 
 extern int
-utime(const char* path, struct utimbuf* ut)
+utime(const char* path, const struct utimbuf* ut)
 {
 	int	r;
 	int	oerrno;

@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.0 2005-01-01
+info mam static 00000 1994-07-17 make (AT&T Research) 5.0 2005-03-19
 setv INSTALLROOT ${INSTALLROOT}
 setv PACKAGE_ast ${INSTALLROOT}
 setv PACKAGE_ast_INCLUDE ${PACKAGE_ast}/include/ast
@@ -35,8 +35,8 @@ setv SILENT
 setv TAR tar
 setv YACC yacc
 setv YACCFLAGS -d
-make ${INSTALLROOT}/lib/package/ast.lic
-done ${INSTALLROOT}/lib/package/ast.lic
+make ${PACKAGEROOT}/lib/package/ast.lic
+done ${PACKAGEROOT}/lib/package/ast.lic
 make install
 make ksh
 make pmain.o
@@ -247,6 +247,8 @@ prev ${INSTALLROOT}/include/ast/stak.h implicit
 prev ${INSTALLROOT}/include/ast/error.h implicit
 make include/defs.h implicit
 prev include/shell.h implicit
+make include/env.h implicit
+done include/env.h dontcare
 make include/argnod.h implicit
 prev ${INSTALLROOT}/include/ast/stak.h implicit
 done include/argnod.h
@@ -280,8 +282,6 @@ prev ${INSTALLROOT}/include/ast/error.h implicit
 make ${INSTALLROOT}/include/ast/sig.h implicit
 done ${INSTALLROOT}/include/ast/sig.h dontcare
 done include/fault.h
-make include/env.h implicit
-done include/env.h dontcare
 make include/history.h implicit
 prev ${INSTALLROOT}/include/ast/sfio.h implicit
 prev ${INSTALLROOT}/include/ast/ast.h implicit
@@ -1456,7 +1456,7 @@ done ${INSTALLROOT}/include/ast generated
 make ${INSTALLROOT}/include/ast/nval.h
 prev ${INSTALLROOT}/include/ast
 prev include/nval.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1982,author=dgk'  include/nval.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1982,author=dgk'  include/nval.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/nval.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/nval.h
@@ -1464,7 +1464,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/nval.h generated
 make ${INSTALLROOT}/include/ast/shell.h
 prev include/shell.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1982,author=dgk'  include/shell.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1982,author=dgk'  include/shell.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/shell.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/shell.h
@@ -1472,7 +1472,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/shell.h generated
 make ${INSTALLROOT}/include/ast/history.h
 prev include/history.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1982,author=dgk'  include/history.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1982,author=dgk'  include/history.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/history.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/history.h

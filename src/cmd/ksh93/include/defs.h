@@ -32,13 +32,17 @@
 #include	"FEATURE/options"
 #include	<cdt.h>
 #include	<history.h>
+#include	"fault.h"
+#include	"argnod.h"
+
+#define	env_change()		(++ast.env_serial)
 #ifdef SHOPT_ENV
 #   include	<env.h>
 #else
-#   define Env_t	void
+#   define Env_t		void
+#   define sh_envput(e,p)	env_change()
+#   define env_delete(e,p)	env_change()
 #endif
-#include	"fault.h"
-#include	"argnod.h"
 
 /*
  * note that the first few fields have to be the same as for
@@ -265,6 +269,7 @@ struct limits
 
 #define MATCH_MAX		64
 
+extern int		sh_addlib(void*);
 extern void 		*sh_argopen(Shell_t*);
 extern Namval_t		*sh_assignok(Namval_t*,int);
 extern char		*sh_checkid(char*,char*);

@@ -1,6 +1,6 @@
 set	prototyped
 hdr	float,limits,math,values
-lib	frexp,frexpl,ldexp,ldexpl -lm
+lib	frexp,frexpl,ldexp,ldexpl,finite,finitel,isnan,isnanl <math.h> -lm
 
 tst	ast_no_um2fm note{ no unsigned intmax => floatmax cast }end nolink{
 	#include "FEATURE/common"
@@ -944,7 +944,7 @@ tst	- -DN=1 - -DN=2 note{ _ast_fltmax_t maximum integral type }end output{
 	}
 }end
 
-tst	- -lm -DSCAN=1 - -DEXP=1 - -DADD=1 - -DMPY=1 note{ nan memory representations }end output{
+tst	- -lm -DSCAN=1 - -DDIV=1 - -DEXP=1 - -DADD=1 - -DMPY=1 note{ INF and NAN memory representations }end output{
 	#include "FEATURE/common"
 	#include <sys/types.h>
 	#include <signal.h>
@@ -971,10 +971,11 @@ tst	- -lm -DSCAN=1 - -DEXP=1 - -DADD=1 - -DMPY=1 note{ nan memory representation
 	#endif
 	static void
 	#if _STD_
-	list(const char* pfx, void* val, int siz)
+	list(const char* typ, const char* var, void* val, int siz)
 	#else
-	list(pfx, val, siz)
-	char* pfx;
+	list(typ, var, val, siz)
+	char* typ;
+	char* var;
 	void* val;
 	int siz;
 	#endif
@@ -982,7 +983,7 @@ tst	- -lm -DSCAN=1 - -DEXP=1 - -DADD=1 - -DMPY=1 note{ nan memory representation
 		register unsigned char*	u = (unsigned char*)val;
 		register unsigned char*	e = u + siz;
 	
-		printf("#define _ast_%s_nan_init\t0x%02x", pfx, *u);
+		printf("#define _ast_%s_%s_init\t0x%02x", typ, var, *u);
 		while (++u < e)
 			printf(",0x%02x", *u);
 		printf("\n");
@@ -991,28 +992,38 @@ tst	- -lm -DSCAN=1 - -DEXP=1 - -DADD=1 - -DMPY=1 note{ nan memory representation
 	main()
 	{
 	#if SCAN
-	#define STR	"NaNQ"
+	#define NANQ	"NaNQ"
+	#define INF	"INF"
 	{
 		float	f;
 
-		if (sscanf(STR, "%g", &f) != 1)
+		if (sscanf(NANQ, "%g", &f) != 1)
 			return 1;
-		list("flt", &f, sizeof(f));
+		list("flt", "nan", &f, sizeof(f));
+		if (sscanf(INF, "%g", &f) != 1)
+			return 1;
+		list("flt", "inf", &f, sizeof(f));
 	}
 	{
 		double	f;
 
-		if (sscanf(STR, "%lg", &f) != 1)
+		if (sscanf(NANQ, "%lg", &f) != 1)
 			return 1;
-		list("dbl", &f, sizeof(f));
+		list("dbl", "nan", &f, sizeof(f));
+		if (sscanf(INF, "%lg", &f) != 1)
+			return 1;
+		list("dbl", "inf", &f, sizeof(f));
 	}
 	#ifdef LDBL_MAX
 	{
 		long double	f;
 
-		if (sscanf(STR, "%Lg", &f) != 1)
+		if (sscanf(NANQ, "%Lg", &f) != 1)
 			return 1;
-		list("ldbl", &f, sizeof(f));
+		list("ldbl", "nan", &f, sizeof(f));
+		if (sscanf(INF, "%Lg", &f) != 1)
+			return 1;
+		list("ldbl", "inf", &f, sizeof(f));
 	}
 	#endif
 	#else
@@ -1022,6 +1033,16 @@ tst	- -lm -DSCAN=1 - -DEXP=1 - -DADD=1 - -DMPY=1 note{ nan memory representation
 	#ifdef FLT_MAX
 		{
 			float	f = FLT_MAX;
+	#if DIV
+			float	z = 0;
+
+			f = 0.0 / z;
+			if (!f)
+				return 1;
+			list("flt", "nan", &f, sizeof(f));
+			f = 1.0 / z;
+			list("flt", "inf", &f, sizeof(f));
+	#else
 	#if ADD
 			f += f;
 	#endif
@@ -1031,12 +1052,24 @@ tst	- -lm -DSCAN=1 - -DEXP=1 - -DADD=1 - -DMPY=1 note{ nan memory representation
 	#if MPY
 			f *= 2;
 	#endif
-			list("flt", &f, sizeof(f));
+			list("flt", "nan", &f, sizeof(f));
+			list("flt", "inf", &f, sizeof(f));
+	#endif
 		}
 	#endif
 	#ifdef DBL_MAX
 		{
 			double	f = DBL_MAX;
+	#if DIV
+			double	z = 0;
+
+			f = 0.0 / z;
+			if (!f)
+				return 1;
+			list("dbl", "nan", &f, sizeof(f));
+			f = 1.0 / z;
+			list("dbl", "inf", &f, sizeof(f));
+	#else
 	#if ADD
 			f += f;
 	#endif
@@ -1046,12 +1079,24 @@ tst	- -lm -DSCAN=1 - -DEXP=1 - -DADD=1 - -DMPY=1 note{ nan memory representation
 	#if MPY
 			f *= 2;
 	#endif
-			list("dbl", &f, sizeof(f));
+			list("dbl", "nan", &f, sizeof(f));
+			list("dbl", "inf", &f, sizeof(f));
+	#endif
 		}
 	#endif
 	#ifdef LDBL_MAX
 		{
 			long double	f = LDBL_MAX;
+	#if DIV
+			long double	z = 0;
+
+			f = 0.0 / z;
+			if (!f)
+				return 1;
+			list("ldbl", "nan", &f, sizeof(f));
+			f = 1.0 / z;
+			list("ldbl", "inf", &f, sizeof(f));
+	#else
 	#if ADD
 			f += f;
 	#endif
@@ -1061,7 +1106,9 @@ tst	- -lm -DSCAN=1 - -DEXP=1 - -DADD=1 - -DMPY=1 note{ nan memory representation
 	#if MPY
 			f *= 2;
 	#endif
-			list("ldbl", &f, sizeof(f));
+			list("ldbl", "nan", &f, sizeof(f));
+			list("ldbl", "inf", &f, sizeof(f));
+	#endif
 		}
 	#endif
 	#endif

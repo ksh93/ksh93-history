@@ -133,9 +133,7 @@ int    B_login(int argc,char *argv[],void *extra)
 				(*cp=0,np=nv_search(arg->argval,shp->var_tree,0)))
 			{
 				nv_onattr(np,NV_EXPORT);
-#ifdef _ENV_H
 				sh_envput(shp->env,np);
-#endif
 			}
 			if(cp)
 				*cp = '=';

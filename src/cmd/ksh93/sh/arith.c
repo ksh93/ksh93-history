@@ -244,7 +244,7 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 		return(r);
 	    }
 
-	    case ERRMSG:
+	    case MESSAGE:
 		sfsync(NIL(Sfio_t*));
 #if 0
 		if(warn)

@@ -31,6 +31,8 @@
 #include <ctype.h>
 #include <namval.h>
 
+#include "FEATURE/tmlib"
+
 #ifndef tzname
 #	if defined(__DYNAMIC__)
 #		define	tzname		__DYNAMIC__(tzname)
@@ -64,6 +66,38 @@ static const Namval_t		options[] =
 Tm_info_t	_tm_info_ = { 0 };
 
 __EXTERN__(Tm_info_t, _tm_info_);
+
+#if _tzset_environ
+
+static char	TZ[256];
+static char*	TE[2];
+
+struct tm*
+_tm_localtime(const time_t* t)
+{
+	struct tm*	r;
+	char*		e;
+
+	if (TZ[0])
+	{
+		if (!environ || !*environ)
+			environ = TE;
+		else
+			e = environ[0];
+		environ[0] = TZ;
+	}
+	r = localtime(t);
+	if (TZ[0])
+	{
+		if (environ == TE)
+			environ = 0;
+		else
+			environ[0] = e;
+	}
+	return r;
+}
+
+#endif
 
 /*
  * return minutes west of GMT for local time clock
@@ -100,10 +134,10 @@ tzwest(time_t* clock, int* isdst)
 	m = tp->tm_min;
 
 	/*
-	 * localtime() handles DST and GMT offset
+	 * tmlocaltime() handles DST and GMT offset
 	 */
 
-	tp = localtime(clock);
+	tp = tmlocaltime(clock);
 	if (n = tp->tm_yday - n)
 	{
 		if (n > 1)
@@ -161,12 +195,34 @@ tmlocal(void)
 	char*			t;
 	struct tm*		tp;
 	time_t			now;
-	char			buf[20];
+	char			buf[16];
 
 	static Tm_zone_t	local;
 
 #if _lib_tzset
+#if _tzset_environ
+	if (s = getenv("TZ"))
+	{
+		sfsprintf(TZ, sizeof(TZ), "TZ=%s", s);
+		if (!environ || !*environ)
+			environ = TE;
+		else
+			e = environ[0];
+		environ[0] = TZ;
+	}
+	else
+	{
+		TZ[0] = 0;
+		e = 0;
+	}
+#endif
 	tzset();
+#if _tzset_environ
+	if (environ == TE)
+		environ = 0;
+	else if (e)
+		environ[0] = e;
+#endif
 #endif
 #if _dat_tzname
 	local.standard = strdup(tzname[0]);
@@ -239,7 +295,7 @@ tmlocal(void)
 	else if ((s = getenv("TZ")) && *s && *s != ':' && (s = strdup(s)))
 	{
 		/*
-		 * POSIX style but skipped by localtime()
+		 * POSIX style but skipped by tmlocaltime()
 		 */
 
 		local.standard = s;
@@ -335,7 +391,7 @@ tmlocal(void)
 	if (!(tm_info.flags & TM_ADJUST))
 	{
 		now = (time_t)78811200;		/* Jun 30 1972 23:59:60 */
-		tp = localtime(&now);
+		tp = tmlocaltime(&now);
 		if (tp->tm_sec != 60)
 			tm_info.flags |= TM_ADJUST;
 	}

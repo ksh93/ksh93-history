@@ -22,7 +22,7 @@
 #ifndef _SFIO_H
 #define _SFIO_H	1
 
-#define SFIO_VERSION	20040101L
+#define SFIO_VERSION	20050202L
 
 /*	Public header file for the sfio library
 **
@@ -31,6 +31,7 @@
 
 typedef struct _sfio_s		Sfio_t;
 typedef struct _sfdisc_s	Sfdisc_t;
+typedef struct _sfieee_s	Sfieee_t;
 
 #if defined(_AST_STD_H) || defined(_PACKAGE_ast) && defined(_SFIO_PRIVATE)
 #include	<ast_std.h>
@@ -56,6 +57,16 @@ struct _sfdisc_s
 	Sfseek_f	seekf;		/* seek function		*/
 	Sfexcept_f	exceptf;	/* to handle exceptions		*/
 	Sfdisc_t*	disc;		/* the continuing discipline	*/
+};
+
+/* IEEE constants structure */
+struct _sfieee_s
+{	float		fltnan;		/* float NAN			*/
+	float		fltinf;		/* float INF			*/
+	double		dblnan;		/* double NAN			*/
+	double		dblinf;		/* double INF			*/
+	Sfdouble_t	ldblnan;	/* Sfdouble_t NAN		*/
+	Sfdouble_t	ldblinf;	/* Sfdouble_t INF		*/
 };
 
 #include <sfio_s.h>
@@ -271,6 +282,8 @@ extern Sfoff_t		sfsk _ARG_((Sfio_t*, Sfoff_t, int, Sfdisc_t*));
 extern ssize_t		sfpkrd _ARG_((int, Void_t*, size_t, int, long, int));
 
 /* portable handling of primitive types */
+extern Sfieee_t*	sfieee _ARG_((void));
+
 extern int		sfdlen _ARG_((Sfdouble_t));
 extern int		sfllen _ARG_((Sflong_t));
 extern int		sfulen _ARG_((Sfulong_t));

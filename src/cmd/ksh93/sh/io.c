@@ -434,8 +434,9 @@ int sh_open(register const char *path, int flags, ...)
 		}
 	}
 #endif /* SOCKET */
-	else if((fd = open(path, flags, mode)) < 0)
-		return(-1);
+	else while((fd = open(path, flags, mode)) < 0)
+		if(errno!=EINTR || sh.trapnote)
+			return(-1);
 	flags &= O_ACCMODE;
 	if(flags==O_WRONLY)
 		mode = IOWRITE;

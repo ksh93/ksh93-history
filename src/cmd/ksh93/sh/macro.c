@@ -1792,8 +1792,6 @@ static void mac_copy(register Mac_t *mp,register const char *str, register int s
 					n= S_DELIM;
 				}
 #endif /* SHOPT_MULTIBYTE */
-				endfield(mp,n==S_DELIM||mp->quoted);
-				mp->patfound = 0;
 				if(n==S_SPACE || n==S_NL)
 				{
 					while(size>0 && ((n=state[c= *(unsigned char*)cp++])==S_SPACE||n==S_NL))
@@ -1808,8 +1806,13 @@ static void mac_copy(register Mac_t *mp,register const char *str, register int s
 						size -= n;
 						n=S_DELIM;
 					}
+					else
 #endif /* SHOPT_MULTIBYTE */
+					if(n==S_DELIM)
+						size--;
 				}
+				endfield(mp,n==S_DELIM||mp->quoted);
+				mp->patfound = 0;
 				if(n==S_DELIM)
 					while(size>0 && ((n=state[c= *(unsigned char*)cp++])==S_SPACE||n==S_NL))
 						size--;

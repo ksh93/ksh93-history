@@ -147,7 +147,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	sfclose.c sfclrlock.c sfdisc.c sfdlen.c sfexcept.c \
 	sfgetl.c sfgetu.c sfcvt.c sfecvt.c sffcvt.c \
 	sfextern.c sffilbuf.c sfflsbuf.c sfprints.c sfgetd.c \
-	sfgetr.c sfllen.c sfmode.c sfmove.c sfnew.c \
+	sfgetr.c sfieee.c sfllen.c sfmode.c sfmove.c sfnew.c \
 	sfpkrd.c sfnotify.c sfnputc.c sfopen.c sfpeek.c sfpoll.c \
 	sfpool.c sfpopen.c sfprintf.c sfputd.c sfputl.c sfputr.c \
 	sfputu.c sfrd.c sfread.c sfreserve.c sfscanf.c sfseek.c sfset.c \
@@ -294,7 +294,7 @@ $(INCLUDEDIR)/prototyped.h :INSTALL: $(INCLUDEDIR)
 	else	$(MV) 1.$(tmp).x $(<)
 	fi
 
-ast.req : astmath.exe .check.hdr .check.lib
+ast.req : .check.hdr .check.lib
 
 /*
  * atmain.C is the only C++ and only for a few systems
@@ -330,20 +330,26 @@ atmain.o : atmain.C
  */
 
 .check.lib : .AFTER astmath.exe
-	if	test -x $(~)
+	if	test -f $(~)
 	then	touch $(<<)
 	else	echo ' -lm' >> $(<<)
 	fi
 
 astmath.exe : .DONTCARE astmath.c
-	if	$(CC) -DLD $(CCFLAGS) -o $(*:N=*.c:B:S=.exe) $(*) 2>/dev/null
-	then	: implicit "{ frexpl ldexpl }"
-	elif	$(CC) -DLD $(CCFLAGS) -o $(*:N=*.c:B:S=.exe) $(*) -lm 2>/dev/null
-	then	$(RM) -f $(*:N=*.c:B:S=.exe)
-	elif	$(CC) $(CCFLAGS) -o $(*:N=*.c:B:S=.exe) $(*) 2>/dev/null
-	then	: implicit "{ frexp ldexp }"
-	else	$(RM) -f $(*:N=*.c:B:S=.exe)
-	fi
+	X=1
+	for N in 1 2 3 4 5 6
+	do	if	$(CC) -DN=$N -DIS $(CCFLAGS) -o $(*:N=*.c:B:S=.exe) $(*) 2>/dev/null
+		then	: implicit math function N=$N :
+		elif	$(CC) -DN=$N -DIS $(CCFLAGS) -o $(*:N=*.c:B:S=.exe) $(*) -lm 2>/dev/null
+		then	: math function N=$N requires -lm :
+			X=0
+			break
+		fi
+	done
+	case $X in
+	0)	$(RM) -f $(*:N=*.c:B:S=.exe) ;;
+	*)	touch $(*:N=*.c:B:S=.exe) ;;
+	esac
 	$(RM) -f $(*:N=*.c:B:S=$(CC.SUFFIX.OBJECT))
 
 /* astsa is a subset of standalone functions that just needs sfio+cdt */

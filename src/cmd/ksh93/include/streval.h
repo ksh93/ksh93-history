@@ -183,7 +183,7 @@ extern const struct 		mathtab shtab_math[];
 #define LOOKUP	0
 #define ASSIGN	1
 #define VALUE	2
-#define ERRMSG	3
+#define MESSAGE	3
 
 extern Sfdouble_t strval(const char*,char**,Sfdouble_t(*)(const char**,struct lval*,int,Sfdouble_t),int);
 extern Arith_t *arith_compile(const char*,char**,Sfdouble_t(*)(const char**,struct lval*,int,Sfdouble_t),int);

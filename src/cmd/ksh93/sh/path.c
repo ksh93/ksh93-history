@@ -624,14 +624,17 @@ Pathcomp_t *path_absolute(register const char *name, Pathcomp_t *endpath)
 			if(oldpp->bltin_lib)
 			{
 				typedef int (*Fptr_t)(int, char*[], void*);
+				Namval_t *np;
 				Fptr_t addr;
 				int n = staktell();
 				stakputs("b_");
 				stakputs(name);
 				stakputc(0);
-				if(addr=(Fptr_t)dlllook(oldpp->bltin_lib,stakptr(n)))
+				if((addr=(Fptr_t)dlllook(oldpp->bltin_lib,stakptr(n))) &&
+				   (!(np = sh_addbuiltin(stakptr(PATH_OFFSET),NiL,NiL)) || np->nvalue.bfp!=addr) &&
+				   (np = sh_addbuiltin(stakptr(PATH_OFFSET),addr,NiL)))
 				{
-					sh_addbuiltin(stakptr(PATH_OFFSET),addr,(void*)0)->nvenv = oldpp->bltin_lib;
+					np->nvenv = oldpp->bltin_lib;
 					return(oldpp);
 				}
 			}
@@ -1320,11 +1323,13 @@ static int path_chkpaths(Pathcomp_t *first, Pathcomp_t* old,Pathcomp_t *pp, int 
 							sfsprintf(sp, k, "%s/%s", pp->name, ep);
 						else
 							sp = ep;
-						pp->bltin_lib = dllplug("ksh", sp, NiL, RTLD_LAZY, NiL, 0);
+						if (pp->bltin_lib = dllplug("ksh", sp, NiL, RTLD_LAZY, NiL, 0))
+							sh_addlib(pp->bltin_lib);
 						if (sp != ep)
 							free(sp);
 #else
-						pp->bltin_lib = dllfind(ep, NiL, RTLD_LAZY, NiL, 0);
+						if (pp->bltin_lib = dllfind(ep, NiL, RTLD_LAZY, NiL, 0))
+							sh_addlib(pp->bltin_lib);
 #endif
 					}
 				}

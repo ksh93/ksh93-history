@@ -35,6 +35,11 @@
 #include "defs.h"
 #include "edit.h"
 
+#if ! SHOPT_HISTEXPAND
+
+NoN(hexpand)
+
+#else
 
 static char *modifiers = "htrepqxs&";
 static int mod_flags[] = { 0, 0, 0, 0, HIST_PRINT, HIST_QUOTE, HIST_QUOTE|HIST_QUOTE_BR, 0, 0 };
@@ -721,3 +726,4 @@ done:
 	return (flag & HIST_ERROR ? HIST_ERROR : flag & HIST_FLAG_RETURN_MASK);
 }
 
+#endif

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1994-2005 AT&T Corp.                  *
+*                  Copyright (c) 1990-2005 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -25,7 +25,7 @@
  * coded for portability
  */
 
-static char id[] = "\n@(#)$Id: mamake (AT&T Labs Research) 2005-01-11 $\0\n";
+static char id[] = "\n@(#)$Id: mamake (AT&T Labs Research) 2005-03-11 $\0\n";
 
 #if _PACKAGE_ast
 
@@ -33,7 +33,7 @@ static char id[] = "\n@(#)$Id: mamake (AT&T Labs Research) 2005-01-11 $\0\n";
 #include <error.h>
 
 static const char usage[] =
-"[-?\n@(#)$Id: mamake (AT&T Labs Research) 2005-01-11 $\n]"
+"[-?\n@(#)$Id: mamake (AT&T Labs Research) 2005-03-11 $\n]"
 USAGE_LICENSE
 "[+NAME?mamake - make abstract machine make]"
 "[+DESCRIPTION?\bmamake\b reads \amake abstract machine\a target and"
@@ -398,6 +398,30 @@ drop(Buf_t* buf)
 }
 
 /*
+ * append str length n to buffer and return the buffer base
+ */
+
+static char*
+appendn(Buf_t* buf, char* str, int n)
+{
+	int	m;
+	int	i;
+
+	if ((n + 1) >= (buf->end - buf->nxt))
+	{
+		i = buf->nxt - buf->buf;
+		m = (((buf->end - buf->buf) + n + CHUNK + 1) / CHUNK) * CHUNK;
+		if (!(buf->buf = newof(buf->buf, char, m, 0)))
+			report(3, "out of space [buffer resize]", NiL, (unsigned long)0);
+		buf->end = buf->buf + m;
+		buf->nxt = buf->buf + i;
+	}
+	memcpy(buf->nxt, str, n + 1);
+	buf->nxt += n;
+	return buf->buf;
+}
+
+/*
  * append str to buffer and return the buffer base
  * if str==0 then next pointer reset to base
  */
@@ -405,27 +429,9 @@ drop(Buf_t* buf)
 static char*
 append(Buf_t* buf, char* str)
 {
-	int	n;
-	int	m;
-	int	i;
-
-	if (!str)
-		buf->nxt = buf->buf;
-	else
-	{
-		n = strlen(str);
-		if ((n + 1) >= (buf->end - buf->nxt))
-		{
-			i = buf->nxt - buf->buf;
-			m = (((buf->end - buf->buf) + n + CHUNK + 1) / CHUNK) * CHUNK;
-			if (!(buf->buf = newof(buf->buf, char, m, 0)))
-				report(3, "out of space [buffer resize]", NiL, (unsigned long)0);
-			buf->end = buf->buf + m;
-			buf->nxt = buf->buf + i;
-		}
-		memcpy(buf->nxt, str, n + 1);
-		buf->nxt += n;
-	}
+	if (str)
+		return appendn(buf, str, strlen(str));
+	buf->nxt = buf->buf;
 	return buf->buf;
 }
 
@@ -1859,24 +1865,48 @@ scan(Dict_item_t* item, void* handle)
 				}
 			}
 			pop();
-			for (t = 0, w = r->name; *w; w++)
+			for (s = 0, w = r->name; *w; w++)
 				if (*w == '/')
-					t = w + 1;
-			if (t && (t - r->name) > 3 && *(t - 1) == 'b' && *(t - 2) == 'i' && *(t - 3) == 'l')
+					s = w;
+			if (s)
 			{
-				*(t - 3) = 0;
-				q = (Rule_t*)search(state.leaf, r->name, NiL);
-				if (q && q != r)
-					cons(r, q);
-				for (t = w = r->name; *w; w++)
-					if (*w == '/')
-						t = w + 1;
-				append(buf, "lib");
-				append(buf, t);
-				q = (Rule_t*)search(state.leaf, use(buf), NiL);
-				if (q && q != r)
-					cons(r, q);
-				*(t - 3) = 'l';
+				if ((s - r->name) > 3 && *(s - 1) == 'b' && *(s - 2) == 'i' && *(s - 3) == 'l' && *(s - 4) != '/')
+				{
+					/*
+					 * foolib : foo : libfoo
+					 */
+
+					*(s - 3) = 0;
+					q = (Rule_t*)search(state.leaf, r->name, NiL);
+					if (q && q != r)
+						cons(r, q);
+					for (t = w = r->name; *w; w++)
+						if (*w == '/')
+							t = w + 1;
+					append(buf, "lib");
+					append(buf, t);
+					q = (Rule_t*)search(state.leaf, use(buf), NiL);
+					if (q && q != r)
+						cons(r, q);
+					*(s - 3) = 'l';
+				}
+				else if (((s - r->name) != 3 || *(s - 1) != 'b' || *(s - 2) != 'i' || *(s - 3) != 'l') && (*(s + 1) != 'l' || *(s + 2) != 'i' || *(s + 3) != 'b'))
+				{
+					/*
+					 * huh/foobar : lib/libfoo
+					 */
+
+					s++;
+					t = s + strlen(s);
+					while (--t > s)
+					{
+						append(buf, "lib/lib");
+						appendn(buf, s, t - s);
+						q = (Rule_t*)search(state.leaf, use(buf), NiL);
+						if (q && q != r)
+							cons(r, q);
+					}
+				}
 			}
 			break;
 		}
@@ -2063,8 +2093,12 @@ main(int argc, char** argv)
 			state.debug = -opt_info.num;
 			continue;
 		case 'G':
+			append(state.opt, " -G");
+			search(state.vars, "-debug-symbols", "1");
+			continue;
 		case 'S':
-			search(state.vars, opt_info.name + 1, "1");
+			append(state.opt, " -S");
+			search(state.vars, "-strip-symbols", "1");
 			continue;
 		case '?':
 			error(ERROR_USAGE|4, "%s", opt_info.arg);
@@ -2090,7 +2124,7 @@ main(int argc, char** argv)
 				break;
 			}
 			for (t = s += 2; *t && *t != '='; t++);
-			if (!strncmp(s, "debug-symbols", t - s) || !strncmp(s, "strip-symbols", t - s))
+			if (!strncmp(s, "debug-symbols", t - s) && append(state.opt, " -G") || !strncmp(s, "strip-symbols", t - s) && append(state.opt, " -S"))
 			{
 				if (*t)
 				{
@@ -2105,7 +2139,6 @@ main(int argc, char** argv)
 					c = 0;
 					v = "1";
 				}
-				fprintf(stderr, "AHA setv \"%s\" \"%s\"\n", s - 1, v);
 				search(state.vars, s - 1, v);
 				if (c)
 					*t = c;
@@ -2141,7 +2174,15 @@ main(int argc, char** argv)
 				append(state.opt, " -F");
 				state.force = 1;
 				continue;
+			case 'G':
+				append(state.opt, " -G");
+				search(state.vars, "-debug-symbols", "1");
+				continue;
 			case 'K':
+				continue;
+			case 'S':
+				append(state.opt, " -S");
+				search(state.vars, "-strip-symbols", "1");
 				continue;
 			case 'V':
 				fprintf(stdout, "%s\n", id + 10);

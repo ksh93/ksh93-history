@@ -25,12 +25,7 @@
 
 #include <ast.h>
 
-#if _std_strtod
-#define S2F_function	_ast_strtod
-#else
 #define S2F_function	strtod
-#endif
-
 #define S2F_type	1
 
 #include "sfstrtof.h"

@@ -744,7 +744,6 @@ static void fixargs(char **argv, int mode)
 		buff[offset++] = ' ';
 	}
 	buff[offset-1] = 0;
-	environ=0;
 #   ifdef PSTAT
 	un.pst_command = stakptr(0);
 	pstat(PSTAT_SETCMD,un,0,0,0);

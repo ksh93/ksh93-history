@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2005 AT&T Corp.                  *
+*                  Copyright (c) 1985-2005 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -14,7 +14,21 @@
 *                            AT&T Research                             *
 *                           Florham Park NJ                            *
 *                                                                      *
+*                 Glenn Fowler <gsf@research.att.com>                  *
 *                  David Korn <dgk@research.att.com>                   *
+*                   Phong Vo <kpv@research.att.com>                    *
 *                                                                      *
 ***********************************************************************/
-#define SH_RELEASE	"1993-12-28 q+"
+#include	"sfhdr.h"
+
+/* return IEEE constants struct */
+
+#if __STD_C
+Sfieee_t* sfieee(void)
+#else
+Sfieee_t* sfieee()
+#endif
+{
+	SFCVINIT();	/* initialize conversion tables */
+	return _Sfieee;
+}

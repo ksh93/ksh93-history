@@ -20,7 +20,7 @@
 function err_exit
 {
 	print -u2 -n "\t"
-	print -u2 -r $Command[$1]: "${@:2}"
+	print -u2 -r ${Command}[$1]: "${@:2}"
 	let Errors+=1
 }
 alias err_exit='err_exit $LINENO'
@@ -54,7 +54,7 @@ if	[[ !  $PWD -ef . ]]
 then	err_exit PWD variable not working
 fi
 # PPID
-if	[[ $($SHELL -c 'echo $PPID')  != $$ ]]
+if	[[ $($SHELL -c 'print $PPID')  != $$ ]]
 then	err_exit PPID variable not working
 fi
 # OLDPWD
@@ -81,7 +81,6 @@ if	(( LINENO != 13))
 then	err_exit LINENO variable not working
 fi
 LINENO=save+10
-ifs=$IFS
 IFS=:
 x=a::b::c
 if	[[ $x != a::b::c ]]
@@ -199,6 +198,7 @@ x error"
 	then	err_exit "\${#$i} not correct"
 	fi
 done
+kill $!
 unset x
 CDPATH=/
 x=$(cd tmp)
@@ -264,6 +264,144 @@ x  y z
 if	[[ $b != y ]]
 then	err_exit 'IFS not restored after subshell'
 fi
+
+# The next part generates 3428 IFS set/read tests.
+
+unset IFS x
+function split
+{
+	i=$1 s=$2 r=$3
+	IFS=': '
+	set -- $i
+	IFS=' '
+	g="[$#]"
+	while	:
+	do	case $# in
+		0)	break ;;
+		esac
+		g="$g($1)"
+		shift
+	done
+	case "$g" in
+	"$s")	;;
+	*)	err_exit "IFS=': '; set -- '$i'; expected '$s' got '$g'" ;;
+	esac
+	print "$i" | IFS=": " read arg rem; g="($arg)($rem)"
+	case "$g" in
+	"$r")	;;
+	*)	err_exit "IFS=': '; read '$i'; expected '$r' got '$g'" ;;
+	esac
+}
+for str in 	\
+	'-'	\
+	'a'	\
+	'- -'	\
+	'- a'	\
+	'a -'	\
+	'a b'	\
+	'- - -'	\
+	'- - a'	\
+	'- a -'	\
+	'- a b'	\
+	'a - -'	\
+	'a - b'	\
+	'a b -'	\
+	'a b c'
+do
+	IFS=' '
+	set x $str
+	shift
+	case $# in
+	0)	continue ;;
+	esac
+	f1=$1
+	case $f1 in
+	'-')	f1='' ;;
+	esac
+	shift
+	case $# in
+	0)	for d0 in '' ' '
+		do
+			for d1 in '' ' ' ':' ' :' ': ' ' : '
+			do
+				case $f1$d1 in
+				'')	split "$d0$f1$d1" "[0]" "()()" ;;
+				' ')	;;
+				*)	split "$d0$f1$d1" "[1]($f1)" "($f1)()" ;;
+				esac
+			done
+		done
+		continue
+		;;
+	esac
+	f2=$1
+	case $f2 in
+	'-')	f2='' ;;
+	esac
+	shift
+	case $# in
+	0)	for d0 in '' ' '
+		do
+			for d1 in ' ' ':' ' :' ': ' ' : '
+			do
+				case ' ' in
+				$f1$d1|$d1$f2)	continue ;;
+				esac
+				for d2 in '' ' ' ':' ' :' ': ' ' : '
+				do
+					case $f2$d2 in
+					'')	split "$d0$f1$d1$f2$d2" "[1]($f1)" "($f1)()" ;;
+					' ')	;;
+					*)	split "$d0$f1$d1$f2$d2" "[2]($f1)($f2)" "($f1)($f2)" ;;
+					esac
+				done
+			done
+		done
+		continue
+		;;
+	esac
+	f3=$1
+	case $f3 in
+	'-')	f3='' ;;
+	esac
+	shift
+	case $# in
+	0)	for d0 in '' ' '
+		do
+			for d1 in ':' ' :' ': ' ' : '
+			do
+				case ' ' in
+				$f1$d1|$d1$f2)	continue ;;
+				esac
+				for d2 in ' ' ':' ' :' ': ' ' : '
+				do
+					case $f2$d2 in
+					' ')	continue ;;
+					esac
+					case ' ' in
+					$f2$d2|$d2$f3)	continue ;;
+					esac
+					for d3 in '' ' ' ':' ' :' ': ' ' : '
+					do
+						case $f3$d3 in
+						'')	split "$d0$f1$d1$f2$d2$f3$d3" "[2]($f1)($f2)" "($f1)($f2)" ;;
+						' ')	;;
+						*)	x=$f2$d2$f3$d3
+							x=${x#' '}
+							x=${x%' '}
+							split "$d0$f1$d1$f2$d2$f3$d3" "[3]($f1)($f2)($f3)" "($f1)($x)"
+							;;
+						esac
+					done
+				done
+			done
+		done
+		continue
+		;;
+	esac
+done
+unset IFS
+
 if	[[ $( (print ${12345:?}) 2>&1) != *12345* ]]
 then	err_exit 'Incorrect error message with ${12345?}'
 fi

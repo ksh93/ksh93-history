@@ -32,18 +32,31 @@
 int
 main()
 {
-#if LD
+#if N & 1
 	long double	valuel = 0;
-#endif
+#else
 	double		value = 0;
-	int		exp = 0;
-	int		r = 0;
-
-#if LD
-	r |= ldexpl(valuel, exp) != 0;
-	r |= frexpl(valuel, &exp) != 0;
 #endif
-	r |= ldexp(value, exp) != 0;
-	r |= frexp(value, &exp) != 0;
-	return r;
+#if N < 5
+	int		exp = 0;
+#endif
+
+#if N == 1
+	return ldexpl(valuel, exp) != 0;
+#endif
+#if N == 2
+	return ldexp(value, exp) != 0;
+#endif
+#if N == 3
+	return frexpl(valuel, &exp) != 0;
+#endif
+#if N == 4
+	return frexp(value, &exp) != 0;
+#endif
+#if N == 5
+	return isnanl(valuel);
+#endif
+#if N == 6
+	return isnan(value);
+#endif
 }

@@ -97,7 +97,7 @@ USAGE_LICENSE
 "[+?If either \b-s\b or \b-u\b is used with no \aoptname\a arguments, the "
 	"display is limited to those options which are set or unset.]"
 "[+?\bshopt\b supports all bash options. Some settings do not have any effect "
-	"or are are always on and cannot be changed."
+	"or are are always on and cannot be changed.]"
 "[+?The value of \aoptname\a must be one of the following:]{"
 		"[+cdable_vars?If set, arguments to the \bcd\b command are "
 			"assumed to be names of variables whose values are to "

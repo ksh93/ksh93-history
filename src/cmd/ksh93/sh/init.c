@@ -937,21 +937,24 @@ Shell_t *sh_init(register int argc,register char *argv[], void(*userinit)(int))
 	if(argc>0)
 	{
 		/* check for restricted shell */
-		if(argc>0 && strmatch(name,rsh_pattern))
+		if(strmatch(name,rsh_pattern))
 			sh_onoption(SH_RESTRICTED);
 #if SHOPT_PFSH
 		/* check for profile shell */
-		if(argc>0 && strmatch(name,pfsh_pattern))
+		else if(strmatch(name,pfsh_pattern))
 			sh_onoption(SH_PFSH);
 #endif
 #if SHOPT_BASH
 		/* check for invocation as bash */
-		if(argc>0 && strmatch(name,bash_pattern))
+		else if(strmatch(name,bash_pattern))
 		{
-		        sh.userinit = userinit=bash_init;
+		        sh.userinit = userinit = bash_init;
 			sh_onoption(SH_BASH);
 			if(*name=='r')
 				sh_onoption(SH_RESTRICTED);
+			sh_onstate(SH_PREINIT);
+			(*userinit)(0);
+			sh_offstate(SH_PREINIT);
 		}
 #endif
 		/* look for options */

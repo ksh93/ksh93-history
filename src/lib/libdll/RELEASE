@@ -1,3 +1,4 @@
+05-02-14 dllscan.c: "" || "-" => NiL
 04-10-01 dllfind.c: drop ksh "builtin" workaround
 	 dllscan.c: directory prefix in name limits search to dir and siblings
 04-07-22 dllscan.c: access() => eaccess()

@@ -26,10 +26,18 @@
 **	Written by Kiem-Phong Vo and Glenn Fowler (SFFMT_AFORMAT)
 */
 
-static char		*Inf = "Inf", *Zero = "0";
+static char		*Inf = "Inf", *Zero = "0", *Nan = "NaN";
 #define SF_INTPART	(SF_IDIGITS/2)
 #define SF_INFINITE	((_Sfi = 3), Inf)
 #define SF_ZERO		((_Sfi = 1), Zero)
+#define SF_NAN		((_Sfi = 3), Nan)
+
+#if ! _lib_isnanl
+#define isnanl(n)	((n)==_Sflnan)
+#endif
+#if ! _lib_isnan
+#define isnan(n)	((n)==_Sfdnan)
+#endif
 
 #if __STD_C
 char* _sfcvt(Sfdouble_t dv, char* buf, size_t size, int n_digit,
@@ -60,7 +68,9 @@ int		format;		/* conversion format		*/
 	if(format&SFFMT_LDOUBLE)
 	{	Sfdouble_t	f = dv;
 
-		if(f == 0.)
+		if(isnanl(f))
+			return SF_NAN;
+		else if(f == 0.)
 			return SF_ZERO;
 		else if((*sign = (f < 0.)) )	/* assignment = */
 			f = -f;
@@ -171,7 +181,9 @@ int		format;		/* conversion format		*/
 #endif
 	{	double	f = (double)dv;
 
-		if(f == 0.)
+		if(isnan(f))
+			return SF_NAN;
+		else if(f == 0.)
 			return SF_ZERO;
 		else if((*sign = (f < 0.)) )	/* assignment = */
 			f = -f;

@@ -1,3 +1,20 @@
+05-03-23 string/ccmap.c: add ebcdic-m mvs cobol table
+05-03-11 comp/omitted.c: handle utime[s](const,const)
+	 comp/conf.tab: fix linux PID_MAX probe
+05-03-10 comp/setlocale.c: LC_* value "" => unset -- doh
+	 misc/optget.c: reorder _PACKAGE_astsa code for msgcc
+05-03-08 misc/optget.c: delete leading space in STYLE_nroff output
+05-03-07 sfio/sfhdr.h: drop extern _sfdscan -- clashes with sfvscanf.c static
+05-03-01 tm/tminit.c: add tmlocaltime() for tzset() getenv() override workaround
+05-02-20 features/tvlib: tmsettimeofday only for systems that have settimeofday
+	 features/float: fix mvs.s390 NaN tests
+05-02-18 tm/tmxmake.c: fix <0 west of GMT bug that warped to 1800's -- wow
+05-02-11 port/mnt.c: handle lynxos MOUNTED=/etc/fstab
+05-02-08 features/float,sfio.h,sfcvt.c,sftable.c: add INF and fix NAN
+05-02-04 features/lib: add _std_strtol (for lynxos)
+	 include/ast_std.h: add _std_strtol tests
+	 comp/strtod.c: #define S2F_function strtod
+	 misc/signal.c: fix ancient bsd SV_INTERRUPT vs. SV_ABORT clash
 05-01-11 sfio/sfmove.c: try to seek(fr) when fw==0
 	 comp/omitted.c: intercept utimes() too
 	 comp/omitted.c: add DOSPATHVARS env var path value conversions

@@ -486,3 +486,19 @@ cat{
 		typedef int ssize_t;
 	#endif
 }end
+
+run{
+	grep __NO_INCLUDE_WARN__ /usr/include/stat.h >/dev/null 2>&1 &&
+	grep '<name.h>' /usr/include/sys/stat.h >/dev/null 2>&1 &&
+	grep __name_h /usr/include/name.h >/dev/null 2>&1 &&
+	cat <<!
+	/* disable ${HOSTTYPE} <sys/foo.h> vs. <foo.h> clash warnings */
+	#ifndef __NO_INCLUDE_WARN__
+	#define __NO_INCLUDE_WARN__	1
+	#endif
+	/* disable ${HOSTTYPE} <sys/stat.h> <name.h> hijack */
+	#ifndef __name_h
+	#define __name_h		1
+	#endif
+	!
+}end

@@ -151,17 +151,7 @@ static const Font_t	fonts[] =
 
 static char		native[] = "";
 
-#if _PACKAGE_astsa
-
-static char		ID[] = "ast";
-
-#define C(s)		s
-#define D(s)		(opt_info.state->msgdict && dtmatch(opt_info.state->msgdict, (s)))
-#define T(i,c,m)	m
-#define X(c)		0
-#define Z(x)		C(x),sizeof(x)-1
-
-#else
+#if !_PACKAGE_astsa
 
 #define ID		ast.id
 
@@ -184,6 +174,16 @@ translate(const char* cmd, const char* cat, const char* msg)
 		cat = (const char*)ID;
 	return errorx(NiL, cmd, cat, msg);
 }
+
+#else
+
+static char		ID[] = "ast";
+
+#define C(s)		s
+#define D(s)		(opt_info.state->msgdict && dtmatch(opt_info.state->msgdict, (s)))
+#define T(i,c,m)	m
+#define X(c)		0
+#define Z(x)		C(x),sizeof(x)-1
 
 #endif
 
@@ -3261,6 +3261,8 @@ opthelp(const char* oopts, const char* what)
 						tp = sfstrtell(mp);
 						pp = p;
 					}
+					if (style == STYLE_nroff && !co)
+						continue;
 				}
 				else if (style == STYLE_html)
 				{

@@ -38,6 +38,16 @@ function ping # id
 	done
 }
 
+cat |&
+print -p "hello"
+read -p line
+[[ $line == hello ]] || err_exit 'coprocessing fails' 
+exec 5>&p 6<&p
+print -u5 'hello again' || err_exit 'write on u5 fails'
+read -u6 line
+[[ $line == 'hello again' ]] || err_exit 'coprocess after moving fds fails' 
+exec 5<&- 6<&-
+
 ping three |&
 exec 3>&p
 ping four |&
@@ -157,4 +167,15 @@ do	if	( trap - $sig ) 2> /dev/null
 		break
 	fi
 done
+builtin cat
+cat |&
+pid=$!
+exec 5<&p 6>&p
+print -u6 hi; read -u5
+[[ $REPLY == hi ]] || err_exit 'REPLY is $REPLY not hi'
+integer s=SECONDS
+sleep 5 &
+exec 6>&-
+wait $pid
+(( (SECONDS-s) > 3 )) && err_exit  'time out because builtin keeps fd open'
 exit $((Errors))

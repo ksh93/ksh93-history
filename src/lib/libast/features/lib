@@ -556,6 +556,19 @@ std	strtod note{ stuck with standard strtod }end nostatic{
 	int main() { printf(""); return strtod("1",0) != 0; }
 }end
 
+std	strtol note{ stuck with standard strtol }end nostatic{
+	_BEGIN_EXTERNS_
+	#if _STD_
+	extern long atol(const char*);
+	long strtol(const char* s, char** e) { return 0; }
+	#else
+	extern long atol();
+	long strtol(s, e) char* s; char** e; { return 0; }
+	#endif
+	_END_EXTERNS_
+	int main() { printf(""); return (atol("1") + strtol("1",0)) != 0; }
+}end
+
 tst	- output{
 	int
 	main()

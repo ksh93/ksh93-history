@@ -1,3 +1,5 @@
+05-03-07 date.c: add --listzones to list the time zone table
+05-02-14 chmod.c: add --reference=file
 05-01-11 cat.c: restore output stream to binary mode on exit
 04-12-15 cp.c: add --preserve high resolution time support
 04-12-08 date.c: add high resolution time support

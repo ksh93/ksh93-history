@@ -124,10 +124,7 @@ if SHOPT_VSH
 	FILES_opt += vi.c
 end
 if SHOPT_BASH
-	FILES_opt += bash.c bash_pre_rc.c
-end
-if SHOPT_HISTEXPAND
-	FILES_opt += hexpand.c
+	FILES_opt += bash.c bash_pre_rc.c hexpand.c
 end
 if SHOPT_DYNAMIC
 	FILES_opt += -ldll

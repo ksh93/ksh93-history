@@ -28,7 +28,7 @@
  */
 
 static const char usage_1[] =
-"[-?@(#)$Id: chgrp (AT&T Labs Research) 2002-11-14 $\n]"
+"[-?@(#)$Id: chgrp (AT&T Labs Research) 2005-02-14 $\n]"
 USAGE_LICENSE
 ;
 
@@ -59,8 +59,8 @@ static const char usage_2[] =
 "	\ato\a part of the pair. The process stops at the first match for"
 "	each file. Unmatched files are silently ignored.]"
 "[n:show?Show actions but don't execute.]"
-"[r:reference?The explicit ownership operand is omitted and the ownership of"
-"	\afile\a is used instead.]:[file]"
+"[r:reference?Omit the explicit ownership operand and use the ownership of"
+"	\afile\a instead.]:[file]"
 "[v:verbose?Describe changed permissions of all files.]"
 "[H:metaphysical?Follow symbolic links for command arguments; otherwise don't"
 "	follow symbolic links when traversing directories.]"

@@ -498,16 +498,56 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 	return(r);
 }
 
+typedef void (*Iptr_t)(int);
 typedef int (*Fptr_t)(int, char*[], void*);
 
 #define GROWLIB	4
-static void **liblist;
+
+static void**	liblist;
+static int	nlib;
+static int	maxlib;
 
 /*
  * This allows external routines to load from the same library */
 void **sh_getliblist(void)
 {
 	return(liblist);
+}
+
+/*
+ * add library to loaded list
+ * call (*lib_init)() on first load if defined
+ * always move to head of search list
+ * return: 0: already loaded 1: first load
+ */
+int sh_addlib(void* library)
+{
+	register int	n;
+	register int	r;
+	Iptr_t		initfn;
+
+	for (n = r = 0; n < nlib; n++)
+	{
+		if (r)
+			liblist[n-1] = liblist[n];
+		else if (liblist[n] == library)
+			r++;
+	}
+	if (r)
+		nlib--;
+	else if ((initfn = (Iptr_t)dlllook(library, "lib_init")))
+		(*initfn)(0);
+	if (nlib >= maxlib)
+	{
+		maxlib += GROWLIB;
+		if (liblist)
+			liblist = (void**)realloc((void*)liblist, (maxlib+1)*sizeof(void**));
+		else
+			liblist = (void**)malloc((maxlib+1)*sizeof(void**));
+	}
+	liblist[nlib++] = library;
+	liblist[nlib] = 0;
+	return !r;
 }
 
 /*
@@ -521,7 +561,6 @@ int	b_builtin(int argc,char *argv[],void *extra)
 	register Namval_t *np;
 	int dlete=0;
 	struct tdata tdata;
-	static int maxlib, nlib;
 	Fptr_t addr;
 	void *library=0;
 	char *errmsg;
@@ -577,37 +616,7 @@ int	b_builtin(int argc,char *argv[],void *extra)
 			errormsg(SH_DICT,ERROR_exit(0),"%s: %s",arg,dlerror());
 			return(1);
 		}
-		/* 
-		 * see if library is already on search list
-		 * if it is, move to head of search list
-		 */
-		for(n=r=0; n < nlib; n++)
-		{
-			if(r)
-				liblist[n-1] = liblist[n];
-			else if(liblist[n]==library)
-				r++;
-		}
-		if(r)
-			nlib--;
-		else
-		{
-			typedef void (*Iptr_t)(int);
-			Iptr_t initfn;
-			if((initfn = (Iptr_t)dlllook(library,"lib_init")))
-				(*initfn)(0);
-		}
-		if(nlib >= maxlib)
-		{
-			/* add library to search list */
-			maxlib += GROWLIB;
-			if(nlib>0)
-				liblist = (void**)realloc((void*)liblist,(maxlib+1)*sizeof(void**));
-			else
-				liblist = (void**)malloc((maxlib+1)*sizeof(void**));
-		}
-		liblist[nlib++] = library;
-		liblist[nlib] = 0;
+		sh_addlib(library);
 	}
 	else if(*argv==0 && !dlete)
 	{

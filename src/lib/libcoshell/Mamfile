@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.0 2005-01-01
+info mam static 00000 1994-07-17 make (AT&T Research) 5.0 2005-03-19
 setv INSTALLROOT ${INSTALLROOT}
 setv PACKAGE_ast ${INSTALLROOT}
 setv PACKAGE_ast_INCLUDE ${PACKAGE_ast}/include/ast
@@ -35,8 +35,8 @@ setv SILENT
 setv TAR tar
 setv YACC yacc
 setv YACCFLAGS -d
-make ${INSTALLROOT}/lib/package/ast.lic
-done ${INSTALLROOT}/lib/package/ast.lic
+make ${PACKAGEROOT}/lib/package/ast.lic
+done ${PACKAGEROOT}/lib/package/ast.lic
 make install
 make coshell
 make libcoshell.a archive
@@ -314,7 +314,7 @@ exec -
 exec - !
 exec - 	;;
 exec - esac
-exec - chmod u+w,+x ignore
+exec - silent test -w ignore -a -x ignore || chmod u+w,+x ignore
 done ignore generated
 make silent
 make silent.sh
@@ -351,7 +351,7 @@ exec -
 exec - !
 exec - 	;;
 exec - esac
-exec - chmod u+w,+x silent
+exec - silent test -w silent -a -x silent || chmod u+w,+x silent
 done silent generated
 make ${INSTALLROOT}/lib
 exec - if	silent test ! -d ${INSTALLROOT}/lib
@@ -407,7 +407,7 @@ done ${INSTALLROOT}/include/ast generated
 make ${INSTALLROOT}/include/ast/coshell.h
 prev ${INSTALLROOT}/include/ast
 prev coshell.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1990,author=gsf'  coshell.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1990,author=gsf'  coshell.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/coshell.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/coshell.h

@@ -1,7 +1,31 @@
+05-03-03  --- Release ksh93q+  ---
+05-03-03  A bug where a SIGCHLD interrupt could cause a fifo open to fail has
+	  been fixed.
+05-02-25  A bug in which a builtin command run in the background could
+	  keep a file descriptor open which could cause a foreground
+	  process to hang has been fixed.
+05-02-24  A bug where builtin library commands (e.g., date and TZ) failed to
+	  detect environment variable changes has been fixed.
+05-02-22  The read builtin and word splitting are now consistent with respect
+	  to IFS -- both treat IFS as field delimiters.
+05-02-22  The read builtin no longer strips off trailing delimiters that
+	  are not space characters when there are fewer variables than fields.
+05-02-17  A builtin bug on systems where dlsym(libcmd) returns link-time
+	  bindings has been fixed.
+05-02-12  A bug in which the lib_init() function for .paths BUILTIN_LIB
+	  libraries was not called has been fixed.
+05-02-06  A bug on some systems in which moving the write end of a co-process
+	  to a numbered file descriptor could cause it to close has been fixed. 
+05-02-06  A bug in the vi-edit mode in which the character under the cursor
+	  was not deleted in some cases with the d% directive has been fixed.
+05-02-06  A bug where external builtin stdout/stderr redirection corrupted
+          stdout has been fixed.
+05-02-04  A bug where times formatting assumed CLK_TCK==60 has been fixed.
+
 05-01-11  --- Release ksh93q  ---
 05-01-11  A bug in the integral divide by zero check has been fixed.
-05-01-11  The -l option has been added to cause /etc/profile and
-	  $HOME/.profile, if they exist, to be read before the first command.
+05-01-11  The -l option has been added to read /etc/profile and
+	  $HOME/.profile, if they exist, before the first command.
 05-01-11  An argument parsing bug that caused `kill -s x -- n' to fail has
 	  been fixed.
 05-01-11  The .paths file, introduced in ksh93m, which can appear in
@@ -18,7 +42,7 @@
 04-12-24  A bug in which some SIGCHLD interrupts (from child processes exiting)
           corrupted the internal process/job list, sometimes causing the shell
 	  to hang, has been fixed.
-04-12-01  A bug in which typeset -Fn truncated in less than n digits for large
+04-12-01  A bug in which typeset -Fn truncated less than n digits for large
 	  numbers has been fixed.
 04-11-25  A bug in which standard error could be closed after a redirection
 	  to /dev/stderr has been fixed.

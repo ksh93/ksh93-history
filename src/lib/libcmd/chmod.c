@@ -28,7 +28,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: chmod (AT&T Labs Research) 2004-08-26 $\n]"
+"[-?\n@(#)$Id: chmod (AT&T Labs Research) 2005-02-14 $\n]"
 USAGE_LICENSE
 "[+NAME?chmod - change the access permissions of files]"
 "[+DESCRIPTION?\bchmod\b changes the permission of each file "
@@ -111,6 +111,8 @@ USAGE_LICENSE
 	"support this.]"
 "[i:ignore-umask?Ignore the \bumask\b(2) value in symbolic mode "
 	"expressions. This is probably how you expect \bchmod\b to work.]"
+"[F:reference?Omit the \amode\a operand and use the mode of \afile\a "
+	"instead.]:[file]"
 "[v:verbose?Describe changed permissions of all files.]"
 "\n"
 "\nmode file ...\n"
@@ -142,9 +144,6 @@ __STDPP__directive pragma pp:nohide lchmod
 #undef	lchmod
 #endif
 
-#define OPT_FORCE	(1<<2)		/* ignore errors		*/
-#define OPT_LCHOWN	(1<<5)		/* lchown			*/
-
 extern int	lchmod(const char*, mode_t);
 
 static struct State_s
@@ -153,12 +152,12 @@ static struct State_s
 } state;
 
 int
-b_chmod(int argc, char* argv[], void* context)
+b_chmod(int argc, char** argv, void* context)
 {
 	register int	mode;
 	register int	force = 0;
 	register int	flags;
-	register char*	amode;
+	register char*	amode = 0;
 	register FTS*	fts;
 	register FTSENT*ent;
 	char*		last;
@@ -168,6 +167,7 @@ b_chmod(int argc, char* argv[], void* context)
 #if _lib_lchmod
 	int		chlink = 0;
 #endif
+	struct stat	st;
 
 	if (argc < 0)
 	{
@@ -187,6 +187,9 @@ b_chmod(int argc, char* argv[], void* context)
 	{
 		switch (optget(argv, usage))
 		{
+		case 'c':
+			notify = 1;
+			continue;
 		case 'f':
 			force = 1;
 			continue;
@@ -195,14 +198,17 @@ b_chmod(int argc, char* argv[], void* context)
 			chlink = 1;
 #endif
 			continue;
-		case 'c':
-			notify = 1;
+		case 'i':
+			ignore = 1;
 			continue;
 		case 'v':
 			notify = 2;
 			continue;
-		case 'i':
-			ignore = 1;
+		case 'F':
+			if (stat(opt_info.arg, &st))
+				error(ERROR_exit(1), "%s: cannot stat", opt_info.arg);
+			mode = st.st_mode;
+			amode = "";
 			continue;
 		case 'H':
 			flags |= FTS_META|FTS_PHYSICAL;
@@ -224,29 +230,33 @@ b_chmod(int argc, char* argv[], void* context)
 		break;
 	}
 	argv += opt_info.index;
-	argc -= opt_info.index;
-	if (error_info.errors || argc < 2)
+	if (error_info.errors || !*argv || !amode && !*(argv + 1))
 		error(ERROR_usage(2), "%s", optusage(NiL));
-	amode = *argv;
 	if (ignore)
 		ignore = umask(0);
-	mode = strperm(amode, &last, 0);
-	if (*last)
+	if (amode)
+		amode = 0;
+	else
 	{
-		if (ignore)
-			umask(ignore);
-		error(ERROR_exit(1), "%s: invalid mode", amode);
+		amode = *argv++;
+		mode = strperm(amode, &last, 0);
+		if (*last)
+		{
+			if (ignore)
+				umask(ignore);
+			error(ERROR_exit(1), "%s: invalid mode", amode);
+		}
 	}
 	chmodf =
 #if _lib_lchmod
 		chlink ? lchmod :
 #endif
 		chmod;
-	if (!(fts = fts_open(argv + 1, flags, NiL)))
+	if (!(fts = fts_open(argv, flags, NiL)))
 	{
 		if (ignore)
 			umask(ignore);
-		error(ERROR_system(1), "%s: not found", argv[1]);
+		error(ERROR_system(1), "%s: not found", *argv);
 	}
 	while (!state.interrupt && (ent = fts_read(fts)))
 		switch (ent->fts_info)

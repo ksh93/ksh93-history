@@ -1,5 +1,5 @@
 .fp 5 CW
-.TH SFIO 3 "01 December 2002"
+.TH SFIO 3 "01 February 2005"
 .SH NAME
 \fBsfio\fR \- safe/fast string/file input/output
 .SH SYNOPSIS
@@ -2259,7 +2259,9 @@ For most platforms, the mapping is now constant time per look-up.
 .PP
 The \f5SF_BUFCONST\fP flag was deleted. This is largely unused anyway.
 .PP
-The library is now thread-safe. This is based largely on Posix pthread mutexes.
+The library can be built for thread-safety. This is based largely on
+Posix pthread mutexes except for on UWIN where native Windows APIs
+are used.
 .PP
 The functions \f5sfgetm()\fP and \f5sfputm()\fP were added to encode
 unsigned integer values with known ranges.

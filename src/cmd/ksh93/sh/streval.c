@@ -796,7 +796,7 @@ Arith_t *arith_compile(const char *string,char **last,Sfdouble_t(*fun)(const cha
         {
 		if(cur.errstr)
 			string = cur.errstr;
-		(*fun)( &string , &cur.errmsg, ERRMSG, 0);
+		(*fun)( &string , &cur.errmsg, MESSAGE, 0);
 		cur.nextchr = cur.errchr;
 	}
 	stakputc(0);
@@ -821,7 +821,7 @@ Arith_t *arith_compile(const char *string,char **last,Sfdouble_t(*fun)(const cha
  *     is a user supplied conversion routine that is called when unknown 
  *     chars are encountered.
  * *end points to the part to be converted and must be adjusted by convert to
- * point to the next non-converted character; if typ is ERRMSG then string
+ * point to the next non-converted character; if typ is MESSAGE then string
  * points to an error message string
  *
  * NOTE: (*convert)() may call strval()

@@ -29,6 +29,8 @@
 
 #include <tmx.h>
 
+#include "FEATURE/tmlib"
+
 /*
  * return Tm_t for t
  * time zone and leap seconds accounted for in return value
@@ -44,7 +46,7 @@ tmxmake(Time_t t)
 	int			leapsec;
 	int			y;
 	unsigned _ast_int4_t	n;
-	unsigned _ast_int4_t	o;
+	_ast_int4_t		o;
 #if TMX_FLOAT
 	Time_t			z;
 	unsigned _ast_int4_t	i;
@@ -67,7 +69,10 @@ tmxmake(Time_t t)
 	}
 	x = tmxsec(t);
 	if (tm_info.flags & TM_UTC)
+	{
 		tm.tm_zone = &tm_data.zone[2];
+		o = 0;
+	}
 	else
 	{
 		tm.tm_zone = tm_info.zone;
@@ -117,7 +122,7 @@ tmxmake(Time_t t)
 			te.tm_year = y;
 			now = tmxsec(tmxtime(&te, tm.tm_zone->west));
 		}
-		if ((tp = localtime(&now)) && ((tm.tm_isdst = tp->tm_isdst) || o))
+		if ((tp = tmlocaltime(&now)) && ((tm.tm_isdst = tp->tm_isdst) || o))
 		{
 			tm.tm_min -= o / 60 + (tm.tm_isdst ? tm.tm_zone->dst : 0);
 			tmfix(&tm);

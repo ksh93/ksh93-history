@@ -141,7 +141,7 @@ static int p_time(Sfio_t *out, const char *format, clock_t *tm)
 			errormsg(SH_DICT,ERROR_exit(0),e_badtformat,c);
 			return(0);
 		}
-		d = (double)tm[n]/60;
+		d = (double)tm[n]/sh.lim.clk_tck;
 	skip:
 		if(l)
 			l_time(stkstd, tm[n], p);
@@ -541,6 +541,7 @@ static void free_list(struct openlist *olist)
 	}
 }
 
+
 int sh_exec(register const Shnode_t *t, int flags)
 {
 	sh_sigcheck();
@@ -763,6 +764,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 							share = sfset(sfstdin,SF_SHARE,0);
 							sh_onstate(SH_STOPOK);
 							sfpool(sfstderr,NIL(Sfio_t*),SF_WRITE);
+							sfsetbuf(sfstderr,sh.errbuff,IOBSIZE/4);
+							sfset(sfstderr,SF_LINE,1);
 							save_prompt = sh.nextprompt;
 							sh.nextprompt = 0;
 						}
@@ -786,6 +789,15 @@ int sh_exec(register const Shnode_t *t, int flags)
 							bdata.data = t->com.comstate;
 							bdata.flags = (OPTIMIZE!=0);
 							context = (void*)&bdata;
+						}
+						if(execflg && !sh.subshell &&
+							!sh.st.trapcom[0] && !sh.st.trap[SH_ERRTRAP] && sh.fn_depth==0 && !nv_isattr(np,BLT_ENV))
+						{
+							/* do close-on-exec */
+							int fd;
+							for(fd=0; fd < sh.lim.open_max; fd++)
+								if((sh.fdstatus[fd]&IOCLEX)&&fd!=sh.infd)
+									sh_close(fd);
 						}
 						sh.exitval = (*sh.bltinfun)(argn,com,context);
 						if(error_info.flags&ERROR_INTERACTIVE)
@@ -815,7 +827,9 @@ int sh_exec(register const Shnode_t *t, int flags)
 						sh_offstate(SH_STOPOK);
 						if(share&SF_SHARE)
 							sfset(sfstdin,SF_PUBLIC|SF_SHARE,1);
+						sfset(sfstderr,SF_LINE,0);
 						sfpool(sfstderr,sh.outpool,SF_WRITE);
+						sfsetbuf(sfstderr,sh.outbuff,IOBSIZE);
 						sfpool(sfstdin,NIL(Sfio_t*),SF_WRITE);
 						sh.nextprompt = save_prompt;
 					}
@@ -2345,6 +2359,7 @@ int cmdrecurse(int argc, char* argv[], int ac, char* av[])
  */
 static void coproc_init(int pipes[])
 {
+	int outfd;
 	if(sh.coutpipe>=0 && sh.cpid)
 		errormsg(SH_DICT,ERROR_exit(1),e_pexists);
 	sh.cpid = 0;
@@ -2353,6 +2368,17 @@ static void coproc_init(int pipes[])
 		/* first co-process */
 		sh_pclose(sh.cpipe);
 		sh_pipe(sh.cpipe);
+		if((outfd=sh.cpipe[1]) < 10) 
+		{
+		        int fd=fcntl(sh.cpipe[1],F_DUPFD,10);
+			if(fd>=10)
+			{
+			        sh.fdstatus[fd] = (sh.fdstatus[outfd]&~IOCLEX);
+				close(outfd);
+			        sh.fdstatus[outfd] = IOCLOSE;
+				sh.cpipe[1] = fd;
+			}
+		}
 		if(fcntl(*sh.cpipe,F_SETFD,FD_CLOEXEC)>=0)
 			sh.fdstatus[sh.cpipe[0]] |= IOCLEX;
 		sh.fdptrs[sh.cpipe[0]] = sh.cpipe;

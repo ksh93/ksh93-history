@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.0 2005-01-01
+info mam static 00000 1994-07-17 make (AT&T Research) 5.0 2005-03-19
 setv INSTALLROOT ${INSTALLROOT}
 setv PACKAGE_ast ${INSTALLROOT}
 setv PACKAGE_ast_INCLUDE ${PACKAGE_ast}/include/ast
@@ -35,8 +35,8 @@ setv SILENT
 setv TAR tar
 setv YACC yacc
 setv YACCFLAGS -d
-make ${INSTALLROOT}/lib/package/ast.lic
-done ${INSTALLROOT}/lib/package/ast.lic
+make ${PACKAGEROOT}/lib/package/ast.lic
+done ${PACKAGEROOT}/lib/package/ast.lic
 make install
 make sum
 make libsum.a archive
@@ -70,14 +70,35 @@ exec - rm -f 1.${COTEMP}.*
 done sum.req generated
 make sumlib.o
 make sumlib.c
-make ${INSTALLROOT}/include/ast/fnv.h implicit
+make sum-sha2.c implicit
+make ${INSTALLROOT}/include/ast/endian.h implicit
+make ${INSTALLROOT}/include/ast/bytesex.h implicit
 make ${INSTALLROOT}/include/ast/ast_common.h implicit
 done ${INSTALLROOT}/include/ast/ast_common.h dontcare
+done ${INSTALLROOT}/include/ast/bytesex.h dontcare
+done ${INSTALLROOT}/include/ast/endian.h dontcare
+done sum-sha2.c
+make sum-sha1.c implicit
+done sum-sha1.c
+make sum-prng.c implicit
+make ${INSTALLROOT}/include/ast/fnv.h implicit
+prev ${INSTALLROOT}/include/ast/ast_common.h implicit
 make ${INSTALLROOT}/include/ast/prototyped.h implicit
 make ${INSTALLROOT}/include/prototyped.h implicit
 done ${INSTALLROOT}/include/prototyped.h dontcare
 done ${INSTALLROOT}/include/ast/prototyped.h dontcare
 done ${INSTALLROOT}/include/ast/fnv.h
+done sum-prng.c
+make sum-md5.c implicit
+done sum-md5.c
+make sum-crc.c implicit
+done sum-crc.c
+make sum-bsd.c implicit
+done sum-bsd.c
+make sum-ast4.c implicit
+done sum-ast4.c
+make sum-att.c implicit
+done sum-att.c
 make ${INSTALLROOT}/include/ast/hashpart.h implicit
 prev ${INSTALLROOT}/include/ast/prototyped.h implicit
 done ${INSTALLROOT}/include/ast/hashpart.h
@@ -195,7 +216,7 @@ done ${INSTALLROOT}/include/ast generated
 make ${INSTALLROOT}/include/ast/sum.h
 prev ${INSTALLROOT}/include/ast
 prev sum.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1996,author=gsf'  sum.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1996,author=gsf'  sum.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/sum.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/sum.h

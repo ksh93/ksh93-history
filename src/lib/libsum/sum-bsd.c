@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2005 AT&T Corp.                  *
+*                  Copyright (c) 1996-2005 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -14,7 +14,35 @@
 *                            AT&T Research                             *
 *                           Florham Park NJ                            *
 *                                                                      *
-*                  David Korn <dgk@research.att.com>                   *
+*                 Glenn Fowler <gsf@research.att.com>                  *
 *                                                                      *
 ***********************************************************************/
-#define SH_RELEASE	"1993-12-28 q+"
+#pragma prototyped
+
+/*
+ * bsd
+ */
+
+#define bsd_description \
+	"The BSD checksum."
+#define bsd_options	0
+#define bsd_match	"bsd|ucb"
+#define bsd_open	long_open
+#define bsd_init	long_init
+#define bsd_done	short_done
+#define bsd_print	long_print
+#define bsd_data	long_data
+#define bsd_scale	1024
+
+static int
+bsd_block(register Sum_t* p, const void* s, size_t n)
+{
+	register unsigned _ast_int4_t	c = ((Integral_t*)p)->sum;
+	register unsigned char*		b = (unsigned char*)s;
+	register unsigned char*		e = b + n;
+
+	while (b < e)
+		c = ((c >> 1) + *b++ + ((c & 01) ? 0x8000 : 0)) & 0xffff;
+	((Integral_t*)p)->sum = c;
+	return 0;
+}

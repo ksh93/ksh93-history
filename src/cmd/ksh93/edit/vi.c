@@ -1208,7 +1208,7 @@ static int delmotion(Vi_t *vp,int motion, int mode)
 	}
 	else
 	{
-		delta = -delta;
+		delta = -delta + (motion=='%');
 	}
 
 	cdelete(vp,delta, mode);

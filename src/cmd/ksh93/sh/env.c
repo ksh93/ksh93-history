@@ -22,6 +22,8 @@
 #include	<ast.h>
 #include	<cdt.h>
 
+#define	env_change()		(++ast.env_serial)
+
 typedef struct _venv_ Evar_t;
 struct _venv_
 {
@@ -152,6 +154,7 @@ int env_add(Env_t *ep, const char *str, int flags)
 		vp->index |= ENV_PMALLOC;
 	else
 		vp->index &= ~ENV_PMALLOC;
+	env_change();
 	return(1);
 }
 
@@ -171,6 +174,7 @@ int env_delete(Env_t *ep, const char *str)
 	dtdelete(ep->dt,vp);
 	vp->un.next = ep->freelist;
 	ep->freelist = vp;
+	env_change();
 	return(1);
 }
 
@@ -249,4 +253,3 @@ void env_close(Env_t *ep)
 	}
 	dtclose(ep->dt);
 }
-

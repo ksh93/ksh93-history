@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: date (AT&T Research) 2004-12-20 $\n]"
+"[-?\n@(#)$Id: date (AT&T Research) 2005-03-07 $\n]"
 USAGE_LICENSE
 "[+NAME?date - set/list/convert dates]"
 "[+DESCRIPTION?\bdate\b sets the current date and time (with appropriate"
@@ -168,6 +168,10 @@ USAGE_LICENSE
 "}"
 "[s:show?Show the date without setting the system time.]"
 "[u:utc|gmt|zulu?Output dates in \acoordinated universal time\a (UTC).]"
+"[z:list-zones?List the known time zone table and exit. The table columns"
+"	are: country code, standard zone name, savings time zone name,"
+"	minutes west of \bUTC\b, and savings time minutes offset. Blank"
+"	or empty entries are listed as \b-\b.]"
 
 "\n"
 "\n[ +format | date ... | file ... ]\n"
@@ -278,6 +282,7 @@ b_date(int argc, register char** argv, void* context)
 	int		elapsed = 0;	/* args are start/stop pairs	*/
 	int		filetime = 0;	/* use this st_ time field	*/
 	int		increment = 0;	/* incrementally adjust time	*/
+	Tm_zone_t*	listzones = 0;	/* known time zone table	*/
 	int		network = 0;	/* don't set network time	*/
 	int		show = 0;	/* show date and don't set	*/
 
@@ -332,6 +337,9 @@ b_date(int argc, register char** argv, void* context)
 		case 'u':
 			tm_info.flags |= TM_UTC;
 			continue;
+		case 'z':
+			listzones = tm_data.zone;
+			continue;
 		case '?':
 			error(ERROR_USAGE|4, "%s", opt_info.arg);
 			continue;
@@ -345,7 +353,18 @@ b_date(int argc, register char** argv, void* context)
 	if (error_info.errors)
 		error(ERROR_USAGE|4, "%s", optusage(NiL));
 	now = tmxgettime();
-	if (elapsed)
+	if (listzones)
+	{
+		s = "-";
+		while (listzones->standard)
+		{
+			if (listzones->type)
+				s = listzones->type;
+			sfprintf(sfstdout, "%3s %4s %4s %4d %4d\n", s, *listzones->standard ? listzones->standard : "-", listzones->daylight ? listzones->daylight : "-", listzones->west, listzones->dst);
+			listzones++;
+		}
+	}
+	else if (elapsed)
 	{
 		e = 0;
 		while (s = *argv++)

@@ -765,9 +765,7 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 	register char *cp;
 	register int size = 0;
 	register int dot;
-#ifdef _ENV_H
 	int	was_local = nv_local;
-#endif
 	if(!(flags&NV_RDONLY) && nv_isattr (np, NV_RDONLY))
 		errormsg(SH_DICT,ERROR_exit(1),e_readonly, nv_name(np));
 	/* The following could cause the shell to fork if assignment
@@ -783,10 +781,8 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 		{
 			nv_local=1;
 			nv_putv(np,sp,flags,np->nvfun);
-#ifdef _ENV_H
 			if((flags&NV_EXPORT) || nv_isattr(np,NV_EXPORT))
 				sh_envput(sh.env,np);
-#endif
 			return;
 		}
 		/* called from disc, assign the actual value */
@@ -1091,10 +1087,8 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 		if(tofree)
 			free((void*)tofree);
 	}
-#ifdef _ENV_H
 	if(!was_local && ((flags&NV_EXPORT) || nv_isattr(np,NV_EXPORT)))
 		sh_envput(sh.env,np);
-#endif
 	return;
 }
 
@@ -1459,10 +1453,8 @@ static void table_unset(register Dt_t *root, int flags, Dt_t *oroot)
 	for(np=(Namval_t*)dtfirst(root);np;np=nq)
 	{
 		_nv_unset(np,flags);
-#ifdef _ENV_H
 		if(oroot && (nq=nv_search(nv_name(np),oroot,0)) && nv_isattr(nq,NV_EXPORT))
 			sh_envput(sh.env,nq);
-#endif
 		nq = (Namval_t*)dtnext(root,np);
 		dtdelete(root,np);
 		free((void*)np);
@@ -1528,14 +1520,6 @@ void	_nv_unset(register Namval_t *np,int flags)
 		up->cp = 0;
 	}
 done:
-#ifdef _ENV_H
-	if(nv_isattr(np,NV_EXPORT))
-	{
-		char *sub;
-		if(!nv_isarray(np) || (sub=nv_getsub(np)) && strcmp(sub,"0")==0)
-			env_delete(sh.env,nv_name(np));
-	}
-#endif
 	if(!nv_isarray(np) || !nv_arrayptr(np))
 	{
 		if(nv_isref(np))
@@ -1547,6 +1531,8 @@ done:
 		nv_setsize(np,0);
 		if(!nv_isattr(np,NV_MINIMAL) || nv_isattr(np,NV_EXPORT))
 		{
+			if(nv_isattr(np,NV_EXPORT))
+				env_delete(sh.env,nv_name(np));
 			np->nvenv = 0;
 			nv_setattr(np,0);
 		}
@@ -1883,16 +1869,14 @@ void nv_newattr (register Namval_t *np, unsigned newatts, int size)
 	if(newatts&NV_EXPORT)
 		nv_offattr(np,NV_IMPORT);
 #endif /* SHOPT_BSH */
-#ifdef _ENV_H
 	if(((n^newatts)&NV_EXPORT))
-	/* record changes to the environment */
 	{
+		/* record changes to the environment */
 		if(n&NV_EXPORT)
 			env_delete(sh.env,nv_name(np));
 		else
 			sh_envput(sh.env,np);
 	}
-#endif
 	if((size==0||(n&NV_INTEGER)) && ((n^newatts)&~NV_NOCHANGE)==0)
 	{
 		if(size)
