@@ -74,7 +74,7 @@ tst	run{
 	echo "#define _DLL_NEXT_PATH	\"$lib\""
 }end
 tst	- output{
-	#if _hdr_dlfcn
+	#if _hdr_dlfcn && _lib_dlopen
 	#include <dlfcn.h>
 	#endif
 	#if _hdr_rld_interface
@@ -88,7 +88,7 @@ tst	- output{
 		static char*	local[] = { "__elf_header", "_call_add_gp_range", "_etext" };
 	#endif
 		printf("\n");
-	#if _hdr_dlfcn
+	#if _hdr_dlfcn && _lib_dlopen
 		printf("#include <dlfcn.h>\n");
 	#endif
 	#ifndef RTLD_LAZY
@@ -133,7 +133,7 @@ tst	- output{
 			printf("#define _DLL_RLD_SYM_TYPE	void*\n");
 		}
 	#endif
-	#if !_hdr_dlfcn
+	#if !_hdr_dlfcn || !_lib_dlopen
 		printf("\n");
 		printf("extern void*		dlopen(const char*, int);\n");
 		printf("extern void*		dlsym(void*, const char*);\n");

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2001 AT&T Corp.                *
+*                Copyright (c) 1985-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -52,6 +51,37 @@
 
 #ifndef PROBE
 #define PROBE		"probe"
+#endif
+
+#if defined(ST_RDONLY) || defined(ST_NOSUID)
+
+/*
+ * return non-0 if path is in a readonly or non-setuid fs
+ */
+
+static int
+rofs(const char* path)
+{
+	struct statvfs	vfs;
+
+	if (!statvfs(path, &vfs))
+	{
+#if defined(ST_RDONLY)
+		if (vfs.f_flag & ST_RDONLY)
+			return 1;
+#endif
+#if defined(ST_NOSUID)
+		if (vfs.f_flag & ST_NOSUID)
+			return 1;
+#endif
+	}
+	return 0;
+}
+
+#else
+
+#define rofs(p)		0
+
 #endif
 
 char*
@@ -121,7 +151,7 @@ pathprobe(char* path, char* attr, const char* lang, const char* tool, const char
 	if (stat(path, &st))
 		return 0;
 	strcpy(exe, path);
-	if (op >= -1 && !(st.st_mode & S_ISUID) && ps.st_uid != geteuid())
+	if (op >= -1 && (!(st.st_mode & S_ISUID) && ps.st_uid != geteuid() || rofs(path)))
 	{
 		if (!(p = getenv("HOME")))
 			return 0;

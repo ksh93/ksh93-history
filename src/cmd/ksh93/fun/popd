@@ -44,7 +44,7 @@ function pushd
         fi
     esac
     case $dir in
-    \~*)   dir=$HOME${dir#~}
+    \~*)   dir=$HOME${dir#\~}
     esac
     cd "${dir:-$1}" > /dev/null || return 1
     dir=${OLDPWD#$HOME/}
@@ -86,7 +86,7 @@ function popd
     "")
         dir=${_push_stack[_push_top]}
         case $dir in
-        \~*)   dir=$HOME${dir#~}
+        \~*)   dir=$HOME${dir#\~}
         esac
         cd "$dir" || return 1
         ;;
@@ -105,7 +105,7 @@ function popd
     *)  print pushd: Bad directory.
         return 1
     esac
-    unset _push_stack[_push_top]
+    unset '_push_stack[_push_top]'
     _push_top=_push_top+1
     dirs
 }

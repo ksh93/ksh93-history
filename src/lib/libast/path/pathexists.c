@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2001 AT&T Corp.                *
+*                Copyright (c) 1985-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -29,12 +28,16 @@
  * AT&T Research
  *
  * return 1 if path exisis
- * maintains a cache to minimize access(2) calls
+ * maintains a cache to minimize stat(2) calls
+ * path is modified in-place but restored on return
+ * path components checked in pairs to cut stat()'s
+ * in half by checking ENOTDIR vs. ENOENT
  */
 
 #include "lclib.h"
 
 #include <ls.h>
+#include <error.h>
 
 typedef struct Tree_s
 {
@@ -52,6 +55,9 @@ pathexists(char* path, int mode)
 	register Tree_t*	p;
 	register Tree_t*	t;
 	register int		c;
+	char*			ee;
+	int			cc;
+	int			x;
 	struct stat		st;
 
 	static Tree_t		tree;
@@ -59,6 +65,8 @@ pathexists(char* path, int mode)
 	t = &tree;
 	e = path + 1;
 	c = *path;
+	if ((ast.locale.set & (AST_LC_debug|AST_LC_find)) == (AST_LC_debug|AST_LC_find))
+		sfprintf(sfstderr, "locale test %s\n", path);
 	while (c)
 	{
 		p = t;
@@ -76,9 +84,35 @@ pathexists(char* path, int mode)
 			strcpy(t->name, s);
 			t->next = p->tree;
 			p->tree = t;
+			if (c)
+			{
+				*e = c;
+				for (s = ee = e + 1; *ee && *ee != '/'; ee++);
+				cc = *ee;
+				*ee = 0;
+			}
+			else
+				ee = 0;
 			if ((ast.locale.set & (AST_LC_debug|AST_LC_find)) == (AST_LC_debug|AST_LC_find))
-				sfprintf(sfstdout, "locale stat %s\n", path);
-			if (stat(path, &st))
+				sfprintf(sfstderr, "locale stat %s\n", path);
+			x = stat(path, &st);
+			if (ee)
+			{
+				e = ee;
+				c = cc;
+				if (!x || errno == ENOENT)
+					t->mode = PATH_READ|PATH_EXECUTE;
+				if (!(p = newof(0, Tree_t, 1, strlen(s))))
+				{
+					*e = c;
+					return 0;
+				}
+				strcpy(p->name, s);
+				p->next = t->tree;
+				t->tree = p;
+				t = p;
+			}
+			if (x)
 			{
 				*e = c;
 				return 0;
@@ -93,7 +127,7 @@ pathexists(char* path, int mode)
 				t->mode |= PATH_REGULAR;
 		}
 		*e++ = c;
-		if (!t->mode)
+		if (!t->mode || c && (t->mode & PATH_REGULAR))
 			return 0;
 	}
 	mode &= (PATH_READ|PATH_WRITE|PATH_EXECUTE|PATH_REGULAR);

@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1982-2001 AT&T Corp.                #
+#                Copyright (c) 1982-2002 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -14,8 +14,7 @@
 #           the license and copyright and are violating            #
 #               AT&T's intellectual property rights.               #
 #                                                                  #
-#                 This software was created by the                 #
-#                 Network Services Research Center                 #
+#            Information and Software Systems Research             #
 #                        AT&T Labs Research                        #
 #                         Florham Park NJ                          #
 #                                                                  #
@@ -24,9 +23,10 @@
 function err_exit
 {
 	print -u2 -n "\t"
-	print -u2 -r $Command: "$@"
+	print -u2 -r ${Command}[$1]: "${@:2}"
 	let Errors+=1
 }
+alias err_exit='err_exit $LINENO'
 
 integer Errors=0
 Command=$0
@@ -65,7 +65,7 @@ fi
 if	[[ $(bar=foo foobar 1) != '33 foo' ]]
 then	err_exit 'environment override not correct'
 fi
-if	[[ $bar = foo ]]
+if	[[ $bar == foo ]]
 then	err_exit 'scoping error'
 fi
 
@@ -358,5 +358,23 @@ function closure
 	return $r
 }
 closure 0 || err_exit -u2 'for loop function optimization bug2'
+mkdir  /tmp/ksh$$ || err_exit "mkdir /tmp/ksh$$ failed"
+cd /tmp/ksh$$ || err_exit "cd /tmp/ksh$$ failed"
+print 'false' > try
+chmod +x try
+cat > tst <<- EOF
+	function ignore
+	{
+		./try
+		return 0
+	}
+	trap "print error; exit 1" ERR
+	ignore
+EOF
+if	[[ $($SHELL < tst)  == error ]]
+then	err_exit 'ERR trap not cleared'
+fi
+cd ~- || err_exit "cd back failed"
+rm -r /tmp/ksh$$ || err_exit "rm -r /tmp/ksh$$ failed"
 
 exit $((Errors))

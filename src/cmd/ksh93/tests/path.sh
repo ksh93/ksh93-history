@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1982-2001 AT&T Corp.                #
+#                Copyright (c) 1982-2002 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -14,8 +14,7 @@
 #           the license and copyright and are violating            #
 #               AT&T's intellectual property rights.               #
 #                                                                  #
-#                 This software was created by the                 #
-#                 Network Services Research Center                 #
+#            Information and Software Systems Research             #
 #                        AT&T Labs Research                        #
 #                         Florham Park NJ                          #
 #                                                                  #
@@ -24,9 +23,10 @@
 function err_exit
 {
 	print -u2 -n "\t"
-	print -u2 -r $Command: "$@"
+	print -u2 -r $Command[$1]: "${@:2}"
 	let Errors+=1
 }
+alias err_exit='err_exit $LINENO'
 
 integer Errors=0
 Command=$0
@@ -81,6 +81,7 @@ do
 		date
 		"$cmd"
 done > /dev/null 2>&1
+builtin -d date 2> /dev/null
 if	[[ $(PATH=:/usr/bin; date) != 'hello' ]]
 then	err_exit "leading : in path not working"
 fi
@@ -95,10 +96,17 @@ fi
 	fi
 )
 [[ $? == 126 ]] || err_exit 'exit status of non-executable is not 126' 
+builtin -d rm 2> /dev/null
 rm=$(whence rm)
 d=$(dirname "$rm")
+unset FPATH
+PATH=/dev/null
+if	date > /dev/null 2>&1
+then	err_exit 'programs in . should not be found'
+fi
 PATH=$d:
 cp "$rm" kshrm$$
+chmod 755 kshrm$$
 if	[[ $(whence kshrm$$) != kshrm$$  ]]
 then	err_exit 'trailing : in pathname not working'
 fi

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2001 AT&T Corp.                *
+*                Copyright (c) 1985-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -474,8 +473,7 @@ tmdate(register const char* s, char** e, time_t* clock)
 							}
 							else
 								dig4(s, m);
-							if ((m -= 1900) < TM_WINDOW)
-								break;
+							m -= 1900;
 						}
 						else if (i == 10)
 						{
@@ -871,28 +869,39 @@ tmdate(register const char* s, char** e, time_t* clock)
 		}
 		else if (*s == '/')
 		{
-			if ((state & MONTH) || n <= 0 || n > 31)
-				break;
-			if (isalpha(*++s))
+			if (!(state & (YEAR|MONTH)) && n >= 1900 && n < 3000 && (i = strtol(s + 1, &t, 10)) > 0 && i <= 12)
 			{
-				if ((i = tmlex(s, &t, tm_info.format, TM_DAY_ABBREV, NiL, 0)) < 0)
-					break;
-				if (i >= TM_MONTH)
-					i -= TM_MONTH;
+				state |= YEAR;
+				tm->tm_year = n - 1900;
 				s = t;
+				i--;
 			}
 			else
 			{
-				i = n - 1;
-				n = strtol(s, &t, 10);
-				s = t;
-				if (n <= 0 || n > 31)
+				if ((state & MONTH) || n <= 0 || n > 31)
 					break;
-				if (*s == '/' && !isdigit(*(s + 1)))
-					break;
+				if (isalpha(*++s))
+				{
+					if ((i = tmlex(s, &t, tm_info.format, TM_DAY_ABBREV, NiL, 0)) < 0)
+						break;
+					if (i >= TM_MONTH)
+						i -= TM_MONTH;
+					s = t;
+				}
+				else
+				{
+					i = n - 1;
+					n = strtol(s, &t, 10);
+					s = t;
+					if (n <= 0 || n > 31)
+						break;
+					if (*s == '/' && !isdigit(*(s + 1)))
+						break;
+				}
+				state |= DAY;
+				tm->tm_mday = n;
 			}
-			state |= MONTH|DAY;
-			tm->tm_mday = n;
+			state |= MONTH;
 			n = tm->tm_mon;
 			tm->tm_mon = i;
 			if (*s == '/')

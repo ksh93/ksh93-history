@@ -1,12 +1,13 @@
 set	prototyped
 lib	catopen,nl_langinfo
 hdr	nl_types,langinfo
+nxt	nl_types
 
 tst	output{
 	#if !_lib_catopen
 	#undef	_hdr_nl_types
 	#endif
-	#include <limits.h>
+	#include "FEATURE/limits"
 	#if _hdr_nl_types
 	#include <nl_types.h>
 	#endif
@@ -14,8 +15,8 @@ tst	output{
 	main()
 	{
 		printf("#include <limits.h>\n");
-	#if _hdr_nl_types
-		printf("#include <../include/nl_types.h>	/* the native nl_types.h */\n");
+	#if _hdr_nl_types && defined(_nxt_nl_types_str)
+		printf("#include <%s>	/* the native nl_types.h */\n", _nxt_nl_types_str);
 	#endif
 		printf("\n");
 	#ifndef NL_SETMAX

@@ -1,17 +1,53 @@
 set	prototyped
-hdr	float,math,values
+hdr	float,limits,math,values
 lib	frexp,frexpl,ldexp,ldexpl
 
-tst	- output{
-	#include "iffeio.h"
-	#include "FEATURE/common"
+tst	_ast_mpy_overflow_fpe note{ fpe on mpy overflow }end noexecute{
+	main()
+	{
+		float	f;
+		float	p;
+
+		p = f = 1.0;
+		do
+		{
+			p = f;
+			f *= 2.0;
+		} while (f != p);
+		return 0;
+	}
+}end
+
+tst	_ast_div_underflow_fpe note{ fpe on div underflow }end noexecute{
+	main()
+	{
+		float	f;
+		float	p;
+
+		p = f = 1.0;
+		do
+		{
+			p = f;
+			f /= 2.0;
+		} while (f != p);
+		return 0;
+	}
+}end
+
+macro{
 	#if _hdr_float
 	#include <float.h>
+	#endif
+	#if _hdr_limits
+	#include <limits.h>
+	#endif
+	#if _hdr_math
+	#include <math.h>
 	#endif
 	#if _hdr_values
 	#include <values.h>
 	#endif
-	#include <signal.h>
+
 	#if !defined(FLT_MIN_EXP) && defined(FMINEXP)
 	#define FLT_MIN_EXP	FMINEXP
 	#endif
@@ -24,6 +60,7 @@ tst	- output{
 	#if !defined(FLT_MAX) && defined(MAXFLOAT)
 	#define FLT_MAX		MAXFLOAT
 	#endif
+
 	#if !defined(DBL_MIN_EXP) && defined(DMINEXP)
 	#define DBL_MIN_EXP	DMINEXP
 	#endif
@@ -36,6 +73,137 @@ tst	- output{
 	#if !defined(DBL_MAX) && defined(MAXDOUBLE)
 	#define DBL_MAX		MAXDOUBLE
 	#endif
+
+	#if _hdr_float
+	<<"#include <float.h>">>
+	#endif
+	#if _hdr_math
+	<<"#include <math.h>">>
+	#endif
+	#ifdef FLT_DIG
+	<<"#ifndef FLT_DIG">>
+	<<"#define FLT_DIG">>		FLT_DIG
+	<<"#endif">>
+	#endif
+	#ifdef FLT_MAX
+	<<"#ifndef FLT_MAX">>
+	<<"#define FLT_MAX">>		FLT_MAX
+	<<"#endif">>
+	#endif
+	#ifdef FLT_MAX_10_EXP
+	<<"#ifndef FLT_MAX_10_EXP">>
+	<<"#define FLT_MAX_10_EXP">>	FLT_MAX_10_EXP
+	<<"#endif">>
+	#endif
+	#ifdef FLT_MAX_EXP
+	<<"#ifndef FLT_MAX_EXP">>
+	<<"#define FLT_MAX_EXP">>	FLT_MAX_EXP
+	<<"#endif">>
+	#endif
+	#ifdef FLT_MIN
+	<<"#ifndef FLT_MIN">>
+	<<"#define FLT_MIN">>		FLT_MIN
+	<<"#endif">>
+	#endif
+	#ifdef FLT_MIN_10_EXP
+	<<"#ifndef FLT_MIN_10_EXP">>
+	<<"#define FLT_MIN_10_EXP">>	FLT_MIN_10_EXP
+	<<"#endif">>
+	#endif
+	#ifdef FLT_MIN_EXP
+	<<"#ifndef FLT_MIN_EXP">>
+	<<"#define FLT_MIN_EXP">>	FLT_MIN_EXP
+	<<"#endif">>
+	#endif
+
+	#ifdef DBL_DIG
+	<<"#ifndef DBL_DIG">>
+	<<"#define DBL_DIG">>		DBL_DIG
+	<<"#endif">>
+	#endif
+	#ifdef DBL_MAX
+	<<"#ifndef DBL_MAX">>
+	<<"#define DBL_MAX">>		DBL_MAX
+	<<"#endif">>
+	#endif
+	#ifdef DBL_MAX_10_EXP
+	<<"#ifndef DBL_MAX_10_EXP">>
+	<<"#define DBL_MAX_10_EXP">>	DBL_MAX_10_EXP
+	<<"#endif">>
+	#endif
+	#ifdef DBL_MAX_EXP
+	<<"#ifndef DBL_MAX_EXP">>
+	<<"#define DBL_MAX_EXP">>	DBL_MAX_EXP
+	<<"#endif">>
+	#endif
+	#ifdef DBL_MIN
+	<<"#ifndef DBL_MIN">>
+	<<"#define DBL_MIN">>		DBL_MIN
+	<<"#endif">>
+	#endif
+	#ifdef DBL_MIN_10_EXP
+	<<"#ifndef DBL_MIN_10_EXP">>
+	<<"#define DBL_MIN_10_EXP">>	DBL_MIN_10_EXP
+	<<"#endif">>
+	#endif
+	#ifdef DBL_MIN_EXP
+	<<"#ifndef DBL_MIN_EXP">>
+	<<"#define DBL_MIN_EXP">>	DBL_MIN_EXP
+	<<"#endif">>
+	#endif
+
+	#ifdef LDBL_DIG
+	<<"#ifndef LDBL_DIG">>
+	<<"#define LDBL_DIG">>		LDBL_DIG
+	<<"#endif">>
+	#endif
+	#ifdef LDBL_MAX
+	<<"#ifndef LDBL_MAX">>
+	<<"#define LDBL_MAX">>		LDBL_MAX
+	<<"#endif">>
+	#endif
+	#ifdef LDBL_MAX_10_EXP
+	<<"#ifndef LDBL_MAX_10_EXP">>
+	<<"#define LDBL_MAX_10_EXP">>	LDBL_MAX_10_EXP
+	<<"#endif">>
+	#endif
+	#ifdef LDBL_MAX_EXP
+	<<"#ifndef LDBL_MAX_EXP">>
+	<<"#define LDBL_MAX_EXP">>	LDBL_MAX_EXP
+	<<"#endif">>
+	#endif
+	#ifdef LDBL_MIN
+	<<"#ifndef LDBL_MIN">>
+	<<"#define LDBL_MIN">>		LDBL_MIN
+	<<"#endif">>
+	#endif
+	#ifdef LDBL_MIN_10_EXP
+	<<"#ifndef LDBL_MIN_10_EXP">>
+	<<"#define LDBL_MIN_10_EXP">>	LDBL_MIN_10_EXP
+	<<"#endif">>
+	#endif
+	#ifdef LDBL_MIN_EXP
+	<<"#ifndef LDBL_MIN_EXP">>
+	<<"#define LDBL_MIN_EXP">>	LDBL_MIN_EXP
+	<<"#endif">>
+	#endif
+}end
+
+tst	- output{
+	#include "FEATURE/common"
+	#if _hdr_float
+	#include <float.h>
+	#endif
+	#if _hdr_limits
+	#include <limits.h>
+	#endif
+	#if _hdr_math
+	#include <math.h>
+	#endif
+	#if _hdr_values
+	#include <values.h>
+	#endif
+	#include <signal.h>
 	#ifdef SIGFPE
 	int caught = 0;
 	#if _STD_
@@ -84,12 +252,6 @@ tst	- output{
 		signal(SIGFPE, catch);
 	#endif
 		printf("\n");
-	#if _hdr_float
-		printf("#include <float.h>\n");
-	#endif
-	#if _hdr_math
-		printf("#include <math.h>\n");
-	#endif
 		printf("\n");
 		us = 0;
 		us = ~us;
@@ -173,15 +335,21 @@ tst	- output{
 		mf = FLT_MIN;
 	#endif
 	#endif
+	#ifndef FLT_DIG
 		printf("#ifndef FLT_DIG\n");
 		printf("#define FLT_DIG			%d\n", s);
 		printf("#endif\n");
+	#endif
+	#ifndef FLT_MIN
 		printf("#ifndef FLT_MIN\n");
 		printf("#define FLT_MIN			%.*E%s\n", s + 1, mf, fs);
 		printf("#endif\n");
+	#endif
+	#ifndef FLT_MIN_EXP
 		printf("#ifndef FLT_MIN_EXP\n");
 		printf("#define FLT_MIN_EXP		(%d)\n", i);
 		printf("#endif\n");
+	#endif
 
 	#if defined(FLT_MAX) && defined(FLT_MAX_EXP)
 		i = FLT_MAX_EXP;
@@ -214,12 +382,16 @@ tst	- output{
 		f = (mf - f) * 2.0 + f;
 	#endif
 		xf = f;
+	#ifndef FLT_MAX
 		printf("#ifndef FLT_MAX\n");
 		printf("#define FLT_MAX			%.*E%s\n", s + 1, f, fs);
 		printf("#endif\n");
+	#endif
+	#ifndef FLT_MAX_EXP
 		printf("#ifndef FLT_MAX_EXP\n");
 		printf("#define FLT_MAX_EXP		%d\n", i);
 		printf("#endif\n");
+	#endif
 
 	#ifdef FLT_MIN_10_EXP
 		i = FLT_MIN_10_EXP;
@@ -233,9 +405,11 @@ tst	- output{
 			f /= 10.0;
 		} while (f < pf);
 	#endif
+	#ifndef FLT_MIN_10_EXP
 		printf("#ifndef FLT_MIN_10_EXP\n");
 		printf("#define FLT_MIN_10_EXP		(%d)\n", i);
 		printf("#endif\n");
+	#endif
 
 	#ifdef FLT_MAX_10_EXP
 		i = FLT_MAX_10_EXP;
@@ -249,9 +423,11 @@ tst	- output{
 			f *= 10.0;
 		} while (f > pf);
 	#endif
+	#ifndef FLT_MAX_10_EXP
 		printf("#ifndef FLT_MAX_10_EXP\n");
 		printf("#define FLT_MAX_10_EXP		%d\n", i);
 		printf("#endif\n");
+	#endif
 
 		printf("\n");
 		w = 1;
@@ -305,15 +481,21 @@ tst	- output{
 		md = DBL_MIN;
 	#endif
 	#endif
+	#ifndef DBL_DIG
 		printf("#ifndef DBL_DIG\n");
 		printf("#define DBL_DIG			%d\n", s);
 		printf("#endif\n");
+	#endif
+	#ifndef DBL_MIN
 		printf("#ifndef DBL_MIN\n");
 		printf("#define DBL_MIN			%.*E%s\n", s + 1, md, ds);
 		printf("#endif\n");
+	#endif
+	#ifndef DBL_MIN_EXP
 		printf("#ifndef DBL_MIN_EXP\n");
 		printf("#define DBL_MIN_EXP		(%d)\n", i);
 		printf("#endif\n");
+	#endif
 
 	#if defined(DBL_MAX) && defined(DBL_MAX_EXP)
 		i = DBL_MAX_EXP;
@@ -341,12 +523,16 @@ tst	- output{
 		d = DBL_MAX;
 	#endif
 	#endif
+	#ifndef DBL_MAX
 		printf("#ifndef DBL_MAX\n");
 		printf("#define DBL_MAX			%.*E%s\n", s + 1, d, ds);
 		printf("#endif\n");
+	#endif
+	#ifndef DBL_MAX_EXP
 		printf("#ifndef DBL_MAX_EXP\n");
 		printf("#define DBL_MAX_EXP		%d\n", i);
 		printf("#endif\n");
+	#endif
 
 	#ifdef DBL_MIN_10_EXP
 		i = DBL_MIN_10_EXP;
@@ -360,9 +546,11 @@ tst	- output{
 			d /= 10.0;
 		} while (d < pd);
 	#endif
+	#ifndef DBL_MIN_10_EXP
 		printf("#ifndef DBL_MIN_10_EXP\n");
 		printf("#define DBL_MIN_10_EXP		(%d)\n", i);
 		printf("#endif\n");
+	#endif
 
 	#ifdef DBL_MAX_10_EXP
 		i = DBL_MAX_10_EXP;
@@ -376,9 +564,11 @@ tst	- output{
 			d *= 10.0;
 		} while (d > pd);
 	#endif
+	#ifndef DBL_MAX_10_EXP
 		printf("#ifndef DBL_MAX_10_EXP\n");
 		printf("#define DBL_MAX_10_EXP		%d\n", i);
 		printf("#endif\n");
+	#endif
 
 	#if !_ast_fltmax_double
 		printf("\n");
@@ -433,15 +623,21 @@ tst	- output{
 		ml = LDBL_MIN;
 	#endif
 	#endif
+	#ifndef LDBL_DIG
 		printf("#ifndef LDBL_DIG\n");
 		printf("#define LDBL_DIG		%d\n", s);
 		printf("#endif\n");
+	#endif
+	#ifndef LDBL_MIN
 		printf("#ifndef LDBL_MIN\n");
 		printf("#define LDBL_MIN		%.*LE%s\n", s + 1, ml, ls);
 		printf("#endif\n");
+	#endif
+	#ifndef LDBL_MIN_EXP
 		printf("#ifndef LDBL_MIN_EXP\n");
 		printf("#define LDBL_MIN_EXP		(%d)\n", i);
 		printf("#endif\n");
+	#endif
 
 	#if defined(LDBL_MAX) && defined(LDBL_MAX_EXP)
 		i = LDBL_MAX_EXP;
@@ -469,12 +665,16 @@ tst	- output{
 		l = LDBL_MAX;
 	#endif
 	#endif
+	#ifndef LDBL_MAX
 		printf("#ifndef LDBL_MAX\n");
 		printf("#define LDBL_MAX		%.*LE%s\n", s + 1, l, ls);
 		printf("#endif\n");
+	#endif
+	#ifndef LDBL_MAX_EXP
 		printf("#ifndef LDBL_MAX_EXP\n");
 		printf("#define LDBL_MAX_EXP		%d\n", i);
 		printf("#endif\n");
+	#endif
 
 	#ifdef LDBL_MIN_10_EXP
 		i = LDBL_MIN_10_EXP;
@@ -488,9 +688,11 @@ tst	- output{
 			l /= 10.0L;
 		} while (l < pl);
 	#endif
+	#ifndef LDBL_MIN_10_EXP
 		printf("#ifndef LDBL_MIN_10_EXP\n");
 		printf("#define LDBL_MIN_10_EXP		(%d)\n", i);
 		printf("#endif\n");
+	#endif
 
 	#ifdef LDBL_MAX_10_EXP
 		i = LDBL_MAX_10_EXP;
@@ -504,9 +706,11 @@ tst	- output{
 			l *= 10.0L;
 		} while (l > pl);
 	#endif
+	#ifndef LDBL_MAX_10_EXP
 		printf("#ifndef LDBL_MAX_10_EXP\n");
 		printf("#define LDBL_MAX_10_EXP		%d\n", i);
 		printf("#endif\n");
+	#endif
 	#endif
 
 	#ifdef SIGFPE

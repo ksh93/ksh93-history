@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2001 AT&T Corp.                *
+*                Copyright (c) 1985-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -69,6 +68,107 @@ wcrtomb(char* s, wchar_t c, mbstate_t* q)
 
 #define FPRECIS		6	/* default precision for floats 	*/
 
+/* fast io system */
+
+#define SFlocal()	\
+			reg uchar	*d, *endd; \
+			reg int		w
+
+#define SFBUF(f)	(d = f->next, endd = f->endb)
+#define SFINIT(f)	(SFBUF(f), n_output = 0)
+#define SFEND(f)	((n_output += d - f->next), (f->next = d))
+
+#define SFputc(f,c) \
+	{ if(d < endd) 	{ *d++ = (uchar)c; } \
+	  else \
+	  { SFEND(f); n_output += (w = SFFLSBUF(f,c)) >= 0 ? 1 : 0; SFBUF(f); \
+	    if(w < 0) goto done; \
+	  } \
+	}
+#define SFnputc(f,c,n) \
+	{ if((endd-d) >= n) { while(n--) *d++ = (uchar)c; } \
+	  else \
+	  { SFEND(f); n_output += (w = SFNPUTC(f,c,n)) > 0 ? w : 0; SFBUF(f); \
+	    if(n != w) goto done; n = 0;\
+	  } \
+	}
+#define SFwrite(f,s,n) \
+	{ if((endd-d) >= n) { MEMCPY(d,s,n); } \
+	  else \
+	  { SFEND(f); n_output += (w = SFWRITE(f,(Void_t*)s,n)) > 0 ? w : 0; SFBUF(f); \
+	    if(n != w) goto done; \
+	  } \
+	}
+
+#if _UTS
+
+#define register
+
+#define _SFenter()	\
+			unsigned char*	d = *pd; \
+			unsigned char*	endd = *pendd; \
+			int		n_output = *pn_output; \
+			int		w
+
+#define _SFreturn()	*pd = d, *pendd = endd, *pn_output = n_output
+
+static int _SFputc(f, c, pd, pendd, pn_output)
+Sfio_t*		f;
+int		c;
+unsigned char**	pd;
+unsigned char**	pendd;
+int*		pn_output;
+{
+	_SFenter();
+	SFputc(f, c);
+	_SFreturn();
+	return 0;
+ done:
+	_SFreturn();
+	return -1;
+}
+#undef	SFputc
+#define SFputc(f,c)	{if(_SFputc(f,c,&d,&endd,&n_output))goto done;}
+
+static int _SFnputc(f, c, n, pd, pendd, pn_output)
+Sfio_t*		f;
+int		c;
+int		n;
+unsigned char**	pd;
+unsigned char**	pendd;
+int*		pn_output;
+{
+	_SFenter();
+	SFnputc(f, c, n);
+	_SFreturn();
+	return 0;
+ done:
+	_SFreturn();
+	return -1;
+}
+#undef	SFnputc
+#define SFnputc(f,c,n)	{if(_SFnputc(f,c,n,&d,&endd,&n_output))goto done;n=0;}
+
+static int _SFwrite(f, s, n, pd, pendd, pn_output)
+Sfio_t*		f;
+char*		s;
+int		n;
+unsigned char**	pd;
+unsigned char**	pendd;
+int*		pn_output;
+{
+	_SFenter();
+	SFwrite(f, s, n);
+	_SFreturn();
+	return 0;
+ done:
+	_SFreturn();
+	return -1;
+}
+#undef	SFwrite
+#define SFwrite(f,s,n)	{if(_SFwrite(f,s,n,&d,&endd,&n_output))goto done;}
+
+#endif
 
 #if __STD_C
 int sfvprintf(Sfio_t* f, const char* form, va_list args)
@@ -113,34 +213,7 @@ va_list	args;		/* arg list if !argf	*/
 	mbstate_t	ws;
 	int		m;
 #endif
-
-	/* fast io system */
-	reg uchar	*d, *endd;
-	reg int		w;
-#define SFBUF(f)	(d = f->next, endd = f->endb)
-#define SFINIT(f)	(SFBUF(f), n_output = 0)
-#define SFEND(f)	((n_output += d - f->next), (f->next = d))
-#define SFputc(f,c) \
-	{ if(d < endd) 	{ *d++ = (uchar)c; } \
-	  else \
-	  { SFEND(f); n_output += (w = SFFLSBUF(f,c)) >= 0 ? 1 : 0; SFBUF(f); \
-	    if(w < 0) goto done; \
-	  } \
-	}
-#define SFnputc(f,c,n) \
-	{ if((endd-d) >= n) { while(n--) *d++ = (uchar)c; } \
-	  else \
-	  { SFEND(f); n_output += (w = SFNPUTC(f,c,n)) > 0 ? w : 0; SFBUF(f); \
-	    if(n != w) goto done; n = 0;\
-	  } \
-	}
-#define SFwrite(f,s,n) \
-	{ if((endd-d) >= n) { MEMCPY(d,s,n); } \
-	  else \
-	  { SFEND(f); n_output += (w = SFWRITE(f,(Void_t*)s,n)) > 0 ? w : 0; SFBUF(f); \
-	    if(n != w) goto done; \
-	  } \
-	}
+	SFlocal();
 
 	SFCVINIT();	/* initialize conversion tables */
 

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2001 AT&T Corp.                *
+*                Copyright (c) 1982-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -49,7 +48,6 @@
 #endif /* KSHELL */
 
 #define SYNBAD		3	/* exit value for syntax errors */
-#define HERE_MEM	512	/* size of here-docs kept in memory */
 #define STACK_ARRAY	3	/* size of depth match stack growth */
 #define isblank(c)	(c==' ' || c=='\t')
 
@@ -65,6 +63,7 @@ struct lexstate
 	char		reservok;	/* >0 for reserved word legal */
 	char		skipword;	/* next word can't be reserved */
 	char		last_quote;	/* last multi-line quote character */
+	char		comp_assign;	/* inside compound assignment */
 };
 
 struct lexdata
@@ -244,6 +243,7 @@ Lex_t *sh_lexopen(Lex_t *lp, Shell_t *sp, int mode)
 		lp->_shlex.sh = sp;
 	}
 	lex.intest = lex.incase = lex.skipword = lexd.warn = 0;
+	lex.comp_assign = 0;
 	lex.reservok = 1;
 	if(!sh_isoption(SH_DICTIONARY) && sh_isoption(SH_NOEXEC))
 		lexd.warn=1;
@@ -341,6 +341,8 @@ int sh_lex(void)
 		shlex.assignok = 0;
 	else
 		shlex.assignok |= lex.reservok;
+	if(lex.comp_assign==2)
+		lex.comp_assign = lex.reservok = 0;
 	if(lexd.nest)
 	{
 		pushlevel(lexd.nest,ST_NONE);
@@ -353,6 +355,11 @@ int sh_lex(void)
 		{
 			lexd.docword++;
 			shlex.digits=1;
+		}
+		else if(c=='<')
+		{
+			shlex.digits=2;
+			lexd.docword=0;
 		}
 		else if(c>0)
 			fcseek(-1);
@@ -455,7 +462,7 @@ int sh_lex(void)
 				do
 				{
 					while(fcgetc(c)>0 && c!='\n');
-					if(c<=0)
+					if(c<=0 || shlex.heredoc)
 						break;
 					while(shp->inlineno++,fcpeek(0)=='\n')
 						fcseek(1);
@@ -496,7 +503,10 @@ int sh_lex(void)
 				while(shp->inlineno++,fcget()=='\n');
 				fcseek(-1);
 				if(n==S_NLTOK)
+				{
+					lex.comp_assign = 0;
 					return(shlex.token='\n');
+				}
 				continue;
 			case S_OP:
 				/* return operator token */
@@ -544,7 +554,17 @@ int sh_lex(void)
 					else if(c=='(' || c==')')
 						return(shlex.token=c);
 					else if(c=='&')
-						n = 0;
+					{
+#ifdef SHOPT_ZSH
+						if(n=='>')
+						{
+							shlex.digits = -1;
+							c = '>';
+						}
+						else
+#endif
+							n = 0;
+					}
 					else if(n=='&')
 						c  |= SYMAMP;
 					else if(c!='<' && c!='>')
@@ -568,6 +588,10 @@ int sh_lex(void)
 							errormsg(SH_DICT,ERROR_warn(0),e_lexspace,shp->inlineno,c,n);
 					}
 				}
+				if(c==LPAREN && lex.comp_assign && !lex.intest && !lex.incase)
+					lex.comp_assign = 2;
+				else
+					lex.comp_assign = 0;
 				return(shlex.token=c);
 			case S_ESC:
 				/* check for \<new-line> */
@@ -1091,6 +1115,7 @@ int sh_lex(void)
 				break;
 #endif /* SHOPT_APPEND */
 		}
+		lex.comp_assign = 0;
 		if(mode==ST_NAME)
 			mode = ST_NORM;
 		else if(mode==ST_NONE)
@@ -1177,6 +1202,7 @@ breakloop:
 	else
 		shlex.arg = sh_endword(0);
 	state = shlex.arg->argval;
+	lex.comp_assign = assignment;
 	if(assignment)
 		shlex.arg->argflag |= ARG_ASSIGN;
 	else if(!lex.skipword)
@@ -1492,17 +1518,11 @@ static int here_copy(Lex_t *lp,register struct ionod *iop)
 	register const char	*state;
 	register int		c,n;
 	register char		*bufp,*cp;
-	register Sfio_t	*sp;
+	register Sfio_t		*sp=shlex.sh->heredocs;
 	int			stripflg, nsave, special=0;
 	if(iop->iolst)
 		here_copy(lp,iop->iolst);
-	if(!(sp=shlex.sh->heredocs))
-	{
-		shlex.sh->heredocs = sp = sftmp(HERE_MEM);
-		iop->iooffset = (off_t)0;
-	}
-	else
-		iop->iooffset = sfseek(sp,(off_t)0,SEEK_END);
+	iop->iooffset = sfseek(sp,(off_t)0,SEEK_END);
 	iop->iosize = 0;
 	iop->iodelim=iop->ioname;
 	/* check for and strip quoted characters in delimiter string */

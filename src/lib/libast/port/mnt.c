@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2001 AT&T Corp.                *
+*                Copyright (c) 1985-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -136,7 +135,7 @@ set(register Header_t* hp, const char* fs, const char* dir, const char* type, co
 #if _lib_getmntinfo && _sys_mount
 
 /*
- * 4.4 bsd -- we are the world (altogether now)
+ * 4.4 bsd
  *
  * what a crappy interface
  * data returned in static buffer -- ok
@@ -231,6 +230,7 @@ typedef struct
 	long		count;
 	struct vmount*	next;
 	char		remote[128];
+	char		type[16];
 	struct vmount	info[1];
 } Handle_t;
 
@@ -256,7 +256,8 @@ mntread(void* handle)
 {
 	register Handle_t*	mp = (Handle_t*)handle;
 	register char*		s;
-	register int		n;
+	register char*		t;
+	register char*		o;
 
 	if (mp->count > 0)
 	{
@@ -265,10 +266,59 @@ mntread(void* handle)
 			sfsprintf(mp->remote, sizeof(mp->remote) - 1, "%s:%s", s, vmt2dataptr(mp->next, VMT_OBJECT));
 			s = mp->remote;
 		}
-		else s = vmt2dataptr(mp->next, VMT_OBJECT);
-		if ((n = mp->next->vmt_gfstype) < 0 || n >= elementsof(type))
-			n = 0;
-		set(&mp->hdr, s, vmt2dataptr(mp->next, VMT_STUB), type[n], NiL);
+		else
+			s = vmt2dataptr(mp->next, VMT_OBJECT);
+		if (vmt2datasize(mp->next, VMT_ARGS))
+			o = vmt2dataptr(mp->next, VMT_ARGS);
+		else
+			o = NiL;
+		switch (mp->next->vmt_gfstype)
+		{
+#ifdef MNT_AIX
+		case MNT_AIX:
+			t = "aix";
+			break;
+#endif
+#ifdef MNT_NFS
+		case MNT_NFS:
+			t = "nfs";
+			break;
+#endif
+#ifdef MNT_JFS
+		case MNT_JFS:
+			t = "jfs";
+			break;
+#endif
+#ifdef MNT_CDROM
+		case MNT_CDROM:
+			t = "cdrom";
+			break;
+#endif
+#ifdef MNT_SFS
+		case MNT_SFS:
+			t = "sfs";
+			break;
+#endif
+#ifdef MNT_CACHEFS
+		case MNT_CACHEFS:
+			t = "cachefs";
+			break;
+#endif
+#ifdef MNT_NFS3
+		case MNT_NFS3:
+			t = "nfs3";
+			break;
+#endif
+#ifdef MNT_AUTOFS
+		case MNT_AUTOFS:
+			t = "autofs";
+			break;
+#endif
+		default:
+			sfsprintf(t = mp->type, sizeof(mp->type), "aix%+d", mp->next->vmt_gfstype);
+			break;
+		}
+		set(&mp->hdr, s, vmt2dataptr(mp->next, VMT_STUB), t, o);
 		if (--mp->count > 0)
 			mp->next = (struct vmount*)((char*)mp->next + mp->next->vmt_length);
 		return &mp->hdr.mnt;
@@ -291,7 +341,7 @@ mntclose(void* handle)
 
 #if !_lib_setmntent
 #undef	_lib_getmntent
-#if !_SCO_COFF && !_SCO_ELF
+#if !_SCO_COFF && !_SCO_ELF && !_UTS
 #undef	_hdr_mnttab
 #endif
 #endif

@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1982-2001 AT&T Corp.                #
+#                Copyright (c) 1982-2002 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -14,8 +14,7 @@
 #           the license and copyright and are violating            #
 #               AT&T's intellectual property rights.               #
 #                                                                  #
-#                 This software was created by the                 #
-#                 Network Services Research Center                 #
+#            Information and Software Systems Research             #
 #                        AT&T Labs Research                        #
 #                         Florham Park NJ                          #
 #                                                                  #
@@ -59,13 +58,14 @@ sh -c	'function foo
 . $OPTIONS
 for i in ACCT ACCTFILE BRACEPAT CRNL DYNAMIC ECHOPRINT ESH FS_3D \
 	JOBS KIA MULTIBYTE NAMESPAXE NOCASE OLDTERMIO OO P_SUID RAWONLY \
-	SEVENBIT SPAWN SUID_EXEC TIMEOUT VSH
+	SEVENBIT SPAWN SUID_EXEC TIMEOUT VSH CMDLIB_BLTIN
 do	: This could be done with eval, but eval broken in some shells
 	j=0
 	case $i in
 	ACCT)		j=$ACCT;;
 	ACCTFILE)	j=$ACCTFILE;;
 	BRACEPAT)	j=$BRACEPAT;;
+	CMDLIB_BLTIN)	j=$CMDLIB_BLTIN;;
 	CRNL)		j=$CRNL;;
 	DYNAMIC)	j=$DYNAMIC;;
 	ECHOPRINT)	j=$ECHOPRINT;;
@@ -102,7 +102,7 @@ do	: This could be done with eval, but eval broken in some shells
 	esac
 done
 cat <<\!
-#if (MB_LEN_MAX-1)<=0 || !defined(_lib_mbtowc)
+#if !_PACKAGE_ast && ( (MB_LEN_MAX-1)<=0 || !defined(_lib_mbtowc) )
 #   undef SHOPT_MULTIBYTE
 #endif
 !

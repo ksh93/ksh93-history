@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2001 AT&T Corp.                *
+*                Copyright (c) 1985-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -489,6 +488,7 @@ typedef struct Reginfo			/* library private regex_t info	*/
 	unsigned char	hard;		/* hard comp			*/
 	unsigned char	leading;	/* explicit match on leading .	*/
 	unsigned char	once;		/* if 1st parse fails, quit	*/
+	unsigned char	separate;	/* cannot combine		*/
 	unsigned char	stack;		/* hard comp or exec		*/
 	unsigned char	test;		/* debug/test bitmask		*/
 } Env_t;

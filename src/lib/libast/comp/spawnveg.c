@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2001 AT&T Corp.                *
+*                Copyright (c) 1985-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -42,6 +41,39 @@ NoN(spawnveg)
 
 #else
 
+#if _lib_spawn_mode
+
+#define spawnlp		_spawnlp
+#define spawnve		_spawnve
+#define spawnvp		_spawnvp
+#define spawnvpe	_spawnvpe
+
+#include <sys/types.h>
+#include <process.h>
+
+#if !defined(P_DETACH) && defined(_P_DETACH)
+#define P_DETACH	_P_DETACH
+#endif
+#if !defined(P_NOWAIT) && defined(_P_NOWAIT)
+#define P_NOWAIT	_P_NOWAIT
+#endif
+
+#endif
+
+#if _lib_spawn_mode && defined(P_DETACH) && defined(P_NOWAIT)
+
+#if defined(__EXPORT__)
+#define extern	__EXPORT__
+#endif
+
+extern pid_t
+spawnveg(const char* cmd, char* const argv[], char* const envv[], pid_t pgid)
+{
+	return spawnve(pgid ? P_DETACH : P_NOWAIT, cmd, argv, envv);
+}
+
+#else
+
 #if _lib_spawn && _hdr_spawn && _mem_pgroup_inheritance
 
 #include <spawn.h>
@@ -50,7 +82,7 @@ NoN(spawnveg)
  * open-edition/mvs/zos fork+exec+(setpgid)
  */
 
-pid_t
+extern pid_t
 spawnveg(const char* cmd, char* const argv[], char* const envv[], pid_t pgid)
 {
 	struct inheritance	inherit;
@@ -95,7 +127,7 @@ extern pid_t	spawnve(const char*, char* const[], char* const[]);
  * fork+exec+(setsid|setpgid) with script check to avoid shell double fork
  */
 
-pid_t
+extern pid_t
 spawnveg(const char* cmd, char* const argv[], char* const envv[], pid_t pgid)
 {
 #if _lib_fork || _lib_vfork
@@ -213,6 +245,8 @@ spawnveg(const char* cmd, char* const argv[], char* const envv[], pid_t pgid)
 	return(-1);
 #endif
 }
+
+#endif
 
 #endif
 

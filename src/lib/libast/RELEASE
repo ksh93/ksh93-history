@@ -1,3 +1,71 @@
+02-03-17 features/stdio: hack around g++ 3.* clashes
+	 Makefile: add ast_nl_types.h to the .check.hdr list
+	 string/strtoip4.c: fix validity check bug that only checked last part
+02-03-14 misc/optget.c: fix --keys to not expand inline \f...\f
+02-03-12 port/astlicense.c: add type=free
+	 path/pathaccess.c: sibling ".." search ignores relative dirs
+	 sfio/sfvscanf.c: sfstrtof get() must return 0 on eof
+02-03-11 path/pathexists.c: check path by pairs checking {ENOTDIR,ENOENT}
+02-02-14 features/float: copy local min/max macros to avoid printf roundoff
+	 features/wchar: include <ast_common.h>, not <ast_std.h>
+	 misc/magic.c: match[]=>matches[] to fix K&R match() macro conflict
+	 include/vmalloc.h: include <stdlib.h> for !_PACKAGE_ast
+	 uwin/mini.sym: add sprintf (now required by features/common)
+	 regex/regnexec.c: truncate wide chars for <ctype.h> functions
+	 Makefile: fix MAM ast_common.h sequencing bug by making it first
+	 cdt/dthash.c: fix DT_DELETE memory leak (DT_DETACH typo)
+	 cdt/dthash.c: fix DT_DELETE double free (dt->data->here typo)
+	 regex/regcomp.c: fix recomb() to reject RE with backref
+	 features/iffeio: explicitly generate stdio.lcl
+	 stdio: add {fcloseall,f(get|put)s_unlocked,fmemopen,getdelim,getline}
+	 tmmake,tmtime: allow negative time_t if native localtime/gmtime do
+	 tmdate: allow years before 1969
+	 fmtfmt: add
+	 include/ast.h: add { PATH_TOUCH_CREATE PATH_TOUCH_VERBATIM }
+	 Makefile: add std/*.h for std header iffe overrides
+	 comp/iconv.c: fix non-C win32 sfreserve() loop
+02-02-11 features/common: separate long long / long double tests
+	 features/common: verify printf handles long long / long double
+02-02-02 include/ast_std.h,sfio/sfhdr.h: drop _hdr_locale tests -- always on now
+	 include/ast_std.h: trust _UWIN <unistd.h>
+02-01-31 port/mnt.c: add aix options field
+02-01-30 comp/strstr.c: add for ancient s5
+	 stdio/_flsbuf.c: only on systems that transfer to native (e.g., uwin)
+	 string/strtoi.h: cat min/max error return values
+02-01-28 features/tty: add cf[gs]et[io]speed macros for <termio.h>
+	 comp/rename.c: punt to (ancient) /usr/lib/mv_dir on EISDIR
+02-01-24 sigcrit.c: fix SIGCLD!=SIGCHLD interrupt loop
+	 sfvprintf.c: convert fast io macros to functions for uts.390 cc
+	 string/strtoi.h: drop #pragma prototyped for standalone sfio
+	 sfdcsubstr.c: rename from sfdcsubstream.c for 14 char fs
+02-01-22 execlp,execvp,execvpe,spawnlp,spawnvp,spawnvpe: fix __EXPORT__
+	 spawnlp,spawnve,spawnvp,spawnvpe: handle ms mode arg -- barf
+	 sftable.c: ifdef hacks for _WIN32&_ALPHA_ fp exception
+	 _stdfun.c: add _UWIN&_ALPHA_ iob map
+02-01-18 sfio/sfstrtof.h: drop #pragma prototyped for standalone sfio
+02-01-17 features/hdr: don't include <stddef.h> after it doesn't check out!
+02-01-16 misc/magic.c: add version type for YYYYMMDD or [a.][b.]c.d
+	 misc/magic.c: recode mime %s parse -- sensible and no buffer overflow
+02-01-15 misc/magic.tab,magicid.h: add generic binary magic number and header
+02-01-12 tm/tmlocale.c: override win32 default date for {C,POSIX,en} locales
+	 comp/omitted.c: fix cygwin workaround logic bugs
+02-01-09 stdio/fseeko.c,ftello.c: add from UNIX98
+02-01-08 comp/conf.sh: use $cc instead of cc
+02-01-07 string/strlcat.c,string/strlcpy.c: add bsd api
+01-12-18 comp/conf.tab: fix LFS_CFLAGS default for sun _CS_LFS_CFLAGS botch
+	 features/common: add hdr stdarg test
+	 tm/tmdate.c: handle YYYY/MM/DD
+01-12-10 misc/magic.tab: add generic 0x00010203 binary magic
+01-12-03 path/pathprobe.c: return HOME relative path if readonly/non-suid fs
+01-11-30 misc/optget.c: add simple cache for repeat offenders (like ksh read)
+	 sfio/sfhdr.h: preserve errno across SFMMSEQON-SFMMSEQOFF
+01-11-29 magic.tab: fix GIF version number listing
+01-11-28 string/fmtbase.c: p!=0 => base always included in output
+01-11-26 misc/fts.c: empty path is an error
+01-11-14 misc/optget.c: fix --?+SECTION queries to include paragraphs
+01-11-20 regex/regnexec.c: fix REG_MINIMAL character class match bug
+01-11-19 features/lib: retain _lib_confstr for all solaris releases
+01-11-16 comp/setlocale.c: fix !_lib_setlocale typo
 01-10-31 regex/ucs_names.h: add string catenation to keep line length low
 	 misc/fastfind.c: handle gnu slocate db read
 	 misc/optget.c: add --?+SECTION queries

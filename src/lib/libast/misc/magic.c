@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2001 AT&T Corp.                *
+*                Copyright (c) 1985-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -33,7 +32,7 @@
  * the sum of the hacks {s5,v10,planix} is _____ than the parts
  */
 
-static const char id[] = "\n@(#)$Id: magic library (AT&T Labs Research) 2000-04-19 $\0\n";
+static const char id[] = "\n@(#)$Id: magic library (AT&T Labs Research) 2002-01-16 $\0\n";
 
 static const char lib[] = "libast:magic";
 
@@ -474,7 +473,7 @@ ckmagic(register Magic_t* mp, const char* file, char* buf, struct stat* st, unsi
 	char*			base = 0;
 	unsigned long		num;
 	unsigned long		mask;
-	regmatch_t		match[10];
+	regmatch_t		matches[10];
 
 	mp->swap = 0;
 	b = mp->msg[0] = buf;
@@ -631,6 +630,7 @@ ckmagic(register Magic_t* mp, const char* file, char* buf, struct stat* st, unsi
 
 		case 'd':
 		case 'l':
+		case 'v':
 			if (!(p = getdata(mp, num, 4))) goto next;
 			num = swapget(ep->swap ? (~ep->swap ^ mp->swap) : mp->swap, p, 4);
 			break;
@@ -645,7 +645,7 @@ ckmagic(register Magic_t* mp, const char* file, char* buf, struct stat* st, unsi
 			/*FALLTHROUGH*/
 		case 'E':
 			if (!ep->value.sub->from) goto next;
-			if ((c = regexec(ep->value.sub->from, p, elementsof(match), match, 0)) || (c = regsub(ep->value.sub->from, mp->tmp, p, ep->value.sub->into, elementsof(match), match, ep->value.sub->flags)))
+			if ((c = regexec(ep->value.sub->from, p, elementsof(matches), matches, 0)) || (c = regsub(ep->value.sub->from, mp->tmp, p, ep->value.sub->into, elementsof(matches), matches, ep->value.sub->flags)))
 			{
 				c = mp->fbsz;
 				if (c >= sizeof(mp->nbuf))
@@ -653,7 +653,7 @@ ckmagic(register Magic_t* mp, const char* file, char* buf, struct stat* st, unsi
 				p = (char*)memcpy(mp->nbuf, p, c);
 				p[c] = 0;
 				ccmaps(p, c, !CC_NATIVE, CC_NATIVE);
-				if ((c = regexec(ep->value.sub->from, p, elementsof(match), match, 0)) || (c = regsub(ep->value.sub->from, mp->tmp, p, ep->value.sub->into, elementsof(match), match, ep->value.sub->flags)))
+				if ((c = regexec(ep->value.sub->from, p, elementsof(matches), matches, 0)) || (c = regsub(ep->value.sub->from, mp->tmp, p, ep->value.sub->into, elementsof(matches), matches, ep->value.sub->flags)))
 				{
 					if (c != REG_NOMATCH)
 						regmessage(mp, ep->value.sub->from, c);
@@ -872,6 +872,20 @@ ckmagic(register Magic_t* mp, const char* file, char* buf, struct stat* st, unsi
 			*b++ = ' ';
 		if (ep->type == 'd' || ep->type == 'D')
 			b += sfsprintf(b, PATH_MAX - (b - buf), q + (*q == '\b'), fmttime("%?%l", (time_t)num));
+		else if (ep->type == 'v')
+		{
+			if (num >= 19700101L)
+				sfprintf(mp->tmp, "%04lu-%02lu-%02lu", (num / 10000) % 10000, (num / 100) % 100, num % 100);
+			else
+			{
+				if (c = (num >> 24) & 0xff)
+					sfprintf(mp->tmp, "%d.", c);
+				if (c = (num >> 16) & 0xff)
+					sfprintf(mp->tmp, "%d.", c);
+				sfprintf(mp->tmp, "%ld.%ld", (num >> 8) & 0xff, num & 0xff);
+			}
+			b += sfsprintf(b, PATH_MAX - (b - buf), q + (*q == '\b'), sfstruse(mp->tmp));
+		}
 		else
 			b += sfsprintf(b, PATH_MAX - (b - buf), q + (*q == '\b'), num);
 		if (ep->mime && *ep->mime)
@@ -1427,27 +1441,31 @@ type(register Magic_t* mp, const char* file, struct stat* st, char* buf, int siz
 	else if ((t = strchr(mp->mime, '%')) && *(t + 1) == 's' && !*(t + 2))
 	{
 		register char*	b;
-		register char*	e;
-		register int	n;
-		register int	m;
+		register char*	be;
+		register char*	m;
+		register char*	me;
 
-		n = t - mp->mime;
-		b = s;
-		mp->mime = memcpy(mp->fbuf, mp->mime, n);
+		b = mp->mime;
+		me = (m = mp->mime = mp->fbuf) + sizeof(mp->fbuf) - 1;
+		while (m < me && b < t)
+			*m++ = *b++;
+		b = t = s;
 		for (;;)
 		{
-			if (!(e = strchr(b, ' ')))
+			if (!(be = strchr(t, ' ')))
 			{
-				e = b + strlen(b);
+				be = b + strlen(b);
 				break;
 			}
-			if (*(e - 1) == ',' || strneq(e + 1, "data", 4) || strneq(e + 1, "file", 4))
+			if (*(be - 1) == ',' || strneq(be + 1, "data", 4) || strneq(be + 1, "file", 4))
 				break;
-			b = e + 1;
+			b = t;
+			t = be + 1;
 		}
-		m = e - b;
-		memcpy(mp->mime + n, b, m);
-		*(mp->mime + n + m) = 0;
+		while (m < me && b < be)
+			if ((*m++ = *b++) == ' ')
+				*(m - 1) = '-';
+		*m = 0;
 	}
 	return s;
 }
@@ -1921,7 +1939,7 @@ load(register Magic_t* mp, char* file, register Sfio_t* fp, unsigned long flags)
 				char*	t;
 
 				t = p;
-				ep->type = 'v';
+				ep->type = 'V';
 				ep->op = *p;
 				while (*p && *p++ != '(');
 				switch (ep->op)

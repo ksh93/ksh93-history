@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2001 AT&T Corp.                *
+*                Copyright (c) 1985-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -37,6 +36,12 @@
 #include	<ast_std.h>
 #else
 #include	<ast_common.h>
+#if _hdr_stdlib
+#include	<stdlib.h>
+#ifndef _STDLIB_H
+#define _STDLIB_H	1
+#endif
+#endif
 #endif
 
 typedef struct _vmalloc_s	Vmalloc_t;
@@ -168,7 +173,7 @@ extern int		vmwalk _ARG_((Vmalloc_t*,
 					int(*)(Vmalloc_t*,Void_t*,size_t,Vmdisc_t*)));
 extern char*		vmstrdup _ARG_((Vmalloc_t*, const char*));
 
-#if !defined(_AST_STD_H) && \
+#if !defined(_AST_STD_H) && !defined(_STDLIB_H) && \
 	!defined(__stdlib_h) && !defined(__STDLIB_H) && \
 	!defined(_STDLIB_INCLUDED) && !defined(_INC_STDLIB)
 extern Void_t*		malloc _ARG_(( size_t ));

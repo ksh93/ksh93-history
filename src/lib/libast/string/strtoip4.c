@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2001 AT&T Corp.                *
+*                Copyright (c) 1985-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -86,10 +85,12 @@ strtoip4(register const char* s, char** e, unsigned _ast_int4_t* paddr, unsigned
 			part = 4;
 			break;
 		}
+		if (n > 0xff)
+			return -1;
 		addr = (addr << 8) | n;
 		part++;
 	} while (c == '.');
-	if (n > 0xff || (s - b) == 1 && c != '/')
+	if ((s - b) == 1 && c != '/')
 		return -1;
 	if (part > 4)
 		return -1;

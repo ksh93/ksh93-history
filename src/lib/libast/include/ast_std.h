@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2001 AT&T Corp.                *
+*                Copyright (c) 1985-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -403,6 +402,8 @@ extern int		strncasecmp(const char*, const char*, size_t);
 extern char*		strncat(char*, const char*, size_t);
 extern int		strncmp(const char*, const char*, size_t);
 extern char*		strncpy(char*, const char*, size_t);
+extern size_t		strlcat(char*, const char*, size_t);
+extern size_t		strlcpy(char*, const char*, size_t);
 extern char*		strpbrk(const char*, const char*);
 extern char*		strrchr(const char*, int);
 extern size_t		strspn(const char*, const char*);
@@ -621,10 +622,12 @@ __STDPP__directive pragma pp:ignore "strings.h"
 /* <unistd.h> */
 
 #if _UWIN
+
 #include <unistd.h>
+
 #else
+
 #include <ast_unistd.h>
-#endif
 #include <ast_botch.h>
 
 #ifndef STDIN_FILENO
@@ -705,6 +708,8 @@ extern int		truncate(const char*, off_t);
 extern char*		ttyname(int);
 extern int		unlink(const char*);
 extern ssize_t		write(int, const void*, size_t);
+
+#endif
 
 #if _BLD_ast && defined(__EXPORT__)
 #define extern		__EXPORT__

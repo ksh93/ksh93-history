@@ -28,7 +28,7 @@ lib	readlink,remove,rename,rewinddir,rindex,rmdir,setlocale
 lib	setpgid,setpgrp,setpgrp2,setreuid,setsid,setuid,sigaction
 lib	sigprocmask,sigsetmask,sigunblock,sigvec,socketpair,spawn,spawnlp
 lib	spawnve,spawnveg,spawnvp,spawnvpe,strchr,strcoll,strdup,strerror
-lib	strcasecmp,strncasecmp,strrchr
+lib	strcasecmp,strncasecmp,strrchr,strstr
 lib	strtod,strtold,strtol,strtoll,strtoul,strtoull
 lib	strxfrm,strftime,swab,symlink,sysconf,syslog
 lib	telldir,tmpnam,tzset,universe,unlink,utime,vfork,wctype
@@ -87,6 +87,19 @@ tst	lib_poll_fd_2 note{ fd is second arg to poll() }end execute{
 		fd.events = POLLIN;
 		fd.revents = 0;
 		return poll(1, &fd, 0) < 0;
+	}
+}end
+
+tst	lib_spawn_mode note{ first spawn and _spawn arg is windows mode }end compile{
+	#include <sys/types.h>
+	#include <process.h>
+	#ifndef P_NOWAIT
+	#define P_NOWAIT _P_NOWAIT
+	#endif
+	static char* cmd[] = { "ls", "-l", 0 };
+	main()
+	{
+		return spawnv(P_NOWAIT, cmd[0], cmd) || _spawnv(P_NOWAIT, cmd[0], cmd);
 	}
 }end
 
@@ -556,14 +569,6 @@ std	strtod note{ stuck with standard strtod }end nostatic{
 tst	- output{
 	main()
 	{
-	#if __sparc__ || __sparc || sparc
-		printf("\n");
-		printf("/* ignore solaris 5.4 incompatibilities -- they aren't worth it */\n");
-		printf("#undef	_lib_confstr\n");
-		printf("#undef	_lib_fnmatch\n");
-		printf("\n");
-	#endif
-
 	#if _UWIN
 		printf("\n");
 		printf("/* override some uwin feature tests */\n");
@@ -587,6 +592,18 @@ tst	- output{
 		printf("/* override some cygwin feature tests */\n");
 		printf("#undef	_std_malloc\n");
 		printf("#define _std_malloc	1\n");
+		printf("\n");
+	#endif
+
+	#if _lib_spawn_mode
+		printf("\n");
+		printf("#if _lib_spawn_mode\n");
+		printf("/* eradicate the windows spawn infection */\n");
+		printf("#undef	_lib_spawnlp\n");
+		printf("#undef	_lib_spawnve\n");
+		printf("#undef	_lib_spawnvp\n");
+		printf("#undef	_lib_spawnvpe\n");
+		printf("#endif\n");
 		printf("\n");
 	#endif
 

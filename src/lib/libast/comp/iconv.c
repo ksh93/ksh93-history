@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2001 AT&T Corp.                *
+*                Copyright (c) 1985-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -222,7 +221,7 @@ _win_codeset(const char* name)
 	char		tmp[128];
 
 #if DEBUG_TRACE
-sfprintf(sfstderr, "AHA#%d name=%s\n", __LINE__, name);
+error(DEBUG_TRACE, "AHA#%d _win_codeset name=%s", __LINE__, name);
 #endif
 	if (!name[0] || name[0] == '-' && !name[1] || !strcasecmp(name, "local") || !strcasecmp(name, "native"))
 		return CP_ACP;
@@ -277,14 +276,14 @@ static _ast_iconv_t
 _win_iconv_open(register Conv_t* cc, const char* t, const char* f)
 {
 #if DEBUG_TRACE
-sfprintf(sfstderr, "AHA#%d f=%s t=%s\n", __LINE__, f, t);
+error(DEBUG_TRACE, "AHA#%d _win_iconv_open f=%s t=%s\n", __LINE__, f, t);
 #endif
 	if ((cc->from.index = _win_codeset(f)) < 0)
 		return (_ast_iconv_t)(-1);
 	if ((cc->to.index = _win_codeset(t)) < 0)
 		return (_ast_iconv_t)(-1);
 #if DEBUG_TRACE
-sfprintf(sfstderr, "AHA#%d f=0x%04x t=0x%04x\n", __LINE__, cc->from.index, cc->to.index);
+error(DEBUG_TRACE, "AHA#%d _win_iconv_open f=0x%04x t=0x%04x\n", __LINE__, cc->from.index, cc->to.index);
 #endif
 	return (_ast_iconv_t)cc;
 }
@@ -307,7 +306,7 @@ _win_iconv(_ast_iconv_t cd, char** fb, size_t* fn, char** tb, size_t* tn)
 	LPWSTR	ub;
 
 #if DEBUG_TRACE
-sfprintf(sfstderr, "AHA#%d from=0x%04x to=0x%04x\n", __LINE__, cc->from.index, cc->to.index);
+error(DEBUG_TRACE, "AHA#%d _win_iconv from=0x%04x to=0x%04x\n", __LINE__, cc->from.index, cc->to.index);
 #endif
 	if (cc->from.index == cc->to.index)
 	{
@@ -423,7 +422,12 @@ sfprintf(sfstderr, "AHA#%d from=0x%04x to=0x%04x\n", __LINE__, cc->from.index, c
 				}
 				if (!(tz = WideCharToMultiByte(cc->to.index, 0, (LPCWSTR)ub, fz, *tb, tz, 0, 0)))
 					goto nope;
+#if DEBUG_TRACE
+error(DEBUG_TRACE, "AHA#%d _win_iconv *fn=%u fz=%u[%u] *tn=%u tz=%u\n", __LINE__, *fn, fz, fz * sizeof(WCHAR), *tn, tz);
+#endif
+#if 0
 				fz *= sizeof(WCHAR);
+#endif
 			}
 			if (ub != (LPWSTR)*fb)
 				free(ub);
@@ -994,7 +998,7 @@ _ast_iconv_open(const char* t, const char* f)
 	char			to[64];
 
 #if DEBUG_TRACE
-sfprintf(sfstderr, "AHA#%d f=%s t=%s\n", __LINE__, f, t);
+error(DEBUG_TRACE, "AHA#%d _ast_iconv_open f=%s t=%s\n", __LINE__, f, t);
 #endif
 	if (!(cc = newof(0, Conv_t, 1, 0)))
 		return (iconv_t)(-1);
@@ -1002,7 +1006,7 @@ sfprintf(sfstderr, "AHA#%d f=%s t=%s\n", __LINE__, f, t);
 	fc = _ast_iconv_name(f, fr, sizeof(fr));
 	tc = _ast_iconv_name(t, to, sizeof(to));
 #if DEBUG_TRACE
-sfprintf(sfstderr, "AHA#%d f=%s:%s:%d t=%s:%s:%d\n", __LINE__, f, fr, fc, t, to, tc);
+error(DEBUG_TRACE, "AHA#%d _ast_iconv_open f=%s:%s:%d t=%s:%s:%d\n", __LINE__, f, fr, fc, t, to, tc);
 #endif
 
 	/*
@@ -1215,14 +1219,28 @@ _ast_iconv_write(_ast_iconv_t cd, Sfio_t* op, char** fb, size_t* fn, size_t* e)
 	size_t		r;
 
 	r = 0;
+	tn = 0;
 	while (*fn > 0)
 	{
-		if (!(tb = (char*)sfreserve(op, SF_UNBOUND, SF_LOCKR)))
+		if (!(tb = (char*)sfreserve(op, -(tn + 1), SF_LOCKR)))
 			return r ? r : -1;
 		ts = tb;
 		tn = sfvalue(op);
+#if DEBUG_TRACE
+error(DEBUG_TRACE, "AHA#%d iconv_write ts=%p tn=%d", __LINE__, ts, tn);
+		for (;;)
+#else
 		while (_ast_iconv(cd, fb, fn, &ts, &tn) != (size_t)(-1) && *fn > 0)
+#endif
 		{
+#if DEBUG_TRACE
+			ssize_t	_r;
+error(DEBUG_TRACE, "AHA#%d iconv_write %d => %d `%-.*s'", __LINE__, *fn, tn, *fn, *fb);
+			_r = _ast_iconv(cd, fb, fn, &ts, &tn);
+error(DEBUG_TRACE, "AHA#%d iconv_write %d => %d [%d]", __LINE__, *fn, tn, _r);
+			if (_r == (size_t)(-1) || *fn <= 0)
+				break;
+#endif
 			if (tn > 0)
 			{
 				*ts++ = '_';
@@ -1233,6 +1251,9 @@ _ast_iconv_write(_ast_iconv_t cd, Sfio_t* op, char** fb, size_t* fn, size_t* e)
 			(*fb)++;
 			(*fn)--;
 		}
+#if DEBUG_TRACE
+error(DEBUG_TRACE, "AHA#%d iconv_write %d", __LINE__, ts - tb);
+#endif
 		sfwrite(op, tb, ts - tb);
 		r += ts - tb;
 	}

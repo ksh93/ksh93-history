@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2001 AT&T Corp.                *
+*                Copyright (c) 1985-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -23,8 +22,6 @@
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
 *******************************************************************/
-#pragma prototyped
-
 /*
  * AT&T Labs Research
  * Glenn Fowler
@@ -85,6 +82,10 @@
 #include <ctype.h>
 
 #include "sfhdr.h"
+
+#if !__STD_C && !defined(const)
+#define const
+#endif
 
 #ifndef ERANGE
 #define ERANGE		EINVAL
@@ -184,9 +185,17 @@ static const S2I_utype	mm[] =
 extern S2I_type
 #undef	extern
 #if S2I_multiplier
+#if __STD_C
 S2I_function(const char* a, char** e, char* basep, int m)
 #else
+S2I_function(a, e, basep, m) const char* a; char** e; char* basep; int m;
+#endif
+#else
+#if __STD_C
 S2I_function(const char* a, char** e, int base)
+#else
+S2I_function(a, e, base) const char* a; char** e; int base;
+#endif
 #endif
 {
 	register unsigned char*	s = (unsigned char*)a;
@@ -514,11 +523,11 @@ S2I_function(const char* a, char** e, int base)
 		{
 			if (x << 1)
 				errno = ERANGE;
-			return S2I_min;
+			return (S2I_type)S2I_min;
 		}
 #endif
 		errno = ERANGE;
-		return S2I_max;
+		return (S2I_type)S2I_max;
 	}
 	return negative ? -n : n;
 }

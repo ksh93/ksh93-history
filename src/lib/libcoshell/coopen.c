@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1990-2001 AT&T Corp.                *
+*                Copyright (c) 1990-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -182,22 +181,25 @@ coopen(const char* path, int flags, const char* attributes)
 	sh[0] = (char*)path;
 	sh[1] = getenv(CO_ENV_SHELL);
 	for (i = 0; i < elementsof(sh); i++)
-		if ((s = sh[i]) && *s && (s = strdup(s)) && (n = tokscan(s, NiL, " %v ", av, elementsof(av) - 1)) > 0)
+		if ((s = sh[i]) && *s && (s = strdup(s)))
 		{
-			if (t = strrchr(s = av[0], '/'))
-				av[0] = t + 1;
-			if (flags || (co->flags & CO_DEVFD) && strmatch(s, "*ksh*"))
-				av[n++] = devfd;
-			av[n] = 0;
-			proc = procopen(s, av, NiL, ops, PROC_DAEMON|PROC_IGNORE);
-			if (proc)
+			if ((n = tokscan(s, NiL, " %v ", av, elementsof(av) - 1)) > 0)
 			{
-				if (!state.sh)
-					state.sh = strdup(s);
-				free(s);
-				co->pid = proc->pid;
-				procfree(proc);
-				break;
+				if (t = strrchr(s = av[0], '/'))
+					av[0] = t + 1;
+				if (flags || (co->flags & CO_DEVFD) && strmatch(s, "*ksh*"))
+					av[n++] = devfd;
+				av[n] = 0;
+				proc = procopen(s, av, NiL, ops, PROC_DAEMON|PROC_IGNORE);
+				if (proc)
+				{
+					if (!state.sh)
+						state.sh = strdup(s);
+					free(s);
+					co->pid = proc->pid;
+					procfree(proc);
+					break;
+				}
 			}
 			free(s);
 		}

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2001 AT&T Corp.                *
+*                Copyright (c) 1982-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -88,13 +87,6 @@
 #   endif
 #endif
 
-#ifdef _hdr_locale
-#   include	<locale.h>
-#   ifndef LC_MESSAGES
-#	define LC_MESSAGES	LC_ALL
-#   endif /* LC_MESSAGES */
-#endif /* _hdr_locale */
-
 #define RANDMASK	0x7fff
 #ifndef CLK_TCK
 #   define CLK_TCK	60
@@ -164,6 +156,7 @@ typedef struct _init_
 	struct rand	RAND_init;
 	struct shell	LINENO_init;
 	struct shell	L_ARG_init;
+	struct match	SH_MATCH_init;
 #ifdef _hdr_locale
 	struct shell	LC_TYPE_init;
 	struct shell	LC_NUM_init;
@@ -171,7 +164,6 @@ typedef struct _init_
 	struct shell	LC_MSG_init;
 	struct shell	LC_ALL_init;
 	struct shell	LANG_init;
-	struct match	SH_MATCH_init;
 #endif /* _hdr_locale */
 #ifdef SHOPT_MULTIBYTE
 	Namfun_t	CSWIDTH_init;
@@ -342,7 +334,7 @@ static void put_cdpath(register Namval_t* np,const char *val,int flags,Namfun_t 
 		{
 			buff[0] = fc[i];
 			cp = buff;
-			if(n=mbsize(buff))
+			if((n=mbsize(buff))>0)
 			{
 				wc =  mbchar(cp);
 				if((int_charsize[i+1] = n-(i>0))>0)
@@ -373,7 +365,7 @@ static void put_cdpath(register Namval_t* np,const char *val,int flags,Namfun_t 
 		type = LC_ALL;
 	else
 		type= -1;
-	if(type>=0 && type!=LC_ALL && lc_all && *lc_all)
+	if(sh_isstate(SH_INIT) && type>=0 && type!=LC_ALL && lc_all && *lc_all)
 		type= -1;
 	if(type>=0)
 	{
@@ -474,9 +466,10 @@ static char* get_ifs(register Namval_t* np, Namfun_t *fp)
 #endif /* SHOPT_MULTIBYTE */
 			{
 #ifdef SHOPT_MULTIBYTE
-				cp+=n;
+				cp++;
 				if(n>1)
 				{
+					cp += (n-1);
 					shp->ifstable[c] = S_MBYTE;
 					continue;
 				}
@@ -1026,6 +1019,7 @@ int sh_reinit(char *argv[])
 	sh.shname = error_info.id = strdup(sh.st.dolv[0]);
 	sh_offstate(SH_FORKED);
 	sh.fn_depth = sh.dot_depth = 0;
+	sh_sigreset(0);
 	return(1);
 }
 
@@ -1122,6 +1116,7 @@ static Init_t *nv_init(Shell_t *shp)
 	nv_stack(LINENO, &ip->LINENO_init.hdr);
 	nv_putsub(SH_MATCHNOD,(char*)0,10);
 	nv_onattr(SH_MATCHNOD,NV_RDONLY);
+	nv_stack(SH_MATCHNOD, &ip->SH_MATCH_init.hdr);
 #ifdef _hdr_locale
 	nv_stack(LCTYPENOD, &ip->LC_TYPE_init.hdr);
 	nv_stack(LCALLNOD, &ip->LC_ALL_init.hdr);
@@ -1129,7 +1124,6 @@ static Init_t *nv_init(Shell_t *shp)
 	nv_stack(LCCOLLNOD, &ip->LC_COLL_init.hdr);
 	nv_stack(LCNUMNOD, &ip->LC_NUM_init.hdr);
 	nv_stack(LANGNOD, &ip->LANG_init.hdr);
-	nv_stack(SH_MATCHNOD, &ip->SH_MATCH_init.hdr);
 #endif /* _hdr_locale */
 #ifdef SHOPT_MULTIBYTE
 	nv_stack(CSWIDTHNOD, &ip->CSWIDTH_init);

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2001 AT&T Corp.                *
+*                Copyright (c) 1985-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -2938,6 +2937,8 @@ regcomp(regex_t* p, const char* pattern, regflags_t flags)
 	}
 	if (env.stats.a || env.stats.b || env.stats.c > 1 && env.stats.c != env.stats.s || env.stats.t && (env.stats.t > 1 || env.stats.a || env.stats.c))
 		p->env->hard = 1;
+	if (env.stats.b)
+		p->env->separate = 1;
 	if (special(&env, p))
 		goto bad;
 	serialize(&env, p->env->rex, 1);
@@ -2965,7 +2966,7 @@ regcomp(regex_t* p, const char* pattern, regflags_t flags)
 /*
  * combine two compiled regular expressions if possible,
  * replacing first with the combination and freeing second.
- * return 1 on success.
+ * return 0 on success.
  * the only combinations handled are building a Trie
  * from String|Kmp|Trie and String|Kmp
  */
@@ -2980,6 +2981,8 @@ regcomb(regex_t* p, regex_t* q)
 
 	if (!e || !f)
 		return fatal(p->env->disc, REG_BADPAT, NiL);
+	if (p->env->separate || q->env->separate)
+		return REG_ESUBREG;
 	memset(&env, 0, sizeof(env));
 	env.disc = p->env->disc;
 	if (e->type == REX_BM)

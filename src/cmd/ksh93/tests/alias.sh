@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1982-2001 AT&T Corp.                #
+#                Copyright (c) 1982-2002 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -14,8 +14,7 @@
 #           the license and copyright and are violating            #
 #               AT&T's intellectual property rights.               #
 #                                                                  #
-#                 This software was created by the                 #
-#                 Network Services Research Center                 #
+#            Information and Software Systems Research             #
 #                        AT&T Labs Research                        #
 #                         Florham Park NJ                          #
 #                                                                  #
@@ -24,9 +23,10 @@
 function err_exit
 {
 	print -u2 -n "\t"
-	print -u2 -r $Command: "$@"
+	print -u2 -r $Command[$1]: "${@:2}"
 	let Errors+=1
 }
+alias err_exit='err_exit $LINENO'
 
 Command=$0
 integer Errors=0
@@ -73,6 +73,11 @@ alias foo=echo
 if	[[ $(print  "$(foo bar)" ) != bar  ]]
 then	err_exit 'alias in command substitution not working'
 fi
+( unalias foo)
+if	[[ $(foo bar 2> /dev/null)  != bar  ]]
+then	err_exit 'alias not working after unalias in subshell'
+fi
+builtin -d rm 2> /dev/null
 if	whence rm > /dev/null
 then	[[ ! $(alias -t | grep rm= ) ]] && err_exit 'tracked alias not set'
 	PATH=$PATH

@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1982-2001 AT&T Corp.                #
+#                Copyright (c) 1982-2002 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -14,8 +14,7 @@
 #           the license and copyright and are violating            #
 #               AT&T's intellectual property rights.               #
 #                                                                  #
-#                 This software was created by the                 #
-#                 Network Services Research Center                 #
+#            Information and Software Systems Research             #
 #                        AT&T Labs Research                        #
 #                         Florham Park NJ                          #
 #                                                                  #
@@ -24,9 +23,10 @@
 function err_exit
 {
 	print -u2 -n "\t"
-	print -u2 -r $Command: "$@"
+	print -u2 -r $Command[$1]: "${@:2}"
 	let Errors+=1
 }
+alias err_exit='err_exit $LINENO'
 
 Command=$0
 integer Errors=0
@@ -131,5 +131,17 @@ if	[[ $( IFS=:;cat <<-!
 			$IFS$(print hi)$IFS
 		!) != :hi: ]]
 then	err_exit '$IFS unset by command substitution in here docs'
+fi
+if	x=$($SHELL -c 'cat <<< "hello world"' 2> /dev/null)
+then	[[ $x == 'hello world' ]] || err_exit '<<< documents not working'
+	x=$($SHELL -c 'v="hello  world";cat <<< $v' 2> /dev/null)
+	[[ $x == 'hello  world' ]] || err_exit '<<< documents with $x not working'
+else	err_exit '<<< syntax not supported'
+fi
+if	[[ $(cat << EOF #testing
+#abc
+abc
+EOF) != $'#abc\nabc' ]]
+then	err_exit 'comments not preserved in here-documents'
 fi
 exit $((Errors))

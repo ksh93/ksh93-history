@@ -1,3 +1,5 @@
+02-03-17 dllfind.c: fix dll prefix search (for cygwin)
+02-01-11 features/dll: include <dlfcn.h> only if _hdr_dlfcn&&_lib_dlopen
 01-10-31 dlfcn.c: change hp.pa dlopen() prototype (<dlfcn.h> but no -ldl!)
 01-09-25 dllfind: add LIBSUFFIX
 01-07-17 dllfind: do at least one dlopen() to prime dlerror()

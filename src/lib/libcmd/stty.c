@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1992-2001 AT&T Corp.                *
+*                Copyright (c) 1992-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -30,7 +29,7 @@
  */
 
 static const char usage[] =
-"[-?@(#)$Id: stty (AT&T Labs Research) 2001-06-21 $\n]"
+"[-?@(#)$Id: stty (AT&T Labs Research) 2002-01-24 $\n]"
 USAGE_LICENSE
 "[+NAME?stty - set or get terminal modes]"
 "[+DESCRIPTION?\bstty\b sets certain terminal I/O modes for the device "
@@ -76,6 +75,14 @@ USAGE_LICENSE
 
 #ifndef _POSIX_VDISABLE
 #   define _POSIX_VDISABLE 0
+#endif
+
+#ifndef NCCS
+#   ifdef NCC
+#	define NCCS	NCC
+#   else
+#	define NCCS	elementsof(((struct termio*)0)->c_cc)
+#   endif
 #endif
 
 /* command options */
@@ -162,12 +169,18 @@ static const Tty_t Ttable[] =
 { "swtch",	CHAR,	T_CHAR,	US,	VSWTCH, _POSIX_VDISABLE, C("Switch to a different shell layer") },
 #endif /* VSWTCH */
 { "eol",	CHAR,	T_CHAR,	NL|US,	VEOL, _POSIX_VDISABLE, C("End the line") },
+#ifdef VSTART
 { "start",	CHAR,	T_CHAR,	SS,	VSTART, 'Q', C("Restart the output after stopping it") },
+#endif /* VSTART */
+#ifdef VSTOP
 { "stop",	CHAR,	T_CHAR,	SS,	VSTOP, 'S', C("Stop the output") },
-#ifdef VDUSP
+#endif /* VSTOP */
+#ifdef VDSUSP
 { "dsusp",	CHAR,	T_CHAR,	SS,	VDSUSP, 'Y', C("Send a terminal stop signal  after flushing the input.") },
-#endif /* VDUSP */
+#endif /* VDSUSP */
+#ifdef VSUSP
 { "susp",	CHAR,	T_CHAR,	NL|SS,	VSUSP, 'Z', C("Send a terminal stop signal") },
+#endif /* VSUSP */
 #ifdef VREPRINT
 { "rprnt",	CHAR,	T_CHAR,	SS,	VREPRINT, 'R', C("Redraw the current line") },
 #endif /* VREPRINT */
@@ -232,7 +245,9 @@ static const Tty_t Ttable[] =
 { "isig",	BIT,	L_FLAG,	SS,	ISIG, ISIG, C("Enable (disable) \bintr\b, \bquit\b, and \bsusp\b special characters") },
 { "icanon",	BIT,	L_FLAG,	SS,	ICANON, ICANON, C("Enable (disable) \berase\b, \bkill\b, \bwerase\b, and \brprnt\b special characters") },
 { "icannon",	BIT,	L_FLAG,	SS,	ICANON, ICANON },
+#ifdef IEXTEN
 { "iexten",	BIT,	L_FLAG,	SS,	IEXTEN, IEXTEN, C("Enable (disable) non-POSIX special characters") },
+#endif /* IEXTEN */
 { "echo",	BIT,	L_FLAG,	SS,	ECHO|ECHONL, ECHO|ECHONL, C("Echo (do not echo) input characters") },
 { "echoe",	BIT,	L_FLAG,	SS,	ECHOE, ECHOE, C("Echo (do not echo) erase characters as backspace-space-backspace") },
 { "echok",	BIT,	L_FLAG,	SS,	ECHOK, ECHOK, C("Echo (do not echo) a newline after a kill character") },
@@ -264,8 +279,9 @@ static const Tty_t Ttable[] =
 { "pendin",	BIT,	L_FLAG,	0,	PENDIN, PENDIN, C("Redisplay pending input at next read and then automatically clear \bpendin\b") },
 #endif /* PENDIN */
 { "noflsh",	BIT,	L_FLAG,	US,	NOFLSH, NOFLSH, C("Disable  (enable) flushing  after \bintr\b and \bquit\b special characters") },
+#ifdef TOSTOP
 { "tostop",	BIT,	L_FLAG,	NL|US,	TOSTOP, TOSTOP, C("Stop (do not stop) background jobs that try to write to the  terminal") },
-	
+#endif /* TOSTOP */
 #ifdef OLCUC
 { "olcuc",	BIT,	O_FLAG,	US,	OLCUC, OLCUC, C("Translate (do not translate) lowercase characters to uppercase") },
 #endif /* OLCUC */
@@ -431,13 +447,11 @@ static void gout(struct termios *sp)
 	sfprintf(sfstdout,":%x",sp->c_lflag);
 	for(i=0;i< NCCS; i++)
 		sfprintf(sfstdout,":%x",sp->c_cc[i]);
-	sfprintf(sfstdout,":%x",
 #if _mem_c_line_termios
-		sp->c_line
+	sfprintf(sfstdout,":%x", sp->c_line);
 #else
-		0
+	sfprintf(sfstdout,":%x", 0);
 #endif
-		);
 	sfprintf(sfstdout,":%x",cfgetispeed(sp));
 	sfprintf(sfstdout,":%x",cfgetospeed(sp));
 	sfprintf(sfstdout,":\n");
@@ -816,6 +830,9 @@ static void listmode(Sfio_t *sp,const char *name)
 
 static int infof(Opt_t* op, Sfio_t* sp, const char* s, Optdisc_t* dp)
 {
+	NoP(op);
+	NoP(s);
+	NoP(dp);
 	sfprintf(sp,"[+Control Modes.]{");
 	listfields(sp,C_FLAG);
 	listgroup(sp,SPEED,"Attempt to set input and output baud rate to number given.  A value of \b0\b causes immediate hangup");

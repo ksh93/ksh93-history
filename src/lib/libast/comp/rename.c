@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2001 AT&T Corp.                *
+*                Copyright (c) 1985-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -34,6 +33,36 @@ NoN(rename)
 #else
 
 #include <error.h>
+#include <proc.h>
+
+#ifdef EPERM
+
+static int
+mvdir(const char* from, const char* to)
+{
+	char*			argv[4];
+	int			oerrno;
+
+	static const char	mvdir[] = "/usr/lib/mv_dir";
+
+	oerrno = errno;
+	if (!access(mvdir, X_OK))
+	{
+		argv[0] = mvdir;
+		argv[1] = from;
+		argv[2] = to;
+		argv[3] = 0;
+		if (!procrun(argv[0], argv))
+		{
+			errno = oerrno;
+			return 0;
+		}
+	}
+	errno = EPERM;
+	return -1;
+}
+
+#endif
 
 int
 rename(const char* from, const char* to)
@@ -44,16 +73,29 @@ rename(const char* from, const char* to)
 	ooerrno = errno;
 	while (link(from, to))
 	{
+#ifdef EPERM
+		if (errno == EPERM)
+		{
+			errno = ooerrno;
+			return mvdir(from, to);
+		}
+#endif
 		oerrno = errno;
 		if (unlink(to))
 		{
+#ifdef EPERM
+			if (errno == EPERM)
+			{
+				errno = ooerrno;
+				return mvdir(from, to);
+			}
+#endif
 			errno = oerrno;
-			return(-1);
+			return -1;
 		}
 	}
 	errno = ooerrno;
-	unlink(from);
-	return(0);
+	return unlink(from);
 }
 
 #endif

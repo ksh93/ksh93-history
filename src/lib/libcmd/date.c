@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1992-2001 AT&T Corp.                *
+*                Copyright (c) 1992-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -31,7 +30,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: date (AT&T Labs Research) 2001-05-31 $\n]"
+"[-?\n@(#)$Id: date (AT&T Labs Research) 2001-12-14 $\n]"
 USAGE_LICENSE
 "[+NAME?date - set/list/convert dates]"
 "[+DESCRIPTION?\bdate\b sets the current date and time (with appropriate"
@@ -130,7 +129,8 @@ USAGE_LICENSE
 "		[+X?locale time style that includes hours and minutes]"
 "		[+y?2-digit year (you'll be sorry)]"
 "		[+Y?4-digit year]"
-"		[+z?time zone minutes west of GMT offset]"
+"		[+z?time zone \aSHHMM\a west of GMT offset where S is"
+"			\b+\b or \b-\b]"
 "		[+Z?time zone name]"
 "		[++|-flag?set (+) or clear (-) \aflag\a for the remainder"
 "			of \aformat\a. \aflag\a may be:]{"

@@ -1,6 +1,7 @@
 set	prototyped
 hdr	iconv
 lib	iconv_open,iconv_close,iconv -liconv
+nxt	iconv
 
 tst	output{
 	#if !_lib_iconv_open
@@ -14,9 +15,8 @@ tst	output{
 	{
 		char*	lib;
 
-		printf("#include <ast.h>\n");
-	#if _hdr_iconv
-		printf("#include <../include/iconv.h>	/* the native iconv.h */\n");
+	#if _hdr_iconv && defined(_nxt_iconv_str)
+		printf("#include <%s>	/* the native iconv.h */\n", _nxt_iconv_str);
 	#endif
 		printf("\n");
 		printf("#define CC_ICONV	(-1)\n");
@@ -77,9 +77,16 @@ tst	output{
 		printf("extern size_t		%siconv(%siconv_t, char**, size_t*, char**, size_t*);\n", lib, lib);
 		printf("extern int		%siconv_close(%siconv_t);\n", lib, lib);
 		printf("extern %siconv_list_t*	%siconv_list(%siconv_list_t*);\n", lib, lib, lib);
-		printf("extern ssize_t		%siconv_move(%siconv_t, Sfio_t*, Sfio_t*, size_t, size_t*);\n", lib, lib);
 		printf("extern int		%siconv_name(const char*, char*, size_t);\n", lib);
+		printf("#if _SFIO_H\n");
+		printf("extern ssize_t		%siconv_move(%siconv_t, Sfio_t*, Sfio_t*, size_t, size_t*);\n", lib, lib);
 		printf("extern ssize_t		%siconv_write(%siconv_t, Sfio_t*, char**, size_t*, size_t*);\n", lib, lib);
+		printf("#else\n");
+		printf("#if _SFSTDIO_H\n");
+		printf("extern ssize_t		%siconv_move(%siconv_t, FILE*, FILE*, size_t, size_t*);\n", lib, lib);
+		printf("extern ssize_t		%siconv_write(%siconv_t, FILE*, char**, size_t*, size_t*);\n", lib, lib);
+		printf("#endif\n");
+		printf("#endif\n");
 		printf("\n");
 		printf("#undef	extern\n");
 		printf("\n");

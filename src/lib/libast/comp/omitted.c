@@ -1,32 +1,28 @@
-/*******************************************************************
-*                                                                  *
-*             This software is part of the ast package             *
-*                Copyright (c) 1985-2001 AT&T Corp.                *
-*        and it may only be used by you under license from         *
-*                       AT&T Corp. ("AT&T")                        *
-*         A copy of the Source Code Agreement is available         *
-*                at the AT&T Internet web site URL                 *
-*                                                                  *
-*       http://www.research.att.com/sw/license/ast-open.html       *
-*                                                                  *
-*        If you have copied this software without agreeing         *
-*        to the terms of the license you are infringing on         *
-*           the license and copyright and are violating            *
-*               AT&T's intellectual property rights.               *
-*                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
-*                        AT&T Labs Research                        *
-*                         Florham Park NJ                          *
-*                                                                  *
-*               Glenn Fowler <gsf@research.att.com>                *
-*                David Korn <dgk@research.att.com>                 *
-*                 Phong Vo <kpv@research.att.com>                  *
-*******************************************************************/
-#pragma prototyped
+#pragma prototyped noticed
 
 /*
- * omissions and other workarounds
+ * workarounds to bring the native interface close to posix and x/open
+ *
+ *	Glenn Fowler <gsf@research.att.com>
+ *	AT&T Labs Research
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of THIS SOFTWARE FILE (the "Software"), to deal in the Software
+ * without restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, and/or sell copies of the
+ * Software, and to permit persons to whom the Software is furnished to do
+ * so, subject to the following disclaimer:
+ *
+ * THIS SOFTWARE IS PROVIDED BY AT&T ``AS IS'' AND ANY EXPRESS OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL AT&T BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include <ast.h>
@@ -40,24 +36,19 @@
 #include <utime.h>
 
 /*
- * these workarounds assume each system call foo() has an _foo() entry
+ * these workarounds assume each system call foo() has a _foo() entry
  * which is true for __CYGWIN__ and __EMX__ (both gnu based)
  *
- * the workarounds handle .exe suffix omissions and the fixed /bin/sh
- * reference in execve() and bogus getpagesize() return values
+ * the workarounds handle:
  *
- * NOTE: __CYGWIN__ _win32_botch_* workarounds have been moved to
- *	 cygwin1.dll by Karsten Fleischer <K.Fleischer@omnium.de>.
- *	 Thanks to Karsten for working with gsf through umpteen
- *	 emails to get these issues resolved -- now real unix
- *	 commands and makefiles can build out of the box.
- *	 And yes, not all workarounds can be handled by the unix
- *	 syscall interface. In particular, { ksh nmake } have 
- *	 workarounds for case-ignorant filesystems and { libast }
- *	 has workarounds for win32 locale info.
+ *	(1) .exe suffix inconsistencies
+ *	(2) /bin/sh reference in execve()
+ *	(3) bogus getpagesize() return values
+ *
+ * NOTE: Not all workarounds can be handled by unix syscall intercepts.
+ *	 In particular, { ksh nmake } have workarounds for case-ignorant
+ *	 filesystems and { libast } has workarounds for win32 locale info.
  */
-
-#define ic(x,c)	(((x)|040)==(c))
 
 extern int	_access(const char*, int);
 extern int	_chmod(const char*, mode_t);
@@ -188,106 +179,47 @@ chmod(const char* path, mode_t mode)
 #if _win32_botch_execve
 
 #define DEBUG		1
-#define DEBUG_init	(1<<0)
-#define DEBUG_enoexec	(1<<1)
-#define DEBUG_trace	(1<<2)
-
 extern int
 execve(const char* path, char* const argv[], char* const envv[])
 {
-	register char*	s;
-	register char**	p;
-	register char**	v;
-	int		n;
 	int		oerrno;
 	struct stat	st;
-	struct stat	ss;
 	char		buf[PATH_MAX];
-	char		cmd[PATH_MAX];
 
 #if DEBUG
-	static int	debug;
+	static int	trace = -1;
 #endif
 
-#if DEBUG
-	if (!debug)
-	{
-		debug |= DEBUG_init;
-		if (getenv("_AST_execve_ENOEXEC"))
-			debug |= DEBUG_enoexec;
-		if (getenv("_AST_execve_trace"))
-			debug |= DEBUG_trace;
-	}
-#endif
-	v = 0;
 	oerrno = errno;
-	s = suffix(path);
-	if (_stat(path, &st))
-		return -1;
-	if (!s)
+#if DEBUG
+	if (trace < 0)
+		trace = getenv("_AST_execve_trace") != 0;
+#endif
+	if (!suffix(path))
 	{
 		snprintf(buf, sizeof(buf), "%s.exe", path);
-		if (!_stat(buf, &ss) && st.st_dev == ss.st_dev && st.st_ino == ss.st_ino)
-		{
+		if (!_stat(buf, &st))
 			path = (const char*)buf;
-			goto exec;
-		}
-		errno = oerrno;
+		else
+			errno = oerrno;
 	}
+	if (path != (const char*)buf && _stat(path, &st))
+		return -1;
 	if (!S_ISREG(st.st_mode) || !(st.st_mode & (S_IXUSR|S_IXGRP|S_IXOTH)))
 	{
 		errno = EACCES;
 		return -1;
 	}
-	if (s)
-		switch (strlen(s))
-		{
-		case 2:
-			if (ic(s[0], 's') && ic(s[1], 'h'))
-				goto shell;
-			break;
-		case 3:
-			if (ic(s[0], 'k') && ic(s[1], 's') && ic(s[2], 'h'))
-				goto shell;
-			if (ic(s[0], 'e') && ic(s[1], 'x') && ic(s[2], 'e'))
-				goto exec;
-			break;
-		}
-	if (!magic(path, MAGIC_exec))
-		goto exec;
-#if DEBUG
-	if (debug & DEBUG_enoexec)
+	if (magic(path, MAGIC_exec))
 	{
 		errno = ENOEXEC;
 		return -1;
 	}
-#endif
- 	errno = oerrno;
- shell:
-	p = (char**)argv;
-	while (*p++);
-	if (!(v = (char**)malloc((p - (char**)argv + 2) * sizeof(char*))))
-	{
-		errno = EAGAIN;
-		return -1;
-	}
-	p = v;
-	*p++ = "sh";
-	*p++ = (char*)path;
-	path = (const char*)pathshell();
-	if (!suffix(path))
-	{
-		snprintf(cmd, sizeof(cmd), "%s.exe", path);
-		path = (const char*)cmd;
-	}
-	if (*argv)
-		argv++;
-	while (*p++ = (char*)*argv++);
-	argv = (char*const*)v;
- exec:
 #if DEBUG
-	if (debug & DEBUG_trace)
+	if (trace > 0)
 	{
+		int	n;
+
 		sfprintf(sfstderr, "_execve %s [", path);
 		for (n = 0; argv[n]; n++)
 			sfprintf(sfstderr, " '%s'", argv[n]);
@@ -297,9 +229,7 @@ execve(const char* path, char* const argv[], char* const envv[])
 		sfprintf(sfstderr, " ]\n");
 	}
 #endif
-	if (n = _execve(path, argv, envv))
-		free(v);
-	return n;
+	return _execve(path, argv, envv);
 }
 
 #endif
@@ -376,7 +306,7 @@ close(int fd)
 			if (r = _close(fd))
 				return r;
 			oerrno = errno;
-			if (stat(exe[fd].path, &st) && st.st_ino == exe[fd].ino)
+			if (!stat(exe[fd].path, &st) && st.st_ino == exe[fd].ino)
 			{
 				snprintf(buf, sizeof(buf), "%s.exe", exe[fd].path);
 				_rename(exe[fd].path, buf);
@@ -417,21 +347,19 @@ open(const char* path, int flags, ...)
 	va_start(ap, flags);
 	mode = (flags & O_CREAT) ? va_arg(ap, int) : 0;
 	oerrno = errno;
-	if ((fd = _open(path, flags, mode)) < 0)
+	fd = _open(path, flags, mode);
 #if _win32_botch_open
-		if (errno == ENOENT && !suffix(path))
-		{
-			snprintf(buf, sizeof(buf), "%s.exe", path);
-			errno = oerrno;
-			fd = _open(buf, flags, mode);
-		}
-#else
-		/*nop*/;
+	if (fd < 0 && errno == ENOENT && !suffix(path))
+	{
+		snprintf(buf, sizeof(buf), "%s.exe", path);
+		errno = oerrno;
+		fd = _open(buf, flags, mode);
+	}
 #endif
 #if _win32_botch_copy
-	else if (fd < elementsof(exe))
+	if (fd >= 0 && fd < elementsof(exe))
 	{
-		if ((mode & 0111) && !suffix(path) && strlen(path) <= PATH_MAX && !fstat(fd, &st))
+		if ((flags & (O_CREAT|O_TRUNC)) == (O_CREAT|O_TRUNC) && (mode & 0111) && !suffix(path) && strlen(path) <= PATH_MAX && !fstat(fd, &st))
 		{
 			exe[fd].test = 1;
 			exe[fd].magic = 0;

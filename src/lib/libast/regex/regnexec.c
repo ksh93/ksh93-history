@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2001 AT&T Corp.                *
+*                Copyright (c) 1985-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -593,6 +592,9 @@ collmatch(Rex_t* rex, unsigned char* s, unsigned char* e, unsigned char** p)
 		key[w] = 0;
 		t = s;
 		c = mbchar(t);
+#if !_lib_wctype
+		c &= 0xff;
+#endif
 		x = 0;
 	}
 	else
@@ -823,10 +825,10 @@ parse(Env_t* env, Rex_t* rex, Rex_t* cont, unsigned char* s)
 			}
 			else
 			{
-				for (i = 0; s < e && i < m; i++, s = t)
+				for (i = 0; i < m && s < e; i++, s = t)
 					if (!collmatch(rex, s, e, &t))
 						return r;
-				while (i++ < n)
+				while (i++ <= n)
 				{
 					switch (follow(env, rex, cont, s))
 					{
@@ -836,9 +838,8 @@ parse(Env_t* env, Rex_t* rex, Rex_t* cont, unsigned char* s)
 					case GOOD:
 						return BEST;
 					}
-					if (s >= e || !collmatch(rex, s, e, &t))
+					if (s >= e || !collmatch(rex, s, e, &s))
 						break;
-					s = t;
 				}
 			}
 			return r;
@@ -1412,7 +1413,7 @@ parse(Env_t* env, Rex_t* rex, Rex_t* cont, unsigned char* s)
 							if (mbchar(t) != c)
 								return r;
 						}
-						while (i++ <= n && s < e)
+						while (i++ <= n)
 						{
 							switch (follow(env, rex, cont, s))
 							{
@@ -1422,7 +1423,7 @@ parse(Env_t* env, Rex_t* rex, Rex_t* cont, unsigned char* s)
 							case GOOD:
 								return BEST;
 							}
-							if (mbchar(s) != c)
+							if (s >= e || mbchar(s) != c)
 								break;
 						}
 					}
@@ -1434,7 +1435,7 @@ parse(Env_t* env, Rex_t* rex, Rex_t* cont, unsigned char* s)
 							if (toupper(mbchar(t)) != c)
 								return r;
 						}
-						while (i++ <= n && s < e)
+						while (i++ <= n)
 						{
 							switch (follow(env, rex, cont, s))
 							{
@@ -1444,7 +1445,7 @@ parse(Env_t* env, Rex_t* rex, Rex_t* cont, unsigned char* s)
 							case GOOD:
 								return BEST;
 							}
-							if (toupper(mbchar(s)) != c)
+							if (s >= e || toupper(mbchar(s)) != c)
 								break;
 						}
 					}

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2001 AT&T Corp.                *
+*                Copyright (c) 1985-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -293,7 +292,7 @@ int		type;
 		else if(p)
 			p->right = t->right;
 		else if((p = *s) == t)
-			*s = t->right;
+			p = *s = t->right;
 		else
 		{	while(p->right != t)
 				p = p->right;
@@ -302,7 +301,7 @@ int		type;
 		obj = _DTOBJ(t,lk);
 		dt->data->size -= 1;
 		dt->data->here = p;
-		if(disc->freef && (type&DT_DETACH))
+		if(disc->freef && (type&DT_DELETE))
 			(*disc->freef)(dt,obj,disc);
 		if(disc->link < 0)
 			(*dt->memoryf)(dt,(Void_t*)t,0,disc);

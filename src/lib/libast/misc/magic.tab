@@ -1,5 +1,5 @@
 #
-# @(#)magic (AT&T Research) 2001-09-06
+# @(#)magic (AT&T Research) 2002-01-30
 #
 # magic number database for file(1) and magic(3)
 #
@@ -882,16 +882,18 @@ o()
 0	short		0530		u370 5.2/5.0
 o{
 {
-18	short		&01		executable			x-system/exe
+20	long		!=0440
+&18	short		&01		executable			x-system/exe
 +0	short		&01==0		, pure
 +12	long		>0		, not stripped
 }
++20	long		0440		shared library			x-system/dll
 +18	short		&01==0		object				x-system/obj
 +18	byte		&0x40		, BIG
 +49	byte		&0xf!=0		, pre-XA
 {
 18	short		&01
-+22	short		>0		, version %ld
++24	long		>0		, version %ld
 }
 }
 0	short		0531		amdahl 5.2
@@ -1171,6 +1173,10 @@ o()
 +16	long	*		, %d records
 +20	long	*		, flags 0x%x
 
+0	long	0x950412de	gnu message catalog	application/x-locale
++4	long	*		, revision %d
++8	long	*		, %d messages
+
 #
 # from the net
 #
@@ -1232,7 +1238,7 @@ v()
 0	string		begin 0		uuencoded data			application/x-uuencode
 0	string		\377\330\377	JPEG image			image/jpeg
 0	string		GIF		GIF image			image/gif
-+3	string		*		, version %s
++3	string		*		, version %-.3s
 {
 6	leshort		>0		, %d
 &8	leshort		>0		x %d
@@ -1321,23 +1327,30 @@ v()
 &1	edit		%^\([A-Z_][A-Z_]*\)\([0-9][0-9]\)%\1 data, version \2%l	%s	application/x-%s
 
 #
+# generic binary magic
+#
+
+0	long		0x00010203
+&4	string		*		%s			application/x-%s
+&12	string		*		%s data
+&24	version		*		, version %s
+{
+&28	long		>=4
+&32	long		*		, %u
+}
+{
+&28	long		>=8
+&36	long		*		, %u
+}
+
+#
 # local additions
 #
 
 0	match		info mam		mam program		application/x-mam
 0	edit		%^!<\([^>]*\)>.*%\1%l	%s data			application/x-%s
-0	string		\015\023\007\000	ast message catalog	application/x-catalog
+0	string		\015\023\007\000	ast message catalog	application/x-locale
 +4	string		*			, %s
-
-0	long		0x02071012		bgp route dump, fixed record
-+4	byte		*			, version %d
-+5	byte		*			.%d
-0	long		0x09100104		4 byte ip address binary	application/x-ipmask
-0	long		0x09101704		4 byte ip retrie binary	application/x-ipmask
-+8	string		*			, %s
-+64	long		*			, %d masks
-+76	long		*			, %d slots
-+80	long		*			, %d leaves
 
 #
 # last chance

@@ -43,6 +43,9 @@ cat{
 #   undef TIOCGETC
 #else
 #   define cfgetospeed(tp)	((tp)->c_cflag & CBAUD)
+#   define cfgetispeed(tp)	((tp)->c_cflag & CBAUD)
+#   define cfsetispeed(tp,val)	((tp)->c_cflag &=~ CBAUD,(tp)->c_cflag|=(val))
+#   define cfsetospeed(tp,val)	((tp)->c_cflag &=~ CBAUD,(tp)->c_cflag|=(val))
 #   ifdef _hdr_termio
 #	include	<termio.h>
 #   else

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2001 AT&T Corp.                *
+*                Copyright (c) 1985-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -51,10 +50,7 @@ signals[] =		/* held inside critical region	*/
 #ifdef SIGHUP
 	SIGHUP,		SIG_REG_EXEC,
 #endif
-#ifdef SIGCLD
-	SIGCLD,		SIG_REG_PROC,
-#endif
-#ifdef SIGCHLD
+#if defined(SIGCHLD) && ( !defined(SIGCLD) || SIGCHLD != SIGCLD )
 	SIGCHLD,	SIG_REG_PROC,
 #endif
 #ifdef SIGTSTP
@@ -139,13 +135,10 @@ sigcritical(int op)
 #else
 			hold = 0;
 			for (i = 0; i < elementsof(signals); i++)
-				if (op & signals[i].op)
+				if ((op & signals[i].op) && (handler[i] = signal(signals[i].sig, interrupt)) == SIG_IGN)
 				{
-					if ((handler[i] = signal(signals[i].sig, interrupt)) == SIG_IGN)
-					{
-						signal(signals[i].sig, SIG_IGN);
-						hold &= ~sigmask(signals[i].sig);
-					}
+					signal(signals[i].sig, handler[i]);
+					hold &= ~sigmask(signals[i].sig);
 				}
 #endif
 #endif

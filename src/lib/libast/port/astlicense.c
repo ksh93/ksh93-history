@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2001 AT&T Corp.                *
+*                Copyright (c) 1985-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -52,6 +51,7 @@
 #define NONCOMMERCIAL		5
 #define OPEN			6
 #define COPYLEFT		7
+#define FREE			8
 
 #define AUTHOR			0
 #define COMPANY			1
@@ -461,6 +461,8 @@ astlicense(char* p, int size, char* file, char* options, int cc1, int cc2, int c
 							notice.type = COPYLEFT;
 						else if (!strncmp(v, "special", 7))
 							notice.type = SPECIAL;
+						else if (!strncmp(v, "free", 4) || !strncmp(v, "gpl", 3))
+							notice.type = FREE;
 						else if (!strncmp(v, "none", 4))
 							return 0;
 						else if (!strncmp(v, "open", 4))
@@ -595,6 +597,55 @@ astlicense(char* p, int size, char* file, char* options, int cc1, int cc2, int c
 			COMMENT(&notice, &buf, "http://www.gnu.org/copyleft/gpl.html", 0);
 			comment(&notice, &buf, NiL, 0, 0);
 		}
+		else if (notice.type == FREE)
+		{
+			if (!notice.item[PACKAGE].data)
+			{
+				copyright(&notice, &tmp);
+				comment(&notice, &buf, BUF(&tmp), USE(&tmp), 0);
+			}
+			comment(&notice, &buf, NiL, 0, 0);
+			COMMENT(&notice, &buf, "Permission is hereby granted, free of charge,", 0);
+			COMMENT(&notice, &buf, "to any person obtaining a copy of THIS SOFTWARE FILE", 0);
+			COMMENT(&notice, &buf, "(the \"Software\"), to deal in the Software", 0);
+			COMMENT(&notice, &buf, "without restriction, including without", 0);
+			COMMENT(&notice, &buf, "limitation the rights to use, copy, modify,", 0);
+			COMMENT(&notice, &buf, "merge, publish, distribute, and/or", 0);
+			COMMENT(&notice, &buf, "sell copies of the Software, and to permit", 0);
+			COMMENT(&notice, &buf, "persons to whom the Software is furnished", 0);
+			COMMENT(&notice, &buf, "to do so, subject to the following disclaimer:", 0);
+			comment(&notice, &buf, NiL, 0, 0);
+			copy(&tmp, "THIS SOFTWARE IS PROVIDED ", -1);
+			if ((x = notice.item[CORPORATION].data) && (n = notice.item[CORPORATION].size) ||
+			    (x = notice.item[COMPANY].data) && (n = notice.item[COMPANY].size))
+			{
+				copy(&tmp, "BY ", -1);
+				expand(&notice, &tmp, x, n);
+			}
+			comment(&notice, &buf, BUF(&tmp), USE(&tmp), 0);
+			COMMENT(&notice, &buf, "``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,", 0);
+			COMMENT(&notice, &buf, "INCLUDING, BUT NOT LIMITED TO, THE IMPLIED", 0);
+			COMMENT(&notice, &buf, "WARRANTIES OF MERCHANTABILITY AND FITNESS", 0);
+			COMMENT(&notice, &buf, "FOR A PARTICULAR PURPOSE ARE DISCLAIMED.", 0);
+			copy(&tmp, "IN NO EVENT SHALL ", -1);
+			if ((x = notice.item[CORPORATION].data) && (n = notice.item[CORPORATION].size) ||
+			    (x = notice.item[COMPANY].data) && (n = notice.item[COMPANY].size))
+				expand(&notice, &tmp, x, n);
+			else
+				copy(&tmp, " THE AUTHOR(S)", -1);
+			comment(&notice, &buf, BUF(&tmp), USE(&tmp), 0);
+			COMMENT(&notice, &buf, "BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,", 0);
+			COMMENT(&notice, &buf, "SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES", 0);
+			COMMENT(&notice, &buf, "(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT", 0);
+			COMMENT(&notice, &buf, "OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,", 0);
+			COMMENT(&notice, &buf, "DATA, OR PROFITS; OR BUSINESS INTERRUPTION)", 0);
+			COMMENT(&notice, &buf, "HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,", 0);
+			COMMENT(&notice, &buf, "WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT", 0);
+			COMMENT(&notice, &buf, "(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING", 0);
+			COMMENT(&notice, &buf, "IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,", 0);
+			COMMENT(&notice, &buf, "EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.", 0);
+			comment(&notice, &buf, NiL, 0, 0);
+		}
 		else
 		{
 			if (notice.type == PROPRIETARY)
@@ -703,7 +754,6 @@ astlicense(char* p, int size, char* file, char* options, int cc1, int cc2, int c
 		}
 		if (x = notice.item[ORGANIZATION].data)
 		{
-			COMMENT(&notice, &buf, "This software was created by the", 0);
 			expand(&notice, &tmp, x, notice.item[ORGANIZATION].size);
 			comment(&notice, &buf, BUF(&tmp), USE(&tmp), 0);
 			if (x = notice.item[CORPORATION].data)

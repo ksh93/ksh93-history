@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2001 AT&T Corp.                *
+*                Copyright (c) 1985-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -35,12 +34,12 @@ NoN(spawnlp)
 
 #else
 
-#define spawnlp		______spawnlp
+#if defined(__EXPORT__)
+#include <sys/types.h>
+__EXPORT__ pid_t spawnlp(const char*, const char*, ...);
+#endif
 
 #include <ast.h>
-#include <errno.h>
-
-#undef	spawnlp
 
 #if defined(__EXPORT__)
 #define extern	__EXPORT__
@@ -55,7 +54,7 @@ spawnlp(const char* name, const char* arg, ...)
 	va_start(ap, arg);
 	pid = spawnvp(name, (char* const*)&arg);
 	va_end(ap);
-	return(pid);
+	return pid;
 }
 
 #endif

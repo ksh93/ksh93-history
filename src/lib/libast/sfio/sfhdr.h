@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2001 AT&T Corp.                *
+*                Copyright (c) 1985-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -60,13 +59,10 @@
 #include	<ls.h>
 
 #if _mem_st_blksize_stat
-#define _stat_blksize	1
+#define _stat_blksize		1
 #endif
 
-#if _lib_localeconv && _hdr_locale
-#define _lib_locale	1
-#endif
-
+#define _lib_locale		1
 #define _has_multibyte		1
 
 #define SFMBLEN(s,x)		mbsize(s)
@@ -255,7 +251,7 @@
 #define fork	vfork
 #endif
 
-#if _lib_unlink
+#if _lib_unlink && !defined(remove)
 #define remove	unlink
 #endif
 
@@ -719,8 +715,8 @@ typedef struct _sfextern_s
 
 /* set/unset sequential states for mmap */
 #if _lib_madvise && defined(MADV_SEQUENTIAL) && defined(MADV_NORMAL)
-#define SFMMSEQON(f,a,s)	(void)(madvise((caddr_t)(a),(size_t)(s),MADV_SEQUENTIAL) )
-#define SFMMSEQOFF(f,a,s)	(void)(madvise((caddr_t)(a),(size_t)(s),MADV_NORMAL) )
+#define SFMMSEQON(f,a,s)	do{ int oerrno=errno; (void)madvise((caddr_t)(a),(size_t)(s),MADV_SEQUENTIAL); errno=oerrno; }while(0)
+#define SFMMSEQOFF(f,a,s)	do{ int oerrno=errno; (void)madvise((caddr_t)(a),(size_t)(s),MADV_NORMAL); errno=oerrno; }while(0)
 #else
 #define SFMMSEQON(f,a,s)
 #define SFMMSEQOFF(f,a,s)

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2001 AT&T Corp.                *
+*                Copyright (c) 1985-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -29,12 +28,17 @@
  * AT&T Research
  *
  * touch file access and modify times of file
- * if force>0 then file will be created if it doesn't exist
- * if force<0 then times are taken verbatim
+ * if flags&PATH_TOUCH_CREATE then file will be created if it doesn't exist
+ * if flags&PATH_TOUCH_VERBATIM then times are taken verbatim
  * times have one second granularity
  *
  *	(time_t)(-1)	retain old time
  *	0		use current time
+ *
+ * the old interface flag values were:
+ *	 1	PATH_TOUCH_CREATE
+ *	-1	PATH_TOUCH_CREATE|PATH_TOUCH_VERBATIM
+ *		PATH_TOUCH_VERBATIM -- not supported
  */
 
 #if defined(__STDPP__directive) && defined(__STDPP__hide)
@@ -67,7 +71,7 @@ extern int	utime(const char*, const time_t*);
 #endif
 
 int
-touch(const char* file, time_t atime, time_t mtime, int force)
+touch(const char* file, time_t atime, time_t mtime, int flags)
 {
 	int		n;
 	int		fd;
@@ -82,13 +86,16 @@ touch(const char* file, time_t atime, time_t mtime, int force)
 	time_t		ut[2];
 #endif
 
-	if (force >= 0)
+	if (!(flags & PATH_TOUCH_VERBATIM))
 	{
 		if (atime == (time_t)(-1) || mtime == (time_t)(-1))
 		{
-			if (stat(file, &st)) st.st_atime = st.st_mtime = 0;
-			if (atime == (time_t)(-1)) atime = st.st_atime;
-			if (mtime == (time_t)(-1)) mtime = st.st_mtime;
+			if (stat(file, &st))
+				st.st_atime = st.st_mtime = 0;
+			if (atime == (time_t)(-1))
+				atime = st.st_atime;
+			if (mtime == (time_t)(-1))
+				mtime = st.st_mtime;
 		}
 		if (!atime || !mtime)
 #if _hdr_utime && _lib_utime_now
@@ -96,15 +103,17 @@ touch(const char* file, time_t atime, time_t mtime, int force)
 #endif
 		{
 			time(&now);
-			if (!atime) atime = now;
-			if (!mtime) mtime = now;
+			if (!atime)
+				atime = now;
+			if (!mtime)
+				mtime = now;
 		}
 	}
 #if _hdr_utime
 	ut.actime = atime;
 	ut.modtime = mtime;
 #if _lib_utime_now
-	n = utime(file, (force < 0 || atime || mtime) ? &ut : (struct utimbuf*)0);
+	n = utime(file, ((flags & PATH_TOUCH_VERBATIM) || atime || mtime) ? &ut : (struct utimbuf*)0);
 #else
 	n = utime(file, &ut);
 #endif
@@ -123,7 +132,7 @@ touch(const char* file, time_t atime, time_t mtime, int force)
 		 */
 
 		errno = EINVAL;
-		return(-1);
+		return -1;
 	}
 #endif
 	{
@@ -134,24 +143,26 @@ touch(const char* file, time_t atime, time_t mtime, int force)
 		if (access(file, F_OK))
 #endif
 		{
-			if (!force) return(-1);
+			if (!(flags & PATH_TOUCH_CREATE))
+				return -1;
 			umask(mode = umask(0));
 			mode = (~mode) & (S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH);
-			if ((fd = open(file, O_WRONLY|O_CREAT|O_TRUNC, mode)) < 0) return(-1);
+			if ((fd = open(file, O_WRONLY|O_CREAT|O_TRUNC, mode)) < 0)
+				return -1;
 			close(fd);
 			errno = oerrno;
 #if _lib_utime
 #if _hdr_utime
 #if _lib_utime_now
-			return((force < 0 || atime || mtime) ? utime(file, &ut) : 0);
+			return ((flags & PATH_TOUCH_VERBATIM) || atime || mtime) ? utime(file, &ut) : 0;
 #else
-			return(0);
+			return 0;
 #endif
 #else
-			return((atime != now || mtime != now) ? utime(file, ut) : 0);
+			return (atime != now || mtime != now) ? utime(file, ut) : 0;
 #endif
 #else
-			return(0);
+			return 0;
 #endif
 		}
 #if !_hdr_utime || !_lib_utime
@@ -187,5 +198,5 @@ touch(const char* file, time_t atime, time_t mtime, int force)
 		}
 #endif
 	}
-	return(n);
+	return n;
 }

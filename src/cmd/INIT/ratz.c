@@ -5,7 +5,7 @@
  * _SEAR_* macros for win32 self extracting archives -- see sear(1).
  */
 
-static char id[] = "\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 2001-10-18 $\0\n";
+static char id[] = "\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 2002-02-02 $\0\n";
 
 #if _PACKAGE_ast
 
@@ -13,7 +13,7 @@ static char id[] = "\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler)
 #include <error.h>
 
 static const char usage[] =
-"[-?\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 2001-10-18 $\n]"
+"[-?\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 2002-02-02 $\n]"
 "[-author?Jean-loup Gailly]"
 "[-author?Mark Adler]"
 "[-author?Glenn Fowler <gsf@research.att.com>]"
@@ -56,6 +56,18 @@ static const char usage[] =
 
 #include <stdio.h>
 #include <sys/types.h>
+
+#if _PACKAGE_ast || defined(__STDC__) || defined(_SEAR_EXEC)
+
+#define FOPEN_READ	"rb"
+#define FOPEN_WRITE	"wb"
+
+#else
+
+#define FOPEN_READ	"r"
+#define FOPEN_WRITE	"w"
+
+#endif
 
 #if !_PACKAGE_ast
 
@@ -354,7 +366,9 @@ typedef z_stream FAR *z_streamp;
 
 /* === zutil.h === */
 #if !_PACKAGE_ast && !defined(STDC)
+#if defined(__STDC__)
 #  include <stddef.h>
+#endif
 #  include <string.h>
 #  include <stdlib.h>
 #endif
@@ -2939,18 +2953,59 @@ sear_rm_r(char* dir)
 	WIN32_FIND_DATA	info;
 	HANDLE		hp;
 
-	SetCurrentDirectory(dir);
+	if (!SetCurrentDirectory(dir))
+		return;
 	if ((hp = FindFirstFile("*.*", &info)) != INVALID_HANDLE_VALUE)
 		do
 		{
 			if (!(info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+			{
+				if (info.dwFileAttributes & FILE_ATTRIBUTE_READONLY)
+					SetFileAttributes(info.cFileName, info.dwFileAttributes & ~FILE_ATTRIBUTE_READONLY);
 				DeleteFile(info.cFileName);
+			}
 			else if (info.cFileName[0] != '.' || info.cFileName[1] != 0 && (info.cFileName[1] != '.' || info.cFileName[2] != 0))
 				sear_rm_r(info.cFileName);
 		} while(FindNextFile(hp, &info));
 	FindClose(hp);
-	SetCurrentDirectory("..");
+	if (!SetCurrentDirectory(".."))
+		return;
 	RemoveDirectory(dir);
+}
+
+/*
+ * system(3) without PATH search that should work on all windows variants
+ */
+
+static int
+sear_system(const char* command)
+{
+	PROCESS_INFORMATION	pinfo;
+	STARTUPINFO		sinfo;
+	char*			cp;
+	char			path[PATH_MAX];
+	int			n = *command == '"';
+
+	strncpy(path, &command[n], PATH_MAX - 4);
+	n = n ? '"' : ' ';
+	for (cp = path; *cp; *cp++)
+		if (*cp == n)
+			break;
+	*cp = 0;
+	if (GetFileAttributes(path)==0xffffffff && GetLastError()==ERROR_FILE_NOT_FOUND)
+		strcpy(cp, ".exe");
+	ZeroMemory(&sinfo, sizeof(sinfo));
+	if (CreateProcess(path, (char*)command, NULL, NULL, TRUE, NORMAL_PRIORITY_CLASS, NULL, NULL, &sinfo, &pinfo))
+	{
+		CloseHandle(pinfo.hThread);
+		WaitForSingleObject(pinfo.hProcess, INFINITE);
+		if (!GetExitCodeProcess(pinfo.hProcess, &n))
+			n = 1;
+		CloseHandle(pinfo.hProcess);
+	}
+	else
+		n = GetLastError() == ERROR_FILE_NOT_FOUND ? 127 : 126;
+	return n;
 }
 
 /*
@@ -2969,7 +3024,7 @@ sear_exec(const char* cmd)
 		close(0);
 		dup(sear_stdin);
 		close(sear_stdin);
-		r = cmd ? system(cmd) : 1;
+		r = cmd ? sear_system(cmd) : 1;
 		sear_rm_r(sear_tmp);
 	}
 	else
@@ -3168,7 +3223,7 @@ char**	argv;
 	ungetc(c, stdin);
 	if (c != gz_magic[0])
 		gz = 0;
-	else if (!(gz = gzfopen(stdin, "rb")))
+	else if (!(gz = gzfopen(stdin, FOPEN_READ)))
 	{
 		fprintf(stderr, "%s: gunzip open error\n", state.id);
 		EXIT(1);
@@ -3426,23 +3481,9 @@ char**	argv;
 			int	p;
 			char	bar[METER_parts + 1];
 
-			s = path;
-			for (;;)
-			{
-				switch (*s++)
-				{
-				case 0:
-				case '\f':
-				case '\n':
-				case '\r':
-				case '\v':
-					s--;
+			for (s = path; *s; s++)
+				if (s[0] == ' ' && s[1] == '-' && s[2] == '-' && s[3] == ' ')
 					break;
-				default:
-					continue;
-				}
-				break;
-			}
 			if (*s)
 			{
 				if (clear)
@@ -3450,7 +3491,7 @@ char**	argv;
 					fprintf(stderr, "%*s", clear, "\r");
 					clear = 0;
 				}
-				fprintf(stderr, "%s\n", path);
+				fprintf(stderr, "\n%s\n\n", path);
 			}
 			else
 			{
@@ -3486,11 +3527,11 @@ char**	argv;
 		{
 		case REGTYPE:
 		case AREGTYPE:
-			while (!(fp = fopen(path, "wb")))
+			while (!(fp = fopen(path, FOPEN_WRITE)))
 				if (unlink(path))
 				{
-					fprintf(stderr, "%s: %s: cannot create file\n", state.id, path);
-					EXIT(1);
+					fprintf(stderr, "%s: warning: %s: cannot create file\n", state.id, path);
+					break;
 				}
 			n = number(header.size);
 			c = a2x ? 0 : -1;
@@ -3530,7 +3571,7 @@ char**	argv;
 						*s = a2x[*(unsigned char*)s];
 					break;
 				}
-				if (fwrite(buf, n > sizeof(header) ? sizeof(header) : n, 1, fp) != 1)
+				if (fp && fwrite(buf, n > sizeof(header) ? sizeof(header) : n, 1, fp) != 1)
 				{
 					fprintf(stderr, "%s: %s: write error\n", state.id, path);
 					EXIT(1);
@@ -3539,7 +3580,7 @@ char**	argv;
 					break;
 				n -= sizeof(header);
 			}
-			if (fclose(fp))
+			if (fp && fclose(fp))
 			{
 				fprintf(stderr, "%s: %s: write error\n", state.id, path);
 				EXIT(1);
@@ -3562,7 +3603,7 @@ char**	argv;
 				}
 			continue;
 #endif
-#if !_WIN32 && !__EMX__ || _UWIN
+#if !_WIN32 || _UWIN
 		case LNKTYPE:
 			while (link(header.linkname, path))
 				if (unlink(path))

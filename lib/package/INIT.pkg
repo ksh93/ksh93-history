@@ -1,5 +1,7 @@
 INIT :PACKAGE:
-	The INIT package is required by all other packages. It contains
-	the package command, support scripts, and utilities.
 
 :INDEX: the package command, required by all other packages
+
+:DESCRIPTION:
+	The INIT package is required by all other packages. It contains
+	the package command, support scripts, and utilities.

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2001 AT&T Corp.                *
+*                Copyright (c) 1982-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -343,7 +342,8 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 				c = mbsize((char*)cp-1);
 				if(name)
 					cp[-1] = 0;
-				cp += (c-1);
+				if(c>1)
+					cp += (c-1);
 				c = S_DELIM;
 			}
 			else
@@ -417,8 +417,8 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 			{
 				if(sh_strchr(ifs,(char*)cp-1)>=0)
 				{
-					c = mbsize((char*)cp-1);
-					cp += (c-1);
+					if((c = mbsize((char*)cp-1))>1)
+						cp += (c-1);
 					c = S_DELIM;
 				}
 				else

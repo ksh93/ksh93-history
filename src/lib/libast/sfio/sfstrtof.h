@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2001 AT&T Corp.                *
+*                Copyright (c) 1985-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -23,8 +22,6 @@
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
 *******************************************************************/
-#pragma prototyped
-
 /*
  * AT&T Labs Research
  * Glenn Fowler & Phong Vo
@@ -100,7 +97,7 @@
 
 #if S2F_scan
 
-typedef int (*S2F_get_f)(void*);
+typedef int (*S2F_get_f)_ARG_((void*));
 
 #define ERR(e)
 #define GET(p)		(*get)(p)
@@ -137,9 +134,17 @@ extern
 #endif
 S2F_number
 #if S2F_scan
+#if __STD_C
 S2F_function(void* s, S2F_get_f get)
 #else
+S2F_function(s, get) void* s; S2F_get_f get;
+#endif
+#else
+#if __STD_C
 S2F_function(const char* str, char** end)
+#else
+S2F_function(str, end) char* str; char** end;
+#endif
 #endif
 {
 #if !S2F_scan
@@ -429,11 +434,19 @@ S2F_function(const char* str, char** end)
 		if (c > S2F_exp_10_max)
 		{
 			ERR(ERANGE);
-			v = S2F_huge;
-			break;
+			return negative ? -S2F_huge : S2F_huge;
 		}
 		if (c > 0)
+		{
+#if _ast_mpy_overflow_fpe
+			if ((S2F_max / p) < S2F_pow10[c])
+			{
+				ERR(ERANGE);
+				return negative ? -S2F_huge : S2F_huge;
+			}
+#endif
 			p *= S2F_pow10[c];
+		}
 		v += p;
 	}
 	if (m)
@@ -443,6 +456,13 @@ S2F_function(const char* str, char** end)
 			m -= S2F_exp_10_max;
 			v /= S2F_pow10[S2F_exp_10_max];
 		}
+#if _ast_div_underflow_fpe
+		if ((S2F_min * p) > S2F_pow10[c])
+		{
+			ERR(ERANGE);
+			return negative ? -S2F_huge : S2F_huge;
+		}
+#endif
 		v /= S2F_pow10[m];
 	}
 

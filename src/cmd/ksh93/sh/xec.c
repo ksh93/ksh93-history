@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2001 AT&T Corp.                *
+*                Copyright (c) 1982-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -489,7 +488,7 @@ sh_exec(register const union anynode *t, int flags)
 						np=nv_search(com0,sh.fun_tree,0);
 					else
 					{
-						if((np=nv_search(com0,sh.track_tree,0)) && np->nvalue.cp)
+						if((np=nv_search(com0,sh.track_tree,0)) && !nv_isattr(np,NV_NOALIAS) && np->nvalue.cp)
 							np=nv_search(nv_getval(np),sh.bltin_tree,0);
 						else
 							np = 0;
@@ -855,7 +854,7 @@ sh_exec(register const union anynode *t, int flags)
 		    case TPAR:
 			echeck = 1;
 			flags &= ~OPTIMIZE_FLAG;
-			if(!sh.subshell && (flags&SH_NOFORK))
+			if(!sh.subshell && !sh.st.trapcom[0] && !sh.st.trap[SH_ERRTRAP] && (flags&SH_NOFORK))
 			{
 				int jmpval;
 				struct checkpt buff;
@@ -2304,8 +2303,20 @@ static pid_t sh_ntfork(const union anynode *t,char *argv[],int *jobid,int flag)
 	{
 #ifdef PATH_BFPATH
 		Namval_t *np;
-		if((np=nv_search(path,shp->track_tree,0)) && np->nvalue.cp)
+		if((np=nv_search(path,shp->track_tree,0)) && !nv_isattr(np,NV_NOALIAS) && np->nvalue.cp)
 			path = nv_getval(np);
+		else
+		{
+			Pathcomp_t *pp=path_get(path);
+			while(pp)
+			{
+				if(pp->len==1 && *pp->name=='.')
+					break;
+				pp = pp->next;
+			}
+			if(!pp)
+				path = 0;
+		}
 #else
 		path = shp->lastpath;
 #endif
@@ -2365,7 +2376,7 @@ static pid_t sh_ntfork(const union anynode *t,char *argv[],int *jobid,int flag)
 			char *shell=0;
 #ifdef PATH_BFPATH
 			Namval_t *np;
-			if((np=nv_search("ksh",shp->track_tree,0)) && np->nvalue.cp)
+			if((np=nv_search("ksh",shp->track_tree,0)) && !nv_isattr(np,NV_NOALIAS) && np->nvalue.cp)
 				shell = nv_getval(np);
 			else if(path_absolute("ksh",NIL(Pathcomp_t*)))
 				shell = stakptr(PATH_OFFSET);

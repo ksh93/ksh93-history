@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2001 AT&T Corp.                *
+*                Copyright (c) 1985-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -89,7 +88,8 @@ tmtime(register Tm_t* tm, int west)
 			else
 			{
 				now = clock;
-				tn = tmmake(&now);
+				if (!(tn = tmmake(&now)))
+					return -1;
 				if (tm->tm_isdst = tn->tm_isdst)
 					clock += tm_info.zone->dst * 60;
 			}
@@ -102,19 +102,19 @@ tmtime(register Tm_t* tm, int west)
 			else if (tm->tm_isdst < 0)
 			{
 				now = clock;
-				tn = tmmake(&now);
+				if (!(tn = tmmake(&now)))
+					return -1;
 				tm->tm_isdst = tn->tm_isdst;
 			}
 		}
 	}
 	else if (tm->tm_isdst)
 		tm->tm_isdst = 0;
-	if (clock < 0)
-		return -1;
 	if (!tn)
 	{
 		now = clock;
-		tn = tmmake(&now);
+		if (!(tn = tmmake(&now)))
+			return -1;
 	}
 	tm->tm_wday = tn->tm_wday;
 	tm->tm_yday = tn->tm_yday;

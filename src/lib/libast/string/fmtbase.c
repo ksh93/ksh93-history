@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2001 AT&T Corp.                *
+*                Copyright (c) 1985-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -29,8 +28,8 @@
  * AT&T Bell Laboratories
  *
  * return base b representation for n
- * if n==0 or b==0 then output is signed base 10
  * if p!=0 then base prefix is included
+ * otherwise if n==0 or b==0 then output is signed base 10
  */
 
 #include <ast.h>
@@ -42,7 +41,7 @@ fmtbase(register long n, register int b, int p)
 	int	z;
 
 	buf = fmtbuf(z = 36);
-	if (n == 0 || b == 0)
+	if (!p && (n == 0 || b == 0))
 		sfsprintf(buf, z, "%ld", n);
 	else
 		sfsprintf(buf, z, p ? "%#..*u" : "%..*u", b, n);

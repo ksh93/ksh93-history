@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2001 AT&T Corp.                *
+*                Copyright (c) 1985-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -62,13 +61,8 @@
 #endif
 
 #ifndef ERROR_translate
-#if _hdr_locale && _lib_setlocale
 #define ERROR_translating()		(error_info.translate&&(ast.locale.set&(1<<AST_LC_MESSAGES)))
 #define ERROR_translate(l,i,d,m)	(ERROR_translating()?errorx((const char*)l,(const char*)i,(const char*)d,(const char*)m):(m))
-#else
-#define ERROR_translating()		0
-#define ERROR_translate(l,i,d,m)	(m)
-#endif
 #endif
 
 #define ERROR_INFO	0		/* info message -- no err_id	*/

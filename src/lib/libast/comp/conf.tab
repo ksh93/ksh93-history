@@ -1,7 +1,7 @@
 #
 # posix limits,unistd,confstr,fpathconf,pathconf,sysconf macro table
 #
-# @(#)conf.tab (AT&T Research) 2000-09-19
+# @(#)conf.tab (AT&T Research) 2001-12-18
 #
 # name index standard section call flags [ value ... ]
 # [ <tab> _LOCAL_name macro definition ... ]
@@ -127,7 +127,7 @@ LFS_CFLAGS		155	POSIX	CS 1 MU	{
 	#include <sys/types.h>
 	main() { return sizeof(off_t) != sizeof(off64_t); }
 	!
-	for i in -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -64
+	for i in -D_LARGEFILE_SOURCE "-D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64" -D_LARGEFILE64_SOURCE -64
 	do	if	$cc -o $tmp.x $i $tmp.c && ./$tmp.x
 		then	echo '"'$i'"'; break
 		fi

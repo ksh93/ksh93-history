@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2001 AT&T Corp.                *
+*                Copyright (c) 1985-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -39,14 +38,20 @@ pathcat(char* path, register const char* dirs, int sep, const char* a, register 
 	register char*	s;
 
 	s = path;
-	while (*dirs && *dirs != sep) *s++ = *dirs++;
-	if (s != path) *s++ = '/';
+	while (*dirs && *dirs != sep)
+		*s++ = *dirs++;
+	if (s != path)
+		*s++ = '/';
 	if (a)
 	{
-		while (*s = *a++) s++;
-		if (b) *s++ = '/';
+		while (*s = *a++)
+			s++;
+		if (b)
+			*s++ = '/';
 	}
-	else if (!b) b = ".";
-	if (b) while (*s++ = *b++);
-	return(*dirs ? (char*)++dirs : 0);
+	else if (!b)
+		b = ".";
+	if (b)
+		while (*s++ = *b++);
+	return *dirs ? (char*)++dirs : 0;
 }

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2001 AT&T Corp.                *
+*                Copyright (c) 1982-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -159,7 +158,7 @@ static char *path_lib(Pathcomp_t *pp, char *path)
 	if(r>=0)
 	{
 		Pathcomp_t pcomp;
-		char save[7];
+		char save[8];
 		for( ;pp; pp=pp->next)
 		{
 			if(pp->ino==statb.st_ino && pp->dev==statb.st_dev)
@@ -479,7 +478,8 @@ static int canexecute(register char *path, int isfun)
 		char *cp;
 		if(errno==ENOENT && (!(cp=strrchr(path,'.')) || strlen(cp)>4 || strchr(cp,'/')))
 		{
-			int offset = staktell();
+			int offset = staktell()-1;
+			stakseek(offset);
 			stakputs(".bat");
 			path = stakptr(PATH_OFFSET);
 			if(stat(path,&statb) < 0)
@@ -539,11 +539,13 @@ void	path_exec(register const char *arg0,register char *argv[],struct argnod *lo
 	char **envp;
 	Pathcomp_t *libpath, *pp=0;
 	Shell_t *shp = &sh;
+	int slash=0;
 	nv_setlist(local,NV_EXPORT|NV_IDENT|NV_ASSIGN);
 	data.sh = shp;
 	envp = sh_envgen();
 	if(strchr(arg0,'/'))
 	{
+		slash=1;
 		/* name containing / not allowed for restricted shell */
 		if(sh_isoption(SH_RESTRICTED))
 			errormsg(SH_DICT,ERROR_exit(1),e_restricted,arg0);
@@ -557,7 +559,7 @@ void	path_exec(register const char *arg0,register char *argv[],struct argnod *lo
 	timerdel(NIL(void*));
 	/* find first path that has a library component */
 	for(libpath=pp; libpath && !libpath->lib ; libpath=libpath->next);
-	do
+	if(pp || slash) do
 	{
 		data.libpath = libpath;
 		data.envp = envp;
@@ -657,13 +659,13 @@ static Pathcomp_t *execs(Pathcomp_t *pp,const char *arg0,register char **argv, s
 			xp = 0;
 		}
 	}
-	dp->envp[0] =  stakptr(0);
+	if(!opath)
+		opath = stakptr(PATH_OFFSET);
+	dp->envp[0] =  opath-PATH_OFFSET;
 	dp->envp[0][0] =  '_';
 	dp->envp[0][1] =  '=';
 	sfsync(sfstderr);
 	sh_sigcheck();
-	if(!opath)
-		opath = stakptr(PATH_OFFSET);
 	path = path_relative(opath);
 #ifdef SHELLMAGIC
 	if(*path!='/' && path!=opath)

@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 4.2 2001-10-31
+info mam static 00000 1994-07-17 make (AT&T Research) 4.2 2002-02-14
 setv INSTALLROOT ../../..
 setv PACKAGE_ast ${INSTALLROOT}
 setv PACKAGE_ast_INCLUDE ${PACKAGE_ast}/include/ast
@@ -76,13 +76,17 @@ done ../../../include/ast/ast_types.h dontcare
 make ../../../include/ast/ast_map.h implicit
 done ../../../include/ast/ast_map.h dontcare
 make ../../../include/ast/stdio.h implicit
+make ../../../include/ast/ast_stdio.h implicit
 prev ../../../include/ast/getopt.h implicit
 make ../../../include/ast/sfio_s.h implicit
 done ../../../include/ast/sfio_s.h dontcare
 prev ../../../include/ast/ast_common.h implicit
+done ../../../include/ast/ast_stdio.h dontcare
 done ../../../include/ast/stdio.h dontcare
 prev ../../../include/ast/getopt.h implicit
 make ../../../include/ast/limits.h implicit
+make ../../../include/ast/ast_limits.h implicit
+done ../../../include/ast/ast_limits.h dontcare
 done ../../../include/ast/limits.h dontcare
 make ../../../include/ast/ast_hdr.h implicit
 done ../../../include/ast/ast_hdr.h dontcare
@@ -281,7 +285,7 @@ prev ../../../include/ast/stak.h implicit
 prev include/defs.h implicit
 done bltins/cd_pwd.c
 prev bltins/cd_pwd.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_MULTIBYTE -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -D_PACKAGE_ast -c bltins/cd_pwd.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -c bltins/cd_pwd.c
 done cd_pwd.o generated
 make cflow.o
 make bltins/cflow.c
@@ -295,7 +299,7 @@ prev ../../../include/ast/ast.h implicit
 prev include/defs.h implicit
 done bltins/cflow.c
 prev bltins/cflow.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_MULTIBYTE -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -D_PACKAGE_ast -c bltins/cflow.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -c bltins/cflow.c
 done cflow.o generated
 make deparse.o
 make sh/deparse.c
@@ -307,7 +311,7 @@ prev include/shnodes.h implicit
 prev include/defs.h implicit
 done sh/deparse.c
 prev sh/deparse.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_MULTIBYTE -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -D_BLD_shell -D_PACKAGE_ast -c sh/deparse.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -D_BLD_shell -c sh/deparse.c
 done deparse.o generated
 make getopts.o
 make bltins/getopts.c
@@ -318,7 +322,7 @@ prev include/variables.h implicit
 prev include/defs.h implicit
 done bltins/getopts.c
 prev bltins/getopts.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_MULTIBYTE -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -D_PACKAGE_ast -c bltins/getopts.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -c bltins/getopts.c
 done getopts.o generated
 make hist.o
 make bltins/hist.c
@@ -336,7 +340,7 @@ prev ../../../include/ast/stak.h implicit
 prev include/defs.h implicit
 done bltins/hist.c
 prev bltins/hist.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_MULTIBYTE -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -D_PACKAGE_ast -DKSHELL -c bltins/hist.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -DKSHELL -c bltins/hist.c
 done hist.o generated
 make misc.o
 make bltins/misc.c
@@ -364,7 +368,7 @@ prev include/variables.h implicit
 prev include/defs.h implicit
 done bltins/misc.c
 prev bltins/misc.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_MULTIBYTE -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -D_PACKAGE_ast -D_BLD_shell -DKSHELL -c bltins/misc.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -D_BLD_shell -DKSHELL -c bltins/misc.c
 done misc.o generated
 make print.o
 make bltins/print.c
@@ -417,7 +421,7 @@ prev ../../../include/ast/error.h implicit
 prev ../../../include/ast/ast.h implicit
 done bltins/read.c
 prev bltins/read.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_MULTIBYTE -DSHOPT_ESH -D_PACKAGE_ast -D_BLD_shell -DSHOPT_VSH -DSHOPT_SUID_EXEC -DKSHELL -c bltins/read.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_ESH -D_BLD_shell -DSHOPT_VSH -DSHOPT_SUID_EXEC -DKSHELL -c bltins/read.c
 done read.o generated
 make sleep.o
 make bltins/sleep.c
@@ -443,7 +447,7 @@ prev include/jobs.h implicit
 prev include/defs.h implicit
 done bltins/trap.c
 prev bltins/trap.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_MULTIBYTE -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -D_PACKAGE_ast -c bltins/trap.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -c bltins/trap.c
 done trap.o generated
 make test.o
 make bltins/test.c
@@ -463,7 +467,7 @@ prev ../../../include/ast/error.h implicit
 prev include/defs.h implicit
 done bltins/test.c
 prev bltins/test.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_MULTIBYTE -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -D_PACKAGE_ast -DKSHELL -c bltins/test.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -DKSHELL -c bltins/test.c
 done test.o generated
 make typeset.o
 make bltins/typeset.c
@@ -515,7 +519,7 @@ prev ../../../include/ast/sfio.h implicit
 prev ../../../include/ast/ast.h implicit
 done bltins/umask.c
 prev bltins/umask.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_MULTIBYTE -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -D_PACKAGE_ast -c bltins/umask.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -c bltins/umask.c
 done umask.o generated
 make whence.o
 make bltins/whence.c
@@ -534,7 +538,7 @@ prev ../../../include/ast/error.h implicit
 prev include/defs.h implicit
 done bltins/whence.c
 prev bltins/whence.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_MULTIBYTE -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -D_PACKAGE_ast -c bltins/whence.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -c bltins/whence.c
 done whence.o generated
 make main.o
 make sh/main.c
@@ -586,7 +590,7 @@ prev include/lexstates.h implicit
 prev include/defs.h implicit
 done sh/arith.c
 prev sh/arith.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_MULTIBYTE -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -D_PACKAGE_ast -D_BLD_shell -c sh/arith.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -D_BLD_shell -c sh/arith.c
 done arith.o generated
 make args.o
 make sh/args.c
@@ -637,7 +641,7 @@ prev include/jobs.h implicit
 prev include/defs.h implicit
 done sh/defs.c
 prev sh/defs.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_MULTIBYTE -DKSHELL -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_SUID_EXEC -D_BLD_shell -D_PACKAGE_ast -c sh/defs.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DKSHELL -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_SUID_EXEC -D_BLD_shell -c sh/defs.c
 done defs.o generated
 make edit.o
 make edit/edit.c
@@ -654,7 +658,7 @@ prev ../../../include/ast/ccode.h implicit
 prev ../../../include/ast/ast.h implicit
 done edit/edit.c
 prev edit/edit.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_MULTIBYTE -DKSHELL -DSHOPT_SUID_EXEC -D_PACKAGE_ast -D_BLD_shell -c edit/edit.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DKSHELL -DSHOPT_SUID_EXEC -D_BLD_shell -c edit/edit.c
 done edit.o generated
 make expand.o
 make sh/expand.c
@@ -662,7 +666,9 @@ prev include/path.h implicit
 prev include/io.h implicit
 make ../../../include/ast/ast_dir.h implicit
 make ../../../include/ast/dirent.h implicit
+make ../../../include/ast/ast_dirent.h implicit
 prev ../../../include/ast/ast_std.h implicit
+done ../../../include/ast/ast_dirent.h dontcare
 done ../../../include/ast/dirent.h dontcare
 make dirlib.h implicit
 done dirlib.h dontcare virtual
@@ -728,9 +734,11 @@ make init.o
 make sh/init.c
 prev include/edit.h implicit
 make ../../../include/ast/wchar.h implicit
+make ../../../include/ast/ast_wchar.h implicit
 prev ../../../include/ast/stdio.h implicit
 prev ../../../include/ast/stdio.h implicit
-prev ../../../include/ast/ast_std.h implicit
+prev ../../../include/ast/ast_common.h implicit
+done ../../../include/ast/ast_wchar.h dontcare
 done ../../../include/ast/wchar.h dontcare
 prev ../../../include/ast/wchar.h implicit
 prev include/national.h implicit
@@ -751,7 +759,7 @@ prev ../../../include/ast/stak.h implicit
 prev include/defs.h implicit
 done sh/init.c
 prev sh/init.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_NAMESPACE -DSHOPT_MULTIBYTE -DKSHELL -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_SUID_EXEC -D_PACKAGE_ast -D_BLD_shell -c sh/init.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_NAMESPACE -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DKSHELL -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_SUID_EXEC -D_BLD_shell -c sh/init.c
 done init.o generated
 make io.o
 make sh/io.c
@@ -771,7 +779,7 @@ prev include/fcin.h implicit
 prev include/defs.h implicit
 done sh/io.c
 prev sh/io.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_VSH -DSHOPT_ESH -DSHOPT_MULTIBYTE -DKSHELL -DSHOPT_SUID_EXEC -D_PACKAGE_ast -D_BLD_shell -c sh/io.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_VSH -DSHOPT_ESH -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DKSHELL -DSHOPT_SUID_EXEC -D_BLD_shell -c sh/io.c
 done io.o generated
 make jobs.o
 make sh/jobs.c
@@ -820,7 +828,7 @@ prev include/fcin.h implicit
 prev include/defs.h implicit
 done sh/macro.c
 prev sh/macro.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DKSHELL -DSHOPT_COMPOUND_ARRAY -DSHOPT_FILESCAN -DSHOPT_MULTIBYTE -DSHOPT_SUID_EXEC -D_BLD_shell -D_PACKAGE_ast -DSHOPT_VSH -DSHOPT_ESH -c sh/macro.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DKSHELL -DSHOPT_COMPOUND_ARRAY -DSHOPT_FILESCAN -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_SUID_EXEC -D_BLD_shell -DSHOPT_VSH -DSHOPT_ESH -c sh/macro.c
 done macro.o generated
 make name.o
 make sh/name.c
@@ -838,7 +846,7 @@ prev include/variables.h implicit
 prev include/defs.h implicit
 done sh/name.c
 prev sh/name.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_OPTIMIZE -DSHOPT_MULTIBYTE -DSHOPT_APPEND -DSHOPT_COMPOUND_ARRAY -DSHOPT_NAMESPACE -D_BLD_shell -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -D_PACKAGE_ast -c sh/name.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_OPTIMIZE -DSHOPT_MULTIBYTE -DSHOPT_APPEND -DSHOPT_COMPOUND_ARRAY -DSHOPT_NAMESPACE -D_BLD_shell -D_PACKAGE_ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -c sh/name.c
 done name.o generated
 make parse.o
 make sh/parse.c
@@ -1004,7 +1012,7 @@ prev include/defs.h implicit
 prev ../../../include/ast/ast.h implicit
 done data/msg.c
 prev data/msg.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_SUID_EXEC -DSHOPT_MULTIBYTE -DKSHELL -DSHOPT_ESH -DSHOPT_VSH -D_PACKAGE_ast -D_BLD_shell -c data/msg.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_SUID_EXEC -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DKSHELL -DSHOPT_ESH -DSHOPT_VSH -D_BLD_shell -c data/msg.c
 done msg.o generated
 make strdata.o
 make data/strdata.c
@@ -1020,7 +1028,7 @@ prev include/test.h implicit
 prev include/shtable.h implicit
 done data/testops.c
 prev data/testops.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2001 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libshell]"\" -DSHOPT_MULTIBYTE -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -c data/testops.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libshell]"\" -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -c data/testops.c
 done testops.o generated
 make keywords.o
 make data/keywords.c
@@ -1030,7 +1038,7 @@ prev include/shell.h implicit
 prev include/shtable.h implicit
 done data/keywords.c
 prev data/keywords.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_NAMESPACE -DSHOPT_MULTIBYTE -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -D_BLD_shell -D_PACKAGE_ast -c data/keywords.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_NAMESPACE -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -D_BLD_shell -c data/keywords.c
 done keywords.o generated
 make options.o
 make data/options.c
@@ -1078,7 +1086,7 @@ prev include/shtable.h implicit
 prev include/shell.h implicit
 done data/builtins.c
 prev data/builtins.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2001 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libshell]"\" -DSHOPT_MULTIBYTE -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -D_PACKAGE_ast -D_BLD_shell -DKSHELL -c data/builtins.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libshell]"\" -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -D_BLD_shell -DKSHELL -c data/builtins.c
 done builtins.o generated
 make variables.o
 make data/variables.c
@@ -1098,7 +1106,7 @@ prev include/lexstates.h implicit
 prev FEATURE/options implicit
 done data/lexstates.c
 prev data/lexstates.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -DSHOPT_NAMESPACE -DSHOPT_MULTIBYTE -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -c data/lexstates.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -DSHOPT_NAMESPACE -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -c data/lexstates.c
 done lexstates.o generated
 make emacs.o
 make edit/emacs.c
@@ -1110,7 +1118,7 @@ prev include/defs.h implicit
 prev ../../../include/ast/ast.h implicit
 done edit/emacs.c
 prev edit/emacs.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_MULTIBYTE -DKSHELL -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_SUID_EXEC -D_PACKAGE_ast -D_BLD_shell -c edit/emacs.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DKSHELL -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_SUID_EXEC -D_BLD_shell -c edit/emacs.c
 done emacs.o generated
 make vi.o
 make edit/vi.c
@@ -1133,7 +1141,7 @@ exec - (ranlib libshell.a) >/dev/null 2>&1 || true
 done libshell.a generated
 bind -lshell
 prev ${mam_libdl}
-exec - ${CC} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}}  -o ksh pmain.o ${mam_libshell} ${mam_libm} ${mam_cc_static}  ${mam_cc_dynamic} ${mam_cc_static} ${mam_libast} ${mam_cc_dynamic}
+exec - ${CC} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}}  -o ksh pmain.o ${mam_libshell} ${mam_libm} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libast} ${mam_cc_dynamic}
 done ksh generated
 make shcomp
 make shcomp.o
@@ -1147,13 +1155,13 @@ prev sh/shcomp.c
 setv CC.DLL -UCC.DLL
 setv SH_DICT -DSH_DICT="\"libshell\""
 setv _BLD_shell -U_BLD_shell
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSH_DICT=\""libshell"\" -DKSHELL -D_PACKAGE_ast -DSHOPT_SUID_EXEC -DSHOPT_MULTIBYTE -DSHOPT_VSH -DSHOPT_ESH -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2001 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libshell]"\" -c sh/shcomp.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSH_DICT=\""libshell"\" -DKSHELL -D_PACKAGE_ast -DSHOPT_SUID_EXEC -DSHOPT_MULTIBYTE -DSHOPT_VSH -DSHOPT_ESH -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libshell]"\" -c sh/shcomp.c
 done shcomp.o generated
 prev libshell.a archive
 prev ${mam_libdl}
 setv CC.DLL -UCC.DLL
 setv SH_DICT -DSH_DICT="\"libshell\""
-exec - ${CC} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}}  -o shcomp shcomp.o ${mam_libshell} ${mam_libm} ${mam_cc_static}  ${mam_cc_dynamic} ${mam_cc_static} ${mam_libast} ${mam_cc_dynamic}
+exec - ${CC} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}}  -o shcomp shcomp.o ${mam_libshell} ${mam_libm} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libast} ${mam_cc_dynamic}
 done shcomp generated
 make sh/suid_exec.c
 prev ../../../include/ast/error.h implicit
@@ -1176,7 +1184,7 @@ exec - ${CC} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c sh/suid_
 done suid_exec.o generated
 prev ${mam_libdl}
 setv CC.DLL -UCC.DLL
-exec - ${CC} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}}  -o suid_exec suid_exec.o ${mam_cc_static} ${mam_libast} ${mam_cc_dynamic} ${mam_libm} ${mam_cc_static}  ${mam_cc_dynamic} ${mam_cc_static} ${mam_libast} ${mam_cc_dynamic}
+exec - ${CC} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}}  -o suid_exec suid_exec.o ${mam_cc_static} ${mam_libast} ${mam_cc_dynamic} ${mam_libm} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libast} ${mam_cc_dynamic}
 done suid_exec generated
 make ../../../bin
 exec - set -
@@ -1352,7 +1360,7 @@ exec - fi
 done ../../../include/ast generated
 make ../../../include/ast/nval.h
 prev include/nval.h
-exec - proto -p -s -l ${PACKAGE_ast_LIB}/package/ast.lic '-o since=1982,author=dgk' include/nval.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${PACKAGE_ast_LIB}/package/ast.lic '-o since=1982,author=dgk'  include/nval.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${PACKAGE_ast_INCLUDE}/nval.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${PACKAGE_ast_INCLUDE}/nval.h
@@ -1360,7 +1368,7 @@ exec - fi
 done ../../../include/ast/nval.h generated
 make ../../../include/ast/shell.h
 prev include/shell.h
-exec - proto -p -s -l ${PACKAGE_ast_LIB}/package/ast.lic '-o since=1982,author=dgk' include/shell.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${PACKAGE_ast_LIB}/package/ast.lic '-o since=1982,author=dgk'  include/shell.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${PACKAGE_ast_INCLUDE}/shell.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${PACKAGE_ast_INCLUDE}/shell.h
@@ -1368,7 +1376,7 @@ exec - fi
 done ../../../include/ast/shell.h generated
 make ../../../include/ast/history.h
 prev include/history.h
-exec - proto -p -s -l ${PACKAGE_ast_LIB}/package/ast.lic '-o since=1982,author=dgk' include/history.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${PACKAGE_ast_LIB}/package/ast.lic '-o since=1982,author=dgk'  include/history.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${PACKAGE_ast_INCLUDE}/history.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${PACKAGE_ast_INCLUDE}/history.h

@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1982-2001 AT&T Corp.                #
+#                Copyright (c) 1982-2002 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -14,8 +14,7 @@
 #           the license and copyright and are violating            #
 #               AT&T's intellectual property rights.               #
 #                                                                  #
-#                 This software was created by the                 #
-#                 Network Services Research Center                 #
+#            Information and Software Systems Research             #
 #                        AT&T Labs Research                        #
 #                         Florham Park NJ                          #
 #                                                                  #
@@ -152,6 +151,16 @@ if	[[	$(var1=1 var2=2
 		done) != $'1\n2' ]]
 then	err_exit 'for loop nameref optimization error'
 fi
+if	[[	$(typeset -A var1 var2
+		var1[sub1]=1 var2[sub2]=1
+		for i in var1 var2
+		do
+		        typeset -n array=$i
+		        print ${!array[*]}
+		done) != $'sub1\nsub2' ]]
+then 	err_exit 'for loop nameref optimization test2 error'
+fi
+
 unset -n x foo bar
 if	[[ $(nameref x=foo;for x in foo bar;do print ${!x};done) != $'foo\nbar' ]]
 then	err_exit 'for loop optimization with namerefs not working'

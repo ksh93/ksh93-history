@@ -1,4 +1,40 @@
-01-10-16  --- Release ksh93m-  ---
+02-02-18  --- Release ksh93m+  ---
+02-02-18  A bug in which lines beginning with a # were deleted from here
+	  documents when the here-document delimiter was followed by
+	  a comment has been fixed.
+02-12-06  An optimization bug in which ${!x[@]) was treated as invariant in
+	  a for loop has been fixed.
+02-02-06  A bug in which the ERR trap is not cleared for a script invoked
+	  by name from within a function has been fixed.
+02-01-08  A bug in which a shell script executed from within a subshell
+	  could cause this script to have an invalid pointer leading
+	  to a memory fault has been fixed. 
+02-01-07  Added here documents of the form <<< word (as per zsh) which
+	  is equivalent to << delim\nword\ndelim.
+02-01-07  A bug in which the first word of a compound assignment,
+	  x=(word ...), was treated as a reserved word has been fixed.
+02-01-07  A bug in the handling of \ when noglob was enabled and a
+	  substitution of the form ${word op pattern} occured in the
+	  same word has been fixed.
+02-01-07  A compilation option, CMDLIB_BLTIN in the file OPTION, has
+	  been added.  When this options is set, all commands implemented
+	  in libcmd become shell builtin commands by default.
+02-01-07  A bug in which builtin foo, where foo is already a builtin
+	  would result in the builtin foo getting removed has been fixed. 
+02-01-07  A bug which the shell executed a command found in the current
+	  directory when PATH have no valid directories has been fixed.
+01-11-28  The value of $? was not being set when called with exit.
+01-11-28  If the last command was of the form (...) and a trap on EXIT or
+	  ERR was set, and the command inside () modifed the trap, then
+	  the original trap wasn't executed.
+01-11-26  The value for 0 is now precdeded by the base number when
+	  the base was not 10.
+01-11-26  The default has compilation mode has been changes so that
+	  viraw mode will always be on.
+
+01-10-31  --- Release ksh93m  ---
+01-10-31  A for loop optimizer bug for subshells contained withing for
+	  loops has been fixed.
 01-10-16  typeset without arguments no longer outputs variable names
 	  that do not have any attributes that are set.
 01-10-16  A bug introduced in ksh93l in which assignments specified with

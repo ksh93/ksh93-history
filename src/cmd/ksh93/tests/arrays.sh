@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1982-2001 AT&T Corp.                #
+#                Copyright (c) 1982-2002 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -14,8 +14,7 @@
 #           the license and copyright and are violating            #
 #               AT&T's intellectual property rights.               #
 #                                                                  #
-#                 This software was created by the                 #
-#                 Network Services Research Center                 #
+#            Information and Software Systems Research             #
 #                        AT&T Labs Research                        #
 #                         Florham Park NJ                          #
 #                                                                  #
@@ -24,9 +23,10 @@
 function err_exit
 {
 	print -u2 -n "\t"
-	print -u2 -r $Command: "$@"
+	print -u2 -r $Command[$1]: "${@:2}"
 	let Errors+=1
 }
+alias err_exit='err_exit $LINENO'
 
 function fun
 {
@@ -253,4 +253,5 @@ fi
 if	[[ ${foo[@]: -3:1} != four ]]
 then	err_exit 'array offset of -3:1 not working'
 fi
+$SHELL -c 'x=(if then else fi)' 2> /dev/null  || err_exit 'reserved words in x=() assignment not working'
 exit $((Errors))

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2001 AT&T Corp.                *
+*                Copyright (c) 1985-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -25,18 +24,32 @@
 *******************************************************************/
 #pragma prototyped
 
-#include <ast.h>
+#include <ast_lib.h>
 
 #if _lib_spawnve
+
+#include <ast.h>
 
 NoN(spawnve)
 
 #else
 
-pid_t
+#if defined(__EXPORT__)
+#include <sys/types.h>
+__EXPORT__ pid_t spawnve(const char*, char* const[], char* const[]);
+#endif
+
+#include <ast.h>
+#include <errno.h>
+
+#if defined(__EXPORT__)
+#define extern	__EXPORT__
+#endif
+
+extern pid_t
 spawnve(const char* cmd, char* const argv[], char* const envv[])
 {
-	return(spawnveg(cmd, argv, envv, 0));
+	return spawnveg(cmd, argv, envv, 0);
 }
 
 #endif

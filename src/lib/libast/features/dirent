@@ -5,6 +5,7 @@ lib	stat64 -D_LARGEFILE64_SOURCE
 typ	off64_t -D_LARGEFILE64_SOURCE
 hdr	dirent,ndir
 sys	dir
+nxt	dirent
 
 tst	botch_d_ino_dirent64 note{ dirent64.d_ino vs. readdir64 mismatch }end compile{
 	#if !__arm__
@@ -62,7 +63,8 @@ exp	_inc_dirent !_lib_opendir yes{
 	#endif
 }end
 
-exp	_inc_dirent !_inc_dirent&_lib_stat64&&_typ_off64_t&&_botch_d_ino_dirent64 yes{
+exp	_inc_dirent !_inc_dirent&_nxt_dirent&_lib_stat64&&_typ_off64_t&&_botch_d_ino_dirent64 pass{
+cat <<!
 	/*
 	 * <dirent.h> for [fl]stat64 and off64_t with sizeof(ino64_t)==4
 	 */
@@ -79,7 +81,7 @@ exp	_inc_dirent !_inc_dirent&_lib_stat64&&_typ_off64_t&&_botch_d_ino_dirent64 ye
 	#undef	__ino64_t
 	#define __ino64_t	_ast_int8_t
 
-	#include <../include/dirent.h>
+	#include $_nxt_dirent	/* the native <dirent.h> */
 
 	#undef	__ino64_t
 	#define __ino64_t	__ino64_t
@@ -98,9 +100,11 @@ exp	_inc_dirent !_inc_dirent&_lib_stat64&&_typ_off64_t&&_botch_d_ino_dirent64 ye
 	#endif
 
 	#endif
+!
 }end
 
-exp	_inc_dirent !_inc_dirent&_lib_stat64&&_typ_off64_t yes{
+exp	_inc_dirent !_inc_dirent&_nxt_dirent&_lib_stat64&&_typ_off64_t pass{
+cat <<!
 	/*
 	 * <dirent.h> for [fl]stat64 and off64_t
 	 */
@@ -114,7 +118,7 @@ exp	_inc_dirent !_inc_dirent&_lib_stat64&&_typ_off64_t yes{
 	#undef	off_t
 	#endif
 
-	#include <../include/dirent.h>
+	#include $_nxt_dirent	/* the native <dirent.h> */
 
 	#if _typ_off64_t
 	#define	off_t		off64_t
@@ -130,22 +134,25 @@ exp	_inc_dirent !_inc_dirent&_lib_stat64&&_typ_off64_t yes{
 	#endif
 
 	#endif
+!
 }end
 
-exp	_inc_dirent !_inc_dirent&_hdr_dirent yes{
+exp	_inc_dirent !_inc_dirent&_nxt_dirent&_hdr_dirent pass{
+cat <<!
 	/*
 	 * <dirent.h> for systems with ok <dirent.h>
 	 */
 
 	#ifndef _DIRENT_H
 
-	#include <../include/dirent.h>
+	#include $_nxt_dirent	/* the native <dirent.h> */
 
 	#ifndef _DIRENT_H
 	#define _DIRENT_H
 	#endif
 
 	#endif
+!
 }end
 
 exp	_inc_dirent !_inc_dirent&_hdr_ndir yes{

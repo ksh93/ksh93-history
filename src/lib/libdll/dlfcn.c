@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1997-2001 AT&T Corp.                *
+*                Copyright (c) 1997-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -30,7 +29,7 @@
  * AT&T Labs Research
  */
 
-static const char id[] = "\n@(#)$Id: dll library (AT&T Labs Research) 2001-07-17 $\0\n";
+static const char id[] = "\n@(#)$Id: dll library (AT&T Labs Research) 2002-01-11 $\0\n";
 
 #include <ast.h>
 #include <dlldefs.h>
@@ -68,7 +67,7 @@ static const char id[] = "\n@(#)$Id: dll library (AT&T Labs Research) 2001-07-17
 	static shl_t	all;
 	static int	err;
 
-	extern void* dlopen(const char* path, unsigned int mode)
+	extern void* dlopen(const char* path, int mode)
 	{
 		void*	dll;
 

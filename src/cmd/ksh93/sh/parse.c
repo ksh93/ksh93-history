@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2001 AT&T Corp.                *
+*                Copyright (c) 1982-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -45,6 +44,8 @@
 #include	"builtins.h"
 #include	"test.h"
 #include	"history.h"
+
+#define HERE_MEM	1024	/* size of here-docs kept in memory */
 
 #define hash	nvlink.hl._hash
 
@@ -1253,6 +1254,9 @@ static struct ionod	*inout(struct ionod *lastio,int flag)
 {
 	register int 		iof = shlex.digits, token=shlex.token;
 	register struct ionod	*iop;
+#ifdef SHOPT_ZSH
+	register int		errout=0;
+#endif
 	switch(token&0xff)
 	{
 	    case '<':
@@ -1265,6 +1269,13 @@ static struct ionod	*inout(struct ionod *lastio,int flag)
 		break;
 
 	    case '>':
+#ifdef SHOPT_ZSH
+		if(iof<0)
+		{
+			errout = 1;
+			iof = 1;
+		}
+#endif
 		iof |= IOPUT;
 		if(token==IOAPPSYM)
 			iof |= IOAPP;
@@ -1285,12 +1296,27 @@ static struct ionod	*inout(struct ionod *lastio,int flag)
 	iop->iodelim = 0;
 	if(iof&IODOC)
 	{
-		iop->iolst=shlex.heredoc;
-		shlex.heredoc=iop;
-		if(shlex.arg->argflag&ARG_QUOTED)
-			iof |= IOQUOTE;
-		if(shlex.digits)
-			iof |= IOSTRIP;
+		if(!shlex.sh->heredocs)
+			shlex.sh->heredocs = sftmp(HERE_MEM);
+		if(shlex.digits==2)
+		{
+			Sfio_t *sp = shlex.sh->heredocs;
+			if(shlex.arg->argflag&ARG_RAW)
+				iof |= IOQUOTE;
+			iop->iooffset = sfseek(sp,(off_t)0,SEEK_END);
+			iop->iosize = strlen(shlex.arg->argval);
+			sfwrite(sp,shlex.arg->argval,iop->iosize++);
+			sfputc(sp,'\n');
+		}
+		else
+		{
+			iop->iolst=shlex.heredoc;
+			shlex.heredoc=iop;
+			if(shlex.arg->argflag&ARG_QUOTED)
+				iof |= IOQUOTE;
+			if(shlex.digits)
+				iof |= IOSTRIP;
+		}
 	}
 	else
 	{
@@ -1315,8 +1341,21 @@ static struct ionod	*inout(struct ionod *lastio,int flag)
 #endif /* SHOPT_KIA */
 	if(flag>=0)
 	{
+		struct ionod *ioq=iop;
 		sh_lex();
-		iop->ionxt=inout(lastio,flag);
+#ifdef SHOPT_ZSH
+		if(errout)
+		{
+			/* redirect standard output to standard error */
+			ioq = (struct ionod*)stakalloc(sizeof(struct ionod));
+			ioq->ioname = "1";
+			ioq->iolst = 0;
+			ioq->iodelim = 0;
+			ioq->iofile = IORAW|IOPUT|IOMOV|2;
+			iop->ionxt=ioq;
+		}
+#endif
+		ioq->ionxt=inout(lastio,flag);
 	}
 	else
 		iop->ionxt=0;

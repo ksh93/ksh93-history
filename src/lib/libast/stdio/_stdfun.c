@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2001 AT&T Corp.                *
+*                Copyright (c) 1985-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -36,11 +35,13 @@ void _STUB_stdfun(){}
 #include <windows.h>
 #include <uwin.h>
 
-#if 0 /* this is in <wchar.h> now */
-__declspec(dllimport) extern char* __cdecl __p__iob(void);
+#if _ALPHA_
+#define IOB		((char*)_iob)
+#else
+#define IOB		((char*)__p__iob())
 #endif
 
-#define IOBMAX	(512*32)
+#define IOBMAX		(512*32)
 
 #include "stdhdr.h"
 
@@ -52,7 +53,7 @@ _stdfun(Sfio_t* f, Funvec_t* vp)
 	static HANDLE	bp;
 	static HANDLE	np;
 
-	if (!iob && !(iob = (char*)__p__iob()))
+	if (!iob && !(iob = IOB))
 		return 0;
 	if (f && ((char*)f < iob || (char*)f > iob+IOBMAX))
 		return 0;

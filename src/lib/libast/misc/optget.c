@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2001 AT&T Corp.                *
+*                Copyright (c) 1985-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -285,6 +284,8 @@ static Msg_t		C_LC_MESSAGES_libast[] =
 	{ C("path") },
 	{ C("version") },
 };
+
+static unsigned char	map[UCHAR_MAX];
 
 static Optstate_t	state;
 
@@ -596,6 +597,9 @@ init(register char* s, Optpass_t* p)
 		if (opt_info.state->msgdict = dtopen(&opt_info.state->msgdisc, Dthash))
 			for (n = 0; n < elementsof(C_LC_MESSAGES_libast); n++)
 				dtinsert(opt_info.state->msgdict, C_LC_MESSAGES_libast + n);
+		if (!map[OPT_FLAGS[0]])
+			for (n = 0, t = OPT_FLAGS; *t; t++)
+				map[*t] = ++n;
 	}
 #if _BLD_DEBUG
 	error(-1, "optget debug");
@@ -641,6 +645,9 @@ init(register char* s, Optpass_t* p)
 					}
 					switch (c)
 					{
+					case 'c':
+						p->flags |= OPT_cache;
+						break;
 					case 'i':
 						p->flags |= OPT_ignore;
 						break;
@@ -704,7 +711,7 @@ init(register char* s, Optpass_t* p)
 	if (*s == '+')
 	{
 		s++;
-		opt_info.state->plus = 1;
+		p->flags |= OPT_plus;
 	}
 	p->opts = s;
 }
@@ -1578,13 +1585,16 @@ text(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip, i
 				a = FONT_BOLD;
 				goto setfont;
 			case '\f':
-				psp = info(psp, p, NiL, ip);
-				if (psp->nb)
-					p = psp->nb;
-				else
+				if (style != STYLE_keys)
 				{
-					p = psp->ob;
-					psp = psp->next;
+					psp = info(psp, p, NiL, ip);
+					if (psp->nb)
+						p = psp->nb;
+					else
+					{
+						p = psp->ob;
+						psp = psp->next;
+					}
 				}
 				continue;
 			case '\v':
@@ -1771,6 +1781,7 @@ opthelp(const char* oopts, const char* what)
 	char*			opts = (char*)oopts;
 	int			flags = 0;
 	int			matched = 0;
+	int			paragraph = 0;
 	int			section = 1;
 	Push_t*			psp = 0;
 	Sfio_t*			sp_help = 0;
@@ -1828,12 +1839,17 @@ opthelp(const char* oopts, const char* what)
 		}
 		e = o + 1;
 	}
-	else
+	else if (opt_info.state->npass > 0)
 	{
 		o = opt_info.state->pass;
 		e = o + opt_info.state->npass;
 	}
-	if (e == o)
+	else if (opt_info.state->npass < 0)
+	{
+		o = &opt_info.state->cache->pass;
+		e = o + 1;
+	}
+	else
 		return T(NiL, ast.id, "[* call optget() before opthelp() *]");
 	if (style < STYLE_usage)
 	{
@@ -2062,7 +2078,7 @@ opthelp(const char* oopts, const char* what)
 			free(tsp);
 			continue;
 		}
-		if (c == '\f')
+		if (c == '\f' && style != STYLE_keys)
 		{
 			psp = info(psp, p, NiL, sp_info);
 			if (psp->nb)
@@ -2340,11 +2356,24 @@ opthelp(const char* oopts, const char* what)
 						}
 						continue;
 					}
-					else if (style == STYLE_match && *what == '+' && match((char*)what + 1, p + 1, version, catalog))
+					else if (style == STYLE_match && *what == '+')
 					{
-						p = text(sp, p, style, 1, 3, sp_info, version, catalog);
-						matched = -1;
-						continue;
+						if (paragraph)
+						{
+							if (p[1] == '?')
+							{
+								p = text(sp, p, style, 1, 3, sp_info, version, catalog);
+								continue;
+							}
+							paragraph = 0;
+						}
+						if (match((char*)what + 1, p + 1, version, catalog))
+						{
+							p = text(sp, p, style, 1, 3, sp_info, version, catalog);
+							matched = -1;
+							paragraph = 1;
+							continue;
+						}
 					}
 					if (!z)
 						z = -1;
@@ -3314,7 +3343,7 @@ opterror(register char* p, int version, char* catalog)
  * if any # option is specified then numeric options (e.g., -123)
  * are associated with the leftmost # option in opts
  *
- * usage info placed in opt_info.arg when '?' returned
+ * usage info in placed opt_info.arg when '?' returned
  * see help_text[] (--???) for more info
  */
 
@@ -3342,13 +3371,15 @@ optget(register char** argv, const char* oopts)
 	int		nov;
 	int		num;
 	int		numchr;
-	int		old;
 	int		prefix;
 	int		version;
 	Help_t*		hp;
 	Push_t*		psp;
 	Push_t*		tsp;
 	Sfio_t*		xp;
+	Optcache_t*	cache;
+	Optcache_t*	pcache;
+	Optpass_t*	pass;
 
 	opt_info.state = &state; /* not initialized in some dll's! */
 	if (!oopts)
@@ -3359,7 +3390,6 @@ optget(register char** argv, const char* oopts)
 	{
 		opt_info.index = 1;
 		opt_info.offset = 0;
-		opt_info.state->plus = 0;
 		if (opt_info.state->npass)
 		{
 			opt_info.state->npass = 0;
@@ -3367,30 +3397,50 @@ optget(register char** argv, const char* oopts)
 		}
 	}
 	if (!argv)
-		n = opt_info.state->npass ? opt_info.state->npass : 1;
-	else if ((n = opt_info.state->join - 1) < 0)
-		n = 0;
-	if (n >= opt_info.state->npass || opt_info.state->pass[n].oopts != (char*)oopts)
+		cache = 0;
+	else
+		for (pcache = 0, cache = opt_info.state->cache; cache; pcache = cache, cache = cache->next)
+			if (cache->pass.oopts == (char*)oopts)
+				break;
+	if (cache)
 	{
-		for (m = 0; m < opt_info.state->npass && opt_info.state->pass[m].oopts != (char*)oopts; m++);
-		if (m < opt_info.state->npass)
-			n = m;
-		else
+		if (pcache)
 		{
-			if (n >= elementsof(opt_info.state->pass))
-				n = elementsof(opt_info.state->pass) - 1;
-			init((char*)oopts, &opt_info.state->pass[n]);
-			if (opt_info.state->npass <= n)
-				opt_info.state->npass = n + 1;
+			pcache->next = cache->next;
+			cache->next = opt_info.state->cache;
+			opt_info.state->cache = cache;
 		}
+		pass = &cache->pass;
+		opt_info.state->npass = -1;
 	}
-	if (!argv)
-		return 0;
-	opts = opt_info.state->pass[n].opts;
-	old = opt_info.state->pass[n].flags & OPT_old;
-	prefix = opt_info.state->pass[n].prefix;
-	version = opt_info.state->pass[n].version;
-	if (!(xp = opt_info.state->xp) || (catalog = opt_info.state->pass[n].catalog) && !X(catalog))
+	else
+	{
+		if (!argv)
+			n = opt_info.state->npass ? opt_info.state->npass : 1;
+		else if ((n = opt_info.state->join - 1) < 0)
+			n = 0;
+		if (n >= opt_info.state->npass || opt_info.state->pass[n].oopts != (char*)oopts)
+		{
+			for (m = 0; m < opt_info.state->npass && opt_info.state->pass[m].oopts != (char*)oopts; m++);
+			if (m < opt_info.state->npass)
+				n = m;
+			else
+			{
+				if (n >= elementsof(opt_info.state->pass))
+					n = elementsof(opt_info.state->pass) - 1;
+				init((char*)oopts, &opt_info.state->pass[n]);
+				if (opt_info.state->npass <= n)
+					opt_info.state->npass = n + 1;
+			}
+		}
+		if (!argv)
+			return 0;
+		pass = &opt_info.state->pass[n];
+	}
+	opts = pass->opts;
+	prefix = pass->prefix;
+	version = pass->version;
+	if (!(xp = opt_info.state->xp) || (catalog = pass->catalog) && !X(catalog))
 		catalog = 0;
  again:
 	psp = 0;
@@ -3440,9 +3490,9 @@ optget(register char** argv, const char* oopts)
 				else if (*s == '?')
 					n = 1;
 			}
-			else if ((c = *s++) != '-' && (c != '+' || !opt_info.state->plus && (*s < '0' || *s > '9' || !strmatch(opts, version ? "*\\]#\\[*" : "*#*"))))
+			else if ((c = *s++) != '-' && (c != '+' || !(pass->flags & OPT_plus) && (*s < '0' || *s > '9' || !strmatch(opts, version ? "*\\]#\\[*" : "*#*"))))
 			{
-				if (!old || !isalpha(c))
+				if (!(pass->flags & OPT_old) || !isalpha(c))
 					return 0;
 				s--;
 				n = 1;
@@ -3573,25 +3623,139 @@ optget(register char** argv, const char* oopts)
 	}
 	else
 	{
+		if (!w && (pass->flags & OPT_cache))
+		{
+			if (cache)
+			{
+				if (k = cache->flags[map[c]])
+				{
+					opt_info.arg = 0;
+
+					/*
+					 * this is a ksh getopts workaround
+					 */
+
+					if (opt_info.num != LONG_MIN)
+						opt_info.num = !(k & OPT_cache_invert);
+					if (!(k & (OPT_cache_string|OPT_cache_numeric)))
+						return c;
+					if (*(opt_info.arg = &argv[opt_info.index++][opt_info.offset]))
+					{
+						if (!(k & OPT_cache_numeric))
+						{
+							opt_info.offset = 0;
+							return c;
+						}
+						opt_info.num = strton(opt_info.arg, &e, NiL, 0);
+						if (e == opt_info.arg)
+						{
+							if (k & OPT_cache_optional)
+							{
+								opt_info.arg = 0;
+								opt_info.index--;
+								return c;
+							}
+						}
+						else if (*e)
+						{
+							opt_info.offset += e - opt_info.arg;
+							opt_info.index--;
+							return c;
+						}
+						else
+						{
+							opt_info.offset = 0;
+							return c;
+						}
+					}
+					else if (opt_info.arg = argv[opt_info.index])
+					{
+						opt_info.index++;
+						if ((k & OPT_cache_optional) && (*opt_info.arg == '-' || (pass->flags & OPT_plus) && *opt_info.arg == '+') && *(opt_info.arg + 1))
+						{
+							opt_info.arg = 0;
+							opt_info.index--;
+							opt_info.offset = 0;
+							return c;
+						}
+						if (k & OPT_cache_string)
+						{
+							opt_info.offset = 0;
+							return c;
+						}
+						opt_info.num = strton(opt_info.arg, &e, NiL, 0);
+						if (!*e)
+						{
+							opt_info.offset = 0;
+							return c;
+						}
+						if (k & OPT_cache_optional)
+						{
+							opt_info.arg = 0;
+							opt_info.index--;
+							opt_info.offset = 0;
+							return c;
+						}
+					}
+					else if (k & OPT_cache_optional)
+					{
+						opt_info.offset = 0;
+						return c;
+					}
+					opt_info.index--;
+				}
+				cache = 0;
+			}
+			else if (cache = newof(0, Optcache_t, 1, 0))
+			{
+				cache->caching = c;
+				c = 0;
+				cache->pass = *pass;
+				cache->next = opt_info.state->cache;
+				opt_info.state->cache = cache;
+			}
+		}
+		else
+			cache = 0;
 		for (;;)
 		{
-			if (!(*(s = next(s, version))))
+			if (!(*(s = next(s, version))) || *s == '\n' || *s == ' ')
 			{
 				if (!(tsp = psp))
 				{
+					if (cache)
+					{
+						/*
+						 * the first loop pass
+						 * initialized the cache
+						 * so one more pass to
+						 * check the cache or
+						 * bail for a full scan
+						 */
+
+						cache->flags[0] = 0;
+						c = cache->caching;
+						cache->caching = 0;
+						cache = 0;
+						s = opts;
+						continue;
+					}
 					if (!x && catalog)
 					{
 						/*
-						 * the first loop pass was
-						 * for translated long options
-						 * and there were no matches
-						 * one more pass for C locale
+						 * the first loop pass
+						 * translated long
+						 * options and there
+						 * were no matches so
+						 * one more pass for C
+						 * locale
 						 */
 
 						catalog = 0;
 						s = opts;
 						continue;
 					}
+					s = "";
 					break;
 				}
 				s = psp->ob;
@@ -3611,11 +3775,6 @@ optget(register char** argv, const char* oopts)
 				}
 				continue;
 			}
-			if (*s == '\n' || *s == ' ')
-			{
-				s = "";
-				break;
-			}
 			message((-20, "optget: opt %-.16s", s));
 			if (*s == c && !w)
 				break;
@@ -3627,7 +3786,7 @@ optget(register char** argv, const char* oopts)
 					/* ignore */;
 				else if (*s == '[' || version < 1)
 					continue;
-				else if (w)
+				else if (w && !cache)
 				{
 					nov = no;
 					if (*s != ':')
@@ -3740,46 +3899,98 @@ optget(register char** argv, const char* oopts)
 				s = skip(s, 0, 0, 0, 1, 0, 1, version);
 				if (*s == GO)
 					s = skip(s + 1, 0, 0, 0, 0, 1, 1, version);
-				m = 0;
-				if (!w)
+				if (cache)
 				{
-					if (isdigit(*f) && isdigit(*(f + 1)))
-						k = -1;
-					if (c == k)
-						m = 1;
-					while (*(f + 1) == '|')
+					m = OPT_cache_flag;
+					v = s;
+					if (*v == '#')
 					{
-						f += 2;
-						if (!(j = *f))
+						v++;
+						m |= OPT_cache_numeric;
+					}
+					else if (*v == ':')
+					{
+						v++;
+						m |= OPT_cache_string;
+					}
+					if (*v == '?')
+					{
+						v++;
+						m |= OPT_cache_optional;
+					}
+					else if (*v == *(v - 1))
+						v++;
+					if (*(v = next(v, version)) == '[')
+						v = skip(v + 1, 0, 0, 0, 1, 0, 1, version);
+					if (*v != GO)
+					{
+						v = f;
+						for (;;)
 						{
-							m = 0;
-							break;
+							if (isdigit(*f) && isdigit(*(f + 1)))
+								while (isdigit(*(f + 1)))
+									f++;
+							else
+							{
+								cache->flags[map[*f]] = m;
+							}
+							while (*(f + 1) == '|')
+							{
+								f += 2;
+								if (!(j = *f) || j == '!' || j == '=' || j == ':' || j == '?' || j == ']')
+									break;
+								cache->flags[map[j]] = m;
+							}
+							if (j != '!' || (m & OPT_cache_invert))
+								break;
+							f = v;
+							m |= OPT_cache_invert;
 						}
-						else if (j == c)
-							m = 1;
-						else if (j == '!' || j == '=' || j == ':' || j == '?' || j == ']')
-							break;
 					}
 				}
-				if (m)
+				else
 				{
-					s--;
-					if (*++f == '!')
+					m = 0;
+					if (!w)
 					{
-						f++;
-						num = 0;
+						if (isdigit(*f) && isdigit(*(f + 1)))
+							k = -1;
+						if (c == k)
+							m = 1;
+						while (*(f + 1) == '|')
+						{
+							f += 2;
+							if (!(j = *f))
+							{
+								m = 0;
+								break;
+							}
+							else if (j == c)
+								m = 1;
+							else if (j == '!' || j == '=' || j == ':' || j == '?' || j == ']')
+								break;
+						}
 					}
-					if (*f == '=')
+					if (m)
 					{
-						c = -strtol(++f, &b, 0);
-						if ((b - f) > sizeof(opt_info.option) - 2)
-							b = f + sizeof(opt_info.option) - 2;
-						memcpy(&opt_info.option[1], f, b - f);
-						opt_info.option[b - f + 1] = 0;
+						s--;
+						if (*++f == '!')
+						{
+							f++;
+							num = 0;
+						}
+						if (*f == '=')
+						{
+							c = -strtol(++f, &b, 0);
+							if ((b - f) > sizeof(opt_info.option) - 2)
+								b = f + sizeof(opt_info.option) - 2;
+							memcpy(&opt_info.option[1], f, b - f);
+							opt_info.option[b - f + 1] = 0;
+						}
+						else
+							c = k;
+						break;
 					}
-					else
-						c = k;
-					break;
 				}
 				if (*s == '#')
 				{
@@ -3820,6 +4031,23 @@ optget(register char** argv, const char* oopts)
 			}
 			else if (*s != ':')
 			{
+				if (cache)
+				{
+					m = OPT_cache_flag;
+					if (*(s + 1) == '#')
+					{
+						m |= OPT_cache_numeric;
+						if (*(s + 2) == '?')
+							m |= OPT_cache_optional;
+					}
+					else if (*(s + 1) == ':')
+					{
+						m |= OPT_cache_string;
+						if (*(s + 2) == '?')
+							m |= OPT_cache_optional;
+					}
+					cache->flags[map[*s]] = m;
+				}
 				s++;
 				continue;
 			}
@@ -3954,7 +4182,7 @@ optget(register char** argv, const char* oopts)
 		else if (opt_info.arg = argv[opt_info.index])
 		{
 			opt_info.index++;
-			if (*(s + 1) == '?' && (*opt_info.arg == '-' || opt_info.state->plus && *opt_info.arg == '+') && *(opt_info.arg + 1))
+			if (*(s + 1) == '?' && (*opt_info.arg == '-' || (pass->flags & OPT_plus) && *opt_info.arg == '+') && *(opt_info.arg + 1))
 			{
 				opt_info.index--;
 				opt_info.arg = 0;

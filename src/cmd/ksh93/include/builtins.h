@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2001 AT&T Corp.                *
+*                Copyright (c) 1982-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -30,7 +29,7 @@
 #include	"FEATURE/dynamic"
 #include	"shtable.h"
 
-#define SH_RELEASE	"1993-12-28 m"
+#define SH_RELEASE	"1993-12-28 m+"
 
 #define	SYSLOGIN	(sh.bltin_cmds)
 #define SYSEXEC		(sh.bltin_cmds+1)

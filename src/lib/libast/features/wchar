@@ -2,14 +2,16 @@ set	prototyped
 lib	mbstowcs,wctomb,wcrtomb,wcslen,wcstombs,wcwidth stdlib.h stdio.h wchar.h
 lib	towlower,towupper stdlib.h stdio.h wchar.h
 typ	mbstate_t stdlib.h stdio.h wchar.h
+nxt	wchar
 
-cat{
+run{
+cat <<!
 	#ifndef _SFSTDIO_H
-	#include <ast_std.h>
+	#include <ast_common.h>
 	#include <stdio.h>
 	#endif
-	#if _hdr_wchar
-	#include <../include/wchar.h>	/* the real wchar.h */
+	#if _hdr_wchar && defined(_nxt_wchar)
+	#include $_nxt_wchar	/* the native wchar.h */
 	#endif
 	#if _hdr_wctype
 	#include <wctype.h>
@@ -102,4 +104,5 @@ cat{
 	extern int		wscanf(const wchar_t*, ...);
 
 	#undef	extern
+!
 }end

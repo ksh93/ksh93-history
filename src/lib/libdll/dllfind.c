@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1997-2001 AT&T Corp.                *
+*                Copyright (c) 1997-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -196,7 +195,7 @@ dllfind(const char* lib, const char* ver, int flags)
 				x = s;
 			break;
 		}
-#if DEBUG
+#if DEBUG_TRACE
 sfprintf(sfstderr, "dllfind: lib=%s ver=%s\n", lib, ver);
 #endif
 	nv = nam;
@@ -218,14 +217,21 @@ sfprintf(sfstderr, "dllfind: lib=%s ver=%s\n", lib, ver);
 	{
 		pre = astconf("LIBPREFIX", NiL, NiL);
 		suf = astconf("LIBSUFFIX", NiL, NiL);
+#if DEBUG_TRACE
+sfprintf(sfstderr, "dllfind: pre=%s suf=%s\n", pre, suf);
+#endif
+		sfsprintf(gen, sizeof(gen), "%s%s%s", pre, lib, suf);
 		if (streq(suf, ".dll"))
 		{
-			sfsprintf(gen, sizeof(gen), "%s%s", lib, suf);
 			if (ver)
 			{
 				s = spc;
+				t = pre;
+				while (s < &spc[sizeof(spc)-1] && *t)
+					*s++ = *t++;
 				t = (char*)lib;
 				while (s < &spc[sizeof(spc)-1] && *t)
+					*s++ = *t++;
 				for (; s < &spc[sizeof(spc)-1] && *ver; ver++)
 					if (isdigit(*ver))
 						*s++ = *ver;
@@ -235,27 +241,28 @@ sfprintf(sfstderr, "dllfind: lib=%s ver=%s\n", lib, ver);
 				*s = 0;
 				*nv++ = spc;
 			}
-			*nv++ = gen;
-			sfsprintf(pat, sizeof(pat), "%s+([0-9])%s", lib, suf);
+			sfsprintf(pat, sizeof(pat), "%s%s+([0-9])%s", pre, lib, suf);
 		}
 		else
 		{
-			sfsprintf(gen, sizeof(gen), "%s%s%s", pre, lib, suf);
 			if (ver)
 			{
 				sfsprintf(spc, sizeof(spc), "%s.%s", gen, ver);
 				*nv++ = spc;
 			}
-			*nv++ = gen;
 			sfsprintf(pat, sizeof(pat), "%s%s%s.+([0-9.])", pre, lib, suf);
 		}		
+		*nv++ = gen;
+#if DEBUG_TRACE
+sfprintf(sfstderr, "dllfind: pat=%s\n", pat);
+#endif
 	}
 	*nv = 0;
 	*sv = 0;
 	try = 0;
 	dll = 0;
 	x = &tmp[sizeof(tmp) - 1];
-#if DEBUG
+#if DEBUG_TRACE
 	for (nv = nam; *nv; nv++)
 		sfprintf(sfstderr, "dllfind: nam[%d]=%s\n", nv - nam, *nv);
 #endif
@@ -290,7 +297,7 @@ sfprintf(sfstderr, "dllfind: lib=%s ver=%s\n", lib, ver);
 			dot = b == s;
 			do
 			{
-#if DEBUG
+#if DEBUG_TRACE
 sfprintf(sfstderr, "dllfind: attempt sib[%d]=%s\n", sv - sib + 1, *sv);
 #endif
 				e = tmp;
@@ -313,7 +320,7 @@ sfprintf(sfstderr, "dllfind: attempt sib[%d]=%s\n", sv - sib + 1, *sv);
 					for (u = e; *e = *s++; e++)
 						if (e >= x)
 							goto next;
-#if DEBUG
+#if DEBUG_TRACE
 sfprintf(sfstderr, "dllfind: access(%s)\n", tmp);
 #endif
 					if (access(tmp, X_OK))
@@ -334,7 +341,7 @@ sfprintf(sfstderr, "dllfind: access(%s)\n", tmp);
 					if (*nv != pat)
 					{
 						for (u = e, s = *nv; (*u = *s++) && u < x; u++);
-#if DEBUG
+#if DEBUG_TRACE
 sfprintf(sfstderr, "dllfind: access(%s) dot=%d nv=%s sv=%s\n", tmp, dot, *nv, *sv);
 #endif
 						if (!access(tmp, 0))
@@ -354,7 +361,7 @@ sfprintf(sfstderr, "dllfind: access(%s) dot=%d nv=%s sv=%s\n", tmp, dot, *nv, *s
 	}
 	else
 		*e = 0;
-#if DEBUG
+#if DEBUG_TRACE
 sfprintf(sfstderr, "dllfind: fts_open(%s) pat=%s\n", tmp, pat);
 #endif
 	if (fts = fts_open((char**)tmp, FTS_LOGICAL|FTS_NOPOSTORDER|FTS_ONEPATH, vercmp))
@@ -362,13 +369,13 @@ sfprintf(sfstderr, "dllfind: fts_open(%s) pat=%s\n", tmp, pat);
 		if (ent = fts_read(fts))
 			for (ent = fts_children(fts, FTS_NOSTAT); ent; ent = ent->fts_link)
 			{
-#if DEBUG
+#if DEBUG_TRACE
 sfprintf(sfstderr, "dllfind: fts_child=%s\n", ent->fts_name);
 #endif
 				if (strmatch(ent->fts_name, pat))
 				{
 					for (u = e, s = ent->fts_name; (*u = *s++) && u < x; u++);
-#if DEBUG
+#if DEBUG_TRACE
 sfprintf(sfstderr, "dllfind: attempt dlopen %s\n", tmp);
 #endif
 					try = 1;

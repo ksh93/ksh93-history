@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2001 AT&T Corp.                *
+*                Copyright (c) 1985-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -218,10 +217,10 @@ Void_t*		handle;
 #define SFXEND(x)	(((x)->n_input += SFXLEN(x)), \
 			 ((x)->rs > 0 ? SFREAD((x)->f,(Void_t*)(x)->data,SFXLEN(x)) : (((x)->f->next = (x)->d), 0)) )
 #define SFXGETC(x)	(((x)->d < (x)->endd || (SFXEND(x), SFXBUF(x), (x)->d < (x)->endd)) ? \
-				(int)(*(x)->d++) : -2 )
+				(int)(*(x)->d++) : 0 )
 
 	if (--x->width <= 0)
-		return -2;
+		return 0;
 	return x->inp = SFXGETC(x);
 }
 

@@ -1,5 +1,5 @@
 iff	AST_COMMON
-hdr	pthread,stddef,types
+hdr	pthread,stdarg,stddef,types
 sys	types
 typ	long.double,size_t,ssize_t
 
@@ -103,7 +103,7 @@ cat{
 	#	if !defined(__EXPORT__) && _BLD_DLL
 	#		define __EXPORT__	__declspec(dllexport)
 	#	endif
-	#	if !defined(__IMPORT__) && ( _BLD_DLL || _DLL )
+	#	if !defined(__IMPORT__) && ( _BLD_DLL || defined(_DLL) )
 	#		define __IMPORT__	__declspec(dllimport)
 	#	endif
 	#	if _BLD_DLL && _UWIN
@@ -111,7 +111,7 @@ cat{
 	#	endif
 	#endif
 	#if !defined(_astimport)
-	#	if defined(__IMPORT__) && _DLL
+	#	if defined(__IMPORT__) && defined(_DLL)
 	#		define _astimport	__IMPORT__
 	#	else
 	#		define _astimport	extern
@@ -135,42 +135,54 @@ tst	_ast_LL note{ LL numeric suffix supported }end compile{
 	int i = 1LL;
 }end
 
-tst	- -DN=0 - -DN=1 - -DN=2 - -DN=3 - -DN=4 - -DN=5 - -DN=6 - -DN=7 - -DN=8 output{
+tst	- -DN=1 - -DN=2 - -DN=3 - -DN=4 - -DN=5 - -DN=6 - -DN=7 - -DN=8 - -DN=0 output{
 	#define _BYTESEX_H
 
 	#include <sys/types.h>
 
-	#if N == 0
+	_BEGIN_EXTERNS_
+	#if _STD_
+	extern int	sprintf(const char*, ...);
+	extern int	strcmp(const char*, const char*);
+	#else
+	extern int	sprintf();
+	extern int	strcmp();
+	#endif
+	_END_EXTERNS_
+
+	#if _STD_
+	#if N == 1
 	#define _ast_int8_t	long
 	#define _ast_int8_str	"long"
 	#endif
-	#if N == 1
+	#if N == 2
 	#define _ast_int8_t	__int64
 	#define _ast_int8_str	"__int64"
 	#endif
-	#if N == 2
+	#if N == 3
 	#define _ast_int8_t	long long
 	#define _ast_int8_str	"long long"
 	#endif
-	#if N == 3
+	#if N == 4
 	#define _ast_int8_t	__int64_t
 	#define _ast_int8_str	"__int64_t"
 	#endif
-	#if N == 4
+	#if N == 5
 	#define _ast_int8_t	_int64_t
 	#define _ast_int8_str	"_int64_t"
 	#endif
-	#if N == 5
+	#if N == 6
 	#define _ast_int8_t	int64_t
 	#define _ast_int8_str	"int64_t"
 	#endif
-	#if N == 6
+	#if N == 7
 	#define _ast_int8_t	_int64
 	#define _ast_int8_str	"_int64"
 	#endif
-	#if N == 7
+	#if N == 8
 	#define _ast_int8_t	int64
 	#define _ast_int8_str	"int64"
+	#endif
 	#endif
 
 	#define elementsof(x)	(sizeof(x)/sizeof(x[0]))
@@ -205,19 +217,6 @@ tst	- -DN=0 - -DN=1 - -DN=2 - -DN=3 - -DN=4 - -DN=5 - -DN=6 - -DN=7 - -DN=8 outp
 	#endif
 	};
 	
-	static struct
-	{
-		char*	name;
-		int	size;
-	} flt_type[] = 
-	{
-		"float",	sizeof(float),
-		"double",	sizeof(double),
-	#ifdef _typ_long_double
-		"long double",	sizeof(long double),
-	#endif
-	};
-	
 	static int	int_size[] = { 1, 2, 4, 8 };
 	
 	main()
@@ -229,7 +228,16 @@ tst	- -DN=0 - -DN=1 - -DN=2 - -DN=3 - -DN=4 - -DN=5 - -DN=6 - -DN=7 - -DN=8 outp
 		register int	w = 0;
 	
 	#ifdef _ast_int8_t
+		unsigned _ast_int8_t	p;
+		char			buf[64];
+
 		if (int_type[elementsof(int_type)-1].size <= 4)
+			return 1;
+		p = 0x12345678;
+		p <<= 32;
+		p |= 0x9abcdef0;
+		sprintf(buf, "0x%016llx", p);
+		if (strcmp(buf, "0x123456789abcdef0"))
 			return 1;
 	#endif
 		for (s = 0; s < elementsof(int_size); s++)
@@ -252,6 +260,60 @@ tst	- -DN=0 - -DN=1 - -DN=2 - -DN=3 - -DN=4 - -DN=5 - -DN=6 - -DN=7 - -DN=8 outp
 			printf("#define _ast_intmax_long		1\n");
 		printf("#define _ast_intswap		%d\n", w);
 		printf("\n");
+		return 0;
+	}
+}end
+
+tst	- -DN=1 - -DN=0 output{
+	#define _BYTESEX_H
+
+	#include <sys/types.h>
+
+	_BEGIN_EXTERNS_
+	#if _STD_
+	extern int	sprintf(const char*, ...);
+	extern int	strcmp(const char*, const char*);
+	#else
+	extern int	sprintf();
+	extern int	strcmp();
+	#endif
+	_END_EXTERNS_
+
+	#if !N || !_STD_
+	#undef	_typ_long_double
+	#endif
+
+	#define elementsof(x)	(sizeof(x)/sizeof(x[0]))
+	
+	static struct
+	{
+		char*	name;
+		int	size;
+	} flt_type[] = 
+	{
+		"float",	sizeof(float),
+		"double",	sizeof(double),
+	#ifdef _typ_long_double
+		"long double",	sizeof(long double),
+	#endif
+	};
+	
+	main()
+	{
+		register int	t;
+		register int	m = 1;
+	
+	#ifdef _typ_long_double
+		long double	p;
+		char		buf[64];
+
+		if (flt_type[elementsof(flt_type)-1].size <= sizeof(double))
+			return 1;
+		p = 1.12345E-55;
+		sprintf(buf, "%1.5LE", p);
+		if (strcmp(buf, "1.12345E-55"))
+			return 1;
+	#endif
 		for (t = 0; t < elementsof(flt_type); t++)
 		{
 			while (t < elementsof(flt_type) && flt_type[t].size == flt_type[t + 1].size)
@@ -268,7 +330,7 @@ tst	- -DN=0 - -DN=1 - -DN=2 - -DN=3 - -DN=4 - -DN=5 - -DN=6 - -DN=7 - -DN=8 outp
 
 tst	- -DTRY=1 - -DTRY=1 -Dvoid=char - -DTRY=2 - -DTRY=3 - -DTRY=4 output{
 	#define printf	______printf
-	#ifdef __STDC__
+	#if _STD_ && _hdr_stdarg
 	#include <stdarg.h>
 	#else
 	#include <varargs.h>

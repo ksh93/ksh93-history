@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2001 AT&T Corp.                *
+*                Copyright (c) 1985-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -499,9 +498,9 @@ debug_strcoll(const char* a, const char* b)
 	char	ab[1024];
 	char	bb[1024];
 
-	strxfrm(ab, a, sizeof(ab) - 1);
+	debug_strxfrm(ab, a, sizeof(ab) - 1);
 	ab[sizeof(ab)-1] = 0;
-	strxfrm(bb, b, sizeof(bb) - 1);
+	debug_strxfrm(bb, b, sizeof(bb) - 1);
 	bb[sizeof(bb)-1] = 0;
 	return strcmp(ab, bb);
 }
@@ -667,12 +666,11 @@ default_setlocale(int category, const char* locale)
 	{
 		if (!(lc = lcmake(locale)) || !(lc->flags & LC_default))
 			return 0;
-		info_default[0].native &= ~lc->set;
-		info_default[1].native &= ~lc->set;
-		lc->native |= lc->set;
+		locales[0]->flags &= ~lc->flags;
+		locales[1]->flags &= ~lc->flags;
 		return lc->name;
 	}
-	return (info_default[1].native & (1<<category)) ? info_default[1].name : info_default[0].name;
+	return (locales[1]->flags & (1<<category)) ? locales[1]->name : locales[0]->name;
 }
 
 #endif

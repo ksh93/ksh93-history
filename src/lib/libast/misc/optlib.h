@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2001 AT&T Corp.                *
+*                Copyright (c) 1985-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -38,15 +37,26 @@
 #include <cdt.h>
 #include <sfstr.h>
 
-#define OPT_functions		0x01
-#define OPT_ignore		0x02
-#define OPT_long		0x04
-#define OPT_old			0x08
-#define OPT_proprietary		0x10
+#define OPT_cache		0x01
+#define OPT_functions		0x02
+#define OPT_ignore		0x04
+#define OPT_long		0x08
+#define OPT_old			0x10
+#define OPT_plus		0x20
+#define OPT_proprietary		0x40
+
+#define OPT_cache_flag		0x01
+#define OPT_cache_invert	0x02
+#define OPT_cache_numeric	0x04
+#define OPT_cache_optional	0x08
+#define OPT_cache_string	0x10
+
+#define OPT_CACHE		128
+#define OPT_FLAGS		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
 struct Optdisc_s;
 
-typedef struct
+typedef struct Optpass_s
 {
 	struct Optdisc_s*	disc;
 	char*			opts;
@@ -58,14 +68,22 @@ typedef struct
 	unsigned char		section;
 } Optpass_t;
 
-typedef struct
+typedef struct Optcache_s
+{
+	struct Optcache_s*	next;
+	Optpass_t		pass;
+	int			caching;
+	unsigned char		flags[sizeof(OPT_FLAGS)];
+} Optcache_t;
+
+typedef struct Optstr_s
 {
 	char*			argv[3];
 	char*			str;
 	int			colon;
 } Optstr_t;
 
-typedef struct
+typedef struct Optstate_s
 {
 	Sfio_t*		mp;		/* opt_info.msg string stream	*/
 	Sfio_t*		xp;		/* translation string stream	*/
@@ -87,6 +105,7 @@ typedef struct
 	int		emphasis;	/* ansi term emphasis ok	*/
 	Dtdisc_t	msgdisc;	/* msgdict discipline		*/
 	Dt_t*		msgdict;	/* default ast.id catalog msgs	*/
+	Optcache_t*	cache;		/* OPT_cache cache		*/
 } Optstate_t;
 
 #define _OPT_PRIVATE_	Optstate_t* state;

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2001 AT&T Corp.                *
+*                Copyright (c) 1985-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -157,7 +156,7 @@ struct _dtstat_s
 #define DT_MATCH	0001000	/* find object matching key		*/
 #define DT_VSEARCH	0002000	/* search using internal representation	*/
 #define DT_ATTACH	0004000	/* attach an object to the dictionary	*/
-#define DT_DETACH	0010000	/* attach an object to the dictionary	*/
+#define DT_DETACH	0010000	/* detach an object to the dictionary	*/
 
 /* events */
 #define DT_OPEN		1	/* a dictionary is being opened		*/

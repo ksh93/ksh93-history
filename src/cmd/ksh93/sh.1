@@ -1197,7 +1197,7 @@ If
 A negative
 .I offset\^
 counts backwards from the end of
-.IT parameter .
+.IR parameter .
 If
 .I parameter\^
 is
@@ -2800,6 +2800,12 @@ is appended to
 then all leading tabs are stripped from
 .I word\^
 and from the document.
+.TP
+\f3<<<\fP\f2word\fP
+A short form of here document in which \f2word\fP becomes the
+contents of the here-document after any
+parameter expansion, command substitution, and arithmetic
+substitution occur.
 .TP
 .BI <& digit
 The standard input is duplicated from file descriptor
@@ -6532,12 +6538,14 @@ that can be safely invoked by
 Errors detected by the shell, such as syntax errors,
 cause the shell
 to return a non-zero exit status.
+If the shell is being used non-interactively,
+then execution of the shell file is abandoned
+unless the error occurs inside a subshell in which case
+the subshell is abandoned.
 Otherwise, the shell returns the exit status of
 the last command executed (see also the
 .B exit
 command above).
-If the shell is being used non-interactively,
-then execution of the shell file is abandoned.
 Run time errors detected by the shell are reported by
 printing the command or function name and the error condition.
 If the line number that the error occurred on is greater than one,

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2001 AT&T Corp.                *
+*                Copyright (c) 1982-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -228,10 +227,14 @@ static Namarr_t *nv_changearray(Namval_t *np, void *(*fun)(Namval_t*,const char*
 			nv_putsub(np, string_index, ARRAY_ADD);
 			up=array_find(np,0);
 			up->cp = save_ap->val[dot].cp;
+			save_ap->val[dot].cp = 0;
 		}
 		string_index = &numbuff[NUMSIZE];
 	}
-	free(save_ap);
+	np->nvalue.array = (Namarr_t*)save_ap;
+	nv_unset(np);
+	nv_onattr(np,NV_ARRAY);
+	np->nvalue.array = ap;
 	return(ap);
 }
 /*
@@ -440,6 +443,7 @@ struct assoc_array
 	Namarr_t	header;
 	Dt_t		*table;
 	Namval_t	*pos;
+	Namval_t	*nextpos;
 	Namval_t	*cur;
 };
 
@@ -474,7 +478,9 @@ void *nv_associative(register Namval_t *np,const char *sp,int mode)
 		if(!ap->pos)
 			ap->pos = dtfirst(ap->table);
 		else
-			ap->pos = dtnext(ap->table,ap->pos);
+			ap->pos = ap->nextpos;
+		if(ap->pos)
+			ap->nextpos = dtnext(ap->table,ap->pos);
 		for(;ap->cur=ap->pos;ap->pos =(Namval_t*)dtnext(ap->table,ap->pos))
 		{
 			if(ap->cur->nvalue.cp)

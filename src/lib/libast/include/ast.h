@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2001 AT&T Corp.                *
+*                Copyright (c) 1985-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -112,6 +111,13 @@ struct _sfio_s;
 #define PATH_EXECUTE	001
 #define	PATH_REGULAR	010
 #define PATH_ABSOLUTE	020
+
+/*
+ * touch() flags
+ */
+
+#define PATH_TOUCH_CREATE	01
+#define PATH_TOUCH_VERBATIM	02
 
 /*
  * pathcheck() info
@@ -220,10 +226,11 @@ extern char*		fmtesc(const char*);
 extern char*		fmtesq(const char*, const char*);
 extern char*		fmtident(const char*);
 extern char*		fmtip4(unsigned _ast_int4_t, int);
-extern char*		fmtnesq(const char*, const char*, size_t);
+extern char*		fmtfmt(const char*);
 extern char*		fmtgid(int);
 extern char*		fmtmatch(const char*);
 extern char*		fmtmode(int, int);
+extern char*		fmtnesq(const char*, const char*, size_t);
 extern char*		fmtnum(unsigned long, int);
 extern char*		fmtperm(int);
 extern char*		fmtquote(const char*, const char*, const char*, size_t, int);

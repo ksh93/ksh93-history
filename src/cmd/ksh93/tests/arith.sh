@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1982-2001 AT&T Corp.                #
+#                Copyright (c) 1982-2002 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -14,8 +14,7 @@
 #           the license and copyright and are violating            #
 #               AT&T's intellectual property rights.               #
 #                                                                  #
-#                 This software was created by the                 #
-#                 Network Services Research Center                 #
+#            Information and Software Systems Research             #
 #                        AT&T Labs Research                        #
 #                         Florham Park NJ                          #
 #                                                                  #
@@ -281,16 +280,16 @@ x=0 y=4
 if	[[ $(foobar y) != 5 ]]
 then	err_exit 'name references in arithmetic statements in functions broken'
 fi
-if	(( 2**3 != 8 ))
+if	(( 2**3 != pow(2,3) ))
 then	err_exit '2**3 not working'
 fi
-if	(( 2**3*2 != 16 ))
+if	(( 2**3*2 != pow(2,3)*2 ))
 then	err_exit '2**3*2 not working'
 fi
-if	(( 4**3**2 != 262144 ))
+if	(( 4**3**2 != pow(4,pow(3,2)) ))
 then	err_exit '4**3**2 not working'
 fi
-if	(( (4**3)**2 != 4096 ))
+if	(( (4**3)**2 != pow(pow(4,3),2) ))
 then	err_exit '(4**3)**2 not working'
 fi
 typeset -Z3 x=11

@@ -7,14 +7,18 @@ tst std_stddef note{ <stddef.h> looks ok }end compile{
 }end
 tst std_stdlib note{ <stdlib.h> looks ok }end compile{
 	#include <sys/types.h>
+	#if _std_stddef
 	#include <stddef.h>
+	#endif
 	#include <stdlib.h>
 	div_t i;
 	ldiv_t j;
 }end
 tst std_def_calloc note{ <std*.h> defines calloc macro }end compile{
 	#include <sys/types.h>
+	#if _std_stddef
 	#include <stddef.h>
+	#endif
 	#include <stdlib.h>
 	#ifndef calloc
 	(
@@ -22,7 +26,9 @@ tst std_def_calloc note{ <std*.h> defines calloc macro }end compile{
 }end
 tst std_def_free note{ <std*.h> defines free macro }end compile{
 	#include <sys/types.h>
+	#if _std_stddef
 	#include <stddef.h>
+	#endif
 	#include <stdlib.h>
 	#ifndef free
 	(
@@ -30,7 +36,9 @@ tst std_def_free note{ <std*.h> defines free macro }end compile{
 }end
 tst std_def_malloc note{ <std*.h> defines malloc macro }end compile{
 	#include <sys/types.h>
+	#if _std_stddef
 	#include <stddef.h>
+	#endif
 	#include <stdlib.h>
 	#ifndef malloc
 	(
@@ -38,7 +46,9 @@ tst std_def_malloc note{ <std*.h> defines malloc macro }end compile{
 }end
 tst std_def_realloc note{ <std*.h> defines realloc macro }end compile{
 	#include <sys/types.h>
+	#if _std_stddef
 	#include <stddef.h>
+	#endif
 	#include <stdlib.h>
 	#ifndef realloc
 	(
@@ -46,7 +56,9 @@ tst std_def_realloc note{ <std*.h> defines realloc macro }end compile{
 }end
 tst std_def_valloc note{ <std*.h> defines valloc macro }end compile{
 	#include <sys/types.h>
+	#if _std_stddef
 	#include <stddef.h>
+	#endif
 	#include <stdlib.h>
 	#ifndef valloc
 	(

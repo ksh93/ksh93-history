@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2001 AT&T Corp.                *
+*                Copyright (c) 1985-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -434,11 +433,9 @@ toplist(FTS* fts, register char* const* pathnames)
 		fts->flags &= ~FTS_SEEDOTDIR;
 	physical = (fts->flags & FTS_PHYSICAL);
 	metaphysical = (fts->flags & (FTS_META|FTS_PHYSICAL)) == (FTS_META|FTS_PHYSICAL);
-	for (top = bot = root = 0; *pathnames; pathnames++)
+	top = bot = root = 0;
+	while (path = *pathnames++)
 	{
-		if (!*(path = *pathnames))
-			path = ".";
-
 		/*
 		 * make elements
 		 */
@@ -477,12 +474,18 @@ toplist(FTS* fts, register char* const* pathnames)
 			f->fts_namelen = s - path;
 		}
 		sb = f->fts_statp;
-		f->fts_info = (*fts->statf)(path, sb) < 0 ? FTS_NS : INFO(sb->st_mode);
+		if (!*path)
+		{
+			errno = ENOENT;
+			f->fts_info = FTS_NS;
+		}
+		else
+			f->fts_info = (*fts->statf)(path, sb) < 0 ? FTS_NS : INFO(sb->st_mode);
 #ifdef S_ISLNK
 
 		/*
-		 * don't let any standards committee member
-		 * get away with calling your idea a hack
+		 * don't let any standards committee get
+		 * away with calling your idea a hack
 		 */
 
 		if (metaphysical && f->fts_info == FTS_SL && !stat(path, &st))

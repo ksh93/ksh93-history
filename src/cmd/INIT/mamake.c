@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1999-2001 AT&T Corp.                *
+*                Copyright (c) 1990-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -29,7 +28,7 @@
  * coded for portability
  */
 
-static char id[] = "\n@(#)$Id: mamake (AT&T Labs Research) 2001-10-31 $\0\n";
+static char id[] = "\n@(#)$Id: mamake (AT&T Labs Research) 2002-02-02 $\0\n";
 
 #if _PACKAGE_ast
 
@@ -37,7 +36,7 @@ static char id[] = "\n@(#)$Id: mamake (AT&T Labs Research) 2001-10-31 $\0\n";
 #include <error.h>
 
 static const char usage[] =
-"[-?\n@(#)$Id: mamake (AT&T Labs Research) 2001-10-31 $\n]"
+"[-?\n@(#)$Id: mamake (AT&T Labs Research) 2002-02-02 $\n]"
 USAGE_LICENSE
 "[+NAME?mamake - make abstract machine make]"
 "[+DESCRIPTION?\bmamake\b reads \amake abstract machine\a target and"
@@ -58,6 +57,9 @@ USAGE_LICENSE
 "		[+recursion?Ordered subdirectory recursion over unrelated"
 "			makefiles.]"
 "	}"
+"[+?\bmamprobe\b(1) is called to probe and generate system specific variable"
+"	definitions. The probe information is regenerated when it is older"
+"	than the \bmamprobe\b command.]"
 "[+?For compatibility with \bnmake\b(1) the \b-K\b option and the \brecurse\b"
 "	and \bcc-*\b command line targets are ignored.]"
 "[f:?Read \afile\a instead of the default.]:[file:=Mamfile]"
@@ -84,7 +86,8 @@ USAGE_LICENSE
 "\n[ target ... ] [ name=value ... ]\n"
 "\n"
 
-"[+SEE ALSO?\bgmake\b(1), \bmake\b(1), \bnmake\b(1), \bsh\b(1)]"
+"[+SEE ALSO?\bgmake\b(1), \bmake\b(1), \bmamprobe\b(1),"
+"	\bnmake\b(1), \bsh\b(1)]"
 ;
 
 #else
@@ -1210,14 +1213,19 @@ probe(void)
 	register char*	cc;
 	register char*	s;
 	unsigned long	h;
+	unsigned long	q;
 	Buf_t*		buf;
 	Buf_t*		tmp;
+	struct stat	st;
 
 	static char	let[] = "ABCDEFGHIJKLMNOP";
+	static char	cmd[] = "mamprobe";
 
 	if (!(cc = (char*)search(state.vars, "CC", NiL)))
 		cc = "cc";
 	buf = buffer();
+	s = path(buf, cmd, 1);
+	q = stat(s, &st) ? (unsigned long)0 : (unsigned long)st.st_mtime;
 	s = path(buf, cc, 1);
 	for (h = 0; *s; s++)
 		h = h * 0x63c63cd9L + *s + 0x9c39c33dL;
@@ -1228,15 +1236,18 @@ probe(void)
 	for (; h; h >>= 4)
 		add(buf, let[h & 0xf]);
 	s = use(buf);
-	if (!push(s, (Stdio_t*)0, 0))
+	h = stat(s, &st) ? (unsigned long)0 : (unsigned long)st.st_mtime;
+	if (h < q || !push(s, (Stdio_t*)0, 0))
 	{
 		tmp = buffer();
-		append(tmp, "mamprobe ");
+		append(tmp, cmd);
+		add(tmp, ' ');
 		append(tmp, s);
 		add(tmp, ' ');
 		append(tmp, cc);
 		if (execute(use(tmp)))
 			report(3, "cannot generate probe info", s);
+		drop(tmp);
 		if (!push(s, (Stdio_t*)0, 0))
 			report(3, "cannot read probe info", s);
 	}

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2001 AT&T Corp.                *
+*                Copyright (c) 1982-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -430,7 +429,7 @@ static void copyto(register Mac_t *mp,int endch, int newquote)
 			}
 			if(mp->lit)
 				break;
-			if(!mp->quote || isqescchar(n) || n==S_ENDCH) 
+			if(!mp->quote || isqescchar(n) || n==S_ENDCH)
 			{
 				/* eliminate \ */
 				if(c)
@@ -974,6 +973,8 @@ retry1:
 		}
 		else
 			fcseek(-1);
+		if((type==M_VNAME||type==M_SUBNAME)  && sh.argaddr && strcmp(nv_name(np),id))
+			sh.argaddr = 0;
 		ap = nv_arrayptr(np);
 		c = (type>M_BRACE && isastchar(mode));
 		if(!c || !ap)
@@ -982,8 +983,6 @@ retry1:
 			{
 				type = M_BRACE;
 				v = nv_name(np);
-				if(sh.argaddr && strcmp(v,id))
-					sh.argaddr = 0;
 			}
 #ifdef SHOPT_OO
 			else if(type==M_CLASS)
@@ -1123,6 +1122,8 @@ retry1:
 				else if(c=='?' || c=='=')
 					mp->split = mp->pattern = 0;
 				copyto(mp,RBRACE,newquote);
+				if(!oldpat)
+					mp->patfound = 0;
 				mp->pattern = oldpat;
 				mp->split = split;
 				/* add null byte */
@@ -1664,6 +1665,8 @@ static void mac_copy(register Mac_t *mp,register const char *str, register int s
 					if(sh_strchr(mp->ifsp,cp-1)<0)
 						continue;
 					n = mbsize(cp-1) - 1;
+					if(n==-2)
+						n = 0;
 					cp += n;
 					size -= n;
 					n= S_DELIM;
@@ -1679,6 +1682,8 @@ static void mac_copy(register Mac_t *mp,register const char *str, register int s
 					if(n==S_MBYTE && sh_strchr(mp->ifsp,cp-1)>=0)
 					{
 						n = mbsize(cp-1) - 1;
+						if(n==-2)
+							n = 0;
 						cp += n;
 						size -= n;
 						n=S_DELIM;

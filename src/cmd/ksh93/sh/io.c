@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2001 AT&T Corp.                *
+*                Copyright (c) 1982-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -38,6 +37,7 @@
 #include	<fcin.h>
 #include	<ls.h>
 #include	<stdarg.h>
+#include	<ctype.h>
 #include	"variables.h"
 #include	"io.h"
 #include	"jobs.h"
@@ -1023,7 +1023,7 @@ static int piperead(Sfio_t *iop,void *buff,register int size,Sfdisc_t *handle)
 	NOT_USED(handle);
 	if(sh_isstate(SH_INTERACTIVE) && io_prompt(iop,sh.nextprompt)<0 && errno==EIO)
 		return(0);
-	if(sfset(iop,0,0)&SF_SHARE)
+	if(!(sh.fdstatus[sffileno(iop)]&IOCLEX) && sfset(iop,0,0)&SF_SHARE)
 		size = ed_read(fd, (char*)buff, size);
 	else
 		size = read(fd, (char*)buff, size);
@@ -1051,7 +1051,11 @@ static int slowread(Sfio_t *iop,void *buff,register int size,Sfdisc_t *handle)
 	else
 #   endif	/* SHOPT_ESH */
 #   ifdef SHOPT_VSH
-	if(sh_isoption(SH_VI))
+#	ifdef SHOPT_RAWONLY
+	    if(sh_isoption(SH_VI) || ((SHOPT_RAWONLY-0) && mbwide()))
+#	else
+	    if(sh_isoption(SH_VI))
+#	endif
 		readf = ed_viread;
 	else
 #   endif	/* SHOPT_VSH */

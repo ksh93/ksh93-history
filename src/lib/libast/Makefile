@@ -12,10 +12,12 @@ HOSTTYPE == "$(CC.HOSTTYPE)"
 
 CCFLAGS = $(CC.OPTIMIZE) -D_BLD_ast $(CC.DLL)
 
+IFFEFLAGS = -v -X std
+
 .SOURCE : cdt comp dir disc hash man misc path port preroot \
 		regex sfio stdio string tm uwin vec vmalloc
 
-.SOURCE.h : include comp
+.SOURCE.h : include comp std
 
 CP = $(STDCP|"cp")
 
@@ -33,16 +35,19 @@ HEADERSRC = ast.h ast_dir.h ast_std.h ast_version.h \
 	sfio.h sfio_s.h sfio_t.h sfdisc.h sfstr.h \
 	stack.h stak.h stk.h swap.h tar.h times.h tm.h \
 	tok.h usage.h vdb.h vecargs.h vmalloc.h wait.h wordexp.h \
-	bytesex.h endian.h fnmatch.h
+	bytesex.h endian.h fnmatch.h magicid.h \
+	$(HEADERSTD)
 
-HEADERGEN = align.h dirent.h iconv.h limits.h nl_types.h preroot.h \
-	sig.h wchar.h \
+HEADERGEN = align.h preroot.h sig.h \
 	$(ID)_botch.h $(ID)_ccode.h $(ID)_common.h $(ID)_fcntl.h \
 	$(ID)_fs.h $(ID)_hdr.h $(ID)_lib.h $(ID)_map.h $(ID)_mode.h \
 	$(ID)_param.h $(ID)_time.h $(ID)_tty.h $(ID)_types.h \
-	$(ID)_unistd.h $(ID)_wait.h
+	$(ID)_unistd.h $(ID)_wait.h \
+	$(HEADERSTD:/^/$(ID)_/)
 
 HEADEROPT = fmtmsg.h libgen.h syslog.h
+
+HEADERSTD = dirent.h iconv.h limits.h nl_types.h stdio.h wchar.h
 
 $(ID) 5.4 :LIBRARY: README RELEASE \
 	LIBAST.3 ast.3 cdt.3 chr.3 compat.3 error.3 find.3 fmt.3 \
@@ -64,7 +69,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	_ccmaps.c ccmapc.c ccmapcpy.c ccmapid.c ccmaps.c ccnative.c \
 	chresc.c chrtoi.c streval.c strexpr.c strmatch.c strcopy.c \
 	modelib.h modei.c modex.c strmode.c \
-	strlook.c strsearch.c strpsearch.c \
+	strlcat.c strlcpy.c strlook.c strsearch.c strpsearch.c \
 	stresc.c stropt.c strtape.c tok.c tokline.c tokscan.c \
 	pathaccess.c pathcat.c pathcanon.c pathcheck.c pathpath.c \
 	pathexists.c pathfind.c pathkey.c pathprobe.c pathrepl.c \
@@ -78,9 +83,9 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	catopen.c iconv.c lc.c mc.c \
 	liberror.c libevent.c \
 	fmtbase.c fmtbuf.c fmtclock.c fmtdev.c fmtelapsed.c fmterror.c \
-	fmtesc.c fmtfs.c fmtident.c fmtip4.c fmtls.c fmtmatch.c fmtmode.c \
-	fmtnum.c fmtperm.c fmtre.c fmttime.c fmtuid.c fmtgid.c fmtsignal.c \
-	fmtscale.c \
+	fmtesc.c fmtfmt.c fmtfs.c fmtident.c fmtip4.c fmtls.c fmtmatch.c \
+	fmtmode.c fmtnum.c fmtperm.c fmtre.c fmttime.c fmtuid.c fmtgid.c \
+	fmtsignal.c fmtscale.c \
 	strelapsed.c strperm.c struid.c strgid.c strtoip4.c stack.c stk.c \
 	swapget.c swapmem.c swapop.c swapput.c \
 	sigdata.c sigcrit.c sigunblock.c \
@@ -92,7 +97,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	univlib.h univdata.c touch.c mnt.c \
 	memccpy.c memchr.c memcmp.c memcpy.c memdup.c memmove.c memset.c \
 	mkdir.c mkfifo.c mknod.c rmdir.c remove.c rename.c link.c unlink.c \
-	strdup.c strchr.c strrchr.c \
+	strdup.c strchr.c strrchr.c strstr.c \
 	strtod.c strtold.c \
 	strtol.c strtoll.c strtoul.c strtoull.c strton.c strtonll.c \
 	strcasecmp.c strncasecmp.c strerror.c \
@@ -114,7 +119,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	modedata.c tmdata.c \
 	memfatal.c sfkeyprintf.c sfstrtmp.c \
 	sfdcold.c sfdcdio.c sfdcdos.c sfdcfilter.c sfdcseekable.c \
-	sfdcslow.c sfdcsubstream.c sfdctee.c sfdcunion.c \
+	sfdcslow.c sfdcsubstr.c sfdctee.c sfdcunion.c \
 	sfdcmore.c sfdcprefix.c \
 	wc.c libc.c \
 	/* standards */ \
@@ -153,10 +158,11 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	clearerr.c fclose.c fdopen.c feof.c ferror.c fflush.c \
 	fgetc.c fgetpos.c fgets.c fileno.c fopen.c fprintf.c \
 	fpurge.c fputc.c fputs.c fread.c freopen.c fscanf.c \
-	fseek.c fsetpos.c ftell.c fwrite.c getc.c getchar.c \
-	getw.c pclose.c popen.c printf.c putc.c putchar.c \
-	puts.c putw.c rewind.c scanf.c setbuf.c setbuffer.c \
-	setlinebuf.c setvbuf.c snprintf.c sprintf.c sscanf.c \
+	fseek.c fseeko.c fsetpos.c ftell.c ftello.c fwrite.c \
+	getc.c getchar.c getw.c pclose.c popen.c printf.c \
+	putc.c putchar.c puts.c putw.c rewind.c scanf.c \
+	setbuf.c setbuffer.c setlinebuf.c setvbuf.c \
+	snprintf.c sprintf.c sscanf.c \
 	stdio/tmpfile.c ungetc.c vfprintf.c vfscanf.c vprintf.c \
 	vscanf.c vsnprintf.c vsprintf.c vsscanf.c \
 	_doprnt.c _doscan.c _filbuf.c _flsbuf.c _stdfun.c \
@@ -168,6 +174,8 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	fputwc.c getwc.c swscanf.c vswscanf.c \
 	fputws.c getwchar.c ungetwc.c vwprintf.c \
 	fwide.c putwc.c vfwprintf.c vwscanf.c \
+	/* stdio extensions */ \
+	stdio_c99.c stdio_gnu.c \
 	/* math */ \
 	frexp.c frexpl.c \
 	/* ast */ \
@@ -189,25 +197,16 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 
 /*
  * man is stdio.h problematic
- * it gets included by all sorts of system headers
- * it gums up the libast works when override header
- * generation, e.g., limits.h, has stdio.h imbedded
- * the symptom is having to run `make install' with
- * -A and -t sprinkled in umpteen times until it
- * reaches steady state -- until the next stdio.h change
+ * the std/stdio.h => ast_stdio.h runaround should
+ * get to a steady state
  *
- * this works around the problem by ignoring stdio.h
- * changes for the ast source, which shouldn't be too
- * bad since the library uses sfio for io and only
- * includes <stdio.h> for a few manifest constants
- *
- * also, -D_BLD_ast is explicit for the uwin bootstrap
+ * also, -D_BLD_ast must be explicit for the uwin bootstrap
  */
 
 parameter	(_BLD_ast) ast_version.h
-ignore		stdio.h
+ignore		iffeio.h
+scan.ignore	iffeio.h
 virtual		ast/stdio.h
-scan.ignore	iffeio.h stdio.h FEATURE/stdio
 
 if CC.HOSTTYPE == "sol*.*" || "$(-mam)" == "static*"
 sfrd.o sfvprintf.o : .CC.NOOPTIMIZE
@@ -236,13 +235,9 @@ confmap.c conftab.c confstr.c pathconf.c sysconf.c :JOINT: \
 
 $(INCLUDEDIR) :INSTALLPROTO: $(HEADERSRC) $(HEADERGEN)
 
-$(INCLUDEDIR)/stdio.h :INSTALL: FEATURE/stdio
-
 $(HEADERGEN) :COPY: FEATURE/$$(<:B:/$(ID)_//)
 
 iffeio.h :COPY: FEATURE/iffeio
-
-stdio.h :COPY: FEATURE/stdio
 
 lcgen : lcgen.c
 	$(CC.NATIVE|CC) -o $(<) $(*)
@@ -315,7 +310,10 @@ atmain.o : atmain.C
  * the process since the ast stdio.h is useless until -last is built
  */
 
-.check.hdr : .IGNORE .VIRTUAL iffeio.h - stdio.h
+.check.hdr : .IGNORE .VIRTUAL \
+		ast_common.h - iffeio.h - ast_limits.h - ast_stdio.h \
+		ast_nl_types.h
+	rm -f $(HEADERSTD)	/* clean up pre-2002-03-17 headers */
 
 /*
  * some systems move -lc routines to -lm

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2001 AT&T Corp.                *
+*                Copyright (c) 1985-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -14,8 +14,7 @@
 *           the license and copyright and are violating            *
 *               AT&T's intellectual property rights.               *
 *                                                                  *
-*                 This software was created by the                 *
-*                 Network Services Research Center                 *
+*            Information and Software Systems Research             *
 *                        AT&T Labs Research                        *
 *                         Florham Park NJ                          *
 *                                                                  *
@@ -35,7 +34,10 @@
 #include <tm.h>
 
 /*
- * append p and hh:mm part of n to s
+ * n is minutes west of UTC
+ *
+ * append p and SHHMM part of n to s
+ * where S is + or -
  *
  * n ignored if n==d
  * end of s is returned
@@ -44,18 +46,18 @@
 char*
 tmpoff(register char* s, register const char* p, register int n, int d)
 {
-	while (*s = *p++) s++;
+	while (*s = *p++)
+		s++;
 	if (n != d)
 	{
 		if (n < 0)
 		{
 			n = -n;
-			*s++ = '-';
+			*s++ = '+';
 		}
-		else *s++ = '+';
-		s += sfsprintf(s, 16, "%02d", n / 60);
-		if (n %= 60)
-			s += sfsprintf(s, 16, ":%02d", n);
+		else
+			*s++ = '-';
+		s += sfsprintf(s, 16, "%02d%02d", n / 60, n % 60);
 	}
-	return(s);
+	return s;
 }
