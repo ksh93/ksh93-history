@@ -363,7 +363,7 @@ void nv_setlist(register struct argnod *arg,register int flags)
 				if(!(arg->argflag&ARG_APPEND))
 					nv_unset(np);
 				/* check for array assignment */
-				if(tp->tre.tretyp!=TLST && tp->com.comarg)
+				if(tp->tre.tretyp!=TLST && tp->com.comarg && !tp->com.comset)
 				{
 					int argc;
 					char **argv = sh_argbuild(&argc,&tp->com,0);
@@ -1618,7 +1618,7 @@ static void put_optimize(Namval_t* np,const char *val,int flags,Namfun_t *fp)
 
 static const Namdisc_t optimize_disc  = {  0, put_optimize };
 
-static void check_optimize(Namval_t *np)
+void nv_optimize(Namval_t *np)
 {
 	register Namfun_t *fp;
 	register struct optimize *op, *xp;
@@ -1697,7 +1697,7 @@ char *nv_getval(register Namval_t *np)
 	register Namarr_t *ap;
 #ifdef SHOPT_OPTIMIZE
 	if(!local && sh.argaddr)
-		check_optimize(np);
+		nv_optimize(np);
 #endif /* SHOPT_OPTIMIZE */
 	if(!np->nvfun && !nv_isattr(np,NV_ARRAY|NV_INTEGER|NV_FUNCT|NV_REF|NV_TABLE))
 		goto done;
@@ -1733,28 +1733,39 @@ char *nv_getval(register Namval_t *np)
 		if(nv_isattr (np,NV_DOUBLE))
 		{
 			Sfdouble_t ld;
-			long l;
+			double d;
 			char *format;
-			if(nv_isattr(np,NV_LONG))
-				ld = *up->ldp;
-			else
-				ld = *up->dp;
-			if(nv_isattr (np,NV_EXPNOTE))
-				format = "%.*Lg\0";
-			else
-				format = "%.*Lf\0";
-			l = nv_size(np)+8;
+			long l = nv_size(np)+8;
 			if(!curbuf)
 				curbuf = (char*)malloc(maxbufsize=l);
 			else if(l > maxbufsize)
 				curbuf = (char*)realloc(curbuf,maxbufsize=l);
-			sfsprintf(curbuf,l,format,nv_size(np),ld);
+			if(nv_isattr(np,NV_LONG))
+			{
+				ld = *up->ldp;
+				if(nv_isattr (np,NV_EXPNOTE))
+					format = "%.*Lg\0";
+				else
+					format = "%.*Lf\0";
+				sfsprintf(curbuf,l,format,nv_size(np),ld);
+			}
+			else
+			{
+				d = *up->dp;
+				if(nv_isattr (np,NV_EXPNOTE))
+					format = "%.*g\0";
+				else
+					format = "%.*f\0";
+				sfsprintf(curbuf,l,format,nv_size(np),d);
+			}
 			return(curbuf);
 		}
         	else if(nv_isattr (np,NV_LONG))
 			ll = *up->llp;
         	else if(nv_isattr (np,NV_SHORT))
 			ll = up->s;
+		else if(nv_isattr(np,NV_UNSIGN))
+			ll = (unsigned long)*(up->lp);
         	else
 			ll = *(up->lp);
 		if((numeric=nv_size(np))==10)
@@ -1762,7 +1773,7 @@ char *nv_getval(register Namval_t *np)
 			if(nv_isattr(np,NV_UNSIGN))
 			{
 				char *cp=fmtbuf(36);
-				sfsprintf(cp,36,"%lu",ll);
+				sfsprintf(cp,36,"%I*u",sizeof(ll),ll);
 				return(cp);
 			}
 			numeric = 0;
@@ -1785,7 +1796,7 @@ double nv_getnum(register Namval_t *np)
 	register char *str;
 #ifdef SHOPT_OPTIMIZE
 	if(!local && sh.argaddr)
-		check_optimize(np);
+		nv_optimize(np);
 #endif /* SHOPT_OPTIMIZE */
      	if(np->nvfun && !nv_isattr(np,NV_NODISC))
 	{
@@ -2656,7 +2667,9 @@ char *nv_name(register Namval_t *np)
 {
 	register int len;
 	register Namval_t *table;
-	if(np->nvfun && np->nvfun->disc->name)
+	if(is_abuiltin(np) || is_afunction(np))
+		return(np->nvname);
+	if(np->nvfun && np->nvfun->disc && np->nvfun->disc->name)
 		return((*np->nvfun->disc->name)(np,np->nvfun));
 	if(!(table = sh.last_table) || *np->nvname=='.' || table==sh.namespace)
 		return(np->nvname);

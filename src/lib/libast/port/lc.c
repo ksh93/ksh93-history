@@ -35,7 +35,7 @@
 
 #if _WIN32
 
-#include <windows.h>
+#include <ast_windows.h>
 
 #define LANG_CHINESE_SIMPLIFIED			LANG_CHINESE
 #define LANG_CHINESE_TRADITIONAL		LANG_CHINESE

@@ -30,13 +30,13 @@
  * extended to allow some features to be set
  */
 
-static const char id[] = "\n@(#)$Id: getconf (AT&T Labs Research) 2001-09-25 $\0\n";
+static const char id[] = "\n@(#)$Id: getconf (AT&T Labs Research) 2002-09-22 $\0\n";
 
 #include "univlib.h"
 
 #include <ast.h>
 #include <error.h>
-#include <stk.h>
+#include <sfstr.h>
 #include <fs3d.h>
 #include <ctype.h>
 
@@ -229,6 +229,16 @@ static State_t	state = { "getconf", "_AST_FEATURES", dynamic };
 static char*	feature(const char*, const char*, const char*, Ast_conferror_f);
 
 /*
+ * return fmtbuf() copy of s
+ */
+
+static char*
+buffer(char* s)
+{
+	return strcpy(fmtbuf(strlen(s) + 1), s);
+}
+
+/*
  * synthesize state for fp
  * fp==0 initializes from getenv(state.name)
  * value==0 just does lookup
@@ -418,64 +428,69 @@ initialize(register Feature_t* fp, const char* path, const char* command, const 
 		{
 			register int	r = 1;
 			register char*	d = p;
-			int		offset = stktell(stkstd);
+			Sfio_t*		tmp;
 
-			for (;;)
+			if (tmp = sfstropen())
 			{
-				switch (*p++)
+				for (;;)
 				{
-				case 0:
-					break;
-				case ':':
-					if (command && (fp->op != OP_universe || !ok))
+					switch (*p++)
 					{
-						if (r = p - d - 1)
+					case 0:
+						break;
+					case ':':
+						if (command && (fp->op != OP_universe || !ok))
 						{
-							sfwrite(stkstd, d, r);
-							sfputc(stkstd, '/');
-							sfputr(stkstd, command, 0);
-							stkseek(stkstd, offset);
-							if (!access(stkptr(stkstd, offset), X_OK))
+							if (r = p - d - 1)
 							{
-								ok = 1;
-								if (fp->op != OP_universe)
+								sfwrite(tmp, d, r);
+								sfputc(tmp, '/');
+								sfputr(tmp, command, 0);
+								if (!access(sfstruse(tmp), X_OK))
+								{
+									ok = 1;
+									if (fp->op != OP_universe)
+										break;
+								}
+							}
+							d = p;
+						}
+						r = 1;
+						continue;
+					case '/':
+						if (r)
+						{
+							r = 0;
+							if (fp->op == OP_universe)
+							{
+								if (strneq(p, "bin:", 4) || strneq(p, "usr/bin:", 8))
 									break;
 							}
 						}
-						d = p;
-					}
-					r = 1;
-					continue;
-				case '/':
-					if (r)
-					{
-						r = 0;
 						if (fp->op == OP_universe)
 						{
-							if (strneq(p, "bin:", 4) || strneq(p, "usr/bin:", 8))
+							if (strneq(p, "5bin", 4))
+							{
+								ok = 1;
 								break;
+							}
+							if (strneq(p, "bsd", 3) || strneq(p, "ucb", 3))
+							{
+								ok = 0;
+								break;
+							}
 						}
+						continue;
+					default:
+						r = 0;
+						continue;
 					}
-					if (fp->op == OP_universe)
-					{
-						if (strneq(p, "5bin", 4))
-						{
-							ok = 1;
-							break;
-						}
-						if (strneq(p, "bsd", 3) || strneq(p, "ucb", 3))
-						{
-							ok = 0;
-							break;
-						}
-					}
-					continue;
-				default:
-					r = 0;
-					continue;
+					break;
 				}
-				break;
+				sfclose(tmp);
 			}
+			else
+				ok = 1;
 		}
 		break;
 	}
@@ -732,9 +747,9 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, A
 	register Conf_t*	p = look->conf;
 	register int		flags = look->flags|CONF_DEFINED;
 	char*			call;
-	int			offset;
 	long			v;
 	int			olderrno;
+	int			drop;
 	char			buf[PATH_MAX];
 
 	if (!name && p->call != CONF_confstr && (p->flags & (CONF_FEATURE|CONF_LIMIT)) && (p->flags & (CONF_LIMIT|CONF_PREFIXED)) != CONF_LIMIT)
@@ -803,13 +818,8 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, A
 			flags &= ~CONF_DEFINED;
 	}
 	errno = olderrno;
-	if (sp)
-		offset = -1;
-	else
-	{
-		sp = stkstd;
-		offset = stktell(sp);
-	}
+	if ((drop = !sp) && !(sp = sfstropen()))
+		return "";
 	if (!(flags & CONF_PREFIXED))
 	{
 		if (!name)
@@ -850,11 +860,11 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, A
 			sfprintf(sp, "undefined");
 		sfprintf(sp, "\n");
 	}
-	if (offset >= 0)
+	if (drop)
 	{
-		sfputc(sp, 0);
-		stkseek(sp, offset);
-		return stkptr(sp, offset);
+		call = buffer(sfstruse(sp));
+		sfclose(sp);
+		return call;
 	}
 	return "";
 }
@@ -865,7 +875,7 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, A
  * path==0 implies path=="/"
  *
  * settable return values are in permanent store
- * non-settable return values are on stkstd
+ * non-settable return values copied to a tmp fmtbuf() buffer
  *
  *	if (!strcmp(astgetconf("PATH_RESOLVE", NiL, NiL), "logical", 0))
  *		our_way();
@@ -882,11 +892,9 @@ astgetconf(const char* name, const char* path, const char* value, Ast_conferror_
 	register char*	s;
 	char*		e;
 	int		n;
-	int		offset;
 	long		v;
 	Lookup_t	look;
-
-	static char	buf[MAXVAL];
+	Sfio_t*		tmp;
 
 	if (!name)
 	{
@@ -924,8 +932,9 @@ astgetconf(const char* name, const char* path, const char* value, Ast_conferror_
 			v = sysconf(n);
 			if (v == -1)
 				return "error";
-			sfsprintf(buf, sizeof(buf), "%lu", v);
-			return buf;
+			s = fmtbuf(n = 16);
+			sfsprintf(s, n, "%lu", v);
+			return s;
 		}
 	}
 	if (lookup(&look, name))
@@ -959,18 +968,21 @@ astgetconf(const char* name, const char* path, const char* value, Ast_conferror_
 		{
 			if (!strcmp(name + n - 3, "DEV"))
 			{
-				offset = stktell(stkstd);
-				sfprintf(stkstd, "/dev/");
-				for (s = (char*)name; s < (char*)name + n - 3; s++)
-					sfputc(stkstd, isupper(*s) ? tolower(*s) : *s);
-				sfputc(stkstd, 0);
-				stkseek(stkstd, offset);
-				s = stkptr(stkstd, offset);
-				if (!access(s, F_OK))
+				if (tmp = sfstropen())
 				{
-					if (value)
-						goto ro;
-					return s;
+					sfprintf(tmp, "/dev/");
+					for (s = (char*)name; s < (char*)name + n - 3; s++)
+						sfputc(tmp, isupper(*s) ? tolower(*s) : *s);
+					s = sfstruse(tmp);
+					if (!access(s, F_OK))
+					{
+						if (value)
+							goto ro;
+						s = buffer(s);
+						sfclose(tmp);
+						return s;
+					}
+					sfclose(tmp);
 				}
 			}
 			else if (!strcmp(name + n - 3, "DIR"))
@@ -999,19 +1011,22 @@ astgetconf(const char* name, const char* path, const char* value, Ast_conferror_
 				for (s = altname; *s; s++)
 					if (isupper(*s))
 						*s = tolower(*s);
-				offset = stktell(stkstd);
-				for (n = 0; n < elementsof(dirs); n++)
+				if (tmp = sfstropen())
 				{
-					sfprintf(stkstd, "%s/%s/.", dirs[n], altname);
-					sfputc(stkstd, 0);
-					stkseek(stkstd, offset);
-					s = stkptr(stkstd, offset);
-					if (!access(s, F_OK))
+					for (n = 0; n < elementsof(dirs); n++)
 					{
-						if (value)
-							goto ro;
-						return s;
+						sfprintf(tmp, "%s/%s/.", dirs[n], altname);
+						s = sfstruse(tmp);
+						if (!access(s, F_OK))
+						{
+							if (value)
+								goto ro;
+							s = buffer(s);
+							sfclose(tmp);
+							return s;
+						}
 					}
+					sfclose(tmp);
 				}
 			}
 		}

@@ -29,7 +29,7 @@
  *
  * common header and implementation for
  *
- *	strtof		strtod		strtold		_sfscand
+ *	strtof		strtod		strtold		_sfdscan
  *
  * define these macros to instantiate an implementation:
  *
@@ -38,13 +38,30 @@
  *	S2F_type	0:float 1:double 2:long.double
  *	S2F_scan	1 for alternate interface with these arguments:
  *				void* handle
- *				int (*getchar)(void* handle)
+ *				int (*getchar)(void* handle, int flag)
  *			exactly one extra (*getchar)() is done, i.e.,
  *			the caller must do the pushback
+ *				flag==0		get next char
+ *				flag==1		no number seen
+ *			return 0 on error or EOF
  */
 
 #include "sfhdr.h"
 #include "FEATURE/float"
+
+/*
+ * the default is _sfdscan for standalone sfio compatibility
+ */
+
+#if !defined(S2F_function)
+#define S2F_function	_sfdscan
+#define S2F_static	0
+#define S2F_type	2
+#define S2F_scan	1
+#ifndef elementsof
+#define elementsof(a)	(sizeof(a)/sizeof(a[0]))
+#endif
+#endif
 
 #if S2F_type == 2 && _ast_fltmax_double
 #undef	S2F_type
@@ -98,10 +115,11 @@
 
 #if S2F_scan
 
-typedef int (*S2F_get_f)_ARG_((void*));
+typedef int (*S2F_get_f)_ARG_((void*, int));
 
 #define ERR(e)
-#define GET(p)		(*get)(p)
+#define GET(p)		(*get)(p,0)
+#define NON(p)		(*get)(p,1)
 #define PUT(p)
 #define SET(p,t)
 
@@ -109,6 +127,7 @@ typedef int (*S2F_get_f)_ARG_((void*));
 
 #define ERR(e)		(errno=(e))
 #define GET(p)		(*p++)
+#define NON(p)
 #define PUT(p)		(end?(*end=(char*)p-1):(char*)0)
 #define SET(p,t)	(t=p)
 
@@ -120,7 +139,7 @@ typedef struct S2F_part_s
 	int		digits;
 } S2F_part_t;
 
-#ifndef ERANGE
+#if !defined(ERANGE)
 #define ERANGE		EINVAL
 #endif
 
@@ -324,6 +343,7 @@ S2F_function(str, end) char* str; char** end;
 	else if (c < '1' || c > '9')
 	{
 		PUT(t);
+		NON(s);
 		return 0;
 	}
 

@@ -75,7 +75,7 @@ static const char lib[] = "libast:fastfind";
 
 /*
  * this db could be anywhere
- * directories are checked for findnames[i]
+ * findcodes[] directories are checked for findnames[i]
  */
 
 static char*		findcodes[] =

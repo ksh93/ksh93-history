@@ -292,7 +292,7 @@ static Optstate_t	state;
 
 Opt_t			opt_info = { 0,0,0,0,0,0,0,{0},{0},0,&state };
 
-__EXTERN__(Opt_t, opt_info);
+__EXTERN__(Opt_t, _opt_info_);
 
 /*
  * translate with C_LC_MESSAGES_libast[] check
@@ -2778,6 +2778,7 @@ opthelp(const char* oopts, const char* what)
 	{
 		sfprintf(sp, "\
 .\\\" format with nroff|troff|groff -man\n\
+.fp 5 CW\n\
 .nr mI 0\n\
 .de mI\n\
 .if \\\\n(mI>\\\\$1 \\{\n\

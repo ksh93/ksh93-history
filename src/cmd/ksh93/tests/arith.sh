@@ -310,6 +310,10 @@ fi
 $SHELL -c 'i=0;(( ofiles[i] != -1 && (ofiles[i] < mins || mins == -1) ));exit 0' 2> /dev/null || err_exit 'lexical error with arithemtic expression'
 rm -f core
 $SHELL -c '(( +1 == 1))' 2> /dev/null || err_exit 'unary + not working'
-typeset -E17 val=123.01234567890
+typeset -E20 val=123.01234567890
 [[ $val == 123.0123456789 ]] || err_exit "rounding error val=$val"
+if	[[ $(print x$((10))=foo) != x10=foo ]]
+then	err_exit 'parsing error with x$((10))=foo'
+fi
+$SHELL -c 'typeset x$((10))=foo' 2> /dev/null || err_exit 'typeset x$((10)) parse error'
 exit $((Errors))

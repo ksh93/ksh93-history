@@ -1,4 +1,5 @@
-.TH SFIO 3 "15 May 2000"
+.fp 5 CW
+.TH SFIO 3 "01 August 2001"
 .SH NAME
 \fBsfio\fR \- safe/fast string/file input/output
 .SH SYNOPSIS
@@ -63,6 +64,7 @@ SF_STATIC
 SF_IOCHECK
 SF_WHOLE
 SF_MTSAFE
+SF_IOINTR
 .ft 1
 .fi
 .Ss "OPENING/CLOSING STREAMS"
@@ -242,13 +244,14 @@ ssize_t    sfpkrd(int fd, Void_t* buf, size_t n,
 int        sfdcdio(Sfio_t* f, size_t bufsize);
 int        sfdcdos(Sfio_t* f);
 int        sfdcfilter(Sfio_t* f, const char* cmd);
-int        sfdclzw(Sfio_t* f);
 int        sfdcseekable(Sfio_t* f);
 int        sfdcslow(Sfio_t* f);
 int        sfdcsubstream(Sfio_t* f, Sfio_t* parent,
                          Sfoff_t offset, Sfoff_t extent);
 int        sfdctee(Sfio_t* f, Sfio_t* tee);
 int        sfdcunion(Sfio_t* f, Sfio_t** array, int n);
+int        sfdclzw(Sfio_t* f);
+int        sfdcgzip(Sfio_t* f, int flags);
 .ft 1
 .fi
 .Ss "STDIO-COMPATIBILITY"
@@ -441,6 +444,14 @@ the stream. Note that this flag can only be set at stream opening time
 Certain fast macro functions such as \f5sfgetc()\fP and \f5sfputc()\fP will
 no longer behave as macros. Thus, an application that requires such fast macro functions
 should leave \f5SF_MTSAFE\fP off and performs explicit locking with \f5sfmutex()\fP.
+.Tp
+\f5SF_IOINTR\fP:
+This flag indicates that I/O system calls should not be resumed 
+after being interrupted by signals. It is useful for 
+aborting I/O operations on such interruptions. Note, however,
+than certain operating systems (e.g., BSD Unix systems) may automatically
+resume interrupted system calls outside the scope of the library. On such systems,
+\f5SF_IOINTR\fP will be ineffective.
 
 .PP
 .Ss "OPENING/CLOSING STREAMS"
@@ -1551,6 +1562,12 @@ can be performed on them without blocking.
 This is useful for multiplexing I/O over a set of streams.
 If a stream has a discipline, the exception function may be called
 before and after the stream is polled (see \f5sfdisc()\fP for details).
+After a successful \f5sfpoll()\fP call,
+for each ready stream \f5f\fP, \f5sfvalue(f)\fP returns
+a bit combination of \f5SF_READ\fP and \f5SF_WRITE\fP to tell which I/O
+mode is available. If \f5SF_READ\fP is available, an attempt to read
+a byte will not block. If \f5SF_WRITE\fP is available,
+an attempt to flush will not block.
 \f5sfpoll()\fP returns the number of ready streams or \f5-1\fP on failure.
 .Tp
 \f5flist\fP and \f5n\fP:
@@ -1559,7 +1576,7 @@ Upon return, ready streams are moved to the front
 of \f5flist\fP in the same relative order.
 .Tp
 \f5timeout\fP:
-This defines an ellapse time in milliseconds
+This defines an elapse time in milliseconds
 to wait to see if any stream is ready for I/O.
 If \f5timeout\fP is negative, \f5sfpoll()\fP will block until some stream become ready.
 Note that \f5SF_STRING\fP and normal file streams never block
@@ -1567,7 +1584,7 @@ and are always ready for I/O.
 If a stream with discipline is being polled and
 its readiness is as yet undetermined (e.g., empty buffer,)
 the discipline exception function will be called with \f5SF_DPOLL\fP
-before normal actions are taken.
+before querying the operating system.
 
 .Ss "  Sfio_t* sfpool(Sfio_t* f, Sfio_t* poolf, int mode)"
 This function manipulates pools of streams.
@@ -1671,6 +1688,8 @@ The on-going operation shall terminate.
 \f5>0\fP:
 If the event was raised due to an I/O error,
 the error has been repaired and the on-going operation shall continue normally.
+For some events, e.g., \f5SF_DPOLL\fP, the return value may also have
+additional meanings.
 .Tp
 \f5=0\fP:
 The on-going operation performs default actions with respect to the raised event.
@@ -1735,17 +1754,17 @@ This event is raised by
 \f5sfpoll()\fP to see if the stream is ready for I/O.
 \f5*((int*)value)\fP indicates a time-out interval to wait.
 A negative return value from the exception function means blocking.
-A positive return value means non-blocking.
 A zero return value means that \f5sfpoll()\fP should
-query the stream file descriptor using default methods.
+query the underlying file descriptor.
+A positive return value means non-blocking. In addition,
+this value will be a bit combination of \f5SF_READ\fP and \f5SF_WRITE\fP
+to indicate what I/O modes are ready.
 .Tp
 \f5SF_READY\fP:
-This event is raised by \f5sfpoll()\fP for each ready stream
-after they are determined.
-A negative return value from the exeption handler causes \f5sfpoll()\fP
-to return immediately with the same return value.
-A positive return value causes \f5sfpoll()\fP to retry polling
-the whole set of streams.
+This event is raised by \f5sfpoll()\fP for each ready stream.
+The third argument to the event handler is an integer composed with
+the two bits \f5SF_READ\fP and \f5SF_WRITE\fP to indicate which
+I/O modes are ready.
 .Tp
 \f5SF_SYNC\fP, \f5SF_PURGE\fP:
 If \f5SF_IOCHECK\fP is set,
@@ -2024,11 +2043,6 @@ It basically transforms pairs of \er\en to \en.
 This creates a discipline that sends data from \f5f\fP
 to the given command \f5cmd\fP to process, then reads back the processed data.
 
-.Ss "int sfdclzw(Sfio_t* f)"
-This creates a discipline that would decompress data in \f5f\fP.
-The stream \f5f\fP should have data from a source compressed by
-the Unix \fBcompress\fP program.
-
 .Ss "int sfdcseekable(Sfio_t* f)"
 This creates a discipline that makes an unseekable reading stream seekable.
 
@@ -2049,6 +2063,15 @@ any data written to \f5f\fP.
 This creates a discipline that makes \f5f\fP act as if it is
 the concatenation of the \f5n\fP streams given in \f5array\fP.
 
+.Ss "int sfdclzw(Sfio_t* f)"
+This creates a discipline that would decompress data in \f5f\fP.
+The stream \f5f\fP should have data from a source compressed by
+the Unix \fBcompress\fP program.
+
+.Ss "int sfdcgzip(Sfio_t* f, int opt)"
+This creates a discipline for reading/writing data compressed by zlib.
+The argument \f5opt\fP defines the optimization level.
+
 .PP
 .Ss "STDIO-COMPATIBILITY"
 .PP
@@ -2063,6 +2086,7 @@ original Stdio operations. For example, the Sfio's version of
 unlike the original call which only allows a coprocess to be opened for a single mode.
 Similarly, the Sfio's \f5fopen()\fP call can be used to create
 string streams in addition to file streams.
+.PP
 The standard streams \f5stdin\fP, \f5stdout\fP and \f5stderr\fP
 are mapped via \f5#define\fP to \f5sfstdin\fP, \f5sfstdout\fP and \f5sfstderr\fP.
 The latter are typically declared of the type \f5Sfio_t*\fP.
@@ -2197,6 +2221,13 @@ However it conflicts with a different token of the same name
 defined in the system header \f5socket.h\fP of AIX Unix systems.
 On such systems, we shall not define \f5SF_CLOSE\fP and this
 symbol may be removed in a future release.
+.PP
+The printing and scanning functions were extended to handle multibyte characters
+and to conform to the C99 standard.
+.PP
+The function \f5sfpoll()\fP was rehauled to make it useful
+for writing servers that must commnunicate with multiple streams
+without blocking.
 
 .SH AUTHORS
 Kiem-Phong Vo, kpv@research.att.com,

@@ -19,7 +19,7 @@ lib	atexit,bcopy,bzero,catclose,catgets,catopen,confstr,dirread,dup2
 lib	execlp,execve,execvp,execvpe
 lib	fchmod,fcntl,fmtmsg,fnmatch,fork,fsync
 lib	getconf,getdents,getdirentries,getdtablesize,getdate
-lib	getgroups,getlogin,getpagesize,getrlimit,getuniverse
+lib	getgroups,gethostname,getlogin,getpagesize,getrlimit,getuniverse
 lib	glob,index,iswblank,iswctype,killpg,link,localeconv,madvise,mbtowc
 lib	memalign,memchr,memcmp,memcpy,memdup,memmove,memset
 lib	mkdir,mkfifo,mktemp,mktime
@@ -498,32 +498,6 @@ std	cleanup note{ stuck with standard _cleanup }end noexecute{
 	main() { printf("cleanup\n"); exit(1); }
 }end
 
-std	malloc note{ stuck with standard malloc }end noexecute{
-	_BEGIN_EXTERNS_
-	extern void _exit _ARG_((int));
-	extern void* calloc _ARG_((unsigned, unsigned));
-	#if !defined(NeXT) && !defined(__NeXT)
-	#if _STD_
-	char* malloc(unsigned n) { _exit(0); return 0; }
-	#else
-	char* malloc(n) unsigned n; { _exit(0); return 0; }
-	#endif
-	#endif
-	_END_EXTERNS_
-	main() { calloc(1, 1); _exit(1); }
-}end
-
-std	malloc note{ stuck with standard malloc -- wimp-o mach? }end noexecute{
-	_BEGIN_EXTERNS_
-	#if _STD_
-	void* calloc(unsigned n, unsigned m) { exit(1); }
-	#else
-	void* calloc(n, m) unsigned n, m; { exit(1); }
-	#endif
-	_END_EXTERNS_
-	main() { return 0; }
-}end
-
 std	remove note{ stuck with standard remove() }end nostatic{
 	_BEGIN_EXTERNS_
 	extern int unlink _ARG_((const char*));
@@ -579,19 +553,9 @@ tst	- output{
 		printf("#undef	_lib_spawnlp\n");
 		printf("#undef	_lib_spawnvp\n");
 		printf("#undef	_lib_spawnvpe\n");
-		printf("#undef	_std_malloc\n");
-		printf("#define _std_malloc	1\n");
 		printf("#undef	_std_string\n");
 		printf("#define _std_string	1\n");
 		printf("#undef	_stream_peek\n");
-		printf("\n");
-	#endif
-
-	#if __CYGWIN__
-		printf("\n");
-		printf("/* override some cygwin feature tests */\n");
-		printf("#undef	_std_malloc\n");
-		printf("#define _std_malloc	1\n");
 		printf("\n");
 	#endif
 

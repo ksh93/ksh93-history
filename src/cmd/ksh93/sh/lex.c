@@ -1419,6 +1419,7 @@ static int comsub(register Lex_t *lp)
 done:
 	lexd.dolparen--;
 	lex = save;
+	shlex.assignok = 0;
 	return(messages);
 }
 

@@ -49,7 +49,7 @@ struct dirent
 	char		d_name[1];	/* entry name			*/
 };
 
-#ifndef _DIR_PRIVATE_
+#ifndef _BLD_3d
 
 #ifdef	rewinddir
 #undef	rewinddir

@@ -48,6 +48,23 @@ static struct
 } state;
 
 /*
+ * this is unix dadgummit
+ */
+
+static int
+standardized(Lc_info_t* li, register char** b)
+{
+	if ((li->lc->language->flags & (LC_debug|LC_default)) || streq(li->lc->language->code, "en"))
+	{
+		b[TM_TIME] = "%H:%M:%S";
+		b[TM_DATE] = "%m/%d/%y";
+		b[TM_DEFAULT] = "%a %b %e %T %Z %Y";
+		return 1;
+	}
+	return 0;
+}
+
+/*
  * fix up LC_TIME data after loading
  */
 
@@ -71,6 +88,7 @@ fixup(Lc_info_t* li, register char** b)
 					TM_MERIDIAN_TIME,
 	};
 
+	standardized(li, b);
 	for (v = b, e = b + TM_NFORM; v < e; v++)
 		if (!*v)
 			*v = state.null;
@@ -97,7 +115,7 @@ fixup(Lc_info_t* li, register char** b)
 
 #if _WIN32
 
-#include <windows.h>
+#include <ast_windows.h>
 
 typedef struct Map_s
 {
@@ -342,17 +360,7 @@ native_lc_time(Lc_info_t* li)
 		b[map[i].local] = s;
 		s += m;
 	}
-	if ((li->lc->language->flags & (LC_debug|LC_default)) || streq(li->lc->language->code, "en"))
-	{
-		/*
-		 * you really didn't want to look like ms word, did you?
-		 */
-
-		b[TM_TIME] = "%H:%M:%S";
-		b[TM_DATE] = "%m/%d/%y";
-		b[TM_DEFAULT] = "%a %b %e %T %Z %Y";
-	}
-	else
+	if (!standardized(li, b))
 	{
 		/*
 		 * synthesize TM_TIME format from the ms word template

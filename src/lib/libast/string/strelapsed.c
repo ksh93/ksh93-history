@@ -46,14 +46,12 @@ strelapsed(register const char* s, char** e, int n)
 	int			m;
 	const char*		last;
 
-	while (isspace(*s)) s++;
-	if (*s == '%')
+	for (;;)
 	{
-		t = ~t;
-		last = s + 1;
-	}
-	else while (*(last = s))
-	{
+		while (isspace(*s))
+			s++;
+		if (!*(last = s))
+			break;
 		v = 0;
 		while ((c = *s++) >= '0' && c <= '9')
 			v = v * 10 + c - '0';
@@ -61,6 +59,15 @@ strelapsed(register const char* s, char** e, int n)
 		if (c == '.')
 			for (m = n; (c = *s++) >= '0' && c <= '9';)
 				f += (m /= 10) * (c - '0');
+		if (c == '%')
+		{
+			t = ~t;
+			last = s;
+		}
+		if (s == last)
+			break;
+		while (isspace(c))
+			c = *s++;
 		switch (c)
 		{
 		case 'S':
@@ -83,22 +90,32 @@ strelapsed(register const char* s, char** e, int n)
 			v *= 60 * 60;
 			break;
 		case 'm':
-			v *= 60;
+			if (*s == 'o')
+				v *= 4 * 7 * 24 * 60 * 60;
+			else
+				v *= 60;
 			break;
 		case 0:
 			s--;
 			/*FALLTHROUGH*/
 		case 's':
-			v += f;
-			f = 0;
+			if (*s == 'c')
+				v *= 20 * 12 * 4 * 7 * 24 * 60 * 60;
+			else
+			{
+				v += f;
+				f = 0;
+			}
 			break;
 		default:
-			if (isspace(c)) t += v + f;
 			goto done;
 		}
 		t += v;
+		while (isalpha(*s))
+			s++;
 	}
  done:
-	if (e) *e = (char*)last;
-	return(t);
+	if (e)
+		*e = (char*)last;
+	return t;
 }

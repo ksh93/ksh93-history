@@ -163,6 +163,7 @@ static struct back_save	bck;
 
 #ifdef JOBS
 
+
 /*
  * This is the SIGCLD interrupt routine
  * When called with sig==0, it does a blocking wait
@@ -175,7 +176,7 @@ static void job_waitsafe(register int sig)
 	register int flags;
 	struct process dummy;
 	struct jobsave *jp;
-	int wstat;
+	int wstat, (*waitevent)(int,long,int) = sh.waitevent;
 #ifdef DEBUG
 	if(sfprintf(sfstderr,"%d: signal %d critical=%d\n",getpid(),sig,job.in_critical) <=0)
 		write(2,"waitsafe\n",9);
@@ -184,6 +185,7 @@ static void job_waitsafe(register int sig)
 	if(job.in_critical && sig)
 	{
 		savesig = sig;
+		job.waitsafe++;
 		return;
 	}
 	savesig = 0;
@@ -191,11 +193,12 @@ static void job_waitsafe(register int sig)
 		flags = WNOHANG|WUNTRACED|WCONTINUED;
 	else
 		flags = WUNTRACED;
+	sh.waitevent = 0;
 	while(1)
 	{
-		if(!(flags&WNOHANG))
+		if(!(flags&WNOHANG) && !sh.intrap && waitevent && job.pwlist)
 		{
-			if(sh.waitevent && (*sh.waitevent)(-1,-1L,0))
+			if((*waitevent)(-1,-1L,0))
 				flags |= WNOHANG;
 		}
 		pid = waitpid((pid_t)-1,&wstat,flags);
@@ -295,6 +298,7 @@ static void job_waitsafe(register int sig)
 		if(px && pw != px)
 			pw->p_flag &= ~P_NOTIFY;
 	}
+	sh.waitevent = waitevent;
 	if(!sh.intrap && sh.st.trapcom[SIGCHLD])
 	{
 		sh.sigflag[SIGCHLD] |= SH_SIGTRAP;
@@ -610,6 +614,8 @@ int job_walk(Sfio_t *file,int (*fun)(struct process*,int),int arg,char *joblist[
 		for(;pw;pw=px)
 		{
 			px = pw->p_nxtjob;
+			if(pw->p_env != sh.jobenv)
+				continue;
 			if((*fun)(pw,arg))
 				r = 2;
 		}
@@ -617,7 +623,7 @@ int job_walk(Sfio_t *file,int (*fun)(struct process*,int),int arg,char *joblist[
 	else if(*jobs==0)	/* current job */
 	{
 		/* skip over non-stop jobs */
-		while(pw && pw->p_pgrp==0)
+		while(pw && (pw->p_env!=sh.jobenv || pw->p_pgrp==0))
 			pw = pw->p_nxtjob;
 		if((*fun)(pw,arg))
 			r = 2;
@@ -1530,6 +1536,16 @@ void job_subrestore(void* ptr)
 {
 	register struct jobsave *jp,*jpnext;
 	register struct back_save *bp = (struct back_save*)ptr;
+	register struct process *pw, *px, *pwnext;
+	for(pw=job.pwlist; pw; pw=pwnext)
+	{
+		pwnext = pw->p_nxtjob;
+		if(pw->p_env != sh.jobenv)
+			continue;
+		for(px=pw; px; px=px->p_nxtproc)
+			px->p_flag |= P_DONE;
+		job_unpost(pw,0);
+	}
 	for(jp=bck.list; jp; jp=jpnext)
 	{
 		jpnext = jp->next;
@@ -1538,3 +1554,9 @@ void job_subrestore(void* ptr)
 	bck = *bp;
 	free(ptr);
 }
+
+sh_waitsafe(void)
+{
+	return(job.waitsafe);
+}
+

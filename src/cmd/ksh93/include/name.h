@@ -143,6 +143,7 @@ extern union Value	*array_find(Namval_t*, int);
 extern int		array_maxindex(Namval_t*);
 extern char 		*nv_endsubscript(Namval_t*, char*, int);
 extern Namfun_t 	*nv_cover(Namval_t*);
+extern void		nv_optimize(Namval_t*);
 struct argnod;		/* struct not declared yet */
 extern int		nv_setnotify(Namval_t*,char **);
 extern int		nv_unsetnotify(Namval_t*,char **);

@@ -2,7 +2,7 @@
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)C.probe (AT&T Research) 2002-01-24
+# @(#)C probe (AT&T Research) 2002-09-21
 #
 # probe [ -d ] c-compiler-path [ attributes ]
 #
@@ -66,17 +66,22 @@ undef="define defined elif else endif error if ifdef ifndef include line pragma 
 # now the common probes
 #
 
-case $1 in
--d)	debug=1; shift ;;
--*)	set x ;;
-*)	debug= ;;
-esac
+while	:
+do	case $1 in
+	-d)	debug=1 ;;
+	-*)	set ''; break ;;
+	*)	break ;;
+	esac
+	shift
+done
 
 cc=$1
 case $cc in
 [\\/]*|[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz]:\\*)
 	;;
-*)	echo "Usage: $0 [ -d ] c-compiler-path [ attributes ]" >&2; exit 1 ;;
+*)	echo "Usage: $0 [ -d ] c-compiler-path [ attributes ]" >&2
+	exit 1
+	;;
 esac
 ATTRIBUTES=
 eval $2

@@ -1,8 +1,76 @@
-lib	vmalloc,mallopt,mallinfo,mstats
-hdr	alloca,malloc
+#
+# This file defines probes for local features that vmalloc requires.
+# Such probes are interpreted by the "iffe" language interpreter.
+# Results are stored in the FEATURE directory. Some of the
+# {lib,hdr,sys,typ} tests may also be done in the AST features/lib;
+# repeating them here allows for single standalone and AST sources.
+#
 
-lib alloca note{ alloca exists }end compile{
-	#include "FEATURE/vmalloc"
+lib	atexit,getpagesize,mallopt,mallinfo,mstats,onexit,sbrk,vmalloc
+hdr	alloca,malloc,stat,stdlib,unistd
+sys	stat
+typ	ssize_t
+
+libc	malloc note{ GNU __libc_malloc is defined }end  compile{
+	_BEGIN_EXTERNS_
+	void* __libc_malloc(unsigned int);
+	_END_EXTERNS_
+	main() { __libc_malloc(10); return 0; }
+}end
+
+std	malloc note{ stuck with standard malloc }end noexecute{
+	#if defined(_UWIN) || defined(__CYGWIN__)
+	main() { return 1; }
+	#else
+	_BEGIN_EXTERNS_
+	extern void _exit _ARG_((int));
+	extern void* calloc _ARG_((unsigned int, unsigned int));
+	#if _STD_
+	void free(void* p) { }
+	void __libc_free(void* p) { }
+	void* malloc(unsigned int n) { _exit(0); return 0; }
+	void* __libc_malloc(unsigned int n) { _exit(0); return 0; }
+	#else
+	void free(p) char* p; { }
+	void __libc_free(p) char* p; { }
+	void* malloc(n) unsigned int n; { _exit(0); return 0; }
+	void* __libc_malloc(n) unsigned int n; { _exit(0); return 0; }
+	#endif
+	_END_EXTERNS_
+	main() { calloc(1,1); _exit(1); }
+	#endif
+}end
+
+std	malloc note{ stuck with standard malloc -- wimp-o mach? }end noexecute{
+	#if _std_malloc
+	main() { return 0; }
+	#else
+	_BEGIN_EXTERNS_
+	#if _STD_
+	void* calloc(unsigned n, unsigned m) { exit(1); }
+	#else
+	void* calloc(n, m) unsigned n, m; { exit(1); }
+	#endif
+	_END_EXTERNS_
+	main() { return 0; }
+	#endif
+}end
+
+mmap	devzero note{ use mmap on /dev/zero to get raw memory }end execute{
+	#include	<sys/types.h>
+	#include	<sys/mman.h>
+	#include	<sys/fcntl.h>
+	main()
+	{	int	fd;
+		void	*addr;
+		if((fd = open("/dev/zero", O_RDONLY)) < 0)
+			return 1;
+		addr = mmap(0,2000*1024*1024,PROT_READ|PROT_WRITE,MAP_PRIVATE,fd,0);
+		return addr ? 0 : 1;
+	}
+}end
+
+lib	alloca note{ alloca exists }end link{
 	#if _hdr_alloca
 	#include	<alloca.h>
 	#endif
@@ -11,8 +79,7 @@ lib alloca note{ alloca exists }end compile{
 	}
 }end
 
-mal alloca note{ alloca is based on malloc() }end execute{
-	#include "FEATURE/vmalloc"
+mal	alloca note{ alloca is based on malloc() }end execute{
 	#if _hdr_alloca
 	#include	<alloca.h>
 	#endif
@@ -30,7 +97,7 @@ mal alloca note{ alloca is based on malloc() }end execute{
 	}
 }end
 
-stk down note{ stack grows downward }end execute{
+stk	down note{ stack grows downward }end execute{
 	static growdown()
 	{	static char*	addr = 0;
 		char		array[4];

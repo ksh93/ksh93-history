@@ -1,3 +1,29 @@
+02-09-22 package.sh: handle admin_action=ditto
+	 iffe.sh: --confix sizeof(foo) macro is SIZEOF_foo
+	 iffe.sh: fix long.long test so it doesn't defeat uwin "typ long.long"
+	 mamprobe.sh: convert $("foo") nmake string constants
+02-09-21 mamprobe.sh: "-" info-path writes probe info to stdout
+02-09-11 make.probe: move from nmake src to be part of mamprobe.sh
+	 mamprobe: generate from mamprobe.beg C.probe make.probe mamprobe.end
+	 mamake.c: pass cc absolute path to mamprobe
+	 package.sh: generate mamprobe -- yuk (at least its confined to INIT)
+	 iffe.sh: lcl,nxt: drop default sys/ check
+	 ditto.sh: tw --logical by default; add --physical
+02-09-10 package.sh: SHELLMAGIC creeps into package too -- duh and fooey
+02-09-09 ditto.sh: test that remote .profile exists before sourcing
+02-09-06 package.sh: don't ditto nfs junk
+	 ditto.sh: --show now lists directory ops instead of enumerating all
+02-09-05 ditto.sh: add --remote={rsh|ssh}
+	 package.sh: add admin [[{rsh|ssh|-}]:]directory
+02-09-02 iffe.sh: change 'print -r --' to 'print -r -' for ksh86 compatibility
+02-09-01 cc.unix.mc68k: add for ancient 3b1
+02-08-22 package.sh: fix component() to test for components -- duh
+	 Makefile: add LICENSE:.DONTCARE to workaround mam
+02-08-11 iffe.sh: provide defaults for LD_* additions
+02-08-07 ratz.c: change -m to use * instead of non-portable inverse video
+02-07-17 mamprobe.sh: close tmp file in trap before rm for cygwin
+	 package.sh: fix "type" to handle i1586 (P4)
+	 package.sh: add the view action
 02-06-28 package.sh: handle multiple packages for release action
 02-06-27 package.sh: catch sol*.sparc=>sol*.sun4 when CC=gcc
 02-06-14 package.sh: fix admin_action to not include qualifiers

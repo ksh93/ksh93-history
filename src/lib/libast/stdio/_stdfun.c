@@ -33,7 +33,7 @@ void _STUB_stdfun(){}
 
 #else
 
-#include <windows.h>
+#include <ast_windows.h>
 #include <uwin.h>
 
 #if _ALPHA_

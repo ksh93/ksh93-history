@@ -89,11 +89,13 @@ Sfio_t*	tee;	/* stream to tee to	*/
 
 	if(!(te = (Tee_t*)malloc(sizeof(Tee_t))) )
 		return -1;
-	memset(te, 0, sizeof(*te));
 
+	te->disc.readf = NIL(Sfread_f);
+	te->disc.seekf = NIL(Sfseek_f);
 	te->disc.writef = teewrite;
 	te->disc.exceptf = teeexcept;
 	te->tee = tee;
+	te->status = 0;
 
 	if(sfdisc(f,(Sfdisc_t*)te) != (Sfdisc_t*)te)
 	{	free(te);

@@ -23,25 +23,39 @@
 *                 Phong Vo <kpv@research.att.com>                  *
 *                                                                  *
 *******************************************************************/
-#pragma prototyped
+#if _UWIN
 
-#include <ast.h>
-
-#if _std_malloc || _BLD_INSTRUMENT || cray
-
-void _STUB_libc(){}
+void _STUB_vmgetmem(){}
 
 #else
 
-extern void*	memalign(size_t, size_t);
-extern void*	valloc(size_t);
+#include	"vmhdr.h"
 
-void*	__libc_calloc(size_t n, size_t m) { return calloc(n, m); }
-void	__libc_cfree(void* p) { cfree(p); }
-void	__libc_free(void* p) { free(p); }
-void*	__libc_malloc(size_t n) { return malloc(n); }
-void*	__libc_memalign(size_t a, size_t n) { return memalign(a, n); }
-void*	__libc_realloc(void* p, size_t n) { return realloc(p, n); }
-void*	__libc_valloc(size_t n) { return valloc(n); }
+/*
+ * vm open/close/resize - a handy default for discipline memory functions
+ *
+ *	vmgetmem(0,0,0)		open new region
+ *	vmgetmem(r,0,0)		free region
+ *	vmgetmem(r,0,n)		allocate n bytes initialized to 0
+ *	vmgetmem(r,p,0)		free p
+ *	vmgetmem(r,p,n)		realloc p to n bytes
+ */
+
+#if __STD_C
+Void_t* vmgetmem(Vmalloc_t* vm, Void_t* data, size_t size)
+#else
+Void_t* vmgetmem(vm, data, size)
+Vmalloc_t*	vm;
+Void_t*		data;
+size_t		size;
+#endif
+{
+	if (!vm)
+		return vmopen(Vmdcheap, Vmbest, 0);
+	if (data || size)
+		return vmresize(vm, data, size, VM_RSMOVE|VM_RSCOPY|VM_RSZERO);
+	vmclose(vm);
+	return 0;
+}
 
 #endif

@@ -192,6 +192,7 @@ extern void		sh_sigcheck(void);
 extern Shopt_t		sh_isoption(Shopt_t);
 extern Shopt_t		sh_onoption(Shopt_t);
 extern Shopt_t		sh_offoption(Shopt_t);
+extern int 		sh_waitsafe(void);
 
 
 

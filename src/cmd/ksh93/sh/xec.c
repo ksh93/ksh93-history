@@ -1291,8 +1291,6 @@ sh_exec(register const union anynode *t, int flags)
 				sfputr(sfstderr,sh_translate(e_real),'\t');
 				p_time(sfstderr,at,'\n');
 			}
-			else if(sh.optcount)
-				sfprintf(sfstderr,"%d optimizations\n",sh.optcount);
 			sfputr(sfstderr,sh_translate(e_user),'\t');
 			at = after.tms_utime - before.tms_utime;
 			at += after.tms_cutime - before.tms_cutime;

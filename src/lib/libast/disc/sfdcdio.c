@@ -31,10 +31,6 @@
 **	Written by Kiem-Phong Vo, kpv@research.att.com, 03/18/1998.
 */
 
-#ifndef F_DIOINFO
-#undef	FDIRECT
-#endif
-
 typedef struct _direct_s
 {	Sfdisc_t	disc;	/* Sfio discipline	*/
 	int		cntl;	/* file control flags	*/

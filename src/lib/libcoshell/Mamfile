@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 4.2 2002-06-11
+info mam static 00000 1994-07-17 make (AT&T Research) 4.2 2002-09-22
 setv INSTALLROOT ../../..
 setv PACKAGE_ast ${INSTALLROOT}
 setv PACKAGE_ast_INCLUDE ${PACKAGE_ast}/include/ast
@@ -343,143 +343,53 @@ done silent generated
 make ../../../lib
 exec - set -
 exec - if	test ! -d ${PACKAGE_ast_LIB}
-exec - then	set -x && mkdir -p ${PACKAGE_ast_LIB} 2>/dev/null && set - ||
-exec - 	{
-exec - 		test -d ./-p && rm -Rf ./-p
-exec - 		p=
-exec - 		for d in `echo ${PACKAGE_ast_LIB} | sed -e 's%\\(.\\)/%\\1 %g'`
-exec - 		do	case $p in
-exec - 			"")	p=$d ;;
-exec - 			*)	p=$p/$d ;;
-exec - 			esac
-exec - 			case $d in
-exec - 			.|..)	;;
-exec - 			*)	if	test ! -d $p
-exec - 				then	rm -f $p
-exec - 					set -x && mkdir $p && set -
-exec - 				fi
-exec - 				;;
-exec - 			esac
-exec - 		done
-exec - 	} && set -x 		    		   
+exec - then	set -x && mkdir -p ${PACKAGE_ast_LIB} 		    		   
 exec - fi
 done ../../../lib generated
 make ../../../lib/libcoshell.a archive
 prev libcoshell.a archive
-exec - mv ${PACKAGE_ast_LIB}/libcoshell.a ${PACKAGE_ast_LIB}/libcoshell.a.old 2>/dev/null || true; test '' = 'libcoshell.a' || { cp libcoshell.a ${PACKAGE_ast_LIB}/libcoshell.a  		    		    ;}
+exec - ${STDMV} ${PACKAGE_ast_LIB}/libcoshell.a ${PACKAGE_ast_LIB}/libcoshell.a.old 2>/dev/null || true; test '' = 'libcoshell.a' || ${STDCMP} 2>/dev/null -s libcoshell.a ${PACKAGE_ast_LIB}/libcoshell.a || { ${STDCP} libcoshell.a ${PACKAGE_ast_LIB}/libcoshell.a  		    		    ;}
 exec - (ranlib ${PACKAGE_ast_LIB}/libcoshell.a) >/dev/null 2>&1 || true
 done ../../../lib/libcoshell.a generated
 make ../../../man/man3
 exec - set -
 exec - if	test ! -d ${INSTALLROOT}/man/man3
-exec - then	set -x && mkdir -p ${INSTALLROOT}/man/man3 2>/dev/null && set - ||
-exec - 	{
-exec - 		test -d ./-p && rm -Rf ./-p
-exec - 		p=
-exec - 		for d in `echo ${INSTALLROOT}/man/man3 | sed -e 's%\\(.\\)/%\\1 %g'`
-exec - 		do	case $p in
-exec - 			"")	p=$d ;;
-exec - 			*)	p=$p/$d ;;
-exec - 			esac
-exec - 			case $d in
-exec - 			.|..)	;;
-exec - 			*)	if	test ! -d $p
-exec - 				then	rm -f $p
-exec - 					set -x && mkdir $p && set -
-exec - 				fi
-exec - 				;;
-exec - 			esac
-exec - 		done
-exec - 	} && set -x 		    		   
+exec - then	set -x && mkdir -p ${INSTALLROOT}/man/man3 		    		   
 exec - fi
 done ../../../man/man3 generated
 make ../../../man/man3/coshell.3
 make coshell.3
 done coshell.3
-exec - mv ${INSTALLROOT}/man/man3/coshell.3 ${INSTALLROOT}/man/man3/coshell.3.old 2>/dev/null || true; test '' = 'coshell.3' || { cp coshell.3 ${INSTALLROOT}/man/man3/coshell.3  		    		    ;}
+exec - ${STDMV} ${INSTALLROOT}/man/man3/coshell.3 ${INSTALLROOT}/man/man3/coshell.3.old 2>/dev/null || true; test '' = 'coshell.3' || ${STDCMP} 2>/dev/null -s coshell.3 ${INSTALLROOT}/man/man3/coshell.3 || { ${STDCP} coshell.3 ${INSTALLROOT}/man/man3/coshell.3  		    		    ;}
 done ../../../man/man3/coshell.3 generated
 make ../../../lib/lib
 exec - set -
 exec - if	test ! -d ${PACKAGE_ast_LIB}/lib
-exec - then	set -x && mkdir -p ${PACKAGE_ast_LIB}/lib 2>/dev/null && set - ||
-exec - 	{
-exec - 		test -d ./-p && rm -Rf ./-p
-exec - 		p=
-exec - 		for d in `echo ${PACKAGE_ast_LIB}/lib | sed -e 's%\\(.\\)/%\\1 %g'`
-exec - 		do	case $p in
-exec - 			"")	p=$d ;;
-exec - 			*)	p=$p/$d ;;
-exec - 			esac
-exec - 			case $d in
-exec - 			.|..)	;;
-exec - 			*)	if	test ! -d $p
-exec - 				then	rm -f $p
-exec - 					set -x && mkdir $p && set -
-exec - 				fi
-exec - 				;;
-exec - 			esac
-exec - 		done
-exec - 	} && set -x 		    		   
+exec - then	set -x && mkdir -p ${PACKAGE_ast_LIB}/lib 		    		   
 exec - fi
 done ../../../lib/lib generated
 make ../../../lib/lib/coshell
 prev coshell.req
-exec - mv ${PACKAGE_ast_LIB}/lib/coshell ${PACKAGE_ast_LIB}/lib/coshell.old 2>/dev/null || true; test '' = 'coshell.req' || { cp coshell.req ${PACKAGE_ast_LIB}/lib/coshell  		    		    ;}
+exec - ${STDMV} ${PACKAGE_ast_LIB}/lib/coshell ${PACKAGE_ast_LIB}/lib/coshell.old 2>/dev/null || true; test '' = 'coshell.req' || ${STDCMP} 2>/dev/null -s coshell.req ${PACKAGE_ast_LIB}/lib/coshell || { ${STDCP} coshell.req ${PACKAGE_ast_LIB}/lib/coshell  		    		    ;}
 done ../../../lib/lib/coshell generated
 make ../../../bin
 exec - set -
 exec - if	test ! -d ${INSTALLROOT}/bin
-exec - then	set -x && mkdir -p ${INSTALLROOT}/bin 2>/dev/null && set - ||
-exec - 	{
-exec - 		test -d ./-p && rm -Rf ./-p
-exec - 		p=
-exec - 		for d in `echo ${INSTALLROOT}/bin | sed -e 's%\\(.\\)/%\\1 %g'`
-exec - 		do	case $p in
-exec - 			"")	p=$d ;;
-exec - 			*)	p=$p/$d ;;
-exec - 			esac
-exec - 			case $d in
-exec - 			.|..)	;;
-exec - 			*)	if	test ! -d $p
-exec - 				then	rm -f $p
-exec - 					set -x && mkdir $p && set -
-exec - 				fi
-exec - 				;;
-exec - 			esac
-exec - 		done
-exec - 	} && set -x 		    		   
+exec - then	set -x && mkdir -p ${INSTALLROOT}/bin 		    		   
 exec - fi
 done ../../../bin generated
 make ../../../bin/ignore
 prev ignore
-exec - mv ${INSTALLROOT}/bin/ignore ${INSTALLROOT}/bin/ignore.old 2>/dev/null || true; test '' = 'ignore' || { cp ignore ${INSTALLROOT}/bin/ignore  		    		    ;}
+exec - ${STDMV} ${INSTALLROOT}/bin/ignore ${INSTALLROOT}/bin/ignore.old 2>/dev/null || true; test '' = 'ignore' || ${STDCMP} 2>/dev/null -s ignore ${INSTALLROOT}/bin/ignore || { ${STDCP} ignore ${INSTALLROOT}/bin/ignore  		    		    ;}
 done ../../../bin/ignore generated
 make ../../../bin/silent
 prev silent
-exec - mv ${INSTALLROOT}/bin/silent ${INSTALLROOT}/bin/silent.old 2>/dev/null || true; test '' = 'silent' || { cp silent ${INSTALLROOT}/bin/silent  		    		    ;}
+exec - ${STDMV} ${INSTALLROOT}/bin/silent ${INSTALLROOT}/bin/silent.old 2>/dev/null || true; test '' = 'silent' || ${STDCMP} 2>/dev/null -s silent ${INSTALLROOT}/bin/silent || { ${STDCP} silent ${INSTALLROOT}/bin/silent  		    		    ;}
 done ../../../bin/silent generated
 make ../../../include/ast
 exec - set -
 exec - if	test ! -d ${PACKAGE_ast_INCLUDE}
-exec - then	set -x && mkdir -p ${PACKAGE_ast_INCLUDE} 2>/dev/null && set - ||
-exec - 	{
-exec - 		test -d ./-p && rm -Rf ./-p
-exec - 		p=
-exec - 		for d in `echo ${PACKAGE_ast_INCLUDE} | sed -e 's%\\(.\\)/%\\1 %g'`
-exec - 		do	case $p in
-exec - 			"")	p=$d ;;
-exec - 			*)	p=$p/$d ;;
-exec - 			esac
-exec - 			case $d in
-exec - 			.|..)	;;
-exec - 			*)	if	test ! -d $p
-exec - 				then	rm -f $p
-exec - 					set -x && mkdir $p && set -
-exec - 				fi
-exec - 				;;
-exec - 			esac
-exec - 		done
-exec - 	} && set -x 		    		   
+exec - then	set -x && mkdir -p ${PACKAGE_ast_INCLUDE} 		    		   
 exec - fi
 done ../../../include/ast generated
 make ../../../include/ast/coshell.h

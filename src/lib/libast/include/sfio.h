@@ -26,7 +26,7 @@
 #ifndef _SFIO_H
 #define _SFIO_H	1
 
-#define SFIO_VERSION	20010201L
+#define SFIO_VERSION	20020906L
 
 /*	Public header file for the sfio library
 **
@@ -40,74 +40,6 @@ typedef struct _sfdisc_s	Sfdisc_t;
 #include	<ast_std.h>
 #else
 #include	<ast_common.h>
-
-/* to prevent stdio.h from being included */
-#ifndef __stdio_h__
-#define __stdio_h__	1
-#endif
-#ifndef _stdio_h_
-#define _stdio_h_	1
-#endif
-#ifndef _stdio_h
-#define _stdio_h	1
-#endif
-#ifndef __h_stdio__
-#define __h_stdio__	1
-#endif
-#ifndef _h_stdio_
-#define _h_stdio_	1
-#endif
-#ifndef _h_stdio
-#define _h_stdio	1
-#endif
-#ifndef __STDIO_H__
-#define __STDIO_H__	1
-#endif
-#ifndef _STDIO_H_
-#define _STDIO_H_	1
-#endif
-#ifndef _STDIO_H
-#define _STDIO_H	1
-#endif
-#ifndef __H_STDIO__
-#define __H_STDIO__	1
-#endif
-#ifndef _H_STDIO_
-#define _H_STDIO_	1
-#endif
-#ifndef _H_STDIO
-#define _H_STDIO	1
-#endif
-#ifndef _stdio_included
-#define _stdio_included	1
-#endif
-#ifndef _included_stdio
-#define _included_stdio	1
-#endif
-#ifndef _INCLUDED_STDIO
-#define _INCLUDED_STDIO	1
-#endif
-#ifndef _STDIO_INCLUDED
-#define _STDIO_INCLUDED	1
-#endif
-#ifndef _INC_STDIO
-#define _INC_STDIO	1
-#endif
-
-#ifndef FILE
-#define _FILE_DEFINED	1	/* stop MS headers from defining FILE	*/
-#define _FILEDEFED	1	/* stop SUNOS5.8 from defining FILE	*/
-#define FILE	struct _sfio_s	/* because certain stdarg.h needs FILE	*/
-#endif
-
-#if !defined(_SFSTDIO_H)
-#if __STD_C && _hdr_stdarg
-#include	<stdarg.h>
-#else
-#include	<varargs.h>
-#endif /* __STD_C */
-#endif /* !defined(_SFSTDIO_H) */
-
 #endif /* _PACKAGE_ast */
 
 /* Sfoff_t should be large enough for largest file address */
@@ -156,7 +88,7 @@ struct _sffmt_s
 
 	Void_t*		mbs;	/* multibyte state for format string	*/
 
-	Void_t*		none;	/* as yet unused			*/
+	Void_t*		none;	/* unused for now			*/
 };
 #define sffmtversion(fe,type) \
 		(type ? ((fe)->version = SFIO_VERSION) : (fe)->version)
@@ -216,9 +148,10 @@ struct _sffmt_s
 #define SF_PUBLIC	0004000	/* SF_SHARE and follow physical seek	*/
 #define SF_MTSAFE	0010000	/* need thread safety			*/
 #define SF_WHOLE	0020000	/* preserve wholeness of sfwrite/sfputr */
+#define SF_IOINTR	0040000	/* return on interrupts			*/
 
 #define SF_FLAGS	0077177	/* PUBLIC FLAGS PASSABLE TO SFNEW()	*/
-#define SF_SETS		0027163	/* flags passable to sfset()		*/
+#define SF_SETS		0077163	/* flags passable to sfset()		*/
 
 #ifndef _SF_NO_OBSOLETE
 #define SF_BUFCONST	0400000 /* unused flag - for compatibility only	*/

@@ -307,12 +307,16 @@ char	*sh_fmtq(const char *string)
 	{
 		wchar_t c, d;
 		register const char *cp=string;
+		mbinit();
 		d = mbchar(dp); 
+		mbinit();
 		while(c = mbchar(cp))
 		{
 			if(c==d)
 				return(cp-string);
 		}
+		if(d==0)
+			return(cp-string);
 		return(-1);
 	}
 #endif /* SHOPT_MULTIBYTE */

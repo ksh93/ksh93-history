@@ -215,9 +215,10 @@ int	type;	/* 0: from org, 1: from here, 2: from end */
 		}
 		else
 #endif
-		{	/* for mmap, f->here can be virtual */
+		{	/* for mmap, f->here can be virtual except for hardseek */
 			newpos(f,p);
-			goto done;
+			if(!hardseek)
+				goto done;
 		}
 	}
 #endif

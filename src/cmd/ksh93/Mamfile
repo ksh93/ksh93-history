@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 4.2 2002-06-11
+info mam static 00000 1994-07-17 make (AT&T Research) 4.2 2002-09-22
 setv INSTALLROOT ../../..
 setv PACKAGE_ast ${INSTALLROOT}
 setv PACKAGE_ast_INCLUDE ${PACKAGE_ast}/include/ast
@@ -163,7 +163,7 @@ exec - do	case $i in
 exec - 	"shell"|shell)
 exec - 		;;
 exec - 	*)	if	test ! -f ${INSTALLROOT}/lib/lib$i.a
-exec - 		then	case `{ ${CC} ${CCFLAGS}    -L${PACKAGE_ast_LIB} -L../../lib ${LDFLAGS}  -o 1.${COTEMP}.x 1.${COTEMP}.o  -l$i 2>&1 || echo '' $x ;} | sed -e 's/[][()+@?]/#/g' || :` in
+exec - 		then	case `{ ${CC} ${CCFLAGS}    -L../../lib ${LDFLAGS}  -o 1.${COTEMP}.x 1.${COTEMP}.o  -l$i 2>&1 || echo '' $x ;} | sed -e 's/[][()+@?]/#/g' || :` in
 exec - 			*$x*)	case `{ ${CC} ${CCFLAGS}    ${LDFLAGS}  -o 1.${COTEMP}.x 1.${COTEMP}.o  -l$i 2>&1 || echo '' $x ;} | sed -e 's/[][()+@?]/#/g' || :` in
 exec - 				*$x*) continue ;;
 exec - 				esac
@@ -187,9 +187,15 @@ bind -lcmd
 bind -ldll
 bind -last
 bind -lm dontcare
+make +ljobs
+done +ljobs dontcare virtual
+make +li
+done +li dontcare virtual
+make +lintl
+done +lintl dontcare virtual
 make ${mam_libdl}
 done ${mam_libdl} dontcare virtual
-exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libast} ${mam_cc_dynamic} : run features/time
+exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_libast} : run features/time
 make ../../../include/ast/times.h implicit
 make ../../../include/ast/ast_time.h implicit
 done ../../../include/ast/ast_time.h dontcare
@@ -203,8 +209,11 @@ make FEATURE/dynamic implicit
 make features/dynamic
 done features/dynamic
 prev shell.req
+prev +ljobs
+prev +li
+prev +lintl
 prev ${mam_libdl}
-exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libast} ${mam_cc_dynamic} : run features/dynamic
+exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_libast} : run features/dynamic
 make ../../../include/ast/fs3d.h implicit
 prev ../../../include/ast/ast_fs.h implicit
 prev ../../../include/ast/prototyped.h implicit
@@ -216,8 +225,11 @@ make OPTIONS implicit
 done OPTIONS
 done features/options.sh
 prev shell.req
+prev +ljobs
+prev +li
+prev +lintl
 prev ${mam_libdl}
-exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libast} ${mam_cc_dynamic} : run features/options.sh OPTIONS
+exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_libast} : run features/options.sh OPTIONS
 done FEATURE/options dontcare generated
 prev ../../../include/ast/option.h implicit
 done include/builtins.h
@@ -233,15 +245,21 @@ make FEATURE/sigfeatures implicit
 make features/sigfeatures
 done features/sigfeatures
 prev shell.req
+prev +ljobs
+prev +li
+prev +lintl
 prev ${mam_libdl}
-exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libast} ${mam_cc_dynamic} : run features/sigfeatures
+exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_libast} : run features/sigfeatures
 done FEATURE/sigfeatures dontcare generated
 make FEATURE/setjmp implicit
 make features/setjmp
 done features/setjmp
 prev shell.req
+prev +ljobs
+prev +li
+prev +lintl
 prev ${mam_libdl}
-exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libast} ${mam_cc_dynamic} : run features/setjmp
+exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_libast} : run features/setjmp
 done FEATURE/setjmp dontcare generated
 prev ../../../include/ast/sfio.h implicit
 prev ../../../include/ast/error.h implicit
@@ -269,8 +287,11 @@ prev include/name.h implicit
 make include/path.h implicit
 make FEATURE/acct implicit
 prev shell.req
+prev +ljobs
+prev +li
+prev +lintl
 prev ${mam_libdl}
-exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libast} ${mam_cc_dynamic} : def acct
+exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_libast} : def acct
 done FEATURE/acct dontcare generated
 prev include/nval.h implicit
 prev FEATURE/options implicit
@@ -350,8 +371,11 @@ make FEATURE/ttys implicit
 make features/ttys
 done features/ttys
 prev shell.req
+prev +ljobs
+prev +li
+prev +lintl
 prev ${mam_libdl}
-exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libast} ${mam_cc_dynamic} : run features/ttys
+exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_libast} : run features/ttys
 done FEATURE/ttys dontcare generated
 done include/terminal.h dontcare
 prev FEATURE/options implicit
@@ -404,8 +428,11 @@ make FEATURE/locale implicit
 make features/locale
 done features/locale
 prev shell.req
+prev +ljobs
+prev +li
+prev +lintl
 prev ${mam_libdl}
-exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libast} ${mam_cc_dynamic} : run features/locale
+exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_libast} : run features/locale
 done FEATURE/locale generated
 done include/national.h
 prev include/terminal.h implicit
@@ -429,8 +456,11 @@ make FEATURE/poll implicit
 make features/poll
 done features/poll
 prev shell.req
+prev +ljobs
+prev +li
+prev +lintl
 prev ${mam_libdl}
-exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libast} ${mam_cc_dynamic} : run features/poll
+exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_libast} : run features/poll
 done FEATURE/poll generated
 prev FEATURE/time implicit
 prev include/builtins.h implicit
@@ -455,8 +485,11 @@ make FEATURE/externs implicit
 make features/externs
 done features/externs
 prev shell.req
+prev +ljobs
+prev +li
+prev +lintl
 prev ${mam_libdl}
-exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libast} ${mam_cc_dynamic} : run features/externs
+exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_libast} : run features/externs
 done FEATURE/externs generated
 prev include/builtins.h implicit
 prev include/test.h implicit
@@ -494,8 +527,11 @@ make FEATURE/rlimits implicit
 make features/rlimits
 done features/rlimits
 prev shell.req
+prev +ljobs
+prev +li
+prev +lintl
 prev ${mam_libdl}
-exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libast} ${mam_cc_dynamic} : run features/rlimits
+exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_libast} : run features/rlimits
 done FEATURE/rlimits dontcare generated
 prev FEATURE/time implicit
 prev include/shtable.h implicit
@@ -553,13 +589,19 @@ done nc.h dontcare virtual
 prev FEATURE/externs implicit
 make FEATURE/execargs implicit
 prev shell.req
+prev +ljobs
+prev +li
+prev +lintl
 prev ${mam_libdl}
-exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libast} ${mam_cc_dynamic} : def execargs
+exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_libast} : def execargs
 done FEATURE/execargs generated
 make FEATURE/pstat implicit
 prev shell.req
+prev +ljobs
+prev +li
+prev +lintl
 prev ${mam_libdl}
-exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libast} ${mam_cc_dynamic} : def pstat
+exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_libast} : def pstat
 done FEATURE/pstat generated
 prev FEATURE/time implicit
 make include/timeout.h implicit
@@ -1076,8 +1118,11 @@ make FEATURE/cmds implicit
 make features/cmds
 done features/cmds
 prev shell.req
+prev +ljobs
+prev +li
+prev +lintl
 prev ${mam_libdl}
-exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libast} ${mam_cc_dynamic} : run features/cmds
+exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_libast} : run features/cmds
 done FEATURE/cmds dontcare generated
 prev include/jobs.h implicit
 prev include/builtins.h implicit
@@ -1140,8 +1185,11 @@ exec - ${AR} cr libshell.a lex.o macro.o name.o parse.o path.o string.o streval.
 exec - (ranlib libshell.a) >/dev/null 2>&1 || true
 done libshell.a generated
 bind -lshell
+prev +ljobs
+prev +li
+prev +lintl
 prev ${mam_libdl}
-exec - ${CC} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}}  -o ksh pmain.o ${mam_libshell} ${mam_libm} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libast} ${mam_cc_dynamic}
+exec - ${CC} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}}  -o ksh pmain.o ${mam_libshell} ${mam_libm} ${mam_libast}
 done ksh generated
 make shcomp
 make shcomp.o
@@ -1158,10 +1206,13 @@ setv _BLD_shell -U_BLD_shell
 exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSH_DICT=\""libshell"\" -DKSHELL -D_PACKAGE_ast -DSHOPT_SUID_EXEC -DSHOPT_MULTIBYTE -DSHOPT_VSH -DSHOPT_ESH -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libshell]"\" -c sh/shcomp.c
 done shcomp.o generated
 prev libshell.a archive
+prev +ljobs
+prev +li
+prev +lintl
 prev ${mam_libdl}
 setv CC.DLL -UCC.DLL
 setv SH_DICT -DSH_DICT="\"libshell\""
-exec - ${CC} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}}  -o shcomp shcomp.o ${mam_libshell} ${mam_libm} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libast} ${mam_cc_dynamic}
+exec - ${CC} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}}  -o shcomp shcomp.o ${mam_libshell} ${mam_libm} ${mam_libast}
 done shcomp generated
 make sh/suid_exec.c
 prev ../../../include/ast/error.h implicit
@@ -1182,180 +1233,75 @@ setv CC.DLL -UCC.DLL
 setv _BLD_shell -U_BLD_shell
 exec - ${CC} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c sh/suid_exec.c
 done suid_exec.o generated
+prev +ljobs
+prev +li
+prev +lintl
 prev ${mam_libdl}
 setv CC.DLL -UCC.DLL
-exec - ${CC} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}}  -o suid_exec suid_exec.o ${mam_cc_static} ${mam_libast} ${mam_cc_dynamic} ${mam_libm} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libast} ${mam_cc_dynamic}
+exec - ${CC} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}}  -o suid_exec suid_exec.o ${mam_libast} ${mam_libm} ${mam_libast}
 done suid_exec generated
 make ../../../bin
 exec - set -
 exec - if	test ! -d ${INSTALLROOT}/bin
-exec - then	set -x && mkdir -p ${INSTALLROOT}/bin 2>/dev/null && set - ||
-exec - 	{
-exec - 		test -d ./-p && rm -Rf ./-p
-exec - 		p=
-exec - 		for d in `echo ${INSTALLROOT}/bin | sed -e 's%\\(.\\)/%\\1 %g'`
-exec - 		do	case $p in
-exec - 			"")	p=$d ;;
-exec - 			*)	p=$p/$d ;;
-exec - 			esac
-exec - 			case $d in
-exec - 			.|..)	;;
-exec - 			*)	if	test ! -d $p
-exec - 				then	rm -f $p
-exec - 					set -x && mkdir $p && set -
-exec - 				fi
-exec - 				;;
-exec - 			esac
-exec - 		done
-exec - 	} && set -x 		    		   
+exec - then	set -x && mkdir -p ${INSTALLROOT}/bin 		    		   
 exec - fi
 done ../../../bin generated
 make ../../../bin/ksh
 prev ksh
-exec - mv ${INSTALLROOT}/bin/ksh ${INSTALLROOT}/bin/ksh.old 2>/dev/null || true; test '' = 'ksh' || { cp ksh ${INSTALLROOT}/bin/ksh  		    		    ;}
+exec - ${STDMV} ${INSTALLROOT}/bin/ksh ${INSTALLROOT}/bin/ksh.old 2>/dev/null || true; test '' = 'ksh' || ${STDCMP} 2>/dev/null -s ksh ${INSTALLROOT}/bin/ksh || { ${STDCP} ksh ${INSTALLROOT}/bin/ksh  		    		    ;}
 done ../../../bin/ksh generated
 make ../../../man/man1
 exec - set -
 exec - if	test ! -d ${INSTALLROOT}/man/man1
-exec - then	set -x && mkdir -p ${INSTALLROOT}/man/man1 2>/dev/null && set - ||
-exec - 	{
-exec - 		test -d ./-p && rm -Rf ./-p
-exec - 		p=
-exec - 		for d in `echo ${INSTALLROOT}/man/man1 | sed -e 's%\\(.\\)/%\\1 %g'`
-exec - 		do	case $p in
-exec - 			"")	p=$d ;;
-exec - 			*)	p=$p/$d ;;
-exec - 			esac
-exec - 			case $d in
-exec - 			.|..)	;;
-exec - 			*)	if	test ! -d $p
-exec - 				then	rm -f $p
-exec - 					set -x && mkdir $p && set -
-exec - 				fi
-exec - 				;;
-exec - 			esac
-exec - 		done
-exec - 	} && set -x 		    		   
+exec - then	set -x && mkdir -p ${INSTALLROOT}/man/man1 		    		   
 exec - fi
 done ../../../man/man1 generated
 make ../../../man/man1/sh.1
 make sh.1
 done sh.1
-exec - mv ${INSTALLROOT}/man/man1/sh.1 ${INSTALLROOT}/man/man1/sh.1.old 2>/dev/null || true; test '' = 'sh.1' || { cp sh.1 ${INSTALLROOT}/man/man1/sh.1  		    		    ;}
+exec - ${STDMV} ${INSTALLROOT}/man/man1/sh.1 ${INSTALLROOT}/man/man1/sh.1.old 2>/dev/null || true; test '' = 'sh.1' || ${STDCMP} 2>/dev/null -s sh.1 ${INSTALLROOT}/man/man1/sh.1 || { ${STDCP} sh.1 ${INSTALLROOT}/man/man1/sh.1  		    		    ;}
 done ../../../man/man1/sh.1 generated
 make ../../../lib
 exec - set -
 exec - if	test ! -d ${PACKAGE_ast_LIB}
-exec - then	set -x && mkdir -p ${PACKAGE_ast_LIB} 2>/dev/null && set - ||
-exec - 	{
-exec - 		test -d ./-p && rm -Rf ./-p
-exec - 		p=
-exec - 		for d in `echo ${PACKAGE_ast_LIB} | sed -e 's%\\(.\\)/%\\1 %g'`
-exec - 		do	case $p in
-exec - 			"")	p=$d ;;
-exec - 			*)	p=$p/$d ;;
-exec - 			esac
-exec - 			case $d in
-exec - 			.|..)	;;
-exec - 			*)	if	test ! -d $p
-exec - 				then	rm -f $p
-exec - 					set -x && mkdir $p && set -
-exec - 				fi
-exec - 				;;
-exec - 			esac
-exec - 		done
-exec - 	} && set -x 		    		   
+exec - then	set -x && mkdir -p ${PACKAGE_ast_LIB} 		    		   
 exec - fi
 done ../../../lib generated
 make ../../../lib/libshell.a archive
 prev libshell.a archive
-exec - mv ${PACKAGE_ast_LIB}/libshell.a ${PACKAGE_ast_LIB}/libshell.a.old 2>/dev/null || true; test '' = 'libshell.a' || { cp libshell.a ${PACKAGE_ast_LIB}/libshell.a  		    		    ;}
+exec - ${STDMV} ${PACKAGE_ast_LIB}/libshell.a ${PACKAGE_ast_LIB}/libshell.a.old 2>/dev/null || true; test '' = 'libshell.a' || ${STDCMP} 2>/dev/null -s libshell.a ${PACKAGE_ast_LIB}/libshell.a || { ${STDCP} libshell.a ${PACKAGE_ast_LIB}/libshell.a  		    		    ;}
 exec - (ranlib ${PACKAGE_ast_LIB}/libshell.a) >/dev/null 2>&1 || true
 done ../../../lib/libshell.a generated
 make ../../../man/man3
 exec - set -
 exec - if	test ! -d ${INSTALLROOT}/man/man3
-exec - then	set -x && mkdir -p ${INSTALLROOT}/man/man3 2>/dev/null && set - ||
-exec - 	{
-exec - 		test -d ./-p && rm -Rf ./-p
-exec - 		p=
-exec - 		for d in `echo ${INSTALLROOT}/man/man3 | sed -e 's%\\(.\\)/%\\1 %g'`
-exec - 		do	case $p in
-exec - 			"")	p=$d ;;
-exec - 			*)	p=$p/$d ;;
-exec - 			esac
-exec - 			case $d in
-exec - 			.|..)	;;
-exec - 			*)	if	test ! -d $p
-exec - 				then	rm -f $p
-exec - 					set -x && mkdir $p && set -
-exec - 				fi
-exec - 				;;
-exec - 			esac
-exec - 		done
-exec - 	} && set -x 		    		   
+exec - then	set -x && mkdir -p ${INSTALLROOT}/man/man3 		    		   
 exec - fi
 done ../../../man/man3 generated
 make ../../../man/man3/shell.3
 make shell.3
 done shell.3
-exec - mv ${INSTALLROOT}/man/man3/shell.3 ${INSTALLROOT}/man/man3/shell.3.old 2>/dev/null || true; test '' = 'shell.3' || { cp shell.3 ${INSTALLROOT}/man/man3/shell.3  		    		    ;}
+exec - ${STDMV} ${INSTALLROOT}/man/man3/shell.3 ${INSTALLROOT}/man/man3/shell.3.old 2>/dev/null || true; test '' = 'shell.3' || ${STDCMP} 2>/dev/null -s shell.3 ${INSTALLROOT}/man/man3/shell.3 || { ${STDCP} shell.3 ${INSTALLROOT}/man/man3/shell.3  		    		    ;}
 done ../../../man/man3/shell.3 generated
 make ../../../man/man3/nval.3
 make nval.3
 done nval.3
-exec - mv ${INSTALLROOT}/man/man3/nval.3 ${INSTALLROOT}/man/man3/nval.3.old 2>/dev/null || true; test '' = 'nval.3' || { cp nval.3 ${INSTALLROOT}/man/man3/nval.3  		    		    ;}
+exec - ${STDMV} ${INSTALLROOT}/man/man3/nval.3 ${INSTALLROOT}/man/man3/nval.3.old 2>/dev/null || true; test '' = 'nval.3' || ${STDCMP} 2>/dev/null -s nval.3 ${INSTALLROOT}/man/man3/nval.3 || { ${STDCP} nval.3 ${INSTALLROOT}/man/man3/nval.3  		    		    ;}
 done ../../../man/man3/nval.3 generated
 make ../../../lib/lib
 exec - set -
 exec - if	test ! -d ${PACKAGE_ast_LIB}/lib
-exec - then	set -x && mkdir -p ${PACKAGE_ast_LIB}/lib 2>/dev/null && set - ||
-exec - 	{
-exec - 		test -d ./-p && rm -Rf ./-p
-exec - 		p=
-exec - 		for d in `echo ${PACKAGE_ast_LIB}/lib | sed -e 's%\\(.\\)/%\\1 %g'`
-exec - 		do	case $p in
-exec - 			"")	p=$d ;;
-exec - 			*)	p=$p/$d ;;
-exec - 			esac
-exec - 			case $d in
-exec - 			.|..)	;;
-exec - 			*)	if	test ! -d $p
-exec - 				then	rm -f $p
-exec - 					set -x && mkdir $p && set -
-exec - 				fi
-exec - 				;;
-exec - 			esac
-exec - 		done
-exec - 	} && set -x 		    		   
+exec - then	set -x && mkdir -p ${PACKAGE_ast_LIB}/lib 		    		   
 exec - fi
 done ../../../lib/lib generated
 make ../../../lib/lib/shell
 prev shell.req
-exec - mv ${PACKAGE_ast_LIB}/lib/shell ${PACKAGE_ast_LIB}/lib/shell.old 2>/dev/null || true; test '' = 'shell.req' || { cp shell.req ${PACKAGE_ast_LIB}/lib/shell  		    		    ;}
+exec - ${STDMV} ${PACKAGE_ast_LIB}/lib/shell ${PACKAGE_ast_LIB}/lib/shell.old 2>/dev/null || true; test '' = 'shell.req' || ${STDCMP} 2>/dev/null -s shell.req ${PACKAGE_ast_LIB}/lib/shell || { ${STDCP} shell.req ${PACKAGE_ast_LIB}/lib/shell  		    		    ;}
 done ../../../lib/lib/shell generated
 make ../../../include/ast
 exec - set -
 exec - if	test ! -d ${PACKAGE_ast_INCLUDE}
-exec - then	set -x && mkdir -p ${PACKAGE_ast_INCLUDE} 2>/dev/null && set - ||
-exec - 	{
-exec - 		test -d ./-p && rm -Rf ./-p
-exec - 		p=
-exec - 		for d in `echo ${PACKAGE_ast_INCLUDE} | sed -e 's%\\(.\\)/%\\1 %g'`
-exec - 		do	case $p in
-exec - 			"")	p=$d ;;
-exec - 			*)	p=$p/$d ;;
-exec - 			esac
-exec - 			case $d in
-exec - 			.|..)	;;
-exec - 			*)	if	test ! -d $p
-exec - 				then	rm -f $p
-exec - 					set -x && mkdir $p && set -
-exec - 				fi
-exec - 				;;
-exec - 			esac
-exec - 		done
-exec - 	} && set -x 		    		   
+exec - then	set -x && mkdir -p ${PACKAGE_ast_INCLUDE} 		    		   
 exec - fi
 done ../../../include/ast generated
 make ../../../include/ast/nval.h
@@ -1384,53 +1330,35 @@ exec - fi
 done ../../../include/ast/history.h generated
 make ../../../bin/suid_exec
 prev suid_exec
-exec - mv ${INSTALLROOT}/bin/suid_exec ${INSTALLROOT}/bin/suid_exec.old 2>/dev/null || true; test '' = 'suid_exec' || { cp suid_exec ${INSTALLROOT}/bin/suid_exec  		    		    ;}
+exec - ${STDMV} ${INSTALLROOT}/bin/suid_exec ${INSTALLROOT}/bin/suid_exec.old 2>/dev/null || true; test '' = 'suid_exec' || ${STDCMP} 2>/dev/null -s suid_exec ${INSTALLROOT}/bin/suid_exec || { ${STDCP} suid_exec ${INSTALLROOT}/bin/suid_exec  		    		    ;}
 done ../../../bin/suid_exec generated
 make ../../../bin/shcomp
 prev shcomp
-exec - mv ${INSTALLROOT}/bin/shcomp ${INSTALLROOT}/bin/shcomp.old 2>/dev/null || true; test '' = 'shcomp' || { cp shcomp ${INSTALLROOT}/bin/shcomp  		    		    ;}
+exec - ${STDMV} ${INSTALLROOT}/bin/shcomp ${INSTALLROOT}/bin/shcomp.old 2>/dev/null || true; test '' = 'shcomp' || ${STDCMP} 2>/dev/null -s shcomp ${INSTALLROOT}/bin/shcomp || { ${STDCP} shcomp ${INSTALLROOT}/bin/shcomp  		    		    ;}
 done ../../../bin/shcomp generated
 make ../../../fun
 exec - set -
 exec - if	test ! -d ${INSTALLROOT}/fun
-exec - then	set -x && mkdir -p ${INSTALLROOT}/fun 2>/dev/null && set - ||
-exec - 	{
-exec - 		test -d ./-p && rm -Rf ./-p
-exec - 		p=
-exec - 		for d in `echo ${INSTALLROOT}/fun | sed -e 's%\\(.\\)/%\\1 %g'`
-exec - 		do	case $p in
-exec - 			"")	p=$d ;;
-exec - 			*)	p=$p/$d ;;
-exec - 			esac
-exec - 			case $d in
-exec - 			.|..)	;;
-exec - 			*)	if	test ! -d $p
-exec - 				then	rm -f $p
-exec - 					set -x && mkdir $p && set -
-exec - 				fi
-exec - 				;;
-exec - 			esac
-exec - 		done
-exec - 	} && set -x 		    		   
+exec - then	set -x && mkdir -p ${INSTALLROOT}/fun 		    		   
 exec - fi
 done ../../../fun generated
 make ../../../fun/dirs
 make fun/dirs
 done fun/dirs
 setv mode -Dmode="+x"
-exec - mv ${INSTALLROOT}/fun/dirs ${INSTALLROOT}/fun/dirs.old 2>/dev/null || true; test '' = 'fun/dirs' || { cp fun/dirs ${INSTALLROOT}/fun/dirs  		    		   && chmod ugo+x ${INSTALLROOT}/fun/dirs ;}
+exec - ${STDMV} ${INSTALLROOT}/fun/dirs ${INSTALLROOT}/fun/dirs.old 2>/dev/null || true; test '' = 'fun/dirs' || ${STDCMP} 2>/dev/null -s fun/dirs ${INSTALLROOT}/fun/dirs || { ${STDCP} fun/dirs ${INSTALLROOT}/fun/dirs  		    		   && chmod ugo+x ${INSTALLROOT}/fun/dirs ;}
 done ../../../fun/dirs generated
 make ../../../fun/popd
 make fun/popd
 done fun/popd
 setv mode -Dmode="+x"
-exec - mv ${INSTALLROOT}/fun/popd ${INSTALLROOT}/fun/popd.old 2>/dev/null || true; test '' = 'fun/popd' || { cp fun/popd ${INSTALLROOT}/fun/popd  		    		   && chmod ugo+x ${INSTALLROOT}/fun/popd ;}
+exec - ${STDMV} ${INSTALLROOT}/fun/popd ${INSTALLROOT}/fun/popd.old 2>/dev/null || true; test '' = 'fun/popd' || ${STDCMP} 2>/dev/null -s fun/popd ${INSTALLROOT}/fun/popd || { ${STDCP} fun/popd ${INSTALLROOT}/fun/popd  		    		   && chmod ugo+x ${INSTALLROOT}/fun/popd ;}
 done ../../../fun/popd generated
 make ../../../fun/pushd
 make fun/pushd
 done fun/pushd
 setv mode -Dmode="+x"
-exec - mv ${INSTALLROOT}/fun/pushd ${INSTALLROOT}/fun/pushd.old 2>/dev/null || true; test '' = 'fun/pushd' || { cp fun/pushd ${INSTALLROOT}/fun/pushd  		    		   && chmod ugo+x ${INSTALLROOT}/fun/pushd ;}
+exec - ${STDMV} ${INSTALLROOT}/fun/pushd ${INSTALLROOT}/fun/pushd.old 2>/dev/null || true; test '' = 'fun/pushd' || ${STDCMP} 2>/dev/null -s fun/pushd ${INSTALLROOT}/fun/pushd || { ${STDCP} fun/pushd ${INSTALLROOT}/fun/pushd  		    		   && chmod ugo+x ${INSTALLROOT}/fun/pushd ;}
 done ../../../fun/pushd generated
 done install virtual
 make test

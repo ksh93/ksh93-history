@@ -29,7 +29,7 @@
  * coded for portability
  */
 
-static char id[] = "\n@(#)$Id: mamake (AT&T Labs Research) 2002-05-22 $\0\n";
+static char id[] = "\n@(#)$Id: mamake (AT&T Labs Research) 2002-09-11 $\0\n";
 
 #if _PACKAGE_ast
 
@@ -37,7 +37,7 @@ static char id[] = "\n@(#)$Id: mamake (AT&T Labs Research) 2002-05-22 $\0\n";
 #include <error.h>
 
 static const char usage[] =
-"[-?\n@(#)$Id: mamake (AT&T Labs Research) 2002-05-22 $\n]"
+"[-?\n@(#)$Id: mamake (AT&T Labs Research) 2002-09-11 $\n]"
 USAGE_LICENSE
 "[+NAME?mamake - make abstract machine make]"
 "[+DESCRIPTION?\bmamake\b reads \amake abstract machine\a target and"
@@ -1221,6 +1221,7 @@ probe(void)
 	unsigned long	h;
 	unsigned long	q;
 	Buf_t*		buf;
+	Buf_t*		pro;
 	Buf_t*		tmp;
 	struct stat	st;
 
@@ -1232,14 +1233,15 @@ probe(void)
 	buf = buffer();
 	s = path(buf, cmd, 1);
 	q = stat(s, &st) ? (unsigned long)0 : (unsigned long)st.st_mtime;
-	s = path(buf, cc, 1);
+	pro = buffer();
+	s = cc = path(pro, cc, 1);
 	for (h = 0; *s; s++)
 		h = h * 0x63c63cd9L + *s + 0x9c39c33dL;
 	if (!(s = (char*)search(state.vars, "INSTALLROOT", NiL)))
 		report(3, "variable must be defined", "INSTALLROOT");
 	append(buf, s);
 	append(buf, "/lib/probe/C/mam/");
-	for (; h; h >>= 4)
+	for (h &= 0xffffffffL; h; h >>= 4)
 		add(buf, let[h & 0xf]);
 	s = use(buf);
 	h = stat(s, &st) ? (unsigned long)0 : (unsigned long)st.st_mtime;
@@ -1257,6 +1259,7 @@ probe(void)
 		if (!push(s, (Stdio_t*)0, 0))
 			report(3, "cannot read probe info", s);
 	}
+	drop(pro);
 	drop(buf);
 	make(rule(""));
 	pop();

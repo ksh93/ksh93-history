@@ -56,7 +56,11 @@ end
 /* use the following libraries only if they exist */
 LIBS_opt := +lm +ljobs +li
 if ! "$(-mam:N=static*)" && CC.HOSTTYPE != "sgi.mips*"
-	LIBS_opt += +lsocket +lnsl
+	if CC.HOSTTYPE == "sol8.*"
+		LIBS_opt += +lsocket -lnsl
+	else
+		LIBS_opt += +lsocket +lnsl
+	end
 end
 if CC.HOSTTYPE == "linux.sparc"
 	/* the linux.sparc linker still has some problems */
@@ -93,9 +97,10 @@ shell $(VERSION) :LIBRARY: shell.3 nval.3 alarm.c cd_pwd.c cflow.c deparse.c \
 
 if CC.HOSTTYPE == "win32.*" || "$(-mam)" == "static*"
 trestore.o : .CC.NOOPTIMIZE
-end
-
 :DLL: $(CC.DEBUG)
+else
+:DLL: $(CC.OPTIMIZE)
+end
 
 :READONLY: $(DATAFILES)
 
@@ -117,7 +122,7 @@ shcomp.o : _BLD_shell=
 	quoting2.sh return.sh select.sh substring.sh tilde.sh variables.sh \
 	shtests
 
-if VARIANT
+if "$(PWD:B:N=cc-*)"
 
 test : .NULL
 

@@ -25,7 +25,7 @@
 *******************************************************************/
 #pragma prototyped
 /*
- * closelog implementation
+ * openlog implementation
  */
 
 #include <ast.h>
@@ -41,9 +41,18 @@ NoN(openlog)
 void
 openlog(const char* ident, int flags, int facility)
 {
-	if (log.ident)
-		free(log.ident);
-	log.ident = ident ? strdup(ident) : (char*)0;
+	int		n;
+
+	if (ident)
+	{
+		n = strlen(ident);
+		if (n >= sizeof(log.ident))
+			n = sizeof(log.ident) - 1;
+		memcpy(log.ident, ident, n);
+		log.ident[n] = 0;
+	}
+	else
+		log.ident[0] = 0;
 	log.facility = facility;
 	log.flags = flags;
 	if (!(log.flags & LOG_ODELAY))

@@ -143,9 +143,9 @@ reg Sfio_t*	f;
 
 	/* destroy the mutex */
 	if(f->mutex)
-	{	vtmtxclrlock(f->mutex);
+	{	(void)vtmtxclrlock(f->mutex);
 		if(f != sfstdin && f != sfstdout && f != sfstderr)
-		{	vtmtxclose(f->mutex);
+		{	(void)vtmtxclose(f->mutex);
 			f->mutex = NIL(Vtmutex_t*);
 		}
 	}

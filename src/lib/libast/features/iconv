@@ -5,7 +5,12 @@ nxt	iconv
 
 tst	output{
 	#if !_lib_iconv_open
+	#define _undef_hdr_iconv	1
 	#undef	_hdr_iconv
+	#endif
+	#if !_hdr_iconv
+	#define _undef_lib_iconv_open	1
+	#undef	_lib_iconv_open
 	#endif
 	#if _hdr_iconv
 	#include <sys/types.h>
@@ -16,6 +21,13 @@ tst	output{
 	{
 		char*	lib;
 
+		printf("#include <ast_common.h>\n");
+	#if _undef_hdr_iconv
+		printf("#undef	_hdr_iconv\n");
+	#endif
+	#if _undef_lib_iconv_open
+		printf("#undef	_lib_iconv_open\n");
+	#endif
 	#if _hdr_iconv && defined(_nxt_iconv_str)
 		printf("#include <%s>	/* the native iconv.h */\n", _nxt_iconv_str);
 	#endif

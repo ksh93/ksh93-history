@@ -48,12 +48,25 @@
 
 #if _PACKAGE_ast
 
+#if !_UWIN
+#define getpagesize		______getpagesize
+#define _npt_getpagesize	1
+#define sbrk			______sbrk
+#define _npt_sbrk		1
+#endif
+
 #include	<ast.h>
+
+#if _npt_getpagesize
+#undef				getpagesize
+#endif
+#if _npt_sbrk
+#undef				sbrk
+#endif
 
 #else
 
 #include	<ast_common.h>
-#include	"FEATURE/vmalloc"
 
 #if !_UWIN
 #define _npt_getpagesize	1
@@ -61,6 +74,8 @@
 #endif
 
 #endif /*_PACKAGE_ast*/
+
+#include	"FEATURE/vmalloc"
 
 #undef free
 #undef malloc
@@ -193,9 +208,7 @@ union _align_u
 	Body_t*		body;
 	Block_t*	block;
 	Vmuchar_t	a[ALIGNB];
-#if _long_double
-	long double	ld, *ldp;
-#endif
+	_ast_fltmax_t	ld, *ldp;
 };
 struct _a_s
 {	char		c;
@@ -445,7 +458,7 @@ extern Vmextern_t	_Vmextern;
 #if _PACKAGE_ast
 
 #if _npt_getpagesize
-extern size_t		getpagesize _ARG_((void));
+extern int		getpagesize _ARG_((void));
 #endif
 #if _npt_sbrk
 extern Void_t*		sbrk _ARG_(( ssize_t ));

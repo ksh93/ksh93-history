@@ -125,7 +125,7 @@ __STDPP__directive pragma pp:hide realloc
 #if !_std_def_valloc
 __STDPP__directive pragma pp:hide valloc
 #endif
-__STDPP__directive pragma pp:hide bcopy bzero execl execle execlp execv
+__STDPP__directive pragma pp:hide execl execle execlp execv
 __STDPP__directive pragma pp:hide execve execvp execvpe
 __STDPP__directive pragma pp:hide getcwd getopt getsubopt putenv realpath
 __STDPP__directive pragma pp:hide setenv setpgrp sleep spawnlp
@@ -149,8 +149,6 @@ __STDPP__directive pragma pp:hide strdup vfprintf vprintf vsprintf
 #if !_std_def_valloc
 #define valloc		______valloc
 #endif
-#define bcopy		______bcopy
-#define bzero		______bzero
 #define execl		______execl
 #define execle		______execle
 #define execlp		______execlp
@@ -247,7 +245,7 @@ __STDPP__directive pragma pp:nohide realloc
 #if !_std_def_valloc
 __STDPP__directive pragma pp:nohide valloc
 #endif
-__STDPP__directive pragma pp:nohide bcopy bzero execl execle execlp execv
+__STDPP__directive pragma pp:nohide execl execle execlp execv
 __STDPP__directive pragma pp:nohide execve execvp execvpe
 __STDPP__directive pragma pp:nohide getcwd getopt getsubopt putenv realpath
 __STDPP__directive pragma pp:nohide setenv setpgrp sleep spawnlp
@@ -271,8 +269,6 @@ __STDPP__directive pragma pp:nohide strdup vfprintf vprintf vsprintf
 #if !_std_def_valloc
 #undef	valloc	
 #endif
-#undef	bcopy
-#undef	bzero
 #undef	execl
 #undef	execle
 #undef	execlp
@@ -1055,7 +1051,9 @@ typedef struct
 	int		(*mb_width)(wchar_t);
 	int		(*mb_conv)(char*, wchar_t);
 
-	void*		extra[237];
+	unsigned _ast_int4_t	env_serial;
+
+	char		pad[944];
 
 } _Ast_info_t;
 
@@ -1103,20 +1101,14 @@ extern int		truncate64(const char*, off64_t);
 #if !defined(__cplusplus)
 
 #if !defined(memcpy) && !defined(_lib_memcpy) && defined(_lib_bcopy)
-extern void		bcopy(void*, void*, size_t);
 #define memcpy(t,f,n)	(bcopy(f,t,n),(t))
 #endif
 
-#if !defined(memzero)
-#if defined(_lib_bzero)
-extern void		bzero(void*, size_t);
-#if defined(FD_ZERO)
-#undef	FD_ZERO
-#define FD_ZERO(p)	memzero(p,sizeof(*p))
-#endif
-#define memzero(b,n)	(bzero(b,n),(b))
-#else
+#if !defined(memzero) && !defined(_lib_memzero)
+#if defined(_lib_memset) || !defined(_lib_bzero)
 #define memzero(b,n)	memset(b,0,n)
+#else
+#define memzero(b,n)	(bzero(b,n),(b))
 #endif
 #endif
 

@@ -190,9 +190,6 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 			out++;
 
 		} while (c && !ismeta(c) && c!='`');
-		if(!dir || *dir==0)
-			dir = ".";
-
 		out--;
 		if(!var && mode=='\\')
 			addstar = '*';
@@ -208,10 +205,10 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 		char	*cp=begin;
 		char	*left=0;
 		int	 narg,cmd_completion=0;
-		register int size;
+		register int size='x';
 		while(cp>outbuff && ((size=cp[-1])==' ' || size=='\t'))
 			cp--;
-		if(!var && ((cp==outbuff || (strchr(";&|(",size)) && (cp==outbuff+1||size=='('||cp[-2]!='>') && *begin!='~' && !strchr(ap->argval,'/'))))
+		if(!var && !strchr(ap->argval,'/') && ((cp==outbuff || (strchr(";&|(",size)) && (cp==outbuff+1||size=='('||cp[-2]!='>') && *begin!='~' )))
 		{
 			cmd_completion=1;
 			sh_onstate(SH_COMPLETE);
@@ -295,10 +292,18 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 			out = strcopy(begin,*com++);
 		if(mode=='\\')
 		{
-			char *saveout;
-			int nocase;
-			if(saveout=astconf("PATH_ATTRIBUTES",dir,(char*)0))
+			char *saveout = ".";
+			int c, nocase;
+			if(dir)
+			{
+				c = *dir;
+				*dir = 0;
+				saveout = begin;
+			}
+			if(saveout=astconf("PATH_ATTRIBUTES",saveout,(char*)0))
 				nocase = (strchr(saveout,'c')!=0);
+			if(dir)
+				*dir = c;
 			if(!var && addstar==0)
 				*out++ = '/';
 			saveout= ++out;
@@ -377,13 +382,14 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 		sh_offoption(SH_MARKDIRS);
 #ifdef SHOPT_MULTIBYTE
 	{
-		register int c;
+		register int c,n=0;
 		/* first re-adjust cur */
-		out = outbuff + *cur;
-		c = *out;
-		*out = 0;
-		*cur = ed_internal(outbuff,(genchar*)stakptr(0));
-		*out = c;
+		c = outbuff[*cur];
+		outbuff[*cur] = 0;
+		for(out=outbuff; *out;n++)
+			mbchar(out);
+		outbuff[*cur] = c;
+		*cur = n;
 		outbuff[*eol+1] = 0;
 		*eol = ed_internal(outbuff,(genchar*)outbuff);
 	}

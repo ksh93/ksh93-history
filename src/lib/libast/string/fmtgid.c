@@ -38,7 +38,7 @@ __STDPP__directive pragma pp:hide getgrgid
 #endif
 
 #include <ast.h>
-#include <hash.h>
+#include <cdt.h>
 #include <grp.h>
 
 #if defined(__STDPP__directive) && defined(__STDPP__hide)
@@ -49,6 +49,13 @@ __STDPP__directive pragma pp:nohide getgrgid
 
 extern struct group*	getgrgid(gid_t);
 
+typedef struct Id_s
+{
+	Dtlink_t	link;
+	int		id;
+	char		name[1];
+} Id_t;
+
 /*
  * return gid name given gid number
  */
@@ -56,27 +63,35 @@ extern struct group*	getgrgid(gid_t);
 char*
 fmtgid(int gid)
 {
+	register Id_t*		ip;
 	register char*		name;
 	register struct group*	gr;
 	int			z;
 
-	static Hash_table_t*	gidtab;
+	static Dt_t*		dict;
+	static Dtdisc_t		disc;
 
-	if (!gidtab && !(gidtab = hashalloc(NiL, HASH_set, HASH_ALLOCATE, HASH_namesize, sizeof(gid), HASH_name, "gidnum", 0)))
+	if (!dict)
 	{
-		name = fmtbuf(z = sizeof(int) * 3 + 1);
+		disc.key = offsetof(Id_t, id);
+		disc.size = sizeof(int);
+		dict = dtopen(&disc, Dthash);
+	}
+	else if (ip = (Id_t*)dtmatch(dict, &gid))
+		return ip->name;
+	if (gr = getgrgid(gid))
+		name = gr->gr_name;
+	else
+	{
+		name = fmtbuf(z = sizeof(gid) * 3 + 1);
 		sfsprintf(name, z, "%I*d", sizeof(gid), gid);
 	}
-	else if (!(name = hashget(gidtab, &gid)))
+	if (dict && (ip = newof(0, Id_t, 1, strlen(name))))
 	{
-		if (gr = getgrgid(gid))
-			name = gr->gr_name;
-		else
-		{
-			name = fmtbuf(z = sizeof(int) * 3 + 1);
-			sfsprintf(name, z, "%I*d", sizeof(gid), gid);
-		}
-		hashput(gidtab, NiL, name = strdup(name));
+		ip->id = gid;
+		strcpy(ip->name, name);
+		dtinsert(dict, ip);
+		return ip->name;
 	}
 	return name;
 }

@@ -26,13 +26,13 @@ filter :: filter.sh
 
 ignore :: ignore.sh
 
-mamprobe :: mamprobe.sh
-
 silent :: silent.sh
 
 :PACKAGE_INIT: mamake.c proto.c ratz.c release.c
 
 :: RELEASE hosttype.tst p.c
+
+LICENSE : .DONTCARE
 
 /*
  * hosttype specific cc workaround initialization
@@ -56,7 +56,8 @@ $(BINDIR)/cc :INSTALL: (CC.HOSTTYPE) package hello.c \
 		cc.sgi.mips3 \
 		cc.sgi.mips3-o32 \
 		cc.sgi.mips4 \
-		cc.sgi.mips4-n32
+		cc.sgi.mips4-n32 \
+		cc.unix.mc68k
 	for cc in $(*:N=*cc.*.*)
 	do	case $cc in
 		*cc.$(CC.HOSTTYPE))
@@ -88,6 +89,7 @@ $(BINDIR)/ld :INSTALL: (CC.HOSTTYPE) package $(BINDIR)/cc \
 	fi
 
 $(BINDIR)/ldd :INSTALL: .VIRTUAL (CC.HOSTTYPE) package $(BINDIR)/cc \
+		ldd.cygwin.i386 \
 		ldd.darwin.ppc \
 		ldd.ibm.risc \
 		ldd.mvs.390 \
@@ -104,6 +106,16 @@ $(BINDIR)/ldd :INSTALL: .VIRTUAL (CC.HOSTTYPE) package $(BINDIR)/cc \
 				fi
 			esac
 		done
+	fi
+
+$(BINDIR)/mkdir :INSTALL: mkdir.sh
+	if	test ! -x $(<) -a -x /bin/mkdir
+	then	mkdir -p 2>/dev/null || :
+		if	test -d ./-p
+		then	rmdir ./-p
+			cp $(*) $(<)
+			chmod +x $(<)
+		fi
 	fi
 
 /*
@@ -161,12 +173,46 @@ $(BINDIR)/.paths :INSTALL:
  * probe initialization
  */
 
-for T C+probe C+make+probe.lcl
+for T C+probe C+make+probe.lcl C+pp+probe.lcl
 	if T == "*.lcl"
 		$(T) : .DONTCARE
 	end
 	$(LIBDIR)/probe/$(T:C,+,/,G) :INSTALL: $(T)
 end
+
+$(LIBDIR)/probe/C/mam/probe :INSTALL: mprobe
+
+mprobe :: mprobe.sh
+
+$(LIBDIR)/probe/C/make :INSTALLDIR: probe probe.ini
+
+probe.sh : C+probe make.probe
+	cat $(*) > $(<)
+
+probe :: probe.sh
+
+probe.ini : (CC.HOSTTYPE) probe.win32
+	t=$(CC.HOSTTYPE)
+	ifs=$IFS
+	IFS=.
+	set x $t
+	IFS=$ifs
+	t=$2
+	set x $(*)
+	while	:
+	do	shift
+		case $# in
+		0)	break ;;
+		esac
+		case $1 in
+		*probe.$t)
+			break
+		esac
+	done
+	case $1 in
+	?*)	cmp -s $1 $(<) || cp $1 $(<) ;;
+	*)	: > $(<)
+	esac
 
 $(LIBDIR)/make :INSTALLDIR: PROBE.mk TEST.mk WWW.mk MSGFUN.mk MSGKEY.mk
 

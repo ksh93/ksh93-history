@@ -256,5 +256,19 @@ if	[[ $(for i in foo bar
 	  done) != $'foo\nbar' ]]
 then	err_exit 'for loop subshell optimizer bug'
 fi
-
+unset a1
+optbug()
+{
+	set -A a1  foo bar bam
+	integer i
+	for ((i=0; i < 3; i++))
+	do
+		(( ${#a1[@]} < 2 )) && return 0
+		set -- "${a1[@]}"
+		shift
+		set -A a1 -- "$@"
+	done
+	return 1
+}
+optbug ||  err_exit 'array size optimzation bug'
 exit $((Errors))

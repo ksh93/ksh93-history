@@ -789,6 +789,7 @@ static int
 token(register Cenv_t* env)
 {
 	int	c;
+	int	posixkludge;
 
 	if (env->token.push)
 		return env->token.lex;
@@ -829,7 +830,7 @@ token(register Cenv_t* env)
 	}
 	if (env->flags & REG_LITERAL)
 		return c;
-	if (env->posixkludge)
+	if (posixkludge = env->posixkludge)
 	{
 		env->posixkludge = 0;
 		if (c == '*')
@@ -873,12 +874,12 @@ token(register Cenv_t* env)
 	}
 	else if (c == '$')
 	{
-		if (env->type < SRE && (*(env->cursor + 1) == 0 || *(env->cursor + 1) == env->delimiter || *(env->cursor + 1) == env->terminator) || (env->flags & REG_MULTIPLE) && *(env->cursor + 1) == '\n')
+		if (env->type == BRE && (*(env->cursor + 1) == 0 || *(env->cursor + 1) == env->delimiter || *(env->cursor + 1) == env->terminator || *(env->cursor + 1) == '\\' && *(env->cursor + 2) == ')') || (env->flags & REG_MULTIPLE) && *(env->cursor + 1) == '\n')
 			return T_DOLL;
 	}
 	else if (c == '^')
 	{
-		if (env->type == BRE && env->cursor == env->pattern)
+		if (env->type == BRE && (env->cursor == env->pattern || posixkludge))
 		{
 			env->posixkludge = 1;
 			return T_CFLX;
@@ -1693,7 +1694,9 @@ rep(Cenv_t* env, Rex_t* e, int number, int last)
 		if (minimal >= 0)
 			mark(e, minimal);
 		return e;
+#if HUH_2002_08_07
 	case REX_BEG:
+#endif
 	case REX_BEG_STR:
 	case REX_END_STR:
 	case REX_FIN_STR:

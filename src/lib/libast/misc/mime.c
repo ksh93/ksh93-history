@@ -32,7 +32,7 @@
  * mime/mailcap support library
  */
 
-static const char id[] = "\n@(#)$Id: mime library (AT&T Research) 1997-07-17 $\0\n";
+static const char id[] = "\n@(#)$Id: mime library (AT&T Research) 2002-09-07 $\0\n";
 
 static const char lib[] = "libast:mime";
 
@@ -472,6 +472,7 @@ arg(register Parse_t* pp, int first)
 	register char*	s;
 	register int	c;
 	register int	q;
+	int		x;
 
 	for (s = pp->next; isspace(*s) && *s != '\n'; s++);
 	if (!*s || *s == '\n')
@@ -482,15 +483,25 @@ arg(register Parse_t* pp, int first)
 	pp->name.data = s;
 	pp->value.data = 0;
 	q = 0;
+	x = 0;
 	while ((c = *s++) && c != ';' && c != '\n')
 	{
 		if (c == '"')
 		{
 			q = 1;
 			if (pp->value.data)
+			{
 				pp->value.data = s;
-			else if (first < 0 && pp->name.data == (s - 1))
+				if (x)
+					x = -1;
+				else
+					x = 1;
+			}
+			else if (!x && pp->name.data == (s - 1))
+			{
+				x = 1;
 				pp->name.data = s;
+			}
 			do
 			{
 				if (!(c = *s++) || c == '\n')
@@ -499,7 +510,7 @@ arg(register Parse_t* pp, int first)
 					break;
 				}
 			} while (c != '"');
-			if (first < 0)
+			if (first < 0 || x > 0)
 			{
 				c = ';';
 				break;
@@ -518,7 +529,7 @@ arg(register Parse_t* pp, int first)
 	if (first >= 0 || !q)
 		for (s--; s > pp->name.data && isspace(*(s - 1)); s--);
 	if (pp->value.data)
-		pp->value.size = s - pp->value.data - q;
+		pp->value.size = s - pp->value.data - (q && first < 0);
 	else
 		pp->name.size = s - pp->name.data - (q && first < 0);
 	return pp->name.size > 0;

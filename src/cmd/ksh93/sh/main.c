@@ -316,6 +316,8 @@ sh_main(int ac, char *av[], void (*userinit)(int))
 	sh_onstate(sh_isoption(SH_INTERACTIVE));
 	nv_putval(IFSNOD,(char*)e_sptbnl,NV_RDONLY);
 	exfile(iop,fdin);
+	if(sh.userinit)
+		(*sh.userinit)(-1);
 	sh_done(0);
 	/* NOTREACHED */
 	return(0);

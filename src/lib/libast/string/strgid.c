@@ -40,7 +40,7 @@ __STDPP__directive pragma pp:hide getgrgid getgrnam getpwnam
 #endif
 
 #include <ast.h>
-#include <hash.h>
+#include <cdt.h>
 #include <pwd.h>
 #include <grp.h>
 
@@ -56,11 +56,12 @@ extern struct group*	getgrgid(gid_t);
 extern struct group*	getgrnam(const char*);
 extern struct passwd*	getpwnam(const char*);
 
-typedef struct
+typedef struct Id_s
 {
-	HASH_HEADER;
-	int	id;
-} bucket;
+	Dtlink_t	link;
+	int		id;
+	char		name[1];
+} Id_t;
 
 /*
  * return gid number given gid/uid name
@@ -72,28 +73,37 @@ typedef struct
 int
 strgid(const char* name)
 {
+	register Id_t*		ip;
 	register struct group*	gr;
 	register struct passwd*	pw;
-	register bucket*	b;
+	int			id;
 	char*			e;
 
-	static Hash_table_t*	gidtab;
+	static Dt_t*		dict;
+	static Dtdisc_t		disc;
 
-	if (!gidtab && !(gidtab = hashalloc(NiL, HASH_set, HASH_ALLOCATE, HASH_name, "gidnam", 0)))
-		return -1;
-	if (b = (bucket*)hashlook(gidtab, name, HASH_LOOKUP|HASH_FIXED, (char*)sizeof(bucket)))
-		return b->id;
-	if (!(b = (bucket*)hashlook(gidtab, NiL, HASH_CREATE|HASH_FIXED, (char*)sizeof(bucket))))
-		return -1;
+	if (!dict)
+	{
+		disc.key = offsetof(Id_t, name);
+		dict = dtopen(&disc, Dthash);
+	}
+	else if (ip = (Id_t*)dtmatch(dict, name))
+		return ip->id;
 	if (gr = getgrnam(name))
-		return b->id = gr->gr_gid;
-	if (pw = getpwnam(name))
-		return b->id = pw->pw_gid;
-	if (strmatch(name, "+([0-9])"))
-		return b->id = strtol(name, NiL, 0);
-	b->id = strtol(name, &e, 0);
-	if (!*e && getgrgid(b->id))
-		return b->id;
-	b->id = -2;
-	return -1;
+		id = gr->gr_gid;
+	else if (pw = getpwnam(name))
+		id = pw->pw_gid;
+	else
+	{
+		id = strtol(name, &e, 0);
+		if (*e || !getgrgid(id))
+			id = -1;
+	}
+	if (dict && (ip = newof(0, Id_t, 1, strlen(name))))
+	{
+		strcpy(ip->name, name);
+		ip->id = id >= 0 ? id : -2;
+		dtinsert(dict, ip);
+	}
+	return id;
 }

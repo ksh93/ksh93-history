@@ -143,12 +143,13 @@ extern int		vmcompact _ARG_(( Vmalloc_t* ));
 
 extern Vmdisc_t*	vmdisc _ARG_(( Vmalloc_t*, Vmdisc_t* ));
 
-extern Vmalloc_t*	vmmopen _ARG_(( char*, Void_t* ));
+extern Vmalloc_t*	vmmopen _ARG_(( char*, Void_t*, size_t ));
 extern Void_t*		vmmset _ARG_((Vmalloc_t*, int, Void_t*, int));
 
 extern Void_t*		vmalloc _ARG_(( Vmalloc_t*, size_t ));
 extern Void_t*		vmalign _ARG_(( Vmalloc_t*, size_t, size_t ));
 extern Void_t*		vmresize _ARG_(( Vmalloc_t*, Void_t*, size_t, int ));
+extern Void_t*		vmgetmem _ARG_(( Vmalloc_t*, Void_t*, size_t ));
 extern int		vmfree _ARG_(( Vmalloc_t*, Void_t* ));
 
 extern long		vmaddr _ARG_(( Vmalloc_t*, Void_t* ));

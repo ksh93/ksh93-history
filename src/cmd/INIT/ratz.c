@@ -5,7 +5,7 @@
  * _SEAR_* macros for win32 self extracting archives -- see sear(1).
  */
 
-static char id[] = "\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 2002-02-02 $\0\n";
+static char id[] = "\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 2002-08-07 $\0\n";
 
 #if _PACKAGE_ast
 
@@ -13,7 +13,7 @@ static char id[] = "\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler)
 #include <error.h>
 
 static const char usage[] =
-"[-?\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 2002-02-02 $\n]"
+"[-?\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 2002-08-07 $\n]"
 "[-author?Jean-loup Gailly]"
 "[-author?Mark Adler]"
 "[-author?Glenn Fowler <gsf@research.att.com>]"
@@ -3051,7 +3051,6 @@ char**	argv;
 	unsigned long		m;
 	const unsigned char*	a2x;
 	int			clear;
-	int			escape;
 	int			list;
 	int			local;
 	int			meter;
@@ -3108,9 +3107,6 @@ char**	argv;
 		a2x = 0;
 		break;
 	}
-	escape = 033;
-	if (a2x)
-		escape = a2x[escape];
 #if defined(_SEAR_OPTS)
 	opts[0] = argv[0];
 	opts[1] = _SEAR_OPTS;
@@ -3420,105 +3416,107 @@ char**	argv;
 			mode |= S_IWOTH;
 		if (n & TOEXEC)
 			mode |= S_IXOTH;
-		if (list)
+		if (list || meter)
 		{
-			if (verbose)
+			if (meter)
 			{
-				switch (header.typeflag)
-				{
-				case REGTYPE:
-				case AREGTYPE:
-					c = '-';
-					break;
-				case DIRTYPE:
-					c = 'd';
-					break;
-				case LNKTYPE:
-					c = 'h';
-					break;
-				case SYMTYPE:
-					c = 'l';
-					break;
-				default:
-					c = '?';
-					break;
-				}
-				printf("%c", c);
-				m = 0400; 
-				while (m)
-				{
-					printf("%c", (n & m) ? 'r' : '-');
-					m >>= 1;
-					printf("%c", (n & m) ? 'w' : '-');
-					m >>= 1;
-					printf("%c", (n & m) ? 'x' : '-');
-					m >>= 1;
-				}
-				printf(" %10lu ", number(header.size));
-			}
-			switch (header.typeflag)
-			{
-			case LNKTYPE:
-				printf("%s == %s\n", path, header.linkname);
-				break;
-			case SYMTYPE:
-				printf("%s => %s\n", path, header.linkname);
-				break;
-			default:
-				printf("%s\n", path);
-				break;
-			}
-			if (skip(stdin, gz, buf, number(header.size)))
-				EXIT(1);
-			continue;
-		}
-		if (meter)
-		{
-			int	i;
-			int	j;
-			int	k;
-			int	n;
-			int	p;
-			char	bar[METER_parts + 1];
+				int	i;
+				int	j;
+				int	k;
+				int	n;
+				int	p;
+				char	bar[METER_parts + 1];
 
-			for (s = path; *s; s++)
-				if (s[0] == ' ' && s[1] == '-' && s[2] == '-' && s[3] == ' ')
-					break;
-			if (*s)
-			{
-				if (clear)
+				for (s = path; *s; s++)
+					if (s[0] == ' ' && s[1] == '-' && s[2] == '-' && s[3] == ' ')
+						break;
+				if (*s)
 				{
-					fprintf(stderr, "%*s", clear, "\r");
-					clear = 0;
+					if (clear)
+					{
+						fprintf(stderr, "%*s", clear, "\r");
+						clear = 0;
+					}
+					fprintf(stderr, "\n%s\n\n", path);
 				}
-				fprintf(stderr, "\n%s\n\n", path);
+				else
+				{
+					n = strlen(s = path);
+					p = (state.blocks * 100) / total;
+					if (n > (METER_width - METER_parts - 1))
+					{
+						s += n - (METER_width - METER_parts - 1);
+						n = METER_width - METER_parts - 1;
+					}
+					i = (p / (100 / METER_parts));
+					j = n + METER_parts + 2;
+					if (!clear)
+						clear = j + 5;
+					if ((k = clear - j - 5) < 0)
+						k = 0;
+					n = 0;
+					while (n < i)
+						bar[n++] = '*';
+					while (n < sizeof(bar) - 1)
+						bar[n++] = ' ';
+					bar[n] = 0;
+					clear = fprintf(stderr, "%02d%% |%s| %s%*s", p, bar, s, k, "\r");
+				}
 			}
 			else
 			{
-				n = strlen(s = path);
-				p = (state.blocks * 100) / total;
-				if (n > (METER_width - METER_parts - 1))
+				if (verbose)
 				{
-					s += n - (METER_width - METER_parts - 1);
-					n = METER_width - METER_parts - 1;
+					switch (header.typeflag)
+					{
+					case REGTYPE:
+					case AREGTYPE:
+						c = '-';
+						break;
+					case DIRTYPE:
+						c = 'd';
+						break;
+					case LNKTYPE:
+						c = 'h';
+						break;
+					case SYMTYPE:
+						c = 'l';
+						break;
+					default:
+						c = '?';
+						break;
+					}
+					printf("%c", c);
+					m = 0400; 
+					while (m)
+					{
+						printf("%c", (n & m) ? 'r' : '-');
+						m >>= 1;
+						printf("%c", (n & m) ? 'w' : '-');
+						m >>= 1;
+						printf("%c", (n & m) ? 'x' : '-');
+						m >>= 1;
+					}
+					printf(" %10lu ", number(header.size));
 				}
-				i = (p / (100 / METER_parts));
-				j = n + METER_parts + 5;
-				if (!clear)
-					clear = j;
-				if ((k = clear - j + 1) < 0)
-					k = 0;
-				clear = j;
-				t = bar;
-				for (j = METER_parts / 2 - 3; j > 0; j--)
-					*t++ = ' ';
-				*t++ = (j = p / 10) ? ('0' + j) : ' ';
-				*t++ = '0' + (p % 10);
-				*t++ = '%';
-				for (j = METER_parts - (METER_parts / 2 - 3); j > 0; j--)
-					*t++ = ' ';
-				*t = 0;
-				fprintf(stderr, " %c[7m%-.*s%c[0m%s%s%*s", escape, i, bar, escape, bar + i, s, k, "\r");
+				switch (header.typeflag)
+				{
+				case LNKTYPE:
+					printf("%s == %s\n", path, header.linkname);
+					break;
+				case SYMTYPE:
+					printf("%s => %s\n", path, header.linkname);
+					break;
+				default:
+					printf("%s\n", path);
+					break;
+				}
+			}
+			if (list)
+			{
+				if (skip(stdin, gz, buf, number(header.size)))
+					EXIT(1);
+				continue;
 			}
 		}
 		else if (verbose)

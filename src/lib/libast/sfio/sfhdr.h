@@ -33,7 +33,6 @@
 **	Written by Kiem-Phong Vo
 */
 
-/* map <sfio_s.h> members to the library implementation form */
 #define _next		next
 #define _endw		endw
 #define _endr		endr
@@ -330,10 +329,10 @@
 #undef SF_MTSAFE /* no need to worry about thread-safety */
 #define SF_MTSAFE		0
 
-#define SFONCE()		(0)
+#define SFONCE()		/*(0)*/
 
-#define SFMTXLOCK(f)		(0)
-#define SFMTXUNLOCK(f)		(0)
+#define SFMTXLOCK(f)		/*(0)*/
+#define SFMTXUNLOCK(f)		/*(0)*/
 #define SFMTXSTART(f,v)		{ if(!f) return(v); }
 #define SFMTXRETURN(f,v)	{ return(v); }
 
@@ -388,7 +387,7 @@
 #define fork	vfork
 #endif
 
-#if _lib_unlink
+#if !defined(remove) && _lib_unlink
 #define remove	unlink
 #endif
 
@@ -826,8 +825,9 @@ typedef struct _sfextern_s
 				((f)->mode &= ~(SF_LOCK|SF_RC|SF_RV), _SFOPEN(f), 0) )
 
 /* check to see if the stream can be accessed */
-#define SFFROZEN(f)	((f)->mode&(SF_PUSH|SF_LOCK|SF_PEEK) ? 1 : \
-			 ((f)->mode&SF_STDIO) ? (*_Sfstdsync)(f) : 0)
+#define SFFROZEN(f)	(((f)->mode&(SF_PUSH|SF_LOCK|SF_PEEK)) ? 1 : \
+			 !((f)->mode&SF_STDIO) ? 0 : \
+			 _Sfstdsync ? (*_Sfstdsync)(f) : (((f)->mode &= ~SF_STDIO),0) )
 
 
 /* set discipline code */
@@ -1071,7 +1071,7 @@ extern Sfrsrv_t*	_sfrsrv _ARG_((Sfio_t*, ssize_t));
 extern int		_sfsetpool _ARG_((Sfio_t*));
 extern char*		_sfcvt _ARG_((Sfdouble_t,char*,size_t,int,int*,int*,int*,int));
 extern char**		_sfgetpath _ARG_((char*));
-extern Sfdouble_t	_sfdscan _ARG_((Void_t*, int(*)(Void_t*)));
+extern Sfdouble_t	_sfdscan _ARG_((Void_t*, int(*)(Void_t*,int)));
 
 #if _BLD_sfio && defined(__EXPORT__)
 #define extern	__EXPORT__

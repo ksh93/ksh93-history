@@ -15,7 +15,7 @@ vmalloc \- virtual memory allocation
 .MW "int vmset(Vmalloc_t* region, int flags, int type);"
 .MW "Vmalloc_t* Vmheap;"
 .MW "Vmdisc_t* vmdisc(Vmalloc_t* region, Vmdisc_t* disc);"
-.MW "Vmalloc_t* vmmopen(char* file, Void_t* base);"
+.MW "Vmalloc_t* vmmopen(char* file, Void_t* base, size_t round);"
 .MW "Void_t* vmmset(Vmalloc_t* vm, int key, Void_t* data, int set);"
 .fi
 .SS "Allocation functions"
@@ -139,6 +139,10 @@ This function always returns the current discipline.
 creates a region to allocate memory given by the system call \fImmap(2)\fP.
 The given \fIfile\fP is the backing store for the map.
 If \fIbase\fP is not \f5NULL\fP, it is the address to map the data to.
+The \fIround\fP argument asserts that the size of the region is always
+a multiple of this value. However, note that \fIvmmopen\fP has
+an internally defined minimum round value (typically 64K) which may be
+used if the given value is too small.
 .PP
 .I vmmset
 sets a \fIdata\fP value associated with a \fIkey\fP if \f5set\fP is non-zero.

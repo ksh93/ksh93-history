@@ -244,7 +244,7 @@ static int whence(Shell_t *shp,char **argv, register int flags)
 				if(*cp=='/' && (np=nv_search(cp,shp->bltin_tree,0)))
 					msg = sh_translate(is_builtver);
 				/* tracked aliases next */
-				else if(!notrack && *name == '/')
+				else if(!notrack || strchr(name,'/'))
 					msg = sh_translate("is");
 				else
 					msg = sh_translate(is_talias);

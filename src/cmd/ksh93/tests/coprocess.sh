@@ -117,6 +117,7 @@ unset line
 	do	echo $line  |&
 		if	cat  <&p 
 		then	((n++))
+			wait $!
 		fi
 	done > /dev/null 2>&1 <<-  !
 		line1

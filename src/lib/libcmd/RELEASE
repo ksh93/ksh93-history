@@ -1,3 +1,6 @@
+02-09-06 wclib.c: fix 1 char-at-a-time miscount bug
+02-08-19 chgrp.c: convert to use <cdt.h>
+02-07-23 join.c: fix comm snarf typo
 02-04-05 date.c: add %u
 02-01-24 stty.c: ifdef a few more macros for uts (yes, its still running)
 01-12-14 date.c: clarify %z doc

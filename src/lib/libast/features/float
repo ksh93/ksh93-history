@@ -7,13 +7,15 @@ tst	_ast_mpy_overflow_fpe note{ fpe on mpy overflow }end noexecute{
 	{
 		float	f;
 		float	p;
+		int	i;
 
+		i = 0;
 		p = f = 1.0;
 		do
 		{
 			p = f;
 			f *= 2.0;
-		} while (f != p);
+		} while (f != p && ++i < 1024);
 		return 0;
 	}
 }end
@@ -23,13 +25,15 @@ tst	_ast_div_underflow_fpe note{ fpe on div underflow }end noexecute{
 	{
 		float	f;
 		float	p;
+		int	i;
 
+		i = 0;
 		p = f = 1.0;
 		do
 		{
 			p = f;
 			f /= 2.0;
-		} while (f != p);
+		} while (f != p && ++i < 1024);
 		return 0;
 	}
 }end
@@ -761,7 +765,7 @@ tst	- -DN=1 - -DN=2 output{
 	}
 }end
 
-tst	- -DEXP=1 - -DADD=1 - -DMPY=1 output{
+tst	- -lm -DEXP=1 - -DADD=1 - -DMPY=1 output{
 	#include "FEATURE/common"
 	#include <sys/types.h>
 	#include <signal.h>

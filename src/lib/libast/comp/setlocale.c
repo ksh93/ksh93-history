@@ -112,7 +112,7 @@ extern _Ast_state_t		old;
 
 #if _UWIN
 
-#include <windows.h>
+#include <ast_windows.h>
 
 #undef	_lib_setlocale
 #define _lib_setlocale		1

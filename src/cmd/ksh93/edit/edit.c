@@ -709,6 +709,7 @@ int ed_read(int fd, char *buff, int size)
 	register int rv= -1;
 	register int delim = (ep->e_raw==RAWMODE?'\r':'\n');
 	int mode = -1;
+	int (*waitevent)(int,long,int) = sh.waitevent;
 	if(ep->e_raw==ALTMODE)
 		mode = 1;
 	if(size < 0)
@@ -718,13 +719,14 @@ int ed_read(int fd, char *buff, int size)
 	}
 	sh_onstate(SH_TTYWAIT);
 	errno = EINTR;
+	sh.waitevent = 0;
 	while(rv<0 && errno==EINTR)
 	{
 		if(sh.trapnote&(SH_SIGSET|SH_SIGTRAP))
 			goto done;
 		/* an interrupt that should be ignored */
 		errno = 0;
-		if(!sh.waitevent || (rv=(*sh.waitevent)(fd,-1L,0))==0)
+		if(!waitevent || (rv=(*waitevent)(fd,-1L,0))>=0)
 			rv = sfpkrd(fd,buff,size,delim,-1L,mode);
 	}
 	if(rv < 0)
@@ -765,6 +767,7 @@ int ed_read(int fd, char *buff, int size)
 	else if(rv>=0 && mode>0)
 		rv = read(fd,buff,rv>0?rv:1);
 done:
+	sh.waitevent = waitevent;
 	sh_offstate(SH_TTYWAIT);
 	return(rv);
 }

@@ -1,3 +1,65 @@
+02-09-22 port/astconf.c: return values in fmtbuf() buffer instead of stack
+	 port/mnt.c: don't set MNT_REMOTE for win32 ?:\* paths
+	 sfio/sfvscanf.c: _sfdscan() is library global (not static)
+02-09-21 path/pathkey.c: add tool arg for mamake compatible hash
+	 features/fcntl.c: handle iffe _hdr_lcl_* => _lcl_* change
+02-09-15 comp/conf.sh: fix enum vs. macro test
+	 cdt: kpv sync
+02-09-11 ast.h,features/common: move _WIN32 macro init to features/common
+	 features/common: enable __EXTERN__ and __DEFINE__ for _WIN32&!_UWIN
+	 features/float: add -lm to _ast_*_nan_init tests
+	 vmalloc: kpv sync with vmresizef => vmgetmem
+	 features/iconv: must have both <iconv.h> and iconv_open()!
+	 features/vmalloc: alloca test must compile *and* link
+	 sfio/sfvscanf.c,sfstrtof.h: add flag arg to char get, fix NaN loop
+02-09-10 vmalloc/vmhdr.h: enable getpagesize() and sbrk() prototypes
+	 features/fcntl.c: enable mmap64() prototype
+	 include/ast_windows.h: windows.h wrapper with ast namespace workarounds
+02-09-07 misc/mime.c: fix quoted value parse bug that ate the whole line
+02-09-05 features/vmalloc: add free() to _std_malloc test
+	 include/ast.h: NoF(x) now defines _DATA_x for !_BLD_DLL too
+	 tm/tmlocale.c: { C POSIX en } == unix dadgummit
+02-08-29 path/pathfind.c: initialize Dir_t.next=0
+02-08-28 uwin/rint.c: update
+	 features/libpath.sh: "bin" is now the default value
+02-08-22 vmtrace.h: add for debugging
+02-08-20 misc/magic.c: convert to use <cdt.h>
+	 vmalloc/vmresizef.c: add for generic discipline resizef default
+	 string/strelapsed.c: allow long time component names
+02-08-19 misc/optget.c: add `.fp 5 CW' to --nroff output
+	 string/(fmtfs|fmtuid|fmtgid|strgid|struid).c: convert to use <cdt.h>
+	 include/dt.h,cdt/dtnew.c: add for dtopen() in specific vm region
+02-08-13 comp/omitted.c: fix bzero logic for e.g. unixware.i386
+	 include/ast.h: add fmtbase->fmtbasell; swap in 2003-09-01
+02-08-12 regex/regnexec.c: fix REG_MINIMAL REX_DOT mb bug
+02-08-08 features/iconv: <ast_common.h> instead of <sys/types.h> <ast_common.h>
+02-08-07 regex/regcomp.c: recognize anchors in BRE subexpressions
+02-08-06 comp/iconv.c: handle win32 cpNNNN == windows-NNNN aliases
+02-08-05 cdt/*: sync with kpv src
+02-08-02 features/iconv: include sys/types.h for ast_types.h
+02-08-01 misc/magic.c: magic file "." names the default
+	 misc/magic.c: handle addr type (from irix string)
+	 features/lib: move malloc tests to features/vmalloc
+	 features/vmalloc: snarf tests from features/lib
+	 vmalloc/*: sync with kpv src
+	 comp/libc.c: dropped -- __libc_* intercepts moved to vmalloc/malloc.c
+02-07-30 features/lib: handle __libc_malloc() in _std_malloc test
+	 vmalloc/malloc.c: add gnu pvalloc()
+	 features/vmalloc: fix alloca check
+02-07-29 features/limits.c: handle netbsd guards
+02-07-27 sfio/sfpoll.c: handle rw pipes
+02-07-25 features/iconv: include ast_types.h for size_t in ast_iconv.h
+02-07-18 apply LARGEFILE64 header prototype clash patches
+	 misc/optget.c: __EXTERN__ _opt_info_ instead of opt_info
+02-07-17 ast_std.h: memzero() now defaults to memset() instead of bzero()
+02-07-16 ast_std.h: add ast.env_serial
+	 misc/setenviron.c: increment ast.env_serial
+	 include/tm.h: tmset() now calls tminit() directly
+	 tm/tminit.c: check ast.env_serial for env change
+	 tm/tmfix.c: speed up for large values of tm_mday
+02-07-15 comp/fnmatch.c: fix memory leak caused by missing regfree()
+	 comp/strstr.c: fix broken interpretation and implementation
+	 comp/iconv.c: intercept (but no-op) null to and from buffer pointers
 02-06-27 ast_std.h: map _sysconf => _ast_sysconf for sun
 02-06-26 cdt,sfio,vmalloc: kpv sync -- is this ever easy?
 02-06-24 sfio: kpv sync, vfwscanf(),fputw() fix (wcslen(x)*sizeof(wchar_t)!!)

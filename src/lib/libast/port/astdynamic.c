@@ -36,7 +36,7 @@
 
 #undef	strcoll
 
-#include <windows.h>
+#include <ast_windows.h>
 
 extern Sfio_t	_Sfstdin;
 extern Sfio_t	_Sfstdout;

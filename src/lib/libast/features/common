@@ -85,6 +85,11 @@ cat{
 	#	endif
 	#endif
 
+	/* windows variants and veneers */
+	#if !defined(_WIN32) && (_UWIN || __CYGWIN__ || __EMX__)
+	#	define _WIN32		1
+	#endif
+
 	/* dynamic linked library external scope handling */
 	#ifdef __DYNAMIC__
 	#	undef	__DYNAMIC__
@@ -117,7 +122,7 @@ cat{
 	#		define _astimport	extern
 	#	endif
 	#endif
-	#if _dll_import && !_BLD_DLL
+	#if _dll_import && ( !_BLD_DLL || _WIN32 && !_UWIN )
 	#	ifdef __STDC__
 	#	define __EXTERN__(T,obj)	extern T obj; T* _imp__ ## obj = &obj
 	#	define __DEFINE__(T,obj,val)	T obj = val; T* _imp__ ## obj = &obj
@@ -141,13 +146,8 @@ tst	- -DN=1 - -DN=2 - -DN=3 - -DN=4 - -DN=5 - -DN=6 - -DN=7 - -DN=8 - -DN=0 outp
 	#include <sys/types.h>
 
 	_BEGIN_EXTERNS_
-	#if _STD_
-	extern int	sprintf(const char*, ...);
-	extern int	strcmp(const char*, const char*);
-	#else
-	extern int	sprintf();
-	extern int	strcmp();
-	#endif
+	extern int	sprintf _ARG_((const char*, ...));
+	extern int	strcmp _ARG_((const char*, const char*));
 	_END_EXTERNS_
 
 	#if _STD_
@@ -270,13 +270,8 @@ tst	- -DN=1 - -DN=0 output{
 	#include <sys/types.h>
 
 	_BEGIN_EXTERNS_
-	#if _STD_
-	extern int	sprintf(const char*, ...);
-	extern int	strcmp(const char*, const char*);
-	#else
-	extern int	sprintf();
-	extern int	strcmp();
-	#endif
+	extern int	sprintf _ARG_((const char*, ...));
+	extern int	strcmp _ARG_((const char*, const char*));
 	_END_EXTERNS_
 
 	#if !N || !_STD_

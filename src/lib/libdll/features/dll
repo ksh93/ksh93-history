@@ -133,6 +133,37 @@ tst	- output{
 			printf("#define _DLL_RLD_SYM_TYPE	void*\n");
 		}
 	#endif
+		printf("\n");
+		printf("#define DLL_INFO_PREVER	0x0001	/* pre-suffix style version */\n");
+		printf("#define DLL_INFO_DOTVER	0x0002	/* post-suffix style version */\n");
+		printf("\n");
+		printf("typedef struct Dllinfo_s\n");
+		printf("{\n");
+		printf("	char**	sibling;	/* sibling dirs on $PATH */\n");
+		printf("	char*	prefix;		/* library name prefix */\n");
+		printf("	char*	suffix;		/* library name suffix */\n");
+		printf("	int	flags;		/* DLL_INFO_* flags */\n");
+		printf("#ifdef _DLLINFO_PRIVATE_\n");
+		printf("	_DLLINFO_PRIVATE_\n");
+		printf("#endif\n");
+		printf("} Dllinfo_t;\n");
+		printf("\n");
+		printf("typedef struct Dllent_s\n");
+		printf("{\n");
+		printf("	char*		path;\n");
+		printf("	char*		name;\n");
+		printf("#ifdef _DLLENT_PRIVATE_\n");
+		printf("	_DLLENT_PRIVATE_\n");
+		printf("#endif\n");
+		printf("} Dllent_t;\n");
+		printf("\n");
+		printf("typedef struct Dllscan_s\n");
+		printf("{\n");
+		printf("	void*		pad;\n");
+		printf("#ifdef _DLLSCAN_PRIVATE_\n");
+		printf("	_DLLSCAN_PRIVATE_\n");
+		printf("#endif\n");
+		printf("} Dllscan_t;\n");
 	#if !_hdr_dlfcn || !_lib_dlopen
 		printf("\n");
 		printf("extern void*		dlopen(const char*, int);\n");
@@ -145,6 +176,7 @@ tst	- output{
 		printf("#define extern          __EXPORT__\n");
 		printf("#endif\n");
 		printf("\n");
+		printf("extern Dllinfo_t*	dllinfo(void);\n");
 		printf("extern void*		dllfind(const char*, const char*, int);\n");
 		printf("extern void*		dllnext(int);\n");
 		printf("extern void*		dlllook(void*, const char*);\n");
@@ -156,6 +188,10 @@ tst	- output{
 			printf("#define dllnext(f)	_dll_next(f, &_DLL_RLD_SYM)\n");
 		}
 	#endif
+		printf("\n");
+		printf("extern Dllscan_t*	dllsopen(const char*, const char*, const char*);\n");
+		printf("extern Dllent_t*	dllsread(Dllscan_t*);\n");
+		printf("extern int		dllsclose(Dllscan_t*);\n");
 		printf("\n");
 		printf("#undef  extern\n");
 	#if _hdr_rld_interface

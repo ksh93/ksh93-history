@@ -1146,15 +1146,49 @@ done:
 	return (Void_t*)data;
 }
 
-#if defined(_WIN32)
-#include	<windows.h>
+
+/* different modes of getting raw memory */
+#define USE_MALLOC	1	/* use native malloc		*/
+#define USE_WIN32	2	/* WIN32 VirtualAlloc		*/
+#define USE_MMAP	3	/* mmap on /dev/zero is ok	*/
+#undef GET_MEMORY
+
+#if !defined(GET_MEMORY) && (_std_malloc || _BLD_INSTRUMENT || cray)
+#define GET_MEMORY	USE_MALLOC
+#endif /* (_std_malloc || _BLD_INSTRUMENT || cray) */
+
+#if !defined(GET_MEMORY) && defined(_WIN32)
+#define GET_MEMORY	USE_WIN32
+#if _PACKAGE_ast
+#include		<ast_windows.h>
+#else
+#include		<windows.h>
+#endif
 #endif /*_WIN32*/
+
+#if !defined(GET_MEMORY) && _mmap_devzero
+#define GET_MEMORY	USE_MMAP
+#include		<sys/fcntl.h>
+#include		<sys/mman.h>
+typedef struct _mmapdisc_s
+{	Vmdisc_t	disc;
+	int		fd;
+	off_t		offset;
+} Mmapdisc_t;
+
+#ifndef MAP_FAILED
+#define MAP_FAILED	(void*)(-1)
+#endif
+#endif /*_mmap_devzero*/
+
+#if !defined(GET_MEMORY)
+#define GET_MEMORY	0
+#endif
 
 /*	A discipline to get memory using sbrk() or VirtualAlloc on win32 */
 #if __STD_C
 static Void_t* sbrkmem(Vmalloc_t* vm, Void_t* caddr,
-			size_t csize, size_t nsize,
-			Vmdisc_t* disc)
+			size_t csize, size_t nsize, Vmdisc_t* disc)
 #else
 static Void_t* sbrkmem(vm, caddr, csize, nsize, disc)
 Vmalloc_t*	vm;	/* region doing allocation from		*/
@@ -1164,46 +1198,79 @@ size_t		nsize;	/* new size				*/
 Vmdisc_t*	disc;	/* discipline structure			*/
 #endif
 {
-#if _std_malloc || _BLD_INSTRUMENT || cray
-	NOTUSED(vm);
+#if !_done_sbrkmem && GET_MEMORY == USE_MALLOC
+#define _done_sbrkmem	1
 	NOTUSED(disc);
+	NOTUSED(vm);
 
 	if(csize == 0)
 		return (Void_t*)malloc(nsize);
-	if(nsize == 0)
+	else if(nsize == 0)
 		free(caddr);
-	return NIL(Void_t*);
-#else
-#if defined(_WIN32)
-	NOTUSED(vm);
+#endif /* USE_MALLOC */
+
+#if !_done_sbrkmem && GET_MEMORY == USE_WIN32
+#define _done_sbrkmem	1
 	NOTUSED(disc);
+	NOTUSED(vm);
 
 	if(csize == 0)
-		return (Void_t*)VirtualAlloc(NIL(LPVOID),nsize,MEM_COMMIT,PAGE_READWRITE);
+		return (Void_t*)VirtualAlloc(0,nsize,MEM_COMMIT,PAGE_READWRITE);
 	else if(nsize == 0)
 		return VirtualFree((LPVOID)caddr,0,MEM_RELEASE) ? caddr : NIL(Void_t*);
-	else	return NIL(Void_t*);
+#endif /* USE_WIN32 */
+
+#if !_done_sbrkmem
+	Vmuchar_t	*addr;
+	ssize_t		size;
+#if GET_MEMORY == USE_MMAP
+	Mmapdisc_t	*mmdc = (Mmapdisc_t*)disc;
 #else
-	reg Vmuchar_t*	addr;
-	reg ssize_t	size;
-	NOTUSED(vm);
 	NOTUSED(disc);
-
-	/* sbrk, see if still own current address */
-	if(csize > 0 && (Vmuchar_t*)sbrk(0) != (Vmuchar_t*)caddr+csize)
-		return NIL(Void_t*);
-
-	/* do this because sbrk() uses 'ssize_t' argument */
-	size = nsize > csize ? (ssize_t)(nsize-csize) : -(ssize_t)(csize-nsize);
-
-	if((addr = (Vmuchar_t*)sbrk(size)) == (Vmuchar_t*)(-1))
-		return NIL(Void_t*);
-	else	return csize == 0 ? (Void_t*)addr : caddr;
 #endif
+	NOTUSED(vm);
+
+	if(csize == 0) /* allocating new memory */
+	{	if((addr = (Vmuchar_t*)sbrk((ssize_t)nsize)) != (Vmuchar_t*)(-1) )
+			return addr;
+#if GET_MEMORY == USE_MMAP
+		if(mmdc->fd < 0 && (mmdc->fd = open("/dev/zero", O_RDONLY)) < 0)
+			return NIL(Void_t*);
+		addr = (Vmuchar_t*)mmap(0, nsize, PROT_READ|PROT_WRITE, MAP_PRIVATE,
+			    mmdc->fd, mmdc->offset);
+		if(addr == (Vmuchar_t*)MAP_FAILED )
+			addr = NIL(Vmuchar_t*);
+		if(addr)
+		{	mmdc->offset += nsize;
+			return addr;
+		}
 #endif
+	}
+	else
+	{	addr = (Vmuchar_t*)sbrk(0);
+		if(((Vmuchar_t*)caddr+csize) == addr) /* in sbrk-space */
+		{	if(nsize < csize)
+				size = -(ssize_t)(csize - nsize);
+			else	size =  (ssize_t)(nsize - csize);
+			if((Void_t*)sbrk(size) != (Void_t*)(-1))
+				return caddr;
+		}
+#if GET_MEMORY == USE_MMAP
+		else if(((Vmuchar_t*)caddr+csize) > addr && nsize == 0 &&
+			munmap(caddr,csize) == 0)
+				return caddr;
+#endif
+	}
+#endif /*_done_sbrkmem*/
+
+	return NIL(Void_t*);
 }
 
+#if GET_MEMORY == USE_MMAP
+static Mmapdisc_t _Vmdcsbrk = { { sbrkmem, NIL(Vmexcept_f), 64*1024 }, -1, 0 };
+#else
 static Vmdisc_t _Vmdcsbrk = { sbrkmem, NIL(Vmexcept_f), 0 };
+#endif
 
 static Vmethod_t _Vmbest =
 {
@@ -1242,15 +1309,15 @@ static Vmalloc_t _Vmheap =
 	NIL(char*),			/* file		*/
 	0,				/* line		*/
 	0,				/* func		*/
-	&_Vmdcsbrk,			/* disc		*/
+	(Vmdisc_t*)(&_Vmdcsbrk),	/* disc		*/
 	&_Vmdata,			/* data		*/
 	NIL(Vmalloc_t*)			/* next		*/
 };
 
-__DEFINE__(Vmalloc_t*,Vmheap,&_Vmheap);
-__DEFINE__(Vmalloc_t*,Vmregion,&_Vmheap);
-__DEFINE__(Vmethod_t*,Vmbest,&_Vmbest);
-__DEFINE__(Vmdisc_t*,Vmdcsbrk,&_Vmdcsbrk);
+__DEFINE__(Vmalloc_t*, Vmheap, &_Vmheap);
+__DEFINE__(Vmalloc_t*, Vmregion, &_Vmheap);
+__DEFINE__(Vmethod_t*, Vmbest, &_Vmbest);
+__DEFINE__(Vmdisc_t*,  Vmdcsbrk, (Vmdisc_t*)(&_Vmdcsbrk) );
 
 #ifdef NoF
 NoF(vmbest)

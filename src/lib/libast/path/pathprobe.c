@@ -128,7 +128,7 @@ pathprobe(char* path, char* attr, const char* lang, const char* tool, const char
 	*p++ = '/';
 	p = strcopy(p, tool);
 	*p++ = '/';
-	pathkey(key, attr, lang, proc);
+	pathkey(key, attr, lang, tool, proc);
 	if (op >= -2)
 	{
 		strcpy(p, key);

@@ -41,8 +41,12 @@ void _STUB_vmmopen(){}
 ** Written by Kiem-Phong Vo (kpv@research.att.com)
 */
 
+#ifndef MAP_FAILED
+#define MAP_FAILED	(void*)(-1)
+#endif
+
 #define	MM_MAGIC	(('V'<<24) | ('M'<<16) | ('A'<<8) | ('P'))
-#define MM_INCR		(64*1024)
+#define MM_ROUND	(64*1024)
 #define MM_START	ROUND(sizeof(Mmvm_t),ALIGN)
 
 #ifdef S_IRUSR
@@ -63,6 +67,7 @@ typedef struct _mmvm_s
 	Void_t*		base;	/* base of the map	*/
 	size_t		size;	/* current size		*/
 	size_t		busy;	/* amount in use	*/
+	size_t		round;	/* amount to round to	*/
 	User_t*		user;	/* some user data	*/
 } Mmvm_t;
 
@@ -74,11 +79,12 @@ typedef struct _mmvmdisc_s
 } Mmvmdisc_t;
 
 #if __STD_C
-static int mmvminit(char* file, Void_t* addr, Mmvm_t* mm)
+static int mmvminit(char* file, Void_t* addr, size_t round, Mmvm_t* mm)
 #else
-static int mmvminit(file, addr, mm)
+static int mmvminit(file, addr, round, mm)
 char*	file;	/* file to map data from	*/
 Void_t*	addr;	/* desired starting address	*/
+size_t	round;	/* amount to round requests 	*/
 Mmvm_t*	mm;	/* to return some mapped info	*/
 #endif
 {
@@ -104,18 +110,22 @@ Mmvm_t*	mm;	/* to return some mapped info	*/
 			goto done;
 		base = (Void_t*)mmap(mm->base, mm->size, PROT_READ|PROT_WRITE,
 				     MAP_FIXED|MAP_SHARED, fd, (off_t)0 );
+		if(base == (Void_t*)MAP_FAILED)
+			base = NIL(Void_t*);
 	}
 	else
 	{	if((fd = open(file, O_RDWR|O_CREAT, CREAT_MODE)) < 0)
 			goto done;
 
 	new_f:	/* create an initial set of data */
-		size = MM_INCR;
+		size = round;
 		if(lseek(fd, size-1, 0) != (size-1) || write(fd, "", 1) != 1 )
 			goto done;
 
 		base = (Void_t*)mmap(addr, (size_t)size, PROT_READ|PROT_WRITE,
 				     (addr ? MAP_FIXED : 0)|MAP_SHARED, fd, (off_t)0 );
+		if(base == (Void_t*)MAP_FAILED)
+			base = NIL(Void_t*);
 		if(!base)
 			goto done;
 
@@ -125,6 +135,7 @@ Mmvm_t*	mm;	/* to return some mapped info	*/
 		hdr->base  = base;
 		hdr->size  = size;
 		hdr->busy  = MM_START;
+		hdr->round = round;
 		hdr->user  = NIL(User_t*);
 		memcpy(mm, hdr, sizeof(Mmvm_t));
 	}
@@ -179,6 +190,8 @@ Vmdisc_t*	disc;
 		(void)munmap(caddr, mmdc->mm->size);
 		caddr = (Void_t*)mmap(caddr, csize, PROT_READ|PROT_WRITE,
 				     MAP_FIXED|MAP_SHARED, mmdc->fd, (off_t)0 );
+		if(caddr == (Void_t*)MAP_FAILED)
+			caddr = NIL(Void_t*);
 		if(caddr)
 			mmdc->mm->size = csize;
 		else	/* bad problem */
@@ -226,11 +239,12 @@ Vmdisc_t*	disc;
 
 
 #if __STD_C
-Vmalloc_t* vmmopen(char* file, Void_t* base)
+Vmalloc_t* vmmopen(char* file, Void_t* base, size_t round)
 #else
-Vmalloc_t* vmmopen(file, base)
+Vmalloc_t* vmmopen(file, base, round)
 char*		file;	/* file mapping data from	*/
 Void_t* 	base;	/* desired starting address	*/
+size_t		round;	/* amount to round requests	*/
 #endif
 {
 	Vmalloc_t	*vm;
@@ -241,7 +255,13 @@ Void_t* 	base;	/* desired starting address	*/
 	if(!file)
 		return NIL(Vmalloc_t*);
 
-	if((fd = mmvminit(file, base, &mm)) < 0)
+	/* set the amount to round up to on each memory request */
+	GETPAGESIZE(_Vmpagesize);
+	if(round < MM_ROUND)
+		round = MM_ROUND;
+	round = ROUND(round, _Vmpagesize);
+
+	if((fd = mmvminit(file, base, round, &mm)) < 0)
 		return NIL(Vmalloc_t*);
 
 	if(!(mmdc = vmalloc(Vmheap, sizeof(Mmvmdisc_t))) )
@@ -251,7 +271,7 @@ Void_t* 	base;	/* desired starting address	*/
 
 	mmdc->disc.memoryf = mmvmmemory;
 	mmdc->disc.exceptf = mmvmexcept;
-	mmdc->disc.round   = MM_INCR;
+	mmdc->disc.round   = mm.round;
 	mmdc->fd = fd;
 	mmdc->mm = (Mmvm_t*)mm.base;
 

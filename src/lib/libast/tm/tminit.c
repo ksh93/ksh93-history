@@ -219,8 +219,10 @@ tmlocal(void)
 		 * POSIX
 		 */
 
-		if (!local.standard) local.standard = tzname[0];
-		if (!local.daylight) local.daylight = tzname[1];
+		if (!local.standard)
+			local.standard = tzname[0];
+		if (!local.daylight)
+			local.daylight = tzname[1];
 	}
 	else
 #endif
@@ -329,7 +331,8 @@ tmlocal(void)
 	{
 		now = (time_t)78811200;		/* Jun 30 1972 23:59:60 */
 		tp = (Tm_t*)localtime(&now);
-		if (tp->tm_sec != 60) tm_info.flags |= TM_ADJUST;
+		if (tp->tm_sec != 60)
+			tm_info.flags |= TM_ADJUST;
 	}
 	if (!(tm_info.flags & TM_UTC))
 	{
@@ -350,36 +353,20 @@ tmlocal(void)
 void
 tminit(register Tm_zone_t* zp)
 {
+	static unsigned _ast_int4_t	serial = ~(_ast_int4_t)0;
+
+	if (serial != ast.env_serial)
+	{
+		serial = ast.env_serial;
+		if (tm_info.local)
+		{
+			memset(tm_info.local, 0, sizeof(*tm_info.local));
+			tm_info.local = 0;
+		}
+	}
 	if (!tm_info.local)
 		tmlocal();
 	if (!zp)
 		zp = tm_info.local;
-#if HUH950804 /* it only worked on systems that ignored TZ=...! */
-	if (zp != tm_info.zone)
-	{
-		register char*	s;
-		time_t		clock;
-		char		buf[128];
-
-		tm_info.zone = zp;
-		s = buf;
-		s += sfsprintf(s, sizeof(buf), "TZ=%s%d", zp->standard, zp->west / 60);
-		if (zp->daylight)
-		{
-			s += sfsprintf(s, sizeof(buf) - (s - buf), "%s", zp->daylight);
-			if (zp->dst != TM_DST)
-				sfsprintf(s, sizeof(buf) - (s - buf), "%d", zp->dst);
-		}
-		s = *environ;
-		*environ = buf;
-		time(&clock);
-#if _lib_tzset
-		tzset();
-#endif
-		localtime(&clock);
-		*environ = s;
-	}
-#else
 	tm_info.zone = zp;
-#endif
 }

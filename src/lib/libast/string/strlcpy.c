@@ -33,7 +33,11 @@
  * strlen(t) returned
  */
 
-size_t
+#if defined(__EXPORT__)
+#define extern	__EXPORT__
+#endif
+
+extern size_t
 strlcpy(register char* s, register const char* t, register size_t n)
 {
 	const char*	o = t;

@@ -1012,6 +1012,8 @@ retry1:
 		stakseek(offset);
 		if(ap)
 		{
+			if(sh.argaddr)
+				nv_optimize(np);
 			if(isastchar(mode) && array_elem(ap)> !c)
 				dolg = -1;
 			else

@@ -42,7 +42,7 @@
 
 #undef	daylight
 
-#define tmset(z)	do{if(!tm_info.zone||(z)&&tm_info.zone!=(z)||!(z)&&tm_info.zone!=tm_info.local)tminit(z);}while(0)
+#define tmset(z)	tminit(z)
 
 #define TM_ADJUST	(1<<0)		/* local doesn't do leap secs	*/
 #define TM_LEAP		(1<<1)		/* do leap seconds		*/

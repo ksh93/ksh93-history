@@ -65,7 +65,7 @@ typedef struct
 } Header_t;
 
 #if __CYGWIN__
-#include <windows.h>
+#include <ast_windows.h>
 #endif
 
 static void
@@ -76,7 +76,7 @@ set(register Header_t* hp, const char* fs, const char* dir, const char* type, co
 	hp->mnt.flags = 0;
 	if (x = (const char*)strchr(fs, ':'))
 	{
-		if (*++x)
+		if (*++x && *x != '\\')
 		{
 			hp->mnt.flags |= MNT_REMOTE;
 			if (*x == '(')

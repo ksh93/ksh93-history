@@ -632,7 +632,9 @@ loop_fmt :
 				else
 #endif
 				{	if((v = size) < 0)
-						v = strlen(sp);
+						for(v = 0; sp[v]; ++v)
+							if(v == precis)
+								break;
 				}
 
 				if(precis >= 0 && v > precis)

@@ -24,7 +24,7 @@
 *                                                                  *
 *******************************************************************/
 #include	"dthdr.h"
-static char*     Version = "\n@(#)$Id: cdt (AT&T Labs Research) 2002-05-31 $\0\n";
+static char*     Version = "\n@(#)$Id: cdt (AT&T Labs - Research) 2002-05-31 $\0\n";
 
 /* 	Make a new dictionary
 **
@@ -55,27 +55,45 @@ Dtmethod_t*	meth;
 	dt->meth = NIL(Dtmethod_t*);
 	dt->disc = NIL(Dtdisc_t*);
 	dtdisc(dt,disc,0);
+	dt->type = DT_MALLOC;
 	dt->nview = 0;
 	dt->view = dt->walk = NIL(Dt_t*);
 
 	if(disc->eventf)
 	{	/* if shared/persistent dictionary, get existing data */
 		data = NIL(Dtdata_t*);
-		if((e = (*disc->eventf)(dt,DT_OPEN,(Void_t*)(&data),disc)) != 0)
-		{	if(e < 0 || !data || !(data->type&meth->type) )
-			{	free((Void_t*)dt);
-				return NIL(Dt_t*);
+		if((e = (*disc->eventf)(dt,DT_OPEN,(Void_t*)(&data),disc)) < 0)
+			goto err_open;
+		else if(e > 0)
+		{	if(data)
+			{	if(data->type&meth->type)
+					goto done;
+				else	goto err_open;
 			}
-			else	goto done;
+
+			if(!disc->memoryf)
+				goto err_open;
+
+			free((Void_t*)dt);
+			if(!(dt = (*disc->memoryf)(0, 0, sizeof(Dt_t), disc)) )
+				return NIL(Dt_t*);
+			dt->searchf = NIL(Dtsearch_f);
+			dt->meth = NIL(Dtmethod_t*);
+			dt->disc = NIL(Dtdisc_t*);
+			dtdisc(dt,disc,0);
+			dt->type = DT_MEMORYF;
+			dt->nview = 0;
+			dt->view = dt->walk = NIL(Dt_t*);
 		}
 	}
 
 	/* allocate sharable data */
-	data = (Dtdata_t*)(dt->memoryf)(dt,NIL(Void_t*),sizeof(Dtdata_t),disc);
-	if(!data)
-	{	free((Void_t*)dt);
+	if(!(data = (Dtdata_t*)(dt->memoryf)(dt,NIL(Void_t*),sizeof(Dtdata_t),disc)) )
+	{ err_open:
+		free((Void_t*)dt);
 		return NIL(Dt_t*);
 	}
+
 	data->type = meth->type;
 	data->here = NIL(Dtlink_t*);
 	data->htab = NIL(Dtlink_t**);
@@ -86,6 +104,9 @@ done:
 	dt->data = data;
 	dt->searchf = meth->searchf;
 	dt->meth = meth;
+
+	if(disc->eventf)
+		(*disc->eventf)(dt, DT_ENDOPEN, (Void_t*)dt, disc);
 
 	return dt;
 }

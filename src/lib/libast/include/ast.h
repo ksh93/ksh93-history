@@ -44,10 +44,6 @@
 #include <sfio.h>
 #endif
 
-#if !defined(_WIN32) && (_UWIN || __CYGWIN__ || __EMX__)
-#define _WIN32		1
-#endif
-
 #ifndef	ast
 #define ast		_ast_info
 #endif
@@ -151,7 +147,7 @@ typedef struct
 #define mbcoll()	(ast.mb_xfrm!=0)
 #define mbwide()	(mbmax()>1)
 
-#define mbchar(p)	(mbwide()?((ast.tmp_int=(*ast.mb_towc)(&ast.tmp_wchar,(char*)(p),mbmax()))>0?((p+=ast.tmp_int),ast.tmp_wchar):ast.tmp_int):(*(unsigned char*)(p++)))
+#define mbchar(p)	(mbwide()?((ast.tmp_int=(*ast.mb_towc)(&ast.tmp_wchar,(char*)(p),mbmax()))>0?((p+=ast.tmp_int),ast.tmp_wchar):(p+=!ast.tmp_int,ast.tmp_int)):(*(unsigned char*)(p++)))
 #define mbinit()	(mbwide()?(*ast.mb_towc)((wchar_t*)0,(char*)0,mbmax()):0)
 #define mbsize(p)	(mbwide()?(*ast.mb_len)((char*)(p),mbmax()):((p),1))
 #define mbconv(s,w)	(ast.mb_conv?(*ast.mb_conv)(s,w):((*(s)=(w)),1))
@@ -179,13 +175,9 @@ typedef struct
 #endif
 
 #if !defined(NoF)
-#if _BLD_DLL
-#define NoF(x)		void _DLL_ ## x () { }
-#if !defined(_DLL_)
-#define _DLL_
-#endif
-#else
-#define NoF(x)
+#define NoF(x)		void _DATA_ ## x () {}
+#if !defined(_DATA_)
+#define _DATA_
 #endif
 #endif
 
@@ -219,6 +211,8 @@ extern void		astwinsize(int, int*, int*);
 extern int		chresc(const char*, char**);
 extern int		chrtoi(const char*);
 extern char*		fmtbase(long, int, int);
+extern char*		fmtbasell(_ast_intmax_t, int, int);
+#define fmtbase(a,b,c)	fmtbasell((_ast_intmax_t)(a),b,c) /* until 2003-09-01 */
 extern char*		fmtbuf(size_t);
 extern char*		fmtclock(Sfulong_t);
 extern char*		fmtelapsed(unsigned long, int);
@@ -254,7 +248,7 @@ extern int		pathexists(char*, int);
 extern char*		pathfind(const char*, const char*, const char*, char*, size_t);
 extern int		pathgetlink(const char*, char*, int);
 extern int		pathinclude(const char*);
-extern char*		pathkey(char*, char*, const char*, const char*);
+extern char*		pathkey(char*, char*, const char*, const char*, const char*);
 extern size_t		pathnative(const char*, char*, size_t);
 extern char*		pathpath(char*, const char*, const char*, int);
 extern char*		pathprobe(char*, char*, const char*, const char*, const char*, int);

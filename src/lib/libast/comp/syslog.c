@@ -44,7 +44,7 @@ NoN(syslog)
 #include <error.h>
 #include <tm.h>
 
-Syslog_state_t		log = { 0, LOG_USER, -1, 0, ~0 };
+Syslog_state_t		log = { LOG_USER, -1, 0, ~0 };
 
 static const Namval_t	attempt[] =
 {
@@ -324,12 +324,22 @@ vsyslog(int priority, const char* format, va_list ap)
 				sfsprintf(s = buf, sizeof(buf), "local%d", c);
 			sfprintf(sp, " %-8s ", s);
 		}
+#if _lib_gethostname
+		if (!*log.host && gethostname(log.host, sizeof(log.host)-1))
+			strcpy(log.host, "localhost");
+		sfprintf(sp, " %s", log.host);
+#endif
+		if (*log.ident)
+			sfprintf(sp, " %s", log.ident);
 		if (log.flags & LOG_PID)
-			sfprintf(sp, "%05d ", getpid());
-		if (log.ident)
-			sfprintf(sp, "%s: ", log.ident);
+		{
+			if (!*log.ident)
+				sfprintf(sp, " ");
+			sfprintf(sp, "[%d]", getpid());
+		}
 		if (format)
 		{
+			sfprintf(sp, ": ");
 			memset(&fmt, 0, sizeof(fmt));
 			fmt.version = SFIO_VERSION;
 			fmt.form = (char*)format;

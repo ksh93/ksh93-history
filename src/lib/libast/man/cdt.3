@@ -1,3 +1,4 @@
+.fp 5 CW
 .TH LIBCDT 3
 .SH NAME
 \fBCdt\fR \- container data types
@@ -136,12 +137,14 @@ This creates a new dictionary.
 \f5disc\fP is a discipline structure to describe object format.
 \f5meth\fP specifies a manipulation method.
 \f5dtopen()\fP returns the new dictionary or \f5NULL\fP on error.
+See also the events \f5DT_OPEN\fP and \f5DT_ENDOPEN\fP below.
 .PP
 .Ss "  int dtclose(Dt_t* dt)"
 This deletes \f5dt\fP and its objects.
 Note that \f5dtclose()\fP fails if \f5dt\fP is being viewed by
 some other dictionaries (see \f5dtview()\fP).
 \f5dtclose()\fP returns \f50\fP on success and \f5-1\fP on error.
+See also the events \f5DT_CLOSE\fP and \f5DT_ENDCLOSE\fP below.
 .PP
 .Ss "  void dtclear(Dt_t* dt)"
 This deletes all objects in \f5dt\fP without closing \f5dt\fP.
@@ -296,7 +299,7 @@ If \f5addr\fP is not \f5NULL\fP and \f5size\fP is positive,
 If \f5memoryf\fP is \f5NULL\fP, \fImalloc(3)\fP is used.
 When dictionaries share memory,
 a record of the first allocated memory segment should be kept
-so that it can be used to initialize new dictionaries (see below.)
+so that it can be used to initialize other dictionaries (see below.)
 .PP
 .Ss "  int (*eventf)(Dt_t* dt, int type, Void_t* data, Dtdisc_t* disc)"
 If not \f5NULL\fP, \f5eventf\fP announces various events.
@@ -307,15 +310,32 @@ calling function proceed normally. Following are the events:
 \f5DT_OPEN\fP:
 \f5dt\fP is being opened.
 If \f5eventf\fP returns zero, the opening process proceeds normally.
-A positive return value indicates that \f5dt\fP
-uses memory already initialized by a different dictionary.
-In that case, \f5*(Void_t**)data\fP should be set to
-the first allocated memory segment as discussed in \f5memoryf\fP.
-\f5dtopen()\fP may fail if this segment is not returned or
-if it has not been properly initialized.
+A positive return value indicates special treatment of memory as follows.
+If \f5*(Void_t**)data\fP is set to point to some memory segment
+as discussed in \f5memoryf\fP, that segment of memory is used to start
+the dictionary. If \f5*(Void_t**)data\fP is not set, this indicates that
+\f5dtopen()\fP should allocate the dictionary handle itself with
+\f5memoryf\fP so that all memories pertained to the dictionary are allocated
+via this function.
+.Tp
+\f5DT_ENDOPEN\fP:
+This event announces that \f5dtopen()\fP has successfully opened
+a dictionary and is about to return. The \f5data\fP argument of
+\f5eventf\fP should be the new dictionary handle itself.
 .Tp
 \f5DT_CLOSE\fP:
-\f5dt\fP is being closed.
+\f5dt\fP is about to be closed. If \f5eventf\fP returns zero,
+the closing process proceeds normally. This means that all objects
+in the dictionary will be deleted and all associated memories freed.
+If \f5eventf\fP returns a positive value, objects will not be deleted.
+However, the dictionary handle itself will still be deallocated
+unless it was allocated via \f5memoryf\fP during \f5dtopen()\fP.
+This allows shared/persistent memory dictionaries to retain
+the relevant memories across dictionary openings and closings.
+.Tp
+\f5DT_ENDCLOSE\fP:
+This event announces that \f5dtclose()\fP has successfully closed
+a dictionary and is about to return.
 .Tp
 \f5DT_DISC\fP:
 The discipline of \f5dt\fP is being changed to a new one given in
@@ -347,9 +367,14 @@ See \f5Dtdisc_t.makef\fP for object construction.
 or \f5NULL\fP on error.
 .PP
 .Ss "  Void_t* dtdelete(Dt_t* dt, Void_t* obj)"
-If \f5obj\fP is not \f5NULL\fP, the first object matching it is deleted.
 If \f5obj\fP is \f5NULL\fP, methods \f5Dtstack\fP and \f5Dtqueue\fP
 delete respectively stack top or queue head while other methods do nothing.
+If \f5obj\fP is not \f5NULL\fP, there are two cases.
+If the method in use is not \f5Dtbag\fP or \f5Dtobag\fP,
+the first object matching \f5obj\fP is deleted.
+On the other hand, if the method in use is \f5Dtbag\fP or \f5Dtobag\fP,
+the library check to see if \f5obj\fP is in the dictionary and delete it.
+If \f5obj\fP is not in the dictionary, some object matching it will be deleted.
 See \f5Dtdisc_t.freef\fP for object destruction.
 \f5dtdelete()\fP returns the deleted object (even if it was deallocated)
 or \f5NULL\fP on error.

@@ -427,10 +427,18 @@ main()
 	printf("#define __sys_limits_h\n");
 #endif
 #ifdef	_BITS_POSIX1_LIM_H
+	printf("#ifndef _BITS_POSIX1_LIM_H\n");
 	printf("#define _BITS_POSIX1_LIM_H\n");
+	printf("#endif\n");
 #endif
 #ifdef	_LIMITS_H_
 	printf("#define _LIMITS_H_\n");
+#endif
+#ifdef	_LIMITS_H__
+	printf("#define _LIMITS_H__\n");
+#endif
+#ifdef	_LIMITS_H___
+	printf("#define _LIMITS_H___\n");
 #endif
 #ifdef	__LIMITS_H
 	printf("#define __LIMITS_H\n");
@@ -440,6 +448,9 @@ main()
 #endif
 #ifdef	_MACH_MACHLIMITS_H_
 	printf("#define _MACH_MACHLIMITS_H_\n");
+#endif
+#ifdef	_MACHINE_LIMITS_H_
+	printf("#define _MACHINE_LIMITS_H_\n");
 #endif
 #ifdef	_SYS_LIMITS_H_
 	printf("#define _SYS_LIMITS_H_\n");

@@ -28,13 +28,13 @@ DEBUG ==
 __OBSOLETE__ == 20020101
 
 HEADERSRC = ast.h ast_dir.h ast_std.h ast_version.h \
-	ccode.h cdt.h debug.h error.h find.h ftw.h ftwalk.h fts.h \
+	ccode.h cdt.h debug.h dt.h error.h find.h ftw.h ftwalk.h fts.h \
 	fs3d.h getopt.h glob.h hash.h hashkey.h hashpart.h int.h lc.h ls.h \
 	magic.h mc.h mime.h mnt.h modecanon.h modex.h namval.h option.h \
 	proc.h re.h re_comp.h regex.h regexp.h \
 	sfio.h sfio_s.h sfio_t.h sfdisc.h sfstr.h \
 	stack.h stak.h stk.h swap.h tar.h times.h tm.h \
-	tok.h usage.h vdb.h vecargs.h vmalloc.h wait.h wordexp.h \
+	tok.h usage.h vdb.h vecargs.h vmalloc.h vmtrace.h wait.h wordexp.h \
 	bytesex.h endian.h fnmatch.h magicid.h \
 	$(HEADERSTD)
 
@@ -121,7 +121,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	sfdcold.c sfdcdio.c sfdcdos.c sfdcfilter.c sfdcseekable.c \
 	sfdcslow.c sfdcsubstr.c sfdctee.c sfdcunion.c \
 	sfdcmore.c sfdcprefix.c \
-	wc.c libc.c \
+	wc.c \
 	/* standards */ \
 	basename.c closelog.c dirname.c fmtmsglib.c fnmatch.c ftw.c \
 	getdate.c getsubopt.c glob.c nftw.c openlog.c re_comp.c \
@@ -134,7 +134,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	regsubcomp.c regsubexec.c regsub.c regrecord.c regrexec.c \
 	/* cdt */ \
 	dthdr.h dtclose.c dtdisc.c dtextract.c dtflatten.c dthash.c \
-	dtlist.c dtmethod.c dtopen.c dtrenew.c dtrestore.c dtsize.c \
+	dtlist.c dtmethod.c dtnew.c dtopen.c dtrenew.c dtrestore.c dtsize.c \
 	dtstat.c dtstrhash.c dttree.c dttreeset.c dtview.c dtwalk.c \
 	/* sfio */ \
 	sfhdr.h sfdchdr.h \
@@ -185,7 +185,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	vmalloc.h vmhdr.h vmbest.c vmclear.c vmclose.c vmdcheap.c vmdebug.c \
 	vmdisc.c vmexit.c vmlast.c vmopen.c vmpool.c vmprivate.c vmprofile.c \
 	vmregion.c vmsegment.c vmset.c vmstat.c vmstrdup.c vmtrace.c vmwalk.c \
-	vmmopen.c malloc.c \
+	vmmopen.c malloc.c vmgetmem.c \
 	/* uwin */ \
 	mathimpl.h rlib.h ufc-crypt.h \
 	a64l.c acosh.c asinh.c atanh.c cbrt.c crypt.c crypt_util.c erf.c \

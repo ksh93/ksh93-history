@@ -59,6 +59,7 @@ pathinclude(const char* dir)
 		if (!(dp = oldof(0, Dir_t, 1, strlen(dir))))
 			return -1;
 		strcpy(dp->dir, dir);
+		dp->next = 0;
 		if (state.tail)
 			state.tail = state.tail->next = dp;
 		else

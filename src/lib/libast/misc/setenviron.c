@@ -56,6 +56,7 @@ setenviron(const char* akey)
 	register char*	t;
 	int		n;
 
+	ast.env_serial++;
 	if (p && !v)
 	{
 		environ = next = p;
@@ -69,7 +70,8 @@ setenviron(const char* akey)
 			n = v - environ + INCREMENT;
 			v = environ;
 		}
-		else n = INCREMENT;
+		else
+			n = INCREMENT;
 		if (!p || (last - p + 1) < n)
 		{
 			if (!p && fs3d(FS3D_TEST))
@@ -82,16 +84,22 @@ setenviron(const char* akey)
 				v = environ;
 			}
 			if (!(p = newof(p, char*, n, 0)))
-				return(0);
+				return 0;
 			last = p + n - 1;
 		}
 		envv = environ = p;
-		if (v && v[0] && v[0][0] == '_' && v[0][1] == '=') *p++ = *v++;
-		else *p++ = "_=";
-		if (!v) *p = 0;
-		else while (*p = *v++)
-			if (p[0][0] == '_' && p[0][1] == '=') envv[0] = *p;
-			else p++;
+		if (v && v[0] && v[0][0] == '_' && v[0][1] == '=')
+			*p++ = *v++;
+		else
+			*p++ = "_=";
+		if (!v)
+			*p = 0;
+		else
+			while (*p = *v++)
+				if (p[0][0] == '_' && p[0][1] == '=')
+					envv[0] = *p;
+				else
+					p++;
 		next = p;
 		p = envv;
 	}
@@ -99,12 +107,13 @@ setenviron(const char* akey)
 	{
 		n = last - v + INCREMENT + 1;
 		if (!(p = newof(p, char*, n, 0)))
-			return(0);
+			return 0;
 		last = p + n - 1;
 		next = last - INCREMENT;
 		envv = environ = p;
 	}
-	if (!key) return(ok);
+	if (!key)
+		return ok;
 	for (; s = *p; p++)
 	{
 		t = key;
@@ -119,18 +128,19 @@ setenviron(const char* akey)
 						v = p++;
 						while (*v++ = *p++);
 						next--;
-						return(ok);
+						return ok;
 					}
 					*p = key;
-					return((s = strchr(key, '=')) ? s + 1 : (char*)0);
+					return (s = strchr(key, '=')) ? s + 1 : (char*)0;
 				}
 				break;
 			}
 		} while (*t++ == *s++);
 	}
-	if (!(s = strchr(key, '='))) return(ok);
+	if (!(s = strchr(key, '=')))
+		return ok;
 	p = next;
 	*++next = 0;
 	*p = key;
-	return(s + 1);
+	return s + 1;
 }

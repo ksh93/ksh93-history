@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 4.2 2002-06-11
+info mam static 00000 1994-07-17 make (AT&T Research) 4.2 2002-09-22
 setv INSTALLROOT ../../..
 setv PACKAGE_ast ${INSTALLROOT}
 setv PACKAGE_ast_INCLUDE ${PACKAGE_ast}/include/ast
@@ -152,82 +152,28 @@ prev libsum.a archive
 make ../../../lib
 exec - set -
 exec - if	test ! -d ${PACKAGE_ast_LIB}
-exec - then	set -x && mkdir -p ${PACKAGE_ast_LIB} 2>/dev/null && set - ||
-exec - 	{
-exec - 		test -d ./-p && rm -Rf ./-p
-exec - 		p=
-exec - 		for d in `echo ${PACKAGE_ast_LIB} | sed -e 's%\\(.\\)/%\\1 %g'`
-exec - 		do	case $p in
-exec - 			"")	p=$d ;;
-exec - 			*)	p=$p/$d ;;
-exec - 			esac
-exec - 			case $d in
-exec - 			.|..)	;;
-exec - 			*)	if	test ! -d $p
-exec - 				then	rm -f $p
-exec - 					set -x && mkdir $p && set -
-exec - 				fi
-exec - 				;;
-exec - 			esac
-exec - 		done
-exec - 	} && set -x 		    		   
+exec - then	set -x && mkdir -p ${PACKAGE_ast_LIB} 		    		   
 exec - fi
 done ../../../lib generated
 make ../../../lib/libsum.a archive
 prev libsum.a archive
-exec - mv ${PACKAGE_ast_LIB}/libsum.a ${PACKAGE_ast_LIB}/libsum.a.old 2>/dev/null || true; test '' = 'libsum.a' || { cp libsum.a ${PACKAGE_ast_LIB}/libsum.a  		    		    ;}
+exec - ${STDMV} ${PACKAGE_ast_LIB}/libsum.a ${PACKAGE_ast_LIB}/libsum.a.old 2>/dev/null || true; test '' = 'libsum.a' || ${STDCMP} 2>/dev/null -s libsum.a ${PACKAGE_ast_LIB}/libsum.a || { ${STDCP} libsum.a ${PACKAGE_ast_LIB}/libsum.a  		    		    ;}
 exec - (ranlib ${PACKAGE_ast_LIB}/libsum.a) >/dev/null 2>&1 || true
 done ../../../lib/libsum.a generated
 make ../../../lib/lib
 exec - set -
 exec - if	test ! -d ${PACKAGE_ast_LIB}/lib
-exec - then	set -x && mkdir -p ${PACKAGE_ast_LIB}/lib 2>/dev/null && set - ||
-exec - 	{
-exec - 		test -d ./-p && rm -Rf ./-p
-exec - 		p=
-exec - 		for d in `echo ${PACKAGE_ast_LIB}/lib | sed -e 's%\\(.\\)/%\\1 %g'`
-exec - 		do	case $p in
-exec - 			"")	p=$d ;;
-exec - 			*)	p=$p/$d ;;
-exec - 			esac
-exec - 			case $d in
-exec - 			.|..)	;;
-exec - 			*)	if	test ! -d $p
-exec - 				then	rm -f $p
-exec - 					set -x && mkdir $p && set -
-exec - 				fi
-exec - 				;;
-exec - 			esac
-exec - 		done
-exec - 	} && set -x 		    		   
+exec - then	set -x && mkdir -p ${PACKAGE_ast_LIB}/lib 		    		   
 exec - fi
 done ../../../lib/lib generated
 make ../../../lib/lib/sum
 prev sum.req
-exec - mv ${PACKAGE_ast_LIB}/lib/sum ${PACKAGE_ast_LIB}/lib/sum.old 2>/dev/null || true; test '' = 'sum.req' || { cp sum.req ${PACKAGE_ast_LIB}/lib/sum  		    		    ;}
+exec - ${STDMV} ${PACKAGE_ast_LIB}/lib/sum ${PACKAGE_ast_LIB}/lib/sum.old 2>/dev/null || true; test '' = 'sum.req' || ${STDCMP} 2>/dev/null -s sum.req ${PACKAGE_ast_LIB}/lib/sum || { ${STDCP} sum.req ${PACKAGE_ast_LIB}/lib/sum  		    		    ;}
 done ../../../lib/lib/sum generated
 make ../../../include/ast
 exec - set -
 exec - if	test ! -d ${PACKAGE_ast_INCLUDE}
-exec - then	set -x && mkdir -p ${PACKAGE_ast_INCLUDE} 2>/dev/null && set - ||
-exec - 	{
-exec - 		test -d ./-p && rm -Rf ./-p
-exec - 		p=
-exec - 		for d in `echo ${PACKAGE_ast_INCLUDE} | sed -e 's%\\(.\\)/%\\1 %g'`
-exec - 		do	case $p in
-exec - 			"")	p=$d ;;
-exec - 			*)	p=$p/$d ;;
-exec - 			esac
-exec - 			case $d in
-exec - 			.|..)	;;
-exec - 			*)	if	test ! -d $p
-exec - 				then	rm -f $p
-exec - 					set -x && mkdir $p && set -
-exec - 				fi
-exec - 				;;
-exec - 			esac
-exec - 		done
-exec - 	} && set -x 		    		   
+exec - then	set -x && mkdir -p ${PACKAGE_ast_INCLUDE} 		    		   
 exec - fi
 done ../../../include/ast generated
 make ../../../include/ast/sum.h

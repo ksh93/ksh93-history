@@ -48,37 +48,57 @@ fmtfs(struct stat* st)
 
 #else
 
-#include <hash.h>
+#include <cdt.h>
+
+typedef struct Id_s
+{
+	Dtlink_t	link;
+	dev_t		id;
+	char		name[1];
+} Id_t;
 
 char*
 fmtfs(struct stat* st)
 {
+	register Id_t*		ip;
 	register void*		mp;
 	register Mnt_t*		mnt;
 	register char*		s;
 	struct stat		rt;
 	char*			buf;
 
-	static Hash_table_t*	tab;
+	static Dt_t*		dict;
+	static Dtdisc_t		disc;
 
-	if ((tab || (tab = hashalloc(NiL, HASH_set, HASH_ALLOCATE, HASH_namesize, sizeof(dev_t), HASH_name, "fstype", 0))) && (s = (char*)hashget(tab, &st->st_dev)))
-		return(s);
+	if (!dict)
+	{
+		disc.key = offsetof(Id_t, id);
+		disc.size = sizeof(dev_t);
+		dict = dtopen(&disc, Dthash);
+	}
+	else if (ip = (Id_t*)dtmatch(dict, &st->st_dev))
+		return ip->name;
 	s = FS_default;
 	if (mp = mntopen(NiL, "r"))
 	{
 		while ((mnt = mntread(mp)) && (stat(mnt->dir, &rt) || rt.st_dev != st->st_dev));
-		if (mnt && mnt->type && (!tab || !(s = strdup(mnt->type))))
-		{
-			buf = fmtbuf(strlen(mnt->type) + 1);
-			strcpy(buf, mnt->type);
-			mntclose(mp);
-			return buf;
-		}
-		mntclose(mp);
+		if (mnt && mnt->type)
+			s = mnt->type;
 	}
-	if (tab)
-		hashput(tab, NiL, s);
-	return s;
+	if (!dict || !(ip = newof(0, Id_t, 1, strlen(s))))
+	{
+		if (!mp)
+			return s;
+		buf = fmtbuf(strlen(s) + 1);
+		strcpy(buf, s);
+		mntclose(mp);
+		return buf;
+	}
+	strcpy(ip->name, s);
+	if (mp)
+		mntclose(mp);
+	dtinsert(dict, ip);
+	return ip->name;
 }
 
 #endif

@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 4.2 2002-06-11
+info mam static 00000 1994-07-17 make (AT&T Research) 4.2 2002-09-22
 setv INSTALLROOT ../../..
 setv PACKAGE_ast ${INSTALLROOT}
 setv PACKAGE_ast_INCLUDE ${PACKAGE_ast}/include/ast
@@ -9,7 +9,7 @@ setv ARFLAGS cr
 setv AS as
 setv ASFLAGS
 setv CC cc
-setv CCFLAGS "-O ${mam_cc_DLL}"
+setv CCFLAGS "${mam_cc_OPTIMIZE} ${mam_cc_DLL}"
 setv COTEMP $$
 setv CPIO cpio
 setv CPIOFLAGS
@@ -207,12 +207,10 @@ prev ../../../include/ast/prototyped.h implicit
 done ../../../include/ast/sfstr.h
 prev ../../../include/ast/fts.h implicit
 prev ../../../include/ast/ls.h implicit
-make ../../../include/ast/hash.h implicit
-make ../../../include/ast/hashpart.h implicit
-prev ../../../include/ast/prototyped.h implicit
-done ../../../include/ast/hashpart.h dontcare
-prev ../../../include/ast/prototyped.h implicit
-done ../../../include/ast/hash.h
+make ../../../include/ast/cdt.h implicit
+prev ../../../include/ast/ast_common.h implicit
+prev ../../../include/ast/ast_std.h implicit
+done ../../../include/ast/cdt.h
 prev cmdlib.h implicit
 done chgrp.c
 prev chgrp.c
@@ -504,7 +502,7 @@ done FEATURE/utsname generated
 prev cmdlib.h implicit
 done uname.c
 prev uname.c
-exec - ${CC} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -DHOSTTYPE=\""${_hosttype_=`package`}"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c uname.c
+exec - ${CC} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -DHOSTTYPE=\""${mam_cc_HOSTTYPE}"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c uname.c
 done uname.o generated
 make uniq.o
 make uniq.c
@@ -548,82 +546,28 @@ prev libcmd.a archive
 make ../../../lib
 exec - set -
 exec - if	test ! -d ${PACKAGE_ast_LIB}
-exec - then	set -x && mkdir -p ${PACKAGE_ast_LIB} 2>/dev/null && set - ||
-exec - 	{
-exec - 		test -d ./-p && rm -Rf ./-p
-exec - 		p=
-exec - 		for d in `echo ${PACKAGE_ast_LIB} | sed -e 's%\\(.\\)/%\\1 %g'`
-exec - 		do	case $p in
-exec - 			"")	p=$d ;;
-exec - 			*)	p=$p/$d ;;
-exec - 			esac
-exec - 			case $d in
-exec - 			.|..)	;;
-exec - 			*)	if	test ! -d $p
-exec - 				then	rm -f $p
-exec - 					set -x && mkdir $p && set -
-exec - 				fi
-exec - 				;;
-exec - 			esac
-exec - 		done
-exec - 	} && set -x 		    		   
+exec - then	set -x && mkdir -p ${PACKAGE_ast_LIB} 		    		   
 exec - fi
 done ../../../lib generated
 make ../../../lib/libcmd.a archive
 prev libcmd.a archive
-exec - mv ${PACKAGE_ast_LIB}/libcmd.a ${PACKAGE_ast_LIB}/libcmd.a.old 2>/dev/null || true; test '' = 'libcmd.a' || { ${STDCP} libcmd.a ${PACKAGE_ast_LIB}/libcmd.a  		    		    ;}
+exec - ${STDMV} ${PACKAGE_ast_LIB}/libcmd.a ${PACKAGE_ast_LIB}/libcmd.a.old 2>/dev/null || true; test '' = 'libcmd.a' || ${STDCMP} 2>/dev/null -s libcmd.a ${PACKAGE_ast_LIB}/libcmd.a || { ${STDCP} libcmd.a ${PACKAGE_ast_LIB}/libcmd.a  		    		    ;}
 exec - (ranlib ${PACKAGE_ast_LIB}/libcmd.a) >/dev/null 2>&1 || true
 done ../../../lib/libcmd.a generated
 make ../../../lib/lib
 exec - set -
 exec - if	test ! -d ${PACKAGE_ast_LIB}/lib
-exec - then	set -x && mkdir -p ${PACKAGE_ast_LIB}/lib 2>/dev/null && set - ||
-exec - 	{
-exec - 		test -d ./-p && rm -Rf ./-p
-exec - 		p=
-exec - 		for d in `echo ${PACKAGE_ast_LIB}/lib | sed -e 's%\\(.\\)/%\\1 %g'`
-exec - 		do	case $p in
-exec - 			"")	p=$d ;;
-exec - 			*)	p=$p/$d ;;
-exec - 			esac
-exec - 			case $d in
-exec - 			.|..)	;;
-exec - 			*)	if	test ! -d $p
-exec - 				then	rm -f $p
-exec - 					set -x && mkdir $p && set -
-exec - 				fi
-exec - 				;;
-exec - 			esac
-exec - 		done
-exec - 	} && set -x 		    		   
+exec - then	set -x && mkdir -p ${PACKAGE_ast_LIB}/lib 		    		   
 exec - fi
 done ../../../lib/lib generated
 make ../../../lib/lib/cmd
 prev cmd.req
-exec - mv ${PACKAGE_ast_LIB}/lib/cmd ${PACKAGE_ast_LIB}/lib/cmd.old 2>/dev/null || true; test '' = 'cmd.req' || { ${STDCP} cmd.req ${PACKAGE_ast_LIB}/lib/cmd  		    		    ;}
+exec - ${STDMV} ${PACKAGE_ast_LIB}/lib/cmd ${PACKAGE_ast_LIB}/lib/cmd.old 2>/dev/null || true; test '' = 'cmd.req' || ${STDCMP} 2>/dev/null -s cmd.req ${PACKAGE_ast_LIB}/lib/cmd || { ${STDCP} cmd.req ${PACKAGE_ast_LIB}/lib/cmd  		    		    ;}
 done ../../../lib/lib/cmd generated
 make ../../../include/ast
 exec - set -
 exec - if	test ! -d ${PACKAGE_ast_INCLUDE}
-exec - then	set -x && mkdir -p ${PACKAGE_ast_INCLUDE} 2>/dev/null && set - ||
-exec - 	{
-exec - 		test -d ./-p && rm -Rf ./-p
-exec - 		p=
-exec - 		for d in `echo ${PACKAGE_ast_INCLUDE} | sed -e 's%\\(.\\)/%\\1 %g'`
-exec - 		do	case $p in
-exec - 			"")	p=$d ;;
-exec - 			*)	p=$p/$d ;;
-exec - 			esac
-exec - 			case $d in
-exec - 			.|..)	;;
-exec - 			*)	if	test ! -d $p
-exec - 				then	rm -f $p
-exec - 					set -x && mkdir $p && set -
-exec - 				fi
-exec - 				;;
-exec - 			esac
-exec - 		done
-exec - 	} && set -x 		    		   
+exec - then	set -x && mkdir -p ${PACKAGE_ast_INCLUDE} 		    		   
 exec - fi
 done ../../../include/ast generated
 make ../../../include/ast/cmd.h

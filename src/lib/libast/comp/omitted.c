@@ -30,7 +30,11 @@
 
 #include "FEATURE/omitted"
 
+#undef	OMITTED
+
 #if _win32_botch
+
+#define	OMITTED	1
 
 #include <ls.h>
 #include <utime.h>
@@ -85,6 +89,23 @@ suffix(register const char* path)
 	return 0;
 }
 
+static int
+execrate(const char* path, char* buf, int size, int physical)
+{
+	int	n;
+	int	oerrno;
+
+	if (suffix(path))
+		return 0;
+	oerrno = errno;
+	if (!physical && (n = readlink(path, buf, size)) > 0 && n < (size - 4))
+		strcpy(buf + n, ".exe");
+	else
+		snprintf(buf, size, "%s.exe", path);
+	errno = oerrno;
+	return 1;
+}
+
 #define MAGIC_mode		0
 #define MAGIC_exec		1
 
@@ -132,9 +153,8 @@ access(const char* path, int op)
 	char	buf[PATH_MAX];
 
 	oerrno = errno;
-	if ((r = _access(path, op)) && errno == ENOENT && !suffix(path))
+	if ((r = _access(path, op)) && errno == ENOENT && execrate(path, buf, sizeof(buf), 0))
 	{
-		snprintf(buf, sizeof(buf), "%s.exe", path);
 		errno = oerrno;
 		r = _access(buf, op);
 	}
@@ -152,9 +172,8 @@ chmod(const char* path, mode_t mode)
 	int	oerrno;
 	char	buf[PATH_MAX];
 
-	if ((r = _chmod(path, mode)) && errno == ENOENT && !suffix(path))
+	if ((r = _chmod(path, mode)) && errno == ENOENT && execrate(path, buf, sizeof(buf), 0))
 	{
-		snprintf(buf, sizeof(buf), "%s.exe", path);
 		errno = oerrno;
 		return _chmod(buf, mode);
 	}
@@ -195,9 +214,8 @@ execve(const char* path, char* const argv[], char* const envv[])
 	if (trace < 0)
 		trace = getenv("_AST_execve_trace") != 0;
 #endif
-	if (!suffix(path))
+	if (execrate(path, buf, sizeof(buf), 0))
 	{
-		snprintf(buf, sizeof(buf), "%s.exe", path);
 		if (!_stat(buf, &st))
 			path = (const char*)buf;
 		else
@@ -255,14 +273,10 @@ link(const char* fp, const char* tp)
 	char	tb[PATH_MAX];
 
 	oerrno = errno;
-	if ((r = _link(fp, tp)) && errno == ENOENT && !suffix(fp))
+	if ((r = _link(fp, tp)) && errno == ENOENT && execrate(fp, fb, sizeof(fb), 1))
 	{
-		snprintf(fb, sizeof(fb), "%s.exe", fp);
-		if (!suffix(tp))
-		{
-			snprintf(tb, sizeof(tb), "%s.exe", tp);
+		if (execrate(tp, tb, sizeof(tb), 1))
 			tp = tb;
-		}
 		errno = oerrno;
 		r = _link(fb, tp);
 	}
@@ -349,9 +363,8 @@ open(const char* path, int flags, ...)
 	oerrno = errno;
 	fd = _open(path, flags, mode);
 #if _win32_botch_open
-	if (fd < 0 && errno == ENOENT && !suffix(path))
+	if (fd < 0 && errno == ENOENT && execrate(path, buf, sizeof(buf), 0))
 	{
-		snprintf(buf, sizeof(buf), "%s.exe", path);
 		errno = oerrno;
 		fd = _open(buf, flags, mode);
 	}
@@ -400,14 +413,10 @@ rename(const char* fp, const char* tp)
 	char	tb[PATH_MAX];
 
 	oerrno = errno;
-	if ((r = _rename(fp, tp)) && errno == ENOENT && !suffix(fp))
+	if ((r = _rename(fp, tp)) && errno == ENOENT && execrate(fp, fb, sizeof(fb), 1))
 	{
-		snprintf(fb, sizeof(fb), "%s.exe", fp);
-		if (!suffix(tp))
-		{
-			snprintf(tb, sizeof(tb), "%s.exe", tp);
+		if (execrate(tp, tb, sizeof(tb), 1))
 			tp = tb;
-		}
 		errno = oerrno;
 		r = _rename(fb, tp);
 	}
@@ -426,9 +435,8 @@ stat(const char* path, struct stat* st)
 	char	buf[PATH_MAX];
 
 	oerrno = errno;
-	if ((r = _stat(path, st)) && errno == ENOENT && !suffix(path))
+	if ((r = _stat(path, st)) && errno == ENOENT && execrate(path, buf, sizeof(buf), 0))
 	{
-		snprintf(buf, sizeof(buf), "%s.exe", path);
 		errno = oerrno;
 		r = _stat(buf, st);
 	}
@@ -447,9 +455,8 @@ truncate(const char* path, off_t offset)
 	char	buf[PATH_MAX];
 
 	oerrno = errno;
-	if ((r = _truncate(path, offset)) && errno == ENOENT && !suffix(path))
+	if ((r = _truncate(path, offset)) && errno == ENOENT && execrate(path, buf, sizeof(buf), 0))
 	{
-		snprintf(buf, sizeof(buf), "%s.exe", path);
 		errno = oerrno;
 		r = _truncate(buf, offset);
 	}
@@ -468,9 +475,8 @@ unlink(const char* path)
 	char	buf[PATH_MAX];
 
 	oerrno = errno;
-	if ((r = _unlink(path)) && errno == ENOENT && !suffix(path))
+	if ((r = _unlink(path)) && errno == ENOENT && execrate(path, buf, sizeof(buf), 1))
 	{
-		snprintf(buf, sizeof(buf), "%s.exe", path);
 		errno = oerrno;
 		r = _unlink(buf);
 	}
@@ -489,9 +495,8 @@ utime(const char* path, struct utimbuf* ut)
 	char	buf[PATH_MAX];
 
 	oerrno = errno;
-	if ((r = _utime(path, ut)) && errno == ENOENT && !suffix(path))
+	if ((r = _utime(path, ut)) && errno == ENOENT && execrate(path, buf, sizeof(buf), 0))
 	{
-		snprintf(buf, sizeof(buf), "%s.exe", path);
 		errno = oerrno;
 		r = _utime(buf, ut);
 	}
@@ -500,13 +505,32 @@ utime(const char* path, struct utimbuf* ut)
 
 #endif
 
-#else
-
-#if sun || _sun || __sun
+#endif
 
 /*
- * sun misses a few functions required by its own bsd-like macros
+ * some systems (sun) miss a few functions required by their
+ * own bsd-like macros
  */
+
+#if !_lib_bzero || defined(bzero)
+
+#undef	bzero
+
+void
+bzero(void* b, size_t n)
+{
+	memset(b, 0, n);
+}
+
+#endif
+
+#if !_lib_getpagesize || defined(getpagesize)
+
+#ifndef OMITTED
+#define OMITTED	1
+#endif
+
+#undef	getpagesize
 
 #ifdef	_SC_PAGESIZE
 #undef	PAGESIZE
@@ -517,28 +541,16 @@ utime(const char* path, struct utimbuf* ut)
 #endif
 #endif
 
-void
-bzero(void* b, size_t n)
-{
-	memset(b, 0, n);
-}
-
 int
 getpagesize()
 {
 	return PAGESIZE;
 }
 
-int
-killpg(pid_t pgrp, int sig)
-{
-	return kill(-pgrp, sig);
-}
+#endif
 
-#else
+#ifndef OMITTED
 
 NoN(omitted)
-
-#endif
 
 #endif

@@ -75,6 +75,8 @@ print 'print hello' > date
 chmod +x date
 print 'print notfound' >  $cmd
 chmod +x "$cmd"
+> foo
+chmod 755 foo
 for PATH in $path :$path $path: .:$path $path: $path:. $PWD::$path $PWD:.:$path $path:$PWD $path:.:$PWD
 do	
 #	print path=$PATH $(whence date)
@@ -105,6 +107,9 @@ PATH=/dev/null
 if	date > /dev/null 2>&1
 then	err_exit 'programs in . should not be found'
 fi
+[[ $(whence ./foo) != "$PWD/"./foo ]] && err_exit 'whence ./foo not working'
+[[ $(whence "$PWD/foo") != "$PWD/foo" ]] && err_exit 'whence $PWD/foo not working'
+[[ $(whence ./xxxxx) ]] && err_exit 'whence ./xxxx not working'
 PATH=$d:
 cp "$rm" kshrm$$
 chmod 755 kshrm$$

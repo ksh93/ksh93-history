@@ -288,7 +288,7 @@ function myexport
 		return
 	fi
 	typeset val
-	val=$(export | grep "$1=")
+	val=$(export | grep "^$1=")
 	print ${val#"$1="}
 	
 }
@@ -296,21 +296,21 @@ export dgk=base
 if	[[ $(myexport dgk fun) != fun ]]
 then	err_exit 'export inside function not working'
 fi
-val=$(export | grep "dgk=")
+val=$(export | grep "^dgk=")
 if	[[ ${val#dgk=} != base ]]
 then	err_exit 'export not restored after function call'
 fi
 if	[[ $(myexport dgk fun fun2) != fun2 ]]
 then	err_exit 'export inside function not working with recursive function'
 fi
-val=$(export | grep "dgk=")
+val=$(export | grep "^dgk=")
 if	[[ ${val#dgk=} != base ]]
 then	err_exit 'export not restored after recursive function call'
 fi
 if	[[ $(dgk=try3 myexport dgk) != try3 ]]
 then	err_exit 'name=value not added to export list with function call'
 fi
-val=$(export | grep "dgk=")
+val=$(export | grep "^dgk=")
 if	[[ ${val#dgk=} != base ]]
 then	err_exit 'export not restored name=value function call'
 fi

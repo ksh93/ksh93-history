@@ -77,6 +77,7 @@
 
 typedef struct Map_s
 {
+	char*			name;
 	const unsigned char*	map;
 	_ast_iconv_f		fun;
 	int			index;
@@ -90,6 +91,12 @@ typedef struct Conv_s
 	Map_t			from;
 	Map_t			to;
 } Conv_t;
+
+static Conv_t*			freelist[4];
+static int			freeindex;
+
+static const char		name_local[] = "local";
+static const char		name_native[] = "native";
 
 static const _ast_iconv_list_t	codes[] =
 {
@@ -197,7 +204,7 @@ static const _ast_iconv_list_t	codes[] =
 
 #if _UWIN
 
-#include <windows.h>
+#include <ast_windows.h>
 
 #ifndef CP_UCS2
 #define CP_UCS2	0x0000
@@ -215,7 +222,6 @@ _win_codeset(const char* name)
 {
 	register char*	s;
 	char*		e;
-	char*		prefix;
 	int		n;
 	Sfio_t*		sp;
 	char		aka[128];
@@ -224,7 +230,7 @@ _win_codeset(const char* name)
 #if DEBUG_TRACE
 error(DEBUG_TRACE, "AHA#%d _win_codeset name=%s", __LINE__, name);
 #endif
-	if (!name[0] || name[0] == '-' && !name[1] || !strcasecmp(name, "local") || !strcasecmp(name, "native"))
+	if (name == name_native)
 		return CP_ACP;
 	if (!strcasecmp(name, "utf") || !strcasecmp(name, "utf8") || !strcasecmp(name, "utf-8"))
 		return CP_UTF8;
@@ -232,12 +238,20 @@ error(DEBUG_TRACE, "AHA#%d _win_codeset name=%s", __LINE__, name);
 		return CP_UCS2;
 	if (name[0] == '0' && name[1] == 'x' && (n = strtol(name, &e, 0)) > 0 && !*e)
 		return n;
-	prefix = isdigit(name[0]) ? "windows-" : "";
 	for (;;)
 	{
-		sfsprintf(tmp, sizeof(tmp), "%s/%s%s", _win_maps, prefix, name);
+		sfsprintf(tmp, sizeof(tmp), "%s/%s", _win_maps, name);
 		if (!(sp = sfopen(0, tmp, "r")))
-			break;
+		{
+			s = (char*)name;
+			if ((s[0] == 'c' || s[0] == 'C') && (s[1] == 'p' || s[1] == 'P'))
+				s += 2;
+			if (!isdigit(s[0]))
+				break;
+			sfsprintf(tmp, sizeof(tmp), "%s/windows-%s", _win_maps, s);
+			if (!(sp = sfopen(0, tmp, "r")))
+				break;
+		}
 		for (;;)
 		{
 			if (!(s = sfgetr(sp, '\n', 0)))
@@ -471,8 +485,6 @@ _ast_iconv_name(register const char* m, register char* b, size_t n)
 	e = b + n - 1;
 	bp = 0;
 	n = 0;
-	if (!*m || *m == '-' && !*(m + 1))
-		m = "native";
 	for (cp = codes; cp->name; cp++)
 		if (strgrpmatch(m, cp->match, sub, elementsof(sub) / 2, STR_MAXIMAL|STR_LEFT|STR_ICASE))
 		{
@@ -994,6 +1006,7 @@ _ast_iconv_open(const char* t, const char* f)
 	register Conv_t*	cc;
 	int			fc;
 	int			tc;
+	int			i;
 
 	char			fr[64];
 	char			to[64];
@@ -1001,8 +1014,46 @@ _ast_iconv_open(const char* t, const char* f)
 #if DEBUG_TRACE
 error(DEBUG_TRACE, "AHA#%d _ast_iconv_open f=%s t=%s\n", __LINE__, f, t);
 #endif
-	if (!(cc = newof(0, Conv_t, 1, 0)))
+	if (!t || !*t || *t == '-' && !*(t + 1) || !strcasecmp(t, name_local) || !strcasecmp(t, name_native))
+		t = name_native;
+	if (!f || !*f || *f == '-' && !*(f + 1) || !strcasecmp(t, name_local) || !strcasecmp(f, name_native))
+		f = name_native;
+
+	/*
+	 * (soft) fail if to is native and conversion is the identity
+	 */
+
+	if (t == name_native && t == f)
 		return (iconv_t)(-1);
+
+	/*
+	 * first check the free list
+	 */
+
+	for (i = 0; i < elementsof(freelist); i++)
+		if ((cc = freelist[i]) && streq(t, cc->to.name) && streq(f, cc->from.name))
+		{
+			freelist[i] = 0;
+#if _lib_iconv_open
+			/*
+			 * reset the shift state if any
+			 */
+
+			if (cc->cvt != (iconv_t)(-1))
+				iconv(cc->cvt, NiL, NiL, NiL, NiL);
+#endif
+			return cc;
+		}
+
+	/*
+	 * allocate a new one
+	 */
+
+	if (!(cc = newof(0, Conv_t, 1, strlen(t) + strlen(f) + 2)))
+		return (iconv_t)(-1);
+	cc->to.name = (char*)(cc + 1);
+	cc->from.name = strcopy(cc->to.name, t) + 1;
+	strcpy(cc->from.name, f);
 	cc->cvt = (iconv_t)(-1);
 	fc = _ast_iconv_name(f, fr, sizeof(fr));
 	tc = _ast_iconv_name(t, to, sizeof(to));
@@ -1011,10 +1062,10 @@ error(DEBUG_TRACE, "AHA#%d _ast_iconv_open f=%s:%s:%d t=%s:%s:%d\n", __LINE__, f
 #endif
 
 	/*
-	 * (soft) fail if to is "" or "-" and conversion is the identity
+	 * (soft) fail if to is native and conversion is the identity
 	 */
 
-	if ((!*t || *t == '-' && !*(t + 1)) && streq(fr, to))
+	if (t == name_native && streq(fr, to))
 	{
 		free(cc);
 		return (iconv_t)(-1);
@@ -1085,7 +1136,6 @@ error(DEBUG_TRACE, "AHA#%d _ast_iconv_open f=%s:%s:%d t=%s:%s:%d\n", __LINE__, f
 	}
 	return (iconv_t)cc;
  nope:
-	free(cc);
 	return (iconv_t)(-1);
 }
 
@@ -1097,18 +1147,48 @@ int
 _ast_iconv_close(_ast_iconv_t cd)
 {
 	Conv_t*	cc;
+	Conv_t*	oc;
+	int	i;
 	int	r = 0;
 
 	if (cd == (_ast_iconv_t)(-1))
 		return -1;
 	cc = (Conv_t*)cd;
+
+	/*
+	 * add to the free list
+	 */
+
+	i = freeindex;
+	for (;;)
+	{
+		if (++ i >= elementsof(freelist))
+			i = 0;
+		if (!freelist[i])
+			break;
+		if (i == freeindex)
+		{
+			if (++ i >= elementsof(freelist))
+				i = 0;
+
+			/*
+			 * close the oldest
+			 */
+
+			if (oc = freelist[i])
+			{
 #if _lib_iconv_open
-	if (cc->cvt != (iconv_t)(-1))
-		r = iconv_close(cc->cvt);
+				if (oc->cvt != (iconv_t)(-1))
+					r = iconv_close(oc->cvt);
 #endif
-	if (cc->buf)
-		free(cc->buf);
-	free(cc);
+				if (oc->buf)
+					free(oc->buf);
+				free(oc);
+			}
+			break;
+		}
+	}
+	freelist[freeindex = i] = cc;
 	return r;
 }
 
@@ -1131,6 +1211,14 @@ _ast_iconv(_ast_iconv_t cd, char** fb, size_t* fn, char** tb, size_t* tn)
 	size_t				tfn;
 	size_t				i;
 
+	if (!fb || !*fb)
+	{
+		/* TODO: reset to the initial state */
+		if (!tb || !*tb)
+			return 0;
+		/* TODO: write the initial state shift sequence */
+		return 0;
+	}
 	n = *tn;
 	if (cc->from.fun)
 	{

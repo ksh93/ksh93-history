@@ -244,11 +244,15 @@ cat{
 	#endif
 	#if _lib_statvfs64 && !defined(statvfs)
 	#define statvfs		statvfs64
+	#if !defined(__USE_LARGEFILE64)
 	extern int		statvfs64(const char*, struct statvfs64*);
+	#endif
 	#endif
 	#if _lib_fstatvfs64 && !defined(fstatvfs)
 	#define fstatvfs	fstatvfs64
+	#if !defined(__USE_LARGEFILE64)
 	extern int		fstatvfs64(int, struct statvfs64*);
+	#endif
 	#endif
 }end
 str	st_fstype sys/types.h sys/stat.h note{ stat.st_fstype is a string }end compile{

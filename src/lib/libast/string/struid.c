@@ -39,7 +39,7 @@ __STDPP__directive pragma pp:hide getpwnam getpwuid
 #endif
 
 #include <ast.h>
-#include <hash.h>
+#include <cdt.h>
 #include <pwd.h>
 
 #if defined(__STDPP__directive) && defined(__STDPP__hide)
@@ -52,11 +52,12 @@ __STDPP__directive pragma pp:nohide getpwnam getpwuid
 extern struct passwd*	getpwnam(const char*);
 extern struct passwd*	getpwuid(uid_t);
 
-typedef struct
+typedef struct Id_s
 {
-	HASH_HEADER;
-	int	id;
-} bucket;
+	Dtlink_t	link;
+	int		id;
+	char		name[1];
+} Id_t;
 
 /*
  * return uid number given uid name
@@ -67,23 +68,34 @@ typedef struct
 int
 struid(const char* name)
 {
+	register Id_t*		ip;
 	register struct passwd*	pw;
-	register bucket*	b;
+	int			id;
 	char*			e;
 
-	static Hash_table_t*	uidtab;
+	static Dt_t*		dict;
+	static Dtdisc_t		disc;
 
-	if (!uidtab && !(uidtab = hashalloc(NiL, HASH_set, HASH_ALLOCATE, HASH_name, "uidnam", 0)))
-		return -1;
-	if (b = (bucket*)hashlook(uidtab, name, HASH_LOOKUP|HASH_FIXED, (char*)sizeof(bucket)))
-		return b->id;
-	if (!(b = (bucket*)hashlook(uidtab, NiL, HASH_CREATE|HASH_FIXED, (char*)sizeof(bucket))))
-		return -1;
+	if (!dict)
+	{
+		disc.key = offsetof(Id_t, name);
+		dict = dtopen(&disc, Dthash);
+	}
+	else if (ip = (Id_t*)dtmatch(dict, name))
+		return ip->id;
 	if (pw = getpwnam(name))
-		return b->id = pw->pw_uid;
-	b->id = strtol(name, &e, 0);
-	if (!*e && getpwuid(b->id))
-		return b->id;
-	b->id = -2;
-	return -1;
+		id = pw->pw_uid;
+	else
+	{
+		id = strtol(name, &e, 0);
+		if (*e || !getpwuid(id))
+			id = -1;
+	}
+	if (dict && (ip = newof(0, Id_t, 1, strlen(name))))
+	{
+		strcpy(ip->name, name);
+		ip->id = id >= 0 ? id : -2;
+		dtinsert(dict, ip);
+	}
+	return id;
 }

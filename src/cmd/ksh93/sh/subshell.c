@@ -340,7 +340,7 @@ Sfio_t *sh_subshell(union anynode *t, int flags, int comsub)
 		subshell_data=0;
 		subenv = 0;
 	}
-	shp->curenv = ++subenv;
+	shp->jobenv = shp->curenv = ++subenv;
 	savst = shp->st;
 	sh_pushcontext(&buff,SH_JMPSUB);
 	shp->subshell++;
@@ -481,6 +481,7 @@ Sfio_t *sh_subshell(union anynode *t, int flags, int comsub)
 	shp->pathlist = (void*)sp->pathlist;
 #endif
 	job_subrestore(sp->jobs);
+	shp->jobenv = savecurenv;
 	if(sp->svar)	/* restore environment if saved */
 	{
 		shp->options = sp->options;
@@ -497,7 +498,7 @@ Sfio_t *sh_subshell(union anynode *t, int flags, int comsub)
 		}
 		sh_sigreset(1);
 		shp->st = savst;
-		shp->jobenv = shp->curenv = savecurenv;
+		shp->curenv = savecurenv;
 		if(nsig)
 		{
 			memcpy((char*)&shp->st.trapcom[0],savsig,nsig);

@@ -1,0 +1,172 @@
+:
+# @(#)probe.win32 (AT&T Labs Research) 2002-05-28
+#
+# win32 specific make C probe initialization
+# ms vc is easy on uwin
+#
+# 2> easy.err to avoid mysterious hang with bcc
+#
+
+probe_easy="winerror"
+
+nativepp=-1
+export nativepp
+
+{
+for i in $probe_easy
+do	echo "#include <$i.h>"
+done
+echo '#ifdef _UWIN'
+echo 'int uwin=_UWIN;'
+echo '#endif'
+echo '#ifdef __BORLANDC__'
+echo 'int versionb=__BORLANDC__;'
+echo '#endif'
+echo '#ifdef __DMC__'
+echo 'int versiond=__DMC__;'
+echo '#endif'
+echo '#ifdef _MSC_VER'
+echo 'int versionm=_MSC_VER;'
+echo '#endif'
+echo '#ifdef __ICL'
+echo 'int versioni=__ICL;'
+echo '#endif'
+echo '#ifdef __LCC__'
+echo 'int versionl=0+__LCC__;'
+echo '#endif'
+echo '#ifdef __MINGW32__'
+echo "int versiong=__MINGW32__"
+echo '#endif'
+} > easy.c
+
+for i in $probe_easy
+do	eval ${i}_include=
+done
+include=
+uwin=
+versionb=
+versiond=
+versionm=
+versioni=
+versiong=
+versionl=
+
+$cc -E easy.c 2> easy.err |
+egrep -i '^(#line 1 .*\.[hH]| *int +(uwin|version[bdiglm]) *= *[0-9])' |
+sed	-e 's/.*"\(.*\)".*/\1/' \
+	-e 's,^  *,,' \
+	-e 's,  *$,,' \
+	-e 's, *= *,=,' \
+	-e 's,^\(.\):[\\/]*,/\1/,' \
+	-e 's,[\\/][\\/]*,/,g' \
+	-e 's,^\(/.*\)/\(.*\)\.[hH]$,\2_include="\1",' \
+	-e 's, *int *,,' \
+	> easy.sh
+. ./easy.sh
+
+for i in $probe_easy
+do	eval d=\"\$${i}_include\"
+	case $d in
+	?*)	include=${d// /}
+		break
+		;;
+	esac
+done
+
+i=$($cc -V 2> easy.err)
+if	test "" != "$i" -a -d "$i/include"
+then	include=$i/include
+fi
+
+case $versionb$versiond$versionm$versiong$versionl:$include in
+[0-9]*:/*)
+	: the payoff
+	set -- $cc
+	cmd=$1
+	shift
+	set -- $(whence $cmd) "$@"
+	typ=$(package)
+	cat >&3 <<!
+CC.CC = $*
+CC.NATIVE = $*
+CC.ALTPP.FLAGS = -Yp,\$(CPP:D)
+CC.ALTPP.ENV =
+CC.ARFLAGS =
+CC.DEBUG = -g
+CC.DIALECT = ANSI CLOSURE DYNAMIC
+CC.DLL = -D_BLD_DLL
+CC.DLLBIG = -D_BLD_DLL
+CC.DLL.VARIANTS =
+CC.DLL.LIBRARIES =
+CC.DYNAMIC =
+CC.EXECTYPE = $typ
+CC.HOSTTYPE = $typ
+CC.LD = /usr/bin/ld
+CC.LD.DYNAMIC = -Bdynamic
+CC.LD.RUNPATH =
+CC.LD.STATIC = -Bstatic
+CC.LIB.DLL = option
+CC.LIB.ALL = -Bwhole-archive
+CC.LIB.UNDEF = -Bno-whole-archive
+CC.MAKE.OPTIONS = nativepp=-1
+CC.NM = nm
+CC.NMEDIT =
+CC.NMFLAGS =
+CC.OPTIMIZE = -O
+CC.READONLY =
+CC.REPOSITORY =
+CC.SHARED = -G
+CC.SHARED.REGISTRY =
+CC.SHARED.REGISTRY.PATH =
+CC.STATIC = -Bstatic
+!
+	if	[ X"$versiond" != X ]
+	then	inc=${include}/win32 lib=/dm
+	elif	[ X"$versionb" != X ]
+	then	inc= lib=/borland
+	elif	[ X"$versioni" != X ]
+	then	if	[ -d /msdev/vc98/inlcude ]
+		then	inc=/msdev/vc98/include
+		else	inc=/msdev/vc/include
+		fi
+		lib=
+	else	inc= lib=
+	fi
+	case $include in
+	*' '*)	include=`echo "$include" | sed -e 's/ //g'`;;
+	esac
+	case $uwin in
+	[0-9]*)	cat >&3 <<!
+CC.STDINCLUDE = /usr/include ${include} ${inc}
+CC.STDLIB = /usr/lib${lib} ${include%/*}/lib
+!
+		;;
+	*)	cat >&3 <<!
+CC.STDINCLUDE = ${include} ${inc}
+CC.STDLIB = ${include%/*}/lib
+!
+		;;
+	esac
+	cat >&3 <<!
+CC.STRICT =
+CC.STRIP =
+CC.STRIPFLAGS =
+CC.PREFIX.ARCHIVE = lib
+CC.PREFIX.DYNAMIC =
+CC.PREFIX.SHARED =
+CC.PREFIX.SYMBOL = _
+CC.SUFFIX.ARCHIVE = .a
+CC.SUFFIX.COMMAND =
+CC.SUFFIX.DYNAMIC = .dll
+CC.SUFFIX.LD = .def .exp .ign .res
+CC.SUFFIX.OBJECT = .o
+CC.SUFFIX.SHARED = .lib
+CC.SUFFIX.SOURCE = .c
+CC.SUFFIX.STATIC =
+CC.WARN =
+CC.PREROOT =
+CC.UNIVERSE = att
+!
+	exit 0
+	;;
+esac

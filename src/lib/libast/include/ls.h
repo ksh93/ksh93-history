@@ -98,10 +98,10 @@
 #endif
 
 extern int		chmod(const char*, _AST_mode_t);
-#if !defined(_ver_fstat)
+#if !defined(_ver_fstat) && !defined(__USE_LARGEFILE64)
 extern int		fstat(int, struct stat*);
 #endif
-#if !defined(_ver_lstat)
+#if !defined(_ver_lstat) && !defined(__USE_LARGEFILE64)
 extern int		lstat(const char*, struct stat*);
 #endif
 extern int		mkdir(const char*, _AST_mode_t);
@@ -109,7 +109,7 @@ extern int		mkfifo(const char*, _AST_mode_t);
 #if !defined(_lib__xmknod)
 extern int		mknod(const char*, _AST_mode_t, dev_t);
 #endif
-#if !defined(_ver_stat)
+#if !defined(_ver_stat) && !defined(__USE_LARGEFILE64)
 extern int		stat(const char*, struct stat*);
 #endif
 extern _AST_mode_t	umask(_AST_mode_t);

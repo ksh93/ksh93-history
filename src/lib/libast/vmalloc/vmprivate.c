@@ -31,7 +31,7 @@ void _STUB_vmprivate(){}
 
 #include	"vmhdr.h"
 
-static char*	Version = "\n@(#)$Id: Vmalloc (AT&T Labs Research) 2002-05-31 $\0\n";
+static char*	Version = "\n@(#)$Id: Vmalloc (AT&T Labs - Research) 2002-05-31 $\0\n";
 
 
 /*	Private code used in the vmalloc library
@@ -52,7 +52,7 @@ Vmsearch_f	searchf;	/* tree search function		*/
 	reg size_t	s;
 	reg Seg_t*	seg;
 	reg Block_t	*bp, *t;
-	reg Vmuchar_t*	addr;
+	reg Vmuchar_t*	addr = (Vmuchar_t*)Version; /* shut compiler warning */
 	reg Vmdata_t*	vd = vm->data;
 	reg Vmemory_f	memoryf = vm->disc->memoryf;
 	reg Vmexcept_f	exceptf = vm->disc->exceptf;

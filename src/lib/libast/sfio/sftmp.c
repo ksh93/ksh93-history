@@ -75,7 +75,7 @@ Sfdisc_t*	disc;
 
 	if(type == SF_CLOSING)
 	{
-		vtmtxlock(_Sfmutex);
+		(void)vtmtxlock(_Sfmutex);
 		for(last = NIL(File_t*), ff = File; ff; last = ff, ff = ff->next)
 			if(ff->f == f)
 				break;
@@ -93,7 +93,7 @@ Sfdisc_t*	disc;
 
 			free((Void_t*)ff);
 		}
-		vtmtxunlock(_Sfmutex);
+		(void)vtmtxunlock(_Sfmutex);
 	}
 
 	return 0;
@@ -106,12 +106,12 @@ static void _rmfiles()
 #endif
 {	reg File_t	*ff, *next;
 
-	vtmtxlock(_Sfmutex);
+	(void)vtmtxlock(_Sfmutex);
 	for(ff = File; ff; ff = next)
 	{	next = ff->next;
 		_tmprmfile(ff->f, SF_CLOSING, NIL(Void_t*), ff->f->disc);
 	}
-	vtmtxunlock(_Sfmutex);
+	(void)vtmtxunlock(_Sfmutex);
 }
 
 static Sfdisc_t	Rmdisc =
@@ -135,12 +135,12 @@ char*	file;
 
 	if(!(ff = (File_t*)malloc(sizeof(File_t)+strlen(file))) )
 		return -1;
-	vtmtxlock(_Sfmutex);
+	(void)vtmtxlock(_Sfmutex);
 	ff->f = f;
 	strcpy(ff->name,file);
 	ff->next = File;
 	File = ff;
-	vtmtxunlock(_Sfmutex);
+	(void)vtmtxunlock(_Sfmutex);
 
 #else	/* can remove now */
 	while(remove(file) < 0 && errno == EINTR)
@@ -327,8 +327,8 @@ Sfdisc_t*	disc;
 		return -1;
 
 	if(newf.mutex) /* don't need a mutex for this stream */
-	{	vtmtxclrlock(newf.mutex);
-		vtmtxclose(newf.mutex);
+	{	(void)vtmtxclrlock(newf.mutex);
+		(void)vtmtxclose(newf.mutex);
 		newf.mutex = NIL(Vtmutex_t*);
 	}
 

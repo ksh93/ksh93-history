@@ -234,7 +234,7 @@ reg size_t	size;	/* buffer size, -1 for default size */
 
 				/* initialize side buffer for r+w unseekable streams */
 				if(!f->proc && (f->bits&SF_BOTH) )
-					(void)_sfpopen(f,-1,-1,0);
+					(void)_sfpopen(f,-1,-1,1);
 			}
 		}
 

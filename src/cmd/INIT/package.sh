@@ -22,7 +22,7 @@
 #                                                                  #
 ####################################################################
 # package - source and binary package control
-# this script written to make it through all sh variants
+# this script is written to make it through all sh variants
 # Glenn Fowler <gsf@research.att.com>
 
 case $-:$BASH_VERSION in
@@ -42,8 +42,8 @@ package_use='=$HOSTTYPE=$PACKAGEROOT=$INSTALLROOT=$EXECROOT=$CC='
 
 admin_db=admin.db
 admin_env=admin.env
-admin_ditto="ditto --delete --update --verbose"
-admin_ditto_skip="OFFICIAL|old|*.tmp"
+admin_ditto="ditto --checksum --delete --update --verbose"
+admin_ditto_skip="OFFICIAL|core|old|*.core|*.tmp|.nfs*"
 default_url=default.url
 
 all_types='*.*|sun4'		# all but sun4 match *.*
@@ -51,7 +51,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Labs Research) 2002-06-28 $
+@(#)$Id: package (AT&T Labs Research) 2002-09-22 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary packages.
@@ -121,13 +121,13 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 				\"\bpackage\b\".]
 			[+[user@]]host?The host name and optionally user name
 				for \brcp\b(1) and \brsh\b(1) access.]
-			[+[server::]]PACKAGEROOT?The absolute remote package
-				root directory and optionally the server name
-				if the directory is on a different server than
-				the master package root directory. If
-				\blib/package/admin/'$admin_env$'\b exists
-				under this directory then it is sourced by
-				\bsh\b(1) before \aaction\a is done. If this
+			[+[remote::]]PACKAGEROOT?The absolute remote package
+				root directory and optionally the remote
+				protocol (rsh or ssh) if the directory is on
+				a different server than the master package
+				root directory. If \blib/package/admin/'$admin_env$'\b
+				exists under this directory then it is sourced
+				by \bsh\b(1) before \aaction\a is done. If this
 				field begins with \b-\b then the host is
 				ignored. If this field contains \b:\b then
 				\bditto\b(1) is used to sync the remote \bsrc\b
@@ -182,7 +182,8 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 		directory prefixes. Otherwise each architecture will be
 		installed in a separate \barch/\b\aHOSTTYPE\a subdirectory of
 		\adirectory\a. The \aarchitecture\a \b-\b names the current
-		architecture. \adirectory\a must be an existing directory.]
+		architecture. \adirectory\a must be an existing directory.
+		This action requires \bnmake\b.]
 	[+license\b [ \apackage\a ... ]]?List the source license(s) for
 		\apackage\a on the standard output. Note that individual
 		components in \apackage\a may contain additional or replacement
@@ -197,7 +198,7 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 		in the \b$INSTALLROOT\b directory tree viewpathed on top of
 		the \b$PACKAGEROOT\b directory tree. Leaf directory names
 		matching the \b|\b-separated shell pattern \b$MAKESKIP\b
-		are ignored.]
+		are ignored. The \bview\b action is done before making.]
 	[+read\b [ \apackage\a ... | \aarchive\a ... ]]?Read the named
 		package or archive(s). Must be run from the package root
 		directory. Archives are searched for in \b.\b and
@@ -263,6 +264,8 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 		and group are changed as necessary to match the checksum entry.
 		A warning is printed on the standard error for each mismatch.
 		Requires the \bast\b package \bcksum\b(1) command.]
+	[+view?Initialize the architecture specific viewpath hierarchy. The
+		\bmake\b action implicitly calls this action.]
 	[+write\b [\aformat\a]] \atype\a ... [ \apackage\a ...]]?Write a
 		package archive for \apackage\a. All work is done in the
 		\b$PACKAGEROOT/lib/package\b directory. \aformat\a-specific
@@ -458,13 +461,14 @@ tab="        "
 verbose=0
 DEBUG=
 PROTOROOT=-
+SHELLMAGIC=-
 
 while	:
 do	case $# in
 	0)	set host type ;;
 	esac
 	case $1 in
-	admin|contents|copyright|host|install|license|list|make|read|release|remove|results|test|update|use|verify|write|TEST)
+	admin|contents|copyright|host|install|license|list|make|read|release|remove|results|test|update|use|verify|view|write|TEST)
 		action=$1
 		shift
 		break
@@ -785,12 +789,13 @@ ${eL}${eO}"
 		   [user@]host
 			   The host name and optionally user name for rcp(1)
 			   and rsh(1) access.
-		   [server:]PACKAGEROOT
+		   [remote:]PACKAGEROOT
 			   The absolute remote package root directory and
-			   optionally the server name if the directory is on
-			   a different server than the master package root
-			   directory. If lib/package/admin/'$admin_env$' exists
-			   under this directory then it is sourced by sh(1)
+			   optionally the remote prorocol (rsh or ssh) if
+			   the directory is on a different server than the
+			   master package root directory. If
+			   lib/package/admin/'$admin_env$' exists under
+			   this directory then it is sourced by sh(1)
 			   before ACTION is done. If this field begins with -
 			   then the host is ignored. If this field contains
 			   : then ditto(1) is used to sync the remote src
@@ -844,7 +849,8 @@ ${eL}${eO}"
 		the \"arch/HOSTTYPE\" directory prefixes. Otherwise each
 		architecture will be installed in a separate \"arch/HOSTTYPE\"
 		subdirectory of DIR. The ARCHITECTURE - names the current
-		architecture. DIR must be an existing directory.
+		architecture. DIR must be an existing directory. This action
+		requires nmake.
 	license [ package ... ]
 		List the source license(s) for PACKAGE on the standard output.
 		Note that individual components in PACKAGE may contain
@@ -860,7 +866,7 @@ ${eL}${eO}"
 		in the \$INSTALLROOT directory tree viewpathed on top of
 		the \$PACKAGEROOT directory tree. Leaf directory names
 		matching the |-separated shell pattern \$MAKESKIP
-		are ignored.
+		are ignored. The view action is done before making.
 	read [ package ... | archive ... ]
 		Read the named package archive(s). Must be run from the
 		package root directory. Archives are searched for in .
@@ -921,6 +927,8 @@ ${eL}${eO}"
 		as necessary to match the checksum entry. A warning is printed
 		on the standard error for each mismatch. Requires the ast
 		package cksum(1) command.
+	view	Initialize the architecture specific viewpath hierarchy. The
+		make action implicitly calls this action.]
 	write [closure] [exp|lcl|pkg|rpm] [base|delta] [binary|source] PACKAGE
 		Write an archive for PACKAGE. The archive name is
 		lib/package/SAVE/PACKAGE.RELEASE[.VERSION][.HOSTTYPE].SUFFIX:
@@ -1086,6 +1094,23 @@ executable() # [!] command
 	case $1 in
 	'!')	test ! -x "$2" -a ! -x "$2.exe"; return ;;
 	*)	test -x "$1" -o -x "$1.exe"; return ;;
+	esac
+}
+
+# initialize SHELLMAGIC
+# tangible proof of cygwin's disdain for unix (well, this and execrate)
+
+shellmagic()
+{
+	case $SHELLMAGIC in
+	'')	;;
+	-)	if	test -f /emx/bin/sh.exe
+		then	SHELLMAGIC='#!/emx/bin/sh.exe'$nl
+		elif	test -f /bin/env.exe
+		then	SHELLMAGIC='#!/bin/env sh'$nl
+		else	SHELLMAGIC=
+		fi
+		;;
 	esac
 }
 
@@ -1305,8 +1330,8 @@ hostinfo() # attribute ...
 		esac
 		_hostinfo_="$_hostinfo_ $cpu"
 		;;
-	name)	name=`hostname || uname -n || cat /etc/whoami || echo local`
-		_hostinfo_="$_hostinfo_ $name"
+	name)	_name_=`hostname || uname -n || cat /etc/whoami || echo local`
+		_hostinfo_="$_hostinfo_ $_name_"
 		;;
 	rating)	for rating in `grep -i ^bogomips /proc/cpuinfo 2>/dev/null | sed -e 's,.*:[ 	]*,,' -e 's,\(...*\)\..*,\1,' -e 's,\(\..\).*,\1,'`
 		do	case $rating in
@@ -1825,7 +1850,8 @@ main()
 			68*)			rhs=m$rhs ;;
 			esac
 			case $rhs in
-			i[x23456789]86|*86pc)	rhs=i386 ;;
+			i[x23456789]86|i?[x23456789]86|*86pc)
+						rhs=i386 ;;
 			esac
 			case $rhs in
 			arm[abcdefghijklmnopqrstuvwxyz_][0123456789]*)
@@ -1833,6 +1859,17 @@ main()
 			hppa)			rhs=pa ;;
 			esac
 			case $lhs in
+			?*coff|?*dwarf|?*elf)
+				case $lhs in
+				?*coff)	x=coff ;;
+				?*dwarf)x=coff ;;
+				?*elf)	x=elf ;;
+				esac
+				lhs=`echo ${lhs}XXX | sed -e "s/${x}XXX//"`
+				;;
+			esac
+			case $lhs in
+			bsdi)			lhs=bsd ;;
 			hpux)			lhs=hp ;;
 			mvs)			rhs=390 ;;
 			esac
@@ -2062,6 +2099,41 @@ $PACKAGE_USE)
 	$show PACKAGEROOT=$PACKAGEROOT
 	$show export PACKAGEROOT
 	export PACKAGEROOT
+
+	# initialize the architecture environment
+
+	case $KEEP_HOSTTYPE in
+	0)	hostinfo type
+		HOSTTYPE=$_hostinfo_
+		;;
+	1)	_PACKAGE_HOSTTYPE_=$HOSTTYPE
+		export _PACKAGE_HOSTTYPE_
+		;;
+	esac
+	$show HOSTTYPE=$HOSTTYPE
+	$show export HOSTTYPE
+	export HOSTTYPE
+	INSTALLROOT=$PACKAGEROOT/arch/$HOSTTYPE
+	case $action in
+	admin|install|make|read|remove|test|verify|view|write)
+		;;
+	*)	if	test ! -d $INSTALLROOT
+		then	INSTALLROOT=$PACKAGEROOT
+		fi
+		;;
+	esac
+	$show INSTALLROOT=$INSTALLROOT
+	$show export INSTALLROOT
+	export INSTALLROOT
+
+	# HOSTTYPE specific package profile
+
+	if	test -r $INSTALLROOT/lib/package/profile
+	then	. $INSTALLROOT/lib/package/profile
+	fi
+
+	# check the basic package hierarchy
+
 	case $action in
 	use)	packageroot $PACKAGEROOT || {
 			echo "$command: $PACKAGEROOT: invalid package root directory" >&2
@@ -2089,45 +2161,59 @@ $PACKAGE_USE)
 			case `ls -t $INITROOT/$i.sh $PACKAGEROOT/bin/$i 2>/dev/null` in
 			"$INITROOT/$i.sh"*)
 				note update $PACKAGEROOT/bin/$i
-				$exec cp $INITROOT/$i.sh $PACKAGEROOT/bin/$i || exit
+				shellmagic
+				case $SHELLMAGIC in
+				'')	$exec cp $INITROOT/$i.sh $PACKAGEROOT/bin/$i || exit
+					;;
+				*)	case $exec in
+					'')	{
+						echo "$SHELLMAGIC"
+						cat $INITROOT/$i.sh
+						} > $PACKAGEROOT/bin/$i || exit
+						;;
+					*)	echo "{
+echo \"$SHELLMAGIC\"
+cat $INITROOT/$i.sh
+} > $PACKAGEROOT/bin/$i"
+						;;
+					esac
+					;;
+				esac
 				$exec chmod +x $PACKAGEROOT/bin/$i || exit
 				;;
 			esac
 		done
+		for i in arch arch/$HOSTTYPE
+		do	test -d $PACKAGEROOT/$i || $exec mkdir $PACKAGEROOT/$i || exit
+		done
+		for i in lib lib/probe lib/probe/C lib/probe/C/make
+		do	test -d $INSTALLROOT/$i || $exec mkdir $INSTALLROOT/$i || exit
+		done
+		i=$INSTALLROOT/lib/probe/C/make/probe
+		case `ls -t $INITROOT/C+probe $INITROOT/make.probe $i 2>/dev/null` in
+			*/make/probe*$INITROOT/*$INITROOT/*)
+				;;
+			*)	note update $i
+				shellmagic
+				case $exec in
+				'')	{
+					case $SHELLMAGIC in
+					?*)	echo "$SHELLMAGIC" ;;
+					esac
+					cat $INITROOT/C+probe $INITROOT/make.probe
+					} > $i || exit
+					;;
+				*)	echo "{
+echo $SHELLMAGIC
+cat $INITROOT/C+probe $INITROOT/make.probe
+} > $i"
+					;;
+				esac
+				$exec chmod +x $i || exit
+				;;
+			esac
 		;;
 	esac
-
-	# initialize the package environment
-
-	case $KEEP_HOSTTYPE in
-	0)	hostinfo type
-		HOSTTYPE=$_hostinfo_
-		;;
-	1)	_PACKAGE_HOSTTYPE_=$HOSTTYPE
-		export _PACKAGE_HOSTTYPE_
-		;;
-	esac
-	$show HOSTTYPE=$HOSTTYPE
-	$show export HOSTTYPE
-	export HOSTTYPE
-	INSTALLROOT=$PACKAGEROOT/arch/$HOSTTYPE
-	case $action in
-	admin|install|make|read|remove|test|verify|write)
-		;;
-	*)	if	test ! -d $INSTALLROOT
-		then	INSTALLROOT=$PACKAGEROOT
-		fi
-		;;
-	esac
-	$show INSTALLROOT=$INSTALLROOT
-	$show export INSTALLROOT
-	export INSTALLROOT
-
-	# HOSTTYPE specific package profile
-
-	if	test -r $INSTALLROOT/lib/package/profile
-	then	. $INSTALLROOT/lib/package/profile
-	fi
 
 	# check if $CC is a cross compiler
 
@@ -2899,7 +2985,7 @@ components() # [ package ]
 			esac
 			;;
 		*)	
-			if	view package src lib/package/$p.pkg
+			if	view - src lib/package/$p.pkg
 			then	p=$_view_
 				op=::
 				exec < $p
@@ -2930,6 +3016,10 @@ components() # [ package ]
 					done
 				done
 				exec < /dev/null
+			elif	test -d $PACKAGEROOT/src/cmd/$p -o -d $PACKAGEROOT/src/lib/$p
+			then	_components_="$_components_ $p"
+			else	echo "$command: $p: package or component not found" >&2
+				exit 1
 			fi
 			;;
 		esac
@@ -2942,7 +3032,7 @@ capture() # file command ...
 {
 	case $make:$noexec in
 	:)	case $action in
-		install|make)
+		install|make|view)
 			o=$action
 			;;
 		*)	case $package in
@@ -3116,6 +3206,7 @@ admin)	while	test ! -f $admin_db
 	case $admin_on in
 	'')	admin_on="*" ;;
 	esac
+	hostname=
 	hosts=
 	pids=
 	trap 'kill $pids >/dev/null 2>&1' 1 2 3 15
@@ -3124,7 +3215,8 @@ admin)	while	test ! -f $admin_db
 		''|'#'*);;
 		*=*)	eval "$type $host $root $date $time $make $test $write $junk"
 			;;
-		*)	case $host in
+		*)	remote=rsh
+			case $host in
 			*@*)	IFS=@
 				set '' $host
 				IFS=$ifs
@@ -3144,11 +3236,19 @@ admin)	while	test ! -f $admin_db
 				IFS=:
 				set '' $root
 				IFS=$ifs
-				sync=$2
-				case $sync in
-				'')	sync=ditto ;;
+				sync=$host
+				case $hostname in
+				'')	hostinfo name
+					hostname=$_hostinfo_
+					;;
 				esac
-				root=$3
+				shift
+				case $# in
+				0)	;;
+				1)	root=$1 ;;
+				2)	remote=$1 root=$2 ;;
+				*)	remote=$1 sync=$2 root=$3 ;;
+				esac
 				;;
 			*)	sync=
 				;;
@@ -3164,30 +3264,49 @@ admin)	while	test ! -f $admin_db
 			'')	echo package "$admin_args" $host
 				{
 				case $sync in
-				ditto)	for dir in $src
+				?*)	for dir in $src
 					do	case $MAKESKIP in
 						'')	expr="--expr=if(name=='$admin_ditto_skip')status=SKIP" ;;
 						*)	expr="--expr=if(name=='$admin_ditto_skip'||level==1&&name=='$MAKESKIP')status=SKIP" ;;
 						esac
-						test -d $PACKAGEROOT/src/$dir && $admin_ditto "$expr" $PACKAGEROOT/src/$dir $user$host:$root/src/$dir
+						test -d $PACKAGEROOT/src/$dir && $admin_ditto --remote=$remote "$expr" $PACKAGEROOT/src/$dir $user$sync:$root/src/$dir
 					done
 					;;
 				esac
-				rsh $user$host ". ./.profile && cd $root && { test -f lib/package/admin/$admin_env && . ./lib/package/admin/$admin_env || true; } && \${SHELL:-/bin/sh} -c 'bin/package $admin_args PACKAGEROOT=$root HOSTTYPE=$type'" &
+				case $admin_action in
+				ditto)	;;
+				*)	if	ping -c 1 -w 4 $host >/dev/null 2>&1
+					then	cmd=". ./.profile && cd $root && { test -f lib/package/admin/$admin_env && . ./lib/package/admin/$admin_env || true; } && touch .package.tim && \${SHELL:-/bin/sh} -c 'bin/package $admin_args PACKAGEROOT=$root HOSTTYPE=$type'"
+						case $sync in
+						?*)	case " $admin_args " in
+							*" write "*" binary "*)
+								cmd="$cmd && cd lib/package/tgz && rcp \`tw -e 'type==REG&&name!=\"*.tim\"&&mtime>\"../../../.package.tim\".mtime\` $hostname:lib/package/tgz"
+								;;
+							esac
+							;;
+						esac
+						$remote $user$host "$cmd"
+					else	echo "$command: $host: down" >&2
+					fi
+					;;
+				esac
 				} < /dev/null > $admin_log/$name 2>&1 &
 				pids="$pids $!"
 				;;
 			*)	case $sync in
-				ditto)	for dir in $src
+				?*)	for dir in $src
 					do	case $MAKESKIP in
-						'')	expr="--expr=if(name=='$admin_ditto_skip')status=SKIP" ;;
-						*)	expr="--expr=if(name=='$admin_ditto_skip'||level==1&&name=='$MAKESKIP')status=SKIP" ;;
+						'')	expr="\"--expr=if(name=='$admin_ditto_skip')status=SKIP\"" ;;
+						*)	expr="\"--expr=if(name=='$admin_ditto_skip'||level==1&&name=='$MAKESKIP')status=SKIP\"" ;;
 						esac
-						test -d $PACKAGEROOT/src/$dir && $admin_ditto --show "$expr" $PACKAGEROOT/src/$dir $user$host:$root/src/$dir
+						test -d $PACKAGEROOT/src/$dir && $exec $admin_ditto --show --remote=$remote "$expr" $PACKAGEROOT/src/$dir $user$sync:$root/src/$dir
 					done
 					;;
 				esac
-				$exec rsh $user$host ". ./.profile && cd $root && \${SHELL:-/bin/sh} -c 'bin/package $admin_args PACKAGEROOT=$root HOSTTYPE=$type' < /dev/null > $admin_log/$name 2>&1 &"
+				case $admin_action in
+				ditto)	;;
+				*)	$exec $remote $user$host ". ./.profile && cd $root && \${SHELL:-/bin/sh} -c 'bin/package $admin_args PACKAGEROOT=$root HOSTTYPE=$type' < /dev/null > $admin_log/$name 2>&1 &" ;;
+				esac
 				;;
 			esac
 		esac
@@ -3218,8 +3337,9 @@ admin)	while	test ! -f $admin_db
 					E=`eval date -E \`egrep '[ 	](start|done)[ 	][ 	]*at[ 	]' $admin_log/$2 | sed -e 's/.*[ 	][ 	]*at[ 	][ 	]*//' -e 's/[ 	][ 	]*in[ 	].*$//' -e 's/.*/"&"/'\``
 					M=$6 T=$7 W=$8
 					case $admin_action in
-					make)	M=`grep -c ']: \*\*\*.* code ' $admin_log/$2` ;;
-					test)	T=`grep -ci 'failed' $admin_log/$2` ;;
+					make|view)
+						M=`grep -c ']: \*\*\*.* code ' $admin_log/$2` ;;
+					test)	T=`grep -ci 'fail' $admin_log/$2` ;;
 					*)	W=`grep '^[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz]*:' $admin_log/$2 | egrep -cv 'start at|done  at|output captured|warning:'` ;;
 					esac
 					case $1 in
@@ -3566,6 +3686,7 @@ install)cd $PACKAGEROOT
 					else	echo "$command: $MAKE: not found" >&2
 						exit 1
 					fi
+					makecheck=
 				fi
 				if	test "" != "$exec"
 				then	(
@@ -3644,7 +3765,8 @@ license)# all work in $PACKAGESRC/LICENSES
 	done
 	;;
 
-make)	cd $PACKAGEROOT
+make|view)
+	cd $PACKAGEROOT
 	case $package in
 	'')	lic="lib/package/*.lic"
 		;;
@@ -3737,17 +3859,19 @@ make)	cd $PACKAGEROOT
 		if	test -d $i
 		then	test -d $INSTALLROOT/$i || $exec mkdir $INSTALLROOT/$i || exit
 			make_recurse $i
-			for j in `cd $i; find . $o | sed -e 's,^\./,,' -e 's,/[^/]*$,,' | sort -u`
+			for j in `cd $i; find . $o 2>/dev/null | sed -e 's,^\./,,' -e 's,/[^/]*$,,' | sort -u`
 			do	case $j in
 				$k|$MAKESKIP) continue ;;
 				esac
-				test -d $INSTALLROOT/$i/$j || $exec mkdir -p $INSTALLROOT/$i/$j || exit
+				test -d $INSTALLROOT/$i/$j ||
+				$exec mkdir -p $INSTALLROOT/$i/$j || exit
 			done
 		fi
 	done
 	for i in $lic
 	do	test -f $i || continue
-		cmp -s $i $INSTALLROOT/$i || $exec cp $PACKAGEROOT/$i $INSTALLROOT/$i
+		cmp -s $i $INSTALLROOT/$i 2>/dev/null ||
+		$exec cp $PACKAGEROOT/$i $INSTALLROOT/$i
 	done
 	if	test ! -f $INSTALLROOT/bin/.paths
 	then	case $exec in
@@ -3766,11 +3890,12 @@ make)	cd $PACKAGEROOT
 	then	$make cd $INSTALLROOT/bin
 		for i in chmod chgrp cmp cp ln mv rm
 		do	if	test ! -x $OK/$i -a -x /bin/$i.exe
-			then	case $exec in
-				'')	echo 'execrate /bin/'$i' "$@"' > $OK/$i
+			then	shellmagic
+				case $exec in
+				'')	echo "$SHELLMAGIC"'execrate /bin/'$i' "$@"' > $OK/$i
 					chmod +x $OK/$i
 					;;
-				*)	$exec echo 'execrate /bin/'$i' "$@" >' $OK/$i
+				*)	$exec echo \'"$SHELLMAGIC"'execrate /bin/'$i' "$@"'\'' >' $OK/$i
 					$exec chmod +x $OK/$i
 					;;
 				esac
@@ -3779,6 +3904,9 @@ make)	cd $PACKAGEROOT
 		PATH=$INSTALLROOT/bin/$OK:$PATH
 		export PATH
 	fi
+	case $action in
+	view)	exit 0 ;;
+	esac
 
 	# all work under $INSTALLROOT/src
 
@@ -3891,7 +4019,7 @@ make)	cd $PACKAGEROOT
 			ksh nmake tee cp ln mv rm \
 			*ast*.dll *cmd*.dll *dll*.dll *shell*.dll
 		do	if	executable $i
-			then	cmp -s $i $OK/$i ||
+			then	cmp -s $i $OK/$i 2>/dev/null ||
 				$exec cp $i $OK/$i
 			fi
 		done
@@ -4382,7 +4510,7 @@ results)set '' $target
 		error*|fail*)
 			filter=err
 			;;
-		make|test|write)
+		make|test|view|write)
 			def=$1
 			;;
 		old)	suf=old
@@ -4448,11 +4576,11 @@ results)set '' $target
 			do	echo "$sep==> $j <=="
 				sep=$nl
 				case $filter in
-				err)	$exec egrep '\*\*\*|fail|FAIL|^TEST.* [1-9][0-9]* error' $j | sed -e '/^TEST.\//s,/[^ ]*/,,'
+				err)	$exec egrep -i '\*\*\*|FAIL|^TEST.* [1-9][0-9]* error' $j | sed -e '/^TEST.\//s,/[^ ]*/,,'
 					;;
 				cat)	$exec cat $j
 					;;
-				*)	$exec egrep '^TEST|FAIL|fail' $j
+				*)	$exec egrep -i '^TEST|FAIL' $j
 					;;
 				esac
 			done

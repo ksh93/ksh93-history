@@ -170,6 +170,8 @@ struct _dtstat_s
 #define DT_CLOSE	2	/* a dictionary is being closed		*/
 #define DT_DISC		3	/* discipline is about to be changed	*/
 #define DT_METH		4	/* method is about to be changed	*/
+#define DT_ENDOPEN	5	/* dtopen() is done			*/
+#define DT_ENDCLOSE	6	/* dtclose() is done			*/
 
 _BEGIN_EXTERNS_	/* public data */
 #if _BLD_cdt && defined(__EXPORT__)

@@ -1,3 +1,8 @@
+02-08-30 dllfind.c: fix a bug that returned uninitialized value on not found
+02-08-28 dllscan.c: handle and display bin as a sibling dir
+02-07-31 dllscan.c: add dllsopen,dllsread,dllsclose
+	 dllfind.c: use dllsopen,dllsread,dllsclose
+02-07-26 dllfind.c: add dllinfo()
 02-06-27 dllnext.c: define _GNU_SOURCE to enable RTLD_NEXT
 02-03-17 dllfind.c: fix dll prefix search (for cygwin)
 02-01-11 features/dll: include <dlfcn.h> only if _hdr_dlfcn&&_lib_dlopen

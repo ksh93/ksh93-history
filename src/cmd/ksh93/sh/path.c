@@ -364,6 +364,24 @@ int	path_search(register const char *name,Pathcomp_t *endpath, int flag)
 	register int fno;
 	Pathcomp_t *pp=0;
 	Shell_t *shp = &sh;
+	if(name && strchr(name,'/'))
+	{
+		stakseek(PATH_OFFSET);
+		stakputs(name);
+		if(canexecute(stakptr(PATH_OFFSET),0)<0)
+		{
+			*stakptr(PATH_OFFSET) = 0;
+			return(0);
+		}
+		if(*name=='/')
+			return(1);
+		stakseek(PATH_OFFSET);
+		stakputs(path_pwd(1));
+		stakputc('/');
+		stakputs(name);
+		stakputc(0);
+		return(0);
+	}
 	if(!shp->defpathlist)
 		path_init(shp);
 	if(flag)
@@ -762,7 +780,7 @@ static void exscript(Shell_t *shp,register char *path,register char *argv[],char
 	/* clean up any cooperating processes */
 	if(shp->cpipe[0]>0)
 		sh_pclose(shp->cpipe);
-	if(shp->cpid)
+	if(shp->cpid && shp->outpipe)
 		sh_close(*shp->outpipe);
 	shp->cpid = 0;
 	if(sp=fcfile())
@@ -1081,6 +1099,9 @@ Pathcomp_t *path_addpath(Pathcomp_t *first, register const char *path,int type)
 {
 	register const char *cp;
 	Pathcomp_t *old=0;
+	int offset = staktell();
+	char *savptr;
+	
 	if(!path && type!=PATH_PATH)
 		return(first);
 	if(type!=PATH_FPATH)
@@ -1088,6 +1109,8 @@ Pathcomp_t *path_addpath(Pathcomp_t *first, register const char *path,int type)
 		old = first;
 		first = 0;
 	}
+	if(offset)
+		savptr = stakfreeze(0);
 	if(path) while(*(cp=path))
 	{
 		if(*cp==':')
@@ -1117,6 +1140,10 @@ Pathcomp_t *path_addpath(Pathcomp_t *first, register const char *path,int type)
 			first = (void*)path_addpath((Pathcomp_t*)first,cp,PATH_FPATH);
 		path_delete(old);
 	}
+	if(offset)
+		stakset(savptr,offset);
+	else
+		stakseek(0);
 	return(first);
 }
 

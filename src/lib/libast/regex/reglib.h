@@ -71,6 +71,8 @@ typedef struct regsubop_s
 #if __OBSOLETE__ && __OBSOLETE__ < 20040101
 /* old REG_DELIMITED that did not skip past delimiter */
 #define REG_DELIMITED_OLD	0x00008000
+#else
+#define REG_DELIMITED_OLD	0
 #endif
 
 #undef	RE_DUP_MAX			/* posix puts this in limits.h!	*/

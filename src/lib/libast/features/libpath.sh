@@ -61,6 +61,7 @@ else	case `package` in
 		;;
 	esac
 fi
-if	test "" != "$libpath"
-then	echo "#define CONF_LIBPATH	\"$libpath\""
-fi
+case $libpath in
+'')	libpath=bin ;;
+esac
+echo "#define CONF_LIBPATH	\"$libpath\""

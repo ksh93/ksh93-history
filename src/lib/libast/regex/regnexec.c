@@ -960,7 +960,7 @@ DEBUG_TEST(0x0008,(sfprintf(sfstdout, "AHA#%04d 0x%04x parse %s `%-.*s'\n", __LI
 				return BEST;
 			n = s - env->beg;
 			r = env->nsub;
-			DEBUG_TEST(0x0100,(sfprintf(sfstdout,"AHA#%04d 0x%04x %s (%d,%d)(%d,%d) (%d,%d)(%d,%d)\n", __LINE__, debug_flag, rexname(rex), env->best[0].rm_so, env->best[0].rm_eo, env->best[1].rm_so, env->best[1].rm_eo, env->match[0].rm_so, env->match[0].rm_eo, env->match[1].rm_so, env->match[1].rm_eo)),(0));
+			DEBUG_TEST(0x0100,(sfprintf(sfstdout,"AHA#%04d 0x%04x %s (%d,%d)(%d,%d)(%d,%d)(%d,%d) (%d,%d)(%d,%d)\n", __LINE__, debug_flag, rexname(rex), env->best[0].rm_so, env->best[0].rm_eo, env->best[1].rm_so, env->best[1].rm_eo, env->best[2].rm_so, env->best[2].rm_eo, env->best[3].rm_so, env->best[3].rm_eo, env->match[0].rm_so, env->match[0].rm_eo, env->match[1].rm_so, env->match[1].rm_eo)),(0));
 			if ((i = env->best[0].rm_eo) >= 0)
 			{
 				if (rex->flags & REG_MINIMAL)
@@ -991,7 +991,7 @@ DEBUG_TEST(0x0008,(sfprintf(sfstdout, "AHA#%04d 0x%04x parse %s `%-.*s'\n", __LI
 			}
 			env->bestpos->cur = n;
 			memcpy(env->bestpos->vec, env->pos->vec, n * sizeof(Pos_t));
-			DEBUG_TEST(0x0100,(sfprintf(sfstdout,"AHA#%04d 0x%04x %s (%d,%d)(%d,%d) (%d,%d)(%d,%d)\n", __LINE__, debug_flag, rexname(rex), env->best[0].rm_so, env->best[0].rm_eo, env->best[1].rm_so, env->best[1].rm_eo, env->match[0].rm_so, env->match[0].rm_eo, env->match[1].rm_so, env->match[1].rm_eo)),(0));
+			DEBUG_TEST(0x0100,(sfprintf(sfstdout,"AHA#%04d 0x%04x %s (%d,%d)(%d,%d)(%d,%d)(%d,%d) (%d,%d)(%d,%d)\n", __LINE__, debug_flag, rexname(rex), env->best[0].rm_so, env->best[0].rm_eo, env->best[1].rm_so, env->best[1].rm_eo, env->best[2].rm_so, env->best[2].rm_eo, env->best[3].rm_so, env->best[3].rm_eo, env->match[0].rm_so, env->match[0].rm_eo, env->match[1].rm_so, env->match[1].rm_eo)),(0));
 			return GOOD;
 		case REX_DOT:
 			if (LEADING(env, rex, s))
@@ -1080,7 +1080,7 @@ DEBUG_TEST(0x0008,(sfprintf(sfstdout, "AHA#%04d 0x%04x parse %s `%-.*s'\n", __LI
 					for (i = 0; s < e && i < m && s[i] != c; i++)
 						s += mbsize(s);
 					if (i >= m)
-						for (; s <= e && i < n; s += mbsize(s), i++)
+						for (; s <= e && i <= n; s += mbsize(s), i++)
 							switch (follow(env, rex, cont, s))
 							{
 							case BAD:
@@ -1589,7 +1589,7 @@ DEBUG_TEST(0x0200,(sfprintf(sfstdout,"AHA#%04d 0x%04x parse %s=>%s `%-.*s'\n", _
 				 * optional empty iteration
 				 */
 
-DEBUG_TEST(0x0001,(sfprintf(sfstdout, "AHA#%04d %p re.group.back=%d re.group.expr.rex=%s\n", __LINE__, rex->re.rep_catch.ref->re.group.expr.rex, rex->re.rep_catch.ref->re.group.expr.rex->re.group.back, rexname(rex->re.rep_catch.ref->re.group.expr.rex))),(0));
+DEBUG_TEST(0x0002,(sfprintf(sfstdout, "AHA#%04d %p re.group.back=%d re.group.expr.rex=%s\n", __LINE__, rex->re.rep_catch.ref->re.group.expr.rex, rex->re.rep_catch.ref->re.group.expr.rex->re.group.back, rexname(rex->re.rep_catch.ref->re.group.expr.rex))),(0));
 				if (!env->stack || s != rex->re.rep_catch.ref->re.rep_catch.beg && !rex->re.rep_catch.ref->re.group.expr.rex->re.group.back)
 					r = NONE;
 				else if (pospush(env, rex, s, END_ANY))

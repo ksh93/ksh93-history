@@ -25,7 +25,7 @@
 # AT&T Labs Research
 #
 # test if feature exists
-# this script written to make it through all sh variants
+# this script is written to make it through all sh variants
 #
 # NOTE: .exe a.out suffix and [\\/] in path patterns for dos/nt
 
@@ -34,7 +34,7 @@ case $-:$BASH_VERSION in
 esac
 
 command=iffe
-version=2002-02-14 # update in USAGE too #
+version=2002-09-22 # update in USAGE too #
 
 pkg() # package
 {
@@ -182,8 +182,8 @@ copy() # output-file data
 {
 	case $shell in
 	ksh)	case $1 in
-		-)	print -r -- "$2" ;;
-		*)	print -r -- "$2" > "$1" ;;
+		-)	print -r - "$2" ;;
+		*)	print -r - "$2" > "$1" ;;
 		esac
 		;;
 	*)	case $1 in
@@ -347,6 +347,11 @@ in=
 includes=
 intrinsic=
 libpaths="LD_LIBRARY_PATH LD_LIBRARYN32_PATH LD_LIBRARY64_PATH LIBPATH SHLIB_PATH"
+	LD_LIBRARY_PATH_default=:/lib:/usr/lib
+	LD_LIBRARYN32_PATH_default=:/lib32:/usr/lib32
+	LD_LIBRARY64_PATH_default=:/lib64:/usr/lib64
+	LIBPATH_default=:/lib:/usr/lib
+	SHLIB_PATH_default=:/shlib:/usr/shlib:/lib:/usr/lib
 nl="
 "
 occ=cc
@@ -416,7 +421,7 @@ set=
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: iffe (AT&T Labs Research) 2002-02-14 $
+@(#)$Id: iffe (AT&T Labs Research) 2002-09-22 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?iffe - host C compilation environment feature probe]
@@ -600,8 +605,7 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 	[+key \aname\a?Defines \b_key_\b\aname\a if \aname\a is a reserved
 		word (keyword).]
 	[+lcl \aname\a?Generates a \b#include\b statement for the native version
-		of either the header \b<\b\aname\a\b.h>\b if it exists or the
-		header \b<sys/\b\aname\a\b.h>\b if it exists. Defines
+		of the header \b<\b\aname\a\b.h>\b if it exists. Defines
 		\b_lcl_\b\aname\a on success. The \b--config\b macro name is
 		\bHAVE_\b\aNAME\a\b_H\b.]
 	[+lib \aname\a?Defines \b_lib_\b\aname\a if \aname\a is an external
@@ -621,11 +625,10 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 		constant \aenum\a or \amacro\a.]
 	[+nxt \aname\a?Defines a string macro \b_nxt_\b\aname\a suitable for
 		a \b#include\b statement to include the next (on the include
-		path) or native version of either the header
-		\b<\b\aname\a\b.h>\b if it exists or the header
-		\b<sys/\b\aname\a\b.h>\b if it exists. Also defines the \"...\"
-		form \b_nxt_\b\aname\a\b_str\b. The \b--config\b
-		macro name is \bHAVE_\b\aNAME\a\b_NEXT\b.]
+		path) or native version of the header \b<\b\aname\a\b.h>\b
+		if it exists. Also defines the \"...\" form
+		\b_nxt_\b\aname\a\b_str\b. The \b--config\b macro name is
+		\bHAVE_\b\aNAME\a\b_NEXT\b.]
 	[+one \aheader\a ...?Generates a \b#include\b statement for the first
 		header found in the \aheader\a list.]
 	[+pth \afile\a [ \adir\a ... | { \ag1\a - ... - \agn\a } | < \apkg\a [\aver\a ...]] > ]]?Defines
@@ -1161,7 +1164,7 @@ do	case $in in
 			continue
 			;;
 		library)for y in $libpaths
-			do	eval $y=\"\$$y:\$arg\"
+			do	eval $y=\"\$$y:\$arg\$${y}_default\"
 				eval export $y
 			done
 			continue
@@ -1382,7 +1385,7 @@ do	case $in in
 							*)	x=`echo x$1 | sed 's,^x-L,,'` ;;
 							esac
 							for y in $libpaths
-							do	eval $y=\"\$$y:\$x\"
+							do	eval $y=\"\$$y:\$x\$${y}_default\"
 								eval export $y
 							done
 							;;
@@ -1442,7 +1445,7 @@ do	case $in in
 			then	cc="$cc -L$i/lib"
 				occ="$occ -L$i/lib"
 				for y in $libpaths
-				do	eval $y=\"\$$y:\$i/lib\"
+				do	eval $y=\"\$$y:\$i/lib\$${y}_default\"
 					eval export $y
 				done
 			fi
@@ -1777,30 +1780,53 @@ do	case $in in
 
 	for o in $x
 	do	for a in $arg
-		do	user_pf= user_yn=
+		do	c= user_pf= user_yn=
 			case $a in
 			*[.\\/]*)
 				case $o in
-				hdr|pth|sys)
-					case $a in
-					*[\\/]*) x=/ ;;
-					*)	 x=. ;;
-					esac
-					case $shell in
-					bsh)	case $x in
-						.)	x="\\$x" ;;
+				hdr|lcl|nxt|pth|sys)
+					x=$a
+					case $x in
+					*.lcl|*.nxt)
+						case $o in
+						sys)	x=sys/$x ;;
 						esac
-						eval `echo $a | sed -e 's,\\(.*\\)'"${x}"'\\(.*\\),p=\\1 v=\\2,'`
-						;;
-					*)	eval 'p=${a%%${x}*}'
-						eval 'v=${a##*${x}}'
+						case $shell in
+						bsh)	eval `echo $x | sed -e 's,\\(.*\\)\.\\([^.]*\\),x=\\1 o=\\2,'`
+							;;
+						*)	o=${x##*.}
+							x=${x%.${o}}
+							;;
+						esac
+						v=$x
 						;;
 					esac
-					case $v in
-					lcl|nxt)t=$p
-						p=$v
-						v=$t
+					case $x in
+					*[\\/]*)case $shell in
+						bsh)	case $x in
+							.)	x="\\$x" ;;
+							esac
+							eval `echo $x | sed -e 's,\\(.*\\)'"${x}"'\\(.*\\),p=\\1 v=\\2,'`
+							;;
+						*)	eval 'p=${x%/*}'
+							eval 'v=${x##*/}'
+							;;
+						esac
 						;;
+					*.*)	case $shell in
+						bsh)	eval `echo $x | sed -e 's,\\(.*\\)\\.\\(.*\\),p=\\1 v=\\2,'`
+							;;
+						*)	eval 'p=${x%.*}'
+							eval 'v=${x##*.}'
+							;;
+						esac
+						;;
+					*)	p=
+						;;
+					esac
+					case $o in
+					lcl|nxt)	c=$v.$o ;;
+					*)		c=$v ;;
 					esac
 					;;
 				*)	case $shell in
@@ -1814,7 +1840,10 @@ do	case $in in
 					esac
 					;;
 				esac
-				f=${p}/${v}
+				case $p in
+				'')	f=${v} ;;
+				*)	f=${p}/${v} ;;
+				esac
 				case $o in
 				run)	v=$p
 					p=
@@ -1835,7 +1864,10 @@ do	case $in in
 					1)	m=_${v}_in_${p} ;;
 					esac
 					;;
-				*)	m=_${p}_${v}
+				*)	case $p in
+					'')	m=_${v} ;;
+					*)	m=_${p}_${v} ;;
+					esac
 					;;
 				esac
 				;;
@@ -1844,6 +1876,9 @@ do	case $in in
 				f=$a
 				m=_${v}
 				;;
+			esac
+			case $c in
+			'')	c=$v ;;
 			esac
 			M=$m
 			case $m in
@@ -1857,7 +1892,7 @@ do	case $in in
 			case $out in
 			$cur)	;;
 			*)	case $cur in
-				$a|$v)	;;
+				$a|$c)	;;
 				*)	case $cur in
 					.)	;;
 					-)	case $iff in
@@ -1907,7 +1942,7 @@ do	case $in in
 					esac
 					case $out in
 					"")	case $a in
-						*[\\/]*|???????????????*) cur=$v ;;
+						*[\\/]*|???????????????*) cur=$c ;;
 						*)			cur=$a ;;
 						esac
 						;;
@@ -2102,6 +2137,7 @@ do	case $in in
 					esac
 					;;
 				nxt)	m=HAVE${u}_NEXT ;;
+				siz)	m=SIZEOF${u} ;;
 				sys)	m=HAVE_SYS${u}_H ;;
 				*)	m=HAVE${u} ;;
 				esac
@@ -2114,7 +2150,17 @@ do	case $in in
 #undef $x"
 				done
 				;;
-			*)	pre="#undef $v"
+			*)	case $o in
+				siz|typ)case $v in
+					char|short|int|long)
+						;;
+					*)	pre="#undef $v"
+						;;
+					esac
+					;;
+				*)	pre="#undef $v"
+					;;
+				esac
 				;;
 			esac
 			case $src in
@@ -2507,15 +2553,98 @@ $inc
 				;;
 			hdr|lcl|nxt|sys)
 				case $o in
-				lcl|nxt)p=$o ;;
-				esac
-				case $p in
-				lcl|nxt)eval f='$'_${p}_$v
-					case $f in
+				lcl|nxt)eval x='$'_$m
+					case $x in
 					?*)	continue ;;
 					esac
-					eval _${p}_$v=1
-					f=$v
+					eval _$m=1
+					is $o $f
+					echo "$pre
+$inc
+#include <$f.h>" > $tmp.c
+					case $f in
+					sys/*)	e= ;;
+					*)	e='-e /[\\\/]sys[\\\/]'$f'\\.h"/d' ;;
+					esac
+					if	$cc -E $tmp.c <&$nullin >$tmp.i
+					then	i=`sed -e '/^#[line 	]*[0123456789][0123456789]*[ 	][ 	]*"[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:]*[\\\\\\/].*[\\\\\\/]'$f'\\.h"/!d' $e -e s'/.*"\\(.*\\)".*/\\1/' -e 's,\\\\,/,g' -e 's,///*,/,g' $tmp.i | sed 1q`
+						case $i in
+						[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ]:[\\/]*)
+							;;
+						*/*/*)	k=`echo "$i" | sed 's,.*/\([^/]*/[^/]*\)$,../\1,'`
+							echo "$pre
+$inc
+#include <$k>" > $tmp.c
+							if	$cc -E $tmp.c <&$nullin >$tmp.i
+							then	j=`sed -e '/^#[line 	]*[0123456789][0123456789]*[ 	][ 	]*"[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:]*[\\\\\\/].*[\\\\\\/]'$f'\\.h"/!d' $e -e s'/.*"\\(.*\\)".*/\\1/' -e 's,\\\\,/,g' -e 's,///*,/,g' $tmp.i | sed 1q`
+								wi=`wc < "$i"`
+								wj=`wc < "$j"`
+								case $wi in
+								$wj)	i=$k	;;
+								esac
+							fi
+							;;
+						*)	echo "$pre
+$inc
+#include <../include/$f.h>" > $tmp.c
+							if	$cc -E $tmp.c <&$nullin >&$nullout
+							then	i=../include/$f.h
+							fi
+							;;
+						esac
+					else	i=
+					fi
+					case $i in
+					[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ]:[\\/]*|[\\/]*)
+						success
+						case $o in
+						lcl)	echo "#if defined(__STDPP__directive)"
+							echo "__STDPP__directive pragma pp:hosted"
+							echo "#endif"
+							echo "#include <$i>	/* the native <$f.h> */"
+							echo "#undef	$m"
+							usr="$usr$nl#define $m 1"
+							echo "#define $m	1"
+							;;
+						nxt)	echo "#define $m <$i>	/* include path for the native <$f.h> */"
+							echo "#define ${m}_str \"$i\"	/* include string for the native <$f.h> */"
+							usr="$usr$nl#define $m <$i>$nl#define ${m}_str \"$i\""
+							eval $m=\\\<$i\\\>
+							;;
+						esac
+						break
+						;;
+					../*/*)	success
+						case $o in
+						lcl)	echo "#include <$i>	/* the native <$f.h> */"
+							echo "#undef	$m"
+							usr="$usr$nl#define $m 1"
+							echo "#define $m	1"
+							eval $m=1
+							;;
+						nxt)	echo "#define $m <$i>	/* include path for the native <$f.h> */"
+							echo "#define ${m}_str \"$i\"	/* include string for the native <$f.h> */"
+							usr="$usr$nl#define $m <$i>$nl#define ${m}_str \"$i\""
+							eval $m=\\\<$i\\\>
+							;;
+						esac
+						break
+						;;
+					*)	failure
+						case $o in
+						lcl)	case $all$config$undef in
+							?1?|??1)echo "#undef	$m		/* no native <$f.h> */" ;;
+							1??)	echo "#define	$m	0	/* no native <$f.h> */" ;;
+							esac
+							eval $m=0
+							;;
+						nxt)	case $all$config$undef in
+							?1?|??1)echo "#undef	$m		/* no include path for the native <$f.h> */" ;;
+							esac
+							;;
+						esac
+						;;
+					esac
 					;;
 				*)	case $o in
 					hdr)	x=$f.h ;;
@@ -2553,100 +2682,6 @@ $inc
 					continue
 					;;
 				esac
-				x=$f
-				case $f in
-				*[\\/]*)g=$f ;;
-				*)	g="$f sys/$f" ;;
-				esac
-				is $o $x
-				for f in $g
-				do	echo "$pre
-$inc
-#include <$f.h>" > $tmp.c
-					case $f in
-					sys/*)	e= ;;
-					*)	e='-e /[\\\/]sys[\\\/]'$x'\\.h"/d' ;;
-					esac
-					if	$cc -E $tmp.c <&$nullin >$tmp.i
-					then	i=`sed -e '/^#[line 	]*[0123456789][0123456789]*[ 	][ 	]*"[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:]*[\\\\\\/].*[\\\\\\/]'$x'\\.h"/!d' $e -e s'/.*"\\(.*\\)".*/\\1/' -e 's,\\\\,/,g' -e 's,///*,/,g' $tmp.i | sed 1q`
-						case $i in
-						[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ]:[\\/]*)
-							;;
-						*/*/*)	k=`echo "$i" | sed 's,.*/\([^/]*/[^/]*\)$,../\1,'`
-							echo "$pre
-$inc
-#include <$k>" > $tmp.c
-							if	$cc -E $tmp.c <&$nullin >$tmp.i
-							then	j=`sed -e '/^#[line 	]*[0123456789][0123456789]*[ 	][ 	]*"[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:]*[\\\\\\/].*[\\\\\\/]'$x'\\.h"/!d' $e -e s'/.*"\\(.*\\)".*/\\1/' -e 's,\\\\,/,g' -e 's,///*,/,g' $tmp.i | sed 1q`
-								wi=`wc < "$i"`
-								wj=`wc < "$j"`
-								case $wi in
-								$wj)	i=$k	;;
-								esac
-							fi
-							;;
-						*)	echo "$pre
-$inc
-#include <../include/$f.h>" > $tmp.c
-							if	$cc -E $tmp.c <&$nullin >&$nullout
-							then	i=../include/$f.h
-							fi
-							;;
-						esac
-					else	i=
-					fi
-					case $i in
-					[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ]:[\\/]*|[\\/]*)
-						success
-						case $p in
-						lcl)	echo "#if defined(__STDPP__directive)"
-							echo "__STDPP__directive pragma pp:hosted"
-							echo "#endif"
-							echo "#include <$i>	/* the native <$f.h> */"
-							echo "#undef	$m"
-							usr="$usr$nl#define $m 1"
-							echo "#define $m	1"
-							;;
-						nxt)	echo "#define $m <$i>	/* include path for the native <$f.h> */"
-							echo "#define ${m}_str \"$i\"	/* include string for the native <$f.h> */"
-							usr="$usr$nl#define $m <$i>$nl#define ${m}_str \"$i\""
-							eval $m=\\\<$i\\\>
-							;;
-						esac
-						break
-						;;
-					../*/*)	success
-						case $p in
-						lcl)	echo "#include <$i>	/* the native <$f.h> */"
-							echo "#undef	$m"
-							usr="$usr$nl#define $m 1"
-							echo "#define $m	1"
-							eval $m=1
-							;;
-						nxt)	echo "#define $m <$i>	/* include path for the native <$f.h> */"
-							echo "#define ${m}_str \"$i\"	/* include string for the native <$f.h> */"
-							usr="$usr$nl#define $m <$i>$nl#define ${m}_str \"$i\""
-							eval $m=\\\<$i\\\>
-							;;
-						esac
-						break
-						;;
-					*)	failure
-						case $p in
-						lcl)	case $all$config$undef in
-							?1?|??1)echo "#undef	$m		/* no native <$f.h> */" ;;
-							1??)	echo "#define	$m	0	/* no native <$f.h> */" ;;
-							esac
-							eval $m=0
-							;;
-						nxt)	case $all$config$undef in
-							?1?|??1)echo "#undef	$m		/* no include path for the native <$f.h> */" ;;
-							esac
-							;;
-						esac
-						;;
-					esac
-				done
 				;;
 			iff)	;;
 			key)	case $p in

@@ -33,7 +33,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: wc (AT&T Labs Research) 1999-04-20 $\n]"
+"[-?\n@(#)$Id: wc (AT&T Labs Research) 2002-09-06 $\n]"
 USAGE_LICENSE
 "[+NAME?wc - print the number of bytes, words, and lines in files]"
 "[+DESCRIPTION?\bwc\b reads one or more input files and, by default, "

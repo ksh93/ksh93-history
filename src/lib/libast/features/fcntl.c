@@ -84,7 +84,7 @@ main()
 	printf("#endif\n");
 	printf("#endif\n");
 	printf("\n");
-#if _hdr_lcl_fcntl
+#if _lcl_fcntl || _hdr_lcl_fcntl /* _hdr_lcl_ workaround iffe pre 2002-09-11 */
 	printf("#if defined(__STDPP__directive) && defined(__STDPP__hide)\n");
 	printf("__STDPP__directive pragma pp:hide chmod creat fcntl mkdir mkfifo mmap mmap64 munmap");
 #if !_lib__xmknod && !defined(mknod)
@@ -435,7 +435,9 @@ main()
 	printf("#endif\n");
 	printf("#if _lib_creat64\n");
 	printf("#define creat	creat64\n");
+	printf("#if !defined(__USE_LARGEFILE64)\n");
 	printf("extern int	creat64(const char*, mode_t);\n");
+	printf("#endif\n");
 	printf("#endif\n");
 	printf("#if _lib_mmap64\n");
 	printf("#define mmap	mmap64\n");
@@ -443,7 +445,9 @@ main()
 	printf("#endif\n");
 	printf("#if _lib_open64\n");
 	printf("#define open	open64\n");
+	printf("#if !defined(__USE_LARGEFILE64)\n");
 	printf("extern int	open64(const char*, int, ...);\n");
+	printf("#endif\n");
 	printf("#endif\n");
 
 	return(0);

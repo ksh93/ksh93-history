@@ -79,6 +79,15 @@ wc_count(Wc_t *wp, Sfio_t *fd)
 		sfread(fd,(char*)(cp=buff),c);
 		wp->chars += c;
 		/* check to see whether first character terminates word */
+		if(c==1)
+		{
+			if(endline(lasttype))
+				nlines++;
+			if((c = space[*cp]) && !lasttype)
+				nwords++;
+			lasttype = c;
+			continue;
+		}
 		if(!lasttype && space[*cp])
 			nwords++;
 		lastchar = cp[--c];

@@ -110,6 +110,11 @@ tmfix(register Tm_t* tm)
 		tm->tm_year -= (12 - tm->tm_mon) / 12;
 		tm->tm_mon = (12 - tm->tm_mon) % 12;
 	}
+	while (tm->tm_mday < -365)
+	{
+		tm->tm_year--;
+		tm->tm_mday += 365 + LEAP(tm);
+	}
 	while (tm->tm_mday < 1)
 	{
 		if (--tm->tm_mon < 0)
@@ -118,6 +123,11 @@ tmfix(register Tm_t* tm)
 			tm->tm_year--;
 		}
 		tm->tm_mday += DAYS(tm);
+	}
+	while (tm->tm_mday > 365)
+	{
+		tm->tm_mday -= 365 + LEAP(tm);
+		tm->tm_year++;
 	}
 	while (tm->tm_mday > (n = DAYS(tm)))
 	{

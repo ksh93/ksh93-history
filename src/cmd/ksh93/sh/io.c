@@ -1263,7 +1263,12 @@ static void	sftrack(Sfio_t* sp,int flag, int newfd)
 		return;
 	if(flag==SF_NEW)
 	{
-		if(!sh.fdstatus[fd] && sh.fdstatus[fd]==IOCLOSE)
+		if(sp==sh.heredocs && fd < 10)
+		{
+			fd = sfsetfd(sp,10);
+			fcntl(fd,F_SETFD,FD_CLOEXEC);
+		}
+		if(!sh.sftable[fd] && sh.fdstatus[fd]==IOCLOSE)
 		{
 			sh.sftable[fd] = sp;
 			flag = (mode&SF_WRITE)?IOWRITE:0;

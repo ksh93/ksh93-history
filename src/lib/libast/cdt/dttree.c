@@ -44,7 +44,7 @@ int		type;
 {
 	Dtlink_t	*root, *t;
 	int		cmp, lk, sz, ky;
-	Void_t		*k, *key;
+	Void_t		*o, *k, *key;
 	Dtlink_t	*l, *r, *me, link;
 	int		n, minp, turn[DT_MINP];
 	Dtcompar_f	cmpf;
@@ -92,6 +92,22 @@ int		type;
 
 	/* note that link.right is LEFT tree and link.left is RIGHT tree */
 	l = r = &link;
+
+	/* allow apps to delete an object "actually" in the dictionary */
+	if(dt->meth->type == DT_OBAG && (type&(DT_DELETE|DT_DETACH)) )
+	{	key = _DTKEY(obj,ky,sz);
+		for(o = dtsearch(dt,obj); o; o = dtnext(dt,o) )
+		{	k = _DTKEY(o,ky,sz);
+			if(_DTCMP(dt,key,k,disc,cmpf,sz) != 0)
+				break;
+			if(o == obj)
+			{	root = dt->data->here;
+				l->right = root->left;
+				r->left  = root->right;
+				goto dt_delete;
+			}
+		}
+	}
 
 	if(type&(DT_MATCH|DT_SEARCH|DT_INSERT|DT_ATTACH))
 	{	key = (type&DT_MATCH) ? obj : _DTKEY(obj,ky,sz);
@@ -226,7 +242,13 @@ int		type;
 			if((dt->meth->type&DT_OBAG) && (type&(DT_SEARCH|DT_MATCH)) )
 			{	key = _DTOBJ(root,lk); key = _DTKEY(key,ky,sz);
 				while((t = root->left) )
-				{	k = _DTOBJ(t,lk); k = _DTKEY(k,ky,sz);
+				{	/* find max of left subtree */
+					while((r = t->right) )
+						LROTATE(t,r);
+					root->left = t;
+
+					/* now see if it's in the same group */
+					k = _DTOBJ(t,lk); k = _DTKEY(k,ky,sz);
 					if(_DTCMP(dt,key,k,disc,cmpf,sz) != 0)
 						break;
 					RROTATE(root,t);
@@ -262,7 +284,9 @@ int		type;
 			else	goto no_root;
 		}
 		else if(type&(DT_DELETE|DT_DETACH))
-		{	obj = _DTOBJ(root,lk);
+		{	/* taking an object out of the dictionary */
+		dt_delete:
+			obj = _DTOBJ(root,lk);
 			if(disc->freef && (type&DT_DELETE))
 				(*disc->freef)(dt,obj,disc);
 			if(disc->link < 0)

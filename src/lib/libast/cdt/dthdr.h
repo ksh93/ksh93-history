@@ -52,6 +52,10 @@
 #define DT_FLATTEN	010000	/* dictionary already flattened	*/
 #define DT_WALK		020000	/* hash table being walked	*/
 
+/* how the Dt_t handle was allocated */
+#define DT_MALLOC	0
+#define DT_MEMORYF	1
+
 /* max search length before splaying */
 #define DT_MINP		(sizeof(size_t)*8 - 2)
 

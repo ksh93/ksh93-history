@@ -25,7 +25,7 @@
 ####################################################################
 : generate conf info
 #
-# @(#)conf.sh (AT&T Research) 2001-09-19
+# @(#)conf.sh (AT&T Research) 2002-09-15
 #
 # this script generates these files from the table file in the first arg
 # the remaining args are the C compiler name and flags
@@ -125,10 +125,13 @@ sed \
 	-e 's,^[ 	]*#[ 	]*define[ 	]*,,' -e 's,[ 	].*,,' \
 	-e 's,^_,,' \
 	-e 's,_, ,g' \
-	`cat $tmp.f` |
+	`cat $tmp.f` 2>/dev/null |
 sort -u > $tmp.v
 
 HOST=`package | sed -e 's,[0123456789.].*,,' | tr abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ`
+case $HOST in
+'')	HOST=SYSTEM ;;
+esac
 
 {
 
@@ -448,6 +451,7 @@ main()
 #if ${conf_op}
 	(
 #endif
+#undef ${conf_op}
 	return ${conf_op} == 0;
 #endif
 #ifdef TEST_notmacro
@@ -942,6 +946,7 @@ esac
 cat <<!
 #pragma prototyped
 #define _ast_sysconf(x)	0
+#undef	_sysconf
 #define _sysconf(x)	0
 
 ${generated}

@@ -50,26 +50,28 @@ NoN(strstr)
 #endif
 
 extern char*
-strstr(register const char* p, register const char* s)
+strstr(register const char* s1, register const char* s2)
 {
-	register int		b;
-	register int		c;
-	register const char*	tp;
-	register const char*	ts;
+	register int		c1;
+	register int		c2;
+	register const char*	t1;
+	register const char*	t2;
 	
-	if (s)
+	if (s2)
 	{
-		if (!*s)
-			return (char*)p;
-		b = *p++;
-		while (c = *s++)
-			if (c == b)
+		if (!*s2)
+			return (char*)s1;
+		c2 = *s2++;
+		while (c1 = *s1++)
+			if (c1 == c2)
 			{
-				for (tp = p, ts = s; *tp == *ts; ts++)
-					if (!*tp++)
-						return (char*)ts;
-				if (!*tp)
-					return (char*)ts;
+				t1 = s1;
+				t2 = s2;
+				do
+				{
+					if (!*t2)
+						return (char*)s1 - 1;
+				} while (*t1++ == *t2++);
 			}
 	}
 	return 0;

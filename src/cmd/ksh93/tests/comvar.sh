@@ -24,9 +24,11 @@
 function err_exit
 {
 	print -u2 -n "\t"
-	print -u2 -r $Command: "$@"
+	print -u2 -r $Command[$1]: "${@:2}"
 	let Errors+=1
 }
+alias err_exit='err_exit $LINENO'
+
 #test for compound variables
 Command=$0
 integer Errors=0
@@ -81,4 +83,8 @@ unset x
 	[[ ${x.foo.bar} == 7 ]] || err_exit '[[ ${x.foo.bar} != 7 ]]'
 	(( x.foo.bar == 7  ))|| err_exit '(( x.foo.bar != 7 ))'
 )
+foo=(integer x=3)
+if	[[ ${foo} != *x=3* ]]
+then	err_exit "compound variable with integer subvariable not working"
+fi
 exit $((Errors))

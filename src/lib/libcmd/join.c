@@ -52,7 +52,7 @@ USAGE_LICENSE
 "[+?The files \afile1\a and \afile2\a must be ordered in the collating "
 	"sequence of \bsort -b\b on the fields on which they are to be "
 	"joined otherwise the results are unspecified.]"
-"[+?If either \afile1\a or \afiles2\a is \b-\b, \bcomm\b "
+"[+?If either \afile1\a or \afile2\a is \b-\b, \bjoin\b "
         "uses standard input starting at the current location.]"
 
 "[e:empty]:[string?Replace empty output fields in the list selected with"
