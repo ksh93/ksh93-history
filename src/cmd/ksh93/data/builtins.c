@@ -561,7 +561,7 @@ USAGE_LICENSE
 "[+EXIT STATUS?If \aname\a is found, then the exit status is that "
 	"of the last command executed.  Otherwise, since this is a special "
 	"built-in, an error will cause a non-interactive shell to exit with "
-	"a non-zero exit status.  A interactive shell returns a non-zero exit"
+	"a non-zero exit status.  An interactive shell returns a non-zero exit "
 	"status to indicate an error.]"
 
 "[+SEE ALSO?\bcommand\b(1), \bksh\b(1)]"
@@ -1367,7 +1367,7 @@ USAGE_LICENSE
 "\n[arg ...]\n"
 "\n"
 "[+EXIT STATUS?If \b\f?\f\b executes command, the exit status will be that "
-        "of the last command executed.  Otherwise, it will be one of"
+        "of the last command executed.  Otherwise, it will be one of "
         "the following:]{"
         "[+0?The script or command line to be executed consists entirely "
 		"of zero or more blank lines or comments.]"

@@ -215,11 +215,9 @@ static void job_waitsafe(register int sig)
 				flags |= WNOHANG;
 		}
 		pid = waitpid((pid_t)-1,&wstat,flags);
+		sh_sigcheck();
 		if(sig && pid<0 && errno==EINTR)
-		{
-			sh_sigcheck();
 			continue;
-		}
 		if(pid<=0)
 			break;
 		flags |= WNOHANG;

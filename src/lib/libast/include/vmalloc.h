@@ -31,7 +31,7 @@
 **	Written by Kiem-Phong Vo, kpv@research.att.com, 01/16/94.
 */
 
-#define VMALLOC_VERSION	20040101L
+#define VMALLOC_VERSION	20040404L
 
 #if _PACKAGE_ast
 #include	<ast_std.h>
@@ -76,9 +76,9 @@ struct _vmethod_s
 
 struct _vmalloc_s
 {	Vmethod_t	meth;		/* method for allocation	*/
-	const char*	file;		/* file name			*/
+	char*		file;		/* file name			*/
 	int		line;		/* line number			*/
-	const Void_t*	func;		/* calling function		*/
+	Void_t*		func;		/* calling function		*/
 #ifdef _VM_PRIVATE_
 	_VM_PRIVATE_
 #endif
@@ -177,7 +177,7 @@ extern int		vmwalk _ARG_((Vmalloc_t*,
 					int(*)(Vmalloc_t*,Void_t*,size_t,Vmdisc_t*)));
 extern char*		vmstrdup _ARG_((Vmalloc_t*, const char*));
 
-#if !defined(_AST_STD_H) && \
+#if !defined(_BLD_vmalloc) && !defined(_AST_STD_H) && \
 	!defined(__stdlib_h) && !defined(__STDLIB_H) && \
 	!defined(_STDLIB_INCLUDED) && !defined(_INC_STDLIB)
 extern Void_t*		malloc _ARG_(( size_t ));
@@ -199,7 +199,7 @@ _END_EXTERNS_
 #ifdef VMFL
 
 #if defined(__FILE__)
-#define _VMFILE_(vm)	(_VM_(vm)->file = __FILE__)
+#define _VMFILE_(vm)	(_VM_(vm)->file = (char*)__FILE__)
 #else
 #define _VMFILE_(vm)	(_VM_(vm)->file = 0)
 #endif
@@ -211,7 +211,7 @@ _END_EXTERNS_
 #endif
 
 #if defined(__FUNCTION__)
-#define _VMFUNC_(vm)	(_VM_(vm)->func = (const Void_t*)__FUNCTION__)
+#define _VMFUNC_(vm)	(_VM_(vm)->func = (Void_t*)__FUNCTION__)
 #else
 #define _VMFUNC_(vm)	(_VM_(vm)->func = 0)
 #endif

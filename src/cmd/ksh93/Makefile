@@ -3,6 +3,11 @@
  * This makefile should work with nmake 2.3 and higher 
  */
 
+if CC.HOSTTYPE == "linux.alpha"
+	/* workaround for "BUG IN DYNAMIC LINKER ld.so" */
+	:PACKAGE: - m:static:noinclude noCC.EXPORT.DYNAMIC
+end
+
 if CC.HOSTTYPE == "*win*" && CC.SUFFIX.DYNAMIC == ".dll" || "$(PACKAGE_OPTIMIZE:N=space)"
 	CCFLAGS += $$(CC.DLL)
 	LIBS_req = -lshell

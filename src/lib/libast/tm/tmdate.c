@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2003 AT&T Corp.                *
+*                Copyright (c) 1985-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -46,18 +46,19 @@
 #define CRON		(1<<2)
 #define DAY		(1<<3)
 #define EXACT		(1<<4)
-#define HOLD		(1<<5)
-#define HOUR		(1<<6)
-#define LAST		(1<<7)
-#define MDAY		(1<<8)
-#define MINUTE		(1<<9)
-#define MONTH		(1<<10)
-#define NEXT		(1<<11)
-#define SECOND		(1<<12)
-#define THIS		(1<<13)
-#define WDAY		(1<<14)
-#define YEAR		(1L<<15)
-#define ZONE		(1L<<16)
+#define FINAL		(1<<5)
+#define HOLD		(1<<6)
+#define HOUR		(1<<7)
+#define LAST		(1<<8)
+#define MDAY		(1<<9)
+#define MINUTE		(1<<10)
+#define MONTH		(1<<11)
+#define NEXT		(1<<12)
+#define SECOND		(1<<13)
+#define THIS		(1<<14)
+#define WDAY		(1L<<15)
+#define YEAR		(1L<<16)
+#define ZONE		(1L<<17)
 
 /*
  * parse cron range into set
@@ -120,11 +121,14 @@ tmdate(register const char* s, char** e, time_t* clock)
 	unsigned long	state;
 	unsigned long	flags;
 	time_t		now;
+	time_t		fix;
 	char*		t;
 	char*		u;
 	const char*	x;
 	char*		last;
 	char*		type;
+	int		day;
+	int		dir;
 	int		dst;
 	int		zone;
 	int		f;
@@ -156,6 +160,7 @@ tmdate(register const char* s, char** e, time_t* clock)
 
 	tm = tmmake(clock);
 	tm_info.date = tm_info.zone;
+	day = -1;
 	dst = TM_DST;
 	set = state = 0;
 	type = 0;
@@ -258,7 +263,6 @@ tmdate(register const char* s, char** e, time_t* clock)
 			}
 			if (i == 5)
 			{
-				time_t	bt;
 				time_t	tt;
 				char	hit[60];
 				char	mon[12];
@@ -344,8 +348,8 @@ tmdate(register const char* s, char** e, time_t* clock)
 				s = t;
 				if (flags & (MONTH|MDAY|WDAY))
 				{
-					bt = tmtime(tm, zone);
-					tm = tmmake(&bt);
+					fix = tmtime(tm, zone);
+					tm = tmmake(&fix);
 					i = tm->tm_mon + 1;
 					j = tm->tm_mday;
 					k = tm->tm_wday;
@@ -361,7 +365,7 @@ tmdate(register const char* s, char** e, time_t* clock)
 							tm->tm_mon = i - 1;
 							tm->tm_mday = 1;
 							tt = tmtime(tm, zone);
-							if ((unsigned long)tt < (unsigned long)bt)
+							if ((unsigned long)tt < (unsigned long)fix)
 								goto done;
 							tm = tmmake(&tt);
 							i = tm->tm_mon + 1;
@@ -409,8 +413,9 @@ tmdate(register const char* s, char** e, time_t* clock)
 		{
 			n = strtol(s, &t, 10);
 			w = t - s;
-			if (f == -1 && isalpha(*t) && tmlex(t, &t, tm_info.format + TM_ORDINAL, TM_NFORM - TM_ORDINAL, NiL, 0) >= 0)
+			if (f == -1 && isalpha(*t) && tmlex(t, &t, tm_info.format + TM_ORDINAL, TM_ORDINALS - TM_ORDINAL, NiL, 0) >= 0)
 			{
+ ordinal:
 				state |= (f = n) ? NEXT : THIS;
 				set &= ~(EXACT|LAST|NEXT|THIS);
 				set |= state & (EXACT|LAST|NEXT|THIS);
@@ -668,10 +673,29 @@ tmdate(register const char* s, char** e, time_t* clock)
 					n = 0;
 					continue;
 				case TM_NEXT:
-					state |= HOLD|NEXT;
+					/*
+					 * disambiguate english "last ... in" 
+					 */
+
+					if (!((state|set) & LAST))
+					{
+						state |= HOLD|NEXT;
+						set &= ~(EXACT|LAST|NEXT|THIS);
+						set |= state & (EXACT|LAST|NEXT|THIS);
+						continue;
+					}
+					/*FALLTHROUGH*/
+				case TM_FINAL:
+					state |= HOLD|THIS|FINAL;
 					set &= ~(EXACT|LAST|NEXT|THIS);
-					set |= state & (EXACT|LAST|NEXT|THIS);
+					set |= state & (EXACT|LAST|NEXT|THIS|FINAL);
 					continue;
+				case TM_ORDINAL:
+					j += TM_ORDINALS - TM_ORDINAL;
+					/*FALLTHROUGH*/
+				case TM_ORDINALS:
+					n = j - TM_ORDINALS + 1;
+					goto ordinal;
 				case TM_MERIDIAN:
 					if (f >= 0)
 						f++;
@@ -708,34 +732,46 @@ tmdate(register const char* s, char** e, time_t* clock)
 				case TM_PARTS:
 				case TM_HOURS:
 					state |= set & (EXACT|LAST|NEXT|THIS);
-					if (!(state & (LAST|NEXT|THIS))) for (;;)
-					{
-						while (skip[*s])
-							s++;
-						if ((k = tmlex(s, &t, tm_info.format + TM_LAST, TM_NOISE - TM_LAST, NiL, 0)) >= 0)
+					if (!(state & (LAST|NEXT|THIS)))
+						for (;;)
 						{
-							s = t;
-							if (k <= 2)
-								state |= LAST;
-							else if (k <= 5)
-								state |= THIS;
-							else if (k <= 8)
-								state |= NEXT;
+							while (skip[*s])
+								s++;
+							if ((k = tmlex(s, &t, tm_info.format + TM_LAST, TM_NOISE - TM_LAST, NiL, 0)) >= 0)
+							{
+								s = t;
+								if (k <= 2)
+									state |= LAST;
+								else if (k <= 5)
+									state |= THIS;
+								else if (k <= 8)
+									state |= NEXT;
+								else
+									state |= EXACT;
+							}
 							else
-								state |= EXACT;
+							{
+								state |= (n > 0) ? NEXT : THIS;
+								break;
+							}
+							set &= ~(EXACT|LAST|NEXT|THIS);
+							set |= state & (EXACT|LAST|NEXT|THIS);
 						}
-						else
-						{
-							state |= NEXT;
-							break;
-						}
-						set &= ~(EXACT|LAST|NEXT|THIS);
-						set |= state & (EXACT|LAST|NEXT|THIS);
-					}
 					/*FALLTHROUGH*/
 				case TM_DAYS:
 					if (n == -1)
+					{
+						/*
+						 * disambiguate english "second"
+						 */
+
+						if (j == TM_PARTS && f == -1)
+						{
+							n = 2;
+							goto ordinal;
+						}
 						n = 1;
+					}
 					if (state & LAST)
 						n = -n;
 					else if (!(state & NEXT))
@@ -777,6 +813,8 @@ tmdate(register const char* s, char** e, time_t* clock)
 						set |= HOUR;
 						goto clear_hour;
 					case TM_PARTS+4:
+						fix = tmtime(tm, zone);
+						tm = tmmake(&fix);
 						tm->tm_mday += 7 * m - tm->tm_wday + 1;
 						set |= DAY;
 						goto clear_hour;
@@ -807,7 +845,11 @@ tmdate(register const char* s, char** e, time_t* clock)
 						set |= HOUR;
 						goto clear_min;
 					}
-					j -= tm->tm_wday + TM_DAY;
+					fix = tmtime(tm, zone);
+					tm = tmmake(&fix);
+					day = j -= TM_DAY;
+					dir = m;
+					j -= tm->tm_wday;
 					if (state & (LAST|NEXT|THIS))
 					{
 						if (j < 0)
@@ -836,7 +878,7 @@ tmdate(register const char* s, char** e, time_t* clock)
 						if (isdigit(*s))
 						{
 							n = strtol(s, &t, 10);
-							if (n <= 31)
+							if (n <= 31 && *t != ':')
 								s = t;
 							else
 								n = -1;
@@ -1026,6 +1068,23 @@ tmdate(register const char* s, char** e, time_t* clock)
 		tm->tm_sec = 0;
 	}
  done:
+	if (day >= 0 && !(state & (MDAY|WDAY)))
+	{
+		if ((m = dir) > 0)
+			m--;
+		if (state & MONTH)
+			tm->tm_mday = 1;
+		else if (m < 0)
+			m++;
+		fix = tmtime(tm, zone);
+		tm = tmmake(&fix);
+		j = day - tm->tm_wday;
+		if (j < 0)
+			j += 7;
+		tm->tm_mday += j + m * 7;
+		if (state & FINAL)
+			for (n = tm_data.days[tm->tm_mon] + (tm->tm_mon == 1 && tmisleapyear(tm->tm_year)); (tm->tm_mday + 7) <= n; tm->tm_mday += 7);
+	}
 	if (e)
 		*e = last;
 	return tmtime(tm, zone);

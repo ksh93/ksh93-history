@@ -941,8 +941,6 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 					else if(flags&NV_APPEND)	
 						ol =  *(up->lp);
 					*(up->lp) = l+ol;
-					if(l && *sp++ == '0')
-						nv_onattr(np,NV_UNSIGN);
 				}
 			}
 		}
@@ -1635,7 +1633,7 @@ static void put_optimize(Namval_t* np,const char *val,int flags,Namfun_t *fp)
 	optimize_clear(np,fp);
 }
 
-static const Namdisc_t optimize_disc  = {  0, put_optimize };
+static const Namdisc_t optimize_disc  = {sizeof(struct optimize),put_optimize};
 
 void nv_optimize(Namval_t *np)
 {

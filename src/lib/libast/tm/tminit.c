@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -346,7 +346,10 @@ tmlocal(void)
 	if (!(tm_info.flags & TM_UTC))
 	{
 		s = local.standard;
-		for (zp = tm_data.zone; !zp->type && zp->standard; zp++)
+		zp = tm_data.zone;
+		if (local.daylight)
+			zp++;
+		for (; !zp->type && zp->standard; zp++)
 			if (tmword(s, NiL, zp->standard, NiL, 0))
 			{
 				tm_info.flags |= TM_UTC;

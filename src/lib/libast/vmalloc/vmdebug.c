@@ -374,9 +374,9 @@ size_t		size;
 {
 	reg size_t		s;
 	reg Vmuchar_t*		data;
-	reg const char*		file;
+	reg char*		file;
 	reg int			line;
-	reg const Void_t*	func;
+	reg Void_t*		func;
 	reg Vmdata_t*		vd = vm->data;
 
 	VMFLF(vm,file,line,func);
@@ -425,9 +425,9 @@ Vmalloc_t*	vm;
 Void_t*		data;
 #endif
 {
-	const char*	file;
+	char*		file;
 	int		line;
-	const Void_t*	func;
+	Void_t*		func;
 	reg long	offset;
 	reg int		rv, *ip, *endip;
 	reg Vmdata_t*	vd = vm->data;
@@ -488,9 +488,9 @@ int		type;		/* !=0 for movable, >0 for copy	*/
 	reg Vmuchar_t*	data;
 	reg size_t	s, oldsize;
 	reg long	offset;
-	const char	*file, *oldfile;
+	char		*file, *oldfile;
 	int		line, oldline;
-	const Void_t*	func;
+	Void_t*		func;
 	reg Vmdata_t*	vd = vm->data;
 
 	if(!addr)
@@ -679,9 +679,9 @@ size_t		align;
 {
 	reg Vmuchar_t*		data;
 	reg size_t		s;
-	reg const char*		file;
+	reg char*		file;
 	reg int			line;
-	reg const Void_t*	func;
+	reg Void_t*		func;
 	reg Vmdata_t*		vd = vm->data;
 
 	VMFLF(vm,file,line,func);

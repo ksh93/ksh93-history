@@ -132,13 +132,9 @@ typedef int		ssize_t;
 /* compute a value that is a common multiple of x and y */
 #define MULTIPLE(x,y)	((x)%(y) == 0 ? (x) : (y)%(x) == 0 ? (y) : (y)*(x))
 
-/* _Vmcheck flags */
-#define _VM_init	0x1
-#define _VM_check	0x2
-#define _VM_assert	0x4
-#define _VM_warn	0x8
-
-extern int		_Vmcheck;
+#define VM_check	0x1	/* enable detailed checks		*/
+#define VM_abort	0x2	/* abort() on assertion failure		*/
+#define VM_init		0x8	/* VMCHECK env var checked		*/
 
 #ifndef DEBUG
 #ifdef _BLD_DEBUG
@@ -146,14 +142,18 @@ extern int		_Vmcheck;
 #endif /*_BLD_DEBUG*/
 #endif /*DEBUG*/
 #if DEBUG
-extern void		_Vmessage _ARG_((const char*, long, const char*, long));
-#define MESSAGE(s)	_Vmessage(__FILE__,__LINE__,s,0)
-#define ASSERT(p)	((!(_Vmcheck & (_VM_assert|_VM_check)) || (p)) ? 0 : (MESSAGE("assertion failed"), (_Vmcheck & _VM_warn) ? 0 : (abort(),1)))
+extern void		_vmmessage _ARG_((const char*, long, const char*, long));
+#define ABORT()		(_Vmassert & VM_abort)
+#define CHECK()		(_Vmassert & VM_check)
+#define ASSERT(p)	((p) ? 0 : (MESSAGE("Assertion failed"), ABORT() ? (abort(),0) : 0))
 #define COUNT(n)	((n) += 1)
+#define MESSAGE(s)	_vmmessage(__FILE__,__LINE__,s,0)
 #else
+#define ABORT()		(0)
 #define ASSERT(p)
+#define CHECK()		(0)
 #define COUNT(n)
-#define MESSAGE(s)	0
+#define MESSAGE(s)	(0)
 #endif /*DEBUG*/
 
 #define VMPAGESIZE	8192
@@ -475,6 +475,7 @@ typedef struct _vmextern_
 	void		(*vm_trace)_ARG_((Vmalloc_t*,
 					  Vmuchar_t*, Vmuchar_t*, size_t, size_t));
 	void		(*vm_pfclose)_ARG_((Vmalloc_t*));
+	int		vm_assert;
 } Vmextern_t;
 
 #define _Vmextend	(_Vmextern.vm_extend)
@@ -484,6 +485,7 @@ typedef struct _vmextern_
 #define _Vmitoa		(_Vmextern.vm_itoa)
 #define _Vmtrace	(_Vmextern.vm_trace)
 #define _Vmpfclose	(_Vmextern.vm_pfclose)
+#define _Vmassert	(_Vmextern.vm_assert)
 
 extern int		_vmbestcheck _ARG_((Vmdata_t*, Block_t*));
 

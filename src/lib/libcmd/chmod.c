@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1992-2002 AT&T Corp.                *
+*                Copyright (c) 1992-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -32,7 +32,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: chmod (AT&T Labs Research) 2002-11-14 $\n]"
+"[-?\n@(#)$Id: chmod (AT&T Labs Research) 2004-04-15 $\n]"
 USAGE_LICENSE
 "[+NAME?chmod - change the access permissions of files]"
 "[+DESCRIPTION?\bchmod\b changes the permission of each file "
@@ -253,19 +253,25 @@ b_chmod(int argc, char* argv[], void* context)
 	while (!state.interrupt && (ent = fts_read(fts)))
 		switch (ent->fts_info)
 		{
+		case FTS_SL:
+			if (chmodf == chmod)
+			{
+				fts_set(NiL, ent, FTS_FOLLOW);
+				break;
+			}
+			/*FALLTHROUGH*/
 		case FTS_F:
 		case FTS_D:
-		case FTS_SL:
 		case FTS_SLNONE:
 		anyway:
 			if (amode)
 				mode = strperm(amode, &last, ent->fts_statp->st_mode);
-			if ((*chmodf)(ent->fts_accpath, mode) >= 0 )
+			if ((*chmodf)(ent->fts_accpath, mode) >= 0)
 			{
-				if(notify==2 || (notify==1 && (mode!=(ent->fts_statp->st_mode&S_IPERM))))
-					sfprintf(sfstdout,"mode of %s changed to %0.4o (%s)\n" ,ent->fts_accpath,mode,fmtmode(mode,1)+1);
+				if (notify == 2 || notify == 1 && mode != (ent->fts_statp->st_mode&S_IPERM))
+					sfprintf(sfstdout, "%s: mode changed to %0.4o (%s)\n", ent->fts_accpath, mode, fmtmode(mode, 1)+1);
 			}
-			else if(!force)
+			else if (!force)
 				error(ERROR_system(0), "%s: cannot change mode", ent->fts_accpath);
 			break;
 		case FTS_DC:

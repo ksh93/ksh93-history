@@ -113,5 +113,10 @@ omitted features that are completely upward compatible.
 	to on standard output as required by X/Open.  With ksh88,
 	this only happened for interactive shells.
 
+26.	As an undocumented feature of ksh-88, a leading 0 to an
+	assignment of an integer variable caused that variable
+	to be treated as unsigned.  This behavior was removed
+	starting in ksh93p.
+
 I am interested in expanding this list so please let me know if you
 uncover any others.

@@ -241,7 +241,7 @@ static void array_putval(Namval_t *np, const char *string, int flags, Namfun_t *
 		nfp = nv_stack(np,0);
 		if(nfp == (Namfun_t*)ap)
 			free((void*)ap);
-		else sfprintf(sfstderr,"not top level\n");
+		else errormsg(SH_DICT,ERROR_warn(0),"%s: variable discipline not top level",nv_name(np));
 	}
 }
 

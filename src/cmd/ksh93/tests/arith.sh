@@ -357,7 +357,9 @@ c010=3
 (( c$x  == 3 )) || err_exit 'leading zero with variable should not be stripped'
 [[ $( ($SHELL -c '((++1))' 2>&1)2>/dev/null ) == *lvalue* ]] || err_exit "((--1)) not generating error message"
 i=2
-(( "22" == 22 )) || print err_exit "double quoted constants fail"
-(( "2$i" == 22 )) || print err_exit "double quoted variables fail"
-(( "18+$i+2" == 22 )) || print err_exit "double quoted expressions fail"
+(( "22" == 22 )) || err_exit "double quoted constants fail"
+(( "2$i" == 22 )) || err_exit "double quoted variables fail"
+(( "18+$i+2" == 22 )) || err_exit "double quoted expressions fail"
+unset i; typeset -i i=01-2
+(( i == -1 )) || err_exit "01-2 is not -1"
 exit $((Errors))

@@ -117,4 +117,18 @@ if	[[ $line != foo ]]
 then	err_exit 'file descriptor not restored after exec in subshell'
 fi
 exec 3>&- 4>&-; cd /; rm -r /tmp/ksh$$ || err_exit "rm -r /tmp/ksh$$ failed"
+[[ $( {
+	read -r line;print -r -- "$line"
+	(
+	        read -r line;print -r -- "$line"
+	) & wait
+	while	read -r line
+        do	print -r -- "$line"
+	done
+ } << !
+line 1
+line 2
+line 3
+!) == $'line 1\nline 2\nline 3' ]] || err_exit 'read error with subshells'
+
 exit $((Errors))

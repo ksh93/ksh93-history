@@ -9,6 +9,7 @@ LICENSE = since=1992,author=gsf+dgk
 CCFLAGS = $(CC.OPTIMIZE) $(CC.DLL)
 
 CP = $(STDCP|"cp")
+CHMOD = $(STDCHMOD|"chmod")
 
 HOSTTYPE == "$(CC.HOSTTYPE)"
 

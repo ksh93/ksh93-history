@@ -21,4 +21,4 @@
 *                David Korn <dgk@research.att.com>                 *
 *                                                                  *
 *******************************************************************/
-#define SH_RELEASE	"1993-12-28 p"
+#define SH_RELEASE	"1993-12-28 p+"

@@ -1,3 +1,8 @@
+04-04-15 tm/tmdate.c,include/tm.h: fix specific and ordinal days
+04-04-08 astconf: retain { HOSTTYPE LIBPATH LIBPREFIX LIBSUFFIX } strict vals
+04-04-07 vmalloc/vmbest.c: fix alpha tiny block bug
+	 vmalloc/malloc.c: re-enable on alpha
+04-03-30 tm/tminit.c: GMT => UCT only if tz.daylight not defined
 04-03-25 vmalloc/malloc.c: _AST_std_malloc=1 for __alpha
 	 path/pathprobe.c: per-user probe dir => $HOME/.probe/$HOSTTYPE
 04-03-23 regex/reglib.h: fix isw*() redefines

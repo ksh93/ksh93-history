@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2003 AT&T Corp.                *
+*                Copyright (c) 1985-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -33,6 +33,8 @@
 
 #ifndef _TM_H
 #define _TM_H
+
+#define TM_VERSION	20040415L
 
 #define tm_data		_tm_data_
 #define tm_info		_tm_info_
@@ -94,8 +96,10 @@
 #define TM_ERA_TIME		113
 #define TM_ERA_DEFAULT		114
 #define TM_ERA_YEAR		115
+#define TM_ORDINALS		116
+#define TM_FINAL		126
 
-#define TM_NFORM		116
+#define TM_NFORM		129
 
 typedef struct				/* leap second info		*/
 {

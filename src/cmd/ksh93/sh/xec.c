@@ -805,7 +805,7 @@ int sh_exec(register const union anynode *t, int flags)
 					{
 						sh_offstate(SH_STOPOK);
 						if(share&SF_SHARE)
-							sfset(sfstdin,SF_SHARE,1);
+							sfset(sfstdin,SF_PUBLIC|SF_SHARE,1);
 						sfpool(sfstderr,sh.outpool,SF_WRITE);
 						sfpool(sfstdin,NIL(Sfio_t*),SF_WRITE);
 						sh.nextprompt = save_prompt;

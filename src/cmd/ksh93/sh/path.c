@@ -916,8 +916,12 @@ retry:
 #ifdef _lib_fork
 			if(sh.subshell)
 				return(-1);
-			if(pid=fork())
-				return(pid);
+			do
+			{
+				if((pid=fork())>0)
+					return(pid);
+			}
+			while(_sh_fork(pid,0,(int*)0) < 0);
 #else
 			return(-1);
 #endif

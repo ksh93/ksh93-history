@@ -474,9 +474,9 @@ size_t		size;
 {
 	reg size_t		s;
 	reg Void_t*		data;
-	reg const char*		file;
+	reg char*		file;
 	reg int			line, local;
-	reg const Void_t*	func;
+	reg Void_t*		func;
 	reg Vmdata_t*		vd = vm->data;
 
 	VMFLF(vm,file,line,func);
@@ -513,9 +513,9 @@ Void_t*		data;
 {
 	reg Pfobj_t*		pf;
 	reg size_t		s;
-	reg const char*		file;
+	reg char*		file;
 	reg int			line, rv, local;
-	reg const Void_t*	func;
+	reg Void_t*		func;
 	reg Vmdata_t*		vd = vm->data;
 
 	VMFLF(vm,file,line,func);
@@ -572,9 +572,9 @@ int		type;
 	reg size_t		s;
 	reg size_t		news;
 	reg Void_t*		addr;
-	reg const char*		file;
+	reg char*		file;
 	reg int			line, local;
-	reg const Void_t*	func;
+	reg Void_t*		func;
 	reg size_t		oldsize;
 	reg Vmdata_t*		vd = vm->data;
 
@@ -687,9 +687,9 @@ size_t		align;
 {
 	reg size_t		s;
 	reg Void_t*		data;
-	reg const char*		file;
+	reg char*		file;
 	reg int			line, local;
-	reg const Void_t*	func;
+	reg Void_t*		func;
 	reg Vmdata_t*		vd = vm->data;
 
 	VMFLF(vm,file,line,func);

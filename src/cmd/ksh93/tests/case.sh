@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1982-2002 AT&T Corp.                #
+#                Copyright (c) 1982-2004 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -69,4 +69,17 @@ fi
 a)      print -n a > /dev/null ;&
 b)      print b;;
 esac') != b ]] && err_exit 'bug in ;& at end of script'
+[[ $(VMDEBUG=1 $SHELL -c '
+	tmp=foo
+	for i in a b
+	do	case $i in
+		a)	:  tmp=$tmp tmp.h=$tmp.h;;
+		b)	( tmp=bar )
+			for j in a
+			do	print -r -- $tmp.h
+			done
+			;;
+		esac
+	done
+') == foo.h ]] || err_exit "optimizer bug"
 exit $((Errors))

@@ -50,8 +50,6 @@ static int	N_reclaim;	/* # of bestreclaim calls		*/
 #define	VM_TRUST	0
 #endif /*DEBUG*/
 
-int		_Vmcheck = 0;	/* _VM_[a-z]* assert/check/debug flags	*/
-
 /* Check to see if a block is in the free tree */
 #if __STD_C
 static int vmintree(Block_t* node, Block_t* b)
@@ -183,7 +181,7 @@ Block_t*	freeb; /* known to be free but not on any free list */
 	reg Block_t	*b, *endb, *nextb;
 	int		rv = 0;
 
-	if(!(_Vmcheck & _VM_check))
+	if(!CHECK())
 		return 0;
 
 	/* make sure the free tree is still in shape */
@@ -585,7 +583,7 @@ Vmalloc_t*	vm;
 		}
 
 		if(bp)
-		{	/**/ ASSERT(SIZE(bp) >= TINYSIZE);
+		{	/**/ ASSERT(SIZE(bp) >= BODYSIZE);
 			/**/ ASSERT(SEGWILD(bp));
 			/**/ ASSERT(!vd->root || !vmintree(vd->root,bp));
 			SIZE(bp) |= BUSY|JUNK;
@@ -618,9 +616,9 @@ reg size_t	size;	/* desired block size		*/
 	size_t		orgsize = 0;
 
 #ifdef DEBUG
-	if(!(_Vmcheck & _VM_init))
+	if(!(_Vmassert & VM_init))
 	{	char	*chk = getenv("VMCHECK");
-		_Vmcheck = _VM_init;
+		_Vmassert = VM_init;
 		if(chk)
 			for(;;)
 			{
@@ -629,19 +627,21 @@ reg size_t	size;	/* desired block size		*/
 				case 0:
 					break;
 				case '1':
-					_Vmcheck |= _VM_assert|_VM_check;
+					_Vmassert |= VM_check;
+					continue;
+				case '2':
+					_Vmassert |= VM_abort;
+					continue;
+				case '3':
+					_Vmassert |= VM_check|VM_abort;
 					continue;
 				case 'a':
 				case 'A':
-					_Vmcheck |= _VM_assert;
+					_Vmassert |= VM_abort;
 					continue;
 				case 'c':
 				case 'C':
-					_Vmcheck |= _VM_check;
-					continue;
-				case 'w':
-				case 'W':
-					_Vmcheck |= _VM_warn;
+					_Vmassert |= VM_check;
 					continue;
 				default:
 					continue;
@@ -666,11 +666,11 @@ reg size_t	size;	/* desired block size		*/
 	/**/ ASSERT((ALIGN%(BITS+1)) == 0 );
 	/**/ ASSERT((sizeof(Head_t)%ALIGN) == 0 );
 	/**/ ASSERT((sizeof(Body_t)%ALIGN) == 0 );
-	/**/ ASSERT((TINYSIZE%ALIGN) == 0 );
+	/**/ ASSERT((BODYSIZE%ALIGN) == 0 );
 	/**/ ASSERT(sizeof(Block_t) == (sizeof(Body_t)+sizeof(Head_t)) );
 
 	/* for ANSI requirement that malloc(0) returns non-NULL pointer */
-	size = size <= TINYSIZE ? TINYSIZE : ROUND(size,ALIGN);
+	size = size <= BODYSIZE ? BODYSIZE : ROUND(size,ALIGN);
 
 	if((tp = vd->free) )	/* reuse last free piece if appropriate */
 	{	/**/ASSERT(ISBUSY(SIZE(tp)) );
@@ -679,7 +679,7 @@ reg size_t	size;	/* desired block size		*/
 
 		vd->free = NIL(Block_t*);
 		if((s = SIZE(tp)) >= size && s < (size << 1) )
-		{	if(s >= size + (sizeof(Head_t)+TINYSIZE) )
+		{	if(s >= size + (sizeof(Head_t)+BODYSIZE) )
 			{	SIZE(tp) = size;
 				np = NEXT(tp);
 				SEG(np) = SEG(tp);
@@ -729,7 +729,7 @@ got_block:
 	/* tell next block that we are no longer a free block */
 	CLRPFREE(SIZE(NEXT(tp)));	/**/ ASSERT(ISBUSY(SIZE(NEXT(tp))));
 
-	if((s = SIZE(tp)-size) >= (sizeof(Head_t)+TINYSIZE) )
+	if((s = SIZE(tp)-size) >= (sizeof(Head_t)+BODYSIZE) )
 	{	SIZE(tp) = size;
 
 		np = NEXT(tp);
@@ -830,17 +830,17 @@ Void_t*		data;
 	reg int		local;
 
 #ifdef DEBUG
-	if((int)data <= 1)
-	{	_Vmcheck |= _VM_check;
+	if((local = (int)data) >= 0 && local <= 3)
+	{	int	vmassert = _Vmassert;
+		_Vmassert = local ? local : vmassert ? vmassert : (VM_check|VM_abort);
 		_vmbestcheck(vd, NIL(Block_t*));
-		if(!data)
-			_Vmcheck &= ~_VM_check;
+		_Vmassert = local ? local : vmassert;
 		return 0;
 	}
-#else
+#endif
+
 	if(!data) /* ANSI-ism */
 		return 0;
-#endif
 
 	/**/COUNT(N_free);
 
@@ -909,7 +909,7 @@ int		type;		/* !=0 to move, <0 for not copy */
 	if(!data)
 	{	if((data = bestalloc(vm,size)) )
 		{	oldsize = 0;
-			size = size <= TINYSIZE ? TINYSIZE : ROUND(size,ALIGN);
+			size = size <= BODYSIZE ? BODYSIZE : ROUND(size,ALIGN);
 		}
 		goto done;
 	}
@@ -931,7 +931,7 @@ int		type;		/* !=0 to move, <0 for not copy */
 	}
 
 	/**/ASSERT(_vmbestcheck(vd, NIL(Block_t*)) == 0);
-	size = size <= TINYSIZE ? TINYSIZE : ROUND(size,ALIGN);
+	size = size <= BODYSIZE ? BODYSIZE : ROUND(size,ALIGN);
 	rp = BLOCK(data);	/**/ASSERT(ISBUSY(SIZE(rp)) && !ISJUNK(SIZE(rp)));
 	oldsize = SIZE(rp); CLRBITS(oldsize);
 	if(oldsize < size)
@@ -1092,7 +1092,7 @@ size_t		align;
 	}
 
 	/**/ASSERT(_vmbestcheck(vd, NIL(Block_t*)) == 0);
-	size = size <= TINYSIZE ? TINYSIZE : ROUND(size,ALIGN);
+	size = size <= BODYSIZE ? BODYSIZE : ROUND(size,ALIGN);
 	align = MULTIPLE(align,ALIGN);
 
 	/* hack so that dbalign() can store header data */

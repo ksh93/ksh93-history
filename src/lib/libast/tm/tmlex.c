@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -52,18 +52,19 @@ int
 tmlex(register const char* s, char** e, char** tab, int ntab, char** suf, int nsuf)
 {
 	register char**	p;
+	register char*	x;
 	register int	n;
 
-	for (p = tab, n = ntab; n-- && *p; p++)
-		if (tmword(s, e, *p, suf, nsuf))
+	for (p = tab, n = ntab; n-- && (x = *p); p++)
+		if (*x && *x != '%' && tmword(s, e, x, suf, nsuf))
 			return p - tab;
 	if (tm_info.format != tm_data.format && tab >= tm_info.format && tab < tm_info.format + TM_NFORM)
 	{
 		tab = tm_data.format + (tab - tm_info.format);
 		if (suf && tab >= tm_info.format && tab < tm_info.format + TM_NFORM)
 			suf = tm_data.format + (suf - tm_info.format);
-		for (p = tab, n = ntab; n-- && *p; p++)
-			if (tmword(s, e, *p, suf, nsuf))
+		for (p = tab, n = ntab; n-- && (x = *p); p++)
+			if (*x && *x != '%' && tmword(s, e, x, suf, nsuf))
 				return p - tab;
 	}
 	return -1;

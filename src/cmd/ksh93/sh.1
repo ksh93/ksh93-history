@@ -4,7 +4,7 @@
 .\"
 .\" @(#)sh.1 (research!dgk) 12/28/93
 .\"
-.nr Z 0 \" set to 1 when command name is ksh rather than sh
+.nr Z 1 \" set to 1 when command name is ksh rather than sh
 .nr Y 0 \" set to 1 for R&D UNIX
 .if \nY=1 .nr Z 1
 .ds OK [\|
@@ -711,6 +711,8 @@ but can be unset or redefined:
 .B "r=\(fmhist \-s\(fm"
 .TP
 .B "redirect=\(fmcommand exec\(fm"
+.TP
+.B "source=\(fmcommand \s+2.\s-2\(fm"
 .TP
 .B "stop=\(fmkill \-s \s-1STOP\s+1\(fm"
 .TP

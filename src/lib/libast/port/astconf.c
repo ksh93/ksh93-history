@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2003 AT&T Corp.                *
+*                Copyright (c) 1985-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -30,7 +30,7 @@
  * extended to allow some features to be set
  */
 
-static const char id[] = "\n@(#)$Id: getconf (AT&T Labs Research) 2003-06-21 $\0\n";
+static const char id[] = "\n@(#)$Id: getconf (AT&T Labs Research) 2004-04-08 $\0\n";
 
 #include "univlib.h"
 
@@ -144,7 +144,7 @@ static Feature_t	dynamic[] =
 		&dynamic[3],
 		"HOSTTYPE",
 		HOSTTYPE,
-		&null[0],
+		0,
 		8,
 		CONF_AST,
 		CONF_READONLY,
@@ -158,7 +158,7 @@ static Feature_t	dynamic[] =
 #else
 		&null[0],
 #endif
-		&null[0],
+		0,
 		7,
 		CONF_AST,
 		0,
@@ -172,7 +172,7 @@ static Feature_t	dynamic[] =
 #else
 		"lib",
 #endif
-		&null[0],
+		0,
 		7,
 		CONF_AST,
 		0,
@@ -186,7 +186,7 @@ static Feature_t	dynamic[] =
 #else
 		".so",
 #endif
-		&null[0],
+		0,
 		7,
 		CONF_AST,
 		0,
@@ -594,7 +594,7 @@ feature(const char* name, const char* path, const char* value, Error_f conferror
 			initialize(fp, path, NiL, fp->strict, fp->value);
 		if (!n && streq(fp->value, fp->strict))
 			for (sp = state.features; sp; sp = sp->next)
-				if (sp->op && sp->op != OP_conformance)
+				if (sp->strict && sp->op && sp->op != OP_conformance)
 					astconf(sp->name, path, sp->strict);
 		break;
 

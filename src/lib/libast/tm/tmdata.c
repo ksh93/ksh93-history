@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -92,6 +92,11 @@ static char*		format[] =
 	"%I:%M:%S %p",
 
 	"",		"",		"",		"",		"",
+
+	"first",	"",		"third",	"fourth",	"fifth",
+	"sixth",	"seventh",	"eighth",	"ninth",	"tenth",
+
+	"final",	"ending",	"nth",
 };
 
 /*
@@ -114,7 +119,7 @@ static char		lex[] =
 	TM_DAY,		TM_DAY,		TM_DAY,		TM_DAY,
 	TM_DAY,		TM_DAY,		TM_DAY,
 
-	TM_TIME,	TM_DATE,	TM_DEFAULT,
+	0,		0,		0,
 
 	TM_MERIDIAN,	TM_MERIDIAN,
 
@@ -137,7 +142,21 @@ static char		lex[] =
 
 	TM_NOISE,	TM_NOISE,	TM_NOISE,	TM_NOISE,
 
-	TM_ORDINAL,	TM_ORDINAL,	TM_ORDINAL,	TM_ORDINAL,
+	TM_ORDINAL,	TM_ORDINAL,	TM_ORDINAL,	TM_ORDINAL,	TM_ORDINAL,
+	TM_ORDINAL,	TM_ORDINAL,	TM_ORDINAL,	TM_ORDINAL,	TM_ORDINAL,
+
+	0,		0,		0,		0,		0,
+	0,		0,		0,		0,		0,
+
+	0,		0,		0,
+	0,		0,		0,
+
+	0,		0,		0,		0,		0,
+
+	TM_ORDINALS,	TM_ORDINALS,	TM_ORDINALS,	TM_ORDINALS,	TM_ORDINALS,
+	TM_ORDINALS,	TM_ORDINALS,	TM_ORDINALS,	TM_ORDINALS,	TM_ORDINALS,
+
+	TM_FINAL,	TM_FINAL,	TM_FINAL,
 };
 
 /*

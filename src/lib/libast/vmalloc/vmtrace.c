@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2003 AT&T Corp.                *
+*                Copyright (c) 1985-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -198,9 +198,9 @@ size_t		align;		/* alignment			*/
 
 #if DEBUG
 #if __STD_C
-void _Vmessage(const char* s1, long n1, const char* s2, long n2)
+void _vmmessage(const char* s1, long n1, const char* s2, long n2)
 #else
-void _Vmessage(s1, n1, s2, n2)
+void _vmmessage(s1, n1, s2, n2)
 const char*	s1;
 long		n1;
 const char*	s2;

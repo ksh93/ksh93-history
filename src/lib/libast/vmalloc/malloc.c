@@ -47,7 +47,7 @@ void _STUB_malloc(){}
  * will simply call malloc etc.
  */
 
-#if !defined(_AST_std_malloc) && ( __CYGWIN__ || __alpha )
+#if !defined(_AST_std_malloc) && __CYGWIN__
 #define _AST_std_malloc	1
 #endif
 
@@ -259,9 +259,9 @@ static int vmflinit()
 	Vmalloc_t*	vm;
 	int		fd;
 	Vmulong_t	addr;
-	const char*	file;
+	char*		file;
 	int		line;
-	const Void_t*	func;
+	Void_t*		func;
 
 	/* this must be done now to avoid any inadvertent recursion (more below) */
 	_Vmflinit = 1;
@@ -593,9 +593,9 @@ extern Void_t* alloca(size)
 size_t	size;
 #endif
 {	char		array[ALIGN];
-	const char*	file;
+	char*		file;
 	int		line;
-	const Void_t*	func;
+	Void_t*		func;
 	reg Alloca_t*	f;
 	static Alloca_t* Frame;
 
