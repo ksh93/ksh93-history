@@ -216,6 +216,7 @@ ignore		iffeio.h
 scan.ignore	iffeio.h
 virtual		ast/stdio.h
 
+		:NOOPTIMIZE: spawnveg.c
 "sol*.*"	:NOOPTIMIZE: sfrd.c sfvprintf.c
 "win32*"	:NOOPTIMIZE: fastfind.c mc.c
 

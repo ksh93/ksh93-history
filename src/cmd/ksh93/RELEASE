@@ -1,4 +1,5 @@
-04-08-08  --- Release ksh93p+  ---
+04-09-03  --- Release ksh93p+  ---
+04-09-03  <<< here documents now handle quotes in the word token correctly. 
 04-08-08  The maximum size for read -n and and read -N was increased from
 	  4095 to 32M.
 04-08-04  printf %q was modified so that if an no operand was supplied, no

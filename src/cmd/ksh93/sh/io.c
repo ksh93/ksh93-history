@@ -110,7 +110,7 @@ static ssize_t	slowread(Sfio_t*, void*, size_t, Sfdisc_t*);
 static ssize_t	subread(Sfio_t*, void*, size_t, Sfdisc_t*);
 static ssize_t	tee_write(Sfio_t*,const void*,size_t,Sfdisc_t*);
 static int	io_prompt(Sfio_t*,int);
-static int	io_heredoc(register struct ionod*);
+static int	io_heredoc(register struct ionod*, const char*);
 static void	sftrack(Sfio_t*,int,int);
 static const Sfdisc_t eval_disc = { NULL, NULL, NULL, eval_exceptf, NULL};
 static Sfdisc_t tee_disc = {NULL,tee_write,NULL,NULL,NULL};
@@ -542,7 +542,7 @@ int	sh_redirect(struct ionod *iop, int flag)
 					io_op[2] = '<';
 					sfputr(sfstderr,io_op,'\n');
 				}
-				fd = io_heredoc(iop);
+				fd = io_heredoc(iop,fname);
 				fname = 0;
 			}
 			else if(iof&IOMOV)
@@ -703,7 +703,7 @@ fail:
 /*
  * Create a tmp file for the here-document
  */
-static int io_heredoc(register struct ionod *iop)
+static int io_heredoc(register struct ionod *iop, const char *name)
 {
 	register Sfio_t	*infile = 0, *outfile;
 	register char		fd;
@@ -712,25 +712,27 @@ static int io_heredoc(register struct ionod *iop)
 	/* create an unnamed temporary file */
 	if(!(outfile=sftmp(0)))
 		errormsg(SH_DICT,ERROR_system(1),e_tmpcreate);
-	if(!(iop->iofile&IOSTRG))
-		infile = subopen(sh.heredocs,iop->iooffset,iop->iosize);
-	if(iop->iofile&IOQUOTE)
-	{
-		/* This is a quoted here-document, not expansion */
-		if(!infile)
-			infile = sfopen(NIL(Sfio_t*),iop->ioname,"s");
-		sfmove(infile,outfile,SF_UNBOUND,-1);
-		sfclose(infile);
-	}
+	if(iop->iofile&IOSTRG)
+		sfputr(outfile,name,'\n');
 	else
 	{
-		char *lastpath = sh.lastpath;
-		if(sh_isoption(SH_XTRACE))
-			sfdisc(outfile,&tee_disc);
-		sh_machere(infile,outfile,iop->ioname);
-		sh.lastpath = lastpath;
-		if(infile)
+		infile = subopen(sh.heredocs,iop->iooffset,iop->iosize);
+		if(iop->iofile&IOQUOTE)
+		{
+			/* This is a quoted here-document, not expansion */
+			sfmove(infile,outfile,SF_UNBOUND,-1);
 			sfclose(infile);
+		}
+		else
+		{
+			char *lastpath = sh.lastpath;
+			if(sh_isoption(SH_XTRACE))
+				sfdisc(outfile,&tee_disc);
+			sh_machere(infile,outfile,iop->ioname);
+			sh.lastpath = lastpath;
+			if(infile)
+				sfclose(infile);
+		}
 	}
 	/* close stream outfile, but save file descriptor */
 	fd = sffileno(outfile);

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1990-2002 AT&T Corp.                *
+*                Copyright (c) 1990-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -75,6 +75,8 @@ typedef struct cojob Cojob_t;
 
 #define CO_CROSS	(1<<10)		/* don't prepend local dirs	*/
 #define CO_DEVFD	(1<<11)		/* coshell handles /dev/fd/#	*/
+
+#define CO_SERIALIZE	(1<<12)		/* serialize stdout and stderr	*/
 
 #define CO_USER		(1L<<16)	/* first user flag		*/
 

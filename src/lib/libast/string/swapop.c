@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -49,15 +49,6 @@ swapop(const void* internal, const void* external, int size)
 	if (size <= sizeof(int_max))
 		for (op = 0; op < size; op++)
 			if (!memcmp(internal, swapmem(op, external, tmp, size), size))
-			{
-				/*
-				 * le on 4 bytes is also le on 8
-				 * nuxi pdp is the anomaly
-				 */
-
-				if (op == 3 && size == 4)
-					op = 7;
 				return op;
-			}
 	return -1;
 }

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2003 AT&T Corp.                *
+*                Copyright (c) 1985-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -36,18 +36,18 @@
 
 #include <ast_lib.h>
 
-#if _BLD_ast
-#include "dirlib.h"
-#else
-#include <dirent.h>
-#endif
-
 #if _mem_d_fileno_dirent || _mem_d_ino_dirent
 #if !_mem_d_fileno_dirent
 #undef	_mem_d_fileno_dirent
 #define _mem_d_fileno_dirent	1
 #define d_fileno		d_ino
 #endif
+#endif
+
+#if _BLD_ast
+#include "dirlib.h"
+#else
+#include <dirent.h>
 #endif
 
 #if _mem_d_fileno_dirent

@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -32,7 +32,7 @@
 #include "colib.h"
 
 char	coident[] = "\
-# @(#)$Id: libcoshell (AT&T Research) 2004-02-11 $\n\
+# @(#)$Id: libcoshell (AT&T Research) 2004-09-01 $\n\
 { { (eval 'function fun { trap \":\" 0; return 1; }; trap \"exit 0\" 0; fun; exit 1') && PATH= print -u%d ksh; } || { times && echo bsh >&%d; } || { echo osh >&%d; }; } >/dev/null 2>&1\n\
 ";
 

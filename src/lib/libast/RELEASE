@@ -1,6 +1,13 @@
+04-09-25 string/swapop.c: return op < size -- duh
+04-09-23 comp/spawnveg.c: :NOOPTIMIZE: -- volatile sometimes ignored
+04-09-21 comp/spawnveg.c: exec_errno_ptr is volatile -- duh
+04-09-14 tm/tmscan.c: add %| alternation and %& => tmdate()
+04-09-08 misc/optget.c: add :!value: omitted optional arg value
+	 misc/optget.c: fix --noNAME ambiguous option logic
 04-08-26 string/strperm.c: add who^mode to propagate least restrictive up
 	 astmath.c: add { frexpl ldexpl } checks for ast.req
 	 port/astlicense.c: ignore first option if non-assignment
+	 include/ast_dir.h: move d_fileno map before struct defs -- duh
 04-08-24 vmalloc/vmbest.c: add {VM_region} VMCHECK=+r for region segment checks
 	 misc/recfmt.c,include/recfmt.h: add
 04-08-23 vmalloc/vmbest.c: add {VM_primary VM_secondary} VMCHECK=-s for primary

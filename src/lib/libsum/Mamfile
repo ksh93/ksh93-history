@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 4.4 2004-08-11
+info mam static 00000 1994-07-17 make (AT&T Research) 4.4 2004-09-24
 setv INSTALLROOT ${INSTALLROOT}
 setv PACKAGE_ast ${INSTALLROOT}
 setv PACKAGE_ast_INCLUDE ${PACKAGE_ast}/include/ast
@@ -35,16 +35,16 @@ setv SILENT
 setv TAR tar
 setv YACC yacc
 setv YACCFLAGS -d
-make ${PACKAGEROOT}/lib/package/ast.lic
-done ${PACKAGEROOT}/lib/package/ast.lic
+make ${INSTALLROOT}/lib/package/ast.lic
+done ${INSTALLROOT}/lib/package/ast.lic
 make install
 make sum
 make libsum.a archive
 make sum.req
 exec - set -
 exec - echo 'int main(){return 0;}' > 1.${COTEMP}.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}    -c 1.${COTEMP}.c &&
-exec - x=`${CC} ${mam_cc_FLAGS} ${CCFLAGS}    ${LDFLAGS}  -o 1.${COTEMP}.x 1.${COTEMP}.o -l'*' 2>&1 | sed -e 's/[][()+@?]/#/g' || :` &&
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}   -c 1.${COTEMP}.c &&
+exec - x=`${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS}  -o 1.${COTEMP}.x 1.${COTEMP}.o -l'*' 2>&1 | sed -e 's/[][()+@?]/#/g' || :` &&
 exec - {
 exec - case "" in
 exec - *?)	echo " " ;;
@@ -54,8 +54,8 @@ exec - do	case $i in
 exec - 	"sum"|sum)
 exec - 		;;
 exec - 	*)	if	test ! -f ${INSTALLROOT}/lib/lib$i.a
-exec - 		then	case `{ ${CC} ${mam_cc_FLAGS} ${CCFLAGS}     ${LDFLAGS}  -o 1.${COTEMP}.x 1.${COTEMP}.o  -l$i 2>&1 || echo '' $x ;} | sed -e 's/[][()+@?]/#/g' || :` in
-exec - 			*$x*)	case `{ ${CC} ${mam_cc_FLAGS} ${CCFLAGS}    ${LDFLAGS}  -o 1.${COTEMP}.x 1.${COTEMP}.o  -l$i 2>&1 || echo '' $x ;} | sed -e 's/[][()+@?]/#/g' || :` in
+exec - 		then	case `{ ${CC} ${mam_cc_FLAGS} ${CCFLAGS}    ${LDFLAGS}  -o 1.${COTEMP}.x 1.${COTEMP}.o  -l$i 2>&1 || echo '' $x ;} | sed -e 's/[][()+@?]/#/g' || :` in
+exec - 			*$x*)	case `{ ${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS}  -o 1.${COTEMP}.x 1.${COTEMP}.o  -l$i 2>&1 || echo '' $x ;} | sed -e 's/[][()+@?]/#/g' || :` in
 exec - 				*$x*) continue ;;
 exec - 				esac
 exec - 				;;
@@ -159,7 +159,7 @@ done sum.h
 done sumlib.c
 meta sumlib.o %.c>%.o sumlib.c sumlib
 prev sumlib.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${INSTALLROOT}/include/ast -D_PACKAGE_ast -c sumlib.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${INSTALLROOT}/include/ast -D_PACKAGE_ast -c sumlib.c
 done sumlib.o generated
 exec - ${AR} cr libsum.a sumlib.o
 exec - (ranlib libsum.a) >/dev/null 2>&1 || true
@@ -195,7 +195,7 @@ done ${INSTALLROOT}/include/ast generated
 make ${INSTALLROOT}/include/ast/sum.h
 prev ${INSTALLROOT}/include/ast
 prev sum.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1996,author=gsf'  sum.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1996,author=gsf'  sum.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/sum.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/sum.h

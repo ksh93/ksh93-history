@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1990-2002 AT&T Corp.                *
+*                Copyright (c) 1990-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -33,6 +33,27 @@
 #include "colib.h"
 
 #include <ctype.h>
+
+/*
+ * cat and remove fd {1,2} serialized output
+ */
+
+static void
+cat(Cojob_t* job, char** path, Sfio_t* op)
+{
+	Sfio_t*		sp;
+
+	if (sp = sfopen(NiL, *path, "r"))
+	{
+		sfmove(sp, op, SF_UNBOUND, -1);
+		sfclose(sp);
+	}
+	else
+		sfprintf(sfstderr, "%s: %s: cannot open job %d serialized output\n", CO_ID, *path, job->id);
+	remove(*path);
+	free(*path);
+	*path = 0;
+}
 
 Cojob_t*
 cowait(register Coshell_t* co, Cojob_t* job)
@@ -138,6 +159,10 @@ cowait(register Coshell_t* co, Cojob_t* job)
 			}
 			co->user += cj->user;
 			co->sys += cj->sys;
+			if (cj->out)
+				cat(cj, &cj->out, sfstdout);
+			if (cj->err)
+				cat(cj, &cj->err, sfstderr);
 			if (cj->pid > 0 || (co->flags & (CO_INIT|CO_SERVER)))
 			{
 			nuke:

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1990-2002 AT&T Corp.                *
+*                Copyright (c) 1990-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -136,6 +136,8 @@ coexec(register Coshell_t* co, const char* action, int flags, const char* out, c
 			else
 				sfprintf(sp, " >%s/%s", state.pwd, out);
 		}
+		else if ((flags & CO_SERIALIZE) && (cj->out = pathtemp(NiL, 64, NiL, "coo", NiL)))
+			sfprintf(sp, " >%s", cj->out);
 		if (err)
 		{
 			if (out && streq(out, err))
@@ -144,6 +146,13 @@ coexec(register Coshell_t* co, const char* action, int flags, const char* out, c
 				sfprintf(sp, " 2>%s", err);
 			else
 				sfprintf(sp, " 2>%s/%s", state.pwd, err);
+		}
+		else if (flags & CO_SERIALIZE)
+		{
+			if (out)
+				sfprintf(sp, " 2>&1");
+			else if (cj->err = pathtemp(NiL, 64, NiL, "coe", NiL))
+				sfprintf(sp, " 2>%s", cj->err);
 		}
 #if !_lib_fork && defined(_map_spawnve)
 		if (sp != tp)
@@ -188,6 +197,8 @@ coexec(register Coshell_t* co, const char* action, int flags, const char* out, c
 			else
 				sfprintf(sp, " >%s/%s", state.pwd, out);
 		}
+		else if ((flags & CO_SERIALIZE) && (cj->out = pathtemp(NiL, 64, NiL, "coo", NiL)))
+			sfprintf(sp, " >%s", cj->out);
 		if (err)
 		{
 			if (out && streq(out, err))
@@ -196,6 +207,13 @@ coexec(register Coshell_t* co, const char* action, int flags, const char* out, c
 				sfprintf(sp, " 2>%s", err);
 			else
 				sfprintf(sp, " 2>%s/%s", state.pwd, err);
+		}
+		else if (flags & CO_SERIALIZE)
+		{
+			if (out)
+				sfprintf(sp, " 2>&1");
+			else if (cj->err = pathtemp(NiL, 64, NiL, "coe", NiL))
+				sfprintf(sp, " 2>%s", cj->err);
 		}
 		if (flags & CO_OSH)
 			sfprintf(sp, " && echo x %d 0 >&%d || echo x %d $? >&%d",

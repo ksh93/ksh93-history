@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -61,7 +61,10 @@ reg Sfdisc_t*	disc;
 	if(!(f->flags&SF_STRING))
 	{	if(((f->mode&SF_WRITE) && f->next > f->data) ||
 		   (f->mode&SF_READ) || f->disc == _Sfudisc )
-			(void)SFSYNC(f);
+		{	(void)SFSYNC(f);
+			f->mode &= ~SF_SYNCED;
+			f->endb = f->next = f->endr = f->endw = f->data;
+		}
 
 		if(((f->mode&SF_WRITE) && (n = f->next-f->data) > 0) ||
 		   ((f->mode&SF_READ) && f->extent < 0 && (n = f->endb-f->next) > 0) )

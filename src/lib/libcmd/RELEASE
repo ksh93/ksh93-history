@@ -1,3 +1,5 @@
+04-09-24 pathchk.c: fix docs
+04-09-14 date.c: add %| and %& --parse docs
 04-08-27 cp.c: add FTW_DC check -- duh
 04-08-01 fmt.c: handle last char != '\n'
 04-07-22 date.c,uname.c: access() => eaccess()

@@ -156,7 +156,13 @@ USAGE_LICENSE
 "[n!:network?Set network time.]"
 "[p:parse?Add \aformat\a to the list of \bstrptime\b(3) parse conversion"
 "	formats. \aformat\a follows the same conventions as the"
-"	\b--format\b option.]:[format]"
+"	\b--format\b option, with the addition of these format"
+"	fields:]:[format]{"
+"		[+|?If the format failed before this point then restart"
+"			the parse with the remaining format.]"
+"		[+&?Call the \btmdate\b(3) heuristic parser. This is"
+"			is the default when \b--parse\b is omitted.]"
+"}"
 "[s:show?Show the date without setting the system time.]"
 "[u:utc|gmt|zulu?Output dates in \acoordinated universal time\a (UTC).]"
 
@@ -165,7 +171,7 @@ USAGE_LICENSE
 "\n"
 
 "[+SEE ALSO?\bcrontab\b(1), \bls\b(1), \btouch\b(1), \bfmtelapsed\b(3),"
-"	\bstrftime\b(3), \bstrptime\b(3)]"
+"	\bstrftime\b(3), \bstrptime\b(3), \btm\b(3)]"
 ;
 
 #include <cmdlib.h>

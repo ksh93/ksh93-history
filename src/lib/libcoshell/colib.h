@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1990-2002 AT&T Corp.                *
+*                Copyright (c) 1990-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -35,6 +35,8 @@
 #define _CO_JOB_PRIVATE_		/* Cojob_t private additions	*/ \
 	Cojob_t*	next;		/* next in list			*/ \
 	int		pid;		/* pid				*/ \
+	char*		out;		/* serialized stdout file	*/ \
+	char*		err;		/* serialized stderr file	*/ \
 					/* end of private additions	*/
 
 #define _CO_SHELL_PRIVATE_		/* Coshell_t private additions	*/ \

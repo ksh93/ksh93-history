@@ -1555,12 +1555,15 @@ textout(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip
 					{
 						if ((*p == '#' || *p == ':') && level > lev)
 						{
+							char*	o;
 							char*	v;
 							int	j;
 							int	m;
+							int	ol;
 							int	vl;
 
 							a = 0;
+							o = 0;
 							v = 0;
 							if (*++p == '?' || *p == *(p - 1))
 							{
@@ -1574,7 +1577,12 @@ textout(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip
 								{
 									p = skip(t = p + 1, ':', '?', 0, 1, 0, 0, version);
 									m = p - t;
-									if (*t == '=')
+									if (*t == '!')
+									{
+										o = t + 1;
+										ol = m - 1;
+									}
+									else if (*t == '=')
 									{
 										v = t + 1;
 										vl = m - 1;
@@ -1589,7 +1597,24 @@ textout(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip
 								}
 							}
 							if (a & OPT_optional)
-								sfprintf(sp, " %s", T(NiL, ast.id, "The option value may be omitted."));
+							{
+								if (o)
+								{
+									sfprintf(sp, " %s ", T(NiL, ast.id, "If the option value is omitted then"));
+									sfputr(sp, font(FONT_BOLD, style, 1), -1);
+									t = o + ol;
+									while (o < t)
+									{
+										if (((c = *o++) == ':' || c == '?') && *o == c)
+											o++;
+										sfputc(sp, c);
+									}
+									sfputr(sp, font(FONT_BOLD, style, 0), -1);
+									sfprintf(sp, " %s.", T(NiL, ast.id, "is assumed"));
+								}
+								else
+									sfprintf(sp, " %s", T(NiL, ast.id, "The option value may be omitted."));
+							}
 							if (v)
 							{
 								sfprintf(sp, " %s ", T(NiL, ast.id, "The default value is"));
@@ -1844,6 +1869,7 @@ opthelp(const char* oopts, const char* what)
 	char*			s;
 	char*			d;
 	char*			v;
+	char*			ov;
 	char*			name;
 	char*			pp;
 	char*			rb;
@@ -1856,6 +1882,7 @@ opthelp(const char* oopts, const char* what)
 	int			a;
 	int			sl;
 	int			vl;
+	int			ol;
 	int			wl;
 	int			xl;
 	int			rm;
@@ -2622,7 +2649,7 @@ opthelp(const char* oopts, const char* what)
 				if (!f && !w)
 					z = -1;
 			}
-			u = v = y = 0;
+			ov = u = v = y = 0;
 			if (*p == ':' && (a |= OPT_string) || *p == '#' && (a |= OPT_number))
 			{
 				message((-21, "opthelp: arg %s", show(p)));
@@ -2640,7 +2667,12 @@ opthelp(const char* oopts, const char* what)
 						{
 							p = skip(t = p + 1, ':', '?', 0, 1, 0, 0, version);
 							m = p - t;
-							if (*t == '=')
+							if (*t == '!')
+							{
+								ov = t + 1;
+								ol = m - 1;
+							}
+							else if (*t == '=')
 							{
 								v = t + 1;
 								vl = m - 1;
@@ -2853,7 +2885,20 @@ opthelp(const char* oopts, const char* what)
 							y = " ";
 						if (a & OPT_optional)
 						{
-							sfprintf(sp_info, "%s%s", y, T(NiL, ast.id, "The option value may be omitted."));
+							if (ov)
+							{
+								sfprintf(sp_info, "%s%s \b", y, T(NiL, ast.id, "If the option value is omitted then"));
+								t = ov + ol;
+								while (ov < t)
+								{
+									if (((c = *ov++) == ':' || c == '?') && *ov == c)
+										ov++;
+									sfputc(sp_info, c);
+								}
+								sfprintf(sp_info, "\b %s.", T(NiL, ast.id, "is assumed"));
+							}
+							else
+								sfprintf(sp_info, "%s%s", y, T(NiL, ast.id, "The option value may be omitted."));
 							textout(sp_body, sfstruse(sp_info), style, 4, 0, sp_info, version, NiL);
 							y = " ";
 						}
@@ -4011,6 +4056,7 @@ optget(register char** argv, const char* oopts)
 							}
 							if (n = no)
 							{
+								m = 0;
 								s = e - 1;
 								w = &opt_info.name[prefix] + n;
 								while (*++s)
@@ -4054,7 +4100,7 @@ optget(register char** argv, const char* oopts)
 						{
 							if (n)
 								num = 0;
-							if (!(n = num && (m || *s == ':' || *s == '|' || *s == '?' || *s == ']' || *s == 0)) && x)
+							if (!(n = (m || *s == ':' || *s == '|' || *s == '?' || *s == ']' || *s == 0)) && x)
 							{
 								psp = pop(psp);
 								return opterror("?", version, catalog);
@@ -4364,15 +4410,34 @@ optget(register char** argv, const char* oopts)
 			{
 				if (!v && *(s + 1) != '?' && (v = argv[opt_info.index]))
 					opt_info.index++;
-				if (!(opt_info.arg = v))
+				if (!(opt_info.arg = v) || (*v == '0' || *v == '1') && !*(v + 1))
 				{
 					if (*(s + 1) != '?')
 					{
-						pop(psp);
-						return opterror(s, version, catalog);
+						if (!opt_info.arg)
+						{
+							pop(psp);
+							return opterror(s, version, catalog);
+						}
 					}
+					else if (*(t = next(s + 2, version)) == '[')
+						while (*(t = skip(t, ':', 0, 0, 1, 0, 0, version)) == ':')
+							if (*++t == '!')
+							{
+								if (!v || *v == '1')
+								{
+									e = skip(t, ':', '?', ']', 1, 0, 0, version);
+									opt_info.arg = sfprints("%-.*s", e - t - 1, t + 1);
+								}
+								else
+								{
+									opt_info.arg = 0;
+									opt_info.num = opt_info.number = 0;
+								}
+								break;
+							}
 				}
-				else if (*s == '#')
+				if (opt_info.arg && *s == '#')
 				{
 					opt_info.num = (long)(opt_info.number = strtonll(opt_info.arg, &e, NiL, 0));
 					if (e == opt_info.arg)

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -64,8 +64,93 @@ typedef struct
 				while (s < (const char*)(t + d) && *s >= '0' && *s <= '9') \
 					n = n * 10 + *s++ - '0'; \
 				if (t == (char*)s || n < m || n > x) \
-					goto done; \
+					goto next; \
 			} while (0)
+
+/*
+ * generate a time_t from tm + set
+ */
+
+static time_t
+gen(register Tm_t* tm, register Set_t* set)
+{
+	register int	n;
+	time_t		tt;
+
+	if (set->year >= 0)
+		tm->tm_year = set->year;
+	if (set->mon >= 0)
+	{
+		if (set->year < 0 && set->mon < tm->tm_mon)
+			tm->tm_year++;
+		tm->tm_mon = set->mon;
+		if (set->yday < 0 && set->mday < 0)
+			tm->tm_mday = set->mday = 1;
+	}
+	if (set->week >= 0)
+	{
+		if (set->mon < 0)
+		{
+			tm->tm_mon = 0;
+			tm->tm_mday = (set->week >> 1) * 7 + 1;
+		}
+	}
+	else if (set->yday >= 0)
+	{
+		if (set->mon < 0)
+			tm->tm_mday += set->yday - tm->tm_yday;
+	}
+	else if (set->mday >= 0)
+		tm->tm_mday = set->mday;
+	if (set->hour >= 0)
+	{
+		if (set->hour < tm->tm_hour && set->yday < 0 && set->mday < 0 && set->wday < 0)
+			tm->tm_mday++;
+		tm->tm_hour = set->hour;
+		tm->tm_min = (set->min >= 0) ? set->min : 0;
+		tm->tm_sec = (set->sec >= 0) ? set->sec : 0;
+	}
+	else if (set->min >= 0)
+	{
+		tm->tm_min = set->min;
+		tm->tm_sec = (set->sec >= 0) ? set->sec : 0;
+	}
+	else if (set->sec >= 0)
+		tm->tm_sec = set->sec;
+	if (set->meridian > 0)
+	{
+		if (tm->tm_hour < 12)
+			tm->tm_hour += 12;
+	}
+	else if (set->meridian == 0)
+	{
+		if (tm->tm_hour >= 12)
+			tm->tm_hour -= 12;
+	}
+	tt = tmtime(tm, set->zone);
+	tm = 0;
+	if (set->yday >= 0)
+	{
+		tm = tmmake(&tt);
+		tm->tm_mday += set->yday - tm->tm_yday;
+	}
+	else if (set->week >= 0)
+	{
+		/*HERE*/
+	}
+	else if (set->wday >= 0)
+	{
+		tm = tmmake(&tt);
+		if ((n = set->wday - tm->tm_wday) < 0)
+			n += 7;
+		tm->tm_mday += n;
+	}
+	return tm ? tmtime(tm, set->zone) : tt;
+}
+
+/*
+ * the format scan workhorse
+ */
 
 static time_t
 scan(register const char* s, char** e, const char* format, char** f, time_t* clock, long flags)
@@ -74,6 +159,7 @@ scan(register const char* s, char** e, const char* format, char** f, time_t* clo
 	register int	n;
 	register char*	p;
 	register Tm_t*	tm;
+	const char*	b;
 	char*		t;
 	char*		stack[4];
 	int		m;
@@ -86,13 +172,15 @@ scan(register const char* s, char** e, const char* format, char** f, time_t* clo
 
 	char**		sp = &stack[0];
 
+	while (isspace(*s))
+		s++;
+	b = s;
+ again:
 	CLEAR(set);
 	tm = tmmake(clock);
 	tm_info.date = tm_info.zone;
 	pedantic = (flags & TM_PEDANTIC) != 0;
-	while (isspace(*s))
-		s++;
-	while (*s)
+	for (;;)
 	{
 		if (!(d = *format++))
 		{
@@ -102,6 +190,11 @@ scan(register const char* s, char** e, const char* format, char** f, time_t* clo
 				break;
 			}
 			format = (const char*)*--sp;
+		}
+		else if (!*s)
+		{
+			format--;
+			break;
 		}
 		else if (d == '%' && (d = *format) && format++ && d != '%')
 		{
@@ -117,7 +210,7 @@ scan(register const char* s, char** e, const char* format, char** f, time_t* clo
 				hi = TM_TIME;
 			get_wday:
 				if ((n = tmlex(s, &t, tm_info.format + lo, hi - lo, NiL, 0)) < 0)
-					goto done;
+					goto next;
 				s = t;
 				INDEX(TM_DAY_ABBREV, TM_DAY);
 				set.wday = n;
@@ -132,7 +225,7 @@ scan(register const char* s, char** e, const char* format, char** f, time_t* clo
 				hi = TM_DAY_ABBREV;
 			get_mon:
 				if ((n = tmlex(s, &t, tm_info.format + lo, hi - lo, NiL, 0)) < 0)
-					goto done;
+					goto next;
 				s = t;
 				INDEX(TM_MONTH_ABBREV, TM_MONTH);
 				set.mon = n;
@@ -146,7 +239,7 @@ scan(register const char* s, char** e, const char* format, char** f, time_t* clo
 				continue;
 			case 'd':
 				if (pedantic && !isdigit(*s))
-					goto done;
+					goto next;
 				/*FALLTHROUGH*/
 			case 'e':
 				NUMBER(2, 1, 31);
@@ -195,7 +288,7 @@ scan(register const char* s, char** e, const char* format, char** f, time_t* clo
 				continue;
 			case 'p':
 				if ((n = tmlex(s, &t, tm_info.format + TM_MERIDIAN, TM_UT - TM_MERIDIAN, NiL, 0)) < 0)
-					goto done;
+					goto next;
 				set.meridian = n;
 				s = t;
 				continue;
@@ -208,7 +301,7 @@ scan(register const char* s, char** e, const char* format, char** f, time_t* clo
 			case 's':
 				tt = strtoul(s, &t, 0);
 				if (s == t)
-					goto done;
+					goto next;
 				tm = tmmake(&tt);
 				s = t;
 				CLEAR(set);
@@ -272,11 +365,24 @@ scan(register const char* s, char** e, const char* format, char** f, time_t* clo
 					tm_info.date = zp;
 				}
 				continue;
+			case '|':
+				s = b;
+				goto again;
+			case '&':
+				tt = gen(tm, &set);
+				tt = tmdate(s, e, &tt);
+				if (s == (const char*)*e)
+					goto next;
+				s = (const char*)*e;
+				if (!*format || *format == '%' && *(format + 1) == '|')
+					goto done;
+				clock = &tt;
+				goto again;
 			default:
-				goto done;
+				goto next;
 			}
 			if (sp >= &stack[elementsof(stack)])
-				goto done;
+				goto next;
 			*sp++ = (char*)format;
 			format = (const char*)p;
 		}
@@ -285,8 +391,28 @@ scan(register const char* s, char** e, const char* format, char** f, time_t* clo
 				s++;
 		else if (*s != d)
 			break;
-		else s++;
+		else
+			s++;
 	}
+ next:
+	if (sp > &stack[0])
+		format = (const char*)stack[0];
+	if (*format)
+	{
+		p = (char*)format;
+		if (!*s && *p == '%' && *(p + 1) == '|')
+			format += strlen(format);
+		else
+			while (*p)
+				if (*p++ == '%' && *p && *p++ == '|' && *p)
+				{
+					format = (const char*)p;
+					s = b;
+					goto again;
+				}
+	}
+ fix:
+	tt = gen(tm, &set);
  done:
 	if (e)
 	{
@@ -300,75 +426,7 @@ scan(register const char* s, char** e, const char* format, char** f, time_t* clo
 			format++;
 		*f = (char*)format;
 	}
-	if (set.year >= 0)
-		tm->tm_year = set.year;
-	if (set.mon >= 0)
-	{
-		if (set.year < 0 && set.mon < tm->tm_mon)
-			tm->tm_year++;
-		tm->tm_mon = set.mon;
-		if (set.yday < 0 && set.mday < 0)
-			tm->tm_mday = set.mday = 1;
-	}
-	if (set.week >= 0)
-	{
-		if (set.mon < 0)
-		{
-			tm->tm_mon = 0;
-			tm->tm_mday = (set.week >> 1) * 7 + 1;
-		}
-	}
-	else if (set.yday >= 0)
-	{
-		if (set.mon < 0)
-			tm->tm_mday += set.yday - tm->tm_yday;
-	}
-	else if (set.mday >= 0)
-		tm->tm_mday = set.mday;
-	if (set.hour >= 0)
-	{
-		if (set.hour < tm->tm_hour && set.yday < 0 && set.mday < 0 && set.wday < 0)
-			tm->tm_mday++;
-		tm->tm_hour = set.hour;
-		tm->tm_min = (set.min >= 0) ? set.min : 0;
-		tm->tm_sec = (set.sec >= 0) ? set.sec : 0;
-	}
-	else if (set.min >= 0)
-	{
-		tm->tm_min = set.min;
-		tm->tm_sec = (set.sec >= 0) ? set.sec : 0;
-	}
-	else if (set.sec >= 0)
-		tm->tm_sec = set.sec;
-	if (set.meridian > 0)
-	{
-		if (tm->tm_hour < 12)
-			tm->tm_hour += 12;
-	}
-	else if (set.meridian == 0)
-	{
-		if (tm->tm_hour >= 12)
-			tm->tm_hour -= 12;
-	}
-	tt = tmtime(tm, set.zone);
-	tm = 0;
-	if (set.yday >= 0)
-	{
-		tm = tmmake(&tt);
-		tm->tm_mday += set.yday - tm->tm_yday;
-	}
-	else if (set.week >= 0)
-	{
-		/*HERE*/
-	}
-	else if (set.wday >= 0)
-	{
-		tm = tmmake(&tt);
-		if ((n = set.wday - tm->tm_wday) < 0)
-			n += 7;
-		tm->tm_mday += n;
-	}
-	return tm ? tmtime(tm, set.zone) : tt;
+	return tt;
 }
 
 /*

@@ -1342,20 +1342,16 @@ static struct ionod	*inout(struct ionod *lastio,int flag)
 	iop->iodelim = 0;
 	if(iof&IODOC)
 	{
-		if(!shlex.sh->heredocs)
-			shlex.sh->heredocs = sftmp(HERE_MEM);
 		if(shlex.digits==2)
 		{
-			Sfio_t *sp = shlex.sh->heredocs;
-			if(shlex.arg->argflag&ARG_RAW)
-				iof |= IOQUOTE;
-			iop->iooffset = sfseek(sp,(off_t)0,SEEK_END);
-			iop->iosize = strlen(shlex.arg->argval);
-			sfwrite(sp,shlex.arg->argval,iop->iosize++);
-			sfputc(sp,'\n');
+			iof |= IOSTRG;
+			if(!(shlex.arg->argflag&ARG_RAW))
+				iof &= ~IORAW;
 		}
 		else
 		{
+			if(!shlex.sh->heredocs)
+				shlex.sh->heredocs = sftmp(HERE_MEM);
 			iop->iolst=shlex.heredoc;
 			shlex.heredoc=iop;
 			if(shlex.arg->argflag&ARG_QUOTED)

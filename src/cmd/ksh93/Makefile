@@ -3,6 +3,9 @@
  * This makefile should work with nmake 2.3 and higher 
  */
 
+SH = ksh		/* name of the shell program */
+VERSION = 1.1
+
 if CC.HOSTTYPE == "linux.alpha"
 	/* workaround for "BUG IN DYNAMIC LINKER ld.so" */
 	:PACKAGE: - m:static:noinclude noCC.EXPORT.DYNAMIC
@@ -19,7 +22,7 @@ else
 	end
 end
 
-:PACKAGE:	ast$(libtype)
+:PACKAGE: ast$(libtype) --clobber=!($(SH))
 
 LICENSE = since=1982,author=dgk
 
@@ -27,11 +30,6 @@ CATALOG = libshell
 
 .SOURCE : edit sh bltins data tests fun
 .SOURCE.h : include 
-
-SH = ksh		/* name of the shell program */
-VERSION = 1.1
-
-clobber = !($(SH))	/* move ksh to ksh.old on clobber */
 
 /* documentation files */
 DOCFILES = sh.memo builtins.mm README RELEASE PROMO.mm COMPATIBILITY \

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2003 AT&T Corp.                *
+*                Copyright (c) 1985-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -15,7 +15,7 @@
 *               AT&T's intellectual property rights.               *
 *                                                                  *
 *            Information and Software Systems Research             *
-*                        AT&T Labs Research                        *
+*                          AT&T Research                           *
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
@@ -132,27 +132,26 @@ spawnveg(const char* path, char* const argv[], char* const envv[], pid_t pgid)
 #endif
 #endif
 
+#if !_lib_vfork
+#undef	_real_vfork
+#endif
+
 /*
- * fork+exec+(setsid|setpgid) with script check to avoid shell double fork
+ * fork+exec+(setsid|setpgid)
  */
 
 pid_t
 spawnveg(const char* path, char* const argv[], char* const envv[], pid_t pgid)
 {
 #if _lib_fork || _lib_vfork
-	int	n;
-	pid_t	pid;
+	int			n;
+	pid_t			pid;
 #if _real_vfork
-	int	exec_errno;
-	int*	exec_errno_ptr;
-	void*	exec_free;
-	void**	exec_free_ptr;
+	volatile int		exec_errno;
+	volatile int* volatile	exec_errno_ptr;
 #else
-	int	err[2];
+	int			err[2];
 #endif
-#endif
-#if _AST_DEBUG_spawnveg
-	int	debug;
 #endif
 
 	if (!envv)
@@ -168,8 +167,6 @@ spawnveg(const char* path, char* const argv[], char* const envv[], pid_t pgid)
 #if _real_vfork
 	exec_errno = 0;
 	exec_errno_ptr = &exec_errno;
-	exec_free = 0;
-	exec_free_ptr = &exec_free;
 #else
 	if (pipe(err) < 0)
 		err[0] = -1;
@@ -185,16 +182,9 @@ spawnveg(const char* path, char* const argv[], char* const envv[], pid_t pgid)
 #else
 	pid = fork();
 #endif
-#if _AST_DEBUG_spawnveg
-	debug = streq(path, "/bin/_ast_debug_spawnveg_");
-#endif
 	sigcritical(0);
 	if (!pid)
 	{
-#if _AST_DEBUG_spawnveg
-		if (debug)
-			_exit(argv[1] ? (int)strtol(argv[1], NiL, 0) : 0);
-#endif
 		if (pgid < 0)
 			setsid();
 		else if (pgid > 0)
@@ -216,35 +206,14 @@ spawnveg(const char* path, char* const argv[], char* const envv[], pid_t pgid)
 #endif
 		_exit(errno == ENOENT ? EXIT_NOTFOUND : EXIT_NOEXEC);
 	}
-	else if (pid != -1)
-	{
-		if (pgid > 0)
-		{
-			/*
-			 * parent and child are in a race here
-			 */
-
-			if (pgid == 1)
-				pgid = pid;
-			if (setpgid(pid, pgid) < 0 && pid != pgid && errno == EPERM)
-				setpgid(pid, pid);
-		}
 #if _real_vfork
-		if (exec_errno)
-		{
-			while (waitpid(pid, NiL, 0) == -1 && errno == EINTR);
-			pid = -1;
-			n = exec_errno;
-		}
-		if (exec_free)
-			free(exec_free);
-#endif
-		errno = n;
-#if _AST_DEBUG_spawnveg
-		if (!n && debug)
-			pause();
-#endif
+	if (pid != -1 && *exec_errno_ptr)
+	{
+		while (waitpid(pid, NiL, 0) == -1 && errno == EINTR);
+		pid = -1;
+		n = *exec_errno_ptr;
 	}
+#endif
 #if !_real_vfork
 	if (err[0] != -1)
 	{
@@ -253,11 +222,22 @@ spawnveg(const char* path, char* const argv[], char* const envv[], pid_t pgid)
 		{
 			while (waitpid(pid, NiL, 0) == -1 && errno == EINTR);
 			pid = -1;
-			errno = n;
 		}
 		close(err[0]);
 	}
 #endif
+	if (pid != -1 && pgid > 0)
+	{
+		/*
+		 * parent and child are in a race here
+		 */
+
+		if (pgid == 1)
+			pgid = pid;
+		if (setpgid(pid, pgid) < 0 && pid != pgid && errno == EPERM)
+			setpgid(pid, pid);
+	}
+	errno = n;
 	return pid;
 #else
 	errno = ENOSYS;

@@ -127,6 +127,8 @@ int        sfvscanf(Sfio_t* f, const char* format, va_list args);
 
 int        sfprintf(Sfio_t* f, const char* format, ...);
 char*      sfprints(const char* format, ...);
+ssize_t    sfaprints(char** sp, const char* format, ...);
+ssize_t    sfvaprints(char** sp, const char* format, va_list args);
 int        sfsprintf(char* s, int n, const char* format, ...);
 int        sfvsprintf(char* s, int n, const char* format, va_list args);
 int        sfvprintf(Sfio_t* f, const char* format, va_list args);
@@ -850,39 +852,38 @@ call can be obtained in another \f5sfreserve()\fP call with the argument
 \f5type\fP being \f5SF_LASTR\fP. The second argument \f5n\fP
 to \f5sfreserve()\fP will be ignored in this case.
 
-A \f5sfreserve()\fP call is successful if it can reserve a data block 
+A \f5sfreserve()\fP call is successful if it can obtain a data block 
 of size at least the absolute value of \f5n\fP.
 For a \f5SF_READ\fP atream, the argument \f5n\fP is treated as follows:
 .Tp
 \f5n < 0\fP:
 \f5sfreserve()\fP attempts to get \fIat least\fP \f5|n|\fP bytes
-into the buffer. If not possible, \f5sfreserve()\fP returns failure.
+into the buffer.
 .Tp
 \f5n == 0\fP:
-If the argument \f5type\fP is \f50\fP or \f5SF_LOCKR\fP,
-\f5sfreserve()\fP attempts to get \fIat least\fP \f51\fP byte into
-the buffer. If not possible, \f5sfreserve()\fP returns failure.
-See the case of \f5type < 0\fP below.
+If the argument \f5type\fP is \f50\fP,
+\f5sfreserve()\fP attempts to get \fIat least\fP \f51\fP byte into the buffer;
+otherwise, no attempt will be made to read data into the buffer.
+For example, the call \f5sfreserve(f, 0, -1)\fP only returns the buffer status,
+i.e., size of existing buffered data and pointer to such data, if any.
+The call \f5sfreserve(f, 0, SF_LOCKR)\fP is similar but also locks the stream.
 .Tp
 \f5n > 0\fP:
-\f5sfreserve()\fP will use attempt to get at most \f5n\fP bytes into the buffer.
-In addition, if \f5type == \f5SF_LOCKR\fP (see below), system calls are attempted
-only until a positive amount of data is obtained.
-\f5sfreserve()\fP returns failure if less than \f5n\fP bytes are read.
+\f5sfreserve()\fP will use attempt to get \fIat most\fP \f5n\fP bytes into
+the buffer. Further, if \f5type == \f5SF_LOCKR\fP (see below), read attempts
+end on a positive amount.
 
 For a successful reservation, the argument \f5type\fP dictates treatment
 as follows:
 .Tp
 \f5type == SF_LASTR\fP:
-This should be used only after the immediately preceding
-\f5sfreserve()\fP returned \f5NULL\fP. In this case,
-\f5sfreserve()\fP returns currently buffered data and
-also advances the stream I/O position by that amount.
+After a \f5sfreserve()\fP call with \f5type != SF_LOCKR\fP fails,
+there may be some left over data not accessible via conventional Sfio calls.
+Immediately after such a failed call,
+another call to \f5sfreserve\fP with \f5type == SF_LASTR\fP will return any left over
+data and also advance the stream I/O position by the amount of returned data.
 .Tp
 \f5type < 0\fP:
-If \f5n == 0\fP, only the current status of the stream buffer is returned.
-That is, the pointer to already buffered data, if any, is returned
-and the data size can be obtained \f5sfvalue(f)\fP.
 If \f5n > 0\fP, the stream I/O position is advanced by \f5n\fP.
 If \f5n < 0\fP, the stream I/O position is advanced by the amount
 of available data.
@@ -1171,6 +1172,8 @@ which is defined in the macro value \f5SFIO_VERSION\fP.
 
 .Ss "  int sfprintf(Sfio_t* f, const char* format, ...)"
 .Ss "  char* sfprints(const char* format, ...)"
+.Ss "  ssize_t sfaprints(char** sp, const char* format, ...);"
+.Ss "  ssize_t sfvaprints(char** sp, const char* format, va_list args);"
 .Ss "  int sfsprintf(char* s, int n, const char* format, ...)"
 .Ss "  int sfvsprintf(char* s, int n, const char* format, va_list args)"
 .Ss "  int sfvprintf(Sfio_t* f, const char* format, va_list args)"
@@ -1179,6 +1182,9 @@ These functions format output data.
 \f5sfsprintf()\fP and \f5sfvsprintf()\fP write to buffer \f5s\fP
 which is of size \f5n\fP.
 \f5sfprints()\fP constructs output in some Sfio-defined buffer.
+\f5sfaprints()\fP and \f5sfvaprints()\fP are similar to \f5sfprints()\fP
+but they return the constructed string in  \f5*sp\fP and expect this string
+to be freed by the caller when no longer needed.
 \f5sfvprintf()\fP is the underlying primitive for the other functions.
 Except for \f5sfprints()\fP
 which returns a null-terminated string or \f5NULL\fP,
