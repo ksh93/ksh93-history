@@ -1,45 +1,27 @@
-/*
- * CDE - Common Desktop Environment
- *
- * Copyright (c) 1993-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
- */
 /***************************************************************
 *                                                              *
-*                      AT&T - PROPRIETARY                      *
+*           This software is part of the ast package           *
+*              Copyright (c) 1985-2000 AT&T Corp.              *
+*      and it may only be used by you under license from       *
+*                     AT&T Corp. ("AT&T")                      *
+*       A copy of the Source Code Agreement is available       *
+*              at the AT&T Internet web site URL               *
 *                                                              *
-*         THIS IS PROPRIETARY SOURCE CODE LICENSED BY          *
-*                          AT&T CORP.                          *
+*     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*                Copyright (c) 1995 AT&T Corp.                 *
-*                     All Rights Reserved                      *
-*                                                              *
-*           This software is licensed by AT&T Corp.            *
-*       under the terms and conditions of the license in       *
-*       http://www.research.att.com/orgs/ssr/book/reuse        *
+*     If you received this software without first entering     *
+*       into a license with AT&T, you have an infringing       *
+*           copy and cannot use it without violating           *
+*             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
-*           Software Engineering Research Department           *
-*                    AT&T Bell Laboratories                    *
+*               Network Services Research Center               *
+*                      AT&T Labs Research                      *
+*                       Florham Park NJ                        *
 *                                                              *
-*               For further information contact                *
-*                     gsf@research.att.com                     *
+*             Glenn Fowler <gsf@research.att.com>              *
+*              David Korn <dgk@research.att.com>               *
+*               Phong Vo <kpv@research.att.com>                *
 *                                                              *
 ***************************************************************/
 #include	"sfhdr.h"
@@ -55,14 +37,15 @@
 */
 
 #if __STD_C
-_sffilbuf(reg Sfio_t* f, reg int n)
+int _sffilbuf(Sfio_t* f, reg int n)
 #else
-_sffilbuf(f,n)
-reg Sfio_t	*f;	/* fill the read buffer of this stream */
-reg int		n;	/* see above */
+int _sffilbuf(f,n)
+Sfio_t*	f;	/* fill the read buffer of this stream */
+reg int	n;	/* see above */
 #endif
 {
-	reg int		r, local, rcrv, rc;
+	reg ssize_t	r;
+	reg int		first, local, rcrv, rc;
 
 	GETLOCAL(f,local);
 
@@ -70,7 +53,7 @@ reg int		n;	/* see above */
 	rcrv = f->mode&(SF_RC|SF_RV|SF_LOCK);
 	rc = f->getr;
 
-	for(;; f->mode &= ~SF_LOCK)
+	for(first = 1;; first = 0, (f->mode &= ~SF_LOCK) )
 	{	/* check mode */
 		if(SFMODE(f,local) != SF_READ && _sfmode(f,SF_READ,local) < 0)
 			return -1;
@@ -78,24 +61,41 @@ reg int		n;	/* see above */
 
 		/* current extent of available data */
 		if((r = f->endb-f->next) > 0)
-		{	if(n <= 0 || (f->flags&SF_STRING))
+		{	/* on first iteration, n is amount beyond current buffer;
+			   afterward, n is the exact amount requested */
+			if((first && n <= 0) || (!first && n <= r) ||
+			   (f->flags&SF_STRING))
 				break;
 
-			/* shift left to make room for new data */
-			if(!(f->flags&SF_MMAP) && n > (f->size - (f->endb-f->data)) )
-			{	memcpy((char*)f->data,(char*)f->next,r);
-				f->endb = (f->next = f->data)+r;
+			/* try shifting left to make room for new data */
+			if(!(f->bits&SF_MMAP) && f->next > f->data &&
+			   n > (f->size - (f->endb-f->data)) )
+			{	uchar*	copy;
+
+				if(f->extent < 0 || f->size < SF_PAGE)
+					copy = f->next;
+				else	/* try keeping alignment */
+				{	Sfoff_t	a = ((f->here-r)/SF_PAGE)*SF_PAGE;
+					if(a < (f->here-r) &&
+					   a > (f->here - (f->endb-f->data)) )
+						copy = f->endb - (f->here-a);
+					else	break;
+				}
+
+				memcpy((char*)f->data, (char*)copy, f->endb-copy);
+				f->next = f->data + (f->next - copy);
+				f->endb = f->data + (f->endb - copy);
 			}
 		}
-		else if(!(f->flags&(SF_STRING|SF_MMAP)) )
+		else if(!(f->flags&SF_STRING) && !(f->bits&SF_MMAP) )
 			f->next = f->endb = f->endr = f->data;
 
-		if(f->flags&SF_MMAP)
+		if(f->bits&SF_MMAP)
 			r = n > 0 ? n : f->size;
 		else if(!(f->flags&SF_STRING) )
 		{	/* make sure we read no more than required */
 			r = f->size - (f->endb - f->data);
-			if(n > 0 && r > n && f->extent < 0 && (f->flags&SF_SHARE))
+			if(n > 0 && r > n && f->extent < 0 && (f->flags&SF_SHARE) )
 				r = n;
 		}
 
@@ -109,5 +109,5 @@ reg int		n;	/* see above */
 	}
 
 	SFOPEN(f,local);
-	return (n == 0) ? (r > 0 ? (int)(*f->next++) : EOF) : r;
+	return (n == 0) ? (r > 0 ? (int)(*f->next++) : EOF) : (int)r;
 }

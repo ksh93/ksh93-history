@@ -1,5 +1,6 @@
-hdr,sys	dlfcn,dl,ldr
-lib	dlopen,shl_load,loadbind
+hdr,sys	dlfcn,dl,ldr,dll
+hdr	dlldefs -I$INSTALLROOT/include/ast -I../../../include/ast
+lib	dlopen,shl_load,loadbind,dllload,dllfind
 cat{
 	#ifdef _lib_dlopen
 	#   define SHOPT_FS_3D	1
@@ -9,7 +10,10 @@ cat{
 	#endif /* _lib_shl_load */
 	#ifdef _lib_loadbind
 	#   define SHOPT_FS_3D	1
-	#endif /* _lib_loadbind */
+	#endif /* _lib_dllload */
+	#ifdef _lib_loadbind
+	#   define SHOPT_FS_3D	1
+	#endif /* _lib_dllload */
 	#ifdef SHOPT_FS_3D
 	#   undef mount
 	#   include	<fs3d.h>

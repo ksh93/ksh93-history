@@ -1,3 +1,27 @@
+################################################################
+#                                                              #
+#           This software is part of the ast package           #
+#              Copyright (c) 1982-2000 AT&T Corp.              #
+#      and it may only be used by you under license from       #
+#                     AT&T Corp. ("AT&T")                      #
+#       A copy of the Source Code Agreement is available       #
+#              at the AT&T Internet web site URL               #
+#                                                              #
+#     http://www.research.att.com/sw/license/ast-open.html     #
+#                                                              #
+#     If you received this software without first entering     #
+#       into a license with AT&T, you have an infringing       #
+#           copy and cannot use it without violating           #
+#             AT&T's intellectual property rights.             #
+#                                                              #
+#               This software was created by the               #
+#               Network Services Research Center               #
+#                      AT&T Labs Research                      #
+#                       Florham Park NJ                        #
+#                                                              #
+#              David Korn <dgk@research.att.com>               #
+#                                                              #
+################################################################
 function err_exit
 {
 	print -u2 -n "\t"
@@ -94,7 +118,7 @@ if	[[ ! . -ot $file ]]
 then	err_exit ". should be older than $file"
 fi
 if	[[ /bin -nt $file ]]
-then	err_exit "$file should be newer than /tmp"
+then	err_exit "$file should be newer than /bin"
 fi
 if	[[ $file != /tmp/* ]]
 then	err_exit "$file should match /tmp/*"
@@ -155,4 +179,21 @@ test -d .  -a '(' ! -f . ')' || err_exit 'test not working'
 if	[[ '!' != ! ]]
 then	err_exit 'quoting unary operator not working'
 fi
+chmod 600 $file
+exec 4> $file
+print -u4 foobar
+if	[[ ! -s $file ]]
+then	err_exit "-s: $file should be non-zero"
+fi
+if	[[ 011 -ne 11 ]]
+then	err_exit "leading zeros in arithmetic compares not ignored"
+fi
+{
+	set -x
+	[[ foo > bar ]]
+} 2> /dev/null || { set +x; err_exit "foo<bar with -x enabled" ;}
+set +x
+(
+	eval "[[ (a) ]]"
+) 2> /dev/null || err_exit "[[ (a) ]] not working"
 exit $((Errors))

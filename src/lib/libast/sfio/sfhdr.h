@@ -1,80 +1,53 @@
-/*
- * CDE - Common Desktop Environment
- *
- * Copyright (c) 1993-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
- */
 /***************************************************************
 *                                                              *
-*                      AT&T - PROPRIETARY                      *
+*           This software is part of the ast package           *
+*              Copyright (c) 1985-2000 AT&T Corp.              *
+*      and it may only be used by you under license from       *
+*                     AT&T Corp. ("AT&T")                      *
+*       A copy of the Source Code Agreement is available       *
+*              at the AT&T Internet web site URL               *
 *                                                              *
-*         THIS IS PROPRIETARY SOURCE CODE LICENSED BY          *
-*                          AT&T CORP.                          *
+*     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*                Copyright (c) 1995 AT&T Corp.                 *
-*                     All Rights Reserved                      *
-*                                                              *
-*           This software is licensed by AT&T Corp.            *
-*       under the terms and conditions of the license in       *
-*       http://www.research.att.com/orgs/ssr/book/reuse        *
+*     If you received this software without first entering     *
+*       into a license with AT&T, you have an infringing       *
+*           copy and cannot use it without violating           *
+*             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
-*           Software Engineering Research Department           *
-*                    AT&T Bell Laboratories                    *
+*               Network Services Research Center               *
+*                      AT&T Labs Research                      *
+*                       Florham Park NJ                        *
 *                                                              *
-*               For further information contact                *
-*                     gsf@research.att.com                     *
+*             Glenn Fowler <gsf@research.att.com>              *
+*              David Korn <dgk@research.att.com>               *
+*               Phong Vo <kpv@research.att.com>                *
 *                                                              *
 ***************************************************************/
 #ifndef _SFHDR_H
 #define _SFHDR_H	1
+#ifndef _BLD_sfio
+#define _BLD_sfio	1
+#endif
 
 /*	Internal definitions for sfio.
 **	Written by Kiem-Phong Vo (07/16/90)
-**	AT&T Bell Laboratories
+**	AT&T Labs
 */
 
 #include	"FEATURE/sfio"
 #include	"sfio_t.h"
 
+/* avoid conflict with BSDI's SF_APPEND */
+#undef SF_APPEND
+
 /* file system info */
 #if _PACKAGE_ast
 
-#if defined(__STDPP__directive) && defined(__STDPP__hide)
-__STDPP__directive pragma pp:hide ecvt fcvt getpagesize
-#else
-#define ecvt		______ecvt
-#define fcvt		______fcvt
-#define getpagesize	______getpagesize
-#endif
-
 #include	<ast.h>
+#include	<ast_time.h>
 #include	<ast_tty.h>
 #include	<ls.h>
-
-#if defined(__STDPP__directive) && defined(__STDPP__hide)
-__STDPP__directive pragma pp:nohide ecvt fcvt getpagesize
-#else
-#undef	ecvt
-#undef	fcvt
-#undef	getpagesize
-#endif
 
 #if _mem_st_blksize_stat
 #define _stat_blksize	1
@@ -84,27 +57,74 @@ __STDPP__directive pragma pp:nohide ecvt fcvt getpagesize
 #define _lib_locale	1
 #endif
 
-#else
+#else /*!_PACKAGE_ast*/
 
-#if __STD_C
-#include	<stdarg.h>
-#include	<stddef.h>
+#if __mips == 2 && !defined(_NO_LARGEFILE64_SOURCE)
+#define _NO_LARGEFILE64_SOURCE  1
+#endif
+#if !defined(_NO_LARGEFILE64_SOURCE) && \
+	_lib_lseek64 && _lib_stat64 && _lib_mmap64 && _typ_off64_t && _typ_struct_stat64
+#	if !defined(_LARGEFILE64_SOURCE)
+#	define _LARGEFILE64_SOURCE     1
+#	endif
 #else
-#include	<varargs.h>
+#	undef  _LARGEFILE64_SOURCE
+#endif
+
+/* when building the binary compatibility package, a number of header files
+   are not needed and they may get in the way so we remove them here.
+*/
+#if _SFBINARY_H
+#undef  _hdr_time
+#undef  _sys_time
+#undef  _sys_stat
+#undef  _hdr_stat
+#undef  _hdr_filio
+#undef  _sys_filio
+#undef  _hdr_unistd
+#undef  _lib_poll
+#undef  _stream_peek
+#undef  _socket_peek
+#undef  _hdr_vfork
+#undef  _sys_vfork
+#undef  _lib_vfork
+#undef  _hdr_floatingpoint
+#undef  _hdr_float
+#undef  _hdr_values
+#undef  _hdr_math
+#undef  _sys_mman
+#undef  _hdr_mman
+#undef  _sys_ioctl
+#endif
+
+#if _hdr_stdlib
+#include	<stdlib.h>
+#endif
+
+#if _hdr_string
+#include	<string.h>
 #endif
 
 #if _hdr_time
 #include	<time.h>
 #endif
-#if _sys_types
-#include	<sys/types.h>
+#if _sys_time
+#include	<sys/time.h>
 #endif
-#if _hdr_stat
-#include	<stat.h>
-#else
+
 #if _sys_stat
 #include	<sys/stat.h>
+#else
+#if _hdr_stat
+#include	<stat.h>
+#ifndef _sys_stat
+#define	_sys_stat	1
 #endif
+#endif
+#endif /*_sys_stat*/
+
+#ifndef _sys_stat
+#define _sys_stat	0
 #endif
 
 #include	<fcntl.h>
@@ -121,22 +141,32 @@ __STDPP__directive pragma pp:nohide ecvt fcvt getpagesize
 #endif /*_FIOCLEX*/
 #endif /*F_SETFD*/
 
+#if _hdr_unistd
+#include	<unistd.h>
+#endif
+
 #endif /*_PACKAGE_ast*/
 
+#include	<errno.h>
+#include	<ctype.h>
+
+#if _lib_select
+#undef _lib_poll
+#else
 #if _lib_poll_fd_1 || _lib_poll_fd_2
 #define _lib_poll	1
 #endif
-
-#if _lib_select
-#include	<sys/time.h>
-#if _lib_poll
-#undef _lib_poll
-#endif
-#endif
+#endif /*_lib_select_*/
 
 #if _lib_poll
 #include	<poll.h>
+
+#if _lib_poll_fd_1
+#define SFPOLL(pfd,n,tm)	poll((pfd),(ulong)(n),(tm))
+#else
+#define SFPOLL(pfd,n,tm)	poll((ulong)(n),(pfd),(tm))
 #endif
+#endif /*_lib_poll*/
 
 #if _stream_peek
 #include	<stropts.h>
@@ -146,60 +176,140 @@ __STDPP__directive pragma pp:nohide ecvt fcvt getpagesize
 #include	<sys/socket.h>
 #endif
 
-#if _typ_long_double
-#define Double_t	long double
-#define _sfio_cvt	1
-#else
-#define Double_t	double
-#	if _i386_cvt
-#	define _sfio_cvt	0
-#	else
-#	define _sfio_cvt	1
-#	endif
+#ifndef X_OK	/* executable */
+#define X_OK	01
 #endif
 
-#include	<errno.h>
-#include	<ctype.h>
+#if _lib_vfork && !defined(sparc) && !defined(__sparc)
+#if _hdr_vfork
+#include	<vfork.h>
+#endif
+#if _sys_vfork
+#include	<sys/vfork.h>
+#endif
+#define fork	vfork
+#endif
 
-/* NOTE: these flags share the same space with the public flags */
-#define SF_MMAP		0010000	/* in memory mapping mode		*/
-#define SF_PROCESS	0020000	/* this stream is sfpopen		*/
-#define SF_BOTH		0040000	/* both read/write			*/
-#define SF_HOLE		0100000	/* a hole of zero's was created		*/
+#if _lib_unlink
+#define remove	unlink
+#endif
+
+#if _hdr_math
+#include	<math.h>
+#ifdef MAXFLOAT	/* on BSDI, this is defined twice in machine/values.h and math.h */
+#undef MAXFLOAT	/* we don't need it anyway, so we zap it to avoid compiler warnings */
+#endif
+#endif
+
+#if !defined(MAXDOUBLE) && _hdr_values
+#include	<values.h>
+#endif
+
+#if !defined(MAXDOUBLE) && _hdr_floatingpoint
+#include	<floatingpoint.h>
+#endif
+
+#if !defined(MAXDOUBLE) && _hdr_float
+#include	<float.h>
+#endif
+
+#if !_ast_fltmax_double
+#if !defined(MAXDOUBLE) && defined(DBL_MAX)
+#define MAXDOUBLE	DBL_MAX
+#endif
+#if !defined(MAXDOUBLE)
+#define MAXDOUBLE	1.79769313486231570e+308
+#endif
+
+#if _lib_qfrexp && _lib_qldexp
+#define _has_expfuncs	1
+#define frexp		qfrexp
+#define ldexp		qldexp
+#else
+#define _has_expfuncs	0
+#endif
+
+#endif/*_ast_fltmax_double*/
+
+/* 64-bit vs 32-bit file stuff */
+#if _sys_stat
+#ifdef _LARGEFILE64_SOURCE
+typedef struct stat64	Stat_t;
+#define	lseek		lseek64
+#define stat		stat64
+#define fstat		fstat64
+#define off_t		off64_t
+#else
+typedef struct stat	Stat_t;
+#endif
+#endif
+
+/* to get rid of pesky compiler warnings */
+#if __STD_C
+#define NOTUSED(x)	(void)(x)
+#else
+#define NOTUSED(x)	(&x,1)
+#endif
+
+/* Private flags */
+#define SF_MMAP		00000001	/* in memory mapping mode		*/
+#define SF_PROCESS	00000002	/* this stream is sfpopen		*/
+#define SF_BOTH		00000004	/* both read/write			*/
+#define SF_HOLE		00000010	/* a hole of zero's was created		*/
+#define SF_NULL		00000020	/* stream is /dev/null			*/
+#define SF_SEQUENTIAL	00000040	/* sequential access			*/
+#define SF_JUSTSEEK	00000100	/* just did a sfseek			*/
+
+/* private flags that must be cleared in sfclrlock */
+#define SF_DCDOWN	00001000	/* recurse down the discipline stack	*/
+#define SF_MVSIZE	00002000
+#define SFMVSET(f)	(((f)->size *= SF_NMAP), ((f)->bits |= SF_MVSIZE) )
+#define SFMVUNSET(f)	(!((f)->bits&SF_MVSIZE) ? 0 : \
+				(((f)->bits &= ~SF_MVSIZE), ((f)->size /= SF_NMAP)) )
+#define SFCLRBITS(f)	(SFMVUNSET(f), ((f)->bits &= ~(SF_DCDOWN|SF_MVSIZE)) )
 
 /* bits for the mode field, SF_INIT defined in sfio_t.h */
-#define SF_RC		0000010	/* peeking for a record			*/
-#define SF_RV		0000020	/* reserve a block of data without read	*/
-#define SF_LOCK		0000040	/* stream is locked for io op		*/
-#define SF_PUSH		0000100	/* stream has been pushed		*/
-#define SF_POOL		0000200	/* stream is in a pool but not current	*/
-#define SF_PEEK		0000400	/* there is a pending peek		*/
-#define SF_PKRD		0001000	/* did a peek read			*/
-#define SF_GETR		0002000	/* did a getr on this stream		*/
-#define SF_SYNCED	0004000	/* stream was synced			*/
-#define SF_STDIO	0010000	/* given up the buffer to stdio		*/
-#define SF_AVAIL	0020000	/* was closed, available for reuse	*/
-#define SF_OPEN		0040000	/* file descriptor was from sfopen()	*/
-#define SF_LOCAL	0100000	/* sentinel for a local call		*/
+#define SF_RC		00000010	/* peeking for a record			*/
+#define SF_RV		00000020	/* reserve without read	or most write	*/
+#define SF_LOCK		00000040	/* stream is locked for io op		*/
+#define SF_PUSH		00000100	/* stream has been pushed		*/
+#define SF_POOL		00000200	/* stream is in a pool but not current	*/
+#define SF_PEEK		00000400	/* there is a pending peek		*/
+#define SF_PKRD		00001000	/* did a peek read			*/
+#define SF_GETR		00002000	/* did a getr on this stream		*/
+#define SF_SYNCED	00004000	/* stream was synced			*/
+#define SF_STDIO	00010000	/* given up the buffer to stdio		*/
+#define SF_AVAIL	00020000	/* was closed, available for reuse	*/
+#define SF_LOCAL	00100000	/* sentinel for a local call		*/
+
+/* mode bits usable on the flags argument of sfnew() because they are >16-bit  */
+#define SF_OPEN		00200000	/* just opened, ie, seek == 0		*/
 
 #ifdef DEBUG
-_BEGIN_EXTERNS_
-extern void abort();
-_END_EXTERNS_
 #define ASSERT(p)	((p) ? 0 : (abort(),0) )
 #else
 #define ASSERT(p)
 #endif
 
 /* short-hands */
-#define uchar		unsigned char
-#define ulong		unsigned long
-#define uint		unsigned int
+#define NIL(t)		((t)0)
 #define reg		register
-#define REG		register
+#ifndef uchar
+#define uchar		unsigned char
+#endif
+#ifndef ulong
+#define ulong		unsigned long
+#endif
+#ifndef uint
+#define uint		unsigned int
+#endif
+#ifndef ushort
+#define ushort		unsigned short
+#endif
 
 #define SECOND		1000	/* millisecond units */
 
+/* macros do determine stream types from Stat_t data */
 #ifndef S_IFMT
 #define S_IFMT	0
 #endif
@@ -227,98 +337,187 @@ _END_EXTERNS_
 #endif
 
 #ifndef S_ISFIFO
-#ifdef S_IFIFO
-#define S_ISFIFO(m)	(((m)&S_IFIFO) == S_IFIFO)
-#else
-#define S_ISFIFO(m)	(0)
+#	ifdef S_IFIFO
+#		define S_ISFIFO(m)	(((m)&S_IFIFO) == S_IFIFO)
+#	else
+#		define S_ISFIFO(m)	(0)
+#	endif
 #endif
+
+#ifdef S_IRUSR
+#define SF_CREATMODE	(S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH)
+#else
+#define SF_CREATMODE	0666
 #endif
 
 /* set close-on-exec */
 #ifdef F_SETFD
-#ifndef FD_CLOEXEC
-#define FD_CLOEXEC	1
-#endif /*FD_CLOEXEC*/
-#define SETCLOEXEC(fd)	((void)fcntl((fd),F_SETFD,FD_CLOEXEC))
+#	ifndef FD_CLOEXEC
+#		define FD_CLOEXEC	1
+#	endif /*FD_CLOEXEC*/
+#	define SETCLOEXEC(fd)		((void)fcntl((fd),F_SETFD,FD_CLOEXEC))
 #else
-#ifdef FIOCLEX
-#define SETCLOEXEC(fd)	((void)ioctl((fd),FIOCLEX,0))
-#else
-#define SETCLOEXEC(fd)
-#endif /*FIOCLEX*/
+#	ifdef FIOCLEX
+#		define SETCLOEXEC(fd)	((void)ioctl((fd),FIOCLEX,0))
+#	else
+#		define SETCLOEXEC(fd)
+#	endif /*FIOCLEX*/
 #endif /*F_SETFD*/
 
 /* see if we can use memory mapping for io */
-#if _lib_mmap
+#if !_PACKAGE_ast && _mmap_worthy
+#	ifdef _LARGEFILE64_SOURCE
+#		undef	mmap
+#	endif
 #	if _hdr_mman
 #		include	<mman.h>
-#	else
-#		if _sys_mman
-#			include	<sys/mman.h>
+#	endif
+#	if _sys_mman
+#		include	<sys/mman.h>
+#	endif
+#	ifdef _LARGEFILE64_SOURCE
+#		ifndef off_t
+#			define off_t		off64_t
 #		endif
+#		define mmap		mmap64
 #	endif
 #endif
 
 /* function to get the decimal point for local environment */
 #if _lib_locale
 #include	<locale.h>
-#define GETDECIMAL(dc,lv) \
-	(dc ? dc : \
-	 (dc = ((lv = localeconv()) && lv->decimal_point && *lv->decimal_point) ? \
-	   *lv->decimal_point : '.' ) )
+#define SFSETLOCALE(decimal,thousand) \
+	{ struct lconv*	lv; \
+	  if(*(decimal) == 0) \
+	  { *(decimal) = '.'; \
+	    if((lv = localeconv())) \
+	    { if(lv->decimal_point && lv->decimal_point[0]) \
+	    	*(decimal) = lv->decimal_point[0]; \
+	      if(thousand && lv->thousands_sep && lv->thousands_sep[0]) \
+	    	*(thousand) = lv->thousands_sep[0]; \
+	    } \
+	  } \
+	}
 #else
-#define GETDECIMAL(dc,lv)	('.')
+#define SFSETLOCALE(decimal,thousand)
 #endif
 
 /* stream pool structure. */
-typedef struct _sfpl_
-{	struct _sfpl_*	next;
+typedef struct _sfpool_s	Sfpool_t;
+struct _sfpool_s
+{	Sfpool_t*	next;
 	int		mode;		/* type of pool			*/
 	int		s_sf;		/* size of pool array		*/
 	int		n_sf;		/* number currently in pool	*/
 	Sfio_t**	sf;		/* array of streams		*/
 	Sfio_t*		array[3];	/* start with 3			*/
-} Sfpool_t;
+};
 
 /* reserve buffer structure */
-typedef struct _rsrv_
-{	struct _rsrv_*	next;		/* link list			*/
+typedef struct _sfrsrv_s	Sfrsrv_t;
+struct _sfrsrv_s
+{	Sfrsrv_t*	next;		/* link list			*/
 	Sfio_t*		sf;		/* stream associated with	*/
-	int		slen;		/* last string length		*/
-	int		size;		/* buffer size			*/
+	ssize_t		slen;		/* last string length		*/
+	ssize_t		size;		/* buffer size			*/
 	uchar		data[1];	/* data buffer			*/
-} Sfrsrv_t;
+};
 
-/* extension structures for sfvprintf/sfvscanf */
-typedef int(*Argf_s)_ARG_((char,char*,uint));
-typedef int(*Extf_s)_ARG_((Sfio_t*,int,int,char**));
-typedef int(*Argf_p)_ARG_((int,char*,char*,int));
-typedef int(*Extf_p)_ARG_((char*,int,int,char**,int,char*,int));
-typedef struct _fa_
-{
-	char		*form;		/* format string		*/
+/* extensions to sfvprintf/sfvscanf */
+#define FP_SET(fp,fn)	(fp < 0 ? (fn += 1) : (fn = fp) )
+#define FP_WIDTH	0
+#define FP_PRECIS	1
+#define FP_BASE		2
+#define FP_STR		3
+#define FP_SIZE		4
+#define FP_INDEX	5	/* index size	*/
+
+typedef struct _fmt_s		Fmt_t;
+typedef struct _fmtpos_s	Fmtpos_t;
+typedef union
+{	int		i, *ip;
+	long		l, *lp;
+	short		h, *hp;
+	uint		ui;
+	ulong		ul;
+	ushort		uh;
+	Sflong_t	ll, *llp;
+	Sfulong_t	lu;
+	Sfdouble_t	ld;
+	double		d;
+	float		f;
+	char		c, *s, **sp;
+	Void_t		*vp;
+	Sffmt_t		*ft;
+} Argv_t;
+
+struct _fmt_s
+{	char*		form;		/* format string		*/
 	va_list		args;		/* corresponding arglist	*/
-	union
-	{ Argf_s	s;		/* argf for sfvscanf		*/
-	  Argf_p	p;		/* argf for sfvprintf		*/
-	}		argf;
-	union
-	{ Extf_s	s;		/* extf for sfvscanf		*/
-	  Extf_p	p;		/* extf for sfvprintf		*/
-	}		extf;
-	struct _fa_	*next;		/* next on the stack		*/
-} Fa_t;
 
-/* memory management for the Fa_t structures */
-#define FAMALLOC(f)	((f = _Fafree) ? (_Fafree = f->next, f) : \
-				(f = (Fa_t*)malloc(sizeof(Fa_t))))
-#define FAFREE(f)	(f->next = _Fafree, _Fafree = f)
+	char*		oform;		/* original format string	*/
+	va_list		oargs;		/* original arg list		*/
+	int		argn;		/* number of args already used	*/
+	Fmtpos_t*	fp;		/* position list		*/
+
+	Sffmt_t*	ft;		/* formatting environment	*/
+	Sffmtevent_f	eventf;		/* event function		*/
+	Fmt_t*		next;		/* stack frame pointer		*/
+};
+
+struct _fmtpos_s
+{	Sffmt_t	ft;			/* environment			*/
+	Argv_t	argv;			/* argument value		*/
+	int	fmt;			/* original format		*/
+	int	need[FP_INDEX];		/* positions depending on	*/
+};
+
+#define LEFTP		'('
+#define RIGHTP		')'
+#define QUOTE		'\''
+
+#ifndef CHAR_BIT
+#define CHAR_BIT	8
+#endif
+
+#define FMTSET(ft, frm,ags, fv, sz, flgs, wid,pr,bs, ts,ns) \
+	((ft->form = (char*)frm), va_copy(ft->args,ags), \
+	 (ft->fmt = fv), (ft->size = sz), \
+	 (ft->flags = (flgs&SFFMT_SET)), \
+	 (ft->width = wid), (ft->precis = pr), (ft->base = bs), \
+	 (ft->t_str = ts), (ft->n_str = ns) )
+#define FMTGET(ft, frm,ags, fv, sz, flgs, wid,pr,bs) \
+	((frm = ft->form), va_copy(ags,ft->args), (fv = ft->fmt), (sz = ft->size), \
+	 (flgs = (flgs&~(SFFMT_SET))|(ft->flags&SFFMT_SET)), \
+	 (wid = ft->width), (pr = ft->precis), (bs = ft->base) )
+#define FMTCMP(sz, type, maxtype) \
+	(sz == sizeof(type) || (sz == 0 && sizeof(type) == sizeof(maxtype)) || \
+	 (sz == 64 && sz == sizeof(type)*CHAR_BIT) )
+
+/* format flags&types, must coexist with those in sfio.h */
+#define SFFMT_FORBIDDEN 007777700	/* for sfio.h	*/
+#define SFFMT_INT	000000001	/* %d,%i 	*/
+#define SFFMT_UINT	000000002	/* %u, etc.	*/
+#define SFFMT_FLOAT	000000004	/* %f,e,g etc.	*/
+#define SFFMT_BYTE	000000010	/* %c		*/
+#define SFFMT_POINTER	000000020	/* %p, %n	*/
+#define SFFMT_CLASS	000000040	/* %[		*/
+#define SFFMT_GFORMAT	010000000	/* %g		*/
+#define SFFMT_EFORMAT	020000000	/* %e		*/
+#define SFFMT_MINUS	040000000	/* minus sign	*/
+
+#define SFFMT_TYPES	(SFFMT_SHORT|SFFMT_LONG|SFFMT_LLONG|SFFMT_LDOUBLE|SFFMT_IFLAG)
+
+/* memory management for the Fmt_t structures */
+#define FMTALLOC(f)	((f = _Fmtfree) ? (_Fmtfree = NIL(Fmt_t*), f) : \
+				(f = (Fmt_t*)malloc(sizeof(Fmt_t))) )
+#define FMTFREE(f)	(_Fmtfree = _Fmtfree ? (free((Void_t*)_Fmtfree),f) : f )
 
 /* local variables used across sf-functions */
+#define _Sfpage		(_Sfextern.sf_page)
 #define _Sfpool		(_Sfextern.sf_pool)
 #define _Sffree		(_Sfextern.sf_free)
-#define _Fafree		(_Sfextern.fa_free)
-#define _Sfpage		(_Sfextern.sf_page)
+#define _Fmtfree	(_Sfextern.fmt_free)
 #define _Sfpmove	(_Sfextern.sf_pmove)
 #define _Sfstack	(_Sfextern.sf_stack)
 #define _Sfnotify	(_Sfextern.sf_notify)
@@ -326,27 +525,28 @@ typedef struct _fa_
 #define _Sfudisc	(&(_Sfextern.sf_udisc))
 #define _Sfcleanup	(_Sfextern.sf_cleanup)
 #define _Sfexiting	(_Sfextern.sf_exiting)
-typedef struct _sfext_
-{
-	Sfpool_t	sf_pool;
-	Sfio_t*		sf_free;
-	Fa_t*		fa_free;
-	int		sf_page;
-	int(*		sf_pmove)_ARG_((Sfio_t*, int));
-	Sfio_t*(*	sf_stack)_ARG_((Sfio_t*, Sfio_t*));
-	void(*		sf_notify)_ARG_((Sfio_t*, int, int));
-	int(*		sf_stdio)_ARG_((Sfio_t*));
-	Sfdisc_t	sf_udisc;
-	void(*		sf_cleanup)_ARG_((void));
-	int		sf_exiting;
+typedef struct _sfext_s
+{	ssize_t			sf_page;
+	struct _sfpool_s	sf_pool;
+	Sfio_t*			sf_free;
+	Fmt_t*			fmt_free;
+	int			(*sf_pmove)_ARG_((Sfio_t*, int));
+	Sfio_t*			(*sf_stack)_ARG_((Sfio_t*, Sfio_t*));
+	void			(*sf_notify)_ARG_((Sfio_t*, int, int));
+	int			(*sf_stdio)_ARG_((Sfio_t*, Void_t*));
+	struct _sfdisc_s	sf_udisc;
+	void			(*sf_cleanup)_ARG_((void));
+	int			sf_exiting;
 } Sfext_t;
 
 /* function to clear an sfio structure */
 #define SFCLEAR(f) \
 	((f)->next = (f)->endw = (f)->endr = (f)->endb = (f)->data = NIL(uchar*), \
-	 (f)->flags = 0, (f)->file = -1, (f)->extent = -1L, (f)->here = 0L, \
-	 (f)->getr = 0, (f)->mode = 0, (f)->size = -1, (f)->disc = NIL(Sfdisc_t*), \
-	 (f)->pool = NIL(Sfpool_t*), (f)->push = NIL(Sfio_t*))
+	 (f)->flags = 0, (f)->file = -1, \
+	 (f)->extent = (Sfoff_t)(-1), (f)->here = (Sfoff_t)0, \
+	 (f)->getr = 0, (f)->bits = 0, (f)->mode = 0, (f)->size = (ssize_t)(-1), \
+	 (f)->disc = NIL(Sfdisc_t*), (f)->pool = NIL(Sfpool_t*), \
+	 (f)->push = NIL(Sfio_t*) )
 
 /* get the real value of a byte in a coded long or ulong */
 #define SFUVALUE(v)	(((ulong)(v))&(SF_MORE-1))
@@ -357,15 +557,44 @@ typedef struct _sfext_
 
 /* grain size for buffer increment */
 #define SF_GRAIN	1024
-#define SF_PAGE		(SF_GRAIN*sizeof(int)*2)
+#define SF_PAGE		((ssize_t)(SF_GRAIN*sizeof(int)*2))
+
+/* after a seek, we may limit buffer filling */
+#define SFUNBUFFER(f,n)	(n >= 4*SF_GRAIN && \
+			 ((n%SF_GRAIN) == 0 || \
+			  (ssize_t)n >= SF_PAGE-SF_GRAIN || \
+			  (ssize_t)n >= f->size-SF_GRAIN ) )
 
 /* number of pages to memory map at a time */
 #define SF_NMAP		8
 
+/* set/unset sequential states for mmap */
+#if _lib_madvise && defined(MADV_SEQUENTIAL) && defined(MADV_NORMAL)
+#define SFMMSEQON(f,a,s)	(void)(madvise((caddr_t)(a),(size_t)(s),MADV_SEQUENTIAL) )
+#define SFMMSEQOFF(f,a,s)	(void)(madvise((caddr_t)(a),(size_t)(s),MADV_NORMAL) )
+#else
+#define SFMMSEQON(f,a,s)
+#define SFMMSEQOFF(f,a,s)
+#endif
+
+#define SFMUNMAP(f,a,s)		(munmap((caddr_t)(a),(size_t)(s)), \
+				 ((f)->endb = (f)->endr = (f)->endw = (f)->next = \
+				  (f)->data = NIL(uchar*)) )
+
+#ifndef MAP_VARIABLE
+#define MAP_VARIABLE	0
+#endif
+#ifndef _mmap_fixed
+#define _mmap_fixed	0
+#endif
+
 /* the bottomless bit bucket */
 #define DEVNULL		"/dev/null"
-#define SFSETNULL(f)	((f)->extent = -1, (f)->flags |= SF_HOLE)
-#define SFISNULL(f)	((f)->extent < 0 && ((f)->flags&SF_HOLE) )
+#define SFSETNULL(f)	((f)->extent = (Sfoff_t)(-1), (f)->bits |= SF_NULL)
+#define SFISNULL(f)	((f)->extent < 0 && ((f)->bits&SF_NULL) )
+
+#define SFKILL(f)	((f)->mode = (SF_AVAIL|SF_LOCK) )
+#define SFKILLED(f)	(((f)->mode&(SF_AVAIL|SF_LOCK)) == (SF_AVAIL|SF_LOCK) )
 
 /* exception types */
 #define SF_EDONE	0	/* stop this operation and return	*/
@@ -375,7 +604,11 @@ typedef struct _sfext_
 
 #define SETLOCAL(f)	((f)->mode |= SF_LOCAL)
 #define GETLOCAL(f,v)	((v) = ((f)->mode&SF_LOCAL), (f)->mode &= ~SF_LOCAL, (v))
-#define SFSK(f,a,o,d)	(SETLOCAL(f),sfsk(f,(long)a,o,d))
+#define SFWRALL(f)	((f)->mode |= SF_RV)
+#define SFISALL(f,v)	((((v) = (f)->mode&SF_RV) ? ((f)->mode &= ~SF_RV) : 0), \
+			 ((v) || (f)->extent < 0 || \
+			  ((f)->flags&(SF_SHARE|SF_APPENDWR|SF_WHOLE)) ) )
+#define SFSK(f,a,o,d)	(SETLOCAL(f),sfsk(f,(Sfoff_t)a,o,d))
 #define SFRD(f,b,n,d)	(SETLOCAL(f),sfrd(f,(Void_t*)b,n,d))
 #define SFWR(f,b,n,d)	(SETLOCAL(f),sfwr(f,(Void_t*)b,n,d))
 #define SFSYNC(f)	(SETLOCAL(f),sfsync(f))
@@ -387,29 +620,46 @@ typedef struct _sfext_
 #define SFREAD(f,s,n)	(SETLOCAL(f),sfread(f,s,n))
 #define SFSEEK(f,p,t)	(SETLOCAL(f),sfseek(f,p,t))
 #define SFNPUTC(f,c,n)	(SETLOCAL(f),sfnputc(f,c,n))
+#define SFRAISE(f,e,d)	(SETLOCAL(f),sfraise(f,e,d))
 
 /* lock/open a stream */
 #define SFMODE(f,l)	((f)->mode & ~(SF_RV|SF_RC|((l) ? SF_LOCK : 0)) )
-#define SFLOCK(f,l)	((f)->mode |= SF_LOCK, (f)->endr = (f)->endw = (f)->data)
+#define SFLOCK(f,l)	(void)((f)->mode |= SF_LOCK, (f)->endr = (f)->endw = (f)->data)
 #define _SFOPEN(f)	((f)->endr=((f)->mode == SF_READ) ? (f)->endb : (f)->data, \
 			 (f)->endw=(((f)->mode == SF_WRITE) && !((f)->flags&SF_LINE)) ? \
 				      (f)->endb : (f)->data )
-#define SFOPEN(f,l)	((l) ? 0 : ((f)->mode &= ~(SF_LOCK|SF_RC|SF_RV), _SFOPEN(f), 0) )
+#define SFOPEN(f,l)	(void)((l) ? 0 : \
+				((f)->mode &= ~(SF_LOCK|SF_RC|SF_RV), _SFOPEN(f), 0) )
 
 /* check to see if the stream can be accessed */
 #define SFFROZEN(f)	((f)->mode&(SF_PUSH|SF_LOCK|SF_PEEK) ? 1 : \
-			 ((f)->mode&SF_STDIO) ? (*_Sfstdio)(f) : 0)
+			 ((f)->mode&SF_STDIO) ? (*_Sfstdio)(f,NIL(Void_t*)) : 0)
 
 
 /* set discipline code */
-#define SFDISC(f,disc,iof,local) \
-	{	Sfdisc_t* d; \
-		if(!(disc)) \
-			d = (disc) = (f)->disc; \
-		else 	d = (local) ? (disc) : ((disc) = (disc)->disc); \
+#define SFDISC(f,dc,iof) \
+	do {	Sfdisc_t* d; \
+		if(!(dc)) \
+			d = (dc) = (f)->disc; \
+		else 	d = (f->bits&SF_DCDOWN) ? ((dc) = (dc)->disc) : (dc); \
 		while(d && !(d->iof))	d = d->disc; \
-		if(d)	(disc) = d; \
-	}
+		if(d)	(dc) = d; \
+	} while (0)
+#define SFDCRD(f,buf,n,dc,rv) \
+	do {	int		dcdown = f->bits&SF_DCDOWN; f->bits |= SF_DCDOWN; \
+		rv = (*dc->readf)(f,buf,n,dc); \
+		if(!dcdown)	f->bits &= ~SF_DCDOWN; \
+	} while (0)
+#define SFDCWR(f,buf,n,dc,rv) \
+	do {	int		dcdown = f->bits&SF_DCDOWN; f->bits |= SF_DCDOWN; \
+		rv = (*dc->writef)(f,buf,n,dc); \
+		if(!dcdown)	f->bits &= ~SF_DCDOWN; \
+	} while (0)
+#define SFDCSK(f,addr,type,dc,rv) \
+	do {	int		dcdown = f->bits&SF_DCDOWN; f->bits |= SF_DCDOWN; \
+		rv = (*dc->seekf)(f,addr,type,dc); \
+		if(!dcdown)	f->bits &= ~SF_DCDOWN; \
+	} while (0)
 
 /* fast peek of a stream */
 #define _SFAVAIL(f,s,n)	((n) = (f)->endb - ((s) = (f)->next) )
@@ -419,8 +669,8 @@ typedef struct _sfext_
 				((n) = SFFLSBUF(f,-1), (s) = (f)->next, (n)) )
 
 /* malloc and free of streams */
-#define SFFREE(f)	(f->push = _Sffree, _Sffree = f)
-#define SFALLOC(f)	((f = _Sffree) ? (_Sffree = f->push, f) : \
+#define SFFREE(f)	((_Sffree ? (free((Void_t*)_Sffree),0) : 0), _Sffree = f)
+#define SFALLOC(f)	((f = _Sffree) ? (_Sffree = NIL(Sfio_t*), f) : \
 				   (f = (Sfio_t*)malloc(sizeof(Sfio_t))))
 
 /* more than this for a line buffer, we might as well flush */
@@ -430,17 +680,20 @@ typedef struct _sfext_
 #define CLOSE(f)	{ while(close(f) < 0 && errno == EINTR) errno = 0; }
 
 /* string stream extent */
-#define SFSTRSIZE(f)	{ reg long s = (f)->next - (f)->data; \
+#define SFSTRSIZE(f)	{ reg Sfoff_t s = (f)->next - (f)->data; \
 			  if(s > (f)->here) \
 			    { (f)->here = s; if(s > (f)->extent) (f)->extent = s; } \
 			}
 
 /* control flags for open() */
-#ifndef O_CREAT	/* research UNIX */
-#define NO_OFLAGS
+#ifdef O_CREAT
+#define _has_oflags	1
+#else	/* for example, research UNIX */
+#define _has_oflags	0
 #define O_CREAT		004
 #define O_TRUNC		010
 #define O_APPEND	020
+#define O_EXCL		040
 
 #ifndef O_RDONLY
 #define	O_RDONLY	000
@@ -459,6 +712,9 @@ typedef struct _sfext_
 #ifndef O_TEXT
 #define O_TEXT		000
 #endif
+#ifndef O_TEMPORARY
+#define O_TEMPORARY	000
+#endif
 
 #define	SF_RADIX	64	/* maximum integer conversion base */
 
@@ -470,10 +726,12 @@ typedef struct _sfext_
 #define SF_MAXLONG	((long)(((ulong)~0L) >> 1))
 #endif
 
+#define SF_MAXCHAR	((uchar)(~0))
+
 /* floating point to ascii conversion */
 #define SF_MAXEXP10	6
 #define SF_MAXPOW10	(1 << SF_MAXEXP10)
-#if _typ_long_double
+#if !_ast_fltmax_double
 #define SF_FDIGITS	1024		/* max allowed fractional digits */
 #define SF_IDIGITS	(8*1024)	/* max number of digits in int part */
 #else
@@ -486,18 +744,30 @@ typedef struct _sfext_
 #define _Sfpos10	(_Sftable.sf_pos10)
 #define _Sfneg10	(_Sftable.sf_neg10)
 #define _Sfdec		(_Sftable.sf_dec)
-#define _Sfv36		(_Sftable.sf_v36)
-#define _Sfvmax		(_Sftable.sf_vmax)
 #define _Sfdigits	(_Sftable.sf_digits)
+#define _Sfcvinitf	(_Sftable.sf_cvinitf)
+#define _Sfcvinit	(_Sftable.sf_cvinit)
+#define _Sffmtposf	(_Sftable.sf_fmtposf)
+#define _Sffmtintf	(_Sftable.sf_fmtintf)
+#define _Sfcv36		(_Sftable.sf_cv36)
+#define _Sfcv64		(_Sftable.sf_cv64)
+#define _Sftype		(_Sftable.sf_type)
 typedef struct _sftab_
-{
-	Double_t	sf_pos10[SF_MAXEXP10];	/* positive powers of 10	*/
-	Double_t	sf_neg10[SF_MAXEXP10];	/* negative powers of 10	*/
-	char		sf_dec[200];	/* ascii reps of values < 100		*/
-	char		sf_v36[128];	/* digit translation for base <= 36	*/
-	char		sf_vmax[128];	/* digit translation for base > 36	*/
-	char*		sf_digits;	/* digits for non-standard bases	*/ 
+{	Sfdouble_t	sf_pos10[SF_MAXEXP10];	/* positive powers of 10	*/
+	Sfdouble_t	sf_neg10[SF_MAXEXP10];	/* negative powers of 10	*/
+	uchar		sf_dec[200];		/* ascii reps of values < 100	*/
+	char*		sf_digits;		/* digits for general bases	*/ 
+	int		(*sf_cvinitf)();	/* initialization function	*/
+	int		sf_cvinit;		/* initialization state		*/
+	Fmtpos_t*	(*sf_fmtposf)_ARG_((Sfio_t*,const char*,va_list,int));
+	char*		(*sf_fmtintf)_ARG_((const char*,int*));
+	uchar		sf_cv36[SF_MAXCHAR+1];	/* conversion for base [2-36]	*/
+	uchar		sf_cv64[SF_MAXCHAR+1];	/* conversion for base [37-64]	*/
+	uchar		sf_type[SF_MAXCHAR+1];	/* conversion formats&types	*/
 } Sftab_t;
+
+/* thread-safe macro/function to initialize _Sfcv* conversion tables */
+#define SFCVINIT()      (_Sfcvinit ? 1 : (_Sfcvinit = (*_Sfcvinitf)()) )
 
 /* sfucvt() converts decimal integers to ASCII */
 #define SFDIGIT(v,scale,digit) \
@@ -521,35 +791,33 @@ typedef struct _sftab_
 				{ digit = '8'; v -= 8*scale; } \
 			else	{ digit = '9'; v -= 9*scale; } \
 	}
-#define sfucvt(v,s,n,list) \
-	{ list = _Sfdec; \
-	  while((ulong)v >= 10000) \
-	  {	n = v; v = ((ulong)v)/10000; n = ((ulong)n) - ((ulong)v)*10000; \
-		SFDIGIT(n,1000,s[-4]); \
-		SFDIGIT(n,100,s[-3]); \
-		*--s = list[(n <<= 1)+1]; \
-		*--s = list[n]; \
-		s -= 2; \
+#define sfucvt(v,s,n,list,type,utype) \
+	{ while((utype)v >= 10000) \
+	  {	n = v; v = (type)(((utype)v)/10000); \
+		n = (type)((utype)n - ((utype)v)*10000); \
+	  	s -= 4; SFDIGIT(n,1000,s[0]); SFDIGIT(n,100,s[1]); \
+			s[2] = *(list = (char*)_Sfdec + (n <<= 1)); s[3] = *(list+1); \
 	  } \
-	  if(v >= 100) \
-	  {	if(v >= 1000) \
-		{	n = 2; \
-			SFDIGIT(v,1000,s[-4]); \
-		} \
-		else	n = 1; \
-		SFDIGIT(v,100,s[-3]); \
-	  	*--s = list[(v <<= 1)+1]; \
-		*--s = list[v]; \
-		s -= n; \
-	  } \
-	  else \
-	  {	*--s = list[(v <<= 1)+1]; \
-	  	if(v >= 20) \
-			*--s = list[v]; \
+	  if(v < 100) \
+	  { if(v < 10) \
+	    { 	s -= 1; s[0] = (char)('0'+v); \
+	    } else \
+	    { 	s -= 2; s[0] = *(list = (char*)_Sfdec + (v <<= 1)); s[1] = *(list+1); \
+	    } \
+	  } else \
+	  { if(v < 1000) \
+	    { 	s -= 3; SFDIGIT(v,100,s[0]); \
+			s[1] = *(list = (char*)_Sfdec + (v <<= 1)); s[2] = *(list+1); \
+	    } else \
+	    {	s -= 4; SFDIGIT(v,1000,s[0]); SFDIGIT(v,100,s[1]); \
+			s[2] = *(list = (char*)_Sfdec + (v <<= 1)); s[3] = *(list+1); \
+	    } \
 	  } \
 	}
 
 /* handy functions */
+#undef min
+#undef max
 #define min(x,y)	((x) < (y) ? (x) : (y))
 #define max(x,y)	((x) > (y) ? (x) : (y))
 
@@ -557,12 +825,10 @@ typedef struct _sftab_
 #if _PACKAGE_ast
 #define memclear(s,n)	memzero(s,n)
 #else
-#if _lib_bcopy
-#ifndef memcpy
+#if _lib_bcopy && !_lib_memcpy
 #define memcpy(to,fr,n)	bcopy((fr),(to),(n))
 #endif
-#endif
-#if _lib_bzero
+#if _lib_bzero && !_lib_memset
 #define memclear(s,n)	bzero((s),(n))
 #else
 #define memclear(s,n)	memset((s),'\0',(n))
@@ -580,11 +846,10 @@ typedef struct _sftab_
 	  case  3 : *to++ = *fr++; \
 	  case  2 : *to++ = *fr++; \
 	  case  1 : *to++ = *fr++; \
-	  case  0 : break; \
 	}
 #define MEMSET(s,c,n) \
 	switch(n) \
-	{ default : memset((char*)s,(char)c,n); s += n; break; \
+	{ default : memset((Void_t*)s,(int)c,n); s += n; break; \
 	  case  7 : *s++ = c; \
 	  case  6 : *s++ = c; \
 	  case  5 : *s++ = c; \
@@ -592,7 +857,6 @@ typedef struct _sftab_
 	  case  3 : *s++ = c; \
 	  case  2 : *s++ = c; \
 	  case  1 : *s++ = c; \
-	  case  0 : break; \
 	}
 
 _BEGIN_EXTERNS_
@@ -604,103 +868,115 @@ extern int		_sfpopen _ARG_((Sfio_t*, int, int));
 extern int		_sfpclose _ARG_((Sfio_t*));
 extern int		_sfmode _ARG_((Sfio_t*, int, int));
 extern int		_sftype _ARG_((const char*, int*));
-extern int		_sfexcept _ARG_((Sfio_t*, int, int, Sfdisc_t*));
-extern Sfrsrv_t*	_sfrsrv _ARG_((Sfio_t*, int));
+extern int		_sfexcept _ARG_((Sfio_t*, int, ssize_t, Sfdisc_t*));
+extern Sfrsrv_t*	_sfrsrv _ARG_((Sfio_t*, ssize_t));
 extern int		_sfsetpool _ARG_((Sfio_t*));
 extern void		_sfswap _ARG_((Sfio_t*, Sfio_t*, int));
-extern char*		_sfcvt _ARG_((Double_t, int, int*, int*, int));
+extern char*		_sfcvt _ARG_((Void_t*, int, int*, int*, int));
+extern char**		_sfgetpath _ARG_((char*));
+extern Sfdouble_t	_sfstrtod _ARG_((const char*, char**));
 
-#if _sfio_cvt
-extern Double_t		_sfstrtod _ARG_((const char*, char**));
+#if !_lib_strtod
 #define strtod		_sfstrtod
 #endif
 
 #ifndef errno
-extern int	errno;
+_astimport int		errno;
 #endif
+
+/* for portable encoding of double values */
+#if !__STDC__
 extern double	frexp _ARG_((double, int*));
 extern double	ldexp _ARG_((double,int));
+#endif
 
-extern int	getpagesize _ARG_((void));
-#ifndef __USLC__
-extern Void_t*	memccpy _ARG_((Void_t*, const Void_t*, int, size_t));
+#if !_hdr_mman && !_sys_mman
+extern Void_t*	mmap _ARG_((Void_t*, size_t, int, int, int, off_t));
+extern int	munmap _ARG_((Void_t*, size_t));
 #endif
 
 #if !_PACKAGE_ast
-extern void	bcopy _ARG_((const Void_t*, Void_t*, int));
-extern void	bzero _ARG_((Void_t*, int));
-extern Void_t*	malloc _ARG_((int));
-extern Void_t*	realloc _ARG_((Void_t*, int));
-extern void	free _ARG_((Void_t*));
+
+#if !__STDC__ && !_hdr_stdlib
+extern void	abort _ARG_((void));
+extern int	atexit _ARG_((void(*)(void)));
+extern char*	getenv _ARG_((const char*));
+extern void*	malloc _ARG_((size_t));
+extern void*	realloc _ARG_((void*, size_t));
+extern void	free _ARG_((void*));
 extern size_t	strlen _ARG_((const char*));
 extern char*	strcpy _ARG_((char*, const char*));
 
-extern Void_t*	memset _ARG_((Void_t*, int, size_t));
-extern Void_t*	memchr _ARG_((const Void_t*, int, size_t));
+extern Void_t*	memset _ARG_((void*, int, size_t));
+extern Void_t*	memchr _ARG_((const void*, int, size_t));
+extern Void_t*	memccpy _ARG_((void*, const void*, int, size_t));
 #ifndef memcpy
-extern Void_t*	memcpy _ARG_((Void_t*, const Void_t*, size_t));
+extern Void_t*	memcpy _ARG_((void*, const void*, size_t));
 #endif
-
-#if !_sfio_cvt
+#if !defined(strtod)
 extern double	strtod _ARG_((const char*, char**));
 #endif
+#if !defined(remove)
+extern int	remove _ARG_((const char*));
+#endif
+#endif /* !__STDC__ && !_hdr_stdlib */
 
+#if !_hdr_unistd
+extern int	close _ARG_((int));
+extern ssize_t	read _ARG_((int, void*, size_t));
+extern ssize_t	write _ARG_((int, const void*, size_t));
+extern off_t	lseek _ARG_((int, off_t, int));
+extern int	dup _ARG_((int));
+extern int	isatty _ARG_((int));
+extern int	wait _ARG_((int*));
+extern int	pipe _ARG_((int*));
+extern int	access _ARG_((const char*, int));
+extern uint	sleep _ARG_((uint));
+extern int	execl _ARG_((const char*, const char*,...));
+extern int	execv _ARG_((const char*, char**));
+#if !defined(fork)
+extern int	fork _ARG_((void));
+#endif
+#if _lib_unlink
+extern int	unlink _ARG_((const char*));
+#endif
+
+#endif /*_hdr_unistd*/
+
+#if _lib_bcopy && !_proto_bcopy
+extern void	bcopy _ARG_((const void*, void*, size_t));
+#endif
+#if _lib_bzero && !_proto_bzero
+extern void	bzero _ARG_((void*, size_t));
+#endif
+
+extern time_t	time _ARG_((time_t*));
+extern int	waitpid _ARG_((int,int*,int));
 extern void	_exit _ARG_((int));
-extern int	atexit _ARG_((void(*)(void)));
-extern int	onexit _ARG_((void(*)(void)));
-extern int	on_exit _ARG_((void(*)(void), char*));
+typedef int(*	Onexit_f)_ARG_((void));
+extern Onexit_f	onexit _ARG_((Onexit_f));
+
+#if _sys_stat
+extern int	fstat _ARG_((int, Stat_t*));
+#endif
+
+#if _lib_vfork && !_hdr_vfork && !_sys_vfork
+extern pid_t	vfork _ARG_((void));
+#endif /*_lib_vfork*/
+
+#if _lib_poll
+#if _lib_poll_fd_1
+extern int	poll _ARG_((struct pollfd*, ulong, int));
+#else
+extern int	poll _ARG_((ulong, struct pollfd*, int));
+#endif
+#endif /*_lib_poll*/
 
 #if _proto_open && __cplusplus
 extern int	open _ARG_((const char*, int, ...));
 #endif
 
-extern int	close _ARG_((int));
-extern int	read _ARG_((int, Void_t*, int));
-extern int	write _ARG_((int, const Void_t*, int));
-extern long	lseek _ARG_((int, long, int));
-extern int	fstat _ARG_((int, struct stat*));
-extern int	dup _ARG_((int));
-extern int	unlink _ARG_((const char*));
-extern int	isatty _ARG_((int));
-extern int	waitpid _ARG_((int,int*,int));
-extern int	wait _ARG_((int*));
-extern int	sleep _ARG_((int));
-
-#if _lib_select
-#if __cplusplus
-extern int	select _ARG_((int, fd_set*, fd_set*, fd_set*, const struct timeval*));
-#else
-extern int	select _ARG_((int, fd_set*, fd_set*, fd_set*, struct timeval*));
-#endif
-#endif /*_lib_select*/
-
-#if _lib_poll
-#if _lib_poll_fd_1
-extern int			poll _ARG_((struct pollfd*, ulong, int));
-#else
-extern int			poll _ARG_((ulong, struct pollfd*, int));
-#endif
-#endif /*_lib_poll*/
-
-#if _stream_peek
-extern int ioctl _ARG_((int, int, ...));
-#endif /*_stream_peek*/
-
-#if _socket_peek
-#if !__cplusplus
-extern int recv _ARG_((int, Void_t*, int, int));
-#endif
-#endif /*_socket_peek*/
-
 #endif /* _PACKAGE_ast */
-
-#if _lib_poll
-#if _lib_poll_fd_1
-#define SFPOLL(pfd,n,tm)	poll((pfd),(ulong)(n),(tm))
-#else
-#define SFPOLL(pfd,n,tm)	poll((ulong)(n),(pfd),(tm))
-#endif
-#endif /*_lib_poll*/
 
 _END_EXTERNS_
 

@@ -1,71 +1,55 @@
-/*
- * CDE - Common Desktop Environment
- *
- * Copyright (c) 1993-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
- */
 /***************************************************************
 *                                                              *
-*                      AT&T - PROPRIETARY                      *
+*           This software is part of the ast package           *
+*              Copyright (c) 1985-2000 AT&T Corp.              *
+*      and it may only be used by you under license from       *
+*                     AT&T Corp. ("AT&T")                      *
+*       A copy of the Source Code Agreement is available       *
+*              at the AT&T Internet web site URL               *
 *                                                              *
-*         THIS IS PROPRIETARY SOURCE CODE LICENSED BY          *
-*                          AT&T CORP.                          *
+*     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*                Copyright (c) 1995 AT&T Corp.                 *
-*                     All Rights Reserved                      *
-*                                                              *
-*           This software is licensed by AT&T Corp.            *
-*       under the terms and conditions of the license in       *
-*       http://www.research.att.com/orgs/ssr/book/reuse        *
+*     If you received this software without first entering     *
+*       into a license with AT&T, you have an infringing       *
+*           copy and cannot use it without violating           *
+*             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
-*           Software Engineering Research Department           *
-*                    AT&T Bell Laboratories                    *
+*               Network Services Research Center               *
+*                      AT&T Labs Research                      *
+*                       Florham Park NJ                        *
 *                                                              *
-*               For further information contact                *
-*                     gsf@research.att.com                     *
+*             Glenn Fowler <gsf@research.att.com>              *
+*              David Korn <dgk@research.att.com>               *
+*               Phong Vo <kpv@research.att.com>                *
 *                                                              *
 ***************************************************************/
 #include	"sfhdr.h"
 
 /*	Read a record delineated by a character.
-**	The record length can be accessed via sfslen().
-**	Note that the reg declarations below must be kept in
-**	their relative order so that the code will configured
-**	correctly on Vaxes to use "asm()".
+**	The record length can be accessed via sfvalue(f).
 **
 **	Written by Kiem-Phong Vo (06/27/90)
 */
 
 #if __STD_C
-char* sfgetr(reg Sfio_t *f, reg int rc, int string)
+char* sfgetr(reg Sfio_t *f, reg int rc, int type)
 #else
-char* sfgetr(f,rc,string)
+char* sfgetr(f,rc,type)
 reg Sfio_t*	f;	/* stream to read from. r11 on vax		*/
 reg int		rc;	/* record separator. r10 on Vax			*/
-int		string; /* <0: get last, 0: rc as is, 1: rc to nul	*/
+int		type;
 #endif
 {
-	reg int		n;		/* r9 on vax		*/
-	reg uchar	*s, *ends, *us;	/* r8, r7, r6 on vax	*/
-	reg int		un, found;
+	reg ssize_t	n;
+	reg uchar	*s, *ends, *us;
+	reg ssize_t	un;
+	reg int		found;
 	reg Sfrsrv_t*	frs;
+
+	if(rc < 0 || (f->mode != SF_READ && _sfmode(f,SF_READ,0) < 0) )
+		return NIL(char*);
+	SFLOCK(f,0);
 
 	/* buffer to be returned */
 	frs = NIL(Sfrsrv_t*);
@@ -73,19 +57,10 @@ int		string; /* <0: get last, 0: rc as is, 1: rc to nul	*/
 	un = 0;
 	found = 0;
 
-	/* restore the byte changed by the last getr */
-	if(f->mode&SF_GETR)
-	{	f->mode &= ~SF_GETR;
-		f->next[-1] = f->getr;
-	}
+	/* compatibility mode */
+	type = type < 0 ? SF_LASTR : type == 1 ? SF_STRING : type;
 
-	/* set the right mode */
-	if(rc < 0 || (f->mode != SF_READ && _sfmode(f,SF_READ,0) < 0) )
-		goto done;
-
-	SFLOCK(f,0);
-
-	if(string < 0) /* return the previously read string only */
+	if(type&SF_LASTR) /* return the broken record */
 	{	if((frs = _sfrsrv(f,0)) && (un = -frs->slen) > 0)
 		{	us = frs->data;
 			found = 1;
@@ -114,28 +89,25 @@ int		string; /* <0: get last, 0: rc as is, 1: rc to nul	*/
 			}
 		}
 
-#if _vax_asm	/* rc is r10, n is r9, s is r8, ends is r7 */
-		asm( "locc	r10,r9,(r8)" );	/* find rc */
-		asm( "movl	r1,r8" );	/* set s to be where it is */
-#else
 #if _lib_memchr
 		if(!(s = (uchar*)memchr((char*)s,rc,n)))
 			s = ends;
 #else
-		while(s < ends)
-		{	if(*s++ == rc)
-			{	s -= 1;
+		while(*s != rc)
+			if((s += 1) == ends)
 				break;
-			}
-		}
-#endif
 #endif
 	do_copy:
 		if(s < ends)
 		{	s += 1;		/* include the separator */
 			found = 1;
-			if(!us && (!string || !(f->flags&(SF_STRING|SF_BOTH))) )
-			{	/* just returning the buffer */
+
+			if(!us &&
+			   (!(type&SF_STRING) ||
+			    ((f->flags&SF_STRING) && (f->bits&SF_BOTH) ) ||
+			    ((f->bits&SF_MMAP) && !(f->flags&SF_BUFCONST) ) ||
+			    (!(f->flags&SF_STRING) && !(f->bits&SF_MMAP) ) ) )
+			{	/* returning data in buffer */
 				us = f->next;
 				un = s - f->next;
 				f->next = s;
@@ -163,16 +135,13 @@ int		string; /* <0: get last, 0: rc as is, 1: rc to nul	*/
 		un += n;
 		ends = f->next;
 		f->next += n;
-#if vax_asm
-		asm( "movc3	r9,(r7),(r8)" );
-#else
 		MEMCPY(s,ends,n);
-#endif
 	}
 
 done:
-	_Sfi = un;
-	if(found && string > 0)
+	_Sfi = f->val = un;
+	f->getr = 0;
+	if(found && rc != 0 && (type&SF_STRING) )
 	{	us[un-1] = '\0';
 		if(us >= f->data && us < f->endb)
 		{	f->getr = rc;
@@ -180,10 +149,19 @@ done:
 		}
 	}
 
-	/* prepare for a call with string < 0 */
+	/* prepare for a call to get the broken record */
 	if(frs)
 		frs->slen = found ? 0 : -un;
 
 	SFOPEN(f,0);
-	return (char*)us;
+
+	if(!us)
+		return NIL(char*);
+	else
+	{	if(type&SF_LOCKR)
+		{	f->mode |= SF_PEEK|SF_GETR;
+			f->endr = f->data;
+		}
+		return (char*)us;
+	}
 }

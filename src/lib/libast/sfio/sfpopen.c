@@ -1,100 +1,162 @@
-/*
- * CDE - Common Desktop Environment
- *
- * Copyright (c) 1993-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
- */
 /***************************************************************
 *                                                              *
-*                      AT&T - PROPRIETARY                      *
+*           This software is part of the ast package           *
+*              Copyright (c) 1985-2000 AT&T Corp.              *
+*      and it may only be used by you under license from       *
+*                     AT&T Corp. ("AT&T")                      *
+*       A copy of the Source Code Agreement is available       *
+*              at the AT&T Internet web site URL               *
 *                                                              *
-*         THIS IS PROPRIETARY SOURCE CODE LICENSED BY          *
-*                          AT&T CORP.                          *
+*     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*                Copyright (c) 1995 AT&T Corp.                 *
-*                     All Rights Reserved                      *
-*                                                              *
-*           This software is licensed by AT&T Corp.            *
-*       under the terms and conditions of the license in       *
-*       http://www.research.att.com/orgs/ssr/book/reuse        *
+*     If you received this software without first entering     *
+*       into a license with AT&T, you have an infringing       *
+*           copy and cannot use it without violating           *
+*             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
-*           Software Engineering Research Department           *
-*                    AT&T Bell Laboratories                    *
+*               Network Services Research Center               *
+*                      AT&T Labs Research                      *
+*                       Florham Park NJ                        *
 *                                                              *
-*               For further information contact                *
-*                     gsf@research.att.com                     *
+*             Glenn Fowler <gsf@research.att.com>              *
+*              David Korn <dgk@research.att.com>               *
+*               Phong Vo <kpv@research.att.com>                *
 *                                                              *
 ***************************************************************/
 #include	"sfhdr.h"
 
 #if _PACKAGE_ast
-
 #include	<proc.h>
-
 #else
 
-#if _lib_vfork
-#define fork	vfork
-#if _hdr_vfork
-#include	<vfork.h>
-#endif
-#if _sys_vfork
-#include	<sys/vfork.h>
-#endif
-#endif
-
-#include	<signal.h>
-typedef void(*Handler_t)_ARG_((int));
 #define EXIT_NOTFOUND	127
 
-_BEGIN_EXTERNS_
-extern int	fork _ARG_((void));
-extern int	waitpid _ARG_((int, int*, int));
-extern int	wait _ARG_((int*));
-extern int	pipe _ARG_((int*));
-extern int	execl _ARG_((char*,char*,...));
-_END_EXTERNS_
+#define READ		0
+#define WRITE		1
 
-/* pipe ends */
-#define READ	0
-#define WRITE	1
+#ifndef CHAR_BIT
+#define CHAR_BIT	8
+#endif
+static char	Meta[1<<CHAR_BIT], **Path;
+
+/* execute command directly if possible; else use the shell */
+#if __STD_C
+static void execute(const char* argcmd)
+#else
+static void execute(argcmd)
+char*	argcmd;
+#endif
+{
+	reg char	*s, *cmd, **argv, **p, *interp;
+	reg int		n;
+
+	/* define interpreter */
+	if(!(interp = getenv("SHELL")) || !interp[0])
+		interp = "/bin/sh";
+
+	if(strcmp(interp,"/bin/sh") != 0 && strcmp(interp,"/bin/ksh") != 0 )
+	{	if(access(interp,X_OK) == 0)
+			goto do_interp;
+		else	interp = "/bin/sh";
+	}
+
+	/* if there is a meta character, let the shell do it */
+	for(s = (char*)argcmd; *s; ++s)
+		if(Meta[(uchar)s[0]])
+			goto do_interp;
+
+	/* try to construct argv */
+	if(!(cmd = (char*)malloc(strlen(argcmd)+1)) )
+		goto do_interp;
+	strcpy(cmd,argcmd);
+	if(!(argv = (char**)malloc(16*sizeof(char*))) )
+		goto do_interp;
+	for(n = 0, s = cmd;; )
+	{	while(isspace(s[0]))
+			s += 1;
+		if(s[0] == 0)
+			break;
+
+		/* new argument */
+		argv[n++] = s;
+		if((n%16) == 0 && !(argv = (char**)realloc(argv,(n+16)*sizeof(char*))) )
+			goto do_interp;
+
+		/* make this into a C string */
+		while(s[0] && !isspace(s[0]))
+			s += 1;
+		*s++ = 0;
+	}
+	if(n == 0)
+		goto do_interp;
+	argv[n] = NIL(char*);
+
+	/* get the command name */
+	cmd = argv[0];
+	for(s = cmd+strlen(cmd)-1; s >= cmd; --s)
+		if(*s == '/')
+			break;
+	argv[0] = s+1;
+
+	/* Non-standard pathnames as in nDFS should be handled by the shell */
+	for(s = cmd+strlen(cmd)-1; s >= cmd+2; --s)
+		if(s[0] == '.' && s[-1] == '.' && s[-2] == '.')
+			goto do_interp;
+
+	if(cmd[0] == '/' ||
+	   (cmd[0] == '.' && cmd[1] == '/') ||
+	   (cmd[0] == '.' && cmd[1] == '.' && cmd[2] == '/') )
+	{	if(access(cmd,X_OK) != 0)
+			goto do_interp;
+		else	execv(cmd,argv);
+	}
+	else
+	{	for(p = Path; *p; ++p)
+		{	s = sfprints("%s/%s", *p, cmd);
+			if(access(s,X_OK) == 0)
+				execv(s,argv);
+		}
+	}
+
+	/* if get here, let the interpreter do it */
+do_interp: 
+	for(s = interp+strlen(interp)-1; s >= interp; --s)
+		if(*s == '/')
+			break;
+	execl(interp, s+1, "-c", argcmd, NIL(char*));
+	_exit(EXIT_NOTFOUND);
+}
 
 #endif /*_PACKAGE_ast*/
 
 #if __STD_C
-Sfio_t *sfpopen(Sfio_t* f, const char* command, const char* mode)
+Sfio_t*	sfpopen(Sfio_t* f, const char* command, const char* mode)
 #else
-Sfio_t *sfpopen(f,command,mode)
-Sfio_t	*f;
-char	*command;	/* command to execute */
-char	*mode;		/* mode of the stream */
+Sfio_t*	sfpopen(f,command,mode)
+Sfio_t*	f;
+char*	command;	/* command to execute */
+char*	mode;		/* mode of the stream */
 #endif
 {
 #if _PACKAGE_ast
 	reg Proc_t*	proc;
 	reg int		sflags;
-	reg long	flags = PROC_IGNORE;
+	reg long	flags;
+	reg int		bits;
 	char*		av[4];
 
 	if (!command || !command[0] || !(sflags = _sftype(mode, NiL)))
 		return 0;
+
+	if(f == (Sfio_t*)(-1))
+	{	/* stdio compatibility mode */
+		f = NIL(Sfio_t*);
+		bits = SF_STDIO;
+	}
+	else	bits = 0;
+
+	flags = 0;
 	if (sflags & SF_READ)
 		flags |= PROC_READ;
 	if (sflags & SF_WRITE)
@@ -103,10 +165,12 @@ char	*mode;		/* mode of the stream */
 	av[1] = "-c";
 	av[2] = (char*)command;
 	av[3] = 0;
-	if (!(proc = procopen(NiL, av, NiL, NiL, flags)))
+	if (!(proc = procopen(0, av, 0, 0, flags)))
 		return 0;
-	if (!(f = sfnew(f, NiL, -1, (sflags&SF_READ) ? proc->rfd : proc->wfd, sflags)) ||
-	    _sfpopen(f, (sflags&SF_READ) ? proc->wfd : -1, proc->pid) < 0)
+	if (!(f = sfnew(f, NIL(Void_t*), (size_t)SF_UNBOUND,
+	       		(sflags&SF_READ) ? proc->rfd : proc->wfd, sflags)) ||
+	    ((f->bits |= bits),
+	     _sfpopen(f, (sflags&SF_READ) ? proc->wfd : -1, proc->pid)) < 0)
 	{
 		if (f) sfclose(f);
 		procclose(proc);
@@ -116,9 +180,18 @@ char	*mode;		/* mode of the stream */
 	return f;
 #else
 	reg int		pid, pkeep, ckeep, sflags;
-	int		parent[2], child[2];
+	int		bits, parent[2], child[2];
 	Sfio_t		sf;
-	Handler_t	sig;
+
+	/* set shell meta characters */
+	if(Meta[0] == 0)
+	{	reg char*	s;
+		Meta[0] = 1;
+		for(s = "!@#$%&*(){}[]:;<>~`'|\"\\"; *s; ++s)
+			Meta[(uchar)s[0]] = 1;
+	}
+	if(!Path)
+		Path = _sfgetpath("PATH");
 
 	/* sanity check */
 	if(!command || !command[0] || !(sflags = _sftype(mode,NIL(int*))))
@@ -131,15 +204,21 @@ char	*mode;		/* mode of the stream */
 	if((sflags&SF_RDWR) == SF_RDWR && pipe(child) < 0)
 		goto error;
 
-	switch(pid = fork())
+	switch((pid = fork()) )
 	{
 	default :	/* in parent process */
 		if(sflags&SF_READ)
 			{ pkeep = READ; ckeep = WRITE; }
 		else	{ pkeep = WRITE; ckeep = READ; }
 
+		if(f == (Sfio_t*)(-1) )
+		{	bits = SF_STDIO;
+			f = NIL(Sfio_t*);
+		}
+		else	bits = 0;
+
 		/* make the streams */
-		if(!(f = sfnew(f,NIL(char*),-1,parent[pkeep],sflags)))
+		if(!(f = sfnew(f,NIL(Void_t*),(size_t)SF_UNBOUND,parent[pkeep],sflags)))
 			goto error;
 		CLOSE(parent[!pkeep]);
 
@@ -147,16 +226,11 @@ char	*mode;		/* mode of the stream */
 			CLOSE(child[!ckeep]);
 
 		/* save process info */
+		f->bits |= bits;
 		if(_sfpopen(f,(sflags&SF_RDWR) == SF_RDWR ? child[ckeep] : -1,pid) < 0)
 		{	(void)sfclose(f);
 			goto error;
 		}
-
-#ifdef SIGPIPE	/* protect from broken pipe signal */
-		if((sflags&SF_WRITE) &&
-		   (sig = signal(SIGPIPE,SIG_IGN)) != SIG_DFL && sig != SIG_IGN)
-			signal(SIGPIPE,sig);
-#endif
 
 		return f;
 
@@ -195,9 +269,7 @@ char	*mode;		/* mode of the stream */
 				_exit(EXIT_NOTFOUND);
 		}
 
-		/* now exec the command */
-		execl("/bin/sh", "sh", "-c", command, NIL(char*));
-		_exit(EXIT_NOTFOUND);
+		execute(command);
 		return NIL(Sfio_t*);
 
 	case -1 :	/* error */

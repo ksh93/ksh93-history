@@ -1,45 +1,27 @@
-/*
- * CDE - Common Desktop Environment
- *
- * Copyright (c) 1993-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
- */
 /***************************************************************
 *                                                              *
-*                      AT&T - PROPRIETARY                      *
+*           This software is part of the ast package           *
+*              Copyright (c) 1985-2000 AT&T Corp.              *
+*      and it may only be used by you under license from       *
+*                     AT&T Corp. ("AT&T")                      *
+*       A copy of the Source Code Agreement is available       *
+*              at the AT&T Internet web site URL               *
 *                                                              *
-*         THIS IS PROPRIETARY SOURCE CODE LICENSED BY          *
-*                          AT&T CORP.                          *
+*     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*                Copyright (c) 1995 AT&T Corp.                 *
-*                     All Rights Reserved                      *
-*                                                              *
-*           This software is licensed by AT&T Corp.            *
-*       under the terms and conditions of the license in       *
-*       http://www.research.att.com/orgs/ssr/book/reuse        *
+*     If you received this software without first entering     *
+*       into a license with AT&T, you have an infringing       *
+*           copy and cannot use it without violating           *
+*             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
-*           Software Engineering Research Department           *
-*                    AT&T Bell Laboratories                    *
+*               Network Services Research Center               *
+*                      AT&T Labs Research                      *
+*                       Florham Park NJ                        *
 *                                                              *
-*               For further information contact                *
-*                     gsf@research.att.com                     *
+*             Glenn Fowler <gsf@research.att.com>              *
+*              David Korn <dgk@research.att.com>               *
+*               Phong Vo <kpv@research.att.com>                *
 *                                                              *
 ***************************************************************/
 #include	"sfhdr.h"
@@ -51,17 +33,17 @@
 */
 
 #if __STD_C
-_sfflsbuf(reg Sfio_t* f, reg int c)
+int _sfflsbuf(reg Sfio_t* f, reg int c)
 #else
-_sfflsbuf(f,c)
-reg Sfio_t	*f;	/* write out the buffered content of this stream */
+int _sfflsbuf(f,c)
+reg Sfio_t*	f;	/* write out the buffered content of this stream */
 reg int		c;	/* if c>=0, c is also written out */ 
 #endif
 {
-	reg int		n, w;
-	reg uchar	*data;
+	reg ssize_t	n, w;
+	reg uchar*	data;
 	uchar		outc;
-	reg int		local;
+	reg int		local, isall;
 	int		inpc = c;
 
 	GETLOCAL(f,local);
@@ -75,7 +57,7 @@ reg int		c;	/* if c>=0, c is also written out */
 		/* current data extent */
 		n = f->next - (data = f->data);
 
-		if(n == (f->endb-f->data) && (f->flags&SF_STRING))
+		if(n == (f->endb-data) && (f->flags&SF_STRING))
 		{	/* extend string stream buffer */
 			(void)SFWR(f,data,1,f->disc);
 
@@ -93,11 +75,12 @@ reg int		c;	/* if c>=0, c is also written out */
 		{	/* write into buffer */
 			if(n < (f->endb - (data = f->data)))
 			{	*f->next++ = c;
-				if(c != '\n' ||
-				   !(f->flags&SF_LINE) || (f->flags&SF_STRING))
-					break;
-				c = -1;
-				n += 1;
+				if(c == '\n' &&
+				   (f->flags&SF_LINE) && !(f->flags&SF_STRING))
+				{	c = -1;
+					n += 1;
+				}
+				else	break;
 			}
 			else if(n == 0)
 			{	/* unbuffered io */
@@ -108,14 +91,15 @@ reg int		c;	/* if c>=0, c is also written out */
 			}
 		}
 
-		/* writing data */
 		if(n == 0 || (f->flags&SF_STRING))
 			break;
-		else if((w = SFWR(f,data,n,f->disc)) > 0)
+
+		isall = SFISALL(f,isall);
+		if((w = SFWR(f,data,n,f->disc)) > 0)
 		{	if((n -= w) > 0) /* save unwritten data, then resume */
 				memcpy((char*)f->data,(char*)data+w,n);
 			f->next = f->data+n;
-			if(n == 0 && c < 0)
+			if(c < 0 && (!isall || n == 0))
 				break;
 		}
 		else if(w == 0)

@@ -1,59 +1,35 @@
-/*
- * CDE - Common Desktop Environment
- *
- * Copyright (c) 1993-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
- */
 /***************************************************************
 *                                                              *
-*                      AT&T - PROPRIETARY                      *
+*           This software is part of the ast package           *
+*              Copyright (c) 1982-2000 AT&T Corp.              *
+*      and it may only be used by you under license from       *
+*                     AT&T Corp. ("AT&T")                      *
+*       A copy of the Source Code Agreement is available       *
+*              at the AT&T Internet web site URL               *
 *                                                              *
-*        THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF        *
-*                    AT&T BELL LABORATORIES                    *
-*         AND IS NOT TO BE DISCLOSED OR USED EXCEPT IN         *
-*            ACCORDANCE WITH APPLICABLE AGREEMENTS             *
+*     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*                Copyright (c) 1995 AT&T Corp.                 *
-*              Unpublished & Not for Publication               *
-*                     All Rights Reserved                      *
-*                                                              *
-*       The copyright notice above does not evidence any       *
-*      actual or intended publication of such source code      *
+*     If you received this software without first entering     *
+*       into a license with AT&T, you have an infringing       *
+*           copy and cannot use it without violating           *
+*             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
-*           Advanced Software Technology Department            *
-*                    AT&T Bell Laboratories                    *
+*               Network Services Research Center               *
+*                      AT&T Labs Research                      *
+*                       Florham Park NJ                        *
 *                                                              *
-*               For further information contact                *
-*                    {research,attmail}!dgk                    *
+*              David Korn <dgk@research.att.com>               *
 *                                                              *
 ***************************************************************/
 /*
  *	UNIX shell
  *
- *	S. R. Bourne
- *	AT&T Bell Laboratories
+ *	AT&T Labs
  *
  */
 
 #define TGRACE		60	/* grace period before termination */
 				/* The time_warn message contains this number */
-extern long		sh_timeout;
 extern const char	e_timeout[];
 extern const char	e_timewarn[];

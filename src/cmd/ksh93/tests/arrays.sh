@@ -1,3 +1,27 @@
+################################################################
+#                                                              #
+#           This software is part of the ast package           #
+#              Copyright (c) 1982-2000 AT&T Corp.              #
+#      and it may only be used by you under license from       #
+#                     AT&T Corp. ("AT&T")                      #
+#       A copy of the Source Code Agreement is available       #
+#              at the AT&T Internet web site URL               #
+#                                                              #
+#     http://www.research.att.com/sw/license/ast-open.html     #
+#                                                              #
+#     If you received this software without first entering     #
+#       into a license with AT&T, you have an infringing       #
+#           copy and cannot use it without violating           #
+#             AT&T's intellectual property rights.             #
+#                                                              #
+#               This software was created by the               #
+#               Network Services Research Center               #
+#                      AT&T Labs Research                      #
+#                       Florham Park NJ                        #
+#                                                              #
+#              David Korn <dgk@research.att.com>               #
+#                                                              #
+################################################################
 function err_exit
 {
 	print -u2 -n "\t"
@@ -196,5 +220,25 @@ unset xxx
 : ${xxx[3]}
 if	[[ ${!xxx[@]} ]]
 then	err_exit '${!xxx[@]} should be null'
+fi
+integer i=0
+{
+	set -x
+	xxx[++i]=1
+	set +x
+} 2> /dev/null
+if	(( i != 1))
+then	err_exit 'execution trace side effects with array subscripts'
+fi
+unset list
+: $(set -A list foo bar)
+if	(( ${#list[@]} != 0))
+then	err_exit '$(set -A list ...) leaves side effects'
+fi
+unset list
+list= (foo bar bam)
+( set -A list one two three four)
+if	[[ ${list[1]} != bar ]]
+then	err_exit 'array not restored after subshell'
 fi
 exit $((Errors))

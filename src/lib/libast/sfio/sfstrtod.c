@@ -1,58 +1,36 @@
-/*
- * CDE - Common Desktop Environment
- *
- * Copyright (c) 1993-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
- */
 /***************************************************************
 *                                                              *
-*                      AT&T - PROPRIETARY                      *
+*           This software is part of the ast package           *
+*              Copyright (c) 1985-2000 AT&T Corp.              *
+*      and it may only be used by you under license from       *
+*                     AT&T Corp. ("AT&T")                      *
+*       A copy of the Source Code Agreement is available       *
+*              at the AT&T Internet web site URL               *
 *                                                              *
-*         THIS IS PROPRIETARY SOURCE CODE LICENSED BY          *
-*                          AT&T CORP.                          *
+*     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*                Copyright (c) 1995 AT&T Corp.                 *
-*                     All Rights Reserved                      *
-*                                                              *
-*           This software is licensed by AT&T Corp.            *
-*       under the terms and conditions of the license in       *
-*       http://www.research.att.com/orgs/ssr/book/reuse        *
+*     If you received this software without first entering     *
+*       into a license with AT&T, you have an infringing       *
+*           copy and cannot use it without violating           *
+*             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
-*           Software Engineering Research Department           *
-*                    AT&T Bell Laboratories                    *
+*               Network Services Research Center               *
+*                      AT&T Labs Research                      *
+*                       Florham Park NJ                        *
 *                                                              *
-*               For further information contact                *
-*                     gsf@research.att.com                     *
+*             Glenn Fowler <gsf@research.att.com>              *
+*              David Korn <dgk@research.att.com>               *
+*               Phong Vo <kpv@research.att.com>                *
 *                                                              *
 ***************************************************************/
 #include	"sfhdr.h"
 
-/*	Convert a Double_t value represented in an ASCII format into
-**	the internal Double_t representation.
+/*	Convert a Sfdouble_t value represented in an ASCII format into
+**	the internal Sfdouble_t representation.
 **
 **	Written by David Korn and Kiem-Phong Vo (06/27/90)
 */
-
-#if !_sfio_cvt
-int	_Sfstrtod_already_defined;
-#else
 
 #define BATCH	(2*sizeof(int))	/* accumulate this many digits at a time */
 #define IPART		0	/* doing integer part */
@@ -60,59 +38,52 @@ int	_Sfstrtod_already_defined;
 #define EPART		2	/* doing exponent part */
 
 #if __STD_C
-static Double_t pow10(reg int n)
+static Sfdouble_t sfpow10(reg int n)
 #else
-static Double_t pow10(n)
+static Sfdouble_t sfpow10(n)
 reg int	n;
 #endif
 {
-	reg int		m, pow;
-	reg Double_t	dval, d, *pow10;
+	Sfdouble_t	dval;
 
-	/* set up look up table */
-	if((pow = n) < 0)
-	{	pow10 = _Sfneg10;
-		pow = -pow;
-	}
-	else	pow10 = _Sfpos10;
-
-	/* reduce to a low exponent */
-	dval = 1.;
-	if(pow >= SF_MAXPOW10)
-	{	d = pow10[SF_MAXEXP10-1]*pow10[SF_MAXEXP10-1];	
-		for(m = pow/SF_MAXPOW10; m > 0; --m)
-			dval *= d;
-		pow = pow%SF_MAXPOW10;
+	switch(n)
+	{	case -3:	return .001;
+		case -2:	return .01;
+		case -1:	return .1;
+		case  0:	return 1.;
+		case  1:	return 10.;
+		case  2:	return 100.;
+		case  3:	return 1000.;
 	}
 
-	/* fast loop for the rest */
-	for(m = 1; m <= pow;)
-	{	if(m&pow)
-			dval *= *pow10;
-		pow10 += 1;
-		if(n < 0)
-			pow >>= 1;
-		else	m <<= 1;
+	if(n < 0)
+	{	dval = .0001;
+		for(n += 4; n < 0; n += 1)
+			dval /= 10.;
+	}
+	else
+	{	dval = 10000.;
+		for(n -= 4; n > 0; n -= 1)
+			dval *= 10.;
 	}
 
 	return dval;
 }
 
 #if __STD_C
-Double_t _sfstrtod(reg const char* s, char** retp)
+Sfdouble_t _sfstrtod(reg const char* s, char** retp)
 #else
-Double_t _sfstrtod(s,retp)
+Sfdouble_t _sfstrtod(s,retp)
 reg char*	s;	/* string to convert */
 char**		retp;	/* to return the remainder of string */
 #endif
 {
 	reg int		n, c, m;
 	reg int		mode, fexp, sign, expsign;
-	Double_t	dval;
+	Sfdouble_t	dval;
 #if _lib_locale
-	struct lconv*	lv;
 	int		decpoint = 0;
-	GETDECIMAL(decpoint,lv);
+	SFSETLOCALE(&decpoint,NIL(int*));
 #else
 #define decpoint	'.'
 #endif
@@ -144,20 +115,20 @@ char**		retp;	/* to return the remainder of string */
 		if(mode == IPART)
 		{	/* doing the integer part */
 			if(dval == 0.)
-				dval = (Double_t)n;
-			else	dval = dval*pow10(m) + (Double_t)n;
+				dval = (Sfdouble_t)n;
+			else	dval = dval*sfpow10(m) + (Sfdouble_t)n;
 		}
 		else if(mode == FPART)
 		{	/* doing the fractional part */
 			fexp -= m;
 			if(n > 0)
-				dval += n*pow10(fexp);
+				dval += n*sfpow10(fexp);
 		}
 		else if(n)
 		{	/* doing the exponent part */
 			if(expsign)
 				n = -n;
-			dval *= pow10(n);
+			dval *= sfpow10(n);
 		}
 
 		if(!c)
@@ -188,5 +159,3 @@ char**		retp;	/* to return the remainder of string */
 		*retp = (char*)s;
 	return sign ? -dval : dval;
 }
-
-#endif /* !_sfio_cvt */

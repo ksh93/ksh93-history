@@ -2,6 +2,7 @@ set	prototyped
 hdr,sys	time,times
 mem	tm.tm_sec,timeval.tv_sec sys/time.h
 typ	clock_t,time_t
+
 cat{
 #if !_typ_clock_t
 #define _typ_clock_t	1
@@ -36,4 +37,33 @@ struct timeval
 	time_t	tv_usec;
 };
 #endif
+}end
+
+tst	- -DN=1 - -DN=2 - -DN=3 - -DN=4 output{
+	#include <sys/types.h>
+	#include <sys/time.h>
+	main()
+	{
+		struct timeval	tv;
+#if N == 1
+		struct timezone	tz;
+		if (gettimeofday(&tv, (struct timezone*)0) < 0)
+			return 1;
+		printf("#define tmtimeofday(p)	gettimeofday(p,(struct timezone*)0)\n");
+#endif
+#if N == 2
+		if (gettimeofday(&tv, (void*)0) < 0)
+			return 1;
+		printf("#define tmtimeofday(p)	gettimeofday(p,(void*)0)\n");
+#endif
+#if N == 3
+		if (gettimeofday(&tv) < 0)
+			return 1;
+		printf("#define tmtimeofday(p)	gettimeofday(p)\n");
+#endif
+#if N == 4
+		printf("#define tmtimeofday(p)	((p)->tv_sec=time((time_t*)0),(p)->tv_usec=0,0)\n");
+#endif
+		return 0;
+	}
 }end

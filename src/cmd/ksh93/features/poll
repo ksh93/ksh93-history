@@ -1,6 +1,7 @@
 hdr,sys	poll,socket,netinet/in
 lib	select,poll,socket
-typ	fd_set sys/socket.h
+lib	htons,htonl sys/types.h sys/socket.h netinet/in.h
+typ	fd_set sys/time.h sys/socket.h sys/select.h
 cat{
 	#pragma prototyped
 	#ifdef _lib_poll

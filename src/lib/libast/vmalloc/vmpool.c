@@ -1,48 +1,38 @@
-/*
- * CDE - Common Desktop Environment
- *
- * Copyright (c) 1993-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
- */
 /***************************************************************
 *                                                              *
-*                      AT&T - PROPRIETARY                      *
+*           This software is part of the ast package           *
+*              Copyright (c) 1985-2000 AT&T Corp.              *
+*      and it may only be used by you under license from       *
+*                     AT&T Corp. ("AT&T")                      *
+*       A copy of the Source Code Agreement is available       *
+*              at the AT&T Internet web site URL               *
 *                                                              *
-*         THIS IS PROPRIETARY SOURCE CODE LICENSED BY          *
-*                          AT&T CORP.                          *
+*     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*                Copyright (c) 1995 AT&T Corp.                 *
-*                     All Rights Reserved                      *
-*                                                              *
-*           This software is licensed by AT&T Corp.            *
-*       under the terms and conditions of the license in       *
-*       http://www.research.att.com/orgs/ssr/book/reuse        *
+*     If you received this software without first entering     *
+*       into a license with AT&T, you have an infringing       *
+*           copy and cannot use it without violating           *
+*             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
-*           Software Engineering Research Department           *
-*                    AT&T Bell Laboratories                    *
+*               Network Services Research Center               *
+*                      AT&T Labs Research                      *
+*                       Florham Park NJ                        *
 *                                                              *
-*               For further information contact                *
-*                     gsf@research.att.com                     *
+*             Glenn Fowler <gsf@research.att.com>              *
+*              David Korn <dgk@research.att.com>               *
+*               Phong Vo <kpv@research.att.com>                *
 *                                                              *
 ***************************************************************/
+#ifdef _UWIN
+
+int _STUB_vmpool;
+
+#else
+
 #include	"vmhdr.h"
+
+#define POOLFREE	0x55555555L	/* block free indicator	 */
 
 /*	Method for pool allocation.
 **	All elements in a pool have the same size.
@@ -50,95 +40,99 @@
 **		pool:	size of a block.
 **		free:	list of free blocks.
 **
-**	Written by (Kiem-)Phong Vo, kpv@research.att.com, 01/16/94.
+**	Written by Kiem-Phong Vo, kpv@research.att.com, 01/16/94.
 */
 
 #if __STD_C
-static Void_t* poolalloc(Vmalloc_t* vm, size_t size)
+static Void_t* poolalloc(Vmalloc_t* vm, reg size_t size)
 #else
 static Void_t* poolalloc(vm, size )
 Vmalloc_t*	vm;
-size_t		size;
+reg size_t	size;
 #endif
 {
+	reg Vmdata_t*	vd = vm->data;
 	reg Block_t	*tp, *next;
 	reg size_t	s;
 	reg Seg_t*	seg;
-	reg Vmdata_t*	vd = vm->data;
 	reg int		local;
 
 	if(size <= 0)
 		return NIL(Void_t*);
+	else if(size != vd->pool)
+	{	if(vd->pool <= 0)
+			vd->pool = size;
+		else	return NIL(Void_t*);
+	}
 
 	if(!(local = vd->mode&VM_TRUST) )
 	{	if(ISLOCK(vd,0))
 			return NIL(Void_t*);
-		if(vd->pool > 0 && size != vd->pool)
-			return NIL(Void_t*);
 		SETLOCK(vd,0);
 	}
 
-	if(vd->pool <= 0)	/* region initialization */
-	{	vd->pool = size;
-
-		/* build free list out of available space */
-		size = ROUND(size,ALIGN);
-		for(seg = vd->seg; seg; seg = seg->next)
-		{	if(!(tp = seg->free) )
-				continue;
-			seg->free = NIL(Block_t*);
-			for(s = (SIZE(tp)&~BITS)+sizeof(Head_t); s >= size; s -= size)
-			{	SEGLINK(tp) = vd->free;
-				vd->free = tp;
-				tp = (Block_t*)((uchar*)tp+size);
-			} 
-		}
+	if((tp = vd->free) ) /* there is a ready free block */
+	{	vd->free = SEGLINK(tp);
+		goto done;
 	}
 
-	for(;;)
-	{	if((tp = vd->free) )
-		{	vd->free = SEGLINK(tp);
-			goto done;
-		}
+	size = ROUND(size,ALIGN);
 
-		/* if get here, no current free block works, so we must extend */
-		if((tp = (*_Vmextend)(vm,ROUND(vd->pool,vd->incr),NIL(Vmsearch_f))) )
-			break;
+	/* look thru all segments for a suitable free block */
+	for(tp = NIL(Block_t*), seg = vd->seg; seg; seg = seg->next)
+	{	if((tp = seg->free) &&
+		   (s = (SIZE(tp) & ~BITS) + sizeof(Head_t)) >= size )
+			goto has_blk;
+	}
+
+	for(;;) /* must extend region */
+	{	if((tp = (*_Vmextend)(vm,ROUND(size,vd->incr),NIL(Vmsearch_f))) )
+		{	s = (SIZE(tp) & ~BITS) + sizeof(Head_t);
+			seg = SEG(tp);
+			goto has_blk;
+		}
 		else if(vd->mode&VM_AGAIN)
 			vd->mode &= ~VM_AGAIN;
 		else	goto done;
 	}
 
-	/* make remainder into free list */
-	size = ROUND(vd->pool,ALIGN);
-	next = (Block_t*)((uchar*)tp+size);
-	s = (uchar*)BLOCK(vd->seg->baddr) - (uchar*)next;
-	for(; s >= size; s -= size)
-	{	SEGLINK(next) = vd->free;
-		vd->free = next;
-		next = (Block_t*)((uchar*)next + size);
+has_blk: /* if get here, (tp, s, seg) must be well-defined */
+	next = (Block_t*)((Vmuchar_t*)tp+size);
+	if((s -= size) <= (size + sizeof(Head_t)) )
+	{	for(; s >= size; s -= size)
+		{	SIZE(next) = POOLFREE;
+			SEGLINK(next) = vd->free;
+			vd->free = next;
+			next = (Block_t*)((Vmuchar_t*)next + size);
+		}
+		seg->free = NIL(Block_t*);
+	}
+	else
+	{	SIZE(next) = s - sizeof(Head_t);
+		SEG(next) = seg;
+		seg->free = next;
 	}
 
 done:
 	if(!local && (vd->mode&VM_TRACE) && _Vmtrace && tp)
-		(*_Vmtrace)(vm,NIL(uchar*),(uchar*)tp,vd->pool);
+		(*_Vmtrace)(vm,NIL(Vmuchar_t*),(Vmuchar_t*)tp,vd->pool,0);
 
 	CLRLOCK(vd,0);
 	return (Void_t*)tp;
 }
 
 #if __STD_C
-static long pooladdr(Vmalloc_t* vm, Void_t* addr)
+static long pooladdr(Vmalloc_t* vm, reg Void_t* addr)
 #else
 static long pooladdr(vm, addr)
 Vmalloc_t*	vm;
-Void_t*		addr;
+reg Void_t*	addr;
 #endif
 {
-	reg Seg_t*	seg;
-	reg uchar	*laddr, *baddr;
-	reg Block_t*	bp;
+	reg Block_t	*bp, *tp;
+	reg Vmuchar_t	*laddr, *baddr;
 	reg size_t	size;
+	reg Seg_t*	seg;
 	reg long	offset;
 	reg Vmdata_t*	vd = vm->data;
 	reg int		local;
@@ -152,21 +146,22 @@ Void_t*		addr;
 
 	offset = -1L;
 	for(seg = vd->seg; seg; seg = seg->next)
-	{	laddr = (uchar*)SEGBLOCK(seg);
+	{	laddr = (Vmuchar_t*)SEGBLOCK(seg);
 		baddr = seg->baddr-sizeof(Head_t);
-		if((uchar*)addr < laddr || (uchar*)addr >= baddr)
+		if((Vmuchar_t*)addr < laddr || (Vmuchar_t*)addr >= baddr)
 			continue;
 
+		/* the block that has this address */
 		size = ROUND(vd->pool,ALIGN);
+		tp = (Block_t*)(laddr + (((Vmuchar_t*)addr-laddr)/size)*size );
 
-		/* see if already freed */
-		for(bp = vd->free; bp; bp = SEGLINK(bp))
-		{	if((uchar*)bp <= (uchar*)addr &&
-			   (uchar*)addr < ((uchar*)bp)+size)
-				goto done;
-		}
+		/* see if this block has been freed */
+		if(SIZE(tp) == POOLFREE) /* may be a coincidence - make sure */
+			for(bp = vd->free; bp; bp = SEGLINK(bp))
+				if(bp == tp)
+					goto done;
 
-		offset = (uchar*)addr - (laddr + (((uchar*)addr-laddr)/size)*size);
+		offset = (Vmuchar_t*)addr - (Vmuchar_t*)tp;
 		goto done;
 	}
 
@@ -176,11 +171,11 @@ done :
 }
 
 #if __STD_C
-static int poolfree(Vmalloc_t* vm, Void_t* data )
+static int poolfree(reg Vmalloc_t* vm, reg Void_t* data )
 #else
 static int poolfree(vm, data)
-Vmalloc_t*	vm;
-Void_t*		data;
+reg Vmalloc_t*	vm;
+reg Void_t*	data;
 #endif
 {
 	reg Block_t*	bp;
@@ -188,7 +183,7 @@ Void_t*		data;
 	reg int		local;
 
 	if(!data)
-		return -1;
+		return 0;
 
 	if(!(local = vd->mode&VM_TRUST))
 	{	if(ISLOCK(vd,0) || vd->pool <= 0)
@@ -204,11 +199,12 @@ Void_t*		data;
 	}
 
 	bp = (Block_t*)data;
+	SIZE(bp) = POOLFREE;
 	SEGLINK(bp) = vd->free;
 	vd->free = bp;
 
 	if(!local && (vd->mode&VM_TRACE) && _Vmtrace)
-		(*_Vmtrace)(vm, (uchar*)data, NIL(uchar*), vd->pool);
+		(*_Vmtrace)(vm, (Vmuchar_t*)data, NIL(Vmuchar_t*), vd->pool, 0);
 
 	CLRLOCK(vd,local);
 	return 0;
@@ -229,8 +225,13 @@ int		type;
 	NOTUSED(type);
 
 	if(!data)
-		return poolalloc(vm,size);
-	else if(size == 0)
+	{	if((data = poolalloc(vm,size)) && (type&VM_RSZERO) )
+		{	reg int	*d = (int*)data, *ed = (int*)((char*)data+size);
+			do { *d++ = 0;} while(d < ed);
+		}
+		return data;
+	}
+	if(size == 0)
 	{	(void)poolfree(vm,data);
 		return NIL(Void_t*);
 	}
@@ -246,7 +247,7 @@ int		type;
 		}
 
 		if((vd->mode&VM_TRACE) && _Vmtrace)
-			(*_Vmtrace)(vm, (uchar*)data, (uchar*)data, size);
+			(*_Vmtrace)(vm, (Vmuchar_t*)data, (Vmuchar_t*)data, size, 0);
 	}
 
 	return data;
@@ -264,9 +265,9 @@ Void_t*		addr;
 }
 
 #if __STD_C
-static poolcompact(Vmalloc_t* vm)
+static int poolcompact(Vmalloc_t* vm)
 #else
-static poolcompact(vm)
+static int poolcompact(vm)
 Vmalloc_t*	vm;
 #endif
 {
@@ -285,7 +286,7 @@ Vmalloc_t*	vm;
 	{	next = seg->next;
 
 		if(!(fp = seg->free))
-			goto loop;
+			continue;
 
 		seg->free = NIL(Block_t*);
 		if(seg->size == (s = SIZE(fp)&~BITS))
@@ -294,9 +295,10 @@ Vmalloc_t*	vm;
 
 		if((*_Vmtruncate)(vm,seg,s,1) < 0)
 			seg->free = fp;
-	loop:
-		seg = next;
 	}
+
+	if((vd->mode&VM_TRACE) && _Vmtrace)
+		(*_Vmtrace)(vm, (Vmuchar_t*)0, (Vmuchar_t*)0, 0, 0);
 
 	CLRLOCK(vd,0);
 	return 0;
@@ -318,7 +320,7 @@ size_t		align;
 }
 
 /* Public interface */
-Vmethod_t _Vmpool =
+static Vmethod_t _Vmpool =
 {
 	poolalloc,
 	poolresize,
@@ -329,3 +331,11 @@ Vmethod_t _Vmpool =
 	poolalign,
 	VM_MTPOOL
 };
+
+__DEFINE__(Vmethod_t*,Vmpool,&_Vmpool);
+
+#ifdef NoF
+NoF(vmpool)
+#endif
+
+#endif

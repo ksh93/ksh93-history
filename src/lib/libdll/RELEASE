@@ -1,0 +1,11 @@
+00-01-26 dlllook: add -- dlsym() with `_' weak prefix fallback
+99-04-01 features/dll: drop <stdio.h> -- iffe protos printf
+99-03-19 static=1 for all but win32.*
+98-06-01 dllfind: fix version search
+98-03-11 features/dll: probe for _DLL_RLD_SYM
+98-03-01 dllnext: fix to work!
+98-01-23 -ldl test moved to lib0ast
+98-01-11 update for astconf("LIBPATH")
+	 add dllnext(flags) to uncover next layer
+	 dllfind() and dllnext() in separate files (for 3d)
+97-10-11 move from libast so libast can link static

@@ -1,95 +1,85 @@
-/*
- * CDE - Common Desktop Environment
- *
- * Copyright (c) 1993-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
- */
 /***************************************************************
 *                                                              *
-*                      AT&T - PROPRIETARY                      *
+*           This software is part of the ast package           *
+*              Copyright (c) 1985-2000 AT&T Corp.              *
+*      and it may only be used by you under license from       *
+*                     AT&T Corp. ("AT&T")                      *
+*       A copy of the Source Code Agreement is available       *
+*              at the AT&T Internet web site URL               *
 *                                                              *
-*         THIS IS PROPRIETARY SOURCE CODE LICENSED BY          *
-*                          AT&T CORP.                          *
+*     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*                Copyright (c) 1995 AT&T Corp.                 *
-*                     All Rights Reserved                      *
-*                                                              *
-*           This software is licensed by AT&T Corp.            *
-*       under the terms and conditions of the license in       *
-*       http://www.research.att.com/orgs/ssr/book/reuse        *
+*     If you received this software without first entering     *
+*       into a license with AT&T, you have an infringing       *
+*           copy and cannot use it without violating           *
+*             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
-*           Software Engineering Research Department           *
-*                    AT&T Bell Laboratories                    *
+*               Network Services Research Center               *
+*                      AT&T Labs Research                      *
+*                       Florham Park NJ                        *
 *                                                              *
-*               For further information contact                *
-*                     gsf@research.att.com                     *
+*             Glenn Fowler <gsf@research.att.com>              *
+*              David Korn <dgk@research.att.com>               *
+*               Phong Vo <kpv@research.att.com>                *
 *                                                              *
 ***************************************************************/
 #include	"sfhdr.h"
 
 /*	Read n bytes from a stream into a buffer
-**	Note that the reg declarations below must be kept in
-**	their relative order so that the code will configured
-**	correctly on Vaxes to use "asm()".
 **
 **	Written by Kiem-Phong Vo (06/27/90)
 */
 
 #if __STD_C
-sfread(reg Sfio_t* f, Void_t* buf, reg int n)
+ssize_t sfread(reg Sfio_t* f, Void_t* buf, reg size_t n)
 #else
-sfread(f,buf,n)
-reg Sfio_t*	f;	/* read from this stream. r11 on Vax	*/
-Void_t*		buf;	/* buffer to read into			*/
-reg int		n;	/* number of bytes to be read. r10	*/
+ssize_t sfread(f,buf,n)
+reg Sfio_t*	f;	/* read from this stream. 	*/
+Void_t*		buf;	/* buffer to read into		*/
+reg size_t	n;	/* number of bytes to be read. 	*/
 #endif
 {
-	reg char*	s;	/* Vax r9	*/
-	reg uchar*	next;	/* Vax r8	*/
-	reg int		r;	/* Vax r7	*/
-	reg char*	begs;
-	reg int		local;
+	reg uchar	*s, *begs, *next;
+	reg ssize_t	r;
+	reg int		local, justseek;
 
 	GETLOCAL(f,local);
+	justseek = f->bits&SF_JUSTSEEK; f->bits &= ~SF_JUSTSEEK;
 
 	/* release peek lock */
 	if(f->mode&SF_PEEK)
-	{	if(!(f->mode&SF_READ) || (uchar*)buf != f->next)
+	{	if(!(f->mode&SF_READ) )
 			return -1;
 
-		f->mode &= ~SF_PEEK;
-		if(f->mode&SF_PKRD)
-		{	/* actually read the data now */
-			f->mode &= ~SF_PKRD;
-			if(n > 0 && (n = read(f->file,(char*)f->data,n)) < 0)
-				n = 0;
-			f->endb = f->data+n;
-			f->here += n;
+		if(f->mode&SF_GETR)
+		{	if(((uchar*)buf + f->val) != f->next)
+			{	Sfrsrv_t* frs;
+				if(!(frs = _sfrsrv(f,0)) || frs->data != (uchar*)buf)
+					return -1;
+			}
+			f->mode &= ~SF_PEEK;
+			return 0;
 		}
-
-		f->next += n;
-		f->endr = f->endb;
-		return n;
+		else
+		{	if((uchar*)buf != f->next)
+				return -1;
+			f->mode &= ~SF_PEEK;
+			if(f->mode&SF_PKRD)
+			{	/* actually read the data now */
+				f->mode &= ~SF_PKRD;
+				if(n > 0)
+					n = (r = read(f->file,f->data,n)) < 0 ? 0 : r;
+				f->endb = f->data+n;
+				f->here += n;
+			}
+			f->next += n;
+			f->endr = f->endb;
+			return n;
+		}
 	}
 
-	s = begs = (char*)buf;
+	s = begs = (uchar*)buf;
 	for(;; f->mode &= ~SF_LOCK)
 	{	/* check stream mode */
 		if(SFMODE(f,local) != SF_READ && _sfmode(f,SF_READ,local) < 0)
@@ -101,42 +91,48 @@ reg int		n;	/* number of bytes to be read. r10	*/
 		SFLOCK(f,local);
 
 		/* determine current amount of buffered data */
-		if((r = f->endb - f->next) > n)
+		if((r = f->endb - f->next) > (ssize_t)n)
 			r = n;
 
 		if(r > 0)
-		{	/* copy data already in buffer */
-			next = f->next;
-
-#if _vax_asm		/* s is r9, next is r8, r is r7 */
-			asm( "movc3	r7,(r8),(r9)" );
-			s += r;
-			next += r;
-#else
-			MEMCPY(s,next,r);
-#endif
-			f->next = next;
+		{	/* copy buffered data */
+			if((next = f->next) == s)
+				f->next += r;
+			else
+			{	MEMCPY(s,next,r);
+				f->next = next;
+			}
 			if((n -= r) <= 0)
 				break;
 		}
-		else if((f->flags&(SF_STRING|SF_MMAP)) ||
-			(n < f->size && !(f->extent < 0 && (f->flags&SF_SHARE))) )
+		else if((f->flags&SF_STRING) || (f->bits&SF_MMAP) )
 		{	if(SFFILBUF(f,-1) <= 0)
 				break;
 		}
 		else
-		{	/* stream buf is empty, do a direct read to user's buf */
+		{	/* reset buffer before refilling */
 			f->next = f->endb = f->data;
-			if(f->extent < 0 && (f->flags&SF_SHARE) )
-				r = n;
-			else	r = n < _Sfpage ? n : (n/_Sfpage)*_Sfpage;
-			if((r = SFRD(f,s,r,f->disc)) == 0)
-				break;
-			else if(r > 0)
+
+			if(justseek) /* limit buffer filling */
+			{	if(SFUNBUFFER(f,n) ||
+				   (r = (n/SF_GRAIN + 1)*SF_GRAIN) > f->size )
+					r = (ssize_t)n;
+			}
+			else if(((f->flags&SF_SHARE) && f->extent < 0) ||
+				(f->extent >= 0 && (f->here+n) >= f->extent) ||
+				(r = f->size) <= (ssize_t)n)
+					r = (ssize_t)n;
+
+			if(r != (ssize_t)n) /* fill stream buffer, then copy */
+				r = SFRD(f,f->next,r,f->disc);
+			else if((r = SFRD(f,s,r,f->disc)) > 0) /* user buffer */
 			{	s += r;
 				if((n -= r) <= 0)
 					break;
 			}
+			
+			if(r == 0) /* must be eof */
+				break;
 		}
 	}
 

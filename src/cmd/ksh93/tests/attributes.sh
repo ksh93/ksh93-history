@@ -1,3 +1,27 @@
+################################################################
+#                                                              #
+#           This software is part of the ast package           #
+#              Copyright (c) 1982-2000 AT&T Corp.              #
+#      and it may only be used by you under license from       #
+#                     AT&T Corp. ("AT&T")                      #
+#       A copy of the Source Code Agreement is available       #
+#              at the AT&T Internet web site URL               #
+#                                                              #
+#     http://www.research.att.com/sw/license/ast-open.html     #
+#                                                              #
+#     If you received this software without first entering     #
+#       into a license with AT&T, you have an infringing       #
+#           copy and cannot use it without violating           #
+#             AT&T's intellectual property rights.             #
+#                                                              #
+#               This software was created by the               #
+#               Network Services Research Center               #
+#                      AT&T Labs Research                      #
+#                       Florham Park NJ                        #
+#                                                              #
+#              David Korn <dgk@research.att.com>               #
+#                                                              #
+################################################################
 function err_exit
 {
 	print -u2 -n "\t"
@@ -84,4 +108,41 @@ fi
 if	[[ $(export | grep '^PATH=') != PATH=* ]]
 then	err_exit 'export not working'
 fi
+picture=(
+	bitmap=/fruit
+	size=(typeset -E x=2.5)
+)
+string="$(print $picture)"
+if [[ "${string}" != *'size=( typeset -E'* ]]
+then	err_exit 'print of compound exponential variable not working'
+fi
+sz=(typeset -E y=2.2)
+string="$(print $sz)"
+if [[ "${sz}" == *'typeset -E -F'* ]]
+then 	err_exit 'print of exponential shows both -E and -F attributes'  
+fi
+print 'typeset -i m=48/4+1;print -- $m' > /tmp/ksh$$
+chmod +x /tmp/ksh$$
+typeset -Z2 m
+if	[[ $(/tmp/ksh$$) != 13 ]]
+then	err_exit 'attributes not cleared for script execution'
+fi
+typeset -Z  LAST=00
+unset -f foo
+function foo
+{
+        if [[ $1 ]]
+        then    LAST=$1
+        else    ((LAST++))
+        fi
+}
+foo 1
+if	(( ${#LAST} != 2 ))
+then	err_exit 'LAST!=2'
+fi
+foo
+if	(( ${#LAST} != 2 ))
+then	err_exit 'LAST!=2'
+fi
+rm -rf /tmp/ksh$$
 exit	$((Errors))

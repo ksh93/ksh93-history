@@ -26,3 +26,18 @@ cat{
 	#    endif /* _lib_sigprocmask */
 	#endif /* _lib_sigsetmask */
 }end
+tst	output{
+	#include <signal.h>
+	main()
+	{
+	#ifdef SIGRTMIN
+		printf("#undef	_SIGRTMIN\n");
+		printf("#define _SIGRTMIN	%d\n", SIGRTMIN);
+	#endif
+	#ifdef SIGRTMAX
+		printf("#undef	_SIGRTMAX\n");
+		printf("#define _SIGRTMAX	%d\n", SIGRTMAX);
+	#endif
+		return 0;
+	}
+}end

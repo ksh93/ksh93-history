@@ -1,45 +1,27 @@
-/*
- * CDE - Common Desktop Environment
- *
- * Copyright (c) 1993-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
- */
 /***************************************************************
 *                                                              *
-*                      AT&T - PROPRIETARY                      *
+*           This software is part of the ast package           *
+*              Copyright (c) 1985-2000 AT&T Corp.              *
+*      and it may only be used by you under license from       *
+*                     AT&T Corp. ("AT&T")                      *
+*       A copy of the Source Code Agreement is available       *
+*              at the AT&T Internet web site URL               *
 *                                                              *
-*         THIS IS PROPRIETARY SOURCE CODE LICENSED BY          *
-*                          AT&T CORP.                          *
+*     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*                Copyright (c) 1995 AT&T Corp.                 *
-*                     All Rights Reserved                      *
-*                                                              *
-*           This software is licensed by AT&T Corp.            *
-*       under the terms and conditions of the license in       *
-*       http://www.research.att.com/orgs/ssr/book/reuse        *
+*     If you received this software without first entering     *
+*       into a license with AT&T, you have an infringing       *
+*           copy and cannot use it without violating           *
+*             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
-*           Software Engineering Research Department           *
-*                    AT&T Bell Laboratories                    *
+*               Network Services Research Center               *
+*                      AT&T Labs Research                      *
+*                       Florham Park NJ                        *
 *                                                              *
-*               For further information contact                *
-*                     gsf@research.att.com                     *
+*             Glenn Fowler <gsf@research.att.com>              *
+*              David Korn <dgk@research.att.com>               *
+*               Phong Vo <kpv@research.att.com>                *
 *                                                              *
 ***************************************************************/
 #include	"sfhdr.h"
@@ -50,41 +32,58 @@
 */
 
 #if __STD_C
-Void_t* sfreserve(reg Sfio_t* f, int size, int lock)
+Void_t* sfreserve(reg Sfio_t* f, ssize_t size, int type)
 #else
-Void_t* sfreserve(f,size,lock)
-reg Sfio_t	*f;	/* file to peek */
-int		size;	/* size of peek */
-int		lock;	/* 1 to lock stream and not advance pointer */
+Void_t* sfreserve(f,size,type)
+reg Sfio_t*	f;	/* file to peek */
+ssize_t		size;	/* size of peek */
+int		type;	/* LOCKR: lock stream, LASTR: last record */
 #endif
 {
-	reg int		n;
+	reg ssize_t	n, sz;
 	reg Sfrsrv_t*	frs;
 	reg int		mode;
 
 	/* initialize io states */
 	frs = NIL(Sfrsrv_t*);
-	_Sfi = -1;
+	_Sfi = f->val = -1;
 
-	if(lock && size == 0)
-	{	/* this case only returns the current status and lock */
+	/* return the last record */
+	if(type == SF_LASTR )
+	{	if((frs = _sfrsrv(f,0)) && (n = -frs->slen) > 0)
+		{	frs->slen = 0;
+			_Sfi = f->val = n;
+			return (Void_t*)frs->data;
+		}
+		else	return NIL(Void_t*);
+	}
+
+	if(type > 0 && !(type == SF_LOCKR || type == 1) )
+		return NIL(Void_t*);
+
+	if((sz = size) == 0 && type != 0)
+	{	/* only return the current status and possibly lock stream */
 		if((f->mode&SF_RDWR) != f->mode && _sfmode(f,0,0) < 0)
 			return NIL(Void_t*);
 
 		SFLOCK(f,0);
 		if((n = f->endb - f->next) < 0)
 			n = 0;
-		if(!f->data)
+
+		if(!f->data && type > 0)
 			frs = _sfrsrv(f,0);
+
 		goto done;
 	}
+	if(sz < 0)
+		sz = -sz;
 
 	/* iterate until get to a stream that has data or buffer space */
 	for(;;)
 	{	/* prefer read mode so that data is always valid */
 		if(!(mode = (f->flags&SF_READ)) )
 			mode = SF_WRITE;
-		if(f->mode != mode && _sfmode(f,mode,0) < 0)
+		if((int)f->mode != mode && _sfmode(f,mode,0) < 0)
 		{	n = -1;
 			goto done;
 		}
@@ -94,18 +93,26 @@ int		lock;	/* 1 to lock stream and not advance pointer */
 		if((n = f->endb - f->next) < 0)	/* possible for string+rw */
 			n = 0;
 
-		if(n > 0 && n >= size)	/* all done */
+		if(n > 0 && n >= sz)	/* all done */
 			break;
 
 		/* do a buffer refill or flush */
 		if(f->mode&SF_WRITE)
 			(void)SFFLSBUF(f, -1);
-		/* make sure no peek-read if there is data in buffer */
-		else if(n == 0 || f->extent >= 0 || !(f->flags&SF_SHARE))
-		{	if(lock && n == 0 && f->extent < 0 && (f->flags&SF_SHARE) )
-				f->mode |= SF_RV;
-			(void)SFFILBUF(f, size <= 0 ? -1 : (size-n) );
+		else if(type > 0 && f->extent < 0 && (f->flags&SF_SHARE) )
+		{	if(n == 0) /* peek-read only if there is no buffered data */
+			{	f->mode |= SF_RV;
+				(void)SFFILBUF(f, sz == 0 ? -1 : (sz-n) );
+			}
+			if((n = f->endb - f->next) < sz)
+			{	if(f->mode&SF_PKRD)
+				{	f->endb = f->endr = f->next;
+					f->mode &= ~SF_PKRD;
+				}
+				goto done;
+			}
 		}
+		else	(void)SFFILBUF(f, sz == 0 ? -1 : (sz-n) );
 
 		/* now have data */
 		if((n = f->endb - f->next) > 0)
@@ -113,60 +120,49 @@ int		lock;	/* 1 to lock stream and not advance pointer */
 		else if(n < 0)
 			n = 0;
 
-		/* this type of stream requires immediate return */
-		if(lock && f->extent < 0 && (f->flags&SF_SHARE) )
-			break;
-
-		/* this test fails only if unstacked to an opposite
-		   stream or if SF_PKRD was set during _sffilbuf() */
+		/* this test fails only if unstacked to an opposite stream */
 		if((f->mode&mode) != 0)
 			break;
 	}
 
-	/* try to accomodate request size */	
-	if(n > 0 && n < size && (f->mode&mode) != 0 )
-	{
+	if(n > 0 && n < sz && (f->mode&mode) != 0 )
+	{	/* try to accomodate request size */	
 		if(f->flags&SF_STRING)
 		{	if((f->mode&SF_WRITE) && (f->flags&SF_MALLOC) )
-			{	(void)SFWR(f,f->next,size,f->disc);
+			{	(void)SFWR(f,f->next,sz,f->disc);
 				n = f->endb - f->next;
 			}
 		}
 		else if(f->mode&SF_WRITE)
-		{	if(lock && (frs = _sfrsrv(f,size)) )
-				n = size;
+		{	if(type > 0 && (frs = _sfrsrv(f,sz)) )
+				n = sz;
 		}
-		/* (f->extent - f->here) >= (size-n) ensures no stack pop */
-		else if(!(f->flags&SF_MMAP) && !lock && f->extent >= 0L &&
-			(f->extent - f->here) >= (size-n) && (frs = _sfrsrv(f,size)) )
-		{	if((n = SFREAD(f,(Void_t*)frs->data,size)) < size)
-			{	if(n > 0)
-					(void)SFSEEK(f,(long)(-n),1);
-				frs = NIL(Sfrsrv_t*);
-				n = f->endb - f->next;
-			}
+		else /*if(f->mode&SF_READ)*/
+		{	if(type <= 0 && (frs = _sfrsrv(f,sz)) &&
+			   (n = SFREAD(f,(Void_t*)frs->data,sz)) < sz)
+				frs->slen = -n;
 		}
 	}
 
 done:
 	/* return true buffer size */
-	_Sfi = n;
+	_Sfi = f->val = n;
 
 	SFOPEN(f,0);
 
-	if(n < 0 || (size > 0 && n < size) || (size < 0 && n == 0) )
+	if((sz > 0 && n < sz) || (n == 0 && type <= 0) )
 		return NIL(Void_t*);
 	else
 	{	reg Void_t* rsrv = frs ? (Void_t*)frs->data : (Void_t*)f->next;
 
-		if(lock && rsrv)
-		{	f->mode |= SF_PEEK;
-			f->endr = f->endw = f->data;
+		if(rsrv)
+		{	if(type > 0)
+			{	f->mode |= SF_PEEK;
+				f->endr = f->endw = f->data;
+			}
+			else if(rsrv == (Void_t*)f->next)
+				f->next += (size >= 0 ? size : n);
 		}
-		else if(n == 0)
-			rsrv = NIL(Void_t*);
-		else if(!frs)
-			f->next += (size >= 0 ? size : n);
 
 		return rsrv;
 	}

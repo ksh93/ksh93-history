@@ -1,11 +1,385 @@
-libast changes
-
-08/11/95 fix malloc bug in magic
+00-02-02 vm*: add NoF() for data only files
+00-01-27 fts: fix top level .==.. statp bug (thanks to dr. ek)
+00-01-25 conf.tab: fix LFS*_*LAGS typo
+00-01-24 astlicense: handle type=verbose, license.notice, author=*
+00-01-11 pathprobe: generate info for first probe script on PATH - duh
+	 ast.h: add NoF(x) for files that define no functions
+	 tmpfile: fix implementation
+	 global change for string ERROR_translate() dictionary names
+	 optget: fix new way but no long names off by one
+	 optget: handle [--dictionary?name]
+99-11-19 comp/conf.sh: `expr length XXX` is not universal
+	 drop sfstdio; stdio via functions everywhere
+	 drop Makefile conditionals (and follow our own advice for once)
+	 sfio: new stream after atexit() bug fix
+	 tm: Tm_zone_t.daylight=0 for standard time within zone
+	 stdio: fopen => _ast_fopen: only way short of binary compatibility
+	 Makefile: atmain.C falls back to atmain.c
+	 optget: add --keys, s<section> option
+	 stdio: _UWIN check for foreign stdio
+99-11-11 astlicense: add
+99-10-31 glob: fix regexec pattern; add PATH_ATTRIBUTES case check
+	 pathpath: path==0 means malloc space
+99-10-22 tmfmt: %C=2-digit-century, %k=date(1), %y=2-digit-year-in-century
+99-10-18 fastfind: expanded default db lookup
+99-08-11 magic: fix off by one registry malloc
+	 features/fs: add __RENAME checks for stat familiy (netbsd)
+	 features/fs: major()/minor() fixes for s5
+	 features/libpath.sh: netbsd fix -- ld.so not in std places
+	 misc/fastfind: fix codes path generation bug
+	 optget: beef up --?* description, fix <TR>...</TR> nesting
+	 pathprobe: check for override (writable key file) first
+	 features/time: int tmtimeofday(struct timeval*);
+	 optget: fix opt_info.num, even if opt_info.arg!=0
+	 fts: FTS_PHYSICAL => FTS_SEEDOTDIR, add FTS_CHOP
+	 fastfind: init dir tab with logical and physical name
+	 glob: add gnu GLOB_ALTDIRFUNC
+99-07-17 sfio: kpv update and sfhdr.h sync!
+99-06-24 stdio: fix fflush() to ignore sfseek(0) return value
+99-06-23 magic: '\r' is text not control to placate m$
+99-06-08 stdio: fix fseek,ftell semantics
+	 uwin stdio: fflush() => _doflsh() to avoid __cplusplus clash
+	 getopt: call liberror() to avoid error() conflict
+	 tmfmt,tmscan: %N zone type (nation code), %z zone minutes west offset
+	 tmfmt: - no pad _ space pad 0 leading 0 pad
+99-05-28 magic: fix 'x' == '*' for any number, magic.tab tweaks
+	 features/lib: verify that stat64 really works
+99-05-21 tm*: add TM_WINDOW==69 for consistent century windowing guard year
+99-05-18 tmtime: add century leap year calc anticipating unsigned time_t
+99-05-17 sfkeyprintf: handle %o and %x!!
+99-05-09 pathprobe: $HOME/.probe if not suid and st_uid!=geteuid()
+99-04-28 magic,magic.tab: add registry()
+99-04-24 regcomp: fix ksh pattern +! parse
+	 regfatalpat: add
+	 optget: make : ? ] double escape consistent in all contexts
+99-04-01 features: drop iffeio.h and stdio.h when only printf() used
+	 regex: fix stats() .l and .k count
+	 fmtquote: added; most general fmtesc() form
+99-03-22 fmtesc.c,ast.h: add fmtnesq()
+	 optget: --?x works for -x option flag
+99-03-17 features/limits.c: workaround solaris __EXTENSIONS__ _timespec bug
+	 workaround limits.h circular prereq with ignore stdio.h
+	 sfvprintf: %04e left-pad zero fixed
+99-03-03 fts: uncle already: add FTS_SEEDOTDIR to retain leading ./
+	 regex: REG_MULTIPLE, BM for fixed string alternation
+	 optget: embedded `-' optional in long options, prefix={0,1,2}
+99-02-14 fastfind: fix dir format bug that emitted wrong paths
+	 astconf: fix redef off by one bug
+99-02-11 pathcanon(): don't cache astconf("PATH_LEADING_SLASHES", NiL, NiL)
+99-01-23 optget: move <old_opt.h> back into <option.h>, no open-close
+	 optget: add "[index:long-name:description]" for --long-name
+	 comp/gross: add weak __libc_attr for irix < 6.5 compatibility
+	 features/limits.c: tweak the guards again
+99-01-11 fastfind: handle old format count byte order
+	 magic.tab: fix elf to use real phdr offset
+	 magic.c,magic.tab: fix | to act like switch/case
+	 comp/fross.c,features/hack: for gross hacks
+	 features/stdio: avoid sfio namespace pollution
+98-12-25 tmdate: yyyy.mm.dd
+	 pathprobe: fix procrun() cmd path bug
+	 fmtesq: add
+	 features/common: win32.alpha va_list
+	 magic: add pc alpha object
+98-11-11 strmatch: add STR_ICASE
+	 pathprobe: punt to $HOME/.probe/<key+HOSTTYPE> if not S_ISUID
+	 tmzone,tmdate: handle +-minutes, nn/MMM/yyyy
+	 stropt: fix nested quote pop
+	 tmfmt: add %K => %Y-%m-%d/%H:%M:%S
+	 sfio/stdio: fix fseek() SF_PUBLIC omissions
+	 fmtesc: catch '\\' (duh)
+	 vmalloc: vmbest round bug fix
+98-11-01 fts.c: no pathcanon() if (fts_flags & FTS_PHYSICAL)
+98-10-01 features/stdio prototype fixes
+	 optget: strton() instead of strtol() for #
+98-09-22 regcomp: add REG_DELIMITED and REG_ESCAPE delimited re support
+98-09-15 fix _LARGEFILE64_SOURCE stuff
+	 ast_std.h: provide mmap() prototype
+98-08-11 fix sfpopen() to ignore SIGPIPE by ignoresig() for sfio but not stdio
+	 fix procopen() to ignore SIGPIPE by ignoresig() for PROC_IGNORE
+	 sfio sfpopen/popen update
+	 magic.src: fix ustar entry
+98-07-17 fix ftwalk() short by one malloc()
+	 add fts_notify()
+98-06-25 sfdcmore,sfdcprefix: add
+98-06-19 tokscan: add %f %g
+98-06-01 disc/sf*.c: memset(0) after disc malloc()
+98-05-11 strelapsed: y==Y
+	 fts: pathcanon() top list 
+98-04-01 error: error_info.time for all msgs, just after cmd id
+	 error: no sfsync(sfstdin)
+	 sfio: sfpool, Sffmt_t update
+	 magic.tab: sgi core dumps -- why aren't these elf?
+	 stropt: (v+n) for unknown option is option value if n!=0
+	 procopen: fix setsid() for spawnveg() only
+98-03-19 malloc: add realloc foreign region check
+	 sfdisc.h: rename to match kpv disciplines
+	 fastfind: fix strcasecmp/strcmp directory prefix mixup
+98-03-17 features/fcntl.c,pathtmp,sftmp: add O_TEMPORARY
+98-03-01 pathcanon: fix PATH_LEADING_SLASHES to stat() both slashes
+	 pathcanon: add PATH_VERIFIED
+	 tmdate: add skip[] to expand separator char set
+	 fastfind: FIND_OLD for old 7 bit db, FIND_TYPE for new 8 bit typed db
+	 fastfind: default generates gnu LOCATE02 8 bit db
+	 magic: handle %s in mime description
+	 cdt: kpv update
+	 sfio: kpv update
+	 stdio: fpos64_t fseek64(), ftell64(), fgetpos64(), fsetpos64()
+	 stdio: fseek() => sfseek(SF_PUBLIC) to avoid locking
+	 fts: initialize parent stat[bp] from top level *after* statf done
+	 astmath: add -lm requirement test
+	 *: Astlong_t => _ast_*_t
+	 regex: simplify regcollate() (from doug)
+	 tmtime: preserve Tm_t*tm when calling tminit()
+	 astconf: add readonly PATH_ATTRIBUTES=[cirw]
+98-02-14 fastfind: add FIND_ICASE to ignore case
+	 tmdate,tmgoff: handle (+|-)hh[[:]mm[[:]ss]] absolute timezone
+	 tmdate: `<n> <part>' now assumes `next <n> <part>' instead of `this'
+	 tmfix: fix leap year bug that forgot to add 1900
+	 proc: add PROC_ZOMBIE
+98-02-06 strmatch() char class range bug fix
+	 regex char class range bug fix
+98-01-23 _WIN32: changed the #if logic again to accomodate _GNUC_
+	 mnt: grab the mount options too
+	 ast_std.h: hide getopt,getsubopt from stdlib.h
+	 features/limits.c: add gnu guard macros to avoid limits.h recursion
+	 features/mode.c: include "limits.h" instead of "FEATURE/limits.lcl"
+98-01-11 sfio.h: use Astlong_t, move Sfio_t Sfdisc_t typedef to top for stdio.h
+	 sfhdr.h: #undef SETLOCAL for hpux
+	 sfvprintf,sfvscanf: %I*x for sizeof(int_arg)
+	 handle ftruncate64 and truncate64
+	 dtopen.c: __hppa dll needs Dtset Dtlist Dttree refs here
+97-12-18 fmtnum: add
+97-12-11 magic: handle sgi 64 bit core dumps
+97-12-07 pathtmp: add override for TMPPATH,TMPDIR and cycling
+97-11-11 tm: handle 0 return from gmtime(),localtime() (dos negative time_t)
+	 features/stdio: fix fflush() macro to do physical sync
+97-10-31 astconf PATH_RESOLVE is logical if 3d&&!std, metaphysical otherwise
+	 magic: fix #! mime bug
+	 tm: tmtime() now calls tmfix() and adjusts tm_isdst too=>mtime() works
+97-10-11 dllfind,dlfcn: move to separate -ldll so -last can link static, duh
+	 Makefile,state.c: move forced header generation state.c => Makefile
+	 sfio: update including SF_WHOLE
+97-10-01 sfdostext: add \r\n => \n sfio discipline
+	 stropt: NiL table => p=name for all name=value
+97-08-11 pathtmp: check pid to note forks
+	 procopen: FD_CLOEXEC rfd && wfd
+	 fts: fts_close() after fts_children() with no fts_read() now works
+97-07-17 error: sfsync(sfstdin,sfstdout,sfstderr) instead of sfsync(NiL)
+	 _sfcvinit: add sfio internal interface to base conversion tables
+	 strton: use _Sfcv* base conversion tables instead of sfsscanf()
+	 sfvscanf: use _Sfcv* base conversion tables
+	 mime: x- permutations now matched if exact fails
+	 mime: original- stripped from content-* headers
+	 tmdate: add yyyy-jjj, yyyy-mm-dd
+	 dllfind: add
+	 ccmapid: fix buf copy loop limit
+	 ccmapname,ccmapcpy: add
+	 sfstrtmp: add
+97-05-09 streval: fix up casts for pseudo-ansi cc
+	 features/types: use _ast_int_8 vars to verify support
+	 string/modedata: check for mvs.390 S_IFMT
+	 include/ast(_std).h: add #define __FILE_typedef
+	 magic: add ccode text check
+	 include/ftwalk.h: FTW_PATH=>FTS_NOCHDIR to avoid FTS_AGAIN (duh)
+	 fts: clear status for FTS_AGAIN (fixes rm -r bug)
+	 mnt: add mvs openedition w_getmntent()
+	 sfhdr: _hdr_float && <float.h> for correct MAXDOUBLE
+	 vmalloc/vmbest: if _std_malloc then use malloc()/free() not sbrk()
+	 remove: check _std_remove
+	 procopen: handle pio[{0,1}]=={0,1}
+	 setenviron,features/uinstd: test for mvs.390 dll environ hacks
+96-12-25 <sfio_p.h> -> <ast_common.h>
+	 __EXTERN__(type,object)
+	 __DEFINE__(type,object,value)
+	 magic: check strings in !CC_NATIVE code set too
+	 system: cmd==0 means check for shell access (xopen)
+	 sfhdr.h: fix sfrsrv prototype
+	 add __libc_malloc etc for gnu/linux
+	 astconf(NiL,path,name) == astconf(name,path,NiL) + no liberror
+	 fts_open: if toplist() stat fails return 0
+	 ftwalk: handle fts_open()==0 via one phony userf() call
+	 sfmode: S_ISFIFO default is SF_SHARE=0
+	 features/lib: _WIN32 _lib_vfork=1 by default
+	 unsigned<0 comparison and other fixes via sgi.mips4 cc
+	 stk.c: use <align.h> ALIGN_BOUND for stkalloc()
+	 features/lib,vfork: uwin fix
+	 ast_std.h: fix strto[u]ll prototypes with features/types _ast_int_8
+	 getsubopt: add for xopen 4.2 compatibility
+	 drop function __IMPORT__
+	 magic: more magic
+	 change #define FILE from Sfio_t to struct _sfio_s
+	 state.c: add generated includes that may be hit by std for MAM
+	 bytesex: forgot about sizeof(long)=>7; could we fix the name too?
+	 vmalloc.h: fix vmnewof() definition
+	 sfio.h,stdio.h,ast_common.h: pollution cleanup
+	 magic.c: add | op for switch
+	 Makefile: stdio.h was on both HEADERSRC and HEADERGEN -- don't do that
+	 drop pp:notice to get <sfio.h> ... <ast.h> to work 
+	 regex: add [[:<:]]==\< and [[:>:]]==\> for bsd compat
+	 mime.c: ignore X-* headers while scanning for Content-*
+	 magic.c: check for negative indirect offsets
+	 magic.tab: fix dos entry that generated negative indirect offsets
+	 vmalloc.h: add vmstrdup() prototype
+	 hash.h: add hashgetbucket() macro
+	 magic.c: MAGIFILE is now a : file list
+	 mnt.c: another 4.4 bsd fix -- users must include <sys/crap.h>
+	 common: fix _WIN32 chicken&egg with va_copy
+	 sfio: forgot to set f->val along with _Sfi in sfexcept() 
+	 Makefile: add mini target for uwin libmini.a
+	 sfcvt.c: workaround for flaky long double optimizers
+	 features/common: fix to work with va_list==void*
+	 regexec.c: fix REG_STARTEND subexpression offsets
+	 strmatch.c: don't forget <wctype.h>
+	 regrexec.c: fix REG_INVERT end boundary bug that missed last record
+	 astconf.c: notify(0,0,"a=b") called for each setenviron("a=b")
+	 pathcanon.c: check astconf(PATH_LEADING_SLASHES) to preserve //*
+96-11-28 _LARGEFILE64_SOURCE by default if possible: NOTE: assumes xopen
+	 regerror: fix for xopen
+	 getopt: fix for xopen
+	 magic: add ciao virtual database
+	 astconf: posix/strict/xopen implies "standard" conformance
+	 fs3d.h: hide mount prototype
+	 ast_std.h,mnt.c,features/fs: ncr port tweaks
+96-10-31 version 5.0
+	 add strtoll() strtoull()
+	 sfkeyprintf: upgrade to int_max args
+	 ast.h: add ssizeof() to work around unsigned botch
+	 conf.sh: add shell actions to conf.tab
+	 _DLL*: drop for _BLD_<lib> + __EXPORT__ + __IMPORT__
+	 sfio,cdt,vmalloc: kpv update
+96-10-11 <ccode.h>: add character code map support
+	 procclose: return shell style exit status
+	 features/fs: pun statvfs.f_basetype to statvfs.f_reserved7 for mvs
+	 uwin: add subdir for uwin additions
+	 ast_std.h: swab() is from <stdlib.h>
+	 sfio.h: <ast_std.h> if _PACKAGE_ast
+	 magic.tab: add mips[1-4], 64-bit
+	 port tweaks for sol.sun4 and sun4
+96-09-06 strerror: add
+	 fmterror: uses strerror
+	 str*search: use sfiso646() order
+	 strpsearch: add
+	 magic: add Magic_t.mime mime type return for magictype()
+	 mime.h: add
+	 strton: use sfsscanf()
+	 strperm: factor in umask() if no who
+	 pathtmp: add TMPPATH check
+	 libevent: add
+	 magic: add discipline to magicopen()
+	 mime: add discipline to mimeopen()
+96-08-31 regex: fix BM fail table generator
+96-08-11 mntread: fix mnt.type for SCO variant
+	 conf.tab: add SCO KERNEL_* sysconf() vars
+	 fastfind: add findwrite(), fix findread() FF_OFF omission
+	 ftwalk: reimplement on top of fts
+	 fnmatch,re_comp,regexp: reimplement on top of regex
+	 basename,dirname,fmtmsg,fts,ftw,getdate,getsubopt,glob: add
+	 hsearch,nftw,realpath,strftime,strptime,swab,tempnam: add
+	 tsearch,wordexp: add
+	 getcwd: cache last path for easy test
+96-07-17 error: sfsync(NiL) ... write ... sfsync(sfstderr)
+	 astconf: handle readonly *(DEV|DIR) vars
+96-04-01 swapop: fix stupid return value bug
+	 features/int.c: fix int_swap generation bug
+	 regnexec,regrexec: fix unsigned underflow init error
+	 ls.h: fix iblocks() to be in units of LS_BLOCKSIZE
+96-02-29 magic: space before function is definition with no call
+	 hash: drop hash_info from public interface
+	 hash: OBSOLETE hashlast()
+	 hash: add Hash_root_t.Hash_last_t to public interface
+	 add strsearch() and strnsearch() to complement strlook()
+	 add hashkey.h for keyword->long hash
+	 pathpath: pathpath(0,0,"",0) disables $0 $_ $PWD relative search
+	 sfio: sfstrtod+sfhdr update
+	 regex: fix REG_LENIENT to map BRE \[+?|] to ERE [+?|]
+	 change _std_malloc iffe test so it doesn't hang on alpha
+	 sfhdr.h: features/sfio generates _lib_cvt instead of _i386_cvt
+	 ast_hdr.h: add va_copy(a,b) to copy va_list b to a
+	 getopt: fix stupid getopt() -> optget() bug
+	 sfvprintf: %h? now downcasts
+	 regex: handle strto?l() errno in regcomp()
+	 sfstrtod: _Sfstrtod_already_defined -> _STUB_sfstrtod
+	 ast_std.h: hide valloc() and ignore <strings.h>
+	 sfkeyprintf: pass phony va_list for '2'
+	 regex: change HIT var type from int to size_t in special()
+	 ast.h: add EXIT_STATUS(x) to convert wait() status to sh exit status
+96-02-14 regex: add _ to \<...\> isalnum test
+	 regex: fix BM inner loop breakout
+	 features/types: size_t is signed on some systems! => _ast_size_t
+	 sfio: sfrd discipline peek optimization
+	 vmalloc: vmalloc.h malloc family macro upgrade
+	 tokopen: fix newline bug for non-restore open
+	 sfio: no inline for gcc until it emits for -g too
+96-02-12 sfio: internal upgrade
+96-02-09 regex: Boyer-Moore boundary fix
+	 vmalloc: snarf latest
+96-02-06 regex: add regrecord() and regrexec() for Boyer-Moore record filtering
+	 regex: rearrange regnexec() args to match buffer,count arg style
+96-01-31 stk: add STK_NULL to stk.h and stk.c
+	 regex: privatize regex.h and fix min re length computation
+	 workaround lazy strdup() implementations in features/lib _std_malloc
+	 fix stkclose() to free(stream) -- purify missed because of sfio links
+	 unused var cleanup
+	 port/mnt.c must include <ls.h> to get <ast_fs.h>
+	 add SF_FINAL to sfio and stk
+	 sfio reads now on natural block boundaries
+	 add #!!! <level> <message> !!! to tokline()
+	 add REX_BM pre-filter to regcomp/regnexec
+96-01-22 add regcomp env.paren overflow checks
+96-01-11 add Doug McIlroy's regex (converted to C from C++ by gsf)
+	 AT&T Research now
+	 sfgetr optimization
+	 regex buglets
+96-01-05 tweak magic.tab for win32
+95-12-25 add !(...) -> (...)! to fmtre()
+	 nt tweaks -- functions with no header proto must be defined extern
+95-11-24 version 4.1
+	 add mnt.h mntopen mntread mntclose
+	 convert fmtfs to mnt.h
+	 add RE_LEFTANCHOR and RE_RIGHTANCHOR
+	 gcc inlines must also have global library function instantiation!
+	 add hashview()
+	 fix strtape() internal buffer flow
+	 fix mntread() fs/dir transposition for uts mnttab
+95-10-31 change features/unistd.c includes to break limits-param cycle
+	 add cdt from kpv
+	 sfio snarf from kpv
+	 add [ht]search for _WIN32
+95-10-11 clarify PARANOID pathcheck() warning
+	 fix procopen() LIB_SPAWN environ bug with setenviron() cache
+	 fix setenviron() bug that forgot to reset environ if == 0
+	 add %Z '\0' output format to sfkeyprintf()
+	 sfio snarf for sfvprintf fix
+	 allow multiple hashscan() with scope caveat
+	 add comp/fakelink.h to synthesize a few symlink text patterns
+	 add !<xxx> magic to misc/magic.tab
+	 add FTW_TOP to inhibit recursion (for ftw side effects on top level)
+	 add memfatal() common malloc fatal exception message
+	 add dos \r\n test to misc/magic.c/cklang()
+	 sftmp() O_EXCL+random to avoid collisions
+	 pathtemp() uses sftmp() randomizing
+	 features/fs uses SF_APPENDWR
+	 sftmp() uses pathtemp() -- don't worry, its not circular
+	 a few more _WIN32 compatibility additions
+	 realloc fixed to use VM_RSCOPY|VM_RSMOVE instead of obsolete 1
+	 add hashlook(tab, oldname, HASH_RENAME, newname)
+	 a few more tweaks to satisfy port warnings
+	 add _SFIO_INLINE_PRIVATE to provide real function too
+	 fix <dirent.h> installation test
+	 oops object / shared library compat with _sfgetl2 _sfgetu2
+95-09-11 add getopt() compatibility
+	 add fstat,lstat,mknod,stat fixes for _x versions in sys/stat.h
+	 add getconf CONFORMANCE - posix for things that aren't ast default
+	 sfio_t.h: #ifndef _SFIO_H #include "sfio.h" #endif
+	 snarf vmalloc from kpv
+95-08-11 fix malloc bug in magic
 	 update linux and bsd 386 magic entries
-07/17/95 fix port/astconf universe initialization
+	 error_info.auxilliary returns new level, |=ERROR_OUTPUT if msg done
+	 drop fnmatch from strmatch for sparc (solaris) until it collates
+95-07-17 fix port/astconf universe initialization
 	 fix misc/optget opt_info.nopt initialization
 	 drop tmset() TZ=... because it only worked when TZ=... was ignored
-05/09/95 mongo <ast.h> namespace cleanup
+95-05-09 mongo <ast.h> namespace cleanup
 	 drop > 2 year old obsolete interfaces
 	 sfvprintf.c fix for (char:8 short:16 int:32 long:64) architectures
 	 TMP_MAX back into conf.tab
@@ -33,7 +407,7 @@ libast changes
 	 magic.c falls back to malloc for now
 	 add environ to <ast.h> -- C library global data syms are *RESERVED*
 	 sfhdr.h memccpy(1,2,3,size_t) prototype
-04/01/95 version 4.0
+95-04-01 version 4.0
 	 convert to vmalloc
 	 allow sigcritical() nesting mismatch to work around vfork() bug
 	 add strexpr() primitive for streval() with user handle (like ftwalk)
@@ -76,7 +450,7 @@ libast changes
 	 add quad type to magic
 	 add astfeature() to unify universe style dynamic features
 	 add ftwflags() to determine FTW_* flags from astfeature()
-03/11/95 fix stropt() to not modify its *const* arg
+95-03-11 fix stropt() to not modify its *const* arg
 	 handle "'\ quotes and chresc() in stropt() values
 	 , treated like :space: between stropt() options
 	 fix procopen() fd dup to ignore self-dups
@@ -88,19 +462,19 @@ libast changes
 	 add <keyprintf.h> and keyprintf() to support %(...)? in commands
 	 add Hash_table_t for size==0 in stropt()
 	 add EXTTYPE extended header to tar.h
-02/14/95 sfmove() buffer size overflow fix
+95-02-14 sfmove() buffer size overflow fix
 	 add _SFSTDIO_H to sfio.h
 	 rename setenv() to setenviron() -- posix finally decided
 	 rename <option.h> opt_* to opt_info.*
 	 update features/unistd.c for _SC_* and _PC_* posix additions
-01/19/95 (char*)uchar cast in fmtesc()
+95-01-19 (char*)uchar cast in fmtesc()
 	 fix hash bucket memory leak in hashlook() [via John Mocenigo]
 	 update strings/strtape()
 	 fix optget()/optjoin() to handle leading +
 	 add ALIGN_ prefix to <align.h> identifiers
-01/11/95 change tm/*.c tmset(0) to tmset(tm_info.zone) to keep user setting
+95-01-11 change tm/*.c tmset(0) to tmset(tm_info.zone) to keep user setting
 	 fix tmform() %Z null pointer dereference
-01/01/95 add this RELEASE file
+95-01-01 add this RELEASE file
 	 fix strperm() to properly handle "644 file"
 	 fix tokline() to return last '\0' terminated line in string
 	 fix tokscan() to properly handle \\n splice

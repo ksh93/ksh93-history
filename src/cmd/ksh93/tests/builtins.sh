@@ -1,3 +1,27 @@
+################################################################
+#                                                              #
+#           This software is part of the ast package           #
+#              Copyright (c) 1982-2000 AT&T Corp.              #
+#      and it may only be used by you under license from       #
+#                     AT&T Corp. ("AT&T")                      #
+#       A copy of the Source Code Agreement is available       #
+#              at the AT&T Internet web site URL               #
+#                                                              #
+#     http://www.research.att.com/sw/license/ast-open.html     #
+#                                                              #
+#     If you received this software without first entering     #
+#       into a license with AT&T, you have an infringing       #
+#           copy and cannot use it without violating           #
+#             AT&T's intellectual property rights.             #
+#                                                              #
+#               This software was created by the               #
+#               Network Services Research Center               #
+#                      AT&T Labs Research                      #
+#                       Florham Park NJ                        #
+#                                                              #
+#              David Korn <dgk@research.att.com>               #
+#                                                              #
+################################################################
 function err_exit
 {
 	print -u2 -n "\t"
@@ -85,8 +109,9 @@ then	err_exit '$0 not correct for eval'
 fi
 unset x
 readonly x
-if	[[ $(readonly) != x ]]
-then	err_exit 'unset readonly variables are not displayed'
+set -- $(readonly)
+if      [[ " $@ " != *" x "* ]]
+then    err_exit 'unset readonly variables are not displayed'
 fi
 if	[[ $(	for i in foo bar
 		do	print $i
@@ -139,4 +164,34 @@ fi
 if	[[ $( trap 'print done' EXIT; trap - EXIT) == done ]]
 then	err_exit 'trap on EXIT not being cleared'
 fi
+if	[[ $(type test) != 'test is a shell builtin' ]]
+then	err_exit 'whence -v test not a builtin'
+fi
+builtin -d test
+if	[[ $(type test) != 'test is '*/test ]]
+then	err_exit 'whence -v test after builtin -d incorrect'
+fi
+typeset -Z3 percent=$(printf '%o\n' "'%'")
+forrmat=\\${percent}s
+if      [[ $(printf "$forrmat") != %s ]]
+then    err_exit "printf $forrmat not working"
+fi
+if	(( $(printf 'x\0y' | wc -c) != 3 ))
+then	err_exit 'printf \0 not working'
+fi
+if	[[ $(printf "%bx%s\n" 'f\to\cbar') != $'f\to' ]]
+then	err_exit 'printf %bx%s\n  not working'
+fi
+alpha=abcdefghijklmnop
+if	[[ $(printf "%10.*s\n" 5 $alpha) != '     abcde' ]]
+then	err_exit 'printf %10.%s\n  not working'
+fi
+float x2=.0000625
+if	[[ $(printf "%10.5E\n" x2) != 6.25000E-05 ]]
+then	err_exit 'printf "%10.5E" not normalizing correctly'
+fi
+($SHELL read -s foobar <<\!
+testing
+!
+) 2> /dev/null || err_exit ksh read -s var fails
 exit $((Errors))

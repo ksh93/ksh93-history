@@ -100,16 +100,18 @@ To run all these tests with the shell you just built, go to the tests
 directory and run the command
         SHELL=../ksh shtests
 
-The file PROMO is an advertisement that extolls the virtues of ksh.
+The file PROMO.mm is an advertisement that extolls the virtues of ksh.
 The file sh.1 contains the troff (man) description of this Shell.
 The file nval.3 contains the troff (man) description of the name-value
 pair library that is needed for writing built-ins that need to
 access shell variables.
 
 The file sh.memo contains a draft troff (mm) memo describing ksh.  The
-file RELEASE contains the changes made in this release since ksh-88.
-The file COMPATIBILITY contains a list of incompatibilities with ksh-88.
-The file bltins.mm is a draft troff (mm) memo describing how to write
+file RELEASE88 contains the changes made for ksh88.  The file RELEASE93
+contains the changes made in this release since ksh-88.  The file
+RELEASE contains bug fixes made in this release since ksh-88.  The file
+COMPATIBILITY contains a list of incompatibilities with ksh-88.  The
+file bltins.mm is a draft troff (mm) memo describing how to write
 built-in commands that can be loaded at run time.
 
 Most of the work for internationalization has been done with ksh93.

@@ -1,45 +1,27 @@
-/*
- * CDE - Common Desktop Environment
- *
- * Copyright (c) 1993-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
- */
 /***************************************************************
 *                                                              *
-*                      AT&T - PROPRIETARY                      *
+*           This software is part of the ast package           *
+*              Copyright (c) 1985-2000 AT&T Corp.              *
+*      and it may only be used by you under license from       *
+*                     AT&T Corp. ("AT&T")                      *
+*       A copy of the Source Code Agreement is available       *
+*              at the AT&T Internet web site URL               *
 *                                                              *
-*         THIS IS PROPRIETARY SOURCE CODE LICENSED BY          *
-*                          AT&T CORP.                          *
+*     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*                Copyright (c) 1995 AT&T Corp.                 *
-*                     All Rights Reserved                      *
-*                                                              *
-*           This software is licensed by AT&T Corp.            *
-*       under the terms and conditions of the license in       *
-*       http://www.research.att.com/orgs/ssr/book/reuse        *
+*     If you received this software without first entering     *
+*       into a license with AT&T, you have an infringing       *
+*           copy and cannot use it without violating           *
+*             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
-*           Software Engineering Research Department           *
-*                    AT&T Bell Laboratories                    *
+*               Network Services Research Center               *
+*                      AT&T Labs Research                      *
+*                       Florham Park NJ                        *
 *                                                              *
-*               For further information contact                *
-*                     gsf@research.att.com                     *
+*             Glenn Fowler <gsf@research.att.com>              *
+*              David Korn <dgk@research.att.com>               *
+*               Phong Vo <kpv@research.att.com>                *
 *                                                              *
 ***************************************************************/
 #include	"sfhdr.h"
@@ -50,14 +32,13 @@
 */
 
 #if __STD_C
-sfclose(reg Sfio_t* f)
+int sfclose(reg Sfio_t* f)
 #else
-sfclose(f)
+int sfclose(f)
 reg Sfio_t*	f;
 #endif
 {
-	reg int		local;
-	reg Sfdisc_t*	disc;
+	reg int		local, ex, rv;
 
 	if(!f)
 		return -1;
@@ -83,49 +64,26 @@ reg Sfio_t*	f;
 	}
 
 	/* this is from popen */
-	if(f->flags&SF_PROCESS)
+	if(f->bits&SF_PROCESS)
 	{	if(local)
 			SETLOCAL(f);
 		return _sfpclose(f);
 	}
 
+	rv = 0;
 	if(f->disc == _Sfudisc)	/* closing the ungetc stream */
 		f->disc = NIL(Sfdisc_t*);
-	/* sync file pointer and announce SF_SYNC event */
-	else if((f->disc && f->disc->exceptf) || (f->flags&(SF_SHARE|SF_WRITE)) )
-		(void)sfsync(f);
+	else if(f->file >= 0)	/* sync file pointer */
+		rv = sfsync(f);
 
 	SFLOCK(f,0);
 
 	/* zap any associated auxiliary buffer */
 	(void)_sfrsrv(f,-1);
 
-	/* terminate disciplines */
-	for(disc = f->disc; disc; )
-	{	reg Sfdisc_t*	next = disc->disc;
-		reg int		ex;
-
-		if(disc->exceptf)
-		{	SFOPEN(f,0);
-			ex = (*disc->exceptf)(f,local ? SF_NEW : SF_CLOSE,disc );
-			if(ex < 0)
-				return ex;
-			else if(ex > 0)
-				return 0;
-			SFLOCK(f,0);
-		}
-
-		if((disc = next) )
-		{	reg Sfdisc_t*	d;
-
-			/* make sure that the next discipline hasn't been popped */
-			for(d = f->disc; d; d = d->disc)
-				if(d == disc)
-					break;
-			if(!d)
-				disc = f->disc;
-		}
-	}
+	/* raise discipline exceptions */
+	if(f->disc && (ex = SFRAISE(f,local ? SF_NEW : SF_CLOSE,NIL(Void_t*))) != 0)
+		return ex;
 
 	if(!local && f->pool)
 	{	/* remove from pool */
@@ -149,43 +107,43 @@ reg Sfio_t*	f;
 			}
 			f->mode |= SF_LOCK;
 		}
-
-		f->disc = NIL(Sfdisc_t*);
 	}
 
-	/* tell the register function */
-	if(_Sfnotify)
-		(*_Sfnotify)(f,SF_CLOSE,f->file);
-
-	if(f->data && (!local || (f->flags&(SF_STRING|SF_MMAP))))
+	if(f->data && (!local || (f->flags&SF_STRING) || (f->bits&SF_MMAP) ) )
 	{	/* free buffer */
 #ifdef MAP_TYPE
-		if(f->flags&SF_MMAP)
-			munmap((caddr_t)f->data,f->endb-f->data);
+		if(f->bits&SF_MMAP)
+			SFMUNMAP(f,f->data,f->endb-f->data);
 		else
 #endif
 		if(f->flags&SF_MALLOC)
-			free((char*)f->data);
+			free(f->data);
 
 		f->data = NIL(uchar*);
 		f->size = -1;
 	}
 
 	/* zap the file descriptor */
+	if(_Sfnotify)
+		(*_Sfnotify)(f,SF_CLOSE,f->file);
 	if(f->file >= 0 && !(f->flags&SF_STRING))
 		CLOSE(f->file);
 	f->file = -1;
 
-	f->mode = SF_AVAIL|SF_LOCK;	/* prevent muttiple closings */
+	SFKILL(f);
+	f->flags &= SF_STATIC;
+	f->here = 0;
+	f->extent = -1;
+	f->endb = f->endr = f->endw = f->next = f->data;
 
-	if(!local && !(f->flags&SF_STATIC) )
-		SFFREE(f);
-	else
-	{	f->flags = (f->flags&SF_STATIC);
-		f->here = 0L;
-		f->extent = -1L;
-		f->endb = f->endr = f->endw = f->next = f->data;
+	if(!local)
+	{	if(f->disc && (ex = SFRAISE(f,SF_FINAL,NIL(Void_t*))) != 0 )
+			return ex;
+
+		f->disc = NIL(Sfdisc_t*);
+		if(!(f->flags&SF_STATIC) )
+			SFFREE(f);
 	}
 
-	return 0;
+	return rv;
 }

@@ -1,4 +1,4 @@
-lib	endgrent,getgrent,getlogin,setgrent
+lib	endgrent,getgrent,setgrent
 lib	fsid,getfsgid,isfsg sys/types.h sys/fss.h fsg.h -lfsg
 mac	fsid sys/types.h sys/fss.h fsg.h
 cat{

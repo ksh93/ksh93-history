@@ -34,6 +34,11 @@ magic \- magic file interface
 .EX
 #include <magic.h>
 
+Magic_t
+{
+	unsigned long	flags;
+};
+
 Magic_t*  magicopen(unsigned long \fIflags\fP);
 void      magicclose(Magic_t* \fImagic\fP);
 
@@ -50,6 +55,9 @@ command magic file.
 returns a magic session handle that is passed to all of the other routines.
 .I flags 
 may be
+.TP
+.L MAGIC_MIME
+Return the MIME type string rather than the magic file description.
 .TP
 .L MAGIC_PHYSICAL
 Don't follow symbolic links.
@@ -121,7 +129,7 @@ calls
 on
 .IR st .
 .L magictype
-always returns a valid string.
+always returns a non-null string.
 If errors are encounterd on
 .I path
 then the return value will contain information on those errors, e.g.,
@@ -149,7 +157,7 @@ An entry is a sequence of lines, each line being a record of
 separated fields.
 The general record format is:
 .EX
-[op]offset type [mask]expression description
+[op]offset type [mask]expression description [mimetype]
 .EE
 .L #
 in the first column introduces a comment.
@@ -439,6 +447,11 @@ for the string types and
 or
 .L %lu
 for the integral types.
+.PP
+The
+.L mimetype
+field specifies the MIME type, usually in the form
+.IR a / b .
 .SH FILES
 .L ../lib/file/magic
 located on
@@ -468,4 +481,4 @@ determines if the executable is stripped and also extracts the version number.
 .EE
 This entry requires that the file also has execute permission.
 .SH "SEE ALSO"
-file(1), tw(1), modecanon(3)
+file(1), mime(4), tw(1), modecanon(3)

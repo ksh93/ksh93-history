@@ -5,6 +5,10 @@
 
 :PACKAGE:	ast
 
+LICENSE = since=1982,author=dgk
+
+SH_DICT         == (void*)e_dict
+
 .SOURCE : edit sh bltins data tests
 .SOURCE.h : include 
 
@@ -14,25 +18,31 @@ SH = ksh		/* name of the shell program */
 VERSION = 1.1
 
 /* documentation files */
-DOCFILES = sh.memo grep.mm builtins.mm README RELEASE COMPATIBILITY PROMO \
-		OBSOLETE RELEASEa
+DOCFILES = sh.memo grep.mm builtins.mm README RELEASE PROMO.mm COMPATIBILITY \
+		DESIGN OBSOLETE RELEASE88
 
 KSHELL == 1		/* this is ksh */
 
 /* set these variables to 1 to enable, null to disable */
-DEBUG ==		/* debugging purposes only */
-MTRACE ==   		/* on for malloc tracing */
-SHOPT_ESH == 1		/* emacs/gmacs edit mode */
-SHOPT_VSH == 1		/* vi edit mode */
-SHOPT_SPAWN == 		/* use spawnve for fork/exec */
-SHOPT_SUID_EXEC == 1	/* allow (safe) suid/sgid shell scripts */
+DEBUG ==			/* debugging purposes only */
+SHOPT_NAMESPACE == 1		/* allow namespaces */
+SHOPT_COMPOUND_ARRAY == 1	/* allow compound arrays */
+SHOPT_ESH == 1			/* emacs/gmacs edit mode */
+SHOPT_VSH == 1			/* vi edit mode */
+SHOPT_SPAWN == 			/* use spawnve for fork/exec */
+SHOPT_SUID_EXEC == 1		/* allow (safe) suid/sgid shell scripts */
+if  CC.HOSTTYPE == "win32.*"
+	CCFLAGS = -O $(CC.DLL)
+	SHOPT_CRNL == 1		/* <cr><nl> is eqivalent to <nl> */
+	SHOPT_NOCASE == 1	/* do case insensitive file compare */
+end
 
 /* use the following libraries only if they exist */
 LIBS_opt := +lm +ljobs +li
-if ! "$(-mam:N=static*)" && ! "$(HOSTTYPE:N=sgi.mips*)"
+if ! "$(-mam:N=static*)" && CC.HOSTTYPE != "sgi.mips*"
 	LIBS_opt += +lsocket +lnsl
 end
-LIBS_opt += -ldl -ldld +lintl
+LIBS_opt += +lintl -ldl
 $(LIBS_opt)	: .DONTCARE
 
 LDLIBRARIES = $(LIBS_opt)
@@ -40,45 +50,64 @@ LDLIBRARIES = $(LIBS_opt)
 FILES_opt =		/* optional file list enabled by vars above */
 FILES_opt += $(SHOPT_ESH:T=V?emacs.c)
 FILES_opt += $(SHOPT_VSH:T=V?vi.c)
-/*
+if SHOPT_X
 LDFLAGS += -u  _XtAppInitialize -L/usr/add-on/X11/lib
-*/
+end
 
-.ALL : $(SH) shcomp ksh.msg $(SHOPT_SUID_EXEC:T=V?suid_exec.c)
+:ALL: $(SH) shcomp ksh.msg $(SHOPT_SUID_EXEC:T=V?suid_exec.c)
 
-$(SH) :: sh.1 main.c -lshell +lcmd /* -lXaw -lXmu -lXt -lXtext -lX11 */ +last
+/* the linux.sparc linker still has some problems */
+
+$(SH) :: sh.1 pmain.c $(CC.HOSTTYPE:N=linux.sparc:?-ldll??) $(CC.HOSTTYPE:N=win32.*:?-lshell?+lshell?)
 
 DATAFILES = limits.c msg.c strdata.c testops.c keywords.c options.c \
                  signals.c aliases.c builtins.c variables.c lexstates.c
 
-shell $(VERSION) :LIBRARY: nval.3 alarm.c cd_pwd.c cflow.c deparse.c \
+shell $(VERSION) :LIBRARY: shell.3 nval.3 alarm.c cd_pwd.c cflow.c deparse.c \
 	getopts.c hist.c misc.c print.c read.c sleep.c trap.c test.c \
-	typeset.c ulimit.c umask.c whence.c \
-	arith.c args.c array.c completion.c dlopen.c defs.c edit.c expand.c \
+	typeset.c ulimit.c umask.c whence.c main.c \
+	arith.c args.c array.c completion.c defs.c edit.c expand.c \
 	fault.c fcin.c history.c init.c io.c jobs.c lex.c macro.c name.c \
 	parse.c path.c string.c streval.c subshell.c tdump.c timers.c \
-	trestore.c userinit.c waitevent.c xec.c $(DATAFILES) $(FILES_opt)
+	trestore.c waitevent.c xec.c $(DATAFILES) $(FILES_opt) \
+	-lcmd -ldll -last -lm
+
+:DLL:
 
 :READONLY: $(DATAFILES)
 
-$(INCLUDEDIR) :INSTALLPROTO: nval.h shell.h
+$(INCLUDEDIR) :INSTALLPROTO: nval.h shell.h history.h
 
-suid_exec ::	suid_exec.c
+NODLL = $(CCFLAGS:@/$(CC.DLL)//)
 
-shcomp	::	shcomp.c -lshell -lcmd -last
+suid_exec ::	CCFLAGS=$(NODLL) suid_exec.c +last
+
+shcomp	::	CCFLAGS=$(NODLL) shcomp.c -lshell
+
+shcomp.o : _BLD_shell=
 
 ksh.msg :	$(DATAFILES)	/* build error message dictionary */
-	grep '[ 	]e_[a-z].*".*[^\][a-z].*"' $(*) |  grep -v /bin/ |  grep -v /usr/ | grep -v /dev/ |  grep -v /etc/ | grep -v A__z | sed 's/.*=[ 	]*\(".*"\);.*/\1/' | sort | uniq > $(<)
-	grep '[ 	]sh_opt.*".*[^\][a-z].*"' $(*) |  sed 's/.*=[ 	]*\(".*"\);.*/\1/'  >> $(<)
-	grep '[ 	]is_[a-z].*".*[^\][a-z].*"' $(*) |  sed 's/.*=[ 	]*\(".*"\);.*/\1/'  >> $(<)
-	grep '[         ]e_notset' $(*) | sed 's/.*"....\(.*"\).*/"\1/' >> $(<)
-	grep '[         ]e_subst' $(*) | sed 's/.*"....\(.*"\).*/"\1/' >> $(<)
-	grep '[         ]e_file' $(*) | sed 's/.*"....\(.*"\).*/"\1/' >> $(<)
-	grep ',$' $(*:N=*signals.c)  | sed 's/.*\(".*"\),/\1/' | sort | uniq >> $(<)
+	{
+	$(SED) -e '/[ 	]e_[a-z].*".*[^\][a-z].*"/!d' -e '/\/[a-z][a-z][a-z]\//d' -e '/A__z/d' -e 's/.*=[ 	]*\(".*"\);.*/\1/' $(*)
+	$(SED) -e '/[ 	]sh_opt.*".*[^\][a-z].*"/!d' -e 's/.*=[ 	]*\(".*"\);.*/\1/' $(*)
+	$(SED) -e '/[ 	]is_[a-z].*".*[^\][a-z].*"/!d' -e 's/.*=[ 	]*\(".*"\);.*/\1/' $(*)
+	$(SED) -e '/[         ]e_notset/!d' -e 's/.*"....\(.*"\).*/"\1/' $(*)
+	$(SED) -e '/[         ]e_subst/!d' -e 's/.*"....\(.*"\).*/"\1/' $(*)
+	$(SED) -e '/[         ]e_file/!d' -e 's/.*"....\(.*"\).*/"\1/' $(*)
+	$(SED) -e '/,$/!d' -e 's/.*\(".*"\),/\1/' $(*:N=*signals.c)
+	} | sort -u > $(<)
 
-:: syscall.s mamexec mamstate.c apollo.c deparse.c ksh.mk OPTIONS $(DOCFILES)
+:: syscall.s mamexec mamstate.c deparse.c shopen.c ksh.mk OPTIONS $(DOCFILES)
 
-$(TESTS):: alias.sh arith.sh arrays.sh attributes.sh basic.sh bracket.sh \
+:: alias.sh arith.sh arrays.sh attributes.sh basic.sh bracket.sh \
 	builtins.sh case.sh comvar.sh coprocess.sh exit.sh functions.sh \
-	grep.sh heredoc.sh io.sh options.sh quoting.sh return.sh select.sh \
-	substring.sh tilde.sh variables.sh nameref.sh shtests
+	grep.sh heredoc.sh io.sh nameref.sh options.sh path.sh quoting.sh \
+	quoting2.sh return.sh select.sh substring.sh tilde.sh variables.sh \
+	shtests
+
+test : ksh shtests
+	KSH=$(*:O=1:P=A)
+	cd $(*:O=2:P=L!:D)
+	SHELL=$KSH $KSH $(*:O=2:B)
+
+OPTIONS : .TERMINAL /* avoid case-insensitive options.c => OPTIONS map */

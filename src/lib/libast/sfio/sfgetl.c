@@ -1,45 +1,27 @@
-/*
- * CDE - Common Desktop Environment
- *
- * Copyright (c) 1993-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
- */
 /***************************************************************
 *                                                              *
-*                      AT&T - PROPRIETARY                      *
+*           This software is part of the ast package           *
+*              Copyright (c) 1985-2000 AT&T Corp.              *
+*      and it may only be used by you under license from       *
+*                     AT&T Corp. ("AT&T")                      *
+*       A copy of the Source Code Agreement is available       *
+*              at the AT&T Internet web site URL               *
 *                                                              *
-*         THIS IS PROPRIETARY SOURCE CODE LICENSED BY          *
-*                          AT&T CORP.                          *
+*     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*                Copyright (c) 1995 AT&T Corp.                 *
-*                     All Rights Reserved                      *
-*                                                              *
-*           This software is licensed by AT&T Corp.            *
-*       under the terms and conditions of the license in       *
-*       http://www.research.att.com/orgs/ssr/book/reuse        *
+*     If you received this software without first entering     *
+*       into a license with AT&T, you have an infringing       *
+*           copy and cannot use it without violating           *
+*             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
-*           Software Engineering Research Department           *
-*                    AT&T Bell Laboratories                    *
+*               Network Services Research Center               *
+*                      AT&T Labs Research                      *
+*                       Florham Park NJ                        *
 *                                                              *
-*               For further information contact                *
-*                     gsf@research.att.com                     *
+*             Glenn Fowler <gsf@research.att.com>              *
+*              David Korn <dgk@research.att.com>               *
+*               Phong Vo <kpv@research.att.com>                *
 *                                                              *
 ***************************************************************/
 #include	"sfhdr.h"
@@ -50,36 +32,41 @@
 */
 
 #if __STD_C
-long _sfgetl(reg Sfio_t* f)
+Sflong_t _sfgetl(reg Sfio_t* f)
 #else
-long _sfgetl(f)
-reg Sfio_t	*f;
+Sflong_t _sfgetl(f)
+reg Sfio_t*	f;
 #endif
 {
+	Sflong_t	v;
 	reg uchar	*s, *ends, c;
 	reg int		p;
-	reg long	v;
 
-	if(!(_Sfi&SF_MORE))	/* must be a small negative number */
-		return -SFSVALUE(_Sfi)-1;
-
+	if(f->mode != SF_READ && _sfmode(f,SF_READ,0) < 0)
+		return (Sflong_t)(-1);
 	SFLOCK(f,0);
-	v = SFUVALUE(_Sfi);
+
+	v = (Sflong_t)f->val;
+	if(!(v&SF_MORE))
+	{	/* must be a small negative number */
+		v = -SFSVALUE(v)-1;
+		goto done;
+	}
+
+	v = SFUVALUE(v);
 	for(;;)
-	{
-		if(SFRPEEK(f,s,p) <= 0)
+	{	if(SFRPEEK(f,s,p) <= 0)
 		{	f->flags |= SF_ERROR;
-			v = -1L;
+			v = (Sflong_t)(-1);
 			goto done;
 		}
 		for(ends = s+p; s < ends;)
-		{
-			c = *s++;
+		{	c = *s++;
 			if(c&SF_MORE)
-				v = ((ulong)v << SF_UBITS) | SFUVALUE(c);
+				v = ((Sfulong_t)v << SF_UBITS) | SFUVALUE(c);
 			else
 			{	/* special translation for this byte */
-				v = ((ulong)v << SF_SBITS) | SFSVALUE(c);
+				v = ((Sfulong_t)v << SF_SBITS) | SFSVALUE(c);
 				f->next = s;
 				v = (c&SF_SIGN) ? -v-1 : v;
 				goto done;

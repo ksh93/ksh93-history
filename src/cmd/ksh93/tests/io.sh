@@ -1,3 +1,27 @@
+################################################################
+#                                                              #
+#           This software is part of the ast package           #
+#              Copyright (c) 1982-2000 AT&T Corp.              #
+#      and it may only be used by you under license from       #
+#                     AT&T Corp. ("AT&T")                      #
+#       A copy of the Source Code Agreement is available       #
+#              at the AT&T Internet web site URL               #
+#                                                              #
+#     http://www.research.att.com/sw/license/ast-open.html     #
+#                                                              #
+#     If you received this software without first entering     #
+#       into a license with AT&T, you have an infringing       #
+#           copy and cannot use it without violating           #
+#             AT&T's intellectual property rights.             #
+#                                                              #
+#               This software was created by the               #
+#               Network Services Research Center               #
+#                      AT&T Labs Research                      #
+#                       Florham Park NJ                        #
+#                                                              #
+#              David Korn <dgk@research.att.com>               #
+#                                                              #
+################################################################
 function err_exit
 {
 	print -u2 -n "\t"
@@ -40,5 +64,13 @@ x=$(./close0)
 if	[[ $x != "abc" ]]
 then	err_exit "picked up file descriptor zero for opening script file"
 fi
+cat > close0 <<\!
+	for ((i=0; i < 1100; i++))
+	do	exec 4< /dev/null
+		read -u4
+	done
+	exit 0
+!
+./close0 2> /dev/null || err_exit "multiple exec 4< /dev/null can fail"
 cd ~- || err_exit "cd back failed"
 rm -r /tmp/ksh$$ || err_exit "rm -r /tmp/ksh$$ failed"

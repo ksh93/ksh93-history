@@ -1,0 +1,74 @@
+/***************************************************************
+*                                                              *
+*           This software is part of the ast package           *
+*              Copyright (c) 1985-2000 AT&T Corp.              *
+*      and it may only be used by you under license from       *
+*                     AT&T Corp. ("AT&T")                      *
+*       A copy of the Source Code Agreement is available       *
+*              at the AT&T Internet web site URL               *
+*                                                              *
+*     http://www.research.att.com/sw/license/ast-open.html     *
+*                                                              *
+*     If you received this software without first entering     *
+*       into a license with AT&T, you have an infringing       *
+*           copy and cannot use it without violating           *
+*             AT&T's intellectual property rights.             *
+*                                                              *
+*               This software was created by the               *
+*               Network Services Research Center               *
+*                      AT&T Labs Research                      *
+*                       Florham Park NJ                        *
+*                                                              *
+*             Glenn Fowler <gsf@research.att.com>              *
+*              David Korn <dgk@research.att.com>               *
+*               Phong Vo <kpv@research.att.com>                *
+*                                                              *
+***************************************************************/
+#pragma prototyped
+/*
+ * realpath implementation
+ */
+
+#if defined(__EXPORT__)
+
+#define extern	__EXPORT__
+
+extern char*	realpath(const char*, char*);
+
+#undef	extern
+
+#endif
+
+#include <ast.h>
+#include <error.h>
+
+char*
+realpath(const char* file, char* path)
+{
+	register char*	s;
+	register int	n;
+	register int	r;
+
+	r = *file == '/';
+	n = strlen(file) + r + 1;
+	if (n >= PATH_MAX)
+	{
+#ifdef ENAMETOOLONG
+		errno = ENAMETOOLONG;
+#else
+		errno = ENOMEM;
+#endif
+		return 0;
+	}
+	if (!r)
+		s = path;
+	else if (!getcwd(path, PATH_MAX - n))
+		return 0;
+	else
+	{
+		s = path + strlen(path);
+		*s++ = '/';
+	}
+	strcpy(s, file);
+	return pathcanon(path, PATH_PHYSICAL|PATH_DOTDOT|PATH_EXISTS) ? path : (char*)0;
+}

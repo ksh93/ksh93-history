@@ -1,0 +1,129 @@
+/***************************************************************
+*                                                              *
+*           This software is part of the ast package           *
+*              Copyright (c) 1985-2000 AT&T Corp.              *
+*      and it may only be used by you under license from       *
+*                     AT&T Corp. ("AT&T")                      *
+*       A copy of the Source Code Agreement is available       *
+*              at the AT&T Internet web site URL               *
+*                                                              *
+*     http://www.research.att.com/sw/license/ast-open.html     *
+*                                                              *
+*     If you received this software without first entering     *
+*       into a license with AT&T, you have an infringing       *
+*           copy and cannot use it without violating           *
+*             AT&T's intellectual property rights.             *
+*                                                              *
+*               This software was created by the               *
+*               Network Services Research Center               *
+*                      AT&T Labs Research                      *
+*                       Florham Park NJ                        *
+*                                                              *
+*             Glenn Fowler <gsf@research.att.com>              *
+*              David Korn <dgk@research.att.com>               *
+*               Phong Vo <kpv@research.att.com>                *
+*                                                              *
+***************************************************************/
+#pragma prototyped
+
+/*
+ * ast dynamic data initialization
+ */
+
+#ifdef _WIN32
+
+#include <sfio_t.h>
+#include <ast.h>
+
+#undef	strcoll
+
+#include <windows.h>
+
+extern Sfio_t	_Sfstdin;
+extern Sfio_t	_Sfstdout;
+extern Sfio_t	_Sfstderr;
+
+#include "sfhdr.h"
+
+#if defined(__EXPORT__)
+#define extern		__EXPORT__
+#endif
+
+/*
+ * for backward compatibility with early UNIX
+ */
+
+extern int
+cfree(void* addr)
+{
+	free(addr);
+	return 1;
+}
+
+extern void
+_ast_libinit(void* in, void* out, void* err)
+{
+	Sfio_t*		sp;
+
+	sp = (Sfio_t*)in;
+	*sp =  _Sfstdin;
+	sp = (Sfio_t*)out;
+	*sp =  _Sfstdout;
+	sp = (Sfio_t*)err;
+	*sp =  _Sfstderr;
+}
+
+extern void
+_ast_init(void)
+{
+	struct _astdll*	ap = _ast_getdll();
+
+	_ast_libinit(ap->_ast_stdin,ap->_ast_stdout,ap->_ast_stderr);
+}
+
+extern void
+_ast_exit(void)
+{
+	if (_Sfcleanup)
+		(*_Sfcleanup)();
+}
+
+BOOL WINAPI
+DllMain(HINSTANCE hinst, DWORD reason, VOID* reserved)
+{
+	switch (reason)
+	{
+	case DLL_PROCESS_ATTACH:
+		break;
+	case DLL_PROCESS_DETACH:
+		_ast_exit();
+		break;
+	}
+	return 1;
+}
+
+#else
+
+#include <ast.h>
+
+#if __MVS__ && ( _DLL_BLD || _BLD_DLL )
+
+#undef	environ
+
+extern char**	environ;
+
+struct _astdll	_ast_dll = { &environ };
+
+struct _astdll*
+_ast_getdll(void)
+{
+	return &_ast_dll;
+}
+
+#else
+
+NoN(astdynamic)
+
+#endif
+
+#endif

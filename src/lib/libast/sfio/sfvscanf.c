@@ -1,45 +1,27 @@
-/*
- * CDE - Common Desktop Environment
- *
- * Copyright (c) 1993-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
- */
 /***************************************************************
 *                                                              *
-*                      AT&T - PROPRIETARY                      *
+*           This software is part of the ast package           *
+*              Copyright (c) 1985-2000 AT&T Corp.              *
+*      and it may only be used by you under license from       *
+*                     AT&T Corp. ("AT&T")                      *
+*       A copy of the Source Code Agreement is available       *
+*              at the AT&T Internet web site URL               *
 *                                                              *
-*         THIS IS PROPRIETARY SOURCE CODE LICENSED BY          *
-*                          AT&T CORP.                          *
+*     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*                Copyright (c) 1995 AT&T Corp.                 *
-*                     All Rights Reserved                      *
-*                                                              *
-*           This software is licensed by AT&T Corp.            *
-*       under the terms and conditions of the license in       *
-*       http://www.research.att.com/orgs/ssr/book/reuse        *
+*     If you received this software without first entering     *
+*       into a license with AT&T, you have an infringing       *
+*           copy and cannot use it without violating           *
+*             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
-*           Software Engineering Research Department           *
-*                    AT&T Bell Laboratories                    *
+*               Network Services Research Center               *
+*                      AT&T Labs Research                      *
+*                       Florham Park NJ                        *
 *                                                              *
-*               For further information contact                *
-*                     gsf@research.att.com                     *
+*             Glenn Fowler <gsf@research.att.com>              *
+*              David Korn <dgk@research.att.com>               *
+*               Phong Vo <kpv@research.att.com>                *
 *                                                              *
 ***************************************************************/
 #include	"sfhdr.h"
@@ -49,28 +31,14 @@
 **	Written by Kiem-Phong Vo (06/27/90)
 */
 
-#define	S_NORMAL	0	/* argument is a pointer to a normal object */
-#define S_LONG		1	/* argument is a pointer to a long object */
-#define S_SHORT		2	/* argument is a pointer to a short object */
-#define S_LONGDOUBLE	3	/* argument is a pointer to a long double object */
+#define MAXWIDTH	(int)(((uint)~0)>>1)	/* max amount to scan	*/
 
-#if !_typ_long_double
-#ifndef _typ_long_double
-#define _typ_long_double	0
-#endif
-#endif
-
-#define MAXLENGTH	(int)(((uint)~0)>>1)
-
-#define a2f(s)	strtod(s,NIL(char**))
-
-#define A_SIZE		(1<<8)	/* alphabet */
 #if __STD_C
-static char *setclass(reg char* form, reg char* accept)
+static char* setclass(reg char* form, reg char* accept)
 #else
-static char *setclass(form,accept)
-reg char	*form;		/* format string */
-reg char	*accept;	/* accepted characters are set to 1 */
+static char* setclass(form,accept)
+reg char*	form;	/* format string			*/
+reg char*	accept;	/* accepted characters are set to 1	*/
 #endif
 {
 	reg int		fmt, c, yes;
@@ -82,7 +50,7 @@ reg char	*accept;	/* accepted characters are set to 1 */
 	}
 	else	yes = 1;
 
-	for(c = 0; c < A_SIZE; ++c)
+	for(c = 0; c <= SF_MAXCHAR; ++c)
 		accept[c] = !yes;
 
 	if(fmt == ']' || fmt == '-')
@@ -106,13 +74,6 @@ reg char	*accept;	/* accepted characters are set to 1 */
 	return form;
 }
 
-#define SETARG(val,argf,args,type,fmt,form) \
-	{ if(!argf) \
-		*va_arg(args,type*) = (type)val; \
-	  else if((*argf)(fmt,(char*)(&val),sizeof(val)) < 0) \
-		form = ""; \
-	}
-
 #if __STD_C
 static void _sfbuf(Sfio_t* f, int* rs)
 #else
@@ -135,188 +96,412 @@ int*	rs;
 }
 
 #if __STD_C
-sfvscanf(Sfio_t* f, reg const char* form, va_list args)
+int sfvscanf(Sfio_t* f, reg const char* form, va_list args)
 #else
-sfvscanf(f,form,args)
-Sfio_t		*f;		/* file to be scanned */
-reg char	*form;		/* scanning format */
+int sfvscanf(f,form,args)
+Sfio_t*		f;		/* file to be scanned */
+reg char*	form;		/* scanning format */
 va_list		args;
 #endif
 {
 	reg uchar	*d, *endd, *data;
-	reg int		inp, shift, base, length;
-	reg int		fmt, skip, size, n_assign;
-	reg char	*sp;
-	Sfio_t		*sf;
-	int		n_input, len;
+	reg int		inp, shift, base, width;
+	ssize_t		size;
+	int		fmt, flags, dot, n_assign, v, n, n_input;
+	char*		sp;
 	char		accept[SF_MAXDIGITS];
-	Argf_s		argf;
-	Extf_s		extf;
-	Fa_t		*fa, *fast;
-	va_list*	argsp;
+
+	Argv_t		argv;
+	Sffmt_t		*ft;
+	Fmt_t		*fm, *fmstk;
+
+	Fmtpos_t*	fp;
+	char		*oform;
+	va_list		oargs;
+	int		argp, argn;
+
+	Void_t*		value;	/* location to assign scanned value */
+	char*		t_str;
+	ssize_t		n_str;
 	int		rs = (f->extent < 0 && (f->flags&SF_SHARE)) ? 1 : 0;
 
-#define SFBUF(f)	(_sfbuf(f,&rs), \
-			 (data = d = f->next), (endd = f->endb), (d < endd) )
+#define SFBUF(f)	(_sfbuf(f,&rs), (data = d = f->next), (endd = f->endb) )
 #define SFLEN(f)	(d-data)
 #define SFEND(f)	((n_input += d-data), \
 			 (rs > 0 ? SFREAD(f,(Void_t*)data,d-data) : ((f->next = d), 0)) )
-#define SFGETC(f,c)	((c) = (d < endd || (SFEND(f),SFBUF(f))) ? (int)(*d++) : -1 )
+#define SFGETC(f,c)	((c) = (d < endd || (SFEND(f), SFBUF(f), d < endd)) ? \
+				(int)(*d++) : -1 )
 #define SFUNGETC(f,c)	(--d)
 
 	if(f->mode != SF_READ && _sfmode(f,SF_READ,0) < 0)
 		return -1;
 	SFLOCK(f,0);
 
+	SFCVINIT();	/* initialize conversion tables */
+
 	SFBUF(f);
 	n_assign = n_input = 0;
-	inp = -1;
-	sf = NIL(Sfio_t*);
-	argf = NIL(Argf_s);
-	extf = NIL(Extf_s);
-	fast = NIL(Fa_t*);
 
-loop_fa :
+	inp = -1;
+
+	fmstk = NIL(Fmt_t*); ft = NIL(Sffmt_t*);
+
+	fp = NIL(Fmtpos_t*); argn = -1;
+	oform = (char*)form; va_copy(oargs,args);
+
+loop_fmt :
 	while((fmt = *form++) )
-	{
-		if(fmt != '%')
-		{	/* matching white space directive */
-			if(isspace(fmt))
+	{	if(fmt != '%')
+		{	if(isspace(fmt))
 			{	if(fmt != '\n' || !(f->flags&SF_LINE))
 					fmt = -1;
 				for(;;)
 				{	if(SFGETC(f,inp) < 0)
 						goto done;
 					else if(!isspace(inp))
-					{	/* put back unmatched byte */
-						SFUNGETC(f,inp);
-						break;
+					{	SFUNGETC(f,inp);
+						goto loop_fmt;
 					}
 					else if(inp == fmt)	/* match only one \n */
-						break;
+						goto loop_fmt;
 				}
 			}
 			else
-			{
-			literal : /* literal match */
+			{ match_1:
 				if(SFGETC(f,inp) != fmt)
 				{	if(inp >= 0)
 						SFUNGETC(f,inp);
-					goto done;
+					goto pop_fmt;
 				}
 			}
 			continue;
 		}
+
+		if(*form == '%')
+		{	form += 1;
+			goto match_1;
+		}
+
+		if(*form == '\0')
+			goto pop_fmt;
+
+		if(*form == '*')
+		{	flags = SFFMT_SKIP;
+			form += 1;
+		}
+		else	flags = 0;
 
 		/* matching some pattern */
-		skip = length = 0;
-		base = 10;
+		base = 10; size = -1;
+		width = dot = 0;
+		t_str = NIL(char*); n_str = 0;
+		value = NIL(Void_t*);
+		argp = -1;
+
+	loop_flags:	/* LOOP FOR FLAGS, WIDTH, BASE, TYPE */
 		switch((fmt = *form++) )
 		{
-		case '%' : /* match % literally */
-			goto literal;
+		case LEFTP : /* get the type which is enclosed in balanced () */
+			t_str = (char*)form;
+			for(v = 1;;)
+			{	switch(*form++)
+				{
+				case 0 :	/* not balanceable, retract */
+					form = t_str;
+					t_str = NIL(char*);
+					n_str = 0;
+					goto loop_flags;
+				case LEFTP :	/* increasing nested level */
+					v += 1;
+					continue;
+				case RIGHTP :	/* decreasing nested level */
+					if((v -= 1) != 0)
+						continue;
+					if(*t_str != '*' )
+						n_str = (form-1) - t_str;
+					else
+					{	t_str = (*_Sffmtintf)(t_str+1,&n);
+						if(*t_str == '$')
+						{	if(!fp &&
+							   !(fp = (*_Sffmtposf)
+								  (f,oform,oargs,1)) )
+								goto pop_fmt;
+							n = FP_SET(n,argn);
+						}
+						else	n = FP_SET(-1,argn);
 
-		case '@' : /* set argument getting function */
-			argf = va_arg(args,Argf_s);
-			continue;
-
-		case '&' : /* set extension function */
-			extf = va_arg(args,Extf_s);
-			continue;
-
-		case 'n' : /* return number of bytes read */
-			len = n_input + SFLEN(f);
-			SETARG(len,argf,args,int,'n',form);
-			continue;
-
-		case ':' : /* stack a pair of format/arglist */
-			if(!FAMALLOC(fa))
-				goto done;
-			fa->form = (char*)form;
-			if(!(form = va_arg(args,char*)))
-				form = "";
-#ifdef __ppc
-			__va_copy( argsp, va_arg(args,va_list*) );
-			__va_copy( fa->args, args );
-			__va_copy( args, argsp );
-#else
-			argsp = va_arg(args,va_list*);
-			memcpy((Void_t*)(&(fa->args)), (Void_t*)(&args), sizeof(va_list));
-			memcpy((Void_t*)(&args), (Void_t*)argsp, sizeof(va_list));
-#endif
-			fa->extf.s = extf;
-			fa->argf.s = argf;
-			fa->next = fast;
-			fast = fa;
-			continue;
-
-		case '*' :	/* skip one argument */
-			skip = 1;
-			fmt = *form++;
-
-		default :
-			/* scan length */
-			while(isdigit(fmt))
-			{	length = length*10 + (fmt - '0');
-				fmt = *form++;
-			}
-
-			if(fmt == '.')
-			{	/* defining a base */
-				fmt = *form++;
-				base = 0;
-				while(isdigit(fmt))
-				{	base = base*10 + (fmt - '0');
-					fmt = *form++;
+						if(fp)
+						{	t_str = fp[n].argv.s;
+							n_str = fp[n].ft.size;
+						}
+						else if(ft && ft->extf )
+						{	FMTSET(ft, form,args,
+								LEFTP, 0, 0, 0,0,0,
+								NIL(char*),0);
+							n = (*ft->extf)
+							      (f,(Void_t*)&argv,ft);
+							if(n < 0)
+								goto pop_fmt;
+							if(!(ft->flags&SFFMT_VALUE) )
+								goto t_arg;
+							if((t_str = argv.s) &&
+							   (n_str = (int)ft->size) < 0)
+								n_str = strlen(t_str);
+						}
+						else
+						{ t_arg:
+							if((t_str = va_arg(args,char*)) )
+								n_str = strlen(t_str);
+						}
+					}
+					goto loop_flags;
 				}
-				if(base < 2 || base > SF_RADIX)
-					base = 10;
 			}
 
-			/* size of object to be assigned */
-			if(fmt == 'L')
-				{ size = S_LONGDOUBLE; fmt = *form++; }
-			else if(fmt == 'l')
-				{ size = S_LONG; fmt = *form++; }
-			else if(fmt == 'h')
-				{ size = S_SHORT; fmt = *form++; }
-			else	size = S_NORMAL;
+		case '#' : /* alternative format */
+			flags |= SFFMT_ALTER;
+			goto loop_flags;
 
-			/* canonicalize format */
-			if(fmt == 'e' || fmt == 'g')
-				fmt = 'f';
+		case '.' : /* width & base */
+			dot += 1;
+			if(isdigit(*form))
+			{	fmt = *form++;
+				goto dot_size;
+			}
+			else if(*form == '*')
+			{	form = (*_Sffmtintf)(form+1,&n);
+				if(*form == '$')
+				{	form += 1;
+					if(!fp && !(fp = (*_Sffmtposf)(f,oform,oargs,1)) )
+						goto pop_fmt;
+					n = FP_SET(n,argn);
+				}
+				else	n = FP_SET(-1,argn);
 
-			if(size == S_LONGDOUBLE && (fmt != 'f' || !_typ_long_double))
-				size = S_LONG;
+				if(fp)
+					v = fp[n].argv.i;
+				else if(ft && ft->extf )
+				{	FMTSET(ft, form,args, '.',dot, 0, 0,0,0,
+						NIL(char*), 0);
+					if((*ft->extf)(f, (Void_t*)(&argv), ft) < 0)
+						goto pop_fmt;
+					if(ft->flags&SFFMT_VALUE)
+						v = argv.i;
+					else	v = (dot <= 2) ? va_arg(args,int) : 0;
+				}
+				else	v = (dot <= 2) ? va_arg(args,int) : 0;
+				if(v < 0)
+					v = 0;
+				goto dot_set;
+			}
+			else	goto loop_flags;
+			
+		case '0' : case '1' : case '2' : case '3' : case '4' :
+		case '5' : case '6' : case '7' : case '8' : case '9' :
+		dot_size :
+			for(v = fmt-'0'; isdigit(*form); ++form)
+				v = v*10 + (*form - '0');
+
+			if(*form == '$')
+			{	form += 1;
+				if(!fp && !(fp = (*_Sffmtposf)(f,oform,oargs,1)) )
+					goto pop_fmt;
+				argp = v-1;
+				goto loop_flags;
+			}
+
+		dot_set :
+			if(dot == 0 || dot == 1)
+				width = v;
+			else if(dot == 2)
+				base = v;
+			goto loop_flags;
+
+		case 'I' : /* object size */
+			size = 0;
+			flags = (flags & ~SFFMT_TYPES) | SFFMT_IFLAG;
+			if(isdigit(*form))
+			{	for(n = *form; isdigit(n); n = *++form)
+					size = size*10 + (n - '0');
+			}
+			else if(*form == '*')
+			{	form = (*_Sffmtintf)(form+1,&n);
+				if(*form == '$')
+				{	form += 1;
+					if(!fp && !(fp = (*_Sffmtposf)(f,oform,oargs,1)))
+						goto pop_fmt;
+					n = FP_SET(n,argn);
+				}
+				else	n = FP_SET(-1,argn);
+
+				if(fp)	/* use position list */
+					size = fp[n].argv.i;
+				else if(ft && ft->extf )
+				{	FMTSET(ft, form,args, 'I',sizeof(int), 0, 0,0,0,
+						NIL(char*), 0);
+					if((*ft->extf)(f, (Void_t*)(&argv), ft) < 0)
+						goto pop_fmt;
+					if(ft->flags&SFFMT_VALUE)
+						size = argv.i;
+					else	size = va_arg(args,int);
+				}
+				else	size = va_arg(args,int);
+			}
+			goto loop_flags;
+
+		case 'l' :
+			size = -1;
+			flags &= ~SFFMT_TYPES;
+			if(*form == 'l')
+			{	form += 1;
+				flags |= SFFMT_LLONG;
+			}
+			else	flags |= SFFMT_LONG;
+			goto loop_flags;
+		case 'h' :
+			size = -1;
+			flags = (flags&~SFFMT_TYPES) | SFFMT_SHORT;
+			goto loop_flags;
+		case 'L' :
+			size = -1;
+			flags = (flags&~SFFMT_TYPES) | SFFMT_LDOUBLE;
+			goto loop_flags;
 		}
 
-		/* scan length */
-		if(length == 0)
-			length = fmt == 'c' ? 1 : MAXLENGTH;
+		/* set object size */
+		if(flags & (SFFMT_TYPES & ~SFFMT_IFLAG) )
+		{	if((_Sftype[fmt]&(SFFMT_INT|SFFMT_UINT)) || fmt == 'n')
+			{	size =	(flags&SFFMT_LLONG) ? sizeof(Sflong_t) :
+					(flags&SFFMT_LONG) ? sizeof(long) :
+					(flags&SFFMT_SHORT) ? sizeof(short) : -1;
+			}
+			else if(_Sftype[fmt]&SFFMT_FLOAT)
+			{	size = (flags&SFFMT_LDOUBLE) ? sizeof(Sfdouble_t) :
+				       (flags&(SFFMT_LONG|SFFMT_LLONG)) ?
+						sizeof(double) : -1;
+			}
+		}
+
+		argp = FP_SET(argp,argn);
+		if(fp)
+		{	if(!(fp[argp].ft.flags&SFFMT_SKIP) )
+			{	n_assign += 1;
+				value = fp[argp].argv.vp;
+				size = fp[argp].ft.size;
+				if(ft && ft->extf && fp[argp].ft.fmt != fp[argp].fmt)
+					fmt = fp[argp].ft.fmt;
+			}
+			else	flags |= SFFMT_SKIP;
+		}
+		else if(ft && ft->extf)
+		{	FMTSET(ft, form,args, fmt, size,flags, width,0,base, t_str,n_str);
+			SFEND(f); SFOPEN(f,0);
+			v = (*ft->extf)(f, (Void_t*)&argv, ft);
+			SFLOCK(f,0); SFBUF(f);
+
+			if(v < 0)
+				goto pop_fmt;
+			else if(v == 0) /* extf did not use input stream */
+			{	FMTGET(ft, form,args, fmt, size, flags, width,n,base);
+				if((ft->flags&SFFMT_VALUE) && !(ft->flags&SFFMT_SKIP) )
+					value = argv.vp;
+			}
+			else /* v > 0: number of input bytes consumed */
+			{	n_input += v;
+				if(!(ft->flags&SFFMT_SKIP) )
+					n_assign += 1;
+				continue;
+			}
+		}
+
+		if(_Sftype[fmt] == 0) /* unknown pattern */
+			continue;
+
+		/* get the address to assign value */
+		if(!value && !(flags&SFFMT_SKIP) )
+			value = va_arg(args,Void_t*);
+
+		if(*form == '!')
+		{	form += 1;
+			if(!fp)
+				fp = (*_Sffmtposf)(f,oform,oargs,1);
+			else	goto pop_fmt;
+
+			if(!(argv.ft = va_arg(args,Sffmt_t*)) )
+				continue;
+			if(!argv.ft->form && ft ) /* change extension functions */
+			{	if(ft->eventf &&
+				   (*ft->eventf)(f,SF_DPOP,(Void_t*)form,ft) < 0)
+					continue;
+				fmstk->ft = ft = argv.ft;
+			}
+			else			/* stack a new environment */
+			{	if(!FMTALLOC(fm))
+					goto done;
+
+				if(argv.ft->form)
+				{	fm->form = (char*)form;
+					va_copy(fm->args,args);
+
+					fm->oform = oform;
+					va_copy(fm->oargs,oargs);
+					fm->argn = argn;
+					fm->fp = fp;
+
+					form = argv.ft->form;	
+					va_copy(args,argv.ft->args);
+					argn = -1;
+					fp = NIL(Fmtpos_t*);
+				}
+				else	fm->form = NIL(char*);
+
+				fm->eventf = argv.ft->eventf;
+				fm->ft = ft;
+				fm->next = fmstk;
+				fmstk = fm;
+				ft = argv.ft;
+			}
+			continue;
+		}
+
+		if(fmt == 'n') /* return length of consumed input */
+		{
+#if !_ast_intmax_long
+			if(FMTCMP(size,Sflong_t,Sflong_t))
+				*((Sflong_t*)value) = (Sflong_t)(n_input+SFLEN(f));
+			else
+#endif
+			if(sizeof(long) > sizeof(int) && FMTCMP(size,long,Sflong_t))
+				*((long*)value) = (long)(n_input+SFLEN(f));
+			else if(sizeof(short) < sizeof(int) &&
+				FMTCMP(size,short,Sflong_t))
+				*((short*)value) = (short)(n_input+SFLEN(f));
+			else	*((int*)value) = (int)(n_input+SFLEN(f));
+			continue;
+		}
+
+		/* if get here, start scanning input */
+		if(width == 0)
+			width = fmt == 'c' ? 1 : MAXWIDTH;
 
 		/* define the first input character */
 		if(fmt == 'c' || fmt == '[')
 			SFGETC(f,inp);
 		else
-		{	/* skip starting blanks */
-			do	{ SFGETC(f,inp); }
-			while(isspace(inp))
+		{	do	{ SFGETC(f,inp); }
+			while(isspace(inp))	/* skip starting blanks */
 				;
 		}
 		if(inp < 0)
 			goto done;
 
-		if(fmt == 'd' || fmt == 'o' || fmt == 'x' )
-			goto dec_convert;
-		else if(fmt == 'f')
-		{	/* a float or double */
-			reg char*	val;
+		if(_Sftype[fmt] == SFFMT_FLOAT)
+		{	reg char*	val;
 			reg int		dot, exponent;
-			Double_t	dval;
 
 			val = accept;
-			if(length >= SF_MAXDIGITS)
-				length = SF_MAXDIGITS-1;
+			if(width >= SF_MAXDIGITS)
+				width = SF_MAXDIGITS-1;
 			dot = exponent = 0;
 			do
 			{	if(isdigit(inp))
@@ -332,7 +517,7 @@ loop_fa :
 					if(exponent++ > 0)
 						break;
 					*val++ = inp;
-					if(--length <= 0 || SFGETC(f,inp) < 0 ||
+					if(--width <= 0 || SFGETC(f,inp) < 0 ||
 					   (inp != '-' && inp != '+' && !isdigit(inp)) )
 						break;
 					*val++ = inp;
@@ -345,181 +530,78 @@ loop_fa :
 				}
 				else	break;
 
-			} while(--length > 0 && SFGETC(f,inp) >= 0);
+			} while(--width > 0 && SFGETC(f,inp) >= 0);
 
-			if(!skip && val > accept)
-			{	/* there is something to convert */
-				*val = '\0';
-				n_assign += 1;
-				dval = a2f(accept);
-
-				switch(size)
-				{
-#if _typ_long_double
-				case S_LONGDOUBLE:
-					SETARG(dval,argf,args,long double,'G',form);
-					break;
-#endif
-				case S_LONG:
-					SETARG(dval,argf,args,double,'F',form);
-					break;
-				case S_SHORT :
-				case S_NORMAL:
-					SETARG(dval,argf,args,float,'f',form);
-					break;
-				}
-			}
-		}
-		else if(fmt == 's' || fmt == 'c' || fmt == '[')
-		{	/* get buffer to copy to */
-			sp = NIL(char*);
-			if(skip)
-				size = 0;
-			else
-			{	if(!argf)
-				{	sp = va_arg(args,char*);
-					if(size != S_LONG)
-						size = -1;
-					else	/* buffer size */
-					{	size = va_arg(args,int);
-						if(fmt != 'c' && size > 0)
-							size -= 1;
-					}
-					if(!sp)
-						size = 0;
-				}
+			if(value)
+			{	*val = '\0';
+#if !_ast_fltmax_double
+				if(FMTCMP(size,Sfdouble_t,Sfdouble_t))
+					argv.ld = _sfstrtod(accept,NIL(char**));
 				else
-				{	size = 0;
-					if(!sf)
-						sf = sfnew(NIL(Sfio_t*),NIL(char*),
-							   -1,-1, SF_STRING|SF_WRITE);
-					else	sfseek(sf,0L,0);
-				}
+#endif
+					argv.d = (double)strtod(accept,NIL(char**));
 			}
 
-			if(fmt == 's')
-			{	/* copy a string */
-				do
-				{	if(isspace(inp))
-						break;
-					if(size < 0)
-						*sp++ = inp;
-					else if(size > 0)
-					{	*sp++ = inp;
-						size -= 1;
-					}
-					else if(!skip && sf)
-						sfputc(sf,inp);
-				} while(--length > 0 && SFGETC(f,inp) >= 0);
-			}
-			else if(fmt == 'c')
-			{	/* copy characters */
-				do
-				{	if(size < 0)
-						*sp++ = inp;
-					else if(size > 0)
-					{	*sp++ = inp;
-						size -= 1;
-					}
-					else if(!skip && sf)
-						sfputc(sf,inp);
-				} while(--length > 0 && SFGETC(f,inp) >= 0);
-			}
-			else
-			{	/* copy characters from a class */
-				form = setclass((char*)form,accept);
-				if(!accept[inp])
-				{	SFUNGETC(f,inp);
-					continue;
-				}
-
-				do
-				{	if(!accept[inp])
-						break;
-					if(size < 0)
-						*sp++ = inp;
-					else if(size > 0)
-					{	*sp++ = inp;
-						size -= 1;
-					}
-					else if(!skip && sf)
-						sfputc(sf,inp);
-				} while(--length > 0 && SFGETC(f,inp) >= 0);
-			}
-
-			if(!skip)
+			if(value)
 			{	n_assign += 1;
-				if(sp)
-				{	if(fmt != 'c')
-						*sp = '\0';
-				}
-				else if(sf)
-				{	sfputc(sf,'\0');
-					if((*argf)('s',(char*)sf->data,
-						(sf->next-sf->data)-1) < 0)
-							form = "";
-				}
+#if !_ast_fltmax_double
+				if(FMTCMP(size,Sfdouble_t,Sfdouble_t))
+					*((Sfdouble_t*)value) = argv.ld;
+				else
+#endif
+				if(FMTCMP(size,double,Sfdouble_t))
+					*((double*)value) = argv.d;
+				else	*((float*)value) = (float)argv.d;
 			}
 		}
-		else if(fmt == 'p' || fmt == 'u')
-		{	/* make sure this is unsigned */
-			if(inp == '-')
+		else if(_Sftype[fmt] == SFFMT_UINT || fmt == 'p')
+		{	if(inp == '-')
 			{	SFUNGETC(f,inp);
-				goto done;
+				goto pop_fmt;
 			}
-			goto dec_convert;
+			else	goto int_cvt;
 		}
-		else if(fmt == 'i')
-		{	/* some integer type */
-			long	lval;
-			reg int	sign;
-
-		dec_convert:
+		else if(_Sftype[fmt] == SFFMT_INT)
+		{ int_cvt:
 			if(inp == '-' || inp == '+')
-			{	/* get the sign */
-				sign = inp == '-' ? -1 : 1;
-
-				/* skip until a non-blank */
-				while(--length > 0 && SFGETC(f,inp) >= 0)
+			{	if(inp == '-')
+					flags |= SFFMT_MINUS;
+				while(--width > 0 && SFGETC(f,inp) >= 0)
 					if(!isspace(inp))
 						break;
 			}
-			else	sign = 1;
 			if(inp < 0)
 				goto done;
 
-			if(fmt == 'i')
-			{	/* data type is self-described */
-				if(inp == '0')
-				{	if(--length > 0)
-						SFGETC(f,inp);
-					if(inp == 'x' || inp == 'X')
-					{	base = 16;
-						if(--length > 0)
-							SFGETC(f,inp);
-					}
-					else	base = 8;
-				}
-				else	base = 10;
-			}
-			else if(fmt == 'o')
+			if(fmt == 'o')
 				base = 8;
 			else if(fmt == 'x' || fmt == 'p')
 				base = 16;
+			else if(fmt == 'i' && inp == '0') /* self-described data */
+			{	base = 8;
+				if(width > 1) /* peek to see if it's a base-16 */
+				{	if(SFGETC(f,inp) >= 0)
+					{	if(inp == 'x' || inp == 'X')
+							base = 16;
+						SFUNGETC(f,inp);
+					}
+					inp = '0';
+				}
+			}
 
 			/* now convert */
-			lval = 0;
+			argv.lu = 0;
 			if(base == 16)
-			{	sp = _Sfv36;
+			{	sp = (char*)_Sfcv36;
 				shift = 4;
 				if(sp[inp] >= 16)
 				{	SFUNGETC(f,inp);
-					goto done;
+					goto pop_fmt;
 				}
-				if(inp == '0' && --length > 0)
+				if(inp == '0' && --width > 0)
 				{	/* skip leading 0x or 0X */
-					SFGETC(f,inp);
-					if((inp == 'x' || inp == 'X') && --length > 0)
+					if(SFGETC(f,inp) >= 0 &&
+					   (inp == 'x' || inp == 'X') && --width > 0)
 						SFGETC(f,inp);
 				}
 				if(inp >= 0 && sp[inp] < 16)
@@ -529,29 +611,31 @@ loop_fa :
 			{	/* fast base 10 conversion */
 				if(inp < '0' || inp > '9')
 				{	SFUNGETC(f,inp);
-					goto done;
+					goto pop_fmt;
 				}
 
-				do	{ lval = (lval<<3) + (lval<<1) + (inp - '0'); }
-				while(--length > 0 &&
-				      SFGETC(f,inp) >= '0' && inp <= '9');
+				do
+				{ argv.lu = (argv.lu<<3) + (argv.lu<<1) + (inp-'0');
+				} while(--width > 0 &&
+				        SFGETC(f,inp) >= '0' && inp <= '9');
 
-				if(fmt == 'i' && inp == '#' &&
-				   lval >= 2 && lval <= SF_RADIX)
-				{	base = (int)lval;
-					lval = 0;
-					sp = base <= 36 ? _Sfv36 : _Sfvmax;
-					if(--length > 0 &&
+				if(fmt == 'i' && inp == '#' && !(flags&SFFMT_ALTER) )
+				{	base = (int)argv.lu;
+					if(base < 2 || base > SF_RADIX)
+						goto pop_fmt;
+					argv.lu = 0;
+					sp = base <= 36 ? (char*)_Sfcv36 : (char*)_Sfcv64;
+					if(--width > 0 &&
 					   SFGETC(f,inp) >= 0 && sp[inp] < base)
 						goto base_conv;
 				}
 			}
 			else
 			{	/* other bases */
-				sp = base <= 36 ? _Sfv36 : _Sfvmax;
+				sp = base <= 36 ? (char*)_Sfcv36 : (char*)_Sfcv64;
 				if(base < 2 || base > SF_RADIX || sp[inp] >= base)
 				{	SFUNGETC(f,inp);
-					goto done;
+					goto pop_fmt;
 				}
 
 			base_conv: /* check for power of 2 conversions */
@@ -562,83 +646,143 @@ loop_fa :
 						shift = base < 16 ? 3 : 4;
 					else	shift = base < 64 ? 5 : 6;
 
-			base_shift:	/* fast conversion with shifting */
-					do	{ lval = (lval << shift) + sp[inp]; }
-					while(--length > 0 &&
-					      SFGETC(f,inp) >= 0 && sp[inp] < base);
+			base_shift:	do
+					{ argv.lu = (argv.lu << shift) + sp[inp];
+					} while(--width > 0 &&
+					        SFGETC(f,inp) >= 0 && sp[inp] < base);
 				}
 				else
-				{	do	{ lval = (lval * base) + sp[inp]; }
-					while(--length > 0 &&
-					      SFGETC(f,inp) >= 0 && sp[inp] < base);
+				{	do
+					{ argv.lu = (argv.lu * base) + sp[inp];
+					} while(--width > 0 &&
+						SFGETC(f,inp) >= 0 && sp[inp] < base);
 				}
 			}
 
-			if(!skip)
-			{	/* assign */
-				n_assign += 1;
-				if(sign < 0)
-					lval = -lval;
+			if(flags&SFFMT_MINUS)
+				argv.ll = -argv.ll;
+
+			if(value)
+			{	n_assign += 1;
+
 				if(fmt == 'p')
-				{	/* pointer conversion */
-					SETARG(lval,argf,args,char*,'p',form);
+#if _more_void_int
+					*((Void_t**)value) = (Void_t*)((ulong)argv.lu);
+#else
+					*((Void_t**)value) = (Void_t*)((uint)argv.lu);
+#endif
+#if !_ast_intmax_long
+				else if(FMTCMP(size,Sflong_t,Sflong_t))
+					*((Sflong_t*)value) = argv.ll;
+#endif
+				else if(sizeof(long) > sizeof(int) &&
+					FMTCMP(size,long,Sflong_t))
+				{	if(fmt == 'd' || fmt == 'i')
+						*((long*)value) = (long)argv.ll;
+					else	*((ulong*)value) = (ulong)argv.lu;
 				}
-				else switch(size)
-				{
-				case S_SHORT :
-					SETARG(lval,argf,args,short,'h',form);
-					break;
-				case S_NORMAL :
-					SETARG(lval,argf,args,int,'d',form);
-					break;
-				case S_LONG :
-					SETARG(lval,argf,args,long,'D',form);
-					break;
+				else if(sizeof(short) < sizeof(int) &&
+					FMTCMP(size,short,Sflong_t))
+				{	if(fmt == 'd' || fmt == 'i')
+						*((short*)value) = (short)argv.ll;
+					else	*((ushort*)value) = (ushort)argv.lu;
+				}
+				else
+				{	if(fmt == 'd' || fmt == 'i')
+						*((int*)value) = (int)argv.ll;
+					else	*((uint*)value) = (uint)argv.lu;
 				}
 			}
 		}
-		else /* undefined pattern */
-		{	/* return the read byte to the stream */
-			SFUNGETC(f,inp);
-			if(extf)
-			{	/* call extension function */
-				char	*rv;
-				int	n;
-				SFEND(f);
-				n = (*extf)(f,fmt,length,&rv);
-				SFBUF(f);
-				if(n >= 0 && !skip)
-				{	n_assign += 1;
-					if(!argf)
-					{	sp = va_arg(args,char*);
-						while(n--)
-							*sp++ = *rv++;
-					}
-					else if((*argf)(fmt,rv,n) < 0)
-						form = "";
-				}
+		else if(fmt == 's' || fmt == 'c' || fmt == '[')
+		{	if(size < 0)
+				size = MAXWIDTH;
+			if(value)
+			{	argv.s = (char*)value;
+				if(fmt != 'c')
+					size -= 1;
 			}
-			continue;
+			else	size = 0;
+
+			n = 0;
+			if(fmt == 's')
+			{	do
+				{	if(isspace(inp))
+						break;
+					if((n += 1) <= size)
+						*argv.s++ = inp;
+				} while(--width > 0 && SFGETC(f,inp) >= 0);
+			}
+			else if(fmt == 'c')
+			{	do
+				{	if((n += 1) <= size)
+						*argv.s++ = inp;
+				} while(--width > 0 && SFGETC(f,inp) >= 0);
+			}
+			else /* if(fmt == '[') */
+			{	form = setclass((char*)form,accept);
+				do
+				{	if(!accept[inp])
+					{	if(n > 0 || (flags&SFFMT_ALTER) )
+							break;
+						else
+						{	SFUNGETC(f,inp);
+							goto pop_fmt;
+						}
+					}
+					if((n += 1) <= size)
+						*argv.s++ = inp;
+				} while(--width > 0 && SFGETC(f,inp) >= 0);
+			}
+
+			if(value && (n > 0 || fmt == '[') )
+			{	n_assign += 1;
+				if(fmt != 'c' && size >= 0)
+					*argv.s = '\0';
+			}
 		}
 
-		if(length > 0 && inp >= 0)
+		if(width > 0 && inp >= 0)
 			SFUNGETC(f,inp);
 	}
 
-	if((fa = fast) )
-	{	/* check for stacked formats/arglists */
-		form = fa->form;
-		memcpy((Void_t*)(&args), (Void_t*)(&(fa->args)), sizeof(va_list));
-		argf = fa->argf.s;
-		extf = fa->extf.s;
-		fast = fa->next;
-		FAFREE(fa);
-		goto loop_fa;
+pop_fmt:
+	if(fp)
+	{	free(fp);
+		fp = NIL(Fmtpos_t*);
+	}
+	while((fm = fmstk) ) /* pop the format stack and continue */
+	{	if(fm->eventf)
+		{	if(!form || !form[0])
+				(*fm->eventf)(f,SF_FINAL,NIL(Void_t*),ft);
+			else if((*fm->eventf)(f,SF_DPOP,(Void_t*)form,ft) < 0)
+				goto loop_fmt;
+		}
+
+		fmstk = fm->next;
+		if((form = fm->form) )
+		{	va_copy(args, fm->args);
+			oform = fm->oform;
+			va_copy(oargs,fm->oargs);
+			argn = fm->argn;
+			fp = fm->fp;
+		}
+		ft = fm->ft;
+		FMTFREE(fm);
+		if(form && form[0])
+			goto loop_fmt;
 	}
 
 done:
-	if(sf)
-		sfclose(sf);
+	if(fp)
+		free(fp);
+	while((fm = fmstk) )
+	{	if(fm->eventf)
+			(*fm->eventf)(f,SF_FINAL,NIL(Void_t*),fm->ft);
+		fmstk = fm->next;
+		FMTFREE(fm);
+	}
+
 	SFEND(f);
 	SFOPEN(f,0);
 	return (n_assign == 0 && inp < 0) ? -1 : n_assign;

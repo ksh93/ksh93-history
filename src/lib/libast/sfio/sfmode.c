@@ -1,52 +1,44 @@
-/*
- * CDE - Common Desktop Environment
- *
- * Copyright (c) 1993-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
- */
 /***************************************************************
 *                                                              *
-*                      AT&T - PROPRIETARY                      *
+*           This software is part of the ast package           *
+*              Copyright (c) 1985-2000 AT&T Corp.              *
+*      and it may only be used by you under license from       *
+*                     AT&T Corp. ("AT&T")                      *
+*       A copy of the Source Code Agreement is available       *
+*              at the AT&T Internet web site URL               *
 *                                                              *
-*         THIS IS PROPRIETARY SOURCE CODE LICENSED BY          *
-*                          AT&T CORP.                          *
+*     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*                Copyright (c) 1995 AT&T Corp.                 *
-*                     All Rights Reserved                      *
-*                                                              *
-*           This software is licensed by AT&T Corp.            *
-*       under the terms and conditions of the license in       *
-*       http://www.research.att.com/orgs/ssr/book/reuse        *
+*     If you received this software without first entering     *
+*       into a license with AT&T, you have an infringing       *
+*           copy and cannot use it without violating           *
+*             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
-*           Software Engineering Research Department           *
-*                    AT&T Bell Laboratories                    *
+*               Network Services Research Center               *
+*                      AT&T Labs Research                      *
+*                       Florham Park NJ                        *
 *                                                              *
-*               For further information contact                *
-*                     gsf@research.att.com                     *
+*             Glenn Fowler <gsf@research.att.com>              *
+*              David Korn <dgk@research.att.com>               *
+*               Phong Vo <kpv@research.att.com>                *
 *                                                              *
 ***************************************************************/
 #include	"sfhdr.h"
-static char*	Version = "\n@(#)sfio (AT&T Bell Laboratories) 05/09/95\0\n";
+static char*	Version = "\n@(#)sfio (AT&T Labs - kpv) 1999-08-05\0\n";
 
 #if _PACKAGE_ast
-#include <wait.h>
+#include	<sig.h>
+#include	<wait.h>
+
+#define Sfsignal_f	Sig_handler_t
+
+#else
+
+#include	<signal.h>
+
+typedef void(*	Sfsignal_f)_ARG_((int));
+
 #endif
 
 /*	Switch the given stream to a desired mode
@@ -67,42 +59,50 @@ static void _sfcleanup()
 
 	sfsync(NIL(Sfio_t*));
 
-	/* unbuffer all write streams so that any new output 
-	   from other atexit functions will be done immediately.
-	   This can be inefficient for applications that do lots of
-	   output at the end but it's correct.
-	*/
+	/* set this so that no more buffering is allowed */
+	_Sfexiting = 1001;
+
 	for(p = &_Sfpool; p; p = p->next)
 	{	for(n = 0; n < p->n_sf; ++n)
 		{	f = p->sf[n];
-			if(SFFROZEN(f) || (f->flags&SF_STRING) )
+
+			if(SFFROZEN(f))
 				continue;
 
+			SFLOCK(f,0);
+
+			/* let application know that we are leaving */
+			(void)SFRAISE(f, SF_ATEXIT, NIL(Void_t*));
+
+			if(f->flags&SF_STRING)
+				continue;
+
+			/* from now on, write streams are unbuffered */
 			pool = f->mode&SF_POOL;
 			f->mode &= ~SF_POOL;
 			if((f->flags&SF_WRITE) && !(f->mode&SF_WRITE))
-				(void)_sfmode(f,SF_WRITE,0);
-			if((f->mode&SF_WRITE) && f->next == f->data)
-				sfsetbuf(f,NIL(Void_t*),0);
+				(void)_sfmode(f,SF_WRITE,1);
+			if(((f->bits&SF_MMAP) && f->data) ||
+			   ((f->mode&SF_WRITE) && f->next == f->data) )
+				(void)SFSETBUF(f,NIL(Void_t*),0);
 			f->mode |= pool;
+
+			SFOPEN(f,0);
 		}
 	}
-
-	/* set this so that no more buffering is allowed */
-	_Sfexiting = 1001;
 }
 
 /* put into discrete pool */
 #if __STD_C
-_sfsetpool(Sfio_t* f)
+int _sfsetpool(Sfio_t* f)
 #else
-_sfsetpool(f)
+int _sfsetpool(f)
 Sfio_t*	f;
 #endif
 {
 	reg Sfpool_t*	p;
 	reg Sfio_t**	array;
-	reg int		n;
+	reg int		n, rv;
 
 	if(!_Sfcleanup)
 	{	_Sfcleanup = _sfcleanup;
@@ -112,6 +112,12 @@ Sfio_t*	f;
 	if(!(p = f->pool) )
 		p = f->pool = &_Sfpool;
 
+	if(p->mode&SF_LOCK) /* only one manipulator at a time */
+		return -1;
+
+	p->mode |= SF_LOCK;
+	rv = -1;
+
 	if(p->n_sf >= p->s_sf)
 	{	if(p->s_sf == 0) /* initialize pool array */
 		{	p->s_sf = sizeof(p->array)/sizeof(p->array[0]);
@@ -120,7 +126,7 @@ Sfio_t*	f;
 		else	/* allocate a larger array */
 		{	n = (p->sf != p->array ? p->s_sf : (p->s_sf/4 + 1)*4) + 4;
 			if(!(array = (Sfio_t**)malloc(n*sizeof(Sfio_t*))) )
-				return -1;
+				goto done;
 
 			/* move old array to new one */
 			memcpy((Void_t*)array,(Void_t*)p->sf,p->n_sf*sizeof(Sfio_t*));
@@ -136,19 +142,23 @@ Sfio_t*	f;
 	   of walk thru all streams, we'll want the new stream to be seen.
 	*/
 	p->sf[p->n_sf++] = f;
-	return 0;
+	rv = 0;
+
+done:
+	p->mode &= ~SF_LOCK;
+	return rv;
 }
 
-/* to create auxiliary buffer for large sfgetr() or sfrsrv() */
+/* to create auxiliary buffer */
 #define SF_RSRV	128
 static Sfrsrv_t*	_Sfrsrv;
 
 #if __STD_C
-Sfrsrv_t* _sfrsrv(reg Sfio_t* f, reg int size)
+Sfrsrv_t* _sfrsrv(reg Sfio_t* f, reg ssize_t size)
 #else
 Sfrsrv_t* _sfrsrv(f,size)
 reg Sfio_t*	f;
-reg int		size;	/* closing if size < 0 */
+reg ssize_t	size;	/* closing if size < 0 */
 #endif
 {
 	reg Sfrsrv_t	*last, *frs;
@@ -165,7 +175,7 @@ reg int		size;	/* closing if size < 0 */
 
 	if(size < 0)	/* closing stream */
 	{	if(frs)
-			free((char*)frs);
+			free(frs);
 		return NIL(Sfrsrv_t*);
 	}
 
@@ -177,9 +187,8 @@ reg int		size;	/* closing if size < 0 */
 		else
 		{	if(frs)
 			{	if(frs->slen > 0)
-					memcpy((char*)last,(char*)frs,
-						sizeof(Sfrsrv_t)+frs->slen);
-				free((char*)frs);
+					memcpy(last,frs,sizeof(Sfrsrv_t)+frs->slen);
+				free(frs);
 			}
 			frs = last;
 			frs->size = size;
@@ -198,24 +207,43 @@ reg int		size;	/* closing if size < 0 */
 	return size >= 0 ? frs : NIL(Sfrsrv_t*);
 }
 
+#ifdef SIGPIPE
+#if __STD_C
+static void ignoresig(int sig)
+#else
+static void ignoresig(sig)
+int sig;
+#endif
+{
+	signal(sig, ignoresig);
+}
+#endif
+
+#define SF_POPEN_INIT	0	/* not checked yet			*/
+#define SF_POPEN_SET	1	/* set to ignoresig			*/
+#define SF_POPEN_USER	2	/* user override -- leave it alone	*/
 
 /* to keep track of process or unseekable read/write streams */
 typedef struct _sfp_
-{
-	struct _sfp_*	next;	/* link list			*/
+{	struct _sfp_*	next;	/* link list			*/
 	int		pid;	/* process id			*/
 	Sfio_t*		sf;	/* stream associated with	*/
 	uchar*		rdata;	/* read data being cached	*/
 	int		ndata;	/* size of cached data		*/
 	int		size;	/* buffer size			*/
 	int		file;	/* saved file descriptor	*/
+	int		type;	/* 0 or SF_POPEN_SET		*/
 } Sfpopen_t;
-static Sfpopen_t*	_Sfprocess;
+static struct
+{	Sfpopen_t*	head;	/* linked list of processes	*/
+	int		state;	/* signal handler state		*/
+	int		set;	/* # of SF_POPEN_SET  streams	*/
+} Sfpopen = {NIL(Sfpopen_t*), SF_POPEN_INIT, 0};
 
 #if __STD_C
-_sfpopen(reg Sfio_t* f, int fd, int pid)
+int _sfpopen(reg Sfio_t* f, int fd, int pid)
 #else
-_sfpopen(f, fd, pid)
+int _sfpopen(f, fd, pid)
 reg Sfio_t*	f;
 int		fd;
 int		pid;
@@ -223,30 +251,49 @@ int		pid;
 {
 	reg Sfpopen_t* p = (Sfpopen_t*)Version;	/* shut up unuse warning */
 
-	for(p = _Sfprocess; p; p = p->next)
+	for(p = Sfpopen.head; p; p = p->next)
 		if(p->sf == f)
 			return 0;
 
 	if(!(p = (Sfpopen_t*)malloc(sizeof(Sfpopen_t))) )
 		return -1;
 
-	f->flags |= SF_PROCESS;
-
+	p->next = Sfpopen.head; Sfpopen.head = p;
 	p->pid = pid;
 	p->sf = f;
 	p->size = p->ndata = 0;
 	p->rdata = NIL(uchar*);
 	p->file = fd;
-	p->next = _Sfprocess;
-	_Sfprocess = p;
+	p->type = (pid >= 0 && !(f->bits&SF_STDIO) && (f->flags&SF_WRITE)) ?
+			SF_POPEN_SET : 0;
+
+	f->bits = (f->bits & ~SF_STDIO) | SF_PROCESS;
+
+#ifdef SIGPIPE	/* protect from broken pipe signal */
+	if(p->type == SF_POPEN_SET)
+	{	Sfsignal_f	handler;
+
+		Sfpopen.set += 1; /* reference count */
+
+		if(Sfpopen.state == SF_POPEN_INIT)
+		{	if((handler = signal(SIGPIPE, ignoresig)) == SIG_DFL ||
+			    handler == ignoresig)
+				Sfpopen.state = SF_POPEN_SET;
+			else
+			{	Sfpopen.state = SF_POPEN_USER;
+				signal(SIGPIPE, handler);
+			}
+		}
+	}
+#endif
 
 	return 0;
 }
 
 #if __STD_C
-_sfpclose(reg Sfio_t* f)
+int _sfpclose(reg Sfio_t* f)
 #else
-_sfpclose(f)
+int _sfpclose(f)
 reg Sfio_t*	f;	/* stream to close */
 #endif
 {
@@ -255,7 +302,7 @@ reg Sfio_t*	f;	/* stream to close */
 
 	if(!f)
 	{	/* before exec-ing, close all pipe ends */
-		for(p = _Sfprocess; p; p = p->next)
+		for(p = Sfpopen.head; p; p = p->next)
 		{	if(p->file >= 0)
 				CLOSE(p->file);
 			CLOSE(p->sf->file);
@@ -264,27 +311,24 @@ reg Sfio_t*	f;	/* stream to close */
 	}
 
 	/* find the associated process structure */
-	for(last = NIL(Sfpopen_t*), p = _Sfprocess; p ; last = p, p = p->next)
+	for(last = NIL(Sfpopen_t*), p = Sfpopen.head; p ; last = p, p = p->next)
 		if(f == p->sf)
 			break;
 	if(!p)
 		return -1;
 
-	f->flags &= ~SF_PROCESS;
-	if(sfclose(f) < 0)
-	{	f->flags |= SF_PROCESS;
-		return -1;
-	}
+	f->bits &= ~SF_PROCESS;
+	(void)sfclose(f);
 
 	/* delete from process table */
 	if(last)
 		last->next = p->next;
-	else	_Sfprocess = p->next;
+	else	Sfpopen.head = p->next;
 	if(p->rdata)
-		free((char*)p->rdata);
+		free(p->rdata);
 
 	if(p->pid < 0)
-	{	free((char*)p);
+	{	free(p);
 		return 0;
 	}
 
@@ -296,19 +340,34 @@ reg Sfio_t*	f;	/* stream to close */
 #if _PACKAGE_ast
 	sigcritical(1);
 #endif
-	while ((pid = waitpid(p->pid,&status,0)) == -1 && errno == EINTR);
+	while ((pid = waitpid(p->pid,&status,0)) == -1 && errno == EINTR)
+		;
 #if _PACKAGE_ast
 	sigcritical(0);
 #endif
 
-	free((char*)p);
+#ifdef SIGPIPE
+	if(p->type == SF_POPEN_SET)
+	{	Sfsignal_f	handler;
+
+		if((Sfpopen.set -= 1) == 0 && Sfpopen.state == SF_POPEN_SET)
+		{	if((handler = signal(SIGPIPE,SIG_DFL)) != ignoresig)
+			{	Sfpopen.state = SF_POPEN_USER;
+				signal(SIGPIPE,handler);
+			}
+			else	Sfpopen.state = SF_POPEN_INIT;
+		}
+	}
+#endif
+
+	free(p);
 	return (pid == -1 ? -1 : status);
 }
 
 #if __STD_C
-static _sfpmode(Sfio_t* f, int type)
+static int _sfpmode(Sfio_t* f, int type)
 #else
-static _sfpmode(f,type)
+static int _sfpmode(f,type)
 Sfio_t*	f;
 int	type;
 #endif
@@ -318,7 +377,7 @@ int	type;
 	   with respect to a stacked stream since it takes on the identity
 	   of the stack base.
 	*/
-	for(last = NIL(Sfpopen_t*), p = _Sfprocess; p; last = p, p = p->next)
+	for(last = NIL(Sfpopen_t*), p = Sfpopen.head; p; last = p, p = p->next)
 		if((f->push ? f->push : f) == p->sf)
 			break;
 	if(!p)
@@ -327,8 +386,8 @@ int	type;
 	/* move-to-front heuristic */
 	if(last)
 	{	last->next = p->next;
-		p->next = _Sfprocess;
-		_Sfprocess = p;
+		p->next = Sfpopen.head;
+		Sfpopen.head = p;
 	}
 
 	if(type == SF_WRITE)
@@ -398,7 +457,7 @@ int	stack;
 	if(!stack)
 	{	/* and for sfpopen buffer */
 		p1 = p2 = NIL(Sfpopen_t*);
-		for(p = _Sfprocess; p; p = p->next)
+		for(p = Sfpopen.head; p; p = p->next)
 		{	if(p->sf == f1)
 				p1 = p;
 			if(p->sf == f2)
@@ -412,33 +471,60 @@ int	stack;
 }
 
 #if __STD_C
-_sfmode(reg Sfio_t* f, reg int wanted, reg int local)
+int _sfmode(reg Sfio_t* f, reg int wanted, reg int local)
 #else
-_sfmode(f, wanted, local)
+int _sfmode(f, wanted, local)
 reg Sfio_t*	f;	/* change r/w mode and sync file pointer for this stream */
 reg int		wanted;	/* desired mode */
 reg int		local;	/* a local call */
 #endif
 {
-	reg int		n;
-	reg long	addr;
-	reg int		rv = 0;
+	reg int	n;
+	Sfoff_t	addr;
+	reg int	rv = 0;
 
 	if((!local && SFFROZEN(f)) || (!(f->flags&SF_STRING) && f->file < 0))
-	{	local = 1;
-		goto err_notify;
+	{	if(local || !f->disc || !f->disc->exceptf)
+		{	local = 1;
+			goto err_notify;
+		}
+
+		for(;;)
+		{	if((rv = (*f->disc->exceptf)(f,SF_LOCKED,0,f->disc)) < 0)
+				return rv;
+			if((!local && SFFROZEN(f)) ||
+			   (!(f->flags&SF_STRING) && f->file < 0) )
+			{	if(rv == 0)
+				{	local = 1;
+					goto err_notify;
+				}
+				else	continue;
+			}
+			else	break;
+		}
 	}
 
 	if(f->mode&SF_GETR)
 	{	f->mode &= ~SF_GETR;
-		f->next[-1] = f->getr;
+#ifdef MAP_TYPE
+		if((f->bits&SF_MMAP) && (f->tiny[0] += 1) >= (4*SF_NMAP) )
+		{	/* turn off mmap to avoid page faulting */
+			sfsetbuf(f,(Void_t*)f->tiny,(size_t)SF_UNBOUND);
+			f->tiny[0] = 0;
+		}
+		else
+#endif
+		if(f->getr)
+		{	f->next[-1] = f->getr;
+			f->getr = 0;
+		}
 	}
 
 	if(f->mode&SF_STDIO) /* synchronizing with stdio pointers */
-		(*_Sfstdio)(f);
+		(*_Sfstdio)(f,NIL(Void_t*));
 
 	if(f->disc == _Sfudisc && wanted == SF_WRITE &&
-	   sfclose((*_Sfstack)(f,NIL(Sfile_t*))) < 0 )
+	   sfclose((*_Sfstack)(f,NIL(Sfio_t*))) < 0 )
 	{	local = 1;
 		goto err_notify;
 	}
@@ -466,12 +552,13 @@ reg int		local;	/* a local call */
 		if(wanted == 0)
 			goto done;
 
-		if(wanted != (f->mode&SF_RDWR) && !(f->flags&wanted) )
+		if(wanted != (int)(f->mode&SF_RDWR) && !(f->flags&wanted) )
 			goto err_notify;
 
 		if((f->flags&SF_STRING) && f->size >= 0 && f->data)
 		{	f->mode &= ~SF_INIT;
-			f->extent = (f->flags&(SF_READ|SF_BOTH)) ? f->size : 0;
+			f->extent = ((f->flags&SF_READ) || (f->bits&SF_BOTH)) ?
+					f->size : 0;
 			f->here = 0;
 			f->endb = f->data + f->size;
 			f->next = f->endr = f->endw = f->data;
@@ -481,12 +568,12 @@ reg int		local;	/* a local call */
 		}
 		else
 		{	n = f->flags;
-			(void)SFSETBUF(f,(char*)f->data,f->size);
+			(void)SFSETBUF(f,f->data,f->size);
 			f->flags |= (n&SF_MALLOC);
 		}
 	}
 
-	if(wanted == SFMODE(f,1))
+	if(wanted == (int)SFMODE(f,1))
 		goto done;
 
 	switch(SFMODE(f,1))
@@ -516,7 +603,7 @@ reg int		local;	/* a local call */
 		f->mode = SF_READ|SF_LOCK;
 
 		/* restore saved read data for coprocess */
-		if((f->flags&SF_PROCESS) && _sfpmode(f,wanted) < 0)
+		if((f->bits&SF_PROCESS) && _sfpmode(f,wanted) < 0)
 			goto err_notify;
 
 		break;
@@ -528,11 +615,11 @@ reg int		local;	/* a local call */
 
 			/* see if must go with new physical location */
 			if((f->flags&(SF_SHARE|SF_PUBLIC)) == (SF_SHARE|SF_PUBLIC) &&
-			   (addr = SFSK(f,0L,1,f->disc)) != f->here)
+			   (addr = SFSK(f,0,1,f->disc)) != f->here)
 			{
 #ifdef MAP_TYPE
-				if((f->flags&SF_MMAP) && f->data)
-				{	munmap((caddr_t)f->data,f->endb-f->data);
+				if((f->bits&SF_MMAP) && f->data)
+				{	SFMUNMAP(f,f->data,f->endb-f->data);
 					f->data = NIL(uchar*);
 				}
 #endif
@@ -562,13 +649,13 @@ reg int		local;	/* a local call */
 		}
 
 		/* save unread data before switching mode */
-		if((f->flags&SF_PROCESS) && _sfpmode(f,wanted) < 0)
+		if((f->bits&SF_PROCESS) && _sfpmode(f,wanted) < 0)
 			goto err_notify;
 
 		/* reset buffer and seek pointer */
 		if(!(f->mode&SF_SYNCED) )
 		{	n = f->endb - f->next;
-			if(f->extent >= 0 && (n > 0 || (f->data && (f->flags&SF_MMAP))) )
+			if(f->extent >= 0 && (n > 0 || (f->data && (f->bits&SF_MMAP))) )
 			{	/* reset file pointer */
 				addr = f->here - n;
 				if(SFSK(f,addr,0,f->disc) < 0)
@@ -579,13 +666,10 @@ reg int		local;	/* a local call */
 
 		f->mode = SF_WRITE|SF_LOCK;
 #ifdef MAP_TYPE
-		if(f->flags&SF_MMAP)
+		if(f->bits&SF_MMAP)
 		{	if(f->data)
-			{	(void)munmap((caddr_t)f->data,f->endb-f->data);
-				f->endb = f->endr = f->endw =
-				f->next = f->data = NIL(uchar*);
-			}
-			(void)SFSETBUF(f,(char*)f->tiny,-1);
+				SFMUNMAP(f,f->data,f->endb-f->data);
+			(void)SFSETBUF(f,(Void_t*)f->tiny,(size_t)SF_UNBOUND);
 		}
 #endif
 		if(f->data == f->tiny)

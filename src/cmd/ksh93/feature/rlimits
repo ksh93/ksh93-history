@@ -1,2 +1,0 @@
-hdr,sys	resource,vlimit
-lib	getrlimit,ulimit,vlimit

@@ -1,52 +1,40 @@
-/*
- * CDE - Common Desktop Environment
- *
- * Copyright (c) 1993-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
- */
 /***************************************************************
 *                                                              *
-*                      AT&T - PROPRIETARY                      *
+*           This software is part of the ast package           *
+*              Copyright (c) 1985-2000 AT&T Corp.              *
+*      and it may only be used by you under license from       *
+*                     AT&T Corp. ("AT&T")                      *
+*       A copy of the Source Code Agreement is available       *
+*              at the AT&T Internet web site URL               *
 *                                                              *
-*         THIS IS PROPRIETARY SOURCE CODE LICENSED BY          *
-*                          AT&T CORP.                          *
+*     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*                Copyright (c) 1995 AT&T Corp.                 *
-*                     All Rights Reserved                      *
-*                                                              *
-*           This software is licensed by AT&T Corp.            *
-*       under the terms and conditions of the license in       *
-*       http://www.research.att.com/orgs/ssr/book/reuse        *
+*     If you received this software without first entering     *
+*       into a license with AT&T, you have an infringing       *
+*           copy and cannot use it without violating           *
+*             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
-*           Software Engineering Research Department           *
-*                    AT&T Bell Laboratories                    *
+*               Network Services Research Center               *
+*                      AT&T Labs Research                      *
+*                       Florham Park NJ                        *
 *                                                              *
-*               For further information contact                *
-*                     gsf@research.att.com                     *
+*             Glenn Fowler <gsf@research.att.com>              *
+*              David Korn <dgk@research.att.com>               *
+*               Phong Vo <kpv@research.att.com>                *
 *                                                              *
 ***************************************************************/
+#ifdef _UWIN
+
+int _STUB_vmtrace;
+
+#else
+
 #include	"vmhdr.h"
 
 /*	Turn on tracing for regions
 **
-**	Written by (Kiem-)Phong Vo, kpv@research.att.com, 01/16/94.
+**	Written by Kiem-Phong Vo, kpv@research.att.com, 01/16/94.
 */
 
 static int	Trfile = -1;
@@ -72,11 +60,11 @@ int	endc;
 
 /* convert a long value to an ascii representation */
 #if __STD_C
-static char* tritoa(ulong v, int type)
+static char* tritoa(Vmulong_t v, int type)
 #else
 static char* tritoa(v, type)
-ulong	v;	/* value to convert					*/
-int	type;	/* =0 base-16, >0: unsigned base-10, <0: signed base-10	*/
+Vmulong_t	v;	/* value to convert					*/
+int		type;	/* =0 base-16, >0: unsigned base-10, <0: signed base-10	*/
 #endif
 {
 	char*	s;
@@ -102,7 +90,7 @@ int	type;	/* =0 base-16, >0: unsigned base-10, <0: signed base-10	*/
 	else			/* signed base-10 */
 	{	int	sign = ((long)v < 0);
 		if(sign)
-			v = (ulong)(-((long)v));
+			v = (Vmulong_t)(-((long)v));
 		do
 		{	*s-- = (char)('0' + (v%10));
 			v /= 10;
@@ -116,43 +104,56 @@ int	type;	/* =0 base-16, >0: unsigned base-10, <0: signed base-10	*/
 
 /* generate a trace of some call */
 #if __STD_C
-static void trtrace(Vmalloc_t* vm, uchar* oldaddr, uchar* newaddr, size_t size )
+static void trtrace(Vmalloc_t* vm,
+		    Vmuchar_t* oldaddr, Vmuchar_t* newaddr, size_t size, size_t align )
 #else
-static void trtrace(vm, oldaddr, newaddr, size)
+static void trtrace(vm, oldaddr, newaddr, size, align)
 Vmalloc_t*	vm;		/* region call was made from	*/
-uchar*		oldaddr;	/* old data address		*/
-uchar*		newaddr;	/* new data address		*/
+Vmuchar_t*	oldaddr;	/* old data address		*/
+Vmuchar_t*	newaddr;	/* new data address		*/
 size_t		size;		/* size of piece		*/
+size_t		align;		/* alignment			*/
 #endif
 {
 	char		buf[1024], *bufp, *endbuf;
 	reg Vmdata_t*	vd = vm->data;
-	reg char*	file;
-	reg int		line;
+	reg char*	file = NIL(char*);
+	reg int		line = 0;
+	int		type;
 #define SLOP	32
 
-	VMFILELINE(file,line);
+	if(oldaddr == (Vmuchar_t*)(-1)) /* printing busy blocks */
+	{	type = 0;
+		oldaddr = NIL(Vmuchar_t*);
+	}
+	else
+	{	type = vd->mode&VM_METHODS;
+		VMFILELINE(vm,file,line);
+	}
 
 	if(Trfile < 0)
 		return;
 
 	bufp = buf; endbuf = buf+sizeof(buf);
-	bufp = trstrcpy(bufp, tritoa(oldaddr ? ULONG(oldaddr) : 0L, 0), ':');
-	bufp = trstrcpy(bufp, tritoa(newaddr ? ULONG(newaddr) : 0L, 0), ':');
-	bufp = trstrcpy(bufp, tritoa((ulong)size, 1), ':');
-	bufp = trstrcpy(bufp, tritoa(ULONG(vm), 0), ':');
-	if(vd->mode&VM_MTBEST)
+	bufp = trstrcpy(bufp, tritoa(oldaddr ? VLONG(oldaddr) : 0L, 0), ':');
+	bufp = trstrcpy(bufp, tritoa(newaddr ? VLONG(newaddr) : 0L, 0), ':');
+	bufp = trstrcpy(bufp, tritoa((Vmulong_t)size, 1), ':');
+	bufp = trstrcpy(bufp, tritoa((Vmulong_t)align, 1), ':');
+	bufp = trstrcpy(bufp, tritoa(VLONG(vm), 0), ':');
+	if(type&VM_MTBEST)
 		bufp = trstrcpy(bufp, "best", ':');
-	else if(vd->mode&VM_MTLAST)
+	else if(type&VM_MTLAST)
 		bufp = trstrcpy(bufp, "last", ':');
-	else if(vd->mode&VM_MTPOOL)
+	else if(type&VM_MTPOOL)
 		bufp = trstrcpy(bufp, "pool", ':');
-	else if(vd->mode&VM_MTPROFILE)
+	else if(type&VM_MTPROFILE)
 		bufp = trstrcpy(bufp, "profile", ':');
-	else	bufp = trstrcpy(bufp, "debug", ':');
+	else if(type&VM_MTDEBUG)
+		bufp = trstrcpy(bufp, "debug", ':');
+	else	bufp = trstrcpy(bufp, "busy", ':');
 	if(file && file[0] && line > 0 && (bufp + strlen(file) + SLOP) < endbuf)
 	{	bufp = trstrcpy(bufp, file, ',');
-		bufp = trstrcpy(bufp, tritoa((ulong)line,1), ':');
+		bufp = trstrcpy(bufp, tritoa((Vmulong_t)line,1), ':');
 	}
 	*bufp++ = '\n';
 	*bufp = '\0';
@@ -161,9 +162,9 @@ size_t		size;		/* size of piece		*/
 }
 
 #if __STD_C
-vmtrace(int file)
+int vmtrace(int file)
 #else
-vmtrace(file)
+int vmtrace(file)
 int	file;
 #endif
 {
@@ -177,3 +178,45 @@ int	file;
 	Trfile = file;
 	return fd;
 }
+
+#if __STD_C
+int vmtrbusy(Vmalloc_t* vm)
+#else
+int vmtrbusy(vm)
+Vmalloc_t*	vm;
+#endif
+{
+	Seg_t*		seg;
+	Vmdata_t*	vd = vm->data;
+
+	if(Trfile < 0 || !(vd->mode&(VM_MTBEST|VM_MTDEBUG|VM_MTPROFILE)))
+		return -1;
+
+	for(seg = vd->seg; seg; seg = seg->next)
+	{	Block_t		*b, *endb;
+		Vmuchar_t*	data;
+		size_t		s;
+
+		for(b = SEGBLOCK(seg), endb = BLOCK(seg->baddr); b < endb; )
+		{	if(ISJUNK(SIZE(b)) || !ISBUSY(SIZE(b)))
+				continue;
+
+			data = DATA(b);
+			if(vd->mode&VM_MTDEBUG)
+			{	data = DB2DEBUG(data);
+				s = DBSIZE(data);
+			}
+			else if(vd->mode&VM_MTPROFILE)
+				s = PFSIZE(data);
+			else	s = SIZE(b)&~BITS;
+
+			trtrace(vm, (Vmuchar_t*)(-1), data, s, 0);
+
+			b = (Block_t*)((Vmuchar_t*)DATA(b) + (SIZE(b)&~BITS) );
+		}
+	}
+
+	return 0;
+}
+
+#endif

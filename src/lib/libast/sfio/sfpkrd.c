@@ -1,45 +1,27 @@
-/*
- * CDE - Common Desktop Environment
- *
- * Copyright (c) 1993-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
- */
 /***************************************************************
 *                                                              *
-*                      AT&T - PROPRIETARY                      *
+*           This software is part of the ast package           *
+*              Copyright (c) 1985-2000 AT&T Corp.              *
+*      and it may only be used by you under license from       *
+*                     AT&T Corp. ("AT&T")                      *
+*       A copy of the Source Code Agreement is available       *
+*              at the AT&T Internet web site URL               *
 *                                                              *
-*         THIS IS PROPRIETARY SOURCE CODE LICENSED BY          *
-*                          AT&T CORP.                          *
+*     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*                Copyright (c) 1995 AT&T Corp.                 *
-*                     All Rights Reserved                      *
-*                                                              *
-*           This software is licensed by AT&T Corp.            *
-*       under the terms and conditions of the license in       *
-*       http://www.research.att.com/orgs/ssr/book/reuse        *
+*     If you received this software without first entering     *
+*       into a license with AT&T, you have an infringing       *
+*           copy and cannot use it without violating           *
+*             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
-*           Software Engineering Research Department           *
-*                    AT&T Bell Laboratories                    *
+*               Network Services Research Center               *
+*                      AT&T Labs Research                      *
+*                       Florham Park NJ                        *
 *                                                              *
-*               For further information contact                *
-*                     gsf@research.att.com                     *
+*             Glenn Fowler <gsf@research.att.com>              *
+*              David Korn <dgk@research.att.com>               *
+*               Phong Vo <kpv@research.att.com>                *
 *                                                              *
 ***************************************************************/
 #include	"sfhdr.h"
@@ -60,39 +42,40 @@
 #define SOCKET_PEEK	002
 
 #if __STD_C
-sfpkrd(int fd, Void_t* argbuf, int n, int rc, long tm, int action)
+ssize_t sfpkrd(int fd, Void_t* argbuf, size_t n, int rc, long tm, int action)
 #else
-sfpkrd(fd, argbuf, n, rc, tm, action)
+ssize_t sfpkrd(fd, argbuf, n, rc, tm, action)
 int	fd;	/* file descriptor */
 Void_t*	argbuf;	/* buffer to read data */
-int	n;	/* buffer size */
+size_t	n;	/* buffer size */
 int	rc;	/* record character */
 long	tm;	/* time-out */
-int	action;	/* >0: peeking,
-		   <0: no peeking, if rc>=0, get rec if able to, else just read,
-		   =0; no peeking, if rc>=0, must get a rec only
+int	action;	/* >0: peeking, if rc>=0, get action records,
+		   <0: no peeking, if rc>=0, get -action records,
+		   =0: no peeking, if rc>=0, must get a single record
 		*/
 #endif
 {
-	reg int		r, ntry, type;
-	reg char*	buf = (char*)argbuf;
+	reg ssize_t	r;
+	reg int		ntry, t;
+	reg char	*buf = (char*)argbuf, *endbuf;
 
 	if(rc < 0 && tm < 0 && action <= 0)
 		return read(fd,buf,n);
 
-	type = (action > 0 || rc >= 0) ? (STREAM_PEEK|SOCKET_PEEK) : 0;
+	t = (action > 0 || rc >= 0) ? (STREAM_PEEK|SOCKET_PEEK) : 0;
 #if !_stream_peek
-	type &= ~STREAM_PEEK;
+	t &= ~STREAM_PEEK;
 #endif
 #if !_socket_peek
-	type &= ~SOCKET_PEEK;
+	t &= ~SOCKET_PEEK;
 #endif
 
 	for(ntry = 0; ntry < 2; ++ntry)
 	{
 		r = -1;
 #if _stream_peek
-		if((type&STREAM_PEEK) && (ntry == 1 || tm < 0) )
+		if((t&STREAM_PEEK) && (ntry == 1 || tm < 0) )
 		{
 			struct strpeek	pbuf;
 			pbuf.flags = 0;
@@ -106,10 +89,10 @@ int	action;	/* >0: peeking,
 			if((r = ioctl(fd,I_PEEK,&pbuf)) < 0)
 			{	if(errno == EINTR)
 					return -1;
-				type &= ~STREAM_PEEK;
+				t &= ~STREAM_PEEK;
 			}
 			else
-			{	type &= ~SOCKET_PEEK;
+			{	t &= ~SOCKET_PEEK;
 				if(r > 0 && (r = pbuf.databuf.len) <= 0)
 				{	if(action <= 0)	/* read past eof */
 						r = read(fd,buf,1);
@@ -129,9 +112,9 @@ int	action;	/* >0: peeking,
 		/* poll or select to see if data is present.  */
 		while(tm >= 0 || action > 0 ||
 			/* block until there is data before peeking again */
-			((type&STREAM_PEEK) && rc >= 0) ||
+			((t&STREAM_PEEK) && rc >= 0) ||
 			/* let select be interrupted instead of recv which autoresumes */
-			(type&SOCKET_PEEK) )
+			(t&SOCKET_PEEK) )
 		{	r = -2;
 #if _lib_poll
 			if(r == -2)
@@ -199,8 +182,8 @@ int	action;	/* >0: peeking,
 							break;
 						}
 					}
-					else if((r = avail) <= 0)
-						r = -1;
+					else	r = avail <= 0 ? -1 : (ssize_t)avail;
+
 					if(r < 0 && nsec-- > 0)
 						sleep(1);
 				}
@@ -220,7 +203,7 @@ int	action;	/* >0: peeking,
 		}
 
 #if _socket_peek
-		if(type&SOCKET_PEEK)
+		if(t&SOCKET_PEEK)
 		{
 			while((r = recv(fd,(char*)buf,n,MSG_PEEK)) < 0)
 			{	if(errno == EINTR)
@@ -229,11 +212,11 @@ int	action;	/* >0: peeking,
 				{	errno = 0;
 					continue;
 				}
-				type &= ~SOCKET_PEEK;
+				t &= ~SOCKET_PEEK;
 				break;
 			}
 			if(r >= 0)
-			{	type &= ~STREAM_PEEK;
+			{	t &= ~STREAM_PEEK;
 				if(r > 0)
 					break;
 				else	/* read past eof */
@@ -249,34 +232,33 @@ int	action;	/* >0: peeking,
 	if(r < 0)
 	{	if(tm >= 0 || action > 0)
 			return -1;
-		else if(action < 0 || rc < 0)
-			return read(fd,buf,n);
-		else	/* read 1 byte at a time for a record */
-		{	if((r = read(fd,buf,1)) == 1)
-			{	while(r < n)
-				{	if(read(fd,buf+r,1) <= 0)
-						break;
-					if(buf[r++] == rc)
-						break;
-				}
+		else /* get here means: tm < 0 && action <= 0 && rc >= 0 */
+		{	/* number of records read at a time */
+			if((action = action ? -action : 1) > (int)n)
+				action = n;
+			r = 0;
+			while((t = read(fd,buf,action)) > 0)
+			{	r += t;
+				for(endbuf = buf+t; buf < endbuf;)
+					if(*buf++ == rc)
+						action -= 1;
+				if(action == 0 || (int)(n-r) < action)
+					break;
 			}
-			return r;
+			return r == 0 ? t : r;
 		}
 	}
 
 	/* successful peek, find the record end */
 	if(rc >= 0)
 	{	reg char*	sp;	
-#if _lib_memchr
-		if((sp = (char*)memchr(buf,rc,r)) )
-			r = (sp-buf) + 1;
-#else
-		reg char*	endbuf;
+
+		t = action == 0 ? 1 : action < 0 ? -action : action;
 		for(endbuf = (sp = buf)+r; sp < endbuf; )
 			if(*sp++ == rc)
-				break;
+				if((t -= 1) == 0)
+					break;
 		r = sp - buf;
-#endif
 	}
 
 	/* advance */

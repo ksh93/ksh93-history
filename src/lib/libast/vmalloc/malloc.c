@@ -1,112 +1,90 @@
-/*
- * CDE - Common Desktop Environment
- *
- * Copyright (c) 1993-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
- */
 /***************************************************************
 *                                                              *
-*                      AT&T - PROPRIETARY                      *
+*           This software is part of the ast package           *
+*              Copyright (c) 1985-2000 AT&T Corp.              *
+*      and it may only be used by you under license from       *
+*                     AT&T Corp. ("AT&T")                      *
+*       A copy of the Source Code Agreement is available       *
+*              at the AT&T Internet web site URL               *
 *                                                              *
-*         THIS IS PROPRIETARY SOURCE CODE LICENSED BY          *
-*                          AT&T CORP.                          *
+*     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*                Copyright (c) 1995 AT&T Corp.                 *
-*                     All Rights Reserved                      *
-*                                                              *
-*           This software is licensed by AT&T Corp.            *
-*       under the terms and conditions of the license in       *
-*       http://www.research.att.com/orgs/ssr/book/reuse        *
+*     If you received this software without first entering     *
+*       into a license with AT&T, you have an infringing       *
+*           copy and cannot use it without violating           *
+*             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
-*           Software Engineering Research Department           *
-*                    AT&T Bell Laboratories                    *
+*               Network Services Research Center               *
+*                      AT&T Labs Research                      *
+*                       Florham Park NJ                        *
 *                                                              *
-*               For further information contact                *
-*                     gsf@research.att.com                     *
+*             Glenn Fowler <gsf@research.att.com>              *
+*              David Korn <dgk@research.att.com>               *
+*               Phong Vo <kpv@research.att.com>                *
 *                                                              *
 ***************************************************************/
-#include	<ast_lib.h>
+#ifdef _UWIN
 
-#if _std_malloc || _INSTRUMENT_ || cray
-
-int	_STUB_malloc;
+int _STUB_malloc;
 
 #else
 
 #include	"vmhdr.h"
 
+#if _std_malloc || _BLD_INSTRUMENT || cray
+
+int	_STUB_malloc;
+
+#else
+
 /*	malloc compatibility functions.
 **	These are aware of debugging/profiling and driven by the environment variables:
 **	VMETHOD: select an allocation method by name.
-**	VMPROFILE: if is a file name, profile memory usage and write output to it.
-**	VMDEBUG:
-**		a:	abort on any warning
-**		#:	period to check arena.
-**		0x#:	address to watch.
-**	VMTRACE: if is a file name, turn on tracing and output
-**		trace data to the given file.
 **
-**	Written by (Kiem-)Phong Vo, kpv@research.att.com, 01/16/94.
+**	VMPROFILE: if is a file name, write profile data to it.
+**	VMTRACE: if is a file name, write trace data to it.
+**	The pattern %p in a file name will be replaced by the process ID.
+**
+**	VMDEBUG:
+**		a:			abort on any warning
+**		[decimal]:		period to check arena.
+**		0x[hexadecimal]:	address to watch.
+**
+**	Written by Kiem-Phong Vo, kpv@research.att.com, 01/16/94.
 */
 
-#if !_PACKAGE_ast
-_BEGIN_EXTERNS_
-extern int	atexit _ARG_(( void(*)() ));
-extern char*	getenv _ARG_(( const char* ));
-extern int	creat _ARG_(( const char*, int ));
-extern int	close _ARG_(( int ));
-extern int	getpid _ARG_(( void ));
-_END_EXTERNS_
+#if _hdr_stat
+#include	<stat.h>
+#else
+#if _sys_stat
+#include	<sys/stat.h>
+#endif
 #endif
 
-#ifdef malloc
+#ifdef S_IRUSR
+#define CREAT_MODE	(S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH)
+#else
+#define CREAT_MODE	0644
+#endif
+
 #undef malloc
-#endif
-#ifdef free
 #undef free
-#endif
-#ifdef realloc
 #undef realloc
-#endif
-#ifdef calloc
 #undef calloc
-#endif
-#ifdef cfree
 #undef cfree
-#endif
-#ifdef memalign
 #undef memalign
-#endif
-#ifdef valloc
 #undef valloc
-#endif
 
 #if __STD_C
-static ulong atou(char** sp)
+static Vmulong_t atou(char** sp)
 #else
-static ulong atou(sp)
+static Vmulong_t atou(sp)
 char**	sp;
 #endif
 {
-	char*	s = *sp;
-	ulong	v = 0;
+	char*		s = *sp;
+	Vmulong_t	v = 0;
 
 	if(s[0] == '0' && (s[1] == 'x' || s[1] == 'X') )
 	{	for(s += 2; *s; ++s)
@@ -132,12 +110,12 @@ char**	sp;
 }
 
 static int		_Vmflinit = 0;
-static ulong		_Vmdbcheck = 0;
-static ulong		_Vmdbtime = 0;
+static Vmulong_t	_Vmdbcheck = 0;
+static Vmulong_t	_Vmdbtime = 0;
 static int		_Vmpffd = -1;
 #define VMFLINIT() \
 	{ if(!_Vmflinit)	vmflinit(); \
-	  if(_Vmdbcheck && (_Vmdbtime++ % _Vmdbcheck) == 0 && \
+	  if(_Vmdbcheck && (++_Vmdbtime % _Vmdbcheck) == 0 && \
 	     Vmregion->meth.meth == VM_MTDEBUG) \
 		vmdbcheck(Vmregion); \
 	}
@@ -168,9 +146,9 @@ char*	ends;
 }
 
 #if __STD_C
-static createfile(char* file)
+static int createfile(char* file)
 #else
-static createfile(file)
+static int createfile(file)
 char*	file;
 #endif
 {
@@ -202,24 +180,39 @@ char*	file;
 	}
 
 	*next = '\0';
-	return creat(buf,0644);
+#if _PACKAGE_ast
+	return open(buf,O_WRONLY|O_CREAT|O_TRUNC,CREAT_MODE);
+#else
+	return creat(buf,CREAT_MODE);
+#endif
 }
 
+#if __STD_C
+static void pfprint(void)
+#else
 static void pfprint()
+#endif
 {
 	if(Vmregion->meth.meth == VM_MTPROFILE)
 		vmprofile(Vmregion,_Vmpffd);
 }
 
-static vmflinit()
+#if __STD_C
+static int vmflinit(void)
+#else
+static int vmflinit()
+#endif
 {
 	char*		env;
 	Vmalloc_t*	vm;
 	int		fd;
-	ulong		addr;
+	Vmulong_t	addr;
+	char*		file;
+	int		line;
 
 	/* this must be done now to avoid any inadvertent recursion (more below) */
 	_Vmflinit = 1;
+	VMFILELINE(Vmregion,file,line);
 
 	/* if getenv() calls malloc(), this may not be caught by the eventual region */
 	vm = NIL(Vmalloc_t*);
@@ -291,6 +284,10 @@ static vmflinit()
 		_Vmpffd = -1;
 	}
 
+	/* reset file and line number to correct values for the call */
+	Vmregion->file = file;
+	Vmregion->line = line;
+
 	return 0;
 }
 
@@ -314,7 +311,14 @@ reg size_t	size;	/* new size			*/
 #endif
 {
 	VMFLINIT();
-	return (*Vmregion->meth.resizef)(Vmregion,data,size,VM_RSCOPY|VM_RSFREE);
+	if(data && !(Vmregion->data->mode&VM_TRUST) &&
+	   (*Vmregion->meth.addrf)(Vmregion,data) != 0 )
+	{	Void_t*	newdata;
+		if((newdata = (*Vmregion->meth.allocf)(Vmregion,size)) )
+			memcpy(newdata,data,size);
+		return newdata;
+	}
+	else	return (*Vmregion->meth.resizef)(Vmregion,data,size,VM_RSCOPY|VM_RSMOVE);
 }
 
 #if __STD_C
@@ -336,23 +340,8 @@ reg size_t	n_obj;
 reg size_t	s_obj;
 #endif
 {
-	reg int*	di;
-	reg char*	dc;
-	reg Void_t*	data;
-
 	VMFLINIT();
-	if(!(data = (*Vmregion->meth.allocf)(Vmregion,n_obj*s_obj)) )
-		return NIL(Void_t*);
-
-	n_obj *= s_obj;
-	s_obj  = n_obj/sizeof(int);
-	n_obj -= s_obj*sizeof(int);
-	for(di = (int*)data; s_obj > 0; --s_obj )
-		*di++ = 0;
-	for(dc = (char*)di; n_obj > 0; --n_obj )
-		*dc++ = 0;
-
-	return data;
+	return (*Vmregion->meth.resizef)(Vmregion,NIL(Void_t*),n_obj*s_obj,VM_RSZERO);
 }
 
 #if __STD_C
@@ -390,93 +379,129 @@ reg size_t	size;
 	return (*Vmregion->meth.alignf)(Vmregion,size,_Vmpagesize);
 }
 
-/* the below collection of functions are aware of files and line numbers */
-#define VMSETFL(f,l)	(_Vmfile = (f), _Vmline = (l))
+#if _hdr_malloc
+
+#define calloc	______calloc
+#define free	______free
+#define malloc	______malloc
+#define realloc	______realloc
+
+#include	<malloc.h>
+
+#if _lib_mallopt
 #if __STD_C
-Void_t* _vmflmalloc(size_t size, char* file, int line)
+int mallopt(int cmd, int value)
 #else
-Void_t* _vmflmalloc(size, file, line)
+int mallopt(cmd, value)
+int	cmd;
+int	value;
+#endif
+{
+	VMFLINIT();
+	return 0;
+}
+#endif
+
+#if _lib_mallinfo
+#if __STD_C
+struct mallinfo mallinfo(void)
+#else
+struct mallinfo mallinfo()
+#endif
+{
+	Vmstat_t	sb;
+	struct mallinfo	mi;
+
+	VMFLINIT();
+	memset(&mi,0,sizeof(mi));
+	if(vmstat(Vmregion,&sb) >= 0)
+	{	mi.arena = sb.extent;
+		mi.ordblks = sb.n_busy+sb.n_free;
+		mi.uordblks = sb.s_busy;
+		mi.fordblks = sb.s_free;
+	}
+	return mi;
+}
+#endif
+
+#if _lib_mstats
+#if __STD_C
+struct mstats mstats(void)
+#else
+struct mstats mstats()
+#endif
+{
+	Vmstat_t	sb;
+	struct mstats	ms;
+
+	VMFLINIT();
+	memset(&ms,0,sizeof(ms));
+	if(vmstat(Vmregion,&sb) >= 0)
+	{	ms.bytes_total = sb.extent;
+		ms.chunks_used = sb.n_busy;
+		ms.bytes_used = sb.s_busy;
+		ms.chunks_free = sb.n_free;
+		ms.bytes_free = sb.s_free;
+	}
+	return ms;
+}
+#endif
+
+#endif/*_hdr_malloc*/
+
+#if !_lib_alloca || _mal_alloca
+#ifndef _stk_down
+#define _stk_down	0
+#endif
+typedef struct _alloca_s	Alloca_t;
+union _alloca_u
+{	struct
+	{	char*		addr;
+		Alloca_t*	next;
+	} head;
+	char	array[ALIGN];
+};
+struct _alloca_s
+{	union _alloca_u	head;
+	Vmuchar_t	data[1];
+};
+
+#if __STD_C
+Void_t* alloca(size_t size)
+#else
+Void_t* alloca(size)
 size_t	size;
-char*	file;
-int	line;
 #endif
-{
-	VMFLINIT();
-	VMSETFL(file,line);
-	return malloc(size);
-}
+{	char		array[ALIGN];
+	char*		file;
+	int		line;
+	reg Alloca_t*	f;
+	static Alloca_t* Frame;
 
-#if __STD_C
-Void_t* _vmflrealloc(Void_t* data, size_t size, char* file, int line)
-#else
-Void_t* _vmflrealloc(data,size,file,line)
-Void_t*	data;
-size_t	size;
-char*	file;
-int	line;
-#endif
-{
 	VMFLINIT();
-	VMSETFL(file,line);
-	return realloc(data,size);
-}
+	VMFILELINE(Vmregion,file,line);
+	while(Frame)
+	{	if(( _stk_down && &array[0] > Frame->head.head.addr) ||
+		   (!_stk_down && &array[0] < Frame->head.head.addr) )
+		{	f = Frame;
+			Frame = f->head.head.next;
+			(void)(*Vmregion->meth.freef)(Vmregion,f);
+		}
+		else	break;
+	}
 
-#if __STD_C
-void _vmflfree(Void_t* data, char* file, int line)
-#else
-void _vmflfree(data,file,line)
-Void_t*	data;
-char*	file;
-int	line;
-#endif
-{
-	VMFLINIT();
-	VMSETFL(file,line);
-	free(data);
-}
+	Vmregion->file = file;
+	Vmregion->line = line;
+	f = (Alloca_t*)(*Vmregion->meth.allocf)(Vmregion,size+sizeof(Alloca_t)-1);
 
-#if __STD_C
-Void_t* _vmflcalloc(size_t n_obj, size_t s_obj, char* file, int line)
-#else
-Void_t* _vmflcalloc(n_obj, s_obj, file, line)
-size_t	n_obj;
-size_t	s_obj;
-char*	file;
-int	line;
-#endif
-{
-	VMFLINIT();
-	VMSETFL(file,line);
-	return calloc(n_obj, s_obj);
-}
+	f->head.head.addr = &array[0];
+	f->head.head.next = Frame;
+	Frame = f;
 
-#if __STD_C
-Void_t* _vmflmemalign(size_t align, size_t size, char* file, int line)
-#else
-Void_t* _vmflmemalign(align, size, file, line)
-size_t	align;
-size_t	size;
-char*	file;
-int	line;
-#endif
-{
-	VMFLINIT();
-	VMSETFL(file,line);
-	return memalign(size,align);
+	return (Void_t*)f->data;
 }
+#endif /*!_lib_alloca || _mal_alloca*/
 
-#if __STD_C
-Void_t* _vmflvalloc(size_t size, char* file, int line)
-#else
-Void_t* _vmflvalloc(size, file, line)
-size_t	size;
-char*	file;
-int	line;
-#endif
-{
-	VMFLINIT();
-	VMSETFL(file,line);
-	return valloc(size);
-}
+#endif /*_std_malloc || _BLD_INSTRUMENT || cray*/
 
 #endif

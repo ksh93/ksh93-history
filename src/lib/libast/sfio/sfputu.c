@@ -1,45 +1,27 @@
-/*
- * CDE - Common Desktop Environment
- *
- * Copyright (c) 1993-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
- */
 /***************************************************************
 *                                                              *
-*                      AT&T - PROPRIETARY                      *
+*           This software is part of the ast package           *
+*              Copyright (c) 1985-2000 AT&T Corp.              *
+*      and it may only be used by you under license from       *
+*                     AT&T Corp. ("AT&T")                      *
+*       A copy of the Source Code Agreement is available       *
+*              at the AT&T Internet web site URL               *
 *                                                              *
-*         THIS IS PROPRIETARY SOURCE CODE LICENSED BY          *
-*                          AT&T CORP.                          *
+*     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*                Copyright (c) 1995 AT&T Corp.                 *
-*                     All Rights Reserved                      *
-*                                                              *
-*           This software is licensed by AT&T Corp.            *
-*       under the terms and conditions of the license in       *
-*       http://www.research.att.com/orgs/ssr/book/reuse        *
+*     If you received this software without first entering     *
+*       into a license with AT&T, you have an infringing       *
+*           copy and cannot use it without violating           *
+*             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
-*           Software Engineering Research Department           *
-*                    AT&T Bell Laboratories                    *
+*               Network Services Research Center               *
+*                      AT&T Labs Research                      *
+*                       Florham Park NJ                        *
 *                                                              *
-*               For further information contact                *
-*                     gsf@research.att.com                     *
+*             Glenn Fowler <gsf@research.att.com>              *
+*              David Korn <dgk@research.att.com>               *
+*               Phong Vo <kpv@research.att.com>                *
 *                                                              *
 ***************************************************************/
 #include	"sfhdr.h"
@@ -50,16 +32,16 @@
 */
 
 #if __STD_C
-_sfputu(reg Sfio_t* f, reg ulong v)
+int _sfputu(reg Sfio_t* f, Sfulong_t v)
 #else
-_sfputu(f,v)
-reg Sfio_t	*f;	/* write a portable ulong to this stream */
-reg ulong	v;	/* the unsigned value to be written */
+int _sfputu(f,v)
+reg Sfio_t*	f;	/* write a portable ulong to this stream */
+Sfulong_t	v;	/* the unsigned value to be written */
 #endif
 {
-#define N_ARRAY		(2*sizeof(long))
+#define N_ARRAY		(2*sizeof(Sfulong_t))
 	reg uchar	*s, *ps;
-	reg int		n, p;
+	reg ssize_t	n, p;
 	uchar		c[N_ARRAY];
 
 	if(f->mode != SF_WRITE && _sfmode(f,SF_WRITE,0) < 0)
@@ -73,11 +55,15 @@ reg ulong	v;	/* the unsigned value to be written */
 		*--s = (uchar)(SFUVALUE(v) | SF_MORE);
 	n = (ps-s)+1;
 
-	if(n > 4 || SFWPEEK(f,ps,p) < n)
+	if(n > 8 || SFWPEEK(f,ps,p) < n)
 		n = SFWRITE(f,(Void_t*)s,n); /* write the hard way */
 	else
 	{	switch(n)
 		{
+		case 8 : *ps++ = *s++;
+		case 7 : *ps++ = *s++;
+		case 6 : *ps++ = *s++;
+		case 5 : *ps++ = *s++;
 		case 4 : *ps++ = *s++;
 		case 3 : *ps++ = *s++;
 		case 2 : *ps++ = *s++;
@@ -87,5 +73,5 @@ reg ulong	v;	/* the unsigned value to be written */
 	}
 
 	SFOPEN(f,0);
-	return n;
+	return (int)n;
 }

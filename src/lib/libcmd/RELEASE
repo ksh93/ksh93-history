@@ -1,12 +1,68 @@
-libcmd changes
-
-05/09/95 add getconf
+00-01-27 getconf: add "-a" and "-v spec" for sol7.* compatibility
+99-09-09 join: fix -j1 vs. -j 1, add --ignorecase
+99-06-22 paste: defualt delim in writable string
+99-06-16 cat: fix --dos-ouput typo
+99-06-11 cp: tighten chown() diagnostics
+99-06-08 expr: nothing for NULL string bug fix
+99-05-21 paste: fix missing newline columnize bug
+99-05-20 mv: do not check for `mv foo foo' since rename() handles it
+99-05-01 cmp,comm,cp/mv/ln,expr,fold,getconf,head: long options
+	 join,logname,paste,pathchk,tail,tee: long options
+99-04-10 uname: long options, stdize -a
+	 chmod,head,tail,rev: long options
+	 cut: long options, pass regression test 02
+99-04-07 cat: long options, fix O_TEXT modes
+99-01-11 tail: fix +n
+	 join: another ggs/psm bug
+	 join: all 1 and/or 2 to be unseekable
+99-01-01 cp: fix -p
+	 chmod: drop -l option because of clash with l (lock) mode
+98-12-25 cat: add -T to sfopen(,,"rt")
+98-11-11 chgrp,chmod: cannot open file stream => not found
+	 join: fix another ggs/psm bug; thanks guys
+98-10-20 cp: fix cp -rp to update dir times too
+98-09-22 join: fix ggs null field bug
+98-08-11 join: fix last regression test bug
+98-05-29 join: add jp->common to handle boundary conditions
+98-03-11 cat,cp,rev,tee: fix sfmove() error checks
+98-03-01 join: fix bug that emitted records more than once after eof
+	 cp: fix sfmove() error check
+98-02-14 cp: -R physical, -[HLP], -r getconf(PATH_RESOLVE)
+98-01-11 cp: check sfclose() return value
+98-01-07 chown,chgrp,chmod: use fts for -R
+	 mkdir: fix -p default mode
+97-12-07 mkdir: fix umask() reset
+97-11-11 chown,chgrp: proper interpretation of -h,-l for lchown()
+	 chown,chgrp: only chown() if uid or gid change
+97-10-31 mkdir: do umask right
+97-08-11 cmdinit: clear opt_info.index to allow multiple calls
+	 cp,ln,mv: add
+97-07-17 join: fix a few more -a bugs
+97-05-31 expr: optget() only if CONFORMANCE==standard
+97-04-01 join: fix a few bugs that make it work!
+96-12-25 head: sfset(sfstdin,SF_SHARE,1)
+	 Makefile: add -last to cmd lib list
+	 drop function __IMPORT__
+96-08-11 tail: check for truncated file and rewind for -f
+96-04-08 update <cmd.h>
+96-02-29 uname: -a like std, -l for everything
+	 id: add -a (default)
+96-02-14 wc: speed up inner loop newline breakout
+96-01-30 unused var cleanup
+96-01-01 AT&T Research now
+	 pathchk: handle getcwd(0,0) error
+	 expr: switch to <regex.h>
+95-11-11 add expr.c
+	 fix cut exit code and -s optimization
+95-10-11 add extern b_* to cmd.h
+	 add void* context 3rd arg to b_main()
+95-05-09 add getconf
 	 cat -u avoids mmap
 	 add chown|chgrp -m uid|gid map file
 	 add chown|chgrp -P for systems with lchown(2)
 	 chown|chgrp -P => lstat() too!
 	 chmod|chown|chgrp -HLP
-04/01/95 version 1.2
+95-04-01 version 1.2
 	 add rmdir
-02/14/95 fix mkdir -p symlink bug
+95-02-14 fix mkdir -p symlink bug
 	 fix mkdir '/' skip bug that went one too far

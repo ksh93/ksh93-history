@@ -46,4 +46,16 @@ typ ldiv_t fail{
 	echo "typedef struct { long quot; long rem; } $v;"
 	echo "#endif"
 }end
-typ	long.double,long.long
+
+tst	typ_signed_size_t output{
+	#include <sys/types.h>
+	main()
+	{
+		unsigned long u = ~0;
+		size_t s = ~0;
+		if (s >= 0)
+			return 1;
+		printf("#if !defined(__cplusplus) && !defined(c_plusplus) && !defined(_typ_signed_size_t)\n/* what dipsticks made size_t signed? sun. */\ntypedef unsigned %s _ast_size_t;\n#undef\tsize_t\n#define size_t\t_ast_size_t\n#endif\n", u == (unsigned long)s ? "long" : "int");
+		return 0;
+	}
+}end

@@ -1,119 +1,110 @@
-/*
- * CDE - Common Desktop Environment
- *
- * Copyright (c) 1993-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
- */
 /***************************************************************
 *                                                              *
-*                      AT&T - PROPRIETARY                      *
+*           This software is part of the ast package           *
+*              Copyright (c) 1985-2000 AT&T Corp.              *
+*      and it may only be used by you under license from       *
+*                     AT&T Corp. ("AT&T")                      *
+*       A copy of the Source Code Agreement is available       *
+*              at the AT&T Internet web site URL               *
 *                                                              *
-*         THIS IS PROPRIETARY SOURCE CODE LICENSED BY          *
-*                          AT&T CORP.                          *
+*     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*                Copyright (c) 1995 AT&T Corp.                 *
-*                     All Rights Reserved                      *
-*                                                              *
-*           This software is licensed by AT&T Corp.            *
-*       under the terms and conditions of the license in       *
-*       http://www.research.att.com/orgs/ssr/book/reuse        *
+*     If you received this software without first entering     *
+*       into a license with AT&T, you have an infringing       *
+*           copy and cannot use it without violating           *
+*             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
-*           Software Engineering Research Department           *
-*                    AT&T Bell Laboratories                    *
+*               Network Services Research Center               *
+*                      AT&T Labs Research                      *
+*                       Florham Park NJ                        *
 *                                                              *
-*               For further information contact                *
-*                     gsf@research.att.com                     *
+*             Glenn Fowler <gsf@research.att.com>              *
+*              David Korn <dgk@research.att.com>               *
+*               Phong Vo <kpv@research.att.com>                *
 *                                                              *
 ***************************************************************/
 #include	"sfhdr.h"
 
-/*	Put out a nul-terminated string
-**	Note that the reg declarations below must be kept in
-**	their relative order so that the code will configured
-**	correctly on Vaxes to use "asm()".
+/*	Put out a null-terminated string
 **
 **	Written by Kiem-Phong Vo
 */
 #if __STD_C
-sfputr(reg Sfio_t* f, const char* s, reg int rc)
+ssize_t sfputr(reg Sfio_t* f, const char* s, reg int rc)
 #else
-sfputr(f,s,rc)
-reg Sfio_t*	f;	/* write to this stream. r11 on Vax	*/
-char*		s;	/* string to write			*/
-reg int		rc;	/* record separator. r10 on Vax		*/
+ssize_t sfputr(f,s,rc)
+reg Sfio_t*	f;	/* write to this stream	*/
+char*		s;	/* string to write	*/
+reg int		rc;	/* record separator.	*/
 #endif
 {
-	reg int		p;		/* r9 on Vax		*/
-	reg uchar	*os, *ps;	/* r8, r7 on Vax	*/
-	reg int		n;		/* r6 on Vax		*/
+	reg ssize_t	p, n, w;
+	reg uchar*	ps;
 
 	if(f->mode != SF_WRITE && _sfmode(f,SF_WRITE,0) < 0)
 		return -1;
 
 	SFLOCK(f,0);
-	os = (uchar*)s;
-	if(f->size <= 0)
-	{	/* unbuffered stream */
-		n = strlen((char*)os);
-		if((p = SFWRITE(f,(Void_t*)os,n)) > 0)
-			os += p;
-		goto done;
-	}
 
-	while(*os)
-	{	/* peek buffer for space */
-		if(SFWPEEK(f,ps,p) <= 0)
+	for(w = 0; (*s || rc >= 0); )
+	{	SFWPEEK(f,ps,p);
+
+		if(p == 0 || (f->flags&SF_WHOLE) )
+		{	n = strlen(s);
+			if(p >= (n + (rc < 0 ? 0 : 1)) )
+			{	/* buffer can hold everything */
+				if(n > 0)
+				{	memcpy(ps, s, n);
+					ps += n;
+					w += n;
+				}
+				if(rc >= 0)
+				{	*ps++ = rc;
+					w += 1;
+				}
+				f->next = ps;
+			}
+			else
+			{	/* create a reserve buffer to hold data */
+				Sfrsrv_t*	frs;
+
+				p = n + (rc >= 0 ? 1 : 0);
+				if(!(frs = _sfrsrv(f, p)) )
+					n = 0;
+				else
+				{	if(n > 0)
+						memcpy(frs->data, s, n);
+					if(rc >= 0)
+						frs->data[n] = rc;
+					if((n = SFWRITE(f,frs->data,p)) < 0 )
+						n = 0;
+				}
+
+				w += n;
+			}
 			break;
+		}
 
-#if _vax_asm	/* p is r9, os is r8, and ps is r7 */
-		0;					/* avoid if() branching bug */
-		asm( "locc	$0,r9,(r8)" );		/* look for the \0 */
-		asm( "subl2	r0,r9" );		/* length of data to copy */
-		asm( "movc3	r9,(r8),(r7)" );	/* copy data */
-		ps += p;
-		os += p;
-#else
+		if(*s == 0)
+		{	*ps++ = rc;
+			f->next = ps;
+			w += 1;
+			break;
+		}
+
 #if _lib_memccpy
-		if((ps = (uchar*)memccpy(ps,os,'\0',p)) != NIL(uchar*))
+		if((ps = (uchar*)memccpy(ps,s,'\0',p)) != NIL(uchar*))
 			ps -= 1;
 		else	ps  = f->next+p;
-		os += ps - f->next;
+		s += ps - f->next;
 #else
-		/* fast copy loop */
-		while((*ps++ = *os++) != '\0' && --p > 0)
-			;
-		if(*--ps != 0)
-			ps += 1;
-		else	os -= 1;
+		for(; p > 0; --p, ++ps, ++s)
+			if((*ps = *s) == 0)
+				break;
 #endif
-#endif
+		w += ps - f->next;
 		f->next = ps;
-	}
-
-done:
-	p = (char*)os - (char*)s;
-	if(rc >= 0)
-	{	if(f->next >= f->endb)
-			(void)SFFLSBUF(f,(int)((uchar)rc));
-		else	*f->next++ = (uchar)rc;
-		p += 1;
 	}
 
 	/* sync unseekable shared streams */
@@ -122,13 +113,12 @@ done:
 
 	/* check for line buffering */
 	else if((f->flags&SF_LINE) && !(f->flags&SF_STRING) && (n = f->next-f->data) > 0)
-	{	if(n > p)
-			n = p;
+	{	if(n > w)
+			n = w;
 		f->next -= n;
 		(void)SFWRITE(f,(Void_t*)f->next,n);
 	}
 
 	SFOPEN(f,0);
-
-	return p;
+	return w;
 }

@@ -1,170 +1,117 @@
-.de L		\" literal font
-.ft 5
-.it 1 }N
-.if !\\$1 \&\\$1 \\$2 \\$3 \\$4 \\$5 \\$6
-..
-.de LR
-.}S 5 1 \& "\\$1" "\\$2" "\\$3" "\\$4" "\\$5" "\\$6"
-..
-.de LI
-.}S 5 3 \& "\\$1" "\\$2" "\\$3" "\\$4" "\\$5" "\\$6"
-..
-.de RL
-.}S 1 5 \& "\\$1" "\\$2" "\\$3" "\\$4" "\\$5" "\\$6"
-..
-.de EX		\" start example
-.ta 1i 2i 3i 4i 5i 6i
-.PP
-.RS 
-.PD 0
-.ft 5
-.nf
-..
-.de EE		\" end example
-.fi
-.ft
-.PD
-.RE
-.PP
-..
-.TH SFDISC 3
+.TH SFDISC 3 "16 June 1993"
 .SH NAME
-sfdisc \- some common sfio disciplines
+\fBsfdisc\fR \- \fBsfio\fP disciplines
 .SH SYNOPSIS
-.EX
-#include <sfdisc.h>
+.de Tp
+.fl
+.ne 2
+.TP
+..
+.de Ss
+.fl
+.ne 2
+.SS "\\$1"
+..
+.ta 1.0i 2.0i 3.0i 4.0i 5.0i
+.nf
+.ft 5
+#include	<sfdisc.h>
 
-typedef int (*Sf_key_lookup_t)(void* \fIhandle\fP, const char* \fIname\fP, const char* \fIop\fP, int \fIcc\fP, char** str_\fIptr\fP, long* num_\fIptr\fP);
-typedef char* (*Sf_key_convert_t)(void* \fIhandle\fP, const char* \fIname\fP, const char* \fIop\fP, int \fIcc\fP, char* str_\fIvalue\fP, long num_\fIvalue\fP);
+extern Sfdisc_t*	dcnewskable(Sfio_t* f);
+extern int		dcdelskable(Sfdisc_t* disc);
 
-int    sfkeyprintf(Sfio_t* \fIsp\fP, void* \fIhandle\fP, const char* \fIformat\fP, Sf_key_lookup_t \fIlookup\fP, Sf_key_convert_t \fIconvert\fP);
+extern Sfdisc_t*	dcnewtee(Sfio_t* tee);
+extern int		dcdeltee(Sfdisc_t* disc);
 
-int    sflowio(Sfio_t* \fIsp\fP);
-.EE
+extern Sfdisc_t*	dcnewfilter(char* cmd);
+extern int		dcdelfilter(Sfdisc_t* disc);
+
+extern Sfdisc_t*	dcnewsubstream(Sfio_t* f, long offset, long extent);
+extern int		dcdelsubstream(Sfdisc_t* disc);
+
+extern Sfdisc_t*	dcnewlzw(void);
+extern int		dcdellzw(Sfdisc_t* disc);
+
+extern Sfdisc_t*	dcnewunion(Sfio_t** flist, int n);
+extern int		dcdelunion(Sfdisc_t* disc);
+.ft 1
+.fi
 .SH DESCRIPTION
-.L sfkeyprintf
-provides support for
-.IR sfio (3)
-.LI %( keyword [[:;=] op ])
-printf formatting.
-Rather than getting format values from the next argument, the
-.L "%(...)"
-style gets the format value by doing a lookup on
-.LR keyword .
-Output is written to the 
-.IR sfio (3)
-stream 
-.I sp
-under control of the
-.L printf
-format string
-.IR format .
-.I handle
-is a user supplied pointer that is passed untouched to
-the user supplied routines
-.I lookup 
-and 
-.IR convert .
 .PP
-.I lookup
-determines the value for
-.I name
-with optional information
-.I op
-and places the value either in
-.I *str_ptr
-or
-.IR *num_ptr .
-.I cc
-is the
-.L printf
-conversion character
-(e.g., 
-.LR "'s'" ,
-.LR "'d'" ,
-etc.) and may provide a hint to the
-.I name
-lookup.
+I/O disciplines are used to extend the data processing power of
+\fIsfio\fP streams. The convention for using the disciplines
+in this package is to use the call \f5dcnewXXX()\fP to create
+a discipline of the type \f5XXX\fP and to use \f5dcdelXXX()\fP
+to destroy it.
+A discipline is enable by inserting it into the desired
+stream using the \f5sfdisc()\fP call. A discipline can be used on only
+one stream. It is unsafe to share a discipline on two or more streams
+since the discipline may maintain states between successive IO calls.
+For multiple uses, \f5dcnewXXX()\fP should be used
+to create a distinct discipline for each stream.
+Each discipline structure is equipped with an exception handler
+that causes self-destruction when the associated stream is closed.
 .PP
-.I convert
-is called when an format unknown conversion character
-.I cc
-is encountered.
-.I name
-is the keyword name from the format specification,
-.I op
-is the optional operation string,
-.L 0
-if not specified,
-.I str_value
-is its string value,
-.L 0
-if it is not a string,
-and
-.I num_value
-is the numeric value if
-.IR "str_value == 0" .
-.I convert
-returns a pointer to the converted string,
-.L 0
-on error.
-.PP
-.L sfkeyprintf
-supplies two operations:
-.TP
-\f5:case:\fIpattern\d1\u\fP:\fIformat\d1\u\fP:...:\fIpattern\dn\u\fP:\fIformat\dn\u\fR
-.L case
-matches the string value of
-.L keyword
-against
-.I pattern\d1\u
-through
-.IR pattern\dn\u .
-using
-.IR strmatch (3) .
-.I format\di\u
-corresponding to the first matching pattern
-.I pattern\di\u
-from the left is pushed back on to the 
-.L sfkeyprintf
-format input.
-If nothing matches then nothing is output to
-.IR sp .
-Any delimiter may appear after
-.LR case .
-.TP
-\f5:edit:\fIold\fP:\fInew\fP:\fIflags\fP[:...]
-Performs an
-.IR ed (1)-style
-substitution on the string value of
-.IR keyword .
-Multiple sets of
-.I old,new,flags
-may be specified; they are applied in order from left to right.
-In addition to the
-.I flags
-supported by
-.IR ed (3)
-are
-.L l
-that converts the substituted value to lower case and
-.L u
-that converts the substituted value to upper case.
-Any delimiter may appear after
-.LR edit .
-.PP
-.L sfslowio
-pushes an
-.IR sfio (3)
-discipline onto the stream
-.I sp
-that makes the stream interruptable.
-Read or write operations on
-.I sp
-fail with 
-.I errno
-set to
-.L EINTR
-when interrupted.
-.SH "SEE ALSO"
-sfio(3)
+.Ss "  Sfdisc_t* dcnewskable(Sfio_t* f);"
+.Ss "  int dcdelskable(Sfdisc_t* disc);"
+\f5dcnewskable()\fP creates a discipline that when inserted
+on the stream \f5f\fP will ensure that \f5f\fP is seekable.
+If \f5f\fP is originally unseekable, data will be shadowed
+in a temporary file stream to allow seekability.
+\f5dcnewskable()\fP returns the discipline on success and \f5NULL\fP on failure.
+
+.Ss "  Sfdisc_t* dcnewtee(Sfio_t* tee);"
+.Ss "  int dcdeltee(Sfdisc_t* disc);"
+\f5dcnewtee()\fP creates a discipline that
+when inserted into a stream \f5f\fP will duplicate to the stream \f5tee\fP
+any data written to \f5f\fP.
+\f5dcnewtee()\fP returns the discipline on success and \f5NULL\fP on failure.
+
+.Ss "  Sfdisc_t* dcnewfilter(char* cmd);"
+.Ss "  int dcdelfilter(Sfdisc_t* disc);"
+\f5dcnewfilter()\fP creates a discipline that
+when inserted into a stream \f5f\fP will run the command \f5cmd\fP
+to process any input data before making it available to the application.
+For example, \f5dcnewfilter("uncompress")\fP is an equivalent but slower
+alternative to the lzw discipline below.
+\f5dcnewfilter()\fP returns the discipline on success and \f5NULL\fP on failure.
+
+.Ss "  Sfdisc_t* dcnewsubstream(Sfio_t* base, long offset, long extent);"
+.Ss "  int dcdelsubstream(Sfdisc_t* disc);"
+\f5dcnewsubstream()\fP creates a discipline that
+reserves a portion of the stream \f5base\fP starting at \f5offset\fP
+with length \f5extent\fP and makes this portion appear as if it is
+a stream. When this discipline is inserted into a stream, it will make
+cause all IO operations on this stream to take place in the reserved
+portion of the \f5base\fP stream.
+\f5dcnewsubstream()\fP returns the discipline on success and \f5NULL\fP on failure.
+
+.Ss "  Sfdisc_t* dcnewlzw(void);
+.Ss "  int dcdellzw(Sfdisc_t* disc);"
+\f5dcnewlzw()\fP creates a discipline that when inserted into
+a stream \f5f\fP will run the \fBuncompress\fP algorithm
+on input data from \f5f\fP before making it available to the
+application. This is useful to allow applications to process
+data from a file packed with the UNIX \fBcompress\fP utility
+as if the data is in plain text.
+\f5dcnewlzw()\fP returns the discipline on success and \f5NULL\fP on failure.
+
+.Ss "  Sfdisc_t* dcnewunion(Sfio_t** list, int n);
+.Ss "  int dcdelunion(Sfdisc_t* disc);"
+\f5dcnewunion()\fP creates a discipline that concatenates
+input data from all \f5n\fP streams in \f5list\fP.
+When inserted into a stream \f5f\fP, this discipline will cause
+all input operations on \f5f\fP to come from the merged data stream.
+\f5dcnewunion()\fP returns the discipline on success and \f5NULL\fP on failure.
+
+.SH ACKNOWLEDGEMENTS
+Dave Korn contributed the substream discipline.
+Jim Arnold contributed the lzw discipline.
+
+.SH NOTES
+Since we are not sure of the legal responsibilities concerning the lzw patent,
+the lzw discipline is not currently distributed with any release of sfio
+outside of AT&T.
+
+.SH AUTHOR
+Kiem-Phong Vo, kpv@research.att.com.

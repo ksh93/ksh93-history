@@ -1,89 +1,98 @@
-/*
- * CDE - Common Desktop Environment
- *
- * Copyright (c) 1993-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
- */
 /***************************************************************
 *                                                              *
-*                      AT&T - PROPRIETARY                      *
+*           This software is part of the ast package           *
+*              Copyright (c) 1985-2000 AT&T Corp.              *
+*      and it may only be used by you under license from       *
+*                     AT&T Corp. ("AT&T")                      *
+*       A copy of the Source Code Agreement is available       *
+*              at the AT&T Internet web site URL               *
 *                                                              *
-*         THIS IS PROPRIETARY SOURCE CODE LICENSED BY          *
-*                          AT&T CORP.                          *
+*     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*                Copyright (c) 1995 AT&T Corp.                 *
-*                     All Rights Reserved                      *
-*                                                              *
-*           This software is licensed by AT&T Corp.            *
-*       under the terms and conditions of the license in       *
-*       http://www.research.att.com/orgs/ssr/book/reuse        *
+*     If you received this software without first entering     *
+*       into a license with AT&T, you have an infringing       *
+*           copy and cannot use it without violating           *
+*             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
-*           Software Engineering Research Department           *
-*                    AT&T Bell Laboratories                    *
+*               Network Services Research Center               *
+*                      AT&T Labs Research                      *
+*                       Florham Park NJ                        *
 *                                                              *
-*               For further information contact                *
-*                     gsf@research.att.com                     *
+*             Glenn Fowler <gsf@research.att.com>              *
+*              David Korn <dgk@research.att.com>               *
+*               Phong Vo <kpv@research.att.com>                *
 *                                                              *
 ***************************************************************/
 #ifndef _VMHDR_H
 #define _VMHDR_H	1
+#ifndef _BLD_vmalloc
+#define _BLD_vmalloc	1
+#endif
 
 /*	Common types, and macros for vmalloc functions.
 **
-**	Written by (Kiem-)Phong Vo, kpv@research.att.com, 01/16/94.
+**	Written by Kiem-Phong Vo, kpv@research.att.com, 01/16/94.
 */
 
+#ifndef __STD_C	/* this is normally in vmalloc.h but it's included late here */
+#ifdef __STDC__
+#define	__STD_C		1
+#else
+#if __cplusplus || c_plusplus
+#define __STD_C		1
+#else
+#define __STD_C		0
+#endif /*__cplusplus*/
+#endif /*__STDC__*/
+#endif /*__STD_C*/
+
 #if _PACKAGE_ast
+
+#if defined(__STDPP__directive) && defined(__STDPP__hide)
+__STDPP__directive pragma pp:hide getpagesize
+#else
+#define getpagesize	______getpagesize
+#endif
+
 #include	<ast.h>
+
+#if defined(__STDPP__directive) && defined(__STDPP__hide)
+__STDPP__directive pragma pp:nohide getpagesize
 #else
+#undef	getpagesize
+#endif
+
+#else
+
+#include	<ast_common.h>
 #include	"FEATURE/vmalloc"
+
+#endif /*_PACKAGE_ast*/
+
+#undef free
+#undef malloc
+#undef realloc
+
+typedef unsigned char	Vmuchar_t;
+typedef unsigned long	Vmulong_t;
+
+typedef union _head_u	Head_t;
+typedef union _body_u	Body_t;
+typedef struct _block_s	Block_t;
+typedef struct _seg_s	Seg_t;
+typedef struct _pfobj_s	Pfobj_t;
+
+#define NIL(t)		((t)0)
+#define reg		register
 #if __STD_C
-#include	<stddef.h>
+#define NOTUSED(x)	(void)(x)
 #else
-#include	<sys/types.h>
+#define NOTUSED(x)	(&x,1)
 #endif
-#endif
-
-#ifdef uchar
-#undef uchar
-#endif
-#ifdef ulong
-#undef ulong
-#endif
-#ifdef ushort
-#undef ushort
-#endif
-#define uchar			unsigned char
-#define ushort			unsigned short
-#define ulong			unsigned long
-typedef union _head_		Head_t;
-typedef union _body_		Body_t;
-typedef struct _block_		Block_t;
-typedef struct _seg_		Seg_t;
-typedef struct _pfobj_		Pfobj_t;
-
-#define reg			register
-#define NOTUSED(x)		(&x,1)
 
 /* convert an address to an integral value */
-#define ULONG(addr)	((ulong)((char*)(addr) - (char*)0) )
+#define VLONG(addr)	((Vmulong_t)((char*)(addr) - (char*)0) )
 
 /* Round x up to a multiple of y. ROUND2 does powers-of-2 and ROUNDX does others */
 #define ROUND2(x,y)	(((x) + ((y)-1)) & ~((y)-1))
@@ -94,20 +103,34 @@ typedef struct _pfobj_		Pfobj_t;
 #define MULTIPLE(x,y)	((x)%(y) == 0 ? (x) : (y)%(x) == 0 ? (y) : (y)*(x))
 
 #ifndef DEBUG
+#ifdef _BLD_DEBUG
+#define DEBUG		1
+#endif
+#endif
+#ifndef DEBUG
 #define ASSERT(p)
 #define COUNT(n)
 #else
-#define ASSERT(p)	((p) ? 0 : (abort(),0) )
+#if defined(__LINE__) && defined(__FILE__)
+#if _PACKAGE_ast
+#define PRFILELINE	sfprintf(sfstdout,"Assertion failed at %s:%d\n",__FILE__,__LINE__)
+#else
+extern int printf _ARG_((const char*, ...));
+#define PRFILELINE	printf("Assertion failed at %s:%d\n",__FILE__,__LINE__)
+#endif
+#else
+#define PRFILELINE	0
+#endif
+#define ASSERT(p)	((p) ? 0 : (PRFILELINE, abort(), 0) )
 #define COUNT(n)	((n) += 1)
 #endif /*DEBUG*/
 
-#ifndef PAGESIZE
-#define PAGESIZE	8192
-#endif
+#define VMPAGESIZE	8192
 #if _lib_getpagesize
-#define GETPAGESIZE(x)	((x) ? (0) : ((x) = getpagesize()))
+#define GETPAGESIZE(x)	((x) ? (x) : \
+			 (((x)=getpagesize()) < VMPAGESIZE ? ((x)=VMPAGESIZE) : (x)) )
 #else
-#define GETPAGESIZE(x)	((x) = PAGESIZE)
+#define GETPAGESIZE(x)	((x) = VMPAGESIZE)
 #endif
 
 /* Blocks are allocated such that their sizes are 0%(BITS+1)
@@ -155,7 +178,7 @@ typedef struct _pfobj_		Pfobj_t;
 #define KPVALLOC(vm,sz,func)		(SETLOCAL((vm)->data), func((vm),(sz)) )
 #define KPVALIGN(vm,sz,al,func)		(SETLOCAL((vm)->data), func((vm),(sz),(al)) )
 #define KPVFREE(vm,d,func)		(SETLOCAL((vm)->data), func((vm),(d)) )
-#define KPVRESIZE(vm,d,sz,fl,func)	(SETLOCAL((vm)->data), func((vm),(d),(sz),(fl)) )
+#define KPVRESIZE(vm,d,sz,mv,func)	(SETLOCAL((vm)->data), func((vm),(d),(sz),(mv)) )
 #define KPVADDR(vm,addr,func)		(SETLOCAL((vm)->data), func((vm),(addr)) )
 
 /* ALIGN is chosen so that a block can store all primitive types.
@@ -166,27 +189,27 @@ typedef struct _pfobj_		Pfobj_t;
 ** ALIGNA right, then the code below should be commented out and ALIGNA
 ** redefined to the appropriate requirement.
 */
-union _align_
+union _align_u
 {	char		c, *cp;
 	int		i, *ip;
 	long		l, *lp;
 	double		d, *dp, ***dppp[8];
 	size_t		s, *sp;
 	void(*		fn)();
-	union _align_*	align;
+	union _align_u*	align;
 	Head_t*		head;
 	Body_t*		body;
 	Block_t*	block;
-	uchar		a[ALIGNB];
+	Vmuchar_t	a[ALIGNB];
 #if _long_double
 	long double	ld, *ldp;
 #endif
 };
-struct _a_
+struct _a_s
 {	char		c;
-	union _align_	a;
+	union _align_u	a;
 };
-#define ALIGNA	(sizeof(struct _a_) - sizeof(union _align_))
+#define ALIGNA	(sizeof(struct _a_s) - sizeof(union _align_u))
 struct _align_s
 {	char	data[MULTIPLE(ALIGNA,ALIGNB)];
 };
@@ -207,8 +230,8 @@ struct _head_s
 	} size;
 };
 #define HEADSIZE	ROUND(sizeof(struct _head_s),ALIGN)
-union _head_
-{	uchar		data[HEADSIZE];	/* to standardize size		*/
+union _head_u
+{	Vmuchar_t	data[HEADSIZE];	/* to standardize size		*/
 	struct _head_s	head;
 };
 	
@@ -220,8 +243,8 @@ struct _body_s
 	Block_t**	self;	/* self pointer when free	*/
 };
 #define BODYSIZE	ROUND(sizeof(struct _body_s),ALIGN)
-union _body_
-{	uchar		data[BODYSIZE];	/* to standardize size		*/
+union _body_u
+{	Vmuchar_t	data[BODYSIZE];	/* to standardize size		*/
 	struct _body_s	body;
 };
 
@@ -230,7 +253,7 @@ union _body_
 **	sizeof(Body_t)%ALIGN == 0
 ** and	sizeof(Block_t) = sizeof(Head_t)+sizeof(Body_t)
 */
-struct _block_
+struct _block_s
 {	Head_t	head;
 	Body_t	body;
 };
@@ -272,7 +295,8 @@ typedef struct _vmdata_s
 /* private parts of Vmalloc_t */
 #define _VM_PRIVATE_ \
 	Vmdisc_t*	disc;		/* discipline to get space		*/ \
-	Vmdata_t*	data;		/* the real region data			*/
+	Vmdata_t*	data;		/* the real region data			*/ \
+	Vmalloc_t*	next;		/* linked list of regions		*/
 
 #include	"vmalloc.h"
 
@@ -282,18 +306,19 @@ typedef struct _vmdata_s
 #undef realloc
 
 /* segment structure */
-struct _seg_
+struct _seg_s
 {	Vmalloc_t*	vm;	/* the region that holds this	*/
 	Seg_t*		next;	/* next segment			*/
 	Void_t*		addr;	/* starting segment address	*/
 	size_t		extent;	/* extent of segment		*/
-	uchar*		baddr;	/* bottom of usable memory	*/
+	Vmuchar_t*	baddr;	/* bottom of usable memory	*/
 	size_t		size;	/* allocable size		*/
 	Block_t*	free;	/* recent free blocks		*/
+	Block_t*	last;	/* Vmlast last-allocated block	*/
 };
 
 /* starting block of a segment */
-#define SEGBLOCK(s)	((Block_t*)(((uchar*)(s)) + ROUND(sizeof(Seg_t),ALIGN)))
+#define SEGBLOCK(s)	((Block_t*)(((Vmuchar_t*)(s)) + ROUND(sizeof(Seg_t),ALIGN)))
 
 /* short-hands for block data */
 #define SEG(b)		((b)->head.head.seg.seg)
@@ -327,7 +352,7 @@ struct _seg_
 ** In this case, I have also carefully arranged so that RIGHT(b) and
 ** SELF(b) can be overlapped and the test ISLINK() will go through.
 */
-#define DELETE(vd,b,i,t,func) \
+#define REMOVE(vd,b,i,t,func) \
 		((!TINIEST(b) && ISLINK(b)) ? UNLINK((vd),(b),(i),(t)) : \
 	 		func((vd),SIZE(b),(b)) )
 
@@ -335,7 +360,8 @@ struct _seg_
 #define SEGWILD(b)	(((b)->body.data+SIZE(b)+sizeof(Head_t)) >= SEG(b)->baddr)
 #define VMWILD(vd,b)	(((b)->body.data+SIZE(b)+sizeof(Head_t)) >= vd->seg->baddr)
 
-#define VMFILELINE(f,l)	((f) = _Vmfile, _Vmfile = NIL(char*), (l) = _Vmline, _Vmline = 0)
+#define VMFILELINE(vm,f,l)	((f) = (vm)->file, (vm)->file = NIL(char*), \
+		 		 (l) = (vm)->line, (vm)->line = 0 )
 
 /* The lay-out of a Vmprofile block is this:
 **	seg_ size ----data---- _pf_ size
@@ -344,12 +370,12 @@ struct _seg_
 **	data:	actual data block.
 **	_pf_:	pointer to the corresponding Pfobj_t struct
 **	size:	the true size of the block.
-** So each block requires and extra Head_t.
+** So each block requires an extra Head_t.
 */
-#define PF_EXTRA	sizeof(Head_t)
-#define PFDATA(d)	((Head_t*)((uchar*)(d)+(SIZE(BLOCK(d))&~BITS)-sizeof(Head_t)) )
-#define PFOBJ(d)	(PFDATA(d)->head.seg.pf)
-#define PFSIZE(d)	(PFDATA(d)->head.size.size)
+#define PF_EXTRA   sizeof(Head_t)
+#define PFDATA(d)  ((Head_t*)((Vmuchar_t*)(d)+(SIZE(BLOCK(d))&~BITS)-sizeof(Head_t)) )
+#define PFOBJ(d)   (PFDATA(d)->head.seg.pf)
+#define PFSIZE(d)  (PFDATA(d)->head.size.size)
 
 /* The lay-out of a block allocated by Vmdebug is this:
 **	seg_ size file size seg_ magi ----data---- --magi-- magi line
@@ -367,18 +393,20 @@ struct _seg_
 */
 
 /* convenient macros for accessing the above fields */
-#define DB_EXTRA	(4*sizeof(Head_t))
-#define DBBLOCK(d)	((Block_t*)((uchar*)(d) - 3*sizeof(Head_t)) )
+#define DB_HEAD		(2*sizeof(Head_t))
+#define DB_TAIL		(2*sizeof(Head_t))
+#define DB_EXTRA	(DB_HEAD+DB_TAIL)
+#define DBBLOCK(d)	((Block_t*)((Vmuchar_t*)(d) - 3*sizeof(Head_t)) )
 #define DBBSIZE(d)	(SIZE(DBBLOCK(d)) & ~BITS)
-#define DBSEG(d)	(((Head_t*)((uchar*)(d) - sizeof(Head_t)))->head.seg.seg )
-#define DBSIZE(d)	(((Head_t*)((uchar*)(d) - 2*sizeof(Head_t)))->head.size.size )
-#define DBFILE(d)	(((Head_t*)((uchar*)(d) - 2*sizeof(Head_t)))->head.seg.file )
-#define DBLN(d)		(((Head_t*)((uchar*)DBBLOCK(d)+DBBSIZE(d)))->head.size.line )
+#define DBSEG(d)	(((Head_t*)((Vmuchar_t*)(d) - sizeof(Head_t)))->head.seg.seg )
+#define DBSIZE(d)	(((Head_t*)((Vmuchar_t*)(d) - 2*sizeof(Head_t)))->head.size.size )
+#define DBFILE(d)	(((Head_t*)((Vmuchar_t*)(d) - 2*sizeof(Head_t)))->head.seg.file )
+#define DBLN(d)		(((Head_t*)((Vmuchar_t*)DBBLOCK(d)+DBBSIZE(d)))->head.size.line )
 #define DBLINE(d)	(DBLN(d) < 0 ? -DBLN(d) : DBLN(d))
 
 /* forward/backward translation for addresses between Vmbest and Vmdebug */
-#define DB2BEST(d)	((uchar*)(d) - 2*sizeof(Head_t))
-#define DB2DEBUG(b)	((uchar*)(b) + 2*sizeof(Head_t))
+#define DB2BEST(d)	((Vmuchar_t*)(d) - 2*sizeof(Head_t))
+#define DB2DEBUG(b)	((Vmuchar_t*)(b) + 2*sizeof(Head_t))
 
 /* set file and line number, note that DBLN > 0 so that DBISBAD will work  */
 #define DBSETFL(d,f,l)	(DBFILE(d) = (f), DBLN(d) = (f) ? (l) : 1)
@@ -391,20 +419,45 @@ struct _seg_
 
 /* compute the bounds of the magic areas */
 #define DBHEAD(d,begp,endp) \
-		(((begp) = (uchar*)(&DBSEG(d)) + sizeof(Seg_t*)), ((endp) = (d)) )
+		(((begp) = (Vmuchar_t*)(&DBSEG(d)) + sizeof(Seg_t*)), ((endp) = (d)) )
 #define DBTAIL(d,begp,endp) \
-		(((begp) = (uchar*)(d) + DBSIZE(d)), ((endp) = (uchar*)(&DBLN(d))) )
+		(((begp) = (Vmuchar_t*)(d)+DBSIZE(d)), ((endp) = (Vmuchar_t*)(&DBLN(d))) )
+
+/* clear and copy functions */
+#define INTCOPY(to,fr,n) \
+	switch(n/sizeof(int)) \
+	{ default: memcpy((Void_t*)to,(Void_t*)fr,n); break; \
+	  case 7:	*to++ = *fr++; \
+	  case 6:	*to++ = *fr++; \
+	  case 5:	*to++ = *fr++; \
+	  case 4:	*to++ = *fr++; \
+	  case 3:	*to++ = *fr++; \
+	  case 2:	*to++ = *fr++; \
+	  case 1:	*to++ = *fr++; \
+	}
+#define INTZERO(d,n) \
+	switch(n/sizeof(int)) \
+	{ default: memset((Void_t*)d,0,n); break; \
+	  case 7:	*d++ = 0; \
+	  case 6:	*d++ = 0; \
+	  case 5:	*d++ = 0; \
+	  case 4:	*d++ = 0; \
+	  case 3:	*d++ = 0; \
+	  case 2:	*d++ = 0; \
+	  case 1:	*d++ = 0; \
+	}
 
 /* external symbols for internal use by vmalloc */
 typedef Block_t*	(*Vmsearch_f)_ARG_((Vmdata_t*, size_t, Block_t*));
 typedef struct _vmextern_
-{	Block_t*(*	vm_extend)_ARG_((Vmalloc_t*, size_t, Vmsearch_f ));
-	int(*		vm_truncate)_ARG_((Vmalloc_t*, Seg_t*, size_t, int));
+{	Block_t*	(*vm_extend)_ARG_((Vmalloc_t*, size_t, Vmsearch_f ));
+	int		(*vm_truncate)_ARG_((Vmalloc_t*, Seg_t*, size_t, int));
 	size_t		vm_pagesize;
-	char*(*		vm_strcpy)_ARG_((char*, char*, int));
-	char*(*		vm_itoa)_ARG_((ulong, int));
-	void(*		vm_trace)_ARG_((Vmalloc_t*, uchar*, uchar*, size_t));
-	void(*		vm_pfclose)_ARG_((Vmalloc_t*));
+	char*		(*vm_strcpy)_ARG_((char*, char*, int));
+	char*		(*vm_itoa)_ARG_((Vmulong_t, int));
+	void		(*vm_trace)_ARG_((Vmalloc_t*,
+					  Vmuchar_t*, Vmuchar_t*, size_t, size_t));
+	void		(*vm_pfclose)_ARG_((Vmalloc_t*));
 } Vmextern_t;
 
 #define _Vmextend	(_Vmextern.vm_extend)
@@ -416,21 +469,51 @@ typedef struct _vmextern_
 #define _Vmpfclose	(_Vmextern.vm_pfclose)
 
 _BEGIN_EXTERNS_
+
 extern Vmextern_t	_Vmextern;
-extern char*		_Vmfile;
-extern int		_Vmline;
-#ifndef _AIX
-extern uchar*		sbrk _ARG_((ssize_t));
-extern size_t		getpagesize _ARG_(( ));
+
+#if !_WIN32
+extern size_t		getpagesize _ARG_((void));
 #endif
+
 #if !_PACKAGE_ast
-extern void		abort _ARG_(( ));
-extern int		write _ARG_((int, const char*, int));
-extern int		strlen _ARG_((const char*));
-extern char*		strcpy _ARG_((char*, const char*));
-extern int		strcmp _ARG_((const char*, const char*));
-extern Void_t*		memcpy _ARG_((Void_t*, const Void_t*, size_t));
+
+extern void		abort _ARG_(( void ));
+extern ssize_t		write _ARG_(( int, const void*, size_t ));
+
+#if !__STDC__ && !_hdr_stdlib
+extern size_t		strlen _ARG_(( const char* ));
+extern char*		strcpy _ARG_(( char*, const char* ));
+extern int		strcmp _ARG_(( const char*, const char* ));
+extern int		atexit _ARG_(( void(*)(void) ));
+extern char*		getenv _ARG_(( const char* ));
+extern Void_t*		memcpy _ARG_(( Void_t*, const Void_t*, size_t ));
+extern Void_t*		memset _ARG_(( Void_t*, int, size_t ));
+#else
+#include	<stdlib.h>
+#include	<string.h>
 #endif
+
+/* for malloc.c */
+extern int		creat _ARG_(( const char*, int ));
+extern int		close _ARG_(( int ));
+extern int		getpid _ARG_(( void ));
+
+/* for vmexit.c */
+extern int		onexit _ARG_(( void(*)(void) ));
+extern void		_exit _ARG_(( int ));
+extern void		_cleanup _ARG_(( void ));
+
+#endif /*!PACKAGE_ast*/
+
+/* for vmdcsbrk.c */
+#if !_typ_ssize_t
+typedef int		ssize_t;
+#endif
+#if !_WIN32
+extern Vmuchar_t*	sbrk _ARG_(( ssize_t ));
+#endif
+
 _END_EXTERNS_
 
 #endif /* _VMHDR_H */

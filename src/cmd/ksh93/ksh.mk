@@ -50,10 +50,12 @@ CPIO=cpio
 install : all ${INSTALLROOT}/bin ${INSTALLROOT}/bin/ksh \
 		${INSTALLROOT}/man/man1 ${INSTALLROOT}/man/man1/sh.1 \
 		${INSTALLROOT}/lib ${INSTALLROOT}/lib/libshell.a \
-		${INSTALLROOT}/man/man3 ${INSTALLROOT}/man/man3/nval.3 \
+		${INSTALLROOT}/man/man3 ${INSTALLROOT}/man/man3/shell.3 \
+		${INSTALLROOT}/man/man3/nval.3 \
 		${INSTALLROOT}/include/ast \
 		${INSTALLROOT}/include/ast/nval.h \
 		${INSTALLROOT}/include/ast/shell.h \
+		${INSTALLROOT}/include/ast/history.h \
 		${INSTALLROOT}/bin/suid_exec ${INSTALLROOT}/bin/shcomp
 
 all : ksh shcomp ksh.msg sh/suid_exec.c \
@@ -63,49 +65,50 @@ all : ksh shcomp ksh.msg sh/suid_exec.c \
 		${PACKAGE_ast_INCLUDE}/ast/ast.h shell libshell.a \
 		suid_exec
 
-ksh : main.o libshell.a
+ksh : pmain.o libshell.a
 	${CC} ${CCFLAGS}  ${LDFLAGS} $${mam_cc_L+-L.} $${mam_cc_L+-L${PACKAGE_ast_LIB}} \
-	-o ksh main.o libshell.a ${mam_libcmd} ${mam_cc_static} ${mam_libast} \
-	${mam_cc_dynamic} ${mam_cc_static} ${mam_libm} ${mam_cc_dynamic} \
-	${mam_cc_static} ${mam_libjobs} ${mam_cc_dynamic} ${mam_cc_static} \
-	${mam_libi} ${mam_cc_dynamic} ${mam_libdl} ${mam_libdld} \
-	${mam_cc_static} ${mam_libintl} ${mam_cc_dynamic} ${mam_libast}
-
-main.o : sh/main.c FEATURE/externs FEATURE/execargs FEATURE/pstat \
-		FEATURE/time include/timeout.h include/history.h \
-		include/shnodes.h include/jobs.h FEATURE/ttys \
-		FEATURE/options include/io.h \
-		${PACKAGE_ast_INCLUDE}/ast/sfio.h include/path.h \
-		FEATURE/acct include/variables.h FEATURE/dynamic \
-		include/defs.h include/shell.h include/argnod.h \
-		include/fault.h FEATURE/sigfeatures FEATURE/setjmp \
-		${PACKAGE_ast_INCLUDE}/ast/ls.h
-	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_ESH \
-	-DSHOPT_VSH -DSHOPT_SUID_EXEC -DKSHELL -c sh/main.c
-
-FEATURE/externs : features/externs
-	iffe set cc ${CC} ${CCFLAGS}    ${LDFLAGS}  :   ref $${mam_cc_L+-L.} \
-	$${mam_cc_L+-L${PACKAGE_ast_LIB}} ${mam_cc_static} ${mam_libm} \
+	-o ksh pmain.o libshell.a ${mam_libcmd} ${mam_cc_static} \
+	${mam_libast} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libm} \
 	${mam_cc_dynamic} ${mam_cc_static} ${mam_libjobs} ${mam_cc_dynamic} \
 	${mam_cc_static} ${mam_libi} ${mam_cc_dynamic} ${mam_libdl} \
 	${mam_libdld} ${mam_cc_static} ${mam_libintl} ${mam_cc_dynamic} \
-	${mam_libast} : run features/externs
+	${mam_libast}
 
-FEATURE/execargs :
-	iffe set cc ${CC} ${CCFLAGS}    ${LDFLAGS}  :   ref $${mam_cc_L+-L.} \
-	$${mam_cc_L+-L${PACKAGE_ast_LIB}} ${mam_cc_static} ${mam_libm} \
-	${mam_cc_dynamic} ${mam_cc_static} ${mam_libjobs} ${mam_cc_dynamic} \
-	${mam_cc_static} ${mam_libi} ${mam_cc_dynamic} ${mam_libdl} \
-	${mam_libdld} ${mam_cc_static} ${mam_libintl} ${mam_cc_dynamic} \
-	${mam_libast} : def execargs
+pmain.o : sh/pmain.c include/shell.h
+	${CC} ${CCFLAGS}  -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_ESH \
+	-c sh/pmain.c
 
-FEATURE/pstat :
-	iffe set cc ${CC} ${CCFLAGS}    ${LDFLAGS}  :   ref $${mam_cc_L+-L.} \
-	$${mam_cc_L+-L${PACKAGE_ast_LIB}} ${mam_cc_static} ${mam_libm} \
-	${mam_cc_dynamic} ${mam_cc_static} ${mam_libjobs} ${mam_cc_dynamic} \
-	${mam_cc_static} ${mam_libi} ${mam_cc_dynamic} ${mam_libdl} \
-	${mam_libdld} ${mam_cc_static} ${mam_libintl} ${mam_cc_dynamic} \
-	${mam_libast} : def pstat
+libshell.a : alarm.o cd_pwd.o cflow.o deparse.o getopts.o hist.o misc.o \
+		print.o read.o sleep.o trap.o test.o typeset.o ulimit.o \
+		umask.o whence.o main.o arith.o args.o array.o \
+		completion.o dlopen.o defs.o edit.o expand.o fault.o \
+		fcin.o history.o init.o io.o jobs.o lex.o macro.o name.o \
+		parse.o path.o string.o streval.o subshell.o tdump.o \
+		timers.o trestore.o userinit.o waitevent.o xec.o \
+		limits.o msg.o strdata.o testops.o keywords.o options.o \
+		signals.o aliases.o builtins.o variables.o lexstates.o \
+		emacs.o vi.o
+	${AR} cr libshell.a alarm.o cd_pwd.o cflow.o deparse.o getopts.o \
+	hist.o misc.o print.o read.o sleep.o trap.o test.o typeset.o \
+	ulimit.o umask.o whence.o main.o arith.o args.o array.o completion.o \
+	dlopen.o defs.o edit.o expand.o fault.o fcin.o history.o \
+	init.o io.o$(newline) \
+	${AR} cr libshell.a jobs.o lex.o macro.o name.o parse.o path.o string.o \
+	streval.o subshell.o tdump.o timers.o trestore.o userinit.o \
+	waitevent.o xec.o limits.o msg.o strdata.o testops.o keywords.o \
+	options.o signals.o aliases.o builtins.o variables.o lexstates.o \
+	emacs.o vi.o$(newline) \
+	(ranlib libshell.a) >/dev/null 2>&1 || true
+
+alarm.o : bltins/alarm.c FEATURE/time include/builtins.h \
+		FEATURE/dynamic FEATURE/options \
+		${PACKAGE_ast_INCLUDE}/ast/stak.h \
+		${PACKAGE_ast_INCLUDE}/ast/error.h defs.h \
+		include/argnod.h include/fault.h FEATURE/sigfeatures \
+		FEATURE/setjmp include/history.h \
+		${PACKAGE_ast_INCLUDE}/ast/hash.h
+	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH \
+	-DSHOPT_SUID_EXEC -DSHOPT_ESH -c bltins/alarm.c
 
 FEATURE/time : features/time
 	iffe set cc ${CC} ${CCFLAGS}    ${LDFLAGS}  :   ref $${mam_cc_L+-L.} \
@@ -115,30 +118,6 @@ FEATURE/time : features/time
 	${mam_libdld} ${mam_cc_static} ${mam_libintl} ${mam_cc_dynamic} \
 	${mam_libast} : run features/time
 
-FEATURE/ttys : features/ttys
-	iffe set cc ${CC} ${CCFLAGS}    ${LDFLAGS}  :   ref $${mam_cc_L+-L.} \
-	$${mam_cc_L+-L${PACKAGE_ast_LIB}} ${mam_cc_static} ${mam_libm} \
-	${mam_cc_dynamic} ${mam_cc_static} ${mam_libjobs} ${mam_cc_dynamic} \
-	${mam_cc_static} ${mam_libi} ${mam_cc_dynamic} ${mam_libdl} \
-	${mam_libdld} ${mam_cc_static} ${mam_libintl} ${mam_cc_dynamic} \
-	${mam_libast} : run features/ttys
-
-FEATURE/options : features/options.sh
-	iffe set cc ${CC} ${CCFLAGS}    ${LDFLAGS}  :   ref $${mam_cc_L+-L.} \
-	$${mam_cc_L+-L${PACKAGE_ast_LIB}} ${mam_cc_static} ${mam_libm} \
-	${mam_cc_dynamic} ${mam_cc_static} ${mam_libjobs} ${mam_cc_dynamic} \
-	${mam_cc_static} ${mam_libi} ${mam_cc_dynamic} ${mam_libdl} \
-	${mam_libdld} ${mam_cc_static} ${mam_libintl} ${mam_cc_dynamic} \
-	${mam_libast} : run features/options.sh OPTIONS
-
-FEATURE/acct :
-	iffe set cc ${CC} ${CCFLAGS}    ${LDFLAGS}  :   ref $${mam_cc_L+-L.} \
-	$${mam_cc_L+-L${PACKAGE_ast_LIB}} ${mam_cc_static} ${mam_libm} \
-	${mam_cc_dynamic} ${mam_cc_static} ${mam_libjobs} ${mam_cc_dynamic} \
-	${mam_cc_static} ${mam_libi} ${mam_cc_dynamic} ${mam_libdl} \
-	${mam_libdld} ${mam_cc_static} ${mam_libintl} ${mam_cc_dynamic} \
-	${mam_libast} : def acct
-
 FEATURE/dynamic : features/dynamic
 	iffe set cc ${CC} ${CCFLAGS}    ${LDFLAGS}  :   ref $${mam_cc_L+-L.} \
 	$${mam_cc_L+-L${PACKAGE_ast_LIB}} ${mam_cc_static} ${mam_libm} \
@@ -146,6 +125,14 @@ FEATURE/dynamic : features/dynamic
 	${mam_cc_static} ${mam_libi} ${mam_cc_dynamic} ${mam_libdl} \
 	${mam_libdld} ${mam_cc_static} ${mam_libintl} ${mam_cc_dynamic} \
 	${mam_libast} : run features/dynamic
+
+FEATURE/options : features/options.sh OPTIONS
+	iffe set cc ${CC} ${CCFLAGS}    ${LDFLAGS}  :   ref $${mam_cc_L+-L.} \
+	$${mam_cc_L+-L${PACKAGE_ast_LIB}} ${mam_cc_static} ${mam_libm} \
+	${mam_cc_dynamic} ${mam_cc_static} ${mam_libjobs} ${mam_cc_dynamic} \
+	${mam_cc_static} ${mam_libi} ${mam_cc_dynamic} ${mam_libdl} \
+	${mam_libdld} ${mam_cc_static} ${mam_libintl} ${mam_cc_dynamic} \
+	${mam_libast} : run features/options.sh OPTIONS
 
 FEATURE/sigfeatures : features/sigfeatures
 	iffe set cc ${CC} ${CCFLAGS}    ${LDFLAGS}  :   ref $${mam_cc_L+-L.} \
@@ -163,59 +150,51 @@ FEATURE/setjmp : features/setjmp
 	${mam_libdld} ${mam_cc_static} ${mam_libintl} ${mam_cc_dynamic} \
 	${mam_libast} : run features/setjmp
 
-libshell.a : alarm.o cd_pwd.o cflow.o getopts.o hist.o misc.o print.o \
-		read.o sleep.o trap.o test.o typeset.o ulimit.o umask.o \
-		whence.o arith.o args.o array.o completion.o dlopen.o \
-		defs.o edit.o expand.o fault.o fcin.o history.o init.o \
-		io.o jobs.o lex.o macro.o name.o parse.o path.o string.o \
-		streval.o subshell.o tdump.o timers.o trestore.o \
-		userinit.o xec.o limits.o msg.o strdata.o testops.o \
-		keywords.o options.o signals.o aliases.o builtins.o \
-		variables.o lexstates.o emacs.o vi.o
-	${AR} cr libshell.a alarm.o cd_pwd.o cflow.o getopts.o hist.o misc.o \
-	print.o read.o sleep.o trap.o test.o typeset.o ulimit.o umask.o \
-	whence.o arith.o args.o array.o completion.o dlopen.o defs.o \
-	edit.o expand.o fault.o fcin.o history.o init.o io.o jobs.o \
-	lex.o$(newline) \
-	${AR} cr libshell.a macro.o name.o parse.o path.o string.o streval.o \
-	subshell.o tdump.o timers.o trestore.o userinit.o xec.o limits.o \
-	msg.o strdata.o testops.o keywords.o options.o signals.o \
-	aliases.o builtins.o variables.o lexstates.o emacs.o vi.o$(newline) \
-	(ranlib libshell.a) >/dev/null 2>&1 || true
-
-alarm.o : bltins/alarm.c FEATURE/time include/builtins.h \
-		FEATURE/options ${PACKAGE_ast_INCLUDE}/ast/stak.h \
-		${PACKAGE_ast_INCLUDE}/ast/error.h include/defs.h \
-		include/shell.h include/argnod.h include/fault.h \
-		FEATURE/sigfeatures FEATURE/setjmp include/history.h
-	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH \
-	-DSHOPT_SUID_EXEC -DSHOPT_ESH -c bltins/alarm.c
-
 cd_pwd.o : bltins/cd_pwd.c ${PACKAGE_ast_INCLUDE}/ast/ls.h \
 		include/builtins.h FEATURE/dynamic FEATURE/options \
 		include/name.h include/path.h FEATURE/acct \
 		include/variables.h ${PACKAGE_ast_INCLUDE}/ast/error.h \
-		${PACKAGE_ast_INCLUDE}/ast/stak.h include/defs.h \
-		include/shell.h include/argnod.h include/fault.h \
-		FEATURE/sigfeatures FEATURE/setjmp include/history.h
+		${PACKAGE_ast_INCLUDE}/ast/stak.h defs.h include/shell.h \
+		include/argnod.h include/fault.h FEATURE/sigfeatures \
+		FEATURE/setjmp include/history.h \
+		${PACKAGE_ast_INCLUDE}/ast/hash.h \
+		${PACKAGE_ast_INCLUDE}/ast/ast.h
 	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH \
 	-DSHOPT_SUID_EXEC -DSHOPT_ESH -c bltins/cd_pwd.c
 
+FEATURE/acct :
+	iffe set cc ${CC} ${CCFLAGS}    ${LDFLAGS}  :   ref $${mam_cc_L+-L.} \
+	$${mam_cc_L+-L${PACKAGE_ast_LIB}} ${mam_cc_static} ${mam_libm} \
+	${mam_cc_dynamic} ${mam_cc_static} ${mam_libjobs} ${mam_cc_dynamic} \
+	${mam_cc_static} ${mam_libi} ${mam_cc_dynamic} ${mam_libdl} \
+	${mam_libdld} ${mam_cc_static} ${mam_libintl} ${mam_cc_dynamic} \
+	${mam_libast} : def acct
+
 cflow.o : bltins/cflow.c include/builtins.h FEATURE/dynamic \
-		FEATURE/options include/shnodes.h \
-		${PACKAGE_ast_INCLUDE}/ast/error.h \
-		${PACKAGE_ast_INCLUDE}/ast/ast.h include/defs.h \
+		FEATURE/options shnodes.h \
+		${PACKAGE_ast_INCLUDE}/ast/error.h defs.h \
 		include/shell.h include/argnod.h include/fault.h \
-		FEATURE/sigfeatures FEATURE/setjmp include/history.h
+		FEATURE/sigfeatures FEATURE/setjmp include/history.h \
+		${PACKAGE_ast_INCLUDE}/ast/hash.h \
+		${PACKAGE_ast_INCLUDE}/ast/ast.h
 	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH \
 	-DSHOPT_SUID_EXEC -DSHOPT_ESH -c bltins/cflow.c
+
+deparse.o : sh/deparse.c include/test.h shnodes.h defs.h \
+		include/shell.h include/argnod.h include/fault.h \
+		FEATURE/sigfeatures FEATURE/setjmp include/history.h \
+		${PACKAGE_ast_INCLUDE}/ast/hash.h FEATURE/options \
+		${PACKAGE_ast_INCLUDE}/ast/ast.h
+	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_ESH \
+	-DSHOPT_VSH -DSHOPT_SUID_EXEC -c sh/deparse.c
 
 getopts.o : bltins/getopts.c include/builtins.h FEATURE/dynamic \
 		FEATURE/options include/nval.h \
 		${PACKAGE_ast_INCLUDE}/ast/error.h include/variables.h \
-		include/defs.h include/shell.h include/argnod.h \
-		include/fault.h FEATURE/sigfeatures FEATURE/setjmp \
-		include/history.h
+		defs.h include/shell.h include/argnod.h include/fault.h \
+		FEATURE/sigfeatures FEATURE/setjmp include/history.h \
+		${PACKAGE_ast_INCLUDE}/ast/hash.h \
+		${PACKAGE_ast_INCLUDE}/ast/ast.h
 	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH \
 	-DSHOPT_SUID_EXEC -DSHOPT_ESH -c bltins/getopts.c
 
@@ -225,9 +204,9 @@ hist.o : bltins/hist.c include/builtins.h FEATURE/dynamic \
 		${PACKAGE_ast_INCLUDE}/ast/ast.h include/variables.h \
 		${PACKAGE_ast_INCLUDE}/ast/error.h \
 		${PACKAGE_ast_INCLUDE}/ast/ls.h \
-		${PACKAGE_ast_INCLUDE}/ast/stak.h include/defs.h \
-		include/shell.h include/argnod.h include/fault.h \
-		FEATURE/sigfeatures FEATURE/setjmp
+		${PACKAGE_ast_INCLUDE}/ast/stak.h defs.h include/shell.h \
+		include/argnod.h include/fault.h FEATURE/sigfeatures \
+		FEATURE/setjmp ${PACKAGE_ast_INCLUDE}/ast/hash.h
 	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH \
 	-DSHOPT_SUID_EXEC -DSHOPT_ESH -DKSHELL -c bltins/hist.c
 
@@ -236,20 +215,31 @@ misc.o : bltins/misc.c include/jobs.h FEATURE/ttys FEATURE/options \
 		include/name.h include/io.h \
 		${PACKAGE_ast_INCLUDE}/ast/sfio.h \
 		${PACKAGE_ast_INCLUDE}/ast/ast.h include/path.h \
-		FEATURE/acct include/shnodes.h include/variables.h \
-		include/defs.h include/shell.h include/argnod.h \
-		include/fault.h FEATURE/sigfeatures FEATURE/setjmp
+		FEATURE/acct shnodes.h include/variables.h defs.h \
+		include/shell.h include/argnod.h include/fault.h \
+		FEATURE/sigfeatures FEATURE/setjmp \
+		${PACKAGE_ast_INCLUDE}/ast/hash.h
 	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH \
 	-DSHOPT_SUID_EXEC -DSHOPT_ESH -DKSHELL -c bltins/misc.c
 
-print.o : bltins/print.c include/builtins.h FEATURE/dynamic \
-		FEATURE/options include/history.h include/name.h \
-		include/io.h ${PACKAGE_ast_INCLUDE}/ast/sfio.h \
+FEATURE/ttys : features/ttys
+	iffe set cc ${CC} ${CCFLAGS}    ${LDFLAGS}  :   ref $${mam_cc_L+-L.} \
+	$${mam_cc_L+-L${PACKAGE_ast_LIB}} ${mam_cc_static} ${mam_libm} \
+	${mam_cc_dynamic} ${mam_cc_static} ${mam_libjobs} ${mam_cc_dynamic} \
+	${mam_cc_static} ${mam_libi} ${mam_cc_dynamic} ${mam_libdl} \
+	${mam_libdld} ${mam_cc_static} ${mam_libintl} ${mam_cc_dynamic} \
+	${mam_libast} : run features/ttys
+
+print.o : bltins/print.c include/streval.h include/builtins.h \
+		FEATURE/dynamic FEATURE/options include/history.h \
+		include/name.h include/io.h \
+		${PACKAGE_ast_INCLUDE}/ast/sfio.h \
 		${PACKAGE_ast_INCLUDE}/ast/ast.h \
 		${PACKAGE_ast_INCLUDE}/ast/stak.h \
-		${PACKAGE_ast_INCLUDE}/ast/error.h include/defs.h \
+		${PACKAGE_ast_INCLUDE}/ast/error.h defs.h \
 		include/shell.h include/argnod.h include/fault.h \
-		FEATURE/sigfeatures FEATURE/setjmp
+		FEATURE/sigfeatures FEATURE/setjmp \
+		${PACKAGE_ast_INCLUDE}/ast/hash.h
 	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH \
 	-DSHOPT_SUID_EXEC -DSHOPT_ESH -DKSHELL -c bltins/print.c
 
@@ -258,17 +248,20 @@ read.o : bltins/read.c include/national.h include/terminal.h \
 		FEATURE/options include/name.h include/io.h \
 		${PACKAGE_ast_INCLUDE}/ast/sfio.h \
 		${PACKAGE_ast_INCLUDE}/ast/ast.h include/lexstates.h \
-		include/variables.h include/defs.h include/shell.h \
+		include/variables.h defs.h include/shell.h \
 		include/argnod.h include/fault.h FEATURE/sigfeatures \
-		FEATURE/setjmp ${PACKAGE_ast_INCLUDE}/ast/error.h
+		FEATURE/setjmp ${PACKAGE_ast_INCLUDE}/ast/hash.h \
+		${PACKAGE_ast_INCLUDE}/ast/error.h
 	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_ESH \
 	-DSHOPT_VSH -DSHOPT_SUID_EXEC -DKSHELL -c bltins/read.c
 
 sleep.o : bltins/sleep.c FEATURE/poll FEATURE/time include/builtins.h \
 		FEATURE/dynamic FEATURE/options \
-		${PACKAGE_ast_INCLUDE}/ast/error.h include/defs.h \
+		${PACKAGE_ast_INCLUDE}/ast/error.h defs.h \
 		include/shell.h include/argnod.h include/fault.h \
-		FEATURE/sigfeatures FEATURE/setjmp include/history.h
+		FEATURE/sigfeatures FEATURE/setjmp include/history.h \
+		${PACKAGE_ast_INCLUDE}/ast/hash.h \
+		${PACKAGE_ast_INCLUDE}/ast/ast.h
 	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH \
 	-DSHOPT_SUID_EXEC -DSHOPT_ESH -c bltins/sleep.c
 
@@ -281,10 +274,11 @@ FEATURE/poll : features/poll
 	${mam_libast} : run features/poll
 
 trap.o : bltins/trap.c include/builtins.h FEATURE/dynamic \
-		FEATURE/options include/jobs.h FEATURE/ttys \
-		include/defs.h include/shell.h include/argnod.h \
-		include/fault.h FEATURE/sigfeatures FEATURE/setjmp \
-		include/history.h
+		FEATURE/options include/jobs.h FEATURE/ttys defs.h \
+		include/shell.h include/argnod.h include/fault.h \
+		FEATURE/sigfeatures FEATURE/setjmp include/history.h \
+		${PACKAGE_ast_INCLUDE}/ast/hash.h \
+		${PACKAGE_ast_INCLUDE}/ast/ast.h
 	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH \
 	-DSHOPT_SUID_EXEC -DSHOPT_ESH -c bltins/trap.c
 
@@ -294,19 +288,29 @@ test.o : bltins/test.c FEATURE/externs include/builtins.h \
 		${PACKAGE_ast_INCLUDE}/ast/sfio.h \
 		${PACKAGE_ast_INCLUDE}/ast/ast.h \
 		${PACKAGE_ast_INCLUDE}/ast/ls.h \
-		${PACKAGE_ast_INCLUDE}/ast/error.h include/defs.h \
+		${PACKAGE_ast_INCLUDE}/ast/error.h defs.h \
 		include/shell.h include/argnod.h include/fault.h \
-		FEATURE/sigfeatures FEATURE/setjmp include/history.h
+		FEATURE/sigfeatures FEATURE/setjmp include/history.h \
+		${PACKAGE_ast_INCLUDE}/ast/hash.h
 	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH \
 	-DSHOPT_SUID_EXEC -DSHOPT_ESH -DKSHELL -c bltins/test.c
 
-typeset.o : bltins/typeset.c include/builtins.h FEATURE/dynamic \
-		FEATURE/options include/history.h include/name.h \
+FEATURE/externs : features/externs
+	iffe set cc ${CC} ${CCFLAGS}    ${LDFLAGS}  :   ref $${mam_cc_L+-L.} \
+	$${mam_cc_L+-L${PACKAGE_ast_LIB}} ${mam_cc_static} ${mam_libm} \
+	${mam_cc_dynamic} ${mam_cc_static} ${mam_libjobs} ${mam_cc_dynamic} \
+	${mam_cc_static} ${mam_libi} ${mam_cc_dynamic} ${mam_libdl} \
+	${mam_libdld} ${mam_cc_static} ${mam_libintl} ${mam_cc_dynamic} \
+	${mam_libast} : run features/externs
+
+typeset.o : bltins/typeset.c include/argnod.h include/fcin.h \
+		include/variables.h FEATURE/dynamic FEATURE/options \
+		include/builtins.h include/history.h include/name.h \
 		include/path.h FEATURE/acct \
-		${PACKAGE_ast_INCLUDE}/ast/error.h include/defs.h \
-		include/shell.h include/argnod.h include/fault.h \
-		include/variables.h \
-		FEATURE/sigfeatures FEATURE/setjmp
+		${PACKAGE_ast_INCLUDE}/ast/error.h defs.h \
+		include/shell.h include/fault.h FEATURE/sigfeatures \
+		FEATURE/setjmp ${PACKAGE_ast_INCLUDE}/ast/hash.h \
+		${PACKAGE_ast_INCLUDE}/ast/ast.h
 	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH \
 	-DSHOPT_SUID_EXEC -DSHOPT_ESH -c bltins/typeset.c
 
@@ -338,16 +342,50 @@ umask.o : bltins/umask.c include/builtins.h FEATURE/dynamic \
 whence.o : bltins/whence.c include/builtins.h FEATURE/dynamic \
 		FEATURE/options include/shlex.h include/path.h \
 		FEATURE/acct include/name.h \
-		${PACKAGE_ast_INCLUDE}/ast/error.h include/defs.h \
+		${PACKAGE_ast_INCLUDE}/ast/error.h defs.h \
 		include/shell.h include/argnod.h include/fault.h \
-		FEATURE/sigfeatures FEATURE/setjmp include/history.h
+		FEATURE/sigfeatures FEATURE/setjmp include/history.h \
+		${PACKAGE_ast_INCLUDE}/ast/hash.h \
+		${PACKAGE_ast_INCLUDE}/ast/ast.h
 	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH \
 	-DSHOPT_SUID_EXEC -DSHOPT_ESH -c bltins/whence.c
 
+main.o : sh/main.c FEATURE/externs FEATURE/execargs FEATURE/pstat \
+		FEATURE/time include/timeout.h include/history.h \
+		shnodes.h include/jobs.h FEATURE/ttys FEATURE/options \
+		include/io.h ${PACKAGE_ast_INCLUDE}/ast/sfio.h \
+		${PACKAGE_ast_INCLUDE}/ast/ast.h include/path.h \
+		FEATURE/acct include/variables.h FEATURE/dynamic defs.h \
+		include/shell.h include/argnod.h include/fault.h \
+		FEATURE/sigfeatures FEATURE/setjmp \
+		${PACKAGE_ast_INCLUDE}/ast/hash.h \
+		${PACKAGE_ast_INCLUDE}/ast/ls.h \
+		${PACKAGE_ast_INCLUDE}/ast/stak.h
+	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_ESH \
+	-DSHOPT_VSH -DSHOPT_SUID_EXEC -DKSHELL -c sh/main.c
+
+FEATURE/execargs :
+	iffe set cc ${CC} ${CCFLAGS}    ${LDFLAGS}  :   ref $${mam_cc_L+-L.} \
+	$${mam_cc_L+-L${PACKAGE_ast_LIB}} ${mam_cc_static} ${mam_libm} \
+	${mam_cc_dynamic} ${mam_cc_static} ${mam_libjobs} ${mam_cc_dynamic} \
+	${mam_cc_static} ${mam_libi} ${mam_cc_dynamic} ${mam_libdl} \
+	${mam_libdld} ${mam_cc_static} ${mam_libintl} ${mam_cc_dynamic} \
+	${mam_libast} : def execargs
+
+FEATURE/pstat :
+	iffe set cc ${CC} ${CCFLAGS}    ${LDFLAGS}  :   ref $${mam_cc_L+-L.} \
+	$${mam_cc_L+-L${PACKAGE_ast_LIB}} ${mam_cc_static} ${mam_libm} \
+	${mam_cc_dynamic} ${mam_cc_static} ${mam_libjobs} ${mam_cc_dynamic} \
+	${mam_cc_static} ${mam_libi} ${mam_cc_dynamic} ${mam_libdl} \
+	${mam_libdld} ${mam_cc_static} ${mam_libintl} ${mam_cc_dynamic} \
+	${mam_libast} : def pstat
+
 arith.o : sh/arith.c FEATURE/locale include/streval.h include/name.h \
-		include/lexstates.h include/defs.h include/shell.h \
+		include/lexstates.h defs.h include/shell.h \
 		include/argnod.h include/fault.h FEATURE/sigfeatures \
-		FEATURE/setjmp include/history.h FEATURE/options
+		FEATURE/setjmp include/history.h \
+		${PACKAGE_ast_INCLUDE}/ast/hash.h FEATURE/options \
+		${PACKAGE_ast_INCLUDE}/ast/ast.h
 	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_ESH \
 	-DSHOPT_VSH -DSHOPT_SUID_EXEC -c sh/arith.c
 
@@ -361,16 +399,18 @@ FEATURE/locale : features/locale
 
 args.o : sh/args.c include/terminal.h include/builtins.h \
 		FEATURE/dynamic FEATURE/options include/path.h \
-		FEATURE/acct include/defs.h include/shell.h \
-		include/argnod.h include/fault.h FEATURE/sigfeatures \
-		FEATURE/setjmp include/history.h
+		FEATURE/acct defs.h include/shell.h include/argnod.h \
+		include/fault.h FEATURE/sigfeatures FEATURE/setjmp \
+		include/history.h ${PACKAGE_ast_INCLUDE}/ast/hash.h \
+		${PACKAGE_ast_INCLUDE}/ast/ast.h
 	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DKSHELL \
 	-DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -c sh/args.c
 
 array.o : sh/array.c include/name.h ${PACKAGE_ast_INCLUDE}/ast/stak.h \
-		include/defs.h include/shell.h include/argnod.h \
-		include/fault.h FEATURE/sigfeatures FEATURE/setjmp \
-		include/history.h FEATURE/options
+		defs.h include/shell.h include/argnod.h include/fault.h \
+		FEATURE/sigfeatures FEATURE/setjmp include/history.h \
+		${PACKAGE_ast_INCLUDE}/ast/hash.h FEATURE/options \
+		${PACKAGE_ast_INCLUDE}/ast/ast.h
 	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_ESH \
 	-DSHOPT_VSH -DSHOPT_SUID_EXEC -c sh/array.c
 
@@ -378,9 +418,9 @@ completion.o : edit/completion.c include/history.h include/edit.h \
 		FEATURE/setjmp FEATURE/options include/io.h \
 		${PACKAGE_ast_INCLUDE}/ast/sfio.h \
 		${PACKAGE_ast_INCLUDE}/ast/ast.h include/path.h \
-		FEATURE/acct include/lexstates.h include/defs.h \
-		include/shell.h include/argnod.h include/fault.h \
-		FEATURE/sigfeatures
+		FEATURE/acct include/lexstates.h defs.h include/shell.h \
+		include/argnod.h include/fault.h FEATURE/sigfeatures \
+		${PACKAGE_ast_INCLUDE}/ast/hash.h
 	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_ESH \
 	-DKSHELL -DSHOPT_VSH -DSHOPT_SUID_EXEC -c edit/completion.c
 
@@ -392,9 +432,10 @@ dlopen.o : sh/dlopen.c FEATURE/dynamic include/nval.h \
 
 defs.o : sh/defs.c include/timeout.h include/edit.h FEATURE/setjmp \
 		FEATURE/options include/shlex.h include/jobs.h \
-		FEATURE/ttys include/defs.h include/shell.h \
-		include/argnod.h include/fault.h FEATURE/sigfeatures \
-		include/history.h
+		FEATURE/ttys defs.h include/shell.h include/argnod.h \
+		include/fault.h FEATURE/sigfeatures include/history.h \
+		${PACKAGE_ast_INCLUDE}/ast/hash.h \
+		${PACKAGE_ast_INCLUDE}/ast/ast.h
 	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_ESH \
 	-DSHOPT_VSH -DKSHELL -DSHOPT_SUID_EXEC -c sh/defs.c
 
@@ -416,20 +457,19 @@ expand.o : sh/expand.c include/path.h FEATURE/acct FEATURE/options \
 	-DSHOPT_VSH -DSHOPT_ESH -DKSHELL -c sh/expand.c
 
 fault.o : sh/fault.c include/path.h FEATURE/acct FEATURE/options \
-		include/jobs.h FEATURE/ttys include/shnodes.h \
-		include/history.h include/io.h \
-		${PACKAGE_ast_INCLUDE}/ast/sfio.h \
-		${PACKAGE_ast_INCLUDE}/ast/ast.h include/fcin.h \
-		include/defs.h include/shell.h include/argnod.h \
-		include/fault.h FEATURE/sigfeatures FEATURE/setjmp
+		include/jobs.h FEATURE/ttys shnodes.h include/history.h \
+		include/io.h ${PACKAGE_ast_INCLUDE}/ast/sfio.h \
+		${PACKAGE_ast_INCLUDE}/ast/ast.h include/fcin.h defs.h \
+		include/shell.h include/argnod.h include/fault.h \
+		FEATURE/sigfeatures FEATURE/setjmp \
+		${PACKAGE_ast_INCLUDE}/ast/hash.h
 	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_ESH \
 	-DSHOPT_VSH -DSHOPT_SUID_EXEC -DKSHELL -c sh/fault.c
 
 fcin.o : sh/fcin.c include/fcin.h ${PACKAGE_ast_INCLUDE}/ast/error.h \
 		${PACKAGE_ast_INCLUDE}/ast/sfio.h \
 		${PACKAGE_ast_INCLUDE}/ast/ast.h
-	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast  -c \
-	sh/fcin.c
+	${CC} ${CCFLAGS}  -Iinclude -I${PACKAGE_ast_INCLUDE}/ast  -c sh/fcin.c
 
 history.o : edit/history.c include/national.h include/history.h \
 		${PACKAGE_ast_INCLUDE}/ast/ls.h \
@@ -446,20 +486,21 @@ init.o : sh/init.c include/national.h FEATURE/locale \
 		FEATURE/ttys FEATURE/options include/name.h \
 		include/fault.h FEATURE/sigfeatures FEATURE/setjmp \
 		include/path.h FEATURE/acct include/variables.h \
-		${PACKAGE_ast_INCLUDE}/ast/stak.h include/defs.h \
-		include/shell.h include/argnod.h include/history.h
+		${PACKAGE_ast_INCLUDE}/ast/stak.h defs.h include/shell.h \
+		include/argnod.h include/history.h \
+		${PACKAGE_ast_INCLUDE}/ast/hash.h
 	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DKSHELL \
 	-DSHOPT_ESH -DSHOPT_VSH -DSHOPT_SUID_EXEC -c sh/init.c
 
 io.o : sh/io.c FEATURE/poll FEATURE/dynamic FEATURE/externs \
 		include/timeout.h include/edit.h FEATURE/setjmp \
-		FEATURE/options include/history.h include/shnodes.h \
+		FEATURE/options include/history.h shnodes.h \
 		include/jobs.h FEATURE/ttys include/io.h \
 		${PACKAGE_ast_INCLUDE}/ast/sfio.h \
 		${PACKAGE_ast_INCLUDE}/ast/ast.h include/variables.h \
-		${PACKAGE_ast_INCLUDE}/ast/ls.h include/fcin.h \
-		include/defs.h include/shell.h include/argnod.h \
-		include/fault.h FEATURE/sigfeatures
+		${PACKAGE_ast_INCLUDE}/ast/ls.h include/fcin.h defs.h \
+		include/shell.h include/argnod.h include/fault.h \
+		FEATURE/sigfeatures ${PACKAGE_ast_INCLUDE}/ast/hash.h
 	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH \
 	-DSHOPT_ESH -DKSHELL -DSHOPT_SUID_EXEC -c sh/io.c
 
@@ -467,9 +508,9 @@ jobs.o : sh/jobs.c include/history.h include/jobs.h FEATURE/ttys \
 		FEATURE/options include/io.h \
 		${PACKAGE_ast_INCLUDE}/ast/sfio.h \
 		${PACKAGE_ast_INCLUDE}/ast/ast.h \
-		${PACKAGE_ast_INCLUDE}/ast/wait.h include/defs.h \
-		include/shell.h include/argnod.h include/fault.h \
-		FEATURE/sigfeatures FEATURE/setjmp
+		${PACKAGE_ast_INCLUDE}/ast/wait.h defs.h include/shell.h \
+		include/argnod.h include/fault.h FEATURE/sigfeatures \
+		FEATURE/setjmp ${PACKAGE_ast_INCLUDE}/ast/hash.h
 	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH \
 	-DSHOPT_ESH -DSHOPT_SUID_EXEC -DKSHELL -c sh/jobs.c
 
@@ -481,30 +522,32 @@ lex.o : sh/lex.c include/lexstates.h include/test.h include/shlex.h \
 	-DSHOPT_VSH -DSHOPT_SUID_EXEC -DKSHELL -c sh/lex.c
 
 macro.o : sh/macro.c include/national.h include/path.h FEATURE/acct \
-		FEATURE/options include/shnodes.h include/io.h \
+		FEATURE/options shnodes.h include/io.h \
 		${PACKAGE_ast_INCLUDE}/ast/sfio.h \
 		${PACKAGE_ast_INCLUDE}/ast/ast.h include/shlex.h \
 		include/variables.h FEATURE/dynamic include/name.h \
-		include/fcin.h include/defs.h include/shell.h \
-		include/argnod.h include/fault.h FEATURE/sigfeatures \
-		FEATURE/setjmp include/history.h
+		include/fcin.h defs.h include/shell.h include/argnod.h \
+		include/fault.h FEATURE/sigfeatures FEATURE/setjmp \
+		include/history.h ${PACKAGE_ast_INCLUDE}/ast/hash.h
 	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DKSHELL \
 	-DSHOPT_SUID_EXEC -DSHOPT_VSH -DSHOPT_ESH -c sh/macro.c
 
-name.o : sh/name.c include/national.h FEATURE/locale include/timeout.h \
-		include/lexstates.h include/path.h FEATURE/acct \
-		FEATURE/options include/variables.h FEATURE/dynamic \
-		include/defs.h include/shell.h include/argnod.h \
-		include/fault.h FEATURE/sigfeatures FEATURE/setjmp \
-		include/history.h
+name.o : sh/name.c include/builtins.h FEATURE/dynamic FEATURE/options \
+		shnodes.h include/national.h FEATURE/locale \
+		include/timeout.h include/lexstates.h include/path.h \
+		FEATURE/acct include/variables.h defs.h include/shell.h \
+		include/argnod.h include/fault.h FEATURE/sigfeatures \
+		FEATURE/setjmp include/history.h \
+		${PACKAGE_ast_INCLUDE}/ast/hash.h \
+		${PACKAGE_ast_INCLUDE}/ast/ast.h
 	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH \
 	-DSHOPT_SUID_EXEC -DSHOPT_ESH -c sh/name.c
 
 parse.o : sh/parse.c include/test.h include/builtins.h FEATURE/dynamic \
 		FEATURE/options include/history.h include/shlex.h \
 		${PACKAGE_ast_INCLUDE}/ast/error.h include/fcin.h
-	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH \
-	-DSHOPT_SUID_EXEC -DSHOPT_ESH -DKSHELL -c sh/parse.c
+	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_SUID_EXEC \
+	-DSHOPT_VSH -DSHOPT_ESH -DKSHELL -c sh/parse.c
 
 path.o : sh/path.c FEATURE/time FEATURE/externs include/test.h \
 		include/history.h include/jobs.h FEATURE/ttys \
@@ -512,17 +555,18 @@ path.o : sh/path.c FEATURE/time FEATURE/externs include/test.h \
 		${PACKAGE_ast_INCLUDE}/ast/sfio.h \
 		${PACKAGE_ast_INCLUDE}/ast/ast.h include/path.h \
 		FEATURE/acct include/variables.h FEATURE/dynamic \
-		${PACKAGE_ast_INCLUDE}/ast/ls.h include/fcin.h \
-		include/defs.h include/shell.h include/argnod.h \
-		include/fault.h FEATURE/sigfeatures FEATURE/setjmp
+		${PACKAGE_ast_INCLUDE}/ast/ls.h include/fcin.h defs.h \
+		include/shell.h include/argnod.h include/fault.h \
+		FEATURE/sigfeatures FEATURE/setjmp \
+		${PACKAGE_ast_INCLUDE}/ast/hash.h
 	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_SUID_EXEC \
 	-DSHOPT_ESH -DSHOPT_VSH -DKSHELL -c sh/path.c
 
 string.o : sh/string.c include/national.h include/lexstates.h \
 		include/shtable.h ${PACKAGE_ast_INCLUDE}/ast/stak.h \
-		include/defs.h include/shell.h include/argnod.h \
-		include/fault.h FEATURE/sigfeatures FEATURE/setjmp \
-		include/history.h FEATURE/options \
+		defs.h include/shell.h include/argnod.h include/fault.h \
+		FEATURE/sigfeatures FEATURE/setjmp include/history.h \
+		${PACKAGE_ast_INCLUDE}/ast/hash.h FEATURE/options \
 		${PACKAGE_ast_INCLUDE}/ast/ast.h
 	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_ESH \
 	-DSHOPT_VSH -DSHOPT_SUID_EXEC -c sh/string.c
@@ -534,21 +578,22 @@ streval.o : sh/streval.c FEATURE/externs \
 
 subshell.o : sh/subshell.c include/path.h FEATURE/acct FEATURE/options \
 		include/variables.h FEATURE/dynamic include/jobs.h \
-		FEATURE/ttys include/shlex.h include/shnodes.h \
-		include/fault.h FEATURE/sigfeatures FEATURE/setjmp \
-		include/io.h ${PACKAGE_ast_INCLUDE}/ast/sfio.h \
+		FEATURE/ttys include/shlex.h shnodes.h include/fault.h \
+		FEATURE/sigfeatures FEATURE/setjmp include/io.h \
+		${PACKAGE_ast_INCLUDE}/ast/sfio.h \
 		${PACKAGE_ast_INCLUDE}/ast/ast.h \
-		${PACKAGE_ast_INCLUDE}/ast/ls.h include/defs.h \
-		include/shell.h include/argnod.h include/history.h
+		${PACKAGE_ast_INCLUDE}/ast/ls.h defs.h include/shell.h \
+		include/argnod.h include/history.h \
+		${PACKAGE_ast_INCLUDE}/ast/hash.h
 	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_SUID_EXEC \
 	-DSHOPT_VSH -DSHOPT_ESH -DKSHELL -c sh/subshell.c
 
 tdump.o : sh/tdump.c include/io.h ${PACKAGE_ast_INCLUDE}/ast/sfio.h \
 		${PACKAGE_ast_INCLUDE}/ast/ast.h include/path.h \
-		FEATURE/acct FEATURE/options include/shnodes.h \
-		include/defs.h include/shell.h include/argnod.h \
-		include/fault.h FEATURE/sigfeatures FEATURE/setjmp \
-		include/history.h
+		FEATURE/acct FEATURE/options shnodes.h defs.h \
+		include/shell.h include/argnod.h include/fault.h \
+		FEATURE/sigfeatures FEATURE/setjmp include/history.h \
+		${PACKAGE_ast_INCLUDE}/ast/hash.h
 	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DKSHELL \
 	-DSHOPT_SUID_EXEC -DSHOPT_VSH -DSHOPT_ESH -c sh/tdump.c
 
@@ -562,29 +607,36 @@ timers.o : sh/timers.c FEATURE/time FEATURE/sigfeatures include/fault.h \
 trestore.o : sh/trestore.c include/io.h \
 		${PACKAGE_ast_INCLUDE}/ast/sfio.h \
 		${PACKAGE_ast_INCLUDE}/ast/ast.h include/path.h \
-		FEATURE/acct FEATURE/options include/shnodes.h \
-		include/defs.h include/shell.h include/argnod.h \
-		include/fault.h FEATURE/sigfeatures FEATURE/setjmp \
-		include/history.h
+		FEATURE/acct FEATURE/options shnodes.h defs.h \
+		include/shell.h include/argnod.h include/fault.h \
+		FEATURE/sigfeatures FEATURE/setjmp include/history.h \
+		${PACKAGE_ast_INCLUDE}/ast/hash.h
 	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DKSHELL \
 	-DSHOPT_SUID_EXEC -DSHOPT_VSH -DSHOPT_ESH -c sh/trestore.c
 
-userinit.o : sh/userinit.c include/defs.h include/shell.h \
-		include/argnod.h include/fault.h FEATURE/sigfeatures \
-		FEATURE/setjmp include/history.h FEATURE/options
+userinit.o : sh/userinit.c defs.h include/shell.h include/argnod.h \
+		include/fault.h FEATURE/sigfeatures FEATURE/setjmp \
+		include/history.h ${PACKAGE_ast_INCLUDE}/ast/hash.h \
+		FEATURE/options ${PACKAGE_ast_INCLUDE}/ast/ast.h
 	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_ESH \
 	-DSHOPT_VSH -DSHOPT_SUID_EXEC -c sh/userinit.c
 
+waitevent.o : sh/waitevent.c defs.h include/shell.h include/argnod.h \
+		include/fault.h FEATURE/sigfeatures FEATURE/setjmp \
+		include/history.h ${PACKAGE_ast_INCLUDE}/ast/hash.h \
+		FEATURE/options ${PACKAGE_ast_INCLUDE}/ast/ast.h
+	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_ESH \
+	-DSHOPT_VSH -DSHOPT_SUID_EXEC -c sh/waitevent.c
+
 xec.o : sh/xec.c FEATURE/locale FEATURE/externs FEATURE/time \
 		include/builtins.h FEATURE/dynamic FEATURE/options \
-		include/test.h include/jobs.h FEATURE/ttys \
-		include/shnodes.h include/io.h \
-		${PACKAGE_ast_INCLUDE}/ast/sfio.h \
+		include/test.h include/jobs.h FEATURE/ttys shnodes.h \
+		include/io.h ${PACKAGE_ast_INCLUDE}/ast/sfio.h \
 		${PACKAGE_ast_INCLUDE}/ast/ast.h include/path.h \
-		FEATURE/acct include/variables.h include/fcin.h \
-		include/defs.h include/shell.h include/argnod.h \
-		include/fault.h FEATURE/sigfeatures FEATURE/setjmp \
-		include/history.h
+		FEATURE/acct include/variables.h include/fcin.h defs.h \
+		include/shell.h include/argnod.h include/fault.h \
+		FEATURE/sigfeatures FEATURE/setjmp include/history.h \
+		${PACKAGE_ast_INCLUDE}/ast/hash.h
 	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH \
 	-DSHOPT_SUID_EXEC -DSHOPT_ESH -DKSHELL -c sh/xec.c
 
@@ -599,8 +651,9 @@ msg.o : data/msg.c include/national.h include/edit.h FEATURE/setjmp \
 		include/timeout.h include/shlex.h include/io.h \
 		${PACKAGE_ast_INCLUDE}/ast/sfio.h \
 		${PACKAGE_ast_INCLUDE}/ast/ast.h include/path.h \
-		FEATURE/acct include/defs.h include/shell.h \
-		include/argnod.h include/fault.h FEATURE/sigfeatures
+		FEATURE/acct defs.h include/shell.h include/argnod.h \
+		include/fault.h FEATURE/sigfeatures \
+		${PACKAGE_ast_INCLUDE}/ast/hash.h
 	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_SUID_EXEC \
 	-DKSHELL -DSHOPT_ESH -DSHOPT_VSH -c data/msg.c
 
@@ -649,8 +702,8 @@ FEATURE/cmds : features/cmds
 variables.o : data/variables.c include/name.h include/shtable.h \
 		include/shell.h FEATURE/dynamic FEATURE/options \
 		${PACKAGE_ast_INCLUDE}/ast/ast.h
-	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH \
-	-DSHOPT_SUID_EXEC -DSHOPT_ESH -c data/variables.c
+	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_ESH \
+	-DSHOPT_VSH -DSHOPT_SUID_EXEC -c data/variables.c
 
 lexstates.o : data/lexstates.c include/lexstates.h FEATURE/options
 	${CC} ${CCFLAGS}  -I. -Iinclude -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH \
@@ -681,10 +734,10 @@ shcomp : shcomp.o libshell.a
 
 shcomp.o : sh/shcomp.c include/io.h ${PACKAGE_ast_INCLUDE}/ast/sfio.h \
 		${PACKAGE_ast_INCLUDE}/ast/ast.h include/path.h \
-		FEATURE/acct FEATURE/options include/shnodes.h \
-		include/defs.h include/shell.h include/argnod.h \
-		include/fault.h FEATURE/sigfeatures FEATURE/setjmp \
-		include/history.h
+		FEATURE/acct FEATURE/options shnodes.h defs.h \
+		include/shell.h include/argnod.h include/fault.h \
+		FEATURE/sigfeatures FEATURE/setjmp include/history.h \
+		${PACKAGE_ast_INCLUDE}/ast/hash.h
 	${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DKSHELL \
 	-DSHOPT_SUID_EXEC -DSHOPT_VSH -DSHOPT_ESH -c sh/shcomp.c
 
@@ -696,52 +749,53 @@ ksh.msg : data/limits.c include/ulimit.h FEATURE/time FEATURE/rlimits \
 		include/timeout.h include/shlex.h include/io.h \
 		${PACKAGE_ast_INCLUDE}/ast/sfio.h \
 		${PACKAGE_ast_INCLUDE}/ast/ast.h include/path.h \
-		FEATURE/acct include/defs.h include/shell.h \
-		include/argnod.h include/fault.h FEATURE/sigfeatures \
-		data/strdata.c include/streval.h FEATURE/options \
-		data/testops.c include/test.h include/shtable.h \
-		data/keywords.c FEATURE/options include/shlex.h \
-		include/shtable.h ${PACKAGE_ast_INCLUDE}/ast/hash.h \
-		data/options.c include/shtable.h include/name.h \
-		FEATURE/options include/shell.h data/signals.c \
-		include/fault.h FEATURE/sigfeatures FEATURE/setjmp \
-		include/shtable.h ${PACKAGE_ast_INCLUDE}/ast/ast.h \
-		data/aliases.c include/name.h include/shtable.h \
-		FEATURE/dynamic FEATURE/options \
-		${PACKAGE_ast_INCLUDE}/ast/ast.h data/builtins.c \
-		FEATURE/cmds include/name.h include/shtable.h \
-		include/shell.h data/variables.c include/name.h \
-		include/shtable.h include/shell.h FEATURE/dynamic \
+		FEATURE/acct defs.h include/shell.h include/argnod.h \
+		include/fault.h FEATURE/sigfeatures \
+		${PACKAGE_ast_INCLUDE}/ast/hash.h data/strdata.c \
+		include/streval.h FEATURE/options data/testops.c \
+		include/test.h include/shtable.h data/keywords.c \
+		FEATURE/options include/shlex.h include/shtable.h \
+		${PACKAGE_ast_INCLUDE}/ast/hash.h data/options.c \
+		include/shtable.h include/name.h FEATURE/options \
+		include/shell.h data/signals.c include/fault.h \
+		FEATURE/sigfeatures FEATURE/setjmp include/shtable.h \
+		${PACKAGE_ast_INCLUDE}/ast/ast.h data/aliases.c \
+		include/name.h include/shtable.h FEATURE/dynamic \
 		FEATURE/options ${PACKAGE_ast_INCLUDE}/ast/ast.h \
-		data/lexstates.c include/lexstates.h FEATURE/options
-	grep '[ 	]e_[a-z].*".*[^\][a-z].*"' data/limits.c data/msg.c data/strdata.c \
-	data/testops.c data/keywords.c data/options.c data/signals.c \
-	data/aliases.c data/builtins.c data/variables.c data/lexstates.c \
-	|  grep -v /bin/ |  grep -v /usr/ | grep -v /dev/ |  grep \
-	-v /etc/ | grep -v A__z | sed 's/.*=[ 	]*\(".*"\);.*/\1/' \
-	| sort | uniq > ksh.msg$(newline) \
-	grep '[ 	]sh_opt.*".*[^\][a-z].*"' data/limits.c data/msg.c data/strdata.c \
-	data/testops.c data/keywords.c data/options.c data/signals.c \
-	data/aliases.c data/builtins.c data/variables.c data/lexstates.c \
-	|  sed 's/.*=[ 	]*\(".*"\);.*/\1/'  >> ksh.msg$(newline) \
-	grep '[ 	]is_[a-z].*".*[^\][a-z].*"' data/limits.c data/msg.c data/strdata.c \
-	data/testops.c data/keywords.c data/options.c data/signals.c \
-	data/aliases.c data/builtins.c data/variables.c data/lexstates.c \
-	|  sed 's/.*=[ 	]*\(".*"\);.*/\1/'  >> ksh.msg$(newline) \
-	grep '[         ]e_notset' data/limits.c data/msg.c data/strdata.c \
-	data/testops.c data/keywords.c data/options.c data/signals.c \
-	data/aliases.c data/builtins.c data/variables.c data/lexstates.c \
-	| sed 's/.*"....\(.*"\).*/"\1/' >> ksh.msg$(newline) \
-	grep '[         ]e_subst' data/limits.c data/msg.c data/strdata.c \
-	data/testops.c data/keywords.c data/options.c data/signals.c \
-	data/aliases.c data/builtins.c data/variables.c data/lexstates.c \
-	| sed 's/.*"....\(.*"\).*/"\1/' >> ksh.msg$(newline) \
-	grep '[         ]e_file' data/limits.c data/msg.c data/strdata.c \
-	data/testops.c data/keywords.c data/options.c data/signals.c \
-	data/aliases.c data/builtins.c data/variables.c data/lexstates.c \
-	| sed 's/.*"....\(.*"\).*/"\1/' >> ksh.msg$(newline) \
-	grep ',$$' data/signals.c  | sed 's/.*\(".*"\),/\1/' | sort | uniq \
-	>> ksh.msg
+		data/builtins.c FEATURE/cmds include/name.h \
+		include/shtable.h include/shell.h data/variables.c \
+		include/name.h include/shtable.h include/shell.h \
+		FEATURE/dynamic FEATURE/options \
+		${PACKAGE_ast_INCLUDE}/ast/ast.h data/lexstates.c \
+		include/lexstates.h FEATURE/options
+	{$(newline) \
+	sed -e '/[ 	]e_[a-z].*".*[^\][a-z].*"/!d' -e '/\/[a-z][a-z][a-z]\//d' \
+	-e '/A__z/d' -e 's/.*=[ 	]*\(".*"\);.*/\1/' data/limits.c \
+	data/msg.c data/strdata.c data/testops.c data/keywords.c \
+	data/options.c data/signals.c data/aliases.c data/builtins.c \
+	data/variables.c data/lexstates.c$(newline) \
+	sed -e '/[ 	]sh_opt.*".*[^\][a-z].*"/!d' -e 's/.*=[ 	]*\(".*"\);.*/\1/' \
+	data/limits.c data/msg.c data/strdata.c data/testops.c data/keywords.c \
+	data/options.c data/signals.c data/aliases.c data/builtins.c \
+	data/variables.c data/lexstates.c$(newline) \
+	sed -e '/[ 	]is_[a-z].*".*[^\][a-z].*"/!d' -e 's/.*=[ 	]*\(".*"\);.*/\1/' \
+	data/limits.c data/msg.c data/strdata.c data/testops.c data/keywords.c \
+	data/options.c data/signals.c data/aliases.c data/builtins.c \
+	data/variables.c data/lexstates.c$(newline) \
+	sed -e '/[         ]e_notset/!d' -e 's/.*"....\(.*"\).*/"\1/' data/limits.c \
+	data/msg.c data/strdata.c data/testops.c data/keywords.c \
+	data/options.c data/signals.c data/aliases.c data/builtins.c \
+	data/variables.c data/lexstates.c$(newline) \
+	sed -e '/[         ]e_subst/!d' -e 's/.*"....\(.*"\).*/"\1/' data/limits.c \
+	data/msg.c data/strdata.c data/testops.c data/keywords.c \
+	data/options.c data/signals.c data/aliases.c data/builtins.c \
+	data/variables.c data/lexstates.c$(newline) \
+	sed -e '/[         ]e_file/!d' -e 's/.*"....\(.*"\).*/"\1/' data/limits.c \
+	data/msg.c data/strdata.c data/testops.c data/keywords.c \
+	data/options.c data/signals.c data/aliases.c data/builtins.c \
+	data/variables.c data/lexstates.c$(newline) \
+	sed -e '/,$$/!d' -e 's/.*\(".*"\),/\1/' data/signals.c$(newline) \
+	} | sort -u > ksh.msg
 
 shell : libshell.a
 
@@ -876,6 +930,11 @@ ${INSTALLROOT}/man/man3 :
 	} && set -x 		    		   $(newline) \
 	fi
 
+${INSTALLROOT}/man/man3/shell.3 : shell.3
+	{ mv ${INSTALLROOT}/man/man3/shell.3 ${INSTALLROOT}/man/man3/shell.3.old \
+	2>/dev/null; cp shell.3 ${INSTALLROOT}/man/man3/shell.3 2>/dev/null \
+	;} || true
+
 ${INSTALLROOT}/man/man3/nval.3 : nval.3
 	{ mv ${INSTALLROOT}/man/man3/nval.3 ${INSTALLROOT}/man/man3/nval.3.old \
 	2>/dev/null; cp nval.3 ${INSTALLROOT}/man/man3/nval.3 2>/dev/null \
@@ -919,6 +978,13 @@ ${INSTALLROOT}/include/ast/shell.h : include/shell.h
 	if	cmp -s ${INSTALLROOT}/include/ast/shell.h 1.${COTEMP}.x$(newline) \
 	then	rm -f 1.${COTEMP}.x$(newline) \
 	else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/shell.h$(newline) \
+	fi
+
+${INSTALLROOT}/include/ast/history.h : include/history.h
+	proto -p -s -c AT\&T\ Bell\ Laboratories include/history.h > 1.${COTEMP}.x$(newline) \
+	if	cmp -s ${INSTALLROOT}/include/ast/history.h 1.${COTEMP}.x$(newline) \
+	then	rm -f 1.${COTEMP}.x$(newline) \
+	else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/history.h$(newline) \
 	fi
 
 ${INSTALLROOT}/bin/suid_exec : suid_exec

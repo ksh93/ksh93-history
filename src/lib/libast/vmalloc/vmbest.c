@@ -1,54 +1,42 @@
-/*
- * CDE - Common Desktop Environment
- *
- * Copyright (c) 1993-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
- */
 /***************************************************************
 *                                                              *
-*                      AT&T - PROPRIETARY                      *
+*           This software is part of the ast package           *
+*              Copyright (c) 1985-2000 AT&T Corp.              *
+*      and it may only be used by you under license from       *
+*                     AT&T Corp. ("AT&T")                      *
+*       A copy of the Source Code Agreement is available       *
+*              at the AT&T Internet web site URL               *
 *                                                              *
-*         THIS IS PROPRIETARY SOURCE CODE LICENSED BY          *
-*                          AT&T CORP.                          *
+*     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*                Copyright (c) 1995 AT&T Corp.                 *
-*                     All Rights Reserved                      *
-*                                                              *
-*           This software is licensed by AT&T Corp.            *
-*       under the terms and conditions of the license in       *
-*       http://www.research.att.com/orgs/ssr/book/reuse        *
+*     If you received this software without first entering     *
+*       into a license with AT&T, you have an infringing       *
+*           copy and cannot use it without violating           *
+*             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
-*           Software Engineering Research Department           *
-*                    AT&T Bell Laboratories                    *
+*               Network Services Research Center               *
+*                      AT&T Labs Research                      *
+*                       Florham Park NJ                        *
 *                                                              *
-*               For further information contact                *
-*                     gsf@research.att.com                     *
+*             Glenn Fowler <gsf@research.att.com>              *
+*              David Korn <dgk@research.att.com>               *
+*               Phong Vo <kpv@research.att.com>                *
 *                                                              *
 ***************************************************************/
+#ifdef _UWIN
+
+int _STUB_vmbest;
+
+#else
+
 #include	"vmhdr.h"
 
 /*	Best-fit allocation method. This is based on a best-fit strategy
 **	using a splay tree for storage of lists of free blocks of the same
 **	size. Recent free blocks may be cached for fast reuse.
 **
-**	Written by (Kiem-)Phong Vo, kpv@research.att.com, 01/16/94.
+**	Written by Kiem-Phong Vo, kpv@research.att.com, 01/16/94.
 */
 
 #ifdef DEBUG
@@ -88,6 +76,31 @@ Block_t*	b;
 	return 0;
 }
 
+/* Check to see if a block is known to be free */
+#if __STD_C
+static vmisfree(Vmdata_t* vd, Block_t* b)
+#else
+static vmisfree(vd,b)
+Vmdata_t*	vd;
+Block_t*	b;
+#endif
+{
+	Block_t*	t;
+	size_t		s;
+
+	if(b == vd->wild)
+		return 1;
+	else if((s = SIZE(b)) < MAXTINY)
+	{	for(t = TINY(vd)[INDEX(s)]; t; t = LINK(t))
+			if(b == t)
+				return 1;
+	}
+	else if(vd->root && vmintree(vd->root, b))
+		return 1;
+
+	return 0;
+}
+
 /* check to see if the tree is in good shape */
 #if __STD_C
 static vmchktree(Block_t* node)
@@ -97,8 +110,12 @@ Block_t*	node;
 #endif
 {	Block_t*	t;
 
+	/**/ASSERT(!ISBUSY(SIZE(node)) && !ISJUNK(SIZE(node)));
+
 	for(t = LINK(node); t; t = LINK(t))
-		/**/ASSERT(SIZE(t) == SIZE(node));
+	{	/**/ASSERT(SIZE(t) == SIZE(node));
+		/**/ASSERT(!ISBUSY(SIZE(t)) && !ISJUNK(SIZE(t)));
+	}
 	if((t = LEFT(node)) )
 	{	/**/ASSERT(SIZE(t) < SIZE(node));
 		vmchktree(t);
@@ -111,6 +128,20 @@ Block_t*	node;
 }
 
 #if __STD_C
+static vmonlist(Block_t* list, Block_t* b)
+#else
+static vmonlist(list,b)
+Block_t*	list;
+Block_t*	b;
+#endif
+{
+	for(; list; list = LINK(list))
+		if(list == b)
+			return 1;
+	return 0;
+}
+
+#if __STD_C
 static vmcheck(Vmdata_t* vd, size_t size, int wild)
 #else
 static vmcheck(vd, size, wild)
@@ -119,7 +150,7 @@ size_t		size;	/* if > 0, checking that no large free block >size	*/
 int		wild;	/* if != 0, do above but allow wild to be >size		*/
 #endif
 {
-	reg Seg_t	*seg, *sp;
+	reg Seg_t	*seg;
 	reg Block_t	*b, *endb, *t, *np;
 	reg size_t	s;
 
@@ -136,7 +167,7 @@ int		wild;	/* if != 0, do above but allow wild to be >size		*/
 		endb = (Block_t*)(seg->baddr - sizeof(Head_t));
 		while(b < endb )
 		{	s = SIZE(b)&~BITS;
-			np = (Block_t*)((uchar*)DATA(b) + s);
+			np = (Block_t*)((Vmuchar_t*)DATA(b) + s);
 
 			if(!ISBUSY(SIZE(b)) )
 			{	/**/ ASSERT(!ISJUNK(SIZE(b)));
@@ -241,7 +272,8 @@ Block_t*	wanted;
 		if(!seg->next)
 			SEG(root) = seg;
 		else for(;; seg = seg->next)
-		{	if((uchar*)root > (uchar*)seg->addr && (uchar*)root < seg->baddr)
+		{	if((Vmuchar_t*)root > (Vmuchar_t*)seg->addr &&
+			   (Vmuchar_t*)root < seg->baddr)
 			{	SEG(root) = seg;
 				break;
 			}
@@ -249,6 +281,8 @@ Block_t*	wanted;
 
 		return root;
 	}
+
+	/**/ASSERT(!vd->root || vmchktree(vd->root));
 
 	/* find the right one to delete */
 	l = r = &link;
@@ -286,6 +320,7 @@ Block_t*	wanted;
 			}
 			LLINK(l,root);
 		}
+		/**/ ASSERT(root != t);
 	} while((root = t) );
 
 	if(root)	/* found it, now isolate it */
@@ -316,7 +351,7 @@ Block_t*	wanted;
 			RROTATE(r,t);
 		LEFT(r) = RIGHT(&link);
 	}
-	vd->root = r;
+	vd->root = r; /**/ASSERT(!r || !ISBITS(SIZE(r)));
 
 	/**/ ASSERT(!wanted || wanted == root);
 	return root;
@@ -324,9 +359,9 @@ Block_t*	wanted;
 
 /* Reclaim all delayed free blocks into the free tree */
 #if __STD_C
-static bestreclaim(reg Vmdata_t* vd, Block_t* wanted, int c)
+static int bestreclaim(reg Vmdata_t* vd, Block_t* wanted, int c)
 #else
-static bestreclaim(vd, wanted, c)
+static int bestreclaim(vd, wanted, c)
 reg Vmdata_t*	vd;
 Block_t*	wanted;
 int		c;
@@ -335,11 +370,13 @@ int		c;
 	reg size_t	size, s;
 	reg Block_t	*fp, *np, *t, *list, **cache;
 	reg int		n, count;
+	reg Seg_t	*seg;
 	Block_t		tree;
 
+	/**/ASSERT(!vd->root || vmchktree(vd->root));
+
 	if((fp = vd->free) )
-	{	LINK(fp) = *(cache = CACHE(vd) + C_INDEX(SIZE(fp)) );
-		*cache = fp;
+	{	LINK(fp) = *(cache = CACHE(vd) + S_CACHE); *cache = fp;
 		vd->free = NIL(Block_t*);
 	}
 
@@ -366,29 +403,41 @@ int		c;
 			** fields are kept intact.
 			*/
 			count += 1;
-			list = LINK(list);
+			list = LINK(list); /**/ASSERT(!vmonlist(list,fp));
+
 			size = SIZE(fp);
 			if(!ISJUNK(size))	/* already done */
 				continue;
 
+			/* see if this address is from region */
+			for(seg = vd->seg; seg; seg = seg->next)
+				if(fp >= SEGBLOCK(seg) && fp < (Block_t*)seg->baddr )
+					break;
+			if(!seg) /* must be a bug in application code! */
+			{	/**/ ASSERT(seg != NIL(Seg_t*));
+				continue;
+			}
+
 			if(ISPFREE(size))	/* backward merge */
 			{	fp = LAST(fp);
 				s = SIZE(fp);
-				DELETE(vd,fp,INDEX(s),t,bestsearch);
+				REMOVE(vd,fp,INDEX(s),t,bestsearch);
 				size = (size&~BITS) + s + sizeof(Head_t);
 			}
 			else	size &= ~BITS;
 
 			for(;;)	/* forward merge */
-			{	np = (Block_t*)((uchar*)fp+size+sizeof(Head_t));
+			{	np = (Block_t*)((Vmuchar_t*)fp+size+sizeof(Head_t));
 				s = SIZE(np);	/**/ASSERT(s > 0);
 				if(!ISBUSY(s))
 				{	if(np == vd->wild)
 						vd->wild = NIL(Block_t*);
-					else	DELETE(vd,np,INDEX(s),t,bestsearch);
+					else	REMOVE(vd,np,INDEX(s),t,bestsearch);
 				}
-				else if(ISJUNK(s) && C_INDEX(s) >= c )
-				{	SIZE(np) = 0;
+				else if(ISJUNK(s))
+				{	if((int)C_INDEX(s) < c)
+						c = C_INDEX(s);
+					SIZE(np) = 0;
 					CLRBITS(s);
 				}
 				else	break;
@@ -453,9 +502,12 @@ int		c;
 
 		size = SIZE(fp);
 		while(1)	/* leaf insertion */
-		{	if((s = SIZE(np)) > size)
+		{	/**/ASSERT(np != fp);
+			if((s = SIZE(np)) > size)
 			{	if((t = LEFT(np)) )
+				{	/**/ ASSERT(np != t);
 					np = t;
+				}
 				else
 				{	LEFT(np) = fp;
 					break;
@@ -463,7 +515,9 @@ int		c;
 			}
 			else if(s < size)
 			{	if((t = RIGHT(np)) )
+				{	/**/ ASSERT(np != t);
 					np = t;
+				}
 				else
 				{	RIGHT(np) = fp;
 					break;
@@ -482,6 +536,7 @@ int		c;
 		}
 	}
 
+	/**/ ASSERT(!vd->root || vmchktree(vd->root));
 	return count;
 }
 
@@ -534,7 +589,7 @@ reg size_t	size;	/* desired block size		*/
 
 		vd->free = NIL(Block_t*);
 		if((s = SIZE(tp)) < size)
-		{	LINK(tp) = *(cache = CACHE(vd)+C_INDEX(s));
+		{	LINK(tp) = *(cache = CACHE(vd)+S_CACHE);
 			*cache = tp;
 		}
 		else
@@ -555,7 +610,7 @@ reg size_t	size;	/* desired block size		*/
 	{	for(;;)	/* best-fit - more or less */
 		{	for(s = INDEX(size); s < S_TINY; ++s)
 			{	if((tp = TINY(vd)[s]) )
-				{	DELETE(vd,tp,s,np,bestsearch);
+				{	REMOVE(vd,tp,s,np,bestsearch);
 					CLRPFREE(SIZE(NEXT(tp)));
 					goto got_block;
 				}
@@ -604,17 +659,13 @@ got_block:
 		SEG(np) = SEG(tp);
 		SIZE(np) = (s - sizeof(Head_t)) | BUSY|JUNK;
 
-		if(!vd->root)
+		if(!vd->root || !VMWILD(vd,np))
 			vd->free = np;
-		else if(VMWILD(vd,np))
+		else
 		{	SIZE(np) &= ~BITS;
 			*SELF(np) = np;
 			SETPFREE(SIZE(NEXT(np)));
 			vd->wild = np;
-		}
-		else
-		{	LINK(np) = *(cache = CACHE(vd) + C_INDEX(SIZE(np)));
-			*cache = np;
 		}
 	}
 
@@ -622,7 +673,9 @@ got_block:
 
 done:
 	if(!local && (vd->mode&VM_TRACE) && _Vmtrace && VMETHOD(vd) == VM_MTBEST)
-		(*_Vmtrace)(vm,NIL(uchar*),(uchar*)DATA(tp),orgsize);
+		(*_Vmtrace)(vm,NIL(Vmuchar_t*),(Vmuchar_t*)DATA(tp),orgsize,0);
+
+	/**/ASSERT(!vd->root || vmchktree(vd->root));
 
 	CLRLOCK(vd,local);
 	return DATA(tp);
@@ -653,7 +706,8 @@ Void_t*		addr;	/* address to check		*/
 	for(seg = vd->seg; seg; seg = seg->next)
 	{	b = SEGBLOCK(seg);
 		endb = (Block_t*)(seg->baddr - sizeof(Head_t));
-		if((uchar*)addr > (uchar*)b && (uchar*)addr < (uchar*)endb)
+		if((Vmuchar_t*)addr > (Vmuchar_t*)b &&
+		   (Vmuchar_t*)addr < (Vmuchar_t*)endb)
 			break;
 	}
 
@@ -666,17 +720,17 @@ Void_t*		addr;	/* address to check		*/
 	}
 	else if(seg)
 	{	while(b < endb)
-		{	reg uchar*	data = (uchar*)DATA(b);
+		{	reg Vmuchar_t*	data = (Vmuchar_t*)DATA(b);
 			reg size_t	size = SIZE(b)&~BITS;
 
-			if((uchar*)addr >= data && (uchar*)addr < data+size)
+			if((Vmuchar_t*)addr >= data && (Vmuchar_t*)addr < data+size)
 			{	if(ISJUNK(SIZE(b)) || !ISBUSY(SIZE(b)))
 					offset = -1L;
-				else	offset = (uchar*)addr - data;
+				else	offset = (Vmuchar_t*)addr - data;
 				goto done;
 			}
 
-			b = (Block_t*)((uchar*)DATA(b) + size);
+			b = (Block_t*)((Vmuchar_t*)DATA(b) + size);
 		}
 	}
 
@@ -686,15 +740,15 @@ done:
 }
 
 #if __STD_C
-static bestfree(Vmalloc_t* vm, Void_t* data )
+static int bestfree(Vmalloc_t* vm, Void_t* data )
 #else
-static bestfree(vm, data )
+static int bestfree(vm, data )
 Vmalloc_t*	vm;
 Void_t*		data;
 #endif
 {
 	reg Vmdata_t*	vd = vm->data;
-	reg Block_t	*bp, *fp, **cache;
+	reg Block_t	*bp, **cache;
 	reg size_t	s;
 	reg int		local;
 
@@ -714,52 +768,56 @@ Void_t*		data;
 	bp = BLOCK(data);	/**/ASSERT(ISBUSY(SIZE(bp)) && !ISJUNK(SIZE(bp)));
 	SETJUNK(SIZE(bp));
 	if((s = SIZE(bp)) < MAXCACHE)
-	{	LINK(bp) = *(cache = CACHE(vd) + INDEX(s));
+	{	/**/ASSERT(!vmonlist(CACHE(vd)[INDEX(s)], bp) );
+		LINK(bp) = *(cache = CACHE(vd) + INDEX(s));
 		*cache = bp;
 	}
+	else if(!vd->free)
+		vd->free = bp;
 	else
-	{	if((!(fp = vd->free) || VMWILD(vd,fp)) && !VMWILD(vd,bp) )
-			vd->free = bp;
-		else	fp = bp;
-		if(fp)
-		{	LINK(fp) = *(cache = CACHE(vd) + C_INDEX(SIZE(fp)));
-			*cache = fp;
-		}
+	{	/**/ASSERT(!vmonlist(CACHE(vd)[S_CACHE], bp) );
+		LINK(bp) = *(cache = CACHE(vd) + S_CACHE);
+		*cache = bp;
 	}
 
+	/* coalesce large free blocks to avoid fragmentation */
+	if(s >= _Vmpagesize && ISPFREE(s))
+		bestreclaim(vd,NIL(Block_t*),0);
+
 	if(!local && _Vmtrace && (vd->mode&VM_TRACE) && VMETHOD(vd) == VM_MTBEST )
-		(*_Vmtrace)(vm,(uchar*)data,NIL(uchar*),SIZE(BLOCK(data))&~BITS);
+		(*_Vmtrace)(vm,(Vmuchar_t*)data,NIL(Vmuchar_t*), (s&~BITS), 0);
+
+	/**/ASSERT(!vd->root || vmchktree(vd->root));
 
 	CLRLOCK(vd,0);
 	return 0;
 }
 
 #if __STD_C
-static Void_t* bestresize(Vmalloc_t* vm, Void_t* data, reg size_t size, int flags)
+static Void_t* bestresize(Vmalloc_t* vm, Void_t* data, reg size_t size, int type)
 #else
-static Void_t* bestresize(vm,data,size,flags)
+static Void_t* bestresize(vm,data,size,type)
 Vmalloc_t*	vm;		/* region allocating from	*/
 Void_t*		data;		/* old block of data		*/
 reg size_t	size;		/* new size			*/
-int		flags;		/* VM_RS*			*/
+int		type;		/* !=0 to move, <0 for not copy */
 #endif
 {
 	reg Vmdata_t*	vd = vm->data;
 	reg Block_t	*rp, *np, *t, **cache;
 	reg size_t	s, bs;
-	reg int		local, *nd, *od;
+	reg int		local, *d, *ed;
+	size_t		oldsize, orgsize;
 	Void_t*		orgdata;
-	size_t		orgsize;
 
 	/**/ COUNT(N_resize);
 
 	if(!data)
-	{	if((data = bestalloc(vm,size)) && (flags & VM_RSZERO))
-		{	s = (size+sizeof(int)-1)/sizeof(int);
-			for(nd = (int*)data; s-- > 0; )
-				*nd++ = 0;
+	{	if((data = bestalloc(vm,size)) )
+		{	oldsize = 0;
+			size = size <= TINYSIZE ? TINYSIZE : ROUND(size,ALIGN);
 		}
-		return data;
+		goto done;
 	}
 	if(size == 0)
 	{	(void)bestfree(vm,data);
@@ -778,9 +836,11 @@ int		flags;		/* VM_RS*			*/
 		orgsize = size;
 	}
 
+	/**/ASSERT(!vd->root || vmchktree(vd->root));
+
 	size = size <= TINYSIZE ? TINYSIZE : ROUND(size,ALIGN);
 	rp = BLOCK(data);	/**/ASSERT(ISBUSY(SIZE(rp)) && !ISJUNK(SIZE(rp)));
-	if((bs = SIZE(rp)) < size)
+	if((bs = oldsize = SIZE(rp)) < size)
 	{	CLRBITS(SIZE(rp));
 		np = NEXT(rp);
 		do	/* forward merge as much as possible */
@@ -799,12 +859,12 @@ int		flags;		/* VM_RS*			*/
 			else if(!ISBUSY(s) )
 			{	if(np == vd->wild)
 					vd->wild = NIL(Block_t*);
-				else	DELETE(vd,np,INDEX(s),t,bestsearch); 
+				else	REMOVE(vd,np,INDEX(s),t,bestsearch); 
 			}
 			else	break;
 
 			SIZE(rp) += (s += sizeof(Head_t));
-			np = (Block_t*)((uchar*)np + s);
+			np = (Block_t*)((Vmuchar_t*)np + s);
 			CLRPFREE(SIZE(np));
 		} while(SIZE(rp) < size);
 
@@ -828,10 +888,10 @@ int		flags;		/* VM_RS*			*/
 		CPYBITS(SIZE(rp),bs);
 	}
 
-	/* If a buffer is resized, it is likely to be resized again. So we
-	   make the increment a reasonable size to reduce future work */
-#define INCREMENT	128
-	if((s = SIZE(rp)) >= (size + (INCREMENT+TINYSIZE+sizeof(Head_t))) )
+	/* If a buffer is resized, it is likely to be resized again.
+	   So we increase a bit more to reduce future work */
+	bs = size < (BODYSIZE<<1) ? size : size < 1024 ? (size>>1) : 1024;
+	if((s = SIZE(rp)) >= (size + bs + (TINYSIZE+sizeof(Head_t))) )
 	{	SIZE(rp) = size;
 		np = NEXT(rp);
 		SEG(np) = SEG(rp);
@@ -841,40 +901,41 @@ int		flags;		/* VM_RS*			*/
 		goto do_free;
 	}
 	else if(s < size)
-	{	if(!(flags & VM_RSFREE))
+	{	if(!(type&(VM_RSMOVE|VM_RSCOPY)) )	/* see if old data is moveable */
 			data = NIL(Void_t*);
 		else
-		{	od = (int*)data;
-			if(size < (s&~BITS)+INCREMENT)
-				size = (s&~BITS)+INCREMENT;
+		{	ed = (int*)data;
+			if(size < ((s&~BITS)+bs) )
+				size = (s&~BITS)+bs;
 			if((data = KPVALLOC(vm,size,bestalloc)) )
-			{	if(flags & VM_RSZERO)
-				{	bs = (size-s+sizeof(int)-1)/sizeof(int);
-					for(nd = (int*)((char*)data+s); bs-- > 0; )
-						*nd++ = 0;
+			{	if(type&VM_RSCOPY)	/* old data must be copied */
+				{	d = (int*)data;
+					INTCOPY(d,ed,s);
 				}
-				if(flags & VM_RSCOPY)
-				{	nd = (int*)data;
-					for(s /= sizeof(int); s-- > 0; )
-						*nd++ = *od++;
-				}
+			do_free: /* delay reusing these blocks as long as possible */
 				SETJUNK(SIZE(rp));
-			do_free:
-				if((np = vd->free) && VMWILD(vd,np) )
-				{	vd->free = rp;
-					rp = np;
-				}
-				cache = CACHE(vd) + C_INDEX(SIZE(rp));
-				LINK(rp) = *cache;
+				LINK(rp) = *(cache = CACHE(vd) + S_CACHE);
 				*cache = rp;
+				if((rp = vd->free) )
+				{	vd->free = NIL(Block_t*);
+					LINK(rp) = *cache; *cache = rp;
+				}
 			}
 		}
 	}
 
 	if(!local && _Vmtrace && data && (vd->mode&VM_TRACE) && VMETHOD(vd) == VM_MTBEST)
-		(*_Vmtrace)(vm, (uchar*)orgdata, (uchar*)data, orgsize);
-
+		(*_Vmtrace)(vm, (Vmuchar_t*)orgdata, (Vmuchar_t*)data, orgsize, 0);
 	CLRLOCK(vd,local);
+
+done:	if(data && (type&VM_RSZERO) && size > CLRBITS(oldsize) )
+	{	d  = (int*)((char*)data + oldsize);
+		size -= oldsize;
+		INTZERO(d,size);
+	}
+
+	/**/ASSERT(!vd->root || vmchktree(vd->root));
+
 	return data;
 }
 
@@ -901,7 +962,8 @@ Void_t*		addr;	/* address to check		*/
 	for(seg = vd->seg; seg; seg = seg->next)
 	{	b = SEGBLOCK(seg);
 		endb = (Block_t*)(seg->baddr - sizeof(Head_t));
-		if((uchar*)addr <= (uchar*)b || (uchar*)addr >= (uchar*)endb)
+		if((Vmuchar_t*)addr <= (Vmuchar_t*)b ||
+		   (Vmuchar_t*)addr >= (Vmuchar_t*)endb)
 			continue;
 		while(b < endb)
 		{	if(addr == DATA(b))
@@ -910,10 +972,10 @@ Void_t*		addr;	/* address to check		*/
 				else	size = (long)SIZE(b)&~BITS;
 				goto done;
 			}
-			else if((uchar*)addr <= (uchar*)b)
+			else if((Vmuchar_t*)addr <= (Vmuchar_t*)b)
 				break;
 
-			b = (Block_t*)((uchar*)DATA(b) + (SIZE(b)&~BITS) );
+			b = (Block_t*)((Vmuchar_t*)DATA(b) + (SIZE(b)&~BITS) );
 		}
 	}
 
@@ -923,15 +985,15 @@ done:
 }
 
 #if __STD_C
-static bestcompact(Vmalloc_t* vm)
+static int bestcompact(Vmalloc_t* vm)
 #else
-static bestcompact(vm)
+static int bestcompact(vm)
 Vmalloc_t*	vm;
 #endif
 {
 	reg Seg_t	*seg, *next;
 	reg Block_t	*bp, *t;
-	reg size_t	size;
+	reg size_t	size, segsize;
 	reg Vmdata_t*	vd = vm->data;
 
 	if(!(vd->mode&VM_TRUST) )
@@ -940,43 +1002,49 @@ Vmalloc_t*	vm;
 		SETLOCK(vd,0);
 	}
 
-	bestreclaim(vd,NIL(Block_t*),0);
+	bestreclaim(vd,NIL(Block_t*),0); /**/ASSERT(!vd->root || vmchktree(vd->root));
 
-	for(seg = vd->seg; seg; )
+	for(seg = vd->seg; seg; seg = next)
 	{	next = seg->next;
+
 		bp = BLOCK(seg->baddr);
 		if(!ISPFREE(SIZE(bp)) )
-			goto loop;
+			continue;
 
-		bp = LAST(bp);	/**/ ASSERT(!ISBUSY(SIZE(bp)));
+		bp = LAST(bp);	/**/ ASSERT(!ISBUSY(SIZE(bp)) && vmisfree(vd,bp));
 		size = SIZE(bp);
-		if(VMWILD(vd,bp))
+		if(bp == vd->wild)
 			vd->wild = NIL(Block_t*);
-		else	DELETE(vd,bp,INDEX(size),t,bestsearch);
+		else	REMOVE(vd,bp,INDEX(size),t,bestsearch);
 		CLRPFREE(SIZE(NEXT(bp)));
 
-		if(size < seg->size)
+		if(size < (segsize = seg->size))
 			size += sizeof(Head_t);
 
 		if((*_Vmtruncate)(vm,seg,size,1) >= 0)
-		{	if((size = (seg->baddr - ((uchar*)bp) - sizeof(Head_t))) > 0)
+		{	if(size >= segsize) /* entire segment deleted */
+				continue;
+
+			if((size = (seg->baddr - ((Vmuchar_t*)bp) - sizeof(Head_t))) > 0)
 				SIZE(bp) = size - sizeof(Head_t);
 			else	bp = NIL(Block_t*);
-		}
+		} /**/ASSERT(!vd->root || vmchktree(vd->root));
 
 		if(bp)
 		{	/**/ ASSERT(SIZE(bp) >= TINYSIZE);
 			/**/ ASSERT(SEGWILD(bp));
+			/**/ ASSERT(!vd->root || !vmintree(vd->root,bp));
 			SIZE(bp) |= BUSY|JUNK;
 			LINK(bp) = CACHE(vd)[C_INDEX(SIZE(bp))];
 			CACHE(vd)[C_INDEX(SIZE(bp))] = bp;
-		}
+		} /**/ASSERT(!vd->root || vmchktree(vd->root));
+	} /**/ASSERT(!vd->root || vmchktree(vd->root));
 
-	loop:
-		seg = next;
-	}
+	if(_Vmtrace && (vd->mode&VM_TRACE) && VMETHOD(vd) == VM_MTBEST)
+		(*_Vmtrace)(vm, (Vmuchar_t*)0, (Vmuchar_t*)0, 0, 0);
 
 	CLRLOCK(vd,0);
+
 	return 0;
 }
 
@@ -989,64 +1057,153 @@ size_t		size;
 size_t		align;
 #endif
 {
-	reg uchar	*data;
+	reg Vmuchar_t	*data;
 	reg Block_t	*tp, *np;
 	reg Seg_t*	seg;
-	reg size_t	s;
+	reg size_t	s, orgsize, orgalign, extra;
+	reg int		local;
 	reg Vmdata_t*	vd = vm->data;
 
 	if(size <= 0 || align <= 0)
 		return NIL(Void_t*);
 
-	if(!(vd->mode&VM_TRUST) )
-	{	if(ISLOCK(vd,0) )
+	if(!(local = vd->mode&VM_TRUST) )
+	{	GETLOCAL(vd,local);
+		if(ISLOCK(vd,local) )
 			return NIL(Void_t*);
-		SETLOCK(vd,0);
+		SETLOCK(vd,local);
+		orgsize = size;
+		orgalign = align;
 	}
 
+	size = size <= TINYSIZE ? TINYSIZE : ROUND(size,ALIGN);
 	align = MULTIPLE(align,ALIGN);
-	s = (size <= TINYSIZE ? TINYSIZE : ROUND(size,ALIGN)) + align;
-	if(!(data = (uchar*)KPVALLOC(vm,s,bestalloc)) )
+
+	/* hack so that dbalign() can store header data */
+	if(VMETHOD(vd) != VM_MTDEBUG)
+		extra = 0;
+	else
+	{	extra = DB_HEAD;
+		while(align < extra || (align - extra) < sizeof(Block_t))
+			align *= 2;
+	}
+
+	/* reclaim all free blocks now to avoid fragmentation */
+	bestreclaim(vd,NIL(Block_t*),0);
+
+	s = size + 2*(align+sizeof(Head_t)+extra); 
+	if(!(data = (Vmuchar_t*)KPVALLOC(vm,s,bestalloc)) )
 		goto done;
 
 	tp = BLOCK(data);
 	seg = SEG(tp);
 
 	/* get an aligned address that we can live with */
-	if((s = (size_t)(ULONG(data)%align)) != 0)
-		data += align-s;
-	np = BLOCK(data);
-	if(((uchar*)np - (uchar*)tp) < sizeof(Block_t) )
-		data += align;
+	if((s = (size_t)((VLONG(data)+extra)%align)) != 0)
+		data += align-s; /**/ASSERT(((VLONG(data)+extra)%align) == 0);
 
-	/* np is the usable block of data */
-	np = BLOCK(data);
-	s  = (uchar*)np - (uchar*)tp;
-	SIZE(np) = ((SIZE(tp)&~BITS) - s)|BUSY;
-	SEG(np) = seg;
-	data = (uchar*)DATA(np);
+	if((np = BLOCK(data)) != tp ) /* need to free left part */
+	{	if(((Vmuchar_t*)np - (Vmuchar_t*)tp) < (ssize_t)(sizeof(Block_t)+extra) )
+		{	data += align;
+			np = BLOCK(data);
+		} /**/ASSERT(((VLONG(data)+extra)%align) == 0);
 
-	/* now free the left part */
-	SIZE(tp) = (s - sizeof(Head_t)) | (SIZE(tp)&BITS) | JUNK;
-	/**/ ASSERT(SIZE(tp) >= sizeof(Body_t) );
-	if(!vd->free)
-		vd->free = tp;
-	else
-	{	LINK(tp) = CACHE(vd)[C_INDEX(SIZE(tp))];
+		s  = (Vmuchar_t*)np - (Vmuchar_t*)tp;
+		SIZE(np) = ((SIZE(tp)&~BITS) - s)|BUSY;
+		SEG(np) = seg;
+
+		SIZE(tp) = (s - sizeof(Head_t)) | (SIZE(tp)&BITS) | JUNK;
+		/**/ ASSERT(SIZE(tp) >= sizeof(Body_t) );
+		LINK(tp) = CACHE(vd)[C_INDEX(SIZE(tp))];
 		CACHE(vd)[C_INDEX(SIZE(tp))] = tp;
 	}
 
-	if(!(vd->mode&VM_TRUST) && _Vmtrace && (vd->mode&VM_TRACE) &&
-	   VMETHOD(vd) == VM_MTBEST )
-		(*_Vmtrace)(vm,NIL(uchar*),data,size);
+	/* free left-over if too big */
+	if((s = SIZE(np) - size) >= sizeof(Block_t))
+	{	SIZE(np) = size;
+
+		tp = NEXT(np);
+		SIZE(tp) = ((s & ~BITS) - sizeof(Head_t)) | BUSY | JUNK;
+		SEG(tp) = seg;
+		LINK(tp) = CACHE(vd)[C_INDEX(SIZE(tp))];
+		CACHE(vd)[C_INDEX(SIZE(tp))] = tp;
+
+		SIZE(np) |= s&BITS;
+	}
+
+	bestreclaim(vd,NIL(Block_t*),0); /* coalesce all free blocks */
+
+	if(!local && !(vd->mode&VM_TRUST) && _Vmtrace && (vd->mode&VM_TRACE) )
+		(*_Vmtrace)(vm,NIL(Vmuchar_t*),data,orgsize,orgalign);
 
 done:
-	CLRLOCK(vd,0);
+	CLRLOCK(vd,local);
+
+	/**/ASSERT(!vd->root || vmchktree(vd->root));
+
 	return (Void_t*)data;
 }
 
-/* The world knows us by this */
-Vmethod_t	_Vmbest =
+#if defined(_WIN32)
+#include	<windows.h>
+#endif /*_WIN32*/
+
+/*	A discipline to get memory using sbrk() or VirtualAlloc on win32 */
+#if __STD_C
+static Void_t* sbrkmem(Vmalloc_t* vm, Void_t* caddr,
+			size_t csize, size_t nsize,
+			Vmdisc_t* disc)
+#else
+static Void_t* sbrkmem(vm, caddr, csize, nsize, disc)
+Vmalloc_t*	vm;	/* region doing allocation from		*/
+Void_t*		caddr;	/* current address			*/
+size_t		csize;	/* current size				*/
+size_t		nsize;	/* new size				*/
+Vmdisc_t*	disc;	/* discipline structure			*/
+#endif
+{
+#if _std_malloc || _BLD_INSTRUMENT || cray
+	NOTUSED(vm);
+	NOTUSED(disc);
+
+	if(csize == 0)
+		return (Void_t*)malloc(nsize);
+	if(nsize == 0)
+		free(caddr);
+	return NIL(Void_t*);
+#else
+#if defined(_WIN32)
+	NOTUSED(vm);
+	NOTUSED(disc);
+
+	if(csize == 0)
+		return (Void_t*)VirtualAlloc(NIL(LPVOID),nsize,MEM_COMMIT,PAGE_READWRITE);
+	else if(nsize == 0)
+		return VirtualFree((LPVOID)caddr,0,MEM_RELEASE) ? caddr : NIL(Void_t*);
+	else	return NIL(Void_t*);
+#else
+	reg Vmuchar_t*	addr;
+	reg ssize_t	size;
+	NOTUSED(vm);
+	NOTUSED(disc);
+
+	/* sbrk, see if still own current address */
+	if(csize > 0 && sbrk(0) != (Vmuchar_t*)caddr+csize)
+		return NIL(Void_t*);
+
+	/* do this because sbrk() uses 'ssize_t' argument */
+	size = nsize > csize ? (ssize_t)(nsize-csize) : -(ssize_t)(csize-nsize);
+
+	if((addr = sbrk(size)) == (Vmuchar_t*)(-1))
+		return NIL(Void_t*);
+	else	return csize == 0 ? (Void_t*)addr : caddr;
+#endif
+#endif
+}
+
+static Vmdisc_t _Vmdcsbrk = { sbrkmem, NIL(Vmexcept_f), 0 };
+
+static Vmethod_t _Vmbest =
 {
 	bestalloc,
 	bestresize,
@@ -1069,7 +1226,7 @@ static Vmdata_t	_Vmdata =
 	NIL(Block_t*),			/* wild		*/
 	NIL(Block_t*),			/* root		*/
 };
-Vmalloc_t _Vmheap =
+static Vmalloc_t _Vmheap =
 {
 	{ bestalloc,
 	  bestresize,
@@ -1080,8 +1237,20 @@ Vmalloc_t _Vmheap =
 	  bestalign,
 	  VM_MTBEST
 	},
-	Vmdcsbrk,			/* disc		*/
-	&_Vmdata			/* data		*/
+	NIL(char*),			/* file		*/
+	0,				/* line		*/
+	&_Vmdcsbrk,			/* disc		*/
+	&_Vmdata,			/* data		*/
+	NIL(Vmalloc_t*)			/* next		*/
 };
 
-Vmalloc_t*	Vmregion = &_Vmheap;	/* region for malloc/free/realloc	*/
+__DEFINE__(Vmalloc_t*,Vmheap,&_Vmheap);
+__DEFINE__(Vmalloc_t*,Vmregion,&_Vmheap);
+__DEFINE__(Vmethod_t*,Vmbest,&_Vmbest);
+__DEFINE__(Vmdisc_t*,Vmdcsbrk,&_Vmdcsbrk);
+
+#ifdef NoF
+NoF(vmbest)
+#endif
+
+#endif

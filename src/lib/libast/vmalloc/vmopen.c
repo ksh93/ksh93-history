@@ -1,47 +1,35 @@
-/*
- * CDE - Common Desktop Environment
- *
- * Copyright (c) 1993-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
- */
 /***************************************************************
 *                                                              *
-*                      AT&T - PROPRIETARY                      *
+*           This software is part of the ast package           *
+*              Copyright (c) 1985-2000 AT&T Corp.              *
+*      and it may only be used by you under license from       *
+*                     AT&T Corp. ("AT&T")                      *
+*       A copy of the Source Code Agreement is available       *
+*              at the AT&T Internet web site URL               *
 *                                                              *
-*         THIS IS PROPRIETARY SOURCE CODE LICENSED BY          *
-*                          AT&T CORP.                          *
+*     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*                Copyright (c) 1995 AT&T Corp.                 *
-*                     All Rights Reserved                      *
-*                                                              *
-*           This software is licensed by AT&T Corp.            *
-*       under the terms and conditions of the license in       *
-*       http://www.research.att.com/orgs/ssr/book/reuse        *
+*     If you received this software without first entering     *
+*       into a license with AT&T, you have an infringing       *
+*           copy and cannot use it without violating           *
+*             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
-*           Software Engineering Research Department           *
-*                    AT&T Bell Laboratories                    *
+*               Network Services Research Center               *
+*                      AT&T Labs Research                      *
+*                       Florham Park NJ                        *
 *                                                              *
-*               For further information contact                *
-*                     gsf@research.att.com                     *
+*             Glenn Fowler <gsf@research.att.com>              *
+*              David Korn <dgk@research.att.com>               *
+*               Phong Vo <kpv@research.att.com>                *
 *                                                              *
 ***************************************************************/
+#ifdef _UWIN
+
+int _STUB_vmopen;
+
+#else
+
 #include	"vmhdr.h"
 
 /*	Opening a new region of allocation.
@@ -49,7 +37,7 @@
 **	all region data must be stored within the space given
 **	by the discipline.
 **
-**	Written by (Kiem-)Phong Vo, kpv@research.att.com, 01/16/94.
+**	Written by Kiem-Phong Vo, kpv@research.att.com, 01/16/94.
 */
 
 typedef struct _vminit_
@@ -75,7 +63,7 @@ int		mode;	/* type of region		*/
 	reg size_t	s, a, incr;
 	reg Block_t*	b;
 	reg Seg_t*	seg;
-	uchar*		addr;
+	Vmuchar_t*	addr;
 	reg Vmemory_f	memoryf;
 	reg int		e;
 
@@ -90,20 +78,30 @@ int		mode;	/* type of region		*/
 		return NIL(Vmalloc_t*);
 	vm->meth = *meth;
 	vm->disc = disc;
+	vm->file = NIL(char*);
+	vm->line = 0;
 
 	if(disc->exceptf)
-	{	addr = NIL(uchar*);
-		e = (*disc->exceptf)(vm,VM_OPEN,(Void_t*)(&addr),disc);
-		if(e > 0 && addr)
-		{	if((a = (size_t)(ULONG(addr)%ALIGN)) != 0)
+	{	addr = NIL(Vmuchar_t*);
+		if((e = (*disc->exceptf)(vm,VM_OPEN,(Void_t*)(&addr),disc)) != 0)
+		{	if(e < 0 || !addr)
+				goto open_error;
+
+			/* align this address */
+			if((a = (size_t)(VLONG(addr)%ALIGN)) != 0)
 				addr += ALIGN-a;
+
+			/* see if it's a valid region */
 			vd = (Vmdata_t*)addr;
-			if(!(vd->mode&meth->meth) )
-			{	vmfree(Vmheap,vm);
+			if((vd->mode&meth->meth) != 0)
+			{	vm->data = vd;
+				return vm;
+			}
+			else
+			{ open_error:
+				vmfree(Vmheap,vm);
 				return NIL(Vmalloc_t*);
 			}
-			vm->data = vd;
-			return vm;
 		}
 	}
 
@@ -113,13 +111,13 @@ int		mode;	/* type of region		*/
 
 	/* get space for region data */
 	s = ROUND(sizeof(Vminit_t),incr);
-	if(!(addr = (uchar*)(*memoryf)(vm,NIL(Void_t*),0,s,disc)) )
+	if(!(addr = (Vmuchar_t*)(*memoryf)(vm,NIL(Void_t*),0,s,disc)) )
 	{	vmfree(Vmheap,vm);
 		return NIL(Vmalloc_t*);
 	}
 
 	/* make sure that addr is aligned */
-	if((a = (size_t)(ULONG(addr)%ALIGN)) != 0)
+	if((a = (size_t)(VLONG(addr)%ALIGN)) != 0)
 		addr += ALIGN-a;
 
 	/* initialize region */
@@ -143,7 +141,7 @@ int		mode;	/* type of region		*/
 	else	incr = OFFSET(Vmdata_t,root);
 
 	vd->seg = (Seg_t*)(addr + ROUND(incr,ALIGN));
-	/**/ ASSERT(ULONG(vd->seg)%ALIGN == 0);
+	/**/ ASSERT(VLONG(vd->seg)%ALIGN == 0);
 
 	seg = vd->seg;
 	seg->next = NIL(Seg_t*);
@@ -158,10 +156,10 @@ int		mode;	/* type of region		*/
 	/* make a data block out of the remainder */
 	b = SEGBLOCK(seg);
 	SEG(b) = seg;
-	SIZE(b) = seg->baddr - (uchar*)b - 2*sizeof(Head_t);
+	SIZE(b) = seg->baddr - (Vmuchar_t*)b - 2*sizeof(Head_t);
 	*SELF(b) = b;
 	/**/ ASSERT(SIZE(b)%ALIGN == 0);
-	/**/ ASSERT(ULONG(b)%ALIGN == 0);
+	/**/ ASSERT(VLONG(b)%ALIGN == 0);
 
 	/* make a fake header for next block in case of noncontiguous segments */
 	SEG(NEXT(b)) = seg;
@@ -172,5 +170,12 @@ int		mode;	/* type of region		*/
 	else	vd->wild = b;
 
 	vm->data = vd;
+
+	/* put into linked list of regions */
+	vm->next = Vmheap->next;
+	Vmheap->next = vm;
+
 	return vm;
 }
+
+#endif

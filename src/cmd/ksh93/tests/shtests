@@ -9,7 +9,11 @@ case $0 in
 */*)	d=$PWD/`dirname $0`;;
 *)	d=$PWD;;
 esac
-PATH=/bin:/usr/bin:$d
+PATH=/bin:/usr/bin
+if	[[ -d /usr/ucb ]]
+then	PATH=$PATH:/usr/ucb
+fi
+PATH=$PATH:$d
 for i in ${*-*.sh}
 do	echo test $i begins at `date`
 	if	$SHELL $i

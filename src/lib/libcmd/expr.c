@@ -1,0 +1,442 @@
+/***************************************************************
+*                                                              *
+*           This software is part of the ast package           *
+*              Copyright (c) 1992-2000 AT&T Corp.              *
+*      and it may only be used by you under license from       *
+*                     AT&T Corp. ("AT&T")                      *
+*       A copy of the Source Code Agreement is available       *
+*              at the AT&T Internet web site URL               *
+*                                                              *
+*     http://www.research.att.com/sw/license/ast-open.html     *
+*                                                              *
+*     If you received this software without first entering     *
+*       into a license with AT&T, you have an infringing       *
+*           copy and cannot use it without violating           *
+*             AT&T's intellectual property rights.             *
+*                                                              *
+*               This software was created by the               *
+*               Network Services Research Center               *
+*                      AT&T Labs Research                      *
+*                       Florham Park NJ                        *
+*                                                              *
+*             Glenn Fowler <gsf@research.att.com>              *
+*              David Korn <dgk@research.att.com>               *
+*                                                              *
+***************************************************************/
+#pragma prototyped
+
+/*
+ * expr.c
+ * Written by David Korn
+ * Tue Oct 31 08:48:11 EST 1995
+ */
+
+static const char usage[] =
+"[-?\n@(#)expr (AT&T Labs Research) 1999-06-08\n]"
+USAGE_LICENSE
+"[+NAME?expr - evaluate arguments as an expression]"
+"[+DESCRIPTION?\bexpr\b evaluates an expression given as arguments and writes "
+	"the result to standard output.  The character \b0\b will be written "
+	"to indicate a zero value and nothing will be written to indicate an "
+	"empty string.]"
+"[+?Most of the functionality of \bexpr\b is provided in a more natural "
+	"way by the shell, \bsh\b(1), and \bexpr\b is provided primarily "
+	"for backward compatibility.]"
+"[+?Terms of the expression must be separate arguments.  A string argument is "
+	"one that can not be identified as an integer.  Integer-valued "
+	"arguments may be preceded by a unary plus or minus sign.  Because "
+	"many of the operators use characters that have special meaning to "
+	"the shell, they must be quoted when entered from the shell.]"
+
+"[+?Expressions are formed from the operators listed below in order "
+	"of increasing precedence within groups.  All of the operators are "
+	"left associative. The symbols \aexpr1\a and \aexpr2\a represent "
+	"expressions formed from strings and integers and the following "
+	"operators:]{"
+	"[+\aexpr1\a \b|\b \aexpr2\a?Returns the evaluation of \aexpr1\a if "
+	"it is neither null nor 0, otherwise returns the evaluation of expr2.]"
+
+	"[+\aexpr1\a \b&\b \aexpr2\a?Returns the evaluation of \aexpr1\a if "
+	"neither expression evaluates to null or 0, otherwise returns 0.]"
+
+	"[+\aexpr1\a \aop\a \aexpr2\a?Returns the result of a decimal integer "
+	"comparison if both arguments are integers; otherwise, returns the "
+	"result of a string comparison using the locale-specific collation "
+	"sequence. The result of each comparison will be 1 if the specified "
+	"relationship is true, or 0 if the relationship is false.  \aop\a "
+	"can be one of the following:]{"
+		"[+=?Equal.]"
+		"[+>?Greater than.]"
+		"[+>=?Greater than or equal to.]"
+		"[+<?Less than.]"
+		"[+<=?Less than or equal to.]"
+		"[+!=?Not equal to.]"
+		"}"
+
+	"[+\aexpr1\a \aop\a \aexpr2\a?Where \aop\a is \b+\b or \b-\b; "
+		"addition or subtraction of decimal integer-valued arguments.]"
+	"[+\aexpr1\a \aop\a \aexpr2\a?Where \aop\a is \b*\b, \b/\b or \b%\b; "
+		"multiplication, division, or remainder of the	decimal	"
+		"integer-valued arguments.]"
+	"[+\aexpr1\a \b::\b \aexpr2\a?The matching operator : compares "
+		"\aexpr1\a with \aexpr2\a, which must be a BRE.  Normally, "
+		"the matching operator returns the number of bytes matched "
+		"and 0 on failure.  However, if the pattern contains at "
+		"least one sub-expression [\\( . . .\\)]], the string "
+		"corresponding to \\1 will be returned.]"
+	"[+\b(\b \aexpr1\a \b)\b?Grouping symbols.  An expression can "
+		"be placed within parenthesis to change precedence.]"
+	"}"
+"[+?For backwards compatibility, unrecognized options beginning with "
+	"a \b-\b will be treated as operands.  Portable applications "
+	"should use \b--\b to indicate end of options.]"
+
+"\n"
+"\n operand ...\n"
+"\n"
+
+"[+EXIT STATUS?]{"
+	"[+0?The expression is neither null nor	0.]"
+	"[+1?The expression is null or 0.]"
+	"[+2?Invalid expressions.]"
+	"[+>2?An error occurred.]"
+	"}"
+"[+SEE ALSO?\bregcomp\b(5), \bgrep\b(1), \bsh\b(1)]"
+;
+
+#include	<cmd.h>
+#include	<regex.h>
+
+#define T_ADD	0x100
+#define T_MULT	0x200
+#define T_CMP	0x400
+#define T_OP	7
+#define T_NUM	1
+#define T_STR	2
+
+#define OP_EQ		(T_CMP|0)
+#define OP_GT		(T_CMP|1)
+#define OP_LT		(T_CMP|2)
+#define OP_GE		(T_CMP|3)
+#define OP_LE		(T_CMP|4)
+#define OP_NE		(T_CMP|5)
+#define OP_PLUS		(T_ADD|0)
+#define OP_MINUS	(T_ADD|1)
+#define OP_MULT		(T_MULT|0)
+#define OP_DIV		(T_MULT|1)
+#define OP_MOD		(T_MULT|2)
+#define numeric(np)	((np)->type&T_NUM)
+
+static struct Optable
+{
+	char	opname[3];
+	int	op;
+} optable[] =
+{
+	"|",	'|',
+	"&",	'&',
+	"=",	OP_EQ,
+	">",	OP_GT,
+	"<",	OP_LT,
+	">=",	OP_GE,
+	"<=",	OP_LE,
+	"!=",	OP_NE,
+	"+",	OP_PLUS,
+	"-",	OP_MINUS,
+	"*",	OP_MULT,
+	"/",	OP_DIV,
+	"%",	OP_MOD,
+	":",	':',
+	"(",	'(',
+	")",	')'
+};
+
+typedef struct _node_
+{
+	int	type;
+	long	num;
+	char	*str;
+} Node_t;
+
+static int expr_or(Node_t*);
+static char **arglist;
+
+static int getnode(Node_t *np)
+{
+	char *cp;
+	register int i,tok;
+	if (!(cp = *arglist++))
+		error(ERROR_exit(2),"argument expected");
+	if (streq(cp,"match"))
+	{
+		if (!(np->str = *arglist++))
+			error(ERROR_exit(2),"argument expected");
+		np->type = T_STR;
+		return ':';
+	}
+	if (*cp=='(' && cp[1]==0)
+	{
+		tok = expr_or(np);
+		if (tok != ')')
+			error(ERROR_exit(2),"closing parenthesis missing");
+	}
+	else
+	{
+		np->type = T_STR;
+		np->str = cp;
+		if (*cp)
+		{
+			np->num = strtol(np->str,&cp,10);
+			if (*cp==0)
+				np->type |= T_NUM;
+		}
+	}
+	if (!(cp = *arglist))
+		return 0;
+	arglist++;
+	for (i=0; i < sizeof(optable)/sizeof(*optable); i++)
+	{
+		if (*cp==optable[i].opname[0] && cp[1]==optable[i].opname[1])
+			return optable[i].op;
+	}
+	error(ERROR_exit(2),"%s: unknown operator argument",cp);
+	return 0;
+}
+
+static int expr_cond(Node_t *np)
+{
+	register int tok = getnode(np);
+	static char buff[36];
+	while (tok==':')
+	{
+		regex_t re;
+		regmatch_t match[2];
+		int n;
+		Node_t rp;
+		char *cp;
+		tok = getnode(&rp);
+		if (np->type&T_STR)
+			cp = np->str;
+		else
+			sfsprintf(cp=buff,sizeof(buff),"%d",np->num);
+		np->num = 0;
+		np->type = T_NUM;
+		if (n = regcomp(&re, rp.str, REG_LEFT|REG_LENIENT))
+			regfatal(&re, ERROR_exit(2), n);
+		if (re.re_nsub>1)
+		{
+			regfree(&re);
+			error(ERROR_exit(2),"too many re sub-expressions");
+		}
+		if (!(n = regexec(&re, cp, elementsof(match), match, 0)))
+		{
+			if (match[1].rm_so != -1)
+			{
+				np->str = cp + match[1].rm_so;
+				np->str[match[1].rm_eo - match[1].rm_so] = 0;
+				np->type = T_STR;
+				np->num = strtol(np->str,&cp,10);
+				if (cp!=np->str && *cp==0)
+					np->type |= T_NUM;
+			}
+			else np->num = match[0].rm_eo - match[0].rm_so;
+		}
+		else if (n != REG_NOMATCH)
+			regfatal(&re, ERROR_exit(2), n);
+		else if (re.re_nsub)
+		{
+			np->str = "";
+			np->type = T_STR;
+		}
+		regfree(&re);
+	}
+	return tok;
+}
+
+static int expr_mult(Node_t *np)
+{
+	register int tok = expr_cond(np);
+	while ((tok&~T_OP)==T_MULT)
+	{
+		Node_t rp;
+		int op = (tok&T_OP);
+		tok = expr_cond(&rp);
+		if (!numeric(np) || !numeric(&rp))
+			error(ERROR_exit(2),"non-numeric argument");
+		if (op && rp.num==0)
+			error(ERROR_exit(2),"division by zero");
+		switch(op)
+		{
+		    case 0:
+			np->num *= rp.num;
+			break;
+		    case 1:
+			np->num /= rp.num;
+			break;
+		    case 2:
+			np->num %= rp.num;
+		}
+		np->type = T_NUM;
+	}
+	return tok;
+}
+
+static int expr_add(Node_t *np)
+{
+	register int tok = expr_mult(np);
+	while ((tok&~T_OP)==T_ADD)
+	{
+		Node_t rp;
+		int op = (tok&T_OP);
+		tok = expr_mult(&rp);
+		if (!numeric(np) || !numeric(&rp))
+			error(ERROR_exit(2),"non-numeric argument");
+		if (op)
+			np->num -= rp.num;
+		else
+			np->num += rp.num;
+		np->type = T_NUM;
+	}
+	return tok;
+}
+
+static int expr_cmp(Node_t *np)
+{
+	register int tok = expr_add(np);
+	while ((tok&~T_OP)==T_CMP)
+	{
+		Node_t rp;
+		register char *left,*right;
+		char buff1[36],buff2[36];
+		int op = (tok&T_OP);
+		tok = expr_add(&rp);
+		if (numeric(&rp) && numeric(np))
+			op |= 010;
+		else
+		{
+			if (np->type&T_STR)
+				left = np->str;
+			else
+				sfsprintf(left=buff1,sizeof(buff1),"%d",np->num);
+			if (rp.type&T_STR)
+				right = rp.str;
+			else
+				sfsprintf(right=buff2,sizeof(buff2),"%d",rp.num);
+		}
+		switch(op)
+		{
+		    case 0:
+			np->num = streq(left,right);
+			break;
+		    case 1:
+			np->num = (strcoll(left,right)>0);
+			break;
+		    case 2:
+			np->num = (strcoll(left,right)<0);
+			break;
+		    case 3:
+			np->num = (strcoll(left,right)>=0);
+			break;
+		    case 4:
+			np->num = (strcoll(left,right)<=0);
+			break;
+		    case 5:
+			np->num = !streq(left,right);
+			break;
+		    case 010:
+			np->num = (np->num==rp.num);
+			break;
+		    case 011:
+			np->num = (np->num>rp.num);
+			break;
+		    case 012:
+			np->num = (np->num<rp.num);
+			break;
+		    case 013:
+			np->num = (np->num>=rp.num);
+			break;
+		    case 014:
+			np->num = (np->num<=rp.num);
+			break;
+		    case 015:
+			np->num = (np->num!=rp.num);
+			break;
+		}
+		np->type = T_NUM;
+	}
+	return tok;
+}
+
+static int expr_and(Node_t *np)
+{
+	register int tok = expr_cmp(np);
+	while (tok=='&')
+	{
+		Node_t rp;
+		tok = expr_cmp(&rp);
+		if ((numeric(&rp) && rp.num==0) || *rp.str==0)
+		{
+			np->num = 0;
+			np->type=T_NUM;
+		}
+	}
+	return tok;
+}
+
+static int expr_or(Node_t *np)
+{
+	register int tok = expr_and(np);
+	while (tok=='|')
+	{
+		Node_t rp;
+		tok = expr_and(&rp);
+		if ((numeric(np) && np->num==0) || *np->str==0)
+			*np = rp;
+	}
+	return tok;
+}
+
+int
+b_expr(int argc, char *argv[], void *context)
+{
+	Node_t node;
+	int n;
+	NoP(argc);
+	cmdinit(argv,context);
+#if 0
+	if (strcmp(astconf("CONFORMANCE", NiL, NiL), "standard"))
+		arglist = argv+1;
+	else
+#endif
+	{
+		while (n=optget(argv, usage))
+		{
+			/*
+			 * NOTE: this loop ignores all but literal -- and -?
+			 *	 out of kindness for obsolescent usage
+			 *	 (and is ok with the standard) but strict
+			 *	 getopt conformance would give usage for all
+			 *	 unknown - options
+			 */
+			if(n=='?')
+				error(ERROR_usage(2), "%s", opt_info.arg);
+			if (opt_info.option[1] != '?')
+				break;
+			error(ERROR_usage(2), "%s", opt_info.arg);
+		}
+		if (error_info.errors)
+			error(ERROR_usage(2),"%s",optusage((char*)0));
+		arglist = argv+opt_info.index;
+	}
+	if (expr_or(&node))
+		error(ERROR_exit(2),"syntax error");
+	if (node.type&T_STR)
+	{
+		if (*node.str)
+			sfprintf(sfstdout,"%s\n",node.str);
+	}
+	else
+		sfprintf(sfstdout,"%d\n",node.num);
+	return numeric(&node)?node.num==0:*node.str==0;
+}
+

@@ -1,45 +1,27 @@
-/*
- * CDE - Common Desktop Environment
- *
- * Copyright (c) 1993-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
- */
 /***************************************************************
 *                                                              *
-*                      AT&T - PROPRIETARY                      *
+*           This software is part of the ast package           *
+*              Copyright (c) 1985-2000 AT&T Corp.              *
+*      and it may only be used by you under license from       *
+*                     AT&T Corp. ("AT&T")                      *
+*       A copy of the Source Code Agreement is available       *
+*              at the AT&T Internet web site URL               *
 *                                                              *
-*         THIS IS PROPRIETARY SOURCE CODE LICENSED BY          *
-*                          AT&T CORP.                          *
+*     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*                Copyright (c) 1995 AT&T Corp.                 *
-*                     All Rights Reserved                      *
-*                                                              *
-*           This software is licensed by AT&T Corp.            *
-*       under the terms and conditions of the license in       *
-*       http://www.research.att.com/orgs/ssr/book/reuse        *
+*     If you received this software without first entering     *
+*       into a license with AT&T, you have an infringing       *
+*           copy and cannot use it without violating           *
+*             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
-*           Software Engineering Research Department           *
-*                    AT&T Bell Laboratories                    *
+*               Network Services Research Center               *
+*                      AT&T Labs Research                      *
+*                       Florham Park NJ                        *
 *                                                              *
-*               For further information contact                *
-*                     gsf@research.att.com                     *
+*             Glenn Fowler <gsf@research.att.com>              *
+*              David Korn <dgk@research.att.com>               *
+*               Phong Vo <kpv@research.att.com>                *
 *                                                              *
 ***************************************************************/
 #include	"sfhdr.h"
@@ -49,40 +31,50 @@
 **	Written by Kiem-Phong Vo (02/12/91)
 */
 #if __STD_C
-long sfsk(reg Sfio_t* f, reg long addr, reg int type, reg Sfdisc_t* disc)
+Sfoff_t sfsk(reg Sfio_t* f, Sfoff_t addr, reg int type, Sfdisc_t* disc)
 #else
-long sfsk(f,addr,type,disc)
-reg Sfio_t	*f;
-reg long	addr;
+Sfoff_t sfsk(f,addr,type,disc)
+reg Sfio_t*	f;
+Sfoff_t		addr;
 reg int		type;
-reg Sfdisc_t	*disc;
+Sfdisc_t*	disc;
 #endif
 {
-	reg long	p;
-	reg int		s, local, string;
+	Sfoff_t		p;
+	reg Sfdisc_t*	dc;
+	reg ssize_t	s;
+	reg int		local, mode;
 
 	GETLOCAL(f,local);
-	if(!local && !(f->mode&SF_LOCK))
-		return -1;
-
-	if(!(string = (f->flags&SF_STRING)))
-		SFDISC(f,disc,seekf,local);
+	if(!local && !(f->bits&SF_DCDOWN))
+	{	if((mode = f->mode&SF_RDWR) != (int)f->mode && _sfmode(f,mode,0) < 0)
+			return -1;
+		if(SFSYNC(f) < 0)
+			return -1;
+#if MAP_TYPE
+		if(f->mode == SF_READ && (f->bits&SF_MMAP) && f->data)
+		{	SFMUNMAP(f, f->data, f->endb-f->data);
+			f->data = NIL(uchar*);
+		}
+#endif
+		f->next = f->endb = f->endr = f->endw = f->data;
+	}
 
 	for(;;)
-	{
-		if(string)
+	{	dc = disc;
+		if(f->flags&SF_STRING)
 		{	SFSTRSIZE(f);
 			if(type == 0)
-				s = (int)addr;
+				s = (ssize_t)addr;
 			else if(type == 1)
-				s = (int)(addr + f->here);
-			else	s = (int)(addr + f->extent);
+				s = (ssize_t)(addr + f->here);
+			else	s = (ssize_t)(addr + f->extent);
 		}
 		else
-		{
-			if(disc && disc->seekf)
-				p = (*(disc->seekf))(f,addr,type,disc);
-			else	p = lseek(f->file,addr,type);
+		{	SFDISC(f,dc,seekf);
+			if(dc && dc->seekf)
+				SFDCSK(f,addr,type,dc,p);
+			else	p = lseek(f->file,(off_t)addr,type);
 			if(p >= 0)
 				return p;
 			s = -1;
@@ -90,15 +82,21 @@ reg Sfdisc_t	*disc;
 
 		if(local)
 			SETLOCAL(f);
-		switch(_sfexcept(f,SF_SEEK,s,disc))
+		switch(_sfexcept(f,SF_SEEK,s,dc))
 		{
 		case SF_EDISC:
 		case SF_ECONT:
-			if(string)
-				return 0L;
-			continue;
+			if(f->flags&SF_STRING)
+				return 0;
+			goto do_continue;
 		default:
-			return -1L;
+			return -1;
 		}
+
+	do_continue:
+		for(dc = f->disc; dc; dc = dc->disc)
+			if(dc == disc)
+				break;
+		disc = dc;
 	}
 }

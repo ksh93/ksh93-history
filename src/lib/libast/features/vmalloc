@@ -1,1 +1,46 @@
-lib	vmalloc
+lib	vmalloc,mallopt,mallinfo,mstats
+hdr	alloca,malloc
+
+lib alloca note{ alloca exists }end compile{
+	#include "FEATURE/vmalloc"
+	#if _hdr_alloca
+	#include	<alloca.h>
+	#endif
+	main()
+	{	alloca(10);
+	}
+}end
+
+mal alloca note{ alloca is based on malloc() }end execute{
+	#include "FEATURE/vmalloc"
+	#if _hdr_alloca
+	#include	<alloca.h>
+	#endif
+	#if _STD_
+	void* malloc(unsigned int size)
+	#else
+	void* malloc(size) unsigned int size;
+	#endif
+	{	exit(0);
+		return 0;
+	}
+	main()
+	{	alloca(10);
+		return 1;
+	}
+}end
+
+stk down note{ stack grows downward }end execute{
+	static growdown()
+	{	static char*	addr = 0;
+		char		array[4];
+		if(!addr)
+		{	addr = &array[0];
+			return growdown();
+		}
+		else if(addr < &array[0])
+			return 0;
+		else	return 1;	
+	}
+	main() { return growdown() ? 0 : 1; }
+}end

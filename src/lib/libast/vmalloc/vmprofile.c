@@ -1,52 +1,40 @@
-/*
- * CDE - Common Desktop Environment
- *
- * Copyright (c) 1993-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
- */
 /***************************************************************
 *                                                              *
-*                      AT&T - PROPRIETARY                      *
+*           This software is part of the ast package           *
+*              Copyright (c) 1985-2000 AT&T Corp.              *
+*      and it may only be used by you under license from       *
+*                     AT&T Corp. ("AT&T")                      *
+*       A copy of the Source Code Agreement is available       *
+*              at the AT&T Internet web site URL               *
 *                                                              *
-*         THIS IS PROPRIETARY SOURCE CODE LICENSED BY          *
-*                          AT&T CORP.                          *
+*     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*                Copyright (c) 1995 AT&T Corp.                 *
-*                     All Rights Reserved                      *
-*                                                              *
-*           This software is licensed by AT&T Corp.            *
-*       under the terms and conditions of the license in       *
-*       http://www.research.att.com/orgs/ssr/book/reuse        *
+*     If you received this software without first entering     *
+*       into a license with AT&T, you have an infringing       *
+*           copy and cannot use it without violating           *
+*             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
-*           Software Engineering Research Department           *
-*                    AT&T Bell Laboratories                    *
+*               Network Services Research Center               *
+*                      AT&T Labs Research                      *
+*                       Florham Park NJ                        *
 *                                                              *
-*               For further information contact                *
-*                     gsf@research.att.com                     *
+*             Glenn Fowler <gsf@research.att.com>              *
+*              David Korn <dgk@research.att.com>               *
+*               Phong Vo <kpv@research.att.com>                *
 *                                                              *
 ***************************************************************/
+#ifdef _UWIN
+
+int _STUB_vmprofile;
+
+#else
+
 #include	"vmhdr.h"
 
 /*	Method to profile space usage.
 **
-**	Written by (Kiem-)Phong Vo, kpv@research.att.com, 03/23/94.
+**	Written by Kiem-Phong Vo, kpv@research.att.com, 03/23/94.
 */
 
 #define PFHASH(pf)	((pf)->data.data.hash)
@@ -61,21 +49,21 @@
 #define PFREGION(pf)	((pf)->data.data.region)
 #define PFMAX(pf)	((pf)->data.data.fm.max)
 
-typedef struct _pfdata_	Pfdata_t;
-struct _pfdata_
-{	ulong		hash;	/* hash value			*/
+typedef struct _pfdata_s	Pfdata_t;
+struct _pfdata_s
+{	Vmulong_t	hash;	/* hash value			*/
 	union
 	{ char*		file;	/* file name			*/
-	  ulong		max;	/* max busy space for region	*/
+	  Vmulong_t	max;	/* max busy space for region	*/
 	} fm;
 	Vmalloc_t*	vm;	/* region alloc from 		*/
 	Pfobj_t*	region;	/* pointer to region record	*/
-	ulong		nalloc;	/* number of alloc calls	*/
-	ulong		alloc;	/* amount allocated		*/
-	ulong		nfree;	/* number of free calls		*/
-	ulong		free;	/* amount freed			*/
+	Vmulong_t	nalloc;	/* number of alloc calls	*/
+	Vmulong_t	alloc;	/* amount allocated		*/
+	Vmulong_t	nfree;	/* number of free calls		*/
+	Vmulong_t	free;	/* amount freed			*/
 };
-struct _pfobj_
+struct _pfobj_s
 {	Pfobj_t*	next;	/* next in linked list	*/
 	int		line;	/* line #, 0 for name holder	*/
 	union
@@ -99,7 +87,7 @@ int		line;	/* line number					*/
 #endif
 {
 	reg Pfobj_t		*pf, *last;
-	reg ulong		h;
+	reg Vmulong_t		h;
 	reg int			n;
 	reg char*		cp;
 
@@ -115,27 +103,26 @@ int		line;	/* line number					*/
 	}
 
 	/* see if it's there with a combined hash value of vm,file,line */
-	h = line + (((ulong)vm)>>4);
+	h = line + (((Vmulong_t)vm)>>4);
 	for(cp = file; *cp; ++cp)
 		h += (h<<7) + ((*cp)&0377) + 987654321L;
 	n = (int)(h%PFTABLE);
 	for(last = NIL(Pfobj_t*), pf = Pftable[n]; pf; last = pf, pf = pf->next)
-		if(PFLINE(pf) == line && PFVM(pf) == vm &&
-		   strcmp(PFFILE(pf),file) == 0)
+		if(PFLINE(pf) == line && PFVM(pf) == vm && strcmp(PFFILE(pf),file) == 0)
 			break;
 
 	/* insert if not there yet */
 	if(!pf)
 	{	reg Pfobj_t*	fn;
 		reg Pfobj_t*	pfvm;
-		reg ulong	hn;
+		reg Vmulong_t	hn;
 
 		/* first get/construct the file name slot */
 		hn = 0;
 		for(cp = file; *cp; ++cp)
 			hn += (hn<<7) + ((*cp)&0377) + 987654321L;
 		n = (int)(hn%PFTABLE);
-		for(fn = Pftable[n]; fn; fn = pf->next)
+		for(fn = Pftable[n]; fn; fn = fn->next)
 			if(PFLINE(fn) < 0 && strcmp(PFNAME(fn),file) == 0)
 				break;
 		if(!fn)
@@ -225,18 +212,18 @@ Vmalloc_t*	vm;
 }
 
 #if __STD_C
-static void pfsetinfo(Vmalloc_t* vm, uchar* data, size_t size, char* file, int line)
+static void pfsetinfo(Vmalloc_t* vm, Vmuchar_t* data, size_t size, char* file, int line)
 #else
 static void pfsetinfo(vm, data, size, file, line)
 Vmalloc_t*	vm;
-uchar*		data;
+Vmuchar_t*	data;
 size_t		size;
 char*		file;
 int		line;
 #endif
 {
 	reg Pfobj_t*	pf;
-	reg ulong	s;
+	reg Vmulong_t	s;
 
 	/* let vmclose knows that there are records for region vm */
 	_Vmpfclose = pfclose;
@@ -335,16 +322,17 @@ Pfobj_t*	pf;
 }
 
 #if __STD_C
-char* pfsummary(char* buf, ulong na, ulong sa, ulong nf, ulong sf, ulong max, ulong size)
+static char* pfsummary(char* buf, Vmulong_t na, Vmulong_t sa,
+			Vmulong_t nf, Vmulong_t sf, Vmulong_t max, Vmulong_t size)
 #else
-char* pfsummary(buf, na, sa, nf, sf, max, size)
-char*	buf;
-ulong	na;
-ulong	sa;
-ulong	nf;
-ulong	sf;
-ulong	max;
-ulong	size;
+static char* pfsummary(buf, na, sa, nf, sf, max, size)
+char*		buf;
+Vmulong_t	na;
+Vmulong_t	sa;
+Vmulong_t	nf;
+Vmulong_t	sf;
+Vmulong_t	max;
+Vmulong_t	size;
 #endif
 {
 	buf = (*_Vmstrcpy)(buf,"n_alloc", '=');
@@ -368,16 +356,16 @@ ulong	size;
 
 /* print profile data */
 #if __STD_C
-vmprofile(Vmalloc_t* vm, int fd)
+int vmprofile(Vmalloc_t* vm, int fd)
 #else
-vmprofile(vm, fd)
+int vmprofile(vm, fd)
 Vmalloc_t*	vm;
 int		fd;
 #endif
 {
 	reg Pfobj_t	*pf, *list, *next, *last;
 	reg int		n;
-	reg ulong	nalloc, alloc, nfree, free;
+	reg Vmulong_t	nalloc, alloc, nfree, free;
 	reg Seg_t*	seg;
 	char		buf[1024], *bufp, *endbuf;
 #define INITBUF()	(bufp = buf, endbuf = buf+sizeof(buf)-128)
@@ -432,7 +420,7 @@ int		fd;
 		for(seg = PFVM(pf)->data->seg; seg; seg = seg->next)
 			alloc += seg->extent;
 		bufp = (*_Vmstrcpy)(bufp,"region", '=');
-		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(ULONG(PFVM(pf)),0), ':');
+		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VLONG(PFVM(pf)),0), ':');
 		bufp = pfsummary(bufp,PFNALLOC(pf),PFALLOC(pf),
 				 PFNFREE(pf),PFFREE(pf),PFMAX(pf),alloc);
 	}
@@ -460,7 +448,7 @@ int		fd;
 			bufp = (*_Vmstrcpy)(bufp,"\tline",'=');
 			bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(PFLINE(pf),-1), ':');
 			bufp = (*_Vmstrcpy)(bufp, "region", '=');
-			bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(ULONG(PFVM(pf)),0), ':');
+			bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VLONG(PFVM(pf)),0), ':');
 			bufp = pfsummary(bufp,PFNALLOC(pf),PFALLOC(pf),
 					 PFNFREE(pf),PFFREE(pf),0,0);
 
@@ -491,7 +479,7 @@ size_t		size;
 	reg int		line;
 	reg Vmdata_t*	vd = vm->data;
 
-	VMFILELINE(file,line);
+	VMFILELINE(vm,file,line);
 	if(!(vd->mode&VM_TRUST) && ISLOCK(vd,0))
 		return NIL(Void_t*);
 	SETLOCK(vd,0);
@@ -500,11 +488,11 @@ size_t		size;
 	if(!(data = KPVALLOC(vm,s,(*(Vmbest->allocf))) ) )
 		goto done;
 
-	pfsetinfo(vm,(uchar*)data,size,file,line);
+	pfsetinfo(vm,(Vmuchar_t*)data,size,file,line);
 
 	if(!(vd->mode&VM_TRUST) && (vd->mode&VM_TRACE) && _Vmtrace)
-	{	_Vmfile = file; _Vmline = line;
-		(*_Vmtrace)(vm,NIL(uchar*),(uchar*)data,size);
+	{	vm->file = file; vm->line = line;
+		(*_Vmtrace)(vm,NIL(Vmuchar_t*),(Vmuchar_t*)data,size,0);
 	}
 done:
 	CLRLOCK(vd,0);
@@ -525,7 +513,7 @@ Void_t*		data;
 	reg int		line;
 	reg Vmdata_t*	vd = vm->data;
 
-	VMFILELINE(file,line);
+	VMFILELINE(vm,file,line);
 
 	if(!data)
 		return 0;
@@ -554,8 +542,8 @@ Void_t*		data;
 	}
 
 	if(!(vd->mode&VM_TRUST) && (vd->mode&VM_TRACE) && _Vmtrace)
-	{	_Vmfile = file; _Vmline = line;
-		(*_Vmtrace)(vm,(uchar*)data,NIL(uchar*),s);
+	{	vm->file = file; vm->line = line;
+		(*_Vmtrace)(vm,(Vmuchar_t*)data,NIL(Vmuchar_t*),s,0);
 	}
 
 	CLRLOCK(vd,0);
@@ -563,13 +551,13 @@ Void_t*		data;
 }
 
 #if __STD_C
-static Void_t* pfresize(Vmalloc_t* vm, Void_t* data, size_t size, int flags)
+static Void_t* pfresize(Vmalloc_t* vm, Void_t* data, size_t size, int type)
 #else
-static Void_t* pfresize(vm, data, size, flags)
+static Void_t* pfresize(vm, data, size, type)
 Vmalloc_t*	vm;
 Void_t*		data;
 size_t		size;
-int		flags;
+int		type;
 #endif
 {
 	reg Pfobj_t*	pf;
@@ -577,16 +565,20 @@ int		flags;
 	reg Void_t*	addr;
 	reg char*	file;
 	reg int		line;
+	reg size_t	oldsize;
 	reg Vmdata_t*	vd = vm->data;
 
 	if(!data)
-		return pfalloc(vm,size);
-	else if(size == 0)
+	{	oldsize = 0;
+		addr = pfalloc(vm,size);
+		goto done;
+	}
+	if(size == 0)
 	{	(void)pffree(vm,data);
 		return NIL(Void_t*);
 	}
 
-	VMFILELINE(file,line);
+	VMFILELINE(vm,file,line);
 	if(!(vd->mode&VM_TRUST))
 	{	if(ISLOCK(vd,0))
 			return NIL(Void_t*);
@@ -601,22 +593,22 @@ int		flags;
 	}
 
 	pf = PFOBJ(data);
-	s = PFSIZE(data);
+	s = oldsize = PFSIZE(data);
 
 	news = ROUND(size,ALIGN) + PF_EXTRA;
-	if((addr = KPVRESIZE(vm,data,news,flags,Vmbest->resizef)) )
+	if((addr = KPVRESIZE(vm,data,news,(type&~VM_RSZERO),Vmbest->resizef)) )
 	{	if(pf)
 		{	PFFREE(pf) += s;
 			PFNFREE(pf) += 1;
 			pf = PFREGION(pf);
 			PFFREE(pf) += s;
 			PFNFREE(pf) += 1;
-			pfsetinfo(vm,(uchar*)addr,size,file,line);
+			pfsetinfo(vm,(Vmuchar_t*)addr,size,file,line);
 		}
 
 		if(!(vd->mode&VM_TRUST) && (vd->mode&VM_TRACE) && _Vmtrace)
-		{	_Vmfile = file; _Vmline = line;
-			(*_Vmtrace)(vm,(uchar*)data,(uchar*)addr,size);
+		{	vm->file = file; vm->line = line;
+			(*_Vmtrace)(vm,(Vmuchar_t*)data,(Vmuchar_t*)addr,size,0);
 		}
 	}
 	else if(pf)	/* reset old info */
@@ -627,10 +619,16 @@ int		flags;
 		PFNALLOC(pf) -= 1;
 		file = PFFILE(pf);
 		line = PFLINE(pf);
-		pfsetinfo(vm,(uchar*)data,s,file,line);
+		pfsetinfo(vm,(Vmuchar_t*)data,s,file,line);
 	}
 
 	CLRLOCK(vd,0);
+
+done:	if(addr && (type&VM_RSZERO) && oldsize < size)
+	{	reg Vmuchar_t *d = (Vmuchar_t*)addr+oldsize, *ed = (Vmuchar_t*)addr+size;
+		do { *d++ = 0; } while(d < ed);
+	}
+
 	return addr;
 }
 
@@ -642,7 +640,7 @@ Vmalloc_t*	vm;
 Void_t*		addr;
 #endif
 {
-	return (*Vmbest->addrf)(vm,addr) != 0 ? -1L : PFSIZE(addr);
+	return (*Vmbest->addrf)(vm,addr) != 0 ? -1L : (long)PFSIZE(addr);
 }
 
 #if __STD_C
@@ -681,7 +679,7 @@ size_t		align;
 	reg int		line;
 	reg Vmdata_t*	vd = vm->data;
 
-	VMFILELINE(file,line);
+	VMFILELINE(vm,file,line);
 
 	if(!(vd->mode&VM_TRUST) && ISLOCK(vd,0))
 		return NIL(Void_t*);
@@ -691,18 +689,18 @@ size_t		align;
 	if(!(data = KPVALIGN(vm,s,align,Vmbest->alignf)) )
 		goto done;
 
-	pfsetinfo(vm,(uchar*)data,size,file,line);
+	pfsetinfo(vm,(Vmuchar_t*)data,size,file,line);
 
 	if(!(vd->mode&VM_TRUST) && (vd->mode&VM_TRACE) && _Vmtrace)
-	{	_Vmfile = file; _Vmline = line;
-		(*_Vmtrace)(vm,NIL(uchar*),(uchar*)data,size);
+	{	vm->file = file; vm->line = line;
+		(*_Vmtrace)(vm,NIL(Vmuchar_t*),(Vmuchar_t*)data,size,align);
 	}
 done:
 	CLRLOCK(vd,0);
 	return data;
 }
 
-Vmethod_t	_Vmprofile =
+static Vmethod_t _Vmprofile =
 {
 	pfalloc,
 	pfresize,
@@ -713,3 +711,11 @@ Vmethod_t	_Vmprofile =
 	pfalign,
 	VM_MTPROFILE
 };
+
+__DEFINE__(Vmethod_t*,Vmprofile,&_Vmprofile);
+
+#ifdef NoF
+NoF(vmprofile)
+#endif
+
+#endif

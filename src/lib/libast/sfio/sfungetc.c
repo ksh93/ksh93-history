@@ -1,45 +1,27 @@
-/*
- * CDE - Common Desktop Environment
- *
- * Copyright (c) 1993-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
- */
 /***************************************************************
 *                                                              *
-*                      AT&T - PROPRIETARY                      *
+*           This software is part of the ast package           *
+*              Copyright (c) 1985-2000 AT&T Corp.              *
+*      and it may only be used by you under license from       *
+*                     AT&T Corp. ("AT&T")                      *
+*       A copy of the Source Code Agreement is available       *
+*              at the AT&T Internet web site URL               *
 *                                                              *
-*         THIS IS PROPRIETARY SOURCE CODE LICENSED BY          *
-*                          AT&T CORP.                          *
+*     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*                Copyright (c) 1995 AT&T Corp.                 *
-*                     All Rights Reserved                      *
-*                                                              *
-*           This software is licensed by AT&T Corp.            *
-*       under the terms and conditions of the license in       *
-*       http://www.research.att.com/orgs/ssr/book/reuse        *
+*     If you received this software without first entering     *
+*       into a license with AT&T, you have an infringing       *
+*           copy and cannot use it without violating           *
+*             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
-*           Software Engineering Research Department           *
-*                    AT&T Bell Laboratories                    *
+*               Network Services Research Center               *
+*                      AT&T Labs Research                      *
+*                       Florham Park NJ                        *
 *                                                              *
-*               For further information contact                *
-*                     gsf@research.att.com                     *
+*             Glenn Fowler <gsf@research.att.com>              *
+*              David Korn <dgk@research.att.com>               *
+*               Phong Vo <kpv@research.att.com>                *
 *                                                              *
 ***************************************************************/
 #include	"sfhdr.h"
@@ -49,14 +31,17 @@
 **	Written by Kiem-Phong Vo (03/02/91)
 */
 #if __STD_C
-static _uexcept(reg Sfio_t* f, reg int type, reg Sfdisc_t* disc)
+static int _uexcept(reg Sfio_t* f, reg int type, Void_t* val, reg Sfdisc_t* disc)
 #else
-static _uexcept(f,type,disc)
+static int _uexcept(f,type,val,disc)
 reg Sfio_t	*f;
 reg int		type;
+Void_t*		val;
 reg Sfdisc_t	*disc;
 #endif
 {	
+	NOTUSED(val);
+
 	/* hmm! This should never happen */
 	if(disc != _Sfudisc)
 		return -1;
@@ -69,14 +54,14 @@ reg Sfdisc_t	*disc;
 }
 
 #if __STD_C
-sfungetc(reg Sfio_t* f, reg int c)
+int sfungetc(reg Sfio_t* f, reg int c)
 #else
-sfungetc(f,c)
-reg Sfio_t	*f;	/* push back one byte to this stream */
+int sfungetc(f,c)
+reg Sfio_t*	f;	/* push back one byte to this stream */
 reg int		c;	/* the value to be pushed back */
 #endif
 {
-	reg Sfio_t	*uf;
+	reg Sfio_t*	uf;
 
 	if(c < 0 || (f->mode != SF_READ && _sfmode(f,SF_READ,0) < 0))
 		return -1;
@@ -90,7 +75,8 @@ reg int		c;	/* the value to be pushed back */
 
 	/* make a string stream for unget characters */
 	if(f->disc != _Sfudisc)
-	{	if(!(uf = sfnew(NIL(Sfio_t*),NIL(char*),-1,-1,SF_STRING|SF_READ)))
+	{	if(!(uf = sfnew(NIL(Sfio_t*),NIL(char*),(size_t)SF_UNBOUND,
+				-1,SF_STRING|SF_READ)))
 		{	c = -1;
 			goto done;
 		}

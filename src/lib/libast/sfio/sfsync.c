@@ -1,45 +1,27 @@
-/*
- * CDE - Common Desktop Environment
- *
- * Copyright (c) 1993-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
- */
 /***************************************************************
 *                                                              *
-*                      AT&T - PROPRIETARY                      *
+*           This software is part of the ast package           *
+*              Copyright (c) 1985-2000 AT&T Corp.              *
+*      and it may only be used by you under license from       *
+*                     AT&T Corp. ("AT&T")                      *
+*       A copy of the Source Code Agreement is available       *
+*              at the AT&T Internet web site URL               *
 *                                                              *
-*         THIS IS PROPRIETARY SOURCE CODE LICENSED BY          *
-*                          AT&T CORP.                          *
+*     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*                Copyright (c) 1995 AT&T Corp.                 *
-*                     All Rights Reserved                      *
-*                                                              *
-*           This software is licensed by AT&T Corp.            *
-*       under the terms and conditions of the license in       *
-*       http://www.research.att.com/orgs/ssr/book/reuse        *
+*     If you received this software without first entering     *
+*       into a license with AT&T, you have an infringing       *
+*           copy and cannot use it without violating           *
+*             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
-*           Software Engineering Research Department           *
-*                    AT&T Bell Laboratories                    *
+*               Network Services Research Center               *
+*                      AT&T Labs Research                      *
+*                       Florham Park NJ                        *
 *                                                              *
-*               For further information contact                *
-*                     gsf@research.att.com                     *
+*             Glenn Fowler <gsf@research.att.com>              *
+*              David Korn <dgk@research.att.com>               *
+*               Phong Vo <kpv@research.att.com>                *
 *                                                              *
 ***************************************************************/
 #include	"sfhdr.h"
@@ -50,7 +32,11 @@
 **	Written by Kiem-Phong Vo (06/27/90)
 */
 
-static _sfall()
+#if __STD_C
+static int _sfall(void)
+#else
+static int _sfall()
+#endif
 {
 	reg Sfpool_t	*p, *next;
 	reg Sfio_t*	f;
@@ -77,17 +63,15 @@ static _sfall()
 					continue;
 				if((f->mode&SF_READ) && (f->mode&SF_SYNCED) )
 					goto did_sync;
-				if((f->mode&SF_READ) && !(f->flags&SF_MMAP) &&
+				if((f->mode&SF_READ) && !(f->bits&SF_MMAP) &&
 				   f->next == f->endb)
 					goto did_sync;
-				if((f->mode&SF_WRITE) && !(f->flags&SF_HOLE) &&
+				if((f->mode&SF_WRITE) && !(f->bits&SF_HOLE) &&
 				   f->next == f->data)
 					goto did_sync;
 
-				SFLOCK(f,0);
-				if(SFSYNC(f) < 0)
+				if(sfsync(f) < 0)
 					rv = -1;
-				SFOPEN(f,0);
 
 			did_sync:
 				nsync += 1;
@@ -101,9 +85,9 @@ static _sfall()
 }
 
 #if __STD_C
-sfsync(reg Sfio_t* f)
+int sfsync(reg Sfio_t* f)
 #else
-sfsync(f)
+int sfsync(f)
 reg Sfio_t*	f;	/* stream to be synchronized */
 #endif
 {
@@ -135,23 +119,23 @@ reg Sfio_t*	f;	/* stream to be synchronized */
 		if((f->flags&SF_STRING) || (f->mode&SF_SYNCED))
 			goto next;
 
-		if((f->mode&SF_WRITE) && (f->next > f->data || (f->flags&SF_HOLE)) )
+		if((f->mode&SF_WRITE) && (f->next > f->data || (f->bits&SF_HOLE)) )
 		{	/* sync the buffer, make sure pool don't move */
 			reg int pool = f->mode&SF_POOL;
 			f->mode &= ~SF_POOL;
-			if(f->next > f->data && SFFLSBUF(f,-1) < 0)
+			if(f->next > f->data && (SFWRALL(f), SFFLSBUF(f,-1)) < 0)
 				rv = -1;
-			if(!SFISNULL(f) && (f->flags&SF_HOLE) )
+			if(!SFISNULL(f) && (f->bits&SF_HOLE) )
 			{	/* realize a previously created hole of 0's */
-				if(lseek(f->file,-1L,1) >= 0)
-					(void)write(f->file,"",1);
-				f->flags &= ~SF_HOLE;
+				if(SFSK(f,(Sfoff_t)(-1),1,f->disc) >= 0)
+					(void)SFWR(f,"",1,f->disc);
+				f->bits &= ~SF_HOLE;
 			}
 			f->mode |= pool;
 		}
 
 		if((f->mode&SF_READ) && f->extent >= 0 &&
-		   ((f->flags&SF_MMAP) || f->next < f->endb) )
+		   ((f->bits&SF_MMAP) || f->next < f->endb) )
 		{	/* make sure the file pointer is at the right place */
 			f->here -= (f->endb-f->next);
 			f->endr = f->endw = f->data;
@@ -159,7 +143,7 @@ reg Sfio_t*	f;	/* stream to be synchronized */
 			(void)SFSK(f,f->here,0,f->disc);
 
 			if((f->flags&SF_SHARE) && !(f->flags&SF_PUBLIC) &&
-			   !(f->flags&SF_MMAP) )
+			   !(f->bits&SF_MMAP) )
 			{	f->endb = f->next = f->data;
 				f->mode &= ~SF_SYNCED;
 			}
@@ -171,7 +155,7 @@ reg Sfio_t*	f;	/* stream to be synchronized */
 
 		if(!local && !(f->flags&SF_ERROR) && (f->mode&~SF_RDWR) == 0 &&
 		   (f->flags&SF_IOCHECK) && f->disc && f->disc->exceptf)
-			(void)(*f->disc->exceptf)(f,SF_SYNC,f->disc);
+			(void)(*f->disc->exceptf)(f,SF_SYNC,NIL(Void_t*),f->disc);
 	}
 
 done:

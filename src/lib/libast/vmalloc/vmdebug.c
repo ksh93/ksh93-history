@@ -1,53 +1,41 @@
-/*
- * CDE - Common Desktop Environment
- *
- * Copyright (c) 1993-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
- */
 /***************************************************************
 *                                                              *
-*                      AT&T - PROPRIETARY                      *
+*           This software is part of the ast package           *
+*              Copyright (c) 1985-2000 AT&T Corp.              *
+*      and it may only be used by you under license from       *
+*                     AT&T Corp. ("AT&T")                      *
+*       A copy of the Source Code Agreement is available       *
+*              at the AT&T Internet web site URL               *
 *                                                              *
-*         THIS IS PROPRIETARY SOURCE CODE LICENSED BY          *
-*                          AT&T CORP.                          *
+*     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*                Copyright (c) 1995 AT&T Corp.                 *
-*                     All Rights Reserved                      *
-*                                                              *
-*           This software is licensed by AT&T Corp.            *
-*       under the terms and conditions of the license in       *
-*       http://www.research.att.com/orgs/ssr/book/reuse        *
+*     If you received this software without first entering     *
+*       into a license with AT&T, you have an infringing       *
+*           copy and cannot use it without violating           *
+*             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
-*           Software Engineering Research Department           *
-*                    AT&T Bell Laboratories                    *
+*               Network Services Research Center               *
+*                      AT&T Labs Research                      *
+*                       Florham Park NJ                        *
 *                                                              *
-*               For further information contact                *
-*                     gsf@research.att.com                     *
+*             Glenn Fowler <gsf@research.att.com>              *
+*              David Korn <dgk@research.att.com>               *
+*               Phong Vo <kpv@research.att.com>                *
 *                                                              *
 ***************************************************************/
+#ifdef _UWIN
+
+int _STUB_vmdebug;
+
+#else
+
 #include	"vmhdr.h"
 
 /*	Method to help with debugging. This does rigorous checks on
 **	addresses and arena integrity.
 **
-**	Written by (Kiem-)Phong Vo, kpv@research.att.com, 01/16/94.
+**	Written by Kiem-Phong Vo, kpv@research.att.com, 01/16/94.
 */
 
 /* structure to keep track of file names */
@@ -130,11 +118,11 @@ int		type;	/* operation being done		*/
 
 	/* region info */
 	bufp = (*_Vmstrcpy)(bufp, "region", '=');
-	bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(ULONG(vm), 0), ':');
+	bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VLONG(vm), 0), ':');
 
 	if(data)
 	{	bufp = (*_Vmstrcpy)(bufp,"block",'=');
-		bufp = (*_Vmstrcpy)(bufp,(*_Vmitoa)(ULONG(data),0),':');
+		bufp = (*_Vmstrcpy)(bufp,(*_Vmitoa)(VLONG(data),0),':');
 	}
 
 	if(!data)
@@ -161,11 +149,11 @@ int		type;	/* operation being done		*/
 	}
 	else if(type == DB_CHECK)
 	{	bufp = (*_Vmstrcpy)(bufp, "bad byte at", '=');
-		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(ULONG(where),-1), ':');
+		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VLONG(where),-1), ':');
 		if((s = DBFILE(data)) && (bufp + strlen(s) + SLOP) < endbuf)
 		{	bufp = (*_Vmstrcpy)(bufp,"allocated at", '=');
 			bufp = (*_Vmstrcpy)(bufp, s, ',');
-			bufp = (*_Vmstrcpy)(bufp,(*_Vmitoa)(ULONG(DBLINE(data)),-1),':');
+			bufp = (*_Vmstrcpy)(bufp,(*_Vmitoa)(VLONG(DBLINE(data)),-1),':');
 		}
 	}
 
@@ -173,7 +161,7 @@ int		type;	/* operation being done		*/
 	if(file && file[0] && line > 0 && (bufp + strlen(file) + SLOP) < endbuf)
 	{	bufp = (*_Vmstrcpy)(bufp, "detected at", '=');
 		bufp = (*_Vmstrcpy)(bufp, file, ',');
-		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(ULONG(line),-1), ':');
+		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VLONG(line),-1), ':');
 	}
 
 	*bufp++ = '\n';
@@ -206,16 +194,16 @@ int		type;
 
 /* record information about the block */
 #if __STD_C
-static void dbsetinfo(uchar* data, size_t size, char* file, int line)
+static void dbsetinfo(Vmuchar_t* data, size_t size, char* file, int line)
 #else
 static void dbsetinfo(data, size, file, line)
-uchar*		data;	/* real address not the one from Vmbest	*/
+Vmuchar_t*		data;	/* real address not the one from Vmbest	*/
 size_t		size;	/* the actual requested size		*/
 char*		file;	/* file where the request came from	*/
 int		line;	/* and line number			*/
 #endif
 {
-	reg uchar	*begp, *endp;
+	reg Vmuchar_t	*begp, *endp;
 	reg Dbfile_t	*last, *db;
 
 	DBINIT();
@@ -268,7 +256,7 @@ Void_t*		addr;
 {
 	reg Block_t	*b, *endb;
 	reg Seg_t*	seg;
-	reg uchar*	data;
+	reg Vmuchar_t*	data;
 	reg long	offset = -1L;
 	reg Vmdata_t*	vd = vm->data;
 	reg int		local;
@@ -281,7 +269,8 @@ Void_t*		addr;
 	for(seg = vd->seg; seg; seg = seg->next)
 	{	b = SEGBLOCK(seg);
 		endb = (Block_t*)(seg->baddr - sizeof(Head_t));
-		if((uchar*)addr > (uchar*)b && (uchar*)addr < (uchar*)endb)
+		if((Vmuchar_t*)addr > (Vmuchar_t*)b &&
+		   (Vmuchar_t*)addr < (Vmuchar_t*)endb)
 			break;
 	}
 	if(!seg)
@@ -298,18 +287,18 @@ Void_t*		addr;
 	}
 
 	while(b < endb)
-	{	data = (uchar*)DATA(b);
-		if((uchar*)addr >= data && (uchar*)addr < data+SIZE(b))
+	{	data = (Vmuchar_t*)DATA(b);
+		if((Vmuchar_t*)addr >= data && (Vmuchar_t*)addr < data+SIZE(b))
 		{	if(ISBUSY(SIZE(b)) && !ISJUNK(SIZE(b)) )
 			{	data = DB2DEBUG(data);
-				if((uchar*)addr >= data &&
-				   (uchar*)addr < data+DBSIZE(data))
-					offset =  (uchar*)addr - data;
+				if((Vmuchar_t*)addr >= data &&
+				   (Vmuchar_t*)addr < data+DBSIZE(data))
+					offset =  (Vmuchar_t*)addr - data;
 			}
 			goto done;
 		}
 
-		b = (Block_t*)((uchar*)DATA(b) + (SIZE(b)&~BITS) );
+		b = (Block_t*)((Vmuchar_t*)DATA(b) + (SIZE(b)&~BITS) );
 	}
 
 done:
@@ -339,7 +328,8 @@ Void_t*		addr;
 	for(seg = vd->seg; seg; seg = seg->next)
 	{	b = SEGBLOCK(seg);
 		endb = (Block_t*)(seg->baddr - sizeof(Head_t));
-		if((uchar*)addr <= (uchar*)b || (uchar*)addr >= (uchar*)endb)
+		if((Vmuchar_t*)addr <= (Vmuchar_t*)b ||
+		   (Vmuchar_t*)addr >= (Vmuchar_t*)endb)
 			continue;
 		while(b < endb)
 		{	if(addr == (Void_t*)DB2DEBUG(DATA(b)))
@@ -348,7 +338,7 @@ Void_t*		addr;
 				goto done;
 			}
 
-			b = (Block_t*)((uchar*)DATA(b) + (SIZE(b)&~BITS) );
+			b = (Block_t*)((Vmuchar_t*)DATA(b) + (SIZE(b)&~BITS) );
 		}
 	}
 done:
@@ -365,15 +355,15 @@ size_t		size;
 #endif
 {
 	reg size_t	s;
-	reg uchar*	data;
+	reg Vmuchar_t*	data;
 	reg char*	file;
 	reg int		line;
 	reg Vmdata_t*	vd = vm->data;
 
-	VMFILELINE(file,line);
+	VMFILELINE(vm,file,line);
 
 	if(ISLOCK(vd,0) )
-	{	dbwarn(vm,NIL(uchar*),0,file,line,DB_ALLOC);
+	{	dbwarn(vm,NIL(Vmuchar_t*),0,file,line,DB_ALLOC);
 		return NIL(Void_t*);
 	}
 	SETLOCK(vd,0);
@@ -385,8 +375,8 @@ size_t		size;
 	if(s < sizeof(Body_t))	/* no tiny blocks during Vmdebug */
 		s = sizeof(Body_t);
 
-	if(!(data = (uchar*)KPVALLOC(vm,s,(*(Vmbest->allocf))) ) )
-	{	dbwarn(vm,NIL(uchar*),DB_ALLOC,file,line,DB_ALLOC);
+	if(!(data = (Vmuchar_t*)KPVALLOC(vm,s,(*(Vmbest->allocf))) ) )
+	{	dbwarn(vm,NIL(Vmuchar_t*),DB_ALLOC,file,line,DB_ALLOC);
 		goto done;
 	}
 
@@ -394,8 +384,8 @@ size_t		size;
 	dbsetinfo(data,size,file,line);
 
 	if((vd->mode&VM_TRACE) && _Vmtrace)
-	{	_Vmfile = file; _Vmline = line;
-		(*_Vmtrace)(vm,NIL(uchar*),data,size);
+	{	vm->file = file; vm->line = line;
+		(*_Vmtrace)(vm,NIL(Vmuchar_t*),data,size,0);
 	}
 
 	if(Dbnwatch > 0 )
@@ -421,13 +411,13 @@ Void_t*		data;
 	reg int		*ip, *endip;
 	reg Vmdata_t*	vd = vm->data;
 
-	VMFILELINE(file,line);
+	VMFILELINE(vm,file,line);
 
 	if(!data)
 		return 0;
 
 	if(ISLOCK(vd,0) )
-	{	dbwarn(vm,NIL(uchar*),0,file,line,DB_FREE);
+	{	dbwarn(vm,NIL(Vmuchar_t*),0,file,line,DB_FREE);
 		return -1;
 	}
 	SETLOCK(vd,0);
@@ -438,7 +428,7 @@ Void_t*		data;
 	if((offset = KPVADDR(vm,data,dbaddr)) != 0)
 	{	if(vm->disc->exceptf)
 			(void)(*vm->disc->exceptf)(vm,VM_BADADDR,data,vm->disc);
-		dbwarn(vm,(uchar*)data,offset == -1L ? 0 : 1,file,line,DB_FREE);
+		dbwarn(vm,(Vmuchar_t*)data,offset == -1L ? 0 : 1,file,line,DB_FREE);
 		CLRLOCK(vd,0);
 		return -1;
 	}
@@ -447,8 +437,8 @@ Void_t*		data;
 		dbwatch(vm,data,file,line,DB_FREE);
 
 	if((vd->mode&VM_TRACE) && _Vmtrace)
-	{	_Vmfile = file; _Vmline = line;
-		(*_Vmtrace)(vm,(uchar*)data,NIL(uchar*),DBSIZE(data));
+	{	vm->file = file; vm->line = line;
+		(*_Vmtrace)(vm,(Vmuchar_t*)data,NIL(Vmuchar_t*),DBSIZE(data),0);
 	}
 
 	/* clear free space */
@@ -463,16 +453,16 @@ Void_t*		data;
 
 /*	Resizing an existing block */
 #if __STD_C
-Void_t* dbresize(Vmalloc_t* vm, Void_t* addr, reg size_t size, int flags)
+static Void_t* dbresize(Vmalloc_t* vm, Void_t* addr, reg size_t size, int type)
 #else
-Void_t* dbresize(vm,addr,size,flags)
+static Void_t* dbresize(vm,addr,size,type)
 Vmalloc_t*	vm;		/* region allocating from	*/
 Void_t*		addr;		/* old block of data		*/
 reg size_t	size;		/* new size			*/
-int		flags;		/* VM_RS*			*/
+int		type;		/* !=0 for movable, >0 for copy	*/
 #endif
 {
-	reg uchar*	data;
+	reg Vmuchar_t*	data;
 	reg size_t	s, oldsize;
 	reg long	offset;
 	char		*file, *oldfile;
@@ -480,16 +470,19 @@ int		flags;		/* VM_RS*			*/
 	reg Vmdata_t*	vd = vm->data;
 
 	if(!addr)
-		return dballoc(vm,size);
-	else if(size == 0)
+	{	oldsize = 0;
+		data = (Vmuchar_t*)dballoc(vm,size);
+		goto done;
+	}
+	if(size == 0)
 	{	(void)dbfree(vm,addr);
 		return NIL(Void_t*);
 	}
 
-	VMFILELINE(file,line);
+	VMFILELINE(vm,file,line);
 
 	if(ISLOCK(vd,0) )
-	{	dbwarn(vm,NIL(uchar*),0,file,line,DB_RESIZE);
+	{	dbwarn(vm,NIL(Vmuchar_t*),0,file,line,DB_RESIZE);
 		return NIL(Void_t*);
 	}
 	SETLOCK(vd,0);
@@ -500,7 +493,7 @@ int		flags;		/* VM_RS*			*/
 	if((offset = KPVADDR(vm,addr,dbaddr)) != 0)
 	{	if(vm->disc->exceptf)
 			(void)(*vm->disc->exceptf)(vm,VM_BADADDR,addr,vm->disc);
-		dbwarn(vm,(uchar*)addr,offset == -1L ? 0 : 1,file,line,DB_RESIZE);
+		dbwarn(vm,(Vmuchar_t*)addr,offset == -1L ? 0 : 1,file,line,DB_RESIZE);
 		CLRLOCK(vd,0);
 		return NIL(Void_t*);
 	}
@@ -518,32 +511,38 @@ int		flags;		/* VM_RS*			*/
 	s = ROUND(size,ALIGN) + DB_EXTRA;
 	if(s < sizeof(Body_t))
 		s = sizeof(Body_t);
-	data = (uchar*)KPVRESIZE(vm,(Void_t*)data,s,flags,(*(Vmbest->resizef)) );
+	data = (Vmuchar_t*)KPVRESIZE(vm,(Void_t*)data,s,
+				 (type&~VM_RSZERO),(*(Vmbest->resizef)) );
 	if(!data) /* failed, reset data for old block */
-	{	dbwarn(vm,NIL(uchar*),DB_ALLOC,file,line,DB_RESIZE);
-		dbsetinfo((uchar*)addr,oldsize,oldfile,oldline);
+	{	dbwarn(vm,NIL(Vmuchar_t*),DB_ALLOC,file,line,DB_RESIZE);
+		dbsetinfo((Vmuchar_t*)addr,oldsize,oldfile,oldline);
 	}
 	else
 	{	data = DB2DEBUG(data);
 		dbsetinfo(data,size,file,line);
 
 		if((vd->mode&VM_TRACE) && _Vmtrace)
-		{	_Vmfile = file; _Vmline = line;
-			(*_Vmtrace)(vm,(uchar*)addr,data,size);
+		{	vm->file = file; vm->line = line;
+			(*_Vmtrace)(vm,(Vmuchar_t*)addr,data,size,0);
 		}
 		if(Dbnwatch > 0)
 			dbwatch(vm,data,file,line,DB_RESIZED);
 	}
 
 	CLRLOCK(vd,0);
+
+done:	if(data && (type&VM_RSZERO) && size > oldsize)
+	{	reg Vmuchar_t *d = data+oldsize, *ed = data+size;
+		do { *d++ = 0; } while(d < ed);
+	}
 	return (Void_t*)data;
 }
 
 /* compact any residual free space */
 #if __STD_C
-static dbcompact(Vmalloc_t* vm)
+static int dbcompact(Vmalloc_t* vm)
 #else
-static dbcompact(vm)
+static int dbcompact(vm)
 Vmalloc_t*	vm;
 #endif
 {
@@ -552,9 +551,9 @@ Vmalloc_t*	vm;
 
 /* check for memory overwrites over all live blocks */
 #if __STD_C
-vmdbcheck(Vmalloc_t* vm)
+int vmdbcheck(Vmalloc_t* vm)
 #else
-vmdbcheck(vm)
+int vmdbcheck(vm)
 Vmalloc_t*	vm;
 #endif
 {
@@ -571,7 +570,7 @@ Vmalloc_t*	vm;
 	{	b = SEGBLOCK(seg);
 		endb = (Block_t*)(seg->baddr - sizeof(Head_t));
 		while(b < endb)
-		{	reg uchar	*data, *begp, *endp;
+		{	reg Vmuchar_t	*data, *begp, *endp;
 
 			if(ISJUNK(SIZE(b)) || !ISBUSY(SIZE(b)))
 				goto next;
@@ -598,7 +597,7 @@ Vmalloc_t*	vm;
 				goto next;
 			}
 
-		next:	b = (Block_t*)((uchar*)DATA(b) + (SIZE(b)&~BITS));
+		next:	b = (Block_t*)((Vmuchar_t*)DATA(b) + (SIZE(b)&~BITS));
 		}
 	}
 
@@ -639,23 +638,21 @@ Void_t*		addr;	/* address to insert			*/
 }
 
 #if __STD_C
-Void_t* dbalign(Vmalloc_t* vm, size_t size, size_t align)
+static Void_t* dbalign(Vmalloc_t* vm, size_t size, size_t align)
 #else
-Void_t* dbalign(vm, size, align)
+static Void_t* dbalign(vm, size, align)
 Vmalloc_t*	vm;
 size_t		size;
 size_t		align;
 #endif
 {
-	reg uchar	*data;
-	reg Block_t	*tp, *np;
-	reg Seg_t*	seg;
+	reg Vmuchar_t	*data;
 	reg size_t	s;
 	reg char*	file;
 	reg int		line;
 	reg Vmdata_t*	vd = vm->data;
 
-	VMFILELINE(file,line);
+	VMFILELINE(vm,file,line);
 
 	if(size <= 0 || align <= 0)
 		return NIL(Void_t*);
@@ -666,47 +663,18 @@ size_t		align;
 		SETLOCK(vd,0);
 	}
 
-	s = size <= sizeof(Block_t) ? sizeof(Block_t) : ROUND(size,ALIGN);
-	align = MULTIPLE(align,ALIGN);
-	if(align < sizeof(Block_t))
-		align = (sizeof(Block_t)/align + 1)*align;
-	s += align + DB_EXTRA;
+	if((s = ROUND(size,ALIGN) + DB_EXTRA) < sizeof(Body_t))
+		s = sizeof(Body_t);
 
-	if(!(data = (uchar*)KPVALLOC(vm,s,(*(Vmbest->allocf)))) )
+	if(!(data = (Vmuchar_t*)KPVALIGN(vm,s,align,(*(Vmbest->alignf)))) )
 		goto done;
 
-	tp = BLOCK(data);
-	seg = SEG(tp);
-
-	/* get an aligned address that we can live with */
-	data = DB2DEBUG(data);
-	if((s = (size_t)(ULONG(data)%align)) != 0)
-		data += align-s;
-	np = DBBLOCK(data);
-	if(((uchar*)np - (uchar*)tp) < sizeof(Block_t) )
-		data += align;
-
-	/* np is the usable block of data */
-	np = DBBLOCK(data);
-	s  = (uchar*)np - (uchar*)tp;
-	SIZE(np) = ((SIZE(tp)&~BITS) - s)|BUSY;
-	SEG(np) = seg;
-
-	/* now free the left part */
-	SIZE(tp) = (s - sizeof(Head_t)) | (SIZE(tp)&BITS) | JUNK;
-	/**/ ASSERT(SIZE(tp) >= sizeof(Body_t) );
-	if(!vd->free)
-		vd->free = tp;
-	else
-	{	LINK(tp) = CACHE(vd)[C_INDEX(SIZE(tp))];
-		CACHE(vd)[C_INDEX(SIZE(tp))] = tp;
-	}
-
+	data += DB_HEAD;
 	dbsetinfo(data,size,file,line);
 
 	if((vd->mode&VM_TRACE) && _Vmtrace)
-	{	_Vmfile = file; _Vmline = line;
-		(*_Vmtrace)(vm,NIL(uchar*),data,size);
+	{	vm->file = file; vm->line = line;
+		(*_Vmtrace)(vm,NIL(Vmuchar_t*),data,size,align);
 	}
 
 done:
@@ -714,7 +682,7 @@ done:
 	return (Void_t*)data;
 }
 
-Vmethod_t _Vmdebug =
+static Vmethod_t _Vmdebug =
 {
 	dballoc,
 	dbresize,
@@ -725,3 +693,11 @@ Vmethod_t _Vmdebug =
 	dbalign,
 	VM_MTDEBUG
 };
+
+__DEFINE__(Vmethod_t*,Vmdebug,&_Vmdebug);
+
+#ifdef NoF
+NoF(vmdebug)
+#endif
+
+#endif

@@ -1,45 +1,27 @@
-/*
- * CDE - Common Desktop Environment
- *
- * Copyright (c) 1993-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
- */
 /***************************************************************
 *                                                              *
-*                      AT&T - PROPRIETARY                      *
+*           This software is part of the ast package           *
+*              Copyright (c) 1985-2000 AT&T Corp.              *
+*      and it may only be used by you under license from       *
+*                     AT&T Corp. ("AT&T")                      *
+*       A copy of the Source Code Agreement is available       *
+*              at the AT&T Internet web site URL               *
 *                                                              *
-*         THIS IS PROPRIETARY SOURCE CODE LICENSED BY          *
-*                          AT&T CORP.                          *
+*     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*                Copyright (c) 1995 AT&T Corp.                 *
-*                     All Rights Reserved                      *
-*                                                              *
-*           This software is licensed by AT&T Corp.            *
-*       under the terms and conditions of the license in       *
-*       http://www.research.att.com/orgs/ssr/book/reuse        *
+*     If you received this software without first entering     *
+*       into a license with AT&T, you have an infringing       *
+*           copy and cannot use it without violating           *
+*             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
-*           Software Engineering Research Department           *
-*                    AT&T Bell Laboratories                    *
+*               Network Services Research Center               *
+*                      AT&T Labs Research                      *
+*                       Florham Park NJ                        *
 *                                                              *
-*               For further information contact                *
-*                     gsf@research.att.com                     *
+*             Glenn Fowler <gsf@research.att.com>              *
+*              David Korn <dgk@research.att.com>               *
+*               Phong Vo <kpv@research.att.com>                *
 *                                                              *
 ***************************************************************/
 #include	"sfhdr.h"
@@ -51,17 +33,18 @@
 */
 
 #if __STD_C
-sfpeek(reg Sfio_t* f, Void_t** bp, reg int size)
+ssize_t sfpeek(reg Sfio_t* f, Void_t** bp, reg size_t size)
 #else
-sfpeek(f,bp,size)
+ssize_t sfpeek(f,bp,size)
 reg Sfio_t*	f;	/* file to peek */
 Void_t**	bp;	/* start of data area */
-reg int		size;	/* size of peek */
+reg size_t	size;	/* size of peek */
 #endif
-{	reg int	n;
+{	reg ssize_t	n, sz;
+	reg int		mode;
 
 	/* query for the extent of the remainder of the buffer */
-	if(!bp || size == 0)
+	if((sz = size) == 0 || !bp)
 	{	if(f->mode&SF_INIT)
 			(void)_sfmode(f,0,0);
 
@@ -80,28 +63,28 @@ reg int		size;	/* size of peek */
 		/* else fall down and fill buffer */
 	}
 
-	if(!(n = f->flags&SF_READ) )
-		n = SF_WRITE;
-	if(f->mode != n && _sfmode(f,n,0) < 0)
+	if(!(mode = f->flags&SF_READ) )
+		mode = SF_WRITE;
+	if((int)f->mode != mode && _sfmode(f,mode,0) < 0)
 		return -1;
 
-	*bp = sfreserve(f, size <= 0 ? 0 : size > f->size ? f->size : size, 0);
+	*bp = sfreserve(f, sz <= 0 ? 0 : sz > f->size ? f->size : sz, 0);
 
-	if(*bp && size >= 0)
-		return size;
+	if(*bp && sz >= 0)
+		return sz;
 
-	if((n = sfslen()) > 0)
+	if((n = sfvalue(f)) > 0)
 	{	*bp = (Void_t*)f->next;
-		if(size < 0)
+		if(sz < 0)
 		{	f->mode |= SF_PEEK;
 			f->endr = f->endw = f->data;
 		}
 		else
-		{	if(size > n)
-				size = n;
-			f->next += size;
+		{	if(sz > n)
+				sz = n;
+			f->next += sz;
 		}
 	}
 
-	return (size >= 0 && n >= size) ? size : n;
+	return (sz >= 0 && n >= sz) ? sz : n;
 }

@@ -1,45 +1,27 @@
-/*
- * CDE - Common Desktop Environment
- *
- * Copyright (c) 1993-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
- */
 /***************************************************************
 *                                                              *
-*                      AT&T - PROPRIETARY                      *
+*           This software is part of the ast package           *
+*              Copyright (c) 1985-2000 AT&T Corp.              *
+*      and it may only be used by you under license from       *
+*                     AT&T Corp. ("AT&T")                      *
+*       A copy of the Source Code Agreement is available       *
+*              at the AT&T Internet web site URL               *
 *                                                              *
-*         THIS IS PROPRIETARY SOURCE CODE LICENSED BY          *
-*                          AT&T CORP.                          *
+*     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*                Copyright (c) 1995 AT&T Corp.                 *
-*                     All Rights Reserved                      *
-*                                                              *
-*           This software is licensed by AT&T Corp.            *
-*       under the terms and conditions of the license in       *
-*       http://www.research.att.com/orgs/ssr/book/reuse        *
+*     If you received this software without first entering     *
+*       into a license with AT&T, you have an infringing       *
+*           copy and cannot use it without violating           *
+*             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
-*           Software Engineering Research Department           *
-*                    AT&T Bell Laboratories                    *
+*               Network Services Research Center               *
+*                      AT&T Labs Research                      *
+*                       Florham Park NJ                        *
 *                                                              *
-*               For further information contact                *
-*                     gsf@research.att.com                     *
+*             Glenn Fowler <gsf@research.att.com>              *
+*              David Korn <dgk@research.att.com>               *
+*               Phong Vo <kpv@research.att.com>                *
 *                                                              *
 ***************************************************************/
 #include	"sfhdr.h"
@@ -48,17 +30,18 @@
 **	Written by Kiem-Phong Vo (8/18/90)
 */
 #if __STD_C
-_sfexcept(reg Sfio_t* f, reg int type, reg int io, reg Sfdisc_t* disc)
+int _sfexcept(Sfio_t* f, int type, ssize_t io, Sfdisc_t* disc)
 #else
-_sfexcept(f,type,io,disc)
-reg Sfio_t	*f;	/* stream where the exception happened */
-reg int		type;	/* io type that was performed */
-reg int		io;	/* the io return value that indicated exception */
-reg Sfdisc_t	*disc;	/* discipline in use */
+int _sfexcept(f,type,io,disc)
+Sfio_t*		f;	/* stream where the exception happened */
+int		type;	/* io type that was performed */
+ssize_t		io;	/* the io return value that indicated exception */
+Sfdisc_t*	disc;	/* discipline in use */
 #endif
 {
-	reg int		d, local, lock;
-	reg uchar	*data;
+	reg int		ev, local, lock;
+	reg ssize_t	size;
+	reg uchar*	data;
 
 	GETLOCAL(f,local);
 	lock = f->mode&SF_LOCK;
@@ -72,18 +55,18 @@ reg Sfdisc_t	*disc;	/* discipline in use */
 			SFOPEN(f,0);
 
 		/* so that exception handler knows what we are asking for */
-		_Sfi = io;
-		d = (*(disc->exceptf))(f,type,disc);
+		_Sfi = f->val = io;
+		ev = (*(disc->exceptf))(f,type,&io,disc);
 
 		/* relock if necessary */
 		if(local && lock)
 			SFLOCK(f,0);
 
 		if(io > 0 && !(f->flags&SF_STRING) )
-			return d;
-		else if(d < 0)
+			return ev;
+		else if(ev < 0)
 			return SF_EDONE;
-		else if(d > 0)
+		else if(ev > 0)
 			return SF_EDISC;
 	}
 
@@ -96,20 +79,20 @@ reg Sfdisc_t	*disc;	/* discipline in use */
 		{	if(f->size >= 0 && !(f->flags&SF_MALLOC))
 				goto chk_stack;
 			/* extend buffer */
-			if((d = f->size) < 0)
-				d = 0;
-			if((io -= d) <= 0)
+			if((size = f->size) < 0)
+				size = 0;
+			if((io -= size) <= 0)
 				io = SF_GRAIN;
-			d = ((d+io+SF_GRAIN-1)/SF_GRAIN)*SF_GRAIN;
+			size = ((size+io+SF_GRAIN-1)/SF_GRAIN)*SF_GRAIN;
 			if(f->size > 0)
-				data = (uchar*)realloc((char*)f->data,d);
-			else	data = (uchar*)malloc(d);
+				data = (uchar*)realloc((char*)f->data,size);
+			else	data = (uchar*)malloc(size);
 			if(!data)
 				goto chk_stack;
-			f->endb = data + d;
+			f->endb = data + size;
 			f->next = data + (f->next - f->data);
 			f->endr = f->endw = f->data = data;
-			f->size = d;
+			f->size = size;
 		}
 		return SF_EDISC;
 	}
@@ -133,13 +116,13 @@ chk_stack:
 
 		/* pop and close */
 		pf = (*_Sfstack)(f,NIL(Sfio_t*));
-		if((d = sfclose(pf)) < 0) /* can't close, restack */
+		if((ev = sfclose(pf)) < 0) /* can't close, restack */
 			(*_Sfstack)(f,pf);
 
 		if(lock)
 			SFLOCK(f,0);
 
-		return d < 0 ? SF_EDONE : SF_ESTACK;
+		return ev < 0 ? SF_EDONE : SF_ESTACK;
 	}
 
 	return SF_EDONE;

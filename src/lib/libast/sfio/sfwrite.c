@@ -1,73 +1,51 @@
-/*
- * CDE - Common Desktop Environment
- *
- * Copyright (c) 1993-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
- */
 /***************************************************************
 *                                                              *
-*                      AT&T - PROPRIETARY                      *
+*           This software is part of the ast package           *
+*              Copyright (c) 1985-2000 AT&T Corp.              *
+*      and it may only be used by you under license from       *
+*                     AT&T Corp. ("AT&T")                      *
+*       A copy of the Source Code Agreement is available       *
+*              at the AT&T Internet web site URL               *
 *                                                              *
-*         THIS IS PROPRIETARY SOURCE CODE LICENSED BY          *
-*                          AT&T CORP.                          *
+*     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*                Copyright (c) 1995 AT&T Corp.                 *
-*                     All Rights Reserved                      *
-*                                                              *
-*           This software is licensed by AT&T Corp.            *
-*       under the terms and conditions of the license in       *
-*       http://www.research.att.com/orgs/ssr/book/reuse        *
+*     If you received this software without first entering     *
+*       into a license with AT&T, you have an infringing       *
+*           copy and cannot use it without violating           *
+*             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
-*           Software Engineering Research Department           *
-*                    AT&T Bell Laboratories                    *
+*               Network Services Research Center               *
+*                      AT&T Labs Research                      *
+*                       Florham Park NJ                        *
 *                                                              *
-*               For further information contact                *
-*                     gsf@research.att.com                     *
+*             Glenn Fowler <gsf@research.att.com>              *
+*              David Korn <dgk@research.att.com>               *
+*               Phong Vo <kpv@research.att.com>                *
 *                                                              *
 ***************************************************************/
 #include	"sfhdr.h"
 
 /*	Write data out to the file system
-**	Note that the reg declarations below must be kept in
-**	their relative order so that the code will configured
-**	correctly on Vaxes to use "asm()".
 **
 **	Written by Kiem-Phong Vo (06/27/90)
 */
 
 #if __STD_C
-sfwrite(reg Sfio_t* f, const Void_t* buf, reg int n)
+ssize_t sfwrite(reg Sfio_t* f, const Void_t* buf, reg size_t n)
 #else
-sfwrite(f,buf,n)
-reg Sfio_t*	f;	/* write to this stream. r11 on Vax	*/
-Void_t*		buf;	/* buffer to be written.		*/
-reg int		n;	/* number of bytes. r10 on Vax		*/
+ssize_t sfwrite(f,buf,n)
+reg Sfio_t*	f;	/* write to this stream. 	*/
+Void_t*		buf;	/* buffer to be written.	*/
+reg size_t	n;	/* number of bytes. 		*/
 #endif
 {
-	reg char*	s;	/* r9 on Vax	*/
-	reg uchar*	next;	/* r8 on Vax	*/
-	reg int		w;	/* r7 on Vax	*/
-	reg char*	begs;
-	reg int		local;
+	reg uchar	*s, *begs, *next;
+	reg ssize_t	w;
+	reg int		local, justseek;
 
 	GETLOCAL(f,local);
+	justseek = f->bits&SF_JUSTSEEK; f->bits &= ~SF_JUSTSEEK;
 
 	/* release peek lock */
 	if(f->mode&SF_PEEK)
@@ -84,8 +62,8 @@ reg int		n;	/* number of bytes. r10 on Vax		*/
 
 		if(f->mode&SF_PKRD)
 		{	/* read past peeked data */
-			char	buf[16];
-			reg int	r;
+			char		buf[16];
+			reg ssize_t	r;
 
 			for(w = n; w > 0; )
 			{	if((r = w) > sizeof(buf))
@@ -102,11 +80,11 @@ reg int		n;	/* number of bytes. r10 on Vax		*/
 			f->here += n;
 		}
 
-		if((f->mode&SF_READ) && (f->flags&SF_PROCESS))
+		if((f->mode&SF_READ) && (f->bits&SF_PROCESS))
 			f->next += n;
 	}
 
-	s = begs = (char*)buf;
+	s = begs = (uchar*)buf;
 	for(;; f->mode &= ~SF_LOCK)
 	{	/* check stream mode */
 		if(SFMODE(f,local) != SF_WRITE && _sfmode(f,SF_WRITE,local) < 0 )
@@ -117,44 +95,39 @@ reg int		n;	/* number of bytes. r10 on Vax		*/
 
 		SFLOCK(f,local);
 
-		/* current available buffer space */
-		if((w = f->endb - f->next) > n)
-			w = n;
-
-		if((uchar*)s == f->next)
-		{	/* fast write after sfreserve() */
-			f->next += w;
-			s += w;
-			n = 0;
+		w = f->endb - f->next;
+		if(f->next == s) /* fast write after sfreserve */	
+		{	if(w > (ssize_t)n )
+				w = (ssize_t)n;
+			f->next = (s += w);
+			n -= w;
 			break;
 		}
-
-		if(w > 0 && ((f->flags&SF_STRING) || w != (f->endb-f->data)) )
-		{	/* copy into buffer */
-			next = f->next;
-
-#if _vax_asm		/* s is r9, next is r8, w is r7 */
-			asm( "movc3	r7,(r9),(r8)" );
-			s += w;
-			next += w;
-#else
-			MEMCPY(next,s,w);
-#endif
-			f->next = next;
-			if((n -= w) <= 0)
-				break;
-		}
-		else if(!(f->flags&SF_STRING) && f->next > f->data)
+		else if((w > 0 && w < (ssize_t)n && (f->flags&SF_WHOLE) ) ||
+			(w == 0 && (f->next > f->data || (f->flags&SF_STRING)) ) )
 		{	if(SFFLSBUF(f,-1) < 0)
 				break;
+			w = f->endb - f->next;
 		}
-		else if((w = SFWR(f,s,n,f->disc)) == 0)
-			break;
-		else if(w > 0)
-		{	s += w;
-			if((n -= w) <= 0)
+
+		if(!(f->flags&SF_STRING) && f->next == f->data &&
+		   ((ssize_t)n >= f->size ||
+		    ((f->flags&SF_WHOLE) && (ssize_t)n > w) ||
+		    (justseek && SFUNBUFFER(f,n)) ) )
+		{	if((w = SFWR(f,s,n,f->disc)) <= 0)
 				break;
+			s += w;
 		}
+		else
+		{	if(w > (ssize_t)n)
+				w = (ssize_t)n;
+			next = f->next;
+			MEMCPY(next,s,w);
+			f->next = next;
+		}
+
+		if((n -= w) <= 0)
+			break;
 	}
 
 	/* always flush buffer for share streams */
@@ -163,15 +136,15 @@ reg int		n;	/* number of bytes. r10 on Vax		*/
 
 	/* check to see if buffer should be flushed */
 	else if(n == 0 && (f->flags&SF_LINE) && !(f->flags&SF_STRING))
-	{	if((n = f->next-f->data) > (w = s-begs))
+	{	if((ssize_t)(n = f->next-f->data) > (w = s-begs))
 			n = w;
 		if(n > 0 && n < HIFORLINE)
-		{	w = *(next = f->next-n); *next = '\n'; next += n;
-			while(*--next != '\n')
-				;
-			f->next[-n] = w;
-			if(*next == '\n')
-				n = HIFORLINE;
+		{	for(next = f->next-1; n > 0; --n, --next)
+			{	if(*next == '\n')
+				{	n = HIFORLINE;
+					break;
+				}
+			}
 		}
 		if(n >= HIFORLINE)
 			(void)SFFLSBUF(f,-1);

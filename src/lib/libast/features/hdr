@@ -44,3 +44,11 @@ tst std_def_realloc note{ <std*.h> defines realloc macro }end compile{
 	(
 	#endif
 }end
+tst std_def_valloc note{ <std*.h> defines valloc macro }end compile{
+	#include <sys/types.h>
+	#include <stddef.h>
+	#include <stdlib.h>
+	#ifndef valloc
+	(
+	#endif
+}end

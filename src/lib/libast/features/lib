@@ -1,24 +1,41 @@
 cmd	universe
-hdr	dirent,filio,jioctl,locale,mman,ndir,utime,vfork,wchar
+hdr	dirent,direntry,filio,fmtmsg,fnmatch,jioctl,libgen
+hdr	locale,mman,ndir,syslog,utime,vfork,wctype
+hdr	wchar note{ <wchar.h> and isw*() really work }end execute{
+	#include <wchar.h>
+	main()
+	{
+		wchar_t	w = 'a';
+		return iswalnum(w) == 0;
+	}
+}end
 dat	_tzname,tzname
-lib	_cleanup,BSDsetpgrp,atexit,bcopy,bzero,confstr,dirread,dup2,fchmod
-lib	fcntl,fnmatch,fork,fsync,getconf,getdents,getdirentries,getdtablesize
-lib	getgroups,getpagesize,getrlimit,getuniverse,index,killpg,link
-lib	localeconv,lstat,mbtowc,memccpy
-lib	memchr,memcmp,memcpy,memdup,memmove,memset,mkdir,mkfifo,mknod,mktemp
-lib	mount,on_exit,onexit,opendir,pathconf,readlink,remove,rename,rindex
-lib	rmdir,rewinddir,setlocale,setpgid,setpgrp,setpgrp2,setreuid,setsid
-lib	setuid,sigaction,sigprocmask,sigsetmask,sigunblock,sigvec
-lib	socketpair,spawnve,spawnveg,strchr,strcoll,strdup,strerror,strrchr
-lib	strtod,strtol,strtoul,strxfrm,symlink,sysconf
-lib	telldir,tmpnam,tzset,universe,unlink,utime,vfork
-lib	wctype,iswblank,iswctype
-lib	execve,pcreateve,NutForkExecve
+lib	BSDsetpgrp NutForkExecve
+lib	_cleanup
+lib	atexit,bcopy,bzero,confstr,dirread,dup2,execlp,execve,execvp,execvpe
+lib	fchmod,fcntl,fmtmsg,fnmatch,fork,fsync,getconf,getdents,getdirentries
+lib	getdtablesize,getgroups,getlogin,getpagesize,getrlimit,getuniverse
+lib	glob,index,iswblank,iswctype,killpg,link,localeconv,madvise,mbtowc
+lib	memalign,memccpy,memchr,memcmp,memcpy,memdup,memmove,memset
+lib	mkdir,mkfifo,mktemp,mktime
+lib	mount,on_exit,onexit,opendir,pathconf,pcreateve
+lib	readlink,remove,rename,rewinddir,rindex,rmdir,setlocale
+lib	setpgid,setpgrp,setpgrp2,setreuid,setsid,setuid,sigaction
+lib	sigprocmask,sigsetmask,sigunblock,sigvec,socketpair,spawnlp
+lib	spawnve,spawnveg,spawnvp,spawnvpe,strchr,strcoll,strdup,strerror
+lib	strcasecmp,strncasecmp,strrchr,strtod,strtol,strtoll,strtoul,strtoull
+lib	strxfrm,strftime,swab,symlink,sysconf,syslog
+lib	telldir,tmpnam,tzset,universe,unlink,utime,vfork,wctype
+lib	creat64,fstat64,fstatvfs64,ftruncate64 -D_LARGEFILE64_SOURCE
+lib	lseek64,lstat64 -D_LARGEFILE64_SOURCE
+lib	mmap64,open64,stat64,statvfs64,truncate64 -D_LARGEFILE64_SOURCE
 mem	direct.d_reclen sys/types.h sys/dir.h
 mem	dirent.d_fileno,dirent.d_ino,dirent.d_namlen,dirent.d_off,dirent.d_reclen sys/types.h dirent.h
+mem	DIR sys/types.h - dirent.h - sys/dir.h
 mem	DIR.dd_fd sys/types.h - dirent.h - sys/dir.h
-sys	dir,filio,jioctl,localedef,mman,ptem,resource,socket,stream,universe
-sys	vfork
+sys	dir,filio,jioctl,localedef,mman,ptem,resource
+sys	socket,stream,universe,vfork
+typ	off64_t -D_LARGEFILE64_SOURCE
 
 tst	tst_errno note{ errno can be assigned }end link{
 	_BEGIN_EXTERNS_
@@ -67,10 +84,6 @@ cat{
 	#endif
 	#if _lib_NutForkExecve
 	#define _map_spawnve	NutForkExecve
-	#else
-	#if _lib_pcreateve
-	#define _map_spawnve	pcreateve
-	#endif
 	#endif
 }end
 
@@ -171,70 +184,110 @@ tst	socket_peek note{ recv(MSG_PEEK) works }end link{
 }end
 
 tst	lib_mmap sys/types.h sys/stat.h unistd.h fcntl.h mman.h sys/mman.h sys/times.h note{ standard mmap interface that works }end execute{
-	#define BUFSIZE	(16*1024)
-	#define MAPSIZE	(16*1024)
-	#define WRITE	(64)
+	#define MAPSIZE (64*1024)
+	#define BUFSIZE	(8*1024)
+	#define WRITE   (64)
+
+	#define Failed(file)	(unlink(file),1)
+
 	#if _STD_
 	main(int argc, char** argv)
 	#else
 	main(argc,argv)
-	int	argc;
-	char**	argv;
+	int     argc;
+	char**  argv;
 	#endif
 	{
 		caddr_t		mm;
-		char*		t;
-		char*		f;
-		int		i;
-		int		fd;
-		char		file[1024];
-		char		buf[BUFSIZE];
-		struct tms	brdtm, erdtm, bmmtm, emmtm;
-	
-		f = argv[0];
+		char		*t, *u, *f;
+		int		i, fd, okfixed;
+		char		file[1024], buf[MAPSIZE];
+		struct tms	stm, etm;
+		clock_t		rdtm, mmtm;
+
+		/* create data file in a local fs if possible */
 		t = file;
-		while (*t = *f++) t++;
-		*t++ = '.';
-		*t++ = 'D';
-		*t = 0;
-		/* create data file */
+		if (access(f = "/tmp", 0) == 0 ||
+		    access(f = "/usr/tmp", 0) == 0)
+		{
+			while (*t = *f++)
+				t++;
+			*t++ = '/';
+		}
+		u = t;
+		f = argv[0];
+		while (*t = *f++)
+			if (*t == '/')
+				t = u;
+			else if (*t != '.')
+				t++;
+		*t++ = '.'; *t++ = 'D'; *t = 0;
 		if ((fd = creat(file,0666)) < 0)
-			return(1);
+			return 1;
+
 		for (i = 0; i < sizeof(buf); ++i)
 			buf[i] = '0' + (i%10);
 		for (i = 0; i < WRITE; ++i)
 			if (write(fd,buf,sizeof(buf)) != sizeof(buf))
-				return(1);
+				return Failed(file);
 		close(fd);
-		/* read time */
-		if ((fd = open(file, 0)) < 0)
-			return(1);
-		times(&brdtm);
-		for (i = 0; i < WRITE; ++i)
-			if (read(fd,buf,sizeof(buf)) != sizeof(buf))
-				return(1);
-		times(&erdtm);
-		close(fd);
-		/* memory map time */
+
+		/* see if can overwrite fixed map */
+	#ifndef MAP_VARIABLE
+	#define MAP_VARIABLE	0
+	#endif
 		if ((fd = open(file,0)) < 0)
-			return(1);
-		times(&bmmtm);
-		mm = 0;
-		for (i = 0; i < (WRITE/(MAPSIZE/BUFSIZE)); ++i)
-		{	mm = (caddr_t)mmap(mm, MAPSIZE, (PROT_READ|PROT_WRITE),
-				  (MAP_PRIVATE | (mm ? MAP_FIXED : 0)),
-				  fd, i*MAPSIZE );
+			return Failed(file);
+
+		mm = mmap((caddr_t)0, sizeof(buf), (PROT_READ|PROT_WRITE),
+			  (MAP_PRIVATE|MAP_VARIABLE), fd, 0);
+		if(mm == (caddr_t)0 || mm == (caddr_t)(-1))
+			return Failed(file);
+		mm = mmap(mm, sizeof(buf), (PROT_READ|PROT_WRITE),
+			  (MAP_PRIVATE|MAP_FIXED), fd, 0);
+		okfixed = (mm == (caddr_t)0 || mm == (caddr_t)(-1)) ? 0 : 1;
+		munmap(mm, sizeof(buf));
+		close(fd);
+
+		/* read time */
+		if((fd = open(file, 0)) < 0)
+			return Failed(file);
+		times(&stm);
+		for (i = 0; i < WRITE; ++i)
+			if (read(fd,buf,BUFSIZE) != BUFSIZE)
+				return Failed(file);
+		times(&etm);
+		close(fd);
+		rdtm = (etm.tms_utime-stm.tms_utime) + (etm.tms_stime-stm.tms_utime);
+
+		/* mmap time */
+		if ((fd = open(file,0)) < 0)
+			return Failed(file);
+		times(&stm);
+		for(i = 0, mm = (caddr_t)0; i < WRITE; ++i)
+		{	if(okfixed)
+			{	mm = (caddr_t)mmap(mm, MAPSIZE,
+					(PROT_READ|PROT_WRITE),
+					(MAP_PRIVATE | (mm ? MAP_FIXED : MAP_VARIABLE)),
+					fd, i*MAPSIZE );
+			}
+			else
+			{	if(mm)
+					munmap(mm, MAPSIZE);
+				mm = (caddr_t)mmap((caddr_t)0, MAPSIZE,
+					(PROT_READ|PROT_WRITE),
+					(MAP_PRIVATE|MAP_VARIABLE),
+					fd, i*MAPSIZE );
+			}
 			if(mm == (caddr_t)(-1) || mm == (caddr_t)0)
-				return(1);
+				return Failed(file);
 		}
-		times(&emmtm);
+		times(&etm);
 		close(fd);
 		unlink(file);
-		if(((erdtm.tms_utime-brdtm.tms_utime)+(erdtm.tms_stime-brdtm.tms_stime)) <=
-		   ((emmtm.tms_utime-bmmtm.tms_utime)+(emmtm.tms_stime-bmmtm.tms_stime)) )
-			return(1);
-	
-		return(0);
+		mmtm = (etm.tms_utime-stm.tms_utime) + (etm.tms_stime-stm.tms_utime);
+
+		return rdtm+60 < mmtm ? 1 : 0;
 	}
 }end
 
@@ -262,16 +315,15 @@ tst	run{
 	u=att
 	case `/bin/cat -s /dev/null/foo 2>&1` in
 	'')	;;
-	*)	case `/bin/echo '\\\\t'` in
-		'\\t')	u=ucb ;;
+	*)	case `/bin/echo '\\t'` in
+		'\t')	u=ucb ;;
 		esac
 		;;
 	esac
-	echo "#define _UNIV_DEFAULT	\\"$u\\"	/* default universe name */"
+	echo "#define _UNIV_DEFAULT	\"$u\"	/* default universe name */"
 }end
 
 std	cleanup note{ stuck with standard _cleanup }end noexecute{
-	#include <stdio.h>
 	_BEGIN_EXTERNS_
 	extern void exit _ARG_((int));
 	extern void _exit _ARG_((int));
@@ -283,14 +335,27 @@ std	cleanup note{ stuck with standard _cleanup }end noexecute{
 
 std	malloc note{ stuck with standard malloc }end noexecute{
 	_BEGIN_EXTERNS_
+	extern void _exit _ARG_((int));
 	extern char* strdup _ARG_((const char*));
 	#if _STD_
-	char* malloc(unsigned n) { return 0; }
+	char* malloc(unsigned n) { _exit(0); return 0; }
 	#else
-	char* malloc(n) unsigned n; { return 0; }
+	char* malloc(n) unsigned n; { _exit(0); return 0; }
 	#endif
 	_END_EXTERNS_
-	main() { return strdup("yo") != 0; }
+	main() { strdup("yo"); _exit(1); }
+}end
+
+std	remove note{ stuck with standard remove() }end nostatic{
+	_BEGIN_EXTERNS_
+	extern int unlink _ARG_((const char*));
+	_END_EXTERNS_
+	#if _STD_
+	int remove(const char* path) { return 0; }
+	#else
+	int remove(path) char* path; { return 0; }
+	#endif
+	main() { return unlink("foo"); }
 }end
 
 std	signal note{ stuck with standard signal }end nolink{
@@ -310,4 +375,56 @@ std	strcoll note{ standard strcoll works }end execute{
 		char	t[] = S;
 		return strcoll(s, t) || strcmp(s, t);
 	}
+}end
+
+cat{
+	/* ignore solaris 5.4 incompatibilities -- they aren't worth it */
+	#if __sparc__ || __sparc || sparc
+	#undef	_lib_confstr
+	#undef	_lib_fnmatch
+	#endif
+
+	/* temporarily override some uwin feature tests */
+	#if _WIN32
+	#undef	_lib_execlp
+	#undef	_lib_execvp
+	#undef	_lib_execvpe
+	#undef	_lib_fork
+	#undef	_lib_spawnlp
+	#undef	_lib_spawnvp
+	#undef	_lib_spawnvpe
+	#undef	_std_malloc
+	#define _std_malloc 1
+	#undef	_stream_peek
+	#endif
+
+	/* mvs.390 hacks */
+	#if __MVS__
+	#undef	_mem_dd_fd_DIR
+	#undef	_typ_long_double
+	#endif
+
+}end
+
+tst	no64 note{ largefile 64 broken }end execute{
+	#define _LARGEFILE64_SOURCE 1
+	#include <sys/types.h>
+	#include <sys/stat.h>
+	main()
+	{
+		struct stat64	st;
+		return !stat64(".", &st) && st.st_mode && st.st_mtime;
+	}
+}end pass{
+	echo "/* can we at least agree that a successful return means success? */"
+	echo "#undef	_lib_creat64"
+	echo "#undef	_lib_fstat64"
+	echo "#undef	_lib_fstatvfs64"
+	echo "#undef	_lib_ftruncate64"
+	echo "#undef	_lib_lseek64"
+	echo "#undef	_lib_lstat64"
+	echo "#undef	_lib_mmap64"
+	echo "#undef	_lib_stat64"
+	echo "#undef	_lib_statvfs64"
+	echo "#undef	_lib_truncate64"
 }end

@@ -1,45 +1,27 @@
-/*
- * CDE - Common Desktop Environment
- *
- * Copyright (c) 1993-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
- */
 /***************************************************************
 *                                                              *
-*                      AT&T - PROPRIETARY                      *
+*           This software is part of the ast package           *
+*              Copyright (c) 1985-2000 AT&T Corp.              *
+*      and it may only be used by you under license from       *
+*                     AT&T Corp. ("AT&T")                      *
+*       A copy of the Source Code Agreement is available       *
+*              at the AT&T Internet web site URL               *
 *                                                              *
-*         THIS IS PROPRIETARY SOURCE CODE LICENSED BY          *
-*                          AT&T CORP.                          *
+*     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*                Copyright (c) 1995 AT&T Corp.                 *
-*                     All Rights Reserved                      *
-*                                                              *
-*           This software is licensed by AT&T Corp.            *
-*       under the terms and conditions of the license in       *
-*       http://www.research.att.com/orgs/ssr/book/reuse        *
+*     If you received this software without first entering     *
+*       into a license with AT&T, you have an infringing       *
+*           copy and cannot use it without violating           *
+*             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
-*           Software Engineering Research Department           *
-*                    AT&T Bell Laboratories                    *
+*               Network Services Research Center               *
+*                      AT&T Labs Research                      *
+*                       Florham Park NJ                        *
 *                                                              *
-*               For further information contact                *
-*                     gsf@research.att.com                     *
+*             Glenn Fowler <gsf@research.att.com>              *
+*              David Korn <dgk@research.att.com>               *
+*               Phong Vo <kpv@research.att.com>                *
 *                                                              *
 ***************************************************************/
 #include	"sfhdr.h"
@@ -50,9 +32,9 @@
 */
 
 #if __STD_C
-static _sfdup(reg int fd, reg int newfd)
+static int _sfdup(reg int fd, reg int newfd)
 #else
-static _sfdup(fd,newfd)
+static int _sfdup(fd,newfd)
 reg int	fd;
 reg int	newfd;
 #endif
@@ -79,9 +61,9 @@ reg int	newfd;
 }
 
 #if __STD_C
-sfsetfd(reg Sfio_t* f, reg int newfd)
+int sfsetfd(reg Sfio_t* f, reg int newfd)
 #else
-sfsetfd(f,newfd)
+int sfsetfd(f,newfd)
 reg Sfio_t	*f;
 reg int		newfd;
 #endif
@@ -129,8 +111,8 @@ reg int		newfd;
 				}
 
 #ifdef MAP_TYPE
-				if((f->flags&SF_MMAP) && f->data)
-				{	(void)munmap((caddr_t)f->data,f->endb-f->data);
+				if((f->bits&SF_MMAP) && f->data)
+				{	SFMUNMAP(f,f->data,f->endb-f->data);
 					f->data = NIL(uchar*);
 				}
 #endif
@@ -139,7 +121,7 @@ reg int		newfd;
 				f->endb = f->endr = f->endw = f->data;
 				f->extent = f->here = 0;
 				f->mode = (f->mode&SF_RDWR)|SF_INIT;
-				f->flags &= ~SF_HOLE;	/* off /dev/null handling */
+				f->bits &= ~SF_NULL;	/* off /dev/null handling */
 			}
 		}
 

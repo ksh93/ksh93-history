@@ -1,4 +1,27 @@
-
+################################################################
+#                                                              #
+#           This software is part of the ast package           #
+#              Copyright (c) 1982-2000 AT&T Corp.              #
+#      and it may only be used by you under license from       #
+#                     AT&T Corp. ("AT&T")                      #
+#       A copy of the Source Code Agreement is available       #
+#              at the AT&T Internet web site URL               #
+#                                                              #
+#     http://www.research.att.com/sw/license/ast-open.html     #
+#                                                              #
+#     If you received this software without first entering     #
+#       into a license with AT&T, you have an infringing       #
+#           copy and cannot use it without violating           #
+#             AT&T's intellectual property rights.             #
+#                                                              #
+#               This software was created by the               #
+#               Network Services Research Center               #
+#                      AT&T Labs Research                      #
+#                       Florham Park NJ                        #
+#                                                              #
+#              David Korn <dgk@research.att.com>               #
+#                                                              #
+################################################################
 : check for shell magic #!
 : include OPTIONS
 eval $1
@@ -22,18 +45,11 @@ fi
 if	test -d /dev/fd
 then	echo "#define SHOPT_DEVFD	1"
 fi
-: Check for VPIX
-if	test -f /usr/bin/vpix
-then	echo "#define SHOPT_VPIX	1"
-fi
 
 : get the option settings from the options file
-if [ -z "$OPTIONS" ] ; then
-  OPTIONS="OPTIONS"
-fi
 . $OPTIONS
 for i in ACCT ACCTFILE BRACEPAT CRNL DYNAMIC ECHOPRINT ESH FS_3D \
-	JOBS KIA MULTIBYTE OLDTERMIO OO P_SUID RAWONLY \
+	JOBS KIA MULTIBYTE NAMESPAXE NOCASE OLDTERMIO OO P_SUID RAWONLY \
 	SEVENBIT SPAWN SUID_EXEC TIMEOUT VSH
 do	: This could be done with eval, but eval broken in some shells
 	j=0
@@ -48,7 +64,14 @@ do	: This could be done with eval, but eval broken in some shells
 	FS_3D)		j=$FS_3D;;
 	JOBS)		j=$JOBS;;
 	KIA)		j=$KIA;;
-	MULTIBYTE)	j=$MULTIBYTE;;
+	MULTIBYTE)	j=$MULTIBYTE
+			: check for ebcidic
+			case  `echo a | tr a '\012' | wc -l` in
+			*1*)	j=0;;
+			esac
+			;;
+	NAMESPACE)		j=$NAMESPACE;;
+	NOCASE)		j=$NOCASE;;
 	OLDTERMIO)	echo "#include <sys/termios.h>" > /tmp/dummy$$.c
 			echo "#include <sys/termio.h>" >>/tmp/dummy$$.c
 			if	$cc -E /tmp/dummy$$.c > /dev/null 2>&1

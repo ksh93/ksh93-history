@@ -1,7 +1,7 @@
 .de MW
 \f5\\$1\fP
 ..
-.TH VMALLOC 3 "16 January 1994"
+.TH VMALLOC 3 "1 May 1998"
 .SH NAME
 vmalloc \- virtual memory allocation
 .SH SYNOPSIS
@@ -14,7 +14,6 @@ vmalloc \- virtual memory allocation
 .MW "int vmcompact(Vmalloc_t* region);"
 .MW "int vmset(Vmalloc_t* region, int flags, int type);"
 .MW "Vmalloc_t* Vmheap;"
-.MW "Vmalloc_t* Vmregion;"
 .fi
 .SS "Allocation functions"
 .nf
@@ -22,6 +21,8 @@ vmalloc \- virtual memory allocation
 .MW "Void_t* vmalign(Vmalloc_t* region, size_t size, size_t align);"
 .MW "Void_t* vmresize(Vmalloc_t* region, Void_t* addr, size_t size, int type);"
 .MW "int vmfree(Vmalloc_t* region, Void_t* addr);"
+.MW "Void_t* vmnewof(Vmalloc_t* region, Void_t* addr, type, size_t n, size_t x);"
+.MW "Void_t* vmoldof(Vmalloc_t* region, Void_t* addr, type, size_t n, size_t x);"
 .fi
 .SS "Debugging"
 .nf
@@ -37,10 +38,12 @@ vmalloc \- virtual memory allocation
 .nf
 .MW "Vmalloc_t* vmregion(Void_t* addr);"
 .MW "Void_t* vmsegment(Vmalloc_t* region, Void_t* addr);"
+.MW "int vmwalk(Vmalloc_t* region, int(*walkf)(Vmalloc_t*, Void_t*, size_t, Vmdisc_t*);"
 .MW "long vmaddr(Vmalloc_t* region, Void_t* addr);"
 .MW "long vmsize(Vmalloc_t* region, Void_t* addr);"
 .MW "int vmstat(Vmalloc_t* vm, Vmstat_t* statb);"
 .MW "int vmtrace(int fd);"
+.MW "int vmtrbusy(Vmalloc_t* vm);"
 .fi
 .SS "Malloc-compatible functions"
 .nf
@@ -73,10 +76,6 @@ Two predefined regions are pointed to by:
 .MW Vmheap
 A general-purpose region, with best-fit
 allocation, and Unix memory discipline \f5Vmdcsbrk\fP.
-.TP
-.MW Vmregion
-The default region for malloc-compatible functions; initially
-the same as \f5Vmheap\fP.
 .PP
 These functions manipulate regions:
 .PP
@@ -140,10 +139,14 @@ multiple of \fIalign\fP and the \fIstrictest alignment\fP.
 .I vmresize
 attempts to change the length of the block pointed to by
 \fIaddr\fP to the specified \fIsize\fP.
-If that is impossible and \fItype\fP
-is not 0, a new block is allocated and the old block is freed.
-If, in addition, \fItype\fP is positive, the new block is initialized with
+If that is impossible and \fItype\fP has
+at least one of \f5VM_RSMOVE\fP and \f5VM_RSCOPY\fP,
+a new block is allocated and the old block is freed.
+The bit \f5VM_RSCOPY\fP also causes
+the new block to be initialized with
 as much of the old contents as will fit.
+When a resized block gets larger, the new space will be cleared
+if \fItype\fP has the bit \f5VM_RSZERO\fP.
 \fIvmresize\fP
 returns a pointer to the final block, or \f5NULL\fP on failure.
 If \fIaddr\fP is \f5NULL\fP, \fIvmresize\fP behaves like \fIvmalloc\fP;
@@ -154,7 +157,16 @@ makes the currently allocated block pointed to by
 \fIaddr\fP available for future allocations in its \fIregion\fP.
 If \fIaddr\fP is \f5NULL\fP, \fIvmfree\fP does nothing.
 It returns \-1 on error, and nonnegative otherwise.
-
+.PP
+.I vmnewof
+is a macro function that attempts to change the length of
+the block pointed to by \fIaddr\fP to the size \f5n*sizeof(type)+x\fP.
+If the block is moved, new space will be initialized with as much of the
+old content as will fit.
+Additional space will be set to zero.
+.PP
+.I vmoldof
+is similar to \fIvmnewof\fP but it neither copies data nor clears space.
 .SS "Memory disciplines"
 Memory disciplines have type \f5Vmdisc_t\fP,
 a structure with these members:
@@ -207,14 +219,15 @@ function is called for events identified by \fItype\fP, which is coded thus:
 .TP
 .MW VM_OPEN
 A new region is being opened.
-If this region is to manipulate memory
+If \fIexceptf\fP returns a zero value, the region opening proceeds normally.
+A negative return value causes \fIvmopen\fP to terminate with failure.
+A positive return value indicates that the new region is to manipulate memory
 already initialized by a previous \fIvmopen\fP call
-(perhaps by a different process on persistent or shared memory),
-the \fIexceptf\fP function should return a positive value.
-In addition, the argument \f5(Void_t**)\fP\fIobj\fP should be used
-to return the initial segment.
-If \fIexceptf\fP returns a non-positive value or if \f5*(Void_t**)\fP\fIobj\fP
-is \f5NULL\fP, the region opening proceeds normally.
+(perhaps by a different process on persistent or shared memory).
+In this case, the argument \f5(Void_t**)\fP\fIobj\fP should
+return the initial segment (which is of type \f5(Void_t*)\fP).
+\fIvmopen\fP will return failure if this segment is not returned or if it
+has not been properly initialized.
 .TP
 .MW VM_CLOSE
 The region is being closed.
@@ -226,13 +239,15 @@ An attempt to extend the region by the amount
 \f5(size_t)\fP\fIobj\fP failed. The region is unlocked, so the
 \fIexceptf\fP function may free blocks.
 If the function returns a positive value the memory
-request will be repeated; if zero, the allocation method
-will again invoke \fImemoryf\fP to get space;
-if negative, the allocation request will fail.
+request will be repeated.
+If zero, the allocation method
+will again invoke \fImemoryf\fP to get space.
+If negative, the allocation request will fail.
 .TP
 .MW VM_BADADDR
 Address \fIobj\fP, given to \fIvmfree\fP or \fIvmresize\fP,
 does not point to an allocated block from the region.
+The respective call will fail.
 
 .SS "Allocation methods"
 There are five methods, of type \f5Vmethod_t*\fP:
@@ -242,10 +257,9 @@ An approximately best-fit allocation strategy.
 .TP
 .MW Vmlast
 A strategy for building structures that are only deleted in whole.
-Only the latest allocated block can be freed or resized.
-This means that after a block \f5a\fP is allocated,
-all previously allocated blocks are frozen (see also \fIvmclear\fP)
-and only \f5a\fP can ever be freed or resized.
+Only the latest allocated block can be freed.
+This means that as soon as a block \f5a\fP is allocated,
+\fIvmfree\fP calls on blocks other than \c5a\fP are ignored.
 .TP
 .MW Vmpool
 A strategy for blocks of one size,
@@ -340,6 +354,15 @@ finds if some segment of memory in \fIregion\fP
 contains the address \fIaddr\fP.
 It returns the address of a found segment or \f5NULL\fP if none found.
 .PP
+.I vmwalk
+walks all segments in \fIregion\fP or if \fIregion\fP is \f5NULL\fP,
+all segments in all regions.
+At each segment, \fI(*walkf)(vm,addr,size,disc)\fP
+is called where \fIvm\fP is the region, \fIaddr\fP is the segment,
+\fIsize\fP is the size of the segment, and \fIdisc\fP is the region's discipline.
+If \fIwalkf\fP returns a negative value, the walk stops and returns the same value.
+On success, \fIvmwalk\fP returns 0; otherwise, it returns \-1.
+.PP
 .I vmaddr
 checks whether \fIaddr\fP
 points to an address within some allocated block of the given region.
@@ -409,13 +432,15 @@ The address of the affected region.
 .I method
 A string that tells the region's method:
 \f5best\fP, \f5last\fP, \f5pool\fP, \f5profile\fP, or \f5debug\fP.
+.PP
+.I vmtrbusy
+outputs a trace of all currently busy blocks in region \f5vm\fP.
+This only works with the \f5Vmbest\fP, \f5Vmdebug\fP and \f5Vmprofile\fP methods.
 
 .SS "Malloc-compatible functions"
-Functions in this set work in region \f5Vmregion\fP
-and provide the behaviors of \fImalloc\fP(3).
+Functions in this set provide the behaviors of \fImalloc\fP(3).
 The functions
-\fImemalign\fP and \fIvalloc\fP are like \fIvmalign\fP
-with the \fIregion\fP argument fixed to \f5Vmregion\fP; 
+\fImemalign\fP and \fIvalloc\fP allocate aligned blocks;
 \fIvalloc\fP further restricts alignment to page boundaries.
 .PP
 The \fImalloc\fP functions are instrumented for run-time debugging,
@@ -424,7 +449,8 @@ When these modes are enable, time and space performance will be affected.
 For accurate reporting of files and line numbers,
 code should include \f5vmalloc.h\fP and compile with \f5-DVMFL\fP.
 
-The following environment variables drive different modes:
+The following environment variables should be set before any memory allocation
+(e.g., before a process starts). They drive different modes:
 .TP
 .I VMETHOD
 This defines the method to use for allocation.
@@ -460,8 +486,11 @@ are written to the given file (see \fIvmopen()\fP and \fIvmtrace()\fP).
 Similar to \fIVMPROFILE\fP, each instance of the pattern `%p' found
 in \fIVMTRACE\fP is turned to the process id of the running process.
 
+.SH RECENT CHANGES
+\f5Vmlast\fP: allocated blocks are now allowed to be resized (09/1998).
+
 .SH SEE ALSO
 \fImtreplay\fP(1), \fImalloc\fP(3).
 
 .SH AUTHOR
-Kiem-Phong Vo, kpv@research.att.com, AT&T Bell Laboratories
+Kiem-Phong Vo, kpv@research.att.com

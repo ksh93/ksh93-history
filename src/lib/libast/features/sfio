@@ -1,6 +1,69 @@
+hdr	float,floatingpoint,math,values
 sys	filio,ioctl
+lib	qfrexp,qldexp
 
-vax asm note{ register layout ok for vax string operations }end execute{
+tst	tmp_rmfail note{ open files cannot be removed }end execute{
+	#include "iffeio.h"
+	#include <string.h>
+	main()
+	{	
+		int		n;
+		char*		s;
+		FILE*		fr;
+		FILE*		fw;
+		char		file[16];
+		static char	data[] = "0123456789";
+		s = file;
+		*s++ = '1';
+		*s++ = 'F';
+		*s++ = 'F';
+		*s++ = '3';
+		n = (int)&fr;
+		*s++ = (n & 0xF) + 'A';
+		*s++ = ((n >> 4) & 0xF) + 'A';
+		*s++ = ((n >> 8) & 0xF) + 'A';
+		*s++ = ((n >> 12) & 0xF) + 'A';
+		*s++ = '.';
+		*s++ = 'T';
+		*s++ = 'M';
+		*s++ = 'P';
+		*s = 0;
+		remove(file);
+		if (!(fw = fopen(file, "w")))
+			return 0;
+		if (!(fr = fopen(file, "r")) || remove(file) < 0)
+		{
+			fclose(fr);
+			fclose(fw);
+			remove(file);
+			return 0;
+		}
+		if (fwrite(data, sizeof(data), 1, fw) != 1)
+			return 0;
+		fclose(fw);
+		if (fread(file, sizeof(data), 1, fr) != 1)
+			return 0;
+		if (strcmp(file, data) != 0)
+			return 0;
+		return 1;
+	}
+}end
+
+more void_int note{ voidptr is larger than int }end execute{
+	main()
+	{
+		return sizeof(char*) > sizeof(int) ? 0 : 1;
+	}
+}end
+
+more long_int note{ long is larger than int }end execute{
+	main()
+	{
+		return sizeof(long) > sizeof(int) ? 0 : 1;
+	}
+}end
+
+tst	vax_asm note{ register layout ok for vax string operations }end execute{
 	main()
 	{
 	#ifndef vax
@@ -21,16 +84,180 @@ vax asm note{ register layout ok for vax string operations }end execute{
 	}
 }end
 
-i386 cvt note{ 386 native floating point conversions better than C }end link{
+tst	lib_cvt note{ native floating point conversions ok }end link{
+	_BEGIN_EXTERNS_
+	extern char* ecvt _ARG_((double, int, int*, int*));
+	extern char* fcvt _ARG_((double, int, int*, int*));
+	extern double strtod _ARG_((const char*, char**));
+	_END_EXTERNS_
 	main()
 	{
-	#ifndef i386
-		return absurd = -1;
-	#else
-		ecvt();
-		fcvt();
-		strtod();
+		ecvt(0.0, 0, 0, 0);
+		fcvt(0.0, 0, 0, 0);
+		strtod(0, 0);
 		return 0;
+	}
+}end
+
+tst	mmap_fixed note{ mmap allows overwrite of previous fixed address }end execute{
+	#include	<sys/types.h>
+	#include	<sys/mman.h>
+
+	_BEGIN_EXTERNS_
+	int open _ARG_((char*, int));
+	int unlink _ARG_((char*));
+	_END_EXTERNS_
+
+	#define BUFSIZE (64*1024)
+	#define WRITE   (64)
+
+	#define Failed(file)	(unlink(file),1)
+
+	#if _STD_
+	main(int argc, char** argv)
+	#else
+	main(argc,argv)
+	int     argc;
+	char**  argv;
 	#endif
+	{
+		caddr_t	mm;
+		char	*t, *f;
+		int	i, fd;
+		char	file[1024], buf[BUFSIZE];
+
+		/* create data file */
+		f = argv[0]; t = file;
+		while (*t = *f++)
+			t++;
+		*t++ = '.'; *t++ = 'D'; *t = 0;
+		if ((fd = creat(file,0666)) < 0)
+			return 1;
+
+		for (i = 0; i < sizeof(buf); ++i)
+			buf[i] = '0' + (i%10);
+		for (i = 0; i < WRITE; ++i)
+			if (write(fd,buf,sizeof(buf)) != sizeof(buf))
+				return Failed(file);
+		close(fd);
+
+	#ifndef MAP_VARIABLE
+	#define MAP_VARIABLE	0
+	#endif
+		if ((fd = open(file,0)) < 0)
+			return Failed(file);
+
+		mm = mmap((caddr_t)0, sizeof(buf), (PROT_READ|PROT_WRITE),
+			  (MAP_PRIVATE|MAP_VARIABLE), fd, 0);
+		if(mm == (caddr_t)0 || mm == (caddr_t)(-1))
+			return Failed(file);
+		mm = mmap(mm, sizeof(buf), (PROT_READ|PROT_WRITE),
+			  (MAP_PRIVATE|MAP_FIXED), fd, 0);
+		if(mm == (caddr_t)0 || mm == (caddr_t)(-1))
+			return Failed(file);
+
+		return 0;
+	}
+}end
+
+tst	output{
+	#include	<sys/types.h>
+	#include	<sys/mman.h>
+	#include	<sys/times.h>
+	
+	_BEGIN_EXTERNS_
+	int creat _ARG_((char*, int));
+	int open _ARG_((char*, int));
+	int unlink _ARG_((char*));
+	int read _ARG_((int, char*, int));
+	_END_EXTERNS_
+	
+	#define MAPSIZE (64*1024)
+	#define BUFSIZE	(MAPSIZE/8)
+	#define WRITE   (64)
+	#define RUN	(64)
+	
+	#define Failed(file)	(unlink(file),1)
+	
+	#if _STD_
+	main(int argc, char** argv)
+	#else
+	main(argc,argv)
+	int     argc;
+	char**  argv;
+	#endif
+	{
+		caddr_t		mm;
+		char		*t, *f;
+		int		i, fd, k, run;
+		char		file[1024], buf[MAPSIZE];
+		struct tms	stm, etm;
+		clock_t		rdtm, mmtm;
+	
+		/* create data file */
+		f = argv[0]; t = file;
+		while (*t = *f++)
+			t++;
+		*t++ = '.'; *t++ = 'D'; *t = 0;
+		if ((fd = creat(file,0666)) < 0)
+			return 1;
+	
+		for (i = 0; i < sizeof(buf); ++i)
+			buf[i] = '0' + (i%10);
+		for (i = 0; i < WRITE; ++i)
+			if (write(fd,buf,sizeof(buf)) != sizeof(buf))
+				return Failed(file);
+		close(fd);
+	
+		/* read time */
+		times(&stm);
+		for(run = 0; run < RUN; ++run)
+		{	if((fd = open(file, 0)) < 0)
+				return Failed(file);
+			for (i = 0; i < WRITE; ++i)
+			{	for(k = 0; k < MAPSIZE; k += BUFSIZE)
+					if (read(fd,buf,BUFSIZE) != BUFSIZE)
+						return Failed(file);
+			}
+			close(fd);
+		}
+		times(&etm);
+		rdtm = (etm.tms_utime-stm.tms_utime) + (etm.tms_stime-stm.tms_stime);
+	
+		/* mmap time */
+		times(&stm);
+		for(run = 0; run < RUN; ++run)
+		{	if ((fd = open(file,0)) < 0)
+				return Failed(file);
+			for(i = 0, mm = (caddr_t)0; i < WRITE; ++i)
+			{	if(mm)
+					munmap(mm, MAPSIZE);
+				mm = (caddr_t)mmap((caddr_t)0, MAPSIZE,
+						   (PROT_READ|PROT_WRITE),
+						   MAP_PRIVATE, fd, i*MAPSIZE );
+				if(mm == (caddr_t)(-1) || mm == (caddr_t)0)
+					return Failed(file);
+	
+				/* the memcpy is < BUFSIZE to simulate the
+				   fact that functions like sfreserve/sfgetr do
+				   not do buffer copying.
+				*/
+				t = (char*)mm;
+				for(k = 0; k < MAPSIZE; k += BUFSIZE, t += BUFSIZE)
+					memcpy(buf,t,(3*BUFSIZE)/4);
+			}
+			close(fd);
+		}
+		times(&etm);
+		mmtm = (etm.tms_utime-stm.tms_utime) + (etm.tms_stime-stm.tms_stime);
+
+		unlink(file);
+	
+		if(4*mmtm <= 3*rdtm)
+			printf("#define _mmap_worthy	2	/* mmap is great! */\n");
+		else if(4*mmtm <= 5*rdtm)
+			printf("#define _mmap_worthy	1	/* mmap is good! */\n");
+	
+		return 0;
 	}
 }end

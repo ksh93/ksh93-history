@@ -1,45 +1,27 @@
-/*
- * CDE - Common Desktop Environment
- *
- * Copyright (c) 1993-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
- */
 /***************************************************************
 *                                                              *
-*                      AT&T - PROPRIETARY                      *
+*           This software is part of the ast package           *
+*              Copyright (c) 1985-2000 AT&T Corp.              *
+*      and it may only be used by you under license from       *
+*                     AT&T Corp. ("AT&T")                      *
+*       A copy of the Source Code Agreement is available       *
+*              at the AT&T Internet web site URL               *
 *                                                              *
-*         THIS IS PROPRIETARY SOURCE CODE LICENSED BY          *
-*                          AT&T CORP.                          *
+*     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*                Copyright (c) 1995 AT&T Corp.                 *
-*                     All Rights Reserved                      *
-*                                                              *
-*           This software is licensed by AT&T Corp.            *
-*       under the terms and conditions of the license in       *
-*       http://www.research.att.com/orgs/ssr/book/reuse        *
+*     If you received this software without first entering     *
+*       into a license with AT&T, you have an infringing       *
+*           copy and cannot use it without violating           *
+*             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
-*           Software Engineering Research Department           *
-*                    AT&T Bell Laboratories                    *
+*               Network Services Research Center               *
+*                      AT&T Labs Research                      *
+*                       Florham Park NJ                        *
 *                                                              *
-*               For further information contact                *
-*                     gsf@research.att.com                     *
+*             Glenn Fowler <gsf@research.att.com>              *
+*              David Korn <dgk@research.att.com>               *
+*               Phong Vo <kpv@research.att.com>                *
 *                                                              *
 ***************************************************************/
 #include	"sfhdr.h"
@@ -51,7 +33,11 @@
 */
 
 /* synchronize unseekable write streams */
+#if __STD_C
+static void _sfwrsync(void)
+#else
 static void _sfwrsync()
+#endif
 {	reg Sfpool_t*	p;
 	reg Sfio_t*	f;
 	reg int		n;
@@ -61,80 +47,93 @@ static void _sfwrsync()
 	{	if(p->n_sf <= 0)
 			continue;
 		f = p->sf[0];
-		if(!SFFROZEN(f) && (f->mode&SF_WRITE) && f->next > f->data &&
-		   (f->extent < 0 /*|| (f->flags&SF_SHARE)*/) )
+		if(!SFFROZEN(f) && f->next > f->data &&
+		   (f->mode&SF_WRITE) && f->extent < 0 )
 			(void)_sfflsbuf(f,-1);
 	}
 
 	/* and all the ones in the discrete pool */
 	for(n = 0; n < _Sfpool.n_sf; ++n)
 	{	f = _Sfpool.sf[n];
-		if(!SFFROZEN(f) && (f->mode&SF_WRITE) && f->next > f->data &&
-		   (f->extent < 0 /*|| (f->flags&SF_SHARE)*/) )
+		if(!SFFROZEN(f) && f->next > f->data &&
+		   (f->mode&SF_WRITE) && f->extent < 0 )
 			(void)_sfflsbuf(f,-1);
 	}
 }
 
 #if __STD_C
-sfrd(reg Sfio_t* f, reg Void_t* buf, reg int n, reg Sfdisc_t* disc)
+ssize_t sfrd(reg Sfio_t* f, reg Void_t* buf, reg size_t n, Sfdisc_t* disc)
 #else
-sfrd(f,buf,n,disc)
-reg Sfio_t	*f;
+ssize_t sfrd(f,buf,n,disc)
+reg Sfio_t*	f;
 reg Void_t*	buf;
-reg int		n;
-reg Sfdisc_t	*disc;
+reg size_t	n;
+Sfdisc_t*	disc;
 #endif
 {
-	reg long	r;
-	reg int		local, string, rcrv, dosync, oerrno;
+	Sfoff_t		r;
+	reg Sfdisc_t*	dc;
+	reg int		local, rcrv, dosync, oerrno;
 
 	GETLOCAL(f,local);
 	if((rcrv = f->mode & (SF_RC|SF_RV)) )
 		f->mode &= ~(SF_RC|SF_RV);
+	f->bits &= ~SF_JUSTSEEK;
 
-	if((f->mode&SF_PKRD) || (!local && !(f->mode&SF_LOCK)) )
+	if(f->mode&SF_PKRD)
 		return -1;
 
-	/* find the continuation discipline */
-	if(!(string = (f->flags&SF_STRING)) )
-		SFDISC(f,disc,readf,local);
-	dosync = 0;
+	if(!local && !(f->bits&SF_DCDOWN)) /* an external user's call */
+	{	if(f->mode != SF_READ && _sfmode(f,SF_READ,0) < 0)
+			return -1;
+		if(f->next < f->endb)
+		{	if(SFSYNC(f) < 0)
+				return -1;
+#ifdef MAP_TYPE
+			if((f->bits&SF_MMAP) && f->data)
+			{	SFMUNMAP(f, f->data, f->endb-f->data);
+				f->data = NIL(uchar*);
+			}
+#endif
+			f->next = f->endb = f->endr = f->endw = f->data;
+		}
+	}
 
-	for(;;)
-	{
-		/* stream locked by sfsetfd() */
-		if(!string && f->file < 0)
+	for(dosync = 0;;)
+	{	/* stream locked by sfsetfd() */
+		if(!(f->flags&SF_STRING) && f->file < 0)
 			return 0;
 
-		/* clear current error states */
 		f->flags &= ~(SF_EOF|SF_ERROR);
 
-		if(string)
+		dc = disc;
+		if(f->flags&SF_STRING)
 		{	if((r = (f->data+f->extent) - f->next) < 0)
 				r = 0;
 			if(r > 0)
-				return r;
+				return (ssize_t)r;
 			else	goto do_except;
 		}
 
 		/* warn that a read is about to happen */
-		if(disc && disc->exceptf && (f->flags&SF_IOCHECK) )
+		SFDISC(f,dc,readf);
+		if(dc && dc->exceptf && (f->flags&SF_IOCHECK) )
 		{	reg int	rv;
 			if(local)
 				SETLOCAL(f);
-			if((rv = _sfexcept(f,SF_READ,n,disc)) > 0)
+			if((rv = _sfexcept(f,SF_READ,n,dc)) > 0)
 				n = rv;
 			else if(rv < 0)
 			{	f->flags |= SF_ERROR;
-				return rv;
+				return (ssize_t)rv;
 			}
 		}
 
 #ifdef MAP_TYPE
-		if(f->flags&SF_MMAP)
-		{	reg int		a, mmsz;
-			reg uchar*	data;
-			struct stat	st;
+		if(f->bits&SF_MMAP)
+		{	reg ssize_t	a, round;
+			reg int		prot, flags;
+			Stat_t		st;
 
 			/* determine if we have to copy data to buffer */
 			if((uchar*)buf >= f->data && (uchar*)buf <= f->endb)
@@ -144,87 +143,80 @@ reg Sfdisc_t	*disc;
 
 			/* actual seek location */
 			if((f->flags&(SF_SHARE|SF_PUBLIC)) == (SF_SHARE|SF_PUBLIC) &&
-			   (r = SFSK(f,0L,1,disc)) != f->here)
+			   (r = SFSK(f,(Sfoff_t)0,1,dc)) != f->here)
 				f->here = r;
 			else	f->here -= f->endb-f->next;
 
 			/* before mapping, make sure we have data to map */
-			if((f->flags&SF_SHARE) || (r = f->extent-f->here) < n)
+			if((f->flags&SF_SHARE) || (size_t)(r = f->extent-f->here) < n)
 			{	if((r = fstat(f->file,&st)) < 0)
 					goto do_except;
-				if((r = st.st_size - f->here) <= 0 )
+				if((r = (f->extent = st.st_size) - f->here) <= 0 )
 				{	r = 0;	/* eof */
 					goto do_except;
 				}
 			}
 
 			/* make sure current position is page aligned */
-			if((a = (int)(f->here%_Sfpage)) != 0)
+			if((a = (size_t)(f->here%_Sfpage)) != 0)
 			{	f->here -= a;
 				r += a;
 			}
 
-			/* only map what is required */
-			if(f->size > n+a)
-			{	if(r > f->size)
-					r = f->size;
+			/* map minimal requirement */
+			if(r > (round = (1 + (n+a)/f->size)*f->size) )
+				r = round;
+
+			if(f->data)
+				SFMUNMAP(f, f->data, f->endb-f->data);
+
+			prot = PROT_READ | ((f->flags&SF_BUFCONST) ? 0 : PROT_WRITE);
+			flags = (f->flags&SF_BUFCONST) ? MAP_SHARED : MAP_PRIVATE;
+			for(;;)
+			{	f->data = (uchar*) mmap((caddr_t)0, (size_t)r, prot,
+						flags, f->file, (off_t)f->here);
+				if(f->data && (caddr_t)f->data != (caddr_t)(-1))
+					break;
+				else
+				{	f->data = NIL(uchar*);
+					if((r >>= 1) < (_Sfpage*SF_NMAP) ||
+					   (errno != EAGAIN && errno != ENOMEM) )
+						break;
+				}
 			}
-			else if(r > n+a)
-				r = n+a;
 
-			mmsz = 0;
-			if((data = f->data) && r != (mmsz = f->endb-data))
-			{	f->endb = f->endr = f->endw =
-				f->next = f->data = NIL(uchar*);
-				(void)munmap((caddr_t)data,mmsz);
-				data = NIL(uchar*);
-			}
-
-			f->data = (uchar*) mmap((caddr_t)data, (int)r,
-					(PROT_READ|PROT_WRITE),
-					(MAP_PRIVATE|(data ? MAP_FIXED : 0)),
-					f->file, f->here);
-
-			if((caddr_t)f->data != (caddr_t)(-1) )
-			{	/* success */
+			if(f->data)
+			{	if(f->bits&SF_SEQUENTIAL)
+					SFMMSEQON(f,f->data,r);
 				f->next = f->data+a;
 				f->endr = f->endb = f->data+r;
 				f->endw = f->data;
 				f->here += r;
 
-				/* if share-public, make known our seek location */
-				if((f->flags&(SF_SHARE|SF_PUBLIC)) ==
-				   (SF_SHARE|SF_PUBLIC))
-					(void)SFSK(f,f->here,0,disc);
+				/* make known our seek location */
+				(void)SFSK(f,f->here,0,dc);
 
 				if(buf)
-				{	if(n > (r-a))
-						n = (int)(r-a);
-					memcpy((char*)buf,(char*)f->next,n);
+				{	if(n > (size_t)(r-a))
+						n = (ssize_t)(r-a);
+					memcpy(buf,f->next,n);
 					f->next += n;
 					return n;
 				}
 				else	return f->endb-f->next;
 			}
 			else
-			{	if(data)
-				{	f->endb = f->endr = f->endw =
-					f->next = f->data = NIL(uchar*);
-					(void)munmap((caddr_t)data,mmsz);
-				}
-
-				r = -1;
+			{	r = -1;
 				f->here += a;
-				f->data = NIL(uchar*);
 
 				/* reset seek pointer to its physical location */
-				(void)SFSK(f,f->here,0,disc);
+				(void)SFSK(f,f->here,0,dc);
 
 				/* make a buffer */
-				(void)SFSETBUF(f,(char*)f->tiny,-1);
+				(void)SFSETBUF(f,(Void_t*)f->tiny,(size_t)SF_UNBOUND);
 
 				if(!buf)
-				{	buf = (char*)f->data;
+				{	buf = (Void_t*)f->data;
 					n = f->size;
 				}
 			}
@@ -240,20 +232,27 @@ reg Sfdisc_t	*disc;
 		/* make sure file pointer is right */
 		if(f->extent >= 0 && (f->flags&SF_SHARE) )
 		{	if(!(f->flags&SF_PUBLIC) )
-				f->here = SFSK(f,f->here,0,disc);
-			else	f->here = SFSK(f,0L,1,disc);
+				f->here = SFSK(f,f->here,0,dc);
+			else	f->here = SFSK(f,(Sfoff_t)0,1,dc);
 		}
 
 		oerrno = errno;
 		errno = 0;
 
-		if(disc && disc->readf)
-		{	/* pass on rcrv to handle possible future continuations */
-			if(rcrv)
+		if(dc && dc->readf)
+		{	int	share = f->flags&SF_SHARE;
+
+			if(rcrv) /* pass on rcrv for possible continuations */
 				f->mode |= rcrv;
-			r = (*(disc->readf))(f,buf,n,disc);
+				/* tell readf that no peeking necessary */
+			else	f->flags &= ~SF_SHARE;
+
+			SFDCRD(f,buf,n,dc,r);
+
+			/* reset flags */
 			if(rcrv)
 				f->mode &= ~rcrv;
+			else	f->flags |= share;
 		}
 		else if(SFISNULL(f))
 			r = 0;
@@ -268,40 +267,47 @@ reg Sfdisc_t	*disc;
 				else	f->mode |= SF_RC;
 			}
 		}
-		else	r = read(f->file,(char*)buf,n);
+		else	r = read(f->file,buf,n);
 
 		if(errno == 0 )
 			errno = oerrno;
 
-		if(local && r > 0)
-		{	if(!(f->mode&SF_PKRD))
-			{	f->here += r;
-				if(f->extent >= 0 && f->extent < f->here)
-					f->extent = f->here;
+		if(r > 0 )
+		{	if(!(f->bits&SF_DCDOWN) )	/* not a continuation call */
+			{	if(!(f->mode&SF_PKRD) )
+				{	f->here += r;
+					if(f->extent >= 0 && f->extent < f->here)
+						f->extent = f->here;
+				}
+				if((uchar*)buf >= f->data &&
+				   (uchar*)buf < f->data+f->size)
+					f->endb = f->endr = ((uchar*)buf) + r;
 			}
-			if((uchar*)buf >= f->data &&
-			   (uchar*)buf < f->data+f->size)
-				f->endb = f->endr = ((uchar*)buf) + r;
-		}
 
-		if(r > 0)
-			return (int)r;
+			return (ssize_t)r;
+		}
 
 	do_except:
 		if(local)
 			SETLOCAL(f);
-		switch(_sfexcept(f,SF_READ,(int)r,disc))
+		switch(_sfexcept(f,SF_READ,(ssize_t)r,dc))
 		{
 		case SF_ECONT :
-			continue;
+			goto do_continue;
 		case SF_EDONE :
-			return local ? 0 : r;
+			return local ? 0 : (ssize_t)r;
 		case SF_EDISC :
-			if(!local && !string)
-				continue;
+			if(!local && !(f->flags&SF_STRING))
+				goto do_continue;
 			/* else fall thru */
 		case SF_ESTACK :
 			return -1;
 		}
+
+	do_continue:
+		for(dc = f->disc; dc; dc = dc->disc)
+			if(dc == disc)
+				break;
+		disc = dc;
 	}
 }

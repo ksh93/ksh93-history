@@ -1,9 +1,9 @@
-note : : make abstract machine file generated from Makefile : : note
-info mam static 00000 07/17/94 make (AT&T Bell Laboratories) 3.2 research 05/09/95
+info mam static 00000 1994-07-17 make (AT&T Research) 4.0 2000-02-01
 setv INSTALLROOT ../../..
 setv PACKAGE_ast ${INSTALLROOT}
 setv PACKAGE_ast_INCLUDE ${PACKAGE_ast}/include
 setv PACKAGE_ast_LIB ${PACKAGE_ast}/lib
+setv PACKAGEROOT ../../../../..
 setv AR ar
 setv ARFLAGS cr
 setv AS as
@@ -18,7 +18,7 @@ setv F77 f77
 setv HOSTCC ${CC}
 setv IGNORE
 setv LD ld
-setv LDFLAGS
+setv LDFLAGS 
 setv LEX lex
 setv LEXFLAGS
 setv LPR lpr
@@ -33,188 +33,356 @@ setv SILENT
 setv TAR tar
 setv YACC yacc
 setv YACCFLAGS -d
+make ${PACKAGE_ast_LIB}/package/ast.lic
+done ${PACKAGE_ast_LIB}/package/ast.lic
 make install
-make all
 make ksh
-make main.o
-make sh/main.c
-make FEATURE/externs implicit
-make features/externs
-done features/externs
-setv mam_libm `(set -; cd /tmp; echo 'main(){return(0);}' > x.${!-$$}.c; ${CC} ${CCFLAGS}    -o x.${!-$$}.x x.${!-$$}.c -lm >/dev/null 2>&1 && echo ' -lm'; rm -f x.${!-$$}.[cox])`
-setv mam_libjobs `(set -; cd /tmp; echo 'main(){return(0);}' > x.${!-$$}.c; ${CC} ${CCFLAGS}    -o x.${!-$$}.x x.${!-$$}.c -ljobs >/dev/null 2>&1 && echo ' -ljobs'; rm -f x.${!-$$}.[cox])`
-setv mam_libi `(set -; cd /tmp; echo 'main(){return(0);}' > x.${!-$$}.c; ${CC} ${CCFLAGS}    -o x.${!-$$}.x x.${!-$$}.c -li >/dev/null 2>&1 && echo ' -li'; rm -f x.${!-$$}.[cox])`
-setv mam_libdl `(set -; cd /tmp; echo 'main(){return(0);}' > x.${!-$$}.c; ${CC} ${CCFLAGS}    -o x.${!-$$}.x x.${!-$$}.c -ldl >/dev/null 2>&1 && echo ' -ldl'; rm -f x.${!-$$}.[cox])`
-setv mam_libdld `(set -; cd /tmp; echo 'main(){return(0);}' > x.${!-$$}.c; ${CC} ${CCFLAGS}    -o x.${!-$$}.x x.${!-$$}.c -ldld >/dev/null 2>&1 && echo ' -ldld'; rm -f x.${!-$$}.[cox])`
-setv mam_libintl `(set -; cd /tmp; echo 'main(){return(0);}' > x.${!-$$}.c; ${CC} ${CCFLAGS}    -o x.${!-$$}.x x.${!-$$}.c -lintl >/dev/null 2>&1 && echo ' -lintl'; rm -f x.${!-$$}.[cox])`
-setv mam_libast ${mam_cc_L+-last}${mam_cc_L-${INSTALLROOT}/lib/libast.a}
-exec - iffe set cc ${CC} ${CCFLAGS}    ${LDFLAGS}  :   ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} ${mam_cc_static} ${mam_libm} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libjobs} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libi} ${mam_cc_dynamic} ${mam_libdl} ${mam_libdld} ${mam_cc_static} ${mam_libintl} ${mam_cc_dynamic} ${mam_libast} : run features/externs
-done FEATURE/externs generated
-make FEATURE/execargs implicit
-exec - iffe set cc ${CC} ${CCFLAGS}    ${LDFLAGS}  :   ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} ${mam_cc_static} ${mam_libm} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libjobs} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libi} ${mam_cc_dynamic} ${mam_libdl} ${mam_libdld} ${mam_cc_static} ${mam_libintl} ${mam_cc_dynamic} ${mam_libast} : def execargs
-done FEATURE/execargs generated
-make FEATURE/pstat implicit
-exec - iffe set cc ${CC} ${CCFLAGS}    ${LDFLAGS}  :   ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} ${mam_cc_static} ${mam_libm} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libjobs} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libi} ${mam_cc_dynamic} ${mam_libdl} ${mam_libdld} ${mam_cc_static} ${mam_libintl} ${mam_cc_dynamic} ${mam_libast} : def pstat
-done FEATURE/pstat generated
+make pmain.o
+make sh/pmain.c
+make include/shell.h implicit
+make include/nval.h implicit
+make ${PACKAGE_ast_INCLUDE}/ast/cdt.h implicit
+make ${PACKAGE_ast_INCLUDE}/ast/ast_common.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast/ast_common.h dontcare
+make ${PACKAGE_ast_INCLUDE}/ast/ast_std.h implicit
+make ${PACKAGE_ast_INCLUDE}/ast/ast_botch.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast/ast_botch.h dontcare
+make ${PACKAGE_ast_INCLUDE}/ast/ast_unistd.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast/ast_unistd.h dontcare
+make ${PACKAGE_ast_INCLUDE}/ast/re_comp.h implicit
+make ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+done ${PACKAGE_ast_INCLUDE}/prototyped.h dontcare
+done ${PACKAGE_ast_INCLUDE}/ast/re_comp.h dontcare
+make ${PACKAGE_ast_INCLUDE}/ast/getopt.h implicit
+prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast/getopt.h dontcare
+make ${PACKAGE_ast_INCLUDE}/ast/ast_fcntl.h implicit
+make ${PACKAGE_ast_INCLUDE}/ast/ls.h implicit
+make ${PACKAGE_ast_INCLUDE}/ast/ast_mode.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast/ast_mode.h dontcare
+make ${PACKAGE_ast_INCLUDE}/ast/ast_fs.h implicit
+make error?--?old?ethernet?address?at?wrong?offset implicit
+done error?--?old?ethernet?address?at?wrong?offset dontcare virtual
+done ${PACKAGE_ast_INCLUDE}/ast/ast_fs.h dontcare
+prev ${PACKAGE_ast_INCLUDE}/ast/ast_std.h implicit
+prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast/ls.h dontcare
+prev ${PACKAGE_ast_INCLUDE}/ast/ast_fs.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast/ast_fcntl.h dontcare
+make ${PACKAGE_ast_INCLUDE}/ast/ast_types.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast/ast_types.h dontcare
+make ${PACKAGE_ast_INCLUDE}/ast/stdio.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/getopt.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/ast_common.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast/stdio.h dontcare
+prev ${PACKAGE_ast_INCLUDE}/ast/getopt.h implicit
+make ${PACKAGE_ast_INCLUDE}/ast/limits.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast/limits.h dontcare
+make ${PACKAGE_ast_INCLUDE}/ast/ast_hdr.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast/ast_hdr.h dontcare
+prev ${PACKAGE_ast_INCLUDE}/ast/getopt.h implicit
+make ${PACKAGE_ast_INCLUDE}/ast/ast_lib.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast/ast_lib.h dontcare
+prev ${PACKAGE_ast_INCLUDE}/ast/ast_common.h implicit
+prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast/ast_std.h dontcare
+done ${PACKAGE_ast_INCLUDE}/ast/cdt.h dontcare
+make ${PACKAGE_ast_INCLUDE}/ast/ast.h implicit
+make ${PACKAGE_ast_INCLUDE}/ast/sfio.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/ast_common.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/ast_std.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast/sfio.h dontcare
+prev ${PACKAGE_ast_INCLUDE}/ast/ast_std.h implicit
+make ${PACKAGE_ast_INCLUDE}/ast/ast_version.h implicit
+prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast/ast_version.h dontcare
+prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast/ast.h dontcare
+done include/nval.h dontcare
+make include/name.h implicit
+prev include/nval.h implicit
+make include/shtable.h implicit
+done include/shtable.h dontcare
+prev ${PACKAGE_ast_INCLUDE}/ast/cdt.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/ast.h implicit
+done include/name.h dontcare
+make include/history.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/sfio.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/ast.h implicit
+done include/history.h dontcare
+prev ${PACKAGE_ast_INCLUDE}/ast/cdt.h implicit
+make ${PACKAGE_ast_INCLUDE}/ast/cmd.h implicit
+make ${PACKAGE_ast_INCLUDE}/ast/stak.h implicit
+make ${PACKAGE_ast_INCLUDE}/ast/stk.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/sfio.h implicit
+prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast/stk.h dontcare
+prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast/stak.h dontcare
+make ${PACKAGE_ast_INCLUDE}/ast/error.h implicit
+make ${PACKAGE_ast_INCLUDE}/ast/option.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/ast.h implicit
+prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast/option.h dontcare
+prev ${PACKAGE_ast_INCLUDE}/ast/ast.h implicit
+prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast/error.h dontcare
+prev ${PACKAGE_ast_INCLUDE}/ast/ast.h implicit
+prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast/cmd.h dontcare
+done include/shell.h
+done sh/pmain.c
+prev sh/pmain.c
+exec - ${CC} ${CCFLAGS}  -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -D_PACKAGE_ast -DSHOPT_ESH -c sh/pmain.c
+done pmain.o generated
+make libshell.a archive
+make shell.req
+exec - echo 'main(){return(0);}' > 1.${COTEMP}.c
+exec - ${CC} ${CCFLAGS}    -c 1.${COTEMP}.c &&
+exec - x=`${CC} ${CCFLAGS}    ${LDFLAGS}  -o 1.${COTEMP}.x 1.${COTEMP}.o -l'*' 2>&1 | sed -e 's/[][()+@?]/#/g' || :` &&
+exec - {
+exec - case "" in
+exec - *?)	echo " " ;;
+exec - esac
+exec - for i in shell cmd dll ast m
+exec - do	case $i in
+exec - 	"shell"|shell)
+exec - 		;;
+exec - 	*)	if	test ! -f ${INSTALLROOT}/lib/lib$i.a
+exec - 		then	case `{ ${CC} ${CCFLAGS}    -L. -Ledit -Lsh -Lbltins -Ldata -Ltests ${LDFLAGS}  -o 1.${COTEMP}.x 1.${COTEMP}.o  -l$i 2>&1 || echo '' $x ;} | sed -e 's/[][()+@?]/#/g' || :` in
+exec - 			*$x*)	case `{ ${CC} ${CCFLAGS}    ${LDFLAGS}  -o 1.${COTEMP}.x 1.${COTEMP}.o  -l$i 2>&1 || echo '' $x ;} | sed -e 's/[][()+@?]/#/g' || :` in
+exec - 				*$x*) continue ;;
+exec - 				esac
+exec - 				;;
+exec - 			esac
+exec - 		fi
+exec - 		;;
+exec - 	esac
+exec - 	echo " -l$i"
+exec - done
+exec - } > shell.req
+exec - rm -f 1.${COTEMP}.*
+done shell.req generated
+make alarm.o
+make bltins/alarm.c
 make FEATURE/time implicit
 make features/time
 done features/time
-exec - iffe set cc ${CC} ${CCFLAGS}    ${LDFLAGS}  :   ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} ${mam_cc_static} ${mam_libm} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libjobs} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libi} ${mam_cc_dynamic} ${mam_libdl} ${mam_libdld} ${mam_cc_static} ${mam_libintl} ${mam_cc_dynamic} ${mam_libast} : run features/time
+prev shell.req
+setv mam_libcmd ${mam_cc_L+-lcmd}${mam_cc_L-${PACKAGE_ast_LIB}/libcmd.a}
+setv mam_libcmd `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lcmd,${INSTALLROOT}/lib/libcmd.a,} ${PACKAGE_ast_LIB}/lib/cmd`
+setv mam_libdll ${mam_cc_L+-ldll}${mam_cc_L-${PACKAGE_ast_LIB}/libdll.a}
+setv mam_libdll `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-ldll,${INSTALLROOT}/lib/libdll.a,} ${PACKAGE_ast_LIB}/lib/dll`
+setv mam_libast ${mam_cc_L+-last}${mam_cc_L-${PACKAGE_ast_LIB}/libast.a}
+setv mam_libm `(set -; cd /tmp; echo 'main(){return(0);}' > x.${!-$$}.c; ${CC} ${CCFLAGS}    -o x.${!-$$}.x x.${!-$$}.c -lm >/dev/null 2>&1 && echo ' -lm'; rm -f x.${!-$$}.[cox])`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+make ${mam_libdl}
+done ${mam_libdl} dontcare virtual
+setv mam_libdl `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-ldl,${INSTALLROOT}/lib/libdl.a,} ${PACKAGE_ast_LIB}/lib/dl`
+exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_libast} : run features/time
+make ${PACKAGE_ast_INCLUDE}/ast/times.h implicit
+make ${PACKAGE_ast_INCLUDE}/ast/ast_time.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast/ast_time.h dontcare
+prev ${PACKAGE_ast_INCLUDE}/ast/ast.h implicit
+prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast/times.h dontcare
 done FEATURE/time generated
-make include/timeout.h implicit
-done include/timeout.h
-make include/history.h implicit
-done include/history.h
-make include/shnodes.h implicit
-done include/shnodes.h
-make include/jobs.h implicit
-make FEATURE/ttys implicit
-make features/ttys
-done features/ttys
-exec - iffe set cc ${CC} ${CCFLAGS}    ${LDFLAGS}  :   ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} ${mam_cc_static} ${mam_libm} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libjobs} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libi} ${mam_cc_dynamic} ${mam_libdl} ${mam_libdld} ${mam_cc_static} ${mam_libintl} ${mam_cc_dynamic} ${mam_libast} : run features/ttys
-done FEATURE/ttys dontcare generated
+make include/builtins.h implicit
+prev include/shtable.h implicit
+make FEATURE/dynamic implicit
+make features/dynamic
+done features/dynamic
+prev shell.req
+setv mam_libcmd `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lcmd,${INSTALLROOT}/lib/libcmd.a,} ${PACKAGE_ast_LIB}/lib/cmd`
+setv mam_libdll `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-ldll,${INSTALLROOT}/lib/libdll.a,} ${PACKAGE_ast_LIB}/lib/dll`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+prev ${mam_libdl}
+setv mam_libdl `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-ldl,${INSTALLROOT}/lib/libdl.a,} ${PACKAGE_ast_LIB}/lib/dl`
+exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_libast} : run features/dynamic
+make ${PACKAGE_ast_INCLUDE}/ast/fs3d.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/ast_fs.h implicit
+prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast/fs3d.h dontcare
+done FEATURE/dynamic dontcare generated
 make FEATURE/options implicit
 make features/options.sh
 make OPTIONS implicit
 done OPTIONS
 done features/options.sh
-exec - iffe set cc ${CC} ${CCFLAGS}    ${LDFLAGS}  :   ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} ${mam_cc_static} ${mam_libm} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libjobs} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libi} ${mam_cc_dynamic} ${mam_libdl} ${mam_libdld} ${mam_cc_static} ${mam_libintl} ${mam_cc_dynamic} ${mam_libast} : run features/options.sh OPTIONS
+prev shell.req
+setv mam_libcmd `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lcmd,${INSTALLROOT}/lib/libcmd.a,} ${PACKAGE_ast_LIB}/lib/cmd`
+setv mam_libdll `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-ldll,${INSTALLROOT}/lib/libdll.a,} ${PACKAGE_ast_LIB}/lib/dll`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+prev ${mam_libdl}
+setv mam_libdl `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-ldl,${INSTALLROOT}/lib/libdl.a,} ${PACKAGE_ast_LIB}/lib/dl`
+exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_libast} : run features/options.sh OPTIONS
 done FEATURE/options dontcare generated
-done include/jobs.h
-make include/io.h implicit
-make ${PACKAGE_ast_INCLUDE}/ast/sfio.h implicit
-done ${PACKAGE_ast_INCLUDE}/ast/sfio.h
-make ${PACKAGE_ast_INCLUDE}/ast/ast.h implicit
-done ${PACKAGE_ast_INCLUDE}/ast/ast.h
-done include/io.h
-make include/path.h implicit
-make FEATURE/acct implicit
-exec - iffe set cc ${CC} ${CCFLAGS}    ${LDFLAGS}  :   ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} ${mam_cc_static} ${mam_libm} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libjobs} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libi} ${mam_cc_dynamic} ${mam_libdl} ${mam_libdld} ${mam_cc_static} ${mam_libintl} ${mam_cc_dynamic} ${mam_libast} : def acct
-done FEATURE/acct dontcare generated
-make FEATURE/options implicit
-done FEATURE/options dontcare generated
-done include/path.h
-make include/variables.h implicit
-make FEATURE/dynamic implicit
-make features/dynamic
-done features/dynamic
-exec - iffe set cc ${CC} ${CCFLAGS}    ${LDFLAGS}  :   ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} ${mam_cc_static} ${mam_libm} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libjobs} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libi} ${mam_cc_dynamic} ${mam_libdl} ${mam_libdld} ${mam_cc_static} ${mam_libintl} ${mam_cc_dynamic} ${mam_libast} : run features/dynamic
-done FEATURE/dynamic dontcare generated
-prev FEATURE/options implicit
-done include/variables.h
+prev ${PACKAGE_ast_INCLUDE}/ast/option.h implicit
+done include/builtins.h
+prev ${PACKAGE_ast_INCLUDE}/ast/stak.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/error.h implicit
 make include/defs.h implicit
-make include/shell.h implicit
-done include/shell.h
+prev include/shell.h implicit
 make include/argnod.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/stak.h implicit
 done include/argnod.h
 make include/fault.h implicit
 make FEATURE/sigfeatures implicit
 make features/sigfeatures
 done features/sigfeatures
-exec - iffe set cc ${CC} ${CCFLAGS}    ${LDFLAGS}  :   ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} ${mam_cc_static} ${mam_libm} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libjobs} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libi} ${mam_cc_dynamic} ${mam_libdl} ${mam_libdld} ${mam_cc_static} ${mam_libintl} ${mam_cc_dynamic} ${mam_libast} : run features/sigfeatures
+prev shell.req
+setv mam_libcmd `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lcmd,${INSTALLROOT}/lib/libcmd.a,} ${PACKAGE_ast_LIB}/lib/cmd`
+setv mam_libdll `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-ldll,${INSTALLROOT}/lib/libdll.a,} ${PACKAGE_ast_LIB}/lib/dll`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+prev ${mam_libdl}
+setv mam_libdl `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-ldl,${INSTALLROOT}/lib/libdl.a,} ${PACKAGE_ast_LIB}/lib/dl`
+exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_libast} : run features/sigfeatures
 done FEATURE/sigfeatures dontcare generated
 make FEATURE/setjmp implicit
 make features/setjmp
 done features/setjmp
-exec - iffe set cc ${CC} ${CCFLAGS}    ${LDFLAGS}  :   ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} ${mam_cc_static} ${mam_libm} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libjobs} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libi} ${mam_cc_dynamic} ${mam_libdl} ${mam_libdld} ${mam_cc_static} ${mam_libintl} ${mam_cc_dynamic} ${mam_libast} : run features/setjmp
+prev shell.req
+setv mam_libcmd `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lcmd,${INSTALLROOT}/lib/libcmd.a,} ${PACKAGE_ast_LIB}/lib/cmd`
+setv mam_libdll `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-ldll,${INSTALLROOT}/lib/libdll.a,} ${PACKAGE_ast_LIB}/lib/dll`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+prev ${mam_libdl}
+setv mam_libdl `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-ldl,${INSTALLROOT}/lib/libdl.a,} ${PACKAGE_ast_LIB}/lib/dl`
+exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_libast} : run features/setjmp
 done FEATURE/setjmp dontcare generated
+prev ${PACKAGE_ast_INCLUDE}/ast/sfio.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/error.h implicit
+make ${PACKAGE_ast_INCLUDE}/ast/sig.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast/sig.h dontcare
 done include/fault.h
 prev include/history.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/cdt.h implicit
 prev FEATURE/options implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/error.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/sfio.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/ast.h implicit
 done include/defs.h
-make ${PACKAGE_ast_INCLUDE}/ast/ls.h implicit
-done ${PACKAGE_ast_INCLUDE}/ast/ls.h
-done sh/main.c
-prev sh/main.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_SUID_EXEC -DKSHELL -c sh/main.c
-done main.o generated
-make libshell.a archive
-make alarm.o
-make bltins/alarm.c
-prev FEATURE/time implicit
-make include/builtins.h implicit
-make FEATURE/dynamic implicit
-done FEATURE/dynamic dontcare generated
-prev FEATURE/options implicit
-done include/builtins.h
-make ${PACKAGE_ast_INCLUDE}/ast/stak.h implicit
-done ${PACKAGE_ast_INCLUDE}/ast/stak.h
-make ${PACKAGE_ast_INCLUDE}/ast/error.h implicit
-done ${PACKAGE_ast_INCLUDE}/ast/error.h
-prev include/defs.h implicit
 done bltins/alarm.c
 prev bltins/alarm.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -c bltins/alarm.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DSH_DICT='(void*)e_dict' -D_PACKAGE_ast -D_BLD_shell -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -c bltins/alarm.c
 done alarm.o generated
 make cd_pwd.o
 make bltins/cd_pwd.c
 prev ${PACKAGE_ast_INCLUDE}/ast/ls.h implicit
 prev include/builtins.h implicit
-make include/name.h implicit
-done include/name.h
-prev include/path.h implicit
-prev include/variables.h implicit
+prev include/name.h implicit
+make include/path.h implicit
+make FEATURE/acct implicit
+prev shell.req
+setv mam_libcmd `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lcmd,${INSTALLROOT}/lib/libcmd.a,} ${PACKAGE_ast_LIB}/lib/cmd`
+setv mam_libdll `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-ldll,${INSTALLROOT}/lib/libdll.a,} ${PACKAGE_ast_LIB}/lib/dll`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+prev ${mam_libdl}
+setv mam_libdl `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-ldl,${INSTALLROOT}/lib/libdl.a,} ${PACKAGE_ast_LIB}/lib/dl`
+exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_libast} : def acct
+done FEATURE/acct dontcare generated
+prev include/nval.h implicit
+prev FEATURE/options implicit
+done include/path.h
+make include/variables.h implicit
+prev FEATURE/dynamic implicit
+prev FEATURE/options implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/option.h implicit
+done include/variables.h
 prev ${PACKAGE_ast_INCLUDE}/ast/error.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast/stak.h implicit
 prev include/defs.h implicit
 done bltins/cd_pwd.c
 prev bltins/cd_pwd.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -c bltins/cd_pwd.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DSH_DICT='(void*)e_dict' -D_BLD_shell -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -D_PACKAGE_ast -c bltins/cd_pwd.c
 done cd_pwd.o generated
 make cflow.o
 make bltins/cflow.c
 prev include/builtins.h implicit
-prev include/shnodes.h implicit
-make /usr/include/ctype.h implicit
-done /usr/include/ctype.h
+make include/shnodes.h implicit
+prev include/argnod.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/ast.h implicit
+done include/shnodes.h
 prev ${PACKAGE_ast_INCLUDE}/ast/error.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast/ast.h implicit
 prev include/defs.h implicit
 done bltins/cflow.c
 prev bltins/cflow.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -c bltins/cflow.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DSH_DICT='(void*)e_dict' -D_BLD_shell -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -D_PACKAGE_ast -c bltins/cflow.c
 done cflow.o generated
 make deparse.o
 make sh/deparse.c
 make include/test.h implicit
+prev include/shtable.h implicit
 done include/test.h
 prev include/shnodes.h implicit
 prev include/defs.h implicit
 done sh/deparse.c
 prev sh/deparse.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_SUID_EXEC -c sh/deparse.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -D_PACKAGE_ast -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_SUID_EXEC -c sh/deparse.c
 done deparse.o generated
 make getopts.o
 make bltins/getopts.c
 prev include/builtins.h implicit
-make include/nval.h implicit
-done include/nval.h
+prev include/nval.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast/error.h implicit
 prev include/variables.h implicit
 prev include/defs.h implicit
 done bltins/getopts.c
 prev bltins/getopts.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -c bltins/getopts.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DSH_DICT='(void*)e_dict' -D_BLD_shell -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -D_PACKAGE_ast -c bltins/getopts.c
 done getopts.o generated
 make hist.o
 make bltins/hist.c
 prev include/builtins.h implicit
 prev include/history.h implicit
 prev include/name.h implicit
-prev include/io.h implicit
+make include/io.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/sfio.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/ast.h implicit
+done include/io.h
 prev include/variables.h implicit
-prev /usr/include/ctype.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast/error.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast/ls.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast/stak.h implicit
 prev include/defs.h implicit
 done bltins/hist.c
 prev bltins/hist.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -DKSHELL -c bltins/hist.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DSH_DICT='(void*)e_dict' -D_BLD_shell -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -D_PACKAGE_ast -DKSHELL -c bltins/hist.c
 done hist.o generated
 make misc.o
 make bltins/misc.c
-prev include/jobs.h implicit
+make include/jobs.h implicit
+make include/terminal.h implicit
+make FEATURE/ttys implicit
+make features/ttys
+done features/ttys
+prev shell.req
+setv mam_libcmd `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lcmd,${INSTALLROOT}/lib/libcmd.a,} ${PACKAGE_ast_LIB}/lib/cmd`
+setv mam_libdll `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-ldll,${INSTALLROOT}/lib/libdll.a,} ${PACKAGE_ast_LIB}/lib/dll`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+prev ${mam_libdl}
+setv mam_libdl `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-ldl,${INSTALLROOT}/lib/libdl.a,} ${PACKAGE_ast_LIB}/lib/dl`
+exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_libast} : run features/ttys
+done FEATURE/ttys dontcare generated
+done include/terminal.h dontcare
+prev FEATURE/options implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/sfio.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/ast.h implicit
+done include/jobs.h
 prev include/builtins.h implicit
 prev include/history.h implicit
 prev include/name.h implicit
@@ -225,10 +393,18 @@ prev include/variables.h implicit
 prev include/defs.h implicit
 done bltins/misc.c
 prev bltins/misc.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -DKSHELL -c bltins/misc.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DSH_DICT='(void*)e_dict' -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -D_PACKAGE_ast -D_BLD_shell -DKSHELL -c bltins/misc.c
 done misc.o generated
 make print.o
 make bltins/print.c
+make ${PACKAGE_ast_INCLUDE}/ast/tm.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/times.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/ast.h implicit
+prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast/tm.h
+make include/streval.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/ast.h implicit
+done include/streval.h
 prev include/builtins.h implicit
 prev include/history.h implicit
 prev include/name.h implicit
@@ -238,14 +414,13 @@ prev ${PACKAGE_ast_INCLUDE}/ast/error.h implicit
 prev include/defs.h implicit
 done bltins/print.c
 prev bltins/print.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -DKSHELL -c bltins/print.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DSH_DICT='(void*)e_dict' -D_PACKAGE_ast -D_BLD_shell -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -DKSHELL -c bltins/print.c
 done print.o generated
 make read.o
 make bltins/read.c
 make include/national.h implicit
 done include/national.h
-make include/terminal.h implicit
-done include/terminal.h
+prev include/terminal.h implicit
 prev include/history.h implicit
 prev include/builtins.h implicit
 prev include/name.h implicit
@@ -254,60 +429,78 @@ make include/lexstates.h implicit
 done include/lexstates.h
 prev include/variables.h implicit
 prev include/defs.h implicit
-prev /usr/include/ctype.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast/error.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast/ast.h implicit
 done bltins/read.c
 prev bltins/read.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_SUID_EXEC -DKSHELL -c bltins/read.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DSH_DICT='(void*)e_dict' -DSHOPT_ESH -D_PACKAGE_ast -D_BLD_shell -DSHOPT_VSH -DSHOPT_SUID_EXEC -DKSHELL -c bltins/read.c
 done read.o generated
 make sleep.o
 make bltins/sleep.c
 make FEATURE/poll implicit
 make features/poll
 done features/poll
-exec - iffe set cc ${CC} ${CCFLAGS}    ${LDFLAGS}  :   ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} ${mam_cc_static} ${mam_libm} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libjobs} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libi} ${mam_cc_dynamic} ${mam_libdl} ${mam_libdld} ${mam_cc_static} ${mam_libintl} ${mam_cc_dynamic} ${mam_libast} : run features/poll
+prev shell.req
+setv mam_libcmd `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lcmd,${INSTALLROOT}/lib/libcmd.a,} ${PACKAGE_ast_LIB}/lib/cmd`
+setv mam_libdll `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-ldll,${INSTALLROOT}/lib/libdll.a,} ${PACKAGE_ast_LIB}/lib/dll`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+prev ${mam_libdl}
+setv mam_libdl `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-ldl,${INSTALLROOT}/lib/libdl.a,} ${PACKAGE_ast_LIB}/lib/dl`
+exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_libast} : run features/poll
 done FEATURE/poll generated
 prev FEATURE/time implicit
 prev include/builtins.h implicit
-make /usr/include/errno.h implicit
-done /usr/include/errno.h
 prev ${PACKAGE_ast_INCLUDE}/ast/error.h implicit
 prev include/defs.h implicit
 done bltins/sleep.c
 prev bltins/sleep.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -c bltins/sleep.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DSH_DICT='(void*)e_dict' -D_PACKAGE_ast -D_BLD_shell -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -c bltins/sleep.c
 done sleep.o generated
 make trap.o
 make bltins/trap.c
 prev include/builtins.h implicit
 prev include/jobs.h implicit
-prev /usr/include/ctype.h implicit
 prev include/defs.h implicit
 done bltins/trap.c
 prev bltins/trap.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -c bltins/trap.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DSH_DICT='(void*)e_dict' -D_BLD_shell -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -D_PACKAGE_ast -c bltins/trap.c
 done trap.o generated
 make test.o
 make bltins/test.c
-prev FEATURE/externs implicit
+make FEATURE/externs implicit
+make features/externs
+done features/externs
+prev shell.req
+setv mam_libcmd `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lcmd,${INSTALLROOT}/lib/libcmd.a,} ${PACKAGE_ast_LIB}/lib/cmd`
+setv mam_libdll `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-ldll,${INSTALLROOT}/lib/libdll.a,} ${PACKAGE_ast_LIB}/lib/dll`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+prev ${mam_libdl}
+setv mam_libdl `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-ldl,${INSTALLROOT}/lib/libdl.a,} ${PACKAGE_ast_LIB}/lib/dl`
+exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_libast} : run features/externs
+done FEATURE/externs generated
 prev include/builtins.h implicit
 prev include/test.h implicit
 prev include/terminal.h implicit
 prev include/io.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast/ls.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast/error.h implicit
-prev /usr/include/ctype.h implicit
 prev include/defs.h implicit
 done bltins/test.c
 prev bltins/test.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -DKSHELL -c bltins/test.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DSH_DICT='(void*)e_dict' -D_BLD_shell -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -D_PACKAGE_ast -DKSHELL -c bltins/test.c
 done test.o generated
 make typeset.o
 make bltins/typeset.c
 prev include/argnod.h implicit
 make include/fcin.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/sfio.h implicit
 done include/fcin.h
+make ${PACKAGE_ast_INCLUDE}/ast/dlldefs.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast/dlldefs.h dontcare
 prev include/variables.h implicit
 prev include/builtins.h implicit
 prev include/history.h implicit
@@ -317,17 +510,26 @@ prev ${PACKAGE_ast_INCLUDE}/ast/error.h implicit
 prev include/defs.h implicit
 done bltins/typeset.c
 prev bltins/typeset.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -c bltins/typeset.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DSHOPT_COMPOUND_ARRAY -D_PACKAGE_ast -DSH_DICT='(void*)e_dict' -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -D_BLD_shell -c bltins/typeset.c
 done typeset.o generated
 make ulimit.o
 make bltins/ulimit.c
 make include/ulimit.h implicit
-prev FEATURE/time implicit
 make FEATURE/rlimits implicit
 make features/rlimits
 done features/rlimits
-exec - iffe set cc ${CC} ${CCFLAGS}    ${LDFLAGS}  :   ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} ${mam_cc_static} ${mam_libm} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libjobs} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libi} ${mam_cc_dynamic} ${mam_libdl} ${mam_libdld} ${mam_cc_static} ${mam_libintl} ${mam_cc_dynamic} ${mam_libast} : run features/rlimits
+prev shell.req
+setv mam_libcmd `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lcmd,${INSTALLROOT}/lib/libcmd.a,} ${PACKAGE_ast_LIB}/lib/cmd`
+setv mam_libdll `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-ldll,${INSTALLROOT}/lib/libdll.a,} ${PACKAGE_ast_LIB}/lib/dll`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+prev ${mam_libdl}
+setv mam_libdl `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-ldl,${INSTALLROOT}/lib/libdl.a,} ${PACKAGE_ast_LIB}/lib/dl`
+exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_libast} : run features/rlimits
 done FEATURE/rlimits dontcare generated
+prev FEATURE/time implicit
+prev include/shtable.h implicit
 done include/ulimit.h
 prev include/builtins.h implicit
 prev include/shell.h implicit
@@ -336,61 +538,124 @@ prev ${PACKAGE_ast_INCLUDE}/ast/sfio.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast/ast.h implicit
 done bltins/ulimit.c
 prev bltins/ulimit.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -c bltins/ulimit.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DSH_DICT='(void*)e_dict' -D_PACKAGE_ast -D_BLD_shell -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -c bltins/ulimit.c
 done ulimit.o generated
 make umask.o
 make bltins/umask.c
 prev include/builtins.h implicit
 prev include/shell.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast/ls.h implicit
-prev /usr/include/ctype.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast/error.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast/sfio.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast/ast.h implicit
 done bltins/umask.c
 prev bltins/umask.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -c bltins/umask.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DSH_DICT='(void*)e_dict' -D_BLD_shell -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -D_PACKAGE_ast -c bltins/umask.c
 done umask.o generated
 make whence.o
 make bltins/whence.c
 prev include/builtins.h implicit
 make include/shlex.h implicit
+prev include/lexstates.h implicit
+prev include/shtable.h implicit
+prev include/shnodes.h implicit
 prev FEATURE/options implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/cdt.h implicit
 done include/shlex.h
 prev include/path.h implicit
 prev include/name.h implicit
+prev include/shtable.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast/error.h implicit
 prev include/defs.h implicit
 done bltins/whence.c
 prev bltins/whence.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -c bltins/whence.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DSH_DICT='(void*)e_dict' -D_BLD_shell -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -D_PACKAGE_ast -c bltins/whence.c
 done whence.o generated
+make main.o
+make sh/main.c
+make execargs.h implicit
+done execargs.h dontcare virtual
+make ${PACKAGE_ast_INCLUDE}/ast/fts.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/ls.h implicit
+prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast/fts.h dontcare
+make nc.h implicit
+done nc.h dontcare virtual
+prev FEATURE/externs implicit
+make FEATURE/execargs implicit
+prev shell.req
+setv mam_libcmd `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lcmd,${INSTALLROOT}/lib/libcmd.a,} ${PACKAGE_ast_LIB}/lib/cmd`
+setv mam_libdll `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-ldll,${INSTALLROOT}/lib/libdll.a,} ${PACKAGE_ast_LIB}/lib/dll`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+prev ${mam_libdl}
+setv mam_libdl `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-ldl,${INSTALLROOT}/lib/libdl.a,} ${PACKAGE_ast_LIB}/lib/dl`
+exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_libast} : def execargs
+done FEATURE/execargs generated
+make FEATURE/pstat implicit
+prev shell.req
+setv mam_libcmd `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lcmd,${INSTALLROOT}/lib/libcmd.a,} ${PACKAGE_ast_LIB}/lib/cmd`
+setv mam_libdll `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-ldll,${INSTALLROOT}/lib/libdll.a,} ${PACKAGE_ast_LIB}/lib/dll`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+prev ${mam_libdl}
+setv mam_libdl `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-ldl,${INSTALLROOT}/lib/libdl.a,} ${PACKAGE_ast_LIB}/lib/dl`
+exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_libast} : def pstat
+done FEATURE/pstat generated
+prev FEATURE/time implicit
+make include/timeout.h implicit
+done include/timeout.h
+prev include/history.h implicit
+prev include/shnodes.h implicit
+prev include/jobs.h implicit
+prev include/io.h implicit
+prev include/path.h implicit
+prev include/variables.h implicit
+prev include/defs.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/ls.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/stak.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/sfio.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/ast.h implicit
+done sh/main.c
+prev sh/main.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DSH_DICT='(void*)e_dict' -D_PACKAGE_ast -DSHOPT_ESH -D_BLD_shell -DSHOPT_VSH -DSHOPT_SUID_EXEC -DKSHELL -c sh/main.c
+done main.o generated
 make arith.o
 make sh/arith.c
 make FEATURE/locale implicit
 make features/locale
 done features/locale
-exec - iffe set cc ${CC} ${CCFLAGS}    ${LDFLAGS}  :   ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} ${mam_cc_static} ${mam_libm} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libjobs} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libi} ${mam_cc_dynamic} ${mam_libdl} ${mam_libdld} ${mam_cc_static} ${mam_libintl} ${mam_cc_dynamic} ${mam_libast} : run features/locale
+prev shell.req
+setv mam_libcmd `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lcmd,${INSTALLROOT}/lib/libcmd.a,} ${PACKAGE_ast_LIB}/lib/cmd`
+setv mam_libdll `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-ldll,${INSTALLROOT}/lib/libdll.a,} ${PACKAGE_ast_LIB}/lib/dll`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+prev ${mam_libdl}
+setv mam_libdl `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-ldl,${INSTALLROOT}/lib/libdl.a,} ${PACKAGE_ast_LIB}/lib/dl`
+exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_libast} : run features/locale
 done FEATURE/locale generated
-make include/streval.h implicit
-done include/streval.h
+prev include/streval.h implicit
 prev include/name.h implicit
 prev include/lexstates.h implicit
-prev /usr/include/ctype.h implicit
 prev include/defs.h implicit
 done sh/arith.c
 prev sh/arith.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_SUID_EXEC -c sh/arith.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DSH_DICT='(void*)e_dict' -D_PACKAGE_ast -D_BLD_shell -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_SUID_EXEC -c sh/arith.c
 done arith.o generated
 make args.o
 make sh/args.c
+prev include/io.h implicit
+prev include/shlex.h implicit
 prev include/terminal.h implicit
 prev include/builtins.h implicit
 prev include/path.h implicit
 prev include/defs.h implicit
 done sh/args.c
 prev sh/args.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DKSHELL -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -c sh/args.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DSH_DICT='(void*)e_dict' -D_BLD_shell -DKSHELL -D_PACKAGE_ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -c sh/args.c
 done args.o generated
 make array.o
 make sh/array.c
@@ -399,14 +664,16 @@ prev ${PACKAGE_ast_INCLUDE}/ast/stak.h implicit
 prev include/defs.h implicit
 done sh/array.c
 prev sh/array.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_SUID_EXEC -c sh/array.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DSH_DICT='(void*)e_dict' -D_BLD_shell -D_PACKAGE_ast -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_SUID_EXEC -c sh/array.c
 done array.o generated
 make completion.o
 make edit/completion.c
 prev include/history.h implicit
 make include/edit.h implicit
-make FEATURE/setjmp implicit
-done FEATURE/setjmp dontcare generated
+prev include/national.h implicit
+prev include/terminal.h implicit
+prev FEATURE/setjmp implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/sig.h implicit
 prev FEATURE/options implicit
 done include/edit.h
 prev include/io.h implicit
@@ -415,18 +682,8 @@ prev include/lexstates.h implicit
 prev include/defs.h implicit
 done edit/completion.c
 prev edit/completion.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_ESH -DKSHELL -DSHOPT_VSH -DSHOPT_SUID_EXEC -c edit/completion.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DSHOPT_ESH -D_PACKAGE_ast -DKSHELL -DSHOPT_VSH -DSHOPT_SUID_EXEC -D_BLD_shell -c edit/completion.c
 done completion.o generated
-make dlopen.o
-make sh/dlopen.c
-prev FEATURE/dynamic implicit
-prev include/nval.h implicit
-prev ${PACKAGE_ast_INCLUDE}/ast/error.h implicit
-prev ${PACKAGE_ast_INCLUDE}/ast/ast.h implicit
-done sh/dlopen.c
-prev sh/dlopen.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast  -c sh/dlopen.c
-done dlopen.o generated
 make defs.o
 make sh/defs.c
 prev include/timeout.h implicit
@@ -436,7 +693,7 @@ prev include/jobs.h implicit
 prev include/defs.h implicit
 done sh/defs.c
 prev sh/defs.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_ESH -DSHOPT_VSH -DKSHELL -DSHOPT_SUID_EXEC -c sh/defs.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DKSHELL -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_SUID_EXEC -D_BLD_shell -D_PACKAGE_ast -c sh/defs.c
 done defs.o generated
 make edit.o
 make edit/edit.c
@@ -444,27 +701,46 @@ prev include/edit.h implicit
 prev include/history.h implicit
 prev include/terminal.h implicit
 prev include/io.h implicit
+prev include/variables.h implicit
+prev include/defs.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/ls.h implicit
 prev FEATURE/time implicit
 prev include/path.h implicit
 prev FEATURE/options implicit
-prev /usr/include/ctype.h implicit
-prev /usr/include/errno.h implicit
+make ${PACKAGE_ast_INCLUDE}/ast/ccode.h implicit
+make ${PACKAGE_ast_INCLUDE}/ast/ast_ccode.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast/ast_ccode.h dontcare
+prev ${PACKAGE_ast_INCLUDE}/ast/ast.h implicit
+prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast/ccode.h
 prev ${PACKAGE_ast_INCLUDE}/ast/ast.h implicit
 done edit/edit.c
 prev edit/edit.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_ESH -DSHOPT_VSH -DKSHELL -DSHOPT_SUID_EXEC -c edit/edit.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DSHOPT_ESH -DSHOPT_VSH -DKSHELL -DSHOPT_SUID_EXEC -D_PACKAGE_ast -D_BLD_shell -c edit/edit.c
 done edit.o generated
 make expand.o
 make sh/expand.c
 prev include/path.h implicit
 prev include/io.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast/ast_dir.h implicit
+make ${PACKAGE_ast_INCLUDE}/ast/dirent.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/ast_std.h implicit
+prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast/dirent.h dontcare
+make dirlib.h implicit
+done dirlib.h dontcare virtual
+prev ${PACKAGE_ast_INCLUDE}/ast/ast_lib.h implicit
+prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast/ast_dir.h
 prev ${PACKAGE_ast_INCLUDE}/ast/stak.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast/ls.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/ast.h implicit
+prev include/test.h implicit
+prev include/variables.h implicit
+prev include/defs.h implicit
 done sh/expand.c
 prev sh/expand.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_SUID_EXEC -DSHOPT_VSH -DSHOPT_ESH -DKSHELL -c sh/expand.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DSHOPT_SUID_EXEC -D_BLD_shell -D_PACKAGE_ast -DSHOPT_VSH -DSHOPT_ESH -DKSHELL -c sh/expand.c
 done expand.o generated
 make fault.o
 make sh/fault.c
@@ -477,7 +753,7 @@ prev include/fcin.h implicit
 prev include/defs.h implicit
 done sh/fault.c
 prev sh/fault.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_SUID_EXEC -DKSHELL -c sh/fault.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_SUID_EXEC -D_BLD_shell -D_PACKAGE_ast -DKSHELL -c sh/fault.c
 done fault.o generated
 make fcin.o
 make sh/fcin.c
@@ -487,24 +763,31 @@ prev ${PACKAGE_ast_INCLUDE}/ast/sfio.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast/ast.h implicit
 done sh/fcin.c
 prev sh/fcin.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast  -c sh/fcin.c
+exec - ${CC} ${CCFLAGS}  -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c sh/fcin.c
 done fcin.o generated
 make history.o
 make edit/history.c
+prev ${PACKAGE_ast_INCLUDE}/ast/stdio.h implicit
 prev include/national.h implicit
 prev include/history.h implicit
+prev include/io.h implicit
+prev include/builtins.h implicit
+prev include/path.h implicit
+prev include/variables.h implicit
+prev include/defs.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast/ls.h implicit
-prev /usr/include/ctype.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast/error.h implicit
 prev FEATURE/time implicit
 prev ${PACKAGE_ast_INCLUDE}/ast/sfio.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast/ast.h implicit
 done edit/history.c
 prev edit/history.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH -DSHOPT_ESH -DKSHELL -DSHOPT_SUID_EXEC -c edit/history.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DSHOPT_VSH -DSHOPT_ESH -DSH_DICT='(void*)e_dict' -D_PACKAGE_ast -D_BLD_shell -DKSHELL -DSHOPT_SUID_EXEC -c edit/history.c
 done history.o generated
 make init.o
 make sh/init.c
+prev include/edit.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/stdio.h implicit
 prev include/national.h implicit
 prev FEATURE/locale implicit
 prev include/lexstates.h implicit
@@ -516,15 +799,16 @@ prev include/name.h implicit
 prev include/fault.h implicit
 prev include/path.h implicit
 prev include/variables.h implicit
-prev /usr/include/ctype.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/ccode.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast/stak.h implicit
 prev include/defs.h implicit
 done sh/init.c
 prev sh/init.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DKSHELL -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_SUID_EXEC -c sh/init.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DSHOPT_NAMESPACE -DKSHELL -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSH_DICT='(void*)e_dict' -D_PACKAGE_ast -D_BLD_shell -c sh/init.c
 done init.o generated
 make io.o
 make sh/io.c
+prev ${PACKAGE_ast_INCLUDE}/ast/stdio.h implicit
 prev FEATURE/poll implicit
 prev FEATURE/dynamic implicit
 prev FEATURE/externs implicit
@@ -540,7 +824,7 @@ prev include/fcin.h implicit
 prev include/defs.h implicit
 done sh/io.c
 prev sh/io.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH -DSHOPT_ESH -DKSHELL -DSHOPT_SUID_EXEC -c sh/io.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DSHOPT_VSH -DSHOPT_ESH -DSH_DICT='(void*)e_dict' -DKSHELL -DSHOPT_SUID_EXEC -D_PACKAGE_ast -D_BLD_shell -c sh/io.c
 done io.o generated
 make jobs.o
 make sh/jobs.c
@@ -548,18 +832,23 @@ prev include/history.h implicit
 prev include/jobs.h implicit
 prev include/io.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast/wait.h implicit
+make ${PACKAGE_ast_INCLUDE}/ast/ast_wait.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast/ast_wait.h dontcare
+prev ${PACKAGE_ast_INCLUDE}/ast/ast.h implicit
+prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast/wait.h
-prev /usr/include/ctype.h implicit
 prev include/defs.h implicit
 done sh/jobs.c
 prev sh/jobs.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH -DSHOPT_ESH -DSHOPT_SUID_EXEC -DKSHELL -c sh/jobs.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DSH_DICT='(void*)e_dict' -DSHOPT_VSH -DSHOPT_ESH -D_PACKAGE_ast -DSHOPT_SUID_EXEC -D_BLD_shell -DKSHELL -c sh/jobs.c
 done jobs.o generated
 make lex.o
 make sh/lex.c
+prev include/shlex.h implicit
+prev include/shell.h implicit
+prev include/defs.h implicit
 prev include/lexstates.h implicit
 prev include/test.h implicit
-prev include/shlex.h implicit
 prev include/argnod.h implicit
 prev FEATURE/options implicit
 prev include/nval.h implicit
@@ -568,7 +857,7 @@ prev ${PACKAGE_ast_INCLUDE}/ast/stak.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast/ast.h implicit
 done sh/lex.c
 prev sh/lex.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_SUID_EXEC -DKSHELL -c sh/lex.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DSH_DICT='(void*)e_dict' -D_BLD_shell -D_PACKAGE_ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -DKSHELL -c sh/lex.c
 done lex.o generated
 make macro.o
 make sh/macro.c
@@ -579,42 +868,44 @@ prev include/io.h implicit
 prev include/shlex.h implicit
 prev include/variables.h implicit
 prev include/name.h implicit
-make /usr/include/pwd.h implicit
-done /usr/include/pwd.h
 prev include/fcin.h implicit
 prev include/defs.h implicit
 done sh/macro.c
 prev sh/macro.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DKSHELL -DSHOPT_SUID_EXEC -DSHOPT_VSH -DSHOPT_ESH -c sh/macro.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DKSHELL -DSHOPT_COMPOUND_ARRAY -DSH_DICT='(void*)e_dict' -DSHOPT_SUID_EXEC -D_BLD_shell -D_PACKAGE_ast -DSHOPT_VSH -DSHOPT_ESH -c sh/macro.c
 done macro.o generated
 make name.o
 make sh/name.c
 prev include/builtins.h implicit
 prev include/shnodes.h implicit
+make uwin.h implicit
+done uwin.h dontcare virtual
 prev include/national.h implicit
+prev FEATURE/externs implicit
 prev FEATURE/locale implicit
 prev include/timeout.h implicit
 prev include/lexstates.h implicit
 prev include/path.h implicit
 prev include/variables.h implicit
-prev /usr/include/ctype.h implicit
 prev include/defs.h implicit
 done sh/name.c
 prev sh/name.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -c sh/name.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DSH_DICT='(void*)e_dict' -DSHOPT_COMPOUND_ARRAY -DSHOPT_NAMESPACE -D_BLD_shell -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -D_PACKAGE_ast -c sh/name.c
 done name.o generated
 make parse.o
 make sh/parse.c
+prev include/path.h implicit
 prev include/test.h implicit
 prev include/builtins.h implicit
 prev include/history.h implicit
 prev include/shlex.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast/error.h implicit
 prev include/fcin.h implicit
-prev /usr/include/ctype.h implicit
+prev include/shell.h implicit
+prev include/defs.h implicit
 done sh/parse.c
 prev sh/parse.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -DKSHELL -c sh/parse.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DSHOPT_NAMESPACE -DSHOPT_COMPOUND_ARRAY -DSH_DICT='(void*)e_dict' -DSHOPT_SUID_EXEC -D_BLD_shell -D_PACKAGE_ast -DSHOPT_VSH -DSHOPT_ESH -DKSHELL -c sh/parse.c
 done parse.o generated
 make path.o
 make sh/path.c
@@ -631,31 +922,29 @@ prev include/fcin.h implicit
 prev include/defs.h implicit
 done sh/path.c
 prev sh/path.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_SUID_EXEC -DSHOPT_ESH -DSHOPT_VSH -DKSHELL -c sh/path.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -DSHOPT_SUID_EXEC -DSH_DICT='(void*)e_dict' -DSHOPT_ESH -DSHOPT_VSH -D_BLD_shell -DKSHELL -c sh/path.c
 done path.o generated
 make string.o
 make sh/string.c
 prev include/national.h implicit
 prev include/lexstates.h implicit
-make include/shtable.h implicit
-done include/shtable.h
-prev /usr/include/ctype.h implicit
+prev include/shtable.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/ccode.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast/stak.h implicit
 prev include/defs.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast/ast.h implicit
 done sh/string.c
 prev sh/string.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_SUID_EXEC -c sh/string.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_shell -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_SUID_EXEC -c sh/string.c
 done string.o generated
 make streval.o
 make sh/streval.c
 prev FEATURE/externs implicit
 prev ${PACKAGE_ast_INCLUDE}/ast/error.h implicit
-prev /usr/include/ctype.h implicit
 prev include/streval.h implicit
 done sh/streval.c
 prev sh/streval.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast  -c sh/streval.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DSH_DICT='(void*)e_dict' -D_PACKAGE_ast -c sh/streval.c
 done streval.o generated
 make subshell.o
 make sh/subshell.c
@@ -670,7 +959,7 @@ prev ${PACKAGE_ast_INCLUDE}/ast/ls.h implicit
 prev include/defs.h implicit
 done sh/subshell.c
 prev sh/subshell.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_SUID_EXEC -DSHOPT_VSH -DSHOPT_ESH -DKSHELL -c sh/subshell.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DSH_DICT='(void*)e_dict' -DSHOPT_SUID_EXEC -D_BLD_shell -D_PACKAGE_ast -DSHOPT_VSH -DSHOPT_ESH -DKSHELL -c sh/subshell.c
 done subshell.o generated
 make tdump.o
 make sh/tdump.c
@@ -680,21 +969,20 @@ prev include/shnodes.h implicit
 prev include/defs.h implicit
 done sh/tdump.c
 prev sh/tdump.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DKSHELL -DSHOPT_SUID_EXEC -DSHOPT_VSH -DSHOPT_ESH -c sh/tdump.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DKSHELL -D_PACKAGE_ast -DSHOPT_SUID_EXEC -DSHOPT_VSH -DSHOPT_ESH -c sh/tdump.c
 done tdump.o generated
 make timers.o
 make sh/timers.c
 prev FEATURE/time implicit
-make FEATURE/sigfeatures implicit
-done FEATURE/sigfeatures generated
+prev FEATURE/sigfeatures implicit
+prev include/defs.h implicit
 prev include/fault.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast/error.h implicit
-make ${PACKAGE_ast_INCLUDE}/ast/sig.h implicit
-done ${PACKAGE_ast_INCLUDE}/ast/sig.h
+prev ${PACKAGE_ast_INCLUDE}/ast/sig.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast/ast.h implicit
 done sh/timers.c
 prev sh/timers.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast  -c sh/timers.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DSH_DICT='(void*)e_dict' -D_PACKAGE_ast -D_BLD_shell -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_SUID_EXEC -c sh/timers.c
 done timers.o generated
 make trestore.o
 make sh/trestore.c
@@ -704,21 +992,14 @@ prev include/shnodes.h implicit
 prev include/defs.h implicit
 done sh/trestore.c
 prev sh/trestore.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DKSHELL -DSHOPT_SUID_EXEC -DSHOPT_VSH -DSHOPT_ESH -c sh/trestore.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DKSHELL -D_PACKAGE_ast -DSHOPT_SUID_EXEC -DSHOPT_VSH -DSHOPT_ESH -c sh/trestore.c
 done trestore.o generated
-make userinit.o
-make sh/userinit.c
-prev include/defs.h implicit
-done sh/userinit.c
-prev sh/userinit.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_SUID_EXEC -c sh/userinit.c
-done userinit.o generated
 make waitevent.o
 make sh/waitevent.c
 prev include/defs.h implicit
 done sh/waitevent.c
 prev sh/waitevent.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_SUID_EXEC -c sh/waitevent.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -D_PACKAGE_ast -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_SUID_EXEC -c sh/waitevent.c
 done waitevent.o generated
 make xec.o
 make sh/xec.c
@@ -736,7 +1017,7 @@ prev include/fcin.h implicit
 prev include/defs.h implicit
 done sh/xec.c
 prev sh/xec.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -DKSHELL -c sh/xec.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DSH_DICT='(void*)e_dict' -DSHOPT_NAMESPACE -D_PACKAGE_ast -D_BLD_shell -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -DKSHELL -c sh/xec.c
 done xec.o generated
 make limits.o
 make data/limits.c
@@ -744,7 +1025,7 @@ prev include/ulimit.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast/ast.h implicit
 done data/limits.c
 prev data/limits.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast  -c data/limits.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c data/limits.c
 done limits.o generated
 make msg.o
 make data/msg.c
@@ -758,11 +1039,10 @@ prev include/shlex.h implicit
 prev include/io.h implicit
 prev include/path.h implicit
 prev include/defs.h implicit
-prev /usr/include/errno.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast/ast.h implicit
 done data/msg.c
 prev data/msg.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_SUID_EXEC -DKSHELL -DSHOPT_ESH -DSHOPT_VSH -c data/msg.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DSHOPT_SUID_EXEC -DKSHELL -DSHOPT_ESH -DSHOPT_VSH -D_PACKAGE_ast -D_BLD_shell -c data/msg.c
 done msg.o generated
 make strdata.o
 make data/strdata.c
@@ -770,7 +1050,7 @@ prev include/streval.h implicit
 prev FEATURE/options implicit
 done data/strdata.c
 prev data/strdata.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -c data/strdata.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -c data/strdata.c
 done strdata.o generated
 make testops.o
 make data/testops.c
@@ -778,18 +1058,17 @@ prev include/test.h implicit
 prev include/shtable.h implicit
 done data/testops.c
 prev data/testops.c
-exec - ${CC} ${CCFLAGS}  -Iinclude  -c data/testops.c
+exec - ${CC} ${CCFLAGS}  -Iinclude -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2000 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html]"\" -c data/testops.c
 done testops.o generated
 make keywords.o
 make data/keywords.c
 prev FEATURE/options implicit
 prev include/shlex.h implicit
+prev include/shell.h implicit
 prev include/shtable.h implicit
-make ${PACKAGE_ast_INCLUDE}/ast/hash.h implicit
-done ${PACKAGE_ast_INCLUDE}/ast/hash.h
 done data/keywords.c
 prev data/keywords.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -c data/keywords.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DSHOPT_NAMESPACE -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -D_BLD_shell -D_PACKAGE_ast -c data/keywords.c
 done keywords.o generated
 make options.o
 make data/options.c
@@ -799,7 +1078,7 @@ prev FEATURE/options implicit
 prev include/shell.h implicit
 done data/options.c
 prev data/options.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -c data/options.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -D_PACKAGE_ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -c data/options.c
 done options.o generated
 make signals.o
 make data/signals.c
@@ -808,7 +1087,7 @@ prev include/shtable.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast/ast.h implicit
 done data/signals.c
 prev data/signals.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast  -c data/signals.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c data/signals.c
 done signals.o generated
 make aliases.o
 make data/aliases.c
@@ -816,27 +1095,34 @@ prev include/name.h implicit
 prev include/shtable.h implicit
 prev FEATURE/dynamic implicit
 prev FEATURE/options implicit
-make /usr/include/signal.h implicit
-done /usr/include/signal.h
 prev ${PACKAGE_ast_INCLUDE}/ast/ast.h implicit
 done data/aliases.c
 prev data/aliases.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -c data/aliases.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -D_PACKAGE_ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -c data/aliases.c
 done aliases.o generated
 make builtins.o
 make data/builtins.c
 make FEATURE/cmds implicit
 make features/cmds
 done features/cmds
-exec - iffe set cc ${CC} ${CCFLAGS}    ${LDFLAGS}  :   ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} ${mam_cc_static} ${mam_libm} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libjobs} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libi} ${mam_cc_dynamic} ${mam_libdl} ${mam_libdld} ${mam_cc_static} ${mam_libintl} ${mam_cc_dynamic} ${mam_libast} : run features/cmds
+prev shell.req
+setv mam_libcmd `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lcmd,${INSTALLROOT}/lib/libcmd.a,} ${PACKAGE_ast_LIB}/lib/cmd`
+setv mam_libdll `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-ldll,${INSTALLROOT}/lib/libdll.a,} ${PACKAGE_ast_LIB}/lib/dll`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+prev ${mam_libdl}
+setv mam_libdl `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-ldl,${INSTALLROOT}/lib/libdl.a,} ${PACKAGE_ast_LIB}/lib/dl`
+exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} ${mam_libcmd} ${mam_libdll} ${mam_libast} ${mam_libm} ${mam_libm} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_cc_static} ${mam_cc_dynamic} ${mam_libast} : run features/cmds
 done FEATURE/cmds dontcare generated
+prev include/jobs.h implicit
+prev include/builtins.h implicit
 prev include/name.h implicit
 prev include/shtable.h implicit
-prev /usr/include/signal.h implicit
 prev include/shell.h implicit
 done data/builtins.c
 prev data/builtins.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -DKSHELL -c data/builtins.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2000 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html]"\" -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -D_PACKAGE_ast -D_BLD_shell -DKSHELL -c data/builtins.c
 done builtins.o generated
 make variables.o
 make data/variables.c
@@ -848,7 +1134,7 @@ prev FEATURE/options implicit
 prev ${PACKAGE_ast_INCLUDE}/ast/ast.h implicit
 done data/variables.c
 prev data/variables.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -c data/variables.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -D_PACKAGE_ast -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_SUID_EXEC -c data/variables.c
 done variables.o generated
 make lexstates.o
 make data/lexstates.c
@@ -856,7 +1142,7 @@ prev include/lexstates.h implicit
 prev FEATURE/options implicit
 done data/lexstates.c
 prev data/lexstates.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -c data/lexstates.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -DSHOPT_NAMESPACE -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -c data/lexstates.c
 done lexstates.o generated
 make emacs.o
 make edit/emacs.c
@@ -864,33 +1150,38 @@ prev include/terminal.h implicit
 prev include/edit.h implicit
 prev include/history.h implicit
 prev include/io.h implicit
-prev /usr/include/ctype.h implicit
+prev include/defs.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast/ast.h implicit
 done edit/emacs.c
 prev edit/emacs.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DKSHELL -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_SUID_EXEC -c edit/emacs.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DKSHELL -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_SUID_EXEC -D_PACKAGE_ast -D_BLD_shell -c edit/emacs.c
 done emacs.o generated
 make vi.o
 make edit/vi.c
+prev include/lexstates.h implicit
 prev FEATURE/time implicit
 prev include/terminal.h implicit
 prev include/edit.h implicit
 prev include/history.h implicit
 prev include/io.h implicit
-prev /usr/include/ctype.h implicit
-prev ${PACKAGE_ast_INCLUDE}/ast/error.h implicit
 prev FEATURE/options implicit
+prev ${PACKAGE_ast_INCLUDE}/ast/ast.h implicit
+prev include/defs.h implicit
 done edit/vi.c
 prev edit/vi.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DKSHELL -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_SUID_EXEC -c edit/vi.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -DKSHELL -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_SUID_EXEC -D_BLD_shell -c edit/vi.c
 done vi.o generated
-exec - ${AR} cr libshell.a alarm.o cd_pwd.o cflow.o deparse.o getopts.o hist.o misc.o print.o read.o sleep.o trap.o test.o typeset.o ulimit.o umask.o whence.o arith.o args.o array.o completion.o dlopen.o defs.o edit.o expand.o fault.o fcin.o history.o init.o io.o jobs.o
-exec - ${AR} cr libshell.a lex.o macro.o name.o parse.o path.o string.o streval.o subshell.o tdump.o timers.o trestore.o userinit.o waitevent.o xec.o limits.o msg.o strdata.o testops.o keywords.o options.o signals.o aliases.o builtins.o variables.o lexstates.o emacs.o vi.o
+exec - ${AR} cr libshell.a alarm.o cd_pwd.o cflow.o deparse.o getopts.o hist.o misc.o print.o read.o sleep.o trap.o test.o typeset.o ulimit.o umask.o whence.o main.o arith.o args.o array.o completion.o defs.o edit.o expand.o fault.o fcin.o history.o init.o io.o jobs.o
+exec - ${AR} cr libshell.a lex.o macro.o name.o parse.o path.o string.o streval.o subshell.o tdump.o timers.o trestore.o waitevent.o xec.o limits.o msg.o strdata.o testops.o keywords.o options.o signals.o aliases.o builtins.o variables.o lexstates.o emacs.o vi.o
 exec - (ranlib libshell.a) >/dev/null 2>&1 || true
 done libshell.a generated
-setv mam_libcmd ${mam_cc_L+-lcmd}${mam_cc_L-${INSTALLROOT}/lib/libcmd.a}
-setv mam_libcmd `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lcmd,${INSTALLROOT}/lib/libcmd.a,} ${PACKAGE_ast_LIB}/lib/cmd`
-exec - ${CC} ${CCFLAGS}  ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib}  -o ksh main.o libshell.a ${mam_libcmd} ${mam_cc_static} ${mam_libast} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libm} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libjobs} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libi} ${mam_cc_dynamic} ${mam_libdl} ${mam_libdld} ${mam_cc_static} ${mam_libintl} ${mam_cc_dynamic} ${mam_libast}
+setv mam_libshell `sed -e 's,-lshell,libshell.a,' shell.req`
+setv mam_libshell ${mam_cc_L+-lshell}${mam_cc_L-libshell.a}
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+prev ${mam_libdl}
+setv mam_libdl `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-ldl,${INSTALLROOT}/lib/libdl.a,} ${PACKAGE_ast_LIB}/lib/dl`
+exec - ${CC} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}}  -o ksh pmain.o ${mam_libshell} ${mam_libm} ${mam_cc_static}  ${mam_cc_dynamic} ${mam_libast}
 done ksh generated
 make shcomp
 make shcomp.o
@@ -898,15 +1189,20 @@ make sh/shcomp.c
 prev include/io.h implicit
 prev include/path.h implicit
 prev include/shnodes.h implicit
-prev include/defs.h implicit
+prev include/shell.h implicit
 done sh/shcomp.c
 prev sh/shcomp.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -DKSHELL -DSHOPT_SUID_EXEC -DSHOPT_VSH -DSHOPT_ESH -c sh/shcomp.c
-done shcomp.o virtual
+setv _BLD_shell -U_BLD_shell
+exec - ${CC} -O  -I. -Iinclude -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -DSH_DICT='(void*)e_dict' -DKSHELL -D_PACKAGE_ast -DSHOPT_SUID_EXEC -DSHOPT_VSH -DSHOPT_ESH -c sh/shcomp.c
+done shcomp.o generated
 prev libshell.a archive
-setv mam_libcmd `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lcmd,${INSTALLROOT}/lib/libcmd.a,} ${PACKAGE_ast_LIB}/lib/cmd`
-exec - ${CC} ${CCFLAGS}  ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib}  -o shcomp shcomp.o libshell.a ${mam_libcmd} ${mam_libast} ${mam_cc_static} ${mam_libm} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libjobs} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libi} ${mam_cc_dynamic} ${mam_libdl} ${mam_libdld} ${mam_cc_static} ${mam_libintl} ${mam_cc_dynamic} ${mam_libast}
-done shcomp virtual
+setv mam_libshell `sed -e 's,-lshell,libshell.a,' shell.req`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+prev ${mam_libdl}
+setv mam_libdl `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-ldl,${INSTALLROOT}/lib/libdl.a,} ${PACKAGE_ast_LIB}/lib/dl`
+exec - ${CC} -O ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}}  -o shcomp shcomp.o ${mam_libshell} ${mam_libm} ${mam_cc_static}  ${mam_cc_dynamic} ${mam_libast}
+done shcomp generated
 make ksh.msg
 prev data/limits.c
 prev data/msg.c
@@ -919,14 +1215,16 @@ prev data/aliases.c
 prev data/builtins.c
 prev data/variables.c
 prev data/lexstates.c
-exec - grep '[ 	]e_[a-z].*".*[^\][a-z].*"' data/limits.c data/msg.c data/strdata.c data/testops.c data/keywords.c data/options.c data/signals.c data/aliases.c data/builtins.c data/variables.c data/lexstates.c |  grep -v /bin/ |  grep -v /usr/ | grep -v /dev/ |  grep -v /etc/ | grep -v A__z | sed 's/.*=[ 	]*\(".*"\);.*/\1/' | sort | uniq > ksh.msg
-exec - grep '[ 	]sh_opt.*".*[^\][a-z].*"' data/limits.c data/msg.c data/strdata.c data/testops.c data/keywords.c data/options.c data/signals.c data/aliases.c data/builtins.c data/variables.c data/lexstates.c |  sed 's/.*=[ 	]*\(".*"\);.*/\1/'  >> ksh.msg
-exec - grep '[ 	]is_[a-z].*".*[^\][a-z].*"' data/limits.c data/msg.c data/strdata.c data/testops.c data/keywords.c data/options.c data/signals.c data/aliases.c data/builtins.c data/variables.c data/lexstates.c |  sed 's/.*=[ 	]*\(".*"\);.*/\1/'  >> ksh.msg
-exec - grep '[         ]e_notset' data/limits.c data/msg.c data/strdata.c data/testops.c data/keywords.c data/options.c data/signals.c data/aliases.c data/builtins.c data/variables.c data/lexstates.c | sed 's/.*"....\(.*"\).*/"\1/' >> ksh.msg
-exec - grep '[         ]e_subst' data/limits.c data/msg.c data/strdata.c data/testops.c data/keywords.c data/options.c data/signals.c data/aliases.c data/builtins.c data/variables.c data/lexstates.c | sed 's/.*"....\(.*"\).*/"\1/' >> ksh.msg
-exec - grep '[         ]e_file' data/limits.c data/msg.c data/strdata.c data/testops.c data/keywords.c data/options.c data/signals.c data/aliases.c data/builtins.c data/variables.c data/lexstates.c | sed 's/.*"....\(.*"\).*/"\1/' >> ksh.msg
-exec - grep ',$' data/signals.c  | sed 's/.*\(".*"\),/\1/' | sort | uniq >> ksh.msg
-done ksh.msg virtual
+exec - {
+exec - sed -e '/[ 	]e_[a-z].*".*[^\][a-z].*"/!d' -e '/\/[a-z][a-z][a-z]\//d' -e '/A__z/d' -e 's/.*=[ 	]*\(".*"\);.*/\1/' data/limits.c data/msg.c data/strdata.c data/testops.c data/keywords.c data/options.c data/signals.c data/aliases.c data/builtins.c data/variables.c data/lexstates.c
+exec - sed -e '/[ 	]sh_opt.*".*[^\][a-z].*"/!d' -e 's/.*=[ 	]*\(".*"\);.*/\1/' data/limits.c data/msg.c data/strdata.c data/testops.c data/keywords.c data/options.c data/signals.c data/aliases.c data/builtins.c data/variables.c data/lexstates.c
+exec - sed -e '/[ 	]is_[a-z].*".*[^\][a-z].*"/!d' -e 's/.*=[ 	]*\(".*"\);.*/\1/' data/limits.c data/msg.c data/strdata.c data/testops.c data/keywords.c data/options.c data/signals.c data/aliases.c data/builtins.c data/variables.c data/lexstates.c
+exec - sed -e '/[         ]e_notset/!d' -e 's/.*"....\(.*"\).*/"\1/' data/limits.c data/msg.c data/strdata.c data/testops.c data/keywords.c data/options.c data/signals.c data/aliases.c data/builtins.c data/variables.c data/lexstates.c
+exec - sed -e '/[         ]e_subst/!d' -e 's/.*"....\(.*"\).*/"\1/' data/limits.c data/msg.c data/strdata.c data/testops.c data/keywords.c data/options.c data/signals.c data/aliases.c data/builtins.c data/variables.c data/lexstates.c
+exec - sed -e '/[         ]e_file/!d' -e 's/.*"....\(.*"\).*/"\1/' data/limits.c data/msg.c data/strdata.c data/testops.c data/keywords.c data/options.c data/signals.c data/aliases.c data/builtins.c data/variables.c data/lexstates.c
+exec - sed -e '/,$/!d' -e 's/.*\(".*"\),/\1/' data/signals.c
+exec - } | sort -u > ksh.msg
+done ksh.msg generated
 make sh/suid_exec.c
 prev ${PACKAGE_ast_INCLUDE}/ast/error.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast/sig.h implicit
@@ -942,11 +1240,14 @@ make suid_exec
 make suid_exec.o
 prev sh/suid_exec.c
 prev sh/suid_exec.c
-exec - ${CC} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE}/ast  -c sh/suid_exec.c
-done suid_exec.o virtual
-exec - ${CC} ${CCFLAGS}  ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib}  -o suid_exec suid_exec.o ${mam_cc_static} ${mam_libm} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libjobs} ${mam_cc_dynamic} ${mam_cc_static} ${mam_libi} ${mam_cc_dynamic} ${mam_libdl} ${mam_libdld} ${mam_cc_static} ${mam_libintl} ${mam_cc_dynamic} ${mam_libast}
-done suid_exec virtual
-done all virtual
+exec - ${CC} -O  -I. -I${PACKAGE_ast_INCLUDE}/ast -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c sh/suid_exec.c
+done suid_exec.o generated
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+setv mam_libm `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-lm,${INSTALLROOT}/lib/libm.a,} ${PACKAGE_ast_LIB}/lib/m`
+prev ${mam_libdl}
+setv mam_libdl `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L-s,-ldl,${INSTALLROOT}/lib/libdl.a,} ${PACKAGE_ast_LIB}/lib/dl`
+exec - ${CC} -O ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}}  -o suid_exec suid_exec.o ${mam_cc_static} ${mam_libast} ${mam_cc_dynamic} ${mam_libm} ${mam_cc_static}  ${mam_cc_dynamic} ${mam_libast}
+done suid_exec generated
 make ${INSTALLROOT}/bin
 exec - set -
 exec - if	test ! -d ${INSTALLROOT}/bin
@@ -973,8 +1274,8 @@ exec - fi
 done ${INSTALLROOT}/bin generated
 make ${INSTALLROOT}/bin/ksh
 prev ksh
-exec - { mv ${INSTALLROOT}/bin/ksh ${INSTALLROOT}/bin/ksh.old 2>/dev/null; cp ksh ${INSTALLROOT}/bin/ksh 2>/dev/null  		    		    ;} || true
-done ${INSTALLROOT}/bin/ksh virtual
+exec - mv ${INSTALLROOT}/bin/ksh ${INSTALLROOT}/bin/ksh.old 2>/dev/null || true; cp ksh ${INSTALLROOT}/bin/ksh
+done ${INSTALLROOT}/bin/ksh generated
 make ${INSTALLROOT}/man/man1
 exec - set -
 exec - if	test ! -d ${INSTALLROOT}/man/man1
@@ -1002,16 +1303,16 @@ done ${INSTALLROOT}/man/man1 generated
 make ${INSTALLROOT}/man/man1/sh.1
 make sh.1
 done sh.1
-exec - { mv ${INSTALLROOT}/man/man1/sh.1 ${INSTALLROOT}/man/man1/sh.1.old 2>/dev/null; cp sh.1 ${INSTALLROOT}/man/man1/sh.1 2>/dev/null  		    		    ;} || true
+exec - mv ${INSTALLROOT}/man/man1/sh.1 ${INSTALLROOT}/man/man1/sh.1.old 2>/dev/null || true; cp sh.1 ${INSTALLROOT}/man/man1/sh.1
 done ${INSTALLROOT}/man/man1/sh.1 generated
-make ${INSTALLROOT}/lib
+make ${PACKAGE_ast_LIB}
 exec - set -
-exec - if	test ! -d ${INSTALLROOT}/lib
-exec - then	set -x && mkdir -p ${INSTALLROOT}/lib 2>/dev/null && set - ||
+exec - if	test ! -d ${PACKAGE_ast_LIB}
+exec - then	set -x && mkdir -p ${PACKAGE_ast_LIB} 2>/dev/null && set - ||
 exec - 	{
 exec - 		test -d ./-p && rm -rf ./-p
 exec - 		p=
-exec - 		for d in `echo ${INSTALLROOT}/lib | sed -e 's%\\(.\\)/%\\1 %g'`
+exec - 		for d in `echo ${PACKAGE_ast_LIB} | sed -e 's%\\(.\\)/%\\1 %g'`
 exec - 		do	case $p in
 exec - 			"")	p=$d ;;
 exec - 			*)	p=$p/$d ;;
@@ -1027,12 +1328,12 @@ exec - 			esac
 exec - 		done
 exec - 	} && set -x 		    		   
 exec - fi
-done ${INSTALLROOT}/lib generated
-make ${INSTALLROOT}/lib/libshell.a archive
+done ${PACKAGE_ast_LIB} generated
+make ${PACKAGE_ast_LIB}/libshell.a archive
 prev libshell.a archive
-exec - { mv ${INSTALLROOT}/lib/libshell.a ${INSTALLROOT}/lib/libshell.a.old 2>/dev/null; cp libshell.a ${INSTALLROOT}/lib/libshell.a 2>/dev/null  		    		    ;} || true
-exec - (ranlib ${INSTALLROOT}/lib/libshell.a) >/dev/null 2>&1 || true
-done ${INSTALLROOT}/lib/libshell.a generated
+exec - mv ${PACKAGE_ast_LIB}/libshell.a ${PACKAGE_ast_LIB}/libshell.a.old 2>/dev/null || true; cp libshell.a ${PACKAGE_ast_LIB}/libshell.a
+exec - (ranlib ${PACKAGE_ast_LIB}/libshell.a) >/dev/null 2>&1 || true
+done ${PACKAGE_ast_LIB}/libshell.a generated
 make ${INSTALLROOT}/man/man3
 exec - set -
 exec - if	test ! -d ${INSTALLROOT}/man/man3
@@ -1057,19 +1358,24 @@ exec - 		done
 exec - 	} && set -x 		    		   
 exec - fi
 done ${INSTALLROOT}/man/man3 generated
+make ${INSTALLROOT}/man/man3/shell.3
+make shell.3
+done shell.3
+exec - mv ${INSTALLROOT}/man/man3/shell.3 ${INSTALLROOT}/man/man3/shell.3.old 2>/dev/null || true; cp shell.3 ${INSTALLROOT}/man/man3/shell.3
+done ${INSTALLROOT}/man/man3/shell.3 generated
 make ${INSTALLROOT}/man/man3/nval.3
 make nval.3
 done nval.3
-exec - { mv ${INSTALLROOT}/man/man3/nval.3 ${INSTALLROOT}/man/man3/nval.3.old 2>/dev/null; cp nval.3 ${INSTALLROOT}/man/man3/nval.3 2>/dev/null  		    		    ;} || true
+exec - mv ${INSTALLROOT}/man/man3/nval.3 ${INSTALLROOT}/man/man3/nval.3.old 2>/dev/null || true; cp nval.3 ${INSTALLROOT}/man/man3/nval.3
 done ${INSTALLROOT}/man/man3/nval.3 generated
-make ${INSTALLROOT}/include/ast
+make ${PACKAGE_ast_LIB}/lib
 exec - set -
-exec - if	test ! -d ${INSTALLROOT}/include/ast
-exec - then	set -x && mkdir -p ${INSTALLROOT}/include/ast 2>/dev/null && set - ||
+exec - if	test ! -d ${PACKAGE_ast_LIB}/lib
+exec - then	set -x && mkdir -p ${PACKAGE_ast_LIB}/lib 2>/dev/null && set - ||
 exec - 	{
 exec - 		test -d ./-p && rm -rf ./-p
 exec - 		p=
-exec - 		for d in `echo ${INSTALLROOT}/include/ast | sed -e 's%\\(.\\)/%\\1 %g'`
+exec - 		for d in `echo ${PACKAGE_ast_LIB}/lib | sed -e 's%\\(.\\)/%\\1 %g'`
 exec - 		do	case $p in
 exec - 			"")	p=$d ;;
 exec - 			*)	p=$p/$d ;;
@@ -1085,29 +1391,73 @@ exec - 			esac
 exec - 		done
 exec - 	} && set -x 		    		   
 exec - fi
-done ${INSTALLROOT}/include/ast virtual
-make ${INSTALLROOT}/include/ast/nval.h
+done ${PACKAGE_ast_LIB}/lib generated
+make ${PACKAGE_ast_LIB}/lib/shell
+prev shell.req
+exec - mv ${PACKAGE_ast_LIB}/lib/shell ${PACKAGE_ast_LIB}/lib/shell.old 2>/dev/null || true; cp shell.req ${PACKAGE_ast_LIB}/lib/shell
+done ${PACKAGE_ast_LIB}/lib/shell generated
+make ${PACKAGE_ast_INCLUDE}/ast
+exec - set -
+exec - if	test ! -d ${PACKAGE_ast_INCLUDE}/ast
+exec - then	set -x && mkdir -p ${PACKAGE_ast_INCLUDE}/ast 2>/dev/null && set - ||
+exec - 	{
+exec - 		test -d ./-p && rm -rf ./-p
+exec - 		p=
+exec - 		for d in `echo ${PACKAGE_ast_INCLUDE}/ast | sed -e 's%\\(.\\)/%\\1 %g'`
+exec - 		do	case $p in
+exec - 			"")	p=$d ;;
+exec - 			*)	p=$p/$d ;;
+exec - 			esac
+exec - 			case $d in
+exec - 			.|..)	;;
+exec - 			*)	if	test ! -d $p
+exec - 				then	rm -f $p
+exec - 					set -x && mkdir $p && set -
+exec - 				fi
+exec - 				;;
+exec - 			esac
+exec - 		done
+exec - 	} && set -x 		    		   
+exec - fi
+done ${PACKAGE_ast_INCLUDE}/ast generated
+make ${PACKAGE_ast_INCLUDE}/ast/nval.h
 prev include/nval.h
-exec - proto -p -s -c AT\&T\ Bell\ Laboratories include/nval.h > 1.${COTEMP}.x
-exec - if	cmp -s ${INSTALLROOT}/include/ast/nval.h 1.${COTEMP}.x
+exec - proto -p -s -l ${PACKAGE_ast_LIB}/package/ast.lic -o since='1982,author=dgk' include/nval.h > 1.${COTEMP}.x
+exec - if	cmp 2>/dev/null -s ${PACKAGE_ast_INCLUDE}/ast/nval.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
-exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/nval.h
+exec - else	mv 1.${COTEMP}.x ${PACKAGE_ast_INCLUDE}/ast/nval.h
 exec - fi
-done ${INSTALLROOT}/include/ast/nval.h virtual
-make ${INSTALLROOT}/include/ast/shell.h
+done ${PACKAGE_ast_INCLUDE}/ast/nval.h generated
+make ${PACKAGE_ast_INCLUDE}/ast/shell.h
 prev include/shell.h
-exec - proto -p -s -c AT\&T\ Bell\ Laboratories include/shell.h > 1.${COTEMP}.x
-exec - if	cmp -s ${INSTALLROOT}/include/ast/shell.h 1.${COTEMP}.x
+exec - proto -p -s -l ${PACKAGE_ast_LIB}/package/ast.lic -o since='1982,author=dgk' include/shell.h > 1.${COTEMP}.x
+exec - if	cmp 2>/dev/null -s ${PACKAGE_ast_INCLUDE}/ast/shell.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
-exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/shell.h
+exec - else	mv 1.${COTEMP}.x ${PACKAGE_ast_INCLUDE}/ast/shell.h
 exec - fi
-done ${INSTALLROOT}/include/ast/shell.h virtual
+done ${PACKAGE_ast_INCLUDE}/ast/shell.h generated
+make ${PACKAGE_ast_INCLUDE}/ast/history.h
+prev include/history.h
+exec - proto -p -s -l ${PACKAGE_ast_LIB}/package/ast.lic -o since='1982,author=dgk' include/history.h > 1.${COTEMP}.x
+exec - if	cmp 2>/dev/null -s ${PACKAGE_ast_INCLUDE}/ast/history.h 1.${COTEMP}.x
+exec - then	rm -f 1.${COTEMP}.x
+exec - else	mv 1.${COTEMP}.x ${PACKAGE_ast_INCLUDE}/ast/history.h
+exec - fi
+done ${PACKAGE_ast_INCLUDE}/ast/history.h generated
 make ${INSTALLROOT}/bin/suid_exec
 prev suid_exec
-exec - { mv ${INSTALLROOT}/bin/suid_exec ${INSTALLROOT}/bin/suid_exec.old 2>/dev/null; cp suid_exec ${INSTALLROOT}/bin/suid_exec 2>/dev/null  		    		    ;} || true
+exec - mv ${INSTALLROOT}/bin/suid_exec ${INSTALLROOT}/bin/suid_exec.old 2>/dev/null || true; cp suid_exec ${INSTALLROOT}/bin/suid_exec
 done ${INSTALLROOT}/bin/suid_exec generated
 make ${INSTALLROOT}/bin/shcomp
 prev shcomp
-exec - { mv ${INSTALLROOT}/bin/shcomp ${INSTALLROOT}/bin/shcomp.old 2>/dev/null; cp shcomp ${INSTALLROOT}/bin/shcomp 2>/dev/null  		    		    ;} || true
-done ${INSTALLROOT}/bin/shcomp virtual
+exec - mv ${INSTALLROOT}/bin/shcomp ${INSTALLROOT}/bin/shcomp.old 2>/dev/null || true; cp shcomp ${INSTALLROOT}/bin/shcomp
+done ${INSTALLROOT}/bin/shcomp generated
 done install virtual
+make test
+prev ksh
+make tests/shtests
+done tests/shtests
+exec - KSH=/home/gsf/arch/sgi.mips3/src/cmd/ksh93/ksh
+exec - cd /home/gsf/src/cmd/ksh93/tests
+exec - SHELL=$KSH $KSH shtests
+done test dontcare virtual

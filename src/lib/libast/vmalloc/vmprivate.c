@@ -1,52 +1,43 @@
-/*
- * CDE - Common Desktop Environment
- *
- * Copyright (c) 1993-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
- */
 /***************************************************************
 *                                                              *
-*                      AT&T - PROPRIETARY                      *
+*           This software is part of the ast package           *
+*              Copyright (c) 1985-2000 AT&T Corp.              *
+*      and it may only be used by you under license from       *
+*                     AT&T Corp. ("AT&T")                      *
+*       A copy of the Source Code Agreement is available       *
+*              at the AT&T Internet web site URL               *
 *                                                              *
-*         THIS IS PROPRIETARY SOURCE CODE LICENSED BY          *
-*                          AT&T CORP.                          *
+*     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*                Copyright (c) 1995 AT&T Corp.                 *
-*                     All Rights Reserved                      *
-*                                                              *
-*           This software is licensed by AT&T Corp.            *
-*       under the terms and conditions of the license in       *
-*       http://www.research.att.com/orgs/ssr/book/reuse        *
+*     If you received this software without first entering     *
+*       into a license with AT&T, you have an infringing       *
+*           copy and cannot use it without violating           *
+*             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
-*           Software Engineering Research Department           *
-*                    AT&T Bell Laboratories                    *
+*               Network Services Research Center               *
+*                      AT&T Labs Research                      *
+*                       Florham Park NJ                        *
 *                                                              *
-*               For further information contact                *
-*                     gsf@research.att.com                     *
+*             Glenn Fowler <gsf@research.att.com>              *
+*              David Korn <dgk@research.att.com>               *
+*               Phong Vo <kpv@research.att.com>                *
 *                                                              *
 ***************************************************************/
+#ifdef _UWIN
+
+int _STUB_vmprivate;
+
+#else
+
 #include	"vmhdr.h"
+
+static char*	Version = "\n@(#)Vmalloc (AT&T Labs - kpv) 1999-08-05\0\n";
+
 
 /*	Private code used in the vmalloc library
 **
-**	Written by (Kiem-)Phong Vo, kpv@research.att.com, 01/16/94.
+**	Written by Kiem-Phong Vo, kpv@research.att.com, 01/16/94.
 */
 
 /* Get more memory for a region */
@@ -62,7 +53,7 @@ Vmsearch_f	searchf;	/* tree search function		*/
 	reg size_t	s;
 	reg Seg_t*	seg;
 	reg Block_t	*bp, *t;
-	reg uchar*	addr;
+	reg Vmuchar_t*	addr;
 	reg Vmdata_t*	vd = vm->data;
 	reg Vmemory_f	memoryf = vm->disc->memoryf;
 	reg Vmexcept_f	exceptf = vm->disc->exceptf;
@@ -70,7 +61,7 @@ Vmsearch_f	searchf;	/* tree search function		*/
 	GETPAGESIZE(_Vmpagesize);
 
 	if(vd->incr <= 0) /* this is just _Vmheap on the first call */
-		vd->incr = _Vmpagesize;
+		vd->incr = 4*_Vmpagesize;
 
 	/* Get slightly more for administrative data */
 	s = size + sizeof(Seg_t) + sizeof(Block_t) + sizeof(Head_t) + 2*ALIGN;
@@ -79,9 +70,9 @@ Vmsearch_f	searchf;	/* tree search function		*/
 	if((size = ROUND(s,vd->incr)) < s)
 		return NIL(Block_t*);
 
-	/* first see if we can extend the current segment */
+	/* see if we can extend the current segment */
 	if(!(seg = vd->seg) )
-		addr = NIL(uchar*);
+		addr = NIL(Vmuchar_t*);
 	else
 	{	if(!vd->wild || SEG(vd->wild) != seg)
 			s = 0;
@@ -90,17 +81,19 @@ Vmsearch_f	searchf;	/* tree search function		*/
 			if((s = (s/vd->incr)*vd->incr) == size)
 				size += vd->incr;
 		}
-		addr = (uchar*)(*memoryf)(vm,seg->addr,seg->extent,
+		addr = (Vmuchar_t*)(*memoryf)(vm,seg->addr,seg->extent,
 					  seg->extent+size-s,vm->disc);
-		if(addr)
-		{	/**/ASSERT(addr == (uchar*)seg->addr);
+		if(!addr)
+			seg = NIL(Seg_t*);
+		else
+		{	/**/ASSERT(addr == (Vmuchar_t*)seg->addr);
 			addr += seg->extent;
 			size -= s;
 		}
 	}
 
 	while(!addr)	/* try to get space */
-	{	if((addr = (uchar*)(*memoryf)(vm,NIL(Void_t*),0,size,vm->disc)) )
+	{	if((addr = (Vmuchar_t*)(*memoryf)(vm,NIL(Void_t*),0,size,vm->disc)) )
 			break;
 
 		/* check with exception handler to see if we should continue */
@@ -120,12 +113,8 @@ Vmsearch_f	searchf;	/* tree search function		*/
 		}
 	}
 
-	/* search segment list to see if this is attachable to any of them */
-	for(seg = vd->seg; seg; seg = seg->next)
-		if(addr == ((uchar*)seg->addr+seg->extent) )
-			break;
 	if(seg)
-	{	/* extending a current segment */
+	{	/* extending current segment */
 		bp = BLOCK(seg->baddr);	/**/ ASSERT((SIZE(bp)&~BITS) == 0);
 					/**/ ASSERT(SEG(bp) == seg);
 
@@ -137,7 +126,7 @@ Vmsearch_f	searchf;	/* tree search function		*/
 				bp = LAST(bp);
 				if(bp == vd->wild)
 					vd->wild = NIL(Block_t*);
-				else	DELETE(vd,bp,INDEX(SIZE(bp)),t,(*searchf));
+				else	REMOVE(vd,bp,INDEX(SIZE(bp)),t,(*searchf));
 				SIZE(bp) += size;
 			}
 		}
@@ -158,7 +147,7 @@ Vmsearch_f	searchf;	/* tree search function		*/
 	{	/* creating a new segment */
 		reg Seg_t	*sp, *lastsp;
 
-		if((s = (size_t)(ULONG(addr)%ALIGN)) != 0)
+		if((s = (size_t)(VLONG(addr)%ALIGN)) != 0)
 			addr += ALIGN-s;
 
 		seg = (Seg_t*)addr;
@@ -169,7 +158,7 @@ Vmsearch_f	searchf;	/* tree search function		*/
 		seg->free = NIL(Block_t*);
 		bp = SEGBLOCK(seg);
 		SEG(bp) = seg;
-		SIZE(bp) = seg->baddr - (uchar*)bp - 2*sizeof(Head_t);
+		SIZE(bp) = seg->baddr - (Vmuchar_t*)bp - 2*sizeof(Head_t);
 
 		/* NOTE: for Vmbest, Vmdebug and Vmprofile the region's segment list
 		   is reversely ordered by addresses. This is so that we can easily
@@ -212,9 +201,9 @@ Vmsearch_f	searchf;	/* tree search function		*/
 
 /* Truncate a segment if possible */
 #if __STD_C
-vmtruncate(Vmalloc_t* vm, Seg_t* seg, size_t size, int exact)
+static int vmtruncate(Vmalloc_t* vm, Seg_t* seg, size_t size, int exact)
 #else
-vmtruncate(vm, seg, size, exact)
+static int vmtruncate(vm, seg, size, exact)
 Vmalloc_t*	vm;	/* containing region		*/
 Seg_t*		seg;	/* the one to be truncated	*/
 size_t		size;	/* amount of free space		*/
@@ -283,15 +272,14 @@ int		exact;	/* amount given was exact	*/
 
 /* Externally visible names but local to library */
 Vmextern_t	_Vmextern =
-{	
-	vmextend,						/* _Vmextend	*/
+{	vmextend,						/* _Vmextend	*/
 	vmtruncate,						/* _Vmtruncate	*/
 	0,							/* _Vmpagesize	*/
 	NIL(char*(*)_ARG_((char*,char*,int))),			/* _Vmstrcpy	*/
-	NIL(char*(*)_ARG_((ulong,int))),			/* _Vmitoa	*/
-	NIL(void(*)_ARG_((Vmalloc_t*,uchar*,uchar*,size_t))),	/* _Vmtrace	*/
+	NIL(char*(*)_ARG_((Vmulong_t,int))),			/* _Vmitoa	*/
+	NIL(void(*)_ARG_((Vmalloc_t*,
+			  Vmuchar_t*,Vmuchar_t*,size_t,size_t))), /* _Vmtrace	*/
 	NIL(void(*)_ARG_((Vmalloc_t*)))				/* _Vmpfclose	*/
 };
 
-char*	_Vmfile;	/* current file	*/
-int	_Vmline;	/* current line */
+#endif
