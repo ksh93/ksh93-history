@@ -1,12 +1,12 @@
-/*
+/*$(PACKAGESRC)/$i.pkg
  * source and binary package support
  *
- * @(#)package.mk (AT&T Labs Research) 2002-10-04
+ * @(#)package.mk (AT&T Labs Research) 2003-04-21
  *
  * usage:
  *
  *	cd $INSTALLROOT/lib/package
- *	nmake -f name [ closure ] [ exp|lcl|pkg|rpm ] [ base|delta ] type
+ *	nmake -f name [closure] [cyg|exp|lcl|pkg|rpm|tgz] [base|delta] type
  *
  * where:
  *
@@ -24,11 +24,18 @@
  * main assertions:
  *
  *	NAME [ name=value ] :PACKAGE: component ...
+ *	:CATEGORY: category-id ...
  *	:COVERS: package ...
  *	:REQURES: package ...
  *	:INDEX: index description line
- *	:DESCRIPTZION:
+ *	:DESCRIPTION:
  *		[ verbose description ]
+ *	:DETAILS: style
+ *		:README:
+ *			readme lines
+ *		:EXPORT:
+ *			name=value
+ *		target :INSTALL: [ source ]
  *
  * option variables, shown with default values
  *
@@ -47,23 +54,40 @@
  *	variants=pattern
  *		include variants matching pattern in binary packages
  *
+ *	incremental=[source:1 binary:0]
+ *		if a base archive is generated then also generate an
+ *		incremental delta archive from the previous base
+ *
  * NOTE: the Makerules.mk :PACKAGE: operator defers to :package: when
  *	 a target is specified
  */
 
+/* these are ast centric -- we'll parameterize another day */
+
+org = ast
+url = http://www.research.att.com/sw/download
+
+/* generic defaults */
+
+base =
+category = utils
 closure =
+delta =
 format = tgz
+incremental =
 index =
 init = INIT
-licenses = ast
+licenses = $(org)
+opt =
 name =
+release =
 strip = 0
 style = tgz
 suffix = tgz
 type =
 variants = !(cc-g)
+vendor =
 version = $("":T=R%Y-%m-%d)
-release =
 
 package.notice = ------------ NOTICE -- LICENSED SOFTWARE -- SEE README FOR DETAILS ------------
 
@@ -128,9 +152,9 @@ PACKAGEDIR = $(PACKAGESRC)/$(style)
 INSTALLOFFSET = $(INSTALLROOT:C%$(PACKAGEROOT)/%%)
 
 package.omit = -|*/$(init)
-package.glob.all = $(INSTALLROOT)/src/($(MAKEDIRS:/:/|/G))/*/($(MAKEFILES:/:/|/G))
+package.glob.all = $(INSTALLROOT)/src/*/*/($(MAKEFILES:/:/|/G))
 package.all = $(package.glob.all:P=G:W=O=$(?$(name):A=.VIRTUAL):N!=$(package.omit):T=F:$(VROOT:T=F:P=L*:C,.*,C;^&/;;,:/ /:/G):U)
-package.glob.pkg = $(INSTALLROOT)/src/($(MAKEDIRS:/:/|/G))/($(~$(name):/ /|/G))/($(MAKEFILES:/:/|/G))
+package.glob.pkg = $(INSTALLROOT)/src/*/($(~$(name):/ /|/G))/($(MAKEFILES:/:/|/G))
 package.pkg = $(package.glob.pkg:P=G:D:N!=$(package.omit):T=F:$(VROOT:T=F:P=L*:C,.*,C;^&/;;,:/ /:/G):U)
 package.closure = $(closure:?$(package.all)?$(package.pkg)?)
 
@@ -175,7 +199,7 @@ $(init) : .VIRTUAL $(init)
 			end
 		end
 		if name == "*-*"
-			J := $(name:/[^-]*-//) $(name)
+			J := $(name:/[^-]*-//) $(name) $(name:/-[^-]*$//)
 		else
 			J := $(name)
 		end
@@ -204,6 +228,9 @@ $(init) : .VIRTUAL $(init)
 		$(P).txt := This is the $(P) package.
 	end
 
+":CATEGORY:" : .MAKE .OPERATOR
+	category := $(>)
+
 ":COVERS:" : .MAKE .OPERATOR
 	local I R
 	for I $(>)
@@ -215,10 +242,40 @@ $(init) : .VIRTUAL $(init)
 	end
 
 ":DESCRIPTION:" : .MAKE .OPERATOR
-	$(name).txt := $(@)
+	$(name).txt := $(@:V)
 
 ":INDEX:" : .MAKE .OPERATOR
 	index := $(>)
+
+":DETAILS:" : .MAKE .OPERATOR
+	details.$(>:O=1) := $(@:V)
+
+":README:" : .MAKE .OPERATOR
+	readme.$(style) := $(@:V)
+
+":EXPORT:" : .MAKE .OPERATOR
+	export.$(style) := $(@:/$$("\n")/ /G)
+
+":INSTALL:" : .MAKE .OPERATOR
+	local T S
+	S := $(>)
+	T := $(<)
+	if "$(exe.$(style))" && "$(T)" == "bin/*([!./])"
+		T := $(T).exe
+	end
+	if ! "$(S)"
+		S := $(T)
+	elif "$(exe.$(style))" && "$(S)" == "bin/*([!./])"
+		S := $(S).exe
+	end
+	install.$(style) := $(install.$(style):V)$("\n")install : $$(ROOT)/$(T)$("\n")$$(ROOT)/$(T) : $$(ARCH)/$(S)$("\n\t")cp $< $@
+	if strip && "$(T:N=*.exe)"
+		install.$(style) := $(install.$(style):V)$("\n\t")strip $@ 2>/dev/null
+	end
+	if "$(filter.$(style):V)"
+		filter.$(style) := $(filter.$(style):V)$$("\n")
+	end
+	filter.$(style) := $(filter.$(style):V);;;$(PACKAGEROOT)/arch/$(CC.HOSTTYPE)/$(S);usr/$(T)
 
 ":REQUIRES:" : .MAKE .OPERATOR
 	local I R V
@@ -240,13 +297,24 @@ $(init) : .VIRTUAL $(init)
 		end
 	end
 
+":TEST:" : .MAKE .OPERATOR
+	local T
+	T := $(>)
+	if "$(T)" == "bin/*([!./])"
+		if "$(exe.$(style))"
+			T := $(T).exe
+		end
+		T := $$(PWD)/$$(ARCH)/$(T)
+	end
+	test.$(style) := $(test.$(style):V)$("\n")test : $(T:V)$("\n\t")$(@)
+
 base delta : .MAKE .VIRTUAL .FORCE
 	op := $(<)
 
 closure : .MAKE .VIRTUAL .FORCE
 	$(<) := 1
 
-exp lcl pkg rpm : .MAKE .VIRTUAL .FORCE
+cyg exp lcl pkg rpm tgz : .MAKE .VIRTUAL .FORCE
 	style := $(<)
 
 source : .source.init .source.gen .source.$$(style)
@@ -254,9 +322,14 @@ source : .source.init .source.gen .source.$$(style)
 .source.init : .MAKE
 	local A B D P V I
 	type := source
+	if ! "$(incremental)"
+		incremental = 1
+	end
 	if "$(source.$(name))"
 		suffix = c
 	end
+	: $(.init.$(style))
+	: $(details.$(style):V:R) :
 	A := $(source.list)
 	B := $(A:N=*.$(stamp).$(suffix):N!=*.$(stamp).$(stamp).*:O=1:T=F)
 	P := $(A:N=*.$(stamp).$(suffix):N!=*.$(stamp).$(stamp).*:O=2:T=F)
@@ -296,26 +369,208 @@ source : .source.init .source.gen .source.$$(style)
 			end
 			error 1 $(B:B:S): replacing current base
 		end
-		version := $(source:B:/$(name).//)
+		version := $(source:B:S:/^$(name).\(.*\).$(suffix)$/\1/)
 	end
 	PACKAGEGEN := $(PACKAGESRC)/gen
 
 .source.gen : $$(PACKAGEDIR) $$(PACKAGEGEN) $$(PACKAGEGEN)/SOURCE.html $$(PACKAGEGEN)/BINARY.html $$(PACKAGEGEN)/DETAILS.html
 
+BINPACKAGE := $(PATH:/:/ /G:X=package:T=F:O=1)
+
 $$(PACKAGEDIR) $$(PACKAGEGEN) : .IGNORE
 	test -d $(<) || mkdir $(<)
 
-$$(PACKAGEGEN)/SOURCE.html : $$(INSTALLROOT)/bin/package
-	package html source > $(<)
+$$(PACKAGEGEN)/SOURCE.html : $(BINPACKAGE)
+	$(*) html source > $(<)
 
-$$(PACKAGEGEN)/BINARY.html : $$(INSTALLROOT)/bin/package
-	package html binary > $(<)
+$$(PACKAGEGEN)/BINARY.html : $(BINPACKAGE)
+	$(*) html binary > $(<)
 
-$$(PACKAGEGEN)/DETAILS.html : $$(INSTALLROOT)/bin/package
-	package html intro > $(<)
+$$(PACKAGEGEN)/DETAILS.html : $(BINPACKAGE)
+	$(*) html intro > $(<)
 
 .source.exp .source.pkg .source.rpm : .MAKE
 	error 3 $(style): source package style not supported yet
+
+exe.cyg = .exe
+vendor.cyg = gnu
+
+.name.cyg : .FUNCTION
+	local N
+	N := $(%)
+	if N == "*-*"
+		vendor := $(N:/-.*//)
+		if vendor == "$(vendor.cyg)"
+			vendor :=
+			N := $(N:/[^-]*-//)
+		end
+		N := $(N:/-//G)
+	end
+	return $(N)
+
+.init.cyg : .FUNCTION
+	local N O
+	closure = 1
+	init = .
+	strip = 1
+	suffix = tar.bz2
+	format = tbz
+	vendor := $(licenses:N!=$(vendor.cyg):O=1)
+	package.ini := $(package.ini)
+	package.src.pat := $(package.src.pat)
+	package.src := $(package.src)
+	package.bin := $(package.bin)
+	.source.gen : .CLEAR $(*.source.gen:V:N!=*.html)
+	name.original := $(name)
+	name := $(.name.cyg $(name))
+	if name != "$(name.original)"
+		$(name) : $(~$(name.original))
+		O := $(~covers)
+		covers : .CLEAR
+		for N $(O)
+			covers : $(.name.cyg $(N))
+		end
+	end
+	stamp = [0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-[0-9]
+	version.original := $(version)
+	version := $(version:/-//G)-1
+	if opt
+		opt := $(opt)/$(vendor)/
+	else
+		opt := $(name)-$(version)/
+	end
+	if type == "source"
+		version := $(version)-src
+	else
+		binary = $(PACKAGEDIR)/$(name).$(version)$(release:?.$(release)??).$(suffix)
+	end
+
+.source.cyg :
+	if	test '' != '$(~$(name))'
+	then	tmp=/tmp/pkg$(tmp)
+		mkdir $tmp
+		{
+			integer m
+			: > $tmp/HEAD
+			echo ";;;$tmp/HEAD;$(opt)$(package.notice)"
+			cat > $tmp/README <<'!'
+	$(package.readme)
+	!
+			echo ";;;$tmp/README;$(opt)README"
+			cat > $tmp/configure <<'!'
+	echo "you didn't have to do that"
+	!
+			chmod +x $tmp/configure
+			echo ";;;$tmp/configure;$(opt)configure"
+			cat > $tmp/Makefile0 <<'!'
+	HOSTTYPE := $$(shell bin/package)
+	ROOT = ../..
+	ARCH = arch/$$(HOSTTYPE)
+	all :
+		PACKAGEROOT= CYGWIN="$$CYGWIN ntsec binmode" bin/package make $(export.$(style))
+	install : all
+	$(install.$(style):V)
+	$(test.$(style):V)
+	!
+			echo ";;;$tmp/Makefile0;$(opt)Makefile"
+			cat > $tmp/CYGWIN-README <<'!'
+	$(readme.$(style):@?$$(readme.$$(style))$$("\n\n")??)To build binaries from source into the ./arch/`bin/package` tree run:
+	$()
+		make
+	$()
+	$(test.$(style):@?To test the binaries after building/installing run:$$("\n\n\t")make test$$("\n\n")??)To build and/or install the binaries run:
+	$()
+		make install
+	$()
+	The bin/package command provides a command line interface for all package
+	operations. The $(opt:/.$//) source and binary packages were generated by:
+	$()
+		package write cyg base source version=$(version.original) $(name.original)
+		package write cyg base binary version=$(version.original) $(name.original)
+	$()
+	using the $(org)-base package. To download and install the latest
+	$(org)-base source package in /opt/$(org) run:
+	$()
+		PATH=/opt/$(org)/bin:$PATH
+		cd /opt/$(org)
+		package setup flat source $("\\")
+			$(url) $("\\")
+			$(org)-base
+		package make
+	$()
+	and export /opt/$(org)/bin in PATH to use. If multiple architectures
+	may be built under /opt/$(org) then drop "flat" and export
+	/opt/$(org)/arch/`package`/bin in PATH to use. To update
+	previously downloaded packages from the same url simply run:
+	$()
+		cd /opt/$(org)
+		package setup
+		package make
+	$()
+	To download and install the latest $(org)-base binary package in
+	/opt/$(org) change "source" to "binary" and omit "package make".
+	!
+			echo ";;;$tmp/CYGWIN-README;$(opt)CYGWIN-PATCHES/README"
+			cat > $(source:/-src.$(suffix)//).setup.hint <<'!'
+	category: $(category:/\(.\).*/\1/U)$(category:/.\(.*\)/\1/L)
+	requires: cygwin
+	sdesc: "$(index)"
+	ldesc: "$($(name.original).txt)"
+	!
+			echo ";;;$(source:/-src.$(suffix)//).setup.hint;$(opt)CYGWIN-PATCHES/setup.hint"
+			echo ";;;$(BINPACKAGE);$(opt)bin/package"
+			cat > $tmp/Makefile <<'!'
+	:MAKE:
+	!
+			echo ";;;$tmp/Makefile;$(opt)src/Makefile"
+			echo ";;;$tmp/Makefile;$(opt)src/cmd/Makefile"
+			echo ";;;$tmp/Makefile;$(opt)src/lib/Makefile"
+			cat > $tmp/Mamfile1 <<'!'
+	info mam static
+	note source level :MAKE: equivalent
+	make install
+	make all
+	exec - ${MAMAKE} -r '*/*' ${MAMAKEARGS}
+	done all virtual
+	done install virtual
+	!
+			echo ";;;$tmp/Mamfile1;$(opt)src/Mamfile"
+			cat > $tmp/Mamfile2 <<'!'
+	info mam static
+	note component level :MAKE: equivalent
+	make install
+	make all
+	exec - ${MAMAKE} -r '*' ${MAMAKEARGS}
+	done all virtual
+	done install virtual
+	!
+			echo ";;;$tmp/Mamfile2;$(opt)src/cmd/Mamfile"
+			echo ";;;$tmp/Mamfile2;$(opt)src/lib/Mamfile"
+			$(package.src:T=F:/.*/echo ";;;&"$("\n")/)
+			echo ";;;$(PACKAGEGEN)/$(name.original).req"
+			set -- $(package.closure)
+			for i
+			do	cd $(INSTALLROOT)/$i
+				(( m++ ))
+				$(MAKE) --noexec --force --mam=static --corrupt=accept CC=$(CC.DIALECT:N=C++:?CC?cc?) $(=) $(export.$(style)) 'dontcare test' install test > $tmp/$m.mam
+				echo ";;;$tmp/$m.mam;$(opt)$i/Mamfile"
+				$(MAKE) --noexec $(-) $(=) recurse list.package.$(type)
+			done
+			set -- $(package.dir:P=G)
+			for i
+			do	tw -d $i -e "action:printf(';;;%s\n',path);"
+			done
+			: > $tmp/TAIL
+			echo ";;;$tmp/TAIL;$(opt)$(package.notice)"
+		} |
+		$(PAX)	--filter=- \
+			--to=ascii \
+			--format=$(format) \
+			--local \
+			-wvf $(source) $(base) \
+			$(VROOT:T=F:P=L*:C%.*%-s",^&/,$(vendor:?$(opt)??),"%)
+		rm -rf $tmp
+	fi
 
 .source.lcl :
 	if	test '' != '$(~$(name))'
@@ -340,8 +595,6 @@ $$(PACKAGEGEN)/DETAILS.html : $$(INSTALLROOT)/bin/package
 			--local \
 			-wvf $(source) $(base) \
 			$(VROOT:T=F:P=L*:C%.*%-s",^&/,,"%)
-		test '' != '$(old.source)' &&
-		$(PAX) -rf $(source) -wvf $(old.new.source) -z $(old.source)
 		rm -rf $tmp
 	fi
 
@@ -392,8 +645,16 @@ $$(PACKAGEGEN)/DETAILS.html : $$(INSTALLROOT)/bin/package
 			echo ";;;$(PACKAGEGEN)/$(name).ver"
 			if	test '' != '$(~covers)'
 			then	for i in $(~covers)
-				do	echo ";;;$(PACKAGEGEN)/$i.ver"
-					echo ";;;$(PACKAGEGEN)/$i.req"
+				do	for j in pkg lic
+					do	if	test -f $(PACKAGESRC)/$i.$j
+						then	echo ";;;$(PACKAGESRC)/$i.$j"
+						fi
+					done
+					for j in ver req
+					do	if	test -f $(PACKAGEGEN)/$i.$j
+						then	echo ";;;$(PACKAGEGEN)/$i.$j"
+						fi
+					done
 				done
 			fi
 			sed 's,1$,0,' $(~req) < /dev/null > $(PACKAGEGEN)/$(name).req
@@ -519,7 +780,7 @@ $$(PACKAGEGEN)/DETAILS.html : $$(INSTALLROOT)/bin/package
 			for i
 			do	cd $(INSTALLROOT)/$i
 				(( m++ ))
-				$(MAKE) --noexec --force --mam=static --mismatch CC=$(CC.DIALECT:N=C++:?CC?cc?) $(=) 'dontcare test' install test > $tmp/$m.mam
+				$(MAKE) --noexec --force --mam=static --corrupt=accept CC=$(CC.DIALECT:N=C++:?CC?cc?) $(=) 'dontcare test' install test > $tmp/$m.mam
 				echo ";;;$tmp/$m.mam;$i/Mamfile"
 				$(MAKE) --noexec $(-) $(=) recurse list.package.$(type)
 			done
@@ -537,7 +798,7 @@ $$(PACKAGEGEN)/DETAILS.html : $$(INSTALLROOT)/bin/package
 			-wvf $(source) $(base) \
 			$(VROOT:T=F:P=L*:C%.*%-s",^&/,,"%)
 		echo local > $(source:D:B=$(name):S=.tim)
-		test '' != '$(old.source)' &&
+		test '1' = '$(incremental)' -a '' != '$(old.source)' &&
 		$(PAX) -rf $(source) -wvf $(old.new.source) -z $(old.source)
 		rm -rf $tmp
 	else	if	test '' != '$(old.source)' &&
@@ -578,6 +839,9 @@ binary : .binary.init .binary.gen .binary.$$(style)
 .binary.init : .MAKE
 	local A B D I P V
 	type := binary
+	if ! "$(incremental)"
+		incremental = 0
+	end
 	if ! "$(~$(name))"
 		if name == "ratz"
 			suffix = exe
@@ -585,6 +849,8 @@ binary : .binary.init .binary.gen .binary.$$(style)
 			suffix = gz
 		end
 	end
+	: $(.init.$(style)) :
+	: $(details.$(style):V:R) :
 	A := $(binary.list)
 	B := $(A:N=*.$(stamp).$(CC.HOSTTYPE).$(suffix):N!=*.$(stamp).$(stamp).*:O=1:T=F)
 	P := $(A:N=*.$(stamp).$(CC.HOSTTYPE).$(suffix):N!=*.$(stamp).$(stamp).*:O=2:T=F)
@@ -630,6 +896,59 @@ binary : .binary.init .binary.gen .binary.$$(style)
 .binary.exp .binary.pkg .binary.rpm : .MAKE
 	error 3 $(style): binary package style not supported yet
 
+.binary.cyg :
+	if	test '' != '$(~$(name))'
+	then	tmp=/tmp/pkg$(tmp)
+		mkdir $tmp
+		{
+			integer m
+			: > $tmp/HEAD
+			echo ";;;$tmp/HEAD;usr/doc/$(opt)$(package.notice)"
+			{
+				echo '$($(name.original).txt)' | fmt
+				cat <<'!'
+	$(readme.$(style):@?$$("\n")$$(readme.$$(style))??)
+	!
+			} > $tmp/README1
+			echo ";;;$tmp/README1;usr/doc/Cygwin/$(opt:/.$//).README"
+			{
+				echo '$($(name.original).txt)' | fmt
+				cat <<'!'
+	$()
+	The remainder of this file is the README from the source package
+	that was used to generate this binary package. It describes
+	the source build hierarchy, not the current directory.
+	$()
+	$(package.readme)
+	!
+			} > $tmp/README2
+			echo ";;;$tmp/README2;usr/doc/$(opt)README"
+			package release $(name.original) > $tmp/RELEASE
+			echo ";;;$tmp/RELEASE;usr/doc/$(opt)RELEASE"
+			cat > $(binary:/.$(suffix)//).setup.hint <<'!'
+	category: $(category:/\(.\).*/\1/U)$(category:/.\(.*\)/\1/L)
+	requires:
+	sdesc: "$(index)"
+	ldesc: "$($(name.original).txt)"
+	!
+			set -- $(.package.licenses. $(name.original):N!=*.lic)
+			for i
+			do	echo ";;;${i};usr/doc/$(opt)LICENSE-${i##*/}"
+			done
+			cat <<'!'
+	$(filter.$(style))
+	!
+			: > $tmp/TAIL
+			echo ";;;$tmp/TAIL;usr/doc/$(opt)$(package.notice)"
+		} |
+		$(PAX)	--filter=- \
+			--to=ascii \
+			--format=$(format) \
+			--local \
+			-wvf $(binary)
+		rm -rf $tmp
+	fi
+
 .binary.lcl :
 	if	test '' != '$(~$(name))'
 	then	tmp=/tmp/pkg$(tmp)
@@ -654,8 +973,6 @@ binary : .binary.init .binary.gen .binary.$$(style)
 			-s",^$tmp/,$(INSTALLOFFSET)/," \
 			$(PACKAGEROOT:C%.*%-s",^&/,,"%)
 		echo local > $(binary:D:B=$(name):S=.$(CC.HOSTTYPE).tim)
-		test '' != '$(old.binary)' &&
-		$(PAX) -rf $(binary) -wvf $(old.new.binary) -z $(old.binary)
 		rm -rf $tmp
 	fi
 
@@ -678,8 +995,16 @@ binary : .binary.init .binary.gen .binary.$$(style)
 			echo ";;;$(PACKAGEGEN)/$(name).ver"
 			if	test '' != '$(~covers)'
 			then	for i in $(~covers)
-				do	echo ";;;$(PACKAGEGEN)/$i.ver"
-					echo ";;;$(PACKAGEGEN)/$i.req"
+				do	for j in pkg lic
+					do	if	test -f $(PACKAGESRC)/$i.$j
+						then	echo ";;;$(PACKAGESRC)/$i.$j"
+						fi
+					done
+					for j in ver req
+					do	if	test -f $(PACKAGEGEN)/$i.$j
+						then	echo ";;;$(PACKAGEGEN)/$i.$j"
+						fi
+					done
 				done
 			fi
 			sed 's,1$,0,' $(~req) < /dev/null > $(PACKAGEGEN)/$(name).req
@@ -731,7 +1056,7 @@ binary : .binary.init .binary.gen .binary.$$(style)
 			-s",^$tmp/,$(INSTALLOFFSET)/," \
 			$(PACKAGEROOT:C%.*%-s",^&/,,"%)
 		echo local > $(binary:D:B=$(name):S=.$(CC.HOSTTYPE).tim)
-		test '' != '$(old.binary)' &&
+		test '1' = '$(incremental)' -a '' != '$(old.binary)' &&
 		$(PAX) -rf $(binary) -wvf $(old.new.binary) -z $(old.binary)
 		rm -rf $tmp
 	else	if	test '' != '$(binary.$(name))'
@@ -761,7 +1086,7 @@ binary : .binary.init .binary.gen .binary.$$(style)
 		fi
 	fi
 
-list.install list.manifest :
+list.installed list.manifest :
 	set -- $(package.closure)
 	for i
 	do	cd $(INSTALLROOT)/$i

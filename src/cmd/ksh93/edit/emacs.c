@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -74,7 +74,7 @@ directed to
 
 #include	<ast.h>
 #include	<ctype.h>
-#ifdef KSHELL
+#if KSHELL
 #   include	"defs.h"
 #endif	/* KSHELL */
 #include	"io.h"
@@ -92,7 +92,7 @@ directed to
 #define beep()		ed_ringbell()
 
 
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 #   define gencpy(a,b)	ed_gencpy(a,b)
 #   define genncpy(a,b,n)	ed_genncpy(a,b,n)
 #   define genlen(str)	ed_genlen(str)
@@ -263,7 +263,7 @@ ed_emacsread(int fd,char *buff,int scend)
 			hline = location.hist_command;
 			hloff = location.hist_line;
 			hist_copy((char*)kstack,MAXLINE, hline,hloff);
-#   ifdef SHOPT_MULTIBYTE
+#   if SHOPT_MULTIBYTE
 			ed_internal((char*)kstack,kstack);
 #   endif /* SHOPT_MULTIBYTE */
 			ed_ungetchar(ep->ed,cntl('Y'));
@@ -452,7 +452,7 @@ ed_emacsread(int fd,char *buff,int scend)
 				if (cntlC)
 				{
 					c = out[i];
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 					if((c&~STRIP)==0 && islower(c))
 #else
 					if(islower(c))
@@ -637,7 +637,7 @@ update:
 			location.hist_line = hloff;
 #endif
 			hist_copy((char*)out,MAXLINE, hline,hloff);
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 			ed_internal((char*)(out),out);
 #endif /* SHOPT_MULTIBYTE */
 		drawline:
@@ -670,7 +670,7 @@ process:
 		out[eol] = '\0';
 		ed_crlf(ep->ed);
 	}
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 	ed_external(out,buff);
 #endif /* SHOPT_MULTIBYTE */
 	i = strlen(buff);
@@ -689,7 +689,7 @@ static void show_info(Emacs_t *ep,const char *str)
 	genncpy(string,out,sizeof(string)/sizeof(*string));
 	*out = 0;
 	cur = 0;
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 	ed_internal(str,out);
 #else
 	gencpy(out,str);
@@ -774,7 +774,7 @@ static int escape(register Emacs_t* ep,register genchar *out,int count)
 				while (value-- > 0)
 				{
 					i = out[cur];
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 					if((i&~STRIP)==0 && isupper(i))
 #else
 					if(isupper(i))
@@ -880,7 +880,7 @@ static int escape(register Emacs_t* ep,register genchar *out,int count)
 			char buf[MAXLINE];
 			char *ptr;
 			ptr = hist_word(buf,MAXLINE,(count?count:-1));
-#ifndef KSHELL
+#if !KSHELL
 			if(ptr==0)
 			{
 				beep();
@@ -903,7 +903,7 @@ static int escape(register Emacs_t* ep,register genchar *out,int count)
 			draw(ep,UPDATE);
 			return(-1);
 		}
-#ifdef KSHELL
+#if KSHELL
 
 		/* file name expansion */
 		case cntl('[') :	/* filename completion */
@@ -1018,14 +1018,14 @@ static void xcommands(register Emacs_t *ep,int count)
                         draw(ep,UPDATE);
                         return;
 
-#ifdef KSHELL
+#if KSHELL
 #   ifdef ESH_BETTER
                 case cntl('E'):	/* invoke emacs on current command */
 			if(ed_fulledit(ep->ed)==-1)
 				beep();
 			else
 			{
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 				ed_internal((char*)drawbuff,drawbuff);
 #endif /* SHOPT_MULTIBYTE */
 				ed_ungetchar(ep->ed,'\n');
@@ -1153,7 +1153,7 @@ static void search(Emacs_t* ep,genchar *out,int direction)
 		direction = -1;
 	if (i != 2)
 	{
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 		ed_external(string,(char*)string);
 #endif /* SHOPT_MULTIBYTE */
 		strncpy(lstring,((char*)string)+2,SEARCHSIZE);
@@ -1172,7 +1172,7 @@ static void search(Emacs_t* ep,genchar *out,int direction)
 		hloff = location.hist_line;
 #endif /* ESH_NFIRST */
 		hist_copy((char*)out,MAXLINE, hline,hloff);
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 		ed_internal((char*)out,out);
 #endif /* SHOPT_MULTIBYTE */
 		return;
@@ -1321,7 +1321,7 @@ static void draw(register Emacs_t *ep,Draw_t option)
 		}
 		setcursor(ep,sptr-ep->screen,*nptr);
 		*sptr++ = *nptr++;
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 		while(*nptr==MARKER)
 		{
 			if(*sptr=='\0')
@@ -1400,7 +1400,7 @@ skip:
 	return;
 }
 
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 static int print(register int c)
 {
 	return((c&~STRIP)==0 && isprint(c));

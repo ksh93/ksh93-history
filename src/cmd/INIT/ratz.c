@@ -5,7 +5,7 @@
  * _SEAR_* macros for win32 self extracting archives -- see sear(1).
  */
 
-static char id[] = "\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 2002-10-23 $\0\n";
+static char id[] = "\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 2003-02-14 $\0\n";
 
 #if _PACKAGE_ast
 
@@ -13,7 +13,7 @@ static char id[] = "\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler)
 #include <error.h>
 
 static const char usage[] =
-"[-?\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 2002-10-23 $\n]"
+"[-?\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 2003-02-14 $\n]"
 "[-author?Jean-loup Gailly]"
 "[-author?Mark Adler]"
 "[-author?Glenn Fowler <gsf@research.att.com>]"
@@ -57,7 +57,7 @@ static const char usage[] =
 #include <stdio.h>
 #include <sys/types.h>
 
-#if _PACKAGE_ast || defined(__STDC__) || defined(_SEAR_EXEC)
+#if _PACKAGE_ast || defined(__STDC__) || defined(_SEAR_EXEC) || defined(_WIN32)
 
 #define FOPEN_READ	"rb"
 #define FOPEN_WRITE	"wb"
@@ -69,7 +69,11 @@ static const char usage[] =
 
 #endif
 
-#if !_PACKAGE_ast
+#if _PACKAGE_ast
+
+#define setmode(d,m)
+
+#else
 
 #if !defined(_WINIX) && (_UWIN || __CYGWIN__ || __EMX__)
 #define _WINIX		1
@@ -87,6 +91,8 @@ static const char usage[] =
 #else
 
 #include <unistd.h>
+
+#define setmode(d,m)
 
 #endif
 
@@ -3073,6 +3079,8 @@ char**	argv;
 	char*			opts[4];
 #endif
 
+	setmode(0, O_BINARY);
+	setmode(1, O_BINARY);
 	clear = 0;
 	list = 0;
 	local = 0;

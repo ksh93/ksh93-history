@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -381,8 +381,16 @@ sfprintf(sfstderr, "AHA#%d:%s cp->cat %p cp->debug %d NOCAT %p\n", __LINE__, __F
 	r = catgets(cp->cat, mp->set, mp->seq, msg);
 	if (ast.locale.set & AST_LC_translate)
 		sfprintf(sfstderr, "translate locale=%s catalog=%s set=%d seq=%d \"%s\" => \"%s\"\n", cp->locale, cp->name, mp->set, mp->seq, msg, r == (char*)msg ? "NOPE" : r);
-	if (r != (char*)msg && streq(r, (char*)msg))
-		r = (char*)msg;
+	if (r != (char*)msg)
+	{
+		if (streq(r, (char*)msg))
+			r = (char*)msg;
+		else if (strcmp(fmtfmt(r), fmtfmt(msg)))
+		{
+			sfprintf(sfstderr, "locale %s catalog %s message %d.%d \"%s\" does not match \"%s\"\n", cp->locale, cp->name, mp->set, mp->seq, r, msg);
+			r = (char*)msg;
+		}
+	}
 	if (ast.locale.set & AST_LC_debug)
 	{
 		p = tempget(state.tmp);

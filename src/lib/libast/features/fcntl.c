@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -40,7 +40,6 @@
 #define getpagesize	______getpagesize
 #define ioctl		______ioctl
 #define printf		______printf
-#define spawnve		______spawnve
 
 #if _typ_off64_t
 #undef	off_t
@@ -57,7 +56,6 @@
 #undef	getpagesize
 #undef	ioctl
 #undef	printf
-#undef	spawnve
 
 #include "FEATURE/tty"
 

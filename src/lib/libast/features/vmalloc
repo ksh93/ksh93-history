@@ -56,20 +56,6 @@ std	malloc note{ stuck with standard malloc -- wimp-o mach? }end noexecute{
 	#endif
 }end
 
-mmap	devzero note{ use mmap on /dev/zero to get raw memory }end execute{
-	#include	<sys/types.h>
-	#include	<sys/mman.h>
-	#include	<sys/fcntl.h>
-	main()
-	{	int	fd;
-		void	*addr;
-		if((fd = open("/dev/zero", O_RDONLY)) < 0)
-			return 1;
-		addr = mmap(0,2000*1024*1024,PROT_READ|PROT_WRITE,MAP_PRIVATE,fd,0);
-		return addr ? 0 : 1;
-	}
-}end
-
 lib	alloca note{ alloca exists }end link{
 	#if _hdr_alloca
 	#include	<alloca.h>

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -71,7 +71,7 @@ range(register char* s, char** e, char* set, int lo, int hi)
 	int	m;
 	char*	t;
 
-	while (isspace(*s))
+	while (isspace(*s) || *s == '_')
 		s++;
 	if (*s == '*')
 	{
@@ -162,7 +162,7 @@ tmdate(register const char* s, char** e, time_t* clock)
 	zone = TM_LOCALZONE;
 	skip[0] = 0;
 	for (n = 1; n <= UCHAR_MAX; n++)
-		skip[n] = isspace(n) || strchr(",;@=|!^()[]{}", n);
+		skip[n] = isspace(n) || strchr("_,;@=|!^()[]{}", n);
 
 	/*
 	 * get <weekday year month day hour minutes seconds ?[ds]t [ap]m>
@@ -212,7 +212,7 @@ tmdate(register const char* s, char** e, time_t* clock)
 		f = -1;
 		if (*s == '+')
 		{
-			while (isspace(*++s));
+			while (isspace(*++s) || *s == '_');
 			n = strtol(s, &t, 0);
 			if (w = t - s)
 			{
@@ -234,7 +234,7 @@ tmdate(register const char* s, char** e, time_t* clock)
 			 * if it's cron then determine the next time
 			 * that satisfies the specification
 			 *
-			 * NOTE: the only spacing is ' '||';'
+			 * NOTE: the only spacing is ' '||'_'||';'
 			 */
 
 			i = 0;
@@ -247,14 +247,14 @@ tmdate(register const char* s, char** e, time_t* clock)
 					break;
 				else
 					while ((n = *++s) == ',' || n == '-' || isdigit(n));
-				if (n != ' ' && n != ';')
+				if (n != ' ' && n != '_' && n != ';')
 				{
 					if (!n)
 						i++;
 					break;
 				}
 				i++;
-				while ((n = *++s) == ' ');
+				while ((n = *++s) == ' ' || n == '_');
 			}
 			if (i == 5)
 			{
@@ -419,13 +419,15 @@ tmdate(register const char* s, char** e, time_t* clock)
 				{
 					n = strtol(s, &t, 10);
 					s = t;
+					if (*s == '_')
+						s++;
 				}
 				else
 					n = -1;
 			}
 			else
 			{
-				if (!(state & (LAST|NEXT|THIS)) && ((i = t - s) == 4 && (*t == '.' && isdigit(*(t + 1)) && isdigit(*(t + 2)) && *(t + 3) != '.' || (!*t || isspace(*t) || isalnum(*t)) && n >= 0 && (n % 100) < 60 && ((m = (n / 100)) < 20 || m < 24 && !((set|state) & (YEAR|MONTH|HOUR|MINUTE)))) || i > 4 && i <= 12))
+				if (!(state & (LAST|NEXT|THIS)) && ((i = t - s) == 4 && (*t == '.' && isdigit(*(t + 1)) && isdigit(*(t + 2)) && *(t + 3) != '.' || (!*t || isspace(*t) || *t == '_' || isalnum(*t)) && n >= 0 && (n % 100) < 60 && ((m = (n / 100)) < 20 || m < 24 && !((set|state) & (YEAR|MONTH|HOUR|MINUTE)))) || i > 4 && i <= 12))
 				{
 					/*
 					 * various date(1) formats
@@ -544,18 +546,18 @@ tmdate(register const char* s, char** e, time_t* clock)
 				{
 					if ((state & HOUR) || n > 24)
 						break;
-					while (*++s && isspace(*s));
+					while (isspace(*++s) || *s == '_');
 					if (!isdigit(*s))
 						break;
 					i = n;
 					n = strtol(s, &t, 10);
-					for (s = t; isspace(*s); s++);
+					for (s = t; isspace(*s) || *s == '_'; s++);
 					if (n > 59)
 						break;
 					j = n;
 					if (*s == ':')
 					{
-						while (*++s && isspace(*s));
+						while (isspace(*++s) || *s == '_');
 						if (!isdigit(*s))
 							break;
 						n = strtol(s, &t, 10);
@@ -573,6 +575,20 @@ tmdate(register const char* s, char** e, time_t* clock)
 					l = tm->tm_min;
 					tm->tm_min = j;
 					tm->tm_sec = n;
+					while (isspace(*s))
+						s++;
+					switch (tmlex(s, &t, tm_info.format, TM_NFORM, tm_info.format + TM_MERIDIAN, 2))
+					{
+					case TM_MERIDIAN:
+						s = t;
+						if (i == 12)
+							tm->tm_hour = i = 0;
+						break;
+					case TM_MERIDIAN+1:
+						if (i < 12)
+							tm->tm_hour = i += 12;
+						break;
+					}
 					if (f >= 0 || (state & (LAST|NEXT)))
 					{
 						state &= ~HOLD;
@@ -585,7 +601,12 @@ tmdate(register const char* s, char** e, time_t* clock)
 							else
 								f = 0;
 						}
-						if (f >= 0 && (i < k || i == k && j < l))
+						if (f > 0)
+						{
+							if (i > k || i == k && j > l)
+								f--;
+						}
+						else if (i < k || i == k && j < l)
 							f++;
 						if (f > 0)
 						{
@@ -668,12 +689,14 @@ tmdate(register const char* s, char** e, time_t* clock)
 							goto done;
 						tm->tm_hour = n;
 					}
+					for (k = tm->tm_hour; k < 0; k += 24);
+					k %= 24;
 					if (j == TM_MERIDIAN)
 					{
-						if (tm->tm_hour == 12)
-							tm->tm_hour = 0;
+						if (k == 12)
+							tm->tm_hour -= 12;
 					}
-					else if (tm->tm_hour < 12)
+					else if (k < 12)
 						tm->tm_hour += 12;
 					if (n > 0)
 						goto clear_min;
@@ -910,7 +933,7 @@ tmdate(register const char* s, char** e, time_t* clock)
 				n = strtol(++s, &t, 10);
 				w = t - s;
 				s = t;
-				if (*s == '/' || *s == ':' || *s == '-')
+				if (*s == '/' || *s == ':' || *s == '-' || *s == '_')
 					s++;
 			}
 			else

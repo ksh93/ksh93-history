@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -23,7 +23,7 @@
 *                 Phong Vo <kpv@research.att.com>                  *
 *                                                                  *
 *******************************************************************/
-#ifdef _UWIN
+#if defined(_UWIN) && defined(_BLD_ast)
 
 void _STUB_vmbest(){}
 
@@ -53,7 +53,7 @@ static size_t	M_free;		/* max size of a free piece		*/
 static size_t	M_busy;		/* max size of a busy piece		*/
 static size_t	S_free;		/* total free space			*/
 static size_t	S_junk;		/* total junk space			*/
-static int	Vmcheck=0;	/* 1 if checking			*/
+static int	Vmcheck=0;	/* check=0x1 compact=0x2		*/
 
 /* Check to see if a block is in the free tree */
 #if __STD_C
@@ -153,7 +153,7 @@ int		wild;	/* if != 0, do above but allow wild to be >size		*/
 	reg Block_t	*b, *endb, *t, *np;
 	reg size_t	s;
 
-	if(!Vmcheck)
+	if(!(Vmcheck & 01))
 		return 1;
 
 	/**/ASSERT(size <= 0 || !vd->free);
@@ -541,6 +541,72 @@ int		c;
 }
 
 #if __STD_C
+static int bestcompact(Vmalloc_t* vm)
+#else
+static int bestcompact(vm)
+Vmalloc_t*	vm;
+#endif
+{
+	reg Seg_t	*seg, *next;
+	reg Block_t	*bp, *t;
+	reg size_t	size, segsize;
+	reg int		local;
+	reg Vmdata_t*	vd = vm->data;
+
+	if(!(local = vd->mode&VM_TRUST) )
+	{	GETLOCAL(vd,local);
+		if(ISLOCK(vd,local))
+			return -1;
+		SETLOCK(vd,local);
+	}
+
+	bestreclaim(vd,NIL(Block_t*),0); /**/ASSERT(!vd->root || vmchktree(vd->root));
+
+	for(seg = vd->seg; seg; seg = next)
+	{	next = seg->next;
+
+		bp = BLOCK(seg->baddr);
+		if(!ISPFREE(SIZE(bp)) )
+			continue;
+
+		bp = LAST(bp);	/**/ ASSERT(!ISBUSY(SIZE(bp)) && vmisfree(vd,bp));
+		size = SIZE(bp);
+		if(bp == vd->wild)
+			vd->wild = NIL(Block_t*);
+		else	REMOVE(vd,bp,INDEX(size),t,bestsearch);
+		CLRPFREE(SIZE(NEXT(bp)));
+
+		if(size < (segsize = seg->size))
+			size += sizeof(Head_t);
+
+		if((*_Vmtruncate)(vm,seg,size,1) >= 0)
+		{	if(size >= segsize) /* entire segment deleted */
+				continue;
+
+			if((size = (seg->baddr - ((Vmuchar_t*)bp) - sizeof(Head_t))) > 0)
+				SIZE(bp) = size - sizeof(Head_t);
+			else	bp = NIL(Block_t*);
+		} /**/ASSERT(!vd->root || vmchktree(vd->root));
+
+		if(bp)
+		{	/**/ ASSERT(SIZE(bp) >= TINYSIZE);
+			/**/ ASSERT(SEGWILD(bp));
+			/**/ ASSERT(!vd->root || !vmintree(vd->root,bp));
+			SIZE(bp) |= BUSY|JUNK;
+			LINK(bp) = CACHE(vd)[C_INDEX(SIZE(bp))];
+			CACHE(vd)[C_INDEX(SIZE(bp))] = bp;
+		} /**/ASSERT(!vd->root || vmchktree(vd->root));
+	} /**/ASSERT(!vd->root || vmchktree(vd->root));
+
+	if(!local && _Vmtrace && (vd->mode&VM_TRACE) && VMETHOD(vd) == VM_MTBEST)
+		(*_Vmtrace)(vm, (Vmuchar_t*)0, (Vmuchar_t*)0, 0, 0);
+
+	CLRLOCK(vd,local);
+
+	return 0;
+}
+
+#if __STD_C
 static Void_t* bestalloc(Vmalloc_t* vm, reg size_t size )
 #else
 static Void_t* bestalloc(vm,size)
@@ -554,6 +620,17 @@ reg size_t	size;	/* desired block size		*/
 	reg Block_t	*tp, *np, **cache;
 	reg int		local;
 	size_t		orgsize;
+
+#if DEBUG
+	if (!(Vmcheck & 0x8000))
+	{
+		char*	v;
+
+		if (v = getenv("VMCHECK"))
+			Vmcheck = (int)strtol(v, (char**)0, 0);
+		Vmcheck |= 0x8000;
+	}
+#endif
 
 	/**/ COUNT(N_alloc);
 
@@ -647,6 +724,10 @@ reg size_t	size;	/* desired block size		*/
 		}
 	
 		/**/ASSERT(vmcheck(vd,size,0) );
+#if DEBUG
+		if (Vmcheck & 02)
+			KPVCOMPACT(vm,bestcompact);
+#endif
 		if((tp = (*_Vmextend)(vm,size,bestsearch)) )
 			goto got_block;
 		else if(vd->mode&VM_AGAIN)
@@ -920,7 +1001,7 @@ int		type;		/* !=0 to move, <0 for not copy */
 			{	if(type&VM_RSCOPY)
 					memcpy(data, oldd, bs);
 
-			do_free: /* delay reusing these blocks as long as possible */
+			do_free: /* delay reusing these as long as possible */
 				SETJUNK(SIZE(rp));
 				LINK(rp) = *(cache = CACHE(vd) + S_CACHE);
 				*cache = rp;
@@ -984,70 +1065,6 @@ Void_t*		addr;	/* address to check		*/
 done:
 	CLRLOCK(vd,0);
 	return size;
-}
-
-#if __STD_C
-static int bestcompact(Vmalloc_t* vm)
-#else
-static int bestcompact(vm)
-Vmalloc_t*	vm;
-#endif
-{
-	reg Seg_t	*seg, *next;
-	reg Block_t	*bp, *t;
-	reg size_t	size, segsize;
-	reg Vmdata_t*	vd = vm->data;
-
-	if(!(vd->mode&VM_TRUST) )
-	{	if(ISLOCK(vd,0))
-			return -1;
-		SETLOCK(vd,0);
-	}
-
-	bestreclaim(vd,NIL(Block_t*),0); /**/ASSERT(!vd->root || vmchktree(vd->root));
-
-	for(seg = vd->seg; seg; seg = next)
-	{	next = seg->next;
-
-		bp = BLOCK(seg->baddr);
-		if(!ISPFREE(SIZE(bp)) )
-			continue;
-
-		bp = LAST(bp);	/**/ ASSERT(!ISBUSY(SIZE(bp)) && vmisfree(vd,bp));
-		size = SIZE(bp);
-		if(bp == vd->wild)
-			vd->wild = NIL(Block_t*);
-		else	REMOVE(vd,bp,INDEX(size),t,bestsearch);
-		CLRPFREE(SIZE(NEXT(bp)));
-
-		if(size < (segsize = seg->size))
-			size += sizeof(Head_t);
-
-		if((*_Vmtruncate)(vm,seg,size,1) >= 0)
-		{	if(size >= segsize) /* entire segment deleted */
-				continue;
-
-			if((size = (seg->baddr - ((Vmuchar_t*)bp) - sizeof(Head_t))) > 0)
-				SIZE(bp) = size - sizeof(Head_t);
-			else	bp = NIL(Block_t*);
-		} /**/ASSERT(!vd->root || vmchktree(vd->root));
-
-		if(bp)
-		{	/**/ ASSERT(SIZE(bp) >= TINYSIZE);
-			/**/ ASSERT(SEGWILD(bp));
-			/**/ ASSERT(!vd->root || !vmintree(vd->root,bp));
-			SIZE(bp) |= BUSY|JUNK;
-			LINK(bp) = CACHE(vd)[C_INDEX(SIZE(bp))];
-			CACHE(vd)[C_INDEX(SIZE(bp))] = bp;
-		} /**/ASSERT(!vd->root || vmchktree(vd->root));
-	} /**/ASSERT(!vd->root || vmchktree(vd->root));
-
-	if(_Vmtrace && (vd->mode&VM_TRACE) && VMETHOD(vd) == VM_MTBEST)
-		(*_Vmtrace)(vm, (Vmuchar_t*)0, (Vmuchar_t*)0, 0, 0);
-
-	CLRLOCK(vd,0);
-
-	return 0;
 }
 
 #if __STD_C
@@ -1148,23 +1165,24 @@ done:
 
 
 /* different modes of getting raw memory */
+#define USE_SBRK	0	/* use sbrk			*/
 #define USE_MALLOC	1	/* use native malloc		*/
 #define USE_WIN32	2	/* WIN32 VirtualAlloc		*/
 #define USE_MMAP	3	/* mmap on /dev/zero is ok	*/
-#undef GET_MEMORY
+#undef	GET_MEMORY
 
-#if !defined(GET_MEMORY) && (_std_malloc || _BLD_INSTRUMENT || cray)
+#if !defined(GET_MEMORY) && _BLD_INSTRUMENT
 #define GET_MEMORY	USE_MALLOC
-#endif /* (_std_malloc || _BLD_INSTRUMENT || cray) */
+#endif /* _BLD_INSTRUMENT */
 
-#if !defined(GET_MEMORY) && defined(_WIN32)
+#if !defined(GET_MEMORY) && ( defined(_WIN32) || _WINIX && !__CYGWIN__ )
 #define GET_MEMORY	USE_WIN32
 #if _PACKAGE_ast
 #include		<ast_windows.h>
 #else
 #include		<windows.h>
 #endif
-#endif /*_WIN32*/
+#endif /* _WIN32 || _WINIX */
 
 #if !defined(GET_MEMORY) && _mmap_devzero
 #define GET_MEMORY	USE_MMAP
@@ -1179,13 +1197,17 @@ typedef struct _mmapdisc_s
 #ifndef MAP_FAILED
 #define MAP_FAILED	(void*)(-1)
 #endif
-#endif /*_mmap_devzero*/
+#endif /* _mmap_devzero */
+
+#if !defined(GET_MEMORY) && ( _std_malloc || !_lib_sbrk )
+#define GET_MEMORY	USE_MALLOC
+#endif /* _std_malloc || !_lib_sbrk */
 
 #if !defined(GET_MEMORY)
-#define GET_MEMORY	0
+#define GET_MEMORY	USE_SBRK
 #endif
 
-/*	A discipline to get memory using sbrk() or VirtualAlloc on win32 */
+/*	A discipline to get memory using GET_MEMORY */
 #if __STD_C
 static Void_t* sbrkmem(Vmalloc_t* vm, Void_t* caddr,
 			size_t csize, size_t nsize, Vmdisc_t* disc)

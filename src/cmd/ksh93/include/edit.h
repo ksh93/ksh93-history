@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -35,11 +35,11 @@
 
 #include	"FEATURE/options"
 #include        "FEATURE/locale"
-#if !defined(SHOPT_VSH) && !defined (SHOPT_ESH)
+#if !SHOPT_VSH && !SHOPT_ESH
 #   define ed_winsize()	(SEARCHSIZE)
 #else
 
-#ifndef KSHELL
+#if !KSHELL
 #   include	<setjmp.h>
 #   include	<sig.h>
 #   include	<ctype.h>
@@ -51,7 +51,7 @@
 #define STRIP		0377
 #define LOOKAHEAD	80
 
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 #   ifndef ESS_MAXCHAR
 #	include	"national.h"
 #   endif /* ESS_MAXCHAR */
@@ -112,19 +112,19 @@ typedef struct edit
 	dev_t	e_tty_dev;
 	char	*e_tty;
 #endif
-#ifdef SHOPT_OLDTERMIO
+#if SHOPT_OLDTERMIO
 	char	e_echoctl;
 	char	e_tcgeta;
 	struct termio e_ott;
 #endif
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 	int	e_curchar;
 	int	e_cursize;
 #endif
 	int	*e_globals;	/* global variables */
 	genchar	*e_window;	/* display window  image */
 	char	e_inmacro;	/* processing macro expansion */
-#ifdef KSHELL
+#if KSHELL
 	char	e_vi_insert[2];	/* for sh_keytrap */
 	long	e_col;		/* for sh_keytrap */
 #else
@@ -165,7 +165,7 @@ typedef struct edit
 		(c<'J'?c+1-'A':(c+10-'J'))))))))))))))))
 #endif
 
-#ifndef KSHELL
+#if !KSHELL
 #   define STRIP	0377
 #   define GMACS	1
 #   define EMACS	2
@@ -194,13 +194,13 @@ extern void	ed_ungetchar(Edit_t*,int);
 extern int	ed_viread(int, char*, int);
 extern int	ed_read(int, char*, int);
 extern int	ed_emacsread(int, char*, int);
-#ifdef KSHELL
+#if KSHELL
 	extern int	ed_macro(Edit_t*,int);
 	extern int	ed_expand(Edit_t*, char[],int*,int*,int,int);
 	extern int	ed_fulledit(Edit_t*);
 	extern void	*ed_open(Shell_t*);
 #endif /* KSHELL */
-#   ifdef SHOPT_MULTIBYTE
+#   if SHOPT_MULTIBYTE
 	extern int ed_internal(const char*, genchar*);
 	extern int ed_external(const genchar*, char*);
 	extern void ed_gencpy(genchar*,const genchar*);
@@ -210,7 +210,7 @@ extern int	ed_emacsread(int, char*, int);
 #  endif /* SHOPT_MULTIBYTE */
 
 extern const char	e_runvi[];
-#ifndef KSHELL
+#if !KSHELL
    extern const char	e_version[];
 #endif /* KSHELL */
 

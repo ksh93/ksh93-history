@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -91,10 +91,12 @@ gl_dirnext(glob_t* gp, void* handle)
 	struct dirent*	dp;
 
 	while (dp = (struct dirent*)(*gp->gl_readdir)(handle))
+#ifdef D_FILENO
 		if (D_FILENO(dp))
+#endif
 		{
-#if defined(DT_UNKNOWN) && defined(DT_DIR) && defined(DT_LNK)
-			if (dp->d_type != DT_UNKNOWN && dp->d_type != DT_DIR && dp->d_type != DT_LNK)
+#ifdef D_TYPE
+			if (D_TYPE(dp) != DT_UNKNOWN && D_TYPE(dp) != DT_DIR && D_TYPE(dp) != DT_LNK)
 				gp->gl_status |= GLOB_NOTDIR;
 #endif
 			return dp->d_name;

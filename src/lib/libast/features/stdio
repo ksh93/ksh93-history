@@ -72,7 +72,7 @@ cat{
 		unsigned char	_sf_state[64 - sizeof(_ast_intmax_t)];
 	} _ast_fpos_t;
 
-	#include <getopt.h>	/* to be dropped by Xopen -- we can't wait */
+	#include <ast_getopt.h>	/* to be dropped by Xopen -- we can't wait */
 
 	#define _base		_data
 	#define _ptr		_next

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -41,6 +41,7 @@ typedef struct _fcin
 	unsigned char	*fcptr;		/* pointer to next input char */
 	unsigned char	fcchar;		/* saved character */
 	void (*fcfun)(Sfio_t*,const char*,int);	/* advance function */
+	Sfoff_t		fcoff;		/* offset for last read */
 } Fcin_t;
 
 #define fcfile()	(_Fcin._fcfile)
@@ -50,6 +51,7 @@ typedef struct _fcin
 #define	fcseek(n)	((char*)(_Fcin.fcptr+=(n)))
 #define fcfirst()	((char*)_Fcin.fcbuff)
 #define fcsopen(s)	(_Fcin._fcfile=(Sfio_t*)0,_Fcin.fcbuff=_Fcin.fcptr=(unsigned char*)(s))
+#define fctell()	(_Fcin.fcoff + (_Fcin.fcptr-_Fcin.fcbuff))
 #define fcsave(x)	(*(x) = _Fcin)
 #define fcrestore(x)	(_Fcin = *(x))
 extern int		fcfill(void);

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -36,12 +36,11 @@
  */
 
 #if defined(__STDPP__directive) && defined(__STDPP__hide)
-__STDPP__directive pragma pp:hide getpagesize getdtablesize printf spawnve
+__STDPP__directive pragma pp:hide getpagesize getdtablesize printf
 #else
 #define getpagesize	______getpagesize
 #define getdtablesize	______getdtablesize
 #define printf		______printf
-#define spawnve		______spawnve
 #endif
 
 /*
@@ -80,11 +79,10 @@ __STDPP__directive pragma pp:hide getpagesize getdtablesize printf spawnve
 #include "FEATURE/param"
 
 #if defined(__STDPP__directive) && defined(__STDPP__hide)
-__STDPP__directive pragma pp:nohide getpagesize getdtablesize printf spawnve
+__STDPP__directive pragma pp:nohide getpagesize getdtablesize printf
 #else
 #undef	getpagesize
 #undef	getdtablesize   
-#undef	spawnve
 #endif
 
 #if defined(__STDPP__hide) || defined(printf)

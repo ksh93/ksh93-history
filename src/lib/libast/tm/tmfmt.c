@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -72,6 +72,12 @@ number(register char* s, register char* e, register long n, register int p, int 
 	return s;
 }
 
+typedef struct Stack_s
+{
+	char*		format;
+	int		delimiter;
+} Stack_t;
+
 /*
  * format date given clock into buf of length len
  * end of buf is returned
@@ -88,11 +94,12 @@ tmfmt(char* buf, size_t len, const char* format, time_t* clock)
 	int		i;
 	int		flags;
 	int		pad;
+	int		delimiter;
 	Tm_t*		tp;
 	Tm_zone_t*	zp;
-	char*		stack[4];
-	char**		sp;
 	time_t		now;
+	Stack_t*	sp;
+	Stack_t		stack[4];
 
 	tmlocale();
 	tp = tmmake(clock);
@@ -102,13 +109,17 @@ tmfmt(char* buf, size_t len, const char* format, time_t* clock)
 	sp = &stack[0];
 	cp = buf;
 	ep = buf + len - 1;
+	delimiter = 0;
 	for (;;)
 	{
-		if (!(c = *format++))
+		if ((c = *format++) == delimiter)
 		{
+			delimiter = 0;
 			if (sp <= &stack[0])
 				break;
-			format = *--sp;
+			sp--;
+			format = sp->format;
+			delimiter = sp->delimiter;
 			continue;
 		}
 		if (c != '%')
@@ -257,6 +268,31 @@ tmfmt(char* buf, size_t len, const char* format, time_t* clock)
 		case 'p':	/* meridian */
 			n = TM_MERIDIAN + (tp->tm_hour >= 12);
 			goto index;
+		case 'Q':	/* %Q<delim>recent<delim>distant<delim> */
+			if (c = *format)
+			{
+				format++;
+				if (clock)
+				{
+					time(&now);
+					p = warped(*clock, now) ? (char*)0 : (char*)format;
+				}
+				else
+					p = (char*)format;
+				i = 0;
+				while (n = *format)
+				{
+					format++;
+					if (n == c)
+					{
+						if (!p)
+							p = (char*)format;
+						if (++i == 2)
+							goto push_delimiter;
+					}
+				}
+			}
+			continue;
 		case 'r':
 			p = tm_info.format[TM_MERIDIAN_TIME];
 			goto push;
@@ -372,10 +408,15 @@ tmfmt(char* buf, size_t len, const char* format, time_t* clock)
 				cp++;
 		continue;
 	push:
+		c = 0;
+	push_delimiter:
 		if (sp < &stack[elementsof(stack)])
 		{
-			*sp++ = (char*)format;
+			sp->format = (char*)format;
 			format = p;
+			sp->delimiter = delimiter;
+			delimiter = c;
+			sp++;
 		}
 		continue;
 	}

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -51,11 +51,11 @@ struct nvdir
 char *nv_getvtree(Namval_t*, Namfun_t *);
 static void put_tree(Namval_t*, const char*, int,Namfun_t*);
 
-static Namval_t *create_tree(Namval_t *np,const char *name,int n,Namfun_t *fp)
+static Namval_t *create_tree(Namval_t *np,const char *name,int flag,Namfun_t *fp)
 {
 	NOT_USED(np);
 	NOT_USED(name);
-	NOT_USED(n);
+	NOT_USED(flag);
 	NOT_USED(fp);
 	return(0);
 }
@@ -73,6 +73,8 @@ static const Namdisc_t treedisc =
 static char *nextdot(const char *str)
 {
 	char *cp;
+	if(*str=='.')
+		str++;
 	if(*str=='[')
 	{
 		cp = nv_endsubscript((Namval_t*)0,(char*)str,0);
@@ -82,26 +84,11 @@ static char *nextdot(const char *str)
 		return(strchr(str,'.'));
 }
 
-Dt_t *nv_root(char *name)
-{
-	Dt_t *root = sh.var_tree;
-	char *next;
-	Namval_t *np;
-	while(next= nextdot(name))
-	{
-		*next = 0;
-		if((np=nv_search(name,root,0)) && nv_istable(np))
-			root = np->nvalue.hp;
-		*next = 0;
-		name = next+1;
-	}
-	return(root);
-}
-
-
 static  const Namdisc_t *nextdisc(Namval_t *np)
 {
 	register Namfun_t *fp;
+	if(nv_isref(np))
+		return(0);
         for(fp=np->nvfun;fp;fp=fp->next)
 	{
 		if(fp && fp->disc && fp->disc->nextf)
@@ -140,7 +127,10 @@ void *nv_diropen(const char *name)
 				return(0);
 			*save = *dp;
 			dp->prev = save;
-			dp->root = np->nvalue.hp;
+			if(nv_istable(np))
+				dp->root = nv_dict(np);
+			else
+				dp->root = (Dt_t*)dp;
 			dp->offset = last-(char*)name;
 			if(dp->offset<len)
 				dp->len = len-dp->offset;
@@ -192,11 +182,24 @@ char *nv_dirnext(void *dir)
 			{
 				if((disc=nextdisc(np)) || nv_istable(np))
 				{
+					Dt_t *root;
+					if(nv_istable(np))
+						root = nv_dict(np);
+					else
+						root = (Dt_t*)dp;
+					/* check for recursive walk */
+					for(save=dp; save;  save=save->prev) 
+					{
+						if(save->root==root)
+							break;
+					}
+					if(save)
+						continue;
 					if(!(save = new_of(struct nvdir,0)))
 						return(0);
 					*save = *dp;
 					dp->prev = save;
-					dp->root = np->nvalue.hp;
+					dp->root = root;
 					dp->len = 0;
 					if(np->nvfun)
 					{
@@ -230,22 +233,27 @@ void nv_dirclose(void *dir)
 	free(dir);
 }
 
-#ifdef SHOPT_OO
-static void outtype(Namfun_t *fp, Sfio_t* out, const char *prefix)
+static void outtype(Namval_t *np, Namfun_t *fp, Sfio_t* out, const char *prefix)
 {
 	char *type;
-	Namval_t *np = fp->type;
-	for(fp=fp->next;fp && !fp->type;fp=fp->next);
-	if(fp)
-		outtype(fp,out,prefix);
+	Namval_t *tp = fp->type;
+	if(!tp && fp->disc && fp->disc->typef) 
+		tp = (*fp->disc->typef)(np,fp);
+	for(fp=fp->next;fp;fp=fp->next)
+	{
+		if(fp->type || (fp->disc && fp->disc->typef &&(*fp->disc->typef)(np,fp)))
+		{
+			outtype(np,fp,out,prefix);
+			break;
+		}
+	}
 	if(prefix && *prefix=='t')
 		type = "-T";
 	else if(!prefix)
 		type = "type";
 	if(type)
-		sfprintf(out,"%s %s ",type,np->nvname);
+		sfprintf(out,"%s %s ",type,tp->nvname);
 }
-#endif /* SHOPT_OO */
 
 /*
  * print the attributes of name value pair give by <np>
@@ -258,10 +266,18 @@ void nv_attribute(register Namval_t *np,Sfio_t *out,char *prefix,int noname)
 	register unsigned mask;
 	register unsigned attr;
 	Namfun_t *fp=0; 
-#ifdef SHOPT_OO
-	for(fp=np->nvfun;fp && !fp->type;fp=fp->next);
-#endif /* SHOPT_OO */
-	if ((attr=nv_isattr(np,~(NV_NOALLOC|NV_NOFREE))) || fp)
+	for(fp=np->nvfun;fp;fp=fp->next)
+	{
+		if(fp->type || (fp->disc && fp->disc->typef &&(*fp->disc->typef)(np,fp)))
+			break;
+	}
+	if(!fp  && !nv_isattr(np,~NV_ARRAY))
+	{
+		if(!nv_isattr(np,NV_ARRAY)  || nv_aindex(np)>=0)
+			return;
+	}
+
+	if ((attr=nv_isattr(np,~NV_NOFREE)) || fp)
 	{
 		if((attr&NV_NOPRINT)==NV_NOPRINT)
 			attr &= ~NV_NOPRINT;
@@ -310,7 +326,7 @@ void nv_attribute(register Namval_t *np,Sfio_t *out,char *prefix,int noname)
 		                if ((val&(NV_LJUST|NV_RJUST|NV_ZFILL)) && !(val&NV_INTEGER) && val!=NV_HOST)
 					sfprintf(out,"%d ",nv_size(np));
 			}
-		        if(val==NV_INTEGER && nv_isattr(np,NV_INTEGER) && !np->nvfun)
+		        if(val==NV_INTEGER && nv_isattr(np,NV_INTEGER))
 			{
 				if(nv_size(np) != 10)
 				{
@@ -325,10 +341,8 @@ void nv_attribute(register Namval_t *np,Sfio_t *out,char *prefix,int noname)
 				break;
 			}
 		}
-#ifdef SHOPT_OO
 		if(fp)
-			outtype(fp,out,prefix);
-#endif /* SHOPT_OO */
+			outtype(np,fp,out,prefix);
 		if(noname)
 			return;
 		sfputr(out,nv_name(np),'\n');
@@ -366,8 +380,7 @@ static void outval(char *name, char *vname, Sfio_t *outfile, int indent)
 		return;
 	}
 	sfnputc(outfile,'\t',indent);
-	if(nv_isattr(np,~NV_ARRAY) || associative)
-		nv_attribute(np,outfile,"typeset",'=');
+	nv_attribute(np,outfile,"typeset",'=');
 	nv_outname(outfile,name,-1);
 	sfputc(outfile,(isarray==2?'\n':'='));
 
@@ -489,7 +502,7 @@ static char *walk_tree(register Namval_t *np, int dlete)
 	void *dir;
 	int n=0;
 	stakputs(nv_name(np));
-#ifdef SHOPT_COMPOUND_ARRAY
+#if SHOPT_COMPOUND_ARRAY
 	if(subscript = nv_getsub(np))
 	{
 		stakputc('[');
@@ -537,6 +550,8 @@ static char *walk_tree(register Namval_t *np, int dlete)
 char *nv_getvtree(register Namval_t *np, Namfun_t *fp)
 {
 	NOT_USED(fp);
+	if(nv_isattr(np,NV_BINARY) &&  nv_isattr(np,NV_RAW))
+		return(nv_getv(np,fp));
 	return(walk_tree(np,0));
 }
 
@@ -547,12 +562,13 @@ static void put_tree(register Namval_t *np, const char *val, int flags,Namfun_t 
 {
 	struct Namarray *ap;
 	int nleft = 0;
-	walk_tree(np,1);
+	if(!nv_isattr(np,NV_INTEGER))
+		walk_tree(np,1);
+	nv_putv(np, val, flags,fp);
+	if(nv_isattr(np,NV_INTEGER))
+		return;
 	if(ap= nv_arrayptr(np))
-	{
-		nv_putv(np, val, flags,fp);
 		nleft = array_elem(ap);
-	}
 	if(nleft==0)
 	{
 		fp = nv_stack(np,fp);
@@ -561,7 +577,6 @@ static void put_tree(register Namval_t *np, const char *val, int flags,Namfun_t 
 			free((void*)fp);
 		}
 	}
-	nv_putval(np,val,flags);
 }
 
 /*

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -57,15 +57,19 @@ tmword(register const char* s, char** e, register const char* t, char** suf, int
 		{
 			if (c != '.')
 			{
-				if (!isalpha(c) || c != *t && (islower(c) ? toupper(c) : tolower(c)) != *t) break;
+				if (!isalpha(c) || c != *t && (islower(c) ? toupper(c) : tolower(c)) != *t)
+					break;
 				t++;
 			}
 		}
 		s--;
 		if (!isalpha(c))
 		{
-			if (e) *e = (char*)s;
-			return(s > b);
+			if (c == '_')
+				s++;
+			if (e)
+				*e = (char*)s;
+			return s > b;
 		}
 		if (!*t && s > (b + 1))
 		{
@@ -76,11 +80,14 @@ tmword(register const char* s, char** e, register const char* t, char** suf, int
 				while (isalpha(c = *s++) && (c == *t || (islower(c) ? toupper(c) : tolower(c)) == *t)) t++;
 				if (!*t && !isalpha(c))
 				{
-					if (e) *e = (char*)s - 1;
-					return(1);
+					if (c != '_')
+						s--;
+					if (e)
+						*e = (char*)s;
+					return 1;
 				}
 			}
 		}
 	}
-	return(0);
+	return 0;
 }

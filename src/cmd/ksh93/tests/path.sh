@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1982-2002 AT&T Corp.                #
+#                Copyright (c) 1982-2003 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -33,11 +33,11 @@ integer Errors=0
 Command=$0
 mkdir /tmp/ksh$$
 cd /tmp/ksh$$
-trap 'rm -rf /tmp/ksh$$' EXIT
+trap "PATH=$PATH; cd /; rm -rf /tmp/ksh$$" EXIT
 cat > bug1 <<- \EOF
 	print print ok > /tmp/ok$$
 	/bin/chmod 755 /tmp/ok$$
-	trap 'rm -f /tmp/ok$$' EXIT
+	trap 'cd /; rm -f /tmp/ok$$' EXIT
 	function a
 	{
 	        typeset -x PATH=/tmp
@@ -128,7 +128,6 @@ fi
 [[ $(whence ./xxxxx) ]] && err_exit 'whence ./xxxx not working'
 PATH=$d:
 cp "$rm" kshrm$$
-chmod 755 kshrm$$
 if	[[ $(whence kshrm$$) != kshrm$$  ]]
 then	err_exit 'trailing : in pathname not working'
 fi

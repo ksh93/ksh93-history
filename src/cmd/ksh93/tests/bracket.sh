@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1982-2002 AT&T Corp.                #
+#                Copyright (c) 1982-2003 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -24,9 +24,10 @@
 function err_exit
 {
 	print -u2 -n "\t"
-	print -u2 -r $Command: "$@"
+	print -u2 -r $Command[$1]: "${@:2}"
 	let Errors+=1
 }
+alias err_exit='err_exit $LINENO'
 
 Command=$0
 integer Errors=0
@@ -185,6 +186,7 @@ print -u4 foobar
 if	[[ ! -s $file ]]
 then	err_exit "-s: $file should be non-zero"
 fi
+exec 4>&-
 if	[[ 011 -ne 11 ]]
 then	err_exit "leading zeros in arithmetic compares not ignored"
 fi
@@ -210,4 +212,20 @@ done
 	[[ abcdcdabcd == {3,6}(ab|cd) ]] || err_exit 'abcdcdabcd == {3,4}(ab|cd)'
 	[[ abcdcdabcde == {5}(ab|cd)e ]] || err_exit 'abcdcdabcd == {5}(ab|cd)e'
 ) || err_exit 'Errors with {..}(...) patterns'
+[[ D290.2003.02.16.temp == D290.+(2003.02.16).temp* ]] || err_exit 'pattern match bug with +(...)'
+rm -rf $file
+print > $file
+{
+[[ -N $file ]] && err_exit 'test -N /tmp/*: st_mtime>st_atime after creat'
+sleep 2
+print 'hello world'
+[[ -N $file ]] || err_exit 'test -N /tmp/*: st_mtime<=st_atime after write'
+sleep 2
+read
+[[ -N $file ]] && err_exit 'test -N /tmp/*: st_mtime>st_atime after read'
+} > $file < $file
+if	rm -rf "$file" && ln -s / "$file"
+then	[[ -L "$file" ]] || err_exit '-L not working'
+	[[ -L "$file"/ ]] && err_exit '-L with file/ not working'
+fi
 exit $((Errors))

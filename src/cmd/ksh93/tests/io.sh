@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1982-2002 AT&T Corp.                #
+#                Copyright (c) 1982-2003 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -92,8 +92,6 @@ $SHELL -c '
 	exec 1<> out$$
 	builtin cat
 	print -r -- "$(cat in$$)"
-cp in$$ /tmp/dgk.in
-cp out$$ /tmp/dgk.out
 	cmp -s in$$ out$$'  2> /dev/null
 [[ $? == 0 ]] || err_exit 'builtin cat truncates files'
 cd ~- || err_exit "cd back failed"
@@ -109,5 +107,5 @@ read line
 if	[[ $line != foo ]]
 then	err_exit 'file descriptor not restored after exec in subshell'
 fi
-rm -r /tmp/ksh$$ || err_exit "rm -r /tmp/ksh$$ failed"
+exec 3>&- 4>&-; cd /; rm -r /tmp/ksh$$ || err_exit "rm -r /tmp/ksh$$ failed"
 exit $((Errors))

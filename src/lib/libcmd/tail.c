@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1992-2002 AT&T Corp.                *
+*                Copyright (c) 1992-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -93,6 +93,7 @@ USAGE_LICENSE
 #include <cmdlib.h>
 #include <ctype.h>
 #include <ls.h>
+#include <tm.h>
 
 #define F_FLAG		1
 #define R_FLAG		2

@@ -13,41 +13,68 @@ are in the edit sub-directory.  The code for shell built-ins is
 in the bltins directory.  The data directory contains read-only
 data tables and messages that are used by the shell.  The include
 files remain in the include directory and the shlib directory
-is gone.  The feature directory replaces the older install
+is gone.  The features directory replaces the older install
 directory. The method for generating systems specific feature
 information has changed substantially.
 
-The OPTIONS file contains several options that can be set before
-compiling ksh.  This file is used to generate the FEATURE/options
-include file.  The OPTIONS are set to their recommended value.
-A value of 0 represents off, 1 represents on.
+The Makefile file contains several compilation options that can be set
+before compiling ksh.  Options are of the form SHOPT_option and become
+#define inside the code.  These options are set to their recommended
+value and some of these may disappear as options in future releases.
+A value of 0, or no value  represents off, 1 represents on.
+Note that == is needed, not =, because these are nmake state variables
+and changing their value will cause all modules that could be affected
+by this change to be recompiled.
 The options have the following defaults and meanings:
-    ACCT      off Shell accounting.
-    ACCTFILE  off Enable per user accounting info
-    BRACEPAT  on  C-shell type abc{d,e}f style file generation
-    CRNL      off <cr><nl> treated as <nl> in shell grammar.
-    DYNAMIC   on  Dynamic loading of builtins. (Requires dlopen() interface.)
-    ECHOPRINT off Make echo equivalent to print.
-    ESH       on  Compile with emacs command line editing.  The original
-                  emacs line editor code was provided by Mike Veach at IH.
-    FS_3D     off For use with 3-D file system.  Enabled automatically for
-                  sytems with dynamic linking.
-    JOBS      on  Job notification, job control if possible.
-    KIA       off Allow generation of shell cross reference database with -I.
-    MULTIBYTE on  Multibyte character handling.  Requires mblen() and mbctowc().
-    OLDTERMIO off Use either termios or termio at runtime.
-    P_SUID    off If set, all real uids, greater than or equal to this
-                  value will require the -p flag to run suid/sgid scripts.
-    RAWONLY   off Turn on if the vi line mode doesn't work right unless
-                  you do a set -o viraw.
-    SEVENBIT  off Strip the eigth bit from characters.
-    SPAWN     off Use spawn as combined fork/exec.  May improve speed.
-    SUID_EXEC on  Execute /etc/suid_exec for setuid, setgid script.
-    TIMEOUT   off Set this to the number of seconds for timing out and
-                  exiting the shell when you don't enter a command.  If
-                  non-zero, TMOUT can not be set larger than this value.
-    VSH       on  Compile with vi command line editing.  The original vi
-                  line editor code was provided by Pat Sullivan at CB.
+    ACCT         off Shell accounting.
+    ACCTFILE     off Enable per user accounting info
+    APPEND       on  Allows var+=val string and array append.
+    BASH         off Bash compatibility mode.  It is not fully implemented
+                     and is experimental.
+    BRACEPAT     on  C-shell type abc{d,e}f style file generation
+    CMDLIB_BLTIN off Makes all commands in libcmd.a builtins.  The
+                     SH_CMDLIB_DIR nmake state variable can be used to
+		     specify a directory. 
+    CMDLIB_DIR   off Sets CMDLIB_BLTIN=1 and provides a default value
+                     of "/opt/ast/bin/" for SH_CMDLIB_DIR.
+    COMPOUND_ARRAY
+                 on  Allows all components of compound variables except the
+                     first to be any string by enclosing in [...].  It also
+                     allows components other than the last to be arrays.
+                     This is experimental and only partially complete.
+    CRNL         off <cr><nl> treated as <nl> in shell grammar.
+    DYNAMIC      on  Dynamic loading of builtins. (Requires dlopen() interface.)
+    ECHOPRINT    off Make echo equivalent to print.
+    ESH          on  Compile with emacs command line editing.  The original
+                     emacs line editor code was provided by Mike Veach at IH.
+    FILESCAN     on  Experimental option that allows fast reading of files
+                     using while < file;do ...; done and allowing fields in
+                     each line to be accessed as positional parameters.
+    FS_3D        off For use with 3-D file system.  Enabled automatically for
+                     sytems with dynamic linking.
+    KIA          off Allow generation of shell cross reference database with -I.
+    MULTIBYTE    on  Multibyte character handling.  Requires mblen() and
+                     mbctowc().
+    NAMESPACE    on  Allows namespaces.  This is experimental, incomplete
+                     and undocumented.
+    OLDTERMIO    off Use either termios or termio at runtime.
+    OO           on  Experimental object oriented extension.  This option
+                     should disappear soon.
+    OPTIMIZE     on  Optimize loop invariants for with for and while loops.
+    P_SUID       off If set, all real uids, greater than or equal to this
+                     value will require the -p flag to run suid/sgid scripts.
+    PFSH         off Compile with support for profile shell.
+    RAWONLY      off Turn on if the vi line mode doesn't work right unless
+                     you do a set -o viraw.
+    SEVENBIT     off Strip the eigth bit from characters.
+    SPAWN        off Use spawn as combined fork/exec.  May improve speed on
+                     some systems.
+    SUID_EXEC    on  Execute /etc/suid_exec for setuid, setgid script.
+    TIMEOUT      off Set this to the number of seconds for timing out and
+                     exiting the shell when you don't enter a command.  If
+                     non-zero, TMOUT can not be set larger than this value.
+    VSH          on  Compile with vi command line editing.  The original vi
+                     line editor code was provided by Pat Sullivan at CB.
 
 The following compile options are set automatically by the feature testing:
     DEVFD   Set when /dev/fd is a directory that names open files.
@@ -144,10 +171,11 @@ signifies that ksh has been installed as /bin/sh on this machine.
 *    Sun OS 4.1.[123] on sparc.
      Sun OS 4.1.1 on sun.
      Solaris 2.[1-9] on sparc.
-     Solaris 2.[4-8] on X86..
+     Solaris 2.[4-8] on X86.
      HP/UX 8 on HP-9000/730.
      HP/UX 9 on HP-9000/730.
      HP/UX 10 on HP-9000/857.
+     HP/UX 11 on pa-risc.
      System V Release 3 on Counterpoint C19
      System V Release  4 on AT&T Intel 486.
      System V Release  4 on NCR 4850 Intel 486.
@@ -168,8 +196,11 @@ signifies that ksh has been installed as /bin/sh on this machine.
      Linux 2.X on Alpha
      Linux 2.X on OS/390
      Linux 2.X on sparc
+     Linux 2.4 on intel itanium 64
+     Linux Slackware on sparc64
 *    Linux ARM on i-PAQ 
      OSF1 on DEC alpha.
+     OSF4 on DEC alpha.
      UMIPS 4.52 on mips.
      BSD-i [2-4] on X86.
      OpenBSD on X86
@@ -179,14 +210,15 @@ signifies that ksh has been installed as /bin/sh on this machine.
      NeXT on HP.
 *    Windows NT using UWIN on X86
 *    Windows NT using UWIN on alpha
+     Windows NT using Cygwin on X86
      Windows NT with NutCracker libraries.
      Windows NT with Portage libraries.
      Windows 3.1 using custom C library.
      OpenEdition on MVS
      Darwin OS X on PPC
      MVS on OS 390
-     SCO Openserver on X86
-     Unixware on X86
+     SCO Openserver 3.2 on X86
+     Unixware 7 on X86
 
 Good luck!!
 

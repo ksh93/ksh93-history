@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -83,7 +83,7 @@ char *sh_substitute(const char *string,const char *oldsp,char *newsp)
 		return((char*)0);
 	if(*(cp=oldsp) == 0)
 		goto found;
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 	mbinit();
 #endif /* SHOPT_MULTIBYTE */
 	do
@@ -91,7 +91,7 @@ char *sh_substitute(const char *string,const char *oldsp,char *newsp)
 	/* skip to first character which matches start of oldsp */
 		while(*sp && (savesp==sp || *sp != *cp))
 		{
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 			/* skip a whole character at a time */
 			int c = mbsize(sp);
 			if(c < 0)
@@ -187,14 +187,14 @@ char	*sh_fmtq(const char *string)
 	if(!cp)
 		return((char*)0);
 	offset = staktell();
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 	state = ((c= mbchar(cp))==0);
 #else
 	state = ((c= *(unsigned char*)cp++)==0);
 #endif
 	if(isaletter(c))
 	{
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 		while((c=mbchar(cp)),isaname(c));
 #else
 		while((c = *(unsigned char*)cp++),isaname(c));
@@ -208,7 +208,7 @@ char	*sh_fmtq(const char *string)
 			c = cp - string;
 			stakwrite(string,c);
 			string = cp;
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 			c = mbchar(cp);
 #else
 			c = *(unsigned char*)cp++;
@@ -217,13 +217,13 @@ char	*sh_fmtq(const char *string)
 	}
 	if(c==0 || c=='#' || c=='~')
 		state = 1;
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 	for(;c;c= mbchar(cp))
 #else
 	for(;c; c= *(unsigned char*)cp++)
 #endif
 	{
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 		if(c>=0x200)
 			continue;
 		if(c=='\'' || !iswprint(c))
@@ -247,7 +247,7 @@ char	*sh_fmtq(const char *string)
 	{
 		stakwrite("$'",2);
 		cp = string;
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 		while(c= mbchar(cp))
 #else
 		while(c= *(unsigned char*)cp++)
@@ -280,7 +280,7 @@ char	*sh_fmtq(const char *string)
 			    case '\\':	case '\'':
 				break;
 			    default:
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 				if(!iswprint(c))
 #else
 				if(!isprint(c))
@@ -302,7 +302,7 @@ char	*sh_fmtq(const char *string)
 	return(stakptr(offset));
 }
 
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 	int sh_strchr(const char *string, register const char *dp)
 	{
 		wchar_t c, d;

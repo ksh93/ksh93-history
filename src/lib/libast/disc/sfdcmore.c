@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -261,9 +261,9 @@ Sfdisc_t*	dp;
  */
 
 #if __STD_C
-static moreexcept(Sfio_t* f, int type, Void_t* data, Sfdisc_t* dp)
+static int moreexcept(Sfio_t* f, int type, Void_t* data, Sfdisc_t* dp)
 #else
-static moreexcept(f, type, data, dp)
+static int moreexcept(f, type, data, dp)
 Sfio_t*		f;
 int		type;
 Void_t*		data;

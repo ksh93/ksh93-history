@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -26,7 +26,7 @@
  * UNIX shell
  *
  * S. R. Bourne
- * Rewritten by David Korn
+ * Rewritten By David Korn
  * AT&T Labs
  *
  */
@@ -55,8 +55,8 @@
 #define CMD_LENGTH	64
 
 /* These routines are referenced by this module */
-static void	exfile(Sfio_t*,int);
-static void	chkmail(char*);
+static void	exfile(Shell_t*, Sfio_t*,int);
+static void	chkmail(Shell_t *shp, char*);
 #if defined(_lib_fork) && !defined(_NEXT_SOURCE)
     static void	fixargs(char**,int);
 #else
@@ -88,10 +88,10 @@ static char	beenhere = 0;
     /* check for interrupts during tree walks */
     static int fts_sigcheck(FTS* fp, FTSENT* ep, void* context)
     {
+	Shell_t *shp = (Shell_t*)context;
 	NOT_USED(fp);
 	NOT_USED(ep);
-	NOT_USED(context);
-	if(sh.trapnote&SH_SIGSET)
+	if(shp->trapnote&SH_SIGSET)
 	{
 		errno = EINTR;
 		return(-1);
@@ -106,6 +106,7 @@ sh_main(int ac, char *av[], void (*userinit)(int))
 	register int	fdin;
 	register Sfio_t  *iop;
 	register int 	rshflag;	/* set for restricted shell */
+	register Shell_t *shp;
 	int prof;
 	char *command;
 #ifdef _lib_sigvec
@@ -118,38 +119,43 @@ sh_main(int ac, char *av[], void (*userinit)(int))
 	_NutConf(_NC_SET_SUFFIXED_SEARCHING, 1);
 #endif	/* _hdr_nc */
 	fixargs(av,0);
-	prof = sh_init(ac,av,userinit);
+	shp = sh_init(ac,av,userinit);
+	prof = !sh_isoption(SH_PRIVILEGED);
 	time(&mailtime);
 	if(rshflag=sh_isoption(SH_RESTRICTED))
 		sh_offoption(SH_RESTRICTED);
 #ifdef _lib_fts_notify
-	fts_notify(fts_sigcheck,0);
+	fts_notify(fts_sigcheck,(void*)shp);
 #endif /* _lib_fts_notify */
-	if(sigsetjmp(*((sigjmp_buf*)sh.jmpbuffer),0))
+	if(sigsetjmp(*((sigjmp_buf*)shp->jmpbuffer),0))
 	{
 		/* begin script execution here */
 		sh_reinit((char**)0);
 	}
-	sh.fn_depth = sh.dot_depth = 0;
+	shp->fn_depth = shp->dot_depth = 0;
 	command = error_info.id;
 	/* set pidname '$$' */
-	sh.pid = getpid();
-	srand(sh.pid&0x7fff);
-	sh.ppid = getppid();
+	shp->pid = getpid();
+	srand(shp->pid&0x7fff);
+	shp->ppid = getppid();
 	if(nv_isnull(PS4NOD))
 		nv_putval(PS4NOD,e_traceprompt,NV_RDONLY);
 	path_pwd(1);
 	iop = (Sfio_t*)0;
+#if SHOPT_BRACEPAT
+	sh_onoption(SH_BRACEEXPAND);
+#endif
 	if((beenhere++)==0)
 	{
 		sh_onstate(SH_PROFILE);
-		if(sh.ppid==1)
-			sh.login_sh++;
+		if(shp->ppid==1)
+			shp->login_sh++;
 		/* decide whether shell is interactive */
-		if(sh_isoption(SH_TFLAG|SH_CFLAG)==0 && sh_isoption(SH_SFLAG) &&
+		if(!sh_isoption(SH_TFLAG) && !sh_isoption(SH_CFLAG) && sh_isoption(SH_SFLAG) &&
 			tty_check(0) && tty_check(ERRIO))
 		{
-			sh_onoption(SH_INTERACTIVE|SH_BGNICE);
+			sh_onoption(SH_INTERACTIVE);
+			sh_onoption(SH_BGNICE);
 		}
 		if(sh_isoption(SH_INTERACTIVE))
 		{
@@ -161,8 +167,8 @@ sh_main(int ac, char *av[], void (*userinit)(int))
 #endif /* SIGXFSZ */
 			sh_onoption(SH_MONITOR);
 		}
-		job_init(sh.login_sh >= 2);
-		if(sh.login_sh >= 2)
+		job_init(shp->login_sh >= 2);
+		if(shp->login_sh >= 2 && !sh_isoption(SH_NOPROFILE))
 		{
 			/*	system profile	*/
 #ifdef PATH_BFPATH
@@ -172,26 +178,51 @@ sh_main(int ac, char *av[], void (*userinit)(int))
 #endif
 			{
 				error_info.id = (char*)e_sysprofile;
-				exfile(iop,fdin);	/* file exists */
+				shp->st.filename = path_fullname(stakptr(PATH_OFFSET));
+				exfile(shp,iop,fdin);	/* file exists */
 			}
-#ifdef PATH_BFPATH
-			if(prof &&  (fdin=path_open(sh_mactry((char*)e_profile),NIL(Pathcomp_t*))) >= 0)
-#else
-			if(prof &&  (fdin=path_open(sh_mactry((char*)e_profile),"")) >= 0)
-#endif
+			if(prof)
 			{
-				error_info.id = path_basename(e_profile);
-				exfile(iop,fdin);
+				char **files = shp->login_files;
+				while(name = *files++)
+				{
+#ifdef PATH_BFPATH
+					if((fdin=path_open(sh_mactry(name),NIL(Pathcomp_t*))) >= 0)
+#else
+					if((fdin=path_open(sh_mactry(name),"")) >= 0)
+#endif
+					{
+						shp->st.filename = path_fullname(stakptr(PATH_OFFSET));
+						error_info.id = path_basename(name);
+						exfile(shp,iop,fdin);
+						break;
+					}
+				}
 			}
 		}
 		/* make sure PWD is set up correctly */
 		path_pwd(1);
 		name = "";
-		if(sh_isoption(SH_INTERACTIVE) && !sh_isoption(SH_NOEXEC))
+		if(!sh_isoption(SH_NOEXEC))
 		{
-			if(prof)
+			if(prof && shp->rcfile && sh_isoption(SH_INTERACTIVE))
+			{
+#ifdef PATH_BFPATH
+				if((fdin = path_open(shp->rcfile,NIL(Pathcomp_t*))) >= 0)
+#else
+				if((fdin = path_open(shp->rcfile,"")) >= 0)
+#endif
+				{
+					char *saveid = error_info.id;
+					error_info.id = shp->rcfile;
+					shp->st.filename = path_fullname(stakptr(PATH_OFFSET));
+					exfile(shp,iop,fdin);
+					error_info.id = saveid;
+				}
+			}
+			if(prof && (sh_isoption(SH_INTERACTIVE) || sh_isoption(SH_BASH) && !sh_isoption(SH_POSIX)))
 				name = sh_mactry(nv_getval(ENVNOD));
-			else if(sh_isoption(SH_PRIVILEGED))
+			else if(sh_isoption(SH_INTERACTIVE) && sh_isoption(SH_PRIVILEGED))
 				name = (char*)e_suidprofile;
 		}
 #ifdef PATH_BFPATH
@@ -202,24 +233,25 @@ sh_main(int ac, char *av[], void (*userinit)(int))
 		{
 			char *cp, *saveid = error_info.id;
 			cp = error_info.id = strdup(name);
-			exfile(iop,fdin);
+			shp->st.filename = path_fullname(stakptr(PATH_OFFSET));
+			exfile(shp,iop,fdin);
 			error_info.id = saveid;
 			free(cp);
 		}
-		sh.st.cmdname = error_info.id = command;
+		shp->st.cmdname = error_info.id = command;
 		sh_offstate(SH_PROFILE);
 		if(rshflag)
 			sh_onoption(SH_RESTRICTED);
 		/* open input file if specified */
-		if(sh.comdiv)
+		if(shp->comdiv)
 		{
 		shell_c:
-			iop = sfnew(NIL(Sfio_t*),sh.comdiv,strlen(sh.comdiv),0,SF_STRING|SF_READ);
+			iop = sfnew(NIL(Sfio_t*),shp->comdiv,strlen(shp->comdiv),0,SF_STRING|SF_READ);
 		}
 		else
 		{
 			name = error_info.id;
-			error_info.id = sh.shname;
+			error_info.id = shp->shname;
 			if(sh_isoption(SH_SFLAG))
 				fdin = 0;
 			else
@@ -233,7 +265,7 @@ sh_main(int ac, char *av[], void (*userinit)(int))
 					fdin = (int)strtol(name+8, (char**)0, 10);
 					if(fstat(fdin,&statb)<0)
 						errormsg(SH_DICT,ERROR_system(1),e_open,error_info.id);
-#ifndef _UWIN
+#if !_WINIX
 					/*
 					 * try to undo effect of solaris 2.5+
 					 * change for argv for setuid scripts
@@ -249,13 +281,14 @@ sh_main(int ac, char *av[], void (*userinit)(int))
 							/*  exec to change $0 for ps */
 							execv(pathshell(),av);
 							/* exec fails */
-							sh.st.dolv[0] = av[0];
-							fixargs(sh.st.dolv,1);
+							shp->st.dolv[0] = av[0];
+							fixargs(shp->st.dolv,1);
 						}
 					}
 #endif
 					name = av[0];
-					sh_offoption(SH_XTRACE|SH_VERBOSE);
+					sh_offoption(SH_VERBOSE);
+					sh_offoption(SH_XTRACE);
 				}
 				else
 				{
@@ -267,6 +300,8 @@ sh_main(int ac, char *av[], void (*userinit)(int))
 						isdir = 1;
 						fdin = -1;
 					}
+					else
+						shp->st.filename = path_fullname(name);
 					sp = 0;
 					if(fdin < 0 && !strchr(name,'/'))
 					{
@@ -277,7 +312,10 @@ sh_main(int ac, char *av[], void (*userinit)(int))
 							sp = path_absolute(name,NIL(char*));
 #endif
 						if(sp)
-							fdin=sh_open(sp,O_RDONLY,0);
+						{
+							if((fdin=sh_open(sp,O_RDONLY,0))>=0)
+								shp->st.filename = path_fullname(sp);
+						}
 					}
 					if(fdin<0)
 					{
@@ -288,20 +326,20 @@ sh_main(int ac, char *av[], void (*userinit)(int))
 							errormsg(SH_DICT,ERROR_system(ERROR_NOEXEC),e_open,name);
 						/* try sh -c 'name "$@"' */
 						sh_onoption(SH_CFLAG);
-						sh.comdiv = (char*)malloc(strlen(name)+7);
-						name = strcopy(sh.comdiv,name);
-						if(sh.st.dolc)
+						shp->comdiv = (char*)malloc(strlen(name)+7);
+						name = strcopy(shp->comdiv,name);
+						if(shp->st.dolc)
 							strcopy(name," \"$@\"");
 						goto shell_c;
 					}
 					if(fdin==0)
 						fdin = sh_iomovefd(fdin);
 				}
-				sh.readscript = sh.shname;
+				shp->readscript = shp->shname;
 			}
 			error_info.id = name;
-			sh.comdiv--;
-#ifdef SHOPT_ACCT
+			shp->comdiv--;
+#if SHOPT_ACCT
 			sh_accinit();
 			if(fdin != 0)
 				sh_accbegin(error_info.id);
@@ -310,14 +348,13 @@ sh_main(int ac, char *av[], void (*userinit)(int))
 	}
 	else
 	{
-		fdin = sh.infd;
-		fixargs(sh.st.dolv,1);
+		fdin = shp->infd;
+		fixargs(shp->st.dolv,1);
 	}
-	sh_onstate(sh_isoption(SH_INTERACTIVE));
+	if(sh_isoption(SH_INTERACTIVE))
+		sh_onstate(SH_INTERACTIVE);
 	nv_putval(IFSNOD,(char*)e_sptbnl,NV_RDONLY);
-	exfile(iop,fdin);
-	if(sh.userinit)
-		(*sh.userinit)(-1);
+	exfile(shp,iop,fdin);
 	sh_done(0);
 	/* NOTREACHED */
 	return(0);
@@ -328,7 +365,7 @@ sh_main(int ac, char *av[], void (*userinit)(int))
  * fdin is the input file descriptor 
  */
 
-static void	exfile(register Sfio_t *iop,register int fno)
+static void	exfile(register Shell_t *shp, register Sfio_t *iop,register int fno)
 {
 	time_t curtime;
 	union anynode *t;
@@ -337,13 +374,14 @@ static void	exfile(register Sfio_t *iop,register int fno)
 	struct checkpt buff;
 	sh_pushcontext(&buff,SH_JMPERREXIT);
 	/* open input stream */
+	nv_putval(SH_PATHNAMENOD, shp->st.filename ,NV_NOFREE);
 	if(!iop)
 	{
 		if(fno > 0)
 		{
 			fno = sh_iomovefd(fno);
 			fcntl(fno,F_SETFD,FD_CLOEXEC);
-			sh.fdstatus[fno] |= IOCLEX;
+			shp->fdstatus[fno] |= IOCLEX;
 			iop = sh_iostream(fno);
 		}
 		else
@@ -351,11 +389,11 @@ static void	exfile(register Sfio_t *iop,register int fno)
 	}
 	else
 		fno = -1;
-	sh.infd = fno;
+	shp->infd = fno;
 	if(sh_isstate(SH_INTERACTIVE))
 	{
 		if(nv_isnull(PS1NOD))
-			nv_putval(PS1NOD,(sh.euserid?e_stdprompt:e_supprompt),NV_RDONLY);
+			nv_putval(PS1NOD,(shp->euserid?e_stdprompt:e_supprompt),NV_RDONLY);
 		sh_sigdone();
 		if(sh_histinit())
 			sh_onoption(SH_HISTORY);
@@ -368,24 +406,27 @@ static void	exfile(register Sfio_t *iop,register int fno)
 			sh_onoption(SH_TRACKALL);
 			sh_offoption(SH_MONITOR);
 		}
-		sh_offstate(SH_INTERACTIVE|SH_MONITOR|SH_HISTORY);
+		sh_offstate(SH_INTERACTIVE);
+		sh_offstate(SH_MONITOR);
+		sh_offstate(SH_HISTORY);
 		sh_offoption(SH_HISTORY);
 	}
-	states = sh_isstate(~0);
+	states = sh_getstate();
 	jmpval = sigsetjmp(buff.buff,0);
 	if(jmpval)
 	{
 		Sfio_t *top;
 		sh_iorestore(0);
-		hist_flush(sh.hist_ptr);
-		sfsync(sh.outpool);
-		sh.st.execbrk = sh.st.breakcnt = 0;
+		hist_flush(shp->hist_ptr);
+		sfsync(shp->outpool);
+		shp->st.execbrk = shp->st.breakcnt = 0;
 		/* check for return from profile or env file */
 		if(sh_isstate(SH_PROFILE) && (jmpval==SH_JMPFUN || jmpval==SH_JMPEXIT))
 			goto done;
 		if(!sh_isoption(SH_INTERACTIVE) || sh_isstate(SH_FORKED) || (jmpval > SH_JMPERREXIT && job_close() >=0))
 		{
-			sh_offstate(SH_INTERACTIVE|SH_MONITOR);
+			sh_offstate(SH_INTERACTIVE);
+			sh_offstate(SH_MONITOR);
 			goto done;
 		}
 		/* skip over remaining input */
@@ -398,40 +439,52 @@ static void	exfile(register Sfio_t *iop,register int fno)
 		}
 		/* make sure that we own the terminal */
 #ifdef SIGTSTP
-		tcsetpgrp(job.fd,sh.pid);
+		tcsetpgrp(job.fd,shp->pid);
 #endif /* SIGTSTP */
 	}
 	/* error return here */
 	sfclrerr(iop);
 	sh_setstate(states);
-	sh.st.optindex = 1;
+	shp->st.optindex = 1;
 	opt_info.offset = 0;
-	sh.st.loopcnt = 0;
-	sh.trapnote = 0;
-	sh.intrap = 0;
+	shp->st.loopcnt = 0;
+	shp->trapnote = 0;
+	shp->intrap = 0;
 	error_info.line = 1;
-	sh.inlineno = 1;
-	sh.binscript = 0;
+	shp->inlineno = 1;
+	shp->binscript = 0;
 	if(sfeof(iop))
 		goto eof_or_error;
 	/* command loop */
 	while(1)
 	{
-		sh.nextprompt = 1;
+		shp->nextprompt = 1;
 		sh_freeup();
 		stakset(NIL(char*),0);
 		exitset();
-		sh_offstate(SH_STOPOK|SH_ERREXIT|SH_VERBOSE|SH_TIMING|SH_GRACE|SH_TTYWAIT);
-		sh_onstate(sh_isoption(SH_VERBOSE)|SH_ERREXIT);
+		sh_offstate(SH_STOPOK);
+		sh_offstate(SH_ERREXIT);
+		sh_offstate(SH_VERBOSE);
+		sh_offstate(SH_TIMING);
+		sh_offstate(SH_GRACE);
+		sh_offstate(SH_TTYWAIT);
+		if(sh_isoption(SH_VERBOSE))
+			sh_onstate(SH_VERBOSE);
+		sh_onstate(SH_ERREXIT);
 		/* -eim  flags don't apply to profiles */
 		if(sh_isstate(SH_PROFILE))
-			sh_offstate(SH_INTERACTIVE|SH_ERREXIT|SH_MONITOR);
+		{
+			sh_offstate(SH_INTERACTIVE);
+			sh_offstate(SH_ERREXIT);
+			sh_offstate(SH_MONITOR);
+		}
 		if(sh_isstate(SH_INTERACTIVE) && !tdone)
 		{
 			register char *mail;
 #ifdef JOBS
 			sh_offstate(SH_MONITOR);
-			sh_onstate(sh_isoption(SH_MONITOR));
+			if(sh_isoption(SH_MONITOR))
+				sh_onstate(SH_MONITOR);
 			if(job.pwlist)
 			{
 				job_walk(sfstderr,job_list,JOB_NFLAG,(char**)0);
@@ -443,22 +496,22 @@ static void	exfile(register Sfio_t *iop,register int fno)
 				time(&curtime);
 				if ((curtime - mailtime) >= sh_mailchk)
 				{
-					chkmail(mail);
+					chkmail(shp,mail);
 					mailtime = curtime;
 				}
 			}
-			if(sh.hist_ptr)
-				hist_eof(sh.hist_ptr);
+			if(shp->hist_ptr)
+				hist_eof(shp->hist_ptr);
 			/* sets timeout for command entry */
-			sh.timeout = sh.st.tmout;
-#ifdef SHOPT_TIMEOUT
-			if(sh.timeout <= 0 || sh.timeout > SHOPT_TIMEOUT)
-				sh.timeout = SHOPT_TIMEOUT;
+			shp->timeout = shp->st.tmout;
+#if SHOPT_TIMEOUT
+			if(shp->timeout <= 0 || shp->timeout > SHOPT_TIMEOUT)
+				shp->timeout = SHOPT_TIMEOUT;
 #endif /* SHOPT_TIMEOUT */
-			sh.inlineno = 1;
+			shp->inlineno = 1;
 			error_info.line = 1;
-			sh.exitval = 0;
-			sh.trapnote = 0;
+			shp->exitval = 0;
+			shp->trapnote = 0;
 			if(buff.mode == SH_JMPEXIT)
 			{
 				buff.mode = SH_JMPERREXIT;
@@ -474,7 +527,7 @@ static void	exfile(register Sfio_t *iop,register int fno)
 			if(sh_isstate(SH_INTERACTIVE) && !sferror(iop)) 
 			{
 				if(--maxtry>0 && sh_isoption(SH_IGNOREEOF) &&
-					 !sferror(sfstderr) && (sh.fdstatus[fno]&IOTTY))
+					 !sferror(sfstderr) && (shp->fdstatus[fno]&IOTTY))
 				{
 					sfclrerr(iop);
 					errormsg(SH_DICT,0,e_logout);
@@ -492,35 +545,36 @@ static void	exfile(register Sfio_t *iop,register int fno)
 			goto done;
 		}
 		maxtry = IOMAXTRY;
-		if(sh_isstate(SH_INTERACTIVE) && sh.hist_ptr)
+		if(sh_isstate(SH_INTERACTIVE) && shp->hist_ptr)
 		{
 			job_wait((pid_t)0);
-			hist_eof(sh.hist_ptr);
+			hist_eof(shp->hist_ptr);
 			sfsync(sfstderr);
 		}
-		sh_onstate(sh_isoption(SH_HISTORY));
+		if(sh_isoption(SH_HISTORY))
+			sh_onstate(SH_HISTORY);
 		job.waitall = job.curpgid = 0;
 		error_info.flags |= ERROR_INTERACTIVE;
-		t = (union anynode*)sh_parse(iop,0);
+		t = (union anynode*)sh_parse(shp,iop,0);
 		if(!sh_isstate(SH_INTERACTIVE) && !sh_isstate(SH_CFLAG))
 			error_info.flags &= ~ERROR_INTERACTIVE;
-		sh.readscript = 0;
-		if(sh_isstate(SH_INTERACTIVE) && sh.hist_ptr)
-			hist_flush(sh.hist_ptr);
+		shp->readscript = 0;
+		if(sh_isstate(SH_INTERACTIVE) && shp->hist_ptr)
+			hist_flush(shp->hist_ptr);
 		sh_offstate(SH_HISTORY);
 		if(t)
 		{
-			execflags = (SH_ERREXIT|SH_INTERACTIVE);
+			execflags = sh_state(SH_ERREXIT)|sh_state(SH_INTERACTIVE);
 			/* The last command may not have to fork */
-			if(!(sh_isstate(SH_PROFILE|SH_INTERACTIVE)) &&
-				(fno<0 || !(sh.fdstatus[fno]&(IOTTY|IONOSEEK)))
+			if(!sh_isstate(SH_PROFILE) && !sh_isstate(SH_INTERACTIVE) &&
+				(fno<0 || !(shp->fdstatus[fno]&(IOTTY|IONOSEEK)))
 				&& !sfreserve(iop,0,0))
 			{
-					execflags |= SH_NOFORK;
+					execflags |= sh_state(SH_NOFORK);
 			}
-			sh.st.execbrk = 0;
+			shp->st.execbrk = 0;
 			sh_exec(t,execflags);
-			if(sh.forked)
+			if(shp->forked)
 			{
 				sh_offstate(SH_INTERACTIVE);
 				goto done;
@@ -538,16 +592,19 @@ done:
 		job_close();
 	}
 	if(jmpval == SH_JMPSCRIPT)
-		siglongjmp(*sh.jmplist,jmpval);
+		siglongjmp(*shp->jmplist,jmpval);
 	else if(jmpval == SH_JMPEXIT)
 		sh_done(0);
 	if(fno>0)
 		sh_close(fno);
+	if(shp->st.filename)
+		free((void*)shp->st.filename);
+	shp->st.filename = 0;
 }
 
 
 /* prints out messages if files in list have been modified since last call */
-static void chkmail(char *files)
+static void chkmail(Shell_t *shp, char *files)
 {
 	register char *cp,*sp,*qp;
 	register char save;
@@ -596,10 +653,10 @@ static void chkmail(char *files)
 						|| statb.st_size > lastmail.st_size))
 					{
 						/* save and restore $_ */
-						char *save = sh.lastarg;
-						sh.lastarg = cp;
+						char *save = shp->lastarg;
+						shp->lastarg = cp;
 						errormsg(SH_DICT,0,sh_mactry(qp?qp+1:(char*)e_mailmsg));
-						sh.lastarg = save;
+						shp->lastarg = save;
 					}
 					lastmail = statb;
 					break;

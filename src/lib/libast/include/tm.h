@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -43,6 +43,7 @@
 #undef	daylight
 
 #define tmset(z)	tminit(z)
+#define tmisleapyear(y)	(!((y)%4)&&(((y)%100)||!((((y)<1900)?((y)+1900):(y))%400)))
 
 #define TM_ADJUST	(1<<0)		/* local doesn't do leap secs	*/
 #define TM_LEAP		(1<<1)		/* do leap seconds		*/

@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 4.3 2002-12-21
+info mam static 00000 1994-07-17 make (AT&T Research) 4.3 2003-04-15
 setv INSTALLROOT ../../..
 setv PACKAGE_ast ${INSTALLROOT}
 setv PACKAGE_ast_INCLUDE ${PACKAGE_ast}/include/ast
@@ -9,7 +9,7 @@ setv ARFLAGS cr
 setv AS as
 setv ASFLAGS
 setv CC cc
-setv CCFLAGS "${mam_cc_OPTIMIZE} ${mam_cc_DLL}"
+setv CCFLAGS ${mam_cc_DLL} ${debug?1?${mam_cc_DEBUG}?${mam_cc_OPTIMIZE}?}
 setv COTEMP $$
 setv CPIO cpio
 setv CPIOFLAGS
@@ -94,6 +94,9 @@ done ../../../include/prototyped.h dontcare
 done ../../../include/ast/prototyped.h dontcare
 done ../../../include/ast/re_comp.h dontcare
 make ../../../include/ast/getopt.h implicit
+make ../../../include/ast/ast_getopt.h implicit
+prev ../../../include/ast/prototyped.h implicit
+done ../../../include/ast/ast_getopt.h dontcare
 prev ../../../include/ast/prototyped.h implicit
 done ../../../include/ast/getopt.h dontcare
 make ../../../include/ast/ast_fcntl.h implicit
@@ -115,7 +118,7 @@ make ../../../include/ast/ast_map.h implicit
 done ../../../include/ast/ast_map.h dontcare
 make ../../../include/ast/stdio.h implicit
 make ../../../include/ast/ast_stdio.h implicit
-prev ../../../include/ast/getopt.h implicit
+prev ../../../include/ast/ast_getopt.h implicit
 prev ../../../include/ast/sfio_s.h implicit
 prev ../../../include/ast/ast_common.h implicit
 done ../../../include/ast/ast_stdio.h dontcare
@@ -127,7 +130,7 @@ done ../../../include/ast/ast_limits.h dontcare
 done ../../../include/ast/limits.h dontcare
 make ../../../include/ast/ast_hdr.h implicit
 done ../../../include/ast/ast_hdr.h dontcare
-prev ../../../include/ast/getopt.h implicit
+prev ../../../include/ast/ast_getopt.h implicit
 make ../../../include/ast/ast_lib.h implicit
 done ../../../include/ast/ast_lib.h dontcare
 prev ../../../include/ast/ast_common.h implicit
@@ -223,8 +226,9 @@ exec - then	set -x && mkdir -p ${PACKAGE_ast_LIB}
 exec - fi
 done ../../../lib generated
 make ../../../lib/libdll.a archive
+prev ../../../lib
 prev libdll.a archive
-exec - ${STDMV} ${PACKAGE_ast_LIB}/libdll.a ${PACKAGE_ast_LIB}/libdll.a.old 2>/dev/null || true; test '' = 'libdll.a' || ${STDCMP} 2>/dev/null -s libdll.a ${PACKAGE_ast_LIB}/libdll.a || { ${STDCP} libdll.a ${PACKAGE_ast_LIB}/libdll.a  		    		    ;}
+exec - test '' = 'libdll.a' || ${STDCMP} 2>/dev/null -s libdll.a ${PACKAGE_ast_LIB}/libdll.a || { ${STDMV} ${PACKAGE_ast_LIB}/libdll.a ${PACKAGE_ast_LIB}/libdll.a.old 2>/dev/null || true; ${STDCP} libdll.a ${PACKAGE_ast_LIB}/libdll.a  		    		    ;}
 exec - (ranlib ${PACKAGE_ast_LIB}/libdll.a) >/dev/null 2>&1 || true
 done ../../../lib/libdll.a generated
 make ../../../lib/lib
@@ -234,8 +238,9 @@ exec - then	set -x && mkdir -p ${PACKAGE_ast_LIB}/lib
 exec - fi
 done ../../../lib/lib generated
 make ../../../lib/lib/dll
+prev ../../../lib/lib
 prev dll.req
-exec - ${STDMV} ${PACKAGE_ast_LIB}/lib/dll ${PACKAGE_ast_LIB}/lib/dll.old 2>/dev/null || true; test '' = 'dll.req' || ${STDCMP} 2>/dev/null -s dll.req ${PACKAGE_ast_LIB}/lib/dll || { ${STDCP} dll.req ${PACKAGE_ast_LIB}/lib/dll  		    		    ;}
+exec - test '' = 'dll.req' || ${STDCMP} 2>/dev/null -s dll.req ${PACKAGE_ast_LIB}/lib/dll || { ${STDMV} ${PACKAGE_ast_LIB}/lib/dll ${PACKAGE_ast_LIB}/lib/dll.old 2>/dev/null || true; ${STDCP} dll.req ${PACKAGE_ast_LIB}/lib/dll  		    		    ;}
 done ../../../lib/lib/dll generated
 make ../../../include/ast
 exec - set -
@@ -244,6 +249,7 @@ exec - then	set -x && mkdir -p ${PACKAGE_ast_INCLUDE}
 exec - fi
 done ../../../include/ast generated
 make ../../../include/ast/dlldefs.h
+prev ../../../include/ast
 prev dlldefs.h
 exec - proto -p -s -l ${PACKAGE_ast_LIB}/package/ast.lic '-o since=1997,author=gsf'  dlldefs.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${PACKAGE_ast_INCLUDE}/dlldefs.h 1.${COTEMP}.x

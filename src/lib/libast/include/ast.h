@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -129,13 +129,23 @@ typedef struct
 } Pathcheck_t;
 
 /*
- * strmatch() flags
+ * strgrpmatch() flags
  */
 
-#define STR_MAXIMAL	01
-#define STR_LEFT	02
-#define STR_RIGHT	04
-#define STR_ICASE	010
+#define STR_MAXIMAL	01		/* maximal match		*/
+#define STR_LEFT	02		/* implicit left anchor		*/
+#define STR_RIGHT	04		/* implicit right anchor	*/
+#define STR_ICASE	010		/* ignore case			*/
+#define STR_GROUP	020		/* (|&) inside [@|&](...) only	*/
+
+/*
+ * fmtquote() flags
+ */
+
+#define FMT_ALWAYS	0x01		/* always quote			*/
+#define FMT_ESCAPED	0x02		/* already escaped		*/
+#define FMT_SHELL	0x04		/* escape $ ` too		*/
+#define FMT_WIDE	0x08		/* don't escape 8 bit chars	*/
 
 /*
  * multibyte macros
@@ -209,6 +219,8 @@ extern int		astlicense(char*, int, char*, char*, int, int, int);
 extern int		astquery(int, const char*, ...);
 extern void		astwinsize(int, int*, int*);
 
+extern ssize_t		base64encode(const void*, size_t, void**, void*, size_t, void**);
+extern ssize_t		base64decode(const void*, size_t, void**, void*, size_t, void**);
 extern int		chresc(const char*, char**);
 extern int		chrtoi(const char*);
 extern char*		fmtbase(long, int, int);
@@ -253,6 +265,7 @@ extern int		pathinclude(const char*);
 extern char*		pathkey(char*, char*, const char*, const char*, const char*);
 extern size_t		pathnative(const char*, char*, size_t);
 extern char*		pathpath(char*, const char*, const char*, int);
+extern size_t		pathposix(const char*, char*, size_t);
 extern char*		pathprobe(char*, char*, const char*, const char*, const char*, int);
 extern char*		pathrepl(char*, const char*, const char*);
 extern int		pathsetlink(const char*, const char*);

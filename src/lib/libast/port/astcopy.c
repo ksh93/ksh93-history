@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -32,16 +32,13 @@
  */
 
 #include <ast.h>
+#include <ast_mmap.h>
 
-#if __sun__ || sun
-
-#if _lib_mmap && (_hdr_mman || _sys_mman)
+#if _mmap_worthy > 1
 
 #include <ls.h>
 
 #define MAPSIZE		(1024*256)
-
-#endif
 
 #endif
 

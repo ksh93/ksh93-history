@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -86,6 +86,7 @@ typedef struct Optstr_s
 typedef struct Optstate_s
 {
 	Sfio_t*		mp;		/* opt_info.msg string stream	*/
+	Sfio_t*		vp;		/* translation string stream	*/
 	Sfio_t*		xp;		/* translation string stream	*/
 	Optpass_t	pass[8];	/* optjoin() list		*/
 	char*		argv[2];	/* initial argv copy		*/
@@ -108,7 +109,10 @@ typedef struct Optstate_s
 	Optcache_t*	cache;		/* OPT_cache cache		*/
 } Optstate_t;
 
-#define _OPT_PRIVATE_	Optstate_t* state;
+#define _OPT_PRIVATE_ \
+	_ast_intmax_t	number; \
+	char            pad[3*sizeof(void*)]; \
+	Optstate_t*	state;
 
 #include <error.h>
 

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -120,12 +120,16 @@ static int p_tree(register const union anynode *t)
 				return(-1);
 			return(p_arg(t->ar.arexpr));
 		case TFOR:
+			if(sfputu(outfile,t->for_.forline)<0)
+				return(-1);
 			if(p_tree(t->for_.fortre)<0)
 				return(-1);
 			if(p_string(t->for_.fornam)<0)
 				return(-1);
 			return(p_tree((union anynode*)t->for_.forlst));
 		case TSW:
+			if(sfputu(outfile,t->sw.swline)<0)
+				return(-1);
 			if(p_arg(t->sw.swarg)<0)
 				return(-1);
 			return(p_switch(t->sw.swlst));

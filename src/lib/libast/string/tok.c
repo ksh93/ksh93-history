@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -37,20 +37,18 @@
 #define FLG_RESTORE	01		/* restore string on close	*/
 #define FLG_NEWLINE	02		/* return newline token next	*/
 
-struct tok				/* token stream state		*/
+typedef struct Tok_s			/* token stream state		*/
 {
 	union
 	{
 	char*		end;		/* end ('\0') of last token	*/
-	struct tok*	nxt;		/* next in free list		*/
+	struct Tok_s*	nxt;		/* next in free list		*/
 	}		ptr;
 	char		chr;		/* replace *end with this	*/
 	char		flg;		/* FLG_*			*/
-};
+} Tok_t;
 
-typedef struct tok TOK;
-
-static struct tok*	freelist;
+static Tok_t*		freelist;
 
 /*
  * open a new token stream on s
@@ -60,13 +58,15 @@ static struct tok*	freelist;
 char*
 tokopen(register char* s, int f)
 {
-	register TOK*	p;
+	register Tok_t*	p;
 
-	if (p = freelist) freelist = freelist->ptr.nxt;
-	else if (!(p = newof(0, TOK, 1, 0))) return(0);
+	if (p = freelist)
+		freelist = freelist->ptr.nxt;
+	else if (!(p = newof(0, Tok_t, 1, 0)))
+		return 0;
 	p->chr = *(p->ptr.end = s);
 	p->flg = f ? FLG_RESTORE : 0;
-	return((char*)p);
+	return (char*)p;
 }
 
 /*
@@ -77,9 +77,10 @@ tokopen(register char* s, int f)
 void
 tokclose(char* u)
 {
-	register TOK*	p = (TOK*)u;
+	register Tok_t*	p = (Tok_t*)u;
 
-	if (p->flg == FLG_RESTORE) *p->ptr.end = p->chr;
+	if (p->flg == FLG_RESTORE && *p->ptr.end != p->chr)
+		*p->ptr.end = p->chr;
 	p->ptr.nxt = freelist;
 	freelist = p;
 }
@@ -94,7 +95,7 @@ tokclose(char* u)
 char*
 tokread(char* u)
 {
-	register TOK*	p = (TOK*)u;
+	register Tok_t*	p = (Tok_t*)u;
 	register char*	s;
 	register char*	r;
 	register int	q;
@@ -104,18 +105,21 @@ tokread(char* u)
 	 * restore string on each call
 	 */
 
-	if (!p->chr) return(0);
+	if (!p->chr)
+		return 0;
 	s = p->ptr.end;
 	switch (p->flg)
 	{
 	case FLG_NEWLINE:
 		p->flg = 0;
-		return("\n");
+		return "\n";
 	case FLG_RESTORE:
-		*s = p->chr;
+		if (*s != p->chr)
+			*s = p->chr;
 		break;
 	default:
-		if (!*s) s++;
+		if (!*s)
+			s++;
 		break;
 	}
 
@@ -123,12 +127,13 @@ tokread(char* u)
 	 * skip leading space
 	 */
 
-	while (*s == ' ' || *s == '\t') s++;
+	while (*s == ' ' || *s == '\t')
+		s++;
 	if (!*s)
 	{
 		p->ptr.end = s;
 		p->chr = 0;
-		return(0);
+		return 0;
 	}
 
 	/*
@@ -137,46 +142,53 @@ tokread(char* u)
 
 	r = s;
 	q = 0;
-	for (;;) switch (c = *r++)
-	{
-	case '\n':
-		if (!q)
+	for (;;)
+		switch (c = *r++)
 		{
-			if (s == (r - 1))
+		case '\n':
+			if (!q)
 			{
-				if (!p->flg)
+				if (s == (r - 1))
 				{
-					p->ptr.end = r;
-					return("\n");
+					if (!p->flg)
+					{
+						p->ptr.end = r;
+						return "\n";
+					}
+					r++;
 				}
-				r++;
+				else if (!p->flg)
+					p->flg = FLG_NEWLINE;
 			}
-			else if (!p->flg) p->flg = FLG_NEWLINE;
+			/*FALLTHROUGH*/
+		case ' ':
+		case '\t':
+			if (q)
+				break;
+			/*FALLTHROUGH*/
+		case 0:
+			if (s == --r)
+			{
+				p->ptr.end = r;
+				p->chr = 0;
+			}
+			else
+			{
+				p->chr = *(p->ptr.end = r);
+				if (*r)
+					*r = 0;
+			}
+			return s;
+		case '\\':
+			if (*r)
+				r++;
+			break;
+		case '"':
+		case '\'':
+			if (c == q)
+				q = 0;
+			else if (!q)
+				q = c;
+			break;
 		}
-		/*FALLTHROUGH*/
-	case ' ':
-	case '\t':
-		if (q) break;
-		/*FALLTHROUGH*/
-	case 0:
-		if (s == --r)
-		{
-			p->ptr.end = r;
-			p->chr = 0;
-		}
-		else
-		{
-			p->chr = *(p->ptr.end = r);
-			*r = 0;
-		}
-		return(s);
-	case '\\':
-		if (*r) r++;
-		break;
-	case '"':
-	case '\'':
-		if (c == q) q = 0;
-		else if (!q) q = c;
-		break;
-	}
 }

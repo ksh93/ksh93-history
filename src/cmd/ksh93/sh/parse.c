@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -32,7 +32,7 @@
  *  This is the parser for a shell language
  */
 
-#ifdef KSHELL
+#if KSHELL
 #include	"defs.h"
 #else
 #include	<shell.h>
@@ -68,7 +68,7 @@ static union anynode	*test_and(void);
 static union anynode	*test_or(void);
 static union anynode	*test_primary(void);
 
-#define	sh_getlineno()	(sh.inlineno)
+#define	sh_getlineno()	(shlex.lastline)
 
 #ifndef NIL
 #   define NIL(type)	((type)0)
@@ -76,7 +76,7 @@ static union anynode	*test_primary(void);
 #define CNTL(x)		((x)&037)
 
 
-#ifndef KSHELL
+#if !KSHELL
 static struct stdata
 {
 	struct slnod    *staklist;
@@ -90,7 +90,7 @@ static struct argnod	*label_last;
 
 #define getnode(type)	((union anynode*)stakalloc(sizeof(struct type)))
 
-#ifdef SHOPT_KIA
+#if SHOPT_KIA
 #include	"path.h"
 /*
  * write out entities for each item in the list
@@ -212,24 +212,27 @@ static union anynode	*makelist(int type, union anynode *l, union anynode *r)
  * Flag can be the union of SH_EOF|SH_NL
  */
 
-void	*sh_parse(Sfio_t *iop, int flag)
+void	*sh_parse(Shell_t *shp, Sfio_t *iop, int flag)
 {
 	register union anynode	*t;
 	Fcin_t	sav_input;
 	struct argnod *sav_arg = shlex.arg;
-	int	sav_prompt = sh.nextprompt;
-	if(sh.binscript && sffileno(iop)==sh.infd)
+	int	sav_prompt = shp->nextprompt;
+	if(shp->binscript && sffileno(iop)==shp->infd)
 		return((void*)sh_trestore(iop));
 	fcsave(&sav_input);
-	sh.st.staklist = 0;
+	shp->st.staklist = 0;
 	shlex.heredoc = 0;
-	shlex.inlineno = sh.inlineno;
-	shlex.firstline = sh.st.firstline;
-	sh.nextprompt = 1;
+	shlex.inlineno = shp->inlineno;
+	shlex.firstline = shp->st.firstline;
+	shp->nextprompt = 1;
 	loop_level = 0;
 	label_list = label_last = 0;
-	sh_onstate(sh_isoption(SH_INTERACTIVE));
-	sh_lexopen((Lex_t*)sh.lex_context,&sh,0);
+	if(sh_isoption(SH_INTERACTIVE))
+		sh_onstate(SH_INTERACTIVE);
+	if(sh_isoption(SH_VERBOSE))
+		sh_onstate(SH_VERBOSE);
+	sh_lexopen((Lex_t*)shp->lex_context,shp,0);
 	if(fcfopen(iop) < 0)
 		return(NIL(void*));
 	if(fcfile())
@@ -243,18 +246,18 @@ void	*sh_parse(Sfio_t *iop, int flag)
 			fcclose();
 			fcrestore(&sav_input);
 			shlex.arg = sav_arg;
-			if(version > 2)
+			if(version > 3)
 				errormsg(SH_DICT,ERROR_exit(1),e_lexversion);
-			if(sffileno(iop)==sh.infd)
-				sh.binscript = 1;
+			if(sffileno(iop)==shp->infd)
+				shp->binscript = 1;
 			sfgetc(iop);
 			return((void*)sh_trestore(iop));
 		}
 	}
-	if((flag&SH_NL) && (sh.inlineno=error_info.line+sh.st.firstline)==0)
-		sh.inlineno=1;
-#ifdef KSHELL
-	sh.nextprompt = 2;
+	if((flag&SH_NL) && (shp->inlineno=error_info.line+shp->st.firstline)==0)
+		shp->inlineno=1;
+#if KSHELL
+	shp->nextprompt = 2;
 #endif
 	t = sh_cmd((flag&SH_EOF)?EOFSYM:'\n',SH_EMPTY|(flag&SH_NL));
 	fcclose();
@@ -267,11 +270,11 @@ void	*sh_parse(Sfio_t *iop, int flag)
 		if(sp)
 			sfclose(sp);
 	}
-	sh.nextprompt = sav_prompt;
+	shp->nextprompt = sav_prompt;
 	if(flag&SH_NL)
 	{
-		sh.st.firstline = shlex.firstline;
-		sh.inlineno = shlex.inlineno;
+		shp->st.firstline = shlex.firstline;
+		shp->inlineno = shlex.inlineno;
 	}
 	stakseek(0);
 	return((void*)t);
@@ -600,18 +603,16 @@ static union anynode *funct(void)
 	register int flag;
 	struct slnod *volatile slp=0;
 	Stak_t *savstak;
-#ifdef SHOPT_KIA
+	Sfoff_t	first, last;
+	struct functnod *fp;
+	Sfio_t *iop;
+#if SHOPT_KIA
 	unsigned long current = shlex.current;
 #endif /* SHOPT_KIA */
-#ifdef KSHELL
-	int histon = sh_isstate(SH_HISTORY);
-#endif
-	int saveloop = loop_level;
+	int jmpval, saveloop=loop_level;
 	struct argnod *savelabel = label_last;
-	int jmpval;
 	struct  checkpt buff;
 	t = getnode(functnod);
-	t->funct.functloc = -1;
 	t->funct.functline = sh.inlineno;
 	t->funct.functtyp=TFUN;
 	t->funct.functargs = 0;
@@ -619,33 +620,60 @@ static union anynode *funct(void)
 		t->funct.functtyp |= FPOSIX;
 	else if(sh_lex())
 		sh_syntax();
+	if(!(iop=fcfile()))
+	{
+		iop = sfopen(NIL(Sfio_t*),fcseek(0),"s");
+		fcclose();
+		fcfopen(iop);
+	}
+	t->funct.functloc = first = fctell();
+	if(!sh.st.filename || sffileno(iop)<0)
+	{
+		if(fcfill() < 0)
+			fcseek(-1);
+		if(sh_isstate(SH_HISTORY))
+			t->funct.functloc = sfseek(sh.hist_ptr->histfp,(off_t)0,SEEK_CUR);
+		else
+		{
+			/* copy source to temporary file */
+			t->funct.functloc = 0;
+			if(shlex.sh->heredocs)
+				t->funct.functloc = sfseek(shlex.sh->heredocs,(Sfoff_t)0, SEEK_END);
+			else
+				shlex.sh->heredocs = sftmp(HERE_MEM);
+			shlex.sh->funlog = shlex.sh->heredocs;
+			t->funct.functtyp |= FPIN;
+		}
+	}
 	t->funct.functnam= (char*)shlex.arg->argval;
-#ifdef SHOPT_KIA
+#if SHOPT_KIA
 	if(shlex.kiafile)
 		shlex.current = kiaentity(t->funct.functnam,-1,'p',-1,-1,shlex.script,'p',0,"");
 #endif /* SHOPT_KIA */
+	if(flag)
+	{
+		shlex.token = sh_lex();
+#if SHOPT_BASH
+		if(shlex.token == LPAREN)
+		{
+			if((shlex.token = sh_lex()) == RPAREN)
+				t->funct.functtyp |= FPOSIX;
+			else
+				sh_syntax();
+		}
+#endif
+	}
 	if(t->funct.functtyp&FPOSIX)
 		skipnl();
 	else
 	{
-		if((shlex.token=sh_lex())==0)
+		if(shlex.token==0)
 			t->funct.functargs = (struct comnod*)simple(SH_NOIO|SH_FUNDEF,NIL(struct ionod*));
 		while(shlex.token==NL)
 			shlex.token = sh_lex();
 	}
 	if((flag && shlex.token!=LBRACE) || shlex.token==EOFSYM)
 		sh_syntax();
-#ifdef KSHELL
-	/* log function definitions in history file */
-	if(sh_isoption(SH_INTERACTIVE) && !sh_isoption(SH_NOLOG)
-		&& fcfile() && sffileno(fcfile())>=0 && sh_histinit())
-	{
-		fcfill();
-		fcseek(-1);
-		t->funct.functloc = sfseek(sh.hist_ptr->histfp,(off_t)0,SEEK_CUR)+1;
-		sh_onstate(SH_HISTORY);
-	}
-#endif
 	sh_pushcontext(&buff,1);
 	jmpval = sigsetjmp(buff.buff,0);
 	if(jmpval == 0)
@@ -653,11 +681,21 @@ static union anynode *funct(void)
 		/* create a new stak frame to compile the command */
 		savstak = stakcreate(STAK_SMALL);
 		savstak = stakinstall(savstak, 0);
-		slp = (struct slnod*)stakalloc(sizeof(struct slnod));
+		slp = (struct slnod*)stakalloc(sizeof(struct slnod)+sizeof(struct functnod));
 		slp->slchild = 0;
 		slp->slnext = sh.st.staklist;
 		sh.st.staklist = 0;
 		t->funct.functstak = (struct slnod*)slp;
+		/*
+		 * store the pathname of function definition file on stack
+		 * in name field of fake for node
+		 */
+		fp = (struct functnod*)(slp+1);
+		fp->functtyp = TFUN|FAMP;
+		fp->functnam = 0;
+		fp->functline = t->funct.functline;
+		if(sh.st.filename)
+			fp->functnam = stakcopy(sh.st.filename);
 		loop_level = 0;
 		label_last = label_list;
 		if(!flag && shlex.token==0)
@@ -680,7 +718,7 @@ static union anynode *funct(void)
 		slp->slptr =  stakinstall(savstak,0);
 		slp->slchild = sh.st.staklist;
 	}
-#ifdef SHOPT_KIA
+#if SHOPT_KIA
 	shlex.current = current;
 #endif /* SHOPT_KIA */
 	if(jmpval && slp)
@@ -690,17 +728,16 @@ static union anynode *funct(void)
 		siglongjmp(*sh.jmplist,jmpval);
 	}
 	sh.st.staklist = (struct slnod*)slp;
-#ifdef KSHELL
-	if(sh.hist_ptr && sh_isstate(SH_HISTORY) && !histon)
+	last = fctell();
+	fp->functline = (last-first);
+	fp->functtre = t;
+	if(shlex.sh->funlog)
 	{
 		if(fcfill()>0)
 			fcseek(-1);
-		hist_flush(sh.hist_ptr);
-		hist_cancel(sh.hist_ptr);
-		sh_offstate(SH_HISTORY);
+		shlex.sh->funlog = 0;
 	}
-#endif
-#ifdef SHOPT_KIA
+#if 	SHOPT_KIA
 	if(shlex.kiafile)
 		kiaentity(t->funct.functnam,-1,'p',t->funct.functline,sh.inlineno-1,shlex.current,'p',0,"");
 #endif /* SHOPT_KIA */
@@ -718,13 +755,13 @@ static struct argnod *assign(register struct argnod *ap)
 	int array=0;
 	Namval_t *np;
 	n = strlen(ap->argval)-1;
-#ifdef SHOPT_COMPOUND_ARRAY
+#if SHOPT_COMPOUND_ARRAY
 	if(ap->argval[n]!='=')
 #else
 	if(ap->argval[n]!='=' || ap->argval[n-1]==']')
 #endif
 		sh_syntax();
-#ifdef SHOPT_APPEND
+#if SHOPT_APPEND
 	if(ap->argval[n-1]=='+')
 	{
 		ap->argval[n--]=0;
@@ -835,6 +872,8 @@ static union anynode	*item(int flag)
 		t->sw.swarg=shlex.arg;
 		t->sw.swtyp=TSW;
 		t->sw.swio = 0;
+		t->sw.swtyp |= FLINENO;
+		t->sw.swline =  sh.inlineno;
 		if((tok=skipnl())!=INSYM && tok!=LBRACE)
 			sh_syntax();
 		if(!(t->sw.swlst=syncase(tok==INSYM?ESACSYM:RBRACE)) && shlex.token==EOFSYM)
@@ -876,6 +915,7 @@ static union anynode	*item(int flag)
 		t = getnode(fornod);
 		t->for_.fortyp=(shlex.token==FORSYM?TFOR:TSELECT);
 		t->for_.forlst=0;
+		t->for_.forline =  sh.inlineno;
 		if(sh_lex())
 		{
 			if(shlex.token!=EXPRSYM || t->for_.fortyp!=TFOR)
@@ -885,7 +925,8 @@ static union anynode	*item(int flag)
 			break;
 		}
 		t->for_.fornam=(char*) shlex.arg->argval;
-#ifdef SHOPT_KIA
+		t->for_.fortyp |= FLINENO;
+#if SHOPT_KIA
 		if(shlex.kiafile)
 			writedefs(shlex.arg,sh.inlineno,'v',NIL(struct argnod*));
 #endif /* SHOPT_KIA */
@@ -903,6 +944,8 @@ static union anynode	*item(int flag)
 				(t->for_.forlst)->comarg = 0;
 				(t->for_.forlst)->comset = 0;
 				(t->for_.forlst)->comnamp = 0;
+				(t->for_.forlst)->comnamq = 0;
+				(t->for_.forlst)->comstate = 0;
 				(t->for_.forlst)->comio = 0;
 				(t->for_.forlst)->comtyp = 0;
 			}
@@ -928,7 +971,7 @@ static union anynode	*item(int flag)
 	    case FUNCTSYM:
 		return(funct());
 
-#ifdef SHOPT_NAMESPACE
+#if SHOPT_NAMESPACE
 	    case NSPACESYM:
 		t = getnode(fornod);
 		t->for_.fortyp=TNSPACE;
@@ -972,7 +1015,7 @@ static union anynode	*item(int flag)
 		skipnl();
 		if(!(t = item(SH_NL)))
 			sh_syntax();
-		tok = t->tre.tretyp;
+		tok = (t->tre.tretyp&(COMSCAN|COMSCAN-1));
 		if(sh_isoption(SH_NOEXEC) && tok!=TWH && tok!=TUN && tok!=TFOR && tok!=TSELECT)
 			errormsg(SH_DICT,ERROR_warn(0),e_lexlabignore,label_list->argchn.len,label_list->argval);
 		return(t);
@@ -1040,6 +1083,8 @@ static union anynode *simple(int flag, struct ionod *io)
 	argtail = &(t->comarg);
 	t->comset = 0;
 	t->comnamp = 0;
+	t->comnamq = 0;
+	t->comstate = 0;
 	settail = &(t->comset);
 	while(shlex.token==0)
 	{
@@ -1087,7 +1132,7 @@ static union anynode *simple(int flag, struct ionod *io)
 			if(argno>=0 && argno++==0 && !(flag&SH_ARRAY) && *argp->argval!='/')
 			{
 				/* check for builtin command */
-				Namval_t *np = nv_search(argp->argval,sh.fun_tree,0);
+				Namval_t *np=nv_bfsearch(argp->argval,sh.fun_tree, (Namval_t**)&t->comnamq,(char**)0);
 				if((t->comnamp=(void*)np) && is_abuiltin(np) &&
 					nv_isattr(np,BLT_DCL))
 				{
@@ -1102,7 +1147,7 @@ static union anynode *simple(int flag, struct ionod *io)
 		}
 	retry:
 		tok = sh_lex();
-#ifdef SHOPT_DEVFD
+#if SHOPT_DEVFD
 		if((tok==IPROCSYM || tok==OPROCSYM))
 		{
 			union anynode *t;
@@ -1157,7 +1202,7 @@ static union anynode *simple(int flag, struct ionod *io)
 	}
 	*argtail = 0;
 	t->comtyp = TCOM;
-#ifdef SHOPT_KIA
+#if SHOPT_KIA
 	if(shlex.kiafile && !(flag&SH_NOIO))
 	{
 		register Namval_t *np=(Namval_t*)t->comnamp;
@@ -1252,7 +1297,7 @@ static struct ionod	*inout(struct ionod *lastio,int flag)
 {
 	register int 		iof = shlex.digits, token=shlex.token;
 	register struct ionod	*iop;
-#ifdef SHOPT_ZSH
+#if SHOPT_BASH
 	register int		errout=0;
 #endif
 	switch(token&0xff)
@@ -1267,7 +1312,7 @@ static struct ionod	*inout(struct ionod *lastio,int flag)
 		break;
 
 	    case '>':
-#ifdef SHOPT_ZSH
+#if SHOPT_BASH
 		if(iof<0)
 		{
 			errout = 1;
@@ -1326,7 +1371,7 @@ static struct ionod	*inout(struct ionod *lastio,int flag)
 	if(flag>0)
 		/* allow alias substitutions and parameter assignments */
 		shlex.aliasok = shlex.assignok = 1;
-#ifdef SHOPT_KIA
+#if SHOPT_KIA
 	if(shlex.kiafile)
 	{
 		int n = sh.inlineno-(shlex.token=='\n');
@@ -1341,7 +1386,7 @@ static struct ionod	*inout(struct ionod *lastio,int flag)
 	{
 		struct ionod *ioq=iop;
 		sh_lex();
-#ifdef SHOPT_ZSH
+#if SHOPT_BASH
 		if(errout)
 		{
 			/* redirect standard output to standard error */
@@ -1466,7 +1511,7 @@ static union anynode *test_primary(void)
 	    case TESTUNOP:
 		if(sh_lex())
 			sh_syntax();
-#ifdef SHOPT_KIA
+#if SHOPT_KIA
 		if(shlex.kiafile && !strchr("sntzoOG",num))
 		{
 			int line = sh.inlineno- (shlex.token==NL);
@@ -1497,7 +1542,7 @@ static union anynode *test_primary(void)
 		}
 		else
 			sh_syntax();
-#ifdef SHOPT_KIA
+#if SHOPT_KIA
 		if(shlex.kiafile && (num==TEST_EF||num==TEST_NT||num==TEST_OT))
 		{
 			int line = sh.inlineno- (shlex.token==NL);
@@ -1518,7 +1563,7 @@ static union anynode *test_primary(void)
 		t->lst.lstlef = (union anynode*)arg;
 		t->lst.lstrit = (union anynode*)shlex.arg;
 		t->tst.tstline =  sh.inlineno;
-#ifdef SHOPT_KIA
+#if SHOPT_KIA
 		if(shlex.kiafile && (num==TEST_EF||num==TEST_NT||num==TEST_OT))
 		{
 			int line = sh.inlineno-(shlex.token==NL);
@@ -1532,7 +1577,7 @@ static union anynode *test_primary(void)
 	return(t);
 }
 
-#ifdef SHOPT_KIA
+#if SHOPT_KIA
 /*
  * return an entity checksum
  * The entity is created if it doesn't exist

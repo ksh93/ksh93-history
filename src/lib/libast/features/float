@@ -2,7 +2,19 @@ set	prototyped
 hdr	float,limits,math,values
 lib	frexp,frexpl,ldexp,ldexpl
 
-tst	_ast_mpy_overflow_fpe note{ fpe on mpy overflow }end noexecute{
+tst	ast_no_um2fm note{ no unsigned intmax => floatmax cast }end nolink{
+	#include "FEATURE/common"
+	main()
+	{
+		_ast_fltmax_t		f = 0;
+		unsigned _ast_intmax_t	i = 0;
+		f = i;
+		i = f;
+		return f == i;
+	}
+}end
+
+tst	ast_mpy_overflow_fpe note{ fpe on mpy overflow }end noexecute{
 	main()
 	{
 		float	f;
@@ -20,7 +32,7 @@ tst	_ast_mpy_overflow_fpe note{ fpe on mpy overflow }end noexecute{
 	}
 }end
 
-tst	_ast_div_underflow_fpe note{ fpe on div underflow }end noexecute{
+tst	ast_div_underflow_fpe note{ fpe on div underflow }end noexecute{
 	main()
 	{
 		float	f;
@@ -78,6 +90,7 @@ macro{
 	#define DBL_MAX		MAXDOUBLE
 	#endif
 
+	<<"#include <ast_common.h>">>
 	#if _hdr_float
 	<<"#include <float.h>">>
 	#endif
@@ -193,7 +206,7 @@ macro{
 	#endif
 }end
 
-tst	- output{
+tst	- note{ missing floating point limits }end output{
 	#include "FEATURE/common"
 	#if _hdr_float
 	#include <float.h>
@@ -209,16 +222,15 @@ tst	- output{
 	#endif
 	#include <signal.h>
 	#ifdef SIGFPE
-	int caught = 0;
+	static int caught = 0;
 	#if _STD_
-	int catch(int sig)
+	static void catch(int sig)
 	#else
-	int catch(sig) int sig;
+	static void catch(sig) int sig;
 	#endif
 	{
 		signal(sig, SIG_IGN);
 		caught++;
-		return 0;
 	}
 	#endif
 	main()
@@ -232,6 +244,7 @@ tst	- output{
 		double			d;
 		double			pd;
 		double			md;
+		char*			fp;
 	#if _ast_fltmax_double
 		char*			fs = "";
 		char*			ds = "";
@@ -307,7 +320,36 @@ tst	- output{
 			printf("#define FLT_UINTMAX_MAX		FLT_ULONGLONG_MAX\n");
 		}
 		else
+		{
+			printf("#define FLT_ULONGLONG_MAX	FLT_ULONG_MAX\n");
 			printf("#define FLT_UINTMAX_MAX		FLT_ULONG_MAX\n");
+		}
+		u /= 2;
+		w /= 2;
+		printf("#define FLT_LONG_MAX		%lu.0F\n", u);
+		if (sizeof(w) > sizeof(u))
+		{
+			printf("#define FLT_LONGLONG_MAX	%llu.0F\n", w);
+			printf("#define FLT_INTMAX_MAX		FLT_LONGLONG_MAX\n");
+		}
+		else
+		{
+			printf("#define FLT_LONGLONG_MAX	FLT_LONG_MAX\n");
+			printf("#define FLT_INTMAX_MAX		FLT_LONG_MAX\n");
+		}
+		u++;
+		w++;
+		printf("#define FLT_LONG_MIN		(-%lu.0F)\n", u);
+		if (sizeof(w) > sizeof(u))
+		{
+			printf("#define FLT_LONGLONG_MIN	(-%llu.0F)\n", w);
+			printf("#define FLT_INTMAX_MIN		FLT_LONGLONG_MIN\n");
+		}
+		else
+		{
+			printf("#define FLT_LONGLONG_MIN	FLT_LONG_MIN\n");
+			printf("#define FLT_INTMAX_MIN		FLT_LONG_MIN\n");
+		}
 	#ifdef FLT_DIG
 		s = FLT_DIG;
 	#else
@@ -453,7 +495,36 @@ tst	- output{
 			printf("#define DBL_UINTMAX_MAX		DBL_ULONGLONG_MAX\n");
 		}
 		else
+		{
+			printf("#define DBL_ULONGLONG_MAX	DBL_ULONG_MAX\n");
 			printf("#define DBL_UINTMAX_MAX		DBL_ULONG_MAX\n");
+		}
+		u /= 2;
+		w /= 2;
+		printf("#define DBL_LONG_MAX		%lu.0\n", u);
+		if (sizeof(w) > sizeof(u))
+		{
+			printf("#define DBL_LONGLONG_MAX	%llu.0\n", w);
+			printf("#define DBL_INTMAX_MAX		DBL_LONGLONG_MAX\n");
+		}
+		else
+		{
+			printf("#define DBL_LONGLONG_MAX	DBL_LONG_MAX\n");
+			printf("#define DBL_INTMAX_MAX		DBL_LONG_MAX\n");
+		}
+		u++;
+		w++;
+		printf("#define DBL_LONG_MIN		(-%lu.0)\n", u);
+		if (sizeof(w) > sizeof(u))
+		{
+			printf("#define DBL_LONGLONG_MIN	(-%llu.0)\n", w);
+			printf("#define DBL_INTMAX_MIN		DBL_LONGLONG_MIN\n");
+		}
+		else
+		{
+			printf("#define DBL_LONGLONG_MIN	DBL_LONG_MIN\n");
+			printf("#define DBL_INTMAX_MIN		DBL_LONG_MIN\n");
+		}
 	#ifdef DBL_DIG
 		s = DBL_DIG;
 	#else
@@ -595,7 +666,36 @@ tst	- output{
 			printf("#define LDBL_UINTMAX_MAX	LDBL_ULONGLONG_MAX\n");
 		}
 		else
+		{
+			printf("#define LDBL_ULONGLONG_MAX	LDBL_ULONG_MAX\n");
 			printf("#define LDBL_UINTMAX_MAX	LDBL_ULONG_MAX\n");
+		}
+		u /= 2;
+		w /= 2;
+		printf("#define LDBL_LONG_MAX		%lu.0L\n", u);
+		if (sizeof(w) > sizeof(u))
+		{
+			printf("#define LDBL_LONGLONG_MAX	%llu.0L\n", w);
+			printf("#define LDBL_INTMAX_MAX		LDBL_LONGLONG_MAX\n");
+		}
+		else
+		{
+			printf("#define LDBL_LONGLONG_MAX	LDBL_LONG_MAX\n");
+			printf("#define LDBL_INTMAX_MAX		LDBL_LONG_MAX\n");
+		}
+		u++;
+		w++;
+		printf("#define LDBL_LONG_MIN		(-%lu.0L)\n", u);
+		if (sizeof(w) > sizeof(u))
+		{
+			printf("#define LDBL_LONGLONG_MIN	(-%llu.0L)\n", w);
+			printf("#define LDBL_INTMAX_MIN		LDBL_LONGLONG_MIN\n");
+		}
+		else
+		{
+			printf("#define LDBL_LONGLONG_MIN	LDBL_LONG_MIN\n");
+			printf("#define LDBL_INTMAX_MIN		LDBL_LONG_MIN\n");
+		}
 	#ifdef LDBL_DIG
 		s = LDBL_DIG;
 	#else
@@ -715,7 +815,15 @@ tst	- output{
 		printf("#define LDBL_MAX_10_EXP		%d\n", i);
 		printf("#endif\n");
 	#endif
+		fp = "LDBL";
+	#else
+		fp = "DBL";
 	#endif
+
+	printf("\n");
+	printf("#define FLTMAX_UINTMAX_MAX	%s_UINTMAX_MAX\n", fp);
+	printf("#define FLTMAX_INTMAX_MAX	%s_INTMAX_MAX\n", fp);
+	printf("#define FLTMAX_INTMAX_MIN	%s_INTMAX_MIN\n", fp);
 
 	#ifdef SIGFPE
 		if (!caught)
@@ -726,7 +834,7 @@ tst	- output{
 				caught = 1;
 		}
 		if (caught)
-			printf("#define _ast_fltsig		%d\n", SIGFPE);
+			printf("\n#define _ast_fltsig		%d\n", SIGFPE);
 	#endif
 
 		printf("\n");
@@ -747,7 +855,71 @@ tst	- output{
 	}
 }end
 
-tst	- -DN=1 - -DN=2 output{
+tst	- note{ double exponent bitfoolery }end output{
+	#include "FEATURE/common"
+	typedef union _dbl_exp_u
+	{
+		unsigned _ast_int4_t	e[sizeof(double) / 4];
+		double			f;
+	} _ast_dbl_exp_t;
+	main()
+	{
+		int			i;
+		int			j;
+		unsigned _ast_int4_t	e;
+		_ast_dbl_exp_t		a;
+		_ast_dbl_exp_t		b;
+		a.f = 1;
+		b.f = 2;
+		for (i = 0; i < sizeof(a.e) / sizeof(a.e[0]); i++)
+			if (e = a.e[i] ^ b.e[i])
+			{
+				for (j = i + 1; j < sizeof(a.e) / sizeof(a.e[0]); j++)
+					if (a.e[j] ^ b.e[j])
+						return 0;
+				printf("typedef union _ast_dbl_exp_u\n{\n\tunsigned _ast_int4_t\te[sizeof(double)/4];\n\tdouble\t\t\tf;\n} _ast_dbl_exp_t;\n\n");
+				printf("#define _ast_dbl_exp_index	%d\n", i);
+				for (i = 0; !(e & 1); e >>= 1, i++);
+				printf("#define _ast_dbl_exp_shift	%d\n\n", i);
+				return 0;
+			}
+		return 0;
+	}
+}end
+
+tst	- note{ long double exponent bitfoolery }end output{
+	#include "FEATURE/common"
+	typedef union _ast_fltmax_exp_u
+	{
+		unsigned _ast_int4_t	e[sizeof(_ast_fltmax_t) / 4];
+		_ast_fltmax_t		f;
+	} _ast_fltmax_exp_t;
+	main()
+	{
+		int			i;
+		int			j;
+		unsigned _ast_int4_t	e;
+		_ast_fltmax_exp_t	a;
+		_ast_fltmax_exp_t	b;
+		a.f = 1;
+		b.f = 2;
+		for (i = 0; i < sizeof(a.e) / sizeof(a.e[0]); i++)
+			if (e = a.e[i] ^ b.e[i])
+			{
+				for (j = i + 1; j < sizeof(a.e) / sizeof(a.e[0]); j++)
+					if (a.e[j] ^ b.e[j])
+						return 0;
+				printf("typedef union _fltmax_exp_u\n{\n\tunsigned _ast_int4_t\te[sizeof(_ast_fltmax_t)/4];\n\t_ast_fltmax_t\t\tf;\n} _ast_fltmax_exp_t;\n\n");
+				printf("#define _ast_fltmax_exp_index\t%d\n", i);
+				for (i = 0; !(e & 1); e >>= 1, i++);
+				printf("#define _ast_fltmax_exp_shift\t%d\n\n", i);
+				return 0;
+			}
+		return 0;
+	}
+}end
+
+tst	- -DN=1 - -DN=2 note{ _ast_fltmax_t maximum integral type }end output{
 	main()
 	{
 	#if N == 1
@@ -765,7 +937,7 @@ tst	- -DN=1 - -DN=2 output{
 	}
 }end
 
-tst	- -lm -DEXP=1 - -DADD=1 - -DMPY=1 output{
+tst	- -lm -DEXP=1 - -DADD=1 - -DMPY=1 note{ nan memory representations }end output{
 	#include "FEATURE/common"
 	#include <sys/types.h>
 	#include <signal.h>

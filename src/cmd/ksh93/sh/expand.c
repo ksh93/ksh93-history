@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -30,7 +30,7 @@
  *
  */
 
-#ifdef KSHELL
+#if KSHELL
 #   include	"defs.h"
 #   include	"variables.h"
 #   include	"test.h"
@@ -45,11 +45,11 @@
 #include	"io.h"
 #include	"path.h"
 
-#ifndef SHOPT_BRACEPAT
+#if !SHOPT_BRACEPAT
 #   define SHOPT_BRACEPAT	0
 #endif
 
-#ifdef KSHELL
+#if KSHELL
 #   define argbegin	argnxt.cp
     static	const char	*sufstr;
     static	int		suflen;
@@ -104,7 +104,7 @@ int path_expand(const char *pattern, struct argnod **arghead)
 		flags |= GLOB_MARK;
 	if(sh_isstate(SH_COMPLETE))
 	{
-#ifdef KSHELL
+#if KSHELL
 		extra += scantree(sh.alias_tree,pattern,arghead); 
 		extra += scantree(sh.fun_tree,pattern,arghead); 
 #   if GLOB_VERSION >= 20010916L
@@ -131,7 +131,7 @@ int path_expand(const char *pattern, struct argnod **arghead)
 }
 
 
-#ifdef KSHELL
+#if KSHELL
 
 /*
  * scan tree and add each name that matches the given pattern
@@ -175,7 +175,7 @@ int path_complete(const char *name,register const char *suffix, struct argnod **
 
 #endif
 
-#ifdef SHOPT_BRACEPAT
+#if SHOPT_BRACEPAT
 int path_generate(struct argnod *todo, struct argnod **arghead)
 /*@
 	assume todo!=0;

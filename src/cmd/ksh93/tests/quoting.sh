@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1982-2002 AT&T Corp.                #
+#                Copyright (c) 1982-2003 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -24,7 +24,7 @@
 function err_exit
 {
 	print -u2 -n "\t"
-	print -u2 -r ${Command}[$1]: "${@:2}"
+	print -u2 -r $Command[$1]: "${@:2}"
 	let Errors+=1
 }
 alias err_exit='err_exit $LINENO'
@@ -161,16 +161,6 @@ x='   hello    world    '
 set -- $x
 if	(( $# != 2 ))
 then	err_exit 'field splitting error'
-fi
-set -- $(
-i=
-for j in 0 1
-do
-	print -r -- '`\.\.\.`'"$i"
-done
-)
-if	[[ "$1" != "$2" ]]
-then	err_exit 'loop optimization quoting bug'
 fi
 x=$(print -r -- '1234567890123456789012345678901234567890123456789012345678901234567890 \
 1234567890123456789012345678901234567890123456789012345678901234567890 \
@@ -315,17 +305,21 @@ fi
 ###########################################################
 ###########################################################
 print foo) ]] || err_exit "command subsitution with long comments broken"
-x=$'print -r s/\\(\\<3d\\>\\)/\\\\h\'0*1\'\\1\\\\h\'0\'/'
-set +f
-unset IFS
-if	[[ $($x) != $'s/\\(\\<3d\\>\\)/\\\\h\'0*1\'\\1\\\\h\'0\'/' ]]
-then	err_exit 'complex quoting with pattern chars not working'
-fi
-x=hi
-set -- "$x[$x]\c"
-[[ $1 == 'hi[hi]\c' ]] ||  err_exit "double quotes with [] error"
-set -- "$x{}\c"
-[[ $1 == 'hi{}\c' ]] || err_exit "double quotes with {} error"
-[[ $(print -r -- /*'/$x)') ==  '/*/$x)' ]] || err_exit $'/*\'/$x)\' not correct' 
-[[ $(print -r -- /*'-/$x)')  ==  '/*-/$x)' ]] || err_exit $'/*\'-/$x)\' not correct'
+subject='some/other/words'
+re='(?*)/(?*)/(?*)'
+[[ ${subject/${re}/\3} != words ]] && err_exit 'string replacement with \3 not working'
+[[ ${subject/${re}/'\3'} != '\3' ]] && err_exit 'string replacement with '"'\3'"' not working'
+[[ ${subject/${re}/"\\3"} != '\3' ]] && err_exit 'string replacement with "\\3" not working'
+[[ ${subject/${re}/"\3"} != '\3' ]] && err_exit 'string replacement with "\3" not working'
+string='\3'
+[[ ${subject/${re}/${string}} != words ]] && err_exit 'string replacement with $string not working with string=\3'
+[[ ${subject/${re}/"${string}"} != '\3' ]] && err_exit 'string replacement with "$string" not working with  string=\3'
+string='\\3'
+[[ ${subject/${re}/${string}} != '\3' ]] && err_exit 'string replacement with $string not working with string=\\3'
+[[ ${subject/${re}/"${string}"} != '\\3' ]] && err_exit 'string replacement with "$string" not working with  string=\\3'
+[[ ${subject/${re}/\4} != '\4' ]] && err_exit 'string replacement with \4 not working'
+[[ ${subject/${re}/'\4'} != '\4' ]] && err_exit 'string replacement with '\4' not working'
+string='\4'
+[[ ${subject/${re}/${string}} != '\4' ]] && err_exit 'string replacement with $string not working with string=\4'
+[[ ${subject/${re}/"${string}"} != '\4' ]] && err_exit 'string replacement with "$string" not working with  string=\4'
 exit $((Errors))

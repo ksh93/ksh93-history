@@ -2,7 +2,7 @@
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)make.probe (AT&T Research) 2002-09-11
+# @(#)make.probe (AT&T Research) 2002-12-17
 #
 # C probe for make
 #
@@ -14,7 +14,9 @@ probe_debug="-g"
 probe_ld='ld "$cc"'
 probe_ldlib="LD_LIBRARY_PATH LIBPATH LPATH"
 probe_ldmap="'-Wl,-M' '-Qoption ld -M' '-Wl,-m' '-m'"
+probe_ldorigin="-Wl,-z,origin"
 probe_ldrunpath="-Wl,-R, -R -Wl,-rpath, -L"
+probe_ldstrip="'-s -mr' -Wl,-s"
 probe_lib="a lib"
 probe_lib_append="/usr/lib/pa1.1"
 probe_lib_all_undef="-all -notall -all -none -Bwhole-archive -Bno-whole-archive -whole-archive -no-whole-archive -Wl,-whole-archive -Wl,-no-whole-archive -all_load '' -Wl,-zallextract -Wl,-zdefaultextract"
@@ -33,7 +35,7 @@ probe_shared_registry_file='registry.ld'
 probe_shared_registry_path="\$(LIBDIR)/$probe_shared_registry_file"
 probe_strict="'-ansi -pedantic' '-ansi -strict' -strict -ansi"
 probe_strip="strip"
-probe_stripflags="-f"
+probe_stripflags="'-f -s' -f -s"
 probe_unresolved="'-expect_unresolved \"*\"'"
 probe_warn="-Wall -fullwarn -w3 '-A -A' +w1"
 
@@ -78,6 +80,9 @@ const int g(x,y)=1;
 extern int c(int);' > stdc.$src
 echo 'extern int f(); main() { return f(); }' > sovmain.$src
 echo 'int f() { return 0; }' > sovlib.$src
+echo '#include <stdio.h>
+int i;
+main(){int j;j = i * 10;return j;}' > strip.$src
 echo 'template <class T> void f(T){}
 int main(){f(1);return 0;}' > toucho.$src
 echo '#if defined(__STDC__) || defined(__cplusplus)
@@ -102,6 +107,7 @@ exectype=
 iminus=
 implicitc=
 lddynamic=
+ldorigin=
 ldrunpath=
 ldscript=
 ldstatic=
@@ -471,6 +477,27 @@ then	eval set x $probe_stripflags
 	done
 fi
 
+rm -f strip.exe
+if	$cc -o strip.exe strip.$src
+then	z=`wc -c < strip.exe`
+	eval set x $probe_ldstrip
+	while	:
+	do	shift
+		case $# in
+		0)	break ;;
+		esac
+		rm -f strip.exe
+		if	$cc -o strip.exe $1 strip.$src
+		then	case `wc -c < strip.exe` in
+			$z)	;;
+			*)	ldstrip=$1
+				break
+				;;
+			esac
+		fi
+	done
+fi
+
 case $pic:$so:$dynamic:$static in
 :::)	: lets get specifical
 	while	:
@@ -740,6 +767,18 @@ case $pic:$so:$dynamic:$static in
 					grep -c /proberun/ require.exe >/dev/null &&
 					grep -c /runprobe/ require.exe > /dev/null
 				then	ldrunpath=$1
+					eval set x $probe_ldorigin
+					while	:
+					do	shift
+						case $# in
+						0)	break ;;
+						esac
+						rm -f require.exe
+						if	$cc -o require.exe $1 $ldrunpath"$p" require.$obj
+						then	ldorigin="$1 $ldrunpath"'\$ORIGIN/$(BINDIR:P=R=$(DLLDIR))'
+							break
+						fi
+					done
 					break
 				fi
 			done
@@ -1356,13 +1395,13 @@ esac
 
 # shellmagic defined if installed shell scripts need magic
 
-echo 'exec 4<&0
+echo ': got magic :
 echo ok' > ok
 chmod +x ok
 case `(eval ./ok | /bin/sh) 2>/dev/null` in
 ok)	;;
 *)	echo '#!/bin/env sh
-exec 4<&0
+: got magic :
 echo ok' > ok
 	chmod +x ok
 	case `(eval ./ok | /bin/sh) 2>/dev/null` in
@@ -1399,8 +1438,10 @@ CC_EXECTYPE=$exectype
 CC_HOSTTYPE=$hosttype
 CC_LD=$ld
 CC_LD_DYNAMIC=$lddynamic
+CC_LD_ORIGIN=$ldorigin
 CC_LD_RUNPATH=$ldrunpath
 CC_LD_STATIC=$ldstatic
+CC_LD_STRIP=$ldstrip
 CC_LIB_DLL=$lib_dll
 CC_LIB_ALL=$lib_all
 CC_LIB_UNDEF=$lib_undef
@@ -1470,8 +1511,10 @@ echo CC.EXECTYPE = $CC_EXECTYPE
 echo CC.HOSTTYPE = $CC_HOSTTYPE
 echo CC.LD = $CC_LD
 echo CC.LD.DYNAMIC = $CC_LD_DYNAMIC
+echo CC.LD.ORIGIN = $CC_LD_ORIGIN
 echo CC.LD.RUNPATH = $CC_LD_RUNPATH
 echo CC.LD.STATIC = $CC_LD_STATIC
+echo CC.LD.STRIP = $CC_LD_STRIP
 echo CC.LIB.DLL = $CC_LIB_DLL
 echo CC.LIB.ALL = $CC_LIB_ALL
 echo CC.LIB.UNDEF = $CC_LIB_UNDEF

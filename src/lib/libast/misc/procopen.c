@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -33,33 +33,22 @@
  *
  * _ contains the process path name and is
  * placed at the top of the environment
- *
- * define USE_SPAWN=1 if spawnveg() is preferred over fork()/exec()
- * define USE_SPAWN=2 to use spawnveg() as the only process primitve
  */
 
 #include "proclib.h"
 
 #include <ls.h>
 
+/*
+ * not quite ready for _use_spawnveg 
+ */
+
+#if _use_spawnveg && _lib_fork
+#undef	_use_spawnveg
+#endif
+
 #ifndef DEBUG_PROC
 #define DEBUG_PROC	1
-#endif
-
-#if USE_SPAWN > 1
-#undef	_lib_fork
-#else
-#if !_lib_fork
-#undef	USE_SPAWN
-#endif
-#endif
-
-#ifndef USE_SPAWN
-#if !_lib_fork || _map_spawnve
-#define USE_SPAWN	1
-#else
-#define USE_SPAWN	0
-#endif
 #endif
 
 #if _lib_socketpair
@@ -104,25 +93,27 @@ setopt(register void* a, register const void* p, register int n, const char* v)
 	NoP(v);
 	if (p)
 	{
-		if (n) *((int*)a) |= ((Namval_t*)p)->value;
-		else *((int*)a) &= ~((Namval_t*)p)->value;
+		if (n)
+			*((int*)a) |= ((Namval_t*)p)->value;
+		else
+			*((int*)a) &= ~((Namval_t*)p)->value;
 	}
 	return 0;
 }
 
 #endif
 
-#if USE_SPAWN
+#if _use_spawnveg
 
-typedef struct
+typedef struct Fd_s
 {
 	short		fd;
 	short		flag;
 } Fd_t;
 
-typedef struct Mod
+typedef struct Mod_s
 {
-	struct Mod*	next;
+	struct Mod_s*	next;
 	short		op;
 	short		save;
 
@@ -140,8 +131,6 @@ typedef struct Mod
 	}		arg;
 
 } Modify_t;
-
-static Modify_t*	mods;
 
 #endif
 
@@ -181,9 +170,11 @@ modify(Proc_t* proc, int forked, int op, long arg1, long arg2)
 				if (arg2 != PROC_ARG_NULL)
 				{
 					close(arg2);
-					if (fcntl(arg1, F_DUPFD, arg2) != arg2) return -1;
+					if (fcntl(arg1, F_DUPFD, arg2) != arg2)
+						return -1;
 				}
-				if (op & PROC_FD_CHILD) close(arg1);
+				if (op & PROC_FD_CHILD)
+					close(arg1);
 			}
 			break;
 		case PROC_sig_dfl:
@@ -210,19 +201,20 @@ modify(Proc_t* proc, int forked, int op, long arg1, long arg2)
 			return -1;
 		}
 	}
-#if USE_SPAWN
+#if _use_spawnveg
 	else
 #endif
 #else
 	NoP(forked);
 #endif
-#if USE_SPAWN
+#if _use_spawnveg
 	{
 		register Modify_t*	m;
 
-		if (!(m = newof(NiL, Modify_t, 1, 0))) return -1;
-		m->next = mods;
-		mods = m;
+		if (!(m = newof(NiL, Modify_t, 1, 0)))
+			return -1;
+		m->next = proc->mods;
+		proc->mods = m;
 		switch (m->op = op)
 		{
 		case PROC_fd_dup:
@@ -243,39 +235,47 @@ modify(Proc_t* proc, int forked, int op, long arg1, long arg2)
 					}
 					fcntl(m->save, F_SETFD, FD_CLOEXEC);
 					close(arg2);
-					if (fcntl(arg1, F_DUPFD, arg2) != arg2) return -1;
-					if (op & PROC_FD_CHILD) close(arg1);
+					if (fcntl(arg1, F_DUPFD, arg2) != arg2)
+						return -1;
+					if (op & PROC_FD_CHILD)
+						close(arg1);
 				}
 				else if (op & PROC_FD_CHILD)
 				{
-					if (m->arg.fd.parent.flag) break;
+					if (m->arg.fd.parent.flag)
+						break;
 					fcntl(arg1, F_SETFD, FD_CLOEXEC);
 				}
-				else if (!m->arg.fd.parent.flag) break;
-				else fcntl(arg1, F_SETFD, 0);
+				else if (!m->arg.fd.parent.flag)
+					break;
+				else
+					fcntl(arg1, F_SETFD, 0);
 				return 0;
 			}
 			break;
 		case PROC_sig_dfl:
-			if ((m->arg.handler = signal(arg1, SIG_DFL)) == SIG_DFL) break;
+			if ((m->arg.handler = signal(arg1, SIG_DFL)) == SIG_DFL)
+				break;
 			m->save = (short)arg1;
 			return 0;
 		case PROC_sig_ign:
-			if ((m->arg.handler = signal(arg1, SIG_IGN)) == SIG_IGN) break;
+			if ((m->arg.handler = signal(arg1, SIG_IGN)) == SIG_IGN)
+				break;
 			m->save = (short)arg1;
 			return 0;
 		case PROC_sys_pgrp:
 			proc->pgrp = arg1;
 			break;
 		case PROC_sys_umask:
-			if ((m->save = (short)umask(arg1)) == arg1) break;
+			if ((m->save = (short)umask(arg1)) == arg1)
+				break;
 			return 0;
 		default:
-			mods = m->next;
+			proc->mods = m->next;
 			free(m);
 			return -1;
 		}
-		mods = m->next;
+		proc->mods = m->next;
 		free(m);
 	}
 #else
@@ -284,7 +284,7 @@ modify(Proc_t* proc, int forked, int op, long arg1, long arg2)
 	return 0;
 }
 
-#if USE_SPAWN
+#if _use_spawnveg
 
 /*
  * restore modifications
@@ -299,8 +299,8 @@ restore(Proc_t* proc)
 
 	NoP(proc);
 	oerrno = errno;
-	m = mods;
-	mods = 0;
+	m = proc->mods;
+	proc->mods = 0;
 	while (m)
 	{
 		switch (m->op)
@@ -382,7 +382,7 @@ procopen(const char* cmd, char** argv, char** envv, long* modv, long flags)
 #if defined(SIGCHLD) && ( _lib_sigprocmask || _lib_sigsetmask )
 	Sig_mask_t		mask;
 #endif
-#if USE_SPAWN
+#if _use_spawnveg
 	int			newenv = 0;
 #endif
 #if DEBUG_PROC
@@ -402,7 +402,8 @@ procopen(const char* cmd, char** argv, char** envv, long* modv, long flags)
 #if !_pipe_rw && !_lib_socketpair
 	poi[0] = poi[1] = -1;
 #endif
-	if (cmd && (!*cmd || !pathpath(path, cmd, NiL, PATH_REGULAR|PATH_EXECUTE))) goto bad;
+	if (cmd && (!*cmd || !pathpath(path, cmd, NiL, PATH_REGULAR|PATH_EXECUTE)))
+		goto bad;
 	switch (flags & (PROC_READ|PROC_WRITE))
 	{
 	case 0:
@@ -418,8 +419,10 @@ procopen(const char* cmd, char** argv, char** envv, long* modv, long flags)
 		procfd = 2;
 		break;
 	}
-	if (proc_default.pid == -1) proc = &proc_default;
-	else if (!(proc = newof(0, Proc_t, 1, 0))) goto bad;
+	if (proc_default.pid == -1)
+		proc = &proc_default;
+	else if (!(proc = newof(0, Proc_t, 1, 0)))
+		goto bad;
 	proc->pid = -1;
 	proc->pgrp = 0;
 	proc->rfd = -1;
@@ -428,25 +431,30 @@ procopen(const char* cmd, char** argv, char** envv, long* modv, long flags)
 	sfsync(NiL);
 	if (environ && (envv || (flags & PROC_PARANOID) || argv && (environ[0][0] != '_' || environ[0][1] != '=')))
 	{
-		if (!setenviron(NiL)) goto bad;
-#if USE_SPAWN
+		if (!setenviron(NiL))
+			goto bad;
+#if _use_spawnveg
 		newenv = 1;
 #endif
 	}
 	if (procfd >= 0)
 	{
 #if _pipe_rw
-		if (pipe(pio)) goto bad;
+		if (pipe(pio))
+			goto bad;
 #else
 		if (procfd > 1)
 		{
 #if _lib_socketpair
-			if (socketpair(AF_UNIX, SOCK_STREAM, 0, pio)) goto bad;
+			if (socketpair(AF_UNIX, SOCK_STREAM, 0, pio))
+				goto bad;
 #else
-			if (pipe(pio) || pipe(poi)) goto bad;
+			if (pipe(pio) || pipe(poi))
+				goto bad;
 #endif
 		}
-		else if (pipe(pio)) goto bad;
+		else if (pipe(pio))
+			goto bad;
 #endif
 	}
 	if (flags & PROC_OVERLAY)
@@ -454,8 +462,9 @@ procopen(const char* cmd, char** argv, char** envv, long* modv, long flags)
 		proc->pid = 0;
 		forked = 1;
 	}
-#if USE_SPAWN
-	else if (argv) proc->pid = 0;
+#if _use_spawnveg
+	else if (argv)
+		proc->pid = 0;
 #endif
 #if _lib_fork
 	else
@@ -504,7 +513,7 @@ procopen(const char* cmd, char** argv, char** envv, long* modv, long flags)
 #endif
 	if (!proc->pid)
 	{
-#if USE_SPAWN
+#if _use_spawnveg
 		char**		oenviron = 0;
 		char*		oenviron0 = 0;
 
@@ -557,24 +566,33 @@ procopen(const char* cmd, char** argv, char** envv, long* modv, long flags)
 				setuid(geteuid());
 				setgid(getegid());
 			}
-			if (flags & (PROC_PARANOID|PROC_GID)) setgid(getgid());
-			if (flags & (PROC_PARANOID|PROC_UID)) setuid(getuid());
+			if (flags & (PROC_PARANOID|PROC_GID))
+				setgid(getgid());
+			if (flags & (PROC_PARANOID|PROC_UID))
+				setuid(getuid());
 		}
 		if (procfd > 1)
 		{
-			if (modify(proc, forked, PROC_fd_dup|PROC_FD_CHILD, pio[0], PROC_ARG_NULL)) goto cleanup;
-			if (modify(proc, forked, PROC_fd_dup|PROC_FD_CHILD, pio[1], 1)) goto cleanup;
+			if (modify(proc, forked, PROC_fd_dup|PROC_FD_CHILD, pio[0], PROC_ARG_NULL))
+				goto cleanup;
+			if (modify(proc, forked, PROC_fd_dup|PROC_FD_CHILD, pio[1], 1))
+				goto cleanup;
 #if _pipe_rw || _lib_socketpair
-			if (modify(proc, forked, PROC_fd_dup, 1, 0)) goto cleanup;
+			if (modify(proc, forked, PROC_fd_dup, 1, 0))
+				goto cleanup;
 #else
-			if (modify(proc, forked, PROC_fd_dup|PROC_FD_CHILD, poi[0], 0)) goto cleanup;
-			if (poi[1] != 0 && modify(proc, forked, PROC_fd_dup|PROC_FD_CHILD, poi[1], PROC_ARG_NULL)) goto cleanup;
+			if (modify(proc, forked, PROC_fd_dup|PROC_FD_CHILD, poi[0], 0))
+				goto cleanup;
+			if (poi[1] != 0 && modify(proc, forked, PROC_fd_dup|PROC_FD_CHILD, poi[1], PROC_ARG_NULL))
+				goto cleanup;
 #endif
 		}
 		else if (procfd >= 0)
 		{
-			if (modify(proc, forked, PROC_fd_dup|PROC_FD_CHILD, pio[!!procfd], !!procfd)) goto cleanup;
-			if (pio[!procfd] != !!procfd && modify(proc, forked, PROC_fd_dup|PROC_FD_CHILD, pio[!procfd], PROC_ARG_NULL)) goto cleanup;
+			if (modify(proc, forked, PROC_fd_dup|PROC_FD_CHILD, pio[!!procfd], !!procfd))
+				goto cleanup;
+			if (pio[!procfd] != !!procfd && modify(proc, forked, PROC_fd_dup|PROC_FD_CHILD, pio[!procfd], PROC_ARG_NULL))
+				goto cleanup;
 		}
 		if (modv)
 			for (i = 0; n = modv[i]; i++)
@@ -584,40 +602,48 @@ procopen(const char* cmd, char** argv, char** envv, long* modv, long flags)
 				case PROC_fd_dup|PROC_FD_PARENT:
 				case PROC_fd_dup|PROC_FD_CHILD:
 				case PROC_fd_dup|PROC_FD_PARENT|PROC_FD_CHILD:
-					if (modify(proc, forked, PROC_OP(n), PROC_ARG(n, 1), PROC_ARG(n, 2))) goto cleanup;
+					if (modify(proc, forked, PROC_OP(n), PROC_ARG(n, 1), PROC_ARG(n, 2)))
+						goto cleanup;
 					break;
 				default:
-					if (modify(proc, forked, PROC_OP(n), PROC_ARG(n, 1), 0)) goto cleanup;
+					if (modify(proc, forked, PROC_OP(n), PROC_ARG(n, 1), 0))
+						goto cleanup;
 					break;
 				}
 #if _lib_fork
-		if (forked && (flags & PROC_ENVCLEAR)) environ = 0;
-#if USE_SPAWN
+		if (forked && (flags & PROC_ENVCLEAR))
+			environ = 0;
+#if _use_spawnveg
 		else
 #endif
 #endif
-#if USE_SPAWN
+#if _use_spawnveg
 		if (newenv)
 		{
 			p = environ;
 			while (*p++);
-			if (!(oenviron = (char**)memdup(environ, (p - environ) * sizeof(char*)))) goto cleanup;
+			if (!(oenviron = (char**)memdup(environ, (p - environ) * sizeof(char*))))
+				goto cleanup;
 		}
 #endif
 		if (argv)
 		{
-#if USE_SPAWN
-			if (!newenv && environ[0][0] == '_' && environ[0][1] == '=') oenviron0 = environ[0];
+#if _use_spawnveg
+			if (!newenv && environ[0][0] == '_' && environ[0][1] == '=')
+				oenviron0 = environ[0];
 #endif
 			env[0] = '_';
 			env[1] = '=';
 			env[2] = 0;
-			if (!setenviron(env)) goto cleanup;
+			if (!setenviron(env))
+				goto cleanup;
 		}
-		if ((flags & PROC_PARANOID) && !setenviron("PATH=:/bin:/usr/bin")) goto cleanup;
+		if ((flags & PROC_PARANOID) && !setenviron("PATH=:/bin:/usr/bin"))
+			goto cleanup;
 		if (p = envv)
 			while (*p)
-				if (!setenviron(*p++)) goto cleanup;
+				if (!setenviron(*p++))
+					goto cleanup;
 		p = argv;
 #if _lib_fork
 		if (forked && !p)
@@ -631,21 +657,26 @@ procopen(const char* cmd, char** argv, char** envv, long* modv, long flags)
 					sfprintf(sfstderr, "%s\n", *p++);
 			sfprintf(sfstderr, "+ %s", cmd ? path : "sh");
 			if ((p = argv) && *p)
-				while (*++p) sfprintf(sfstderr, " %s", *p);
+				while (*++p)
+					sfprintf(sfstderr, " %s", *p);
 			sfprintf(sfstderr, "\n");
 sfsync(sfstderr);
-			if (!(debug & PROC_OPT_EXEC)) _exit(0);
+			if (!(debug & PROC_OPT_EXEC))
+				_exit(0);
 			p = argv;
 		}
 #endif
 		if (cmd)
 		{
 			strcpy(env + 2, path);
-			if (forked || (flags & PROC_OVERLAY)) execve(path, p, environ);
-#if USE_SPAWN
-			else if ((proc->pid = spawnveg(path, p, environ, proc->pgrp)) != -1) goto cleanup;
+			if (forked || (flags & PROC_OVERLAY))
+				execve(path, p, environ);
+#if _use_spawnveg
+			else if ((proc->pid = spawnveg(path, p, environ, proc->pgrp)) != -1)
+				goto cleanup;
 #endif
-			if (errno != ENOEXEC) goto cleanup;
+			if (errno != ENOEXEC)
+				goto cleanup;
 
 			/*
 			 * try cmd as a shell script
@@ -654,9 +685,11 @@ sfsync(sfstderr);
 			if (!(flags & PROC_ARGMOD))
 			{
 				while (*p++);
-				if (!(v = newof(0, char*, p - argv + 2, 0))) goto cleanup;
+				if (!(v = newof(0, char*, p - argv + 2, 0)))
+					goto cleanup;
 				p = v + 2;
-				if (*argv) argv++;
+				if (*argv)
+					argv++;
 				while (*p++ = *argv++);
 				p = v + 1;
 			}
@@ -666,15 +699,19 @@ sfsync(sfstderr);
 		if (!(flags & PROC_PARANOID))
 		{
 			strcpy(env + 2, pathshell());
-			if (forked || (flags & PROC_OVERLAY)) execve(env + 2, p, environ);
-#if USE_SPAWN
-			else if ((proc->pid = spawnveg(env + 2, p, environ, proc->pgrp)) != -1) goto cleanup;
+			if (forked || (flags & PROC_OVERLAY))
+				execve(env + 2, p, environ);
+#if _use_spawnveg
+			else if ((proc->pid = spawnveg(env + 2, p, environ, proc->pgrp)) != -1)
+				goto cleanup;
 #endif
 		}
 		strcpy(env + 2, "/bin/sh");
-		if (forked || (flags & PROC_OVERLAY)) execve(env + 2, p, environ);
-#if USE_SPAWN
-		else proc->pid = spawnveg(env + 2, p, environ, proc->pgrp);
+		if (forked || (flags & PROC_OVERLAY))
+			execve(env + 2, p, environ);
+#if _use_spawnveg
+		else
+			proc->pid = spawnveg(env + 2, p, environ, proc->pgrp);
 #endif
 	cleanup:
 		if (forked)
@@ -683,18 +720,22 @@ sfsync(sfstderr);
 				_exit(errno == ENOENT ? EXIT_NOTFOUND : EXIT_NOEXEC);
 			goto bad;
 		}
-#if USE_SPAWN
-		if (v) free(v);
+#if _use_spawnveg
+		if (v)
+			free(v);
 		if (p = oenviron)
 		{
 			environ = 0;
 			while (*p)
-				if (!setenviron(*p++)) goto bad;
+				if (!setenviron(*p++))
+					goto bad;
 			free(oenviron);
 		}
-		else if (oenviron0) environ[0] = oenviron0;
+		else if (oenviron0)
+			environ[0] = oenviron0;
 		restore(proc);
-		if (flags & PROC_OVERLAY) exit(0);
+		if (flags & PROC_OVERLAY)
+			exit(0);
 #endif
 	}
 	if (proc->pid != -1)
@@ -782,11 +823,15 @@ sfsync(sfstderr);
 					close(PROC_ARG(n, 1));
 				break;
 			}
-	if (pio[0] >= 0) close(pio[0]);
-	if (pio[1] >= 0) close(pio[1]);
+	if (pio[0] >= 0)
+		close(pio[0]);
+	if (pio[1] >= 0)
+		close(pio[1]);
 #if !_pipe_rw && !_lib_socketpair
-	if (poi[0] >= 0) close(poi[0]);
-	if (poi[1] >= 0) close(poi[1]);
+	if (poi[0] >= 0)
+		close(poi[0]);
+	if (poi[1] >= 0)
+		close(poi[1]);
 #endif
 	procfree(proc);
 	return 0;

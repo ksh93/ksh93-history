@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -25,22 +25,28 @@
 *******************************************************************/
 #pragma prototyped
 /*
- * getopt interface
+ * gnu getopt interface
  */
 
-#ifndef _GETOPT_H
-#define _GETOPT_H	1
+#include <ast_getopt.h>
 
-extern int	opterr;
-extern int	optind;
-extern int	optopt;
-extern char*	optarg;
+#if !defined(_GETOPT_H) && !defined(_AST_STD_I)
 
-#ifndef NULL	/* in case <stdlib.h> or <stdio.h> got here first */
+#define _GETOPT_H		1
 
-extern int	getopt(int, char* const*, const char*);
-extern int	getsubopt(char**, char* const*, char**);
+#define no_argument		0
+#define required_argument	1
+#define optional_argument	2
 
-#endif
+struct option
+{
+	const char*	name;
+	int		has_arg;
+	int*		flag;
+	int		val;
+};
+
+extern int	getopt_long(int, char* const*, const char*, const struct option*, int*);
+extern int	getopt_long_only(int, char* const*, const char*, const struct option*, int*);
 
 #endif

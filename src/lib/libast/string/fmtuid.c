@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -80,7 +80,15 @@ fmtuid(int uid)
 	else if (ip = (Id_t*)dtmatch(dict, &uid))
 		return ip->name;
 	if (pw = getpwuid(uid))
+	{
 		name = pw->pw_name;
+#if _WINIX
+		if (streq(name, "Administrator"))
+			name = "root";
+#endif
+	}
+	else if (uid == 0)
+		name = "root";
 	else
 	{
 		name = fmtbuf(z = sizeof(uid) * 3 + 1);

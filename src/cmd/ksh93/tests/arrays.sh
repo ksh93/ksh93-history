@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1982-2002 AT&T Corp.                #
+#                Copyright (c) 1982-2003 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -316,10 +316,14 @@ for ((i=0; i < 40; i++))
 do	x[i]=$i
 done
 [[  ${#x[@]} == 40 ]] || err_exit 'index arrays loosing values'
-[[ $( ($SHELL -c 'typeset -A var; (IFS=: ; set -A var a:b:c ;print ${var[@]});:' )2>junk2) == 'a b c' ]] || err_exit 'change associative to index failed'
+[[ $( ($SHELL -c 'typeset -A var; (IFS=: ; set -A var a:b:c ;print ${var[@]});:' )2>/dev/null) == 'a b c' ]] || err_exit 'change associative to index failed'
 unset foo
 [[ $(foo=good
 for ((i=0; i < 2; i++))
 do	[[ ${foo[i]} ]] && print ok
 done) == ok ]] || err_exit 'invalid optimization for subscripted variables'
+(
+x=([foo]=bar)
+set +A x bam
+) 2> /dev/null && err_exit 'set +A with associative array should be an error'
 exit $((Errors))

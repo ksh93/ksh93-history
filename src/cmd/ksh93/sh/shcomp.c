@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -31,7 +31,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: shcomp (AT&T Labs Research) 2001-03-20 $\n]"
+"[-?\n@(#)$Id: shcomp (AT&T Labs Research) 2003-03-02 $\n]"
 USAGE_LICENSE
 "[+NAME?shcomp - compile a shell script]"
 "[+DESCRIPTION?Unless \b-D\b is specified, \bshcomp\b takes a shell script, "
@@ -60,20 +60,17 @@ USAGE_LICENSE
 "[+SEE ALSO?\bksh\b(1)]"
 ;
 
-#include	"defs.h"
+#include	<shell.h>
 #include	"shnodes.h"
-#include	"path.h"
-#include	"io.h"
-
-#define sh	(*sh_getinterp())
 
 #define CNTL(x)	((x)&037)
-#define VERSION	2
+#define VERSION	3
 static const char header[6] = { CNTL('k'),CNTL('s'),CNTL('h'),0,VERSION,0 };
 
 main(int argc, char *argv[])
 {
 	Sfio_t *in, *out;
+	Shell_t	*shp;
 	Namval_t *np;
 	union anynode *t;
 	char *cp;
@@ -97,7 +94,7 @@ main(int argc, char *argv[])
 		errormsg(SH_DICT,ERROR_usage(2),"%s",opt_info.arg);
 		break;
 	}
-	sh_init(argc,argv,(Sh_init_f)0);
+	shp = sh_init(argc,argv,(Shinit_f)0);
 	argv += opt_info.index;
 	argc -= opt_info.index;
 	if(error_info.errors || argc>2)
@@ -120,19 +117,21 @@ main(int argc, char *argv[])
 	else
 		out = sfstdout;
 	if(dflag)
-		sh_onoption(SH_DICTIONARY|SH_NOEXEC);
+	{
+		sh_onoption(SH_DICTIONARY);
+		sh_onoption(SH_NOEXEC);
+	}
 	if(nflag)
 		sh_onoption(SH_NOEXEC);
 	if(vflag)
 		sh_onoption(SH_VERBOSE);
 	if(!dflag)
 		sfwrite(out,header,sizeof(header));
-	sh.inlineno = 1;
-	sh_onstate(sh_isoption(SH_VERBOSE));
+	shp->inlineno = 1;
 	while(1)
 	{
 		stakset((char*)0,0);
-		if(t = (union anynode*)sh_parse(in,0))
+		if(t = (union anynode*)sh_parse(shp,in,0))
 		{
 			if(!dflag && sh_tdump(out,t) < 0)
 				errormsg(SH_DICT,ERROR_exit(1),"dump failed");

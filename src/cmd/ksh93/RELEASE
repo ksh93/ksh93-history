@@ -1,4 +1,60 @@
-02-11-30  --- Release ksh93n+  ---
+03-03-18  --- Release ksh93o  ---
+03-03-18  A -N unary operator was added to test and [[...]] which returns
+	  true if the file exists and the file has been modified since it
+	  was last read.
+03-03-18  The TIMEFORMAT variable was added to control the format for
+	  the time compound command.  The formatting description is
+	  described in the man page.
+03-03-06  A -N n option was added to read which causes exactly n bytes
+	  to be read unlike -n n which causes at most n bytes to be read.
+03-03-03  Three new shell variables were added.  The variable .sh.file
+	  stores the full pathname of the file that the current command
+	  was found in.  The variable .sh.fun names the current function
+	  that is running.  The variable .sh.subshell contains the depth
+	  of the current subshell or command substitution.
+03-03-03  When the DEBUG trap is executed, the current command line after
+	  expansions is placed in the variable .sh.command.  The trap
+	  is also now triggered before each iteration of a for, select,
+	  and case command and before each assignment and redirection.
+03-02-28  Function definitions are no longer stored in the history file so
+	  that set -o nolog no longer has any meaning.
+03-02-28  All function definitions can be displayed with typeset -f not
+	  just those stored in the history file.  In addition, typeset +f
+	  displays the function name followed by a comment containg the
+	  line number and the path name for the file that defined this function.
+03-02-28  A bug in which the value of $LINENO was not correct when executing
+	  command contained inside mult-line command substitutions has been
+	  fixed.
+03-02-19  Since some existing ksh88 scripts use the undocumented and
+	  unintended ability to insert a : in front of the % and # parameter
+	  expansion operators, ksh93 was modified to accept :% as equivalent
+	  to % and :# as equivalent to # with ${name op word}.
+03-02-14  A bug which could cause a core dump when reading from standard
+	  error when standard error was a pty has been fixed.
+03-02-14  The shell arithmetic was modified to use long double on systems
+	  that provide this data type.
+03-02-09  A bug in which a function located in the first directory in FPATH
+	  would not be found when the last component of PATH was . and the
+	  current directory was one of the directories in PATH has been fixed.
+03-02-07  The trap and kill builtin commands now accept a leading SIG prefix
+	  on the signal names as documented.
+03-02-05  A bug in the expansion of ${var/$pattern}, when pattern contained
+	  \[ has been fixed.
+03-02-05  A bug in which .sh.match[n], n>0, was not being set for substring
+	  matches with % and %% has been fixed.
+03-01-15  A bug in which getopts did not work for numerical arguments specified
+	  as n#var in the getopts string has been fixed.
+03-01-09  A bug in which using ${.sh.match} multiple times could lead to
+	  a memory exception has been fixed.
+03-01-06  A bug in the expansion of ${var/pattern/$string} in the case that
+	  $string contains \digit has been fixed. 
+03-01-02  A -P option was added for systems such as Solaris 8 that support
+	  profile shell.
+03-01-02  For backward compatibility with ksh88, arithmetic expansion
+	  with ((...)) and let has been modified so that if x is a zero-filled
+	  variable, $x will not be treated as an octal constant.
+
+02-12-05  --- Release ksh93n+  ---
 02-11-30  A bug that can show up in evaluating arithmetic statements that
 	  are in an autoloaded function when the function is autoload from
 	  another function has been fixed.
@@ -55,10 +111,10 @@
 02-09-03  A bug in which an assignment of the form name=(integer x=3)
 	  could be interpretted as an array assignment rather than a
 	  compound variable assignment has been fixed.
-02-08-19  A command completion bug which occured on file systems that
+02-08-19  A command completion bug which occurred on file systems that
 	  are case insensitive has been fixed.
 02-08-19  A bug which could lead to an exception on some systems (for
-	  example FREEBSD) which occured when setting PATH has been fixed.
+	  example FREEBSD) which occurred when setting PATH has been fixed.
 02-08-11  A bug in arithmetic rounding in which a value input as a decimal
 	  string would output as a rounded version of the string has
 	  been fixed.
@@ -83,8 +139,8 @@
 	  builtin to terminate prematurely has been fixed.
 02-06-17  A bug in which the shell could core dump if getopts was called
 	  when the OPTIND variable contained a negative value has been fixed. 
-02-06-10  The edit mode prompt has been modified to hande escape sequences.  
-02-06-10  A bug which occured for interactive shells in which the builtin
+02-06-10  The edit mode prompt has been modified to handle escape sequences.  
+02-06-10  A bug which occurred for interactive shells in which the builtin
 	  cat command was used in command substitution on a file whose
 	  size was larger than PIPE_BUF has been fixed.
 02-06-10  A bug in which the trap on ERR was not being processed when
@@ -99,7 +155,7 @@
 02-05-07  A bug in substitutions of the form ${var/pattern/string} in which
 	  a backslash was inserted in the replacement string when it contained
 	  a special pattern character has been fixed.
-02-05-01  A bug in the emacs edit mode which occured in versions compiled
+02-05-01  A bug in the emacs edit mode which occurred in versions compiled
 	  for multibyte character sets which occurred when a repeated search
 	  was requested after a long line had been returned for the previous
 	  search has been fixed.
@@ -124,7 +180,7 @@
 02-01-07  A bug in which the first word of a compound assignment,
 	  x=(word ...), was treated as a reserved word has been fixed.
 02-01-07  A bug in the handling of \ when noglob was enabled and a
-	  substitution of the form ${word op pattern} occured in the
+	  substitution of the form ${word op pattern} occurred in the
 	  same word has been fixed.
 02-01-07  A compilation option, CMDLIB_BLTIN in the file OPTION, has
 	  been added.  When this options is set, all commands implemented

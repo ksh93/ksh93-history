@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -360,7 +360,7 @@ S2I_function(a, e, base) const char* a; char** e; int base;
 			}
 			else if (c != thousand)
 				break;
-			else if (!p && (s - b) > 3)
+			else if (!p && (s - b) > 4)
 			{
 				if (e)
 					*e = (char*)s - 1;

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -42,7 +42,6 @@
 #include	"builtins.h"
 #include	"jobs.h"
 #include	"edit.h"
-#include	"national.h"
 
 /* error messages */
 const char e_timewarn[]		= "\r\n\ashell will timeout in 60 seconds due to inactivity";
@@ -66,6 +65,7 @@ const char e_subst[]		= "%s: bad substitution";
 const char e_create[]		= "%s: cannot create";
 const char e_tmpcreate[]	= "cannot create temporary file";
 const char e_restricted[]	= "%s: restricted";
+const char e_pfsh[]		= "%s: disabled in profile shell";
 const char e_pexists[]		= "process already exists";
 const char e_exists[]		= "%s: file already exists";
 const char e_pipe[]		= "cannot create pipe";
@@ -99,6 +99,7 @@ const char e_noref[]		= "%s: no reference name";
 const char e_selfref[]		= "%s: invalid self reference";
 const char e_noalias[]		= "%s: alias not found\n";
 const char e_format[]		= "%s: bad format";
+const char e_badtformat[]	= "%c: bad format character in time format";
 const char e_nolabels[]		= "%s: label not implemented";
 const char e_notimp[]		= "%s: not implemented";
 const char e_nosupport[]	= "not supported";
@@ -118,7 +119,6 @@ const char is_alias[]		= "%s is an alias for ";
 const char is_xalias[]		= "%s is an exported alias for ";
 const char is_talias[]		= "is a tracked alias for";
 const char is_function[]	= " is a function";
-const char is_xfunction[]	= " is an exported function";
 const char is_ufunction[]	= " is an undefined function";
 #ifdef JOBS
 #   ifdef SIGTSTP
@@ -140,8 +140,9 @@ const char is_ufunction[]	= " is an undefined function";
 const char e_coredump[]		= "(coredump)";
 const char e_alphanum[]		= "[_[:alpha:]]*([_[:alnum:]])";
 const char e_devfdNN[]		= "/dev/fd/+([0-9])";
+const char e_devfdstd[]		= "/dev/@(fd/+([0-9])|std@(in|out|err))";
 const char e_signo[]		= "Signal %d";
-#ifdef SHOPT_FS_3D
+#if SHOPT_FS_3D
     const char e_cantget[]	= "cannot get %s";
     const char e_cantset[]	= "cannot set %s";
     const char e_mapping[]	= "mapping";
@@ -158,18 +159,16 @@ const char e_devnull[]		= "/dev/null";
 const char e_traceprompt[]	= "+ ";
 const char e_supprompt[]	= "# ";
 const char e_stdprompt[]	= "$ ";
-const char e_profile[]		= "${HOME:-.}/.profile";
+const char e_profile[]		= "${HOME}/.profile";
 const char e_sysprofile[]	= "/etc/profile";
 const char e_suidprofile[]	= "/etc/suid_profile";
 const char e_crondir[]		= "/usr/spool/cron/atjobs";
 const char e_prohibited[]	= "login setuid/setgid shells prohibited";
-#ifdef SHOPT_SUID_EXEC
+#if SHOPT_SUID_EXEC
    const char e_suidexec[]	= "/etc/suid_exec";
 #endif /* SHOPT_SUID_EXEC */
 const char hist_fname[]		= "/.sh_history";
 const char e_dot[]		= ".";
 const char e_envmarker[]	= "A__z";
-const char e_real[]		= "\nreal";
-const char e_user[]		= "user";
-const char e_sys[]		= "sys";
+const char e_timeformat[]	= "\nreal\t%2lR\nuser\t%2lU\nsys\t%2lS";
 const char e_dict[]		= "libshell";

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -29,8 +29,6 @@
  *
  *   David Korn
  *   AT&T Labs
- *   research!dgk
- *
  */
 
 #include	"defs.h"
@@ -60,8 +58,8 @@ union types_t
 	char		**p;
 };
 
-    struct printf
-    {
+struct printf
+{
 	Sffmt_t		hdr;
 	int		argsize;
 	int		intvar;
@@ -69,14 +67,10 @@ union types_t
 	char		cescape;
 	char		err;
 	Shell_t		*sh;
-    };
-#if SFIO_VERSION >= 19980401L
-    static int		extend(Sfio_t*,void*, Sffmt_t*);
-#else
-    static int		getarg(Sfio_t*,void*, Sffmt_t*);
-    static int		extend(Sfio_t*, void*, int, Sffmt_t*);
-#endif
-    static const char   preformat[] = "";
+};
+
+static int		extend(Sfio_t*,void*, Sffmt_t*);
+static const char   	preformat[] = "";
 static char		*genformat(char*);
 static int		fmtvecho(const char*, struct printf*);
 
@@ -108,7 +102,7 @@ static int outexceptf(Sfio_t* iop, int mode, void* data, Sfdisc_t* dp)
 	return(0);
 }
 
-#ifndef	SHOPT_ECHOPRINT
+#if !SHOPT_ECHOPRINT
    int    B_echo(int argc, char *argv[],void *extra)
    {
 	static char bsd_univ;
@@ -294,14 +288,8 @@ skip2:
 		pdata.err = 0;
 		pdata.cescape = 0;
 		memset(&pdata, 0, sizeof(pdata));
-#if SFIO_VERSION >= 19970311L
 		pdata.hdr.version = SFIO_VERSION;
-#endif
 		pdata.hdr.extf = extend;
-#if SFIO_VERSION < 19980401L
-		pdata.hdr.argf = getarg;
-		pdata.hdr.form = format;
-#endif
 		pdata.nextarg = argv;
 		sh_offstate(SH_STOPOK);
 		pool=sfpool(sfstderr,NIL(Sfio_t*),SF_WRITE);
@@ -309,9 +297,7 @@ skip2:
 		{
 			if(shp->trapnote&SH_SIGSET)
 				break;
-#if SFIO_VERSION >= 19980401L
 			pdata.hdr.form = format;
-#endif
 			sfprintf(outfile,"%!",&pdata);
 		} while(*pdata.nextarg && pdata.nextarg!=argv);
 		if(pdata.nextarg == nullarg && pdata.argsize>0)
@@ -415,15 +401,13 @@ static char *genformat(char *format)
 	return(fp);
 }
 
-#if SFIO_VERSION >= 19980401L
-
 static char *fmthtml(const char *string)
 {
 	register const char *cp = string;
 	register int c, offset = staktell();
 	while(c= *(unsigned char*)cp++)
 	{
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 		register int s;
 		if((s=mbsize(cp-1)) > 1)
 		{
@@ -452,13 +436,77 @@ static char *fmthtml(const char *string)
 	return(stakptr(offset));
 }
 
+static void *fmtbase64(char *string, ssize_t *sz)
+{
+	char			*cp;
+	Sfdouble_t		d;
+	size_t			size;
+	Namval_t		*np = nv_open(string, NiL, NV_VARNAME|NV_NOASSIGN|NV_NOADD);
+	static union types_t	number;
+	if(!np)
+		return("");
+	if(nv_isattr(np,NV_INTEGER))
+	{
+		d = nv_getnum(np);
+		if(nv_isattr(np,NV_DOUBLE))
+		{
+			if(nv_isattr(np,NV_LONG))
+			{
+				size = sizeof(Sfdouble_t);
+				number.ld = d;
+			}
+			else if(nv_isattr(np,NV_SHORT))
+			{
+				size = sizeof(float);
+				number.f = (float)d;
+			}
+			else
+			{
+				size = sizeof(double);
+				number.d = (double)d;
+			}
+		}
+		else
+		{
+			if(nv_isattr(np,NV_LONG))
+			{
+				size =  sizeof(Sflong_t);
+				number.ll = (Sflong_t)d;
+			}
+			else if(nv_isattr(np,NV_SHORT))
+			{
+				size =  sizeof(short);
+				number.h = (short)d;
+			}
+			else
+			{
+				size =  sizeof(short);
+				number.i = (int)d; 
+			}
+		}
+		if(sz)
+			*sz = size;
+		return((void*)&number);
+	}
+	if(nv_isattr(np,NV_BINARY))
+		nv_onattr(np,NV_RAW);
+	cp = nv_getval(np);
+	if(nv_isattr(np,NV_BINARY))
+		nv_offattr(np,NV_RAW);
+	if((size = nv_size(np))==0)
+		size = strlen(cp);
+	if(sz)
+		*sz = size;
+	return((void*)cp);
+}
+
 static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 {
 	char*		lastchar = "";
 	register int	neg = 0;
-	double		d;
-	double		longmin = LONG_MIN;
-	double		longmax = LONG_MAX;
+	Sfdouble_t	d;
+	Sfdouble_t	longmin = LDBL_LONGLONG_MIN;
+	Sfdouble_t	longmax = LDBL_LONGLONG_MAX;
 	int		format = fe->fmt;
 	int		n;
 	union types_t*	value = (union types_t*)v;
@@ -477,6 +525,7 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 		case 's':
 		case 'q':
 		case 'H':
+		case 'B':
 		case 'P':
 		case 'R':
 		case 'Z':
@@ -496,21 +545,21 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 		case 'A':
 		case 'E':
 		case 'G':
-			value->d = 0.;
+			value->ld = 0.;
 			break;
 		case 'n':
 			value->ip = &pp->intvar;
 			break;
 		case 'Q':
-			value->l = 0;
+			value->ll = 0;
 			break;
 		case 'T':
 			fe->fmt = 'd';
-			value->l = time(NIL(time_t*));
+			value->ll = time(NIL(time_t*));
 			break;
 		default:
 			fe->fmt = 'd';
-			value->l = 0;
+			value->ll = 0;
 			break;
 		}
 	}
@@ -519,7 +568,7 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 		switch(format)
 		{
 		case 'p':
-			value->p = (char**)strtol(argp,&lastchar,10);
+			value->p = (char**)strtoll(argp,&lastchar,10);
 			break;
 		case 'n':
 		{
@@ -543,6 +592,7 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 		case 'q':
 		case 'b':
 		case 's':
+		case 'B':
 		case 'H':
 		case 'P':
 		case 'R':
@@ -572,11 +622,11 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 		case 'X':
 		case 'u':
 		case 'U':
-			longmax = (unsigned long)ULONG_MAX;
+			longmax = LDBL_ULONGLONG_MAX;
 		case '.':
 			if(fe->size==2 && strchr("bcsqHPRQTZ",*fe->form))
 			{
-				value->l = ((unsigned char*)argp)[0];
+				value->ll = ((unsigned char*)argp)[0];
 				break;
 			}
 		case 'd':
@@ -586,7 +636,7 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 			{
 			case '\'':
 			case '"':
-				value->l = ((unsigned char*)argp)[1];
+				value->ll = ((unsigned char*)argp)[1];
 				break;
 			default:
 				d = sh_strnum(argp,&lastchar,0);
@@ -602,17 +652,17 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 					pp->err = 1;
 					d = longmax;
 				}
-				value->l = (long)d;
+				value->ll = (Sflong_t)d;
 				if(lastchar == *pp->nextarg)
 				{
-					value->l = *argp;
+					value->ll = *argp;
 					lastchar = "";
 				}
 				break;
 			}
 			if(neg)
-				value->l = -value->l;
-			fe->size = sizeof(value->l);
+				value->ll = -value->ll;
+			fe->size = sizeof(value->ll);
 			break;
 		case 'a':
 		case 'e':
@@ -625,20 +675,20 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 			fe->size = sizeof(value->d);
 			break;
 		case 'Q':
-			value->l = (long)strelapsed(*pp->nextarg,&lastchar,1);
+			value->ll = (Sflong_t)strelapsed(*pp->nextarg,&lastchar,1);
 			break;
 		case 'T':
-			value->l = (long)tmdate(*pp->nextarg,&lastchar,NIL(time_t*));
+			value->ll = (Sflong_t)tmdate(*pp->nextarg,&lastchar,NIL(time_t*));
 			break;
 		default:
-			value->l = 0;
+			value->ll = 0;
 			fe->fmt = 'd';
-			fe->size = sizeof(value->l);
+			fe->size = sizeof(value->ll);
 			errormsg(SH_DICT,ERROR_exit(1),e_formspec,format);
 			break;
 		}
 		if (format == '.')
-			value->i = value->l;
+			value->i = value->ll;
 		if(*lastchar)
 		{
 			errormsg(SH_DICT,ERROR_warn(0),e_argtype,format);
@@ -664,6 +714,9 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 			value->s = stakptr(staktell());
 		}
 		break;
+	case 'B':
+		value->s = (char*)fmtbase64(value->s, &fe->size);
+		break;
 	case 'H':
 		value->s = fmthtml(value->s);
 		break;
@@ -684,11 +737,11 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 		if (fe->n_str>0)
 		{
 			fe->fmt = 'd';
-			fe->size = sizeof(value->l);
+			fe->size = sizeof(value->ll);
 		}
 		else
 		{
-			value->s = fmtelapsed(value->l, 1);
+			value->s = fmtelapsed(value->ll, 1);
 			fe->fmt = 's';
 			fe->size = -1;
 		}
@@ -698,240 +751,16 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 		{
 			n = fe->t_str[fe->n_str];
 			fe->t_str[fe->n_str] = 0;
-			value->s = fmttime(fe->t_str, value->l);
+			value->s = fmttime(fe->t_str, value->ll);
 			fe->t_str[fe->n_str] = n;
 		}
-		else value->s = fmttime(NIL(char*), value->l);
+		else value->s = fmttime(NIL(char*), value->ll);
 		fe->fmt = 's';
 		fe->size = -1;
 		break;
 	}
 	return 0;
 }
-#else
-static int getarg(Sfio_t *sp, void* v, Sffmt_t* fe)
-{
-	register char *argp = *nextarg;
-	char *lastchar = "";
-	register int neg = 0;
-	double d, longmin= LONG_MIN, longmax=LONG_MAX;
-	int size;
-	int format = fe->fmt;
-	union types_t *value = (union types_t*)v;
-	struct printf* pp = (struct printf*)fe;
-	if(!argp || format=='Z')
-	{
-		switch(format)
-		{
-			case 'c':
-				value->c = 0;
-				break;
-			case 's':
-			case 'q':
-			case 'P':
-			case 'R':
-			case 'Z':
-			case 'b':
-				value->s = "";
-				break;
-			case 'a':
-			case 'e':
-			case 'f':
-			case 'g':
-				value->f = 0.;
-				break;
-			case 'A':
-			case 'E':
-			case 'G':
-				value->d = 0.;
-				break;
-			case 'n':
-			{
-				value->ip = &pp->intvar;
-				break;
-			}
-			default:
-				value->l = 0;
-		}
-		return(1);
-	}
-	switch(format)
-	{
-		case 'p':
-			value->p = (char**)strtol(argp,&lastchar,10);
-			break;
-		case 'n':
-		{
-			Namval_t *np;
-			np = nv_open(argp,sh.var_tree,NV_VARNAME|NV_NOASSIGN|NV_ARRAY);
-			nv_unset(np);
-			nv_onattr(np,NV_INTEGER);
-			if (np->nvalue.lp = new_of(long,0))
-				*np->nvalue.lp = 0;
-			nv_setsize(np,10);
-			if(sizeof(int)==sizeof(long))
-				value->ip = (int*)np->nvalue.lp;
-			else
-			{
-				long sl = 1;
-				value->ip = (int*)(((char*)np->nvalue.lp) + (*((char*)&sl) ? 0 : sizeof(int)));
-			}
-			nv_close(np);
-			break;
-		}
-		case 'q':
-		case 'b':
-		case 's':
-		case 'P':
-		case 'R':
-			value->s = argp;
-			break;
-		case 'c':
-			value->c = *argp;
-			break;
-		case 'o':
-		case 'x':
-		case 'X':
-		case 'u':
-		case 'U':
-			longmax = (unsigned long)ULONG_MAX;
-		case 'd':
-		case 'D':
-		case 'i':
-			size = sizeof(int);
-			if(pp->hdr.flag=='h')
-				size = sizeof(short);
-			if(pp->hdr.flag=='l' || pp->hdr.flag=='L')
-				size = (pp->hdr.n_flag>1?sizeof(Sfulong_t):sizeof(long));
-			switch(*argp)
-			{
-				case '\'': case '"':
-					value->l = ((unsigned char*)argp)[1];
-					break;
-				default:
-					d = sh_strnum(argp,&lastchar,0);
-					if(d<longmin)
-					{
-						errormsg(SH_DICT,ERROR_warn(0),e_overflow,argp);
-						pp->err = 1;
-						d = longmin;
-					}
-					else if(d>longmax)
-					{
-						errormsg(SH_DICT,ERROR_warn(0),e_overflow,argp);
-						pp->err = 1;
-						d = longmax;
-					}
-					value->l = (long)d;
-					if(lastchar == *nextarg)
-					{
-						value->l = *argp;
-						lastchar = "";
-					}
-			}
-			if(neg)
-				value->l = -value->l;
-			if(size!=sizeof(long))
-			{
-				if(size==sizeof(int))
-					value->i = (int)value->l;
-				else if(size==sizeof(short))
-					value->h = (short)value->l;
-				else if(size==sizeof(Sflong_t))
-					value->ll = (Sflong_t)value->l;
-			}
-			break;
-		case 'a':
-		case 'e':
-		case 'f':
-		case 'g':
-		case 'A':
-		case 'E':
-		case 'G':
-			size = sizeof(double);
-			if(pp->hdr.flag=='h' || format=='f')
-				size = sizeof(float);
-			if((pp->hdr.flag=='l' || pp->hdr.flag=='L') && format!='f')
-				size = sizeof(Sfdouble_t);
-			value->d = sh_strnum(*nextarg,&lastchar,0);
-			if(size!=sizeof(double))
-			{
-				if(size==sizeof(float))
-					value->f = (float)value->d;
-				if(size==sizeof(Sfdouble_t))
-					value->ld = (Sfdouble_t)value->d;
-			}
-			break;
-		default:
-			value->l = 0;
-			errormsg(SH_DICT,ERROR_exit(1),e_formspec,format);
-	}
-	if(*lastchar)
-	{
-		errormsg(SH_DICT,ERROR_warn(0),e_argtype,format);
-		pp->err = 1;
-	}
-	nextarg++;
-	return(1);
-}
-
-/*
- * This routine adds new % escape sequences to printf
- */
-static int extend(Sfio_t* sp, void* val, int precis, Sffmt_t* fe)
-{
-	register int n;
-	struct printf *pp = (struct printf*)fe;
-	int format = fe->fmt;
-	char *invalue = (char*)val;
-	char **outval = &fe->t_str;
-	NOT_USED(precis);
-	switch(format)
-	{
-		case 'Z':
-			*outval = invalue;
-			n=1;
-			break;
-		case 'b':
-			if((n=fmtvecho(invalue,pp))>=0)
-			{
-				if(nextarg == nullarg)
-				{
-					*outval = 0;
-					argsize = n;
-					return(-1);
-				}
-				*outval = stakptr(staktell());
-				break;
-			}
-			*outval = invalue;
-			n = strlen(*outval);
-			break;
-		case 'q':
-			*outval = sh_fmtq(invalue);
-			n = strlen(*outval);
-			break;
-		case 'P':
-			*outval = fmtmatch(invalue);
-			if(*outval==0)
-				errormsg(SH_DICT,ERROR_exit(1),e_badregexp,invalue);
-			n = strlen(*outval);
-			break;
-		case 'R':
-			*outval = fmtre(invalue);
-			if(*outval==0)
-				errormsg(SH_DICT,ERROR_exit(1),e_badregexp,invalue);
-			n = strlen(*outval);
-			break;
-		default:
-			*outval = 0;
-			return(0);
-	}
-	fe->n_str = n;
-	return(1);
-
-}
-#endif /* SFIO_VERSION */
 
 /*
  * construct System V echo string out of <cp>
@@ -945,7 +774,7 @@ static int fmtvecho(const char *string, struct printf *pp)
 	register const char *cp = string, *cpmax;
 	register int c;
 	register int offset = staktell();
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 	int chlen;
 	if(mbwide())
 	{
@@ -968,7 +797,7 @@ static int fmtvecho(const char *string, struct printf *pp)
 		stakwrite((void*)string,c);
 	for(; c= *cp; cp++)
 	{
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 		if (mbwide() && ((chlen = mbsize(cp)) > 1))
 		{
 			stakwrite(cp,chlen);

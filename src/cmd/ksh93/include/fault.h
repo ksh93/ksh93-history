@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -87,7 +87,11 @@ struct checkpt
 	int		topfd;
 	int		mode;
 	struct openlist	*olist;
+#if (ERROR_VERSION >= 20030214L)
 	struct Error_context_s err;
+#else
+	struct errorcontext err;
+#endif
 };
 
 #define sh_pushcontext(bp,n)	( (bp)->mode=(n) , (bp)->olist=0,  \

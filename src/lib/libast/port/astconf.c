@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -30,7 +30,7 @@
  * extended to allow some features to be set
  */
 
-static const char id[] = "\n@(#)$Id: getconf (AT&T Labs Research) 2002-10-29 $\0\n";
+static const char id[] = "\n@(#)$Id: getconf (AT&T Labs Research) 2003-03-18 $\0\n";
 
 #include "univlib.h"
 
@@ -55,6 +55,7 @@ static const char id[] = "\n@(#)$Id: getconf (AT&T Labs Research) 2002-10-29 $\0
 
 #define CONF_ERROR	(CONF_USER<<0)
 #define CONF_READONLY	(CONF_USER<<1)
+#define CONF_ALLOC	(CONF_USER<<2)
 
 #define INITIALIZE()	do{if(!state.data)synthesize(NiL,NiL,NiL);}while(0)
 
@@ -69,12 +70,14 @@ static const char id[] = "\n@(#)$Id: getconf (AT&T Labs Research) 2002-10-29 $\0
 #define _UNIV_DEFAULT	"att"
 #endif
 
+static char	null[1];
+
 typedef struct Feature_s
 {
 	struct Feature_s*next;
 	const char*	name;
-	char		value[MAXVAL];
-	char		strict[MAXVAL];
+	char*		value;
+	char*		strict;
 	short		length;
 	short		standard;
 	short		flags;
@@ -107,7 +110,7 @@ static Feature_t	dynamic[] =
 	{
 		&dynamic[2],
 		"FS_3D",
-		"",
+		&null[0],
 		"0",
 		5,
 		CONF_AST,
@@ -118,7 +121,7 @@ static Feature_t	dynamic[] =
 		&dynamic[3],
 		"HOSTTYPE",
 		HOSTTYPE,
-		"",
+		&null[0],
 		8,
 		CONF_AST,
 		CONF_READONLY,
@@ -130,9 +133,9 @@ static Feature_t	dynamic[] =
 #ifdef CONF_LIBPATH
 		CONF_LIBPATH,
 #else
-		"",
+		&null[0],
 #endif
-		"",
+		&null[0],
 		7,
 		CONF_AST,
 		0,
@@ -146,7 +149,7 @@ static Feature_t	dynamic[] =
 #else
 		"lib",
 #endif
-		"",
+		&null[0],
 		7,
 		CONF_AST,
 		0,
@@ -160,7 +163,7 @@ static Feature_t	dynamic[] =
 #else
 		".so",
 #endif
-		"",
+		&null[0],
 		7,
 		CONF_AST,
 		0,
@@ -172,9 +175,9 @@ static Feature_t	dynamic[] =
 #if _WINIX
 		"c",
 #else
-		"",
+		&null[0],
 #endif
-		"",
+		&null[0],
 		15,
 		CONF_AST,
 		CONF_READONLY,
@@ -183,7 +186,7 @@ static Feature_t	dynamic[] =
 	{
 		&dynamic[8],
 		"PATH_RESOLVE",
-		"",
+		&null[0],
 		"metaphysical",
 		12,
 		CONF_AST,
@@ -193,7 +196,7 @@ static Feature_t	dynamic[] =
 	{
 		0,
 		"UNIVERSE",
-		"",
+		&null[0],
 		"att",
 		8,
 		CONF_AST,
@@ -254,7 +257,7 @@ synthesize(register Feature_t* fp, const char* path, const char* value)
 	register int		n;
 
 	if (state.synthesizing)
-		return "";
+		return null;
 	if (!state.data)
 	{
 		char*		se;
@@ -352,7 +355,12 @@ synthesize(register Feature_t* fp, const char* path, const char* value)
 	if (!value)
 	{
 		if (!fp->op)
-			fp->value[0] = 0;
+		{
+			if (fp->flags & CONF_ALLOC)
+				fp->value[0] = 0;
+			else
+				fp->value = null;
+		}
 		return 0;
 	}
 	if (!value[0])
@@ -387,12 +395,18 @@ synthesize(register Feature_t* fp, const char* path, const char* value)
 		(*state.notify)(NiL, NiL, state.data - state.prefix);
 	n = s - (char*)value - 1;
  ok:
-	if (n >= sizeof(fp->value))
-		n = sizeof(fp->value) - 1;
-	else if (n == 1 && (*value == '0' || *value == '-'))
+	if (!(fp->flags & CONF_ALLOC))
+		fp->value = 0;
+	if (n == 1 && (*value == '0' || *value == '-'))
 		n = 0;
-	strncpy(fp->value, value, n);
-	fp->value[n] = 0;
+	if (!(fp->value = newof(fp->value, char, n, 1)))
+		fp->value = null;
+	else
+	{
+		fp->flags |= CONF_ALLOC;
+		memcpy(fp->value, value, n);
+		fp->value[n] = 0;
+	}
 	return fp->value;
 }
 
@@ -411,6 +425,9 @@ initialize(register Feature_t* fp, const char* path, const char* command, const 
 
 	switch (fp->op)
 	{
+	case OP_conformance:
+		ok = getenv("POSIXLY_CORRECT") != 0;
+		break;
 	case OP_hosttype:
 		ok = 1;
 		break;
@@ -511,7 +528,7 @@ feature(const char* name, const char* path, const char* value, Error_f conferror
 	register Feature_t*	sp;
 
 	if (value && (streq(value, "-") || streq(value, "0")))
-		value = "";
+		value = null;
 	for (fp = state.features; fp && !streq(fp->name, name); fp = fp->next);
 	if (!fp)
 	{
@@ -554,7 +571,8 @@ feature(const char* name, const char* path, const char* value, Error_f conferror
 		if (value && (streq(value, "strict") || streq(value, "posix") || streq(value, "xopen")))
 			value = fp->strict;
 		n = streq(fp->value, fp->strict);
-		synthesize(fp, path, value);
+		if (!synthesize(fp, path, value))
+			initialize(fp, path, NiL, fp->strict, fp->value);
 		if (!n && streq(fp->value, fp->strict))
 			for (sp = state.features; sp; sp = sp->next)
 				if (sp->op && sp->op != OP_conformance)
@@ -562,7 +580,7 @@ feature(const char* name, const char* path, const char* value, Error_f conferror
 		break;
 
 	case OP_fs_3d:
-		fp->value[0] = fs3d(value ? value[0] ? FS3D_ON : FS3D_OFF : FS3D_TEST) ? '1' : 0;
+		fp->value = fs3d(value ? value[0] ? FS3D_ON : FS3D_OFF : FS3D_TEST) ? "1" : null;
 		break;
 
 	case OP_hosttype:
@@ -809,7 +827,7 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, E
 					(*conferror)(&state, &state, ERROR_SYSTEM|2, "%s: %s error", p->name, call);
 					return 0;
 				}
-				return "";
+				return null;
 			}
 			flags &= ~CONF_DEFINED;
 			flags |= CONF_ERROR;
@@ -819,7 +837,7 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, E
 	}
 	errno = olderrno;
 	if ((drop = !sp) && !(sp = sfstropen()))
-		return "";
+		return null;
 	if (!(flags & CONF_PREFIXED))
 	{
 		if (!name)
@@ -866,7 +884,7 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, E
 		sfclose(sp);
 		return call;
 	}
-	return "";
+	return null;
 }
 
 /*
@@ -899,7 +917,7 @@ astgetconf(const char* name, const char* path, const char* value, Error_f confer
 	if (!name)
 	{
 		if (path)
-			return "";
+			return null;
 		if (!(name = value))
 		{
 			if (state.data)
@@ -915,7 +933,7 @@ astgetconf(const char* name, const char* path, const char* value, Error_f confer
 				INITIALIZE();
 				state.notify = notify;
 			}
-			return "";
+			return null;
 		}
 		value = 0;
 	}
@@ -948,7 +966,7 @@ astgetconf(const char* name, const char* path, const char* value, Error_f confer
 				(*conferror)(&state, &state, 2, "%s: cannot set value", name);
 				return 0;
 			}
-			return "";
+			return null;
 		}
 		s = print(NiL, &look, name, path, conferror);
 		return s;
@@ -990,7 +1008,7 @@ astgetconf(const char* name, const char* path, const char* value, Error_f confer
 				Lookup_t		altlook;
 				char			altname[ALT];
 
-				static const char*	dirs[] = { "/usr/lib", "/usr", "" };
+				static const char*	dirs[] = { "/usr/lib", "/usr", null };
 
 				strcpy(altname, name);
 				altname[n - 3] = 0;
@@ -1004,7 +1022,7 @@ astgetconf(const char* name, const char* path, const char* value, Error_f confer
 							(*conferror)(&state, &state, 2, "%s: cannot set value", altname);
 							return 0;
 						}
-						return "";
+						return null;
 					}
 					return print(NiL, &altlook, altname, path, conferror);
 				}
@@ -1036,7 +1054,7 @@ astgetconf(const char* name, const char* path, const char* value, Error_f confer
 		if (conferror)
 			return 0;
 	}
-	return "";
+	return null;
 }
 
 char*

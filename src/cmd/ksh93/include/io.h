@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -61,7 +61,7 @@
  * The remainder of this file is only used when compiled with shell
  */
 
-#ifdef KSHELL
+#if KSHELL
 
 #ifndef ARG_RAW
     struct ionod;
@@ -85,6 +85,7 @@ extern void 	sh_iosave(int,int);
 extern void 	sh_iounsave(void);
 extern int	sh_chkopen(const char*);
 extern int	sh_ioaccess(int,int);
+extern int	sh_devtofd(const char*);
 
 /* the following are readonly */
 extern const char	e_pexists[];

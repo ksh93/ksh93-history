@@ -1,5 +1,5 @@
 #
-# @(#)magic (AT&T Research) 2002-11-18
+# @(#)magic (AT&T Research) 2003-01-17
 #
 # magic number database for file(1) and magic(3)
 #
@@ -1194,14 +1194,14 @@ o()
 +2	byte		&0200		, blocked
 +2	byte		&037>0		, with %d bits
 
-0	short		0x1f10		pzip compressed data		application/zip
+0	short		0x1f10		pzip compressed data		application/pzip
 &2	byte		>0		, version %d
 &3	byte		<10		.%d
 
-0	short		0x1f8b		pzip compressed data		application/zip
+0	short		0x1f8b		pzip compressed data		application/pzip
 &10	short		0x9217
 
-0	short		0x1f8b		gzip compressed data		application/zip
+0	short		0x1f8b		gzip compressed data		application/gzip
 +9	byte		0		, dos
 +9	byte		1		, amiga
 +9	byte		2		, vms
@@ -1440,7 +1440,7 @@ name	match		core.*			unknown core dump	x-system/core
 |name	match	*.gst	MSMap.Datainst.8	application/x-ms-msmap
 |name	match	*.gwx	Genigraphics GraphicsLink	application/x-ms-graphicslink
 |name	match	*.gwz	Genigraphics GraphicsLink	application/x-ms-graphicslink
-|name	match	*.gz	WinZip File	application/x-gzip
+|name	match	*.gz	WinZip File	application/gzip
 |name	match	*.hep	HostExplorer Session Profile	application/x-ms-hostexplorer
 |name	match	*.hlp	Help File	application/x-ms-hlpfile
 |name	match	*.hpp	C++ Header File	application/x-ms-hppfile

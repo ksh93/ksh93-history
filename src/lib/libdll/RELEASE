@@ -1,3 +1,7 @@
+03-03-12 dllfind.c: dlopen() with RTLD_GLOBAL|RTLD_PARENT defaults
+03-02-11 dllscan.c: change LIBPATH to <dir>[:<env>[:<pat>]][,...]
+03-01-08 dllscan.c: hack version logic again -- is consistency rocket science?
+03-01-07 dlfcn.c: fix darwin.ppc dlopen/dlsym/dlclose
 02-11-18 dllfind.c: add path,size args (with backwards compatibility checks)
 02-11-15 dllfind.c: check for ./path if '.' in path but no '/'
 02-08-30 dllfind.c: fix a bug that returned uninitialized value on not found

@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1982-2002 AT&T Corp.                #
+#                Copyright (c) 1982-2003 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -28,13 +28,14 @@ function err_exit
 	let Errors+=1
 }
 
-function roothome
+function home # id
 {
-	typeset IFS=:
-	if	[[ -f /etc/passwd ]] && grep -c ^root /etc/passwd > /dev/null
-	then	set -- $(grep ^root /etc/passwd)
+	typeset IFS=: pwd=/etc/passwd
+	set -o noglob
+	if	[[ -f $pwd ]] && grep -c "^$1:" $pwd > /dev/null
+	then	set -- $(grep "^$1:" $pwd)
 		print -r -- "$6"
-	else	print /
+	else	print .
 	fi
 }
 
@@ -66,13 +67,19 @@ x=~-
 if	[[ $x != $OLDPWD ]]
 then	err_exit x=~- not $OLDPWD
 fi
-if	[[ ~root != $(roothome)  &&  ~root != /root ]]
-then	err_exit '~root' not "$(roothome)"
-fi
-x=~root
-if	[[ $x != $(roothome)  &&  $x != /root ]]
-then	err_exit 'x=~root' not "$(roothome)"
-fi
+for u in root Administrator
+do	h=$(home $u)
+	if	[[ $h != . ]]
+	then	if	[[ ~$u != $h ]]
+		then	err_exit "~$u not $h"
+		fi
+		x=~$u
+		if	[[ $x != $h ]]
+		then	err_exit "x=~$u not $h"
+		fi
+		break
+	fi
+done
 x=~%%
 if	[[ $x != '~%%' ]]
 then	err_exit 'x='~%%' not '~%%

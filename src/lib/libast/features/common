@@ -136,7 +136,7 @@ cat{
 	#endif
 }end
 
-tst	_ast_LL note{ LL numeric suffix supported }end compile{
+tst	ast_LL note{ LL numeric suffix supported }end compile{
 	int i = 1LL;
 }end
 

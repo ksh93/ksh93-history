@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1982-2002 AT&T Corp.                #
+#                Copyright (c) 1982-2003 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -151,6 +151,10 @@ fi
 if	[[ $(trap -p HUP) != 'print HUP' ]]
 then	err_exit '$(trap -p HUP) not working'
 fi
+[[ $($SHELL -c 'trap "print ok" SIGTERM; kill -s SIGTERM $$' 2> /dev/null) == ok
+ ]] || err_exit 'SIGTERM not recognized'
+[[ $($SHELL -c 'trap "print ok" sigterm; kill -s sigterm $$' 2> /dev/null) == ok
+ ]] || err_exit 'SIGTERM not recognized'
 n=123
 typeset -A base
 base[o]=8#
@@ -283,6 +287,8 @@ then	err_exit '"name=value exec -c ..." not working'
 fi
 $SHELL -c 'OPTIND=-1000000; getopts a opt -a' 2> /dev/null
 [[ $? == 1 ]] || err_exit 'getopts with negative OPTIND not working'
+getopts 'n#num' opt  -n 3
+[[ $OPTARG == 3 ]] || err_exit 'getopts with numerical arguments failed'
 if	[[ $($SHELL -c $'printf \'%2$s %1$s\n\' world hello') != 'hello world' ]]
 then	err_exit 'printf %2$s %1$s not working'
 fi

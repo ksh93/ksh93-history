@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -37,7 +37,6 @@
  *
  *   David Korn
  *   AT&T Labs
- *   research!dgk
  *
  */
 
@@ -139,7 +138,7 @@ int    B_login(int argc,char *argv[],void *extra)
 			{
 				nv_onattr(np,NV_EXPORT);
 #ifdef _ENV_H
-				env_put(shp->env,np);
+				sh_envput(shp->env,np);
 #endif
 			}
 			if(cp)
@@ -217,9 +216,9 @@ int    b_dot_cmd(register int n,char *argv[],void* extra)
 	register Namval_t *np;
 	register int jmpval;
 	register Shell_t *shp = (Shell_t*)extra;
+	struct sh_scoped savst, *prevscope = shp->st.self;
 	int	fd;
 	struct dolnod   *argsave=0, *saveargfor;
-	char **saveargv;
 	struct checkpt buff;
 	Sfio_t *iop=0;
 	NOT_USED(extra);
@@ -236,6 +235,15 @@ int    b_dot_cmd(register int n,char *argv[],void* extra)
 	script = *argv;
 	if(error_info.errors || !script)
 		errormsg(SH_DICT,ERROR_usage(2),"%s",optusage((char*)0));
+	if(shp->dot_depth++ > DOTMAX)
+		errormsg(SH_DICT,ERROR_exit(1),e_toodeep,script);
+	shp->st.lineno = error_info.line;
+	*prevscope = shp->st;
+	shp->st.prevst = prevscope;
+	shp->st.self = &savst;
+	shp->topscope = (Shscope_t*)shp->st.self;
+	prevscope->save_tree = shp->var_tree;
+	shp->st.cmdname = argv[0];
 	if(!(np=shp->posix_fun))
 	{
 		/* check for KornShell style function first */
@@ -260,18 +268,19 @@ int    b_dot_cmd(register int n,char *argv[],void* extra)
 		}
 		else
 			np = 0;
-		if(!np  && (fd=path_open(script,path_get(script))) < 0)
-			errormsg(SH_DICT,ERROR_system(1),e_open,script);
+		if(!np)
+		{
+			if((fd=path_open(script,path_get(script))) < 0)
+				errormsg(SH_DICT,ERROR_system(1),e_open,script);
+			shp->st.filename = path_fullname(stakptr(PATH_OFFSET));
+		}
 	}
+	if(np)
+		shp->st.filename = np->nvalue.rp->fname;
+	nv_putval(SH_PATHNAMENOD, shp->st.filename ,NV_NOFREE);
 	shp->posix_fun = 0;
-	if(shp->dot_depth++ > DOTMAX)
-		errormsg(SH_DICT,ERROR_exit(1),e_toodeep,script);
 	if(np || argv[1])
-	{
-		n = shp->st.dolc;
-		saveargv = shp->st.dolv;
 		argsave = sh_argnew(argv,&saveargfor);
-	}
 	sh_pushcontext(&buff,SH_JMPDOT);
 	jmpval = sigsetjmp(buff.buff,0);
 	if(jmpval == 0)
@@ -286,13 +295,22 @@ int    b_dot_cmd(register int n,char *argv[],void* extra)
 		}
 	}
 	sh_popcontext(&buff);
+	if(!np)
+		free((void*)shp->st.filename);
 	shp->dot_depth--;
 	if((np || argv[1]) && jmpval!=SH_JMPSCRIPT)
-	{
 		sh_argreset(argsave,saveargfor);
-		shp->st.dolc = n;
-		shp->st.dolv = saveargv;
+	else
+	{
+		prevscope->dolc = shp->st.dolc;
+		prevscope->dolv = shp->st.dolv;
 	}
+	if (shp->st.self != &savst)
+		*shp->st.self = shp->st;
+	/* only restore the top Shscope_t portion for posix functions */
+	memcpy((void*)&shp->st, (void*)prevscope, sizeof(Shscope_t));
+	shp->topscope = (Shscope_t*)prevscope;
+	nv_putval(SH_PATHNAMENOD, shp->st.filename ,NV_NOFREE);
 	if(shp->exitval > SH_EXITSIG)
 		sh_fault(shp->exitval&SH_EXITMASK);
 	if(jmpval && jmpval!=SH_JMPFUN)
@@ -481,7 +499,7 @@ int	b_universe(int argc, char *argv[],void *extra)
 }
 #endif /* cmd_universe */
 
-#ifdef SHOPT_FS_3D
+#if SHOPT_FS_3D
 #   if 0
     /* for the dictionary generator */
     int	b_vmap(int argc,char *argv[], void *extra){}

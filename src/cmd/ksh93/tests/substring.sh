@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1982-2002 AT&T Corp.                #
+#                Copyright (c) 1982-2003 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -261,4 +261,17 @@ foo='foo+bar+'
 [[ $(print -r -- ${foo//+/"|"}) != 'foo|bar|' ]] && err_exit '${foobar//+/"|"}'
 [[ $(print -r -- "${foo//+/'|'}") != 'foo|bar|' ]] && err_exit '"${foobar//+/'"'|'"'}"'
 [[ $(print -r -- "${foo//+/"|"}") != 'foo|bar|' ]] && err_exit '"${foobar//+/"|"}"'
+unset x
+x=abcedfg
+: ${x%@(d)f@(g)}
+[[ ${.sh.match[0]} == dfg ]] || err_exit '.sh.match[0] not dfg'
+[[ ${.sh.match[1]} == d ]] || err_exit '.sh.match[1] not d'
+[[ ${.sh.match[2]} == g ]] || err_exit '.sh.match[2] not g'
+x=abcedddfg
+: ${x%%+(d)f@(g)}
+[[ ${.sh.match[1]} == ddd ]] || err_exit '.sh.match[1] not ddd'
+unset a b
+a='\[abc @(*) def\]'
+b='[abc 123 def]'
+[[ ${b//$a/\1} == 123 ]] || err_exit "\${var/pattern} not working with \[ in pattern"
 exit $((Errors))

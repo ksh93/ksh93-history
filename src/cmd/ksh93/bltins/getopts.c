@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -170,7 +170,7 @@ int	b_getopts(int argc,char *argv[],void *extra)
 	if(opt_info.num != LONG_MIN)
 	{
 		double d = opt_info.num;
-		nv_putval(np, (char*)&d, NV_INTEGER|NV_RDONLY);
+		nv_putval(np, (char*)&d, NV_INTEGER|NV_DOUBLE|NV_RDONLY);
 	}
 	else
 		nv_putval(np, opt_info.arg, NV_RDONLY);

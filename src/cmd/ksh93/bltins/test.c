@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -28,7 +28,6 @@
  *
  *   David Korn
  *   AT&T Labs
- *   research!dgk
  *
  */
 
@@ -42,6 +41,7 @@
 #include	"test.h"
 #include	"builtins.h"
 #include	"FEATURE/externs"
+#include	"FEATURE/poll"
 
 #ifndef _lib_setregid
 #   undef _lib_setreuid
@@ -51,6 +51,22 @@
     extern int setreuid(uid_t,uid_t);
     extern int setregid(uid_t,uid_t);
 #endif /* _lib_setreuid */
+
+#ifdef S_ISSOCK
+#   if _pipe_socketpair
+#      if _socketpair_shutdown_mode
+#         define isapipe(f,p) (test_stat(f,p)>=0&&S_ISFIFO((p)->st_mode)||S_ISSOCK((p)->st_mode)&&(p)->st_ino&&((p)->st_mode&(S_IRUSR|S_IWUSR))!=(S_IRUSR|S_IWUSR))
+#      else
+#         define isapipe(f,p) (test_stat(f,p)>=0&&S_ISFIFO((p)->st_mode)||S_ISSOCK((p)->st_mode)&&(p)->st_ino)
+#      endif
+#   else
+#      define isapipe(f,p) (test_stat(f,p)>=0&&S_ISFIFO((p)->st_mode))
+#   endif
+#   define isasock(f,p) (test_stat(f,p)>=0&&S_ISSOCK((p)->st_mode))
+#else
+#   define isapipe(f,p) (test_stat(f,p)>=0&&S_ISFIFO((p)->st_mode))
+#   define isasock(f,p) (0)
+#endif
 
 #define	permission(a,f)		(sh_access(a,f)==0)
 static time_t	test_time(const char*, const char*);
@@ -205,7 +221,7 @@ static char *nxtarg(struct test *tp,int mt)
 }
 
 
-static e3(struct test *tp)
+static int e3(struct test *tp)
 {
 	register char *arg, *cp;
 	register int op;
@@ -276,7 +292,7 @@ int test_unop(register int op,register const char *arg)
 	    case 'x':
 		return(permission(arg, X_OK));
 	    case 'V':
-#ifdef SHOPT_FS_3D
+#if SHOPT_FS_3D
 	    {
 		register int offset = staktell();
 		if(stat(arg,&statb)<0 || !S_ISREG(statb.st_mode))
@@ -310,14 +326,14 @@ int test_unop(register int op,register const char *arg)
 #else
 		return(0);
 #endif /* S_ISVTX */
-#ifdef SHOPT_TEST_L
+#if SHOPT_TEST_L
 	    case 'l':
 #endif
 	    case 'L':
 	    case 'h': /* undocumented, and hopefully will disappear */
 	    {
 		struct stat statb;
-		if(*arg==0 || lstat(arg,&statb)<0)
+		if(*arg==0 || arg[strlen(arg)-1]=='/' || lstat(arg,&statb)<0)
 			return(0);
 		return(S_ISLNK(statb.st_mode));
 	    }
@@ -346,13 +362,11 @@ int test_unop(register int op,register const char *arg)
 #endif	/* S_ISCDF */
 
 	    case 'S':
-#ifdef S_ISSOCK
-		return(test_stat(arg,&statb)>=0 && S_ISSOCK(statb.st_mode));
-#else
-		return(0);
-#endif /* S_ISSOCK */
+		return(isasock(arg,&statb));
+	    case 'N':
+		return(test_stat(arg,&statb)>=0 && (statb.st_mtime>statb.st_atime));
 	    case 'p':
-		return(test_stat(arg,&statb)>=0 && S_ISFIFO(statb.st_mode));
+		return(isapipe(arg,&statb));
 	    case 'n':
 		return(*arg != 0);
 	    case 'z':
@@ -376,7 +390,7 @@ int test_unop(register int op,register const char *arg)
 		return(permission(arg, F_OK));
 	    case 'o':
 		op = sh_lookup(arg,shtab_options);
-		return(op && sh_isoption((1L<<op))!=0);
+		return(op && sh_isoption(op)!=0);
 	    case 't':
 		if(isdigit(*arg) && arg[1]==0)
 			 return(tty_check(*arg-'0'));
@@ -392,7 +406,7 @@ int test_unop(register int op,register const char *arg)
 	}
 }
 
-test_binop(register int op,const char *left,const char *right)
+int test_binop(register int op,const char *left,const char *right)
 {
 	register double lnum,rnum;
 	if(op&TEST_ARITH)
@@ -464,7 +478,7 @@ static time_t test_time(const char *file1,const char *file2)
  * return true if inode of two files are the same
  */
 
-test_inode(const char *file1,const char *file2)
+int test_inode(const char *file1,const char *file2)
 {
 	struct stat stat1,stat2;
 	if(test_stat(file1,&stat1)>=0  && test_stat(file2,&stat2)>=0)

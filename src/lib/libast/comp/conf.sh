@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1985-2002 AT&T Corp.                #
+#                Copyright (c) 1985-2003 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -25,7 +25,7 @@
 ####################################################################
 : generate conf info
 #
-# @(#)conf.sh (AT&T Research) 2002-09-15
+# @(#)conf.sh (AT&T Research) 2003-02-22
 #
 # this script generates these files from the table file in the first arg
 # the remaining args are the C compiler name and flags
@@ -51,7 +51,7 @@ esac
 
 command=conf
 
-shell=`{ integer n=2; (( n == 2 )) && echo ksh; } 2>/dev/null`
+shell=`eval 'x=123&&integer n=\${#x}\${x#1?}&&((n==330/(10)))&&echo ksh' 2>/dev/null`
 
 append=0
 extra=0

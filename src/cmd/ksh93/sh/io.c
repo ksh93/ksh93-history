@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -83,6 +83,13 @@ static int	(*fdnotify)(int,int);
 #   if !defined(htonl) && !_lib_htonl
 #      define htonl(x)	(x)
 #   endif
+#   if _pipe_socketpair
+#      if _socketpair_shutdown_mode
+#         define pipe(v) ((socketpair(AF_UNIX,SOCK_STREAM,0,v)<0||shutdown((v)[0],1)<0||fchmod((v)[0],S_IRUSR)<0||shutdown((v)[1],0)<0||fchmod((v)[1],S_IWUSR)<0)?(-1):0)
+#      else
+#         define pipe(v) ((socketpair(AF_UNIX,SOCK_STREAM,0,v)<0||shutdown((v)[0],1)<0||shutdown((v)[1],0)<0)?(-1):0)
+#      endif
+#   endif
     static int str2inet(const char*, struct sockaddr_in*);
 #   define SOCKET	1
 #else
@@ -143,7 +150,7 @@ void sh_ioinit(void)
 	register int n;
 	filemapsize = 8;
 	filemap = (struct fdsave*)malloc(8*sizeof(struct fdsave));
-#ifdef SHOPT_FASTPIPE
+#if SHOPT_FASTPIPE
 	n = sh.lim.open_max+2;
 #else
 	n = sh.lim.open_max;
@@ -183,7 +190,7 @@ Sfio_t *sh_iostream(register int fd)
 	register int status = sh_iocheckfd(fd);
 	register int flags = SF_WRITE;
 	char *bp;
-#ifdef SHOPT_FASTPIPE
+#if SHOPT_FASTPIPE
 	if(fd>=sh.lim.open_max)
 		return(sh.sftable[fd]);
 #endif /* SHOPT_FASTPIPE */
@@ -338,13 +345,29 @@ int sh_close(register int fd)
 	return(r);
 }
 
+int sh_devtofd(const char *cp)
+{
+	if(strmatch(cp,(char*)e_devfdstd))
+	{
+		if(cp[8]=='i')		/* /dev/stdin */
+			return(0);
+		else if(cp[8]=='o')	/* /dev/stdout */
+			return(1);
+		else if(cp[8]=='e')	/* /dev/stderr */
+			return(2);
+		else			/* /dev/fd/N */
+			return((int)strtol(cp+8,(char**)0,10));
+	}
+	return(-1);
+}
+
 /*
  * Open a file for reading
  * On failure, print message.
  */
 int sh_open(register const char *path, int flags, ...)
 {
-	register int		fd=0;
+	register int		fd= -1;
 	mode_t			mode;
 #ifdef SOCKET
 	struct sockaddr_in	addr;
@@ -359,6 +382,7 @@ int sh_open(register const char *path, int flags, ...)
 		errno = ENOENT;
 		return(-1);
 	}
+	if ((fd = sh_devtofd(path))>=0)
 	if (strmatch(path,e_devfdNN) || (fd=strmatch(path,"/dev/std@(in|out|err)")))
 	{
 		if(fd)
@@ -497,6 +521,7 @@ int	sh_redirect(struct ionod *iop, int flag)
 	static int	inuse_bits;	/* keep track of 3-9 in use */
 	int clexec=0, fn, traceon;
 	int indx = sh.topfd;
+	char *trace = sh.st.trap[SH_DEBUGTRAP];
 	if(flag==2)
 		clexec = 1;
 	if(iop)
@@ -562,7 +587,7 @@ int	sh_redirect(struct ionod *iop, int flag)
 				else if(fd=='-' && fname[1]==0)
 				{
 					fd= -1;
-					goto trace;
+					goto traceit;
 				}
 				else if(fd=='p' && fname[1]==0)
 				{
@@ -618,7 +643,7 @@ int	sh_redirect(struct ionod *iop, int flag)
 						struct stat sb;
 						if(stat(fname,&sb)>=0)
 						{
-#ifdef SHOPT_FS_3D
+#if SHOPT_FS_3D
 							if(S_ISREG(sb.st_mode)&&
 						                (!sh.lim.fs3d || iview(&sb)==0))
 #else
@@ -637,9 +662,17 @@ int	sh_redirect(struct ionod *iop, int flag)
 				if((fd=sh_open(fname,o_mode,RW_ALL)) <0)
 					errormsg(SH_DICT,ERROR_system(1),((o_mode&O_CREAT)?e_create:e_open),fname);
 			}
-		trace:
+		traceit:
 			if(traceon && fname)
 				sfprintf(sfstderr,"%s %s%c",io_op,fname,iop->ionxt?' ':'\n');
+			if(trace && fname)
+			{
+				char *av[3];
+				av[0] = io_op;
+				av[1] = fname;
+				av[2] = 0;;
+				sh_debug(trace,(char*)0,(char*)0,av,ARG_NOGLOB);
+			}
 			if(flag==0)
 				sh_iosave(fn,indx);
 			else if(sh_subsavefd(fn))
@@ -767,7 +800,7 @@ void sh_iosave(register int origfd, int oldtop)
 			errormsg(SH_DICT,ERROR_exit(4),e_nospace);
 			
 	}
-#ifdef SHOPT_DEVFD
+#if SHOPT_DEVFD
 	if(origfd <0)
 	{
 		savefd = origfd;
@@ -1077,13 +1110,13 @@ static int slowread(Sfio_t *iop,void *buff,register int size,Sfdisc_t *handle)
 		return(0);
 	if(sh.timeout)
 		timeout = (void*)sh_timeradd(sh_isstate(SH_GRACE)?1000L*TGRACE:1000L*sh.timeout,0,time_grace,NIL(void*));
-#   ifdef SHOPT_ESH
-	if(sh_isoption(SH_EMACS|SH_GMACS))
+#   if SHOPT_ESH
+	if(sh_isoption(SH_EMACS) || sh_isoption(SH_GMACS))
 		readf = ed_emacsread;
 	else
 #   endif	/* SHOPT_ESH */
-#   ifdef SHOPT_VSH
-#	ifdef SHOPT_RAWONLY
+#   if SHOPT_VSH
+#	if SHOPT_RAWONLY
 	    if(sh_isoption(SH_VI) || ((SHOPT_RAWONLY-0) && mbwide()))
 #	else
 	    if(sh_isoption(SH_VI))
@@ -1190,7 +1223,7 @@ static int	io_prompt(Sfio_t *iop,register int flag)
 		{
 			register int c;
 #if defined(TIOCLBIC) && defined(LFLUSHO)
-			if(!sh_isoption(SH_VI|SH_EMACS|SH_GMACS))
+			if(!sh_isoption(SH_VI) && !sh_isoption(SH_EMACS) && !sh_isoption(SH_GMACS))
 			{
 				/*
 				 * re-enable output in case the user has
@@ -1698,23 +1731,6 @@ Notify_f    sh_fdnotify(Notify_f notify)
         old = fdnotify;
         fdnotify = notify;
         return(old);
-}
-
-Sfio_t	*sh_fd2sfio(int fd)
-{
-	register int status;
-	Sfio_t *sp = sh.sftable[fd];
-	if(!sp  && (status = sh_iocheckfd(fd))!=IOCLOSE)
-	{
-		register int flags=0;
-		if(status&IOREAD)
-			flags |= SF_READ;
-		if(status&IOWRITE)
-			flags |= SF_WRITE;
-		sp = sfnew(NULL, NULL, -1, fd,flags);
-		sh.sftable[fd] = sp;
-	}
-	return(sp);
 }
 
 Sfio_t *sh_pathopen(const char *cp)

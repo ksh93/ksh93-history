@@ -1,4 +1,26 @@
-USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-author?Phong Vo <kpv@research.att.com>][-copyright?Copyright (c) 1994-2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"
+####################################################################
+#                                                                  #
+#             This software is part of the ast package             #
+#                Copyright (c) 1994-2003 AT&T Corp.                #
+#        and it may only be used by you under license from         #
+#                       AT&T Corp. ("AT&T")                        #
+#         A copy of the Source Code Agreement is available         #
+#                at the AT&T Internet web site URL                 #
+#                                                                  #
+#       http://www.research.att.com/sw/license/ast-open.html       #
+#                                                                  #
+#    If you have copied or used this software without agreeing     #
+#        to the terms of the license you are infringing on         #
+#           the license and copyright and are violating            #
+#               AT&T's intellectual property rights.               #
+#                                                                  #
+#            Information and Software Systems Research             #
+#                        AT&T Labs Research                        #
+#                         Florham Park NJ                          #
+#                                                                  #
+#               Glenn Fowler <gsf@research.att.com>                #
+#                                                                  #
+####################################################################
 # Glenn Fowler & Phong Vo
 # AT&T Labs Research
 #
@@ -12,7 +34,7 @@ case $-:$BASH_VERSION in
 esac
 
 command=iffe
-version=2002-12-10 # update in USAGE too #
+version=2003-03-06 # update in USAGE too #
 
 pkg() # package
 {
@@ -402,7 +424,7 @@ set=
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: iffe (AT&T Labs Research) 2002-12-10 $
+@(#)$Id: iffe (AT&T Labs Research) 2003-03-06 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?iffe - host C compilation environment feature probe]
@@ -858,7 +880,7 @@ esac
 
 # prompt complications
 
-case `print -n aha 2>/dev/null` in
+case `print -n aha </dev/null 2>/dev/null` in
 aha)	show='print -n' SHOW='' ;;
 *)	case `echo -n aha 2>/dev/null` in
 	-n*)	show=echo SHOW='\c' ;;
@@ -903,7 +925,7 @@ std='#if defined(__STDC__) || defined(__cplusplus) || defined(c_plusplus)
 #define _END_EXTERNS_
 #endif
 #define _NIL_(x)	((x)0)'
-ext='#ifndef feof
+ext='#if !defined(stdin) && !defined(feof) && !defined(L_tmpnam)
 _BEGIN_EXTERNS_
 #if _STD_
 extern int	printf(const char*, ...);
@@ -2784,9 +2806,16 @@ _END_EXTERNS_
 #endif
 static _IFFE_fun i=(_IFFE_fun)$v;main(){return(i==0);}
 "
-				if	$cc -D_IFFE_extern -c $tmp.c <&$nullin >&$nullout || $cc -c $tmp.c <&$nullin >&$nullout
+				d=-D_IFFE_extern
+				if	$cc -c $tmp.c <&$nullin >&$nullout
+				then	d=
+				elif	$cc $d -c $tmp.c <&$nullin >&$nullout
+				then	:
+				else	d=error
+				fi
+				if	test error != "$d"
 				then	rm -f $tmp.exe
-					if	$cc $static -o $tmp.exe $tmp.o $lib $deflib <&$nullin >&$nullout && $executable $tmp.exe
+					if	$cc $d $static -o $tmp.exe $tmp.o $lib $deflib <&$nullin >&$nullout && $executable $tmp.exe
 					then	case $o in
 						lib)	success
 							usr="$usr$nl#define $m 1"
@@ -2806,7 +2835,7 @@ static _IFFE_fun i=(_IFFE_fun)$v;main(){return(i==0);}
 						esac
 					else	case $o in
 						mth)	rm -f $tmp.exe
-							if	$cc $static -o $tmp.exe $tmp.o -lm <&$nullin >&$nullout && $executable $tmp.exe
+							if	$cc $d $static -o $tmp.exe $tmp.o -lm <&$nullin >&$nullout && $executable $tmp.exe
 							then	success
 								usr="$usr$nl#define $m 1"
 								echo "#define $m	1	/* $v() in math lib */"

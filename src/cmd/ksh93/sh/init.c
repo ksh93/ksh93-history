@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -28,7 +28,6 @@
  *
  *   David Korn
  *   AT&T Labs
- *   research!dgk
  *
  */
 
@@ -36,10 +35,12 @@
 #include        <stak.h>
 #include        <ctype.h>
 #include        <ccode.h>
+#include        <pwd.h>
 #include        "variables.h"
 #include        "path.h"
 #include        "fault.h"
 #include        "name.h"
+#include	"edit.h"
 #include	"jobs.h"
 #include	"io.h"
 #include	"shlex.h"
@@ -48,13 +49,16 @@
 #include	"FEATURE/dynamic"
 #include	"lexstates.h"
 #include	"FEATURE/locale"
-#include	"national.h"
 
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
     char e_version[]	= "\n@(#)$Id: Version M "SH_RELEASE" $\0\n";
 #else
     char e_version[]	= "\n@(#)$Id: Version "SH_RELEASE" $\0\n";
 #endif /* SHOPT_MULTIBYTE */
+
+#if SHOPT_BASH
+    extern void bash_init(int);
+#endif
 
 #if _hdr_wchar && _lib_wctype && _lib_iswctype
 #   include <wchar.h>
@@ -138,7 +142,7 @@ struct match
 typedef struct _init_
 {
 	Shell_t		*sh;
-#ifdef SHOPT_FS_3D
+#if SHOPT_FS_3D
 	Namfun_t	VPATH_init;
 #endif /* SHOPT_FS_3D */
 	struct ifs	IFS_init;
@@ -165,16 +169,21 @@ typedef struct _init_
 	struct shell	LC_ALL_init;
 	struct shell	LANG_init;
 #endif /* _hdr_locale */
-#ifdef SHOPT_MULTIBYTE
-	Namfun_t	CSWIDTH_init;
-#endif /* SHOPT_MULTIBYTE */
 } Init_t;
 
 static void		env_init(Shell_t*);
 static Init_t		*nv_init(Shell_t*);
 static Dt_t		*inittree(Shell_t*,const struct shtable2*);
 
-static const char	rsh_pattern[] = "@(rk|kr|r)sh";
+#ifdef _WINIX
+#   define EXE	"?(.exe)"
+#else
+#   define EXE
+#endif
+
+static const char	rsh_pattern[] = "@(rk|kr|r)sh" EXE;
+static const char	pfsh_pattern[] = "pf?(k)sh" EXE;
+static const char	bash_pattern[] = "?(r)bash" EXE;
 static int		rand_shift;
 
 
@@ -197,24 +206,15 @@ static char *nospace(int unused)
 	return(NIL(char*));
 }
 
-#ifdef SHOPT_MULTIBYTE
-#   include	"edit.h"
-    /* Trap for CSWIDTH variable */
-    static void put_cswidth(Namval_t* np,const char *val,int flags,Namfun_t *fp)
-    {
-	if(ed_setwidth(val?val:"") && !(flags&NV_IMPORT))
-		errormsg(SH_DICT,ERROR_exit(1),e_format,nv_name(np));
-	nv_putv(np, val, flags, fp);
-    }
-#endif /* SHOPT_MULTIBYTE */
-
 /* Trap for VISUAL and EDITOR variables */
 static void put_ed(register Namval_t* np,const char *val,int flags,Namfun_t *fp)
 {
 	register const char *cp, *name=nv_name(np);
 	if(*name=='E' && nv_getval(nv_scoped(VISINOD)))
 		goto done;
-	sh_offoption(SH_VI|SH_EMACS|SH_GMACS);
+	sh_offoption(SH_VI);
+	sh_offoption(SH_EMACS);
+	sh_offoption(SH_GMACS);
 	if(!(cp=val) && (*name=='E' || !(cp=nv_getval(nv_scoped(EDITNOD)))))
 		goto done;
 	/* turn on vi or emacs option if editor name is either*/
@@ -323,29 +323,6 @@ static void put_cdpath(register Namval_t* np,const char *val,int flags,Namfun_t 
 	return((char*)message);
     }
 #endif
-#   ifdef SHOPT_MULTIBYTE
-	void charsize_init(void)
-	{
-		static char fc[3] = { 0301,  ESS2, ESS3};
-		char buff[8],*cp;
-		register int i,n;
-		wchar_t wc;
-		memset(buff,0301,mbmax());
-		for(i=0; i<=2; i++)
-		{
-			buff[0] = fc[i];
-			cp = buff;
-			if((n=mbsize(buff))>0)
-			{
-				wc =  mbchar(cp);
-				if((int_charsize[i+1] = n-(i>0))>0)
-					int_charsize[i+5] = mbwidth(wc);
-				else
-					int_charsize[i+5] = 0;
-			}
-		}
-	}
-#   endif /* SHOPT_MULTIBYTE */
 
     /* Trap for LC_ALL, LC_TYPE, LC_MESSAGES, LC_COLLATE and LANG */
     static void put_lang(Namval_t* np,const char *val,int flags,Namfun_t *fp)
@@ -424,9 +401,6 @@ static void put_cdpath(register Namval_t* np,const char *val,int flags,Namfun_t 
 			sh_lexstates[ST_DOL]=(char*)sh_lexrstates[ST_DOL];
 			sh_lexstates[ST_BRACE]=(char*)sh_lexrstates[ST_BRACE];
 		}
-#ifdef SHOPT_MULTIBYTE
-        	charsize_init();
-#endif /* SHOPT_MULTIBYTE */
 	}
 #if ERROR_VERSION < 20000101L
 	if(type==LC_ALL || type==LC_MESSAGES)
@@ -462,13 +436,13 @@ static char* get_ifs(register Namval_t* np, Namfun_t *fp)
 		memset(shp->ifstable,0,(1<<CHAR_BIT));
 		if(cp=value)
 		{
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 			while(n=mbsize(cp),c= *(unsigned char*)cp)
 #else
 			while(c= *(unsigned char*)cp++)
 #endif /* SHOPT_MULTIBYTE */
 			{
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 				cp++;
 				if(n>1)
 				{
@@ -548,7 +522,7 @@ static char* get_seconds(register Namval_t* np, Namfun_t *fp)
 	return(bufptr);
 }
 
-static double nget_seconds(register Namval_t* np, Namfun_t *fp)
+static Sfdouble_t nget_seconds(register Namval_t* np, Namfun_t *fp)
 {
 	struct tms tp;
 	double offset = (np->nvalue.dp?*np->nvalue.dp:0);
@@ -584,7 +558,7 @@ static void put_rand(register Namval_t* np,const char *val,int flags,Namfun_t *f
  * get random number in range of 0 - 2**15
  * never pick same number twice in a row
  */
-static double nget_rand(register Namval_t* np, Namfun_t *fp)
+static Sfdouble_t nget_rand(register Namval_t* np, Namfun_t *fp)
 {
 	register long cur, last= *np->nvalue.lp;
 	NOT_USED(fp);
@@ -604,7 +578,7 @@ static char* get_rand(register Namval_t* np, Namfun_t *fp)
 /*
  * These three routines are for LINENO
  */
-static double nget_lineno(Namval_t* np, Namfun_t *fp)
+static Sfdouble_t nget_lineno(Namval_t* np, Namfun_t *fp)
 {
 	double d=1;
 	if(error_info.line >0)
@@ -701,7 +675,7 @@ static char* get_match(register Namval_t* np, Namfun_t *fp)
 	char *val;
 	if(mp->rval)
 	{
-		free((void*)mp->val);
+		free((void*)mp->rval);
 		mp->rval = 0;
 	}
 	sub = nv_aindex(np);
@@ -721,7 +695,7 @@ static char* get_match(register Namval_t* np, Namfun_t *fp)
 
 static const Namdisc_t SH_MATCH_disc  = {  sizeof(struct match), 0, get_match };
 
-#ifdef SHOPT_FS_3D
+#if SHOPT_FS_3D
     /*
      * set or unset the mappings given a colon separated list of directories
      */
@@ -753,113 +727,12 @@ static const Namdisc_t SH_MATCH_disc  = {  sizeof(struct match), 0, get_match };
 	nv_putv(np,val,flags,fp);
     }
     static const Namdisc_t VPATH_disc	= { 0, put_vpath  };
-    static Namfun_t VPATH_init	= { &VPATH_disc  };
+    static Namfun_t VPATH_init	= { &VPATH_disc, 1  };
 #endif /* SHOPT_FS_3D */
-
-#ifdef SHOPT_OO
-/*
- * disciplines for the "time" type
-*/ 
-struct dctime
-{
-	Namfun_t	fun;
-	char		node[NV_MINSZ];
-};
-
-static char *get_time(Namval_t* np, Namfun_t* nfp)
-{
-	static char buff[256];
-	struct dctime *dp = (struct dctime*)nfp;
-	Namval_t *nq = nv_namptr(dp->node,0);
-	time_t t = (time_t)nv_getn(np,(Namfun_t*)0);
-	char *format = nv_getval(nq);
-	tmfmt(buff,sizeof(buff),format,&t);
-	return(buff);
-}
-
-static void put_time(Namval_t* np, const char* val, int flag, Namfun_t* nfp)
-{
-	struct dctime *dp = (struct dctime*)nfp;
-	char *last;
-	if(val)
-	{
-		time_t t;
-		if(flag&NV_INTEGER)
-		{
-			if(flag&NV_LONG)
-				t = (time_t)*(Sfdouble_t*)val;
-			else
-				t = (time_t)*(double*)val;
-		}
-		else
-		{
-			if(sizeof(time_t)==sizeof(Sflong_t) && sizeof(Sflong_t)>sizeof(long))
-				t = (time_t)strtoull(val, &last, 0);
-			else
-				t = (time_t)strtoul(val, &last, 0);
-			
-			if(*last)
-				t = tmdate(val, &last, (time_t*)0);
-		}
-		if(*last)
-			errormsg(SH_DICT,ERROR_exit(1),"%s: invalid date/time string",val);
-		flag = (flag&NV_RDONLY)|NV_INTEGER;
-		if(sizeof(time_t)==sizeof(Sflong_t) && sizeof(Sflong_t)>sizeof(long))
-			flag |= NV_LONG;
-		nv_putv(np,(char*)&t,flag,(Namfun_t*)0);
-	}
-	else
-	{
-		Namval_t *nq = nv_namptr(dp->node,0);
-		nv_unset(nq);
-		nv_putv(np,val,flag,nfp);
-	}
-}
-
-static Namval_t *create_time(Namval_t *np, const char *name, int flags, Namfun_t *nfp)
-{
-	struct dctime *dp = (struct dctime*)nfp;
-	Namval_t *nq;
-	if(strcmp(name,"format"))
-		return((Namval_t*)0);
-	nq = nv_namptr(dp->node,0);
-	if(!nq->nvname)
-	{
-		nq->nvname = "format";
-		nv_stack(np,nfp);
-		nfp = nv_stack(np,(Namfun_t*)0);
-		nv_putval(nq,"", NV_MINIMAL|NV_NOFREE);
-		nv_stack(np,nfp);
-	}
-	return(nq);
-}
-
-static Namval_t *next_time(register Namval_t* np, Dt_t *root,Namfun_t *nfp)
-{
-	struct dctime *dp = (struct dctime*)nfp;
-	if(!root)
-		return(nv_namptr(dp->node,0));
-	return(0);
-}
-
-static const Namdisc_t timedisc =
-{
-        sizeof(struct dctime),
-        put_time,
-        get_time,
-        0,
-        0,
-        create_time,
-	0,
-	0,
-	0,
-	next_time
-};
-#endif /* SHOPT_OO */
 
 
 static const Namdisc_t IFS_disc		= {  sizeof(struct ifs), put_ifs, get_ifs };
-static const Namdisc_t RESTRICTED_disc	= {  sizeof(struct shell), put_restricted };
+const Namdisc_t RESTRICTED_disc	= {  sizeof(struct shell), put_restricted };
 #ifdef PATH_BFPATH
 static const Namdisc_t CDPATH_disc	= {  sizeof(struct shell), put_cdpath }; 
 #endif
@@ -870,7 +743,7 @@ static const Namdisc_t RAND_disc	= {  sizeof(struct rand), put_rand, get_rand, n
 static const Namdisc_t LINENO_disc	= {  sizeof(struct shell), put_lineno, get_lineno, nget_lineno };
 static const Namdisc_t L_ARG_disc	= {  sizeof(struct shell), put_lastarg, get_lastarg };
 
-#ifdef SHOPT_NAMESPACE
+#if SHOPT_NAMESPACE
     static char* get_nspace(Namval_t* np, Namfun_t *fp)
     {
 	if(sh.namespace)
@@ -878,15 +751,12 @@ static const Namdisc_t L_ARG_disc	= {  sizeof(struct shell), put_lastarg, get_la
 	return((char*)np->nvalue.cp);
     }
     static const Namdisc_t NSPACE_disc	= {  0, 0, get_nspace };
-    static Namfun_t NSPACE_init	= {  &NSPACE_disc};
+    static Namfun_t NSPACE_init	= {  &NSPACE_disc, 1};
 #endif /* SHOPT_NAMESPACE */
 
 #ifdef _hdr_locale
     static const Namdisc_t LC_disc	= {  sizeof(struct shell), put_lang };
 #endif /* _hdr_locale */
-#ifdef SHOPT_MULTIBYTE
-    static const Namdisc_t CSWIDTH_disc	= {  0, put_cswidth };
-#endif /* SHOPT_MULTIBYTE */
 
 /*
  * This function will get called whenever a configuration parameter changes
@@ -937,10 +807,11 @@ static int newconf(const char *name, const char *path, const char *value)
 /*
  * initialize the shell
  */
-int sh_init(register int argc,register char *argv[], void(*userinit)(int))
+Shell_t *sh_init(register int argc,register char *argv[], void(*userinit)(int))
 {
 	register char *name;
-	register int n,prof;
+	register int n;
+	static char *login_files[3];
 	n = strlen(e_version);
 	if(e_version[n-1]=='$' && e_version[n-2]==' ')
 		e_version[n-2]=0;
@@ -986,7 +857,7 @@ int sh_init(register int argc,register char *argv[], void(*userinit)(int))
 		sh.lim.open_max = OPEN_MAX;
 	if(sh.lim.clk_tck <=0)
 		sh.lim.clk_tck = CLK_TCK;
-#ifdef SHOPT_FS_3D
+#if SHOPT_FS_3D
 	if(fs3d(FS3D_TEST))
 		sh.lim.fs3d = 1;
 #endif /* SHOPT_FS_3D */
@@ -997,9 +868,6 @@ int sh_init(register int argc,register char *argv[], void(*userinit)(int))
 	/* set up memory for name-value pairs */
 	sh.init_context =  nv_init(&sh);
 	/* read the environment */
-#ifdef SHOPT_MULTIBYTE
-       	charsize_init();
-#endif /* SHOPT_MULTIBYTE */
 	if(argc>0)
 	{
 		name = path_basename(*argv);
@@ -1011,11 +879,11 @@ int sh_init(register int argc,register char *argv[], void(*userinit)(int))
 	}
 	env_init(&sh);
 	nv_putval(IFSNOD,(char*)e_sptbnl,NV_RDONLY);
-#ifdef SHOPT_FS_3D
+#if SHOPT_FS_3D
 	nv_stack(VPATHNOD, &VPATH_init);
 #endif /* SHOPT_FS_3D */
 	astconfdisc(newconf);
-#ifdef SHOPT_TIMEOUT
+#if SHOPT_TIMEOUT
 	sh.st.tmout = SHOPT_TIMEOUT;
 #endif /* SHOPT_TIMEOUT */
 	/* initialize jobs table */
@@ -1025,6 +893,21 @@ int sh_init(register int argc,register char *argv[], void(*userinit)(int))
 		/* check for restricted shell */
 		if(argc>0 && strmatch(name,rsh_pattern))
 			sh_onoption(SH_RESTRICTED);
+#if SHOPT_PFSH
+		/* check for profile shell */
+		if(argc>0 && strmatch(name,pfsh_pattern))
+			sh_onoption(SH_PFSH);
+#endif
+#if SHOPT_BASH
+		/* check for invocation as bash */
+		if(argc>0 && strmatch(name,bash_pattern))
+		{
+		        sh.userinit = userinit=bash_init;
+			sh_onoption(SH_BASH);
+			if(*name=='r')
+				sh_onoption(SH_RESTRICTED);
+		}
+#endif
 		/* look for options */
 		/* sh.st.dolc is $#	*/
 		if((sh.st.dolc = sh_argopts(-argc,argv)) < 0)
@@ -1041,22 +924,39 @@ int sh_init(register int argc,register char *argv[], void(*userinit)(int))
 		{
 			sh.st.dolc--;
 			sh.st.dolv++;
-#if defined (_WIN32) || _WINIX
+#if _WINIX
 			name = sh.st.dolv[0];
 			if(name[1]==':' && (name[2]=='/' || name[2]=='\\'))
 			{
-				name[1] = name[0];
-				name[0] = '/';
-				name[2] = '/';
+#if _lib_pathposix
+				char*	p;
+
+				if((n = pathposix(name, NIL(char*), 0)) > 0 && (p = (char*)malloc(++n)))
+				{
+					pathposix(name, p, n);
+					name = p;
+				}
+				else
+#endif
+				{
+					name[1] = name[0];
+					name[0] = name[2] = '/';
+				}
 			}
-#endif /*_WIN32 */
+#endif /* _WINIX */
 		}
 	}
+	if (sh_isoption(SH_PFSH))
+	{
+		struct passwd *pw = getpwuid(sh.userid);
+		if(pw)
+			sh.user = strdup(pw->pw_name);
+		
+	}
 	/* set[ug]id scripts require the -p flag */
-	prof = !sh_isoption(SH_PRIVILEGED);
 	if(sh.userid!=sh.euserid || sh.groupid!=sh.egroupid)
 	{
-#ifdef SHOPT_P_SUID
+#if SHOPT_P_SUID
 		/* require sh -p to run setuid and/or setgid */
 		if(!sh_isoption(SH_PRIVILEGED) && sh.euserid < SHOPT_P_SUID)
 		{
@@ -1065,10 +965,7 @@ int sh_init(register int argc,register char *argv[], void(*userinit)(int))
 		}
 		else
 #else
-		{
 			sh_onoption(SH_PRIVILEGED);
-			prof = 0;
-		}
 #endif /* SHOPT_P_SUID */
 #ifdef SHELLMAGIC
 		/* careful of #! setuid scripts with name beginning with - */
@@ -1089,9 +986,12 @@ int sh_init(register int argc,register char *argv[], void(*userinit)(int))
 	sh.st.self = &sh.global;
         sh.topscope = (Shscope_t*)sh.st.self;
 	sh_offstate(SH_INIT);
+	login_files[0] = (char*)e_profile;
+	login_files[1] = ".profile";
+	sh.login_files = login_files;
 	if(sh.userinit=userinit)
 		(*userinit)(0);
-	return(prof);
+	return(&sh);
 }
 
 Shell_t *sh_getinterp(void)
@@ -1104,6 +1004,7 @@ Shell_t *sh_getinterp(void)
  */
 int sh_reinit(char *argv[])
 {
+	Shopt_t opt;
 	dtclear(sh.fun_tree);
 	dtclose(sh.alias_tree);
 	sh.alias_tree = inittree(&sh,shtab_aliases);
@@ -1118,7 +1019,18 @@ int sh_reinit(char *argv[])
 	/* remove locals */
 	nv_scan(sh.var_tree,sh_envnolocal,(void*)0,NV_EXPORT,0);
 	memset(sh.st.trapcom,0,(sh.st.trapmax+1)*sizeof(char*));
-	sh_offoption(~(SH_TRACKALL|SH_EMACS|SH_GMACS|SH_VIRAW|SH_VI));
+	memset((void*)&opt,0,sizeof(opt));
+	if(sh_isoption(SH_TRACKALL))
+		on_option(&opt,SH_TRACKALL);
+	if(sh_isoption(SH_EMACS))
+		on_option(&opt,SH_EMACS);
+	if(sh_isoption(SH_GMACS))
+		on_option(&opt,SH_GMACS);
+	if(sh_isoption(SH_VI))
+		on_option(&opt,SH_VI);
+	if(sh_isoption(SH_VIRAW))
+		on_option(&opt,SH_VIRAW);
+	sh.options = opt;
 	/* set up new args */
 	if(argv)
 		sh.arglist = sh_argcreate(argv);
@@ -1151,11 +1063,15 @@ Namfun_t *nv_cover(register Namval_t *np)
 	 return(0);
 }
 
+static Namtype_t typeset;
+static const char *shdiscnames[] = { "tilde", 0};
+
 /*
  * Initialize the shell name and alias table
  */
 static Init_t *nv_init(Shell_t *shp)
 {
+	Namval_t *np;
 	register Init_t *ip;
 	double d=0;
 	ip = newof(0,Init_t,1,0);
@@ -1164,48 +1080,65 @@ static Init_t *nv_init(Shell_t *shp)
 	ip->sh = shp;
 	shp->var_base = shp->var_tree = inittree(shp,shtab_variables);
 	ip->IFS_init.hdr.disc = &IFS_disc;
+	ip->IFS_init.hdr.nofree = 1;
 	ip->IFS_init.sh = shp;
 	ip->PATH_init.hdr.disc = &RESTRICTED_disc;
+	ip->PATH_init.hdr.nofree = 1;
 	ip->PATH_init.sh = shp;
 #ifdef PATH_BFPATH
 	ip->FPATH_init.hdr.disc = &RESTRICTED_disc;
+	ip->FPATH_init.hdr.nofree = 1;
 	ip->FPATH_init.sh = shp;
 	ip->CDPATH_init.hdr.disc = &CDPATH_disc;
+	ip->CDPATH_init.hdr.nofree = 1;
 	ip->CDPATH_init.sh = shp;
 #endif
 	ip->SHELL_init.hdr.disc = &RESTRICTED_disc;
 	ip->SHELL_init.sh = shp;
+	ip->SHELL_init.hdr.nofree = 1;
 	ip->ENV_init.hdr.disc = &RESTRICTED_disc;
+	ip->ENV_init.hdr.nofree = 1;
 	ip->ENV_init.sh = shp;
 	ip->VISUAL_init.hdr.disc = &EDITOR_disc;
+	ip->VISUAL_init.hdr.nofree = 1;
 	ip->VISUAL_init.sh = shp;
 	ip->EDITOR_init.hdr.disc = &EDITOR_disc;
+	ip->EDITOR_init.hdr.nofree = 1;
 	ip->EDITOR_init.sh = shp;
 	ip->OPTINDEX_init.hdr.disc = &OPTINDEX_disc;
+	ip->OPTINDEX_init.hdr.nofree = 1;
 	ip->OPTINDEX_init.sh = shp;
 	ip->SECONDS_init.hdr.disc = &SECONDS_disc;
+	ip->SECONDS_init.hdr.nofree = 1;
 	ip->SECONDS_init.sh = shp;
 	ip->RAND_init.hdr.disc = &RAND_disc;
+	ip->RAND_init.hdr.nofree = 1;
 	ip->SH_MATCH_init.hdr.disc = &SH_MATCH_disc;
+	ip->SH_MATCH_init.hdr.nofree = 1;
 	ip->LINENO_init.hdr.disc = &LINENO_disc;
+	ip->LINENO_init.hdr.nofree = 1;
 	ip->LINENO_init.sh = shp;
 	ip->L_ARG_init.hdr.disc = &L_ARG_disc;
+	ip->L_ARG_init.hdr.nofree = 1;
 #ifdef _hdr_locale
 	ip->LC_TYPE_init.hdr.disc = &LC_disc;
+	ip->LC_TYPE_init.hdr.nofree = 1;
 	ip->LC_NUM_init.hdr.disc = &LC_disc;
+	ip->LC_NUM_init.hdr.nofree = 1;
 	ip->LC_COLL_init.hdr.disc = &LC_disc;
+	ip->LC_COLL_init.hdr.nofree = 1;
 	ip->LC_MSG_init.hdr.disc = &LC_disc;
+	ip->LC_MSG_init.hdr.nofree = 1;
 	ip->LC_ALL_init.hdr.disc = &LC_disc;
+	ip->LC_ALL_init.hdr.nofree = 1;
 	ip->LANG_init.hdr.disc = &LC_disc;
+	ip->LANG_init.hdr.nofree = 1;
 	ip->LC_TYPE_init.sh = shp;
 	ip->LC_NUM_init.sh = shp;
 	ip->LC_COLL_init.sh = shp;
 	ip->LC_MSG_init.sh = shp;
 	ip->LANG_init.sh = shp;
 #endif /* _hdr_locale */
-#ifdef SHOPT_MULTIBYTE
-	ip->CSWIDTH_init.disc = &CSWIDTH_disc;
-#endif /* SHOPT_MULTIBYTE */
 	nv_stack(IFSNOD, &ip->IFS_init.hdr);
 	nv_stack(PATHNOD, &ip->PATH_init.hdr);
 #ifdef PATH_BFPATH
@@ -1235,9 +1168,6 @@ static Init_t *nv_init(Shell_t *shp)
 	nv_stack(LCNUMNOD, &ip->LC_NUM_init.hdr);
 	nv_stack(LANGNOD, &ip->LANG_init.hdr);
 #endif /* _hdr_locale */
-#ifdef SHOPT_MULTIBYTE
-	nv_stack(CSWIDTHNOD, &ip->CSWIDTH_init);
-#endif /* SHOPT_MULTIBYTE */
 	(PPIDNOD)->nvalue.lp = (&shp->ppid);
 	(TMOUTNOD)->nvalue.lp = (&shp->st.tmout);
 	(MCHKNOD)->nvalue.lp = (long*)(&sh_mailchk);
@@ -1246,49 +1176,23 @@ static Init_t *nv_init(Shell_t *shp)
 	shp->alias_tree = inittree(shp,shtab_aliases);
 	shp->track_tree = dtopen(&_Nvdisc,Dtset);
 	shp->bltin_tree = inittree(shp,(const struct shtable2*)shtab_builtins);
+	typeset.shp = shp;
+	typeset.optstring = sh_opttypeset;
+	nv_search("typeset",shp->bltin_tree,0)->nvfun = (void*)&typeset;
+#if SHOPT_BASH
+	nv_search("local",shp->bltin_tree,0)->nvfun = (void*)&typeset;
+#endif
 	shp->fun_tree = dtopen(&_Nvdisc,Dtset);
 	dtview(shp->fun_tree,shp->bltin_tree);
-#ifdef SHOPT_NAMESPACE
-	{
-	Namval_t *np;
-	np = nv_search("global",DOTSHNOD->nvalue.hp,NV_ADD);
-	nv_putval(np,(char*)shp->var_tree,NV_TABLE|NV_RDONLY|NV_NOFREE);
-	np = nv_search("function",DOTSHNOD->nvalue.hp,NV_ADD);
-	nv_putval(np,(char*)shp->fun_tree,NV_TABLE|NV_RDONLY|NV_NOFREE);
-	np = nv_search("builtin",DOTSHNOD->nvalue.hp,NV_ADD);
-	nv_putval(np,(char*)shp->bltin_tree,NV_TABLE|NV_RDONLY|NV_NOFREE);
-	np = nv_search("alias",DOTSHNOD->nvalue.hp,NV_ADD);
-	nv_putval(np,(char*)shp->alias_tree,NV_TABLE|NV_RDONLY|NV_NOFREE);
-	np = nv_search("type",DOTSHNOD->nvalue.hp,NV_ADD);
-	np->nvalue.hp = dtopen(&_Nvdisc,Dtset);
-	nv_onattr(np,NV_TABLE|NV_RDONLY|NV_NOFREE);
-	np = nv_search("namespace",DOTSHNOD->nvalue.hp,NV_ADD);
+#if SHOPT_NAMESPACE
+	np = nv_mount(DOTSHNOD, "global", shp->var_tree);
+	nv_onattr(np,NV_RDONLY);
+	np = nv_search("namespace",nv_dict(DOTSHNOD),NV_ADD);
 	nv_putval(np,".sh.global",NV_RDONLY|NV_NOFREE);
 	nv_stack(np, &NSPACE_init);
-	}
 #endif /* SHOPT_NAMESPACE */
-#ifdef SHOPT_OO
-	{
-	Namval_t *np;
-	int flags;
-	time_t t=time(0);
-	struct dctime *dp = newof(0,struct dctime,1,0);
-	np = nv_search("type",DOTSHNOD->nvalue.hp,NV_ADD);
-	np->nvalue.hp = dtopen(&_Nvdisc,Dtset);
-	np = nv_search("time", np->nvalue.hp, NV_ADD);
-	if(sizeof(Sflong_t)>sizeof(long) && sizeof(time_t)==sizeof(Sflong_t))
-		flags = NV_INTEGER|NV_LONG;
-	else
-		flags = NV_INTEGER;
-	nv_onattr(np,flags);
-	nv_putval(np,(char*)&t, flags);
-	dp->fun.disc = &timedisc;
-	dp->fun.type = np;
-	nv_stack(np,&dp->fun);
-	np = nv_namptr(dp->node,0);
-	nv_onattr(np,NV_MINIMAL);
-	}
-#endif /* SHOPT_OO */
+	np = nv_mount(DOTSHNOD, "type", dtopen(&_Nvdisc,Dtset));
+	nv_adddisc(DOTSHNOD, shdiscnames);
 	return(ip);
 }
 
@@ -1302,7 +1206,7 @@ static Dt_t *inittree(Shell_t *shp,const struct shtable2 *name_vals)
 	register const struct shtable2 *tp;
 	register unsigned n = 0;
 	register Dt_t *treep;
-	Dt_t *base_treep;
+	Dt_t *base_treep, *dict;
 	for(tp=name_vals;*tp->sh_name;tp++)
 		n++;
 	np = (Namval_t*)calloc(n,sizeof(Namval_t));
@@ -1327,14 +1231,14 @@ static Dt_t *inittree(Shell_t *shp,const struct shtable2 *name_vals)
 			np->nvalue.cp = (char*)tp->sh_value;
 		nv_setattr(np,tp->sh_number);
 		if(nv_istable(np))
-			np->nvalue.hp = dtopen(&_Nvdisc,Dtset);
+			nv_mount(np,(const char*)0,dict=dtopen(&_Nvdisc,Dtset));
 		if(nv_isattr(np,NV_INTEGER))
 			nv_setsize(np,10);
 		else
 			nv_setsize(np,0);
 		dtinsert(treep,np);
 		if(nv_istable(np))
-			treep = np->nvalue.hp;
+			treep = dict;
 	}
 	return(treep);
 }
@@ -1435,33 +1339,29 @@ int sh_term(void)
 
 /* function versions of these */
 
-#undef sh_isoption
-Shopt_t sh_isoption(Shopt_t opt)
+#define DISABLE	/* proto workaround */
+
+unsigned long sh_isoption DISABLE (int opt)
 {
-	return(sh.options & (opt));
+	return(sh_isoption(opt));
 }
 
-#undef sh_onoption
-Shopt_t sh_onoption(Shopt_t opt)
+unsigned long sh_onoption DISABLE (int opt)
 {
-	return(sh.options |= (opt));
+	return(sh_onoption(opt));
 }
 
-#undef sh_offoption
-Shopt_t sh_offoption(Shopt_t opt)
+unsigned long sh_offoption DISABLE (int opt)
 {
-	return(sh.options &= ~(opt));
+	return(sh_offoption(opt));
 }
 
-#undef sh_sigcheck
-void	sh_sigcheck(void)
+void	sh_sigcheck DISABLE (void)
 {
-	if(sh.trapnote&SH_SIGSET)
-		sh_exit(SH_EXITSIG);
+	sh_sigcheck();
 }
 
-#undef sh_bltin_tree
-Dt_t	*sh_bltin_tree(void)
+Dt_t*	sh_bltin_tree DISABLE (void)
 {
 	return(sh.bltin_tree);
 }

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -47,7 +47,7 @@ const Shtable_t shtab_reserved[] =
 		"function",	FUNCTSYM,
 		"if",		IFSYM,
 		"in",		INSYM,
-#ifdef SHOPT_NAMESPACE
+#if SHOPT_NAMESPACE
 		"namespace",	NSPACESYM,
 #endif /* SHOPT_NAMESPACE */
 		"select",	SELECTSYM,

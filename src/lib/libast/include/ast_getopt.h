@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -24,33 +24,23 @@
 *                                                                  *
 *******************************************************************/
 #pragma prototyped
+/*
+ * legacy standard getopt interface
+ */
 
-#include <ast_lib.h>
+#ifndef _AST_GETOPT_H
+#define _AST_GETOPT_H		1
 
-#if _lib_spawnvp
+extern int	opterr;
+extern int	optind;
+extern int	optopt;
+extern char*	optarg;
 
-#include <ast.h>
+#ifndef NULL	/* in case <stdlib.h> or <stdio.h> got here first */
 
-NoN(spawnvp)
+extern int	getopt(int, char* const*, const char*);
+extern int	getsubopt(char**, char* const*, char**);
 
-#else
-
-#if defined(__EXPORT__)
-#include <sys/types.h>
-__EXPORT__ pid_t spawnvp(const char*, char* const[]);
 #endif
-
-#include <ast.h>
-#include <errno.h>
-
-#if defined(__EXPORT__)
-#define extern	__EXPORT__
-#endif
-
-extern pid_t
-spawnvp(const char* name, char* const argv[])
-{
-	return spawnvpe(name, argv, environ);
-}
 
 #endif

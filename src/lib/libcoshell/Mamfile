@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 4.3 2002-12-21
+info mam static 00000 1994-07-17 make (AT&T Research) 4.3 2003-04-15
 setv INSTALLROOT ../../..
 setv PACKAGE_ast ${INSTALLROOT}
 setv PACKAGE_ast_INCLUDE ${PACKAGE_ast}/include/ast
@@ -9,7 +9,7 @@ setv ARFLAGS cr
 setv AS as
 setv ASFLAGS
 setv CC cc
-setv CCFLAGS "-O"
+setv CCFLAGS  ${debug?1?${mam_cc_DEBUG}?${mam_cc_OPTIMIZE}?}
 setv COTEMP $$
 setv CPIO cpio
 setv CPIOFLAGS
@@ -47,7 +47,7 @@ exec - {
 exec - case "" in
 exec - *?)	echo " " ;;
 exec - esac
-exec - for i in coshell  ast
+exec - for i in coshell ast
 exec - do	case $i in
 exec - 	"coshell"|coshell)
 exec - 		;;
@@ -87,6 +87,9 @@ done ../../../include/prototyped.h dontcare
 done ../../../include/ast/prototyped.h dontcare
 done ../../../include/ast/re_comp.h dontcare
 make ../../../include/ast/getopt.h implicit
+make ../../../include/ast/ast_getopt.h implicit
+prev ../../../include/ast/prototyped.h implicit
+done ../../../include/ast/ast_getopt.h dontcare
 prev ../../../include/ast/prototyped.h implicit
 done ../../../include/ast/getopt.h dontcare
 make ../../../include/ast/ast_fcntl.h implicit
@@ -108,7 +111,7 @@ make ../../../include/ast/ast_map.h implicit
 done ../../../include/ast/ast_map.h dontcare
 make ../../../include/ast/stdio.h implicit
 make ../../../include/ast/ast_stdio.h implicit
-prev ../../../include/ast/getopt.h implicit
+prev ../../../include/ast/ast_getopt.h implicit
 prev ../../../include/ast/sfio_s.h implicit
 prev ../../../include/ast/ast_common.h implicit
 done ../../../include/ast/ast_stdio.h dontcare
@@ -120,7 +123,7 @@ done ../../../include/ast/ast_limits.h dontcare
 done ../../../include/ast/limits.h dontcare
 make ../../../include/ast/ast_hdr.h implicit
 done ../../../include/ast/ast_hdr.h dontcare
-prev ../../../include/ast/getopt.h implicit
+prev ../../../include/ast/ast_getopt.h implicit
 make ../../../include/ast/ast_lib.h implicit
 done ../../../include/ast/ast_lib.h dontcare
 prev ../../../include/ast/ast_common.h implicit
@@ -277,8 +280,8 @@ exec - 	fi
 exec - 	;;
 exec - esac
 exec - case '${mam_cc_SHELLMAGIC}' in
-exec - "")	case '' in
-exec - 	"")	cp ignore.sh ignore
+exec - "")	case 0 in
+exec - 	0)	cp ignore.sh ignore
 exec - 		;;
 exec - 	*)	{
 exec - 		i=`(read x; echo $x) < ignore.sh`
@@ -293,8 +296,9 @@ exec - 	esac
 exec - 	;;
 exec - *)	{
 exec - 	echo '${mam_cc_SHELLMAGIC}'
-exec - 	case '' in
-exec - 	?*)	echo  ;;
+exec - 	case 0 in
+exec - 	0)	;;
+exec - 	*)	echo  ;;
 exec - 	esac
 exec - 	cat ignore.sh
 exec - 	} > ignore
@@ -315,8 +319,8 @@ exec - 	fi
 exec - 	;;
 exec - esac
 exec - case '${mam_cc_SHELLMAGIC}' in
-exec - "")	case '' in
-exec - 	"")	cp silent.sh silent
+exec - "")	case 0 in
+exec - 	0)	cp silent.sh silent
 exec - 		;;
 exec - 	*)	{
 exec - 		i=`(read x; echo $x) < silent.sh`
@@ -331,8 +335,9 @@ exec - 	esac
 exec - 	;;
 exec - *)	{
 exec - 	echo '${mam_cc_SHELLMAGIC}'
-exec - 	case '' in
-exec - 	?*)	echo  ;;
+exec - 	case 0 in
+exec - 	0)	;;
+exec - 	*)	echo  ;;
 exec - 	esac
 exec - 	cat silent.sh
 exec - 	} > silent
@@ -347,8 +352,9 @@ exec - then	set -x && mkdir -p ${PACKAGE_ast_LIB}
 exec - fi
 done ../../../lib generated
 make ../../../lib/libcoshell.a archive
+prev ../../../lib
 prev libcoshell.a archive
-exec - ${STDMV} ${PACKAGE_ast_LIB}/libcoshell.a ${PACKAGE_ast_LIB}/libcoshell.a.old 2>/dev/null || true; test '' = 'libcoshell.a' || ${STDCMP} 2>/dev/null -s libcoshell.a ${PACKAGE_ast_LIB}/libcoshell.a || { ${STDCP} libcoshell.a ${PACKAGE_ast_LIB}/libcoshell.a  		    		    ;}
+exec - test '' = 'libcoshell.a' || ${STDCMP} 2>/dev/null -s libcoshell.a ${PACKAGE_ast_LIB}/libcoshell.a || { ${STDMV} ${PACKAGE_ast_LIB}/libcoshell.a ${PACKAGE_ast_LIB}/libcoshell.a.old 2>/dev/null || true; ${STDCP} libcoshell.a ${PACKAGE_ast_LIB}/libcoshell.a  		    		    ;}
 exec - (ranlib ${PACKAGE_ast_LIB}/libcoshell.a) >/dev/null 2>&1 || true
 done ../../../lib/libcoshell.a generated
 make ../../../man/man3
@@ -358,9 +364,10 @@ exec - then	set -x && mkdir -p ${INSTALLROOT}/man/man3
 exec - fi
 done ../../../man/man3 generated
 make ../../../man/man3/coshell.3
+prev ../../../man/man3
 make coshell.3
 done coshell.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/coshell.3 ${INSTALLROOT}/man/man3/coshell.3.old 2>/dev/null || true; test '' = 'coshell.3' || ${STDCMP} 2>/dev/null -s coshell.3 ${INSTALLROOT}/man/man3/coshell.3 || { ${STDCP} coshell.3 ${INSTALLROOT}/man/man3/coshell.3  		    		    ;}
+exec - test '' = 'coshell.3' || ${STDCMP} 2>/dev/null -s coshell.3 ${INSTALLROOT}/man/man3/coshell.3 || { ${STDMV} ${INSTALLROOT}/man/man3/coshell.3 ${INSTALLROOT}/man/man3/coshell.3.old 2>/dev/null || true; ${STDCP} coshell.3 ${INSTALLROOT}/man/man3/coshell.3  		    		    ;}
 done ../../../man/man3/coshell.3 generated
 make ../../../lib/lib
 exec - set -
@@ -369,8 +376,9 @@ exec - then	set -x && mkdir -p ${PACKAGE_ast_LIB}/lib
 exec - fi
 done ../../../lib/lib generated
 make ../../../lib/lib/coshell
+prev ../../../lib/lib
 prev coshell.req
-exec - ${STDMV} ${PACKAGE_ast_LIB}/lib/coshell ${PACKAGE_ast_LIB}/lib/coshell.old 2>/dev/null || true; test '' = 'coshell.req' || ${STDCMP} 2>/dev/null -s coshell.req ${PACKAGE_ast_LIB}/lib/coshell || { ${STDCP} coshell.req ${PACKAGE_ast_LIB}/lib/coshell  		    		    ;}
+exec - test '' = 'coshell.req' || ${STDCMP} 2>/dev/null -s coshell.req ${PACKAGE_ast_LIB}/lib/coshell || { ${STDMV} ${PACKAGE_ast_LIB}/lib/coshell ${PACKAGE_ast_LIB}/lib/coshell.old 2>/dev/null || true; ${STDCP} coshell.req ${PACKAGE_ast_LIB}/lib/coshell  		    		    ;}
 done ../../../lib/lib/coshell generated
 make ../../../bin
 exec - set -
@@ -379,12 +387,13 @@ exec - then	set -x && mkdir -p ${INSTALLROOT}/bin
 exec - fi
 done ../../../bin generated
 make ../../../bin/ignore
+prev ../../../bin
 prev ignore
-exec - ${STDMV} ${INSTALLROOT}/bin/ignore ${INSTALLROOT}/bin/ignore.old 2>/dev/null || true; test '' = 'ignore' || ${STDCMP} 2>/dev/null -s ignore ${INSTALLROOT}/bin/ignore || { ${STDCP} ignore ${INSTALLROOT}/bin/ignore  		    		    ;}
+exec - test '' = 'ignore' || ${STDCMP} 2>/dev/null -s ignore ${INSTALLROOT}/bin/ignore || { ${STDMV} ${INSTALLROOT}/bin/ignore ${INSTALLROOT}/bin/ignore.old 2>/dev/null || true; ${STDCP} ignore ${INSTALLROOT}/bin/ignore  		    		    ;}
 done ../../../bin/ignore generated
 make ../../../bin/silent
 prev silent
-exec - ${STDMV} ${INSTALLROOT}/bin/silent ${INSTALLROOT}/bin/silent.old 2>/dev/null || true; test '' = 'silent' || ${STDCMP} 2>/dev/null -s silent ${INSTALLROOT}/bin/silent || { ${STDCP} silent ${INSTALLROOT}/bin/silent  		    		    ;}
+exec - test '' = 'silent' || ${STDCMP} 2>/dev/null -s silent ${INSTALLROOT}/bin/silent || { ${STDMV} ${INSTALLROOT}/bin/silent ${INSTALLROOT}/bin/silent.old 2>/dev/null || true; ${STDCP} silent ${INSTALLROOT}/bin/silent  		    		    ;}
 done ../../../bin/silent generated
 make ../../../include/ast
 exec - set -
@@ -393,6 +402,7 @@ exec - then	set -x && mkdir -p ${PACKAGE_ast_INCLUDE}
 exec - fi
 done ../../../include/ast generated
 make ../../../include/ast/coshell.h
+prev ../../../include/ast
 prev coshell.h
 exec - proto -p -s -l ${PACKAGE_ast_LIB}/package/ast.lic '-o since=1990,author=gsf'  coshell.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${PACKAGE_ast_INCLUDE}/coshell.h 1.${COTEMP}.x

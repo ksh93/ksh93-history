@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1982-2002 AT&T Corp.                #
+#                Copyright (c) 1982-2003 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -318,4 +318,25 @@ fi
 $SHELL -c 'typeset x$((10))=foo' 2> /dev/null || err_exit 'typeset x$((10)) parse error'
 x=$(( exp(log(2.0)) ))
 (( x > 1.999 && x < 2.001 )) || err_exit 'composit functions not working'
+unset x y n
+typeset -Z8 x=0 y=0
+integer n
+for	(( n=0; n < 20; n++ ))
+do	let "x = $x+1"
+	(( y = $y+1 ))
+done
+(( x == n ))  || err_exit 'let with zero filled fields not working'
+(( y == n ))  || err_exit '((...)) with zero filled fields not working'
+unset i ip ipx
+typeset -i hex=( 172 30 18 1)
+typeset -iu ip=0 ipx=0
+integer i
+for	((i=0; i < 4; i++))
+do	(( ip =  (ip<<8) | hex[i]))
+done
+for ((i=0; i < 4; i++))
+do	(( ipx = ip % 256 ))
+	(( ip /= 256 ))
+	(( ipx != hex[3-i] )) && err_exit "hex digit $((3-i)) not correct"
+done	
 exit $((Errors))

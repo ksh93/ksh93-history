@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -36,9 +36,6 @@
  *
  *   David Korn
  *   AT&T Research
- *   Room 2B-102
- *   Murray Hill, N. J. 07974
- *   Tel. x7975
  *   dgk@research.att.com
  *
  */
@@ -58,6 +55,7 @@
  *	struct frame
  *	data
  */
+
 #define STK_ALIGN	ALIGN_BOUND
 #define STK_FSIZE	(1024*sizeof(int))
 #define STK_HDRSIZE	(sizeof(Sfio_t)+sizeof(Sfdisc_t))
@@ -73,9 +71,19 @@ __EXTERN__(Sfio_t, _Stak_data);
 
 struct frame
 {
-	char	*prev;	/* address of previous frame */
-	char	*end;	/* address of end this frame */
+	union
+	{
+		char	frame_align[STK_ALIGN];
+		struct
+		{
+			char	*frame_prev;	/* address of previous frame */
+			char	*frame_end;	/* address of end this frame */
+		}	frame_head;
+	}	frame_union;
 };
+
+#define prev	frame_union.frame_head.frame_prev
+#define end	frame_union.frame_head.frame_end
 
 struct stk
 {
@@ -457,7 +465,6 @@ static char *stkgrow(register Sfio_t *stream, unsigned size)
 	register struct frame *fp;
 	register char *cp;
 	register unsigned m = stktell(stream);
-	register int reused = 0;
 	n += (m + sizeof(struct frame)+1);
 	if(sp->stkflags&STK_SMALL)
 #ifndef USE_REALLOC
@@ -466,24 +473,17 @@ static char *stkgrow(register Sfio_t *stream, unsigned size)
 #endif /* !USE_REALLOC */
 		n = roundof(n,STK_FSIZE);
 	/* see whether current frame can be extended */
-	if((char*)(stream->_data) == sp->stkbase+sizeof(struct frame))
-	{
-		cp = newof(sp->stkbase,char,n,0);
-		reused++;
-	}
-	else
-		cp = newof((char*)0, char, n, 0);
+	cp = newof((char*)0, char, n, 0);
 	if(!cp && (!sp->stkoverflow || !(cp = (*sp->stkoverflow)(n))))
 		return(0);
 	increment(grow);
 	count(addsize,n);
 	fp = (struct frame*)cp;
-	if(!reused)
-		fp->prev = sp->stkbase;
+	fp->prev = sp->stkbase;
 	sp->stkbase = cp;
 	sp->stkend = fp->end = cp+n;
 	cp = (char*)(fp+1);
-	if(m && !reused)
+	if(m)
 		memcpy(cp,(char*)stream->_data,m);
 	count(movsize,m);
 	sfsetbuf(stream,cp,sp->stkend-cp);

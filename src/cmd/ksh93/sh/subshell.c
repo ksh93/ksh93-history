@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -40,8 +40,6 @@
 #include	"variables.h"
 #include	"path.h"
 
-#undef nv_name
-
 #ifndef PIPE_BUF
 #   define PIPE_BUF	512
 #endif
@@ -70,7 +68,11 @@ static struct subshell
 #ifdef PATH_BFPATH
 	Pathcomp_t	*pathlist; /* for PATH variable */
 #endif
+#if (ERROR_VERSION >= 20030214L)
 	struct Error_context_s *errcontext;
+#else
+	struct errorcontext *errcontext;
+#endif
 	Shopt_t		options;/* save shell options */
 	pid_t		subpid;	/* child process id */
 	Sfio_t*	saveout;/*saved standard output */
@@ -168,12 +170,15 @@ void sh_subfork(void)
 	}
 	else
 	{
+		short subshell;
 		/* this is the child part of the fork */
 		/* setting subpid to 1 causes subshell to exit when reached */
-		sh_onstate(SH_FORKED|SH_NOLOG);
+		sh_onstate(SH_FORKED);
+		sh_onstate(SH_NOLOG);
 		sh_offstate(SH_MONITOR);
 		subshell_data = 0;
-		sh.subshell = 0;
+		subshell = sh.subshell = 0;
+		nv_putval(SH_SUBSHELLNOD, (char*)&subshell, NV_INTEGER|NV_SHORT);
 		sp->subpid=0;
 	}
 }
@@ -208,13 +213,9 @@ Namval_t *sh_assignok(register Namval_t *np,int add)
 	save = sh.subshell;
 	sh.subshell = 0;;
 	nv_clone(np,mp,NV_NOFREE);
-	sh.subshell = save;;
+	sh.subshell = save;
 	return(np);
 }
-
-#ifdef _ENV_H
-extern void env_put(Env_t*,Namval_t*);
-#endif
 
 /*
  * restore the variables
@@ -247,7 +248,7 @@ static void nv_restore(struct subshell *sp)
 		{
 			char *name = nv_name(mp);
 #ifdef _ENV_H
-			env_put(sh.env,mp);
+			sh_envput(sh.env,mp);
 #endif
 			if(*name=='_' && strcmp(name,"_AST_FEATURES")==0)
 				astconf(NiL, NiL, NiL);
@@ -323,6 +324,7 @@ Sfio_t *sh_subshell(union anynode *t, int flags, int comsub)
 	register struct subshell *sp = &sub_data;
 	int jmpval,nsig;
 	int savecurenv = shp->curenv;
+	short subshell;
 	char *savsig;
 	Sfio_t *iop=0;
 	struct checkpt buff;
@@ -339,7 +341,9 @@ Sfio_t *sh_subshell(union anynode *t, int flags, int comsub)
 	shp->curenv = ++subenv;
 	savst = shp->st;
 	sh_pushcontext(&buff,SH_JMPSUB);
-	shp->subshell++;
+	subshell = shp->subshell+1;
+	nv_putval(SH_SUBSHELLNOD, (char*)&subshell, NV_INTEGER|NV_SHORT);
+	shp->subshell = subshell;
 	sp->prev = subshell_data;
 	subshell_data = sp;
 	sp->errcontext = &buff.err;
@@ -399,7 +403,7 @@ Sfio_t *sh_subshell(union anynode *t, int flags, int comsub)
 		else if(sp->prev)
 		{
 			sp->pipe = sp->prev->pipe;
-			flags &= ~SH_NOFORK;
+			flags &= ~sh_state(SH_NOFORK);
 		}
 		sh_exec(t,flags);
 	}
@@ -471,6 +475,8 @@ Sfio_t *sh_subshell(union anynode *t, int flags, int comsub)
 		sfseek(iop,(off_t)0,SEEK_SET);
 	if(shp->subshell)
 		shp->subshell--;
+	subshell = shp->subshell;
+	nv_putval(SH_SUBSHELLNOD, (char*)&subshell, NV_INTEGER|NV_SHORT);
 #ifdef PATH_BFPATH
 	path_delete((Pathcomp_t*)shp->pathlist);
 	shp->pathlist = (void*)sp->pathlist;

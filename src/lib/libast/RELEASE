@@ -1,3 +1,87 @@
+03-04-21 tm/tmdate.c: fix next hour/min logic
+03-04-15 vmalloc/malloc.c: intercept __malloc() along with __libc_malloc()
+	 string/strdup.c: intercept __strdup() along with __libc_strdup()
+	 features/mmap: consolidate from features/(lib|sfio|vmalloc)
+	 add _NO_MMAP==1 to disable all mmap()/munmap() calls
+	 path/pathposix.c: add
+03-04-14 comp/setlocale.c: fix debug_mbtowc() return value for *s==0 || n < 1
+	 comp/iconv.c: fix error return errno values
+03-04-11 misc/stk.c: fix stkgrow() realloc bug
+03-04-05 string/tok.c: support readonly single token input strings
+	 disc/sfdcdio.c: fix F_DIOINFO and FDIRECT #ifdef's
+	 include/ast_std.h: allow _LARGEFILE64_SOURCE on __hppa
+	 features/common: fix `tst _foo_' => `tst foo_' typo
+	 features/float: fix `tst _foo_' => `tst foo_' typo
+	 features/float: add FLTMAX_(UINTMAX_MAX,INTMAX_MAX,INTMAX_MIN)
+	 comp/omitted.c: fix pathconf => _pathconf => _ast_pathconf loop
+03-04-03 features/float: add _ast_no_um2fm: no usinged intmax => floatmax cast
+	 vmalloc/vmbest.c: add getenv("VMCHECK") to initialize Vmcheck
+03-03-28 include/ast_dir.h: add D_TYPE; { D_FILENO D_TYPE } must be #ifdef'd
+	 misc/fts.c|getcwd.c|glob.c,preroot/getpreroot.c: add D_FILENO #ifdef's
+	 Makefile: make sure _BLD_ast is defined for all compiles
+03-03-27 ast_vfork.h: generate from features/vfork to pick up headers/pragmas
+03-03-25 comp/omitted.c: drop free() of live environ
+	 path/pathshell.c: allow trailing .exe -- pox on that
+	 string/strtoi.h: fix bug leading 3 digits before thousands sep bug
+	 string/(fmt|str)[gu]id.c: we know root when we see it
+03-03-24 misc/optget.c: handle : and ? in := default value
+03-03-21 ast_std.h: drop all spawn*() but spawnveg()
+	 obsolete/spawn.c: add for dropped spawn*()
+	 features/lib: _use_spawnveg if spawnveg() is a win over fork()/exec()
+	 features/lib: drop NutForkExecve() and _map_spawnve
+	 features/lib: fix memccpy test to clean up /tmp droppings
+	 comp/spawnveg.c: call posix_spawn() if implemented
+	 comp/omitted.c: add spawnve() intercept
+	 comp/getoptl.c: set getopt_long() optind even if no options
+	 tm/tmfmt.c: add %Q<delim>recent<delim>distant<delim>
+	 misc/optget.c: fix trailing '*' for option and option args
+	 sfio/sfmode.c: getenv("_AST_SFIO_OPTIONS") [,]SF_LINE[,] for fd {0,1,2}
+	 vmalloc/*: kpv sync for uwin build independent of libast
+03-03-18 port/astconf.c: switch to dynamic string values (saves 7K data/bss)
+	 string/strmatch.c: switch to dynamic regex cache (saves 3K data/bss)
+	 regex/regcoll.c,ucs_names.h: initialize rw tables from smaller ro data
+	 features/lib: add vfork test for passing SIG_IGN across exec
+	 features/lib: add spawn test for passing SIG_IGN across spawn
+03-03-17 comp/omitted.c: unlink() renames to .deleted dir in case file open
+	 sfio/sfpopen.c: handle mode "" for spawn with no pipe
+	 features/float,comp/frexp.c,comp/frexpl.c: add pow2() table alternative
+03-03-12 features/lib: fix linux.ia64 memccpy() tests -- now its their turn
+	 features/vmalloc: fix /dev/zero test
+	 features/align: _ast_intmax_t and _ast_fltmax_t join the union
+	 misc/stk.c: fix struct frame size to align data
+	 disc/sfdcdos.c: change sfslen() => sfvalue(f)
+03-03-10 misc/optget.c: handle [f\f:x:lll\f?ddd]
+03-03-07 port/astconf.c: uninitialized CONFORMANCE + POSIXLY_CORRECT => standard
+03-03-05 comp/omitted.c: make sure at least /bin is in PATH to find cygwin dlls
+03-03-02 path/pathshell.c: write access to /bin is effectively root
+03-02-28 features/float: add (FLT|DBL|LDBL)_U?(LONG|LONGLONG|INTMAX)_(MIN|MAX)
+03-02-25 features/lib: change vfork() test to use _exit() instead of exit()
+03-02-23 include/error.h: update ERROR_VERSION for error_info.number space
+03-02-22 comp/conf.sh: wrap ksh check in eval to avoid premature exit
+03-02-21 misc/fts.c: verify chdir(..) to avoid malicious dir rename()
+03-02-19 string/strtoip4.c: isspace() instead of ' '||'\t'
+03-02-17 regex/regcomp.c: fix stats.l REX_REP logic that botched REX_BM
+03-02-13 string/base64.c: handle catenated encodings
+03-02-11 features/libpath.sh: change LIBPATH to <dir>[:<env>[:<pat>]][,...]
+03-02-07 path/pathfind.c: allow "/dev/null" to be PATH_REGULAR
+03-02-06 include/ast.h,fmtquote.c: add FMT_ALWAYS|FMT_ESCAPED|FMT_SHELL|FMT_WIDE
+03-02-05 tm/tmdate.c,tm/tmword.c,string/strelapsed.c: '_' treated like ' '
+03-02-01 string/strelapsed.c: handle ps style [day-][hour:]min:sec
+03-01-31 port/astlicense.c: fix author=* match
+03-01-30 include/tm.h: add tmisleapyear() macro
+03-01-29 comp/getopt.h,comp/getoptl.c: add gnu getopt_long(), getopt_long_only()
+	 include/ast_getopt.h: for non-gnu part of comp/getopt.h
+	 include/ast_std.h: include <ast_getopt.h> instead of <getopt.h>
+03-01-28 ast.h,string/base64.c: add base64encode() and base64decode()
+	 path/pathfind.c: verify S_ISREG()
+03-01-24 path/pathexists.c: fix abs dir bug and deal with case ignorance
+03-01-23 path/pathpath.c: honor PATH_ABSOLUTE for the easy case too
+03-01-22 path/pathprobe.c: fix search to find both the probe script and command
+03-01-17 misc/magic.tab: application/zip => appplication/(gzip|pzip|zip)
+03-01-14 misc/optget.c: change href="" to href="."
+03-01-10 include/ast_std.h: strtold() import hackery for static __CYGWIN__
+03-01-03 include/regex.h,regex/regcomp.h: add REG_SHELL_GROUP
+	 include/ast.h,string/strmatch.c: add STR_GROUP for REG_SHELL_GROUP
 02-12-15 include/error.h: errorcontext => Error_context_s (compatible til 2004)
 02-12-06 misc/sigdata.c: add NoF(sigdadata) -- why nmake was uninterruptable!
 02-12-03 comp/omitted.c,features/omitted: handle cygwin alarm() return botch

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -33,6 +33,7 @@
  */
 
 #include <ast.h>
+#include <sys/stat.h>
 
 /*
  * return pointer to the full path name of the shell
@@ -40,7 +41,9 @@
  * SHELL is read from the environment and must start with /
  *
  * if set-uid or set-gid then the executable and its containing
- * directory must not be writable by the real user
+ * directory must not be owned by the real user/group
+ *
+ * root/administrator has its own test
  *
  * astconf("SHELL",NiL,NiL) is returned by default
  *
@@ -51,28 +54,56 @@
 char*
 pathshell(void)
 {
-	register char*	s;
 	register char*	sh;
-	register int	i;
+	int		ru;
+	int		eu;
+	int		rg;
+	int		eg;
+	struct stat	st;
 
 	static char*	val;
 
-	if ((sh = getenv("SHELL")) && *sh == '/' && strmatch(sh, "*/(sh|*[!cC]sh)?(-+([a-zA-Z0-9.]))"))
+	if ((sh = getenv("SHELL")) && *sh == '/' && strmatch(sh, "*/(sh|*[!cC]sh)?(-+([a-zA-Z0-9.]))?(.exe)"))
 	{
-		if (!(i = getuid()))
+		if (!(ru = getuid()) || !access("/bin", W_OK))
 		{
-			if (!strmatch(sh, "?(/usr)?(/local)/?(l)bin/?([a-z])sh")) goto defshell;
+			if (stat(sh, &st))
+				goto defshell;
+			if (ru != st.st_uid && !strmatch(sh, "?(/usr)?(/local)/?(l)bin/?([a-z])sh?(.exe)"))
+				goto defshell;
 		}
-		else if (i != geteuid() || getgid() != getegid())
+		else
 		{
-			if (!access(sh, W_OK)) goto defshell;
-			s = strrchr(sh, '/');
-			*s = 0;
-			i = access(sh, W_OK);
-			*s = '/';
-			if (!i) goto defshell;
+			eu = geteuid();
+			rg = getgid();
+			eg = getegid();
+			if (ru != eu || rg != eg)
+			{
+				char*	s;
+				char	dir[PATH_MAX];
+
+				s = sh;
+				for (;;)
+				{
+					if (stat(s, &st))
+						goto defshell;
+					if (ru != eu && st.st_uid == ru)
+						goto defshell;
+					if (rg != eg && st.st_gid == rg)
+						goto defshell;
+					if (s != sh)
+						break;
+					if (strlen(s) >= sizeof(dir))
+						goto defshell;
+					strcpy(dir, s);
+					if (!(s = strrchr(dir, '/')))
+						break;
+					*s = 0;
+					s = dir;
+				}
+			}
 		}
-		return(sh);
+		return sh;
 	}
  defshell:
 	if (!(sh = val))
@@ -81,5 +112,5 @@ pathshell(void)
 			sh = "/bin/sh";
 		val = sh;
 	}
-	return(sh);
+	return sh;
 }

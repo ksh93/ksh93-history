@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -23,6 +23,8 @@
 *******************************************************************/
 #pragma prototyped
 
+#include	<ast.h>
+
 #include	"FEATURE/options"
 #include	"lexstates.h"
 
@@ -33,7 +35,7 @@
 static const char sh_lexstate0[256] =
 {
 	S_EOF,	S_REG,	S_REG,	S_REG,	S_REG,	S_REG,	S_REG,	S_REG,
-#ifdef SHOPT_CRNL
+#if SHOPT_CRNL
 	S_REG,	0,	S_NLTOK,S_REG,	S_REG,	0,	S_REG,	S_REG,
 #else
 	S_REG,	0,	S_NLTOK,S_REG,	S_REG,	S_REG,	S_REG,	S_REG,
@@ -52,7 +54,7 @@ static const char sh_lexstate0[256] =
 	S_NAME,	S_NAME,	S_NAME,	S_REG,	S_REG,	S_REG,	S_REG,	S_NAME,
 
 	S_REG,	S_NAME,	S_NAME,	S_RES,	S_RES,	S_RES,	S_RES,	S_NAME,
-#ifdef SHOPT_NAMESPACE
+#if SHOPT_NAMESPACE
 	S_NAME,	S_RES,	S_NAME,	S_NAME,	S_NAME,	S_NAME,	S_RES,	S_NAME,
 #else
 	S_NAME,	S_RES,	S_NAME,	S_NAME,	S_NAME,	S_NAME,	S_NAME,	S_NAME,
@@ -84,7 +86,7 @@ static const char sh_lexstate0[256] =
 static const char sh_lexstate1[256] =
 {
 	S_EOF,	S_REG,	S_REG,	S_REG,	S_REG,	S_REG,	S_REG,	S_REG,
-#ifdef SHOPT_CRNL
+#if SHOPT_CRNL
 	S_REG,	S_BREAK,S_BREAK,S_REG,	S_REG,	S_BREAK,S_REG,	S_REG,
 #else
 	S_REG,	S_BREAK,S_BREAK,S_REG,	S_REG,	S_REG,	S_REG,	S_REG,
@@ -128,7 +130,7 @@ static const char sh_lexstate1[256] =
 static const char sh_lexstate2[256] =
 {
 	S_EOF,	0,	0,	0,	0,	0,	0,	0,
-#ifdef SHOPT_CRNL
+#if SHOPT_CRNL
 	0,	S_BREAK,S_BREAK,0,	0,	S_BREAK,0,	0,
 #else
 	0,	S_BREAK,S_BREAK,0,	0,	0,	0,	0,
@@ -230,7 +232,7 @@ static const char sh_lexstate6[256] =
 	S_ERR,	S_ERR,	S_ERR,	S_ERR,	S_ERR,	S_ERR,	S_ERR,	S_ERR,
 
 	S_ERR,	S_SPC1,	S_ERR,	S_SPC1,	S_SPC2,	S_ERR,	S_ERR,	S_LIT,
-#ifdef SHOPT_OO
+#if SHOPT_OO
 	S_PAR,	S_ERR,	S_SPC2,	S_ERR,	S_ERR,	S_SPC1,	S_ALP,	S_ERR,
 #else
 	S_PAR,	S_ERR,	S_SPC2,	S_ERR,	S_ERR,	S_SPC2,	S_ALP,	S_ERR,
@@ -372,7 +374,7 @@ static const char sh_lexstate9[256] =
 	S_GRAVE,0,	0,	0,	0,	0,	0,	0,
 	0,	0,	0,	0,	0,	0,	0,	0,
 	0,	0,	0,	0,	0,	0,	0,	0,
-#ifdef SHOPT_BRACEPAT
+#if SHOPT_BRACEPAT
 	0,	0,	0,	S_BRACE,S_PAT,	S_ENDCH,0,	0
 #else
 	0,	0,	0,	0,	S_PAT,	S_ENDCH,0,	0

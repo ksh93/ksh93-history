@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -35,7 +35,7 @@
 
 #if FS_PREROOT
 
-#include "dirlib.h"
+#include <ast_dir.h>
 #include <ls.h>
 #include <error.h>
 #include <stdio.h>
@@ -125,36 +125,25 @@ getpreroot(char* path, const char* cmd)
 					}
 					return(path);
 				}
-#if _mem_d_fileno_dirent || _mem_d_ino_dirent
-#if !_mem_d_fileno_dirent
-#define d_fileno	d_ino
-#endif
+#ifdef D_FILENO
 				while (entry = readdir(dirp))
-					if (entry->d_fileno == cur->st_ino)
+					if (D_FILENO(entry) == cur->st_ino)
 					{
-#if _mem_d_namlen_dirent
-						namlen = entry->d_namlen;
-#else
-						namlen = strlen(entry->d_name);
-#endif
+						namlen = D_NAMLEN(entry);
 						goto found;
 					}
+#endif
 	
 				/*
 				 * this fallthrough handles logical naming
 				 */
 
 				rewinddir(dirp);
-#endif
 			}
 			do
 			{
 				if (!(entry = readdir(dirp))) ERROR(ENOENT);
-#if _mem_d_namlen_dirent
-				namlen = entry->d_namlen;
-#else
-				namlen = strlen(entry->d_name);
-#endif
+				namlen = D_NAMLEN(entry);
 				if ((d - dots) > (PATH_MAX - 1 - namlen)) ERROR(ERANGE);
 				memcpy(d, entry->d_name, namlen + 1);
 				if (stat(dots, &tstst)) ERROR(errno);

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -25,7 +25,7 @@
 *******************************************************************/
 #include	"FEATURE/vmalloc"
 
-#if _std_malloc || _BLD_INSTRUMENT || cray || defined(_UWIN)
+#if _std_malloc || _BLD_INSTRUMENT || cray || defined(_UWIN) && defined(_BLD_ast)
 void _STUB_malloc(){}
 #else
 
@@ -460,6 +460,7 @@ size_t	size;
 
 #if _libc_malloc /* GNU __libc_* functions */
 #if __STD_C
+
 Void_t*	__libc_calloc(size_t n, size_t m) { return calloc(n, m); }
 Void_t	__libc_cfree(Void_t* p) { cfree(p); }
 Void_t	__libc_free(Void_t* p) { free(p); }
@@ -468,7 +469,18 @@ Void_t*	__libc_memalign(size_t a, size_t n) { return memalign(a, n); }
 Void_t*	__libc_pvalloc(size_t n) { return pvalloc(n); }
 Void_t*	__libc_realloc(Void_t* p, size_t n) { return realloc(p, n); }
 Void_t*	__libc_valloc(size_t n) { return valloc(n); }
+
+Void_t*	__calloc(size_t n, size_t m) { return calloc(n, m); }
+Void_t	__cfree(Void_t* p) { cfree(p); }
+Void_t	__free(Void_t* p) { free(p); }
+Void_t*	__malloc(size_t n) { return malloc(n); }
+Void_t*	__memalign(size_t a, size_t n) { return memalign(a, n); }
+Void_t*	__pvalloc(size_t n) { return pvalloc(n); }
+Void_t*	__realloc(Void_t* p, size_t n) { return realloc(p, n); }
+Void_t*	__valloc(size_t n) { return valloc(n); }
+
 #else
+
 Void_t*	__libc_calloc(n,m) size_t n; size_t m; { return calloc(n, m); }
 Void_t	__libc_cfree(p) Void_t* p; { cfree(p); }
 Void_t	__libc_free(p) Void_t* p; { free(p); }
@@ -477,9 +489,18 @@ Void_t*	__libc_memalign(a,n) size_t a; size_t n; { return memalign(a, n); }
 Void_t*	__libc_pvalloc(n) size_t n; { return pvalloc(n); }
 Void_t*	__libc_realloc(p,n) Void_t* p; size_t n; { return realloc(p, n); }
 Void_t*	__libc_valloc(n) size_t n; { return valloc(n); }
+
+Void_t*	__calloc(n,m) size_t n; size_t m; { return calloc(n, m); }
+Void_t	__cfree(p) Void_t* p; { cfree(p); }
+Void_t	__free(p) Void_t* p; { free(p); }
+Void_t*	__malloc(n) size_t n; { return malloc(n); }
+Void_t*	__memalign(a,n) size_t a; size_t n; { return memalign(a, n); }
+Void_t*	__pvalloc(n) size_t n; { return pvalloc(n); }
+Void_t*	__realloc(p,n) Void_t* p; size_t n; { return realloc(p, n); }
+Void_t*	__valloc(n) size_t n; { return valloc(n); }
+
 #endif
 #endif /* _libc_malloc */
-
 
 #if _hdr_malloc /* need the mallint interface for statistics, etc. */
 
@@ -551,4 +572,4 @@ struct mstats mstats()
 
 #endif/*_hdr_malloc*/
 
-#endif /*_std_malloc || _BLD_INSTRUMENT || cray || defined(_UWIN) */
+#endif /*_std_malloc || _BLD_INSTRUMENT || cray || defined(_UWIN) && defined(_BLD_ast) */

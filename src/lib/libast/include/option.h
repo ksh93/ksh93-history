@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -58,7 +58,9 @@ typedef struct Optdisc_s
 /* NOTE: Opt_t member order fixed by a previous binary release */
 
 #ifndef _OPT_PRIVATE_
-#define _OPT_PRIVATE_	void*	_opt_private;
+#define _OPT_PRIVATE_	\
+	_ast_intmax_t	number; \
+	char		pad[4*sizeof(void*)];
 #endif
 
 typedef struct Opt_s

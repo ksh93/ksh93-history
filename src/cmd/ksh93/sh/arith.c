@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -26,10 +26,6 @@
  * Shell arithmetic - uses streval library
  *   David Korn
  *   AT&T Labs
- *   Room 2B-102
- *   Murray Hill, N. J. 07974
- *   Tel. x7975
- *   research!dgk
  */
 
 #include	"defs.h"
@@ -49,7 +45,7 @@ static Namval_t *scope(register Namval_t *np,register struct lval *lvalue,int as
 	{
 		char *cp = (char*)np;
 		register Namval_t *mp;
-		if(cp>=lvalue->expr &&  cp < lvalue->expr+strlen(lvalue->expr))
+		if(cp>=lvalue->expr &&  cp < lvalue->expr+lvalue->elen)
 		{
 			/* do bindiing to node now */
 			int c = cp[flag];
@@ -83,9 +79,9 @@ static Namval_t *scope(register Namval_t *np,register struct lval *lvalue,int as
 	return(np);
 }
 
-static double arith(const char **ptr, struct lval *lvalue, int type, double n)
+static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdouble_t n)
 {
-	register double r= 0;
+	register Sfdouble_t r= 0;
 	char *str = (char*)*ptr;
 	switch(type)
 	{
@@ -93,7 +89,7 @@ static double arith(const char **ptr, struct lval *lvalue, int type, double n)
 	    {
 		register Namval_t *np = (Namval_t*)(lvalue->value);
 		np = scope(np,lvalue,1);
-		nv_putval(np, (char*)&n, NV_INTEGER|NV_DOUBLE);
+		nv_putval(np, (char*)&n, NV_INTEGER|NV_DOUBLE|NV_LONG);
 		r=nv_getnum(np);
 		break;
 	    }
@@ -181,12 +177,12 @@ static double arith(const char **ptr, struct lval *lvalue, int type, double n)
 		{
 			char	lastbase=0, *val = str, oerrno = errno;
 			errno = 0;
-			r = strton(val,&str, &lastbase,-1);
+			r = strtonll(val,&str, &lastbase,-1);
 			if(*str=='8' || *str=='9')
 			{
 				lastbase=10;
 				errno = 0;
-				r = strton(val,&str, &lastbase,-1);
+				r = strtonll(val,&str, &lastbase,-1);
 			}
 			if(lastbase<=1)
 				lastbase=10;
@@ -210,10 +206,10 @@ static double arith(const char **ptr, struct lval *lvalue, int type, double n)
 			{
 				if(val[2]=='#')
 					val += 3;
-				if((str-val)>2*sizeof(long))
+				if((str-val)>2*sizeof(Sflong_t))
 				{
-					double rr;
-					rr = strtod(val,&str);
+					Sfdouble_t rr;
+					rr = strtold(val,&str);
 					if(rr!=r)
 					{
 						r = rr;
@@ -258,31 +254,33 @@ static double arith(const char **ptr, struct lval *lvalue, int type, double n)
 }
 
 /*
- * convert number defined by string to a double
+ * convert number defined by string to a Sfdouble_t
  * ptr is set to the last character processed
  * if mode>0, an error will be fatal with value <mode>
  */
-double sh_strnum(register const char *str, char** ptr, int mode)
-{
-	return(strval(str,(char**)ptr, arith,mode));
-}
 
-double sh_arith(register const char *str)
+Sfdouble_t sh_strnum(register const char *str, char** ptr, int mode)
 {
-	char base=0;
-	const char *ptr = str;
-	register double d;
+	register Sfdouble_t d;
+	char base=0, *last;
 	if(*str==0)
 		return(0);
 	errno = 0;
-	d = strton(str,(char**)&ptr,&base,-1);
-	if(*ptr || errno)
+	d = strtonll(str,&last,&base,-1);
+	if(*last || errno)
 	{
-		d = strval(str,(char**)&ptr,arith,1);
-		if(*ptr)
-			errormsg(SH_DICT,ERROR_exit(1),e_lexbadchar,*ptr,str);
+		d = strval(str,&last,arith,mode);
+		if(!ptr && *last && mode>0)
+			errormsg(SH_DICT,ERROR_exit(1),e_lexbadchar,*last,str);
 	}
+	if(ptr)
+		*ptr = last;
 	return(d);
+}
+
+Sfdouble_t sh_arith(register const char *str)
+{
+	return(sh_strnum(str, (char**)0, 1));
 }
 
 void	*sh_arithcomp(register char *str)

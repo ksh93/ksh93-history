@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -81,7 +81,7 @@
 #	define cfgetospeed(tp)		((tp)->c_cflag & CBAUD)
 #   endif /* _lib_tcgetattr */
 #   undef TIOCGETC
-#   ifdef SHOPT_OLDTERMIO  /* use both termios and termio */
+#   if SHOPT_OLDTERMIO  /* use both termios and termio */
 #	ifdef _hdr_termio
 #	    include	<termio.h>
 #	else

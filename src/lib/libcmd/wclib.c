@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1992-2002 AT&T Corp.                *
+*                Copyright (c) 1992-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -57,7 +57,7 @@ Wc_t *wc_init(char *space)
 /*
  * compute the line, word, and character count for file <fd>
  */
-wc_count(Wc_t *wp, Sfio_t *fd)
+int wc_count(Wc_t *wp, Sfio_t *fd)
 {
 	register signed char	*space = wp->space;
 	register unsigned char	*cp;

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -30,7 +30,7 @@
 #include	"FEATURE/dynamic"
 #include	"shtable.h"
 
-#define SH_RELEASE	"1993-12-28 n+"
+#define SH_RELEASE	"1993-12-28 o"
 
 #define	SYSLOGIN	(sh.bltin_cmds)
 #define SYSEXEC		(sh.bltin_cmds+1)
@@ -43,6 +43,12 @@
 #define SYSTYPESET	(sh.bltin_cmds+9)
 #define SYSTEST		(sh.bltin_cmds+10)
 #define SYSBRACKET	(sh.bltin_cmds+11)
+#define SYSLET		(sh.bltin_cmds+12)
+#if SHOPT_BASH
+#   define SYSLOCAL	(sh.bltin_cmds+13)
+#else
+#   define SYSLOCAL	0
+#endif
 
 /* entry point for shell special builtins */
 
@@ -89,7 +95,7 @@ extern int b_umask(int, char*[],void*);
 #ifdef _cmd_universe
     extern int b_universe(int, char*[],void*);
 #endif /* _cmd_universe */
-#ifdef SHOPT_FS_3D
+#if SHOPT_FS_3D
     extern int b_vpath(int, char*[],void*);
 #endif /* SHOPT_FS_3D */
 extern int b_wait(int, char*[],void*);
@@ -101,7 +107,7 @@ extern int b_printf(int, char*[],void*);
 extern int b_pwd(int, char*[],void*);
 extern int b_sleep(int, char*[],void*);
 extern int b_test(int, char*[],void*);
-#ifndef SHOPT_ECHOPRINT
+#if !SHOPT_ECHOPRINT
     extern int B_echo(int, char*[],void*);
 #endif /* SHOPT_ECHOPRINT */
 
@@ -136,7 +142,7 @@ extern const char	e_direct[];
 extern const char	e_defedit[];
 extern const char	e_cneedsarg[];
 extern const char	e_defined[];
-#ifdef SHOPT_FS_3D
+#if SHOPT_FS_3D
     extern const char	e_cantset[];
     extern const char	e_cantget[];
     extern const char	e_mapping[];
@@ -188,7 +194,7 @@ extern const char sh_optwait[];
     extern const char sh_optuniverse[];
 #endif /* _cmd_universe */
 extern const char sh_optunset[];
-#ifdef SHOPT_FS_3D
+#if SHOPT_FS_3D
     extern const char sh_optvpath[];
     extern const char sh_optvmap[];
 #endif /* SHOPT_FS_3D */

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1990-2002 AT&T Corp.                *
+*                Copyright (c) 1990-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -3778,41 +3778,47 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 	if (v = notice.item[0].data)
 	{
 		x = v + notice.item[0].size;
-		k = notice.type != 1 && (x - v) == 1 && (*v == '*' || *v == '-') ? -1 : 0;
+		q = (x - v) == 1 && (*v == '*' || *v == '-');
+		k = q && notice.type != 1 ? -1 : 0;
 		for (;;)
 		{
-			while (v < x && (*v == ' ' || *v == '\t' || *v == '\r' || *v == '\n' || *v == ',' || *v == '+'))
-				v++;
-			if (v >= x)
-				break;
-			s = v;
-			while (v < x && *v != ',' && *v != '+' && *v++ != '>');
-			n = v - s;
-			q = n == 1 && (*s == '*' || *s == '-');
+			if (!q)
+			{
+				while (v < x && (*v == ' ' || *v == '\t' || *v == '\r' || *v == '\n' || *v == ',' || *v == '+'))
+					v++;
+				if (v >= x)
+					break;
+				s = v;
+				while (v < x && *v != ',' && *v != '+' && *v++ != '>');
+				n = v - s;
+			}
 			for (i = 0; i < notice.ids; i++)
 				if (q || n == notice.id[i].name.size && !sstrncmp( s, notice.id[i].name.data, n))
 				{
 					s = notice.id[i].value.data;
 					n = notice.id[i].value.size;
-					break;
+					if (notice.type == 1)
+					{
+						copy(&buf, "[-author?", -1);
+						expand(&notice, &buf, s, n);
+						((( &buf)->nxt<( &buf)->end)?(*( &buf)->nxt++=( ']')):(-1));
+					}
+					else
+					{
+						if (k < 0)
+						{
+							comment( &notice, &buf, "CONTRIBUTORS",sizeof( "CONTRIBUTORS")-1, 0);
+							comment(&notice, &buf, ((char*)0), 0, 0);
+						}
+						k = 1;
+						expand(&notice, &tmp, s, n);
+						comment(&notice, &buf, (( &tmp)->buf), (( &tmp)->siz=( &tmp)->nxt-( &tmp)->buf,( &tmp)->nxt=( &tmp)->buf,( &tmp)->siz), 0);
+					}
+					if (!q)
+						break;
 				}
-			if (notice.type == 1)
-			{
-				copy(&buf, "[-author?", -1);
-				expand(&notice, &buf, s, n);
-				((( &buf)->nxt<( &buf)->end)?(*( &buf)->nxt++=( ']')):(-1));
-			}
-			else
-			{
-				if (k < 0)
-				{
-					comment( &notice, &buf, "CONTRIBUTORS",sizeof( "CONTRIBUTORS")-1, 0);
-					comment(&notice, &buf, ((char*)0), 0, 0);
-				}
-				k = 1;
-				expand(&notice, &tmp, s, n);
-				comment(&notice, &buf, (( &tmp)->buf), (( &tmp)->siz=( &tmp)->nxt-( &tmp)->buf,( &tmp)->nxt=( &tmp)->buf,( &tmp)->siz), 0);
-			}
+			if (q)
+				break;
 		}
 		if (k > 0)
 			comment(&notice, &buf, ((char*)0), 0, 0);

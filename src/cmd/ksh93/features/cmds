@@ -1,1 +1,1 @@
-cmd	newgrp,test,id,wc,cut,logname,universe
+cmd	newgrp,test,id,wc,cut,logname,universe,pfexec

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -35,7 +35,7 @@
 
 const struct shtable2 shtab_aliases[] =
 {
-#ifdef SHOPT_FS_3D
+#if SHOPT_FS_3D
 	"2d",		NV_NOFREE,	"set -f;_2d",
 #endif /* SHOPT_FS_3D */
 	"autoload",	NV_NOFREE,	"typeset -fu",
@@ -46,9 +46,6 @@ const struct shtable2 shtab_aliases[] =
 	"hash",		NV_NOFREE,	"alias -t --",
 	"history",	NV_NOFREE,	"hist -l",
 	"integer",	NV_NOFREE,	"typeset -i",
-#ifdef SHOPT_ALIASLOCAL
-	"local",	NV_NOFREE,	"typeset",
-#endif
 	"nameref",	NV_NOFREE,	"typeset -n",
 	"nohup",	NV_NOFREE,	"nohup ",
 	"r",		NV_NOFREE,	"hist -s",

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -33,6 +33,10 @@
 
 #include <ast.h>
 #include <error.h>
+#include <ls.h>
+
+#define directory(p,s)	(stat((p),(s))>=0&&S_ISDIR((s)->st_mode))
+#define regular(p,s)	(stat((p),(s))>=0&&(S_ISREG((s)->st_mode)||streq(p,"/dev/null")))
 
 typedef struct Dir_s			/* directory list element	*/
 {
@@ -54,8 +58,9 @@ int
 pathinclude(const char* dir)
 {
 	register Dir_t*	dp;
+	struct stat	st;
 
-	if (dir && *dir && !streq(dir, ".") && !access(dir, X_OK))
+	if (dir && *dir && !streq(dir, ".") && directory(dir, &st))
 	{
 		for (dp = state.head; dp; dp = dp->next)
 			if (streq(dir, dp->dir))
@@ -86,6 +91,7 @@ pathfind(const char* name, const char* lib, const char* type, char* buf, size_t 
 	register Dir_t*		dp;
 	register char*		s;
 	char			tmp[PATH_MAX];
+	struct stat		st;
 
 	if (((s = strrchr(name, '/')) || (s = (char*)name)) && strchr(s, '.'))
 		type = 0;
@@ -95,12 +101,12 @@ pathfind(const char* name, const char* lib, const char* type, char* buf, size_t 
 	 * this handles . and absolute paths
 	 */
 
-	if (access(name, R_OK) >= 0)
+	if (regular(name, &st))
 		return strncpy(buf, name, size);
 	if (type)
 	{
 		sfsprintf(buf, size, "%s.%s", name, type);
-		if (access(buf, R_OK) >= 0)
+		if (regular(buf, &st))
 			return buf;
 	}
 	if (*name == '/')
@@ -114,12 +120,12 @@ pathfind(const char* name, const char* lib, const char* type, char* buf, size_t 
 	if (error_info.file && (s = strrchr(error_info.file, '/')))
 	{
 		sfsprintf(buf, sizeof(buf), "%-.*s%s", s - error_info.file + 1, error_info.file, name);
-		if (access(buf, R_OK) >= 0)
+		if (regular(buf, &st))
 			return buf;
 		if (type)
 		{
 			sfsprintf(buf, sizeof(buf), "%-.*s%s%.s", s - error_info.file + 1, error_info.file, name, type);
-			if (access(buf, R_OK) >= 0)
+			if (regular(buf, &st))
 				return buf;
 		}
 	}

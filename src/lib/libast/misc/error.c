@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -422,8 +422,6 @@ errorv(const char* id, int level, va_list ap)
 			 * already output
 			 */
 
-			if (error_info.auxilliary && level >= 0)
-				level = (*error_info.auxilliary)(stkstd, level, flags);
 			if ((flags & ERROR_SYSTEM) && errno && errno != error_info.last_errno)
 			{
 				sfprintf(stkstd, " [%s]", fmterror(errno));
@@ -431,6 +429,8 @@ errorv(const char* id, int level, va_list ap)
 					errno = 0;
 				error_info.last_errno = (level >= 0) ? 0 : errno;
 			}
+			if (error_info.auxilliary && level >= 0)
+				level = (*error_info.auxilliary)(stkstd, level, flags);
 			sfputc(stkstd, '\n');
 		}
 		if (level < 0 || !(level & ERROR_OUTPUT))

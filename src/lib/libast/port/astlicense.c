@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -778,41 +778,47 @@ astlicense(char* p, int size, char* file, char* options, int cc1, int cc2, int c
 	if (v = notice.item[AUTHOR].data)
 	{
 		x = v + notice.item[AUTHOR].size;
-		k = notice.type != USAGE && (x - v) == 1 && (*v == '*' || *v == '-') ? -1 : 0;
+		q = (x - v) == 1 && (*v == '*' || *v == '-');
+		k = q && notice.type != USAGE ? -1 : 0;
 		for (;;)
 		{
-			while (v < x && (*v == ' ' || *v == '\t' || *v == '\r' || *v == '\n' || *v == ',' || *v == '+'))
-				v++;
-			if (v >= x)
-				break;
-			s = v;
-			while (v < x && *v != ',' && *v != '+' && *v++ != '>');
-			n = v - s;
-			q = n == 1 && (*s == '*' || *s == '-');
+			if (!q)
+			{
+				while (v < x && (*v == ' ' || *v == '\t' || *v == '\r' || *v == '\n' || *v == ',' || *v == '+'))
+					v++;
+				if (v >= x)
+					break;
+				s = v;
+				while (v < x && *v != ',' && *v != '+' && *v++ != '>');
+				n = v - s;
+			}
 			for (i = 0; i < notice.ids; i++)
 				if (q || n == notice.id[i].name.size && !strncmp(s, notice.id[i].name.data, n))
 				{
 					s = notice.id[i].value.data;
 					n = notice.id[i].value.size;
-					break;
+					if (notice.type == USAGE)
+					{
+						copy(&buf, "[-author?", -1);
+						expand(&notice, &buf, s, n);
+						PUT(&buf, ']');
+					}
+					else
+					{
+						if (k < 0)
+						{
+							COMMENT(&notice, &buf, "CONTRIBUTORS", 0);
+							comment(&notice, &buf, NiL, 0, 0);
+						}
+						k = 1;
+						expand(&notice, &tmp, s, n);
+						comment(&notice, &buf, BUF(&tmp), USE(&tmp), 0);
+					}
+					if (!q)
+						break;
 				}
-			if (notice.type == USAGE)
-			{
-				copy(&buf, "[-author?", -1);
-				expand(&notice, &buf, s, n);
-				PUT(&buf, ']');
-			}
-			else
-			{
-				if (k < 0)
-				{
-					COMMENT(&notice, &buf, "CONTRIBUTORS", 0);
-					comment(&notice, &buf, NiL, 0, 0);
-				}
-				k = 1;
-				expand(&notice, &tmp, s, n);
-				comment(&notice, &buf, BUF(&tmp), USE(&tmp), 0);
-			}
+			if (q)
+				break;
 		}
 		if (k > 0)
 			comment(&notice, &buf, NiL, 0, 0);

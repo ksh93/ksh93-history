@@ -1,5 +1,5 @@
 :
-# @(#)probe.win32 (AT&T Labs Research) 2002-05-28
+# @(#)probe.win32 (AT&T Labs Research) 2003-04-22
 #
 # win32 specific make C probe initialization
 # ms vc is easy on uwin
@@ -8,6 +8,10 @@
 #
 
 probe_easy="winerror"
+
+# we are probing on behalf of libpp and nmake
+# so the native preprocessor must be forced in
+# order to bootstrap libpp and nmake
 
 nativepp=-1
 export nativepp
@@ -86,6 +90,12 @@ case $versionb$versiond$versionm$versiong$versionl:$include in
 	shift
 	set -- $(whence $cmd) "$@"
 	typ=$(package)
+	dialect="ANSI CLOSURE DYNAMIC LIBPP -I-"
+	case ${cc##*/} in
+	*CC*)	dialect="$dialect C++"
+		cplus=1
+		;;
+	esac
 	cat >&3 <<!
 CC.CC = $*
 CC.NATIVE = $*
@@ -93,7 +103,7 @@ CC.ALTPP.FLAGS = -Yp,\$(CPP:D)
 CC.ALTPP.ENV =
 CC.ARFLAGS =
 CC.DEBUG = -g
-CC.DIALECT = ANSI CLOSURE DYNAMIC
+CC.DIALECT = $dialect
 CC.DLL = -D_BLD_DLL
 CC.DLLBIG = -D_BLD_DLL
 CC.DLL.VARIANTS =
@@ -108,7 +118,7 @@ CC.LD.STATIC = -Bstatic
 CC.LIB.DLL = option
 CC.LIB.ALL = -Bwhole-archive
 CC.LIB.UNDEF = -Bno-whole-archive
-CC.MAKE.OPTIONS = nativepp=-1
+CC.MAKE.OPTIONS = nativepp=0
 CC.NM = nm
 CC.NMEDIT =
 CC.NMFLAGS =
@@ -123,13 +133,40 @@ CC.STATIC = -Bstatic
 	if	[ X"$versiond" != X ]
 	then	inc=${include}/win32 lib=/dm
 	elif	[ X"$versionb" != X ]
-	then	inc= lib=/borland
+	then	inc=/usr/include/borland lib=/borland
 	elif	[ X"$versioni" != X ]
-	then	if	[ -d /msdev/vc98/inlcude ]
+	then	if	[ -d /msdev/vc98/include ]
 		then	inc=/msdev/vc98/include
+		elif	[ -d /msdev/vc7/include ]
+		then	inc=/msdev/vc7/include
 		else	inc=/msdev/vc/include
 		fi
 		lib=
+	elif	[ X"$versiong" != X ]
+	then	inc= lib=
+		if	[ X"$cplus" != X ]
+		then	if	[ -d "$include/g++-3" ]
+			then	inc="$inc $include/g++-3"
+			elif	[ -d "$include"/c++/3.* ]
+			then	set X "$include"/c++/3.*
+				inc="$inc $2"
+				if	[ -d "$2"/mingw32 ]
+				then	inc="$inc $2/mingw32"
+				fi
+				if	[ -d "$2"/backward ]
+				then	inc="$inc $2/backward"
+				fi
+			fi
+			if	[ -d "${include%/*}"/mingw32/include ]
+			then	inc="$inc ${include%/*}/mingw32/include"
+			fi
+		fi
+		if	[ -d "${include%/*}"/lib/gcc-lib/mingw32/*/include ]
+		then	set X "${include%/*}"/lib/gcc-lib/mingw32/*/include
+			inc="$inc $2"
+		fi
+	elif	[ X"$versionl" != X ]
+	then	inc= lib=/lcc
 	else	inc= lib=
 	fi
 	case $include in

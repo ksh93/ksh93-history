@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -48,22 +48,4 @@ char *sh_lexstates[ST_NONE] = {0};
 
 struct jobs	job = {0};
 time_t		sh_mailchk = 600;
-
-#ifdef SHOPT_MULTIBYTE
-/*
- * These are default values.  They can be changed with CSWIDTH
- */
-
-char int_charsize[] =
-{
-	1, CCS1_IN_SIZE, CCS2_IN_SIZE, CCS3_IN_SIZE,	/* input sizes */
-	1, CCS1_OUT_SIZE, CCS2_OUT_SIZE, CCS3_OUT_SIZE	/* output widths */
-};
-#else
-char int_charsize[] =
-{
-	1, 0, 0, 0,	/* input sizes */
-	1, 0, 0, 0	/* output widths */
-};
-#endif /* SHOPT_MULTIBYTE */
 

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -44,6 +44,7 @@
 
 #if _mem_d_fileno_dirent || _mem_d_ino_dirent
 #if !_mem_d_fileno_dirent
+#undef	_mem_d_fileno_dirent
 #define _mem_d_fileno_dirent	1
 #define d_fileno		d_ino
 #endif
@@ -51,8 +52,6 @@
 
 #if _mem_d_fileno_dirent
 #define D_FILENO(d)		((d)->d_fileno)
-#else
-#define D_FILENO(d)		(1)
 #endif
 
 #if _mem_d_namlen_dirent
@@ -68,5 +67,15 @@
 #endif
 
 #define D_RECSIZ(d,n)		(sizeof(*(d))-sizeof((d)->d_name)+((n)+sizeof(char*))&~(sizeof(char*)-1))
+
+/*
+ * NOTE: 2003-03-27 mac osx bug symlink==DT_REG bug discovered;
+ *	 the kernel *and* all directories must be fixed, so d_type
+ *	 is summarily disabled until we see that happen
+ */
+
+#if _mem_d_type_dirent && defined(DT_UNKNOWN) && defined(DT_REG) && defined(DT_DIR) && defined(DT_LNK) && ! ( __APPLE__ || __MACH__ )
+#define D_TYPE(d)		((d)->d_type)
+#endif
 
 #endif

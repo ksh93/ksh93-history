@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -28,7 +28,6 @@
  *
  *   David Korn
  *   AT&T Labs
- *   research!dgk
  *
  */
 
@@ -132,6 +131,9 @@ static int whence(Shell_t *shp,char **argv, register int flags)
 	register const char *cp;
 	register int aflag,r=0;
 	register const char *msg;
+	Dt_t *root;
+	Namval_t *nq;
+	char *notused;
 #ifdef PATH_BFPATH
 	Pathcomp_t *pp;
 #endif
@@ -174,24 +176,18 @@ static int whence(Shell_t *shp,char **argv, register int flags)
 			aflag++;
 		}
 		/* built-ins and functions next */
-		if((np=nv_search(name,shp->fun_tree,0)) && nv_isattr(np,NV_FUNCTION|NV_BLTIN))
+		root = (flags&F_FLAG)?shp->bltin_tree:shp->fun_tree;
+		if(np= nv_bfsearch(name, root, &nq, &notused))
 		{
-			if((flags&F_FLAG) && nv_isattr(np,NV_FUNCTION))
-				if(!(np=nv_search(name,shp->bltin_tree,0)) || nv_isnull(np))
-					goto search;
+			if(is_abuiltin(np) && nv_isnull(np))
+				goto search;
 			cp = "";
 			if(flags&V_FLAG)
 			{
 				if(nv_isnull(np))
-				{
-					if(!nv_isattr(np,NV_FUNCTION))
-						goto search;
 					cp = sh_translate(is_ufunction);
-				}
 				else if(is_abuiltin(np))
 					cp = sh_translate(is_builtin);
-				else if(nv_isattr(np,NV_EXPORT))
-					cp = sh_translate(is_xfunction);
 				else
 					cp = sh_translate(is_function);
 			}

@@ -10,11 +10,11 @@ ID = ast
 
 HOSTTYPE == "$(CC.HOSTTYPE)"
 
-CCFLAGS = $(CC.OPTIMIZE) -D_BLD_ast $(CC.DLL)
+CCFLAGS = $(CC.OPTIMIZE) $(CC.DLL)
 
 IFFEFLAGS = -v -X std
 
-.SOURCE : cdt comp dir disc hash man misc path port preroot \
+.SOURCE : cdt comp dir disc hash man misc obsolete path port preroot \
 		regex sfio stdio string tm uwin vec vmalloc
 
 .SOURCE.h : include comp std
@@ -27,7 +27,8 @@ CONF_LIBSUFFIX == "$(CC.SUFFIX.DYNAMIC|CC.SUFFIX.SHARED)"
 DEBUG ==
 __OBSOLETE__ == 20020101
 
-HEADERSRC = ast.h ast_dir.h ast_std.h ast_version.h ast_windows.h \
+HEADERSRC = ast.h ast_dir.h ast_getopt.h ast_std.h \
+	ast_version.h ast_windows.h \
 	ccode.h cdt.h debug.h dt.h error.h find.h ftw.h ftwalk.h fts.h \
 	fs3d.h getopt.h glob.h hash.h hashkey.h hashpart.h int.h lc.h ls.h \
 	magic.h mc.h mime.h mnt.h modecanon.h modex.h namval.h option.h \
@@ -40,9 +41,9 @@ HEADERSRC = ast.h ast_dir.h ast_std.h ast_version.h ast_windows.h \
 
 HEADERGEN = align.h preroot.h sig.h \
 	$(ID)_botch.h $(ID)_ccode.h $(ID)_common.h $(ID)_fcntl.h \
-	$(ID)_fs.h $(ID)_hdr.h $(ID)_lib.h $(ID)_map.h $(ID)_mode.h \
-	$(ID)_param.h $(ID)_time.h $(ID)_tty.h $(ID)_types.h \
-	$(ID)_unistd.h $(ID)_wait.h \
+	$(ID)_float.h $(ID)_fs.h $(ID)_hdr.h $(ID)_lib.h $(ID)_map.h \
+	$(ID)_mmap.h $(ID)_mode.h $(ID)_param.h $(ID)_time.h $(ID)_tty.h \
+	$(ID)_types.h $(ID)_unistd.h $(ID)_vfork.h $(ID)_wait.h \
 	$(HEADERSTD:/^/$(ID)_/)
 
 HEADEROPT = fmtmsg.h libgen.h syslog.h
@@ -73,7 +74,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	stresc.c stropt.c strtape.c tok.c tokline.c tokscan.c \
 	pathaccess.c pathcat.c pathcanon.c pathcheck.c pathpath.c \
 	pathexists.c pathfind.c pathkey.c pathprobe.c pathrepl.c \
-	pathnative.c pathtemp.c pathtmp.c pathstat.c \
+	pathnative.c pathposix.c pathtemp.c pathtmp.c pathstat.c \
 	pathgetlink.c pathsetlink.c pathbin.c pathshell.c pathcd.c \
 	fs3d.c ftwalk.c ftwflags.c fts.c setenviron.c \
 	optget.c optjoin.c optesc.c strsort.c struniq.c \
@@ -82,6 +83,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	localeconv.c setlocale.c translate.c \
 	catopen.c iconv.c lc.c mc.c \
 	liberror.c libevent.c \
+	base64.c \
 	fmtbase.c fmtbuf.c fmtclock.c fmtdev.c fmtelapsed.c fmterror.c \
 	fmtesc.c fmtfmt.c fmtfs.c fmtident.c fmtip4.c fmtls.c fmtmatch.c \
 	fmtmode.c fmtnum.c fmtperm.c fmtre.c fmttime.c fmtuid.c fmtgid.c \
@@ -104,8 +106,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	strntol.c strntoll.c strntoul.c strntoull.c \
 	strcasecmp.c strncasecmp.c strerror.c \
 	mktemp.c tmpnam.c \
-	execlp.c execve.c execvp.c execvpe.c \
-	spawnlp.c spawnve.c spawnveg.c spawnvp.c spawnvpe.c \
+	execlp.c execve.c execvp.c execvpe.c spawnveg.c \
 	vfork.c killpg.c \
 	hsearch.c tsearch.c \
 	getlogin.c putenv.c \
@@ -182,7 +183,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	frexp.c frexpl.c \
 	/* ast */ \
 	astcopy.c astconf.c astdynamic.c astlicense.c astquery.c astwinsize.c \
-	$(CC.LD.STATIC) aststatic.c getopt.c $(CC.LD.DYNAMIC) \
+	$(CC.LD.STATIC) aststatic.c getopt.c getoptl.c $(CC.LD.DYNAMIC) \
 	/* vmalloc */ \
 	vmalloc.h vmhdr.h vmbest.c vmclear.c vmclose.c vmdcheap.c vmdebug.c \
 	vmdisc.c vmexit.c vmlast.c vmopen.c vmpool.c vmprivate.c vmprofile.c \
@@ -194,7 +195,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	err.c exp.c exp__E.c expm1.c gamma.c getpass.c lgamma.c log.c log1p.c \
 	log__L.c rand48.c random.c rcmd.c rint.c support.c \
 	/* obsolete */ \
-	obsolete/mematoe.c obsolete/memetoa.c \
+	obsolete/mematoe.c obsolete/memetoa.c spawn.c \
 	-liconv /* please OSF, this *has* to be wrong */
 
 /*
@@ -204,6 +205,10 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
  *
  * also, -D_BLD_ast must be explicit for the uwin bootstrap
  */
+
+.MAKEINIT : .AST.INIT
+.AST.INIT : .MAKE
+	CCFLAGS += -D_BLD_ast
 
 parameter	(_BLD_ast) ast_version.h
 ignore		iffeio.h
@@ -320,8 +325,10 @@ atmain.o : atmain.C
  */
 
 .check.lib : .AFTER astmath.exe
-	test -x $(~) ||
-	echo ' -lm' >> $(<<)
+	if	test -x $(~)
+	then	echo ' -lm' >> $(<<)
+	else	touch $(<<)
+	fi
 
 astmath.exe : .DONTCARE astmath.c
 	$(CC) $(CCFLAGS) -o $(*:N=*.c:B:S=.exe) $(*) 2>/dev/null ||

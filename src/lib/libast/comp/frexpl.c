@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -43,7 +43,14 @@ NoN(frexpl)
 #define LDBL_MAX_EXP	DBL_MAX_EXP
 #endif
 
-static _ast_fltmax_t	pow2[LDBL_MAX_EXP + 1];
+#if defined(_ast_fltmax_exp_index) && defined(_ast_fltmax_exp_shift)
+
+#define INIT()		_ast_fltmax_exp_t _pow_
+#define pow2(i)		(_pow_.f=1,_pow_.e[_ast_fltmax_exp_index]+=((i)<<_ast_fltmax_exp_shift),_pow_.f)
+
+#else
+
+static _ast_fltmax_t	pow2tab[LDBL_MAX_EXP + 1];
 
 static int
 init(void)
@@ -52,15 +59,19 @@ init(void)
 	_ast_fltmax_t		g;
 
 	g = 1;
-	for (x = 0; x < elementsof(pow2); x++)
+	for (x = 0; x < elementsof(pow2tab); x++)
 	{
-		pow2[x] = g;
+		pow2tab[x] = g;
 		g *= 2;
 	}
 	return 0;
 }
 
-#define INIT()		(pow2[0]?0:init())
+#define INIT()		(pow2tab[0]?0:init())
+
+#define pow2(i)		(pow2tab[i])
+
+#endif
 
 #if !_lib_frexpl
 
@@ -86,14 +97,14 @@ frexpl(_ast_fltmax_t f, int* p)
 		for (;;)
 		{
 			k = (k + 1) / 2;
-			if (g < pow2[x])
+			if (g < pow2(x))
 				x -= k;
-			else if (k == 1 && g < pow2[x+1])
+			else if (k == 1 && g < pow2(x+1))
 				break;
 			else
 				x += k;
 		}
-		if (g == pow2[x])
+		if (g == pow2(x))
 			x--;
 		x = -x;
 	}
@@ -102,14 +113,14 @@ frexpl(_ast_fltmax_t f, int* p)
 		for (;;)
 		{
 			k = (k + 1) / 2;
-			if (f > pow2[x])
+			if (f > pow2(x))
 				x += k;
-			else if (k == 1 && f > pow2[x-1])
+			else if (k == 1 && f > pow2(x-1))
 				break;
 			else
 				x -= k;
 		}
-		if (f == pow2[x])
+		if (f == pow2(x))
 			x++;
 	}
 	else
@@ -122,11 +133,11 @@ frexpl(_ast_fltmax_t f, int* p)
 
 	x = -x;
 	if (x < 0)
-		f /= pow2[-x];
+		f /= pow2(-x);
 	else if (x < LDBL_MAX_EXP)
-		f *= pow2[x];
+		f *= pow2(x);
 	else
-		f = (f * pow2[LDBL_MAX_EXP - 1]) * pow2[x - (LDBL_MAX_EXP - 1)];
+		f = (f * pow2(LDBL_MAX_EXP - 1)) * pow2(x - (LDBL_MAX_EXP - 1));
 	return f;
 }
 
@@ -141,11 +152,11 @@ ldexpl(_ast_fltmax_t f, register int x)
 {
 	INIT();
 	if (x < 0)
-		f /= pow2[-x];
+		f /= pow2(-x);
 	else if (x < LDBL_MAX_EXP)
-		f *= pow2[x];
+		f *= pow2(x);
 	else
-		f = (f * pow2[LDBL_MAX_EXP - 1]) * pow2[x - (LDBL_MAX_EXP - 1)];
+		f = (f * pow2(LDBL_MAX_EXP - 1)) * pow2(x - (LDBL_MAX_EXP - 1));
 	return f;
 }
 

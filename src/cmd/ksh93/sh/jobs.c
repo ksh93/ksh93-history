@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -341,7 +341,7 @@ void job_init(int lflag)
 	if(job.linedisc!=NTTYDISC && job.linedisc!=OTTYDISC)
 	{
 		/* no job control when running with MPX */
-#   ifdef SHOPT_VSH
+#   if SHOPT_VSH
 		sh_onoption(SH_VIRAW);
 #   endif /* SHOPT_VSH */
 		return;

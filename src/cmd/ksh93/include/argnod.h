@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -49,12 +49,15 @@ struct comnod
 	struct argnod	*comarg;
 	struct argnod	*comset;
 	void		*comnamp;
+	void		*comnamq;
+	void		*comstate;
 	int		comline;
 };
 
 #define COMBITS		4
 #define COMMSK		((1<<COMBITS)-1)
 #define COMSCAN		(01<<COMBITS)
+#define COMFIXED	(02<<COMBITS)
 
 struct slnod 	/* struct for link list of stacks */
 {
@@ -121,6 +124,7 @@ struct argnod
 #define ARG_ARITH	0x100	/* arithmetic expansion */
 #define ARG_OPTIMIZE	0x200	/* try to optimize */
 #define ARG_NOGLOB	0x400	/* no file name expansion */
+#define ARG_LET		0x800	/* processing let command arguments */
 
 extern char 		**sh_argbuild(int*,const struct comnod*,int);
 extern struct dolnod	*sh_argcreate(char*[]);
@@ -140,5 +144,6 @@ extern const char	e_subst[];
 extern const char	e_option[];
 extern const char	e_exec[];
 extern const char	e_devfdNN[];
+extern const char	e_devfdstd[];
 
 #endif /* ARG_RAW */

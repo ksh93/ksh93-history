@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -26,6 +26,8 @@
 /*
  * tables for the test builin [[...]] and [...]
  */
+
+#include	<ast.h>
 
 #include	"shtable.h"
 #include	"test.h"
@@ -57,7 +59,7 @@ const Shtable_t shtab_testops[] =
 };
 
 const char sh_opttest[] =
-"[-1c?\n@(#)$Id: test (AT&T Labs Research) 1999-07-17 $\n]"
+"[-1c?\n@(#)$Id: test (AT&T Labs Research) 2003-03-18 $\n]"
 USAGE_LICENSE
 "[+NAME?test - evaluate expression]"
 "[+DESCRIPTION?\btest\b evaluates expressions and indicates its "
@@ -79,7 +81,8 @@ USAGE_LICENSE
 	"[+4?If first operand is \b!\b, the result is True if the next "
 		"three operands are a valid binary expression that is False.]"
 "}"
-
+"[If any \afile\a is of the form \b/dev/fd/\b\an\a, then file descriptor "
+	"\an\a is checked.]"
 "[+?Unary expressions can be one of the following:]{"
 	"[+-a \afile\a?True if \afile\a exists, obsolete.]"
 	"[+-b \afile\a?True if \afile\a exists and is a block special file.]"
@@ -92,7 +95,7 @@ USAGE_LICENSE
 		"set.]"
 	"[+-h \afile\a?True if \afile\a exists and is a symbolic link.]"
 	"[+-k \afile\a?True if \afile\a exists and has its sticky bit on.]"
-#ifdef SHOPT_TEST_L
+#if SHOPT_TEST_L
 	"[+-l \afile\a?True if \afile\a exists and is a symbolic link.]"
 #endif
 	"[+-n \astring\a?True if length of \astring\a is non-zero.]"
@@ -108,9 +111,11 @@ USAGE_LICENSE
 	"[+-x \afile\a?True if \afile\a exists and is executable.  For a "
 		"directory it means that it can be searched.]"
 	"[+-z \astring\a?True if \astring\a is a zero length string.]"
-	"[+-L \afile\a?True if \afile\a exists and is a symbolic link.]"
 	"[+-G \afile\a?True if \afile\a exists and group is the effective "
 		"group id of the current process.]"
+	"[+-L \afile\a?True if \afile\a exists and is a symbolic link.]"
+	"[+-N \afile\a?True if \afile\a exists and has been modified since "
+		"it was last read.]"
 	"[+-O \afile\a?True if \afile\a exists and owner is the effective "
 		"user id of the current process.]"
 	"[+-S \afile\a?True if \afile\a exists and is a socket.]"
@@ -154,8 +159,8 @@ USAGE_LICENSE
 "[+SEE ALSO?\blet\b(1), \bexpr\b(1)]"
 ;
 
-const char test_opchars[]	= "HLSVOGCaeohrwxdcbfugk"
-#ifdef SHOPT_TEST_L
+const char test_opchars[]	= "HLNSVOGCaeohrwxdcbfugk"
+#if SHOPT_TEST_L
 	"l"
 #endif
 				"psnzt";

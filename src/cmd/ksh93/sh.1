@@ -14,14 +14,14 @@
 .if \nZ=0 .TH SH 1
 .if \nZ=1 .TH KSH 1 "User Environment Utilities" "RDS Standard"
 .SH NAME
-.if \nZ=0 sh, rsh \- shell, the
-.if \nZ=1 ksh, rksh \- KornShell, a
+.if \nZ=0 sh, rsh, pfsh \- shell, the
+.if \nZ=1 ksh, rksh, pfksh \- KornShell, a
 standard/restricted command and programming language
 .SH SYNOPSIS
 .if \nZ=0 .B sh
 .if \nZ=1 .B ksh
 [
-.B \(+-abcefhikmnoprstuvxCD
+.B \(+-abcefhikmnoprstuvxCDP
 ] [
 .B \-R
 file ] [
@@ -56,6 +56,16 @@ command interpreter
 .if \nZ=1 .IR ksh ;
 it is used to set up login names and execution environments whose
 capabilities are more controlled than those of the standard shell.
+.if \nZ=0 .I Rpfsh\^
+.if \nZ=1 .I Rpfksh\^
+is a profile shell version of the
+.if \nZ=0 standard
+command interpreter
+.if \nZ=0 .IR sh ;
+.if \nZ=1 .IR ksh ;
+it is used to to execute commands with the attributes specified by
+the user's profiles (see
+.IR pfexec (1)).
 See
 .I Invocation\^
 below
@@ -540,6 +550,18 @@ Otherwise,
 .I pipeline\^
 is executed and the elapsed time as well as
 the user and system time are printed on standard error.
+The
+.SM
+.B TIMEFORMAT
+variable may be set to a format string that specifies how the timing
+information should be displayed.
+See
+.B "Shell Variables"
+below 
+for a description of the
+.SM
+.B TIMEFORMAT
+variable.
 .PP
 The following reserved words
 are recognized as reserved only when they are the first word of a command
@@ -974,6 +996,8 @@ of the name up to the first \fB\s+2.\s-2\fP matches the
 name of a nameref, the variable referred to is obtained by
 replacing the nameref portion with the name of the variable
 referenced by the nameref.
+If a nameref is used as the index of a \fBfor\fP loop,
+a name reference is established for each item in the list.
 A nameref provides a convenient way to refer to the variable
 inside a function whose name is passed as an argument to a function.
 For example, if the name of a variable is passed as the first
@@ -1198,6 +1222,11 @@ A negative
 .I offset\^
 counts backwards from the end of
 .IR parameter .
+Note that one or more
+.IR blank s
+is required in front of a minus sign
+to prevent the shell from interpreting the operator as
+.BR :\- .
 If
 .I parameter\^
 is
@@ -1372,6 +1401,13 @@ file when checking for mail.
 .B !
 The process number of the last background command invoked.
 .TP
+.B .sh.command
+When processing a
+.SM
+.B DEBUG
+trap, this variable contains the current command line
+that is about to run.
+.TP
 .B .sh.edchar
 This variable contains the value of the keyboard character
 (or sequence of characters if the first character is an ESC, ascii
@@ -1419,6 +1455,12 @@ The value is null when not processing a
 .SM KEYBD
 trap.
 .TP
+.B .sh.file
+The pathname of the file than contains the current command.
+.TP
+.B .sh.fun
+The name of the current function that is being executed.
+.TP
 .B .sh.match
 An indexed array which stores the most recent match and sub-pattern
 matches after variables expansions using the operators
@@ -1446,6 +1488,9 @@ discipline function is invoked.
 .B .sh.subscript
 Set to the name subscript of the variable at the time that a
 discipline function is invoked.
+.TP
+.B .sh.subshell
+The current depth for subshells and command substitution.
 .TP
 .B .sh.value
 Set to the value of the variable at the time that the
@@ -1869,6 +1914,61 @@ At invocation, if the basename of this variable is
 or
 .BR krsh ,
 then the shell becomes restricted.
+If it is
+.BR pfsh
+or
+.BR pfksh ,
+then the shell becomes a profile shell (see
+.IR pfexec (1)).
+.TP
+.SM
+.B TIMEFORMAT
+The value of this parameter is used as a format string specifying
+how the timing information for pipelines prefixed with the
+.B time
+reserved word should be displayed.
+The \fB%\fP character introduces a format sequence that is
+expanded to a time value or other information.
+The format sequences and their meanings are as follows.
+.sp .5
+.RS
+.PD 0
+.TP 10
+.B %%
+A literal \fB%\fP.
+.TP
+.B %[\fIp\fP][l]R
+The elapsed time in seconds.
+.TP
+.B %[\fIp\fP][l]U
+The number of CPU seconds spent in user mode.
+.TP
+.B %[\fIp\fP][l]S
+The number of CPU seconds spent in system mode.
+.TP
+.B %P
+The CPU percentage, computed as (U + S) / R.
+.PD
+.RE
+.IP
+The braces denote optional portions.
+The optional \fIp\fP is a digit specifying the \fIprecision\fP,
+the number of fractional digits after a decimal point.
+A value of 0 causes no decimal point or fraction to be output.
+At most three places after the decimal point can be displayed;
+values of \fIp\fP greater than 3 are treated as 3.
+If \fIp\fP is not specified, the value 3 is used.
+.IP
+The optional \fBl\fP specifies a longer format, including
+hours if greater than zero,
+minutes, and seconds of the form \fIHH\fPh\fIMM\fPm\fISS\fP.\fIFF\fPs.
+The value of \fIp\fP determines whether or not the fraction is
+included.
+.IP
+All other characters are output without change and a trailing
+newline is added.
+If unset, the default value, \fB$'\enreal\et%2lR\enuser\et%2lU\ensys\t%2lS'\fP,
+is used.  If the value is null, no timing information is displayed.
 .TP
 .B
 .SM TMOUT
@@ -2295,7 +2395,8 @@ and
 .BR let .
 Evaluations are performed using
 double precision floating point
-arithmetic.
+arithmetic or long double precision floating point for
+systems that provide this data type.
 Floating point constants follow the ANSI-C programming language
 floating point conventions.
 Integer constants follow the ANSI-C programming language
@@ -2539,6 +2640,11 @@ exists and is a symbolic link.
 True, if
 .I file\^
 exists and is a symbolic link.
+.TP
+\f3\-N\fP \f2file\fP
+True, if
+.I file\^
+exists and the modification time is greater than the last access time.
 .TP
 \f3\-O\fP \f2file\fP
 True, if
@@ -3009,8 +3115,10 @@ the
 .B typeset
 special built-in command used within a function
 defines local variables whose scope includes
-the current function and
-all functions it calls.
+the current function.
+They can be passed to functions that they call in the
+variable assignment list the precedes the call or as arguments
+passed as name references.
 Errors within functions return control to the caller.
 .PP
 Functions defined with the
@@ -5328,6 +5436,15 @@ to be expanded as described in
 .BR print.
 .LI
 A
+.B %B
+option causes each of the arguments to be treated
+as variable names and the binary value of variable
+will be printed. 
+This is most useful for variables whose attribute
+is
+.BR \-b .
+.LI
+A
 .B %H
 format can be used instead of
 .B %s
@@ -5398,7 +5515,7 @@ or
 on the command line
 determines which method is used.
 .TP
-\f3read\fP \*(OK \f3\-Aprs\^\fP \*(CK \*(OK \f3\-d\fP \f2delim\^\fP\*(CK \*(OK \f3\-t\fP \f2timeout\^\fP\*(CK \*(OK \f3\-u\fP \f2unit\^\fP\*(CK \*(OK \f2vname\f3?\f2prompt\^\f1 \*(CK \*(OK \f2vname\^\fP .\|.\|. \*(CK
+\f3read\fP \*(OK \f3\-Aprs\^\fP \*(CK \*(OK \f3\-d\fP \f2delim\^\fP\*(CK \*(OK \f3\-n\fP \f2n\^\fP\*(CK \*(OK \*(OK \f3\-N\fP \f2n\^\fP\*(CK \*(OK \*(OK \f3\-t\fP \f2timeout\^\fP\*(CK \*(OK \f3\-u\fP \f2unit\^\fP\*(CK \*(OK \f2vname\f3?\f2prompt\^\f1 \*(CK \*(OK \f2vname\^\fP .\|.\|. \*(CK
 The shell input mechanism.
 One line is read and
 is broken up into fields using the characters in
@@ -5415,6 +5532,21 @@ option
 causes the read to continue to the first character of
 .I delim\^
 rather than new-line.
+The
+.B \-n
+option causes at most
+.I n\^
+bytes to read rather a full line
+but will return when reading from a slow device
+as soon as any characters have been read.
+The
+.B \-N
+option causes exactly
+.I n\^
+to be read unless an end-of-file has been encountered or
+the read times out because of the
+.B \-t
+option.
 In raw mode,
 .B \-r,
 the
@@ -5845,6 +5977,12 @@ is
 then
 .I action\^
 will be executed before each command.
+The variable
+.B .sh.command
+will contain the contents of the current command line
+when 
+.I action\^
+is running.
 If
 .I sig\^
 is
@@ -5901,7 +6039,7 @@ Does nothing, and exits 0. Used with
 .B while
 for infinite loops.
 .TP
-\(dg\(dg \f3typeset\fP \*(OK \f3\(+-AHflnprtux\^\fP \*(CK \*(OK \f3\(+-EFLRZi\*(OK\f2n\^\fP\*(CK \*(CK  \*(OK \f2vname\^\fP\*(OK\f3=\fP\f2value\^\fP \*(CK \^ \*(CK .\|.\|.
+\(dg\(dg \f3typeset\fP \*(OK \f3\(+-AHflbnprtux\^\fP \*(CK \*(OK \f3\(+-EFLRZi\*(OK\f2n\^\fP\*(CK \*(CK  \*(OK \f2vname\^\fP\*(OK\f3=\fP\f2value\^\fP \*(CK \^ \*(CK .\|.\|.
 Sets attributes and values for shell variables and functions.
 When invoked inside a function defined with the
 .B function
@@ -6017,6 +6155,33 @@ The
 .B FPATH
 variable will be searched to find the function definition
 when the function is referenced.
+If no options other than
+.B \-f
+is specified, then the function definition will be displayed
+on standard output.  If
+.B +f
+is specified, then a line containing the function name followed
+by a shell comment containing the line number and path name of the
+file where this function was defined, if any, is displayed.
+.TP
+.B \-b
+The variable can hold any number of bytes of data.
+The data can be text or binary.
+The value is represented by the base64 encoding of the data.
+If
+.B \-Z
+is also specified, the size in bytes of the
+data in the buffer will be determined by the size associated with the
+.BR \-Z .
+If the base64 string assigned results in more data, it will be
+truncated.  Otherwise, it will be filled with bytes
+whose value is zero.
+The
+.B printf
+format
+.B %B
+can be used to output the actual data in this buffer instead
+of the base64 encoding of the data.
 .TP
 .B \-i
 Declares
@@ -6439,6 +6604,14 @@ when the locale is not C or POSIX.
 No commands will be executed.
 .PD
 .TP
+.B \-P
+If
+.B \-P
+or
+.B \-o profile
+is present, the shell is a profile shell (see
+.IR pfexec (1)).
+.TP
 .BI \-R " filename\^"
 The
 .B \-R
@@ -6574,6 +6747,7 @@ emacs(1),
 env(1),
 gmacs(1),
 newgrp(1),
+pfexec(1),
 stty(1),
 test(1),
 umask(1),

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -39,6 +39,11 @@
 #include	"history.h"
 #include	"test.h"
 #include	"FEATURE/externs"
+#if SHOPT_PFSH 
+#   ifdef _hdr_exec_attr
+#	include	<exec_attr.h>
+#   endif
+#endif
 
 #define RW_ALL	(S_IRUSR|S_IRGRP|S_IROTH|S_IWUSR|S_IWGRP|S_IWOTH)
 
@@ -57,6 +62,47 @@ static void		funload(Shell_t*,int,const char*);
 static void		exscript(Shell_t*,char*, char*[], char**);
 static int		path_chkfpath(Pathcomp_t*,Pathcomp_t*,Pathcomp_t*,int);
 
+
+static int path_pfexecve(const char *path, char *argv[],char *const envp[])
+{
+#if SHOPT_PFSH 
+	char  resolvedpath[PATH_MAX + 1];
+	if(!sh_isoption(SH_PFSH))
+		return(execve(path, argv, envp));
+	/* Solaris implements realpath(3C) using the resolvepath(2) */
+	/* system call so we can save us to call access(2) first */
+	if (!realpath(path, resolvedpath))
+		return -1;
+
+	/* we can exec the command directly instead of via pfexec(1) if */
+	/* there is a matching entry without attributes in exec_attr(4) */
+	if (sh.user && *sh.user)
+	{
+		execattr_t *pf;
+		if(pf=getexecuser(sh.user, KV_COMMAND, resolvedpath, GET_ONE))
+		{
+			if (!pf->attr || pf->attr->length == 0)
+			{
+				int r = execve(path, argv, envp);
+				free_execattr(pf);
+				return r;
+			}
+			free_execattr(pf);
+		}
+		else
+		{
+			errno = ENOENT;
+			return -1;
+		}
+	}
+	--argv;
+	argv[0] = argv[1];
+	argv[1] = resolvedpath;
+	return(execve("/usr/bin/pfexec", argv, envp));
+#else
+	return(execve(path, argv, envp));
+#endif
+}
 
 /*
  * make sure PWD is set up correctly
@@ -176,7 +222,7 @@ static char *path_lib(Pathcomp_t *pp, char *path)
 	return(0);
 }
 
-#if 1
+#if 0
 void path_dump(register Pathcomp_t *pp)
 {
 	sfprintf(sfstderr,"dump\n");
@@ -292,9 +338,10 @@ static int	path_opentype(const char *name, register Pathcomp_t *pp, int fun)
 	}
 	do
 	{
-		oldpp=pp;
-		pp = path_nextcomp(pp,name,0);
-		if(fun && !(oldpp->flags&PATH_FPATH))
+		pp = path_nextcomp(oldpp=pp,name,0);
+		while(oldpp && (oldpp->flags&PATH_SKIP))
+			oldpp = oldpp->next;
+		if(fun && (!oldpp || !(oldpp->flags&PATH_FPATH)))
 			continue;
 		if((fd = sh_open(path_relative(stakptr(PATH_OFFSET)),O_RDONLY,0)) >= 0)
 		{
@@ -336,17 +383,41 @@ char	*path_basename(register const char *name)
 	return ((char*)start);
 }
 
+char *path_fullname(const char *name)
+{
+	int len=strlen(name)+1,dirlen=0;
+	char *path,*pwd;
+	if(*name!='/')
+	{
+		pwd = path_pwd(1);
+		dirlen = strlen(pwd)+1;
+	}
+	path = (char*)malloc(len+dirlen);
+	if(dirlen)
+	{
+		memcpy((void*)path,(void*)pwd,dirlen);
+		path[dirlen-1] = '/';
+	}
+	memcpy((void*)&path[dirlen],(void*)name,len);
+	pathcanon(path,0);
+	return(path);
+}
+
 /*
  * load functions from file <fno>
  */
 static void funload(Shell_t *shp,int fno, const char *name)
 {
-	char buff[IOBSIZE+1];
-	int savestates = sh_isstate(~0);
-	sh_onstate(SH_NOLOG|SH_NOALIAS);
+	char *oldname=shp->st.filename, buff[IOBSIZE+1];
+	int savestates = sh_getstate();
+	sh_onstate(SH_NOLOG);
+	sh_onstate(SH_NOALIAS);
 	shp->readscript = (char*)name;
+	shp->st.filename = path_fullname(stakptr(PATH_OFFSET));
 	sh_eval(sfnew(NIL(Sfio_t*),buff,IOBSIZE,fno,SF_READ),0);
 	shp->readscript = 0;
+	free((void*)shp->st.filename);
+	shp->st.filename = oldname;
 	sh_setstate(savestates);
 }
 
@@ -494,7 +565,7 @@ static int canexecute(register char *path, int isfun)
 	}
 	else if(stat(path,&statb) < 0)
 	{
-#ifdef _UWIN
+#if _WINIX
 		/* check for .exe or .bat suffix */
 		char *cp;
 		if(errno==ENOENT && (!(cp=strrchr(path,'.')) || strlen(cp)>4 || strchr(cp,'/')))
@@ -513,7 +584,7 @@ static int canexecute(register char *path, int isfun)
 			}
 		}
 		else
-#endif /* _UWIN */
+#endif /* _WINIX */
 		goto err;
 	}
 	errno = EPERM;
@@ -702,7 +773,7 @@ static Pathcomp_t *execs(Pathcomp_t *pp,const char *arg0,register char **argv, s
 		path = sp;
 	}
 #endif /* SHELLMAGIC */
-	execve(opath, &argv[0] ,dp->envp);
+	path_pfexecve(opath, &argv[0] ,dp->envp);
 	if(xp)
 		*xp = xval;
 #ifdef SHELLMAGIC
@@ -724,7 +795,7 @@ static Pathcomp_t *execs(Pathcomp_t *pp,const char *arg0,register char **argv, s
 	    case EACCES:
 #endif /* apollo */
 	    case ENOEXEC:
-#ifdef SHOPT_SUID_EXEC
+#if SHOPT_SUID_EXEC
 	    case EPERM:
 		/* some systems return EPERM if setuid bit is on */
 #endif
@@ -748,7 +819,7 @@ static Pathcomp_t *execs(Pathcomp_t *pp,const char *arg0,register char **argv, s
 #ifdef ENAMETOOLONG
 	    case ENAMETOOLONG:
 #endif /* ENAMETOOLONG */
-#ifndef SHOPT_SUID_EXEC
+#if !SHOPT_SUID_EXEC
 	    case EPERM:
 #endif
 		dp->exec_err = errno;
@@ -790,9 +861,9 @@ static void exscript(Shell_t *shp,register char *path,register char *argv[],char
 	job_clear();
 	if(shp->infd>0)
 		sh_close(shp->infd);
-	sh_setstate(SH_FORKED);
+	sh_setstate(sh_state(SH_FORKED));
 	sfsync(sfstderr);
-#ifdef SHOPT_SUID_EXEC
+#if SHOPT_SUID_EXEC && !SHOPT_PFSH
 	/* check if file cannot open for read or script is setuid/setgid  */
 	{
 		static char name[] = "/tmp/euidXXXXXXXXXX";
@@ -828,7 +899,7 @@ static void exscript(Shell_t *shp,register char *path,register char *argv[],char
 		}
 		savet = *--argv;
 		*argv = path;
-		execve(e_suidexec,argv,envp);
+		path_pfexecve(e_suidexec,argv,envp);
 	fail:
 		/*
 		 *  The following code is just for compatibility
@@ -841,8 +912,9 @@ static void exscript(Shell_t *shp,register char *path,register char *argv[],char
 	}
 #else
 	shp->infd = sh_chkopen(path);
-#endif /* SHOPT_SUID_EXEC */
-#ifdef SHOPT_ACCT
+#endif
+	shp->infd = sh_iomovefd(shp->infd);
+#if SHOPT_ACCT
 	sh_accbegin(path) ;  /* reset accounting */
 #endif	/* SHOPT_ACCT */
 	shp->arglist = sh_argcreate(argv);
@@ -859,7 +931,7 @@ static void exscript(Shell_t *shp,register char *path,register char *argv[],char
 	siglongjmp(*shp->jmplist,SH_JMPSCRIPT);
 }
 
-#ifdef SHOPT_ACCT
+#if SHOPT_ACCT
 #   include <sys/acct.h>
 #   include "FEATURE/time"
 
@@ -1290,7 +1362,7 @@ static void talias_put(register Namval_t* np,const char *val,int flags,Namfun_t 
 }
 
 static const Namdisc_t talias_disc   = { 0, talias_put, talias_get   };
-static Namfun_t  talias_init = { &talias_disc };
+static Namfun_t  talias_init = { &talias_disc, 1 };
 
 /*
  *  set tracked alias node <np> to value <pp>

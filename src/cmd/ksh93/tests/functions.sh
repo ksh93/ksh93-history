@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1982-2002 AT&T Corp.                #
+#                Copyright (c) 1982-2003 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -163,6 +163,19 @@ fi
 $SHELL -c "trap 'rm /tmp/script$$' EXIT"
 if	[[ -f /tmp/script$$ ]]
 then	err_exit 'exit trap not triggered when invoked with -c' 
+fi
+cat > /tmp/script$$ <<- \EOF
+	foobar()
+	{
+		return
+	}
+	shift
+	foobar
+	print -r -- "$1"
+EOF
+chmod +x /tmp/script$$
+if	[[ $( $SHELL /tmp/script$$ arg1 arg2) != arg2 ]]
+then	err_exit 'arguments not restored by posix functions'
 fi
 function foo
 {
@@ -383,8 +396,10 @@ unset -f  foobar
 if	[[ $? != 126 ]]
 then	err_exit 'function file without function definition processes wrong error'
 fi
+print 'set a b c' > dotscript 
+[[ $(PATH=$PATH: $SHELL -c '. dotscript;print $#') == 3 ]] || err_exit 'positional parameters not preserved with . script without arguments'
 cd ~- || err_exit "cd back failed"
-rm -r /tmp/ksh$$ || err_exit "rm -r /tmp/ksh$$ failed"
+cd /; rm -r /tmp/ksh$$ || err_exit "rm -r /tmp/ksh$$ failed"
 function errcheck
 {
 	trap 'print ERR; return 1' ERR
@@ -393,5 +408,14 @@ function errcheck
 }
 err=$(errcheck)
 [[ $err == ERR ]] || err_exit 'trap on ERR not working in a function'
-
+x="$(
+	function foobar
+	{
+		print ok
+	}
+	typeset -f foobar
+)"
+eval "$x"  || err_exit 'typeset -f generates syntax error'
+[[ $(foobar) != ok ]] && err_exit 'typeset -f not generating function'
 exit $((Errors))
+

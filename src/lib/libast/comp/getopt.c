@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -33,9 +33,7 @@ NoN(getopt)
 
 #else
 
-#if _UWIN
 #undef	_BLD_ast	/* enable ast imports since we're user static */
-#endif
 
 #include <error.h>
 #include <option.h>

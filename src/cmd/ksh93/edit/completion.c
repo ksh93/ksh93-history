@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -105,7 +105,7 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 	}
 	comptr = (struct comnod*)stakalloc(sizeof(struct comnod));
 	ap = (struct argnod*)stakseek(ARGVAL);
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 	{
 		register int c = *cur;
 		register genchar *cp;
@@ -380,7 +380,7 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 		stakset(ep->e_stkptr,ep->e_stkoff);
 	if(nomarkdirs)
 		sh_offoption(SH_MARKDIRS);
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 	{
 		register int c,n=0;
 		/* first re-adjust cur */
@@ -415,7 +415,7 @@ ed_macro(Edit_t *ep, register int i)
 		ep->e_macro[2] = 0;
 	if (isalnum(i)&&(np=nv_search(ep->e_macro,sh.alias_tree,HASH_SCOPE))&&(out=nv_getval(np)))
 	{
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 		/* copy to buff in internal representation */
 		int c = 0;
 		if( strlen(out) > LOOKAHEAD )
@@ -451,7 +451,7 @@ ed_fulledit(Edit_t *ep)
 	{
 		if(ep->e_eol<0)
 			return(-1);
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 		ep->e_inbuf[ep->e_eol+1] = 0;
 		ed_external(ep->e_inbuf, (char *)ep->e_inbuf);
 #endif /* SHOPT_MULTIBYTE */

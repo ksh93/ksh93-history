@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -91,10 +91,15 @@ pathprobe(char* path, char* attr, const char* lang, const char* tool, const char
 	char*		proc = (char*)aproc;
 	register char*	p;
 	register char*	k;
+	register char*	x;
 	register char**	ap;
 	int		n;
 	char*		e;
+	char*		np;
+	char*		nx;
 	char*		probe;
+	const char*	dirs;
+	const char*	dir;
 	char		buf[PATH_MAX];
 	char		cmd[PATH_MAX];
 	char		exe[PATH_MAX];
@@ -109,60 +114,85 @@ pathprobe(char* path, char* attr, const char* lang, const char* tool, const char
 	{
 		if (p = strchr(proc, ' '))
 		{
-			n = p - proc;
-			proc = strncpy(buf, proc, n);
-			*(proc + n) = 0;
+			strncopy(buf, proc, p - proc + 1);
+			proc = buf;
 		}
 		if (!(proc = pathpath(cmd, proc, NiL, PATH_ABSOLUTE|PATH_REGULAR|PATH_EXECUTE)))
 			proc = (char*)aproc;
 		else if (p)
-			strcpy(proc + strlen(proc), p);
+		{
+			n = strlen(proc);
+			strncopy(proc + n, p, PATH_MAX - n - 1);
+		}
 	}
 	if (!path)
 		path = buf;
 	probe = PROBE;
-	p = strcopy(lib, "lib/");
-	p = strcopy(p, probe);
-	*p++ = '/';
-	p = strcopy(k = p, lang);
-	*p++ = '/';
-	p = strcopy(p, tool);
-	*p++ = '/';
+	x = lib + sizeof(lib) - 1;
+	k = lib + sfsprintf(lib, x - lib, "lib/%s/", probe);
+	p = k + sfsprintf(k, x - k, "%s/%s/", lang, tool);
 	pathkey(key, attr, lang, tool, proc);
 	if (op >= -2)
 	{
-		strcpy(p, key);
+		strncopy(p, key, x - p);
 		if (pathpath(path, lib, "", PATH_ABSOLUTE) && !stat(path, &st) && (st.st_mode & S_IWUSR))
 			return path == buf ? strdup(path) : path;
 	}
-	e = strcopy(p, probe);
+	e = strncopy(p, probe, x - p);
 	if (!pathpath(path, lib, "", PATH_ABSOLUTE|PATH_EXECUTE) || stat(path, &ps))
 		return 0;
-	ptime = ps.st_mtime;
-	n = strlen(path);
-	if (n < (PATH_MAX + 5))
+	for (;;)
 	{
-		strcpy(path + n, ".ini");
-		if (!stat(path, &st) && st.st_size && ptime < (unsigned long)st.st_mtime)
-			ptime = st.st_mtime;
+		ptime = ps.st_mtime;
+		n = strlen(path);
+		if (n < (PATH_MAX - 5))
+		{
+			strcpy(path + n, ".ini");
+			if (!stat(path, &st) && st.st_size && ptime < (unsigned long)st.st_mtime)
+				ptime = st.st_mtime;
+			path[n] = 0;
+		}
+		np = path + n - (e - k);
+		nx = path + PATH_MAX - 1;
+		strncopy(np, probe, nx - np);
+		if (!stat(path, &st))
+			break;
+
+		/*
+		 * yes lib/probe/<lang>/<proc>/probe
+		 *  no lib/probe/probe
+		 *
+		 * do a manual pathaccess() to find a dir with both
+		 */
+
+		sfsprintf(exe, sizeof(exe), "lib/%s/%s", probe, probe);
+		dirs = pathbin();
+		for (;;)
+		{
+			if (!(dir = dirs))
+				return 0;
+			dirs = pathcat(path, dir, ':', "..", exe);
+			pathcanon(path, 0);
+			if (*path == '/' && pathexists(path, PATH_REGULAR|PATH_EXECUTE))
+			{
+				pathcat(path, dir, ':', "..", lib);
+				pathcanon(path, 0);
+				if (*path == '/' && pathexists(path, PATH_REGULAR|PATH_EXECUTE) && !stat(path, &ps))
+					break;
+			}
+		}
 	}
-	strcpy(p, key);
-	p = path + n - (e - k);
-	strcpy(p, probe);
-	if (stat(path, &st))
-		return 0;
+	strncopy(p, key, x - p);
+	p = np;
+	x = nx;
 	strcpy(exe, path);
 	if (op >= -1 && (!(st.st_mode & S_ISUID) && ps.st_uid != geteuid() || rofs(path)))
 	{
 		if (!(p = getenv("HOME")))
 			return 0;
-		p = strcopy(path, p);
-		*p++ = '/';
-		*p++ = '.';
-		p = strcopy(p, probe);
-		*p++ = '/';
+		p = path + sfsprintf(path, PATH_MAX - 1, "%s/.%s/", p, probe);
 	}
-	strcpy(p, k);
+	strncopy(p, k, x - p);
 	if (op >= 0 && !stat(path, &st))
 	{
 		if (ptime <= (unsigned long)st.st_mtime || ptime <= (unsigned long)st.st_ctime)

@@ -1,20 +1,11 @@
 hdr,sys	dlfcn,dl,ldr,dll
-hdr	dlldefs -I$INSTALLROOT/include/ast -I../../../include/ast
+hdr	dlldefs
 lib	dlopen,shl_load,loadbind,dllload,dllfind
 cat{
-	#ifdef _lib_dlopen
+	#if !defined(SHOPT_FS_3D) && ( _lib_dllfind || _lib_dlopen || _lib_shl_load || _lib_loadbind )
 	#   define SHOPT_FS_3D	1
-	#endif /* _lib_dlopen */
-	#ifdef _lib_shl_load
-	#   define SHOPT_FS_3D	1
-	#endif /* _lib_shl_load */
-	#ifdef _lib_loadbind
-	#   define SHOPT_FS_3D	1
-	#endif /* _lib_dllload */
-	#ifdef _lib_loadbind
-	#   define SHOPT_FS_3D	1
-	#endif /* _lib_dllload */
-	#ifdef SHOPT_FS_3D
+	#endif /* !SHOPT_FS_3D */
+	#if SHOPT_FS_3D
 	#   undef mount
 	#   include	<fs3d.h>
 	#endif /* SHOPT_FS_3D */

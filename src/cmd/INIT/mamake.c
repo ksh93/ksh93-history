@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1990-2002 AT&T Corp.                *
+*                Copyright (c) 1994-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -29,7 +29,7 @@
  * coded for portability
  */
 
-static char id[] = "\n@(#)$Id: mamake (AT&T Labs Research) 2002-12-04 $\0\n";
+static char id[] = "\n@(#)$Id: mamake (AT&T Labs Research) 2003-04-15 $\0\n";
 
 #if _PACKAGE_ast
 
@@ -37,7 +37,7 @@ static char id[] = "\n@(#)$Id: mamake (AT&T Labs Research) 2002-12-04 $\0\n";
 #include <error.h>
 
 static const char usage[] =
-"[-?\n@(#)$Id: mamake (AT&T Labs Research) 2002-12-04 $\n]"
+"[-?\n@(#)$Id: mamake (AT&T Labs Research) 2003-04-15 $\n]"
 USAGE_LICENSE
 "[+NAME?mamake - make abstract machine make]"
 "[+DESCRIPTION?\bmamake\b reads \amake abstract machine\a target and"
@@ -54,15 +54,16 @@ USAGE_LICENSE
 "			unit by \b$SHELL\b. There are some shell constructs"
 "			that cannot be expressed in an old-\bmake\b makefile.]"
 "		[+viewpathing?\bVPATH\b is properly interpreted. This allows"
-"			source to be separated from generated files.]"
+"			source to be separate from generated files.]"
 "		[+recursion?Ordered subdirectory recursion over unrelated"
 "			makefiles.]"
 "	}"
 "[+?\bmamprobe\b(1) is called to probe and generate system specific variable"
 "	definitions. The probe information is regenerated when it is older"
 "	than the \bmamprobe\b command.]"
-"[+?For compatibility with \bnmake\b(1) the \b-K\b option and the \brecurse\b"
-"	and \bcc-*\b command line targets are ignored.]"
+"[+?For compatibility with \bnmake\b(1) the \b-e\b and \b-K\b options and the"
+"	\brecurse\b and \bcc-*\b command line targets are ignored.]"
+"[e:?Ignored.]"
 "[f:?Read \afile\a instead of the default.]:[file:=Mamfile]"
 "[i:?Ignore action errors.]"
 "[k:?Continue after error with sibling prerequisites.]"
@@ -128,9 +129,10 @@ USAGE_LICENSE
 #define RULE_error	0x0004		/* not found or not generated	*/
 #define RULE_exists	0x0008		/* target file exists		*/
 #define RULE_generated	0x0010		/* generated target		*/
-#define RULE_implicit	0x0020		/* implicit prerequisite	*/
-#define RULE_made	0x0040		/* already made			*/
-#define RULE_virtual	0x0080		/* not a file			*/
+#define RULE_ignore	0x0020		/* ignore time			*/
+#define RULE_implicit	0x0040		/* implicit prerequisite	*/
+#define RULE_made	0x0080		/* already made			*/
+#define RULE_virtual	0x0100		/* not a file			*/
 
 #define STREAM_KEEP	0x0001		/* don't fclose() on pop()	*/
 #define STREAM_MUST	0x0002		/* push() file must exist	*/
@@ -292,7 +294,7 @@ identify(Stdio_t* sp)
  */
 
 static void
-report(int level, char* text, char* item)
+report(int level, char* text, char* item, unsigned long stamp)
 {
 	int	i;
 
@@ -321,7 +323,10 @@ report(int level, char* text, char* item)
 		}
 		if (item)
 			fprintf(stderr, "%s: ", item);
-		fprintf(stderr, "%s\n", text);
+		fprintf(stderr, "%s", text);
+		if (stamp && state.debug <= -2)
+			fprintf(stderr, " %10u", stamp);
+		fprintf(stderr, "\n");
 		if (level > 2)
 			exit(level - 2);
 	}
@@ -377,7 +382,7 @@ buffer(void)
 	if (buf = state.old)
 		state.old = state.old->old;
 	else if (!(buf = newof(0, Buf_t, 1, 0)) || !(buf->buf = newof(0, char, CHUNK, 0)))
-		report(3, "out of space [buffer]", NiL);
+		report(3, "out of space [buffer]", NiL, (unsigned long)0);
 	buf->end = buf->buf + CHUNK;
 	buf->nxt = buf->buf;
 	return buf;
@@ -416,7 +421,7 @@ append(Buf_t* buf, char* str)
 			i = buf->nxt - buf->buf;
 			m = (((buf->end - buf->buf) + n + CHUNK + 1) / CHUNK) * CHUNK;
 			if (!(buf->buf = newof(buf->buf, char, m, 0)))
-				report(3, "out of space [buffer resize]", NiL);
+				report(3, "out of space [buffer resize]", NiL, (unsigned long)0);
 			buf->end = buf->buf + m;
 			buf->nxt = buf->buf + i;
 		}
@@ -438,7 +443,7 @@ duplicate(char* s)
 
 	n = strlen(s);
 	if (!(t = newof(0, char, n, 1)))
-		report(3, "out of space [duplicate]", s);
+		report(3, "out of space [duplicate]", s, (unsigned long)0);
 	strcpy(t, s);
 	return t;
 }
@@ -453,7 +458,7 @@ dictionary(void)
 	Dict_t*	dict;
 
 	if (!(dict = newof(0, Dict_t, 1, 0)))
-		report(3, "out of space [dictionary]", NiL);
+		report(3, "out of space [dictionary]", NiL, (unsigned long)0);
 	return dict;
 }
 
@@ -527,7 +532,7 @@ search(register Dict_t* dict, char* name, void* value)
 	else if (value)
 	{
 		if (!(root = newof(0, Dict_item_t, 1, strlen(name))))
-			report(3, "out of space [dictionary]", name);
+			report(3, "out of space [dictionary]", name, (unsigned long)0);
 		strcpy(root->name, name);
 	}
 	if (root)
@@ -594,7 +599,7 @@ rule(char* name)
 	if (!(r = (Rule_t*)search(state.rules, name, NiL)))
 	{
 		if (!(r = newof(0, Rule_t, 1, 0)))
-			report(3, "out of space [rule]", name);
+			report(3, "out of space [rule]", name, (unsigned long)0);
 		r->name = (char*)search(state.rules, name, (void*)r);
 	}
 	return r;
@@ -613,7 +618,7 @@ cons(Rule_t* r, Rule_t* p)
 	if (!x)
 	{
 		if (!(x = newof(0, List_t, 1, 0)))
-			report(3, "out of space [list]", r->name);
+			report(3, "out of space [list]", r->name, (unsigned long)0);
 		x->rule = p;
 		x->next = r->prereqs;
 		r->prereqs = x;
@@ -642,14 +647,14 @@ view(void)
 	char			buf[CHUNK];
 
 	if (stat(".", &st))
-		report(3, "cannot stat", ".");
+		report(3, "cannot stat", ".", (unsigned long)0);
 	if ((s = (char*)search(state.vars, "PWD", NiL)) && !stat(s, &ts) &&
 	    ts.st_dev == st.st_dev && ts.st_ino == st.st_ino)
 		state.pwd = s;
 	if (!state.pwd)
 	{
 		if (!getcwd(buf, sizeof(buf) - 1))
-			report(3, "cannot determine PWD", NiL);
+			report(3, "cannot determine PWD", NiL, (unsigned long)0);
 		state.pwd = duplicate(buf);
 		search(state.vars, "PWD", state.pwd);
 	}
@@ -668,9 +673,9 @@ view(void)
 				 */
 
 				if (stat(s, &st))
-					report(3, "cannot stat top view", s);
+					report(3, "cannot stat top view", s, (unsigned long)0);
 				if (stat(state.pwd, &ts))
-					report(3, "cannot stat", state.pwd);
+					report(3, "cannot stat", state.pwd, (unsigned long)0);
 				if (ts.st_dev == st.st_dev && ts.st_ino == st.st_ino)
 					p = ".";
 				else
@@ -680,10 +685,10 @@ view(void)
 						if (*--p == '/')
 						{
 							if (p == state.pwd)
-								report(3, ". not under VPATH", s);
+								report(3, ". not under VPATH", s, (unsigned long)0);
 							*p = 0;
 							if (stat(state.pwd, &ts))
-								report(3, "cannot stat", state.pwd);
+								report(3, "cannot stat", state.pwd, (unsigned long)0);
 							*p = '/';
 							if (ts.st_dev == st.st_dev && ts.st_ino == st.st_ino)
 							{
@@ -692,17 +697,17 @@ view(void)
 							}
 						}
 					if (p <= state.pwd)
-						report(3, "cannot determine viewpath offset", s);
+						report(3, "cannot determine viewpath offset", s, (unsigned long)0);
 				}
 			}
 			n = strlen(s);
 			if (!(vp = newof(0, View_t, 1, strlen(p) + n + 1)))
-				report(3, "out of space [view]", s);
+				report(3, "out of space [view]", s, (unsigned long)0);
 			vp->node = n + 1;
 			strcpy(vp->dir, s);
 			*(vp->dir + n) = '/';
 			strcpy(vp->dir + n + 1, p);
-			report(-3, vp->dir, "view");
+			report(-4, vp->dir, "view", (unsigned long)0);
 			if (!state.view)
 				state.view = zp = vp;
 			else
@@ -716,6 +721,43 @@ view(void)
 }
 
 /*
+ * return next '?' or '}' in nested '}'
+ */
+
+static char*
+cond(register char* s)
+{
+	register int	n;
+
+	if (*s == '?')
+		s++;
+	n = 0;
+	for (;;)
+	{
+		switch (*s++)
+		{
+		case 0:
+			break;
+		case '{':
+			n++;
+			continue;
+		case '}':
+			if (!n--)
+				break;
+			continue;
+		case '?':
+			if (!n)
+				break;
+			continue;
+		default:
+			continue;
+		}
+		break;
+	}
+	return s - 1;
+}
+
+/*
  * expand var refs from s into buf
  */
 
@@ -724,6 +766,7 @@ substitute(Buf_t* buf, register char* s)
 {
 	register char*	t;
 	register char*	v;
+	register char*	q;
 	register int	c;
 	register int	n;
 
@@ -731,7 +774,7 @@ substitute(Buf_t* buf, register char* s)
 	{
 		if (c == '$' && *s == '{')
 		{
-			for (t = ++s; (c = *s) && c != '+' && c != '-' && c != ':' && c != '=' && c != '[' && c != '}'; s++);
+			for (t = ++s; (c = *s) && c != '?' && c != '+' && c != '-' && c != ':' && c != '=' && c != '[' && c != '}'; s++);
 			*s = 0;
 			if (c == '[')
 			{
@@ -758,6 +801,38 @@ substitute(Buf_t* buf, register char* s)
 			}
 			switch (c)
 			{
+			case '?':
+				q = cond(t - 1);
+				if (v)
+				{
+					if (((q - t) != 1 || *t != '*') && strncmp(v, t, q - t))
+						v = 0;
+				}
+				else if (q == t)
+					v = s;
+				t = cond(q);
+				if (v)
+				{
+					if (t > q)
+					{
+						c = *t;
+						*t = 0;
+						substitute(buf, q + 1);
+						*t = c;
+					}
+				}
+				else
+				{
+					q = cond(t);
+					if (q > t)
+					{
+						c = *q;
+						*q = 0;
+						substitute(buf, t + 1);
+						*q = c;
+					}
+				}
+				break;
 			case '+':
 			case '-':
 				if ((v == 0 || *v == 0) == (c == '-'))
@@ -851,7 +926,7 @@ find(Buf_t* buf, char* file, struct stat* st)
 
 	if (s = status(buf, 0, file, st))
 	{
-		report(-2, s, "find");
+		report(-3, s, "find", (unsigned long)0);
 		return s;
 	}
 	if (vp = state.view)
@@ -891,7 +966,7 @@ find(Buf_t* buf, char* file, struct stat* st)
 				s = use(buf);
 				if (s = status(buf, o, s, st))
 				{
-					report(-2, s, "find");
+					report(-3, s, "find", (unsigned long)0);
 					return s;
 				}
 			} while (vp = vp->next);
@@ -932,7 +1007,7 @@ pop(void)
 	int	r;
 
 	if (!state.sp)
-		report(3, "input stack underflow", NiL);
+		report(3, "input stack underflow", NiL, (unsigned long)0);
 	if (!state.sp->fp || (state.sp->flags & STREAM_KEEP))
 		r = 0;
 	else if (state.sp->flags & STREAM_PIPE)
@@ -960,11 +1035,11 @@ push(char* file, Stdio_t* fp, int flags)
 	if (!state.sp)
 		state.sp = state.streams;
 	else if (++state.sp >= &state.streams[elementsof(state.streams)])
-		report(3, "input stream stack overflow", NiL);
+		report(3, "input stream stack overflow", NiL, (unsigned long)0);
 	if (state.sp->fp = fp)
 		state.sp->file = "pipeline";
 	else if (flags & STREAM_PIPE)
-		report(3, "pipe error", file);
+		report(3, "pipe error", file, (unsigned long)0);
 	else if (!file || !strcmp(file, "-") || !strcmp(file, "/dev/stdin"))
 	{
 		flags |= STREAM_KEEP;
@@ -977,7 +1052,7 @@ push(char* file, Stdio_t* fp, int flags)
 		if (path = find(buf, file, &st))
 		{
 			if (!(state.sp->fp = fopen(path, "r")))
-				report(3, "cannot read", path);
+				report(3, "cannot read", path, (unsigned long)0);
 			state.sp->file = duplicate(path);
 			drop(buf);
 		}
@@ -986,7 +1061,7 @@ push(char* file, Stdio_t* fp, int flags)
 			drop(buf);
 			pop();
 			if (flags & STREAM_MUST)
-				report(3, "not found", file);
+				report(3, "not found", file, (unsigned long)0);
 			return 0;
 		}
 	}
@@ -1005,7 +1080,7 @@ input(void)
 	char*	e;
 
 	if (!state.sp)
-		report(3, "no input file stream", NiL);
+		report(3, "no input file stream", NiL, (unsigned long)0);
 	if (state.peek)
 		state.peek = 0;
 	else if (!fgets(state.input, sizeof(state.input), state.sp->fp))
@@ -1048,6 +1123,7 @@ execute(register char* s)
 	}
 	add(buf, '\'');
 	s = use(buf);
+	report(-5, s, "exec", (unsigned long)0);
 	if ((c = system(s)) > 255)
 		c >>= 8;
 	drop(buf);
@@ -1156,6 +1232,8 @@ run(Rule_t* r, register char* s)
 	else
 	{
 		fprintf(stdout, "%s\n", s);
+		if (state.debug)
+			fflush(stdout);
 		r->time = NOW;
 		r->flags |= RULE_exists;
 	}
@@ -1184,7 +1262,7 @@ path(Buf_t* buf, char* s, int must)
 	if ((x = status(buf, 0, s, &st)) && (st.st_mode & (S_IXUSR|S_IXGRP|S_IXOTH)))
 		return x;
 	if (!(p = (char*)search(state.vars, "PATH", NiL)))
-		report(3, "variable not defined", "PATH");
+		report(3, "variable not defined", "PATH", (unsigned long)0);
 	do
 	{
 		for (d = p; *p && *p != ':'; p++);
@@ -1207,7 +1285,7 @@ path(Buf_t* buf, char* s, int must)
 			return x;
 	} while (*p++);
 	if (must)
-		report(3, "command not found", s);
+		report(3, "command not found", s, (unsigned long)0);
 	return 0;
 }
 
@@ -1241,7 +1319,7 @@ probe(void)
 	for (h = 0; *s; s++)
 		h = h * 0x63c63cd9L + *s + 0x9c39c33dL;
 	if (!(s = (char*)search(state.vars, "INSTALLROOT", NiL)))
-		report(3, "variable must be defined", "INSTALLROOT");
+		report(3, "variable must be defined", "INSTALLROOT", (unsigned long)0);
 	append(buf, s);
 	append(buf, "/lib/probe/C/mam/");
 	for (h &= 0xffffffffL; h; h >>= 4)
@@ -1257,10 +1335,10 @@ probe(void)
 		add(tmp, ' ');
 		append(tmp, cc);
 		if (execute(use(tmp)))
-			report(3, "cannot generate probe info", s);
+			report(3, "cannot generate probe info", s, (unsigned long)0);
 		drop(tmp);
 		if (!push(s, (Stdio_t*)0, 0))
-			report(3, "cannot read probe info", s);
+			report(3, "cannot read probe info", s, (unsigned long)0);
 	}
 	drop(pro);
 	drop(buf);
@@ -1295,7 +1373,9 @@ attributes(register Rule_t* r, register char* s)
 				r->flags |= RULE_generated;
 			break;
 		case 'i':
-			if (n == 8 && !strncmp(t, "implicit", n))
+			if (n == 6 && !strncmp(t, "ignore", n))
+				r->flags |= RULE_ignore;
+			else if (n == 8 && !strncmp(t, "implicit", n))
 				r->flags |= RULE_implicit;
 			break;
 		case 'v':
@@ -1327,30 +1407,48 @@ require(char* lib, int dontcare)
 	Buf_t*		tmp;
 	struct stat	st;
 
-	static int	archive = -1;
+	static int	dynamic = -1;
 
-	if (archive < 0)
-		archive = (s = search(state.vars, "mam_cc_L", NiL)) ? !atoi(s) : 1;
+	if (dynamic < 0)
+		dynamic = (s = search(state.vars, "mam_cc_L", NiL)) ? atoi(s) : 0;
 	if (!(r = search(state.vars, lib, NiL)))
 	{
 		buf = buffer();
 		tmp = buffer();
-		append(tmp, "lib");
-		append(tmp, lib + 2);
-		append(tmp, ".a");
-		r = use(tmp);
-		if (stat(r, &st))
+		s = 0;
+		for (;;)
 		{
-			if (archive)
-			{
-				append(buf, "${INSTALLROOT}/lib/");
+			if (s)
+				append(buf, s);
+			if (r = search(state.vars, "mam_cc_PREFIX_ARCHIVE", NiL))
 				append(buf, r);
-				r = expand(tmp, use(buf));
-				if (stat(r, &st))
-					r = lib;
-			}
-			else
+			append(buf, lib + 2);
+			if (r = search(state.vars, "mam_cc_SUFFIX_ARCHIVE", NiL))
+				append(buf, r);
+			r = expand(tmp, use(buf));
+			if (!stat(r, &st))
+				break;
+			if (s)
+			{
 				r = lib;
+				break;
+			}
+			s = "${INSTALLROOT}/lib/";
+			if (dynamic)
+			{
+				append(buf, s);
+				if (r = search(state.vars, "mam_cc_PREFIX_SHARED", NiL))
+					append(buf, r);
+				append(buf, lib + 2);
+				if (r = search(state.vars, "mam_cc_SUFFIX_SHARED", NiL))
+					append(buf, r);
+				r = expand(tmp, use(buf));
+				if (!stat(r, &st))
+				{
+					r = lib;
+					break;
+				}
+			}
 		}
 		if (r != lib)
 			r = duplicate(r);
@@ -1431,7 +1529,7 @@ make(Rule_t* r)
 	{
 		z = bind(r);
 		state.indent++;
-		report(-1, r->name, "make");
+		report(-1, r->name, "make", r->time);
 	}
 	else
 		z = 0;
@@ -1455,13 +1553,33 @@ make(Rule_t* r)
 		switch (KEY(u[0], u[1], u[2], u[3]))
 		{
 		case KEY('b','i','n','d'):
-			if (t[0] == '-' && t[1] == 'l')
-				require(t, !strcmp(v, "dontcare"));
+			if ((t[0] == '-' || t[0] == '+') && t[1] == 'l' && (s = require(t, !strcmp(v, "dontcare"))) && strncmp(r->name, "FEATURE/", 8) && strcmp(r->name, "configure.h"))
+				for (;;)
+				{
+					for (t = s; *s && *s != ' '; s++);
+					if (*s)
+						*s = 0;
+					else
+						s = 0;
+					if (*t)
+					{
+						q = rule(expand(buf, t));
+						attributes(q, v);
+						x = bind(q);
+						if (z < x)
+							z = x;
+						if (q->flags & RULE_error)
+							r->flags |= RULE_error;
+					}
+					if (!s)
+						break;
+					for (*s++ = ' '; *s == ' '; s++);
+				}
 			continue;
 		case KEY('d','o','n','e'):
 			q = rule(expand(buf, t));
 			if (q != r)
-				report(2, "improper done statement", t);
+				report(2, "improper done statement", t, (unsigned long)0);
 			r->flags |= RULE_made;
 			attributes(r, v);
 			if (!(r->flags & (RULE_dontcare|RULE_error|RULE_exists|RULE_generated|RULE_implicit|RULE_virtual)))
@@ -1503,17 +1621,20 @@ make(Rule_t* r)
 			q = rule(expand(buf, t));
 			attributes(q, v);
 			x = make(q);
-			if (z < x)
+			if (!(q->flags & RULE_ignore) && z < x)
 				z = x;
 			if (q->flags & RULE_error)
 				r->flags |= RULE_error;
 			continue;
 		case KEY('p','r','e','v'):
 			q = rule(expand(buf, t));
-			if (z < q->time)
+			if (!(q->flags & RULE_ignore) && z < q->time)
 				z = q->time;
 			if (q->flags & RULE_error)
 				r->flags |= RULE_error;
+			state.indent++;
+			report(-2, q->name, "prev", q->time);
+			state.indent--;
 			continue;
 		case KEY('s','e','t','v'):
 			if (!search(state.vars, t, NiL))
@@ -1543,7 +1664,7 @@ make(Rule_t* r)
 	drop(buf);
 	if (*r->name)
 	{
-		report(-1, r->name, "done");
+		report(-1, r->name, "done", z);
 		state.indent--;
 	}
 	if (r->flags & RULE_active)
@@ -1860,6 +1981,8 @@ main(int argc, char** argv)
 	register char**		e;
 	register char*		s;
 	register char*		t;
+	register char*		v;
+	int			c;
 
 	/*
 	 * initialize the state
@@ -1884,6 +2007,8 @@ main(int argc, char** argv)
 	{
 		switch (optget(argv, usage))
 		{
+		case 'e':
+			continue;
 		case 'i':
 			append(state.opt, " -i");
 			state.ignore = 1;
@@ -1956,6 +2081,8 @@ main(int argc, char** argv)
 			{
 			case 0:
 				break;
+			case 'e':
+				continue;
 			case 'i':
 				append(state.opt, " -i");
 				state.ignore = 1;
@@ -1987,7 +2114,7 @@ main(int argc, char** argv)
 				t = s;
 				if (!*++s && !(s = *++argv))
 				{
-					report(2, "option value expected", t);
+					report(2, "option value expected", t, (unsigned long)0);
 					usage();
 				}
 				else
@@ -2012,7 +2139,7 @@ main(int argc, char** argv)
 					}
 				break;
 			default:
-				report(2, "unknown option", s);
+				report(2, "unknown option", s, (unsigned long)0);
 			case '?':
 				usage();
 				break;
@@ -2045,9 +2172,13 @@ main(int argc, char** argv)
 		for (t = s; *t; t++)
 			if (*t == '=')
 			{
+				v = t + 1;
+				if (t > s && *(t - 1) == '+')
+					t--;
+				c = *t;
 				*t = 0;
-				search(state.vars, s, t + 1);
-				*t = '=';
+				search(state.vars, s, v);
+				*t = c;
 				break;
 			}
 		if (!*t)
@@ -2076,7 +2207,7 @@ main(int argc, char** argv)
 	 */
 
 	if (state.directory && chdir(state.directory))
-		report(3, "cannot change working directory", NiL);
+		report(3, "cannot change working directory", NiL, (unsigned long)0);
 	view();
 
 	/*

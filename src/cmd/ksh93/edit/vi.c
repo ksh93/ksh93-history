@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -33,7 +33,7 @@
 -*/
 
 
-#ifdef KSHELL
+#if KSHELL
 #   include	"defs.h"
 #else
 #   include	<ast.h>
@@ -47,7 +47,7 @@
 #include	"terminal.h"
 #include	"FEATURE/time"
 
-#ifdef SHOPT_OLDTERMIO
+#if SHOPT_OLDTERMIO
 #   undef ECHOCTL
 #   define echoctl	(vp->ed->e_echoctl)
 #else
@@ -65,7 +65,7 @@
 #define	MAXCHAR	MAXLINE-2		/* max char per line */
 
 #undef isblank
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 #   define gencpy(a,b)	ed_gencpy(a,b)
 #   define genncpy(a,b,n)	ed_genncpy(a,b,n)
 #   define genlen(str)	ed_genlen(str)
@@ -134,7 +134,7 @@ typedef struct _vi_
 #else
 	int typeahead;		/* typeahead occurred */
 #endif	/* FIORDCHK */
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 	int bigvi;
 #endif
 	Edit_t	*ed;		/* pointer to edit data */
@@ -227,7 +227,7 @@ ed_viread(int fd, register char *shbuf, int nchar)
 	int Globals[9];			/* local global variables */
 	int esc_or_hang=0;		/* <ESC> or hangup */
 	char cntl_char=0;		/* TRUE if control character present */
-#ifdef SHOPT_RAWONLY
+#if SHOPT_RAWONLY
 # 	define viraw	1
 #else
 	int viraw = (sh_isoption(SH_VIRAW) || sh.st.trap[SH_KEYTRAP]);
@@ -248,7 +248,7 @@ ed_viread(int fd, register char *shbuf, int nchar)
 	Prompt = prompt;
 	ed_setup(vp->ed,fd);
 
-#ifndef SHOPT_RAWONLY
+#if !SHOPT_RAWONLY
 	if(!viraw)
 	{
 		/*** Change the eol characters to '\r' and eof  ***/
@@ -262,7 +262,7 @@ ed_viread(int fd, register char *shbuf, int nchar)
 		/* time the current line to determine typeahead */
 		oldtime = times(&dummy);
 #endif /* FIORDCHK */
-#ifdef KSHELL
+#if KSHELL
 		/* abort of interrupt has occurred */
 		if(sh.trapnote&SH_SIGSET)
 			i = -1;
@@ -343,7 +343,7 @@ ed_viread(int fd, register char *shbuf, int nchar)
 	{
 		/*** Set raw mode ***/
 
-#ifndef SHOPT_RAWONLY
+#if !SHOPT_RAWONLY
 		if( editb.e_ttyspeed == 0 )
 		{
 			/*** never did TCGETA, so do it ***/
@@ -361,7 +361,7 @@ ed_viread(int fd, register char *shbuf, int nchar)
 	virtual = (genchar*)shbuf;
 #undef virtual
 #define virtual		((genchar*)shbuf)
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 	shbuf[i+1] = 0;
 	i = ed_internal(shbuf,virtual)-1;
 #endif /* SHOPT_MULTIBYTE */
@@ -503,7 +503,7 @@ ed_viread(int fd, register char *shbuf, int nchar)
 			}
 			vp->last_cmd = 'i';
 			save_last(vp);
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 			virtual[last_virt+1] = 0;
 			last_virt = ed_external(virtual,shbuf);
 			return(last_virt);
@@ -525,7 +525,7 @@ ed_viread(int fd, register char *shbuf, int nchar)
 			if(esc_or_hang)
 				return(-1);
 			virtual[++last_virt] = '\n';
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 			virtual[last_virt+1] = 0;
 			last_virt = ed_external(virtual,shbuf);
 			return(last_virt);
@@ -606,7 +606,7 @@ ed_viread(int fd, register char *shbuf, int nchar)
 	}
 	if( ++last_virt >= 0 )
 	{
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 		if(vp->bigvi)
 		{
 			vp->bigvi = 0;
@@ -899,11 +899,11 @@ static int cntlmode(Vi_t *vp)
 			else
 			{
 				strcpy((char*)virtual,(char*)vp->u_space);
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 				ed_internal((char*)vp->u_space,vp->u_space);
 #endif /* SHOPT_MULTIBYTE */
 			}
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 			ed_internal((char*)virtual,virtual);
 #endif /* SHOPT_MULTIBYTE */
 			if((last_virt=genlen(virtual)-1) >= 0  && cur_virt == INVALID)
@@ -927,7 +927,7 @@ static int cntlmode(Vi_t *vp)
 			}
 			break;
 
-#ifdef KSHELL
+#if KSHELL
 		case 'v':
 			if(vp->repeat_set==0)
 				goto vcommand;
@@ -948,7 +948,7 @@ static int cntlmode(Vi_t *vp)
 				goto newhist;
 			}
 
-#ifdef KSHELL
+#if KSHELL
 		vcommand:
 			if(ed_fulledit(vp->ed)==GOOD)
 				return(BIGVI);
@@ -1036,7 +1036,7 @@ static void cursor(Vi_t *vp,register int x)
 {
 	register int delta;
 
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 	while(physical[x]==MARKER)
 		x++;
 #endif /* SHOPT_MULTIBYTE */
@@ -1411,7 +1411,7 @@ static void getline(register Vi_t* vp,register int mode)
 				tmp = cntlmode(vp);
 				if( tmp == ENTER || tmp == BIGVI )
 				{
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 					vp->bigvi = (tmp==BIGVI);
 #endif /* SHOPT_MULTIBYTE */
 					return;
@@ -1994,7 +1994,7 @@ static void replace(register Vi_t *vp, register int c, register int increment)
 	if( vp->ocur_virt == INVALID || !is_print(c)
 		|| !is_print(virtual[cur_virt])
 		|| !is_print(vp->o_v_char)
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 		|| !iswascii(c) || mbwidth(vp->o_v_char)>1
 		|| !iswascii(virtual[cur_virt])
 #endif /* SHOPT_MULTIBYTE */
@@ -2113,7 +2113,7 @@ static int curline_search(Vi_t *vp, const char *string)
 {
 	register int len=strlen(string);
 	register const char *dp,*cp=string, *dpmax;
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 	ed_external(vp->u_space,(char*)vp->u_space);
 #endif /* SHOPT_MULTIBYTE */
 	for(dp=(char*)vp->u_space,dpmax=dp+strlen(dp)-len; dp<=dpmax; dp++)
@@ -2121,7 +2121,7 @@ static int curline_search(Vi_t *vp, const char *string)
 		if(*dp==*cp && memcmp(cp,dp,len)==0)
 			return(dp-(char*)vp->u_space);
 	}
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 	ed_internal((char*)vp->u_space,vp->u_space);
 #endif /* SHOPT_MULTIBYTE */
 	return(-1);
@@ -2158,7 +2158,7 @@ static int search(register Vi_t* vp,register int mode)
 		/*** user wants repeat of last search ***/
 		del_line(vp,BAD);
 		strcpy( ((char*)virtual)+1, lsearch);
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 		*((char*)virtual) = '/';
 		ed_internal((char*)virtual,virtual);
 #endif /* SHOPT_MULTIBYTE */
@@ -2173,7 +2173,7 @@ static int search(register Vi_t* vp,register int mode)
 	/*** now search ***/
 
 	oldcurhline = curhline;
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 	ed_external(virtual,(char*)virtual);
 #endif /* SHOPT_MULTIBYTE */
 	if(mode=='?' && (i=curline_search(vp,((char*)virtual)+1))>=0)
@@ -2226,7 +2226,7 @@ static void sync_cursor(register Vi_t *vp)
 	{
 		/*** try to optimize search a little ***/
 		p = vp->ocur_phys + 1;
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 		while(physical[p]==MARKER)
 			p++;
 #endif /* SHOPT_MULTIBYTE */
@@ -2239,7 +2239,7 @@ static void sync_cursor(register Vi_t *vp)
 	}
 	for(; v <= last_virt; ++p, ++v)
 	{
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 		int d;
 		c = virtual[v];
 		if((d = mbwidth(c)) > 1)
@@ -2317,7 +2317,7 @@ addin:
 	{
 			/***** Input commands *****/
 
-#ifdef KSHELL
+#if KSHELL
 	case '*':		/** do file name expansion in place **/
 	case '\\':		/** do file name completion in place **/
 		if( cur_virt == INVALID )
@@ -2373,14 +2373,14 @@ addin:
 			if(vp->repeat_set==0)
 				vp->repeat = -1;
 			p = (genchar*)hist_word((char*)tmpbuf,MAXLINE,vp->repeat);
-#ifndef KSHELL
+#if !KSHELL
 			if(p==0)
 			{
 				ed_ringbell();
 				break;
 			}
 #endif	/* KSHELL */
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 			ed_internal((char*)p,tmpbuf);
 			p = tmpbuf;
 #endif /* SHOPT_MULTIBYTE */
@@ -2595,7 +2595,7 @@ yankeol:
 			{
 				i = cur_virt;
 				c = virtual[cur_virt];
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 				if((c&~STRIP)==0)
 #endif /* SHOPT_MULTIBYTE */
 				if( isupper(c) )
@@ -2617,7 +2617,7 @@ yankeol:
 }
 
 
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
     static int _isalph(register int v)
     {
 #ifdef _lib_iswalnum

@@ -24,3 +24,5 @@ cmd 1.2 :LIBRARY: RELEASE cmdinit.c cmdrecurse.c \
 $(INCLUDEDIR) :INSTALLPROTO: cmd.h
 
 "win32*" :NOOPTIMIZE: id.c
+
+ignore dlldefs.h /* prevents bootstrap double build */

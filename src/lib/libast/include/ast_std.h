@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -53,13 +53,14 @@
  */
 
 #ifndef _AST_STD_H
-#define _AST_STD_H
+#define _AST_STD_H		1
+#define _AST_STD_I		1
 
 #include <ast_common.h>
 #include <ast_lib.h>
-#include <getopt.h>	/* <stdlib.h> does this */
+#include <ast_getopt.h>	/* <stdlib.h> does this */
 
-#if (__hppa || __mips == 2) && !defined(_NO_LARGEFILE64_SOURCE)
+#if __mips == 2 && !defined(_NO_LARGEFILE64_SOURCE)
 #define	_NO_LARGEFILE64_SOURCE	1
 #endif
 #if !defined(_NO_LARGEFILE64_SOURCE) && _typ_off64_t && _lib_lseek64 && _lib_stat64
@@ -128,8 +129,7 @@ __STDPP__directive pragma pp:hide valloc
 __STDPP__directive pragma pp:hide execl execle execlp execv
 __STDPP__directive pragma pp:hide execve execvp execvpe
 __STDPP__directive pragma pp:hide getcwd getopt getsubopt putenv realpath
-__STDPP__directive pragma pp:hide resolvepath setenv setpgrp sleep spawnlp
-__STDPP__directive pragma pp:hide spawnve spawnveg spawnvp spawnvpe
+__STDPP__directive pragma pp:hide resolvepath setenv setpgrp sleep spawnveg
 __STDPP__directive pragma pp:hide strtol strtoul strtoll strtoull
 __STDPP__directive pragma pp:hide strtod strtold
 __STDPP__directive pragma pp:hide strdup unsetenv vfprintf vprintf vsprintf
@@ -165,11 +165,7 @@ __STDPP__directive pragma pp:hide strdup unsetenv vfprintf vprintf vsprintf
 #define setenv		______setenv
 #define setpgrp		______setpgrp
 #define sleep		______sleep
-#define spawnlp		______spawnlp
-#define spawnve		______spawnve
 #define spawnveg	______spawnveg
-#define spawnvp		______spawnvp
-#define spawnvpe	______spawnvpe
 #define strtol		______strtol
 #define strtoul		______strtoul
 #define strtoll		______strtoll
@@ -250,8 +246,7 @@ __STDPP__directive pragma pp:nohide valloc
 __STDPP__directive pragma pp:nohide execl execle execlp execv
 __STDPP__directive pragma pp:nohide execve execvp execvpe
 __STDPP__directive pragma pp:nohide getcwd getopt getsubopt putenv realpath
-__STDPP__directive pragma pp:nohide resolvepath setenv setpgrp sleep spawnlp
-__STDPP__directive pragma pp:nohide spawnve spawnveg spawnvp spawnvpe
+__STDPP__directive pragma pp:nohide resolvepath setenv setpgrp sleep spawnveg
 __STDPP__directive pragma pp:nohide strtol strtoul strtoll strtoull
 __STDPP__directive pragma pp:nohide strtod strtold
 __STDPP__directive pragma pp:nohide strdup unsetenv vfprintf vprintf vsprintf
@@ -287,11 +282,7 @@ __STDPP__directive pragma pp:nohide strdup unsetenv vfprintf vprintf vsprintf
 #undef	setenv
 #undef	setpgrp
 #undef	sleep
-#undef	spawnlp
-#undef	spawnve
 #undef	spawnveg
-#undef	spawnvp
-#undef	spawnvpe
 #undef	strtol
 #undef	strtoul
 #undef	strtoll
@@ -356,6 +347,11 @@ extern long			strtol(const char*, char**, int);
 extern unsigned long		strtoul(const char*, char**, int);
 
 extern double			strtod(const char*, char**);
+
+#if !_UWIN
+#undef	extern
+#endif
+
 extern _ast_fltmax_t		strtold(const char*, char**);
 
 #undef	extern
@@ -698,11 +694,6 @@ extern int		setpgid(pid_t, pid_t);
 extern pid_t		setsid(void);
 extern int		setuid(uid_t);
 extern unsigned		sleep(unsigned int);
-extern pid_t		spawnlp(const char*, const char*, ...);
-extern pid_t		spawnve(const char*, char* const[], char* const[]);
-extern pid_t		spawnveg(const char*, char* const[], char* const[], pid_t);
-extern pid_t		spawnvp(const char*, char* const[]);
-extern pid_t		spawnvpe(const char*, char* const[], char* const[]);
 extern long		sysconf(int);
 extern pid_t		tcgetpgrp(int);
 extern int		tcsetpgrp(int, pid_t);
@@ -751,6 +742,7 @@ extern long		fpathconf(int, int);
 extern long		pathconf(const char*, int);
 extern long		sysconf(int);
 
+extern pid_t		spawnveg(const char*, char* const[], char* const[], pid_t);
 extern char*		strdup(const char*);
 
 #endif
@@ -1145,5 +1137,7 @@ extern char*		rindex(const char*, int);
 extern int		_ast_getpgrp(void);
 
 #undef	extern
+
+#undef	_AST_STD_I
 
 #endif

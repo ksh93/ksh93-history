@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -61,6 +61,7 @@
 #define REG_MULTIREF	0x00100000	/* multiple digit backrefs	*/
 #define REG_MUSTDELIM	0x08000000	/* all delimiters required	*/
 #define REG_DELIMITED	0x10000000	/* pattern[0] is delimiter	*/
+#define REG_SHELL_GROUP	0x20000000	/* (|&) inside [@|&](...) only	*/
 
 #define REG_SHELL_DOT	0x00200000	/* explicit leading . match	*/
 #define REG_SHELL_ESCAPED 0x00400000	/* \ not special		*/

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -151,9 +151,9 @@ Sfdisc_t*	disc;
 
 /* on close, remove the discipline */
 #if __STD_C
-static skexcept(Sfio_t* f, int type, Void_t* data, Sfdisc_t* disc)
+static int skexcept(Sfio_t* f, int type, Void_t* data, Sfdisc_t* disc)
 #else
-static skexcept(f,type,data,disc)
+static int skexcept(f,type,data,disc)
 Sfio_t*		f;
 int		type;
 Void_t*		data;

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -137,7 +137,7 @@ static union Value *array_find(Namval_t *np,Namarr_t *arp, int flag)
 	return(up);
 }
 
-static Namfun_t *array_clone(Namval_t *np, Namval_t *mp, int size, Namfun_t *fp)
+static Namfun_t *array_clone(Namval_t *np, Namval_t *mp, int flags, Namfun_t *fp)
 {
 	Namarr_t *ap = (Namarr_t*)fp;
 	if(array_assoc(ap))
@@ -160,7 +160,7 @@ static char *array_getval(Namval_t *np, Namfun_t *disc)
 	return(nv_getv(np,&ap->hdr));
 }
 
-static double array_getnum(Namval_t *np, Namfun_t *disc)
+static Sfdouble_t array_getnum(Namval_t *np, Namfun_t *disc)
 {
 	register Namarr_t *ap = (Namarr_t*)disc;
 	register union Value *up;
@@ -238,6 +238,7 @@ static struct index_array *array_grow(Namval_t *np, register struct index_array 
 		if((ap->val[0].cp=np->nvalue.cp))
 			i++;
 		ap->header.nelem = i;
+		ap->header.hdr.nofree = 1;
 		ap->header.hdr.disc = &array_disc;
 		nv_disc(np,(Namfun_t*)ap, NV_LAST);
 	}
@@ -283,15 +284,8 @@ static Namarr_t *array_check(Namval_t *np, Namarr_t *arp, int flag)
 
 Namarr_t *nv_arrayptr(register Namval_t *np)
 {
-	register Namfun_t *fp;
 	if(nv_isattr(np,NV_ARRAY))
-	{
-		for(fp=np->nvfun; fp; fp = fp->next)
-		{
-			if(fp->disc==&array_disc)
-				return((Namarr_t*)fp);
-		}
-	}
+		return((Namarr_t*)nv_hasdisc(np, &array_disc));
 	return(0);
 }
 
@@ -527,7 +521,7 @@ char	*nv_getsub(Namval_t* np)
 
 /*
  * If <np> is an indexed array node, the current subscript index
- * retuned, otherwise returns -1
+ * returned, otherwise returns -1
  */
 int nv_aindex(register Namval_t* np)
 {
@@ -563,6 +557,7 @@ void *nv_associative(register Namval_t *np,const char *sp,int mode)
 			ap->cur = 0;
 			ap->pos = 0;
 			ap->header.hdr.disc = &array_disc;
+			ap->header.hdr.nofree = 1;
 			nv_disc(np,(Namfun_t*)ap, NV_LAST);
 		}
 		return((void*)ap);
@@ -631,14 +626,18 @@ void *nv_associative(register Namval_t *np,const char *sp,int mode)
 void nv_setvec(register Namval_t *np,int append,register int argc,register char *argv[])
 {
 	int arg0=0;
-#ifdef SHOPT_APPEND
+	struct index_array *ap=0;
+	if(nv_isarray(np))
+	{
+		ap = (struct index_array*)nv_arrayptr(np);
+		if(is_associative(ap))
+			errormsg(SH_DICT,ERROR_exit(1),"cannot append index array to associate array %s",nv_name(np));
+	}
+#if SHOPT_APPEND
 	if(append)
 	{
-		if(nv_isarray(np))
+		if(ap)
 		{
-			struct index_array *ap = (struct index_array*)nv_arrayptr(np);
-			if(is_associative(ap))
-				errormsg(SH_DICT,ERROR_exit(1),"cannot append index array to associate array %s",nv_name(np));
 			arg0 = ap->maxi;
 			while(--arg0>0 && ap->val[arg0].cp==0);
 			arg0++;

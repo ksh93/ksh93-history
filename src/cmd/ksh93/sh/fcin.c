@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -27,10 +27,6 @@
  *
  *   David Korn
  *   AT&T Labs
- *   Room 2B-102
- *   Murray Hill, N. J. 07974
- *   Tel. x7975
- *   research!dgk
  *
  */
 
@@ -64,6 +60,9 @@ int	fcfopen(register Sfio_t* f)
 	}
 	n = sfvalue(f);
 	fcrestore(&save);
+	sfread(f,buff,0);
+	_Fcin.fcoff = sftell(f);;
+	buff = (char*)sfreserve(f,SF_UNBOUND,1);
 	_Fcin.fclast = (_Fcin.fcptr=_Fcin.fcbuff=(unsigned char*)buff)+n;
 	if(sffileno(f) >= 0)
 		*_Fcin.fclast = 0;
@@ -88,6 +87,8 @@ int	fcfill(void)
 		/* see whether pointer has passed null byte */
 		if(ptr>_Fcin.fcbuff && *--ptr==0)
 			_Fcin.fcptr=ptr;
+		else
+			_Fcin.fcoff = 0;
 		return(0);
 	}
 	if(last)
@@ -102,6 +103,7 @@ int	fcfill(void)
 	if((n = ptr-_Fcin.fcbuff) && _Fcin.fcfun)
 		(*_Fcin.fcfun)(f,(const char*)_Fcin.fcbuff,n);
 	sfread(f, (char*)_Fcin.fcbuff, n);
+	_Fcin.fcoff +=n;
 	_Fcin._fcfile = 0;
 	if(!last)
 		return(0);

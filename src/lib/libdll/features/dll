@@ -106,6 +106,30 @@ tst	- output{
 		}
 		printf("#define RTLD_NOW	2\n");
 	#endif
+	#ifndef RTLD_GLOBAL
+		if (i)
+		{
+			i = 0;
+			printf("\n");
+		}
+		printf("#define RTLD_GLOBAL	0\n");
+	#endif
+	#ifndef RTLD_LOCAL
+		if (i)
+		{
+			i = 0;
+			printf("\n");
+		}
+		printf("#define RTLD_LOCAL	0\n");
+	#endif
+	#ifndef RTLD_PARENT
+		if (i)
+		{
+			i = 0;
+			printf("\n");
+		}
+		printf("#define RTLD_PARENT	0\n");
+	#endif
 	#if defined(_hdr_mach_o_dyld) && !defined(RTLD_NEXT)
 		if (i)
 		{
@@ -142,6 +166,7 @@ tst	- output{
 		printf("	char**	sibling;	/* sibling dirs on $PATH */\n");
 		printf("	char*	prefix;		/* library name prefix */\n");
 		printf("	char*	suffix;		/* library name suffix */\n");
+		printf("	char*	env;		/* library path env var */\n");
 		printf("	int	flags;		/* DLL_INFO_* flags */\n");
 		printf("#ifdef _DLLINFO_PRIVATE_\n");
 		printf("	_DLLINFO_PRIVATE_\n");

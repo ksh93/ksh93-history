@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -50,9 +50,12 @@ struct sh_scoped
 	int		dolc;
 	char		**dolv;
 	char		*cmdname;
+	char		*filename;
+	int		lineno;
 	Dt_t		*save_tree;	/* var_tree for calling function */
-	struct slnod	*staklist;	/* link list of function stacks */
 	struct sh_scoped *self;		/* pointer to copy of this scope*/
+	Dt_t		*var_local;	/* local level variables for name() */
+	struct slnod	*staklist;	/* link list of function stacks */
 	int		states;
 	int		breakcnt;
 	int		execbrk;
@@ -82,13 +85,11 @@ struct limits
 	unsigned char	fs3d;		/* non-zero for 3-d file system */
 };
 
-typedef void	(*Sh_init_f)(int);
-typedef int	(*Sh_bltin_f)(int, char*[], void*);
-
 #define _SH_PRIVATE \
 	struct sh_scoped st;		/* scoped information */ \
 	struct limits	lim;		/* run time limits */ \
-	Sfio_t		*heredocs;	/* current here-doc file */ \
+	Sfio_t		*heredocs;	/* current here-doc temp file */ \
+	Sfio_t		*funlog;	/* for logging function definitions */ \
 	int		**fdptrs;	/* pointer to file numbers */ \
 	int		savexit; \
 	char		*lastarg; \
@@ -101,8 +102,8 @@ typedef int	(*Sh_bltin_f)(int, char*[], void*);
 	Namval_t	*last_table;	/* last table used in last nv_open  */ \
 	Sfio_t		*outpool;	/* ouput stream pool */ \
 	long		timeout;	/* read timeout */ \
-	int		curenv;		/* current subshell number */ \
-	int		jobenv;		/* subshell number for jobs */ \
+	short		curenv;		/* current subshell number */ \
+	short		jobenv;		/* subshell number for jobs */ \
 	int		nextprompt;	/* next prompt is PS<nextprompt> */ \
 	Namval_t	*bltin_cmds;	/* pointer to built-in commands */ \
 	Namval_t	*posix_fun;	/* points to last name() function */ \
@@ -111,6 +112,7 @@ typedef int	(*Sh_bltin_f)(int, char*[], void*);
 	char		*errbuff;	/* pointer to stderr buffer */ \
 	char		*prompt;	/* pointer to prompt string */ \
 	char		*shname;	/* shell name */ \
+	char		*user;		/* name of real user for pfsh */ \
 	char		*comdiv;	/* points to sh -c argument */ \
 	char		*prefix;	/* prefix for compound assignment */ \
 	sigjmp_buf	*jmplist;	/* longjmp return stack */ \
@@ -157,10 +159,19 @@ typedef int	(*Sh_bltin_f)(int, char*[], void*);
 	int		optcount ; \
 	struct sh_scoped global; \
 	struct checkpt	checkbase; \
-	Sh_init_f	userinit; \
-	Sh_bltin_f	bltinfun; \
+	Shinit_f	userinit; \
+	Shbltin_f	bltinfun; \
+	Shwait_f	waitevent; \
 	char		*cur_line; \
+	char		*rcfile; \
+	char		**login_files; \
 	short		offsets[10]; \
+	Sfio_t		**sftable; \
+	unsigned char	*fdstatus; \
+	const char	*pwd; \
+	History_t	*hist_ptr; \
+	char		universe; \
+	void		*jmpbuffer; \
 	char		ifstable[256];
 
 #include	<shell.h>
@@ -179,27 +190,75 @@ typedef int	(*Sh_bltin_f)(int, char*[], void*);
 
 /* states */
 /* low numbered states are same as options */
-#define SH_NOFORK	0x1	/* set when fork not necessary, not a state */
-#define SH_COMPLETE	0x1	/* set for command completion */
-#define SH_TTYWAIT	0x40	/* waiting for keyboard input */ 
-#define	SH_FORKED	0x80	/* set when process has been forked */
-#define	SH_PROFILE	0x100	/* set when processing profiles */
-#define SH_NOALIAS	0x200	/* do not expand non-exported aliases */
-#define SH_NOTRACK	0x400	/* set to disable sftrack() function */
-#define SH_STOPOK	0x800	/* set for stopable builtins */
-#define SH_GRACE	0x1000	/* set for timeout grace period */
-#define SH_TIMING	0x2000	/* set while timing pipelines */
-#define SH_DEFPATH	0x4000	/* set when using default path */
-#define SH_INIT		0x8000	/* set when initializing the shell */
+#define SH_NOFORK	0	/* set when fork not necessary, not a state */
+#define SH_COMPLETE	0	/* set for command completion */
+#define	SH_FORKED	7	/* set when process has been forked */
+#define	SH_PROFILE	8	/* set when processing profiles */
+#define SH_NOALIAS	9	/* do not expand non-exported aliases */
+#define SH_NOTRACK	10	/* set to disable sftrack() function */
+#define SH_STOPOK	11	/* set for stopable builtins */
+#define SH_GRACE	12	/* set for timeout grace period */
+#define SH_TIMING	13	/* set while timing pipelines */
+#define SH_DEFPATH	14	/* set when using default path */
+#define SH_INIT		15	/* set when initializing the shell */
+#define SH_TTYWAIT	16	/* waiting for keyboard input */ 
+
+#define SH_BASH			41
+#define SH_BRACEEXPAND		42
+#define SH_POSIX		46
+#define SH_NOPROFILE		78
+#define SH_LOGIN_SHELL		67
+#define SH_COMMANDLINE		0x100
+#define SH_BASHEXTRA		0x200
+#define SH_BASHOPT		0x400
+
+#if SHOPT_BASH
+/*
+ *  define for all the bash options
+ */
+#   define SH_CDABLE_VARS	51
+#   define SH_CDSPELL		52
+#   define SH_CHECKHASH		53
+#   define SH_CHECKWINSIZE	54
+#   define SH_CMDHIST		55
+#   define SH_DOTGLOB		56
+#   define SH_EXECFAIL		57
+#   define SH_EXPAND_ALIASES	58
+#   define SH_EXTGLOB		59
+#   define SH_HISTAPPEND	60
+#   define SH_HISTEXPAND	43
+#   define SH_HISTORY2		44
+#   define SH_HISTREEDIT	61
+#   define SH_HISTVERIFY	62
+#   define SH_HOSTCOMPLETE	63
+#   define SH_HUPONEXIT		64
+#   define SH_INTERACTIVE_COMM	65
+#   define SH_LITHIST		66
+#   define SH_MAILWARN		68
+#   define SH_NOEMPTYCMDCOMPL	69
+#   define SH_NOCASEGLOB	70
+#   define SH_NULLGLOB		71
+#   define SH_PHYSICAL		45
+#   define SH_PROGCOMP		72
+#   define SH_PROMPTVARS	73
+#   define SH_RESTRICTED2	74
+#   define SH_SHIFT_VERBOSE	75
+#   define SH_SOURCEPATH	76
+#   define SH_XPG_ECHO		77
+#   define SH_NOEDITING		79
+#   define SH_NORC		80
+#endif
 
 extern void 		*sh_argopen(Shell_t*);
 extern Namval_t		*sh_assignok(Namval_t*,int);
 extern char		*sh_checkid(char*,char*);
+extern int		sh_debug(const char*,const char*,const char*,char *const[],int);
 extern int 		sh_echolist(Sfio_t*, int, char**);
 extern struct argnod	*sh_endword(int);
 extern char 		**sh_envgen(void);
+extern void 		sh_envput(Env_t*, Namval_t*);
 extern void 		sh_envnolocal(Namval_t*,void*);
-extern double		sh_arith(const char*);
+extern Sfdouble_t	sh_arith(const char*);
 extern void		*sh_arithcomp(char*);
 extern pid_t 		sh_fork(int,int*);
 extern char 		*sh_mactrim(char*,int);
@@ -207,6 +266,7 @@ extern int 		sh_macexpand(struct argnod*,struct argnod**,int);
 extern void 		sh_machere(Sfio_t*, Sfio_t*, char*);
 extern void 		*sh_macopen(Shell_t*);
 extern char 		*sh_mactry(char*);
+extern void		sh_printopts(Shopt_t,int,Shopt_t*);
 extern int 		sh_readline(Shell_t*,char**,int,int,long);
 extern Sfio_t		*sh_sfeval(char*[]);
 extern void		sh_setmatch(const char*,int,int,int[]);
@@ -226,16 +286,37 @@ extern int 		sh_whence(char**,int);
 #endif
 #define sh_translate(s)	_sh_translate(ERROR_dictionary(s))
 
-#define sh_isoption(x)	(sh.options & (x))
-#define sh_onoption(x)	(sh.options |= (x))
-#define sh_offoption(x)	(sh.options &= ~(x))
+#define WBITS		(sizeof(long)*8)
+#define WMASK		(0xff)
 
-#define	sh_isstate(x)	(sh.st.states&((int)(x)))
-#define	sh_onstate(x)	(sh.st.states |= ((int)(x)))
-#define	sh_setstate(x)	(sh.st.states = ((int)(x)))
-#define	sh_offstate(x)	(sh.st.states &= ~((int)(x)))
+#define is_option(s,x)	((s)->v[((x)&WMASK)/WBITS] & (1L << ((x) % WBITS)))
+#define on_option(s,x)	((s)->v[((x)&WMASK)/WBITS] |= (1L << ((x) % WBITS)))
+#define off_option(s,x)	((s)->v[((x)&WMASK)/WBITS] &= ~(1L << ((x) % WBITS)))
+#define sh_isoption(x)	is_option(&sh.options,x)
+#define sh_onoption(x)	on_option(&sh.options,x)
+#define sh_offoption(x)	off_option(&sh.options,x)
+
+
+#define sh_state(x)	( 1<<(x))
+#define	sh_isstate(x)	(sh.st.states&sh_state(x))
+#define	sh_onstate(x)	(sh.st.states |= sh_state(x))
+#define	sh_offstate(x)	(sh.st.states &= ~sh_state(x))
+#define	sh_getstate()	(sh.st.states)
+#define	sh_setstate(x)	(sh.st.states = x)
 
 #define sh_sigcheck() do{if(sh.trapnote&SH_SIGSET)sh_exit(SH_EXITSIG);} while(0)
 
 extern time_t		sh_mailchk;
 extern const char	e_dict[];
+
+/* flags for sh_printopts mode parameter
+   PRINT_VERBOSE: print "option on|off" format, "set -o option" otherwise
+   PRINT_ALL: also print unset options as "set +o option"
+   PRINT_NO_HEADER: don't print "Current option settings"
+   PRINT_SHOPT: use "shopt -s|-u" instead of "set -o|+o"
+*/
+#define PRINT_VERBOSE	0x01
+#define PRINT_ALL	0x02
+#define PRINT_NO_HEADER	0x04
+#define PRINT_SHOPT	0x08
+

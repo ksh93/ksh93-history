@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -42,35 +42,53 @@ NoN(spawnveg)
 
 #else
 
+#if _lib_posix_spawn
+
+#include <spawn.h>
+#include <error.h>
+
+pid_t
+spawnveg(const char* path, char* const argv[], char* const envv[], pid_t pgid)
+{
+	int			err;
+	pid_t			pid;
+	posix_spawnattr_t	attr;
+
+	if (err = posix_spawnattr_init(&attr))
+		goto bad;
+	if (pgid)
+	{
+		if (pgid <= 1)
+			pgid = 0;
+		if (err = posix_spawnattr_setpgroup(&attr, pgid))
+			goto bad;
+	}
+	if (err = posix_spawn(&pid, path, NiL, &attr, argv, envv ? envv : environ))
+		goto bad;
+	posix_spawnattr_destroy(&attr);
+	return pid;
+ bad:
+	errno = err;
+	return -1;
+}
+
+#else
+
 #if _lib_spawn_mode
 
-#define spawnlp		_spawnlp
-#define spawnve		_spawnve
-#define spawnvp		_spawnvp
-#define spawnvpe	_spawnvpe
-
-#include <sys/types.h>
 #include <process.h>
 
-#if !defined(P_DETACH) && defined(_P_DETACH)
-#define P_DETACH	_P_DETACH
-#endif
-#if !defined(P_NOWAIT) && defined(_P_NOWAIT)
+#ifndef P_NOWAIT
 #define P_NOWAIT	_P_NOWAIT
 #endif
-
+#ifndef P_DETACH
+#define P_DETACH	_P_DETACH
 #endif
 
-#if _lib_spawn_mode && defined(P_DETACH) && defined(P_NOWAIT)
-
-#if defined(__EXPORT__)
-#define extern	__EXPORT__
-#endif
-
-extern pid_t
-spawnveg(const char* cmd, char* const argv[], char* const envv[], pid_t pgid)
+pid_t
+spawnveg(const char* path, char* const argv[], char* const envv[], pid_t pgid)
 {
-	return spawnve(pgid ? P_DETACH : P_NOWAIT, cmd, argv, envv);
+	return spawnve(pgid ? P_DETACH : P_NOWAIT, path, argv, envv ? envv : environ);
 }
 
 #else
@@ -83,8 +101,8 @@ spawnveg(const char* cmd, char* const argv[], char* const envv[], pid_t pgid)
  * open-edition/mvs/zos fork+exec+(setpgid)
  */
 
-extern pid_t
-spawnveg(const char* cmd, char* const argv[], char* const envv[], pid_t pgid)
+pid_t
+spawnveg(const char* path, char* const argv[], char* const envv[], pid_t pgid)
 {
 	struct inheritance	inherit;
 
@@ -94,33 +112,23 @@ spawnveg(const char* cmd, char* const argv[], char* const envv[], pid_t pgid)
 		inherit.flags |= SPAWN_SETGROUP;
 		inherit.pgroup = (pgid > 1) ? pgid : SPAWN_NEWPGROUP;
 	}
-	return spawn(cmd, 0, (int*)0, &inherit, (const char**)argv, (const char**)envv);
+	return spawn(path, 0, (int*)0, &inherit, (const char**)argv, (const char**)envv);
 }
 
 #else
 
 #include <error.h>
+#include <sig.h>
+#include <ast_vfork.h>
 
 #ifndef ENOSYS
 #define ENOSYS	EINVAL
 #endif
 
-#if _lib_vfork
-#if _hdr_vfork
-#include	<vfork.h>
-#endif
-#if _sys_vfork
-#include	<sys/vfork.h>
-#endif
-#endif
-
-#if !_lib_spawnve
-#if _map_spawnve
-#undef	spawnve
-#define spawnve	_map_spawnve
-extern pid_t	spawnve(const char*, char* const[], char* const[]);
+#if _lib_spawnve && _hdr_process
+#include <process.h>
+#if defined(P_NOWAIT) || defined(_P_NOWAIT)
 #undef	_lib_spawnve
-#define _lib_spawnve	1
 #endif
 #endif
 
@@ -128,29 +136,40 @@ extern pid_t	spawnve(const char*, char* const[], char* const[]);
  * fork+exec+(setsid|setpgid) with script check to avoid shell double fork
  */
 
-extern pid_t
-spawnveg(const char* cmd, char* const argv[], char* const envv[], pid_t pgid)
+pid_t
+spawnveg(const char* path, char* const argv[], char* const envv[], pid_t pgid)
 {
 #if _lib_fork || _lib_vfork
 	int	n;
 	pid_t	pid;
-#if !_real_vfork
+#if _real_vfork
+	int	exec_errno;
+	int*	exec_errno_ptr;
+	void*	exec_free;
+	void**	exec_free_ptr;
+#else
 	int	err[2];
 #endif
 #endif
 
+	if (!envv)
+		envv = environ;
 #if _lib_spawnve
 #if _lib_fork || _lib_vfork
 	if (!pgid)
 #endif
-		return(spawnve(cmd, argv, envv));
+		return spawnve(path, argv, envv);
 #endif
 #if _lib_fork || _lib_vfork
 	n = errno;
 #if _real_vfork
-	errno = 0;
+	exec_errno = 0;
+	exec_errno_ptr = &exec_errno;
+	exec_free = 0;
+	exec_free_ptr = &exec_free;
 #else
-	if (pipe(err) < 0) err[0] = -1;
+	if (pipe(err) < 0)
+		err[0] = -1;
 	else
 	{
 		fcntl(err[0], F_SETFD, FD_CLOEXEC);
@@ -175,7 +194,7 @@ spawnveg(const char* cmd, char* const argv[], char* const envv[], pid_t pgid)
 			if (setpgid(0, pgid) < 0 && pgid && errno == EPERM)
 				setpgid(0, 0);
 		}
-		execve(cmd, argv, envv);
+		execve(path, argv, envv);
 		if (errno == ENOEXEC)
 		{
 			register char**	o;
@@ -185,19 +204,26 @@ spawnveg(const char* cmd, char* const argv[], char* const envv[], pid_t pgid)
 			for (p = o = (char**)argv; *p; p++);
 			if (v = newof(0, char*, p - o + 2, 0))
 			{
+#if _real_vfork
+				*exec_free_ptr = v;
+#endif
 				p = v;
-				if (*p = *o) o++;
-				else *p = (char*)cmd;
-				*++p = (char*)cmd;
+				if (*p = *o)
+					o++;
+				else
+					*p = (char*)path;
+				*++p = (char*)path;
 				while (*++p = *o++);
 				execve(pathshell(), v, envv);
-				free(v);
 			}
 #ifdef ENOMEM
-			else errno = ENOMEM;
+			else
+				errno = ENOMEM;
 #endif
 		}
-#if !_real_vfork
+#if _real_vfork
+		*exec_errno_ptr = errno;
+#else
 		if (err[0] != -1)
 		{
 			n = errno;
@@ -208,24 +234,28 @@ spawnveg(const char* cmd, char* const argv[], char* const envv[], pid_t pgid)
 	}
 	else if (pid != -1)
 	{
-#if _real_vfork
-		if (errno) pid = -1;
-		else
-#endif
+		if (pgid > 0)
 		{
-			if (pgid > 0)
-			{
-				/*
-				 * parent and child are in a race here
-				 */
+			/*
+			 * parent and child are in a race here
+			 */
 
-				if (pgid == 1)
-					pgid = pid;
-				if (setpgid(pid, pgid) < 0 && pid != pgid && errno == EPERM)
-					setpgid(pid, pid);
-			}
-			errno = n;
+			if (pgid == 1)
+				pgid = pid;
+			if (setpgid(pid, pgid) < 0 && pid != pgid && errno == EPERM)
+				setpgid(pid, pid);
 		}
+#if _real_vfork
+		if (exec_errno)
+		{
+			while (waitpid(pid, NiL, 0) == -1 && errno == EINTR);
+			pid = -1;
+			n = exec_errno;
+		}
+		if (exec_free)
+			free(exec_free);
+#endif
+		errno = n;
 	}
 #if !_real_vfork
 	if (err[0] != -1)
@@ -240,12 +270,14 @@ spawnveg(const char* cmd, char* const argv[], char* const envv[], pid_t pgid)
 		close(err[0]);
 	}
 #endif
-	return(pid);
+	return pid;
 #else
 	errno = ENOSYS;
-	return(-1);
+	return -1;
 #endif
 }
+
+#endif
 
 #endif
 

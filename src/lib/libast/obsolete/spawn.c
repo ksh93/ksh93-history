@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -25,27 +25,54 @@
 *******************************************************************/
 #pragma prototyped
 
-#include <ast_lib.h>
+/*
+ * OBSOLETE 20030321 -- use spawnveg()
+ */
 
-#if _lib_spawnvpe
-
-#include <ast.h>
-
-NoN(spawnvpe)
-
+#if defined(__STDPP__directive) && defined(__STDPP__hide)
+__STDPP__directive pragma pp:hide spawnve spawnvpe spawnvp spawnlp
 #else
-
-#if defined(__EXPORT__)
-#include <sys/types.h>
-__EXPORT__ pid_t spawnvpe(const char*, char* const[], char* const[]);
+#define spawnve		______spawnve
+#define spawnvpe	______spawnvpe
+#define spawnvp		______spawnvp
+#define spawnlp		______spawnlp
 #endif
 
 #include <ast.h>
-#include <errno.h>
+#include <error.h>
+
+#if defined(__STDPP__directive) && defined(__STDPP__hide)
+__STDPP__directive pragma pp:nohide spawnve spawnvpe spawnvp spawnlp
+#else
+#undef	spawnve
+#undef	spawnvpe
+#undef	spawnvp
+#undef	spawnlp
+#endif
 
 #if defined(__EXPORT__)
 #define extern	__EXPORT__
 #endif
+
+#if _lib_spawnve
+
+NoN(spawnve)
+
+#else
+
+extern pid_t
+spawnve(const char* cmd, char* const argv[], char* const envv[])
+{
+	return spawnveg(cmd, argv, envv, 0);
+}
+
+#endif
+
+#if _lib_spawnvpe
+
+NoN(spawnvpe)
+
+#else
 
 extern pid_t
 spawnvpe(const char* name, char* const argv[], char* const envv[])
@@ -79,6 +106,40 @@ spawnvpe(const char* name, char* const argv[], char* const envv[])
 		else
 			errno = ENOMEM;
 	}
+	return pid;
+}
+
+#endif
+
+#if _lib_spawnvp
+
+NoN(spawnvp)
+
+#else
+
+extern pid_t
+spawnvp(const char* name, char* const argv[])
+{
+	return spawnvpe(name, argv, environ);
+}
+
+#endif
+
+#if _lib_spawnlp
+
+NoN(spawnlp)
+
+#else
+
+extern pid_t
+spawnlp(const char* name, const char* arg, ...)
+{
+	va_list	ap;
+	pid_t	pid;
+
+	va_start(ap, arg);
+	pid = spawnvp(name, (char* const*)&arg);
+	va_end(ap);
 	return pid;
 }
 

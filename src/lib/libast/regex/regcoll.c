@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -33,8 +33,11 @@
 #include <cdt.h>
 #include <ccode.h>
 
-typedef unsigned _ast_int2_t Ucs_code_t;
-typedef unsigned _ast_int4_t Ucs_attr_t;
+#ifndef UCS_BYTE
+#define UCS_BYTE	1
+#endif
+
+#include "ucs_names.h"
 
 typedef struct Ucs_map_s
 {
@@ -49,12 +52,6 @@ typedef struct Ucs_map_s
 #define tstattr(a,i)	((a)[(i)>>5]&(1<<((i)&((1<<5)-1))))
 #define clrattr(a,i)	((a)[(i)>>5]&=~(1<<((i)&((1<<5)-1))))
 
-#ifndef UCS_BYTE
-#define UCS_BYTE	1
-#endif
-
-#include "ucs_names.h"
-
 static struct Local_s
 {
 	int		fatal;
@@ -63,37 +60,62 @@ static struct Local_s
 	Dtdisc_t	dtdisc;
 } local;
 
+/*
+ * initialize the writeable tables from the readonly data
+ * the tables are big enough to be concerned about text vs. data vs. bss
+ *	UCS_BYTE==0 100K
+ *	UCS_BYTE==1  20K
+ */
+
 static int
 initialize(void)
 {
 	register int		i;
 	register Ucs_map_t*	a;
+	register Ucs_map_t*	w;
 
+	if (local.fatal)
+		return -1;
 	local.dtdisc.link = offsetof(Ucs_map_t, link);
 	local.dtdisc.key = offsetof(Ucs_map_t, name);
 	local.dtdisc.size = -1;
+	if (!(w = newof(0, Ucs_map_t, elementsof(ucs_attrs) + elementsof(ucs_names), 0)))
+	{
+		local.fatal = 1;
+		return -1;
+	}
 	if (!(local.attrs = dtopen(&local.dtdisc, Dttree)))
 	{
+		free(w);
 		local.fatal = 1;
 		return -1;
 	}
 	if (!(local.names = dtopen(&local.dtdisc, Dttree)))
 	{
+		free(w);
 		dtclose(local.attrs);
 		local.fatal = 1;
 		return -1;
 	}
-	for (i = 0; i < elementsof(ucs_attrs); i++)
-		dtinsert(local.attrs, ucs_attrs+i);
-	for (i = 0; i < elementsof(ucs_names); i++)
-		if (a = (Ucs_map_t*)dtsearch(local.names, ucs_names+i))
+	for (i = 0; i < elementsof(ucs_attrs); i++, w++)
+	{
+		memcpy(w, &ucs_attrs[i], offsetof(Ucs_dat_t, table));
+		w->name = ucs_strings[ucs_attrs[i].table] + ucs_attrs[i].index;
+		dtinsert(local.attrs, w);
+	}
+	for (i = 0; i < elementsof(ucs_names); i++, w++)
+	{
+		memcpy(w, &ucs_names[i], offsetof(Ucs_dat_t, table));
+		w->name = ucs_strings[ucs_names[i].table] + ucs_names[i].index;
+		if (a = (Ucs_map_t*)dtsearch(local.names, w))
 		{
 			while (a->next)
 				a = a->next;
-			a->next = ucs_names+i;
+			a->next = w;
 		}
 		else
-			dtinsert(local.names, ucs_names+i);
+			dtinsert(local.names, w);
+	}
 	return 0;
 }
 

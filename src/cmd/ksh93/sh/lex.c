@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -40,7 +40,7 @@
 #include	"lexstates.h"
 #include	"io.h"
 
-#ifdef KSHELL
+#if KSHELL
 #   include	"defs.h"
 #else
 #   include	<shell.h>
@@ -85,7 +85,7 @@ struct lexdata
 	int		lex_max;
 	int		*lex_match;
 	int		lex_state;
-#ifdef SHOPT_KIA
+#if SHOPT_KIA
 	off_t		kiaoff;
 #endif
 };
@@ -123,7 +123,7 @@ static int		here_copy(Lex_t*, struct ionod*);
 static int 		stack_grow(Lex_t*);
 static const Sfdisc_t alias_disc = { NULL, NULL, NULL, alias_exceptf, NULL };
 
-#ifdef SHOPT_KIA
+#if SHOPT_KIA
 
 static void refvar(int type)
 {
@@ -171,12 +171,15 @@ static void lex_advance(Sfio_t *iop, const char *buff, register int size)
 {
 	register Shell_t *shp = sh_getinterp();
 	register Lex_t *lp = (Lex_t*)shp->lex_context;
-#ifdef KSHELL
+	register Sfio_t *log= shp->funlog;
+#if KSHELL
 	/* write to history file and to stderr if necessary */
 	if(!sfstacked(iop))
 	{
-		if(sh_isstate(SH_HISTORY) && shp->hist_ptr && shp->hist_ptr->histfp)
-			sfwrite(shp->hist_ptr->histfp, (void*)buff, size);
+		if(sh_isstate(SH_HISTORY) && shp->hist_ptr)
+			log = shp->hist_ptr->histfp;
+		if(iop)
+			sfwrite(log, (void*)buff, size);
 		if(sh_isstate(SH_VERBOSE))
 			sfwrite(sfstderr, buff, size);
 	}
@@ -189,7 +192,7 @@ static void lex_advance(Sfio_t *iop, const char *buff, register int size)
 		buff = lexd.first;
 		if(!lexd.noarg)
 			shlex.arg = (struct argnod*)stakseek(ARGVAL);
-#ifdef SHOPT_KIA
+#if SHOPT_KIA
 		lexd.kiaoff += ARGVAL;
 #endif /* SHOPT_KIA */
 	}
@@ -283,7 +286,7 @@ int sh_lex(void)
 #define sh_lex	lextoken
 #endif
 
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 static int mb_stateskip(const char *state, int *c, int *len)
 {
 	int curChar, lexState;
@@ -327,7 +330,7 @@ int sh_lex(void)
 	register int	n, c, mode=ST_BEGIN, wordflags=0;
 	register Lex_t *lp = (Lex_t*)shp->lex_context;
 	int		inlevel=lexd.level, assignment=0, ingrave=0;
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 	int LEN;
 #else
 #	define LEN	1
@@ -373,11 +376,12 @@ int sh_lex(void)
 		else
 			lexd.first = 0;
 	}
+	shlex.lastline = sh.inlineno;
 	while(1)
 	{
 		/* skip over characters in the current state */
 		state = sh_lexstates[mode];
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 		LEN=1;
 		if(mbwide())
 		{
@@ -556,8 +560,8 @@ int sh_lex(void)
 						return(shlex.token=c);
 					else if(c=='&')
 					{
-#ifdef SHOPT_ZSH
-						if(n=='>')
+#if SHOPT_BASH
+						if(!sh_isoption(SH_POSIX) && n=='>')
 						{
 							shlex.digits = -1;
 							c = '>';
@@ -598,7 +602,7 @@ int sh_lex(void)
 				/* check for \<new-line> */
 				fcgetc(n);
 				c=2;
-#ifdef SHOPT_CRNL
+#if SHOPT_CRNL
 				if(n=='\r')
 				{
 					if(fcgetc(n)=='\n')
@@ -780,7 +784,7 @@ int sh_lex(void)
 				/* don't check syntax inside `` */
 				if(mode==ST_QUOTE && ingrave)
 					continue;
-#ifdef SHOPT_KIA
+#if SHOPT_KIA
 				if(lexd.first)
 					lexd.kiaoff = fcseek(0)-lexd.first;
 				else
@@ -807,7 +811,7 @@ int sh_lex(void)
 				break;
 			case S_EDOL:
 				/* end $identifier */
-#ifdef SHOPT_KIA
+#if SHOPT_KIA
 				if(shlex.kiafile)
 					refvar(0);
 #endif /* SHOPT_KIA */
@@ -859,7 +863,7 @@ int sh_lex(void)
 							poplevel();
 						}
 						break;
-#ifdef SHOPT_OO
+#if SHOPT_OO
 					case '-':
 #endif /* SHOPT_OO */
 					case '!':
@@ -927,7 +931,7 @@ int sh_lex(void)
 				}
 				/* FALL THRU */
 			case S_MOD2:
-#ifdef SHOPT_KIA
+#if SHOPT_KIA
 				if(shlex.kiafile)
 					refvar(1);
 #endif /* SHOPT_KIA */
@@ -1085,8 +1089,7 @@ int sh_lex(void)
 				/* check for reserved word { or } */
 				if(lex.reservok && state[n]==S_BREAK && isfirst)
 					break;
-#ifdef SHOPT_BRACEPAT
-				if(c==LBRACE && !assignment && state[n]!=S_BREAK
+				if(sh_isoption(SH_BRACEEXPAND) && c==LBRACE && !assignment && state[n]!=S_BREAK
 					&& !lex.incase && !lex.intest
 					&& !lex.skipword)
 				{
@@ -1095,7 +1098,6 @@ int sh_lex(void)
 					mode = ST_NESTED;
 					continue;
 				}
-#endif /* SHOPT_BRACEPAT */
 				if(c==RBRACE && n==LPAREN)
 					goto epat;
 				if(lexd.warn)
@@ -1116,7 +1118,7 @@ int sh_lex(void)
 				}
 				if(n>0)
 					fcseek(-1);
-#ifdef SHOPT_APPEND
+#if SHOPT_APPEND
 				if(n=='=' && c=='+' && mode==ST_NAME)
 					continue;
 				break;
@@ -1336,7 +1338,7 @@ breakloop:
 			if(!lex.incase && !assignment && fcpeek(0)!=LPAREN &&
 				(np=nv_search(state,shp->alias_tree,HASH_SCOPE))
 				&& !nv_isattr(np,NV_NOEXPAND)
-#ifdef KSHELL
+#if KSHELL
 				&& (!sh_isstate(SH_NOALIAS) || nv_isattr(np,NV_NOFREE))
 #endif /* KSHELL */
 				&& (state=nv_getval(np)))
@@ -1423,6 +1425,7 @@ static int comsub(register Lex_t *lp)
 		}
 	}
 done:
+shlex.lastline = line;
 	lexd.dolparen--;
 	lex = save;
 	shlex.assignok = (endchar()==RBRACT?assignok:0);
@@ -1491,7 +1494,7 @@ void sh_lexskip(int close, register int copy, int  state)
 		lexd.nocopy--;
 }
 
-#ifdef SHOPT_CRNL
+#if SHOPT_CRNL
     ssize_t _sfwrite(Sfio_t *sp, const Void_t *buff, size_t n)
     {
 	const char *cp = (const char*)buff, *next=cp, *ep = cp + n;
@@ -1569,7 +1572,7 @@ static int here_copy(Lex_t *lp,register struct ionod *iop)
 				break;
 			if(n==S_ESC)
 			{
-#ifdef SHOPT_CRNL
+#if SHOPT_CRNL
 				if(c=='\r' && (c=fcget())!=NL)
 					fcseek(-1);
 #endif /* SHOPT_CRNL */
@@ -1622,7 +1625,7 @@ static int here_copy(Lex_t *lp,register struct ionod *iop)
 						goto done;
 					}
 				}
-#ifdef SHOPT_CRNL
+#if SHOPT_CRNL
 				if(c=='\r' && (c=fcget())!=NL)
 				{
 					if(c)
@@ -1666,7 +1669,7 @@ static int here_copy(Lex_t *lp,register struct ionod *iop)
 			break;
 		    case S_ESC:
 			n=1;
-#ifdef SHOPT_CRNL
+#if SHOPT_CRNL
 			if(c=='\r')
 			{
 				fcseek(1);
@@ -1758,6 +1761,7 @@ static char	*fmttoken(Lex_t *lp, register int sym, char *tok)
 		}
 		tok[1] = sym;
 	}
+	tok[2] = 0;
 	return(tok);
 }
 
@@ -1795,8 +1799,8 @@ void	sh_syntax(void)
 		fcclose();
 	shp->inlineno = shlex.inlineno;
 	shp->st.firstline = shlex.firstline;
-#ifdef KSHELL
-	if(!sh_isstate(SH_INTERACTIVE|SH_PROFILE))
+#if KSHELL
+	if(!sh_isstate(SH_INTERACTIVE) && !sh_isstate(SH_PROFILE))
 #else
 	if(shp->inlineno!=1)
 #endif
@@ -1839,7 +1843,7 @@ struct argnod *sh_endword(int mode)
 	int bracket=0;
 	stakputc(0);
 	sp =  stakptr(ARGVAL);
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 	if(mbwide())
 	{
 		do
@@ -1971,7 +1975,7 @@ struct argnod *sh_endword(int mode)
 			}
 			break;
 		    case S_ESC:
-#ifdef SHOPT_CRNL
+#if SHOPT_CRNL
 			if(*sp=='\r' && sp[1]=='\n')
 				sp++;
 #endif /* SHOPT_CRNL */
@@ -1991,7 +1995,7 @@ struct argnod *sh_endword(int mode)
 				break;
 			}
 			n = *sp;
-#ifdef SHOPT_DOS
+#if SHOPT_DOS
 			if(!(inquote&1) && sh_lexstates[ST_NORM][n]==0)
 				break;
 #endif /* SHOPT_DOS */
@@ -2047,7 +2051,7 @@ struct argnod *sh_endword(int mode)
 			}
 			break;
 		}
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 		if(mbwide())
 		{
 			do
@@ -2153,7 +2157,7 @@ static void setupalias(Lex_t *lp, const char *string,Namval_t *np)
 	ap->buf[1] = 0;
 	if(ap->np = np)
 	{
-#ifdef SHOPT_KIA
+#if SHOPT_KIA
 		if(shlex.kiafile)
 		{
 			unsigned long r;

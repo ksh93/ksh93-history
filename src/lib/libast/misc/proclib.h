@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -44,7 +44,10 @@ typedef sigset_t Sig_mask_t;
 typedef unsigned long Sig_mask_t;
 #endif
 
+struct Mods_s;
+
 #define _PROC_PRIVATE_ \
+	struct Mod_s*	mods;		/* process modification state	*/ \
 	long		flags;		/* original PROC_* flags	*/ \
 	Sig_mask_t	mask;		/* original blocked sig mask	*/ \
 	Sig_handler_t	sigchld;	/* PROC_FOREGROUND SIG_DFL	*/ \

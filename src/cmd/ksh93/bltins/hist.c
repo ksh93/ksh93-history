@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -226,7 +226,8 @@ int	b_hist(int argc,char *argv[], void *extra)
 	error_info.flags |= ERROR_SILENT;
 	if(!sh_isstate(SH_FORKED))
 		hist_cancel(hp);
-	sh_onstate(SH_VERBOSE|SH_HISTORY);	/* echo lines as read */
+	sh_onstate(SH_HISTORY);
+	sh_onstate(SH_VERBOSE);	/* echo lines as read */
 	if(replace)
 		hist_subst(error_info.id,fdo,replace);
 	else if(error_info.errors == 0)
@@ -240,7 +241,8 @@ int	b_hist(int argc,char *argv[], void *extra)
 	{
 		sh_close(fdo);
 		if(!sh_isoption(SH_VERBOSE))
-			sh_offstate(SH_VERBOSE|SH_HISTORY);
+			sh_offstate(SH_VERBOSE);
+		sh_offstate(SH_HISTORY);
 	}
 	return(shp->exitval);
 }

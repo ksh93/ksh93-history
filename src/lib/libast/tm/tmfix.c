@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -35,7 +35,7 @@
 #include <tm.h>
 
 #define DAYS(p)	(tm_data.days[(p)->tm_mon]+LEAP(p))
-#define LEAP(p)	((p)->tm_mon==1&&!((p)->tm_year%4)&&(((p)->tm_year%100)||!((1900+(p)->tm_year)%400)))
+#define LEAP(p)	((p)->tm_mon==1&&tmisleapyear((p)->tm_year))
 
 /*
  * correct out of bounds fields in tm

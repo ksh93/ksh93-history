@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -33,12 +33,19 @@
  * NOTE: two's complement binary integral representation assumed
  */
 
+#include "FEATURE/common"
+
 union _u_
 {
-	long		u1;
-	char*		u2;
-	double		u3;
-	char		u4[1024];
+	long			u1;
+	char*			u2;
+	double			u3;
+	char			u4[1024];
+	_ast_intmax_t		u5;
+	unsigned _ast_intmax_t	u6;
+	_ast_fltmax_t		u7;
+	void*			u8;
+	char*			(*u9)();
 };
 
 struct _s_
@@ -50,6 +57,9 @@ struct _s_
 #define roundof(x,y)	(((x)+((y)-1))&~((y)-1))
 
 extern int		printf(const char*, ...);
+
+static union _u_	u;
+static union _u_	v;
 
 main()
 {
@@ -65,8 +75,6 @@ main()
 	unsigned long	bits0;
 	unsigned long	bits1;
 	unsigned long	bits2;
-	union _u_	u;
-	union _u_	v;
 
 	u.u2 = u.u4;
 	v.u2 = u.u2 + 1;

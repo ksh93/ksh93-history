@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 4.3 2002-12-21
+info mam static 00000 1994-07-17 make (AT&T Research) 4.3 2003-04-15
 setv INSTALLROOT ../../..
 setv PACKAGE_ast ${INSTALLROOT}
 setv PACKAGE_ast_INCLUDE ${PACKAGE_ast}/include/ast
@@ -9,7 +9,7 @@ setv ARFLAGS cr
 setv AS as
 setv ASFLAGS
 setv CC cc
-setv CCFLAGS "-O"
+setv CCFLAGS  ${debug?1?${mam_cc_DEBUG}?${mam_cc_OPTIMIZE}?}
 setv COTEMP $$
 setv CPIO cpio
 setv CPIOFLAGS
@@ -47,7 +47,7 @@ exec - {
 exec - case "" in
 exec - *?)	echo " " ;;
 exec - esac
-exec - for i in sum  ast
+exec - for i in sum ast
 exec - do	case $i in
 exec - 	"sum"|sum)
 exec - 		;;
@@ -93,6 +93,9 @@ make ../../../include/ast/re_comp.h implicit
 prev ../../../include/ast/prototyped.h implicit
 done ../../../include/ast/re_comp.h dontcare
 make ../../../include/ast/getopt.h implicit
+make ../../../include/ast/ast_getopt.h implicit
+prev ../../../include/ast/prototyped.h implicit
+done ../../../include/ast/ast_getopt.h dontcare
 prev ../../../include/ast/prototyped.h implicit
 done ../../../include/ast/getopt.h dontcare
 make ../../../include/ast/ast_fcntl.h implicit
@@ -114,7 +117,7 @@ make ../../../include/ast/ast_map.h implicit
 done ../../../include/ast/ast_map.h dontcare
 make ../../../include/ast/stdio.h implicit
 make ../../../include/ast/ast_stdio.h implicit
-prev ../../../include/ast/getopt.h implicit
+prev ../../../include/ast/ast_getopt.h implicit
 prev ../../../include/ast/sfio_s.h implicit
 prev ../../../include/ast/ast_common.h implicit
 done ../../../include/ast/ast_stdio.h dontcare
@@ -126,7 +129,7 @@ done ../../../include/ast/ast_limits.h dontcare
 done ../../../include/ast/limits.h dontcare
 make ../../../include/ast/ast_hdr.h implicit
 done ../../../include/ast/ast_hdr.h dontcare
-prev ../../../include/ast/getopt.h implicit
+prev ../../../include/ast/ast_getopt.h implicit
 make ../../../include/ast/ast_lib.h implicit
 done ../../../include/ast/ast_lib.h dontcare
 prev ../../../include/ast/ast_common.h implicit
@@ -156,8 +159,9 @@ exec - then	set -x && mkdir -p ${PACKAGE_ast_LIB}
 exec - fi
 done ../../../lib generated
 make ../../../lib/libsum.a archive
+prev ../../../lib
 prev libsum.a archive
-exec - ${STDMV} ${PACKAGE_ast_LIB}/libsum.a ${PACKAGE_ast_LIB}/libsum.a.old 2>/dev/null || true; test '' = 'libsum.a' || ${STDCMP} 2>/dev/null -s libsum.a ${PACKAGE_ast_LIB}/libsum.a || { ${STDCP} libsum.a ${PACKAGE_ast_LIB}/libsum.a  		    		    ;}
+exec - test '' = 'libsum.a' || ${STDCMP} 2>/dev/null -s libsum.a ${PACKAGE_ast_LIB}/libsum.a || { ${STDMV} ${PACKAGE_ast_LIB}/libsum.a ${PACKAGE_ast_LIB}/libsum.a.old 2>/dev/null || true; ${STDCP} libsum.a ${PACKAGE_ast_LIB}/libsum.a  		    		    ;}
 exec - (ranlib ${PACKAGE_ast_LIB}/libsum.a) >/dev/null 2>&1 || true
 done ../../../lib/libsum.a generated
 make ../../../lib/lib
@@ -167,8 +171,9 @@ exec - then	set -x && mkdir -p ${PACKAGE_ast_LIB}/lib
 exec - fi
 done ../../../lib/lib generated
 make ../../../lib/lib/sum
+prev ../../../lib/lib
 prev sum.req
-exec - ${STDMV} ${PACKAGE_ast_LIB}/lib/sum ${PACKAGE_ast_LIB}/lib/sum.old 2>/dev/null || true; test '' = 'sum.req' || ${STDCMP} 2>/dev/null -s sum.req ${PACKAGE_ast_LIB}/lib/sum || { ${STDCP} sum.req ${PACKAGE_ast_LIB}/lib/sum  		    		    ;}
+exec - test '' = 'sum.req' || ${STDCMP} 2>/dev/null -s sum.req ${PACKAGE_ast_LIB}/lib/sum || { ${STDMV} ${PACKAGE_ast_LIB}/lib/sum ${PACKAGE_ast_LIB}/lib/sum.old 2>/dev/null || true; ${STDCP} sum.req ${PACKAGE_ast_LIB}/lib/sum  		    		    ;}
 done ../../../lib/lib/sum generated
 make ../../../include/ast
 exec - set -
@@ -177,6 +182,7 @@ exec - then	set -x && mkdir -p ${PACKAGE_ast_INCLUDE}
 exec - fi
 done ../../../include/ast generated
 make ../../../include/ast/sum.h
+prev ../../../include/ast
 prev sum.h
 exec - proto -p -s -l ${PACKAGE_ast_LIB}/package/ast.lic '-o since=1996,author=gsf'  sum.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${PACKAGE_ast_INCLUDE}/sum.h 1.${COTEMP}.x

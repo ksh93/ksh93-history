@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -23,49 +23,90 @@
 *******************************************************************/
 #pragma prototyped
 
-#include	<shell.h>
+#include	<defs.h>
 #include	"FEATURE/options"
 #include	"name.h"
 #include	"shtable.h"
+
+#if SHOPT_BASH
+#   define bashopt(a,b)	a,	b|SH_BASHOPT,
+#   define bashextra(a,b)	a,	b|SH_BASHEXTRA,
+#else
+#   define bashopt(a,b)
+#   define bashextra(a,b)
+#endif
 
 /*
  * This is the list of invocation and set options
  * This list must be in in ascii sorted order
  */
 
-#define bit32(x)	((x)&0xffff?bit16(x):16+bit16((x)>>16))
-#define bit16(x)	((x)&0xff?bit8(x):8+bit8((x)>>8))
-#define bit8(x)		((x)&0xf?bit4(x):4+bit4((x)>>4))
-#define bit4(x)		((x)&0x3?bit2(x):2+bit2((x)>>2))
-#define bit2(x)		((x)&1?0:1)
-
 const Shtable_t shtab_options[] =
 {
-	"allexport",		bit32(SH_ALLEXPORT),
-	"bgnice",		bit32(SH_BGNICE),
-	"emacs",		bit32(SH_EMACS),
-	"errexit",		bit32(SH_ERREXIT),
-	"gmacs",		bit32(SH_GMACS),
-	"ignoreeof",		bit32(SH_IGNOREEOF),
-	"interactive",		bit32(SH_INTERACTIVE),
-	"keyword",		bit32(SH_KEYWORD),
-	"markdirs",		bit32(SH_MARKDIRS),
-	"monitor",		bit32(SH_MONITOR),
-	"noexec",		bit32(SH_NOEXEC),
-	"noclobber",		bit32(SH_NOCLOBBER),
-	"noglob",		bit32(SH_NOGLOB),
-	"nolog",		bit32(SH_NOLOG),
-	"notify",		bit32(SH_NOTIFY),
-	"nounset",		bit32(SH_NOUNSET),
-	"pipefail",		bit32(SH_PIPEFAIL),
-	"privileged",		bit32(SH_PRIVILEGED),
-	"restricted",		bit32(SH_RESTRICTED),
-	"trackall",		bit32(SH_TRACKALL),
-	"verbose",		bit32(SH_VERBOSE),
-	"vi",			bit32(SH_VI),
-	"viraw",		bit32(SH_VIRAW),
-	"xtrace",		bit32(SH_XTRACE),
-	"",			0
+	"allexport",			SH_ALLEXPORT,
+#if SHOPT_BASH
+	"bash",				(SH_BASH|SH_COMMANDLINE),
+#endif
+	"bgnice",			SH_BGNICE,
+	bashextra("braceexpand",	SH_BRACEEXPAND)
+	bashopt("cdable_vars",		SH_CDABLE_VARS)
+	bashopt("cdspell",		SH_CDSPELL)
+	bashopt("checkhash",		SH_CHECKHASH)
+	bashopt("checkwinsize",		SH_CHECKWINSIZE)
+	bashopt("dotglob",		SH_DOTGLOB)
+	"emacs",			SH_EMACS,
+	"errexit",			SH_ERREXIT,
+	bashopt("execfail",		SH_EXECFAIL)
+	bashopt("expand_aliases",	SH_EXPAND_ALIASES)
+	bashopt("extglob",		SH_EXTGLOB)
+	"gmacs",			SH_GMACS,
+	bashextra("hashall",		SH_TRACKALL)
+	bashopt("histappend",		SH_HISTAPPEND)
+	bashopt("histexpand",		SH_HISTEXPAND)
+	bashextra("history",		SH_HISTORY2)
+	bashopt("histreedit",		SH_HISTREEDIT)
+	bashopt("histverify",		SH_HISTVERIFY)
+	bashopt("hostcomplete",		SH_HOSTCOMPLETE)
+	bashopt("huponexit",		SH_HUPONEXIT)
+	"ignoreeof",			SH_IGNOREEOF,
+	"interactive",			SH_INTERACTIVE|SH_COMMANDLINE,
+	bashopt("interactive_comments",	SH_INTERACTIVE_COMM)
+	"keyword",			SH_KEYWORD,
+	bashopt("listhist",		SH_LITHIST)
+	bashopt("login_shell",		SH_LOGIN_SHELL|SH_COMMANDLINE)
+	bashopt("mailwarn",		SH_MAILWARN)
+	"markdirs",			SH_MARKDIRS,
+	"monitor",			SH_MONITOR,
+	bashopt("no_empty_cmd_completion", SH_NOEMPTYCMDCOMPL)
+	bashopt("nocaseglob",		SH_NOCASEGLOB)
+	"noexec",			SH_NOEXEC,
+	"noclobber",			SH_NOCLOBBER,
+	"noglob",			SH_NOGLOB,
+	"nolog",			SH_NOLOG,
+	"notify",			SH_NOTIFY,
+	"nounset",			SH_NOUNSET,
+	bashopt("nullglob",		SH_NULLGLOB)
+	bashextra("onecmd",		SH_TFLAG)
+	"pipefail",			SH_PIPEFAIL,
+	bashextra("physical",		SH_PHYSICAL)
+	bashextra("posix",		SH_POSIX)
+	"privileged",			SH_PRIVILEGED,
+#if SHOPT_PFSH
+	"profile",			SH_PFSH|SH_COMMANDLINE,
+#endif
+	bashopt("progcomp",		SH_PROGCOMP)
+	bashopt("promptvars",		SH_PROMPTVARS)
+	"restricted",			SH_RESTRICTED|SH_COMMANDLINE,
+	bashopt("restricted_shell",	SH_RESTRICTED2|SH_COMMANDLINE)
+	bashopt("shift_verbose",	SH_SHIFT_VERBOSE)
+	bashopt("sourcepath",		SH_SOURCEPATH)
+	"trackall",			SH_TRACKALL,
+	"verbose",			SH_VERBOSE,
+	"vi",				SH_VI,
+	"viraw",			SH_VIRAW,
+	bashopt("xpg_echo",		SH_XPG_ECHO)
+	"xtrace",			SH_XTRACE,
+	"",				0
 };
 
 const Shtable_t shtab_attributes[] =
@@ -80,6 +121,7 @@ const Shtable_t shtab_attributes[] =
 	{"++unsigned",	(NV_INTEGER|NV_UNSIGN)},
 	{"-iinteger",	NV_INTEGER},
 	{"-Hfilename",	NV_HOST},
+	{"-bbinary",    NV_BINARY},
 	{"-llowercase",	NV_UTOL},
 	{"-Zzerofill",	NV_ZFILL},
 	{"-Lleftjust",	NV_LJUST},

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -1720,7 +1720,10 @@ regnexec(const regex_t* p, const char* s, size_t len, size_t nmatch, regmatch_t*
 	if (!s)
 		return fatal(env->disc, REG_BADPAT, NiL);
 	if (len < env->min)
+	{
+		DEBUG_TEST(0x0080,(sfprintf(sfstdout, "AHA#%04d REG_NOMATCH %d %d\n", __LINE__, len, env->min)),(0));
 		return REG_NOMATCH;
+	}
 	env->regex = p;
 	env->beg = (unsigned char*)s;
 	env->end = env->beg + len;
@@ -1750,8 +1753,12 @@ regnexec(const regex_t* p, const char* s, size_t len, size_t nmatch, regmatch_t*
 	k = REG_NOMATCH;
 	if ((e = env->rex)->type == REX_BM)
 	{
+		DEBUG_TEST(0x0080,(sfprintf(sfstdout, "AHA#%04d REX_BM\n", __LINE__)),(0));
 		if (len < e->re.bm.right)
+		{
+			DEBUG_TEST(0x0080,(sfprintf(sfstdout, "AHA#%04d REG_NOMATCH %d %d\n", __LINE__, len, e->re.bm.right)),(0));
 			goto done;
+		}
 		else
 		{
 			register unsigned char*	buf = (unsigned char*)s;
@@ -1762,11 +1769,15 @@ regnexec(const regex_t* p, const char* s, size_t len, size_t nmatch, regmatch_t*
 			register Bm_mask_t**	mask = e->re.bm.mask;
 			Bm_mask_t		m;
 
+			DEBUG_TEST(0x0080,(sfprintf(sfstdout, "AHA#%04d REX_BM len=%d right=%d left=%d size=%d %d %d\n", __LINE__, len, e->re.bm.right, e->re.bm.left, e->re.bm.size, index, mid)),(0));
 			for (;;)
 			{
 				while ((index += skip[buf[index]]) < mid);
 				if (index < HIT)
+				{
+					DEBUG_TEST(0x0080,(sfprintf(sfstdout, "AHA#%04d REG_NOMATCH %d %d\n", __LINE__, index, HIT)),(0));
 					goto done;
+				}
 				index -= HIT;
 				m = mask[n = e->re.bm.size - 1][buf[index]];
 				do
@@ -1782,6 +1793,7 @@ regnexec(const regex_t* p, const char* s, size_t len, size_t nmatch, regmatch_t*
 			e = e->next;
 		}
 	}
+	DEBUG_TEST(0x0080,(sfprintf(sfstdout, "AHA#%04d parse\n", __LINE__)),(0));
 	while ((i = parse(env, e, &env->done, (unsigned char*)s)) == NONE || advance && !env->best[0].rm_eo && !(advance = 0))
 	{
 		if (env->once)

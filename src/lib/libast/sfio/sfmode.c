@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -278,7 +278,7 @@ reg Sfio_t*	f;	/* stream to close */
 #endif
 		while ((pid = waitpid(p->pid,&status,0)) == -1 && errno == EINTR)
 			;
-		if(pid < 0)
+		if(pid == -1)
 			status = -1;
 #if _PACKAGE_ast
 		sigcritical(0);

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -39,8 +39,8 @@ NoN(getcwd)
 
 #else
 
-#include "dirlib.h"
-
+#include <ast_dir.h>
+#include <error.h>
 #include <fs3d.h>
 
 #ifndef ERANGE
@@ -229,18 +229,11 @@ getcwd(char* buf, size_t len)
 				env[0].path = strdup(buf);
 				return buf;
 			}
-#if _mem_d_fileno_dirent || _mem_d_ino_dirent
-#if !_mem_d_fileno_dirent
-#define d_fileno	d_ino
-#endif
+#ifdef D_FILENO
 			while (entry = readdir(dirp))
-				if (entry->d_fileno == cur->st_ino)
+				if (D_FILENO(entry) == cur->st_ino)
 				{
-#if _mem_d_namlen_dirent
-					namlen = entry->d_namlen;
-#else
-					namlen = strlen(entry->d_name);
-#endif
+					namlen = D_NAMLEN(entry);
 					goto found;
 				}
 #endif
@@ -254,11 +247,7 @@ getcwd(char* buf, size_t len)
 		do
 		{
 			if (!(entry = readdir(dirp))) ERROR(ENOENT);
-#if _mem_d_namlen_dirent
-			namlen = entry->d_namlen;
-#else
-			namlen = strlen(entry->d_name);
-#endif
+			namlen = D_NAMLEN(entry);
 			if ((d - dots) > (PATH_MAX - 1 - namlen))
 			{
 				*d = 0;

@@ -31,32 +31,62 @@ clobber = !($(SH))	/* move ksh to ksh.old on clobber */
 DOCFILES = sh.memo builtins.mm README RELEASE PROMO.mm COMPATIBILITY \
 		DESIGN OBSOLETE RELEASE93 RELEASE88
 
-KSHELL == 1		/* this is ksh */
+KSHELL == 1			/* this is ksh */
 
-SH_DICT ==
-
-/* set these variables to 1 to enable, null to disable */
+SH_DICT ==			/* message catalog */
+SH_CMDLIB_DIR ==		/* libcmd.a builtin dir */
 DEBUG ==			/* debugging purposes only */
+
+/* set these variables to 1 to enable, 0 to disable, null to probe */
+
+SHOPT_ACCT ==  			/* accounting */
+SHOPT_ACCTFILE ==  		/* per user accounting info */
 SHOPT_APPEND == 1		/* var+=val string append */
-SHOPT_NAMESPACE == 1		/* allow namespaces */
+SHOPT_BASH ==			/* bash compatibility code */
+SHOPT_BRACEPAT == 1		/* C-shell {...,...} expansions (, required) */
+SHOPT_CMDLIB_BLTIN ==		/* make all cmds in libcmd.a builtins */
+SHOPT_CMDLIB_DIR ==		/* SHOPT_CMDLIB_BLTIN=1 + "/opt/ast/bin/" */
 SHOPT_COMPOUND_ARRAY == 1	/* allow compound arrays */
+SHOPT_CRNL ==			/* accept <cr><nl> for <nl> */
+SHOPT_DYNAMIC == 1		/* dynamic loading for builtins */
+SHOPT_ECHOPRINT ==		/* make echo equivalent to print */
 SHOPT_ESH == 1			/* emacs/gmacs edit mode */
-SHOPT_VSH == 1			/* vi edit mode */
-SHOPT_SPAWN == 			/* use spawnve for fork/exec */
+SHOPT_FILESCAN == 1		/* fast file scan */
+SHOPT_FS_3D == 			/* 3d file system */
+SHOPT_KIA == 1			/* shell information database generation */
+SHOPT_MULTIBYTE == 1		/* multibyte character handling */
+SHOPT_NAMESPACE == 1		/* allow namespaces */
+SHOPT_OLDTERMIO ==		/* support both TCGETA and TCGETS */
+SHOPT_OO == 1			/* object oriented extension, not complete */
+SHOPT_OPTIMIZE == 1		/* optimize loop invariants */
+SHOPT_PFSH == 1			/* solaris exec_attr(4) profile execution */
+SHOPT_P_SUID ==			/* real uid's that require -p for set[ug]id */
+SHOPT_RAWONLY == 1		/* make viraw the only vi mode */
+SHOPT_SEVENBIT ==		/* strip the eigth bit from characters */
+SHOPT_SPAWN ==			/* use spawnveg for fork/exec */
 SHOPT_SUID_EXEC == 1		/* allow (safe) suid/sgid shell scripts */
-SHOPT_FILESCAN==1		/* fast file scan */
-SHOPT_OPTIMIZE==1		/* optimize loop invariants */
-SHOPT_MULTIBYTE==1		/* multibyte character handling */
+SHOPT_TIMEOUT ==		/* number of seconds for shell timeout */
+SHOPT_VSH == 1			/* vi edit mode */
 
 if  CC.HOSTTYPE == "*win*"
 	SHOPT_CRNL == 1		/* <cr><nl> is eqivalent to <nl> */
-	SHOPT_NOCASE == 1	/* do case insensitive file compare */
+end
+
+if SHOPT_BASH
+	BASH_HOSTTYPE == "$(CC.HOSTTYPE:S:/\.//)"
+	BASH_MACHTYPE == "$(BASH_HOSTTYPE)-unknown-$(CC.HOSTTYPE:B)"
 end
 
 /* use the following libraries only if they exist */
-LIBS_opt := +lm +ljobs +li
+LIBS_opt := +ljobs +li
+
+if  CC.HOSTTYPE == "sol[89].*"
+	LIBS_opt += -lsecdb
+	LDFLAGS  += -zlazyload -zignore
+end
+
 if ! "$(-mam:N=static*)" && CC.HOSTTYPE != "sgi.mips*"
-	if CC.HOSTTYPE == "sol8.*"
+	if CC.HOSTTYPE == "sol[789].*"
 		LIBS_opt += +lsocket -lnsl
 	else
 		LIBS_opt += +lsocket +lnsl
@@ -74,12 +104,12 @@ LDLIBRARIES = $(LIBS_opt)
 FILES_opt =		/* optional file list enabled by vars above */
 FILES_opt += $(SHOPT_ESH:T=V?emacs.c)
 FILES_opt += $(SHOPT_VSH:T=V?vi.c)
+FILES_opt += $(SHOPT_BASH:T=V?bash.c bash_pre_rc.c)
 if SHOPT_X
 LDFLAGS += -u  _XtAppInitialize -L/usr/add-on/X11/lib
 end
 
-
-:ALL: $(SH) shcomp $(SHOPT_SUID_EXEC:T=V?suid_exec.c)
+:ALL: $(SH) shcomp $(SHOPT_SUID_EXEC:T=V?suid_exec.c) $(SHOPT_BASH:T=V?bash)
 
 $(SH) :: sh.1 pmain.c $(LIBS_req)
 
@@ -88,13 +118,14 @@ DATAFILES = limits.c msg.c strdata.c testops.c keywords.c options.c \
 
 shell $(VERSION) :LIBRARY: shell.3 nval.3 alarm.c cd_pwd.c cflow.c deparse.c \
 	getopts.c hist.c misc.c print.c read.c sleep.c trap.c test.c \
-	typeset.c ulimit.c umask.c whence.c main.c \
+	typeset.c ulimit.c umask.c whence.c main.c nvdisc.c \
 	arith.c args.c array.c completion.c defs.c edit.c expand.c \
 	fault.c fcin.c history.c init.c io.c jobs.c lex.c macro.c name.c \
 	nvtree.c parse.c path.c string.c streval.c subshell.c tdump.c timers.c \
 	trestore.c waitevent.c xec.c env.c $(DATAFILES) $(FILES_opt) \
 	-lcmd -ldll -last -lm
 
+"sol*.i386" :NOOPTIMIZE: main.c
 "win32*" :NOOPTIMIZE: trestore.c
 
 if CC.HOSTTYPE == "win32*"
@@ -113,9 +144,19 @@ shcomp	::	CC.DLL= SH_DICT='"libshell"' shcomp.c -lshell
 
 $(FUNDIR) :INSTALLDIR: mode=+x dirs popd pushd
 
-shcomp.o : _BLD_shell=
+shcomp.o : _BLD_DLL= $(CC.HOSTTYPE:N=cygwin.*:??_BLD_shell=?)
 
-:: syscall.s mamexec mamstate.c deparse.c shopen.c OPTIONS $(DOCFILES)
+if SHOPT_BASH
+bash :LINK: $(SH)
+
+bash_pre_rc.c : bash_pre_rc.sh
+	echo "const char bash_pre_rc[] = " > $(<)
+	sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' -e 's/'"'"'/\\'"'"'/g' -e 's/^[[:space:]]*\(.*\)$/\"\1\\n\"/' $(*) >> $(<)
+	echo ";" >> $(<)
+end
+
+:: syscall.s mamexec mamstate.c deparse.c shopen.c $(DOCFILES) \
+	bash.c bash_pre_rc.sh
 
 :: alias.sh append.sh arith.sh arrays.sh attributes.sh basic.sh bracket.sh \
 	builtins.sh case.sh comvar.sh coprocess.sh exit.sh functions.sh \
@@ -129,11 +170,10 @@ test : .NULL
 
 else
 
-test : $(SH) shtests
-	KSH=$(*:O=1:P=A)
-	cd $(*:O=2:P=L!:D)
-	SHELL=$KSH $KSH $(*:O=2:B)
+test : $(BINDIR)/$(SH) $(SH) shtests
+	$(SILENT) $(CMP) $(CMPFLAGS) $(*:O=1) $(*:O=2) 2>/dev/null ||
+	echo "make install to run the tests on the latest $(SH)" >&2
+	cd $(*:O=3:P=L!:D)
+	SHELL=$(*:O=1:P=A) $(*:O=1) $(*:O=3:B)
 
 end
-
-OPTIONS : .TERMINAL /* avoid case-insensitive options.c => OPTIONS map */

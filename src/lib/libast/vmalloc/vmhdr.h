@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -76,6 +76,7 @@
 #endif /*_PACKAGE_ast*/
 
 #include	"FEATURE/vmalloc"
+#include	"FEATURE/mmap"
 
 #undef free
 #undef malloc
@@ -187,6 +188,7 @@ extern int printf _ARG_((const char*, ...));
 #define KPVFREE(vm,d,func)		(SETLOCAL((vm)->data), func((vm),(d)) )
 #define KPVRESIZE(vm,d,sz,mv,func)	(SETLOCAL((vm)->data), func((vm),(d),(sz),(mv)) )
 #define KPVADDR(vm,addr,func)		(SETLOCAL((vm)->data), func((vm),(addr)) )
+#define KPVCOMPACT(vm,func)		(SETLOCAL((vm)->data), func((vm)) )
 
 /* ALIGN is chosen so that a block can store all primitive types.
 ** It should also be a multiple of ALIGNB==(BITS+1) so the size field

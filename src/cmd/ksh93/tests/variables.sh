@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1982-2002 AT&T Corp.                #
+#                Copyright (c) 1982-2003 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -75,6 +75,7 @@ read <<-!
 if	[[ $REPLY != foobar ]]
 then	err_exit REPLY variable not working
 fi
+integer save=$LINENO
 # LINENO
 LINENO=10
 #
@@ -83,6 +84,7 @@ LINENO=10
 if	(( LINENO != 13))
 then	err_exit LINENO variable not working
 fi
+LINENO=save+10
 ifs=$IFS
 IFS=:
 x=a::b::c
@@ -289,4 +291,37 @@ x=$(foo)
 (( x >1 && x < 2 )) 
 '
 } 2> /dev/null   || err_exit 'SECONDS not working in function'
+trap 'rm -f /tmp/script$$' EXIT
+cat > /tmp/script$$ <<-\!
+	posixfun()
+	{
+		unset x
+	 	nameref x=$1
+	 	print  -r -- "$x"
+	}
+	function fun
+	{
+	 	nameref x=$1
+	 	print  -r -- "$x"
+	}
+	if	[[ $1 ]]
+	then	file=${.sh.file}
+	else	print -r -- "${.sh.file}"
+	fi
+!
+chmod +x /tmp/script$$
+. /tmp/script$$  1
+[[ $file == /tmp/script$$ ]] || err_exit ".sh.file not working for dot scripts"
+[[ $($SHELL /tmp/script$$) == /tmp/script$$ ]] || err_exit ".sh.file not working for scripts"
+[[ $(posixfun .sh.file) == /tmp/script$$ ]] || err_exit ".sh.file not working for posix functions"
+[[ $(fun .sh.file) == /tmp/script$$ ]] || err_exit ".sh.file not working for functions"
+[[ $(posixfun .sh.fun) == posixfun ]] || err_exit ".sh.fun not working for posix functions"
+[[ $(fun .sh.fun) == fun ]] || err_exit ".sh.fun not working for functions"
+[[ $(posixfun .sh.subshell) == 1 ]] || err_exit ".sh.subshell not working for posix functions"
+[[ $(fun .sh.subshell) == 1 ]] || err_exit ".sh.subshell not working for functions"
+(
+    [[ $(posixfun .sh.subshell) == 2 ]]  || err_exit ".sh.subshell not working for posix functions in subshells"
+    [[ $(fun .sh.subshell) == 2 ]]  || err_exit ".sh.subshell not working for functions in subshells"
+    (( .sh.subshell == 1 )) || err_exit ".sh.subshell not working in a subshell"
+)
 exit $((Errors))

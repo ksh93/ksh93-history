@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -300,7 +300,9 @@ debug_mbtowc(register wchar_t* p, register const char* s, size_t n)
 	register int		dr;
 	wchar_t			c;
 
-	if (!s || n < 1)
+	if (n < 1)
+		return -1;
+	if (!s || !*s)
 		return 0;
 	switch (((unsigned char*)s)[0])
 	{

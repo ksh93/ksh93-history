@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1997-2002 AT&T Corp.                *
+*                Copyright (c) 1997-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -30,7 +30,7 @@
  * AT&T Labs Research
  */
 
-static const char id[] = "\n@(#)$Id: dll library (AT&T Labs Research) 2002-11-18 $\0\n";
+static const char id[] = "\n@(#)$Id: dll library (AT&T Labs Research) 2003-02-11 $\0\n";
 
 #include <ast.h>
 #include <dlldefs.h>
@@ -322,9 +322,12 @@ static const char id[] = "\n@(#)$Id: dll library (AT&T Labs Research) 2002-11-18
 
 #	include <mach-o/dyld.h>
 
+	typedef const struct mach_header* NSImage;
+
 	typedef struct Dll_s
 	{
 		unsigned long	magic;
+		NSImage		image;
 		NSModule	module;
 		char		path[1];
 	} Dll_t;
@@ -339,6 +342,8 @@ static const char id[] = "\n@(#)$Id: dll library (AT&T Labs Research) 2002-11-18
 	static const char	e_space[] = T("out of space");
 	static const char	e_static[] = T("image statically linked");
 	static const char	e_undefined[] = T("undefined symbol");
+
+	static Dll_t global = { DL_MAGIC };
 
 	static void undefined(const char* name)
 	{
@@ -361,9 +366,11 @@ static const char id[] = "\n@(#)$Id: dll library (AT&T Labs Research) 2002-11-18
 
 	extern void* dlopen(const char* path, int mode)
 	{
-		Dll_t*		dll;
+		Dll_t*			dll;
+		int			i;
+		NSObjectFileImage	image;
 
-		static int	init = 0;
+		static int		init = 0;
 
 		if (!_dyld_present())
 		{
@@ -375,27 +382,41 @@ static const char id[] = "\n@(#)$Id: dll library (AT&T Labs Research) 2002-11-18
 			init = 1;
 			NSInstallLinkEditErrorHandlers(&handlers);
 		}
-		if (!(dll = newof(0, Dll_t, 1, strlen(path))))
+		if (!path)
+			dll = &global;
+		else if (!(dll = newof(0, Dll_t, 1, strlen(path))))
 		{
 			dlmessage = e_space;
 			return 0;
 		}
-#if 0
-{
-	int			i;
-	NSObjectFileImage	image;
-	i = NSCreateObjectFileImageFromFile(path, &image);
-	sfprintf(sfstderr, "NSCreateObjectFileImageFromFile %s => %d\n", path, i);
-}
-#endif
-		if (!NSAddLibrary(path))
+		else
 		{
-			free(dll);
-			dlmessage = e_space;
-			return 0;
+			switch (NSCreateObjectFileImageFromFile(path, &image))
+			{
+			case NSObjectFileImageSuccess:
+				dll->module = NSLinkModule(image, path, (mode & RTLD_LAZY) ? 0 : NSLINKMODULE_OPTION_BINDNOW);
+				NSDestroyObjectFileImage(image);
+				if (!dll->module)
+				{
+					free(dll);
+					return 0;
+				}
+				break;
+			case NSObjectFileImageInappropriateFile:
+				dll->image = NSAddImage(path, 0);
+				if (!dll->image)
+				{
+					free(dll);
+					return 0;
+				}
+				break;
+			default:
+				free(dll);
+				return 0;
+			}
+			strcpy(dll->path, path);
+			dll->magic = DL_MAGIC;
 		}
-		strcpy(dll->path, path);
-		dll->magic = DL_MAGIC;
 		return (void*)dll;
 	}
 
@@ -408,49 +429,64 @@ static const char id[] = "\n@(#)$Id: dll library (AT&T Labs Research) 2002-11-18
 			dlmessage = e_handle;
 			return -1;
 		}
+		if (dll->module)
+			NSUnLinkModule(dll->module, 0);
 		free(dll);
 		return 0;
+	}
+
+	static NSSymbol
+	lookup(Dll_t* dll, const char* name)
+	{
+		unsigned long	pun;
+		void*		address;
+
+		if (dll == DL_NEXT)
+		{
+			if (!_dyld_func_lookup(name, &pun))
+				return 0;
+			address = (NSSymbol)pun;
+		}
+		else if (dll->module)
+			address = NSLookupSymbolInModule(dll->module, name);
+		else if (dll->image)
+		{
+			if (!NSIsSymbolNameDefinedInImage(dll->image, name))
+				return 0;
+			address = NSLookupSymbolInImage(dll->image, name, 0);
+		}
+		else
+		{
+			if (!NSIsSymbolNameDefined(name))
+				return 0;
+			address = NSLookupAndBindSymbol(name);
+		}
+		if (address)
+			address = NSAddressOfSymbol(address);
+		return address;
 	}
 
 	extern void* dlsym(void* handle, const char* name)
 	{
 		Dll_t*		dll = (Dll_t*)handle;
-		unsigned long	address;
-		void*		module;
+		NSSymbol	address;
 		char		buf[1024];
 
-		if (dll == DL_NEXT)
-		{
-			if (!_dyld_func_lookup(name, &address))
-			{
-				dlmessage = e_cover;
-				return 0;
-			}
-		}
-		else if (dll && dll->magic != DL_MAGIC)
+		if (!dll || dll != DL_NEXT && (dll->magic != DL_MAGIC || !dll->image && !dll->module))
 		{
 			dlmessage = e_handle;
 			return 0;
 		}
-		else
+		if (!(address = lookup(dll, name)) && name[0] != '_' && strlen(name) < (sizeof(buf) - 1))
 		{
-			if (!NSIsSymbolNameDefined(name))
-			{
-				if (name[0] == '_' || strlen(name) >= (sizeof(buf) - 1))
-				{
-					dlmessage = e_undefined;
-					return 0;
-				}
-				buf[0] = '_';
-				strcpy(buf + 1, name);
-				name = (char*)buf;
-				if (!NSIsSymbolNameDefined(name))
-				{
-					dlmessage = e_undefined;
-					return 0;
-				}
-			}
-			_dyld_lookup_and_bind(name, &address, &module);
+			buf[0] = '_';
+			strcpy(buf + 1, name);
+			address = lookup(dll, buf);
+		}
+		if (!address)
+		{
+			dlmessage = dll == DL_NEXT ? e_cover : e_undefined;
+			return 0;
 		}
 		return (void*)address;
 	}

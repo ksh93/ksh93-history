@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -82,7 +82,7 @@
 #define ST_QNEST	10
 #define ST_NONE		11
 
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 #   define isaname(c)	(((c)>=0x200) ||  sh_lexstates[ST_NAME][c]==0)
 #   define isaletter(c)	(((c)>=0x200) || sh_lexstates[ST_DOL][c]==S_ALP && (c)!='.')
 #else

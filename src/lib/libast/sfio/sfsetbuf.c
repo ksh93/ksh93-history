@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -58,6 +58,32 @@ struct stat
 };
 #define fstat(fd,st)	(-1)
 #endif /*_sys_stat*/
+
+static int setlinemode()
+{	char			*astsfio, *endw;
+
+	static int		linemode = -1;
+	static const char	sf_line[] = "SF_LINE";
+
+#define ISSEPAR(c)	((c) == ',' || (c) == ' ' || (c) == '\t')
+	if (linemode < 0)
+	{	linemode = 0;
+		if((astsfio = getenv("_AST_SFIO_OPTIONS")))
+		{	for(; *astsfio != 0; astsfio = endw)
+			{	while(ISSEPAR(*astsfio) )
+					*astsfio++;
+				for(endw = astsfio; *endw && !ISSEPAR(*endw); ++endw)
+					;
+				if((endw-astsfio) == (sizeof(sf_line)-1) &&
+				   strncmp(astsfio,sf_line,endw-astsfio) == 0)
+				{	linemode = 1;
+					break;
+				}
+			}
+		}
+	}
+	return linemode;
+}
 
 #if __STD_C
 Void_t* sfsetbuf(reg Sfio_t* f, reg Void_t* buf, reg size_t size)
@@ -195,6 +221,9 @@ reg size_t	size;	/* buffer size, -1 for default size */
 				okmmap = 0;
 #endif
 		}
+
+		if(init && setlinemode())
+			f->flags |= SF_LINE;
 
 		if(f->here >= 0)
 		{	f->extent = (Sfoff_t)st.st_size;

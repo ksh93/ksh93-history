@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -74,7 +74,7 @@ typedef struct Cache_s
 	char		pattern[128];
 } Cache_t;
 
-static Cache_t		cache[8];
+static Cache_t*		cache[8];
 
 static unsigned long	serial;
 
@@ -95,6 +95,7 @@ strgrpmatch(const char* b, const char* p, int* sub, int n, int flags)
 	register int*		end;
 	register int		i;
 	int			m;
+	int			empty;
 	int			unused;
 	int			old;
 	int			once;
@@ -112,10 +113,10 @@ strgrpmatch(const char* b, const char* p, int* sub, int n, int flags)
 			 */
 
 			for (i = 0; i < elementsof(cache); i++)
-				if (cache[i].keep)
+				if (cache[i] && cache[i]->keep)
 				{
-					cache[i].keep = 0;
-					regfree(&cache[i].re);
+					cache[i]->keep = 0;
+					regfree(&cache[i]->re);
 				}
 		}
 		return 0;
@@ -128,20 +129,28 @@ strgrpmatch(const char* b, const char* p, int* sub, int n, int flags)
 	 */
 
 	once = 0;
-	unused = -1;
+	empty = unused = -1;
 	old = 0;
 	for (i = 0; i < elementsof(cache); i++)
-		if (!cache[i].keep)
+		if (!cache[i])
+			empty = i;
+		else if (!cache[i]->keep)
 			unused = i;
-		else if (streq(cache[i].pattern, p) && cache[i].flags == flags && cache[i].n == n)
+		else if (streq(cache[i]->pattern, p) && cache[i]->flags == flags && cache[i]->n == n)
 			break;
-		else if (cache[old].serial > cache[i].serial)
+		else if (!cache[old] || cache[old]->serial > cache[i]->serial)
 			old = i;
 	if (i >= elementsof(cache))
 	{
 		if (unused < 0)
-			unused = old;
-		cp = &cache[unused];
+		{
+			if (empty < 0)
+				unused = old;
+			else
+				unused = empty;
+		}
+		if (!(cp = cache[unused]) && !(cp = cache[unused] = newof(0, Cache_t, 1, 0)))
+			return 0;
 		if (cp->keep)
 		{
 			cp->keep = 0;
@@ -159,6 +168,8 @@ strgrpmatch(const char* b, const char* p, int* sub, int n, int flags)
 		cp->reflags = REG_SHELL|REG_AUGMENTED;
 		if (!(flags & STR_MAXIMAL))
 			cp->reflags |= REG_MINIMAL;
+		if (flags & STR_GROUP)
+			cp->reflags |= REG_SHELL_GROUP;
 		if (flags & STR_LEFT)
 			cp->reflags |= REG_LEFT;
 		if (flags & STR_RIGHT)
@@ -172,7 +183,7 @@ strgrpmatch(const char* b, const char* p, int* sub, int n, int flags)
 		cp->keep = 1;
 	}
 	else
-		cp = &cache[i];
+		cp = cache[i];
 #if 0
 error(-1, "AHA strmatch b=`%s' p=`%s' sub=%p n=%d flags=%08x cp=%d\n", b, p, sub, n, flags, cp - &cache[0]);
 #endif

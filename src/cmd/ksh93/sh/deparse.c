@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -250,7 +250,7 @@ static void p_tree(register const union anynode *t,register int tflags)
 		}
 
 		case TFOR:
-			cp = (t->tre.tretyp==TSELECT?"select":"for");
+			cp = ((t->tre.tretyp&COMSCAN)?"select":"for");
 			p_keyword(cp,BEGIN);
 			sfputr(outfile,t->for_.fornam,' ');
 			if(t->for_.forlst)

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -63,7 +63,17 @@ pathpath(register char* path, const char* p, const char* a, int mode)
 	{
 		strcpy(path, p);
 		if (pathexists(path, mode))
+		{
+			if (*p != '/' && (mode & PATH_ABSOLUTE))
+			{
+				getcwd(buf, sizeof(buf));
+				s = buf + strlen(buf);
+				sfsprintf(s, sizeof(buf) - (s - buf), "/%s", p);
+				if (path != buf)
+					strcpy(path, buf);
+			}
 			return (path == buf) ? strdup(path) : path;
+		}
 	}
 	if (*p == '/')
 		a = 0;

@@ -101,12 +101,17 @@ omitted features that are completely upward compatible.
 
 23.	Since the POSIX standard requires that octal constants be
 	recongnized, doing arithmetic on typeset -Z variables can
-	yield different results that with ksh88.
+	yield different results that with ksh88.  Most of these
+	differences were eliminated in ksh93o.
 
 24.	Starting after ksh93l, If you run ksh name, where name does
 	not contain a /, the current directory will be searched
 	before doing a path search on name as required by the POSIX
 	shell standard.  
+
+25.	In ksh93, cd - will output the directory that it changes
+	to on standard output as required by X/Open.  With ksh88,
+	this only happened for interactive shells.
 
 I am interested in expanding this list so please let me know if you
 uncover any others.

@@ -1,7 +1,7 @@
 cmd	universe
 
-hdr	dirent,direntry,filio,fmtmsg,fnmatch,jioctl,libgen
-hdr	locale,mman,ndir,nl_types,spawn,syslog,utime,vfork,wctype
+hdr	dirent,direntry,filio,fmtmsg,fnmatch,jioctl,libgen,locale
+hdr	ndir,nl_types,process,spawn,syslog,utime,vfork,wctype
 hdr	wchar note{ <wchar.h> and isw*() really work }end execute{
 	#include <wchar.h>
 	main()
@@ -13,7 +13,7 @@ hdr	wchar note{ <wchar.h> and isw*() really work }end execute{
 
 dat	_tzname,tzname
 
-lib	BSDsetpgrp NutForkExecve
+lib	BSDsetpgrp
 lib	_cleanup
 lib	atexit,bcopy,bzero,catclose,catgets,catopen,confstr,dirread,dup2
 lib	execlp,execve,execvp,execvpe
@@ -23,27 +23,27 @@ lib	getgroups,gethostname,getlogin,getpagesize,getrlimit,getuniverse
 lib	glob,index,iswblank,iswctype,killpg,link,localeconv,madvise
 lib	mbtowc,mbrtowc,memalign,memchr,memcmp,memcpy,memdup,memmove,memset
 lib	mkdir,mkfifo,mktemp,mktime
-lib	mount,on_exit,onexit,opendir,pathconf,pcreateve
+lib	mount,on_exit,onexit,opendir,pathconf
 lib	readlink,remove,rename,rewinddir,rindex,rmdir,setlocale
 lib	setpgid,setpgrp,setpgrp2,setreuid,setsid,setuid,sigaction
-lib	sigprocmask,sigsetmask,sigunblock,sigvec,socketpair,spawn,spawnlp
-lib	spawnve,spawnveg,spawnvp,spawnvpe,strchr,strcoll,strdup,strerror
-lib	strcasecmp,strncasecmp,strrchr,strstr
+lib	sigprocmask,sigsetmask,sigunblock,sigvec,socketpair
+lib	spawn,spawnve,spawnveg
+lib	strchr,strcoll,strdup,strerror,strcasecmp,strncasecmp,strrchr,strstr
 lib	strtod,strtold,strtol,strtoll,strtoul,strtoull
 lib	strxfrm,strftime,swab,symlink,sysconf,syslog
-lib	telldir,tmpnam,tzset,universe,unlink,utime,vfork,wctype
+lib	telldir,tmpnam,tzset,universe,unlink,utime,wctype
 lib	ftruncate,truncate
 lib	creat64,fstat64,fstatvfs64,ftruncate64 -D_LARGEFILE64_SOURCE
 lib	lseek64,lstat64 -D_LARGEFILE64_SOURCE
 lib	open64,readdir64,stat64,statvfs64,truncate64 -D_LARGEFILE64_SOURCE
 
 mem	direct.d_reclen sys/types.h sys/dir.h
-mem	dirent.d_fileno,dirent.d_ino,dirent.d_namlen,dirent.d_off,dirent.d_reclen sys/types.h dirent.h
+mem	dirent.d_fileno,dirent.d_ino,dirent.d_namlen,dirent.d_off,dirent.d_reclen,dirent.d_type sys/types.h dirent.h
 mem	DIR sys/types.h - dirent.h - sys/dir.h
 mem	DIR.dd_fd sys/types.h - dirent.h - sys/dir.h
 mem	inheritance.pgroup spawn.h
 
-sys	dir,filio,jioctl,localedef,mman,ptem,resource
+sys	dir,filio,jioctl,localedef,ptem,resource
 sys	socket,stream,universe,vfork
 
 typ	off64_t -D_LARGEFILE64_SOURCE
@@ -90,25 +90,9 @@ tst	lib_poll_fd_2 note{ fd is second arg to poll() }end execute{
 	}
 }end
 
-tst	lib_spawn_mode note{ first spawn and _spawn arg is windows mode }end compile{
-	#include <sys/types.h>
-	#include <process.h>
-	#ifndef P_NOWAIT
-	#define P_NOWAIT _P_NOWAIT
-	#endif
-	static char* cmd[] = { "ls", "-l", 0 };
-	main()
-	{
-		return spawnv(P_NOWAIT, cmd[0], cmd) || _spawnv(P_NOWAIT, cmd[0], cmd);
-	}
-}end
-
 cat{
 	#if _lib_poll_fd_1 || _lib_poll_fd_2
 	#define _lib_poll	1
-	#endif
-	#if _lib_NutForkExecve
-	#define _map_spawnve	NutForkExecve
 	#endif
 }end
 
@@ -176,17 +160,126 @@ tst	pipe_rw note{ full duplex pipes }end execute{
 	}
 }end
 
+tst	lib_vfork unistd.h stdlib.h vfork.h note{ vfork exists and it works }end execute{
+	#include <signal.h>
+	main(argc, argv)
+	int	argc;
+	char**	argv;
+	{
+		int	status;
+		char*	cmd[3];
+		if (argv[1])
+			_exit(signal(SIGHUP, SIG_DFL) != SIG_IGN);
+		signal(SIGHUP, SIG_IGN);
+		switch (vfork())
+		{
+		case -1:
+			_exit(1);
+		case 0:
+			cmd[0] = argv[0];
+			cmd[1] = "test";
+			cmd[2] = 0;
+			execv(cmd[0], cmd);
+			_exit(2);
+		}
+		status = 1;
+		_exit(wait(&status) < 0 || status != 0);
+ 	}
+}end
+ 
 tst	real_vfork note{ vfork child shares data with parent }end execute{
 	_BEGIN_EXTERNS_
-	extern int	exit _ARG_((int));
-	extern int	vfork();
+	extern int	_exit _ARG_((int));
+	extern int	vfork _ARG_((void));
 	_END_EXTERNS_
 	int		code;
 	main()
 	{
 		code = 1;
-		if (!vfork()) code = 0;
-		exit(code);
+		if (!vfork())
+			code = 0;
+		_exit(code);
+	}
+}end
+
+tst	lib_posix_spawn unistd.h stdlib.h spawn.h note{ posix_spawn exists and it works and its worth using }end execute{
+	#include <spawn.h>
+	#include <signal.h>
+	#include <stdio.h>
+	/* if it uses fork() why bother? */
+	int fork() { return -1; }
+	int _fork() { return -1; }
+	int __fork() { return -1; }
+	main(argc, argv)
+	int	argc;
+	char**	argv;
+	{
+		char*			s;
+		pid_t			pid;
+		posix_spawnattr_t	attr;
+		int			n;
+		int			status;
+		char*			cmd[3];
+		char			tmp[1024];
+		if (argv[1])
+			_exit(signal(SIGHUP, SIG_DFL) != SIG_IGN);
+		signal(SIGHUP, SIG_IGN);
+		if (posix_spawnattr_init(&attr))
+			_exit(1);
+		if (posix_spawnattr_setpgroup(&attr, 0))
+			_exit(1);
+		/* first try an a.out and verify that SIGHUP is ignored */
+		cmd[0] = argv[0];
+		cmd[1] = "test";
+		cmd[2] = 0;
+		if (posix_spawn(&pid, cmd[0], 0, &attr, cmd, 0))
+			_exit(1);
+		status = 1;
+		if (wait(&status) < 0 || status != 0)
+			_exit(1);
+		/* passing ENOEXEC to the shell is bogus */
+		n = strlen(cmd[0]);
+		if (n >= (sizeof(tmp) - 3))
+			_exit(1);
+		strcpy(tmp, cmd[0]);
+		tmp[n] = '.';
+		tmp[n+1] = 's';
+		tmp[n+2] = 'h';
+		tmp[n+3] = 0;
+		if (close(creat(tmp, 0777)) < 0 || chmod(tmp, 0777) < 0)
+			_exit(1);
+		cmd[0] = tmp;
+		if (!posix_spawn(&pid, cmd[0], 0, &attr, cmd, 0))
+		{
+			wait(&status);
+			_exit(1);
+		}
+		_exit(0);
+ 	}
+}end
+
+tst	lib_spawn_mode unistd.h stdlib.h note{ first spawn arg is mode and it works }end execute{
+	#include <signal.h>
+	#include <process.h>
+	#ifndef P_NOWAIT
+	#define P_NOWAIT _P_NOWAIT
+	#endif
+	main(argc, argv)
+	int	argc;
+	char**	argv;
+	{
+		int	status;
+		char*	cmd[3];
+		if (argv[1])
+			_exit(signal(SIGHUP, SIG_DFL) != SIG_IGN);
+		signal(SIGHUP, SIG_IGN);
+		cmd[0] = argv[0];
+		cmd[1] = "test";
+		cmd[2] = 0;
+		if (spawnv(P_NOWAIT, cmd[0], cmd) < 0)
+			_exit(1);
+		status = 1;
+		_exit(wait(&status) < 0 || status != 0);
 	}
 }end
 
@@ -214,181 +307,7 @@ tst	socket_peek note{ recv(MSG_PEEK) works }end link{
 	}
 }end
 
-tst	lib_mmap sys/types.h sys/stat.h unistd.h fcntl.h mman.h sys/mman.h sys/times.h note{ standard mmap interface that works }end execute{
-	#define MAPSIZE (64*1024)
-	#define BUFSIZE	(8*1024)
-	#define WRITE   (64)
-
-	#define Failed(file)	(unlink(file),1)
-
-	#if _STD_
-	main(int argc, char** argv)
-	#else
-	main(argc,argv)
-	int     argc;
-	char**  argv;
-	#endif
-	{
-		caddr_t		mm;
-		char		*t, *u, *f;
-		int		i, fd, okfixed;
-		char		file[1024], buf[MAPSIZE];
-		struct tms	stm, etm;
-		clock_t		rdtm, mmtm;
-
-		/* create data file in a local fs if possible */
-		t = file;
-		if (access(f = "/tmp", 0) == 0 ||
-		    access(f = "/usr/tmp", 0) == 0)
-		{
-			while (*t = *f++)
-				t++;
-			*t++ = '/';
-		}
-		u = t;
-		f = argv[0];
-		while (*t = *f++)
-			if (*t == '/')
-				t = u;
-			else if (*t != '.')
-				t++;
-		*t++ = '.'; *t++ = 'D'; *t = 0;
-		if ((fd = creat(file,0666)) < 0)
-			return 1;
-
-		for (i = 0; i < sizeof(buf); ++i)
-			buf[i] = '0' + (i%10);
-		for (i = 0; i < WRITE; ++i)
-			if (write(fd,buf,sizeof(buf)) != sizeof(buf))
-				return Failed(file);
-		close(fd);
-
-		/* see if can overwrite fixed map */
-	#ifndef MAP_VARIABLE
-	#define MAP_VARIABLE	0
-	#endif
-		if ((fd = open(file,0)) < 0)
-			return Failed(file);
-
-		mm = mmap((caddr_t)0, sizeof(buf), (PROT_READ|PROT_WRITE),
-			  (MAP_PRIVATE|MAP_VARIABLE), fd, 0);
-		if(mm == (caddr_t)0 || mm == (caddr_t)(-1))
-			return Failed(file);
-		mm = mmap(mm, sizeof(buf), (PROT_READ|PROT_WRITE),
-			  (MAP_PRIVATE|MAP_FIXED), fd, 0);
-		okfixed = (mm == (caddr_t)0 || mm == (caddr_t)(-1)) ? 0 : 1;
-		munmap(mm, sizeof(buf));
-		close(fd);
-
-		/* read time */
-		if((fd = open(file, 0)) < 0)
-			return Failed(file);
-		times(&stm);
-		for (i = 0; i < WRITE; ++i)
-			if (read(fd,buf,BUFSIZE) != BUFSIZE)
-				return Failed(file);
-		times(&etm);
-		close(fd);
-		rdtm = (etm.tms_utime-stm.tms_utime) + (etm.tms_stime-stm.tms_utime);
-
-		/* mmap time */
-		if ((fd = open(file,0)) < 0)
-			return Failed(file);
-		times(&stm);
-		for(i = 0, mm = (caddr_t)0; i < WRITE; ++i)
-		{	if(okfixed)
-			{	mm = (caddr_t)mmap(mm, MAPSIZE,
-					(PROT_READ|PROT_WRITE),
-					(MAP_PRIVATE | (mm ? MAP_FIXED : MAP_VARIABLE)),
-					fd, i*MAPSIZE );
-			}
-			else
-			{	if(mm)
-					munmap(mm, MAPSIZE);
-				mm = (caddr_t)mmap((caddr_t)0, MAPSIZE,
-					(PROT_READ|PROT_WRITE),
-					(MAP_PRIVATE|MAP_VARIABLE),
-					fd, i*MAPSIZE );
-			}
-			if(mm == (caddr_t)(-1) || mm == (caddr_t)0)
-				return Failed(file);
-		}
-		times(&etm);
-		close(fd);
-		unlink(file);
-		mmtm = (etm.tms_utime-stm.tms_utime) + (etm.tms_stime-stm.tms_utime);
-
-		return rdtm+60 < mmtm ? 1 : 0;
-	}
-}end
-
-tst	ptr_dd_buf sys/types.h - dirent.h - ndir.h - sys/dir.h note{ DIR.dd_buf is a pointer }end compile{
-	main()
-	{
-		DIR*	dirp;
-		dirp->dd_buf = 0;
-		return 0;
-	}
-}end
-
-tst	lib_mmap64 note{ mmap64 interface and implementation work }end execute{
-	#define _LARGEFILE64_SOURCE     1
-	
-	#include <unistd.h>
-	#include <sys/types.h>
-	#include <sys/mman.h>
-	#include <sys/fcntl.h>
-	
-	main()
-	{
-	        off64_t         off;
-	        int             fd;
-	        int             n;
-	        char*           s;
-	        char            file[32] = {'/','t','m','p','/','m','m','X','X','X','X','X','X'};
-	
-	        if (!mktemp(file) || (fd = open64(file, O_CREAT|O_WRONLY, 0600)) < 0)
-	        {
-	                remove(file);
-	                return 1;
-	        }
-	        off = (1<<8);
-	        off *= off;
-	        if (lseek64(fd, off, SEEK_SET) != off)
-	        {
-	                remove(file);
-	                return 1;
-	        }
-	        n = strlen(file) + 1;
-	        if (write(fd, file, n) != n)
-	        {
-	                remove(file);
-	                return 1;
-	        }
-	        if (close(fd) < 0 || (fd = open64(file, O_RDONLY)) < 0)
-	        {
-	                remove(file);
-	                return 1;
-	        }
-	        if (!(s = mmap64((caddr_t)0, (size_t)n, PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, off)))
-	        {
-	                remove(file);
-	                return 1;
-	        }
-	        if (strcmp(s, file))
-	        {
-	                remove(file);
-	                return 1;
-	        }
-	        close(fd);
-	        remove(file);
-	        return 0;
-	}
-}end
-
-tst	lib_memccpy string.h unistd.h stdlib.h fcntl.h signal.h sys/types.h sys/stat.h mman.h sys/mman.h note{ standard memccpy interface that works }end execute{
-	#include "iffeio.h"
-
+tst	lib_memccpy string.h unistd.h stdlib.h fcntl.h signal.h sys/types.h sys/stat.h sys/mman.h fcntl.h note{ standard memccpy interface that works }end execute{
 	#if _STD_
 	static void gotcha(int sig)
 	#else
@@ -401,17 +320,13 @@ tst	lib_memccpy string.h unistd.h stdlib.h fcntl.h signal.h sys/types.h sys/stat
 	main ()
 	{
 		char	buf[1024];
-	#if _lib_mmap
+	#ifdef MAP_PRIVATE
 		char*	srcbuf;
 		char*	dstbuf;
-		int	srcfd;
-		int	dstfd;
+		int	fd;
 		size_t	siz;
 		int	i;
 		char	c = 1;
-	
-		char	tmp1[] = "/tmp/ifXXXXXX";
-		char	tmp2[] = "/tmp/ifXXXXXX";
 	#endif
 	
 		/*
@@ -420,34 +335,15 @@ tst	lib_memccpy string.h unistd.h stdlib.h fcntl.h signal.h sys/types.h sys/stat
 
 		if (memccpy(buf, "abc", 0, sizeof(buf)) != (buf + 4))
 			return 1;
-		/*
-		 * sgi ia64 fails here as of 3Q 2001
-		 * they insist the behavior is not a bug
-		 */
-
-	#if _lib_mmap
-	#if _lib_getpagesize
-		siz = getpagesize();
-	#else
-		siz = 64 * 1024 * 1024;
-	#endif
+	#ifdef MAP_PRIVATE
+		siz = 64 * 1024;
 		if (!(dstbuf = malloc(2 * siz)))
 			return 0;
-		if ((srcfd = mkstemp(tmp1)) < 0)
+		if ((fd = open("/dev/zero", O_RDWR)) < 0)
 			return 0;
-		if (lseek(srcfd, siz - 1, SEEK_SET) != (siz - 1))
+		if (!(srcbuf = (char*)mmap(NULL, siz, PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, 0)))
 			return 0;
-		if (write(srcfd, &c, 1) != 1)
-			return 0;
-		if ((dstfd = mkstemp(tmp2)) < 0)
-			return 0;
-		if (lseek(dstfd, siz - 1, SEEK_SET) != (siz - 1))
-			return 0;
-		if (write(dstfd, &c, 1) != 1)
-			return 0;
-		if (!(srcbuf = (char*)mmap(NULL, siz, PROT_READ|PROT_WRITE, MAP_PRIVATE, srcfd, 0)))
-			return 0;
-		if (!mmap(srcbuf + siz, siz, PROT_NONE, MAP_PRIVATE, dstfd, 0))
+		if (!mmap(srcbuf + siz, siz, PROT_NONE, MAP_PRIVATE, fd, 0))
 			return 0;
 		for (i = 0; i < siz; i++)
 			srcbuf[i] = 'x';
@@ -456,6 +352,10 @@ tst	lib_memccpy string.h unistd.h stdlib.h fcntl.h signal.h sys/types.h sys/stat
 		signal(SIGSEGV, gotcha);
 		signal(SIGBUS, gotcha);
 		signal(SIGALRM, gotcha);
+		/*
+		 * sgi ia64 dumps here as of 3Q 2001
+		 * bug acknowleged 1Q 2003
+		 */
 		memccpy(dstbuf, srcbuf, 0, siz + 10);
 		alarm(0);
 		if (strcmp(srcbuf, dstbuf))
@@ -550,24 +450,14 @@ tst	- output{
 		printf("#undef	_lib_execvp\n");
 		printf("#undef	_lib_execvpe\n");
 		printf("#undef	_lib_fork\n");
-		printf("#undef	_lib_spawnlp\n");
-		printf("#undef	_lib_spawnvp\n");
-		printf("#undef	_lib_spawnvpe\n");
 		printf("#undef	_std_string\n");
 		printf("#define _std_string	1\n");
 		printf("#undef	_stream_peek\n");
 		printf("\n");
 	#endif
 
-	#if _lib_spawn_mode
-		printf("\n");
-		printf("#if _lib_spawn_mode\n");
-		printf("/* eradicate the windows spawn infection */\n");
-		printf("#undef	_lib_spawnlp\n");
-		printf("#undef	_lib_spawnve\n");
-		printf("#undef	_lib_spawnvp\n");
-		printf("#undef	_lib_spawnvpe\n");
-		printf("#endif\n");
+	#if _lib_spawnveg || _lib_posix_spawn || _lib_spawn_mode || _lib_spawn && _hdr_spawn && _mem_pgroup_inheritance || _lib_vfork && _real_vfork
+		printf("#define _use_spawnveg	1\n");
 		printf("\n");
 	#endif
 

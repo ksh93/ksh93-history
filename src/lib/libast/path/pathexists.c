@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -33,6 +33,7 @@
  * path is modified in-place but restored on return
  * path components checked in pairs to cut stat()'s
  * in half by checking ENOTDIR vs. ENOENT
+ * case ignorance infection unavoidable here
  */
 
 #include "lclib.h"
@@ -60,12 +61,13 @@ pathexists(char* path, int mode)
 	int			cc;
 	int			x;
 	struct stat		st;
+	int			(*cmp)(const char*, const char*);
 
 	static Tree_t		tree;
 
 	t = &tree;
-	e = path + 1;
-	c = *path;
+	e = (c = *path) == '/' ? path + 1 : path;
+	cmp = strchr(astconf("PATH_ATTRIBUTES", path, NiL), 'c') ? strcasecmp : strcmp;
 	if ((ast.locale.set & (AST_LC_debug|AST_LC_find)) == (AST_LC_debug|AST_LC_find))
 		sfprintf(sfstderr, "locale test %s\n", path);
 	while (c)
@@ -74,7 +76,7 @@ pathexists(char* path, int mode)
 		for (s = e; *e && *e != '/'; e++);
 		c = *e;
 		*e = 0;
-		for (t = p->tree; t && !streq(s, t->name); t = t->next);
+		for (t = p->tree; t && (*cmp)(s, t->name); t = t->next);
 		if (!t)
 		{
 			if (!(t = newof(0, Tree_t, 1, strlen(s))))

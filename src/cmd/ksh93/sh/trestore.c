@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -115,12 +115,18 @@ static union anynode *r_tree()
 			break;
 		case TFOR:
 			t = getnode(fornod);
+			t->for_.forline = 0;
+			if(type&FLINENO)
+				t->for_.forline = sfgetu(infile);
 			t->for_.fortre = r_tree();
 			t->for_.fornam = r_string();
 			t->for_.forlst = (struct comnod*)r_tree();
 			break;
 		case TSW:
 			t = getnode(swnod);
+			t->sw.swline = 0;
+			if(type&FLINENO)
+				t->sw.swline = sfgetu(infile);
 			t->sw.swarg = r_arg();
 			if(type&COMSCAN)
 				t->sw.swio = r_redirect();
@@ -252,6 +258,7 @@ static void r_comarg(struct comnod *com)
 	char *cmdname=0;
 	com->comio = r_redirect();
 	com->comset = r_arg();
+	com->comstate = 0;
 	if(com->comtyp&COMSCAN)
 	{
 		com->comarg = r_arg();
@@ -261,8 +268,18 @@ static void r_comarg(struct comnod *com)
 	else if(com->comarg = (struct argnod*)r_comlist())
 		cmdname = ((struct dolnod*)(com->comarg))->dolval[ARG_SPARE];
 	com->comline = sfgetu(infile);
+	com->comnamq = 0;
 	if(cmdname)
+	{
+		char *cp;
 		com->comnamp = (void*)nv_search(cmdname,sh.fun_tree,0);
+		if(com->comnamp && (cp =strrchr(cmdname+1,'.')))
+		{
+			*cp = 0;
+			com->comnamp =  (void*)nv_open(cmdname,sh.var_tree,NV_VARNAME|NV_NOADD|NV_NOARRAY);
+			*cp = '.';
+		}
+	}
 	else
 		com->comnamp  = 0;
 }

@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 4.2 2002-10-02
+info mam static 00000 1994-07-17 make (AT&T Research) 4.3 2003-04-15
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ar
@@ -6,7 +6,7 @@ setv ARFLAGS cr
 setv AS as
 setv ASFLAGS
 setv CC cc
-setv CCFLAGS "-O"
+setv CCFLAGS  ${debug?1?${mam_cc_DEBUG}?${mam_cc_OPTIMIZE}?}
 setv COTEMP $$
 setv CPIO cpio
 setv CPIOFLAGS
@@ -33,6 +33,46 @@ setv YACCFLAGS -d
 make LICENSE
 done LICENSE dontcare
 make install
+make hurl
+make hurl.sh
+done hurl.sh
+prev hurl.sh
+setv LICENSE -DLICENSE="since=2003,author=gsf"
+exec - case static,port:$OPTIND:$RANDOM in
+exec - ?*:*:*|*::*|*:*:$RANDOM)
+exec - 	;;
+exec - *)	if	ENV= x= $SHELL -nc ': ${list[level]}  !(pattern)' 2>/dev/null
+exec - 	then	ENV= $SHELL -n hurl.sh
+exec - 	fi
+exec - 	;;
+exec - esac
+exec - case '${mam_cc_SHELLMAGIC}' in
+exec - "")	case 186 in
+exec - 	0)	cp hurl.sh hurl
+exec - 		;;
+exec - 	*)	{
+exec - 		i=`(read x; echo $x) < hurl.sh`
+exec - 		case $i in
+exec - 		'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo $i ;;
+exec - 		esac
+exec - 		echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"
+exec - 		cat hurl.sh
+exec - 		} > hurl
+exec - 		;;
+exec - 	esac
+exec - 	;;
+exec - *)	{
+exec - 	echo '${mam_cc_SHELLMAGIC}'
+exec - 	case 186 in
+exec - 	0)	;;
+exec - 	*)	echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\" ;;
+exec - 	esac
+exec - 	cat hurl.sh
+exec - 	} > hurl
+exec - 	;;
+exec - esac
+exec - chmod u+w,+x hurl
+done hurl generated
 make iffe
 make iffe.sh
 done iffe.sh
@@ -47,15 +87,15 @@ exec - 	fi
 exec - 	;;
 exec - esac
 exec - case '${mam_cc_SHELLMAGIC}' in
-exec - "")	case 'USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?Phong Vo <kpv@research.att.com>][-copyright?Copyright (c) 1994-2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"' in
-exec - 	"")	cp iffe.sh iffe
+exec - "")	case 232 in
+exec - 	0)	cp iffe.sh iffe
 exec - 		;;
 exec - 	*)	{
 exec - 		i=`(read x; echo $x) < iffe.sh`
 exec - 		case $i in
 exec - 		'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo $i ;;
 exec - 		esac
-exec - 		echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?Phong Vo <kpv@research.att.com>][-copyright?Copyright (c) 1994-2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"
+exec - 		echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?Phong Vo <kpv@research.att.com>][-copyright?Copyright (c) 1994-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"
 exec - 		cat iffe.sh
 exec - 		} > iffe
 exec - 		;;
@@ -63,8 +103,9 @@ exec - 	esac
 exec - 	;;
 exec - *)	{
 exec - 	echo '${mam_cc_SHELLMAGIC}'
-exec - 	case 'USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?Phong Vo <kpv@research.att.com>][-copyright?Copyright (c) 1994-2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"' in
-exec - 	?*)	echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?Phong Vo <kpv@research.att.com>][-copyright?Copyright (c) 1994-2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\" ;;
+exec - 	case 232 in
+exec - 	0)	;;
+exec - 	*)	echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?Phong Vo <kpv@research.att.com>][-copyright?Copyright (c) 1994-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\" ;;
 exec - 	esac
 exec - 	cat iffe.sh
 exec - 	} > iffe
@@ -85,15 +126,15 @@ exec - 	fi
 exec - 	;;
 exec - esac
 exec - case '${mam_cc_SHELLMAGIC}' in
-exec - "")	case 'USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1999-2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"' in
-exec - 	"")	cp package.sh package
+exec - "")	case 191 in
+exec - 	0)	cp package.sh package
 exec - 		;;
 exec - 	*)	{
 exec - 		i=`(read x; echo $x) < package.sh`
 exec - 		case $i in
 exec - 		'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo $i ;;
 exec - 		esac
-exec - 		echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1999-2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"
+exec - 		echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"
 exec - 		cat package.sh
 exec - 		} > package
 exec - 		;;
@@ -101,8 +142,9 @@ exec - 	esac
 exec - 	;;
 exec - *)	{
 exec - 	echo '${mam_cc_SHELLMAGIC}'
-exec - 	case 'USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1999-2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"' in
-exec - 	?*)	echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1999-2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\" ;;
+exec - 	case 191 in
+exec - 	0)	;;
+exec - 	*)	echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\" ;;
 exec - 	esac
 exec - 	cat package.sh
 exec - 	} > package
@@ -124,15 +166,15 @@ exec - 	fi
 exec - 	;;
 exec - esac
 exec - case '${mam_cc_SHELLMAGIC}' in
-exec - "")	case 'USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1995-2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"' in
-exec - 	"")	cp regress.sh regress
+exec - "")	case 191 in
+exec - 	0)	cp regress.sh regress
 exec - 		;;
 exec - 	*)	{
 exec - 		i=`(read x; echo $x) < regress.sh`
 exec - 		case $i in
 exec - 		'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo $i ;;
 exec - 		esac
-exec - 		echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1995-2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"
+exec - 		echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1995-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"
 exec - 		cat regress.sh
 exec - 		} > regress
 exec - 		;;
@@ -140,8 +182,9 @@ exec - 	esac
 exec - 	;;
 exec - *)	{
 exec - 	echo '${mam_cc_SHELLMAGIC}'
-exec - 	case 'USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1995-2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"' in
-exec - 	?*)	echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1995-2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\" ;;
+exec - 	case 191 in
+exec - 	0)	;;
+exec - 	*)	echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1995-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\" ;;
 exec - 	esac
 exec - 	cat regress.sh
 exec - 	} > regress
@@ -162,15 +205,15 @@ exec - 	fi
 exec - 	;;
 exec - esac
 exec - case '${mam_cc_SHELLMAGIC}' in
-exec - "")	case 'USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1999-2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"' in
-exec - 	"")	cp crossexec.sh crossexec
+exec - "")	case 191 in
+exec - 	0)	cp crossexec.sh crossexec
 exec - 		;;
 exec - 	*)	{
 exec - 		i=`(read x; echo $x) < crossexec.sh`
 exec - 		case $i in
 exec - 		'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo $i ;;
 exec - 		esac
-exec - 		echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1999-2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"
+exec - 		echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"
 exec - 		cat crossexec.sh
 exec - 		} > crossexec
 exec - 		;;
@@ -178,8 +221,9 @@ exec - 	esac
 exec - 	;;
 exec - *)	{
 exec - 	echo '${mam_cc_SHELLMAGIC}'
-exec - 	case 'USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1999-2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"' in
-exec - 	?*)	echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1999-2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\" ;;
+exec - 	case 191 in
+exec - 	0)	;;
+exec - 	*)	echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\" ;;
 exec - 	esac
 exec - 	cat crossexec.sh
 exec - 	} > crossexec
@@ -201,15 +245,15 @@ exec - 	fi
 exec - 	;;
 exec - esac
 exec - case '${mam_cc_SHELLMAGIC}' in
-exec - "")	case 'USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?ek][-copyright?Copyright (c) 2001-2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"' in
-exec - 	"")	cp ditto.sh ditto
+exec - "")	case 191 in
+exec - 	0)	cp ditto.sh ditto
 exec - 		;;
 exec - 	*)	{
 exec - 		i=`(read x; echo $x) < ditto.sh`
 exec - 		case $i in
 exec - 		'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo $i ;;
 exec - 		esac
-exec - 		echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?ek][-copyright?Copyright (c) 2001-2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"
+exec - 		echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 2001-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"
 exec - 		cat ditto.sh
 exec - 		} > ditto
 exec - 		;;
@@ -217,8 +261,9 @@ exec - 	esac
 exec - 	;;
 exec - *)	{
 exec - 	echo '${mam_cc_SHELLMAGIC}'
-exec - 	case 'USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?ek][-copyright?Copyright (c) 2001-2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"' in
-exec - 	?*)	echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?ek][-copyright?Copyright (c) 2001-2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\" ;;
+exec - 	case 191 in
+exec - 	0)	;;
+exec - 	*)	echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 2001-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\" ;;
 exec - 	esac
 exec - 	cat ditto.sh
 exec - 	} > ditto
@@ -240,15 +285,15 @@ exec - 	fi
 exec - 	;;
 exec - esac
 exec - case '${mam_cc_SHELLMAGIC}' in
-exec - "")	case 'USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"' in
-exec - 	"")	cp execrate.sh execrate
+exec - "")	case 191 in
+exec - 	0)	cp execrate.sh execrate
 exec - 		;;
 exec - 	*)	{
 exec - 		i=`(read x; echo $x) < execrate.sh`
 exec - 		case $i in
 exec - 		'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo $i ;;
 exec - 		esac
-exec - 		echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"
+exec - 		echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 2002-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"
 exec - 		cat execrate.sh
 exec - 		} > execrate
 exec - 		;;
@@ -256,8 +301,9 @@ exec - 	esac
 exec - 	;;
 exec - *)	{
 exec - 	echo '${mam_cc_SHELLMAGIC}'
-exec - 	case 'USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"' in
-exec - 	?*)	echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\" ;;
+exec - 	case 191 in
+exec - 	0)	;;
+exec - 	*)	echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 2002-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\" ;;
 exec - 	esac
 exec - 	cat execrate.sh
 exec - 	} > execrate
@@ -278,15 +324,15 @@ exec - 	fi
 exec - 	;;
 exec - esac
 exec - case '${mam_cc_SHELLMAGIC}' in
-exec - "")	case 'USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1999-2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"' in
-exec - 	"")	cp filter.sh filter
+exec - "")	case 191 in
+exec - 	0)	cp filter.sh filter
 exec - 		;;
 exec - 	*)	{
 exec - 		i=`(read x; echo $x) < filter.sh`
 exec - 		case $i in
 exec - 		'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo $i ;;
 exec - 		esac
-exec - 		echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1999-2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"
+exec - 		echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"
 exec - 		cat filter.sh
 exec - 		} > filter
 exec - 		;;
@@ -294,8 +340,9 @@ exec - 	esac
 exec - 	;;
 exec - *)	{
 exec - 	echo '${mam_cc_SHELLMAGIC}'
-exec - 	case 'USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1999-2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"' in
-exec - 	?*)	echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1999-2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\" ;;
+exec - 	case 191 in
+exec - 	0)	;;
+exec - 	*)	echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\" ;;
 exec - 	esac
 exec - 	cat filter.sh
 exec - 	} > filter
@@ -316,8 +363,8 @@ exec - 	fi
 exec - 	;;
 exec - esac
 exec - case '${mam_cc_SHELLMAGIC}' in
-exec - "")	case '' in
-exec - 	"")	cp ignore.sh ignore
+exec - "")	case 0 in
+exec - 	0)	cp ignore.sh ignore
 exec - 		;;
 exec - 	*)	{
 exec - 		i=`(read x; echo $x) < ignore.sh`
@@ -332,8 +379,9 @@ exec - 	esac
 exec - 	;;
 exec - *)	{
 exec - 	echo '${mam_cc_SHELLMAGIC}'
-exec - 	case '' in
-exec - 	?*)	echo  ;;
+exec - 	case 0 in
+exec - 	0)	;;
+exec - 	*)	echo  ;;
 exec - 	esac
 exec - 	cat ignore.sh
 exec - 	} > ignore
@@ -354,8 +402,8 @@ exec - 	fi
 exec - 	;;
 exec - esac
 exec - case '${mam_cc_SHELLMAGIC}' in
-exec - "")	case '' in
-exec - 	"")	cp silent.sh silent
+exec - "")	case 0 in
+exec - 	0)	cp silent.sh silent
 exec - 		;;
 exec - 	*)	{
 exec - 		i=`(read x; echo $x) < silent.sh`
@@ -370,8 +418,9 @@ exec - 	esac
 exec - 	;;
 exec - *)	{
 exec - 	echo '${mam_cc_SHELLMAGIC}'
-exec - 	case '' in
-exec - 	?*)	echo  ;;
+exec - 	case 0 in
+exec - 	0)	;;
+exec - 	*)	echo  ;;
 exec - 	esac
 exec - 	cat silent.sh
 exec - 	} > silent
@@ -390,9 +439,9 @@ make ast.h implicit
 done ast.h dontcare virtual
 done mamake.c
 prev mamake.c
-exec - ${CC} ${CCFLAGS}   -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1999-2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\" -c mamake.c
+exec - ${CC} ${CCFLAGS}   -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\" -c mamake.c
 done mamake.o generated
-exec - ${CC} ${CCFLAGS} ${LDFLAGS}   -o mamake mamake.o
+exec - ${CC} ${CCFLAGS} ${LDFLAGS}    -o mamake mamake.o
 done mamake generated
 make proto
 make proto.o
@@ -401,7 +450,7 @@ done proto.c
 prev proto.c
 exec - ${CC} ${CCFLAGS}    -c proto.c
 done proto.o generated
-exec - ${CC} ${CCFLAGS} ${LDFLAGS}   -o proto proto.o
+exec - ${CC} ${CCFLAGS} ${LDFLAGS}    -o proto proto.o
 done proto generated
 make ratz
 make ratz.o
@@ -420,7 +469,7 @@ done ratz.c
 prev ratz.c
 exec - ${CC} ${CCFLAGS}    -c ratz.c
 done ratz.o generated
-exec - ${CC} ${CCFLAGS} ${LDFLAGS}   -o ratz ratz.o
+exec - ${CC} ${CCFLAGS} ${LDFLAGS}    -o ratz ratz.o
 done ratz generated
 make release
 make release.o
@@ -429,9 +478,9 @@ prev error.h implicit
 prev ast.h implicit
 done release.c
 prev release.c
-exec - ${CC} ${CCFLAGS}   -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1999-2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\" -c release.c
+exec - ${CC} ${CCFLAGS}   -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\" -c release.c
 done release.o generated
-exec - ${CC} ${CCFLAGS} ${LDFLAGS}   -o release release.o
+exec - ${CC} ${CCFLAGS} ${LDFLAGS}    -o release release.o
 done release generated
 make mprobe
 make mprobe.sh
@@ -446,8 +495,8 @@ exec - 	fi
 exec - 	;;
 exec - esac
 exec - case '${mam_cc_SHELLMAGIC}' in
-exec - "")	case '' in
-exec - 	"")	cp mprobe.sh mprobe
+exec - "")	case 0 in
+exec - 	0)	cp mprobe.sh mprobe
 exec - 		;;
 exec - 	*)	{
 exec - 		i=`(read x; echo $x) < mprobe.sh`
@@ -462,8 +511,9 @@ exec - 	esac
 exec - 	;;
 exec - *)	{
 exec - 	echo '${mam_cc_SHELLMAGIC}'
-exec - 	case '' in
-exec - 	?*)	echo  ;;
+exec - 	case 0 in
+exec - 	0)	;;
+exec - 	*)	echo  ;;
 exec - 	esac
 exec - 	cat mprobe.sh
 exec - 	} > mprobe
@@ -489,8 +539,8 @@ exec - 	fi
 exec - 	;;
 exec - esac
 exec - case '${mam_cc_SHELLMAGIC}' in
-exec - "")	case '' in
-exec - 	"")	cp probe.sh probe
+exec - "")	case 0 in
+exec - 	0)	cp probe.sh probe
 exec - 		;;
 exec - 	*)	{
 exec - 		i=`(read x; echo $x) < probe.sh`
@@ -505,8 +555,9 @@ exec - 	esac
 exec - 	;;
 exec - *)	{
 exec - 	echo '${mam_cc_SHELLMAGIC}'
-exec - 	case '' in
-exec - 	?*)	echo  ;;
+exec - 	case 0 in
+exec - 	0)	;;
+exec - 	*)	echo  ;;
 exec - 	esac
 exec - 	cat probe.sh
 exec - 	} > probe
@@ -514,23 +565,31 @@ exec - 	;;
 exec - esac
 exec - chmod u+w,+x probe
 done probe generated
-make ../../../bin
+make ../../../../../bin
+exec - set -
+exec - if	test ! -d ${PACKAGEROOT}/bin
+exec - then	set -x && mkdir -p ${PACKAGEROOT}/bin 		    		   
+exec - fi
+done ../../../../../bin generated
 exec - set -
 exec - if	test ! -d ${INSTALLROOT}/bin
 exec - then	set -x && mkdir -p ${INSTALLROOT}/bin 		    		   
 exec - fi
-done ../../../bin generated
+make ../../../bin/hurl
+prev hurl
+exec - test '' = 'hurl' || ${STDCMP} 2>/dev/null -s hurl ${INSTALLROOT}/bin/hurl || { ${STDMV} ${INSTALLROOT}/bin/hurl ${INSTALLROOT}/bin/hurl.old 2>/dev/null || true; ${STDCP} hurl ${INSTALLROOT}/bin/hurl  		    		    ;}
+done ../../../bin/hurl generated
 make ../../../bin/iffe
 prev iffe
-exec - ${STDMV} ${INSTALLROOT}/bin/iffe ${INSTALLROOT}/bin/iffe.old 2>/dev/null || true; test '' = 'iffe' || ${STDCMP} 2>/dev/null -s iffe ${INSTALLROOT}/bin/iffe || { ${STDCP} iffe ${INSTALLROOT}/bin/iffe  		    		    ;}
+exec - test '' = 'iffe' || ${STDCMP} 2>/dev/null -s iffe ${INSTALLROOT}/bin/iffe || { ${STDMV} ${INSTALLROOT}/bin/iffe ${INSTALLROOT}/bin/iffe.old 2>/dev/null || true; ${STDCP} iffe ${INSTALLROOT}/bin/iffe  		    		    ;}
 done ../../../bin/iffe generated
 make ../../../bin/package
 prev package
-exec - ${STDMV} ${INSTALLROOT}/bin/package ${INSTALLROOT}/bin/package.old 2>/dev/null || true; test '' = 'package' || ${STDCMP} 2>/dev/null -s package ${INSTALLROOT}/bin/package || { ${STDCP} package ${INSTALLROOT}/bin/package  		    		    ;}
+exec - test '' = 'package' || ${STDCMP} 2>/dev/null -s package ${INSTALLROOT}/bin/package || { ${STDMV} ${INSTALLROOT}/bin/package ${INSTALLROOT}/bin/package.old 2>/dev/null || true; ${STDCP} package ${INSTALLROOT}/bin/package  		    		    ;}
 done ../../../bin/package generated
 make ../../../bin/regress
 prev regress
-exec - ${STDMV} ${INSTALLROOT}/bin/regress ${INSTALLROOT}/bin/regress.old 2>/dev/null || true; test '' = 'regress' || ${STDCMP} 2>/dev/null -s regress ${INSTALLROOT}/bin/regress || { ${STDCP} regress ${INSTALLROOT}/bin/regress  		    		    ;}
+exec - test '' = 'regress' || ${STDCMP} 2>/dev/null -s regress ${INSTALLROOT}/bin/regress || { ${STDMV} ${INSTALLROOT}/bin/regress ${INSTALLROOT}/bin/regress.old 2>/dev/null || true; ${STDCP} regress ${INSTALLROOT}/bin/regress  		    		    ;}
 done ../../../bin/regress generated
 make ../../../../../lib/package
 exec - set -
@@ -539,23 +598,30 @@ exec - then	set -x && mkdir -p ${PACKAGEROOT}/lib/package
 exec - fi
 done ../../../../../lib/package generated
 make ../../../../../lib/package/package.mk
+prev ../../../../../lib/package
 make package.mk
 done package.mk
-exec - ${STDMV} ${PACKAGEROOT}/lib/package/package.mk ${PACKAGEROOT}/lib/package/package.mk.old 2>/dev/null || true; test '' = 'package.mk' || ${STDCMP} 2>/dev/null -s package.mk ${PACKAGEROOT}/lib/package/package.mk || { ${STDCP} package.mk ${PACKAGEROOT}/lib/package/package.mk  		    		    ;}
+exec - test '' = 'package.mk' || ${STDCMP} 2>/dev/null -s package.mk ${PACKAGEROOT}/lib/package/package.mk || { ${STDMV} ${PACKAGEROOT}/lib/package/package.mk ${PACKAGEROOT}/lib/package/package.mk.old 2>/dev/null || true; ${STDCP} package.mk ${PACKAGEROOT}/lib/package/package.mk  		    		    ;}
 done ../../../../../lib/package/package.mk generated
-make ../../../../../bin
+make ../../../lib/make
 exec - set -
-exec - if	test ! -d ${PACKAGEROOT}/bin
-exec - then	set -x && mkdir -p ${PACKAGEROOT}/bin 		    		   
+exec - if	test ! -d ${INSTALLROOT}/lib/make
+exec - then	set -x && mkdir -p ${INSTALLROOT}/lib/make 		    		   
 exec - fi
-done ../../../../../bin generated
+done ../../../lib/make generated
+make ../../../lib/make/package.mk
+prev ../../../lib/make
+prev package.mk
+exec - test '' = 'package.mk' || ${STDCMP} 2>/dev/null -s package.mk ${INSTALLROOT}/lib/make/package.mk || { ${STDMV} ${INSTALLROOT}/lib/make/package.mk ${INSTALLROOT}/lib/make/package.mk.old 2>/dev/null || true; ${STDCP} package.mk ${INSTALLROOT}/lib/make/package.mk  		    		    ;}
+done ../../../lib/make/package.mk generated
+prev ../../../../../bin
 make ../../../../../bin/execrate
 prev execrate
-exec - ${STDMV} ${PACKAGEROOT}/bin/execrate ${PACKAGEROOT}/bin/execrate.old 2>/dev/null || true; test '' = 'execrate' || ${STDCMP} 2>/dev/null -s execrate ${PACKAGEROOT}/bin/execrate || { ${STDCP} execrate ${PACKAGEROOT}/bin/execrate  		    		    ;}
+exec - test '' = 'execrate' || ${STDCMP} 2>/dev/null -s execrate ${PACKAGEROOT}/bin/execrate || { ${STDMV} ${PACKAGEROOT}/bin/execrate ${PACKAGEROOT}/bin/execrate.old 2>/dev/null || true; ${STDCP} execrate ${PACKAGEROOT}/bin/execrate  		    		    ;}
 done ../../../../../bin/execrate generated
 make ../../../../../bin/ignore
 prev ignore
-exec - ${STDMV} ${PACKAGEROOT}/bin/ignore ${PACKAGEROOT}/bin/ignore.old 2>/dev/null || true; test '' = 'ignore' || ${STDCMP} 2>/dev/null -s ignore ${PACKAGEROOT}/bin/ignore || { ${STDCP} ignore ${PACKAGEROOT}/bin/ignore  		    		    ;}
+exec - test '' = 'ignore' || ${STDCMP} 2>/dev/null -s ignore ${PACKAGEROOT}/bin/ignore || { ${STDMV} ${PACKAGEROOT}/bin/ignore ${PACKAGEROOT}/bin/ignore.old 2>/dev/null || true; ${STDCP} ignore ${PACKAGEROOT}/bin/ignore  		    		    ;}
 done ../../../../../bin/ignore generated
 make ../../../../../bin/mamprobe
 make mamprobe
@@ -570,8 +636,8 @@ exec - 	fi
 exec - 	;;
 exec - esac
 exec - case '${mam_cc_SHELLMAGIC}' in
-exec - "")	case '' in
-exec - 	"")	cp mamprobe.sh mamprobe
+exec - "")	case 0 in
+exec - 	0)	cp mamprobe.sh mamprobe
 exec - 		;;
 exec - 	*)	{
 exec - 		i=`(read x; echo $x) < mamprobe.sh`
@@ -586,8 +652,9 @@ exec - 	esac
 exec - 	;;
 exec - *)	{
 exec - 	echo '${mam_cc_SHELLMAGIC}'
-exec - 	case '' in
-exec - 	?*)	echo  ;;
+exec - 	case 0 in
+exec - 	0)	;;
+exec - 	*)	echo  ;;
 exec - 	esac
 exec - 	cat mamprobe.sh
 exec - 	} > mamprobe
@@ -595,27 +662,27 @@ exec - 	;;
 exec - esac
 exec - chmod u+w,+x mamprobe
 done mamprobe generated
-exec - ${STDMV} ${PACKAGEROOT}/bin/mamprobe ${PACKAGEROOT}/bin/mamprobe.old 2>/dev/null || true; test '' = 'mamprobe' || ${STDCMP} 2>/dev/null -s mamprobe ${PACKAGEROOT}/bin/mamprobe || { ${STDCP} mamprobe ${PACKAGEROOT}/bin/mamprobe  		    		    ;}
+exec - test '' = 'mamprobe' || ${STDCMP} 2>/dev/null -s mamprobe ${PACKAGEROOT}/bin/mamprobe || { ${STDMV} ${PACKAGEROOT}/bin/mamprobe ${PACKAGEROOT}/bin/mamprobe.old 2>/dev/null || true; ${STDCP} mamprobe ${PACKAGEROOT}/bin/mamprobe  		    		    ;}
 done ../../../../../bin/mamprobe generated
 make ../../../../../bin/package
 prev package
-exec - ${STDMV} ${PACKAGEROOT}/bin/package ${PACKAGEROOT}/bin/package.old 2>/dev/null || true; test '' = 'package' || ${STDCMP} 2>/dev/null -s package ${PACKAGEROOT}/bin/package || { ${STDCP} package ${PACKAGEROOT}/bin/package  		    		    ;}
+exec - test '' = 'package' || ${STDCMP} 2>/dev/null -s package ${PACKAGEROOT}/bin/package || { ${STDMV} ${PACKAGEROOT}/bin/package ${PACKAGEROOT}/bin/package.old 2>/dev/null || true; ${STDCP} package ${PACKAGEROOT}/bin/package  		    		    ;}
 done ../../../../../bin/package generated
 make ../../../../../bin/silent
 prev silent
-exec - ${STDMV} ${PACKAGEROOT}/bin/silent ${PACKAGEROOT}/bin/silent.old 2>/dev/null || true; test '' = 'silent' || ${STDCMP} 2>/dev/null -s silent ${PACKAGEROOT}/bin/silent || { ${STDCP} silent ${PACKAGEROOT}/bin/silent  		    		    ;}
+exec - test '' = 'silent' || ${STDCMP} 2>/dev/null -s silent ${PACKAGEROOT}/bin/silent || { ${STDMV} ${PACKAGEROOT}/bin/silent ${PACKAGEROOT}/bin/silent.old 2>/dev/null || true; ${STDCP} silent ${PACKAGEROOT}/bin/silent  		    		    ;}
 done ../../../../../bin/silent generated
 make ../../../bin/crossexec
 prev crossexec
-exec - ${STDMV} ${INSTALLROOT}/bin/crossexec ${INSTALLROOT}/bin/crossexec.old 2>/dev/null || true; test '' = 'crossexec' || ${STDCMP} 2>/dev/null -s crossexec ${INSTALLROOT}/bin/crossexec || { ${STDCP} crossexec ${INSTALLROOT}/bin/crossexec  		    		    ;}
+exec - test '' = 'crossexec' || ${STDCMP} 2>/dev/null -s crossexec ${INSTALLROOT}/bin/crossexec || { ${STDMV} ${INSTALLROOT}/bin/crossexec ${INSTALLROOT}/bin/crossexec.old 2>/dev/null || true; ${STDCP} crossexec ${INSTALLROOT}/bin/crossexec  		    		    ;}
 done ../../../bin/crossexec generated
 make ../../../bin/ditto
 prev ditto
-exec - ${STDMV} ${INSTALLROOT}/bin/ditto ${INSTALLROOT}/bin/ditto.old 2>/dev/null || true; test '' = 'ditto' || ${STDCMP} 2>/dev/null -s ditto ${INSTALLROOT}/bin/ditto || { ${STDCP} ditto ${INSTALLROOT}/bin/ditto  		    		    ;}
+exec - test '' = 'ditto' || ${STDCMP} 2>/dev/null -s ditto ${INSTALLROOT}/bin/ditto || { ${STDMV} ${INSTALLROOT}/bin/ditto ${INSTALLROOT}/bin/ditto.old 2>/dev/null || true; ${STDCP} ditto ${INSTALLROOT}/bin/ditto  		    		    ;}
 done ../../../bin/ditto generated
 make ../../../bin/filter
 prev filter
-exec - ${STDMV} ${INSTALLROOT}/bin/filter ${INSTALLROOT}/bin/filter.old 2>/dev/null || true; test '' = 'filter' || ${STDCMP} 2>/dev/null -s filter ${INSTALLROOT}/bin/filter || { ${STDCP} filter ${INSTALLROOT}/bin/filter  		    		    ;}
+exec - test '' = 'filter' || ${STDCMP} 2>/dev/null -s filter ${INSTALLROOT}/bin/filter || { ${STDMV} ${INSTALLROOT}/bin/filter ${INSTALLROOT}/bin/filter.old 2>/dev/null || true; ${STDCP} filter ${INSTALLROOT}/bin/filter  		    		    ;}
 done ../../../bin/filter generated
 make ../../../bin/mamake
 prev mamake
@@ -675,20 +742,33 @@ make cc.sgi.mips4-n32
 done cc.sgi.mips4-n32
 make cc.unix.mc68k
 done cc.unix.mc68k
-exec - for cc in cc.darwin.ppc cc.hp.pa cc.hp.pa64 cc.ibm.risc cc.mvs.390 cc.next.i386 cc.next.m68k cc.osf.alpha cc.sco.i386 cc.sgi.mips2 cc.sgi.mips3 cc.sgi.mips3-o32 cc.sgi.mips4 cc.sgi.mips4-n32 cc.unix.mc68k
+exec - for cc in cc.darwin.ppc cc.hp.pa cc.hp.pa64 cc.ibm.risc cc.mvs.390 cc.next.i386 cc.next.m68k cc.osf.alpha cc.sco.i386 cc.sgi.mips2 cc.sgi.mips3 cc.sgi.mips3-o32 cc.sgi.mips4 cc.sgi.mips4-n32 cc.unix.mc68k ''
 exec - do	case $cc in
 exec - 	*cc.${mam_cc_HOSTTYPE})
 exec - 		if	silent test -f $cc &&
-exec - 			$cc -o hello.exe hello.c >/dev/null 2>&1 &&
-exec - 			hello.exe >/dev/null 2>&1
+exec - 			silent $cc -o hello.exe hello.c >/dev/null 2>&1 &&
+exec - 			silent hello.exe >/dev/null 2>&1
 exec - 		then	case "${mam_cc_HOSTTYPE}" in
-exec - 			*.mips*)$cc -version >/dev/null 2>&1 || break ;;
+exec - 			*.mips*)$cc -version >/dev/null 2>&1 || cc= ;;
 exec - 			esac
-exec - 			cmp -s $cc ${INSTALLROOT}/bin/cc ||
-exec - 			cp $cc ${INSTALLROOT}/bin/cc
+exec - 			break
 exec - 		fi
+exec - 		;;
+exec - 	'')	silent cc -o hello.exe hello.c &&
+exec - 		silent hello.exe >/dev/null 2>&1 || {
+exec - 			if	silent gcc -o hello.exe hello.c >/dev/null 2>&1 &&
+exec - 				silent hello.exe >/dev/null 2>&1
+exec - 			then	cc=cc.gcc
+exec - 				echo 'gcc "$@"' > $cc
+exec - 				chmod +x $cc
+exec - 			fi
+exec - 		}
+exec - 		;;
 exec - 	esac
 exec - done
+exec - case $cc in
+exec - ?*)	silent cmp -s $cc ${INSTALLROOT}/bin/cc || cp $cc ${INSTALLROOT}/bin/cc ;;
+exec - esac
 exec - silent rm -f hello.exe hello.o
 done ../../../bin/cc generated
 prev package
@@ -700,8 +780,7 @@ exec - then	for ld in ld.hp.pa
 exec - 	do	case $ld in
 exec - 		*ld.${mam_cc_HOSTTYPE})
 exec - 			if	silent test -f $ld
-exec - 			then	cmp -s $ld ${INSTALLROOT}/bin/ld ||
-exec - 				cp $ld ${INSTALLROOT}/bin/ld
+exec - 			then	silent cmp -s $ld ${INSTALLROOT}/bin/ld || cp $ld ${INSTALLROOT}/bin/ld
 exec - 			fi
 exec - 		esac
 exec - 	done
@@ -726,8 +805,7 @@ exec - for ldd in ldd.cygwin.i386 ldd.darwin.ppc ldd.ibm.risc ldd.mvs.390 ldd.sg
 exec - do	case $ldd in
 exec - 	*ldd.${mam_cc_HOSTTYPE})
 exec - 		if	silent test -f $ldd -a ! -x /usr/bin/ldd -a ! -x /bin/ldd
-exec - 		then	cmp -s $ldd ${INSTALLROOT}/bin/ldd ||
-exec - 			cp $ldd ${INSTALLROOT}/bin/ldd
+exec - 		then	silent cmp -s $ldd ${INSTALLROOT}/bin/ldd || cp $ldd ${INSTALLROOT}/bin/ldd
 exec - 		fi
 exec - 	esac
 exec - done
@@ -746,47 +824,52 @@ done ../../../bin/mkdir generated
 make ../../../bin/.paths
 exec - {
 exec - echo FPATH=../fun
-exec - set x x lib64 LD_LIBRARY64_PATH lib32 LD_LIBRARYN32_PATH lib LD_LIBRARY_PATH
-exec - case $#:static,port:/dev/stdout:29452 in
-exec - 2:*|*:1)if	test -x /lib/dld.sl
-exec - 	then	echo SHLIB_PATH=../lib
+exec - set x x : 
+exec - p=
+exec - while	:
+exec - do	while	:
+exec - 	do	case $# in
+exec - 		0)	break ;;
+exec - 		esac
+exec - 		x=$1
+exec - 		shift
+exec - 		case $x in
+exec - 		:)	break ;;
+exec - 		esac
+exec - 	done
+exec - 	case $# in
+exec - 	0|1)	break
+exec - 		;;
+exec - 	2)	p=$2
+exec - 		;;
+exec - 	*)	case "${mam_cc_HOSTTYPE}" in
+exec - 		$3)	p=$2; break ;;
+exec - 		esac
+exec - 		;;
+exec - 	esac
+exec - done
+exec - case $p in
+exec - '')	if	test -x /lib/dld.sl
+exec - 	then	p=SHLIB_PATH
 exec - 	elif	test -x /usr/lib/dyld
-exec - 	then	echo DYLD_LIBRARY_PATH=../lib
+exec - 	then	p=DYLD_LIBRARY_PATH
 exec - 	else	case "${mam_cc_HOSTTYPE}" in
 exec - 		ibm.*|mvs.*)
-exec - 			echo LIBPATH=../lib
+exec - 			p=LIBPATH
 exec - 			;;
 exec - 		sgi.mips3)
-exec - 			echo LD_LIBRARYN32_PATH=../lib
+exec - 			p=LD_LIBRARYN32_PATH
 exec - 			;;
 exec - 		sgi.mips4)
-exec - 			echo LD_LIBRARYN64_PATH=../lib
+exec - 			p=LD_LIBRARYN64_PATH
 exec - 			;;
-exec - 		*)	echo LD_LIBRARY_PATH=../lib
+exec - 		*)	p=LD_LIBRARY_PATH
 exec - 			;;
 exec - 		esac
 exec - 	fi
 exec - 	;;
-exec - *)	while	:
-exec - 	do	shift 2
-exec - 		case $1 in
-exec - 		*32)	case "${mam_cc_HOSTTYPE}" in
-exec - 			*3|*32)	echo $2=../lib; break ;;
-exec - 			esac
-exec - 			;;
-exec - 		*64)	case "${mam_cc_HOSTTYPE}" in
-exec - 			*4|*64)	echo $2=../lib; break ;;
-exec - 			esac
-exec - 			;;
-exec - 		*)	echo $2=../$1; break
-exec - 			;;
-exec - 		esac
-exec - 		case $# in
-exec - 		0|1)	break ;;
-exec - 		esac
-exec - 	done
-exec - 	;;
 exec - esac
+exec - echo $p=../lib
 exec - } > ${INSTALLROOT}/bin/.paths
 done ../../../bin/.paths generated
 make ../../../lib/probe/C
@@ -796,8 +879,9 @@ exec - then	set -x && mkdir -p ${INSTALLROOT}/lib/probe/C
 exec - fi
 done ../../../lib/probe/C generated
 make ../../../lib/probe/C/probe
+prev ../../../lib/probe/C
 prev C+probe
-exec - ${STDMV} ${INSTALLROOT}/lib/probe/C/probe ${INSTALLROOT}/lib/probe/C/probe.old 2>/dev/null || true; test '' = 'C+probe' || ${STDCMP} 2>/dev/null -s C+probe ${INSTALLROOT}/lib/probe/C/probe || { ${STDCP} C+probe ${INSTALLROOT}/lib/probe/C/probe  		    		    ;}
+exec - test '' = 'C+probe' || ${STDCMP} 2>/dev/null -s C+probe ${INSTALLROOT}/lib/probe/C/probe || { ${STDMV} ${INSTALLROOT}/lib/probe/C/probe ${INSTALLROOT}/lib/probe/C/probe.old 2>/dev/null || true; ${STDCP} C+probe ${INSTALLROOT}/lib/probe/C/probe  		    		    ;}
 done ../../../lib/probe/C/probe generated
 make ../../../lib/probe/C/make
 exec - set -
@@ -805,18 +889,20 @@ exec - if	test ! -d ${INSTALLROOT}/lib/probe/C/make
 exec - then	set -x && mkdir -p ${INSTALLROOT}/lib/probe/C/make 		    		   
 exec - fi
 done ../../../lib/probe/C/make generated
+prev ../../../lib/probe/C/make
 make C+make+probe.lcl
 done C+make+probe.lcl dontcare virtual
-exec - ${STDMV} ${INSTALLROOT}/lib/probe/C/make/probe.lcl ${INSTALLROOT}/lib/probe/C/make/probe.lcl.old 2>/dev/null || true; test '' = '' || ${STDCMP} 2>/dev/null -s  ${INSTALLROOT}/lib/probe/C/make/probe.lcl || { ${STDCP}  ${INSTALLROOT}/lib/probe/C/make/probe.lcl  		    		    ;}
+exec - test '' = '' || ${STDCMP} 2>/dev/null -s  ${INSTALLROOT}/lib/probe/C/make/probe.lcl || { ${STDMV} ${INSTALLROOT}/lib/probe/C/make/probe.lcl ${INSTALLROOT}/lib/probe/C/make/probe.lcl.old 2>/dev/null || true; ${STDCP}  ${INSTALLROOT}/lib/probe/C/make/probe.lcl  		    		    ;}
 make ../../../lib/probe/C/pp
 exec - set -
 exec - if	test ! -d ${INSTALLROOT}/lib/probe/C/pp
 exec - then	set -x && mkdir -p ${INSTALLROOT}/lib/probe/C/pp 		    		   
 exec - fi
 done ../../../lib/probe/C/pp generated
+prev ../../../lib/probe/C/pp
 make C+pp+probe.lcl
 done C+pp+probe.lcl dontcare virtual
-exec - ${STDMV} ${INSTALLROOT}/lib/probe/C/pp/probe.lcl ${INSTALLROOT}/lib/probe/C/pp/probe.lcl.old 2>/dev/null || true; test '' = '' || ${STDCMP} 2>/dev/null -s  ${INSTALLROOT}/lib/probe/C/pp/probe.lcl || { ${STDCP}  ${INSTALLROOT}/lib/probe/C/pp/probe.lcl  		    		    ;}
+exec - test '' = '' || ${STDCMP} 2>/dev/null -s  ${INSTALLROOT}/lib/probe/C/pp/probe.lcl || { ${STDMV} ${INSTALLROOT}/lib/probe/C/pp/probe.lcl ${INSTALLROOT}/lib/probe/C/pp/probe.lcl.old 2>/dev/null || true; ${STDCP}  ${INSTALLROOT}/lib/probe/C/pp/probe.lcl  		    		    ;}
 make ../../../lib/probe/C/mam
 exec - set -
 exec - if	test ! -d ${INSTALLROOT}/lib/probe/C/mam
@@ -824,12 +910,13 @@ exec - then	set -x && mkdir -p ${INSTALLROOT}/lib/probe/C/mam
 exec - fi
 done ../../../lib/probe/C/mam generated
 make ../../../lib/probe/C/mam/probe
+prev ../../../lib/probe/C/mam
 prev mprobe
-exec - ${STDMV} ${INSTALLROOT}/lib/probe/C/mam/probe ${INSTALLROOT}/lib/probe/C/mam/probe.old 2>/dev/null || true; test '' = 'mprobe' || ${STDCMP} 2>/dev/null -s mprobe ${INSTALLROOT}/lib/probe/C/mam/probe || { ${STDCP} mprobe ${INSTALLROOT}/lib/probe/C/mam/probe  		    		    ;}
+exec - test '' = 'mprobe' || ${STDCMP} 2>/dev/null -s mprobe ${INSTALLROOT}/lib/probe/C/mam/probe || { ${STDMV} ${INSTALLROOT}/lib/probe/C/mam/probe ${INSTALLROOT}/lib/probe/C/mam/probe.old 2>/dev/null || true; ${STDCP} mprobe ${INSTALLROOT}/lib/probe/C/mam/probe  		    		    ;}
 done ../../../lib/probe/C/mam/probe generated
 make ../../../lib/probe/C/make/probe
 prev probe
-exec - ${STDMV} ${INSTALLROOT}/lib/probe/C/make/probe ${INSTALLROOT}/lib/probe/C/make/probe.old 2>/dev/null || true; test '' = 'probe' || ${STDCMP} 2>/dev/null -s probe ${INSTALLROOT}/lib/probe/C/make/probe || { ${STDCP} probe ${INSTALLROOT}/lib/probe/C/make/probe  		    		    ;}
+exec - test '' = 'probe' || ${STDCMP} 2>/dev/null -s probe ${INSTALLROOT}/lib/probe/C/make/probe || { ${STDMV} ${INSTALLROOT}/lib/probe/C/make/probe ${INSTALLROOT}/lib/probe/C/make/probe.old 2>/dev/null || true; ${STDCP} probe ${INSTALLROOT}/lib/probe/C/make/probe  		    		    ;}
 done ../../../lib/probe/C/make/probe generated
 make ../../../lib/probe/C/make/probe.ini
 make probe.ini
@@ -857,38 +944,32 @@ exec - ?*)	cmp -s $1 probe.ini || cp $1 probe.ini ;;
 exec - *)	: > probe.ini
 exec - esac
 done probe.ini generated
-exec - ${STDMV} ${INSTALLROOT}/lib/probe/C/make/probe.ini ${INSTALLROOT}/lib/probe/C/make/probe.ini.old 2>/dev/null || true; test '' = 'probe.ini' || ${STDCMP} 2>/dev/null -s probe.ini ${INSTALLROOT}/lib/probe/C/make/probe.ini || { ${STDCP} probe.ini ${INSTALLROOT}/lib/probe/C/make/probe.ini  		    		    ;}
+exec - test '' = 'probe.ini' || ${STDCMP} 2>/dev/null -s probe.ini ${INSTALLROOT}/lib/probe/C/make/probe.ini || { ${STDMV} ${INSTALLROOT}/lib/probe/C/make/probe.ini ${INSTALLROOT}/lib/probe/C/make/probe.ini.old 2>/dev/null || true; ${STDCP} probe.ini ${INSTALLROOT}/lib/probe/C/make/probe.ini  		    		    ;}
 done ../../../lib/probe/C/make/probe.ini generated
-make ../../../lib/make
-exec - set -
-exec - if	test ! -d ${INSTALLROOT}/lib/make
-exec - then	set -x && mkdir -p ${INSTALLROOT}/lib/make 		    		   
-exec - fi
-done ../../../lib/make generated
 make ../../../lib/make/PROBE.mk
 make PROBE.mk
 done PROBE.mk
-exec - ${STDMV} ${INSTALLROOT}/lib/make/PROBE.mk ${INSTALLROOT}/lib/make/PROBE.mk.old 2>/dev/null || true; test '' = 'PROBE.mk' || ${STDCMP} 2>/dev/null -s PROBE.mk ${INSTALLROOT}/lib/make/PROBE.mk || { ${STDCP} PROBE.mk ${INSTALLROOT}/lib/make/PROBE.mk  		    		    ;}
+exec - test '' = 'PROBE.mk' || ${STDCMP} 2>/dev/null -s PROBE.mk ${INSTALLROOT}/lib/make/PROBE.mk || { ${STDMV} ${INSTALLROOT}/lib/make/PROBE.mk ${INSTALLROOT}/lib/make/PROBE.mk.old 2>/dev/null || true; ${STDCP} PROBE.mk ${INSTALLROOT}/lib/make/PROBE.mk  		    		    ;}
 done ../../../lib/make/PROBE.mk generated
 make ../../../lib/make/TEST.mk
 make TEST.mk
 done TEST.mk
-exec - ${STDMV} ${INSTALLROOT}/lib/make/TEST.mk ${INSTALLROOT}/lib/make/TEST.mk.old 2>/dev/null || true; test '' = 'TEST.mk' || ${STDCMP} 2>/dev/null -s TEST.mk ${INSTALLROOT}/lib/make/TEST.mk || { ${STDCP} TEST.mk ${INSTALLROOT}/lib/make/TEST.mk  		    		    ;}
+exec - test '' = 'TEST.mk' || ${STDCMP} 2>/dev/null -s TEST.mk ${INSTALLROOT}/lib/make/TEST.mk || { ${STDMV} ${INSTALLROOT}/lib/make/TEST.mk ${INSTALLROOT}/lib/make/TEST.mk.old 2>/dev/null || true; ${STDCP} TEST.mk ${INSTALLROOT}/lib/make/TEST.mk  		    		    ;}
 done ../../../lib/make/TEST.mk generated
 make ../../../lib/make/WWW.mk
 make WWW.mk
 done WWW.mk
-exec - ${STDMV} ${INSTALLROOT}/lib/make/WWW.mk ${INSTALLROOT}/lib/make/WWW.mk.old 2>/dev/null || true; test '' = 'WWW.mk' || ${STDCMP} 2>/dev/null -s WWW.mk ${INSTALLROOT}/lib/make/WWW.mk || { ${STDCP} WWW.mk ${INSTALLROOT}/lib/make/WWW.mk  		    		    ;}
+exec - test '' = 'WWW.mk' || ${STDCMP} 2>/dev/null -s WWW.mk ${INSTALLROOT}/lib/make/WWW.mk || { ${STDMV} ${INSTALLROOT}/lib/make/WWW.mk ${INSTALLROOT}/lib/make/WWW.mk.old 2>/dev/null || true; ${STDCP} WWW.mk ${INSTALLROOT}/lib/make/WWW.mk  		    		    ;}
 done ../../../lib/make/WWW.mk generated
 make ../../../lib/make/MSGFUN.mk
 make MSGFUN.mk
 done MSGFUN.mk
-exec - ${STDMV} ${INSTALLROOT}/lib/make/MSGFUN.mk ${INSTALLROOT}/lib/make/MSGFUN.mk.old 2>/dev/null || true; test '' = 'MSGFUN.mk' || ${STDCMP} 2>/dev/null -s MSGFUN.mk ${INSTALLROOT}/lib/make/MSGFUN.mk || { ${STDCP} MSGFUN.mk ${INSTALLROOT}/lib/make/MSGFUN.mk  		    		    ;}
+exec - test '' = 'MSGFUN.mk' || ${STDCMP} 2>/dev/null -s MSGFUN.mk ${INSTALLROOT}/lib/make/MSGFUN.mk || { ${STDMV} ${INSTALLROOT}/lib/make/MSGFUN.mk ${INSTALLROOT}/lib/make/MSGFUN.mk.old 2>/dev/null || true; ${STDCP} MSGFUN.mk ${INSTALLROOT}/lib/make/MSGFUN.mk  		    		    ;}
 done ../../../lib/make/MSGFUN.mk generated
 make ../../../lib/make/MSGKEY.mk
 make MSGKEY.mk
 done MSGKEY.mk
-exec - ${STDMV} ${INSTALLROOT}/lib/make/MSGKEY.mk ${INSTALLROOT}/lib/make/MSGKEY.mk.old 2>/dev/null || true; test '' = 'MSGKEY.mk' || ${STDCMP} 2>/dev/null -s MSGKEY.mk ${INSTALLROOT}/lib/make/MSGKEY.mk || { ${STDCP} MSGKEY.mk ${INSTALLROOT}/lib/make/MSGKEY.mk  		    		    ;}
+exec - test '' = 'MSGKEY.mk' || ${STDCMP} 2>/dev/null -s MSGKEY.mk ${INSTALLROOT}/lib/make/MSGKEY.mk || { ${STDMV} ${INSTALLROOT}/lib/make/MSGKEY.mk ${INSTALLROOT}/lib/make/MSGKEY.mk.old 2>/dev/null || true; ${STDCP} MSGKEY.mk ${INSTALLROOT}/lib/make/MSGKEY.mk  		    		    ;}
 done ../../../lib/make/MSGKEY.mk generated
 make ../../../include
 exec - set -
@@ -897,6 +978,7 @@ exec - then	set -x && mkdir -p ${INSTALLROOT}/include
 exec - fi
 done ../../../include generated
 make ../../../include/prototyped.h
+prev ../../../include
 make prototyped.h
 prev ../../../bin/proto
 exec - proto -f /dev/null > h.${COTEMP}.h
@@ -905,7 +987,7 @@ exec - then	rm -f h.${COTEMP}.h
 exec - else	mv h.${COTEMP}.h prototyped.h
 exec - fi
 done prototyped.h generated
-exec - ${STDMV} ${INSTALLROOT}/include/prototyped.h ${INSTALLROOT}/include/prototyped.h.old 2>/dev/null || true; test '' = 'prototyped.h' || ${STDCMP} 2>/dev/null -s prototyped.h ${INSTALLROOT}/include/prototyped.h || { ${STDCP} prototyped.h ${INSTALLROOT}/include/prototyped.h  		    		    ;}
+exec - test '' = 'prototyped.h' || ${STDCMP} 2>/dev/null -s prototyped.h ${INSTALLROOT}/include/prototyped.h || { ${STDMV} ${INSTALLROOT}/include/prototyped.h ${INSTALLROOT}/include/prototyped.h.old 2>/dev/null || true; ${STDCP} prototyped.h ${INSTALLROOT}/include/prototyped.h  		    		    ;}
 done ../../../include/prototyped.h generated
 make ../../../lib/lib
 exec - set -
@@ -914,6 +996,7 @@ exec - then	set -x && mkdir -p ${INSTALLROOT}/lib/lib
 exec - fi
 done ../../../lib/lib generated
 make ../../../lib/lib/dl
+prev ../../../lib/lib
 make dl.req
 make dl.c
 done dl.c
@@ -929,7 +1012,7 @@ exec - done 2>/dev/null
 exec - echo " $r" > dl.req
 exec - rm -f dl.exe dl.o
 done dl.req generated
-exec - ${STDMV} ${INSTALLROOT}/lib/lib/dl ${INSTALLROOT}/lib/lib/dl.old 2>/dev/null || true; test '' = 'dl.req' || ${STDCMP} 2>/dev/null -s dl.req ${INSTALLROOT}/lib/lib/dl || { ${STDCP} dl.req ${INSTALLROOT}/lib/lib/dl  		    		    ;}
+exec - test '' = 'dl.req' || ${STDCMP} 2>/dev/null -s dl.req ${INSTALLROOT}/lib/lib/dl || { ${STDMV} ${INSTALLROOT}/lib/lib/dl ${INSTALLROOT}/lib/lib/dl.old 2>/dev/null || true; ${STDCP} dl.req ${INSTALLROOT}/lib/lib/dl  		    		    ;}
 done ../../../lib/lib/dl generated
 make ../../../lib/lib/m
 make m.req
@@ -947,7 +1030,7 @@ exec - done 2>/dev/null
 exec - echo " $r" > m.req
 exec - rm -f m.exe m.o
 done m.req generated
-exec - ${STDMV} ${INSTALLROOT}/lib/lib/m ${INSTALLROOT}/lib/lib/m.old 2>/dev/null || true; test '' = 'm.req' || ${STDCMP} 2>/dev/null -s m.req ${INSTALLROOT}/lib/lib/m || { ${STDCP} m.req ${INSTALLROOT}/lib/lib/m  		    		    ;}
+exec - test '' = 'm.req' || ${STDCMP} 2>/dev/null -s m.req ${INSTALLROOT}/lib/lib/m || { ${STDMV} ${INSTALLROOT}/lib/lib/m ${INSTALLROOT}/lib/lib/m.old 2>/dev/null || true; ${STDCP} m.req ${INSTALLROOT}/lib/lib/m  		    		    ;}
 done ../../../lib/lib/m generated
 make ../../../lib/lib/nsl
 make nsl.req
@@ -965,7 +1048,7 @@ exec - done 2>/dev/null
 exec - echo " $r" > nsl.req
 exec - rm -f nsl.exe nsl.o
 done nsl.req generated
-exec - ${STDMV} ${INSTALLROOT}/lib/lib/nsl ${INSTALLROOT}/lib/lib/nsl.old 2>/dev/null || true; test '' = 'nsl.req' || ${STDCMP} 2>/dev/null -s nsl.req ${INSTALLROOT}/lib/lib/nsl || { ${STDCP} nsl.req ${INSTALLROOT}/lib/lib/nsl  		    		    ;}
+exec - test '' = 'nsl.req' || ${STDCMP} 2>/dev/null -s nsl.req ${INSTALLROOT}/lib/lib/nsl || { ${STDMV} ${INSTALLROOT}/lib/lib/nsl ${INSTALLROOT}/lib/lib/nsl.old 2>/dev/null || true; ${STDCP} nsl.req ${INSTALLROOT}/lib/lib/nsl  		    		    ;}
 done ../../../lib/lib/nsl generated
 make ../../../lib/lib/socket
 make socket.req
@@ -984,7 +1067,7 @@ exec - done 2>/dev/null
 exec - echo " $r" > socket.req
 exec - rm -f socket.exe socket.o
 done socket.req generated
-exec - ${STDMV} ${INSTALLROOT}/lib/lib/socket ${INSTALLROOT}/lib/lib/socket.old 2>/dev/null || true; test '' = 'socket.req' || ${STDCMP} 2>/dev/null -s socket.req ${INSTALLROOT}/lib/lib/socket || { ${STDCP} socket.req ${INSTALLROOT}/lib/lib/socket  		    		    ;}
+exec - test '' = 'socket.req' || ${STDCMP} 2>/dev/null -s socket.req ${INSTALLROOT}/lib/lib/socket || { ${STDMV} ${INSTALLROOT}/lib/lib/socket ${INSTALLROOT}/lib/lib/socket.old 2>/dev/null || true; ${STDCP} socket.req ${INSTALLROOT}/lib/lib/socket  		    		    ;}
 done ../../../lib/lib/socket generated
 done install virtual
 make test

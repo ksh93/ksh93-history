@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1992-2002 AT&T Corp.                *
+*                Copyright (c) 1992-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -31,7 +31,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: date (AT&T Labs Research) 2002-09-30 $\n]"
+"[-?\n@(#)$Id: date (AT&T Labs Research) 2003-03-21 $\n]"
 USAGE_LICENSE
 "[+NAME?date - set/list/convert dates]"
 "[+DESCRIPTION?\bdate\b sets the current date and time (with appropriate"
@@ -109,13 +109,15 @@ USAGE_LICENSE
 "		[+J?0-offset Julian date]"
 "		[+k?\bdate\b(1) style date]"
 "		[+K?date as \ayyyy-mm-dd+HH:MM:SS\a]"
-"		[+l?\bls\b(1) \b-l\b date that formats recent dates with \b%g\b"
-"			and distant dates with \b%G\b]"
+"		[+l?\bls\b(1) \b-l\b date; equivalent to \b%Q/%g/%G/\b]"
 "		[+m?month number]"
 "		[+M?minutes]"
 "		[+n?newline character]"
 "		[+N?time zone type name]"
 "		[+p?meridian (e.g., \bAM\b or \bPM\b)]"
+"		[+Q?\a<del>recent<del>distant<del>\a: \a<del>\a is a unique"
+"			delimter character; \arecent\a format for recent"
+"			dates, \adistant\a format otherwise]"
 "		[+r?12-hour time as \ahh:mm:ss meridian\a]"
 "		[+R?24-hour time as \ahh:mm\a]"
 "		[+s?number of seconds since the epoch]"
@@ -134,7 +136,7 @@ USAGE_LICENSE
 "		[+z?time zone \aSHHMM\a west of GMT offset where S is"
 "			\b+\b or \b-\b]"
 "		[+Z?time zone name]"
-"		[++|-flag?set (+) or clear (-) \aflag\a for the remainder"
+"		[++|!flag?set (+) or clear (!) \aflag\a for the remainder"
 "			of \aformat\a. \aflag\a may be:]{"
 "			[+l?enable leap second adjustments]"
 "			[+u?UTC time zone]"

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -73,7 +73,7 @@ extern int		hist_match(History_t*,off_t, char*, int*);
 extern off_t		hist_tell(History_t*,int);
 extern off_t		hist_seek(History_t*,int);
 extern char 		*hist_word(char*, int, int);
-#ifdef SHOPT_ESH
+#if SHOPT_ESH
     extern Histloc_t	hist_locate(History_t*,int, int, int);
 #endif	/* SHOPT_ESH */
 

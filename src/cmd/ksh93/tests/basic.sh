@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1982-2002 AT&T Corp.                #
+#                Copyright (c) 1982-2003 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -37,7 +37,7 @@ if	[[ $(umask -S) != u=rwx,g=rx,o=rx ]]
 then	err_exit 'umask -S incorrect'
 fi
 mkdir  /tmp/ksh$$ || err_exit "mkdir /tmp/ksh$$ failed" 
-trap "rm -rf /tmp/ksh$$" EXIT
+trap "cd /; rm -rf /tmp/ksh$$" EXIT
 pwd=$PWD
 [[ $SHELL != /* ]] && SHELL=$pwd/$SHELL
 cd /tmp/ksh$$ || err_exit "cd /tmp/ksh$$ failed"
@@ -82,7 +82,7 @@ then	set -- foo*
 	then	err_exit 'foo* does not match foo\abc'
 	fi
 fi
-if : > TT* && : > TTfoo
+if ( : > TT* && : > TTfoo ) 2>/dev/null
 then	set -- TT*
 	if	(( $# < 2 ))
 	then	err_exit 'TT* not expanding when file TT* exists'
@@ -110,9 +110,9 @@ then	err_exit 'eval foo=\$bar, with bar="foo\ bar" not working'
 fi
 cd /tmp
 cd ../../tmp || err_exit "cd ../../tmp failed"
-#if	[[ $PWD != /dev ]]
-#then	err_exit 'cd ../../dev is not /dev'
-#fi
+if	[[ $PWD != /tmp ]]
+then	err_exit 'cd ../../tmp is not /tmp'
+fi
 ( sleep 2; cat <<!
 foobar
 !
@@ -284,4 +284,6 @@ foo()
 : $(jobs -p)
 foo
 [[ $( (trap 'print alarm' ALRM; sleep 4) & sleep 2; kill -ALRM $!) == alarm ]] || print -u2 'ALRM signal not working'
+[[ $($SHELL -c 'trap "" HUP; $SHELL -c "(sleep 2;kill -HUP $$)& sleep 4;print done"') != done ]] && err_exit 'ignored traps not being ignored'
+[[ $($SHELL -c 'o=foobar; for x in foo bar; do (o=save);print $o;done' 2> /dev/null ) == $'foobar\nfoobar' ]] || err_exit 'for loop optimization subshell bug'
 exit $((Errors))

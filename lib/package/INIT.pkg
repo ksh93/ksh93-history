@@ -1,5 +1,7 @@
 INIT :PACKAGE:
 
+:CATEGORY: admin utils
+
 :INDEX: the package command, required by all other packages
 
 :DESCRIPTION:

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -45,6 +45,7 @@
 #define _val		val
 
 #include	"FEATURE/sfio"
+#include	"FEATURE/mmap"
 
 /* define va_list, _ARG_, etc. before including sfio_t.h (sfio.h) */
 #if !_PACKAGE_ast
@@ -94,7 +95,7 @@
 #else /*!_PACKAGE_ast*/
 
 /* these guys don't know large files */
-#if (__hppa || __mips == 2) && !defined(NO_LARGEFILE64_SOURCE)
+#if __mips == 2 && !defined(NO_LARGEFILE64_SOURCE)
 #define NO_LARGEFILE64_SOURCE	1
 #undef	_LARGEFILE64_SOURCE
 #endif
@@ -198,7 +199,7 @@
 #undef _hdr_mman
 #undef _sys_mman
 #endif
-#if _hdr_man
+#if _hdr_mman
 #include	<mman.h>
 #endif
 #if _sys_mman
@@ -244,6 +245,10 @@
 #endif
 
 #endif /*_PACKAGE_ast*/
+
+#if !_mmap_worthy
+#undef MAP_TYPE
+#endif
 
 #include	"FEATURE/float"
 
@@ -774,9 +779,6 @@ typedef struct _sfextern_s
 
 #ifndef MAP_VARIABLE
 #define MAP_VARIABLE	0
-#endif
-#ifndef _mmap_fixed
-#define _mmap_fixed	0
 #endif
 
 /* the bottomless bit bucket */

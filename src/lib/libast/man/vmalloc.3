@@ -1,3 +1,4 @@
+.fp 5 CW
 .de MW
 \f5\\$1\fP
 ..
@@ -26,6 +27,7 @@ vmalloc \- virtual memory allocation
 .MW "int vmfree(Vmalloc_t* region, Void_t* addr);"
 .MW "Void_t* vmnewof(Vmalloc_t* region, Void_t* addr, type, size_t n, size_t x);"
 .MW "Void_t* vmoldof(Vmalloc_t* region, Void_t* addr, type, size_t n, size_t x);"
+.MW "Void_t* vmgetmem(Vmalloc_t* region, Void_t* addr, size_t size);"
 .fi
 .SS "Debugging"
 .nf
@@ -193,6 +195,28 @@ Additional space will be set to zero.
 .PP
 .I vmoldof
 is similar to \fIvmnewof\fP but it neither copies data nor clears space.
+.PP
+.I vmgetmem
+provides a handy function to creat/close regions and allocate/free memory
+based on chunks of memory obtained from the heap region \fIVmheap\fP.
+.TP
+.MW "vmgetmem(0,0,0)"
+This call opens a new region.
+.TP
+.MW "vmgetmem(region, 0, 0)"
+This call closes the given \f5region\fP.
+.TP
+.MW "vmgetmem(region,0,n)"
+This call allocates a block of length \f5n\fP and clears it to zeros.
+.TP
+.MW "vmgetmem(region,p,0)"
+This call frees the block \f5p\fP.
+.TP
+.MW "vmgetmem(region,p,n)"
+This call resizes the block \f5p\fP to length \f5n\fP
+and clears the new memory to zeros if the block grows.
+The block may be moved as deemed necessary by the allocator.
+.PP
 .SS "Memory disciplines"
 Memory disciplines have type \f5Vmdisc_t\fP,
 a structure with these members:

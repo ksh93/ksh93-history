@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -23,7 +23,7 @@
 *                 Phong Vo <kpv@research.att.com>                  *
 *                                                                  *
 *******************************************************************/
-#ifdef _UWIN
+#if defined(_UWIN) && defined(_BLD_ast)
 
 void _STUB_vmmopen(){}
 
@@ -31,9 +31,15 @@ void _STUB_vmmopen(){}
 
 #include	"vmhdr.h"
 #include	<fcntl.h>
-#include	<sys/mman.h>
 #if _hdr_unistd
 #include	<unistd.h>
+#endif
+
+#if _lib_mmap
+#include	<sys/mman.h>
+#else
+#define mmap(a,b,c,d,e,f)	MAP_FAILED
+#define munmap(a,b)		MAP_FAILED
 #endif
 
 /* Create a region to allocate based on mmap()

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -30,6 +30,7 @@
  *
  * parse elapsed time in 1/n secs from s
  * compatible with fmtelapsed()
+ * also handles ps [day-][hour:]min:sec
  * if e!=0 then it is set to first unrecognized char
  */
 
@@ -43,12 +44,13 @@ strelapsed(register const char* s, char** e, int n)
 	register unsigned long	v;
 	unsigned long		t = 0;
 	int			f = 0;
+	int			p = 0;
 	int			m;
 	const char*		last;
 
 	for (;;)
 	{
-		while (isspace(*s))
+		while (isspace(*s) || *s == '_')
 			s++;
 		if (!*(last = s))
 			break;
@@ -66,8 +68,9 @@ strelapsed(register const char* s, char** e, int n)
 		}
 		if (s == last)
 			break;
-		while (isspace(c))
-			c = *s++;
+		if (!p)
+			while (isspace(c) || c == '_')
+				c = *s++;
 		switch (c)
 		{
 		case 'S':
@@ -83,11 +86,18 @@ strelapsed(register const char* s, char** e, int n)
 		case 'w':
 			v *= 7 * 24 * 60 * 60;
 			break;
+		case '-':
+			p = 1;
+			/*FALLTHROUGH*/
 		case 'd':
 			v *= 24 * 60 * 60;
 			break;
 		case 'h':
 			v *= 60 * 60;
+			break;
+		case ':':
+			p = 1;
+			v *= strchr(s, ':') ? (60 * 60) : 60;
 			break;
 		case 'm':
 			if (*s == 'o')
@@ -108,6 +118,11 @@ strelapsed(register const char* s, char** e, int n)
 			}
 			break;
 		default:
+			if (p)
+			{
+				last = s - 1;
+				t += v + f;
+			}
 			goto done;
 		}
 		t += v;

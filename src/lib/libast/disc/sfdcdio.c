@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -31,10 +31,14 @@
 **	Written by Kiem-Phong Vo, kpv@research.att.com, 03/18/1998.
 */
 
+#ifndef FDIRECT
+#undef F_FIOINFO
+#endif
+
 typedef struct _direct_s
 {	Sfdisc_t	disc;	/* Sfio discipline	*/
 	int		cntl;	/* file control flags	*/
-#ifdef FDIRECT
+#ifdef F_DIOINFO
 	struct dioattr	dio;	/* direct IO params	*/
 #endif
 } Direct_t;
@@ -58,7 +62,7 @@ int		type;
 
 	done = 0;	/* amount processed by direct IO */
 
-#if FDIRECT
+#ifdef F_DIOINFO
 	if((P2I(buf)%di->dio.d_mem) == 0 &&
 	   (f->here%di->dio.d_miniosz) == 0 && n >= di->dio.d_miniosz )
 	{	/* direct IO ok, make sure we're in the right mode */
@@ -91,7 +95,7 @@ int		type;
 		di->cntl &= ~FDIRECT;
 		(void)fcntl(f->file, F_SETFL, di->cntl);
 	}
-#endif /*FDIRECT*/
+#endif /*F_DIOINFO*/
 
 	if((rw = n-done) > 0 &&
 	   (rv = type == SF_READ ? read(f->file,buf,rw) : write(f->file,buf,rw)) > 0 )
@@ -127,9 +131,9 @@ Sfdisc_t*	disc;
 }
 
 #if __STD_C
-static dioexcept(Sfio_t* f, int type, Void_t* data, Sfdisc_t* disc)
+static int dioexcept(Sfio_t* f, int type, Void_t* data, Sfdisc_t* disc)
 #else
-static dioexcept(f,type,data,disc)
+static int dioexcept(f,type,data,disc)
 Sfio_t*		f;
 int		type;
 Void_t*		data;
@@ -140,7 +144,7 @@ Sfdisc_t*	disc;
 
 	if(type == SF_FINAL || type == SF_DPOP)
 	{
-#ifdef FDIRECT
+#ifdef F_DIOINFO
 		if(di->cntl&FDIRECT)
 		{	di->cntl &= ~FDIRECT;
 			(void)fcntl(f->file,F_SETFL,di->cntl);
@@ -160,7 +164,7 @@ Sfio_t*	f;
 size_t	bufsize;
 #endif
 {
-#ifndef FDIRECT
+#ifndef F_DIOINFO
 	return -1;
 #else
 	int		cntl;
@@ -224,5 +228,5 @@ size_t	bufsize;
 
 	return 0;
 
-#endif /*FDIRECT*/
+#endif /*F_DIOINFO*/
 }

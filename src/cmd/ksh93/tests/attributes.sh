@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1982-2002 AT&T Corp.                #
+#                Copyright (c) 1982-2003 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -161,4 +161,19 @@ fi
 if	[[ $(typeset | grep PS2) == PS2 ]]
 then	err_exit 'typeset without arguments outputs names without attributes'
 fi
+unset a z q x
+z=aGVsbG8gd29ybGQ=
+typeset -b x=aGVsbG8gd29ybGQ=
+[[ $x == "$z" ]] || print -u2 'binary variable not expanding correctly'
+[[  $(printf "%B" x) == 'hello world' ]] || err_exit 'typeset -b not working'
+typeset -b -Z5 a=aGVsbG8gd29ybGQ=
+[[  $(printf "%B" a) == 'hello' ]] || err_exit 'typeset -b -Z5 not working'
+typeset -b q=$x$x
+[[ $q == aGVsbG8gd29ybGRoZWxsbyB3b3JsZA== ]] || err_exit 'typeset -b not working with concatination'
+[[  $(printf "%B" q) == 'hello worldhello world' ]] || err_exit 'typeset -b concatination not working'
+x+=aGVsbG8gd29ybGQ=
+[[ $x == aGVsbG8gd29ybGRoZWxsbyB3b3JsZA== ]] || err_exit 'typeset -b not working with append'
+[[  $(printf "%B" x) == 'hello worldhello world' ]] || err_exit 'typeset -b append not working'
+typeset -b -Z20 z=aGVsbG8gd29ybGQ=
+(( $(printf "%B" z | wc -c) == 20 )) || err_exit 'typeset -b -Z20 not storing 20 bytes'
 exit	$((Errors))

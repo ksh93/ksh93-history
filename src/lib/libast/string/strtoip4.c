@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -26,6 +26,7 @@
 #pragma prototyped
 
 #include <ast.h>
+#include <ctype.h>
 
 /*
  * convert string to 4 byte local byte order ip address
@@ -59,7 +60,7 @@ strtoip4(register const char* s, char** e, unsigned _ast_int4_t* paddr, unsigned
 	const char*			b;
 
 	r = -1;
-	while ((c = *s) == ' ' || c == '\t')
+	while (isspace(*s))
 		s++;
 	b = s;
 	addr = 0;

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -48,7 +48,7 @@ struct shlex_t
 	char		assignok;	/* on when name=value is legal */
 	int		inlineno;	/* saved value of sh.inlineno */
 	int		firstline;	/* saved value of sh.st.firstline */
-#ifdef SHOPT_KIA
+#if SHOPT_KIA
 	Sfio_t		*kiafile;	/* kia output file */
 	Sfio_t		*kiatmp;	/* kia reference file */
 	unsigned long	script;		/* script entity number */

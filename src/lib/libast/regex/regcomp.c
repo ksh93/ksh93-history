@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -493,12 +493,6 @@ stats(register Cenv_t* env, register Rex_t* e)
 				return 1;
 			if (env->stats.m == 1 && b == env->stats.b && c == env->stats.c && ++env->stats.s <= 0)
 				return 1;
-			m = env->stats.m;
-			if ((env->stats.m *= e->lo) > 0 && env->stats.m < m)
-				return 1;
-			m = env->stats.m;
-			if ((env->stats.m += n) < m)
-				return 1;
 			if (e->lo < 1)
 			{
 				env->stats.x = x;
@@ -506,6 +500,20 @@ stats(register Cenv_t* env, register Rex_t* e)
 				env->stats.y = y;
 				env->stats.k = k;
 				env->stats.t = t;
+				env->stats.m = n;
+			}
+			else
+			{
+				m = env->stats.m;
+				if ((env->stats.m *= e->lo) > 0 && env->stats.m < m)
+					return 1;
+				m = env->stats.m;
+				if ((env->stats.m += n) < m)
+					return 1;
+				if (env->stats.x != x)
+					env->stats.l = n;
+				if (env->stats.y != y)
+					env->stats.k = n;
 			}
 			break;
 		case REX_STRING:
@@ -724,6 +732,15 @@ magic(register Cenv_t* env, register int c, int escaped)
 				{
 					c = (c - T_BACK) * 2 - 1;
 					c = (c > env->parno || !env->paren[c]) ? o : T_BACK + c;
+				}
+				else if (env->type == KRE && !env->parnest && (env->flags & REG_SHELL_GROUP))
+				{
+					if (c == T_AND)
+						c = '&';
+					else if (c == T_BAR)
+						c = '|';
+					else if (c == T_OPEN)
+						c = '(';
 				}
 			}
 		}

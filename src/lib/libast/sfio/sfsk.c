@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -52,7 +52,7 @@ Sfdisc_t*	disc;
 			SFMTXRETURN(f, (Sfoff_t)(-1));
 		if(SFSYNC(f) < 0)
 			SFMTXRETURN(f, (Sfoff_t)(-1));
-#if MAP_TYPE
+#ifdef MAP_TYPE
 		if(f->mode == SF_READ && (f->bits&SF_MMAP) && f->data)
 		{	SFMUNMAP(f, f->data, f->endb-f->data);
 			f->data = NIL(uchar*);

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -32,33 +32,70 @@
 /* The following only is needed for const */
 #include	<ast.h>
 #include	<math.h>
+#if _AST_VERSION >= 20030127L
+#   include	<ast_float.h>
+#endif
+
+#if _ast_fltmax_double
+#define LDBL_LONGLONG_MAX	DBL_LONGLONG_MAX
+#define LDBL_ULONGLONG_MAX	DBL_ULONGLONG_MAX
+#define LDBL_LONGLONG_MIN	DBL_LONGLONG_MIN
+#endif
+
+#ifndef LDBL_LONGLONG_MAX
+#   ifdef LLONG_MAX
+#	define LDBL_LONGLONG_MAX	((Sfdouble_t)LLONG_MAX)
+#   else
+#	ifdef LONGLONG_MAX
+#	   define LDBL_LONGLONG_MAX	((Sfdouble_t)LONGLONG_MAX)
+#	else
+#	   define LDBL_LONGLONG_MAX	((Sfdouble_t)((1LL << (8*sizeof(Sflong_t)-1)) -1 ))
+#	endif
+#   endif
+#endif
+#ifndef LDBL_ULONGLONG_MAX
+#   ifdef ULLONG_MAX
+#	define LDBL_ULONGLONG_MAX	((Sfdouble_t)ULLONG_MAX)
+#   else
+#	define LDBL_ULONGLONG_MAX	(2.*((Sfdouble_t)LDBL_LONGLONG_MAX))
+#   endif
+#endif
+#ifndef LDBL_LONGLONG_MIN
+#   ifdef LLONG_MIN
+#	define LDBL_LONGLONG_MIN	((Sfdouble_t)LLONG_MIN)
+#   else
+#	define LDBL_LONGLONG_MIN	(-LDBL_LONGLONG_MAX)
+#   endif
+#endif
 
 struct lval
 {
-	char	*value;
-	double	(*fun)(double,...);
-	const char *expr;
-	short	flag;
-	char	isfloat;
-	char	nargs;
-	short	emode;
-	short	level;
+	char		*value;
+	Sfdouble_t	(*fun)(Sfdouble_t,...);
+	const char	*expr;
+	short		flag;
+	char		isfloat;
+	char		nargs;
+	short		emode;
+	short		level;
+	short		elen;
 };
 
 struct mathtab
 {
-	char	fname[8];
-	double	(*fnptr)(double,...);
+	char		fname[8];
+	Sfdouble_t	(*fnptr)(Sfdouble_t,...);
 };
 
 typedef struct _arith_
 {
 	unsigned char	*code;
 	const char	*expr;
-	double		(*fun)(const char**,struct lval*,int,double);
+	Sfdouble_t	(*fun)(const char**,struct lval*,int,Sfdouble_t);
 	short		size;
 	short		staksize;
-	int		emode;
+	short		emode;
+	short		elen;
 } Arith_t;
 #define ARITH_COMP	04	/* set when compile separate from execute */
 
@@ -152,7 +189,7 @@ extern const struct 		mathtab shtab_math[];
 #define VALUE	2
 #define ERRMSG	3
 
-extern double strval(const char*,char**,double(*)(const char**,struct lval*,int,double),int);
-extern Arith_t *arith_compile(const char*,char**,double(*)(const char**,struct lval*,int,double),int);
-extern double arith_exec(Arith_t*);
+extern Sfdouble_t strval(const char*,char**,Sfdouble_t(*)(const char**,struct lval*,int,Sfdouble_t),int);
+extern Arith_t *arith_compile(const char*,char**,Sfdouble_t(*)(const char**,struct lval*,int,Sfdouble_t),int);
+extern Sfdouble_t arith_exec(Arith_t*);
 #endif /* !SEQPOINT */

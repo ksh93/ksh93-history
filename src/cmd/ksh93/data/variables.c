@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -89,10 +89,15 @@ const struct shtable2 shtab_variables[] =
 	".sh.version",	NV_NOFREE,			(char*)(&e_version[10]),
 	".sh.dollar",	0,				(char*)0,
 	".sh.match",	0,				(char*)0,
-#ifdef SHOPT_FS_3D
+	".sh.command",	0,				(char*)0,
+	".sh.file",	0,				(char*)0,
+	".sh.fun",	0,				(char*)0,
+	".sh.subshell",	NV_INTEGER|NV_SHORT|NV_NOFREE,	(char*)0,
+	".sh.level",	0,				(char*)0,
+#if SHOPT_FS_3D
 	"VPATH",	0,				(char*)0,
 #endif /* SHOPT_FS_3D */
-#ifdef SHOPT_MULTIBYTE
+#if SHOPT_MULTIBYTE
 	"CSWIDTH",	0,				(char*)0,
 #endif /* SHOPT_MULTIBYTE */
 #ifdef apollo

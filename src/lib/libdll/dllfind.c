@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1997-2002 AT&T Corp.                *
+*                Copyright (c) 1997-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -52,7 +52,7 @@ dllfind(const char* lib, const char* ver, int flags, char* path, size_t size)
 			while (dle = dllsread(dls))
 			{
 				hit = 1;
-				if (dll = dlopen(dle->path, flags))
+				if (dll = dlopen(dle->path, flags|RTLD_GLOBAL|RTLD_PARENT))
 				{
 					if (path && size)
 #if __OBSOLETE__ < 20041118 /* path,size added 2002-11-18 */

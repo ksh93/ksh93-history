@@ -2,9 +2,11 @@
  * initialization for all packages
  */
 
-LICENSE = since=1999,author=gsf
+LICENSE = since=1994,author=gsf
 
 PACKAGEROOT = $(INSTALLROOT:T=F:P=L*:O=n)
+
+hurl :: hurl.sh LICENSE=since=2003,author=gsf
 
 iffe :: iffe.sh LICENSE=since=1994,author=gsf+kpv
 
@@ -12,7 +14,7 @@ package :: package.sh
 
 regress :: regress.sh LICENSE=since=1995,author=gsf
 
-$(PACKAGEROOT)/lib/package :INSTALLDIR: package.mk
+$(PACKAGEROOT)/lib/package $(INSTALLROOT)/lib/make :INSTALLDIR: package.mk
 
 $(PACKAGEROOT)/bin :INSTALLDIR: execrate ignore mamprobe package silent
 
@@ -36,6 +38,7 @@ LICENSE : .DONTCARE
 
 /*
  * hosttype specific cc workaround initialization
+ * these are coded for mam's benefit
  */
 
 if ! CC.HOSTTYPE
@@ -58,20 +61,33 @@ $(BINDIR)/cc :INSTALL: (CC.HOSTTYPE) package hello.c \
 		cc.sgi.mips4 \
 		cc.sgi.mips4-n32 \
 		cc.unix.mc68k
-	for cc in $(*:N=*cc.*.*)
+	for cc in $(*:N=*cc.*.*) ''
 	do	case $cc in
 		*cc.$(CC.HOSTTYPE))
 			if	$(SILENT) test -f $cc &&
-				$cc -o hello.exe $(*:O=2) >/dev/null 2>&1 &&
-				hello.exe >/dev/null 2>&1
+				$(SILENT) $cc -o hello.exe $(*:O=2) >/dev/null 2>&1 &&
+				$(SILENT) hello.exe >/dev/null 2>&1
 			then	case "$(CC.HOSTTYPE)" in
-				*.mips*)$cc -version >/dev/null 2>&1 || break ;;
+				*.mips*)$cc -version >/dev/null 2>&1 || cc= ;;
 				esac
-				cmp -s $cc $(<) ||
-				cp $cc $(<)
+				break
 			fi
+			;;
+		'')	$(SILENT) cc -o hello.exe $(*:O=2) &&
+			$(SILENT) hello.exe >/dev/null 2>&1 || {
+				if	$(SILENT) gcc -o hello.exe $(*:O=2) >/dev/null 2>&1 &&
+					$(SILENT) hello.exe >/dev/null 2>&1
+				then	cc=cc.gcc
+					echo 'gcc "$@"' > $cc
+					chmod +x $cc
+				fi
+			}
+			;;
 		esac
 	done
+	case $cc in
+	?*)	$(SILENT) cmp -s $cc $(<) || cp $cc $(<) ;;
+	esac
 	$(SILENT) rm -f hello.exe hello$(CC.SUFFIX.OBJECT)
 
 $(BINDIR)/ld :INSTALL: (CC.HOSTTYPE) package $(BINDIR)/cc \
@@ -81,8 +97,7 @@ $(BINDIR)/ld :INSTALL: (CC.HOSTTYPE) package $(BINDIR)/cc \
 		do	case $ld in
 			*ld.$(CC.HOSTTYPE))
 				if	$(SILENT) test -f $ld
-				then	cmp -s $ld $(<) ||
-					cp $ld $(<)
+				then	$(SILENT) cmp -s $ld $(<) || cp $ld $(<)
 				fi
 			esac
 		done
@@ -100,8 +115,7 @@ $(BINDIR)/ldd :INSTALL: .VIRTUAL (CC.HOSTTYPE) package $(BINDIR)/cc \
 	do	case $ldd in
 		*ldd.$(CC.HOSTTYPE))
 			if	$(SILENT) test -f $ldd -a ! -x /usr/bin/ldd -a ! -x /bin/ldd
-			then	cmp -s $ldd $(<) ||
-				cp $ldd $(<)
+			then	$(SILENT) cmp -s $ldd $(<) || cp $ldd $(<)
 			fi
 		esac
 	done
@@ -124,47 +138,52 @@ $(BINDIR)/mkdir :INSTALL: mkdir.sh
 $(BINDIR)/.paths :INSTALL:
 	{
 	echo FPATH=../fun
-	set x x $(.GETCONF LIBPATH:/[:,]/ /G)
-	case $#:$(-mam) in
-	2:*|*:1)if	test -x /lib/dld.sl
-		then	echo SHLIB_PATH=../lib
+	set x x : $(-mam:??$(.GETCONF LIBPATH:/:/ /G:/,/ : /G:Q)?)
+	p=
+	while	:
+	do	while	:
+		do	case $# in
+			0)	break ;;
+			esac
+			x=$1
+			shift
+			case $x in
+			:)	break ;;
+			esac
+		done
+		case $# in
+		0|1)	break
+			;;
+		2)	p=$2
+			;;
+		*)	case "$(CC.HOSTTYPE)" in
+			$3)	p=$2; break ;;
+			esac
+			;;
+		esac
+	done
+	case $p in
+	'')	if	test -x /lib/dld.sl
+		then	p=SHLIB_PATH
 		elif	test -x /usr/lib/dyld
-		then	echo DYLD_LIBRARY_PATH=../lib
+		then	p=DYLD_LIBRARY_PATH
 		else	case "$(CC.HOSTTYPE)" in
 			ibm.*|mvs.*)
-				echo LIBPATH=../lib
+				p=LIBPATH
 				;;
 			sgi.mips3)	
-				echo LD_LIBRARYN32_PATH=../lib
+				p=LD_LIBRARYN32_PATH
 				;;
 			sgi.mips4)	
-				echo LD_LIBRARYN64_PATH=../lib
+				p=LD_LIBRARYN64_PATH
 				;;
-			*)	echo LD_LIBRARY_PATH=../lib
+			*)	p=LD_LIBRARY_PATH
 				;;
 			esac
 		fi
 		;;
-	*)	while	:
-		do	shift 2
-			case $1 in
-			*32)	case "$(CC.HOSTTYPE)" in
-				*3|*32)	echo $2=../lib; break ;;
-				esac
-				;;
-			*64)	case "$(CC.HOSTTYPE)" in
-				*4|*64)	echo $2=../lib; break ;;
-				esac
-				;;
-			*)	echo $2=../$1; break
-				;;
-			esac
-			case $# in
-			0|1)	break ;;
-			esac
-		done
-		;;
 	esac
+	echo $p=../lib
 	} > $(<)
 
 /*

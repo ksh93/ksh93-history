@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -41,9 +41,7 @@
 #include	"name.h"
 #include	"builtins.h"
 #include	<ls.h>
-#ifdef _UWIN
-#   include	<ctype.h>
-#endif /* _UWIN */
+#include	<ctype.h>
 
 #ifdef PATH_BFPATH
 /*
@@ -105,10 +103,10 @@ int	b_cd(int argc, char *argv[],void *extra)
 		dir = nv_getval(opwdnod);
 	if(!dir || *dir==0)
 		errormsg(SH_DICT,ERROR_exit(1),argc==2?e_subst+4:e_direct);
-#ifdef _UWIN
+#if _WINIX
 	if(*dir != '/' && (dir[1]!=':'))
 #else
-#endif /* _UWIN */
+#endif /* _WINIX */
 	if(*dir != '/')
 	{
 #ifdef PATH_BFPATH
@@ -152,13 +150,13 @@ int	b_cd(int argc, char *argv[],void *extra)
 		dp = cdpath;
 		cdpath=path_join(cdpath,dir);
 #endif
-#ifdef _UWIN
+#if _WINIX
                 if(*stakptr(PATH_OFFSET+1)==':' && isalpha(*stakptr(PATH_OFFSET)))
 		{
 			*stakptr(PATH_OFFSET+1) = *stakptr(PATH_OFFSET);
 			*stakptr(PATH_OFFSET)='/';
 		}
-#endif /* _UWIN */
+#endif /* _WINIX */
                 if(*stakptr(PATH_OFFSET)!='/')
 
 		{
@@ -175,7 +173,7 @@ int	b_cd(int argc, char *argv[],void *extra)
 		{
 			register char *cp;
 			stakseek(PATH_MAX+PATH_OFFSET);
-#ifdef SHOPT_FS_3D
+#if SHOPT_FS_3D
 			if(!(cp = pathcanon(stakptr(PATH_OFFSET),PATH_DOTDOT)))
 				continue;
 			/* eliminate trailing '/' */
@@ -269,7 +267,7 @@ int	b_pwd(int argc, char *argv[],void *extra)
 		errormsg(SH_DICT,ERROR_system(1), e_pwd);
 	if(flag)
 	{
-#ifdef SHOPT_FS_3D
+#if SHOPT_FS_3D
 		if(shp->lim.fs3d && (flag = mount(e_dot,NIL(char*),FS3D_GET|FS3D_VIEW,0))>=0)
 		{
 			cp = (char*)stakseek(++flag+PATH_MAX);

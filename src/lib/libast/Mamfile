@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 4.3 2002-12-21
+info mam static 00000 1994-07-17 make (AT&T Research) 4.3 2003-04-15
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ar
@@ -6,7 +6,7 @@ setv ARFLAGS cr
 setv AS as
 setv ASFLAGS
 setv CC cc
-setv CCFLAGS "${mam_cc_OPTIMIZE} -D_BLD_ast ${mam_cc_DLL}"
+setv CCFLAGS ${mam_cc_DLL} -D_BLD_ast ${debug?1?${mam_cc_DEBUG}?${mam_cc_OPTIMIZE}?}
 setv COTEMP $$
 setv CPIO cpio
 setv CPIOFLAGS
@@ -52,11 +52,13 @@ make features/iffeio
 done features/iffeio
 exec - iffe -v -X std -c '${CC} ${CCFLAGS}    ${LDFLAGS} '   run features/iffeio
 make comp/getopt.h implicit
+make include/ast_getopt.h implicit
+done include/ast_getopt.h dontcare
 done comp/getopt.h dontcare
 prev FEATURE/common implicit
 done FEATURE/iffeio generated
 exec - cmp 2>/dev/null -s FEATURE/iffeio iffeio.h || { rm -f iffeio.h; silent test -d . || mkdir .; ${STDCP} FEATURE/iffeio iffeio.h; }
-done iffeio.h generated
+done iffeio.h ignore generated
 make ast_limits.h
 make FEATURE/limits
 make features/limits.c
@@ -74,8 +76,8 @@ exec - 	fi
 exec - 	;;
 exec - esac
 exec - case '${mam_cc_SHELLMAGIC}' in
-exec - "")	case 'HOSTTYPE=\""${mam_cc_HOSTTYPE}"\"' in
-exec - 	"")	${STDCP} comp/conf.sh conf
+exec - "")	case 33 in
+exec - 	0)	${STDCP} comp/conf.sh conf
 exec - 		;;
 exec - 	*)	{
 exec - 		i=`(read x; echo $x) < comp/conf.sh`
@@ -90,8 +92,9 @@ exec - 	esac
 exec - 	;;
 exec - *)	{
 exec - 	echo '${mam_cc_SHELLMAGIC}'
-exec - 	case 'HOSTTYPE=\""${mam_cc_HOSTTYPE}"\"' in
-exec - 	?*)	echo HOSTTYPE=\""${mam_cc_HOSTTYPE}"\" ;;
+exec - 	case 33 in
+exec - 	0)	;;
+exec - 	*)	echo HOSTTYPE=\""${mam_cc_HOSTTYPE}"\" ;;
 exec - 	esac
 exec - 	cat comp/conf.sh
 exec - 	} > conf
@@ -152,7 +155,7 @@ make FEATURE/limits.lcl implicit
 exec - iffe -v -X std -c '${CC} ${CCFLAGS}    ${LDFLAGS} '   def limits.lcl
 done FEATURE/limits.lcl generated
 done features/limits.c
-exec - iffe -v -X std -c '${CC} ${CCFLAGS}  -I. -Icomp  ${LDFLAGS} '   run features/limits.c
+exec - iffe -v -X std -c '${CC} ${CCFLAGS}  -I. -Icomp -Iinclude  ${LDFLAGS} '   run features/limits.c
 done FEATURE/limits generated
 exec - cmp 2>/dev/null -s FEATURE/limits ast_limits.h || { rm -f ast_limits.h; silent test -d . || mkdir .; ${STDCP} FEATURE/limits ast_limits.h; }
 done ast_limits.h generated
@@ -161,7 +164,7 @@ make FEATURE/stdio
 make features/stdio
 done features/stdio
 exec - iffe -v -X std -c '${CC} ${CCFLAGS}    ${LDFLAGS} '   run features/stdio
-prev comp/getopt.h implicit
+prev include/ast_getopt.h implicit
 make include/sfio_s.h implicit
 done include/sfio_s.h dontcare
 prev ast_common.h implicit
@@ -184,22 +187,18 @@ make FEATURE/wchar
 make features/wchar
 done features/wchar
 exec - iffe -v -X std -c '${CC} ${CCFLAGS}    ${LDFLAGS} '   run features/wchar
-make std/wchar.h implicit
-prev ast_wchar.h implicit
-done std/wchar.h dontcare
 make std/stdio.h implicit
 prev ast_stdio.h implicit
-prev comp/getopt.h implicit
+prev include/ast_getopt.h implicit
 prev include/sfio_s.h implicit
 prev ast_common.h implicit
 done std/stdio.h dontcare
 prev std/stdio.h implicit
+prev std/stdio.h implicit
 prev ast_common.h implicit
 done FEATURE/wchar generated
 exec - cmp 2>/dev/null -s FEATURE/wchar ast_wchar.h || { rm -f ast_wchar.h; silent test -d . || mkdir .; ${STDCP} FEATURE/wchar ast_wchar.h; }
-prev std/stdio.h implicit
-prev ast_common.h implicit
-done ast_wchar.h dontcare generated
+done ast_wchar.h generated
 exec - rm -f dirent.h iconv.h limits.h nl_types.h stdio.h wchar.h
 exec - set -
 exec - echo 'main(){return(0);}' > 1.${COTEMP}.c
@@ -233,8 +232,10 @@ done port/astmath.c
 exec - ${CC} ${CCFLAGS}    -o astmath.exe port/astmath.c 2>/dev/null ||
 exec - rm -f astmath.exe
 done astmath.exe dontcare generated
-exec - test -x astmath.exe ||
-exec - echo ' -lm' >> ast.req
+exec - if	test -x astmath.exe
+exec - then	echo ' -lm' >> ast.req
+exec - else	touch ast.req
+exec - fi
 done ast.req generated
 make state.o
 make misc/state.c
@@ -270,7 +271,7 @@ prev FEATURE/limits implicit
 prev FEATURE/lib implicit
 done features/unistd.c
 prev ast.req
-exec - iffe -v -X std -c '${CC} ${CCFLAGS}  -I. -Icomp  ${LDFLAGS} '   run features/unistd.c
+exec - iffe -v -X std -c '${CC} ${CCFLAGS}  -I. -Icomp -Iinclude  ${LDFLAGS} '   run features/unistd.c
 done FEATURE/unistd generated
 exec - cmp 2>/dev/null -s FEATURE/unistd ast_unistd.h || { rm -f ast_unistd.h; silent test -d . || mkdir .; ${STDCP} FEATURE/unistd ast_unistd.h; }
 done ast_unistd.h dontcare generated
@@ -297,7 +298,7 @@ done FEATURE/fcntl.lcl generated
 prev FEATURE/lib implicit
 done features/fcntl.c
 prev ast.req
-exec - iffe -v -X std -c '${CC} ${CCFLAGS}  -I. -Icomp  ${LDFLAGS} '   run features/fcntl.c
+exec - iffe -v -X std -c '${CC} ${CCFLAGS}  -I. -Icomp -Iinclude  ${LDFLAGS} '   run features/fcntl.c
 make include/ls.h implicit
 make ast_mode.h implicit
 make FEATURE/mode
@@ -337,7 +338,6 @@ exec - iffe -v -X std -c '${CC} ${CCFLAGS}    ${LDFLAGS} '   run features/map
 done FEATURE/map generated
 exec - cmp 2>/dev/null -s FEATURE/map ast_map.h || { rm -f ast_map.h; silent test -d . || mkdir .; ${STDCP} FEATURE/map ast_map.h; }
 done ast_map.h dontcare generated
-prev std/stdio.h implicit
 prev comp/getopt.h implicit
 prev std/limits.h implicit
 make ast_hdr.h implicit
@@ -349,7 +349,7 @@ exec - iffe -v -X std -c '${CC} ${CCFLAGS}    ${LDFLAGS} '   run features/hdr
 done FEATURE/hdr generated
 exec - cmp 2>/dev/null -s FEATURE/hdr ast_hdr.h || { rm -f ast_hdr.h; silent test -d . || mkdir .; ${STDCP} FEATURE/hdr ast_hdr.h; }
 done ast_hdr.h dontcare generated
-prev comp/getopt.h implicit
+prev include/ast_getopt.h implicit
 make ast_lib.h implicit
 prev FEATURE/lib
 exec - cmp 2>/dev/null -s FEATURE/lib ast_lib.h || { rm -f ast_lib.h; silent test -d . || mkdir .; ${STDCP} FEATURE/lib ast_lib.h; }
@@ -431,7 +431,17 @@ make misc/getcwd.c
 make include/fs3d.h implicit
 prev ast_fs.h implicit
 done include/fs3d.h dontcare
+make include/error.h implicit
+make include/option.h implicit
+prev include/ast.h implicit
+done include/option.h dontcare
+prev include/ast.h implicit
+done include/error.h dontcare
+make include/ast_dir.h implicit
+prev std/dirent.h implicit
 prev dir/dirlib.h implicit
+prev ast_lib.h implicit
+done include/ast_dir.h dontcare
 prev include/ast.h implicit
 done misc/getcwd.c
 prev misc/getcwd.c
@@ -450,12 +460,7 @@ make include/regex.h implicit
 prev ast_common.h implicit
 done include/regex.h dontcare
 prev include/ls.h implicit
-make include/error.h implicit
-make include/option.h implicit
-prev include/ast.h implicit
-done include/option.h dontcare
-prev include/ast.h implicit
-done include/error.h dontcare
+prev include/error.h implicit
 make include/cdt.h implicit
 prev ast_common.h implicit
 prev include/ast_std.h implicit
@@ -464,7 +469,7 @@ prev include/ast.h implicit
 done misc/findlib.h
 done misc/fastfind.c
 prev misc/fastfind.c
-exec - ${CC} -D_BLD_ast ${mam_cc_DLL}  -I. -Icomp -Imisc -Iinclude -Istd -D_PACKAGE_ast -c misc/fastfind.c
+exec - ${CC} ${debug?1?${mam_cc_DEBUG}??} ${mam_cc_DLL} -D_BLD_ast  -I. -Icomp -Imisc -Iinclude -Istd -D_PACKAGE_ast -c misc/fastfind.c
 done fastfind.o generated
 make hashalloc.o
 make hash/hashalloc.c
@@ -919,6 +924,7 @@ exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Iinclude -Istd -D_PACKAGE_ast -c pat
 done pathexists.o generated
 make pathfind.o
 make path/pathfind.c
+prev include/ls.h implicit
 prev include/error.h implicit
 prev include/ast.h implicit
 done path/pathfind.c
@@ -968,6 +974,13 @@ done path/pathnative.c
 prev path/pathnative.c
 exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c path/pathnative.c
 done pathnative.o generated
+make pathposix.o
+make path/pathposix.c
+prev include/ast.h implicit
+done path/pathposix.c
+prev path/pathposix.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c path/pathposix.c
+done pathposix.o generated
 make pathtemp.o
 make path/pathtemp.c
 make include/tm.h implicit
@@ -1071,7 +1084,9 @@ make fts.o
 make misc/fts.c
 prev include/fts.h implicit
 prev include/fs3d.h implicit
-prev dir/dirlib.h implicit
+prev include/error.h implicit
+prev include/ast_dir.h implicit
+prev include/ast.h implicit
 done misc/fts.c
 prev misc/fts.c
 exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idir -Iinclude -Istd -D_PACKAGE_ast -c misc/fts.c
@@ -1324,12 +1339,19 @@ make sfio/sfhdr.h implicit
 prev port/lclib.h implicit
 make vfork.h implicit
 done vfork.h dontcare virtual
-prev std/wchar.h implicit
+make cell_sys_headers.h implicit
+done cell_sys_headers.h dontcare virtual
+make std/wchar.h implicit
+prev ast_wchar.h implicit
+prev std/stdio.h implicit
+prev ast_common.h implicit
+done std/wchar.h dontcare
 make FEATURE/float implicit
 make features/float
 done features/float
 prev ast.req
 exec - iffe -v -X std -c '${CC} ${CCFLAGS}    ${LDFLAGS} '   run features/float
+prev ast_common.h implicit
 done FEATURE/float dontcare generated
 make mman.h implicit
 done mman.h dontcare virtual
@@ -1352,6 +1374,12 @@ make include/sfio_t.h implicit
 prev include/sfio.h implicit
 done include/sfio_t.h dontcare
 prev FEATURE/common implicit
+make FEATURE/mmap implicit
+make features/mmap
+done features/mmap
+prev ast.req
+exec - iffe -v -X std -c '${CC} ${CCFLAGS}    ${LDFLAGS} '   run features/mmap
+done FEATURE/mmap dontcare generated
 make FEATURE/sfio implicit
 make features/sfio
 done features/sfio
@@ -1361,7 +1389,7 @@ done FEATURE/sfio dontcare generated
 done sfio/sfhdr.h
 done port/mc.c
 prev port/mc.c
-exec - ${CC} -D_BLD_ast ${mam_cc_DLL}  -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c port/mc.c
+exec - ${CC} ${debug?1?${mam_cc_DEBUG}??} ${mam_cc_DLL} -D_BLD_ast  -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c port/mc.c
 done mc.o generated
 make liberror.o
 make misc/liberror.c
@@ -1377,6 +1405,13 @@ done misc/libevent.c
 prev misc/libevent.c
 exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c misc/libevent.c
 done libevent.o generated
+make base64.o
+make string/base64.c
+prev include/ast.h implicit
+done string/base64.c
+prev string/base64.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c string/base64.c
+done base64.o generated
 make fmtbase.o
 make string/fmtbase.c
 prev include/ast.h implicit
@@ -1608,9 +1643,10 @@ prev include/stk.h implicit
 make align.h implicit
 make FEATURE/align
 make features/align.c
+prev FEATURE/common implicit
 done features/align.c
 prev ast.req
-exec - iffe -v -X std -c '${CC} ${CCFLAGS}    ${LDFLAGS} '   run features/align.c
+exec - iffe -v -X std -c '${CC} ${CCFLAGS}  -I.  ${LDFLAGS} '   run features/align.c
 done FEATURE/align generated
 exec - cmp 2>/dev/null -s FEATURE/align align.h || { rm -f align.h; silent test -d . || mkdir .; ${STDCP} FEATURE/align align.h; }
 done align.h generated
@@ -2052,6 +2088,12 @@ exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c comp/unlin
 done unlink.o generated
 make strdup.o
 make string/strdup.c
+make FEATURE/vmalloc implicit
+make features/vmalloc
+done features/vmalloc
+prev ast.req
+exec - iffe -v -X std -c '${CC} ${CCFLAGS}    ${LDFLAGS} '   run features/vmalloc
+done FEATURE/vmalloc generated
 prev include/ast.h implicit
 done string/strdup.c
 prev string/strdup.c
@@ -2264,51 +2306,28 @@ done comp/execvpe.c
 prev comp/execvpe.c
 exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c comp/execvpe.c
 done execvpe.o generated
-make spawnlp.o
-make comp/spawnlp.c
-prev include/ast.h implicit
-prev ast_lib.h implicit
-done comp/spawnlp.c
-prev comp/spawnlp.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c comp/spawnlp.c
-done spawnlp.o generated
-make spawnve.o
-make comp/spawnve.c
-prev include/ast.h implicit
-prev ast_lib.h implicit
-done comp/spawnve.c
-prev comp/spawnve.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c comp/spawnve.c
-done spawnve.o generated
 make spawnveg.o
 make comp/spawnveg.c
-prev vfork.h implicit
+make ast_vfork.h implicit
+make FEATURE/vfork
+make features/vfork
+done features/vfork
+prev ast.req
+exec - iffe -v -X std -c '${CC} ${CCFLAGS}    ${LDFLAGS} '   run features/vfork
+done FEATURE/vfork generated
+exec - cmp 2>/dev/null -s FEATURE/vfork ast_vfork.h || { rm -f ast_vfork.h; silent test -d . || mkdir .; ${STDCP} FEATURE/vfork ast_vfork.h; }
+done ast_vfork.h dontcare generated
+prev sig.h implicit
+make process.h implicit
+done process.h dontcare virtual
 prev include/error.h implicit
 make spawn.h implicit
 done spawn.h dontcare virtual
-make process.h implicit
-done process.h dontcare virtual
 prev include/ast.h implicit
 done comp/spawnveg.c
 prev comp/spawnveg.c
 exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c comp/spawnveg.c
 done spawnveg.o generated
-make spawnvp.o
-make comp/spawnvp.c
-prev include/ast.h implicit
-prev ast_lib.h implicit
-done comp/spawnvp.c
-prev comp/spawnvp.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c comp/spawnvp.c
-done spawnvp.o generated
-make spawnvpe.o
-make comp/spawnvpe.c
-prev include/ast.h implicit
-prev ast_lib.h implicit
-done comp/spawnvpe.c
-prev comp/spawnvpe.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c comp/spawnvpe.c
-done spawnvpe.o generated
 make vfork.o
 make comp/vfork.c
 prev include/error.h implicit
@@ -2393,6 +2412,7 @@ exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c comp/gross
 done gross.o generated
 make omitted.o
 make comp/omitted.c
+prev process.h implicit
 prev include/ast_windows.h implicit
 prev include/ls.h implicit
 make FEATURE/omitted implicit
@@ -2469,7 +2489,7 @@ prev FEATURE/unistd.lcl implicit
 prev FEATURE/limits.lcl implicit
 done confmap.c
 prev confmap.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp  -c confmap.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude  -c confmap.c
 done confmap.o generated
 make conftab.o
 make conftab.c
@@ -2579,7 +2599,7 @@ make preroot/getpreroot.c
 prev std/stdio.h implicit
 prev include/error.h implicit
 prev include/ls.h implicit
-prev dir/dirlib.h implicit
+prev include/ast_dir.h implicit
 prev preroot.h implicit
 prev include/ast.h implicit
 done preroot/getpreroot.c
@@ -2662,12 +2682,7 @@ exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c tm/tmdata.
 done tmdata.o generated
 make memfatal.o
 make disc/memfatal.c
-make FEATURE/vmalloc implicit
-make features/vmalloc
-done features/vmalloc
-prev ast.req
-exec - iffe -v -X std -c '${CC} ${CCFLAGS}    ${LDFLAGS} '   run features/vmalloc
-done FEATURE/vmalloc generated
+prev FEATURE/vmalloc implicit
 prev include/vmalloc.h implicit
 prev include/error.h implicit
 prev include/ast.h implicit
@@ -2871,11 +2886,7 @@ make include/glob.h implicit
 done include/glob.h
 prev include/regex.h implicit
 prev include/error.h implicit
-make include/ast_dir.h implicit
-prev std/dirent.h implicit
-prev dir/dirlib.h implicit
-prev ast_lib.h implicit
-done include/ast_dir.h
+prev include/ast_dir.h implicit
 make include/stak.h implicit
 prev include/stk.h implicit
 done include/stak.h
@@ -3047,6 +3058,7 @@ done regclass.o generated
 make regcoll.o
 make regex/regcoll.c
 make regex/ucs_names.h implicit
+prev ast_common.h implicit
 done regex/ucs_names.h
 prev include/ccode.h implicit
 prev include/cdt.h implicit
@@ -3501,7 +3513,7 @@ make sfio/sfrd.c
 prev sfio/sfhdr.h implicit
 done sfio/sfrd.c
 prev sfio/sfrd.c
-exec - ${CC} -D_BLD_ast ${mam_cc_DLL}  -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfrd.c
+exec - ${CC} ${debug?1?${mam_cc_DEBUG}??} ${mam_cc_DLL} -D_BLD_ast  -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfrd.c
 done sfrd.o generated
 make sfread.o
 make sfio/sfread.c
@@ -3638,7 +3650,7 @@ prev include/ccode.h implicit
 prev sfio/sfhdr.h implicit
 done sfio/sfvprintf.c
 prev sfio/sfvprintf.c
-exec - ${CC} -D_BLD_ast ${mam_cc_DLL}  -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfvprintf.c
+exec - ${CC} ${debug?1?${mam_cc_DEBUG}??} ${mam_cc_DLL} -D_BLD_ast  -I. -Icomp -Iport -Isfio -Iinclude -Istd -D_PACKAGE_ast -c sfio/sfvprintf.c
 done sfvprintf.o generated
 make sfvscanf.o
 make sfio/sfvscanf.c
@@ -4494,6 +4506,10 @@ done frexpl.o generated
 make astcopy.o
 make port/astcopy.c
 prev include/ls.h implicit
+make ast_mmap.h implicit
+prev FEATURE/mmap
+exec - cmp 2>/dev/null -s FEATURE/mmap ast_mmap.h || { rm -f ast_mmap.h; silent test -d . || mkdir .; ${STDCP} FEATURE/mmap ast_mmap.h; }
+done ast_mmap.h generated
 prev include/ast.h implicit
 done port/astcopy.c
 prev port/astcopy.c
@@ -4569,12 +4585,24 @@ done comp/getopt.c
 prev comp/getopt.c
 exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c comp/getopt.c
 done getopt.o generated
+make getoptl.o
+make comp/getoptl.c
+prev comp/getopt.h implicit
+prev include/sfstr.h implicit
+prev include/option.h implicit
+prev include/error.h implicit
+prev include/ast.h implicit
+done comp/getoptl.c
+prev comp/getoptl.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c comp/getoptl.c
+done getoptl.o generated
 make vmbest.o
 make vmalloc/vmbest.c
 prev windows.h implicit
 prev include/ast_windows.h implicit
 make vmalloc/vmhdr.h implicit
 prev include/vmalloc.h implicit
+prev FEATURE/mmap implicit
 prev FEATURE/vmalloc implicit
 prev ast_common.h implicit
 prev include/ast.h implicit
@@ -4796,7 +4824,7 @@ prev std/stdio.h implicit
 prev FEATURE/uwin implicit
 done uwin/crypt_util.c
 prev uwin/crypt_util.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iuwin -Iinclude -Istd  -c uwin/crypt_util.c
+exec - ${CC} ${CCFLAGS}  -I. -Iuwin -Iinclude -Istd  -c uwin/crypt_util.c
 done crypt_util.o generated
 make erf.o
 make uwin/erf.c
@@ -4954,13 +4982,21 @@ done obsolete/memetoa.c
 prev obsolete/memetoa.c
 exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c obsolete/memetoa.c
 done memetoa.o generated
+make spawn.o
+make obsolete/spawn.c
+prev include/error.h implicit
+prev include/ast.h implicit
+done obsolete/spawn.c
+prev obsolete/spawn.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c obsolete/spawn.c
+done spawn.o generated
 exec - ${AR} cr libast.a state.o opendir.o readdir.o rewinddir.o seekdir.o telldir.o getcwd.o fastfind.o hashalloc.o hashdump.o hashfree.o hashlast.o hashlook.o hashscan.o hashsize.o hashview.o hashwalk.o memhash.o memsum.o strhash.o strkey.o strsum.o stracmp.o strnacmp.o _ccmaps.o ccmapc.o ccmapcpy.o ccmapid.o ccmaps.o ccnative.o
-exec - ${AR} cr libast.a chresc.o chrtoi.o streval.o strexpr.o strmatch.o strcopy.o modei.o modex.o strmode.o strlcat.o strlcpy.o strlook.o strncopy.o strsearch.o strpsearch.o stresc.o stropt.o strtape.o tok.o tokline.o tokscan.o pathaccess.o pathcat.o pathcanon.o pathcheck.o pathpath.o pathexists.o pathfind.o pathkey.o pathprobe.o pathrepl.o pathnative.o pathtemp.o pathtmp.o pathstat.o pathgetlink.o pathsetlink.o pathbin.o pathshell.o pathcd.o fs3d.o ftwalk.o ftwflags.o fts.o setenviron.o optget.o optjoin.o optesc.o strsort.o struniq.o magic.o mime.o mimetype.o signal.o systrace.o error.o errorf.o errormsg.o errorx.o localeconv.o setlocale.o translate.o catopen.o iconv.o lc.o mc.o liberror.o libevent.o fmtbase.o fmtbuf.o fmtclock.o fmtdev.o fmtelapsed.o fmterror.o fmtesc.o fmtfmt.o fmtfs.o fmtident.o fmtip4.o fmtls.o fmtmatch.o fmtmode.o fmtnum.o fmtperm.o fmtre.o fmttime.o fmtuid.o fmtgid.o fmtsignal.o fmtscale.o fmtversion.o strelapsed.o strperm.o struid.o strgid.o strtoip4.o stack.o stk.o swapget.o swapmem.o swapop.o
-exec - ${AR} cr libast.a swapput.o sigdata.o sigcrit.o sigunblock.o procopen.o procclose.o procrun.o procfree.o tmdate.o tmfix.o tmfmt.o tmform.o tmgoff.o tminit.o tmleap.o tmlex.o tmlocale.o tmmake.o tmpoff.o tmscan.o tmtime.o tmtype.o tmword.o tmzone.o vecargs.o vecfile.o vecfree.o vecload.o vecstring.o univdata.o touch.o mnt.o memccpy.o memchr.o memcmp.o memcpy.o memdup.o memmove.o memset.o mkdir.o mkfifo.o mknod.o rmdir.o remove.o rename.o link.o unlink.o strdup.o strchr.o strrchr.o strstr.o strtod.o strtold.o strtol.o strtoll.o strtoul.o strtoull.o strton.o strtonll.o strntod.o strntold.o strntol.o strntoll.o strntoul.o strntoull.o strcasecmp.o strncasecmp.o strerror.o mktemp.o tmpnam.o execlp.o execve.o execvp.o execvpe.o spawnlp.o spawnve.o spawnveg.o spawnvp.o spawnvpe.o vfork.o killpg.o hsearch.o tsearch.o getlogin.o putenv.o lstat.o statvfs.o gross.o omitted.o readlink.o symlink.o getpgrp.o setpgid.o setsid.o waitpid.o confmap.o conftab.o confstr.o pathconf.o sysconf.o creat64.o
-exec - ${AR} cr libast.a fcntl.o open.o atexit.o getdents.o getwd.o dup2.o errno.o getpreroot.o ispreroot.o realopen.o setpreroot.o getgroups.o mount.o system.o iblocks.o modedata.o tmdata.o memfatal.o sfkeyprintf.o sfstrtmp.o sfdcold.o sfdcdio.o sfdcdos.o sfdcfilter.o sfdcseekable.o sfdcslow.o sfdcsubstr.o sfdctee.o sfdcunion.o sfdcmore.o sfdcprefix.o wc.o basename.o closelog.o dirname.o fmtmsglib.o fnmatch.o ftw.o getdate.o getsubopt.o glob.o nftw.o openlog.o re_comp.o resolvepath.o realpath.o regcmp.o regexp.o setlogmask.o strftime.o strptime.o swab.o syslog.o tempnam.o wordexp.o mktime.o regalloc.o regclass.o regcoll.o regcomp.o regerror.o regexec.o regfatal.o reginit.o regnexec.o regsubcomp.o regsubexec.o regsub.o regrecord.o regrexec.o dtclose.o dtdisc.o dtextract.o dtflatten.o dthash.o dtlist.o dtmethod.o dtnew.o dtopen.o dtrenew.o dtrestore.o dtsize.o dtstat.o dtstrhash.o dttree.o dttreeset.o dtview.o dtwalk.o sfclose.o sfclrlock.o sfdisc.o sfdlen.o sfexcept.o sfgetl.o sfgetu.o sfcvt.o sfecvt.o sffcvt.o sfextern.o sffilbuf.o sfflsbuf.o
-exec - ${AR} cr libast.a sfprints.o sfgetd.o sfgetr.o sfllen.o sfmode.o sfmove.o sfnew.o sfpkrd.o sfnotify.o sfnputc.o sfopen.o sfpeek.o sfpoll.o sfpool.o sfpopen.o sfprintf.o sfputd.o sfputl.o sfputr.o sfputu.o sfrd.o sfread.o sfreserve.o sfscanf.o sfseek.o sfset.o sfsetbuf.o sfsetfd.o sfsize.o sfsk.o sfstack.o sfstrtod.o sfsync.o sfswap.o sftable.o sftell.o sftmp.o sfungetc.o sfvprintf.o sfvscanf.o sfwr.o sfwrite.o sfpurge.o sfraise.o sfgetm.o sfmutex.o sfputm.o sfresize.o _sfclrerr.o _sfeof.o _sferror.o _sffileno.o _sfstacked.o _sfvalue.o _sfgetc.o _sfgetl.o _sfgetl2.o _sfgetu.o _sfgetu2.o _sfdlen.o _sfllen.o _sfslen.o _sfulen.o _sfputc.o _sfputd.o _sfputl.o _sfputm.o _sfputu.o clearerr.o fclose.o fdopen.o feof.o ferror.o fflush.o fgetc.o fgetpos.o fgets.o fileno.o fopen.o fprintf.o fpurge.o fputc.o fputs.o fread.o freopen.o fscanf.o fseek.o fseeko.o fsetpos.o ftell.o ftello.o fwrite.o getc.o getchar.o getw.o pclose.o popen.o printf.o putc.o putchar.o puts.o
-exec - ${AR} cr libast.a putw.o rewind.o scanf.o setbuf.o setbuffer.o setlinebuf.o setvbuf.o snprintf.o sprintf.o sscanf.o tmpfile.o ungetc.o vfprintf.o vfscanf.o vprintf.o vscanf.o vsnprintf.o vsprintf.o vsscanf.o _doprnt.o _doscan.o _filbuf.o _flsbuf.o _stdfun.o _stdopen.o _stdprintf.o _stdscanf.o _stdsprnt.o _stdvbuf.o _stdvsnprnt.o _stdvsprnt.o _stdvsscn.o fgetwc.o fwprintf.o putwchar.o vfwscanf.o wprintf.o fgetws.o fwscanf.o swprintf.o vswprintf.o wscanf.o fputwc.o getwc.o swscanf.o vswscanf.o fputws.o getwchar.o ungetwc.o vwprintf.o fwide.o putwc.o vfwprintf.o vwscanf.o stdio_c99.o stdio_gnu.o frexp.o frexpl.o astcopy.o astconf.o astdynamic.o astlicense.o astquery.o astwinsize.o aststatic.o getopt.o vmbest.o vmclear.o vmclose.o vmdcheap.o vmdebug.o vmdisc.o vmexit.o vmlast.o vmopen.o vmpool.o vmprivate.o vmprofile.o vmregion.o vmsegment.o vmset.o vmstat.o vmstrdup.o vmtrace.o vmwalk.o vmmopen.o malloc.o vmgetmem.o a64l.o acosh.o asinh.o atanh.o cbrt.o crypt.o crypt_util.o erf.o err.o exp.o exp__E.o expm1.o gamma.o
-exec - ${AR} cr libast.a getpass.o lgamma.o log.o log1p.o log__L.o rand48.o random.o rcmd.o rint.o support.o mematoe.o memetoa.o
+exec - ${AR} cr libast.a chresc.o chrtoi.o streval.o strexpr.o strmatch.o strcopy.o modei.o modex.o strmode.o strlcat.o strlcpy.o strlook.o strncopy.o strsearch.o strpsearch.o stresc.o stropt.o strtape.o tok.o tokline.o tokscan.o pathaccess.o pathcat.o pathcanon.o pathcheck.o pathpath.o pathexists.o pathfind.o pathkey.o pathprobe.o pathrepl.o pathnative.o pathposix.o pathtemp.o pathtmp.o pathstat.o pathgetlink.o pathsetlink.o pathbin.o pathshell.o pathcd.o fs3d.o ftwalk.o ftwflags.o fts.o setenviron.o optget.o optjoin.o optesc.o strsort.o struniq.o magic.o mime.o mimetype.o signal.o systrace.o error.o errorf.o errormsg.o errorx.o localeconv.o setlocale.o translate.o catopen.o iconv.o lc.o mc.o liberror.o libevent.o base64.o fmtbase.o fmtbuf.o fmtclock.o fmtdev.o fmtelapsed.o fmterror.o fmtesc.o fmtfmt.o fmtfs.o fmtident.o fmtip4.o fmtls.o fmtmatch.o fmtmode.o fmtnum.o fmtperm.o fmtre.o fmttime.o fmtuid.o fmtgid.o fmtsignal.o fmtscale.o fmtversion.o strelapsed.o strperm.o struid.o strgid.o strtoip4.o stack.o stk.o swapget.o
+exec - ${AR} cr libast.a swapmem.o swapop.o swapput.o sigdata.o sigcrit.o sigunblock.o procopen.o procclose.o procrun.o procfree.o tmdate.o tmfix.o tmfmt.o tmform.o tmgoff.o tminit.o tmleap.o tmlex.o tmlocale.o tmmake.o tmpoff.o tmscan.o tmtime.o tmtype.o tmword.o tmzone.o vecargs.o vecfile.o vecfree.o vecload.o vecstring.o univdata.o touch.o mnt.o memccpy.o memchr.o memcmp.o memcpy.o memdup.o memmove.o memset.o mkdir.o mkfifo.o mknod.o rmdir.o remove.o rename.o link.o unlink.o strdup.o strchr.o strrchr.o strstr.o strtod.o strtold.o strtol.o strtoll.o strtoul.o strtoull.o strton.o strtonll.o strntod.o strntold.o strntol.o strntoll.o strntoul.o strntoull.o strcasecmp.o strncasecmp.o strerror.o mktemp.o tmpnam.o execlp.o execve.o execvp.o execvpe.o spawnveg.o vfork.o killpg.o hsearch.o tsearch.o getlogin.o putenv.o lstat.o statvfs.o gross.o omitted.o readlink.o symlink.o getpgrp.o setpgid.o setsid.o waitpid.o confmap.o conftab.o confstr.o pathconf.o sysconf.o creat64.o fcntl.o open.o
+exec - ${AR} cr libast.a atexit.o getdents.o getwd.o dup2.o errno.o getpreroot.o ispreroot.o realopen.o setpreroot.o getgroups.o mount.o system.o iblocks.o modedata.o tmdata.o memfatal.o sfkeyprintf.o sfstrtmp.o sfdcold.o sfdcdio.o sfdcdos.o sfdcfilter.o sfdcseekable.o sfdcslow.o sfdcsubstr.o sfdctee.o sfdcunion.o sfdcmore.o sfdcprefix.o wc.o basename.o closelog.o dirname.o fmtmsglib.o fnmatch.o ftw.o getdate.o getsubopt.o glob.o nftw.o openlog.o re_comp.o resolvepath.o realpath.o regcmp.o regexp.o setlogmask.o strftime.o strptime.o swab.o syslog.o tempnam.o wordexp.o mktime.o regalloc.o regclass.o regcoll.o regcomp.o regerror.o regexec.o regfatal.o reginit.o regnexec.o regsubcomp.o regsubexec.o regsub.o regrecord.o regrexec.o dtclose.o dtdisc.o dtextract.o dtflatten.o dthash.o dtlist.o dtmethod.o dtnew.o dtopen.o dtrenew.o dtrestore.o dtsize.o dtstat.o dtstrhash.o dttree.o dttreeset.o dtview.o dtwalk.o sfclose.o sfclrlock.o sfdisc.o sfdlen.o sfexcept.o sfgetl.o sfgetu.o sfcvt.o sfecvt.o sffcvt.o sfextern.o sffilbuf.o sfflsbuf.o sfprints.o sfgetd.o
+exec - ${AR} cr libast.a sfgetr.o sfllen.o sfmode.o sfmove.o sfnew.o sfpkrd.o sfnotify.o sfnputc.o sfopen.o sfpeek.o sfpoll.o sfpool.o sfpopen.o sfprintf.o sfputd.o sfputl.o sfputr.o sfputu.o sfrd.o sfread.o sfreserve.o sfscanf.o sfseek.o sfset.o sfsetbuf.o sfsetfd.o sfsize.o sfsk.o sfstack.o sfstrtod.o sfsync.o sfswap.o sftable.o sftell.o sftmp.o sfungetc.o sfvprintf.o sfvscanf.o sfwr.o sfwrite.o sfpurge.o sfraise.o sfgetm.o sfmutex.o sfputm.o sfresize.o _sfclrerr.o _sfeof.o _sferror.o _sffileno.o _sfstacked.o _sfvalue.o _sfgetc.o _sfgetl.o _sfgetl2.o _sfgetu.o _sfgetu2.o _sfdlen.o _sfllen.o _sfslen.o _sfulen.o _sfputc.o _sfputd.o _sfputl.o _sfputm.o _sfputu.o clearerr.o fclose.o fdopen.o feof.o ferror.o fflush.o fgetc.o fgetpos.o fgets.o fileno.o fopen.o fprintf.o fpurge.o fputc.o fputs.o fread.o freopen.o fscanf.o fseek.o fseeko.o fsetpos.o ftell.o ftello.o fwrite.o getc.o getchar.o getw.o pclose.o popen.o printf.o putc.o putchar.o puts.o putw.o rewind.o
+exec - ${AR} cr libast.a scanf.o setbuf.o setbuffer.o setlinebuf.o setvbuf.o snprintf.o sprintf.o sscanf.o tmpfile.o ungetc.o vfprintf.o vfscanf.o vprintf.o vscanf.o vsnprintf.o vsprintf.o vsscanf.o _doprnt.o _doscan.o _filbuf.o _flsbuf.o _stdfun.o _stdopen.o _stdprintf.o _stdscanf.o _stdsprnt.o _stdvbuf.o _stdvsnprnt.o _stdvsprnt.o _stdvsscn.o fgetwc.o fwprintf.o putwchar.o vfwscanf.o wprintf.o fgetws.o fwscanf.o swprintf.o vswprintf.o wscanf.o fputwc.o getwc.o swscanf.o vswscanf.o fputws.o getwchar.o ungetwc.o vwprintf.o fwide.o putwc.o vfwprintf.o vwscanf.o stdio_c99.o stdio_gnu.o frexp.o frexpl.o astcopy.o astconf.o astdynamic.o astlicense.o astquery.o astwinsize.o aststatic.o getopt.o getoptl.o vmbest.o vmclear.o vmclose.o vmdcheap.o vmdebug.o vmdisc.o vmexit.o vmlast.o vmopen.o vmpool.o vmprivate.o vmprofile.o vmregion.o vmsegment.o vmset.o vmstat.o vmstrdup.o vmtrace.o vmwalk.o vmmopen.o malloc.o vmgetmem.o a64l.o acosh.o asinh.o atanh.o cbrt.o crypt.o crypt_util.o erf.o err.o exp.o exp__E.o expm1.o gamma.o getpass.o
+exec - ${AR} cr libast.a lgamma.o log.o log1p.o log__L.o rand48.o random.o rcmd.o rint.o support.o mematoe.o memetoa.o spawn.o
 exec - (ranlib libast.a) >/dev/null 2>&1 || true
 done libast.a generated
 done ast virtual
@@ -4972,8 +5008,9 @@ exec - then	set -x && mkdir -p ${INSTALLROOT}/lib
 exec - fi
 done ../../../lib generated
 make ../../../lib/libast.a archive
+prev ../../../lib
 prev libast.a archive
-exec - ${STDMV} ${INSTALLROOT}/lib/libast.a ${INSTALLROOT}/lib/libast.a.old 2>/dev/null || true; test '' = 'libast.a' || ${STDCMP} 2>/dev/null -s libast.a ${INSTALLROOT}/lib/libast.a || { ${STDCP} libast.a ${INSTALLROOT}/lib/libast.a  		    		    ;}
+exec - test '' = 'libast.a' || ${STDCMP} 2>/dev/null -s libast.a ${INSTALLROOT}/lib/libast.a || { ${STDMV} ${INSTALLROOT}/lib/libast.a ${INSTALLROOT}/lib/libast.a.old 2>/dev/null || true; ${STDCP} libast.a ${INSTALLROOT}/lib/libast.a  		    		    ;}
 exec - (ranlib ${INSTALLROOT}/lib/libast.a) >/dev/null 2>&1 || true
 done ../../../lib/libast.a generated
 make ../../../man/man3
@@ -4983,269 +5020,270 @@ exec - then	set -x && mkdir -p ${INSTALLROOT}/man/man3
 exec - fi
 done ../../../man/man3 generated
 make ../../../man/man3/LIBAST.3
+prev ../../../man/man3
 make man/LIBAST.3
 done man/LIBAST.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/LIBAST.3 ${INSTALLROOT}/man/man3/LIBAST.3.old 2>/dev/null || true; test '' = 'man/LIBAST.3' || ${STDCMP} 2>/dev/null -s man/LIBAST.3 ${INSTALLROOT}/man/man3/LIBAST.3 || { ${STDCP} man/LIBAST.3 ${INSTALLROOT}/man/man3/LIBAST.3  		    		    ;}
+exec - test '' = 'man/LIBAST.3' || ${STDCMP} 2>/dev/null -s man/LIBAST.3 ${INSTALLROOT}/man/man3/LIBAST.3 || { ${STDMV} ${INSTALLROOT}/man/man3/LIBAST.3 ${INSTALLROOT}/man/man3/LIBAST.3.old 2>/dev/null || true; ${STDCP} man/LIBAST.3 ${INSTALLROOT}/man/man3/LIBAST.3  		    		    ;}
 done ../../../man/man3/LIBAST.3 generated
 make ../../../man/man3/ast.3
 make man/ast.3
 done man/ast.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/ast.3 ${INSTALLROOT}/man/man3/ast.3.old 2>/dev/null || true; test '' = 'man/ast.3' || ${STDCMP} 2>/dev/null -s man/ast.3 ${INSTALLROOT}/man/man3/ast.3 || { ${STDCP} man/ast.3 ${INSTALLROOT}/man/man3/ast.3  		    		    ;}
+exec - test '' = 'man/ast.3' || ${STDCMP} 2>/dev/null -s man/ast.3 ${INSTALLROOT}/man/man3/ast.3 || { ${STDMV} ${INSTALLROOT}/man/man3/ast.3 ${INSTALLROOT}/man/man3/ast.3.old 2>/dev/null || true; ${STDCP} man/ast.3 ${INSTALLROOT}/man/man3/ast.3  		    		    ;}
 done ../../../man/man3/ast.3 generated
 make ../../../man/man3/cdt.3
 make man/cdt.3
 done man/cdt.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/cdt.3 ${INSTALLROOT}/man/man3/cdt.3.old 2>/dev/null || true; test '' = 'man/cdt.3' || ${STDCMP} 2>/dev/null -s man/cdt.3 ${INSTALLROOT}/man/man3/cdt.3 || { ${STDCP} man/cdt.3 ${INSTALLROOT}/man/man3/cdt.3  		    		    ;}
+exec - test '' = 'man/cdt.3' || ${STDCMP} 2>/dev/null -s man/cdt.3 ${INSTALLROOT}/man/man3/cdt.3 || { ${STDMV} ${INSTALLROOT}/man/man3/cdt.3 ${INSTALLROOT}/man/man3/cdt.3.old 2>/dev/null || true; ${STDCP} man/cdt.3 ${INSTALLROOT}/man/man3/cdt.3  		    		    ;}
 done ../../../man/man3/cdt.3 generated
 make ../../../man/man3/chr.3
 make man/chr.3
 done man/chr.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/chr.3 ${INSTALLROOT}/man/man3/chr.3.old 2>/dev/null || true; test '' = 'man/chr.3' || ${STDCMP} 2>/dev/null -s man/chr.3 ${INSTALLROOT}/man/man3/chr.3 || { ${STDCP} man/chr.3 ${INSTALLROOT}/man/man3/chr.3  		    		    ;}
+exec - test '' = 'man/chr.3' || ${STDCMP} 2>/dev/null -s man/chr.3 ${INSTALLROOT}/man/man3/chr.3 || { ${STDMV} ${INSTALLROOT}/man/man3/chr.3 ${INSTALLROOT}/man/man3/chr.3.old 2>/dev/null || true; ${STDCP} man/chr.3 ${INSTALLROOT}/man/man3/chr.3  		    		    ;}
 done ../../../man/man3/chr.3 generated
 make ../../../man/man3/compat.3
 make man/compat.3
 done man/compat.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/compat.3 ${INSTALLROOT}/man/man3/compat.3.old 2>/dev/null || true; test '' = 'man/compat.3' || ${STDCMP} 2>/dev/null -s man/compat.3 ${INSTALLROOT}/man/man3/compat.3 || { ${STDCP} man/compat.3 ${INSTALLROOT}/man/man3/compat.3  		    		    ;}
+exec - test '' = 'man/compat.3' || ${STDCMP} 2>/dev/null -s man/compat.3 ${INSTALLROOT}/man/man3/compat.3 || { ${STDMV} ${INSTALLROOT}/man/man3/compat.3 ${INSTALLROOT}/man/man3/compat.3.old 2>/dev/null || true; ${STDCP} man/compat.3 ${INSTALLROOT}/man/man3/compat.3  		    		    ;}
 done ../../../man/man3/compat.3 generated
 make ../../../man/man3/error.3
 make man/error.3
 done man/error.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/error.3 ${INSTALLROOT}/man/man3/error.3.old 2>/dev/null || true; test '' = 'man/error.3' || ${STDCMP} 2>/dev/null -s man/error.3 ${INSTALLROOT}/man/man3/error.3 || { ${STDCP} man/error.3 ${INSTALLROOT}/man/man3/error.3  		    		    ;}
+exec - test '' = 'man/error.3' || ${STDCMP} 2>/dev/null -s man/error.3 ${INSTALLROOT}/man/man3/error.3 || { ${STDMV} ${INSTALLROOT}/man/man3/error.3 ${INSTALLROOT}/man/man3/error.3.old 2>/dev/null || true; ${STDCP} man/error.3 ${INSTALLROOT}/man/man3/error.3  		    		    ;}
 done ../../../man/man3/error.3 generated
 make ../../../man/man3/find.3
 make man/find.3
 done man/find.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/find.3 ${INSTALLROOT}/man/man3/find.3.old 2>/dev/null || true; test '' = 'man/find.3' || ${STDCMP} 2>/dev/null -s man/find.3 ${INSTALLROOT}/man/man3/find.3 || { ${STDCP} man/find.3 ${INSTALLROOT}/man/man3/find.3  		    		    ;}
+exec - test '' = 'man/find.3' || ${STDCMP} 2>/dev/null -s man/find.3 ${INSTALLROOT}/man/man3/find.3 || { ${STDMV} ${INSTALLROOT}/man/man3/find.3 ${INSTALLROOT}/man/man3/find.3.old 2>/dev/null || true; ${STDCP} man/find.3 ${INSTALLROOT}/man/man3/find.3  		    		    ;}
 done ../../../man/man3/find.3 generated
 make ../../../man/man3/fmt.3
 make man/fmt.3
 done man/fmt.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/fmt.3 ${INSTALLROOT}/man/man3/fmt.3.old 2>/dev/null || true; test '' = 'man/fmt.3' || ${STDCMP} 2>/dev/null -s man/fmt.3 ${INSTALLROOT}/man/man3/fmt.3 || { ${STDCP} man/fmt.3 ${INSTALLROOT}/man/man3/fmt.3  		    		    ;}
+exec - test '' = 'man/fmt.3' || ${STDCMP} 2>/dev/null -s man/fmt.3 ${INSTALLROOT}/man/man3/fmt.3 || { ${STDMV} ${INSTALLROOT}/man/man3/fmt.3 ${INSTALLROOT}/man/man3/fmt.3.old 2>/dev/null || true; ${STDCP} man/fmt.3 ${INSTALLROOT}/man/man3/fmt.3  		    		    ;}
 done ../../../man/man3/fmt.3 generated
 make ../../../man/man3/fmtls.3
 make man/fmtls.3
 done man/fmtls.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/fmtls.3 ${INSTALLROOT}/man/man3/fmtls.3.old 2>/dev/null || true; test '' = 'man/fmtls.3' || ${STDCMP} 2>/dev/null -s man/fmtls.3 ${INSTALLROOT}/man/man3/fmtls.3 || { ${STDCP} man/fmtls.3 ${INSTALLROOT}/man/man3/fmtls.3  		    		    ;}
+exec - test '' = 'man/fmtls.3' || ${STDCMP} 2>/dev/null -s man/fmtls.3 ${INSTALLROOT}/man/man3/fmtls.3 || { ${STDMV} ${INSTALLROOT}/man/man3/fmtls.3 ${INSTALLROOT}/man/man3/fmtls.3.old 2>/dev/null || true; ${STDCP} man/fmtls.3 ${INSTALLROOT}/man/man3/fmtls.3  		    		    ;}
 done ../../../man/man3/fmtls.3 generated
 make ../../../man/man3/fs3d.3
 make man/fs3d.3
 done man/fs3d.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/fs3d.3 ${INSTALLROOT}/man/man3/fs3d.3.old 2>/dev/null || true; test '' = 'man/fs3d.3' || ${STDCMP} 2>/dev/null -s man/fs3d.3 ${INSTALLROOT}/man/man3/fs3d.3 || { ${STDCP} man/fs3d.3 ${INSTALLROOT}/man/man3/fs3d.3  		    		    ;}
+exec - test '' = 'man/fs3d.3' || ${STDCMP} 2>/dev/null -s man/fs3d.3 ${INSTALLROOT}/man/man3/fs3d.3 || { ${STDMV} ${INSTALLROOT}/man/man3/fs3d.3 ${INSTALLROOT}/man/man3/fs3d.3.old 2>/dev/null || true; ${STDCP} man/fs3d.3 ${INSTALLROOT}/man/man3/fs3d.3  		    		    ;}
 done ../../../man/man3/fs3d.3 generated
 make ../../../man/man3/ftwalk.3
 make man/ftwalk.3
 done man/ftwalk.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/ftwalk.3 ${INSTALLROOT}/man/man3/ftwalk.3.old 2>/dev/null || true; test '' = 'man/ftwalk.3' || ${STDCMP} 2>/dev/null -s man/ftwalk.3 ${INSTALLROOT}/man/man3/ftwalk.3 || { ${STDCP} man/ftwalk.3 ${INSTALLROOT}/man/man3/ftwalk.3  		    		    ;}
+exec - test '' = 'man/ftwalk.3' || ${STDCMP} 2>/dev/null -s man/ftwalk.3 ${INSTALLROOT}/man/man3/ftwalk.3 || { ${STDMV} ${INSTALLROOT}/man/man3/ftwalk.3 ${INSTALLROOT}/man/man3/ftwalk.3.old 2>/dev/null || true; ${STDCP} man/ftwalk.3 ${INSTALLROOT}/man/man3/ftwalk.3  		    		    ;}
 done ../../../man/man3/ftwalk.3 generated
 make ../../../man/man3/getcwd.3
 make man/getcwd.3
 done man/getcwd.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/getcwd.3 ${INSTALLROOT}/man/man3/getcwd.3.old 2>/dev/null || true; test '' = 'man/getcwd.3' || ${STDCMP} 2>/dev/null -s man/getcwd.3 ${INSTALLROOT}/man/man3/getcwd.3 || { ${STDCP} man/getcwd.3 ${INSTALLROOT}/man/man3/getcwd.3  		    		    ;}
+exec - test '' = 'man/getcwd.3' || ${STDCMP} 2>/dev/null -s man/getcwd.3 ${INSTALLROOT}/man/man3/getcwd.3 || { ${STDMV} ${INSTALLROOT}/man/man3/getcwd.3 ${INSTALLROOT}/man/man3/getcwd.3.old 2>/dev/null || true; ${STDCP} man/getcwd.3 ${INSTALLROOT}/man/man3/getcwd.3  		    		    ;}
 done ../../../man/man3/getcwd.3 generated
 make ../../../man/man3/hash.3
 make man/hash.3
 done man/hash.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/hash.3 ${INSTALLROOT}/man/man3/hash.3.old 2>/dev/null || true; test '' = 'man/hash.3' || ${STDCMP} 2>/dev/null -s man/hash.3 ${INSTALLROOT}/man/man3/hash.3 || { ${STDCP} man/hash.3 ${INSTALLROOT}/man/man3/hash.3  		    		    ;}
+exec - test '' = 'man/hash.3' || ${STDCMP} 2>/dev/null -s man/hash.3 ${INSTALLROOT}/man/man3/hash.3 || { ${STDMV} ${INSTALLROOT}/man/man3/hash.3 ${INSTALLROOT}/man/man3/hash.3.old 2>/dev/null || true; ${STDCP} man/hash.3 ${INSTALLROOT}/man/man3/hash.3  		    		    ;}
 done ../../../man/man3/hash.3 generated
 make ../../../man/man3/iblocks.3
 make man/iblocks.3
 done man/iblocks.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/iblocks.3 ${INSTALLROOT}/man/man3/iblocks.3.old 2>/dev/null || true; test '' = 'man/iblocks.3' || ${STDCMP} 2>/dev/null -s man/iblocks.3 ${INSTALLROOT}/man/man3/iblocks.3 || { ${STDCP} man/iblocks.3 ${INSTALLROOT}/man/man3/iblocks.3  		    		    ;}
+exec - test '' = 'man/iblocks.3' || ${STDCMP} 2>/dev/null -s man/iblocks.3 ${INSTALLROOT}/man/man3/iblocks.3 || { ${STDMV} ${INSTALLROOT}/man/man3/iblocks.3 ${INSTALLROOT}/man/man3/iblocks.3.old 2>/dev/null || true; ${STDCP} man/iblocks.3 ${INSTALLROOT}/man/man3/iblocks.3  		    		    ;}
 done ../../../man/man3/iblocks.3 generated
 make ../../../man/man3/int.3
 make man/int.3
 done man/int.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/int.3 ${INSTALLROOT}/man/man3/int.3.old 2>/dev/null || true; test '' = 'man/int.3' || ${STDCMP} 2>/dev/null -s man/int.3 ${INSTALLROOT}/man/man3/int.3 || { ${STDCP} man/int.3 ${INSTALLROOT}/man/man3/int.3  		    		    ;}
+exec - test '' = 'man/int.3' || ${STDCMP} 2>/dev/null -s man/int.3 ${INSTALLROOT}/man/man3/int.3 || { ${STDMV} ${INSTALLROOT}/man/man3/int.3 ${INSTALLROOT}/man/man3/int.3.old 2>/dev/null || true; ${STDCP} man/int.3 ${INSTALLROOT}/man/man3/int.3  		    		    ;}
 done ../../../man/man3/int.3 generated
 make ../../../man/man3/magic.3
 make man/magic.3
 done man/magic.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/magic.3 ${INSTALLROOT}/man/man3/magic.3.old 2>/dev/null || true; test '' = 'man/magic.3' || ${STDCMP} 2>/dev/null -s man/magic.3 ${INSTALLROOT}/man/man3/magic.3 || { ${STDCP} man/magic.3 ${INSTALLROOT}/man/man3/magic.3  		    		    ;}
+exec - test '' = 'man/magic.3' || ${STDCMP} 2>/dev/null -s man/magic.3 ${INSTALLROOT}/man/man3/magic.3 || { ${STDMV} ${INSTALLROOT}/man/man3/magic.3 ${INSTALLROOT}/man/man3/magic.3.old 2>/dev/null || true; ${STDCP} man/magic.3 ${INSTALLROOT}/man/man3/magic.3  		    		    ;}
 done ../../../man/man3/magic.3 generated
 make ../../../man/man3/mem.3
 make man/mem.3
 done man/mem.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/mem.3 ${INSTALLROOT}/man/man3/mem.3.old 2>/dev/null || true; test '' = 'man/mem.3' || ${STDCMP} 2>/dev/null -s man/mem.3 ${INSTALLROOT}/man/man3/mem.3 || { ${STDCP} man/mem.3 ${INSTALLROOT}/man/man3/mem.3  		    		    ;}
+exec - test '' = 'man/mem.3' || ${STDCMP} 2>/dev/null -s man/mem.3 ${INSTALLROOT}/man/man3/mem.3 || { ${STDMV} ${INSTALLROOT}/man/man3/mem.3 ${INSTALLROOT}/man/man3/mem.3.old 2>/dev/null || true; ${STDCP} man/mem.3 ${INSTALLROOT}/man/man3/mem.3  		    		    ;}
 done ../../../man/man3/mem.3 generated
 make ../../../man/man3/mime.3
 make man/mime.3
 done man/mime.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/mime.3 ${INSTALLROOT}/man/man3/mime.3.old 2>/dev/null || true; test '' = 'man/mime.3' || ${STDCMP} 2>/dev/null -s man/mime.3 ${INSTALLROOT}/man/man3/mime.3 || { ${STDCP} man/mime.3 ${INSTALLROOT}/man/man3/mime.3  		    		    ;}
+exec - test '' = 'man/mime.3' || ${STDCMP} 2>/dev/null -s man/mime.3 ${INSTALLROOT}/man/man3/mime.3 || { ${STDMV} ${INSTALLROOT}/man/man3/mime.3 ${INSTALLROOT}/man/man3/mime.3.old 2>/dev/null || true; ${STDCP} man/mime.3 ${INSTALLROOT}/man/man3/mime.3  		    		    ;}
 done ../../../man/man3/mime.3 generated
 make ../../../man/man3/modecanon.3
 make man/modecanon.3
 done man/modecanon.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/modecanon.3 ${INSTALLROOT}/man/man3/modecanon.3.old 2>/dev/null || true; test '' = 'man/modecanon.3' || ${STDCMP} 2>/dev/null -s man/modecanon.3 ${INSTALLROOT}/man/man3/modecanon.3 || { ${STDCP} man/modecanon.3 ${INSTALLROOT}/man/man3/modecanon.3  		    		    ;}
+exec - test '' = 'man/modecanon.3' || ${STDCMP} 2>/dev/null -s man/modecanon.3 ${INSTALLROOT}/man/man3/modecanon.3 || { ${STDMV} ${INSTALLROOT}/man/man3/modecanon.3 ${INSTALLROOT}/man/man3/modecanon.3.old 2>/dev/null || true; ${STDCP} man/modecanon.3 ${INSTALLROOT}/man/man3/modecanon.3  		    		    ;}
 done ../../../man/man3/modecanon.3 generated
 make ../../../man/man3/optget.3
 make man/optget.3
 done man/optget.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/optget.3 ${INSTALLROOT}/man/man3/optget.3.old 2>/dev/null || true; test '' = 'man/optget.3' || ${STDCMP} 2>/dev/null -s man/optget.3 ${INSTALLROOT}/man/man3/optget.3 || { ${STDCP} man/optget.3 ${INSTALLROOT}/man/man3/optget.3  		    		    ;}
+exec - test '' = 'man/optget.3' || ${STDCMP} 2>/dev/null -s man/optget.3 ${INSTALLROOT}/man/man3/optget.3 || { ${STDMV} ${INSTALLROOT}/man/man3/optget.3 ${INSTALLROOT}/man/man3/optget.3.old 2>/dev/null || true; ${STDCP} man/optget.3 ${INSTALLROOT}/man/man3/optget.3  		    		    ;}
 done ../../../man/man3/optget.3 generated
 make ../../../man/man3/path.3
 make man/path.3
 done man/path.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/path.3 ${INSTALLROOT}/man/man3/path.3.old 2>/dev/null || true; test '' = 'man/path.3' || ${STDCMP} 2>/dev/null -s man/path.3 ${INSTALLROOT}/man/man3/path.3 || { ${STDCP} man/path.3 ${INSTALLROOT}/man/man3/path.3  		    		    ;}
+exec - test '' = 'man/path.3' || ${STDCMP} 2>/dev/null -s man/path.3 ${INSTALLROOT}/man/man3/path.3 || { ${STDMV} ${INSTALLROOT}/man/man3/path.3 ${INSTALLROOT}/man/man3/path.3.old 2>/dev/null || true; ${STDCP} man/path.3 ${INSTALLROOT}/man/man3/path.3  		    		    ;}
 done ../../../man/man3/path.3 generated
 make ../../../man/man3/preroot.3
 make man/preroot.3
 done man/preroot.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/preroot.3 ${INSTALLROOT}/man/man3/preroot.3.old 2>/dev/null || true; test '' = 'man/preroot.3' || ${STDCMP} 2>/dev/null -s man/preroot.3 ${INSTALLROOT}/man/man3/preroot.3 || { ${STDCP} man/preroot.3 ${INSTALLROOT}/man/man3/preroot.3  		    		    ;}
+exec - test '' = 'man/preroot.3' || ${STDCMP} 2>/dev/null -s man/preroot.3 ${INSTALLROOT}/man/man3/preroot.3 || { ${STDMV} ${INSTALLROOT}/man/man3/preroot.3 ${INSTALLROOT}/man/man3/preroot.3.old 2>/dev/null || true; ${STDCP} man/preroot.3 ${INSTALLROOT}/man/man3/preroot.3  		    		    ;}
 done ../../../man/man3/preroot.3 generated
 make ../../../man/man3/proc.3
 make man/proc.3
 done man/proc.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/proc.3 ${INSTALLROOT}/man/man3/proc.3.old 2>/dev/null || true; test '' = 'man/proc.3' || ${STDCMP} 2>/dev/null -s man/proc.3 ${INSTALLROOT}/man/man3/proc.3 || { ${STDCP} man/proc.3 ${INSTALLROOT}/man/man3/proc.3  		    		    ;}
+exec - test '' = 'man/proc.3' || ${STDCMP} 2>/dev/null -s man/proc.3 ${INSTALLROOT}/man/man3/proc.3 || { ${STDMV} ${INSTALLROOT}/man/man3/proc.3 ${INSTALLROOT}/man/man3/proc.3.old 2>/dev/null || true; ${STDCP} man/proc.3 ${INSTALLROOT}/man/man3/proc.3  		    		    ;}
 done ../../../man/man3/proc.3 generated
 make ../../../man/man3/re.3
 make man/re.3
 done man/re.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/re.3 ${INSTALLROOT}/man/man3/re.3.old 2>/dev/null || true; test '' = 'man/re.3' || ${STDCMP} 2>/dev/null -s man/re.3 ${INSTALLROOT}/man/man3/re.3 || { ${STDCP} man/re.3 ${INSTALLROOT}/man/man3/re.3  		    		    ;}
+exec - test '' = 'man/re.3' || ${STDCMP} 2>/dev/null -s man/re.3 ${INSTALLROOT}/man/man3/re.3 || { ${STDMV} ${INSTALLROOT}/man/man3/re.3 ${INSTALLROOT}/man/man3/re.3.old 2>/dev/null || true; ${STDCP} man/re.3 ${INSTALLROOT}/man/man3/re.3  		    		    ;}
 done ../../../man/man3/re.3 generated
 make ../../../man/man3/setenviron.3
 make man/setenviron.3
 done man/setenviron.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/setenviron.3 ${INSTALLROOT}/man/man3/setenviron.3.old 2>/dev/null || true; test '' = 'man/setenviron.3' || ${STDCMP} 2>/dev/null -s man/setenviron.3 ${INSTALLROOT}/man/man3/setenviron.3 || { ${STDCP} man/setenviron.3 ${INSTALLROOT}/man/man3/setenviron.3  		    		    ;}
+exec - test '' = 'man/setenviron.3' || ${STDCMP} 2>/dev/null -s man/setenviron.3 ${INSTALLROOT}/man/man3/setenviron.3 || { ${STDMV} ${INSTALLROOT}/man/man3/setenviron.3 ${INSTALLROOT}/man/man3/setenviron.3.old 2>/dev/null || true; ${STDCP} man/setenviron.3 ${INSTALLROOT}/man/man3/setenviron.3  		    		    ;}
 done ../../../man/man3/setenviron.3 generated
 make ../../../man/man3/sfdisc.3
 make man/sfdisc.3
 done man/sfdisc.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/sfdisc.3 ${INSTALLROOT}/man/man3/sfdisc.3.old 2>/dev/null || true; test '' = 'man/sfdisc.3' || ${STDCMP} 2>/dev/null -s man/sfdisc.3 ${INSTALLROOT}/man/man3/sfdisc.3 || { ${STDCP} man/sfdisc.3 ${INSTALLROOT}/man/man3/sfdisc.3  		    		    ;}
+exec - test '' = 'man/sfdisc.3' || ${STDCMP} 2>/dev/null -s man/sfdisc.3 ${INSTALLROOT}/man/man3/sfdisc.3 || { ${STDMV} ${INSTALLROOT}/man/man3/sfdisc.3 ${INSTALLROOT}/man/man3/sfdisc.3.old 2>/dev/null || true; ${STDCP} man/sfdisc.3 ${INSTALLROOT}/man/man3/sfdisc.3  		    		    ;}
 done ../../../man/man3/sfdisc.3 generated
 make ../../../man/man3/sfio.3
 make man/sfio.3
 done man/sfio.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/sfio.3 ${INSTALLROOT}/man/man3/sfio.3.old 2>/dev/null || true; test '' = 'man/sfio.3' || ${STDCMP} 2>/dev/null -s man/sfio.3 ${INSTALLROOT}/man/man3/sfio.3 || { ${STDCP} man/sfio.3 ${INSTALLROOT}/man/man3/sfio.3  		    		    ;}
+exec - test '' = 'man/sfio.3' || ${STDCMP} 2>/dev/null -s man/sfio.3 ${INSTALLROOT}/man/man3/sfio.3 || { ${STDMV} ${INSTALLROOT}/man/man3/sfio.3 ${INSTALLROOT}/man/man3/sfio.3.old 2>/dev/null || true; ${STDCP} man/sfio.3 ${INSTALLROOT}/man/man3/sfio.3  		    		    ;}
 done ../../../man/man3/sfio.3 generated
 make ../../../man/man3/sig.3
 make man/sig.3
 done man/sig.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/sig.3 ${INSTALLROOT}/man/man3/sig.3.old 2>/dev/null || true; test '' = 'man/sig.3' || ${STDCMP} 2>/dev/null -s man/sig.3 ${INSTALLROOT}/man/man3/sig.3 || { ${STDCP} man/sig.3 ${INSTALLROOT}/man/man3/sig.3  		    		    ;}
+exec - test '' = 'man/sig.3' || ${STDCMP} 2>/dev/null -s man/sig.3 ${INSTALLROOT}/man/man3/sig.3 || { ${STDMV} ${INSTALLROOT}/man/man3/sig.3 ${INSTALLROOT}/man/man3/sig.3.old 2>/dev/null || true; ${STDCP} man/sig.3 ${INSTALLROOT}/man/man3/sig.3  		    		    ;}
 done ../../../man/man3/sig.3 generated
 make ../../../man/man3/spawnveg.3
 make man/spawnveg.3
 done man/spawnveg.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/spawnveg.3 ${INSTALLROOT}/man/man3/spawnveg.3.old 2>/dev/null || true; test '' = 'man/spawnveg.3' || ${STDCMP} 2>/dev/null -s man/spawnveg.3 ${INSTALLROOT}/man/man3/spawnveg.3 || { ${STDCP} man/spawnveg.3 ${INSTALLROOT}/man/man3/spawnveg.3  		    		    ;}
+exec - test '' = 'man/spawnveg.3' || ${STDCMP} 2>/dev/null -s man/spawnveg.3 ${INSTALLROOT}/man/man3/spawnveg.3 || { ${STDMV} ${INSTALLROOT}/man/man3/spawnveg.3 ${INSTALLROOT}/man/man3/spawnveg.3.old 2>/dev/null || true; ${STDCP} man/spawnveg.3 ${INSTALLROOT}/man/man3/spawnveg.3  		    		    ;}
 done ../../../man/man3/spawnveg.3 generated
 make ../../../man/man3/stak.3
 make man/stak.3
 done man/stak.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/stak.3 ${INSTALLROOT}/man/man3/stak.3.old 2>/dev/null || true; test '' = 'man/stak.3' || ${STDCMP} 2>/dev/null -s man/stak.3 ${INSTALLROOT}/man/man3/stak.3 || { ${STDCP} man/stak.3 ${INSTALLROOT}/man/man3/stak.3  		    		    ;}
+exec - test '' = 'man/stak.3' || ${STDCMP} 2>/dev/null -s man/stak.3 ${INSTALLROOT}/man/man3/stak.3 || { ${STDMV} ${INSTALLROOT}/man/man3/stak.3 ${INSTALLROOT}/man/man3/stak.3.old 2>/dev/null || true; ${STDCP} man/stak.3 ${INSTALLROOT}/man/man3/stak.3  		    		    ;}
 done ../../../man/man3/stak.3 generated
 make ../../../man/man3/stk.3
 make man/stk.3
 done man/stk.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/stk.3 ${INSTALLROOT}/man/man3/stk.3.old 2>/dev/null || true; test '' = 'man/stk.3' || ${STDCMP} 2>/dev/null -s man/stk.3 ${INSTALLROOT}/man/man3/stk.3 || { ${STDCP} man/stk.3 ${INSTALLROOT}/man/man3/stk.3  		    		    ;}
+exec - test '' = 'man/stk.3' || ${STDCMP} 2>/dev/null -s man/stk.3 ${INSTALLROOT}/man/man3/stk.3 || { ${STDMV} ${INSTALLROOT}/man/man3/stk.3 ${INSTALLROOT}/man/man3/stk.3.old 2>/dev/null || true; ${STDCP} man/stk.3 ${INSTALLROOT}/man/man3/stk.3  		    		    ;}
 done ../../../man/man3/stk.3 generated
 make ../../../man/man3/strcopy.3
 make man/strcopy.3
 done man/strcopy.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/strcopy.3 ${INSTALLROOT}/man/man3/strcopy.3.old 2>/dev/null || true; test '' = 'man/strcopy.3' || ${STDCMP} 2>/dev/null -s man/strcopy.3 ${INSTALLROOT}/man/man3/strcopy.3 || { ${STDCP} man/strcopy.3 ${INSTALLROOT}/man/man3/strcopy.3  		    		    ;}
+exec - test '' = 'man/strcopy.3' || ${STDCMP} 2>/dev/null -s man/strcopy.3 ${INSTALLROOT}/man/man3/strcopy.3 || { ${STDMV} ${INSTALLROOT}/man/man3/strcopy.3 ${INSTALLROOT}/man/man3/strcopy.3.old 2>/dev/null || true; ${STDCP} man/strcopy.3 ${INSTALLROOT}/man/man3/strcopy.3  		    		    ;}
 done ../../../man/man3/strcopy.3 generated
 make ../../../man/man3/strdup.3
 make man/strdup.3
 done man/strdup.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/strdup.3 ${INSTALLROOT}/man/man3/strdup.3.old 2>/dev/null || true; test '' = 'man/strdup.3' || ${STDCMP} 2>/dev/null -s man/strdup.3 ${INSTALLROOT}/man/man3/strdup.3 || { ${STDCP} man/strdup.3 ${INSTALLROOT}/man/man3/strdup.3  		    		    ;}
+exec - test '' = 'man/strdup.3' || ${STDCMP} 2>/dev/null -s man/strdup.3 ${INSTALLROOT}/man/man3/strdup.3 || { ${STDMV} ${INSTALLROOT}/man/man3/strdup.3 ${INSTALLROOT}/man/man3/strdup.3.old 2>/dev/null || true; ${STDCP} man/strdup.3 ${INSTALLROOT}/man/man3/strdup.3  		    		    ;}
 done ../../../man/man3/strdup.3 generated
 make ../../../man/man3/strelapsed.3
 make man/strelapsed.3
 done man/strelapsed.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/strelapsed.3 ${INSTALLROOT}/man/man3/strelapsed.3.old 2>/dev/null || true; test '' = 'man/strelapsed.3' || ${STDCMP} 2>/dev/null -s man/strelapsed.3 ${INSTALLROOT}/man/man3/strelapsed.3 || { ${STDCP} man/strelapsed.3 ${INSTALLROOT}/man/man3/strelapsed.3  		    		    ;}
+exec - test '' = 'man/strelapsed.3' || ${STDCMP} 2>/dev/null -s man/strelapsed.3 ${INSTALLROOT}/man/man3/strelapsed.3 || { ${STDMV} ${INSTALLROOT}/man/man3/strelapsed.3 ${INSTALLROOT}/man/man3/strelapsed.3.old 2>/dev/null || true; ${STDCP} man/strelapsed.3 ${INSTALLROOT}/man/man3/strelapsed.3  		    		    ;}
 done ../../../man/man3/strelapsed.3 generated
 make ../../../man/man3/strerror.3
 make man/strerror.3
 done man/strerror.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/strerror.3 ${INSTALLROOT}/man/man3/strerror.3.old 2>/dev/null || true; test '' = 'man/strerror.3' || ${STDCMP} 2>/dev/null -s man/strerror.3 ${INSTALLROOT}/man/man3/strerror.3 || { ${STDCP} man/strerror.3 ${INSTALLROOT}/man/man3/strerror.3  		    		    ;}
+exec - test '' = 'man/strerror.3' || ${STDCMP} 2>/dev/null -s man/strerror.3 ${INSTALLROOT}/man/man3/strerror.3 || { ${STDMV} ${INSTALLROOT}/man/man3/strerror.3 ${INSTALLROOT}/man/man3/strerror.3.old 2>/dev/null || true; ${STDCP} man/strerror.3 ${INSTALLROOT}/man/man3/strerror.3  		    		    ;}
 done ../../../man/man3/strerror.3 generated
 make ../../../man/man3/stresc.3
 make man/stresc.3
 done man/stresc.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/stresc.3 ${INSTALLROOT}/man/man3/stresc.3.old 2>/dev/null || true; test '' = 'man/stresc.3' || ${STDCMP} 2>/dev/null -s man/stresc.3 ${INSTALLROOT}/man/man3/stresc.3 || { ${STDCP} man/stresc.3 ${INSTALLROOT}/man/man3/stresc.3  		    		    ;}
+exec - test '' = 'man/stresc.3' || ${STDCMP} 2>/dev/null -s man/stresc.3 ${INSTALLROOT}/man/man3/stresc.3 || { ${STDMV} ${INSTALLROOT}/man/man3/stresc.3 ${INSTALLROOT}/man/man3/stresc.3.old 2>/dev/null || true; ${STDCP} man/stresc.3 ${INSTALLROOT}/man/man3/stresc.3  		    		    ;}
 done ../../../man/man3/stresc.3 generated
 make ../../../man/man3/streval.3
 make man/streval.3
 done man/streval.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/streval.3 ${INSTALLROOT}/man/man3/streval.3.old 2>/dev/null || true; test '' = 'man/streval.3' || ${STDCMP} 2>/dev/null -s man/streval.3 ${INSTALLROOT}/man/man3/streval.3 || { ${STDCP} man/streval.3 ${INSTALLROOT}/man/man3/streval.3  		    		    ;}
+exec - test '' = 'man/streval.3' || ${STDCMP} 2>/dev/null -s man/streval.3 ${INSTALLROOT}/man/man3/streval.3 || { ${STDMV} ${INSTALLROOT}/man/man3/streval.3 ${INSTALLROOT}/man/man3/streval.3.old 2>/dev/null || true; ${STDCP} man/streval.3 ${INSTALLROOT}/man/man3/streval.3  		    		    ;}
 done ../../../man/man3/streval.3 generated
 make ../../../man/man3/strgid.3
 make man/strgid.3
 done man/strgid.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/strgid.3 ${INSTALLROOT}/man/man3/strgid.3.old 2>/dev/null || true; test '' = 'man/strgid.3' || ${STDCMP} 2>/dev/null -s man/strgid.3 ${INSTALLROOT}/man/man3/strgid.3 || { ${STDCP} man/strgid.3 ${INSTALLROOT}/man/man3/strgid.3  		    		    ;}
+exec - test '' = 'man/strgid.3' || ${STDCMP} 2>/dev/null -s man/strgid.3 ${INSTALLROOT}/man/man3/strgid.3 || { ${STDMV} ${INSTALLROOT}/man/man3/strgid.3 ${INSTALLROOT}/man/man3/strgid.3.old 2>/dev/null || true; ${STDCP} man/strgid.3 ${INSTALLROOT}/man/man3/strgid.3  		    		    ;}
 done ../../../man/man3/strgid.3 generated
 make ../../../man/man3/strmatch.3
 make man/strmatch.3
 done man/strmatch.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/strmatch.3 ${INSTALLROOT}/man/man3/strmatch.3.old 2>/dev/null || true; test '' = 'man/strmatch.3' || ${STDCMP} 2>/dev/null -s man/strmatch.3 ${INSTALLROOT}/man/man3/strmatch.3 || { ${STDCP} man/strmatch.3 ${INSTALLROOT}/man/man3/strmatch.3  		    		    ;}
+exec - test '' = 'man/strmatch.3' || ${STDCMP} 2>/dev/null -s man/strmatch.3 ${INSTALLROOT}/man/man3/strmatch.3 || { ${STDMV} ${INSTALLROOT}/man/man3/strmatch.3 ${INSTALLROOT}/man/man3/strmatch.3.old 2>/dev/null || true; ${STDCP} man/strmatch.3 ${INSTALLROOT}/man/man3/strmatch.3  		    		    ;}
 done ../../../man/man3/strmatch.3 generated
 make ../../../man/man3/stropt.3
 make man/stropt.3
 done man/stropt.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/stropt.3 ${INSTALLROOT}/man/man3/stropt.3.old 2>/dev/null || true; test '' = 'man/stropt.3' || ${STDCMP} 2>/dev/null -s man/stropt.3 ${INSTALLROOT}/man/man3/stropt.3 || { ${STDCP} man/stropt.3 ${INSTALLROOT}/man/man3/stropt.3  		    		    ;}
+exec - test '' = 'man/stropt.3' || ${STDCMP} 2>/dev/null -s man/stropt.3 ${INSTALLROOT}/man/man3/stropt.3 || { ${STDMV} ${INSTALLROOT}/man/man3/stropt.3 ${INSTALLROOT}/man/man3/stropt.3.old 2>/dev/null || true; ${STDCP} man/stropt.3 ${INSTALLROOT}/man/man3/stropt.3  		    		    ;}
 done ../../../man/man3/stropt.3 generated
 make ../../../man/man3/strperm.3
 make man/strperm.3
 done man/strperm.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/strperm.3 ${INSTALLROOT}/man/man3/strperm.3.old 2>/dev/null || true; test '' = 'man/strperm.3' || ${STDCMP} 2>/dev/null -s man/strperm.3 ${INSTALLROOT}/man/man3/strperm.3 || { ${STDCP} man/strperm.3 ${INSTALLROOT}/man/man3/strperm.3  		    		    ;}
+exec - test '' = 'man/strperm.3' || ${STDCMP} 2>/dev/null -s man/strperm.3 ${INSTALLROOT}/man/man3/strperm.3 || { ${STDMV} ${INSTALLROOT}/man/man3/strperm.3 ${INSTALLROOT}/man/man3/strperm.3.old 2>/dev/null || true; ${STDCP} man/strperm.3 ${INSTALLROOT}/man/man3/strperm.3  		    		    ;}
 done ../../../man/man3/strperm.3 generated
 make ../../../man/man3/strsignal.3
 make man/strsignal.3
 done man/strsignal.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/strsignal.3 ${INSTALLROOT}/man/man3/strsignal.3.old 2>/dev/null || true; test '' = 'man/strsignal.3' || ${STDCMP} 2>/dev/null -s man/strsignal.3 ${INSTALLROOT}/man/man3/strsignal.3 || { ${STDCP} man/strsignal.3 ${INSTALLROOT}/man/man3/strsignal.3  		    		    ;}
+exec - test '' = 'man/strsignal.3' || ${STDCMP} 2>/dev/null -s man/strsignal.3 ${INSTALLROOT}/man/man3/strsignal.3 || { ${STDMV} ${INSTALLROOT}/man/man3/strsignal.3 ${INSTALLROOT}/man/man3/strsignal.3.old 2>/dev/null || true; ${STDCP} man/strsignal.3 ${INSTALLROOT}/man/man3/strsignal.3  		    		    ;}
 done ../../../man/man3/strsignal.3 generated
 make ../../../man/man3/strsort.3
 make man/strsort.3
 done man/strsort.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/strsort.3 ${INSTALLROOT}/man/man3/strsort.3.old 2>/dev/null || true; test '' = 'man/strsort.3' || ${STDCMP} 2>/dev/null -s man/strsort.3 ${INSTALLROOT}/man/man3/strsort.3 || { ${STDCP} man/strsort.3 ${INSTALLROOT}/man/man3/strsort.3  		    		    ;}
+exec - test '' = 'man/strsort.3' || ${STDCMP} 2>/dev/null -s man/strsort.3 ${INSTALLROOT}/man/man3/strsort.3 || { ${STDMV} ${INSTALLROOT}/man/man3/strsort.3 ${INSTALLROOT}/man/man3/strsort.3.old 2>/dev/null || true; ${STDCP} man/strsort.3 ${INSTALLROOT}/man/man3/strsort.3  		    		    ;}
 done ../../../man/man3/strsort.3 generated
 make ../../../man/man3/strtape.3
 make man/strtape.3
 done man/strtape.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/strtape.3 ${INSTALLROOT}/man/man3/strtape.3.old 2>/dev/null || true; test '' = 'man/strtape.3' || ${STDCMP} 2>/dev/null -s man/strtape.3 ${INSTALLROOT}/man/man3/strtape.3 || { ${STDCP} man/strtape.3 ${INSTALLROOT}/man/man3/strtape.3  		    		    ;}
+exec - test '' = 'man/strtape.3' || ${STDCMP} 2>/dev/null -s man/strtape.3 ${INSTALLROOT}/man/man3/strtape.3 || { ${STDMV} ${INSTALLROOT}/man/man3/strtape.3 ${INSTALLROOT}/man/man3/strtape.3.old 2>/dev/null || true; ${STDCP} man/strtape.3 ${INSTALLROOT}/man/man3/strtape.3  		    		    ;}
 done ../../../man/man3/strtape.3 generated
 make ../../../man/man3/strton.3
 make man/strton.3
 done man/strton.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/strton.3 ${INSTALLROOT}/man/man3/strton.3.old 2>/dev/null || true; test '' = 'man/strton.3' || ${STDCMP} 2>/dev/null -s man/strton.3 ${INSTALLROOT}/man/man3/strton.3 || { ${STDCP} man/strton.3 ${INSTALLROOT}/man/man3/strton.3  		    		    ;}
+exec - test '' = 'man/strton.3' || ${STDCMP} 2>/dev/null -s man/strton.3 ${INSTALLROOT}/man/man3/strton.3 || { ${STDMV} ${INSTALLROOT}/man/man3/strton.3 ${INSTALLROOT}/man/man3/strton.3.old 2>/dev/null || true; ${STDCP} man/strton.3 ${INSTALLROOT}/man/man3/strton.3  		    		    ;}
 done ../../../man/man3/strton.3 generated
 make ../../../man/man3/struid.3
 make man/struid.3
 done man/struid.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/struid.3 ${INSTALLROOT}/man/man3/struid.3.old 2>/dev/null || true; test '' = 'man/struid.3' || ${STDCMP} 2>/dev/null -s man/struid.3 ${INSTALLROOT}/man/man3/struid.3 || { ${STDCP} man/struid.3 ${INSTALLROOT}/man/man3/struid.3  		    		    ;}
+exec - test '' = 'man/struid.3' || ${STDCMP} 2>/dev/null -s man/struid.3 ${INSTALLROOT}/man/man3/struid.3 || { ${STDMV} ${INSTALLROOT}/man/man3/struid.3 ${INSTALLROOT}/man/man3/struid.3.old 2>/dev/null || true; ${STDCP} man/struid.3 ${INSTALLROOT}/man/man3/struid.3  		    		    ;}
 done ../../../man/man3/struid.3 generated
 make ../../../man/man3/swap.3
 make man/swap.3
 done man/swap.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/swap.3 ${INSTALLROOT}/man/man3/swap.3.old 2>/dev/null || true; test '' = 'man/swap.3' || ${STDCMP} 2>/dev/null -s man/swap.3 ${INSTALLROOT}/man/man3/swap.3 || { ${STDCP} man/swap.3 ${INSTALLROOT}/man/man3/swap.3  		    		    ;}
+exec - test '' = 'man/swap.3' || ${STDCMP} 2>/dev/null -s man/swap.3 ${INSTALLROOT}/man/man3/swap.3 || { ${STDMV} ${INSTALLROOT}/man/man3/swap.3 ${INSTALLROOT}/man/man3/swap.3.old 2>/dev/null || true; ${STDCP} man/swap.3 ${INSTALLROOT}/man/man3/swap.3  		    		    ;}
 done ../../../man/man3/swap.3 generated
 make ../../../man/man3/tab.3
 make man/tab.3
 done man/tab.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/tab.3 ${INSTALLROOT}/man/man3/tab.3.old 2>/dev/null || true; test '' = 'man/tab.3' || ${STDCMP} 2>/dev/null -s man/tab.3 ${INSTALLROOT}/man/man3/tab.3 || { ${STDCP} man/tab.3 ${INSTALLROOT}/man/man3/tab.3  		    		    ;}
+exec - test '' = 'man/tab.3' || ${STDCMP} 2>/dev/null -s man/tab.3 ${INSTALLROOT}/man/man3/tab.3 || { ${STDMV} ${INSTALLROOT}/man/man3/tab.3 ${INSTALLROOT}/man/man3/tab.3.old 2>/dev/null || true; ${STDCP} man/tab.3 ${INSTALLROOT}/man/man3/tab.3  		    		    ;}
 done ../../../man/man3/tab.3 generated
 make ../../../man/man3/tm.3
 make man/tm.3
 done man/tm.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/tm.3 ${INSTALLROOT}/man/man3/tm.3.old 2>/dev/null || true; test '' = 'man/tm.3' || ${STDCMP} 2>/dev/null -s man/tm.3 ${INSTALLROOT}/man/man3/tm.3 || { ${STDCP} man/tm.3 ${INSTALLROOT}/man/man3/tm.3  		    		    ;}
+exec - test '' = 'man/tm.3' || ${STDCMP} 2>/dev/null -s man/tm.3 ${INSTALLROOT}/man/man3/tm.3 || { ${STDMV} ${INSTALLROOT}/man/man3/tm.3 ${INSTALLROOT}/man/man3/tm.3.old 2>/dev/null || true; ${STDCP} man/tm.3 ${INSTALLROOT}/man/man3/tm.3  		    		    ;}
 done ../../../man/man3/tm.3 generated
 make ../../../man/man3/tok.3
 make man/tok.3
 done man/tok.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/tok.3 ${INSTALLROOT}/man/man3/tok.3.old 2>/dev/null || true; test '' = 'man/tok.3' || ${STDCMP} 2>/dev/null -s man/tok.3 ${INSTALLROOT}/man/man3/tok.3 || { ${STDCP} man/tok.3 ${INSTALLROOT}/man/man3/tok.3  		    		    ;}
+exec - test '' = 'man/tok.3' || ${STDCMP} 2>/dev/null -s man/tok.3 ${INSTALLROOT}/man/man3/tok.3 || { ${STDMV} ${INSTALLROOT}/man/man3/tok.3 ${INSTALLROOT}/man/man3/tok.3.old 2>/dev/null || true; ${STDCP} man/tok.3 ${INSTALLROOT}/man/man3/tok.3  		    		    ;}
 done ../../../man/man3/tok.3 generated
 make ../../../man/man3/touch.3
 make man/touch.3
 done man/touch.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/touch.3 ${INSTALLROOT}/man/man3/touch.3.old 2>/dev/null || true; test '' = 'man/touch.3' || ${STDCMP} 2>/dev/null -s man/touch.3 ${INSTALLROOT}/man/man3/touch.3 || { ${STDCP} man/touch.3 ${INSTALLROOT}/man/man3/touch.3  		    		    ;}
+exec - test '' = 'man/touch.3' || ${STDCMP} 2>/dev/null -s man/touch.3 ${INSTALLROOT}/man/man3/touch.3 || { ${STDMV} ${INSTALLROOT}/man/man3/touch.3 ${INSTALLROOT}/man/man3/touch.3.old 2>/dev/null || true; ${STDCP} man/touch.3 ${INSTALLROOT}/man/man3/touch.3  		    		    ;}
 done ../../../man/man3/touch.3 generated
 make ../../../man/man3/vecargs.3
 make man/vecargs.3
 done man/vecargs.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/vecargs.3 ${INSTALLROOT}/man/man3/vecargs.3.old 2>/dev/null || true; test '' = 'man/vecargs.3' || ${STDCMP} 2>/dev/null -s man/vecargs.3 ${INSTALLROOT}/man/man3/vecargs.3 || { ${STDCP} man/vecargs.3 ${INSTALLROOT}/man/man3/vecargs.3  		    		    ;}
+exec - test '' = 'man/vecargs.3' || ${STDCMP} 2>/dev/null -s man/vecargs.3 ${INSTALLROOT}/man/man3/vecargs.3 || { ${STDMV} ${INSTALLROOT}/man/man3/vecargs.3 ${INSTALLROOT}/man/man3/vecargs.3.old 2>/dev/null || true; ${STDCP} man/vecargs.3 ${INSTALLROOT}/man/man3/vecargs.3  		    		    ;}
 done ../../../man/man3/vecargs.3 generated
 make ../../../man/man3/vmalloc.3
 make man/vmalloc.3
 done man/vmalloc.3
-exec - ${STDMV} ${INSTALLROOT}/man/man3/vmalloc.3 ${INSTALLROOT}/man/man3/vmalloc.3.old 2>/dev/null || true; test '' = 'man/vmalloc.3' || ${STDCMP} 2>/dev/null -s man/vmalloc.3 ${INSTALLROOT}/man/man3/vmalloc.3 || { ${STDCP} man/vmalloc.3 ${INSTALLROOT}/man/man3/vmalloc.3  		    		    ;}
+exec - test '' = 'man/vmalloc.3' || ${STDCMP} 2>/dev/null -s man/vmalloc.3 ${INSTALLROOT}/man/man3/vmalloc.3 || { ${STDMV} ${INSTALLROOT}/man/man3/vmalloc.3 ${INSTALLROOT}/man/man3/vmalloc.3.old 2>/dev/null || true; ${STDCP} man/vmalloc.3 ${INSTALLROOT}/man/man3/vmalloc.3  		    		    ;}
 done ../../../man/man3/vmalloc.3 generated
 make ../../../lib/lib
 exec - set -
@@ -5254,8 +5292,9 @@ exec - then	set -x && mkdir -p ${INSTALLROOT}/lib/lib
 exec - fi
 done ../../../lib/lib generated
 make ../../../lib/lib/ast
+prev ../../../lib/lib
 prev ast.req
-exec - ${STDMV} ${INSTALLROOT}/lib/lib/ast ${INSTALLROOT}/lib/lib/ast.old 2>/dev/null || true; test '' = 'ast.req' || ${STDCMP} 2>/dev/null -s ast.req ${INSTALLROOT}/lib/lib/ast || { ${STDCP} ast.req ${INSTALLROOT}/lib/lib/ast  		    		    ;}
+exec - test '' = 'ast.req' || ${STDCMP} 2>/dev/null -s ast.req ${INSTALLROOT}/lib/lib/ast || { ${STDMV} ${INSTALLROOT}/lib/lib/ast ${INSTALLROOT}/lib/lib/ast.old 2>/dev/null || true; ${STDCP} ast.req ${INSTALLROOT}/lib/lib/ast  		    		    ;}
 done ../../../lib/lib/ast generated
 make ../../../include/ast
 exec - set -
@@ -5264,6 +5303,7 @@ exec - then	set -x && mkdir -p ${INSTALLROOT}/include/ast
 exec - fi
 done ../../../include/ast generated
 make ../../../include/ast/ast.h
+prev ../../../include/ast
 prev include/ast.h
 exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/ast.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast.h 1.${COTEMP}.x
@@ -5279,6 +5319,14 @@ exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_dir.h
 exec - fi
 done ../../../include/ast/ast_dir.h generated
+make ../../../include/ast/ast_getopt.h
+prev include/ast_getopt.h
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/ast_getopt.h > 1.${COTEMP}.x
+exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_getopt.h 1.${COTEMP}.x
+exec - then	rm -f 1.${COTEMP}.x
+exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_getopt.h
+exec - fi
+done ../../../include/ast/ast_getopt.h generated
 make ../../../include/ast/ast_std.h
 prev include/ast_std.h
 exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/ast_std.h > 1.${COTEMP}.x
@@ -5853,6 +5901,17 @@ exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_fcntl.h
 exec - fi
 done ../../../include/ast/ast_fcntl.h generated
+make ../../../include/ast/ast_float.h
+make ast_float.h
+prev FEATURE/float
+exec - cmp 2>/dev/null -s FEATURE/float ast_float.h || { rm -f ast_float.h; silent test -d . || mkdir .; ${STDCP} FEATURE/float ast_float.h; }
+done ast_float.h generated
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_float.h > 1.${COTEMP}.x
+exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_float.h 1.${COTEMP}.x
+exec - then	rm -f 1.${COTEMP}.x
+exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_float.h
+exec - fi
+done ../../../include/ast/ast_float.h generated
 make ../../../include/ast/ast_fs.h
 prev ast_fs.h
 exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_fs.h > 1.${COTEMP}.x
@@ -5885,6 +5944,14 @@ exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_map.h
 exec - fi
 done ../../../include/ast/ast_map.h generated
+make ../../../include/ast/ast_mmap.h
+prev ast_mmap.h
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_mmap.h > 1.${COTEMP}.x
+exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_mmap.h 1.${COTEMP}.x
+exec - then	rm -f 1.${COTEMP}.x
+exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_mmap.h
+exec - fi
+done ../../../include/ast/ast_mmap.h generated
 make ../../../include/ast/ast_mode.h
 prev ast_mode.h
 exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_mode.h > 1.${COTEMP}.x
@@ -5933,6 +6000,14 @@ exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_unistd.h
 exec - fi
 done ../../../include/ast/ast_unistd.h generated
+make ../../../include/ast/ast_vfork.h
+prev ast_vfork.h
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_vfork.h > 1.${COTEMP}.x
+exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_vfork.h 1.${COTEMP}.x
+exec - then	rm -f 1.${COTEMP}.x
+exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_vfork.h
+exec - fi
+done ../../../include/ast/ast_vfork.h generated
 make ../../../include/ast/ast_wait.h
 prev ast_wait.h
 exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_wait.h > 1.${COTEMP}.x
@@ -5996,9 +6071,10 @@ exec - then	set -x && mkdir -p ${INSTALLROOT}/lib/file
 exec - fi
 done ../../../lib/file generated
 make ../../../lib/file/magic
+prev ../../../lib/file
 make misc/magic.tab
 done misc/magic.tab
-exec - ${STDMV} ${INSTALLROOT}/lib/file/magic ${INSTALLROOT}/lib/file/magic.old 2>/dev/null || true; test '' = 'misc/magic.tab' || ${STDCMP} 2>/dev/null -s misc/magic.tab ${INSTALLROOT}/lib/file/magic || { ${STDCP} misc/magic.tab ${INSTALLROOT}/lib/file/magic  		    		    ;}
+exec - test '' = 'misc/magic.tab' || ${STDCMP} 2>/dev/null -s misc/magic.tab ${INSTALLROOT}/lib/file/magic || { ${STDMV} ${INSTALLROOT}/lib/file/magic ${INSTALLROOT}/lib/file/magic.old 2>/dev/null || true; ${STDCP} misc/magic.tab ${INSTALLROOT}/lib/file/magic  		    		    ;}
 done ../../../lib/file/magic generated
 prev comp/fmtmsg.h
 prev ast_lib.h

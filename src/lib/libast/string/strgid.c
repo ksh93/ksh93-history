@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -96,8 +96,24 @@ strgid(const char* name)
 	else
 	{
 		id = strtol(name, &e, 0);
+#if _WINIX
+		if (!*e)
+		{
+			if (!getgrgid(id))
+				id = -1;
+		}
+		else if (!streq(name, "sys"))
+			id = -1;
+		else if (gr = getgrnam("Administrators"))
+			id = gr->gr_gid;
+		else if (pw = getpwnam("Administrator"))
+			id = pw->pw_gid;
+		else
+			id = -1;
+#else
 		if (*e || !getgrgid(id))
 			id = -1;
+#endif
 	}
 	if (dict && (ip = newof(0, Id_t, 1, strlen(name))))
 	{

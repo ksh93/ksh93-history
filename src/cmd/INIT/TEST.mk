@@ -1,7 +1,7 @@
 /*
  * regression test support
  *
- * @(#)TEST.mk (AT&T Labs Research) 2001-04-30
+ * @(#)TEST.mk (AT&T Labs Research) 2003-03-11
  *
  * test management is still in the design phase
  */
@@ -38,13 +38,17 @@
 			test.$$(T) : $$(B).tst
 				$$(REGRESS) $$(REGRESSFLAGS) $$(*) $(>:V:O>1)
 		end
-	elif "$(P:N=*.(c|sh))"
+	elif "$(P:N=*@(.sh|$(.SUFFIX.c:/ /|/G)|$(.SUFFIX.C:/ /|/G)))"
 		B := $(P:B)
 		if ! ( T = "$(<:V)" )
 			T := $(B)
 		end
 		:INSTALLDIR: $(B)
 		$(B) :: $(P)
+		if "$(P:N=*.sh)"
+			TESTCC == $(CC)
+			$(B) : (TESTCC)
+		end
 		test : - test.$(T)
 		if "$(@:V)"
 			eval

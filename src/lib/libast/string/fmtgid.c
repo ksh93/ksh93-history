@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -80,7 +80,15 @@ fmtgid(int gid)
 	else if (ip = (Id_t*)dtmatch(dict, &gid))
 		return ip->name;
 	if (gr = getgrgid(gid))
+	{
 		name = gr->gr_name;
+#if _WINIX
+		if (streq(name, "Administrators"))
+			name = "sys";
+#endif
+	}
+	else if (gid == 0)
+		name = "sys";
 	else
 	{
 		name = fmtbuf(z = sizeof(gid) * 3 + 1);

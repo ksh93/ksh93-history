@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2002 AT&T Corp.                *
+*                Copyright (c) 1982-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -42,6 +42,7 @@
 #define FPCL		(0100<<COMBITS)		/* close the pipe */
 #define FCOOP		(0200<<COMBITS)		/* cooperating process */
 #define FPOSIX		(02<<COMBITS)		/* posix semantics function */
+#define FLINENO		(04<<COMBITS)		/* for/case has line number */
 
 #define TNEGATE		(01<<COMBITS)		/* ! inside [[...]] */
 #define TBINARY		(02<<COMBITS)		/* binary operator in [[...]] */
@@ -107,9 +108,10 @@ struct whnod
 struct fornod
 {
 	int		fortyp;
-	char	 *fornam;
+	char	 	*fornam;
 	union anynode	*fortre;
 	struct comnod	*forlst;
+	int		forline;
 };
 
 struct swnod
@@ -118,6 +120,7 @@ struct swnod
 	struct argnod	*swarg;
 	struct regnod	*swlst;
 	struct ionod	*swio;
+	int		swline;
 };
 
 struct regnod
@@ -211,7 +214,7 @@ extern int			sh_exec(const union anynode*,int);
 extern int			sh_tdump(Sfio_t*, const union anynode*);
 extern union anynode		*sh_dolparen(void);
 extern union anynode		*sh_trestore(Sfio_t*);
-#ifdef SHOPT_KIA
+#if SHOPT_KIA
     extern int 			kiaclose(void);
     extern unsigned long 	kiaentity(const char*,int,int,int,int,unsigned long,int,int,const char*);
 #endif /* SHOPT_KIA */

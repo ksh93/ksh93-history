@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1997-2002 AT&T Corp.                *
+*                Copyright (c) 1997-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -29,7 +29,8 @@
 
 #define _DLLINFO_PRIVATE_ \
 	char*	sib[3]; \
-	char	buf[64];
+	char	sibbuf[64]; \
+	char	envbuf[64];
 
 #define _DLLSCAN_PRIVATE_ \
 	Dllent_t	entry; \
@@ -57,9 +58,6 @@
 #define DLL_MATCH_NAME		0x4000
 #define DLL_MATCH_VERSION	0x2000
 
-#define DIG			01
-#define SEP			02
-
 #include <ast.h>
 #include <cdt.h>
 #include <ctype.h>
@@ -81,57 +79,81 @@ static char		lib[] = "lib";
 
 /*
  * we need a sibling dir in PATH to search for dlls
- * the confstr LIBPATH almost does it, except for sgi
- * who really got carried away trying to handle binary
- * compatibility between *three* different object formats
- * this list will surely grow given all vendor's weakness
- * for `enhancing' standard practice, de-facto or otherwise
+ * the confstr LIBPATH provides the local info
  *
- *	HOSTTYPE	sibling
- *	----------	-------
- *	sgi.mips4	lib64
- *	sgi.mips3	lib32
- *	sgi.*		lib
+ *	<sibling-dir>[:<env-var>[:<host-pattern>]][,...]
  *
- * otherwise the first dir in LIBPATH which has the format
- *
- *	<sibling-dir>:<env-var>,...
- *
- * gives us the sibling, bin being the overall default
+ * if <host-pattern> is present then it must match confstr HOSTTYPE
  */
 
 Dllinfo_t*
 dllinfo(void)
 {
 	register char*		s;
-	register char*		t;
-	register int		n;
+	register char*		h;
+	char*			d;
+	char*			v;
+	char*			p;
+	int			dn;
+	int			vn;
+	int			pn;
+	char			pat[256];
 
 	static Dllinfo_t	info;
 
 	if (!info.sibling)
 	{
 		info.sibling = info.sib;
-		t = astconf("HOSTTYPE", NiL, NiL);
-		if (strmatch(t, "sgi.*"))
+		if (*(s = astconf("LIBPATH", NiL, NiL)))
 		{
-			if (strmatch(t, "sgi.mips3|sgi.*-n32"))
-				info.sibling[0] = "lib32";
-			else if (strmatch(t, "sgi.mips[4-9]|sgi.*-64"))
-				info.sibling[0] = "lib64";
-			else
-				info.sibling[0] = lib;
-		}
-		else if (*(s = astconf("LIBPATH", NiL, NiL)))
-		{
-			for (t = s; *t && *t != ':' && *t != ','; t++);
-			if (*t == ':')
+			while (*s == ':' || *s == ',')
+				s++;
+			if (*s)
 			{
-				n = t - s;
-				if ((n + 1) < sizeof(info.buf))
+				h = 0;
+				for (;;)
 				{
-					info.sibling[0] = info.buf;
-					memcpy(info.buf, s, n);
+					for (d = s; *s && *s != ':' && *s != ','; s++);
+					if (!(dn = s - d))
+						d = 0;
+					if (*s == ':')
+					{
+						for (v = ++s; *s && *s != ':' && *s != ','; s++);
+						if (!(vn = s - v))
+							v = 0;
+						if (*s == ':')
+						{
+							for (p = ++s; *s && *s != ':' && *s != ','; s++);
+							if (!(pn = s - p))
+								p = 0;
+						}
+						else
+							p = 0;
+					}
+					else
+					{
+						v = 0;
+						p = 0;
+					}
+					while (*s && *s++ != ',');
+					if (!*s || !p || !h && !*(h = astconf("HOSTTYPE", NiL, NiL)))
+						break;
+					if (pn >= sizeof(pat))
+						pn = sizeof(pat) - 1;
+					memcpy(pat, p, pn);
+					pat[pn] = 0;
+					if (strmatch(h, pat))
+						break;
+				}
+				if (d && dn < sizeof(info.sibbuf))
+				{
+					memcpy(info.sibbuf, d, dn);
+					info.sibling[0] = info.sibbuf;
+				}
+				if (v && vn < sizeof(info.envbuf))
+				{
+					memcpy(info.envbuf, v, vn);
+					info.env = info.envbuf;
 				}
 			}
 		}
@@ -139,6 +161,8 @@ dllinfo(void)
 			info.sibling[0] = bin;
 		if (!streq(info.sibling[0], lib))
 			info.sibling[1] = lib;
+		if (!info.env)
+			info.env = "LD_LIBRARY_PATH";
 		info.prefix = astconf("LIBPREFIX", NiL, NiL);
 		info.suffix = astconf("LIBSUFFIX", NiL, NiL);
 		if (streq(info.suffix, ".dll"))
@@ -297,6 +321,7 @@ dllsread(register Dllscan_t* scan)
 	register char*		t;
 	register Uniq_t*	u;
 	register int		n;
+	register int		m;
 
 	if (scan->flags & DLL_MATCH_DONE)
 		return 0;
@@ -354,39 +379,51 @@ dllsread(register Dllscan_t* scan)
 	p = sfstruse(scan->tmp);
  found:
 	b = scan->buf + sfsprintf(scan->buf, sizeof(scan->buf), "%s", b + scan->prelen);
-	n = 0;
 	if (!(scan->flags & DLL_INFO_PREVER))
 		while (b > scan->buf)
 		{
-			if (isdigit(*(b - 1)))
-				n |= DIG;
-			else if (*(b - 1) == '.')
-				n |= SEP;
-			else
+			if (!isdigit(*(b - 1)) && *(b - 1) != '.')
 				break;
 			b--;
 		}
 	b -= scan->suflen;
 	if (b > (scan->buf + 2) && (*(b - 1) == 'g' || *(b - 1) == 'O') && *(b - 2) == '-')
 		b -= 2;
-	if (!n)
-	{
-		for (t = b; t > scan->buf; t--)
-			if (isdigit(*(t - 1)))
-				n |= DIG;
-			else if (*(t - 1) == '.')
-				n |= SEP;
-			else if (*(t - 1) == '-')
+	n = m = 0;
+	for (t = b; t > scan->buf; t--)
+		if (isdigit(*(t - 1)))
+			n = 1;
+		else if (*(t - 1) != m)
+		{
+			if (*(t - 1) == '.' || *(t - 1) == '-' || *(t - 1) == '_')
 			{
-				t--;
-				n |= SEP;
-				break;
+				n = 1;
+				if (m)
+				{
+					m = -1;
+					t--;
+					break;
+				}
+				m = *(t - 1);
 			}
-			else if (*(t - 1) == '_' && isdigit(*t))
-				/* ignore */;
 			else
 				break;
-		if ((n & DIG) && ((n & SEP) || (scan->flags & DLL_INFO_PREVER) && ((b - t) != 2 || !(t[0] == '1' && t[1] == '6' || t[0] == '3' && t[1] == '2'))))
+		}
+	if (n)
+	{
+		if (isdigit(t[0]) && isdigit(t[1]) && !isdigit(t[2]))
+			n = (t[0] - '0') * 10 + (t[1] - '0');
+		else if (isdigit(t[1]) && isdigit(t[2]) && !isdigit(t[3]))
+			n = (t[1] - '0') * 10 + (t[2] - '0');
+		else
+			n = 0;
+		if (n && !(n & (n - 1)))
+		{
+			if (!isdigit(t[0]))
+				t++;
+			m = *(t += 2);
+		}
+		if (m || (scan->flags & DLL_INFO_PREVER))
 			b = t;
 	}
 	*b = 0;

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2003 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -37,9 +37,11 @@
 
 /*
  * quote string as of length n with qb...qe
- * (flags&1) forces quote, otherwise quote output only if necessary
+ * (flags&FMT_ALWAYS) always quotes, otherwise quote output only if necessary
  * qe and the usual suspects are \... escaped
- * (flags&2) doesn't quote 8 bit chars
+ * (flags&FMT_WIDE) doesn't escape 8 bit chars
+ * (flags&FMT_ESCAPED) doesn't \... escape the usual suspects
+ * (flags&FMT_SHELL) escape $ and `
  */
 
 char*
@@ -68,12 +70,10 @@ fmtquote(const char* as, const char* qb, const char* qe, size_t n, int flags)
 	b = buf = fmtbuf(c);
 	if (qb)
 	{
-		if ((flags & 1) && qb[0] == '"' && qb[1] == 0)
-			flags |= 4;
 		q = qb[0] == '$' && qb[1] == '\'' && qb[2] == 0 ? 1 : 0;
 		while (*b = *qb++)
 			b++;
-		k = (flags & 1) ? 0 : (b - buf);
+		k = (flags & FMT_ALWAYS) ? 0 : (b - buf);
 	}
 	while (s < e)
 	{
@@ -85,7 +85,7 @@ fmtquote(const char* as, const char* qb, const char* qe, size_t n, int flags)
 		else
 		{
 			c = *s++;
-			if (iscntrl(c) || !isprint(c) || c == '\\')
+			if (!(flags & FMT_ESCAPED) && (iscntrl(c) || !isprint(c) || c == '\\'))
 			{
 				k = 0;
 				*b++ = '\\';
@@ -118,7 +118,7 @@ fmtquote(const char* as, const char* qb, const char* qe, size_t n, int flags)
 				case '\\':
 					break;
 				default:
-					if (!(flags & 2) || !(c & 0200))
+					if (!(flags & FMT_WIDE) || !(c & 0200))
 					{
 						*b++ = '0' + ((c >> 6) & 07);
 						*b++ = '0' + ((c >> 3) & 07);
@@ -129,7 +129,13 @@ fmtquote(const char* as, const char* qb, const char* qe, size_t n, int flags)
 					break;
 				}
 			}
-			else if (qe && strchr(qe, c) || (flags & 4) && (c == '$' || c == '`'))
+			else if (c == '\\')
+			{
+				*b++ = c;
+				if (*s)
+					c = *s++;
+			}
+			else if (qe && strchr(qe, c) || (flags & FMT_SHELL) && (c == '$' || c == '`'))
 			{
 				k = 0;
 				*b++ = '\\';
