@@ -14,12 +14,11 @@ contributor=(
 	[chen]="Robin Chen <chen@research.bell-labs.com>"
 	[dfwc]="Don Caldwell <dfwc@research.att.com>"
 	[ek]="Lefty Koutsofios <ek@research.att.com>"
-	[griffin]="Tim Griffin <griffin@research.att.com>"
 	[gruber]="Bob Gruber <gruber@research.att.com>"
 	[jiawang]="Jia Wang <jiawang@research.att.com>"
-	[jlk]="Jeff Korn <jlk@research.att.com>"
+	[jlk]="Jeff Korn <@google.com>"
 	[kfisher]="Kathleen Fisher <kfisher@research.att.com>"
-	[kwc]="Ken Church <kwc@research.att.com>"
+	[kwc]="Ken Church <@microsoft.com>"
 
 	[bwk]="Brian Kernigham <bwk@research.bell-labs.com>"
 	[dmr]="Dennis Ritchie <dmr@research.bell-labs.com>"
@@ -30,7 +29,8 @@ contributor=(
 )
 
 license=(
-	type=open
+	type=cpl
+	version=1.0
 	package=ast
 	since=1986
 	author=gsf+dgk+kpv
@@ -42,32 +42,7 @@ license=(
 	company="Research"
 	location="Florham Park NJ"
 
-	url=http://www.${license.domain}/sw/license/${license.package}-${license.type}.html
-	bin=http://www.${license.domain}/sw/license/${license.package}-${license.type}-bin.html
-
-	notice='
-This product contains certain software code or other
-information ("AT&T Software") proprietary to AT&T Corp.
-("AT&T"). The AT&T Software is provided to you "AS IS". YOU
-ASSUME TOTAL RESPONSIBILITY AND RISK FOR USE OF THE AT&T
-SOFTWARE. AT&T DOES NOT MAKE, AND EXPRESSLY DISCLAIMS, ANY
-EXPRESS OR IMPLIED WARRANTIES OF ANY KIND WHATSOEVER,
-INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
-MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE,
-WARRANTIES OF TITLE OR NON-INFRINGEMENT OF ANY INTELLECTUAL
-PROPERTY RIGHTS, ANY WARRANTIES ARISING BY USAGE OF TRADE,
-COURSE OF DEALING OR COURSE OF PERFORMANCE, OR ANY WARRANTY
-THAT THE AT&T SOFTWARE IS "ERROR FREE" OR WILL MEET YOUR
-REQUIREMENTS.
-
-Unless you accept a license to use the AT&T Software, you
-shall not reverse compile, disassemble or otherwise reverse
-engineer this product to ascertain the source code for any
-AT&T Software.
-
-Copyright (c) AT&T Corp. 
-All rights reserved. 
-AT&T is a registered trademark of AT&T Corp.
-'
+	url=http://www.${license.domain}/sw/license/${license.type}-${license.version}.html
+	urlmd5=64647892da9c23e1f820667f94c1e0db
 
 )

@@ -1,26 +1,24 @@
-/*******************************************************************
-*                                                                  *
-*             This software is part of the ast package             *
-*                Copyright (c) 1982-2004 AT&T Corp.                *
-*        and it may only be used by you under license from         *
-*                       AT&T Corp. ("AT&T")                        *
-*         A copy of the Source Code Agreement is available         *
-*                at the AT&T Internet web site URL                 *
-*                                                                  *
-*       http://www.research.att.com/sw/license/ast-open.html       *
-*                                                                  *
-*    If you have copied or used this software without agreeing     *
-*        to the terms of the license you are infringing on         *
-*           the license and copyright and are violating            *
-*               AT&T's intellectual property rights.               *
-*                                                                  *
-*            Information and Software Systems Research             *
-*                          AT&T Research                           *
-*                         Florham Park NJ                          *
-*                                                                  *
-*                David Korn <dgk@research.att.com>                 *
-*                                                                  *
-*******************************************************************/
+/***********************************************************************
+*                                                                      *
+*               This software is part of the ast package               *
+*                  Copyright (c) 1982-2004 AT&T Corp.                  *
+*                      and is licensed under the                       *
+*          Common Public License, Version 1.0 (the "License")          *
+*                        by AT&T Corp. ("AT&T")                        *
+*      Any use, downloading, reproduction or distribution of this      *
+*      software constitutes acceptance of the License.  A copy of      *
+*                     the License is available at                      *
+*                                                                      *
+*         http://www.research.att.com/sw/license/cpl-1.0.html          *
+*         (with md5 checksum 8a5e0081c856944e76c69a1cf29c2e8b)         *
+*                                                                      *
+*              Information and Software Systems Research               *
+*                            AT&T Research                             *
+*                           Florham Park NJ                            *
+*                                                                      *
+*                  David Korn <dgk@research.att.com>                   *
+*                                                                      *
+***********************************************************************/
 #pragma prototyped
 /*
  * AT&T Labs
@@ -131,14 +129,7 @@ void nv_putv(Namval_t *np, const char *value, int flags, register Namfun_t *nfp)
 			break;
 	}
 	if(fp && fp->disc->putval)
-	{
 		(*fp->disc->putval)(np,value, flags, fp);
-#if 0
-		/* automatic cleanup in case user doesn't */
-		if(!value && (fp=nv_disc(np, fp, NV_POP)) && !fp->nofree)
-			free((void*)fp);
-#endif
-	}
 	else
 	{
 		nv_local=1;
@@ -421,12 +412,6 @@ static char *setdisc(register Namval_t* np,register const char *event,Namval_t *
 	}
 	if(!name)
 		return(nv_setdisc(np,event,action,fp));
-#if 0
-	{
-		if((fp=(Namfun_t*)vp) && fp->disc->setdisc)
-			return((*fp->disc->setdisc)(np,event,action,fp));
-	}
-#endif
 	else if(getname)
 		return((char*)name);
 	/* Handle the disciplines */
@@ -899,7 +884,7 @@ Namval_t *sh_addbuiltin(const char *path, int (*bltin)(int, char*[],void*),void 
 			if(np->nvfun && !nv_isattr(np,NV_NOFREE))
 				free((void*)np->nvfun);
 			dtdelete(sh.bltin_tree,np);
-				return(0);
+			return(0);
 		}
 		if(!bltin)
 			return(np);
@@ -915,7 +900,8 @@ Namval_t *sh_addbuiltin(const char *path, int (*bltin)(int, char*[],void*),void 
 				return(np);
 			if(!bltin)
 				bltin = np->nvalue.bfp;
-			dtdelete(sh.bltin_tree,np);
+			if(np->nvenv)
+				dtdelete(sh.bltin_tree,np);
 			if(extra == (void*)1)
 				return(0);
 			np = 0;

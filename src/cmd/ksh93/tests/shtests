@@ -19,6 +19,9 @@ if	[[ -d /usr/ucb ]]
 then	PATH=$PATH:/usr/ucb
 fi
 PATH=$PATH:$d
+if [[ $INSTALLROOT && -r $INSTALLROOT/bin/.paths ]]
+then	PATH=$INSTALLROOT/bin:$PATH
+fi
 for i in ${*-*.sh}
 do	echo test $i begins at `date`
 	if	$SHELL $i

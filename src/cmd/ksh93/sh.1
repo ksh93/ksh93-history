@@ -3446,6 +3446,14 @@ When an executable is found, the directory where it is found
 in is searched for a file named
 .BR .paths .
 If this file is found and it contains a line of the form
+.BI BUILTIN_LIB= value\^
+, then the library named by
+.I value\^
+will be searched for as if it were an option argument to
+.BR "builtin -f" ,
+and if it contains a built-in of the specified name
+this will be executed instead of a command by this name.
+Otherwise, if this file is found and it contains a line of the form
 .IB name\^ = value\^
 in the first or second line, then the environment variable
 .I name\^
@@ -4757,6 +4765,8 @@ option deletes each of the given built-ins.
 On systems that support dynamic loading, the
 .B \-f
 option names a shared library containing the code for built-ins.
+The shared library prefix and/or suffix, which depend on the system,
+can be omitted.
 Once a library is loaded, its symbols become available
 for subsequent invocations of
 .BR builtin .

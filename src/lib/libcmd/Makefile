@@ -26,4 +26,8 @@ $(INCLUDEDIR) :INSTALLPROTO: cmd.h
 
 "win32*" :NOOPTIMIZE: id.c
 
+if CC.HOSTTYPE == "sun4"
+	pathsetlink == symlink	/* ld.so workaround */
+end
+
 ignore dlldefs.h /* prevents bootstrap double build */

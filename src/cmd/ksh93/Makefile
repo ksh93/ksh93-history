@@ -11,7 +11,7 @@ if CC.HOSTTYPE == "linux.alpha"
 	:PACKAGE: - m:static:noinclude noCC.EXPORT.DYNAMIC
 end
 
-if CC.HOSTTYPE == "*win*" && CC.SUFFIX.DYNAMIC == ".dll" || "$(PACKAGE_OPTIMIZE:N=space)"
+if "$(CC.DIALECT:N=EXPORT=[AD]LL)" || "$(PACKAGE_OPTIMIZE:N=space)"
 	CCFLAGS += $$(CC.DLL)
 	LIBS_req = -lshell
 else
@@ -38,7 +38,6 @@ DOCFILES = sh.memo builtins.mm README RELEASE PROMO.mm COMPATIBILITY \
 KSHELL == 1			/* this is ksh */
 
 SH_DICT ==			/* message catalog */
-SH_CMDLIB_DIR ==		/* libcmd.a builtin dir */
 DEBUG ==			/* debugging purposes only */
 
 /* set these variables to 1 to enable, 0 to disable, null to probe */
@@ -48,8 +47,6 @@ SHOPT_ACCTFILE ==  		/* per user accounting info */
 SHOPT_APPEND == 1		/* var+=val string append */
 SHOPT_BASH ==			/* bash compatibility code */
 SHOPT_BRACEPAT == 1		/* C-shell {...,...} expansions (, required) */
-SHOPT_CMDLIB_BLTIN ==		/* make all cmds in libcmd.a builtins */
-SHOPT_CMDLIB_DIR ==		/* SHOPT_CMDLIB_BLTIN=1 + "/opt/ast/bin/" */
 SHOPT_COMPOUND_ARRAY == 1	/* allow compound arrays */
 SHOPT_CRNL ==			/* accept <cr><nl> for <nl> */
 SHOPT_DYNAMIC == 1		/* dynamic loading for builtins */

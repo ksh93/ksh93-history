@@ -1,4 +1,9 @@
-04-09-03  --- Release ksh93p+  ---
+04-10-05  --- Release ksh93p+  ---
+04-10-05  The .paths file, introduced in ksh93m, which can appear in
+	  any directory in PATH, now allows a line of the form
+	  BUILTIN_LIB=libname.  When a command is searched for this directory,
+	  the shared library named by libname will first be searched for a
+	  built-in version of the command.
 04-09-03  <<< here documents now handle quotes in the word token correctly. 
 04-08-08  The maximum size for read -n and and read -N was increased from
 	  4095 to 32M.

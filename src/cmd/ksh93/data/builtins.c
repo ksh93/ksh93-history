@@ -1,26 +1,24 @@
-/*******************************************************************
-*                                                                  *
-*             This software is part of the ast package             *
-*                Copyright (c) 1982-2004 AT&T Corp.                *
-*        and it may only be used by you under license from         *
-*                       AT&T Corp. ("AT&T")                        *
-*         A copy of the Source Code Agreement is available         *
-*                at the AT&T Internet web site URL                 *
-*                                                                  *
-*       http://www.research.att.com/sw/license/ast-open.html       *
-*                                                                  *
-*    If you have copied or used this software without agreeing     *
-*        to the terms of the license you are infringing on         *
-*           the license and copyright and are violating            *
-*               AT&T's intellectual property rights.               *
-*                                                                  *
-*            Information and Software Systems Research             *
-*                          AT&T Research                           *
-*                         Florham Park NJ                          *
-*                                                                  *
-*                David Korn <dgk@research.att.com>                 *
-*                                                                  *
-*******************************************************************/
+/***********************************************************************
+*                                                                      *
+*               This software is part of the ast package               *
+*                  Copyright (c) 1982-2004 AT&T Corp.                  *
+*                      and is licensed under the                       *
+*          Common Public License, Version 1.0 (the "License")          *
+*                        by AT&T Corp. ("AT&T")                        *
+*      Any use, downloading, reproduction or distribution of this      *
+*      software constitutes acceptance of the License.  A copy of      *
+*                     the License is available at                      *
+*                                                                      *
+*         http://www.research.att.com/sw/license/cpl-1.0.html          *
+*         (with md5 checksum 8a5e0081c856944e76c69a1cf29c2e8b)         *
+*                                                                      *
+*              Information and Software Systems Research               *
+*                            AT&T Research                             *
+*                           Florham Park NJ                            *
+*                                                                      *
+*                  David Korn <dgk@research.att.com>                   *
+*                                                                      *
+***********************************************************************/
 #pragma prototyped
 
 #include	<shell.h>
@@ -38,18 +36,6 @@
 #   define	Bltin(x)	(B_##x)
 #else
 #   define bltin(x)	0
-#endif
-
-#if SHOPT_CMDLIB_DIR
-#   ifdef SH_CMDLIB_DIR
-#       define BDIR		SH_CMDLIB_DIR
-#   else
-#       define BDIR		"/opt/ast/bin/"
-#   endif
-#   undef  SHOPT_CMDLIB_BLTIN
-#   define SHOPT_CMDLIB_BLTIN	1
-#else
-#   define BDIR
 #endif
 
 /*
@@ -128,69 +114,31 @@ const struct shtable3 shtab_builtins[] =
 	"wait",		NV_BLTIN|BLT_ENV|BLT_EXIT,	bltin(wait),
 	"type",		NV_BLTIN|BLT_ENV,		bltin(whence),
 	"whence",	NV_BLTIN|BLT_ENV,		bltin(whence),
-#if SHOPT_CMDLIB_BLTIN
-	BDIR "basename",NV_BLTIN|NV_NOFREE,	 	bltin(basename),
-	BDIR "cat",	NV_BLTIN|NV_NOFREE,	 	bltin(cat),
-	BDIR "chgrp",	NV_BLTIN|NV_NOFREE,	 	bltin(chgrp),
-	BDIR "chmod",	NV_BLTIN|NV_NOFREE,	 	bltin(chmod),
-	BDIR "chown",	NV_BLTIN|NV_NOFREE,	 	bltin(chown),
-	BDIR "cmp",	NV_BLTIN|NV_NOFREE,	 	bltin(cmp),
-	BDIR "comm",	NV_BLTIN|NV_NOFREE,	 	bltin(comm),
-	BDIR "cp",	NV_BLTIN|NV_NOFREE,	 	bltin(cp),
-	BDIR "cut",	NV_BLTIN|NV_NOFREE,	 	bltin(cut),
-	BDIR "date",	NV_BLTIN|NV_NOFREE,	 	bltin(date),
-	BDIR "dirname",	NV_BLTIN|NV_NOFREE,	 	bltin(dirname),
-	BDIR "expr",	NV_BLTIN|NV_NOFREE,	 	bltin(expr),
-	BDIR "fmt",	NV_BLTIN|NV_NOFREE,	 	bltin(fmt),
-	BDIR "fold",	NV_BLTIN|NV_NOFREE,	 	bltin(fold),
-	BDIR "getconf",	NV_BLTIN|NV_NOFREE,	 	bltin(getconf),
-	BDIR "head",	NV_BLTIN|NV_NOFREE,	 	bltin(head),
-	BDIR "id",	NV_BLTIN|NV_NOFREE,	 	bltin(id),
-	BDIR "join",	NV_BLTIN|NV_NOFREE,	 	bltin(join),
-	BDIR "ln",	NV_BLTIN|NV_NOFREE,	 	bltin(ln),
-	BDIR "logname",	NV_BLTIN|NV_NOFREE,	 	bltin(logname),
-	BDIR "mkdir",	NV_BLTIN|NV_NOFREE,	 	bltin(mkdir),
-	BDIR "mkfifo",	NV_BLTIN|NV_NOFREE,	 	bltin(mkfifo),
-	BDIR "mv",	NV_BLTIN|NV_NOFREE,	 	bltin(mv),
-	BDIR "paste",	NV_BLTIN|NV_NOFREE,	 	bltin(paste),
-	BDIR "pathchk",	NV_BLTIN|NV_NOFREE,	 	bltin(pathchk),
-	BDIR "rev",	NV_BLTIN|NV_NOFREE,	 	bltin(rev),
-	BDIR "rm",	NV_BLTIN|NV_NOFREE,	 	bltin(rm),
-	BDIR "rmdir",	NV_BLTIN|NV_NOFREE,	 	bltin(rmdir),
-	BDIR "stty",	NV_BLTIN|NV_NOFREE,	 	bltin(stty),
-	BDIR "tail",	NV_BLTIN|NV_NOFREE,	 	bltin(tail),
-	BDIR "tee",	NV_BLTIN|NV_NOFREE,	 	bltin(tee),
-	BDIR "tty",	NV_BLTIN|NV_NOFREE,	 	bltin(tty),
-	BDIR "uname",	NV_BLTIN|NV_NOFREE,	 	bltin(uname),
-	BDIR "uniq",	NV_BLTIN|NV_NOFREE,	 	bltin(uniq),
-	BDIR "wc",	NV_BLTIN|NV_NOFREE,	 	bltin(wc),
-#else
 	"/bin/basename",NV_BLTIN|NV_NOFREE,		bltin(basename),
 	"/bin/chmod",	NV_BLTIN|NV_NOFREE,		bltin(chmod),
 	"/bin/dirname",	NV_BLTIN|NV_NOFREE,		bltin(dirname),
 	"/bin/head",	NV_BLTIN|NV_NOFREE,		bltin(head),
 	"/bin/mkdir",	NV_BLTIN|NV_NOFREE,		bltin(mkdir),
-#   if defined(_usr_bin_logname)  && !defined(_bin_logname)
+#if defined(_usr_bin_logname)  && !defined(_bin_logname)
 	"/usr/bin/logname",	NV_BLTIN|NV_NOFREE,	bltin(logname),
-#   else
+#else
 	"/bin/logname",	NV_BLTIN|NV_NOFREE,		bltin(logname),
-#   endif
+#endif
 	"/bin/cat",	NV_BLTIN|NV_NOFREE,		bltin(cat),
 	"/bin/cmp",	NV_BLTIN|NV_NOFREE,		bltin(cmp),
-#   if defined(_usr_bin_cut)  && !defined(_bin_cut)
+#if defined(_usr_bin_cut)  && !defined(_bin_cut)
 	"/usr/bin/cut",	NV_BLTIN|NV_NOFREE,		bltin(cut),
-#   else
+#else
 	"/bin/cut",	NV_BLTIN|NV_NOFREE,		bltin(cut),
-#   endif
+#endif
 	"/bin/uname",	NV_BLTIN|NV_NOFREE,		bltin(uname),
-#   if defined(_usr_bin_wc)  && !defined(_bin_wc)
+#if defined(_usr_bin_wc)  && !defined(_bin_wc)
 	"/usr/bin/wc",	NV_BLTIN|NV_NOFREE,		bltin(wc),
-#   else
-#	if defined(_usr_ucb_wc)  && !defined(_bin_wc)
+#else
+#   if defined(_usr_ucb_wc)  && !defined(_bin_wc)
 	   "/usr/ucb/wc", NV_BLTIN|NV_NOFREE,		bltin(wc),
-#	else
+#   else
 	   "/bin/wc",	NV_BLTIN|NV_NOFREE,		bltin(wc),
-#	endif
 #   endif
 #endif
 	"",		0, 0 
@@ -397,43 +345,42 @@ const char sh_optbuiltin[] =
 USAGE_LICENSE
 "[+NAME?builtin - add, delete, or display shell built-ins]"
 "[+DESCRIPTION?\bbuiltin\b can be used to add, delete, or display "
-	"built-in commands in the current shell environment.  A "
-	"built-in command executes in the current shell process "
-	"and can have side effects in the current shell.  On most "
-	"systems, the invocation time for built-in commands is one "
-	"or two orders of magnitude less than commands that create "
-	"a separate process.]" 
+    "built-in commands in the current shell environment. A built-in command "
+    "executes in the current shell process and can have side effects in the "
+    "current shell. On most systems, the invocation time for built-in "
+    "commands is one or two orders of magnitude less than commands that "
+    "create a separate process.]"
 "[+?For each \apathname\a specified, the basename of the pathname "
-	"determines the name of the built-in.  For each basename, "
-	"the shell looks for a C level function in the current shell "
-	"whose name is determined by prepending \bb_\b to the built-in "
-	"name.  If \apathname\a contains a \b/\b, then the built-in is "
-	"bound to this pathname.  A built-in bound to a pathname will "
-	"only be executed if \apathname\a is the first executable "
-	"found during a path search.  Otherwise, built-ins are found "
-	"prior to performing the path search.]"
+    "determines the name of the built-in. For each basename, the shell looks "
+    "for a C level function in the current shell whose name is determined by "
+    "prepending \bb_\b to the built-in name. If \apathname\a contains a "
+    "\b/\b, then the built-in is bound to this pathname. A built-in bound to "
+    "a pathname will only be executed if \apathname\a is the first "
+    "executable found during a path search. Otherwise, built-ins are found "
+    "prior to performing the path search.]"
 "[+?If no \apathname\a operands are specified, then \bbuiltin\b displays "
-	"the current list of built-ins, or just the special built-ins if "
-	"\b-s\b is specified, on standard output.  The full pathname for "
-	"built-ins that are bound to pathnames are displayed.]"
+    "the current list of built-ins, or just the special built-ins if \b-s\b "
+    "is specified, on standard output. The full pathname for built-ins that "
+    "are bound to pathnames are displayed.]"
 "[+?Libraries containing built-ins can be specified with the \b-f\b "
-	"option.  If the library contains a function named \blib_init\b(), "
-	"this function will be invoked with argument \b0\b when the "
-	"library is loaded.  The \blib_init\b() function can load "
-	"built-ins by invoking an appropriate C level function.  In "
-	"this case there is no restriction on the C level function name.]"
-"[+?The C level function will be invoked with three arguments.  The first "
-	"two are the same as \bmain\b() and the third one is a pointer.]"
+    "option. If the library contains a function named \blib_init\b(), this "
+    "function will be invoked with argument \b0\b when the library is "
+    "loaded. The \blib_init\b() function can load built-ins by invoking an "
+    "appropriate C level function. In this case there is no restriction on "
+    "the C level function name.]"
+"[+?The C level function will be invoked with three arguments. The first "
+    "two are the same as \bmain\b() and the third one is a pointer.]"
 "[+?\bbuiltin\b cannot be invoked from a restricted shell.]"
-"[d?Deletes each of the specified built-ins.  Special built-ins cannot "
-	"be deleted.]"
-"[f]:[lib?On systems with dynamic linking, \alib\a names a shared library "
-	"to load and search for built-ins.  The shared library suffix, which "
-	"depends on the system, can be omitted. Once a library is loaded, "
-	"its symbols become available for the current and subsequent "
-	"invocations of \bbuiltin\b.  Multiple libraries can be specified "
-	"with separate invocations of \bbuiltin\b.  Libraries are searched in "
-	"the reverse order in which they are specified.]"
+"[d?Deletes each of the specified built-ins. Special built-ins cannot be "
+    "deleted.]"
+"[f]:[lib?On systems with dynamic linking, \alib\a names a shared "
+    "library to load and search for built-ins. Libraries are search for in "
+    "\b$PATH\b and system dependent library directories. The system "
+    "dependent shared library prefix and/or suffix may be omitted. Once a "
+    "library is loaded, its symbols become available for the current and "
+    "subsequent invocations of \bbuiltin\b. Multiple libraries can be "
+    "specified with separate invocations of \bbuiltin\b. Libraries are "
+    "searched in the reverse order in which they are specified.]"
 "[s?Display only the special built-ins.]"
 "\n"
 "\n[pathname ...]\n"

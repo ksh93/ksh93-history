@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 4.4 2004-09-24
+info mam static 00000 1994-07-17 make (AT&T Research) 4.4 2004-10-01
 setv INSTALLROOT ${INSTALLROOT}
 setv PACKAGEROOT ${PACKAGEROOT}
 setv AR ar
@@ -374,13 +374,6 @@ make features/vmalloc
 done features/vmalloc
 prev ast.req
 exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/vmalloc
-make FEATURE/mmap implicit
-meta FEATURE/mmap features/%>FEATURE/% features/mmap mmap
-make features/mmap
-done features/mmap
-prev ast.req
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/mmap
-done FEATURE/mmap dontcare generated
 done FEATURE/vmalloc generated
 done features/map.c
 prev ast.req
@@ -1501,7 +1494,13 @@ make include/sfio_t.h implicit
 prev include/sfio.h implicit
 done include/sfio_t.h dontcare
 prev FEATURE/common implicit
-prev FEATURE/mmap implicit
+make FEATURE/mmap implicit
+meta FEATURE/mmap features/%>FEATURE/% features/mmap mmap
+make features/mmap
+done features/mmap
+prev ast.req
+exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/mmap
+done FEATURE/mmap dontcare generated
 make FEATURE/sfio implicit
 meta FEATURE/sfio features/%>FEATURE/% features/sfio sfio
 make features/sfio

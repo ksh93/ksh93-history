@@ -4,7 +4,7 @@
  * workarounds to bring the native interface close to posix and x/open
  *
  *	Glenn Fowler <gsf@research.att.com>
- *	AT&T Labs Research
+ *	AT&T Research
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of THIS SOFTWARE FILE (the "Software"), to deal in the Software

@@ -24,11 +24,6 @@ tst	cross{
 		esac
 	}
 	
-	case `pwd` in
-	/usr/src/*|/opt/ast/*)
-		option CMDLIB_DIR 0
-		;;
-	esac
 	test -d /dev/fd
 	option DEVFD $?
 	case  `echo a | tr a '\012' | wc -l` in

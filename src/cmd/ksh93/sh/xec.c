@@ -1,26 +1,24 @@
-/*******************************************************************
-*                                                                  *
-*             This software is part of the ast package             *
-*                Copyright (c) 1982-2004 AT&T Corp.                *
-*        and it may only be used by you under license from         *
-*                       AT&T Corp. ("AT&T")                        *
-*         A copy of the Source Code Agreement is available         *
-*                at the AT&T Internet web site URL                 *
-*                                                                  *
-*       http://www.research.att.com/sw/license/ast-open.html       *
-*                                                                  *
-*    If you have copied or used this software without agreeing     *
-*        to the terms of the license you are infringing on         *
-*           the license and copyright and are violating            *
-*               AT&T's intellectual property rights.               *
-*                                                                  *
-*            Information and Software Systems Research             *
-*                          AT&T Research                           *
-*                         Florham Park NJ                          *
-*                                                                  *
-*                David Korn <dgk@research.att.com>                 *
-*                                                                  *
-*******************************************************************/
+/***********************************************************************
+*                                                                      *
+*               This software is part of the ast package               *
+*                  Copyright (c) 1982-2004 AT&T Corp.                  *
+*                      and is licensed under the                       *
+*          Common Public License, Version 1.0 (the "License")          *
+*                        by AT&T Corp. ("AT&T")                        *
+*      Any use, downloading, reproduction or distribution of this      *
+*      software constitutes acceptance of the License.  A copy of      *
+*                     the License is available at                      *
+*                                                                      *
+*         http://www.research.att.com/sw/license/cpl-1.0.html          *
+*         (with md5 checksum 8a5e0081c856944e76c69a1cf29c2e8b)         *
+*                                                                      *
+*              Information and Software Systems Research               *
+*                            AT&T Research                             *
+*                           Florham Park NJ                            *
+*                                                                      *
+*                  David Korn <dgk@research.att.com>                   *
+*                                                                      *
+***********************************************************************/
 #pragma prototyped
 /*
  * UNIX shell parse tree executer
@@ -746,8 +744,9 @@ int sh_exec(register const Shnode_t *t, int flags)
 					jmpval = sigsetjmp(buff.buff,1);
 					if(jmpval == 0)
 					{
-						type= !(nv_isattr(np,BLT_ENV));
-						errorpush(&buff.err,type?ERROR_SILENT:0);
+						if(!(nv_isattr(np,BLT_ENV)))
+							error_info.flags |= ERROR_SILENT;
+						errorpush(&buff.err,0);
 						if(io)
 						{
 							struct openlist *item;
@@ -791,6 +790,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 							context = (void*)&bdata;
 						}
 						sh.exitval = (*sh.bltinfun)(argn,com,context);
+						if(error_info.flags&ERROR_INTERACTIVE)
+							tty_check(ERRIO);
 						if(nv_isattr(np,NV_BLTINOPT))
 							((Shnode_t*)t)->com.comstate = bdata.data;
 						if(!nv_isattr(np,BLT_EXIT) && sh.exitval!=SH_RUNPROG)
@@ -822,6 +823,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 					}
 					sh_popcontext(&buff);
 					errorpop(&buff.err);
+					error_info.flags &= ~ERROR_SILENT;
 					sh.bltinfun = 0;
 					if(buff.olist)
 						free_list(buff.olist);
