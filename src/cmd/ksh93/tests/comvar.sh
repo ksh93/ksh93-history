@@ -74,4 +74,11 @@ nameref x=foo
 if	[[ ${!x.@} != foo.x ]]
 then	err_exit 'name references not expanded on prefix matching'
 fi
+unset x
+(
+	x=()
+	x.foo.bar=7
+	[[ ${x.foo.bar} == 7 ]] || err_exit '[[ ${x.foo.bar} != 7 ]]'
+	(( x.foo.bar == 7  ))|| err_exit '(( x.foo.bar != 7 ))'
+)
 exit $((Errors))

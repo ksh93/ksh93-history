@@ -27,7 +27,7 @@
 
 /*
  * Glenn Fowler
- * AT&T Bell Laboratories
+ * AT&T Labs Research
  *
  * return RE expression given strmatch() pattern
  * 0 returned for invalid RE
@@ -35,20 +35,34 @@
 
 #include <ast.h>
 
+typedef struct Stack_s
+{
+	char*		beg;
+	short		len;
+	short		min;
+} Stack_t;
+
 char*
 fmtre(const char* as)
 {
-	register char*	s = (char*)as;
-	register int	c;
-	register char*	t;
-	register char*	p;
-	int		n;
-	char*		buf;
-	char		stack[32];
+	register char*		s = (char*)as;
+	register int		c;
+	register char*		t;
+	register Stack_t*	p;
+	char*			x;
+	int			n;
+	int			end;
+	char*			buf;
+	Stack_t			stack[32];
 
+	end = 1;
 	c = 2 * strlen(s) + 1;
 	t = buf = fmtbuf(c);
 	p = stack;
+	if (*s != '*' || *(s + 1) == '(' || *(s + 1) == '-' && *(s + 2) == '(')
+		*t++ = '^';
+	else
+		s++;
 	for (;;)
 	{
 		switch (c = *s++)
@@ -62,7 +76,7 @@ fmtre(const char* as)
 			if ((*t++ = c) == '(' && *s == '|')
 			{
 				*t++ = *s++;
-				goto alternate;
+				goto logical;
 			}
 			continue;
 		case '[':
@@ -96,50 +110,101 @@ fmtre(const char* as)
 				}
 			}
 			continue;
+		case '{':
+			for (x = s; *x && *x != '}'; x++);
+			if (*x++ && (*x == '(' || *x == '-' && *(x + 1) == '('))
+			{
+				if (p >= &stack[elementsof(stack)])
+					return 0;
+				p->beg = s - 1;
+				s = x;
+				p->len = s - p->beg;
+				if (p->min = *s == '-')
+					s++;
+				p++;
+				*t++ = *s++;
+			}
+			else
+				*t++ = c;
+			continue;
 		case '*':
+			if (!*s)
+			{
+				end = 0;
+				break;
+			}
+			/*FALLTHROUGH*/
 		case '?':
 		case '+':
 		case '@':
 		case '!':
-			if (*s == '(')
+		case '~':
+			if (*s == '(' || c != '~' && *s == '-' && *(s + 1) == '(')
 			{
 				if (p >= &stack[elementsof(stack)])
 					return 0;
-				*p++ = c == '@' ? 0 : c;
-				c = *s++;
+				p->beg = s - 1;
+				if (c == '~')
+				{
+					if (*(s + 1) == 'E' && *(s + 2) == ')')
+					{
+						for (s += 3; *t = *s; t++, s++);
+						continue;
+					}
+					p->len = 0;
+					*t++ = *s++;
+					*t++ = '?';
+				}
+				else
+				{
+					p->len = c != '@';
+					if (p->min = *s == '-')
+						s++;
+					*t++ = *s++;
+				}
+				p++;
 			}
-			switch (c)
+			else
 			{
-			case '*':
-				*t++ = '.';
-				break;
-			case '?':
-				c = '.';
-				break;
-			case '+':
-			case '!':
-				*t++ = '\\';
-				break;
+				switch (c)
+				{
+				case '*':
+					*t++ = '.';
+					break;
+				case '?':
+					c = '.';
+					break;
+				case '+':
+				case '!':
+					*t++ = '\\';
+					break;
+				}
+				*t++ = c;
 			}
-			*t++ = c;
 			continue;
 		case '(':
 			if (p >= &stack[elementsof(stack)])
 				return 0;
-			*p++ = 0;
+			p->beg = s - 1;
+			p->len = 0;
+			p->min = 0;
+			p++;
 			*t++ = c;
 			continue;
 		case ')':
 			if (p == stack)
 				return 0;
 			*t++ = c;
-			if (c = *--p)
-				*t++ = c;
+			p--;
+			for (c = 0; c < p->len; c++)
+				*t++ = p->beg[c];
+			if (p->min)
+				*t++ = '?';
 			continue;
 		case '|':
 			if (t == buf || *(t - 1) == '(')
 				return 0;
-		alternate:
+		logical:
 			if (!*s || *s == ')')
 				return 0;
 			/*FALLTHROUGH*/
@@ -151,6 +216,8 @@ fmtre(const char* as)
 	}
 	if (p != stack)
 		return 0;
+	if (end)
+		*t++ = '$';
 	*t = 0;
 	return buf;
 }

@@ -38,10 +38,18 @@ fi
 mkdir  /tmp/ksh$$ || err_exit "mkdir /tmp/ksh$$ failed" 
 trap "rm -rf /tmp/ksh$$" EXIT
 pwd=$PWD
+[[ $SHELL != /* ]] && SHELL=$pwd/$SHELL
 cd /tmp/ksh$$ || err_exit "cd /tmp/ksh$$ failed"
 mkdir dir
 if	[[ $(print */) != dir/ ]]
 then	err_exit 'file expansion with trailing / not working'
+fi
+if	[[ $(print *) != dir ]]
+then	err_exit 'file expansion with single file not working'
+fi
+print hi > .foo
+if	[[ $(print *) != dir ]]
+then	err_exit 'file expansion leading . not working'
 fi
 date > dat1 || err_exit "date > dat1 failed"
 test -r dat1 || err_exit "dat1 is not readable"
@@ -63,7 +71,20 @@ then	set -- foo*
 	then	err_exit 'foo* does not match foo\abc'
 	fi
 fi
+> TT* > TTfoo
+set -- TT*
+if	(( $# < 2 ))
+then	err_exit 'TT* not expanding when file TT* exists'
+fi
 cd ~- || err_exit "cd back failed"
+cat > /tmp/ksh$$/script <<- !
+	#! $SHELL
+	print -r -- \$0
+!
+chmod 755 /tmp/ksh$$/script
+if	[[ $(/tmp/ksh$$/script) != "/tmp/ksh$$/script" ]]
+then	err_exit '$0 not correct for #! script'
+fi
 rm -r /tmp/ksh$$ || err_exit "rm -r /tmp/ksh$$ failed"
 bar=foo
 eval foo=\$bar

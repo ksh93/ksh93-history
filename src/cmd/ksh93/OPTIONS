@@ -7,7 +7,6 @@ ECHOPRINT=0	# make echo equivalent to print, overrides ECHO_N
 ESH=1		# emacs edit option
 FS_3D=		# 3d file system
 KIA=1		# shell information database generation
-MULTIBYTE=1	# multibyte character handling
 NAMESPACE=0	# extension to suport namespaces, not complete
 NOCASE=0	# do case insensitive file matching
 OLDTERMIO=0	# for systems that must support both TCGETA and TCGETS

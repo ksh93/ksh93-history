@@ -54,4 +54,14 @@ case $f in
 \[*\])  ;;
 *)      err_exit "$f does not match \[*\]";;
 esac
+
+if	[[ $($SHELL -c '
+		x=$(case abc {
+			abc)	{ print yes;};;
+			*)	 print no;;
+			}
+		)
+		print -r -- "$x"' 2> /dev/null) != yes ]]
+then err_exit 'case abc {...} not working'
+fi
 exit $((Errors))

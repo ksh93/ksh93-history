@@ -62,9 +62,13 @@ struct jobsave
 	struct jobsave	*next;
 	pid_t		pid;
 	unsigned short	exitval;
-	int		env;
 };
 
+struct back_save
+{
+	int		count;
+	struct jobsave	*list;
+};
 
 #define BYTE(n)		(((n)+CHAR_BIT-1)/CHAR_BIT)
 #define MAXMSG	25
@@ -97,6 +101,7 @@ struct jobsave
 #define P_COREDUMP	0100
 #define P_DISOWN	0200
 
+static int		job_chksave(pid_t);
 static struct process	*job_bypid(pid_t);
 static struct process	*job_byjid(int);
 static char		*job_sigmsg(int);
@@ -110,11 +115,11 @@ static char		beenhere;
 static char		possible;
 static int		savesig;
 static struct process	dummy;
-static int		bck_count;
-static struct jobsave	*bck_list;
 static char		by_number;
 static Sfio_t		*outfile;
 static pid_t		lastpid;
+static struct back_save	bck;
+
 
 #ifdef JOBS
     static void			job_set(struct process*);
@@ -190,7 +195,7 @@ static void job_waitsafe(register int sig)
 	{
 		if(!(flags&WNOHANG))
 		{
-			if(sh.waitevent && (*sh.waitevent)(-1,0L,0))
+			if(sh.waitevent && (*sh.waitevent)(-1,-1L,0))
 				flags |= WNOHANG;
 		}
 		pid = waitpid((pid_t)-1,&wstat,flags);
@@ -207,15 +212,14 @@ static void job_waitsafe(register int sig)
 #endif /* DEBUG */
 			pw = &dummy;
 			pw->p_pgrp = 0;
-			if(bck_count++ > sh.lim.child_max)
+			if(bck.count++ > sh.lim.child_max)
 				job_chksave(0);
 			jp = new_of(struct jobsave,0);
-			jp->next = bck_list;
-			bck_list = jp;
+			jp->next = bck.list;
+			bck.list = jp;
 			lastpid = pw->p_pid = jp->pid = pid;
 			pw->p_flag = 0;
 			jp->exitval = 0;
-			jp->env = sh.curenv;
 			px = 0;
 			if(WIFSTOPPED(wstat))
 			{
@@ -914,16 +918,16 @@ void	job_clear(void)
 		while(px=pw)
 		{
 			pw = pw->p_nxtproc;
-			free((char*)px);
+			free((void*)px);
 		}
 	}
-	for(jp=bck_list; jp;)
+	for(jp=bck.list; jp;)
 	{
 		px = (struct process*)jp;
 		jp = jp->next;
-		free((char*)px);
+		free((void*)px);
 	}
-	bck_list = 0;
+	bck.list = 0;
 	job.pwlist = NIL(struct process*);
 	job.numpost=0;
 	job.waitall = 0;
@@ -1238,6 +1242,8 @@ void	job_wait(register pid_t pid)
 		}
 #endif /* SIGTSTP */
 	}
+	else
+		tty_set(-1, 0, NIL(struct termios*));
 done:
 	if(!sh.intrap)
 	{
@@ -1346,11 +1352,11 @@ static struct process *job_unpost(register struct process *pwtop,int notify)
 	register struct process *pw;
 	/* make sure all processes are done */
 #ifdef DEBUG
-	sfprintf(sfstderr,"%d: unpost pid=%d\n",getpid(),pwtop->p_pid);
+	sfprintf(sfstderr,"%d: unpost pid=%d env=%d\n",getpid(),pwtop->p_pid,pwtop->p_env);
 	sfsync(sfstderr);
 #endif /* DEBUG */
 	pwtop = pw = job_byjid((int)pwtop->p_job);
-	for(; pw && (pw->p_flag&P_DONE)&&(notify||!(pw->p_flag&P_NOTIFY)); pw=pw->p_nxtproc);
+	for(; pw && (pw->p_flag&P_DONE)&&(notify||!(pw->p_flag&P_NOTIFY)||pw->p_env); pw=pw->p_nxtproc);
 	if(pw)
 		return(pw);
 	/* all processes complete, unpost job */
@@ -1362,13 +1368,12 @@ static struct process *job_unpost(register struct process *pwtop,int notify)
 		{
 			struct jobsave *jp;
 			/* save status for future wait */
-			if(bck_count++ > sh.lim.child_max)
+			if(bck.count++ > sh.lim.child_max)
 				job_chksave(0);
 			jp = new_of(struct jobsave,0);
-			jp->next = bck_list;
-			bck_list = jp;
+			jp->next = bck.list;
+			bck.list = jp;
 			jp->pid = pw->p_pid;
-			jp->env = sh.curenv;
 			jp->exitval = pw->p_exit;
 			if(pw->p_flag&P_SIGNALLED)
 				jp->exitval |= SH_EXITSIG;
@@ -1484,9 +1489,9 @@ static char *job_sigmsg(int sig)
  * if pid==0, then oldest saved process is deleted
  * If pid is not found a -1 is returned.
  */
-int job_chksave(register pid_t pid)
+static int job_chksave(register pid_t pid)
 {
-	register struct jobsave *jp = bck_list, *jpold=0;
+	register struct jobsave *jp = bck.list, *jpold=0;
 	register int r= -1;
 	while(jp)
 	{
@@ -1501,17 +1506,35 @@ int job_chksave(register pid_t pid)
 	{
 		r = 0;
 		if(pid)
-		{
-			if(jp->env!=sh.curenv)
-				return(-1);
 			r = jp->exitval;
-		}
 		if(jpold)
 			jpold->next = jp->next;
 		else
-			bck_list = jp->next;
-		bck_count--;
+			bck.list = jp->next;
+		bck.count--;
 		free((char*)jp);
 	}
 	return(r);
+}
+
+void *job_subsave(void)
+{
+	struct back_save *bp = new_of(struct back_save,0);
+	*bp = bck;
+	bck.count = 0;
+	bck.list = 0;
+	return((void*)bp);
+}
+
+void job_subrestore(void* ptr)
+{
+	register struct jobsave *jp,*jpnext;
+	register struct back_save *bp = (struct back_save*)ptr;
+	for(jp=bck.list; jp; jp=jpnext)
+	{
+		jpnext = jp->next;
+		free((void*)jp);
+	}
+	bck = *bp;
+	free(ptr);
 }

@@ -29,7 +29,7 @@
  * ast dynamic data initialization
  */
 
-#ifdef _WIN32
+#ifdef _UWIN
 
 #include <sfio_t.h>
 #include <ast.h>
@@ -112,7 +112,7 @@ DllMain(HINSTANCE hinst, DWORD reason, VOID* reserved)
 
 #include <ast.h>
 
-#if __MVS__ && ( _DLL_BLD || _BLD_DLL )
+#if _dll_intercept_data && ( _DLL_BLD || _BLD_DLL )
 
 #undef	environ
 

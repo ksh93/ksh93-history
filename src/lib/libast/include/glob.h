@@ -102,6 +102,7 @@ struct _glob_
 #define GLOB_BRACE	0x0100		/* enable {...} expansion	*/
 #define GLOB_ICASE	0x0200		/* ignore case on match		*/
 #define GLOB_COMPLETE	0x0400		/* shell file completeion	*/
+#define GLOB_AUGMENTED	0x0800		/* augmented shell patterns	*/
 #define GLOB_STACK	0x1000		/* allocate on current stack	*/
 #define GLOB_LIST	0x2000		/* just create gl_list		*/
 #define GLOB_ALTDIRFUNC	0x4000		/* gnu discipline functions	*/

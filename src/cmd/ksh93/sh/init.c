@@ -48,6 +48,12 @@
 #include	"FEATURE/locale"
 #include	"national.h"
 
+#ifdef SHOPT_MULTIBYTE
+    char e_version[]	= "\n@(#)$Id: Version M 1993-12-28 l $\0\n";
+#else
+    char e_version[]	= "\n@(#)$Id: Version 1993-12-28 l $\0\n";
+#endif /* SHOPT_MULTIBYTE */
+
 #if _hdr_wchar && _lib_wctype && _lib_iswctype
 #   include <wchar.h>
 #   if _hdr_wctype
@@ -125,6 +131,17 @@ struct shell
 	Shell_t		*sh;
 };
 
+struct match
+{
+	Namfun_t	hdr;
+	Namval_t	*np;
+	char		*val;
+	char		*subp;
+	int		sub;
+	int		nmatch;
+	int		match[20];
+};
+
 typedef struct _init_
 {
 	Shell_t		*sh;
@@ -133,6 +150,10 @@ typedef struct _init_
 #endif /* SHOPT_FS_3D */
 	struct ifs	IFS_init;
 	struct shell	PATH_init;
+#ifdef PATH_BFPATH
+	struct shell	FPATH_init;
+	struct shell	CDPATH_init;
+#endif
 	struct shell	SHELL_init;
 	struct shell	ENV_init;
 	struct shell	VISUAL_init;
@@ -149,6 +170,7 @@ typedef struct _init_
 	struct shell	LC_MSG_init;
 	struct shell	LC_ALL_init;
 	struct shell	LANG_init;
+	struct match	SH_MATCH_init;
 #endif /* _hdr_locale */
 #ifdef SHOPT_MULTIBYTE
 	Namfun_t	CSWIDTH_init;
@@ -225,19 +247,63 @@ static void put_optindex(Namval_t* np,const char *val,int flags,Namfun_t *fp)
 	nv_putv(np, val, flags, fp);
 }
 
-/* Trap for restricted variables PATH, SHELL, ENV */
+/* Trap for restricted variables FPATH, PATH, SHELL, ENV */
 static void put_restricted(register Namval_t* np,const char *val,int flags,Namfun_t *fp)
 {
 	Shell_t *shp = ((struct shell*)fp)->sh;
+#ifdef PATH_BFPATH
+	Pathcomp_t *pp;
+#endif
 	if(!(flags&NV_RDONLY) && sh_isoption(SH_RESTRICTED))
 		errormsg(SH_DICT,ERROR_exit(1),e_restricted,nv_name(np));
 	if(nv_name(np)==nv_name(PATHNOD))			
 	{
+#ifndef PATH_BFPATH
 		shp->lastpath = 0;
+#endif
 		nv_scan(shp->track_tree,rehash,(void*)0,NV_TAGGED,NV_TAGGED);
 	}
+	if(val && np->nvalue.cp && strcmp(val,np->nvalue.cp)==0)
+		 return;
+#ifdef PATH_BFPATH
+	if(shp->defpathlist  && nv_name(np)==nv_name(FPATHNOD))
+		shp->pathlist = (void*)path_unsetfpath((Pathcomp_t*)shp->pathlist);
+#endif
 	nv_putv(np, val, flags, fp);
+#ifdef PATH_BFPATH
+	if(shp->defpathlist)
+	{
+		val = np->nvalue.cp;
+		if(nv_name(np)==nv_name(PATHNOD))
+			pp = (void*)path_addpath((Pathcomp_t*)shp->pathlist,val,PATH_PATH);
+		else if(val && nv_name(np)==nv_name(FPATHNOD))
+			pp = (void*)path_addpath((Pathcomp_t*)shp->pathlist,val,PATH_FPATH);
+		else
+			return;
+		if(shp->pathlist = (void*)pp)
+			pp->shp = shp;
+#if 0
+sfprintf(sfstderr,"%d: name=%s val=%s\n",getpid(),nv_name(np),val);
+path_dump((Pathcomp_t*)shp->pathlist);
+#endif
+	}
+#endif
 }
+
+#ifdef PATH_BFPATH
+static void put_cdpath(register Namval_t* np,const char *val,int flags,Namfun_t *fp)
+{
+	Pathcomp_t *pp;
+	Shell_t *shp = ((struct shell*)fp)->sh;
+	nv_putv(np, val, flags, fp);
+	if(!shp->cdpathlist)
+		return;
+	val = np->nvalue.cp;
+	pp = (void*)path_addpath((Pathcomp_t*)shp->cdpathlist,val,PATH_CDPATH);
+	if(shp->cdpathlist = (void*)pp)
+		pp->shp = shp;
+}
+#endif
 
 #ifdef _hdr_locale
     /*
@@ -326,6 +392,10 @@ static void put_restricted(register Namval_t* np,const char *val,int flags,Namfu
 			memcpy(state[3],sh_lexrstates[ST_BRACE],(1<<CHAR_BIT));
 			for(c=0; c<(1<<CHAR_BIT); c++)
 			{
+				if(state[0][c]!=S_REG)
+					continue;
+				if(state[2][c]!=S_ERR)
+					continue;
 				if(isblank(c))
 				{
 					state[0][c]=0;
@@ -335,12 +405,10 @@ static void put_restricted(register Namval_t* np,const char *val,int flags,Namfu
 				}
 				if(!isalpha(c))
 					continue;
-				if(state[0][c]==S_REG)
-					state[0][c]=S_NAME;
+				state[0][c]=S_NAME;
 				if(state[1][c]==S_REG)
 					state[1][c]=0;
-				if(state[2][c]==S_ERR)
-					state[2][c]=S_ALP;
+				state[2][c]=S_ALP;
 				if(state[3][c]==S_ERR)
 					state[3][c]=0;
 			}
@@ -587,6 +655,107 @@ static void put_lastarg(Namval_t* np,const char *val,int flags,Namfun_t *fp)
 		sh.lastarg = 0;
 }
 
+static int hasgetdisc(register Namfun_t *fp)
+{
+        while(fp && !fp->disc->getnum && !fp->disc->getval)
+                fp = fp->next;
+	return(fp!=0);
+}
+
+/*
+ * store the most recent node or value for use in .sh.match
+ * size==-2 when node is given
+ */
+void sh_setmatch(Namval_t *np, int size, int nmatch, int match[])
+{
+	struct match *mp = (struct match*)(SH_MATCHNOD->nvfun);
+	Namarr_t *ap;
+	if(mp->val)
+	{
+		free((void*)mp->val);
+		mp->val = 0;
+	}
+	if(mp->np)
+		nv_unsetnotify(mp->np,(char**)&mp->np);
+	if(mp->sub>= -1 && mp->subp)
+		free((void*)mp->subp);
+	mp->subp = 0;
+	if(size >= -1)
+	{
+		mp->np = 0;
+		if(size==-1)
+			mp->subp = strdup((char*)np);
+		else
+		{
+			mp->subp = (char*)malloc(size+1);
+			memcpy(mp->subp,(void*)np,size);
+			mp->subp[size] = 0;
+		}
+	}
+	else if(mp->np = np)
+	{
+		if(nv_isarray(np))
+		{
+			if((mp->sub = nv_aindex(np)) < 0)
+				mp->subp = nv_getsub(np);
+		}
+		if(ap = nv_arrayptr(SH_MATCHNOD))
+			ap->nelem = nmatch;
+		nv_setnotify(np,(char**)&mp->np);
+	}
+	if(mp->nmatch = nmatch)
+		memcpy(mp->match,match,nmatch*2*sizeof(int));
+} 
+
+#define array_scan(np)	((nv_arrayptr(np)->nelem&ARRAY_SCAN))
+
+static char* get_match(register Namval_t* np, Namfun_t *fp)
+{
+	struct match *mp = (struct match*)fp;
+	char *val;
+	int sub,n;
+	if(mp->val)
+	{
+		free((void*)mp->val);
+		mp->val = 0;
+	}
+	if(!mp->np && !mp->subp)
+		return(0);
+	if(mp->np  && (mp->np->nvfun && hasgetdisc(mp->np->nvfun)))
+		return(0);
+	sub = nv_aindex(np);
+	if(sub>=mp->nmatch)
+		return(0);
+	n = mp->match[2*sub+1]-mp->match[2*sub];
+	if(n==0)
+		return("");
+	mp->val = (char*)malloc(n+1);
+	if(mp->np)
+	{
+		int osub=0,scan=0;
+		char *osubp=0;
+		if(nv_isarray(mp->np))
+		{
+			scan = array_scan(mp->np);
+			if(mp->subp)
+				osubp = nv_getsub(mp->np);
+			else
+				osub = nv_aindex(mp->np);
+			nv_putsub(mp->np,mp->subp,mp->sub);
+		}
+		val = nv_getval(mp->np);
+		if(nv_isarray(mp->np))
+			nv_putsub(mp->np,osubp,osub|scan);
+	}
+	else
+		val = mp->subp;
+	memcpy(mp->val,val+mp->match[2*sub],n);
+	mp->val[n] = 0;
+	return(mp->val);
+}
+
+static const Namdisc_t SH_MATCH_disc  = {  0, 0, get_match };
+
 #ifdef SHOPT_FS_3D
     /*
      * set or unset the mappings given a colon separated list of directories
@@ -624,6 +793,9 @@ static void put_lastarg(Namval_t* np,const char *val,int flags,Namfun_t *fp)
 
 static const Namdisc_t IFS_disc		= {  0, put_ifs, get_ifs };
 static const Namdisc_t RESTRICTED_disc	= {  0, put_restricted };
+#ifdef PATH_BFPATH
+static const Namdisc_t CDPATH_disc	= {  0, put_cdpath }; 
+#endif
 static const Namdisc_t EDITOR_disc	= {  0, put_ed };
 static const Namdisc_t OPTINDEX_disc	= {  0, put_optindex };
 static const Namdisc_t SECONDS_disc	= {  0, put_seconds, get_seconds, nget_seconds };
@@ -702,6 +874,9 @@ int sh_init(register int argc,register char *argv[], void(*userinit)(int))
 {
 	register char *name;
 	register int n,prof;
+	n = strlen(e_version);
+	if(e_version[n-1]=='$' && e_version[n-2]==' ')
+		e_version[n-2]=0;
 #if	(CC_NATIVE == CC_ASCII)
 	memcpy(sh_lexstates,sh_lexrstates,ST_NONE*sizeof(char*));
 #else
@@ -892,7 +1067,11 @@ int sh_reinit(char *argv[])
  */
 Namfun_t *nv_cover(register Namval_t *np)
 {
-	if(np==IFSNOD || np==PATHNOD || np==SHELLNOD)
+#ifdef PATH_BFPATH
+	if(np==IFSNOD || np==PATHNOD || np==SHELLNOD || np==FPATHNOD || np==CDPNOD || np==SECONDS)
+#else
+	if(np==IFSNOD || np==PATHNOD || np==SHELLNOD || np==SECONDS)
+#endif
 		return(np->nvfun);
 #ifdef _hdr_locale
 	if(np==LCALLNOD || np==LCTYPENOD || np==LCMSGNOD || np==LCCOLLNOD || np==LCNUMNOD || np==LANGNOD)
@@ -917,6 +1096,12 @@ static Init_t *nv_init(Shell_t *shp)
 	ip->IFS_init.sh = shp;
 	ip->PATH_init.hdr.disc = &RESTRICTED_disc;
 	ip->PATH_init.sh = shp;
+#ifdef PATH_BFPATH
+	ip->FPATH_init.hdr.disc = &RESTRICTED_disc;
+	ip->FPATH_init.sh = shp;
+	ip->CDPATH_init.hdr.disc = &CDPATH_disc;
+	ip->CDPATH_init.sh = shp;
+#endif
 	ip->SHELL_init.hdr.disc = &RESTRICTED_disc;
 	ip->SHELL_init.sh = shp;
 	ip->ENV_init.hdr.disc = &RESTRICTED_disc;
@@ -930,6 +1115,7 @@ static Init_t *nv_init(Shell_t *shp)
 	ip->SECONDS_init.hdr.disc = &SECONDS_disc;
 	ip->SECONDS_init.sh = shp;
 	ip->RAND_init.hdr.disc = &RAND_disc;
+	ip->SH_MATCH_init.hdr.disc = &SH_MATCH_disc;
 	ip->LINENO_init.hdr.disc = &LINENO_disc;
 	ip->LINENO_init.sh = shp;
 	ip->L_ARG_init.hdr.disc = &L_ARG_disc;
@@ -951,6 +1137,10 @@ static Init_t *nv_init(Shell_t *shp)
 #endif /* SHOPT_MULTIBYTE */
 	nv_stack(IFSNOD, &ip->IFS_init.hdr);
 	nv_stack(PATHNOD, &ip->PATH_init.hdr);
+#ifdef PATH_BFPATH
+	nv_stack(FPATHNOD, &ip->FPATH_init.hdr);
+	nv_stack(CDPNOD, &ip->CDPATH_init.hdr);
+#endif
 	nv_stack(SHELLNOD, &ip->SHELL_init.hdr);
 	nv_stack(ENVNOD, &ip->ENV_init.hdr);
 	nv_stack(VISINOD, &ip->VISUAL_init.hdr);
@@ -963,6 +1153,8 @@ static Init_t *nv_init(Shell_t *shp)
 	d = (shp->pid&RANDMASK);
 	nv_putval(RANDNOD, (char*)&d, NV_INTEGER);
 	nv_stack(LINENO, &ip->LINENO_init.hdr);
+	nv_putsub(SH_MATCHNOD,(char*)0,10);
+	nv_onattr(SH_MATCHNOD,NV_RDONLY);
 #ifdef _hdr_locale
 	nv_stack(LCTYPENOD, &ip->LC_TYPE_init.hdr);
 	nv_stack(LCALLNOD, &ip->LC_ALL_init.hdr);
@@ -970,6 +1162,7 @@ static Init_t *nv_init(Shell_t *shp)
 	nv_stack(LCCOLLNOD, &ip->LC_COLL_init.hdr);
 	nv_stack(LCNUMNOD, &ip->LC_NUM_init.hdr);
 	nv_stack(LANGNOD, &ip->LANG_init.hdr);
+	nv_stack(SH_MATCHNOD, &ip->SH_MATCH_init.hdr);
 #endif /* _hdr_locale */
 #ifdef SHOPT_MULTIBYTE
 	nv_stack(CSWIDTHNOD, &ip->CSWIDTH_init);
@@ -1040,14 +1233,14 @@ static Dt_t *inittree(Shell_t *shp,const struct shtable2 *name_vals)
 		else
 			np->nvalue.cp = (char*)tp->sh_value;
 		nv_setattr(np,tp->sh_number);
-		if(nv_isattr(np,NV_TABLE))
+		if(nv_istable(np))
 			np->nvalue.hp = dtopen(&_Nvdisc,Dtset);
 		if(nv_isattr(np,NV_INTEGER))
 			nv_setsize(np,10);
 		else
 			nv_setsize(np,0);
 		dtinsert(treep,np);
-		if(nv_isattr(np,NV_TABLE))
+		if(nv_istable(np))
 			treep = np->nvalue.hp;
 	}
 	return(treep);
@@ -1064,6 +1257,10 @@ static void env_init(Shell_t *shp)
 	register Namval_t	*np;
 	register char **ep=environ;
 	register char *next=0;
+#ifdef _ENV_H
+	shp->env = env_open(environ,3);
+	env_delete(shp->env,"_");
+#endif
 	if(ep)
 	{
 		while(cp= *ep++)
@@ -1083,11 +1280,41 @@ static void env_init(Shell_t *shp)
 				*next = 0;
 			np = nv_search(cp+2,shp->var_tree,NV_ADD);
 			if(nv_isattr(np,NV_IMPORT|NV_EXPORT))
-{
-				nv_newattr(np,*(unsigned char*)cp-' '|NV_IMPORT|NV_EXPORT,*(unsigned char*)(cp+1)-' ');
-}
+			{
+				int flag = *(unsigned char*)cp-' ';
+				int size = *(unsigned char*)(cp+1)-' ';
+				if((flag&NV_INTEGER) && size==0)
+				{
+					/* check for floating*/
+					char *ep,*val = nv_getval(np);
+					strtol(val,&ep,10);
+					if(*ep=='.' || *ep=='e' || *ep=='E')
+					{
+						char *lp;
+						flag |= NV_DOUBLE;
+						if(*ep=='.')
+						{
+							strtol(ep+1,&lp,10);
+							if(*lp)
+								ep = lp;
+						}
+						if(*ep && *ep!='.')
+						{
+							flag |= NV_EXPNOTE;
+							size = ep-val;
+						}
+						else
+							size = strlen(ep);
+						size--;
+					}
+				}
+				nv_newattr(np,flag|NV_IMPORT|NV_EXPORT,size);
+			}
 		}
 	}
+#ifdef _ENV_H
+	env_delete(sh.env,e_envmarker);
+#endif
 	if(nv_isattr(PWDNOD,NV_TAGGED))
 	{
 		nv_offattr(PWDNOD,NV_TAGGED);

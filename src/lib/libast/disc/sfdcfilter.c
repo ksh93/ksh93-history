@@ -31,8 +31,16 @@
 **	Written by Kiem-Phong Vo, kpv@research.att.com, 03/18/1998.
 */
 
-#if !defined(FNDELAY) && defined(O_NDELAY)
-#define FNDELAY	O_NDELAY
+#ifndef O_NONBLOCK
+#ifdef	O_NDELAY
+#define O_NONBLOCK	O_NDELAY
+#else
+#ifdef	FNDELAY
+#define O_NONBLOCK	FNDELAY
+#else
+#define O_NONBLOCK	0
+#endif
+#endif
 #endif
 
 typedef struct _filter_s
@@ -155,6 +163,7 @@ char*	cmd;	/* program to run as a filter	*/
 {
 	reg Filter_t*	fi;
 	reg Sfio_t*	filter;
+	int		fl;
 
 	/* open filter for read&write */
 	if(!(filter = sfpopen(NIL(Sfio_t*),cmd,"r+")) )
@@ -165,12 +174,16 @@ char*	cmd;	/* program to run as a filter	*/
 
 	/* make the write descriptor nonblocking */
 	sfset(filter,SF_READ,0);
-	fcntl(sffileno(filter),F_SETFL,FNDELAY);
+	if ((fl = fcntl(sffileno(filter),F_GETFL,0)) == -1)
+		fl = 0;
+	fcntl(sffileno(filter),F_SETFL,fl|O_NONBLOCK);
 	sfset(filter,SF_READ,1);
 
 	/* same for the read descriptor */
 	sfset(filter,SF_WRITE,0);
-	fcntl(sffileno(filter),F_SETFL,FNDELAY);
+	if ((fl = fcntl(sffileno(filter),F_GETFL,0)) == -1)
+		fl = 0;
+	fcntl(sffileno(filter),F_SETFL,fl|O_NONBLOCK);
 	sfset(filter,SF_WRITE,1);
 
 	if(!(fi = (Filter_t*)malloc(sizeof(Filter_t))) )

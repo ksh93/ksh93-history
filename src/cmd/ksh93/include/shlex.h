@@ -116,6 +116,7 @@ struct shlex_t
 #define SH_NOIO		010
 #define	SH_ASSIGN	020
 #define	SH_FUNDEF	040
+#define SH_ARRAY	0100
 
 typedef struct  _shlex_
 {

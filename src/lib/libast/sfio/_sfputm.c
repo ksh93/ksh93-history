@@ -31,12 +31,12 @@
 */
 
 #if __STD_C
-int _sfputm(reg Sfio_t* f, Sfulong_t v, Sfulong_t max)
+int _sfputm(reg Sfio_t* f, Sfulong_t v, Sfulong_t m)
 #else
-int _sfputm(f,v,max)
+int _sfputm(f,v,m)
 reg Sfio_t*	f;	/* write a portable ulong to this stream */
 Sfulong_t	v;	/* the unsigned value to be written */
-Sfulong_t	max;	/* the max value of the range */
+Sfulong_t	m;	/* the max value of the range */
 #endif
 {
 #define N_ARRAY		(2*sizeof(Sfulong_t))
@@ -46,14 +46,14 @@ Sfulong_t	max;	/* the max value of the range */
 
 	SFMTXSTART(f, -1);
 
-	if(v > max || (f->mode != SF_WRITE && _sfmode(f,SF_WRITE,0) < 0) )
+	if(v > m || (f->mode != SF_WRITE && _sfmode(f,SF_WRITE,0) < 0) )
 		SFMTXRETURN(f, -1);
 	SFLOCK(f,0);
 
 	/* code v as integers in base SF_UBASE */
 	s = ps = &(c[N_ARRAY-1]);
 	*s = (uchar)SFBVALUE(v);
-	while((max >>= SF_BBITS) > 0 )
+	while((m >>= SF_BBITS) > 0 )
 	{	v >>= SF_BBITS;
 		*--s = (uchar)SFBVALUE(v);
 	}

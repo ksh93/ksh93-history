@@ -101,7 +101,7 @@ unsigned sleep(unsigned sec)
 	tp = (void*)sh_timeradd(1000*sec, 0, completed, (void*)&expired);
 	do
 	{
-		if(!sh.waitevent || (*sh.waitevent)(-1,0L,0)==0)
+		if(!sh.waitevent || (*sh.waitevent)(-1,-1L,0)==0)
 			pause();
 		if(sh.sigflag[SIGALRM]&SH_SIGTRAP)
 			sh_timetraps();

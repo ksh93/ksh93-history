@@ -42,6 +42,10 @@
 #include <iconv.h>
 #include <sfstr.h>
 
+#ifndef DEBUG_trace
+#define DEBUG_trace		0
+#endif
+
 #if _lib_catopen
 
 typedef struct
@@ -78,12 +82,12 @@ _ast_catopen(const char* name, int flag)
 	 * first try the ast catalogs
 	 */
 
-#if 0
+#if DEBUG_trace
 sfprintf(sfstderr, "AHA#%d:%s %s\n", __LINE__, __FILE__, name);
 #endif
 	if ((s = mcfind(path, NiL, name, LC_MESSAGES, flag)) && (ip = sfopen(NiL, s, "r")))
 	{
-#if 0
+#if DEBUG_trace
 sfprintf(sfstderr, "AHA#%d:%s %s\n", __LINE__, __FILE__, s);
 #endif
 		mc = mcopen(ip);
@@ -92,6 +96,7 @@ sfprintf(sfstderr, "AHA#%d:%s %s\n", __LINE__, __FILE__, s);
 			return (_ast_nl_catd)mc;
 	}
 #if _lib_catopen
+	if (strcmp(setlocale(LC_MESSAGES, NiL), "debug"))
 	{
 		Cc_t*		cc;
 		nl_catd		d;
@@ -115,6 +120,9 @@ sfprintf(sfstderr, "AHA#%d:%s %s\n", __LINE__, __FILE__, s);
 			}
 			else
 				cc->cvt = (iconv_t)(-1);
+#if DEBUG_trace
+sfprintf(sfstderr, "AHA#%d:%s %s %s native %p\n", __LINE__, __FILE__, s, name, cc->cat);
+#endif
 			return (_ast_nl_catd)cc;
 		}
 	}

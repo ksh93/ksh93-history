@@ -1,8 +1,9 @@
 iff	AST_COMMON
-hdr	stddef
+hdr	pthread,stddef,types
 sys	types
-typ	size_t,ssize_t
-typ	long.double
+typ	long.double,size_t,ssize_t
+
+mac	SF_APPEND,SF_CLOSE	sys/stat.h sys/socket.h
 
 dll	import note{ Microsoft import/export nonsense }end execute{
 	__declspec(dllimport) int foo;
@@ -11,19 +12,36 @@ dll	import note{ Microsoft import/export nonsense }end execute{
 	int*	_imp__foo = &bar;
 }end
 
+std	proto note{ standard C prototypes ok }end compile{
+	extern int foo(int, int);
+	bar() { foo(1, 1); }
+}end
+
+tst	ptr_void note{ standard C void* ok }end compile{
+	extern void* foo();
+	void* bar() { return foo(); }
+}end
+
 cat{
+	/* disable non-standard linux/gnu inlines */
+	#ifdef __GNUC__	
+	#undef	__OPTIMIZE_SIZE__
+	#define	__OPTIMIZE_SIZE__	1
+	#endif
+
 	/* __STD_C indicates that the language is ANSI-C or C++ */
-	#ifndef __STD_C
-	#ifdef __STDC__
+	#if !defined(__STD_C) && __STDC__
 	#define	__STD_C		1
-	#else
-	#if __cplusplus || c_plusplus
+	#endif
+	#if !defined(__STD_C) && (__cplusplus || c_plusplus)
 	#define __STD_C		1
-	#else
+	#endif
+	#if !defined(__STD_C) && _std_proto
+	#define __STD_C		1
+	#endif
+	#if !defined(__STD_C)
 	#define __STD_C		0
-	#endif /*__cplusplus*/
-	#endif /*__STDC__*/
-	#endif /*__STD_C*/
+	#endif
 
 	/* extern symbols must be protected against C++ name mangling */
 	#ifndef _BEGIN_EXTERNS_
@@ -143,9 +161,13 @@ tst	- -DN=0 - -DN=1 - -DN=2 - -DN=3 - -DN=4 - -DN=5 - -DN=6 - -DN=7 - -DN=8 outp
 	static char		i_char = 1;
 	static short		i_short = 1;
 	static int		i_int = 1;
-	static long		i_long = 1;
+	static long		i_long = 1L;
 	#ifdef _ast_int8_t
+	#ifdef __STDC__
+	static _ast_int8_t	i_long_long = 1LL;
+	#else
 	static _ast_int8_t	i_long_long = 1;
+	#endif
 	#endif
 	
 	static struct
@@ -225,7 +247,7 @@ tst	- -DN=0 - -DN=1 - -DN=2 - -DN=3 - -DN=4 - -DN=5 - -DN=6 - -DN=7 - -DN=8 outp
 	}
 }end
 
-tst - -DTRY=1 - -DTRY=1 -Dvoid=char - -DTRY=2 - -DTRY=3 - -DTRY=4 output{
+tst	- -DTRY=1 - -DTRY=1 -Dvoid=char - -DTRY=2 - -DTRY=3 - -DTRY=4 output{
 	#define printf	______printf
 	#ifdef __STDC__
 	#include <stdarg.h>

@@ -33,7 +33,7 @@ NoN(getopt)
 
 #else
 
-#if _WIN32
+#if _UWIN
 #undef	_BLD_ast	/* enable ast imports since we're user static */
 #endif
 

@@ -471,4 +471,3 @@ b_id(int argc, char *argv[], void* context)
 	error_info.errors = getids(sfstdout, *argv, flags);
 	return(error_info.errors);
 }
-

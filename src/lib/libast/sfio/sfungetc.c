@@ -46,7 +46,7 @@ reg Sfdisc_t	*disc;
 		return -1;
 
 	/* close the unget stream */
-	if(type != SF_CLOSE)
+	if(type != SF_CLOSING)
 		(void)sfclose((*_Sfstack)(f,NIL(Sfio_t*)));
 
 	return 1;

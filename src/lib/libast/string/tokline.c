@@ -73,7 +73,7 @@ splice(Sfio_t* s, int op, void* val, Sfdisc_t* ad)
 	NoP(val);
 	switch (op)
 	{
-	case SF_CLOSE:
+	case SF_CLOSING:
 		sfclose(d->sp);
 		return 0;
 	case SF_DPOP:
@@ -132,7 +132,7 @@ splice(Sfio_t* s, int op, void* val, Sfdisc_t* ad)
 				}
 				if (n > 0)
 				{
-					if (!j && buf[n - 1] != '\n' && (s->flags & SF_STRING))
+					if (!j && buf[n - 1] != '\n' && (s->_flags & SF_STRING))
 						buf[n++] = '\n';
 					if (q && buf[n - 1] == '\n')
 						buf[n - 1] = '\r';

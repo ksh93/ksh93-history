@@ -57,6 +57,9 @@ lcl	xstat64 link{
 cat{
 	#if _typ_off64_t
 	#undef	off_t
+	#ifdef __STDC__
+	#define	off_t	off_t
+	#endif
 	#endif
 	#ifndef _def_param_lcl
 	#ifndef S_ISUID
@@ -73,7 +76,7 @@ cat{
 	#if !_lib__lxstat && !_mac_lstat && !defined(__RENAME)
 	__STDPP__directive pragma pp:hide lstat
 	#endif
-	__STDPP__directive pragma pp:hide chmod mkdir mkfifo mount umask SF_APPEND
+	__STDPP__directive pragma pp:hide chmod mkdir mkfifo mount umask
 	#else
 	#if !_lib__xmknod && !_mac_mknod && !defined(__RENAME)
 	#define mknod ______mknod
@@ -89,7 +92,6 @@ cat{
 	#define mkfifo ______mkfifo
 	#define mount ______mount
 	#define umask ______umask
-	#undef	SF_APPEND
 	#endif
 	#include <sys/stat.h>
 	#if defined(__STDPP__directive) && defined(__STDPP__hide)
@@ -102,7 +104,7 @@ cat{
 	#if !_lib__lxstat && !_mac_lstat && !defined(__RENAME)
 	__STDPP__directive pragma pp:nohide lstat
 	#endif
-	__STDPP__directive pragma pp:nohide chmod mkdir mkfifo mount umask SF_APPEND
+	__STDPP__directive pragma pp:nohide chmod mkdir mkfifo mount umask
 	#else
 	#if !_lib__xmknod && !_mac_mknod && !defined(__RENAME)
 	#undef	mknod
@@ -118,8 +120,6 @@ cat{
 	#undef	mkfifo
 	#undef	mount
 	#undef	umask
-	#undef	SF_APPEND
-	#define SF_APPEND	_SF_APPEND
 	#endif
 	#endif
 	#endif
@@ -239,6 +239,7 @@ cat{
 	extern int	statvfs(const char*, struct statvfs*);
 	#endif
 	#if _typ_off64_t
+	#undef	off_t
 	#define off_t	off64_t
 	#endif
 	#if _lib_statvfs64 && !defined(statvfs)

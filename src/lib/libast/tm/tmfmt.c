@@ -33,6 +33,7 @@
 
 #include <ast.h>
 #include <tm.h>
+#include <ctype.h>
 
 #define warped(t,n)	((t)<((n)-6L*30L*24L*60L*60L)||(t)>((n)+24L*60L*60L))
 
@@ -116,15 +117,25 @@ tmfmt(char* buf, size_t len, const char* format, time_t* clock)
 				*cp++ = c;
 			continue;
 		}
-		switch (*format)
+		pad = 0;
+		for (;;)
 		{
-		case '_':
-		case '-':
-		case '0':
-			pad = *format++;
-			break;
-		default:
-			pad = 0;
+			switch (*format)
+			{
+			case '_':
+			case '-':
+			case '0':
+				pad = *format++;
+				continue;
+			case 'E':
+			case 'O':
+				if (!isalpha(*(format + 1)))
+					break;
+				format++;
+				continue;
+			default:
+				break;
+			}
 			break;
 		}
 		switch (*format++)
@@ -143,20 +154,20 @@ tmfmt(char* buf, size_t len, const char* format, time_t* clock)
 				format = tm_info.format[TM_DEFAULT];
 			continue;
 		case 'a':	/* abbreviated day of week name */
-			n = TM_DAY_3 + tp->tm_wday;
+			n = TM_DAY_ABBREV + tp->tm_wday;
 			goto index;
 		case 'A':	/* day of week name */
 			n = TM_DAY + tp->tm_wday;
 			goto index;
 		case 'b':	/* abbreviated month name */
 		case 'h':
-			n = TM_MONTH_3 + tp->tm_mon;
+			n = TM_MONTH_ABBREV + tp->tm_mon;
 			goto index;
 		case 'B':	/* month name */
 			n = TM_MONTH + tp->tm_mon;
 			goto index;
 		case 'c':	/* `ctime(3)' date sans newline */
-			p = "%a %b %e %T %Y";
+			p = tm_info.format[TM_CTIME];
 			goto push;
 		case 'C':	/* 2 digit century */
 			cp = number(cp, ep, (long)(1900 + tp->tm_year) / 100, 2, pad);
@@ -165,19 +176,33 @@ tmfmt(char* buf, size_t len, const char* format, time_t* clock)
 			cp = number(cp, ep, (long)tp->tm_mday, 2, pad);
 			continue;
 		case 'D':	/* date */
-			p = "%m/%d/%y";
+			p = tm_info.format[TM_DATE];
 			goto push;
-		case 'E':       /* no pad day of month */
+		case 'E':       /* OBSOLETE no pad day of month */
 			cp = number(cp, ep, (long)tp->tm_mday, 0, pad);
 			continue;
 		case 'e':       /* blank padded day of month */
 			cp = number(cp, ep, (long)tp->tm_mday, -2, pad);
 			continue;
+		case 'f':	/* TM_DEFAULT override */
+		case 'o':	/* OBSOLETE */
+			p = tm_info.deformat;
+			goto push;
+		case 'F':	/* TM_DEFAULT */
+		case 'O':	/* OBSOLETE */
+			p = tm_info.format[TM_DEFAULT];
+			goto push;
+		case 'g':	/* `ls -l' recent date */
+			p = tm_info.format[TM_RECENT];
+			goto push;
+		case 'G':	/* `ls -l' distant date */
+			p = tm_info.format[TM_DISTANT];
+			goto push;
 		case 'H':	/* hour (0 - 23) */
 			cp = number(cp, ep, (long)tp->tm_hour, 2, pad);
 			continue;
 		case 'i':	/* international `date(1)' date */
-			p = "%a %b %e %T %z %Z %Y";
+			p = tm_info.format[TM_INTERNATIONAL];
 			goto push;
 		case 'I':	/* hour (0 - 12) */
 			if ((n = tp->tm_hour) > 12) n -= 12;
@@ -191,19 +216,22 @@ tmfmt(char* buf, size_t len, const char* format, time_t* clock)
 			cp = number(cp, ep, (long)(tp->tm_yday + 1), 3, pad);
 			continue;
 		case 'k':	/* `date(1)' date */
-			p = "%a %b %e %T %Z %Y";
+			p = tm_info.format[TM_DATE_1];
 			goto push;
 		case 'K':
 			p = "%Y-%m-%d+%H:%M:%S";
 			goto push;
 		case 'l':	/* `ls -l' date */
-			p = "%b %e %H:%M";
 			if (clock)
 			{
 				time(&now);
 				if (warped(*clock, now))
-					p = "%b %e  %Y";
+				{
+					p = tm_info.format[TM_DISTANT];
+					goto push;
+				}
 			}
+			p = tm_info.format[TM_RECENT];
 			goto push;
 		case 'm':	/* month number */
 			cp = number(cp, ep, (long)(tp->tm_mon + 1), 2, pad);
@@ -226,17 +254,11 @@ tmfmt(char* buf, size_t len, const char* format, time_t* clock)
 					goto string;
 			}
 			continue;
-		case 'o':	/* TM_DEFAULT override */
-			p = tm_info.deformat;
-			goto push;
-		case 'O':	/* TM_DEFAULT */
-			p = tm_info.format[TM_DEFAULT];
-			goto push;
 		case 'p':	/* meridian */
 			n = TM_MERIDIAN + (tp->tm_hour >= 12);
 			goto index;
 		case 'r':
-			p = "%I:%M:%S %p";
+			p = tm_info.format[TM_MERIDIAN_TIME];
 			goto push;
 		case 'R':
 			p = "%H:%M";
@@ -257,7 +279,7 @@ tmfmt(char* buf, size_t len, const char* format, time_t* clock)
 				*cp++ = '\t';
 			continue;
 		case 'T':
-			p = "%H:%M:%S";
+			p = tm_info.format[TM_TIME];
 			goto push;
 		case 'U':	/* week number, Sunday as first day */
 			i = tp->tm_yday - tp->tm_wday;

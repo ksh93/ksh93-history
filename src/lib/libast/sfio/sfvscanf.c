@@ -94,6 +94,50 @@ int*	rs;
 	}
 }
 
+/*
+ * pull in a private strtold()
+ */
+
+#define S2F_function	_sfdscan
+#define S2F_static	1
+#define S2F_type	2
+#define S2F_scan	1
+
+#include "sfstrtof.h"
+
+typedef struct Ext_s
+{
+	Sfio_t*		f;
+	uchar*		d;
+	uchar*		data;
+	uchar*		endd;
+	int		inp;
+	int		rs;
+	int		n_input;
+	int		width;
+} Ext_t;
+
+#if __STD_C
+static int get(Void_t* handle)
+#else
+static int get(handle)
+Void_t*		handle;
+#endif
+{
+	register Ext_t*	x = (Ext_t*)handle;
+
+#define SFXBUF(x)	(_sfbuf((x)->f,&(x)->rs), ((x)->data = (x)->d = (x)->f->next), ((x)->endd = (x)->f->endb) )
+#define SFXLEN(x)	((x)->d - (x)->data)
+#define SFXEND(x)	(((x)->n_input += SFXLEN(x)), \
+			 ((x)->rs > 0 ? SFREAD((x)->f,(Void_t*)(x)->data,SFXLEN(x)) : (((x)->f->next = (x)->d), 0)) )
+#define SFXGETC(x)	(((x)->d < (x)->endd || (SFXEND(x), SFXBUF(x), (x)->d < (x)->endd)) ? \
+				(int)(*(x)->d++) : -2 )
+
+	if (--x->width <= 0)
+		return -2;
+	return x->inp = SFXGETC(x);
+}
+
 #if __STD_C
 int sfvscanf(Sfio_t* f, reg const char* form, va_list args)
 #else
@@ -106,8 +150,8 @@ va_list		args;
 	reg uchar	*d, *endd, *data;
 	reg int		inp, shift, base, width;
 	ssize_t		size;
-	int		fmt, flags, dot, n_assign, v, n, n_input;
-	char*		sp;
+	int		fmt, flags, dot, n_assign, v, n, n_input, error;
+	char		*sp;
 	char		accept[SF_MAXDIGITS];
 
 	Argv_t		argv;
@@ -119,10 +163,18 @@ va_list		args;
 	va_list		oargs;
 	int		argp, argn;
 
+	int		decimal = 0, thousand = 0;
+#if _has_multibyte
+	int		mbcurmax = 1;
+#endif
+
 	Void_t*		value;	/* location to assign scanned value */
 	char*		t_str;
 	ssize_t		n_str;
 	int		rs;
+
+#define SFEXT(x)	(SFUNGETC(f,inp),(x)->f=f,(x)->d=d,(x)->data=data,(x)->endd=endd,(x)->rs=rs,(x)->n_input=n_input,(x)->width=width)
+#define SFINT(x)	(f=(x)->f,d=(x)->d,data=(x)->data,endd=(x)->endd,rs=(x)->rs,n_input=(x)->n_input,inp=(x)->inp)
 
 #define SFBUF(f)	(_sfbuf(f,&rs), (data = d = f->next), (endd = f->endb) )
 #define SFLEN(f)	(d-data)
@@ -141,22 +193,30 @@ va_list		args;
 		SFMTXRETURN(f, -1);
 	SFLOCK(f,0);
 
-	rs = (f->extent < 0 && (f->flags&SF_SHARE)) ? 1 : 0;
-
 	SFCVINIT();	/* initialize conversion tables */
 
+	rs = (f->extent < 0 && (f->flags&SF_SHARE)) ? 1 : 0;
 	SFBUF(f);
+
 	n_assign = n_input = 0;
 
 	inp = -1;
 
-	fmstk = NIL(Fmt_t*); ft = NIL(Sffmt_t*);
+	fmstk = NIL(Fmt_t*);
+	ft = NIL(Sffmt_t*);
 
-	fp = NIL(Fmtpos_t*); argn = -1;
-	oform = (char*)form; va_copy(oargs,args);
+	fp = NIL(Fmtpos_t*);
+	argn = -1;
+	oform = (char*)form;
+	va_copy(oargs,args);
+#if _has_multibyte
+	mbcurmax = MB_CUR_MAX;
+#endif
 
-loop_fmt :
-	while((fmt = *form++) )
+	SFSETLOCALE(&decimal, &thousand);
+
+loop_fmt:
+	while((fmt = *form++))
 	{	if(fmt != '%')
 		{	if(isspace(fmt))
 			{	if(fmt != '\n' || !(f->flags&SF_LINE))
@@ -172,11 +232,25 @@ loop_fmt :
 			}
 			else
 			{ match_1:
+#if _has_multibyte
+				n = SFMBLEN(form-1, mbcurmax);
+				for (;;)
+				{	if(SFGETC(f,inp) != fmt)
+					{	if(inp >= 0)
+							SFUNGETC(f,inp);
+						goto pop_fmt;
+					}
+					if (--n <= 0)
+						break;
+					fmt = *form++;
+				}
+#else
 				if(SFGETC(f,inp) != fmt)
 				{	if(inp >= 0)
 						SFUNGETC(f,inp);
 					goto pop_fmt;
 				}
+#endif
 			}
 			continue;
 		}
@@ -201,6 +275,7 @@ loop_fmt :
 		t_str = NIL(char*); n_str = 0;
 		value = NIL(Void_t*);
 		argp = -1;
+		error = 0;
 
 	loop_flags:	/* LOOP FOR FLAGS, WIDTH, BASE, TYPE */
 		switch((fmt = *form++) )
@@ -387,6 +462,10 @@ loop_fmt :
 			size = -1;
 			flags = (flags&~SFFMT_TYPES) | SFFMT_TFLAG;
 			goto loop_flags;
+		case QUOTE :
+			if(thousand > 0)
+				flags |= SFFMT_THOUSAND;
+			goto loop_flags;
 		}
 
 		/* set object size */
@@ -478,6 +557,8 @@ loop_fmt :
 					va_copy(args,argv.ft->args);
 					argn = -1;
 					fp = NIL(Fmtpos_t*);
+					oform = (char*)form;
+					va_copy(oargs,args);
 				}
 				else	fm->form = NIL(char*);
 
@@ -524,62 +605,35 @@ loop_fmt :
 			goto done;
 
 		if(_Sftype[fmt] == SFFMT_FLOAT)
-		{	reg char*	val;
-			reg int		dot, exponent;
+		{	Ext_t		ext;
+			Sfdouble_t	e;
 
-			val = accept;
-			if(width >= SF_MAXDIGITS)
-				width = SF_MAXDIGITS-1;
-			dot = exponent = 0;
-			do
-			{	if(isdigit(inp))
-					*val++ = inp;
-				else if(inp == '.')
-				{	/* too many dots */
-					if(dot++ > 0)
-						break;
-					*val++ = '.';
-				}
-				else if(inp == 'e' || inp == 'E')
-				{	/* too many e,E */
-					if(exponent++ > 0)
-						break;
-					*val++ = inp;
-					if(--width <= 0 || SFGETC(f,inp) < 0 ||
-					   (inp != '-' && inp != '+' && !isdigit(inp)) )
-						break;
-					*val++ = inp;
-				}
-				else if(inp == '-' || inp == '+')
-				{	/* too many signs */
-					if(val > accept)
-						break;
-					*val++ = inp;
-				}
-				else	break;
-
-			} while(--width > 0 && SFGETC(f,inp) >= 0);
-
-			if(value)
-			{	*val = '\0';
-#if !_ast_fltmax_double
-				if(FMTCMP(size,Sfdouble_t,Sfdouble_t))
-					argv.ld = _sfstrtod(accept,NIL(char**));
-				else
-#endif
-					argv.d = (double)strtod(accept,NIL(char**));
+			SFEXT(&ext);
+			e = _sfdscan((Void_t*)&ext, get);
+			SFINT(&ext);
+			if ((width - ext.width) <= 1)
+			{
+				error = 1;
+				SFUNGETC(f, inp);
+				goto pop_fmt;
 			}
-
 			if(value)
-			{	n_assign += 1;
+			{
 #if !_ast_fltmax_double
 				if(FMTCMP(size,Sfdouble_t,Sfdouble_t))
+				{
+					argv.ld = e;
 					*((Sfdouble_t*)value) = argv.ld;
+				}
 				else
 #endif
-				if(FMTCMP(size,double,Sfdouble_t))
-					*((double*)value) = argv.d;
-				else	*((float*)value) = (float)argv.d;
+				{
+					argv.d = (double)e;
+					if(FMTCMP(size,double,Sfdouble_t))
+						*((double*)value) = argv.d;
+					else	*((float*)value) = (float)argv.d;
+				}
+				n_assign += 1;
 			}
 		}
 		else if(_Sftype[fmt] == SFFMT_UINT || fmt == 'p')
@@ -637,22 +691,34 @@ loop_fmt :
 			}
 			else if(base == 10)
 			{	/* fast base 10 conversion */
-				if(inp < '0' || inp > '9')
-				{	SFUNGETC(f,inp);
-					goto pop_fmt;
+				n = v = 0;
+				for (;;)
+				{
+					if (inp >= '0' && inp <= '9')
+					{
+						argv.lu = (argv.lu<<3) + (argv.lu<<1) + (inp-'0');
+						n++;
+					}
+					else if (inp != thousand || v && n != 3 || !v && n > 3)
+						break;
+					else
+					{
+						v = 1;
+						n = 0;
+					}
+					if (--width <= 0)
+						break;
+				        SFGETC(f,inp);
 				}
-
-				do
-				{ argv.lu = (argv.lu<<3) + (argv.lu<<1) + (inp-'0');
-				} while(--width > 0 &&
-				        SFGETC(f,inp) >= '0' && inp <= '9');
+				if (!n && !v)
+					goto pop_fmt;
 
 				if(fmt == 'i' && inp == '#' && !(flags&SFFMT_ALTER) )
 				{	base = (int)argv.lu;
 					if(base < 2 || base > SF_RADIX)
 						goto pop_fmt;
 					argv.lu = 0;
-					sp = base <= 36 ? (char*)_Sfcv36 : (char*)_Sfcv64;
+					sp = (char*)(base <= 36 ? _Sfcv36 : _Sfcv64);
 					if(--width > 0 &&
 					   SFGETC(f,inp) >= 0 && sp[inp] < base)
 						goto base_conv;
@@ -660,7 +726,7 @@ loop_fmt :
 			}
 			else
 			{	/* other bases */
-				sp = base <= 36 ? (char*)_Sfcv36 : (char*)_Sfcv64;
+				sp = (char*)(base <= 36 ? _Sfcv36 : _Sfcv64);
 				if(base < 2 || base > SF_RADIX || sp[inp] >= base)
 				{	SFUNGETC(f,inp);
 					goto pop_fmt;
@@ -777,6 +843,8 @@ loop_fmt :
 
 		if(width > 0 && inp >= 0)
 			SFUNGETC(f,inp);
+		if(error)
+			goto pop_fmt;
 	}
 
 pop_fmt:

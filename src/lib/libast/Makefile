@@ -18,25 +18,28 @@ CCFLAGS = $(CC.OPTIMIZE) -D_BLD_ast $(CC.DLL)
 .SOURCE.h : include comp
 
 PARANOID ==
+CONF_LIBSUFFIX == "$(CC.SUFFIX.DYNAMIC|CC.SUFFIX.SHARED)"
 DEBUG ==
 __OBSOLETE__ == 20010101
 
 HEADERSRC = ast.h ast_dir.h ast_std.h ast_version.h \
 	ccode.h cdt.h debug.h error.h find.h ftw.h ftwalk.h fts.h \
-	fs3d.h getopt.h glob.h hash.h hashkey.h hashpart.h int.h ls.h \
+	fs3d.h getopt.h glob.h hash.h hashkey.h hashpart.h int.h lc.h ls.h \
 	magic.h mc.h mime.h mnt.h modecanon.h modex.h namval.h option.h \
-	proc.h re.h re_comp.h regex.h regexp.h sfio.h sfio_t.h sfdisc.h \
-	sfstr.h stack.h stak.h stk.h swap.h tar.h times.h tm.h \
+	proc.h re.h re_comp.h regex.h regexp.h \
+	sfio.h sfio_s.h sfio_t.h sfdisc.h sfstr.h \
+	stack.h stak.h stk.h swap.h tar.h times.h tm.h \
 	tok.h usage.h vdb.h vecargs.h vmalloc.h wait.h wordexp.h \
-	bytesex.h endian.h
+	bytesex.h endian.h fnmatch.h
 
-HEADERGEN = align.h iconv.h limits.h nl_types.h preroot.h sig.h \
+HEADERGEN = align.h dirent.h iconv.h limits.h nl_types.h preroot.h \
+	sig.h wchar.h \
 	$(ID)_botch.h $(ID)_ccode.h $(ID)_common.h $(ID)_fcntl.h \
-	$(ID)_fs.h $(ID)_hdr.h $(ID)_lib.h $(ID)_mode.h $(ID)_param.h \
-	$(ID)_time.h $(ID)_tty.h $(ID)_types.h $(ID)_unistd.h \
-	$(ID)_wait.h
+	$(ID)_fs.h $(ID)_hdr.h $(ID)_lib.h $(ID)_map.h $(ID)_mode.h \
+	$(ID)_param.h $(ID)_time.h $(ID)_tty.h $(ID)_types.h \
+	$(ID)_unistd.h $(ID)_wait.h
 
-HEADEROPT = fmtmsg.h fnmatch.h libgen.h syslog.h
+HEADEROPT = fmtmsg.h libgen.h syslog.h
 
 $(ID) 5.4 :LIBRARY: README RELEASE \
 	LIBAST.3 ast.3 cdt.3 chr.3 compat.3 error.3 find.3 fmt.3 \
@@ -61,14 +64,15 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	strlook.c strsearch.c strpsearch.c \
 	stresc.c stropt.c strtape.c tok.c tokline.c tokscan.c \
 	pathaccess.c pathcat.c pathcanon.c pathcheck.c pathpath.c \
-	pathfind.c pathkey.c pathprobe.c pathrepl.c \
+	pathexists.c pathfind.c pathkey.c pathprobe.c pathrepl.c \
 	pathtemp.c pathtmp.c pathstat.c \
 	pathgetlink.c pathsetlink.c pathbin.c pathshell.c pathcd.c \
 	fs3d.c ftwalk.c ftwflags.c fts.c setenviron.c \
 	optget.c optjoin.c strsort.c \
 	magic.c mime.c mimetype.c signal.c systrace.c \
-	error.c errorf.c errormsg.c errorx.c setlocale.c translate.c \
-	catopen.c iconv.c mc.c \
+	error.c errorf.c errormsg.c errorx.c \
+	localeconv.c setlocale.c translate.c \
+	catopen.c iconv.c lc.c mc.c \
 	liberror.c libevent.c \
 	fmtbase.c fmtbuf.c fmtclock.c fmtdev.c fmtelapsed.c fmterror.c \
 	fmtesc.c fmtfs.c fmtident.c fmtip4.c fmtls.c fmtmatch.c fmtmode.c \
@@ -86,7 +90,8 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	memccpy.c memchr.c memcmp.c memcpy.c memdup.c memmove.c memset.c \
 	mkdir.c mkfifo.c mknod.c rmdir.c remove.c rename.c link.c unlink.c \
 	strdup.c strchr.c strrchr.c \
-	strtod.c strtol.c strtoll.c strtoul.c strtoull.c strton.c strtonll.c \
+	strtod.c strtold.c \
+	strtol.c strtoll.c strtoul.c strtoull.c strton.c strtonll.c \
 	strcasecmp.c strncasecmp.c strerror.c \
 	mktemp.c tmpnam.c \
 	execlp.c execve.c execvp.c execvpe.c \
@@ -108,15 +113,15 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	sfdcold.c sfdcdio.c sfdcdos.c sfdcfilter.c sfdcseekable.c \
 	sfdcslow.c sfdcsubstream.c sfdctee.c sfdcunion.c \
 	sfdcmore.c sfdcprefix.c \
-	libc.c \
+	wc.c libc.c \
 	/* standards */ \
 	basename.c closelog.c dirname.c fmtmsglib.c fnmatch.c ftw.c \
 	getdate.c getsubopt.c glob.c nftw.c openlog.c re_comp.c \
 	realpath.c regcmp.c regexp.c setlogmask.c strftime.c \
 	strptime.c swab.c syslog.c sysloglib.h tempnam.c \
-	tmpfile.c wordexp.c mktime.c \
+	wordexp.c mktime.c \
 	/* regex */ \
-	reglib.h regalloc.c regclass.c regcomp.c \
+	reglib.h regalloc.c regclass.c regcoll.c regcomp.c \
 	regerror.c regexec.c regfatal.c reginit.c regnexec.c \
 	regsub.c regrecord.c regrexec.c \
 	/* cdt */ \
@@ -149,11 +154,19 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	getw.c pclose.c popen.c printf.c putc.c putchar.c \
 	puts.c putw.c rewind.c scanf.c setbuf.c setbuffer.c \
 	setlinebuf.c setvbuf.c snprintf.c sprintf.c sscanf.c \
-	ungetc.c vfprintf.c vfscanf.c vprintf.c vscanf.c \
-	vsnprintf.c vsprintf.c vsscanf.c \
-	_doprnt.c _doscan.c _stdfun.c \
+	stdio/tmpfile.c ungetc.c vfprintf.c vfscanf.c vprintf.c \
+	vscanf.c vsnprintf.c vsprintf.c vsscanf.c \
+	_doprnt.c _doscan.c _filbuf.c _flsbuf.c _stdfun.c \
 	_stdopen.c _stdprintf.c _stdscanf.c _stdsprnt.c \
 	_stdvbuf.c _stdvsnprnt.c _stdvsprnt.c _stdvsscn.c \
+	/* wchar stdio */ \
+	fgetwc.c fwprintf.c putwchar.c vfwscanf.c wprintf.c \
+	fgetws.c fwscanf.c swprintf.c vswprintf.c wscanf.c \
+	fputwc.c getwc.c swscanf.c vswscanf.c \
+	fputws.c getwchar.c ungetwc.c vwprintf.c \
+	fwide.c putwc.c vfwprintf.c vwscanf.c \
+	/* math */ \
+	frexp.c frexpl.c \
 	/* ast */ \
 	astcopy.c astconf.c astdynamic.c astlicense.c astquery.c astwinsize.c \
 	$(CC.LD.STATIC) aststatic.c getopt.c $(CC.LD.DYNAMIC) \
@@ -169,8 +182,6 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	log__L.c rand48.c random.c rcmd.c rint.c support.c \
 	/* obsolete */ \
 	obsolete/mematoe.c obsolete/memetoa.c \
-	/* misc */ \
-	atmain.C \
 	-liconv /* please OSF, this *has* to be wrong */
 
 /*
@@ -184,8 +195,8 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
  *
  * this works around the problem by ignoring stdio.h
  * changes for the ast source, which shouldn't be too
- * bad since on most systems it includes sfio.h, and
- * any changes there will be seen
+ * bad since the library uses sfio for io and only
+ * includes <stdio.h> for a few manifest constants
  *
  * also, -D_BLD_ast is explicit for the uwin bootstrap
  */
@@ -216,7 +227,8 @@ confmap.c conftab.c confstr.c pathconf.c sysconf.c :JOINT: \
 :READONLY: confmap.c conftab.c modedata.c /*sftable.c*/ \
 	/*sigdata.c*/ tmdata.c univdata.c
 
-:: stdgets.c stdprintf.c stdscanf.c stdvbuf.c stdsprnt.c \
+:: atmain.C \
+	stdgets.c stdprintf.c stdscanf.c stdvbuf.c stdsprnt.c \
 	stdvsprnt.c stdvsnprnt.c stdvsscn.c stdopen.c
 
 $(INCLUDEDIR) :INSTALLPROTO: $(HEADERSRC) $(HEADERGEN)
@@ -229,46 +241,45 @@ iffeio.h :COPY: FEATURE/stdio.lcl
 
 stdio.h :COPY: FEATURE/stdio
 
+lcgen : lcgen.c
+	$(CC.NATIVE|CC) -o $(<) $(*)
+
+lc.h lctab.h :JOINT: lcgen lc.tab
+	$(*:O=1) $(tmp).1 $(tmp).2 < $(*:O=2)
+	$(PROTO) -p $(PROTOFLAGS) $(tmp).1 > $(tmp).3
+	rm -f $(tmp).1
+	if	cmp -s $(tmp).3 $(<:O=1)
+	then	rm $(tmp).3
+	else	mv $(tmp).3 $(<:O=1)
+	fi
+	if	cmp -s $(tmp).2 $(<:O=2)
+	then	rm $(tmp).2
+	else	mv $(tmp).2 $(<:O=2)
+	fi
+
 $(LIBDIR)/file/magic :INSTALL: magic.tab
 
 :INSTALL: $(HEADEROPT:D=$(INCLUDEDIR):B:S)
 
 $(HEADEROPT:D=$(INCLUDEDIR):B:S) : $$(<:B:S) ast_lib.h
-	$(SILENT) $(GREP) -l 'define[ 	][ 	]*_[hl][di][rb]_$(<:B)' $(*:O>1) > /dev/null || {
+	case $(CC.HOSTTYPE) in
+	win32.*)$(PROTO) -p $(PROTOFLAGS) $(*:O=1) > 1.$(tmp).x
+		if	$(CMP) -s $(<) 1.$(tmp).x
+		then	$(RM) -f 1.$(tmp).x
+		else	$(MV) 1.$(tmp).x $(<)
+		fi
+		;;
+	*)	$(SILENT) $(GREP) -l 'define[ 	][ 	]*_[hl][di][rb]_$(<:B)' $(*:O>1) > /dev/null || {
 		$(PROTO) -p $(PROTOFLAGS) $(*:O=1) > 1.$(tmp).x
 		if	$(CMP) -s $(<) 1.$(tmp).x
 		then	$(RM) -f 1.$(tmp).x
 		else	$(MV) 1.$(tmp).x $(<)
 		fi
-	}
+		}
+		;;
+	esac
 
 /* a few headers are problematic */
-
-$(INCLUDEDIR)/dirent.h :INSTALL: $(INCLUDEDIR) dir64.h dirstd.h dirnsys.h dirsys.h ast_lib.h
-	header=
-	match=`$(SED) -e '/define[ 	]*_[lhst][idy][brsp]_[a-z]*[d6][i4]/!d' -e 's/.*define[ 	]*/./' -e 's/[ 	].*/./' $(*:N=*ast_lib.h) 2>/dev/null`
-	case $match in
-	*._lib_opendir.*)
-		case $match in
-		*._lib_stat64.*)case $match in
-				*._typ_off64_t.*) header=$(*:N=*dir64.h) ;;
-				esac
-				;;
-		*._hdr_dirent.*);;
-		*._hdr_ndir.*)	header=$(*:N=*dirnsys.h) ;;
-		*._sys_dir.*)	header=$(*:N=*dirsys.h) ;;
-		esac
-		;;
-	*)	header=$(*:N=*dirstd.h)
-		;;
-	esac
-	case $header in
-	?*)	$(PROTO) -p $(PROTOFLAGS) $header > 1.$(tmp).x
-		if	$(CMP) -s $(<) 1.$(tmp).x
-		then	$(RM) -f 1.$(tmp).x
-		else	$(MV) 1.$(tmp).x $(<)
-		fi
-	esac
 
 $(INCLUDEDIR)/prototyped.h :INSTALL: $(INCLUDEDIR)
 	echo "#include <../prototyped.h>" > 1.$(tmp).x
@@ -286,8 +297,12 @@ ast.req : .check.hdr .check.lib
 atmain.o : atmain.C
 	ignore $(CC) -c $(CCFLAGS) $(*)
 	if	test ! -f $(<)
-	then	$(CP) $(*) $(*:B:S=.c)
-		$(CC) -c $(CCFLAGS) $(*:B:S=.c)
+	then	$(CP) $(*) $(*:B:S=.cpp)
+		ignore $(CC) -c $(CCFLAGS) $(*:B:S=.cpp)
+		if	test ! -f $(<)
+		then	$(CP) $(*) $(*:B:S=.c)
+			$(CC) -c $(CCFLAGS) $(*:B:S=.c)
+		fi
 	fi
 
 /*

@@ -24,8 +24,12 @@
 #                 Phong Vo <kpv@research.att.com>                  #
 ####################################################################
 : generate preroot features
-eval $1
-shift
+case $# in
+0)	;;
+*)	eval $1
+	shift
+	;;
+esac
 if	/etc/preroot / /bin/echo >/dev/null
 then	cat <<!
 #pragma prototyped

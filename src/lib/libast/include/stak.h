@@ -45,7 +45,7 @@
 #define	staktell()		stktell(stkstd)
 #define stakputc(c)		sfputc(stkstd,(c))
 #define stakwrite(b,n)		sfwrite(stkstd,(b),(n))
-#define stakputs(s)		(sfputr(stkstd,(s),0),--stkstd->next)
+#define stakputs(s)		(sfputr(stkstd,(s),0),--stkstd->_next)
 #define stakseek(n)		stkseek(stkstd,n)
 #define stakcreate(n)		stkopen(n)
 #define stakinstall(s,f)	stkinstall(s,f)

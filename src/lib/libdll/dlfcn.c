@@ -30,7 +30,7 @@
  * AT&T Labs Research
  */
 
-static const char id[] = "\n@(#)$Id: dll library (AT&T Labs Research) 2000-10-20 $\0\n";
+static const char id[] = "\n@(#)$Id: dll library (AT&T Labs Research) 2001-05-29 $\0\n";
 
 #include <ast.h>
 #include <dlldefs.h>
@@ -53,7 +53,7 @@ static const char id[] = "\n@(#)$Id: dll library (AT&T Labs Research) 2000-10-20
 
 	/*
 	 * HP-UX
- 	*/
+ 	 */
 
 #	include <dl.h>
 #	ifndef BIND_FIRST
@@ -63,9 +63,13 @@ static const char id[] = "\n@(#)$Id: dll library (AT&T Labs Research) 2000-10-20
 #	define BIND_NOSTART	0x10
 #	endif
 
+	static shl_t	all;
+
 	extern void* dlopen(const char* path, int mode)
 	{
-		if(mode)
+		if (!path)
+			return (void*)&all;
+		if (mode)
 			mode = (BIND_IMMEDIATE|BIND_FIRST|BIND_NOSTART);
 		return (void*)shl_load(path, mode, 0L);
 	}
@@ -75,12 +79,13 @@ static const char id[] = "\n@(#)$Id: dll library (AT&T Labs Research) 2000-10-20
 		return 0;
 	}
 
-	extern void* dlsym(void* handle, const char* name)
+	extern void* dlsym(void* dll, const char* name)
 	{
+		shl_t	handle;
 		long	addr;
 
-		shl_findsym((shl_t*)&handle, name, TYPE_PROCEDURE, &addr);
-		return (void*)addr;
+		handle = dll == (void*)&all ? (shl_t)0 : (shl_t)dll;
+		return shl_findsym(&handle, name, TYPE_UNDEFINED, &addr) ? (void*)0 : (void*)addr;
 	}
 
 	extern char* dlerror(void)
@@ -202,7 +207,7 @@ static const char id[] = "\n@(#)$Id: dll library (AT&T Labs Research) 2000-10-20
 			}
 			else
 				symname = (void*)(ldsym->l_offset + (ulong)ldhdr + ldhdr->l_stoff);
-			if(strcmp(symname,name))
+			if (strcmp(symname,name))
 				continue;
 			loc = (char*)ldsym->l_value;
 			if ((ldsym->l_scnum==hdr->a.o_sndata) ||
@@ -219,7 +224,7 @@ static const char id[] = "\n@(#)$Id: dll library (AT&T Labs Research) 2000-10-20
 	{
 		struct ld_info*	info;
 
-		if(info=getinfo(handle))
+		if (info = getinfo(handle))
 			return getloc(info->ldinfo_textorg,info->ldinfo_dataorg,(char*)name);
 		return 0;
 	}

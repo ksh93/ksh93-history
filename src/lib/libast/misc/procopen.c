@@ -461,12 +461,13 @@ procopen(const char* cmd, char** argv, char** envv, long* modv, long flags)
 	else
 	{
 		if (!(flags & PROC_FOREGROUND))
-			sigcritical(1);
+			sigcritical(SIG_REG_EXEC|SIG_REG_PROC);
 		else
 		{
 			proc->sigint = signal(SIGINT, SIG_IGN);
 			proc->sigquit = signal(SIGQUIT, SIG_IGN);
 #if defined(SIGCHLD)
+			proc->sigchld = signal(SIGCHLD, SIG_DFL);
 #if _lib_sigprocmask
 			sigemptyset(&mask);
 			sigaddset(&mask, SIGCHLD);
@@ -490,6 +491,11 @@ procopen(const char* cmd, char** argv, char** envv, long* modv, long flags)
 			if (proc->sigquit != SIG_IGN)
 				proc->sigquit = SIG_DFL;
 			signal(SIGQUIT, proc->sigquit);
+#if defined(SIGCHLD)
+			if (proc->sigchld != SIG_IGN)
+				proc->sigchld = SIG_DFL;
+			signal(SIGCHLD, proc->sigchld);
+#endif
 		}
 		if (proc->pid == -1)
 			goto bad;
@@ -698,6 +704,9 @@ sfsync(sfstderr);
 			{
 				proc->sigint = signal(SIGINT, SIG_IGN);
 				proc->sigquit = signal(SIGQUIT, SIG_IGN);
+#if defined(SIGCHLD)
+				proc->sigchld = signal(SIGCHLD, SIG_DFL);
+#endif
 			}
 		}
 		else if (modv)

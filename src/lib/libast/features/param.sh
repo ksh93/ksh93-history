@@ -24,8 +24,12 @@
 #                 Phong Vo <kpv@research.att.com>                  #
 ####################################################################
 : generate "<sys/param.h> + <sys/types.h> + <sys/stat.h>" include sequence
-eval $1
-shift
+case $# in
+0)	;;
+*)	eval $1
+	shift
+	;;
+esac
 for i in "#include <sys/param.h>" "#include <sys/param.h>
 #ifndef S_IFDIR
 #include <sys/stat.h>

@@ -32,7 +32,7 @@
 #ifndef _COSHELL_H
 #define _COSHELL_H
 
-#include <sfio.h>
+#include <ast.h>
 
 typedef struct coshell Coshell_t;
 typedef struct cojob Cojob_t;
@@ -73,9 +73,10 @@ typedef struct cojob Cojob_t;
 #define CO_SERVER	(1<<8)		/* coshell is server (readonly)	*/
 #define CO_OSH		(1<<9)		/* coshell is OLD (readonly)	*/
 
-					/* 10,11 internal		*/
+#define CO_CROSS	(1<<10)		/* don't prepend local dirs	*/
+#define CO_DEVFD	(1<<11)		/* coshell handles /dev/fd/#	*/
 
-#define CO_USER		(1L<<12)	/* first user flag		*/
+#define CO_USER		(1L<<16)	/* first user flag		*/
 
 struct cojob				/* coshell job info		*/
 {

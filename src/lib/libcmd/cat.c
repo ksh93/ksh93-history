@@ -35,7 +35,7 @@
 #include <fcntl.h>
 
 static const char usage[] =
-"[-?\n@(#)$Id: cat (AT&T Labs Research) 2000-02-14 $\n]"
+"[-?\n@(#)$Id: cat (AT&T Labs Research) 2001-05-07 $\n]"
 USAGE_LICENSE
 "[+NAME?cat - concatenate files]"
 "[+DESCRIPTION?\bcat\b copies each \afile\a in sequence to the standard"
@@ -87,6 +87,7 @@ USAGE_LICENSE
 #define U_FLAG		(1<<6)
 #define V_FLAG		(1<<7)
 #define D_FLAG		(1<<8)
+#define d_FLAG		(1<<9)
 
 /* character types */
 #define T_ENDBUF	1
@@ -97,7 +98,7 @@ USAGE_LICENSE
 
 #define printof(c)	((c)^0100)
 
-static char	states[UCHAR_MAX+1];
+static char		states[UCHAR_MAX+1];
 
 /*
  * called for any special output processing
@@ -121,9 +122,9 @@ vcat(Sfio_t *fdin, Sfio_t *fdout, int flags)
 	{
 		/* read in a buffer full */
 		if (!(inbuff = (unsigned char*)sfreserve(fdin, SF_UNBOUND, 0)))
-			return(sfvalue(fdin) ? -1 : 0);
+			return sfvalue(fdin) ? -1 : 0;
 		if ((n = sfvalue(fdin)) <= 0)
-			return(n);
+			return n;
 		cp = inbuff;
 		lastchar = *(endbuff = cp + --n);
 		*endbuff = 0;
@@ -236,55 +237,59 @@ b_cat(int argc, char** argv, void* context)
 	cmdinit(argv, context, ERROR_CATALOG);
 	att = !strcmp(astconf("UNIVERSE", NiL, NiL), "att");
 	mode = "r";
-	while (n = optget(argv, usage)) switch (n)
+	for (;;)
 	{
-	case 'A':
-		flags |= T_FLAG|E_FLAG|V_FLAG;
-		break;
-	case 'B':
-		flags |= S_FLAG;
-		break;
-	case 'b':
-		flags |= B_FLAG;
-		break;
-	case 'E':
-		flags |= E_FLAG;
-		break;
-	case 'e':
-		flags |= E_FLAG|V_FLAG;
-		break;
-	case 'n':
-		flags |= N_FLAG;
-		break;
-	case 's':
-		flags |= att ? F_FLAG : S_FLAG;
-		break;
-	case 'S':
-		flags |= F_FLAG;
-		break;
-	case 'T':
-		flags |= T_FLAG;
-		break;
-	case 't':
-		flags |= T_FLAG|V_FLAG;
-		break;
-	case 'u':
-		flags |= U_FLAG;
-		break;
-	case 'v':
-		flags |= V_FLAG;
-		break;
-	case 'd':
-		mode = "rt";
-		break;
-	case 'D':
-		flags |= D_FLAG;
-		break;
-	case ':':
-		error(2, "%s", opt_info.arg);
-		break;
-	case '?':
-		error(ERROR_usage(2), "%s", opt_info.arg);
+		switch (optget(argv, usage))
+		{
+		case 'A':
+			flags |= T_FLAG|E_FLAG|V_FLAG;
+			continue;
+		case 'B':
+			flags |= S_FLAG;
+			continue;
+		case 'b':
+			flags |= B_FLAG;
+			continue;
+		case 'E':
+			flags |= E_FLAG;
+			continue;
+		case 'e':
+			flags |= E_FLAG|V_FLAG;
+			continue;
+		case 'n':
+			flags |= N_FLAG;
+			continue;
+		case 's':
+			flags |= att ? F_FLAG : S_FLAG;
+			continue;
+		case 'S':
+			flags |= F_FLAG;
+			continue;
+		case 'T':
+			flags |= T_FLAG;
+			continue;
+		case 't':
+			flags |= T_FLAG|V_FLAG;
+			continue;
+		case 'u':
+			flags |= U_FLAG;
+			continue;
+		case 'v':
+			flags |= V_FLAG;
+			continue;
+		case 'd':
+			mode = "rt";
+			continue;
+		case 'D':
+			flags |= d_FLAG;
+			continue;
+		case ':':
+			error(2, "%s", opt_info.arg);
+			break;
+		case '?':
+			error(ERROR_usage(2), "%s", opt_info.arg);
+			break;
+		}
 		break;
 	}
 	argv += opt_info.index;
@@ -326,19 +331,18 @@ b_cat(int argc, char** argv, void* context)
 	}
 	if (flags&B_FLAG)
 		flags |= S_FLAG;
-#ifdef O_TEXT
-	if (flags&D_FLAG)
-	{
-		n = fcntl(sffileno(sfstdout),F_GETFL,0);
-		fcntl(sffileno(sfstdout),F_SETFL,O_TEXT|n);
-	}
-#endif
+	if (flags&d_FLAG)
+		sfopen(sfstdout, NiL, "wt");
 	if (cp = *argv)
 		argv++;
 	do
 	{
 		if (!cp || streq(cp,"-"))
+		{
 			fp = sfstdin;
+			if (flags&D_FLAG)
+				sfopen(fp, NiL, mode);
+		}
 		else if (!(fp = sfopen(NiL, cp, mode)))
 		{
 			if (!(flags&F_FLAG))
@@ -348,8 +352,9 @@ b_cat(int argc, char** argv, void* context)
 		}
 		if (flags&U_FLAG)
 			sfsetbuf(fp, (void*)fp, -1);
-		if (dovcat) n = vcat(fp, sfstdout, flags);
-		else if(sfmove(fp, sfstdout, SF_UNBOUND, -1) >= 0 && sfeof(fp))
+		if (dovcat)
+			n = vcat(fp, sfstdout, flags);
+		else if (sfmove(fp, sfstdout, SF_UNBOUND, -1) >= 0 && sfeof(fp))
 			n = 0;
 		else
 			n = -1;
@@ -357,14 +362,15 @@ b_cat(int argc, char** argv, void* context)
 			sfclose(fp);
 		if (n < 0)
 		{
-			if (cp) error(ERROR_system(0), "%s: read error", cp);
-			else error(ERROR_system(0), "read error");
+			if (cp)
+				error(ERROR_system(0), "%s: read error", cp);
+			else
+				error(ERROR_system(0), "read error");
 		}
 		if (sferror(sfstdout))
 			break;
 	} while (cp = *argv++);
 	if (sfsync(sfstdout))
 		error(ERROR_system(0), "write error");
-	return(error_info.errors);
+	return error_info.errors;
 }
-

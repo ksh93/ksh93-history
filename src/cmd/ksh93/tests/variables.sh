@@ -200,11 +200,24 @@ x error"
 	then	err_exit "\${#$i} not correct"
 	fi
 done
+unset x
 CDPATH=/
 x=$(cd tmp)
 if	[[ $x != /tmp ]]
 then	err_exit 'CDPATH does not display new directory'
 fi
+mkdir /tmp/ksh$$
+CDPATH=/:
+x=$(cd /tmp;cd ksh$$)
+if	[[ $x ]]
+then	err_exit 'CDPATH displays new directory when not used'
+fi
+x=$(cd tmp/ksh$$)
+if	[[ $x != /tmp/ksh$$ ]]
+then	err_exit "CDPATH tmp/ksh$$ does not display new directory"
+fi
+cd /
+rm -rf /tmp/ksh$$
 TMOUT=100
 (TMOUT=20)
 if	(( TMOUT !=100 ))
@@ -235,4 +248,7 @@ set -- "${@-}"
 if	(( $# !=1 ))
 then	err_exit	'"${@-}" not expanding to null string'
 fi
+for i in : % + / 3b '**' '***' '@@' '{' '[' '}' !!  '*a' '@a' '$foo'
+do      (eval : \${"$i"} 2> /dev/null) && err_exit "\${$i} not an syntax error"
+done
 exit $((Errors))

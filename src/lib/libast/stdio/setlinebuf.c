@@ -30,7 +30,7 @@
 int
 setlinebuf(Sfio_t* f)
 {
-	STDIO_INT(f, "setlinebuffer", int, (Sfio_t*), (f))
+	STDIO_INT(f, "setlinebuf", int, (Sfio_t*), (f))
 
 	sfset(f, SF_LINE, 1);
 	return 0;

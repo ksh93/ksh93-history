@@ -32,24 +32,29 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: uname (AT&T Labs Research) 1999-04-10 $\n]"
+"[-?\n@(#)$Id: uname (AT&T Labs Research) 2001-05-01 $\n]"
 USAGE_LICENSE
 "[+NAME?uname - identify the current system ]"
 "[+DESCRIPTION?By default \buname\b writes the operating system name to"
 "	standard output. When options are specified, one or more"
-"	system characteristics are written to standard output. When more"
-"	than one options is specifed the output is in the order specfied"
-"	by the \b-l\b option below.]"
-"[a:all?Equivalent to \b-mnrsv\b.]"
-"[i:id?Writes the host id in hex.]"
-"[l:list-all?Equivalent to \b-mnrsvpi\b.]"
-"[m:machine?Writes the name of the hardware type the system is running on.]"
-"[n:nodename?Writes hostname or nodename. This is the name by which the"
-"	system is know to the communications network.]"
-"[p:processor?Writes the name of the processor instruction set architecture.]"
-"[r:release?Writes the release level of the operating system implementation.]"
-"[s:os|sysname?Writes the name of the operating system. This is the default.]"
-"[v:version?Writes the version level of the operating system implementation.]"
+"	system characteristics are written to standard output, space"
+"	separated, on a single line. When more than one option is specifed"
+"	the output is in the order specfied by the \b-A\b option below."
+"	Unsupported option values are listed as \a[option]]\a. If any unknown"
+"	options are specified then the local \b/usr/bin/uname\b is called.]"
+"[a:all?Equivalent to \b-snrvm\b.]"
+"[d:domain?The domain name returned by \agetdomainname\a(2).]"
+"[h:host-id|id?The host id in hex.]"
+"[i:implementation|platform?The hardware implementation (platform);"
+"	this is \b--host-id\b on some systems.]"
+"[m:machine?The name of the hardware type the system is running on.]"
+"[n:nodename?The hostname or nodename.]"
+"[p:processor?The name of the processor instruction set architecture.]"
+"[r:release?The release level of the operating system implementation.]"
+"[s:os|system|sysname?The operating system name. This is the default.]"
+"[v:version?The operating system implementation version level.]"
+"[A:everything?Equivalent to \b-snrvmphCdtbiRX\b.]"
+"[R:extended-release?The extended release name.]"
 "[S:sethost?Set the hostname or nodename to \aname\a. No output is"
 "	written to standard output.]:[name]"
 
@@ -66,6 +71,7 @@ __STDPP__directive pragma pp:hide getdomainname gethostid gethostname sethostnam
 #endif
 
 #include <cmdlib.h>
+#include <ctype.h>
 
 #include "FEATURE/utsname"
 
@@ -74,6 +80,12 @@ __STDPP__directive pragma pp:hide getdomainname gethostid gethostname sethostnam
 #if _lib_uname && _sys_utsname
 
 #include <sys/utsname.h>
+
+#endif
+
+#if _lib_syssgi && _sys_syssgi
+
+#include <sys/syssgi.h>
 
 #endif
 
@@ -157,14 +169,16 @@ uname(register struct utsname* ut)
 		if (arch = strchr(sys, '.'))
 		{
 			*arch++ = 0;
-			if (!*arch) arch = 0;
+			if (!*arch)
+				arch = 0;
 		}
-		if (!*sys) sys = 0;
+		if (!*sys)
+			sys = 0;
 	}
 #endif
 #ifdef _lib_gethostname
 	if (gethostname(ut->nodename, sizeof(ut->nodename) - 1))
-		return(-1);
+		return -1;
 #else
 	strncpy(ut->nodename, "local", sizeof(ut->nodename) - 1);
 #endif
@@ -179,165 +193,146 @@ uname(register struct utsname* ut)
 	ut->machine = MACHINE;
 	ut->release = RELEASE;
 	ut->version = VERSION;
-	return(0);
+	return 0;
 }
 
 #endif
 
-#define S_FLAG	(1<<0)
-#define N_FLAG	(1<<1)
-#define R_FLAG	(1<<2)
-#define V_FLAG	(1<<3)
-#define M_FLAG	(1<<4)
+#define OPT_system		(1<<0)
+#define OPT_nodename		(1<<1)
+#define OPT_release		(1<<2)
+#define OPT_version		(1<<3)
+#define OPT_machine		(1<<4)
 
-#define P_FLAG	(1<<5)
-#define I_FLAG	(1<<6)
-#define C_FLAG	(1<<7)
-#define D_FLAG	(1<<8)
-#define T_FLAG	(1<<9)
-#define B_FLAG	(1<<10)
+#define OPT_ALL			5
 
-#define X_FLAG	(1<<11)
+#define OPT_processor		(1<<5)
+#define OPT_hostid		(1<<6)
+#define OPT_vendor		(1<<7)
+#define OPT_domain		(1<<8)
+#define OPT_machine_type	(1<<9)
+#define OPT_base		(1<<10)
+#define OPT_implementation	(1<<11)
+#define OPT_extended_release	(1<<12)
+#define OPT_extra		(1<<13)
 
-#define FLAGS	12
+#define OPT_TOTAL		14
 
-#define A_FLAGS	(all&(M_FLAG<<1)-1)
-#define L_FLAGS	(all)
-
-#define OPTBEG	"snrvm"
-#define OPTEND	"alS:[nodename] "
+#define OPT_all			(1L<<29)
+#define OPT_total		(1L<<30)
 
 #ifndef MACHINE
 #if defined(__STDPP__)
-#define MACHINE		#(getprd architecture)
+#define MACHINE			#(getprd architecture)
 #else
-#define MACHINE		""
+#define MACHINE			""
 #endif
 #endif
 
 #ifndef HOSTTYPE
-#define HOSTTYPE	"unknown"
+#define HOSTTYPE		"unknown"
 #endif
 
-static int	all = ((M_FLAG<<1)-1);
+#define extra(m)        do \
+			{ \
+				if ((char*)&ut.m[sizeof(ut.m)] > last) \
+					last = (char*)&ut.m[sizeof(ut.m)]; \
+			} while(0)
 
-#define extra(m)        do{if((char*)&ut.m[sizeof(ut.m)]>last)last=(char*)&ut.m[sizeof(ut.m)];}while(0)
-#define output(f,v,u)	((flags&(f))?sfputr(sfstdout,*(v)?(v):(sfsprintf(buf,sizeof(buf),"[%s]",u),buf),flags>=((f)<<1)?' ':'\n'):0)
+#define output(f,v,u)	do \
+			{ \
+				if ((flags&(f))&&(*(v)||!(flags&OPT_total))) \
+				{ \
+					if (sep) \
+						sfputc(sfstdout, ' '); \
+					else \
+						sep = 1; \
+					if (*(v)) \
+						sfputr(sfstdout, v, -1); \
+					else \
+						sfprintf(sfstdout, "[%s]", u); \
+				} \
+			} while (0)
 
 int
 b_uname(int argc, char** argv, void* context)
 {
+	register long	flags = 0;
+	register int	sep = 0;
 	register int	n;
-	register int	flags = 0;
 	register char*	s;
 	char*		t;
 	char*		sethost = 0;
 	struct utsname	ut;
-	char*		last = (char*)&ut.machine + sizeof(ut.machine);
 	char		buf[257];
-
-	static char	opts[sizeof(OPTBEG) + sizeof(OPTEND) + FLAGS] = OPTBEG;
 
 	NoP(argc);
 	cmdinit(argv, context, ERROR_CATALOG);
-	s = &opts[sizeof(OPTBEG) - 1];
-	*s++ = 'p';
-	all |= P_FLAG;
-#if _mem_idnumber_utsname || _lib_gethostid || defined(SI_HW_SERIAL)
-	*s++ = 'i';
-	all |= I_FLAG;
-#if _mem_idnumber_utsname
-	extra(idnumber);
-#endif
-#endif
-#if defined(SI_HW_PROVIDER)
-	*s++ = 'c';
-	all |= C_FLAG;
-#endif
-#if _lib_getdomainname || defined(SI_SRPC_DOMAIN)
-	*s++ = 'd';
-	all |= D_FLAG;
-#endif
-#if _mem_m_type_utsname
-	*s++ = 't';
-	all |= T_FLAG;
-	extra(m_type);
-#endif
-#if _mem_base_rel_utsname
-	*s++ = 'b';
-	all |= B_FLAG;
-	extra(base_rel);
-#endif
-#if _lib_uname && _sys_utsname
-	if (last < ((char*)(&ut + 1)))
+	for (;;)
 	{
-		*s++ = 'x';
-		all |= X_FLAG;
-	}
-#endif
-	strcpy(s, OPTEND);
-	while (n = optget(argv, usage)) switch (n)
-	{
-	case 'a':
-		flags |= A_FLAGS;
-		break;
-#if _mem_base_rel_utsname
-	case 'b':
-		flags |= B_FLAG;
-		break;
-#endif
-#if defined(SI_HW_PROVIDER)
-	case 'c':
-		flags |= C_FLAG;
-		break;
-#endif
-#if _lib_getdomainname || defined(SI_SRPC_DOMAIN)
-	case 'd':
-		flags |= D_FLAG;
-		break;
-#endif
-#if _mem_idnumber_utsname || _lib_gethostid || defined(SI_HW_SERIAL)
-	case 'i':
-		flags |= I_FLAG;
-		break;
-#endif
-	case 'l':
-		flags |= L_FLAGS;
-		break;
-	case 'm':
-		flags |= M_FLAG;
-		break;
-	case 'n':
-		flags |= N_FLAG;
-		break;
-	case 'p':
-		flags |= P_FLAG;
-		break;
-	case 'r':
-		flags |= R_FLAG;
-		break;
-	case 's':
-		flags |= S_FLAG;
-		break;
-#if _mem_m_type_utsname
-	case 't':
-		flags |= T_FLAG;
-		break;
-#endif
-	case 'v':
-		flags |= V_FLAG;
-		break;
-	case 'x':
-		flags |= X_FLAG;
-		break;
-	case 'S':
-		sethost = opt_info.arg;
-		break;
-	case ':':
-		error(2, "%s", opt_info.arg);
-		break;
-	case '?':
-		error(ERROR_usage(2), "%s", opt_info.arg);
+		switch (optget(argv, usage))
+		{
+		case 'a':
+			flags |= OPT_all|((1L<<OPT_ALL)-1);
+			continue;
+		case 'b':
+			flags |= OPT_base;
+			continue;
+		case 'c':
+			flags |= OPT_vendor;
+			continue;
+		case 'd':
+			flags |= OPT_domain;
+			continue;
+		case 'h':
+			flags |= OPT_hostid;
+			continue;
+		case 'i':
+			flags |= OPT_implementation;
+			continue;
+		case 'm':
+			flags |= OPT_machine;
+			continue;
+		case 'n':
+			flags |= OPT_nodename;
+			continue;
+		case 'p':
+			flags |= OPT_processor;
+			continue;
+		case 'r':
+			flags |= OPT_release;
+			continue;
+		case 's':
+			flags |= OPT_system;
+			continue;
+		case 't':
+			flags |= OPT_machine_type;
+			continue;
+		case 'v':
+			flags |= OPT_version;
+			continue;
+		case 'x':
+			flags |= OPT_extra;
+			continue;
+		case 'A':
+			flags |= OPT_total|((1L<<OPT_TOTAL)-1);
+			continue;
+		case 'R':
+			flags |= OPT_extended_release;
+			continue;
+		case 'S':
+			sethost = opt_info.arg;
+			continue;
+		case ':':
+			argv[0] = "/usr/bin/uname";
+			if (!access(argv[0], X_OK) || !access(argv[0]+=4, X_OK))
+				execv(argv[0], argv);
+			error(2, "%s", opt_info.arg);
+			break;
+		case '?':
+			error(ERROR_usage(2), "%s", opt_info.arg);
+			break;
+		}
 		break;
 	}
 	argv += opt_info.index;
@@ -360,21 +355,23 @@ b_uname(int argc, char** argv, void* context)
 	{
 		s = buf;
 		if (!flags)
-			flags = S_FLAG;
+			flags = OPT_system;
 		memzero(&ut, sizeof(ut));
 		if (uname(&ut) < 0)
 			error(ERROR_usage(2), "information unavailable");
-		output(S_FLAG, ut.sysname, "sysname");
+		output(OPT_system, ut.sysname, "sysname");
+		if (flags & OPT_nodename)
+		{
 #if !_mem_nodeext_utsname && _lib_gethostname
-		if ((flags & N_FLAG) && sizeof(ut.nodename) <= 9 && !gethostname(s, sizeof(buf)))
-			output(N_FLAG, s, "nodename");
-		else
+			if (sizeof(ut.nodename) > 9 || gethostname(s, sizeof(buf)))
 #endif
-		output(N_FLAG, ut.nodename, "nodename");
-		output(R_FLAG, ut.release, "release");
-		output(V_FLAG, ut.version, "version");
-		output(M_FLAG, ut.machine, "machine");
-		if (flags & P_FLAG)
+			s = ut.nodename;
+			output(OPT_nodename, s, "nodename");
+		}
+		output(OPT_release, ut.release, "release");
+		output(OPT_version, ut.version, "version");
+		output(OPT_machine, ut.machine, "machine");
+		if (flags & OPT_processor)
 		{
 #if defined(SI_ARCHITECTURE)
 			if ((n = systeminfo(SI_ARCHITECTURE, s, sizeof(buf) - 1)) > 0)
@@ -388,73 +385,122 @@ b_uname(int argc, char** argv, void* context)
 					t = hosttype;
 				strncpy(s, t, sizeof(buf) - 1);
 			}
-			output(P_FLAG, s, "processor");
+			output(OPT_processor, s, "processor");
+		}
+		if (flags & OPT_implementation)
+		{
+#if defined(SI_PLATFORM)
+			if ((n = systeminfo(SI_PLATFORM, s, sizeof(buf) - 1)) > 0)
+				s[n] = 0;
+			else
+#endif
+				*s = 0;
+			output(OPT_implementation, s, "implementation");
+		}
+		if (flags & OPT_extended_release)
+		{
+#if _lib_syssgi && defined(SGI_RELEASE_NAME)
+			if ((n = syssgi(SGI_RELEASE_NAME, sizeof(buf), s)) < 0)
+#endif
+				*s = 0;
+			output(OPT_extended_release, s, "extended-release");
 		}
 #if _mem_idnumber_utsname
-		output(I_FLAG, ut.idnumber, "id");
+		output(OPT_hostid, ut.idnumber, "hostid");
 #else
-#if _lib_gethostid || defined(SI_HW_SERIAL)
-		if (flags & I_FLAG)
+		if (flags & OPT_hostid)
 		{
 #if _lib_gethostid
 			sfsprintf(s, sizeof(buf), "%08x", gethostid());
 #else
-			if ((n = systeminfo(SI_HW_SERIAL, s, sizeof(buf) - 1)) > 0) s[n] = 0;
-			else *s = 0;
+#if _lib_gethostid || defined(SI_HW_SERIAL)
+			if ((n = systeminfo(SI_HW_SERIAL, s, sizeof(buf) - 1)) > 0)
+				s[n] = 0;
+			else
 #endif
-			output(I_FLAG, s, "id");
+				*s = 0;
+#endif
+			output(OPT_hostid, s, "hostid");
 		}
 #endif
-#endif
-#if defined(SI_HW_PROVIDER)
-		if (flags & C_FLAG)
+		if (flags & OPT_vendor)
 		{
-			if ((n = systeminfo(SI_HW_PROVIDER, s, sizeof(buf) - 1)) > 0) s[n] = 0;
-			else *s = 0;
-			output(C_FLAG, s, "vendor");
-		}
+#if defined(SI_HW_PROVIDER)
+			if ((n = systeminfo(SI_HW_PROVIDER, s, sizeof(buf) - 1)) > 0)
+				s[n] = 0;
+			else
 #endif
-#if _lib_getdomainname || defined(SI_SRPC_DOMAIN)
-		if (flags & D_FLAG)
+				*s = 0;
+			output(OPT_vendor, s, "vendor");
+		}
+		if (flags & OPT_domain)
 		{
 #if _lib_getdomainname
 			if (getdomainname(s, sizeof(buf)) < 0)
-				*s = 0;
 #else
-			if ((n = systeminfo(SI_SRPC_DOMAIN, s, sizeof(buf) - 1)) > 0) s[n] = 0;
-			else *s = 0;
+#if defined(SI_SRPC_DOMAIN)
+			if ((n = systeminfo(SI_SRPC_DOMAIN, s, sizeof(buf) - 1)) > 0)
+				s[n] = 0;
+			else
 #endif
-			output(D_FLAG, s, "domain");
+#endif
+				*s = 0;
+			output(OPT_domain, s, "domain");
 		}
-#endif
 #if _mem_m_type_utsname
-		output(T_FLAG, ut.m_type, "m_type");
+		output(OPT_machine_type, ut.m_type, "m_type");
+#else
+		*s = 0;
+		output(OPT_machine_type, s, "m_type");
 #endif
 #if _mem_base_rel_utsname
-		output(B_FLAG, ut.base_rel, "base_rel");
+		output(OPT_base, ut.base_rel, "base_rel");
+#else
+		*s = 0;
+		output(OPT_base, s, "base_rel");
 #endif
-		if (flags & X_FLAG)
+		if (flags & OPT_extra)
 		{
-			char*	b;
-			int	sep = 0;
+			char*	last = (char*)&ut;
 
-			s = b = last;
-			while (s < (char*)(&ut + 1))
+			extra(sysname);
+			extra(nodename);
+			extra(release);
+			extra(version);
+			extra(machine);
+#if _mem_idnumber_utsname
+			extra(idnumber);
+#endif
+#if _mem_m_type_utsname
+			extra(m_type);
+#endif
+#if _mem_base_rel_utsname
+			extra(base_rel);
+#endif
+			if (last < ((char*)(&ut + 1)))
 			{
-				if (!(n = *s++))
+				s = t = last;
+				while (s < (char*)(&ut + 1))
 				{
-					if ((s - b) > 1)
+					if (!(n = *s++))
 					{
-						if (sep) sfputc(sfstdout, ' ');
-						else sep = 1;
-						sfputr(sfstdout, b, -1);
+						if ((s - t) > 1)
+						{
+							if (sep)
+								sfputc(sfstdout, ' ');
+							else
+								sep = 1;
+							sfputr(sfstdout, t, -1);
+						}
+						t = s;
 					}
-					b = s;
+					else if (!isprint(n))
+						break;
 				}
-				else if (n < 0x20 || n >= 0x7E) break;
 			}
-			sfputc(sfstdout, '\n');
 		}
+		if (sep)
+			sfputc(sfstdout, '\n');
 	}
-	return(error_info.errors);
+	return error_info.errors;
 }

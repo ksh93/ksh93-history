@@ -62,6 +62,22 @@ regrexec(const regex_t* p, const char* s, size_t len, size_t nmatch, regmatch_t*
 
 	if (!s || !p || !(env = p->env) || (e = env->rex)->type != REX_BM)
 		return REG_BADPAT;
+#if __OBSOLETE__ < 20030101L
+	/*
+	 * repeat 1000x: sharing bits is never worth it
+	 */
+
+	if (flags & REG_MULTIPLE)
+	{
+		flags &= ~REG_MULTIPLE;
+		flags |= REG_INVERT;
+	}
+	if (flags & REG_DELIMITED)
+	{
+		flags &= ~REG_DELIMITED;
+		flags |= REG_STARTEND;
+	}
+#endif
 	inv = (flags & REG_INVERT) != 0;
 	buf = beg = (unsigned char*)s;
 	end = buf + len;
@@ -75,10 +91,6 @@ regrexec(const regex_t* p, const char* s, size_t len, size_t nmatch, regmatch_t*
 	rightlen = exactlen + e->re.bm.right;
 	env->rex = e->next;
 	index = leftlen++;
-#if 0
-	if (getenv("_AST_DEBUG_regrexec"))
-		sfprintf(sfstderr, "buf=%-.4s complete=%d index=%d mid=%d leftlen=%d rightlen=%d\n", buf, complete, index, mid, leftlen, rightlen);
-#endif
 	for (;;)
 	{
 		while ((index += skip[buf[index]]) < mid);

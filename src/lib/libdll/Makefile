@@ -2,11 +2,7 @@
 
 LICENSE = since=1997,author=gsf
 
-_HOSTTYPE_ == "$(CC.HOSTTYPE)"
-
-CCFLAGS = $(CC.OPTIMIZE) $(CC.DLL)
-
-static = $(CC.SUFFIX.DYNAMIC:T!=V)
+CCFLAGS = $(CC.OPTIMIZE) $(CC.SUFFIX.DYNAMIC:??$(CC.DLL)?)
 
 dll 1.0 :LIBRARY: dlfcn.c dllfind.c dllnext.c dlllook.c -ldl -ldld
 

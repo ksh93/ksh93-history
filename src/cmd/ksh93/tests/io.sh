@@ -72,4 +72,16 @@ cat > close0 <<\!
 !
 ./close0 2> /dev/null || err_exit "multiple exec 4< /dev/null can fail"
 cd ~- || err_exit "cd back failed"
+( exec  > '' ) 2> /dev/null  && err_exit '> "" does not fail'
+unset x
+( exec > ${x} ) 2> /dev/null && err_exit '> $x, where x null does not fail'
+exec <<!
+foo
+bar
+!
+( exec 0< /dev/null)
+read line
+if	[[ $line != foo ]]
+then	err_exit 'file descriptor not restored after exec in subshell'
+fi
 rm -r /tmp/ksh$$ || err_exit "rm -r /tmp/ksh$$ failed"

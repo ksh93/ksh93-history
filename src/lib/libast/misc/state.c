@@ -25,12 +25,73 @@
 *******************************************************************/
 #pragma prototyped
 
-static const char id[] = "\n@(#)$Id: ast (AT&T Labs Research) 2001-01-01 $\0\n";
+static const char id[] = "\n@(#)$Id: ast (AT&T Labs Research) 2001-05-09 $\0\n";
 
 #include <ast.h>
 
 #undef	strcmp
 
-_Ast_info_t	_ast_state = { "libast", { 0, 0 }, 0, 0, 0, 0, 0, strcmp };
+#if __OBSOLETE__ < 20020401
 
-__EXTERN__(_Ast_info_t, _ast_state);
+/*
+ * _Ast_info_t grew
+ * the old exported symbol was _ast_state, retained here for link compatibility
+ * new compilations will use _ast_info
+ * extra space was added to avoid this in the future
+ */
+
+typedef struct
+{
+
+	char*		id;
+
+	struct
+	{
+	unsigned int	serial;
+	unsigned int	set;
+	}		locale;
+
+	long		tmp_long;
+	size_t		tmp_size;
+	short		tmp_short;
+	char		tmp_char;
+	wchar_t		tmp_wchar;
+
+	int		(*collate)(const char*, const char*);
+
+	int		tmp_int;
+	void*		tmp_pointer;
+
+} _Ast_state_t;
+
+#if defined(__EXPORT__)
+#define extern		__EXPORT__
+#endif
+
+extern _Ast_state_t	_ast_state;
+
+__EXTERN__(_Ast_state_t, _ast_state);
+
+#undef	extern
+
+_Ast_state_t	_ast_state =
+{
+	"libast",
+	{ 0, 0 },
+	0, 0, 0, 0, 0,
+	strcmp
+};
+
+#endif
+
+_Ast_info_t	_ast_info =
+{
+	"libast",
+	{ 0, 0 },
+	0, 0, 0, 0, 0,
+	strcmp,
+	0, 0,
+	1
+};
+
+__EXTERN__(_Ast_info_t, _ast_info);

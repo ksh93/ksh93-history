@@ -36,14 +36,18 @@
 #ifndef _REGLIB_H
 #define _REGLIB_H
 
+#define REG_VERSION_EXEC	20010509L
+
 #define re_info		env
 
 #include <ast.h>
+#include <cdt.h>
 #include <stk.h>
 #include <ctype.h>
 #include <errno.h>
 
 #define alloc		_reg_alloc
+#define classfun	_reg_classfun
 #define drop		_reg_drop
 #define fatal		_reg_fatal
 #define state		_reg_state
@@ -56,33 +60,49 @@
 #define BACK_REF_MAX	9
 
 #define REG_COMP	(REG_EXTENDED|REG_ICASE|REG_NOSUB|REG_NEWLINE|REG_SHELL|REG_AUGMENTED|REG_LEFT|REG_LITERAL|REG_MINIMAL|REG_NULL|REG_RIGHT|REG_LENIENT)
-#define REG_EXEC	(REG_INVERT|REG_NOTBOL|REG_NOTEOL)
+#define REG_EXEC	(REG_INVERT|REG_NOTBOL|REG_NOTEOL|REG_STARTEND)
 
-#define REX_NULL	0		/* null string (internal)	*/
-#define REX_ALT		1		/* a|b				*/
-#define REX_ALT_CATCH	2		/* REX_ALT catcher		*/
-#define REX_BACK	3		/* \1, \2, etc			*/
-#define REX_BEG		4		/* initial ^			*/
-#define REX_BM		5		/* Boyer-Moore			*/
-#define REX_CLASS	6		/* [...]			*/
-#define REX_CONJ	7		/* a&b				*/
-#define REX_CONJ_LEFT	8		/* REX_CONJ left catcher	*/
-#define REX_CONJ_RIGHT	9		/* REX_CONJ right catcher	*/
-#define REX_DONE	10		/* completed match (internal)	*/
-#define REX_DOT		11		/* .				*/
-#define REX_END		12		/* final $			*/
-#define REX_GROUP	13		/* \(...\)			*/
-#define REX_GROUP_CATCH	14		/* REX_GROUP catcher		*/
-#define REX_KMP		15		/* Knuth-Morris-Pratt		*/
-#define REX_NEG		16		/* negation			*/
-#define REX_NEG_CATCH	17		/* REX_NEG catcher		*/
-#define REX_ONECHAR	18		/* a single-character literal	*/
-#define REX_REP		19		/* Kleene closure		*/
-#define REX_REP_CATCH	20		/* REX_REP catcher		*/
-#define REX_STRING	21		/* some chars			*/
-#define REX_TRIE	22		/* alternation of strings	*/
-#define REX_WBEG	23		/* \<				*/
-#define REX_WEND	24		/* \>				*/
+#define REX_NULL		0	/* null string (internal)	*/
+#define REX_ALT			1	/* a|b				*/
+#define REX_ALT_CATCH		2	/* REX_ALT catcher		*/
+#define REX_BACK		3	/* \1, \2, etc			*/
+#define REX_BEG			4	/* initial ^			*/
+#define REX_BEG_STR		5	/* initial ^ w/ no newline	*/
+#define REX_BM			6	/* Boyer-Moore			*/
+#define REX_CLASS		7	/* [...]			*/
+#define REX_COLL_CLASS		8	/* collation order [...]	*/
+#define REX_CONJ		9	/* a&b				*/
+#define REX_CONJ_LEFT		10	/* REX_CONJ left catcher	*/
+#define REX_CONJ_RIGHT		11	/* REX_CONJ right catcher	*/
+#define REX_DONE		12	/* completed match (internal)	*/
+#define REX_DOT			13	/* .				*/
+#define REX_END			14	/* final $			*/
+#define REX_END_STR		15	/* final $ before tail newline	*/
+#define REX_EXEC		16	/* call re.re_exec()		*/
+#define REX_FIN_STR		17	/* final $ w/ no newline	*/
+#define REX_GROUP		18	/* \(...\)			*/
+#define REX_GROUP_CATCH		19	/* REX_GROUP catcher		*/
+#define REX_GROUP_AHEAD		20	/* 0-width lookahead		*/
+#define REX_GROUP_AHEAD_NOT	21	/* inverted 0-width lookahead	*/
+#define REX_GROUP_BEHIND	22	/* 0-width lookbehind		*/
+#define REX_GROUP_BEHIND_NOT	23	/* inverted 0-width lookbehind	*/
+#define REX_GROUP_BEHIND_CATCH	24	/* REX_GROUP_BEHIND catcher	*/
+#define REX_GROUP_COND		25	/* conditional group		*/
+#define REX_GROUP_CUT		26	/* don't backtrack over this	*/
+#define REX_GROUP_CUT_CATCH	27	/* REX_GROUP_CUT catcher	*/
+#define REX_GROUP_DONE		28	/* zero width group done	*/
+#define REX_KMP			29	/* Knuth-Morris-Pratt		*/
+#define REX_NEG			30	/* negation			*/
+#define REX_NEG_CATCH		31	/* REX_NEG catcher		*/
+#define REX_ONECHAR		32	/* a single-character literal	*/
+#define REX_REP			33	/* Kleene closure		*/
+#define REX_REP_CATCH		34	/* REX_REP catcher		*/
+#define REX_STRING		35	/* some chars			*/
+#define REX_TRIE		36	/* alternation of strings	*/
+#define REX_WBEG		37	/* \<				*/
+#define REX_WEND		38	/* \>				*/
+#define REX_WORD		39	/* word boundary		*/
+#define REX_WORD_NOT		40	/* not word boundary		*/
 
 #define T_META		(UCHAR_MAX+1)
 #define T_STAR		(T_META+0)
@@ -90,8 +110,9 @@
 #define T_QUES		(T_META+2)
 #define T_BANG		(T_META+3)
 #define T_AT		(T_META+4)
-#define T_LEFT		(T_META+5)
-#define T_OPEN		(T_META+6)
+#define T_TILDE		(T_META+5)
+#define T_LEFT		(T_META+6)
+#define T_OPEN		(T_META+7)
 #define T_CLOSE		(T_OPEN+1)
 #define T_RIGHT		(T_OPEN+2)
 #define T_CFLX		(T_OPEN+3)
@@ -106,35 +127,141 @@
 #define T_LT		(T_OPEN+12)
 #define T_GT		(T_OPEN+13)
 #define T_SLASHPLUS	(T_OPEN+14)
-#define T_BACK		(T_OPEN+15)
+#define T_WORD		(T_OPEN+15)
+#define T_WORD_NOT	(T_WORD+1)
+#define T_BEG_STR	(T_WORD+2)
+#define T_END_STR	(T_WORD+3)
+#define T_FIN_STR	(T_WORD+4)
+#define T_ESCAPE	(T_WORD+5)
+#define T_ALNUM		(T_WORD+6)
+#define T_ALNUM_NOT	(T_ALNUM+1)
+#define T_DIGIT		(T_ALNUM+2)
+#define T_DIGIT_NOT	(T_ALNUM+3)
+#define T_SPACE		(T_ALNUM+4)
+#define T_SPACE_NOT	(T_ALNUM+5)
+#define T_BACK		(T_ALNUM+6)
 
 #define BRE		0
-#define ERE		2
-#define ARE		4
-#define SRE		6
-#define KRE		8
+#define ERE		3
+#define ARE		6
+#define SRE		9
+#define KRE		12
 
 #define HIT		SSIZE_MAX
 
-#define bitclr(p,c)	((p)[(c)>>3]&=(~(1<<((c)&07))))
-#define bitset(p,c)	((p)[(c)>>3]|=(1<<((c)&07)))
-#define bittst(p,c)	((p)[(c)>>3]&(1<<((c)&07)))
+#define bitclr(p,c)	((p)[((c)>>3)&037]&=(~(1<<((c)&07))))
+#define bitset(p,c)	((p)[((c)>>3)&037]|=(1<<((c)&07)))
+#define bittst(p,c)	((p)[((c)>>3)&037]&(1<<((c)&07)))
 
 #define setadd(p,c)	bitset((p)->bits,c)
 #define setclr(p,c)	bitclr((p)->bits,c)
 #define settst(p,c)	bittst((p)->bits,c)
 
+#if _hdr_wchar && _lib_wctype && _lib_iswctype
+
+#include <stdio.h> /* because <wchar.h> includes it and we generate it */
+#include <wchar.h>
+#if _hdr_wctype
+#include <wctype.h>
+#endif
+
+#undef	isalnum
+#define isalnum(x)	iswalnum(x)
+#undef	isalpha
+#define isalpha(x)	iswalpha(x)
+#undef	iscntrl
+#define iscntrl(x)	iswcntrl(x)
+#undef	isblank
+#if !defined(iswblank) && !_lib_iswblank
+#define isblank(x)	_reg_iswblank(x)
+extern int		_reg_iswblank(wint_t);
+#else
+#define isblank(x)	iswblank(x)
+#endif
+#undef	isdigit
+#define isdigit(x)	iswdigit(x)
+#undef	isgraph
+#define isgraph(x)	iswgraph(x)
+#undef	islower
+#define islower(x)	iswlower(x)
+#undef	isprint
+#define isprint(x)	iswprint(x)
+#undef	ispunct
+#define ispunct(x)	iswpunct(x)
+#undef	isspace
+#define isspace(x)	iswspace(x)
+#undef	isupper
+#define isupper(x)	iswupper(x)
+#undef	isxdigit
+#define isxdigit(x)	iswxdigit(x)
+
+#if _lib_towlower
+#undef	tolower
+#define tolower(x)	towlower(x)
+#endif
+
+#if _lib_towupper
+#undef	toupper
+#define toupper(x)	towupper(x)
+#endif
+
+#else
+
+#undef	_lib_wctype
+
+#ifndef	isblank
+#define	isblank(x)	((x)==' '||(x)=='\t')
+#endif
+
+#ifndef isgraph
+#define	isgraph(x)	(isprint(x)&&!isblank(x))
+#endif
+
+#endif
+
+#define isword(x)	(isalnum(x)||(x)=='_')
+
+/*
+ * collation element support
+ */
+
+#define COLL_KEY_MAX	15
+
+#if COLL_KEY_MAX < MB_LEN_MAX
+#undef	COLL_KEY_MAX
+#define COLL_KEY_MAX	MB_LEN_MAX
+#endif
+
+typedef unsigned char Ckey_t[COLL_KEY_MAX+1];
+
+#define COLL_end	0
+#define COLL_call	1
+#define COLL_char	2
+#define COLL_range	3
+#define COLL_range_lc	4
+#define COLL_range_uc	5
+
+typedef struct Celt_s
+{
+	short		typ;
+	short		min;
+	short		max;
+	regclass_t	fun;
+	Ckey_t		beg;
+	Ckey_t		end;
+} Celt_t;
+
 /*
  * private stuff hanging off regex_t
  */
 
-typedef struct
+typedef struct Stk_pos_s
 {
 	off_t		offset;
 	char*		base;
 } Stk_pos_t;
 
-typedef struct
+typedef struct Vector_s
 {
 	Stk_t*		stk;		/* stack pointer		*/
 	char*		vec;		/* the data			*/
@@ -144,49 +271,26 @@ typedef struct
 	int		cur;		/* current index -- user domain	*/
 } Vector_t;
 
-typedef struct Reginfo			/* library private regex_t info	*/
-{
-	struct Rex*	rex;		/* compiled expression		*/
-	regdisc_t*	disc;		/* REG_DISCIPLINE discipline	*/
-	unsigned char*	map;		/* for REG_ICASE folding	*/
-	const regex_t*	regex;		/* from regexec			*/
-	unsigned char*	beg;		/* beginning of string		*/
-	unsigned char*	end;		/* end of string		*/
-	Vector_t*	pos;		/* posns of certain subpatterns	*/
-	Vector_t*	bestpos;	/* ditto for best match		*/
-	regmatch_t*	match;		/* subexrs in current match 	*/
-	regmatch_t*	best;		/* ditto in best match yet	*/
-	Stk_pos_t	stk;		/* exec stack pos		*/
-	size_t		min;		/* minimum match length		*/
-	regflags_t	flags;		/* flags from regcomp()		*/
-	int		error;		/* last error			*/
-	int		explicit;	/* explicit match on this char	*/
-	unsigned char	hard;		/* hard comp			*/
-	unsigned char	leading;	/* explicit match on leading .	*/
-	unsigned char	once;		/* if 1st parse fails, quit	*/
-	unsigned char	stack;		/* hard comp or exec		*/
-} Env_t;
-
 /*
  * Rex_t subtypes
  */
 
-typedef struct
+typedef struct Conj_left_s
 {
 	unsigned char*	beg;		/* beginning of left match	*/
-	struct Rex*	right;		/* right pattern		*/
-	struct Rex*	cont;		/* right catcher		*/
+	struct Rex_s*	right;		/* right pattern		*/
+	struct Rex_s*	cont;		/* right catcher		*/
 } Conj_left_t;
 
-typedef struct
+typedef struct Conj_right_s
 {
 	unsigned char*	end;		/* end of left match		*/
-	struct Rex*	cont;		/* ambient continuation		*/
+	struct Rex_s*	cont;		/* ambient continuation		*/
 } Conj_right_t;
 
 typedef unsigned int Bm_mask_t;
 
-typedef struct
+typedef struct Bm_s
 {
 	Bm_mask_t**	mask;
 	size_t*		skip;
@@ -197,49 +301,64 @@ typedef struct
 	size_t		complete;
 } Bm_t;
 
-typedef struct
+typedef struct String_s
 {
 	int*		fail;
 	unsigned char*	base;
 	size_t		size;
 } String_t;
 
-typedef struct
+typedef struct Set_s
 {
 	unsigned char	bits[(UCHAR_MAX+1)/CHAR_BIT];
 } Set_t;
 
-typedef struct
+typedef struct Collate_s
 {
-	struct Rex*	left;
-	struct Rex*	right;
+	int		invert;
+	Celt_t*		elements;
+} Collate_t;
+
+typedef struct Binary_s
+{
+	struct Rex_s*	left;
+	struct Rex_s*	right;
 	int		serial;
 } Binary_t;
 
-typedef struct
+typedef struct Group_s
 {
 	int		number;		/* group number			*/
 	int		last;		/* last contained group number	*/
+	int		size;		/* lookbehind size		*/
+	regflags_t	flags;		/* group flags			*/
 	union
 	{
 	Binary_t	binary;
-	struct Rex*	rex;
+	struct Rex_s*	rex;
 	}		expr;
 } Group_t;
+
+typedef struct Exec_s
+{
+	void*		data;
+	const char*	text;
+	size_t		size;
+} Exec_t;
 
 /*
  * REX_ALT catcher, solely to get control at the end of an
  * alternative to keep records for comparing matches.
  */
 
-typedef struct
+typedef struct Alt_catch_s
 {
-	struct Rex*	cont;
+	struct Rex_s*	cont;
 } Alt_catch_t;
 
-typedef struct
+typedef struct Group_catch_s
 {
-	struct Rex*	cont;
+	struct Rex_s*	cont;
 	regoff_t*	eo;
 } Group_catch_t;
 
@@ -251,7 +370,7 @@ typedef struct
  * we can investigate continuations whenever a length is skipped.
  */
 
-typedef struct
+typedef struct Neg_catch_s
 {
 	unsigned char*	beg;
 	unsigned char*	index;
@@ -262,10 +381,10 @@ typedef struct
  * each iteration of a complex repetition.
  */
 
-typedef struct
+typedef struct Rep_catch_s
 {
-	struct Rex*	cont;
-	struct Rex*	ref;
+	struct Rex_s*	cont;
+	struct Rex_s*	ref;
 	unsigned char*	beg;
 	int		n;
 } Rep_catch_t;
@@ -280,15 +399,15 @@ typedef struct
  * before short ones.
  */
 
-typedef struct Trie
+typedef struct Trie_node_s
 {
-	unsigned char	c;
-	unsigned char	end;
-	struct Trie*	son;
-	struct Trie*	sib;
+	unsigned char		c;
+	unsigned char		end;
+	struct Trie_node_s*	son;
+	struct Trie_node_s*	sib;
 } Trie_node_t;
 
-typedef struct
+typedef struct Trie_s
 {
 	Trie_node_t**	root;
 	int		min;
@@ -298,11 +417,14 @@ typedef struct
  * Rex_t is a node in a regular expression
  */
 
-typedef struct Rex
+typedef struct Rex_s
 {
-	short		type;			/* node type		*/
+	unsigned char	type;			/* node type		*/
+	unsigned char	marked;			/* already marked	*/
 	short		serial;			/* subpattern number	*/
-	struct Rex*	next;			/* remaining parts	*/
+	regflags_t	flags;			/* scoped flags		*/
+	int		explicit;		/* scoped explicit match*/
+	struct Rex_s*	next;			/* remaining parts	*/
 	int		lo;			/* lo dup count		*/
 	int		hi;			/* hi dup count		*/
 	union
@@ -310,9 +432,11 @@ typedef struct Rex
 	Alt_catch_t	alt_catch;		/* alt catcher		*/
 	Bm_t		bm;			/* bm			*/
 	Set_t*		charclass;		/* char class		*/
+	Collate_t	collate;		/* collation class	*/
 	Conj_left_t	conj_left;		/* conj left catcher	*/
 	Conj_right_t	conj_right;		/* conj right catcher	*/
 	void*		data;			/* data after Rex_t	*/
+	Exec_t		exec;			/* re.re_exec() args	*/
 	Group_t		group;			/* a|b or rep		*/
 	Group_catch_t	group_catch;		/* group catcher	*/
 	Neg_catch_t	neg_catch;		/* neg catcher		*/
@@ -323,24 +447,55 @@ typedef struct Rex
 	}		re;
 } Rex_t;
 
-typedef struct					/* shared state		*/
+typedef struct Reginfo			/* library private regex_t info	*/
 {
-	Rex_t		done;
+	struct Rex_s*	rex;		/* compiled expression		*/
+	regdisc_t*	disc;		/* REG_DISCIPLINE discipline	*/
+	const regex_t*	regex;		/* from regexec			*/
+	unsigned char*	beg;		/* beginning of string		*/
+	unsigned char*	end;		/* end of string		*/
+	Vector_t*	pos;		/* posns of certain subpatterns	*/
+	Vector_t*	bestpos;	/* ditto for best match		*/
+	regmatch_t*	match;		/* subexrs in current match 	*/
+	regmatch_t*	best;		/* ditto in best match yet	*/
+	regmatch_t*	zero;		/* ditto for zero width exprs	*/
+	Stk_pos_t	stk;		/* exec stack pos		*/
+	size_t		min;		/* minimum match length		*/
+	size_t		nsub;		/* internal re_nsub		*/
+	regflags_t	flags;		/* flags from regcomp()		*/
+	int		error;		/* last error			*/
+	int		explicit;	/* explicit match on this char	*/
+	Rex_t		done;		/* the last continuation	*/
+	unsigned char	hard;		/* hard comp			*/
+	unsigned char	leading;	/* explicit match on leading .	*/
+	unsigned char	once;		/* if 1st parse fails, quit	*/
+	unsigned char	stack;		/* hard comp or exec		*/
+	unsigned char	test;		/* debug/test bitmask		*/
+	unsigned char	zeroes;		/* labeled zero width subexprs	*/
+} Env_t;
+
+typedef struct State_s				/* shared state		*/
+{
 	regmatch_t	nomatch;
 	struct
 	{
 	unsigned char	key;
-	short		val[10];
-	}		escape[27];
-	unsigned char	ident[UCHAR_MAX+1];
+	short		val[15];
+	}		escape[52];
 	unsigned char	fold[UCHAR_MAX+1];
 	short*		magic[UCHAR_MAX+1];
 	regdisc_t	disc;
+	int		fatal;
+	Dt_t*		attrs;
+	Dt_t*		names;
+	Dtdisc_t	dtdisc;
 } State_t;
 
 extern State_t		state;
 
 extern void*		alloc(regdisc_t*, void*, size_t);
+extern regclass_t	classfun(int);
 extern void		drop(regdisc_t*, Rex_t*);
+extern int		fatal(regdisc_t*, int, const char*);
 
 #endif

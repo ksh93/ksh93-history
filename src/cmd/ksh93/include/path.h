@@ -33,28 +33,55 @@
 #include	"FEATURE/options"
 #include	<nval.h>
 
+#define PATH_PATH	1
+#define PATH_FPATH	2
+#define PATH_CDPATH	4
+#define PATH_BFPATH	010
+#define PATH_SKIP	020
+
 #define PATH_OFFSET	2		/* path offset for path_join */
 #define MAXDEPTH	(sizeof(char*)==2?64:4096) /* maximum recursion depth*/
+
+/*
+ * path component structure for path searching
+ */
+typedef struct pathcomp
+{
+	struct pathcomp *next;
+	int		refcount;
+	dev_t		dev;
+	ino_t		ino;
+	char		*name;
+	unsigned short	len;
+	unsigned short	flags;
+	Shell_t		*shp;
+} Pathcomp_t;
 
 #ifndef ARG_RAW
     struct argnod;
 #endif /* !ARG_RAW */
 
 /* pathname handling routines */
-extern void 		path_alias(Namval_t*,char*);
-extern char 		*path_absolute(const char*,const char*);
+extern void		path_newdir(Pathcomp_t*);
+extern Pathcomp_t	*path_dirfind(Pathcomp_t*,const char*,int);
+extern Pathcomp_t	*path_unsetfpath(Pathcomp_t*);
+extern Pathcomp_t	*path_addpath(Pathcomp_t*,const char*,int);
+extern Pathcomp_t	*path_dup(Pathcomp_t*);
+extern void		path_delete(Pathcomp_t*);
+extern void 		path_alias(Namval_t*,Pathcomp_t*);
+extern Pathcomp_t 	*path_absolute(const char*, Pathcomp_t*);
 extern char 		*path_basename(const char*);
 extern int 		path_expand(const char*, struct argnod**);
 extern void 		path_exec(const char*,char*[],struct argnod*);
-#if defined(__EXPORT__) && defined(_BLD_DLL) && defined(_BLD_shell) 
+#if defined(_DLL_BLD) && defined(_BLD_shell) 
 #   define extern __EXPORT__
 #endif
-extern int		path_open(const char*,char*);
-extern char 		*path_get(const char*);
+extern int		path_open(const char*,Pathcomp_t*);
+extern Pathcomp_t 	*path_get(const char*);
 #undef extern
-extern char		*path_join(char*,const char*);
 extern char 		*path_pwd(int);
-extern int		path_search(const char*,const char*,int);
+extern Pathcomp_t	*path_nextcomp(Pathcomp_t*,const char*,Pathcomp_t*);
+extern int		path_search(const char*,Pathcomp_t*,int);
 extern char		*path_relative(const char*);
 extern int		path_complete(const char*, const char*,struct argnod**);
 #ifdef SHOPT_BRACEPAT

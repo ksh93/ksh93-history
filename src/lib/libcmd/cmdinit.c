@@ -35,10 +35,12 @@ cmdinit(char** argv, void* context, const char* catalog)
 	register char*	cp;
 
 	NoP(context);
-	if (cp = strrchr(argv[0], '/')) cp++;
-	else cp = argv[0];
-	opt_info.index = 0;
+	if (cp = strrchr(argv[0], '/'))
+		cp++;
+	else
+		cp = argv[0];
 	error_info.id = cp;
 	if (!error_info.catalog)
 		error_info.catalog = catalog;
+	opt_info.index = 0;
 }

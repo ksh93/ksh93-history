@@ -36,7 +36,6 @@
 #include	<ccode.h>
 #include	<ctype.h>
 #include	"FEATURE/options"
-#include	"path.h"
 #include	"FEATURE/time"
 #ifdef _hdr_utime
 #   include	<utime.h>
@@ -48,7 +47,7 @@
 #   include	"variables.h"
 #else
     extern char ed_errbuf[];
-    char e_version[] = "\n@(#)$Id: Editlib version 1993-12-28 f $\0\n";
+    char e_version[] = "\n@(#)$Id: Editlib version 1993-12-28 l $\0\n";
 #endif	/* KSHELL */
 #include	"io.h"
 #include	"terminal.h"
@@ -258,8 +257,9 @@ void tty_cooked(register int fd)
  *
 }*/
 
-tty_raw(register int fd, int echo)
+tty_raw(register int fd, int echomode)
 {
+	int echo = echomode;
 #ifdef L_MASK
 	struct ltchars lchars;
 #endif	/* L_MASK */
@@ -276,8 +276,10 @@ tty_raw(register int fd, int echo)
 			return(-1);
 	}
 #if  L_MASK || VENIX
-	if(!(ttyparm.sg_flags&ECHO) || (ttyparm.sg_flags&LCASE))
+	if(ttyparm.sg_flags&LCASE)
 		return(-1);
+	if(!(ttyparm.sg_flags&ECHO))
+		echo = 0;
 	nttyparm = ttyparm;
 	if(!echo)
 		nttyparm.sg_flags &= ~(ECHO | TBDELAY);
@@ -308,7 +310,7 @@ tty_raw(register int fd, int echo)
 #   endif	/* TIOCGLTC */
 #else
 	if (!(ttyparm.c_lflag & ECHO ))
-		return(-1);
+		echo = 0;
 #   ifdef FLUSHO
 	ttyparm.c_lflag &= ~FLUSHO;
 #   endif /* FLUSHO */
@@ -361,7 +363,7 @@ tty_raw(register int fd, int echo)
 		return(-1);
 	ep->e_ttyspeed = (cfgetospeed(&ttyparm)>=B1200?FAST:SLOW);
 #endif
-	ep->e_raw = (echo?ECHOMODE:RAWMODE);
+	ep->e_raw = (echomode?ECHOMODE:RAWMODE);
 	return(0);
 }
 
@@ -699,7 +701,7 @@ int ed_read(int fd, char *buff, int size)
 			goto done;
 		/* an interrupt that should be ignored */
 		errno = 0;
-		if(!sh.waitevent || (rv=(*sh.waitevent)(fd,0L,0))==0)
+		if(!sh.waitevent || (rv=(*sh.waitevent)(fd,-1L,0))==0)
 			rv = sfpkrd(fd,buff,size,delim,-1L,mode);
 	}
 	if(rv < 0)
@@ -971,6 +973,8 @@ ed_virt_to_phys(Edit_t *ep,genchar *virt,genchar *phys,int cur,int voff,int poff
 		d = (is_print(c)?1:-1);
 #ifdef SHOPT_MULTIBYTE
 		d = wcwidth((wchar_t)c);
+		if(d<0 && !iscntrl(c))
+			d = 1;
 		if(d>1)
 		{
 			/* multiple width character put in place holders */

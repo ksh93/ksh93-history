@@ -37,12 +37,12 @@ ftell(Sfio_t* f)
 
 #ifdef _ast_int8_t
 
-fpos64_t
+_ast_int8_t
 ftell64(Sfio_t* f)
 {
-	STDIO_INT(f, "ftell64", fpos64_t, (Sfio_t*), (f))
+	STDIO_INT(f, "ftell64", _ast_int8_t, (Sfio_t*), (f))
 
-	return (fpos64_t)sfseek(f, (Sfoff_t)0, SEEK_CUR);
+	return (_ast_int8_t)sfseek(f, (Sfoff_t)0, SEEK_CUR);
 }
 
 #endif

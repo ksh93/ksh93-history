@@ -42,14 +42,14 @@
 int
 sfstrtmp(register Sfio_t* f, int mode, void* buf, size_t siz)
 {
-	if (!(f->flags & SF_STRING))
+	if (!(f->_flags & SF_STRING))
 		return -1;
-	if (f->flags & SF_MALLOC)
-		free(f->data);
-	f->flags &= ~(SF_ERROR|SF_MALLOC);
+	if (f->_flags & SF_MALLOC)
+		free(f->_data);
+	f->_flags &= ~(SF_ERROR|SF_MALLOC);
 	f->mode = mode;
-	f->next = f->data = (unsigned char*)buf;
-	f->endw = f->endr = f->endb = f->data + siz;
-	f->size = siz;
+	f->_next = f->_data = (unsigned char*)buf;
+	f->_endw = f->_endr = f->_endb = f->_data + siz;
+	f->_size = siz;
 	return 0;
 }

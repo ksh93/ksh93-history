@@ -103,12 +103,14 @@ struct Ufunction
 #define BLT_SPC		(NV_LJUST)		/* special built-ins */
 #define BLT_EXIT	(NV_RJUST)		/* exit value can be > 255 */
 #define BLT_DCL		(NV_TAGGED)		/* declaration command */
-#define nv_isref(n)	(nv_isattr((n),NV_REF))
+#define nv_isref(n)	(nv_isattr((n),NV_REF)==NV_REF)
+#define nv_istable(n)	(nv_isattr((n),NV_TABLE)==NV_TABLE)
 #define is_abuiltin(n)	(nv_isattr(n,NV_BLTIN)==NV_BLTIN)
 #define is_afunction(n)	(nv_isattr(n,NV_FUNCTION)==NV_FUNCTION)
 #define	nv_funtree(n)	((n)->nvalue.rp->ptree)
 #define	funptr(n)	((n)->nvalue.bfp)
 
+#define NV_SUBQUOTE	(NV_ADD<<1)	/* used with nv_endsubscript */
 
 /* NAMNOD MACROS */
 /* ... for attributes */
@@ -141,7 +143,10 @@ extern union Value	*array_find(Namval_t*, int);
 extern char 		*nv_endsubscript(Namval_t*, char*, int);
 extern Namfun_t 	*nv_cover(Namval_t*);
 struct argnod;		/* struct not declared yet */
+extern int		nv_setnotify(Namval_t*,char **);
+extern int		nv_unsetnotify(Namval_t*,char **);
 extern void		nv_setlist(struct argnod*, int);
+extern void		nv_outname(Sfio_t*,char*, int);
 extern void 		nv_scope(struct argnod*);
 extern void 		nv_unref(Namval_t*);
 

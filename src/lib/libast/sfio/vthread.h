@@ -26,6 +26,8 @@
 #ifndef _VTHREAD_H
 #define _VTHREAD_H	1
 
+#define VTHREAD_VERSION    20001201L
+
 /*	Header for the Vthread library.
 **	Note that the macro vt_threaded may be defined
 **	outside of vthread.h to suppress threading.
@@ -38,7 +40,7 @@
 
 /* ast doesn't do threads yet */
 #if _PACKAGE_ast && !defined(vt_threaded)
-#define vt_threaded	0
+#define vt_threaded     0
 #endif
 
 #if !defined(vt_threaded) || (defined(vt_threaded) && vt_threaded == 1)
@@ -63,7 +65,7 @@ typedef pthread_attr_t		_vtattr_t;
 
 #endif
 
-#if _may_use_threads && !defined(vt_threaded) && _WIN32
+#if _may_use_threads && !defined(vt_threaded) && _UWIN
 #define vt_threaded		1
 #include			<windows.h>
 typedef CRITICAL_SECTION	_vtmtx_t;
@@ -159,7 +161,7 @@ struct _vtonce_s
 	int		error;
 };
 
-#if _WIN32
+#if _UWIN
 #define VTONCE_INITDATA		{0, 0}
 #else
 #define VTONCE_INITDATA		{0, PTHREAD_ONCE_INIT }

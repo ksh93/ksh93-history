@@ -30,7 +30,7 @@
  * ast i18n message translation
  */
 
-#include "loclib.h"
+#include "lclib.h"
 
 #include <cdt.h>
 #include <error.h>
@@ -38,8 +38,8 @@
 #include <nl_types.h>
 #include <sfstr.h>
 
-#ifndef _PACKAGE_MESSAGE_SET
-#define _PACKAGE_MESSAGE_SET	3
+#ifndef DEBUG_trace
+#define DEBUG_trace		0
 #endif
 
 #define NOCAT			((nl_catd)-1)
@@ -130,13 +130,16 @@ entry(Dt_t* dict, int set, int seq, const char* msg)
 static nl_catd
 find(const char* locale, const char* catalog)
 {
-	char	path[PATH_MAX];
-
-#if 0
-sfprintf(sfstderr, "AHA#%d:%s %s %s\n", __LINE__, __FILE__, locale, catalog);
+	char		path[PATH_MAX];
+#if DEBUG_trace
+	const char*	ocatalog = catalog;
 #endif
+
 	if (mcfind(path, locale, catalog, LC_MESSAGES, 0))
 		catalog = (const char*)path;
+#if DEBUG_trace
+sfprintf(sfstderr, "AHA#%d:%s %s %s %s\n", __LINE__, __FILE__, locale, ocatalog, catalog);
+#endif
 	return catopen(catalog, NL_CAT_LOCALE);
 }
 
@@ -171,28 +174,23 @@ init(register char* s)
 	 * locate the default locale catalog
 	 */
 
-	u = setlocale(LC_MESSAGES, "C");
+	u = setlocale(LC_MESSAGES, NiL);
+	setlocale(LC_MESSAGES, "C");
 	if ((d = find("C", s)) != NOCAT)
 	{
 		/*
 		 * load the default locale messages
-		 * this assumes one mesage set for ast (_PACKAGE_MESSAGE_SET)
+		 * this assumes one mesage set for ast (AST_MESSAGE_SET)
 		 * different packages can share the same message catalog
 		 * name by using different message set numbers
-		 * avoid a clash by plugging the first three chars of
-		 * the package name base 36 into MC_MESSAGE_SET(s):
-		 *
-		 *	"ast" : ((((36#a^36#s^36#t)-9)&63)+1) = 3
-		 *	"gnu" : ((((36#g^36#n^36#u)-9)&63)+1) = 17
-		 *	"sgi" : ((((36#s^36#g^36#i)-9)&63)+1) = 22
-		 *	"sun" : ((((36#s^36#u^36#n)-9)&63)+1) = 13
+		 * see <mc.h> mcindex()
 		 */
 
 		if (cp->messages = dtopen(&state.message_disc, Dtset))
 		{
 			m = 0;
 			for (n = 1; n < NL_MSGMAX; n++) 
-				if ((s = catgets(d, _PACKAGE_MESSAGE_SET, n, state.null)) != state.null && entry(cp->messages, _PACKAGE_MESSAGE_SET, n, s))
+				if ((s = catgets(d, AST_MESSAGE_SET, n, state.null)) != state.null && entry(cp->messages, AST_MESSAGE_SET, n, s))
 					m = n;
 			if (!m)
 			{
@@ -335,6 +333,9 @@ translate(const char* loc, const char* cmd, const char* cat, const char* msg)
 	 * adjust for the current locale
 	 */
 
+#if DEBUG_trace
+sfprintf(sfstderr, "AHA#%d:%s cp->locale `%s' %p loc `%s' %p\n", __LINE__, __FILE__, cp->locale, cp->locale, loc, loc);
+#endif
 	if (cp->locale != loc)
 	{
 		cp->locale = loc;
@@ -344,6 +345,9 @@ translate(const char* loc, const char* cmd, const char* cat, const char* msg)
 			cp->debug = streq(cp->locale, "debug");
 		else
 			cp->debug = 0;
+#if DEBUG_trace
+sfprintf(sfstderr, "AHA#%d:%s cp->cat %p cp->debug %d NOCAT %p\n", __LINE__, __FILE__, cp->cat, cp->debug, NOCAT);
+#endif
 	}
 	if (cp->cat == NOCAT)
 	{

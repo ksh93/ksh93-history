@@ -35,5 +35,7 @@ int*	decpt;		/* to return decimal point */
 int*	sign;		/* to return sign */
 #endif
 {
-	return _sfcvt(&dval,n_digit,decpt,sign,0);
+	static char	buf[SF_MAXDIGITS];
+
+	return _sfcvt(&dval,buf,sizeof(buf),n_digit,decpt,sign,0);
 }

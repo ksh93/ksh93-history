@@ -97,8 +97,8 @@ extern const char	e_nospace[];
 extern const char	e_format[];
 extern const char 	e_number[];
 extern const char	e_restricted[];
-extern const char	e_version[];
 extern const char	e_recursive[];
+extern char		e_version[];
 
 typedef struct sh_scope
 {
@@ -175,6 +175,7 @@ extern int 		sh_close(int);
 extern int 		sh_dup(int);
 extern void 		sh_exit(int);
 extern int		sh_fcntl(int, int, ...);
+extern Sfio_t		*sh_fd2sfio(int);
 extern int		(*sh_fdnotify(int(*)(int,int)))(int,int);
 extern Shell_t		*sh_getinterp(void);
 extern int		sh_open(const char*, int, ...);

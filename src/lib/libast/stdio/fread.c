@@ -32,7 +32,7 @@ fread(void* p, size_t s, size_t n, Sfio_t* f)
 {
 	ssize_t	v;
 
-	STDIO_INT(f, "clearerr", ssize_t, (void*, size_t, size_t, Sfio_t*), (p, s, n, f))
+	STDIO_INT(f, "fread", ssize_t, (void*, size_t, size_t, Sfio_t*), (p, s, n, f))
 
-	return ((v = sfread(f, p, s * n)) <= 0) ? v : (v / s);
+	return ((v = sfread(f, p, s * n)) <= 0) ? 0 : (v / s);
 }

@@ -261,3 +261,45 @@ tst	output{
 		return 0;
 	}
 }end
+
+tst	xopen_stdio note{ Stdio fseek/fflush are X/Open-compliant }end execute{
+	#include	"iffeio.h"
+	#define Failed(file)	(unlink(file),1)
+	main(int argc, char** argv)
+	{	FILE	*f1, *f2;
+		char	file[1024], buf[1024], *f, *t;
+		int	i, fd;
+
+		/* create file */
+		for(f = argv[0], t = file; (*t = *f++) != 0; )
+			t++;
+		*t++ = '.'; *t++ = 'D'; *t++ = 0;
+		if((fd = creat(file,0666)) < 0)
+			return 1;
+
+		for (i = 0; i < sizeof(buf); ++i)
+			buf[i] = '0' + (i%10);
+		for (i = 0; i < 16; ++i)
+			if (write(fd,buf,sizeof(buf)) != sizeof(buf))
+				return Failed(file);
+		close(fd);
+
+		if(!(f1 = fopen(file,"r+")) ||
+		   (fd = dup(fileno(f1))) < 0 ||
+		   !(f2 = fdopen(fd,"r+")) )
+			return Failed(file);
+
+		if(fread(buf, 1, 7, f2) != 7 || ftell(f2) != 7)
+			return Failed(file);
+
+		if(fseek(f1, 1010, 0) < 0 || ftell(f1) != 1010)
+			return Failed(file);
+
+		fflush(f2); /* this should set the seek location to 1010 */
+		if(ftell(f2) != 1010)
+			return Failed(file);
+
+		unlink(file);
+		return 0;
+	}
+}end

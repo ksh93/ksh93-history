@@ -323,3 +323,46 @@ const char *_sh_translate(const char *message)
 #endif
 #endif
 }
+
+/*
+ * change '['identifier']' to identifier
+ * character before <str> must be a '['
+ * returns pointer to last character
+ */
+char *sh_checkid(char *str, char *last)
+{
+	register unsigned char *cp = (unsigned char*)str;
+	register unsigned char *v = cp;
+	register int c;
+	if(c= *cp++,isaletter(c))
+		while(c= *cp++,isaname(c));
+	if(c==']' && (!last || ((char*)cp==last)))
+	{
+		/* eliminate [ and ] */
+		while(v < cp)
+		{
+			v[-1] = *v;
+			v++;
+		}
+		if(last)
+			last -=2;
+		else
+		{
+			while(*v)
+			{
+				v[-2] = *v;
+				v++;
+			}
+			v[-2] = 0;
+			last = (char*)v;
+		}
+	}
+	return(last);
+}
+
+#if	_AST_VERSION  <= 20000317L
+char *fmtident(const char *string)
+{
+	return((char*)string);
+}
+#endif

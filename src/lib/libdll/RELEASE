@@ -1,3 +1,6 @@
+01-05-29 dlopen: fix dlopen(0,0) for HP
+01-04-20 dllfind: use getconf HOSTTYPE LIBPATH LIBSUFFIX
+01-02-14 features/dll: fix unbalanced ' quote and ancient hostinfo reference
 00-01-26 dlllook: add -- dlsym() with `_' weak prefix fallback
 99-04-01 features/dll: drop <stdio.h> -- iffe protos printf
 99-03-19 static=1 for all but win32.*

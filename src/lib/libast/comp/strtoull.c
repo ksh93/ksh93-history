@@ -23,41 +23,12 @@
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
 *******************************************************************/
-#pragma prototyped
+/*
+ * strtoull() implementation
+ */
 
-#if defined(__STDPP__directive) && defined(__STDPP__hide)
-__STDPP__directive pragma pp:hide strtoll strtoull
-#else
-#define strtoll		______strtoll
-#define strtoull	______strtoull
-#endif
+#define S2I_function	strtoull
+#define S2I_number	_ast_intmax_t
+#define S2I_unsigned	1
 
-#include <ast.h>
-#include <int.h>
-
-#if defined(__STDPP__directive) && defined(__STDPP__hide)
-__STDPP__directive pragma pp:nohide strtoll strtoull
-#else
-#undef	strtoll
-#undef	strtoull
-#endif
-
-#if _lib_strtoull
-
-NoN(strtoull)
-
-#else
-
-#if defined(__EXPORT__)
-#define extern	__EXPORT__
-#endif
-
-extern int_max	strtoll(const char*, char**, int);
-
-extern unsigned int_max
-strtoull(const char* str, char** ptr, int base)
-{
-	return (unsigned int_max)strtoll(str, ptr, base);
-}
-
-#endif
+#include "strtoi.h"

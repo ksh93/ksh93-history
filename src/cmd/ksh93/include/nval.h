@@ -67,6 +67,7 @@ struct Namfun
 {
 	const Namdisc_t *disc;
 	Namfun_t *next;
+	short	nofree;
 };
 
 /* This is an array template header */
@@ -119,12 +120,11 @@ struct Namval
 #define NV_TAGGED	0x8000	/* user define tag bit */
 
 /* The following are used with NV_INTEGER */
-#define NV_SHORT	(NV_LTOU)	/* when integers are not long */
-#define NV_UNSIGN	(NV_UTOL)	/* for unsigned quantities */
+#define NV_SHORT	(NV_RJUST)	/* when integers are not long */
+#define NV_LONG		(NV_UTOL)	/* for long long and long double */
+#define NV_UNSIGN	(NV_LTOU)	/* for unsigned quantities */
 #define NV_DOUBLE	(NV_ZFILL)	/* for floating point */
-#define NV_EXPNOTE	(NV_LTOU)	/* for scientific notation */
-#define NV_LONG		(NV_RJUST)	/* for long long and long double */
-
+#define NV_EXPNOTE	(NV_LJUST)	/* for scientific notation */
 
 /*  options for nv_open */
 
@@ -137,7 +137,7 @@ struct Namval
 #define NV_NOARRAY	NV_ARRAY		/* array name not possible */
 #define NV_NOREF	NV_REF			/* don't follow reference */
 #define NV_IDENT	0x80			/* name must be identifier */
-#define NV_VARNAME	NV_TABLE		/* name must be ?(.)id*(.id) */
+#define NV_VARNAME	0x20000			/* name must be ?(.)id*(.id) */
 #define NV_NOADD	NV_IMPORT		/* do not add node */ 	
 #define NV_NODISC	NV_IDENT		/* ignore disciplines */
 

@@ -71,8 +71,11 @@ va_list	args;		/* arg list if !argf	*/
 	int		argp, argn;	/* arg position and number	*/
 
 #define SLACK		1024
-	char		buf[SF_MAXDIGITS+SLACK], data[SF_GRAIN];
+	char		buf[SF_MAXDIGITS+SLACK], tmp[SF_MAXDIGITS], data[SF_GRAIN];
 	int		decimal = 0, thousand = 0;
+#if _has_multibyte
+	int		mbcurmax = 1;
+#endif
 
 	/* fast io system */
 	reg uchar	*d, *endd;
@@ -123,17 +126,27 @@ va_list	args;		/* arg list if !argf	*/
 
 	tls[1] = NIL(char*);
 
-	fmstk = NIL(Fmt_t*); ft = NIL(Sffmt_t*);
+	fmstk = NIL(Fmt_t*);
+	ft = NIL(Sffmt_t*);
 
-	oform = (char*)form; va_copy(oargs,args);
-	fp = NIL(Fmtpos_t*); argn = -1;
+	oform = (char*)form;
+	va_copy(oargs,args);
+	argn = -1;
+	fp = NIL(Fmtpos_t*);
+#if _has_multibyte
+	mbcurmax = MB_CUR_MAX;
+#endif
 
 loop_fmt :
 	while((n = *form) )
 	{	if(n != '%') /* collect the non-pattern chars */
-		{	sp = (char*)form++;
-			while(*form && *form != '%')
-				form += 1;
+		{	sp = (char*)form;
+			for(;;)
+			{	form += SFMBLEN(form, mbcurmax);
+				if(*form == 0 || *form == '%')
+					break;
+			}
+
 			n = form-sp;
 			SFwrite(f,sp,n);
 			continue;
@@ -503,6 +516,8 @@ loop_fmt :
 					va_copy(args,argv.ft->args);
 					argn = -1;
 					fp = NIL(Fmtpos_t*);
+					oform = (char*)form;
+					va_copy(oargs,args);
 				}
 				else	fm->form = NIL(char*);
 
@@ -787,6 +802,7 @@ loop_fmt :
 			break;
 
 		case 'g': case 'G': /* these ultimately become %e or %f */
+		case 'a': case 'A':
 		case 'e': case 'E':
 		case 'f':
 #if !_ast_fltmax_double
@@ -803,12 +819,14 @@ loop_fmt :
 			{	n = (precis = precis < 0 ? FPRECIS : precis)+1;
 #if !_ast_fltmax_double
 				if(FMTCMP(size,Sfdouble_t,Sfdouble_t))
-				{	ep = _sfcvt(&ldval,min(n,SF_FDIGITS),
+				{	ep = _sfcvt(&ldval,tmp,sizeof(tmp),
+						min(n,SF_FDIGITS),
 					    	&decpt,&sign,
 						SFFMT_EFORMAT|SFFMT_LDOUBLE );
 				} else
 #endif
-				{	ep = _sfcvt(&dval,min(n,SF_FDIGITS),
+				{	ep = _sfcvt(&dval,tmp,sizeof(tmp),
+						min(n,SF_FDIGITS),
 					    	&decpt,&sign,SFFMT_EFORMAT);
 				}
 				goto e_format;
@@ -817,21 +835,48 @@ loop_fmt :
 			{	precis = precis < 0 ? FPRECIS : precis;
 #if !_ast_fltmax_double
 				if(FMTCMP(size,Sfdouble_t,Sfdouble_t))
-				{	ep = _sfcvt(&ldval,min(precis,SF_FDIGITS),
+				{	ep = _sfcvt(&ldval,tmp,sizeof(tmp),
+						min(precis,SF_FDIGITS),
 					    	&decpt,&sign,SFFMT_LDOUBLE);
 				} else
 #endif
-				{	ep = _sfcvt(&dval,min(precis,SF_FDIGITS),
+				{	ep = _sfcvt(&dval,tmp,sizeof(tmp),
+						min(precis,SF_FDIGITS),
 					    	&decpt,&sign,0);
 				}
 				goto f_format;
+			}
+			else if(fmt == 'a' || fmt == 'A')
+			{
+#if !_ast_fltmax_double
+				if(FMTCMP(size,Sfdouble_t,Sfdouble_t))
+				{	n = (precis = precis < 0 ? 2*(sizeof(Sfdouble_t)-2) : precis)+1;
+					ep = _sfcvt(&ldval,tmp,sizeof(tmp),
+						min(n,SF_FDIGITS),
+					    	&decpt,&sign,
+						SFFMT_LDOUBLE|SFFMT_AFORMAT|(fmt=='A'?SFFMT_UPPER:0));
+				} else
+#endif
+				{	n = (precis = precis < 0 ? 2*(sizeof(double)-2) : precis)+1;
+					ep = _sfcvt(&dval,tmp,sizeof(tmp),
+						min(n,SF_FDIGITS),
+					    	&decpt,&sign,
+						SFFMT_AFORMAT|(fmt=='A'?SFFMT_UPPER:0));
+				}
+				sp = endsp = buf+1;	/* reserve space for sign */
+				*endsp++ = '0';
+				*endsp++ = fmt == 'a' ? 'x' : 'X';
+				if (!isxdigit(*ep))
+					goto infinite;
+				goto a_format;
 			}
 
 			/* 'g' or 'G' format */
 			precis = precis < 0 ? FPRECIS : precis == 0 ? 1 : precis;
 #if !_ast_fltmax_double
 			if(FMTCMP(size,Sfdouble_t,Sfdouble_t))
-			{	ep = _sfcvt(&ldval,min(precis,SF_FDIGITS),
+			{	ep = _sfcvt(&ldval,tmp,sizeof(tmp),
+					min(precis,SF_FDIGITS),
 				    	&decpt,&sign,SFFMT_EFORMAT|SFFMT_LDOUBLE);
 				if(ldval == 0.)
 					decpt = 1;
@@ -839,7 +884,8 @@ loop_fmt :
 					goto infinite;
 			} else
 #endif
-			{	ep = _sfcvt(&dval,min(precis,SF_FDIGITS),
+			{	ep = _sfcvt(&dval,tmp,sizeof(tmp),
+					min(precis,SF_FDIGITS),
 				    	&decpt,&sign,SFFMT_EFORMAT);
 				if(dval == 0.)
 					decpt = 1;
@@ -870,6 +916,7 @@ loop_fmt :
 			if(isalpha(*ep))
 				goto infinite;
 			sp = endsp = buf+1;	/* reserve space for sign */
+		a_format:
 			*endsp++ = *ep ? *ep++ : '0';
 
 			SFSETLOCALE(&decimal,&thousand);
@@ -902,9 +949,9 @@ loop_fmt :
 
 			/* the e/Exponent separator and sign */
 			*--ep = (decpt > 0 || dval == 0.) ? '+' : '-';
-			*--ep = isupper(fmt) ? 'E' : 'e';
+			*--ep = fmt == 'a' ? 'p' : fmt == 'A' ? 'P' : isupper(fmt) ? 'E' : 'e';
 
-			goto end_efg;
+			goto end_aefg;
 
 		f_format: /* data before the decimal point */
 			if(isalpha(*ep))
@@ -913,7 +960,7 @@ loop_fmt :
 				endsp = (sp = ep)+sfslen();
 				ep = endep;
 				precis = 0;
-				goto end_efg;
+				goto end_aefg;
 			}
 
 			SFSETLOCALE(&decimal,&thousand);
@@ -953,7 +1000,7 @@ loop_fmt :
 				;
 			precis -= (endsp -= 1) - ssp;
 			ep = endep;
-		end_efg:
+		end_aefg:
 			flags |= SFFMT_FLOAT;
 			if(sign)
 				flags |= SFFMT_MINUS;

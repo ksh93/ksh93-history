@@ -31,7 +31,7 @@
 
 #include <ast.h>
 
-#if __MVS__ && ( _DLL_BLD || _BLD_DLL )
+#if _dll_intercept_data && ( _DLL_BLD || _BLD_DLL )
 
 void
 _ast_init(void)

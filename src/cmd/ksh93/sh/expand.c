@@ -38,12 +38,12 @@
 #   include	<ast.h>
 #   include	<setjmp.h>
 #endif /* KSHELL */
+#include	<glob.h>
 #include	<ls.h>
 #include	<stak.h>
 #include	<ast_dir.h>
 #include	"io.h"
 #include	"path.h"
-
 
 #ifndef SHOPT_BRACEPAT
 #   define SHOPT_BRACEPAT	0
@@ -86,265 +86,40 @@ struct glob
 #endif
 };
 
+#ifndef GLOB_AUGMENTED
+#   define GLOB_AUGMENTED	0
+#endif
 
 #define GLOB_RESCAN 1
-#define	argstart(ap)	((ap)->argbegin)
 #define globptr()	((struct glob*)membase)
 
 static struct glob	 *membase;
 
-static void		addmatch(const char*,const char*,const char*,char*);
-static void		glob_dir(struct argnod*);
-
 int path_expand(const char *pattern, struct argnod **arghead)
 {
+	glob_t gdata;
 	register struct argnod *ap;
-	register struct glob *gp;
-	register char *pat;
-#ifdef KSHELL
-	struct glob globdata;
-	membase = &globdata;
-#endif /* KSHELL */
-	gp = globptr();
-	ap = (struct argnod*)stakalloc(strlen(pattern)+sizeof(struct argnod)+suflen);
-	gp->rescan =  ap;
-	gp->argn = 0;
-#ifdef KSHELL
-	gp->fignore = nv_getval(nv_scoped(FIGNORENOD));
-	gp->match = *arghead;
-#else
-	gp->fignore = getenv("FIGNORE");
-	gp->match = 0;
-#endif /* KSHELL */
-	ap->argbegin = ap->argval;
-	ap->argchn.ap = 0;
-#ifdef KSHELL
-	pat = strcopy(ap->argval,pattern);
-	if(suflen)
-		strcpy(pat,sufstr);
-	else
-		*pat = 0;
-#else
-	strcpy(ap->argval,pat);
-#endif /* KSHELL */
-	suflen = 0;
-	do
-	{
-		gp->rescan = ap->argchn.ap;
-		glob_dir(ap);
-	}
-	while(ap = gp->rescan);
-#ifdef KSHELL
-	*arghead = gp->match;
-#endif /* KSHELL */
-	return(gp->argn);
-}
-
-static void glob_dir(struct argnod *ap)
-{
-	register char		*rescan;
-	register char		*prefix;
-	register char		*pat;
-	register struct dirent	*dirp;
-	DIR 			*dirf;
-	char			*path=0;
-	char			quote = 0;
-	char			savequote = 0;
-	char			meta = 0;
-	char			bracket = 0;
-	char			first;
-	char			*dirname;
-	char			*fignore = globptr()->fignore;
-	struct stat		statb;
-#ifdef SHOPT_NOCASE
-	int			nocase = STR_ICASE;
-#else
-	int			nocase = 0;
-#endif /* SHOPT_NOCASE */
-	sh_sigcheck();
-	pat = rescan = argstart(ap);
-	prefix = dirname = ap->argval;
-	first = (rescan == prefix);
-	/* check for special chars */
-	while(1) switch(*rescan++)
-	{
-		case 0:
-			if(meta)
-			{
-				rescan = 0;
-				goto process;
-			}
-			if(first && !quote || !SHOPT_BRACEPAT)
-				return;
-			if(quote)
-				sh_trim(argstart(ap));
- 			/* treat trailing / as trailing /. */
-			if(*rescan==0 && (--rescan,rescan[-1]=='/'))
- 				*rescan = '.';
-			else
-				rescan = 0;
-			if((SHOPT_BRACEPAT&&quote) || lstat(prefix,&statb)>=0)
-				addmatch((char*)0,prefix,(char*)0,rescan);
-			return;
-
-		case '/':
-			if(meta)
-				goto process;
-			pat = rescan;
-			bracket = 0;
-			savequote = quote;
-			break;
-
-		case '[':
-			bracket = 1;
-			break;
-
-		case ']':
-			meta |= bracket;
-			break;
-
-		case '*':
-		case '?':
-		case '(':
-			meta=1;
-			break;
-
-		case '\\':
-			quote = 1;
-			rescan++;
-	}
-process:
-	if(pat == prefix)
-	{
-		dirname = ".";
-		prefix = 0;
-#ifdef KSHELL
-		if(!rescan && sh_isstate(SH_COMPLETE))
-		{
-			/* command completion */
-			scantree(sh.alias_tree,pat);
-			scantree(sh.fun_tree,pat);
-			path = path_get("");
-		}
-#endif /* KSHELL */
-	}
-	else
-	{
-		if(pat==prefix+1)
-			dirname = "/";
-		*(pat-1) = 0;
-		if(savequote)
-			sh_trim(argstart(ap));
-	}
-	while(1)
-	{
-#ifdef KSHELL
-		if(path)
-		{
-			if(*path==':')
-			{
-				while(*path==':')
-					path++;
-				prefix=0;
-				dirname = ".";
-			}
-			else
-			{
-				dirname = prefix = path;
-				while(*path && *path!=':')
-					path++;
-				if(*path==':')
-					*path++ = 0;
-			}
-		}
-#endif /* KSHELL */
-		if(dirf=opendir(dirname))
-		{
-			char *cp;
-			if(cp=astconf("PATH_ATTRIBUTES",dirname,(char*)0))
-				nocase = strchr(cp,'c') ? STR_ICASE : 0;
-			/* check for rescan */
-			if(rescan)
-				*(rescan-1) = 0;
-			while(dirp = readdir(dirf))
-			{
-				register int c;
-				if(!D_FILENO(dirp))
-					continue;
-				if(fignore && *fignore && strgrpmatch(dirp->d_name, fignore, NIL(int*), 0, STR_MAXIMAL|STR_LEFT|STR_RIGHT|nocase))
-					continue;
-				if(*dirp->d_name=='.' && *pat != '.' && (!fignore ||
-				    (c=dirp->d_name[1])==0 || 
-				    (c=='.'  && dirp->d_name[2]==0)))
-					continue;
-				if(strgrpmatch(dirp->d_name, pat, NIL(int*), 0, STR_MAXIMAL|STR_LEFT|STR_RIGHT|nocase))
-					addmatch(prefix,dirp->d_name,rescan,(char*)0);
-			}
-			closedir(dirf);
-		}
-		if(!path || *path==0)
-			break;
-		sh_sigcheck();
-	}
-	return;
-}
-
-static  void addmatch(const char *dir,const char *pat,const register char *rescan,char *endslash)
-{
-	register struct argnod *ap = (struct argnod*)stakseek(ARGVAL);
-	register struct glob *gp = globptr();
-	struct stat statb;
-	if(dir)
-	{
-		stakputs(dir);
-		stakputc('/');
-	}
-	if(endslash)
-		*endslash = 0;
-	stakputs(pat);
-	if(rescan)
-	{
-		int offset;
-		if(stat(stakptr(ARGVAL),&statb)<0 || !S_ISDIR(statb.st_mode))
-			return;
-		stakputc('/');
-		offset = staktell();
- 		/* if null, reserve room for . */
- 		if(*rescan)
- 			stakputs(rescan);
- 		else
- 			stakputc(0);
-		stakputc(0);
-		rescan = stakptr(offset);
-		ap = (struct argnod*)stakfreeze(0);
-		ap->argbegin = (char*)rescan;
-		ap->argchn.ap = gp->rescan;
-		gp->rescan = ap;
-	}
-	else
-	{
-#ifdef KSHELL
-		if(!endslash && sh_isoption(SH_MARKDIRS) && stat(ap->argval,&statb)>=0)
-		{
-			if(sh_isstate(SH_COMPLETE) && (!S_ISREG(statb.st_mode) || !(statb.st_mode&(S_IXUSR|S_IXGRP|S_IXOTH))))
-			{
-				stakseek(0);
-				return;
-			}
-			else if(S_ISDIR(statb.st_mode))
-				stakputc('/');
-		}
-#endif /* KSHELL */
-		ap = (struct argnod*)stakfreeze(1);
-		ap->argchn.ap = gp->match;
-		gp->match = ap;
-		gp->argn++;
-	}
-#ifdef KSHELL
-	ap->argflag = ARG_RAW;
+	register glob_t *gp= &gdata;
+	register int flags;
+	memset(gp,0,sizeof(gdata));
+	flags = GLOB_AUGMENTED|GLOB_NOCHECK|GLOB_NOSORT|GLOB_STACK|GLOB_LIST|GLOB_DISC;
+	if(sh_isoption(SH_MARKDIRS))
+		flags |= GLOB_MARK;
 	if(sh_isstate(SH_COMPLETE))
-		ap->argflag |= ARG_MAKE;
-#endif /* KSHELL */
+		flags |= GLOB_COMPLETE;
+	gp->gl_fignore = nv_getval(nv_scoped(FIGNORENOD));
+	if(suflen)
+		gp->gl_suffix = sufstr;
+	gp->gl_intr = &sh.trapnote; 
+	suflen = 0;
+	glob(pattern, flags, 0, gp);
+	sh_sigcheck();
+	for(ap= (struct argnod*)gp->gl_list; ap; ap = ap->argnxt.ap)
+	{
+		ap->argchn.ap = *arghead;
+		*arghead = ap;
+	}
+	return(gp->gl_pathc);
 }
 
 
@@ -389,27 +164,7 @@ int path_complete(const char *name,register const char *suffix, struct argnod **
 	return(path_expand(name,arghead));
 }
 
-#else
-
-/*
- * remove backslashes
- */
-
-static void sh_trim(sp)
-register char *sp;
-{
-	register char *dp = sp;
-	register int c;
-	while(1)
-	{
-		if((c= *sp++) == '\\')
-			c = *sp++;
-		*dp++ = c;
-		if(c==0)
-			break;
-	}
-}
-#endif /* KSHELL */
+#endif
 
 #ifdef SHOPT_BRACEPAT
 int path_generate(struct argnod *todo, struct argnod **arghead)

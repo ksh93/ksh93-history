@@ -73,5 +73,22 @@ fi
 	fi
 )
 [[ $? == 126 ]] || err_exit 'exit status of non-executable is not 126' 
+rm=$(whence rm)
+PATH=$(dirname "$rm"):
+cp "$rm" kshrm$$
+if	[[ $(whence kshrm$$) != kshrm$$  ]]
+then	err_exit 'trailing : in pathname not working'
+fi
+"$rm" -f kshrm$$
 cd /
+if	whence ls > /dev/null
+then	PATH=
+	if	[[ $(whence rm) ]]
+	then	err_exit 'setting PATH to Null not working'
+	fi
+	unset PATH
+	if	[[ $(whence rm) != /*rm ]]
+	then	err_exit 'unsetting path  not working'
+	fi
+fi
 exit $((Errors))

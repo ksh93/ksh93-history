@@ -48,7 +48,7 @@ reg size_t	n;	/* number of bytes. 		*/
 	GETLOCAL(f,local);
 
 	if(!buf)
-		SFMTXRETURN(f, (ssize_t)(-1));
+		SFMTXRETURN(f, (ssize_t)(n == 0 ? 0 : -1) );
 
 	/* release peek lock */
 	if(f->mode&SF_PEEK)

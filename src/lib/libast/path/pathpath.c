@@ -90,7 +90,7 @@ pathpath(register char* path, const char* p, const char* a, int mode)
 					do if (s <= path) goto normal; while (*--s == '/');
 					do if (s <= path) goto normal; while (*--s != '/');
 					strcpy(s + 1, "bin");
-					if (!access(path, F_OK))
+					if (pathexists(path, PATH_EXECUTE))
 					{
 						if (s = pathaccess(path, path, p, a, mode))
 							return path == buf ? strdup(s) : s;

@@ -82,6 +82,7 @@
 
 static struct
 {
+	mode_t		mode;
 	char**		vec;
 	char**		dir;
 	unsigned long	key;
@@ -91,7 +92,7 @@ static struct
 	char*		pfx;
 	char*		tmpdir;
 	char*		tmppath;
-} tmp;
+} tmp = { S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH };
 
 char*
 pathtemp(char* buf, size_t len, const char* dir, const char* pfx, int* fdp)
@@ -128,6 +129,10 @@ pathtemp(char* buf, size_t len, const char* dir, const char* pfx, int* fdp)
 			tmp.pfx = dir ? strdup(dir) : (char*)0;
 			return (char*)pfx;
 		}
+		else if (streq(pfx, "private"))
+			tmp.mode = S_IRUSR|S_IWUSR;
+		else if (streq(pfx, "public"))
+			tmp.mode = S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH;
 		else if (streq(pfx, TMP_ENV))
 		{
 			if (tmp.vec)
@@ -273,7 +278,7 @@ pathtemp(char* buf, size_t len, const char* dir, const char* pfx, int* fdp)
 		sfsprintf(s, len, fmt, (tmp.key >> 15) & 0x7fff, tmp.key & 0x7fff);
 		if (fdp)
 		{
-			if ((n = open(b, O_CREAT|O_RDWR|O_EXCL|O_TEMPORARY, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH)) >= 0)
+			if ((n = open(b, O_CREAT|O_RDWR|O_EXCL|O_TEMPORARY, tmp.mode)) >= 0)
 			{
 				*fdp = n;
 				return b;

@@ -61,12 +61,16 @@ static struct subshell
 	Dt_t		*svar;	/* save shell variable table */
 	Dt_t		*sfun;	/* function scope for subshell */
 	Dt_t		*salias;/* alias scope for subshell */
+#ifdef PATH_BFPATH
+	Pathcomp_t	*pathlist; /* for PATH variable */
+#endif
 	struct errorcontext *errcontext;
 	Shopt_t		options;/* save shell options */
 	pid_t		subpid;	/* child process id */
 	Sfio_t*	saveout;/*saved standard output */
 	char		*pwd;	/* present working directory */
 	const char	*shpwd;	/* saved pointer to sh.pwd */
+	void		*jobs;	/* save job info */
 	int		mask;	/* present umask */
 	short		tmpfd;	/* saved tmp file descriptor */
 	short		pipefd;	/* read fd if pipe is created */
@@ -176,6 +180,7 @@ Namval_t *sh_assignok(register Namval_t *np,int add)
 {
 	register Namval_t *mp;
 	register Dt_t	 *htab = subshell_data->svar;
+	register Namfun_t *fp;
 	/* don't bother with this */
 	if(!htab || (nv_isnull(np) && !add))
 		return(np);
@@ -188,29 +193,37 @@ Namval_t *sh_assignok(register Namval_t *np,int add)
 		mp = nv_search((char*)np,htab,NV_ADD|HASH_BUCKET);
 	if(mp->nvflag || mp->nvalue.cp)		/* see if already saved */
 		return(np);
+	nv_setsize(mp,nv_size(np));
+	mp->nvflag = np->nvflag;
+	mp->nvenv = np->nvenv;
 	if(nv_isnull(np))
 	{
 		/* mark so that it can be restored */
 		nv_onattr(mp,NV_NOFREE);
 		return(np);
 	}
-	nv_setsize(mp,nv_size(np));
-	mp->nvenv = np->nvenv;
+	for(fp=np->nvfun;fp;fp=fp->next)
+		fp->nofree++;
 	mp->nvfun = np->nvfun;
 	mp->nvalue.cp = np->nvalue.cp;
-	mp->nvflag = np->nvflag;
 	nv_onattr(np,NV_NOFREE);
 	return(np);
 }
+
+#ifdef _ENV_H
+extern void env_put(Env_t*,Namval_t*);
+#endif
 
 /*
  * restore the variables
  */
 static void nv_restore(struct subshell *sp)
 {
-	register Namval_t *mp, *np;
-	for(np=(Namval_t*)dtfirst(sp->svar);np;np=(Namval_t*)dtnext(sp->svar,np))
+	register Namval_t *mp, *np, *nq;
+	register Namfun_t *fp;
+	for(np=(Namval_t*)dtfirst(sp->svar); np; np=nq)
 	{
+		nq = (Namval_t*)dtnext(sp->svar,np);
 		if(mp = nv_search((char*)np,sp->var,HASH_BUCKET))
 		{
 			mp->nvfun = 0;
@@ -218,18 +231,34 @@ static void nv_restore(struct subshell *sp)
 			nv_setsize(mp,nv_size(np));
 			mp->nvenv = np->nvenv;
 			mp->nvfun = np->nvfun;
+			for(fp=np->nvfun;fp;fp=fp->next)
+				fp->nofree--;
 			mp->nvalue.cp = np->nvalue.cp;
 			mp->nvflag = np->nvflag;
 			np->nvfun = 0;
 			if(nv_isattr(mp,NV_EXPORT))
 			{
 				char *name = nv_name(mp);
+#ifdef _ENV_H
+				env_put(sh.env,mp);
+#endif
 				if(*name=='_' && strcmp(name,"_AST_FEATURES")==0)
 					astconf(NiL, NiL, NiL);
 			}
+#ifdef _ENV_H
+			else if(nv_isattr(np,NV_EXPORT))
+				env_delete(sh.env,nv_name(mp));
+#endif
 		}
-		np->nvalue.cp = 0;
-		np->nvflag = NV_DEFAULT;
+		dtdelete(sp->svar,np);
+		free((void*)np);
+#if 0
+		else
+		{
+			np->nvalue.cp = 0;
+			np->nvflag = NV_DEFAULT;
+		}
+#endif
 	}
 	dtclose(sp->svar);
 }
@@ -279,47 +308,55 @@ Dt_t *sh_subfuntree(void)
 
 Sfio_t *sh_subshell(union anynode *t, int flags, int comsub)
 {
+	Shell_t *shp = &sh;
 	struct subshell sub_data;
 	register struct subshell *sp = &sub_data;
 	int jmpval,nsig;
-	int savecurenv = sh.curenv;
+	int savecurenv = shp->curenv;
 	char *savstak;
 	Sfio_t *iop=0;
 	struct checkpt buff;
 	struct sh_scoped savst;
 	struct dolnod   *argsav=0;
 	memset((char*)sp, 0, sizeof(*sp));
-	sfsync(sh.outpool);
+	sfsync(shp->outpool);
 	argsav = sh_arguse();
-	if(sh.curenv==0)
+	if(shp->curenv==0)
 	{
 		subshell_data=0;
 		subenv = 0;
 	}
-	sh.curenv = ++subenv;
-	savst = sh.st;
+	shp->curenv = ++subenv;
+	savst = shp->st;
 	sh_pushcontext(&buff,SH_JMPSUB);
-	sh.subshell++;
+	shp->subshell++;
 	sp->prev = subshell_data;
 	subshell_data = sp;
 	sp->errcontext = &buff.err;
-	sp->var = sh.var_tree;
-	sp->options = sh.options;
-	if(!sh.pwd)
+	sp->var = shp->var_tree;
+	sp->options = shp->options;
+	sp->jobs = job_subsave();
+#ifdef PATH_BFPATH
+	/* make sure initialization has occurred */ 
+	if(!shp->defpathlist)
+		path_get("/");
+	sp->pathlist = path_dup((Pathcomp_t*)shp->pathlist);
+#endif
+	if(!shp->pwd)
 		path_pwd(0);
 	if(!comsub || !sh_isoption(SH_SUBSHARE))
 	{
-		sp->shpwd = sh.pwd;
-		sp->pwd = (sh.pwd?strdup(sh.pwd):0);
+		sp->shpwd = shp->pwd;
+		sp->pwd = (shp->pwd?strdup(shp->pwd):0);
 		umask(sp->mask=umask(0));
 		/* save trap table */
-		sh.st.otrapcom = 0;
-		if((nsig=sh.st.trapmax*sizeof(char*))>0 || sh.st.trapcom[0])
+		shp->st.otrapcom = 0;
+		if((nsig=shp->st.trapmax*sizeof(char*))>0 || shp->st.trapcom[0])
 		{
 			nsig += sizeof(char*);
-			memcpy(savstak=stakalloc(nsig),(char*)&sh.st.trapcom[0],nsig);
+			memcpy(savstak=stakalloc(nsig),(char*)&shp->st.trapcom[0],nsig);
 			/* this nonsense needed for $(trap) */
-			sh.st.otrapcom = (char**)savstak;
+			shp->st.otrapcom = (char**)savstak;
 		}
 		sh_sigreset(0);
 		sp->svar = dtopen(&_Nvdisc,Dtbag);
@@ -337,7 +374,7 @@ Sfio_t *sh_subshell(union anynode *t, int flags, int comsub)
 			sp->pipe = sp;
 			/* save sfstdout and status */
 			sp->saveout = sfswap(sfstdout,NIL(Sfio_t*));
-			sp->fdstatus = sh.fdstatus[1];
+			sp->fdstatus = shp->fdstatus[1];
 			sp->tmpfd = -1;
 			sp->pipefd = -1;
 			/* use sftmp() file for standard output */
@@ -347,7 +384,7 @@ Sfio_t *sh_subshell(union anynode *t, int flags, int comsub)
 				errormsg(SH_DICT,ERROR_system(1),e_tmpcreate);
 			}
 			sfswap(iop,sfstdout);
-			sh.fdstatus[1] = IOWRITE;
+			shp->fdstatus[1] = IOWRITE;
 		}
 		else if(sp->prev)
 		{
@@ -356,20 +393,20 @@ Sfio_t *sh_subshell(union anynode *t, int flags, int comsub)
 		}
 		sh_exec(t,flags);
 	}
-	if(jmpval!=SH_JMPSUB && sh.st.trapcom[0] && sh.subshell)
+	if(jmpval!=SH_JMPSUB && shp->st.trapcom[0] && shp->subshell)
 	{
 		/* trap on EXIT not handled by child */
-		char *trap=sh.st.trapcom[0];
-		sh.st.trapcom[0] = 0;	/* prevent recursion */
-		sh.oldexit = sh.exitval;
+		char *trap=shp->st.trapcom[0];
+		shp->st.trapcom[0] = 0;	/* prevent recursion */
+		shp->oldexit = shp->exitval;
 		sh_trap(trap,0);
 		free(trap);
 	}
 	sh_popcontext(&buff);
-	if(sh.subshell==0)	/* must be child process */
+	if(shp->subshell==0)	/* must be child process */
 	{
 		if(jmpval==SH_JMPSCRIPT)
-			siglongjmp(*sh.jmplist,jmpval);
+			siglongjmp(*shp->jmplist,jmpval);
 		sh_done(0);
 	}
 	if(comsub)
@@ -400,10 +437,10 @@ Sfio_t *sh_subshell(union anynode *t, int flags, int comsub)
 				int fd=sfsetfd(iop,3);
 				if(fd<0)
 					errormsg(SH_DICT,ERROR_system(1),e_toomany);
-				sh.sftable[fd] = iop;
+				shp->sftable[fd] = iop;
 				fcntl(fd,F_SETFD,FD_CLOEXEC);
-				sh.fdstatus[fd] = (sh.fdstatus[1]|IOCLEX);
-				sh.fdstatus[1] = IOCLOSE;
+				shp->fdstatus[fd] = (shp->fdstatus[1]|IOCLEX);
+				shp->fdstatus[1] = IOCLOSE;
 			}
 		}
 		sfswap(sp->saveout,sfstdout);
@@ -414,49 +451,59 @@ Sfio_t *sh_subshell(union anynode *t, int flags, int comsub)
 			fcntl(sp->tmpfd,F_DUPFD,1);
 			sh_close(sp->tmpfd);
 		}
-		sh.fdstatus[1] = sp->fdstatus;
+		shp->fdstatus[1] = sp->fdstatus;
 	}
 	if(sp->subpid)
 		job_wait(sp->subpid);
 	if(comsub && iop)
 		sfseek(iop,(off_t)0,SEEK_SET);
-	if(sh.subshell)
-		sh.subshell--;
+	if(shp->subshell)
+		shp->subshell--;
+#ifdef PATH_BFPATH
+	path_delete((Pathcomp_t*)shp->pathlist);
+	shp->pathlist = (void*)sp->pathlist;
+#endif
+	job_subrestore(sp->jobs);
 	if(sp->svar)	/* restore environment if saved */
 	{
-		sh.options = sp->options;
+		shp->options = sp->options;
 		nv_restore(sp);
 		if(sp->salias)
 		{
-			sh.alias_tree = dtview(sp->salias,0);
+			shp->alias_tree = dtview(sp->salias,0);
 			dtclose(sp->salias);
 		}
 		if(sp->sfun)
 		{
-			sh.fun_tree = dtview(sp->sfun,0);
+			shp->fun_tree = dtview(sp->sfun,0);
 			dtclose(sp->sfun);
 		}
 		sh_sigreset(1);
-		sh.st = savst;
-		sh.jobenv = sh.curenv = savecurenv;
+		shp->st = savst;
+		shp->jobenv = shp->curenv = savecurenv;
 		if(nsig)
 		{
-			memcpy((char*)&sh.st.trapcom[0],savstak,nsig);
+			memcpy((char*)&shp->st.trapcom[0],savstak,nsig);
 			stakset(savstak,0);
 		}
-		sh.options = sp->options;
-		if(!sh.pwd || strcmp(sp->pwd,sh.pwd))
+		shp->options = sp->options;
+		if(!shp->pwd || strcmp(sp->pwd,shp->pwd))
 		{
 			/* restore PWDNOD */
 			Namval_t *pwdnod = nv_scoped(PWDNOD);
-			if(sh.pwd)
-				chdir(sh.pwd=sp->pwd);
+			if(shp->pwd)
+			{
+				chdir(shp->pwd=sp->pwd);
+#ifdef PATH_BFPATH
+				path_newdir(shp->pathlist);
+#endif
+			}
 			if(nv_isattr(pwdnod,NV_NOFREE))
 				pwdnod->nvalue.cp = (const char*)sp->pwd;
 		}
-		else if(sp->shpwd != sh.pwd)
+		else if(sp->shpwd != shp->pwd)
 		{
-			sh.pwd = sp->pwd;
+			shp->pwd = sp->pwd;
 			if(PWDNOD->nvalue.cp==sp->shpwd)
 				PWDNOD->nvalue.cp = sp->pwd;
 		}
@@ -466,12 +513,12 @@ Sfio_t *sh_subshell(union anynode *t, int flags, int comsub)
 	}
 	subshell_data = sp->prev;
 	sh_argfree(argsav,0);
-	sh.trapnote = 0;
-	if(sh.topfd != buff.topfd)
+	shp->trapnote = 0;
+	if(shp->topfd != buff.topfd)
 		sh_iorestore(buff.topfd);
-	if(sh.exitval > SH_EXITSIG)
+	if(shp->exitval > SH_EXITSIG)
 	{
-		int sig = sh.exitval&SH_EXITMASK;
+		int sig = shp->exitval&SH_EXITMASK;
 		if(sig==SIGINT || sig== SIGQUIT)
 			sh_fault(sig);
 	}

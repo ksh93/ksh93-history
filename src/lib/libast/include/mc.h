@@ -63,7 +63,7 @@
 
 #define MC_NLS		(1<<10)
 
-#define MC_MESSAGE_SET(s)	((((s[0]?((s[0]-'a'+10)^(s[1]?((s[1]-'a'+10)^(s[2]?(s[2]-'a'+10):9)):9)):9)-9)&63)+1)
+#define MC_MESSAGE_SET(s)	mcindex(s,NiL,NiL,NiL)
 
 typedef struct
 {
@@ -92,6 +92,7 @@ extern Mc_t*		mcopen(Sfio_t*);
 extern char*		mcget(Mc_t*, int, int, const char*);
 extern int		mcput(Mc_t*, int, int, const char*);
 extern int		mcdump(Mc_t*, Sfio_t*);
+extern int		mcindex(const char*, char**, int*, int*);
 extern int		mcclose(Mc_t*);
 
 #undef	extern

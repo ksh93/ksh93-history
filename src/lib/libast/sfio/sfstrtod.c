@@ -82,7 +82,8 @@ char**		retp;	/* to return the remainder of string */
 	Sfdouble_t	dval;
 #if _lib_locale
 	int		decpoint = 0;
-	SFSETLOCALE(&decpoint,NIL(int*));
+	int		thousand = 0;
+	SFSETLOCALE(&decpoint,&thousand);
 #else
 #define decpoint	'.'
 #endif

@@ -62,7 +62,7 @@ procclose(register Proc_t* p)
 			sleep(1);
 		}
 		if (!(p->flags & PROC_FOREGROUND))
-			sigcritical(1);
+			sigcritical(SIG_REG_EXEC|SIG_REG_PROC);
 		while ((pid = waitpid(p->pid, &status, flags)) == -1 && errno == EINTR);
 		if (pid != p->pid && (flags & WNOHANG))
 			status = 0;
@@ -80,6 +80,7 @@ procclose(register Proc_t* p)
 			sigsetmask(p->mask);
 #endif
 #endif
+			signal(SIGCHLD, p->sigchld);
 #endif
 		}
 		procfree(p);

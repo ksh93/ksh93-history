@@ -318,7 +318,10 @@ ed_viread(int fd, register char *shbuf, int nchar)
 				term_char = '\n';
 #if !defined(VEOL2) && !defined(ECHOCTL)
 			if(term_char=='\n')
+			{
+				tty_cooked(ERRIO);
 				return(i+1);
+			}
 #endif
 			if( term_char=='\n' || term_char==usreof )
 			{
@@ -1337,7 +1340,7 @@ static void getline(register Vi_t* vp,register int mode)
 {
 	register int c;
 	register int tmp;
-	int	max_virt=0, last_save;
+	int	max_virt=0, last_save=0;
 	genchar saveline[MAXLINE];
 
 	vp->addnl = 1;

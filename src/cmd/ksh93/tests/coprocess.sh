@@ -109,4 +109,26 @@ then	err_exit 'read -p hanging'
 fi
 ( sleep 3 |& sleep 1 && kill $!; sleep 3 |& sleep 1 && kill $! ) || 
 	err_exit "coprocess cleanup not working correctly"
+unset line
+(
+	integer n=0
+	while read  line
+	do	echo $line  |&
+		if	cat  <&p 
+		then	((n++))
+		fi
+	done > /dev/null 2>&1 <<-  !
+		line1
+		line2
+		line3
+		line4
+		line5
+		line6
+		line7
+	!
+	(( n==7 ))  && print ok
+)  | read -t 10 line
+if	[[ $line != ok ]]
+then	err_exit 'coprocess timimg bug'
+fi
 exit $((Errors))

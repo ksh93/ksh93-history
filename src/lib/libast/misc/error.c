@@ -38,7 +38,7 @@
  * NOTE: id && ERROR_NOID && !ERROR_USAGE implies format=id for errmsg()
  */
 
-#include "loclib.h"
+#include "lclib.h"
 
 #include <ctype.h>
 #include <ccode.h>

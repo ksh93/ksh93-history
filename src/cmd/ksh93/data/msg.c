@@ -44,12 +44,6 @@
 #include	"edit.h"
 #include	"national.h"
 
-#ifdef SHOPT_MULTIBYTE
-    const char e_version[]	= "\n@(#)$Id: Version M 1993-12-28 k+ $\0\n";
-#else
-    const char e_version[]	= "\n@(#)$Id: Version 1993-12-28 k+ $\0\n";
-#endif /* SHOPT_MULTIBYTE */
-
 /* error messages */
 const char e_timewarn[]		= "\r\n\ashell will timeout in 60 seconds due to inactivity";
 const char e_runvi[]		= "\\hist -e \"${VISUAL:-${EDITOR:-vi}}\" ";
@@ -81,6 +75,7 @@ const char e_logout[]		= "Use 'exit' to terminate this shell";
 const char e_exec[]		= "%s: cannot execute";
 const char e_pwd[]		= "cannot access parent directories";
 const char e_found[]		= "%s: not found";
+const char e_nointerp[]		= "%s: interpreter not found";
 const char e_subscript[]	= "%s: subscript out of range";
 const char e_toodeep[]		= "%s: recursion too deep";
 const char e_access[]		= "permission denied";

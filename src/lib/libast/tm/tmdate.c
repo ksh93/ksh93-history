@@ -671,8 +671,8 @@ tmdate(register const char* s, char** e, time_t* clock)
 					if (n > 0)
 						goto clear_min;
 					continue;
-				case TM_DAY_3:
-					j += TM_DAY - TM_DAY_3;
+				case TM_DAY_ABBREV:
+					j += TM_DAY - TM_DAY_ABBREV;
 					/*FALLTHROUGH*/
 				case TM_DAY:
 				case TM_PARTS:
@@ -784,8 +784,8 @@ tmdate(register const char* s, char** e, time_t* clock)
 					if (state & (LAST|NEXT|THIS))
 						goto clear_hour;
 					continue;
-				case TM_MONTH_3:
-					j += TM_MONTH - TM_MONTH_3;
+				case TM_MONTH_ABBREV:
+					j += TM_MONTH - TM_MONTH_ABBREV;
 					/*FALLTHROUGH*/
 				case TM_MONTH:
 					if (state & MONTH)
@@ -867,7 +867,7 @@ tmdate(register const char* s, char** e, time_t* clock)
 				break;
 			if (isalpha(*++s))
 			{
-				if ((i = tmlex(s, &t, tm_info.format, TM_DAY_3, NiL, 0)) < 0)
+				if ((i = tmlex(s, &t, tm_info.format, TM_DAY_ABBREV, NiL, 0)) < 0)
 					break;
 				if (i >= TM_MONTH)
 					i -= TM_MONTH;

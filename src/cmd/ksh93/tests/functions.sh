@@ -228,9 +228,102 @@ function winpath
 	print done
 }
 if	[[ $( (winpath --man 2>/dev/null); print ok) != ok ]]
-then	print -u2 'getopts --man in functions not working'
+then	err_exit 'getopts --man in functions not working'
 fi
 if	[[ $( (winpath -z 2>/dev/null); print ok) != ok ]]
-then	print -u2 'getopts with bad option in functions not working'
+then	err_exit 'getopts with bad option in functions not working'
+fi
+unset -f x
+function x
+{
+        print "$@"
+}
+typeset -ft x
+if      [[ $(x x=y 2>/dev/null) != x=y ]]
+then    err_exit 'name=value pair args not passed to traced functions'
+fi
+function bad
+{
+	false
+}
+trap 'val=false' ERR
+val=true
+bad
+if	[[ $val != false ]]
+then	err_exit 'set -e not working for functions'
+fi
+function bad
+{
+	false
+	return 0
+}
+val=true
+bad
+if	[[ $val != true ]]
+then	err_exit 'set -e not disabled for functions'
+fi
+bad()
+{
+	false
+	return 0
+}
+val=true
+bad
+if	[[ $val != false ]]
+then	err_exit 'set -e not inherited for posix functions'
+fi
+function myexport 
+{
+	nameref var=$1
+	if	(( $# > 1 ))
+	then	export	$1=$2
+	fi
+	if	(( $# > 2 ))
+	then	print $(myexport "$1" "$3" )
+		return
+	fi
+	typeset val
+	val=$(export | grep "$1=")
+	print ${val#"$1="}
+	
+}
+export dgk=base
+if	[[ $(myexport dgk fun) != fun ]]
+then	err_exit 'export inside function not working'
+fi
+val=$(export | grep "dgk=")
+if	[[ ${val#dgk=} != base ]]
+then	err_exit 'export not restored after function call'
+fi
+if	[[ $(myexport dgk fun fun2) != fun2 ]]
+then	err_exit 'export inside function not working with recursive function'
+fi
+val=$(export | grep "dgk=")
+if	[[ ${val#dgk=} != base ]]
+then	err_exit 'export not restored after recursive function call'
+fi
+if	[[ $(dgk=try3 myexport dgk) != try3 ]]
+then	err_exit 'name=value not added to export list with function call'
+fi
+val=$(export | grep "dgk=")
+if	[[ ${val#dgk=} != base ]]
+then	err_exit 'export not restored name=value function call'
+fi
+unset zzz
+if	[[ $(myexport zzz fun) != fun ]]
+then	err_exit 'export inside function not working for zzz'
+fi
+if	[[ $(export | grep "zzz=") ]]
+then	err_exit 'zzz exported after function call'
+fi
+unset zzz
+typeset -u zzz
+function foo
+{
+	zzz=abc
+	print $zzz
+}
+if	[[ $(foo)$(foo) != ABCABC ]]
+then	err_exit 'attributes on unset variables not saved/restored'
 fi
 exit $((Errors))

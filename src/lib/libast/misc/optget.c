@@ -108,9 +108,12 @@ typedef struct
 
 typedef struct Push_s
 {
-	struct Push_s*	next;		/* next stream			*/
-	char*		cp;		/* next char in stream		*/
-	Sfio_t*		sp;		/* pushed stream		*/
+	struct Push_s*	next;		/* next string			*/
+	char*		ob;		/* next char in old string	*/
+	char*		oe;		/* end of old string		*/
+	char*		nb;		/* next char in new string	*/
+	char*		ne;		/* end of new string		*/
+	int		ch;		/* localize() translation	*/
 } Push_t;
 
 typedef struct
@@ -291,7 +294,6 @@ pop(register Push_t* psp)
 	while (tsp = psp)
 	{
 		psp = psp->next;
-		sfclose(tsp->sp);
 		free(tsp);
 	}
 	return 0;
@@ -620,6 +622,9 @@ init(register char* s, Optpass_t* p)
 					case 'l':
 						p->flags |= OPT_long;
 						break;
+					case 'o':
+						p->flags |= OPT_old;
+						break;
 					case 'p':
 						p->prefix = n;
 						break;
@@ -736,40 +741,93 @@ italic(int style, int set)
 }
 
 /*
- * return \f...\f info
- * *stk is set to the next input char pointer
- * discipline infof puts info in ip
+ * push \f...\f info
  */
 
-static char*
-info(register char* p, char** stk, Sfio_t* ip)
+static Push_t*
+info(Push_t* psp, register char* s, register char* e, Sfio_t* ip)
 {
 	register int	c;
-	register char*	b = p;
-	int		x;
+	register char*	b = s;
+	int		n;
+	Push_t*		tsp;
 
-	while ((c = *p++) && c != '\f');
-	sfwrite(ip, b, p - b - 1);
+	static Push_t	push;
+
+	c = 1;
+	while ((!e || s < e) && (c = *s++) && c != '\f');
+	sfwrite(ip, b, s - b - 1);
 	sfputc(ip, 0);
 	b = sfstrbase(ip);
-	x = sfstrtell(ip);
+	n = sfstrtell(ip);
 	if (!c)
-		p--;
-	*stk = p;
+		s--;
 	if (*b == '?')
 	{
 		if (!*++b || streq(b, "NAME"))
 		{
 			if (!(b = error_info.id))
 				b = "command";
+			sfstrset(ip, 0);
+			sfputr(ip, b, -1);
+			n = 0;
 		}
-		sfstrset(ip, 0);
+		else
+			n = 1;
 	}
-	else if (opt_info.disc && opt_info.disc->infof && (*opt_info.disc->infof)(&opt_info, ip, b, opt_info.disc) >= 0)
-		b = sfstruse(ip) + x;
+	else if (!opt_info.disc || !opt_info.disc->infof || (*opt_info.disc->infof)(&opt_info, ip, b, opt_info.disc) < 0)
+		n = 0;
+	b = sfstruse(ip) + n;
+	n = strlen(b);
+	if (tsp = newof(0, Push_t, 1, n + 1))
+	{
+		tsp->nb = (char*)(tsp + 1);
+		tsp->ne = tsp->nb + n;
+		strcpy(tsp->nb, b);
+	}
 	else
-		sfstrset(ip, 0);
-	return b;
+		tsp = &push;
+	tsp->next = psp;
+	tsp->ob = s;
+	tsp->oe = e;
+	return tsp;
+}
+
+/*
+ * push translation
+ */
+
+static Push_t*
+localize(Push_t* psp, char* s, char* e, int term, char* catalog, int version, Sfio_t* ip)
+{
+	char*		t;
+	char*		u;
+	Push_t*		tsp;
+	int		n;
+	int		ch;
+
+	static Push_t	push;
+
+	t = skip(s, term, 0, 0, 1, 0, 0, version);
+	if (e && t > e)
+		t = e;
+	sfwrite(ip, s, t - s);
+	s = sfstruse(ip);
+	ch = (u = T(error_info.id, catalog, s)) != s;
+	n = strlen(u);
+	if (tsp = newof(0, Push_t, 1, n + 1))
+	{
+		tsp->nb = (char*)(tsp + 1);
+		tsp->ne = tsp->nb + n;
+		strcpy(tsp->nb, u);
+		tsp->ob = t;
+		tsp->oe = e;
+		tsp->ch = ch;
+	}
+	else
+		tsp = &push;
+	tsp->next = psp;
+	return tsp;
 }
 
 /*
@@ -785,11 +843,11 @@ label(register Sfio_t* sp, int sep, register char* s, int z, int level, int styl
 	register char*	e;
 	int		ostyle;
 	char*		u;
-	char*		stk[16];
+	Push_t*		tsp;
 
 	int		r = 0;
 	int		n = 1;
-	char**		top = stk;
+	Push_t*		psp = 0;
 
 	if ((ostyle = style) > (STYLE_nroff - (sep <= 0)))
 		style = 0;
@@ -826,17 +884,15 @@ label(register Sfio_t* sp, int sep, register char* s, int z, int level, int styl
 	}
 	if (X(catalog) && (!level || *s == '\a' || *(s - 1) != '+'))
 	{
-		*top++ = e;
-		t = skip(s, '?', 0, 0, 1, 0, 0, version);
-		*top++ = t;
-		sfwrite(ip, s, t - s);
-		t = sfstruse(ip);
-		if ((u = T(error_info.id, catalog, t)) != t)
+		psp = localize(psp, s, e, '?', catalog, version, ip);
+		if (psp->nb)
 		{
-			s = u;
-			e = s + strlen(s);
-			r = 1;
+			s = psp->nb;
+			e = psp->ne;
+			r = psp->ch;
 		}
+		else
+			psp = psp->next;
 	}
 	switch (*s)
 	{
@@ -869,13 +925,13 @@ label(register Sfio_t* sp, int sep, register char* s, int z, int level, int styl
 	{
 		if (s >= e)
 		{
-			if (top > &stk[0])
-			{
-				s = *--top;
-				e = *--top;
-				continue;
-			}
-			goto restore;
+			if (!(tsp = psp))
+				goto restore;
+			s = psp->ob;
+			e = psp->oe;
+			psp = psp->next;
+			free(tsp);
+			continue;
 		}
 		switch (c = *s++)
 		{
@@ -896,15 +952,16 @@ label(register Sfio_t* sp, int sep, register char* s, int z, int level, int styl
 				continue;
 			else if (sep)
 				goto restore;
-			else if (X(catalog) && top < &stk[elementsof(stk)-1])
+			else if (X(catalog))
 			{
-				*top++ = e;
-				t = skip(s, 0, 0, 0, 1, 0, 0, version);
-				*top++ = t;
-				sfwrite(ip, s, t - s);
-				t = sfstruse(ip);
-				s = T(error_info.id, catalog, t);
-				e = s + strlen(s);
+				psp = localize(psp, s, e, 0, catalog, version, ip);
+				if (psp->nb)
+				{
+					s = psp->nb;
+					e = psp->ne;
+				}
+				else
+					psp = psp->next;
 			}
 			break;
 		case ']':
@@ -966,11 +1023,16 @@ label(register Sfio_t* sp, int sep, register char* s, int z, int level, int styl
 			sfputr(sp, bold(style, b = !b), -1);
 			continue;
 		case '\f':
-			if (top < &stk[elementsof(stk)-1])
+			psp = info(psp, s, e, ip);
+			if (psp->nb)
 			{
-				*top++ = e;
-				s = info(s, top++, opt_info.state->mp);
-				e = s + strlen(s);
+				s = psp->nb;
+				e = psp->ne;
+			}
+			else
+			{
+				s = psp->ob;
+				psp = psp->next;
 			}
 			continue;
 		case '<':
@@ -1027,6 +1089,8 @@ label(register Sfio_t* sp, int sep, register char* s, int z, int level, int styl
 		sfputr(sp, italic(style, 0), -1);
 	else if (b)
 		sfputr(sp, bold(style, 0), -1);
+	if (psp)
+		pop(psp);
 	return r;
 }
 
@@ -1076,7 +1140,10 @@ args(register Sfio_t* sp, register char* p, register int n, int flags, int style
 			{
 				sfputr(sp, b, -1);
 				if (X(catalog))
+				{
+					sfwrite(ip, p, i);
 					sfputr(sp, T(error_info.id, catalog, sfstruse(ip)), -1);
+				}
 				else
 					sfwrite(sp, p, i);
 			}
@@ -1188,11 +1255,11 @@ text(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip, i
 	int		a;
 	int		b;
 	int		par;
-	char*		stk[8];
+	Push_t*		tsp;
 
 	int		ident = 0;
 	int		lev = level;
-	char**		top = stk;
+	Push_t*		psp = 0;
 
  again:
 	if ((c = *p) == GO)
@@ -1211,8 +1278,17 @@ text(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip, i
 			else if ((level -= 2) <= lev)
 				return p + 1;
 		}
-		if (*p == '\f' && top < &stk[elementsof(stk)])
-			p = info(p + 1, top++, ip);
+		if (*p == '\f')
+		{
+			psp = info(psp, p + 1, NiL, ip);
+			if (psp->nb)
+				p = psp->nb;
+			else
+			{
+				p = psp->ob;
+				psp = psp->next;
+			}
+		}
 		if (*p != '[')
 			return p;
 		c = *++p;
@@ -1292,13 +1368,13 @@ text(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip, i
 			sfputc(sp, c);
 		else
 		{
-			if (X(catalog) && top < &stk[elementsof(stk)])
+			if (X(catalog))
 			{
-				t = skip(p, 0, 0, 0, 1, 0, 0, version);
-				sfwrite(ip, p, t - p);
-				*top++ = t;
-				t = sfstruse(ip);
-				p = T(error_info.id, catalog, t);
+				psp = localize(psp, p, NiL, 0, catalog, version, ip);
+				if (psp->nb)
+					p = psp->nb;
+				else
+					psp = psp->next;
 			}
 			if (style < STYLE_nroff)
 				for (n = 0; n < bump + 1; n++)
@@ -1310,16 +1386,18 @@ text(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip, i
 			switch (c = *p++)
 			{
 			case 0:
-				if (top > &stk[0])
+				if (!(tsp = psp))
 				{
-					p = *--top;
-					continue;
+					if (a)
+						sfputr(sp, italic(style, 0), -1);
+					else if (b)
+						sfputr(sp, bold(style, 0), -1);
+					return p - 1;
 				}
-				if (a)
-					sfputr(sp, italic(style, 0), -1);
-				else if (b)
-					sfputr(sp, bold(style, 0), -1);
-				return p - 1;
+				p = psp->ob;
+				psp = psp->next;
+				free(tsp);
+				continue;
 			case ']':
 				if (*p != ']')
 				{
@@ -1344,9 +1422,11 @@ text(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip, i
 						}
 						else if (!*p)
 						{
-							if (top <= &stk[0])
+							if (!(tsp = psp))
 								break;
-							p = *--top;
+							p = psp->ob;
+							psp = psp->next;
+							free(tsp);
 						}
 						else if (*p != OG)
 							break;
@@ -1412,8 +1492,14 @@ text(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip, i
 				sfputr(sp, bold(style, b = !b), -1);
 				continue;
 			case '\f':
-				if (top < &stk[elementsof(stk)])
-					p = info(p, top++, ip);
+				psp = info(psp, p, NiL, ip);
+				if (psp->nb)
+					p = psp->nb;
+				else
+				{
+					p = psp->ob;
+					psp = psp->next;
+				}
 				continue;
 			case ' ':
 				if (ident && *p == '$')
@@ -1568,7 +1654,6 @@ opthelp(const char* oopts, const char* what)
 	int			version;
 	long			tp;
 	char*			catalog;
-	Push_t*			tsp;
 	Optpass_t*		o;
 	Optpass_t*		q;
 	Optpass_t*		e;
@@ -1577,6 +1662,7 @@ opthelp(const char* oopts, const char* what)
 	Optdisc_t*		dp;
 	short			ptstk[elementsof(indent) + 2];
 	short*			pt;
+	Push_t*			tsp;
 
 	char*			opts = (char*)oopts;
 	int			flags = 0;
@@ -1749,13 +1835,29 @@ opthelp(const char* oopts, const char* what)
 			continue;
 		case STYLE_keys:
 			a = 0;
-			pp = 0;
+			psp = 0;
 			vl = 0;
-			while (c = *p++)
+			for (;;)
 			{
-				if (c == '\f' && !pp)
+				if (!(c = *p++))
 				{
-					p = info(p, &pp, sp_info);
+					if (!(tsp = psp))
+						break;
+					p = psp->ob;
+					psp = psp->next;
+					free(tsp);
+					continue;
+				}
+				if (c == '\f')
+				{
+					psp = info(psp, p, NiL, sp_info);
+					if (psp->nb)
+						p = psp->nb;
+					else
+					{
+						p = psp->ob;
+						psp = psp->next;
+					}
 					continue;
 				}
 				f = z = 1;
@@ -1846,18 +1948,26 @@ opthelp(const char* oopts, const char* what)
 	{
 		if (!(c = *p++))
 		{
-			if (pp)
+			if (!(tsp = psp))
 			{
-				p = pp;
-				pp = 0;
-				continue;
+				p--;
+				break;
 			}
-			p--;
-			break;
+			p = psp->ob;
+			psp = psp->next;
+			free(tsp);
+			continue;
 		}
-		if (c == '\f' && !pp)
+		if (c == '\f')
 		{
-			p = info(p, &pp, sp_info);
+			psp = info(psp, p, NiL, sp_info);
+			if (psp->nb)
+				p = psp->nb;
+			else
+			{
+				p = psp->ob;
+				psp = psp->next;
+			}
 			continue;
 		}
 		if (a > 0)
@@ -1892,7 +2002,6 @@ opthelp(const char* oopts, const char* what)
 					sfstrrel(mp, -1);
 				break;
 			}
-			sfputc(mp, c);
 			sfputc(mp, *p++);
 			continue;
 		}
@@ -1941,9 +2050,8 @@ opthelp(const char* oopts, const char* what)
 				sfputc(mp, c);
 			continue;
 		case '\a':
-		case CC_esc:
-			sfprintf(mp, "\\%03o", c);
-			continue;
+			c = 'a';
+			break;
 		case '\b':
 			c = 'b';
 			break;
@@ -1967,6 +2075,9 @@ opthelp(const char* oopts, const char* what)
 			break;
 		case '\\':
 			c = '\\';
+			break;
+		case CC_esc:
+			c = 'E';
 			break;
 		default:
 			sfputc(mp, c);
@@ -2020,22 +2131,21 @@ opthelp(const char* oopts, const char* what)
 			{
 				if (!(tsp = psp))
 					break;
-				p = psp->cp;
-				sfclose(psp->sp);
+				p = psp->ob;
 				psp = psp->next;
 				free(tsp);
+				continue;
 			}
 			if (*p == '\f')
 			{
-				if (!(tsp = newof(0, Push_t, 1, 0)) || !(tsp->sp = sfstropen()))
+				psp = info(psp, p + 1, NiL, sp_info);
+				if (psp->nb)
+					p = psp->nb;
+				else
 				{
-					if (tsp)
-						free(tsp);
-					goto nospace;
+					p = psp->ob;
+					psp = psp->next;
 				}
-				tsp->next = psp;
-				psp = tsp;
-				p = info(p + 1, &psp->cp, psp->sp);
 				continue;
 			}
 			if (*p == '\n' || *p == ' ')
@@ -2964,7 +3074,9 @@ static int
 opterror(register char* p, int version, char* catalog)
 {
 	register Sfio_t*	mp;
+	register Sfio_t*	tp;
 	register char*		s;
+	register int		c;
 
 	if (opt_info.num != LONG_MIN)
 		opt_info.num = 0;
@@ -2992,16 +3104,17 @@ opterror(register char* p, int version, char* catalog)
 			if (*(p = next(p + 1, version)) == '[')
 			{
 				p = skip(s = p + 1, ':', '?', 0, 1, 0, 0, version);
+				tp = X(catalog) ? opt_info.state->xp : mp;
+				while (s < p)
+				{
+					if ((c = *s++) == '?' || c == ']')
+						s++;
+					sfputc(tp, c);
+				}
 				if (X(catalog))
-				{
-					sfwrite(opt_info.state->xp, s, p - s);
-					sfputr(mp, T(error_info.id, catalog, sfstruse(opt_info.state->xp)), ' ');
-				}
+					sfputr(mp, T(error_info.id, catalog, sfstruse(tp)), ' ');
 				else
-				{
-					sfwrite(mp, s, p - s);
 					sfputc(mp, ' ');
-				}
 			}
 			p = opt_info.name[2] ? C("value expected") : C("argument expected");
 		}
@@ -3094,6 +3207,7 @@ optget(register char** argv, const char* oopts)
 	int		nov;
 	int		num;
 	int		numchr;
+	int		old;
 	int		prefix;
 	int		version;
 	Help_t*		hp;
@@ -3138,11 +3252,14 @@ optget(register char** argv, const char* oopts)
 	if (!argv)
 		return 0;
 	opts = opt_info.state->pass[n].opts;
+	old = opt_info.state->pass[n].flags & OPT_old;
 	prefix = opt_info.state->pass[n].prefix;
 	version = opt_info.state->pass[n].version;
 	if (!(xp = opt_info.state->xp) || (catalog = opt_info.state->pass[n].catalog) && !X(catalog))
 		catalog = 0;
  again:
+	psp = 0;
+
 	/*
 	 * check if any options remain and determine if the
 	 * next option is short or long
@@ -3191,44 +3308,47 @@ optget(register char** argv, const char* oopts)
 				else if (*s == '?')
 					n = 1;
 			}
+			else if ((c = *s++) != '-' && (c != '+' || !opt_info.state->plus && (*s < '0' || *s > '9' || !strmatch(opts, version ? "*\\]#\\[*" : "*#*"))))
+			{
+				if (!old || !isalpha(c))
+					return 0;
+				s--;
+				n = 1;
+				opt_info.offset--;
+			}
+			else if (*s == c)
+			{
+				if (!*++s)
+				{
+					/*
+					 * -- or ++ end of options
+					 */
+
+					opt_info.index++;
+					return 0;
+				}
+
+				/*
+				 * long with double prefix
+				 */
+
+				n = 2;
+			}
+			else if (prefix == 1 && *s != '?')
+			{
+				/*
+				 * long with single prefix (find style)
+				 */
+
+				n = 2;
+			}
 			else
 			{
-				if ((c = *s++) != '-' && (c != '+' || !opt_info.state->plus && (*s < '0' || *s > '9' || !strmatch(opts, version ? "*\\]#\\[*" : "*#*"))))
-					return 0;
-				if (*s == c)
-				{
-					if (!*++s)
-					{
-						/*
-						 * -- or ++ end of options
-						 */
+				/*
+				 * short (always with single prefix)
+				 */
 
-						opt_info.index++;
-						return 0;
-					}
-
-					/*
-					 * long with double prefix
-					 */
-
-					n = 2;
-				}
-				else if (prefix == 1 && *s != '?')
-				{
-					/*
-					 * long with single prefix (find style)
-					 */
-
-					n = 2;
-				}
-				else
-				{
-					/*
-					 * short (always with single prefix)
-					 */
-
-					n = 1;
-				}
+				n = 1;
 			}
 
 			/*
@@ -3270,7 +3390,9 @@ optget(register char** argv, const char* oopts)
 		}
 		if (c = argv[opt_info.index][opt_info.offset++])
 		{
-			opt_info.option[0] = opt_info.name[0] = argv[opt_info.index][0];
+			if ((k = argv[opt_info.index][0]) != '-' && k != '+')
+				k = '-';
+			opt_info.option[0] = opt_info.name[0] = k;
 			opt_info.option[1] = opt_info.name[1] = c;
 			opt_info.option[2] = opt_info.name[2] = 0;
 			break;
@@ -3319,7 +3441,6 @@ optget(register char** argv, const char* oopts)
 	}
 	else
 	{
-		psp = 0;
 		for (;;)
 		{
 			if (!(*(s = next(s, version))))
@@ -3341,23 +3462,21 @@ optget(register char** argv, const char* oopts)
 					}
 					break;
 				}
-				s = psp->cp;
-				sfclose(psp->sp);
+				s = psp->ob;
 				psp = psp->next;
 				free(tsp);
+				continue;
 			}
 			if (*s == '\f')
 			{
-				if (!(tsp = newof(0, Push_t, 1, 0)) || !(tsp->sp = sfstropen()))
+				psp = info(psp, s + 1, NiL, opt_info.state->xp);
+				if (psp->nb)
+					s = psp->nb;
+				else
 				{
-					if (tsp)
-						free(tsp);
-					psp = pop(psp);
-					return opterror(NiL, version, catalog);
+					s = psp->ob;
+					psp = psp->next;
 				}
-				tsp->next = psp;
-				psp = tsp;
-				s = info(s + 1, &psp->cp, psp->sp);
 				continue;
 			}
 			if (*s == '\n' || *s == ' ')
@@ -3582,7 +3701,6 @@ optget(register char** argv, const char* oopts)
 					s = skip(s + 1, 0, 0, 0, 0, 1, 1, version);
 			}
 		}
-		psp = pop(psp);
 		if (w && x)
 		{
 			s = skip(b, '|', '?', 0, 1, 0, 0, version);
@@ -3622,7 +3740,10 @@ optget(register char** argv, const char* oopts)
 			}
 		}
 		if (w || c < '0' || c > '9' || !numopt)
+		{
+			pop(psp);
 			return opterror("", version, catalog);
+		}
 		s = numopt;
 		c = opt_info.option[1] = numchr;
 		opt_info.offset--;
@@ -3642,7 +3763,10 @@ optget(register char** argv, const char* oopts)
 			if (nov)
 			{
 				if (v)
+				{
+					pop(psp);
 					return opterror("!", version, catalog);
+				}
 				opt_info.num = 0;
 			}
 			else
@@ -3652,13 +3776,19 @@ optget(register char** argv, const char* oopts)
 				if (!(opt_info.arg = v))
 				{
 					if (*(s + 1) != '?')
+					{
+						pop(psp);
 						return opterror(s, version, catalog);
+					}
 				}
 				else if (*s == '#')
 				{
 					opt_info.num = strton(opt_info.arg, &e, NiL, 0);
 					if (e == opt_info.arg)
+					{
+						pop(psp);
 						return opterror(s, version, catalog);
+					}
 				}
 			}
 			goto optarg;
@@ -3674,6 +3804,7 @@ optget(register char** argv, const char* oopts)
 					{
 						opt_info.arg = 0;
 						opt_info.index--;
+						pop(psp);
 						return c;
 					}
 					else
@@ -3683,6 +3814,7 @@ optget(register char** argv, const char* oopts)
 				{
 					opt_info.offset += e - opt_info.arg;
 					opt_info.index--;
+					pop(psp);
 					return c;
 				}
 			}
@@ -3780,7 +3912,7 @@ optget(register char** argv, const char* oopts)
 						{
 							if (!(n = (num = !n) && (m || *s == ':' || *s == '|' || *s == '?' || *s == ']')) && x)
 							{
-								psp = pop(psp);
+								pop(psp);
 								return opterror("?", version, catalog);
 							}
 							for (x = k; *(f + 1) == '|' && (j = *(f + 2)) && j != '!' && j != '=' && j != ':' && j != '?' && j != ']'; f += 2);
@@ -3811,11 +3943,17 @@ optget(register char** argv, const char* oopts)
 				}
 			} while (*(s = skip(s + 1, 0, 0, 0, 1, 0, 1, version)) == '[');
 			if (!(opt_info.num = x))
+			{
+				pop(psp);
 				return opterror("*", version, catalog);
+			}
 		}
 	}
 	else if (w && v)
+	{
+		pop(psp);
 		return opterror("=", version, catalog);
+	}
 	else
 	{
 		opt_info.num = num;
@@ -3825,6 +3963,7 @@ optget(register char** argv, const char* oopts)
 			opt_info.index++;
 		}
 	}
+	pop(psp);
 	return c;
  help:
 	if (v && *v == '?' && *(v + 1) == '?' && *(v + 2))
@@ -3842,31 +3981,41 @@ optget(register char** argv, const char* oopts)
 			if (hp->style < STYLE_man || !(s = argv[opt_info.index]) || s[0] != '-' || s[1] != '-' || !s[2])
 			{
 				opt_info.arg = sfprints("\fversion=%d", version);
+				pop(psp);
 				return '?';
 			}
 			opt_info.state->force = hp->style;
+			psp = pop(psp);
 			goto again;
 		}
 		if (match(s, "ESC", -1, NiL) || match(s, "EMPHASIS", -1, NiL))
 		{
 			opt_info.state->emphasis = n;
+			psp = pop(psp);
 			goto again;
 		}
 		if (match(s, "PREFORMAT", -1, NiL))
 		{
 			opt_info.state->flags |= OPT_preformat;
+			psp = pop(psp);
 			goto again;
 		}
 		if (match(s, "TEST", -1, NiL))
 		{
 			opt_info.state->width = OPT_WIDTH;
 			opt_info.state->emphasis = 1;
+			psp = pop(psp);
 			goto again;
 		}
+		pop(psp);
 		return opterror(v, version, catalog);
 	}
 	if ((opt_info.arg = opthelp(NiL, v)) == (char*)unknown)
+	{
+		pop(psp);
 		return opterror(v, version, catalog);
+	}
+	pop(psp);
 	return '?';
 }
 

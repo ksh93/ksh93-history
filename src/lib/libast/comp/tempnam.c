@@ -28,19 +28,27 @@
  * tempnam implementation
  */
 
+#include <ast_std.h>
+
+#ifdef tempnam
+#define _def_tempnam	1
+#else
 #if defined(__STDPP__directive) && defined(__STDPP__hide)
 __STDPP__directive pragma pp:hide tempnam
 #else
 #define tempnam		______tempnam
 #endif
+#endif
 
 #include <ast.h>
 #include <stdio.h>
 
+#if !_def_tempnam
 #if defined(__STDPP__directive) && defined(__STDPP__hide)
 __STDPP__directive pragma pp:nohide tempnam
 #else
 #undef	tempnam
+#endif
 #endif
 
 #if defined(__EXPORT__)

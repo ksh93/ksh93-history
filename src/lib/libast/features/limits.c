@@ -78,6 +78,7 @@ __STDPP__directive pragma pp:hide getpagesize getdtablesize printf spawnve
 #define _SGIAPI		0
 
 #include "FEATURE/lib"
+#include "FEATURE/common"
 #include "FEATURE/unistd.lcl"
 #include "FEATURE/param"
 
@@ -98,12 +99,16 @@ extern int		printf(const char*, ...);
 
 main()
 {
-	char		c;
-	unsigned char	uc;
-	unsigned short	us;
-	unsigned int	ui;
-	unsigned long	ul;
-	unsigned long	val;
+	char			c;
+	unsigned char		uc;
+	unsigned short		us;
+	unsigned int		ui;
+	unsigned long		ul;
+	unsigned long		val;
+#ifdef _ast_int8_t
+	unsigned _ast_int8_t	ull;
+	unsigned _ast_int8_t	vll;
+#endif
 
 	/*
 	 * <limits.h> with *constant* valued macros
@@ -138,6 +143,10 @@ main()
 	ui = ~ui;
 	ul = 0;
 	ul = ~ul;
+#ifdef _ast_int8_t
+	ull = 0;
+	ull = ~ull;
+#endif
 
 #ifdef UCHAR_MAX
 	val = UCHAR_MAX;
@@ -292,10 +301,10 @@ main()
 		val = ULONG_MAX;
 		printf("#undef	ULONG_MAX\n");
 #else
-		val = ui;
+		val = ul;
 #endif
 		printf("#if defined(__STDC__)\n");
-		printf("#define ULONG_MAX	%luU\n", val);
+		printf("#define ULONG_MAX	%luLU\n", val);
 		printf("#else\n");
 		printf("#define ULONG_MAX	%lu\n", val);
 		printf("#endif\n");
@@ -306,7 +315,7 @@ main()
 #else
 		val = (unsigned long)(ul >> 1) + 1;
 #endif
-		printf("#define LONG_MIN	(-%lu-1)\n", val - 1);
+		printf("#define LONG_MIN	(-%luL-1L)\n", val - 1);
 
 #ifdef LONG_MAX
 		val = LONG_MAX;
@@ -314,41 +323,72 @@ main()
 #else
 		val = (unsigned long)(ul >> 1);
 #endif
-		printf("#define LONG_MAX	%lu\n", val);
+		printf("#define LONG_MAX	%luL\n", val);
 	}
 
+#ifdef _ast_int8_t
+	if (ull == ul)
+	{
 #ifdef ULONGLONG_MAX
-	printf("#undef	ULONGLONG_MAX\n");
-	printf("#if defined(__STDC__)\n");
-	printf("#define ULONGLONG_MAX	%lluLLU\n", ULONGLONG_MAX);
-	printf("#else\n");
-	printf("#define ULONGLONG_MAX	%llu\n", ULONGLONG_MAX);
-	printf("#endif\n");
+		printf("#undef	ULONGLONG_MAX\n");
 #endif
+		printf("#define ULONGLONG_MAX	ULONG_MAX\n");
 
 #ifdef LONGLONG_MIN
-	printf("#undef	LONGLONG_MIN\n");
-	printf("#if defined(__STDC__)\n");
-	printf("#define LONGLONG_MIN	(%lldLL)\n", LONGLONG_MIN);
-	printf("#else\n");
-	printf("#define LONGLONG_MIN	(%lld)\n", LONGLONG_MIN);
-	printf("#endif\n");
+		printf("#undef	LONGLONG_MIN\n");
 #endif
+		printf("#define LONGLONG_MIN	LONG_MIN\n");
 
 #ifdef LONGLONG_MAX
-	printf("#undef	LONGLONG_MAX\n");
-	printf("#if defined(__STDC__)\n");
-	printf("#define LONGLONG_MAX	%lldLL\n", LONGLONG_MAX);
-	printf("#else\n");
-	printf("#define LONGLONG_MAX	%lld\n", LONGLONG_MAX);
-	printf("#endif\n");
+		printf("#undef	LONGLONG_MAX\n");
+#endif
+		printf("#define LONGLONG_MAX	LONG_MAX\n");
+	}
+	else
+	{
+#ifdef ULONGLONG_MAX
+		vll = ULONGLONG_MAX;
+		printf("#undef	ULONGLONG_MAX\n");
+#else
+		vll = ull;
+#endif
+		printf("#if defined(__STDC__)\n");
+		printf("#define ULONGLONG_MAX	%lluLLU\n", vll);
+		printf("#else\n");
+		printf("#define ULONGLONG_MAX	%llu\n", vll);
+		printf("#endif\n");
+
+#ifdef LONGLONG_MIN
+		vll = -(unsigned _ast_int8_t)(LONGLONG_MIN);
+		printf("#undef	LONGLONG_MIN\n");
+#else
+		vll = (unsigned _ast_int8_t)(ull >> 1) + 1;
+#endif
+		printf("#if defined(__STDC__)\n");
+		printf("#define LONGLONG_MIN	(-%lluLL-1LL)\n", vll - 1);
+		printf("#else\n");
+		printf("#define LONGLONG_MIN	(-%llu-1)\n", vll - 1);
+		printf("#endif\n");
+
+#ifdef LONGLONG_MAX
+		vll = LONGLONG_MAX;
+		printf("#undef	LONGLONG_MAX\n");
+#else
+		vll = (unsigned _ast_int8_t)(ull >> 1);
+#endif
+		printf("#if defined(__STDC__)\n");
+		printf("#define LONGLONG_MAX	%lluLL\n", vll);
+		printf("#else\n");
+		printf("#define LONGLONG_MAX	%llu\n", vll);
+		printf("#endif\n");
+	}
 #endif
 
 	printf("\n");
 #include "conflim.h"
 	printf("\n");
-#ifdef _WIN32
-	printf("#ifdef _WIN32\n");
+#ifdef _UWIN
+	printf("#ifdef _UWIN\n");
 	printf("#ifndef DBL_DIG\n");
 	printf("#define DBL_DIG		15\n");
 	printf("#endif\n");

@@ -108,8 +108,15 @@ pathprobe(char* path, char* attr, const char* lang, const char* tool, const char
 	if (!pathpath(path, lib, "", PATH_ABSOLUTE|PATH_EXECUTE) || stat(path, &ps))
 		return 0;
 	ptime = ps.st_mtime;
+	n = strlen(path);
+	if (n < (PATH_MAX + 5))
+	{
+		strcpy(path + n, ".ini");
+		if (!stat(path, &st) && st.st_size && ptime < (unsigned long)st.st_mtime)
+			ptime = st.st_mtime;
+	}
 	strcpy(p, key);
-	p = path + strlen(path) - (e - k);
+	p = path + n - (e - k);
 	strcpy(p, probe);
 	if (stat(path, &st))
 		return 0;

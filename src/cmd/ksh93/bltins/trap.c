@@ -131,8 +131,9 @@ int	b_trap(int argc,char *argv[],void *extra)
 			}
 			else if(pflag)
 			{
-				if(arg=shp->st.trapcom[sig])
-					sfputr(sfstdout,sh_fmtq(arg),'\n');
+				char **trapcom = (shp->st.otrapcom?shp->st.otrapcom:shp->st.trapcom);
+				if(arg=trapcom[sig])
+					sfputr(sfstdout,arg,'\n');
 			}
 			else if(clear)
 				sh_sigclear(sig);

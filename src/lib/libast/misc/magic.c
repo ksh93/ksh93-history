@@ -49,6 +49,8 @@ static const char lib[] = "libast:magic";
 
 #define T(m)		(*m?ERROR_translate(NiL,NiL,lib,m):m)
 
+#define match(s,p)	strgrpmatch(s,p,NiL,0,REG_LEFT|REG_RIGHT|REG_ICASE)
+
 #if __OBSOLETE__ < 19980101 || _UWIN
 
 #include <align.h>
@@ -996,7 +998,7 @@ cklang(register Magic_t* mp, const char* file, char* buf, struct stat* st)
 			for (s = (char*)b; b < e && isprint(*b); b++);
 			c = *b;
 			*b = 0;
-			if ((st->st_mode & (S_IXUSR|S_IXGRP|S_IXOTH)) || strmatch(s, "/*bin*/*") || !access(s, 0))
+			if ((st->st_mode & (S_IXUSR|S_IXGRP|S_IXOTH)) || match(s, "/*bin*/*") || !access(s, 0))
 			{
 				if (t = strrchr(s, '/')) s = t + 1;
 				for (t = s; *t; t++)
@@ -1007,7 +1009,7 @@ cklang(register Magic_t* mp, const char* file, char* buf, struct stat* st)
 					}
 				sfsprintf(mp->mbuf, sizeof(mp->mbuf), "application/x-%s", *s ? s : "sh");
 				mp->mime = mp->mbuf;
-				if (strmatch(s, "*sh"))
+				if (match(s, "*sh"))
 				{
 					t1 = T("command");
 					if (streq(s, "sh"))
@@ -1153,7 +1155,7 @@ cklang(register Magic_t* mp, const char* file, char* buf, struct stat* st)
 	suff = (t1 = strrchr(base, '.')) ? t1 + 1 : "";
 	if (!flags)
 	{
-		if (st->st_mode & (S_IXUSR|S_IXGRP|S_IXOTH))
+		if ((st->st_mode & (S_IXUSR|S_IXGRP|S_IXOTH)) && (!suff || suff != strchr(suff, '.')) || match(suff, "*sh|bat|cmd"))
 		{
 			s = T("command script");
 			mp->mime = "application/sh";
@@ -1165,13 +1167,13 @@ cklang(register Magic_t* mp, const char* file, char* buf, struct stat* st)
 			mp->mime = "message/rfc822";
 			goto qualify;
 		}
-		if (strmatch(base, "*([Mm]kfile)"))
+		if (match(base, "*(mkfile)"))
 		{
 			s = "mkfile";
 			mp->mime = "application/mk";
 			goto qualify;
 		}
-		if (strmatch(base, "*@([Mm]akefile|.mk)") || mp->multi['\t'] >= mp->count[':'] && (mp->multi['$'] > 0 || mp->multi[':'] > 0))
+		if (match(base, "*@(makefile|.mk)") || mp->multi['\t'] >= mp->count[':'] && (mp->multi['$'] > 0 || mp->multi[':'] > 0))
 		{
 			s = "makefile";
 			mp->mime = "application/make";
@@ -1202,7 +1204,7 @@ cklang(register Magic_t* mp, const char* file, char* buf, struct stat* st)
 			if (c >= 2 && mp->identifier[ID_INCL2] >= c && mp->identifier[ID_INCL3] >= c && mp->count['.'] >= c ||
 			    mp->identifier[ID_C] >= 5 && mp->count[';'] >= 5 ||
 			    mp->count['='] >= 20 && mp->count[';'] >= 20 ||
-			    strmatch(suff, "[cClLyY]"))
+			    match(suff, "[cly]?(pp|xx|++)|cc|ll|yy"))
 			{
 				t1 = "";
 				t2 = "c ";
@@ -1256,13 +1258,13 @@ cklang(register Magic_t* mp, const char* file, char* buf, struct stat* st)
 			mp->mime = "application/x-fortran";
 			goto qualify;
 		}
-		if (strmatch(suff, "[hH][tT][mM]+([Ll])") || mp->identifier[ID_HTML] > 0 && mp->count['<'] >= 8 && (c = mp->count['<'] - mp->count['>']) >= -2 && c <= 2)
+		if (match(suff, "htm+(l)") || mp->identifier[ID_HTML] > 0 && mp->count['<'] >= 8 && (c = mp->count['<'] - mp->count['>']) >= -2 && c <= 2)
 		{
 			s = T("html input");
 			mp->mime = "text/html";
 			goto qualify;
 		}
-		if (strmatch(suff, "[tT][eE][xX]") || mp->count['{'] >= 6 && (c = mp->count['{'] - mp->count['}']) >= -2 && c <= 2 && mp->count['\\'] >= mp->count['{'])
+		if (match(suff, "tex") || mp->count['{'] >= 6 && (c = mp->count['{'] - mp->count['}']) >= -2 && c <= 2 && mp->count['\\'] >= mp->count['{'])
 		{
 			s = T("TeX input");
 			mp->mime = "text/tex";

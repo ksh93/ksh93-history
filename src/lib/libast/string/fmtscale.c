@@ -53,9 +53,14 @@ fmtscale(register Sfulong_t n, int k)
 		u++;
 	}
 	buf = fmtbuf(z = 8);
-	if (r = (m % k) / (k / 10 + 1))
+	r = (m % k) / (k / 10 + 1);
+	if (n > 0 && n < 10)
 		sfsprintf(buf, z, "%I*u.%d%c", sizeof(n), n, r, *u);
 	else
+	{
+		if (r >= 5)
+			n++;
 		sfsprintf(buf, z, "%I*u%c", sizeof(n), n, *u);
+	}
 	return buf;
 }

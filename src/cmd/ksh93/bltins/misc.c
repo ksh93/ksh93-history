@@ -119,19 +119,33 @@ int    B_login(int argc,char *argv[],void *extra)
 	else
         {
 		register struct argnod *arg=shp->envlist;
+#ifndef _ENV_H
 		register Namval_t* np;
 		register char *cp;
+#endif
 		if(shp->subshell)
 			sh_subfork();
 		if(logp && logp->clear)
+		{
+#ifdef _ENV_H
+			env_close(shp->env);
+			shp->env = env_open((char**)0,3);
+#else
 			nv_scan(shp->var_tree,noexport,0,NV_EXPORT,NV_EXPORT);
+#endif
+		}
 		while(arg)
 		{
+#ifdef _ENV_H
+			if(strchr(arg->argval,'='))
+				env_add(shp->env,arg->argval,0);
+#else
 			if((cp=strchr(arg->argval,'=')) &&
 				(*cp=0,np=nv_search(arg->argval,shp->var_tree,0)))
 				nv_onattr(np,NV_EXPORT);
 			if(cp)
 				*cp = '=';
+#endif
 			arg=arg->argnxt.ap;
 		}
 		pname = argv[0];
@@ -232,7 +246,11 @@ int    b_dot_cmd(register int n,char *argv[],void* extra)
 		{
 			if(!np->nvalue.ip)
 			{
+#ifdef PATH_BFPATH
+				path_search(script,NIL(Pathcomp_t*),0);
+#else
 				path_search(script,NIL(char*),0);
+#endif
 				if(np->nvalue.ip)
 				{
 					if(nv_isattr(np,NV_FPOSIX))

@@ -34,6 +34,7 @@ void _STUB_stdfun(){}
 #else
 
 #include <windows.h>
+#include <uwin.h>
 
 __declspec(dllimport) extern char* __cdecl __p__iob(void);
 
@@ -44,20 +45,33 @@ __declspec(dllimport) extern char* __cdecl __p__iob(void);
 int
 _stdfun(Sfio_t* f, Funvec_t* vp)
 {
-	static char *iob;
-	static HANDLE	hp;
+	static char*	iob;
+	static int	init;
+	static HANDLE	bp;
+	static HANDLE	np;
 
-	if(!iob)
-		iob = __p__iob();
-	if(!iob)
-		return(0);
-	if((char*)f < iob || (char*)f > iob+IOBMAX)
-		return(0);
+	if (!iob && !(iob = __p__iob()))
+		return 0;
+	if (f && ((char*)f < iob || (char*)f > iob+IOBMAX))
+		return 0;
 	if (!vp->vec[1])
 	{
-		if (!hp && (!(hp = GetModuleHandle("msvcrtd.dll")) || !(hp = GetModuleHandle("msvcrt.dll"))))
+		if (!init)
+		{
+			init = 1;
+			if (!(bp = GetModuleHandle("stdio.dll")))
+			{
+				char	path[PATH_MAX];
+
+				if (uwin_path("/usr/lib/stdio.dll", path, sizeof(path)) >= 0)
+					bp = LoadLibraryEx(path, 0, 0);
+			}
+		}
+		if (bp && (vp->vec[1] = (Fun_f)GetProcAddress(bp, vp->name)))
+			return 1;
+		if (!np && (!(np = GetModuleHandle("msvcrtd.dll")) || !(np = GetModuleHandle("msvcrt.dll"))))
 			return -1;
-		if (!(vp->vec[1] = (Fun_f)GetProcAddress(hp, vp->name)))
+		if (!(vp->vec[1] = (Fun_f)GetProcAddress(np, vp->name)))
 			return -1;
 	}
 	return 1;

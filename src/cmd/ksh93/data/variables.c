@@ -88,6 +88,7 @@ const struct shtable2 shtab_variables[] =
 	".sh.value",	0,				(char*)0,
 	".sh.version",	NV_NOFREE,			(char*)(&e_version[10]),
 	".sh.dollar",	0,				(char*)0,
+	".sh.match",	0,				(char*)0,
 #ifdef SHOPT_FS_3D
 	"VPATH",	0,				(char*)0,
 #endif /* SHOPT_FS_3D */

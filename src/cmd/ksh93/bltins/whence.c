@@ -132,12 +132,18 @@ static int whence(Shell_t *shp,char **argv, register int flags)
 	register const char *cp;
 	register int aflag,r=0;
 	register const char *msg;
+#ifdef PATH_BFPATH
+	Pathcomp_t *pp;
+#endif
 	int notrack = 1;
 	while(name= *argv++)
 	{
 		aflag = ((flags&A_FLAG)!=0);
 		cp = 0;
 		np = 0;
+#ifdef PATH_BFPATH
+		pp = 0;
+#endif
 		if(flags&P_FLAG)
 			goto search;
 		/* reserved words first */
@@ -201,18 +207,35 @@ static int whence(Shell_t *shp,char **argv, register int flags)
 			cp=0;
 			notrack=1;
 		}
+#ifdef PATH_BFPATH
+		if(path_search(name,pp,2))
+			cp = name;
+		else
+		{
+			cp = stakptr(PATH_OFFSET);
+			if(*cp==0)
+				cp = 0;
+		}
+#else
 		if(path_search(name,cp,2))
 			cp = name;
 		else
 			cp = shp->lastpath;
 		shp->lastpath = 0;
+#endif
 		if(cp)
 		{
 			if(flags&V_FLAG)
 			{
 				if(*cp!= '/')
 				{
+#ifdef PATH_BFPATH
+					if(!np && (np=nv_search(name,shp->track_tree,0)))
+						sfprintf(sfstdout,"%s %s %s/%s\n",name,sh_translate(is_talias),path_pwd(0),cp);
+					else if(!np || nv_isnull(np))
+#else
 					if(!np || nv_isnull(np))
+#endif
 						sfprintf(sfstdout,"%s%s\n",name,sh_translate(is_ufunction));
 					continue;
 				}

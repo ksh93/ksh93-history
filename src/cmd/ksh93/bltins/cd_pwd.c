@@ -45,10 +45,27 @@
 #   include	<ctype.h>
 #endif /* _UWIN */
 
+#ifdef PATH_BFPATH
+/*
+ * Invalidate path name bindings to relative paths
+ */
+static void rehash(register Namval_t *np,void *data)
+{
+	Pathcomp_t *pp = (Pathcomp_t*)np->nvalue.cp;
+	NOT_USED(data);
+	if(pp && *pp->name!='/')
+		nv_unset(np);
+}
+#endif
 
 int	b_cd(int argc, char *argv[],void *extra)
 {
+#ifdef PATH_BFPATH
+	register char *dir;
+	Pathcomp_t *cdpath = 0;
+#else
 	register char *dir, *cdpath="";
+#endif
 	register const char *dp;
 	register Shell_t *shp = (Shell_t*)extra;
 	int saverrno=0;
@@ -94,25 +111,47 @@ int	b_cd(int argc, char *argv[],void *extra)
 #endif /* _UWIN */
 	if(*dir != '/')
 	{
+#ifdef PATH_BFPATH
+		if(!(cdpath = (Pathcomp_t*)shp->cdpathlist) && (dp=(CDPNOD)->nvalue.cp))
+		{
+			if(cdpath=path_addpath((Pathcomp_t*)0,dp,PATH_CDPATH))
+			{
+				shp->cdpathlist = (void*)cdpath;
+				cdpath->shp = shp;
+			}
+		}
+#else
 		cdpath = nv_getval(nv_scoped(CDPNOD));
+#endif
 		if(!oldpwd)
 			oldpwd = path_pwd(1);
 	}
+#ifndef PATH_BFPATH
 	if(!cdpath)
 		cdpath = "";
+#endif
 	if(*dir=='.')
 	{
 		/* test for pathname . ./ .. or ../ */
 		if(*(dp=dir+1) == '.')
 			dp++;
 		if(*dp==0 || *dp=='/')
+#ifdef PATH_BFPATH
+			cdpath = 0;
+#else
 			cdpath = "";
+#endif
 	}
 	rval = -1;
 	do
 	{
+#ifdef PATH_BFPATH
+		dp = cdpath?cdpath->name:"";
+		cdpath = path_nextcomp(cdpath,dir,0);
+#else
 		dp = cdpath;
 		cdpath=path_join(cdpath,dir);
+#endif
 #ifdef _UWIN
                 if(*stakptr(PATH_OFFSET+1)==':' && isalpha(*stakptr(PATH_OFFSET)))
 		{
@@ -177,7 +216,11 @@ success:
 		stakseek(dir-stakptr(0));
 	}
 	dir = (char*)stakfreeze(1)+PATH_OFFSET;
+#ifdef PATH_BFPATH
+	if(*dp && (*dp!='.'||dp[1]) && strchr(dir,'/'))
+#else
 	if(*dp && *dp!= ':' && strchr(dir,'/'))
+#endif
 		sfputr(sfstdout,dir,'\n');
 	if(*dir != '/')
 		return(0);
@@ -191,6 +234,11 @@ success:
 	nv_putval(pwdnod,dir,NV_RDONLY);
 	nv_onattr(pwdnod,NV_NOFREE|NV_EXPORT);
 	shp->pwd = pwdnod->nvalue.cp;
+#ifdef PATH_BFPATH
+	nv_scan(shp->track_tree,rehash,(void*)0,NV_TAGGED,NV_TAGGED);
+	path_newdir(shp->pathlist);
+	path_newdir(shp->cdpathlist);
+#endif
 	return(0);
 }
 

@@ -23,10 +23,7 @@
 *******************************************************************/
 #pragma prototyped
 /*
- * UNIX shell
- *
- * S. R. Bourne
- * Rewritten by David Korn
+ * David Korn
  * AT&T Labs
  *
  */
@@ -34,6 +31,7 @@
 #include	"defs.h"
 #include	<fcin.h>
 #include	<ls.h>
+#include	<nval.h>
 #include	"variables.h"
 #include	"path.h"
 #include	"io.h"
@@ -53,17 +51,10 @@ struct edata
 };
 
 
-static const char	usrbin[] = "/usr/bin";
-static char		*prune(char*, const char*);
-static char		*execs(const char*, const char*, char**, struct edata*);
+static Pathcomp_t	*execs(Pathcomp_t*, const char*, char**, struct edata*);
 static int		canexecute(char*,int);
-static int		path_inpath(const char*,const char*);
-static void		funload(int,const char*);
-static void		exscript(char*, char*[], char**);
-static int		name_offset;
-
-static Namval_t		*tracknod;
-static int		pruned;
+static void		funload(Shell_t*,int,const char*);
+static void		exscript(Shell_t*,char*, char*[], char**);
 
 /*
  * make sure PWD is set up correctly
@@ -76,8 +67,9 @@ char *path_pwd(int flag)
 	register char *cp;
 	register char *dfault = (char*)e_dot;
 	register int count = 0;
-	if(sh.pwd)
-		return((char*)sh.pwd);
+	Shell_t *shp = &sh;
+	if(shp->pwd)
+		return((char*)shp->pwd);
 	while(1) 
 	{
 		/* try from lowest to highest */
@@ -121,125 +113,146 @@ char *path_pwd(int flag)
 	}
 skip:
 	nv_onattr(PWDNOD,NV_NOFREE|NV_EXPORT);
-	sh.pwd = (char*)(PWDNOD->nvalue.cp);
+	shp->pwd = (char*)(PWDNOD->nvalue.cp);
 	return(cp);
 }
 
 /*
- * returns true if directory already appears in path
+ * delete current Pathcomp_t structure
  */
-static int dir_in_path(const char *dir, int dlen,  const char *path, int plen)
+void  path_delete(Pathcomp_t *first)
 {
-	const char *cp = path, *pend=path+plen;
-	if(*cp==':')
-		cp++;
-	while(cp+dlen <= pend)
+	register Pathcomp_t *pp=first, *old=0;
+	while(pp)
 	{
-		if(memcmp(dir,cp,dlen)==0 && (cp+dlen==pend || cp[dlen]==':'))
-			return(1);
-		while(cp<pend && *cp++!=':');
+		old = pp;
+		pp = pp->next;
+
+		if(--old->refcount<=0)
+			free((void*)old);
 	}
-	return(0);
+}
+
+#if 1
+void path_dump(register Pathcomp_t *pp)
+{
+	sfprintf(sfstderr,"dump\n");
+	while(pp)
+	{
+		sfprintf(sfstderr,"pp=%x dev=%d ino=%d len=%d flags=%o name=%.*s\n",
+			pp,pp->dev,pp->ino,pp->len,pp->flags,pp->len,pp->name);
+		pp = pp->next;
+	}
+}
+#endif
+
+/*
+ * write the next path to search on the current stack
+ * if last is given, all paths that come before <last> are skipped
+ * the next pathcomp is returned.
+ */
+Pathcomp_t *path_nextcomp(register Pathcomp_t *pp, const char *name, Pathcomp_t *last)
+{
+	stakseek(PATH_OFFSET);
+	if(*name=='/')
+		pp = 0;
+	else
+	{
+		for(;pp && pp!=last;pp=pp->next)
+		{
+			if(pp->flags&PATH_SKIP)
+				continue;
+			if(!last || *pp->name!='/')
+				break;
+		}
+		if(!pp)		/* this should not happen */
+			pp = last;
+	}
+	if(pp && (pp->name[0]!='.' || pp->name[1]))
+	{
+		if(*pp->name!='/')
+		{
+			stakputs(path_pwd(1));
+			if(*stakptr(staktell()-1)!='/')
+				stakputc('/');
+		}
+		stakwrite(pp->name,pp->len);
+		if(pp->name[pp->len-1]!='/')
+			stakputc('/');
+	}
+	stakputs(name);
+	stakputc(0);
+	return(pp && pp!=last?pp->next:(Pathcomp_t*)0);
+}
+
+static void path_init(Shell_t *shp)
+{
+	const char *val = astconf("PATH",NIL(char*),NIL(char*));
+	Pathcomp_t *pp = (void*)path_addpath((Pathcomp_t*)0,(val?val:e_defpath),PATH_PATH);
+	if(shp->defpathlist = (void*)pp)
+		pp->shp = shp;
+	if(val=(PATHNOD)->nvalue.cp)
+	{
+		pp = (void*)path_addpath((Pathcomp_t*)shp->pathlist,val,PATH_PATH);
+		if(shp->pathlist = (void*)pp)
+			pp->shp = shp;
+	}
+	else
+		shp->pathlist = (void*)path_dup(pp);
+	if(val=(FPATHNOD)->nvalue.cp)
+	{
+		pp = (void*)path_addpath((Pathcomp_t*)shp->pathlist,val,PATH_FPATH);
+		if(shp->pathlist = (void*)pp)
+			pp->shp = shp;
+	}
 }
 
 /*
- * copies path to stack eliminating duplicates
- * if mode==1, only one of /bin or /usr/bin will be copied
+ * returns that pathlist to search
  */
-static char *path_to_stak(register const char *path, int mode)
+Pathcomp_t *path_get(register const char *name)
 {
-	register const char *cp=path, *base;
-	register int n, len;
-	register int dot=0;
-	stakseek(0);
-	while(*cp)
-	{
-		if (*cp==':'  || (*cp=='.' && (cp[1]==':' || cp[1]==0)) )
-		{
-			if(((cp++==path) || *cp==':') && !dot++)
-			{
-				stakputc('.');
-				stakputc(':');
-			}
-			while(*cp==':')
-				cp++;
-		}
-		else
-		{
-			base = cp;
-			while((n= *cp) && n!=':')
-				cp++;
-			if((n=cp-base)>0 && (len=staktell()))
-			{
-				if(dir_in_path(base,n,path=stakptr(0),len))
-					continue;
-				if(mode && n==8 && memcmp(usrbin,base,8)==0 && dir_in_path(usrbin+4,4,path,len))
-					continue;
-				if(mode && n==4 && memcmp(usrbin+4,base,4)==0 && dir_in_path(usrbin,8,path,len))
-					continue;
-			}
-			stakwrite(base,n+1);
-		}
-	}
-	return(stakfreeze(1));
-}
-
-/*
- * given <s> return a colon separated list of directories to search on the stack
- * This routine adds names to the tracked alias list, if possible, and returns
- * a reduced path string for tracked aliases
- */
-char *path_get(const char *name)
-/*@
- 	assume name!=NULL;
-	return path satisfying path!=NULL;
-@*/
-{
-	register char *path=0;
-	register char *sp = sh.lastpath;
-	static int bin_is_usrbin = -1;
-	if(strchr(name,'/'))
-		return("");
+	register Shell_t *shp = &sh;
+	register Pathcomp_t *pp;
+	if(!shp->defpathlist)
+		path_init(shp);
+	if(*name && strchr(name,'/'))
+		return(0);
 	if(!sh_isstate(SH_DEFPATH))
-		path = nv_getval(nv_scoped(PATHNOD));
-	if(!path)
-		path = (char*)e_defpath;
-	if(bin_is_usrbin < 0)
-		bin_is_usrbin = test_inode(usrbin+4,usrbin);
-	path = path_to_stak(path,bin_is_usrbin); 
-	if(sh_isstate(SH_DEFPATH))
-		return(path);
-	if(sp || *name && ((tracknod=nv_search(name,sh.track_tree,0)) &&
-		nv_isattr(tracknod,NV_NOALIAS)==0 &&
-		(sp=nv_getval(tracknod))))
-	{
-		path = prune(path,sp);
-		pruned++;
-	}
-	return(path);
+		pp = (Pathcomp_t*)shp->pathlist;
+	if(!pp && !(PATHNOD)->nvalue.cp)
+		pp = (Pathcomp_t*)shp->defpathlist;
+	return(pp);
 }
 
-int	path_open(const char *name,char *path)
-/*@
-	assume name!=NULL;
- @*/
+/*
+ * open file corresponding to name using path give by <pp>
+ */
+static int	path_opentype(const char *name, register Pathcomp_t *pp, int fun)
 {
-	register int fd;
+	register int fd= -1;
 	struct stat statb;
-	if(strchr(name,'/'))
+	Pathcomp_t *oldpp;
+	Shell_t *shp;
+	if(pp)
+		shp = pp->shp;
+	else
+	{
+		shp = sh_getinterp();
+		if(!shp->defpathlist)
+			path_init(shp);
+	}
+	if(!fun && strchr(name,'/'))
 	{
 		if(sh_isoption(SH_RESTRICTED))
 			errormsg(SH_DICT,ERROR_exit(1),e_restricted,name);
 	}
-	else
-	{
-		if(!path)
-			path = (char*)e_defpath;
-		path = stakcopy(path);
-	}
 	do
 	{
-		path=path_join(path,name);
+		oldpp=pp;
+		pp = path_nextcomp(pp,name,0);
+		if(fun && !(oldpp->flags&PATH_FPATH))
+			continue;
 		if((fd = sh_open(path_relative(stakptr(PATH_OFFSET)),O_RDONLY,0)) >= 0)
 		{
 			if(fstat(fd,&statb)<0 || S_ISDIR(statb.st_mode))
@@ -250,95 +263,28 @@ int	path_open(const char *name,char *path)
 			}
 		}
 	}
-	while( fd<0 && path);
-	if((fd = sh_iomovefd(fd)) > 0)
+	while( fd<0 && pp);
+	if(fd>=0 && (fd = sh_iomovefd(fd)) > 0)
 	{
 		fcntl(fd,F_SETFD,FD_CLOEXEC);
-		sh.fdstatus[fd] |= IOCLEX;
+		shp->fdstatus[fd] |= IOCLEX;
 	}
 	return(fd);
 }
 
 /*
- * This routine returns 1 if first directory in <path> is also in <fpath>
- * If <path> begins with :, or first directory is ., $PWD must be in <fpath>
- * Otherwise, 0 is returned
+ * open file corresponding to name using path give by <pp>
  */
-
-static int path_inpath(const char *path, const char *fpath)
+int	path_open(const char *name, register Pathcomp_t *pp)
 {
-	register const char *dp = fpath;
-	register const char *sp = path;
-	register int c, match=1;
-	if(!dp || !sp || *sp==0)
-		return(0);
-	if(*sp==':' || (*sp=='.' && ((c=sp[1])==0 || c==':')))
-		sp = path = path_pwd(1);
-	while(1)
-	{
-		if((c= *dp++)==0 || c == ':')
-		{
-			if(match==1 && sp>path && (*sp==0 || *sp==':'))
-				return(1);
-			if(c==0)
-				return(0);
-			match = 1;
-			sp = path;
-		}
-		else if(match)
-		{
-			if(*sp++ != c)
-				match = 0;
-		}
-	}
-	/* NOTREACHED */
+	return(path_opentype(name,pp,0));
 }
-
-/*
- *  set tracked alias node <np> to value <sp>
- */
-
-void path_alias(register Namval_t *np,register char *sp)
-/*@
-	assume np!=NULL;
-@*/
-{
-	if(!sp)
-		nv_unset(np);
-	else
-	{
-		register const char *vp = np->nvalue.cp;
-		register int n = 1;
-		register int nofree = nv_isattr(np,NV_NOFREE);
-		struct stat statb;
-		nv_offattr(np,NV_NOPRINT);
-		if(!vp || (n=strcmp(sp,vp))!=0)
-		{
-			int subshell = sh.subshell;
-			sh.subshell = 0;
-			nv_putval(np,sp,0);
-			sh.subshell = subshell;
-		}
-		nv_setattr(np,NV_TAGGED|NV_EXPORT);
-		if(sp && lstat(sp,&statb)>=0 && S_ISLNK(statb.st_mode))
-			nv_setsize(np,statb.st_size+1);
-		else
-			nv_setsize(np,0);
-		if(nofree && n==0)
-			nv_onattr(np,NV_NOFREE);
-	}
-}
-
 
 /*
  * given a pathname return the base name
  */
 
 char	*path_basename(register const char *name)
-/*@
-	assume name!=NULL;
-	return x satisfying x>=name && *x!='/';
- @*/
 {
 	register const char *start = name;
 	while (*name)
@@ -350,14 +296,14 @@ char	*path_basename(register const char *name)
 /*
  * load functions from file <fno>
  */
-static void funload(int fno, const char *name)
+static void funload(Shell_t *shp,int fno, const char *name)
 {
 	char buff[IOBSIZE+1];
 	int savestates = sh_isstate(~0);
 	sh_onstate(SH_NOLOG|SH_NOALIAS);
-	sh.readscript = (char*)name;
+	shp->readscript = (char*)name;
 	sh_eval(sfnew(NIL(Sfio_t*),buff,IOBSIZE,fno,SF_READ),0);
-	sh.readscript = 0;
+	shp->readscript = 0;
 	sh_setstate(savestates);
 }
 
@@ -369,47 +315,45 @@ static void funload(int fno, const char *name)
  * If endpath!=NULL, Path search ends when path matches endpath.
  */
 
-int	path_search(register const char *name,const char *endpath, int flag)
-/*@
-	assume name!=NULL;
-	assume flag==0 || flag==1 || flag==2;
-@*/
+int	path_search(register const char *name,Pathcomp_t *endpath, int flag)
 {
 	register Namval_t *np;
 	register int fno;
+	Pathcomp_t *pp=0;
+	Shell_t *shp = &sh;
+	if(!shp->defpathlist)
+		path_init(shp);
 	if(flag)
 	{
-		/* if not found on pruned path, rehash and try again */
-		while(!(sh.lastpath=path_absolute(name,endpath)) && pruned)
-			nv_onattr(tracknod,NV_NOALIAS);
-		if(!sh.lastpath && (np=nv_search(name,sh.fun_tree,HASH_NOSCOPE))&&np->nvalue.ip)
+		if(!(pp=path_absolute(name,endpath)) && endpath)
+			pp = path_absolute(name,NIL(Pathcomp_t*));
+		if(!pp && (np=nv_search(name,sh.fun_tree,HASH_NOSCOPE))&&np->nvalue.ip)
 			return(1);
-		np = 0;
+		if(!pp)
+			*stakptr(PATH_OFFSET) = 0;
 	}
-	if(flag==0 || !sh.lastpath)
+	if(flag==0 || !pp || (pp->flags&PATH_FPATH))
 	{
-		register char *path=0;
-		if(strmatch(name,e_alphanum))
-			path = nv_getval(nv_scoped(FPATHNOD));
-		if(path && (fno=path_open(name,path))>=0)
+		if(!pp)
+			pp=shp->pathlist;
+		if(pp && strmatch(name,e_alphanum)  && (fno=path_opentype(name,pp,1))>=0)
 		{
 			if(flag==2)
 			{
 				sh_close(fno);
 				return(1);
 			}
-			funload(fno,name);
+			funload(shp,fno,name);
 			if((np=nv_search(name,sh.fun_tree,HASH_NOSCOPE))&&np->nvalue.ip)
 				return(1);
 		}
+		*stakptr(PATH_OFFSET) = 0;
 		return(0);
 	}
-	else if(!sh_isstate(SH_DEFPATH) && *name!='/')
+	else if(pp && !sh_isstate(SH_DEFPATH) && *name!='/')
 	{
-		if((np=tracknod) || ((endpath||sh_isoption(SH_TRACKALL)) &&
-			(np=nv_search(name,sh.track_tree,NV_ADD)))
-		  )
-			path_alias(np,sh.lastpath);
+		if(np=nv_search(name,shp->track_tree,NV_ADD))
+			path_alias(np,pp);
 	}
 	return(0);
 }
@@ -420,94 +364,44 @@ int	path_search(register const char *name,const char *endpath, int flag)
  * end search of path matches endpath without checking execute permission
  */
 
-char	*path_absolute(register const char *name, const char *endpath)
-/*@
-	assume name!=NULL;
-	return x satisfying x && *x=='/';
-@*/
+Pathcomp_t *path_absolute(register const char *name, Pathcomp_t *endpath)
 {
-	register int	f;
-	register char *path;
-	register const char *fpath=0;
-	register int isfun,len;
-	Namval_t *np;
-	pruned = 0;
-	path = path_get(name);
-	if(*path && strmatch(name,e_alphanum))
-		fpath = nv_getval(nv_scoped(FPATHNOD));
+	register int	f,isfun;
+	int		noexec=0;
+	Pathcomp_t	*pp,*oldpp;
+	Shell_t *shp = &sh;
+	shp->path_err = ENOENT;
+	if(!(pp=path_get("")))
+		return(0);
+	shp->path_err = 0;
 	while(1)
 	{
 		sh_sigcheck();
-		isfun = (fpath && path_inpath(path,fpath));
-		path=path_join(path,name);
-		if(endpath && strcmp(endpath,stakptr(PATH_OFFSET))==0)
-			return((char*)endpath);
+		isfun = (pp->flags&PATH_FPATH);
+		if(oldpp=pp)
+			pp = path_nextcomp(pp,name,0);
+		if(endpath)
+			return(endpath);
 		f = canexecute(stakptr(PATH_OFFSET),isfun);
 		if(isfun && f>=0)
 		{
-			funload(f,stakptr(PATH_OFFSET));
+			funload(shp,f,stakptr(PATH_OFFSET));
 			f = -1;
-			path = 0;
+			pp = 0;
+		}
+		if(!pp || f>=0)
 			break;
-		}
-		if(f>=0)
-			break;
-		if((len=name_offset-PATH_OFFSET)==0)
-			goto skip;
-		*stakptr(name_offset-1) = 0;
-		np = nv_search(stakptr(PATH_OFFSET),sh.track_tree,NV_ADD);
-		*stakptr(name_offset-1) = '/';
-		/* skip .fpath check if already checked */
-		if(np && (nv_isattr(np,NV_NOPRINT|NV_NOALIAS)==NV_NOPRINT))
-			goto skip;
-		nv_offattr(np,NV_NOALIAS);
-		nv_onattr(np,NV_NOPRINT|NV_TAGGED);
-		if(np->nvenv)
-		{
-			stakseek(name_offset);
-			stakputs(np->nvenv);
-			stakputc('/');
-		}
-		else
-		{
-			/* make sure there is room for .fpath */
-			if(staktell()-name_offset<6)
-				stakseek(name_offset+6);
-			strcpy(stakptr(name_offset),".fpath");
-			if((f=open(stakptr(PATH_OFFSET),O_RDONLY))>=0)
-			{
-				struct stat statb;
-				fstat(f,&statb);
-				len = statb.st_size;
-				stakseek(name_offset+len);
-				read(f,stakptr(name_offset),len);
-				*stakptr(name_offset+len-1) = 0;
-				np->nvenv = strdup(stakptr(name_offset));
-				*stakptr(name_offset+len-1) = '/';
-				close(f);
-			}
-			else
-				goto skip;
-		}
-		nv_onattr(np,NV_NOALIAS);
-		stakputs(name);
-		f = canexecute(stakptr(PATH_OFFSET),1);
-		if(f>=0)
-		{
-			funload(f,stakptr(PATH_OFFSET));
-			f = -1;
-			path = 0;
-		}
-	skip:
-		if(!path)
-			break;
+		if(errno!=ENOENT)
+			noexec = errno;
 	}
 	if(f<0)
+	{
+		if(!endpath)
+			shp->path_err = (noexec?noexec:ENOENT);
 		return(0);
-	/* check for relative pathname */
-	if(*stakptr(PATH_OFFSET)!='/')
-		path_join(path_pwd(1),(char*)stakfreeze(1)+PATH_OFFSET);
-	return((char*)stakfreeze(1)+PATH_OFFSET);
+	}
+	stakputc(0);
+	return(oldpp);
 }
 
 /*
@@ -526,9 +420,6 @@ char	*path_absolute(register const char *name, const char *endpath)
 #endif /* S_IXUSR */
 
 static int canexecute(register char *path, int isfun)
-/*@
-	assume path!=NULL;
-@*/
 {
 	struct stat statb;
 	register int fd=0;
@@ -577,10 +468,6 @@ err:
  */
 
 char *path_relative(register const char* file)
-/*@
-	assume file!=NULL;
-	return x satisfying x!=NULL;
-@*/
 {
 	register const char *pwd;
 	register const char *fp = file;
@@ -603,56 +490,15 @@ char *path_relative(register const char* file)
 	return((char*)file);
 }
 
-char *path_join(register char *path,const char *name)
-/*@
-	assume path!=NULL;
-	assume name!=NULL;
-@*/
-{
-	/* leaves result on top of stack */
-	register char *scanp = path;
-	register int c;
-	stakseek(PATH_OFFSET);
-	if(*scanp=='.')
-	{
-		if((c= *++scanp)==0 || c==':')
-			path = scanp;
-		else if(c=='/')
-			path = ++scanp;
-		else
-			scanp--;
-	}
-	while(*scanp && *scanp!=':')
-		stakputc(*scanp++);
-	if(scanp!=path)
-	{
-		if(*path!='/' || scanp!= (path+1))
-			stakputc('/');
-		/* position past ":" unless a trailing colon after pathname */
-		if(*scanp && *++scanp==0)
-			scanp--;
-	}
-	else
-		while(*scanp == ':')
-			scanp++;
-	path=(*scanp ? scanp : 0);
-	name_offset = staktell();
-	stakputs(name);
-	return((char*)path);
-}
-
-
 void	path_exec(register const char *arg0,register char *argv[],struct argnod *local)
-/*@
-	assume arg0!=NULL argv!=NULL && *argv!=NULL;
-@*/
 {
-	register const char *path = "";
-	char *libpath, **envp;
 	struct edata data;
+	char *libpath, **envp;
+	Pathcomp_t *pp=0;
+	Shell_t *shp = &sh;
 	nv_setlist(local,NV_EXPORT|NV_IDENT|NV_ASSIGN);
-	data.sh = &sh;
-	envp=sh_envgen();
+	data.sh = shp;
+	envp = sh_envgen();
 	if(strchr(arg0,'/'))
 	{
 		/* name containing / not allowed for restricted shell */
@@ -660,7 +506,7 @@ void	path_exec(register const char *arg0,register char *argv[],struct argnod *lo
 			errormsg(SH_DICT,ERROR_exit(1),e_restricted,arg0);
 	}
 	else
-		path=path_get(arg0);
+		pp=path_get(arg0);
 	/* leave room for inserting _= pathname in environment */
 	envp--;
 	data.exec_err = ENOENT;
@@ -672,77 +518,25 @@ void	path_exec(register const char *arg0,register char *argv[],struct argnod *lo
 		data.libpath = libpath;
 		data.envp = envp;
 	}
-	while(path=execs(path,arg0,argv,&data));
+	while(pp=execs(pp,arg0,argv,&data));
 	/* force an exit */
-	((struct checkpt*)sh.jmplist)->mode = SH_JMPEXIT;
+	((struct checkpt*)shp->jmplist)->mode = SH_JMPEXIT;
 	if((errno = data.exec_err)==ENOENT)
 		errormsg(SH_DICT,ERROR_exit(ERROR_NOENT),e_found,arg0);
 	else
 		errormsg(SH_DICT,ERROR_system(ERROR_NOEXEC),e_exec,arg0);
 }
 
-/*
- * This routine constructs a short path consisting of all
- * Relative directories up to the directory of fullname <name>
- */
-static char *prune(register char *path,const char *fullname)
-/*@
-	assume path!=NULL;
-	return x satisfying x!=NULL && strlen(x)<=strlen(in path);
-@*/
+static Pathcomp_t *execs(Pathcomp_t *pp,const char *arg0,register char **argv, struct edata *dp)
 {
-	register char *p = path;
-	register char *s;
-	int n = 1; 
-	const char *base;
-	char *inpath = path;
-	if(!fullname  || *fullname != '/' || *path==0)
-		return(path);
-	base = path_basename(fullname);
-	do
-	{
-		/* a null path means current directory */
-		if(*path == ':')
-		{
-			*p++ = ':';
-			path++;
-			continue;
-		}
-		s = path;
-		path=path_join(path,base);
-		if(*s != '/' || (n=strcmp(stakptr(PATH_OFFSET),fullname))==0)
-		{
-			/* position p past end of path */
-			while(*s && *s!=':')
-				*p++ = *s++;
-			if(n==0 || !path)
-			{
-				*p = 0;
-				return(inpath);
-			}
-			*p++ = ':';
-		}
-	}
-	while(path);
-	/* if there is no match just return path */
-	path = nv_getval(nv_scoped(PATHNOD));
-	if(!path)
-		path = (char*)e_defpath;
-	strcpy(inpath,path);
-	return(inpath);
-}
-
-static char *execs(const char *ap,const char *arg0,register char **argv, struct edata *dp)
-/*@
-	assume ap!=NULL;
-	assume argv!=NULL && *argv!=NULL;
-@*/
-{
-	
-	register char *path, *prefix, *opath=0;
+	Shell_t *shp = dp->sh;
+	register char *path, *opath=0;
+	char **xp=0, *xval;
 	int offset;
 	sh_sigcheck();
-	prefix=path_join((char*)ap,arg0);
+	while(pp && (pp->flags&PATH_FPATH))
+		pp = path_nextcomp(pp,arg0,0);
+	pp = path_nextcomp(pp,arg0,0);
 	if (dp->libpath)
 	{
 		register int	c;
@@ -762,7 +556,7 @@ static char *execs(const char *ap,const char *arg0,register char **argv, struct 
 		stakputs(opath);
 		path = stakptr(PATH_OFFSET);
 		ep = strrchr(path,'/');
-		vp=nv_search(arg0,sh.track_tree,0);
+		vp=nv_search(arg0,shp->track_tree,0);
 #if _lib_readlink
 		if(!vp || nv_size(vp)>0)
 		{
@@ -819,10 +613,11 @@ static char *execs(const char *ap,const char *arg0,register char **argv, struct 
 				offset = staktell();
 				stakwrite(var, varlen);
 				stakputc(0);
-				vp = nv_open(stakptr(offset), sh.var_tree, 0);
+				vp = nv_open(stakptr(offset), shp->var_tree, 0);
 				stakseek(offset);
 				pp = nv_getval(vp);
-				if (dirlen > 0 && n >= 3 && ep[-1] == 'n' && ep[-2] == 'i' && ep[-3] == 'b')
+				/* xpg4 test is workaround for solaris bug */
+				if (dirlen > 0 && n >= 3 && ep[-1] == 'n' && ep[-2] == 'i' && ep[-3] == 'b' && (n<8 || strcmp(&ep[-7],"xpg4/bin")))
 				{
 					n -= 3;
 					stakwrite(path, n);
@@ -852,23 +647,27 @@ static char *execs(const char *ap,const char *arg0,register char **argv, struct 
 							stakputs(pp);
 						}
 						stakputc(0);
-						c = 1;
+						r = 1;
 						if (pp)
 						{
 							char*	s;
 							char*	v = nv_name(vp);
 							int	n = strlen(v);
-							char**	xp = dp->envp + 2;
+							xp = dp->envp + 2;
 							while (s = *xp++)
 								if (strneq(s, v, n) && s[n] == '=')
 								{
-									*--xp = stakptr(offset);
-									c = 0;
+									xval = *--xp;
+									*xp = stakptr(offset);
+									r = 0;
 									break;
 								}
 						}
-						if (c)
+						if (r)
+						{
 							*dp->envp-- = stakptr(offset);
+							xp = 0;
+						}
 					}
 					break;
 				}
@@ -902,7 +701,9 @@ static char *execs(const char *ap,const char *arg0,register char **argv, struct 
 		path = sp;
 	}
 #endif /* SHELLMAGIC */
-	execve(path, &argv[0] ,dp->envp);
+	execve(opath, &argv[0] ,dp->envp);
+	if(xp)
+		*xp = xval;
 #ifdef SHELLMAGIC
 	if(*path=='.' && path!=opath)
 	{
@@ -926,7 +727,7 @@ static char *execs(const char *ap,const char *arg0,register char **argv, struct 
 	    case EPERM:
 		/* some systems return EPERM if setuid bit is on */
 #endif
-		exscript(path,argv,dp->envp);
+		exscript(shp,path,argv,dp->envp);
 #ifndef apollo
 	    case EACCES:
 	    {
@@ -949,7 +750,7 @@ static char *execs(const char *ap,const char *arg0,register char **argv, struct 
 #ifdef EMLINK
 	    case EMLINK:
 #endif /* EMLINK */
-		return(prefix);
+		return(pp);
 	    default:
 		errormsg(SH_DICT,ERROR_system(ERROR_NOEXEC),e_exec,path);
 	}
@@ -961,28 +762,24 @@ static char *execs(const char *ap,const char *arg0,register char **argv, struct 
  * Assume file is a Shell script and execute it.
  */
 
-
-static void exscript(register char *path,register char *argv[],char **envp)
-/*@
-	assume path!=NULL;
-	assume argv!=NULL && *argv!=NULL;
-@*/
+static void exscript(Shell_t *shp,register char *path,register char *argv[],char **envp)
 {
 	register Sfio_t *sp;
-	sh.comdiv=0;
-	sh.bckpid = 0;
-	sh.st.ioset=0;
+	path = path_relative(path);
+	shp->comdiv=0;
+	shp->bckpid = 0;
+	shp->st.ioset=0;
 	/* clean up any cooperating processes */
-	if(sh.cpipe[0]>0)
-		sh_pclose(sh.cpipe);
-	if(sh.cpid)
-		sh_close(*sh.outpipe);
-	sh.cpid = 0;
+	if(shp->cpipe[0]>0)
+		sh_pclose(shp->cpipe);
+	if(shp->cpid)
+		sh_close(*shp->outpipe);
+	shp->cpid = 0;
 	if(sp=fcfile())
 		while(sfstack(sp,SF_POPSTACK));
 	job_clear();
-	if(sh.infd>0)
-		sh_close(sh.infd);
+	if(shp->infd>0)
+		sh_close(shp->infd);
 	sh_setstate(SH_FORKED);
 	sfsync(sfstderr);
 #ifdef SHOPT_SUID_EXEC
@@ -1001,7 +798,7 @@ static void exscript(register char *path,register char *argv[],char **envp)
 				goto openok;
 			sh_close(n);
 		}
-		if((euserid=geteuid()) != sh.userid)
+		if((euserid=geteuid()) != shp->userid)
 		{
 			strncpy(name+9,fmtbase((long)getpid(),10,0),sizeof(name)-10);
 			/* create a suid open file with owner equal effective uid */
@@ -1030,26 +827,26 @@ static void exscript(register char *path,register char *argv[],char **envp)
 			errormsg(SH_DICT,ERROR_system(1),e_open,path);
 		*argv++ = savet;
 	openok:
-		sh.infd = n;
+		shp->infd = n;
 	}
 #else
-	sh.infd = sh_chkopen(path);
+	shp->infd = sh_chkopen(path);
 #endif /* SHOPT_SUID_EXEC */
 #ifdef SHOPT_ACCT
 	sh_accbegin(path) ;  /* reset accounting */
 #endif	/* SHOPT_ACCT */
-	sh.arglist = sh_argcreate(argv);
-	sh.lastarg = strdup(path);
+	shp->arglist = sh_argcreate(argv);
+	shp->lastarg = strdup(path);
 	/* save name of calling command */
-	sh.readscript = error_info.id;
+	shp->readscript = error_info.id;
 	/* close history file if name has changed */
-	if(sh.hist_ptr && (path=nv_getval(HISTFILE)) && strcmp(path,sh.hist_ptr->histname))
+	if(shp->hist_ptr && (path=nv_getval(HISTFILE)) && strcmp(path,shp->hist_ptr->histname))
 	{
-		hist_close(sh.hist_ptr);
+		hist_close(shp->hist_ptr);
 		(HISTCUR)->nvalue.lp = 0;
 	}
 	sh_offstate(SH_FORKED);
-	siglongjmp(*sh.jmplist,SH_JMPSCRIPT);
+	siglongjmp(*shp->jmplist,SH_JMPSCRIPT);
 }
 
 #ifdef SHOPT_ACCT
@@ -1142,4 +939,321 @@ static void exscript(register char *path,register char *argv[],char **envp)
 	return((exp<<13) + t);
     }
 #endif	/* SHOPT_ACCT */
+
+
+
+static void path_chkfpath(Pathcomp_t*, Pathcomp_t*, Pathcomp_t*, int);
+
+/*
+ * add a pathcomponent to the path search list and eliminate duplicates
+ * and non-existing absolute paths.
+ */
+static Pathcomp_t *path_addcomp(Pathcomp_t *first, Pathcomp_t *old,const char *name, int flag)
+{
+	register Pathcomp_t *pp, *oldpp;
+	struct stat statb;
+	int len, offset=staktell();
+	if(!(flag&PATH_BFPATH))
+	{
+		register const char *cp = name;
+		while(*cp && *cp!=':')
+			stakputc(*cp++);
+		len = staktell()-offset;
+		stakputc(0);
+	}
+	else
+		len = strlen(name);
+	stakseek(offset);
+	for(pp=first; pp; pp=pp->next)
+	{
+		if(memcmp(name,pp->name,len)==0 && (pp->name[len]==':' || pp->name[len]==0))
+		{
+			pp->flags |= flag;
+			return(first);
+		}
+	}
+	if(old && (old=path_dirfind(old,stakptr(offset),0)))
+	{
+		statb.st_ino = old->ino;
+		statb.st_dev = old->dev;
+		if(old->ino==0 && old->dev==0)
+			flag |= PATH_SKIP;
+	}
+	else if(stat(stakptr(offset),&statb)<0 || !S_ISDIR(statb.st_mode))
+	{
+		if(*name=='/')
+			return(first);
+		flag |= PATH_SKIP;
+		statb.st_ino = 0;
+		statb.st_dev = 0;
+	}
+	for(pp=first, oldpp=0; pp; oldpp=pp, pp=pp->next)
+	{
+		if(pp->ino==statb.st_ino && pp->dev==statb.st_dev)
+		{
+			/* if both absolute paths, eliminate second */
+			pp->flags |= flag;
+			if(*name=='/' && *pp->name=='/')
+				return(first);
+			/* keep the path but mark it as skip */
+			flag |= PATH_SKIP;
+		}
+	}
+	pp = newof((Pathcomp_t*)0,Pathcomp_t,1,len+1);
+	pp->refcount = 1;
+	memcpy((char*)(pp+1),stakptr(offset),len+1);
+	pp->name = (char*)(pp+1);
+	pp->len = len;
+	pp->dev = statb.st_dev;
+	pp->ino = statb.st_ino;
+	if(oldpp)
+		oldpp->next = pp;
+	else
+		first = pp;
+	pp->flags = flag;
+	if(flag!=PATH_PATH)
+		return(first);
+	path_chkfpath(first,old,pp,offset);
+	return(first);
+}
+
+/*
+ * This function checks for the .fpath file in directory in <pp>
+ * it assumes that the directory is on the stack at <offset> 
+ */
+static void path_chkfpath(Pathcomp_t *first, Pathcomp_t*old,Pathcomp_t *pp, int offset)
+{
+	struct stat statb;
+	int n,fd;
+	char *sp;
+	stakseek(offset+pp->len);
+	stakputs("/.fpath");
+	if((fd=open(stakptr(offset),O_RDONLY))>=0)
+	{
+		fstat(fd,&statb);
+		n = statb.st_size;
+		stakseek(offset+pp->len+n+2);
+		sp = stakptr(offset+pp->len);
+		*sp++ = '/';
+		n==read(fd,sp,n);
+		close(fd);
+		if(n>0)
+		{
+			sp += n;
+			while(sp[-1]=='\n' || sp[-1]=='\r') 
+				sp--;
+			*sp = 0;
+			stakseek(offset);
+			path_addcomp(first,old,stakptr(offset),PATH_FPATH|PATH_BFPATH);
+		}
+	}
+}
+
+
+Pathcomp_t *path_addpath(Pathcomp_t *first, register const char *path,int type)
+{
+	register const char *cp;
+	Pathcomp_t *old=0;
+	if(!path && type!=PATH_PATH)
+		return(first);
+	if(type!=PATH_FPATH)
+	{
+		old = first;
+		first = 0;
+	}
+	if(path) while(*(cp=path))
+	{
+		if(*cp==':')
+		{
+			if(type!=PATH_FPATH)
+				first = path_addcomp(first,old,".",type);
+			while(*++path == ':');
+		}
+		else
+		{
+			int c;
+			while(*path && *path!=':')
+				path++;
+			c = *path++;
+			first = path_addcomp(first,old,cp,type);
+			if(c==0)
+				break;
+			if(*path==0)
+				path--;
+		}
+	}
+	if(old)
+	{
+		if(!first && !path)
+			first = path_dup((Pathcomp_t*)(old->shp->defpathlist));
+		if(cp=(FPATHNOD)->nvalue.cp)
+			first = (void*)path_addpath((Pathcomp_t*)first,cp,PATH_FPATH);
+		path_delete(old);
+	}
+	return(first);
+}
+
+/*
+ * duplicate the path give by <first> by incremented reference counts
+ */
+Pathcomp_t *path_dup(Pathcomp_t *first)
+{
+	register Pathcomp_t *pp=first;
+	while(pp)
+	{
+		pp->refcount++;
+		pp = pp->next;
+	}
+	return(first);
+}
+
+/*
+ * called whenever the directory is changed
+ */
+void path_newdir(Pathcomp_t *first)
+{
+	register Pathcomp_t *pp=first, *next, *pq;
+	struct stat statb;
+	for(pp=first; pp; pp=pp->next)
+	{
+		pp->flags &= ~PATH_SKIP;
+		if(*pp->name=='/')
+			continue;
+		/* delete .fpath component */
+		if((next=pp->next) && (next->flags&PATH_BFPATH))
+		{
+			pp->next = next->next;
+			if(--next->refcount<=0)
+				free((void*)next);
+		}
+		if(stat(pp->name,&statb)<0 || !S_ISDIR(statb.st_mode))
+		{
+			pp->dev = 0;
+			pp->ino = 0;
+			continue;
+		}
+		pp->dev = statb.st_dev;
+		pp->ino = statb.st_ino;
+		for(pq=first;pq!=pp;pq=pq->next)
+		{
+			if(pp->ino==pq->ino && pp->dev==pq->dev)
+				pp->flags |= PATH_SKIP;
+		}
+		for(pq=pp;pq=pq->next;)
+		{
+			if(pp->ino==pq->ino && pp->dev==pq->dev)
+				pq->flags |= PATH_SKIP;
+		}
+		if(pp->flags==PATH_PATH)
+		{
+			/* try to insert .fpath component */
+			int offset = staktell();
+			stakputs(pp->name);
+			stakseek(offset);
+			next = pp->next;
+			pp->next = 0;
+			path_chkfpath(first,(Pathcomp_t*)0,pp,offset);
+			if(pp->next)
+				pp = pp->next;
+			pp->next = next;
+		}
+	}
+#if 0
+	path_dump(first);
+#endif
+}
+
+Pathcomp_t *path_unsetfpath(Pathcomp_t *first)
+{
+	register Pathcomp_t *pp=first, *old=0;
+	while(pp)
+	{
+		if((pp->flags&PATH_FPATH) && !(pp->flags&PATH_BFPATH))
+		{
+			if(pp->flags&PATH_PATH)
+				pp->flags &= ~PATH_FPATH;
+			else
+			{
+				Pathcomp_t *ppsave=pp;
+				if(old)
+					old->next = pp->next;
+				else
+					first = pp->next;
+				pp = pp->next;
+				if(--ppsave->refcount<=0)
+					free((void*)ppsave);
+				continue;
+			}
+			
+		}
+		old = pp;
+		pp = pp->next;
+	}
+	return(first);
+}
+
+Pathcomp_t *path_dirfind(Pathcomp_t *first,const char *name,int c)
+{
+	register Pathcomp_t *pp=first;
+	while(pp)
+	{
+		if(memcmp(name,pp->name,pp->len)==0 && name[pp->len]==c) 
+			return(pp);
+		pp = pp->next;
+	}
+	return(0);
+}
+
+/*
+ * get discipline for tracked alias
+ */
+static char *talias_get(Namval_t *np, Namfun_t *nvp)
+{
+	Pathcomp_t *pp = (Pathcomp_t*)np->nvalue.cp;
+	char *ptr;
+	if(!pp)
+		return(NULL);
+	path_nextcomp(pp,nv_name(np),pp);
+	ptr = stakfreeze(0);
+	return(ptr+PATH_OFFSET);
+}
+
+static void talias_put(register Namval_t* np,const char *val,int flags,Namfun_t *fp)
+{
+	if(!val && np->nvalue.cp)
+	{
+		Pathcomp_t *pp = (Pathcomp_t*)np->nvalue.cp;
+		if(--pp->refcount<=0)
+			free((void*)pp);
+	}
+	nv_putv(np,val,flags,fp);
+}
+
+static const Namdisc_t talias_disc   = { 0, talias_put, talias_get   };
+static Namfun_t  talias_init = { &talias_disc };
+
+/*
+ *  set tracked alias node <np> to value <pp>
+ */
+void path_alias(register Namval_t *np,register Pathcomp_t *pp)
+{
+	if(pp)
+	{
+		struct stat statb;
+		char *sp;
+		nv_offattr(np,NV_NOPRINT);
+		nv_stack(np,&talias_init);
+		np->nvalue.cp = (char*)pp;
+		pp->refcount++;
+		nv_setattr(np,NV_TAGGED|NV_NOFREE);
+		path_nextcomp(pp,nv_name(np),pp);
+		sp = stakptr(PATH_OFFSET);
+		if(sp && lstat(sp,&statb)>=0 && S_ISLNK(statb.st_mode))
+			nv_setsize(np,statb.st_size+1);
+		else
+			nv_setsize(np,0);
+	}
+	else
+		nv_unset(np);
+}
 

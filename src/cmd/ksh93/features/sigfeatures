@@ -1,5 +1,5 @@
 lib	sigblock,sigrelse,sigsetmask,sigprocmask,sigvec
-typ	sigset_t	ast.h,signal.h
+typ	sigset_t	ast.h signal.h
 mem	sigvec.sv_mask	signal.h
 cat{
 	#ifndef _mem_sigvec_sv_mask

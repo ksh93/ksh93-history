@@ -24,8 +24,12 @@
 #                 Phong Vo <kpv@research.att.com>                  #
 ####################################################################
 : generate sig features
-eval $1
-shift
+case $# in
+0)	;;
+*)	eval $1
+	shift
+	;;
+esac
 echo "#include <signal.h>
 int xxx;" > $tmp.c
 $cc -c $tmp.c >/dev/null 2>$tmp.e

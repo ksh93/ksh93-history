@@ -36,6 +36,7 @@
 #include	"FEATURE/options"
 #include	<cdt.h>
 #include	<history.h>
+#include	<env.h>
 #include	"fault.h"
 #include	"argnod.h"
 
@@ -81,6 +82,8 @@ struct limits
 	unsigned char	fs3d;		/* non-zero for 3-d file system */
 };
 
+typedef void (*Sh_init_f)(int);
+
 #define _SH_PRIVATE \
 	struct sh_scoped st;		/* scoped information */ \
 	struct limits	lim;		/* run time limits */ \
@@ -89,6 +92,7 @@ struct limits
 	int		savexit; \
 	char		*lastarg; \
 	char		*lastpath;	/* last alsolute path found */ \
+	int		path_err;	/* last error on path search */ \
 	Dt_t		*track_tree;	/* for tracked aliases*/ \
 	Namval_t	*bltin_nodes;	/* pointer to built-in variables */ \
 	Dt_t		*var_base;	/* global level variables */ \
@@ -137,15 +141,24 @@ struct limits
 	int		fn_depth; \
 	int		dot_depth; \
 	long		nforks; \
+	Env_t		*env; \
 	void		*init_context; \
 	void		*mac_context; \
 	void		*lex_context; \
 	void		*arg_context; \
 	void		*ed_context; \
 	void		*job_context; \
+	void		*pathlist; \
+	void		*defpathlist; \
+	void		*cdpathlist; \
+	char		**argaddr; \
+	void		*optlist; \
+	int		optcount ; \
 	struct sh_scoped global; \
 	struct checkpt	checkbase; \
-	void             (*userinit)(int); \
+	Sh_init_f	userinit; \
+	char		*cur_line; \
+	short		offsets[10]; \
 	char		ifstable[256];
 
 #include	<shell.h>
@@ -176,6 +189,7 @@ struct limits
 
 extern void 		*sh_argopen(Shell_t*);
 extern Namval_t		*sh_assignok(Namval_t*,int);
+extern char		*sh_checkid(char*,char*);
 extern int 		sh_echolist(Sfio_t*, int, char**);
 extern struct argnod	*sh_endword(int);
 extern char 		**sh_envgen(void);
@@ -190,6 +204,7 @@ extern void 		*sh_macopen(Shell_t*);
 extern char 		*sh_mactry(char*);
 extern int 		sh_readline(Shell_t*,char**,int,int,long);
 extern Sfio_t		*sh_sfeval(char*[]);
+extern void		sh_setmatch(Namval_t*,int,int,int[]);
 extern Dt_t		*sh_subaliastree(void);
 extern Dt_t		*sh_subfuntree(void);
 extern void		sh_subtmpfile(void);

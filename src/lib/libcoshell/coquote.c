@@ -37,13 +37,8 @@ coquote(register Sfio_t* sp, register const char* s, int type)
 {
 	register int	c;
 
-	static char*	match;
-
-	if (type)
-	{
-		if (!match && !(match = getenv(CO_ENV_TYPE))) match = "";
-		if (!*match) type = 0;
-	}
+	if (type && (!state.type || !*state.type))
+		type = 0;
 	while (c = *s++)
 	{
 		sfputc(sp, c);
@@ -53,10 +48,10 @@ coquote(register Sfio_t* sp, register const char* s, int type)
 			sfputc(sp, '\'');
 			sfputc(sp, '\'');
 		}
-		else if (type && c == '/' && *s == *match)
+		else if (type && c == '/' && *s == *state.type)
 		{
 			register const char*	x = s;
-			register char*		t = match;
+			register char*		t = state.type;
 
 			while (*t && *t++ == *x) x++;
 			if (!*t && *x == '/')

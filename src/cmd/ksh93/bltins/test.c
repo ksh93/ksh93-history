@@ -110,7 +110,7 @@ int b_test(int argc, char *argv[],void *extra)
 				if(argc==5)
 					break;
 				if(not && cp[0]=='-' && cp[2]==0)
-					return(test_unop(cp[1],argv[3]));
+					return(test_unop(cp[1],argv[3])!=0);
 				else if(argv[1][0]=='-' && argv[1][2]==0)
 					return(!test_unop(argv[1][1],cp));
 				errormsg(SH_DICT,ERROR_exit(2),e_badop,cp);
@@ -310,6 +310,9 @@ int test_unop(register int op,register const char *arg)
 #else
 		return(0);
 #endif /* S_ISVTX */
+#ifdef SHOPT_TEST_L
+	    case 'l':
+#endif
 	    case 'L':
 	    case 'h': /* undocumented, and hopefully will disappear */
 	    {

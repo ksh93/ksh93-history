@@ -160,7 +160,7 @@ if	[[ ${xx//\//\\} != 'a\b\c\d\e' ]]
 then	err_exit '${xx//\//\\} not working'
 fi
 x=[123]def
-if	[[ "${x//\[(*)\]/{\1\}}" != {123}def ]]
+if	[[ "${x//\[(*)\]/\{\1\}}" != {123}def ]]
 then	err_exit 'closing brace escape not working'
 fi
 unset foo
@@ -173,5 +173,73 @@ then	err_exit 'double quoting / in replacements failed'
 fi
 if	[[ ${foo//\//_} != one_two_three ]]
 then	err_exit 'escaping / in replacements failed'
+fi
+function myexport 
+{
+	nameref var=$1
+	if	(( $# > 1 ))
+	then	export	$1=$2
+	fi
+	if	(( $# > 2 ))
+	then	print $(myexport "$1" "$3" )
+		return
+	fi
+	typeset val
+	val=$(export | grep "$1=")
+	print ${val#"$1="}
+	
+}
+export dgk=base
+if	[[ $(myexport dgk fun) != fun ]]
+then	err_exit 'export inside function not working'
+fi
+val=$(export | grep "dgk=")
+if	[[ ${val#dgk=} != base ]]
+then	err_exit 'export not restored after function call'
+fi
+if	[[ $(myexport dgk fun fun2) != fun2 ]]
+then	err_exit 'export inside function not working with recursive function'
+fi
+val=$(export | grep "dgk=")
+if	[[ ${val#dgk=} != base ]]
+then	err_exit 'export not restored after recursive function call'
+fi
+if	[[ $(dgk=try3 myexport dgk) != try3 ]]
+then	err_exit 'name=value not added to export list with function call'
+fi
+val=$(export | grep "dgk=")
+if	[[ ${val#dgk=} != base ]]
+then	err_exit 'export not restored name=value function call'
+fi
+unset zzz
+if	[[ $(myexport zzz fun) != fun ]]
+then	err_exit 'export inside function not working for zzz'
+fi
+if	[[ $(export | grep "zzz=") ]]
+then	err_exit 'zzz exported after function call'
+fi
+set -- foo/bar bam/yes last/file/done
+if	[[ ${@/*\/@(*)/${.sh.match[1]}} != 'bar yes done' ]]
+then	err_exit '.sh.match not working with $@'
+fi
+if	[[ ${@/*\/@(*)/\1} != 'bar yes done' ]]
+then	err_exit '\1 not working with $@'
+fi
+var=(foo/bar bam/yes last/file/done)
+if	[[ ${var[@]/*\/@(*)/${.sh.match[1]}} != 'bar yes done' ]]
+then	err_exit '.sh.match not working with ${var[@]}'
+fi
+if	[[ ${var[@]/*\/@(*)/\1} != 'bar yes done' ]]
+then	err_exit '\1 not working with ${var[@]}'
+fi
+var='abc_d2ef.462abc %%'
+if	[[ ${var/+(\w)/Q} != 'Q.462abc %%' ]]
+then	err_exit '${var/+(\w)/Q} not workding'
+fi
+if	[[ ${var//+(\w)/Q} != 'Q.Q %%' ]]
+then	err_exit '${var//+(\w)/Q} not workding'
+fi
+if	[[ ${var//+(\S)/Q} != 'Q Q' ]]
+then	err_exit '${var//+(\S)/Q} not workding'
 fi
 exit $((Errors))

@@ -62,6 +62,11 @@
 #	define O_NONBLOCK	FNDELAY
 #   endif /* !O_NONBLOCK */
 #endif	/* FNDELAY */
+
+#ifndef O_SERVICE
+#   define O_SERVICE	O_NOCTTY
+#endif
+
 #define RW_ALL	(S_IRUSR|S_IRGRP|S_IROTH|S_IWUSR|S_IWGRP|S_IWOTH)
 
 static void	*timeout;
@@ -317,15 +322,17 @@ int sh_close(register int fd)
 	if(fd<0)
 		return(-1);
 	if(!(sp=sh.sftable[fd]) || sfclose(sp) < 0)
+	{
+		if(fdnotify)
+			(*fdnotify)(fd,SH_FDCLOSE);
 		r=close(fd);
+	}
 	if(fd>2)
 		sh.sftable[fd] = 0;
 	sh.fdstatus[fd] = IOCLOSE;
 	if(sh.fdptrs[fd])
 		*sh.fdptrs[fd] = -1;
 	sh.fdptrs[fd] = 0;
-	if(fdnotify)
-		(*fdnotify)(fd,SH_FDCLOSE);
 	return(r);
 }
 
@@ -366,10 +373,21 @@ int sh_open(register const char *path, int flags, ...)
 #ifdef SOCKET
 	if (strmatch(path, "/dev/@(tcp|udp)/*/*") && str2inet(path + 9, &addr))
 	{
-		if ((fd = socket(AF_INET, path[5] == 't' ? SOCK_STREAM : SOCK_DGRAM, 0)) >= 0 && connect(fd, (struct sockaddr*)&addr, sizeof(addr)))
+		if ((fd = socket(AF_INET, path[5] == 't' ? SOCK_STREAM : SOCK_DGRAM, 0)) >= 0)
 		{
-			close(fd);
-			fd = -1;
+			if(flags&O_SERVICE)
+			{
+				if(bind(fd, (struct sockaddr*)&addr, sizeof(addr)) || listen(fd,5))
+				{
+					close(fd);
+					fd = -1;
+				}
+			}
+			else if(connect(fd, (struct sockaddr*)&addr, sizeof(addr)))
+			{
+				close(fd);
+				fd = -1;
+			}
 		}
 	}
 	else
@@ -477,7 +495,7 @@ int	sh_redirect(struct ionod *iop, int flag)
 		io_op[3] = 0;
 		fname = iop->ioname;
 		if(!(iof&IORAW))
-			fname=sh_mactrim(fname,sh_isoption(SH_INTERACTIVE)?2:0);
+			fname=sh_mactrim(fname,(!sh_isoption(SH_NOGLOB)&&sh_isoption(SH_INTERACTIVE))?2:0);
 		errno=0;
 		if(*fname)
 		{
@@ -627,6 +645,8 @@ int	sh_redirect(struct ionod *iop, int flag)
 				sh.fdstatus[fd] |= IOCLEX;
 			}
 		}
+		else 
+			goto fail;
 	}
 	return(indx);
 fail:
@@ -1182,9 +1202,12 @@ static void	sftrack(Sfio_t* sp,int flag, int newfd)
 	register int fd = sffileno(sp);
 	register struct checkpt *pp;
 	register int mode;
-	if(flag==SF_SETFD && newfd<0)
+	if(flag==SF_SETFD || flag==SF_CLOSING)
 	{
-		flag = SF_CLOSE;
+		if(newfd<0)
+			flag = SF_CLOSING;
+		if(fdnotify)
+			(*fdnotify)(sffileno(sp),flag==SF_CLOSING?-1:newfd);
 	}
 #ifdef DEBUG
 	if(flag==SF_READ || flag==SF_WRITE)
@@ -1238,8 +1261,10 @@ static void	sftrack(Sfio_t* sp,int flag, int newfd)
 			item->next = pp->olist;
 			pp->olist = item;
 		}
+		if(fdnotify)
+			(*fdnotify)(-1,sffileno(sp));
 	}
-	else if(flag==SF_CLOSE)	
+	else if(flag==SF_CLOSING || (flag==SF_SETFD  && newfd<=2))
 	{
 		sh.sftable[fd] = 0;
 		sh.fdstatus[fd]=IOCLOSE;
@@ -1310,7 +1335,7 @@ static int eval_exceptf(Sfio_t *iop,int type, Sfdisc_t *handle)
 	/* no more to do */
 	if(type!=SF_READ || !(cp = ep->argv[0]))
 	{
-		if(type==SF_CLOSE)
+		if(type==SF_CLOSING)
 			sfdisc(iop,SF_POPDISC);
 		else if(ep && (type==SF_DPOP || type==SF_FINAL))
 			free((void*)ep);
@@ -1386,7 +1411,7 @@ static int subexcept(Sfio_t* sp,register int mode, Sfdisc_t* handle)
 #endif
 {
 	register struct subfile *disp = (struct subfile*)handle;
-	if(mode==SF_CLOSE)
+	if(mode==SF_CLOSING)
 	{
 		sfdisc(sp,SF_POPDISC);
 		return(0);
@@ -1608,3 +1633,19 @@ Notify_f    sh_fdnotify(Notify_f notify)
         return(old);
 }
 
+Sfio_t	*sh_fd2sfio(int fd)
+{
+	register int status;
+	Sfio_t *sp = sh.sftable[fd];
+	if(!sp  && (status = sh_iocheckfd(fd))!=IOCLOSE)
+	{
+		register int flags=0;
+		if(status&IOREAD)
+			flags |= SF_READ;
+		if(status&IOWRITE)
+			flags |= SF_WRITE;
+		sp = sfnew(NULL, NULL, -1, fd,flags);
+		sh.sftable[fd] = sp;
+	}
+	return(sp);
+}

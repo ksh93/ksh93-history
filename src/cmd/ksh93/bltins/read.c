@@ -241,34 +241,38 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 	}
 	if(flags&N_FLAG)
 	{
-		int n = size;
 		char buf[64],*var=buf;
 		/* reserved buffer */
-		if(n>=sizeof(buf))
+		if((c=size)>=sizeof(buf))
 		{
-			if(!(var = (char*)malloc(n+1)))
+			if(!(var = (char*)malloc(c+1)))
 				sh_exit(1);
 		}
-		cp = (unsigned char*)var;
-		while(size>0)
+		if(sfset(iop,SF_SHARE,0))
+			was_share = 2;
+		if(cp = sfreserve(iop,SF_UNBOUND,1))
+			c = sfvalue(iop);
+		else
+			c = 0;
+		if(c>size)
+			c = size;
+		if(c>0)
 		{
-			*cp = 0;
-			c = sfread(iop,(void*)cp,size);
-			if(c<=0)
-				break;
-			cp += c;
-			size -= c;
+			memcpy((void*)var,cp,c);
+			sfread(iop,cp,c);
 		}
-		*cp = 0;
+		var[c] = 0;
 		if(timeslot)
 			timerdel(timeslot);
 		nv_putval(np,var,0);
-		if(n>=sizeof(buf))
+		if(c>=sizeof(buf))
 			free((void*)var);
 		goto done;
 	}
-	else if(!(cp = (unsigned char*)sfgetr(iop,delim,0)))
-		cp = (unsigned char*)sfgetr(iop,delim,-1);
+	else if(cp = (unsigned char*)sfgetr(iop,delim,0))
+		c = sfvalue(iop);
+	else if(cp = (unsigned char*)sfgetr(iop,delim,-1))
+		c = sfvalue(iop)+1;
 	if(timeslot)
 		timerdel(timeslot);
 	if((flags&S_FLAG) && !shp->hist_ptr)
@@ -279,15 +283,15 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 	}
 	if(cp)
 	{
-		cpmax = cp + sfslen();
+		cpmax = cp + c;
 #ifdef SHOPT_CRNL
-		if(delim=='\n' && sfslen()>=2 && cpmax[-2]=='\r')
+		if(delim=='\n' && c>=2 && cpmax[-2]=='\r')
 			cpmax--;
 #endif /* SHOPT_CRNL */
 		if(*(cpmax-1) != delim)
 			*(cpmax-1) = delim;
 		if(flags&S_FLAG)
-			sfwrite(shp->hist_ptr->histfp,(char*)cp,sfslen());
+			sfwrite(shp->hist_ptr->histfp,(char*)cp,c);
 		c = shp->ifstable[*cp++];
 #ifndef SHOPT_MULTIBYTE
 		if(!name && (flags&R_FLAG)) /* special case single argument */
@@ -378,12 +382,15 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 			if(was_escape)
 			{
 				was_escape = 0;
-				if((cp = (unsigned char*)sfgetr(iop,delim,0)) ||
-				    (cp = (unsigned char*)sfgetr(iop,delim,-1)))
+				if(cp = (unsigned char*)sfgetr(iop,delim,0))
+					c = sfvalue(iop);
+				else if(cp=(unsigned char*)sfgetr(iop,delim,-1))
+					c = sfvalue(iop)+1;
+				if(cp)
 				{
 					if(flags&S_FLAG)
-						sfwrite(shp->hist_ptr->histfp,(char*)cp,sfslen());
-					cpmax = cp + sfslen();
+						sfwrite(shp->hist_ptr->histfp,(char*)cp,c);
+					cpmax = cp + c;
 					c = shp->ifstable[*cp++];
 					val=0;
 					if(!name && (c==S_SPACE || c==S_DELIM || c==S_MBYTE))
@@ -481,7 +488,13 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 		while(1)
 		{
 			if(sh_isoption(SH_ALLEXPORT)&&!strchr(nv_name(np),'.'))
+			{
+#ifdef _ENV_H
+				if(!nv_isattr(np,NV_EXPORT))
+					env_put(sh.env,np);
+#endif
 				nv_onattr(np,NV_EXPORT);
+			}
 			if(name)
 			{
 				nv_close(np);
@@ -510,7 +523,9 @@ done:
 	if(was_write)
 		sfset(iop,SF_WRITE,1);
 	if(fd==0 && !was_share)
-		was_share = sfset(iop,SF_SHARE,0);
+		sfset(iop,SF_SHARE,0);
+	else if (was_share==2)
+		sfset(iop,SF_SHARE,1);
 	nv_close(np);
 	if((flags>>D_FLAG) && (shp->fdstatus[fd]&IOTTY))
 		tty_cooked(fd);

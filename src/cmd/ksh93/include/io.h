@@ -36,6 +36,13 @@
 #endif /* IOBSIZE */
 #define IOMAXTRY	20
 
+#ifndef SF_CLOSING
+#define SF_CLOSING	SF_CLOSE
+#endif
+#ifndef SF_APPENDWR
+#define SF_APPENDWR	SF_APPEND
+#endif
+
 /* used for output of shell errors */
 #define ERRIO		2
 

@@ -1406,6 +1406,3 @@ static int _isword(register int c)
 	return((c&~STRIP) || isalnum(c) || c=='_');
 }
 #endif /* SHOPT_MULTIBYTE */
-#if __OBSOLETE__ < 20020101
-#include "../../lib/libast/string/fmtident.c"
-#endif

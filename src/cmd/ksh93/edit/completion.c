@@ -106,6 +106,7 @@ ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode)
 	comptr->comarg = ap;
 	ap->argflag = (ARG_MAC|ARG_EXP);
 	ap->argnxt.ap = 0;
+	ap->argchn.cp = 0;
 	{
 		register int c;
 		var = isaname(*out);
@@ -126,9 +127,12 @@ ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode)
 				else if(!isaname(c))
 					var = 0;
 			}
-			while(out>outbuff && !ismeta(c));
+			while(out>outbuff && !ismeta(c) && c!='`');
 			/* copy word into arg */
-			if(ismeta(c))
+			if(ismeta(c) || c=='`')
+				out++;
+			/* special handling for leading quotes */
+			if(*out=='\'' || *out=='"')
 				out++;
 		}
 		else
@@ -166,7 +170,7 @@ ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode)
 			stakputc(c);
 			out++;
 
-		} while (c && !ismeta(c));
+		} while (c && !ismeta(c) && c!='`');
 		if(!dir || *dir==0)
 			dir = ".";
 
@@ -207,6 +211,9 @@ ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode)
 			rval = -1;
 			goto done;
 		}
+		/* special handling for leading quotes */
+		if(begin>outbuff && (begin[-1]=='"' || begin[-1]=='\''))
+			begin--;
 		if(mode=='=')
 		{
 			if (strip && !cmd_completion)
@@ -284,8 +291,14 @@ ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode)
 				{
 					Namval_t *np;
 					/* add as tracked alias */
+#ifdef PATH_BFPATH
+					Pathcomp_t *pp;
+					if(*cp=='/' && (pp=path_dirfind(sh.pathlist,cp,'/')) && (np=nv_search(begin,sh.track_tree,NV_ADD)))
+						path_alias(np,pp);
+#else
 					if(*cp=='/' && (np=nv_search(begin,sh.track_tree,NV_ADD)))
 						path_alias(np,cp);
+#endif
 					out = strcopy(begin,cp);
 				}
 				/* add quotes if necessary */

@@ -40,18 +40,38 @@
 #include	"variables.h"
 #include	"FEATURE/locale"
 
+void xxxx(){}
+
 static Namval_t *scope(register Namval_t *np,register struct lval *lvalue,int assign)
 {
-	register Namval_t *mp;
 	register Namarr_t *ap;
-	if((lvalue->emode&ARITH_COMP) && dtvnext(sh.var_tree) && (mp=nv_search((char*)np,sh.var_tree,HASH_NOSCOPE|HASH_SCOPE|HASH_BUCKET)))
-		np = mp;
-	if(lvalue->flag)
+	register int flag = lvalue->flag;
+	if(lvalue->emode&ARITH_COMP)
+	{
+		char *cp = (char*)np;
+		register Namval_t *mp;
+		if(cp>=lvalue->expr &&  cp < lvalue->expr+strlen(lvalue->expr))
+		{
+			/* do bindiing to node now */
+			int c = cp[flag];
+			cp[flag] = 0;
+			np = nv_open(cp,sh.var_tree,NV_NOASSIGN|NV_VARNAME);
+xxxx();
+			cp[flag] = c;
+			if(cp[flag+1]=='[')
+				flag++;
+			else
+				flag = 0;
+		}
+		else if(dtvnext(sh.var_tree) && (mp=nv_search((char*)np,sh.var_tree,HASH_NOSCOPE|HASH_SCOPE|HASH_BUCKET)))
+			np = mp;
+	}
+	if(flag)
 	{
 		if(((ap=nv_arrayptr(np)) && array_assoc(ap)) || (lvalue->emode&ARITH_COMP))
-			nv_endsubscript(np,(char*)&lvalue->expr[lvalue->flag],NV_ADD);
+			nv_endsubscript(np,(char*)&lvalue->expr[flag],NV_ADD|NV_SUBQUOTE);
 		else
-			nv_putsub(np, NIL(char*),lvalue->flag);
+			nv_putsub(np, NIL(char*),flag);
 	}
 	return(np);
 }
@@ -79,7 +99,20 @@ static double arith(const char **ptr, struct lval *lvalue, int type, double n)
 		if(isaletter(c))
 		{
 			register Namval_t *np;
-			while(c= *++str, isaname(c)||c=='.');
+			int dot=0;
+			char *cp;
+			while(1)
+			{
+				while(c= *++str, isaname(c));
+				if(c!='.')
+					break;
+				dot=1;
+				if((c = *++str) !='[')
+					continue;
+				str = nv_endsubscript((Namval_t*)0,cp=str,NV_SUBQUOTE)-1;
+				if(sh_checkid(cp+1,(char*)0))
+					str -=2;
+			}
 			if(c=='(')
 			{
 				int fsize = str- (char*)(*ptr);
@@ -102,6 +135,12 @@ static double arith(const char **ptr, struct lval *lvalue, int type, double n)
 				lvalue->value = (char*)ERROR_dictionary(e_function);
 				return(r);
 			}
+			if((lvalue->emode&ARITH_COMP) && dot)
+			{
+				lvalue->value = (char*)*ptr;
+				lvalue->flag =  str-lvalue->value;
+				break;
+			}
 			*str = 0;
 			if(sh_isoption(SH_NOEXEC))
 				np = L_ARGNOD;
@@ -121,7 +160,7 @@ static double arith(const char **ptr, struct lval *lvalue, int type, double n)
 				break;
 			}
 			if(c=='[')
-				str = nv_endsubscript(np,str,NV_ADD);
+				str = nv_endsubscript(np,str,NV_ADD|NV_SUBQUOTE);
 			else if(nv_isarray(np))
 				nv_putsub(np,NIL(char*),ARRAY_UNDEF);
 			if(nv_isattr(np,NV_INTEGER|NV_DOUBLE)==(NV_INTEGER|NV_DOUBLE))
@@ -130,11 +169,13 @@ static double arith(const char **ptr, struct lval *lvalue, int type, double n)
 		}
 		else
 		{
-			char	lastbase=0, *val = str;
+			char	lastbase=0, *val = str, oerrno = errno;
+			errno = 0;
 			r = strton(val,&str, &lastbase,-1);
 			if(*str=='8' || *str=='9')
 			{
 				lastbase=10;
+				errno = 0;
 				r = strton(val,&str, &lastbase,-1);
 			}
 			if(lastbase<=1)
@@ -146,7 +187,11 @@ static double arith(const char **ptr, struct lval *lvalue, int type, double n)
 				if(*val==0 || *val=='.')
 					val--;
 			}
-			if((c= *str)==GETDECIMAL(0) || c=='e' || c == 'E')
+			if(r==LONG_MAX && errno)
+				c='e';
+			else
+				c = *str;
+			if(c==GETDECIMAL(0) || c=='e' || c == 'E')
 			{
 				lvalue->isfloat=1;
 				r = strtod(val,&str);
@@ -166,6 +211,7 @@ static double arith(const char **ptr, struct lval *lvalue, int type, double n)
 					}
 				}
 			}
+			errno = oerrno;
 		}
 		break;
 	    }
@@ -179,6 +225,7 @@ static double arith(const char **ptr, struct lval *lvalue, int type, double n)
 		{
 			*ptr = nv_name(np);
 			lvalue->value = (char*)ERROR_dictionary(e_notset);
+			lvalue->emode |= 010;
 			return(0);
 		}
 		r = nv_getnum(np);
@@ -217,8 +264,9 @@ double sh_arith(register const char *str)
 	register double d;
 	if(*str==0)
 		return(0);
+	errno = 0;
 	d = strton(str,(char**)&ptr,&base,-1);
-	if(*ptr)
+	if(*ptr || errno)
 	{
 		d = strval(str,(char**)&ptr,arith,1);
 		if(*ptr)

@@ -238,4 +238,35 @@ float z=7.5
 if	{ (( z%2 != 1));} 2> /dev/null
 then	err_exit '% not working on floating point'
 fi
+chr= (a ' ' '=' '\r' '\n' '\\' '\"' '$' "\\'" '[' ']' '(' ')' '<' '\xab' '\040' '`' '{' '}' '*' '\E')
+val=(97 32  61 13 10 92 34 36 39 91 93 40 41 60 171 32 96 123 125 42 27)
+q=0
+for ((i=0; i < ${#chr[@]}; i++))
+do	if	(( '${chr[i]}' != ${val[i]} ))
+	then	err_exit "(( '${chr[i]}'  !=  ${val[i]} ))"
+	fi
+	if	[[ $(( '${chr[i]}' )) != ${val[i]} ]]
+	then	err_exit "(( '${chr[i]}' )) !=  ${val[i]}"
+	fi
+	if	[[ $(( L'${chr[i]}' )) != ${val[i]} ]]
+	then	err_exit "(( '${chr[i]}' )) !=  ${val[i]}"
+	fi
+	if	eval '((' "'${chr[i]}'" != ${val[i]} '))'
+	then	err_exit "eval (( '${chr[i]}'  !=  ${val[i]} ))"
+	fi
+	if	eval '((' "'${chr[i]}'" != ${val[i]} ' + $q ))'
+	then	err_exit "eval (( '${chr[i]}'  !=  ${val[i]} ))"
+	fi
+done
+unset x
+typeset -ui x=4294967293
+[[ $x != 4294967293 ]]  && err_exit "unsigned integers not working"
+x=32767
+x=x+1
+[[ $x != 32768 ]]  && err_exit "unsigned integer addition not working"
+unset x
+float x=99999999999999999999999999
+if	(( x < 1e20 ))
+then	err_exit 'large integer constants not working'
+fi
 exit $((Errors))

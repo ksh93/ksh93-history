@@ -147,6 +147,9 @@ trap 'print HUP' HUP
 if	[[ $(trap) != "trap -- 'print HUP' HUP" ]]
 then	err_exit '$(trap) not working'
 fi
+if	[[ $(trap -p HUP) != 'print HUP' ]]
+then	err_exit '$(trap -p HUP) not working'
+fi
 n=123
 typeset -A base
 base[o]=8#
@@ -188,6 +191,10 @@ fi
 float x2=.0000625
 if	[[ $(printf "%10.5E\n" x2) != 6.25000E-05 ]]
 then	err_exit 'printf "%10.5E" not normalizing correctly'
+fi
+x2=.000000001
+if	[[ $(printf "%g\n" x2 2>/dev/null) != 1e-09 ]]
+then	err_exit 'printf "%g" not working correctly'
 fi
 ($SHELL read -s foobar <<\!
 testing
@@ -244,4 +251,27 @@ abc
 if      [[ $y != a ]]
 then    err_exit  'read -n1 not working'
 fi
+print -n $'{ read -r line;print $line;}\nhello' > /tmp/ksh$$
+chmod 755 /tmp/ksh$$
+trap 'rm -rf /tmp/ksh$$' EXIT
+if	[[ $($SHELL < /tmp/ksh$$) != hello ]]
+then	err_exit 'read of incomplete line not working correctly'
+fi
+set -f
+set -- *
+if      [[ $1 != '*' ]]
+then    err_exit 'set -f not working'
+fi
+unset pid1 pid2
+false &
+pid1=$!
+pid2=$(
+	wait $pid1
+	(( $? == 127 )) || err_exit "job known to subshell"
+	print $!
+)
+wait $pid1
+(( $? == 1 )) || err_exit "wait not saving exit value"
+wait $pid2
+(( $? == 127 )) || err_exit "subshell job known to parent"
 exit $((Errors))

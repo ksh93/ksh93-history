@@ -31,7 +31,7 @@
  */
 
 static const char usage_head[] =
-"[-?@(#)$Id: cp (AT&T Labs Research) 2000-09-20 $\n]"
+"[-?@(#)$Id: cp (AT&T Labs Research) 2001-03-07 $\n]"
 USAGE_LICENSE
 ;
 
@@ -175,6 +175,8 @@ static struct				/* program state		*/
 
 	char		text[PATH_MAX];	/* link text buffer		*/
 } state;
+
+static char	dot[2] = { '.' };
 
 /*
  * preserve support
@@ -469,7 +471,7 @@ visit(register Ftw_t* ftw)
 			}
 			else
 			{
-				e = ".";
+				e = dot;
 				s = state.path;
 			}
 			n = strlen(s);
@@ -768,7 +770,7 @@ b_cp(int argc, register char** argv, void* context)
 	if (!argc && strcmp(astconf("CONFORMANCE", NiL, NiL), "standard"))
 	{
 		argc++;
-		argv[1] = ".";
+		argv[1] = dot;
 	}
 	if (state.backup)
 	{

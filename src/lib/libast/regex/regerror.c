@@ -29,7 +29,7 @@
  * posix regex error message handler
  */
 
-const char id[] = "\n@(#)$Id: regex (AT&T Research) 1999-04-23 $\0\n";
+const char id[] = "\n@(#)$Id: regex (AT&T Research) 2001-06-18 $\0\n";
 
 #include "reglib.h"
 
@@ -54,6 +54,7 @@ static const char*	reg_error[] =
 	/* REG_ECOUNT	*/	"re component count overflow",
 	/* REG_BADESC	*/	"invalid \\char escape",
 	/* REG_VERSIONID*/	&id[10],
+	/* REG_PANIC	*/	"unrecoverable internal error",
 };
 
 size_t
@@ -62,7 +63,12 @@ regerror(int code, const regex_t* p, char* buf, size_t size)
 	const char*	s;
 
 	NoP(p);
-	s = ++code >= 0 && code < elementsof(reg_error) ? reg_error[code] : (const char*)"unknown error";
+	if (code++ == REG_VERSIONID)
+		s = (const char*)fmtident(&id[1]);
+	else if (code >= 0 && code < elementsof(reg_error))
+		s = reg_error[code];
+	else
+		s = (const char*)"unknown error";
 	if (size)
 	{
 		strncpy(buf, s, size);

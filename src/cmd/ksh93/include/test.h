@@ -30,6 +30,7 @@
  *
  */
 
+#include	"FEATURE/options"
 #include	"shtable.h"
 /*
  *  These are the valid test operators

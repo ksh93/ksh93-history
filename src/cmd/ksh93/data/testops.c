@@ -88,7 +88,11 @@ USAGE_LICENSE
 	"[+-f \afile\a?True if \afile\a exists and is a regular file.]"
 	"[+-g \afile\a?True if \afile\a exists and has its set-group-id bit "
 		"set.]"
+	"[+-h \afile\a?True if \afile\a exists and is a symbolic link.]"
 	"[+-k \afile\a?True if \afile\a exists and has its sticky bit on.]"
+#ifdef SHOPT_TEST_L
+	"[+-l \afile\a?True if \afile\a exists and is a symbolic link.]"
+#endif
 	"[+-n \astring\a?True if length of \astring\a is non-zero.]"
 	"[+-o \aoption\a?True if the shell option \aoption\a is enabled.]"
 	"[+-p \afile\a?True if \afile\a exists and is a pipe or fifo.]"
@@ -148,7 +152,11 @@ USAGE_LICENSE
 "[+SEE ALSO?\blet\b(1), \bexpr\b(1)]"
 ;
 
-const char test_opchars[]	= "HLSVOGCaeohrwxdcbfugkpsnzt";
+const char test_opchars[]	= "HLSVOGCaeohrwxdcbfugk"
+#ifdef SHOPT_TEST_L
+	"l"
+#endif
+				"psnzt";
 const char e_argument[]		= "argument expected";
 const char e_missing[]		= "%s missing";
 const char e_badop[]		= "%s: unknown operator";

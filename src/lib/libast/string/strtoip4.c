@@ -101,12 +101,13 @@ strtoip4(register const char* s, char** e, unsigned _ast_int4_t* paddr, unsigned
 		if (c == '/')
 		{
 			part = 0;
+			z = 0;
 			for (;;)
 			{
 				n = 0;
 				while ((c = *s++) >= '0' && c <= '9')
 					n = n * 10 + (c - '0');
-				bits = (bits << 8) | n;
+				z = (z << 8) | n;
 				part++;
 				if (c != '.')
 					break;
@@ -114,19 +115,16 @@ strtoip4(register const char* s, char** e, unsigned _ast_int4_t* paddr, unsigned
 			}
 			if (part > 4)
 				return -1;
-			if (old && (part > 1 || bits > 32))
+			if (z <= 32 && (!old || part < 2))
+				bits = z;
+			else if (z)
 			{
-				z = bits;
-				bits = 0;
-				if (z)
+				while (!(z & 1))
+					z >>= 1;
+				while (z & 1)
 				{
-					while (!(z & 1))
-						z >>= 1;
-					while (z & 1)
-					{
-						z >>= 1;
-						bits++;
-					}
+					z >>= 1;
+					bits++;
 				}
 			}
 		}

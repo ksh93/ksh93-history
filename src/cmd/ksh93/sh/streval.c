@@ -353,7 +353,7 @@ static int gettok(register struct vars *vp)
 			vp->nextchr--;
 			break;
 			/*FALL THRU*/
-		    case A_DIG: case A_REG: case A_DOT:
+		    case A_DIG: case A_REG: case A_DOT: case A_LIT:
 			if(op==A_DOT)
 			{
 				if((c=peekchr(vp))>='0' && c<='9')
@@ -444,7 +444,7 @@ static int expr(register struct vars *vp,register int precedence)
 	{
 		assignop.value = 0;
 		op = gettok(vp);
-		if(op==A_DIG || op==A_REG)
+		if(op==A_DIG || op==A_REG || op==A_LIT)
 		{
 			if(!wasop)
 				ERROR(vp,e_synbad);
@@ -636,18 +636,43 @@ static int expr(register struct vars *vp,register int precedence)
 			ERROR(vp,e_synbad);
 		number:
 			wasop = 0;
+			if(*vp->nextchr=='L' && vp->nextchr[1]=='\'')
+			{
+				vp->nextchr++;
+				op = A_LIT;
+			}
 			pos = vp->nextchr;
 			lvalue.isfloat = 0;
 			lvalue.expr = vp->expr;
 			lvalue.emode = vp->emode;
-			d = (*vp->convert)(&vp->nextchr, &lvalue, LOOKUP, d);
+			if(op==A_LIT)
+			{
+				/* character constants */
+				if(pos[1]=='\\' && pos[2]=='\'' && pos[3]!='\'')
+				{
+					d = '\\';
+					vp->nextchr +=2;
+				}
+				else
+					d = chresc(pos+1,(char**)&vp->nextchr);
+				if(*vp->nextchr=='\'')
+					vp->nextchr++;
+				else
+				{
+					vp->nextchr = pos;
+					vp->errmsg.value = "invalid character constant";
+				}
+
+			}
+			else
+				d = (*vp->convert)(&vp->nextchr, &lvalue, LOOKUP, d);
 			if (vp->nextchr == pos)
 			{
 				if(vp->errmsg.value = lvalue.value)
 					vp->errstr = pos;
-				ERROR(vp,e_synbad);
+				ERROR(vp,op==A_LIT?e_charconst:e_synbad);
 			}
-			if(op==A_DIG)
+			if(op==A_DIG || op==A_LIT)
 			{
 				stakputc(A_PUSHN);
 				if(vp->staksize++>=vp->stakmaxsize)
@@ -756,20 +781,36 @@ double strval(const char *s,char **end,double(*conv)(const char**,struct lval*,i
 #define extern			__EXPORT__
 #endif
 
+#ifndef DOMAIN
+#define DOMAIN			_DOMAIN
+#endif
+#ifndef OVERFLOW
+#define OVERFLOW		_OVERFLOW
+#endif
+#ifndef SING
+#define SING			_SING
+#endif
+
     extern int matherr(struct exception *ep)
     {
 	const char *message;
 	switch(ep->type)
 	{
+#ifdef DOMAIN
 	    case DOMAIN:
 		message = ERROR_dictionary(e_domain);
 		break;
-	    case SING:
-		message = ERROR_dictionary(e_singularity);
-		break;
+#endif
+#ifdef OVERFLOW
 	    case OVERFLOW:
 		message = ERROR_dictionary(e_overflow);
 		break;
+#endif
+#ifdef SING
+	    case SING:
+		message = ERROR_dictionary(e_singularity);
+		break;
+#endif
 	    default:
 		return(1);
 	}

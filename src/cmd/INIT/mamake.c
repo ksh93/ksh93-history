@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1999-2001 AT&T Corp.                *
+*                Copyright (c) 1990-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -29,7 +29,7 @@
  * coded for portability
  */
 
-static char id[] = "\n@(#)$Id: mamake (AT&T Labs Research) 2001-01-01 $\0\n";
+static char id[] = "\n@(#)$Id: mamake (AT&T Labs Research) 2001-05-01 $\0\n";
 
 #if _PACKAGE_ast
 
@@ -37,7 +37,7 @@ static char id[] = "\n@(#)$Id: mamake (AT&T Labs Research) 2001-01-01 $\0\n";
 #include <error.h>
 
 static const char usage[] =
-"[-?\n@(#)$Id: mamake (AT&T Labs Research) 2001-01-01 $\n]"
+"[-?\n@(#)$Id: mamake (AT&T Labs Research) 2001-05-01 $\n]"
 USAGE_LICENSE
 "[+NAME?mamake - make abstract machine make]"
 "[+DESCRIPTION?\bmamake\b reads \amake abstract machine\a target and"
@@ -102,6 +102,11 @@ USAGE_LICENSE
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#if !_PACKAGE_ast && defined(__STDC__)
+#include <stdlib.h>
+#include <string.h>
+#endif
+
 #define add(b,c)	(((b)->nxt >= (b)->end) ? append(b, "") : NiL, *(b)->nxt++ = (c))
 #define delimiter(c)	((c)==' '||(c)=='\t'||(c)=='\n'||(c)==';'||(c)=='('||(c)==')'||(c)=='`'||(c)=='|'||(c)=='&'||(c)=='=')
 #define use(b)		(*(b)->nxt=0,(b)->nxt=(b)->buf)
@@ -137,6 +142,7 @@ typedef FILE Stdio_t;
 
 typedef struct Buf_s			/* buffer stream		*/
 {
+	struct Buf_s*	old;		/* next dropped buffer		*/
 	char*		end;		/* 1 past end of buffer		*/
 	char*		nxt;		/* next char to add		*/
 	char*		buf;		/* buffer space			*/
@@ -189,12 +195,11 @@ typedef struct View_s			/* viewpath level		*/
 static struct				/* program state		*/
 {
 	Buf_t*		buf;		/* work buffer			*/
-	Buf_t*		cmd;		/* execution buffer		*/
-	Buf_t*		nam;		/* find name buffer		*/
+	Buf_t*		old;		/* dropped buffers		*/
 	Buf_t*		opt;		/* option buffer		*/
-	Buf_t*		tmp;		/* temporary buffer		*/
 
 	Dict_t*		leaf;		/* recursion leaf dictionary	*/
+	Dict_t*		libs;		/* library dictionary		*/
 	Dict_t*		rules;		/* rule dictionary		*/
 	Dict_t*		vars;		/* variable dictionary		*/
 
@@ -205,6 +210,7 @@ static struct				/* program state		*/
 	char*		file;		/* first input file		*/
 	char*		pwd;		/* current directory		*/
 	char*		recurse;	/* recursion pattern		*/
+	char*		shell;		/* ${SHELL}			*/
 
 	int		active;		/* targets currently active	*/
 	int		debug;		/* negative of debug level	*/
@@ -219,8 +225,6 @@ static struct				/* program state		*/
 	int		probed;		/* probe already done		*/
 	int		verified;	/* don't bother with verify()	*/
 
-	Stat_t		ls;		/* last stat() info		*/
-
 	Stream_t	streams[4];	/* input file stream stack	*/
 	Stream_t*	sp;		/* input stream stack pointer	*/
 
@@ -228,6 +232,8 @@ static struct				/* program state		*/
 } state;
 
 static unsigned long	make(Rule_t*);
+
+static char		sh[] = "/bin/sh";
 
 extern char**		environ;
 
@@ -356,11 +362,24 @@ buffer(void)
 {
 	register Buf_t*	buf;
 
-	if (!(buf = newof(0, Buf_t, 1, 0)) || !(buf->buf = newof(0, char, CHUNK, 0)))
+	if (buf = state.old)
+		state.old = state.old->old;
+	else if (!(buf = newof(0, Buf_t, 1, 0)) || !(buf->buf = newof(0, char, CHUNK, 0)))
 		report(3, "out of space [buffer]", NiL);
 	buf->end = buf->buf + CHUNK;
 	buf->nxt = buf->buf;
 	return buf;
+}
+
+/*
+ * close a buffer stream
+ */
+
+static void
+drop(Buf_t* buf)
+{
+	buf->old = state.old;
+	state.old = buf;
 }
 
 /*
@@ -608,6 +627,8 @@ view(void)
 	Stat_t			st;
 	Stat_t			ts;
 
+	char			buf[1024];
+
 	if (stat(".", &st))
 		report(3, "cannot stat", ".");
 	if ((s = (char*)search(state.vars, "PWD", NiL)) && !stat(s, &ts) &&
@@ -615,9 +636,9 @@ view(void)
 		state.pwd = s;
 	if (!state.pwd)
 	{
-		if (!getcwd(state.buf->buf, state.buf->end - state.buf->buf - 1))
+		if (!getcwd(buf, sizeof(buf) - 1))
 			report(3, "cannot determine PWD", NiL);
-		state.pwd = duplicate(state.buf->buf);
+		state.pwd = duplicate(buf);
 		search(state.vars, "PWD", state.pwd);
 	}
 	if ((s = (char*)search(state.vars, "VPATH", NiL)) && *s)
@@ -762,18 +783,18 @@ expand(Buf_t* buf, char* s)
 }
 
 /*
- * return path to file (using state.nam and state.ls)
+ * return path to file
  */
 
 static char*
-find(char* file)
+find(Buf_t* buf, char* file, struct stat* st)
 {
 	char*		s;
 	View_t*		vp;
 	int		node;
 	int		c;
 
-	if (!stat(file, &state.ls))
+	if (!stat(file, st))
 	{
 		report(-2, file, "find");
 		return file;
@@ -802,17 +823,17 @@ find(char* file)
 				{
 					c = vp->dir[vp->node];
 					vp->dir[vp->node] = 0;
-					append(state.nam, vp->dir);
+					append(buf, vp->dir);
 					vp->dir[vp->node] = c;
 				}
 				else
 				{
-					append(state.nam, vp->dir);
-					append(state.nam, "/");
+					append(buf, vp->dir);
+					append(buf, "/");
 				}
-				append(state.nam, file);
-				s = use(state.nam);
-				if (!stat(s, &state.ls))
+				append(buf, file);
+				s = use(buf);
+				if (!stat(s, st))
 				{
 					report(-2, s, "find");
 					return s;
@@ -830,15 +851,19 @@ find(char* file)
 static unsigned long
 bind(Rule_t* r)
 {
-	char*	s;
+	char*		s;
+	Buf_t*		buf;
+	struct stat	st;
 
-	if (s = find(r->name))
+	buf = buffer();
+	if (s = find(buf, r->name, &st))
 	{
 		if (s != r->name)
 			r->path = duplicate(s);
-		r->time = state.ls.st_mtime;
+		r->time = st.st_mtime;
 		r->flags |= RULE_exists;
 	}
+	drop(buf);
 	return r->time;
 }
 
@@ -873,7 +898,9 @@ pop(void)
 static int
 push(char* file, Stdio_t* fp, int flags)
 {
-	char*	path;
+	char*		path;
+	Buf_t*		buf;
+	struct stat	st;
 
 	if (!state.sp)
 		state.sp = state.streams;
@@ -889,18 +916,24 @@ push(char* file, Stdio_t* fp, int flags)
 		state.sp->file = "/dev/stdin";
 		state.sp->fp = stdin;
 	}
-	else if (path = find(file))
-	{
-		if (!(state.sp->fp = fopen(path, "r")))
-			report(3, "cannot read", path);
-		state.sp->file = duplicate(path);
-	}
 	else
 	{
-		pop();
-		if (flags & STREAM_MUST)
-			report(3, "not found", file);
-		return 0;
+		buf = buffer();
+		if (path = find(buf, file, &st))
+		{
+			if (!(state.sp->fp = fopen(path, "r")))
+				report(3, "cannot read", path);
+			state.sp->file = duplicate(path);
+			drop(buf);
+		}
+		else
+		{
+			drop(buf);
+			pop();
+			if (flags & STREAM_MUST)
+				report(3, "not found", file);
+			return 0;
+		}
 	}
 	state.sp->flags = flags;
 	state.sp->line = 0;
@@ -929,6 +962,45 @@ input(void)
 }
 
 /*
+ * pass shell action s to ${SHELL:-/bin/sh}
+ */
+
+static int
+execute(register char* s)
+{
+	register int	c;
+	Buf_t*		buf;
+
+	if (!state.shell && (!(state.shell = (char*)search(state.vars, "SHELL", NiL)) || !strcmp(state.shell, sh)))
+		state.shell = sh;
+	buf = buffer();
+	if (state.shell != sh)
+	{
+		append(buf, state.shell);
+		append(buf, " -c '");
+		while (c = *s++)
+		{
+			if (c == '\'')
+			{
+				add(buf, c);
+				for (s--; *s == c; s++)
+				{
+					add(buf, '\\');
+					add(buf, c);
+				} 
+			}
+			add(buf, c);
+		}
+		add(buf, '\'');
+		s = use(buf);
+	}
+	if ((c = system(s)) > 255)
+		c >>= 8;
+	drop(buf);
+	return c;
+}
+
+/*
  * run action s to update r
  */
 
@@ -943,9 +1015,11 @@ run(Rule_t* r, register char* s)
 	int			j;
 	int			x;
 	Stat_t			st;
+	Buf_t*			buf;
 
 	if (r->flags & RULE_error)
 		return r->time;
+	buf = buffer();
 	if (!strncmp(s, "mamake -r ", 10))
 	{
 		state.verified = 1;
@@ -954,26 +1028,26 @@ run(Rule_t* r, register char* s)
 	else
 		x = state.exec;
 	if (x)
-		append(state.cmd, "PATH=.:$PATH\nset -x\n");
+		append(buf, "trap - 1 2 3 15\nPATH=.:$PATH\nset -x\n");
 	if (state.view)
 	{
 		do
 		{
 			for (; delimiter(*s); s++)
-				add(state.cmd, *s);
+				add(buf, *s);
 			for (t = s; *s && !delimiter(*s); s++);
 			c = *s;
 			*s = 0;
 			if (c == '=')
 			{
-				append(state.cmd, t);
+				append(buf, t);
 				continue;
 			}
 			if ((q = (Rule_t*)search(state.rules, t, NiL)) && q->path && !(q->flags & RULE_generated))
-				append(state.cmd, q->path);
+				append(buf, q->path);
 			else
 			{
-				append(state.cmd, t);
+				append(buf, t);
 				if (*t == '-' && *(t + 1) == 'I' && (*(t + 2) || c))
 				{
 					if (*(t + 2))
@@ -985,42 +1059,38 @@ run(Rule_t* r, register char* s)
 						for (s = t + i; *s && *s != ' ' && *s != '\t' && *s != '\n'; s++);
 						c = *s;
 						*s = 0;
-						append(state.cmd, t + 2);
+						append(buf, t + 2);
 					}
 					if (*(t + i) && *(t + i) != '/')
 					{
 						v = state.view;
 						while (v = v->next)
 						{
-							add(state.cmd, ' ');
+							add(buf, ' ');
 							for (j = 0; j < i; j++)
-								add(state.cmd, *(t + j));
-							append(state.cmd, v->dir);
+								add(buf, *(t + j));
+							append(buf, v->dir);
 							if (*(t + i) != '.' || *(t + i + 1))
 							{
-								add(state.cmd, '/');
-								append(state.cmd, t + i);
+								add(buf, '/');
+								append(buf, t + i);
 							}
 						}
 					}
 				}
 			}
 		} while (*s = c);
-		s = use(state.cmd);
+		s = use(buf);
 	}
 	else if (x)
 	{
-		append(state.cmd, s);
-		s = use(state.cmd);
+		append(buf, s);
+		s = use(buf);
 	}
 	if (x)
 	{
-		if (c = system(s))
-		{
-			if (c > 255)
-				c >>= 8;
+		if (c = execute(s))
 			dont(r, c, state.keepgoing);
-		}
 		if (stat(r->name, &st))
 			r->time = NOW;
 		else
@@ -1035,6 +1105,7 @@ run(Rule_t* r, register char* s)
 		r->time = NOW;
 		r->flags |= RULE_exists;
 	}
+	drop(buf);
 	return r->time;
 }
 
@@ -1095,30 +1166,37 @@ probe(void)
 	register char*	cc;
 	register char*	s;
 	unsigned long	h;
+	Buf_t*		buf;
+	Buf_t*		tmp;
+
+	static char	let[] = "ABCDEFGHIJKLMNOP";
 
 	if (!(cc = (char*)search(state.vars, "CC", NiL)))
 		cc = "cc";
-	s = path(state.tmp, cc, 1);
+	buf = buffer();
+	s = path(buf, cc, 1);
 	for (h = 0; *s; s++)
 		h = h * 0x63c63cd9L + *s + 0x9c39c33dL;
 	if (!(s = (char*)search(state.vars, "INSTALLROOT", NiL)))
 		report(3, "variable must be defined", "INSTALLROOT");
-	append(state.tmp, s);
-	append(state.tmp, "/lib/probe/C/mam/");
+	append(buf, s);
+	append(buf, "/lib/probe/C/mam/");
 	for (; h; h >>= 4)
-		add(state.tmp, 'A' + (h & 0xf));
-	s = use(state.tmp);
+		add(buf, let[h & 0xf]);
+	s = use(buf);
 	if (!push(s, (Stdio_t*)0, 0))
 	{
-		append(state.cmd, "mamprobe ");
-		append(state.cmd, s);
-		add(state.cmd, ' ');
-		append(state.cmd, cc);
-		if (system(use(state.cmd)))
+		tmp = buffer();
+		append(tmp, "mamprobe ");
+		append(tmp, s);
+		add(tmp, ' ');
+		append(tmp, cc);
+		if (execute(use(tmp)))
 			report(3, "cannot generate probe info", s);
 		if (!push(s, (Stdio_t*)0, 0))
 			report(3, "cannot read probe info", s);
 	}
+	drop(buf);
 	make(rule(""));
 	pop();
 }
@@ -1161,6 +1239,109 @@ attributes(register Rule_t* r, register char* s)
 	}
 }
 
+typedef struct Req_s
+{
+	int		hit;
+	char*		req;
+} Req_t;
+
+/*
+ * define ${mam_libX} for library reference lib
+ */
+
+static char*
+require(char* lib, int dontcare)
+{
+	register int	c;
+	char*		s;
+	char*		r;
+	FILE*		f;
+	Buf_t*		buf;
+	Buf_t*		tmp;
+	struct stat	st;
+
+	static int	archive = -1;
+
+	if (archive < 0)
+		archive = (s = search(state.vars, "mam_cc_L", NiL)) ? !atoi(s) : 1;
+	if (!(r = search(state.vars, lib, NiL)))
+	{
+		buf = buffer();
+		tmp = buffer();
+		append(tmp, "lib");
+		append(tmp, lib + 2);
+		append(tmp, ".a");
+		r = use(tmp);
+		if (stat(r, &st))
+		{
+			if (archive)
+			{
+				append(buf, "${INSTALLROOT}/lib/");
+				append(buf, r);
+				r = expand(tmp, use(buf));
+				if (stat(r, &st))
+					r = lib;
+			}
+			else
+				r = lib;
+		}
+		if (r != lib)
+			r = duplicate(r);
+		search(state.vars, lib, r);
+		append(tmp, lib + 2);
+		append(tmp, ".req");
+		if (!(f = fopen(use(tmp), "r")))
+		{
+			append(tmp, "${INSTALLROOT}/lib/lib/");
+			append(tmp, lib + 2);
+			f = fopen(expand(buf, use(tmp)), "r");
+		}
+		if (f)
+		{
+			for (;;)
+			{
+				while ((c = fgetc(f)) == ' ' || c == '\t' || c == '\n');
+				if (c == EOF)
+					break;
+				do
+				{
+					add(tmp, c);
+				} while ((c = fgetc(f)) != EOF && c != ' ' && c != '\t' && c != '\n');
+				s = use(tmp);
+				if (s[0] && (s[0] != '-' || s[1]))
+				{
+					add(buf, ' ');
+					append(buf, require(s, 0));
+				}
+			}
+			fclose(f);
+			r = use(buf);
+		}
+		else if (dontcare)
+		{
+			append(tmp, "set -\n");
+			append(tmp, "cd /tmp\n");
+			append(tmp, "echo 'main(){return(0);}' > x.${!-$$}.c\n");
+			append(tmp, "${CC} ${CCFLAGS} -o x.${!-$$}.x x.${!-$$}.c ");
+			append(tmp, r);
+			append(tmp, " >/dev/null 2>&1\n");
+			append(tmp, "c=$?\n");
+			append(tmp, "rm -f x.${!-$$}.[cox]\n");
+			append(tmp, "exit $c\n");
+			if (execute(expand(buf, use(tmp))))
+				r = "";
+		}
+		r = duplicate(r);
+		search(state.vars, lib, r);
+		append(tmp, "mam_lib");
+		append(tmp, lib + 2);
+		search(state.vars, use(tmp), r);
+		drop(tmp);
+		drop(buf);
+	}
+	return r;
+}
+
 /*
  * input() until `done r'
  */
@@ -1175,6 +1356,7 @@ make(Rule_t* r)
 	register Rule_t*	q;
 	unsigned long		z;
 	unsigned long		x;
+	Buf_t*			buf;
 
 	if (r->flags & RULE_active)
 		state.active++;
@@ -1184,6 +1366,7 @@ make(Rule_t* r)
 		state.indent++;
 		report(-1, r->name, "make");
 	}
+	buf = buffer();
 	while (s = input())
 	{
 		for (; *s == ' '; s++);
@@ -1202,8 +1385,12 @@ make(Rule_t* r)
 			t = v = s;
 		switch (KEY(u[0], u[1], u[2], u[3]))
 		{
+		case KEY('b','i','n','d'):
+			if (t[0] == '-' && t[1] == 'l')
+				require(t, !strcmp(v, "dontcare"));
+			continue;
 		case KEY('d','o','n','e'):
-			q = rule(expand(state.buf, t));
+			q = rule(expand(buf, t));
 			if (q != r)
 				report(2, "improper done statement", t);
 			r->flags |= RULE_made;
@@ -1221,7 +1408,7 @@ make(Rule_t* r)
 			}
 			x = state.active && (state.force || r->time < z || !r->time && !z);
 			if (x)
-				substitute(state.buf, v);
+				substitute(buf, v);
 			while (s = input())
 			{
 				if (strncmp(s, "exec ", 5))
@@ -1231,20 +1418,20 @@ make(Rule_t* r)
 				for (; *s == ' '; s++);
 				if (x)
 				{
-					add(state.buf, '\n');
-					substitute(state.buf, s);
+					add(buf, '\n');
+					substitute(buf, s);
 				}
 			}
 			state.peek = 1;
 			if (x)
 			{
-				x = run(r, use(state.buf));
+				x = run(r, use(buf));
 				if (z < x)
 					z = x;
 			}
 			continue;
 		case KEY('m','a','k','e'):
-			q = rule(expand(state.buf, t));
+			q = rule(expand(buf, t));
 			attributes(q, v);
 			x = make(q);
 			if (z < x)
@@ -1253,7 +1440,7 @@ make(Rule_t* r)
 				r->flags |= RULE_error;
 			continue;
 		case KEY('p','r','e','v'):
-			q = rule(expand(state.buf, t));
+			q = rule(expand(buf, t));
 			if (z < q->time)
 				z = q->time;
 			if (q->flags & RULE_error)
@@ -1271,7 +1458,7 @@ make(Rule_t* r)
 						v++;
 					}
 				}
-				search(state.vars, t, duplicate(expand(state.buf, v)));
+				search(state.vars, t, duplicate(expand(buf, v)));
 			}
 			if (!state.probed && t[0] == 'C' && t[1] == 'C' && !t[2])
 			{
@@ -1284,6 +1471,7 @@ make(Rule_t* r)
 		}
 		break;
 	}
+	drop(buf);
 	if (*r->name)
 	{
 		report(-1, r->name, "done");
@@ -1332,6 +1520,7 @@ static int
 update(register Rule_t* r)
 {
 	register List_t*	x;
+	Buf_t*			buf;
 
 	static char		cmd[] = "${MAMAKE} -C ";
 	static char		arg[] = " ${MAMAKEARGS}";
@@ -1342,10 +1531,12 @@ update(register Rule_t* r)
 	for (x = r->prereqs; x; x = x->next)
 		if (x->rule->leaf && !(x->rule->flags & RULE_made))
 			update(x->rule);
-	substitute(state.tmp, cmd);
-	append(state.tmp, r->name);
-	substitute(state.tmp, arg);
-	run(r, use(state.tmp));
+	buf = buffer();
+	substitute(buf, cmd);
+	append(buf, r->name);
+	substitute(buf, arg);
+	run(r, use(buf));
+	drop(buf);
 	return 0;
 }
 
@@ -1366,6 +1557,7 @@ scan(Dict_item_t* item, void* handle)
 	int			j;
 	int			k;
 	int			p;
+	Buf_t*			buf;
 
 	static char*		files[] =
 				{
@@ -1392,12 +1584,13 @@ scan(Dict_item_t* item, void* handle)
 			update(r);
 		return 0;
 	}
+	buf = buffer();
 	for (i = 0; i < elementsof(files); i++)
 	{
-		append(state.buf, r->name);
-		add(state.buf, '/');
-		append(state.buf, files[i]);
-		if (push(use(state.buf), (Stdio_t*)0, 0))
+		append(buf, r->name);
+		add(buf, '/');
+		append(buf, files[i]);
+		if (push(use(buf), (Stdio_t*)0, 0))
 		{
 			while (s = input())
 			{
@@ -1416,9 +1609,9 @@ scan(Dict_item_t* item, void* handle)
 						k = 0;
 					else if ((t[0] == '-' || t[0] == '+') && t[1] == 'l' && t[2])
 					{
-						append(state.buf, "lib");
-						append(state.buf, t + 2);
-						t = use(state.buf);
+						append(buf, "lib");
+						append(buf, t + 2);
+						t = use(buf);
 					}
 					else if (p)
 					{
@@ -1426,9 +1619,15 @@ scan(Dict_item_t* item, void* handle)
 							p = 2;
 						else if (p == 1)
 						{
-							append(state.buf, "lib");
-							append(state.buf, t);
-							t = use(state.buf);
+							if (i != ':' || strncmp(s, "command", 7))
+							{
+								append(buf, "lib");
+								append(buf, t);
+								t = use(buf);
+							}
+							if (i == ':')
+								while (*s && (*s == ' ' || *s == '\t'))
+									s++;
 						}
 					}
 					else if (i == ':')
@@ -1479,6 +1678,7 @@ scan(Dict_item_t* item, void* handle)
 			break;
 		}
 	}
+	drop(buf);
 	return 0;
 }
 
@@ -1528,23 +1728,28 @@ recurse(char* pattern)
 	register char*	s;
 	register char*	t;
 	Rule_t*		r;
+	Buf_t*		buf;
+	Buf_t*		tmp;
+	struct stat	st;
 
 	/*
 	 * first determine the MAM subdirs
 	 */
 
+	tmp = buffer();
+	buf = buffer();
 	state.exec = !state.never;
 	state.leaf = dictionary();
-	append(state.buf, "ls -d ");
-	append(state.buf, pattern);
-	s = use(state.buf);
+	append(buf, "ls -d ");
+	append(buf, pattern);
+	s = use(buf);
 	push("recurse", popen(s, "r"), STREAM_PIPE);
 	while (s = input())
 	{
-		append(state.buf, s);
-		add(state.buf, '/');
-		append(state.buf, MAMFILE);
-		if (find(use(state.buf)))
+		append(buf, s);
+		add(buf, '/');
+		append(buf, MAMFILE);
+		if (find(tmp, use(buf), &st))
 		{
 			r = rule(s);
 			if (t = last(r->name, '/'))
@@ -1556,6 +1761,8 @@ recurse(char* pattern)
 		}
 	}
 	pop();
+	drop(buf);
+	drop(tmp);
 
 	/*
 	 * grab the non-leaf active targets
@@ -1593,11 +1800,7 @@ main(int argc, char** argv)
 	state.active = 1;
 	state.exec = 1;
 	state.file = MAMFILE;
-	state.buf = buffer();
-	state.cmd = buffer();
-	state.nam = buffer();
 	state.opt = buffer();
-	state.tmp = buffer();
 	state.rules = dictionary();
 	state.vars = dictionary();
 	search(state.vars, "MAMAKE", *argv);

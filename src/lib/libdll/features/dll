@@ -31,7 +31,7 @@ tst	run{
 	done
 	case $lib in
 	*.[0-9]*.[0-9]*)
-		i=`echo $lib | sed 's,\([^0-9]*[0-9]*\).*,\1,`
+		i=`echo $lib | sed 's,\([^0-9]*[0-9]*\).*,\1,'`
 		if	test -f $i
 		then	lib=$i
 		fi
@@ -51,7 +51,7 @@ tst	run{
 	esac
 	case $lib in
 	/usr/lib/*)
-		case `hostinfo` in
+		case `package` in
 		sgi.mips3)
 			abi=/lib32
 			;;
@@ -112,22 +112,6 @@ tst	- output{
 			printf("\n");
 		}
 		printf("#define RTLD_NEXT	((void*)16)\n");
-	#endif
-	#if !defined(RTLD_SUFFIX)
-		if (i)
-		{
-			i = 0;
-			printf("\n");
-		}
-	#if _hdr_mach_o_dyld
-		printf("#define RTLD_SUFFIX	\"dylib\"\n");
-	#else
-	#if _hdr_dl
-		printf("#define RTLD_SUFFIX	\"sl\"\n");
-	#else
-		printf("#define RTLD_SUFFIX	\"so\"\n");
-	#endif
-	#endif
 	#endif
 	#if _hdr_rld_interface
 		if (!(dll = dlopen(0, RTLD_LAZY)))

@@ -26,50 +26,125 @@
 #pragma prototyped
 
 /*
- * locale and translation private definitions
+ * frexpl/ldexpl implementation
  */
 
-#ifndef _LOCLIB_H
-#define _LOCLIB_H	1
-
-#define locales		_ast_locales
-#define translate	_ast_translate
-
 #include <ast.h>
-#include <error.h>
 
-typedef struct
+#include "FEATURE/float"
+
+#if _lib_frexpl && _lib_ldexpl
+
+NoN(frexpl)
+
+#else
+
+#ifndef LDBL_MAX_EXP
+#define LDBL_MAX_EXP	DBL_MAX_EXP
+#endif
+
+static _ast_fltmax_t	pow2[LDBL_MAX_EXP + 1];
+
+static int
+init(void)
 {
-	char*		name;
-	int		category;
-	int		set;
-	char*		usr;
-	char*		sys;
-	char*		old_usr;
-	char*		old_sys;
-} Locale_t;
+	register int		x;
+	_ast_fltmax_t		g;
 
-#ifndef LC_COLLATE
-#define LC_COLLATE	AST_LC_COLLATE
-#endif
-#ifndef LC_CTYPE
-#define LC_CTYPE	AST_LC_CTYPE
-#endif
-#ifndef LC_MESSAGES
-#define LC_MESSAGES	AST_LC_MESSAGES
-#endif
-#ifndef LC_MONETARY
-#define LC_MONETARY	AST_LC_MONETARY
-#endif
-#ifndef LC_NUMERIC
-#define LC_NUMERIC	AST_LC_NUMERIC
-#endif
-#ifndef LC_TIME
-#define LC_TIME		AST_LC_TIME
+	g = 1;
+	for (x = 0; x < elementsof(pow2); x++)
+	{
+		pow2[x] = g;
+		g *= 2;
+	}
+	return 0;
+}
+
+#define INIT()		(pow2[0]?0:init())
+
+#if !_lib_frexpl
+
+extern _ast_fltmax_t
+frexpl(_ast_fltmax_t f, int* p)
+{
+	register int		k;
+	register int		x;
+	_ast_fltmax_t		g;
+
+	INIT();
+
+	/*
+	 * normalize
+	 */
+
+	x = k = LDBL_MAX_EXP / 2;
+	if (f < 1)
+	{
+		g = 1.0L / f;
+		for (;;)
+		{
+			k = (k + 1) / 2;
+			if (g < pow2[x])
+				x -= k;
+			else if (k == 1 && g < pow2[x+1])
+				break;
+			else
+				x += k;
+		}
+		if (g == pow2[x])
+			x--;
+		x = -x;
+	}
+	else if (f > 1)
+	{
+		for (;;)
+		{
+			k = (k + 1) / 2;
+			if (f > pow2[x])
+				x += k;
+			else if (k == 1 && f > pow2[x-1])
+				break;
+			else
+				x -= k;
+		}
+		if (f == pow2[x])
+			x++;
+	}
+	else
+		x = 1;
+	*p = x;
+
+	/*
+	 * shift
+	 */
+
+	x = -x;
+	if (x < 0)
+		f /= pow2[-x];
+	else if (x < LDBL_MAX_EXP)
+		f *= pow2[x];
+	else
+		f = (f * pow2[LDBL_MAX_EXP - 1]) * pow2[x - (LDBL_MAX_EXP - 1)];
+	return f;
+}
+
 #endif
 
-extern Locale_t		locales[];
+#if !_lib_ldexpl
 
-extern char*		translate(const char*, const char*, const char*, const char*);
+extern _ast_fltmax_t
+ldexpl(_ast_fltmax_t f, register int x)
+{
+	INIT();
+	if (x < 0)
+		f /= pow2[-x];
+	else if (x < LDBL_MAX_EXP)
+		f *= pow2[x];
+	else
+		f = (f * pow2[LDBL_MAX_EXP - 1]) * pow2[x - (LDBL_MAX_EXP - 1)];
+	return f;
+}
+
+#endif
 
 #endif

@@ -59,7 +59,7 @@ typedef int (*GL_stat_f)(const char*, struct stat*);
 	int		gl_error; \
 	globlist_t*	gl_rescan; \
 	globlist_t*	gl_match; \
-	Stak_t* 	gl_stak; \
+	Stak_t*		gl_stak; \
 	int		re_flags; \
 	regex_t*	gl_ignore; \
 	regex_t*	gl_ignorei; \
@@ -89,7 +89,6 @@ gl_dirnext(glob_t* gp, void* handle)
 
 	while (dp = (struct dirent*)(*gp->gl_readdir)(handle))
 		if (D_FILENO(dp))
-			if (gp->gl_fignore || dp->d_name[0] != '.' || dp->d_name[1] != 0 && (dp->d_name[1] != '.' || dp->d_name[2] != 0))
 			return dp->d_name;
 	return 0;
 }
@@ -195,11 +194,11 @@ addmatch(register glob_t* gp, const char* dir, const char* pat, const register c
 			return;
 		stakputc(gp->gl_delim);
 		offset = staktell();
- 		/* if null, reserve room for . */
- 		if (*rescan)
- 			stakputs(rescan);
- 		else
- 			stakputc(0);
+		/* if null, reserve room for . */
+		if (*rescan)
+			stakputs(rescan);
+		else
+			stakputc(0);
 		stakputc(0);
 		rescan = stakptr(offset);
 		ap = (globlist_t*)stakfreeze(0);
@@ -278,20 +277,18 @@ glob_dir(glob_t* gp, globlist_t* ap)
 				rescan = 0;
 				break;
 			}
-			if (first)
-				return;
 			if (quote)
 				trim(ap->gl_begin);
-			if (!*rescan && *(rescan - 2) == gp->gl_delim)
+			if (!first && !*rescan && *(rescan - 2) == gp->gl_delim)
 			{
 				*(rescan - 2) = 0;
 				c = (*gp->gl_type)(gp, prefix);
 				*(rescan - 2) = gp->gl_delim;
 				if (c == GLOB_DIR)
-				 	addmatch(gp, NiL, prefix, NiL, rescan - 1);
+					addmatch(gp, NiL, prefix, NiL, rescan - 1);
 			}
-			else if ((*gp->gl_type)(gp, prefix))
-				 addmatch(gp, NiL, prefix, NiL, NiL);
+			else if (first && (gp->gl_flags & (GLOB_NOCHECK|GLOB_COMPLETE|GLOB_MARK)) == GLOB_NOCHECK || (*gp->gl_type)(gp, prefix))
+				addmatch(gp, NiL, prefix, NiL, NiL);
 			return;
 		case '[':
 			bracket = 1;
@@ -299,9 +296,11 @@ glob_dir(glob_t* gp, globlist_t* ap)
 		case ']':
 			meta |= bracket;
 			continue;
+		case '(':
+			if (!(gp->gl_flags & GLOB_AUGMENTED))
+				continue;
 		case '*':
 		case '?':
-		case '(':
 			meta = 1;
 			continue;
 		case '\\':
@@ -431,6 +430,17 @@ glob_dir(glob_t* gp, globlist_t* ap)
 		regfree(prei);
 	if (err == REG_ESPACE)
 		gp->gl_error = GLOB_NOSPACE;
+	if (first && (gp->gl_flags & GLOB_NOCHECK) && !gp->gl_rescan && !gp->gl_pathc)
+	{
+		if (quote)
+		{
+			if (prefix)
+				trim(ap->gl_path);
+			else
+				trim(pat);
+		}
+		addmatch(gp, NiL, ap->gl_path, NiL, NiL);
+	}
 }
 
 #if _UWIN /* hack for dll consistency -- drop in 20010101 */
@@ -480,7 +490,7 @@ glob(const char* pattern, int flags, int (*errfn)(const char*, int), register gl
 	else
 	{
 		gp->gl_flags = (flags&0xffff)|GLOB_MAGIC;
-		gp->re_flags = REG_SHELL|REG_AUGMENTED|REG_NOSUB|REG_LEFT|REG_RIGHT;
+		gp->re_flags = REG_SHELL|REG_NOSUB|REG_LEFT|REG_RIGHT|((flags&GLOB_AUGMENTED)?REG_AUGMENTED:0);
 		gp->gl_pathc = 0;
 		gp->gl_ignore = 0;
 		gp->gl_ignorei = 0;
@@ -520,7 +530,9 @@ glob(const char* pattern, int flags, int (*errfn)(const char*, int), register gl
 			gp->gl_attr = gl_attr;
 		if (flags & GLOB_ICASE)
 			gp->re_flags |= REG_ICASE;
-		if (gp->gl_fignore && *gp->gl_fignore)
+		if (!gp->gl_fignore)
+			gp->re_flags |= REG_SHELL_DOT;
+		else if (*gp->gl_fignore)
 		{
 			if (regcomp(&gp->re_ignore, gp->gl_fignore, gp->re_flags))
 				return GLOB_APPERR;

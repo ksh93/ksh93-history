@@ -581,7 +581,15 @@ Indexed array assignment.
 Associative array assignment.
 .TP
 \f2assignment\^\fP .\|.\|.
-Nested variable assignment.
+Compound variable assignment.
+This creates a compound variable \f2varname\^\fP with
+sub-variables of the form \f2varname\^\fP\f3.\fP\f2name\^\fP,
+where \f2name\^\fP is the name portion of \f2assignment\^\fP.
+The value of \f2varname\^\fP will contain all the assignment elements.
+Additional assignments made to sub-variables of \f2varname\^\fP
+will also be displayed as part of the value of \f2varname\^\fP.
+If no \f2assignment\fPs are specified, \f2varname\^\fP will be
+a compound variable allowing subsequence child elements to be defined.
 .TP
 \f3typeset\fP \*(OK\f2options\fP\*(CK \f2assignment\^\fP .\|.\|.
 Nested variable assignment.  Multiple assignments
@@ -594,7 +602,7 @@ In addition, a \f3+=\fP can be used in place of the \f3=\fP
 to signify adding to or appending to the previous value.
 When \f3+=\fP is applied to an arithmetic type, \f2word\^\fP
 is evaluated as an arithmetic expression and added to the current value.
-When applied to a sting variable, the value defined by \f2word\^\fP
+When applied to a string variable, the value defined by \f2word\^\fP
 is appended to the value.  For compound assignments, the previous
 value is not unset and the new values are appended to the
 current ones provided that the types are compatible.
@@ -1290,15 +1298,20 @@ or an array variable with subscript
 or
 .BR * ,
 the substitution operation is applied to each element in turn.
+In this case, the
+.I string\^
+portion of
+.I word\^
+will be re-evaluated for each element.
 .PP
 In the above,
 .I word\^
 is not evaluated unless it is
 to be used as the substituted string,
 so that, in the following example,
-.B pwd\^
+.B pwd
 is executed only if
-.B d\^
+.B d
 is not set or is null:
 .PP
 .RS
@@ -1395,6 +1408,26 @@ The value is null when not processing a
 .B
 .SM KEYBD
 trap.
+.TP
+.B .sh.match
+An indexed array which stores the most recent match and sub-pattern
+matches after variables expansions using the operators
+.BR # ,
+.BR % ,
+or
+.BR / .
+The
+.BR 0 -th
+element stores the complete match and the
+.IR i\^ -th.
+element stores the
+.IR i\^ -th
+submatch.
+The
+.B .sh.match
+variable
+becomes unset when the variable that has expanded
+is assigned a new value.
 .TP
 .B .sh.name
 Set to the name of the variable at the time that a
@@ -1549,13 +1582,23 @@ ignored when performing filename matching.
 .SM
 .B FPATH
 The search path for function definitions.
-This path is searched for a file with the same name
+The directories in this path are searched for a file with the same name
 as the function or command when a function with the
 .B \-u
 attribute is referenced and when a command is not found.
 If an executable file with the name of that command is found,
 then it is read and executed
 in the current environment.
+Unlike
+.SM
+.BR PATH ,
+the current directory must be represented
+explictily by
+.B .
+rather than by adjacent
+.B :
+characters or a beginning or ending
+.BR : .
 .TP
 .B
 .SM HISTCMD
@@ -1985,11 +2028,12 @@ and
 character classes can be specified with the syntax
 \f3[:\fP\f2class\fP\f3:]\fP
 where class is one of the following classes defined in the ANSI-C standard:
+(Note that \f3word\fP is equivalent to \f3alnum\fP plus the character \f3_\fP).
 .PP
 .if t .RS
 .B
-.if n alnum alpha blank cntrl digit graph lower print punct space upper xdigit
-.if t alnum   alpha   blank   cntrl   digit   graph   lower   print   punct   space   upper   xdigit
+.if n alnum alpha blank cntrl digit graph lower print punct space upper word xdigit
+.if t alnum   alpha   blank   cntrl   digit   graph   lower   print   punct   space   upper   word    xdigit
 .br
 Within
 .B \*(OK\^
@@ -2035,6 +2079,14 @@ Matches zero or more occurrences of the given patterns.
 \f3+(\fP\f2pattern-list\^\fP\f3)\fP
 Matches one or more occurrences of the given patterns.
 .TP
+\f3{\fP\f2n\^\fP\f3}\fP(\fP\f2pattern-list\^\fP\f3)\fP
+Matches \f2n\^\fP occurrences of the given patterns.
+.TP
+\f3{\fP\f2m\^\fP\f3,\fP\f2n\^\fP\f3}\fP(\fP\f2pattern-list\^\fP\f3)\fP
+Matches from \f2m\^\fP to \f2n\^\fP occurrences of the given patterns.
+If \f2m\^\fP is omitted, \f30\fP will be used.  If \f2n\^\fP
+is omitted at least \f2m\^\fP occurrences will be matched.
+.TP
 \f3\&@\&(\fP\f2pattern-list\^\fP\f3)\fP
 Matches exactly one of the given patterns.
 .br
@@ -2043,6 +2095,43 @@ Matches exactly one of the given patterns.
 Matches anything except one of the given patterns.
 .PD
 .RE
+By default, each pattern, or sub-pattern will match the
+longest string possible consistent with generating
+the longest overall match.  If more than one match is
+possible, the one starting closest to the beginning
+of the string will be chosen.   However, for each of the above
+compound patterns a \f3\-\fP can be inserted in front of the \f3(\fP
+to cause the shortest match to the specified \f2pattern-list\^\fP
+to be used.
+.PP
+When \f2pattern-list\^\fP is contained within parenthesis,
+the backslash character \f3\e\fP is treated specially even
+when inside a character class.   All ANSI-C character escapes are
+recognized and match the specified character.  In addition
+the following escape sequences are recognized: 
+.PD 0
+.RS
+.TP
+.B \ed
+Matches any charcter in the \f3digit\fP class.
+.TP
+.B \eD
+Matches any charcter not in the \f3digit\fP class.
+.TP
+.B \es
+Matches any charcter in the \f3space\fP class.
+.TP
+.B \eS
+Matches any charcter not in the \f3space\fP class.
+.TP
+.B \ew
+Matches any charcter in the \f3word\fP class.
+.TP
+.B \eW
+Matches any charcter not in the \f3word\fP class.
+.PD
+.RE
+.PP
 Each sub-pattern in a composite pattern is numbered,
 starting at 1, by the location of the \f3(\fP within
 the pattern.
@@ -2050,6 +2139,35 @@ The sequence \f3\e\fP\f2n\^\fP, where \f2n\^\fP
 is a single digit and \f3\e\fP\f2n\^\fP comes after
 the \f2n\fP-th. sub-pattern,
 matches the same string as the sub-pattern itself.
+.PP
+Finally a pattern can contain sub-patterns of the form
+\f3\(ap(\fP\f2options\^\fP\f3:\fP\f2pattern-list\^\fP\f3)\fP.
+where either \f2options\^\fP or \f3:\fP\f2pattern-list\^\fP
+can be omitted.  Unlike, the other compound patterns,
+these sub-patterns are not counted in the numbered sub-patterns.
+If \f2options\^\fP is present, it can consist of one or more
+of the following:
+.PD 0
+.RS
+.TP
+.B +
+Enable the following options.  This is the default.
+.TP
+.B \-
+Disable the following options.
+.TP
+.B i
+Treat the match as case insensitive.
+.TP
+.B g
+File the longest match (greedy).  This is the default.
+.PD
+.RE
+If both \f2options\^\fP and \f3:\fP\f2pattern-list\^\fP
+are specified, then the options apply only to  \f2pattern-list\^\fP.
+Otherwise, these options remain in effect until they are disabled
+by a subseqent \f3\(ap(\fP\f2...\^\fP\f3)\fP or at the end of
+the sub-pattern containing \f3\(ap(\fP\f2...\^\fP\f3)\fP.
 .SS Quoting.
 Each of the
 .I metacharacters\^
@@ -2076,14 +2194,29 @@ A single quote cannot appear within the single quotes.
 A single quoted string preceded by an unquoted
 .B $
 is processed as an ANSI-C string
-except that
+except for the following:
+.PD 0
+.TP
 .B \e0
-within the string causes the remainder of the
-string to be ignored and
+Causes the remainder of the string to be ignored.
+.TP
 .B \eE
-is equivalent to the escape character
+Equivalent to the escape character
 (ascii
-.BR 033 ).
+.BR 033 ),
+.TP
+.B \ee
+Equivalent to the escape character
+(ascii
+.BR 033 ),
+.TP
+.BI \ec x
+Expands to the character control-\f2x\fP.
+.TP
+.BI \eC[. name .]
+Expands to the collating element \f2name\fP.
+.PD
+.PP
 Inside double quote marks
 (\f3"\^"\fP),
 parameter and command substitution occur and
@@ -2195,8 +2328,8 @@ expression:
 .PP
 .if t .RS
 .B
-.if n abs acos asin atan cos cosh exp int log sin sinh sqrt tan tanh
-.if t abs   acos   asin   atan   cos   cosh   exp   int   log   sin   sinh   sqrt   tan   tanh
+.if n abs acos asin atan atan2 cos cosh exp floor fmod hypot int log pow sin sinh sqrt tan tanh
+.if t abs   acos   asin   atan   atan2   cos   cosh   exp   floor  fmod   hypot   int   log   pow   sin   sinh   sqrt   tan   tanh
 .if t .RE
 .PP
 An internal representation of a
@@ -2384,6 +2517,11 @@ True, if length of
 is zero.
 .TP
 \f3\-L\fP \f2file\fP
+True, if
+.I file\^
+exists and is a symbolic link.
+.TP
+\f3\-h\fP \f2file\fP
 True, if
 .I file\^
 exists and is a symbolic link.
@@ -3156,10 +3294,15 @@ an attempt is made to execute the command via
 .P
 On systems that use an environment variable to
 determine the order of directories to search for
-shared libraries, the environment variable is
-modified by prepending the directory to its search list
-if the variable exists, or is created with
-the value of the directory otherwise.
+shared libraries, if the executable is found in
+a directory named
+.BR bin ,
+the environment variable is
+modified by prepending the library
+directory to its search list
+if the variable exists; otherwise the library search variable is created
+with the value of the directory.
+.P
 If the file has execute permission but is not an
 .B a.out
 file,
@@ -4255,7 +4398,6 @@ Except for
 .BR true ,
 .BR false ,
 .BR echo ,
-.BR command ,
 .BR newgrp ,
 and
 .BR login ,
@@ -4263,8 +4405,11 @@ all built-in commands accept
 .B \-\-
 to indicate end of options.
 They also interpret the option
+.B \-\-man
+as a request to display the man page onto
+standard error and
 .B \-?
-as a help request and print a
+as a help request which prints a
 .I usage\^
 message
 on standard error.
@@ -4816,7 +4961,7 @@ to
 .B ?
 for an unknown option and to
 .B :
-when a required option is missing.
+when a required option argument is missing.
 Otherwise,
 .B getopts
 prints an error message.
@@ -5147,6 +5292,15 @@ to cause
 .I arg\^
 to be interpreted as an extended regular
 expression and be printed as a shell pattern.
+.LI
+A
+.B %R
+format can be used instead of
+.B %s
+to cause
+.I arg\^
+interpreted as a shell pattern
+and to be printed as an extended regular expression.
 .LI
 A
 .B %q

@@ -38,6 +38,7 @@ reg Sfio_t*	f;
 #endif
 {
 	reg int		local, ex, rv;
+	Void_t*		data = NIL(Void_t*);
 
 	SFMTXSTART(f, -1);
 
@@ -65,14 +66,14 @@ reg Sfio_t*	f;
 	if(f->disc == _Sfudisc)	/* closing the ungetc stream */
 		f->disc = NIL(Sfdisc_t*);
 	else if(f->file >= 0)	/* sync file pointer */
-	{	f->bits |= SF_CLOSING;
+	{	f->bits |= SF_ENDING;
 		rv = sfsync(f);
 	}
 
 	SFLOCK(f,0);
 
 	/* raise discipline exceptions */
-	if(f->disc && (ex = SFRAISE(f,local ? SF_NEW : SF_CLOSE,NIL(Void_t*))) != 0)
+	if(f->disc && (ex = SFRAISE(f,local ? SF_NEW : SF_CLOSING,NIL(Void_t*))) != 0)
 		SFMTXRETURN(f,ex);
 
 	if(!local && f->pool)
@@ -111,7 +112,7 @@ reg Sfio_t*	f;
 		else
 #endif
 		if(f->flags&SF_MALLOC)
-			free(f->data);
+			data = (Void_t*)f->data;
 
 		f->data = NIL(uchar*);
 		f->size = -1;
@@ -119,7 +120,7 @@ reg Sfio_t*	f;
 
 	/* zap the file descriptor */
 	if(_Sfnotify)
-		(*_Sfnotify)(f,SF_CLOSE,f->file);
+		(*_Sfnotify)(f,SF_CLOSING,f->file);
 	if(f->file >= 0 && !(f->flags&SF_STRING))
 		CLOSE(f->file);
 	f->file = -1;
@@ -151,12 +152,21 @@ reg Sfio_t*	f;
 
 	if(!local)
 	{	if(f->disc && (ex = SFRAISE(f,SF_FINAL,NIL(Void_t*))) != 0 )
-			return ex;
+		{	rv = ex;
+			goto done;
+		}
 
-		f->disc = NIL(Sfdisc_t*);
 		if(!(f->flags&SF_STATIC) )
 			free(f);
+		else
+		{	f->disc = NIL(Sfdisc_t*);
+			f->stdio = NIL(Void_t*);
+			f->mode = SF_AVAIL;
+		}
 	}
 
+done:
+	if(data)
+		free(data);
 	return rv;
 }

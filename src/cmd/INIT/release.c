@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1999-2001 AT&T Corp.                *
+*                Copyright (c) 1990-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -79,6 +79,11 @@ USAGE_LICENSE
 #include <unistd.h>
 #include <ctype.h>
 #include <sys/types.h>
+
+#if !_PACKAGE_ast && defined(__STDC__)
+#include <stdlib.h>
+#include <string.h>
+#endif
 
 static char	mon[] = "janfebmaraprmayjunjulaugsepoctnovdec";
 static char	day[] = "sunmontuewedthufrisat";

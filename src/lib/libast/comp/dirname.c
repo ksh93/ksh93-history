@@ -42,10 +42,10 @@ char *dirname(register char *pathname)
 	if(last==pathname)
 	{
 		/* all '/' or "" */
-		if(*pathname!='/')
-			last = pathname = ".";
+		if(*last!='/')
+			*last = '.';
 		/* preserve // */
-		else if(pathname[1]=='/')
+		else if(last[1]=='/')
 			last++;
 	}
 	else
@@ -56,6 +56,6 @@ char *dirname(register char *pathname)
 		if(last==pathname && *pathname=='/' && pathname[1]=='/')
 			last++;
 	}
-	*last = 0;
+	*(last + 1) = 0;
 	return(pathname);
 }

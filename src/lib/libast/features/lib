@@ -1,7 +1,7 @@
 cmd	universe
 
 hdr	dirent,direntry,filio,fmtmsg,fnmatch,jioctl,libgen
-hdr	locale,mman,ndir,nl_types,syslog,utime,vfork,wctype
+hdr	locale,mman,ndir,nl_types,spawn,syslog,utime,vfork,wctype
 hdr	wchar note{ <wchar.h> and isw*() really work }end execute{
 	#include <wchar.h>
 	main()
@@ -25,9 +25,10 @@ lib	mkdir,mkfifo,mktemp,mktime
 lib	mount,on_exit,onexit,opendir,pathconf,pcreateve
 lib	readlink,remove,rename,rewinddir,rindex,rmdir,setlocale
 lib	setpgid,setpgrp,setpgrp2,setreuid,setsid,setuid,sigaction
-lib	sigprocmask,sigsetmask,sigunblock,sigvec,socketpair,spawnlp
+lib	sigprocmask,sigsetmask,sigunblock,sigvec,socketpair,spawn,spawnlp
 lib	spawnve,spawnveg,spawnvp,spawnvpe,strchr,strcoll,strdup,strerror
-lib	strcasecmp,strncasecmp,strrchr,strtod,strtol,strtoll,strtoul,strtoull
+lib	strcasecmp,strncasecmp,strrchr
+lib	strtod,strtold,strtol,strtoll,strtoul,strtoull
 lib	strxfrm,strftime,swab,symlink,sysconf,syslog
 lib	telldir,tmpnam,tzset,universe,unlink,utime,vfork,wctype
 lib	ftruncate,truncate
@@ -39,6 +40,7 @@ mem	direct.d_reclen sys/types.h sys/dir.h
 mem	dirent.d_fileno,dirent.d_ino,dirent.d_namlen,dirent.d_off,dirent.d_reclen sys/types.h dirent.h
 mem	DIR sys/types.h - dirent.h - sys/dir.h
 mem	DIR.dd_fd sys/types.h - dirent.h - sys/dir.h
+mem	inheritance.pgroup spawn.h
 
 sys	dir,filio,jioctl,localedef,mman,ptem,resource
 sys	socket,stream,universe,vfork
@@ -405,34 +407,48 @@ std	strcoll note{ standard strcoll works }end execute{
 	}
 }end
 
-cat{
-	/* ignore solaris 5.4 incompatibilities -- they aren't worth it */
+std	strtod note{ stuck with standard strtod }end noexecute{
+	_BEGIN_EXTERNS_
+	#if _STD_
+	double strtod(const char* s, char** e) { return 0.0; }
+	#else
+	double strtod(s, e) char* s; char** e; { return 0.0; }
+	#endif
+	_END_EXTERNS_
+	main() { return strtod("1",0) < 0; }
+}end
+
+tst	- output{
+	main()
+	{
 	#if __sparc__ || __sparc || sparc
-	#undef	_lib_confstr
-	#undef	_lib_fnmatch
+		printf("\n");
+		printf("/* ignore solaris 5.4 incompatibilities -- they aren't worth it */\n");
+		printf("#undef	_lib_confstr\n");
+		printf("#undef	_lib_fnmatch\n");
+		printf("\n");
 	#endif
 
-	/* override some uwin feature tests */
 	#if _WIN32
-	#undef	_lib_execlp
-	#undef	_lib_execvp
-	#undef	_lib_execvpe
-	#undef	_lib_fork
-	#undef	_lib_spawnlp
-	#undef	_lib_spawnvp
-	#undef	_lib_spawnvpe
-	#undef	_std_malloc
-	#define _std_malloc 1
-	#undef	_std_string
-	#define _std_string 1
-	#undef	_stream_peek
+		printf("\n");
+		printf("/* override some uwin feature tests */\n");
+		printf("#undef	_lib_execlp\n");
+		printf("#undef	_lib_execvp\n");
+		printf("#undef	_lib_execvpe\n");
+		printf("#undef	_lib_fork\n");
+		printf("#undef	_lib_spawnlp\n");
+		printf("#undef	_lib_spawnvp\n");
+		printf("#undef	_lib_spawnvpe\n");
+		printf("#undef	_std_malloc\n");
+		printf("#define _std_malloc	1\n");
+		printf("#undef	_std_string\n");
+		printf("#define _std_string	1\n");
+		printf("#undef	_stream_peek\n");
+		printf("\n");
 	#endif
 
-	/* mvs.390 hacks */
-	#if __MVS__
-	#undef	_mem_dd_fd_DIR
-	#undef	_typ_long_double
-	#endif
+		return 0;
+	}
 
 }end
 
@@ -459,7 +475,7 @@ tst	no64 note{ largefile 64 broken }end execute{
 	echo "#undef	_lib_truncate64"
 }end
 
-tst	rotten note{ rotten apple? }end execute{
+tst	- note{ rotten apple? }end execute{
 	#include <string.h>
 	main()
 	{

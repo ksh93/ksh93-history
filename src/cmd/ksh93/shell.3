@@ -34,6 +34,7 @@ int	(*sh_fdnotify(int(*\fIfn\fP)(int,int)))(int,int);
 char	*sh_fmtq(const char *\fIstring\fP);
 void	*sh_waitnotify(int(*\fIfn\fP)(int,long,int));
 void 	sh_delay(double \fIsec\fP);
+Sfio_t 	*sh_fd2sfio(int  \fIfd\fP);
 
 Namval_t	*sh_bltin_table(void);
 int	sh_sigcheck(void);
@@ -309,7 +310,7 @@ It is called with three arguments. The first is the file
 descriptor from which the shell trying to read  or \f5\-1\fP
 if the shell is waiting for a process to complete.
 The second is a timeout in milliseconds.
-A value of \f50\fP for the timeout means that
+A value of \f5\-1\fP for the timeout means that
 no timeout should be set.
 The third argument is 0 for input file descriptors
 and 1 for output file descriptor. 
@@ -320,6 +321,10 @@ A value of \f50\fP indicates
 that the function has returned without processing and that the shell
 should wait for input or process completion.
 The previous installed \f5sh_waitnotify()\fP function pointer is returned.
+.PP
+The \f5sh_fd2sfio()\fP function returns a pointer to the
+Sfio stream corresponding to file descriptor number \fIffd\fP.
+If no stream exists, one is created.
 .PP
 \fBSEE ALSO\fP
 Error(3)

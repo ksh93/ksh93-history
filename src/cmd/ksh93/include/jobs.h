@@ -138,7 +138,8 @@ extern int	job_walk(Sfio_t*,int(*)(struct process*,int),int,char*[]);
 extern int	job_kill(struct process*,int);
 extern void	job_wait(pid_t);
 extern int	job_post(pid_t,pid_t);
-extern int	job_chksave(pid_t);
+extern void	*job_subsave(void);
+extern void	job_subrestore(void*);
 #ifdef JOBS
 	extern void	job_init(int);
 	extern int	job_close(void);

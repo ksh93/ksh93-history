@@ -35,6 +35,7 @@
 #include	<sfio.h>
 #include	<stak.h>
 #include	<ls.h>
+#include	<fcin.h>
 #include	"defs.h"
 #include	"variables.h"
 #include	"path.h"
@@ -164,12 +165,20 @@ sh_main(int ac, char *av[], void (*userinit)(int))
 		if(sh.login_sh >= 2)
 		{
 			/*	system profile	*/
+#ifdef PATH_BFPATH
+			if((fdin=path_open(e_sysprofile,NIL(Pathcomp_t*))) >= 0)
+#else
 			if((fdin=path_open(e_sysprofile,"")) >= 0)
+#endif
 			{
 				error_info.id = (char*)e_sysprofile;
 				exfile(iop,fdin);	/* file exists */
 			}
+#ifdef PATH_BFPATH
+			if(prof &&  (fdin=path_open(sh_mactry((char*)e_profile),NIL(Pathcomp_t*))) >= 0)
+#else
 			if(prof &&  (fdin=path_open(sh_mactry((char*)e_profile),"")) >= 0)
+#endif
 			{
 				error_info.id = path_basename(e_profile);
 				exfile(iop,fdin);
@@ -185,7 +194,11 @@ sh_main(int ac, char *av[], void (*userinit)(int))
 			else if(sh_isoption(SH_PRIVILEGED))
 				name = (char*)e_suidprofile;
 		}
+#ifdef PATH_BFPATH
+		if(*name && (fdin = path_open(name,NIL(Pathcomp_t*))) >= 0)
+#else
 		if(*name && (fdin = path_open(name,"")) >= 0)
+#endif
 		{
 			char *cp, *saveid = error_info.id;
 			cp = error_info.id = strdup(name);
@@ -246,7 +259,15 @@ sh_main(int ac, char *av[], void (*userinit)(int))
 				}
 				else
 				{
+#ifdef PATH_BFPATH
+					if(!strchr(name,'/') && path_absolute(name,NIL(Pathcomp_t*)))
+						sp = stakptr(PATH_OFFSET);
+					else
+						sp = 0;
+					
+#else
 					sp = path_absolute(name,NIL(char*));
+#endif
 					if(sp==0 || (fdin=sh_open(sp,O_RDONLY,0))<0)
 						/* for compatibility with bsh */
 						if((fdin=sh_open(name,O_RDONLY,0))<0)
@@ -340,6 +361,7 @@ static void	exfile(register Sfio_t *iop,register int fno)
 	jmpval = sigsetjmp(buff.buff,0);
 	if(jmpval)
 	{
+		Sfio_t *top;
 		sh_iorestore(0);
 		hist_flush(sh.hist_ptr);
 		sfsync(sh.outpool);
@@ -351,6 +373,14 @@ static void	exfile(register Sfio_t *iop,register int fno)
 		{
 			sh_offstate(SH_INTERACTIVE|SH_MONITOR);
 			goto done;
+		}
+		/* skip over remaining input */
+		if(top = fcfile())
+		{
+			while(fcget()>0);
+			fcclose();
+			while(top=sfstack(iop,SF_POPSTACK))
+				sfclose(top);
 		}
 		/* make sure that we own the terminal */
 #ifdef SIGTSTP

@@ -43,6 +43,9 @@
 
 #if _typ_off64_t
 #undef	off_t
+#ifdef __STDC__
+#define	off_t		off_t
+#endif
 #endif
 
 #include "FEATURE/fcntl.lcl"
@@ -58,6 +61,7 @@
 #include "FEATURE/tty"
 
 #if _typ_off64_t
+#undef	off_t
 #define	off_t	off64_t
 #endif
 
@@ -74,6 +78,9 @@ main()
 	printf("\n");
 	printf("#if _typ_off64_t\n");
 	printf("#undef	off_t\n");
+	printf("#ifdef __STDC__\n");
+	printf("#define	off_t	off_t\n");
+	printf("#endif\n");
 	printf("#endif\n");
 	printf("\n");
 #if _hdr_lcl_fcntl
@@ -110,6 +117,9 @@ main()
 	printf("#include <ast_fs.h>	/* <fcntl.h> includes <sys/stat.h>! part I*/\n");
 	printf("#if _typ_off64_t\n");
 	printf("#undef	off_t\n");
+	printf("#ifdef __STDC__\n");
+	printf("#define	off_t	off_t\n");
+	printf("#endif\n");
 	printf("#endif\n");
 #endif
 	printf("#include <fcntl.h>\n");
@@ -398,6 +408,9 @@ main()
 	printf("#include <ls.h>	/* <fcntl.h> includes <sys/stat.h> part II! */\n");
 	printf("#if _typ_off64_t\n");
 	printf("#undef	off_t\n");
+	printf("#ifdef __STDC__\n");
+	printf("#define	off_t	off_t\n");
+	printf("#endif\n");
 	printf("#endif\n");
 #endif
 #if	NEED_F || NEED_O
@@ -410,6 +423,7 @@ main()
 #endif
 #endif
 	printf("#if _typ_off64_t\n");
+	printf("#undef	off_t\n");
 	printf("#define	off_t	off64_t\n");
 	printf("#endif\n");
 	printf("#if _lib_creat64\n");

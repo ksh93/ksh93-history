@@ -93,7 +93,7 @@ static const char sh_lexstate1[256] =
 	S_REG,	S_REG,	S_REG,	S_REG,	S_REG,	S_REG,	S_REG,	S_REG,
 
 	S_BREAK,S_EPAT,	S_QUOTE,S_REG,	S_DOL,	S_REG,	S_BREAK,S_LIT,
-	S_BREAK,S_BREAK,S_PAT,	S_EPAT,	S_REG,	S_REG,	S_DOT,	S_REG,
+	S_BREAK,S_BREAK,S_PAT,	S_EPAT,	S_REG,	S_EPAT,	S_DOT,	S_REG,
 	0,	0,	0,	0,	0,	0,	0,	0,
 	0,	0,	S_LABEL,S_BREAK,S_BREAK,S_EQ,	S_BREAK,S_PAT,
 
@@ -105,7 +105,7 @@ static const char sh_lexstate1[256] =
 	S_GRAVE,0,	0,	0,	0,	0,	0,	0,
 	0,	0,	0,	0,	0,	0,	0,	0,
 	0,	0,	0,	0,	0,	0,	0,	0,
-	0,	0,	0,	S_BRACE,S_BREAK,S_BRACE,S_REG,	S_REG,
+	0,	0,	0,	S_BRACE,S_BREAK,S_BRACE,S_EPAT,	S_REG,
 
 	S_REG,	S_REG,	S_REG,	S_REG,	S_REG,	S_REG,	S_REG,	S_REG,
 	S_REG,	S_REG,	S_REG,	S_REG,	S_REG,	S_REG,	S_REG,	S_REG,
@@ -137,7 +137,7 @@ static const char sh_lexstate2[256] =
 	0,	0,	0,	0,	0,	0,	0,	0,
 
 	S_BREAK,S_EPAT,	S_QUOTE,0,	S_DOL,	0,	S_BREAK,S_LIT,
-	S_BREAK,S_BREAK,S_PAT,	S_EPAT,	0,	0,	0,	0,
+	S_BREAK,S_BREAK,S_PAT,	S_EPAT,	0,	S_EPAT,	0,	0,
 	0,	0,	0,	0,	0,	0,	0,	0,
 	0,	0,	S_COLON,S_BREAK,S_BREAK,0,	S_BREAK,S_PAT,
 
@@ -149,7 +149,7 @@ static const char sh_lexstate2[256] =
 	S_GRAVE,0,	0,	0,	0,	0,	0,	0,
 	0,	0,	0,	0,	0,	0,	0,	0,
 	0,	0,	0,	0,	0,	0,	0,	0,
-	0,	0,	0,	S_BRACE,S_BREAK,S_BRACE,0,	0,
+	0,	0,	0,	S_BRACE,S_BREAK,S_BRACE,S_EPAT,	0,
 };
 
 /*

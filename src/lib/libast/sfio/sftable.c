@@ -24,11 +24,20 @@
 *                 Phong Vo <kpv@research.att.com>                  *
 *******************************************************************/
 #include	"sfhdr.h"
+#include	"FEATURE/float"
 
 /*	Dealing with $ argument addressing stuffs.
 **
 **	Written by Kiem-Phong Vo.
 */
+
+#if _PACKAGE_ast
+#include		<sig.h>
+#define Sfsignal_f	Sig_handler_t
+#else
+#include		<signal.h>
+typedef void(*		Sfsignal_f)_ARG_((int));
+#endif
 
 #if __STD_C
 static char* sffmtint(const char* str, int* v)
@@ -162,7 +171,7 @@ int		type;
 			goto loop_flags;
 		case QUOTE:
 			SFSETLOCALE(&decimal,&thousand);
-			if(thousand)
+			if(thousand > 0)
 				flags |= SFFMT_THOUSAND;
 			goto loop_flags;
 
@@ -413,7 +422,13 @@ int		type;
 
 /* function to initialize conversion tables */
 static int sfcvinit()
-{	reg int	d, l;
+{	reg int		d, l;
+	float		fn;
+	double		dn;
+	Sfdouble_t	ln;
+#ifdef SIGFPE
+	Sfsignal_f	fpe;
+#endif
 
 	for(d = 0; d <= SF_MAXCHAR; ++d)
 	{	_Sfcv36[d] = SF_RADIX;
@@ -446,47 +461,40 @@ static int sfcvinit()
 
 	_Sftype['d'] = _Sftype['i'] = SFFMT_INT;
 	_Sftype['u'] = _Sftype['o'] = _Sftype['x'] = _Sftype['X'] = SFFMT_UINT;
-	_Sftype['e'] = _Sftype['E'] =
+	_Sftype['e'] = _Sftype['E'] = _Sftype['a'] = _Sftype['A'] =
 	_Sftype['g'] = _Sftype['G'] = _Sftype['f'] = SFFMT_FLOAT;
 	_Sftype['s'] = _Sftype['n'] = _Sftype['p'] = _Sftype['!'] = SFFMT_POINTER;
 	_Sftype['c'] = SFFMT_BYTE;
 	_Sftype['['] = SFFMT_CLASS;
 
+	/* floating point huge values */
+
+#ifdef SIGFPE
+	fpe = signal(SIGFPE, SIG_IGN);
+#endif
+
+	fn = FLT_MAX;
+	fn *= 2;
+	_Sffhuge = fn;
+
+	dn = DBL_MAX;
+	dn *= 2;
+	_Sfdhuge = dn;
+
+#ifdef LDBL_MAX
+	ln = LDBL_MAX;
+#else
+	ln = DBL_MAX;
+#endif
+	ln *= 2;
+	_Sflhuge = ln;
+
+#ifdef SIGFPE
+	signal(SIGFPE, fpe);
+#endif
+
 	return 1;
 }
 
 /* table for floating point and integer conversions */
-Sftab_t	_Sftable =
-{
-	{ 1e1, 1e2, 1e4, 1e8, 1e16, 1e32 },		/* _Sfpos10	*/
-
-	{ 1e-1, 1e-2, 1e-4, 1e-8, 1e-16, 1e-32 },	/* _Sfneg10	*/
-
-	{ '0','0', '0','1', '0','2', '0','3', '0','4',	/* _Sfdec	*/
-	  '0','5', '0','6', '0','7', '0','8', '0','9',
-	  '1','0', '1','1', '1','2', '1','3', '1','4',
-	  '1','5', '1','6', '1','7', '1','8', '1','9',
-	  '2','0', '2','1', '2','2', '2','3', '2','4',
-	  '2','5', '2','6', '2','7', '2','8', '2','9',
-	  '3','0', '3','1', '3','2', '3','3', '3','4',
-	  '3','5', '3','6', '3','7', '3','8', '3','9',
-	  '4','0', '4','1', '4','2', '4','3', '4','4',
-	  '4','5', '4','6', '4','7', '4','8', '4','9',
-	  '5','0', '5','1', '5','2', '5','3', '5','4',
-	  '5','5', '5','6', '5','7', '5','8', '5','9',
-	  '6','0', '6','1', '6','2', '6','3', '6','4',
-	  '6','5', '6','6', '6','7', '6','8', '6','9',
-	  '7','0', '7','1', '7','2', '7','3', '7','4',
-	  '7','5', '7','6', '7','7', '7','8', '7','9',
-	  '8','0', '8','1', '8','2', '8','3', '8','4',
-	  '8','5', '8','6', '8','7', '8','8', '8','9',
-	  '9','0', '9','1', '9','2', '9','3', '9','4',
-	  '9','5', '9','6', '9','7', '9','8', '9','9',
-	},
-
-	"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ@_",
-
-	sfcvinit, 0,
-	sffmtpos,
-	sffmtint
-};
+#include	"FEATURE/sfinit"

@@ -34,5 +34,5 @@ fwrite(const void* p, size_t s, size_t n, Sfio_t* f)
 
 	STDIO_INT(f, "fwrite", ssize_t, (const void*, size_t, size_t, Sfio_t*), (p, s, n, f))
 
-	return ((v = sfwrite(f, p, s * n)) <= 0) ? v : (v / s);
+	return ((v = sfwrite(f, p, s * n)) <= 0) ? 0 : (v / s);
 }

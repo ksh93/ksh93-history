@@ -130,26 +130,7 @@ struct _sfdisc_s
 	Sfdisc_t*	disc;		/* the continuing discipline	*/
 };
 
-#if !defined(_SF_EOF) /* an sfio stub may have been here */
-
-/* a file structure */
-struct _sfio_s
-{	unsigned char*	next;	/* next position to read/write from	*/
-	unsigned char*	endw;	/* end of write buffer			*/
-	unsigned char*	endr;	/* end of read buffer			*/
-	unsigned char*	endb;	/* end of buffer			*/
-	Sfio_t*		push;	/* the stream that was pushed on	*/
-	unsigned short	flags;	/* type of stream			*/
-	short		file;	/* file descriptor			*/
-	unsigned char*	data;	/* base of data buffer			*/
-	ssize_t		size;	/* buffer size				*/
-	ssize_t		val;	/* values or string lengths		*/
-#ifdef _SFIO_PRIVATE
-	_SFIO_PRIVATE
-#endif
-};
-
-#endif /* !defined(_SF_EOF) */
+#include <sfio_s.h>
 
 /* formatting environment */
 typedef struct _sffmt_s	Sffmt_t;
@@ -219,14 +200,10 @@ struct _sffmt_s
 #endif
 
 /* bits for various types of files */
-#define _SF_APPEND	0000010	/* BSDI stat.h namespace incursion	*/
-#define _SF_CLOSE	4	/* AIX sys/socket.h namespace incursion	*/
-
 #define	SF_READ		0000001	/* open for reading			*/
 #define SF_WRITE	0000002	/* open for writing			*/
 #define SF_STRING	0000004	/* a string stream			*/
-#define SF_APPENDWR	_SF_APPEND/* associated file is in append mode	*/
-#define SF_APPEND	_SF_APPEND/* associated file is in append mode	*/
+#define SF_APPENDWR	0000010	/* file is in append mode only		*/
 #define SF_MALLOC	0000020	/* buffer is malloc-ed			*/
 #define SF_LINE		0000040	/* line buffering			*/
 #define SF_SHARE	0000100	/* stream with shared file descriptor 	*/
@@ -251,7 +228,7 @@ struct _sffmt_s
 
 /* exception events: SF_NEW(0), SF_READ(1), SF_WRITE(2) and the below 	*/
 #define SF_SEEK		3	/* seek error				*/
-#define SF_CLOSE	_SF_CLOSE/* when stream is about to be closed	*/
+#define SF_CLOSING	4	/* when stream is about to be closed	*/
 #define SF_DPUSH	5	/* when discipline is being pushed	*/
 #define SF_DPOP		6	/* when discipline is being popped	*/
 #define SF_DPOLL	7	/* see if stream is ready for I/O	*/
@@ -274,6 +251,14 @@ struct _sffmt_s
 
 #define SF_BUFSIZE	8192	/* default buffer size			*/
 #define SF_UNBOUND	(-1)	/* unbounded buffer size		*/
+
+/* namespace incursion workarounds -- migrate to the new names */
+#if !_mac_SF_APPEND
+#define SF_APPEND	SF_APPENDWR	/* BSDI sys/stat.h		*/
+#endif
+#if !_mac_SF_CLOSE
+#define SF_CLOSE	SF_CLOSING	/* AIX sys/socket.h		*/
+#endif
 
 _BEGIN_EXTERNS_
 
@@ -418,8 +403,6 @@ _END_EXTERNS_
 #define __sf_putu(f,v)		(_sfputu(_SF_(f),(Sfulong_t)(v)))
 #define __sf_putm(f,v,m)	(_sfputm(_SF_(f),(Sfulong_t)(v),(Sfulong_t)(m)))
 
-#if defined(_SF_EOF)
-
 #define __sf_putc(f,c)	(_SF_(f)->_next >= _SF_(f)->_endw ? \
 			 _sfflsbuf(_SF_(f),(int)((unsigned char)(c))) : \
 			 (int)(*_SF_(f)->_next++ = (unsigned char)(c)) )
@@ -439,72 +422,49 @@ _END_EXTERNS_
 #define __sf_value(f)	(_SF_(f)->_val)
 #define __sf_slen()	(_Sfi)
 
-#else
-
-#define __sf_putc(f,c)	(_SF_(f)->next >= _SF_(f)->endw ? \
-			 _sfflsbuf(_SF_(f),(int)((unsigned char)(c))) : \
-			 (int)(*_SF_(f)->next++ = (unsigned char)(c)) )
-#define __sf_getc(f)	(_SF_(f)->next >= _SF_(f)->endr ? _sffilbuf(_SF_(f),0) : \
-			 (int)(*_SF_(f)->next++) )
-
-#define __sf_dlen(v)	(_sfdlen((Sfdouble_t)(v)) )
-#define __sf_llen(v)	(_sfllen((Sflong_t)(v)) )
-#define __sf_ulen(v)	((Sfulong_t)(v) < SF_U1 ? 1 : (Sfulong_t)(v) < SF_U2 ? 2 : \
-			 (Sfulong_t)(v) < SF_U3 ? 3 : (Sfulong_t)(v) < SF_U4 ? 4 : 5)
-
-#define __sf_fileno(f)	(_SF_(f)->file)
-#define __sf_eof(f)	(_SF_(f)->flags&SF_EOF)
-#define __sf_error(f)	(_SF_(f)->flags&SF_ERROR)
-#define __sf_clrerr(f)	(_SF_(f)->flags &= ~(SF_ERROR|SF_EOF))
-#define __sf_stacked(f)	(_SF_(f)->push != (Sfio_t*)0)
-#define __sf_value(f)	(_SF_(f)->val)
-#define __sf_slen()	(_Sfi)
-
-#endif
-
 #if defined(__INLINE__) && !_BLD_sfio
 
-__INLINE__ int sfputd(Sfio_t* f, Sfdouble_t v)	{ return __sf_putd(f,v);	}
-__INLINE__ int sfputl(Sfio_t* f, Sflong_t v)	{ return __sf_putl(f,v);	}
-__INLINE__ int sfputu(Sfio_t* f, Sfulong_t v)	{ return __sf_putu(f,v);	}
+__INLINE__ int sfputd(Sfio_t* f, Sfdouble_t v)	{ return __sf_putd(f,v); }
+__INLINE__ int sfputl(Sfio_t* f, Sflong_t v)	{ return __sf_putl(f,v); }
+__INLINE__ int sfputu(Sfio_t* f, Sfulong_t v)	{ return __sf_putu(f,v); }
 __INLINE__ int sfputm(Sfio_t* f, Sfulong_t v, Sfulong_t m)
-						{ return __sf_putm(f,v,m);	}
+						{ return __sf_putm(f,v,m); }
 
-__INLINE__ int sfputc(Sfio_t* f, int c)		{ return __sf_putc(f,c);	}
-__INLINE__ int sfgetc(Sfio_t* f)		{ return __sf_getc(f);		}
+__INLINE__ int sfputc(Sfio_t* f, int c)		{ return __sf_putc(f,c); }
+__INLINE__ int sfgetc(Sfio_t* f)		{ return __sf_getc(f); }
 
-__INLINE__ int sfdlen(Sfdouble_t v)		{ return __sf_dlen(v);		}
-__INLINE__ int sfllen(Sflong_t v)		{ return __sf_llen(v);		}
-__INLINE__ int sfulen(Sfulong_t v)		{ return __sf_ulen(v);		}
+__INLINE__ int sfdlen(Sfdouble_t v)		{ return __sf_dlen(v); }
+__INLINE__ int sfllen(Sflong_t v)		{ return __sf_llen(v); }
+__INLINE__ int sfulen(Sfulong_t v)		{ return __sf_ulen(v); }
 
-__INLINE__ int sffileno(Sfio_t* f)		{ return __sf_fileno(f);	}
-__INLINE__ int sfeof(Sfio_t* f)			{ return __sf_eof(f);		}
-__INLINE__ int sferror(Sfio_t* f)		{ return __sf_error(f);		}
-__INLINE__ int sfclrerr(Sfio_t* f)		{ return __sf_clrerr(f);	}
-__INLINE__ int sfstacked(Sfio_t* f)		{ return __sf_stacked(f);	}
-__INLINE__ ssize_t sfvalue(Sfio_t* f)		{ return __sf_value(f);		}
+__INLINE__ int sffileno(Sfio_t* f)		{ return __sf_fileno(f); }
+__INLINE__ int sfeof(Sfio_t* f)			{ return __sf_eof(f); }
+__INLINE__ int sferror(Sfio_t* f)		{ return __sf_error(f); }
+__INLINE__ int sfclrerr(Sfio_t* f)		{ return __sf_clrerr(f); }
+__INLINE__ int sfstacked(Sfio_t* f)		{ return __sf_stacked(f); }
+__INLINE__ ssize_t sfvalue(Sfio_t* f)		{ return __sf_value(f); }
 
 #else
 
-#define sfputd(f,v)				( __sf_putd((f),(v))		)
-#define sfputl(f,v)				( __sf_putl((f),(v))		)
-#define sfputu(f,v)				( __sf_putu((f),(v))		)
-#define sfputm(f,v,m)				( __sf_putm((f),(v),(m))	)
+#define sfputd(f,v)				( __sf_putd((f),(v)) )
+#define sfputl(f,v)				( __sf_putl((f),(v)) )
+#define sfputu(f,v)				( __sf_putu((f),(v)) )
+#define sfputm(f,v,m)				( __sf_putm((f),(v),(m)) )
 
-#define sfputc(f,c)				( __sf_putc((f),(c))		)
-#define sfgetc(f)				( __sf_getc(f)			)
+#define sfputc(f,c)				( __sf_putc((f),(c)) )
+#define sfgetc(f)				( __sf_getc(f) )
 
-#define sfdlen(v)				( __sf_dlen(v)			)
-#define sfllen(v)				( __sf_llen(v)			)
-#define sfulen(v)				( __sf_ulen(v)			)
+#define sfdlen(v)				( __sf_dlen(v) )
+#define sfllen(v)				( __sf_llen(v) )
+#define sfulen(v)				( __sf_ulen(v) )
 
-#define sffileno(f)				( __sf_fileno(f)		)
-#define sfeof(f)				( __sf_eof(f)			)
-#define sferror(f)				( __sf_error(f)			)
-#define sfclrerr(f)				( __sf_clrerr(f)		)
-#define sfstacked(f)				( __sf_stacked(f)		)
-#define sfvalue(f)				( __sf_value(f)			)
-#define sfslen()				( __sf_slen()			)
+#define sffileno(f)				( __sf_fileno(f) )
+#define sfeof(f)				( __sf_eof(f) )
+#define sferror(f)				( __sf_error(f) )
+#define sfclrerr(f)				( __sf_clrerr(f) )
+#define sfstacked(f)				( __sf_stacked(f) )
+#define sfvalue(f)				( __sf_value(f) )
+#define sfslen()				( __sf_slen() )
 
 #endif /*__INLINE__*/
 

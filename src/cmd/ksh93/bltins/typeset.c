@@ -55,6 +55,11 @@
 #   define DL_MODE	1
 #endif
 
+#if ( SFIO_VERSION  <= 20010201L )
+#   define _data	data
+#endif
+
+
 struct tdata
 {
 	Shell_t *sh;
@@ -80,13 +85,25 @@ static void(*nullscan)(Namval_t*,void*);
 static char *get_tree(Namval_t*, Namfun_t *);
 static void put_tree(Namval_t*, const char*, int,Namfun_t*);
 
+static Namval_t *create_tree(Namval_t *np,const char *name,int n,Namfun_t *fp)
+{
+	NOT_USED(np);
+	NOT_USED(name);
+	NOT_USED(n);
+	NOT_USED(fp);
+	return(0);
+}
+
 #undef nv_name
 
 static const Namdisc_t treedisc =
 {
 	0,
 	put_tree,
-	get_tree
+	get_tree,
+	0,
+	0,
+	create_tree
 };
 
 
@@ -124,11 +141,18 @@ int    b_readonly(int argc,char *argv[],void *extra)
 	argv += (opt_info.index-1);
 	if(*command=='r')
 		flag = (NV_ASSIGN|NV_RDONLY|NV_VARNAME);
+#ifdef _ENV_H
+	else if(!argv[1])
+	{
+		char *cp,**env=env_get(tdata.sh->env);
+		while(cp = *env++)
+			sfprintf(sfstdout,"%s\n",sh_fmtq(cp));
+		return(0);
+	}
+#endif
 	else
 		flag = (NV_ASSIGN|NV_EXPORT|NV_IDENT);
-	if(*argv)
-		return(b_common(argv,flag,tdata.sh->var_tree, &tdata));
-	print_scan(sfstdout,flag,tdata.sh->var_tree,tdata.aflag=='+', &tdata);
+	return(b_common(argv,flag,tdata.sh->var_tree, &tdata));
 	return(0);
 }
 
@@ -313,7 +337,7 @@ int    b_typeset(int argc,register char *argv[],void *extra)
 static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *tp)
 {
 	register char *name;
-	int nvflags=(flag&(NV_ARRAY|NV_NOSCOPE|NV_VARNAME|NV_IDENT|NV_ASSIGN));
+	int nvflags=(flag&(NV_NOARRAY|NV_NOSCOPE|NV_VARNAME|NV_IDENT|NV_ASSIGN));
 	int r=0, ref=0;
 	Shell_t *shp =tp->sh;
 #ifdef SHOPT_OO
@@ -337,7 +361,7 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 			flag &= ~NV_REF;
 			ref=1;
 			if(tp->aflag!='-')
-				nvflags |= NV_REF;
+				nvflags |= NV_NOREF;
 		}
 		while(name = *++argv)
 		{
@@ -356,7 +380,7 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 					/* Function names cannot be special builtin */
 					if((np=nv_search(name,shp->bltin_tree,0)) && nv_isattr(np,BLT_SPC))
 						errormsg(SH_DICT,ERROR_exit(1),e_badfun,name);
-					np = nv_open(name,shp->fun_tree,NV_ARRAY|NV_IDENT|NV_NOSCOPE);
+					np = nv_open(name,shp->fun_tree,NV_NOARRAY|NV_IDENT|NV_NOSCOPE);
 				}
 				else
 					np = nv_search(name,shp->fun_tree,HASH_NOSCOPE);
@@ -382,8 +406,12 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 			/* tracked alias */
 			if(troot==shp->track_tree && tp->aflag=='-')
 			{
+#ifdef PATH_BFPATH
+				path_alias(np,path_absolute(nv_name(np),NIL(Pathcomp_t*)));
+#else
 				nv_onattr(np,NV_NOALIAS);
 				path_alias(np,path_absolute(nv_name(np),NIL(char*)));
+#endif
 				continue;
 			}
 			if(flag==NV_ASSIGN && !ref && tp->aflag!='-' && !strchr(name,'='))
@@ -855,6 +883,18 @@ static void	print_all(Sfio_t *file,Dt_t *root, struct tdata *tp)
 #include	<fcin.h>
 #include	"argnod.h"
 
+static char *nextdot(const char *str)
+{
+	char *cp;
+	if(*str=='[')
+	{
+		cp = nv_endsubscript((Namval_t*)0,(char*)str,0);
+		return(*cp=='.'?cp:0);
+	}
+	else
+		return(strchr(str,'.'));
+}
+
 /*
  * format initialization list given a list of assignments <argp>
  */
@@ -868,7 +908,7 @@ static void genvalue(struct argnod *argp, const char *prefix, int n, int indent,
 	if(n==0)
 		m = strlen(prefix);
 	else
-		m = strchr(prefix,'.')-prefix;
+		m = nextdot(prefix)-prefix;
 	m++;
 	if(tp->outfile)
 	{
@@ -890,12 +930,12 @@ static void genvalue(struct argnod *argp, const char *prefix, int n, int indent,
 		if(n==0 || strncmp(ap->argval,prefix-n,m+n)==0)
 		{
 			cp +=m;
-			if(nextcp=strchr(cp,'.'))
+			if(nextcp=nextdot(cp))
 			{
 				if(tp->outfile)
 				{
 					sfnputc(tp->outfile,'\t',indent);
-					sfwrite(tp->outfile,cp,nextcp-cp);
+					nv_outname(tp->outfile,cp,nextcp-cp);
 					sfputc(tp->outfile,'=');
 				}
 				genvalue(argp,cp,n+m ,indent, tp);
@@ -926,7 +966,9 @@ static void genvalue(struct argnod *argp, const char *prefix, int n, int indent,
 			sfnputc(tp->outfile,'\t',indent);
 			if(nv_isattr(np,~NV_ARRAY) || associative)
 				print_attribute(np,tp);
-			sfputr(tp->outfile,cp,(isarray==2?'\n':'='));
+			nv_outname(tp->outfile,cp,-1);
+			sfputc(tp->outfile,(isarray==2?'\n':'='));
+
 			if(isarray)
 			{
 				if(isarray==2)
@@ -954,7 +996,10 @@ static void genvalue(struct argnod *argp, const char *prefix, int n, int indent,
 						fmtq = ep;
 					}
 				}
-				sfputr(tp->outfile,fmtq,'\n');
+				if(*cp=='[' && !isarray)
+					sfprintf(tp->outfile,"(%s)\n",fmtq);
+				else
+					sfputr(tp->outfile,fmtq,'\n');
 				if(!ap || !nv_nextsub(np))
 					break;
 				sfnputc(tp->outfile,'\t',indent);
@@ -1006,7 +1051,7 @@ static char *walk_tree(register Namval_t *np, int dlete)
 	ap = (struct argnod*)stakfreeze(1);
 	ap->argflag = ARG_MAC;
 	fcsave(&save);
-	sh_macexpand(ap,&arglist,0);
+	sh_macexpand(ap,&arglist,ARG_NOGLOB);
 	fcrestore(&save);
 	ap->argval[strlen(ap->argval)-(subscript?4:3)] = 0;
 	name = (char*)&ap->argval[4];
@@ -1024,7 +1069,7 @@ static char *walk_tree(register Namval_t *np, int dlete)
 	if(!tdata.outfile)
 		return((char*)0);
 	sfputc(out,0);
-	return((char*)out->data);
+	return((char*)out->_data);
 }
 
 /*
@@ -1042,6 +1087,7 @@ static char *get_tree(register Namval_t *np, Namfun_t *fp)
 static void put_tree(register Namval_t *np, const char *val, int flags,Namfun_t *fp)
 {
 	walk_tree(np,1);
+	fp = nv_stack(np,fp);
 	if(fp = nv_stack(np,NIL(Namfun_t*)))
 	{
 		free((void*)fp);

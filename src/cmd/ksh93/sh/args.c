@@ -556,6 +556,18 @@ static int arg_expand(register struct argnod *argp, struct argnod **argchain,int
 #endif	/* SHOPT_DEVFD */
 	if(!(argp->argflag&ARG_RAW))
 	{
+#ifdef SHOPT_OPTIMIZE
+		struct argnod *ap=argp->argchn.ap;
+		if(ap)
+		{
+			sh.optcount++;
+			count = 1;
+			ap->argchn.ap = *argchain;
+			ap->argflag |= ARG_RAW;
+			*argchain = ap;
+		}
+		else
+#endif /* SHOPT_OPTIMIZE */
 		count = sh_macexpand(argp,argchain,flag);
 	}
 	else

@@ -42,6 +42,7 @@
 #include	"builtins.h"
 #include	"streval.h"
 #include	<tm.h>
+#include	<ccode.h>
 
 union types_t
 {
@@ -57,9 +58,6 @@ union types_t
 	int		*ip;
 	char		**p;
 };
-
-#define fmtre(x)	(x)
-
 
     struct printf
     {
@@ -89,7 +87,7 @@ struct print
 	char		echon;
 };
 
-static char 	*nullarg;
+static char* 	nullarg[] = { 0, 0 };
 
 /*
  * Need to handle write failures to avoid locking output pool
@@ -315,7 +313,7 @@ skip2:
 #endif
 			sfprintf(outfile,"%!",&pdata);
 		} while(*pdata.nextarg && pdata.nextarg!=argv);
-		if(pdata.nextarg == &nullarg && pdata.argsize>0)
+		if(pdata.nextarg == nullarg && pdata.argsize>0)
 			sfwrite(outfile,stakptr(staktell()),pdata.argsize);
 		sfpool(sfstderr,pool,SF_WRITE);
 		exitval = pdata.err;
@@ -445,7 +443,7 @@ static char *fmthtml(const char *string)
 		else if(c==' ')
 			stakputs("&nbsp;");
 		else if(!isprint(c) && c!='\n' && c!='\r')
-			sfprintf(stkstd,"&#%X;",c);
+			sfprintf(stkstd,"&#%X;",CCMAPC(c,CC_NATIVE,CC_ASCII));
 		else
 			stakputc(c);
 	}
@@ -488,11 +486,11 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 			break;
 		case 'e':
 		case 'f':
+		case 'g':
 			value->f = 0.;
 			break;
 		case 'E':
 		case 'G':
-		case 'F':
 			value->d = 0.;
 			break;
 		case 'n':
@@ -548,7 +546,7 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 			if(format=='s' && fe->base>=0)
 			{
 				value->p = pp->nextarg;
-				pp->nextarg = (char**)&nullarg;
+				pp->nextarg = nullarg;
 			}
 			else
 			{
@@ -611,8 +609,8 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 			break;
 		case 'e':
 		case 'f':
+		case 'g':
 		case 'E':
-		case 'F':
 		case 'G':
 			value->d = sh_strnum(*pp->nextarg,&lastchar,0);
 			fe->size = sizeof(value->d);
@@ -630,6 +628,8 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 			errormsg(SH_DICT,ERROR_exit(1),e_formspec,format);
 			break;
 		}
+		if (format == '.')
+			value->i = value->l;
 		if(*lastchar)
 		{
 			errormsg(SH_DICT,ERROR_warn(0),e_argtype,format);
@@ -647,7 +647,7 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 	case 'b':
 		if((n=fmtvecho(value->s,pp))>=0)
 		{
-			if(pp->nextarg == &nullarg)
+			if(pp->nextarg == nullarg)
 			{
 				pp->argsize = n;
 				return -1;
@@ -727,11 +727,11 @@ static int getarg(Sfio_t *sp, void* v, Sffmt_t* fe)
 				break;
 			case 'e':
 			case 'f':
+			case 'g':
 				value->f = 0.;
 				break;
 			case 'E':
 			case 'G':
-			case 'F':
 				value->d = 0.;
 				break;
 			case 'n':
@@ -832,8 +832,8 @@ static int getarg(Sfio_t *sp, void* v, Sffmt_t* fe)
 			break;
 		case 'e':
 		case 'f':
+		case 'g':
 		case 'E':
-		case 'F':
 		case 'G':
 			size = sizeof(double);
 			if(pp->hdr.flag=='h' || format=='f')
@@ -882,7 +882,7 @@ static int extend(Sfio_t* sp, void* val, int precis, Sffmt_t* fe)
 		case 'b':
 			if((n=fmtvecho(invalue,pp))>=0)
 			{
-				if(nextarg == &nullarg)
+				if(nextarg == nullarg)
 				{
 					*outval = 0;
 					argsize = n;
@@ -976,7 +976,7 @@ static int fmtvecho(const char *string, struct printf *pp)
 				break;
 			case 'c':
 				pp->cescape++;
-				pp->nextarg = (char**)&nullarg;
+				pp->nextarg = nullarg;
 				goto done;
 			case 'f':
 				c = '\f';

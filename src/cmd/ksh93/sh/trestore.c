@@ -30,6 +30,7 @@
  *
  */
 
+#include	<ccode.h>
 #include	"defs.h"
 #include	"shnodes.h"
 #include	"path.h"
@@ -121,7 +122,7 @@ static union anynode *r_tree()
 		case TSW:
 			t = getnode(swnod);
 			t->sw.swarg = r_arg();
-			if(t->tre.tretyp&COMSCAN)
+			if(type&COMSCAN)
 				t->sw.swio = r_redirect();
 			else
 				t->sw.swio = 0;
@@ -176,8 +177,12 @@ static struct argnod *r_arg(void)
 		else
 			apold->argnxt.ap = ap;
 		if(--l > 0)
+		{
 			sfread(infile,ap->argval,(size_t)l);
+			ccmaps(ap->argval, l, CC_ASCII, CC_NATIVE);
+		}
 		ap->argval[l] = 0;
+		ap->argchn.cp = 0;
 		ap->argflag = sfgetc(infile);
 		if(ap->argflag&ARG_MESSAGE)
 		{
@@ -198,6 +203,7 @@ static struct argnod *r_arg(void)
 		if(*ap->argval==0 && (ap->argflag&~ARG_APPEND)==0)
 		{
 			struct fornod *fp = (struct fornod*)getnode(fornod);
+			fp->fortyp = sfgetu(infile);
 			fp->fortre = r_tree();
 			fp->fornam = ap->argval+1;
 			ap->argchn.ap = (struct argnod*)fp;
@@ -310,6 +316,7 @@ static char *r_string(void)
 	{
 		if(sfread(in,ptr,(size_t)l)!=(size_t)l)
 			return(NIL(char*));
+		ccmaps(ptr, l, CC_ASCII, CC_NATIVE);
 	}
 	ptr[l] = 0;
 	return(ptr);

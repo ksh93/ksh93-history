@@ -46,7 +46,8 @@ __STDPP__directive pragma pp:hide getpagesize getdtablesize printf spawnve
 
 #include <sys/types.h>
 
-#include "ast_lib.h"
+#include <ast_lib.h>
+
 #include "limits.h"
 
 #include "FEATURE/unistd.lcl"
@@ -69,8 +70,8 @@ extern int		printf(const char*, ...);
 main()
 {
 #include "confuni.h"
-#if __MVS__
-	printf("\n#if __MVS__ && ( _DLL_BLD || _BLD_DLL )\n");
+#if _dll_data_intercept
+	printf("\n#if _dll_data_intercept && ( _DLL_BLD || _BLD_DLL )\n");
 	printf("#undef	environ\n");
 	printf("#define environ (*_ast_dll._dll_environ)\n");
 	printf("struct _astdll { char*** _dll_environ; };\n");

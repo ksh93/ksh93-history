@@ -93,7 +93,7 @@ static char		*stkgrow(Sfio_t*, unsigned);
 #define stream2stk(stream)	((stream)==stkstd? stkcur:\
 				 ((struct stk*)(((char*)(stream))+STK_HDRSIZE)))
 #define stk2stream(sp)		((Sfio_t*)(((char*)(sp))-STK_HDRSIZE))
-#define stkleft(stream)		((stream)->endb-(stream)->data)
+#define stkleft(stream)		((stream)->_endb-(stream)->_data)
 	
 
 #ifdef STKSTATS
@@ -151,7 +151,7 @@ static int stkexcept(register Sfio_t *stream, int type, void* val, Sfdisc_t* dp)
 	NoP(val);
 	switch(type)
 	{
-	    case SF_CLOSE:
+	    case SF_CLOSING:
 		{
 			register struct stk *sp = stream2stk(stream); 
 			register char *cp = sp->stkbase;
@@ -195,7 +195,7 @@ static int stkexcept(register Sfio_t *stream, int type, void* val, Sfdisc_t* dp)
 				Sfio_t *old = 0;
 				if(stream!=stkstd)
 					old = stkinstall(stream,NiL);
-				if(!stkgrow(stkstd,size-(stkstd->endb-stkstd->data)))
+				if(!stkgrow(stkstd,size-(stkstd->_endb-stkstd->_data)))
 					return(-1);
 				if(old)
 					stkinstall(old,NiL);
@@ -341,8 +341,8 @@ char *stkset(register Sfio_t * stream, register char* loc, unsigned offset)
 			cp += sizeof(struct frame);
 			if(frames)
 				sfsetbuf(stream,cp,sp->stkend-cp);
-			stream->data = (unsigned char*)(cp + roundof(loc-cp,STK_ALIGN));
-			stream->next = (unsigned char*)loc+offset;
+			stream->_data = (unsigned char*)(cp + roundof(loc-cp,STK_ALIGN));
+			stream->_next = (unsigned char*)loc+offset;
 			goto found;
 		}
 		fp = (struct frame*)cp;
@@ -361,9 +361,9 @@ char *stkset(register Sfio_t * stream, register char* loc, unsigned offset)
 	if(frames)
 		sfsetbuf(stream,cp,sp->stkend-cp);
 	else
-		stream->data = stream->next = (unsigned char*)cp;
+		stream->_data = stream->_next = (unsigned char*)cp;
 found:
-	return((char*)stream->data);
+	return((char*)stream->_data);
 }
 
 /*
@@ -378,8 +378,8 @@ char *stkalloc(register Sfio_t *stream, register unsigned int n)
 	n = roundof(n,STK_ALIGN);
 	if(stkleft(stream) <= (int)n && !stkgrow(stream,n))
 		return(0);
-	old = stream->data;
-	stream->data = stream->next = old+n;
+	old = stream->_data;
+	stream->_data = stream->_next = old+n;
 	return((char*)old);
 }
 
@@ -393,8 +393,8 @@ char *_stkseek(register Sfio_t *stream, register unsigned n)
 	increment(seek);
 	if(stkleft(stream) <= (int)n && !stkgrow(stream,n))
 		return(0);
-	stream->next = stream->data+n;
-	return((char*)stream->data);
+	stream->_next = stream->_data+n;
+	return((char*)stream->_data);
 }
 
 /*
@@ -406,20 +406,20 @@ char	*stkfreeze(register Sfio_t *stream, register unsigned extra)
 	register unsigned char *old, *top;
 	if(!init)
 		stkinit(extra);
-	old = stream->data;
-	top = stream->next;
+	old = stream->_data;
+	top = stream->_next;
 	if(extra)
 	{
-		if(extra > (stream->endb-stream->next))
+		if(extra > (stream->_endb-stream->_next))
 		{
 			if (!(top = (unsigned char*)stkgrow(stream,extra)))
 				return(0);
-			old = stream->data;
+			old = stream->_data;
 		}
 		*top = 0;
 		top += extra;
 	}
-	stream->next = stream->data += roundof(top-old,STK_ALIGN);
+	stream->_next = stream->_data += roundof(top-old,STK_ALIGN);
 	return((char*)old);
 }
 
@@ -437,8 +437,8 @@ char	*stkcopy(Sfio_t *stream, const char* str)
 	increment(copy);
 	if(stkleft(stream) <= n && !stkgrow(stream,n))
 		return(0);
-	strcpy((char*)(cp=stream->data),str);
-	stream->data = stream->next = cp+n;
+	strcpy((char*)(cp=stream->_data),str);
+	stream->_data = stream->_next = cp+n;
 	return((char*)cp);
 }
 
@@ -465,7 +465,7 @@ static char *stkgrow(register Sfio_t *stream, unsigned size)
 #endif /* !USE_REALLOC */
 		n = roundof(n,STK_FSIZE);
 	/* see whether current frame can be extended */
-	if((char*)(stream->data) == sp->stkbase+sizeof(struct frame))
+	if((char*)(stream->_data) == sp->stkbase+sizeof(struct frame))
 	{
 		cp = newof(sp->stkbase,char,n,0);
 		reused++;
@@ -483,8 +483,8 @@ static char *stkgrow(register Sfio_t *stream, unsigned size)
 	sp->stkend = fp->end = cp+n;
 	cp = (char*)(fp+1);
 	if(m && !reused)
-		memcpy(cp,(char*)stream->data,m);
+		memcpy(cp,(char*)stream->_data,m);
 	count(movsize,m);
 	sfsetbuf(stream,cp,sp->stkend-cp);
-	return((char*)(stream->next = stream->data+m));
+	return((char*)(stream->_next = stream->_data+m));
 }

@@ -87,7 +87,7 @@
 #if _BLD_ast
 #define _BLD_cdt	1
 #define _BLD_sfio	1
-#if !_WIN32
+#if !_UWIN
 #define _BLD_vmalloc	1
 #endif
 #endif
@@ -126,10 +126,12 @@ __STDPP__directive pragma pp:hide realloc
 __STDPP__directive pragma pp:hide valloc
 #endif
 __STDPP__directive pragma pp:hide bcopy bzero execl execle execlp execv
-__STDPP__directive pragma pp:hide execve execvp execvpe getcwd
-__STDPP__directive pragma pp:hide getopt getsubopt putenv
-__STDPP__directive pragma pp:hide realpath setenv setpgrp sleep spawnlp
+__STDPP__directive pragma pp:hide execve execvp execvpe
+__STDPP__directive pragma pp:hide getcwd getopt getsubopt putenv realpath
+__STDPP__directive pragma pp:hide setenv setpgrp sleep spawnlp
 __STDPP__directive pragma pp:hide spawnve spawnveg spawnvp spawnvpe
+__STDPP__directive pragma pp:hide strtol strtoul strtoll strtoull
+__STDPP__directive pragma pp:hide strtod strtold
 __STDPP__directive pragma pp:hide strdup vfprintf vprintf vsprintf
 #else
 #if !_std_def_calloc
@@ -154,8 +156,8 @@ __STDPP__directive pragma pp:hide strdup vfprintf vprintf vsprintf
 #define execlp		______execlp
 #define execv		______execv
 #define execve		______execve
-#define execvp		______execvp
 #define execvpe		______execvpe
+#define execvp		______execvp
 #define getcwd		______getcwd
 #define getopt		______getopt
 #define getsubopt	______getsubopt
@@ -169,6 +171,12 @@ __STDPP__directive pragma pp:hide strdup vfprintf vprintf vsprintf
 #define spawnveg	______spawnveg
 #define spawnvp		______spawnvp
 #define spawnvpe	______spawnvpe
+#define strtol		______strtol
+#define strtoul		______strtoul
+#define strtoll		______strtoll
+#define strtoull	______strtoull
+#define strtod		______strtod
+#define strtold		______strtold
 #define strdup		______strdup
 #define vfprintf	______vfprintf
 #define vprintf		______vprintf
@@ -240,10 +248,12 @@ __STDPP__directive pragma pp:nohide realloc
 __STDPP__directive pragma pp:nohide valloc
 #endif
 __STDPP__directive pragma pp:nohide bcopy bzero execl execle execlp execv
-__STDPP__directive pragma pp:nohide execve execvp execvpe getcwd
-__STDPP__directive pragma pp:nohide getopt getsubopt putenv
-__STDPP__directive pragma pp:nohide realpath setenv setpgrp sleep spawnlp
+__STDPP__directive pragma pp:nohide execve execvp execvpe
+__STDPP__directive pragma pp:nohide getcwd getopt getsubopt putenv realpath
+__STDPP__directive pragma pp:nohide setenv setpgrp sleep spawnlp
 __STDPP__directive pragma pp:nohide spawnve spawnveg spawnvp spawnvpe
+__STDPP__directive pragma pp:nohide strtol strtoul strtoll strtoull
+__STDPP__directive pragma pp:nohide strtod strtold
 __STDPP__directive pragma pp:nohide strdup vfprintf vprintf vsprintf
 #else
 #if !_std_def_calloc
@@ -283,12 +293,19 @@ __STDPP__directive pragma pp:nohide strdup vfprintf vprintf vsprintf
 #undef	spawnveg
 #undef	spawnvp
 #undef	spawnvpe
+#undef	strtol
+#undef	strtoul
+#undef	strtoll
+#undef	strtoull
+#undef	strtod
+#undef	strtold
 #undef	strdup
 #undef	vfprintf
 #undef	vprintf
 #undef	vsprintf
 #endif
 
+#include <ast_map.h>
 #include <ast_types.h>
 
 #if !defined(__STDC__) && ( defined(__cplusplus) || !defined(_std_stdlib) )
@@ -298,17 +315,6 @@ __STDPP__directive pragma pp:nohide strdup vfprintf vprintf vsprintf
 extern double		atof(const char*);
 extern int		atoi(const char*);
 extern long		atol(const char*);
-extern double		strtod(const char*, char**);
-extern long		strtol(const char*, char**, int);
-extern unsigned long	strtoul(const char*, char**, int);
-
-#ifdef _ast_int8_t
-extern _ast_int8_t		strtoll(const char*, char**, int);
-extern unsigned _ast_int8_t	strtoull(const char*, char**, int);
-#else
-extern long			strtoll(const char*, char**, int);
-extern unsigned long		strtoull(const char*, char**, int);
-#endif
 
 extern int		rand(void);
 extern void		srand(unsigned int);
@@ -337,25 +343,15 @@ extern int		wctomb(char*, wchar_t);
 extern size_t		mbstowcs(wchar_t*, const char*, size_t);
 extern size_t		wcstombs(char*, const wchar_t*, size_t);
 
-#else
-
-#if !_lib_strtoll
-#ifdef _ast_int8_t
-extern _ast_int8_t		strtoll(const char*, char**, int);
-#else
-extern long			strtoll(const char*, char**, int);
-#endif
 #endif
 
-#if !_lib_strtoull
-#ifdef _ast_int8_t
-extern unsigned _ast_int8_t	strtoull(const char*, char**, int);
-#else
-extern unsigned long		strtoull(const char*, char**, int);
-#endif
-#endif
+extern long			strtol(const char*, char**, int);
+extern unsigned long		strtoul(const char*, char**, int);
+extern _ast_intmax_t		strtoll(const char*, char**, int);
+extern unsigned _ast_intmax_t	strtoull(const char*, char**, int);
 
-#endif
+extern double			strtod(const char*, char**);
+extern _ast_fltmax_t		strtold(const char*, char**);
 
 #if !_std_def_calloc
 extern void*		calloc(size_t, size_t);
@@ -606,11 +602,14 @@ __STDPP__directive pragma pp:ignore "strings.h"
 
 #if _typ_off64_t
 #undef	off_t
+#ifdef __STDC__
+#define	off_t		off_t
+#endif
 #endif
 
 /* <unistd.h> */
 
-#if _WIN32
+#if _UWIN
 #include <unistd.h>
 #else
 #include <ast_unistd.h>
@@ -709,7 +708,7 @@ extern ssize_t		write(int, const void*, size_t);
 
 extern char*		strerror(int);
 
-#if !_WIN32
+#if !_UWIN
 
 #undef	confstr
 #define confstr		_ast_confstr
@@ -883,50 +882,81 @@ __STDPP__directive pragma pp:ignore "sysent.h"
 
 #endif
 
+#else
+
+struct lconv 	
+{
+	char*	decimal_point;
+	char*	thousands_sep;
+	char*	grouping;
+	char*	int_curr_symbol;
+	char*	currency_symbol;
+	char*	mon_decimal_point;
+	char*	mon_thousands_sep;
+	char*	mon_grouping;
+	char*	positive_sign;
+	char*	negative_sign;
+	char	int_frac_digits;
+	char	frac_digits;
+	char	p_cs_precedes;
+	char	p_sep_by_space;
+	char	n_cs_precedes;
+	char	n_sep_by_space;
+	char	p_sign_posn;
+	char	n_sign_posn;
+};
+
 #endif
 
 #if _BLD_ast && defined(__EXPORT__)
 #define extern		__EXPORT__
 #endif
 
+#undef	localeconv
+#define localeconv	_ast_localeconv
+
 #undef	setlocale
 #define setlocale	_ast_setlocale
 
+extern struct lconv*	localeconv(void);
 extern char*		setlocale(int, const char*);
 
-#define AST_LC_COLLATE	0
-#define AST_LC_CTYPE	1
-#define AST_LC_MESSAGES	2
-#define AST_LC_MONETARY	3
-#define AST_LC_NUMERIC	4
-#define AST_LC_TIME	5
-#define AST_LC_ALL	6
+#define AST_MESSAGE_SET	3	/* see <mc.h> mcindex()			*/
 
-#define AST_LC_multibyte	(1<<12)
+#define AST_LC_ALL	0
+#define AST_LC_COLLATE	1
+#define AST_LC_CTYPE	2
+#define AST_LC_MESSAGES	3
+#define AST_LC_MONETARY	4
+#define AST_LC_NUMERIC	5
+#define AST_LC_TIME	6
+#define AST_LC_COUNT	7
+
+#define AST_LC_find		(1<<12)
 #define AST_LC_debug		(1<<13)
 #define AST_LC_setlocale	(1<<14)
 #define AST_LC_translate	(1<<15)
 
+#ifndef LC_ALL
+#define LC_ALL		(-AST_LC_ALL)
+#endif
 #ifndef LC_COLLATE
-#define LC_COLLATE	AST_LC_COLLATE
+#define LC_COLLATE	(-AST_LC_COLLATE)
 #endif
 #ifndef LC_CTYPE
-#define LC_CTYPE	AST_LC_CTYPE
+#define LC_CTYPE	(-AST_LC_CTYPE)
 #endif
 #ifndef LC_MESSAGES
-#define LC_MESSAGES	LC_ALL
+#define LC_MESSAGES	(-AST_LC_MESSAGES)
 #endif
 #ifndef LC_MONETARY
-#define LC_MONETARY	AST_LC_MONETARY
+#define LC_MONETARY	(-AST_LC_MONETARY)
 #endif
 #ifndef LC_NUMERIC
-#define LC_NUMERIC	AST_LC_NUMERIC
+#define LC_NUMERIC	(-AST_LC_NUMERIC)
 #endif
 #ifndef LC_TIME
-#define LC_TIME		AST_LC_TIME
-#endif
-#ifndef LC_ALL
-#define LC_ALL		AST_LC_ALL
+#define LC_TIME		(-AST_LC_TIME)
 #endif
 
 #undef	extern
@@ -960,11 +990,23 @@ typedef struct
 	int		tmp_int;
 	void*		tmp_pointer;
 
+	int		mb_cur_max;
+	int		(*mb_len)(const char*, size_t);
+	int		(*mb_towc)(wchar_t*, const char*, size_t);
+	size_t		(*mb_xfrm)(char*, const char*, size_t);
+	int		(*mb_width)(wchar_t);
+
+	void*		extra[241];
+
 } _Ast_info_t;
 
-#ifndef	_ast_info
-#define _ast_info	_ast_state
-#endif
+#define mbcoll()	(_ast_info.mb_xfrm!=0)
+#define mbwide()	(_ast_info.mb_cur_max>1)
+
+#define mbchar(p)	(mbwide()?((_ast_info.tmp_int=(*_ast_info.mb_towc)(&_ast_info.tmp_wchar,(char*)(p),_ast_info.mb_cur_max))>0?((p+=_ast_info.tmp_int),_ast_info.tmp_wchar):_ast_info.tmp_int):(*(unsigned char*)(p++)))
+#define mbsize(p)	(mbwide()?(*_ast_info.mb_len)((char*)(p),_ast_info.mb_cur_max):1)
+#define mbwidth(w)	(_ast_info.mb_width?(*_ast_info.mb_width)(w):1)
+#define mbxfrm(t,f,n)	(mbcoll()?(*_ast_info.mb_xfrm)((char*)(t),(char*)(f),n):0)
 
 #if _BLD_ast && defined(__EXPORT__)
 #define __PUBLIC_DATA__		__EXPORT__
@@ -989,6 +1031,7 @@ extern int		rename(const char*, const char*);
 /* largefile hackery -- ast uses the large versions by default */
 
 #if _typ_off64_t
+#undef	off_t
 #define off_t		off64_t
 #endif
 #if _lib_ftruncate64

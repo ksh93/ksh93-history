@@ -59,8 +59,7 @@
 #define CO_MODE_ACK		(1<<0)	/* wait for coexec() ack	*/
 #define CO_MODE_INDIRECT	(1<<1)	/* indirect CO_SERVER		*/
 
-#define CO_DEVFD	(CO_USER>>1)	/* coshell handles /dev/fd/#	*/
-#define CO_INIT		(CO_USER>>2)	/* initial command		*/
+#define CO_INIT		(CO_USER>>1)	/* initial command		*/
 
 #define CO_PID_FREE	(-3)		/* free job slot		*/
 #define CO_PID_WARPED	(-2)		/* exit before start message	*/
@@ -76,6 +75,7 @@ typedef struct				/* global coshell state		*/
 	Coshell_t*	current;	/* current coshell		*/
 	char*		pwd;		/* pwd				*/
 	char*		sh;		/* sh from first coopen()	*/
+	char*		type;		/* CO_ENV_TYPE value		*/
 	int		init;		/* 0 if first coopen()		*/
 } Costate_t;
 

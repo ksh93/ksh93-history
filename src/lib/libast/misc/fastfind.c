@@ -151,7 +151,7 @@ findopen(const char* file, const char* pattern, const char* type, Finddisc_t* di
 	struct stat		st;
 
 
-#if _WIN32 && __OBSOLETE__ < 19980701
+#if _UWIN && __OBSOLETE__ < 19980701
 	Finddisc_t      	finddisc;
 
 	/*
@@ -670,7 +670,7 @@ findopen(const char* file, const char* pattern, const char* type, Finddisc_t* di
 	return 0;
 }
 
-#if _WIN32 && __OBSOLETE__ < 19980701
+#if _UWIN && __OBSOLETE__ < 19980701
 /*
  * shared lib compatibility
  */

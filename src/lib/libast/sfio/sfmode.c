@@ -206,13 +206,13 @@ int sig;
 #endif
 
 #if __STD_C
-int _sfpopen(reg Sfio_t* f, int fd, int pid, int stdio)
+int _sfpopen(reg Sfio_t* f, int fd, int pid, int pflags)
 #else
-int _sfpopen(f, fd, pid, stdio)
+int _sfpopen(f, fd, pid, pflags)
 reg Sfio_t*	f;
 int		fd;
 int		pid;
-int		stdio;	/* stdio popen() does not reset SIGPIPE handler */
+int		pflags;
 #endif
 {
 	reg Sfproc_t*	p;
@@ -227,7 +227,7 @@ int		stdio;	/* stdio popen() does not reset SIGPIPE handler */
 	p->size = p->ndata = 0;
 	p->rdata = NIL(uchar*);
 	p->file = fd;
-	p->sigp = (!stdio && pid >= 0 && (f->flags&SF_WRITE)) ? 1 : 0;
+	p->sigp = (!(pflags&SF_STDIO) && pid >= 0 && (f->flags&SF_WRITE)) ? 1 : 0;
 
 #ifdef SIGPIPE	/* protect from broken pipe signal */
 	if(p->sigp)

@@ -113,6 +113,7 @@ fi
 if	[[ ! -w /dev/fd/2 ]]
 then	err_exit "/dev/fd/2 not open for writing"
 fi
+sleep 1
 if	[[ ! . -ot $file ]]
 then	err_exit ". should be older than $file"
 fi
@@ -195,4 +196,18 @@ set +x
 (
 	eval "[[ (a) ]]"
 ) 2> /dev/null || err_exit "[[ (a) ]] not working"
+> $file
+chmod 4755 "$file"
+if	test -u $file && test ! -u $file
+then	err_exit "test ! -u suidfile not working"
+fi
+for i in '(' ')' '[' ']'
+do	[[ $i == $i ]] || err_exit "[[ $i != $i ]]"
+done
+(
+	[[ aaaa == {4}(a) ]] || err_exit 'aaaa != {4}(a)'
+	[[ aaaa == {2,5}(a) ]] || err_exit 'aaaa != {2,4}(a)'
+	[[ abcdcdabcd == {3,6}(ab|cd) ]] || err_exit 'abcdcdabcd == {3,4}(ab|cd)'
+	[[ abcdcdabcde == {5}(ab|cd)e ]] || err_exit 'abcdcdabcd == {5}(ab|cd)e'
+) || err_exit 'Errors with {..}(...) patterns'
 exit $((Errors))

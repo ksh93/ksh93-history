@@ -82,27 +82,28 @@
 #define SH_VALNOD	(sh.bltin_nodes+48)
 #define SH_VERSIONNOD	(sh.bltin_nodes+49)
 #define SH_DOLLARNOD	(sh.bltin_nodes+50)
+#define SH_MATCHNOD	(sh.bltin_nodes+51)
 #ifdef SHOPT_FS_3D
-#   define VPATHNOD	(sh.bltin_nodes+51)
+#   define VPATHNOD	(sh.bltin_nodes+52)
 #   define NFS_3D	1
 #else
 #   define NFS_3D	0
 #endif /* SHOPT_FS_3D */
 #ifdef SHOPT_VPIX
-#   define DOSPATHNOD	(sh.bltin_nodes+51+NFS_3D)
-#   define VPIXNOD	(sh.bltin_nodes+52+NFS_3D)
+#   define DOSPATHNOD	(sh.bltin_nodes+52+NFS_3D)
+#   define VPIXNOD	(sh.bltin_nodes+53+NFS_3D)
 #   define NVPIX	(NFS_3D+2)
 #else
 #   define NVPIX	NFS_3D
 #endif /* SHOPT_VPIX */
 #ifdef SHOPT_MULTIBYTE
-#   define CSWIDTHNOD 	(sh.bltin_nodes+51+NVPIX)
+#   define CSWIDTHNOD 	(sh.bltin_nodes+52+NVPIX)
 #   define NMULTI	NVPIX+1
 #else
 #   define NMULTI       NVPIX
 #endif /* SHOPT_MULTIBYTE */
 #ifdef apollo
-#   define SYSTYPENOD	(sh.bltin_nodes+51+NMULTI)
+#   define SYSTYPENOD	(sh.bltin_nodes+52+NMULTI)
 #endif /* apollo */
 
 #endif /* SH_VALNOD */

@@ -1143,9 +1143,9 @@ done:
 	return (Void_t*)data;
 }
 
-#if defined(_WIN32)
+#if defined(_UWIN)
 #include	<windows.h>
-#endif /*_WIN32*/
+#endif /*_UWIN*/
 
 /*	A discipline to get memory using sbrk() or VirtualAlloc on win32 */
 #if __STD_C
@@ -1171,7 +1171,7 @@ Vmdisc_t*	disc;	/* discipline structure			*/
 		free(caddr);
 	return NIL(Void_t*);
 #else
-#if defined(_WIN32)
+#if defined(_UWIN)
 	NOTUSED(vm);
 	NOTUSED(disc);
 

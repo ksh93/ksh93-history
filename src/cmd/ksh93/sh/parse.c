@@ -376,7 +376,12 @@ static union anynode	*sh_cmd(register int sym, int flag)
 		/* FALL THRU */		
 	    case '&':
 		if(left)
+		{
+			/* (...)& -> {...;} & */
+			if(left->tre.tretyp==TPAR)
+				left = left->par.partre;
 			left = makeparent(TFORK|type, left);
+		}
 		/* FALL THRU */		
 	    case ';':
 		if(!left)
@@ -688,6 +693,10 @@ static union anynode *funct(void)
 	{
 		if(fcfill()>0)
 			fcseek(-1);
+		/* add 0 byte (or bytes if on odd boundary */
+		sfputc(sh.hist_ptr->histfp,0);
+		if(sftell(sh.hist_ptr->histfp)&1)
+			sfputc(sh.hist_ptr->histfp,0);
 		hist_flush(sh.hist_ptr);
 		hist_cancel(sh.hist_ptr);
 		sh_offstate(SH_HISTORY);
@@ -736,23 +745,30 @@ static struct argnod *assign(register struct argnod *ap)
 	t->for_.fortyp = sh_getlineno();
 	tp = &t->for_.fortre;
 	ap->argchn.ap = (struct argnod*)t;
-	ap->argflag = array;
+	ap->argflag &= ARG_QUOTED;
+	ap->argflag |= array;
 	shlex.assignok = SH_ASSIGN;
-	if(skipnl())
-		sh_syntax();
 	array=0;
-	if(!(shlex.arg->argflag&ARG_ASSIGN) && !((np=nv_search(shlex.arg->argval,sh.fun_tree,0)) && nv_isattr(np,BLT_DCL)))
-		array=1;
+	if(skipnl())
+	{
+		if(shlex.token!=RPAREN)
+			sh_syntax();
+		ac = (struct comnod*)getnode(comnod);
+		memset((void*)ac,0,sizeof(*ac));
+		ac->comline = sh_getlineno();
+	}
+	else if(!(shlex.arg->argflag&ARG_ASSIGN) && !((np=nv_search(shlex.arg->argval,sh.fun_tree,0)) && nv_isattr(np,BLT_DCL)))
+		array=SH_ARRAY;
 	while(1)
 	{
 		if(shlex.token==RPAREN)
 			break;
-		ac = (struct comnod*)simple(SH_NOIO|SH_ASSIGN,NIL(struct ionod*));
+		ac = (struct comnod*)simple(SH_NOIO|SH_ASSIGN|array,NIL(struct ionod*));
 		if((n=shlex.token)==RPAREN)
 			break;
 		if(n!=NL && n!=';')
 			sh_syntax();
-		shlex.assignok = 1;
+		shlex.assignok = SH_ASSIGN;
 		if(skipnl() || array)
 		{
 			if(shlex.token==RPAREN)
@@ -1009,9 +1025,15 @@ static union anynode *simple(int flag, struct ionod *io)
 	int	argno = 0;
 	int	assignment = 0;
 	int	key_on = (!(flag&SH_NOIO) && sh_isoption(SH_KEYWORD));
-	int	assign_type=1;
+	int	associative=0;
 	if((argp=shlex.arg) && (argp->argflag&ARG_ASSIGN) && argp->argval[0]=='[')
-		assign_type = SH_ASSIGN;	/* x=([subscript]=value ...) */
+	{
+		if(fcpeek(0)!=LPAREN)
+		{
+			flag |= SH_ARRAY;
+			associative = 1;
+		}
+	}
 	t = (struct comnod*)getnode(comnod);
 	t->comio=io; /*initial io chain*/
 	/* set command line number for error messages */
@@ -1028,14 +1050,14 @@ static union anynode *simple(int flag, struct ionod *io)
 			shlex.token = LBRACE;
 			break;
 		}
-		if(assign_type==SH_ASSIGN && (!argp || argp->argval[0]!='['))
+		if(associative && (!argp || argp->argval[0]!='['))
 			sh_syntax();
 		/* check for assignment argument */
-		if(argp->argflag&ARG_ASSIGN && assignment!=2)
+		if((argp->argflag&ARG_ASSIGN) && assignment!=2)
 		{
 			*settail = argp;
 			settail = &(argp->argnxt.ap);
-			shlex.assignok = assign_type;
+			shlex.assignok = (flag&SH_ASSIGN)?SH_ASSIGN:1;
 			if(assignment)
 			{
 				struct argnod *ap=argp;
@@ -1063,11 +1085,11 @@ static union anynode *simple(int flag, struct ionod *io)
 		{
 			if(!(argp->argflag&ARG_RAW))
 				argno = -1;
-			if(argno>=0 && argno++==0 && !(flag&SH_ASSIGN))
+			if(argno>=0 && argno++==0 && !(flag&SH_ARRAY) && *argp->argval!='/')
 			{
 				/* check for builtin command */
 				Namval_t *np = nv_search(argp->argval,sh.fun_tree,0);
-				if((t->comnamp=(void*)np) &&
+				if((t->comnamp=(void*)np) && is_abuiltin(np) &&
 					nv_isattr(np,BLT_DCL))
 				{
 					assignment = 1+(*argp->argval=='a');
@@ -1119,7 +1141,7 @@ static union anynode *simple(int flag, struct ionod *io)
 		{
 			if(tok==RPAREN)
 				break;
-			else if(tok==NL)
+			else if(tok==NL && (flag&SH_ARRAY))
 				goto retry;
 		}
 		if(!(flag&SH_NOIO))

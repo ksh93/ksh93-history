@@ -23,20 +23,12 @@
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
 *******************************************************************/
-#pragma prototyped
+/*
+ * strtoul() implementation
+ */
 
-#include <ast.h>
+#define S2I_function	strtoul
+#define S2I_number	long
+#define S2I_unsigned	1
 
-#if _lib_strtoul
-
-NoN(strtoul)
-
-#else
-
-unsigned long
-strtoul(const char* str, char** ptr, int base)
-{
-	return (unsigned long)strtol(str, ptr, base);
-}
-
-#endif
+#include "strtoi.h"

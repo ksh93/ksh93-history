@@ -41,6 +41,7 @@ static char		lib[] = "libcoshell:coshell";
 
 static const Namval_t	options[] =
 {
+	"cross",	CO_CROSS,
 	"debug",	CO_DEBUG,
 	"devfd",	CO_DEVFD,
 	"ignore",	CO_IGNORE,
@@ -129,6 +130,8 @@ coopen(const char* path, int flags, const char* attributes)
 
 	static char*	sh[] = { 0, 0, "ksh", "sh", "/bin/sh" };
 
+	if (!state.type && (!(s = getenv(CO_ENV_TYPE)) || !(state.type = strdup(s))))
+		state.type = "";
 	if ((flags & CO_ANY) && (co = state.coshells))
 		return co;
 	if (!(co = newof(0, Coshell_t, 1, 0)))

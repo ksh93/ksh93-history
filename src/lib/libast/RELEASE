@@ -1,3 +1,85 @@
+01-06-15 string/chresc: only 2 hex digits max for \xxx
+	 regex/regsub: handle REG_SHELL ~(nnn) rhs backrefs
+01-06-11 regex: handle embedded \0 in pattern and subject string
+	 regex: add (?nnn) for backrefs > 9
+	 comp/fnmatch: add FNM_LEADING_DIR for gnu compatibility
+	 features/float: _ast_flt_unsigned_max_t for bsd.i386 omission
+01-06-06 misc/optget.c: add o option for old ps,ar,tar with optional leading -
+	 regex/regcomp.c: REG_LENIENT|REG_DELIMITED \<newline> => <newline>
+	 regex/regcomp.c: REG_LENIENT \000 => NUL
+01-06-04 features/dirent: replace Makefile hack with iffe semi-hack
+	 regex/regnexec.c: negation must also check REG_SHELL_DOT
+01-06-03 sprintf.c: change buf size from SF_BUFSIZE to INT_MAX
+01-05-31 glob: fix gl_fignore to ignore leading . by default
+	 features/lib: add botch_d_ino_dirent64 for linux botch
+01-05-25 port/lc.tab: add a few missing language_territory's
+01-05-23 string/chresc: \C[.collation-element.]
+	 fmtmatch,fmtre: update for <regex.h> syntax extensions
+01-05-21 regex: add perl extensions, unicode names for collation elements
+01-05-11 string/chresc: \e == \E == escape, \cX == control X, \x{..} == \x..
+01-05-09 path/pathtemp.c: pathtemp(0,0,0,"/private",0) for mode S_IRUSR|S_IWUSR
+	 port/touch.c: handle utime(2) EPERM to fix bug that truncated
+	 regex: change REG_MINIMAL to avoid negation -- much faster now
+01-05-08 *.h: add some off_t macro guards for suse linux
+01-05-03 regcomp.c: optimize ((x)!)* to ((x)!)
+	 wchar: add <wchar.h> and stdio wchar routines
+01-05-02 feaures/wchar: add <wchar.h> intercept, add stdio wchar functions
+01-05-01 string/strtoi.h: signed strtoi accepts qualified unsigned constants
+01-04-30 comp/setlocale.c: fix code that relied on 2 simultaneous getenv()'s
+	 tm/tmlocale.c: check for UTF-8 encoded LC_TIME files
+	 misc/magic.tab: add utf-8 and utf-16 U+FEFF magic
+01-04-26 features/common: some cc's have _ast_int8_t but not LL constants
+01-04-24 features/lib: add _std_strtod for mac os X
+01-04-23 ccode: add CC_sub for ms embedded EOF char on ebcdic -- no joke
+01-04-20 iconv: handle ebcdic<=>utf
+	 mc.h,mc.c: add mcindex()
+	 ast_std.h: add AST_MESSAGE_SET
+01-04-18 features/libpath.sh: fix mvs probe
+	 *: sundry mvs fixes
+	 glob: fix GLOB_NOCHECK to avoid stat() and properly trim patterns
+01-04-01 strtod,strtold: add
+	 strtol,strtoul,strtoll,strtoull,strton,strtonl: handle locale & ERANGE
+	 sfvprintf,sfvscanf: handle locale decimal_point,thousands_sep
+	 sfvprintf,sfvscanf: handle %a,%A
+	 setlocale: add LC_NUMERIC decimal_point,thousands_sep init
+	 ast_std.h: __OPTIMIZE_SIZE__==1 to disable non-std __GNUC__ inlines
+	 pathexists: path cache to cut down pathpath() access(2) calls
+	 features/stdio: __FILE_TAG == _sfio_s for solaris
+01-03-23 iconv: fix iconv_move buffer boundary bug that stopped at 1 block
+01-03-19 glob: add GLOB_AUGMENTED
+	 regex: REG_SHELL syntax error implies REG_LITERAL match
+	 strto[ln][ll]: add overflow checks
+01-03-17 locale: reimplemented to provide canonical locale namespace
+	 locale: add LC_ALL=local for local system user default
+	 tm.h: TM_*_3 => TM_*_ABBREV
+	 tmfmt: handle standard E and O format modifiers
+	 tmlocale: consult nl_langinfo() if defined
+	 fmtquote("\"",1) => shell quote
+01-03-08 regex: handle multibyte chars and collation classes
+	 strmatch,strgrpmatch: now a wrapper on regex
+	 ast_std.h: add mb*() multibyte and collation support
+	 sfvscanf: handle locale decimal and thousand
+	 proc*,system: handle ignored SIGCHLD
+	 sfkeyprintf: handle %*C
+01-03-06 locale: add locale data cache for efficient multiple locale switching
+	 optget: fix LC_MESSAGES!=C --man bug
+01-03-01 Makefile: HEADEROPT is not optional for win32.*
+	 comp/syslog.h: comply with the de factos
+	 optget(): fix \f...\f stack bug that referenced data after pop
+01-02-27 *locale*: a batch of fixes for native LC_MESSAGE&LC_TIME hooks
+01-02-22 pathprobe: reprobe test now checks probe.ini too
+	 sfio_s.h: advertize public Sfio_t members with _ prefix
+	 sfio.h,features/stdio: add <sfio_s.h> reference
+	 sfhdr.h: map <sfio_s.h> _foo to foo
+	 sfio.h: SF_APPEND=>SF_APPENDWR, SF_CLOSE=>SF_CLOSING
+01-02-14 comp/conf.sh: probe <unistd.h> for _(CS|PC|SC)_* getconf symbols
+	 stdio/*: update for uwin stdio.dll binary compatibility
+	 sfread: finally fixed premature pipe read EOF bug
+	 fmtscale: format tenths for number > 0 && number < 10
+01-02-09 _sfmode(),_sftype(),_Sfextern: UWIN binary stdio compatibility exports
+01-02-08 sfgetm,sfputm,_sfputm: fix max clash with k&r max() macro
+	 setlocale: undef valid for sun4 k&r valid() macro
+01-02-07 catopen.c: don't do native catopen for the debug locale
 01-02-06 sfraise.c: add SF_FINAL check to avoid (posibly) freed disciplines
 01-01-01 features/common: fix uwin __DEFINE__
 	 sftable: initialize decimal and thousand

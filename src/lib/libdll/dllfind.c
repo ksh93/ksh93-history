@@ -85,6 +85,7 @@ dllfind(const char* lib, const char* ver, int flags)
 	char*			a;
 	char*			u;
 	char*			p;
+	char*			suf;
 	int			dot;
 	void*			dll;
 	char			bas[64];
@@ -140,7 +141,7 @@ dllfind(const char* lib, const char* ver, int flags)
 	 * this list will surely grow given all vendor's weakness
 	 * for `enhancing' standard practice
 	 *
-	 *	_HOSTTYPE_	sibling
+	 *	HOSTTYPE	sibling
 	 *	----------	-------
 	 *	sgi.mips4	lib64
 	 *	sgi.mips3	lib32
@@ -155,8 +156,7 @@ dllfind(const char* lib, const char* ver, int flags)
 	 */
 
 	dir[0] = 0;
-#ifdef _HOSTTYPE_
-	t = _HOSTTYPE_;
+	t = astconf("HOSTTYPE", NiL, NiL);
 	if (strmatch(t, "sgi.*"))
 	{
 		if (strmatch(t, "sgi.mips3|sgi.*-n32"))
@@ -167,9 +167,7 @@ dllfind(const char* lib, const char* ver, int flags)
 			s = "lib";
 		strcpy(dir, s);
 	}
-	else
-#endif
-	if (*(s = astconf("LIBPATH", NiL, NiL)))
+	else if (*(s = astconf("LIBPATH", NiL, NiL)))
 	{
 		for (t = s; *t && *t != ':' && *t != ','; t++);
 		if (*t == ':')
@@ -202,64 +200,52 @@ sfprintf(sfstderr, "dllfind: lib=%s ver=%s\n", lib, ver);
 	nv = nam;
 	sv = sib;
 	*sv++ = dir;
-	if (!dir[0] || streq(dir, "bin") && !(dir[0] = 0))
+	if (dir[0])
 	{
-		/*
-		 * sibling is "bin" itself
-		 */
-
-		if (x)
+		if (streq(dir, "bin"))
+			dir[0] = 0;
+		else if (!streq(dir, "lib"))
+			*sv++ = "lib";
+	}
+	if (x)
+	{
+		*nv++ = (char*)lib;
+		pat[0] = 0;
+	}
+	else
+	{
+		suf = astconf("LIBSUFFIX", NiL, NiL);
+		if (streq(suf, ".dll"))
 		{
-			*nv++ = (char*)lib;
-			pat[0] = 0;
-		}
-		else
-		{
-			sfsprintf(gen, sizeof(gen), "%s.dll", lib);
+			sfsprintf(gen, sizeof(gen), "%s%s", lib, suf);
 			if (ver)
 			{
 				s = spc;
 				t = (char*)lib;
 				while (s < &spc[sizeof(spc)-1] && *t)
-					*s++ = *t++;
 				for (; s < &spc[sizeof(spc)-1] && *ver; ver++)
 					if (isdigit(*ver))
 						*s++ = *ver;
-				t = ".dll";
+				t = suf;
 				while (s < &spc[sizeof(spc)-1] && *t)
 					*s++ = *t++;
 				*s = 0;
 				*nv++ = spc;
 			}
 			*nv++ = gen;
-			sfsprintf(pat, sizeof(pat), "%s+([0-9]).dll", lib);
-		}
-	}
-	else
-	{
-		/*
-		 * siblings are probably forms of "lib"
-		 */
-
-		if (!streq(dir, "lib"))
-			*sv++ = "lib";
-		s = RTLD_SUFFIX;
-		if (x)
-		{
-			*nv++ = (char*)lib;
-			pat[0] = 0;
+			sfsprintf(pat, sizeof(pat), "%s+([0-9])%s", lib, suf);
 		}
 		else
 		{
-			sfsprintf(gen, sizeof(gen), "lib%s.%s", lib, s);
+			sfsprintf(gen, sizeof(gen), "lib%s%s", lib, suf);
 			if (ver)
 			{
 				sfsprintf(spc, sizeof(spc), "%s.%s", gen, ver);
 				*nv++ = spc;
 			}
 			*nv++ = gen;
-			sfsprintf(pat, sizeof(pat), "lib%s.%s.+([0-9.])", lib, s);
-		}
+			sfsprintf(pat, sizeof(pat), "lib%s%s.+([0-9.])", lib, suf);
+		}		
 	}
 	*nv = 0;
 	*sv = 0;

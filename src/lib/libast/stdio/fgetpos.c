@@ -32,7 +32,7 @@ fgetpos(Sfio_t* f, fpos_t* pos)
 {
 	STDIO_INT(f, "fgetpos", int, (Sfio_t*, fpos_t*), (f, pos))
 
-	return (*pos = (fpos_t)sfseek(f, (Sfoff_t)0, SEEK_CUR)) >= 0 ? 0 : -1;
+	return (pos->_sf_offset = sfseek(f, (Sfoff_t)0, SEEK_CUR)) >= 0 ? 0 : -1;
 }
 
 #ifdef _ast_int8_t
@@ -42,7 +42,7 @@ fgetpos64(Sfio_t* f, fpos64_t* pos)
 {
 	STDIO_INT(f, "fgetpos64", int, (Sfio_t*, fpos64_t*), (f, pos))
 
-	return (*pos = (fpos64_t)sfseek(f, (Sfoff_t)0, SEEK_CUR)) >= 0 ? 0 : -1;
+	return (pos->_sf_offset = sfseek(f, (Sfoff_t)0, SEEK_CUR)) >= 0 ? 0 : -1;
 }
 
 #endif

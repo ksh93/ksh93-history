@@ -39,36 +39,6 @@
 #include <ast.h>
 #include <fs3d.h>
 
-#ifdef _ast_ref_argv
-
-#include <int.h>
-
-/*
- * for __MVS__ dll's
- */
-
-char***
-__environ(void)
-{
-
-	static char***	addr_environ;
-
-	if (!addr_environ)
-	{
-		register char**	p;
-
-		p = _ast_ref_argv;
-		while (*p++);
-		p += _ast_off_envv;
-		while (!*p)
-			p++;
-		addr_environ = (char***)p;
-	}
-	return addr_environ;
-}
-
-#endif
-
 #define INCREMENT	16		/* environ increment		*/
 
 char*

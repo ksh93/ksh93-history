@@ -4,13 +4,25 @@ typ dev_t,nlink_t fail{
 	echo "typedef short $v;"
 	echo "#endif"
 }end
-typ gid_t,mode_t,uid_t,wchar_t fail{
+typ gid_t,mode_t,uid_t fail{
+	echo "#ifndef $m"
+	echo "#define $m	1"
+	echo "typedef unsigned short $v;"
+	echo "#endif"
+}end
+typ wchar_t stdio.h wchar.h fail{
 	echo "#ifndef $m"
 	echo "#define $m	1"
 	echo "typedef unsigned short $v;"
 	echo "#endif"
 }end
 typ pid_t,ssize_t fail{
+	echo "#ifndef $m"
+	echo "#define $m	1"
+	echo "typedef int $v;"
+	echo "#endif"
+}end
+typ wint_t stdio.h wchar.h fail{
 	echo "#ifndef $m"
 	echo "#define $m	1"
 	echo "typedef int $v;"

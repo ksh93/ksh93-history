@@ -34,14 +34,14 @@
 
 #include <ast_common.h>
 
-#define REG_VERSION	20001004L
+#define REG_VERSION	20010509L
 
 /* regcomp flags */
 
 #define REG_AUGMENTED	0x00000001	/* enable ! & < >		*/
 #define REG_EXTENDED	0x00000002	/* enable ( | )			*/
 #define REG_ICASE	0x00000004	/* ignore case in match		*/
-#define REG_NEWLINE	0x00000008	/* \n is a regular char		*/
+#define REG_NEWLINE	0x00000008	/* ^/$ match embedded \n	*/
 #define REG_NOSUB	0x00000010	/* don't report subexp matches	*/
 #define REG_SHELL	0x00000020	/* shell pattern syntax		*/
 
@@ -53,14 +53,17 @@
 #define REG_NULL	0x00000800	/* allow null patterns		*/
 #define REG_RIGHT	0x00001000	/* implicit ...$		*/
 #define REG_LENIENT	0x00002000	/* look the other way		*/
-#define REG_ESCAPE	0x00004000	/* \delimiter needed in [...]	*/
+#define REG_ESCAPE	0x00004000	/* \ escapes delimiter in [...]	*/
 #define REG_DELIMITED	0x00008000	/* pattern[0] is delimiter	*/
 #define REG_MULTIPLE	0x00010000	/* multiple \n sep patterns	*/
 #define REG_DISCIPLINE	0x00020000	/* regex_t.re_disc is valid	*/
+#define REG_SPAN	0x00040000	/* . matches \n			*/
+#define REG_COMMENT	0x00080000	/* ignore pattern space & #...\n*/
+#define REG_MULTIREF	0x00100000	/* multiple digit backrefs	*/
 
-#define REG_SHELL_DOT	REG_NOTBOL	/* explicit leading . match	*/
-#define REG_SHELL_ESCAPED REG_NOTEOL	/* \ not special		*/
-#define REG_SHELL_PATH	REG_NEWLINE	/* explicit / match		*/
+#define REG_SHELL_DOT	0x00200000	/* explicit leading . match	*/
+#define REG_SHELL_ESCAPED 0x00400000	/* \ not special		*/
+#define REG_SHELL_PATH	0x00800000	/* explicit / match		*/
 
 /* regexec flags */
 
@@ -69,8 +72,8 @@
 
 /* nonstandard regexec flags */
 
-#define REG_INVERT	REG_MULTIPLE	/* invert regrexec match sense	*/
-#define REG_STARTEND	REG_DELIMITED	/* subject==match[0].rm_{so,eo} */
+#define REG_INVERT	0x01000000	/* invert regrexec match sense	*/
+#define REG_STARTEND	0x02000000	/* subject==match[0].rm_{so,eo} */
 
 /* regalloc flags */
 
@@ -103,6 +106,7 @@
 #define REG_ECOUNT	15		/* re component count overflow	*/
 #define REG_BADESC	16		/* invalid \char escape		*/
 #define REG_VERSIONID	17		/* version id (pseudo error)	*/
+#define REG_PANIC	18		/* unrecoverable internal error	*/
 
 struct regex_s;
 struct regdisc_s;
@@ -110,7 +114,9 @@ struct regdisc_s;
 typedef int (*regclass_t)(int);
 typedef _ast_int4_t regflags_t;
 typedef int regoff_t;
-typedef int (*regerror_t)(struct regex_s*, struct regdisc_s*, int, const char*, ...);
+typedef int (*regerror_t)(const struct regex_s*, struct regdisc_s*, int, const char*, ...);
+typedef void* (*regcomp_t)(const struct regex_s*, const char*, size_t, struct regdisc_s*);
+typedef int (*regexec_t)(const struct regex_s*, void*, const char*, size_t, const char*, size_t, char**, struct regdisc_s*);
 typedef void* (*regresize_t)(void*, void*, size_t);
 typedef int (*regrecord_t)(void*, const char*, size_t);
 
@@ -128,6 +134,8 @@ typedef struct regdisc_s
 	int		re_errorlevel;	/* errorf level			*/
 	regresize_t	re_resizef;	/* alloc/free function		*/
 	void*		re_resizehandle;/* resizef handle		*/
+	regcomp_t	re_compf;	/* (?{...}) compile function	*/
+	regexec_t	re_execf;	/* (?{...}) execute function	*/
 } regdisc_t;
 
 typedef struct regex_s
@@ -155,9 +163,16 @@ extern void	regfree(regex_t*);
 struct _sfio_s;
 #endif
 
-extern void	regalloc(void*, regresize_t, regflags_t);
+#define _REG_collate	1	/* have regcollate(), regclass()	*/
+#define _REG_comb	1	/* have regcomb()			*/
+#define _REG_fatal	1	/* have regfatal(), regfatalpat()	*/
+#define _REG_nexec	1	/* have regnexec()			*/
+#define _REG_rexec	1	/* have regrexec(), regrecord()		*/
+#define _REG_sub	1	/* have regsub()			*/
+
+extern void	regalloc(void*, regresize_t, regflags_t); /*OBSOLETE*/
 extern regclass_t regclass(const char*, char**);
-extern int	regcollate(const char*, char**);
+extern int	regcollate(const char*, char**, char*, int);
 extern int	regcomb(regex_t*, regex_t*);
 extern int	regnexec(const regex_t*, const char*, size_t, size_t, regmatch_t*, regflags_t);
 extern void	regfatal(regex_t*, int, int);

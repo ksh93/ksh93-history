@@ -46,9 +46,9 @@
 #define STK_SMALL	1		/* small stkopen stack		*/
 #define STK_NULL	2		/* return NULL on overflow	*/
 
-#define	stkptr(sp,n)	((char*)((sp)->data)+(n))
-#define	stktell(sp)	((sp)->next-(sp)->data)
-#define stkseek(sp,n)	((n)==0?(char*)((sp)->next=(sp)->data):_stkseek(sp,n))
+#define	stkptr(sp,n)	((char*)((sp)->_data)+(n))
+#define	stktell(sp)	((sp)->_next-(sp)->_data)
+#define stkseek(sp,n)	((n)==0?(char*)((sp)->_next=(sp)->_data):_stkseek(sp,n))
 
 #if _BLD_ast && defined(__EXPORT__)
 #define __PUBLIC_DATA__		__EXPORT__

@@ -30,6 +30,10 @@
 
 #include "sfhdr.h"
 #include "stdio.h"
+#include "wchar.h"
+
+#define SF_MB		010000
+#define SF_WC		020000
 
 #if _UWIN
 
@@ -87,8 +91,18 @@ extern int	_stdfun(Sfio_t*, Funvec_t*);
 
 #endif
 
+#define FWIDE(f,r) \
+	do \
+	{ \
+		if (fwide(f, 0) < 0) \
+			return r; \
+		f->bits |= SF_WC; \
+	} while (0)
+
 #ifdef __EXPORT__
 #define extern	__EXPORT__
 #endif
+
+extern int		sfdcwide(Sfio_t*);
 
 #endif

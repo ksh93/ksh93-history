@@ -145,20 +145,19 @@ char*	mode;		/* mode of the stream */
 #if _PACKAGE_ast
 	reg Proc_t*	proc;
 	reg int		sflags;
+	reg int		pflags;
 	reg long	flags;
-	reg int		stdio;
 	char*		av[4];
 
 	if (!command || !command[0] || !(sflags = _sftype(mode, NiL, NiL)))
 		return 0;
 
+	pflags = 0;
 	if(f == (Sfio_t*)(-1))
 	{	/* stdio compatibility mode */
 		f = NIL(Sfio_t*);
-		stdio = 1;
+		pflags |= SF_STDIO;
 	}
-	else	stdio = 0;
-
 	flags = 0;
 	if (sflags & SF_READ)
 		flags |= PROC_READ;
@@ -170,19 +169,22 @@ char*	mode;		/* mode of the stream */
 	av[3] = 0;
 	if (!(proc = procopen(0, av, 0, 0, flags)))
 		return 0;
-	if (!(f = sfnew(f, NIL(Void_t*), (size_t)SF_UNBOUND,
-	       		(sflags&SF_READ) ? proc->rfd : proc->wfd, sflags)) ||
-	     _sfpopen(f, (sflags&SF_READ) ? proc->wfd : -1, proc->pid, stdio) < 0)
+	if (!(f = sfnew(f, NIL(Void_t*), (size_t)SF_UNBOUND, (sflags&SF_READ) ? proc->rfd : proc->wfd, sflags)))
 	{
-		if (f) sfclose(f);
+		procclose(proc);
+		return 0;
+	}
+	if (_sfpopen(f, (sflags&SF_READ) ? proc->wfd : -1, proc->pid, pflags) < 0)
+	{
+		sfclose(f);
 		procclose(proc);
 		return 0;
 	}
 	procfree(proc);
 	return f;
 #else
-	reg int		pid, fd, pkeep, ckeep, sflags;
-	int		stdio, parent[2], child[2];
+	reg int		pid, fd, pkeep, ckeep, pflags, sflags;
+	int		parent[2], child[2];
 	Sfio_t		sf;
 
 	/* set shell meta characters */
@@ -213,12 +215,12 @@ char*	mode;		/* mode of the stream */
 			{ pkeep = READ; ckeep = WRITE; }
 		else	{ pkeep = WRITE; ckeep = READ; }
 
+		pflags = 0;
 		if(f == (Sfio_t*)(-1))
 		{	/* stdio compatibility mode */
 			f = NIL(Sfio_t*);
-			stdio = 1;
+			pflags |= SF_STDIO;
 		}
-		else	stdio = 0;
 
 		/* make the streams */
 		if(!(f = sfnew(f,NIL(Void_t*),(size_t)SF_UNBOUND,parent[pkeep],sflags)))
@@ -233,7 +235,7 @@ char*	mode;		/* mode of the stream */
 
 		/* save process info */
 		fd = (sflags&SF_RDWR) == SF_RDWR ? child[ckeep] : -1;
-		if(_sfpopen(f,fd,pid,stdio) < 0)
+		if(_sfpopen(f,fd,pid,pflags) < 0)
 		{	(void)sfclose(f);
 			goto error;
 		}

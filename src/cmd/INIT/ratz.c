@@ -4,7 +4,7 @@
  * coded for portability
  */
 
-static char id[] = "\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 2001-01-01 $\0\n";
+static char id[] = "\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 2001-04-01 $\0\n";
 
 #if _PACKAGE_ast
 
@@ -12,7 +12,7 @@ static char id[] = "\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler)
 #include <error.h>
 
 static const char usage[] =
-"[-?\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 2001-01-01 $\n]"
+"[-?\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 2001-04-01 $\n]"
 "[-author?Jean-loup Gailly]"
 "[-author?Mark Adler]"
 "[-author?Glenn Fowler <gsf@research.att.com>]"
@@ -27,6 +27,8 @@ static const char usage[] =
 "	output.]"
 "[l:local?Reject files that traverse outside the current directory.]"
 "[m:meter?Display a one line text meter showing archive read progress.]"
+"[n!:convert?In ebcdic environments convert text archive members from ascii"
+"	to the native ebcdic.]"
 "[v:verbose?List each file path on the standard output as it is extracted.]"
 "[V?Print the program version and exit.]"
 "[+SEE ALSO?\bgunzip\b(1), \bpackage\b(1), \bpax\b(1), \btar\b(1)]"
@@ -38,7 +40,6 @@ static const char usage[] =
 
 #endif
 
-#define CC_esc		033
 #define METER_width	80
 #define METER_parts	20
 
@@ -60,6 +61,11 @@ static const char usage[] =
 #define mkdir(a,b)	mkdir(a)
 #else
 #include <unistd.h>
+#endif
+
+#if !_PACKAGE_ast && defined(__STDC__)
+#include <stdlib.h>
+#include <string.h>
 #endif
 
 /* === zlib.h === */
@@ -332,7 +338,7 @@ typedef z_stream FAR *z_streamp;
 #define Z_NULL  0  /* for initializing zalloc, zfree, opaque */
 
 /* === zutil.h === */
-#ifdef STDC
+#if !_PACKAGE_ast && !defined(STDC)
 #  include <stddef.h>
 #  include <string.h>
 #  include <stdlib.h>
@@ -434,7 +440,7 @@ local voidpf zcalloc OF((voidpf opaque, unsigned items, unsigned size));
 local void   zcfree  OF((voidpf opaque, voidpf ptr));
 
 /* === zutil.c === */
-#ifndef STDC
+#if 0 && !_PACKAGE_ast && !defined(STDC)
 extern void exit OF((int));
 #endif
 
@@ -582,7 +588,7 @@ local void  zcfree (voidpf opaque, voidpf ptr)
 
 #ifndef MY_ZCALLOC /* Any system without a special alloc function */
 
-#ifndef STDC
+#if 0 && !_PACKAGE_ast && !defined(STDC)
 extern voidp  calloc OF((uInt items, uInt size));
 extern void   free   OF((voidpf ptr));
 #endif
@@ -2682,11 +2688,131 @@ static struct
 static void
 usage()
 {
-	fprintf(stderr, "Usage: %s [-clmvV] < input.tgz\n", state.id);
+	fprintf(stderr, "Usage: %s [-clmnvV] < input.tgz\n", state.id);
 	exit(2);
 }
 
 #endif
+
+/*
+ * the X/Open dd EBCDIC table
+ */
+
+static const unsigned char a2e[] =
+{
+	0000,0001,0002,0003,0067,0055,0056,0057,
+	0026,0005,0045,0013,0014,0015,0016,0017,
+	0020,0021,0022,0023,0074,0075,0062,0046,
+	0030,0031,0077,0047,0034,0035,0036,0037,
+	0100,0132,0177,0173,0133,0154,0120,0175,
+	0115,0135,0134,0116,0153,0140,0113,0141,
+	0360,0361,0362,0363,0364,0365,0366,0367,
+	0370,0371,0172,0136,0114,0176,0156,0157,
+	0174,0301,0302,0303,0304,0305,0306,0307,
+	0310,0311,0321,0322,0323,0324,0325,0326,
+	0327,0330,0331,0342,0343,0344,0345,0346,
+	0347,0350,0351,0255,0340,0275,0232,0155,
+	0171,0201,0202,0203,0204,0205,0206,0207,
+	0210,0211,0221,0222,0223,0224,0225,0226,
+	0227,0230,0231,0242,0243,0244,0245,0246,
+	0247,0250,0251,0300,0117,0320,0137,0007,
+	0040,0041,0042,0043,0044,0025,0006,0027,
+	0050,0051,0052,0053,0054,0011,0012,0033,
+	0060,0061,0032,0063,0064,0065,0066,0010,
+	0070,0071,0072,0073,0004,0024,0076,0341,
+	0101,0102,0103,0104,0105,0106,0107,0110,
+	0111,0121,0122,0123,0124,0125,0126,0127,
+	0130,0131,0142,0143,0144,0145,0146,0147,
+	0150,0151,0160,0161,0162,0163,0164,0165,
+	0166,0167,0170,0200,0212,0213,0214,0215,
+	0216,0217,0220,0152,0233,0234,0235,0236,
+	0237,0240,0252,0253,0254,0112,0256,0257,
+	0260,0261,0262,0263,0264,0265,0266,0267,
+	0270,0271,0272,0273,0274,0241,0276,0277,
+	0312,0313,0314,0315,0316,0317,0332,0333,
+	0334,0335,0336,0337,0352,0353,0354,0355,
+	0356,0357,0372,0373,0374,0375,0376,0377,
+};
+
+/*
+ * the X/Open dd IBM table
+ */
+
+static const unsigned char a2i[] =
+{
+	0000,0001,0002,0003,0067,0055,0056,0057,
+	0026,0005,0045,0013,0014,0015,0016,0017,
+	0020,0021,0022,0023,0074,0075,0062,0046,
+	0030,0031,0077,0047,0034,0035,0036,0037,
+	0100,0132,0177,0173,0133,0154,0120,0175,
+	0115,0135,0134,0116,0153,0140,0113,0141,
+	0360,0361,0362,0363,0364,0365,0366,0367,
+	0370,0371,0172,0136,0114,0176,0156,0157,
+	0174,0301,0302,0303,0304,0305,0306,0307,
+	0310,0311,0321,0322,0323,0324,0325,0326,
+	0327,0330,0331,0342,0343,0344,0345,0346,
+	0347,0350,0351,0255,0340,0275,0137,0155,
+	0171,0201,0202,0203,0204,0205,0206,0207,
+	0210,0211,0221,0222,0223,0224,0225,0226,
+	0227,0230,0231,0242,0243,0244,0245,0246,
+	0247,0250,0251,0300,0117,0320,0241,0007,
+	0040,0041,0042,0043,0044,0025,0006,0027,
+	0050,0051,0052,0053,0054,0011,0012,0033,
+	0060,0061,0032,0063,0064,0065,0066,0010,
+	0070,0071,0072,0073,0004,0024,0076,0341,
+	0101,0102,0103,0104,0105,0106,0107,0110,
+	0111,0121,0122,0123,0124,0125,0126,0127,
+	0130,0131,0142,0143,0144,0145,0146,0147,
+	0150,0151,0160,0161,0162,0163,0164,0165,
+	0166,0167,0170,0200,0212,0213,0214,0215,
+	0216,0217,0220,0232,0233,0234,0235,0236,
+	0237,0240,0252,0253,0254,0255,0256,0257,
+	0260,0261,0262,0263,0264,0265,0266,0267,
+	0270,0271,0272,0273,0274,0275,0276,0277,
+	0312,0313,0314,0315,0316,0317,0332,0333,
+	0334,0335,0336,0337,0352,0353,0354,0355,
+	0356,0357,0372,0373,0374,0375,0376,0377,
+};
+
+/*
+ * the mvs OpenEdition EBCDIC table
+ */
+
+static const unsigned char a2o[] =
+{
+	0000,0001,0002,0003,0067,0055,0056,0057,
+	0026,0005,0025,0013,0014,0015,0016,0017,
+	0020,0021,0022,0023,0074,0075,0062,0046,
+	0030,0031,0077,0047,0034,0035,0036,0037,
+	0100,0132,0177,0173,0133,0154,0120,0175,
+	0115,0135,0134,0116,0153,0140,0113,0141,
+	0360,0361,0362,0363,0364,0365,0366,0367,
+	0370,0371,0172,0136,0114,0176,0156,0157,
+	0174,0301,0302,0303,0304,0305,0306,0307,
+	0310,0311,0321,0322,0323,0324,0325,0326,
+	0327,0330,0331,0342,0343,0344,0345,0346,
+	0347,0350,0351,0255,0340,0275,0137,0155,
+	0171,0201,0202,0203,0204,0205,0206,0207,
+	0210,0211,0221,0222,0223,0224,0225,0226,
+	0227,0230,0231,0242,0243,0244,0245,0246,
+	0247,0250,0251,0300,0117,0320,0241,0007,
+	0040,0041,0042,0043,0044,0045,0006,0027,
+	0050,0051,0052,0053,0054,0011,0012,0033,
+	0060,0061,0032,0063,0064,0065,0066,0010,
+	0070,0071,0072,0073,0004,0024,0076,0377,
+	0101,0252,0112,0261,0237,0262,0152,0265,
+	0273,0264,0232,0212,0260,0312,0257,0274,
+	0220,0217,0352,0372,0276,0240,0266,0263,
+	0235,0332,0233,0213,0267,0270,0271,0253,
+	0144,0145,0142,0146,0143,0147,0236,0150,
+	0164,0161,0162,0163,0170,0165,0166,0167,
+	0254,0151,0355,0356,0353,0357,0354,0277,
+	0200,0375,0376,0373,0374,0272,0256,0131,
+	0104,0105,0102,0106,0103,0107,0234,0110,
+	0124,0121,0122,0123,0130,0125,0126,0127,
+	0214,0111,0315,0316,0313,0317,0314,0341,
+	0160,0335,0336,0333,0334,0215,0216,0337,
+};
 
 static int
 block(fp, gz, buf)
@@ -2723,26 +2849,29 @@ main(argc, argv)
 int	argc;
 char**	argv;
 {
-	register int	c;
-	register char*	s;
-	register char*	t;
-	register char*	e;
-	unsigned long	n;
-	unsigned long	m;
-	int		clear;
-	int		local;
-	int		meter;
-	int		unzip;
-	int		verbose;
-	unsigned long	total;
-	off_t		pos;
-	gzFile		gz;
-	FILE*		fp;
-	Header_t	header;
-	unsigned char	num[4];
-	char		path[sizeof(header.prefix) + sizeof(header.name) + 4];
-	char		buf[sizeof(header)];
+	register int		c;
+	register char*		s;
+	register char*		t;
+	register char*		e;
+	unsigned long		n;
+	unsigned long		m;
+	const unsigned char*	a2x;
+	int			clear;
+	int			escape;
+	int			local;
+	int			meter;
+	int			unzip;
+	int			verbose;
+	unsigned long		total;
+	off_t			pos;
+	gzFile			gz;
+	FILE*			fp;
+	Header_t		header;
+	unsigned char		num[4];
+	char			path[sizeof(header.prefix) + sizeof(header.name) + 4];
+	char			buf[sizeof(header)];
 
+	a2x = 0;
 	clear = 0;
 	local = 0;
 	meter = 0;
@@ -2760,6 +2889,24 @@ char**	argv;
 	}
 	else
 		state.id = "ratz";
+	switch ('~')
+	{
+	case 0241:
+		switch ('\n')
+		{
+		case 0025:
+			a2x = a2o;
+			break;
+		default:
+			a2x = a2e;
+			break;
+		}
+		break;
+	case 0137:
+		a2x = a2i;
+		break;
+	}
+	escape = a2x ? 047 : 033;
 #if _PACKAGE_ast
 	error_info.id = state.id;
 	for (;;)
@@ -2774,6 +2921,9 @@ char**	argv;
 			continue;
 		case 'm':
 			meter = 1;
+			continue;
+		case 'n':
+			a2x = 0;
 			continue;
 		case 'v':
 			verbose = 1;
@@ -2820,6 +2970,9 @@ char**	argv;
 				continue;
 			case 'm':
 				meter = 1;
+				continue;
+			case 'n':
+				a2x = 0;
 				continue;
 			case 'v':
 				verbose = 1;
@@ -2909,11 +3062,17 @@ char**	argv;
 		 * verify the checksum
 		 */
 
-		n = number(header.chksum) & TAR_SUMASK;
 		s = header.chksum;
 		e = header.chksum + sizeof(header.chksum);
+		if (a2x)
+		{
+			for (; s < e; s++)
+				*s = a2x[*(unsigned char*)s];
+			s = header.chksum;
+		}
+		n = number(s) & TAR_SUMASK;
 		while (s < e)
-			*s++ = ' ';
+			*s++ = 040;
 		m = 0;
 		s = (char*)&header;
 		e = (char*)&header + sizeof(header);
@@ -2929,6 +3088,14 @@ char**	argv;
 			fprintf(stderr, "check sum %lu != %lu\n", m, n);
 			return 1;
 		}
+
+		/*
+		 * convert to the native charset
+		 */
+
+		if (a2x)
+			for (e = (s = (char*)&header) + sizeof(header); s < e; s++)
+				*s = a2x[*(unsigned char*)s];
 
 		/*
 		 * get the pathname, type and size
@@ -3043,7 +3210,7 @@ char**	argv;
 			for (j = METER_parts - (METER_parts / 2 - 3); j > 0; j--)
 				*t++ = ' ';
 			*t = 0;
-			fprintf(stderr, " %c[7m%-.*s%c[0m%s%s%*s", CC_esc, i, bar, CC_esc, bar + i, s, k, "\r");
+			fprintf(stderr, " %c[7m%-.*s%c[0m%s%s%*s", escape, i, bar, escape, bar + i, s, k, "\r");
 		}
 		else if (verbose)
 			printf("%s\n", path);
@@ -3058,12 +3225,38 @@ char**	argv;
 					return 1;
 				}
 			n = number(header.size);
+			c = a2x ? 0 : -1;
 			while (n > 0)
 			{
 				if (!block(stdin, gz, buf))
 				{
 					fprintf(stderr, "%s: unexpected EOF\n", state.id);
 					return 1;
+				}
+				switch (c)
+				{
+				case 0:
+					if ((m = n) < 4)
+					{
+						c = -1;
+						break;
+					}
+					else if (m > 256)
+						m = 256;
+					for (e = (s = buf) + m; s < e; s++)
+						if ((c = *(unsigned char*)s) >= 0177 || c < 010 || c > 012 && c < 040)
+							break;
+					if (s < e)
+					{
+						c = -1;
+						break;
+					}
+					c = 1;
+					/*FALLTHROUGH*/
+				case 1:
+					for (e = (s = buf) + sizeof(header); s < e; s++)
+						*s = a2x[*(unsigned char*)s];
+					break;
 				}
 				if (fwrite(buf, n > sizeof(header) ? sizeof(header) : n, 1, fp) != 1)
 				{

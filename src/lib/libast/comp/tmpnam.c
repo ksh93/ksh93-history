@@ -28,19 +28,27 @@
  * tmpnam implementation
  */
 
+#include <ast_lib.h>
+
+#ifdef tmpnam
+#define _def_tmpnam	1
+#else
 #if defined(__STDPP__directive) && defined(__STDPP__hide)
 __STDPP__directive pragma pp:hide tmpnam
 #else
 #define tmpnam		______tmpnam
 #endif
+#endif
 
 #include <ast.h>
 #include <stdio.h>
 
+#if !_def_tmpnam
 #if defined(__STDPP__directive) && defined(__STDPP__hide)
 __STDPP__directive pragma pp:nohide tmpnam
 #else
 #undef	tmpnam
+#endif
 #endif
 
 #ifndef L_tmpnam

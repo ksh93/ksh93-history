@@ -109,32 +109,32 @@ scan(register const char* s, char** e, const char* format, char** f, time_t* clo
 			switch (d)
 			{
 			case 'a':
-				lo = TM_DAY_3;
+				lo = TM_DAY_ABBREV;
 				hi = pedantic ? TM_DAY : TM_TIME;
 				goto get_wday;
 			case 'A':
-				lo = pedantic ? TM_DAY : TM_DAY_3;
+				lo = pedantic ? TM_DAY : TM_DAY_ABBREV;
 				hi = TM_TIME;
 			get_wday:
 				if ((n = tmlex(s, &t, tm_info.format + lo, hi - lo, NiL, 0)) < 0)
 					goto done;
 				s = t;
-				INDEX(TM_DAY_3, TM_DAY);
+				INDEX(TM_DAY_ABBREV, TM_DAY);
 				set.wday = n;
 				continue;
 			case 'b':
 			case 'h':
-				lo = TM_MONTH_3;
-				hi = pedantic ? TM_MONTH : TM_DAY_3;
+				lo = TM_MONTH_ABBREV;
+				hi = pedantic ? TM_MONTH : TM_DAY_ABBREV;
 				goto get_mon;
 			case 'B':
-				lo = pedantic ? TM_MONTH : TM_MONTH_3;
-				hi = TM_DAY_3;
+				lo = pedantic ? TM_MONTH : TM_MONTH_ABBREV;
+				hi = TM_DAY_ABBREV;
 			get_mon:
 				if ((n = tmlex(s, &t, tm_info.format + lo, hi - lo, NiL, 0)) < 0)
 					goto done;
 				s = t;
-				INDEX(TM_MONTH_3, TM_MONTH);
+				INDEX(TM_MONTH_ABBREV, TM_MONTH);
 				set.mon = n;
 				continue;
 			case 'c':

@@ -51,7 +51,9 @@ NoN(getdate)
 
 #else
 
+#ifndef getdate_err
 __DEFINE__(int, getdate_err, 0);
+#endif
 
 extern struct tm*
 getdate(const char* s)

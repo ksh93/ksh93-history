@@ -25,7 +25,7 @@
 *******************************************************************/
 #pragma prototyped
 
-#include "loclib.h"
+#include "lclib.h"
 
 /*
  * low level for ERROR_translate()
@@ -40,7 +40,7 @@ errorx(const char* loc, const char* cmd, const char* cat, const char* msg)
 	if (ERROR_translating())
 	{
 		if (!loc)
-			loc = (const char*)locales[AST_LC_MESSAGES].usr;
+			loc = (const char*)locales[AST_LC_MESSAGES]->code;
 		if (!cat)
 		{
 			cat = (const char*)error_info.catalog;

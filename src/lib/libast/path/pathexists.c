@@ -1,0 +1,101 @@
+/*******************************************************************
+*                                                                  *
+*             This software is part of the ast package             *
+*                Copyright (c) 1985-2001 AT&T Corp.                *
+*        and it may only be used by you under license from         *
+*                       AT&T Corp. ("AT&T")                        *
+*         A copy of the Source Code Agreement is available         *
+*                at the AT&T Internet web site URL                 *
+*                                                                  *
+*       http://www.research.att.com/sw/license/ast-open.html       *
+*                                                                  *
+*        If you have copied this software without agreeing         *
+*        to the terms of the license you are infringing on         *
+*           the license and copyright and are violating            *
+*               AT&T's intellectual property rights.               *
+*                                                                  *
+*                 This software was created by the                 *
+*                 Network Services Research Center                 *
+*                        AT&T Labs Research                        *
+*                         Florham Park NJ                          *
+*                                                                  *
+*               Glenn Fowler <gsf@research.att.com>                *
+*                David Korn <dgk@research.att.com>                 *
+*                 Phong Vo <kpv@research.att.com>                  *
+*******************************************************************/
+#pragma prototyped
+/*
+ * Glenn Fowler
+ * AT&T Research
+ *
+ * return 1 if path exisis
+ * maintains a cache to minimize access(2) calls
+ */
+
+#include "lclib.h"
+
+#include <ls.h>
+
+typedef struct Tree_s
+{
+	struct Tree_s*	next;
+	struct Tree_s*	tree;
+	int		mode;
+	char		name[1];
+} Tree_t;
+
+int
+pathexists(char* path, int mode)
+{
+	register char*		s;
+	register char*		e;
+	register Tree_t*	p;
+	register Tree_t*	t;
+	register int		c;
+	struct stat		st;
+
+	static Tree_t		tree;
+
+	t = &tree;
+	e = path + 1;
+	c = *path;
+	while (c)
+	{
+		p = t;
+		for (s = e; *e && *e != '/'; e++);
+		c = *e;
+		*e = 0;
+		for (t = p->tree; t && !streq(s, t->name); t = t->next);
+		if (!t)
+		{
+			if (!(t = newof(0, Tree_t, 1, strlen(s))))
+			{
+				*e = c;
+				return 0;
+			}
+			strcpy(t->name, s);
+			t->next = p->tree;
+			p->tree = t;
+			if ((ast.locale.set & (AST_LC_debug|AST_LC_find)) == (AST_LC_debug|AST_LC_find))
+				sfprintf(sfstdout, "locale stat %s\n", path);
+			if (stat(path, &st))
+			{
+				*e = c;
+				return 0;
+			}
+			if (st.st_mode & (S_IRUSR|S_IRGRP|S_IROTH))
+				t->mode |= PATH_READ;
+			if (st.st_mode & (S_IWUSR|S_IWGRP|S_IWOTH))
+				t->mode |= PATH_WRITE;
+			if (st.st_mode & (S_IXUSR|S_IXGRP|S_IXOTH))
+				t->mode |= PATH_EXECUTE;
+			if (!S_ISDIR(st.st_mode))
+				t->mode |= PATH_REGULAR;
+		}
+		*e++ = c;
+		if (!t->mode)
+			return 0;
+	}
+	mode &= (PATH_READ|PATH_WRITE|PATH_EXECUTE|PATH_REGULAR);
+	return (t->mode & mode) == mode;
+}

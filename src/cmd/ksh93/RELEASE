@@ -1,4 +1,145 @@
 
+01-06-18  --- Release ksh93l  ---
+01-06-18  A bug in assigning integers larger than can be represented as
+	  long integers to floating point variables has been fixed.
+01-06-18  A bug in the handling of unsigned integers (typeset -ui) has
+	  been fixed.
+01-06-04  The evaluation of the PS1 prompt no longer effects the value
+	  of the $? variable.
+01-06-01  A small memory leak from subshells has been fixed.
+01-05-22  A bug in which attributes for variables that did not have
+	  values would be lost after a subshell has been fixed.
+01-05-22  The %R format has been added to convert a shell pattern into
+	  an extended regular expression.
+01-05-22  The escape sequences \e, \cX, \C[.collating-element.], and
+	  \x{hex} have been added to ASCII-C strings and to printf format
+	  strings.
+01-05-20  Patterns of the form {n}(pattern) and {m,n}(pattern) are now
+	  recognized.  The first form matches exactly n of pattern whereas,
+	  the second form matches from m to n instances of pattern.
+01-05-20  The shell allows *-(pattern), +-(pattern),  ?-(pattern),
+	  {m,n}-(pattern}, and @-(pattern) to cause the minimal
+	  match of pattern to be selected whenever possible rather
+	  than the maximal (greedy) match. 
+01-05-20  The character class [:word:] has been added to patterns.
+	  The word class is the union of [:alnum:] and the character _.
+01-05-20  Inside (...) pattern groups, the \ character is now treated
+	  specially even when in an enclosing character class.  The
+	  sequences, \w, \d, \s are equivalent to the character classes
+	  word, digit, and space respectively.  The sequences \W, \D,
+	  and \S are their complement sets. 
+01-05-20  The shell now recognizes pattern groups of the form
+	  ~(options:pattern) where options or :pattern can be omitted.
+	  Options use the letters + and - to enable and disable options
+	  respectively.  The option letters g (greedy), i (ignore case)
+	  are used to cause maximal matching and to cause case
+	  insensitive matching respectively.  If :pattern is also
+	  specified, these options are only in effect while this
+	  pattern is being processed.  Otherwise, these options remain
+	  in effect until the end of the pattern group that they are contained
+	  in or until another ~(...) is encountered.  These pattern groups
+	  are not counted with respect to group numbering.
+01-05-14  When edit completion, expansion, or listing occurs in the
+	  middle of a quoted string, the leading quote is ignored when
+	  performing the completion, expansion, or listing.
+01-05-14  A small memory leak from subshells has been fixed.
+01-05-10  A bug in which open files were not restored after a subshell
+	  that had used exec to replace a file has been fixed. 
+01-05-10  Redirection to a null file name now generates an error message. 
+01-05-09  The shell now rejects some invalid parameter substitutions that
+	  were previously processed in undefined ways.
+01-05-09  A bug in which the output of select was not flushed before the
+	  read when input did not come from the terminal has been fixed. 
+01-05-08  A bug in which job ids would not be freed for interactive shells
+	  when subshells ran built-ins in the background has been fixed.
+01-05-08  The FPATH variable now requires an explicit . to cause the
+	  current directory to be treated as a function directory. 
+01-05-08  A bug in read -n when echo mode was disabled has been fixed.
+01-05-07  A bug in which function definitions could be listed as part
+	  of the history has been fixed.
+01-04-30  This release uses a new and often much faster pattern matcher than
+	  earlier releases.
+01-04-30  An optimizer now eliminates invariant parameter expansions from
+	  for while and until loops.
+01-04-30  The variable .sh.match is set after each pattern match (# % or /)
+	  in a variable substitution.  The variable .sh.match is an
+	  indexed array with element 0 being the complete match. 
+	  The array is only valid until the next subsequent pattern
+	  match or until the value of the variable changes which ever
+	  comes first.
+01-04-30  A self generating man page has been added to shcomp.  Also,
+	  shcomp now stops compiling when it finds an exit or exec
+	  command and copies the remainder so that it can be used
+	  for standard input.
+01-04-30  The shcomp command was modified so that it can work in an
+	  EBCIDIC environment and that binary scripts are portable
+	  across environments.
+01-04-30  A bug in the handling of a trailing : in PATH has been fixed.
+01-04-30  A bug in which the builtin version of a command would get invoked
+	  even though the full pathname for the command was specified
+	  has been fixed.
+01-04-30  A bug in which read would loose the last character when
+	  reading the last line of a file that did not contain a new-line
+	  character has been fixed.
+01-04-23  A bug on some systems in which in vi mode the end of file
+	  character and end of line character could be swapped has
+	  been fixed.
+01-04-23  A bug on some systems in which invoking a shell script that
+	  did not have execute permission could set the exit value to
+	  127 rather than 126 has been fixed.
+01-04-20  A bug in which read -n from a pipe would block if fewer than
+	  n characters was received has been fixed.
+01-04-09  A bug in which invalid patterns, for example, ) by itself,
+	  was not treated as a string has been fixed so that if i=')',
+	  then [[ $i == $i ]] is true.
+01-04-09  The shell arithmetic now interprets C character constants.
+01-04-09  A bug in which a non-zero return from a function defined
+	  with the function reserved word did not trigger the ERR
+	  trap or exit with set -e has been fixed.
+01-04-02  A bug on some systems, in which characters above 127 were
+	  not displayed correctly in vi or emacs edit mode has been fixed.
+01-04-02  A bug on some systems, introduced in the 'k' point release, in
+	  which the erase character in viraw mode was moving the cursor
+	  to the left without erasing the character has been fixed.
+01-04-02  On some systems the wcwith() function was returning a wrong
+	  value for characters and caused characters to be displayed
+	  incorrectly from the shell edit modes.  A work around for
+	  this problem has been added. 
+01-03-26  A bug in which valid scripts could produce syntax errors
+	  when run with locales that considered characters such as "'"
+	  to be space characters has been fixed.
+01-03-20  A bug in which an syntax error in an arithmetic expression
+	  entered interactively could cause the shell to go into
+	  an infinite loop outputting the error message has been fixed.
+01-03-10  ksh93 accepts -l as a synonym for -L in test on systems for
+	  which /bin/test -l tests for symbolic links.
+01-03-10  A bug in parsing scripts in which { and } are used in place of
+	  in and esac in case statements embedded in compound commands
+	  has been fixed.  Use of { and } for in and esac is obsolete.
+01-03-06  A bug in which an argument of the form foo=bar was not
+	  being passed correctly to a traced function whose name
+	  was foo has been fixed.
+01-03-02  Using $(trap -p name) did not print the name of the current
+	  trap setting for trap name.
+01-02-26  Exported floating point variables gave incorrect results
+	  when passing them to ksh88.  This has been fixed.
+01-02-25  A race condition in which a coprocess which completed too quickly
+	  would not allow subsequent coprocesses to start has been fixed.
+01-02-25  The 'g' format specifier is now handled by printf.  It had
+	  inadvertently been omitted.
+01-02-20  The + was not being displayed during an execution trace
+	  with the += assignment operator.
+01-02-19  The error message which occurs when the interpreter name
+	  defined on the #! line does not exist is more informative.
+01-02-19  A bug in which $0 would not be set correctly when a
+	  script with #! was invoked by full pathname from the
+	  directory of the script has been fixed.
+01-02-19  A shell script did not always pick up tty mode changes
+	  made by external commands such as stty which could
+	  effect the behavior of read.
+01-02-19  The -u, -g, and -k unary tests did not give the correct
+	  results when used with negation and this has been fixed.
+
 01-02-05  --- Release ksh93k+  ---
 01-02-05  The sequence \<newline> inside $'...' was not incrementing
 	  the line count and this has been fixed.
@@ -8,7 +149,7 @@
 01-01-25  allow arithmetic expressions with float%int and treat them
 	  as ((int)float)%int rather than as an error. 
 01-01-19  read -n1 was not working and has been fixed.
-01-01-17  ksh now handes the case in which a here document in command
+01-01-17  ksh now handles the case in which a here document in command
 	  substitution $() is terminated by the trailing ).  Previously,
 	  a new-line was needed at the end of the delimiter word. 
 01-01-02  A bug in which a KEYBD trap would cause a multi-line token

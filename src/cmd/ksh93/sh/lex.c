@@ -38,6 +38,7 @@
 #include	"argnod.h"
 #include	"test.h"
 #include	"lexstates.h"
+#include	"io.h"
 
 #ifdef KSHELL
 #   include	"defs.h"
@@ -216,7 +217,10 @@ static int lexfill(void)
 	savelex = shlex;
 	savedata = lexd;
 	savestate = lex;
+	ap = shlex.arg;
 	c = fcfill();
+	if(ap)
+		shlex.arg = ap;
 	lex = savestate;
 	lexd = savedata;
 	lexd.first = 0;
@@ -635,6 +639,11 @@ int sh_lex(void)
 					fcseek(-1);
 				if(n!=S_TILDE)
 					continue;
+				fcgetc(n);
+				if(n>0)
+					fcseek(-1);
+				if(n==LPAREN)
+					goto epat;
 				wordflags = ARG_MAC;
 				mode = ST_NORM;
 				continue;
@@ -662,6 +671,15 @@ int sh_lex(void)
 				mode = ST_NORM;
 				continue;
 			case S_LIT:
+				if(oldmode()==ST_NONE)	/*  in ((...)) */
+				{
+					if((c=fcpeek(0))==LPAREN || c==RPAREN || c=='$' || c==LBRACE || c==RBRACE || c=='[' || c==']')
+					{
+						if(fcpeek(1)=='\'')
+							fcseek(2);
+					}
+					continue;
+				}
 				wordflags |= ARG_QUOTED;
 				if(mode==ST_DOL)
 				{
@@ -708,6 +726,8 @@ int sh_lex(void)
 					ingrave = !ingrave;
 				/* FALL THRU */
 			case S_QUOTE:
+				if(oldmode()==ST_NONE)	/*  in ((...)) */
+					continue;
 				if(n==S_QUOTE)
 					wordflags |=ARG_QUOTED;
 				if(mode!=ST_QUOTE)
@@ -779,7 +799,7 @@ int sh_lex(void)
 				/* make sure next character is alpha */
 				if(fcgetc(n)>0)
 					fcseek(-1);
-				if(isaletter(n))
+				if(isaletter(n) || n==LBRACT)
 					continue;
 				if(mode==ST_NAME)
 					break;
@@ -826,10 +846,17 @@ int sh_lex(void)
 								fcseek(-1);
 							mode = ST_BRACE;
 						}
-						else if(n==S_DIG)
-							setchar('0');
 						else
-							setchar('!');
+						{
+							if(fcgetc(c)>0)
+								fcseek(-1);
+							if(state[c]==S_ALP)
+								goto err;
+							if(n==S_DIG)
+								setchar('0');
+							else
+								setchar('!');
+						}
 						break;
 					case '0':
 						if(n==S_DIG)
@@ -842,7 +869,7 @@ int sh_lex(void)
 			case S_ERR:
 				if((n=endchar()) == '$')
 					goto err;
-				if((n=sh_lexstates[ST_BRACE][c])!=S_MOD1 && n!=S_MOD2)
+				if(c=='*' || (n=sh_lexstates[ST_BRACE][c])!=S_MOD1 && n!=S_MOD2)
 				{
 					/* see whether inside `...` */
 					mode = oldmode();
@@ -882,7 +909,10 @@ int sh_lex(void)
 				if((c=endchar()) == '$')
 				{
 					setchar(RBRACE);
-					continue;
+					if(fcgetc(c)>0)
+						fcseek(-1);
+					if(state[c]!=S_ERR && c!=RBRACE)
+						continue;
 				}
 			err:
 				n = endchar();
@@ -1000,9 +1030,11 @@ int sh_lex(void)
 				/* check for possible subscript */
 				if((n=endchar())==RBRACT || n==RPAREN || 
 					(mode==ST_BRACE) ||
+					(oldmode()==ST_NONE) ||
 					(mode==ST_NAME && (shlex.assignok||lexd.level)))
 				{
 					pushlevel(RBRACT,mode);
+					wordflags |= ARG_QUOTED;
 					mode = ST_NESTED;
 					continue;
 				}
@@ -1036,6 +1068,8 @@ int sh_lex(void)
 					continue;
 				}
 #endif /* SHOPT_BRACEPAT */
+				if(c==RBRACE && n==LPAREN)
+					goto epat;
 				if(lexd.warn)
 					errormsg(SH_DICT,ERROR_warn(0),e_lexquote,shp->inlineno,c);
 				break;
@@ -1141,6 +1175,8 @@ breakloop:
 		shlex.arg = (struct argnod*)stakfreeze(1);
 		shlex.arg->argflag = (c?c:ARG_RAW);
 	}
+	else if(mode==ST_NONE)
+		shlex.arg = sh_endword(-1);
 	else
 		shlex.arg = sh_endword(0);
 	state = shlex.arg->argval;
@@ -1217,6 +1253,8 @@ breakloop:
 		{
 			if(lexd.warn && c=='{' && lex.incase==2)
 				errormsg(SH_DICT,ERROR_warn(0),e_lexobsolete6,shp->inlineno);
+			if(lex.incase==1 && c==RBRACE)
+				lex.incase = 0;
 			return(shlex.token=c);
 		}
 		else if(!lex.incase && c==LBRACT && state[1]==LBRACT)
@@ -1269,7 +1307,7 @@ breakloop:
 				(np=nv_search(state,shp->alias_tree,HASH_SCOPE))
 				&& !nv_isattr(np,NV_NOEXPAND)
 #ifdef KSHELL
-				&& (!sh_isstate(SH_NOALIAS) || nv_isattr(np,NV_EXPORT))
+				&& (!sh_isstate(SH_NOALIAS) || nv_isattr(np,NV_NOFREE))
 #endif /* KSHELL */
 				&& (state=nv_getval(np)))
 			{
@@ -1328,6 +1366,8 @@ static int comsub(register Lex_t *lp)
 		skip:
 			if(c && (c!='#' || n==0))
 				fcseek(-1);
+			if(c==RBRACE && lex.incase)
+				lex.incase=0;
 			switch(sh_lex())
 			{
 			    case LPAREN:
@@ -1738,6 +1778,20 @@ void	sh_syntax(void)
 		errormsg(SH_DICT,ERROR_exit(SYNBAD),e_lexsyntax2,tokstr,cp);
 }
 
+static char *stack_shift(register char *sp,int shift)
+{
+	register char *ep;
+	register int offset = staktell();
+	register int left = offset-(sp-stakptr(0));
+	offset += shift;
+	stakseek(offset);
+	sp = stakptr(offset);
+	ep = sp - shift;
+	while(left--)
+		*--sp = *--ep;
+	return(sp);
+}
+
 /*
  * Assumes that current word is unfrozen on top of the stak
  * If <mode> is zero, gets rid of quoting and consider argument as string
@@ -1753,8 +1807,8 @@ struct argnod *sh_endword(int mode)
 	register char *sp,*dp;
 	register int inquote=0, inlit=0; /* set within quoted strings */
 	struct argnod* argp;
-	char	*ep=0;
-	int offset = staktell();
+	char	*ep=0, *xp=0;
+	int bracket=0;
 	stakputc(0);
 	sp =  stakptr(ARGVAL);
 #ifdef SHOPT_MULTIBYTE
@@ -1789,13 +1843,15 @@ struct argnod *sh_endword(int mode)
 #endif /* SHOPT_MULTIBYTE */
 	while((n=state[*sp++])==0);
 	dp = sp;
+	if(mode<0)
+		inquote = 1;
 	while(1)
 	{
 		switch(n)
 		{
 		    case S_EOF:
 			stakseek(dp-stakptr(0));
-			if(mode==0)
+			if(mode<=0)
 			{
 				argp = (struct argnod*)stakfreeze(0);
 				argp->argflag = ARG_RAW|ARG_QUOTED;
@@ -1805,7 +1861,7 @@ struct argnod *sh_endword(int mode)
 			if(!(inquote&1))
 			{
 				inlit = !inlit;
-				if(mode==0)
+				if(mode==0 || (mode<0 && bracket))
 				{
 					dp--;
 					if(ep)
@@ -1818,9 +1874,11 @@ struct argnod *sh_endword(int mode)
 			}
 			break;
 		    case S_QUOTE:
+			if(mode<0 && !bracket)
+				break;
 			if(!inlit)
 			{
-				if(mode==0)
+				if(mode<=0)
 					dp--;
 				inquote = inquote^1;
 				if(ep)
@@ -1846,14 +1904,8 @@ struct argnod *sh_endword(int mode)
 					dp = ep+n;
 					if(sp-dp <= 1)
 					{
-						int left = offset-(sp-stakptr(0));
 						int shift = (dp+1-sp);
-						offset += shift;
-						stakseek(offset);
-						sp = stakptr(offset);
-						ep = sp - shift;
-						while(left--)
-							*--sp = *--ep;
+						sp = stack_shift(sp,shift);
 						dp = sp-1;
 						ep = dp-n;
 					}
@@ -1880,7 +1932,7 @@ struct argnod *sh_endword(int mode)
 				else
 					inlit = 1;
 				sp++;
-				if(mode==0 || (inquote&1))
+				if((mode==0||(mode<0&&bracket)) || (inquote&1))
 				{
 					if(mode==2)
 						ep = dp++;
@@ -1896,8 +1948,14 @@ struct argnod *sh_endword(int mode)
 			if(*sp=='\r' && sp[1]=='\n')
 				sp++;
 #endif /* SHOPT_CRNL */
-			if(inlit || mode)
+			if(inlit || mode>0)
 			{
+				if(mode<0)
+				{
+					if(dp>=sp)
+						sp = stack_shift(sp,2);
+					*dp++ = '\\';
+				}
 				if(ep)
 					*dp++ = *sp++;
 				break;
@@ -1918,7 +1976,34 @@ struct argnod *sh_endword(int mode)
 			break;
 		    case S_POP:
 			if(!inlit && !(inquote&1))
+			{
 				inquote >>= 1;
+				if(xp)
+					dp = sh_checkid(xp,dp);
+				xp = 0;
+				if(--bracket<=0 && mode<0)
+					inquote = 1;
+			}
+			else if((inlit||inquote) && mode<0)
+			{
+				dp[-1] = '\\';
+				*dp++ = ']';
+			}
+			break;
+		    case S_BRACT:
+			if(dp[-2]=='.')
+				xp = dp;
+			if(mode<0)
+			{
+				if(inlit || (bracket&&inquote))
+				{
+					dp[-1] = '\\';
+					*dp++ = '[';
+				}
+				else if(bracket++==0)
+					inquote = 0;
+			}
+			break;
 		}
 #ifdef SHOPT_MULTIBYTE
 		if (MB_CUR_MAX > 1)
@@ -1989,7 +2074,7 @@ static int alias_exceptf(Sfio_t *iop,int type,Sfdisc_t *handle)
 	np = ap->np;
 	if(type!=SF_READ)
 	{
-		if(type==SF_CLOSE)
+		if(type==SF_CLOSING)
 		{
 			register Sfdisc_t *dp = sfdisc(iop,SF_POPDISC);
 			if(dp!=handle)

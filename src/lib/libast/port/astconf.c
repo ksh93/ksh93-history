@@ -30,7 +30,7 @@
  * extended to allow some features to be set
  */
 
-static const char id[] = "\n@(#)$Id: getconf (AT&T Labs Research) 2000-05-11 $\0\n";
+static const char id[] = "\n@(#)$Id: getconf (AT&T Labs Research) 2001-04-20 $\0\n";
 
 #include "univlib.h"
 
@@ -47,9 +47,10 @@ static const char id[] = "\n@(#)$Id: getconf (AT&T Labs Research) 2000-05-11 $\0
 #define OP_fs_3d		2
 #define OP_hosttype		3
 #define OP_libpath		4
-#define OP_path_attributes	5
-#define OP_path_resolve		6
-#define OP_universe		7
+#define OP_libsuffix		5
+#define OP_path_attributes	6
+#define OP_path_resolve		7
+#define OP_universe		8
 
 #define CONF_ERROR	(CONF_USER<<0)
 #define CONF_READONLY	(CONF_USER<<1)
@@ -125,8 +126,8 @@ static Feature_t	dynamic[] =
 	{
 		&dynamic[4],
 		"LIBPATH",
-#ifdef _LIBPATH
-		_LIBPATH,
+#ifdef CONF_LIBPATH
+		CONF_LIBPATH,
 #else
 		"",
 #endif
@@ -138,8 +139,22 @@ static Feature_t	dynamic[] =
 	},
 	{
 		&dynamic[5],
+		"LIBSUFFIX",
+#ifdef CONF_LIBSUFFIX
+		CONF_LIBSUFFIX,
+#else
+		"lib",
+#endif
+		"",
+		7,
+		CONF_AST,
+		0,
+		OP_libsuffix
+	},
+	{
+		&dynamic[6],
 		"PATH_ATTRIBUTES",
-#if _WIN32
+#if _UWIN
 		"c",
 #else
 		"",
@@ -151,7 +166,7 @@ static Feature_t	dynamic[] =
 		OP_path_attributes
 	},
 	{
-		&dynamic[6],
+		&dynamic[7],
 		"PATH_RESOLVE",
 		"",
 		"metaphysical",

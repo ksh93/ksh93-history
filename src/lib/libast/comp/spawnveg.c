@@ -42,6 +42,30 @@ NoN(spawnveg)
 
 #else
 
+#if _lib_spawn && _hdr_spawn && _mem_pgroup_inheritance
+
+#include <spawn.h>
+
+/*
+ * open-edition/mvs/zos fork+exec+(setpgid)
+ */
+
+pid_t
+spawnveg(const char* cmd, char* const argv[], char* const envv[], pid_t pgid)
+{
+	struct inheritance	inherit;
+
+	inherit.flags = 0;
+	if (pgid)
+	{
+		inherit.flags |= SPAWN_SETGROUP;
+		inherit.pgroup = (pgid > 1) ? pgid : SPAWN_NEWPGROUP;
+	}
+	return spawn(cmd, 0, (int*)0, &inherit, (const char**)argv, (const char**)envv);
+}
+
+#else
+
 #include <error.h>
 
 #ifndef ENOSYS
@@ -189,5 +213,7 @@ spawnveg(const char* cmd, char* const argv[], char* const envv[], pid_t pgid)
 	return(-1);
 #endif
 }
+
+#endif
 
 #endif

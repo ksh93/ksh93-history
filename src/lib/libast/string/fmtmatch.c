@@ -26,9 +26,9 @@
 #pragma prototyped
 /*
  * Glenn Fowler
- * AT&T Bell Laboratories
+ * AT&T Labs Research
  *
- * return strmatch() expression given RE
+ * return strmatch() expression given REG_AUGMENTED RE
  * 0 returned for invalid RE
  */
 
@@ -44,6 +44,7 @@ fmtmatch(const char* as)
 	register char*	b;
 	char*		x;
 	char*		y;
+	char*		z;
 	int		a;
 	int		e;
 	int		n;
@@ -78,11 +79,12 @@ fmtmatch(const char* as)
 				c = ')';
 				break;
 			case '|':
+			case '&':
 				if (c == '(')
 				{
 					*t++ = c;
 					c = *s++;
-					goto alternate;
+					goto logical;
 				}
 				break;
 			case '{':
@@ -125,7 +127,8 @@ fmtmatch(const char* as)
 			case '*':
 			case '+':
 			case '?':
-				for (y = t + 2, t--; t >= x; t--) *(t + 2) = *t;
+				for (y = t + 2, t--; t >= x; t--)
+					*(t + 2) = *t;
 				*++t = *s++;
 				*++t = '(';
 				t = y;
@@ -137,7 +140,21 @@ fmtmatch(const char* as)
 			if (p >= &stack[elementsof(stack)])
 				return 0;
 			*p++ = t;
-			*t++ = '@';
+			if (*s == '?')
+			{
+				s++;
+				if (*s == 'K' && *(s + 1) == ')')
+				{
+					s += 2;
+					p--;
+					while (*t = *s)
+						t++, s++;
+					continue;
+				}
+				*t++ = '~';
+			}
+			else
+				*t++ = '@';
 			*t++ = '(';
 			continue;
 		case ')':
@@ -152,7 +169,33 @@ fmtmatch(const char* as)
 			case '*':
 			case '+':
 			case '?':
+			case '!':
 				**p = *s++;
+				if (*s == '?')
+				{
+					s++;
+					x = *p + 1;
+					for (y = ++t; y > x; y--)
+						*y = *(y - 1);
+					*x = '-';
+				}
+				continue;
+			case '{':
+				for (z = s; *z != '}'; z++)
+					if (!*z)
+						return 0;
+				n = z - s;
+				if (*++z == '?')
+					n++;
+				x = *p + n;
+				for (y = t += n; y > x; y--)
+					*y = *(y - n);
+				for (x = *p; s < z; *x++ = *s++);
+				if (*s == '?')
+				{
+					s++;
+					*x++ = '-';
+				}
 				continue;
 			default:
 				continue;
@@ -189,18 +232,32 @@ fmtmatch(const char* as)
 		case '*':
 		case '+':
 		case '?':
+		case '{':
 			n = *(t - 1);
 			if (t == b || n == '(' || n == '|')
 				return 0;
 			*(t - 1) = c;
+			if (c == '{')
+			{
+				for (z = s; *z != '}'; z++)
+					if (!*z)
+						return 0;
+				for (; s <= z; *t++ = *s++);
+			}
+			if (*s == '?')
+			{
+				s++;
+				*t++ = '-';
+			}
 			*t++ = '(';
 			*t++ = n;
 			*t++ = ')';
 			continue;
 		case '|':
+		case '&':
 			if (t == b || *(t - 1) == '(')
 				return 0;
-		alternate:
+		logical:
 			if (!*s || *s == ')')
 				return 0;
 			if (p == stack && b == buf + 3)
@@ -224,7 +281,7 @@ fmtmatch(const char* as)
 		return 0;
 	if (b != buf + 3)
 		*t++ = ')';
-	if (!a && *b != '*')
+	if (!a && (*b != '*' || *(b + 1) == '(' || (*(b + 1) == '-' || *(b + 1) == '~') && *(b + 2) == '('))
 		*--b = '*';
 	if (!e)
 		*t++ = '*';

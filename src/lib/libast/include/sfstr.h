@@ -40,21 +40,21 @@
 #define sfstrnew(m)	sfnew((Sfio_t*)0,(char*)0,-1,-1,(m)|SF_STRING)
 #define sfstrclose(f)	sfclose(f)
 
-#define sfstrtell(f)	((f)->next - (f)->data)
-#define sfstrrel(f,p)	((p) == (0) ? (char*)(f)->next : \
-			 ((f)->next += (p), \
-			  ((f)->next >= (f)->data && (f)->next  <= (f)->endb) ? \
-				(char*)(f)->next : ((f)->next -= (p), (char*)0) ) )
+#define sfstrtell(f)	((f)->_next - (f)->_data)
+#define sfstrrel(f,p)	((p) == (0) ? (char*)(f)->_next : \
+			 ((f)->_next += (p), \
+			  ((f)->_next >= (f)->_data && (f)->_next  <= (f)->_endb) ? \
+				(char*)(f)->_next : ((f)->_next -= (p), (char*)0) ) )
 
-#define sfstrset(f,p)	(((p) >= 0 && (p) <= (f)->size) ? \
-				(char*)((f)->next = (f)->data+(p)) : (char*)0 )
+#define sfstrset(f,p)	(((p) >= 0 && (p) <= (f)->_size) ? \
+				(char*)((f)->_next = (f)->_data+(p)) : (char*)0 )
 
-#define sfstrbase(f)	((char*)(f)->data)
-#define sfstrsize(f)	((f)->size)
+#define sfstrbase(f)	((char*)(f)->_data)
+#define sfstrsize(f)	((f)->_size)
 
-#define sfstrrsrv(f,n)	(sfreserve(f,(long)(n),1)?(sfwrite(f,(char*)(f)->next,0),(char*)(f)->next):(char*)0)
+#define sfstrrsrv(f,n)	(sfreserve(f,(long)(n),1)?(sfwrite(f,(char*)(f)->_next,0),(char*)(f)->_next):(char*)0)
 
-#define sfstruse(f)	(sfputc(f,0), (char*)((f)->next = (f)->data) )
+#define sfstruse(f)	(sfputc(f,0), (char*)((f)->_next = (f)->_data) )
 
 #if _BLD_ast && defined(__EXPORT__)
 #define extern		__EXPORT__

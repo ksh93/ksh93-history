@@ -36,26 +36,29 @@
 const struct shtable2 shtab_aliases[] =
 {
 #ifdef SHOPT_FS_3D
-	"2d",		NV_NOFREE|NV_EXPORT,	"set -f;_2d",
+	"2d",		NV_NOFREE,	"set -f;_2d",
 #endif /* SHOPT_FS_3D */
-	"autoload",	NV_NOFREE|NV_EXPORT,	"typeset -fu",
-	"command",	NV_NOFREE|NV_EXPORT,	"command ",
-	"fc",		NV_NOFREE|NV_EXPORT,	"hist",
-	"float",	NV_NOFREE|NV_EXPORT,	"typeset -E",
-	"functions",	NV_NOFREE|NV_EXPORT,	"typeset -f",
-	"hash",		NV_NOFREE|NV_EXPORT,	"alias -t --",
-	"history",	NV_NOFREE|NV_EXPORT,	"hist -l",
-	"integer",	NV_NOFREE|NV_EXPORT,	"typeset -i",
-	"nameref",	NV_NOFREE|NV_EXPORT,	"typeset -n",
-	"nohup",	NV_NOFREE|NV_EXPORT,	"nohup ",
-	"r",		NV_NOFREE|NV_EXPORT,	"hist -s",
-	"redirect",	NV_NOFREE|NV_EXPORT,	"command exec",
-	"times",	NV_NOFREE|NV_EXPORT,	"{ { time;} 2>&1;}",
-	"type",		NV_NOFREE|NV_EXPORT,	"whence -v",
+	"autoload",	NV_NOFREE,	"typeset -fu",
+	"command",	NV_NOFREE,	"command ",
+	"fc",		NV_NOFREE,	"hist",
+	"float",	NV_NOFREE,	"typeset -E",
+	"functions",	NV_NOFREE,	"typeset -f",
+	"hash",		NV_NOFREE,	"alias -t --",
+	"history",	NV_NOFREE,	"hist -l",
+	"integer",	NV_NOFREE,	"typeset -i",
+#ifdef SHOPT_ALIASLOCAL
+	"local",	NV_NOFREE,	"typeset",
+#endif
+	"nameref",	NV_NOFREE,	"typeset -n",
+	"nohup",	NV_NOFREE,	"nohup ",
+	"r",		NV_NOFREE,	"hist -s",
+	"redirect",	NV_NOFREE,	"command exec",
+	"times",	NV_NOFREE,	"{ { time;} 2>&1;}",
+	"type",		NV_NOFREE,	"whence -v",
 #ifdef SIGTSTP
-	"stop",		NV_NOFREE|NV_EXPORT,	"kill -s STOP",
-	"suspend", 	NV_NOFREE|NV_EXPORT,	"kill -s STOP $$",
+	"stop",		NV_NOFREE,	"kill -s STOP",
+	"suspend", 	NV_NOFREE,	"kill -s STOP $$",
 #endif /*SIGTSTP */
-	"",		0,			(char*)0
+	"",		0,		(char*)0
 };
 

@@ -73,6 +73,7 @@ coinit(int flags)
 	char*		t;
 	long		p;
 	Sfio_t*		sp;
+	Sfio_t*		tp;
 	struct stat	st;
 
 	static char*	init;
@@ -193,7 +194,7 @@ coinit(int flags)
 		 * PATH
 		 */
 
-		sfprintf(sp, " PATH=':");
+		sfprintf(sp, " PATH='");
 		n = PATH_MAX;
 		if (!(t = sfstrrsrv(sp, n)))
 		{
@@ -202,21 +203,56 @@ coinit(int flags)
 			return(0);
 		}
 		t += n / 2;
-		s = pathbin();
-		if (!pathpath(t, "ignore", NiL, PATH_ABSOLUTE|PATH_REGULAR|PATH_EXECUTE) && pathpath(t, "bin/ignore", "", PATH_ABSOLUTE|PATH_REGULAR|PATH_EXECUTE))
+		if (!(flags & CO_CROSS) && !pathpath(t, "ignore", NiL, PATH_ABSOLUTE|PATH_REGULAR|PATH_EXECUTE) && pathpath(t, "bin/ignore", "", PATH_ABSOLUTE|PATH_REGULAR|PATH_EXECUTE))
 		{
 			*strrchr(t, '/') = 0;
+			sfputc(sp, ':');
 			coquote(sp, t, !old);
 			sfputc(sp, ':');
+			s = pathbin();
 		}
-		else if (!sync && (*s == ':' || *s == '.' && *(s + 1) == ':'))
+		else
 		{
-			sfstrset(sp, 0);
-			goto done;
+			s = pathbin();
+			if (!sync && (*s == ':' || *s == '.' && *(s + 1) == ':'))
+			{
+				sfstrset(sp, 0);
+				goto done;
+			}
+			if (!(flags & CO_CROSS)) sfputc(sp, ':');
 		}
 		if (*s == ':') s++;
 		else if (*s == '.' && *(s + 1) == ':') s += 2;
+		if (!(flags & CO_CROSS))
+			tp = 0;
+		else if (tp = sfstropen())
+		{
+			while (n = *s++)
+			{
+				if (n == ':')
+				{
+					while (*s == ':')
+						s++;
+					if (!*s)
+						break;
+					if (*s == '.')
+					{
+						if (!*(s + 1))
+							break;
+						if (*(s + 1) == ':')
+						{
+							s++;
+							continue;
+						}
+					}
+				}
+				sfputc(tp, n);
+			}
+			s = sfstruse(tp);
+		}
 		coquote(sp, s, !old);
+		if (tp)
+			sfstrclose(tp);
 		sfputc(sp, '\'');
 		if (old) sfprintf(sp, "\nexport PATH");
 		sfputc(sp, '\n');

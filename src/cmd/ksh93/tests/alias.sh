@@ -73,4 +73,9 @@ alias foo=echo
 if	[[ $(print  "$(foo bar)" ) != bar  ]]
 then	err_exit 'alias in command substitution not working'
 fi
+if	whence rm > /dev/null
+then	[[ ! $(alias -t | grep rm= ) ]] && err_exit 'tracked alias not set'
+	PATH=$PATH
+	[[ $(alias -t | grep rm= ) ]] &&  err_exit 'tracked alias not cleared'
+fi
 exit $((Errors))

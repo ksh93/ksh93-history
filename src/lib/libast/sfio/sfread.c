@@ -49,7 +49,7 @@ reg size_t	n;	/* number of bytes to be read. 	*/
 	justseek = f->bits&SF_JUSTSEEK; f->bits &= ~SF_JUSTSEEK;
 
 	if(!buf)
-		SFMTXRETURN(f, (ssize_t)(-1) );
+		SFMTXRETURN(f, (ssize_t)(n == 0 ? 0 : -1) );
 
 	/* release peek lock */
 	if(f->mode&SF_PEEK)
@@ -104,12 +104,7 @@ reg size_t	n;	/* number of bytes to be read. 	*/
 		if(n <= 0)	/* all done */
 			break;
 
-		/* refill buffer */
-		if((f->flags&SF_STRING) || (f->bits&SF_MMAP) )
-		{	if(SFFILBUF(f,-1) <= 0)
-				break;
-		}
-		else
+		if(!(f->flags&SF_STRING) && !(f->bits&SF_MMAP) )
 		{	f->next = f->endb = f->data;
 
 			/* exact IO is desirable for these cases */
@@ -124,13 +119,20 @@ reg size_t	n;	/* number of bytes to be read. 	*/
 			if(r > (ssize_t)n && (r - r/8) <= (ssize_t)n)
 				r = (ssize_t)n;
 
-			if(r == (ssize_t)n) /* read directly to user's buffer */
-			{	if((r = SFRD(f,s,r,f->disc)) >= 0)
-				{	s += r;
+			/* read directly to user's buffer */
+			if(r == (ssize_t)n && (r = SFRD(f,s,r,f->disc)) >= 0)
+			{	s += r;
+				n -= r;
+				if(r == 0 || n == 0) /* eof or eob */ 
 					break;
-				}
 			}
-			else if(SFRD(f,f->next,r,f->disc) == 0) /* eof */
+			else	goto do_filbuf;
+		}
+		else
+		{ do_filbuf:
+			if(justseek)
+				f->bits |= SF_JUSTSEEK;
+			if(SFFILBUF(f,-1) <= 0)
 				break;
 		}
 	}

@@ -44,6 +44,16 @@ fi
 if	test -d /dev/fd
 then	echo "#define SHOPT_DEVFD	1"
 fi
+if	/bin/test ! -l . 2> /dev/null
+then	echo "#define SHOPT_TEST_L	1"
+fi
+sh -c	'function foo
+	{
+		local bar=0 2> /dev/null || return 1
+		return ${bar=1}
+	}
+	foo
+	' && echo "#define SHOPT_ALIASLOCAL	1"
 
 : get the option settings from the options file
 . $OPTIONS

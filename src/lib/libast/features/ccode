@@ -34,12 +34,14 @@ tst output{
 		{
 			printf("#define CC_bel		0057		/* bel character		*/\n");
 			printf("#define CC_esc		0047		/* esc character		*/\n");
+			printf("#define CC_sub		0077		/* sub character		*/\n");
 			printf("#define CC_vt		0013		/* vt character			*/\n");
 		}
 		else
 		{
 			printf("#define CC_bel		0007		/* bel character		*/\n");
 			printf("#define CC_esc		0033		/* esc character		*/\n");
+			printf("#define CC_sub		0032		/* sub character		*/\n");
 			printf("#define CC_vt		0013		/* vt character			*/\n");
 		}
 		return 0;

@@ -128,7 +128,7 @@ touch(const char* file, time_t atime, time_t mtime, int force)
 #endif
 	{
 #if _lib_utime
-		if (errno == ENOENT || errno == EPERM)
+		if (errno == ENOENT)
 #else
 
 		if (access(file, F_OK))

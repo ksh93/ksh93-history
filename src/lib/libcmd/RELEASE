@@ -1,3 +1,9 @@
+01-05-31 date: fix /bin/date fallback logic
+	 stty: fix a few mismatched flags, -a and -g option logic
+	 stty: tone down sane to modify current settings rather than from zero
+01-05-01 uname: -i => -h, add sol.sun4 -i, add sgi -R, punt to /usr/bin/uname
+01-04-17 date,rm: add
+01-03-07 cp: fix readonly string mod on "."
 01-01-23 cp: `cp foo' => `cp foo .' only for CONFORMANCE!=standard
 00-12-01 cut: multibyte support
 00-10-31 mkdir: handle races by checking EEXIST

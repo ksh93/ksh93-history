@@ -39,11 +39,23 @@
 
 #undef	strerror
 
+#if !_dat_sys_errlist
+#undef		_dat_sys_nerr
+#undef		sys_errlist
+char*		sys_errlist[] = { 0 };
+#else
+#if !_def_errno_sys_errlist
+extern char*	sys_errlist[];
+#endif
+#endif
+
+#if !_dat_sys_nerr
+#undef		sys_nerr
+int		sys_nerr = 0;
+#else
 #if !_def_errno_sys_nerr
 extern int	sys_nerr;
 #endif
-#if !_def_errno_sys_errlist
-extern char*	sys_errlist[];
 #endif
 
 #if _lib_strerror
@@ -53,12 +65,22 @@ extern char*	strerror(int);
 char*
 _ast_strerror(int err)
 {
-	char*		buf;
+	char*		msg;
 	int		z;
 
 	static int	sys;
 
+#if _lib_strerror
+	z = errno;
+	msg = strerror(err);
+	errno = z;
+#else
 	if (err > 0 && err <= sys_nerr)
+		msg = (char*)sys_errlist[err];
+	else
+		msg = 0;
+#endif
+	if (msg)
 	{
 		if (ERROR_translating())
 		{
@@ -66,6 +88,7 @@ _ast_strerror(int err)
 			if (!sys)
 			{
 				char*	s;
+				char*	t;
 				char*	p;
 
 				/*
@@ -76,23 +99,24 @@ _ast_strerror(int err)
 					sys = -1;
 				else
 				{
-					buf = fmtbuf(z = strlen(s) + 1);
-					strcpy(buf, s);
-					p = setlocale(LC_MESSAGES, "C");
-					sys = (s = strerror(1)) && strcmp(s, buf) ? 1 : -1;
+					t = fmtbuf(z = strlen(s) + 1);
+					strcpy(t, s);
+					p = setlocale(LC_MESSAGES, NiL);
+					setlocale(LC_MESSAGES, "C");
+					sys = (s = strerror(1)) && strcmp(s, t) ? 1 : -1;
 					setlocale(LC_MESSAGES, p);
 				}
 			}
 			if (sys > 0)
-				return strerror(err);
+				return msg;
 #endif
-			return ERROR_translate(NiL, NiL, "errlist", (char*)sys_errlist[err]);
+			return ERROR_translate(NiL, NiL, "errlist", msg);
 		}
-		return (char*)sys_errlist[err];
+		return msg;
 	}
-	buf = fmtbuf(z = 32);
-	sfsprintf(buf, z, ERROR_translate(NiL, NiL, "errlist", "Error %d"), err);
-	return buf;
+	msg = fmtbuf(z = 32);
+	sfsprintf(msg, z, ERROR_translate(NiL, NiL, "errlist", "Error %d"), err);
+	return msg;
 }
 
 #if !_lib_strerror

@@ -78,7 +78,20 @@ static char*		format[] =
 
 	"at",		"on",		"",		"",
 
-	"st",		"nd",		"rd",		"th",
+	"st",		"nd",		"rd",		"th",		"th",
+	"th",		"th",		"th",		"th",		"th",
+
+	"",		"",		"",		"",		"",
+	"",		"",		"",		"",		"",
+
+	"%a %b %e %T %Y",
+	"%a %b %e %T %Z %Y",
+	"%a %b %e %T %z %Z %Y",
+	"%b %e %H:%M",
+	"%b %e  %Y",
+	"%I:%M:%S %p",
+
+	"",		"",		"",		"",		"",
 };
 
 /*
@@ -87,16 +100,16 @@ static char*		format[] =
 
 static char		lex[] =
 {
-	TM_MONTH_3,	TM_MONTH_3,	TM_MONTH_3,	TM_MONTH_3,
-	TM_MONTH_3,	TM_MONTH_3,	TM_MONTH_3,	TM_MONTH_3,
-	TM_MONTH_3,	TM_MONTH_3,	TM_MONTH_3,	TM_MONTH_3,
+	TM_MONTH_ABBREV,TM_MONTH_ABBREV,TM_MONTH_ABBREV,TM_MONTH_ABBREV,
+	TM_MONTH_ABBREV,TM_MONTH_ABBREV,TM_MONTH_ABBREV,TM_MONTH_ABBREV,
+	TM_MONTH_ABBREV,TM_MONTH_ABBREV,TM_MONTH_ABBREV,TM_MONTH_ABBREV,
 
 	TM_MONTH,	TM_MONTH,	TM_MONTH,	TM_MONTH,
 	TM_MONTH,	TM_MONTH,	TM_MONTH,	TM_MONTH,
 	TM_MONTH,	TM_MONTH,	TM_MONTH,	TM_MONTH,
 
-	TM_DAY_3,	TM_DAY_3,	TM_DAY_3,	TM_DAY_3,
-	TM_DAY_3,	TM_DAY_3,	TM_DAY_3,
+	TM_DAY_ABBREV,	TM_DAY_ABBREV,	TM_DAY_ABBREV,	TM_DAY_ABBREV,
+	TM_DAY_ABBREV,	TM_DAY_ABBREV,	TM_DAY_ABBREV,
 
 	TM_DAY,		TM_DAY,		TM_DAY,		TM_DAY,
 	TM_DAY,		TM_DAY,		TM_DAY,

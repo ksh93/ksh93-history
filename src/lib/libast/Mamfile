@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 4.1 2001-01-01
+info mam static 00000 1994-07-17 make (AT&T Research) 4.2 2001-05-09
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ar
@@ -30,6 +30,8 @@ setv SILENT
 setv TAR tar
 setv YACC yacc
 setv YACCFLAGS -d
+make ../../../lib/package/ast.lic
+done ../../../lib/package/ast.lic
 make include/ast_version.h
 done include/ast_version.h
 make install
@@ -91,6 +93,8 @@ make state.o
 make misc/state.c
 make include/ast.h implicit
 make include/sfio.h implicit
+make include/sfio_s.h implicit
+done include/sfio_s.h dontcare
 make ast_common.h implicit
 make FEATURE/common
 make features/common
@@ -136,7 +140,7 @@ prev comp/conf.sh
 exec - case static,port:$OPTIND:$RANDOM in
 exec - ?*:*:*|*::*|*:*:$RANDOM)
 exec - 	;;
-exec - *)	if	ENV= x= $SHELL -n -c '${list[level]} ' 2>/dev/null
+exec - *)	if	ENV= x= $SHELL -nc ': ${list[level]}  !(pattern)' 2>/dev/null
 exec - 	then	ENV= $SHELL -n comp/conf.sh
 exec - 	fi
 exec - 	;;
@@ -209,6 +213,7 @@ make error?--?old?ethernet?address?at?wrong?offset implicit
 done error?--?old?ethernet?address?at?wrong?offset dontcare virtual
 done FEATURE/param generated
 prev FEATURE/unistd.lcl implicit
+prev FEATURE/common implicit
 prev FEATURE/lib implicit
 make FEATURE/limits.lcl implicit
 prev ast.req
@@ -281,6 +286,15 @@ make ast_types.h implicit
 prev FEATURE/types
 exec - cmp 2>/dev/null -s FEATURE/types ast_types.h || { rm -f ast_types.h; silent test -d . || mkdir .; cp FEATURE/types ast_types.h; }
 done ast_types.h dontcare generated
+make ast_map.h implicit
+make FEATURE/map
+make features/map
+done features/map
+prev ast.req
+exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '   run features/map
+done FEATURE/map generated
+exec - cmp 2>/dev/null -s FEATURE/map ast_map.h || { rm -f ast_map.h; silent test -d . || mkdir .; cp FEATURE/map ast_map.h; }
+done ast_map.h dontcare generated
 prev stdio.h implicit
 prev comp/getopt.h implicit
 prev limits.h implicit
@@ -303,7 +317,7 @@ prev include/ast_version.h implicit
 done include/ast.h
 done misc/state.c
 prev misc/state.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -D_PACKAGE_ast -c misc/state.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -D__OBSOLETE__=20010101 -D_PACKAGE_ast -c misc/state.c
 done state.o generated
 make opendir.o
 make dir/opendir.c
@@ -319,101 +333,51 @@ exec - cmp 2>/dev/null -s FEATURE/param ast_param.h || { rm -f ast_param.h; sile
 done ast_param.h dontcare generated
 make ndir.h implicit
 done ndir.h dontcare virtual
-make ${INSTALLROOT}/include/ast/dirent.h implicit
-make ${INSTALLROOT}/include/ast
-exec - set -
-exec - if	test ! -d ${INSTALLROOT}/include/ast
-exec - then	set -x && mkdir -p ${INSTALLROOT}/include/ast 2>/dev/null && set - ||
-exec - 	{
-exec - 		test -d ./-p && rm -rf ./-p
-exec - 		p=
-exec - 		for d in `echo ${INSTALLROOT}/include/ast | sed -e 's%\\(.\\)/%\\1 %g'`
-exec - 		do	case $p in
-exec - 			"")	p=$d ;;
-exec - 			*)	p=$p/$d ;;
-exec - 			esac
-exec - 			case $d in
-exec - 			.|..)	;;
-exec - 			*)	if	test ! -d $p
-exec - 				then	rm -f $p
-exec - 					set -x && mkdir $p && set -
-exec - 				fi
-exec - 				;;
-exec - 			esac
-exec - 		done
-exec - 	} && set -x 		    		   
-exec - fi
-done ${INSTALLROOT}/include/ast generated
-make dir/dir64.h
-done dir/dir64.h
-prev dir/dirstd.h
-make dir/dirnsys.h
-done dir/dirnsys.h
-make dir/dirsys.h
-done dir/dirsys.h
-prev ast_lib.h
-exec - header=
-exec - match=`sed -e '/define[ 	]*_[lhst][idy][brsp]_[a-z]*[d6][i4]/!d' -e 's/.*define[ 	]*/./' -e 's/[ 	].*/./' ast_lib.h 2>/dev/null`
-exec - case $match in
-exec - *._lib_opendir.*)
-exec - 	case $match in
-exec - 	*._lib_stat64.*)case $match in
-exec - 			*._typ_off64_t.*) header=dir/dir64.h ;;
-exec - 			esac
-exec - 			;;
-exec - 	*._hdr_dirent.*);;
-exec - 	*._hdr_ndir.*)	header=dir/dirnsys.h ;;
-exec - 	*._sys_dir.*)	header=dir/dirsys.h ;;
-exec - 	esac
-exec - 	;;
-exec - *)	header=dir/dirstd.h
-exec - 	;;
-exec - esac
-exec - case $header in
-exec - ?*)	proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' $header > 1.${COTEMP}.x
-exec - 	if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/dirent.h 1.${COTEMP}.x
-exec - 	then	rm -f 1.${COTEMP}.x
-exec - 	else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/dirent.h
-exec - 	fi
-exec - esac
+make dirent.h implicit
+make FEATURE/dirent
+make features/dirent
+done features/dirent
+prev ast.req
+exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '   run features/dirent
 prev include/ast_std.h implicit
-make ${INSTALLROOT}/include/prototyped.h implicit
-done ${INSTALLROOT}/include/prototyped.h dontcare
-done ${INSTALLROOT}/include/ast/dirent.h dontcare generated
+done FEATURE/dirent generated
+exec - cmp 2>/dev/null -s FEATURE/dirent dirent.h || { rm -f dirent.h; silent test -d . || mkdir .; cp FEATURE/dirent dirent.h; }
+prev include/ast_std.h implicit
+done dirent.h dontcare generated
 prev include/ls.h implicit
 prev include/ast.h implicit
 done dir/dirlib.h
 done dir/opendir.c
 prev dir/opendir.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idir -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c dir/opendir.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idir -Iinclude -D_PACKAGE_ast -c dir/opendir.c
 done opendir.o generated
 make readdir.o
 make dir/readdir.c
 prev dir/dirlib.h implicit
 done dir/readdir.c
 prev dir/readdir.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idir -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c dir/readdir.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idir -Iinclude -D_PACKAGE_ast -c dir/readdir.c
 done readdir.o generated
 make rewinddir.o
 make dir/rewinddir.c
 prev dir/dirlib.h implicit
 done dir/rewinddir.c
 prev dir/rewinddir.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idir -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c dir/rewinddir.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idir -Iinclude -D_PACKAGE_ast -c dir/rewinddir.c
 done rewinddir.o generated
 make seekdir.o
 make dir/seekdir.c
 prev dir/dirlib.h implicit
 done dir/seekdir.c
 prev dir/seekdir.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idir -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c dir/seekdir.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idir -Iinclude -D_PACKAGE_ast -c dir/seekdir.c
 done seekdir.o generated
 make telldir.o
 make dir/telldir.c
 prev dir/dirlib.h implicit
 done dir/telldir.c
 prev dir/telldir.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idir -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c dir/telldir.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idir -Iinclude -D_PACKAGE_ast -c dir/telldir.c
 done telldir.o generated
 make getcwd.o
 make misc/getcwd.c
@@ -424,7 +388,7 @@ prev dir/dirlib.h implicit
 prev include/ast.h implicit
 done misc/getcwd.c
 prev misc/getcwd.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idir -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c misc/getcwd.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idir -Iinclude -D_PACKAGE_ast -c misc/getcwd.c
 done getcwd.o generated
 make fastfind.o
 make misc/fastfind.c
@@ -650,6 +614,7 @@ exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -D_PACKAGE_ast -c string/ccnative.
 done ccnative.o generated
 make chresc.o
 make string/chresc.c
+prev include/regex.h implicit
 prev include/ccode.h implicit
 prev include/ast.h implicit
 done string/chresc.c
@@ -679,10 +644,7 @@ exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -D_PACKAGE_ast -c string/strexpr.c
 done strexpr.o generated
 make strmatch.o
 make string/strmatch.c
-prev include/error.h implicit
-prev stdio.h implicit
-prev stdio.h implicit
-prev include/hashkey.h implicit
+prev include/regex.h implicit
 prev include/ast.h implicit
 done string/strmatch.c
 prev string/strmatch.c
@@ -796,7 +758,6 @@ exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -D_PACKAGE_ast -c string/tokscan.c
 done tokscan.o generated
 make pathaccess.o
 make path/pathaccess.c
-prev include/ls.h implicit
 prev include/ast.h implicit
 done path/pathaccess.c
 prev path/pathaccess.c
@@ -848,6 +809,45 @@ done path/pathpath.c
 prev path/pathpath.c
 exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -D_PACKAGE_ast -c path/pathpath.c
 done pathpath.o generated
+make pathexists.o
+make path/pathexists.c
+prev include/ls.h implicit
+make port/lclib.h implicit
+make joint.lc.h implicit joint
+make lc.h implicit
+make lcgen
+make port/lcgen.c
+prev stdio.h implicit
+done port/lcgen.c
+exec - ${CC} -o lcgen port/lcgen.c
+done lcgen generated
+make port/lc.tab
+done port/lc.tab
+exec - lcgen ${COTEMP}.1 ${COTEMP}.2 < port/lc.tab
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ${COTEMP}.1 > ${COTEMP}.3
+exec - rm -f ${COTEMP}.1
+exec - if	cmp -s ${COTEMP}.3 lc.h
+exec - then	rm ${COTEMP}.3
+exec - else	mv ${COTEMP}.3 lc.h
+exec - fi
+exec - if	cmp -s ${COTEMP}.2 lctab.h
+exec - then	rm ${COTEMP}.2
+exec - else	mv ${COTEMP}.2 lctab.h
+exec - fi
+prev include/ast.h implicit
+make ../../../include/prototyped.h implicit
+done ../../../include/prototyped.h dontcare
+done lc.h dontcare generated
+make lctab.h
+done lctab.h generated
+done joint.lc.h virtual
+prev include/error.h implicit
+prev include/ast.h implicit
+done port/lclib.h
+done path/pathexists.c
+prev path/pathexists.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c path/pathexists.c
+done pathexists.o generated
 make pathfind.o
 make path/pathfind.c
 prev include/ast.h implicit
@@ -997,13 +997,10 @@ prev include/fts.h implicit
 prev dir/dirlib.h implicit
 done misc/fts.c
 prev misc/fts.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idir -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c misc/fts.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idir -Iinclude -D_PACKAGE_ast -c misc/fts.c
 done fts.o generated
 make setenviron.o
 make misc/setenviron.c
-make include/int.h implicit
-prev ast_common.h implicit
-done include/int.h dontcare
 prev include/fs3d.h implicit
 prev include/ast.h implicit
 done misc/setenviron.c
@@ -1061,7 +1058,9 @@ exec - cmp 2>/dev/null -s FEATURE/align align.h || { rm -f align.h; silent test 
 done align.h dontcare generated
 prev include/sfstr.h implicit
 make include/swap.h implicit
-prev include/int.h implicit
+make include/int.h implicit
+prev ast_common.h implicit
+done include/int.h dontcare
 done include/swap.h
 prev include/regex.h implicit
 prev include/error.h implicit
@@ -1131,13 +1130,10 @@ prev sig.h implicit
 make include/namval.h implicit
 done include/namval.h
 prev include/ccode.h implicit
-make misc/loclib.h implicit
-prev include/error.h implicit
-prev include/ast.h implicit
-done misc/loclib.h
+prev port/lclib.h implicit
 done misc/error.c
 prev misc/error.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Imisc -Iinclude -DERROR_CATALOG=\""libast"\" -D_PACKAGE_ast -c misc/error.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Iinclude -I${INSTALLROOT}/include -DERROR_CATALOG=\""libast"\" -D_PACKAGE_ast -c misc/error.c
 done error.o generated
 make errorf.o
 make misc/errorf.c
@@ -1155,21 +1151,45 @@ exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -D_PACKAGE_ast -c misc/errormsg.c
 done errormsg.o generated
 make errorx.o
 make misc/errorx.c
-prev misc/loclib.h implicit
+prev port/lclib.h implicit
 done misc/errorx.c
 prev misc/errorx.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Imisc -Iinclude -D_PACKAGE_ast -c misc/errorx.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c misc/errorx.c
 done errorx.o generated
+make localeconv.o
+make comp/localeconv.c
+prev port/lclib.h implicit
+done comp/localeconv.c
+prev comp/localeconv.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c comp/localeconv.c
+done localeconv.o generated
 make setlocale.o
 make comp/setlocale.c
+make windows.h implicit
+done windows.h dontcare virtual
+make wchar.h implicit
+make FEATURE/wchar
+make features/wchar
+done features/wchar
+prev ast.req
+exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '   run features/wchar
+prev stdio.h implicit
+prev stdio.h implicit
+prev include/ast_std.h implicit
+done FEATURE/wchar generated
+exec - cmp 2>/dev/null -s FEATURE/wchar wchar.h || { rm -f wchar.h; silent test -d . || mkdir .; cp FEATURE/wchar wchar.h; }
+prev stdio.h implicit
+prev include/ast_std.h implicit
+done wchar.h dontcare generated
+prev include/sfstr.h implicit
 prev include/namval.h implicit
 make include/mc.h implicit
 prev include/ast.h implicit
 done include/mc.h
-prev misc/loclib.h implicit
+prev port/lclib.h implicit
 done comp/setlocale.c
 prev comp/setlocale.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Imisc -Iinclude -D_PACKAGE_ast -c comp/setlocale.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Iinclude -I${INSTALLROOT}/include -D__OBSOLETE__=20010101 -D_PACKAGE_ast -c comp/setlocale.c
 done setlocale.o generated
 make translate.o
 make misc/translate.c
@@ -1188,10 +1208,10 @@ done nl_types.h generated
 prev include/mc.h implicit
 prev include/error.h implicit
 prev include/cdt.h implicit
-prev misc/loclib.h implicit
+prev port/lclib.h implicit
 done misc/translate.c
 prev misc/translate.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Imisc -Iinclude -D_PACKAGE_MESSAGE_SET=3 -D_PACKAGE_ast -c misc/translate.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c misc/translate.c
 done translate.o generated
 make catopen.o
 make comp/catopen.c
@@ -1206,17 +1226,26 @@ exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -D_PACKAGE_ast -c comp/catopen.c
 done catopen.o generated
 make iconv.o
 make comp/iconv.c
-make windows.h implicit
-done windows.h dontcare virtual
-prev misc/loclib.h implicit
+prev windows.h implicit
+prev port/lclib.h implicit
 prev iconv.h implicit
 prev include/ccode.h implicit
-prev ${INSTALLROOT}/include/ast/dirent.h implicit
+prev dirent.h implicit
 prev include/ast.h implicit
 done comp/iconv.c
 prev comp/iconv.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Imisc -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c comp/iconv.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c comp/iconv.c
 done iconv.o generated
+make lc.o
+make port/lc.c
+make lctab.h implicit
+done lctab.h
+prev windows.h implicit
+prev port/lclib.h implicit
+done port/lc.c
+prev port/lc.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c port/lc.c
+done lc.o generated
 make mc.o
 make port/mc.c
 prev include/sfstr.h implicit
@@ -1225,10 +1254,43 @@ prev include/mc.h implicit
 prev include/error.h implicit
 prev include/vmalloc.h implicit
 prev iconv.h implicit
-prev misc/loclib.h implicit
+prev port/lclib.h implicit
+make sfio/sfhdr.h implicit
+prev port/lclib.h implicit
+make mman.h implicit
+done mman.h dontcare virtual
+make floatingpoint.h implicit
+done floatingpoint.h dontcare virtual
+make vfork.h implicit
+done vfork.h dontcare virtual
+make filio.h implicit
+done filio.h dontcare virtual
+make stat.h implicit
+done stat.h dontcare virtual
+prev include/ls.h implicit
+make ast_tty.h implicit
+prev FEATURE/tty
+exec - cmp 2>/dev/null -s FEATURE/tty ast_tty.h || { rm -f ast_tty.h; silent test -d . || mkdir .; cp FEATURE/tty ast_tty.h; }
+done ast_tty.h dontcare generated
+prev ast_time.h implicit
+prev include/ast.h implicit
+make sfio/vthread.h implicit
+prev windows.h implicit
+prev ast_common.h implicit
+done sfio/vthread.h dontcare
+make include/sfio_t.h implicit
+prev include/sfio.h implicit
+done include/sfio_t.h dontcare
+make FEATURE/sfio implicit
+make features/sfio
+done features/sfio
+prev ast.req
+exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '   run features/sfio
+done FEATURE/sfio dontcare generated
+done sfio/sfhdr.h
 done port/mc.c
 prev port/mc.c
-exec - ${CC} -D_BLD_ast ${mam_cc_DLL}  -I. -Icomp -Imisc -Iinclude -D_PACKAGE_ast -c port/mc.c
+exec - ${CC} -D_BLD_ast ${mam_cc_DLL}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c port/mc.c
 done mc.o generated
 make liberror.o
 make misc/liberror.c
@@ -1460,9 +1522,7 @@ make misc/stk.c
 prev include/stk.h implicit
 prev align.h implicit
 prev include/ast.h implicit
-make include/sfio_t.h implicit
-prev include/sfio.h implicit
-done include/sfio_t.h
+prev include/sfio_t.h implicit
 done misc/stk.c
 prev misc/stk.c
 exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -D_PACKAGE_ast -c misc/stk.c
@@ -1637,14 +1697,19 @@ exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -D_PACKAGE_ast -c tm/tmlex.c
 done tmlex.o generated
 make tmlocale.o
 make tm/tmlocale.c
-prev misc/loclib.h implicit
+prev nl_types.h implicit
+prev nl_types.h implicit
+prev windows.h implicit
+prev port/lclib.h implicit
 prev include/tm.h implicit
+prev include/sfstr.h implicit
 prev include/mc.h implicit
+prev iconv.h implicit
 prev include/cdt.h implicit
 prev include/ast.h implicit
 done tm/tmlocale.c
 prev tm/tmlocale.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Imisc -Iinclude -D_PACKAGE_ast -c tm/tmlocale.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c tm/tmlocale.c
 done tmlocale.o generated
 make tmmake.o
 make tm/tmmake.c
@@ -1913,88 +1978,71 @@ exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -D_PACKAGE_ast -c comp/strrchr.c
 done strrchr.o generated
 make strtod.o
 make comp/strtod.c
+make sfio/sfstrtof.h implicit
+make FEATURE/float implicit
+make features/float
+done features/float
+prev ast.req
+exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '   run features/float
+done FEATURE/float generated
+prev sfio/sfhdr.h implicit
+done sfio/sfstrtof.h
 prev include/ast.h implicit
 done comp/strtod.c
 prev comp/strtod.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -D_PACKAGE_ast -c comp/strtod.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c comp/strtod.c
 done strtod.o generated
+make strtold.o
+make comp/strtold.c
+prev sfio/sfstrtof.h implicit
+done comp/strtold.c
+prev comp/strtold.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c comp/strtold.c
+done strtold.o generated
 make strtol.o
 make comp/strtol.c
-make sfio/sfhdr.h implicit
-make mman.h implicit
-done mman.h dontcare virtual
-make floatingpoint.h implicit
-done floatingpoint.h dontcare virtual
-make vfork.h implicit
-done vfork.h dontcare virtual
-make filio.h implicit
-done filio.h dontcare virtual
-make stat.h implicit
-done stat.h dontcare virtual
-prev include/ls.h implicit
-make ast_tty.h implicit
-prev FEATURE/tty
-exec - cmp 2>/dev/null -s FEATURE/tty ast_tty.h || { rm -f ast_tty.h; silent test -d . || mkdir .; cp FEATURE/tty ast_tty.h; }
-done ast_tty.h dontcare generated
-prev ast_time.h implicit
+make string/strtoi.h implicit
+prev sfio/sfhdr.h implicit
 prev include/ast.h implicit
-make sfio/vthread.h implicit
-prev windows.h implicit
-prev ast_common.h implicit
-done sfio/vthread.h dontcare
-prev include/sfio_t.h implicit
-make FEATURE/sfio implicit
-make features/sfio
-done features/sfio
-prev ast.req
-exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '   run features/sfio
-done FEATURE/sfio dontcare generated
-done sfio/sfhdr.h dontcare
-prev include/error.h implicit
-prev include/ast.h implicit
+done string/strtoi.h
 done comp/strtol.c
 prev comp/strtol.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c comp/strtol.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istring -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c comp/strtol.c
 done strtol.o generated
 make strtoll.o
 make comp/strtoll.c
-prev sfio/sfhdr.h implicit
-prev include/int.h implicit
-prev include/ast.h implicit
+prev string/strtoi.h implicit
 done comp/strtoll.c
 prev comp/strtoll.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c comp/strtoll.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istring -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c comp/strtoll.c
 done strtoll.o generated
 make strtoul.o
 make comp/strtoul.c
-prev include/ast.h implicit
+prev string/strtoi.h implicit
 done comp/strtoul.c
 prev comp/strtoul.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -D_PACKAGE_ast -c comp/strtoul.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istring -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c comp/strtoul.c
 done strtoul.o generated
 make strtoull.o
 make comp/strtoull.c
-prev include/int.h implicit
-prev include/ast.h implicit
+prev string/strtoi.h implicit
 done comp/strtoull.c
 prev comp/strtoull.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -D_PACKAGE_ast -c comp/strtoull.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istring -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c comp/strtoull.c
 done strtoull.o generated
 make strton.o
 make string/strton.c
-prev sfio/sfhdr.h implicit
-prev include/ast.h implicit
+prev string/strtoi.h implicit
 done string/strton.c
 prev string/strton.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c string/strton.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istring -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c string/strton.c
 done strton.o generated
 make strtonll.o
 make string/strtonll.c
-prev sfio/sfhdr.h implicit
-prev include/ast.h implicit
+prev string/strtoi.h implicit
 done string/strtonll.c
 prev string/strtonll.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c string/strtonll.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istring -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c string/strtonll.c
 done strtonll.o generated
 make strcasecmp.o
 make comp/strcasecmp.c
@@ -2036,6 +2084,7 @@ make tmpnam.o
 make comp/tmpnam.c
 prev stdio.h implicit
 prev include/ast.h implicit
+prev ast_lib.h implicit
 done comp/tmpnam.c
 prev comp/tmpnam.c
 exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -D_PACKAGE_ast -c comp/tmpnam.c
@@ -2089,6 +2138,8 @@ make spawnveg.o
 make comp/spawnveg.c
 prev vfork.h implicit
 prev include/error.h implicit
+make spawn.h implicit
+done spawn.h dontcare virtual
 prev include/ast.h implicit
 done comp/spawnveg.c
 prev comp/spawnveg.c
@@ -2338,7 +2389,7 @@ make dir/getdents.c
 prev dir/dirlib.h implicit
 done dir/getdents.c
 prev dir/getdents.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idir -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c dir/getdents.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idir -Iinclude -D_PACKAGE_ast -c dir/getdents.c
 done getdents.o generated
 make getwd.o
 make comp/getwd.c
@@ -2372,7 +2423,7 @@ prev preroot.h implicit
 prev include/ast.h implicit
 done preroot/getpreroot.c
 prev preroot/getpreroot.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idir -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c preroot/getpreroot.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idir -Iinclude -D_PACKAGE_ast -c preroot/getpreroot.c
 done getpreroot.o generated
 make ispreroot.o
 make preroot/ispreroot.c
@@ -2495,56 +2546,56 @@ prev sfio/sfhdr.h implicit
 done disc/sfdchdr.h
 done disc/sfdcdio.c
 prev disc/sfdcdio.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idisc -Isfio -Iinclude -D_PACKAGE_ast -c disc/sfdcdio.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idisc -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c disc/sfdcdio.c
 done sfdcdio.o generated
 make sfdcdos.o
 make disc/sfdcdos.c
 prev disc/sfdchdr.h implicit
 done disc/sfdcdos.c
 prev disc/sfdcdos.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idisc -Isfio -Iinclude -D_PACKAGE_ast -c disc/sfdcdos.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idisc -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c disc/sfdcdos.c
 done sfdcdos.o generated
 make sfdcfilter.o
 make disc/sfdcfilter.c
 prev disc/sfdchdr.h implicit
 done disc/sfdcfilter.c
 prev disc/sfdcfilter.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idisc -Isfio -Iinclude -D_PACKAGE_ast -c disc/sfdcfilter.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idisc -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c disc/sfdcfilter.c
 done sfdcfilter.o generated
 make sfdcseekable.o
 make disc/sfdcseekable.c
 prev disc/sfdchdr.h implicit
 done disc/sfdcseekable.c
 prev disc/sfdcseekable.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idisc -Isfio -Iinclude -D_PACKAGE_ast -c disc/sfdcseekable.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idisc -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c disc/sfdcseekable.c
 done sfdcseekable.o generated
 make sfdcslow.o
 make disc/sfdcslow.c
 prev disc/sfdchdr.h implicit
 done disc/sfdcslow.c
 prev disc/sfdcslow.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idisc -Isfio -Iinclude -D_PACKAGE_ast -c disc/sfdcslow.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idisc -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c disc/sfdcslow.c
 done sfdcslow.o generated
 make sfdcsubstream.o
 make disc/sfdcsubstream.c
 prev disc/sfdchdr.h implicit
 done disc/sfdcsubstream.c
 prev disc/sfdcsubstream.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idisc -Isfio -Iinclude -D_PACKAGE_ast -c disc/sfdcsubstream.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idisc -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c disc/sfdcsubstream.c
 done sfdcsubstream.o generated
 make sfdctee.o
 make disc/sfdctee.c
 prev disc/sfdchdr.h implicit
 done disc/sfdctee.c
 prev disc/sfdctee.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idisc -Isfio -Iinclude -D_PACKAGE_ast -c disc/sfdctee.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idisc -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c disc/sfdctee.c
 done sfdctee.o generated
 make sfdcunion.o
 make disc/sfdcunion.c
 prev disc/sfdchdr.h implicit
 done disc/sfdcunion.c
 prev disc/sfdcunion.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idisc -Isfio -Iinclude -D_PACKAGE_ast -c disc/sfdcunion.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idisc -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c disc/sfdcunion.c
 done sfdcunion.o generated
 make sfdcmore.o
 make disc/sfdcmore.c
@@ -2552,15 +2603,23 @@ prev ast_tty.h implicit
 prev disc/sfdchdr.h implicit
 done disc/sfdcmore.c
 prev disc/sfdcmore.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idisc -Isfio -Iinclude -D_PACKAGE_ast -c disc/sfdcmore.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idisc -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c disc/sfdcmore.c
 done sfdcmore.o generated
 make sfdcprefix.o
 make disc/sfdcprefix.c
 prev disc/sfdchdr.h implicit
 done disc/sfdcprefix.c
 prev disc/sfdcprefix.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idisc -Isfio -Iinclude -D_PACKAGE_ast -c disc/sfdcprefix.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idisc -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c disc/sfdcprefix.c
 done sfdcprefix.o generated
+make wc.o
+make comp/wc.c
+prev wchar.h implicit
+prev include/ast.h implicit
+done comp/wc.c
+prev comp/wc.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -D_PACKAGE_ast -c comp/wc.c
+done wc.o generated
 make libc.o
 make comp/libc.c
 prev include/ast.h implicit
@@ -2648,7 +2707,7 @@ done include/glob.h
 prev include/regex.h implicit
 prev include/error.h implicit
 make include/ast_dir.h implicit
-prev ${INSTALLROOT}/include/ast/dirent.h implicit
+prev dirent.h implicit
 prev dir/dirlib.h implicit
 prev ast_lib.h implicit
 done include/ast_dir.h
@@ -2659,7 +2718,7 @@ prev include/ls.h implicit
 prev include/ast.h implicit
 done misc/glob.c
 prev misc/glob.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idir -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c misc/glob.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Idir -Iinclude -D_PACKAGE_ast -c misc/glob.c
 done glob.o generated
 make nftw.o
 make comp/nftw.c
@@ -2729,6 +2788,7 @@ make strftime.o
 make comp/strftime.c
 prev include/tm.h implicit
 prev include/ast.h implicit
+prev ast_lib.h implicit
 done comp/strftime.c
 prev comp/strftime.c
 exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -D_PACKAGE_ast -c comp/strftime.c
@@ -2737,6 +2797,7 @@ make strptime.o
 make comp/strptime.c
 prev include/tm.h implicit
 prev include/ast.h implicit
+prev ast_lib.h implicit
 done comp/strptime.c
 prev comp/strptime.c
 exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -D_PACKAGE_ast -c comp/strptime.c
@@ -2766,18 +2827,11 @@ make tempnam.o
 make comp/tempnam.c
 prev stdio.h implicit
 prev include/ast.h implicit
+prev include/ast_std.h implicit
 done comp/tempnam.c
 prev comp/tempnam.c
 exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -D_PACKAGE_ast -c comp/tempnam.c
 done tempnam.o generated
-make tmpfile.o
-make comp/tmpfile.c
-prev stdio.h implicit
-prev include/ast.h implicit
-done comp/tmpfile.c
-prev comp/tmpfile.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -D_PACKAGE_ast -c comp/tmpfile.c
-done tmpfile.o generated
 make wordexp.o
 make comp/wordexp.c
 prev include/stak.h implicit
@@ -2799,8 +2853,11 @@ done mktime.o generated
 make regalloc.o
 make regex/regalloc.c
 make regex/reglib.h implicit
+prev wchar.h implicit
+prev stdio.h implicit
 prev include/regex.h implicit
 prev include/stk.h implicit
+prev include/cdt.h implicit
 prev include/ast.h implicit
 done regex/reglib.h
 done regex/regalloc.c
@@ -2809,18 +2866,30 @@ exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iregex -Iinclude -D_PACKAGE_ast -c regex/re
 done regalloc.o generated
 make regclass.o
 make regex/regclass.c
-prev include/ccode.h implicit
 prev regex/reglib.h implicit
 done regex/regclass.c
 prev regex/regclass.c
 exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iregex -Iinclude -D_PACKAGE_ast -c regex/regclass.c
 done regclass.o generated
+make regcoll.o
+make regex/regcoll.c
+make regex/ucs_names.h implicit
+done regex/ucs_names.h
+prev include/ccode.h implicit
+prev include/cdt.h implicit
+prev regex/reglib.h implicit
+done regex/regcoll.c
+prev regex/regcoll.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iregex -Iinclude -D_PACKAGE_ast -c regex/regcoll.c
+done regcoll.o generated
 make regcomp.o
 make regex/regcomp.c
+prev include/cdt.h implicit
+prev port/lclib.h implicit
 prev regex/reglib.h implicit
 done regex/regcomp.c
 prev regex/regcomp.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iregex -Iinclude -D_PACKAGE_ast -c regex/regcomp.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Iregex -Iinclude -I${INSTALLROOT}/include -D__OBSOLETE__=20010101 -D_PACKAGE_ast -c regex/regcomp.c
 done regcomp.o generated
 make regerror.o
 make regex/regerror.c
@@ -2834,7 +2903,7 @@ make regex/regexec.c
 prev regex/reglib.h implicit
 done regex/regexec.c
 prev regex/regexec.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iregex -Iinclude -D_PACKAGE_ast -c regex/regexec.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iregex -Iinclude -D__OBSOLETE__=20010101 -D_PACKAGE_ast -c regex/regexec.c
 done regexec.o generated
 make regfatal.o
 make regex/regfatal.c
@@ -2846,6 +2915,7 @@ exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iregex -Iinclude -D_PACKAGE_ast -c regex/re
 done regfatal.o generated
 make reginit.o
 make regex/reginit.c
+prev include/ccode.h implicit
 prev regex/reglib.h implicit
 done regex/reginit.c
 prev regex/reginit.c
@@ -2856,7 +2926,7 @@ make regex/regnexec.c
 prev regex/reglib.h implicit
 done regex/regnexec.c
 prev regex/regnexec.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iregex -Iinclude -D_PACKAGE_ast -c regex/regnexec.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iregex -Iinclude -D__OBSOLETE__=20010101 -D_PACKAGE_ast -c regex/regnexec.c
 done regnexec.o generated
 make regsub.o
 make regex/regsub.c
@@ -2877,7 +2947,7 @@ make regex/regrexec.c
 prev regex/reglib.h implicit
 done regex/regrexec.c
 prev regex/regrexec.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iregex -Iinclude -D_PACKAGE_ast -c regex/regrexec.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iregex -Iinclude -D__OBSOLETE__=20010101 -D_PACKAGE_ast -c regex/regrexec.c
 done regrexec.o generated
 make dtclose.o
 make cdt/dtclose.c
@@ -2996,119 +3066,120 @@ make sfio/sfclose.c
 prev sfio/sfhdr.h implicit
 done sfio/sfclose.c
 prev sfio/sfclose.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfclose.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfclose.c
 done sfclose.o generated
 make sfclrlock.o
 make sfio/sfclrlock.c
 prev sfio/sfhdr.h implicit
 done sfio/sfclrlock.c
 prev sfio/sfclrlock.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfclrlock.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfclrlock.c
 done sfclrlock.o generated
 make sfdisc.o
 make sfio/sfdisc.c
 prev sfio/sfhdr.h implicit
 done sfio/sfdisc.c
 prev sfio/sfdisc.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfdisc.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfdisc.c
 done sfdisc.o generated
 make sfdlen.o
 make sfio/sfdlen.c
 prev sfio/sfhdr.h implicit
 done sfio/sfdlen.c
 prev sfio/sfdlen.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfdlen.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfdlen.c
 done sfdlen.o generated
 make sfexcept.o
 make sfio/sfexcept.c
 prev sfio/sfhdr.h implicit
 done sfio/sfexcept.c
 prev sfio/sfexcept.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfexcept.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfexcept.c
 done sfexcept.o generated
 make sfgetl.o
 make sfio/sfgetl.c
 prev sfio/sfhdr.h implicit
 done sfio/sfgetl.c
 prev sfio/sfgetl.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfgetl.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfgetl.c
 done sfgetl.o generated
 make sfgetu.o
 make sfio/sfgetu.c
 prev sfio/sfhdr.h implicit
 done sfio/sfgetu.c
 prev sfio/sfgetu.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfgetu.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfgetu.c
 done sfgetu.o generated
 make sfcvt.o
 make sfio/sfcvt.c
+prev FEATURE/float implicit
 prev sfio/sfhdr.h implicit
 done sfio/sfcvt.c
 prev sfio/sfcvt.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfcvt.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfcvt.c
 done sfcvt.o generated
 make sfecvt.o
 make sfio/sfecvt.c
 prev sfio/sfhdr.h implicit
 done sfio/sfecvt.c
 prev sfio/sfecvt.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfecvt.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfecvt.c
 done sfecvt.o generated
 make sffcvt.o
 make sfio/sffcvt.c
 prev sfio/sfhdr.h implicit
 done sfio/sffcvt.c
 prev sfio/sffcvt.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sffcvt.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sffcvt.c
 done sffcvt.o generated
 make sfextern.o
 make sfio/sfextern.c
 prev sfio/sfhdr.h implicit
 done sfio/sfextern.c
 prev sfio/sfextern.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfextern.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfextern.c
 done sfextern.o generated
 make sffilbuf.o
 make sfio/sffilbuf.c
 prev sfio/sfhdr.h implicit
 done sfio/sffilbuf.c
 prev sfio/sffilbuf.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sffilbuf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sffilbuf.c
 done sffilbuf.o generated
 make sfflsbuf.o
 make sfio/sfflsbuf.c
 prev sfio/sfhdr.h implicit
 done sfio/sfflsbuf.c
 prev sfio/sfflsbuf.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfflsbuf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfflsbuf.c
 done sfflsbuf.o generated
 make sfprints.o
 make sfio/sfprints.c
 prev sfio/sfhdr.h implicit
 done sfio/sfprints.c
 prev sfio/sfprints.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfprints.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfprints.c
 done sfprints.o generated
 make sfgetd.o
 make sfio/sfgetd.c
 prev sfio/sfhdr.h implicit
 done sfio/sfgetd.c
 prev sfio/sfgetd.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfgetd.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfgetd.c
 done sfgetd.o generated
 make sfgetr.o
 make sfio/sfgetr.c
 prev sfio/sfhdr.h implicit
 done sfio/sfgetr.c
 prev sfio/sfgetr.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfgetr.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfgetr.c
 done sfgetr.o generated
 make sfllen.o
 make sfio/sfllen.c
 prev sfio/sfhdr.h implicit
 done sfio/sfllen.c
 prev sfio/sfllen.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfllen.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfllen.c
 done sfllen.o generated
 make sfmode.o
 make sfio/sfmode.c
@@ -3117,70 +3188,70 @@ prev sig.h implicit
 prev sfio/sfhdr.h implicit
 done sfio/sfmode.c
 prev sfio/sfmode.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfmode.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfmode.c
 done sfmode.o generated
 make sfmove.o
 make sfio/sfmove.c
 prev sfio/sfhdr.h implicit
 done sfio/sfmove.c
 prev sfio/sfmove.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfmove.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfmove.c
 done sfmove.o generated
 make sfnew.o
 make sfio/sfnew.c
 prev sfio/sfhdr.h implicit
 done sfio/sfnew.c
 prev sfio/sfnew.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfnew.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfnew.c
 done sfnew.o generated
 make sfpkrd.o
 make sfio/sfpkrd.c
 prev sfio/sfhdr.h implicit
 done sfio/sfpkrd.c
 prev sfio/sfpkrd.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfpkrd.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfpkrd.c
 done sfpkrd.o generated
 make sfnotify.o
 make sfio/sfnotify.c
 prev sfio/sfhdr.h implicit
 done sfio/sfnotify.c
 prev sfio/sfnotify.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfnotify.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfnotify.c
 done sfnotify.o generated
 make sfnputc.o
 make sfio/sfnputc.c
 prev sfio/sfhdr.h implicit
 done sfio/sfnputc.c
 prev sfio/sfnputc.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfnputc.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfnputc.c
 done sfnputc.o generated
 make sfopen.o
 make sfio/sfopen.c
 prev sfio/sfhdr.h implicit
 done sfio/sfopen.c
 prev sfio/sfopen.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfopen.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfopen.c
 done sfopen.o generated
 make sfpeek.o
 make sfio/sfpeek.c
 prev sfio/sfhdr.h implicit
 done sfio/sfpeek.c
 prev sfio/sfpeek.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfpeek.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfpeek.c
 done sfpeek.o generated
 make sfpoll.o
 make sfio/sfpoll.c
 prev sfio/sfhdr.h implicit
 done sfio/sfpoll.c
 prev sfio/sfpoll.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfpoll.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfpoll.c
 done sfpoll.o generated
 make sfpool.o
 make sfio/sfpool.c
 prev sfio/sfhdr.h implicit
 done sfio/sfpool.c
 prev sfio/sfpool.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfpool.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfpool.c
 done sfpool.o generated
 make sfpopen.o
 make sfio/sfpopen.c
@@ -3188,804 +3259,1011 @@ prev include/proc.h implicit
 prev sfio/sfhdr.h implicit
 done sfio/sfpopen.c
 prev sfio/sfpopen.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfpopen.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfpopen.c
 done sfpopen.o generated
 make sfprintf.o
 make sfio/sfprintf.c
 prev sfio/sfhdr.h implicit
 done sfio/sfprintf.c
 prev sfio/sfprintf.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfprintf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfprintf.c
 done sfprintf.o generated
 make sfputd.o
 make sfio/sfputd.c
 prev sfio/sfhdr.h implicit
 done sfio/sfputd.c
 prev sfio/sfputd.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfputd.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfputd.c
 done sfputd.o generated
 make sfputl.o
 make sfio/sfputl.c
 prev sfio/sfhdr.h implicit
 done sfio/sfputl.c
 prev sfio/sfputl.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfputl.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfputl.c
 done sfputl.o generated
 make sfputr.o
 make sfio/sfputr.c
 prev sfio/sfhdr.h implicit
 done sfio/sfputr.c
 prev sfio/sfputr.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfputr.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfputr.c
 done sfputr.o generated
 make sfputu.o
 make sfio/sfputu.c
 prev sfio/sfhdr.h implicit
 done sfio/sfputu.c
 prev sfio/sfputu.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfputu.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfputu.c
 done sfputu.o generated
 make sfrd.o
 make sfio/sfrd.c
 prev sfio/sfhdr.h implicit
 done sfio/sfrd.c
 prev sfio/sfrd.c
-exec - ${CC} -D_BLD_ast ${mam_cc_DLL}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfrd.c
+exec - ${CC} -D_BLD_ast ${mam_cc_DLL}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfrd.c
 done sfrd.o generated
 make sfread.o
 make sfio/sfread.c
 prev sfio/sfhdr.h implicit
 done sfio/sfread.c
 prev sfio/sfread.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfread.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfread.c
 done sfread.o generated
 make sfreserve.o
 make sfio/sfreserve.c
 prev sfio/sfhdr.h implicit
 done sfio/sfreserve.c
 prev sfio/sfreserve.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfreserve.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfreserve.c
 done sfreserve.o generated
 make sfscanf.o
 make sfio/sfscanf.c
 prev sfio/sfhdr.h implicit
 done sfio/sfscanf.c
 prev sfio/sfscanf.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfscanf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfscanf.c
 done sfscanf.o generated
 make sfseek.o
 make sfio/sfseek.c
 prev sfio/sfhdr.h implicit
 done sfio/sfseek.c
 prev sfio/sfseek.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfseek.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfseek.c
 done sfseek.o generated
 make sfset.o
 make sfio/sfset.c
 prev sfio/sfhdr.h implicit
 done sfio/sfset.c
 prev sfio/sfset.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfset.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfset.c
 done sfset.o generated
 make sfsetbuf.o
 make sfio/sfsetbuf.c
 prev sfio/sfhdr.h implicit
 done sfio/sfsetbuf.c
 prev sfio/sfsetbuf.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfsetbuf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfsetbuf.c
 done sfsetbuf.o generated
 make sfsetfd.o
 make sfio/sfsetfd.c
 prev sfio/sfhdr.h implicit
 done sfio/sfsetfd.c
 prev sfio/sfsetfd.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfsetfd.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfsetfd.c
 done sfsetfd.o generated
 make sfsize.o
 make sfio/sfsize.c
 prev sfio/sfhdr.h implicit
 done sfio/sfsize.c
 prev sfio/sfsize.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfsize.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfsize.c
 done sfsize.o generated
 make sfsk.o
 make sfio/sfsk.c
 prev sfio/sfhdr.h implicit
 done sfio/sfsk.c
 prev sfio/sfsk.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfsk.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfsk.c
 done sfsk.o generated
 make sfstack.o
 make sfio/sfstack.c
 prev sfio/sfhdr.h implicit
 done sfio/sfstack.c
 prev sfio/sfstack.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfstack.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfstack.c
 done sfstack.o generated
 make sfstrtod.o
 make sfio/sfstrtod.c
 prev sfio/sfhdr.h implicit
 done sfio/sfstrtod.c
 prev sfio/sfstrtod.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfstrtod.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfstrtod.c
 done sfstrtod.o generated
 make sfsync.o
 make sfio/sfsync.c
 prev sfio/sfhdr.h implicit
 done sfio/sfsync.c
 prev sfio/sfsync.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfsync.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfsync.c
 done sfsync.o generated
 make sfswap.o
 make sfio/sfswap.c
 prev sfio/sfhdr.h implicit
 done sfio/sfswap.c
 prev sfio/sfswap.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfswap.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfswap.c
 done sfswap.o generated
 make sftable.o
 make sfio/sftable.c
+make FEATURE/sfinit implicit
+make features/sfinit.c
+prev FEATURE/float implicit
+prev FEATURE/common implicit
+prev iffeio.h implicit
+done features/sfinit.c
+prev ast.req
+exec - iffe -v -c '${CC} ${CCFLAGS}  -I.  ${LDFLAGS} '   run features/sfinit.c
+done FEATURE/sfinit generated
+prev sig.h implicit
+prev FEATURE/float implicit
 prev sfio/sfhdr.h implicit
 done sfio/sftable.c
 prev sfio/sftable.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sftable.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sftable.c
 done sftable.o generated
 make sftell.o
 make sfio/sftell.c
 prev sfio/sfhdr.h implicit
 done sfio/sftell.c
 prev sfio/sftell.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sftell.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sftell.c
 done sftell.o generated
 make sftmp.o
 make sfio/sftmp.c
 prev sfio/sfhdr.h implicit
 done sfio/sftmp.c
 prev sfio/sftmp.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sftmp.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sftmp.c
 done sftmp.o generated
 make sfungetc.o
 make sfio/sfungetc.c
 prev sfio/sfhdr.h implicit
 done sfio/sfungetc.c
 prev sfio/sfungetc.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfungetc.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfungetc.c
 done sfungetc.o generated
 make sfvprintf.o
 make sfio/sfvprintf.c
 prev sfio/sfhdr.h implicit
 done sfio/sfvprintf.c
 prev sfio/sfvprintf.c
-exec - ${CC} -D_BLD_ast ${mam_cc_DLL}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfvprintf.c
+exec - ${CC} -D_BLD_ast ${mam_cc_DLL}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfvprintf.c
 done sfvprintf.o generated
 make sfvscanf.o
 make sfio/sfvscanf.c
+prev sfio/sfstrtof.h implicit
 prev sfio/sfhdr.h implicit
 done sfio/sfvscanf.c
 prev sfio/sfvscanf.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfvscanf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfvscanf.c
 done sfvscanf.o generated
 make sfwr.o
 make sfio/sfwr.c
 prev sfio/sfhdr.h implicit
 done sfio/sfwr.c
 prev sfio/sfwr.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfwr.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfwr.c
 done sfwr.o generated
 make sfwrite.o
 make sfio/sfwrite.c
 prev sfio/sfhdr.h implicit
 done sfio/sfwrite.c
 prev sfio/sfwrite.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfwrite.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfwrite.c
 done sfwrite.o generated
 make sfpurge.o
 make sfio/sfpurge.c
 prev sfio/sfhdr.h implicit
 done sfio/sfpurge.c
 prev sfio/sfpurge.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfpurge.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfpurge.c
 done sfpurge.o generated
 make sfraise.o
 make sfio/sfraise.c
 prev sfio/sfhdr.h implicit
 done sfio/sfraise.c
 prev sfio/sfraise.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfraise.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfraise.c
 done sfraise.o generated
 make sfgetm.o
 make sfio/sfgetm.c
 prev sfio/sfhdr.h implicit
 done sfio/sfgetm.c
 prev sfio/sfgetm.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfgetm.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfgetm.c
 done sfgetm.o generated
 make sfmutex.o
 make sfio/sfmutex.c
 prev sfio/sfhdr.h implicit
 done sfio/sfmutex.c
 prev sfio/sfmutex.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfmutex.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfmutex.c
 done sfmutex.o generated
 make sfputm.o
 make sfio/sfputm.c
 prev sfio/sfhdr.h implicit
 done sfio/sfputm.c
 prev sfio/sfputm.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfputm.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfputm.c
 done sfputm.o generated
 make sfresize.o
 make sfio/sfresize.c
 prev sfio/sfhdr.h implicit
 done sfio/sfresize.c
 prev sfio/sfresize.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfresize.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/sfresize.c
 done sfresize.o generated
 make _sfclrerr.o
 make sfio/_sfclrerr.c
 prev sfio/sfhdr.h implicit
 done sfio/_sfclrerr.c
 prev sfio/_sfclrerr.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/_sfclrerr.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sfclrerr.c
 done _sfclrerr.o generated
 make _sfeof.o
 make sfio/_sfeof.c
 prev sfio/sfhdr.h implicit
 done sfio/_sfeof.c
 prev sfio/_sfeof.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/_sfeof.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sfeof.c
 done _sfeof.o generated
 make _sferror.o
 make sfio/_sferror.c
 prev sfio/sfhdr.h implicit
 done sfio/_sferror.c
 prev sfio/_sferror.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/_sferror.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sferror.c
 done _sferror.o generated
 make _sffileno.o
 make sfio/_sffileno.c
 prev sfio/sfhdr.h implicit
 done sfio/_sffileno.c
 prev sfio/_sffileno.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/_sffileno.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sffileno.c
 done _sffileno.o generated
 make _sfstacked.o
 make sfio/_sfstacked.c
 prev sfio/sfhdr.h implicit
 done sfio/_sfstacked.c
 prev sfio/_sfstacked.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/_sfstacked.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sfstacked.c
 done _sfstacked.o generated
 make _sfvalue.o
 make sfio/_sfvalue.c
 prev sfio/sfhdr.h implicit
 done sfio/_sfvalue.c
 prev sfio/_sfvalue.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/_sfvalue.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sfvalue.c
 done _sfvalue.o generated
 make _sfgetc.o
 make sfio/_sfgetc.c
 prev sfio/sfhdr.h implicit
 done sfio/_sfgetc.c
 prev sfio/_sfgetc.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/_sfgetc.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sfgetc.c
 done _sfgetc.o generated
 make _sfgetl.o
 make sfio/_sfgetl.c
 prev sfio/sfhdr.h implicit
 done sfio/_sfgetl.c
 prev sfio/_sfgetl.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/_sfgetl.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sfgetl.c
 done _sfgetl.o generated
 make _sfgetl2.o
 make sfio/_sfgetl2.c
 prev sfio/sfhdr.h implicit
 done sfio/_sfgetl2.c
 prev sfio/_sfgetl2.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/_sfgetl2.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sfgetl2.c
 done _sfgetl2.o generated
 make _sfgetu.o
 make sfio/_sfgetu.c
 prev sfio/sfhdr.h implicit
 done sfio/_sfgetu.c
 prev sfio/_sfgetu.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/_sfgetu.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sfgetu.c
 done _sfgetu.o generated
 make _sfgetu2.o
 make sfio/_sfgetu2.c
 prev sfio/sfhdr.h implicit
 done sfio/_sfgetu2.c
 prev sfio/_sfgetu2.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/_sfgetu2.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sfgetu2.c
 done _sfgetu2.o generated
 make _sfdlen.o
 make sfio/_sfdlen.c
 prev sfio/sfhdr.h implicit
 done sfio/_sfdlen.c
 prev sfio/_sfdlen.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/_sfdlen.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sfdlen.c
 done _sfdlen.o generated
 make _sfllen.o
 make sfio/_sfllen.c
 prev sfio/sfhdr.h implicit
 done sfio/_sfllen.c
 prev sfio/_sfllen.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/_sfllen.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sfllen.c
 done _sfllen.o generated
 make _sfslen.o
 make sfio/_sfslen.c
 prev sfio/sfhdr.h implicit
 done sfio/_sfslen.c
 prev sfio/_sfslen.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/_sfslen.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sfslen.c
 done _sfslen.o generated
 make _sfulen.o
 make sfio/_sfulen.c
 prev sfio/sfhdr.h implicit
 done sfio/_sfulen.c
 prev sfio/_sfulen.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/_sfulen.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sfulen.c
 done _sfulen.o generated
 make _sfputc.o
 make sfio/_sfputc.c
 prev sfio/sfhdr.h implicit
 done sfio/_sfputc.c
 prev sfio/_sfputc.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/_sfputc.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sfputc.c
 done _sfputc.o generated
 make _sfputd.o
 make sfio/_sfputd.c
 prev sfio/sfhdr.h implicit
 done sfio/_sfputd.c
 prev sfio/_sfputd.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/_sfputd.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sfputd.c
 done _sfputd.o generated
 make _sfputl.o
 make sfio/_sfputl.c
 prev sfio/sfhdr.h implicit
 done sfio/_sfputl.c
 prev sfio/_sfputl.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/_sfputl.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sfputl.c
 done _sfputl.o generated
 make _sfputm.o
 make sfio/_sfputm.c
 prev sfio/sfhdr.h implicit
 done sfio/_sfputm.c
 prev sfio/_sfputm.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/_sfputm.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sfputm.c
 done _sfputm.o generated
 make _sfputu.o
 make sfio/_sfputu.c
 prev sfio/sfhdr.h implicit
 done sfio/_sfputu.c
 prev sfio/_sfputu.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/_sfputu.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c sfio/_sfputu.c
 done _sfputu.o generated
 make clearerr.o
 make stdio/clearerr.c
 make stdio/stdhdr.h implicit
+prev wchar.h implicit
 prev stdio.h implicit
 prev sfio/sfhdr.h implicit
 done stdio/stdhdr.h
 done stdio/clearerr.c
 prev stdio/clearerr.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/clearerr.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/clearerr.c
 done clearerr.o generated
 make fclose.o
 make stdio/fclose.c
 prev stdio/stdhdr.h implicit
 done stdio/fclose.c
 prev stdio/fclose.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/fclose.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fclose.c
 done fclose.o generated
 make fdopen.o
 make stdio/fdopen.c
 prev stdio/stdhdr.h implicit
 done stdio/fdopen.c
 prev stdio/fdopen.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/fdopen.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fdopen.c
 done fdopen.o generated
 make feof.o
 make stdio/feof.c
 prev stdio/stdhdr.h implicit
 done stdio/feof.c
 prev stdio/feof.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/feof.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/feof.c
 done feof.o generated
 make ferror.o
 make stdio/ferror.c
 prev stdio/stdhdr.h implicit
 done stdio/ferror.c
 prev stdio/ferror.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/ferror.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/ferror.c
 done ferror.o generated
 make fflush.o
 make stdio/fflush.c
 prev stdio/stdhdr.h implicit
 done stdio/fflush.c
 prev stdio/fflush.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/fflush.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fflush.c
 done fflush.o generated
 make fgetc.o
 make stdio/fgetc.c
 prev stdio/stdhdr.h implicit
 done stdio/fgetc.c
 prev stdio/fgetc.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/fgetc.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fgetc.c
 done fgetc.o generated
 make fgetpos.o
 make stdio/fgetpos.c
 prev stdio/stdhdr.h implicit
 done stdio/fgetpos.c
 prev stdio/fgetpos.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/fgetpos.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fgetpos.c
 done fgetpos.o generated
 make fgets.o
 make stdio/fgets.c
 prev stdio/stdhdr.h implicit
 done stdio/fgets.c
 prev stdio/fgets.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/fgets.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fgets.c
 done fgets.o generated
 make fileno.o
 make stdio/fileno.c
 prev stdio/stdhdr.h implicit
 done stdio/fileno.c
 prev stdio/fileno.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/fileno.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fileno.c
 done fileno.o generated
 make fopen.o
 make stdio/fopen.c
 prev stdio/stdhdr.h implicit
 done stdio/fopen.c
 prev stdio/fopen.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/fopen.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fopen.c
 done fopen.o generated
 make fprintf.o
 make stdio/fprintf.c
 prev stdio/stdhdr.h implicit
 done stdio/fprintf.c
 prev stdio/fprintf.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/fprintf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fprintf.c
 done fprintf.o generated
 make fpurge.o
 make stdio/fpurge.c
 prev stdio/stdhdr.h implicit
 done stdio/fpurge.c
 prev stdio/fpurge.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/fpurge.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fpurge.c
 done fpurge.o generated
 make fputc.o
 make stdio/fputc.c
 prev stdio/stdhdr.h implicit
 done stdio/fputc.c
 prev stdio/fputc.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/fputc.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fputc.c
 done fputc.o generated
 make fputs.o
 make stdio/fputs.c
 prev stdio/stdhdr.h implicit
 done stdio/fputs.c
 prev stdio/fputs.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/fputs.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fputs.c
 done fputs.o generated
 make fread.o
 make stdio/fread.c
 prev stdio/stdhdr.h implicit
 done stdio/fread.c
 prev stdio/fread.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/fread.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fread.c
 done fread.o generated
 make freopen.o
 make stdio/freopen.c
 prev stdio/stdhdr.h implicit
 done stdio/freopen.c
 prev stdio/freopen.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/freopen.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/freopen.c
 done freopen.o generated
 make fscanf.o
 make stdio/fscanf.c
 prev stdio/stdhdr.h implicit
 done stdio/fscanf.c
 prev stdio/fscanf.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/fscanf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fscanf.c
 done fscanf.o generated
 make fseek.o
 make stdio/fseek.c
 prev stdio/stdhdr.h implicit
 done stdio/fseek.c
 prev stdio/fseek.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/fseek.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fseek.c
 done fseek.o generated
 make fsetpos.o
 make stdio/fsetpos.c
 prev stdio/stdhdr.h implicit
 done stdio/fsetpos.c
 prev stdio/fsetpos.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/fsetpos.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fsetpos.c
 done fsetpos.o generated
 make ftell.o
 make stdio/ftell.c
 prev stdio/stdhdr.h implicit
 done stdio/ftell.c
 prev stdio/ftell.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/ftell.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/ftell.c
 done ftell.o generated
 make fwrite.o
 make stdio/fwrite.c
 prev stdio/stdhdr.h implicit
 done stdio/fwrite.c
 prev stdio/fwrite.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/fwrite.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fwrite.c
 done fwrite.o generated
 make getc.o
 make stdio/getc.c
 prev stdio/stdhdr.h implicit
 done stdio/getc.c
 prev stdio/getc.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/getc.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/getc.c
 done getc.o generated
 make getchar.o
 make stdio/getchar.c
 prev stdio/stdhdr.h implicit
 done stdio/getchar.c
 prev stdio/getchar.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/getchar.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/getchar.c
 done getchar.o generated
 make getw.o
 make stdio/getw.c
 prev stdio/stdhdr.h implicit
 done stdio/getw.c
 prev stdio/getw.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/getw.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/getw.c
 done getw.o generated
 make pclose.o
 make stdio/pclose.c
 prev stdio/stdhdr.h implicit
 done stdio/pclose.c
 prev stdio/pclose.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/pclose.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/pclose.c
 done pclose.o generated
 make popen.o
 make stdio/popen.c
 prev stdio/stdhdr.h implicit
 done stdio/popen.c
 prev stdio/popen.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/popen.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/popen.c
 done popen.o generated
 make printf.o
 make stdio/printf.c
 prev stdio/stdhdr.h implicit
 done stdio/printf.c
 prev stdio/printf.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/printf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/printf.c
 done printf.o generated
 make putc.o
 make stdio/putc.c
 prev stdio/stdhdr.h implicit
 done stdio/putc.c
 prev stdio/putc.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/putc.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/putc.c
 done putc.o generated
 make putchar.o
 make stdio/putchar.c
 prev stdio/stdhdr.h implicit
 done stdio/putchar.c
 prev stdio/putchar.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/putchar.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/putchar.c
 done putchar.o generated
 make puts.o
 make stdio/puts.c
 prev stdio/stdhdr.h implicit
 done stdio/puts.c
 prev stdio/puts.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/puts.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/puts.c
 done puts.o generated
 make putw.o
 make stdio/putw.c
 prev stdio/stdhdr.h implicit
 done stdio/putw.c
 prev stdio/putw.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/putw.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/putw.c
 done putw.o generated
 make rewind.o
 make stdio/rewind.c
 prev stdio/stdhdr.h implicit
 done stdio/rewind.c
 prev stdio/rewind.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/rewind.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/rewind.c
 done rewind.o generated
 make scanf.o
 make stdio/scanf.c
 prev stdio/stdhdr.h implicit
 done stdio/scanf.c
 prev stdio/scanf.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/scanf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/scanf.c
 done scanf.o generated
 make setbuf.o
 make stdio/setbuf.c
 prev stdio/stdhdr.h implicit
 done stdio/setbuf.c
 prev stdio/setbuf.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/setbuf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/setbuf.c
 done setbuf.o generated
 make setbuffer.o
 make stdio/setbuffer.c
 prev stdio/stdhdr.h implicit
 done stdio/setbuffer.c
 prev stdio/setbuffer.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/setbuffer.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/setbuffer.c
 done setbuffer.o generated
 make setlinebuf.o
 make stdio/setlinebuf.c
 prev stdio/stdhdr.h implicit
 done stdio/setlinebuf.c
 prev stdio/setlinebuf.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/setlinebuf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/setlinebuf.c
 done setlinebuf.o generated
 make setvbuf.o
 make stdio/setvbuf.c
 prev stdio/stdhdr.h implicit
 done stdio/setvbuf.c
 prev stdio/setvbuf.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/setvbuf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/setvbuf.c
 done setvbuf.o generated
 make snprintf.o
 make stdio/snprintf.c
 prev stdio/stdhdr.h implicit
 done stdio/snprintf.c
 prev stdio/snprintf.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/snprintf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/snprintf.c
 done snprintf.o generated
 make sprintf.o
 make stdio/sprintf.c
 prev stdio/stdhdr.h implicit
 done stdio/sprintf.c
 prev stdio/sprintf.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/sprintf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/sprintf.c
 done sprintf.o generated
 make sscanf.o
 make stdio/sscanf.c
 prev stdio/stdhdr.h implicit
 done stdio/sscanf.c
 prev stdio/sscanf.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/sscanf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/sscanf.c
 done sscanf.o generated
+make tmpfile.o
+make stdio/tmpfile.c
+prev stdio/stdhdr.h implicit
+done stdio/tmpfile.c
+prev stdio/tmpfile.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/tmpfile.c
+done tmpfile.o generated
 make ungetc.o
 make stdio/ungetc.c
 prev stdio/stdhdr.h implicit
 done stdio/ungetc.c
 prev stdio/ungetc.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/ungetc.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/ungetc.c
 done ungetc.o generated
 make vfprintf.o
 make stdio/vfprintf.c
 prev stdio/stdhdr.h implicit
 done stdio/vfprintf.c
 prev stdio/vfprintf.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/vfprintf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/vfprintf.c
 done vfprintf.o generated
 make vfscanf.o
 make stdio/vfscanf.c
 prev stdio/stdhdr.h implicit
 done stdio/vfscanf.c
 prev stdio/vfscanf.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/vfscanf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/vfscanf.c
 done vfscanf.o generated
 make vprintf.o
 make stdio/vprintf.c
 prev stdio/stdhdr.h implicit
 done stdio/vprintf.c
 prev stdio/vprintf.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/vprintf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/vprintf.c
 done vprintf.o generated
 make vscanf.o
 make stdio/vscanf.c
 prev stdio/stdhdr.h implicit
 done stdio/vscanf.c
 prev stdio/vscanf.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/vscanf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/vscanf.c
 done vscanf.o generated
 make vsnprintf.o
 make stdio/vsnprintf.c
 prev stdio/stdhdr.h implicit
 done stdio/vsnprintf.c
 prev stdio/vsnprintf.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/vsnprintf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/vsnprintf.c
 done vsnprintf.o generated
 make vsprintf.o
 make stdio/vsprintf.c
 prev stdio/stdhdr.h implicit
 done stdio/vsprintf.c
 prev stdio/vsprintf.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/vsprintf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/vsprintf.c
 done vsprintf.o generated
 make vsscanf.o
 make stdio/vsscanf.c
 prev stdio/stdhdr.h implicit
 done stdio/vsscanf.c
 prev stdio/vsscanf.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/vsscanf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/vsscanf.c
 done vsscanf.o generated
 make _doprnt.o
 make stdio/_doprnt.c
 prev stdio/stdhdr.h implicit
 done stdio/_doprnt.c
 prev stdio/_doprnt.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/_doprnt.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/_doprnt.c
 done _doprnt.o generated
 make _doscan.o
 make stdio/_doscan.c
 prev stdio/stdhdr.h implicit
 done stdio/_doscan.c
 prev stdio/_doscan.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/_doscan.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/_doscan.c
 done _doscan.o generated
+make _filbuf.o
+make stdio/_filbuf.c
+prev stdio/stdhdr.h implicit
+done stdio/_filbuf.c
+prev stdio/_filbuf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/_filbuf.c
+done _filbuf.o generated
+make _flsbuf.o
+make stdio/_flsbuf.c
+prev stdio/stdhdr.h implicit
+done stdio/_flsbuf.c
+prev stdio/_flsbuf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/_flsbuf.c
+done _flsbuf.o generated
 make _stdfun.o
 make stdio/_stdfun.c
 prev stdio/stdhdr.h implicit
+make uwin.h implicit
+done uwin.h dontcare virtual
 prev windows.h implicit
 prev include/ast.h implicit
 done stdio/_stdfun.c
 prev stdio/_stdfun.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/_stdfun.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/_stdfun.c
 done _stdfun.o generated
 make _stdopen.o
 make stdio/_stdopen.c
 prev stdio/stdhdr.h implicit
 done stdio/_stdopen.c
 prev stdio/_stdopen.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/_stdopen.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/_stdopen.c
 done _stdopen.o generated
 make _stdprintf.o
 make stdio/_stdprintf.c
 prev stdio/stdhdr.h implicit
 done stdio/_stdprintf.c
 prev stdio/_stdprintf.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/_stdprintf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/_stdprintf.c
 done _stdprintf.o generated
 make _stdscanf.o
 make stdio/_stdscanf.c
 prev stdio/stdhdr.h implicit
 done stdio/_stdscanf.c
 prev stdio/_stdscanf.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/_stdscanf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/_stdscanf.c
 done _stdscanf.o generated
 make _stdsprnt.o
 make stdio/_stdsprnt.c
 prev stdio/stdhdr.h implicit
 done stdio/_stdsprnt.c
 prev stdio/_stdsprnt.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/_stdsprnt.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/_stdsprnt.c
 done _stdsprnt.o generated
 make _stdvbuf.o
 make stdio/_stdvbuf.c
 prev stdio/stdhdr.h implicit
 done stdio/_stdvbuf.c
 prev stdio/_stdvbuf.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/_stdvbuf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/_stdvbuf.c
 done _stdvbuf.o generated
 make _stdvsnprnt.o
 make stdio/_stdvsnprnt.c
 prev stdio/stdhdr.h implicit
 done stdio/_stdvsnprnt.c
 prev stdio/_stdvsnprnt.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/_stdvsnprnt.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/_stdvsnprnt.c
 done _stdvsnprnt.o generated
 make _stdvsprnt.o
 make stdio/_stdvsprnt.c
 prev stdio/stdhdr.h implicit
 done stdio/_stdvsprnt.c
 prev stdio/_stdvsprnt.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/_stdvsprnt.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/_stdvsprnt.c
 done _stdvsprnt.o generated
 make _stdvsscn.o
 make stdio/_stdvsscn.c
 prev stdio/stdhdr.h implicit
 done stdio/_stdvsscn.c
 prev stdio/_stdvsscn.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Istdio -Iinclude -D_PACKAGE_ast -c stdio/_stdvsscn.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/_stdvsscn.c
 done _stdvsscn.o generated
+make fgetwc.o
+make stdio/fgetwc.c
+prev stdio/stdhdr.h implicit
+done stdio/fgetwc.c
+prev stdio/fgetwc.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fgetwc.c
+done fgetwc.o generated
+make fwprintf.o
+make stdio/fwprintf.c
+prev stdio/stdhdr.h implicit
+done stdio/fwprintf.c
+prev stdio/fwprintf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fwprintf.c
+done fwprintf.o generated
+make putwchar.o
+make stdio/putwchar.c
+prev stdio/stdhdr.h implicit
+done stdio/putwchar.c
+prev stdio/putwchar.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/putwchar.c
+done putwchar.o generated
+make vfwscanf.o
+make stdio/vfwscanf.c
+prev stdio/stdhdr.h implicit
+done stdio/vfwscanf.c
+prev stdio/vfwscanf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/vfwscanf.c
+done vfwscanf.o generated
+make wprintf.o
+make stdio/wprintf.c
+prev stdio/stdhdr.h implicit
+done stdio/wprintf.c
+prev stdio/wprintf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/wprintf.c
+done wprintf.o generated
+make fgetws.o
+make stdio/fgetws.c
+prev stdio/stdhdr.h implicit
+done stdio/fgetws.c
+prev stdio/fgetws.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fgetws.c
+done fgetws.o generated
+make fwscanf.o
+make stdio/fwscanf.c
+prev stdio/stdhdr.h implicit
+done stdio/fwscanf.c
+prev stdio/fwscanf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fwscanf.c
+done fwscanf.o generated
+make swprintf.o
+make stdio/swprintf.c
+prev stdio/stdhdr.h implicit
+done stdio/swprintf.c
+prev stdio/swprintf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/swprintf.c
+done swprintf.o generated
+make vswprintf.o
+make stdio/vswprintf.c
+prev stdio/stdhdr.h implicit
+done stdio/vswprintf.c
+prev stdio/vswprintf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/vswprintf.c
+done vswprintf.o generated
+make wscanf.o
+make stdio/wscanf.c
+prev stdio/stdhdr.h implicit
+done stdio/wscanf.c
+prev stdio/wscanf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/wscanf.c
+done wscanf.o generated
+make fputwc.o
+make stdio/fputwc.c
+prev stdio/stdhdr.h implicit
+done stdio/fputwc.c
+prev stdio/fputwc.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fputwc.c
+done fputwc.o generated
+make getwc.o
+make stdio/getwc.c
+prev stdio/stdhdr.h implicit
+done stdio/getwc.c
+prev stdio/getwc.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/getwc.c
+done getwc.o generated
+make swscanf.o
+make stdio/swscanf.c
+prev stdio/stdhdr.h implicit
+done stdio/swscanf.c
+prev stdio/swscanf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/swscanf.c
+done swscanf.o generated
+make vswscanf.o
+make stdio/vswscanf.c
+prev stdio/stdhdr.h implicit
+done stdio/vswscanf.c
+prev stdio/vswscanf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/vswscanf.c
+done vswscanf.o generated
+make fputws.o
+make stdio/fputws.c
+prev stdio/stdhdr.h implicit
+done stdio/fputws.c
+prev stdio/fputws.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fputws.c
+done fputws.o generated
+make getwchar.o
+make stdio/getwchar.c
+prev stdio/stdhdr.h implicit
+done stdio/getwchar.c
+prev stdio/getwchar.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/getwchar.c
+done getwchar.o generated
+make ungetwc.o
+make stdio/ungetwc.c
+prev stdio/stdhdr.h implicit
+done stdio/ungetwc.c
+prev stdio/ungetwc.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/ungetwc.c
+done ungetwc.o generated
+make vwprintf.o
+make stdio/vwprintf.c
+prev stdio/stdhdr.h implicit
+done stdio/vwprintf.c
+prev stdio/vwprintf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/vwprintf.c
+done vwprintf.o generated
+make fwide.o
+make stdio/fwide.c
+prev stdio/stdhdr.h implicit
+done stdio/fwide.c
+prev stdio/fwide.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fwide.c
+done fwide.o generated
+make putwc.o
+make stdio/putwc.c
+prev stdio/stdhdr.h implicit
+done stdio/putwc.c
+prev stdio/putwc.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/putwc.c
+done putwc.o generated
+make vfwprintf.o
+make stdio/vfwprintf.c
+prev include/sfstr.h implicit
+prev stdio/stdhdr.h implicit
+done stdio/vfwprintf.c
+prev stdio/vfwprintf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/vfwprintf.c
+done vfwprintf.o generated
+make vwscanf.o
+make stdio/vwscanf.c
+prev stdio/stdhdr.h implicit
+done stdio/vwscanf.c
+prev stdio/vwscanf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istdio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/vwscanf.c
+done vwscanf.o generated
+make frexp.o
+make comp/frexp.c
+prev FEATURE/float implicit
+prev include/ast.h implicit
+done comp/frexp.c
+prev comp/frexp.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -D_PACKAGE_ast -c comp/frexp.c
+done frexp.o generated
+make frexpl.o
+make comp/frexpl.c
+prev FEATURE/float implicit
+prev include/ast.h implicit
+done comp/frexpl.c
+prev comp/frexpl.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -D_PACKAGE_ast -c comp/frexpl.c
+done frexpl.o generated
 make astcopy.o
 make port/astcopy.c
 prev include/ls.h implicit
@@ -4010,7 +4288,7 @@ prev include/ast.h implicit
 prev misc/univlib.h implicit
 done port/astconf.c
 prev port/astconf.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Imisc -Iinclude -DHOSTTYPE=\""${_hosttype_=`package`}"\" -D_PACKAGE_ast -c port/astconf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Imisc -Iinclude -DCONF_LIBSUFFIX=\"".so"\" -DHOSTTYPE=\""${_hosttype_=`package`}"\" -D_PACKAGE_ast -c port/astconf.c
 done astconf.o generated
 make astdynamic.o
 make port/astdynamic.c
@@ -4020,7 +4298,7 @@ prev include/ast.h implicit
 prev include/sfio_t.h implicit
 done port/astdynamic.c
 prev port/astdynamic.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c port/astdynamic.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Iinclude -I${INSTALLROOT}/include -D_PACKAGE_ast -c port/astdynamic.c
 done astdynamic.o generated
 make astlicense.o
 make port/astlicense.c
@@ -4411,32 +4689,22 @@ done obsolete/memetoa.c
 prev obsolete/memetoa.c
 exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -D_PACKAGE_ast -c obsolete/memetoa.c
 done memetoa.o generated
-make atmain.o
-make port/atmain.C
-done port/atmain.C
-prev port/atmain.C
-exec - ignore ${CC} -c ${CCFLAGS}    port/atmain.C
-exec - if	test ! -f atmain.o
-exec - then	cp port/atmain.C atmain.c
-exec - 	${CC} -c ${CCFLAGS}    atmain.c
-exec - fi
-done atmain.o generated
 exec - ${AR} cr libast.a state.o opendir.o readdir.o rewinddir.o seekdir.o telldir.o getcwd.o fastfind.o hashalloc.o hashdump.o hashfree.o hashlast.o hashlook.o hashscan.o hashsize.o hashview.o hashwalk.o memhash.o memsum.o strhash.o strkey.o strsum.o stracmp.o strnacmp.o _ccmaps.o ccmapc.o ccmapcpy.o ccmapid.o ccmaps.o ccnative.o
-exec - ${AR} cr libast.a chresc.o chrtoi.o streval.o strexpr.o strmatch.o strcopy.o modei.o modex.o strmode.o strlook.o strsearch.o strpsearch.o stresc.o stropt.o strtape.o tok.o tokline.o tokscan.o pathaccess.o pathcat.o pathcanon.o pathcheck.o pathpath.o pathfind.o pathkey.o pathprobe.o pathrepl.o pathtemp.o pathtmp.o pathstat.o pathgetlink.o pathsetlink.o pathbin.o pathshell.o pathcd.o fs3d.o ftwalk.o ftwflags.o fts.o setenviron.o optget.o optjoin.o strsort.o magic.o mime.o mimetype.o signal.o systrace.o error.o errorf.o errormsg.o errorx.o setlocale.o translate.o catopen.o iconv.o mc.o liberror.o libevent.o fmtbase.o fmtbuf.o fmtclock.o fmtdev.o fmtelapsed.o fmterror.o fmtesc.o fmtfs.o fmtident.o fmtip4.o fmtls.o fmtmatch.o fmtmode.o fmtnum.o fmtperm.o fmtre.o fmttime.o fmtuid.o fmtgid.o fmtsignal.o fmtscale.o strelapsed.o strperm.o struid.o strgid.o strtoip4.o stack.o stk.o swapget.o swapmem.o swapop.o swapput.o sigdata.o sigcrit.o sigunblock.o procopen.o procclose.o procrun.o procfree.o tmdate.o tmfix.o tmfmt.o
-exec - ${AR} cr libast.a tmform.o tmgoff.o tminit.o tmleap.o tmlex.o tmlocale.o tmmake.o tmpoff.o tmscan.o tmtime.o tmtype.o tmword.o tmzone.o vecargs.o vecfile.o vecfree.o vecload.o vecstring.o univdata.o touch.o mnt.o memccpy.o memchr.o memcmp.o memcpy.o memdup.o memmove.o memset.o mkdir.o mkfifo.o mknod.o rmdir.o remove.o rename.o link.o unlink.o strdup.o strchr.o strrchr.o strtod.o strtol.o strtoll.o strtoul.o strtoull.o strton.o strtonll.o strcasecmp.o strncasecmp.o strerror.o mktemp.o tmpnam.o execlp.o execve.o execvp.o execvpe.o spawnlp.o spawnve.o spawnveg.o spawnvp.o spawnvpe.o vfork.o killpg.o hsearch.o tsearch.o getlogin.o putenv.o lstat.o statvfs.o gross.o omitted.o readlink.o symlink.o getpgrp.o setpgid.o setsid.o waitpid.o confmap.o conftab.o confstr.o pathconf.o sysconf.o creat64.o fcntl.o open.o atexit.o getdents.o getwd.o dup2.o errno.o getpreroot.o ispreroot.o realopen.o setpreroot.o getgroups.o mount.o system.o iblocks.o modedata.o tmdata.o memfatal.o sfkeyprintf.o
-exec - ${AR} cr libast.a sfstrtmp.o sfdcold.o sfdcdio.o sfdcdos.o sfdcfilter.o sfdcseekable.o sfdcslow.o sfdcsubstream.o sfdctee.o sfdcunion.o sfdcmore.o sfdcprefix.o libc.o basename.o closelog.o dirname.o fmtmsglib.o fnmatch.o ftw.o getdate.o getsubopt.o glob.o nftw.o openlog.o re_comp.o realpath.o regcmp.o regexp.o setlogmask.o strftime.o strptime.o swab.o syslog.o tempnam.o tmpfile.o wordexp.o mktime.o regalloc.o regclass.o regcomp.o regerror.o regexec.o regfatal.o reginit.o regnexec.o regsub.o regrecord.o regrexec.o dtclose.o dtdisc.o dtextract.o dtflatten.o dthash.o dtlist.o dtmethod.o dtopen.o dtrenew.o dtrestore.o dtsize.o dtstat.o dtstrhash.o dttree.o dtview.o dtwalk.o sfclose.o sfclrlock.o sfdisc.o sfdlen.o sfexcept.o sfgetl.o sfgetu.o sfcvt.o sfecvt.o sffcvt.o sfextern.o sffilbuf.o sfflsbuf.o sfprints.o sfgetd.o sfgetr.o sfllen.o sfmode.o sfmove.o sfnew.o sfpkrd.o sfnotify.o sfnputc.o sfopen.o sfpeek.o sfpoll.o sfpool.o sfpopen.o sfprintf.o sfputd.o sfputl.o sfputr.o sfputu.o sfrd.o sfread.o sfreserve.o sfscanf.o
-exec - ${AR} cr libast.a sfseek.o sfset.o sfsetbuf.o sfsetfd.o sfsize.o sfsk.o sfstack.o sfstrtod.o sfsync.o sfswap.o sftable.o sftell.o sftmp.o sfungetc.o sfvprintf.o sfvscanf.o sfwr.o sfwrite.o sfpurge.o sfraise.o sfgetm.o sfmutex.o sfputm.o sfresize.o _sfclrerr.o _sfeof.o _sferror.o _sffileno.o _sfstacked.o _sfvalue.o _sfgetc.o _sfgetl.o _sfgetl2.o _sfgetu.o _sfgetu2.o _sfdlen.o _sfllen.o _sfslen.o _sfulen.o _sfputc.o _sfputd.o _sfputl.o _sfputm.o _sfputu.o clearerr.o fclose.o fdopen.o feof.o ferror.o fflush.o fgetc.o fgetpos.o fgets.o fileno.o fopen.o fprintf.o fpurge.o fputc.o fputs.o fread.o freopen.o fscanf.o fseek.o fsetpos.o ftell.o fwrite.o getc.o getchar.o getw.o pclose.o popen.o printf.o putc.o putchar.o puts.o putw.o rewind.o scanf.o setbuf.o setbuffer.o setlinebuf.o setvbuf.o snprintf.o sprintf.o sscanf.o ungetc.o vfprintf.o vfscanf.o vprintf.o vscanf.o vsnprintf.o vsprintf.o vsscanf.o _doprnt.o _doscan.o _stdfun.o _stdopen.o _stdprintf.o _stdscanf.o _stdsprnt.o _stdvbuf.o
-exec - ${AR} cr libast.a _stdvsnprnt.o _stdvsprnt.o _stdvsscn.o astcopy.o astconf.o astdynamic.o astlicense.o astquery.o astwinsize.o aststatic.o getopt.o vmbest.o vmclear.o vmclose.o vmdcheap.o vmdebug.o vmdisc.o vmexit.o vmlast.o vmopen.o vmpool.o vmprivate.o vmprofile.o vmregion.o vmsegment.o vmset.o vmstat.o vmstrdup.o vmtrace.o vmwalk.o malloc.o a64l.o acosh.o asinh.o atanh.o cbrt.o crypt.o crypt_util.o erf.o err.o exp.o exp__E.o expm1.o gamma.o getpass.o lgamma.o log.o log1p.o log__L.o rand48.o random.o rcmd.o rint.o support.o mematoe.o memetoa.o atmain.o
+exec - ${AR} cr libast.a chresc.o chrtoi.o streval.o strexpr.o strmatch.o strcopy.o modei.o modex.o strmode.o strlook.o strsearch.o strpsearch.o stresc.o stropt.o strtape.o tok.o tokline.o tokscan.o pathaccess.o pathcat.o pathcanon.o pathcheck.o pathpath.o pathexists.o pathfind.o pathkey.o pathprobe.o pathrepl.o pathtemp.o pathtmp.o pathstat.o pathgetlink.o pathsetlink.o pathbin.o pathshell.o pathcd.o fs3d.o ftwalk.o ftwflags.o fts.o setenviron.o optget.o optjoin.o strsort.o magic.o mime.o mimetype.o signal.o systrace.o error.o errorf.o errormsg.o errorx.o localeconv.o setlocale.o translate.o catopen.o iconv.o lc.o mc.o liberror.o libevent.o fmtbase.o fmtbuf.o fmtclock.o fmtdev.o fmtelapsed.o fmterror.o fmtesc.o fmtfs.o fmtident.o fmtip4.o fmtls.o fmtmatch.o fmtmode.o fmtnum.o fmtperm.o fmtre.o fmttime.o fmtuid.o fmtgid.o fmtsignal.o fmtscale.o strelapsed.o strperm.o struid.o strgid.o strtoip4.o stack.o stk.o swapget.o swapmem.o swapop.o swapput.o sigdata.o sigcrit.o sigunblock.o procopen.o procclose.o procrun.o procfree.o
+exec - ${AR} cr libast.a tmdate.o tmfix.o tmfmt.o tmform.o tmgoff.o tminit.o tmleap.o tmlex.o tmlocale.o tmmake.o tmpoff.o tmscan.o tmtime.o tmtype.o tmword.o tmzone.o vecargs.o vecfile.o vecfree.o vecload.o vecstring.o univdata.o touch.o mnt.o memccpy.o memchr.o memcmp.o memcpy.o memdup.o memmove.o memset.o mkdir.o mkfifo.o mknod.o rmdir.o remove.o rename.o link.o unlink.o strdup.o strchr.o strrchr.o strtod.o strtold.o strtol.o strtoll.o strtoul.o strtoull.o strton.o strtonll.o strcasecmp.o strncasecmp.o strerror.o mktemp.o tmpnam.o execlp.o execve.o execvp.o execvpe.o spawnlp.o spawnve.o spawnveg.o spawnvp.o spawnvpe.o vfork.o killpg.o hsearch.o tsearch.o getlogin.o putenv.o lstat.o statvfs.o gross.o omitted.o readlink.o symlink.o getpgrp.o setpgid.o setsid.o waitpid.o confmap.o conftab.o confstr.o pathconf.o sysconf.o creat64.o fcntl.o open.o atexit.o getdents.o getwd.o dup2.o errno.o getpreroot.o ispreroot.o realopen.o setpreroot.o getgroups.o mount.o system.o iblocks.o
+exec - ${AR} cr libast.a modedata.o tmdata.o memfatal.o sfkeyprintf.o sfstrtmp.o sfdcold.o sfdcdio.o sfdcdos.o sfdcfilter.o sfdcseekable.o sfdcslow.o sfdcsubstream.o sfdctee.o sfdcunion.o sfdcmore.o sfdcprefix.o wc.o libc.o basename.o closelog.o dirname.o fmtmsglib.o fnmatch.o ftw.o getdate.o getsubopt.o glob.o nftw.o openlog.o re_comp.o realpath.o regcmp.o regexp.o setlogmask.o strftime.o strptime.o swab.o syslog.o tempnam.o wordexp.o mktime.o regalloc.o regclass.o regcoll.o regcomp.o regerror.o regexec.o regfatal.o reginit.o regnexec.o regsub.o regrecord.o regrexec.o dtclose.o dtdisc.o dtextract.o dtflatten.o dthash.o dtlist.o dtmethod.o dtopen.o dtrenew.o dtrestore.o dtsize.o dtstat.o dtstrhash.o dttree.o dtview.o dtwalk.o sfclose.o sfclrlock.o sfdisc.o sfdlen.o sfexcept.o sfgetl.o sfgetu.o sfcvt.o sfecvt.o sffcvt.o sfextern.o sffilbuf.o sfflsbuf.o sfprints.o sfgetd.o sfgetr.o sfllen.o sfmode.o sfmove.o sfnew.o sfpkrd.o sfnotify.o sfnputc.o sfopen.o sfpeek.o sfpoll.o sfpool.o sfpopen.o sfprintf.o sfputd.o sfputl.o sfputr.o
+exec - ${AR} cr libast.a sfputu.o sfrd.o sfread.o sfreserve.o sfscanf.o sfseek.o sfset.o sfsetbuf.o sfsetfd.o sfsize.o sfsk.o sfstack.o sfstrtod.o sfsync.o sfswap.o sftable.o sftell.o sftmp.o sfungetc.o sfvprintf.o sfvscanf.o sfwr.o sfwrite.o sfpurge.o sfraise.o sfgetm.o sfmutex.o sfputm.o sfresize.o _sfclrerr.o _sfeof.o _sferror.o _sffileno.o _sfstacked.o _sfvalue.o _sfgetc.o _sfgetl.o _sfgetl2.o _sfgetu.o _sfgetu2.o _sfdlen.o _sfllen.o _sfslen.o _sfulen.o _sfputc.o _sfputd.o _sfputl.o _sfputm.o _sfputu.o clearerr.o fclose.o fdopen.o feof.o ferror.o fflush.o fgetc.o fgetpos.o fgets.o fileno.o fopen.o fprintf.o fpurge.o fputc.o fputs.o fread.o freopen.o fscanf.o fseek.o fsetpos.o ftell.o fwrite.o getc.o getchar.o getw.o pclose.o popen.o printf.o putc.o putchar.o puts.o putw.o rewind.o scanf.o setbuf.o setbuffer.o setlinebuf.o setvbuf.o snprintf.o sprintf.o sscanf.o tmpfile.o ungetc.o vfprintf.o vfscanf.o vprintf.o vscanf.o vsnprintf.o vsprintf.o vsscanf.o _doprnt.o _doscan.o
+exec - ${AR} cr libast.a _filbuf.o _flsbuf.o _stdfun.o _stdopen.o _stdprintf.o _stdscanf.o _stdsprnt.o _stdvbuf.o _stdvsnprnt.o _stdvsprnt.o _stdvsscn.o fgetwc.o fwprintf.o putwchar.o vfwscanf.o wprintf.o fgetws.o fwscanf.o swprintf.o vswprintf.o wscanf.o fputwc.o getwc.o swscanf.o vswscanf.o fputws.o getwchar.o ungetwc.o vwprintf.o fwide.o putwc.o vfwprintf.o vwscanf.o frexp.o frexpl.o astcopy.o astconf.o astdynamic.o astlicense.o astquery.o astwinsize.o aststatic.o getopt.o vmbest.o vmclear.o vmclose.o vmdcheap.o vmdebug.o vmdisc.o vmexit.o vmlast.o vmopen.o vmpool.o vmprivate.o vmprofile.o vmregion.o vmsegment.o vmset.o vmstat.o vmstrdup.o vmtrace.o vmwalk.o malloc.o a64l.o acosh.o asinh.o atanh.o cbrt.o crypt.o crypt_util.o erf.o err.o exp.o exp__E.o expm1.o gamma.o getpass.o lgamma.o log.o log1p.o log__L.o rand48.o random.o rcmd.o rint.o support.o mematoe.o memetoa.o
 exec - (ranlib libast.a) >/dev/null 2>&1 || true
 done libast.a generated
 done ast virtual
 prev libast.a archive
-make ${INSTALLROOT}/lib
+make ../../../lib
 exec - set -
 exec - if	test ! -d ${INSTALLROOT}/lib
 exec - then	set -x && mkdir -p ${INSTALLROOT}/lib 2>/dev/null && set - ||
 exec - 	{
-exec - 		test -d ./-p && rm -rf ./-p
+exec - 		test -d ./-p && rm -Rf ./-p
 exec - 		p=
 exec - 		for d in `echo ${INSTALLROOT}/lib | sed -e 's%\\(.\\)/%\\1 %g'`
 exec - 		do	case $p in
@@ -4454,18 +4722,18 @@ exec - 			esac
 exec - 		done
 exec - 	} && set -x 		    		   
 exec - fi
-done ${INSTALLROOT}/lib generated
-make ${INSTALLROOT}/lib/libast.a archive
+done ../../../lib generated
+make ../../../lib/libast.a archive
 prev libast.a archive
 exec - mv ${INSTALLROOT}/lib/libast.a ${INSTALLROOT}/lib/libast.a.old 2>/dev/null || true; test '' = 'libast.a' || { cp libast.a ${INSTALLROOT}/lib/libast.a  		    		    ;}
 exec - (ranlib ${INSTALLROOT}/lib/libast.a) >/dev/null 2>&1 || true
-done ${INSTALLROOT}/lib/libast.a generated
-make ${INSTALLROOT}/man/man3
+done ../../../lib/libast.a generated
+make ../../../man/man3
 exec - set -
 exec - if	test ! -d ${INSTALLROOT}/man/man3
 exec - then	set -x && mkdir -p ${INSTALLROOT}/man/man3 2>/dev/null && set - ||
 exec - 	{
-exec - 		test -d ./-p && rm -rf ./-p
+exec - 		test -d ./-p && rm -Rf ./-p
 exec - 		p=
 exec - 		for d in `echo ${INSTALLROOT}/man/man3 | sed -e 's%\\(.\\)/%\\1 %g'`
 exec - 		do	case $p in
@@ -4483,278 +4751,278 @@ exec - 			esac
 exec - 		done
 exec - 	} && set -x 		    		   
 exec - fi
-done ${INSTALLROOT}/man/man3 generated
-make ${INSTALLROOT}/man/man3/LIBAST.3
+done ../../../man/man3 generated
+make ../../../man/man3/LIBAST.3
 make man/LIBAST.3
 done man/LIBAST.3
 exec - mv ${INSTALLROOT}/man/man3/LIBAST.3 ${INSTALLROOT}/man/man3/LIBAST.3.old 2>/dev/null || true; test '' = 'man/LIBAST.3' || { cp man/LIBAST.3 ${INSTALLROOT}/man/man3/LIBAST.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/LIBAST.3 generated
-make ${INSTALLROOT}/man/man3/ast.3
+done ../../../man/man3/LIBAST.3 generated
+make ../../../man/man3/ast.3
 make man/ast.3
 done man/ast.3
 exec - mv ${INSTALLROOT}/man/man3/ast.3 ${INSTALLROOT}/man/man3/ast.3.old 2>/dev/null || true; test '' = 'man/ast.3' || { cp man/ast.3 ${INSTALLROOT}/man/man3/ast.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/ast.3 generated
-make ${INSTALLROOT}/man/man3/cdt.3
+done ../../../man/man3/ast.3 generated
+make ../../../man/man3/cdt.3
 make man/cdt.3
 done man/cdt.3
 exec - mv ${INSTALLROOT}/man/man3/cdt.3 ${INSTALLROOT}/man/man3/cdt.3.old 2>/dev/null || true; test '' = 'man/cdt.3' || { cp man/cdt.3 ${INSTALLROOT}/man/man3/cdt.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/cdt.3 generated
-make ${INSTALLROOT}/man/man3/chr.3
+done ../../../man/man3/cdt.3 generated
+make ../../../man/man3/chr.3
 make man/chr.3
 done man/chr.3
 exec - mv ${INSTALLROOT}/man/man3/chr.3 ${INSTALLROOT}/man/man3/chr.3.old 2>/dev/null || true; test '' = 'man/chr.3' || { cp man/chr.3 ${INSTALLROOT}/man/man3/chr.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/chr.3 generated
-make ${INSTALLROOT}/man/man3/compat.3
+done ../../../man/man3/chr.3 generated
+make ../../../man/man3/compat.3
 make man/compat.3
 done man/compat.3
 exec - mv ${INSTALLROOT}/man/man3/compat.3 ${INSTALLROOT}/man/man3/compat.3.old 2>/dev/null || true; test '' = 'man/compat.3' || { cp man/compat.3 ${INSTALLROOT}/man/man3/compat.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/compat.3 generated
-make ${INSTALLROOT}/man/man3/error.3
+done ../../../man/man3/compat.3 generated
+make ../../../man/man3/error.3
 make man/error.3
 done man/error.3
 exec - mv ${INSTALLROOT}/man/man3/error.3 ${INSTALLROOT}/man/man3/error.3.old 2>/dev/null || true; test '' = 'man/error.3' || { cp man/error.3 ${INSTALLROOT}/man/man3/error.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/error.3 generated
-make ${INSTALLROOT}/man/man3/find.3
+done ../../../man/man3/error.3 generated
+make ../../../man/man3/find.3
 make man/find.3
 done man/find.3
 exec - mv ${INSTALLROOT}/man/man3/find.3 ${INSTALLROOT}/man/man3/find.3.old 2>/dev/null || true; test '' = 'man/find.3' || { cp man/find.3 ${INSTALLROOT}/man/man3/find.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/find.3 generated
-make ${INSTALLROOT}/man/man3/fmt.3
+done ../../../man/man3/find.3 generated
+make ../../../man/man3/fmt.3
 make man/fmt.3
 done man/fmt.3
 exec - mv ${INSTALLROOT}/man/man3/fmt.3 ${INSTALLROOT}/man/man3/fmt.3.old 2>/dev/null || true; test '' = 'man/fmt.3' || { cp man/fmt.3 ${INSTALLROOT}/man/man3/fmt.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/fmt.3 generated
-make ${INSTALLROOT}/man/man3/fmtls.3
+done ../../../man/man3/fmt.3 generated
+make ../../../man/man3/fmtls.3
 make man/fmtls.3
 done man/fmtls.3
 exec - mv ${INSTALLROOT}/man/man3/fmtls.3 ${INSTALLROOT}/man/man3/fmtls.3.old 2>/dev/null || true; test '' = 'man/fmtls.3' || { cp man/fmtls.3 ${INSTALLROOT}/man/man3/fmtls.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/fmtls.3 generated
-make ${INSTALLROOT}/man/man3/fs3d.3
+done ../../../man/man3/fmtls.3 generated
+make ../../../man/man3/fs3d.3
 make man/fs3d.3
 done man/fs3d.3
 exec - mv ${INSTALLROOT}/man/man3/fs3d.3 ${INSTALLROOT}/man/man3/fs3d.3.old 2>/dev/null || true; test '' = 'man/fs3d.3' || { cp man/fs3d.3 ${INSTALLROOT}/man/man3/fs3d.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/fs3d.3 generated
-make ${INSTALLROOT}/man/man3/ftwalk.3
+done ../../../man/man3/fs3d.3 generated
+make ../../../man/man3/ftwalk.3
 make man/ftwalk.3
 done man/ftwalk.3
 exec - mv ${INSTALLROOT}/man/man3/ftwalk.3 ${INSTALLROOT}/man/man3/ftwalk.3.old 2>/dev/null || true; test '' = 'man/ftwalk.3' || { cp man/ftwalk.3 ${INSTALLROOT}/man/man3/ftwalk.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/ftwalk.3 generated
-make ${INSTALLROOT}/man/man3/getcwd.3
+done ../../../man/man3/ftwalk.3 generated
+make ../../../man/man3/getcwd.3
 make man/getcwd.3
 done man/getcwd.3
 exec - mv ${INSTALLROOT}/man/man3/getcwd.3 ${INSTALLROOT}/man/man3/getcwd.3.old 2>/dev/null || true; test '' = 'man/getcwd.3' || { cp man/getcwd.3 ${INSTALLROOT}/man/man3/getcwd.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/getcwd.3 generated
-make ${INSTALLROOT}/man/man3/hash.3
+done ../../../man/man3/getcwd.3 generated
+make ../../../man/man3/hash.3
 make man/hash.3
 done man/hash.3
 exec - mv ${INSTALLROOT}/man/man3/hash.3 ${INSTALLROOT}/man/man3/hash.3.old 2>/dev/null || true; test '' = 'man/hash.3' || { cp man/hash.3 ${INSTALLROOT}/man/man3/hash.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/hash.3 generated
-make ${INSTALLROOT}/man/man3/iblocks.3
+done ../../../man/man3/hash.3 generated
+make ../../../man/man3/iblocks.3
 make man/iblocks.3
 done man/iblocks.3
 exec - mv ${INSTALLROOT}/man/man3/iblocks.3 ${INSTALLROOT}/man/man3/iblocks.3.old 2>/dev/null || true; test '' = 'man/iblocks.3' || { cp man/iblocks.3 ${INSTALLROOT}/man/man3/iblocks.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/iblocks.3 generated
-make ${INSTALLROOT}/man/man3/int.3
+done ../../../man/man3/iblocks.3 generated
+make ../../../man/man3/int.3
 make man/int.3
 done man/int.3
 exec - mv ${INSTALLROOT}/man/man3/int.3 ${INSTALLROOT}/man/man3/int.3.old 2>/dev/null || true; test '' = 'man/int.3' || { cp man/int.3 ${INSTALLROOT}/man/man3/int.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/int.3 generated
-make ${INSTALLROOT}/man/man3/magic.3
+done ../../../man/man3/int.3 generated
+make ../../../man/man3/magic.3
 make man/magic.3
 done man/magic.3
 exec - mv ${INSTALLROOT}/man/man3/magic.3 ${INSTALLROOT}/man/man3/magic.3.old 2>/dev/null || true; test '' = 'man/magic.3' || { cp man/magic.3 ${INSTALLROOT}/man/man3/magic.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/magic.3 generated
-make ${INSTALLROOT}/man/man3/mem.3
+done ../../../man/man3/magic.3 generated
+make ../../../man/man3/mem.3
 make man/mem.3
 done man/mem.3
 exec - mv ${INSTALLROOT}/man/man3/mem.3 ${INSTALLROOT}/man/man3/mem.3.old 2>/dev/null || true; test '' = 'man/mem.3' || { cp man/mem.3 ${INSTALLROOT}/man/man3/mem.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/mem.3 generated
-make ${INSTALLROOT}/man/man3/mime.3
+done ../../../man/man3/mem.3 generated
+make ../../../man/man3/mime.3
 make man/mime.3
 done man/mime.3
 exec - mv ${INSTALLROOT}/man/man3/mime.3 ${INSTALLROOT}/man/man3/mime.3.old 2>/dev/null || true; test '' = 'man/mime.3' || { cp man/mime.3 ${INSTALLROOT}/man/man3/mime.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/mime.3 generated
-make ${INSTALLROOT}/man/man3/modecanon.3
+done ../../../man/man3/mime.3 generated
+make ../../../man/man3/modecanon.3
 make man/modecanon.3
 done man/modecanon.3
 exec - mv ${INSTALLROOT}/man/man3/modecanon.3 ${INSTALLROOT}/man/man3/modecanon.3.old 2>/dev/null || true; test '' = 'man/modecanon.3' || { cp man/modecanon.3 ${INSTALLROOT}/man/man3/modecanon.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/modecanon.3 generated
-make ${INSTALLROOT}/man/man3/optget.3
+done ../../../man/man3/modecanon.3 generated
+make ../../../man/man3/optget.3
 make man/optget.3
 done man/optget.3
 exec - mv ${INSTALLROOT}/man/man3/optget.3 ${INSTALLROOT}/man/man3/optget.3.old 2>/dev/null || true; test '' = 'man/optget.3' || { cp man/optget.3 ${INSTALLROOT}/man/man3/optget.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/optget.3 generated
-make ${INSTALLROOT}/man/man3/path.3
+done ../../../man/man3/optget.3 generated
+make ../../../man/man3/path.3
 make man/path.3
 done man/path.3
 exec - mv ${INSTALLROOT}/man/man3/path.3 ${INSTALLROOT}/man/man3/path.3.old 2>/dev/null || true; test '' = 'man/path.3' || { cp man/path.3 ${INSTALLROOT}/man/man3/path.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/path.3 generated
-make ${INSTALLROOT}/man/man3/preroot.3
+done ../../../man/man3/path.3 generated
+make ../../../man/man3/preroot.3
 make man/preroot.3
 done man/preroot.3
 exec - mv ${INSTALLROOT}/man/man3/preroot.3 ${INSTALLROOT}/man/man3/preroot.3.old 2>/dev/null || true; test '' = 'man/preroot.3' || { cp man/preroot.3 ${INSTALLROOT}/man/man3/preroot.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/preroot.3 generated
-make ${INSTALLROOT}/man/man3/proc.3
+done ../../../man/man3/preroot.3 generated
+make ../../../man/man3/proc.3
 make man/proc.3
 done man/proc.3
 exec - mv ${INSTALLROOT}/man/man3/proc.3 ${INSTALLROOT}/man/man3/proc.3.old 2>/dev/null || true; test '' = 'man/proc.3' || { cp man/proc.3 ${INSTALLROOT}/man/man3/proc.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/proc.3 generated
-make ${INSTALLROOT}/man/man3/re.3
+done ../../../man/man3/proc.3 generated
+make ../../../man/man3/re.3
 make man/re.3
 done man/re.3
 exec - mv ${INSTALLROOT}/man/man3/re.3 ${INSTALLROOT}/man/man3/re.3.old 2>/dev/null || true; test '' = 'man/re.3' || { cp man/re.3 ${INSTALLROOT}/man/man3/re.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/re.3 generated
-make ${INSTALLROOT}/man/man3/setenviron.3
+done ../../../man/man3/re.3 generated
+make ../../../man/man3/setenviron.3
 make man/setenviron.3
 done man/setenviron.3
 exec - mv ${INSTALLROOT}/man/man3/setenviron.3 ${INSTALLROOT}/man/man3/setenviron.3.old 2>/dev/null || true; test '' = 'man/setenviron.3' || { cp man/setenviron.3 ${INSTALLROOT}/man/man3/setenviron.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/setenviron.3 generated
-make ${INSTALLROOT}/man/man3/sfdisc.3
+done ../../../man/man3/setenviron.3 generated
+make ../../../man/man3/sfdisc.3
 make man/sfdisc.3
 done man/sfdisc.3
 exec - mv ${INSTALLROOT}/man/man3/sfdisc.3 ${INSTALLROOT}/man/man3/sfdisc.3.old 2>/dev/null || true; test '' = 'man/sfdisc.3' || { cp man/sfdisc.3 ${INSTALLROOT}/man/man3/sfdisc.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/sfdisc.3 generated
-make ${INSTALLROOT}/man/man3/sfio.3
+done ../../../man/man3/sfdisc.3 generated
+make ../../../man/man3/sfio.3
 make man/sfio.3
 done man/sfio.3
 exec - mv ${INSTALLROOT}/man/man3/sfio.3 ${INSTALLROOT}/man/man3/sfio.3.old 2>/dev/null || true; test '' = 'man/sfio.3' || { cp man/sfio.3 ${INSTALLROOT}/man/man3/sfio.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/sfio.3 generated
-make ${INSTALLROOT}/man/man3/sig.3
+done ../../../man/man3/sfio.3 generated
+make ../../../man/man3/sig.3
 make man/sig.3
 done man/sig.3
 exec - mv ${INSTALLROOT}/man/man3/sig.3 ${INSTALLROOT}/man/man3/sig.3.old 2>/dev/null || true; test '' = 'man/sig.3' || { cp man/sig.3 ${INSTALLROOT}/man/man3/sig.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/sig.3 generated
-make ${INSTALLROOT}/man/man3/spawnveg.3
+done ../../../man/man3/sig.3 generated
+make ../../../man/man3/spawnveg.3
 make man/spawnveg.3
 done man/spawnveg.3
 exec - mv ${INSTALLROOT}/man/man3/spawnveg.3 ${INSTALLROOT}/man/man3/spawnveg.3.old 2>/dev/null || true; test '' = 'man/spawnveg.3' || { cp man/spawnveg.3 ${INSTALLROOT}/man/man3/spawnveg.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/spawnveg.3 generated
-make ${INSTALLROOT}/man/man3/stak.3
+done ../../../man/man3/spawnveg.3 generated
+make ../../../man/man3/stak.3
 make man/stak.3
 done man/stak.3
 exec - mv ${INSTALLROOT}/man/man3/stak.3 ${INSTALLROOT}/man/man3/stak.3.old 2>/dev/null || true; test '' = 'man/stak.3' || { cp man/stak.3 ${INSTALLROOT}/man/man3/stak.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/stak.3 generated
-make ${INSTALLROOT}/man/man3/stk.3
+done ../../../man/man3/stak.3 generated
+make ../../../man/man3/stk.3
 make man/stk.3
 done man/stk.3
 exec - mv ${INSTALLROOT}/man/man3/stk.3 ${INSTALLROOT}/man/man3/stk.3.old 2>/dev/null || true; test '' = 'man/stk.3' || { cp man/stk.3 ${INSTALLROOT}/man/man3/stk.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/stk.3 generated
-make ${INSTALLROOT}/man/man3/strcopy.3
+done ../../../man/man3/stk.3 generated
+make ../../../man/man3/strcopy.3
 make man/strcopy.3
 done man/strcopy.3
 exec - mv ${INSTALLROOT}/man/man3/strcopy.3 ${INSTALLROOT}/man/man3/strcopy.3.old 2>/dev/null || true; test '' = 'man/strcopy.3' || { cp man/strcopy.3 ${INSTALLROOT}/man/man3/strcopy.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/strcopy.3 generated
-make ${INSTALLROOT}/man/man3/strdup.3
+done ../../../man/man3/strcopy.3 generated
+make ../../../man/man3/strdup.3
 make man/strdup.3
 done man/strdup.3
 exec - mv ${INSTALLROOT}/man/man3/strdup.3 ${INSTALLROOT}/man/man3/strdup.3.old 2>/dev/null || true; test '' = 'man/strdup.3' || { cp man/strdup.3 ${INSTALLROOT}/man/man3/strdup.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/strdup.3 generated
-make ${INSTALLROOT}/man/man3/strelapsed.3
+done ../../../man/man3/strdup.3 generated
+make ../../../man/man3/strelapsed.3
 make man/strelapsed.3
 done man/strelapsed.3
 exec - mv ${INSTALLROOT}/man/man3/strelapsed.3 ${INSTALLROOT}/man/man3/strelapsed.3.old 2>/dev/null || true; test '' = 'man/strelapsed.3' || { cp man/strelapsed.3 ${INSTALLROOT}/man/man3/strelapsed.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/strelapsed.3 generated
-make ${INSTALLROOT}/man/man3/strerror.3
+done ../../../man/man3/strelapsed.3 generated
+make ../../../man/man3/strerror.3
 make man/strerror.3
 done man/strerror.3
 exec - mv ${INSTALLROOT}/man/man3/strerror.3 ${INSTALLROOT}/man/man3/strerror.3.old 2>/dev/null || true; test '' = 'man/strerror.3' || { cp man/strerror.3 ${INSTALLROOT}/man/man3/strerror.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/strerror.3 generated
-make ${INSTALLROOT}/man/man3/stresc.3
+done ../../../man/man3/strerror.3 generated
+make ../../../man/man3/stresc.3
 make man/stresc.3
 done man/stresc.3
 exec - mv ${INSTALLROOT}/man/man3/stresc.3 ${INSTALLROOT}/man/man3/stresc.3.old 2>/dev/null || true; test '' = 'man/stresc.3' || { cp man/stresc.3 ${INSTALLROOT}/man/man3/stresc.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/stresc.3 generated
-make ${INSTALLROOT}/man/man3/streval.3
+done ../../../man/man3/stresc.3 generated
+make ../../../man/man3/streval.3
 make man/streval.3
 done man/streval.3
 exec - mv ${INSTALLROOT}/man/man3/streval.3 ${INSTALLROOT}/man/man3/streval.3.old 2>/dev/null || true; test '' = 'man/streval.3' || { cp man/streval.3 ${INSTALLROOT}/man/man3/streval.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/streval.3 generated
-make ${INSTALLROOT}/man/man3/strgid.3
+done ../../../man/man3/streval.3 generated
+make ../../../man/man3/strgid.3
 make man/strgid.3
 done man/strgid.3
 exec - mv ${INSTALLROOT}/man/man3/strgid.3 ${INSTALLROOT}/man/man3/strgid.3.old 2>/dev/null || true; test '' = 'man/strgid.3' || { cp man/strgid.3 ${INSTALLROOT}/man/man3/strgid.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/strgid.3 generated
-make ${INSTALLROOT}/man/man3/strmatch.3
+done ../../../man/man3/strgid.3 generated
+make ../../../man/man3/strmatch.3
 make man/strmatch.3
 done man/strmatch.3
 exec - mv ${INSTALLROOT}/man/man3/strmatch.3 ${INSTALLROOT}/man/man3/strmatch.3.old 2>/dev/null || true; test '' = 'man/strmatch.3' || { cp man/strmatch.3 ${INSTALLROOT}/man/man3/strmatch.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/strmatch.3 generated
-make ${INSTALLROOT}/man/man3/stropt.3
+done ../../../man/man3/strmatch.3 generated
+make ../../../man/man3/stropt.3
 make man/stropt.3
 done man/stropt.3
 exec - mv ${INSTALLROOT}/man/man3/stropt.3 ${INSTALLROOT}/man/man3/stropt.3.old 2>/dev/null || true; test '' = 'man/stropt.3' || { cp man/stropt.3 ${INSTALLROOT}/man/man3/stropt.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/stropt.3 generated
-make ${INSTALLROOT}/man/man3/strperm.3
+done ../../../man/man3/stropt.3 generated
+make ../../../man/man3/strperm.3
 make man/strperm.3
 done man/strperm.3
 exec - mv ${INSTALLROOT}/man/man3/strperm.3 ${INSTALLROOT}/man/man3/strperm.3.old 2>/dev/null || true; test '' = 'man/strperm.3' || { cp man/strperm.3 ${INSTALLROOT}/man/man3/strperm.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/strperm.3 generated
-make ${INSTALLROOT}/man/man3/strsignal.3
+done ../../../man/man3/strperm.3 generated
+make ../../../man/man3/strsignal.3
 make man/strsignal.3
 done man/strsignal.3
 exec - mv ${INSTALLROOT}/man/man3/strsignal.3 ${INSTALLROOT}/man/man3/strsignal.3.old 2>/dev/null || true; test '' = 'man/strsignal.3' || { cp man/strsignal.3 ${INSTALLROOT}/man/man3/strsignal.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/strsignal.3 generated
-make ${INSTALLROOT}/man/man3/strsort.3
+done ../../../man/man3/strsignal.3 generated
+make ../../../man/man3/strsort.3
 make man/strsort.3
 done man/strsort.3
 exec - mv ${INSTALLROOT}/man/man3/strsort.3 ${INSTALLROOT}/man/man3/strsort.3.old 2>/dev/null || true; test '' = 'man/strsort.3' || { cp man/strsort.3 ${INSTALLROOT}/man/man3/strsort.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/strsort.3 generated
-make ${INSTALLROOT}/man/man3/strtape.3
+done ../../../man/man3/strsort.3 generated
+make ../../../man/man3/strtape.3
 make man/strtape.3
 done man/strtape.3
 exec - mv ${INSTALLROOT}/man/man3/strtape.3 ${INSTALLROOT}/man/man3/strtape.3.old 2>/dev/null || true; test '' = 'man/strtape.3' || { cp man/strtape.3 ${INSTALLROOT}/man/man3/strtape.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/strtape.3 generated
-make ${INSTALLROOT}/man/man3/strton.3
+done ../../../man/man3/strtape.3 generated
+make ../../../man/man3/strton.3
 make man/strton.3
 done man/strton.3
 exec - mv ${INSTALLROOT}/man/man3/strton.3 ${INSTALLROOT}/man/man3/strton.3.old 2>/dev/null || true; test '' = 'man/strton.3' || { cp man/strton.3 ${INSTALLROOT}/man/man3/strton.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/strton.3 generated
-make ${INSTALLROOT}/man/man3/struid.3
+done ../../../man/man3/strton.3 generated
+make ../../../man/man3/struid.3
 make man/struid.3
 done man/struid.3
 exec - mv ${INSTALLROOT}/man/man3/struid.3 ${INSTALLROOT}/man/man3/struid.3.old 2>/dev/null || true; test '' = 'man/struid.3' || { cp man/struid.3 ${INSTALLROOT}/man/man3/struid.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/struid.3 generated
-make ${INSTALLROOT}/man/man3/swap.3
+done ../../../man/man3/struid.3 generated
+make ../../../man/man3/swap.3
 make man/swap.3
 done man/swap.3
 exec - mv ${INSTALLROOT}/man/man3/swap.3 ${INSTALLROOT}/man/man3/swap.3.old 2>/dev/null || true; test '' = 'man/swap.3' || { cp man/swap.3 ${INSTALLROOT}/man/man3/swap.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/swap.3 generated
-make ${INSTALLROOT}/man/man3/tab.3
+done ../../../man/man3/swap.3 generated
+make ../../../man/man3/tab.3
 make man/tab.3
 done man/tab.3
 exec - mv ${INSTALLROOT}/man/man3/tab.3 ${INSTALLROOT}/man/man3/tab.3.old 2>/dev/null || true; test '' = 'man/tab.3' || { cp man/tab.3 ${INSTALLROOT}/man/man3/tab.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/tab.3 generated
-make ${INSTALLROOT}/man/man3/tm.3
+done ../../../man/man3/tab.3 generated
+make ../../../man/man3/tm.3
 make man/tm.3
 done man/tm.3
 exec - mv ${INSTALLROOT}/man/man3/tm.3 ${INSTALLROOT}/man/man3/tm.3.old 2>/dev/null || true; test '' = 'man/tm.3' || { cp man/tm.3 ${INSTALLROOT}/man/man3/tm.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/tm.3 generated
-make ${INSTALLROOT}/man/man3/tok.3
+done ../../../man/man3/tm.3 generated
+make ../../../man/man3/tok.3
 make man/tok.3
 done man/tok.3
 exec - mv ${INSTALLROOT}/man/man3/tok.3 ${INSTALLROOT}/man/man3/tok.3.old 2>/dev/null || true; test '' = 'man/tok.3' || { cp man/tok.3 ${INSTALLROOT}/man/man3/tok.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/tok.3 generated
-make ${INSTALLROOT}/man/man3/touch.3
+done ../../../man/man3/tok.3 generated
+make ../../../man/man3/touch.3
 make man/touch.3
 done man/touch.3
 exec - mv ${INSTALLROOT}/man/man3/touch.3 ${INSTALLROOT}/man/man3/touch.3.old 2>/dev/null || true; test '' = 'man/touch.3' || { cp man/touch.3 ${INSTALLROOT}/man/man3/touch.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/touch.3 generated
-make ${INSTALLROOT}/man/man3/vecargs.3
+done ../../../man/man3/touch.3 generated
+make ../../../man/man3/vecargs.3
 make man/vecargs.3
 done man/vecargs.3
 exec - mv ${INSTALLROOT}/man/man3/vecargs.3 ${INSTALLROOT}/man/man3/vecargs.3.old 2>/dev/null || true; test '' = 'man/vecargs.3' || { cp man/vecargs.3 ${INSTALLROOT}/man/man3/vecargs.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/vecargs.3 generated
-make ${INSTALLROOT}/man/man3/vmalloc.3
+done ../../../man/man3/vecargs.3 generated
+make ../../../man/man3/vmalloc.3
 make man/vmalloc.3
 done man/vmalloc.3
 exec - mv ${INSTALLROOT}/man/man3/vmalloc.3 ${INSTALLROOT}/man/man3/vmalloc.3.old 2>/dev/null || true; test '' = 'man/vmalloc.3' || { cp man/vmalloc.3 ${INSTALLROOT}/man/man3/vmalloc.3  		    		    ;}
-done ${INSTALLROOT}/man/man3/vmalloc.3 generated
-make ${INSTALLROOT}/lib/lib
+done ../../../man/man3/vmalloc.3 generated
+make ../../../lib/lib
 exec - set -
 exec - if	test ! -d ${INSTALLROOT}/lib/lib
 exec - then	set -x && mkdir -p ${INSTALLROOT}/lib/lib 2>/dev/null && set - ||
 exec - 	{
-exec - 		test -d ./-p && rm -rf ./-p
+exec - 		test -d ./-p && rm -Rf ./-p
 exec - 		p=
 exec - 		for d in `echo ${INSTALLROOT}/lib/lib | sed -e 's%\\(.\\)/%\\1 %g'`
 exec - 		do	case $p in
@@ -4772,610 +5040,681 @@ exec - 			esac
 exec - 		done
 exec - 	} && set -x 		    		   
 exec - fi
-done ${INSTALLROOT}/lib/lib generated
-make ${INSTALLROOT}/lib/lib/ast
+done ../../../lib/lib generated
+make ../../../lib/lib/ast
 prev ast.req
 exec - mv ${INSTALLROOT}/lib/lib/ast ${INSTALLROOT}/lib/lib/ast.old 2>/dev/null || true; test '' = 'ast.req' || { cp ast.req ${INSTALLROOT}/lib/lib/ast  		    		    ;}
-done ${INSTALLROOT}/lib/lib/ast generated
-prev ${INSTALLROOT}/include/ast
-make ${INSTALLROOT}/include/ast/ast.h
+done ../../../lib/lib/ast generated
+make ../../../include/ast
+exec - set -
+exec - if	test ! -d ${INSTALLROOT}/include/ast
+exec - then	set -x && mkdir -p ${INSTALLROOT}/include/ast 2>/dev/null && set - ||
+exec - 	{
+exec - 		test -d ./-p && rm -Rf ./-p
+exec - 		p=
+exec - 		for d in `echo ${INSTALLROOT}/include/ast | sed -e 's%\\(.\\)/%\\1 %g'`
+exec - 		do	case $p in
+exec - 			"")	p=$d ;;
+exec - 			*)	p=$p/$d ;;
+exec - 			esac
+exec - 			case $d in
+exec - 			.|..)	;;
+exec - 			*)	if	test ! -d $p
+exec - 				then	rm -f $p
+exec - 					set -x && mkdir $p && set -
+exec - 				fi
+exec - 				;;
+exec - 			esac
+exec - 		done
+exec - 	} && set -x 		    		   
+exec - fi
+done ../../../include/ast generated
+make ../../../include/ast/ast.h
 prev include/ast.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/ast.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/ast.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast.h
 exec - fi
-done ${INSTALLROOT}/include/ast/ast.h generated
-make ${INSTALLROOT}/include/ast/ast_dir.h
+done ../../../include/ast/ast.h generated
+make ../../../include/ast/ast_dir.h
 prev include/ast_dir.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/ast_dir.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/ast_dir.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_dir.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_dir.h
 exec - fi
-done ${INSTALLROOT}/include/ast/ast_dir.h generated
-make ${INSTALLROOT}/include/ast/ast_std.h
+done ../../../include/ast/ast_dir.h generated
+make ../../../include/ast/ast_std.h
 prev include/ast_std.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/ast_std.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/ast_std.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_std.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_std.h
 exec - fi
-done ${INSTALLROOT}/include/ast/ast_std.h generated
-make ${INSTALLROOT}/include/ast/ast_version.h
+done ../../../include/ast/ast_std.h generated
+make ../../../include/ast/ast_version.h
 prev include/ast_version.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/ast_version.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/ast_version.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_version.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_version.h
 exec - fi
-done ${INSTALLROOT}/include/ast/ast_version.h generated
-make ${INSTALLROOT}/include/ast/ccode.h
+done ../../../include/ast/ast_version.h generated
+make ../../../include/ast/ccode.h
 prev include/ccode.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/ccode.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/ccode.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ccode.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ccode.h
 exec - fi
-done ${INSTALLROOT}/include/ast/ccode.h generated
-make ${INSTALLROOT}/include/ast/cdt.h
+done ../../../include/ast/ccode.h generated
+make ../../../include/ast/cdt.h
 prev include/cdt.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/cdt.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/cdt.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/cdt.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/cdt.h
 exec - fi
-done ${INSTALLROOT}/include/ast/cdt.h generated
-make ${INSTALLROOT}/include/ast/debug.h
+done ../../../include/ast/cdt.h generated
+make ../../../include/ast/debug.h
 prev include/debug.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/debug.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/debug.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/debug.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/debug.h
 exec - fi
-done ${INSTALLROOT}/include/ast/debug.h generated
-make ${INSTALLROOT}/include/ast/error.h
+done ../../../include/ast/debug.h generated
+make ../../../include/ast/error.h
 prev include/error.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/error.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/error.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/error.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/error.h
 exec - fi
-done ${INSTALLROOT}/include/ast/error.h generated
-make ${INSTALLROOT}/include/ast/find.h
+done ../../../include/ast/error.h generated
+make ../../../include/ast/find.h
 prev include/find.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/find.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/find.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/find.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/find.h
 exec - fi
-done ${INSTALLROOT}/include/ast/find.h generated
-make ${INSTALLROOT}/include/ast/ftw.h
+done ../../../include/ast/find.h generated
+make ../../../include/ast/ftw.h
 prev comp/ftw.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/ftw.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/ftw.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ftw.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ftw.h
 exec - fi
-done ${INSTALLROOT}/include/ast/ftw.h generated
-make ${INSTALLROOT}/include/ast/ftwalk.h
+done ../../../include/ast/ftw.h generated
+make ../../../include/ast/ftwalk.h
 prev include/ftwalk.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/ftwalk.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/ftwalk.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ftwalk.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ftwalk.h
 exec - fi
-done ${INSTALLROOT}/include/ast/ftwalk.h generated
-make ${INSTALLROOT}/include/ast/fts.h
+done ../../../include/ast/ftwalk.h generated
+make ../../../include/ast/fts.h
 prev include/fts.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/fts.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/fts.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/fts.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/fts.h
 exec - fi
-done ${INSTALLROOT}/include/ast/fts.h generated
-make ${INSTALLROOT}/include/ast/fs3d.h
+done ../../../include/ast/fts.h generated
+make ../../../include/ast/fs3d.h
 prev include/fs3d.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/fs3d.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/fs3d.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/fs3d.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/fs3d.h
 exec - fi
-done ${INSTALLROOT}/include/ast/fs3d.h generated
-make ${INSTALLROOT}/include/ast/getopt.h
+done ../../../include/ast/fs3d.h generated
+make ../../../include/ast/getopt.h
 prev comp/getopt.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/getopt.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/getopt.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/getopt.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/getopt.h
 exec - fi
-done ${INSTALLROOT}/include/ast/getopt.h generated
-make ${INSTALLROOT}/include/ast/glob.h
+done ../../../include/ast/getopt.h generated
+make ../../../include/ast/glob.h
 prev include/glob.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/glob.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/glob.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/glob.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/glob.h
 exec - fi
-done ${INSTALLROOT}/include/ast/glob.h generated
-make ${INSTALLROOT}/include/ast/hash.h
+done ../../../include/ast/glob.h generated
+make ../../../include/ast/hash.h
 prev include/hash.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/hash.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/hash.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/hash.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/hash.h
 exec - fi
-done ${INSTALLROOT}/include/ast/hash.h generated
-make ${INSTALLROOT}/include/ast/hashkey.h
+done ../../../include/ast/hash.h generated
+make ../../../include/ast/hashkey.h
 prev include/hashkey.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/hashkey.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/hashkey.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/hashkey.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/hashkey.h
 exec - fi
-done ${INSTALLROOT}/include/ast/hashkey.h generated
-make ${INSTALLROOT}/include/ast/hashpart.h
+done ../../../include/ast/hashkey.h generated
+make ../../../include/ast/hashpart.h
 prev include/hashpart.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/hashpart.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/hashpart.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/hashpart.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/hashpart.h
 exec - fi
-done ${INSTALLROOT}/include/ast/hashpart.h generated
-make ${INSTALLROOT}/include/ast/int.h
+done ../../../include/ast/hashpart.h generated
+make ../../../include/ast/int.h
 prev include/int.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/int.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/int.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/int.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/int.h
 exec - fi
-done ${INSTALLROOT}/include/ast/int.h generated
-make ${INSTALLROOT}/include/ast/ls.h
+done ../../../include/ast/int.h generated
+make ../../../include/ast/lc.h
+prev lc.h
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' lc.h > 1.${COTEMP}.x
+exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/lc.h 1.${COTEMP}.x
+exec - then	rm -f 1.${COTEMP}.x
+exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/lc.h
+exec - fi
+done ../../../include/ast/lc.h generated
+make ../../../include/ast/ls.h
 prev include/ls.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/ls.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/ls.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ls.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ls.h
 exec - fi
-done ${INSTALLROOT}/include/ast/ls.h generated
-make ${INSTALLROOT}/include/ast/magic.h
+done ../../../include/ast/ls.h generated
+make ../../../include/ast/magic.h
 prev include/magic.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/magic.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/magic.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/magic.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/magic.h
 exec - fi
-done ${INSTALLROOT}/include/ast/magic.h generated
-make ${INSTALLROOT}/include/ast/mc.h
+done ../../../include/ast/magic.h generated
+make ../../../include/ast/mc.h
 prev include/mc.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/mc.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/mc.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/mc.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/mc.h
 exec - fi
-done ${INSTALLROOT}/include/ast/mc.h generated
-make ${INSTALLROOT}/include/ast/mime.h
+done ../../../include/ast/mc.h generated
+make ../../../include/ast/mime.h
 prev include/mime.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/mime.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/mime.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/mime.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/mime.h
 exec - fi
-done ${INSTALLROOT}/include/ast/mime.h generated
-make ${INSTALLROOT}/include/ast/mnt.h
+done ../../../include/ast/mime.h generated
+make ../../../include/ast/mnt.h
 prev include/mnt.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/mnt.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/mnt.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/mnt.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/mnt.h
 exec - fi
-done ${INSTALLROOT}/include/ast/mnt.h generated
-make ${INSTALLROOT}/include/ast/modecanon.h
+done ../../../include/ast/mnt.h generated
+make ../../../include/ast/modecanon.h
 prev include/modecanon.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/modecanon.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/modecanon.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/modecanon.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/modecanon.h
 exec - fi
-done ${INSTALLROOT}/include/ast/modecanon.h generated
-make ${INSTALLROOT}/include/ast/modex.h
+done ../../../include/ast/modecanon.h generated
+make ../../../include/ast/modex.h
 prev include/modex.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/modex.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/modex.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/modex.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/modex.h
 exec - fi
-done ${INSTALLROOT}/include/ast/modex.h generated
-make ${INSTALLROOT}/include/ast/namval.h
+done ../../../include/ast/modex.h generated
+make ../../../include/ast/namval.h
 prev include/namval.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/namval.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/namval.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/namval.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/namval.h
 exec - fi
-done ${INSTALLROOT}/include/ast/namval.h generated
-make ${INSTALLROOT}/include/ast/option.h
+done ../../../include/ast/namval.h generated
+make ../../../include/ast/option.h
 prev include/option.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/option.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/option.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/option.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/option.h
 exec - fi
-done ${INSTALLROOT}/include/ast/option.h generated
-make ${INSTALLROOT}/include/ast/proc.h
+done ../../../include/ast/option.h generated
+make ../../../include/ast/proc.h
 prev include/proc.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/proc.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/proc.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/proc.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/proc.h
 exec - fi
-done ${INSTALLROOT}/include/ast/proc.h generated
-make ${INSTALLROOT}/include/ast/re.h
+done ../../../include/ast/proc.h generated
+make ../../../include/ast/re.h
 make include/re.h
 done include/re.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/re.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/re.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/re.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/re.h
 exec - fi
-done ${INSTALLROOT}/include/ast/re.h generated
-make ${INSTALLROOT}/include/ast/re_comp.h
+done ../../../include/ast/re.h generated
+make ../../../include/ast/re_comp.h
 prev comp/re_comp.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/re_comp.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/re_comp.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/re_comp.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/re_comp.h
 exec - fi
-done ${INSTALLROOT}/include/ast/re_comp.h generated
-make ${INSTALLROOT}/include/ast/regex.h
+done ../../../include/ast/re_comp.h generated
+make ../../../include/ast/regex.h
 prev include/regex.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/regex.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/regex.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/regex.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/regex.h
 exec - fi
-done ${INSTALLROOT}/include/ast/regex.h generated
-make ${INSTALLROOT}/include/ast/regexp.h
+done ../../../include/ast/regex.h generated
+make ../../../include/ast/regexp.h
 prev comp/regexp.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/regexp.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/regexp.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/regexp.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/regexp.h
 exec - fi
-done ${INSTALLROOT}/include/ast/regexp.h generated
-make ${INSTALLROOT}/include/ast/sfio.h
+done ../../../include/ast/regexp.h generated
+make ../../../include/ast/sfio.h
 prev include/sfio.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/sfio.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/sfio.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/sfio.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/sfio.h
 exec - fi
-done ${INSTALLROOT}/include/ast/sfio.h generated
-make ${INSTALLROOT}/include/ast/sfio_t.h
+done ../../../include/ast/sfio.h generated
+make ../../../include/ast/sfio_s.h
+prev include/sfio_s.h
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/sfio_s.h > 1.${COTEMP}.x
+exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/sfio_s.h 1.${COTEMP}.x
+exec - then	rm -f 1.${COTEMP}.x
+exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/sfio_s.h
+exec - fi
+done ../../../include/ast/sfio_s.h generated
+make ../../../include/ast/sfio_t.h
 prev include/sfio_t.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/sfio_t.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/sfio_t.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/sfio_t.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/sfio_t.h
 exec - fi
-done ${INSTALLROOT}/include/ast/sfio_t.h generated
-make ${INSTALLROOT}/include/ast/sfdisc.h
+done ../../../include/ast/sfio_t.h generated
+make ../../../include/ast/sfdisc.h
 prev include/sfdisc.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/sfdisc.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/sfdisc.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/sfdisc.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/sfdisc.h
 exec - fi
-done ${INSTALLROOT}/include/ast/sfdisc.h generated
-make ${INSTALLROOT}/include/ast/sfstr.h
+done ../../../include/ast/sfdisc.h generated
+make ../../../include/ast/sfstr.h
 prev include/sfstr.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/sfstr.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/sfstr.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/sfstr.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/sfstr.h
 exec - fi
-done ${INSTALLROOT}/include/ast/sfstr.h generated
-make ${INSTALLROOT}/include/ast/stack.h
+done ../../../include/ast/sfstr.h generated
+make ../../../include/ast/stack.h
 prev include/stack.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/stack.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/stack.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/stack.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/stack.h
 exec - fi
-done ${INSTALLROOT}/include/ast/stack.h generated
-make ${INSTALLROOT}/include/ast/stak.h
+done ../../../include/ast/stack.h generated
+make ../../../include/ast/stak.h
 prev include/stak.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/stak.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/stak.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/stak.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/stak.h
 exec - fi
-done ${INSTALLROOT}/include/ast/stak.h generated
-make ${INSTALLROOT}/include/ast/stk.h
+done ../../../include/ast/stak.h generated
+make ../../../include/ast/stk.h
 prev include/stk.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/stk.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/stk.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/stk.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/stk.h
 exec - fi
-done ${INSTALLROOT}/include/ast/stk.h generated
-make ${INSTALLROOT}/include/ast/swap.h
+done ../../../include/ast/stk.h generated
+make ../../../include/ast/swap.h
 prev include/swap.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/swap.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/swap.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/swap.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/swap.h
 exec - fi
-done ${INSTALLROOT}/include/ast/swap.h generated
-make ${INSTALLROOT}/include/ast/tar.h
+done ../../../include/ast/swap.h generated
+make ../../../include/ast/tar.h
 make include/tar.h
 done include/tar.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/tar.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/tar.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/tar.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/tar.h
 exec - fi
-done ${INSTALLROOT}/include/ast/tar.h generated
-make ${INSTALLROOT}/include/ast/times.h
+done ../../../include/ast/tar.h generated
+make ../../../include/ast/times.h
 prev include/times.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/times.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/times.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/times.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/times.h
 exec - fi
-done ${INSTALLROOT}/include/ast/times.h generated
-make ${INSTALLROOT}/include/ast/tm.h
+done ../../../include/ast/times.h generated
+make ../../../include/ast/tm.h
 prev include/tm.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/tm.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/tm.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/tm.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/tm.h
 exec - fi
-done ${INSTALLROOT}/include/ast/tm.h generated
-make ${INSTALLROOT}/include/ast/tok.h
+done ../../../include/ast/tm.h generated
+make ../../../include/ast/tok.h
 prev include/tok.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/tok.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/tok.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/tok.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/tok.h
 exec - fi
-done ${INSTALLROOT}/include/ast/tok.h generated
-make ${INSTALLROOT}/include/ast/usage.h
+done ../../../include/ast/tok.h generated
+make ../../../include/ast/usage.h
 make include/usage.h
 done include/usage.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/usage.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/usage.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/usage.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/usage.h
 exec - fi
-done ${INSTALLROOT}/include/ast/usage.h generated
-make ${INSTALLROOT}/include/ast/vdb.h
+done ../../../include/ast/usage.h generated
+make ../../../include/ast/vdb.h
 make include/vdb.h
 done include/vdb.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/vdb.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/vdb.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/vdb.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/vdb.h
 exec - fi
-done ${INSTALLROOT}/include/ast/vdb.h generated
-make ${INSTALLROOT}/include/ast/vecargs.h
+done ../../../include/ast/vdb.h generated
+make ../../../include/ast/vecargs.h
 prev include/vecargs.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/vecargs.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/vecargs.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/vecargs.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/vecargs.h
 exec - fi
-done ${INSTALLROOT}/include/ast/vecargs.h generated
-make ${INSTALLROOT}/include/ast/vmalloc.h
+done ../../../include/ast/vecargs.h generated
+make ../../../include/ast/vmalloc.h
 prev include/vmalloc.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/vmalloc.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/vmalloc.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/vmalloc.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/vmalloc.h
 exec - fi
-done ${INSTALLROOT}/include/ast/vmalloc.h generated
-make ${INSTALLROOT}/include/ast/wait.h
+done ../../../include/ast/vmalloc.h generated
+make ../../../include/ast/wait.h
 prev include/wait.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/wait.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/wait.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/wait.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/wait.h
 exec - fi
-done ${INSTALLROOT}/include/ast/wait.h generated
-make ${INSTALLROOT}/include/ast/wordexp.h
+done ../../../include/ast/wait.h generated
+make ../../../include/ast/wordexp.h
 prev comp/wordexp.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/wordexp.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/wordexp.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/wordexp.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/wordexp.h
 exec - fi
-done ${INSTALLROOT}/include/ast/wordexp.h generated
-make ${INSTALLROOT}/include/ast/bytesex.h
+done ../../../include/ast/wordexp.h generated
+make ../../../include/ast/bytesex.h
 prev include/bytesex.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/bytesex.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/bytesex.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/bytesex.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/bytesex.h
 exec - fi
-done ${INSTALLROOT}/include/ast/bytesex.h generated
-make ${INSTALLROOT}/include/ast/endian.h
+done ../../../include/ast/bytesex.h generated
+make ../../../include/ast/endian.h
 prev include/endian.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/endian.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/endian.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/endian.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/endian.h
 exec - fi
-done ${INSTALLROOT}/include/ast/endian.h generated
-make ${INSTALLROOT}/include/ast/align.h
+done ../../../include/ast/endian.h generated
+make ../../../include/ast/fnmatch.h
+prev comp/fnmatch.h
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/fnmatch.h > 1.${COTEMP}.x
+exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/fnmatch.h 1.${COTEMP}.x
+exec - then	rm -f 1.${COTEMP}.x
+exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/fnmatch.h
+exec - fi
+done ../../../include/ast/fnmatch.h generated
+make ../../../include/ast/align.h
 prev align.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' align.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' align.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/align.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/align.h
 exec - fi
-done ${INSTALLROOT}/include/ast/align.h generated
-make ${INSTALLROOT}/include/ast/iconv.h
+done ../../../include/ast/align.h generated
+make ../../../include/ast/dirent.h
+prev dirent.h
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' dirent.h > 1.${COTEMP}.x
+exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/dirent.h 1.${COTEMP}.x
+exec - then	rm -f 1.${COTEMP}.x
+exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/dirent.h
+exec - fi
+done ../../../include/ast/dirent.h generated
+make ../../../include/ast/iconv.h
 prev iconv.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' iconv.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' iconv.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/iconv.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/iconv.h
 exec - fi
-done ${INSTALLROOT}/include/ast/iconv.h generated
-make ${INSTALLROOT}/include/ast/limits.h
+done ../../../include/ast/iconv.h generated
+make ../../../include/ast/limits.h
 prev limits.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' limits.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' limits.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/limits.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/limits.h
 exec - fi
-done ${INSTALLROOT}/include/ast/limits.h generated
-make ${INSTALLROOT}/include/ast/nl_types.h
+done ../../../include/ast/limits.h generated
+make ../../../include/ast/nl_types.h
 prev nl_types.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' nl_types.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' nl_types.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/nl_types.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/nl_types.h
 exec - fi
-done ${INSTALLROOT}/include/ast/nl_types.h generated
-make ${INSTALLROOT}/include/ast/preroot.h
+done ../../../include/ast/nl_types.h generated
+make ../../../include/ast/preroot.h
 prev preroot.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' preroot.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' preroot.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/preroot.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/preroot.h
 exec - fi
-done ${INSTALLROOT}/include/ast/preroot.h generated
-make ${INSTALLROOT}/include/ast/sig.h
+done ../../../include/ast/preroot.h generated
+make ../../../include/ast/sig.h
 prev sig.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' sig.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' sig.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/sig.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/sig.h
 exec - fi
-done ${INSTALLROOT}/include/ast/sig.h generated
-make ${INSTALLROOT}/include/ast/ast_botch.h
+done ../../../include/ast/sig.h generated
+make ../../../include/ast/wchar.h
+prev wchar.h
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' wchar.h > 1.${COTEMP}.x
+exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/wchar.h 1.${COTEMP}.x
+exec - then	rm -f 1.${COTEMP}.x
+exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/wchar.h
+exec - fi
+done ../../../include/ast/wchar.h generated
+make ../../../include/ast/ast_botch.h
 prev ast_botch.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_botch.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_botch.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_botch.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_botch.h
 exec - fi
-done ${INSTALLROOT}/include/ast/ast_botch.h generated
-make ${INSTALLROOT}/include/ast/ast_ccode.h
+done ../../../include/ast/ast_botch.h generated
+make ../../../include/ast/ast_ccode.h
 prev ast_ccode.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_ccode.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_ccode.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_ccode.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_ccode.h
 exec - fi
-done ${INSTALLROOT}/include/ast/ast_ccode.h generated
-make ${INSTALLROOT}/include/ast/ast_common.h
+done ../../../include/ast/ast_ccode.h generated
+make ../../../include/ast/ast_common.h
 prev ast_common.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_common.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_common.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_common.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_common.h
 exec - fi
-done ${INSTALLROOT}/include/ast/ast_common.h generated
-make ${INSTALLROOT}/include/ast/ast_fcntl.h
+done ../../../include/ast/ast_common.h generated
+make ../../../include/ast/ast_fcntl.h
 prev ast_fcntl.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_fcntl.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_fcntl.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_fcntl.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_fcntl.h
 exec - fi
-done ${INSTALLROOT}/include/ast/ast_fcntl.h generated
-make ${INSTALLROOT}/include/ast/ast_fs.h
+done ../../../include/ast/ast_fcntl.h generated
+make ../../../include/ast/ast_fs.h
 prev ast_fs.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_fs.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_fs.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_fs.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_fs.h
 exec - fi
-done ${INSTALLROOT}/include/ast/ast_fs.h generated
-make ${INSTALLROOT}/include/ast/ast_hdr.h
+done ../../../include/ast/ast_fs.h generated
+make ../../../include/ast/ast_hdr.h
 prev ast_hdr.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_hdr.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_hdr.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_hdr.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_hdr.h
 exec - fi
-done ${INSTALLROOT}/include/ast/ast_hdr.h generated
-make ${INSTALLROOT}/include/ast/ast_lib.h
+done ../../../include/ast/ast_hdr.h generated
+make ../../../include/ast/ast_lib.h
 prev ast_lib.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_lib.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_lib.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_lib.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_lib.h
 exec - fi
-done ${INSTALLROOT}/include/ast/ast_lib.h generated
-make ${INSTALLROOT}/include/ast/ast_mode.h
+done ../../../include/ast/ast_lib.h generated
+make ../../../include/ast/ast_map.h
+prev ast_map.h
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_map.h > 1.${COTEMP}.x
+exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_map.h 1.${COTEMP}.x
+exec - then	rm -f 1.${COTEMP}.x
+exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_map.h
+exec - fi
+done ../../../include/ast/ast_map.h generated
+make ../../../include/ast/ast_mode.h
 prev ast_mode.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_mode.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_mode.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_mode.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_mode.h
 exec - fi
-done ${INSTALLROOT}/include/ast/ast_mode.h generated
-make ${INSTALLROOT}/include/ast/ast_param.h
+done ../../../include/ast/ast_mode.h generated
+make ../../../include/ast/ast_param.h
 prev ast_param.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_param.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_param.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_param.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_param.h
 exec - fi
-done ${INSTALLROOT}/include/ast/ast_param.h generated
-make ${INSTALLROOT}/include/ast/ast_time.h
+done ../../../include/ast/ast_param.h generated
+make ../../../include/ast/ast_time.h
 prev ast_time.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_time.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_time.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_time.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_time.h
 exec - fi
-done ${INSTALLROOT}/include/ast/ast_time.h generated
-make ${INSTALLROOT}/include/ast/ast_tty.h
+done ../../../include/ast/ast_time.h generated
+make ../../../include/ast/ast_tty.h
 prev ast_tty.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_tty.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_tty.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_tty.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_tty.h
 exec - fi
-done ${INSTALLROOT}/include/ast/ast_tty.h generated
-make ${INSTALLROOT}/include/ast/ast_types.h
+done ../../../include/ast/ast_tty.h generated
+make ../../../include/ast/ast_types.h
 prev ast_types.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_types.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_types.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_types.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_types.h
 exec - fi
-done ${INSTALLROOT}/include/ast/ast_types.h generated
-make ${INSTALLROOT}/include/ast/ast_unistd.h
+done ../../../include/ast/ast_types.h generated
+make ../../../include/ast/ast_unistd.h
 prev ast_unistd.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_unistd.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_unistd.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_unistd.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_unistd.h
 exec - fi
-done ${INSTALLROOT}/include/ast/ast_unistd.h generated
-make ${INSTALLROOT}/include/ast/ast_wait.h
+done ../../../include/ast/ast_unistd.h generated
+make ../../../include/ast/ast_wait.h
 prev ast_wait.h
-exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_wait.h > 1.${COTEMP}.x
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_wait.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_wait.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_wait.h
 exec - fi
-done ${INSTALLROOT}/include/ast/ast_wait.h generated
-make ${INSTALLROOT}/include/ast/stdio.h
+done ../../../include/ast/ast_wait.h generated
+make ../../../include/ast/stdio.h
 prev FEATURE/stdio
 exec - mv ${INSTALLROOT}/include/ast/stdio.h ${INSTALLROOT}/include/ast/stdio.h.old 2>/dev/null || true; test '' = 'FEATURE/stdio' || { cp FEATURE/stdio ${INSTALLROOT}/include/ast/stdio.h  		    		    ;}
-done ${INSTALLROOT}/include/ast/stdio.h generated
-make ${INSTALLROOT}/lib/file
+done ../../../include/ast/stdio.h generated
+make ../../../lib/file
 exec - set -
 exec - if	test ! -d ${INSTALLROOT}/lib/file
 exec - then	set -x && mkdir -p ${INSTALLROOT}/lib/file 2>/dev/null && set - ||
 exec - 	{
-exec - 		test -d ./-p && rm -rf ./-p
+exec - 		test -d ./-p && rm -Rf ./-p
 exec - 		p=
 exec - 		for d in `echo ${INSTALLROOT}/lib/file | sed -e 's%\\(.\\)/%\\1 %g'`
 exec - 		do	case $p in
@@ -5393,65 +5732,74 @@ exec - 			esac
 exec - 		done
 exec - 	} && set -x 		    		   
 exec - fi
-done ${INSTALLROOT}/lib/file generated
-make ${INSTALLROOT}/lib/file/magic
+done ../../../lib/file generated
+make ../../../lib/file/magic
 make misc/magic.tab
 done misc/magic.tab
 exec - mv ${INSTALLROOT}/lib/file/magic ${INSTALLROOT}/lib/file/magic.old 2>/dev/null || true; test '' = 'misc/magic.tab' || { cp misc/magic.tab ${INSTALLROOT}/lib/file/magic  		    		    ;}
-done ${INSTALLROOT}/lib/file/magic generated
-make ${INSTALLROOT}/include/ast/fmtmsg.h
+done ../../../lib/file/magic generated
 prev comp/fmtmsg.h
 prev ast_lib.h
-exec - silent grep -l 'define[ 	][ 	]*_[hl][di][rb]_fmtmsg' ast_lib.h > /dev/null || {
-exec - 	proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/fmtmsg.h > 1.${COTEMP}.x
+exec - case ${_hosttype_=`package`} in
+exec - win32.*)proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/fmtmsg.h > 1.${COTEMP}.x
 exec - 	if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/fmtmsg.h 1.${COTEMP}.x
 exec - 	then	rm -f 1.${COTEMP}.x
 exec - 	else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/fmtmsg.h
 exec - 	fi
-exec - }
-done ${INSTALLROOT}/include/ast/fmtmsg.h virtual
-make ${INSTALLROOT}/include/ast/fnmatch.h
-prev comp/fnmatch.h
-prev ast_lib.h
-exec - silent grep -l 'define[ 	][ 	]*_[hl][di][rb]_fnmatch' ast_lib.h > /dev/null || {
-exec - 	proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/fnmatch.h > 1.${COTEMP}.x
-exec - 	if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/fnmatch.h 1.${COTEMP}.x
+exec - 	;;
+exec - *)	silent grep -l 'define[ 	][ 	]*_[hl][di][rb]_fmtmsg' ast_lib.h > /dev/null || {
+exec - 	proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/fmtmsg.h > 1.${COTEMP}.x
+exec - 	if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/fmtmsg.h 1.${COTEMP}.x
 exec - 	then	rm -f 1.${COTEMP}.x
-exec - 	else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/fnmatch.h
+exec - 	else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/fmtmsg.h
 exec - 	fi
-exec - }
-done ${INSTALLROOT}/include/ast/fnmatch.h virtual
-make ${INSTALLROOT}/include/ast/libgen.h
+exec - 	}
+exec - 	;;
+exec - esac
 prev comp/libgen.h
 prev ast_lib.h
-exec - silent grep -l 'define[ 	][ 	]*_[hl][di][rb]_libgen' ast_lib.h > /dev/null || {
-exec - 	proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/libgen.h > 1.${COTEMP}.x
+exec - case ${_hosttype_=`package`} in
+exec - win32.*)proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/libgen.h > 1.${COTEMP}.x
 exec - 	if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/libgen.h 1.${COTEMP}.x
 exec - 	then	rm -f 1.${COTEMP}.x
 exec - 	else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/libgen.h
 exec - 	fi
-exec - }
-done ${INSTALLROOT}/include/ast/libgen.h virtual
-make ${INSTALLROOT}/include/ast/syslog.h
+exec - 	;;
+exec - *)	silent grep -l 'define[ 	][ 	]*_[hl][di][rb]_libgen' ast_lib.h > /dev/null || {
+exec - 	proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/libgen.h > 1.${COTEMP}.x
+exec - 	if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/libgen.h 1.${COTEMP}.x
+exec - 	then	rm -f 1.${COTEMP}.x
+exec - 	else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/libgen.h
+exec - 	fi
+exec - 	}
+exec - 	;;
+exec - esac
 prev comp/syslog.h
 prev ast_lib.h
-exec - silent grep -l 'define[ 	][ 	]*_[hl][di][rb]_syslog' ast_lib.h > /dev/null || {
-exec - 	proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/syslog.h > 1.${COTEMP}.x
+exec - case ${_hosttype_=`package`} in
+exec - win32.*)proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/syslog.h > 1.${COTEMP}.x
 exec - 	if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/syslog.h 1.${COTEMP}.x
 exec - 	then	rm -f 1.${COTEMP}.x
 exec - 	else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/syslog.h
 exec - 	fi
-exec - }
-done ${INSTALLROOT}/include/ast/syslog.h virtual
-prev ${INSTALLROOT}/include/ast/dirent.h
-make ${INSTALLROOT}/include/ast/prototyped.h
-prev ${INSTALLROOT}/include/ast
+exec - 	;;
+exec - *)	silent grep -l 'define[ 	][ 	]*_[hl][di][rb]_syslog' ast_lib.h > /dev/null || {
+exec - 	proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/syslog.h > 1.${COTEMP}.x
+exec - 	if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/syslog.h 1.${COTEMP}.x
+exec - 	then	rm -f 1.${COTEMP}.x
+exec - 	else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/syslog.h
+exec - 	fi
+exec - 	}
+exec - 	;;
+exec - esac
+make ../../../include/ast/prototyped.h
+prev ../../../include/ast
 exec - echo "#include <../prototyped.h>" > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/prototyped.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/prototyped.h
 exec - fi
-done ${INSTALLROOT}/include/ast/prototyped.h generated
+done ../../../include/ast/prototyped.h generated
 done install virtual
 make test
 done test dontcare virtual

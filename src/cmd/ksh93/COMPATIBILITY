@@ -99,5 +99,9 @@ omitted features that are completely upward compatible.
 22.	The value of the variable given to getopts is set to ? when
 	the end-of-options is reached to conform to the POSIX standard.
 
+23.	Since the POSIX standard requires that octal constants be
+	recongnized, doing arithmetic on typeset -Z variables can
+	yield different results that with ksh88.
+
 I am interested in expanding this list so please let me know if you
 uncover any others.

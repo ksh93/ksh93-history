@@ -32,8 +32,8 @@
 #include "colib.h"
 
 char	coident[] = "\
-# @(#)$Id: libcoshell (AT&T Research) 1999-11-19 $\n\
-{ { test \"\" = \"$KSH_VERSION$ZSH_VERSION\" && PATH= print -u3 ksh; } || { times && echo bsh >&3; } || { echo osh >&3; }; } >/dev/null 2>&1\n\
+# @(#)$Id: libcoshell (AT&T Research) 2001-05-31 $\n\
+{ { test \"\" = \"$KSH_VERSION$ZSH_VERSION\" && test 1 == 1 && PATH= print -u3 ksh; } || { times && echo bsh >&3; } || { echo osh >&3; }; } >/dev/null 2>&1\n\
 ";
 
 char	cobinit[] = "\

@@ -240,4 +240,9 @@ list= (foo bar bam)
 if	[[ ${list[1]} != bar ]]
 then	err_exit 'array not restored after subshell'
 fi
+XPATH=/bin:/usr/bin:/usr/ucb:/usr/local/bin:.:/sbin:/usr/sbin
+xpath=( $( IFS=: ; echo $XPATH ) )
+if	[[ $(print -r  "${xpath[@]##*/}") != 'bin bin ucb bin . sbin sbin' ]]
+then	err_exit '${xpath[@]##*/} not applied to each element'
+fi
 exit $((Errors))

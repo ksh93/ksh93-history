@@ -84,6 +84,7 @@
 #endif
 
 #if _typ_off64_t
+#undef	off_t
 #define off_t		off64_t
 #endif
 #if _lib_fstat64

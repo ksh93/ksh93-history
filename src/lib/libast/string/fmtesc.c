@@ -68,6 +68,8 @@ fmtquote(const char* as, const char* qb, const char* qe, size_t n, int flags)
 	b = buf = fmtbuf(c);
 	if (qb)
 	{
+		if ((flags & 1) && qb[0] == '"' && qb[1] == 0)
+			flags |= 4;
 		q = qb[0] == '$' && qb[1] == '\'' && qb[2] == 0 ? 1 : 0;
 		while (*b = *qb++)
 			b++;
@@ -120,7 +122,7 @@ fmtquote(const char* as, const char* qb, const char* qe, size_t n, int flags)
 				break;
 			}
 		}
-		else if (qe && strchr(qe, c))
+		else if (qe && strchr(qe, c) || (flags & 4) && (c == '$' || c == '`'))
 		{
 			k = 0;
 			*b++ = '\\';

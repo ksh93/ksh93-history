@@ -23,40 +23,18 @@
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
 *******************************************************************/
-#pragma prototyped
+/*
+ * strtod() implementation
+ */
 
 #include <ast.h>
 
-#if _lib_strtod
-
-NoN(strtod)
-
+#if _std_strtod
+#define S2F_function	_ast_strtod
 #else
-
-#include <ctype.h>
-
-extern double	atof(const char*);
-
-double
-strtod(register const char* s, char** e)
-{
-	double	n;
-
-	n = atof(s);
-	if (e)
-	{
-		while (isspace(*s)) s++;
-		if (*s == '-' || *s == '+') s++;
-		while (isdigit(*s)) s++;
-		if (*s == '.') while (isdigit(*++s));
-		if (*s == 'e' || *s == 'E')
-		{
-			if (*++s == '-' || *s == '+') s++;
-			while (isdigit(*s)) s++;
-		}
-		*e = (char*)s;
-	}
-	return(n);
-}
-
+#define S2F_function	strtod
 #endif
+
+#define S2F_type	1
+
+#include "sfstrtof.h"

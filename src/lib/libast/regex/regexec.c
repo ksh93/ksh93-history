@@ -39,6 +39,22 @@
 int
 regexec(const regex_t* p, const char* s, size_t nmatch, regmatch_t* match, regflags_t flags)
 {
+#if __OBSOLETE__ < 20030101L
+	/*
+	 * repeat 1000x: sharing bits is never worth it
+	 */
+
+	if (flags & REG_MULTIPLE)
+	{
+		flags &= ~REG_MULTIPLE;
+		flags |= REG_INVERT;
+	}
+	if (flags & REG_DELIMITED)
+	{
+		flags &= ~REG_DELIMITED;
+		flags |= REG_STARTEND;
+	}
+#endif
 	if (flags & REG_STARTEND)
 	{
 		int		r;

@@ -119,6 +119,7 @@ typedef struct _arith_
 #define A_CALL2         48
 #define A_CALL3         49
 #define A_DOT		50
+#define A_LIT		51
 
 
 /* define error messages */
@@ -140,6 +141,7 @@ extern const char		e_domain[];
 extern const char		e_overflow[];
 extern const char		e_singularity[];
 extern const char		e_dict[];
+extern const char		e_charconst[];
 extern const struct 		mathtab shtab_math[];
 
 /* function code for the convert function */

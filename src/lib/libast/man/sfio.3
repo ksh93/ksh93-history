@@ -54,7 +54,7 @@ SFIO_VERSION
 SF_STRING
 SF_READ
 SF_WRITE
-SF_APPEND
+SF_APPENDWR (SF_APPEND)
 SF_LINE
 SF_SHARE
 SF_PUBLIC
@@ -175,7 +175,7 @@ SF_NEW
 SF_READ
 SF_WRITE
 SF_SEEK
-SF_CLOSE
+SF_CLOSING (SF_CLOSE)
 SF_DPUSH
 SF_DPOP
 SF_DPOLL
@@ -364,9 +364,9 @@ Following are the flags:
 \f5SF_STRING\fP:
 The stream is memory-based.
 .Tp
-\f5SF_READ\fP, \f5SF_WRITE\fP, \f5SF_APPEND\fP:
+\f5SF_READ\fP, \f5SF_WRITE\fP, \f5SF_APPENDWR\fP (\f5SF_APPEND\fP):
 Flags \f5SF_READ\fP and \f5SF_WRITE\fP indicate readability and writability.
-Flag \f5SF_APPEND\fP asserts that the stream is a file opened in append mode
+Flag \f5SF_APPENDWR\fP asserts that the stream is a file opened in append mode
 (see \f5open(2)\fP and \f5fcntl(2)\fP)
 so that data is always output at the end of file.
 On systems without direct support for append mode,
@@ -589,7 +589,7 @@ are synchronized before closing (see \f5sfsync()\fP).
 If \f5f\fP has disciplines,
 their exception handlers will be called twice.
 The first exception handler call has the \f5type\fP argument as one of
-\f5SF_CLOSE\fP or \f5SF_NEW\fP (see \f5sfdisc()\fP.)
+\f5SF_CLOSING\fP or \f5SF_NEW\fP (see \f5sfdisc()\fP.)
 The latter, \f5SF_NEW\fP is used when a stream is being closed via \f5sfnew()\fP
 so that it can be renewed.
 The second call uses \f5type\fP as \f5SF_FINAL\fP
@@ -1709,10 +1709,10 @@ is the return value from the failed operation.
 \f5SF_SEEK\fP:
 This event is raised when a seek operation fails.
 .Tp
-\f5SF_NEW\fP, \f5SF_CLOSE\fP, \f5SF_FINAL\fP:
+\f5SF_NEW\fP, \f5SF_CLOSING\fP (\f5SF_CLOSE\fP), \f5SF_FINAL\fP:
 These events are raised during a stream closing.
 \f5SF_NEW\fP is raised for a stream about to be closed to be renewed (see \f5sfnew()\fP).
-\f5SF_CLOSE\fP is raised for a stream about to be closed.
+\f5SF_CLOSING\fP is raised for a stream about to be closed.
 \f5SF_FINAL\fP is raised after a stream has been closed and before
 its space is to be destroyed (see \f5sfclose()\fP).
 For these events, a non-zero return value from \f5(*exceptf)()\fP causes
@@ -1918,7 +1918,7 @@ Argument \f5type\fP indicates the reason for the call:
 \f5SF_NEW\fP:
 \f5f\fP is being opened and \f5file\fP is the underlying file descriptor.
 .Tp
-\f5SF_CLOSE\fP:
+\f5SF_CLOSING\fP (\f5SF_CLOSE\fP):
 \f5f\fP and \f5file\fP are being closed.
 .Tp
 \f5SF_SETFD\fP:
@@ -2185,6 +2185,18 @@ The library is now thread-safe. This is based largely on Posix pthread mutexes.
 .PP
 The functions \f5sfgetm()\fP and \f5sfputm()\fP were added to encode
 unsigned integer values with known ranges.
+.PP
+The flag \f5SF_APPEND\fP is identical to \f5SF_APPENDWR\fP.
+However it conflicts with a different token of the same name
+defined in the system header \f5stat.h\fP of BSDI Unix systems.
+On such systems, we shall not define \f5SF_APPEND\fP and this
+symbol may be removed in a future release.
+.PP
+Similarly, the exception \f5SF_CLOSE\fP is identical to \f5SF_CLOSING\fP.
+However it conflicts with a different token of the same name
+defined in the system header \f5socket.h\fP of AIX Unix systems.
+On such systems, we shall not define \f5SF_CLOSE\fP and this
+symbol may be removed in a future release.
 
 .SH AUTHORS
 Kiem-Phong Vo, kpv@research.att.com,

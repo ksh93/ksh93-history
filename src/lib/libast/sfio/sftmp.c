@@ -73,7 +73,7 @@ Sfdisc_t*	disc;
 	if(type == SF_DPOP)	/* don't allow this to pop */
 		return -1;
 
-	if(type == SF_CLOSE)
+	if(type == SF_CLOSING)
 	{
 		vtmtxlock(_Sfmutex);
 		for(last = NIL(File_t*), ff = File; ff; last = ff, ff = ff->next)
@@ -85,7 +85,7 @@ Sfdisc_t*	disc;
 			else	last->next = ff->next;
 
 			if(_Sfnotify)
-				(*_Sfnotify)(f,SF_CLOSE,f->file);
+				(*_Sfnotify)(f,SF_CLOSING,f->file);
 			CLOSE(f->file);
 			f->file = -1;
 			while(remove(ff->name) < 0 && errno == EINTR)
@@ -109,7 +109,7 @@ static void _rmfiles()
 	vtmtxlock(_Sfmutex);
 	for(ff = File; ff; ff = next)
 	{	next = ff->next;
-		_tmprmfile(ff->f, SF_CLOSE, NIL(Void_t*), ff->f->disc);
+		_tmprmfile(ff->f, SF_CLOSING, NIL(Void_t*), ff->f->disc);
 	}
 	vtmtxunlock(_Sfmutex);
 }

@@ -32,7 +32,7 @@
  * NOTE: please excuse the crude feature test
  */
 
-#if !_WIN32
+#if !_UWIN
 
 void _STUB_hsearch(){}
 

@@ -24,37 +24,42 @@
 *                 Phong Vo <kpv@research.att.com>                  *
 *******************************************************************/
 #pragma prototyped
+
 /*
- * AT&T Research
- *
- * <dirent.h> for [fl]stat64 and off64_t
- *
- * NOTE: this file assumes the local <dirent.h>
- *	 can be reached by <../include/dirent.h>
+ * locale state private definitions
  */
 
-#ifndef _DIR64_H
-#define _DIR64_H
+#ifndef _LCLIB_H
+#define _LCLIB_H	1
 
-#include <ast_std.h>
+#define categories	_ast_categories
+#define locales		_ast_locales
+#define translate	_ast_translate
 
-#if _typ_off64_t
-#undef	off_t
-#endif
+struct Lc_info_s;
 
-#include <../include/dirent.h>
+#define _LC_PRIVATE_ \
+	struct Lc_info_s	info[AST_LC_COUNT]; \
+	struct Lc_s*		next;
 
-#if _typ_off64_t
-#define	off_t		off64_t
-#endif
+#define _LC_TERRITORY_PRIVATE_ \
+	unsigned char		indices[LC_territory_language_max];
 
-#if _lib_readdir64 && _typ_struct_dirent64
-#ifndef	dirent
-#define dirent		dirent64
-#endif
-#ifndef	readdir
-#define readdir		readdir64
-#endif
-#endif
+#include <ast.h>
+#include <error.h>
+#include <lc.h>
+
+typedef struct Lc_numeric_s
+{
+	int		decimal;
+	int		thousand;
+} Lc_numeric_t;
+
+#define LCINFO(c)	(&locales[c]->info[c])
+
+extern	Lc_category_t	categories[];
+extern	Lc_t*		locales[];
+
+extern char*		translate(const char*, const char*, const char*, const char*);
 
 #endif

@@ -34,7 +34,7 @@ __EXPORT__ int	fnmatch(const char*, const char*, int);
 
 #include <ast.h>
 
-#if _lib_fnmatch
+#if _lib_fnmatch && 0
 
 NoN(fnmatch)
 
@@ -52,7 +52,6 @@ typedef struct
 static const Map_t	map[] =
 {
 	FNM_AUGMENTED,	REG_AUGMENTED,
-	FNM_EXTENDED,	REG_EXTENDED,
 	FNM_ICASE,	REG_ICASE,
 	FNM_NOESCAPE,	REG_SHELL_ESCAPED,
 	FNM_PATHNAME,	REG_SHELL_PATH,
@@ -66,14 +65,24 @@ static const Map_t	map[] =
 extern int
 fnmatch(const char* pattern, const char* subject, register int flags)
 {
-	register int		reflags = REG_SHELL|REG_LEFT|REG_RIGHT;
+	register int		reflags = REG_SHELL|REG_LEFT;
 	register const Map_t*	mp;
 	regex_t			re;
 
 	for (mp = map; mp < &map[elementsof(map)]; mp++)
 		if (flags & mp->fnm)
 			reflags |= mp->reg;
-	if (reflags = regcomp(&re, pattern, reflags))
+	if (flags & FNM_LEADING_DIR)
+	{
+		regmatch_t	match;
+
+		if (reflags = regcomp(&re, pattern, reflags))
+			return reflags;
+		if (reflags = regexec(&re, subject, 1, &match, 0))
+			return reflags;
+		return (!(reflags = subject[match.rm_eo]) || reflags == '/') ? 0 : FNM_NOMATCH;
+	}
+	if (reflags = regcomp(&re, pattern, reflags|REG_RIGHT))
 		return reflags;
 	return regexec(&re, subject, 0, NiL, 0);
 }

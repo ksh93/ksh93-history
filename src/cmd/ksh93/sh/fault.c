@@ -476,6 +476,8 @@ void sh_done(register int sig)
 		job_walk(sfstderr,job_terminate,SIGHUP,NIL(char**));
 #endif	/* JOBS */
 	job_close();
+	if(nv_search("VMTRACE", sh.var_tree,0))
+		strmatch((char*)0,(char*)0);
 	sfsync((Sfio_t*)sfstdin);
 	sfsync((Sfio_t*)sh.outpool);
 	sfsync((Sfio_t*)sfstdout);

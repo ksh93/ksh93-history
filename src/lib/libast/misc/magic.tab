@@ -1,5 +1,5 @@
 #
-# @(#)magic (AT&T Research) 2001-01-01
+# @(#)magic (AT&T Research) 2001-05-09
 #
 # magic number database for file(1) and magic(3)
 #
@@ -458,7 +458,27 @@ o{
 +18	short		17		fujitsu500
 +18	short		18		sparc32+
 +18	short		20		powerpc
-|18	short		*		machine=%ld
++18	short		36		nec-v800
++18	short		37		fujitsu-fr20
++18	short		38		trw-rh32
++18	short		39		fujitsu-mma
++18	short		40		arm
++18	short		41		alpha
++18	short		42		hitachi-sh
++18	short		43		sparc64-v9
++18	short		44		siemens-tricore
++18	short		45		argonaut
++18	short		46		hitachi-h8/300
++18	short		47		hitachi-h8/300h
++18	short		48		hitachi-h8s
++18	short		49		hitachi-h8/500
++18	short		50		intel-merced
++18	short		51		mips-x
++18	short		52		motorola-coldfire
++18	short		53		motorola-m68hc12
++18	short		0x9026		alpha
++18	short		0xa390		s390
+|18	short		*		machine=0x%l04X
 }
 +16	short		0		type=UNKNOWN
 +16	short		1		object				x-system/obj
@@ -1194,6 +1214,10 @@ v()
 0	match		(BABYL|From|Received|Return-Path|To)?(:)[ ]	mail message	message/partial
 
 0	string		\001fcp			X11 portable compiled font	x-X11/font
+
+0	string		\357\273\277		utf-8 encoded text	application/x-iconv
+0	string		\376\377		utf-16 encoded text	application/x-iconv
+0	string		\377\376		utf-16 encoded text, little-endian	application/x-iconv
 
 #
 # front compression data

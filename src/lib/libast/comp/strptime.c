@@ -28,19 +28,27 @@
  * strptime implementation
  */
 
+#include <ast_lib.h>
+
+#ifdef strptime
+#define _def_strptime	1
+#else
 #if defined(__STDPP__directive) && defined(__STDPP__hide)
 __STDPP__directive pragma pp:hide strptime
 #else
 #define strptime	______strptime
 #endif
+#endif
 
 #include <ast.h>
 #include <tm.h>
 
+#if !_def_strptime
 #if defined(__STDPP__directive) && defined(__STDPP__hide)
 __STDPP__directive pragma pp:nohide strptime
 #else
 #undef	strptime
+#endif
 #endif
 
 #if _lib_strptime

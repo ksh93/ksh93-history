@@ -373,7 +373,7 @@ getfmt(Sfio_t* sp, void* vp, Sffmt_t* dp)
 	case '\n':
 		value->s = "\n";
 		break;
-	case '*':
+	case '.':
 		value->i = n;
 		break;
 	default:

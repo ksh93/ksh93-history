@@ -60,29 +60,41 @@
  * these indices must agree with tm_dform[]
  */
 
-#define TM_MONTH_3	0
-#define TM_MONTH	12
-#define TM_DAY_3	24
-#define TM_DAY		31
-#define TM_TIME		38
-#define TM_DATE		39
-#define TM_DEFAULT	40
-#define TM_MERIDIAN	41
+#define TM_MONTH_ABBREV		0
+#define TM_MONTH		12
+#define TM_DAY_ABBREV		24
+#define TM_DAY			31
+#define TM_TIME			38
+#define TM_DATE			39
+#define TM_DEFAULT		40
+#define TM_MERIDIAN		41
 
-#define TM_UT		43
-#define TM_DT		47
-#define TM_SUFFIXES	51
-#define TM_PARTS	55
-#define TM_HOURS	62
-#define TM_DAYS		66
-#define TM_LAST		69
-#define TM_THIS		72
-#define TM_NEXT		75
-#define TM_EXACT	78
-#define TM_NOISE	81
-#define TM_ORDINAL	85
+#define TM_UT			43
+#define TM_DT			47
+#define TM_SUFFIXES		51
+#define TM_PARTS		55
+#define TM_HOURS		62
+#define TM_DAYS			66
+#define TM_LAST			69
+#define TM_THIS			72
+#define TM_NEXT			75
+#define TM_EXACT		78
+#define TM_NOISE		81
+#define TM_ORDINAL		85
+#define TM_DIGITS		95
+#define TM_CTIME		105
+#define TM_DATE_1		106
+#define TM_INTERNATIONAL	107
+#define TM_RECENT		108
+#define TM_DISTANT		109
+#define TM_MERIDIAN_TIME	110
+#define TM_ERA			111
+#define TM_ERA_DATE		112
+#define TM_ERA_TIME		113
+#define TM_ERA_DEFAULT		114
+#define TM_ERA_YEAR		115
 
-#define TM_NFORM	89
+#define TM_NFORM		116
 
 typedef struct				/* leap second info		*/
 {
@@ -149,7 +161,7 @@ extern int		tmgoff(const char*, char**, int);
 extern void		tminit(Tm_zone_t*);
 extern time_t		tmleap(time_t*);
 extern int		tmlex(const char*, char**, char**, int, char**, int);
-extern char*		tmlocale(void);
+extern char**		tmlocale(void);
 extern Tm_t*		tmmake(time_t*);
 extern char*		tmpoff(char*, const char*, int, int);
 extern time_t		tmscan(const char*, char**, const char*, char**, time_t*, long);

@@ -54,10 +54,13 @@ then	libpath=lib:SHLIB_PATH
 elif	test -x /usr/lib/dyld
 then	libpath=lib:DYLD_LIBRARY_PATH
 else	case `package` in
-	ibm.*)	libpath=lib:LIBPATH ;;
-	*)	libpath= ;;
+	ibm.*|mvs.*)
+		libpath=lib:LIBPATH
+		;;
+	*)	libpath=
+		;;
 	esac
 fi
 if	test "" != "$libpath"
-then	echo "#define _LIBPATH		\"$libpath\""
+then	echo "#define CONF_LIBPATH	\"$libpath\""
 fi

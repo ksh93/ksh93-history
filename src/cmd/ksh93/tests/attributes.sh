@@ -144,4 +144,17 @@ if	(( ${#LAST} != 2 ))
 then	err_exit 'LAST!=2'
 fi
 rm -rf /tmp/ksh$$
+set -a
+unset foo
+foo=bar
+if	[[ $(export | grep ^foo=) != 'foo=bar' ]]
+then	err_exit 'all export not working'
+fi
+unset foo
+read foo <<!
+bar
+!
+if	[[ $(export | grep ^foo=) != 'foo=bar' ]]
+then	err_exit 'all export not working with read'
+fi
 exit	$((Errors))

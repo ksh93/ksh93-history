@@ -49,6 +49,7 @@ extern int	b_cmp(int, char**, void*);
 extern int	b_comm(int, char**, void*);
 extern int	b_cp(int, char**, void*);
 extern int	b_cut(int, char**, void*);
+extern int	b_date(int, char**, void*);
 extern int	b_dirname(int, char**, void*);
 extern int	b_expr(int, char**, void*);
 extern int	b_fmt(int, char**, void*);
@@ -65,7 +66,9 @@ extern int	b_mv(int, char**, void*);
 extern int	b_paste(int, char**, void*);
 extern int	b_pathchk(int, char**, void*);
 extern int	b_rev(int, char**, void*);
+extern int	b_rm(int, char**, void*);
 extern int	b_rmdir(int, char**, void*);
+extern int	b_stty(int, char**, void*);
 extern int	b_tail(int, char**, void*);
 extern int	b_tee(int, char**, void*);
 extern int	b_tty(int, char**, void*);
@@ -80,6 +83,18 @@ extern int	b_wc(int, char**, void*);
 #endif
 
 #ifdef	STANDALONE
+
+#if DYNAMIC
+
+#include <dlldefs.h>
+
+typedef int (*Builtin_f)(int, char**, void*);
+
+#else
+
+extern int STANDALONE(int, char**, void*);
+
+#endif
 
 #ifndef BUILTIN
 
@@ -103,14 +118,51 @@ cmdinit(register char** argv, void* context, const char* catalog)
 	opt_info.index = 0;
 }
 
-extern int	STANDALONE(int, char**, void*);
-
 #endif
 
 int
 main(int argc, char** argv)
 {
+#if DYNAMIC
+	register char*	s;
+	register char*	t;
+	void*		dll;
+	Builtin_f	fun;
+	char		buf[64];
+
+	if (s = strrchr(argv[0], '/'))
+		s++;
+	else if (!(s = argv[0]))
+		return 127;
+	if ((t = strrchr(s, '_')) && *++t)
+		s = t;
+	buf[0] = '_';
+	buf[1] = 'b';
+	buf[2] = '_';
+	strncpy(buf + 3, s, sizeof(buf) - 4);
+	buf[sizeof(buf) - 1] = 0;
+	for (;;)
+	{
+		if (dll = dlopen(NiL, RTLD_LAZY))
+		{
+			if (fun = (Builtin_f)dlsym(dll, buf + 1))
+				break;
+			if (fun = (Builtin_f)dlsym(dll, buf))
+				break;
+		}
+		if (dll = dllfind("cmd", NiL, RTLD_LAZY))
+		{
+			if (fun = (Builtin_f)dlsym(dll, buf + 1))
+				break;
+			if (fun = (Builtin_f)dlsym(dll, buf))
+				break;
+		}
+		return 127;
+	}
+	return (*fun)(argc, argv, NiL);
+#else
 	return STANDALONE(argc, argv, NiL);
+#endif
 }
 
 #else

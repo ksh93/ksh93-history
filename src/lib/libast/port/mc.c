@@ -32,7 +32,8 @@
  * machine independent binary message catalog implementation
  */
 
-#include "loclib.h"
+#include "sfhdr.h"
+#include "lclib.h"
 
 #include <iconv.h>
 
@@ -60,21 +61,26 @@
 char*
 mcfind(char* path, const char* locale, const char* catalog, int category, int nls)
 {
-	register int	c;
-	register char*	s;
-	register char*	e;
-	register char*	p;
-	register char*	v;
-	int		i;
-	int		last;
-	int		oerrno;
-	char		file[PATH_MAX];
-	char*		paths[4];
+	register int		c;
+	register char*		s;
+	register char*		e;
+	register char*		p;
+	register const char*	v;
+	int			i;
+	int			first;
+	int			next;
+	int			last;
+	int			oerrno;
+	Lc_t*			lc;
+	char			file[PATH_MAX];
+	char*			paths[4];
 
-	char*		category_name = 0;
+	static char		lc_messages[] = "LC_MESSAGES";
 
-	static char	lc_messages[] = "LC_MESSAGES";
-
+	if ((category = lcindex(category, 1)) < 0)
+		return 0;
+	if (!(lc = locale ? lcmake(locale) : locales[category]))
+		return 0;
 	oerrno = errno;
 	if (catalog && *catalog == '/')
 	{
@@ -85,18 +91,18 @@ mcfind(char* path, const char* locale, const char* catalog, int category, int nl
 		strncpy(path, catalog, PATH_MAX-1);
 		return path;
 	}
-	if (!locale)
-		locale = (const char*)setlocale(category, NiL);
 	i = 0;
 #if !_lib_catopen
 	if ((p = getenv("NLSPATH")) && *p)
 		paths[i++] = p;
 #endif
-	paths[i++] = "share/lib/locale/%L/%C/%N";
-	paths[i++] = "lib/locale/%L/%C/%N";
+	paths[i++] = "share/lib/locale/%l/%C/%N";
+	paths[i++] = "lib/locale/%l/%C/%N";
 	paths[i] = 0;
-	for (i = 0; p = paths[i]; i++)
+	next = 1;
+	for (i = 0; p = paths[i]; i += next)
 	{
+		first = 1;
 		last = 0;
 		e = &file[elementsof(file) - 1];
 		while (*p)
@@ -120,77 +126,53 @@ mcfind(char* path, const char* locale, const char* catalog, int category, int nl
 							p--;
 							continue;
 						case 'N':
-							v = catalog ? (char*)catalog : "";
-							c = 0;
+							v = catalog;
 							break;
 						case 'L':
-							v = (char*)locale;
-							c = 0;
+							if (first)
+							{
+								first = 0;
+								if (next)
+								{
+									v = lc->code;
+									if (lc->code != lc->language->code)
+										next = 0;
+								}
+								else
+								{
+									next = 1;
+									v = lc->language->code;
+								}
+							}
 							break;
 						case 'l':
-							v = (char*)locale;
-							c = '_';
+							v = lc->language->code;
 							break;
 						case 't':
-							if (!(v = strchr(locale, '_')))
-								continue;
-							v++;
-							c = '.';
+							v = lc->territory->code;
 							break;
 						case 'c':
-							if (!(v = strchr(locale, '.')))
-								continue;
-							v++;
-							c = '@';
+							v = lc->charset->code;
 							break;
 						case 'C':
 						case_C:
 							if (!catalog)
 								last = 1;
-							if (!(v = category_name))
-							{
-								v = lc_messages;
-								for (c = 0; locales[c].name; c++)
-									if (category == locales[c].category)
-									{
-										v = locales[c].name;
-										break;
-									}
-								category_name = v;
-							}
-							c = 0;
+							v = categories[category].name;
 							break;
 						default:
 							*s++ = c;
 							continue;
 						}
-						while (s < e)
-						{
-							switch (c)
-							{
-							case '_':
-								if (*v == '_')
-									break;
-							case '.':
-								if (*v == '.')
-									break;
-							case '@':
-								if (*v == '@')
-									break;
-							case 0:
-								if (*v == 0)
-									break;
+						if (v)
+							while (*v && s < e)
 								*s++ = *v++;
-								continue;
-							}
-							break;
-						}
 					}
 					continue;
 				case '/':
 					if (last)
 						break;
-					if (strneq(p, lc_messages, sizeof(lc_messages) - 1) && p[sizeof(lc_messages)-1] == '/')
+					if (category != AST_LC_MESSAGES && strneq(p, lc_messages, sizeof(lc_messages) - 1) && p[sizeof(lc_messages)-1] == '/')
 					{
 						p += sizeof(lc_messages) - 1;
 						goto case_C;
@@ -209,13 +191,12 @@ mcfind(char* path, const char* locale, const char* catalog, int category, int nl
 				continue;
 			else
 				strncpy(file, catalog, elementsof(file));
-#if 0
-sfprintf(sfstderr, "AHA#%d:%s %s\n", __LINE__, __FILE__, file);
-#endif
-			if (s = pathpath(path, file, "", (!catalog && category == LC_MESSAGES) ? PATH_READ : (PATH_REGULAR|PATH_READ|PATH_ABSOLUTE)))
+			if (ast.locale.set & AST_LC_find)
+				sfprintf(sfstderr, "locale find %s\n", file);
+			if (s = pathpath(path, file, "", (!catalog && category == AST_LC_MESSAGES) ? PATH_READ : (PATH_REGULAR|PATH_READ|PATH_ABSOLUTE)))
 			{
 				if (ast.locale.set & AST_LC_setlocale)
-					sfprintf(sfstderr, "locale: %s\n", s);
+					sfprintf(sfstderr, "locale path %s\n", s);
 				errno = oerrno;
 				return s;
 			}
@@ -349,12 +330,9 @@ mcopen(register Sfio_t* ip)
 
 	if (sfread(ip, rp, mc->nstrs) != mc->nstrs || sfgetc(ip) != EOF)
 		goto bad;
-	if (ast.locale.set & (1<<AST_LC_MESSAGES))
-	{
-		if (!(mc->tmp = sfstropen()))
-			goto bad;
-		mc->cvt = iconv_open("", "utf");
-	}
+	if (!(mc->tmp = sfstropen()))
+		goto bad;
+	mc->cvt = iconv_open("", "utf");
 	errno = oerrno;
 	return mc;
  bad:
@@ -380,9 +358,8 @@ mcget(register Mc_t* mc, int set, int num, const char* msg)
 		return (char*)msg;
 	if (mc->cvt == (iconv_t)(-1))
 		return s;
-	if (sfstrtell(mc->tmp) > sfstrsize(mc->tmp) / 2)
-		sfstrset(mc->tmp, 0);
-	p = sfstrtell(mc->tmp);
+	if ((p = sfstrtell(mc->tmp)) > sfstrsize(mc->tmp) / 2)
+		sfstrset(mc->tmp, p = 0);
 	n = strlen(s) + 1;
 	iconv_write(mc->cvt, mc->tmp, &s, &n, NiL);
 	return sfstrbase(mc->tmp) + p;
@@ -618,6 +595,70 @@ mcdump(register Mc_t* mc, register Sfio_t* op)
 	 */
 
 	return sfsync(op);
+}
+
+/*
+ * parse <set,msg> number from s
+ * e!=0 is set to the next char after the parse
+ * set!=0 is set to message set number
+ * msg!=0 is set to message number
+ * the message set number is returned
+ *
+ * the base 36 hash gives reasonable values for these:
+ *
+ *	"ast" : ((((36#a^36#s^36#t)-9)&63)+1) = 3
+ *	"gnu" : ((((36#g^36#n^36#u)-9)&63)+1) = 17
+ *	"sgi" : ((((36#s^36#g^36#i)-9)&63)+1) = 22
+ *	"sun" : ((((36#s^36#u^36#n)-9)&63)+1) = 13
+ */
+
+int
+mcindex(register const char* s, char** e, int* set, int* msg)
+{
+	register int		c;
+	register int		m;
+	register int		n;
+	register int		r;
+	register unsigned char*	cv;
+	char*			t;
+
+	m = 0;
+	n = strtol(s, &t, 0);
+	if (t == (char*)s)
+	{
+		SFCVINIT();
+		cv = _Sfcv36;
+		n = m = 0;
+		while ((c = cv[*s++]) < 36)
+		{
+			m++;
+			n ^= c;
+		}
+		m = (m <= 3) ? 63 : ((1 << (m + 3)) - 1);
+		n = ((n - 9) & m) + 1;
+	}
+	else
+		s = (const char*)t;
+	r = n;
+	if (*s)
+		m = strtol(s + 1, e, 0);
+	else
+	{
+		if (e)
+			*e = (char*)s;
+		if (m)
+			m = 0;
+		else
+		{
+			m = n;
+			n = 1;
+		}
+	}
+	if (set)
+		*set = n;
+	if (msg)
+		*msg = m;
+	return r;
 }
 
 /*
