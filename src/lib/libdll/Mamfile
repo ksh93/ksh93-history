@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 4.3 2003-09-19
+info mam static 00000 1994-07-17 make (AT&T Research) 4.4 2004-02-29
 setv INSTALLROOT ../../..
 setv PACKAGE_ast ${INSTALLROOT}
 setv PACKAGE_ast_INCLUDE ${PACKAGE_ast}/include/ast
@@ -25,8 +25,8 @@ setv LEXFLAGS
 setv LPR lpr
 setv LPRFLAGS
 setv M4FLAGS 
-setv MAKE nmake
-setv MAKEFLAGS
+setv NMAKE nmake
+setv NMAKEFLAGS
 setv PR pr
 setv PRFLAGS
 setv SHELL /bin/sh
@@ -169,12 +169,21 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -D_BLD_dll
 done dlfcn.o generated
 make dllfind.o
 make dllfind.c
+prev ../../../include/ast/error.h implicit
 prev dlldefs.h implicit
 prev ../../../include/ast/ast.h implicit
 done dllfind.c
 prev dllfind.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -D_BLD_dll -D_PACKAGE_ast -c dllfind.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_dll -c dllfind.c
 done dllfind.o generated
+make dllplug.o
+make dllplug.c
+prev dlldefs.h implicit
+prev ../../../include/ast/ast.h implicit
+done dllplug.c
+prev dllplug.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -D_BLD_dll -D_PACKAGE_ast -c dllplug.c
+done dllplug.o generated
 make dllnext.o
 make dllnext.c
 make link.h implicit
@@ -215,7 +224,7 @@ done dllscan.c
 prev dllscan.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -D_BLD_dll -D_PACKAGE_ast -c dllscan.c
 done dllscan.o generated
-exec - ${AR} cr libdll.a dlfcn.o dllfind.o dllnext.o dlllook.o dllscan.o
+exec - ${AR} cr libdll.a dlfcn.o dllfind.o dllplug.o dllnext.o dlllook.o dllscan.o
 exec - (ranlib libdll.a) >/dev/null 2>&1 || true
 done libdll.a generated
 done dll virtual

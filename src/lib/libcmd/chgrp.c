@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1992-2003 AT&T Corp.                *
+*                Copyright (c) 1992-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -84,7 +84,7 @@ static const char usage_3[] =
 	"[+0?All files changed successfully.]"
 	"[+>0?Unable to change ownership of one or more files.]"
 "}"
-"[+SEE ALSO?chmod(1), tw(1), getconf(1), ls(1)]"
+"[+SEE ALSO?\bchmod\b(1), \btw\b(1), \bgetconf\b(1), \bls\b(1)]"
 ;
 
 #if defined(__STDPP__directive) && defined(__STDPP__hide)

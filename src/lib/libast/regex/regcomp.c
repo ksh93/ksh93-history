@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2003 AT&T Corp.                *
+*                Copyright (c) 1985-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -893,7 +893,7 @@ token(register Cenv_t* env)
 	if (env->token.push)
 		return env->token.lex;
 	env->token.att = env->token.esc = 0;
-	if ((env->token.len = mbsize(env->cursor)) > 1)
+	if ((env->token.len = MBSIZE(env->cursor)) > 1)
 		return env->token.lex = C_MB;
 	env->token.lex = 0;
 	for (;;)
@@ -946,7 +946,7 @@ token(register Cenv_t* env)
 				if (c)
 				{
 					env->token.esc = env->token.len;
-					env->token.len += mbsize(env->cursor + 1);
+					env->token.len += MBSIZE(env->cursor + 1);
 					return c;
 				}
 				return '\\';
@@ -955,7 +955,7 @@ token(register Cenv_t* env)
 			return T_BAD;
 		}
 		env->token.esc = env->token.len;
-		env->token.len += mbsize(env->cursor + 1);
+		env->token.len += MBSIZE(env->cursor + 1);
 		if (env->delimiter && c == 'n')
 			return '\n';
 		else if (c == env->delimiter)
@@ -1158,7 +1158,7 @@ bra(Cenv_t* env)
 		return 0;
 	collate = complicated = elements = 0;
 	first = env->cursor;
-	start = first + mbsize(first);
+	start = first + MBSIZE(first);
 	if (*env->cursor == (env->type >= SRE ? '!' : '^'))
 	{
 		env->cursor++;
@@ -1168,7 +1168,7 @@ bra(Cenv_t* env)
 		neg = 0;
 	if (*env->cursor == 0 || *(env->cursor + 1) == 0 || *env->cursor == env->terminator || *(env->cursor + 1) == env->terminator || (env->flags & REG_ESCAPE) && (*env->cursor == env->delimiter || *env->cursor != '\\' && *(env->cursor + 1) == env->delimiter))
 		goto error;
-	begin = env->cursor + mbsize(env->cursor);
+	begin = env->cursor + MBSIZE(env->cursor);
 
 	/*
 	 * inrange: 0=no, 1=possibly, 2=definitely
@@ -1179,7 +1179,7 @@ bra(Cenv_t* env)
 	{
 		if (!(c = *env->cursor) || c == env->terminator || (env->flags & REG_ESCAPE) && c == env->delimiter)
 			goto error;
-		env->cursor += (w = mbsize(env->cursor));
+		env->cursor += (w = MBSIZE(env->cursor));
 		if (c == '\\')
 		{
 			if (*env->cursor)
@@ -1427,7 +1427,7 @@ bra(Cenv_t* env)
 				if ((c = *env->cursor) == 0 || c == env->terminator || (env->flags & REG_ESCAPE) && c == env->delimiter)
 					goto error;
 				pp = env->cursor;
-				env->cursor += (w = mbsize(env->cursor));
+				env->cursor += (w = MBSIZE(env->cursor));
 				if (c == '\\')
 				{
 					if (*env->cursor)
@@ -1549,7 +1549,7 @@ bra(Cenv_t* env)
 							goto ecollate;
 						c = 0;
 						if (ic)
-							for (i = 0; i < rw; i += mbsize(buf+i))
+							for (i = 0; i < rw; i += MBSIZE(buf+i))
 								if (isupper(buf[i]))
 								{
 									buf[i] = tolower(buf[i]);
@@ -1617,7 +1617,7 @@ bra(Cenv_t* env)
 							if (w > COLL_KEY_MAX)
 								goto ecollate;
 							if (ic)
-								for (i = 0; i < w; i += mbsize(buf+i))
+								for (i = 0; i < w; i += MBSIZE(buf+i))
 									if (isupper(buf[i]))
 										buf[i] = tolower(buf[i]);
 							cw = mbxfrm(ce->beg, buf, COLL_KEY_MAX);

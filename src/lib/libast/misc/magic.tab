@@ -1,5 +1,5 @@
 #
-# @(#)magic (AT&T Research) 2003-11-25
+# @(#)magic (AT&T Research) 2004-02-29
 #
 # magic number database for file(1) and magic(3)
 #
@@ -48,8 +48,8 @@
 +2	byte		>0		, version %d
 &3	byte		*		.%d
 0	long		0x223e9f78	ms outlook tnef archive		application/pax
-0	string		MSCF						application/pax
-&4	long		0		ms cabinet archive
+0	string		MSCF		ms cabinet archive		application/pax
+&4	long		0
 +25	byte		*		, version %d
 +24	byte		*		.%d
 0	string		\x52\x61\x72\x21\x1a\x07	rar archive	application/pax
@@ -460,6 +460,7 @@ o{
 +18	short		17		fujitsu500
 +18	short		18		sparc32+
 +18	short		20		powerpc
++18	short		22		s390
 +18	short		36		nec-v800
 +18	short		37		fujitsu-fr20
 +18	short		38		trw-rh32
@@ -516,7 +517,7 @@ o{
 +18	short		91		picojava
 +18	short		0x9026		alpha
 +18	short		0xa390		s390
-|18	short		*		machine=0x%l04X
+|18	short		*		machine=0x%04lX
 }
 +16	short		0		type=UNKNOWN
 +16	short		1		object				x-system/obj
@@ -589,6 +590,7 @@ o{
 +18	short		17		fujitsu500
 +18	short		18		sparc32+
 +18	short		20		powerpc
++18	short		22		s390
 +18	short		36		nec-v800
 +18	short		37		fujitsu-fr20
 +18	short		38		trw-rh32
@@ -645,7 +647,7 @@ o{
 +18	short		91		picojava
 +18	short		0x9026		alpha
 +18	short		0xa390		s390
-|18	short		*		machine=0x%l04X
+|18	short		*		machine=0x%04lX
 }
 +16	short		0		type=UNKNOWN
 +16	short		1		object				x-system/obj
@@ -1047,6 +1049,7 @@ o()
 
 0		short	0x5a4d
 &24		short	0x0040
+{
 +(@60H)		short	0x454c		os/2 linear
 +(@60H)		short	0x454e		os/2
 +(@60H)		short	0x4550		win32
@@ -1055,6 +1058,8 @@ o()
 +(@60H+4)	short	0x0162		mips
 +(@60H+4)	short	0x0166		mips, big endian?
 +(@60H+4)	short	0x0184		alpha
+|(@60H+4)	short	*		machine=0x%04lX
+}
 +(@60H+22)	short	&0x2002==0x0002	executable			x-system/exe
 +(@60H+22)	short	&0x2000		shared library			x-system/dll
 +(@60H+22)	short	&0x0100==0	, 16 bit

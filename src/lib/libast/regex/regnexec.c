@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2003 AT&T Corp.                *
+*                Copyright (c) 1985-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -666,7 +666,7 @@ collmatch(Rex_t* rex, unsigned char* s, unsigned char* e, unsigned char** p)
 	Ckey_t			elt;
 
 	ic = (rex->flags & REG_ICASE);
-	if ((w = mbsize(s)) > 1)
+	if ((w = MBSIZE(s)) > 1)
 	{
 		memcpy((char*)key, (char*)s, w);
 		key[w] = 0;
@@ -1045,7 +1045,7 @@ DEBUG_TEST(0x0008,(sfprintf(sfstdout, "AHA#%04d 0x%04x parse %s `%-.*s'\n", __LI
 					}
 					e = env->end;
 					for (i = 0; s < e && i < n && s[i] != c; i++)
-						s += b[i] = mbsize(s);
+						s += b[i] = MBSIZE(s);
 					for (; i-- >= m; s -= b[i])
 						switch (follow(env, rex, cont, s))
 						{
@@ -1086,9 +1086,9 @@ DEBUG_TEST(0x0008,(sfprintf(sfstdout, "AHA#%04d 0x%04x parse %s `%-.*s'\n", __LI
 				{
 					e = env->end;
 					for (i = 0; s < e && i < m && s[i] != c; i++)
-						s += mbsize(s);
+						s += MBSIZE(s);
 					if (i >= m)
-						for (; s <= e && i <= n; s += mbsize(s), i++)
+						for (; s <= e && i <= n; s += MBSIZE(s), i++)
 							switch (follow(env, rex, cont, s))
 							{
 							case BAD:
@@ -1881,7 +1881,7 @@ regnexec(const regex_t* p, const char* s, size_t len, size_t nmatch, regmatch_t*
 	{
 		if (j)
 			goto done;
-		i = mbsize(s);
+		i = MBSIZE(s);
 		s += i;
 		if ((unsigned char*)s > env->end - env->min)
 			goto done;

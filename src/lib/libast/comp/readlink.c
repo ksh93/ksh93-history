@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2003 AT&T Corp.                *
+*                Copyright (c) 1985-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -37,6 +37,10 @@ NoN(readlink)
 
 #include <error.h>
 
+#ifndef ENOSYS
+#define ENOSYS	EINVAL
+#endif
+
 int
 readlink(const char* path, char* buf, int siz)
 {
@@ -46,16 +50,16 @@ readlink(const char* path, char* buf, int siz)
 	if (siz > sizeof(FAKELINK_MAGIC))
 	{
 		if ((fd = open(path, O_RDONLY)) < 0)
-			return(-1);
+			return -1;
 		if (read(fd, buf, sizeof(FAKELINK_MAGIC)) == sizeof(FAKELINK_MAGIC) && !strcmp(buf, FAKELINK_MAGIC) && (n = read(fd, buf, siz)) > 0 && !buf[n - 1])
 		{
 			close(fd);
-			return(n);
+			return n;
 		}
 		close(fd);
 	}
-	errno = EINVAL;
-	return(-1);
+	errno = ENOSYS;
+	return -1;
 }
 
 #endif

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2003 AT&T Corp.                *
+*                Copyright (c) 1985-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -98,7 +98,11 @@ extern _Ast_state_t		old;
 #define wctomb			0
 #endif
 
+#ifdef mblen
 #undef	mblen
+extern int		mblen(const char*, size_t);
+#endif
+
 #undef	mbtowc
 #undef	setlocale
 #undef	strcmp

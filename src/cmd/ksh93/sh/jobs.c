@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2003 AT&T Corp.                *
+*                Copyright (c) 1982-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -64,22 +64,16 @@ struct jobsave
 static struct jobsave *job_savelist;
 
 /*
- * try to keep at least one jobsave on the free list
+ * return next on link list of jobsave free list
  */
 static struct jobsave *jobsave_create(pid_t pid)
 {
 	register struct jobsave *jp = job_savelist;
-	if(jp && jp->next)
-		job_savelist = jp->next;
-	else if(jp = new_of(struct jobsave,0))
-		jp->next = 0;
-	else
-	{
-		jp = job_savelist;
-		job_savelist = 0;
-	}
 	if(jp)
+	{
+		job_savelist = jp->next;
 		jp->pid = pid;
+	}
 	return(jp);
 }
 
@@ -344,10 +338,13 @@ static void job_waitsafe(register int sig)
  */
 void job_init(int lflag)
 {
-	register int ntry=0;
-
+	register int i,ntry=0;
+	struct jobsave *jp;
 	/* create a jobsave freelist */
-	job_savelist = jobsave_create(0);
+	job_savelist = (struct jobsave*)malloc(sh.lim.child_max*sizeof(struct jobsave));
+	for(jp=job_savelist,i=1; i < sh.lim.child_max; i++, jp++)
+		jp->next = (jp+1);
+	jp->next = 0;
 	job.fd = JOBTTY;
 	signal(SIGCHLD,job_waitsafe);
 #   if defined(SIGCLD) && (SIGCLD!=SIGCHLD)
@@ -450,8 +447,7 @@ void job_init(int lflag)
 
 #ifdef SIGTSTP
 	/* make sure that we are a process group leader */
-	if(setpgid(0,sh.pid)==0)
-		job.mypgid = sh.pid;
+	setpgid(0,sh.pid);
 #   if defined(SA_NOCLDWAIT) && defined(_lib_sigflag)
 	sigflag(SIGCHLD, SA_NOCLDSTOP|SA_NOCLDWAIT, 0);
 #   endif /* SA_NOCLDWAIT */
@@ -564,7 +560,7 @@ static void job_set(register struct process *pw)
 		tty_set(job.fd,TCSAFLUSH,&pw->p_stty);
 	}
 #ifdef SIGTSTP
-	if((pw->p_flag&P_STOPPED) || tcgetpgrp(job.fd) == job.mypgid)
+	if((pw->p_flag&P_STOPPED) || tcgetpgrp(job.fd) == sh.pid)
 		tcsetpgrp(job.fd,pw->p_fgrp);
 	/* if job is stopped, resume it in the background */
 	job_unstop(pw);
@@ -943,7 +939,7 @@ void	job_clear(void)
 	register struct process *pw, *px;
 	register struct process *pwnext;
 	register int j = BYTE(sh.lim.child_max);
-	register struct jobsave *jp;
+	register struct jobsave *jp,*jpnext;
 	for(pw=job.pwlist; pw; pw=pwnext)
 	{
 		pwnext = pw->p_nxtjob;
@@ -953,11 +949,11 @@ void	job_clear(void)
 			free((void*)px);
 		}
 	}
-	for(jp=bck.list; jp;)
+	for(jp=bck.list; jp;jp=jpnext)
 	{
-		px = (struct process*)jp;
-		jp = jp->next;
-		free((void*)px);
+		jpnext = jp->next;
+		jp->next = job_savelist;
+		job_savelist = jp;
 	}
 	bck.list = 0;
 	job.pwlist = NIL(struct process*);
@@ -981,8 +977,6 @@ int job_post(pid_t pid, pid_t join)
 	register struct process *pw;
 	register History_t *hp = sh.hist_ptr;
 	sh.jobenv = sh.curenv;
-	if(!job_savelist)
-		job_savelist = jobsave_create(0);
 	if(job.toclear)
 	{
 		job_clear();
@@ -1553,15 +1547,8 @@ static int job_chksave(register pid_t pid)
 		else
 			bck.list = jp->next;
 		bck.count--;
-		/* keep at most 10 jobs on the free list */
-		if(!job_savelist || job_savelist->pid <8)
-		{
-			jp->next = job_savelist; 
-			jp->pid = job_savelist?job_savelist->pid+1:0;
-			job_savelist = jp;
-		}
-		else
-			free((void*)jp);
+		jp->next = job_savelist; 
+		job_savelist = jp;
 	}
 	return(r);
 }
@@ -1592,7 +1579,8 @@ void job_subrestore(void* ptr)
 	for(jp=bck.list; jp; jp=jpnext)
 	{
 		jpnext = jp->next;
-		free((void*)jp);
+		jp->next = job_savelist;
+		job_savelist = jp;
 	}
 	bck = *bp;
 	free(ptr);

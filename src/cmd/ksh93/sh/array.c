@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2003 AT&T Corp.                *
+*                Copyright (c) 1982-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -117,7 +117,7 @@ static union Value *array_find(Namval_t *np,Namarr_t *arp, int flag)
 					return(up);
 			}
 		}
-		if(!(ap->header.nelem&ARRAY_MASK))
+		if(array_elem(&ap->header)==0 && ((ap->header.nelem&ARRAY_SCAN) || !is_associative(ap)))
 		{
 			const char *cp = up->cp;
 			if(cp && is_associative(ap))
@@ -149,10 +149,38 @@ static union Value *array_find(Namval_t *np,Namarr_t *arp, int flag)
 static Namfun_t *array_clone(Namval_t *np, Namval_t *mp, int flags, Namfun_t *fp)
 {
 	Namarr_t *ap = (Namarr_t*)fp;
+	char *name, *sub=0;
+	int nelem = ap->nelem;
 	if(array_assoc(ap))
 		nv_setarray(mp,ap->fun);
 	else
 		nv_putsub(mp,NIL(char*),ap->nelem);
+	if(!(nelem&(ARRAY_SCAN|ARRAY_UNDEF)) && (sub=nv_getsub(np)))
+		sub = strdup(sub);
+	nv_putsub(np,NIL(char*),ARRAY_SCAN);
+	do
+	{
+	        if(array_assoc(ap))
+			name = (char*)((*ap->fun)(np,NIL(char*),NV_ANAME));
+		else
+			name = nv_getsub(np);
+		nv_putsub(mp,name,ARRAY_ADD);
+		if(nv_isattr(np,NV_INTEGER))
+		{
+			Sfdouble_t d= nv_getnum(np);
+			nv_putval(mp,(char*)&d,NV_LONG|NV_DOUBLE|NV_INTEGER);
+		}
+		else
+			nv_putval(mp,nv_getval(np),NV_RDONLY);
+	}
+	while(nv_nextsub(np));
+	if(sub)
+	{
+		nv_putsub(np,sub,0L);
+		free((void*)sub);
+	}
+	ap->nelem = nelem;
+	((Namarr_t*)mp->nvfun)->nelem = nelem;
 	return(nv_stack(mp,(Namfun_t*)0));
 }
 

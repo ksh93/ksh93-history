@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1990-2003 AT&T Corp.                *
+*                Copyright (c) 1990-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -46,15 +46,19 @@ putexport(Sfio_t* sp, char* n, int old)
 	int	cvt;
 	char*	v;
 
-	if (cvt = *n == '%') n++;
-	if (old) cvt = 0;
+	if (cvt = *n == '%')
+		n++;
+	if (old)
+		cvt = 0;
 	if ((v = getenv(n)) && *v)
 	{
-		if (!old) sfprintf(sp, "\\\n");
+		if (!old)
+			sfprintf(sp, "\\\n");
 		sfprintf(sp, " %s='", n);
 		coquote(sp, v, cvt);
 		sfputc(sp, '\'');
-		if (old) sfprintf(sp, "\nexport %s\n", n);
+		if (old)
+			sfprintf(sp, "\nexport %s\n", n);
 	}
 }
 
@@ -88,24 +92,27 @@ coinit(int flags)
 	 * pwd
 	 */
 
-	if (stat(".", &st)) return(0);
+	if (stat(".", &st))
+		return 0;
 	if (!state.pwd || st.st_ino != pwd_ino || st.st_dev != pwd_dev)
 	{
 		pwd_dev = st.st_dev;
 		pwd_ino = st.st_ino;
-		if (state.pwd) free(state.pwd);
+		if (state.pwd)
+			free(state.pwd);
 		if (!(state.pwd = getcwd(NiL, 0)))
 		{
 			if (errno != EINVAL || !(state.pwd = newof(0, char, PATH_MAX, 0)))
-				return(0);
+				return 0;
 			if (!getcwd(state.pwd, PATH_MAX))
 			{
 				free(state.pwd);
 				state.pwd = 0;
-				return(0);
+				return 0;
 			}
 		}
-		if (!(flags & CO_INIT)) sync = 1;
+		if (!(flags & CO_INIT))
+			sync = 1;
 	}
 
 	/*
@@ -116,7 +123,8 @@ coinit(int flags)
 	if (mask != n)
 	{
 		mask = n;
-		if (!(flags & CO_INIT)) sync = 1;
+		if (!(flags & CO_INIT))
+			sync = 1;
 	}
 	if (!init || sync)
 	{
@@ -124,9 +132,11 @@ coinit(int flags)
 		 * coexport[] vars
 		 */
 
-		if (!(sp = sfstropen())) return(0);
+		if (!(sp = sfstropen()))
+			return 0;
 		old = !(flags & (CO_KSH|CO_SERVER));
-		if (!old) sfprintf(sp, "export");
+		if (!old)
+			sfprintf(sp, "export");
 		if (sync)
 		{
 			if (flags & CO_EXPORT)
@@ -147,7 +157,8 @@ coinit(int flags)
 					char*		es;
 					char*		xs;
 
-					if (v = strchr(s, ':')) *v = 0;
+					if (v = strchr(s, ':'))
+						*v = 0;
 					while (e = *ep++)
 						if ((t = strsubmatch(e, s, 1)) && (*t == '=' || !*t && (t = strchr(e, '='))))
 						{
@@ -162,15 +173,18 @@ coinit(int flags)
 										es++;
 										xs++;
 									}
-									if (*es == '=' && !*xs) break;
+									if (*es == '=' && !*xs)
+										break;
 								}
 								if (!xs)
 								{
-									if (!old) sfprintf(sp, "\\\n");
+									if (!old)
+										sfprintf(sp, "\\\n");
 									sfprintf(sp, " %-.*s='", m, e);
 									coquote(sp, e + m + 1, 0);
 									sfputc(sp, '\'');
-									if (old) sfprintf(sp, "\nexport %-.*s\n", m, e);
+									if (old)
+										sfprintf(sp, "\nexport %-.*s\n", m, e);
 								}
 							}
 						}
@@ -180,13 +194,16 @@ coinit(int flags)
 						s = v;
 					}
 				}
-				if (*s) for (;;)
-				{
-					if (t = strchr(s, ':')) *t = 0;
-					putexport(sp, s, old);
-					if (!(s = t)) break;
-					*s++ = ':';
-				}
+				if (*s)
+					for (;;)
+					{
+						if (t = strchr(s, ':'))
+							*t = 0;
+						putexport(sp, s, old);
+						if (!(s = t))
+							break;
+						*s++ = ':';
+					}
 			}
 		}
 
@@ -200,7 +217,7 @@ coinit(int flags)
 		{
 		bad:
 			sfclose(sp);
-			return(0);
+			return 0;
 		}
 		t += n / 2;
 		if (!(flags & CO_CROSS) && !pathpath(t, "ignore", NiL, PATH_ABSOLUTE|PATH_REGULAR|PATH_EXECUTE) && pathpath(t, "bin/ignore", "", PATH_ABSOLUTE|PATH_REGULAR|PATH_EXECUTE))
@@ -214,15 +231,25 @@ coinit(int flags)
 		else
 		{
 			s = pathbin();
-			if (!sync && (*s == ':' || *s == '.' && *(s + 1) == ':'))
+			if (!(flags & CO_CROSS))
 			{
-				sfstrset(sp, 0);
-				goto done;
+				if (!sync && (*s == ':' || *s == '.' && *(s + 1) == ':'))
+				{
+					sfstrset(sp, 0);
+					goto done;
+				}
+				sfputc(sp, ':');
 			}
-			if (!(flags & CO_CROSS)) sfputc(sp, ':');
 		}
-		if (*s == ':') s++;
-		else if (*s == '.' && *(s + 1) == ':') s += 2;
+		for (;;)
+		{
+			if (*s == ':')
+				s++;
+			else if (*s == '.' && *(s + 1) == ':')
+				s += 2;
+			else
+				break;
+		}
 		if (!(flags & CO_CROSS))
 			tp = 0;
 		else if (tp = sfstropen())
@@ -254,7 +281,8 @@ coinit(int flags)
 		if (tp)
 			sfstrclose(tp);
 		sfputc(sp, '\'');
-		if (old) sfprintf(sp, "\nexport PATH");
+		if (old)
+			sfprintf(sp, "\nexport PATH");
 		sfputc(sp, '\n');
 		if (sync)
 		{
@@ -265,38 +293,48 @@ coinit(int flags)
 			p = sfstrtell(sp);
 			sfprintf(sp, "vpath ");
 			n = PATH_MAX;
-			if (fs3d(FS3D_TEST)) for (;;)
-			{
-				if (!(t = sfstrrsrv(sp, n))) goto bad;
-				if ((m = mount(NiL, t, FS3D_GET|FS3D_ALL|FS3D_SIZE(n), NiL)) > 0) m = n;
-				else
+			if (fs3d(FS3D_TEST))
+				for (;;)
 				{
-					if (!m) sfstrrel(sp, strlen(t));
-					break;
+					if (!(t = sfstrrsrv(sp, n)))
+						goto bad;
+					if ((m = mount(NiL, t, FS3D_GET|FS3D_ALL|FS3D_SIZE(n), NiL)) > 0)
+						m = n;
+					else
+					{
+						if (!m)
+							sfstrrel(sp, strlen(t));
+						break;
+					}
 				}
-			}
 			else
 			{
 				m = 0;
 				sfprintf(sp, "- /#option/2d");
 			}
-			if (m) sfstrset(sp, p);
-			else sfprintf(sp, " 2>/dev/null || :\n");
+			if (m)
+				sfstrset(sp, p);
+			else
+				sfprintf(sp, " 2>/dev/null || :\n");
 			sfprintf(sp, "umask 0%o\ncd '%s'\n", mask, state.pwd);
 		}
 	done:
 		if (!(flags & CO_SERVER))
 		{
 			sfprintf(sp, "%s%s=%05d${!%s-$$}\n", old ? "" : "export ", CO_ENV_TEMP, getpid(), (flags & CO_OSH) ? "" : ":");
-			if (old) sfprintf(sp, "export %s\n", CO_ENV_TEMP);
+			if (old)
+				sfprintf(sp, "export %s\n", CO_ENV_TEMP);
 		}
 		sfputc(sp, 0);
 		n = sfstrtell(sp);
-		if (init) free(init);
-		if (!(init = newof(0, char, n, 1))) goto bad;
+		if (init)
+			free(init);
+		if (!(init = newof(0, char, n, 1)))
+			goto bad;
 		memcpy(init, sfstrbase(sp), n);
 		sfstrclose(sp);
 	}
-	else if (!init && (init = newof(0, char, 1, 0))) *init = 0;
-	return(init);
+	else if (!init && (init = newof(0, char, 1, 0)))
+		*init = 0;
+	return init;
 }

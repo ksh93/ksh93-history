@@ -1,3 +1,28 @@
+04-02-29 comp/omitted.c: move env trace after PATH fixup
+	 comp/omitted.c: cygwin spawn _P_DETACH => _P_NOWAIT+setpgid(pid,0)
+	 misc/optget.c: fix html mailto: match
+	 port/astlicense.c: add type=test for fixed 2001 date
+	 features/float: check local NaNQ first
+	 vmalloc/vmhdr.h: fix _vmextern_ vm_truncate return type
+	 misc/magic.tab: add elf s390 index=22
+04-02-26 vmalloc: VMCHECK a:assertions c:arena-check w:warn-instead-of-abort
+	 sfio/sfvscanf.c: fix extf arg selection
+04-02-24 features/dirent: set nodefine to avoid ast_std.h _typ_off64_t undef
+	 disc/sfkeyprintf.c: only case pattern must be ()[] balanced
+04-02-14 include/sfio_t.h: add SF_DCDOWN, SFDCNEXT(), SFDCPREV()
+04-02-13 string/strmatch.c: fix bug that didn't save one-time sub[] size
+	 vmalloc: -g: export VMCHECK=1 enable malloc/free checks
+	 vmalloc: -g: free(0) to check and disable malloc/free checks
+	 vmalloc: -g: free(1) to check and enable malloc/free checks
+04-02-11 Makefile: add :P=A: to conf and lcgen exec for cross-compile
+	 regex: use MBSIZE() instead of mbsize() to grab 1 char on err
+	 vmalloc/vmbest.c: updated to do more comprehensive DEBUG tests
+04-02-04 sfio/sfraise.c: add sfraise(0,a,b) to iterate over all streams
+04-02-01 vmalloc/vmbest.c: _BLD_DEBUG free(0) checks the arena
+04-01-31 features/vmalloc: fix typo that missed _mmap_zero
+04-01-23 string/strerror.c: handle real strerror() return value overwrite
+04-01-11 path/pathpath.c: fix size vs. sizeof(buf) typo
+03-12-22 misc/magic.tab: dos EXE tweaks
 03-12-05 vmalloc: sync with kpv, adding exceptf announcements
 03-12-04 port/astlicense.c: fix expand() loop sentinel bug
 03-12-02 include/ast.h: mbchar() advances by 1 on mbtowc() error

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2003 AT&T Corp.                *
+*                Copyright (c) 1982-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -96,14 +96,15 @@ typedef Sfdouble_t (*Math_3_f)(Sfdouble_t,Sfdouble_t,Sfdouble_t);
 				((c)=='|'?A_OR:((c)=='^'?A_XOR:((c)=='~'?A_TILDE:A_REG))):\
 				strval_states[(c)])
 #else
-#   define getop(c)	(isdigit(c)?A_DIG:((c==' '||c=='\t' ||c=='\n')?0: \
+#   define getop(c)	(isdigit(c)?A_DIG:((c==' '||c=='\t'||c=='\n'||c=='"')?0: \
 			(c=='<'?A_LT:(c=='>'?A_GT:(c=='='?A_ASSIGN: \
 			(c=='+'?A_PLUS:(c=='-'?A_MINUS:(c=='*'?A_TIMES: \
 			(c=='/'?A_DIV:(c=='%'?A_MOD:(c==','?A_COMMA: \
 			(c=='&'?A_AND:(c=='!'?A_NOT:(c=='('?A_LPAR: \
 			(c==')'?A_RPAR:(c==0?A_EOF:(c==':'?A_COLON: \
 			(c=='?'?A_QUEST:(c=='|'?A_OR:(c=='^'?A_XOR: \
-			(c=='.'?A_DOT:(c=='~'?A_TILDE:A_REG))))))))))))))))))))))
+			(c=='\''?A_LIT: \
+			(c=='.'?A_DOT:(c=='~'?A_TILDE:A_REG)))))))))))))))))))))))
 #endif
 
 #define seterror(v,msg)		_seterror(v,ERROR_dictionary(msg))

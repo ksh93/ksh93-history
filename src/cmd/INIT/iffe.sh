@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1994-2003 AT&T Corp.                #
+#                Copyright (c) 1994-2004 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -34,7 +34,7 @@ case $-:$BASH_VERSION in
 esac
 
 command=iffe
-version=2003-03-06 # update in USAGE too #
+version=2004-02-11 # update in USAGE too #
 
 pkg() # package
 {
@@ -109,7 +109,7 @@ is() # op name
 			nxt)	mm="an include path for the native header" ;;
 			pth)	mm="a file" ;;
 			run)	yy="capture output of" mm= ;;
-			siz)	mm="a type with know size" ;;
+			siz)	mm="a type with known size" ;;
 			sym)	mm="a typed variable" ;;
 			sys)	mm="a system header" ;;
 			typ)	mm="a type or typedef" ;;
@@ -281,13 +281,13 @@ a z
 
 execute()
 {
-	if	test -d /NextDeveloper
-	then	$tmp.exe <&$nullin >&$nullout
-		_execute_=$?
-		$tmp.exe <&$nullin | cat
-	elif	test "" != "$cross"
+	if	test "" != "$cross"
 	then	crossexec $cross "$@"
 		_execute_=$?
+	elif	test -d /NextDeveloper
+	then	"$@" <&$nullin >&$nullout
+		_execute_=$?
+		"$@" <&$nullin | cat
 	else	"$@"
 		_execute_=$?
 	fi
@@ -333,6 +333,7 @@ binding="-dy -dn -Bdynamic -Bstatic -Wl,-ashared -Wl,-aarchive -call_shared -non
 complete=0
 config=0
 defhdr=
+define=1
 iff=
 usr=
 cross=
@@ -425,7 +426,7 @@ set=
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: iffe (AT&T Labs Research) 2003-09-11 $
+@(#)$Id: iffe (AT&T Labs Research) 2004-02-11 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?iffe - host C compilation environment feature probe]
@@ -465,6 +466,7 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 [d:debug?Sets the debug level. Level 0 inhibits most
 	error messages, level 1 shows compiler messages, and
 	level 2 traces internal \biffe\b \bsh\b(1) actions.]#[level]
+[D:define?Successful test macro definitions are emitted. This is the default.]
 [i:input?Sets the input file name to \afile\a, which
 	must contain \biffe\b statements.]:[file]
 [I:include?Adds \b-I\b\adir\a to the C compiler flags.]:[dir]
@@ -505,10 +507,11 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 	operand (where \abegin\a is command specific) and zero
 	or more data lines terminated by a line containing
 	\b}end\b as the first operand. The statements syntax is:
-	\aop\a[,\aop\a...]] [\aarg\a[,\aarg\a...]]]] [\aprereq\a ...]]
+	\aop\a[,\aop\a...]] [\b--nomacro\b]] [\aarg\a[,\aarg\a...]]]] [\aprereq\a ...]]
 	[\abegin\a{ ... |\bend\b ...]] [= [\adefault\a]]]]. \aop\as and \aarg\as
 	may be combined, separated by commas, to perform a set of operations
-	on a set of arguments.]
+	on a set of arguments. An \aarg\a of \b-\b performs the test but does
+	not set an \bexp\b variable or define an output macro.]
 [+?\aprereq\as are used when applying the features tests and may be
 	combinations of:]{
 		[+compiler options?\b-D\b*, \b-L\b*, etc.]
@@ -681,11 +684,18 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 		testing and are translated to \b_\b in the output macro name.]
 	[+val \aname\a?The output of \becho\b \aname\a is written to the
 		output file.]
+	[+var \aname\a?A user defined test on name. A source block must be
+		supplied. Sets the \bexp\b variable \b_\b\aname\a on success
+		but does not define a macro.]
 }
 [+?Code block names may be prefixed by \bno\b to invert the test sense. The
 	block names are:]{
 	[+cat?The block is copied to the output file.]
 	[+compile?The block is compiled (\bcc -c\b).]
+	[+cross?The block is executed as a shell script using \bcrossexec\b(1)
+		if \b--cross\b is on, or on the local host otherwise, and the
+		output is copied to the output file. Test macros are not
+		exported to the script.]
 	[+execute?The block is compiled, linked, and executed. \b0\b exit
 		status means success.]
 	[+fail?If the test fails then the block text evaluated by \bsh\b(1).]
@@ -720,6 +730,7 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 		c)	set="$set set cc $OPTARG :" ;;
 		C)	set="$set set config :" ;;
 		d)	set="$set set debug $OPTARG :" ;;
+		D)	set="$set set define :" ;;
 		i)	set="$set set input $OPTARG :" ;;
 		I)	set="$set set include $OPTARG :" ;;
 		L)	set="$set set library $OPTARG :" ;;
@@ -760,6 +771,9 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 			;;
 		--d=*|--de=*|--deb=*|--debu=*|--debug=*)
 			REM=d`echo $1 | sed -e 's,[^=]*=,,'`
+			;;
+		--def|--defi|--defin|--define)
+			REM=D
 			;;
 		--e=*|--ex=*|--exc=*|--excl=*|--exclu=*|--exclud=*|--exclude=*)
 			REM=X`echo $1 | sed -e 's,[^=]*=,,'`
@@ -832,6 +846,7 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 			c)	set="$set set cc $OPTARG :" ;;
 			C)	set="$set set config :" ;;
 			d)	set="$set set debug $OPTARG :" ;;
+			D)	set="$set set define :" ;;
 			i)	set="$set set input $OPTARG :" ;;
 			I)	set="$set set include $OPTARG :" ;;
 			L)	set="$set set library $OPTARG :" ;;
@@ -845,7 +860,7 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 			v)	set="$set set verbose :" ;;
 			x)	set="$set set cross $OPTARG :" ;;
 			X)	set="$set set exclude $OPTARG :" ;;
-			*)	echo "Usage: $command [-aCpuv] [-c C-compiler-name [C-compiler-flags ...]] [-d level]
+			*)	echo "Usage: $command [-aCDpuv] [-c C-compiler-name [C-compiler-flags ...]] [-d level]
 	    [-i file] [-o file] [-e name] [-P text] [-s shell-path] [-S[flags]]
 	    [-x cross-exec-prefix] [-I dir] [-L dir] [-X dir] [ - ]
 	    [ file.iffe | statement [ : statement ... ] ]" >&2
@@ -1039,6 +1054,7 @@ do	case $in in
 				c)	op=cc ;;
 				C)	op=config ;;
 				d)	op=debug ;;
+				D)	op=define ;;
 				i)	op=input ;;
 				I)	op=include ;;
 				L)	op=library ;;
@@ -1139,6 +1155,9 @@ do	case $in in
 			esac
 			continue
 			;;
+		define)	define=1
+			continue
+			;;
 		exclude)case $arg in
 			""|-)	excludes= ;;
 			*)	excludes="$excludes $arg" ;;
@@ -1192,6 +1211,10 @@ do	case $in in
 			;;
 		nodebug)exec 2>&$nullout
 			set -
+			continue
+			;;
+		nodefine)
+			define=0
 			continue
 			;;
 		out|output)
@@ -1926,6 +1949,9 @@ do	case $in in
 						i=0
 						;;
 					*)	case $m in
+						*'*')	m=`echo "$m" | sed 's,\*,_ptr,g'` ;;
+						esac
+						case $m in
 						*[-+/\\]*)
 							i=0
 							;;
@@ -2095,7 +2121,9 @@ do	case $in in
 				;;
 			esac
 			case $can in
-			?*)	echo "$can"
+			?*)	case $define in
+				1)	echo "$can" ;;
+				esac
 				can=
 				cansep=
 				;;
@@ -2177,19 +2205,19 @@ do	case $in in
 
 			case $config in
 			0)	case $o in
-				tst)	;;
+				tst|var);;
 				*)	m=_${o}${m} ;;
 				esac
 				;;
 			1)	case $o in
-				tst)	m=${v} ;;
+				tst|var)m=${v} ;;
 				esac
 				case $shell in
 				ksh)	typeset -u u=$m ;;
 				*)	u=`echo $m | tr abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ` ;;
 				esac
 				case $o in
-				tst)	case $m in
+				tst|var)case $m in
 					$u)	;;
 					*)	case $m in
 						hdr_*|lib_*|sys_*)
@@ -2258,6 +2286,11 @@ $src"
 				case $run in
 				cat*|nocat*)
 					copy - "$src"
+					;;
+				cross*|nocross*)
+					copy $tmp.sh "$src"
+					chmod +x $tmp.sh
+					execute $tmp.sh <&$nullin || e=1
 					;;
 				run*|norun*)
 					(eval "$src") <&$nullin || e=1
@@ -2374,7 +2407,9 @@ main(){printf("hello");return(0);}' > ${tmp}s.c
 					case $M in
 					*-*)	;;
 					*)	usr="$usr$nl#define $m 1"
-						echo "#define $m	1	/* "${note:-"$run passed"}" */"
+						case $define in
+						1)	echo "#define $m	1	/* "${note:-"$run passed"}" */" ;;
+						esac
 						eval $m=1
 						;;
 					esac
@@ -2383,9 +2418,9 @@ main(){printf("hello");return(0);}' > ${tmp}s.c
 				*)	failure
 					case $M in
 					*-*)	;;
-					*)	case $all$config$undef in
-						?1?|??1)echo "#undef	$m		/* "${note:-"$run"}" failed */" ;;
-						1??)	echo "#define	$m	0	/* "${note:-"$run"}" failed */" ;;
+					*)	case $define$all$config$undef in
+						1?1?|1??1)echo "#undef	$m		/* "${note:-"$run"}" failed */" ;;
+						11??)	echo "#define	$m	0	/* "${note:-"$run"}" failed */" ;;
 						esac
 						eval $m=0
 						;;
@@ -2487,12 +2522,16 @@ main(){printf("hello");return(0);}' > $tmp.c
 						then	case $k in
 							"")	k=1
 								usr="$usr$nl#define $m 1"
-								echo "#define $m	1	/* $a in ?(/usr)/(bin|etc|ucb) */"
+								case $define in
+								1)	echo "#define $m	1	/* $a in ?(/usr)/(bin|etc|ucb) */" ;;
+								esac
 								;;
 							esac
 							c=${s}_${i}_${v}
 							usr="$usr$nl#define $c 1"
-							echo "#define $c	1	/* $d/$i/$a found */"
+							case $define in
+							1)	echo "#define $c	1	/* $d/$i/$a found */" ;;
+							esac
 						fi
 					done
 				done
@@ -2529,12 +2568,14 @@ main(){char* i = (char*) _REF_ $v; return i!=0;}"
 					$executable $tmp.exe
 				then	success
 					usr="$usr$nl#define $m 1"
-					echo "#define $m	1	/* $v in default lib(s) */"
+					case $define in
+					1)	echo "#define $m	1	/* $v in default lib(s) */" ;;
+					esac
 					eval $m=1
 				else	failure
-					case $all$config$undef in
-					?1?|??1)echo "#undef	$m		/* $v not in default lib(s) */" ;;
-					1??)	echo "#define	$m	0	/* $v not in default lib(s) */" ;;
+					case $define$all$config$undef in
+					1?1?|1??1)echo "#undef	$m		/* $v not in default lib(s) */" ;;
+					11??)	echo "#define	$m	0	/* $v not in default lib(s) */" ;;
 					esac
 					eval $m=0
 				fi
@@ -2605,9 +2646,9 @@ $inc
 				\ \"*\"|\ [01])
 					case $a in
 					-|'')	;;
-					*)	case $note in
-						'')	echo "#define $a	$test" ;;
-						*)	echo "#define $a	$test	/* $note */" ;;
+					*)	case $define$note in
+						1)	echo "#define $a	$test" ;;
+						1*)	echo "#define $a	$test	/* $note */" ;;
 						esac
 						;;
 					esac
@@ -2646,9 +2687,9 @@ $inc
 					0)	failure
 						case $a in
 						-|'')	;;
-						*)	case $all$config$undef in
-							?1?|??1)echo "#undef	$a		/*$note is false */" ;;
-							1??)	echo "#define	$a	0	/*$note is false */" ;;
+						*)	case $define$all$config$undef in
+							1?1?|1??1)echo "#undef	$a		/*$note is false */" ;;
+							11??)	echo "#define	$a	0	/*$note is false */" ;;
 							esac
 							eval $a=0
 							;;
@@ -2660,7 +2701,9 @@ $inc
 						case $a in
 						-|'')	;;
 						*)	usr="$usr$nl#define $a 1"
-							echo "#define $a	1	/*$note is true */"
+							case $define in
+							1)	echo "#define $a	1	/*$note is true */" ;;
+							esac
 							eval $a=1
 							;;
 						esac
@@ -2786,13 +2829,15 @@ $inc
 								;;
 							esac
 							gothdr="$gothdr + $x"
-							echo "#define $m	1	/* #include <$x> ok */"
+							case $define in
+							1)	echo "#define $m	1	/* #include <$x> ok */" ;;
+							esac
 							eval $m=1
 						else	failure
 							gothdr="$gothdr - $x"
-							case $all$config$undef in
-							?1?|??1)echo "#undef	$m		/* #include <$x> not ok */" ;;
-							1??)	echo "#define	$m	0	/* #include <$x> not ok */" ;;
+							case $define$all$config$undef in
+							1?1?|1??1)echo "#undef	$m		/* #include <$x> not ok */" ;;
+							11??)	echo "#define	$m	0	/* #include <$x> not ok */" ;;
 							esac
 							eval $m=0
 						fi
@@ -2838,21 +2883,23 @@ int f(){int $w = 1;return($w);}" > $tmp.c
 							continue
 							;;
 						esac
-						case $all$config$undef in
-						?1?|??1)echo "#undef	$m		/* $w is not a reserved keyword */" ;;
-						1??)	echo "#define	$m	0	/* $w is not a reserved keyword */" ;;
+						case $define$all$config$undef in
+						1?1?|1??1)echo "#undef	$m		/* $w is not a reserved keyword */" ;;
+						11??)	echo "#define	$m	0	/* $w is not a reserved keyword */" ;;
 						esac
 						eval $m=0
-						case $set in
-						?*)	echo "#define	$v	$set	/* default for reserved keyword $v */" ;;
+						case $define$set in
+						1?*)	echo "#define	$v	$set	/* default for reserved keyword $v */" ;;
 						esac
 					else	success
 						usr="$usr$nl#define $m 1"
-						echo "#define $m	1	/* $v is a reserved keyword */"
+						case $define in
+						1)	echo "#define $m	1	/* $v is a reserved keyword */" ;;
+						esac
 						eval $m=1
-						case $w in
-						$v)	;;
-						*)	echo "#define	$v	$w	/* alternate for reserved keyword $v */" ;;
+						case $define$w in
+						1$v)	;;
+						1*)	echo "#define	$v	$w	/* alternate for reserved keyword $v */" ;;
 						esac
 					fi
 					break
@@ -2892,17 +2939,19 @@ static _IFFE_fun i=(_IFFE_fun)$v;main(){return(i==0);}
 					then	case $o in
 						lib)	success
 							usr="$usr$nl#define $m 1"
-							echo "#define $m	1	/* $v() in default lib(s) */"
+							case $define in
+							1)	echo "#define $m	1	/* $v() in default lib(s) */" ;;
+							esac
 							eval $m=1
 							;;
 						*)	failure
-							case $all$config$undef in
-							?1?|??1)echo "#undef	$m		/* $v() not in math lib */" ;;
-							1??)	echo "#define	$m	0	/* $v() not in math lib */" ;;
+							case $define$all$config$undef in
+							1?1?|1??1)echo "#undef	$m		/* $v() not in math lib */" ;;
+							11??)	echo "#define	$m	0	/* $v() not in math lib */" ;;
 							esac
 							eval $m=0
-							case $set in
-							?*)	echo "#define	$v	$set	/* default for function $v() */" ;;
+							case $define$set in
+							1?*)	echo "#define	$v	$set	/* default for function $v() */" ;;
 							esac
 							;;
 						esac
@@ -2911,27 +2960,29 @@ static _IFFE_fun i=(_IFFE_fun)$v;main(){return(i==0);}
 							if	$cc $d $static -o $tmp.exe $tmp.o -lm <&$nullin >&$nullout && $executable $tmp.exe
 							then	success
 								usr="$usr$nl#define $m 1"
-								echo "#define $m	1	/* $v() in math lib */"
+								case $define in
+								1)	echo "#define $m	1	/* $v() in math lib */" ;;
+								esac
 								eval $m=1
 							else	failure
-								case $all$config$undef in
-								?1?|??1)echo "#undef	$m		/* $v() not in math lib */" ;;
-								1??)	echo "#define	$m	0	/* $v() not in math lib */" ;;
+								case $define$all$config$undef in
+								1?1?|1??1)echo "#undef	$m		/* $v() not in math lib */" ;;
+								11??)	echo "#define	$m	0	/* $v() not in math lib */" ;;
 								esac
 								eval $m=0
-								case $set in
-								?*)	echo "#define	$v	$set	/* default for function $v() */" ;;
+								case $define$set in
+								1?*)	echo "#define	$v	$set	/* default for function $v() */" ;;
 								esac
 							fi
 							;;
 						*)	failure
-							case $all$config$undef in
-							?1?|??1)echo "#undef	$m		/* $v() not in default lib(s) */" ;;
-							1??)	echo "#define	$m	0	/* $v() not in default lib(s) */" ;;
+							case $define$all$config$undef in
+							1?1?|1??1)echo "#undef	$m		/* $v() not in default lib(s) */" ;;
+							11??)	echo "#define	$m	0	/* $v() not in default lib(s) */" ;;
 							esac
 							eval $m=0
-							case $set in
-							?*)	echo "#define	$v	$set	/* default for function $v() */" ;;
+							case $define$set in
+							1?*)	echo "#define	$v	$set	/* default for function $v() */" ;;
 							esac
 							;;
 						esac
@@ -2957,30 +3008,35 @@ static int ((*i)())=foo;main(){return(i==0);}
 					case $intrinsic in
 					0)	failure
 						case $o in
-						mth)	case $all$config$undef in
-							?1?|??1)echo "#undef	$m		/* $v() not in math lib */" ;;
-							1??)	echo "#define	$m	0	/* $v() not in math lib */" ;;
+						mth)	case $define$all$config$undef in
+							1?1?|1??1)echo "#undef	$m		/* $v() not in math lib */" ;;
+							11??)	echo "#define	$m	0	/* $v() not in math lib */" ;;
 							esac
 							eval $m=0
 							;;
-						*)	case $all$config$undef in
-							?1?|??1)echo "#undef	$m		/* $v() not in default lib(s) */" ;;
-							1??)	echo "#define	$m	0	/* $v() not in default lib(s) */" ;;
+						*)	case $define$all$config$undef in
+							1?1?|1??1)echo "#undef	$m		/* $v() not in default lib(s) */" ;;
+							11??)	echo "#define	$m	0	/* $v() not in default lib(s) */" ;;
 							esac
 							eval $m=0
 							;;
 						esac
-						case $set in
-						?*)	echo "#define	$v	$set	/* default for function $v() */" ;;
+						case $define$set in
+						1?*)	echo "#define	$v	$set	/* default for function $v() */" ;;
 						esac
 						;;
 					1)	success
+						eval $m=1
 						case $o in
 						lib)	usr="$usr$nl#define $m 1"
-							echo "#define $m	1	/* $v() in default lib(s) */"
+							case $define in
+							1)	echo "#define $m	1	/* $v() in default lib(s) */" ;;
+							esac
 							;;
 						mth)	usr="$usr$nl#define $m 1"
-							echo "#define $m	1	/* $v() in math lib */"
+							case $define in
+							1)	echo "#define $m	1	/* $v() in math lib */" ;;
+							esac
 							;;
 						esac
 						;;
@@ -3001,9 +3057,9 @@ $inc
 					usr="$usr$nl#define $m 1"
 					eval $m=1
 				else	failure
-					case $all$config$undef in
-					?1?|??1)echo "#undef	$m	0 /* $v is not a macro */" ;;
-					1??)	echo "#define	$m	0 /* $v is not a macro */" ;;
+					case $define$all$config$undef in
+					1?1?|1??1)echo "#undef	$m	0 /* $v is not a macro */" ;;
+					11??)	echo "#define	$m	0 /* $v is not a macro */" ;;
 					esac
 					eval $m=0
 				fi
@@ -3038,12 +3094,14 @@ int n = sizeof(i.$v);" > $tmp.c
 					if	$cc -c $tmp.c <&$nullin >&$nullout
 					then	success
 						usr="$usr$nl#define $m 1"
-						echo "#define $m	1	/* $v is a member of $p */"
+						case $define in
+						1)	echo "#define $m	1	/* $v is a member of $p */" ;;
+						esac
 						eval $m=1
 					else	failure
-						case $all$config$undef$i in
-						?1?0|??10)echo "#undef	$m		/* $v is not a member of $p */" ;;
-						1??0)	echo "#define	$m	0	/* $v is not a member of $p */" ;;
+						case $define$all$config$undef$i in
+						1?1?0|1??10)echo "#undef	$m		/* $v is not a member of $p */" ;;
+						11??0)	echo "#define	$m	0	/* $v is not a member of $p */" ;;
 						esac
 						eval $m=0
 					fi
@@ -3084,14 +3142,16 @@ unsigned long f() { return (unsigned long)i; }" > $tmp.c
 						then	:
 						else	success
 							usr="$usr$nl#define $m 1"
-							echo "#define $m	1	/* $p is a non-opaque struct */"
+							case $define in
+							1)	echo "#define $m	1	/* $p is a non-opaque struct */" ;;
+							esac
 							continue
 						fi
 					fi
 					failure
-					case $all$config$undef$i in
-					?1?0|??10)echo "#undef	$m		/* $p is not a non-opaque struct */" ;;
-					1??0)	echo "#define	$m	0	/* $p is not a non-opaque struct */" ;;
+					case $define$all$config$undef$i in
+					1?1?0|1??10)echo "#undef	$m		/* $p is not a non-opaque struct */" ;;
+					11??0)	echo "#define	$m	0	/* $p is not a non-opaque struct */" ;;
 					esac
 					eval $m=0
 					;;
@@ -3113,23 +3173,29 @@ _END_EXTERNS_
 				if	$cc -c $tmp.c <&$nullin >&$nullout
 				then	success
 					case $config in
-					1)	echo "#undef	$m		/* $v() needs a prototype */"
+					1)	case $define in
+						1)	echo "#undef	$m		/* $v() needs a prototype */" ;;
+						esac
 						eval $m=0
 						;;
 					*)	usr="$usr$nl#define $m 1"
-						echo "#define $m	1	/* $v() needs a prototype */"
+						case $define in
+						1)	echo "#define $m	1	/* $v() needs a prototype */" ;;
+						esac
 						eval $m=1
 						;;
 					esac
 				else	failure
 					case $config in
 					1)	usr="$usr$nl#define $m 1"
-						echo "#define	$m	1	/* $v() does not need a prototype */"
+						case $define in
+						1)	echo "#define	$m	1	/* $v() does not need a prototype */" ;;
+						esac
 						eval $m=1
 						;;
-					*)	case $all$undef in
-						?1)	echo "#undef	$m		/* $v() does not need a prototype */" ;;
-						1?)	echo "#define	$m	0	/* $v() does not need a prototype */" ;;
+					*)	case $define$all$undef in
+						1?1)	echo "#undef	$m		/* $v() does not need a prototype */" ;;
+						11?)	echo "#define	$m	0	/* $v() does not need a prototype */" ;;
 						esac
 						eval $m=0
 						;;
@@ -3150,12 +3216,14 @@ _END_EXTERNS_
 				if	$cc -c $tmp.c <&$nullin >&$nullout
 				then	success
 					usr="$usr$nl#define $m 1"
-					echo "#define $m	1	/* $v is a numeric constant */"
+					case $define in
+					1)	echo "#define $m	1	/* $v is a numeric constant */" ;;
+					esac
 					eval $m=1
 				else	failure
-					case $all$config$undef in
-					?1?|??1)echo "#undef	$m		/* $v is not a numeric constant */" ;;
-					1??)	echo "#define	$m	0	/* $v is not a numeric constant */" ;;
+					case $define$all$config$undef in
+					1?1?|1??1)echo "#undef	$m		/* $v is not a numeric constant */" ;;
+					11??)	echo "#define	$m	0	/* $v is not a numeric constant */" ;;
 					esac
 					eval $m=0
 				fi
@@ -3256,12 +3324,14 @@ _END_EXTERNS_
 				esac
 				case $f in
 				'')	failure
-					case $all$config$undef in
-					?1?|??1)echo "#undef	$m		/* $a path not found */" ;;
+					case $define$all$config$undef in
+					1?1?|1??1)echo "#undef	$m		/* $a path not found */" ;;
 					esac
 					;;
 				?*)	success
-					echo "#define $m	\"$f\"	/* ${note:-$a path} */"
+					case $define in
+					1)	echo "#define $m	\"$f\"	/* ${note:-$a path} */" ;;
+					esac
 					eval $m=\\\"$f\\\"
 					;;
 				esac
@@ -3355,13 +3425,15 @@ main() {
 				then	success
 					z=`cat $tmp.dat`
 					usr="$usr$nl#define $m $z"
-					echo "#define $m	$z	/* sizeof($x$v) */"
+					case $define in
+					1)	echo "#define $m	$z	/* sizeof($x$v) */" ;;
+					esac
 					eval $m=1
 					user_pf=$pass user_yn=$yes
 				else	failure
-					case $all$config$undef in
-					?1?|??1)echo "#undef	$m		/* $x$v not a type with known size */" ;;
-					1??)	echo "#define	$m	0	/* $x$v not a type with known size */" ;;
+					case $define$all$config$undef in
+					1?1?|1??1)echo "#undef	$m		/* $x$v not a type with known size */" ;;
+					11??)	echo "#define	$m	0	/* $x$v not a type with known size */" ;;
 					esac
 					eval $m=0
 					user_pf=$fail user_yn=$no
@@ -3442,17 +3514,19 @@ struct xxx* f() { return &v; }"
 					execute $tmp.exe
 				then	success
 					usr="$usr$nl#define $m 1"
-					echo "#define $m	1	/* $x$v is a type */"
+					case $define in
+					1)	echo "#define $m	1	/* $x$v is a type */" ;;
+					esac
 					eval $m=1
 					user_pf=$pass user_yn=$yes
 				else	failure
-					case $all$config$undef in
-					?1?|??1)echo "#undef	$m		/* $x$v is not a type */" ;;
-					1??)	echo "#define	$m	0	/* $x$v is not a type */" ;;
+					case $define$all$config$undef in
+					1?1?|1??1)echo "#undef	$m		/* $x$v is not a type */" ;;
+					11??)	echo "#define	$m	0	/* $x$v is not a type */" ;;
 					esac
 					eval $m=0
-					case $set in
-					?*)	echo "#define	$v	$set	/* default for type $x$v */" ;;
+					case $define$set in
+					1?*)	echo "#define	$v	$set	/* default for type $x$v */" ;;
 					esac
 					user_pf=$fail user_yn=$no
 				fi

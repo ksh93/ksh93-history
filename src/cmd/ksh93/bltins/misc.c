@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2003 AT&T Corp.                *
+*                Copyright (c) 1982-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -217,6 +217,7 @@ int    b_dot_cmd(register int n,char *argv[],void* extra)
 	register int jmpval;
 	register Shell_t *shp = (Shell_t*)extra;
 	struct sh_scoped savst, *prevscope = shp->st.self;
+	char *filename=0;
 	int	fd;
 	struct dolnod   *argsave=0, *saveargfor;
 	struct checkpt buff;
@@ -238,12 +239,6 @@ int    b_dot_cmd(register int n,char *argv[],void* extra)
 	if(shp->dot_depth++ > DOTMAX)
 		errormsg(SH_DICT,ERROR_exit(1),e_toodeep,script);
 	shp->st.lineno = error_info.line;
-	*prevscope = shp->st;
-	shp->st.prevst = prevscope;
-	shp->st.self = &savst;
-	shp->topscope = (Shscope_t*)shp->st.self;
-	prevscope->save_tree = shp->var_tree;
-	shp->st.cmdname = argv[0];
 	if(!(np=shp->posix_fun))
 	{
 		/* check for KornShell style function first */
@@ -272,9 +267,17 @@ int    b_dot_cmd(register int n,char *argv[],void* extra)
 		{
 			if((fd=path_open(script,path_get(script))) < 0)
 				errormsg(SH_DICT,ERROR_system(1),e_open,script);
-			shp->st.filename = path_fullname(stakptr(PATH_OFFSET));
+			filename = path_fullname(stakptr(PATH_OFFSET));
 		}
 	}
+	*prevscope = shp->st;
+	if(filename)
+		shp->st.filename = filename;
+	shp->st.prevst = prevscope;
+	shp->st.self = &savst;
+	shp->topscope = (Shscope_t*)shp->st.self;
+	prevscope->save_tree = shp->var_tree;
+	shp->st.cmdname = argv[0];
 	if(np)
 		shp->st.filename = np->nvalue.rp->fname;
 	nv_putval(SH_PATHNAMENOD, shp->st.filename ,NV_NOFREE);

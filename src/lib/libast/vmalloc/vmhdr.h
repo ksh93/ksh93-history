@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2003 AT&T Corp.                *
+*                Copyright (c) 1985-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -109,6 +109,10 @@ typedef struct _block_s	Block_t;
 typedef struct _seg_s	Seg_t;
 typedef struct _pfobj_s	Pfobj_t;
 
+#if !_typ_ssize_t
+typedef int		ssize_t;
+#endif
+
 #define NIL(t)		((t)0)
 #define reg		register
 #if __STD_C
@@ -128,6 +132,14 @@ typedef struct _pfobj_s	Pfobj_t;
 /* compute a value that is a common multiple of x and y */
 #define MULTIPLE(x,y)	((x)%(y) == 0 ? (x) : (y)%(x) == 0 ? (y) : (y)*(x))
 
+/* _Vmcheck flags */
+#define _VM_init	0x1
+#define _VM_check	0x2
+#define _VM_assert	0x4
+#define _VM_warn	0x8
+
+extern int		_Vmcheck;
+
 #ifndef DEBUG
 #ifdef _BLD_DEBUG
 #define DEBUG		1
@@ -136,7 +148,7 @@ typedef struct _pfobj_s	Pfobj_t;
 #if DEBUG
 extern void		_Vmessage _ARG_((const char*, long, const char*, long));
 #define MESSAGE(s)	_Vmessage(__FILE__,__LINE__,s,0)
-#define ASSERT(p)	((p) ? 0 : (MESSAGE("assertion failed"), abort(), 0))
+#define ASSERT(p)	((!(_Vmcheck & (_VM_assert|_VM_check)) || (p)) ? 0 : (MESSAGE("assertion failed"), (_Vmcheck & _VM_warn) ? 0 : (abort(),1)))
 #define COUNT(n)	((n) += 1)
 #else
 #define ASSERT(p)
@@ -456,7 +468,7 @@ struct _seg_s
 typedef Block_t*	(*Vmsearch_f)_ARG_((Vmdata_t*, size_t, Block_t*));
 typedef struct _vmextern_
 {	Block_t*	(*vm_extend)_ARG_((Vmalloc_t*, size_t, Vmsearch_f ));
-	int		(*vm_truncate)_ARG_((Vmalloc_t*, Seg_t*, size_t, int));
+	ssize_t		(*vm_truncate)_ARG_((Vmalloc_t*, Seg_t*, size_t, int));
 	size_t		vm_pagesize;
 	char*		(*vm_strcpy)_ARG_((char*, const char*, int));
 	char*		(*vm_itoa)_ARG_((Vmulong_t, int));
@@ -472,6 +484,8 @@ typedef struct _vmextern_
 #define _Vmitoa		(_Vmextern.vm_itoa)
 #define _Vmtrace	(_Vmextern.vm_trace)
 #define _Vmpfclose	(_Vmextern.vm_pfclose)
+
+extern int		_vmbestcheck _ARG_((Vmdata_t*, Block_t*));
 
 _BEGIN_EXTERNS_
 
@@ -517,11 +531,6 @@ extern void		_exit _ARG_(( int ));
 extern void		_cleanup _ARG_(( void ));
 
 #endif /*_PACKAGE_ast*/
-
-/* for vmdcsbrk.c */
-#if !_typ_ssize_t
-typedef int		ssize_t;
-#endif
 
 _END_EXTERNS_
 

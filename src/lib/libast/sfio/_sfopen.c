@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2003 AT&T Corp.                *
+*                Copyright (c) 1985-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -31,6 +31,12 @@
 **
 **	Written by Kiem-Phong Vo.
 */
+
+#if _BLD_sfio && defined(__EXPORT__)
+#define extern  __EXPORT__
+#endif
+extern
+#undef  extern
 
 #if __STD_C
 Sfio_t* _sfopen(reg Sfio_t* f, const char* file, const char* mode)

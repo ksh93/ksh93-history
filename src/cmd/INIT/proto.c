@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1990-2003 AT&T Corp.                *
+*                Copyright (c) 1990-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -82,6 +82,9 @@
 
 
  
+
+
+
 
 
 
@@ -303,7 +306,7 @@ replace __PARAM__((const char* newfile, const char* oldfile, int preserve), (new
 
 
 
-static const char id[] = "\n@(#)$Id: proto (AT&T Research) 2003-06-21 $\000\n";
+static const char id[] = "\n@(#)$Id: proto (AT&T Research) 2004-02-29 $\000\n";
 
 
 
@@ -520,12 +523,12 @@ struct pptuple
 #line 245
 
 
-#line 295
+#line 303
 
 
 
 
-#line 310
+#line 318
 
 
 
@@ -554,6 +557,7 @@ struct pptuple
 #line 1 "/home/gsf/src/lib/libpp/pp.h"
 
  
+
 
 
 
@@ -952,7 +956,7 @@ struct ppglobals
 
 
 
-	char* checkpoint; int constack; struct ppinstk* in; char* addp; char* args; char* addbuf; char* catbuf; char* hdrbuf; char* hidebuf; char* path; char* tmpbuf; char* valbuf; char* include; char* prefix; struct ppmember* member; int hidden; int hiding; int level; struct { int input; int output; } pool; int truncate; struct ppmacstk* macp; char* maxmac; char* mactop; char* toknxt; long* control; long* maxcon; struct oplist* chop; struct ppfile* insert; struct ppfile* original; struct ppdirs* found; int vendor; char* dirtab; char* strtab; PPBUILTIN builtin; PPCOMMENT comment; PPINCREF incref; PPLINESYNC linesync; PPLINESYNC olinesync; PPMACREF macref; PPOPTARG optarg; PPPRAGMA pragma; struct counter counter; char funbuf[256];		 
+	char* checkpoint; int constack; struct ppinstk* in; char* addp; char* args; char* addbuf; char* catbuf; char* hdrbuf; char* hidebuf; char* path; char* tmpbuf; char* valbuf; char* include; char* prefix; struct ppmember* member; int hidden; int hiding; int level; struct { int input; int output; } pool; struct { long ro_state; long ro_mode; long ro_option; int on; char* symtab; } reset; int truncate; struct ppmacstk* macp; char* maxmac; char* mactop; char* toknxt; long* control; long* maxcon; struct oplist* chop; struct ppfile* insert; struct ppfile* original; struct ppdirs* found; int vendor; char* dirtab; char* strtab; PPBUILTIN builtin; PPCOMMENT comment; PPINCREF incref; PPLINESYNC linesync; PPLINESYNC olinesync; PPMACREF macref; PPOPTARG optarg; PPPRAGMA pragma; struct counter counter; char funbuf[256];		 
 
 
 };
@@ -981,7 +985,7 @@ extern __MANGLE__ void		pppragma __PROTO__((char*, char*, char*, char*, int));
 extern __MANGLE__ int		ppprintf __PROTO__((char*, ...));
 
 
-#line 336 "/home/gsf/src/lib/libpp/pplib.h"
+#line 344 "/home/gsf/src/lib/libpp/pplib.h"
 
 #line 1 "../../lib/libpp/ppdef.h"
  
@@ -1189,7 +1193,7 @@ extern __MANGLE__ int		ppprintf __PROTO__((char*, ...));
 
 
 
-#line 337 "/home/gsf/src/lib/libpp/pplib.h"
+#line 345 "/home/gsf/src/lib/libpp/pplib.h"
 
 #line 1 "/home/gsf/src/lib/libpp/ppkey.h"
 
@@ -1319,7 +1323,7 @@ extern __MANGLE__ int		ppprintf __PROTO__((char*, ...));
 extern __MANGLE__ struct ppkeyword	ppkey[];
 
 
-#line 338 "/home/gsf/src/lib/libpp/pplib.h"
+#line 346 "/home/gsf/src/lib/libpp/pplib.h"
 
 
 
@@ -1361,7 +1365,7 @@ extern __MANGLE__ struct ppkeyword	ppkey[];
 
 
 
-#line 390
+#line 398
 
 
 
@@ -1475,16 +1479,16 @@ extern __MANGLE__ struct ppkeyword	ppkey[];
 
 
 
-#line 515
+#line 523
 
 
 
 
 
-#line 530
+#line 538
 
 
-#line 544
+#line 552
 
 
 
@@ -1493,22 +1497,22 @@ extern __MANGLE__ struct ppkeyword	ppkey[];
 
 
 
-#line 563
+#line 571
 
 
-#line 575
+#line 583
 
 
-#line 598
+#line 606
 
 
-#line 610
+#line 618
 
 
 
 
 
-#line 625
+#line 633
 
 
 
@@ -1611,7 +1615,7 @@ extern __MANGLE__ int		write __PROTO__((int, const __V_*, int));
 
 
 
-#line 758
+#line 766
 
 
 extern __MANGLE__ void		ppassert __PROTO__((int, char*, char*));
@@ -3135,6 +3139,7 @@ typedef struct
 
 typedef struct
 {
+	int		test;
 	int		type;
 	int		verbose;
 	int		ids;
@@ -3295,7 +3300,10 @@ copyright __PARAM__((Notice_t* notice, register Buffer_t* b), (notice, b)) __OTO
 	time_t		clock;
 
 	copy(b, "Copyright (c) ", -1);
-	time(&clock);
+	if (notice->test)
+		clock = (time_t)1000212300;
+	else
+		time(&clock);
 	t = ctime(&clock) + 20;
 	if ((x = notice->item[8].data) && sstrncmp( x, t, 4))
 	{
@@ -3371,6 +3379,7 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 		s = options;
 		options = 0;
 	}
+	notice.test = 0;
 	notice.type = 0;
 	notice.verbose = 0;
 	notice.ids = 0;
@@ -3491,6 +3500,8 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 							return 0;
 						else if (!sstrncmp( v, "open", 4))
 							notice.type = 6;
+						else if (!sstrncmp( v, "test", 4))
+							notice.test = 1;
 						else if (!sstrncmp( v, "usage", 5))
 						{
 							notice.type = 1;
@@ -3516,8 +3527,12 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 			}
 			else
 			{
-				copy(&buf, file, -1);
-				copy(&buf, ": syntax error: assignment expected", -1);
+				if (file)
+				{
+					copy(&buf, file, -1);
+					copy(&buf, ": ", -1);
+				}
+				copy(&buf, "option error: assignment expected", -1);
 				((( &buf)->nxt<( &buf)->end)?(*( &buf)->nxt++=( 0)):(( 0),(-1)));
 				return -1;
 			}
@@ -5575,7 +5590,6 @@ pppopen __PARAM__((char* file, int fd, char* notice, char* options, char* packag
 
 	int			comlen;
 	char			com[80];
-	int			q;
 
 	int			m = 0;
 
@@ -5631,10 +5645,11 @@ pppopen __PARAM__((char* file, int fd, char* notice, char* options, char* packag
 	proto->op = proto->ob = iob;
 	proto->ip = proto->ib = iob + proto->oz + n;
 	if (m) proto->options |= (1L<<0);
-	if (!comment || !comment[0])
+	if (!comment)
 		comment = "/*";
-	proto->cc[0] = comment[0];
-	if (comment[1])
+	if (!(proto->cc[0] = comment[0]))
+		notice = options = 0;
+	else if (comment[1])
 	{
 		proto->cc[1] = comment[1];
 		proto->cc[2] = comment[2] ? comment[2] : comment[0];
@@ -5720,8 +5735,6 @@ pppopen __PARAM__((char* file, int fd, char* notice, char* options, char* packag
 			if (*s == *com && !sstrncmp( s, com, comlen))
 				notice = options = 0;
 			else
-			{
-				q = 8;
 				while (*s)
 				{
 					if (*s == *"Copyright"&& !sstrncmp( s, "Copyright", sizeof("Copyright") - 1))
@@ -5729,17 +5742,18 @@ pppopen __PARAM__((char* file, int fd, char* notice, char* options, char* packag
 						s += sizeof("Copyright") - 1;
 						while (*s == ' ' || *s == '\t')
 							s++;
-						if (*s == '(' && (*(s + 1) == 'c' || *(s + 1) == 'C') && *(s + 2) == ')')
+						if (*s == '(' && (*(s + 1) == 'c' || *(s + 1) == 'C') && *(s + 2) == ')' || *s >= '0' && *s <= '9' && *(s + 1) >= '0' && *(s + 1) <= '9')
 						{
 							notice = options = 0;
 							break;
 						}
 					}
-					else if (*s++ == '\n' && !--q)
+					else if (*s++ == '\n')
+					{
+						s--;
 						break;
+					}
 				}
-				continue;
-			}
 		}
 
 		while (*s && *s++ != '\n');
@@ -5784,10 +5798,13 @@ pppopen __PARAM__((char* file, int fd, char* notice, char* options, char* packag
 					proto->iz = n -= m;
 				}
 
-				if ((comlen = astlicense(proto->op, proto->oz, notice, options, proto->cc[0], proto->cc[1], proto->cc[2])) < 0)
-					proto_error((char*)proto + sizeof(struct proto), 1, proto->op, ((char*)0));
-				else
-					proto->op += comlen;
+				if (proto->cc[0])
+				{
+					if ((comlen = astlicense(proto->op, proto->oz, notice, options, proto->cc[0], proto->cc[1], proto->cc[2])) < 0)
+						proto_error((char*)proto + sizeof(struct proto), 1, proto->op, ((char*)0));
+					else
+						proto->op += comlen;
+				}
 				if (!(flags & (1<<0)) && !(proto->flags & (1L<<28)))
 
 				proto->op = linesync(proto, proto->op, 1);
@@ -5990,7 +6007,7 @@ pppread __PARAM__((char* iob), (iob)) __OTORP__(char* iob;){
 
 
 
-#line 215 "/home/gsf/src/cmd/proto/proto.c"
+#line 218 "/home/gsf/src/cmd/proto/proto.c"
 
 
 
@@ -6097,6 +6114,71 @@ proto __PARAM__((char* file, char* license, char* options, char* package, char* 
 
 
 
+
+typedef struct Sufcom_s
+{
+	char		suffix[4];
+	char		comment[4];
+} Sufcom_t;
+
+static const Sufcom_t	sufcom[] =
+{
+	"c",		"/*",
+	"cxx",		"/*",
+	"c++",		"/*",
+	"C",		"/*",
+	"CXX",		"/*",
+	"C++",		"/*",
+	"f",		"C",
+	"F",		"C",
+	"h",		"/*",
+	"hxx",		"/*",
+	"H",		"/*",
+	"HXX",		"/*",
+	"ksh",		"#",
+	"KSH",		"#",
+	"l",		"/*",
+	"L",		"/*",
+	"p",		"(*)",
+	"pas",		"(*)",
+	"P",		"(*)",
+	"PAS",		"(*)",
+	"pl",		"#",
+	"PL",		"#",
+	"pl1",		"/*",
+	"pli",		"/*",
+	"PL1",		"/*",
+	"PLI",		"/*",
+	"sh",		"#",
+	"SH",		"#",
+	"sml",		"(*)",
+	"SML",		"(*)",
+	"y",		"/*",
+	"Y",		"/*",
+};
+
+ 
+
+
+
+static char*
+type __PARAM__((register char* file, char* comment), (file, comment)) __OTORP__(register char* file; char* comment;){
+	register char*	suffix;
+	register int	i;
+
+	if (file && (!comment || !*comment))
+	{
+		suffix = 0;
+		while (*file)
+			if (*file++ == '.')
+				suffix = file;
+		if (suffix && sstrlen( suffix) <= 3)
+			for (i = 0; i < sizeof(sufcom) / sizeof(sufcom[0]); i++)
+				if (!strcmp(suffix, sufcom[i].suffix))
+					return (char*)sufcom[i].comment;
+	}
+	return comment;
+}
 
 int
 main __PARAM__((int argc, char** argv), (argc, argv)) __OTORP__(int argc; char** argv;){
@@ -6335,15 +6417,15 @@ main __PARAM__((int argc, char** argv), (argc, argv)) __OTORP__(int argc; char**
 			if (b > buf)
 			{
 				*b = 0;
-				flags = proto(buf, license, options, package, copy, comment, flags);
+				flags = proto(buf, license, options, package, copy, type(buf, comment), flags);
 			}
 		} while (n > 0);
 		if (fd > 0)
 			close(fd);
 	}
 	if (file)
-		do flags = proto(file, license, options, package, copy, comment, flags); while (file = *++argv);
+		do flags = proto(file, license, options, package, copy, type(file, comment), flags); while (file = *++argv);
 	else if (!list)
-		flags = proto(file, license, options, package, copy, comment, flags);
+		flags = proto(file, license, options, package, copy, type(file, comment), flags);
 	return errors ? 1 : (flags & ((1<<13)<<0)) ? 2 : 0;
 }

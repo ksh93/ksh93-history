@@ -1,3 +1,6 @@
+04-01-30 dllfind.c: dllplug(error_info.id) then dllplug(0)
+04-01-28 dllscan.c: update for new plugin scheme: lib/foo/bar.xxx
+	 dllplug.c: add dllplug() for plugin dllfind()
 03-03-12 dllfind.c: dlopen() with RTLD_GLOBAL|RTLD_PARENT defaults
 03-02-11 dllscan.c: change LIBPATH to <dir>[:<env>[:<pat>]][,...]
 03-01-08 dllscan.c: hack version logic again -- is consistency rocket science?

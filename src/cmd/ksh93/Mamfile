@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 4.3 2003-09-19
+info mam static 00000 1994-07-17 make (AT&T Research) 4.4 2004-02-29
 setv INSTALLROOT ../../..
 setv PACKAGE_ast ${INSTALLROOT}
 setv PACKAGE_ast_INCLUDE ${PACKAGE_ast}/include/ast
@@ -25,8 +25,8 @@ setv LEXFLAGS
 setv LPR lpr
 setv LPRFLAGS
 setv M4FLAGS 
-setv MAKE nmake
-setv MAKEFLAGS
+setv NMAKE nmake
+setv NMAKEFLAGS
 setv PR pr
 setv PRFLAGS
 setv SHELL /bin/sh
@@ -161,7 +161,7 @@ exec - {
 exec - case "" in
 exec - *?)	echo " " ;;
 exec - esac
-exec - for i in shell cmd dll ast m jobs i intl dl
+exec - for i in shell cmd dll ast m jobs i secdb intl dl
 exec - do	case $i in
 exec - 	"shell"|shell)
 exec - 		;;
@@ -193,6 +193,8 @@ make +ljobs
 done +ljobs dontcare virtual
 make +li
 done +li dontcare virtual
+make ${mam_libsecdb}
+done ${mam_libsecdb} dontcare virtual
 make +lintl
 done +lintl dontcare virtual
 make ${mam_libdl}
@@ -214,6 +216,7 @@ done features/dynamic
 prev shell.req
 prev +ljobs
 prev +li
+prev ${mam_libsecdb}
 prev +lintl
 prev ${mam_libdl}
 exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libm} ${mam_libast} : run features/dynamic
@@ -223,14 +226,15 @@ prev ../../../include/ast/prototyped.h implicit
 done ../../../include/ast/fs3d.h dontcare
 done FEATURE/dynamic dontcare generated
 make FEATURE/options implicit
-make features/options.sh
-done features/options.sh
+make features/options
+done features/options
 prev shell.req
 prev +ljobs
 prev +li
+prev ${mam_libsecdb}
 prev +lintl
 prev ${mam_libdl}
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libm} ${mam_libast} : run features/options.sh
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libm} ${mam_libast} : run features/options
 done FEATURE/options dontcare generated
 prev ../../../include/ast/option.h implicit
 done include/builtins.h
@@ -248,6 +252,7 @@ done features/sigfeatures
 prev shell.req
 prev +ljobs
 prev +li
+prev ${mam_libsecdb}
 prev +lintl
 prev ${mam_libdl}
 exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libm} ${mam_libast} : run features/sigfeatures
@@ -258,6 +263,7 @@ done features/setjmp
 prev shell.req
 prev +ljobs
 prev +li
+prev ${mam_libsecdb}
 prev +lintl
 prev ${mam_libdl}
 exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libm} ${mam_libast} : run features/setjmp
@@ -293,6 +299,7 @@ make FEATURE/acct implicit
 prev shell.req
 prev +ljobs
 prev +li
+prev ${mam_libsecdb}
 prev +lintl
 prev ${mam_libdl}
 exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libm} ${mam_libast} : def acct
@@ -361,6 +368,7 @@ done features/ttys
 prev shell.req
 prev +ljobs
 prev +li
+prev ${mam_libsecdb}
 prev +lintl
 prev ${mam_libdl}
 exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libm} ${mam_libast} : run features/ttys
@@ -374,6 +382,7 @@ done features/locale
 prev shell.req
 prev +ljobs
 prev +li
+prev ${mam_libsecdb}
 prev +lintl
 prev ${mam_libdl}
 exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libm} ${mam_libast} : run features/locale
@@ -472,6 +481,7 @@ done features/poll
 prev shell.req
 prev +ljobs
 prev +li
+prev ${mam_libsecdb}
 prev +lintl
 prev ${mam_libdl}
 exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libm} ${mam_libast} : run features/poll
@@ -504,6 +514,7 @@ done features/externs
 prev shell.req
 prev +ljobs
 prev +li
+prev ${mam_libsecdb}
 prev +lintl
 prev ${mam_libdl}
 exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libm} ${mam_libast} : run features/externs
@@ -542,6 +553,7 @@ done features/rlimits
 prev shell.req
 prev +ljobs
 prev +li
+prev ${mam_libsecdb}
 prev +lintl
 prev ${mam_libdl}
 exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libm} ${mam_libast} : run features/rlimits
@@ -604,6 +616,7 @@ make FEATURE/execargs implicit
 prev shell.req
 prev +ljobs
 prev +li
+prev ${mam_libsecdb}
 prev +lintl
 prev ${mam_libdl}
 exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libm} ${mam_libast} : def execargs
@@ -612,6 +625,7 @@ make FEATURE/pstat implicit
 prev shell.req
 prev +ljobs
 prev +li
+prev ${mam_libsecdb}
 prev +lintl
 prev ${mam_libdl}
 exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libm} ${mam_libast} : def pstat
@@ -753,6 +767,7 @@ make sh/fault.c
 prev ../../../include/ast/vmalloc.h implicit
 prev include/path.h implicit
 prev include/jobs.h implicit
+prev include/variables.h implicit
 prev include/shnodes.h implicit
 prev include/history.h implicit
 prev include/io.h implicit
@@ -799,6 +814,8 @@ prev ../../../include/ast/stdio.h implicit
 prev ../../../include/ast/ast_common.h implicit
 done ../../../include/ast/ast_wchar.h dontcare
 done ../../../include/ast/wchar.h dontcare
+make include/version.h implicit
+done include/version.h
 prev FEATURE/locale implicit
 prev include/lexstates.h implicit
 prev FEATURE/dynamic implicit
@@ -1093,6 +1110,7 @@ done features/math
 prev shell.req
 prev +ljobs
 prev +li
+prev ${mam_libsecdb}
 prev +lintl
 prev ${mam_libdl}
 exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libm} ${mam_libast} : run features/math
@@ -1109,7 +1127,7 @@ prev include/shtable.h implicit
 prev ../../../include/ast/ast.h implicit
 done data/testops.c
 prev data/testops.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libshell]"\" -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -c data/testops.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2004 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libshell]"\" -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -c data/testops.c
 done testops.o generated
 make keywords.o
 make data/keywords.c
@@ -1159,19 +1177,21 @@ done features/cmds
 prev shell.req
 prev +ljobs
 prev +li
+prev ${mam_libsecdb}
 prev +lintl
 prev ${mam_libdl}
 exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libcmd} ${mam_libdll} ${mam_libm} ${mam_libast} : run features/cmds
 done FEATURE/cmds dontcare generated
 prev include/jobs.h implicit
 prev include/builtins.h implicit
+prev include/version.h implicit
 prev include/name.h implicit
 prev include/ulimit.h implicit
 prev include/shtable.h implicit
 prev include/shell.h implicit
 done data/builtins.c
 prev data/builtins.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_KIA -DSHOPT_PFSH -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libshell]"\" -DSHOPT_MULTIBYTE -D_PACKAGE_ast -D_BLD_shell -DKSHELL -DSHOPT_OO -DSHOPT_DYNAMIC -c data/builtins.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_KIA -DSHOPT_PFSH -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2004 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libshell]"\" -DSHOPT_MULTIBYTE -D_PACKAGE_ast -D_BLD_shell -DKSHELL -DSHOPT_OO -DSHOPT_DYNAMIC -c data/builtins.c
 done builtins.o generated
 make variables.o
 make data/variables.c
@@ -1228,9 +1248,10 @@ done libshell.a generated
 bind -lshell
 prev +ljobs
 prev +li
+prev ${mam_libsecdb}
 prev +lintl
 prev ${mam_libdl}
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}}   -o ksh pmain.o ${mam_libshell} ${mam_libast}
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} ${mam_cc_EXPORT_DYNAMIC}   -o ksh pmain.o ${mam_libshell} ${mam_libast}
 done ksh generated
 make shcomp
 make shcomp.o
@@ -1243,16 +1264,17 @@ setv CC.DLL -UCC.DLL
 setv SH_DICT -DSH_DICT="\"libshell\""
 setv _BLD_shell -U_BLD_shell
 setv _BLD_DLL -U_BLD_DLL
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -Iinclude -I${PACKAGE_ast_INCLUDE} -DSH_DICT=\""libshell"\" -DSHOPT_KIA -D_PACKAGE_ast -DSHOPT_DYNAMIC -DSHOPT_OO -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libshell]"\" -c sh/shcomp.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -Iinclude -I${PACKAGE_ast_INCLUDE} -DSH_DICT=\""libshell"\" -DSHOPT_KIA -D_PACKAGE_ast -DSHOPT_DYNAMIC -DSHOPT_OO -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2004 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libshell]"\" -c sh/shcomp.c
 done shcomp.o generated
 prev libshell.a archive
 prev +ljobs
 prev +li
+prev ${mam_libsecdb}
 prev +lintl
 prev ${mam_libdl}
 setv CC.DLL -UCC.DLL
 setv SH_DICT -DSH_DICT="\"libshell\""
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}}   -o shcomp shcomp.o ${mam_libshell} ${mam_libast}
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} ${mam_cc_EXPORT_DYNAMIC}   -o shcomp shcomp.o ${mam_libshell} ${mam_libast}
 done shcomp generated
 make sh/suid_exec.c
 prev ../../../include/ast/error.h implicit
@@ -1275,10 +1297,11 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE
 done suid_exec.o generated
 prev +ljobs
 prev +li
+prev ${mam_libsecdb}
 prev +lintl
 prev ${mam_libdl}
 setv CC.DLL -UCC.DLL
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L${PACKAGE_ast_LIB}}   -o suid_exec suid_exec.o ${mam_libast}
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L${PACKAGE_ast_LIB}} ${mam_cc_EXPORT_DYNAMIC}   -o suid_exec suid_exec.o ${mam_libast}
 done suid_exec generated
 make ../../../bin
 exec - set -
@@ -1416,5 +1439,5 @@ done tests/shtests
 exec - silent cmp 2>/dev/null -s ${INSTALLROOT}/bin/ksh ksh 2>/dev/null ||
 exec - echo "make install to run the tests on the latest ksh" >&2
 exec - cd /home/gsf/src/cmd/ksh93/tests
-exec - SHELL=/home/gsf/arch/sgi.mips3/src/cmd/ksh93/${INSTALLROOT}/bin/ksh ${INSTALLROOT}/bin/ksh shtests
+exec - SHELL=./${INSTALLROOT}/bin/ksh ./${INSTALLROOT}/bin/ksh shtests
 done test dontcare virtual

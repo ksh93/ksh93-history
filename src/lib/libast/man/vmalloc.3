@@ -31,6 +31,7 @@ vmalloc \- virtual memory allocation
 .fi
 .SS "Debugging"
 .nf
+.MW "int vmdebug(int);"
 .MW "int vmdbcheck(Vmalloc_t* vm);"
 .MW "int vmdbwatch(Void_t* addr);"
 .MW "static void vmdbwarn(Vmalloc_t*, char* mesg, int n);"
@@ -350,11 +351,16 @@ The optional flag \f5-DVMFL\fP, if used during compilation,
 enables recording of file names and line numbers.
 The following functions work with method \f5Vmdebug\fP.
 .PP
+.I vmdebug
+resets the file descriptor to write out warnings to the given argument.
+By default, this file descriptor is 2, the standard error.
+\fIvmdebug\fP returns the previous file descriptor.
+.PP
 .I vmdbcheck
-checks an entire \fIregion\fP
-for block boundary violations and other inconsistencies.  It calls
-\fIvmdbwarn\fP when errors are found.
-If flag \f5VM_DBCHECK\fP is on for the region, 
+checks a region using \f5Vmdebug\fP or \f5Vmbest\fP for integrity.
+If \f5Vmdebug\fP, this also checks for block overwriting errors.
+On errors, \fIvmdbwarn\fP is called.
+If flag \f5VM_DBCHECK\fP is on, 
 \fIvmdbcheck\fP is called at each invocation of
 \fIvmalloc\fP, \fIvmfree\fP, or \fIvmresize\fP.
 .PP

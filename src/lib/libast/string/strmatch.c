@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2003 AT&T Corp.                *
+*                Copyright (c) 1985-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -156,12 +156,12 @@ strgrpmatch(const char* b, const char* p, int* sub, int n, int flags)
 			cp->keep = 0;
 			regfree(&cp->re);
 		}
+		cp->flags = flags;
+		cp->n = n;
 		if (strlen(p) < sizeof(cp->pattern))
 		{
 			strcpy(cp->pattern, p);
 			p = (const char*)cp->pattern;
-			cp->flags = flags;
-			cp->n = n;
 		}
 		else
 			once = 1;

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2003 AT&T Corp.                *
+*                Copyright (c) 1985-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -113,13 +113,13 @@ getfield(register Field_t* f, int restore)
 			n--;
 		else if (n <= 0)
 		{
-			if (c == '(')
+			if (c == '(' && restore)
 			{
 				lp = '(';
 				rp = ')';
 				n = 1;
 			}
-			else if (c == '[')
+			else if (c == '[' && restore)
 			{
 				lp = '[';
 				rp = ']';

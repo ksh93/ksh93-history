@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1992-2003 AT&T Corp.                *
+*                Copyright (c) 1992-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -58,7 +58,7 @@ USAGE_LICENSE
       "[+0?All modes reported or set successfully.]"
         "[+>0?Standard input not a terminaol or one or more modes failed.]"
 "}"
-"[+SEE ALSO?tegetattr(2), tcsetattr(2), ioctl(2)]"
+"[+SEE ALSO?\btegetattr\b(2), \btcsetattr\b(2), \bioctl\b(2)]"
 ;
 
 

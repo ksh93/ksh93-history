@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1994-2003 AT&T Corp.                #
+#                Copyright (c) 1994-2004 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -31,7 +31,7 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	ARGV0="-a $command"
 	USAGE=$'
 [-?
-@(#)$Id: crossexec (AT&T Labs Research) 2001-05-31 $
+@(#)$Id: crossexec (AT&T Labs Research) 2004-01-04 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?crossexec - cross compiler a.out execution]
@@ -130,7 +130,7 @@ esac
 case $sh in
 ''|-)	sh=ssh ;;
 esac
-case $copy in
+case $cp in
 ''|-)	cp=scp ;;
 scp)	cp="$cp -q" ;;
 esac

@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1982-2003 AT&T Corp.                #
+#                Copyright (c) 1982-2004 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -39,13 +39,14 @@ function fun
 	done 2>   /dev/null
 	print -u3 good
 }
-print 'read -r a;print -r -u$1 -- "$a"' >  mycat
-chmod 755 ./mycat
+print 'read -r a;print -r -u$1 -- "$a"' >  /tmp/mycat$$
+chmod 755 /tmp/mycat$$
 for ((i=3; i < 10; i++))
 do
-	eval 'a=$(print foo | ./mycat' $i $i'>&1 > /dev/null |cat)' 2> /dev/null
+	eval "a=\$(print foo | /tmp/mycat$$" $i $i'>&1 > /dev/null |cat)' 2> /dev/null
 	[[ $a == foo ]] || err_exit "bad file descriptor $i in comsub script"
 done
+rm -f /tmp/mycat$$
 exec 3> /dev/null
 [[ $(fun) == good ]] || err_exit 'file 3 closed before subshell completes'
 exec 3>&-

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2003 AT&T Corp.                *
+*                Copyright (c) 1982-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -900,6 +900,8 @@ sh_exec(register const union anynode *t, int flags)
 					}
 					sh_funstaks(slp->slchild,-1);
 					stakdelete(slp->slptr);
+					if(jmpval > SH_JMPFUN)
+						siglongjmp(*sh.jmplist,jmpval);
 					goto setexit;
 				}
 			}
@@ -2228,13 +2230,16 @@ static void sh_funct(Namval_t *np,int argn, char *argv[],struct argnod *envlist,
 	if(nv_isattr(np,NV_FPOSIX))
 	{
 		char *save;
+		int loopcnt = sh.st.loopcnt;
 		sh.posix_fun = np;
 		opt_info.index = opt_info.offset = 0;
 		error_info.errors = 0;
 		save = argv[-1];
 		argv[-1] = 0;
 		nv_putval(SH_FUNNAMENOD, nv_name(np),NV_NOFREE);
+		sh.st.loopcnt = 0;
 		b_dot_cmd(argn+1,argv-1,&sh);
+		sh.st.loopcnt = loopcnt;
 		argv[-1] = save;
 	}
 	else
@@ -2728,7 +2733,11 @@ static pid_t sh_ntfork(const union anynode *t,char *argv[],int *jobid,int flag)
 	if(sigwasset)
 		sigreset(1);	/* restore ignored signals */
 	if(scope)
+	{
 		nv_unscope();
+		if(jmpval==SH_JMPSCRIPT)
+			nv_setlist(t->com.comset,NV_EXPORT|NV_IDENT|NV_ASSIGN);
+	}
 	if(t->com.comio)
 		sh_iorestore(buff.topfd,jmpval);
 	if(jmpval>SH_JMPCMD)

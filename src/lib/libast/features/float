@@ -937,7 +937,7 @@ tst	- -DN=1 - -DN=2 note{ _ast_fltmax_t maximum integral type }end output{
 	}
 }end
 
-tst	- -lm -DEXP=1 - -DADD=1 - -DMPY=1 note{ nan memory representations }end output{
+tst	- -lm -DSCAN=1 - -DEXP=1 - -DADD=1 - -DMPY=1 note{ nan memory representations }end output{
 	#include "FEATURE/common"
 	#include <sys/types.h>
 	#include <signal.h>
@@ -979,6 +979,32 @@ tst	- -lm -DEXP=1 - -DADD=1 - -DMPY=1 note{ nan memory representations }end outp
 	}
 	main()
 	{
+	#if SCAN
+	#define STR	"NaNQ"
+	{
+		float	f;
+
+		if (sscanf(STR, "%g", &f) != 1)
+			return 1;
+		list("flt", &f, sizeof(f));
+	}
+	{
+		double	f;
+
+		if (sscanf(STR, "%lg", &f) != 1)
+			return 1;
+		list("dbl", &f, sizeof(f));
+	}
+	#ifdef LDBL_MAX
+	{
+		long double	f;
+
+		if (sscanf(STR, "%Lg", &f) != 1)
+			return 1;
+		list("ldbl", &f, sizeof(f));
+	}
+	#endif
+	#else
 	#ifdef SIGFPE
 		signal(SIGFPE, SIG_IGN);
 	#endif
@@ -1026,6 +1052,7 @@ tst	- -lm -DEXP=1 - -DADD=1 - -DMPY=1 note{ nan memory representations }end outp
 	#endif
 			list("ldbl", &f, sizeof(f));
 		}
+	#endif
 	#endif
 		return 0;
 	}

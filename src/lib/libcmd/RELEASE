@@ -1,3 +1,8 @@
+04-02-29 cp.c: decouple -f and -i for standard CONFORMANCE
+	 cp.c: mv attempts rename() before remove()+rename()
+	 date.c: -f format or +format disables system clock set
+04-02-14 cp.c: add -F --fsync to call fsync(2) for each copied file
+04-01-05 head.c: -s now uses opt_info.number for >2Gb skip
 03-09-18 tail.c: add --log
 03-09-11 rm.c: add --unconditional
 03-08-11 fold.c: add --delimiter=c to break at c

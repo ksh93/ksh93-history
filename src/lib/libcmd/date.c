@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1992-2003 AT&T Corp.                *
+*                Copyright (c) 1992-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -31,7 +31,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: date (AT&T Labs Research) 2003-03-21 $\n]"
+"[-?\n@(#)$Id: date (AT&T Labs Research) 2004-02-29 $\n]"
 USAGE_LICENSE
 "[+NAME?date - set/list/convert dates]"
 "[+DESCRIPTION?\bdate\b sets the current date and time (with appropriate"
@@ -424,7 +424,7 @@ b_date(int argc, register char** argv, void* context)
 		}
 		else
 			show = 1;
-		if (show)
+		if (format || show)
 		{
 			tmfmt(buf, sizeof(buf), format, clock);
 			sfprintf(sfstdout, "%s\n", buf);

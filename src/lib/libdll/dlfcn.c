@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1997-2003 AT&T Corp.                *
+*                Copyright (c) 1997-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -30,7 +30,7 @@
  * AT&T Labs Research
  */
 
-static const char id[] = "\n@(#)$Id: dll library (AT&T Labs Research) 2003-02-11 $\0\n";
+static const char id[] = "\n@(#)$Id: dll library (AT&T Labs Research) 2004-01-28 $\0\n";
 
 #include <ast.h>
 #include <dlldefs.h>

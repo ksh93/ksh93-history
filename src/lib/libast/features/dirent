@@ -1,8 +1,11 @@
 set	prototyped
 
-lib	opendir
+set	nodefine
 lib	stat64 -D_LARGEFILE64_SOURCE
 typ	off64_t -D_LARGEFILE64_SOURCE
+set	define
+
+lib	opendir
 hdr	dirent,ndir
 sys	dir
 nxt	dirent

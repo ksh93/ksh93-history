@@ -1,7 +1,7 @@
-/*$(PACKAGESRC)/$i.pkg
+/*
  * source and binary package support
  *
- * @(#)package.mk (AT&T Labs Research) 2003-06-11
+ * @(#)package.mk (AT&T Labs Research) 2004-02-29
  *
  * usage:
  *
@@ -495,16 +495,16 @@ vendor.cyg = gnu
 		{
 			integer m
 			: > $tmp/HEAD
-			echo ";;;$tmp/HEAD;$(opt)$(package.notice)"
+			echo ";;;$tmp/HEAD;$(package.notice)"
 			cat > $tmp/README <<'!'
 	$(package.readme)
 	!
-			echo ";;;$tmp/README;$(opt)README"
+			echo ";;;$tmp/README;README"
 			cat > $tmp/configure <<'!'
 	echo "you didn't have to do that"
 	!
 			chmod +x $tmp/configure
-			echo ";;;$tmp/configure;$(opt)configure"
+			echo ";;;$tmp/configure;configure"
 			cat > $tmp/Makefile0 <<'!'
 	HOSTTYPE := $$(shell bin/package)
 	ROOT = ../..
@@ -515,7 +515,7 @@ vendor.cyg = gnu
 	$(install.$(style):V)
 	$(test.$(style):V)
 	!
-			echo ";;;$tmp/Makefile0;$(opt)Makefile"
+			echo ";;;$tmp/Makefile0;Makefile"
 			cat > $tmp/CYGWIN-README <<'!'
 	$(readme.$(style):@?$$(readme.$$(style))$$("\n\n")??)To build binaries from source into the ./arch/`bin/package` tree run:
 	$()
@@ -553,21 +553,21 @@ vendor.cyg = gnu
 	To download and install the latest $(org)-base binary package in
 	/opt/$(org) change "source" to "binary" and omit "package make".
 	!
-			echo ";;;$tmp/CYGWIN-README;$(opt)CYGWIN-PATCHES/README"
+			echo ";;;$tmp/CYGWIN-README;CYGWIN-PATCHES/README"
 			cat > $(source:/-src.$(suffix)//).setup.hint <<'!'
 	category: $(category:/\(.\).*/\1/U)$(category:/.\(.*\)/\1/L)
 	requires: cygwin
 	sdesc: "$(index)"
 	ldesc: "$($(name.original).txt)"
 	!
-			echo ";;;$(source:/-src.$(suffix)//).setup.hint;$(opt)CYGWIN-PATCHES/setup.hint"
-			echo ";;;$(BINPACKAGE);$(opt)bin/package"
+			echo ";;;$(source:/-src.$(suffix)//).setup.hint;CYGWIN-PATCHES/setup.hint"
+			echo ";;;$(BINPACKAGE);bin/package"
 			cat > $tmp/Makefile <<'!'
 	:MAKE:
 	!
-			echo ";;;$tmp/Makefile;$(opt)src/Makefile"
-			echo ";;;$tmp/Makefile;$(opt)src/cmd/Makefile"
-			echo ";;;$tmp/Makefile;$(opt)src/lib/Makefile"
+			echo ";;;$tmp/Makefile;src/Makefile"
+			echo ";;;$tmp/Makefile;src/cmd/Makefile"
+			echo ";;;$tmp/Makefile;src/lib/Makefile"
 			cat > $tmp/Mamfile1 <<'!'
 	info mam static
 	note source level :MAKE: equivalent
@@ -577,7 +577,7 @@ vendor.cyg = gnu
 	done all virtual
 	done install virtual
 	!
-			echo ";;;$tmp/Mamfile1;$(opt)src/Mamfile"
+			echo ";;;$tmp/Mamfile1;src/Mamfile"
 			cat > $tmp/Mamfile2 <<'!'
 	info mam static
 	note component level :MAKE: equivalent
@@ -587,16 +587,40 @@ vendor.cyg = gnu
 	done all virtual
 	done install virtual
 	!
-			echo ";;;$tmp/Mamfile2;$(opt)src/cmd/Mamfile"
-			echo ";;;$tmp/Mamfile2;$(opt)src/lib/Mamfile"
+			echo ";;;$tmp/Mamfile2;src/cmd/Mamfile"
+			echo ";;;$tmp/Mamfile2;src/lib/Mamfile"
 			$(package.src:T=F:/.*/echo ";;;&"$("\n")/)
 			echo ";;;$(PACKAGEGEN)/$(name.original).req"
 			set -- $(package.closure)
 			for i
 			do	cd $(INSTALLROOT)/$i
 				(( m++ ))
-				$(MAKE) --noexec --force --mam=static --corrupt=accept CC=$(CC.DIALECT:N=C++:?CC?cc?) $(=) $(export.$(style)) 'dontcare test' install test > $tmp/$m.mam
-				echo ";;;$tmp/$m.mam;$(opt)$i/Mamfile"
+				s=$( $(MAKE) --noexec recurse=list 2>/dev/null )
+				if	test "" != "$s"
+				then	(( m++ ))
+					cat > $tmp/$m.mam <<'!'
+	info mam static
+	note subcomponent level :MAKE: equivalent
+	make install
+	make all
+	exec - ${MAMAKE} -r '*' ${MAMAKEARGS}
+	done all virtual
+	done install virtual
+	!
+					echo ";;;$tmp/$m.mam;$i/Mamfile"
+					for j in $s
+					do	if	test -d $j
+						then	cd $j
+							(( m++ ))
+							$(MAKE) --never --force --mam=static --corrupt=accept CC=$(CC.DIALECT:N=C++:?CC?cc?) $(=) 'dontcare test' install test > $tmp/$m.mam
+							echo ";;;$tmp/$m.mam;$i/$j/Mamfile"
+							cd $(INSTALLROOT)/$i
+						fi
+					done
+				else	(( m++ ))
+					$(MAKE) --never --force --mam=static --corrupt=accept CC=$(CC.DIALECT:N=C++:?CC?cc?) $(=) 'dontcare test' install test > $tmp/$m.mam
+					echo ";;;$tmp/$m.mam;$i/Mamfile"
+				fi
 				$(MAKE) --noexec $(-) $(=) recurse list.package.$(type)
 			done
 			set -- $(package.dir:P=G)
@@ -604,14 +628,15 @@ vendor.cyg = gnu
 			do	tw -d $i -e "action:printf(';;;%s\n',path);"
 			done
 			: > $tmp/TAIL
-			echo ";;;$tmp/TAIL;$(opt)$(package.notice)"
+			echo ";;;$tmp/TAIL;$(package.notice)"
 		} |
 		$(PAX)	--filter=- \
 			--to=ascii \
 			--format=$(format) \
 			--local \
 			-wvf $(source) $(base) \
-			$(VROOT:T=F:P=L*:C%.*%-s",^&/,$(vendor:?$(opt)??),"%)
+			$(VROOT:T=F:P=L*:C%.*%-s",^&/,,"%) \
+			$(vendor:?-s",^[^/],$(opt),"??)
 		rm -rf $tmp
 	fi
 
@@ -646,7 +671,7 @@ vendor.cyg = gnu
 	then	tmp=/tmp/pkg$(tmp)
 		mkdir $tmp
 		{
-			integer m
+			integer m=0
 			: > $tmp/HEAD
 			echo ";;;$tmp/HEAD;$(package.notice)"
 			cat > $tmp/README <<'!'
@@ -773,7 +798,7 @@ vendor.cyg = gnu
 					esac
 					echo .BL
 					for j
-					do	i=`$(PROTO) -l $j -p -h -o type=usage /dev/null | sed -e 's,.*\[-license?\([^]]*\).*,\1,'`
+					do	i=$( $(PROTO) -l $j -p -h -o type=usage /dev/null | sed -e 's,.*\[-license?\([^]]*\).*,\1,' )
 						echo .LI
 						echo ".xx link=\"$i\""
 					done
@@ -822,9 +847,32 @@ vendor.cyg = gnu
 			set -- $(package.closure)
 			for i
 			do	cd $(INSTALLROOT)/$i
-				(( m++ ))
-				$(MAKE) --noexec --force --mam=static --corrupt=accept CC=$(CC.DIALECT:N=C++:?CC?cc?) $(=) 'dontcare test' install test > $tmp/$m.mam
-				echo ";;;$tmp/$m.mam;$i/Mamfile"
+				s=$( $(MAKE) --noexec recurse=list 2>/dev/null )
+				if	test "" != "$s"
+				then	(( m++ ))
+					cat > $tmp/$m.mam <<'!'
+	info mam static
+	note subcomponent level :MAKE: equivalent
+	make install
+	make all
+	exec - ${MAMAKE} -r '*' ${MAMAKEARGS}
+	done all virtual
+	done install virtual
+	!
+					echo ";;;$tmp/$m.mam;$i/Mamfile"
+					for j in $s
+					do	if	test -d $j
+						then	cd $j
+							(( m++ ))
+							$(MAKE) --never --force --mam=static --corrupt=accept CC=$(CC.DIALECT:N=C++:?CC?cc?) $(=) 'dontcare test' install test > $tmp/$m.mam
+							echo ";;;$tmp/$m.mam;$i/$j/Mamfile"
+							cd $(INSTALLROOT)/$i
+						fi
+					done
+				else	(( m++ ))
+					$(MAKE) --never --force --mam=static --corrupt=accept CC=$(CC.DIALECT:N=C++:?CC?cc?) $(=) 'dontcare test' install test > $tmp/$m.mam
+					echo ";;;$tmp/$m.mam;$i/Mamfile"
+				fi
 				$(MAKE) --noexec $(-) $(=) recurse list.package.$(type)
 			done
 			set -- $(package.dir:P=G)
@@ -1140,5 +1188,5 @@ list.installed list.manifest :
 	set -- $(package.closure)
 	for i
 	do	cd $(INSTALLROOT)/$i
-		$(MAKE) --noexec $(-) $(=) $(<)
+		ignore $(MAKE) --noexec $(-) $(=) $(<)
 	done

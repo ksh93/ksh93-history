@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1992-2003 AT&T Corp.                *
+*                Copyright (c) 1992-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -31,10 +31,10 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: comp (AT&T Labs Research) 1999-04-28 $\n]"
+"[-?\n@(#)$Id: comm (AT&T Labs Research) 1999-04-28 $\n]"
 USAGE_LICENSE
-"[+NAME?comp - select or reject lines common to two files]"
-"[+DESCRIPTION?\bcomp\b reads two files \afile1\a and \afile2\a "
+"[+NAME?comm - select or reject lines common to two files]"
+"[+DESCRIPTION?\bcomm\b reads two files \afile1\a and \afile2\a "
 	"which should be ordered in the collating sequence of the "
 	"current locale, and produces three text columns as output:]{"
 	"[+1?Lines only in \afile1\a.]"

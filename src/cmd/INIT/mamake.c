@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1994-2003 AT&T Corp.                *
+*                Copyright (c) 1994-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -29,7 +29,7 @@
  * coded for portability
  */
 
-static char id[] = "\n@(#)$Id: mamake (AT&T Labs Research) 2003-04-15 $\0\n";
+static char id[] = "\n@(#)$Id: mamake (AT&T Labs Research) 2003-12-19 $\0\n";
 
 #if _PACKAGE_ast
 
@@ -37,7 +37,7 @@ static char id[] = "\n@(#)$Id: mamake (AT&T Labs Research) 2003-04-15 $\0\n";
 #include <error.h>
 
 static const char usage[] =
-"[-?\n@(#)$Id: mamake (AT&T Labs Research) 2003-04-15 $\n]"
+"[-?\n@(#)$Id: mamake (AT&T Labs Research) 2003-12-19 $\n]"
 USAGE_LICENSE
 "[+NAME?mamake - make abstract machine make]"
 "[+DESCRIPTION?\bmamake\b reads \amake abstract machine\a target and"
@@ -1865,6 +1865,17 @@ scan(Dict_item_t* item, void* handle)
 				}
 			}
 			pop();
+			for (t = 0, w = r->name; *w; w++)
+				if (*w == '/')
+					t = w + 1;
+			if (t && (t - r->name) > 3 && *(t - 1) == 'b' && *(t - 2) == 'i' && *(t - 3) == 'l')
+			{
+				*(t - 3) = 0;
+				q = (Rule_t*)search(state.leaf, r->name, NiL);
+				*(t - 3) = 'l';
+				if (q && q != r)
+					cons(r, q);
+			}
 			break;
 		}
 	}

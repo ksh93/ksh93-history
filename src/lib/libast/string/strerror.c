@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2003 AT&T Corp.                *
+*                Copyright (c) 1985-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -91,8 +91,16 @@ _ast_strerror(int err)
 				char*	t;
 				char*	p;
 
+#if _lib_strerror
 				/*
-				 * make sure strerror() translates
+				 * stash the pending strerror() msg
+				 */
+
+				msg = strcpy(fmtbuf(strlen(msg) + 1), msg);
+#endif
+
+				/*
+				 * make sure that strerror() translates
 				 */
 
 				if (!(s = strerror(1)))

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1996-2003 AT&T Corp.                *
+*                Copyright (c) 1996-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -41,7 +41,14 @@
 
 #define _SUM_PUBLIC_	const char*	name;
 
-typedef struct
+typedef struct Sumdata_s
+{
+	unsigned _ast_int4_t	size;
+	unsigned _ast_int4_t	num;
+	void*			buf;
+} Sumdata_t;
+
+typedef struct Sum_s
 {
 	_SUM_PUBLIC_
 #ifdef	_SUM_PRIVATE_
@@ -50,11 +57,12 @@ typedef struct
 } Sum_t;
 
 extern Sum_t*	sumopen(const char*);
+extern int	suminit(Sum_t*);
 extern int	sumblock(Sum_t*, const void*, size_t);
+extern int	sumdone(Sum_t*);
+extern int	sumdata(Sum_t*, Sumdata_t*);
 extern int	sumprint(Sum_t*, Sfio_t*, int);
 extern int	sumusage(Sfio_t*);
-extern int	suminit(Sum_t*);
-extern int	sumdone(Sum_t*);
 extern int	sumclose(Sum_t*);
 
 #endif

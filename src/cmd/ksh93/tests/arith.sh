@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1982-2003 AT&T Corp.                #
+#                Copyright (c) 1982-2004 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -239,8 +239,11 @@ float z=7.5
 if	{ (( z%2 != 1));} 2> /dev/null
 then	err_exit '% not working on floating point'
 fi
-chr= (a ' ' '=' '\r' '\n' '\\' '\"' '$' "\\'" '[' ']' '(' ')' '<' '\xab' '\040' '`' '{' '}' '*' '\E')
-val=(97 32  61 13 10 92 34 36 39 91 93 40 41 60 171 32 96 123 125 42 27)
+chr=(a ' ' '=' '\r' '\n' '\\' '\"' '$' "\\'" '[' ']' '(' ')' '<' '\xab' '\040' '`' '{' '}' '*' '\E')
+if	(('a' == 97))
+then	val=(97 32  61 13 10 92 34 36 39 91 93 40 41 60 171 32 96 123 125 42 27)
+else	val=(129 64 126 13 21 224 127 91 125 173 189 77 93 76 171 32 121 192 208 92 39 21)
+fi
 q=0
 for ((i=0; i < ${#chr[@]}; i++))
 do	if	(( '${chr[i]}' != ${val[i]} ))
@@ -353,4 +356,8 @@ typeset -i i=x
 c010=3
 (( c$x  == 3 )) || err_exit 'leading zero with variable should not be stripped'
 [[ $( ($SHELL -c '((++1))' 2>&1)2>/dev/null ) == *lvalue* ]] || err_exit "((--1)) not generating error message"
+i=2
+(( "22" == 22 )) || print err_exit "double quoted constants fail"
+(( "2$i" == 22 )) || print err_exit "double quoted variables fail"
+(( "18+$i+2" == 22 )) || print err_exit "double quoted expressions fail"
 exit $((Errors))

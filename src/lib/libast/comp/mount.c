@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2003 AT&T Corp.                *
+*                Copyright (c) 1985-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -35,6 +35,10 @@ NoN(mount)
 
 #include <error.h>
 
+#ifndef ENOSYS
+#define ENOSYS	EINVAL
+#endif
+
 int
 mount(const char* a, char* b, int c, void* d)
 {
@@ -42,8 +46,8 @@ mount(const char* a, char* b, int c, void* d)
 	NoP(b);
 	NoP(c);
 	NoP(d);
-	errno = EINVAL;
-	return(-1);
+	errno = ENOSYS;
+	return -1;
 }
 
 #endif

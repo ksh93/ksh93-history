@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2003 AT&T Corp.                *
+*                Copyright (c) 1982-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -721,10 +721,13 @@ static union anynode *funct(void)
 #if SHOPT_KIA
 	shlex.current = current;
 #endif /* SHOPT_KIA */
-	if(jmpval && slp)
+	if(jmpval)
 	{
-		sh.st.staklist = slp->slnext;
-		stakdelete(slp->slptr);
+		if(slp && slp->slptr)
+		{
+			sh.st.staklist = slp->slnext;
+			stakdelete(slp->slptr);
+		}
 		siglongjmp(*sh.jmplist,jmpval);
 	}
 	sh.st.staklist = (struct slnod*)slp;

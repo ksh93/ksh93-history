@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2003 AT&T Corp.                *
+*                Copyright (c) 1982-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -706,11 +706,9 @@ int    b_unset(int argc,register char *argv[],void *extra)
 static int b_unall(int argc, char **argv, register Dt_t *troot, Shell_t* shp)
 {
 	register Namval_t *np;
-	register struct slnod *slp;
 	register const char *name;
 	register int r;
-	int nflag = 0;
-	int all=0;
+	int nflag=0,all=0,isfun;
 	NOT_USED(argc);
 	if(troot==shp->alias_tree)
 	{
@@ -756,45 +754,18 @@ static int b_unall(int argc, char **argv, register Dt_t *troot, Shell_t* shp)
 	{
 		if(np=nv_open(name,troot,NV_NOADD|nflag))
 		{
-			if(troot!=shp->var_tree)
+			if(is_abuiltin(np))
 			{
-				if(is_abuiltin(np))
-				{
-					r = 1;
-					continue;
-				}
-				else if(slp=(struct slnod*)(np->nvenv))
-				{
-					/* free function definition */
-					register char *cp= strrchr(name,'.');
-					if(cp)
-					{
-						Namval_t *npv;
-						*cp = 0;
-						npv = nv_open(name,shp->var_tree,NV_ARRAY|NV_VARNAME|NV_NOADD);
-						*cp++ = '.';
-						if(npv)
-							nv_setdisc(npv,cp,NIL(Namval_t*),(Namfun_t*)npv);
-					}
-					stakdelete(slp->slptr);
-					np->nvenv = 0;
-					dtdelete(troot,np);
-					continue;
-				}
+				r = 1;
+				continue;
 			}
-#ifdef apollo
-			else
-			{
-				short namlen;
-				name = nv_name(np);
-				namlen =strlen(name);
-				ev_$delete_var(name,&namlen);
-			}
-#endif /* apollo */
-			if(shp->subshell)
+			isfun = is_afunction(np);
+			if(shp->subshell && troot==shp->var_tree)
 				np=sh_assignok(np,0);
 			nv_unset(np);
 			nv_close(np);
+			if(isfun)
+				dtdelete(troot,np);
 		}
 		else
 			r = 1;

@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1982-2003 AT&T Corp.                #
+#                Copyright (c) 1982-2004 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -124,6 +124,17 @@ fi
 (break bad 2>/dev/null && err_exit 'break bad should return an error')
 (continue 0 2>/dev/null && err_exit 'continue 0 should return an error')
 (break 0 2>/dev/null && err_exit 'break 0 should return an error')
+breakfun() { break;}
+continuefun() { continue;}
+for fun in break continue
+do	if	[[ $(	for i in foo
+			do	${fun}fun
+				print $i
+			done
+		) != foo ]]
+	then	err_exit "$fun call in ${fun}fun breaks out of for loop"
+	fi
+done
 if	[[ $(print -f "%b" "\a\n\v\b\r\f\E\03\\oo") != $'\a\n\v\b\r\f\E\03\\oo' ]]
 then	err_exit 'print -f "%b" not working'
 fi

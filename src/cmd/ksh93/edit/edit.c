@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2003 AT&T Corp.                *
+*                Copyright (c) 1982-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -47,7 +47,7 @@
 #   include	"variables.h"
 #else
     extern char ed_errbuf[];
-    char e_version[] = "\n@(#)$Id: Editlib version 1993-12-28 o+ $\0\n";
+    char e_version[] = "\n@(#)$Id: Editlib version 1993-12-28 p- $\0\n";
 #endif	/* KSHELL */
 #include	"io.h"
 #include	"terminal.h"
@@ -626,7 +626,8 @@ void	ed_setup(register Edit_t *ep, int fd, int reedit)
 				*pp++ = c;
 				for(n=1; c = *last++; n++)
 				{
-					*pp++ = c;
+					if(pp < ppmax)
+						*pp++ = c;
 					if(c=='\a')
 						break;
 					if(skip || (c>='0' && c<='9'))
@@ -639,6 +640,10 @@ void	ed_setup(register Edit_t *ep, int fd, int reedit)
 				qlen += (n+1);
 				break;
 			}
+			case '\b':
+				if(pp>ep->e_prompt+1)
+					pp--;
+				break;
 			case '\r':
 				if(pp == (ep->e_prompt+2)) /* quote char */
 					myquote = *(pp-1);

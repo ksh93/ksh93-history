@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2003 AT&T Corp.                *
+*                Copyright (c) 1982-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -49,6 +49,7 @@
 #include	"FEATURE/dynamic"
 #include	"lexstates.h"
 #include	"FEATURE/locale"
+#include	"version.h"
 
 #if SHOPT_MULTIBYTE
     char e_version[]	= "\n@(#)$Id: Version M "SH_RELEASE" $\0\n";
@@ -1067,7 +1068,10 @@ int sh_reinit(char *argv[])
 		sh.heredocs = 0;
 	}
 	/* remove locals */
+	sh_onstate(SH_INIT);
 	nv_scan(sh.var_tree,sh_envnolocal,(void*)0,NV_EXPORT,0);
+	nv_scan(sh.var_tree,sh_envnolocal,(void*)0,NV_ARRAY,NV_ARRAY);
+	sh_offstate(SH_INIT);
 	memset(sh.st.trapcom,0,(sh.st.trapmax+1)*sizeof(char*));
 	memset((void*)&opt,0,sizeof(opt));
 	if(sh_isoption(SH_TRACKALL))

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2003 AT&T Corp.                *
+*                Copyright (c) 1982-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -35,8 +35,11 @@
 #include	"io.h"
 #include	"history.h"
 #include	"shnodes.h"
+#include	"variables.h"
 #include	"jobs.h"
 #include	"path.h"
+
+#define abortsig(sig)	(sig==SIGABRT || sig==SIGBUS || sig==SIGILL || sig==SIGSEGV)
 
 static char	indone;
 
@@ -60,7 +63,7 @@ static char	indone;
 */
 void	sh_fault(register int sig)
 {
-	register int 	flag;
+	register int 	flag=0;
 	register char	*trap;
 	register struct checkpt	*pp = (struct checkpt*)sh.jmplist;
 	int	action=0;
@@ -68,10 +71,18 @@ void	sh_fault(register int sig)
 	if(!(sig&SH_TRAP))
 		signal(sig, sh_fault);
 	sig &= ~SH_TRAP;
-#ifdef DEBUGSIG
-	if (sig == SIGABRT || sig == SIGBUS || sig == SIGILL || sig == SIGSEGV)
-		return;
-#endif
+#ifdef SIGWINCH
+	if(sig==SIGWINCH && !sh_isoption(SH_POSIX))
+	{
+		int rows=0, cols=0;
+		astwinsize(2,&rows,&cols);
+		if(cols)
+			nv_putval(COLUMNS, (char*)&cols, NV_INTEGER);
+		if(rows)
+			nv_putval(LINES, (char*)&rows, NV_INTEGER);
+	}
+#endif  /* SIGWINCH */
+
 	/* handle ignored signals */
 	if((trap=sh.st.trapcom[sig]) && *trap==0)
 		return;
@@ -82,7 +93,7 @@ void	sh_fault(register int sig)
 			return;
 		if(flag&SH_SIGDONE)
 		{
-			void *ptr;
+			void *ptr=0;
 			if((flag&SH_SIGINTERACTIVE) && sh_isstate(SH_INTERACTIVE) && !sh_isstate(SH_FORKED) && ! sh.subshell)
 			{
 				/* check for TERM signal between fork/exec */
@@ -96,17 +107,22 @@ void	sh_fault(register int sig)
 				pp->mode = SH_JMPFUN;
 			else
 				pp->mode = SH_JMPEXIT;
-			if(ptr = malloc(1))
+			if(sig==SIGABRT || (abortsig(sig) && (ptr = malloc(1))))
 			{
-				free(ptr);
+				if(ptr)
+					free(ptr);
+				if(!sh.subshell)
+					sh_done(sig);
 				sh_exit(SH_EXITSIG);
 			}
-			/* interrupt with malloc() locked, delay cleanup */
+			/* mark signal and continue */
 			sh.trapnote |= SH_SIGSET;
 			if(sig < sh.sigmax)
 				sh.sigflag[sig] |= SH_SIGSET;
 #if  defined(VMFL) && (VMALLOC_VERSION>=20031205L)
+			if(abortsig(sig))
 			{
+				/* abort inside malloc, process when malloc returns */
 				/* VMFL defined when using vmalloc() */
 				Vmdisc_t* dp = vmdisc(Vmregion,0);
 				if(dp)

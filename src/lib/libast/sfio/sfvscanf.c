@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2003 AT&T Corp.                *
+*                Copyright (c) 1985-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -720,10 +720,6 @@ loop_fmt:
 		if(_Sftype[fmt] == 0) /* unknown pattern */
 			goto pop_fmt;
 
-		/* get the address to assign value */
-		if(!value && !(flags&SFFMT_SKIP) )
-			value = va_arg(args,Void_t*);
-
 		if(fmt == '!')
 		{	if(!fp)
 				fp = (*_Sffmtposf)(f,oform,oargs,ft,1);
@@ -742,6 +738,7 @@ loop_fmt:
 					goto done;
 
 				ft = fm->ft = argv.ft;
+				SFMBSET(ft->mbs, &fmbs);
 				if(ft->form)
 				{	fm->form = (char*)form; SFMBCPY(&fm->mbs,&fmbs);
 					va_copy(fm->args,args);
@@ -766,6 +763,10 @@ loop_fmt:
 			}
 			continue;
 		}
+
+		/* get the address to assign value */
+		if(!value && !(flags&SFFMT_SKIP) )
+			value = va_arg(args,Void_t*);
 
 		if(fmt == 'n') /* return length of consumed input */
 		{

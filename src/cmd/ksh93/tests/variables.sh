@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1982-2003 AT&T Corp.                #
+#                Copyright (c) 1982-2004 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -291,7 +291,7 @@ x=$(foo)
 (( x >1 && x < 2 )) 
 '
 } 2> /dev/null   || err_exit 'SECONDS not working in function'
-trap 'rm -f /tmp/script$$' EXIT
+trap 'rm -f /tmp/script$$ /tmp/out$$' EXIT
 cat > /tmp/script$$ <<-\!
 	posixfun()
 	{
@@ -332,4 +332,30 @@ TIMEFORMAT='this is a test'
 [[ $(whence rm) == *.sh.* ]] && err_exit '.sh. prefixed to tracked alias name'
 : ${.sh.version}
 [[ $(cd /bin;env | grep PWD) == *.sh.* ]] && err_exit '.sh. prefixed to PWD'
+# unset discipline bug fix
+dave=dave
+function dave.unset
+{
+    unset dave
+}
+unset dave
+[[ $(typeset +f) == *dave.* ]] && err_exit 'unset discipline not removed'
+print 'print ${VAR}' >  /tmp/script$$
+VAR=foo /tmp/script$$ > /tmp/out$$
+[[ $(</tmp/out$$) == foo ]] || err_exit 'environment variables not passed to scripts'
+(
+	unset dave
+	function  dave.append
+	{
+		.sh.value+=$dave
+		dave=
+	}
+	dave=foo; dave+=bar
+	[[ $dave == barfoo ]] || exit 2
+) 2> /dev/null  
+case $? in
+0)	 ;;
+1)	 err_exit 'append discipline not implemented';;
+*)	 err_exit 'append discipline not working';;
+esac
 exit $((Errors))

@@ -226,7 +226,7 @@ int        sfulen(Sfulong_t v);
 int        sfllen(Sflong_t v);
 int        sfdlen(Sfdouble_t v);
 ssize_t    sfpkrd(int fd, Void_t* buf, size_t n,
-                  int rsc, long tm, int peek);
+                  int rsc, long tm, int action);
 .ft 1
 .fi
 .Ss "FULL STRUCTURE SFIO_T"
@@ -1793,13 +1793,19 @@ Note that \f5sfsync()\fP is called for each
 This event is raised for each open stream before the process exits.
 
 .Ss "  int sfraise(Sfio_t* f, int type, Void_t* data)"
-This function calls all exception handlers
-of stream \f5f\fP with the event \f5type\fP and associated \f5data\fP.
+If \f5f\fP is non-\f5NULL\fP, \f5sfraise()\fP calls all exception handlers
+of \f5f\fP with the event \f5type\fP and associated \f5data\fP.
 If an exception handler returns a non-zero value,
 \f5sfraise()\fP immediate returns the same value.
 Application-defined events should start from the value \f5SF_EVENT\fP
 so as to avoid confusion with system-defined events,
 \f5sfraise()\fP returns \f50\fP on success and \f5-1\fP on failure.
+
+If \f5f\fP is \f5NULL\fP, \f5sfraise()\fP iterates over all streams
+and raise events as described above. In this case,
+\f5sfraise()\fP returns \f50\fP on success and a negative value
+on failure. The absolute value of the return value tells how many
+streams failed on raising the given event.
 
 .Ss "  ssize_t sfrd(Sfio_t* f, Void_t* buf, size_t n, Sfdisc_t* disc)"
 .Ss "  ssize_t sfwr(Sfio_t* f, const Void_t* buf, size_t n, Sfdisc_t* disc)"

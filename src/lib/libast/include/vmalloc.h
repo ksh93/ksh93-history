@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2003 AT&T Corp.                *
+*                Copyright (c) 1985-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -31,7 +31,7 @@
 **	Written by Kiem-Phong Vo, kpv@research.att.com, 01/16/94.
 */
 
-#define VMALLOC_VERSION	20031205L
+#define VMALLOC_VERSION	20040101L
 
 #if _PACKAGE_ast
 #include	<ast_std.h>
@@ -164,6 +164,7 @@ extern int		vmset _ARG_(( Vmalloc_t*, int, int ));
 
 extern Void_t*		vmdbwatch _ARG_(( Void_t* ));
 extern int		vmdbcheck _ARG_(( Vmalloc_t* ));
+extern int		vmdebug _ARG_(( int ));
 
 extern int		vmprofile _ARG_(( Vmalloc_t*, int ));
 

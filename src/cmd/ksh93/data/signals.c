@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2003 AT&T Corp.                *
+*                Copyright (c) 1982-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -32,11 +32,6 @@
 #define VAL(sig,mode)	((sig+1)|(mode)<<SH_SIGBITS)
 #define TRAP(n)		(((n)|SH_TRAP)-1)
 
-#if defined(DEBUGSIG)
-#define SH_SIGDEBUG	SH_SIGOFF
-#else
-#define	SH_SIGDEBUG	SH_SIGDONE
-#endif
 #ifndef ERROR_dictionary
 #   define  ERROR_dictionary(s)	(s)
 #endif
@@ -62,7 +57,7 @@ const struct shtable2 shtab_signals[] =
 	"APOLLO",	VAL(SIGAPOLLO,0),		"SIGAPOLLO"),
 #endif /* SIGAPOLLO */
 #ifdef SIGBUS
-	"BUS",		VAL(SIGBUS,SH_SIGDEBUG),	S("Bus error"),
+	"BUS",		VAL(SIGBUS,SH_SIGDONE),		S("Bus error"),
 #endif /* SIGBUS */
 #ifdef SIGCHLD
 	"CHLD",		VAL(SIGCHLD,SH_SIGFAULT), 	S("Death of Child"),
@@ -93,7 +88,7 @@ const struct shtable2 shtab_signals[] =
 	"FREEZE",	VAL(SIGFREEZE,SH_SIGIGNORE),	S("Special signal used by CPR"),
 #endif	/* SIGFREEZE */
 	"HUP",		VAL(SIGHUP,SH_SIGDONE),		S("Hangup"),
-	"ILL",		VAL(SIGILL,SH_SIGDEBUG),	S("Illegal instruction"),
+	"ILL",		VAL(SIGILL,SH_SIGDONE),		S("Illegal instruction"),
 #ifdef JOBS
 	"INT",		VAL(SIGINT,SH_SIGINTERACTIVE),	S("Interrupt"),
 #else
@@ -198,12 +193,6 @@ const struct shtable2 shtab_signals[] =
 #ifdef SIGWINCH
 	"WINCH",	VAL(SIGWINCH,SH_SIGIGNORE),	S("Window size change"),
 #endif	/* SIGWINCH */
-#ifdef SIGWINDOW
-	"WINDOW",	VAL(SIGWINDOW,SH_SIGIGNORE),	S("Window size change"),
-#endif	/* SIGWINDOW */
-#ifdef SIGWIND
-	"WIND",		VAL(SIGWIND,SH_SIGIGNORE),	S("Window size change"),
-#endif	/* SIGWIND */
 #ifdef SIGMIGRATE
 	"MIGRATE",		VAL(SIGMIGRATE,0),	S("Migrate process"),
 #endif	/* SIGMIGRATE */

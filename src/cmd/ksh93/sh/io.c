@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2003 AT&T Corp.                *
+*                Copyright (c) 1982-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -471,7 +471,7 @@ int	sh_pipe(register int pv[])
 		errormsg(SH_DICT,ERROR_system(1),e_pipe);
 	pv[0] = sh_iomovefd(pv[0]);
 	pv[1] = sh_iomovefd(pv[1]);
-	sh.fdstatus[pv[0]] = IONOSEEK|IOREAD|IODUP;
+	sh.fdstatus[pv[0]] = IONOSEEK|IOREAD;
 	sh.fdstatus[pv[1]] = IONOSEEK|IOWRITE;
 	sh_subsavefd(pv[0]);
 	sh_subsavefd(pv[1]);
@@ -853,7 +853,10 @@ void	sh_iorestore(int last, int jmpval)
 		if(jmpval==SH_JMPSCRIPT)
 		{
 			if ((savefd = filemap[fd].save_fd) >= 0)
+			{
+				sh.sftable[savefd] = 0;
 				sh_close(savefd);
+			}
 			continue;
 		}
 		origfd = filemap[fd].orig_fd;
@@ -1001,9 +1004,9 @@ static int slowexcept(register Sfio_t *iop,int type,void *data,Sfdisc_t *handle)
 		return(0);
 	if((sh.trapnote&(SH_SIGSET|SH_SIGTRAP)) && errno!=EIO && errno!=ENXIO)
 		errno = EINTR;
+	fno = sffileno(iop);
 	if((n=sfvalue(iop))<=0)
 	{
-		fno = sffileno(iop);
 #ifndef FNDELAY
 #   ifdef O_NDELAY
 		if(errno==0 && (n=fcntl(fno,F_GETFL,0))&O_NDELAY)
@@ -1030,7 +1033,8 @@ static int slowexcept(register Sfio_t *iop,int type,void *data,Sfdisc_t *handle)
 	errno = 0;
 	if(sh.trapnote&SH_SIGSET)
 	{
-		sfputc(sfstderr,'\n');
+		if(isatty(fno))
+			sfputc(sfstderr,'\n');
 		sh_exit(SH_EXITSIG);
 	}
 	if(sh.trapnote&SH_SIGTRAP)

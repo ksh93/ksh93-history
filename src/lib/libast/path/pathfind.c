@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2003 AT&T Corp.                *
+*                Copyright (c) 1985-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -102,7 +102,10 @@ pathfind(const char* name, const char* lib, const char* type, char* buf, size_t 
 	 */
 
 	if (regular(name, &st))
-		return strncpy(buf, name, size);
+	{
+		strncopy(buf, name, size);
+		return buf;
+	}
 	if (type)
 	{
 		sfsprintf(buf, size, "%s.%s", name, type);
@@ -119,12 +122,12 @@ pathfind(const char* name, const char* lib, const char* type, char* buf, size_t 
 
 	if (error_info.file && (s = strrchr(error_info.file, '/')))
 	{
-		sfsprintf(buf, sizeof(buf), "%-.*s%s", s - error_info.file + 1, error_info.file, name);
+		sfsprintf(buf, size, "%-.*s%s", s - error_info.file + 1, error_info.file, name);
 		if (regular(buf, &st))
 			return buf;
 		if (type)
 		{
-			sfsprintf(buf, sizeof(buf), "%-.*s%s%.s", s - error_info.file + 1, error_info.file, name, type);
+			sfsprintf(buf, size, "%-.*s%s%.s", s - error_info.file + 1, error_info.file, name, type);
 			if (regular(buf, &st))
 				return buf;
 		}

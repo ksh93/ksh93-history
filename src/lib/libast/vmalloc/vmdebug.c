@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2003 AT&T Corp.                *
+*                Copyright (c) 1985-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -66,6 +66,19 @@ static void dbinit()
 		vmtrace(fd);
 }
 
+static int	Dbfd = 2;	/* default warning file descriptor */
+#if __STD_C
+int vmdebug(int fd)
+#else
+int vmdebug(fd)
+int	fd;
+#endif
+{
+	int	old = Dbfd;
+	Dbfd = fd;
+	return old;
+}
+
 /* just an entry point to make it easy to set break point */
 #if __STD_C
 static void vmdbwarn(Vmalloc_t* vm, char* mesg, int n)
@@ -78,7 +91,7 @@ int		n;
 {
 	reg Vmdata_t*	vd = vm->data;
 
-	write(2,mesg,n);
+	write(Dbfd,mesg,n);
 	if(vd->mode&VM_DBABORT)
 		abort();
 }
@@ -270,6 +283,7 @@ Void_t*		addr;
 		return -1L;
 	SETLOCK(vd,local);
 
+	b = endb = NIL(Block_t*);
 	for(seg = vd->seg; seg; seg = seg->next)
 	{	b = SEGBLOCK(seg);
 		endb = (Block_t*)(seg->baddr - sizeof(Head_t));
@@ -573,8 +587,14 @@ Vmalloc_t*	vm;
 	int		rv;
 	reg Vmdata_t*	vd = vm->data;
 
-	if(!(vd->mode&VM_MTDEBUG) )
-		return -1;
+	/* check the meta-data of this region */
+	if(vd->mode & (VM_MTDEBUG|VM_MTBEST|VM_MTPROFILE))
+	{	if(_vmbestcheck(vd, NIL(Block_t*)) < 0)
+			return -1;
+		if(!(vd->mode&VM_MTDEBUG))
+			return 0;
+	}
+	else	return -1;
 
 	rv = 0;
 	for(seg = vd->seg; seg; seg = seg->next)

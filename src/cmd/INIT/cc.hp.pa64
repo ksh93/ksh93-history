@@ -6,4 +6,6 @@ case $* in
 -dumpmachine) echo $HOSTTYPE; exit ;;
 esac
 
-/opt/ansic/bin/cc +D2.0W -Ae +e -Wl,+s -Wl,+vnocompatwarnings "$@"
+/opt/ansic/bin/cc +D2.0W -Ae +e -Wl,+s \
+	${INSTALLROOT:+-Wl,+cdp,${INSTALLROOT}/lib/:} \
+	-Wl,+vnocompatwarnings "$@"

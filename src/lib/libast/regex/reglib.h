@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2003 AT&T Corp.                *
+*                Copyright (c) 1985-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -68,6 +68,8 @@ typedef struct regsubop_s
 
 #include <ctype.h>
 #include <errno.h>
+
+#define MBSIZE(p)	((ast.tmp_int=mbsize(p))>0?ast.tmp_int:1)
 
 #undef	RE_DUP_MAX			/* posix puts this in limits.h!	*/
 #define RE_DUP_MAX	(INT_MAX/2-1)	/* 2*RE_DUP_MAX won't overflow	*/

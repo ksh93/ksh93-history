@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2003 AT&T Corp.                *
+*                Copyright (c) 1985-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -57,6 +57,7 @@
 
 /* mode bit to indicate that the structure hasn't been initialized */
 #define SF_INIT		0000004
+#define SF_DCDOWN	00010000
 
 /* short-hand for common stream types */
 #define SF_RDWR		(SF_READ|SF_WRITE)
@@ -119,5 +120,11 @@
 	  (f)->lpos = (Sfoff_t)0,			/* lpos		*/ \
 	  (f)->iosz = (size_t)0				/* iosz		*/ \
 	)
+
+/* expose next stream inside discipline function; state saved in int f */
+#define SFDCNEXT(sp,f)	(((f)=(sp)->bits&SF_DCDOWN),(sp)->bits|=SF_DCDOWN)
+
+/* restore SFDCNEXT() state from int f */
+#define SFDCPREV(sp,f)	((f)?(0):((sp)->bits&=~SF_DCDOWN))
 
 #endif /* _SFIO_T_H */

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2003 AT&T Corp.                *
+*                Copyright (c) 1985-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -36,13 +36,19 @@ NoN(mknod)
 
 #include <error.h>
 
+#ifndef ENOSYS
+#define ENOSYS	EINVAL
+#endif
+
 int
 mknod(const char* path, mode_t mode, dev_t dev)
 {
-	if (S_ISFIFO(mode)) return(mkfifo(path, mode));
-	if (S_ISDIR(mode)) return(mkdir(path, mode));
-	errno = EINVAL;
-	return(-1);
+	if (S_ISFIFO(mode))
+		return mkfifo(path, mode);
+	if (S_ISDIR(mode))
+		return mkdir(path, mode);
+	errno = ENOSYS;
+	return -1;
 }
 
 #endif

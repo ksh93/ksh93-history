@@ -105,7 +105,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	strntod.c strntold.c \
 	strntol.c strntoll.c strntoul.c strntoull.c \
 	strcasecmp.c strncasecmp.c strerror.c \
-	mktemp.c tmpnam.c \
+	mktemp.c tmpnam.c fsync.c \
 	execlp.c execve.c execvp.c execvpe.c spawnveg.c \
 	vfork.c killpg.c \
 	hsearch.c tsearch.c \
@@ -226,7 +226,7 @@ conf :: conf.sh
 conflib.h conflim.h confmap.h conftab.h confuni.h \
 confmap.c conftab.c confstr.c pathconf.c sysconf.c :JOINT: \
 		conf conf.tab
-	$(*:O=1) $(IFFEFLAGS:V:N=-v) $(*:O>1) $(CC) $(CCFLAGS:N!=-[DIU]*)
+	$(*:O=1:P=A) $(IFFEFLAGS:V:N=-v) $(*:O>1) $(CC) $(CCFLAGS:N!=-[DIU]*)
 
 /* NOTE: sun4 runtime link botches ro data so advertized sig_info is rw */
 
@@ -247,7 +247,7 @@ lcgen : lcgen.c
 	$(CC.NATIVE|CC) -o $(<) $(*)
 
 lc.h lctab.h :JOINT: lcgen lc.tab
-	$(*:O=1) $(tmp).1 $(tmp).2 < $(*:O=2)
+	$(*:O=1:C,^[^/],./&,) $(tmp).1 $(tmp).2 < $(*:O=2) # :P=E: in 2006
 	$(PROTO) -p $(PROTOFLAGS) $(tmp).1 > $(tmp).3
 	rm -f $(tmp).1
 	if	cmp -s $(tmp).3 $(<:O=1)

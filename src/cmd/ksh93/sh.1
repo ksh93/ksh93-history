@@ -1495,6 +1495,8 @@ The current depth for subshells and command substitution.
 .B .sh.value
 Set to the value of the variable at the time that the
 .B set
+or
+.B append
 discipline function is invoked.
 .TP
 .B .sh.version
@@ -2494,8 +2496,7 @@ The optional option argument
 .I n
 specifies an arithmetic base to be used when expanding the variable.
 If you do not specify an arithmetic base,
-the first assignment to the
-variable determines the arithmetic base.
+base 10 will be used.
 .PP
 Arithmetic evaluation is performed on the value of each
 assignment to a variable with the
@@ -3186,7 +3187,7 @@ file.
 Each variable can have zero or more discipline functions
 associated with it.
 The shell initially understands the discipline names \f3get\fP,
-\f3set\fP, and \f3unset\fP but on most systems
+\f3set\fP, \f3append\fP, and \f3unset\fP but on most systems
 others can be added at run time via the 
 C programming interface extension provided by the
 .B builtin
@@ -3198,6 +3199,8 @@ the discipline function, the referenced variable will evaluate
 to this value instead.
 If the \f3set\fP discipline is defined for a variable, it is invoked
 whenever the given variable is assigned a value.
+If the \f3append\fP discipline is defined for a variable, it is invoked
+whenever a value is appended to the given variable.
 The variable \f3.sh.value\fP is given the value
 of the variable before invoking the discipline, and
 the variable will be assigned the value of \f3.sh.value\fP

@@ -202,6 +202,7 @@ tst	- output{
 		printf("#endif\n");
 		printf("\n");
 		printf("extern Dllinfo_t*	dllinfo(void);\n");
+		printf("extern void*		dllplug(const char*, const char*, const char*, int, char*, size_t);\n");
 		printf("extern void*		dllfind(const char*, const char*, int, char*, size_t);\n");
 		printf("extern void*		dllnext(int);\n");
 		printf("extern void*		dlllook(void*, const char*);\n");

@@ -1,5 +1,5 @@
 :
-# @(#)probe.win32 (AT&T Labs Research) 2003-06-11
+# @(#)probe.win32 (AT&T Labs Research) 2004-02-29
 #
 # win32 specific make C probe initialization
 # ms vc is easy on uwin
@@ -99,27 +99,32 @@ case $versionb$versiond$versionm$versiong$versionl:$include in
 	cat >&3 <<!
 CC.CC = $*
 CC.NATIVE = $*
+CC.EXECTYPE = $typ
+CC.HOSTTYPE = $typ
 CC.ALTPP.FLAGS = -Yp,\$(CPP:D)
 CC.ALTPP.ENV =
+CC.AR = ar
 CC.ARFLAGS =
 CC.DEBUG = -g
 CC.DIALECT = $dialect
 CC.DLL = -D_BLD_DLL
 CC.DLLBIG = -D_BLD_DLL
+CC.DLL.DEF = -D_BLD_DLL
 CC.DLL.DIR = \$(BINDIR)
-CC.DLL.VARIANTS =
 CC.DLL.LIBRARIES =
+CC.DLL.VARIANTS =
 CC.DYNAMIC =
-CC.EXECTYPE = $typ
-CC.HOSTTYPE = $typ
+CC.EXPORT.DYNAMIC =
 CC.LD = /usr/bin/ld
 CC.LD.DYNAMIC = -Bdynamic
 CC.LD.LAZY =
 CC.LD.NOLAZY =
+CC.LD.ORIGIN =
 CC.LD.RECORD =
 CC.LD.NORECORD =
 CC.LD.RUNPATH =
 CC.LD.STATIC = -Bstatic
+CC.LD.STRIP =
 CC.LIB.DLL = option
 CC.LIB.ALL = -Bwhole-archive
 CC.LIB.UNDEF = -Bno-whole-archive
@@ -128,11 +133,16 @@ CC.NM = nm
 CC.NMEDIT =
 CC.NMFLAGS =
 CC.OPTIMIZE = -O
+CC.PIC =
+CC.PICBIG =
 CC.READONLY =
 CC.REPOSITORY =
 CC.SHARED = -G
+CC.SHARED.LD = /usr/bin/ld
 CC.SHARED.REGISTRY =
 CC.SHARED.REGISTRY.PATH =
+CC.SHELLMAGIC =
+CC.SIZE = size
 CC.STATIC = -Bstatic
 !
 	if	[ X"$versiond" != X ]
@@ -191,8 +201,8 @@ CC.STDLIB = ${include%/*}/lib
 	esac
 	cat >&3 <<!
 CC.STRICT =
-CC.STRIP =
-CC.STRIPFLAGS =
+CC.STRIP = strip
+CC.STRIP.FLAGS =
 CC.PREFIX.ARCHIVE = lib
 CC.PREFIX.DYNAMIC =
 CC.PREFIX.SHARED =

@@ -2,7 +2,7 @@
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)C probe (AT&T Research) 2002-09-21
+# @(#)C probe (AT&T Research) 2004-02-14
 #
 # probe [ -d ] c-compiler-path [ attributes ]
 #
@@ -61,6 +61,13 @@ else	tmpdir=/tmp
 fi
 tmpdir=$tmpdir/probe$$
 undef="define defined elif else endif error if ifdef ifndef include line pragma undef __STDC__ __STDPP__ __ARGC__ __BASE__ __BASE_FILE__ __DATE__ __FILE__ __INCLUDE_LEVEL__ __LINE__ __PATH__ __TIME__ __VERSION__"
+
+#
+# constrain the environment
+#
+
+DISPLAY=
+export DISPLAY
 
 #
 # now the common probes

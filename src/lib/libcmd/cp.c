@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1992-2003 AT&T Corp.                *
+*                Copyright (c) 1992-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -31,7 +31,7 @@
  */
 
 static const char usage_head[] =
-"[-?@(#)$Id: cp (AT&T Labs Research) 2002-11-14 $\n]"
+"[-?@(#)$Id: cp (AT&T Labs Research) 2004-02-29 $\n]"
 USAGE_LICENSE
 ;
 
@@ -96,6 +96,7 @@ static const char usage_tail[] =
 "[v:verbose?Print the name of each file before operating on it.]"
 "[b:backup?Make backups of files that are about to be replaced. See"
 "	\b--suffix\b and \b--version-control\b for more information.]"
+"[F:fsync|sync?\bfsync\b(2) each file after it is copied.]"
 "[S:backup-suffix|suffix?A backup file is made by renaming the file to the"
 "	same name with the backup suffix appended. The backup suffix is"
 "	determined in this order: this option, the \bSIMPLE_BACKUP_SUFFIX\b,"
@@ -119,7 +120,8 @@ static const char usage_tail[] =
 "file ... directory\n"
 "\n"
 
-"[+SEE ALSO?pax(1), rename(2), unlink(2), remove(3)]"
+"[+SEE ALSO?\bpax\b(1), \bfsync\b(2), \brename\b(2), \bunlink\b(2),"
+"	\bremove\b(3)]"
 ;
 
 #include <cmd.h>
@@ -161,6 +163,7 @@ static struct				/* program state		*/
 	int		preserve;	/* preserve { id mode time }	*/
 	int		recursive;	/* subtrees too			*/
 	int		suflen;		/* strlen(state.suffix)		*/
+	int		sync;		/* fsync() each file after copy	*/
 	int		uid;		/* caller uid			*/
 	int		update;		/* replace only if newer	*/
 	int		verbose;	/* list each file before op	*/
@@ -420,7 +423,7 @@ visit(register Ftw_t* ftw)
 		}
 		if (state.verbose)
 			sfputr(sfstdout, state.path, '\n');
-		rm = state.op != CP || ftw->info == FTW_SL;
+		rm = state.op == LN || ftw->info == FTW_SL;
 		if (!rm || !state.force)
 		{
 			if ((n = open(state.path, O_RDWR|O_BINARY)) >= 0)
@@ -520,12 +523,22 @@ visit(register Ftw_t* ftw)
 	switch (state.op)
 	{
 	case MV:
-		if (!rename(ftw->path, state.path))
-			break;
-		if (errno != EXDEV || S_ISDIR(ftw->statb.st_mode))
+		for (;;)
 		{
-			error(ERROR_SYSTEM|2, "%s: cannot rename to %s", ftw->path, state.path);
-			break;
+			if (!rename(ftw->path, state.path))
+				return 0;
+			if (!rm && st.st_mode && !remove(state.path))
+			{
+				rm = 1;
+				continue;
+			}
+			if (errno != EXDEV && (rm || S_ISDIR(ftw->statb.st_mode)))
+			{
+				error(ERROR_SYSTEM|2, "%s: cannot rename to %s", ftw->path, state.path);
+				return 0;
+			}
+			else
+				break;
 		}
 		/*FALLTHROUGH*/
 	case CP:
@@ -557,35 +570,40 @@ visit(register Ftw_t* ftw)
 					close(rfd);
 				return 0;
 			}
-			else
+			else if (ftw->statb.st_size > 0)
 			{
-				if (ftw->statb.st_size > 0)
+				if (!(ip = sfnew(NiL, NiL, SF_UNBOUND, rfd, SF_READ)))
 				{
-					if (!(ip = sfnew(NiL, NiL, SF_UNBOUND, rfd, SF_READ)))
-						error(ERROR_SYSTEM|2, "%s: %s read stream error", ftw->path, state.path);
+					error(ERROR_SYSTEM|2, "%s: %s read stream error", ftw->path, state.path);
+					close(rfd);
+					close(wfd);
+				}
+				else
+				{
+					n = 0;
+					if (!(op = sfnew(NiL, NiL, SF_UNBOUND, wfd, SF_WRITE)))
+					{
+						error(ERROR_SYSTEM|2, "%s: %s write stream error", ftw->path, state.path);
+						close(wfd);
+						sfclose(ip);
+					}
 					else
 					{
-						n = 0;
-						if (!(op = sfnew(NiL, NiL, SF_UNBOUND, wfd, SF_WRITE)))
-							error(ERROR_SYSTEM|2, "%s: %s write stream error", ftw->path, state.path);
-						else
-						{
-							if (sfmove(ip, op, (Sfoff_t)SF_UNBOUND, -1) < 0)
-								n |= 3;
-							if (!sfeof(ip))
-								n |= 1;
-							if (sfclose(op))
-								n |= 2;
-						}
+						if (sfmove(ip, op, (Sfoff_t)SF_UNBOUND, -1) < 0)
+							n |= 3;
+						if (!sfeof(ip))
+							n |= 1;
+						if (sfsync(op) || state.sync && fsync(wfd) || sfclose(op))
+							n |= 2;
 						if (sfclose(ip))
 							n |= 1;
 						if (n)
 							error(ERROR_SYSTEM|2, "%s: %s %s error", ftw->path, state.path, n == 1 ? ERROR_translate(0, 0, 0, "read") : n == 2 ? ERROR_translate(0, 0, 0, "write") : ERROR_translate(0, 0, 0, "io"));
 					}
-					close(rfd);
 				}
-				close(wfd);
 			}
+			else
+				close(wfd);
 		}
 		else if (S_ISBLK(ftw->statb.st_mode) || S_ISCHR(ftw->statb.st_mode) || S_ISFIFO(ftw->statb.st_mode))
 		{
@@ -634,6 +652,7 @@ b_cp(int argc, register char** argv, void* context)
 	char*		backup_type;
 	const char*	usage;
 	int		path_resolve;
+	int		standard;
 	struct stat	st;
 
 	if (argc < 0)
@@ -649,6 +668,7 @@ b_cp(int argc, register char** argv, void* context)
 	if (!(state.tmp = sfstropen()))
 		error(ERROR_SYSTEM|3, "out of space [tmp string]");
 	sfputr(state.tmp, usage_head, -1);
+	standard = !strcmp(astconf("CONFORMANCE", NiL, NiL), "standard");
 	switch (error_info.id[0])
 	{
 	case 'c':
@@ -698,14 +718,16 @@ b_cp(int argc, register char** argv, void* context)
 			continue;
 		case 'f':
 			state.force = 1;
-			state.interactive = 0;
+			if (state.op != CP || !standard)
+				state.interactive = 0;
 			continue;
 		case 'h':
 			state.hierarchy = 1;
 			continue;
 		case 'i':
-			state.force = 0;
 			state.interactive = 1;
+			if (state.op != CP || !standard)
+				state.force = 0;
 			continue;
 		case 'l':
 			state.op = LN;
@@ -733,6 +755,13 @@ b_cp(int argc, register char** argv, void* context)
 			continue;
 		case 'x':
 			state.flags |= FTW_MOUNT;
+			continue;
+		case 'F':
+#if _lib_fsync
+			state.sync = 1;
+#else
+			error(1, "%s not implemented on this system", opt_info.name);
+#endif
 			continue;
 		case 'H':
 			state.flags |= FTW_META|FTW_PHYSICAL;
@@ -779,7 +808,7 @@ b_cp(int argc, register char** argv, void* context)
 		error(3, "out of space");
 	memcpy(v, argv, (argc + 1) * sizeof(char*));
 	argv = v;
-	if (!argc && strcmp(astconf("CONFORMANCE", NiL, NiL), "standard"))
+	if (!argc && !standard)
 	{
 		argc++;
 		argv[1] = dot;

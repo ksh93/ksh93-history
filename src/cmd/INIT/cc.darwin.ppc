@@ -6,7 +6,7 @@ case $* in
 -dumpmachine) echo $HOSTTYPE; exit ;;
 esac
 
-cc=/usr/bin/cc
+CC=/usr/bin/cc
 op=init
 for arg
 do	case $op in
@@ -35,15 +35,15 @@ case $# in
 *)	shift ;;
 esac
 case $* in
--v)	$cc "$@"; exit ;;
+-v)	$CC "$@"; exit ;;
 esac
 case $op in
 init)	echo "cc: arguments expected" >&2
 	exit 1
 	;;
-cpp)	$cc -E "$@"
+cpp)	$CC -E "$@"
 	;;
-cc)	$cc -DCLK_TCK=100 "$@"
+cc)	$CC -DCLK_TCK=100 "$@"
 	;;
 dll)	tmp=/tmp/cc.$$.err
 	ld -m -flat_namespace -undefined suppress -dylib -dynamic \
@@ -54,7 +54,7 @@ dll)	tmp=/tmp/cc.$$.err
 	exit $status
 	;;
 ld)	tmp=/tmp/cc.$$.err
-	$cc -Wl,-m -DCLK_TCK=100 "$@" >$tmp 2>&1
+	$CC -Wl,-m -DCLK_TCK=100 "$@" >$tmp 2>&1
 	status=$?
 	egrep -v ' (warning .*multiple definitions of|definition of|as lazy binding|not from earlier dynamic) ' $tmp >&2
 	rm -f $tmp

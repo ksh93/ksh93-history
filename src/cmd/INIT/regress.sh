@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1994-2003 AT&T Corp.                #
+#                Copyright (c) 1994-2004 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -27,7 +27,7 @@ command=regress
 case $(getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt) in
 0123)	USAGE=$'
 [-?
-@(#)$Id: regress (AT&T Labs Research) 2003-10-11 $
+@(#)$Id: regress (AT&T Labs Research) 2004-01-11 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?regress - run regression tests]
@@ -45,6 +45,7 @@ case $(getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt) in
 	at least two digits (0 filled if necessary).]:[pattern]
 [v:verbose?List differences between actual (<) and expected (>) output, errors
 	and exit codes. Also disable long output line truncation.]
+[D:debug?Enable debug tracing.]
 
 unit [ command [ arg ... ] ]
 
@@ -57,7 +58,7 @@ unit [ command [ arg ... ] ]
 		\bTALLY\b, and exit with status \astatus\a.]
 	[+COMMAND \aarg\a ...?Runs the current command under test with
 		\aarg\a ... appended to the default args.]
-	[+COPY \afrom to\a?Rename file \afrom\a to \ato\a. \afrom\a may be
+	[+COPY \afrom to\a?Copy file \afrom\a to \ato\a. \afrom\a may be
 		a regular file or \bINPUT\b, \bOUTPUT\b or \bERROR\b.
 		Post test comparisons are still done for \afrom\a.]
 	[+DIAGNOSTICS [ \b1\b | \"\" ]]?No argument or an argument of \b1\b
@@ -237,9 +238,14 @@ function RUN # void
 		INTRO
 		;;
 	FINI)	;;
-	$select)case $quiet in
-		"")	print -nu2 "$TEST:$ITEM" ;;
-		*)	LABEL=$TEST:$ITEM ;;
+	$select)((COUNT++))
+		if	(( $ITEM <= $LASTITEM ))
+		then	LABEL=$TEST#$COUNT
+		else	LASTITEM=$ITEM
+			LABEL=$TEST:$ITEM
+		fi
+		case $quiet in
+		"")	print -nu2 "$LABEL" ;;
 		esac
 		file=""
 		exec >/dev/null
@@ -407,6 +413,8 @@ function UNIT # cmd arg ...
 function TEST # number description arg ...
 {
 	RUN
+	COUNT=0
+	LASTITEM=0
 	case $1 in
 	-)		((LAST++)); TEST=$LAST ;;
 	+([0123456789]))	LAST=$1 TEST=$1 ;;
@@ -761,7 +769,7 @@ function VIEW # var [ file ]
 
 # main
 
-integer ERRORS=0 EXPORTS=0 TESTS=0 SUBTESTS=0 LINE=0 ITEM=0
+integer ERRORS=0 EXPORTS=0 TESTS=0 SUBTESTS=0 LINE=0 ITEM=0 LASTITEM=0 COUNT
 typeset ARGS COMMAND COPY DIAGNOSTICS ERROR EXEC GROUP=INIT
 typeset IGNORE INPUT KEEP OUTPUT TEST SOURCE MOVE NOTE
 typeset ARGS_ORIG COMMAND_ORIG UNIT ARGV
@@ -784,6 +792,8 @@ do	case $OPT in
 		;;
 	v)	SET verbose=1
 		truncate=
+		;;
+	D)	SET trace=1
 		;;
 	*)	GROUP=FINI
 		exit 2

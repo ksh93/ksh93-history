@@ -14,8 +14,6 @@ package :: package.sh
 
 regress :: regress.sh LICENSE=since=1995,author=gsf
 
-$(PACKAGEROOT)/lib/package $(INSTALLROOT)/lib/make :INSTALLDIR: package.mk
-
 $(PACKAGEROOT)/bin :INSTALLDIR: execrate ignore mamprobe package silent
 
 crossexec :: crossexec.sh
@@ -30,7 +28,12 @@ ignore :: ignore.sh
 
 silent :: silent.sh
 
-:PACKAGE_INIT: mamake.c proto.c ratz.c release.c
+$(PACKAGEROOT)/lib/package :INSTALLDIR: package.mk CONVERT.mk
+
+$(LIBDIR)/make :INSTALLDIR: package.mk PROBE.mk TEST.mk WWW.mk \
+	MSGFUN.mk MSGKEY.mk
+
+cc ld ldd :PACKAGE_INIT: mamake.c proto.c ratz.c release.c
 
 :: RELEASE hosttype.tst p.c hello.c \
 	cc.darwin.ppc cc.hp.pa cc.hp.pa64 cc.ibm.risc cc.mvs.390 \
@@ -157,8 +160,6 @@ probe.ini : (CC.HOSTTYPE) probe.win32
 	?*)	cmp -s $1 $(<) || cp $1 $(<) ;;
 	*)	: > $(<)
 	esac
-
-$(LIBDIR)/make :INSTALLDIR: PROBE.mk TEST.mk WWW.mk MSGFUN.mk MSGKEY.mk
 
 /*
  * proto initialization

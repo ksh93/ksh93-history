@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1982-2003 AT&T Corp.                #
+#                Copyright (c) 1982-2004 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -197,4 +197,8 @@ do	for i in 'a\*b' 'a\ b' 'a\bc' 'a\*b' 'a\"b'
 	done
 	set -f
 done
+foo=foo
+[[ "$" == '$' ]] || err_exit '"$" != $'
+[[ "${foo}$" == 'foo$' ]] || err_exit 'foo=foo;"${foo}$" != foo$'
+[[ "${foo}${foo}$" == 'foofoo$' ]] || err_exit 'foo=foo;"${foo}${foo}$" != foofoo$'
 exit $((Errors))

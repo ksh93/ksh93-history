@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2003 AT&T Corp.                *
+*                Copyright (c) 1982-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -164,13 +164,14 @@ Namval_t *nv_create(register Namval_t* np,const char *name,int flag,register Nam
 
 #define	LOOKUP		0
 #define	ASSIGN		1
-#define	UNASSIGN	2
+#define	APPEND		2
+#define	UNASSIGN	3
 #define BLOCKED		((Namval_t*)&nv_local)
 
 struct	vardisc
 {
 	Namfun_t	fun;
-	Namval_t	*disc[3];
+	Namval_t	*disc[4];
 };
 
 /*
@@ -200,7 +201,7 @@ static void	assign(Namval_t *np,const char* val,int flags,Namfun_t *handle)
 {
 	register struct vardisc *vp = (struct vardisc*)handle;
 	register Namval_t *nq, **disc;
-	disc =  &(vp->disc[ASSIGN]);
+	disc =  &(vp->disc[(flags&NV_APPEND)?APPEND:ASSIGN]);
 	if(val || *disc==BLOCKED)
 	{
 		if(!(nq= *disc) || nq==BLOCKED)
@@ -216,8 +217,13 @@ static void	assign(Namval_t *np,const char* val,int flags,Namfun_t *handle)
 		disc =  &(vp->disc[UNASSIGN]);
 	if((nq= *disc) && nq!=BLOCKED)
 	{
+		Namval_t *nq1, **disc1;
 		*disc=BLOCKED;
+		if ((flags&NV_APPEND) && (disc1= &(vp->disc[LOOKUP])) && (nq1= *disc1) && nq1!=BLOCKED)
+			*disc1=BLOCKED;
 		sh_fun(nq,np,(char**)0);
+		if((flags&NV_APPEND) && disc1 && nq1 && nq1!=BLOCKED)
+			*disc1=nq1;
 		if(*disc==BLOCKED)
 			*disc=nq;
 		else if(!*disc)
@@ -242,16 +248,23 @@ static void	assign(Namval_t *np,const char* val,int flags,Namfun_t *handle)
 			nv_putv(np,cp,flags|NV_RDONLY,handle);
 		nv_unset(SH_VALNOD);
 	}
-	else if(!nq || nq==BLOCKED)
+	else if(sh_isstate(SH_INIT))
 	{
-		if(vp->disc[ASSIGN])
-			nv_unset(vp->disc[ASSIGN]);
-		if(vp->disc[LOOKUP])
-			nv_unset(vp->disc[LOOKUP]);
-		if(vp->disc[UNASSIGN])
-			nv_unset(vp->disc[UNASSIGN]);
-		if((handle=nv_stack(np, NIL(Namfun_t*))) && !handle->nofree)
-			free((void*)handle);
+		/* don't free functions during reinitialization */
+		nv_putv(np,val,flags,handle);
+	}
+	else if(!nq || nq!=BLOCKED)
+	{
+		Dt_t *root = sh_subfuntree(1);
+		int n;
+		for(n=0; n < sizeof(vp->disc)/sizeof(*vp->disc); n++)
+		{
+			if(nq=vp->disc[n])
+			{
+				nv_unset(nq);
+				dtdelete(root,nq);
+			}
+		}
 		nv_unset(np);
 	}
 }
@@ -299,9 +312,10 @@ char *nv_setdisc(register Namval_t* np,register const char *event,Namval_t *acti
 {
 	register struct vardisc *vp = (struct vardisc*)np->nvfun;
 	register int type;
+	char *empty = "";
 	if(np == (Namval_t*)fp)
 	{
-		static const char *discnames[] = { "get", "set", "unset", 0 };
+		static const char *discnames[] = { "get", "set", "append", "unset", 0 };
 		register const char *name;
 		register int getname=0;
 		/* top level call, check for get/set */
@@ -343,7 +357,7 @@ char *nv_setdisc(register Namval_t* np,register const char *event,Namval_t *acti
 		}
 		return(NIL(char*));
 	}
-	/* Handle GET/SET/UNSET disc */
+	/* Handle GET/SET/APPEND/UNSET disc */
 	if(vp && vp->fun.disc->putval!=assign)
 		vp = 0;
 	if(!vp)
@@ -356,7 +370,10 @@ char *nv_setdisc(register Namval_t* np,register const char *event,Namval_t *acti
 		nv_stack(np, (Namfun_t*)vp);
 	}
 	if(action==np)
+	{
 		action = vp->disc[type];
+		empty = 0;
+	}
 	else if(action)
 		vp->disc[type] = action;
 	else
@@ -366,7 +383,7 @@ char *nv_setdisc(register Namval_t* np,register const char *event,Namval_t *acti
 		if(action!=BLOCKED)
 			chktfree(np,vp);
 	}
-	return(action?(char*)action:"");
+	return(action?(char*)action:empty);
 }
 
 
@@ -719,33 +736,7 @@ skip:
 	        nv_setsize(np,0);
 		return(1);
 	}
-	if(nv_isarray(np))
-	{
-		Namarr_t *ap = nv_arrayptr(np);
-		char *name, *sub= nv_getsub(np);
-		if(sub)
-			sub = strdup(sub);
-		nv_putsub(np,NIL(char*),ARRAY_SCAN);
-		do
-		{
-		        if(array_assoc(ap))
-				name = (char*)((*ap->fun)(np,NIL(char*),NV_ANAME));
-			else
-				name = nv_getsub(np);
-			nv_putsub(mp,name,ARRAY_ADD);
-			if(nv_isattr(np,NV_INTEGER))
-			{
-				Sfdouble_t d= nv_getnum(np);
-				nv_putval(mp,(char*)&d,NV_LONG|NV_DOUBLE|NV_INTEGER);
-			}
-			else
-				nv_putval(mp,nv_getval(np),NV_RDONLY);
-		}
-		while(nv_nextsub(np));
-		nv_putsub(np,sub,0L);
-		free((void*)sub);
-	}
-	else if(nv_isattr(np,NV_INTEGER))
+	if(nv_isattr(np,NV_INTEGER))
 		mp->nvalue.ip = (int*)num_clone(np,(void*)np->nvalue.ip);
 	else if(flags)
 	        nv_onattr(np,NV_NOFREE);
@@ -859,6 +850,7 @@ Namval_t *nv_bfsearch(const char *name, Dt_t *root, Namval_t **var, char **last)
 	if(!(cp=strrchr(name+1,'.')))
 		return(var?nv_search(name,root,0):0);
 	stakputs(name);
+	stakputc(0);
 	cp = stakptr(offset) + (cp-name); 
 	if(last)
 		*last = cp;
@@ -875,6 +867,7 @@ Namval_t *nv_bfsearch(const char *name, Dt_t *root, Namval_t **var, char **last)
 		np = nq;
 		goto done;
 	}
+	*var = nq;
 	return((Namval_t*)nv_setdisc(nq,cp+1,nq,(Namfun_t*)nq));
 done:
 	stakseek(offset);

@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1982-2003 AT&T Corp.                #
+#                Copyright (c) 1982-2004 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -326,4 +326,22 @@ done) == ok ]] || err_exit 'invalid optimization for subscripted variables'
 x=([foo]=bar)
 set +A x bam
 ) 2> /dev/null && err_exit 'set +A with associative array should be an error'
+unset bam foo
+foo=0
+typeset -A bam
+unset bam[foo]
+bam[foo]=value
+[[ $bam == value ]] && err_exit 'unset associative array element error'
+: only first element of an array can be exported
+unset bam
+trap 'rm -f /tmp/sharr$$' EXIT
+print 'print ${var[0]} ${var[1]}' > /tmp/sharr$$
+chmod +x /tmp/sharr$$
+[[ $($SHELL -c "var=(foo bar);export var;/tmp/sharr$$") == foo ]] || err_exit 'export array not exporting just first element'
+unset foo
+set -o allexport
+foo=one
+foo[1]=two
+foo[0]=three
+[[ $foo == three ]] || err_exit 'export all not working with arrays'
 exit $((Errors))

@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1994-2003 AT&T Corp.                #
+#                Copyright (c) 1994-2004 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -51,7 +51,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Labs Research) 2003-08-11 $
+@(#)$Id: package (AT&T Labs Research) 2004-02-29 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary packages.
@@ -140,7 +140,9 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 			[+date?\aYYMMDD\a of the last action.]
 			[+time?Elapsed wall time for the last action.]
 			[+M T W?The \badmin\b action \bmake\b, \btest\b and
-				\bwrite\b action error counts.]
+				\bwrite\b action error counts. A non-numeric
+				value in any of these fields disables the
+				corresponding action.]
 		}
 	[+contents\b [ \apackage\a ... ]]?List description and components
 		for \apackage\a on the standard output.]
@@ -148,9 +150,12 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 		for \apackage\a on the standard output. Note that individual
 		components in \apackage\a may contain additional or replacement
 		notices.]
+	[+export\b \avariable\a ...?List \aname\a=\avalue\a for \avariable\a,
+		one per line. If the \bonly\b attribute is specified then only
+		the variable values are listed.]
 	[+help\b [ \aaction\a ]]?Display help text on the standard error
 		(standard output for \aaction\a).]
-	[+host\b [ \aattribute\a... ]]?List architecture/implementation
+	[+host\b [ \aattribute\a ... ]]?List architecture/implementation
 		dependent host information on the standard output. \btype\b is
 		listed if no attributes are specified. Information is listed on
 		a single line in \aattribute\a order. The attributes are:]{
@@ -177,7 +182,7 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 				been futile.]
 		}
 	[+html\b [ \aaction\a ]]?Display html help text on the standard error
-		(stamdard output for \aaction\a).]
+		(standard output for \aaction\a).]
 	[+install\b [ flat ]] [ \aarchitecture\a ... ]] \adirectory\a [ \apackage\a ... ]]?Copy
 		the package binary hierarchy to \adirectory\a. If
 		\aarchitecture\a is omitted then all architectures are
@@ -213,6 +218,7 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 		the read time. See the \bwrite\b action for archive naming
 		conventions. Text file archive member are assumed to be ASCII
 		or UTF-8 encoded.]
+	[+regress?\bdiff\b(1) the current and previous \bpackage test\b results.]
 	[+release\b [ [\aCC\a]]\aYY-MM-DD\a [ [\acc\a]]\ayy-mm-dd\a ]] ]]
 		[ \apackage\a ]]?Display recent changes for the date range
 		[\aCC\a]]\aYY-MM-DD\a (up to [\acc\a]]\ayy-mm-dd\a.), where
@@ -455,8 +461,17 @@ esac
 
 # check the args
 
+case $AR in
+'')	AR=ar ;;
+esac
 case $CC in
 '')	CC=cc ;;
+esac
+case $LD in
+'')	LD=ld ;;
+esac
+case $NM in
+'')	NM=nm ;;
 esac
 
 action=
@@ -493,7 +508,7 @@ do	case $# in
 	0)	set host type ;;
 	esac
 	case $1 in
-	admin|contents|copyright|host|install|license|list|make|read|release|remove|results|setup|test|update|use|verify|view|write|TEST)
+	admin|contents|copyright|export|host|install|license|list|make|read|regress|release|remove|results|setup|test|update|use|verify|view|write|TEST)
 		action=$1
 		shift
 		break
@@ -878,7 +893,8 @@ ${bT}(5)${bD}Read all unread package archive(s):${bX}
 		   date    YYMMDD of the last action.
 		   date    Elapsed wall time of the last action.
 		   M T W   The admin action make, test and write action error
-			   counts.
+			   counts. A non-numeric value in any of these fields
+			   disables the corresponding action.
 	contents [ package ... ]
 		List description and components for PACKAGE on the standard
 		output.
@@ -886,6 +902,10 @@ ${bT}(5)${bD}Read all unread package archive(s):${bX}
 		List the general copyright notice(s) for PACKAGE on the
 		standard output. Note that individual components in PACKAGE
 		may contain additional or replacement notices.
+	export VARIABLE ...
+		List NAME=VALUE for each VARIABLE, one per line. If the
+		\"only\" attribute is specified then only the variable
+		values are listed.
 	help [ ACTION ]
 		Display help text on the standard error [ standard output
 		for ACTION ].
@@ -950,8 +970,10 @@ ${bT}(5)${bD}Read all unread package archive(s):${bX}
 		file lib/package/tgz/package[.type].tim tracks the read time.
 		See the write action for archive naming conventions. Text
 		file archive member are assumed to be ASCII or UTF-8 encoded.
+	regress diff(1) the current and previous package test results.
 	release [ [CC]YY-MM-DD [ [cc]yy-mm-dd ] ] [ package ]
-		Display recent changes since [CC]YY-MM-DD (up to [cc]yy-mm-dd), 		where - means lowest (or highest.) If no dates are specified
+		Display recent changes since [CC]YY-MM-DD (up to [cc]yy-mm-dd),
+		where - means lowest (or highest.) If no dates are specified
 		then changes for the last 4 months are listed. PACKAGE may
 		be a package or component name.
 	remove PACKAGE
@@ -1087,6 +1109,10 @@ args=
 assign=
 for i
 do	case $i in
+	AR=*|LD=*|NM=*)
+		assign="$assign '$i'"
+		eval $i
+		;;
 	CC=*)	eval $i
 		;;
 	CCFLAGS=*)
@@ -1797,21 +1823,16 @@ main()
 				esac
 				;;
 			esac
-			case $n in
-			2)	x='-n32' ;;
-			3)	x='-o32' ;;
-			4)	x='-o32 -n32' ;;
+			a=`$cc -show F0oB@r.c 2>&1`
+			case $n:$a in
+			[!2]:*mips2*)	n=2 ;;
+			[!23]:*mips3*)	n=3 ;;
+			[!234]:*mips4*)	n=4 ;;
 			esac
-			for i in $x
-			do	a=`$cc -${type}$n $i 2>&1`
-				case $a in
-				*conflict*|*mix*|*used*)
-					;;
-				*)	abi=$i
-					break
-					;;
-				esac
-			done
+			case $n:$a in
+			[!2]:*[Oo]32*)	abi=-o32 ;;
+			[!3]:*[Nn]32*)	abi=-n32 ;;
+			esac
 			mach=${type}$n
 			type=sgi.$mach
 			;;
@@ -2142,7 +2163,7 @@ host)	eval u=$package_use
 	echo $_hostinfo_
 	exit 0
 	;;
-setup|use)
+export|setup|use)
 	x=
 	;;
 *)	x=
@@ -2298,7 +2319,8 @@ case $x in
 	# check the basic package hierarchy
 
 	case $action in
-	use)	packageroot $PACKAGEROOT || {
+	export|use)
+		packageroot $PACKAGEROOT || {
 			echo "$command: $PACKAGEROOT: invalid package root directory" >&2
 			exit 1
 		}
@@ -2380,6 +2402,7 @@ cat $INITROOT/$i.sh
 		exit $code
 		) >/dev/null 2>&1 || CROSS=1
 	fi
+	EXECTYPE=$HOSTTYPE
 	EXECROOT=$INSTALLROOT
 	case $CROSS in
 	0) 	# dll hackery -- why is this so complicated?
@@ -2536,8 +2559,9 @@ cat $INITROOT/$i.sh
 		export PATH
 		;;
 	*)	for i in package proto nmake
-		do	if	onpath package
+		do	if	onpath $i
 			then	EXECROOT=`echo $_onpath_ | sed -e 's,//*[^/]*//*[^/]*$,,'`
+				EXECTYPE=`echo $EXECROOT | sed -e 's,.*/,,'`
 				break
 			fi
 		done
@@ -2963,7 +2987,7 @@ checkaout()	# cmd ...
 		then	k=${k}1
 		else	k=${k}0
 		fi
-		if	executable $INSTALLROOT/bin/$i
+		if	executable $EXECROOT/bin/$i
 		then	k=${k}1
 		else	k=${k}0
 		fi
@@ -2981,11 +3005,21 @@ checkaout()	# cmd ...
 		100)	echo "$command: $i: not found: download the INIT package source or $HOSTTYPE binary to continue" >&2
 			exit 1
 			;;
+		110)	case $CROSS in
+			1)	echo "$command: $i: not found: make the local $EXECTYPE binary package before $HOSTTYPE" >&2
+				exit 1
+				;;
+			esac
+			;;
 		?01)	: accept binary
 			continue
 			;;
 		011)	: accept binary
 			continue
+			;;
+		??1)	case $CROSS in
+			1)	continue ;;
+			esac
 			;;
 		esac
 		case `ls -t $INITROOT/$i.c $INSTALLROOT/bin/$i 2>/dev/null` in
@@ -3530,28 +3564,28 @@ remote() # host background
 	case $host in
 	$main)	;;
 	*)	case $exec in
-		'')	exec > $admin_log/$host 2>&1 ;;
-		*)	echo "exec > $admin_log/$host 2>&1" ;;
+		'')	exec > $admin_log/$name 2>&1 ;;
+		*)	echo "exec > $admin_log/$name 2>&1" ;;
 		esac
 		;;
 	esac
-	if	ping -c 1 -w 4 $host >/dev/null 2>&1
+	if	ping -c 1 -w 4 $name >/dev/null 2>&1
 	then	cmd=". ./.profile && cd $root && { test -f lib/package/admin/$admin_env && . ./lib/package/admin/$admin_env || true ;} && touch lib/package/tgz/.package.tim && PATH=\`pwd\`/bin:\$PATH \${SHELL:-/bin/sh} -c 'package $admin_args PACKAGEROOT=\`pwd\` HOSTTYPE=$type VPATH='"
 		case $admin_binary in
 		'')	snarf= ;;
 		esac
 		case $snarf in
-		'')	$exec $rsh $user$host "$cmd" $amp
+		'')	$exec $rsh $user$name "$cmd" $amp
 			;;
 		*?)	rcp=`echo $rsh | sed 's/\(.\).*/\1/'`cp
 			cmd="$cmd && cd lib/package/tgz && tw -e 'type==REG&&name!=\"*[mt]\"&&mtime>\".package.tim\".mtime' > .package.lst"
-			$exec $rsh $user$host "$cmd" $amp
-			for f in `$rsh $user$host "cat $root/lib/package/tgz/.package.lst 2>/dev/null || echo TGZ"`
-			do	$exec $rcp $user$host:$root/lib/package/tgz/$f $PACKAGESRC/tgz
+			$exec $rsh $user$name "$cmd" $amp
+			for f in `$rsh $user$name "cat $root/lib/package/tgz/.package.lst 2>/dev/null || echo TGZ"`
+			do	$exec $rcp $user$name:$root/lib/package/tgz/$f $PACKAGESRC/tgz
 			done
 			;;
 		esac
-	else	echo "$command: $host: down" >&2
+	else	echo "$command: $name: down" >&2
 	fi
 }
 
@@ -3599,7 +3633,14 @@ admin)	while	test ! -f $admin_db
 		''|'#'*);;
 		*=*)	eval "$type $host $root $date $time $make $test $write $junk"
 			;;
-		*)	rsh=rsh
+		*)	case $admin_action in
+			make|test|write)
+				eval f='$'$admin_action
+				case $f in
+				*[!0-9]*)	continue ;;
+				esac
+			esac
+			rsh=rsh
 			case $host in
 			*@*)	IFS=@
 				set '' $host
@@ -3608,6 +3649,12 @@ admin)	while	test ! -f $admin_db
 				host=$3
 				;;
 			*)	user=
+				;;
+			esac
+			name=$host
+			case $host in
+			*[!abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789]*)
+				host=`echo $host | sed 's,[^abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789],_,g'`
 				;;
 			esac
 			case $root in
@@ -3636,6 +3683,11 @@ admin)	while	test ! -f $admin_db
 				2)	rsh=$1 root=$2
 					;;
 				*)	rsh=$1 sync=$2 root=$3
+					case $sync in
+					*[!abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789]*)
+						sync=`echo $sync | sed 's,[^abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789],_,g'`
+						;;
+					esac
 					;;
 				esac
 				;;
@@ -3660,7 +3712,7 @@ admin)	while	test ! -f $admin_db
 			'')	local_hosts="$local_hosts $host"
 				;;
 			esac
-			eval ${host}_type=$type ${host}_user=$user ${host}_sync=$sync ${host}_snarf=$sync ${host}_rsh=$rsh ${host}_root=$root ${host}_keep=$keep
+			eval ${host}_name='$'name ${host}_type='$'type ${host}_user='$'user ${host}_sync='$'sync ${host}_snarf='$'sync ${host}_rsh='$'rsh ${host}_root='$'root ${host}_keep='$'keep
 			;;
 		esac
 	done
@@ -3674,7 +3726,7 @@ admin)	while	test ! -f $admin_db
 			eval ${host}_snarf=
 			;;
 		esac
-		eval keep=\$${host}_keep share=\$${host}_share
+		eval name=\$${host}_name keep=\$${host}_keep share=\$${host}_share
 		for share in $share
 		do	eval type=\$${share}_type keep=\$keep\$${share}_keep
 			case " $local_types " in
@@ -3713,23 +3765,35 @@ admin)	while	test ! -f $admin_db
 			;;
 		esac
 		main=$host
+		eval mainname='$'${host}_name
+		share_keep=
 		for i in $host $share
-		do	eval t='$'${i}_type
-			echo package "$admin_args" "[ $i $t ]"
+		do	eval n='$'${i}_name t='$'${i}_type q='$'${i}_sync s='$'${i}_snarf
+			case $admin_binary:$s:$q in
+			1::?*)	continue ;;
+			esac
+			case $i in
+			$host)	;;
+			*)	share_keep="$share_keep $i" ;;
+			esac
+			echo package "$admin_args" "[ $n $t ]"
 			case $exec in
-			'')	: > $admin_log/$i ;;
+			'')	: > $admin_log/$n ;;
 			esac
 		done
+		share=$share_keep
 		case $exec in
 		'')	{
 			case $admin_binary:$sync in
-			:?*)	test -d $PACKAGESRC && $admin_ditto --remote=$rsh --expr="if(level>1)status=SKIP;name=='*.(pkg|lic)'" $PACKAGESRC $user$sync:$root/lib/package
+			:?*)	eval syncname='$'${sync}_name
+				test -x $PACKAGEROOT/bin/package && $admin_ditto --remote=$rsh --expr="name=='package'" $PACKAGEROOT/bin $user$syncname:$root/bin
+				test -d $PACKAGESRC && $admin_ditto --remote=$rsh --expr="if(level>1)status=SKIP;name=='*.(pkg|lic)'" $PACKAGESRC $user$syncname:$root/lib/package
 				for dir in $src
 				do	case $MAKESKIP in
 					'')	expr="--expr=if(name=='$admin_ditto_skip')status=SKIP" ;;
 					*)	expr="--expr=if(name=='$admin_ditto_skip'||level==1&&name=='$MAKESKIP')status=SKIP" ;;
 					esac
-					test -d $PACKAGEROOT/src/$dir && $admin_ditto --remote=$rsh "$expr" $PACKAGEROOT/src/$dir $user$sync:$root/src/$dir
+					test -d $PACKAGEROOT/src/$dir && $admin_ditto --remote=$rsh "$expr" $PACKAGEROOT/src/$dir $user$syncname:$root/src/$dir
 				done
 				;;
 			esac
@@ -3754,18 +3818,19 @@ admin)	while	test ! -f $admin_db
 				esac
 				;;
 			esac
-			} < /dev/null > $admin_log/$main 2>&1 &
+			} < /dev/null > $admin_log/$mainname 2>&1 &
 			pids="$pids $!"
 			;;
 		*)	echo "{"
 			case $admin_binary:$sync in
-			:?*)	test -d $PACKAGESRC && echo $admin_ditto --remote=$rsh --expr="if(level>1)status=SKIP;name=='*.(pkg|lic)'" $PACKAGESRC $user$sync:$root/lib/package
+			:?*)	eval syncname='$'${sync}_name
+				test -d $PACKAGESRC && echo $admin_ditto --remote=$rsh --expr="if(level>1)status=SKIP;name=='*.(pkg|lic)'" $PACKAGESRC $user$syncname:$root/lib/package
 				for dir in $src
 				do	case $MAKESKIP in
 					'')	expr="--expr=if(name=='$admin_ditto_skip')status=SKIP" ;;
 					*)	expr="--expr=if(name=='$admin_ditto_skip'||level==1&&name=='$MAKESKIP')status=SKIP" ;;
 					esac
-					test -d $PACKAGEROOT/src/$dir && echo $admin_ditto --remote=$rsh "$expr" $PACKAGEROOT/src/$dir $user$sync:$root/src/$dir
+					test -d $PACKAGEROOT/src/$dir && echo $admin_ditto --remote=$rsh "$expr" $PACKAGEROOT/src/$dir $user$syncname:$root/src/$dir
 				done
 				;;
 			esac
@@ -3790,14 +3855,17 @@ admin)	while	test ! -f $admin_db
 				esac
 				;;
 			esac
-			echo "} < /dev/null > $admin_log/$main 2>&1 &"
+			echo "} < /dev/null > $admin_log/$mainname 2>&1 &"
 			;;
 		esac
-		hosts="$hosts $main"
+		eval name='$'${main}_name
+		hosts="$hosts $name"
 		for share in $share
 		do	eval keep=\$${share}_keep
 			case $keep in
-			1)	hosts="$hosts $share" ;;
+			1)	eval name='$'${share}_name
+				hosts="$hosts $share"
+				;;
 			esac
 		done
 	done
@@ -4077,6 +4145,20 @@ copyright)
 	done
 	;;
 
+export)	case $INSTALLROOT in
+	$PACKAGEROOT)
+		INSTALLROOT=$INSTALLROOT/arch/$HOSTTYPE
+		;;
+	esac
+	case $only in
+	0)	v='$i=' ;;
+	*)	v= ;;
+	esac
+	for i in $target $package
+	do	eval echo ${v}'$'${i}
+	done
+	;;
+
 install)cd $PACKAGEROOT
 	set '' $package
 	shift
@@ -4258,8 +4340,8 @@ make|view)
 
 	# check for some required commands
 
-	must="ar"
-	warn="nm yacc bison"
+	must="$AR"
+	warn="$NM yacc bison"
 	test="$must $warn"
 	have=
 	IFS=:
@@ -4372,8 +4454,10 @@ make|view)
 			$b*)	cc=$b
 				;;
 			$s*)	cd $INSTALLROOT/lib/package/gen
-				if	$exec $s -o tmp.exe $INITROOT/hello.c >/dev/null 2>&1 &&
-					test -x tmp.exe
+				tmp=pkg$$
+				eval '$'exec echo "'main(){return 0;}' > $tmp.c"
+				if	$exec $s -o $tmp.exe $tmp.c >/dev/null 2>&1 &&
+					test -x $tmp.exe
 				then	case $HOSTTYPE in
 					*.mips*)$s -version >/dev/null 2>&1 || s= ;;
 					esac
@@ -4384,7 +4468,7 @@ make|view)
 						;;
 					esac
 				fi
-				$exec rm -f tmp.*
+				$exec rm -f $tmp.*
 				$exec touch "$t"
 				cd $PACKAGEROOT
 				;;
@@ -4424,15 +4508,17 @@ make|view)
 	esac
 	case $exec in
 	'')	cd $INSTALLROOT/lib/package/gen
-		if	$CC -o tmp.exe $INITROOT/hello.c >/dev/null 2>&1 &&
-			test -x tmp.exe
+		tmp=pkg$$
+		echo 'main(){return 0;}' > $tmp.c
+		if	$CC -o $tmp.exe $tmp.c >/dev/null 2>&1 &&
+			test -x $tmp.exe
 		then	: ok
 		else	echo "$command: $CC: failed to compile this program:" >&2
-			cat $INITROOT/hello.c >&2
+			cat $tmp.c >&2
 			echo "$command: $CC: not a C compiler" >&2
 			exit 1
 		fi
-		rm -f tmp.*
+		rm -f $tmp.*
 		cd $PACKAGEROOT
 		;;
 	esac
@@ -4450,18 +4536,23 @@ make|view)
 			*)	assign="$assign CC=\"\$CC\""
 				;;
 			esac
-		else	case $exec in
-			'')	{
-				echo ": $CC :"
-				echo "$CC \"\$@\""
-				} > $INSTALLROOT/bin/cc
-				chmod +x $INSTALLROOT/bin/cc
+		else	case $CROSS in
+			1)	assign="$assign CC=\"\$CC\""
 				;;
-			*)	note generate a $INSTALLROOT/bin/cc wrapper for $CC
+			*)	case $exec in
+				'')	{
+					echo ": $CC :"
+					echo "$CC \"\$@\""
+					} > $INSTALLROOT/bin/cc
+					chmod +x $INSTALLROOT/bin/cc
+					;;
+				*)	note generate a $INSTALLROOT/bin/cc wrapper for $CC
+					;;
+				esac
+				CC=cc
+				export CC
 				;;
 			esac
-			CC=cc
-			export CC
 		fi
 		;;
 	esac
@@ -4510,7 +4601,8 @@ cat $j $k
 	# execrate if necessary
 
 	if	(execrate) >/dev/null 2>&1
-	then	$make cd $INSTALLROOT/bin
+	then	execrate=execrate
+		$make cd $INSTALLROOT/bin
 		for i in chmod chgrp cmp cp ln mv rm
 		do	if	test ! -x $OK/$i -a -x /bin/$i.exe
 			then	shellmagic
@@ -4526,6 +4618,7 @@ cat $j $k
 		done
 		PATH=$INSTALLROOT/bin/$OK:$PATH
 		export PATH
+	else	execrate=
 	fi
 	case $action in
 	view)	exit 0 ;;
@@ -4666,7 +4759,7 @@ cat $j $k
 			*ast*.dll *cmd*.dll *dll*.dll *shell*.dll
 		do	if	executable $i
 			then	cmp -s $i $OK/$i 2>/dev/null ||
-				$exec $cp $i $OK/$i
+				$exec $execrate $cp $i $OK/$i
 			fi
 		done
 		if	executable $OK/nmake
@@ -5045,6 +5138,42 @@ $r:" | sort` in
 	0)	requirements - $x ;;
 	esac
 	exit $code
+	;;
+
+regress)if	test ! -d $PACKAGEBIN/gen
+	then	echo "$command: 'package make' and 'package test' required for regression" >&2
+		exit 1
+	fi
+	dir=$PACKAGEBIN/gen
+	cd $dir
+	for s in out old
+	do	case `ls -t regress.$s test.$s 2>/dev/null` in
+		regress*)
+			;;
+		test*)	if	test -f regress.$s
+			then	$exec mv regress.$s regress.old
+			fi
+			case $exec in
+			'')	egrep -i '\*\*\*|FAIL|^TEST.* [1-9][0-9]* error|core.*dump' test.$s |
+				sed 	-e '/\*\*\* [0-9]/d' \
+					-e '/^TEST.\//s,/[^ ]*/,,' \
+					-e 's,[ 	][ 	]*$,,' \
+					-e 's/[0-9][0-9]*: Memory fault/Memory fault/' \
+					-e 's/[0-9][0-9]*: Bus error/Bus error/' \
+					-e 's/\.sh failed at .* with /.sh failed /' \
+					> regress.$s
+				;;
+			*)	$exec filter test failures from $dir/test.$s to $dir/regress.$s
+				;;
+			esac
+			;;
+		esac
+	done
+	if	test -f regress.out -a -f regress.old
+	then	$exec diff -b regress.out regress.old
+	else	echo "$command: at least 2 test runs required for regression" >&2
+			exit 1
+	fi
 	;;
 
 release)count= lo= hi=

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2003 AT&T Corp.                *
+*                Copyright (c) 1985-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -106,6 +106,7 @@ typedef struct
 
 typedef struct
 {
+	int		test;
 	int		type;
 	int		verbose;
 	int		ids;
@@ -271,7 +272,10 @@ copyright(Notice_t* notice, register Buffer_t* b)
 	time_t		clock;
 
 	copy(b, "Copyright (c) ", -1);
-	time(&clock);
+	if (notice->test)
+		clock = (time_t)1000212300;
+	else
+		time(&clock);
 	t = ctime(&clock) + 20;
 	if ((x = notice->item[SINCE].data) && strncmp(x, t, 4))
 	{
@@ -348,6 +352,7 @@ astlicense(char* p, int size, char* file, char* options, int cc1, int cc2, int c
 		s = options;
 		options = 0;
 	}
+	notice.test = 0;
 	notice.type = 0;
 	notice.verbose = 0;
 	notice.ids = 0;
@@ -468,6 +473,8 @@ astlicense(char* p, int size, char* file, char* options, int cc1, int cc2, int c
 							return 0;
 						else if (!strncmp(v, "open", 4))
 							notice.type = OPEN;
+						else if (!strncmp(v, "test", 4))
+							notice.test = 1;
 						else if (!strncmp(v, "usage", 5))
 						{
 							notice.type = USAGE;
@@ -493,8 +500,12 @@ astlicense(char* p, int size, char* file, char* options, int cc1, int cc2, int c
 			}
 			else
 			{
-				copy(&buf, file, -1);
-				copy(&buf, ": syntax error: assignment expected", -1);
+				if (file)
+				{
+					copy(&buf, file, -1);
+					copy(&buf, ": ", -1);
+				}
+				copy(&buf, "option error: assignment expected", -1);
 				PUT(&buf, 0);
 				return -1;
 			}

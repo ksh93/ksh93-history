@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2003 AT&T Corp.                *
+*                Copyright (c) 1985-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -35,8 +35,8 @@
 char* sfgetr(reg Sfio_t *f, reg int rc, int type)
 #else
 char* sfgetr(f,rc,type)
-reg Sfio_t*	f;	/* stream to read from. r11 on vax		*/
-reg int		rc;	/* record separator. r10 on Vax			*/
+reg Sfio_t*	f;	/* stream to read from	*/
+reg int		rc;	/* record separator	*/
 int		type;
 #endif
 {

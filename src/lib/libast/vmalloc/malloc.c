@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2003 AT&T Corp.                *
+*                Copyright (c) 1985-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -47,7 +47,7 @@ void _STUB_malloc(){}
  * will simply call malloc etc.
  */
 
-#if !defined(_AST_std_malloc) && __CYGWIN__ /* cygwin fork() omission? */
+#if !defined(_AST_std_malloc) && ( __CYGWIN__ || __osf__ && __alpha )
 #define _AST_std_malloc	1
 #endif
 
@@ -62,7 +62,8 @@ void _STUB_malloc(){}
 **	The pattern %p in a file name will be replaced by the process ID.
 **
 **	VMDEBUG:
-**		a:			abort on any warning
+**		a:			abort on any warning.
+**		w[decimal]:		file descriptor for warnings.
 **		[decimal]:		period to check arena.
 **		0x[hexadecimal]:	address to watch.
 **
@@ -286,7 +287,14 @@ static int vmflinit()
 
 			while(*env)
 			{	if(*env == 'a')
-					vmset(vm,VM_DBABORT,1);
+				{	vmset(vm,VM_DBABORT,1);
+					env += 1;
+				}
+				else if(*env =='w')
+				{	env += 1;
+					if((fd = atou(&env)) >= 0 )
+						vmdebug(fd);
+				}
 
 				if(*env < '0' || *env > '9')
 					env += 1;

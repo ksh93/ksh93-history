@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2003 AT&T Corp.                *
+*                Copyright (c) 1982-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -559,9 +559,11 @@ Namval_t	*nv_open(const char *name,Dt_t *root,int flags)
 			lastdot = 0;
 		if(lastdot)
 		{
-			*cp = 0;
+			if(sep)
+				*cp = 0;
 			np = nv_search(name,root,0);
-			*cp = sep;
+			if(sep)
+				*cp = sep;
 			if(!np && sep=='[')
 				ptr = nv_endsubscript(np,cp,0);
 			else
@@ -767,6 +769,7 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 	register char *cp;
 	register int size = 0;
 	register int dot;
+	int	was_local = nv_local;
 	if(!(flags&NV_RDONLY) && nv_isattr (np, NV_RDONLY))
 		errormsg(SH_DICT,ERROR_exit(1),e_readonly, nv_name(np));
 	/* The following could cause the shell to fork if assignment
@@ -1091,7 +1094,7 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 			free((void*)tofree);
 	}
 #ifdef _ENV_H
-	if(!nv_local && (flags&NV_EXPORT) || nv_isattr(np,NV_EXPORT))
+	if(!was_local && ((flags&NV_EXPORT) || nv_isattr(np,NV_EXPORT)))
 		sh_envput(sh.env,np);
 #endif
 	return;
@@ -1413,7 +1416,14 @@ void nv_scope(struct argnod *envlist)
 
 void	sh_envnolocal (register Namval_t *np, void *data)
 {
+	char *cp=0;
 	NOT_USED(data);
+	if(nv_isattr(np,NV_EXPORT) && nv_isarray(np))
+	{
+		nv_putsub(np,NIL(char*),0);
+		if(cp = nv_getval(np))
+			cp = strdup(cp);
+	}
 	if(nv_isattr(np,NV_EXPORT|NV_NOFREE))
 	{
 		if(nv_isref(np))
@@ -1422,12 +1432,18 @@ void	sh_envnolocal (register Namval_t *np, void *data)
 			np->nvalue.cp = 0;
 			np->nvfun = 0;
 		}
-		return;
+		if(!cp)
+			return;
 	}
 	if(nv_isarray(np))
 		nv_putsub(np,NIL(char*),ARRAY_SCAN);
 	_nv_unset(np,NV_RDONLY);
 	nv_setattr(np,0);
+	if(cp)
+	{
+		nv_putval(np,cp,0);
+		free((void*)cp);
+	}
 }
 
 /*
@@ -1469,6 +1485,27 @@ void	_nv_unset(register Namval_t *np,int flags)
 	register union Value *up;
 	if(!(flags&NV_RDONLY) && nv_isattr (np,NV_RDONLY))
 		errormsg(SH_DICT,ERROR_exit(1),e_readonly, nv_name(np));
+	if(is_afunction(np) && np->nvalue.ip)
+	{
+		register struct slnod *slp = (struct slnod*)(np->nvenv);
+		if(slp)
+		{
+			/* free function definition */
+			register char *name=nv_name(np),*cp= strrchr(name,'.');
+			if(cp)
+			{
+				Namval_t *npv;
+				*cp = 0;
+				 npv = nv_open(name,sh.var_tree,NV_ARRAY|NV_VARNAME|NV_NOADD);
+				*cp++ = '.';
+				if(npv)
+					nv_setdisc(npv,cp,NIL(Namval_t*),(Namfun_t*)npv);
+			}
+			stakdelete(slp->slptr);
+			np->nvalue.ip = 0;
+		}
+		goto done;
+	}
 	if(sh.subshell && !nv_isnull(np))
 		np = sh_assignok(np,0);
 	nv_offattr(np,NV_NODISC);

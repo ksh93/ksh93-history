@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2003 AT&T Corp.                *
+*                Copyright (c) 1985-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -719,6 +719,7 @@ extern int		execvp(const char*, char* const[]);
 extern int		execvpe(const char*, char* const[], char* const[]);
 extern pid_t		fork(void);
 extern long		fpathconf(int, int);
+extern int		fsync(int);
 extern int		ftruncate(int, off_t);
 extern char*		getcwd(char*, size_t);
 extern gid_t		getegid(void);

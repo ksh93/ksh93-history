@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2003 AT&T Corp.                *
+*                Copyright (c) 1985-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -37,6 +37,10 @@ NoN(symlink)
 
 #include <error.h>
 
+#ifndef ENOSYS
+#define ENOSYS	EINVAL
+#endif
+
 int
 symlink(const char* a, char* b)
 {
@@ -46,14 +50,14 @@ symlink(const char* a, char* b)
 		int	fd;
 
 		if ((fd = open(b, O_CREAT|O_TRUNC|O_WRONLY, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH)) < 0)
-			return(-1);
+			return -1;
 		n = strlen(a) + 1;
 		n = (write(fd, FAKELINK_MAGIC, sizeof(FAKELINK_MAGIC)) != sizeof(FAKELINK_MAGIC) || write(fd, a, n) != n) ? -1 : 0;
 		close(fd);
-		return(n);
+		return n;
 	}
-	errno = EINVAL;
-	return(-1);
+	errno = ENOSYS;
+	return -1;
 }
 
 #endif

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1992-2003 AT&T Corp.                *
+*                Copyright (c) 1992-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -40,9 +40,8 @@ USAGE_LICENSE
 	"as operands, the subdirectory must be specified before the parent "
 	"so that the parent directory will be empty when \brmdir\b attempts "
 	"to remove it.]"
-"[p:parents?Remove any parent directories that are explicitly "
-	"mentioned in an \adirectory\a argument, if they become empty after "
-	"the argument \adirectory\a is removed.]"
+"[p:parents?Remove each explicit \adirectory\a argument directory that "
+	"becomes empty after its child directories are removed.]"
 "\n"
 "\ndirectory ...\n"
 "\n"

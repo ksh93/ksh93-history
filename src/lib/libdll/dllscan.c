@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1997-2003 AT&T Corp.                *
+*                Copyright (c) 1997-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -50,6 +50,7 @@
 	int		off; \
 	int		prelen; \
 	int		suflen; \
+	char**		lib; \
 	char		nam[64]; \
 	char		pat[64]; \
 	char		buf[64];
@@ -220,20 +221,37 @@ dllsopen(const char* lib, const char* name, const char* version)
 	Dllscan_t*	scan;
 	Dllinfo_t*	info;
 	Vmalloc_t*	vm;
+	int		i;
 	char		buf[32];
 
 	if (!(vm = vmopen(Vmdcheap, Vmlast, 0)))
 		return 0;
-	if (!(scan = vmnewof(vm, 0, Dllscan_t, 1, 0)) || !(scan->tmp = sfstropen()))
+	if (lib)
+	{
+		/*
+		 * grab the local part of the library id
+		 */
+
+		if (s = strrchr(lib, ':'))
+			lib = (const char*)(s + 1);
+		i = 2 * sizeof(char**) + strlen(lib) + 5;
+	}
+	else
+		i = 0;
+	if (!(scan = vmnewof(vm, 0, Dllscan_t, 1, i)) || !(scan->tmp = sfstropen()))
 	{
 		vmclose(vm);
 		return 0;
 	}
+	if (lib)
+	{
+		scan->lib = (char**)(scan + 1);
+		s = *scan->lib = (char*)(scan->lib + 2);
+		sfsprintf(s, i, "lib/%s", lib);
+	}
 	scan->vm = vm;
 	info = dllinfo();
 	scan->flags = info->flags;
-	if (!lib)
-		lib = "";
 	if (!name)
 	{
 		name = (const char*)"?*";
@@ -242,11 +260,11 @@ dllsopen(const char* lib, const char* name, const char* version)
 	if (!version)
 	{
 		scan->flags |= DLL_MATCH_VERSION;
-		sfsprintf(scan->nam, sizeof(scan->nam), "%s%s%s%s", info->prefix, lib, name, info->suffix);
+		sfsprintf(scan->nam, sizeof(scan->nam), "%s%s%s", info->prefix, name, info->suffix);
 	}
 	else if (scan->flags & DLL_INFO_PREVER)
 	{
-		sfprintf(scan->tmp, "%s%s%s", info->prefix, lib, name);
+		sfprintf(scan->tmp, "%s%s", info->prefix, name);
 		for (s = (char*)version; *s; s++)
 			if (isdigit(*s))
 				sfputc(scan->tmp, *s);
@@ -256,7 +274,7 @@ dllsopen(const char* lib, const char* name, const char* version)
 	else
 	{
 		scan->flags |= DLL_MATCH_VERSION;
-		sfsprintf(scan->nam, sizeof(scan->nam), "%s%s%s%s.%s", info->prefix, lib, name, info->suffix, version);
+		sfsprintf(scan->nam, sizeof(scan->nam), "%s%s%s.%s", info->prefix, name, info->suffix, version);
 	}
 	if (scan->flags & (DLL_MATCH_NAME|DLL_MATCH_VERSION))
 	{
@@ -273,18 +291,18 @@ dllsopen(const char* lib, const char* name, const char* version)
 				*t = 0;
 				version = (const char*)buf;
 			}
-			sfsprintf(scan->pat, sizeof(scan->pat), "%s%s%s%s%s", info->prefix, lib, name, version, info->suffix);
+			sfsprintf(scan->pat, sizeof(scan->pat), "%s%s%s%s", info->prefix, name, version, info->suffix);
 		}
 		else if (version)
-			sfsprintf(scan->pat, sizeof(scan->pat), "%s%s%s@(%s([-.])%s%s|%s.%s)", info->prefix, lib, name, strchr(version, '.') ? "@" : "?", version, info->suffix, info->suffix, version);
+			sfsprintf(scan->pat, sizeof(scan->pat), "%s%s@(%s([-.])%s%s|%s.%s)", info->prefix, name, strchr(version, '.') ? "@" : "?", version, info->suffix, info->suffix, version);
 		else
 		{
 			version = "*([0-9.])";
-			sfsprintf(scan->pat, sizeof(scan->pat), "%s%s%s@(?([-.])%s%s|%s%s)", info->prefix, lib, name, version, info->suffix, info->suffix, version);
+			sfsprintf(scan->pat, sizeof(scan->pat), "%s%s@(?([-.])%s%s|%s%s)", info->prefix, name, version, info->suffix, info->suffix, version);
 		}
 	}
-	scan->sb = scan->sp = info->sibling;
-	scan->prelen = strlen(info->prefix) + strlen(lib);
+	scan->sp = scan->sb = (scan->lib ? scan->lib : info->sibling);
+	scan->prelen = strlen(info->prefix);
 	scan->suflen = strlen(info->suffix);
 	return scan;
 }

@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 4.3 2003-09-19
+info mam static 00000 1994-07-17 make (AT&T Research) 4.4 2004-02-29
 setv INSTALLROOT ../../..
 setv PACKAGE_ast ${INSTALLROOT}
 setv PACKAGE_ast_INCLUDE ${PACKAGE_ast}/include/ast
@@ -25,8 +25,8 @@ setv LEXFLAGS
 setv LPR lpr
 setv LPRFLAGS
 setv M4FLAGS 
-setv MAKE nmake
-setv MAKEFLAGS
+setv NMAKE nmake
+setv NMAKEFLAGS
 setv PR pr
 setv PRFLAGS
 setv SHELL /bin/sh
@@ -190,14 +190,14 @@ make basename.c
 prev cmdlib.h implicit
 done basename.c
 prev basename.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c basename.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2004 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c basename.c
 done basename.o generated
 make cat.o
 make cat.c
 prev cmdlib.h implicit
 done cat.c
 prev cat.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -D_PACKAGE_ast -D_BLD_cmd -c cat.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2004 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -D_PACKAGE_ast -D_BLD_cmd -c cat.c
 done cat.o generated
 make chgrp.o
 make chgrp.c
@@ -221,7 +221,7 @@ done ../../../include/ast/cdt.h
 prev cmdlib.h implicit
 done chgrp.c
 prev chgrp.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c chgrp.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2004 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c chgrp.c
 done chgrp.o generated
 make chmod.o
 make chmod.c
@@ -231,7 +231,7 @@ prev ../../../include/ast/ls.h implicit
 prev cmdlib.h implicit
 done chmod.c
 prev chmod.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c chmod.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2004 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c chmod.c
 done chmod.o generated
 make chown.o
 make chown.c
@@ -246,14 +246,14 @@ prev ../../../include/ast/ls.h implicit
 prev cmdlib.h implicit
 done cmp.c
 prev cmp.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c cmp.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2004 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c cmp.c
 done cmp.o generated
 make comm.o
 make comm.c
 prev cmdlib.h implicit
 done comm.c
 prev comm.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c comm.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2004 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c comm.c
 done comm.o generated
 make cp.o
 make cp.c
@@ -277,21 +277,21 @@ prev ../../../include/ast/ls.h implicit
 prev cmd.h implicit
 done cp.c
 prev cp.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c cp.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2004 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c cp.c
 done cp.o generated
 make cut.o
 make cut.c
 prev cmdlib.h implicit
 done cut.c
 prev cut.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c cut.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2004 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c cut.c
 done cut.o generated
 make dirname.o
 make dirname.c
 prev cmdlib.h implicit
 done dirname.c
 prev dirname.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c dirname.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2004 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c dirname.c
 done dirname.o generated
 make date.o
 make date.c
@@ -312,7 +312,7 @@ prev ../../../include/ast/ls.h implicit
 prev cmdlib.h implicit
 done date.c
 prev date.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c date.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2004 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c date.c
 done date.o generated
 make expr.o
 make expr.c
@@ -323,35 +323,35 @@ done ../../../include/ast/regex.h
 prev cmd.h implicit
 done expr.c
 prev expr.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_BLD_cmd -D_PACKAGE_ast -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c expr.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_BLD_cmd -D_PACKAGE_ast -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2004 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c expr.c
 done expr.o generated
 make fmt.o
 make fmt.c
 prev cmdlib.h implicit
 done fmt.c
 prev fmt.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c fmt.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2004 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c fmt.c
 done fmt.o generated
 make fold.o
 make fold.c
 prev cmdlib.h implicit
 done fold.c
 prev fold.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c fold.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2004 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c fold.c
 done fold.o generated
 make getconf.o
 make getconf.c
 prev cmdlib.h implicit
 done getconf.c
 prev getconf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c getconf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2004 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c getconf.c
 done getconf.o generated
 make head.o
 make head.c
 prev cmdlib.h implicit
 done head.c
 prev head.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c head.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2004 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c head.c
 done head.o generated
 make id.o
 make id.c
@@ -368,7 +368,7 @@ done FEATURE/ids generated
 prev cmdlib.h implicit
 done id.c
 prev id.c
-exec - ${CC} ${mam_cc_FLAGS} ${debug?1?${mam_cc_DEBUG} -D_BLD_DEBUG??}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c id.c
+exec - ${CC} ${mam_cc_FLAGS} ${debug?1?${mam_cc_DEBUG} -D_BLD_DEBUG??}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2004 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c id.c
 done id.o generated
 make join.o
 make join.c
@@ -379,7 +379,7 @@ done ../../../include/ast/sfdisc.h
 prev cmdlib.h implicit
 done join.c
 prev join.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c join.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2004 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c join.c
 done join.o generated
 make ln.o
 make ln.c
@@ -393,7 +393,7 @@ make logname.c
 prev cmdlib.h implicit
 done logname.c
 prev logname.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c logname.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2004 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c logname.c
 done logname.o generated
 make mkdir.o
 make mkdir.c
@@ -401,7 +401,7 @@ prev ../../../include/ast/ls.h implicit
 prev cmdlib.h implicit
 done mkdir.c
 prev mkdir.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c mkdir.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2004 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c mkdir.c
 done mkdir.o generated
 make mkfifo.o
 make mkfifo.c
@@ -409,7 +409,7 @@ prev ../../../include/ast/ls.h implicit
 prev cmdlib.h implicit
 done mkfifo.c
 prev mkfifo.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c mkfifo.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2004 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c mkfifo.c
 done mkfifo.o generated
 make mv.o
 make mv.c
@@ -423,7 +423,7 @@ make paste.c
 prev cmdlib.h implicit
 done paste.c
 prev paste.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c paste.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2004 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c paste.c
 done paste.o generated
 make pathchk.o
 make pathchk.c
@@ -431,14 +431,14 @@ prev ../../../include/ast/ls.h implicit
 prev cmdlib.h implicit
 done pathchk.c
 prev pathchk.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c pathchk.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2004 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c pathchk.c
 done pathchk.o generated
 make rev.o
 make rev.c
 prev cmdlib.h implicit
 done rev.c
 prev rev.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c rev.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2004 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c rev.c
 done rev.o generated
 make rm.o
 make rm.c
@@ -448,14 +448,14 @@ prev ../../../include/ast/ls.h implicit
 prev cmdlib.h implicit
 done rm.c
 prev rm.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c rm.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2004 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c rm.c
 done rm.o generated
 make rmdir.o
 make rmdir.c
 prev cmdlib.h implicit
 done rmdir.c
 prev rmdir.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c rmdir.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2004 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c rmdir.c
 done rmdir.o generated
 make stty.o
 make stty.c
@@ -472,7 +472,7 @@ prev ../../../include/ast/ast.h implicit
 prev cmd.h implicit
 done stty.c
 prev stty.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c stty.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2004 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c stty.c
 done stty.o generated
 make tail.o
 make tail.c
@@ -481,7 +481,7 @@ prev ../../../include/ast/ls.h implicit
 prev cmdlib.h implicit
 done tail.c
 prev tail.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c tail.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2004 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c tail.c
 done tail.o generated
 make tee.o
 make tee.c
@@ -491,14 +491,14 @@ prev ../../../include/ast/ls.h implicit
 prev cmdlib.h implicit
 done tee.c
 prev tee.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c tee.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2004 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c tee.c
 done tee.o generated
 make tty.o
 make tty.c
 prev cmdlib.h implicit
 done tty.c
 prev tty.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c tty.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2004 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c tty.c
 done tty.o generated
 make uname.o
 make uname.c
@@ -512,14 +512,14 @@ prev ../../../include/ast/proc.h implicit
 prev cmdlib.h implicit
 done uname.c
 prev uname.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -DHOSTTYPE=\""${mam_cc_HOSTTYPE}"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c uname.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -DHOSTTYPE=\""${mam_cc_HOSTTYPE}"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2004 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c uname.c
 done uname.o generated
 make uniq.o
 make uniq.c
 prev cmdlib.h implicit
 done uniq.c
 prev uniq.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c uniq.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2004 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c uniq.c
 done uniq.o generated
 make wc.o
 make wc.c
@@ -530,7 +530,7 @@ done wc.h
 prev cmdlib.h implicit
 done wc.c
 prev wc.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2003 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c wc.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2004 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libcmd]"\" -c wc.c
 done wc.o generated
 make revlib.o
 make revlib.c

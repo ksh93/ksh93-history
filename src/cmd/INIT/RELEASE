@@ -1,3 +1,36 @@
+04-02-29 package.sh: add regress action to compare current and previous tests
+	 package.sh: fix sgi.mips[23] HOSTTYPE test for old irix cc
+	 package.sh: add `export variable ...'
+	 package.sh: admin action now handles host name with non-id chars
+	 package.sh: non-numeric M T W in admin.db disables that action
+	 package.sh: fix admin write binary local vs. shared clash
+	 cc.hp.pa: add _AST_CC_hp_pa_DEFAULT=+DAportable
+	 cc.hp.pa64: sync with cc.hp.pa
+	 cc.ibm.risc: -bnolibpath => -blibpath:/usr/lib:/lib
+	 probe.win32: sync with make.probe
+	 make.probe: fix last chance dynamic test
+	 make.probe: add hp.pa CC.EXPORT.DYNAMIC -Wl,-E
+	 make.probe: add ibm.risc CC.EXPORT.DYNAMIC -bexpall
+	 make.probe: move probe_dll_def to the end of probe_dll
+	 package.mk: capture subcomponent mamfile recursion
+04-02-24 make.probe: strip "..." from cc/ld traces
+	 iffe.sh: add ``set [no]define'' to disable macro #define/#undef
+04-02-23 make.probe: rework CC.LD search
+04-02-14 make.probe: add CC.EXPORT.DYNAMIC for main dynamic sym export
+	 make.probe: resurrect CC.PIC with separate semantics from CC.DLL
+	 make.probe: add CC.SHARED.LD for CC.SHARED linker
+	 C+probe: clear DISPLAY to stifle interactive windows
+04-02-11 iffe.sh: handle ``siz void*'', add cross{ ... }end
+	 make.probe: add { CC.AR CC.SIZE }, fix cross command search
+	 cc.darwin.ppc: change $cc => $CC for old ksh + libast conf bug
+04-02-09 make.probe: drop -nostartfiles from CC.SHARED for C++
+04-02-04 package.sh: fix cross compilation bug that mixed binary formats
+04-02-02 package.sh: package admin now ditto's bin/package too
+04-01-30 cc.sgi.mips3: drop warning 3421
+04-01-11 regress.sh: output label#count for tests in loops
+04-01-05 regress.sh: fix bug that ignored the first SAME
+04-01-04 crossexec.sh: fix typo that did not recognize rcp
+03-12-19 mamake.c: add `foolib:foo:libfoo' to recurse()
 03-10-11 regress.sh: add EXPORT, export COLUMNS=80 for message consistency
 03-09-23 ratz.c: fix tar header number parse bug that skipped to next number
 	 regress.sh: rm cleanup now handles files matching -*

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2003 AT&T Corp.                *
+*                Copyright (c) 1982-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -45,7 +45,7 @@ typedef struct _timer
 #define DEFER_SIGALRM	4
 #define SIGALRM_CALL	8
 
-static Timer_t *tptop, *tpmin;
+static Timer_t *tptop, *tpmin, *tpfree;
 static char time_state;
 
 static double getnow(void)
@@ -134,7 +134,8 @@ static void sigalrm(int sig)
 					tplast->next = tp->next;
 				else
 					tptop = tp->next;
-				free((void*)tp);
+				tp->next = tpfree;
+				tpfree = tp;
 			}
 		}
 		if((tp=tpold) && tp->incr)
@@ -186,7 +187,11 @@ void *sh_timeradd(unsigned long msec,int flags,void (*action)(void*),void *handl
 	double t;
 	Handler_t fn;
 	t = ((double)msec)/1000.;
-	if(t<=0 || !action || !(tp=(Timer_t*)malloc(sizeof(Timer_t))))
+	if(t<=0 || !action)
+		return((void*)0);
+	if(tp=tpfree)
+		tpfree = tp->next;
+	else if(!(tp=(Timer_t*)malloc(sizeof(Timer_t))))
 		return((void*)0);
 	tp->wakeup = getnow() + t;
 	tp->incr = (flags?t:0);

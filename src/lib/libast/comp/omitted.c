@@ -266,6 +266,9 @@ runve(int mode, const char* path, char* const* argv, char* const* envv)
 	void*		m2;
 	pid_t		pid;
 	int		oerrno;
+#if defined(_P_DETACH) && defined(_P_NOWAIT)
+	int		pgrp;
+#endif
 	struct stat	st;
 	char		buf[PATH_MAX];
 	char		tmp[PATH_MAX];
@@ -276,6 +279,21 @@ runve(int mode, const char* path, char* const* argv, char* const* envv)
 	static int	trace;
 #endif
 
+#if defined(_P_DETACH) && defined(_P_NOWAIT)
+	if (mode == _P_DETACH)
+	{
+		/*
+		 * 2004-02-29 cygwin _P_DETACH is useless:
+		 *	spawn*() returns 0 instead of the spawned pid
+		 *	spawned { pgid sid } are the same as the parent
+		 */
+
+		mode = _P_NOWAIT;
+		pgrp = 1;
+	}
+	else
+		pgrp = 0;
+#endif
 	if (!envv)
 		envv = (char* const*)environ;
 	m1 = m2 = 0;
@@ -322,22 +340,6 @@ runve(int mode, const char* path, char* const* argv, char* const* envv)
 		argv = (char* const*)v;
 #endif
 	}
-#if DEBUG
-	if (trace == 'a' || trace == 'e')
-	{
-		sfprintf(sfstderr, "%s %s [", mode == _P_OVERLAY ? "_execve" : "_spawnve", path);
-		for (n = 0; argv[n]; n++)
-			sfprintf(sfstderr, " '%s'", argv[n]);
-		if (trace == 'e')
-		{
-			sfprintf(sfstderr, " ] [");
-			for (n = 0; envv[n]; n++)
-				sfprintf(sfstderr, " '%s'", envv[n]);
-		}
-		sfprintf(sfstderr, " ]\n");
-		sfsync(sfstderr);
-	}
-#endif
 
 	/*
 	 * the win32 dll search order is
@@ -391,11 +393,41 @@ runve(int mode, const char* path, char* const* argv, char* const* envv)
 			}
 		}
 	}
-#if _lib_spawn_mode
-	pid = (mode == _P_OVERLAY) ? _execve(path, argv, envv) : _spawnve(mode, path, argv, envv);
-#else
-	pid = _execve(path, argv, envv);
+
+#if DEBUG
+	if (trace == 'a' || trace == 'e')
+	{
+		sfprintf(sfstderr, "%s %s [", mode == _P_OVERLAY ? "_execve" : "_spawnve", path);
+		for (n = 0; argv[n]; n++)
+			sfprintf(sfstderr, " '%s'", argv[n]);
+		if (trace == 'e')
+		{
+			sfprintf(sfstderr, " ] [");
+			for (n = 0; envv[n]; n++)
+				sfprintf(sfstderr, " '%s'", envv[n]);
+		}
+		sfprintf(sfstderr, " ]\n");
+		sfsync(sfstderr);
+	}
 #endif
+#if _lib_spawn_mode
+	if (mode != _P_OVERLAY)
+	{
+		pid = _spawnve(mode, path, argv, envv);
+#if defined(_P_DETACH) && defined(_P_NOWAIT)
+		if (pid > 0 && pgrp)
+			setpgid(pid, 0);
+#endif
+	}
+	else
+#endif
+	{
+#if defined(_P_DETACH) && defined(_P_NOWAIT)
+		if (pgrp)
+			setpgid(0, 0);
+#endif
+		pid = _execve(path, argv, envv);
+	}
 	if (m1)
 		free(m1);
 	if (m2)

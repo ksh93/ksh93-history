@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2003 AT&T Corp.                *
+*                Copyright (c) 1985-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -1147,7 +1147,7 @@ label(register Sfio_t* sp, int sep, register char* s, int z, int level, int styl
 				sfputr(sp, "&lt;", -1);
 				c = 0;
 				for (t = s; t < e; t++)
-					if (!isalnum(*t) && *t != '_' && *t != '.')
+					if (!isalnum(*t) && *t != '_' && *t != '.' && *t != '-')
 					{
 						if (*t == '@')
 						{
@@ -1164,6 +1164,8 @@ label(register Sfio_t* sp, int sep, register char* s, int z, int level, int styl
 							}
 							break;
 						}
+						else
+							break;
 					}
 				continue;
 			}
@@ -1725,7 +1727,7 @@ text(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip, i
 					sfputr(sp, "&lt;", -1);
 					c = 0;
 					for (t = p; *t; t++)
-						if (!isalnum(*t) && *t != '_' && *t != '.')
+						if (!isalnum(*t) && *t != '_' && *t != '.' && *t != '-')
 						{
 							if (*t == '@')
 							{
@@ -1742,6 +1744,8 @@ text(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip, i
 								}
 								break;
 							}
+							else
+								break;
 						}
 					continue;
 				}
