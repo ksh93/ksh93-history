@@ -25,17 +25,13 @@
 *******************************************************************/
 #pragma prototyped
 
+#include <ast.h>
+
 #if defined(__EXPORT__)
 #define extern	__EXPORT__
 #endif
 
-extern int	putenv(const char*);
-
-#undef	extern
-
-#include <ast.h>
-
-int
+extern int
 putenv(const char* s)
 {
 	return setenviron(s) ? 0 : -1;

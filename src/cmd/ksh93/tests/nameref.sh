@@ -24,9 +24,10 @@
 function err_exit
 {
 	print -u2 -n "\t"
-	print -u2 -r $Command: "$@"
+	print -u2 -r $Command[$1]: "${@:2}"
 	let Errors+=1
 }
+alias err_exit='err_exit $LINENO'
 
 Command=$0
 integer Errors=0
@@ -150,5 +151,9 @@ if	[[	$(var1=1 var2=2
 			print $x
 		done) != $'1\n2' ]]
 then	err_exit 'for loop nameref optimization error'
+fi
+unset -n x foo bar
+if	[[ $(nameref x=foo;for x in foo bar;do print ${!x};done) != $'foo\nbar' ]]
+then	err_exit 'for loop optimization with namerefs not working'
 fi
 exit $((Errors))

@@ -119,10 +119,8 @@ int    B_login(int argc,char *argv[],void *extra)
 	else
         {
 		register struct argnod *arg=shp->envlist;
-#ifndef _ENV_H
 		register Namval_t* np;
 		register char *cp;
-#endif
 		if(shp->subshell)
 			sh_subfork();
 		if(logp && logp->clear)
@@ -136,16 +134,16 @@ int    B_login(int argc,char *argv[],void *extra)
 		}
 		while(arg)
 		{
-#ifdef _ENV_H
-			if(strchr(arg->argval,'='))
-				env_add(shp->env,arg->argval,0);
-#else
 			if((cp=strchr(arg->argval,'=')) &&
 				(*cp=0,np=nv_search(arg->argval,shp->var_tree,0)))
+			{
 				nv_onattr(np,NV_EXPORT);
+#ifdef _ENV_H
+				env_put(shp->env,np);
+#endif
+			}
 			if(cp)
 				*cp = '=';
-#endif
 			arg=arg->argnxt.ap;
 		}
 		pname = argv[0];

@@ -53,7 +53,7 @@
 #   define argbegin	argnxt.cp
     static	const char	*sufstr;
     static	int		suflen;
-    static void scantree(Dt_t*,const char*);
+    static int scantree(Dt_t*,const char*, struct argnod**);
 #else
 #   define sh_sigcheck()	(0)
 #   define sh_access		access
@@ -68,24 +68,6 @@
  *
  */
 
-struct glob
-{
-	int		argn;
-	char		**argv;
-	int		flags;
-	struct argnod	*rescan;
-	struct argnod	*match;	
-	DIR		*dirf;
-	char		*fignore;
-#ifndef KSHELL
-	char		*memlast;
-	char		*last;
-	struct argnod	*resume;
-	sigjmp_buf	jmpbuf;
-	char		begin[1];
-#endif
-};
-
 #ifndef GLOB_AUGMENTED
 #   define GLOB_AUGMENTED	0
 #endif
@@ -95,18 +77,42 @@ struct glob
 
 static struct glob	 *membase;
 
+#if GLOB_VERSION >= 20010916L
+static char *nextdir(glob_t *gp, char *dir)
+{
+	Pathcomp_t *pp = (Pathcomp_t*)gp->gl_handle;
+	if(!dir)
+		pp = path_get("");
+	else
+		pp = pp->next;
+	gp->gl_handle = (void*)pp;
+	if(pp)
+		return(pp->name);
+	return(0);
+}
+#endif
+
 int path_expand(const char *pattern, struct argnod **arghead)
 {
 	glob_t gdata;
 	register struct argnod *ap;
 	register glob_t *gp= &gdata;
-	register int flags;
+	register int flags,extra=0;
 	memset(gp,0,sizeof(gdata));
 	flags = GLOB_AUGMENTED|GLOB_NOCHECK|GLOB_NOSORT|GLOB_STACK|GLOB_LIST|GLOB_DISC;
 	if(sh_isoption(SH_MARKDIRS))
 		flags |= GLOB_MARK;
 	if(sh_isstate(SH_COMPLETE))
+	{
+#ifdef KSHELL
+		extra += scantree(sh.alias_tree,pattern,arghead); 
+		extra += scantree(sh.fun_tree,pattern,arghead); 
+#   if GLOB_VERSION >= 20010916L
+		gp->gl_nextdir = nextdir;
+#   endif
+#endif /* KSHELL */
 		flags |= GLOB_COMPLETE;
+	}
 	gp->gl_fignore = nv_getval(nv_scoped(FIGNORENOD));
 	if(suflen)
 		gp->gl_suffix = sufstr;
@@ -116,10 +122,12 @@ int path_expand(const char *pattern, struct argnod **arghead)
 	sh_sigcheck();
 	for(ap= (struct argnod*)gp->gl_list; ap; ap = ap->argnxt.ap)
 	{
-		ap->argchn.ap = *arghead;
-		*arghead = ap;
+		ap->argchn.ap = ap->argnxt.ap;
+		if(!ap->argnxt.ap)
+			ap->argchn.ap = *arghead;
 	}
-	return(gp->gl_pathc);
+	*arghead = (struct argnod*)gp->gl_list;
+	return(gp->gl_pathc+extra);
 }
 
 
@@ -128,11 +136,11 @@ int path_expand(const char *pattern, struct argnod **arghead)
 /*
  * scan tree and add each name that matches the given pattern
  */
-static void scantree(Dt_t *tree, const char *pattern)
+static int scantree(Dt_t *tree, const char *pattern, struct argnod **arghead)
 {
 	register Namval_t *np;
 	register struct argnod *ap;
-	register struct glob *gp = globptr();
+	register int nmatch=0;
 	register char *cp;
 	np = (Namval_t*)dtfirst(tree);
 	for(;np && !nv_isnull(np);(np = (Namval_t*)dtnext(tree,np)))
@@ -143,12 +151,13 @@ static void scantree(Dt_t *tree, const char *pattern)
 			stakputs(cp);
 			ap = (struct argnod*)stakfreeze(1);
 			ap->argbegin = NIL(char*);
-			ap->argchn.ap = gp->match;
+			ap->argchn.ap = *arghead;
 			ap->argflag = ARG_RAW|ARG_MAKE;
-			gp->match = ap;
-			gp->argn++;
+			*arghead = ap;
+			nmatch++;
 		}
 	}
+	return(nmatch);
 }
 
 /*

@@ -40,7 +40,7 @@
 #   include	<nval.h>
 #endif /* _SH_PRIVATE */
 
-#define SH_VERSION	19990801
+#define SH_VERSION	20010901
 
 /*
  *  The following will disappear in a future release so change all sh_fun
@@ -180,6 +180,7 @@ extern int		(*sh_fdnotify(int(*)(int,int)))(int,int);
 extern Shell_t		*sh_getinterp(void);
 extern int		sh_open(const char*, int, ...);
 extern int		sh_openmax(void);
+extern Sfio_t		*sh_pathopen(const char*);
 extern ssize_t 		sh_read(int, void*, size_t);
 extern ssize_t 		sh_write(int, const void*, size_t);
 extern off_t		sh_seek(int, off_t, int);
@@ -201,7 +202,7 @@ extern Shopt_t		sh_offoption(Shopt_t);
 /*
  * direct access to sh is obsolete, use sh_getinterp() instead
  */
-#if defined(__IMPORT__) && !defined(_BLD_shell)
+#if !defined(_SH_PRIVATE) && defined(__IMPORT__) && !defined(_BLD_shell)
 	__IMPORT__  Shell_t sh;
 #else
 	extern Shell_t sh;

@@ -226,7 +226,8 @@ static void nv_restore(struct subshell *sp)
 		nq = (Namval_t*)dtnext(sp->svar,np);
 		if(mp = nv_search((char*)np,sp->var,HASH_BUCKET))
 		{
-			mp->nvfun = 0;
+			if(mp!=nv_scoped(IFSNOD))
+				mp->nvfun = 0;
 			nv_unset(mp);
 			nv_setsize(mp,nv_size(np));
 			mp->nvenv = np->nvenv;
@@ -313,7 +314,7 @@ Sfio_t *sh_subshell(union anynode *t, int flags, int comsub)
 	register struct subshell *sp = &sub_data;
 	int jmpval,nsig;
 	int savecurenv = shp->curenv;
-	char *savstak;
+	char *savsig;
 	Sfio_t *iop=0;
 	struct checkpt buff;
 	struct sh_scoped savst;
@@ -354,9 +355,9 @@ Sfio_t *sh_subshell(union anynode *t, int flags, int comsub)
 		if((nsig=shp->st.trapmax*sizeof(char*))>0 || shp->st.trapcom[0])
 		{
 			nsig += sizeof(char*);
-			memcpy(savstak=stakalloc(nsig),(char*)&shp->st.trapcom[0],nsig);
+			memcpy(savsig=malloc(nsig),(char*)&shp->st.trapcom[0],nsig);
 			/* this nonsense needed for $(trap) */
-			shp->st.otrapcom = (char**)savstak;
+			shp->st.otrapcom = (char**)savsig;
 		}
 		sh_sigreset(0);
 		sp->svar = dtopen(&_Nvdisc,Dtbag);
@@ -483,8 +484,8 @@ Sfio_t *sh_subshell(union anynode *t, int flags, int comsub)
 		shp->jobenv = shp->curenv = savecurenv;
 		if(nsig)
 		{
-			memcpy((char*)&shp->st.trapcom[0],savstak,nsig);
-			stakset(savstak,0);
+			memcpy((char*)&shp->st.trapcom[0],savsig,nsig);
+			free((void*)savsig);
 		}
 		shp->options = sp->options;
 		if(!shp->pwd || strcmp(sp->pwd,shp->pwd))

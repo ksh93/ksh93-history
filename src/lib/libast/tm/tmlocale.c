@@ -77,6 +77,10 @@ fixup(Lc_info_t* li, register char** b)
 	for (n = 0; n < elementsof(must); n++)
 		if (!*b[must[n]])
 			b[must[n]] = tm_data.format[must[n]];
+	if (li->lc->flags & LC_default)
+		for (n = 0; n < TM_NFORM; n++)
+			if (!*b[n])
+				b[n] = tm_data.format[n];
 	if (strchr(b[TM_UT], '%'))
 	{
 		tm_info.deformat = b[TM_UT];
@@ -91,7 +95,7 @@ fixup(Lc_info_t* li, register char** b)
 	li->data = (void*)b;
 }
 
-#if _UWIN
+#if _WIN32
 
 #include <windows.h>
 
@@ -508,7 +512,7 @@ native_lc_time(Lc_info_t* li)
 
 #else
 
-#define native_lc_time(li)
+#define native_lc_time(li)	((li->data=(void*)(tm_info.format=tm_data.format)),(tm_info.deformat=tm_info.format[TM_DEFAULT]))
 
 #endif
 
@@ -544,6 +548,7 @@ load(Lc_info_t* li)
 		tm_info.deformat = tm_info.format[TM_DEFAULT];
 	if (mcfind(path, NiL, NiL, LC_TIME, 0) && (sp = sfopen(NiL, path, "r")))
 	{
+		n = sfsize(sp);
 		tp = 0;
 		if (u = (unsigned char*)sfreserve(sp, 3, 1))
 		{
@@ -559,8 +564,6 @@ load(Lc_info_t* li)
 			if (!tp)
 				sfread(sp, u, 0);
 		}
-		else
-			n = sfsize(sp);
 		if (b = newof(0, char*, TM_NFORM, n + 2))
 		{
 			v = b;

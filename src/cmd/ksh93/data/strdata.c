@@ -29,7 +29,7 @@
 #include	"FEATURE/options"
 #include	"streval.h"
 
-const unsigned char strval_precedence[34] =
+const unsigned char strval_precedence[35] =
 	/* opcode	precedence,assignment  */
 {
 	/* DEFAULT */		MAXPREC|NOASSIGN,
@@ -41,6 +41,7 @@ const unsigned char strval_precedence[34] =
 	/* AND */		9|NOFLOAT,
 	/* LPAREN */		MAXPREC|NOASSIGN|SEQPOINT,
 	/* RPAREN */		1|NOASSIGN|RASSOC|SEQPOINT,
+	/* POW */		14|NOASSIGN|RASSOC,
 	/* TIMES */		14,
 	/* PLUSPLUS */		15|NOASSIGN|NOFLOAT|SEQPOINT,
 	/* PLUS */		13,	

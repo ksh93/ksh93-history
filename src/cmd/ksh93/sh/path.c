@@ -46,7 +46,7 @@ struct edata
 {
 	Shell_t		*sh;
 	char		**envp;
-	char		*libpath;
+	Pathcomp_t	*libpath;
 	int		exec_err;
 };
 
@@ -55,6 +55,8 @@ static Pathcomp_t	*execs(Pathcomp_t*, const char*, char**, struct edata*);
 static int		canexecute(char*,int);
 static void		funload(Shell_t*,int,const char*);
 static void		exscript(Shell_t*,char*, char*[], char**);
+static int		path_chkfpath(Pathcomp_t*,Pathcomp_t*,Pathcomp_t*,int);
+
 
 /*
  * make sure PWD is set up correctly
@@ -122,15 +124,56 @@ skip:
  */
 void  path_delete(Pathcomp_t *first)
 {
-	register Pathcomp_t *pp=first, *old=0;
+	register Pathcomp_t *pp=first, *old=0, *ppnext;
 	while(pp)
 	{
-		old = pp;
-		pp = pp->next;
-
-		if(--old->refcount<=0)
-			free((void*)old);
+		ppnext = pp->next;
+		if(--pp->refcount<=0)
+		{
+			free((void*)pp);
+			if(old)
+				old->next = ppnext;
+		}
+		else
+			old = pp;
+		pp = ppnext; 
 	}
+}
+
+/*
+ * returns library variable from .fpath
+ * The value might be returned on the stack overwriting path
+ */
+static char *path_lib(Pathcomp_t *pp, char *path)
+{
+	register char *last = strrchr(path,'/');
+	register int r;
+	struct stat statb;
+	if(last)
+		*last = 0;
+	else
+		path = ".";
+	r = stat(path,&statb);
+	if(last)
+		*last = '/';
+	if(r>=0)
+	{
+		Pathcomp_t pcomp;
+		char save[7];
+		for( ;pp; pp=pp->next)
+		{
+			if(pp->ino==statb.st_ino && pp->dev==statb.st_dev)
+				return(pp->lib);
+		}
+		pcomp.len = 0;
+		if(last)
+			pcomp.len = last-path;
+		memcpy((void*)save, (void*)stakptr(PATH_OFFSET+pcomp.len),sizeof(save));
+		if(path_chkfpath((Pathcomp_t*)0,(Pathcomp_t*)0,&pcomp,PATH_OFFSET))
+			return(stakfreeze(1));
+		memcpy((void*)stakptr(PATH_OFFSET+pcomp.len),(void*)save,sizeof(save));
+	}
+	return(0);
 }
 
 #if 1
@@ -493,8 +536,8 @@ char *path_relative(register const char* file)
 void	path_exec(register const char *arg0,register char *argv[],struct argnod *local)
 {
 	struct edata data;
-	char *libpath, **envp;
-	Pathcomp_t *pp=0;
+	char **envp;
+	Pathcomp_t *libpath, *pp=0;
 	Shell_t *shp = &sh;
 	nv_setlist(local,NV_EXPORT|NV_IDENT|NV_ASSIGN);
 	data.sh = shp;
@@ -512,7 +555,8 @@ void	path_exec(register const char *arg0,register char *argv[],struct argnod *lo
 	data.exec_err = ENOENT;
 	sfsync(NIL(Sfio_t*));
 	timerdel(NIL(void*));
-	libpath = astconf("LIBPATH",NIL(char*),NIL(char*));
+	/* find first path that has a library component */
+	for(libpath=pp; libpath && !libpath->lib ; libpath=libpath->next);
 	do
 	{
 		data.libpath = libpath;
@@ -531,152 +575,86 @@ static Pathcomp_t *execs(Pathcomp_t *pp,const char *arg0,register char **argv, s
 {
 	Shell_t *shp = dp->sh;
 	register char *path, *opath=0;
-	char **xp=0, *xval;
-	int offset;
+	char **xp=0, *xval, *libenv= (pp?pp->lib:0); 
+	Namval_t*	vp;
+	char		*s, *v;
+	int		r, n;
 	sh_sigcheck();
-	while(pp && (pp->flags&PATH_FPATH))
-		pp = path_nextcomp(pp,arg0,0);
 	pp = path_nextcomp(pp,arg0,0);
-	if (dp->libpath)
+#if _lib_readlink
+	/* save original pathname */
+	opath = stakfreeze(1)+PATH_OFFSET;
+	vp=nv_search(arg0,shp->track_tree,0);
+	if(!vp || nv_size(vp)>0)
 	{
-		register int	c;
-		const char*	dir;
-		const char*	var;
-		int		dirlen;
-		int		varlen;
-		int		n;
-		int		r;
-		char*		ep;
-		char*		pp;
-		Namval_t*	vp;
-
-		/* save original pathname */
-		opath = stakfreeze(1)+PATH_OFFSET;
+		/* check for symlink and use symlink name */
+		char buff[PATH_MAX+1];
+		char save[PATH_MAX+1];
 		stakseek(PATH_OFFSET);
 		stakputs(opath);
 		path = stakptr(PATH_OFFSET);
-		ep = strrchr(path,'/');
-		vp=nv_search(arg0,shp->track_tree,0);
-#if _lib_readlink
-		if(!vp || nv_size(vp)>0)
+		while((n=readlink(path,buff,PATH_MAX))>0)
 		{
-			/* check for symlink and use symlink name */
-			char buff[PATH_MAX+1];
-			char save[PATH_MAX+1];
-			while((c=readlink(path,buff,PATH_MAX))>0)
+			buff[n] = 0;
+			n = PATH_OFFSET;
+			if((v=strrchr(path,'/')) && *buff!='/')
 			{
-				buff[c] = 0;
-				c = PATH_OFFSET;
-				if(ep && *buff!='/')
+				if(buff[0]=='.' && buff[1]=='.' && (r = strlen(path) + 1) <= PATH_MAX)
+					memcpy(save, path, r);
+				else
+					r = 0;
+				n += (v+1-path);
+			}
+			stakseek(n);
+			stakputs(buff);
+			stakputc(0);
+			path = stakptr(PATH_OFFSET);
+			if(buff[0]=='.' && buff[1]=='.')
+			{
+				pathcanon(path, 0);
+				if(r && access(path,X_OK))
 				{
-					if(buff[0]=='.' && buff[1]=='.' && (r = strlen(path) + 1) <= PATH_MAX)
-						memcpy(save, path, r);
-					else
-						r = 0;
-					c += (ep+1-path);
+					memcpy(path, save, r);
+					break;
 				}
-				stakseek(c);
-				stakputs(buff);
-				stakputc(0);
-				path = stakptr(PATH_OFFSET);
-				if(buff[0]=='.' && buff[1]=='.')
-				{
-					pathcanon(path, 0);
-					if(r && access(path,X_OK))
-					{
-						memcpy(path, save, r);
-						break;
-					}
-				}
-				ep = strrchr(path,'/');
+			}
+			if(libenv = path_lib(dp->libpath,path))
+				break;
+		}
+		stakseek(0);
+	}
+#endif
+	if(libenv)
+	{
+		v = strchr(libenv,'=');
+		n = v - libenv;
+		*v = 0;
+		vp = nv_open(libenv,shp->var_tree,0);
+		*v = '=';
+		s = nv_getval(vp);
+		stakputs(libenv);
+		if(s)
+		{
+			stakputc(':');
+			stakputs(s);
+		}
+		v = stakfreeze(1);
+		r = 1;
+		xp = dp->envp + 2;
+		while (s = *xp++)
+		{
+			if (strneq(s, v, n) && s[n] == '=')
+			{
+				xval = *--xp;
+				*xp = v;
+				r = 0;
+				break;
 			}
 		}
-#endif
-		if(ep &&  (ep - path) > 4)
+		if (r)
 		{
-			stakputc(0);
-			do
-			{
-				n = ep - path;
-				for (var = dp->libpath; (c = *dp->libpath) != 0 && c != ':' && c != ','; dp->libpath++);
-				if (c == ':')
-				{
-					if ((dirlen = dp->libpath++ - var) < 0)
-						break;
-					dir = var;
-					for (var = dp->libpath; (c = *dp->libpath) != 0 && c != ','; dp->libpath++);
-				}
-				else
-					dirlen = 0;
-				if ((varlen = dp->libpath++ - var) <= 0)
-					break;
-				offset = staktell();
-				stakwrite(var, varlen);
-				stakputc(0);
-				vp = nv_open(stakptr(offset), shp->var_tree, 0);
-				stakseek(offset);
-				pp = nv_getval(vp);
-				/* xpg4 test is workaround for solaris bug */
-				if (dirlen > 0 && n >= 3 && ep[-1] == 'n' && ep[-2] == 'i' && ep[-3] == 'b' && (n<8 || strcmp(&ep[-7],"xpg4/bin")))
-				{
-					n -= 3;
-					stakwrite(path, n);
-					stakwrite(dir, dirlen);
-					stakputc(0);
-					r = access(stakptr(offset), 0);
-					stakseek(offset);
-					if (r < 0)
-					{
-						if (c != 0)
-							continue;
-						break;
-					}
-					if (pp == 0 || *pp == 0 || strncmp(pp, path, n) || memcmp(pp + n, dir, dirlen) || pp[n +  dirlen] != ':' && pp[n + dirlen] != 0)
-					{
-					prepend:
-						stakputc(0);
-						offset = staktell();
-						stakputs(nv_name(vp));
-						stakputc('=');
-						stakwrite(path, n);
-						if (dirlen > 0)
-							stakwrite(dir, dirlen);
-						if (pp && *pp)
-						{
-							stakputc(':');
-							stakputs(pp);
-						}
-						stakputc(0);
-						r = 1;
-						if (pp)
-						{
-							char*	s;
-							char*	v = nv_name(vp);
-							int	n = strlen(v);
-							xp = dp->envp + 2;
-							while (s = *xp++)
-								if (strneq(s, v, n) && s[n] == '=')
-								{
-									xval = *--xp;
-									*xp = stakptr(offset);
-									r = 0;
-									break;
-								}
-						}
-						if (r)
-						{
-							*dp->envp-- = stakptr(offset);
-							xp = 0;
-						}
-					}
-					break;
-				}
-				else if (pp == 0 || *pp == 0 || strncmp(pp, path, n) || pp[n] != ':' && pp[n] != 0)
-				{
-					dirlen = 0;
-					goto prepend;
-				}
-			} while (c != 0);
+			*dp->envp-- = v;
+			xp = 0;
 		}
 	}
 	dp->envp[0] =  stakptr(0);
@@ -750,6 +728,8 @@ static Pathcomp_t *execs(Pathcomp_t *pp,const char *arg0,register char **argv, s
 #ifdef EMLINK
 	    case EMLINK:
 #endif /* EMLINK */
+		while(pp && (pp->flags&PATH_FPATH))
+			pp = path_nextcomp(pp,arg0,0);
 		return(pp);
 	    default:
 		errormsg(SH_DICT,ERROR_system(ERROR_NOEXEC),e_exec,path);
@@ -942,8 +922,6 @@ static void exscript(Shell_t *shp,register char *path,register char *argv[],char
 
 
 
-static void path_chkfpath(Pathcomp_t*, Pathcomp_t*, Pathcomp_t*, int);
-
 /*
  * add a pathcomponent to the path search list and eliminate duplicates
  * and non-existing absolute paths.
@@ -1021,13 +999,13 @@ static Pathcomp_t *path_addcomp(Pathcomp_t *first, Pathcomp_t *old,const char *n
  * This function checks for the .fpath file in directory in <pp>
  * it assumes that the directory is on the stack at <offset> 
  */
-static void path_chkfpath(Pathcomp_t *first, Pathcomp_t*old,Pathcomp_t *pp, int offset)
+static int path_chkfpath(Pathcomp_t *first, Pathcomp_t* old,Pathcomp_t *pp, int offset)
 {
 	struct stat statb;
-	int n,fd;
-	char *sp;
+	int k,m,n,fd;
+	char *sp,*cp,*ep;
 	stakseek(offset+pp->len);
-	stakputs("/.fpath");
+	stakputs("/.paths");
 	if((fd=open(stakptr(offset),O_RDONLY))>=0)
 	{
 		fstat(fd,&statb);
@@ -1035,18 +1013,57 @@ static void path_chkfpath(Pathcomp_t *first, Pathcomp_t*old,Pathcomp_t *pp, int 
 		stakseek(offset+pp->len+n+2);
 		sp = stakptr(offset+pp->len);
 		*sp++ = '/';
-		n==read(fd,sp,n);
+		n=read(fd,cp=sp,n);
+		sp[n] = 0;
 		close(fd);
-		if(n>0)
+		for(ep=0; n--; cp++)
 		{
-			sp += n;
-			while(sp[-1]=='\n' || sp[-1]=='\r') 
-				sp--;
-			*sp = 0;
-			stakseek(offset);
-			path_addcomp(first,old,stakptr(offset),PATH_FPATH|PATH_BFPATH);
+			if(*cp=='=')
+			{
+				ep = cp+1;
+				continue;
+			}
+			else if(*cp!='\r' &&  *cp!='\n')
+				continue;
+			if(*sp=='#' || sp==cp)
+			{
+				sp = cp+1;
+				continue;
+			}
+			*cp = 0;
+			if(!ep || memcmp((void*)sp,(void*)"FPATH=",6)==0)
+			{
+				if(first)
+				{
+					char *ptr = stakptr(offset+pp->len+1);
+					stakseek(offset);
+					if(ep)
+						strcpy(ptr,ep);
+					path_addcomp(first,old,stakptr(offset),PATH_FPATH|PATH_BFPATH);
+				}
+			}
+			else if(ep)
+			{
+				m = ep-sp;
+				pp->lib = (char*)malloc(cp-sp+pp->len+2);
+				memcpy((void*)pp->lib,(void*)sp,m);
+				memcpy((void*)&pp->lib[m],stakptr(offset),pp->len);
+				pp->lib[k=m+pp->len] = '/';
+				strcpy((void*)&pp->lib[k+1],ep);
+				pathcanon(&pp->lib[m],0);
+				if(!first)
+				{
+					stakseek(0);
+					stakputs(pp->lib);
+					free((void*)pp->lib);
+					return(1);
+				}
+			}
+			sp = cp+1;
+			ep = 0;
 		}
 	}
+	return(0);
 }
 
 
@@ -1181,7 +1198,11 @@ Pathcomp_t *path_unsetfpath(Pathcomp_t *first)
 					first = pp->next;
 				pp = pp->next;
 				if(--ppsave->refcount<=0)
+				{
+					if(ppsave->lib)
+						free((void*)ppsave->lib);
 					free((void*)ppsave);
+				}
 				continue;
 			}
 			

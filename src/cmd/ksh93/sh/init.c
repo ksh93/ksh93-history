@@ -42,6 +42,8 @@
 #include        "name.h"
 #include	"jobs.h"
 #include	"io.h"
+#include	"shlex.h"
+#include	"builtins.h"
 #include	"FEATURE/time"
 #include	"FEATURE/dynamic"
 #include	"lexstates.h"
@@ -49,9 +51,9 @@
 #include	"national.h"
 
 #ifdef SHOPT_MULTIBYTE
-    char e_version[]	= "\n@(#)$Id: Version M 1993-12-28 l+ $\0\n";
+    char e_version[]	= "\n@(#)$Id: Version M "SH_RELEASE" $\0\n";
 #else
-    char e_version[]	= "\n@(#)$Id: Version 1993-12-28 l+ $\0\n";
+    char e_version[]	= "\n@(#)$Id: Version "SH_RELEASE" $\0\n";
 #endif /* SHOPT_MULTIBYTE */
 
 #if _hdr_wchar && _lib_wctype && _lib_iswctype
@@ -262,7 +264,7 @@ static void put_restricted(register Namval_t* np,const char *val,int flags,Namfu
 #endif
 		nv_scan(shp->track_tree,rehash,(void*)0,NV_TAGGED,NV_TAGGED);
 	}
-	if(val && np->nvalue.cp && strcmp(val,np->nvalue.cp)==0)
+	if(val && !(flags&NV_RDONLY) && np->nvalue.cp && strcmp(val,np->nvalue.cp)==0)
 		 return;
 #ifdef PATH_BFPATH
 	if(shp->defpathlist  && nv_name(np)==nv_name(FPATHNOD))
@@ -281,6 +283,12 @@ static void put_restricted(register Namval_t* np,const char *val,int flags,Namfu
 			return;
 		if(shp->pathlist = (void*)pp)
 			pp->shp = shp;
+		if(!val && (flags&NV_NOSCOPE))
+		{
+			Namval_t *mp = dtsearch(shp->var_tree,np);
+			if(mp && (val=nv_getval(mp)))
+				nv_putval(mp,val,NV_RDONLY);
+		}
 #if 0
 sfprintf(sfstderr,"%d: name=%s val=%s\n",getpid(),nv_name(np),val);
 path_dump((Pathcomp_t*)shp->pathlist);
@@ -326,17 +334,19 @@ static void put_cdpath(register Namval_t* np,const char *val,int flags,Namfun_t 
 	void charsize_init(void)
 	{
 		static char fc[3] = { 0301,  ESS2, ESS3};
-		char buff[8];
+		char buff[8],*cp;
 		register int i,n;
 		wchar_t wc;
-		memset(buff,0301,MB_CUR_MAX);
+		memset(buff,0301,mbmax());
 		for(i=0; i<=2; i++)
 		{
 			buff[0] = fc[i];
-			if((n=mbtowc(&wc,buff,MB_CUR_MAX))>0)
+			cp = buff;
+			if(n=mbsize(buff))
 			{
+				wc =  mbchar(cp);
 				if((int_charsize[i+1] = n-(i>0))>0)
-					int_charsize[i+5] = wcwidth(wc);
+					int_charsize[i+5] = mbwidth(wc);
 				else
 					int_charsize[i+5] = 0;
 			}
@@ -437,6 +447,7 @@ static void put_ifs(register Namval_t* np,const char *val,int flags,Namfun_t *fp
 	register struct ifs *ip = (struct ifs*)fp;
 	ip->ifsnp = 0;
 	nv_putv(np, val, flags, fp);
+	
 }
 
 /*
@@ -457,7 +468,7 @@ static char* get_ifs(register Namval_t* np, Namfun_t *fp)
 		if(cp=value)
 		{
 #ifdef SHOPT_MULTIBYTE
-			while(n=mbtowc(0,cp,MB_CUR_MAX),c= *(unsigned char*)cp)
+			while(n=mbsize(cp),c= *(unsigned char*)cp)
 #else
 			while(c= *(unsigned char*)cp++)
 #endif /* SHOPT_MULTIBYTE */

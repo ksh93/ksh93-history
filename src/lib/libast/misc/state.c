@@ -25,13 +25,13 @@
 *******************************************************************/
 #pragma prototyped
 
-static const char id[] = "\n@(#)$Id: ast (AT&T Labs Research) 2001-05-09 $\0\n";
+static const char id[] = "\n@(#)$Id: ast (AT&T Labs Research) 2001-10-18 $\0\n";
 
 #include <ast.h>
 
 #undef	strcmp
 
-#if __OBSOLETE__ < 20020401
+#if __OBSOLETE__ && __OBSOLETE__ < 20020401
 
 /*
  * _Ast_info_t grew

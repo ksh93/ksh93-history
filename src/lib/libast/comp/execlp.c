@@ -25,23 +25,27 @@
 *******************************************************************/
 #pragma prototyped
 
-#if defined(__EXPORT__)
-#define extern	__EXPORT__
-#endif
-
-extern int	execlp(const char*, const char*, ...);
-
-#undef	extern
-
-#include <ast.h>
+#include <ast_lib.h>
 
 #if _lib_execlp
+
+#include <ast.h>
 
 NoN(execlp)
 
 #else
 
-int
+#define execlp		______execlp
+
+#include <ast.h>
+
+#undef	execlp
+
+#if defined(__EXPORT__)
+#define extern	__EXPORT__
+#endif
+
+extern int
 execlp(const char* name, const char* arg, ...)
 {
 	return execvp(name, (char *const*)&arg);

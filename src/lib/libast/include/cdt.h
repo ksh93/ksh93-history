@@ -31,7 +31,7 @@
 **      Written by Kiem-Phong Vo (05/25/96)
 */
 
-#define CDT_VERSION	19980501L
+#define CDT_VERSION	20010919L
 
 #if _PACKAGE_ast
 #include	<ast_std.h>
@@ -86,6 +86,7 @@ struct _dtdata_s
 	int		ntab;	/* number of hash slots			*/
 	int		size;	/* number of objects			*/
 	int		loop;	/* number of nested loops		*/
+	int		minp;	/* min path before splay, always even	*/
 };
 
 /* structure to hold methods that manipulate an object */
@@ -118,7 +119,6 @@ struct _dt_s
 	int		nview;	/* number of parent view dictionaries	*/
 	Dt_t*		view;	/* next on viewpath			*/
 	Dt_t*		walk;	/* dictionary being walked		*/
-	void*		context;/* user defined context			*/
 };
 
 /* structure to get status of a dictionary */
@@ -156,6 +156,8 @@ struct _dtstat_s
 #define DT_LAST		0000400	/* get last object			*/
 #define DT_MATCH	0001000	/* find object matching key		*/
 #define DT_VSEARCH	0002000	/* search using internal representation	*/
+#define DT_ATTACH	0004000	/* attach an object to the dictionary	*/
+#define DT_DETACH	0010000	/* attach an object to the dictionary	*/
 
 /* events */
 #define DT_OPEN		1	/* a dictionary is being opened		*/
@@ -209,6 +211,8 @@ extern Dtlink_t*	dtflatten _ARG_((Dt_t*));
 extern Dtlink_t*	dtextract _ARG_((Dt_t*));
 extern int		dtrestore _ARG_((Dt_t*, Dtlink_t*));
 
+extern int		dttreeset _ARG_((Dt_t*, int, int));
+
 extern int		dtwalk _ARG_((Dt_t*, int(*)(Dt_t*,Void_t*,Void_t*), Void_t*));
 
 extern Void_t*		dtrenew _ARG_((Dt_t*, Void_t*));
@@ -217,33 +221,79 @@ extern int		dtsize _ARG_((Dt_t*));
 extern int		dtstat _ARG_((Dt_t*, Dtstat_t*, int));
 extern unsigned int	dtstrhash _ARG_((unsigned int, Void_t*, int));
 
+#if !_PACKAGE_ast
+extern int		memcmp _ARG_((const Void_t*, const Void_t*, size_t));
+extern int		strcmp _ARG_((const char*, const char*));
+#endif
+
 #undef extern
 _END_EXTERNS_
 
-#define _DT_(d)		((Dt_t*)(d))
+/* internal functions for translating among holder, object and key */
+#define _DT(dt)		((Dt_t*)(dt))
+#define _DTDSC(dc,ky,sz,lk,cmpf) \
+			(ky = dc->key, sz = dc->size, lk = dc->link, cmpf = dc->comparf)
+#define _DTLNK(o,lk)	((Dtlink_t*)((char*)(o) + lk) )
+#define _DTOBJ(e,lk)	(lk < 0 ? ((Dthold_t*)(e))->obj : (Void_t*)((char*)(e) - lk) )
+#define _DTKEY(o,ky,sz)	(Void_t*)(sz < 0 ? *((char**)((char*)(o)+ky)) : ((char*)(o)+ky))
 
-#define dtvnext(d)	(_DT_(d)->view)
-#define dtvcount(d)	(_DT_(d)->nview)
-#define dtvhere(d)	(_DT_(d)->walk)
+#define _DTCMP(dt,k1,k2,dc,cmpf,sz) \
+			(cmpf ? (*cmpf)(dt,k1,k2,dc) : \
+			 (sz <= 0 ? strcmp(k1,k2) : memcmp(k1,k2,sz)) )
+#define _DTHSH(dt,ky,dc,sz) (dc->hashf ? (*dc->hashf)(dt,ky,dc) : dtstrhash(0,ky,sz) )
+
+/* special search function for tree structure only */
+#define _DTMTCH(dt,key,action) \
+	do { Dtlink_t* _e; Void_t *_o, *_k, *_key; Dtdisc_t* _dc; \
+	     int _ky, _sz, _lk, _cmp; Dtcompar_f _cmpf; \
+	     _dc = (dt)->disc; _DTDSC(_dc, _ky, _sz, _lk, _cmpf); \
+	     _key = (key); \
+	     for(_e = (dt)->data->here; _e; _e = _cmp < 0 ? _e->hl._left : _e->right) \
+	     {	_o = _DTOBJ(_e, _lk); _k = _DTKEY(_o, _ky, _sz); \
+		if((_cmp = _DTCMP((dt), _key, _k, _dc, _cmpf, _sz)) == 0) \
+			break; \
+	     } \
+	     action (_e ? _o : NIL(Void_t*)); \
+	} while(0)
+
+#define _DTSRCH(dt,obj,action) \
+	do { Dtlink_t* _e; Void_t *_o, *_k, *_key; Dtdisc_t* _dc; \
+	     int _ky, _sz, _lk, _cmp; Dtcompar_f _cmpf; \
+	     _dc = (dt)->disc; _DTDSC(_dc, _ky, _sz, _lk, _cmpf); \
+	     _key = _DTOBJ(obj, _lk); _key = _DTKEY(_key, _ky, _sz); \
+	     for(_e = (dt)->data->here; _e; _e = _cmp < 0 ? _e->hl._left : _e->right) \
+	     {	_o = _DTOBJ(_e, _lk); _k = _DTKEY(_o, _ky, _sz); \
+		if((_cmp = _DTCMP((dt), _key, _k, _dc, _cmpf, _sz)) == 0) \
+			break; \
+	     } \
+	     action (_e ? _o : NIL(Void_t*)); \
+	} while(0)
+
+#define DTTREEMATCH(dt,key,action)	_DTMTCH(_DT(dt),(Void_t*)(key),action)
+#define DTTREESEARCH(dt,obj,action)	_DTSRCH(_DT(dt),(Void_t*)(obj),action)
+
+#define dtvnext(d)	(_DT(d)->view)
+#define dtvcount(d)	(_DT(d)->nview)
+#define dtvhere(d)	(_DT(d)->walk)
 
 #define dtlink(d,e)	(((Dtlink_t*)(e))->right)
-#define dtobj(d,e)	((_DT_(d)->disc->link < 0) ? (((Dthold_t*)(e))->obj) : \
-				(Void_t*)((char*)(e) - _DT_(d)->disc->link) )
-#define dtfinger(d)	(_DT_(d)->data->here ? dtobj((d),_DT_(d)->data->here) : \
-				(Void_t*)(0) )
+#define dtobj(d,e)	_DTOBJ((e), _DT(d)->disc->link)
+#define dtfinger(d)	(_DT(d)->data->here ? dtobj((d),_DT(d)->data->here):(Void_t*)(0))
 
-#define dtfirst(d)	(*(_DT_(d)->searchf))((d),(Void_t*)(0),DT_FIRST)
-#define dtnext(d,o)	(*(_DT_(d)->searchf))((d),(Void_t*)(o),DT_NEXT)
-#define dtlast(d)	(*(_DT_(d)->searchf))((d),(Void_t*)(0),DT_LAST)
-#define dtprev(d,o)	(*(_DT_(d)->searchf))((d),(Void_t*)(o),DT_PREV)
-#define dtsearch(d,o)	(*(_DT_(d)->searchf))((d),(Void_t*)(o),DT_SEARCH)
-#define dtinsert(d,o)	(*(_DT_(d)->searchf))((d),(Void_t*)(o),DT_INSERT)
-#define dtdelete(d,o)	(*(_DT_(d)->searchf))((d),(Void_t*)(o),DT_DELETE)
-#define dtmatch(d,o)	(*(_DT_(d)->searchf))((d),(Void_t*)(o),DT_MATCH)
-#define dtclear(d)	(*(_DT_(d)->searchf))((d),(Void_t*)(0),DT_CLEAR)
+#define dtfirst(d)	(*(_DT(d)->searchf))((d),(Void_t*)(0),DT_FIRST)
+#define dtnext(d,o)	(*(_DT(d)->searchf))((d),(Void_t*)(o),DT_NEXT)
+#define dtlast(d)	(*(_DT(d)->searchf))((d),(Void_t*)(0),DT_LAST)
+#define dtprev(d,o)	(*(_DT(d)->searchf))((d),(Void_t*)(o),DT_PREV)
+#define dtsearch(d,o)	(*(_DT(d)->searchf))((d),(Void_t*)(o),DT_SEARCH)
+#define dtmatch(d,o)	(*(_DT(d)->searchf))((d),(Void_t*)(o),DT_MATCH)
+#define dtinsert(d,o)	(*(_DT(d)->searchf))((d),(Void_t*)(o),DT_INSERT)
+#define dtdelete(d,o)	(*(_DT(d)->searchf))((d),(Void_t*)(o),DT_DELETE)
+#define dtattach(d,o)	(*(_DT(d)->searchf))((d),(Void_t*)(o),DT_ATTACH)
+#define dtdetach(d,o)	(*(_DT(d)->searchf))((d),(Void_t*)(o),DT_DETACH)
+#define dtclear(d)	(*(_DT(d)->searchf))((d),(Void_t*)(0),DT_CLEAR)
 
-/* A linear congruential hash: h*17 + c + 97531 */
-#define dtcharhash(h,c)	((((unsigned int)(h))<<4) + ((unsigned int)(h)) + \
+/* A linear congruential hash: h*63 + c + 97531 */
+#define dtcharhash(h,c)	((((unsigned int)(h))<<6) - ((unsigned int)(h)) + \
 			 ((unsigned char)(c)) + 97531 )
 
 #endif /* _CDT_H */

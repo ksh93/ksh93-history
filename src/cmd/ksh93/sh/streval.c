@@ -33,14 +33,17 @@
  *	 and has a separate executor
  */
 
-#include	"defs.h"
 #include	"streval.h"
 #include	<ctype.h>
+#include	<error.h>
 #include	<stak.h>
 #include	"FEATURE/externs"
 
 #ifndef ERROR_dictionary
 #   define ERROR_dictionary(s)	(s)
+#endif
+#ifndef SH_DICT
+#   define SH_DICT	"libshell"
 #endif
 
 #define MAXLEVEL	9
@@ -153,7 +156,7 @@ double	arith_exec(Arith_t *ep)
 	{
 		if(c&T_NOFLOAT)
 		{
-			if(type || ((c&T_BINARY) && (c&T_OP)!=A_MOD  && tp[-1]))
+			if(type==1 || ((c&T_BINARY) && (c&T_OP)!=A_MOD  && tp[-1]==1))
 				arith_error(e_incompatible,ep->expr,ep->emode);
 		}
 		switch(c&T_OP)
@@ -209,7 +212,7 @@ double	arith_exec(Arith_t *ep)
 			*++sp = num;
 			type = node.isfloat;
 			if(!node.isfloat && (long)num!=num)
-				type = 1;
+				type = ((unsigned long)num==num)?2:1;
 			*++tp = type;
 			c = 0;
 			break;
@@ -257,6 +260,9 @@ double	arith_exec(Arith_t *ep)
 		    case A_TIMES:
 			num *= sp[-1];
 			break;
+		    case A_POW:
+			num = pow(sp[-1],num);
+			break;
 		    case A_MOD:
 			if(!num)
 				arith_error(e_divzero,ep->expr,ep->emode);
@@ -265,16 +271,24 @@ double	arith_exec(Arith_t *ep)
 		    case A_DIV:
 			if(!num)
 				arith_error(e_divzero,ep->expr,ep->emode);
-			if(type || tp[-1])
+			if(type==1 || tp[-1])
 				num = sp[-1]/num;
+			else if(type==2 || tp[-1]==2)
+				num = (unsigned long)(sp[-1]) / (unsigned long)(num);
 			else
 				num = (long)(sp[-1]) / (long)(num);
 			break;
 		    case A_LSHIFT:
-			num = (long)(sp[-1]) << (long)(num);
+			if(tp[-1]==2)
+				num = (unsigned long)(sp[-1]) << (long)(num);
+			else
+				num = (long)(sp[-1]) << (long)(num);
 			break;
 		    case A_RSHIFT:
-			num = (long)(sp[-1]) >> (long)(num);
+			if(tp[-1]==2)
+				num = (unsigned long)(sp[-1]) >> (long)(num);
+			else
+				num = (long)(sp[-1]) >> (long)(num);
 			break;
 		    case A_XOR:
 			num = (long)(sp[-1]) ^ (long)(num);
@@ -382,6 +396,7 @@ static int gettok(register struct vars *vp)
 			c = '=';
 			/* FALL THRU */
 		    case A_ASSIGN:
+		    case A_TIMES:
 		    case A_PLUS:	case A_MINUS:
 		    case A_OR:	case A_AND:
 			if(peekchr(vp)==c)
@@ -431,7 +446,7 @@ static int expr(register struct vars *vp,register int precedence)
 	    case A_TILDE:
 		op |= T_NOFLOAT;
 	    common:
-		if(!expr(vp,2*MAXPREC-1))
+		if(!expr(vp,2*MAXPREC+1))
 			return(0);
 		stakputc(op);
 		break;
@@ -464,6 +479,8 @@ static int expr(register struct vars *vp,register int precedence)
 		else
 		{
 			c = (strval_precedence[op]&PRECMASK);
+			if(c==MAXPREC || op==A_POW)
+				c++;
 			c *= 2;
 		}
 		/* from here on c is the new precedence level */
@@ -488,7 +505,7 @@ static int expr(register struct vars *vp,register int precedence)
 			goto done;
 		if(strval_precedence[op]&RASSOC)
 			c--;
-		if(c < 2*MAXPREC && !(strval_precedence[op]&SEQPOINT))
+		if((c < (2*MAXPREC+1)) && !(strval_precedence[op]&SEQPOINT))
 		{
 			wasop = 0;
 			if(!expr(vp,c))
@@ -627,7 +644,7 @@ static int expr(register struct vars *vp,register int precedence)
 			/* FALL THRU */
 		case A_PLUS:	case A_MINUS:	case A_TIMES:	case A_DIV:
 		case A_EQ:	case A_NEQ:	case A_LT:	case A_LE:
-		case A_GT:	case A_GE:
+		case A_GT:	case A_GE:	case A_POW:
 			stakputc(op|T_BINARY);
 			vp->staksize--;
 			break;

@@ -400,8 +400,14 @@ main()
 	printf("#define O_NONBLOCK	O_NDELAY\n");
 #endif
 #endif
+#ifndef	O_BINARY
+	printf("#define O_BINARY	0\n");
+#endif
 #ifndef	O_TEMPORARY
 	printf("#define O_TEMPORARY	0\n");
+#endif
+#ifndef	O_TEXT
+	printf("#define O_TEXT		0\n");
 #endif
 #if defined(S_IRUSR)
 	printf("\n");

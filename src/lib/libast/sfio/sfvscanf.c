@@ -30,6 +30,93 @@
 **	Written by Kiem-Phong Vo.
 */
 
+#if _PACKAGE_ast || _hdr_wchar
+
+#include	<wchar.h>
+#if _hdr_wctype
+#include	<wctype.h>
+#endif
+
+#ifndef iswspace
+#define iswspace(w)	isspace(w)
+#endif
+
+#if !_lib_mbrtowc
+
+#define _lib_mbrtowc	1
+
+#if !_PACKAGE_ast
+
+typedef int mbstate_t;
+
+size_t
+mbrtowc(wchar_t* t, const char* s, size_t n, mbstate_t* q)
+{
+#if _lib_mbtowc
+	memset(q, 0, sizeof(*q));
+	return mbtowc(t, s, n);
+#else
+	*q = 0;
+	if (t && n > 0)
+		*t = *s;
+	return 1;
+#endif
+}
+
+#endif /* !_PACKAGE_ast */
+
+#endif /* !_lib_mbtowc */
+
+#if __STD_C
+static int wcaccept(wchar_t wc, char* accept, const char* form, const char* end)
+#else
+static int wcaccept(wc, accept, form, end)
+wchar_t		wc;
+char*		accept;
+const char*	form;
+const char*	end;
+#endif
+{
+	register unsigned char*	cp = (unsigned char*)form;
+	register unsigned char*	ce = (unsigned char*)end;
+	wchar_t			cc;
+	wchar_t			cb;
+	mbstate_t		cs;
+	int			cz;
+	int			yes;
+
+	if (wc >= 0 && wc <= 0x7f)
+		return accept[wc];
+	if(*cp == '^')
+	{	form++;
+		yes = 0;
+	}
+	else	yes = 1;
+	if(wc == *cp)
+		return yes;
+	if(*cp == ']' || *cp == '-')
+		cp++;
+	if((cz = mbrtowc(&cc, (char*)cp, ce-cp, &cs)) <= 0)
+		return !yes;
+	while(cb = cc, cp += cz, *cp && *cp != ']')
+	{	if(*cp == '-')
+		{	if(*++cp == ']')
+				return wc == '-' ? yes : !yes;
+			if((cz = mbrtowc(&cc, (char*)cp, ce-cp, &cs)) <= 0)
+				return !yes;
+			if(wc >= cb && wc <= cc)
+				return yes;
+		}
+		else if((cz = mbrtowc(&cc, (char*)cp, ce-cp, &cs)) <= 0)
+			return !yes;
+		else if(wc == cc)
+			return yes;
+	}
+	return !yes;
+}
+
+#endif /* _PACKAGE_ast || _hdr_wchar */
+
 #define MAXWIDTH	(int)(((uint)~0)>>1)	/* max amount to scan	*/
 
 #if __STD_C
@@ -183,6 +270,13 @@ va_list		args;
 #define SFGETC(f,c)	((c) = (d < endd || (SFEND(f), SFBUF(f), d < endd)) ? \
 				(int)(*d++) : -1 )
 #define SFUNGETC(f,c)	(--d)
+#if _lib_mbrtowc
+#define SFGETWC(f,c,z,q,p) \
+			(p=q, z=mbrtowc(&c,(char*)d,endd-d,&q), c = (z>0 && (d+z) < endd || (SFEND(f), SFBUF(f), z=mbrtowc(&c,(char*)d,endd-d,&q), z>0 && (d+z) <= endd)) ? \
+				(d+=z,c) : (wchar_t)(-1) )
+#define SFUNGETWC(f,c,z,q,p) \
+			(d-=z,q=p)
+#endif
 
 	SFMTXSTART(f,-1);
 
@@ -462,6 +556,14 @@ loop_fmt:
 			size = -1;
 			flags = (flags&~SFFMT_TYPES) | SFFMT_TFLAG;
 			goto loop_flags;
+		case 'C':
+			flags = (flags&~SFFMT_TYPES) | SFFMT_LONG;
+			fmt = 'c';
+			break;
+		case 'S':
+			flags = (flags&~SFFMT_TYPES) | SFFMT_LONG;
+			fmt = 's';
+			break;
 		case QUOTE :
 			if(thousand > 0)
 				flags |= SFFMT_THOUSAND;
@@ -592,13 +694,77 @@ loop_fmt:
 		/* if get here, start scanning input */
 		if(width == 0)
 			width = fmt == 'c' ? 1 : MAXWIDTH;
+#if _lib_mbrtowc
+		/* catch all mb input here */
+		if((flags & SFFMT_LONG) && (fmt == 's' || fmt == 'c' || fmt == '['))
+		{	wchar_t*	wp;
+			mbstate_t	ws;
+			mbstate_t	wo;
+			wchar_t		wc;
+			int		wz;
 
+			memset(&ws, 0, sizeof(ws));
+			if(fmt == 'c' || fmt == '[')
+				SFGETWC(f,wc,wz,ws,wo);
+			else
+			{	do	{ SFGETWC(f,wc,wz,ws,wo); }
+				while(iswspace(wc)); /* skip starting blanks */
+			}
+			if(wc == (wchar_t)(-1))
+				goto done;
+			if(value)
+			{	wp = (wchar_t*)value;
+				if(fmt != 'c')
+					size -= 1;
+			}
+			else	size = 0;
+			n = 0;
+			if(fmt == 's')
+			{	do
+				{	if(iswspace(wc))
+						break;
+					if((n += 1) <= size)
+						*wp++ = wc;
+				} while(--width > 0 && SFGETWC(f,wc,wz,ws,wo) != (wchar_t)(-1));
+			}
+			else if(fmt == 'c')
+			{	do
+				{	if((n += 1) <= size)
+						*wp++ = wc;
+				} while(--width > 0 && SFGETWC(f,wc,wz,ws,wo) != (wchar_t)(-1));
+			}
+			else /* if(fmt == '[') */
+			{	const char*	oform = form;
+				form = setclass((char*)form,accept);
+				do
+				{	if(!wcaccept(wc, accept, oform, form))
+					{	if(n > 0 || (flags&SFFMT_ALTER) )
+							break;
+						else
+						{	SFUNGETWC(f,wc,wz,ws,wo);
+							goto pop_fmt;
+						}
+					}
+					if((n += 1) <= size)
+						*wp++ = wc;
+				} while(--width > 0 && SFGETWC(f,wc,wz,ws,wo) != (wchar_t)(-1));
+			}
+			if(value && (n > 0 || fmt == '[') )
+			{	n_assign += 1;
+				if(fmt != 'c' && size >= 0)
+					*wp = 0;
+			}
+			if(width > 0 && wc != (wchar_t)(-1))
+				SFUNGETWC(f,wc,wz,ws,wo);
+			continue;
+		}
+#endif
 		/* define the first input character */
 		if(fmt == 'c' || fmt == '[')
 			SFGETC(f,inp);
 		else
 		{	do	{ SFGETC(f,inp); }
-			while(isspace(inp))	/* skip starting blanks */
+			while(isspace(inp)) /* skip starting blanks */
 				;
 		}
 		if(inp < 0)
@@ -833,7 +999,6 @@ loop_fmt:
 						*argv.s++ = inp;
 				} while(--width > 0 && SFGETC(f,inp) >= 0);
 			}
-
 			if(value && (n > 0 || fmt == '[') )
 			{	n_assign += 1;
 				if(fmt != 'c' && size >= 0)

@@ -25,14 +25,6 @@
 *******************************************************************/
 #pragma prototyped
 
-#if defined(__EXPORT__)
-#define extern	__EXPORT__
-#endif
-
-extern int	execve(const char*, char* const[], char* const[]);
-
-#undef	extern
-
 #include <ast.h>
 
 #if _lib_execve
@@ -54,7 +46,11 @@ execsig(int sig)
 	signal(sig, execsig);
 }
 
-int
+#if defined(__EXPORT__)
+#define extern	__EXPORT__
+#endif
+
+extern int
 execve(const char* path, char* const argv[], char* const arge[])
 {
 	int	status;

@@ -251,4 +251,18 @@ fi
 for i in : % + / 3b '**' '***' '@@' '{' '[' '}' !!  '*a' '@a' '$foo'
 do      (eval : \${"$i"} 2> /dev/null) && err_exit "\${$i} not an syntax error"
 done
+unset IFS
+( IFS='  ' ; read -r a b c <<-!
+	x  y z
+	!
+	if	[[ $b ]]
+	then	err_exit 'IFS="  " not causing adjacent space to be null string'
+	fi
+)
+read -r a b c <<-!
+x  y z
+!
+if	[[ $b != y ]]
+then	err_exit 'IFS not restored after subshell'
+fi
 exit $((Errors))

@@ -114,7 +114,7 @@ struct regdisc_s;
 typedef int (*regclass_t)(int);
 typedef _ast_int4_t regflags_t;
 typedef int regoff_t;
-typedef int (*regerror_t)(const struct regex_s*, struct regdisc_s*, int, const char*, ...);
+typedef int (*regerror_t)(const struct regex_s*, struct regdisc_s*, int, ...);
 typedef void* (*regcomp_t)(const struct regex_s*, const char*, size_t, struct regdisc_s*);
 typedef int (*regexec_t)(const struct regex_s*, void*, const char*, size_t, const char*, size_t, char**, struct regdisc_s*);
 typedef void* (*regresize_t)(void*, void*, size_t);

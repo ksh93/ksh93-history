@@ -31,9 +31,15 @@
  *
  */
 
-#include	"defs.h"
+#include	<ast.h>
+#include	<sfio.h>
+#include	<error.h>
+#include	<shell.h>
 #include	"builtins.h"
 #include	"ulimit.h"
+#ifndef SH_DICT
+#   define SH_DICT	"libshell"
+#endif
 
 #ifdef _no_ulimit
 	int	b_ulimit(int argc,char *argv[],void *extra)

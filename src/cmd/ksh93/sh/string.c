@@ -36,6 +36,11 @@
 #include	"lexstates.h"
 #include	"national.h"
 
+#ifndef _lib_iswprint
+#   define iswprint(c)		((c&~0377) || isprint(c))
+#endif
+
+
 /*
  *  Table lookup routine
  *  <table> is searched for string <sp> and corresponding value is returned
@@ -79,7 +84,7 @@ char *sh_substitute(const char *string,const char *oldsp,char *newsp)
 	if(*(cp=oldsp) == 0)
 		goto found;
 #ifdef SHOPT_MULTIBYTE
-	mblen(NIL(char*),MB_CUR_MAX);
+	mbinit();
 #endif /* SHOPT_MULTIBYTE */
 	do
 	{
@@ -88,7 +93,7 @@ char *sh_substitute(const char *string,const char *oldsp,char *newsp)
 		{
 #ifdef SHOPT_MULTIBYTE
 			/* skip a whole character at a time */
-			int c = mblen(sp,MB_CUR_MAX);
+			int c = mbsize(sp);
 			if(c < 0)
 				sp++;
 			while(c-- > 0)
@@ -182,34 +187,49 @@ char	*sh_fmtq(const char *string)
 	if(!cp)
 		return((char*)0);
 	offset = staktell();
-	state = ((c= *cp)==0);
+#ifdef SHOPT_MULTIBYTE
+	state = ((c= mbchar(cp))==0);
+#else
+	state = ((c= *(unsigned char*)cp++)==0);
+#endif
 	if(isaletter(c))
 	{
-		while((c = *++cp),isaname(c));
+#ifdef SHOPT_MULTIBYTE
+		while((c=mbchar(cp)),isaname(c));
+#else
+		while((c = *(unsigned char*)cp++),isaname(c));
+#endif
 		if(c==0)
 			return((char*)string);
 		if(c=='=')
 		{
-			c = ++cp - string;
 			if(*cp==0)
 				return((char*)string);
+			c = cp - string;
 			stakwrite(string,c);
-			c = *(string=cp);
+			string = cp;
+#ifdef SHOPT_MULTIBYTE
+			c = mbchar(cp);
+#else
+			c = *(unsigned char*)cp++;
+#endif
 		}
 	}
 	if(c==0 || c=='#' || c=='~')
 		state = 1;
-	while(c= *(unsigned char*)cp++)
+#ifdef SHOPT_MULTIBYTE
+	for(;c;c= mbchar(cp))
+#else
+	for(;c; c= *(unsigned char*)cp++)
+#endif
 	{
 #ifdef SHOPT_MULTIBYTE
-		int s;
-		if((s=mblen(cp-1,MB_CUR_MAX)) > 1)
-		{
-			cp += (s-1);
+		if(c>=0x200)
 			continue;
-		}
-#endif /* SHOPT_MULTIBYTE */
+		if(c=='\'' || !iswprint(c))
+#else
 		if(c=='\'' || !isprint(c))
+#endif /* SHOPT_MULTIBYTE */
 			state = 2;
 		else if(c==']' || (c!=':' && (c=sh_lexstates[ST_NORM][c]) && c!=S_EPAT))
 			state |=1;
@@ -227,7 +247,11 @@ char	*sh_fmtq(const char *string)
 	{
 		stakwrite("$'",2);
 		cp = string;
+#ifdef SHOPT_MULTIBYTE
+		while(c= mbchar(cp))
+#else
 		while(c= *(unsigned char*)cp++)
+#endif
 		{
 			state=1;
 			switch(c)
@@ -256,7 +280,11 @@ char	*sh_fmtq(const char *string)
 			    case '\\':	case '\'':
 				break;
 			    default:
+#ifdef SHOPT_MULTIBYTE
+				if(!iswprint(c))
+#else
 				if(!isprint(c))
+#endif
 				{
 					sfprintf(staksp,"\\%.3o",c);
 					continue;
@@ -277,38 +305,16 @@ char	*sh_fmtq(const char *string)
 #ifdef SHOPT_MULTIBYTE
 	int sh_strchr(const char *string, register const char *dp)
 	{
-		wchar_t c,d; 
-		register int m;
+		wchar_t c, d;
 		register const char *cp=string;
-		int n = mbtowc(&d,dp,MB_CUR_MAX);
-		while((m=mbtowc(&c,cp,MB_CUR_MAX)) && c)
+		d = mbchar(dp); 
+		while(c = mbchar(cp))
 		{
 			if(c==d)
 				return(cp-string);
-			cp+=m;
 		}
 		return(-1);
 	}
-#   ifndef _lib_wcwidth
-	/*
-	 * only works for EUC
-	 */
-	int	wcwidth(const wchar_t w)
-	{
-		int c;
-		unsigned char buff[ESS_MAXCHAR+1];
-		if(w<256 && !isprint(w))
-			return(-1);
-		c=wctomb((char*)buff,w);
-#ifdef _UWIN
-		/* This seems to handle Shift JIS */
-		return(1+(c>1));
-#else
-		c = echarset(*buff);
-		return(out_csize(c));
-#endif
-	}
-#   endif /* _lib_wcwidth */
 #endif /* SHOPT_MULTIBYTE */
 
 const char *_sh_translate(const char *message)

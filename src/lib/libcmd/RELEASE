@@ -1,3 +1,7 @@
+01-10-11 getconf.c: fix usage typos
+01-09-11 cp.c,cmd.h: handle . in argv[0]
+	 cp.c: add O_BINARY to all open() calls
+01-09-06 tail: input streams must be SF_SHARE -- duh
 01-07-16 stty: fix cntl() macro for CC_NATIVE!=CC_ASCII
 01-05-31 date: fix /bin/date fallback logic
 	 stty: fix a few mismatched flags, -a and -g option logic

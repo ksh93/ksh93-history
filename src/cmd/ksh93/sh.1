@@ -1156,6 +1156,27 @@ If
 is set and is non-null then substitute
 .IR word ;
 otherwise substitute nothing.
+.PP
+In the above,
+.I word\^
+is not evaluated unless it is
+to be used as the substituted string,
+so that, in the following example,
+.B pwd
+is executed only if
+.B d
+is not set or is null:
+.PP
+.RS
+print \|${d:\-\^$(\^pwd\^)\^}
+.RE
+.PP
+If the colon (
+.B : )
+is omitted from the above expressions,
+then the shell only checks whether
+.I parameter\^
+is set or not.
 .TP
 .PD 0
 \f3${\fP\f2parameter\^\fP\f3:\fP\f2offset\^\fP\f3:\fP\f2length\^\fP\f3}\fP
@@ -1173,6 +1194,11 @@ defined by
 .IR length.
 In the second form, the remainder of the value is used. 
 If
+A negative
+.I offset\^
+counts backwards from the end of
+.IT parameter .
+If
 .I parameter\^
 is
 .B \(**
@@ -1188,6 +1214,11 @@ and
 .I length\^
 refer to the array index and number
 of elements respectively.
+A negative
+.I offset\^
+is taken relative to one greater than the highest subscript
+for indexed arrays.
+The order for associate arrays is unspecified.
 .TP
 .PD 0
 \f3${\fP\f2parameter\^\fP\f3#\fP\f2pattern\^\fP\f3}\fP
@@ -1303,27 +1334,6 @@ In this case, the
 portion of
 .I word\^
 will be re-evaluated for each element.
-.PP
-In the above,
-.I word\^
-is not evaluated unless it is
-to be used as the substituted string,
-so that, in the following example,
-.B pwd
-is executed only if
-.B d
-is not set or is null:
-.PP
-.RS
-print \|${d:\-\^$(\^pwd\^)\^}
-.RE
-.PP
-If the colon (
-.B : )
-is omitted from the above expressions,
-then the shell only checks whether
-.I parameter\^
-is set or not.
 .PP
 The following
 parameters
@@ -2287,8 +2297,12 @@ Evaluations are performed using
 double precision floating point
 arithmetic.
 Floating point constants follow the ANSI-C programming language
-conventions.
-Integer constants are of the form
+floating point conventions.
+Integer constants follow the ANSI-C programming language
+integer constant conventions although only single byte
+character constants are recognized and character casts
+are not recognized.
+In addition constants can be of the form
 \*(OK\f2base\f3#\^\f1\*(CK\f2n\^\fP
 where
 .I base\^
@@ -2305,16 +2319,16 @@ and
 respectively.
 For bases less than or equal to 36, upper and lower case
 characters can be used interchangeably.
-If
-.I base\^
-is omitted,
-then base 10 is used.
 .PP
 An arithmetic expression uses the same syntax, precedence, and
 associativity of
 expression as the C language.
 All the C language operators
 that apply to floating point quantities can be used.
+In addition, the operator
+.B **
+can be used for exponentiation.
+It has higher precedence than multiplication as is left associative.
 In addition, when the value of an arithmetic variable
 or sub-expression can be represented as a long integer,
 all C language integer arithmetic operations can be performed. 
@@ -2711,7 +2725,7 @@ where
 is a hostname or host address,
 and
 .I port\^
-is an integer port number,
+is a service given by name or an integer port number,
 then the redirection attempts to make a
 \f3tcp\fP or \f3udp\fP connection to the corresponding
 socket.
@@ -3280,8 +3294,12 @@ as if it were the argument to the \fB.\fP command
 and a function of the given name is executed
 as described above.
 If not found, and the file
-.B .fpath
-is found, and the contents of this file names an
+.B .paths
+is found, and the this file contains a line of the form
+.BI FPATH= path
+where
+.I path\^
+names an
 existing directory, and this directory contains
 a file of the given name,
 then this file is loaded into the current shell environment
@@ -3292,16 +3310,25 @@ a process is created and
 an attempt is made to execute the command via
 .IR exec (2).
 .P
-On systems that use an environment variable to
-determine the order of directories to search for
-shared libraries, if the executable is found in
-a directory named
-.BR bin ,
-the environment variable is
-modified by prepending the library
-directory to its search list
-if the variable exists; otherwise the library search variable is created
-with the value of the directory.
+When an executable is found, the directory where it is found
+in is searched for a file named
+.BR .paths .
+If this file is found and it contains a line of the form
+.IB name\^ = value\^
+in the first or second line, then the environment variable
+.I name\^
+is modified by prepending the directory specified by
+.I value\^
+to the directory list.
+If
+.I value\^
+is not an absolute directory, then it
+specifies a directory relative to the directory that the
+executable was found.
+If the environment variable
+.I name\^
+does not already exist it will be added to the environment
+list for the specified command.
 .P
 If the file has execute permission but is not an
 .B a.out
@@ -3846,6 +3873,7 @@ The commands that accept a parameter are
 .BR M-. ,
 .BR M-^] ,
 .BR M-_ ,
+.BR M-= ,
 .BR M-b ,
 .BR M-c ,
 .BR M-d ,
@@ -3905,7 +3933,13 @@ Command or file name completion as described above.
 .PP
 .TP 10
 .B M-=
-Command or file name listing as described above.
+If not preceded by a numeric parameter,
+it generates the list of matching commands or
+file names as described above.
+Otherwise, the word under the cursor is replaced by
+the item corresponding to the value of the numeric parameter
+from the most recently generated command or file list.
+If the cursor is not on a word, it is inserted instead.
 .PP
 .TP 10
 .BI ^U
@@ -4374,8 +4408,13 @@ inserted in the history as a comment and
 uncommenting previously commented commands
 in the history file.
 .TP 10
-.B =	
-Command or file name listing as described above.
+[\f2count\fP]\f3=\fP
+If \f2count\fP is not specified,
+it generates the list of matching commands or
+file names as described above.
+Otherwise, the word under the the cursor is replaced by the
+\f2count\fP item from the most recently generated command or file list.
+If the cursor is not on a word, it is inserted instead.
 .TP 10
 .BI @ letter
 Your alias list is searched for an
@@ -5145,7 +5184,7 @@ Equivalent to
 .BI "exec /bin/newgrp" " arg\^"
 \&.\|.\|.\^.
 .TP
-\f3print\fP \*(OK \f3\-Rnprs\^\fP \*(CK \*(OK \f3\-u\fP \f2unit\^\fP\*(CK \*(OK \f3\-f\fP \f2format\^\fP \*(CK \*(OK \f2arg\^\fP .\|.\|. \*(CK
+\f3print\fP \*(OK \f3\-Renprs\^\fP \*(CK \*(OK \f3\-u\fP \f2unit\^\fP\*(CK \*(OK \f3\-f\fP \f2format\^\fP \*(CK \*(OK \f2arg\^\fP .\|.\|. \*(CK
 With no options or with option
 .B \-
 or
@@ -5160,6 +5199,7 @@ option causes the arguments to be printed as
 described by
 .BR printf .
 In this case, any
+.BR e ,
 .BR n ,
 .BR r ,
 .B R
@@ -5225,6 +5265,12 @@ The
 option will print all subsequent arguments and options
 other than
 .BR \-n .
+The
+.B \-e
+causes the above escape conventions to be applied
+This is the default behavior.
+It reverses the effect of an earlier
+.BR \-r .
 The
 .B \-p
 option causes the
@@ -5317,6 +5363,10 @@ and to format the date/time according to the
 as defined for the
 .BR date (1)
 command.
+.LI
+A
+.B %Z
+format will output a byte whose value is 0.
 .LI
 The precision field of the
 .B %d
@@ -6069,6 +6119,7 @@ and
 .I attributes\^
 of all
 .I variables\^
+that have attributes
 are printed.
 .RE
 .TP
@@ -6382,7 +6433,7 @@ when the locale is not C or POSIX.
 No commands will be executed.
 .PD
 .TP
-.BI \-I " filename\^"
+.BI \-R " filename\^"
 The
 .B \-R
 .I filename\^

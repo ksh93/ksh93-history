@@ -119,9 +119,9 @@ int		type;
 		while(r)
 		{	t = r->right;
 			if(!(type&DT_SAMEHASH))	/* new hash value */
-			{	k = (char*)OBJ(r,disc->link);
-				k = KEY((Void_t*)k,disc->key,disc->size);
-				r->hash = HASH(dt,k,disc,disc->size);
+			{	k = (char*)_DTOBJ(r,disc->link);
+				k = _DTKEY((Void_t*)k,disc->key,disc->size);
+				r->hash = _DTHSH(dt,k,disc,disc->size);
 			}
 			(void)(*searchf)(dt,(Void_t*)r,DT_RENEW);
 			r = t;

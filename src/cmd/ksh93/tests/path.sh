@@ -33,6 +33,24 @@ Command=$0
 mkdir /tmp/ksh$$
 cd /tmp/ksh$$
 trap 'rm -rf /tmp/ksh$$' EXIT
+cat > bug1 <<- \EOF
+	function lock_unlock
+	{
+	typeset PATH=/usr/bin
+	typeset -x PATH=''
+	}
+	
+	PATH=/usr/bin
+	: $(PATH=/usr/bin getconf PATH)
+	typeset -ft lock_unlock
+	lock_unlock
+EOF
+($SHELL ./bug1)  2> /dev/null || err_exit "path_delete bug"
+mkdir tdir$$
+if	$SHELL tdir$$ > /dev/null 2>&1
+then	err_exit 'not an error to run ksh on a directory'
+fi
+
 print 'print hi' > ls
 if	[[ $($SHELL ls 2> /dev/null) != hi ]]
 then	err_exit "$SHELL name not executing version in current directory"
@@ -78,12 +96,21 @@ fi
 )
 [[ $? == 126 ]] || err_exit 'exit status of non-executable is not 126' 
 rm=$(whence rm)
-PATH=$(dirname "$rm"):
+d=$(dirname "$rm")
+PATH=$d:
 cp "$rm" kshrm$$
 if	[[ $(whence kshrm$$) != kshrm$$  ]]
 then	err_exit 'trailing : in pathname not working'
 fi
-"$rm" -f kshrm$$
+cp "$rm" rm
+PATH=:$d
+if	[[ $(whence rm) != rm ]]
+then	err_exit 'leading : in pathname not working'
+fi
+PATH=$d: whence rm > /dev/null
+if	[[ $(whence rm) != rm ]]
+then	err_exit 'pathname not restored after scoping'
+fi
 cd /
 if	whence ls > /dev/null
 then	PATH=

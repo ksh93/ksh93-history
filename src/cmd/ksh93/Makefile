@@ -3,7 +3,7 @@
  * This makefile should work with nmake 2.3 and higher 
  */
 
-if CC.HOSTTYPE == "win32.*" || "$(PACKAGE_OPTIMIZE:N=space)"
+if CC.HOSTTYPE == "*win*" && CC.SUFFIX.DYNAMIC == ".dll" || "$(PACKAGE_OPTIMIZE:N=space)"
 	CCFLAGS = $(CC.OPTIMIZE) $(CC.DLL)
 	LIBS_req = -lshell
 else
@@ -22,16 +22,18 @@ CATALOG = libshell
 .SOURCE : edit sh bltins data tests fun
 .SOURCE.h : include 
 
-clobber = !(ksh)	/* move ksh to ksh.old on clobber */
-
 SH = ksh		/* name of the shell program */
 VERSION = 1.1
+
+clobber = !($(SH))	/* move ksh to ksh.old on clobber */
 
 /* documentation files */
 DOCFILES = sh.memo builtins.mm README RELEASE PROMO.mm COMPATIBILITY \
 		DESIGN OBSOLETE RELEASE93 RELEASE88
 
 KSHELL == 1		/* this is ksh */
+
+SH_DICT ==
 
 /* set these variables to 1 to enable, null to disable */
 DEBUG ==			/* debugging purposes only */
@@ -101,7 +103,7 @@ $(INCLUDEDIR) :INSTALLPROTO: nval.h shell.h history.h
 
 suid_exec ::	CC.DLL= suid_exec.c +last
 
-shcomp	::	CC.DLL= shcomp.c -lshell
+shcomp	::	CC.DLL= SH_DICT='"libshell"' shcomp.c -lshell
 
 $(FUNDIR) :INSTALLDIR: mode=+x dirs popd pushd
 
@@ -121,7 +123,7 @@ test : .NULL
 
 else
 
-test : ksh shtests
+test : $(SH) shtests
 	KSH=$(*:O=1:P=A)
 	cd $(*:O=2:P=L!:D)
 	SHELL=$KSH $KSH $(*:O=2:B)

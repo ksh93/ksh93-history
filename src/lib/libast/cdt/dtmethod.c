@@ -96,9 +96,9 @@ Dtmethod_t*	meth;
 		while(list)
 		{	r = list->right;
 			if(rehash)
-			{	reg Void_t* key = OBJ(list,disc->link);
-				key = KEY(key,disc->key,disc->size);
-				list->hash = HASH(dt,key,disc,disc->size);
+			{	reg Void_t* key = _DTOBJ(list,disc->link);
+				key = _DTKEY(key,disc->key,disc->size);
+				list->hash = _DTHSH(dt,key,disc,disc->size);
 			}
 			(void)(*meth->searchf)(dt,(Void_t*)list,DT_RENEW);
 			list = r;

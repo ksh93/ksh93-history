@@ -462,7 +462,7 @@ std	strcoll note{ standard strcoll works }end execute{
 	}
 }end
 
-std	strtod note{ stuck with standard strtod }end noexecute{
+std	strtod note{ stuck with standard strtod }end nostatic{
 	_BEGIN_EXTERNS_
 	#if _STD_
 	double strtod(const char* s, char** e) { return 0.0; }
@@ -470,7 +470,7 @@ std	strtod note{ stuck with standard strtod }end noexecute{
 	double strtod(s, e) char* s; char** e; { return 0.0; }
 	#endif
 	_END_EXTERNS_
-	main() { return strtod("1",0) < 0; }
+	main() { printf(""); return strtod("1",0) != 0; }
 }end
 
 tst	- output{
@@ -484,7 +484,7 @@ tst	- output{
 		printf("\n");
 	#endif
 
-	#if _WIN32
+	#if _UWIN
 		printf("\n");
 		printf("/* override some uwin feature tests */\n");
 		printf("#undef	_lib_execlp\n");
@@ -499,6 +499,14 @@ tst	- output{
 		printf("#undef	_std_string\n");
 		printf("#define _std_string	1\n");
 		printf("#undef	_stream_peek\n");
+		printf("\n");
+	#endif
+
+	#if __CYGWIN__
+		printf("\n");
+		printf("/* override some cygwin feature tests */\n");
+		printf("#undef	_std_malloc\n");
+		printf("#define _std_malloc	1\n");
 		printf("\n");
 	#endif
 

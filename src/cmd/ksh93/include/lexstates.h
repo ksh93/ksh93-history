@@ -82,9 +82,14 @@
 #define ST_QNEST	10
 #define ST_NONE		11
 
-#define isaname(c)	(sh_lexstates[ST_NAME][c]==0)
+#ifdef SHOPT_MULTIBYTE
+#   define isaname(c)	(((c)>=0x200) ||  sh_lexstates[ST_NAME][c]==0)
+#   define isaletter(c)	(((c)>=0x200) || sh_lexstates[ST_DOL][c]==S_ALP && (c)!='.')
+#else
+#   define isaname(c)	(sh_lexstates[ST_NAME][c]==0)
+#   define isaletter(c)	(sh_lexstates[ST_DOL][c]==S_ALP && (c)!='.')
+#endif
 #define isadigit(c)	(sh_lexstates[ST_DOL][c]==S_DIG)
-#define isaletter(c)	(sh_lexstates[ST_DOL][c]==S_ALP && (c)!='.')
 #define isastchar(c)	((c)=='@' || (c)=='*')
 #define isexp(c)	(sh_lexstates[ST_MACRO][c]==S_PAT||(c)=='$'||(c)=='`')
 #define ismeta(c)	(sh_lexstates[ST_NAME][c]==S_BREAK)

@@ -450,7 +450,7 @@ static void hist_trim(History_t *hp, int n)
 		}
 		if(!(buff=(char*)sfreserve(hist_old->histfp,SF_UNBOUND,0)))
 			break;
-		*(endbuff=(cp=buff)+sfslen()) = 0;
+		*(endbuff=(cp=buff)+sfvalue(hist_old->histfp)) = 0;
 		/* copy to null byte */
 		incmd = 0;
 		while(*cp++);
@@ -489,7 +489,7 @@ static int hist_nearend(History_t *hp, Sfio_t *iop, register off_t size)
 	/* numbering commands occur after a null and begin with HIST_CMDNO */
         while(cp=buff=(unsigned char*)sfreserve(iop,SF_UNBOUND,1))
         {
-		n = sfslen();
+		n = sfvalue(iop);
                 *(endbuff=cp+n) = 0;
                 while(1)
                 {
@@ -554,7 +554,7 @@ void hist_eof(register History_t *hp)
 	sfseek(hp->histfp,count,SEEK_SET);
         while(cp=(char*)sfreserve(hp->histfp,SF_UNBOUND,0))
 	{
-		n = sfslen();
+		n = sfvalue(hp->histfp);
 		*(endbuff = cp+n) = 0;
 		first = cp += skip;
 		while(1)
@@ -665,7 +665,7 @@ void hist_flush(register History_t *hp)
 	{
 		if(buff=(char*)sfreserve(hp->histfp,0,1))
 		{
-			hp->histflush = sfslen()+1;
+			hp->histflush = sfvalue(hp->histfp)+1;
 			sfwrite(hp->histfp,buff,0);
 		}
 		else
@@ -888,64 +888,35 @@ Histloc_t hist_find(register History_t*hp,char *string,register int index1,int f
 
 int hist_match(register History_t *hp,off_t offset,char *string,int *coffset)
 {
-	register unsigned char *cp;
-	register int c;
-	register off_t count;
-	int line = 0;
-	int chrs=0;
+	register unsigned char *first, *cp;
+	register int m,n,c=1,line=0;
 #ifdef SHOPT_MULTIBYTE
-	int nbytes = 0;
+	mbinit();
 #endif /* SHOPT_MULTIBYTE */
-	do
+	sfseek(hp->histfp,offset,SEEK_SET);
+	if(!(cp = first = (unsigned char*)sfgetr(hp->histfp,0,0)))
+		return(-1);
+	m = sfvalue(hp->histfp);
+	n = strlen(string);
+	while(m > n)
 	{
-		if(offset>=0)
+		if(*cp==*string && memcmp(cp,string,n)==0)
 		{
-			sfseek(hp->histfp,offset,SEEK_SET);
-#ifdef SHOPT_MULTIBYTE
-			mblen(NIL(char*),MB_CUR_MAX);
-			nbytes = 0;
-#endif /* SHOPT_MULTIBYTE */
-			count = offset;
-		}
-		offset = -1;
-		for(cp=(unsigned char*)string;*cp;cp++)
-		{
-			if((c=sfgetc(hp->histfp)) == EOF || c ==0)
-				break;
-			count++;
-#ifdef SHOPT_MULTIBYTE
-			/* always position at character boundary */
-			if(--nbytes > 0)
-			{
-				if(cp==(unsigned char*)string)
-				{
-					cp--;
-					continue;
-				}
-			}
-			else if((nbytes = mblen((char*)cp,MB_CUR_MAX)) <=0)
-				nbytes=1;
-#endif /* SHOPT_MULTIBYTE */
-			if(c == '\n')
-				line++;
-			/* save earliest possible matching character */
-			if(coffset && c == *(unsigned char*)string && offset<0)
-			{
-#ifdef SHOPT_MULTIBYTE
-				offset = count + (nbytes - 1);
-#else
-				offset = count;
-#endif /* SHOPT_MULTIBYTE */
-				*coffset = chrs;
-			}
-			if(*cp != c )
-				break;
-		}
-		if(*cp==0) /* match found */
+			if(coffset)
+				*coffset = (cp-first);
 			return(line);
-		chrs++;
+		}
+		if(!coffset)
+			break;
+		if(*cp=='\n')
+			line++;
+#ifdef SHOPT_MULTIBYTE
+		if((c=mbsize(cp)) < 0)
+			c = 1;
+#endif /* SHOPT_MULTIBYTE */
+		cp += c;
+		m -= c;
 	}
-	while(coffset && c && c != EOF);
 	return(-1);
 }
 

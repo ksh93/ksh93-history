@@ -65,6 +65,8 @@ USAGE_LICENSE
 #include	"path.h"
 #include	"io.h"
 
+#define sh	(*sh_getinterp())
+
 #define CNTL(x)	((x)&037)
 #define VERSION	2
 static const char header[6] = { CNTL('k'),CNTL('s'),CNTL('h'),0,VERSION,0 };
@@ -103,16 +105,7 @@ main(int argc, char *argv[])
 	if(cp= *argv)
 	{
 		argv++;
-#ifdef PATH_BFPATH
-		if((n=path_open(cp,path_get(cp))) < 0)
-			n = path_open(cp,(Pathcomp_t*)0);
-#else
-		if((n=path_open(cp,path_get(cp))) < 0)
-			n = path_open(cp,"");
-#endif
-		if(n < 0)
-			errormsg(SH_DICT,ERROR_system(1),"%s: cannot open",cp);
-		in = sh_iostream(n);
+		in = sh_pathopen(cp);
 	}
 	else
 		in = sfstdin;

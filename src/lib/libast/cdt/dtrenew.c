@@ -45,7 +45,7 @@ reg Void_t*	obj;
 
 	UNFLATTEN(dt);
 
-	if(!(e = dt->data->here) || OBJ(e,disc->link) != obj)
+	if(!(e = dt->data->here) || _DTOBJ(e,disc->link) != obj)
 		return NIL(Void_t*);
 
 	if(dt->data->type&(DT_STACK|DT_QUEUE|DT_LIST))
@@ -73,8 +73,8 @@ reg Void_t*	obj;
 				;
 			t->right = e->right;
 		}
-		key = KEY(obj,disc->key,disc->size);
-		e->hash = HASH(dt,key,disc,disc->size);
+		key = _DTKEY(obj,disc->key,disc->size);
+		e->hash = _DTHSH(dt,key,disc,disc->size);
 		dt->data->here = NIL(Dtlink_t*);
 	}
 

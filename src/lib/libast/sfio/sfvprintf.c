@@ -25,6 +25,38 @@
 *******************************************************************/
 #include	"sfhdr.h"
 
+#if _PACKAGE_ast || _hdr_wchar
+
+#include	<wchar.h>
+
+#if !_lib_wcrtomb
+
+#define _lib_wcrtomb	1
+
+#if !_PACKAGE_ast
+
+typedef int mbstate_t;
+
+size_t
+wcrtomb(char* s, wchar_t c, mbstate_t* q)
+{
+#if _lib_wctomb
+	memset(q, 0, sizeof(*q));
+	return wctomb(s, c);
+#else
+	if (s)
+		*s = c;
+	*q = 0;
+	return 1;
+#endif /* _lib_wctomb */
+}
+
+#endif /* !_PACKAGE_ast */
+
+#endif /* !_lib_wcrtomb */
+
+#endif /* _PACKAGE_ast || _hdr_wchar */
+
 /*	The engine for formatting data
 **
 **	Written by Kiem-Phong Vo.
@@ -50,7 +82,7 @@ va_list	args;		/* arg list if !argf	*/
 	reg int		v, n_s, base, fmt, flags;
 	Sflong_t	lv;
 	reg char	*sp, *ssp, *endsp, *ep, *endep;
-	int		dot, width, precis, n, n_output;
+	int		ofmt, dot, width, precis, n, n_output;
 	int		sign, decpt;
 	ssize_t		size;
 	double		dval;
@@ -75,6 +107,11 @@ va_list	args;		/* arg list if !argf	*/
 	int		decimal = 0, thousand = 0;
 #if _has_multibyte
 	int		mbcurmax = 1;
+#endif
+#if _lib_wcrtomb
+	wchar_t*	wp;
+	mbstate_t	ws;
+	int		m;
 #endif
 
 	/* fast io system */
@@ -260,15 +297,18 @@ loop_fmt :
 			}
 			else if(dot == 2)
 			{	base = 0; /* for %s,%c */
-				if(*form == 'c' || *form == 's')
+				v = form[0] == 'l' ? form[1] : form[0];
+				if(v == 'c' || v == 'C' || v == 's' || v == 'S')
 					goto loop_flags;
-				if(*form && !isalnum(*form) &&
-				   (form[1] == 'c' || form[1] == 's') )
-				{	if(*form == '*')
-						goto do_star;
-					else
-					{	base = *form++;
-						goto loop_flags;
+				if(*form && !isalnum(*form))
+				{	v = form[1] == 'l' ? form[2] : form[1];
+					if(v == 'c' || v == 'C' || v == 's' || v == 'S')
+					{	if(*form == '*')
+							goto do_star;
+						else
+						{	base = *form++;
+							goto loop_flags;
+						}
 					}
 				}
 			}
@@ -297,6 +337,8 @@ loop_fmt :
 			{	FMTSET(ft, form,args, '.',dot, 0, 0,0,0, NIL(char*), 0);
 				if((*ft->extf)(f, (Void_t*)(&argv), ft) < 0)
 					goto pop_fmt;
+				fmt = ft->fmt;
+				flags = (flags&~SFFMT_TYPES) | (ft->flags&SFFMT_TYPES);
 				if(ft->flags&SFFMT_VALUE)
 					v = argv.i;
 				else	v = (dot <= 2) ? va_arg(args,int) : 0;
@@ -397,13 +439,30 @@ loop_fmt :
 			size = -1;
 			flags = (flags&~SFFMT_TYPES) | SFFMT_TFLAG;
 			goto loop_flags;
+		case 'C' :
+			flags = (flags&~SFFMT_TYPES) | SFFMT_LONG;
+			ofmt = fmt;
+			fmt = 'c';
+			break;
+		case 'S' :
+			flags = (flags&~SFFMT_TYPES) | SFFMT_LONG;
+			ofmt = fmt;
+			fmt = 's';
+			break;
+		default:
+			ofmt = fmt;
+			break;
 		}
 
 		/* set the correct size */
 		if(flags & (SFFMT_TYPES & ~SFFMT_IFLAG) )
 		{	if((_Sftype[fmt]&(SFFMT_INT|SFFMT_UINT)) || fmt == 'n')
 			{	size =	(flags&SFFMT_LLONG) ? sizeof(Sflong_t) :
+#if _lib_wcrtomb
+					(flags&SFFMT_LONG) ? ((fmt == 'c' || fmt == 'C') ? sizeof(wchar_t) : sizeof(long)) :
+#else
 					(flags&SFFMT_LONG) ? sizeof(long) :
+#endif
 					(flags&SFFMT_SHORT) ? sizeof(short) :
 					(flags&SFFMT_SSHORT) ? sizeof(char) :
 					(flags&SFFMT_JFLAG) ? sizeof(Sflong_t) :
@@ -426,22 +485,47 @@ loop_fmt :
 			size = fp[argp].ft.size;
 		}
 		else if(ft && ft->extf )	/* extended processing */
-		{	FMTSET(ft, form,args, fmt, size,flags, width,precis,base,
+		{	FMTSET(ft, form,args, ofmt, size,flags, width,precis,base,
 				t_str,n_str);
 			SFEND(f); SFOPEN(f,0);
 			v = (*ft->extf)(f, (Void_t*)(&argv), ft);
 			SFLOCK(f,0); SFBUF(f);
 
-			if(v < 0)
+			if(v < 0)	/* no further processing */
 				goto pop_fmt;
-			else if(v == 0)	/* extf did not output */
-			{	FMTGET(ft, form,args, fmt, size,flags, width,precis,base);
-				if(!(ft->flags&SFFMT_VALUE) )
-					goto get_val;
-			}
-			else if(v > 0) /* extf output v bytes */
+			else if(v > 0)	/* extf output v bytes */
 			{	n_output += v;
 				continue;
+			}
+			else		/* extf did not output */
+			{	FMTGET(ft, form,args, fmt, size,flags, width,precis,base);
+				switch (fmt)
+				{
+				case 'C' :
+#if __OBSOLETE__ && __OBSOLETE__ < 20020101
+					flags &= ~SFFMT_LONG;
+#else
+					flags = (flags&~SFFMT_TYPES) | SFFMT_LONG;
+#endif
+					fmt = 'c';
+					break;
+				case 'S' :
+#if __OBSOLETE__ && __OBSOLETE__ < 20020101
+					flags &= ~SFFMT_LONG;
+#else
+					flags = (flags&~SFFMT_TYPES) | SFFMT_LONG;
+#endif
+					fmt = 's';
+					break;
+#if __OBSOLETE__ && __OBSOLETE__ < 20020101
+				case 'c':
+				case 's':
+					flags &= ~SFFMT_LONG;
+					break;
+#endif
+				}
+				if(!(ft->flags&SFFMT_VALUE))
+					goto get_val;
 			}
 		}
 		else
@@ -529,6 +613,9 @@ loop_fmt :
 			}
 			continue;
 
+		case 'S':
+			flags &= ~SFFMT_TYPES;
+			flags |= SFFMT_LONG;
 		case 's':
 			if(base >= 0)	/* list of strings */
 			{	if(!(ls = argv.sp) || !ls[0])
@@ -544,6 +631,23 @@ loop_fmt :
 				{	if(precis >= 0 && v > precis)
 						v = precis;
 				}
+#if _lib_wcrtomb
+				else if(flags & SFFMT_LONG)
+				{	wp = (wchar_t*)sp;
+					memset(&ws, 0, sizeof(ws));
+					if(precis < 0)
+						v = wcslen(wp);
+					else
+					{	v = 0;
+						while((m = wcrtomb((char*)0, *wp++, &ws)) > 0)
+							if((v += m) >= precis)
+							{	if(v > precis)
+									v -= m;
+								break;
+							}
+					}
+				}
+#endif
 				else if(precis < 0)
 					v = strlen(sp);
 				else /* precis >= 0 means min(strlen,precis) */
@@ -557,7 +661,17 @@ loop_fmt :
 					else if(!(flags&SFFMT_LEFT) )
 						{ SFnputc(f,' ',n); }
 				}
-				SFwrite(f,sp,v);
+#if _lib_wcrtomb
+				if(flags & SFFMT_LONG)
+				{	wp = (wchar_t*)sp;
+					memset(&ws, 0, sizeof(ws));
+					while(v > 0 && (m = wcrtomb(buf, *wp++, &ws)) > 0 && (v -= m) >= 0)
+						for(n_s = 0; n_s < m; n_s++)
+							{ SFputc(f, buf[n_s]); }
+				}
+				else
+#endif
+					{ SFwrite(f,sp,v); }
 				if(n > 0)
 					{ SFnputc(f,' ',n); }
 				if(!(sp = *++ls))
@@ -567,27 +681,71 @@ loop_fmt :
 			}
 			continue;
 
+		case 'C':
+			flags &= ~SFFMT_TYPES;
+			flags |= SFFMT_LONG;
 		case 'c':	/* an array of characters */
 			if(base >= 0)
 			{	if(!(sp = argv.s) || !sp[0])
 					continue;
+#if _lib_mbrtowc
+				if(flags & SFFMT_LONG)
+				{	wp = (wchar_t*)sp;
+					sp = tmp;
+					memset(&ws, 0, sizeof(ws));
+				}
+#endif
 			}
+#if _lib_mbrtowc
+			else if(flags & SFFMT_LONG)
+			{	wp = (wchar_t*)buf;
+				sp = tmp;
+				memset(&ws, 0, sizeof(ws));
+#if !_ast_intmax_long
+				if(sizeof(wchar_t) == sizeof(Sflong_t))
+					*wp = argv.ll;
+				else
+#endif
+				if(sizeof(wchar_t) == sizeof(long))
+					*wp = argv.l;
+				else	*wp = argv.i;
+				wp[1] = 0;
+			}
+#endif
 			else
-			{	fmt = (int)argv.c;
-				sp = buf; buf[0] = fmt; buf[1] = 0;
+			{	sp = buf; buf[0] = (int)argv.c; buf[1] = 0;
 			}
 			if(precis <= 0)
 				precis = 1;
-			for(fmt = *sp;; )
+			for(;;)
 			{	if((n = width-precis) > 0 && !(flags&SFFMT_LEFT))
 					{ SFnputc(f,' ',n) };
 				v = precis;
-				SFnputc(f,fmt,v);
+#if _lib_mbrtowc
+				if(flags & SFFMT_LONG)
+				{
+					if((m = wcrtomb(sp, *wp, &ws)) > 0)
+						while(v-- > 0)
+							for(n_s = 0; n_s < m; n_s++)
+								{ SFputc(f, sp[n_s]); }
+				}
+				else
+#endif
+				{	fmt = *sp;
+					SFnputc(f,fmt,v);
+				}
 				if(n > 0)
 					{ SFnputc(f,' ',n) };
-				if(!(fmt = *++sp))
+#if _lib_mbrtowc
+				if(flags & SFFMT_LONG)
+				{	if(!*++wp)
+						break;
+				}
+				else
+#endif
+				if(!*++sp)
 					break;
-				else if(base > 0)
+				if(base > 0)
 					{ SFputc(f,base); }
 			}
 			continue;

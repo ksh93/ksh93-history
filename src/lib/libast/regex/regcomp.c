@@ -1034,7 +1034,7 @@ bra(Cenv_t* env)
 	unsigned char*	start;
 	unsigned char*	begin;
 	regclass_t	f;
-	char		buf[4 * (COLL_KEY_MAX + 1)];
+	unsigned char	buf[4 * (COLL_KEY_MAX + 1)];
 	char		mbc[COLL_KEY_MAX + 1];
 
 	if (!(e = node(env, REX_CLASS, 1, 1, sizeof(Set_t))))
@@ -1197,7 +1197,7 @@ bra(Cenv_t* env)
 					setadd(e->re.charclass, last);
 					elements++;
 				}
-				if ((c = regcollate((char*)env->cursor, (char**)&env->cursor, buf, sizeof(buf))) < 0)
+				if ((c = regcollate((char*)env->cursor, (char**)&env->cursor, (char*)buf, sizeof(buf))) < 0)
 					goto ecollate;
 				if (c > 1)
 					collate++;
@@ -1209,7 +1209,7 @@ bra(Cenv_t* env)
 				elements++;
 				continue;
 			case '.':
-				if ((c = regcollate((char*)env->cursor, (char**)&env->cursor, buf, sizeof(buf))) < 0)
+				if ((c = regcollate((char*)env->cursor, (char**)&env->cursor, (char*)buf, sizeof(buf))) < 0)
 					goto ecollate;
 				if (c > 1)
 					collate++;
@@ -1431,7 +1431,7 @@ bra(Cenv_t* env)
 						if (inrange == 1)
 							ce = col(ce, ic, rp, rw, rc, NiL, 0, 0);
 						rp = env->cursor + 1;
-						if ((rw = regcollate((char*)env->cursor, (char**)&env->cursor, buf, sizeof(buf) - 1)) < 0)
+						if ((rw = regcollate((char*)env->cursor, (char**)&env->cursor, (char*)buf, sizeof(buf) - 1)) < 0)
 							goto ecollate;
 						c = 0;
 						if (ic)
@@ -1496,7 +1496,7 @@ bra(Cenv_t* env)
 						continue;
 					case '.':
 						pp = env->cursor + 1;
-						if ((w = regcollate((char*)env->cursor, (char**)&env->cursor, buf, sizeof(buf) - 1)) < 0)
+						if ((w = regcollate((char*)env->cursor, (char**)&env->cursor, (char*)buf, sizeof(buf) - 1)) < 0)
 							goto ecollate;
 						if (w > 1)
 						{
@@ -1508,7 +1508,7 @@ bra(Cenv_t* env)
 										buf[i] = tolower(buf[i]);
 							cw = mbxfrm(ce->beg, buf, COLL_KEY_MAX);
 							buf[1] = 0;
-							if (mbxfrm(ce->beg, buf, COLL_KEY_MAX) != cw)
+							if (mbxfrm(ce->beg, buf, COLL_KEY_MAX) < cw)
 								goto ecollate;
 						}
 						c = buf[0];
@@ -2861,7 +2861,7 @@ regcomp(regex_t* p, const char* pattern, regflags_t flags)
 	env.type = (env.flags & REG_AUGMENTED) ? ARE : (env.flags & REG_EXTENDED) ? ERE : BRE;
 	if (env.flags & REG_SHELL)
 	{
-#if __OBSOLETE__ < 20030101L
+#if __OBSOLETE__ && __OBSOLETE__ < 20030101
 		/*
 		 * repeat 1000x: sharing bits is never worth it
 		 */

@@ -24,9 +24,10 @@
 function err_exit
 {
 	print -u2 -n "\t"
-	print -u2 -r $Command: "$@"
+	print -u2 -r $Command[$1]: "${@:2}"
 	let Errors+=1
 }
+alias err_exit='err_exit $LINENO'
 
 # test shell builtin commands
 Command=$0
@@ -274,4 +275,7 @@ wait $pid1
 (( $? == 1 )) || err_exit "wait not saving exit value"
 wait $pid2
 (( $? == 127 )) || err_exit "subshell job known to parent"
+if	[[ $(foo=bar;foo=$foo exec -c $SHELL -c 'print $foo') != bar ]]
+then	err_exit '"name=value exec -c ..." not working'
+fi
 exit $((Errors))

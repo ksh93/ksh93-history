@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 4.2 2001-07-17
+info mam static 00000 1994-07-17 make (AT&T Research) 4.2 2001-10-18
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ar
@@ -46,15 +46,26 @@ exec - 	then	ENV= $SHELL -n iffe.sh
 exec - 	fi
 exec - 	;;
 exec - esac
-exec - case 'USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?Phong Vo <kpv@research.att.com>][-copyright?Copyright (c) 1994-2001 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"' in
-exec - "")	cp iffe.sh iffe
+exec - case '${mam_cc_SHELLMAGIC}' in
+exec - "")	case 'USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?Phong Vo <kpv@research.att.com>][-copyright?Copyright (c) 1994-2001 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"' in
+exec - 	"")	cp iffe.sh iffe
+exec - 		;;
+exec - 	*)	{
+exec - 		i=`(read x; echo $x) < iffe.sh`
+exec - 		case $i in
+exec - 		'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo $i ;;
+exec - 		esac
+exec - 		echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?Phong Vo <kpv@research.att.com>][-copyright?Copyright (c) 1994-2001 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"
+exec - 		cat iffe.sh
+exec - 		} > iffe
+exec - 		;;
+exec - 	esac
 exec - 	;;
 exec - *)	{
-exec - 	i=`(read x; echo $x) < iffe.sh`
-exec - 	case $i in
-exec - 	'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo $i ;;
+exec - 	echo '${mam_cc_SHELLMAGIC}'
+exec - 	case 'USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?Phong Vo <kpv@research.att.com>][-copyright?Copyright (c) 1994-2001 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"' in
+exec - 	?*)	echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?Phong Vo <kpv@research.att.com>][-copyright?Copyright (c) 1994-2001 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\" ;;
 exec - 	esac
-exec - 	echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?Phong Vo <kpv@research.att.com>][-copyright?Copyright (c) 1994-2001 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"
 exec - 	cat iffe.sh
 exec - 	} > iffe
 exec - 	;;
@@ -73,15 +84,26 @@ exec - 	then	ENV= $SHELL -n package.sh
 exec - 	fi
 exec - 	;;
 exec - esac
-exec - case 'USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1999-2001 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"' in
-exec - "")	cp package.sh package
+exec - case '${mam_cc_SHELLMAGIC}' in
+exec - "")	case 'USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1999-2001 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"' in
+exec - 	"")	cp package.sh package
+exec - 		;;
+exec - 	*)	{
+exec - 		i=`(read x; echo $x) < package.sh`
+exec - 		case $i in
+exec - 		'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo $i ;;
+exec - 		esac
+exec - 		echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1999-2001 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"
+exec - 		cat package.sh
+exec - 		} > package
+exec - 		;;
+exec - 	esac
 exec - 	;;
 exec - *)	{
-exec - 	i=`(read x; echo $x) < package.sh`
-exec - 	case $i in
-exec - 	'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo $i ;;
+exec - 	echo '${mam_cc_SHELLMAGIC}'
+exec - 	case 'USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1999-2001 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"' in
+exec - 	?*)	echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1999-2001 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\" ;;
 exec - 	esac
-exec - 	echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1999-2001 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"
 exec - 	cat package.sh
 exec - 	} > package
 exec - 	;;
@@ -101,15 +123,26 @@ exec - 	then	ENV= $SHELL -n regress.sh
 exec - 	fi
 exec - 	;;
 exec - esac
-exec - case 'USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1995-2001 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"' in
-exec - "")	cp regress.sh regress
+exec - case '${mam_cc_SHELLMAGIC}' in
+exec - "")	case 'USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1995-2001 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"' in
+exec - 	"")	cp regress.sh regress
+exec - 		;;
+exec - 	*)	{
+exec - 		i=`(read x; echo $x) < regress.sh`
+exec - 		case $i in
+exec - 		'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo $i ;;
+exec - 		esac
+exec - 		echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1995-2001 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"
+exec - 		cat regress.sh
+exec - 		} > regress
+exec - 		;;
+exec - 	esac
 exec - 	;;
 exec - *)	{
-exec - 	i=`(read x; echo $x) < regress.sh`
-exec - 	case $i in
-exec - 	'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo $i ;;
+exec - 	echo '${mam_cc_SHELLMAGIC}'
+exec - 	case 'USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1995-2001 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"' in
+exec - 	?*)	echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1995-2001 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\" ;;
 exec - 	esac
-exec - 	echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1995-2001 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"
 exec - 	cat regress.sh
 exec - 	} > regress
 exec - 	;;
@@ -128,15 +161,26 @@ exec - 	then	ENV= $SHELL -n crossexec.sh
 exec - 	fi
 exec - 	;;
 exec - esac
-exec - case 'USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1999-2001 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"' in
-exec - "")	cp crossexec.sh crossexec
+exec - case '${mam_cc_SHELLMAGIC}' in
+exec - "")	case 'USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1999-2001 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"' in
+exec - 	"")	cp crossexec.sh crossexec
+exec - 		;;
+exec - 	*)	{
+exec - 		i=`(read x; echo $x) < crossexec.sh`
+exec - 		case $i in
+exec - 		'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo $i ;;
+exec - 		esac
+exec - 		echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1999-2001 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"
+exec - 		cat crossexec.sh
+exec - 		} > crossexec
+exec - 		;;
+exec - 	esac
 exec - 	;;
 exec - *)	{
-exec - 	i=`(read x; echo $x) < crossexec.sh`
-exec - 	case $i in
-exec - 	'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo $i ;;
+exec - 	echo '${mam_cc_SHELLMAGIC}'
+exec - 	case 'USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1999-2001 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"' in
+exec - 	?*)	echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1999-2001 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\" ;;
 exec - 	esac
-exec - 	echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1999-2001 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"
 exec - 	cat crossexec.sh
 exec - 	} > crossexec
 exec - 	;;
@@ -155,15 +199,26 @@ exec - 	then	ENV= $SHELL -n filter.sh
 exec - 	fi
 exec - 	;;
 exec - esac
-exec - case 'USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1999-2001 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"' in
-exec - "")	cp filter.sh filter
+exec - case '${mam_cc_SHELLMAGIC}' in
+exec - "")	case 'USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1999-2001 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"' in
+exec - 	"")	cp filter.sh filter
+exec - 		;;
+exec - 	*)	{
+exec - 		i=`(read x; echo $x) < filter.sh`
+exec - 		case $i in
+exec - 		'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo $i ;;
+exec - 		esac
+exec - 		echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1999-2001 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"
+exec - 		cat filter.sh
+exec - 		} > filter
+exec - 		;;
+exec - 	esac
 exec - 	;;
 exec - *)	{
-exec - 	i=`(read x; echo $x) < filter.sh`
-exec - 	case $i in
-exec - 	'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo $i ;;
+exec - 	echo '${mam_cc_SHELLMAGIC}'
+exec - 	case 'USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1999-2001 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"' in
+exec - 	?*)	echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1999-2001 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\" ;;
 exec - 	esac
-exec - 	echo USAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1999-2001 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\"
 exec - 	cat filter.sh
 exec - 	} > filter
 exec - 	;;
@@ -182,15 +237,26 @@ exec - 	then	ENV= $SHELL -n ignore.sh
 exec - 	fi
 exec - 	;;
 exec - esac
-exec - case '' in
-exec - "")	cp ignore.sh ignore
+exec - case '${mam_cc_SHELLMAGIC}' in
+exec - "")	case '' in
+exec - 	"")	cp ignore.sh ignore
+exec - 		;;
+exec - 	*)	{
+exec - 		i=`(read x; echo $x) < ignore.sh`
+exec - 		case $i in
+exec - 		'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo $i ;;
+exec - 		esac
+exec - 		echo 
+exec - 		cat ignore.sh
+exec - 		} > ignore
+exec - 		;;
+exec - 	esac
 exec - 	;;
 exec - *)	{
-exec - 	i=`(read x; echo $x) < ignore.sh`
-exec - 	case $i in
-exec - 	'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo $i ;;
+exec - 	echo '${mam_cc_SHELLMAGIC}'
+exec - 	case '' in
+exec - 	?*)	echo  ;;
 exec - 	esac
-exec - 	echo 
 exec - 	cat ignore.sh
 exec - 	} > ignore
 exec - 	;;
@@ -209,15 +275,26 @@ exec - 	then	ENV= $SHELL -n mamprobe.sh
 exec - 	fi
 exec - 	;;
 exec - esac
-exec - case '' in
-exec - "")	cp mamprobe.sh mamprobe
+exec - case '${mam_cc_SHELLMAGIC}' in
+exec - "")	case '' in
+exec - 	"")	cp mamprobe.sh mamprobe
+exec - 		;;
+exec - 	*)	{
+exec - 		i=`(read x; echo $x) < mamprobe.sh`
+exec - 		case $i in
+exec - 		'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo $i ;;
+exec - 		esac
+exec - 		echo 
+exec - 		cat mamprobe.sh
+exec - 		} > mamprobe
+exec - 		;;
+exec - 	esac
 exec - 	;;
 exec - *)	{
-exec - 	i=`(read x; echo $x) < mamprobe.sh`
-exec - 	case $i in
-exec - 	'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo $i ;;
+exec - 	echo '${mam_cc_SHELLMAGIC}'
+exec - 	case '' in
+exec - 	?*)	echo  ;;
 exec - 	esac
-exec - 	echo 
 exec - 	cat mamprobe.sh
 exec - 	} > mamprobe
 exec - 	;;
@@ -236,15 +313,26 @@ exec - 	then	ENV= $SHELL -n silent.sh
 exec - 	fi
 exec - 	;;
 exec - esac
-exec - case '' in
-exec - "")	cp silent.sh silent
+exec - case '${mam_cc_SHELLMAGIC}' in
+exec - "")	case '' in
+exec - 	"")	cp silent.sh silent
+exec - 		;;
+exec - 	*)	{
+exec - 		i=`(read x; echo $x) < silent.sh`
+exec - 		case $i in
+exec - 		'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo $i ;;
+exec - 		esac
+exec - 		echo 
+exec - 		cat silent.sh
+exec - 		} > silent
+exec - 		;;
+exec - 	esac
 exec - 	;;
 exec - *)	{
-exec - 	i=`(read x; echo $x) < silent.sh`
-exec - 	case $i in
-exec - 	'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo $i ;;
+exec - 	echo '${mam_cc_SHELLMAGIC}'
+exec - 	case '' in
+exec - 	?*)	echo  ;;
 exec - 	esac
-exec - 	echo 
 exec - 	cat silent.sh
 exec - 	} > silent
 exec - 	;;
@@ -442,9 +530,6 @@ exec - if	test ! -f ${INSTALLROOT}/bin/release
 exec - then	cp release ${INSTALLROOT}/bin/release
 exec - fi
 done ../../../bin/release generated
-make ../../../bin/.fpath
-exec - echo ../fun > ${INSTALLROOT}/bin/.fpath
-done ../../../bin/.fpath generated
 make ../../../bin/cc
 prev package
 make hello.c
@@ -492,18 +577,6 @@ exec - 		fi
 exec - 	esac
 exec - done
 exec - silent rm -f hello.exe hello.o
-exec - case "${_hosttype_=`package`}" in
-exec - sgi.mips3)
-exec - 	if	silent test ! -d ${INSTALLROOT}/lib32
-exec - 	then	ln -s lib ${INSTALLROOT}/lib32
-exec - 	fi
-exec - 	;;
-exec - sgi.mips4)
-exec - 	if	silent test ! -d ${INSTALLROOT}/lib64
-exec - 	then	ln -s lib ${INSTALLROOT}/lib64
-exec - 	fi
-exec - 	;;
-exec - esac
 done ../../../bin/cc generated
 prev package
 prev ../../../bin/cc
@@ -545,6 +618,52 @@ exec - 			fi
 exec - 		esac
 exec - 	done
 exec - fi
+make ../../../bin/.paths
+exec - {
+exec - echo FPATH=../fun
+exec - set x x lib64 LD_LIBRARY64_PATH lib32 LD_LIBRARYN32_PATH lib LD_LIBRARY_PATH
+exec - case $#:static,port:/dev/stdout:2533686 in
+exec - 2:*|*:1)if	test -x /lib/dld.sl
+exec - 	then	echo SHLIB_PATH=../lib
+exec - 	elif	test -x /usr/lib/dyld
+exec - 	then	echo DYLD_LIBRARY_PATH=../lib
+exec - 	else	case "${_hosttype_=`package`}" in
+exec - 		ibm.*|mvs.*)
+exec - 			echo LIBPATH=../lib
+exec - 			;;
+exec - 		sgi.mips3)
+exec - 			echo LD_LIBRARYN32_PATH=../lib
+exec - 			;;
+exec - 		sgi.mips4)
+exec - 			echo LD_LIBRARYN64_PATH=../lib
+exec - 			;;
+exec - 		*)	echo LD_LIBRARY_PATH=../lib
+exec - 			;;
+exec - 		esac
+exec - 	fi
+exec - 	;;
+exec - *)	while	:
+exec - 	do	shift 2
+exec - 		case $1 in
+exec - 		*32)	case "${_hosttype_=`package`}" in
+exec - 			*3|*32)	echo $2=../lib; break ;;
+exec - 			esac
+exec - 			;;
+exec - 		*64)	case "${_hosttype_=`package`}" in
+exec - 			*4|*64)	echo $2=../lib; break ;;
+exec - 			esac
+exec - 			;;
+exec - 		*)	echo $2=../$1; break
+exec - 			;;
+exec - 		esac
+exec - 		case $# in
+exec - 		0|1)	break ;;
+exec - 		esac
+exec - 	done
+exec - 	;;
+exec - esac
+exec - } > ${INSTALLROOT}/bin/.paths
+done ../../../bin/.paths generated
 make ../../../lib/probe/C
 exec - set -
 exec - if	test ! -d ${INSTALLROOT}/lib/probe/C

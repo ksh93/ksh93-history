@@ -33,7 +33,7 @@
 
 #include <ctype.h>
 
-#if _UWIN
+#if _WIN32
 
 #include <windows.h>
 
@@ -83,7 +83,7 @@ static Lc_t		default_lc =
 	&territory[0],
 	&charset[0],
 	0, 
-	LC_default,
+	LC_default|LC_checked|LC_local,
 	0,
 	{
 		{ &default_lc, 0, 0 },
@@ -92,6 +92,13 @@ static Lc_t		default_lc =
 		{ &default_lc, 0, 0 },
 		{ &default_lc, 0, 0 },
 		{ &default_lc, 0, (void*)&default_numeric },
+		{ &default_lc, 0, 0 },
+		{ &default_lc, 0, 0 },
+		{ &default_lc, 0, 0 },
+		{ &default_lc, 0, 0 },
+		{ &default_lc, 0, 0 },
+		{ &default_lc, 0, 0 },
+		{ &default_lc, 0, 0 },
 		{ &default_lc, 0, 0 }
 	}
 };
@@ -106,7 +113,7 @@ static Lc_t		debug_lc =
 	&territory[1],
 	&charset[0],
 	0, 
-	LC_debug,
+	LC_debug|LC_checked|LC_local,
 	0,
 	{
 		{ &debug_lc, 0, 0 },
@@ -115,6 +122,13 @@ static Lc_t		debug_lc =
 		{ &debug_lc, 0, 0 },
 		{ &debug_lc, 0, 0 },
 		{ &debug_lc, 0, (void*)&debug_numeric },
+		{ &debug_lc, 0, 0 },
+		{ &debug_lc, 0, 0 },
+		{ &debug_lc, 0, 0 },
+		{ &debug_lc, 0, 0 },
+		{ &debug_lc, 0, 0 },
+		{ &debug_lc, 0, 0 },
+		{ &debug_lc, 0, 0 },
 		{ &debug_lc, 0, 0 }
 	},
 	&default_lc
@@ -124,6 +138,13 @@ static Lc_t*		lcs = &debug_lc;
 
 Lc_t*			locales[] =
 {
+	&default_lc,
+	&default_lc,
+	&default_lc,
+	&default_lc,
+	&default_lc,
+	&default_lc,
+	&default_lc,
 	&default_lc,
 	&default_lc,
 	&default_lc,
@@ -143,12 +164,19 @@ lcindex(int category, int min)
 	switch (category)
 	{
 	case LC_ALL:		return min ? -1 : AST_LC_ALL;
+	case LC_ADDRESS:	return AST_LC_ADDRESS;
 	case LC_COLLATE:	return AST_LC_COLLATE;
 	case LC_CTYPE:		return AST_LC_CTYPE;
+	case LC_IDENTIFICATION:	return AST_LC_IDENTIFICATION;
+	case LC_MEASUREMENT:	return AST_LC_MEASUREMENT;
 	case LC_MESSAGES:	return AST_LC_MESSAGES;
 	case LC_MONETARY:	return AST_LC_MONETARY;
+	case LC_NAME:		return AST_LC_NAME;
 	case LC_NUMERIC:	return AST_LC_NUMERIC;
+	case LC_PAPER:		return AST_LC_PAPER;
+	case LC_TELEPHONE:	return AST_LC_TELEPHONE;
 	case LC_TIME:		return AST_LC_TIME;
+	case LC_XLITERATE:	return AST_LC_XLITERATE;
 	}
 	return -1;
 }
@@ -363,7 +391,7 @@ lccanon(Lc_t* lc, unsigned long flags, char* buf, size_t siz)
 {
 	if ((flags & LC_local) && (!lc->language || !(lc->language->flags & (LC_debug|LC_default))))
 	{
-#if _UWIN
+#if _WIN32
 		char	lang[64];
 		char	code[64];
 		char	ctry[64];
@@ -721,7 +749,7 @@ lcmake(const char* name)
 	lc->attributes = al;
 	for (i = 0; i < elementsof(lc->info); i++)
 		lc->info[i].lc = lc;
-#if _UWIN
+#if _WIN32
 	n = SUBLANG_DEFAULT;
 	if (tp)
 		for (i = 0; i < elementsof(tp->languages); i++)
@@ -792,7 +820,7 @@ lcscan(Lc_t* lc)
 		}
 	}
 	ls->lc.attributes = ls->list.attribute ? &ls->list : (Lc_attribute_list_t*)0;
-#if _UWIN
+#if _WIN32
 	if (!ls->lc.language || !ls->lc.language->index)
 		ls->lc.index = 0;
 	else

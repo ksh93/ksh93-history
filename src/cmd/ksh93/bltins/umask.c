@@ -31,10 +31,16 @@
  *
  */
 
-#include	"defs.h"
+#include	<ast.h>	
+#include	<sfio.h>	
+#include	<error.h>	
 #include	<ctype.h>	
 #include	<ls.h>	
+#include	<shell.h>	
 #include	"builtins.h"
+#ifndef SH_DICT
+#   define SH_DICT	"libshell"
+#endif
 
 int	b_umask(int argc,char *argv[],void *extra)
 {

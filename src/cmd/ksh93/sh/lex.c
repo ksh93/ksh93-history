@@ -283,14 +283,13 @@ int sh_lex(void)
 #endif
 
 #ifdef SHOPT_MULTIBYTE
-static void mb_stateskip(const char *state, int *c, int *n, int *len)
+static int mb_stateskip(const char *state, int *c, int *len)
 {
 	int curChar, lexState;
 	lexState = 0;
 	do
 	{
-		*len = mblen((char *)_Fcin.fcptr, MB_CUR_MAX);
-		switch(*len)
+		switch(*len = mbsize(_Fcin.fcptr))
 		{
 		    case -1: /* bogus multiByte char - parse as bytes? */
 		    case 0: /* NULL byte */
@@ -306,14 +305,13 @@ static void mb_stateskip(const char *state, int *c, int *n, int *len)
 			 * which would normally be assigned to the
 			 * 'a' character.
 			 */
-			curChar = fcpeek(0);
-			_Fcin.fcptr += *len;
+			curChar = mbchar(_Fcin.fcptr);
 			lexState = state['a'];
 		}
 	}
 	while(lexState == 0);
 	*c = curChar;
-	*n =lexState;
+	return(lexState);
 }
 #endif /* SHOPT_MULTIBYTE */
 /*
@@ -373,11 +371,10 @@ int sh_lex(void)
 		state = sh_lexstates[mode];
 #ifdef SHOPT_MULTIBYTE
 		LEN=1;
-		if (MB_CUR_MAX > 1)
+		if(mbwide())
 		{
-			int curchar, lexstate;
-			mb_stateskip(state, &curchar, &lexstate, &LEN);
-			n = lexstate;
+			int curchar;
+			n = mb_stateskip(state, &curchar, &LEN);
 			c = curchar;
 		}
 		else
@@ -1812,12 +1809,12 @@ struct argnod *sh_endword(int mode)
 	stakputc(0);
 	sp =  stakptr(ARGVAL);
 #ifdef SHOPT_MULTIBYTE
-	if (MB_CUR_MAX > 1)
+	if(mbwide())
 	{
 		do
 		{
-			int len = mblen(sp, MB_CUR_MAX);
-			switch(len)
+			int len;
+			switch(len = mbsize(sp))
 			{
 			    case -1:	/* illegal multi-byte char */
 			    case 0:
@@ -2006,12 +2003,12 @@ struct argnod *sh_endword(int mode)
 			break;
 		}
 #ifdef SHOPT_MULTIBYTE
-		if (MB_CUR_MAX > 1)
+		if(mbwide())
 		{
 			do
 			{
-				int len = mblen(sp, MB_CUR_MAX);
-				switch(len)
+				int len;
+				switch(len = mbsize(sp))
 				{
 				    case -1: /* illegal multi-byte char */
 				    case 0:

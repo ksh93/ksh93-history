@@ -135,24 +135,25 @@ this translate() function send mail to the address below.
 
 Please report any problems or suggestions to:
 
-ksh@mozart.att.com
+dgk@research.att.com
 
 
 ksh93 has been compiled and alpha tested on the following.  An asterisk
 signifies that ksh has been installed as /bin/sh on this machine.
 
-*    Sun OS 4.1.[123] on sparc[12].
-     Sun OS 4.1.1 on sun3.
-     Solaris 2.[1234] on sparc2.
-     Solaris 2.4 on Intel 486..
-     HP/UX 8.05 on HP-9000/730.
-     HP/UX 9.01 on HP-9000/730.
-     HP/UX 9.00 on HP-9000/857.
+*    Sun OS 4.1.[123] on sparc.
+     Sun OS 4.1.1 on sun.
+     Solaris 2.[1-9] on sparc.
+     Solaris 2.[4-8] on X86..
+     HP/UX 8 on HP-9000/730.
+     HP/UX 9 on HP-9000/730.
+     HP/UX 10 on HP-9000/857.
      System V Release 3 on Counterpoint C19
      System V Release  4 on AT&T Intel 486.
      System V Release  4 on NCR 4850 Intel 486.
      IRIX Release 4.0.? System V on SGI-MIPS.
      IRIX Release 5.1 System V on SGI-MIPS.
+     IRIX Release 6.[1-5] System V on SGI-MIPS.
      System V Release 3.2 on 3B2. 
      UTS 5.2.6 on Amdahl 3090,5990,580.
      System V Release 3.2 on i386.
@@ -161,16 +162,31 @@ signifies that ksh has been installed as /bin/sh on this machine.
      4.3BSD on Vax 8650.
      AIX release 2 on RS6000.
      AIX 3.2 on RS6000.
-     Linux 1.1.59 on Intel 486
+     Linux 1.X on Intel
+     Linux 2.X on Intel
+     Linux 2.X on Alpha
+     Linux 2.X on Alpha
+     Linux 2.X on OS/390
+     Linux 2.X on sparc
+*    Linux ARM on i-PAQ 
      OSF1 on DEC alpha.
      UMIPS 4.52 on mips.
-     BSD-i 2.0 on Intel 486.
-     NeXT on Intel 486.
+     BSD-i [2-4] on X86.
+     OpenBSD on X86
+     NetBSD on X86
+     FreeBSD on X86
+     NeXT on Intel X86.
      NeXT on HP.
+*    Windows NT using UWIN on X86
+*    Windows NT using UWIN on alpha
      Windows NT with NutCracker libraries.
      Windows NT with Portage libraries.
-     Windows NT using custom C library.
      Windows 3.1 using custom C library.
+     OpenEdition on MVS
+     Darwin OS X on PPC
+     MVS on OS 390
+     SCO Openserver on X86
+     Unixware on X86
 
 Good luck!!
 

@@ -36,7 +36,7 @@ command=mamprobe
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: mamprobe (AT&T Labs Research) 2000-12-15 $
+@(#)$Id: mamprobe (AT&T Labs Research) 2001-10-10 $
 ]
 [+NAME?mamprobe - generate MAM cc probe info]
 [+DESCRIPTION?\bmamprobe\b generates MAM (make abstract machine) \bcc\b(1)
@@ -45,7 +45,14 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 	\ainfo-path\a is usually \b$INSTALLROOT/lib/probe/C/mam/\b\ahash\a,
 	where \ahash\a is a hash of \acc-path\a.]
 [+?\bmamprobe\b and \bmamake\b are used in the bootstrap phase of
-	\bpackage\b(1) installation before \bnmake\b(1) is built.]
+	\bpackage\b(1) installation before \bnmake\b(1) is built. The
+	probed variables are:]{
+		[+mam_cc_DLL?compile for a small dll]
+		[+mam_cc_DLLBIG?compile for a large dll]
+		[+mam_cc_L?\b-L\b\adir\a supported]
+		[+mam_cc_SHELLMAGIC?a magic line to be placed at the top
+			of installed shell scripts]
+}
 
 info-path cc-path
 
@@ -78,15 +85,15 @@ esac
 # check the args
 
 case $# in
-2)	;;
-*)	echo "Usage: $command info-path cc-path" >&2; exit 2 ;;
+0|1)	echo "Usage: $command info-path cc-path" >&2; exit 2 ;;
 esac
 case $1 in
 /*)	;;
 *)	echo "$command: $1: info-path must be absolute" >&2; exit 1 ;;
 esac
 info=$1
-cc=$2
+shift
+cc=$*
 src=.c
 obj=.o
 exe=.exe
@@ -142,8 +149,9 @@ echo "setv _hosttype_ $_hosttype_"
 # mam_cc_DLL is the cc dll compilation option
 
 case $_hosttype_ in
-win32.*)echo "setv mam_cc_DLL -D_DLL"
-	echo "setv mam_cc_DLLBIG -D_DLL"
+win32.*|cygwin.*)
+	echo "setv mam_cc_DLL -D_BLD_DLL"
+	echo "setv mam_cc_DLLBIG -D_BLD_DLL"
 	;;
 *)	dll=
 	echo '#include <stdio.h>
@@ -241,7 +249,8 @@ esac
 # mam_cc_L defined if cc -Ldir works
 
 case $_hosttype_ in
-win32.*)echo "setv mam_cc_L 1"
+win32.*|cygwin.*)
+	echo "setv mam_cc_L 1"
 	;;
 *)	echo 'main(){return 0;}' > main$src
 	if	$cc -c main$src >/dev/null
@@ -252,6 +261,24 @@ win32.*)echo "setv mam_cc_L 1"
 			esac
 		fi
 	fi
+	;;
+esac
+
+# mam_cc_SHELLMAGIC defined if installed shell scripts need magic
+# currently only cygwin has the honor
+
+echo 'exec 4<&0
+echo ok' > ok
+chmod +x ok
+case `(eval ./ok | /bin/sh) 2>/dev/null` in
+ok)	;;
+*)	echo '#!/bin/env sh
+exec 4<&0
+echo ok' > ok
+	chmod +x ok
+	case `(eval ./ok | /bin/sh) 2>/dev/null` in
+	ok)	echo 'setv mam_cc_SHELLMAGIC #!/bin/env sh' ;;
+	esac
 	;;
 esac
 

@@ -63,6 +63,10 @@ NoN(statvfs)
 #define STATFS(a,b)	statfs(a,b)
 #endif
 
+#if defined(__EXPORT__)
+#define extern	__EXPORT__
+#endif
+
 static void
 us2v(register struct statfs* ufs, register struct stat* st, register struct statvfs* vfs)
 {
@@ -85,7 +89,7 @@ us2v(register struct statfs* ufs, register struct stat* st, register struct stat
 	strncpy(vfs->f_fstr, vfs->f_basetype, sizeof(vfs->f_fstr) - 1);
 }
 
-int
+extern int
 fstatvfs(int fd, struct statvfs* vfs)
 {
 	struct statfs	ufs;
@@ -97,7 +101,7 @@ fstatvfs(int fd, struct statvfs* vfs)
 	return(0);
 }
 
-int
+extern int
 statvfs(const char* path, struct statvfs* vfs)
 {
 	struct statfs	ufs;
@@ -110,6 +114,10 @@ statvfs(const char* path, struct statvfs* vfs)
 }
 
 #else
+
+#if defined(__EXPORT__)
+#define extern	__EXPORT__
+#endif
 
 static void
 s2v(register struct stat* st, register struct statvfs* vfs)
@@ -132,7 +140,7 @@ s2v(register struct stat* st, register struct statvfs* vfs)
 	strncpy(vfs->f_fstr, vfs->f_basetype, sizeof(vfs->f_fstr) - 1);
 }
 
-int
+extern int
 fstatvfs(int fd, struct statvfs* vfs)
 {
 	struct stat	st;
@@ -143,7 +151,7 @@ fstatvfs(int fd, struct statvfs* vfs)
 	return(0);
 }
 
-int
+extern int
 statvfs(const char* path, struct statvfs* vfs)
 {
 	struct stat	st;

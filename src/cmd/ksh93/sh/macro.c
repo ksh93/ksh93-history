@@ -549,6 +549,7 @@ static void copyto(register Mac_t *mp,int endch, int newquote)
 					--paren;
 			}
 		    case S_BRACE:
+			mp->patfound = mp->pattern;
 		    pattern:
 			if(!mp->pattern || !(mp->quote || mp->lit))
 			{
@@ -975,13 +976,14 @@ retry1:
 			fcseek(-1);
 		ap = nv_arrayptr(np);
 		c = (type>M_BRACE && isastchar(mode));
-		id = nv_name(np);
 		if(!c || !ap)
 		{
 			if(type==M_VNAME)
 			{
 				type = M_BRACE;
 				v = nv_name(np);
+				if(sh.argaddr && strcmp(v,id))
+					sh.argaddr = 0;
 			}
 #ifdef SHOPT_OO
 			else if(type==M_CLASS)
@@ -1143,12 +1145,13 @@ retry1:
 	if(c==':')  /* ${name:expr1[:expr2]} */
 	{
 		char *ptr;
-		if((type = (int)sh_strnum(argp,&ptr,1)) < 0)
-			type=0;
+		type = (int)sh_strnum(argp,&ptr,1);
 		if(isastchar(mode))
 		{
 			if(!ap)  /* ${@} or ${*} */
 			{
+				if(type<0 && (type+= dolmax)<0)
+					type = 0;
 				if(type==0)
 					v = special(dolg=0);
 #ifdef  SHOPT_FILESCAN
@@ -1166,6 +1169,13 @@ retry1:
 			}
 			else
 			{
+				if(type<0)
+				{
+					if(array_assoc(ap))
+						type = -type;
+					else
+						type += array_maxindex(np);
+				}
 				if(array_assoc(ap))
 				{
 					while(type-- >0 && (v=0,nv_nextsub(np)))
@@ -1183,6 +1193,8 @@ retry1:
 		{
 			if(vsize<0)
 				vsize=strlen(v);
+			if(type<0 && (type += vsize)<0)
+				type = 0;
 			if(vsize < type)
 				v = 0;
 			else
@@ -1513,7 +1525,7 @@ static void comsubst(Mac_t *mp,int type)
 	stakset(savptr,savtop);
 	newlines = 0;
 	/* read command substitution output and put on stack or here-doc */
-	while((str=(char*)sfreserve(sp,SF_UNBOUND,0)) && (c = sfslen())>0)
+	while((str=(char*)sfreserve(sp,SF_UNBOUND,0)) && (c = sfvalue(sp))>0)
 	{
 #ifdef SHOPT_CRNL
 		/* eliminate <cr> */
@@ -1651,7 +1663,7 @@ static void mac_copy(register Mac_t *mp,register const char *str, register int s
 				{
 					if(sh_strchr(mp->ifsp,cp-1)<0)
 						continue;
-					n = mblen(cp-1,MB_CUR_MAX)-1;
+					n = mbsize(cp-1) - 1;
 					cp += n;
 					size -= n;
 					n= S_DELIM;
@@ -1666,7 +1678,7 @@ static void mac_copy(register Mac_t *mp,register const char *str, register int s
 #ifdef SHOPT_MULTIBYTE
 					if(n==S_MBYTE && sh_strchr(mp->ifsp,cp-1)>=0)
 					{
-						n = mblen(cp-1,MB_CUR_MAX)-1;
+						n = mbsize(cp-1) - 1;
 						cp += n;
 						size -= n;
 						n=S_DELIM;
@@ -1720,11 +1732,14 @@ static void endfield(register Mac_t *mp,int split)
 		argp->argnxt.cp = 0;
 		argp->argflag = 0;
 		if(mp->patfound)
+		{
+			sh.argaddr = 0;
 #ifdef SHOPT_BRACEPAT
 			mp->fields += path_generate(argp,mp->arghead);
 #else
 			mp->fields += path_expand(argp->argval,mp->arghead);
 #endif /* SHOPT_BRACEPAT */
+		}
 		else
 		{
 			argp->argchn.ap = *mp->arghead;
@@ -1762,7 +1777,7 @@ static int substring(register const char *string,const char *pat,int match[], in
 	while(sp>=string)
 	{
 #ifdef SHOPT_MULTIBYTE
-		if(MB_CUR_MAX>1)
+		if(mbwide())
 			sp = lastchar(string,sp);
 #endif /* SHOPT_MULTIBYTE */
 		if(n=strgrpmatch(sp,pat,smatch,10,STR_RIGHT|STR_LEFT|STR_MAXIMAL))
@@ -1790,10 +1805,10 @@ static int substring(register const char *string,const char *pat,int match[], in
 	{
 		register char *str = (char*)string;
 		register int c;
-		mblen(NIL(char*),MB_CUR_MAX);
+		mbinit();
 		while(*str)
 		{
-			if((c=mblen(str,MB_CUR_MAX))<0)
+			if((c=mbsize(str))<0)
 				c = 1;
 			if(str+c > endstring)
 				break;
@@ -1803,22 +1818,26 @@ static int substring(register const char *string,const char *pat,int match[], in
 	}
 	static int	charlen(const char *string,int len)
 	{
-		register const char *str = string;
-		register int n=0;
-		register int c;
-		wchar_t w;
-		mblen(NIL(char*),MB_CUR_MAX);
-		while(*str)
+		if(mbwide())
 		{
-			if((c=mbtowc(&w,str,MB_CUR_MAX))>0)
-				n += wcwidth(w);
-			else
-				c = 1;
-			str += c;
-			if(len>=0 && (len-=c) <=0) 
-				break;
+			register const char *str = string, *strmax=string+len;
+			register int n=0;
+			mbinit();
+			if(len>0)
+			{
+				while(str<strmax && mbchar(str))
+					n++;
+			}
+			else while(mbchar(str))
+				n++;
+			return(n);
 		}
-		return(n);
+		else
+		{
+			if(len<0)
+				return(strlen(string));
+			return(len);
+		}
 	}
 #endif /* SHOPT_MULTIBYTE */
 
@@ -1889,7 +1908,8 @@ static char *sh_tilde(register const char *string)
 static char *special(register int c)
 {
 	register Namval_t *np;
-	sh.argaddr = 0;
+	if(c!='$')
+		sh.argaddr = 0;
 	switch(c)
 	{
 	    case '@':

@@ -25,24 +25,28 @@
 *******************************************************************/
 #pragma prototyped
 
-#if defined(__EXPORT__)
-#define extern	__EXPORT__
-#endif
-
-extern int	execvp(const char*, char* const[]);
-
-#undef	extern
-
-#include <ast.h>
-#include <errno.h>
+#include <ast_lib.h>
 
 #if _lib_execvp
+
+#include <ast.h>
 
 NoN(execvp)
 
 #else
 
-int
+#define execvp		______execvp
+
+#include <ast.h>
+#include <errno.h>
+
+#undef	execvp
+
+#if defined(__EXPORT__)
+#define extern	__EXPORT__
+#endif
+
+extern int
 execvp(const char* name, char* const argv[])
 {
 	return execvpe(name, argv, environ);

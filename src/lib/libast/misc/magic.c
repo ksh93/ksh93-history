@@ -51,7 +51,7 @@ static const char lib[] = "libast:magic";
 
 #define match(s,p)	strgrpmatch(s,p,NiL,0,REG_LEFT|REG_RIGHT|REG_ICASE)
 
-#if __OBSOLETE__ < 19980101 || _UWIN
+#if _WIN32
 
 #include <align.h>
 

@@ -1,4 +1,71 @@
-01-08-09  --- Release ksh93l+  ---
+01-10-16  --- Release ksh93m-  ---
+01-10-16  typeset without arguments no longer outputs variable names
+	  that do not have any attributes that are set.
+01-10-16  A bug introduced in ksh93l in which assignments specified with
+	  the exec built-in were not being expanded properly has been
+	  fixed.
+01-10-11  An optimization bug in which ${!x) was treated as invariant in
+	  a for loop has been fixed.
+01-10-11  Unsigned integer variables in bases other than 10 are printed now
+	  exxpand in that base with the base prefix.
+01-10-10  A number of typos in the self generating man pages for shell
+	  built-ins have been fixed.
+01-10-04  The self generated man pages for hist and fc were not working
+	  correctly and have been fixed.
+01-10-03  Yet another optimizer bug in which shell patterns were
+	  treated as invariants has been fixed.
+01-09-27  Two bugs relating to multibyte history searches and to find
+	  have been fixed.
+01-09-27  A bug introduced in ksh93k in which the PATH searching was
+	  not restored after running a command with an assignment list 
+	  has been fixed.
+01-09-26  A bug in which a zero filled field was treated as octal when
+	  converted to integer has been fixed.
+01-09-26  Yet another bug in the optimization of for loops related to
+	  recursive functions with break or continue statements has been fixed.
+01-09-25  The exponentiation operator ** was added to the shell arithmetic
+	  evaluation.  It has higher precedence than * and is left
+	  associative.
+01-09-25  The code was modified to use the ast multibyte macros
+	  and functions for handing multibyte locales.
+01-09-25  The expansion ${parameter:offset:length} now hanles negative
+	  offsets which cause offsets to be measured from the end.
+01-09-25  Some spelling errors in the documentation were corrected.
+01-09-24  The /dev/tcp/host/port and /dev/udp/host/port now allow
+	  the ports to be specified by service name. 
+01-09-24  The change staring with ksh93g in which the the appropriate
+	  library path variable is prepended with a corresponding library
+	  directory has been modified.  With the new method, only the
+	  library path defined in the file named .paths in the directory
+	  where the executable is found will be modified.  See the
+	  man page for more details.
+01-09-23  The .fpath file (see ksh93h) is no longer looked for in each
+	  directory on the path to locate function directories.  The
+	  file named .paths is used instead.
+01-09-23  A bug in which IFS was not being restored after being changed in
+	  a subshell has been fixed.
+01-09-16  With the vi and emacs edit modes, after a list of command
+	  or functions is generated with = or M-= respectively,
+	  any element from the list can be pasted on the command line
+	  by preceding the = or M-= with a numeric parameter specifying
+	  the position on the list.
+01-09-16  A bug in ksh93l caused command completion not to find aliases
+	  and functions.  Command listing from the edit mode was presented
+	  in reverse order.  This has been fixed.
+01-09-13  Another bug in the optimization of for loops related to subshells
+	  when traps were set has been fixed.
+01-09-07  A change in ksh93l caused brace expansion to stop working
+	  and this has been fixed.
+01-09-04  A bug introduced in ksh93k in which an arithmetic statement
+	  within a function that used name references did not follow the
+	  reference has been fixed.
+01-09-04  A bug introduced in ksh93l in which export -p did not prefix
+	  each export with the word export has been fixed.
+01-08-29  A bug in multibyte input which occurered when a partial multibyte
+	  character was received has been fixed.
+01-08-29  A bug introduced in ksh93l which could cause a core dump
+	  when an assignment list containing PATH is specified inside
+	  command substitution has been fixed.
 01-08-09  Another bug in the optimization of for loops in ksh93l caused
 	  errors in recursive functions using local variables that
 	  contained for loops has been fixed.
@@ -199,7 +266,7 @@
 	  been fixed.
 00-10-18  The output format for indexed arrays in compound variables
 	  has been modified so that it can be used as input.
-00-10-18  Assignments with name references (typeset -n) will no
+00-10-18  Assignments with name references (typeset -n) will now
 	  implicitly unreference an existing name reference.
 00-10-17  A bug the += append operator when a single array element
 	  is appended to a variable that is not an array has been fixed.

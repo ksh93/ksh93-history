@@ -1,5 +1,5 @@
 hdr	locale,wchar
-lib	locale,localeconv,wcwidth,mbtowc,mblen,wctype,iswctype,iswblank
+lib	locale,localeconv,wctype,iswctype,iswblank
 cat{
 	#ifdef _hdr_locale
 	#   include	<locale.h>
@@ -11,11 +11,5 @@ cat{
 	#   endif /* _lib_localeconv */
 	#else
 	#   define GETDECIMAL(x)	('.')
-	#   ifndef _lib_mblen
-	#	undef MULTIBYTE
-	#   endif /* _lib_mblen */
-	#   ifndef _lib_mbtowc
-	#	undef MULTIBYTE
-	#   endif /* _lib_mbtowc */
 	#endif /* _hdr_locale */
 }end

@@ -44,8 +44,12 @@
 #include <sfio.h>
 #endif
 
+#if !defined(_WIN32) && (_UWIN || __CYGWIN__)
+#define _WIN32		1
+#endif
+
 #ifndef	ast
-#define ast	_ast_info
+#define ast		_ast_info
 #endif
 
 #ifndef PATH_MAX
@@ -129,6 +133,23 @@ typedef struct
 #define STR_LEFT	02
 #define STR_RIGHT	04
 #define STR_ICASE	010
+
+/*
+ * multibyte macros
+ */
+
+#define mbmax()		(ast.mb_cur_max)
+#define mberr()		(ast.tmp_int<0)
+
+#define mbcoll()	(ast.mb_xfrm!=0)
+#define mbwide()	(mbmax()>1)
+
+#define mbchar(p)	(mbwide()?((ast.tmp_int=(*ast.mb_towc)(&ast.tmp_wchar,(char*)(p),mbmax()))>0?((p+=ast.tmp_int),ast.tmp_wchar):ast.tmp_int):(*(unsigned char*)(p++)))
+#define mbinit()	(mbwide()?(*ast.mb_towc)((wchar_t*)0,(char*)0,mbmax()):0)
+#define mbsize(p)	(mbwide()?(*ast.mb_len)((char*)(p),mbmax()):((p),1))
+#define mbconv(s,w)	(ast.mb_conv?(*ast.mb_conv)(s,w):((*(s)=(w)),1))
+#define mbwidth(w)	(ast.mb_width&&((ast.tmp_int=(*ast.mb_width)(w))>=0||(w)>UCHAR_MAX)?ast.tmp_int:1)
+#define mbxfrm(t,f,n)	(mbcoll()?(*ast.mb_xfrm)((char*)(t),(char*)(f),n):0)
 
 /*
  * common macros
@@ -226,6 +247,7 @@ extern char*		pathfind(const char*, const char*, const char*, char*, size_t);
 extern int		pathgetlink(const char*, char*, int);
 extern int		pathinclude(const char*);
 extern char*		pathkey(char*, char*, const char*, const char*);
+extern size_t		pathnative(const char*, char*, size_t);
 extern char*		pathpath(char*, const char*, const char*, int);
 extern char*		pathprobe(char*, char*, const char*, const char*, const char*, int);
 extern char*		pathrepl(char*, const char*, const char*);
@@ -275,12 +297,10 @@ extern void*		memetoa(void*, const void*, size_t);
  * C library global data symbols not prototyped by <unistd.h>
  */
 
-#ifndef environ
-#if defined(__EXPORT__) && defined(_BLD_DLL)
-#define	environ		(*_ast_getdll()->_ast_environ)
+#if !defined(environ) && defined(__DYNAMIC__)
+#define	environ		__DYNAMIC__(environ)
 #else
 extern char**		environ;
-#endif
 #endif
 
 #endif

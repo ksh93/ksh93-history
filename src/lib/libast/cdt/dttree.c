@@ -42,16 +42,16 @@ Void_t* 	obj;
 int		type;
 #endif
 {
-	reg Dtlink_t	*root, *t;
-	reg int		cmp, lk, sz, ky;
-	reg Void_t	*k, *key;
-	reg Dtcompar_f	cmpf;
-	reg Dtdisc_t*	disc;
-	reg Dtlink_t	*l, *r, *me;
-	Dtlink_t	link;
+	Dtlink_t	*root, *t;
+	int		cmp, lk, sz, ky;
+	Void_t		*k, *key;
+	Dtlink_t	*l, *r, *me, link;
+	int		n, minp, turn[DT_MINP];
+	Dtcompar_f	cmpf;
+	Dtdisc_t*	disc;
 
 	UNFLATTEN(dt);
-	INITDISC(dt,disc,ky,sz,lk,cmpf);
+	disc = dt->disc; _DTDSC(disc,ky,sz,lk,cmpf);
 
 	root = dt->data->here;
 	if(!obj)
@@ -65,7 +65,7 @@ int		type;
 						RROTATE(root,t);
 					t = root->right;
 					if(disc->freef)
-						(*disc->freef)(dt,OBJ(root,lk),disc);
+						(*disc->freef)(dt,_DTOBJ(root,lk),disc);
 					if(disc->link < 0)
 						(*dt->memoryf)(dt,(Void_t*)root,0,disc);
 				} while((root = t) );
@@ -86,80 +86,127 @@ int		type;
 			}
 
 			dt->data->here = root;
-			return OBJ(root,lk);
+			return _DTOBJ(root,lk);
 		}
 	}
 
 	/* note that link.right is LEFT tree and link.left is RIGHT tree */
 	l = r = &link;
 
-	if(type&(DT_MATCH|DT_SEARCH|DT_INSERT))
-	{	key = (type&DT_MATCH) ? obj : KEY(obj,ky,sz);
+	if(type&(DT_MATCH|DT_SEARCH|DT_INSERT|DT_ATTACH))
+	{	key = (type&DT_MATCH) ? obj : _DTKEY(obj,ky,sz);
 		if(root)
 			goto do_search;
 	}
 	else if(type&DT_RENEW)
 	{	me = (Dtlink_t*)obj;
-		obj = OBJ(me,lk);
-		key = KEY(obj,ky,sz);
+		obj = _DTOBJ(me,lk);
+		key = _DTKEY(obj,ky,sz);
 		if(root)
 			goto do_search;
 	}
-	else if(root && OBJ(root,lk) != obj)
-	{	key = KEY(obj,ky,sz);
+	else if(root && _DTOBJ(root,lk) != obj)
+	{	key = _DTKEY(obj,ky,sz);
 	do_search:
+		if(dt->meth->type == DT_OSET &&
+		   (minp = dt->data->minp) != 0 && (type&(DT_MATCH|DT_SEARCH)) )
+		{	/* simple search, note that minp should be even */
+			for(t = root, n = 0; n < minp; ++n)
+			{	k = _DTOBJ(t,lk); k = _DTKEY(k,ky,sz);
+				if((cmp = _DTCMP(dt,key,k,disc,cmpf,sz)) == 0)
+					return _DTOBJ(t,lk);
+				else
+				{	turn[n] = cmp;	
+					if(!(t = cmp < 0 ? t->left : t->right) )
+						return NIL(Void_t*);
+				}
+			}
+
+			/* exceed search length, top-down splay now */
+			for(n = 0; n < minp; n += 2)
+			{	if(turn[n] < 0)
+				{	t = root->left;
+					if(turn[n+1] < 0)
+					{	rrotate(root,t);
+						rlink(r,t);
+						root = t->left;
+					}
+					else
+					{	llink(l,t);
+						rlink(r,root);
+						root = t->right;
+					}
+				}
+				else
+				{	t = root->right;
+					if(turn[n+1] > 0)
+					{	lrotate(root,t);
+						llink(l,t);
+						root = t->right;
+					}
+					else
+					{	rlink(r,t);
+						llink(l,root);
+						root = t->left;
+					}
+				}
+			}
+		}
+
 		while(1)
-		{	k = OBJ(root,lk); k = KEY(k,ky,sz);
-			if((cmp = CMP(dt,key,k,disc,cmpf,sz)) == 0)
+		{	k = _DTOBJ(root,lk); k = _DTKEY(k,ky,sz);
+			if((cmp = _DTCMP(dt,key,k,disc,cmpf,sz)) == 0)
 				break;
 			else if(cmp < 0)
 			{	if((t = root->left) )
-				{	k = OBJ(t,lk); k = KEY(k,ky,sz);
-					if((cmp = CMP(dt,key,k,disc,cmpf,sz)) < 0)
-					{	RROTATE(root,t);
-						RLINK(r,root);
-						if(!(root = root->left) )
+				{	k = _DTOBJ(t,lk); k = _DTKEY(k,ky,sz);
+					if((cmp = _DTCMP(dt,key,k,disc,cmpf,sz)) < 0)
+					{	rrotate(root,t);
+						rlink(r,t);
+						if(!(root = t->left) )
 							break;
 					}
 					else if(cmp == 0)
-					{	RROTATE(root,t);
+					{	rlink(r,root);
+						root = t;
 						break;
 					}
 					else /* if(cmp > 0) */
-					{	LLINK(l,t);
-						RLINK(r,root);
+					{	llink(l,t);
+						rlink(r,root);
 						if(!(root = t->right) )
 							break;
 					}
 				}
 				else
-				{	RLINK(r,root);
+				{	rlink(r,root);
 					root = NIL(Dtlink_t*);
 					break;
 				}
 			}
 			else /* if(cmp > 0) */
 			{	if((t = root->right) )
-				{	k = OBJ(t,lk); k = KEY(k,ky,sz);
-					if((cmp = CMP(dt,key,k,disc,cmpf,sz)) > 0)
-					{	LROTATE(root,t);
-						LLINK(l,root);
-						if(!(root = root->right) )
+				{	k = _DTOBJ(t,lk); k = _DTKEY(k,ky,sz);
+					if((cmp = _DTCMP(dt,key,k,disc,cmpf,sz)) > 0)
+					{	lrotate(root,t);
+						llink(l,t);
+						if(!(root = t->right) )
 							break;
 					}
 					else if(cmp == 0)
-					{	LROTATE(root,t);
+					{	llink(l,root);
+						root = t;
 						break;
 					}
 					else /* if(cmp < 0) */
-					{	RLINK(r,t);
-						LLINK(l,root);
+					{	rlink(r,t);
+						llink(l,root);
 						if(!(root = t->left) )
 							break;
 					}
 				}
 				else
-				{	LLINK(l,root);
+				{	llink(l,root);
 					root = NIL(Dtlink_t*);
 					break;
 				}
@@ -177,16 +224,16 @@ int		type;
 			root->left = link.right;
 			root->right = link.left;
 			if((dt->meth->type&DT_OBAG) && (type&(DT_SEARCH|DT_MATCH)) )
-			{	key = OBJ(root,lk); key = KEY(key,ky,sz);
+			{	key = _DTOBJ(root,lk); key = _DTKEY(key,ky,sz);
 				while((t = root->left) )
-				{	k = OBJ(t,lk); k = KEY(k,ky,sz);
-					if(CMP(dt,key,k,disc,cmpf,sz) != 0)
+				{	k = _DTOBJ(t,lk); k = _DTKEY(k,ky,sz);
+					if(_DTCMP(dt,key,k,disc,cmpf,sz) != 0)
 						break;
 					RROTATE(root,t);
 				}
 			}
 			dt->data->here = root;
-			return OBJ(root,lk);
+			return _DTOBJ(root,lk);
 		}
 		else if(type&DT_NEXT)
 		{	root->left = link.right;
@@ -214,9 +261,9 @@ int		type;
 			}
 			else	goto no_root;
 		}
-		else if(type&DT_DELETE)
-		{	obj = OBJ(root,lk);
-			if(disc->freef)
+		else if(type&(DT_DELETE|DT_DETACH))
+		{	obj = _DTOBJ(root,lk);
+			if(disc->freef && (type&DT_DELETE))
 				(*disc->freef)(dt,obj,disc);
 			if(disc->link < 0)
 				(*dt->memoryf)(dt,(Void_t*)root,0,disc);
@@ -224,7 +271,7 @@ int		type;
 				dt->data->size = -1;
 			goto no_root;
 		}
-		else if(type&DT_INSERT)
+		else if(type&(DT_INSERT|DT_ATTACH))
 		{	if(dt->meth->type&DT_OSET)
 				goto has_root;
 			else
@@ -263,17 +310,20 @@ int		type;
 			dt->data->here = link.left;
 			return (type&DT_DELETE) ? obj : NIL(Void_t*);
 		}
-		else if(type&DT_INSERT)
+		else if(type&(DT_INSERT|DT_ATTACH))
 		{ dt_insert:
-			if((obj = disc->makef ? (*disc->makef)(dt,obj,disc) : obj) )
+			if(disc->makef && (type&DT_INSERT))
+				obj = (*disc->makef)(dt,obj,disc);
+			if(obj)
 			{	if(lk >= 0)
-					root = ELT(obj,lk);
+					root = _DTLNK(obj,lk);
 				else
 				{	root = (Dtlink_t*)(*dt->memoryf)
 						(dt,NIL(Void_t*),sizeof(Dthold_t),disc);
 					if(root)
 						((Dthold_t*)root)->obj = obj;
-					else if(disc->makef && disc->freef)
+					else if(disc->makef && disc->freef &&
+						(type&DT_INSERT))
 						(*disc->freef)(dt,obj,disc);
 				}
 			}

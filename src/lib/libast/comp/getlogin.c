@@ -25,14 +25,6 @@
 *******************************************************************/
 #pragma prototyped
 
-#if defined(__EXPORT__)
-#define extern	__EXPORT__
-#endif
-
-extern char*	getlogin(void);
-
-#undef	extern
-
 #include <ast.h>
 
 #if _lib_getlogin
@@ -41,7 +33,11 @@ NoN(getlogin)
 
 #else
 
-char*
+#if defined(__EXPORT__)
+#define extern	__EXPORT__
+#endif
+
+extern char*
 getlogin(void)
 {
 	return fmtuid(getuid());

@@ -41,12 +41,15 @@ integer Errors=0
 ABSHELL=$(abspath)
 mkdir /tmp/ksh$$ || err_exit "mkdir /tmp/ksh$$ failed"
 cd /tmp/ksh$$ || err_exit "cd /tmp/ksh$$ failed"
-print exit >.profile
+print exit 0 >.profile
 ${ABSHELL}  <<!
+HOME=$PWD \
 LD_LIBRARY_PATH=$LD_LIBRARY_PATH \
 LD_LIBRARYN32_PATH=$LD_LIBRARYN32_PATH \
 LD_LIBRARY64_PATH=$LD_LIBRARY64_PATH \
 LIBPATH=$LIBPATH \
+PATH=$PATH \
+SHELL=$ABSSHELL \
 SHLIBPATH=$SHLIBPATH \
 exec -c -a -ksh ${ABSHELL} -c "exit 1" 1>/dev/null 2>&1
 !

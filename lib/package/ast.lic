@@ -10,15 +10,20 @@ contributor=(
 	[kpv]="Phong Vo <kpv@research.att.com>"
 
 	[alb]="Adam Buchsbaum <alb@research.att.com>"
-	[kwc]="Ken Church <kwc@research.att.com>"
+	[bala]="Bala Krishnamurthy <bala@research.att.com>"
+	[chen]="Robin Chen <chen@research.bell-labs.com>"
+	[dfwc]="Don Caldwell <dfwc@research.att.com>"
+	[ek]="Lefty Koutsofios <ek@research.att.com>"
 	[griffin]="Tim Griffin <griffin@research.att.com>"
 	[jlk]="Jeff Korn <jlk@research.att.com>"
-	[ek]="Lefty Koutsofios <ek@research.att.com>"
-	[bala]="Bala Krishnamurthy <bala@research.att.com>"
-	[ekrell]="Eduardo Krell <ekrell@adexus.cl>"
-	[doug]="Doug McIlroy <doug@research.bell-labs.com>"
+	[kwc]="Ken Church <kwc@research.att.com>"
+
 	[bwk]="Brian Kernigham <bwk@research.bell-labs.com>"
 	[dmr]="Dennis Ritchie <dmr@research.bell-labs.com>"
+	[doug]="Doug McIlroy <doug@research.bell-labs.com>"
+	[ekrell]="Eduardo Krell <ekrell@adexus.cl>"
+	[jjs]="John Snyder <jjs@adexus.cl>"
+	[rao]="Herman Rao <rao@fareastone.att.com.tw>"
 )
 
 license=(

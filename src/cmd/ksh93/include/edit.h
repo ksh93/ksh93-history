@@ -48,11 +48,7 @@
 #include	"FEATURE/setjmp"
 #include	"terminal.h"
 
-#ifdef SHOPT_SEVENBIT
-#   define STRIP	0177
-#else
-#   define STRIP	0377
-#endif /* SHOPT_SEVENBIT */
+#define STRIP		0377
 #define LOOKAHEAD	80
 
 #ifdef SHOPT_MULTIBYTE
@@ -142,6 +138,10 @@ typedef struct edit
 	void	*e_vi;		/* vi specific data */
 	void	*e_emacs;	/* emacs specific data */
 	Shell_t	*sh;		/* interpreter pointer */ 
+	char	*e_stkptr;	/* saved stack pointer */
+	int	e_stkoff;	/* saved stack offset */
+	char	**e_clist;	/* completion list after <ESC>= */
+	int	e_nlist;	/* number of elements on completion list */
 } Edit_t;
 
 #undef MAXWINDOW
@@ -196,7 +196,7 @@ extern int	ed_read(int, char*, int);
 extern int	ed_emacsread(int, char*, int);
 #ifdef KSHELL
 	extern int	ed_macro(Edit_t*,int);
-	extern int	ed_expand(Edit_t*, char[],int*,int*,int);
+	extern int	ed_expand(Edit_t*, char[],int*,int*,int,int);
 	extern int	ed_fulledit(Edit_t*);
 	extern void	*ed_open(Shell_t*);
 #endif /* KSHELL */

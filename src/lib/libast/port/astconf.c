@@ -30,7 +30,7 @@
  * extended to allow some features to be set
  */
 
-static const char id[] = "\n@(#)$Id: getconf (AT&T Labs Research) 2001-04-20 $\0\n";
+static const char id[] = "\n@(#)$Id: getconf (AT&T Labs Research) 2001-09-25 $\0\n";
 
 #include "univlib.h"
 
@@ -47,10 +47,11 @@ static const char id[] = "\n@(#)$Id: getconf (AT&T Labs Research) 2001-04-20 $\0
 #define OP_fs_3d		2
 #define OP_hosttype		3
 #define OP_libpath		4
-#define OP_libsuffix		5
-#define OP_path_attributes	6
-#define OP_path_resolve		7
-#define OP_universe		8
+#define OP_libprefix		5
+#define OP_libsuffix		6
+#define OP_path_attributes	7
+#define OP_path_resolve		8
+#define OP_universe		9
 
 #define CONF_ERROR	(CONF_USER<<0)
 #define CONF_READONLY	(CONF_USER<<1)
@@ -139,11 +140,25 @@ static Feature_t	dynamic[] =
 	},
 	{
 		&dynamic[5],
+		"LIBPREFIX",
+#ifdef CONF_LIBPREFIX
+		CONF_LIBPREFIX,
+#else
+		"lib",
+#endif
+		"",
+		7,
+		CONF_AST,
+		0,
+		OP_libprefix
+	},
+	{
+		&dynamic[6],
 		"LIBSUFFIX",
 #ifdef CONF_LIBSUFFIX
 		CONF_LIBSUFFIX,
 #else
-		"lib",
+		".so",
 #endif
 		"",
 		7,
@@ -152,9 +167,9 @@ static Feature_t	dynamic[] =
 		OP_libsuffix
 	},
 	{
-		&dynamic[6],
+		&dynamic[7],
 		"PATH_ATTRIBUTES",
-#if _UWIN
+#if _WIN32
 		"c",
 #else
 		"",
@@ -166,7 +181,7 @@ static Feature_t	dynamic[] =
 		OP_path_attributes
 	},
 	{
-		&dynamic[7],
+		&dynamic[8],
 		"PATH_RESOLVE",
 		"",
 		"metaphysical",
@@ -239,7 +254,7 @@ synthesize(register Feature_t* fp, const char* path, const char* value)
 		state.prefix = strlen(state.name) + 1;
 		n = state.prefix + 3 * MAXVAL;
 		if (s = getenv(state.name))
-			n += strlen(s);
+			n += strlen(s) + 1;
 		n = roundof(n, 32);
 		if (!(state.data = newof(0, char, n, 0)))
 			return 0;
@@ -280,6 +295,8 @@ synthesize(register Feature_t* fp, const char* path, const char* value)
 		return state.data;
 	if (!state.last)
 	{
+		if (!value)
+			return 0;
 		n = strlen(value);
 		goto ok;
 	}
@@ -924,7 +941,8 @@ astgetconf(const char* name, const char* path, const char* value, Ast_conferror_
 			}
 			return "";
 		}
-		return print(NiL, &look, name, path, conferror);
+		s = print(NiL, &look, name, path, conferror);
+		return s;
 	}
 	if (look.error)
 	{

@@ -659,6 +659,11 @@ process:
 	}
 	draw(ep,FINAL);
 	tty_cooked(ERRIO);
+	if(ed->e_nlist)
+	{
+		ed->e_nlist = 0;
+		stakset(ed->e_stkptr,ed->e_stkoff);
+	}
 	if(c == '\n')
 	{
 		out[eol++] = '\n';
@@ -906,7 +911,7 @@ static int escape(register Emacs_t* ep,register genchar *out,int count)
 		case '*':		/* filename expansion */
 		case '=':	/* escape = - list all matching file names */
 			ep->mark = cur;
-			if(ed_expand(ep->ed,(char*)out,&cur,&eol,i) < 0)
+			if(ed_expand(ep->ed,(char*)out,&cur,&eol,i,count) < 0)
 				beep();
 			else if(i=='=')
 				draw(ep,REFRESH);

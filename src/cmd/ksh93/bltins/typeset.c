@@ -147,7 +147,11 @@ int    b_readonly(int argc,char *argv[],void *extra)
 	{
 		char *cp,**env=env_get(tdata.sh->env);
 		while(cp = *env++)
+		{
+			if(tdata.prefix)
+				sfputr(sfstdout,tdata.prefix,' ');
 			sfprintf(sfstdout,"%s\n",sh_fmtq(cp));
+		}
 		return(0);
 	}
 #endif
@@ -1125,7 +1129,7 @@ static void	print_attribute(register Namval_t *np,void *data)
 	Namval_t *nq;
 	char *cclass=0;
 #endif /* SHOPT_OO */
-	if (attr=nv_isattr(np,~NV_DEFAULT))
+	if (attr=nv_isattr(np,~(NV_NOALLOC|NV_NOFREE)))
 	{
 		if((attr&NV_NOPRINT)==NV_NOPRINT)
 			attr &= ~NV_NOPRINT;

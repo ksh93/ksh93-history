@@ -85,6 +85,7 @@ dllfind(const char* lib, const char* ver, int flags)
 	char*			a;
 	char*			u;
 	char*			p;
+	char*			pre;
 	char*			suf;
 	int			dot;
 	int			try;
@@ -215,6 +216,7 @@ sfprintf(sfstderr, "dllfind: lib=%s ver=%s\n", lib, ver);
 	}
 	else
 	{
+		pre = astconf("LIBPREFIX", NiL, NiL);
 		suf = astconf("LIBSUFFIX", NiL, NiL);
 		if (streq(suf, ".dll"))
 		{
@@ -238,14 +240,14 @@ sfprintf(sfstderr, "dllfind: lib=%s ver=%s\n", lib, ver);
 		}
 		else
 		{
-			sfsprintf(gen, sizeof(gen), "lib%s%s", lib, suf);
+			sfsprintf(gen, sizeof(gen), "%s%s%s", pre, lib, suf);
 			if (ver)
 			{
 				sfsprintf(spc, sizeof(spc), "%s.%s", gen, ver);
 				*nv++ = spc;
 			}
 			*nv++ = gen;
-			sfsprintf(pat, sizeof(pat), "lib%s%s.+([0-9.])", lib, suf);
+			sfsprintf(pat, sizeof(pat), "%s%s%s.+([0-9.])", pre, lib, suf);
 		}		
 	}
 	*nv = 0;

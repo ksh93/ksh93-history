@@ -25,28 +25,28 @@
 *******************************************************************/
 #pragma prototyped
 
-#if defined(__EXPORT__)
-
-#include <sys/types.h>
-
-#define extern	__EXPORT__
-
-extern pid_t	spawnvp(const char*, char* const[]);
-
-#undef	extern
-
-#endif
-
-#include <ast.h>
-#include <errno.h>
+#include <ast_lib.h>
 
 #if _lib_spawnvp
+
+#include <ast.h>
 
 NoN(spawnvp)
 
 #else
 
-pid_t
+#define spawnvp		______spawnvp
+
+#include <ast.h>
+#include <errno.h>
+
+#undef	spawnvp
+
+#if defined(__EXPORT__)
+#define extern	__EXPORT__
+#endif
+
+extern pid_t
 spawnvp(const char* name, char* const argv[])
 {
 	return spawnvpe(name, argv, environ);

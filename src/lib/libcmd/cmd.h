@@ -106,12 +106,15 @@ static void
 cmdinit(register char** argv, void* context, const char* catalog)
 {
 	register char*	cp;
+	register char*	pp;
 
 	NoP(context);
 	if (cp = strrchr(argv[0], '/'))
 		cp++;
 	else
 		cp = argv[0];
+	if (pp = strrchr(cp, '_'))
+		cp = pp + 1;
 	error_info.id = cp;
 	if (!error_info.catalog)
 		error_info.catalog = (char*)catalog;
@@ -141,6 +144,8 @@ main(int argc, char** argv)
 	buf[2] = '_';
 	strncpy(buf + 3, s, sizeof(buf) - 4);
 	buf[sizeof(buf) - 1] = 0;
+	if (t = strchr(buf, '.'))
+		*t = 0;
 	for (;;)
 	{
 		if (dll = dlopen(NiL, RTLD_LAZY))

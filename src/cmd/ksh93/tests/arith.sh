@@ -24,9 +24,10 @@
 function err_exit
 {
 	print -u2 -n "\t"
-	print -u2 -r $Command: "$@"
+	print -u2 -r $Command[$1]: "${@:2}"
 	let Errors+=1
 }
+alias err_exit='err_exit $LINENO'
 
 Command=$0
 integer Errors=0
@@ -268,5 +269,42 @@ unset x
 float x=99999999999999999999999999
 if	(( x < 1e20 ))
 then	err_exit 'large integer constants not working'
+fi
+unset x  y
+function foobar
+{
+	nameref x=$1
+	(( x +=1 ))
+	print $x
+}
+x=0 y=4
+if	[[ $(foobar y) != 5 ]]
+then	err_exit 'name references in arithmetic statements in functions broken'
+fi
+if	(( 2**3 != 8 ))
+then	err_exit '2**3 not working'
+fi
+if	(( 2**3*2 != 16 ))
+then	err_exit '2**3*2 not working'
+fi
+if	(( 4**3**2 != 262144 ))
+then	err_exit '4**3**2 not working'
+fi
+if	(( (4**3)**2 != 4096 ))
+then	err_exit '(4**3)**2 not working'
+fi
+typeset -Z3 x=11
+typeset -i x
+if	(( x != 11 ))
+then	err_exit '-Z3 not treated as decimal'
+fi
+unset x
+typeset -ui x=-1
+(( x >= 0 )) || err_exit 'unsigned integer not working'
+(( $x >= 0 )) || err_exit 'unsigned integer not working as $x'
+unset x
+typeset -ui42 x=50
+if	[[ $x != 42#18 ]]
+then	err_exit 'display of unsigned integers in non-decimal bases wrong'
 fi
 exit $((Errors))

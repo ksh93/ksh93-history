@@ -1,9 +1,46 @@
+01-10-18 features/lib: check for strtod static link collision
+	 features/float: add another signed cast for old bsd cc
+	 features/wchar: add <stdlib.h> <stdio.h> before <wchar.h> for old bsd
+01-10-17 sfio/sfcvt.c: limit max precision to { FLT_DIG DBL_DIG LDBL_DIG }
+	 sfio/sfcvt.c: fix %[aA] format to always have leading 0[xX]1.
+	 sfio/sfvprintf.c: handle %C %lc %S %ls for wchar_t args
+	 sfio/sfvscanf.c: handle %C %lc %S %ls for wchar_t args
+	 string/fmtmode.c: fix bug that omitted trailing '\0'
+01-10-12 misc/optget.c: . => \&. for --??nroff
+	 comp/wc.c: fix mbstate_t initialization typo
+	 features/float: fix max integer / float loop termiation
+	 features/float: fix LDBL_UINTMAX_MAX typo that did DBL_UINTMAX_MAX
+01-10-11 include/sfio.h: fix _Sfstd* import/export
+	 features/common: fix _UWIN __DYNAMIC__() definition
+01-10-06 features/fcntl.c: { O_BINARY O_TEXT } default to 0
+	 features/omitted: add for comp/omitted.c
+	 sfio/sfopen.c: O_BINARY default for _WIN32&&!_UWIN
+01-10-05 misc/glob.c: fix `\(x/*' GLOB_NOMATCH bug that returned `(x'
+	 misc/optget.c: fix localization lookup that didn't drop doubled : ? ]
+01-10-04 comp/setlocale.c: handle sizeof(wchar_t)!=4 in debug locale
+	 comp/conf.sh: handle sytems where _SC_* is both an enum and a macro
+01-09-25 astconf: add LIBPREFIX
+01-09-20 features/common: add __DYNAMIC__() for dll externs
+01-09-19 cdt: kpv update
+	 mb*() macros: update for ksh conversion, extend debug locale
+01-09-16 tm/tmlocale.c: add compiled in defaults for C locale
+	 misc/glob.c: add gl_nextdir callback for GLOB_COMPLETE
+01-08-14 clarify _WIN32 vs. _UWIN vs. __CYGWIN__
+	 tminit: fix standard & daylight initialization
+01-09-11 pathnative.c: add for native fs representation
+	 regex.h: fix regerror_t prototype
+01-09-04 regex/regnexec.c: fix REG_ICASE for multi-char collating elements
+	 tm/tmlocale.c: fix old ascii LC_TIME load
+	 locale*: add new LC_* categories
+	 comp/omitted.c: add CYGWIN workarounds
+	 features/lib: add CYGWIN workarounds
 01-08-11 features/common: some compilers have long long but no LL constants!
 	 features/lib: add mmap64 implementation test (for linux.s390)
 	 regex/regcomp.c: fix \ in [...] parse
 	 setlocale: retain user locale spelling in setlocale() return value
 	 features/limits.c: don't include ./limits.h -- duh
 	 fmtesc: don't escape multibyte chars
+	 tm/tmlocale.c: fix native C locale default
 01-08-08 features/float: some compilers (msdev) forget long long vs. double
 01-07-31 misc/optget.c: handle suboptions
 01-07-27 cdt.h: add DTDISC()

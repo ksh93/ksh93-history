@@ -347,13 +347,20 @@ extern size_t		wcstombs(char*, const wchar_t*, size_t);
 
 #if !_UWIN || !_BLD_ast
 
+#if !_BLD_ast && defined(__IMPORT__)
+#define extern		__IMPORT__
+#endif
+
 extern long			strtol(const char*, char**, int);
 extern unsigned long		strtoul(const char*, char**, int);
-extern _ast_intmax_t		strtoll(const char*, char**, int);
-extern unsigned _ast_intmax_t	strtoull(const char*, char**, int);
 
 extern double			strtod(const char*, char**);
 extern _ast_fltmax_t		strtold(const char*, char**);
+
+#undef	extern
+
+extern _ast_intmax_t		strtoll(const char*, char**, int);
+extern unsigned _ast_intmax_t	strtoull(const char*, char**, int);
 
 #endif
 
@@ -917,50 +924,82 @@ struct lconv
 #endif
 
 #undef	localeconv
-#define localeconv	_ast_localeconv
+#define localeconv		_ast_localeconv
 
 #undef	setlocale
-#define setlocale	_ast_setlocale
+#define setlocale		_ast_setlocale
 
 extern struct lconv*	localeconv(void);
 extern char*		setlocale(int, const char*);
 
-#define AST_MESSAGE_SET	3	/* see <mc.h> mcindex()			*/
+#define AST_MESSAGE_SET		3	/* see <mc.h> mcindex()		*/
 
-#define AST_LC_ALL	0
-#define AST_LC_COLLATE	1
-#define AST_LC_CTYPE	2
-#define AST_LC_MESSAGES	3
-#define AST_LC_MONETARY	4
-#define AST_LC_NUMERIC	5
-#define AST_LC_TIME	6
-#define AST_LC_COUNT	7
+/*
+ * maintain this order when adding categories
+ */
 
-#define AST_LC_find		(1<<12)
-#define AST_LC_debug		(1<<13)
-#define AST_LC_setlocale	(1<<14)
-#define AST_LC_translate	(1<<15)
+#define AST_LC_ALL		0
+#define AST_LC_COLLATE		1
+#define AST_LC_CTYPE		2
+#define AST_LC_MESSAGES		3
+#define AST_LC_MONETARY		4
+#define AST_LC_NUMERIC		5
+#define AST_LC_TIME		6
+#define AST_LC_IDENTIFICATION	7
+#define AST_LC_ADDRESS		8
+#define AST_LC_NAME		9
+#define AST_LC_TELEPHONE	10
+#define AST_LC_XLITERATE	11
+#define AST_LC_MEASUREMENT	12
+#define AST_LC_PAPER		13
+#define AST_LC_COUNT		14
+
+#define AST_LC_find		(1L<<28)
+#define AST_LC_debug		(1L<<29)
+#define AST_LC_setlocale	(1L<<30)
+#define AST_LC_translate	(1L<<31)
 
 #ifndef LC_ALL
-#define LC_ALL		(-AST_LC_ALL)
+#define LC_ALL			(-AST_LC_ALL)
 #endif
 #ifndef LC_COLLATE
-#define LC_COLLATE	(-AST_LC_COLLATE)
+#define LC_COLLATE		(-AST_LC_COLLATE)
 #endif
 #ifndef LC_CTYPE
-#define LC_CTYPE	(-AST_LC_CTYPE)
+#define LC_CTYPE		(-AST_LC_CTYPE)
 #endif
 #ifndef LC_MESSAGES
-#define LC_MESSAGES	(-AST_LC_MESSAGES)
+#define LC_MESSAGES		(-AST_LC_MESSAGES)
 #endif
 #ifndef LC_MONETARY
-#define LC_MONETARY	(-AST_LC_MONETARY)
+#define LC_MONETARY		(-AST_LC_MONETARY)
 #endif
 #ifndef LC_NUMERIC
-#define LC_NUMERIC	(-AST_LC_NUMERIC)
+#define LC_NUMERIC		(-AST_LC_NUMERIC)
 #endif
 #ifndef LC_TIME
-#define LC_TIME		(-AST_LC_TIME)
+#define LC_TIME			(-AST_LC_TIME)
+#endif
+#ifndef LC_ADDRESS
+#define LC_ADDRESS		(-AST_LC_ADDRESS)
+#endif
+#ifndef LC_IDENTIFICATION
+#define LC_IDENTIFICATION	(-AST_LC_IDENTIFICATION)
+#endif
+#ifndef LC_NAME
+#define LC_NAME			(-AST_LC_NAME)
+#endif
+#ifndef LC_TELEPHONE
+#define LC_TELEPHONE		(-AST_LC_TELEPHONE)
+#endif
+#ifndef LC_XLITERATE
+#define LC_XLITERATE		(-AST_LC_XLITERATE)
+#endif
+#ifndef LC_MEASUREMENT
+#define LC_MEASUREMENT		(-AST_LC_MEASUREMENT)
+#endif
+#ifndef LC_PAPER
+#define LC_PAPER		(-AST_LC_PAPER)
 #endif
 
 #undef	extern
@@ -979,8 +1018,8 @@ typedef struct
 
 	struct
 	{
-	unsigned int	serial;
-	unsigned int	set;
+	unsigned _ast_int4_t	serial;
+	unsigned _ast_int4_t	set;
 	}		locale;
 
 	long		tmp_long;
@@ -999,18 +1038,11 @@ typedef struct
 	int		(*mb_towc)(wchar_t*, const char*, size_t);
 	size_t		(*mb_xfrm)(char*, const char*, size_t);
 	int		(*mb_width)(wchar_t);
+	int		(*mb_conv)(char*, wchar_t);
 
-	void*		extra[241];
+	void*		extra[237];
 
 } _Ast_info_t;
-
-#define mbcoll()	(_ast_info.mb_xfrm!=0)
-#define mbwide()	(_ast_info.mb_cur_max>1)
-
-#define mbchar(p)	(mbwide()?((_ast_info.tmp_int=(*_ast_info.mb_towc)(&_ast_info.tmp_wchar,(char*)(p),_ast_info.mb_cur_max))>0?((p+=_ast_info.tmp_int),_ast_info.tmp_wchar):_ast_info.tmp_int):(*(unsigned char*)(p++)))
-#define mbsize(p)	(mbwide()?(*_ast_info.mb_len)((char*)(p),_ast_info.mb_cur_max):1)
-#define mbwidth(w)	(_ast_info.mb_width?(*_ast_info.mb_width)(w):1)
-#define mbxfrm(t,f,n)	(mbcoll()?(*_ast_info.mb_xfrm)((char*)(t),(char*)(f),n):0)
 
 #if _BLD_ast && defined(__EXPORT__)
 #define __PUBLIC_DATA__		__EXPORT__

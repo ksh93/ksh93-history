@@ -57,11 +57,9 @@ tst	- output{
 		float			pf;
 		float			mf;
 		float			xf;
-		float			ef;
 		double			d;
 		double			pd;
 		double			md;
-		double			xd;
 	#if _ast_fltmax_double
 		char*			fs = "";
 		char*			ds = "";
@@ -69,15 +67,14 @@ tst	- output{
 		_ast_fltmax_t		l;
 		_ast_fltmax_t		pl;
 		_ast_fltmax_t		ml;
-		_ast_fltmax_t		xl;
 		char*			fs = "F";
 		char*			ds = "";
 		char*			ls = "L";
 	#endif
 		unsigned long		u;
-		unsigned long		pu;
 		unsigned _ast_intmax_t	w;
 		unsigned _ast_intmax_t	pw;
+		unsigned _ast_intmax_t	x;
 		unsigned short		us;
 		unsigned int		ui;
 		unsigned long		ul;
@@ -125,14 +122,14 @@ tst	- output{
 		else
 			printf("#define UINTMAX_DIG		ULONG_DIG\n");
 		printf("\n");
-		f = 1;
 		w = 1;
 		do
 		{
-			f *= 2;
 			pw = w;
 			w *= 2;
-		} while (w == (_ast_intmax_t)f);
+			f = (_ast_intmax_t)w;
+			x = (_ast_intmax_t)f;
+		} while (w > pw && w == x);
 		w = (pw - 1) + pw;
 		u = ~0;
 		if (u > w)
@@ -216,6 +213,7 @@ tst	- output{
 		} while (mf == (mf + f));
 		f = (mf - f) * 2.0 + f;
 	#endif
+		xf = f;
 		printf("#ifndef FLT_MAX\n");
 		printf("#define FLT_MAX			%.*E%s\n", s + 1, f, fs);
 		printf("#endif\n");
@@ -256,14 +254,14 @@ tst	- output{
 		printf("#endif\n");
 
 		printf("\n");
-		d = 1.0;
 		w = 1;
 		do
 		{
-			d *= 2;
 			pw = w;
 			w *= 2;
-		} while (w == (_ast_intmax_t)d);
+			d = (_ast_intmax_t)w;
+			x = (_ast_intmax_t)d;
+		} while (w > pw && w == x);
 		w = (pw - 1) + pw;
 		u = ~0;
 		if (u > w)
@@ -384,14 +382,14 @@ tst	- output{
 
 	#if !_ast_fltmax_double
 		printf("\n");
-		l = 1;
 		w = 1;
 		do
 		{
-			l *= 2;
 			pw = w;
 			w *= 2;
-		} while (w == (_ast_intmax_t)l);
+			l = (_ast_intmax_t)w;
+			x = (_ast_intmax_t)l;
+		} while (w > pw && w == x);
 		w = (pw - 1) + pw;
 		u = ~0;
 		if (u > w)
@@ -403,7 +401,7 @@ tst	- output{
 			printf("#define LDBL_UINTMAX_MAX	LDBL_ULONGLONG_MAX\n");
 		}
 		else
-			printf("#define DBL_UINTMAX_MAX		DBL_ULONG_MAX\n");
+			printf("#define LDBL_UINTMAX_MAX	LDBL_ULONG_MAX\n");
 	#ifdef LDBL_DIG
 		s = LDBL_DIG;
 	#else
@@ -514,7 +512,7 @@ tst	- output{
 	#ifdef SIGFPE
 		if (!caught)
 		{
-			f = FLT_MAX;
+			f = xf;
 			f *= 2;
 			if (!f)
 				caught = 1;

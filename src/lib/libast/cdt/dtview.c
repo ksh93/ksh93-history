@@ -66,7 +66,7 @@ reg int		type;
 
 	/* must be (DT_NEXT|DT_PREV) */
 	if(!dt->walk || !(here = dt->walk->data->here) ||
-	   obj != OBJ(here,dt->walk->disc->link) )
+	   obj != _DTOBJ(here,dt->walk->disc->link) )
 	{	for(d = dt; d; d = d->view)
 		{	if((o = (*(d->meth->searchf))(d,obj,DT_SEARCH)) )
 			{	dt->walk = d;

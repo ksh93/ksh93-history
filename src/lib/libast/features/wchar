@@ -1,7 +1,7 @@
 set	prototyped
-lib	mbstowcs,wctomb,wcrtomb,wcslen,wcstombs,wcwidth wchar.h
-lib	towlower,towupper stdio.h wchar.h
-typ	mbstate_t stdio.h wchar.h
+lib	mbstowcs,wctomb,wcrtomb,wcslen,wcstombs,wcwidth stdlib.h stdio.h wchar.h
+lib	towlower,towupper stdlib.h stdio.h wchar.h
+typ	mbstate_t stdlib.h stdio.h wchar.h
 
 cat{
 	#ifndef _SFSTDIO_H

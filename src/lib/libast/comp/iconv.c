@@ -41,6 +41,8 @@
 #if _UWIN
 #define _ICONV_LIST_PRIVATE_ \
 	DIR*		dir;
+#else
+#define _ICONV_LIST_PRIVATE_
 #endif
 
 #include <ccode.h>
@@ -49,20 +51,7 @@
 
 #include "lclib.h"
 
-#if _lib_iconv_open
-
-#undef	iconv_t
-#undef	iconv_f
-#undef	iconv_list_t
-#undef	iconv_open
-#undef	iconv
-#undef	iconv_close
-#undef	iconv_list
-#undef	iconv_move
-#undef	iconv_name
-#undef	iconv_write
-
-#else
+#if !_lib_iconv_open
 
 #define _ast_iconv_t		iconv_t
 #define _ast_iconv_f		iconv_f
@@ -209,7 +198,6 @@ static const _ast_iconv_list_t	codes[] =
 #if _UWIN
 
 #include <windows.h>
-#include <dirent.h>
 
 #ifndef CP_UCS2
 #define CP_UCS2	0x0000

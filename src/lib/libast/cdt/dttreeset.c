@@ -23,74 +23,65 @@
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
 *******************************************************************/
-#pragma prototyped
-/*
- * Xopen 4.2 compatibility
- */
+#include	"dthdr.h"
 
-#include <ast_lib.h>
+/* Set attributes of a tree.
+**
+** Written by Kiem-Phong Vo (09/17/2001)
+*/
 
-#if _lib_getsubopt
-
-#include <ast.h>
-
-NoN(getsubopt)
-
+#if __STD_C
+static Dtlink_t* treebalance(Dtlink_t* list, int size)
 #else
-
-#define getsubopt	______getsubopt
-
-#include <ast.h>
-
-#undef	getsubopt
-
-#include <error.h>
-
-#if defined(__EXPORT__)
-#define extern	__EXPORT__
+static Dtlink_t* treebalance(list, size)
+Dtlink_t*	list;
+int		size;
 #endif
-
-extern int
-getsubopt(register char** op, char* const* tp, char** vp)
 {
-	register char*	b;
-	register char*	s;
-	register char*	v;
+	int		n;
+	Dtlink_t	*l, *mid;
 
-	if (*(b = *op))
-	{
-		v = 0;
-		s = b;
-		for (;;)
-		{
-			switch (*s++)
-			{
-			case 0:
-				s--;
-				break;
-			case ',':
-				*(s - 1) = 0;
-				break;
-			case '=':
-				if (!v)
-				{
-					*(s - 1) = 0;
-					v = s;
-				}
-				continue;
-			default:
-				continue;
-			}
-			break;
-		}
-		*op = s;
-		*vp = v;
-		for (op = (char**)tp; *op; op++)
-			if (streq(b, *op))
-				return op - (char**)tp;
-	}
-	*vp = b;
-	return -1;
+	if(size <= 2)
+		return list;
+
+	for(l = list, n = size/2 - 1; n > 0; n -= 1)
+		l = l->right;
+
+	mid = l->right; l->right = NIL(Dtlink_t*);
+	mid->left  = treebalance(list, (n = size/2) );
+	mid->right = treebalance(mid->right, size - (n + 1));
+	return mid;
 }
 
+#if __STD_C
+int dttreeset(Dt_t* dt, int minp, int balance)
+#else
+int dttreeset(dt, minp, balance)
+Dt_t*	dt;
+int	minp;
+int	balance;
 #endif
+{
+	int	size;
+
+	if(dt->meth->type != DT_OSET)
+		return -1;
+
+	size = dtsize(dt);
+
+	if(minp < 0)
+	{	for(minp = 0; minp < DT_MINP; ++minp)
+			if((1 << minp) >= size)
+				break;
+		if(minp <= DT_MINP-4)	/* use log(size) + 4 */
+			minp += 4;
+	}
+
+	if((dt->data->minp = minp + (minp%2)) > DT_MINP)
+		dt->data->minp = DT_MINP;
+
+	if(balance)
+		dt->data->here = treebalance(dtflatten(dt), size);
+
+	return 0;
+}

@@ -31,6 +31,8 @@
 #ifndef _GLOB_H
 #define _GLOB_H
 
+#define GLOB_VERSION	20010916L
+
 #include <stdlib.h>
 
 struct dirent;
@@ -81,10 +83,14 @@ struct _glob_
 	int		(*gl_stat)(const char*, struct stat*);
 	int		(*gl_lstat)(const char*, struct stat*);
 
+	/* ast additions */
+
+	char*		(*gl_nextdir)(glob_t*, char*);
+
 #ifdef _GLOB_PRIVATE_
 	_GLOB_PRIVATE_
 #else
-	char*		gl_pad[16];
+	char*		gl_pad[12];
 #endif
 
 };

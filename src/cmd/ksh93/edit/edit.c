@@ -582,6 +582,8 @@ void	ed_setup(register Edit_t *ep, int fd)
 	char inquote = 0;
 	ep->e_fd = fd;
 #ifdef KSHELL
+	ep->e_stkptr = stakptr(0);
+	ep->e_stkoff = staktell();
 	if(!(last = sh.prompt))
 		last = "";
 	sh.prompt = 0;
@@ -759,12 +761,12 @@ static int putstack(Edit_t *ep,char string[], register int nbyte, int type)
 #ifdef SHOPT_MULTIBYTE
 	char *endp, *p=string;
 	int size, offset = ep->e_lookahead + nbyte;
-	wchar_t widechar;
+	*(endp = &p[nbyte]) = 0;
 	endp = &p[nbyte];
 	do
 	{
 		c = (int)((*p) & STRIP);
-		if(c< 0x80)
+		if(c< 0x80 && c!='<')
 		{
 			if (type)
 				c = -c;
@@ -784,22 +786,26 @@ static int putstack(Edit_t *ep,char string[], register int nbyte, int type)
 		else
 		{
 		again:
-			if((size = mbtowc(&widechar, p, (endp - p))) >0)
-			{
-				c = (int)widechar;
-				p += (size - 1);  /* more increment below */
-			}
+			if((c=mbchar(p)) >=0)
+				p--;	/* incremented below */
 #ifdef EILSEQ
 			else if(errno == EILSEQ)
 				errno = 0;
 #endif
-			else if((endp-p) < MB_CUR_MAX)
+			else if((endp-p) < mbmax())
 			{
-				if (ed_read(ep->e_fd,endp, 1) == 1)
+				if ((c=ed_read(ep->e_fd,endp, 1)) == 1)
 				{
-					endp++;
+					*++endp = 0;
 					goto again;
 				}
+				return(c);
+			}
+			else
+			{
+				ed_ringbell();
+				c = -(int)((*p) & STRIP);
+				offset += mbmax()-1;
 			}
 		}
 		ep->e_lbuf[--offset] = c;
@@ -852,7 +858,8 @@ int ed_getchar(register Edit_t *ep,int mode)
 		ed_flush(ep);
 		ep->e_inmacro = 0;
 		/* The while is necessary for reads of partial multbyte chars */
-		while((n=ed_read(ep->e_fd,readin,-LOOKAHEAD)) > 0 && putstack(ep,readin,n,1)==0);
+		if((n=ed_read(ep->e_fd,readin,-LOOKAHEAD)) > 0)
+			n = putstack(ep,readin,n,1);
 	}
 	if(ep->e_lookahead)
 	{
@@ -919,7 +926,7 @@ void ed_ungetchar(Edit_t *ep,register int c)
 
 void	ed_putchar(register Edit_t *ep,register int c)
 {
-	char buf[MB_LEN_MAX];
+	char buf[8];
 	register char *dp = ep->e_outptr;
 	register int i,size=1;
 	buf[0] = c;
@@ -927,7 +934,7 @@ void	ed_putchar(register Edit_t *ep,register int c)
 	/* check for place holder */
 	if(c == MARKER)
 		return;
-	if((size = wctomb(buf, (wchar_t)c)) > 1)
+	if((size = mbconv(buf, (wchar_t)c)) > 1)
 	{
 		for (i = 0; i < (size-1); i++)
 			*dp++ = buf[i];
@@ -972,9 +979,9 @@ ed_virt_to_phys(Edit_t *ep,genchar *virt,genchar *phys,int cur,int voff,int poff
 			r = dp - phys;
 		d = (is_print(c)?1:-1);
 #ifdef SHOPT_MULTIBYTE
-		d = wcwidth((wchar_t)c);
-		if(d<0 && !iscntrl(c))
-			d = 1;
+		d = mbwidth((wchar_t)c);
+		if(d==1 && !is_print(c))
+			d = -1;
 		if(d>1)
 		{
 			/* multiple width character put in place holders */
@@ -1027,7 +1034,7 @@ ed_virt_to_phys(Edit_t *ep,genchar *virt,genchar *phys,int cur,int voff,int poff
 int	ed_internal(const char *src, genchar *dest)
 {
 	register const unsigned char *cp = (unsigned char *)src;
-	register int c, size, remainder;
+	register int c;
 	register wchar_t *dp = (wchar_t*)dest;
 	if((unsigned char*)dest == cp)
 	{
@@ -1036,23 +1043,8 @@ int	ed_internal(const char *src, genchar *dest)
 		ed_gencpy((genchar*)dp,buffer);
 		return(c);
 	}
-	remainder = strlen(src);
-	while(remainder>0)
-	{
-		size = mbtowc(dp, (const char *)cp, remainder);
-		if (size <= 0)
-		{
-			/*
-			 * got a bogus character; just copy it over
-			 * and continue.
-			 */
-			*dp = *cp;
-			size = 1;
-		}
-		dp++;
-		remainder -= size;
-		cp += size;
-	}
+	while(*cp)
+		*dp++ = mbchar(cp);
 	*dp = 0;
 	return(dp-(wchar_t*)dest);
 }
@@ -1083,7 +1075,7 @@ int	ed_external(const genchar *src, char *dest)
 	}
 	while((wc = *src++) && dp<dpmax)
 	{
-		if((size = wctomb(dp, wc)) < 0)
+		if((size = mbconv(dp, wc)) < 0)
 		{
 			/* copy the character as is */
 			size = 1;

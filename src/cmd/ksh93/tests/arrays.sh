@@ -245,4 +245,12 @@ xpath=( $( IFS=: ; echo $XPATH ) )
 if	[[ $(print -r  "${xpath[@]##*/}") != 'bin bin ucb bin . sbin sbin' ]]
 then	err_exit '${xpath[@]##*/} not applied to each element'
 fi
+foo=( zero one '' three four '' six)
+integer n=-1
+if	[[ ${foo[@]:n} != six ]]
+then	err_exit 'array offset of -1 not working'
+fi
+if	[[ ${foo[@]: -3:1} != four ]]
+then	err_exit 'array offset of -3:1 not working'
+fi
 exit $((Errors))

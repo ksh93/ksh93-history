@@ -93,6 +93,17 @@ static struct index_array *array_grow(register struct index_array *arp,int maxi)
 	return(ap);
 }
 
+/* return index of highest element of an array */
+int array_maxindex(Namval_t *np)
+{
+	register struct index_array *ap = (struct index_array*)nv_arrayptr(np);
+	register int i = ap->maxi;
+	if(is_associative(ap))
+		return(-1);
+	while(i>0 && ap->val[--i].cp==0);
+	return(i+1);
+}
+
 /*
  * Change ARRAY_UNDEF as appropriate
  * Allocate the space if necessary, if flag is ARRAY_ASSIGN

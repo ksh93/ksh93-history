@@ -192,6 +192,10 @@ int*		uflagp;
 	default :
 		if(!(oflags&O_CREAT) )
 			oflags &= ~O_EXCL;
+#if _WIN32 && !_UWIN
+		if(!(oflags&(O_BINARY|O_TEXT)))
+			oflags |= O_BINARY;
+#endif
 		if((sflags&SF_RDWR) == SF_RDWR)
 			oflags = (oflags&~(O_RDONLY|O_WRONLY))|O_RDWR;
 		if(oflagsp)

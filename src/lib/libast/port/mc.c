@@ -196,7 +196,7 @@ mcfind(char* path, const char* locale, const char* catalog, int category, int nl
 				sfprintf(sfstderr, "locale find %s\n", file);
 			if (s = pathpath(path, file, "", (!catalog && category == AST_LC_MESSAGES) ? PATH_READ : (PATH_REGULAR|PATH_READ|PATH_ABSOLUTE)))
 			{
-				if (ast.locale.set & AST_LC_setlocale)
+				if (ast.locale.set & (AST_LC_find|AST_LC_setlocale))
 					sfprintf(sfstderr, "locale path %s\n", s);
 				errno = oerrno;
 				return s;

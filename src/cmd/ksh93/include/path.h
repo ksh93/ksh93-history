@@ -52,6 +52,7 @@ typedef struct pathcomp
 	dev_t		dev;
 	ino_t		ino;
 	char		*name;
+	char		*lib;
 	unsigned short	len;
 	unsigned short	flags;
 	Shell_t		*shp;
@@ -73,14 +74,8 @@ extern Pathcomp_t 	*path_absolute(const char*, Pathcomp_t*);
 extern char 		*path_basename(const char*);
 extern int 		path_expand(const char*, struct argnod**);
 extern void 		path_exec(const char*,char*[],struct argnod*);
-#if _BLD_shell
-#if _BLD_DLL && defined(__EXPORT__)
+#if defined(_DLL_BLD) && defined(_BLD_shell) 
 #   define extern __EXPORT__
-#endif
-#else
-#if defined(__IMPORT__)
-#   define extern __IMPORT__
-#endif
 #endif
 extern int		path_open(const char*,Pathcomp_t*);
 extern Pathcomp_t 	*path_get(const char*);

@@ -40,12 +40,11 @@
 #include	"variables.h"
 #include	"FEATURE/locale"
 
-void xxxx(){}
-
 static Namval_t *scope(register Namval_t *np,register struct lval *lvalue,int assign)
 {
 	register Namarr_t *ap;
 	register int flag = lvalue->flag;
+	register char *sub=0;
 	if(lvalue->emode&ARITH_COMP)
 	{
 		char *cp = (char*)np;
@@ -56,7 +55,6 @@ static Namval_t *scope(register Namval_t *np,register struct lval *lvalue,int as
 			int c = cp[flag];
 			cp[flag] = 0;
 			np = nv_open(cp,sh.var_tree,NV_NOASSIGN|NV_VARNAME);
-xxxx();
 			cp[flag] = c;
 			if(cp[flag+1]=='[')
 				flag++;
@@ -64,12 +62,21 @@ xxxx();
 				flag = 0;
 		}
 		else if(dtvnext(sh.var_tree) && (mp=nv_search((char*)np,sh.var_tree,HASH_NOSCOPE|HASH_SCOPE|HASH_BUCKET)))
+		{
+			while(nv_isref(mp))
+			{
+				sub = mp->nvenv;
+				mp = nv_refnode(mp);
+			}
 			np = mp;
+		}
 	}
-	if(flag)
+	if(flag || sub)
 	{
+		if(!sub)
+			sub = (char*)&lvalue->expr[flag];
 		if(((ap=nv_arrayptr(np)) && array_assoc(ap)) || (lvalue->emode&ARITH_COMP))
-			nv_endsubscript(np,(char*)&lvalue->expr[flag],NV_ADD|NV_SUBQUOTE);
+			nv_endsubscript(np,sub,NV_ADD|NV_SUBQUOTE);
 		else
 			nv_putsub(np, NIL(char*),flag);
 	}

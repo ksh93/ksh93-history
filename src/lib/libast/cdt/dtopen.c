@@ -24,7 +24,7 @@
 *                 Phong Vo <kpv@research.att.com>                  *
 *******************************************************************/
 #include	"dthdr.h"
-static char*     Version = "\n@(#)$Id: cdt (AT&T Labs Research) 1998-05-01 $\0\n";
+static char*     Version = "\n@(#)$Id: cdt (AT&T Labs Research) 2001-09-19 $\0\n";
 
 /* 	Make a new dictionary
 **
@@ -80,6 +80,7 @@ Dtmethod_t*	meth;
 	data->here = NIL(Dtlink_t*);
 	data->htab = NIL(Dtlink_t**);
 	data->ntab = data->size = data->loop = 0;
+	data->minp = 0;
 
 done:
 	dt->data = data;

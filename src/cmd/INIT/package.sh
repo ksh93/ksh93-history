@@ -30,7 +30,7 @@ case $-:$BASH_VERSION in
 esac
 
 command=package
-version=2001-08-11
+version=2001-10-20
 
 src="cmd contrib etc lib"
 use="/home /usr/common /exp /usr/local /usr/add-on /usr/addon /usr/tools /usr /opt"
@@ -185,7 +185,11 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 		default \atarget\a is \binstall\b, which makes and installs
 		\apackage\a. If the standard output is a terminal then the
 		output is also captured in
-		\b$INSTALLROOT/lib/package/gen/make.out\b.]
+		\b$INSTALLROOT/lib/package/gen/make.out\b. The build is done
+		in the \b$INSTALLROOT\b directory tree viewpathed on top of
+		the \b$PACKAGEROOT\b directory tree. Leaf directory names
+		matching the \b|\b-separated shell pattern \b$MAKESKIP\b
+		are ignored.]
 	[+read\b [ \apackage\a ... | \aarchive\a ... ]]?Read the named
 		package or archive(s). Must be run from the package root
 		directory. Archives are searched for in \b.\b and
@@ -333,8 +337,8 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 	line consisting of \apackage version release\a \b1\b for the most
 	recent instance of \apackage\a read into \b$PACKAGEROOT\b, where
 	\apackage\a is the package name, \aversion\a is the \aYYYY-MM-DD\a
-	base version, and \arelease\a is \b0000\b for the base release, and
-	\b0\b\annn\a for the \annn\ath delta. \apackage\a\b.req\b contains
+	base version, and \arelease\a is \aversion\a for the base release or
+	\aYYYY-MM-DD\a for delta releases. \apackage\a\b.req\b contains
 	*\b.ver\b entries for the packages required by \apackage\a, except
 	that the fourth field is \b0\b instead of \b1\b. All packages except
 	\bINIT\b require the \bINIT\b package. A simple sort of
@@ -526,15 +530,16 @@ ${bT}(3)${bD}Create the subdirectory ${bB}lib/package/tgz${eB} and download all 
       directory, and deletes old archives as new ones are read in. Package
       delta archives require the most recent base, so manually removing files
       in this directory may invalidate future deltas.${eD}
-${bT}(4)${bD}If the ${bB}bin/package${eB} command does not exist then manually read the ${bB}INIT${eB} binary package:${bX}
-		gunzip < lib/package/tgz/INIT.${bI}YYYY-MM-DD${eI}.0000.${bI}HOSTTYPE${eI}.tgz |
+${bT}(4)${bD}If the ${bB}bin/package${eB} command does not exist then manually read the ${bB}INIT${eB}
+      binary package:${bX}
+		gunzip < lib/package/tgz/INIT.${bI}YYYY-MM-DD${eI}.${bI}HOSTTYPE${eI}.tgz |
 			tar xvf -${eX}
       where ${bI}HOSTTYPE${eI} is compatible with your host architecture. If your system
       does not have ${Mtar} or ${Mgunzip} then download the ${Mratz} binary package,
       install it, and manually read the ${bB}INIT${eB} binary command:${bX}
 		mkdir bin
-		cp lib/package/tgz/ratz.${bI}YYYY-MM-DD${eI}.0000.${bI}HOSTTYPE${eI}${bB}.exe${eB} bin/ratz
-		bin/ratz -lm < lib/package/tgz/INIT.YYYY-MM-DD.0000.${bI}HOSTTYPE${eI}.tgz${eX}${eD}
+		cp lib/package/tgz/ratz.${bI}YYYY-MM-DD${eI}.${bI}HOSTTYPE${eI}${bB}.exe${eB} bin/ratz
+		bin/ratz -lm < lib/package/tgz/INIT.YYYY-MM-DD.${bI}HOSTTYPE${eI}.tgz${eX}${eD}
 ${bT}(5)${bD}Read all unread package archive(s):${bX}
 		bin/package read${eX}
       Both binary and source packages will be read by this step.${eD}
@@ -594,7 +599,7 @@ ${bB}\$INSTALLROOT/lib/package/gen${eB}. ${bI}PACKAGE${eI}${bB}.ver${eB} contain
 	${bI}PACKAGE VERSION RELEASE${eI} 1${eX}
 for the most recent instance of ${bI}PACKAGE${eI} read into ${bB}\$PACKAGEROOT${eB}, where
 ${bI}PACKAGE${eI} is the package name, ${bI}VERSION${eI} is the ${bI}YYYY-MM-DD${eI} base version,
-and ${bI}RELEASE${eI} is 0000 for the base release, and 0${bI}NNN${eI} for the ${bI}NNN${eI}th delta.
+and ${bI}RELEASE${eI} is ${bI}VERSION${eI} for the base release or ${bI}YYYY-MM-DD${eI} for delta releases.
 ${bI}PACKAGE${eI}${bB}.req${eB} contains *${bB}.ver${eB} entries for the packages required by
 ${bI}PACKAGE${eI}, except that the fourth field is 0 instead of 1. All packages
 except ${bB}INIT${eB} and ${Mratz} require the ${bB}INIT${eB} package. A simple sort of ${bI}PACKAGE${eI}${bB}.pkg${eB}
@@ -655,13 +660,13 @@ ${bT}(3)${bD}Create the subdirectory ${bB}lib/package/tgz${eB} and download all 
       delta archives require the most recent base, so manually removing files
       in this directory may invalidate future deltas.${eD}
 ${bT}(4)${bD}If the ${bB}bin/package${eB} command does not exist then manually read the ${bB}INIT${eB} source package:${bX}
-		gunzip < lib/package/tgz/INIT.${bI}YYYY-MM-DD${eI}.0000.tgz | tar xvf -${eX}
+		gunzip < lib/package/tgz/INIT.${bI}YYYY-MM-DD${eI}.tgz | tar xvf -${eX}
       If your system does not have ${Mtar} or ${Mgunzip} then download the ${Mratz}
       source package, compile it, and manually read the ${bB}INIT${eB} source package:${bX}
 		mkdir bin
-		cp lib/package/tgz/ratz.${bI}YYYY-MM-DD${eI}.0000.c lib/package/tgz/ratz.c
+		cp lib/package/tgz/ratz.${bI}YYYY-MM-DD${eI}.c lib/package/tgz/ratz.c
 		cc -o bin/ratz lib/package/tgz/ratz.c
-		bin/ratz -lm < lib/package/tgz/INIT.${bI}YYYY-MM-DD${eI}.0000.tgz
+		bin/ratz -lm < lib/package/tgz/INIT.${bI}YYYY-MM-DD${eI}.tgz
 ${bT}(5)${bD}Read all unread package archive(s):${bX}
 		bin/package read${eX}
       Both source and binary packages will be read by this step.${eD}
@@ -806,7 +811,11 @@ ${eL}${eO}"
 		Build and install. The default TARGET is install, which
 		makes and installs all packages. If the standard output
 		is a terminal then the output is also captured in
-		\$INSTALLROOT/lib/package/gen/make.out.
+		\$INSTALLROOT/lib/package/gen/make.out. The build is done
+		in the \$INSTALLROOT directory tree viewpathed on top of
+		the \$PACKAGEROOT directory tree. Leaf directory names
+		matching the |-separated shell pattern \$MAKESKIP
+		are ignored.
 	read [ package ... | archive ... ]
 		Read the named package archive(s). Must be run from the
 		package root directory. Archives are searched for in .
@@ -852,18 +861,16 @@ ${eL}${eO}"
 		package cksum(1) command.
 	write [closure] [exp|lcl|pkg|rpm] [base|delta] [binary|source] PACKAGE
 		Write an archive for PACKAGE. The archive name is
-		lib/package/SAVE/PACKAGE.RELEASE[.HOSTTYPE].VERSION.SUFFIX:
+		lib/package/SAVE/PACKAGE.RELEASE[.VERSION][.HOSTTYPE].SUFFIX:
 		   SAVE      [exp|lcl|pkg|rpm] or tgz by default
 		   PACKAGE   package name
 		   RELEASE   YYYY-MM-DD when the base archive was generated
+		   VERSION   omitted for base archive or YYYY-MM-DD for deltas
 		   HOSTTYPE  the current host type via "package host type"
 			     for binary archives, omitted for source archives
-		   VERSION   .0000 for base archive, YYYY-MM-DD for last delta,
-			     .NNNN for delta, where NNNN is one more than the
-			     most recent delta, 0001 for the first delta
-		   SUFFIX    \".tgz\" for all packages except \"ratz\", which
-		             either has the \".c\" source package suffix or the
-			     \".exe\" binary package suffix.
+		   SUFFIX    \".tgz\" or \".gz\" for all packages except \"ratz\",
+			     which either has the \".c\" source package suffix
+			     or the \".exe\" binary package suffix.
 		closure writes the closure of all package components, useful
 		with lcl for backup and versioning. lcl omits the proto(1)
 		source licensing; otherwise source files not already annotated
@@ -919,9 +926,12 @@ args=
 assign=
 for i
 do	case $i in
-	CC=*|CCFLAGS=*)
+	CC=*)	eval $i
+		assign="$assign CC=\"\$CC\""
+		;;
+	CCFLAGS=*)
 		eval $i
-		assign="$assign '$i'"
+		assign="$assign CCFLAGS=\"\$CCFLAGS\""
 		;;
 	HOSTTYPE=*)
 		eval $i
@@ -1616,6 +1626,9 @@ main()
 				;;
 			*)	type=`echo $os | sed -e 's/[0123456789].*//' -e 's/[^ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_0123456789.].*//'`
 				case $type in
+				[Cc][Yy][Gg][Ww][Ii][Nn]_*)
+					type=cygwin
+					;;
 				[Uu][Ww][Ii][Nn]*|[Ww]indows_[0123456789][0123456789]|[Ww]indows_[Nn][Tt])
 					type=win32
 					arch=`echo $arch | sed -e 's/_[^_]*$//'`
@@ -2547,70 +2560,6 @@ checkaout()	# cmd ...
 	done
 }
 
-# check that all package licenses are/were accepted
-#
-# NOTE: circumventing the license checks will be taken
-#	as an implicit acceptance of *all* licenses
-
-accepted=.license.accepted
-
-checklicenses()
-{
-	_checklicenses_dir=lib/package
-	_checklicenses_ok=1
-	_checklicenses_list=`ls $PACKAGESRC/LICENSES 2>/dev/null`" -- "`ls $PACKAGEBIN/LICENSES 2>/dev/null`
-	for _checklicenses_i in $_checklicenses_list
-	do	case $_checklicenses_i in
-		--)	_checklicenses_dir=$PACKAGEBIN; break ;; # src for now
-		README)	continue ;;
-		esac
-		_checklicenses_gen=$_checklicenses_dir/gen
-		_checklicenses_accepted=$_checklicenses_gen/$_checklicenses_i$accepted
-		if	view - $_checklicenses_accepted
-		then	continue
-		fi
-		_checklicenses_gen=$PACKAGEROOT/$_checklicenses_gen
-		_checklicenses_accepted=$PACKAGEROOT/$_checklicenses_accepted
-		case $exec in
-		'')	echo "$command: $PACKAGESRC/LICENSES/$_checklicenses_i: license has not been accepted yet" >&2
-			while	:
-			do	echo
-				echo "Enter y to accept, p to print, n to reject, anything else to quit:" >&2
-				read _checklicenses_reply || exit
-				case $_checklicenses_reply in
-				[nN]*)	_checklicenses_ok=0
-					continue 2
-					;;
-				[pP]*)	case $PAGER in
-					'')	if	more /dev/null 2>/dev/null
-						then	PAGER=more
-						else	PAGER=cat
-						fi
-						;;
-					esac
-					$PAGER $PACKAGESRC/LICENSES/$_checklicenses_i
-					;;
-				[yY]*)	break
-					;;
-				*)	exit
-					;;
-				esac
-			done
-			test -d $_checklicenses_gen || mkdir -p $_checklicenses_gen || exit
-			touch $_checklicenses_accepted || exit
-			;;
-		*)	echo "$command: $PACKAGESRC/LICENSES/$_checklicenses_i: license has not been accepted yet" >&2
-			_checklicenses_ok=0
-			;;
-		esac
-	done
-	case $_checklicenses_ok in
-	0)	echo "$command: cannot continue until all licenses have been accepted" >&2
-		exit 1
-		;;
-	esac
-}
-
 # check package requirements against received packages
 
 requirements() # source|binary [ package ]
@@ -2680,7 +2629,7 @@ $v $r"
 			case $s in
 			0)	e=1
 				case $r in
-				0000)	echo "$command: base package $p.$v or newer required" >&2 ;;
+				base)	echo "$command: base package $p.$v or newer required" >&2 ;;
 				*)	echo "$command: delta package $p.$v.$r or newer required" >&2 ;;
 				esac
 				;;
@@ -2855,9 +2804,18 @@ components() # [ package ]
 capture() # file command ...
 {
 	case $make:$noexec in
-	:)	case $package in
-		'')	o=$action ;;
-		*)	o=$package ;;
+	:)	case $action in
+		install|make)
+			o=$action
+			;;
+		*)	case $package in
+			''|*' '*)
+				o=$action
+				;;
+			*)	o=$package
+				;;
+			esac
+			;;
 		esac
 		case $action in
 		write)	d=$PACKAGESRC/gen ;;
@@ -2969,8 +2927,7 @@ make_recurse() # dir
 
 case $action in
 
-admin)	checklicenses
-	while	test ! -f $admin_db
+admin)	while	test ! -f $admin_db
 	do	case $admin_db in
 		/*)	echo $command: $action: $admin_db: data file not found >&2
 			exit 1
@@ -3149,7 +3106,10 @@ contents|list)
 		then	echo $command: $action: $pkg: not a package >&2
 		else	if	test -f gen/$pkg.ver
 			then	set '' `cat gen/$pkg.ver`
-				ver=$3
+				case $3 in
+				$2)	ver=base ;;
+				*)	ver=$3 ;;
+				esac
 				if	test -s tgz/$pkg.tim
 				then	sts=local
 				else	sts=
@@ -3219,7 +3179,7 @@ contents|list)
 					esac
 					case $action in
 					list)	case $sts in
-						'')	case `ls -t "tgz/$pkg.$ver.0000" "tgz/$pkg.tim" 2>/dev/null` in
+						'')	case `ls -t "tgz/$pkg.$ver.base" "tgz/$pkg.tim" 2>/dev/null` in
 							"tgz/$pkg.tim"*)
 								sts=read
 								;;
@@ -3228,9 +3188,9 @@ contents|list)
 							esac
 							;;
 						esac
-						echo "$pkg${nl}$ver${nl}0000${nl}$typ${nl}$sts${nl}$req"
+						echo "$pkg${nl}$ver${nl}base${nl}$typ${nl}$sts${nl}$req"
 						case $typ in
-						'')	omit=$omit$pkg.$ver.0000: ;;
+						'')	omit=$omit$pkg.$ver.base: ;;
 						esac
 						;;
 					*)	case $req in
@@ -3254,7 +3214,7 @@ contents|list)
 		then	cd tgz
 			# f:file p:package v:version r:release t:type u:update
 			for f in `find . -name '*?[_.][0123456789][0123456789][0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789][_.]*' -print | sed 's,^\./,,' | sort -r`
-			do	eval `echo "$f" | sed -e 's,\.c$,,' -e 's,\.gz$,,' -e 's,\.exe$,,' -e 's,\.tgz$,,' -e 's,\([^_.]*\)[_.]\([0123456789][0123456789][0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789]\)[_.]\([^_.]*\)[_.]*\(.*\),p=\1 v=\2 r=\3 t=\4,'`
+			do	eval `echo "$f" | sed -e 's,\.c$,,' -e 's,\.gz$,,' -e 's,\.exe$,,' -e 's,\.tgz$,,' -e 's,\([^_.]*\)[_.]\([0123456789][0123456789][0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789]\)[_.]\([0123456789][0123456789][0123456789][0123456789][^_.]*\)[_.]*\(.*\),p=\1 v=\2 r=\3 t=\4,' -e 's,\([^_.]*\)[_.]\([0123456789][0123456789][0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789]\)[_.]*\(.*\),p=\1 v=\2 r=base t=\3,'`
 				case $t in
 				'')	case $omit in
 					*:$p.$v.$r:*)	continue ;;
@@ -3344,8 +3304,7 @@ copyright)
 	done
 	;;
 
-install)checklicenses
-	cd $PACKAGEROOT
+install)cd $PACKAGEROOT
 	set '' $package
 	shift
 	case $only in
@@ -3403,8 +3362,16 @@ install)checklicenses
 		-)	a=$HOSTTYPE ;;
 		esac
 		case $flat:$a in
-		1:*|?:.)dest=$directory ;;
-		*)	dest=$directory/arch/$a ;;
+		1:*|?:.)dest=$directory
+			;;
+		*)	dest=$directory/arch/$a
+			if	test "" = "$exec" -a ! -d $dest
+			then	mkdir -p $dest || {
+					echo "$command: $dest: destination directory must exist" >&2
+					exit 1
+				}
+			fi
+			;;
 		esac
 		for i in $package
 		do	if	test "ratz" = "$i"
@@ -3424,6 +3391,7 @@ install)checklicenses
 				fi
 				if	test "" != "$exec"
 				then	(
+						trap - 0 1 2 15
 						echo "=== $i installation manifest ==="
 						cd arch/$a
 						(
@@ -3435,13 +3403,14 @@ install)checklicenses
 						) | sort -u
 					)
 				else	(
+						set -
 						cd arch/$a
 						(
 						cd lib/package
 						INSTALLROOT=$PACKAGEROOT/arch/$a
 						VPATH=$INSTALLROOT:$PACKAGEROOT:$VPATH
 						export INSTALLROOT VPATH
-						eval capture \$MAKE -s \$makeflags -f \$i.pkg \$qualifier list.install $assign
+						$MAKE -s $makeflags -f $i.pkg $qualifier list.install $assign
 						) | sort -u | pax -drw $dest
 					)
 				fi
@@ -3451,8 +3420,51 @@ install)checklicenses
 	exit $code
 	;;
 
-make)	checklicenses
-	cd $PACKAGEROOT
+license)# all work in $PACKAGESRC/LICENSES
+
+	cd $PACKAGESRC/LICENSES || exit
+
+	# generate the package list
+
+	set '' $target $package
+	shift
+	argc=$#
+	case $# in
+	0)	set '' *
+		shift
+		case $1 in
+		'*')	echo $command: $action: no licenses >&2
+			exit 1
+			;;
+		esac
+		;;
+	esac
+	for i
+	do	j=$i
+		while	:
+		do	if	test -f $j
+			then	case $exec in
+				'')	echo
+					echo "		--- $j package source license ---"
+					echo
+					cat $j
+					;;
+				*)	echo $PACKAGESRC/LICENSES/$j
+				esac
+				break
+			fi
+			case $j in
+			*-*)	j=`echo $j | sed -e 's,-[^-]*$,,'`
+				;;
+			*)	echo "$command: $i: no package license" >&2
+				break
+				;;
+			esac
+		done
+	done
+	;;
+
+make)	cd $PACKAGEROOT
 	case $package in
 	'')	lic="lib/package/*.lic"
 		;;
@@ -3484,25 +3496,39 @@ make)	checklicenses
 		if	test -d $i
 		then	test -d $INSTALLROOT/$i || $exec mkdir $INSTALLROOT/$i || exit
 			make_recurse $i
-		fi
-		for i in src/$d/*
-		do	for j in $makefiles
-			do	if	test -f $i/$j
-				then	test -d $INSTALLROOT/$i || $exec mkdir $INSTALLROOT/$i || exit
-					break
-				fi
+			for j in `cd src/$d && echo '' *`
+			do	case $j in
+				$MAKESKIP) continue ;;
+				esac
+				for k in $makefiles
+				do	if	test -f $i/$j/$k
+					then	test -d $INSTALLROOT/$i/$j || $exec mkdir $INSTALLROOT/$i/$j || exit
+						break
+					fi
+				done
 			done
-		done
+		fi
 	done
 	for i in $lic
 	do	test -f $i || continue
 		cmp -s $i $INSTALLROOT/$i || $exec cp $PACKAGEROOT/$i $INSTALLROOT/$i
 	done
-	if	test ! -f $INSTALLROOT/bin/.fpath
+	if	test ! -f $INSTALLROOT/bin/.paths
 	then	case $exec in
-		'')	echo ../fun > $INSTALLROOT/bin/.fpath ;;
-		*)	$exec "echo ../fun > $INSTALLROOT/bin/.fpath" ;;
+		'')	echo FPATH=../fun > $INSTALLROOT/bin/.paths ;;
+		*)	$exec "echo FPATH=../fun > $INSTALLROOT/bin/.paths" ;;
 		esac
+	fi
+
+	# initialize a few command alias scripts for mamake
+
+	if	( ed ) < /dev/null > /dev/null 2>&1
+	then	: ed is ok
+	else	case $exec in
+		'')	echo 'ex -s "$@"' > $INSTALLROOT/bin/ed ;;
+		*)	$exec "echo 'ex -s \"\$@\"' > $INSTALLROOT/bin/ed" ;;
+		esac
+		$exec chmod +x $INSTALLROOT/bin/ed
 	fi
 	checkaout mamake ratz release
 
@@ -3538,7 +3564,23 @@ make)	checklicenses
 	if	test ! -x $NMAKE -a -d $PACKAGEROOT/src/cmd/nmake
 	then	if	nonmake $MAKE
 		then	note make $NMAKE with mamake
+			c=$CC
+			a=$assign
+			case $HOSTTYPE in
+			win32*|cygwin*)
+				CC="$CC -D_BLD_STATIC"
+				accept="libast"
+				case $assign in
+				*' CC='*)	;;
+				*)		assign="$assign CC=\"\$CC\"" ;;
+				esac
+				;;
+			*)	accept=nmake
+				;;
+			esac
 			eval capture mamake \$makeflags \$noexec install nmake $assign
+			assign=$a
+			CC=$c
 			case $make$noexec in
 			'')	if	test ! -x $NMAKE
 				then	echo "$command: $action: errors making $NMAKE" >&2
@@ -3556,8 +3598,9 @@ make)	checklicenses
 					export VPATH
 				fi
 			fi
-			note accept generated files for $NMAKE
-			eval capture \$NMAKE \$makeflags \$noexec -t recurse install nmake $assign
+			note accept generated files for $accept
+			eval capture \$NMAKE \$makeflags \$noexec -t recurse install $accept $assign
+			$exec touch $INSTALLROOT/bin/.paths
 			note make the remaining targets with $NMAKE
 		else	eval capture $MAKE \$makeflags \$noexec install nmake $assign
 			case $make$noexec in
@@ -3596,7 +3639,9 @@ make)	checklicenses
 	case $EXECROOT in
 	$INSTALLROOT)
 		$make cd $INSTALLROOT/bin
-		for i in ksh nmake tee ast*.* cmd*.* dll*.* shell*.*
+		for i in \
+			ksh nmake tee cp ln mv rm \
+			*ast*.dll *cmd*.dll *dll*.dll *shell*.dll
 		do	if	test -x $i
 			then	cmp -s $i $OK/$i ||
 				$exec cp $i $OK/$i
@@ -3614,6 +3659,8 @@ make)	checklicenses
 			COSHELL=$SHELL
 			export COSHELL
 		fi
+		PATH=$INSTALLROOT/bin/$OK:$PATH
+		export PATH
 		$make cd $INSTALLROOT/src
 		;;
 	esac
@@ -3633,47 +3680,7 @@ make)	checklicenses
 	fi
 	;;
 
-license)# all work in $PACKAGESRC/LICENSES
-
-	cd $PACKAGESRC/LICENSES || exit
-
-	# generate the package list
-
-	set '' $target $package
-	shift
-	argc=$#
-	case $# in
-	0)	set '' *
-		shift
-		case $1 in
-		'*')	echo $command: $action: no licenses >&2
-			exit 1
-			;;
-		esac
-		;;
-	esac
-	for i
-	do	j=$i
-		while	:
-		do	if	test -f $j
-			then	echo $j package source license
-				echo
-				cat $j
-				break
-			fi
-			case $j in
-			*-*)	j=`echo $j | sed -e 's,-[^-]*$,,'`
-				;;
-			*)	echo "$command: $i: no package license" >&2
-				break
-				;;
-			esac
-		done
-	done
-	;;
-
-read)	checklicenses
-	case `pwd` in
+read)	case `pwd` in
 	$PACKAGEROOT)
 		;;
 	*)	echo "$command: must be in package root directory" >&2
@@ -3736,8 +3743,15 @@ read)	checklicenses
 			;;
 		esac
 	done
-	for f in $f1 $f2 $f3 $f4
-	do	case $f in
+	gen=
+	set '' $f1 $f2 $f3 $f4
+	while	:
+	do	shift
+		case $# in
+		0)	break ;;
+		esac
+		f=$1
+		case $f in
 		*.gz)	: standalone packages unbundled manually
 			continue
 			;;
@@ -3753,9 +3767,13 @@ read)	checklicenses
 		*)	d= a=$f ;;
 		esac
 		# f:file d:dir a:base p:package v:version r:release t:type
-		eval `echo "$a" | sed -e 's,\.c$,,' -e 's,\.gz$,,' -e 's,\.exe$,,' -e 's,\.tgz$,,' -e 's,\([^_.]*\)[_.]\([0123456789][0123456789][0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789]\)[_.]\([^_.]*\)[_.]*\(.*\),p=\1 v=\2 r=\3 t=\4,'`
+		eval `echo "$a" | sed -e 's,\.c$,,' -e 's,\.gz$,,' -e 's,\.exe$,,' -e 's,\.tgz$,,' -e 's,\([^_.]*\)[_.]\([0123456789][0123456789][0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789]\)[_.]\([0123456789][0123456789][0123456789][0123456789][^_.]*\)[_.]*\(.*\),p=\1 v=\2 r=\3 t=\4,' -e 's,\([^_.]*\)[_.]\([0123456789][0123456789][0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789]\)[_.]*\(.*\),p=\1 v=\2 r=base t=\3,'`
+		case $r in
+		base)	y=$p.base ;;
+		*)	y=$p.delta ;;
+		esac
 		case " $x " in
-		*" $p "*)
+		*" $y "*)
 			continue
 			;;
 		esac
@@ -3774,20 +3792,23 @@ read)	checklicenses
 		u=$d$p$q.tim
 		if	test -s "$u"
 		then	continue
-		fi
-		case $force in
-		0)	case `ls -t "$f" "$u" 2>/dev/null` in
-			"$u"*)	case $verbose in
-				1)	note $p already read ;;
+		else	case $force in
+			0)	case `ls -t "$f" "$u" 2>/dev/null` in
+				"$u"*)	case $verbose in
+					1)	note $p already read ;;
+					esac
+					continue
+					;;
 				esac
-				continue
 				;;
 			esac
-			;;
+		fi
+		case $p in
+		INIT)	$exec mv $PACKAGEROOT/bin/package $PACKAGEROOT/bin/package.old ;;
 		esac
 		z=
 		case $r in
-		0000)	# base archive
+		base)	# base archive
 			if	test ratz = "$p"
 			then	# ratz packages are not archives
 				case $t in
@@ -3852,32 +3873,73 @@ read)	checklicenses
 				code=1
 				continue
 			}
-			b=${d}${p}_${v}_0000${Q}.tgz
-			test -f "$b" || b=${d}${p}.${v}.0000${q}.tgz
-			test -f "$b" || {
-				echo "$command: $f: base archive $b required to read delta" >&2
-				code=1
-				continue
-			}
-			$exec pax --from=ascii -lm -ps -rvf "$f" -z "$b" || {
-				code=1
-				continue
-			}
-			case $r in
-			[0123456789][0123456789][0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789])
-				note $f: generate new base $d$p.$r.0000$q.tgz
-				$exec pax -rf "$f" -z "$b" -wf $d$p.$r.0000$q.tgz -x tgz || {
+			case `echo "$v:
+$r:" | sort` in
+			$r:*)	y=$p.base
+				b=${d}${p}_${r}${Q}.tgz
+				test -f "$b" || b=${d}${p}.${r}${q}.tgz
+				test -f "$b" || {
+					case " $gen " in
+					*" $b "*)
+						;;
+					*)	case $# in
+						1)	echo "$command: $f: base archive $b required to read delta" >&2
+							code=1
+							;;
+						*)	shift
+							y=$1
+							shift
+						set '' $y $f "$@"
+						esac
+						continue
+						;;
+					esac
+				}
+				$exec pax --from=ascii -lm -ps -rvf "$f" -z "$b" || {
+					code=1
+					continue
+				}
+				note $f: generate new base $d$p.$v$q.tgz
+				$exec pax -rf "$f" -z "$b" -wf $d$p.$v$q.tgz -x tgz || {
 					code=1
 					continue
 				}
 				case $exec in
-				'')	echo $p $r 0000 1 > $w/gen/$p.ver
+				'')	echo $p $v $v 1 > $w/gen/$p.ver
 					;;
-				*)	z=$d$p[_.]$r[_.]0000$q.tgz
-					$exec "echo $p $r 0000 1 > $w/gen/$p.ver"
+				*)	z=$d$p[_.]$v$q.tgz
+					$exec "echo $p $v $v 1 > $w/gen/$p.ver"
+					gen="$gen $d$p.$v$q.tgz"
 					;;
 				esac
-				remove="$remove $f"
+				case " $remove " in
+				*" $f "*)	;;
+				*)		remove="$remove $f" ;;
+				esac
+				;;
+			*)	b=${d}${p}_${v}${Q}.tgz
+				test -f "$b" || b=${d}${p}.${v}${q}.tgz
+				test -f "$b" || {
+					case " $gen " in
+					*" $b "*)
+						;;
+					*)	case $# in
+						1)	echo "$command: $f: base archive $b required to read delta" >&2
+							code=1
+							;;
+						*)	shift
+							y=$1
+							shift
+							set '' $y $f "$@"
+						esac
+						continue
+						;;
+					esac
+				}
+				$exec pax --from=ascii -lm -ps -rvf "$f" -z "$b" || {
+					code=1
+					continue
+				}
 				;;
 			esac
 			;;
@@ -3901,17 +3963,26 @@ read)	checklicenses
 		k=
 		for i in `ls $d$p[_.][0123456789][0123456789][0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789][_.]????$m* $z 2>/dev/null`
 		do	case $i in
-			$d$p[_.][0123456789][0123456789][0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789][_.]0000$m*)
+			$d$p[_.][0123456789][0123456789][0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789][_.][0123456789][0123456789][0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789]$m*)
+				;;
+			$d$p[_.][0123456789][0123456789][0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789]$m*)
 				continue
 				;;
 			esac
 			case $k in
-			?*)	remove="$remove $k" ;;
+			?*)	case " $remove " in
+				*" $k "*)	;;
+				*)		remove="$remove $k" ;;
+				esac
+				;;
 			esac
 			k=$i
 		done
-		x="$x $p"
-		touch="$touch $u"
+		x="$x $y"
+		case " $touch " in
+		*" $u "*)	;;
+		*)		touch="$touch $u" ;;
+		esac
 	done
 
 	# drop obsolete archives
@@ -3931,7 +4002,6 @@ read)	checklicenses
 	case $code$exec in
 	0)	requirements - $x ;;
 	esac
-	checklicenses
 	exit $code
 	;;
 
@@ -4202,7 +4272,6 @@ use)	# finalize the environment
 	;;
 
 verify)	cd $PACKAGEROOT
-	checklicenses
 	requirements binary $package
 	if	test ! -x $SUM
 	then	echo "$command: $action: $SUM command required" >&2

@@ -25,6 +25,8 @@
 *******************************************************************/
 #pragma prototyped
 
+#include <ast_common.h>
+
 /*
  * bsd		int getpgrp(int);
  * s5		int getpgrp(void);
@@ -38,9 +40,7 @@ extern int	getpgrp(int);
 #define extern	__EXPORT__
 #endif
 
-extern int	_ast_getpgrp(void);
-
-int
+extern int
 _ast_getpgrp(void)
 {
 	return getpgrp(0);

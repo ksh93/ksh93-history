@@ -112,7 +112,7 @@ typedef struct _vi_
 	char last_cmd;		/* last command */
 	char repeat_set;
 	char nonewline;
-	char findchar;		/* last find char */
+	int findchar;		/* last find char */
 	genchar *lastline;
 	int first_wind;		/* first column of window */
 	int last_wind;		/* last column in window */
@@ -592,6 +592,11 @@ ed_viread(int fd, register char *shbuf, int nchar)
 	/*** add a new line if user typed unescaped \n ***/
 	/* to cause the shell to process the line */
 	tty_cooked(ERRIO);
+	if(ed->e_nlist)
+	{
+		ed->e_nlist = 0;
+		stakset(ed->e_stkptr,ed->e_stkoff);
+	}
 	if( vp->addnl )
 	{
 		virtual[++last_virt] = '\n';
@@ -1983,7 +1988,7 @@ static void replace(register Vi_t *vp, register int c, register int increment)
 		|| !is_print(virtual[cur_virt])
 		|| !is_print(vp->o_v_char)
 #ifdef SHOPT_MULTIBYTE
-		|| !iswascii(c) || wcwidth(vp->o_v_char)>1
+		|| !iswascii(c) || mbwidth(vp->o_v_char)>1
 		|| !iswascii(virtual[cur_virt])
 #endif /* SHOPT_MULTIBYTE */
 		|| (increment && (cur_window==w_size-1)
@@ -2230,7 +2235,7 @@ static void sync_cursor(register Vi_t *vp)
 #ifdef SHOPT_MULTIBYTE
 		int d;
 		c = virtual[v];
-		if((d = wcwidth(c)) > 1)
+		if((d = mbwidth(c)) > 1)
 		{
 			if( v != cur_virt )
 				p += (d-1);
@@ -2315,12 +2320,12 @@ addin:
 		i = last_virt;
 		++last_virt;
 		virtual[last_virt] = 0;
-		if( ed_expand(vp->ed,(char*)virtual, &cur_virt, &last_virt, c) )
+		if( ed_expand(vp->ed,(char*)virtual, &cur_virt, &last_virt, c, vp->repeat_set?vp->repeat:-1) )
 		{
 			last_virt = i;
 			ed_ringbell();
 		}
-		else if(c == '=')
+		else if(c == '=' && !vp->repeat_set)
 		{
 			last_virt = i;
 			vp->nonewline++;

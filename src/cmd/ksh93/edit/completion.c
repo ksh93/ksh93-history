@@ -74,13 +74,12 @@ static char *overlaid(register char *str,register const char *newstr,int nocase)
  * mode is '=' cause files to be listed in select format
  */
 
-ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode)
+int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 {
-	int offset = staktell();
-	char *staksav = stakptr(0);
-	struct comnod  *comptr = (struct comnod*)stakalloc(sizeof(struct comnod));
-	struct argnod *ap = (struct argnod*)stakseek(ARGVAL);
+	struct comnod  *comptr;
+	struct argnod *ap;
 	register char *out;
+	char *av[2];
 	char *begin;
 	char *dir = 0;
 	int addstar;
@@ -88,6 +87,24 @@ ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode)
 	int strip;
 	int var=0;
 	int nomarkdirs = !sh_isoption(SH_MARKDIRS);
+	if(ep->e_nlist)
+	{
+		if(mode=='=' && count>0)
+		{
+			if(count> ep->e_nlist)
+				return(-1);
+			mode = '*';
+			av[0] = ep->e_clist[count-1];
+			av[1] = 0;
+		}
+		else
+		{
+			stakset(ep->e_stkptr,ep->e_stkoff);
+			ep->e_nlist = 0;
+		}
+	}
+	comptr = (struct comnod*)stakalloc(sizeof(struct comnod));
+	ap = (struct argnod*)stakseek(ARGVAL);
 #ifdef SHOPT_MULTIBYTE
 	{
 		register int c = *cur;
@@ -113,6 +130,8 @@ ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode)
 		if(out>outbuff)
 		{
 			/* go to beginning of word */
+			if(ep->e_nlist)
+				out++;
 			do
 			{
 				out--;
@@ -197,7 +216,13 @@ ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode)
 			cmd_completion=1;
 			sh_onstate(SH_COMPLETE);
 		}
-		com = sh_argbuild(&narg,comptr,0);
+		if(ep->e_nlist)
+		{
+			narg = 1;
+			com = av;
+		}
+		else
+			com = sh_argbuild(&narg,comptr,0);
 		sh_offstate(SH_COMPLETE);
                 /* allow a search to be aborted */
 		if(sh.trapnote&SH_SIGSET)
@@ -226,6 +251,8 @@ ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode)
 			sfputc(sfstderr,'\n');
 			sh_menu(sfstderr,narg,com);
 			sfsync(sfstderr);
+			ep->e_nlist = narg;
+			ep->e_clist = com;
 			goto done;
 		}
 		/* see if there is enough room */
@@ -332,6 +359,11 @@ ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode)
 			if(var==2)
 				*out++  = '"';
 		}
+		if(ep->e_nlist)
+		{
+			*out++ = ' ';
+			*out = 0;
+		}
 		*cur = (out-outbuff);
 		/* restore rest of buffer */
 		if(left)
@@ -339,7 +371,8 @@ ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode)
 		*eol = (out-outbuff);
 	}
  done:
-	stakset(staksav,offset);
+	if(!ep->e_nlist)
+		stakset(ep->e_stkptr,ep->e_stkoff);
 	if(nomarkdirs)
 		sh_offoption(SH_MARKDIRS);
 #ifdef SHOPT_MULTIBYTE

@@ -342,7 +342,7 @@ int sh_close(register int fd)
  */
 int sh_open(register const char *path, int flags, ...)
 {
-	register int		fd;
+	register int		fd=0;
 	mode_t			mode;
 #ifdef SOCKET
 	struct sockaddr_in	addr;
@@ -357,9 +357,19 @@ int sh_open(register const char *path, int flags, ...)
 		errno = ENOENT;
 		return(-1);
 	}
-	if (strmatch(path,e_devfdNN))
+	if (strmatch(path,e_devfdNN) || (fd=strmatch(path,"/dev/std@(in|out|err)")))
 	{
-		fd = (int)strtol(path+8, (char**)0, 10);
+		if(fd)
+		{
+			if(path[8]=='i')
+				fd = 0;
+			else if(path[8]=='o')
+				fd = 1;
+			else if(path[8]=='e')
+				fd = 2;
+		}
+		else
+			fd = (int)strtol(path+8, (char**)0, 10);
 		if((mode=sh_iocheckfd(fd))==IOCLOSE)
 			return(-1);
 		flags &= O_ACCMODE;
@@ -371,7 +381,7 @@ int sh_open(register const char *path, int flags, ...)
 
 	}
 #ifdef SOCKET
-	if (strmatch(path, "/dev/@(tcp|udp)/*/*") && str2inet(path + 9, &addr))
+	if (strmatch(path, "/dev/@(tcp|udp)/*/*") && str2inet(path + 5, &addr))
 	{
 		if ((fd = socket(AF_INET, path[5] == 't' ? SOCK_STREAM : SOCK_DGRAM, 0)) >= 0)
 		{
@@ -863,10 +873,12 @@ sh_ioaccess(int fd,register int mode)
 
 static int str2inet(register const char *sp, struct sockaddr_in *addr)
 {
+	char		*proto = (char*)sp;
 	register int	n=0,c,v;
 	unsigned long	a=0;
 	unsigned short	p=0;
 
+	sp += 4;
 	if(memcmp(sp,"local/",6)==0)
 	{
 		a = INADDR_LOOPBACK;
@@ -885,8 +897,19 @@ static int str2inet(register const char *sp, struct sockaddr_in *addr)
 		a = (unsigned long)((struct in_addr*)hp->h_addr)->s_addr;
 		n=6;
 		sp = cp+1;
+		if(!isdigit(*sp))
+		{
+			struct servent *xp;
+			proto[3] = 0;
+			if(xp = getservbyname(sp,proto))
+			{
+				p = xp->s_port;
+				sp = "";
+			}
+			proto[3] = '/';
+		}
 	}
-	for (;;)
+	while(*sp)
 	{
 		v = 0;
 		while ((c = *sp++) >= '0' && c <= '9')
@@ -928,7 +951,7 @@ static int slowexcept(register Sfio_t *iop, int type, Sfdisc_t *handle)
 		return(0);
 	if((sh.trapnote&(SH_SIGSET|SH_SIGTRAP)) && errno!=EIO && errno!=ENXIO)
 		errno = EINTR;
-	if((n=sfslen())<=0)
+	if((n=sfvalue(iop))<=0)
 	{
 		fno = sffileno(iop);
 #ifndef FNDELAY
@@ -1648,4 +1671,19 @@ Sfio_t	*sh_fd2sfio(int fd)
 		sh.sftable[fd] = sp;
 	}
 	return(sp);
+}
+
+Sfio_t *sh_pathopen(const char *cp)
+{
+	int n;
+#ifdef PATH_BFPATH
+	if((n=path_open(cp,path_get(cp))) < 0)
+		n = path_open(cp,(Pathcomp_t*)0);
+#else
+	if((n=path_open(cp,path_get(cp))) < 0)
+		n = path_open(cp,"");
+#endif
+	if(n < 0)
+		errormsg(SH_DICT,ERROR_system(1),e_open,cp);
+	return(sh_iostream(n));
 }

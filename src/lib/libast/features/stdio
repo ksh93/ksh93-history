@@ -304,9 +304,17 @@ cat{
 	#define	stdout		(&_Sfstdout)
 	#define	stderr		(&_Sfstderr)
 
-	extern FILE		_Sfstdin;
-	extern FILE		_Sfstdout;
-	extern FILE		_Sfstderr;
+	#if !_BLD_ast && defined(__IMPORT__) && !_UWIN
+	#define __PUBLIC_DATA__	__IMPORT__
+	#else
+	#define __PUBLIC_DATA__
+	#endif
+
+	extern __PUBLIC_DATA__ FILE	_Sfstdin;
+	extern __PUBLIC_DATA__ FILE	_Sfstdout;
+	extern __PUBLIC_DATA__ FILE	_Sfstderr;
+
+	#undef	__PUBLIC_DATA__
 
 	#endif
 

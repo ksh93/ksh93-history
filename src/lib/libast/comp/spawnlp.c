@@ -25,28 +25,28 @@
 *******************************************************************/
 #pragma prototyped
 
-#if defined(__EXPORT__)
-
-#include <sys/types.h>
-
-#define extern	__EXPORT__
-
-extern pid_t	spawnlp(const char*, const char*, ...);
-
-#undef	extern
-
-#endif
-
-#include <ast.h>
-#include <errno.h>
+#include <ast_lib.h>
 
 #if _lib_spawnlp
+
+#include <ast.h>
 
 NoN(spawnlp)
 
 #else
 
-pid_t
+#define spawnlp		______spawnlp
+
+#include <ast.h>
+#include <errno.h>
+
+#undef	spawnlp
+
+#if defined(__EXPORT__)
+#define extern	__EXPORT__
+#endif
+
+extern pid_t
 spawnlp(const char* name, const char* arg, ...)
 {
 	va_list	ap;

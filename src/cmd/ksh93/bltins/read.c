@@ -79,8 +79,8 @@ int	b_read(int argc,char *argv[], void *extra)
 		break;
 	    case 'n':
 		r = (int)opt_info.num;
-		if(r> 0xfff)
-			errormsg(SH_DICT,1,e_overlimit,"n");
+		if((unsigned)r> 0xfff)
+			errormsg(SH_DICT,ERROR_exit(1),e_overlimit,"n");
 		flags &= ~((1<<D_FLAG)-1);
 		flags |= N_FLAG|(r<< D_FLAG);
 		break;
@@ -250,7 +250,12 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 		}
 		if(sfset(iop,SF_SHARE,0))
 			was_share = 2;
-		if(cp = sfreserve(iop,SF_UNBOUND,1))
+		if(size==0)
+		{
+			cp = sfreserve(iop,0,0);
+			c = 0;
+		}
+		else if(cp = sfreserve(iop,SF_UNBOUND,1))
 			c = sfvalue(iop);
 		else
 			c = 0;
@@ -335,7 +340,7 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 				val = (char*)(cp-1);
 			if(sh_strchr(ifs,(char*)cp-1)>=0)
 			{
-				c = mblen((char*)cp-1,MB_CUR_MAX);
+				c = mbsize((char*)cp-1);
 				if(name)
 					cp[-1] = 0;
 				cp += (c-1);
@@ -412,7 +417,7 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 			{
 				if(sh_strchr(ifs,(char*)cp-1)>=0)
 				{
-					c = mblen((char*)cp-1,MB_CUR_MAX);
+					c = mbsize((char*)cp-1);
 					cp += (c-1);
 					c = S_DELIM;
 				}

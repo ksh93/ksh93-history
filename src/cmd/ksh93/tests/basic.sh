@@ -40,6 +40,16 @@ trap "rm -rf /tmp/ksh$$" EXIT
 pwd=$PWD
 [[ $SHELL != /* ]] && SHELL=$pwd/$SHELL
 cd /tmp/ksh$$ || err_exit "cd /tmp/ksh$$ failed"
+# optimizer bug test
+> foobar
+for i in 1 2
+do      print foobar*
+        rm -f foobar
+done > out$$
+if      [[ "$(<out$$)"  != "foobar"$'\n'"foobar*" ]]
+then    print -u2 "optimizer bug with file expansion"
+fi
+rm -f out$$ foobar
 mkdir dir
 if	[[ $(print */) != dir/ ]]
 then	err_exit 'file expansion with trailing / not working'
@@ -71,10 +81,11 @@ then	set -- foo*
 	then	err_exit 'foo* does not match foo\abc'
 	fi
 fi
-> TT* > TTfoo
-set -- TT*
-if	(( $# < 2 ))
-then	err_exit 'TT* not expanding when file TT* exists'
+if : > TT* && : > TTfoo
+then	set -- TT*
+	if	(( $# < 2 ))
+	then	err_exit 'TT* not expanding when file TT* exists'
+	fi
 fi
 cd ~- || err_exit "cd back failed"
 cat > /tmp/ksh$$/script <<- !
@@ -97,7 +108,7 @@ if	[[ $foo != 'foo bar' ]]
 then	err_exit 'eval foo=\$bar, with bar="foo\ bar" not working'
 fi
 cd /tmp
-cd ../../dev || err_exit "cd ../../dev failed"
+cd ../../tmp || err_exit "cd ../../tmp failed"
 #if	[[ $PWD != /dev ]]
 #then	err_exit 'cd ../../dev is not /dev'
 #fi
@@ -234,5 +245,8 @@ fi
 word=$(print $'foo\nbar' | ( read line; /bin/cat) )
 if	[[ $word != bar ]]
 then	err_exit "pipe to ( read line; /bin/cat) not working"
+fi
+if	[[ $(print x{a,b}y) != 'xay xby' ]]
+then	err_exit 'brace expansion not working'
 fi
 exit $((Errors))

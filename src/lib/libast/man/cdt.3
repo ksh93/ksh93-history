@@ -35,12 +35,13 @@ Dtstat_t;
 .Ce
 .Ss "DICTIONARY CONTROL"
 .Cs
-Dt_t*       dtopen(Dtdisc_t* disc, Dtmethod_t* meth);
+Dt_t*       dtopen(const Dtdisc_t* disc, const Dtmethod_t* meth);
 int         dtclose(Dt_t* dt);
 void        dtclear(dt);
-Dtmethod_t* dtmethod(Dt_t* dt, Dtmethod_t* meth);
-Dtdisc_t*   dtdisc(Dt_t* dt, Dtdisc_t* disc, int type);
+Dtmethod_t* dtmethod(Dt_t* dt, const Dtmethod_t* meth);
+Dtdisc_t*   dtdisc(Dt_t* dt, const Dtdisc_t* disc, int type);
 Dt_t*       dtview(Dt_t* dt, Dt_t* view);
+int         dttreeset(Dt_t* dt, int minp, int balance);
 .Ce
 .Ss "STORAGE METHODS"
 .Cs
@@ -65,6 +66,8 @@ typedef int          (*Dtevent_f)(Dt_t*, int, Void_t*, Dtdisc_t*);
 .Cs
 Void_t*   dtinsert(Dt_t* dt, Void_t* obj);
 Void_t*   dtdelete(Dt_t* dt, Void_t* obj);
+Void_t*   dtattach(Dt_t* dt, Void_t* obj);
+Void_t*   dtdetach(Dt_t* dt, Void_t* obj);
 Void_t*   dtsearch(Dt_t* dt, Void_t* obj);
 Void_t*   dtmatch(Dt_t* dt, Void_t* key);
 Void_t*   dtfirst(Dt_t* dt);
@@ -79,6 +82,9 @@ Dtlink_t* dtlink(Dt_t*, Dtlink_t* link);
 Void_t*   dtobj(Dt_t* dt, Dtlink_t* link);
 Dtlink_t* dtextract(Dt_t* dt);
 int       dtrestore(Dt_t* dt, Dtlink_t* link);
+
+#define   DTTREESEARCH(Dt_t* dt, Void_t* obj, action)
+#define   DTTREEMATCH(Dt_t* dt, Void_t* key, action)
 .Ce
 .Ss "DICTIONARY STATUS"
 .Cs
@@ -123,7 +129,7 @@ This is the type of a structure to return dictionary statistics (see \f5dtstat()
 .PP
 .Ss "DICTIONARY CONTROL"
 .PP
-.Ss "  Dt_t* dtopen(Dtdisc_t* disc, Dtmethod_t* meth)"
+.Ss "  Dt_t* dtopen(const Dtdisc_t* disc, const Dtmethod_t* meth)"
 This creates a new dictionary.
 \f5disc\fP is a discipline structure to describe object format.
 \f5meth\fP specifies a manipulation method.
@@ -138,7 +144,7 @@ some other dictionaries (see \f5dtview()\fP).
 .Ss "  void dtclear(Dt_t* dt)"
 This deletes all objects in \f5dt\fP without closing \f5dt\fP.
 .PP
-.Ss "  Dtmethod_t dtmethod(Dt_t* dt, Dtmethod_t* meth)"
+.Ss "  Dtmethod_t dtmethod(Dt_t* dt, const Dtmethod_t* meth)"
 If \f5meth\fP is \f5NULL\fP, \f5dtmethod()\fP returns the current method.
 Otherwise, it changes the storage method of \f5dt\fP to \f5meth\fP.
 Object order remains the same during a
@@ -147,7 +153,7 @@ Switching to and from \f5Dtset/Dtbag\fP and \f5Dtoset/Dtobag\fP may cause
 objects to be rehashed, reordered, or removed as the case requires.
 \f5dtmethod()\fP returns the previous method or \f5NULL\fP on error.
 .PP
-.Ss "  Dtdisc_t* dtdisc(Dt_t* dt, Dtdisc_t* disc, int type)"
+.Ss "  Dtdisc_t* dtdisc(Dt_t* dt, const Dtdisc_t* disc, int type)"
 If \f5disc\fP is \f5NULL\fP, \f5dtdisc()\fP returns the current discipline.
 Otherwise, it changes the discipline of \f5dt\fP to \f5disc\fP.
 Objects may be rehashed, reordered, or removed as appropriate.
@@ -170,6 +176,20 @@ If two dictionaries on the same viewpath have the same values for the discipline
 \f5Dtdisc_t.link\fP, \f5Dtdisc_t.key\fP, \f5Dtdisc_t.size\fP, and \f5Dtdisc_t.hashf\fP,
 it is expected that key hashing will be the same.
 If not, undefined behaviors may result during a search or a walk.
+.PP
+.Ss "  int dttreeset(Dt_t* dt, int minp, int balance)"
+This function only applies to dictionaries operated under the method \f5Dtoset\fP
+which uses top-down splay trees (see below). It returns 0 on success and -1 on error.
+.Tp
+\f5minp\fP:
+This parameter defines the minimum path length before a search path is adjusted.
+For example, \f5minp\fP equal 0 would mean that search paths are always adjusted.
+If \f5minp\fP is negative, the minimum search path is internally computed based
+on a function of the current dictionary size. This computed value is such that
+if the tree is balanced, it will never require adjusting.
+.Tp
+\f5balance\fP:
+If this is non-zero, the tree will be made balanced.
 .PP
 .Ss "STORAGE METHODS"
 .PP
@@ -323,6 +343,15 @@ See \f5Dtdisc_t.freef\fP for object destruction.
 \f5dtdelete()\fP returns the deleted object (even if it was deallocated)
 or \f5NULL\fP on error.
 .PP
+.Ss "  Void_t* dtattach(Dt_t* dt, Void_t* obj)"
+This function is similar to \f5dtinsert()\fP but \f5obj\fP itself
+will be inserted into \f5dt\fP even if a discipline
+function \f5makef\fP is defined.
+.PP
+.Ss "  Void_t* dtdetach(Dt_t* dt, Void_t* obj)"
+This function is similar to \f5dtdelete()\fP but the object to be deleted
+from \f5dt\fP will not be freed (via the discipline \f5freef\fP function).
+.PP
 .Ss "  Void_t* dtsearch(Dt_t* dt, Void_t* obj)"
 .Ss "  Void_t* dtmatch(Dt_t* dt, Void_t* key)"
 These functions find an object matching \f5obj\fP or \f5key\fP either from \f5dt\fP or
@@ -419,6 +448,33 @@ They are useful to reduce dictionary overhead
 in an application that creates many concurrent dictionaries.
 It is important that the same discipline and method are in use at both
 extraction and restoration. Otherwise, undefined behaviors may result.
+.PP
+.Ss "  #define   DTTREESEARCH(Dt_t* dt, Void_t* obj, action)"
+.Ss "  #define   DTTREEMATCH(Dt_t* dt, Void_t* key, action)"
+These macro functions are analogues of \f5dtsearch()\fP and \f5dtmatch()\fP
+but they can only be used on a dictionary based on a binary
+search tree, i.e., \f5Dtoset\fP or \f5Dtobag\fP.
+.Tp
+\f5obj\fP or \f5key\fP:
+These are used to find a matching object. If there is no match,
+the result is \f5NULL\fP.
+.Tp
+\f5action\fP:
+The matching object \f5o\fP (which may be \f5NULL\fP) will be processed as follow:
+
+.Cs
+    action (o);
+.Ce
+
+Since \f5action\fP is used verbatim, it can be any C code
+fragment combinable with \f5(o)\fP to form a syntactically correct C statement.
+For example, suppose that the matching object is an integer, the below code
+accumulates the integer value in a variable \f5total\fP:
+
+.Cs
+    DTTREEMATCH(dt, key, total += (int));
+.Ce
+
 .PP
 .Ss "DICTIONARY INFORMATION"
 .PP

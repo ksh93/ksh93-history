@@ -28,6 +28,12 @@
  * regcmp implementation
  */
 
+#if __GNUC__ && __ia64__
+
+NoN(regcmp)
+
+#else
+
 #include <ast.h>
 #include <libgen.h>
 #include <regex.h>
@@ -210,3 +216,5 @@ regex(const char* handle, const char* subject, ...)
 	__loc1 = (char*)subject + match[0].rm_so;
 	return (char*)subject + match[0].rm_eo;
 }
+
+#endif

@@ -25,7 +25,7 @@
 ####################################################################
 : generate conf info
 #
-# @(#)conf.sh (AT&T Research) 2001-05-30
+# @(#)conf.sh (AT&T Research) 2001-09-19
 #
 # this script generates these files from the table file in the first arg
 # the remaining args are the C compiler name and flags
@@ -255,7 +255,11 @@ do	prev=$line
 	eof=$?
 	IFS=$ifs
 	case $line in
-	""|\#*)	continue ;;
+	""|\#*)	case $eof in
+		1)	break ;;
+		esac
+		continue
+		;;
 	"	"*)
 		set x $line
 		shift
@@ -267,6 +271,34 @@ do	prev=$line
 		shift; index=$1
 		conf_index=$index
 		shift; standard=$1
+		shift; call=$1
+		case $call in
+		QQ)	call=XX
+			for c in SC PC CS
+			do	cat > $tmp.c <<!
+#ifndef _POSIX_SOURCE
+#define _POSIX_SOURCE	1
+#endif
+#include <sys/types.h>
+#include <limits.h>
+#include <unistd.h>
+#include <stdio.h>
+main()
+{
+	return _${c}_${name} == 0;
+}
+!
+				if	$cc -o $tmp.exe $tmp.c >/dev/null 2>&1
+				then	call=$c
+					case $standard in
+					C)	standard=POSIX ;;
+					esac
+					set $call 1 FU
+					break
+				fi
+			done
+			;;
+		esac
 		case " $standards " in
 		*" $standard "*)
 			;;
@@ -274,7 +306,6 @@ do	prev=$line
 			;;
 		esac
 		conf_standard=CONF_${standard}
-		shift; call=$1
 		case $call in
 		CS)	conf_call=CONF_confstr
 			;;
@@ -413,14 +444,25 @@ $head $tail"
 #include <stdio.h>
 main()
 {
+#ifdef TEST_enum
+#if ${conf_op}
+	(
+#endif
+	return ${conf_op} == 0;
+#endif
+#ifdef TEST_notmacro
 #ifdef ${conf_op}
 	(
 #endif
 	return 0;
+#endif
 }
 !
-			if	$cc -o $tmp.exe $tmp.c >/dev/null 2>&1
-			then	echo "#define ${conf_op}	${conf_op}" >> $tmp.e 2>/dev/null
+			if	$cc -DTEST_enum -o $tmp.exe $tmp.c >/dev/null 2>&1
+			then	echo "#define _ENUM_${conf_op}	1" >> $tmp.e 2>/dev/null
+				if	$cc -DTEST_notmacro -o $tmp.exe $tmp.c >/dev/null 2>&1
+				then	echo "#define ${conf_op}	${conf_op}" >> $tmp.e 2>/dev/null
+				fi
 			fi
 			echo ${index} ${conf_op} >> $tmp.m
 			;;
@@ -688,7 +730,7 @@ do	case $shell in
 		;;
 	esac
 	cat <<!
-#if	$macro+0
+#if	($macro+0) || _ENUM_$macro
 	$macro,
 #else
 	-1,

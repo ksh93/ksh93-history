@@ -62,7 +62,7 @@ regrexec(const regex_t* p, const char* s, size_t len, size_t nmatch, regmatch_t*
 
 	if (!s || !p || !(env = p->env) || (e = env->rex)->type != REX_BM)
 		return REG_BADPAT;
-#if __OBSOLETE__ < 20030101L
+#if __OBSOLETE__ && __OBSOLETE__ < 20030101
 	/*
 	 * repeat 1000x: sharing bits is never worth it
 	 */

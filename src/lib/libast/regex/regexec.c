@@ -39,7 +39,7 @@
 int
 regexec(const regex_t* p, const char* s, size_t nmatch, regmatch_t* match, regflags_t flags)
 {
-#if __OBSOLETE__ < 20030101L
+#if __OBSOLETE__ && __OBSOLETE__ < 20030101
 	/*
 	 * repeat 1000x: sharing bits is never worth it
 	 */

@@ -280,11 +280,16 @@ extern __PUBLIC_DATA__ Sfio_t*		sfstdin;
 extern __PUBLIC_DATA__ Sfio_t*		sfstdout;
 extern __PUBLIC_DATA__ Sfio_t*		sfstderr;
 
+#if _UWIN
 #undef	__PUBLIC_DATA__
+#define	__PUBLIC_DATA__
+#endif
 
-extern Sfio_t		_Sfstdin;
-extern Sfio_t		_Sfstdout;
-extern Sfio_t		_Sfstderr;
+extern __PUBLIC_DATA__ Sfio_t		_Sfstdin;
+extern __PUBLIC_DATA__ Sfio_t		_Sfstdout;
+extern __PUBLIC_DATA__ Sfio_t		_Sfstderr;
+
+#undef	__PUBLIC_DATA__
 
 #if _BLD_sfio && defined(__EXPORT__)
 #define extern	__EXPORT__

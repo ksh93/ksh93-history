@@ -12,6 +12,8 @@ tst	output{
 
 	main()
 	{
+		char*	lib;
+
 		printf("#include <ast.h>\n");
 	#if _hdr_iconv
 		printf("#include <../include/iconv.h>	/* the native iconv.h */\n");
@@ -24,30 +26,35 @@ tst	output{
 		printf("#define CC_UME		(-5)\n");
 		printf("\n");
 	#if _lib_iconv_open
+		lib = "_ast_";
+		printf("#ifndef _ICONV_LIST_PRIVATE_\n");
 		printf("#undef	iconv_t\n");
-		printf("#define	iconv_t		_ast_iconv_t\n");
+		printf("#define	iconv_t		%siconv_t\n", lib);
 		printf("#undef	iconv_f\n");
-		printf("#define	iconv_f		_ast_iconv_f\n");
+		printf("#define	iconv_f		%siconv_f\n", lib);
 		printf("#undef	iconv_list_t\n");
-		printf("#define	iconv_list_t	_ast_iconv_list_t\n");
+		printf("#define	iconv_list_t	%siconv_list_t\n", lib);
 		printf("#undef	iconv_open\n");
-		printf("#define iconv_open	_ast_iconv_open\n");
+		printf("#define iconv_open	%siconv_open\n", lib);
 		printf("#undef	iconv\n");
-		printf("#define	iconv		_ast_iconv\n");
+		printf("#define	iconv		%siconv\n", lib);
 		printf("#undef	iconv_close\n");
-		printf("#define iconv_close	_ast_iconv_close\n");
+		printf("#define iconv_close	%siconv_close\n", lib);
 		printf("#undef	iconv_list\n");
-		printf("#define iconv_list	_ast_iconv_list\n");
+		printf("#define iconv_list	%siconv_list\n", lib);
 		printf("#undef	iconv_move\n");
-		printf("#define iconv_move	_ast_iconv_move\n");
+		printf("#define iconv_move	%siconv_move\n", lib);
 		printf("#undef	iconv_name\n");
-		printf("#define iconv_name	_ast_iconv_name\n");
+		printf("#define iconv_name	%siconv_name\n", lib);
 		printf("#undef	iconv_write\n");
-		printf("#define iconv_write	_ast_iconv_write\n");
+		printf("#define iconv_write	%siconv_write\n", lib);
+		printf("#endif\n");
+	#else
+		lib = "";
 	#endif
 		printf("\n");
-		printf("typedef void* iconv_t;\n");
-		printf("typedef size_t (*iconv_f)(iconv_t, char**, size_t*, char**, size_t*);\n");
+		printf("typedef void* %siconv_t;\n", lib);
+		printf("typedef size_t (*%siconv_f)(%siconv_t, char**, size_t*, char**, size_t*);\n", lib, lib);
 		printf("\n");
 		printf("typedef struct\n");
 		printf("{\n");
@@ -60,19 +67,19 @@ tst	output{
 		printf("#ifdef _ICONV_LIST_PRIVATE_\n");
 		printf("	_ICONV_LIST_PRIVATE_\n");
 		printf("#endif\n");
-		printf("} iconv_list_t;\n");
+		printf("} %siconv_list_t;\n", lib);
 		printf("\n");
 		printf("#if _BLD_ast && defined(__EXPORT__)\n");
 		printf("#define extern		__EXPORT__\n");
 		printf("#endif\n");
 		printf("\n");
-		printf("extern iconv_t		iconv_open(const char*, const char*);\n");
-		printf("extern size_t		iconv(iconv_t, char**, size_t*, char**, size_t*);\n");
-		printf("extern int		iconv_close(iconv_t);\n");
-		printf("extern iconv_list_t*	iconv_list(iconv_list_t*);\n");
-		printf("extern ssize_t		iconv_move(iconv_t, Sfio_t*, Sfio_t*, size_t, size_t*);\n");
-		printf("extern int		iconv_name(const char*, char*, size_t);\n");
-		printf("extern ssize_t		iconv_write(iconv_t, Sfio_t*, char**, size_t*, size_t*);\n");
+		printf("extern %siconv_t	%siconv_open(const char*, const char*);\n", lib, lib);
+		printf("extern size_t		%siconv(%siconv_t, char**, size_t*, char**, size_t*);\n", lib, lib);
+		printf("extern int		%siconv_close(%siconv_t);\n", lib, lib);
+		printf("extern %siconv_list_t*	%siconv_list(%siconv_list_t*);\n", lib, lib, lib);
+		printf("extern ssize_t		%siconv_move(%siconv_t, Sfio_t*, Sfio_t*, size_t, size_t*);\n", lib, lib);
+		printf("extern int		%siconv_name(const char*, char*, size_t);\n", lib);
+		printf("extern ssize_t		%siconv_write(%siconv_t, Sfio_t*, char**, size_t*, size_t*);\n", lib, lib);
 		printf("\n");
 		printf("#undef	extern\n");
 		printf("\n");

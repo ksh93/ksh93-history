@@ -36,8 +36,15 @@
 #include	"FEATURE/locale"
 #include	"FEATURE/externs"
 #include	"national.h"
+/* NOTE: the ast pathnative() [uwin_path() api] can be used in all cases */
 #ifdef _lib_uwin_path
 #   include	<uwin.h>
+#else
+#if __CYGWIN__
+#define _lib_uwin_path		1
+#define uwin_path(a,b,c)	cygwin_conv_to_win32_path(a,b)
+extern void			cygwin_conv_to_win32_path(const char*, char*);
+#endif
 #endif /* _lib_uwin_path */
 
 static void	attstore(Namval_t*,void*);
@@ -517,9 +524,9 @@ Namval_t	*nv_open(const char *name,Dt_t *root,int flags)
 
 	if(root==sh.alias_tree)
 	{
-		while((sep= *(unsigned char*)cp) && (sep!='=') && (sep!='/') && 
-			(!(sep=sh_lexstates[ST_NORM][sep]) || sep==S_EPAT))
-			cp++;
+		while((sep= *(unsigned char*)cp++) && (sep!='=') && (sep!='/') && 
+			(sep>=0x200 || !(sep=sh_lexstates[ST_NORM][sep]) || sep==S_EPAT));
+		cp--;
 	}
 	else
 	{
@@ -560,7 +567,7 @@ Namval_t	*nv_open(const char *name,Dt_t *root,int flags)
 			name = cp = newname(sh.prefix,name,(char*)0,(char**)0);
 			if(*cp=='.' && root==sh.var_tree)
 				root = sh.var_base;
-			sep = *cp;
+			sep = *(unsigned char*)cp;
 		}
 		/* first skip over alpha-numeric */
 		while(1)
@@ -826,7 +833,7 @@ failed:
 
 #ifdef SHOPT_MULTIBYTE
     static char *savep;
-    static char savechars[MB_LEN_MAX+1];
+    static char savechars[8+1];
     static int ja_size(char*, int, int);
     static void ja_restore(void);
 #endif /* SHOPT_MULTIBYTE */
@@ -1156,26 +1163,21 @@ static void rightjust(char *str, int size, int fill)
     {
 	register char *cp = str;
 	register int c, n=size;
+	register int outsize;
+	register char *oldcp=cp;
 	int oldn;
 	wchar_t w;
 	while(*cp)
 	{
 		oldn = n;
-		if((c=mbtowc(&w,cp,MB_CUR_MAX))>0)
-		{
-			register int outsize =  wcwidth(w);
-			/* allow room for excess input bytes */
-			n += (c-outsize);
-			size -= outsize;
-		}
-		else
-		{
-			c = 1;
-			size -=1;
-		}
+		w = mbchar(cp);
+		outsize = mbwidth(w);
+		size -= outsize;
+		c = cp-oldcp;
+		n += (c-outsize);
+		oldcp = cp;
 		if(size<=0 && type==0)
 			break;
-		cp += c;
 	}
 	/* check for right justified fields that need truncating */
 	if(size <0)
@@ -1432,7 +1434,7 @@ void	sh_envnolocal (register Namval_t *np, void *data)
 	}
 	if(nv_isattr(np, NV_ARRAY))
 		nv_putsub(np,NIL(char*),ARRAY_SCAN);
-	unset(np,1);
+	unset(np,NV_RDONLY);
 	nv_setattr(np,0);
 }
 
@@ -1492,7 +1494,7 @@ static void	unset(register Namval_t *np,int forced)
 		if(!local)
 		{
 			local=1;
-			nv_putv(np,NIL(char*),forced?NV_RDONLY:0,np->nvfun);
+			nv_putv(np,NIL(char*),forced,np->nvfun);
 			return;
 		}
 		/* called from disc, assign the actual value */
@@ -1748,13 +1750,15 @@ char *nv_getval(register Namval_t *np)
 			ll = up->s;
         	else
 			ll = *(up->lp);
-		if((numeric=nv_size(np))==10 && !nv_isattr(np,NV_UNSIGN))
-			numeric = 0;
-		if(nv_isattr(np,NV_UNSIGN))
+		if((numeric=nv_size(np))==10)
 		{
-			char *cp=fmtbuf(36);
-			sfsprintf(cp,36,"%lu",ll);
-			return(cp);
+			if(nv_isattr(np,NV_UNSIGN))
+			{
+				char *cp=fmtbuf(36);
+				sfsprintf(cp,36,"%lu",ll);
+				return(cp);
+			}
+			numeric = 0;
 		}
 		return(fmtbase((long)ll,numeric, numeric&&numeric!=10));
 	}
@@ -1798,6 +1802,8 @@ double nv_getnum(register Namval_t *np)
 			r = 0;
 		else if(nv_isattr(np, NV_DOUBLE))
                        	r = *up->dp;
+		else if(nv_isattr(np, NV_UNSIGN))
+                       	r = *((unsigned long*)up->lp);
 		else
                        	r = *up->lp;
 	}
@@ -1863,6 +1869,8 @@ void nv_newattr (register Namval_t *np, unsigned newatts, int size)
 		np->nvflag = oldatts;
 		if (sp = nv_getval(np))
  		{
+			if(nv_isattr(np,NV_ZFILL))
+				while(*sp=='0') sp++;
 			cp = (char*)malloc((n=strlen (sp)) + 1);
 			strcpy(cp, sp);
 			if(ap)	/* add element to prevent array deletion */
@@ -2552,7 +2560,7 @@ void nv_unscope(void)
 	register Dt_t *root = sh.var_tree;
 	register Dt_t *dp = dtview(root,(Dt_t*)0);
 	sh.var_tree=dp;
-	table_unset(root,1,dp);
+	table_unset(root,NV_RDONLY|NV_NOSCOPE,dp);
 	dtclose(root);
 }
 

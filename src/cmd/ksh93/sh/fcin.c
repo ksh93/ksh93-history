@@ -62,7 +62,7 @@ int	fcfopen(register Sfio_t* f)
 		_Fcin._fcfile = (Sfio_t*)0;
 		return(EOF);
 	}
-	n = sfslen();
+	n = sfvalue(f);
 	fcrestore(&save);
 	_Fcin.fclast = (_Fcin.fcptr=_Fcin.fcbuff=(unsigned char*)buff)+n;
 	if(sffileno(f) >= 0)

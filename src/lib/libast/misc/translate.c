@@ -120,6 +120,9 @@ entry(Dt_t* dict, int set, int seq, const char* msg)
 		free(mp);
 		return 0;
 	}
+#if DEBUG_trace > 1
+sfprintf(sfstderr, "AHA#%d:%s set %d seq %d msg `%s'\n", __LINE__, __FILE__, set, seq, msg);
+#endif
 	return 1;
 }
 
@@ -327,7 +330,12 @@ translate(const char* loc, const char* cmd, const char* cat, const char* msg)
 	    (!error_info.catalog || !(mp = match(error_info.catalog, msg))) &&
 	    (!ast.id || !(mp = match(ast.id, msg))) ||
 	     !(cp = mp->cat))
+	{
+#if DEBUG_trace > 1
+sfprintf(sfstderr, "AHA#%d:%s cmd %s cat %s:%s id %s msg `%s'\n", __LINE__, __FILE__, cmd, cat, error_info.catalog, ast.id, msg);
+#endif
 		goto done;
+	}
 
 	/*
 	 * adjust for the current locale

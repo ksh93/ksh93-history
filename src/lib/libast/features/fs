@@ -187,7 +187,7 @@ macro{
 	!
 }end
 mem	mnttab.mt_dev,mnttab.mt_filsys,mnttab.mt_fstyp sys/types.h mnttab.h
-mem	mntent.mnt_opts,w_mntent.mnt_opts,mnttab.mnt_opts sys/types.h mntent.h sys/mntent.h
+mem	mntent.mnt_opts,w_mntent.mnt_opts,mnttab.mnt_opts sys/types.h stdio.h mntent.h sys/mntent.h
 mem	mntent.mnt_opts,mnttab.mnt_opts sys/types.h mnttab.h sys/mnttab.h
 mem	stat.st_blocks,stat.st_blksize,stat.st_rdev sys/types.h sys/stat.h
 mem	statfs.f_files,statfs.f_bavail sys/types.h - sys/statfs.h - sys/vfs.h - sys/param.h sys/mount.h

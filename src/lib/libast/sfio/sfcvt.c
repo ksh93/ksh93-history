@@ -86,15 +86,12 @@ int	format;		/* conversion format		*/
 			f = ldexpl(g, 8 * sizeof(m) - 3);
 
 			for (;;)
-			{
-				m = f;
+			{	m = f;
 				x = 8 * sizeof(m);
 				while ((x -= 4) >= 0)
-				{
-					*sp++ = ep[(m >> x) & 0xf];
+				{	*sp++ = ep[(m >> x) & 0xf];
 					if (sp >= endsp)
-					{
-						ep = sp + 1;
+					{	ep = sp + 1;
 						goto done;
 					}
 				}
@@ -140,7 +137,10 @@ int	format;		/* conversion format		*/
 		/* remaining number of digits to compute; add 1 for later rounding */
 		n = (((format&SFFMT_EFORMAT) || *decpt <= 0) ? 1 : *decpt+1) - n;
 		if(n_digit > 0)
+		{	if(n_digit > LDBL_DIG)
+				n_digit = LDBL_DIG;
 			n += n_digit;
+		}
 
 		if((ep = (sp+n)) > (endsp = buf+(size-2)))
 			ep = endsp; 
@@ -196,18 +196,15 @@ int	format;		/* conversion format		*/
 
 			g = frexp(f, &x);
 			*decpt = x;
-			f = ldexp(g, 8 * sizeof(m) - 1);
+			f = ldexp(g, 8 * sizeof(m) - 3);
 
 			for (;;)
-			{
-				m = f;
+			{	m = f;
 				x = 8 * sizeof(m);
 				while ((x -= 4) >= 0)
-				{
-					*sp++ = ep[(m >> x) & 0xf];
+				{	*sp++ = ep[(m >> x) & 0xf];
 					if (sp >= endsp)
-					{
-						ep = sp + 1;
+					{	ep = sp + 1;
 						goto done;
 					}
 				}
@@ -251,7 +248,11 @@ int	format;		/* conversion format		*/
 		/* remaining number of digits to compute; add 1 for later rounding */
 		n = (((format&SFFMT_EFORMAT) || *decpt <= 0) ? 1 : *decpt+1) - n;
 		if(n_digit > 0)
+		{	v = (format & SFFMT_EFORMAT) ? DBL_DIG : FLT_DIG;
+			if(n_digit > v)
+				n_digit = v;
 			n += n_digit;
+		}
 
 		if((ep = (sp+n)) > (endsp = buf+(size-2)))
 			ep = endsp; 

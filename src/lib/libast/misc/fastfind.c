@@ -151,25 +151,6 @@ findopen(const char* file, const char* pattern, const char* type, Finddisc_t* di
 	struct stat		st;
 
 
-#if _UWIN && __OBSOLETE__ < 19980701
-	Finddisc_t      	finddisc;
-
-	/*
-	 * win32 shared lib compatibility with 1 arg findopen()
-	 * where the arg is pattern; file(==pattern)!=0, type==0
-	 */
-
-	if (file && type)
-	{
-		pattern = file;
-		file = 0;
-		type = 0;
-		finddisc.version = FIND_VERSION;
-		finddisc.flags = 0;
-		finddisc.errorf = (Finderror_f)errorf;
-		disc = &finddisc;
-	}
-#endif
 	if (!(vm = vmopen(Vmdcheap, Vmbest, 0)))
 		goto nospace;
 
@@ -669,17 +650,6 @@ findopen(const char* file, const char* pattern, const char* type, Finddisc_t* di
 	vmclose(fp->vm);
 	return 0;
 }
-
-#if _UWIN && __OBSOLETE__ < 19980701
-/*
- * shared lib compatibility
- */
-char*
-findnext(Find_t* fp)
-{
-	return findread(fp);
-}
-#endif
 
 /*
  * return the next fastfind path

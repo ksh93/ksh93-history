@@ -35,6 +35,9 @@ string1=$base/abcabcabc
 if	[[ ${string1:0} != "$string1" ]]
 then	err_exit "string1:0"
 fi
+if	[[ ${string1: -1} != "c" ]]
+then	err_exit "string1: -1"
+fi
 if	[[ ${string1:0:1000} != "$string1" ]]
 then	err_exit "string1:0"
 fi
@@ -43,6 +46,9 @@ then	err_exit "string1:1"
 fi
 if	[[ ${string1:1:4} != home ]]
 then	err_exit "string1:1:4"
+fi
+if	[[ ${string1: -5:4} != bcab ]]
+then	err_exit "string1: -5:4"
 fi
 if	[[ ${string1:1:j} != home ]]
 then	err_exit "string1:1:j"
@@ -241,5 +247,12 @@ then	err_exit '${var//+(\w)/Q} not workding'
 fi
 if	[[ ${var//+(\S)/Q} != 'Q Q' ]]
 then	err_exit '${var//+(\S)/Q} not workding'
+fi
+if	[[ "$(LC_ALL=debug $SHELL <<- \+EOF+
+		x=a<2bc><3xyz>g
+		print ${#x}
+		+EOF+)" != 4
+	]]
+then	err_exit '${#x} not working with multibyte locales'
 fi
 exit $((Errors))

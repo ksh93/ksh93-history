@@ -77,33 +77,33 @@ typedef struct _arith_
 #define A_AND		6
 #define A_LPAR		7
 #define A_RPAR		8
-#define A_TIMES		9
-#define A_PLUSPLUS	10
-#define A_PLUS		11
-#define A_COMMA		12
-#define A_MINUSMINUS	13
-#define A_MINUS		14
-#define A_DIV		15
-#define A_LSHIFT	16
-#define A_LE		17
-#define A_LT		18
-#define A_EQ		19
-#define A_ASSIGN	20
-#define A_COLON		21
-#define A_RSHIFT	22
-#define A_GE		23
-#define A_GT		24
-#define A_QCOLON	25
-#define A_QUEST		26
-#define A_XOR		27
-#define A_OROR		28
-#define A_OR		29
-#define A_TILDE		30
-#define A_REG		31
-#define A_DIG		32
-#define A_INCR          33
-#define A_DECR          34
-#define A_NOTNOT        35
+#define A_POW		9
+#define A_TIMES		10
+#define A_PLUSPLUS	11
+#define A_PLUS		12
+#define A_COMMA		13
+#define A_MINUSMINUS	14
+#define A_MINUS		15
+#define A_DIV		16
+#define A_LSHIFT	17
+#define A_LE		18
+#define A_LT		19
+#define A_EQ		20
+#define A_ASSIGN	21
+#define A_COLON		22
+#define A_RSHIFT	23
+#define A_GE		24
+#define A_GT		25
+#define A_QCOLON	26
+#define A_QUEST		27
+#define A_XOR		28
+#define A_OROR		29
+#define A_OR		30
+#define A_TILDE		31
+#define A_REG		32
+#define A_DIG		33
+#define A_INCR          34
+#define A_DECR          35
 #define A_PUSHV         36
 #define A_PUSHL         37
 #define A_PUSHN         38
@@ -120,10 +120,11 @@ typedef struct _arith_
 #define A_CALL3         49
 #define A_DOT		50
 #define A_LIT		51
+#define A_NOTNOT        52
 
 
 /* define error messages */
-extern const unsigned char	strval_precedence[34];
+extern const unsigned char	strval_precedence[35];
 extern const char		strval_states[64];
 extern const char		e_moretokens[];
 extern const char		e_argcount[];

@@ -31,13 +31,6 @@ silent :: silent.sh
 :: RELEASE hosttype.tst p.c
 
 /*
- * ksh93g function search on PATH
- */
-
-$(BINDIR)/.fpath :INSTALL:
-	echo ../fun > $(<)
-
-/*
  * hosttype specific cc workaround initialization
  */
 
@@ -75,18 +68,6 @@ $(BINDIR)/cc :INSTALL: (CC.HOSTTYPE) package hello.c \
 		esac
 	done
 	$(SILENT) rm -f hello.exe hello$(CC.SUFFIX.OBJECT)
-	case "$(CC.HOSTTYPE)" in
-	sgi.mips3)
-		if	$(SILENT) test ! -d $(INSTALLROOT)/lib32
-		then	$(LN) -s lib $(INSTALLROOT)/lib32
-		fi
-		;;
-	sgi.mips4)
-		if	$(SILENT) test ! -d $(INSTALLROOT)/lib64
-		then	$(LN) -s lib $(INSTALLROOT)/lib64
-		fi
-		;;
-	esac
 
 $(BINDIR)/ld :INSTALL: (CC.HOSTTYPE) package $(BINDIR)/cc \
 		ld.hp.pa
@@ -120,6 +101,57 @@ $(BINDIR)/ldd :INSTALL: .VIRTUAL (CC.HOSTTYPE) package $(BINDIR)/cc \
 			esac
 		done
 	fi
+
+/*
+ * ksh93 function search on PATH
+ * ksh93 ld library path search on PATH
+ */
+
+$(BINDIR)/.paths :INSTALL:
+	{
+	echo FPATH=../fun
+	set x x $(.GETCONF LIBPATH:/[:,]/ /G)
+	case $#:$(-mam) in
+	2:*|*:1)if	test -x /lib/dld.sl
+		then	echo SHLIB_PATH=../lib
+		elif	test -x /usr/lib/dyld
+		then	echo DYLD_LIBRARY_PATH=../lib
+		else	case "$(CC.HOSTTYPE)" in
+			ibm.*|mvs.*)
+				echo LIBPATH=../lib
+				;;
+			sgi.mips3)	
+				echo LD_LIBRARYN32_PATH=../lib
+				;;
+			sgi.mips4)	
+				echo LD_LIBRARYN64_PATH=../lib
+				;;
+			*)	echo LD_LIBRARY_PATH=../lib
+				;;
+			esac
+		fi
+		;;
+	*)	while	:
+		do	shift 2
+			case $1 in
+			*32)	case "$(CC.HOSTTYPE)" in
+				*3|*32)	echo $2=../lib; break ;;
+				esac
+				;;
+			*64)	case "$(CC.HOSTTYPE)" in
+				*4|*64)	echo $2=../lib; break ;;
+				esac
+				;;
+			*)	echo $2=../$1; break
+				;;
+			esac
+			case $# in
+			0|1)	break ;;
+			esac
+		done
+		;;
+	esac
+	} > $(<)
 
 /*
  * probe initialization
@@ -190,7 +222,7 @@ nsl :MAPLIB: nsl.c
 /*
  * what was sco smoking
  * almost all of gethost* are in -lnsl except gethostbyname which
- * is in -lsocket which isn't neede to resolve socket() but seems
+ * is in -lsocket which isn't needed to resolve socket() but seems
  * to do the -lnsl job
  */
 

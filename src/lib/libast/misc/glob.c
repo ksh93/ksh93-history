@@ -57,6 +57,7 @@ typedef int (*GL_stat_f)(const char*, struct stat*);
 #define _GLOB_PRIVATE_ \
 	GL_error_f	gl_errfn; \
 	int		gl_error; \
+	char*		gl_nextpath; \
 	globlist_t*	gl_rescan; \
 	globlist_t*	gl_match; \
 	Stak_t*		gl_stak; \
@@ -137,6 +138,37 @@ gl_attr(glob_t* gp, const char* path)
 }
 
 /*
+ * default gl_nextdir
+ */
+
+static char*
+gl_nextdir(glob_t* gp, char* dir)
+{
+	if (!(dir = gp->gl_nextpath))
+		dir = gp->gl_nextpath = stakcopy(pathbin());
+	switch (*gp->gl_nextpath)
+	{
+	case 0:
+		dir = 0;
+		break;
+	case ':':
+		while (*gp->gl_nextpath == ':')
+			gp->gl_nextpath++;
+		dir = ".";
+		break;
+	default:
+		while (*gp->gl_nextpath)
+			if (*gp->gl_nextpath++ == ':')
+			{
+				*(gp->gl_nextpath - 1) = 0;
+				break;
+			}
+		break;
+	}
+	return dir;
+}
+
+/*
  * error intercept
  */
 
@@ -158,18 +190,20 @@ errorcheck(register glob_t* gp, const char* path)
  * remove backslashes
  */
 
-static void
+static int
 trim(register char* sp)
 {
 	register char*	dp = sp;
 	register int	c;
+	register int	n;
 
+	n = 0;
 	do
 	{
-		if ((c = *sp++) == '\\')
-			c = *sp++;
-		*dp++ = c;
-	} while (c);
+		if ((c = *sp++) == '\\' && (c = *sp++))
+			n++;
+	} while (*dp++ = c);
+	return n;
 }
 
 static void
@@ -250,8 +284,8 @@ glob_dir(glob_t* gp, globlist_t* ap)
 	regex_t			rec;
 	regex_t			rei;
 
-	char*			path = 0;
 	int			bracket = 0;
+	int			complete = 0;
 	int			err = 0;
 	int			meta = 0;
 	int			quote = 0;
@@ -278,7 +312,7 @@ glob_dir(glob_t* gp, globlist_t* ap)
 				break;
 			}
 			if (quote)
-				trim(ap->gl_begin);
+				rescan -= trim(ap->gl_begin);
 			if (!first && !*rescan && *(rescan - 2) == gp->gl_delim)
 			{
 				*(rescan - 2) = 0;
@@ -307,7 +341,8 @@ glob_dir(glob_t* gp, globlist_t* ap)
 			if (!(gp->gl_flags & GLOB_NOESCAPE))
 			{
 				quote = 1;
-				rescan++;
+				if (*rescan)
+					rescan++;
 			}
 			continue;
 		default:
@@ -325,40 +360,37 @@ glob_dir(glob_t* gp, globlist_t* ap)
 	}
 	if (pat == prefix)
 	{
-		dirname = ".";
 		prefix = 0;
 		if (!rescan && (gp->gl_flags & GLOB_COMPLETE))
-			path = stakcopy(pathbin());
+		{
+			complete = 1;
+			dirname = 0;
+		}
+		else
+			dirname = ".";
 	}
 	else
 	{
 		if (pat == prefix + 1)
 			dirname = "/";
-		*(pat - 1) = 0;
 		if (savequote)
-			trim(ap->gl_begin);
+		{
+			c = trim(ap->gl_begin);
+			pat -= c;
+			if (rescan)
+				rescan -= c;
+		}
+		*(pat - 1) = 0;
 	}
 	if (rescan)
 		*(rescan - 1) = 0;
 	for (;;)
 	{
-		if (path)
+		if (complete)
 		{
-			if (*path == ':')
-			{
-				while (*path == ':')
-					path++;
-				prefix = 0;
-				dirname = ".";
-			}
-			else
-			{
-				dirname = prefix = path;
-				while (*path && *path != ':')
-					path++;
-				if (*path == ':')
-					*path++ = 0;
-			}
+			if (!(dirname = (*gp->gl_nextdir)(gp, dirname)))
+				break;
+			prefix = streq(dirname, ".") ? (char*)0 : dirname;
 		}
 		if (dirf = (*gp->gl_diropen)(gp, dirname))
 		{
@@ -410,9 +442,9 @@ glob_dir(glob_t* gp, globlist_t* ap)
 			if (err || errno && !errorcheck(gp, dirname))
 				break;
 		}
-		else if (!path && !errorcheck(gp, dirname))
+		else if (!complete && !errorcheck(gp, dirname))
 			break;
-		if (!path || !*path)
+		if (!complete)
 			break;
 		if (*gp->gl_intr)
 		{
@@ -506,6 +538,7 @@ glob(const char* pattern, int flags, int (*errfn)(const char*, int), register gl
 			gp->gl_dirclose = 0;
 			gp->gl_type = 0;
 			gp->gl_attr = 0;
+			gp->gl_nextdir = 0;
 		}
 		if (!(flags & GLOB_ALTDIRFUNC))
 		{
@@ -542,6 +575,8 @@ glob(const char* pattern, int flags, int (*errfn)(const char*, int), register gl
 			gp->gl_stak = 0;
 		else if (!(gp->gl_stak = stakcreate(0)))
 			return GLOB_NOSPACE;
+		if ((gp->gl_flags & GLOB_COMPLETE) && !gp->gl_nextdir)
+			gp->gl_nextdir = gl_nextdir;
 	}
 	if (gp->gl_stak)
 		oldstak = stakinstall(gp->gl_stak, 0);

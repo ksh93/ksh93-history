@@ -32,7 +32,7 @@
  */
 
 static const char usage[] =
-"+[-?\n@(#)$Id: tail (AT&T Labs Research) 2000-03-08 $\n]"
+"+[-?\n@(#)$Id: tail (AT&T Labs Research) 2001-09-06 $\n]"
 USAGE_LICENSE
 "[+NAME?tail - output trailing portion of one or more files ]"
 "[+DESCRIPTION?\btail\b copies one or more input files to standard output "
@@ -448,15 +448,13 @@ b_tail(int argc, char** argv, void* context)
 		do
 		{
 			if (!s || streq(s, "-"))
-			{
 				ip = sfstdin;
-				sfset(ip, SF_SHARE, 1);
-			}
 			else if (!(ip = sfopen(NiL, s, "r")))
 			{
 				error(ERROR_system(0), "%s: cannot open", s);
 				continue;
 			}
+			sfset(ip, SF_SHARE, 1);
 			if (argc > header)
 				sfprintf(sfstdout, format, s);
 			format = header_fmt;

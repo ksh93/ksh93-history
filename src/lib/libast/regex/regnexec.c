@@ -507,79 +507,137 @@ parsetrie(Env_t* env, Trie_node_t* x, Rex_t* rex, Rex_t* cont, unsigned char* s)
 }
 
 static int
+collelt(register Celt_t* ce, char* key, int c, int x)
+{
+	Ckey_t	elt;
+
+	mbxfrm(elt, key, COLL_KEY_MAX);
+	for (;; ce++)
+	{
+		switch (ce->typ)
+		{
+		case COLL_call:
+			if (!x && (*ce->fun)(c))
+				return 1;
+			continue;
+		case COLL_char:
+			if (!strcmp((char*)ce->beg, (char*)elt))
+				return 1;
+			continue;
+		case COLL_range:
+			if (strcmp((char*)ce->beg, (char*)elt) <= ce->min && strcmp((char*)elt, (char*)ce->end) <= ce->max)
+				return 1;
+			continue;
+		case COLL_range_lc:
+			if (strcmp((char*)ce->beg, (char*)elt) <= ce->min && strcmp((char*)elt, (char*)ce->end) <= ce->max && (islower(c) || !isupper(c)))
+				return 1;
+			continue;
+		case COLL_range_uc:
+			if (strcmp((char*)ce->beg, (char*)elt) <= ce->min && strcmp((char*)elt, (char*)ce->end) <= ce->max && (isupper(c) || !islower(c)))
+				return 1;
+			continue;
+		}
+		break;
+	}
+	return 0;
+}
+
+static int
+collic(register Celt_t* ce, char* key, register char* nxt, int c, int x)
+{
+	if (!x)
+	{
+		if (collelt(ce, key, c, x))
+			return 1;
+		if (islower(c))
+			c = toupper(c);
+		else if (isupper(c))
+			c = tolower(c);
+		else
+			return 0;
+		x = wctomb(key, c);
+		key[x] = 0;
+		return collelt(ce, key, c, 0);
+	}
+	while (*nxt)
+	{
+		if (collic(ce, key, nxt + 1, c, x))
+			return 1;
+		if (islower(*nxt))
+			*nxt = toupper(*nxt);
+		else if (isupper(*nxt))
+			*nxt = tolower(*nxt);
+		else
+			return 0;
+		nxt++;
+	}
+	return collelt(ce, key, c, x);
+}
+
+static int
 collmatch(Rex_t* rex, unsigned char* s, unsigned char* e, unsigned char** p)
 {
-	register Celt_t*	ce;
 	unsigned char*		t;
 	wchar_t			c;
 	int			w;
 	int			r;
 	int			x;
+	int			ic;
 	Ckey_t			key;
 	Ckey_t			elt;
 
+	ic = (rex->flags & REG_ICASE);
 	if ((w = mbsize(s)) > 1)
 	{
 		memcpy((char*)key, (char*)s, w);
 		key[w] = 0;
-		mbxfrm(elt, key, COLL_KEY_MAX);
 		t = s;
 		c = mbchar(t);
 		x = 0;
 	}
 	else
 	{
-		key[0] = s[0];
+		c = s[0];
+		if (ic && isupper(c))
+			c = tolower(c);
+		key[0] = c;
 		key[1] = 0;
-		r = mbxfrm(elt, key, COLL_KEY_MAX);
-		while (w < COLL_KEY_MAX && &s[w] < e)
+		if (isalpha(c))
 		{
-			key[w] = s[w];
-			key[w + 1] = 0;
-			if (mbxfrm(elt, key, COLL_KEY_MAX) != r)
-				break;
-			w++;
+			x = e - s;
+			if (x > COLL_KEY_MAX)
+				x = COLL_KEY_MAX;
+			while (w < x)
+			{
+				c = s[w];
+				if (!isalpha(c))
+					break;
+				r = mbxfrm(elt, key, COLL_KEY_MAX);
+				if (ic && isupper(c))
+					c = tolower(c);
+				key[w] = c;
+				key[w + 1] = 0;
+				if (mbxfrm(elt, key, COLL_KEY_MAX) != r)
+					break;
+				w++;
+			}
 		}
 		key[w] = 0;
-		mbxfrm(elt, key, COLL_KEY_MAX);
-		c = s[0];
+		c = key[0];
 		x = w - 1;
 	}
 	r = 1;
-	for (ce = rex->re.collate.elements;; ce++)
+	for (;;)
 	{
-		switch (ce->typ)
+		if (ic ? collic(rex->re.collate.elements, (char*)key, (char*)key, c, x) : collelt(rex->re.collate.elements, (char*)key, c, x))
+			break;
+		if (!x)
 		{
-		case COLL_call:
-			if (!x && (*ce->fun)(c))
-				break;
-			continue;
-		case COLL_char:
-			if (!strcmp((char*)ce->beg, (char*)elt))
-				break;
-			continue;
-		case COLL_range:
-			if (strcmp((char*)ce->beg, (char*)elt) <= ce->min && strcmp((char*)elt, (char*)ce->end) <= ce->max)
-				break;
-			continue;
-		case COLL_range_lc:
-			if (strcmp((char*)ce->beg, (char*)elt) <= ce->min && strcmp((char*)elt, (char*)ce->end) <= ce->max && (islower(c) || !isupper(c)))
-				break;
-			continue;
-		case COLL_range_uc:
-			if (strcmp((char*)ce->beg, (char*)elt) <= ce->min && strcmp((char*)elt, (char*)ce->end) <= ce->max && (isupper(c) || !islower(c)))
-				break;
-			continue;
-		default:
 			r = 0;
 			break;
 		}
-		if (!x || r)
-			break;
-		r = 1;
 		w = x--;
 		key[w] = 0;
-		mbxfrm(elt, key, COLL_KEY_MAX);
 	}
 	*p = s + w;
 	return rex->re.collate.invert ? !r : r;
@@ -1532,11 +1590,13 @@ regnexec(const regex_t* p, const char* s, size_t len, size_t nmatch, regmatch_t*
 
 	DEBUG_INIT();
 	DEBUG_TEST(0x00ff,(sfprintf(sfstdout, "AHA#%d regnexec %d 0x%08x `%-.*s'\n", __LINE__, nmatch, flags, len, s)),(0));
-	if (!s || !p || !(env = p->env))
-		return fatal(p->env->disc, REG_BADPAT, NiL);
+	if (!p || !(env = p->env))
+		return REG_BADPAT;
+	if (!s)
+		return fatal(env->disc, REG_BADPAT, NiL);
 	if (len < env->min)
 		return REG_NOMATCH;
-#if __OBSOLETE__ < 20030101L
+#if __OBSOLETE__ && __OBSOLETE__ < 20030101
 	/*
 	 * repeat 1000x: sharing bits is never worth it
 	 */

@@ -58,7 +58,15 @@ typedef struct
 {
 	Mnt_t	mnt;
 	char	buf[128];
+#if __CYGWIN__
+	char	typ[128];
+	char	opt[128];
+#endif
 } Header_t;
+
+#if __CYGWIN__
+#include <windows.h>
+#endif
 
 static void
 set(register Header_t* hp, const char* fs, const char* dir, const char* type, const char* options)
@@ -92,6 +100,35 @@ set(register Header_t* hp, const char* fs, const char* dir, const char* type, co
 	hp->mnt.dir = (char*)dir;
 	hp->mnt.type = (char*)type;
 	hp->mnt.options = (char*)options;
+#if __CYGWIN__
+	if (streq(type, "system") || streq(type, "user"))
+	{
+		char*	s;
+		int	mode;
+		DWORD	vser;
+		DWORD	flags;
+		DWORD	len;
+		char	drive[4];
+
+		mode = SetErrorMode(SEM_FAILCRITICALERRORS);
+		drive[0] = fs[0];
+		drive[1] = ':';
+		drive[2] = '\\';
+		drive[3] = 0;
+		if (GetVolumeInformation(drive, 0, 0, &vser, &len, &flags, hp->typ, sizeof(hp->typ) - 1))
+			hp->mnt.type = hp->typ;
+		else
+			flags = 0;
+		SetErrorMode(mode);
+		s = strcopy(hp->mnt.options = hp->opt, type);
+		s = strcopy(s, ",ignorecase");
+		if (options)
+		{
+			*s++ = ',';
+			strcpy(s, options);
+		}
+	}
+#endif
 }
 
 #undef	MNT_REMOTE

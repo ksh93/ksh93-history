@@ -259,8 +259,16 @@ sh_main(int ac, char *av[], void (*userinit)(int))
 				}
 				else
 				{
+					struct stat statb;
+					int isdir = 0;
+					if((fdin=sh_open(name,O_RDONLY,0))>=0 &&(fstat(fdin,&statb)<0 || S_ISDIR(statb.st_mode)))
+					{
+						close(fdin);
+						isdir = 1;
+						fdin = -1;
+					}
 					sp = 0;
-					if((fdin=sh_open(name,O_RDONLY,0))<0 && !strchr(name,'/'))
+					if(fdin < 0 && !strchr(name,'/'))
 					{
 #ifdef PATH_BFPATH
 						if(path_absolute(name,NIL(Pathcomp_t*)))
@@ -273,6 +281,9 @@ sh_main(int ac, char *av[], void (*userinit)(int))
 					}
 					if(fdin<0)
 					{
+						if(isdir)
+							errno = EISDIR;
+						 error_info.id = av[0];
 						if(sp || errno!=ENOENT)
 							errormsg(SH_DICT,ERROR_system(ERROR_NOEXEC),e_open,name);
 						/* try sh -c 'name "$@"' */

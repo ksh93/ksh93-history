@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 4.2 2001-07-17
+info mam static 00000 1994-07-17 make (AT&T Research) 4.2 2001-10-18
 setv INSTALLROOT ../../..
 setv PACKAGE_ast ${INSTALLROOT}
 setv PACKAGE_ast_INCLUDE ${PACKAGE_ast}/include/ast
@@ -159,7 +159,7 @@ exec - do	case $i in
 exec - 	"shell"|shell)
 exec - 		;;
 exec - 	*)	if	test ! -f ${INSTALLROOT}/lib/lib$i.a
-exec - 		then	case `{ ${CC} ${CCFLAGS}     ${LDFLAGS}  -o 1.${COTEMP}.x 1.${COTEMP}.o  -l$i 2>&1 || echo '' $x ;} | sed -e 's/[][()+@?]/#/g' || :` in
+exec - 		then	case `{ ${CC} ${CCFLAGS}    -L${PACKAGE_ast_LIB} -L../../lib ${LDFLAGS}  -o 1.${COTEMP}.x 1.${COTEMP}.o  -l$i 2>&1 || echo '' $x ;} | sed -e 's/[][()+@?]/#/g' || :` in
 exec - 			*$x*)	case `{ ${CC} ${CCFLAGS}    ${LDFLAGS}  -o 1.${COTEMP}.x 1.${COTEMP}.o  -l$i 2>&1 || echo '' $x ;} | sed -e 's/[][()+@?]/#/g' || :` in
 exec - 				*$x*) continue ;;
 exec - 				esac
@@ -497,7 +497,10 @@ prev FEATURE/time implicit
 prev include/shtable.h implicit
 done include/ulimit.h
 prev include/builtins.h implicit
-prev include/defs.h implicit
+prev include/shell.h implicit
+prev ../../../include/ast/error.h implicit
+prev ../../../include/ast/sfio.h implicit
+prev ../../../include/ast/ast.h implicit
 done bltins/ulimit.c
 prev bltins/ulimit.c
 exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_shell -DSHOPT_MULTIBYTE -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -c bltins/ulimit.c
@@ -505,8 +508,11 @@ done ulimit.o generated
 make umask.o
 make bltins/umask.c
 prev include/builtins.h implicit
+prev include/shell.h implicit
 prev ../../../include/ast/ls.h implicit
-prev include/defs.h implicit
+prev ../../../include/ast/error.h implicit
+prev ../../../include/ast/sfio.h implicit
+prev ../../../include/ast/ast.h implicit
 done bltins/umask.c
 prev bltins/umask.c
 exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_MULTIBYTE -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -D_PACKAGE_ast -c bltins/umask.c
@@ -732,6 +738,8 @@ prev FEATURE/locale implicit
 prev include/lexstates.h implicit
 prev FEATURE/dynamic implicit
 prev FEATURE/time implicit
+prev include/builtins.h implicit
+prev include/shlex.h implicit
 prev include/io.h implicit
 prev include/jobs.h implicit
 prev include/name.h implicit
@@ -882,11 +890,11 @@ make streval.o
 make sh/streval.c
 prev FEATURE/externs implicit
 prev ../../../include/ast/stak.h implicit
+prev ../../../include/ast/error.h implicit
 prev include/streval.h implicit
-prev include/defs.h implicit
 done sh/streval.c
 prev sh/streval.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -D_PACKAGE_ast -DSHOPT_ESH -DSHOPT_MULTIBYTE -DSHOPT_VSH -DSHOPT_SUID_EXEC -c sh/streval.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -D_PACKAGE_ast -c sh/streval.c
 done streval.o generated
 make subshell.o
 make sh/subshell.c
@@ -1137,12 +1145,14 @@ prev include/defs.h implicit
 done sh/shcomp.c
 prev sh/shcomp.c
 setv CC.DLL -UCC.DLL
+setv SH_DICT -DSH_DICT="\"libshell\""
 setv _BLD_shell -U_BLD_shell
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DKSHELL -D_PACKAGE_ast -DSHOPT_SUID_EXEC -DSHOPT_MULTIBYTE -DSHOPT_VSH -DSHOPT_ESH -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2001 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libshell]"\" -c sh/shcomp.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSH_DICT=\""libshell"\" -DKSHELL -D_PACKAGE_ast -DSHOPT_SUID_EXEC -DSHOPT_MULTIBYTE -DSHOPT_VSH -DSHOPT_ESH -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2001 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?libshell]"\" -c sh/shcomp.c
 done shcomp.o generated
 prev libshell.a archive
 prev ${mam_libdl}
 setv CC.DLL -UCC.DLL
+setv SH_DICT -DSH_DICT="\"libshell\""
 exec - ${CC} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}}  -o shcomp shcomp.o ${mam_libshell} ${mam_libm} ${mam_cc_static}  ${mam_cc_dynamic} ${mam_cc_static} ${mam_libast} ${mam_cc_dynamic}
 done shcomp generated
 make sh/suid_exec.c

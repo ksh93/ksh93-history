@@ -1,5 +1,5 @@
 #
-# @(#)magic (AT&T Research) 2001-05-09
+# @(#)magic (AT&T Research) 2001-09-06
 #
 # magic number database for file(1) and magic(3)
 #
@@ -47,8 +47,9 @@
 0	long		0x04034b50	zip archive			application/zip
 +2	byte		>0		, version %d
 &3	byte		*		.%d
+0	long		0x223e9f78	ms outlook tnef archive
 0	string		MSCF
-&4	long		0		cabinet archive
+&4	long		0		ms cabinet archive
 +25	byte		*		, version %d
 +24	byte		*		.%d
 0	long		0x0d010b05	make object			application/x-nmake
@@ -472,10 +473,46 @@ o{
 +18	short		47		hitachi-h8/300h
 +18	short		48		hitachi-h8s
 +18	short		49		hitachi-h8/500
-+18	short		50		intel-merced
++18	short		50		itanium
 +18	short		51		mips-x
 +18	short		52		motorola-coldfire
 +18	short		53		motorola-m68hc12
++18	short		54		fujutsu-mma
++18	short		55		siemens-pcp
++18	short		56		sony-ncpu
++18	short		57		denso-ndr1
++18	short		58		motorola-startcore
++18	short		59		toyota-me16
++18	short		60		stm-st100
++18	short		61		alc-tinyj
++18	short		62		amd-x86, 64-bit
++18	short		63		sony-dsp
++18	short		66		siemens-fx66
++18	short		67		stm-st9, 16-bit
++18	short		68		stm-st7, 8-bit
++18	short		69		motorola-mc68hc16
++18	short		70		motorola-mc68hc11
++18	short		71		motorola-mc68hc08
++18	short		72		motorola-mc68hc05
++18	short		73		sgi-svx
++18	short		74		stm-st19, 8-bit
++18	short		75		vax
++18	short		76		axis, 32-bit
++18	short		77		infineon-javelin, 32-bit
++18	short		78		element-14-firepath, 64-bit
++18	short		79		lsi-zsp, 16-bit
++18	short		80		knuth-mmix, 64-bit
++18	short		81		harvard-huany
++18	short		82		sitera-prism
++18	short		83		amtel-avr, 8-bit
++18	short		84		fujitsu-fr30
++18	short		85		mitsubishi-d10v
++18	short		86		mitsubishi-d30v
++18	short		87		nec-v850
++18	short		88		matsushita-m32r
++18	short		89		matsushita-mn10300
++18	short		90		matsushita-mn10200
++18	short		91		picojava
 +18	short		0x9026		alpha
 +18	short		0xa390		s390
 |18	short		*		machine=0x%l04X
@@ -551,8 +588,63 @@ o{
 +18	short		17		fujitsu500
 +18	short		18		sparc32+
 +18	short		20		powerpc
++18	short		36		nec-v800
++18	short		37		fujitsu-fr20
++18	short		38		trw-rh32
++18	short		39		fujitsu-mma
++18	short		40		arm
++18	short		41		alpha
++18	short		42		hitachi-sh
++18	short		43		sparc64-v9
++18	short		44		siemens-tricore
++18	short		45		argonaut
++18	short		46		hitachi-h8/300
++18	short		47		hitachi-h8/300h
++18	short		48		hitachi-h8s
++18	short		49		hitachi-h8/500
++18	short		50		itanium
++18	short		51		mips-x
++18	short		52		motorola-coldfire
++18	short		53		motorola-m68hc12
++18	short		54		fujutsu-mma
++18	short		55		siemens-pcp
++18	short		56		sony-ncpu
++18	short		57		denso-ndr1
++18	short		58		motorola-startcore
++18	short		59		toyota-me16
++18	short		60		stm-st100
++18	short		61		alc-tinyj
++18	short		62		amd-x86, 64-bit
++18	short		63		sony-dsp
++18	short		66		siemens-fx66
++18	short		67		stm-st9, 16-bit
++18	short		68		stm-st7, 8-bit
++18	short		69		motorola-mc68hc16
++18	short		70		motorola-mc68hc11
++18	short		71		motorola-mc68hc08
++18	short		72		motorola-mc68hc05
++18	short		73		sgi-svx
++18	short		74		stm-st19, 8-bit
++18	short		75		vax
++18	short		76		axis, 32-bit
++18	short		77		infineon-javelin, 32-bit
++18	short		78		element-14-firepath, 64-bit
++18	short		79		lsi-zsp, 16-bit
++18	short		80		knuth-mmix, 64-bit
++18	short		81		harvard-huany
++18	short		82		sitera-prism
++18	short		83		amtel-avr, 8-bit
++18	short		84		fujitsu-fr30
++18	short		85		mitsubishi-d10v
++18	short		86		mitsubishi-d30v
++18	short		87		nec-v850
++18	short		88		matsushita-m32r
++18	short		89		matsushita-mn10300
++18	short		90		matsushita-mn10200
++18	short		91		picojava
 +18	short		0x9026		alpha
-|18	short		*		machine=%ld
++18	short		0xa390		s390
+|18	short		*		machine=0x%l04X
 }
 +16	short		0		type=UNKNOWN
 +16	short		1		object				x-system/obj

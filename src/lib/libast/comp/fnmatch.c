@@ -28,20 +28,23 @@
  * fnmatch implementation
  */
 
-#if defined(__EXPORT__)
-__EXPORT__ int	fnmatch(const char*, const char*, int);
-#endif
-
-#include <ast.h>
+#include <ast_lib.h>
 
 #if _lib_fnmatch && 0
+
+#include <ast.h>
 
 NoN(fnmatch)
 
 #else
 
+#define fnmatch		______fnmatch
+
+#include <ast.h>
 #include <regex.h>
 #include <fnmatch.h>
+
+#undef	fnmatch
 
 typedef struct
 {

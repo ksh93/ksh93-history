@@ -44,7 +44,11 @@ extern int		getgroups(int, int*);
 #define ast_getgroups	getgroups
 #endif
 
-int
+#if defined(__EXPORT__)
+#define extern	__EXPORT__
+#endif
+
+extern int
 ast_getgroups(int len, gid_t* set)
 {
 #if botched

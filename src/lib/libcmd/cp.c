@@ -31,7 +31,7 @@
  */
 
 static const char usage_head[] =
-"[-?@(#)$Id: cp (AT&T Labs Research) 2001-03-07 $\n]"
+"[-?@(#)$Id: cp (AT&T Labs Research) 2001-09-11 $\n]"
 USAGE_LICENSE
 ;
 
@@ -420,7 +420,7 @@ visit(register Ftw_t* ftw)
 		rm = state.op != CP || ftw->info == FTW_SL;
 		if (!rm || !state.force)
 		{
-			if ((n = open(state.path, O_RDWR)) >= 0)
+			if ((n = open(state.path, O_RDWR|O_BINARY)) >= 0)
 			{
 				close(n);
 				if (state.force)
@@ -542,12 +542,12 @@ visit(register Ftw_t* ftw)
 		}
 		else if (state.op == CP || S_ISREG(ftw->statb.st_mode) || S_ISDIR(ftw->statb.st_mode))
 		{
-			if (ftw->statb.st_size > 0 && (rfd = open(ftw->path, O_RDONLY)) < 0)
+			if (ftw->statb.st_size > 0 && (rfd = open(ftw->path, O_RDONLY|O_BINARY)) < 0)
 			{
 				error(ERROR_SYSTEM|2, "%s: cannot read", ftw->path);
 				return 0;
 			}
-			else if ((wfd = open(state.path, O_WRONLY|O_CREAT|O_TRUNC, ftw->statb.st_mode & state.perm)) < 0)
+			else if ((wfd = open(state.path, O_WRONLY|O_CREAT|O_TRUNC|O_BINARY, ftw->statb.st_mode & state.perm)) < 0)
 			{
 				error(ERROR_SYSTEM|2, "%s: cannot write", state.path);
 				if (ftw->statb.st_size > 0)
@@ -641,33 +641,37 @@ b_cp(int argc, register char** argv, void* context)
 	if (!(state.tmp = sfstropen()))
 		error(ERROR_SYSTEM|3, "out of space [tmp string]");
 	sfputr(state.tmp, usage_head, -1);
-	if (streq(error_info.id, "cp"))
+	switch (error_info.id[0])
 	{
+	case 'c':
+	case 'C':
 		sfputr(state.tmp, usage_cp, -1);
 		state.op = CP;
 		state.stat = stat;
 		path_resolve = -1;
-	}
-	else if (streq(error_info.id, "ln"))
-	{
+		break;
+	case 'l':
+	case 'L':
 		sfputr(state.tmp, usage_ln, -1);
 		state.op = LN;
 		state.flags |= FTW_PHYSICAL;
 		state.link = link;
 		state.stat = lstat;
 		path_resolve = 1;
-	}
-	else if (streq(error_info.id, "mv"))
-	{
+		break;
+	case 'm':
+	case 'M':
 		sfputr(state.tmp, usage_mv, -1);
 		state.op = MV;
 		state.flags |= FTW_PHYSICAL;
 		state.preserve = 1;
 		state.stat = lstat;
 		path_resolve = 1;
-	}
-	else
+		break;
+	default:
 		error(3, "not implemented");
+		break;
+	}
 	sfputr(state.tmp, usage_tail, -1);
 	usage = sfstruse(state.tmp);
 	state.opname = state.op == CP ? ERROR_translate(0, 0, 0, "overwrite") : ERROR_translate(0, 0, 0, "replace");

@@ -37,24 +37,20 @@
 #include <namval.h>
 
 #ifndef tzname
-#if _BLD_ast && defined(__IMPORT__)
-#define	tzname		(_ast_getdll()->_ast_tzname)
-#else
-#ifdef	tzname
-#define _dat_tzname	1
-#else
-#if !_dat_tzname
-#if _dat__tzname
-#undef	_dat_tzname
-#define _dat_tzname	1
-#define tzname		_tzname
-#endif
-#endif
-#endif
-#if _dat_tzname
-extern char*		tzname[];
-#endif
-#endif
+#	if defined(__DYNAMIC__)
+#		define	tzname		__DYNAMIC__(tzname)
+#	else
+#		if !_dat_tzname
+#			if _dat__tzname
+#				undef	_dat_tzname
+#				define _dat_tzname	1
+#				define tzname		_tzname
+#			endif
+#		endif
+#	endif
+#	if _dat_tzname
+		extern char*		tzname[];
+#	endif
 #endif
 
 #define TM_type		(-1)
@@ -252,7 +248,8 @@ tmlocal(void)
 		{
 			*s++ = 0;
 			tmgoff(s, &t, 0);
-			s = t;
+			for (s = t; isalpha(*t); t++);
+			*t = 0;
 		}
 		else
 			s = "";

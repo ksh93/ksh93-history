@@ -1,3 +1,22 @@
+01-10-20 package.sh: don't recurse into leaf dirs matching $MAKESKIP
+01-10-18 package.sh: convert to YYYY-MM-DD delta releases instead of NNNN
+	 package.mk: convert to YYYY-MM-DD delta releases instead of NNNN
+	 ratz.c: fix -m for paths containing \f\n\r\v
+01-10-16 ratz.c: _SEA_* => SEAR_*
+	 ratz.c: preserve stdin for sear_exec()
+	 ratz.c: add recursive sear_rm_r() to sear_exec() tmp dir cleanup
+01-10-10 mamprobe.sh: add mam_cc_SHELLMAGIC
+	 package.sh: add nfs wakeup call to admin to avoid stale file handles
+01-10-04 cc.darin.ppc: -flat_namespace is not longer the default (huh)
+01-10-01 package make: prepend $INSTALLROOT/bin/ok to PATH
+	 package read: save cpy of bin/package when reading the INIT package
+	 mamprobe.sh: allow cc path with optional arguments
+01-09-24 Makefile,package.sh: add $INSTALLROOT/bin/.paths initialization
+01-09-19 package.mk: add recurse to list.package.*
+	 package.sh: bootstrap build nmake with _BLD_STATIC for _WIN32
+01-09-11 ratz.c: add _SEA_SKIP & _SEA_COMMAND for self extracting archives
+01-09-07 package.mk: fix output capture to not generate files names with spaces
+01-09-07 package.mk: fix delta release number search
 01-08-11 package.mk: handle single gz executable packages (e.g., for ksh)
 	 package.sh: fix package install to require nmake only if no *.sum
 	 iffe.sh: drop ancient menu and prompt actions; check ./hdr.h clash

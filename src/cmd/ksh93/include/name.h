@@ -140,6 +140,7 @@ struct Ufunction
 
 extern void		array_check(Namval_t*, int);
 extern union Value	*array_find(Namval_t*, int);
+extern int		array_maxindex(Namval_t*);
 extern char 		*nv_endsubscript(Namval_t*, char*, int);
 extern Namfun_t 	*nv_cover(Namval_t*);
 struct argnod;		/* struct not declared yet */

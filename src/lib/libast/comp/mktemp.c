@@ -28,13 +28,14 @@
  * mktemp,mkstemp implementation
  */
 
-#if defined(__EXPORT__)
-__EXPORT__ char*	mktemp(char*);
-__EXPORT__ int		mkstemp(char*);
-#endif
+#define mktemp		______mktemp
+#define mkstemp		______mkstemp
 
 #include <ast.h>
 #include <stdio.h>
+
+#undef	mktemp
+#undef	mkstemp
 
 static char*
 temp(char* buf, int* fdp)
@@ -66,13 +67,17 @@ temp(char* buf, int* fdp)
 	return buf;
 }
 
-char*
+#if defined(__EXPORT__)
+#define extern	__EXPORT__
+#endif
+
+extern char*
 mktemp(char* buf)
 {
 	return temp(buf, NiL);
 }
 
-int
+extern int
 mkstemp(char* buf)
 {
 	int	fd;

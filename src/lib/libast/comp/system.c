@@ -28,14 +28,20 @@
  * ast library system(3)
  */
 
-#if defined(__EXPORT__)
-__EXPORT__ int	system(const char*);
-#endif
+#define system		______system
+
+#define _STDLIB_H_	1	/* uwin workaround */
 
 #include <ast.h>
 #include <proc.h>
 
-int
+#undef	system
+
+#if defined(__EXPORT__)
+#define extern	__EXPORT__
+#endif
+
+extern int
 system(const char* cmd)
 {
 	char*	sh[4];

@@ -24,9 +24,10 @@
 function err_exit
 {
 	print -u2 -n "\t"
-	print -u2 -r $Command: "$@"
+	print -u2 -r $Command[$1]: "${@:2}"
 	let Errors+=1
 }
+alias err_exit='err_exit $LINENO'
 
 Command=$0
 integer Errors=0
@@ -156,5 +157,8 @@ bar
 !
 if	[[ $(export | grep ^foo=) != 'foo=bar' ]]
 then	err_exit 'all export not working with read'
+fi
+if	[[ $(typeset | grep PS2) == PS2 ]]
+then	err_exit 'typeset without arguments outputs names without attributes'
 fi
 exit	$((Errors))

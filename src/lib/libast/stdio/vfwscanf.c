@@ -42,6 +42,8 @@ typedef struct
 static int
 wideexcept(Sfio_t* f, int op, void* val, Sfdisc_t* dp)
 {
+	if (sffileno(f) >= 0)
+		return -1;
 	switch (op)
 	{
 	case SF_ATEXIT:
@@ -94,9 +96,17 @@ vfwscanf(Sfio_t* f, const wchar_t* fmt, va_list args)
 			w->sfdisc.exceptf = wideexcept;
 			w->sfdisc.readf = wideread;
 			w->f = f;
-			if (sfdisc(f, &w->sfdisc) == &w->sfdisc)
+
+			/*
+			 * reset the fd because fd<0 locks the stream
+			 * no io will be done on this fd
+			 * wideread() will redirect all io to f
+			 */
+
+			sfsetfd(t, 0);
+			if (sfdisc(t, &w->sfdisc) == &w->sfdisc)
 			{
-				wcstombs(w->fmt, fmt, wcslen(fmt) + 1);
+				wcstombs(w->fmt, fmt, n + 1);
 				v = sfvscanf(t, w->fmt, args);
 			}
 			else
@@ -104,6 +114,7 @@ vfwscanf(Sfio_t* f, const wchar_t* fmt, va_list args)
 				free(w);
 				v = -1;
 			}
+			sfsetfd(t, -1);
 			sfclose(t);
 		}
 		else

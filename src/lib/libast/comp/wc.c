@@ -32,6 +32,32 @@
 #include <ast.h>
 #include <wchar.h>
 
+#if !_lib_mbtowc
+size_t
+mbtowc(wchar_t* t, const char* s, size_t n)
+{
+	if (t && n > 0)
+		*t = *s;
+	return 1;
+}
+#endif
+
+#if !_lib_mbrtowc
+size_t
+mbrtowc(wchar_t* t, const char* s, size_t n, mbstate_t* q)
+{
+#if _lib_mbtowc
+	memset(q, 0, sizeof(*q));
+	return mbtowc(t, s, n);
+#else
+	*q = 0;
+	if (t && n > 0)
+		*t = *s;
+	return 1;
+#endif
+}
+#endif
+
 #if !_lib_mbstowcs
 size_t
 mbstowcs(wchar_t* t, const char* s, size_t n)
@@ -63,7 +89,6 @@ size_t
 wcrtomb(char* s, wchar_t c, mbstate_t* q)
 {
 #if _lib_wctomb
-	*q = 0;
 	memset(q, 0, sizeof(*q));
 	return wctomb(s, c);
 #else

@@ -46,5 +46,6 @@ fmtmode(register int mode, int external)
 	s = buf = fmtbuf(MODELEN + 1);
 	for (p = modetab; p < &modetab[MODELEN]; p++)
 		*s++ = p->name[((mode & p->mask1) >> p->shift1) | ((mode & p->mask2) >> p->shift2)];
+	*s = 0;
 	return buf;
 }

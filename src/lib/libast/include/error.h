@@ -44,9 +44,8 @@
 #define error_info	_error_info_
 #endif
 
-#if _BLD_ast && defined(__EXPORT__)
-#undef	errno
-#define errno	(*_ast_getdll()->_ast_errno)
+#if !defined(errno) && defined(__DYNAMIC__)
+#define errno		__DYNAMIC__(errno)
 #endif
 
 #define ERROR_debug(n)	(-(n))

@@ -28,20 +28,14 @@
  * realpath implementation
  */
 
-#if defined(__EXPORT__)
-
-#define extern	__EXPORT__
-
-extern char*	realpath(const char*, char*);
-
-#undef	extern
-
-#endif
-
 #include <ast.h>
 #include <error.h>
 
-char*
+#if defined(__EXPORT__)
+#define extern	__EXPORT__
+#endif
+
+extern char*
 realpath(const char* file, char* path)
 {
 	register char*	s;

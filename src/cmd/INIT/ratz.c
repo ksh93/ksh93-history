@@ -2,9 +2,10 @@
  * ratz -- read a tar gzip archive from the standard input
  *
  * coded for portability
+ * _SEAR_* macros for win32 self extracting archives -- see sear(1).
  */
 
-static char id[] = "\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 2001-08-11 $\0\n";
+static char id[] = "\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 2001-10-18 $\0\n";
 
 #if _PACKAGE_ast
 
@@ -12,7 +13,7 @@ static char id[] = "\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler)
 #include <error.h>
 
 static const char usage[] =
-"[-?\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 2001-08-11 $\n]"
+"[-?\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 2001-10-18 $\n]"
 "[-author?Jean-loup Gailly]"
 "[-author?Mark Adler]"
 "[-author?Glenn Fowler <gsf@research.att.com>]"
@@ -56,17 +57,30 @@ static const char usage[] =
 #include <stdio.h>
 #include <sys/types.h>
 
+#if !_PACKAGE_ast
+
 #if _WIN32 && !_UWIN
+
 #include <direct.h>
 #include <io.h>
+#include <fcntl.h>
+#include <windows.h>
+
 #define mkdir(a,b)	mkdir(a)
+
 #else
+
 #include <unistd.h>
+
 #endif
 
-#if !_PACKAGE_ast && defined(__STDC__)
+#if defined(__STDC__)
+
 #include <stdlib.h>
 #include <string.h>
+
+#endif
+
 #endif
 
 /* === zlib.h === */
@@ -2560,6 +2574,7 @@ int ZEXPORT gzread (file, buf, len)
 #undef	local
 
 /* === ratz.c === */
+
 #include <sys/stat.h>
 
 #ifndef S_IRUSR
@@ -2882,6 +2897,92 @@ register char*	s;
 	return n;
 }
 
+#if defined(_SEAR_SEEK) || defined(_SEAR_EXEC)
+
+#ifndef PATH_MAX
+#define PATH_MAX	256
+#endif
+
+#define EXIT(n)	return(sear_exec((char*)0),(n))
+
+static int	sear_stdin;
+static char*	sear_tmp;
+
+static int
+sear_seek(off_t offset, int tmp)
+{
+	char	cmd[PATH_MAX];
+
+	GetModuleFileName(NULL, cmd, sizeof(cmd));
+	sear_stdin = dup(0);
+	close(0);
+	if (open(cmd, O_BINARY|O_RDONLY) || lseek(0, offset, 0) != offset)
+	{
+		fprintf(stderr, "%s: %s: cannot seek to data offset\n", state.id, cmd);
+		return -1;
+	}
+	if (tmp && (sear_tmp = tmpnam(0)))
+	{
+		CreateDirectory(sear_tmp, NULL);
+		SetCurrentDirectory(sear_tmp);
+	}
+	return 0;
+}
+
+/*
+ * remove dir and its subdirs
+ */
+
+static void
+sear_rm_r(char* dir)
+{
+	WIN32_FIND_DATA	info;
+	HANDLE		hp;
+
+	SetCurrentDirectory(dir);
+	if ((hp = FindFirstFile("*.*", &info)) != INVALID_HANDLE_VALUE)
+		do
+		{
+			if (!(info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+				DeleteFile(info.cFileName);
+			else if (info.cFileName[0] != '.' || info.cFileName[1] != 0 && (info.cFileName[1] != '.' || info.cFileName[2] != 0))
+				sear_rm_r(info.cFileName);
+		} while(FindNextFile(hp, &info));
+	FindClose(hp);
+	SetCurrentDirectory("..");
+	RemoveDirectory(dir);
+}
+
+/*
+ * execute cmd, remove sear_tmp, and chdir ..
+ */
+
+static int
+sear_exec(const char* cmd)
+{
+	int		r;
+
+	fflush(stdout);
+	fflush(stderr);
+	if (sear_tmp)
+	{
+		close(0);
+		dup(sear_stdin);
+		close(sear_stdin);
+		r = cmd ? system(cmd) : 1;
+		sear_rm_r(sear_tmp);
+	}
+	else
+		r = cmd ? 0 : 1;
+	return r;
+}
+
+#else
+
+#define EXIT(n)	return(n)
+
+#endif
+
 int
 main(argc, argv)
 int	argc;
@@ -2910,6 +3011,9 @@ char**	argv;
 	unsigned char		num[4];
 	char			path[sizeof(header.prefix) + sizeof(header.name) + 4];
 	char			buf[sizeof(header)];
+#if defined(_SEAR_OPTS)
+	char*			opts[4];
+#endif
 
 	clear = 0;
 	list = 0;
@@ -2952,6 +3056,13 @@ char**	argv;
 	escape = 033;
 	if (a2x)
 		escape = a2x[escape];
+#if defined(_SEAR_OPTS)
+	opts[0] = argv[0];
+	opts[1] = _SEAR_OPTS;
+	opts[2] = argv[1];
+	opts[3] = 0;
+	argv = opts;
+#endif
 #if _PACKAGE_ast
 	error_info.id = state.id;
 	for (;;)
@@ -3043,44 +3154,49 @@ char**	argv;
 	}
 #endif
 
+#if defined(_SEAR_SEEK)
+	if (sear_seek((off_t)_SEAR_SEEK, !list))
+		return 1;
+#endif
+
 	/*
 	 * commit on the first gzip magic char
 	 */
 
 	if ((c = getchar()) == EOF)
-		return 0;
+		EXIT(0);
 	ungetc(c, stdin);
 	if (c != gz_magic[0])
 		gz = 0;
 	else if (!(gz = gzfopen(stdin, "rb")))
 	{
 		fprintf(stderr, "%s: gunzip open error\n", state.id);
-		return 1;
+		EXIT(1);
 	}
 	if (unzip)
 	{
 		if (!gz)
 		{
 			fprintf(stderr, "%s: not a gzip file\n", state.id);
-			return 1;
+			EXIT(1);
 		}
 		while ((c = gzread(gz, buf, sizeof(buf))) > 0)
 			if (fwrite(buf, c, 1, stdout) != 1)
 			{
 				fprintf(stderr, "%s: write error\n", state.id);
-				return 1;
+				EXIT(1);
 			}
 		if (c < 0)
 		{
 			fprintf(stderr, "%s: read error\n", state.id);
-			return 1;
+			EXIT(1);
 		}
 		if (fflush(stdout))
 		{
 			fprintf(stderr, "%s: flush error\n", state.id);
-			return 1;
+			EXIT(1);
 		}
-		return 0;
+		EXIT(0);
 	}
 	if (meter)
 	{
@@ -3137,7 +3253,7 @@ char**	argv;
 			else
 				fprintf(stderr, "%s: not a tar archive\n", state.id);
 			fprintf(stderr, "check sum %lu != %lu\n", m, n);
-			return 1;
+			EXIT(1);
 		}
 
 		/*
@@ -3191,7 +3307,7 @@ char**	argv;
 						if (access(path, 0) && mkdir(path, S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IXGRP|S_IROTH|S_IXOTH))
 						{
 							fprintf(stderr, "%s: %s: cannot create directory\n", state.id, path);
-							return 1;
+							EXIT(1);
 						}
 						*s = c;
 					}
@@ -3216,7 +3332,7 @@ char**	argv;
 					if (!block(stdin, gz, buf))
 					{
 						fprintf(stderr, "%s: unexpected EOF\n", state.id);
-						return 1;
+						EXIT(1);
 					}
 					if (n <= sizeof(header))
 						break;
@@ -3298,7 +3414,7 @@ char**	argv;
 				break;
 			}
 			if (skip(stdin, gz, buf, number(header.size)))
-				return 1;
+				EXIT(1);
 			continue;
 		}
 		if (meter)
@@ -3310,30 +3426,59 @@ char**	argv;
 			int	p;
 			char	bar[METER_parts + 1];
 
-			n = strlen(s = path);
-			p = (state.blocks * 100) / total;
-			if (n > (METER_width - METER_parts - 1))
+			s = path;
+			for (;;)
 			{
-				s += n - (METER_width - METER_parts - 1);
-				n = METER_width - METER_parts - 1;
+				switch (*s++)
+				{
+				case 0:
+				case '\f':
+				case '\n':
+				case '\r':
+				case '\v':
+					s--;
+					break;
+				default:
+					continue;
+				}
+				break;
 			}
-			i = (p / (100 / METER_parts));
-			j = n + METER_parts + 5;
-			if (!clear)
+			if (*s)
+			{
+				if (clear)
+				{
+					fprintf(stderr, "%*s", clear, "\r");
+					clear = 0;
+				}
+				fprintf(stderr, "%s\n", path);
+			}
+			else
+			{
+				n = strlen(s = path);
+				p = (state.blocks * 100) / total;
+				if (n > (METER_width - METER_parts - 1))
+				{
+					s += n - (METER_width - METER_parts - 1);
+					n = METER_width - METER_parts - 1;
+				}
+				i = (p / (100 / METER_parts));
+				j = n + METER_parts + 5;
+				if (!clear)
+					clear = j;
+				if ((k = clear - j + 1) < 0)
+					k = 0;
 				clear = j;
-			if ((k = clear - j + 1) < 0)
-				k = 0;
-			clear = j;
-			t = bar;
-			for (j = METER_parts / 2 - 3; j > 0; j--)
-				*t++ = ' ';
-			*t++ = (j = p / 10) ? ('0' + j) : ' ';
-			*t++ = '0' + (p % 10);
-			*t++ = '%';
-			for (j = METER_parts - (METER_parts / 2 - 3); j > 0; j--)
-				*t++ = ' ';
-			*t = 0;
-			fprintf(stderr, " %c[7m%-.*s%c[0m%s%s%*s", escape, i, bar, escape, bar + i, s, k, "\r");
+				t = bar;
+				for (j = METER_parts / 2 - 3; j > 0; j--)
+					*t++ = ' ';
+				*t++ = (j = p / 10) ? ('0' + j) : ' ';
+				*t++ = '0' + (p % 10);
+				*t++ = '%';
+				for (j = METER_parts - (METER_parts / 2 - 3); j > 0; j--)
+					*t++ = ' ';
+				*t = 0;
+				fprintf(stderr, " %c[7m%-.*s%c[0m%s%s%*s", escape, i, bar, escape, bar + i, s, k, "\r");
+			}
 		}
 		else if (verbose)
 			printf("%s\n", path);
@@ -3345,7 +3490,7 @@ char**	argv;
 				if (unlink(path))
 				{
 					fprintf(stderr, "%s: %s: cannot create file\n", state.id, path);
-					return 1;
+					EXIT(1);
 				}
 			n = number(header.size);
 			c = a2x ? 0 : -1;
@@ -3354,7 +3499,7 @@ char**	argv;
 				if (!block(stdin, gz, buf))
 				{
 					fprintf(stderr, "%s: unexpected EOF\n", state.id);
-					return 1;
+					EXIT(1);
 				}
 				switch (c)
 				{
@@ -3388,7 +3533,7 @@ char**	argv;
 				if (fwrite(buf, n > sizeof(header) ? sizeof(header) : n, 1, fp) != 1)
 				{
 					fprintf(stderr, "%s: %s: write error\n", state.id, path);
-					return 1;
+					EXIT(1);
 				}
 				if (n <= sizeof(header))
 					break;
@@ -3397,14 +3542,14 @@ char**	argv;
 			if (fclose(fp))
 			{
 				fprintf(stderr, "%s: %s: write error\n", state.id, path);
-				return 1;
+				EXIT(1);
 			}
 			break;
 		case DIRTYPE:
 			if (access(path, 0) && mkdir(path, S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IXGRP|S_IROTH|S_IXOTH))
 			{
 				fprintf(stderr, "%s: %s: cannot create directory\n", state.id, path);
-				return 1;
+				EXIT(1);
 			}
 			break;
 		case SYMTYPE:
@@ -3413,22 +3558,24 @@ char**	argv;
 				if (unlink(path))
 				{
 					fprintf(stderr, "%s: %s: cannot symlink to %s\n", state.id, path, header.linkname);
-					return 1;
+					EXIT(1);
 				}
 			continue;
 #endif
+#if !_WIN32 || _UWIN
 		case LNKTYPE:
 			while (link(header.linkname, path))
 				if (unlink(path))
 				{
 					fprintf(stderr, "%s: %s: cannot link to %s\n", state.id, path, header.linkname);
-					return 1;
+					EXIT(1);
 				}
 			continue;
+#endif
 		default:
 			fprintf(stderr, "%s: %s: file type %c ignored\n", state.id, path, header.typeflag);
 			if (skip(stdin, gz, buf, number(header.size)))
-				return 1;
+				EXIT(1);
 			continue;
 		}
 		if (chmod(path, mode))
@@ -3440,5 +3587,9 @@ char**	argv;
 		fprintf(stderr, "%s: warning: empty archive\n", state.id);
 	else if (verbose)
 		fprintf(stderr, "%lu file%s, %lu block%s\n", state.files, state.files == 1 ? "" : "s", state.blocks, state.blocks == 1 ? "" : "s");
+#if defined(_SEAR_EXEC)
+	if (sear_exec(_SEAR_EXEC))
+		return 1;
+#endif
 	return 0;
 }

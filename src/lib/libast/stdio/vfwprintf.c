@@ -43,17 +43,17 @@ vfwprintf(Sfio_t* f, const wchar_t* fmt, va_list args)
 
 	FWIDE(f, WEOF);
 	n = wcstombs(NiL, fmt, 0);
-	if (m = malloc(n))
+	if (m = malloc(n + 1))
 	{
 		if (t = sfstropen())
 		{
-			wcstombs(m, fmt, wcslen(fmt) + 1);
+			wcstombs(m, fmt, n + 1);
 			sfvprintf(t, m, args);
 			free(m);
 			x = sfstruse(t);
 			n = mbstowcs(NiL, x, 0);
-			if (w = (wchar_t*)sfreserve(f, n, 0))
-				v = mbstowcs(w, x, strlen(x) + 1);
+			if (w = (wchar_t*)sfreserve(f, n * sizeof(wchar_t) + 1, 0))
+				v = mbstowcs(w, x, n + 1);
 			else
 				v = -1;
 			sfstrclose(t);

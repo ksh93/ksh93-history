@@ -340,4 +340,23 @@ function xpd {
 if	[[ $(xpd a c) != $'i=a j=a\ni=b j=b\ni=c j=a' ]]
 then	err_exit 'for loop function optimization error'
 fi
+
+typeset -A visited
+integer level=0
+function closure
+{
+	(( $# > 5 )) && return 1
+	((level < 2)) && ((level++))
+	typeset tmp r=0
+	visited[$1]=1
+
+	for tmp in $level _$level
+	do
+		[[ ${visited[$tmp]} == 1 ]] && continue
+		closure $tmp $* || r=1
+	done
+	return $r
+}
+closure 0 || err_exit -u2 'for loop function optimization bug2'
+
 exit $((Errors))

@@ -25,85 +25,98 @@ tst	ptr_void note{ standard C void* ok }end compile{
 cat{
 	/* disable non-standard linux/gnu inlines */
 	#ifdef __GNUC__	
-	#undef	__OPTIMIZE_SIZE__
-	#define	__OPTIMIZE_SIZE__	1
+	#	undef	__OPTIMIZE_SIZE__
+	#	define	__OPTIMIZE_SIZE__	1
 	#endif
 
 	/* __STD_C indicates that the language is ANSI-C or C++ */
 	#if !defined(__STD_C) && __STDC__
-	#define	__STD_C		1
+	#	define	__STD_C		1
 	#endif
 	#if !defined(__STD_C) && (__cplusplus || c_plusplus)
-	#define __STD_C		1
+	#	define __STD_C		1
 	#endif
 	#if !defined(__STD_C) && _std_proto
-	#define __STD_C		1
+	#	define __STD_C		1
 	#endif
 	#if !defined(__STD_C)
-	#define __STD_C		0
+	#	define __STD_C		0
 	#endif
 
 	/* extern symbols must be protected against C++ name mangling */
 	#ifndef _BEGIN_EXTERNS_
-	#if __cplusplus || c_plusplus
-	#define _BEGIN_EXTERNS_	extern "C" {
-	#define _END_EXTERNS_	}
-	#else
-	#define _BEGIN_EXTERNS_
-	#define _END_EXTERNS_
+	#	if __cplusplus || c_plusplus
+	#		define _BEGIN_EXTERNS_	extern "C" {
+	#		define _END_EXTERNS_	}
+	#	else
+	#		define _BEGIN_EXTERNS_
+	#		define _END_EXTERNS_
+	#	endif
 	#endif
-	#endif /*_BEGIN_EXTERNS_*/
 
 	/* _ARG_ simplifies function prototyping among flavors of C */
 	#ifndef _ARG_
-	#if __STD_C
-	#define _ARG_(x)	x
-	#else
-	#define _ARG_(x)	()
+	#	if __STD_C
+	#		define _ARG_(x)	x
+	#	else
+	#		define _ARG_(x)	()
+	#	endif
 	#endif
-	#endif /*_ARG_*/
 
 	/* _NIL_ simplifies defining nil pointers to a given type */
 	#ifndef _NIL_
-	#define _NIL_(x)	((x)0)
-	#endif /*_NIL_*/
+	#	define _NIL_(x)	((x)0)
+	#endif
 
 	/* __INLINE__ is the inline keyword */
 	#if !defined(__INLINE__) && defined(__cplusplus)
-	#define __INLINE__	inline
+	#	define __INLINE__	inline
 	#endif
 	#if !defined(__INLINE__) && defined(_WIN32) && !defined(__GNUC__)
-	#define __INLINE__	__inline
+	#	define __INLINE__	__inline
 	#endif
 
 	/* Void_t is defined so that Void_t* can address any type */
 	#ifndef Void_t
-	#if __STD_C
-	#define Void_t		void
-	#else
-	#define Void_t		char
+	#	if __STD_C
+	#		define Void_t		void
+	#	else
+	#		define Void_t		char
+	#	endif
 	#endif
-	#endif /*Void_t*/
 
 	/* dynamic linked library external scope handling */
-	#if _dll_import && !defined(__GNUC__)
-	#if !defined(__EXPORT__) && _BLD_DLL
-	#define __EXPORT__	__declspec(dllexport)
+	#ifdef __DYNAMIC__
+	#	undef	__DYNAMIC__
+	#	ifndef _DLL
+	#		define _DLL
+	#	endif
 	#endif
-	#if !defined(__IMPORT__)
-	#define __IMPORT__	__declspec(dllimport)
-	#endif
+	#if _dll_import
+	#	if _BLD_STATIC && !_BLD_DLL
+	#		undef	_DLL
+	#	else
+	#		if !_UWIN && !defined(_DLL)
+	#			define _DLL		1
+	#		endif
+	#	endif
+	#	if !defined(__EXPORT__) && _BLD_DLL
+	#		define __EXPORT__	__declspec(dllexport)
+	#	endif
+	#	if !defined(__IMPORT__) && ( _BLD_DLL || _DLL )
+	#		define __IMPORT__	__declspec(dllimport)
+	#	endif
+	#	if _BLD_DLL && _UWIN
+	#	define __DYNAMIC__(v)		(_ast_getdll()->_ast_ ## v)
+	#	endif
 	#endif
 	#if !defined(_astimport)
-	#if defined(__IMPORT__) && _DLL
-	#define _astimport	__IMPORT__
-	#else
-	#define _astimport	extern
+	#	if defined(__IMPORT__) && _DLL
+	#		define _astimport	__IMPORT__
+	#	else
+	#		define _astimport	extern
+	#	endif
 	#endif
-	#endif /*_astimport*/
-}end
-
-cat{
 	#if _dll_import && !_BLD_DLL
 	#	ifdef __STDC__
 	#	define __EXTERN__(T,obj)	extern T obj; T* _imp__ ## obj = &obj

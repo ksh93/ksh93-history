@@ -424,7 +424,7 @@ static char *fmthtml(const char *string)
 	{
 #ifdef SHOPT_MULTIBYTE
 		register int s;
-		if((s=mblen(cp-1,MB_CUR_MAX)) > 1)
+		if((s=mbsize(cp-1)) > 1)
 		{
 			cp += (s-1);
 			continue;
@@ -471,6 +471,7 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 		{
 		case 'c':
 			value->c = 0;
+			fe->flags &= ~SFFMT_LONG;
 			break;
 		case 's':
 		case 'q':
@@ -483,12 +484,15 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 			fe->size = -1;
 			fe->base = -1;
 			value->s = "";
+			fe->flags &= ~SFFMT_LONG;
 			break;
+		case 'a':
 		case 'e':
 		case 'f':
 		case 'g':
 			value->f = 0.;
 			break;
+		case 'A':
 		case 'E':
 		case 'G':
 			value->d = 0.;
@@ -553,12 +557,14 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 				fe->base = -1;
 				value->s = argp;
 			}
+			fe->flags &= ~SFFMT_LONG;
 			break;
 		case 'c':
 			if(fe->base >=0)
 				value->s = argp;
 			else
 				value->c = *argp;
+			fe->flags &= ~SFFMT_LONG;
 			break;
 		case 'o':
 		case 'x':
@@ -607,9 +613,11 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 				value->l = -value->l;
 			fe->size = sizeof(value->l);
 			break;
+		case 'a':
 		case 'e':
 		case 'f':
 		case 'g':
+		case 'A':
 		case 'E':
 		case 'G':
 			value->d = sh_strnum(*pp->nextarg,&lastchar,0);
@@ -725,11 +733,13 @@ static int getarg(Sfio_t *sp, void* v, Sffmt_t* fe)
 			case 'b':
 				value->s = "";
 				break;
+			case 'a':
 			case 'e':
 			case 'f':
 			case 'g':
 				value->f = 0.;
 				break;
+			case 'A':
 			case 'E':
 			case 'G':
 				value->d = 0.;
@@ -830,9 +840,11 @@ static int getarg(Sfio_t *sp, void* v, Sffmt_t* fe)
 					value->ll = (Sflong_t)value->l;
 			}
 			break;
+		case 'a':
 		case 'e':
 		case 'f':
 		case 'g':
+		case 'A':
 		case 'E':
 		case 'G':
 			size = sizeof(double);
@@ -934,11 +946,11 @@ static int fmtvecho(const char *string, struct printf *pp)
 	register int offset = staktell();
 #ifdef SHOPT_MULTIBYTE
 	int chlen;
-	if (MB_CUR_MAX > 1)
+	if(mbwide())
 	{
 		while(1)
 		{
-			if ((chlen = mblen(cp, MB_CUR_MAX)) > 1)
+			if ((chlen = mbsize(cp)) > 1)
 				/* Skip over multibyte characters */
 				cp += chlen;
 			else if((c= *cp++)==0 || c == '\\')
@@ -956,7 +968,7 @@ static int fmtvecho(const char *string, struct printf *pp)
 	for(; c= *cp; cp++)
 	{
 #ifdef SHOPT_MULTIBYTE
-		if ((MB_CUR_MAX > 1) && ((chlen = mblen(cp, MB_CUR_MAX)) > 1))
+		if (mbwide() && ((chlen = mbsize(cp)) > 1))
 		{
 			stakwrite(cp,chlen);
 			cp +=  (chlen-1);

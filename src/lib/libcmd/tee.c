@@ -99,7 +99,7 @@ int
 b_tee(int argc, register char** argv, void* context)
 {
 	register struct tee*	tp = 0;
-	register int		oflag = O_WRONLY|O_TRUNC|O_CREAT;
+	register int		oflag = O_WRONLY|O_TRUNC|O_CREAT|O_BINARY;
 	register int		n;
 	register int*		hp;
 	register char*		cp;

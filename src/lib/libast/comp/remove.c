@@ -25,15 +25,11 @@
 *******************************************************************/
 #pragma prototyped
 
-#if defined(__EXPORT__)
-#define extern	__EXPORT__
-#endif
-
-extern int	remove(const char*);
-
-#undef	extern
+#define remove	______remove
 
 #include <ast.h>
+
+#undef	remove
 
 #if _std_remove || !_lib_unlink
 
@@ -43,7 +39,11 @@ NoN(remove)
 
 #undef	remove
 
-int
+#if defined(__EXPORT__)
+#define extern	__EXPORT__
+#endif
+
+extern int
 remove(const char* path)
 {
 	return unlink(path);

@@ -1,7 +1,7 @@
 /*
  * source and binary package support
  *
- * @(#)package.mk (AT&T Labs Research) 2001-08-11
+ * @(#)package.mk (AT&T Labs Research) 2001-10-18
  *
  * usage:
  *
@@ -32,10 +32,10 @@
  *		archive format
  *
  *	version=YYYY-MM-DD
- *		package version
+ *		package base version (overrides current date)
  *
- *	release=NNNN
- *		package release (delta number)
+ *	release=YYYY-MM-DD
+ *		package delta release (overrides current date)
  *
  *	strip=0
  *		don't strip non-lcl binary package members
@@ -59,7 +59,7 @@ suffix = tgz
 type =
 variants = !(cc-g)
 version = $("":T=R%Y-%m-%d)
-release = 0000
+release =
 
 PACKAGEROOT = $(VROOT:T=F:P=L*:N!=*/arch/+([!/]):O=1)
 PACKAGESRC = $(PACKAGEROOT)/lib/package
@@ -67,6 +67,7 @@ PACKAGEBIN = $(INSTALLROOT)/lib/package
 PACKAGEDIR = $(PACKAGESRC)/$(style)
 INSTALLOFFSET = $(INSTALLROOT:C%$(PACKAGEROOT)/%%)
 
+package.notice = $("\r\v\v")NOTICE -- LICENSED SOFTWARE -- SEE README FOR DETAILS$("\r\v\v")
 package.omit = -|*/$(init)
 package.glob.all = $(INSTALLROOT)/src/($(MAKEDIRS:/:/|/G))/*/($(MAKEFILES:/:/|/G))
 package.all = $(package.glob.all:P=G:W=O=$(?$(name):A=.VIRTUAL):N!=$(package.omit):T=F:$(VROOT:T=F:P=L*:C,.*,C;^&/;;,:/ /:/G))
@@ -80,15 +81,14 @@ package.src = $(package.src.pat:P=G)
 package.bin = $(PACKAGEBIN)/$(name).ini
 
 op = current
-source = $(PACKAGEDIR)/$(name).$(version).$(release).$(suffix)
-binary = $(PACKAGEDIR)/$(name).$(version).$(release).$(CC.HOSTTYPE).$(suffix)
-old.new.source = $(PACKAGEDIR)/$(name).$(old.version).$(version).$(suffix)
-new.old.source = $(PACKAGEDIR)/$(name).$(version).$(old.version).$(suffix)
-old.new.binary = $(PACKAGEDIR)/$(name).$(old.version).$(version).$(CC.HOSTTYPE).$(suffix)
-new.old.binary = $(PACKAGEDIR)/$(name).$(version).$(old.version).$(CC.HOSTTYPE).$(suffix)
+stamp = [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]
+source = $(PACKAGEDIR)/$(name).$(version)$(release:?.$(release)??).$(suffix)
+binary = $(PACKAGEDIR)/$(name).$(version)$(release:?.$(release)??).$(CC.HOSTTYPE).$(suffix)
+old.new.source = $(PACKAGEDIR)/$(name).$(version).$(old.version).$(suffix)
+old.new.binary = $(PACKAGEDIR)/$(name).$(version).$(old.version).$(CC.HOSTTYPE).$(suffix)
 
-source.list = $("$(PACKAGEDIR)/$(name).*.[0-9][0-9][0-9][0-9].$(suffix)":P=G:H>)
-binary.list = $("$(PACKAGEDIR)/$(name).*.[0-9][0-9][0-9][0-9].$(CC.HOSTTYPE).$(suffix)":P=G:H>)
+source.list = $("$(PACKAGEDIR)/$(name).*$(stamp).$(suffix)":P=G:H>)
+binary.list = $("$(PACKAGEDIR)/$(name).*$(stamp).$(CC.HOSTTYPE).$(suffix)":P=G:H>)
 
 source.ratz = $("$(INSTALLROOT)/src/cmd/$(init)/ratz.c":T=F)
 binary.ratz = $("$(INSTALLROOT)/src/cmd/$(init)/ratz":T=F)
@@ -180,35 +180,27 @@ source : .source.init .source.gen .source.$$(style)
 		suffix = c
 	end
 	A := $(source.list)
-	B := $(A:N=*.0000.$(suffix):O=1:T=F)
-	P := $(A:N=*.0000.$(suffix):O=2:T=F)
-	D := $(A:N!=*.0000.$(suffix):O=1:T=F)
+	B := $(A:N=*.$(stamp).$(suffix):N!=*.$(stamp).$(stamp).*:O=1:T=F)
+	P := $(A:N=*.$(stamp).$(suffix):N!=*.$(stamp).$(stamp).*:O=2:T=F)
+	D := $(A:N=*.$(stamp).$(stamp).$(suffix):O=1:T=F)
 	if op == "delta"
 		if ! B
 			error 3 delta requires a base archive
 		end
 		base := -z $(B)
-		if "$(release)" != "0000"
-			D := $(release)
-		else
-			if D
-				D := $(D:B:/.*\.0*//)
-			end
-			let D = D + 1
-			if D > 999
-				error 3 $(source:B:S): too many deltas
-			end
-		end
-		release := $(D:F=%04d)
-		source := $(B:D)/$(B:D:B:B:S=.$(release).$(suffix))
 		deltaversion := $(B:B:B:/$(name).//)
 		let deltasince = $(deltaversion:/.*-//) + 1
 		deltasince := $(deltaversion:/[^-]*$/$(deltasince:F=%02d)/)
+		if "$(release)" != "$(stamp)"
+			release := $("":T=R%Y-%m-%d)
+		end
+		source := $(B:D:B:S=.$(release).$(suffix))
+		version := $(source:B:B:/$(name).//)
 	elif B || op == "base"
 		if op == "base"
 			for I $(B) $(P)
 				V := $(I:B:/$(name)\.\([^.]*\).*/\1/)
-				if V == "[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]" && V != "$(version)"
+				if V == "$(stamp)" && V != "$(version)"
 					old.version := $(V)
 					old.source := $(I)
 					if "$(old.version)" >= "$(version)"
@@ -226,8 +218,8 @@ source : .source.init .source.gen .source.$$(style)
 			end
 			error 1 $(B:B:S): replacing current base
 		end
+		version := $(source:B:/$(name).//)
 	end
-	version := $(source:B:B:/$(name).//)
 	PACKAGEGEN := $(PACKAGESRC)/gen
 
 .source.gen : $$(PACKAGEDIR) $$(PACKAGEGEN) $$(PACKAGEGEN)/SOURCE.html $$(PACKAGEGEN)/BINARY.html $$(PACKAGEGEN)/DETAILS.html
@@ -257,7 +249,7 @@ $$(PACKAGEGEN)/DETAILS.html : $$(INSTALLROOT)/bin/package
 			set -- $(package.closure)
 			for i
 			do	cd $(INSTALLROOT)/$i
-				$(MAKE) --noexec $(-) $(=) list.package.local
+				$(MAKE) --noexec $(-) $(=) recurse list.package.local
 			done
 			set -- $(package.dir:P=G)
 			for i
@@ -271,8 +263,7 @@ $$(PACKAGEGEN)/DETAILS.html : $$(INSTALLROOT)/bin/package
 			-wvf $(source) $(base) \
 			$(VROOT:T=F:P=L*:C%.*%-s",^&/,,"%)
 		test '' != '$(old.source)' &&
-		$(PAX) -rf $(source) -wvf $(old.new.source) -z $(old.source) &&
-		$(PAX) -rf $(old.source) -wvf $(new.old.source) -z $(source)
+		$(PAX) -rf $(source) -wvf $(old.new.source) -z $(old.source)
 		rm -rf $tmp
 	fi
 
@@ -283,13 +274,31 @@ $$(PACKAGEGEN)/DETAILS.html : $$(INSTALLROOT)/bin/package
 		{
 			integer m
 			if	test '$(init)' = '$(name)'
-			then	cat > $tmp/README <<'!'
+			then	: > $tmp/HEAD
+				echo ";;;$tmp/HEAD;$(package.notice)"
+				cat > $tmp/README <<'!'
 	This is a package root directory $PACKAGEROOT. All source and binary
-	packages under this directory are controlled by the command
+	packages in this directory tree are controlled by the command
+
 		bin/package
+
 	Binary package files are in the install root directory $INSTALLROOT,
 	named arch/`bin/package`. For more information run
+
 		bin/package help
+	
+	Each package has its own license, named by the file
+
+		lib/package/LICENSES/<package>
+
+	A component within a package may have its own license named by
+
+		lib/package/LICENSES/<package>-<component>
+
+	At the top of each license file is a URL; the license covers all
+	software referring to this URL. For details run
+
+		bin/package license
 	!
 				echo ";;;$tmp/README;README"
 				cat > $tmp/Makefile <<'!'
@@ -321,7 +330,7 @@ $$(PACKAGEGEN)/DETAILS.html : $$(INSTALLROOT)/bin/package
 				echo ";;;$tmp/Mamfile2;src/lib/Mamfile"
 			fi
 			$(package.src:T=F:/.*/echo ";;;&"$("\n")/)
-			echo $(name) $(version) $(release) 1 > $(PACKAGEGEN)/$(name).ver
+			echo $(name) $(version) $(release|version) 1 > $(PACKAGEGEN)/$(name).ver
 			echo ";;;$(PACKAGEGEN)/$(name).ver"
 			if	test '' != '$(~covers)'
 			then	for i in $(~covers)
@@ -454,12 +463,14 @@ $$(PACKAGEGEN)/DETAILS.html : $$(INSTALLROOT)/bin/package
 				(( m++ ))
 				$(MAKE) --noexec --force --mam=static --mismatch CC=$(CC.DIALECT:N=C++:?CC?cc?) $(=) 'dontcare test' install test > $tmp/$m.mam
 				echo ";;;$tmp/$m.mam;$i/Mamfile"
-				$(MAKE) --noexec $(-) $(=) list.package.$(type)
+				$(MAKE) --noexec $(-) $(=) recurse list.package.$(type)
 			done
 			set -- $(package.dir:P=G)
 			for i
 			do	tw -d $i -e "action:printf(';;;%s\n',path);"
 			done
+			: > $tmp/TAIL
+			echo ";;;$tmp/TAIL;$(package.notice)"
 		} |
 		$(PAX)	--filter=- \
 			--to=ascii \
@@ -469,13 +480,12 @@ $$(PACKAGEGEN)/DETAILS.html : $$(INSTALLROOT)/bin/package
 			$(VROOT:T=F:P=L*:C%.*%-s",^&/,,"%)
 		echo local > $(source:D:B=$(name):S=.tim)
 		test '' != '$(old.source)' &&
-		$(PAX) -rf $(source) -wvf $(old.new.source) -z $(old.source) &&
-		$(PAX) -rf $(old.source) -wvf $(new.old.source) -z $(source)
+		$(PAX) -rf $(source) -wvf $(old.new.source) -z $(old.source)
 		rm -rf $tmp
 	else	if	test '' != '$(old.source)' &&
 			cmp -s $(source.$(name)) $(source)
 		then	: $(name) is up to date
-		else	echo $(name) $(version) $(release) 1 > $(PACKAGEGEN)/$(name).ver
+		else	echo $(name) $(version) $(release|version) 1 > $(PACKAGEGEN)/$(name).ver
 			: > $(PACKAGEGEN)/$(name).req
 			{
 				echo "name='$(name)'"
@@ -518,26 +528,19 @@ binary : .binary.init .binary.gen .binary.$$(style)
 		end
 	end
 	A := $(binary.list)
-	B := $(A:N=*.0000.*:O=1:T=F)
-	P := $(A:N=*.0000.*:O=2:T=F)
-	D := $(A:N!=*.0000.*:O=1:T=F)
+	B := $(A:N=*.$(stamp).$(CC.HOSTTYPE).$(suffix):N!=*.$(stamp).$(stamp).*:O=1:T=F)
+	P := $(A:N=*.$(stamp).$(CC.HOSTTYPE).$(suffix):N!=*.$(stamp).$(stamp).*:O=2:T=F)
+	D := $(A:N=*.$(stamp).$(stamp).$(CC.HOSTTYPE).$(suffix):O=1:T=F)
 	if op == "delta"
 		if ! B
 			error 3 delta requires a base archive
 		end
 		base := -z $(B)
-		if "$(release)" != "0000"
-			D := $(release)
-		else
-			if D
-				D := $(D:B:/.*\.0*//)
-			end
-			let D = D + 1
-			if D > 999
-				error 3 $(binary:B:S): too many deltas
-			end
+		if "$(release)" != "$(stamp)"
+			release := $("":T=R%Y-%m-%d)
 		end
-		release := $(D:F=%04d)
+		binary := $(B:/$(CC.HOSTTYPE).$(suffix)$/$(release).&/)
+		version := $(binary:B:B:/$(name).//)
 	elif B || op == "base"
 		if op == "base"
 			for I $(B) $(P)
@@ -560,8 +563,8 @@ binary : .binary.init .binary.gen .binary.$$(style)
 			end
 			error 1 $(B:B:S): replacing current base
 		end
+		version := $(binary:B:/$(name).//:/\..*//)
 	end
-	version := $(binary:B:B:/$(name).\([^.]*\).*/\1)
 	PACKAGEGEN := $(PACKAGEBIN)/gen
 
 .binary.gen : $$(PACKAGEDIR) $$(PACKAGEGEN)
@@ -579,7 +582,7 @@ binary : .binary.init .binary.gen .binary.$$(style)
 			set -- $(package.closure)
 			for i
 			do	cd $(INSTALLROOT)/$i
-				$(MAKE) --noexec $(-) $(=) list.package.$(type) variants=$(variants:Q) cc-
+				$(MAKE) --noexec $(-) $(=) recurse list.package.$(type) variants=$(variants:Q) cc-
 			done
 		} |
 		sort -u |
@@ -594,8 +597,7 @@ binary : .binary.init .binary.gen .binary.$$(style)
 			$(PACKAGEROOT:C%.*%-s",^&/,,"%)
 		echo local > $(binary:D:B=$(name):S=.$(CC.HOSTTYPE).tim)
 		test '' != '$(old.binary)' &&
-		$(PAX) -rf $(binary) -wvf $(old.new.binary) -z $(old.binary) &&
-		$(PAX) -rf $(old.binary) -wvf $(new.old.binary) -z $(binary)
+		$(PAX) -rf $(binary) -wvf $(old.new.binary) -z $(old.binary)
 		rm -rf $tmp
 	fi
 
@@ -614,7 +616,7 @@ binary : .binary.init .binary.gen .binary.$$(style)
 			$(package.src:T=F:/.*/echo ";;;&"$("\n")/)
 			$(package.src:T=F:N=*/LICENSES/*:B:C,.*,echo ";;;$(PACKAGESRC)/LICENSES/&;$(PACKAGEBIN)/LICENSES/&"$("\n"),)
 			$(package.bin:T=F:/.*/echo ";;;&"$("\n")/)
-			echo $(name) $(version) $(release) 1 > $(PACKAGEGEN)/$(name).ver
+			echo $(name) $(version) $(release|version) 1 > $(PACKAGEGEN)/$(name).ver
 			echo ";;;$(PACKAGEGEN)/$(name).ver"
 			if	test '' != '$(~covers)'
 			then	for i in $(~covers)
@@ -647,10 +649,16 @@ binary : .binary.init .binary.gen .binary.$$(style)
 			set -- $(package.closure)
 			for i
 			do	cd $(INSTALLROOT)/$i
-				$(MAKE) --noexec $(-) $(=) package.strip=$(strip) list.package.$(type) variants=$(variants:Q) cc-
+				$(MAKE) --noexec $(-) $(=) package.strip=$(strip) recurse list.package.$(type) variants=$(variants:Q) cc-
 			done
 		} |
-		sort -u |
+		sort -u | {
+			: > $tmp/HEAD
+			echo ";;;$tmp/HEAD;$(package.notice)"
+			cat
+			: > $tmp/TAIL
+			echo ";;;$tmp/TAIL;$(package.notice)"
+		} |
 		$(PAX)	--filter=- \
 			--to=ascii \
 			$(op:N=delta:??--format=$(format)?) \
@@ -662,8 +670,7 @@ binary : .binary.init .binary.gen .binary.$$(style)
 			$(PACKAGEROOT:C%.*%-s",^&/,,"%)
 		echo local > $(binary:D:B=$(name):S=.$(CC.HOSTTYPE).tim)
 		test '' != '$(old.binary)' &&
-		$(PAX) -rf $(binary) -wvf $(old.new.binary) -z $(old.binary) &&
-		$(PAX) -rf $(old.binary) -wvf $(new.old.binary) -z $(binary)
+		$(PAX) -rf $(binary) -wvf $(old.new.binary) -z $(old.binary)
 		rm -rf $tmp
 	else	if	test '' != '$(binary.$(name))'
 		then	exe=$(binary.$(name))
@@ -672,8 +679,7 @@ binary : .binary.init .binary.gen .binary.$$(style)
 		if	test '' != '$(old.binary)' &&
 			cmp -s $exe $(binary)
 		then	: $(name) is up to date
-		else	echo $(name) $(version) $(release) 1 > $(PACKAGEGEN)/$(name).ver
-			echo $(name) $(version) $(release) 1 > $(PACKAGEGEN)/$(name).ver
+		else	echo $(name) $(version) $(release|version) 1 > $(PACKAGEGEN)/$(name).ver
 			: > $(PACKAGEGEN)/$(name).req
 			{
 				echo "name='$(name)'"

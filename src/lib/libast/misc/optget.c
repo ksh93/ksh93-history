@@ -72,13 +72,17 @@
 #define STYLE_keys	8		/* translation key strings	*/
 #define STYLE_usage	9		/* escaped usage string		*/
 
-typedef struct
+#define FONT_BOLD	1
+#define FONT_ITALIC	2
+#define FONT_LITERAL	4
+
+typedef struct Attr_s
 {
 	const char*	name;
 	int		flag;
 } Attr_t;
 
-typedef struct
+typedef struct Help_s
 {
 	const char*	match;		/* builtin help match name	*/
 	const char*	name;		/* builtin help name		*/
@@ -87,20 +91,27 @@ typedef struct
 	unsigned int	size;		/* strlen text			*/
 } Help_t;
 
-typedef struct
+typedef struct Font_s
+{
+	const char*	html[2];
+	const char*	nroff[2];
+	const char*	term[2];
+} Font_t;
+
+typedef struct List_s
 {
 	int		type;		/* { - + : }			*/
 	const char*	name;		/* list name			*/
 	const char*	text;		/* help text			*/
 } List_t;
 
-typedef struct
+typedef struct Msg_s
 {
 	const char*	text;		/* default message text		*/
 	Dtlink_t	link;		/* cdt link			*/
 } Msg_t;
 
-typedef struct
+typedef struct Save_s
 {
 	Dtlink_t	link;		/* cdt link			*/
 	char		text[1];	/* saved text text		*/
@@ -116,7 +127,7 @@ typedef struct Push_s
 	int		ch;		/* localize() translation	*/
 } Push_t;
 
-typedef struct
+typedef struct Indent_s
 {
 	int		stop;		/* tab column position		*/
 } Indent_t;
@@ -124,6 +135,19 @@ typedef struct
 static Indent_t		indent[] =
 {
 	0,2,	4,10,	12,18,	20,26,	28,34,	36,42,	44,50,	0,0
+};
+
+static const char	term_off[] =	{CC_esc,'[','0','m',0};
+static const char	term_B_on[] =	{CC_esc,'[','1','m',0};
+static const char	term_I_on[] =	{CC_esc,'[','1',';','4','m',0};
+
+static const Font_t	fonts[] =
+{
+	"",	"",	"",	"",	"",			"",
+	"</B>",	"<B>", "\\fP",	"\\fB",	&term_off[0],	&term_B_on[0],
+	"</I>",	"<I>", "\\fP",	"\\fI",	&term_off[0],	&term_I_on[0],
+	"",	"",	"",	"",	"",			"",
+	"</TT>","<TT>","\\fP",	"\\f5",	"",			"",
 };
 
 #define C(s)		ERROR_catalog(s)
@@ -332,6 +356,7 @@ next(register char* s, int version)
  *
  * ]] for ] inside [...]
  * ?? for ? inside [...] before ?
+ * :: for : inside [...] before ?
  */
 
 static char*
@@ -688,53 +713,22 @@ init(register char* s, Optpass_t* p)
  * return the bold set/unset sequence for style
  */
 
-static char*
-bold(int style, int set)
+static const char*
+font(int f, int style, int set)
 {
-	static const char	on[] = { CC_esc, '[', '1', 'm', 0 };
-	static const char	no[] = { CC_esc, '[', '0', 'm', 0 };
-
 	switch (style)
 	{
 	case STYLE_html:
-		return set ? "<B>" : "</B>";
+		return fonts[f].html[set];
 	case STYLE_nroff:
-		return set ? "\\fB" : "\\fP";
+		return fonts[f].nroff[set];
 	case STYLE_short:
 	case STYLE_long:
 	case STYLE_api:
 		break;
 	default:
 		if (opt_info.state->emphasis > 0)
-			return set ? (char*)on : (char*)no;
-		break;
-	}
-	return "";
-}
-
-/*
- * return the italic set/unset sequence for style
- */
-
-static char*
-italic(int style, int set)
-{
-	static const char	on[] = { CC_esc, '[', '1', ';', '4', 'm', 0 };
-	static const char	no[] = { CC_esc, '[', '0', 'm', 0 };
-
-	switch (style)
-	{
-	case STYLE_html:
-		return set ? "<I>" : "</I>";
-	case STYLE_nroff:
-		return set ? "\\fI" : "\\fP";
-	case STYLE_short:
-	case STYLE_long:
-	case STYLE_api:
-		break;
-	default:
-		if (opt_info.state->emphasis > 0)
-			return set ? (char*)on : (char*)no;
+			return fonts[f].term[set];
 		break;
 	}
 	return "";
@@ -798,22 +792,41 @@ info(Push_t* psp, register char* s, register char* e, Sfio_t* ip)
  */
 
 static Push_t*
-localize(Push_t* psp, char* s, char* e, int term, char* catalog, int version, Sfio_t* ip)
+localize(Push_t* psp, char* s, char* e, int term, int n, char* catalog, int version, Sfio_t* ip)
 {
 	char*		t;
 	char*		u;
 	Push_t*		tsp;
-	int		n;
-	int		ch;
+	int		c;
 
 	static Push_t	push;
 
-	t = skip(s, term, 0, 0, 1, 0, 0, version);
+	t = skip(s, term, 0, 0, n, 0, 0, version);
 	if (e && t > e)
 		t = e;
-	sfwrite(ip, s, t - s);
+	while (s < t)
+	{
+		switch (c = *s++)
+		{
+		case ':':
+		case '?':
+			if (term && *s == c)
+				s++;
+			break;
+		case ']':
+			if (*s == c)
+				s++;
+			break;
+		}
+		sfputc(ip, c);
+	}
 	s = sfstruse(ip);
-	ch = (u = T(error_info.id, catalog, s)) != s;
+	if ((u = T(error_info.id, catalog, s)) != s)
+		c = 1;
+	else if (*s == ':' || *s == '?' || *s == ']')
+		c = -1;
+	else
+		c = 0;
 	n = strlen(u);
 	if (tsp = newof(0, Push_t, 1, n + 1))
 	{
@@ -822,7 +835,7 @@ localize(Push_t* psp, char* s, char* e, int term, char* catalog, int version, Sf
 		strcpy(tsp->nb, u);
 		tsp->ob = t;
 		tsp->oe = e;
-		tsp->ch = ch;
+		tsp->ch = c;
 	}
 	else
 		tsp = &push;
@@ -836,12 +849,14 @@ localize(Push_t* psp, char* s, char* e, int term, char* catalog, int version, Sf
  */
 
 static int
-label(register Sfio_t* sp, int sep, register char* s, int z, int level, int style, int a, int b, Sfio_t* ip, int version, char* catalog)
+label(register Sfio_t* sp, int sep, register char* s, int z, int level, int style, int f, Sfio_t* ip, int version, char* catalog)
 {
 	register int	c;
 	register char*	t;
 	register char*	e;
 	int		ostyle;
+	int		a;
+	int		i;
 	char*		p;
 	char*		w;
 	char*		y;
@@ -852,7 +867,7 @@ label(register Sfio_t* sp, int sep, register char* s, int z, int level, int styl
 	int		n = 1;
 	Push_t*		psp = 0;
 
-	if ((ostyle = style) > (STYLE_nroff - (sep <= 0)))
+	if ((ostyle = style) > (STYLE_nroff - (sep <= 0)) && f != FONT_LITERAL)
 		style = 0;
 	if (z < 0)
 		e = s + strlen(s);
@@ -869,7 +884,7 @@ label(register Sfio_t* sp, int sep, register char* s, int z, int level, int styl
 	y = 0;
 	if (version < 1)
 	{
-		b = 0;
+		a = 0;
 		for (;;)
 		{
 			if (s >= e)
@@ -877,10 +892,10 @@ label(register Sfio_t* sp, int sep, register char* s, int z, int level, int styl
 			switch (c = *s++)
 			{
 			case '[':
-				b++;
+				a++;
 				break;
 			case ']':
-				if (--b < 0)
+				if (--a < 0)
 					return r;
 				break;
 			}
@@ -900,12 +915,12 @@ label(register Sfio_t* sp, int sep, register char* s, int z, int level, int styl
 	}
 	if (X(catalog) && (!level || *s == '\a' || *(s - 1) != '+'))
 	{
-		psp = localize(psp, s, e, '?', catalog, version, ip);
+		psp = localize(psp, s, e, (sep || level) ? '?' : 0, sep || level, catalog, version, ip);
 		if (psp->nb)
 		{
 			s = psp->nb;
 			e = psp->ne;
-			r = psp->ch;
+			r = psp->ch > 0;
 		}
 		else
 			psp = psp->next;
@@ -913,28 +928,23 @@ label(register Sfio_t* sp, int sep, register char* s, int z, int level, int styl
 	switch (*s)
 	{
 	case '\a':
-		if (a)
-		{
-			a = 0;
+		if (f == FONT_ITALIC)
 			s++;
-		}
-		else
-			b = 0;
+		f = 0;
 		break;
 	case '\b':
-		if (b)
-		{
-			b = 0;
+		if (f == FONT_BOLD)
 			s++;
-		}
-		else
-			a = 0;
+		f = 0;
+		break;
+	case '\v':
+		if (f == FONT_LITERAL)
+			s++;
+		f = 0;
 		break;
 	default:
-		if (a)
-			sfputr(sp, italic(style, 1), -1);
-		else if (b)
-			sfputr(sp, bold(style, 1), -1);
+		if (f)
+			sfputr(sp, font(f, style, 1), -1);
 		break;
 	}
 	for (;;)
@@ -955,21 +965,24 @@ label(register Sfio_t* sp, int sep, register char* s, int z, int level, int styl
 			if (n)
 			{
 				n = 0;
-				if (a)
-					sfputr(sp, bold(style, a = !a), -1);
-				else if (b)
-					sfputr(sp, bold(style, b = !b), -1);
+				if (f)
+				{
+					sfputr(sp, font(f, style, 0), -1);
+					f = 0;
+				}
 			}
 			break;
 		case '?':
 		case ':':
 		case ']':
+			if (psp && psp->ch)
+				break;
 			if (y)
 			{
 				if (va & OPT_optional)
 					sfputc(sp, '[');
 				sfputc(sp, '=');
-				label(sp, 0, y, -1, 0, style, 1, 0, ip, version, catalog);
+				label(sp, 0, y, -1, 0, style, FONT_ITALIC, ip, version, catalog);
 				if (va & OPT_optional)
 					sfputc(sp, ']');
 				y = 0;
@@ -985,7 +998,7 @@ label(register Sfio_t* sp, int sep, register char* s, int z, int level, int styl
 					goto restore;
 				else if (X(catalog))
 				{
-					psp = localize(psp, s, e, 0, catalog, version, ip);
+					psp = localize(psp, s, e, 0, 1, catalog, version, ip);
 					if (psp->nb)
 					{
 						s = psp->nb;
@@ -1006,21 +1019,28 @@ label(register Sfio_t* sp, int sep, register char* s, int z, int level, int styl
 			}
 			break;
 		case '\a':
-			if (b)
-				sfputr(sp, bold(style, b = !b), -1);
-			if (!a && style == STYLE_html)
+			a = FONT_ITALIC;
+		setfont:
+			if (f & ~a)
+			{
+				sfputr(sp, font(f, style, 0), -1);
+				f = 0;
+			}
+			if (!f && style == STYLE_html)
 			{
 				for (t = s; t < e && !isspace(*t) && !iscntrl(*t); t++);
-				if (*t == '\a' && *++t == '(')
+				if (*t == c && *++t == '(')
 				{
 					w = t;
 					while (++t < e && isdigit(*t));
 					if (t < e && *t == ')' && t > w + 1)
 					{
-						sfprintf(sp, "<NOBR><A href=\"../man%-.*s/%-.*s.html\"><I>%-.*s</I></A>%-.*s</NOBR>"
+						sfprintf(sp, "<NOBR><A href=\"../man%-.*s/%-.*s.html\">%s%-.*s%s</A>%-.*s</NOBR>"
 							, t - w - 1, w + 1
 							, w - s - 1, s
+							, font(a, style, 1)
 							, w - s - 1, s
+							, font(a, style, 0)
 							, t - w + 1, w
 							);
 						s = t + 1;
@@ -1028,33 +1048,11 @@ label(register Sfio_t* sp, int sep, register char* s, int z, int level, int styl
 					}
 				}
 			}
-			sfputr(sp, italic(style, a = !a), -1);
+			sfputr(sp, font(a, style, !!(f ^= a)), -1);
 			continue;
 		case '\b':
-			if (a)
-				sfputr(sp, italic(style, a = !a), -1);
-			if (!b && style == STYLE_html)
-			{
-				for (t = s; t < e && !isspace(*t) && !iscntrl(*t); t++);
-				if (*t == '\b' && *++t == '(')
-				{
-					w = t;
-					while (++t < e && isdigit(*t));
-					if (*t == ')' && t > w + 1)
-					{
-						sfprintf(sp, "<NOBR><A href=\"../man%-.*s/%-.*s.html\"><B>%-.*s</B></A>%-.*s</NOBR>"
-							, t - w - 1, w + 1
-							, w - s - 1, s
-							, w - s - 1, s
-							, t - w + 1, w
-							);
-						s = t + 1;
-						continue;
-					}
-				}
-			}
-			sfputr(sp, bold(style, b = !b), -1);
-			continue;
+			a = FONT_BOLD;
+			goto setfont;
 		case '\f':
 			psp = info(psp, s, e, ip);
 			if (psp->nb)
@@ -1068,6 +1066,14 @@ label(register Sfio_t* sp, int sep, register char* s, int z, int level, int styl
 				psp = psp->next;
 			}
 			continue;
+		case '\n':
+			sfputc(sp, c);
+			for (i = 0; i < level; i++)
+				sfputc(sp, '\t');
+			continue;
+		case '\v':
+			a = FONT_LITERAL;
+			goto setfont;
 		case '<':
 			if (style == STYLE_html)
 			{
@@ -1109,8 +1115,25 @@ label(register Sfio_t* sp, int sep, register char* s, int z, int level, int styl
 				continue;
 			}
 			break;
-		case ' ':
+		case '-':
+			if (ostyle == STYLE_nroff)
+				sfputc(sp, '\\');
+			break;
+		case '.':
+			if (ostyle == STYLE_nroff)
+			{
+				sfputc(sp, '\\');
+				sfputc(sp, '&');
+			}
+			break;
 		case '\\':
+			if (ostyle == STYLE_nroff)
+			{
+				c = 'e';
+				sfputc(sp, '\\');
+			}
+			break;
+		case ' ':
 			if (ostyle == STYLE_nroff)
 				sfputc(sp, '\\');
 			break;
@@ -1118,10 +1141,8 @@ label(register Sfio_t* sp, int sep, register char* s, int z, int level, int styl
 		sfputc(sp, c);
 	}
  restore:
-	if (a)
-		sfputr(sp, italic(style, 0), -1);
-	else if (b)
-		sfputr(sp, bold(style, 0), -1);
+	if (f)
+		sfputr(sp, font(f, style, 0), -1);
 	if (psp)
 		pop(psp);
 	return r;
@@ -1155,7 +1176,7 @@ args(register Sfio_t* sp, register char* p, register int n, int flags, int style
 			{
 				if (!(a = error_info.id))
 					a = "...";
-				sfprintf(sp, "\t%s%s%s%s[%s%s%s%s%s]", bold(style, 1), a, bold(style, 0), b, b, italic(style, 1), o, italic(style, 0), b);
+				sfprintf(sp, "\t%s%s%s%s[%s%s%s%s%s]", font(FONT_BOLD, style, 1), a, font(FONT_BOLD, style, 0), b, b, font(FONT_ITALIC, style, 1), o, font(FONT_ITALIC, style, 0), b);
 			}
 			else if (a)
 				sfprintf(sp, "%*.*s%s%s%s[%s%s%s]", OPT_USAGE - 1, OPT_USAGE - 1, T(NiL, ast.id, "Or:"), b, a, b, b, o, b);
@@ -1196,7 +1217,7 @@ args(register Sfio_t* sp, register char* p, register int n, int flags, int style
 		}
 	}
 	if (n)
-		label(sp, sep, p, n, 0, style, 0, 0, ip, version, catalog);
+		label(sp, sep, p, n, 0, style, 0, ip, version, catalog);
 }
 
 /*
@@ -1213,7 +1234,28 @@ item(Sfio_t* sp, char* s, int level, int style, Sfio_t* ip, int version, char* c
 	int		par;
 
 	sfputc(sp, '\n');
-	if (*s != ']' && (*s != '?' || *(s + 1) == '?'))
+	if (*s == '\n')
+	{
+		par = 0;
+		if (style >= STYLE_nroff)
+			sfprintf(sp, ".DS\n");
+		else
+		{
+			if (style == STYLE_html)
+				sfprintf(sp, "<PRE>\n");
+			else
+				sfputc(sp, '\n');
+			for (n = 0; n < level; n++)
+				sfputc(sp, '\t');
+		}
+		label(sp, 0, s + 1, -1, level, style, FONT_LITERAL, ip, version, catalog);
+		sfputc(sp, '\n');
+		if (style >= STYLE_nroff)
+			sfprintf(sp, ".DE");
+		else if (style == STYLE_html)
+			sfprintf(sp, "</PRE>");
+	}
+	else if (*s != ']' && (*s != '?' || *(s + 1) == '?'))
 	{
 		par = 0;
 		if (level)
@@ -1236,9 +1278,9 @@ item(Sfio_t* sp, char* s, int level, int style, Sfio_t* ip, int version, char* c
 						opt_info.state->flags |= OPT_proprietary;
 						break;
 					}
-			label(sp, 0, s, -1, level, 0, 0, 0, ip, version, catalog);
+			label(sp, 0, s, -1, level, 0, 0, ip, version, catalog);
 			sfputr(sp, "\">", -1);
-			label(sp, 0, s, -1, level, style, 0, !!level, ip, version, catalog);
+			label(sp, 0, s, -1, level, style, level ? FONT_BOLD : 0, ip, version, catalog);
 			sfputr(sp, "</A>", -1);
 			if (!level)
 				sfputr(sp, "</H4>", -1);
@@ -1254,7 +1296,7 @@ item(Sfio_t* sp, char* s, int level, int style, Sfio_t* ip, int version, char* c
 				else if (style != STYLE_options && style != STYLE_match || *s == '-' || *s == '+')
 					sfputc(sp, '\t');
 			}
-			label(sp, 0, s, -1, level, style, 0, 1, ip, version, catalog);
+			label(sp, 0, s, -1, level, style, FONT_BOLD, ip, version, catalog);
 		}
 	}
 	else
@@ -1286,7 +1328,7 @@ text(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip, i
 	register int	n;
 	char*		e;
 	int		a;
-	int		b;
+	int		f;
 	int		par;
 	Push_t*		tsp;
 
@@ -1407,7 +1449,7 @@ text(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip, i
 		{
 			if (X(catalog))
 			{
-				psp = localize(psp, p, NiL, 0, catalog, version, ip);
+				psp = localize(psp, p, NiL, 0, 1, catalog, version, ip);
 				if (psp->nb)
 					p = psp->nb;
 				else
@@ -1417,7 +1459,7 @@ text(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip, i
 				for (n = 0; n < bump + 1; n++)
 					sfputc(sp, '\t');
 		}
-		a = b = 0;
+		f = 0;
 		for (;;)
 		{
 			switch (c = *p++)
@@ -1425,10 +1467,8 @@ text(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip, i
 			case 0:
 				if (!(tsp = psp))
 				{
-					if (a)
-						sfputr(sp, italic(style, 0), -1);
-					else if (b)
-						sfputr(sp, bold(style, 0), -1);
+					if (f)
+						sfputr(sp, font(f, style, 0), -1);
 					return p - 1;
 				}
 				p = psp->ob;
@@ -1436,17 +1476,14 @@ text(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip, i
 				free(tsp);
 				continue;
 			case ']':
+				if (psp && psp->ch)
+					break;
 				if (*p != ']')
 				{
-					if (a)
+					if (f)
 					{
-						a = 0;
-						sfputr(sp, italic(style, 0), -1);
-					}
-					else if (b)
-					{
-						b = 0;
-						sfputr(sp, bold(style, 0), -1);
+						sfputr(sp, font(f, style, 0), -1);
+						f = 0;
 					}
 					for (;;)
 					{
@@ -1490,9 +1527,9 @@ text(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip, i
 							if (v)
 							{
 								sfprintf(sp, " %s ", T(NiL, ast.id, "The default value is"));
-								sfputr(sp, bold(style, 1), -1);
+								sfputr(sp, font(FONT_BOLD, style, 1), -1);
 								sfprintf(sp, "%-.*s", vl, v);
-								sfputr(sp, bold(style, 0), -1);
+								sfputr(sp, font(FONT_BOLD, style, 0), -1);
 								sfputc(sp, '.');
 							}
 							p = skip(p, 0, 0, 0, 1, 0, 1, version);
@@ -1526,21 +1563,28 @@ text(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip, i
 				p++;
 				break;
 			case '\a':
-				if (b)
-					sfputr(sp, bold(style, b = !b), -1);
-				if (!a && style == STYLE_html)
+				a = FONT_ITALIC;
+			setfont:
+				if (f & ~a)
+				{
+					sfputr(sp, font(f, style, 0), -1);
+					f = 0;
+				}
+				if (!f && style == STYLE_html)
 				{
 					for (t = p; *t && !isspace(*t) && !iscntrl(*t); t++);
-					if (*t == '\a' && *++t == '(')
+					if (*t == c && *++t == '(')
 					{
 						e = t;
 						while (isdigit(*++t));
 						if (*t == ')' && t > e + 1)
 						{
-							sfprintf(sp, "<NOBR><A href=\"../man%-.*s/%-.*s.html\"><I>%-.*s</I></A>%-.*s</NOBR>"
+							sfprintf(sp, "<NOBR><A href=\"../man%-.*s/%-.*s.html\">%s%-.*s%s</A>%-.*s</NOBR>"
 								, t - e - 1, e + 1
 								, e - p - 1, p
+								, font(a, style, 1)
 								, e - p - 1, p
+								, font(a, style, 0)
 								, t - e + 1, e
 								);
 							p = t + 1;
@@ -1548,33 +1592,11 @@ text(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip, i
 						}
 					}
 				}
-				sfputr(sp, italic(style, a = !a), -1);
+				sfputr(sp, font(a, style, !!(f ^= a)), -1);
 				continue;
 			case '\b':
-				if (a)
-					sfputr(sp, italic(style, a = !a), -1);
-				if (!b && style == STYLE_html)
-				{
-					for (t = p; *t && !isspace(*t) && !iscntrl(*t); t++);
-					if (*t == '\b' && *++t == '(')
-					{
-						e = t;
-						while (isdigit(*++t));
-						if (*t == ')' && t > e + 1)
-						{
-							sfprintf(sp, "<NOBR><A href=\"../man%-.*s/%-.*s.html\"><B>%-.*s</B></A>%-.*s</NOBR>"
-								, t - e - 1, e + 1
-								, e - p - 1, p
-								, e - p - 1, p
-								, t - e + 1, e
-								);
-							p = t + 1;
-							continue;
-						}
-					}
-				}
-				sfputr(sp, bold(style, b = !b), -1);
-				continue;
+				a = FONT_BOLD;
+				goto setfont;
 			case '\f':
 				psp = info(psp, p, NiL, ip);
 				if (psp->nb)
@@ -1585,6 +1607,9 @@ text(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip, i
 					psp = psp->next;
 				}
 				continue;
+			case '\v':
+				a = FONT_LITERAL;
+				goto setfont;
 			case ' ':
 				if (ident && *p == '$')
 				{
@@ -1602,7 +1627,7 @@ text(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip, i
 			case '\t':
 				while (*p == ' ' || *p == '\t' || *p == '\r' || *p == '\n')
 					p++;
-				if (*p == ']' && *(p + 1) != ']')
+				if (*p == ']' && *(p + 1) != ']' && (!psp || !psp->ch))
 					continue;
 				c = ' ';
 				break;
@@ -1647,9 +1672,23 @@ text(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip, i
 					continue;
 				}
 				break;
+			case '-':
+				if (style == STYLE_nroff)
+					sfputc(sp, '\\');
+				break;
+			case '.':
+				if (style == STYLE_nroff)
+				{
+					sfputc(sp, '\\');
+					sfputc(sp, '&');
+				}
+				break;
 			case '\\':
 				if (style == STYLE_nroff)
+				{
 					sfputc(sp, c);
+					c = 'e';
+				}
 				break;
 			}
 			sfputc(sp, c);
@@ -1690,6 +1729,7 @@ list(Sfio_t* sp, register const List_t* lp)
  *	\a...\a	italic
  *	\b...\b	bold
  *	\f...\f	discipline infof callback on ...
+ *	\v...\v	literal
  * internal formatter:
  *	\t	indent
  *	\n	newline
@@ -2133,6 +2173,11 @@ opthelp(const char* oopts, const char* what)
 			else
 				sfputc(mp, c);
 			continue;
+		case ':':
+			if (f && *p == ':')
+				p++;
+			sfputc(mp, c);
+			continue;
 		case '\a':
 			c = 'a';
 			break;
@@ -2245,6 +2290,11 @@ opthelp(const char* oopts, const char* what)
 				xl = p - x;
 				if (!*p)
 					break;
+				continue;
+			}
+			if (*p == '}')
+			{
+				p++;
 				continue;
 			}
 			message((-20, "opthelp: opt %-.16s", p));
@@ -2539,7 +2589,7 @@ opthelp(const char* oopts, const char* what)
 							else
 								sfputr(sp, "void", -1);
 							if (w)
-								label(sp_body, ' ', w, -1, 0, style, 0, 1, sp_info, version, catalog);
+								label(sp_body, ' ', w, -1, 0, style, FONT_BOLD, sp_info, version, catalog);
 						}
 						else
 						{
@@ -2551,10 +2601,10 @@ opthelp(const char* oopts, const char* what)
 							sfputc(sp_body, ' ');
 							if (w)
 							{
-								if (label(sp_body, 0, w, -1, 0, style, 0, 0, sp_info, version, catalog))
+								if (label(sp_body, 0, w, -1, 0, style, 0, sp_info, version, catalog))
 								{
 									sfputc(sp_body, '|');
-									label(sp_body, 0, w, -1, 0, style, 0, 0, sp_info, version, native);
+									label(sp_body, 0, w, -1, 0, style, 0, sp_info, version, native);
 								}
 							}
 							else
@@ -2576,7 +2626,7 @@ opthelp(const char* oopts, const char* what)
 									}
 							sfputc(sp_body, ' ');
 							if (y)
-								label(sp_body, 0, y, -1, 0, style, 0, 0, sp_info, version, catalog);
+								label(sp_body, 0, y, -1, 0, style, 0, sp_info, version, catalog);
 							else
 								sfputc(sp_body, '-');
 							if (v)
@@ -2590,12 +2640,12 @@ opthelp(const char* oopts, const char* what)
 							if (sp_body == sp_plus)
 								sfputc(sp_body, '+');
 							sfputc(sp_body, '-');
-							sfputr(sp_body, bold(style, 1), -1);
+							sfputr(sp_body, font(FONT_BOLD, style, 1), -1);
 							if (!sl)
 								sfputc(sp_body, f);
 							else
 								sfwrite(sp_body, s, sl);
-							sfputr(sp_body, bold(style, 0), -1);
+							sfputr(sp_body, font(FONT_BOLD, style, 0), -1);
 							if (w)
 							{
 								sfputc(sp_body, ',');
@@ -2615,10 +2665,10 @@ opthelp(const char* oopts, const char* what)
 								if (prefix > 1)
 									sfputc(sp_body, '-');
 							}
-							if (label(sp_body, 0, w, -1, 0, style, 0, 1, sp_info, version, catalog))
+							if (label(sp_body, 0, w, -1, 0, style, FONT_BOLD, sp_info, version, catalog))
 							{
 								sfputc(sp_body, '|');
-								label(sp_body, 0, w, -1, 0, style, 0, 1, sp_info, version, native);
+								label(sp_body, 0, w, -1, 0, style, FONT_BOLD, sp_info, version, native);
 							}
 						}
 						if (y)
@@ -2629,7 +2679,7 @@ opthelp(const char* oopts, const char* what)
 								sfputc(sp_body, ' ');
 							if (w)
 								sfputc(sp_body, prefix == 1 ? ' ' : '=');
-							label(sp_body, 0, y, -1, 0, style, 1, 0, sp_info, version, catalog);
+							label(sp_body, 0, y, -1, 0, style, FONT_ITALIC, sp_info, version, catalog);
 							if (a & OPT_optional)
 								sfputc(sp_body, ']');
 						}
@@ -2713,55 +2763,69 @@ opthelp(const char* oopts, const char* what)
 		sfprintf(sp, "\
 .\\\" format with nroff|troff|groff -man\n\
 .nr mI 0\n\
-.de H1\n\
-.if \\\\n(mI!=0 \\{\n\
-.	nr mI 0\n\
+.de mI\n\
+.if \\\\n(mI>\\\\$1 \\{\n\
+.	nr mI \\\\n(mI-1\n\
 .	RE\n\
+.mI \\\\$1\n\
 .\\}\n\
+.if \\\\n(mI<\\\\$1 \\{\n\
+.	nr mI \\\\n(mI+1\n\
+.	RS\n\
+.mI \\\\$1\n\
+.\\}\n\
+..\n\
+.de H1\n\
+.mI 1\n\
+.TP\n\
+\\fB\\\\$1\\fP\n\
+..\n\
+.de H2\n\
+.mI 2\n\
 .TP\n\
 \\fB\\\\$1\\fP\n\
 ..\n\
 .de H3\n\
-.if \\\\n(mI=0 \\{\n\
-.	nr mI 1\n\
-.	RS\n\
-.\\}\n\
+.mI 3\n\
 .TP\n\
-\\fB     \\\\$1\\fP\n\
+\\fB\\\\$1\\fP\n\
+..\n\
+.de H4\n\
+.mI 4\n\
+.TP\n\
+\\fB\\\\$1\\fP\n\
 ..\n\
 .de OP\n\
-.if \\\\n(mI!=0 \\{\n\
-.	nr mI 0\n\
-.	RE\n\
-.\\}\n\
+.mI 0\n\
 .ie !'\\\\$1'-' \\{\n\
-.	ds mO \\\\fB\\\\-\\\\$1\\\\fP\n\
-.	ds mS ,\\\\0\n\
+.ds mO \\\\fB\\\\-\\\\$1\\\\fP\n\
+.ds mS ,\\\\0\n\
 .\\}\n\
 .el \\{\n\
-.	ds mO \\\\&\n\
-.	ds mS \\\\&\n\
+.ds mO \\\\&\n\
+.ds mS \\\\&\n\
 .\\}\n\
 .ie '\\\\$2'-' \\{\n\
-.	if !'\\\\$4'-' .as mO \\\\0\\\\fI\\\\$4\\\\fP\n\
+.if !'\\\\$4'-' .as mO \\\\0\\\\fI\\\\$4\\\\fP\n\
 .\\}\n\
 .el \\{\n\
-.	as mO \\\\*(mS\\\\fB\\\\-\\\\-\\\\$2\\\\fP\n\
-.	if !'\\\\$4'-' .as mO =\\\\fI\\\\$4\\\\fP\n\
+.as mO \\\\*(mS\\\\fB%s\\\\$2\\\\fP\n\
+.if !'\\\\$4'-' .as mO =\\\\fI\\\\$4\\\\fP\n\
 .\\}\n\
 .TP\n\
 \\\\*(mO\n\
 ..\n\
 .de FN\n\
-.if \\\\n(mI!=0 \\{\n\
-.	nr mI 0\n\
-.	RE\n\
-.\\}\n\
+.mI 0\n\
 .TP\n\
 \\\\$1 \\\\$2\n\
 ..\n\
 .TH %s %d\n\
-", error_info.id, section);
+"
+, o->prefix == 2 ? "\\\\-\\\\-" : o->prefix == 1 ? "\\\\-" : ""
+, error_info.id
+, section
+);
 	}
 	if (style == STYLE_match)
 	{

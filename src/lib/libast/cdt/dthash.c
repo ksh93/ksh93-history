@@ -96,7 +96,9 @@ int		type;
 	reg Dtlink_t	**s, **ends;
 
 	UNFLATTEN(dt);
-	INITDISC(dt,disc,ky,sz,lk,cmpf);
+
+	/* initialize discipline data */
+	disc = dt->disc; _DTDSC(disc,ky,sz,lk,cmpf);
 
 	if(!obj)
 	{	if(type&(DT_NEXT|DT_PREV))
@@ -116,7 +118,7 @@ int		type;
 				while(t)
 				{	r = t->right;
 					if(disc->freef)
-						(*disc->freef)(dt,OBJ(t,lk),disc);
+						(*disc->freef)(dt,_DTOBJ(t,lk),disc);
 					if(disc->link < 0)
 						(*dt->memoryf)(dt,(Void_t*)t,0,disc);
 					t = r;
@@ -137,38 +139,38 @@ int		type;
 
 			dt->data->loop += 1;
 			dt->data->here = t;
-			return t ? OBJ(t,lk) : NIL(Void_t*);
+			return t ? _DTOBJ(t,lk) : NIL(Void_t*);
 		}
 	}
 
-	if(type&(DT_MATCH|DT_SEARCH|DT_INSERT) )
-	{	key = (type&DT_MATCH) ? obj : KEY(obj,ky,sz);
-		hsh = HASH(dt,key,disc,sz);
+	if(type&(DT_MATCH|DT_SEARCH|DT_INSERT|DT_ATTACH) )
+	{	key = (type&DT_MATCH) ? obj : _DTKEY(obj,ky,sz);
+		hsh = _DTHSH(dt,key,disc,sz);
 		goto do_search;
 	}
 	else if(type&(DT_RENEW|DT_VSEARCH) )
 	{	r = (Dtlink_t*)obj;
-		obj = OBJ(r,lk);
-		key = KEY(obj,ky,sz);
+		obj = _DTOBJ(r,lk);
+		key = _DTKEY(obj,ky,sz);
 		hsh = r->hash;
 		goto do_search;
 	}
-	else /*if(type&(DT_DELETE|DT_NEXT|DT_PREV))*/
-	{	if((t = dt->data->here) && OBJ(t,lk) == obj)
+	else /*if(type&(DT_DELETE|DT_DETACH|DT_NEXT|DT_PREV))*/
+	{	if((t = dt->data->here) && _DTOBJ(t,lk) == obj)
 		{	hsh = t->hash;
 			s = dt->data->htab + HINDEX(dt->data->ntab,hsh);
 			p = NIL(Dtlink_t*);
 		}
 		else
-		{	key = KEY(obj,ky,sz);
-			hsh = HASH(dt,key,disc,sz);
+		{	key = _DTKEY(obj,ky,sz);
+			hsh = _DTHSH(dt,key,disc,sz);
 		do_search:
 			t = dt->data->ntab <= 0 ? NIL(Dtlink_t*) :
 			 	*(s = dt->data->htab + HINDEX(dt->data->ntab,hsh));
 			for(p = NIL(Dtlink_t*); t; p = t, t = t->right)
 			{	if(hsh == t->hash)
-				{	k = OBJ(t,lk); k = KEY(k,ky,sz);
-					if(CMP(dt,key,k,disc,cmpf,sz) == 0)
+				{	k = _DTOBJ(t,lk); k = _DTKEY(k,ky,sz);
+					if(_DTCMP(dt,key,k,disc,cmpf,sz) == 0)
 						break;
 				}
 			}
@@ -185,25 +187,26 @@ int		type;
 			*s = t;
 		}
 		dt->data->here = t;
-		return OBJ(t,lk);
+		return _DTOBJ(t,lk);
 	}
-	else if(type&DT_INSERT)
+	else if(type&(DT_INSERT|DT_ATTACH))
 	{	if(t && (dt->data->type&DT_SET) )
 		{	dt->data->here = t;
-			return OBJ(t,lk);
+			return _DTOBJ(t,lk);
 		}
 
-		if(disc->makef && !(obj = (*disc->makef)(dt,obj,disc)) )
+		if(disc->makef && (type&DT_INSERT) &&
+		   !(obj = (*disc->makef)(dt,obj,disc)) )
 			return NIL(Void_t*);
 		if(lk >= 0)
-			r = ELT(obj,lk);
+			r = _DTLNK(obj,lk);
 		else
 		{	r = (Dtlink_t*)(*dt->memoryf)
 				(dt,NIL(Void_t*),sizeof(Dthold_t),disc);
 			if(r)
 				((Dthold_t*)r)->obj = obj;
 			else
-			{	if(disc->makef && disc->freef)
+			{	if(disc->makef && disc->freef && (type&DT_INSERT))
 					(*disc->freef)(dt,obj,disc);
 				return NIL(Void_t*);
 			}
@@ -216,7 +219,7 @@ int		type;
 			dthtab(dt);
 		if(dt->data->ntab == 0)
 		{	dt->data->size -= 1;
-			if(disc->freef)
+			if(disc->freef && (type&DT_INSERT))
 				(*disc->freef)(dt,obj,disc);
 			if(disc->link < 0)
 				(*disc->memoryf)(dt,(Void_t*)r,0,disc);
@@ -270,7 +273,7 @@ int		type;
 		}
 		else
 		{	dt->data->type |= DT_WALK;
-			return OBJ(p,lk);
+			return _DTOBJ(p,lk);
 		}
 	}
 	else if(type&DT_RENEW)
@@ -279,12 +282,12 @@ int		type;
 		else
 		{	if(disc->freef)
 				(*disc->freef)(dt,obj,disc);
-			if(disc->link >= 0)
+			if(disc->link < 0)
 				(*dt->memoryf)(dt,(Void_t*)r,0,disc);
-			return t ? OBJ(t,lk) : NIL(Void_t*);
+			return t ? _DTOBJ(t,lk) : NIL(Void_t*);
 		}
 	}
-	else /*if(type&DT_DELETE)*/
+	else /*if(type&(DT_DELETE|DT_DETACH))*/
 	{	if(!t)
 			return NIL(Void_t*);
 		else if(p)
@@ -296,10 +299,10 @@ int		type;
 				p = p->right;
 			p->right = t->right;
 		}
-		obj = OBJ(t,lk);
+		obj = _DTOBJ(t,lk);
 		dt->data->size -= 1;
 		dt->data->here = p;
-		if(disc->freef)
+		if(disc->freef && (type&DT_DETACH))
 			(*disc->freef)(dt,obj,disc);
 		if(disc->link < 0)
 			(*dt->memoryf)(dt,(Void_t*)t,0,disc);

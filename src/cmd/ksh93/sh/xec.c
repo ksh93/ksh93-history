@@ -972,6 +972,7 @@ sh_exec(register const union anynode *t, int flags)
 			struct checkpt buff;
 			void *optlist = sh.optlist;
 			sh.optlist = 0;
+			sh_tclear(t->for_.fortre);
 			sh_pushcontext(&buff,jmpval);
 			jmpval = sigsetjmp(buff.buff,0);
 			if(jmpval)
@@ -1086,6 +1087,8 @@ sh_exec(register const union anynode *t, int flags)
 			struct checkpt buff;
 			void *optlist = sh.optlist;
 			sh.optlist = 0;
+			sh_tclear(t->wh.whtre);
+			sh_tclear(t->wh.dotre);
 			sh_pushcontext(&buff,jmpval);
 			jmpval = sigsetjmp(buff.buff,0);
 			if(jmpval)

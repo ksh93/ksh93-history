@@ -20,6 +20,7 @@ CCFLAGS = $(CC.OPTIMIZE) -D_BLD_ast $(CC.DLL)
 CP = $(STDCP|"cp")
 
 PARANOID ==
+CONF_LIBPREFIX == "$(CC.PREFIX.DYNAMIC|CC.PREFIX.SHARED)"
 CONF_LIBSUFFIX == "$(CC.SUFFIX.DYNAMIC|CC.SUFFIX.SHARED)"
 DEBUG ==
 __OBSOLETE__ == 20010101
@@ -67,7 +68,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	stresc.c stropt.c strtape.c tok.c tokline.c tokscan.c \
 	pathaccess.c pathcat.c pathcanon.c pathcheck.c pathpath.c \
 	pathexists.c pathfind.c pathkey.c pathprobe.c pathrepl.c \
-	pathtemp.c pathtmp.c pathstat.c \
+	pathnative.c pathtemp.c pathtmp.c pathstat.c \
 	pathgetlink.c pathsetlink.c pathbin.c pathshell.c pathcd.c \
 	fs3d.c ftwalk.c ftwflags.c fts.c setenviron.c \
 	optget.c optjoin.c strsort.c \
@@ -128,8 +129,8 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	regsub.c regrecord.c regrexec.c \
 	/* cdt */ \
 	dthdr.h dtclose.c dtdisc.c dtextract.c dtflatten.c dthash.c \
-	dtlist.c dtmethod.c dtopen.c dtrenew.c dtrestore.c \
-	dtsize.c dtstat.c dtstrhash.c dttree.c dtview.c dtwalk.c \
+	dtlist.c dtmethod.c dtopen.c dtrenew.c dtrestore.c dtsize.c \
+	dtstat.c dtstrhash.c dttree.c dttreeset.c dtview.c dtwalk.c \
 	/* sfio */ \
 	sfhdr.h sfdchdr.h \
 	sfclose.c sfclrlock.c sfdisc.c sfdlen.c sfexcept.c \
@@ -354,7 +355,7 @@ $(MINI)$$(CC.SUFFIX.SHARED) : $(MINI).sym $(ID)
 	cat $(*:N=*.sym)
 	} > $(MINI).tmp/$(DLL)$(CC.SUFFIX.LD:O=1)
 	cd $(MINI).tmp
-	$(LD) $(CCFLAGS:N=-[gG]*) $(CC.SHARED) -o $(DLL) $(DLL)$(CC.SUFFIX.LD:O=1) $(*$(DLL)$(CC.SUFFIX.DYNAMIC):C,^[^-],../&,)
+	$(LD) $(CCFLAGS:N=-[gG]*) $(CC.SHARED) -o $(DLL) $(DLL)$(CC.SUFFIX.LD:O=1) $(*$(ID).so/$(DLL)$(CC.SUFFIX.DYNAMIC):C,^[^-],../&,)
 	cd ..
 	mv $(MINI).tmp/$(DLL)$(CC.SUFFIX.SHARED) $(<)
 	rm -rf $(MINI).tmp

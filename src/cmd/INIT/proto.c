@@ -2975,7 +2975,7 @@ memcopy __PARAM__((register char* s, register char* t, int n), (s, t, n)) __OTOR
 #line 1 "/home/gsf/arch/sgi.mips3/include/ast/hashkey.h"
  
 
-#line 28
+#line 27
  
                   
  
@@ -5646,8 +5646,10 @@ pppopen __PARAM__((char* file, int fd, char* notice, char* options, char* packag
 				{
 					s = proto->ip;
 					while (*s && *s++ != '\n');
-					proto->op = memcopy(proto->op, proto->ip, s - proto->ip);
+					m = s - proto->ip;
+					proto->op = memcopy(proto->op, proto->ip, m);
 					proto->ip = s;
+					proto->iz = n -= m;
 				}
 
 				if ((comlen = astlicense(proto->op, proto->oz, notice, options, proto->cc[0], proto->cc[1], proto->cc[2])) < 0)
