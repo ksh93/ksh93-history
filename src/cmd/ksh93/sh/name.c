@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2000 AT&T Corp.                *
+*                Copyright (c) 1982-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -20,7 +20,6 @@
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -828,7 +827,7 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 				if(flags&NV_INTEGER)
 				{
 					if(flags&NV_LONG)
-						ld = *(Sfdouble_t*)sp;
+						ld = (double)(*(Sfdouble_t*)sp);
 					else
 						ld = *(double*)sp;
 				}
@@ -846,7 +845,7 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 				if(flags&NV_INTEGER)
 				{
 					if(flags&NV_LONG)
-						d = *(Sfdouble_t*)sp;
+						d = (double)(*(Sfdouble_t*)sp);
 					else
 						d = *(double*)sp;
 				}
@@ -867,7 +866,7 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 				if(flags&NV_INTEGER)
 				{
 					if(flags&NV_LONG)
-						ll = *(Sfdouble_t*)sp;
+						ll = (double)(*(Sfdouble_t*)sp);
 					else
 						ll = *(double*)sp;
 				}
@@ -885,7 +884,7 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 				if(flags&NV_INTEGER)
 				{
 					if(flags&NV_LONG)
-						l = *(Sfdouble_t*)sp;
+						l = (double)(*(Sfdouble_t*)sp);
 					else
 						l = *(double*)sp;
 				}
@@ -1548,7 +1547,10 @@ double nv_getnum(register Namval_t *np)
      	if(nv_isattr (np, NV_INTEGER))
 	{
 		if(nv_isattr(np, NV_ARRAY))
-			up = array_find(np,ARRAY_ASSIGN);
+		{
+			if(!(up = array_find(np,ARRAY_LOOKUP)))
+				return(0);
+		}
 		else
 			up= &np->nvalue;
 		if(!up->lp)

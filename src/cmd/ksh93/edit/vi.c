@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2000 AT&T Corp.                *
+*                Copyright (c) 1982-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -20,7 +20,6 @@
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /* Adapted for ksh by David Korn */
@@ -808,7 +807,7 @@ static int cntlmode(Vi_t *vp)
 
 		case cntl('V'):
 		{
-			register const char *p = &e_version[5];
+			register const char *p = fmtident(e_version);
 			save_v(vp);
 			del_line(vp,BAD);
 			while(c = *p++)

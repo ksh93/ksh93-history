@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2000 AT&T Corp.                *
+*                Copyright (c) 1982-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -20,7 +20,6 @@
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -68,7 +67,7 @@ extern int 	sh_iomovefd(int);
 extern int	sh_iorenumber(int,int);
 extern void 	sh_pclose(int[]);
 extern void 	sh_iorestore(int);
-#if defined(_DLL_BLD) && defined(_BLD_shell) 
+#if defined(__EXPORT__) && defined(_BLD_DLL) && defined(_BLD_shell) 
    __EXPORT__
 #endif
 extern Sfio_t 	*sh_iostream(int);

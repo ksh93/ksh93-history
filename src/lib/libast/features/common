@@ -69,7 +69,7 @@ cat{
 
 	/* dynamic linked library external scope handling */
 	#if _dll_import && !defined(__GNUC__)
-	#if !defined(__EXPORT__) && _DLL_BLD
+	#if !defined(__EXPORT__) && _BLD_DLL
 	#define __EXPORT__	__declspec(dllexport)
 	#endif
 	#if !defined(__IMPORT__)
@@ -77,7 +77,7 @@ cat{
 	#endif
 	#endif
 	#if !defined(_astimport)
-	#if defined(__IMPORT__) && _DLL_BLD
+	#if defined(__IMPORT__) && _DLL
 	#define _astimport	__IMPORT__
 	#else
 	#define _astimport	extern
@@ -86,7 +86,7 @@ cat{
 }end
 
 cat{
-	#if !_DLL_BLD && _dll_import
+	#if _dll_import && !_BLD_DLL
 	#	ifdef __STDC__
 	#	define __EXTERN__(T,obj)	extern T obj; T* _imp__ ## obj = &obj
 	#	define __DEFINE__(T,obj,val)	T obj = val; T* _imp__ ## obj = &obj
@@ -110,24 +110,24 @@ tst	- -DN=0 - -DN=1 - -DN=2 - -DN=3 - -DN=4 - -DN=5 - -DN=6 - -DN=7 - -DN=8 outp
 	#define _ast_int8_str	"long"
 	#endif
 	#if N == 1
+	#define _ast_int8_t	__int64
+	#define _ast_int8_str	"__int64"
+	#endif
+	#if N == 2
 	#define _ast_int8_t	long long
 	#define _ast_int8_str	"long long"
 	#endif
-	#if N == 2
+	#if N == 3
 	#define _ast_int8_t	__int64_t
 	#define _ast_int8_str	"__int64_t"
 	#endif
-	#if N == 3
+	#if N == 4
 	#define _ast_int8_t	_int64_t
 	#define _ast_int8_str	"_int64_t"
 	#endif
-	#if N == 4
+	#if N == 5
 	#define _ast_int8_t	int64_t
 	#define _ast_int8_str	"int64_t"
-	#endif
-	#if N == 5
-	#define _ast_int8_t	__int64
-	#define _ast_int8_str	"__int64"
 	#endif
 	#if N == 6
 	#define _ast_int8_t	_int64

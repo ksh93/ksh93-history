@@ -12,7 +12,7 @@ HOSTTYPE == "$(CC.HOSTTYPE)"
 
 CCFLAGS = $(CC.OPTIMIZE) -D_BLD_ast $(CC.DLL)
 
-.SOURCE : obsolete cdt comp dir disc hash man misc path port preroot \
+.SOURCE : cdt comp dir disc hash man misc path port preroot \
 		regex sfio stdio string tm uwin vec vmalloc
 
 .SOURCE.h : include comp
@@ -56,13 +56,13 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	memhash.c memsum.c strhash.c strkey.c strsum.c \
 	stracmp.c strnacmp.c \
 	_ccmaps.c ccmapc.c ccmapcpy.c ccmapid.c ccmaps.c ccnative.c \
-	mematoe.c memetoa.c \
 	chresc.c chrtoi.c streval.c strexpr.c strmatch.c strcopy.c \
 	modelib.h modei.c modex.c strmode.c \
 	strlook.c strsearch.c strpsearch.c \
 	stresc.c stropt.c strtape.c tok.c tokline.c tokscan.c \
 	pathaccess.c pathcat.c pathcanon.c pathcheck.c pathpath.c \
-	pathfind.c pathkey.c pathprobe.c pathrepl.c pathtmp.c pathstat.c \
+	pathfind.c pathkey.c pathprobe.c pathrepl.c \
+	pathtemp.c pathtmp.c pathstat.c \
 	pathgetlink.c pathsetlink.c pathbin.c pathshell.c pathcd.c \
 	fs3d.c ftwalk.c ftwflags.c fts.c setenviron.c \
 	optget.c optjoin.c strsort.c \
@@ -71,8 +71,8 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	catopen.c iconv.c mc.c \
 	liberror.c libevent.c \
 	fmtbase.c fmtbuf.c fmtclock.c fmtdev.c fmtelapsed.c fmterror.c \
-	fmtesc.c fmtfs.c fmtip4.c fmtls.c fmtmatch.c fmtmode.c fmtnum.c \
-	fmtperm.c fmtre.c fmttime.c fmtuid.c fmtgid.c fmtsignal.c \
+	fmtesc.c fmtfs.c fmtident.c fmtip4.c fmtls.c fmtmatch.c fmtmode.c \
+	fmtnum.c fmtperm.c fmtre.c fmttime.c fmtuid.c fmtgid.c fmtsignal.c \
 	strelapsed.c strperm.c struid.c strgid.c strtoip4.c stack.c stk.c \
 	swapget.c swapmem.c swapop.c swapput.c \
 	sigdata.c sigcrit.c sigunblock.c \
@@ -166,6 +166,8 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	a64l.c acosh.c asinh.c atanh.c cbrt.c crypt.c crypt_util.c erf.c \
 	err.c exp.c exp__E.c expm1.c gamma.c getpass.c lgamma.c log.c log1p.c \
 	log__L.c rand48.c random.c rcmd.c rint.c support.c \
+	/* obsolete */ \
+	obsolete/mematoe.c obsolete/memetoa.c \
 	/* misc */ \
 	atmain.C \
 	-liconv /* please OSF, this *has* to be wrong */
@@ -206,9 +208,7 @@ conf :: conf.sh
 conflib.h conflim.h confmap.h conftab.h confuni.h \
 confmap.c conftab.c confstr.c pathconf.c sysconf.c :JOINT: \
 		conf conf.tab
-	: generate : $(<:N=*.h)
-	: generate : $(<:N=*.c)
-	$(*) $(CC) $(CCFLAGS:N!=-[DIU]*)
+	$(*:O=1) $(IFFEFLAGS:V:N=-v) $(*:O>1) $(CC) $(CCFLAGS:N!=-[DIU]*)
 
 /* NOTE: sun4 runtime link botches ro data so advertized sig_info is rw */
 

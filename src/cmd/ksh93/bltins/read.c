@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2000 AT&T Corp.                *
+*                Copyright (c) 1982-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -20,7 +20,6 @@
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -242,15 +241,15 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 	}
 	if(flags&N_FLAG)
 	{
+		int n = size;
+		char buf[64],*var=buf;
 		/* reserved buffer */
-		if(!(cp = (unsigned char*)malloc(size+1)))
-			sh_exit(1);
-		if(nv_size(np)<size-1 || nv_isattr(np,NV_INTEGER|NV_RJUST|NV_LJUST))
+		if(n>=sizeof(buf))
 		{
-			nv_putval(np,(char*)cp,NV_NOFREE);
-			nv_offattr(np,NV_NOFREE);
-			nv_setsize(np,size-1);
+			if(!(var = (char*)malloc(n+1)))
+				sh_exit(1);
 		}
+		cp = (unsigned char*)var;
 		while(size>0)
 		{
 			*cp = 0;
@@ -263,6 +262,9 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 		*cp = 0;
 		if(timeslot)
 			timerdel(timeslot);
+		nv_putval(np,var,0);
+		if(n>=sizeof(buf))
+			free((void*)var);
 		goto done;
 	}
 	else if(!(cp = (unsigned char*)sfgetr(iop,delim,0)))

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2000 AT&T Corp.                *
+*                Copyright (c) 1985-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -22,7 +22,6 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -35,14 +34,22 @@
 #ifndef _PROCLIB_H
 #define _PROCLIB_H
 
-#define _PROC_PRIVATE_ \
-	long		flags;		/* original PROC_* flags	*/ \
-	Sig_handler_t	sigint;		/* PROC_FOREGROUND SIG_IGN	*/ \
-	Sig_handler_t	sigquit;	/* PROC_FOREGROUND SIG_IGN	*/
-
 #include <ast.h>
 #include <errno.h>
 #include <sig.h>
+
+#if _lib_sigprocmask
+typedef sigset_t Sig_mask_t;
+#else
+typedef unsigned long Sig_mask_t;
+#endif
+
+#define _PROC_PRIVATE_ \
+	long		flags;		/* original PROC_* flags	*/ \
+	Sig_mask_t	mask;		/* original blocked sig mask	*/ \
+	Sig_handler_t	sigint;		/* PROC_FOREGROUND SIG_IGN	*/ \
+	Sig_handler_t	sigquit;	/* PROC_FOREGROUND SIG_IGN	*/
+
 #include <proc.h>
 
 #define proc_default	_proc_info_	/* hide external symbol		*/

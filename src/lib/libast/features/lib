@@ -162,6 +162,7 @@ tst	pipe_rw note{ full duplex pipes }end execute{
 
 tst	real_vfork note{ vfork child shares data with parent }end execute{
 	_BEGIN_EXTERNS_
+	extern int	exit _ARG_((int));
 	extern int	vfork();
 	_END_EXTERNS_
 	int		code;
@@ -169,7 +170,7 @@ tst	real_vfork note{ vfork child shares data with parent }end execute{
 	{
 		code = 1;
 		if (!vfork()) code = 0;
-		return code;
+		exit(code);
 	}
 }end
 
@@ -350,14 +351,27 @@ std	cleanup note{ stuck with standard _cleanup }end noexecute{
 std	malloc note{ stuck with standard malloc }end noexecute{
 	_BEGIN_EXTERNS_
 	extern void _exit _ARG_((int));
-	extern char* strdup _ARG_((const char*));
+	extern void* calloc _ARG_((unsigned, unsigned));
+	#if !defined(NeXT) && !defined(__NeXT)
 	#if _STD_
 	char* malloc(unsigned n) { _exit(0); return 0; }
 	#else
 	char* malloc(n) unsigned n; { _exit(0); return 0; }
 	#endif
+	#endif
 	_END_EXTERNS_
-	main() { strdup("yo"); _exit(1); }
+	main() { calloc(1, 1); _exit(1); }
+}end
+
+std	malloc note{ stuck with standard malloc -- wimp-o mach? }end noexecute{
+	_BEGIN_EXTERNS_
+	#if _STD_
+	void* calloc(unsigned n, unsigned m) { return 0; }
+	#else
+	void* calloc(n, m) unsigned n, m; { return 0; }
+	#endif
+	_END_EXTERNS_
+	main() { return 0; }
 }end
 
 std	remove note{ stuck with standard remove() }end nostatic{
@@ -398,7 +412,7 @@ cat{
 	#undef	_lib_fnmatch
 	#endif
 
-	/* temporarily override some uwin feature tests */
+	/* override some uwin feature tests */
 	#if _WIN32
 	#undef	_lib_execlp
 	#undef	_lib_execvp
@@ -409,6 +423,8 @@ cat{
 	#undef	_lib_spawnvpe
 	#undef	_std_malloc
 	#define _std_malloc 1
+	#undef	_std_string
+	#define _std_string 1
 	#undef	_stream_peek
 	#endif
 
@@ -452,15 +468,4 @@ tst	rotten note{ rotten apple? }end execute{
 	}
 }end pass{
 	echo "#undef	_lib_memccpy	/* rotten apple? */"
-}end
-
-std	malloc note{ stuck with standard malloc -- wimp-o mach? }end noexecute{
-	_BEGIN_EXTERNS_
-	#if _STD_
-	void* calloc(unsigned n, unsigned m) { return 0; }
-	#else
-	void* calloc(n, m) unsigned n, m; { return 0; }
-	#endif
-	_END_EXTERNS_
-	main() { return 0; }
 }end

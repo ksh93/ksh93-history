@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2000 AT&T Corp.                *
+*                Copyright (c) 1982-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -20,7 +20,6 @@
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -38,6 +37,7 @@
 #include	"lexstates.h"
 #include	"name.h"
 #include	"streval.h"
+#include	"variables.h"
 #include	"FEATURE/locale"
 
 static Namval_t *scope(register Namval_t *np,register struct lval *lvalue,int assign)
@@ -103,7 +103,10 @@ static double arith(const char **ptr, struct lval *lvalue, int type, double n)
 				return(r);
 			}
 			*str = 0;
-			np = nv_open(*ptr,sh.var_tree,NV_NOASSIGN|NV_VARNAME);
+			if(sh_isoption(SH_NOEXEC))
+				np = L_ARGNOD;
+			else
+				np = nv_open(*ptr,sh.var_tree,NV_NOASSIGN|NV_VARNAME);
 			*str = c;
 			lvalue->value = (char*)np;
 			if((lvalue->emode&ARITH_COMP) || (nv_isarray(np) && nv_aindex(np)<0))

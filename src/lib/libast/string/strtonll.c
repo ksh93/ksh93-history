@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2000 AT&T Corp.                *
+*                Copyright (c) 1985-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -22,7 +22,6 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -41,7 +40,7 @@
  *
  * integer numbers are of the form:
  *
- *	[sign][base][number][multiplier]
+ *	[sign][base][number[qualifier]][multiplier]
  *
  *	base:		nnn#		base nnn (no multiplier)
  *			0[xX]		hex
@@ -49,6 +48,13 @@
  *			[1-9]		decimal
  *
  *	number:		[0-9a-zA-Z]*
+ *
+ *	qualifier:	[lL]
+ *			[uU]
+ *			[uU][lL] 
+ *			[lL][uU]
+ *			[lL][lL][uU]
+ *			[uU][lL][lL]
  *
  *	multiplier:	.		pseudo-float (100) + subsequent digits
  *			[bB]		block (512)
@@ -62,6 +68,9 @@
 #include <ctype.h>
 
 #include "sfhdr.h"
+
+#define QL		01
+#define QU		02
 
 _ast_intmax_t
 strtonll(const char* a, char** e, char* basep, int m)
@@ -152,6 +161,32 @@ strtonll(const char* a, char** e, char* basep, int m)
 		else while ((c = cv[*s++]) < base)
 			n = (n * base) + c;
 		c = *(s - 1);
+	}
+	if (s > (unsigned char*)(a + 1))
+	{
+		/*
+		 * gobble the optional qualifier
+		 */
+
+		base = 0;
+		for (;;)
+		{
+			if (!(base & QL) && (c == 'l' || c == 'L'))
+			{
+				base |= QL;
+				c = *++s;
+				if (c == 'l' || c == 'L')
+					c = *++s;
+				continue;
+			}
+			if (!(base & QU) && (c == 'u' || c == 'U'))
+			{
+				base |= QU;
+				c = *++s;
+				continue;
+			}
+			break;
+		}
 	}
 
 	/*

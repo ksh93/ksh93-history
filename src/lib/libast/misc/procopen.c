@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2000 AT&T Corp.                *
+*                Copyright (c) 1985-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -22,7 +22,6 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -380,6 +379,9 @@ procopen(const char* cmd, char** argv, char** envv, long* modv, long flags)
 #if !_pipe_rw && !_lib_socketpair
 	int			poi[2];
 #endif
+#if defined(SIGCHLD) && ( _lib_sigprocmask || _lib_sigsetmask )
+	Sig_mask_t		mask;
+#endif
 #if USE_SPAWN
 	int			newenv = 0;
 #endif
@@ -464,6 +466,18 @@ procopen(const char* cmd, char** argv, char** envv, long* modv, long flags)
 		{
 			proc->sigint = signal(SIGINT, SIG_IGN);
 			proc->sigquit = signal(SIGQUIT, SIG_IGN);
+#if defined(SIGCHLD)
+#if _lib_sigprocmask
+			sigemptyset(&mask);
+			sigaddset(&mask, SIGCHLD);
+			sigprocmask(SIG_BLOCK, &mask, &proc->mask);
+#else
+#if _lib_sigsetmask
+			mask = sigmask(SIGCHLD);
+			proc->mask = sigblock(mask);
+#endif
+#endif
+#endif
 		}
 		proc->pid = fork();
 		if (!(flags & PROC_FOREGROUND))

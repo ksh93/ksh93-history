@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2000 AT&T Corp.                *
+*                Copyright (c) 1985-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -22,7 +22,6 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 
@@ -231,6 +230,12 @@ sfprintf(sfstderr, "AHA#%d:%s %s %s\n", __LINE__, __FILE__, p, all);
 	{
 		ast.locale.serial++;
 		ast.collate = (ast.locale.set & (1<<AST_LC_COLLATE)) ? strcoll : strcmp;
+#if MB_LEN_MAX > 1
+		if (MB_CUR_MAX > 1 && (ast.locale.set & (1<<AST_LC_CTYPE)))
+			ast.locale.set |= AST_LC_multibyte;
+		else
+			ast.locale.set &= ~AST_LC_multibyte;
+#endif
 	}
 	return p;
 }

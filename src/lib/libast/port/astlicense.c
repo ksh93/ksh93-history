@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2000 AT&T Corp.                *
+*                Copyright (c) 1985-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -22,7 +22,6 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 
@@ -36,13 +35,12 @@
  *	 not so for the legal department
  */
 
-#ifdef	_PPLIB_H
-#include "../include/hashkey.h"
-#else
+#ifndef	_PPLIB_H
 #include <ast.h>
 #include <time.h>
-#include <hashkey.h>
 #endif
+
+#include <hashkey.h>
 
 #undef	copy
 #undef	END
@@ -729,14 +727,7 @@ astlicense(char* p, int size, char* file, char* options, int cc1, int cc2, int c
 	if (v = notice.item[AUTHOR].data)
 	{
 		x = v + notice.item[AUTHOR].size;
-		if (notice.type != USAGE && (x - v) == 1 && (*v == '*' || *v == '-'))
-		{
-			k = 1;
-			COMMENT(&notice, &buf, "CONTRIBUTORS", 0);
-			comment(&notice, &buf, NiL, 0, 0);
-		}
-		else
-			k = 0;
+		k = notice.type != USAGE && (x - v) == 1 && (*v == '*' || *v == '-') ? -1 : 0;
 		for (;;)
 		{
 			while (v < x && (*v == ' ' || *v == '\t' || *v == '\r' || *v == '\n' || *v == ',' || *v == '+'))
@@ -764,7 +755,12 @@ astlicense(char* p, int size, char* file, char* options, int cc1, int cc2, int c
 				}
 				else
 				{
-					k = 1;
+					if (k < 0)
+					{
+						k = 1;
+						COMMENT(&notice, &buf, "CONTRIBUTORS", 0);
+						comment(&notice, &buf, NiL, 0, 0);
+					}
 					expand(&notice, &tmp, s, n);
 					comment(&notice, &buf, BUF(&tmp), USE(&tmp), 0);
 				}
@@ -772,7 +768,7 @@ astlicense(char* p, int size, char* file, char* options, int cc1, int cc2, int c
 					break;
 			}
 		}
-		if (k)
+		if (k > 0)
 			comment(&notice, &buf, NiL, 0, 0);
 	}
 	if (notice.type == USAGE)

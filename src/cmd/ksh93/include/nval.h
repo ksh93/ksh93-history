@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2000 AT&T Corp.                *
+*                Copyright (c) 1982-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -20,7 +20,6 @@
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 #ifndef NV_DEFAULT
@@ -165,13 +164,13 @@ struct Namval
 #define	ARRAY_SCAN	(2L<<ARRAY_BITS)	/* For ${array[@]} */
 #define ARRAY_UNDEF	(4L<<ARRAY_BITS)	/* For ${array} */
 
-#ifdef _DLL_BLD
+#if defined(__EXPORT__) && defined(_DLL)
 #   ifdef _BLD_shell
 #	define extern __EXPORT__
 #   else
 #	define extern __IMPORT__
 #   endif /* _BLD_shell */
-#endif /* _DLL_BLD */
+#endif /* _DLL */
 /* prototype for array interface*/
 extern Namarr_t	*nv_setarray(Namval_t*,void*(*)(Namval_t*,const char*,int));
 extern void	*nv_associative(Namval_t*,const char*,int);
@@ -206,9 +205,9 @@ extern Namfun_t *nv_stack(Namval_t*,Namfun_t*);
 extern void 	nv_unset(Namval_t*);
 extern Namval_t	*nv_search(const char *, Dt_t*, int);
 extern void	nv_unscope(void);
-#ifdef _DLL_BLD
+#ifdef _DLL
 #   undef extern
-#endif /* _DLL_BLD */
+#endif /* _DLL */
 
 #if 0
 /*

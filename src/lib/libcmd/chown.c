@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1992-2000 AT&T Corp.                *
+*                Copyright (c) 1992-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -21,7 +21,6 @@
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -32,7 +31,7 @@
  * chown
  */
 
-static const char id[] = "\n@(#)chown (AT&T Research) 1997-11-11\0\n";
+static const char id[] = "\n@(#)$Id: chown (AT&T Research) 1997-11-11 $\0\n";
 
 #include <cmdlib.h>
 

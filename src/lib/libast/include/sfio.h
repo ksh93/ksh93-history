@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2000 AT&T Corp.                *
+*                Copyright (c) 1985-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -22,7 +22,6 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
-*                                                                  *
 *******************************************************************/
 #ifndef _SFIO_H
 #define _SFIO_H	1
@@ -219,14 +218,14 @@ struct _sffmt_s
 #endif
 
 /* bits for various types of files */
+#define _SF_APPEND	0000010	/* BSDI stat.h namespace incursion	*/
+#define _SF_CLOSE	4	/* AIX sys/socket.h namespace incursion	*/
+
 #define	SF_READ		0000001	/* open for reading			*/
 #define SF_WRITE	0000002	/* open for writing			*/
 #define SF_STRING	0000004	/* a string stream			*/
-#define SF_APPENDWR	0000010	/* associated file is in append mode	*/
-#define SF_APPEND	SF_APPENDWR	/* BSDI messed up the namespace	*/
-				/* by using the SF_ prefix in stat.h.	*/
-				/* If you run across this, either change*/
-				/* to SF_APPENDWR or complain to them.	*/
+#define SF_APPENDWR	_SF_APPEND/* associated file is in append mode	*/
+#define SF_APPEND	_SF_APPEND/* associated file is in append mode	*/
 #define SF_MALLOC	0000020	/* buffer is malloc-ed			*/
 #define SF_LINE		0000040	/* line buffering			*/
 #define SF_SHARE	0000100	/* stream with shared file descriptor 	*/
@@ -251,7 +250,7 @@ struct _sffmt_s
 
 /* exception events: SF_NEW(0), SF_READ(1), SF_WRITE(2) and the below 	*/
 #define SF_SEEK		3	/* seek error				*/
-#define SF_CLOSE	4	/* when stream is about to be closed	*/
+#define SF_CLOSE	_SF_CLOSE/* when stream is about to be closed	*/
 #define SF_DPUSH	5	/* when discipline is being pushed	*/
 #define SF_DPOP		6	/* when discipline is being popped	*/
 #define SF_DPOLL	7	/* see if stream is ready for I/O	*/
@@ -305,7 +304,7 @@ extern Sfio_t		_Sfstderr;
 
 /* the sfstd* macros will be dropped 4Q2000 */
 
-#if _DLL && _DLL_INDIRECT_DATA
+#if _BLD_DLL && _DLL_INDIRECT_DATA
 
 /* The Uwin shared library environment requires these to be defined
    in a global structure set up by the Uwin start-up procedure.

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1990-2000 AT&T Corp.                *
+*                Copyright (c) 1990-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -20,7 +20,6 @@
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -39,14 +38,14 @@
  */
 
 static int
-killjob(register Coshell_t* co, register Cojob_t* cj, int sig)
+cokilljob(register Coshell_t* co, register Cojob_t* cj, int sig)
 {
 	int	n;
 
 	if (cj->pid <= 0)
 	{
 		errno = ESRCH;
-		return(-1);
+		return -1;
 	}
 	if (sig == SIGKILL)
 	{
@@ -56,7 +55,7 @@ killjob(register Coshell_t* co, register Cojob_t* cj, int sig)
 	}
 	n = kill(cj->pid, sig);
 	killpg(cj->pid, sig);
-	return(n);
+	return n;
 }
 
 /*
@@ -64,7 +63,7 @@ killjob(register Coshell_t* co, register Cojob_t* cj, int sig)
  */
 
 static int
-killshell(register Coshell_t* co, register Cojob_t* cj, int sig)
+cokillshell(register Coshell_t* co, register Cojob_t* cj, int sig)
 {
 	int	n;
 
@@ -74,14 +73,15 @@ killshell(register Coshell_t* co, register Cojob_t* cj, int sig)
 
 		n = sfsprintf(buf, sizeof(buf), "#%05d\nk %d %d\n", 0, cj ? cj->id : 0, sig);
 		sfsprintf(buf, 7, "#%05d\n", n - 7);
-		return(write(co->cmdfd, buf, n) == n ? 0 : -1);
+		return write(co->cmdfd, buf, n) == n ? 0 : -1;
 	}
-	if (cj) return(killjob(co, cj, sig));
+	if (cj)
+		return cokilljob(co, cj, sig);
 	n = 0;
 	for (cj = co->jobs; cj; cj = cj->next)
 		if (cj->pid > 0)
-			n |= killjob(co, cj, sig);
-	return(n);
+			n |= cokilljob(co, cj, sig);
+	return n;
 }
 
 int
@@ -100,9 +100,10 @@ cokill(register Coshell_t* co, register Cojob_t* cj, int sig)
 		break;
 #endif
 	}
-	if (co) return(killshell(co, cj, sig));
+	if (co)
+		return cokillshell(co, cj, sig);
 	n = 0;
 	for (co = state.coshells; co; co = co->next)
-		n |= killshell(co, NiL, sig);
-	return(n);
+		n |= cokillshell(co, NiL, sig);
+	return n;
 }

@@ -1,6 +1,6 @@
 #if ! __MVS__
 
-void _STUB_atmain(){};
+void _STUB_atmain(){}
 
 #else
 

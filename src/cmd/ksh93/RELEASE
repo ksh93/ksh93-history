@@ -1,4 +1,28 @@
 
+
+01-01-25  --- Release ksh93k+  ---
+01-01-25  allow arithmetic expressions with float%int and treat them
+	  as ((int)float)%int rather than as an error. 
+01-01-19  read -n1 was not working and has been fixed.
+01-01-17  ksh now handes the case in which a here document in command
+	  substitution $() is terminated by the trailing ).  Previously,
+	  a new-line was needed at the end of the delimiter word. 
+01-01-02  A bug in which a KEYBD trap would cause a multi-line token
+	  to be processed incorrectly has been fixed.
+00-12-10  Arithmetic integer constants can now have L and U suffices. 
+00-12-10  A bug in the processing of arithmetic expressions with compound
+	  variables when the -n option is on has been fixed.
+00-12-08  A bug in M-f and M-b from emacs mode has been fixed.  This
+	  bug only occurs when ksh93 is compiled without MULTIBYTE enabled.
+00-11-29  A bug in which jobs -p would yield 0 for background
+	  jobs run in a script has been fixed.
+00-11-21  A bug in integer arrays in which the number of elements is
+	  incorrect when the ++ operator is applied to a non-existing
+	  element has been fixed.  For example, integer x; ((x[3]++)).
+00-11-20  A timing bug in which the shell could reset the terminal
+	  group to the wrong value in the case that the a new process
+	  changes the terminal group during startup has been fixed.
+
 00-10-27  --- Release ksh93k  ---
 00-10-27  Using tab for completion now works only when applied
 	  after a non-blank character at the end of the current line.

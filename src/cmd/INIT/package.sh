@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1999-2000 AT&T Corp.                #
+#                Copyright (c) 1999-2001 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -20,7 +20,6 @@
 #                         Florham Park NJ                          #
 #                                                                  #
 #               Glenn Fowler <gsf@research.att.com>                #
-#                                                                  #
 ####################################################################
 # package - source and binary package control
 # this script written to make it through all sh variants
@@ -31,36 +30,40 @@ case $-:$BASH_VERSION in
 esac
 
 command=package
-version=2000-10-31
+version=2001-01-01
 
 src="cmd contrib etc lib"
-use="/home /usr/common /exp /usr/local /usr/add-on /usr/addon /usr/tools /usr"
+use="/home /usr/common /exp /usr/local /usr/add-on /usr/addon /usr/tools /usr /opt"
 lib="/usr/local/lib /usr/local/shlib"
+ccs="/usr/kvm /usr/ccs/bin"
+org="gnu GNU"
 
-case `getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt` in
+admin_db=admin.db
+admin_env=admin.env
+
+case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)'${command}$' (AT&T Labs Research) '${version}$'
+@(#)$Id: '${command}$' (AT&T Labs Research) '${version}$' $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary packages.
 	It is a \bsh\b(1) script coded for maximal portability. All package
 	files are in the \b$PACKAGEROOT\b directory tree. Binary package
-	files are in the \b$PACKAGEROOT/arch/\b\ahosttype\a tree
-	(\b$INSTALLROOT\b), where \ahosttpe\a=`\bpackage\b`. All \aactions\a
-	but \bhost\b and \buse\b require the current directory to be under
+	files are in the \b$INSTALLROOT\b (\b$PACKAGEROOT/arch/\b\ahosttype\a)
+	tree, where \ahosttpe\a=`\bpackage\b`. All \aactions\a but \bhost\b
+	and \buse\b require the current directory to be under
 	\b$PACKAGEROOT\b. See \bDETAILS\b for more information.]
 [+?Note that no environment variables need be set by the user; \bpackage\b
-	determines them based on the current working directory. The \buse\b
-	action provides a \bsh\b(1) with the environment initialized. \bCC\b,
-	\bCCFLAGS\b, \bHOSTTYPE\b and \bSHELL\b may be set by explicit
+	determines the environment based on the current working directory.
+	The \buse\b action starts a \bsh\b(1) with the environment initialized.
+	\bCC\b, \bCCFLAGS\b, \bHOSTTYPE\b and \bSHELL\b may be set by explicit
 	command argument assignments to override the defaults.]
 [+?Packages are composed of components. Each component is built and installed
 	by an \bast\b \bnmake\b(1) makefile. Each package is also described by
-	an \bnmake\b makefile that lists its components and provides a paragraph
-	describing the contents. The package makefile and component makefiles
-	provide all the information required to read, write, build and
-	install packages.]
+	an \bnmake\b makefile that lists its components and provides a content
+	description. The package makefile and component makefiles provide all
+	the information required to read, write, build and install packages.]
 [+?Package recipients only need \bsh\b(1) and \bcc\b(1) to build and install
 	source packages, and \bsh\b to install binary packages. \bnmake\b and
 	\bksh93\b are required to write new packages. An \b$INSTALLROOT/bin/cc\b
@@ -76,7 +79,7 @@ case `getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt` in
 	packages are operated on. \boptget\b(3) documentation options are also
 	supported. The default with no arguments is \bhost type\b.]
 [+?The qualifiers are:]{
-	[+debug?Show environment and actions but do not execute.]
+	[+debug|environment?Show environment and actions but do not execute.]
 	[+force?Force the action to override saved state.]
 	[+never?Run make -N and show other actions.]
 	[+only?Only operate on the specified packages.]
@@ -114,7 +117,10 @@ case `getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt` in
 			[+[server::]]PACKAGEROOT?The absolute remote package
 				root directory and optionally the server name
 				if the directory is on a different server than
-				the master package root directory.]
+				the master package root directory. If this
+				directory contains an \b'$admin_env$'\b \bsh\b(1)
+				script then it is sourced before \aaction\a
+				is done.]
 			[+date?\aYYMMDD\a of the last action.]
 			[+time?Elapsed wall time for the last action.]
 			[+M T W?The \badmin\b action \bmake\b, \btest\b and
@@ -163,6 +169,10 @@ case `getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt` in
 		directory prefixes. Otherwise each architecture will be
 		installed in a separate \barch/\b\aHOSTTYPE\a subdirectory of
 		\adirectory\a. \adirectory\a must be an existing directory.]
+	[+license\b [ \apackage\a ... ]]?List the source license(s) for
+		\apackage\a on the standard output. Note that individual
+		components in \apackage\a may contain additional or replacement
+		licenses.]
 	[+list\b [ \apackage\a ... ]]?List the name, version and prerequisites
 		for \apackage\a on the standard output.]
 	[+make\b [ \apackage\a ]] [ \atarget\a ... ]]?Build and install. The
@@ -285,8 +295,7 @@ case `getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt` in
 [+?Independent \b$PACKAGEROOT\b hierarchies can be combined by appending
 	\b$INSTALLROOT:$PACKAGEROOT\b pairs to \bVPATH\b. The \bVPATH\b viewing
 	order is from left to right. Each \b$PACKAGEROOT\b must have a
-	\b$PACKAGEROOT/bin/package\b command and a \b$PACKAGEROOT/lib/package\b
-	directory.]
+	\b$PACKAGEROOT/lib/package\b directory.]
 [+?Each package contains one or more components. Component source for the
 	\afoo\a command is in \b$PACKAGEROOT/src/cmd/\b\afoo\a, and source for
 	the \abar\a library is in \b$PACKAGEROOT/src/lib/lib\b\abar\a. This
@@ -391,7 +400,6 @@ esac
 
 action=
 admin_all=0
-admin_db=admin.db
 admin_on=
 exec=
 force=0
@@ -418,12 +426,13 @@ do	case $# in
 	0)	set host type ;;
 	esac
 	case $1 in
-	admin|contents|copyright|host|install|list|make|read|release|remove|results|test|use|verify|write|TEST)
+	admin|contents|copyright|host|install|license|list|make|read|release|remove|results|test|use|verify|write|TEST)
 		action=$1
 		shift
 		break
 		;;
-	debug)	exec=echo make=echo show=echo
+	debug|environment)
+		exec=echo make=echo show=echo
 		;;
 	force)	force=1
 		;;
@@ -536,7 +545,7 @@ ${bT}(7)${bD}Once you are satisfied with a package its binaries can be installed
       and users can access the binaries by${bX}
 		bin/package use ${bI}DIRECTORY${eI}${eX}
       or by exporting the environment variable definitions listed by${bX}
-		bin/package debug use ${bI}DIRECTORY${eI}${eX}${eD}
+		bin/package environment use ${bI}DIRECTORY${eI}${eX}${eD}
 ${eL}${eO}"
 			;;
 		intro)	echo "${bO}
@@ -681,7 +690,7 @@ ${bT}(9)${bD}Once you are satisfied with a package its binaries can be installed
       and users can access the binaries by${bX}
 		bin/package use ${bI}DIRECTORY${eI}${eX}
       or by exporting the environment variable definitions listed by${bX}
-		bin/package debug use ${bI}DIRECTORY${eI}${eX}${eD}
+		bin/package environment use ${bI}DIRECTORY${eI}${eX}${eD}
 ${eL}${eO}"
 			;;
 		*)	echo "Usage: $command [ qualifier ... ] [ action ] [ arg ... ] [ n=v ... ]
@@ -693,7 +702,7 @@ ${eL}${eO}"
    action is \"host type\".
 
    qualifier:
-	debug	Show environment and actions; do not execute.
+	debug|environment Show environment and actions; do not execute.
 	force	Force the action to override saved state.
 	never	Run make -N; otherwise show other actions.
 	only	Only operate on the specified packages.
@@ -727,7 +736,9 @@ ${eL}${eO}"
 			   The absolute remote package root directory and
 			   optionally the server name if the directory is on
 			   a different server than the master package root
-			   directory.
+			   directory. If this directory contains an $admin_env
+			   sh(1) script then it is sourced before ACTION
+			   is done.
 		   date    YYMMDD of the last action.
 		   date    Elapsed wall time of the last action.
 		   M T W   The admin action make, test and write action error
@@ -773,6 +784,10 @@ ${eL}${eO}"
 		the \"arch/HOSTTYPE\" directory prefixes. Otherwise each
 		architecture will be installed in a separate \"arch/HOSTTYPE\"
 		subdirectory of DIR. DIR must be an existing directory.
+	license [ package ... ]
+		List the source license(s) for PACKAGE on the standard output.
+		Note that individual components in PACKAGE may contain
+		additional or replacement licenses.
 	list [ PACKAGE ... ]
 		List the name, version and prerequisites for PACKAGE on the
 		standard output.
@@ -886,7 +901,7 @@ KEEP_PACKAGEROOT=0
 KEEP_SHELL=0
 USER_VPATH=
 args=
-assign=physical=1
+assign=
 for i
 do	case $i in
 	CC=*|CCFLAGS=*)
@@ -894,15 +909,21 @@ do	case $i in
 		assign="$assign '$i'"
 		;;
 	HOSTTYPE=*)
-		KEEP_HOSTTYPE=1
 		eval $i
+		case $HOSTTYPE in
+		?*)	KEEP_HOSTTYPE=1 ;;
+		esac
 		;;
 	PACKAGEROOT=*)
-		KEEP_PACKAGEROOT=1
 		eval $i
+		case $PACKAGEROOT in
+		?*)	KEEP_PACKAGEROOT=1 ;;
+		esac
 		;;
-	SHELL=*)KEEP_SHELL=1
-		eval $i
+	SHELL=*)eval $i
+		case $SHELL in
+		?*)	KEEP_SHELL=1 ;;
+		esac
 		;;
 	VPATH=*)eval USER_$i
 		;;
@@ -955,14 +976,21 @@ esac
 
 packageroot() # dir
 {
-	test -x $1/bin/$command -a -d $1/lib/$command
+	test -d $1/lib/$command
 }
 
 # true if no nmake or nmake too old
 
 nonmake() # nmake
 {
-	test 20000101 -gt `$1 -n -f - 'print $(MAKEVERSION:@/.* //:/-//G)' . 2>/dev/null || echo 19840919`
+	_nonmake_version=`$1 -n -f - 'print $(MAKEVERSION:@/.* //:/-//G)' . 2>/dev/null || echo 19840919`
+	if	test $_nonmake_version -ge 20001031
+	then	case " $assign " in
+		*" physical=1 "*)	;;
+		*)			assign="physical=1 $assign" ;;
+		esac
+	fi
+	test 20000101 -gt $_nonmake_version
 }
 
 # determine local host attributes
@@ -975,7 +1003,21 @@ hostinfo() # attribute ...
 	map=
 	something=
 	path=$PATH
-	PATH=$PATH:/usr/kvm:/usr/ccs/bin:/usr/local/bin:/usr/add-on/gnu/bin:/usr/add-on/GNU/bin:/opt/gnu/bin:/opt/GNU/bin
+	for i in $ccs
+	do	PATH=$PATH:$i
+	done
+	for i in $use
+	do	for j in $org
+		do	PATH=$PATH:$i/$j/bin
+		done
+		PATH=$PATH:$i/bin
+	done
+	case $PACKAGE_PATH in
+	?*)	for i in `echo $PACKAGE_PATH | sed 's,:, ,g'`
+		do	PATH=$PATH:$i/bin
+		done
+		;;
+	esac
 
 	# validate the args
 
@@ -1017,6 +1059,7 @@ hostinfo() # attribute ...
 		# exact match
 		set							\
 			hinv			'^Processor [0-9]'	\
+			psrinfo			'on-line'		\
 
 		while	:
 		do	case $# in
@@ -1227,11 +1270,17 @@ main()
 			then	map="`grep -v '^#' $i/$f` $map"
 			fi
 		done
-		set "" \
-			`hostname || uname -n || cat /etc/whoami || echo local` \
-			`{ arch || uname -m || att uname -m || uname -s || att uname -s || echo unknown ;} | sed "s/[ 	]/-/g"` \
-			`{ mach || machine || uname -p || att uname -p || echo unknown ;} | sed -e "s/[ 	]/-/g"` \
-			`uname -a || att uname -a || echo unknown $host unknown unknown unknown unknown unknown`
+		h=`hostname || uname -n || cat /etc/whoami || echo local`
+		a=`arch || uname -m || att uname -m || uname -s || att uname -s || echo unknown`
+		case $a in 
+		*[\ \	]*)	a=`echo $a | sed "s/[ 	]/-/g"` ;;
+		esac
+		m=`mach || machine || uname -p || att uname -p || echo unknown`
+		case $m in 
+		*[\ \	]*)	m=`echo $m | sed "s/[ 	]/-/g"` ;;
+		esac
+		x=`uname -a || att uname -a || echo unknown $host unknown unknown unknown unknown unknown`
+		set "" $h $a $m $x
 		expected=$1 host=$2 arch=$3 mach=$4 os=$5 sys=$6 rel=$7 ver=$8
 		type=unknown
 		case $host in
@@ -1778,7 +1827,9 @@ $show export HOSTTYPE
 export HOSTTYPE
 INSTALLROOT=$PACKAGEROOT/arch/$HOSTTYPE
 case $action in
-use)	if	test ! -d $INSTALLROOT
+admin|install|make|read|remove|test|verify|write)
+	;;
+*)	if	test ! -d $INSTALLROOT
 	then	INSTALLROOT=$PACKAGEROOT
 	fi
 	;;
@@ -1823,7 +1874,7 @@ eval "
 			case \\\$LD_LIBRARY\${v}_PATH: in
 			\\\$d/lib:*)
 				;;
-			*)	x=\\\$LD_LIBRARY\${v}
+			*)	x=\\\$LD_LIBRARY\${v}_PATH
 				case \\\$x in
 				''|:*)	;;
 				*)	x=:\\\$x ;;
@@ -1861,7 +1912,10 @@ esac
 case $LIBPATH: in
 $INSTALLROOT/bin:$INSTALLROOT/lib:*)
 	;;
-*)	LIBPATH=$INSTALLROOT/bin:$INSTALLROOT/lib${LIBPATH:+:$LIBPATH}${LIBPATH:-:/usr/lib:/lib}
+*)	case $LIBPATH in
+	'')	LIBPATH=/usr/lib:/lib ;;
+	esac
+	LIBPATH=$INSTALLROOT/bin:$INSTALLROOT/lib:$LIBPATH
 	$show LIBPATH=$LIBPATH
 	$show export LIBPATH
 	export LIBPATH
@@ -1973,7 +2027,7 @@ esac
 
 PAX=
 if	executable pax
-then	case `pax --?meter 2>&1` in
+then	case `$_executable_ -rw --?meter 2>&1` in
 	*--meter*)	PAX=pax ;;
 	esac
 fi
@@ -2050,7 +2104,7 @@ fi
 
 # return 0 if arg in src|bin|all view
 
-view() # [test] [-|type] [src|bin|any] file
+view() # [test] [-|type] [src|bin|all] file
 {
 	case $1 in
 	-[dfsx])_view_T_=$1; shift ;;
@@ -2128,6 +2182,15 @@ checkaout()	# cmd ...
 {
 	case $PROTOROOT in
 	-)	PROTOROOT=
+		test -f $INITROOT/hello.c -a -f $INITROOT/p.c -a -w $PACKAGEROOT || {
+			for i
+			do	executable $i || {
+					echo "$command: $i: command not found" >&2
+					exit 1
+				}
+			done
+			return 0
+		}
 		if	executable $CC
 		then	_PACKAGE_cc=1
 			test -f $INITROOT/hello.c -a -f $INITROOT/p.c || {
@@ -2166,10 +2229,10 @@ checkaout()	# cmd ...
 						fi
 						case $exec in
 						'')	cd $PACKAGEROOT
-							find $dirs -name '*.[CcHh]' $newer -print | $INSTALLROOT/bin/proto -v -L - -C proto
+							find $dirs -name '*.[CcHh]' $newer -print | proto -v -L - -C proto
 							;;
 						*)	$exec cd $PACKAGEROOT
-							$exec "find $dirs -name '*.[CcHh]' $newer -print | $INSTALLROOT/bin/proto -L - -C proto"
+							$exec "find $dirs -name '*.[CcHh]' $newer -print | proto -L - -C proto"
 							;;
 						esac
 						$exec touch $PROTOROOT/UPDATE
@@ -2185,6 +2248,13 @@ checkaout()	# cmd ...
 			for i in arch arch/$HOSTTYPE arch/$HOSTTYPE/bin
 			do	test -d $PACKAGEROOT/$i || $exec mkdir $PACKAGEROOT/$i || exit
 			done
+		else	_PACKAGE_cc=0
+		fi
+		;;
+	esac
+	case $_PACKAGE_cc in
+	'')	if	executable $CC
+		then	_PACKAGE_cc=1
 		else	_PACKAGE_cc=0
 		fi
 		;;
@@ -2205,6 +2275,9 @@ checkaout()	# cmd ...
 		else	k=${k}0
 		fi
 		: $k : compiler : source : binary :
+		case $k in
+		*00)	view - bin/$i && continue ;;
+		esac
 		case $k in
 		000)	echo "$command: $i: not found: download the INIT package $HOSTTYPE binary to continue" >&2
 			exit 1
@@ -2238,6 +2311,70 @@ checkaout()	# cmd ...
 			;;
 		esac
 	done
+}
+
+# check that all package licenses are/were accepted
+#
+# NOTE: circumventing the license checks will be taken
+#	as an implicit acceptance of *all* licenses
+
+accepted=.license.accepted
+
+checklicenses()
+{
+	_checklicenses_dir=lib/package
+	_checklicenses_ok=1
+	_checklicenses_list=`ls $PACKAGESRC/LICENSES 2>/dev/null`" -- "`ls $PACKAGEBIN/LICENSES 2>/dev/null`
+	for _checklicenses_i in $_checklicenses_list
+	do	case $_checklicenses_i in
+		--)	_checklicenses_dir=$PACKAGEBIN; break ;; # src for now
+		README)	continue ;;
+		esac
+		_checklicenses_gen=$_checklicenses_dir/gen
+		_checklicenses_accepted=$_checklicenses_gen/$_checklicenses_i$accepted
+		if	view - $_checklicenses_accepted
+		then	continue
+		fi
+		_checklicenses_gen=$PACKAGEROOT/$_checklicenses_gen
+		_checklicenses_accepted=$PACKAGEROOT/$_checklicenses_accepted
+		case $exec in
+		'')	echo "$command: $PACKAGESRC/LICENSES/$_checklicenses_i: license has not been accepted yet" >&2
+			while	:
+			do	echo
+				echo "Enter y to accept, p to print, n to reject, anything else to quit:" >&2
+				read _checklicenses_reply || exit
+				case $_checklicenses_reply in
+				[nN]*)	_checklicenses_ok=0
+					continue 2
+					;;
+				[pP]*)	case $PAGER in
+					'')	if	more /dev/null 2>/dev/null
+						then	PAGER=more
+						else	PAGER=cat
+						fi
+						;;
+					esac
+					$PAGER $PACKAGESRC/LICENSES/$_checklicenses_i
+					;;
+				[yY]*)	break
+					;;
+				*)	exit
+					;;
+				esac
+			done
+			test -d $_checklicenses_gen || mkdir -p $_checklicenses_gen || exit
+			touch $_checklicenses_accepted || exit
+			;;
+		*)	echo "$command: $PACKAGESRC/LICENSES/$_checklicenses_i: license has not been accepted yet" >&2
+			_checklicenses_ok=0
+			;;
+		esac
+	done
+	case $_checklicenses_ok in
+	0)	echo "$command: cannot continue until all licenses have been accepted" >&2
+		exit 1
+		;;
+	esac
 }
 
 # check package requirements against received packages
@@ -2398,6 +2535,7 @@ order() # [ package ]
 			echo "$command: $_order_f_: not a package" >&2
 			continue 2
 		done
+		_order_f_=$_view_
 		_order_p_=`echo $_order_f_ | sed -e 's,.*/,,' -e 's,\.pkg$,,'`
 		case $_order_n_ in
 		0)	view -s - src $_order_t_/$_order_p_$_order_a_.tim || continue ;;
@@ -2579,7 +2717,8 @@ package_verify() # sum
 
 case $action in
 
-admin)	while	test ! -f $admin_db
+admin)	checklicenses
+	while	test ! -f $admin_db
 	do	case $admin_db in
 		/*)	echo $command: $action: $admin_db: data file not found >&2
 			exit 1
@@ -2641,7 +2780,7 @@ admin)	while	test ! -f $admin_db
 			hosts="$hosts $name"
 			case $exec in
 			'')	echo package "$admin_args" $host
-				rsh $host ". ./.profile && cd $root && bin/package $admin_args PACKAGEROOT=$root HOSTTYPE=$type" < /dev/null > $admin_log/$name 2>&1 &
+				rsh $host ". ./.profile && cd $root && { test -f lib/package/admin/$admin_env && . ./lib/package/admin/$admin_env || true; } && bin/package $admin_args PACKAGEROOT=$root HOSTTYPE=$type" < /dev/null > $admin_log/$name 2>&1 &
 				pids="$pids $!"
 				;;
 			*)	$exec rsh $host ". ./.profile && cd $root && bin/package $admin_args PACKAGEROOT=$root HOSTTYPE=$type < /dev/null > $admin_log/$name 2>&1 &"
@@ -2807,7 +2946,7 @@ contents|list)
 							;;
 						esac
 						case $state in
-						1)	if	test -f $1.pkg
+						1)	if	view - lib/package/$1.pkg
 							then	req="$req $1"
 							elif	test "" != "$cmp"
 							then	cmp="$cmp$nl$1"
@@ -2859,8 +2998,8 @@ contents|list)
 	0:list)	if	test -d tgz
 		then	cd tgz
 			# f:file p:package v:version r:release t:type u:update
-			for f in `ls -r *.[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].* 2>/dev/null`
-			do	eval `echo "$f" | sed -e 's,\.c$,,' -e 's,\.exe$,,' -e 's,\.tgz$,,' -e 's,\([^.]*\)\.\([^.]*\)\.\([^.]*\)\.*\(.*\),p=\1 v=\2 r=\3 t=\4,'`
+			for f in `ls -r *[._][0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][._]* 2>/dev/null`
+			do	eval `echo "$f" | sed -e 's,\.c$,,' -e 's,\.exe$,,' -e 's,\.tgz$,,' -e 's,\([^._]*\)[._]\([0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]\)[._]\([^._]*\)[._]*\(.*\),p=\1 v=\2 r=\3 t=\4,'`
 				case $t in
 				'')	case $omit in
 					*:$p.$v.$r:*)	continue ;;
@@ -2936,7 +3075,7 @@ copyright)
 		do	if	test -f $j.lic
 			then	echo $j package general copyright notice
 				echo
-				$INSTALLROOT/bin/proto -c'#' -p -s -l $j.lic -o type=verbose,author='*' /dev/null
+				proto -c'#' -p -s -l $j.lic -o type=verbose,author='*' /dev/null
 				break
 			fi
 			case $j in
@@ -2950,7 +3089,8 @@ copyright)
 	done
 	;;
 
-install)cd $PACKAGEROOT
+install)checklicenses
+	cd $PACKAGEROOT
 	set '' $package
 	shift
 	case $only in
@@ -2993,6 +3133,11 @@ install)cd $PACKAGEROOT
 	then	echo "$command: $action: $directory: target directory not found" >&2
 		exit 1
 	fi
+	if	executable $MAKE
+	then	MAKE=$_executable_
+	else	echo "$command: $MAKE: not found" >&2
+		exit 1
+	fi
 	case $target in
 	'')	cd arch
 		set '' *
@@ -3022,15 +3167,21 @@ install)cd $PACKAGEROOT
 					cd arch/$a
 					(
 					cd lib/package
-					eval capture \$MAKE \$makeflags -f \$i.pkg \$qualifier list.install $assign
-					) 2>/dev/null | sort -u
+					INSTALLROOT=$PACKAGEROOT/arch/$a
+					VPATH=$INSTALLROOT:$PACKAGEROOT:$VPATH
+					export INSTALLROOT VPATH
+					$MAKE -s $makeflags -f $i.pkg $qualifier list.install $assign
+					) | sort -u
 				)
 			else	(
 					cd arch/$a
 					(
 					cd lib/package
+					INSTALLROOT=$PACKAGEROOT/arch/$a
+					VPATH=$INSTALLROOT:$PACKAGEROOT:$VPATH
+					export INSTALLROOT VPATH
 					eval capture \$MAKE -s \$makeflags -f \$i.pkg \$qualifier list.install $assign
-					) 2>/dev/null | sort -u | pax -drw $dest
+					) | sort -u | pax -drw $dest
 				)
 			fi
 		done
@@ -3038,7 +3189,8 @@ install)cd $PACKAGEROOT
 	exit $code
 	;;
 
-make)	cd $PACKAGEROOT
+make)	checklicenses
+	cd $PACKAGEROOT
 	case $package in
 	'')	lic="lib/package/*.lic"
 		;;
@@ -3102,31 +3254,58 @@ make)	cd $PACKAGEROOT
 		;;
 	esac
 
+	# make in parallel if possible
+
+	case $NPROC in
+	'')	hostinfo cpu
+		case $_hostinfo_ in
+		0|1)	;;
+		*)	NPROC=$_hostinfo_
+			$show NPROC=$NPROC
+			$show export NPROC
+			export NPROC
+			;;
+		esac
+		;;
+	esac
+
 	# generate nmake first if possible
 
 	if	test ! -x $NMAKE -a -d $PACKAGEROOT/src/cmd/nmake
-	then	note make $NMAKE with mamake
-		eval capture mamake \$makeflags \$noexec install nmake $assign
-		case $make$noexec in
-		'')	if	test ! -x $NMAKE
-			then	echo "$command: $action: errors making $NMAKE" >&2
-				exit 1
-			fi
-			;;
-		*)	make=echo
-			;;
-		esac
-		note accept generated files for $NMAKE
-		eval capture \$NMAKE \$makeflags \$noexec -t recurse install nmake $assign
-		note make the remaining targets with $NMAKE
+	then	if	nonmake $MAKE
+		then	note make $NMAKE with mamake
+			eval capture mamake \$makeflags \$noexec install nmake $assign
+			case $make$noexec in
+			'')	if	test ! -x $NMAKE
+				then	echo "$command: $action: errors making $NMAKE" >&2
+					exit 1
+				fi
+				;;
+			*)	make=echo
+				;;
+			esac
+			note accept generated files for $NMAKE
+			eval capture \$NMAKE \$makeflags \$noexec -t recurse install nmake $assign
+			note make the remaining targets with $NMAKE
+		else	eval capture $MAKE \$makeflags \$noexec install nmake $assign
+			case $make$noexec in
+			'')	if	test ! -x $NMAKE
+				then	echo "$command: $action: errors making $NMAKE" >&2
+					exit 1
+				fi
+				;;
+			*)	make=echo
+				;;
+			esac
+		fi
 	fi
 
 	# generate ksh next if possible
 
-	if	test ! -x $KSH -a -d $PACKAGEROOT/src/cmd/ksh93
-	then	if	test -x $INSTALLROOT/bin/nmake
-		then	m=nmake
-		else	m=mamake
+	if	test "$KEEP_SHELL" != 1 -a ! -x $KSH -a -d $PACKAGEROOT/src/cmd/ksh93
+	then	if	nonmake $MAKE
+		then	m=mamake
+		else	m=nmake
 		fi
 		eval capture $m \$makeflags \$noexec install ksh93 $assign
 		case $make$noexec in
@@ -3151,7 +3330,7 @@ make)	cd $PACKAGEROOT
 			$exec cp $TEE $TEE-ok
 			TEE=$TEE-ok
 		fi
-		if	test -x $KSH
+		if	test "$KEEP_SHELL" != 1 -a -x $KSH
 		then	cmp -s $KSH $KSH-ok 2>/dev/null ||
 			$exec cp $KSH $KSH-ok
 			SHELL=$KSH-ok
@@ -3169,26 +3348,54 @@ make)	cd $PACKAGEROOT
 		'')	target="install" ;;
 		esac
 		eval capture mamake \$makeflags \$noexec install $assign
-	else	case $NPROC in
-		''|0|1)	hostinfo cpu
-			case $_hostinfo_ in
-			0|1)	;;
-			*)	NPROC=$_hostinfo_
-				$show NPROC=$NPROC
-				$show export CDPATH
-				export CDPATH
-				;;
-			esac
-			;;
-		esac
-		case $target in
+	else	case $target in
 		'')	target="install cc-" ;;
 		esac
 		eval capture \$MAKE \$makeflags \$noexec recurse \$package \$target $assign
 	fi
 	;;
 
-read)	case `pwd` in
+license)# all work in $PACKAGESRC/LICENSES
+
+	cd $PACKAGESRC/LICENSES || exit
+
+	# generate the package list
+
+	set '' $target $package
+	shift
+	argc=$#
+	case $# in
+	0)	set '' *
+		shift
+		case $1 in
+		'*')	echo $command: $action: no licenses >&2
+			exit 1
+			;;
+		esac
+		;;
+	esac
+	for i
+	do	j=$i
+		while	:
+		do	if	test -f $j
+			then	echo $j package source license
+				echo
+				cat $j
+				break
+			fi
+			case $j in
+			*-*)	j=`echo $j | sed -e 's,-[^-]*$,,'`
+				;;
+			*)	echo "$command: $i: no package license" >&2
+				break
+				;;
+			esac
+		done
+	done
+	;;
+
+read)	checklicenses
+	case `pwd` in
 	$PACKAGEROOT)
 		;;
 	*)	echo "$command: must be in package root directory" >&2
@@ -3203,7 +3410,7 @@ read)	case `pwd` in
 	set '' $package $target
 	case $# in
 	1)	verbose=:
-		set '' `ls lib/package/tgz/*.[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].* 2>/dev/null`
+		set '' `ls lib/package/tgz/*[._][0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][._]* 2>/dev/null`
 		;;
 	*)	verbose=
 		;;
@@ -3212,10 +3419,10 @@ read)	case `pwd` in
 	files=
 	for f
 	do	if	test ! -f "$f"
-		then	set '' `ls -r ${f}.[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].* 2>/dev/null`
+		then	set '' `ls -r ${f}[._][0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][._]* 2>/dev/null`
 			if	test '' != "$2" -a -f "$2"
 			then	f=$2
-			else	set '' `ls -r lib/package/tgz/${f}.[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].* 2>/dev/null`
+			else	set '' `ls -r lib/package/tgz/${f}[._][0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][._]* 2>/dev/null`
 				if	test '' != "$2" -a -f "$2"
 				then	f=$2
 				else	echo "$command: $f: package archive not found" >&2
@@ -3225,6 +3432,11 @@ read)	case `pwd` in
 		fi
 		files="$files $f"
 	done
+	case $files in
+	'')	echo "$command: lib/package/tgz: no package archives" >&2
+		exit 1
+		;;
+	esac
 	set '' `ls -r $files 2>/dev/null`
 	shift
 	f1= f2= f3= f4=
@@ -3245,7 +3457,7 @@ read)	case `pwd` in
 	done
 	for f in $f1 $f2 $f3 $f4
 	do	case $f in
-		*.[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].*)
+		*[._][0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][._]*)
 			;;
 		*)	echo "$command: $f: not a package archive" >&2
 			code=1
@@ -3257,7 +3469,7 @@ read)	case `pwd` in
 		*)	d= a=$f ;;
 		esac
 		# f:file d:dir a:base p:package v:version r:release t:type
-		eval `echo "$a" | sed -e 's,\.c$,,' -e 's,\.exe$,,' -e 's,\.tgz$,,' -e 's,\([^.]*\)\.\([^.]*\)\.\([^.]*\)\.*\(.*\),p=\1 v=\2 r=\3 t=\4,'`
+		eval `echo "$a" | sed -e 's,\.c$,,' -e 's,\.exe$,,' -e 's,\.tgz$,,' -e 's,\([^._]*\)[._]\([0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]\)[._]\([^._]*\)[._]*\(.*\),p=\1 v=\2 r=\3 t=\4,'`
 		case " $x " in
 		*" $p "*)
 			continue
@@ -3265,12 +3477,17 @@ read)	case `pwd` in
 		esac
 		case $t in
 		'')	w=$PACKAGESRC
+			q=
+			Q=
+			m=
 			;;
 		*)	w=$PACKAGEROOT/arch/$t/lib/package
-			t=.$t
+			q=".$t"
+			Q="_$t"
+			m="[._]$t"
 			;;
 		esac
-		u=$d$p$t.tim
+		u=$d$p$q.tim
 		if	test -s "$u"
 		then	continue
 		fi
@@ -3348,7 +3565,8 @@ read)	case `pwd` in
 				code=1
 				continue
 			}
-			b=$d$p.$v.0000$t.tgz
+			b=${d}${p}_${v}_0000${Q}.tgz
+			test -f "$b" || b=${d}${p}.${v}.0000${q}.tgz
 			test -f "$b" || {
 				echo "$command: $f: base archive $b required to read delta" >&2
 				code=1
@@ -3360,15 +3578,15 @@ read)	case `pwd` in
 			}
 			case $r in
 			[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9])
-				note $f: generate new base $d$p.$r.0000$t.tgz
-				$exec pax -rf "$f" -z "$b" -wf $d$p.$r.0000$t.tgz -x tgz || {
+				note $f: generate new base $d$p.$r.0000$q.tgz
+				$exec pax -rf "$f" -z "$b" -wf $d$p.$r.0000$q.tgz -x tgz || {
 					code=1
 					continue
 				}
 				case $exec in
 				'')	echo $p $r 0000 1 > $w/gen/$p.ver
 					;;
-				*)	z=$d$p.$r.0000$t.tgz
+				*)	z=$d$p[._]$r[._]0000$q.tgz
 					$exec "echo $p $r 0000 1 > $w/gen/$p.ver"
 					;;
 				esac
@@ -3394,9 +3612,9 @@ read)	case `pwd` in
 		# add to the obsolete list
 
 		k=
-		for i in `ls $d$p.[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].????$t* $z 2>/dev/null`
+		for i in `ls $d$p[._][0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][._]????$m* $z 2>/dev/null`
 		do	case $i in
-			$d$p.[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].0000$t*)
+			$d$p[._][0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][._]0000$m*)
 				continue
 				;;
 			esac
@@ -3426,6 +3644,7 @@ read)	case `pwd` in
 	case $code$exec in
 	0)	requirements - $x ;;
 	esac
+	checklicenses
 	exit $code
 	;;
 
@@ -3617,7 +3836,7 @@ results)set '' $target
 				for j in $m
 				do	echo "$sep==> $j <=="
 					sep=$nl
-					$exec egrep -iv '^($||[\+\[]|cc[^-:]|kill |make: .*file system time|so|[0-9]+ error|uncrate |[0-9]+ block|ar: creat|iffe: test: |[a-zA-Z_][a-zA-Z_0-9]*=|gsf@research|ar:.*warning|cpio:|[0-9]*$|(checking|creating|touch) [/a-zA-Z_0-9])| obsolete predefined symbol | is dangerous | is not implemented| trigraph| assigned to | passed as |::__builtin|pragma.*prototyped|^creating.*\.a$|warning.*not optimized|exceeds size thresh|ld:.*preempts|is unchanged|with value >=|(-l|lib)\*|/(ast|sys)/(dir|limits|param|stropts)\.h.*redefined|usage|base registers|`\.\.\.` obsolete'"$i" $j
+					$exec egrep -iv '^($||[\+\[]|cc[^-:]|kill |make: .*file system time|so|[0-9]+ error|uncrate |[0-9]+ block|ar: creat|iffe: test: |conf: (check|generate|test)|[a-zA-Z_][a-zA-Z_0-9]*=|gsf@research|ar:.*warning|cpio:|[0-9]*$|(checking|creating|touch) [/a-zA-Z_0-9])| obsolete predefined symbol | is dangerous | is not implemented| trigraph| assigned to | passed as |::__builtin|pragma.*prototyped|^creating.*\.a$|warning.*not optimized|exceeds size thresh|ld:.*preempts|is unchanged|with value >=|(-l|lib)\*|/(ast|sys)/(dir|limits|param|stropts)\.h.*redefined|usage|base registers|`\.\.\.` obsolete'"$i" $j
 				done
 				;;
 			1)	cat $m
@@ -3668,8 +3887,20 @@ use)	# finalize the environment
 	$show A=$A
 	$show export A
 	export A
+	case $NPROC in
+	'')	hostinfo cpu
+		case $_hostinfo_ in
+		0|1)	;;
+		*)	NPROC=$_hostinfo_
+			$show NPROC=$NPROC
+			$show export NPROC
+			export NPROC
+			;;
+		esac
+		;;
+	esac
 
-	# run the the command
+	# run the command
 
 	case $run in
 	'')	case $show in
@@ -3682,6 +3913,7 @@ use)	# finalize the environment
 	;;
 
 verify)	cd $PACKAGEROOT
+	checklicenses
 	requirements binary $package
 	if	test ! -x $SUM
 	then	echo "$command: $action: $SUM command required" >&2

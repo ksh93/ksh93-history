@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1982-2000 AT&T Corp.                #
+#                Copyright (c) 1982-2001 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -20,7 +20,6 @@
 #                         Florham Park NJ                          #
 #                                                                  #
 #                David Korn <dgk@research.att.com>                 #
-#                                                                  #
 ####################################################################
 function err_exit
 {
@@ -238,5 +237,11 @@ behead()
 print $'line1\nline2' | behead
 if	[[ $left != line2 ]]
 then	err_exit  "read reading ahead on a pipe"
+fi
+read -n1 y <<!
+abc
+!
+if      [[ $y != a ]]
+then    err_exit  'read -n1 not working'
 fi
 exit $((Errors))

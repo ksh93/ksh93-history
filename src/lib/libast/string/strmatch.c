@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2000 AT&T Corp.                *
+*                Copyright (c) 1985-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -22,7 +22,6 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 
@@ -157,7 +156,7 @@ typedef struct
 } Match_t;
 
 #if _lib_mbtowc && MB_LEN_MAX > 1
-#define mbgetchar(p)	((ast.locale.set&(1<<AST_LC_CTYPE))?((ast.tmp_int=mbtowc(&ast.tmp_wchar,p,MB_CUR_MAX))>=0?((p+=ast.tmp_int),ast.tmp_wchar):0):(*p++))
+#define mbgetchar(p)	((ast.locale.set&AST_LC_multibyte)?((ast.tmp_int=mbtowc(&ast.tmp_wchar,p,MB_CUR_MAX))>=0?((p+=ast.tmp_int),ast.tmp_wchar):0):(*p++))
 #else
 #define mbgetchar(p)	(*p++)
 #endif
@@ -618,7 +617,7 @@ onematch(Match_t* mp, int g, char* s, char* p, char* e, char* r, int flags)
 		{
 		getrange:
 #if _lib_mbtowc
-			if (ast.locale.set & (1<<AST_LC_CTYPE))
+			if (ast.locale.set & AST_LC_multibyte)
 			{
 				wchar_t	sw;
 				wchar_t	bw;

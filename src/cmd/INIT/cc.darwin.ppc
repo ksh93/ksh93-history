@@ -1,4 +1,4 @@
-: unix wrapper for max os10 cc
+: unix wrapper for mac os10 cc
 cc=/usr/bin/cc
 op=init
 for arg

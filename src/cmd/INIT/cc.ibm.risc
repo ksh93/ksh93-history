@@ -1,0 +1,26 @@
+: cc wrapper for aix risc xlc
+STDROOT=/usr
+if	test "" != "$INSTALLROOT"
+then	if	test ! -f $INSTALLROOT/include/botch/sys/socket.h -a -f $STDROOT/include/sys/socket.h
+	then	for d in $INSTALLROOT/include $INSTALLROOT/include/botch $INSTALLROOT/include/botch/sys
+		do	if	test ! -d $d
+			then	mkdir $d || exit
+			fi
+		done
+		cat > $INSTALLROOT/include/botch/sys/socket.h <<!
+#undef	SF_CLOSE
+#include <../include/sys/socket.h>
+#undef	SF_CLOSE
+#define	SF_CLOSE	_SF_CLOSE
+!
+	fi
+	set x -I$INSTALLROOT/include/botch "$@"
+	shift
+fi
+case " $@ " in
+*" -G "*)      
+	set x -berok "$@"
+	shift
+	;;
+esac
+PATH=/bin:$PATH LIBPATH=/usr/lib:/lib xlc -brtl -bnolibpath -qhalt=e -qsuppress=1506-224:1506-507 "$@"

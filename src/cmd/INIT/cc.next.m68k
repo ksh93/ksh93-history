@@ -1,0 +1,5 @@
+: next.m68k cc wrapper that enables posix
+
+# @(#)cc.next.m68k (AT&T Labs Research) 2000-12-15
+
+/bin/cc -posix -Xlinker -m "$@"

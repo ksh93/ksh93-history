@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2000 AT&T Corp.                *
+*                Copyright (c) 1982-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -20,7 +20,6 @@
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -822,8 +821,7 @@ static char *execs(const char *ap,const char *arg0,register char **argv, struct 
 				stakputc(0);
 				vp = nv_open(stakptr(offset), sh.var_tree, 0);
 				stakseek(offset);
-				if ((pp = nv_getval(vp)) && *pp == 0)
-					pp = 0;
+				pp = nv_getval(vp);
 				if (dirlen > 0 && n >= 3 && ep[-1] == 'n' && ep[-2] == 'i' && ep[-3] == 'b')
 				{
 					n -= 3;
@@ -838,7 +836,7 @@ static char *execs(const char *ap,const char *arg0,register char **argv, struct 
 							continue;
 						break;
 					}
-					if (pp == 0 || strncmp(pp, path, n) || memcmp(pp + n, dir, dirlen) || pp[n +  dirlen] != ':' && pp[n + dirlen] != 0)
+					if (pp == 0 || *pp == 0 || strncmp(pp, path, n) || memcmp(pp + n, dir, dirlen) || pp[n +  dirlen] != ':' && pp[n + dirlen] != 0)
 					{
 					prepend:
 						stakputc(0);
@@ -848,13 +846,13 @@ static char *execs(const char *ap,const char *arg0,register char **argv, struct 
 						stakwrite(path, n);
 						if (dirlen > 0)
 							stakwrite(dir, dirlen);
-						if (pp)
+						if (pp && *pp)
 						{
 							stakputc(':');
 							stakputs(pp);
 						}
 						stakputc(0);
-						*dp->envp-- = stakptr(offset);
+						c = 1;
 						if (pp)
 						{
 							char*	s;
@@ -865,13 +863,16 @@ static char *execs(const char *ap,const char *arg0,register char **argv, struct 
 								if (strneq(s, v, n) && s[n] == '=')
 								{
 									*--xp = stakptr(offset);
+									c = 0;
 									break;
 								}
 						}
+						if (c)
+							*dp->envp-- = stakptr(offset);
 					}
 					break;
 				}
-				else if (pp == 0 || strncmp(pp, path, n) || pp[n] != ':' && pp[n] != 0)
+				else if (pp == 0 || *pp == 0 || strncmp(pp, path, n) || pp[n] != ':' && pp[n] != 0)
 				{
 					dirlen = 0;
 					goto prepend;

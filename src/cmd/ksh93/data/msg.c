@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2000 AT&T Corp.                *
+*                Copyright (c) 1982-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -20,7 +20,6 @@
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -46,9 +45,9 @@
 #include	"national.h"
 
 #ifdef SHOPT_MULTIBYTE
-    const char e_version[]	= "\n@(#)Version M 1993-12-28 k\0\n";
+    const char e_version[]	= "\n@(#)$Id: Version M 1993-12-28 k+ $\0\n";
 #else
-    const char e_version[]	= "\n@(#)Version 1993-12-28 k\0\n";
+    const char e_version[]	= "\n@(#)$Id: Version 1993-12-28 k+ $\0\n";
 #endif /* SHOPT_MULTIBYTE */
 
 /* error messages */

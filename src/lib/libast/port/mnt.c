@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2000 AT&T Corp.                *
+*                Copyright (c) 1985-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -22,7 +22,6 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -508,18 +507,27 @@ mntread(void* handle)
 	register char*		m;
 	register char*		b;
 	register int		q;
+	register int		x;
 
  again:
 	q = 0;
+	x = 0;
 	b = s = mp->mnt->mnt_fsname;
 	m = s + sizeof(mp->mnt->mnt_fsname) - 1;
 	for (;;) switch (c = sfgetc(mp->fp))
 	{
 	case EOF:
 		return 0;
+	case '"':
+	case '\'':
+		if (q == c)
+			q = 0;
+		else if (!q)
+			q = c;
+		break;
 	case ' ':
 	case '\t':
-		if (s != b) switch (++q)
+		if (s != b && !q) switch (++x)
 		{
 		case 1:
 			*s = 0;
@@ -543,7 +551,7 @@ mntread(void* handle)
 		}
 		break;
 	case '\n':
-		if (q >= 3)
+		if (x >= 3)
 		{
 			set(&mp->hdr, mp->mnt->mnt_fsname, mp->mnt->mnt_dir, mp->mnt->mnt_type, OPTIONS(mp->mnt));
 			return &mp->hdr.mnt;

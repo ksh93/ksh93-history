@@ -4,7 +4,7 @@
  * coded for portability
  */
 
-static char id[] = "\n@(#)ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 2000-02-14\0\n";
+static char id[] = "\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 2001-01-01 $\0\n";
 
 #if _PACKAGE_ast
 
@@ -12,7 +12,7 @@ static char id[] = "\n@(#)ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 2000
 #include <error.h>
 
 static const char usage[] =
-"[-?@(#)ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 2000-02-14]"
+"[-?\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 2001-01-01 $\n]"
 "[-author?Jean-loup Gailly]"
 "[-author?Mark Adler]"
 "[-author?Glenn Fowler <gsf@research.att.com>]"
@@ -26,6 +26,7 @@ static const char usage[] =
 "[c:cat|uncompress?Uncompress the standard input and copy it to the standard"
 "	output.]"
 "[l:local?Reject files that traverse outside the current directory.]"
+"[m:meter?Display a one line text meter showing archive read progress.]"
 "[v:verbose?List each file path on the standard output as it is extracted.]"
 "[V?Print the program version and exit.]"
 "[+SEE ALSO?\bgunzip\b(1), \bpackage\b(1), \bpax\b(1), \btar\b(1)]"
@@ -37,6 +38,10 @@ static const char usage[] =
 
 #endif
 
+#define CC_esc		033
+#define METER_width	80
+#define METER_parts	20
+
 /* === gunzip.h === */
 /*
  * stripped down zlib containing public gzfopen()+gzread() in one file
@@ -47,8 +52,15 @@ static const char usage[] =
 #define _GUNZIP_H	1
 
 #include <stdio.h>
-#include <unistd.h>
 #include <sys/types.h>
+
+#if _WIN32 && !_UWIN
+#include <direct.h>
+#include <io.h>
+#define mkdir(a,b)	mkdir(a)
+#else
+#include <unistd.h>
+#endif
 
 /* === zlib.h === */
 /* zlib.h -- interface of the 'zlib' general purpose compression library
@@ -2670,7 +2682,7 @@ static struct
 static void
 usage()
 {
-	fprintf(stderr, "Usage: %s [-clvV] < input.tgz\n", state.id);
+	fprintf(stderr, "Usage: %s [-clmvV] < input.tgz\n", state.id);
 	exit(2);
 }
 
@@ -2717,16 +2729,23 @@ char**	argv;
 	register char*	e;
 	unsigned long	n;
 	unsigned long	m;
+	int		clear;
 	int		local;
+	int		meter;
 	int		unzip;
 	int		verbose;
+	unsigned long	total;
+	off_t		pos;
 	gzFile		gz;
 	FILE*		fp;
 	Header_t	header;
+	unsigned char	num[4];
 	char		path[sizeof(header.prefix) + sizeof(header.name) + 4];
 	char		buf[sizeof(header)];
 
+	clear = 0;
 	local = 0;
+	meter = 0;
 	unzip = 0;
 	verbose = 0;
 	if (s = *argv)
@@ -2753,11 +2772,14 @@ char**	argv;
 		case 'l':
 			local = 1;
 			continue;
+		case 'm':
+			meter = 1;
+			continue;
 		case 'v':
 			verbose = 1;
 			continue;
 		case 'V':
-			sfprintf(sfstdout, "%s\n", id + 5);
+			sfprintf(sfstdout, "%s\n", id + 10);
 			return 0;
 		case '?':
 			error(ERROR_USAGE|4, "%s", opt_info.arg);
@@ -2796,11 +2818,14 @@ char**	argv;
 			case 'l':
 				local = 1;
 				continue;
+			case 'm':
+				meter = 1;
+				continue;
 			case 'v':
 				verbose = 1;
 				continue;
 			case 'V':
-				fprintf(stdout, "%s\n", id + 5);
+				fprintf(stdout, "%s\n", id + 10);
 				return 0;
 			default:
 				fprintf(stderr, "%s: -%c: unknown option\n", state.id, c);
@@ -2852,6 +2877,19 @@ char**	argv;
 			return 1;
 		}
 		return 0;
+	}
+	if (meter)
+	{
+		if ((pos = lseek(0, (off_t)0, SEEK_CUR)) < 0)
+			meter = 0;
+		else
+		{
+			if (lseek(0, (off_t)(-4), SEEK_END) < 0 || read(0, num, 4) != 4)
+				meter = 0;
+			else if (!(total = ((num[0]|(num[1]<<8)|(num[2]<<16)|(num[3]<<24)) + sizeof(Header_t) - 1) / sizeof(Header_t)))
+				total = 1;
+			lseek(0, pos, SEEK_SET);
+		}
 	}
 
 	/*
@@ -2973,7 +3011,41 @@ char**	argv;
 		 * create and grab the data
 		 */
 
-		if (verbose)
+		if (meter)
+		{
+			int	i;
+			int	j;
+			int	k;
+			int	n;
+			int	p;
+			char	bar[METER_parts + 1];
+
+			n = strlen(s = path);
+			p = (state.blocks * 100) / total;
+			if (n > (METER_width - METER_parts - 1))
+			{
+				s += n - (METER_width - METER_parts - 1);
+				n = METER_width - METER_parts - 1;
+			}
+			i = (p / (100 / METER_parts));
+			j = n + METER_parts + 5;
+			if (!clear)
+				clear = j;
+			if ((k = clear - j + 1) < 0)
+				k = 0;
+			clear = j;
+			t = bar;
+			for (j = METER_parts / 2 - 3; j > 0; j--)
+				*t++ = ' ';
+			*t++ = (j = p / 10) ? ('0' + j) : ' ';
+			*t++ = '0' + (p % 10);
+			*t++ = '%';
+			for (j = METER_parts - (METER_parts / 2 - 3); j > 0; j--)
+				*t++ = ' ';
+			*t = 0;
+			fprintf(stderr, " %c[7m%-.*s%c[0m%s%s%*s", CC_esc, i, bar, CC_esc, bar + i, s, k, "\r");
+		}
+		else if (verbose)
 			printf("%s\n", path);
 		switch (header.typeflag)
 		{
@@ -3042,6 +3114,8 @@ char**	argv;
 		if (chmod(path, m))
 			fprintf(stderr, "%s: %s: cannot change mode to %03o\n", state.id, path, n & 0777);
 	}
+	if (clear)
+		fprintf(stderr, "%*s", clear, "\r");
 	if (!state.files)
 		fprintf(stderr, "%s: warning: empty archive\n", state.id);
 	else if (verbose)

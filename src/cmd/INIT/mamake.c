@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1999-2000 AT&T Corp.                *
+*                Copyright (c) 1999-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -20,7 +20,6 @@
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 
@@ -30,7 +29,7 @@
  * coded for portability
  */
 
-static char id[] = "\n@(#)mamake (AT&T Labs Research) 2000-09-21\0\n";
+static char id[] = "\n@(#)$Id: mamake (AT&T Labs Research) 2001-01-01 $\0\n";
 
 #if _PACKAGE_ast
 
@@ -38,7 +37,7 @@ static char id[] = "\n@(#)mamake (AT&T Labs Research) 2000-09-21\0\n";
 #include <error.h>
 
 static const char usage[] =
-"[-?@(#)mamake (AT&T Labs Research) 2000-09-21]"
+"[-?\n@(#)$Id: mamake (AT&T Labs Research) 2001-01-01 $\n]"
 USAGE_LICENSE
 "[+NAME?mamake - make abstract machine make]"
 "[+DESCRIPTION?\bmamake\b reads \amake abstract machine\a target and"
@@ -233,6 +232,10 @@ static unsigned long	make(Rule_t*);
 extern char**		environ;
 
 #if !_PACKAGE_ast
+
+#if defined(NeXT) || defined(__NeXT)
+#define getcwd(a,b)	getwd(a)
+#endif
 
 /*
  * emit usage message and exit
@@ -1357,6 +1360,7 @@ scan(Dict_item_t* item, void* handle)
 	register char*		s;
 	register char*		t;
 	register char*		u;
+	register char*		w;
 	Rule_t*			q;
 	int			i;
 	int			j;
@@ -1404,7 +1408,7 @@ scan(Dict_item_t* item, void* handle)
 					for (t = s; (i = *s) && i != ' ' && i != '\t' && i != '"' && i != '\'' && i != '\\' && i != ':'; s++)
 						if (i == '/')
 							t = s + 1;
-						else if (i == '.' && t[0] == 'l' && t[1] == 'i' && t[2] == 'b')
+						else if (i == '.' && *(s + 1) != 'c' && *(s + 1) != 'C' && t[0] == 'l' && t[1] == 'i' && t[2] == 'b')
 							*s = 0;
 					if (*s)
 						*s++ = 0;
@@ -1455,9 +1459,17 @@ scan(Dict_item_t* item, void* handle)
 								k = 0;
 								break;
 							}
-					if (k)
+					if (k && ((q = (Rule_t*)search(state.leaf, t, NiL)) && q != r || *t++ == 'l' && *t++ == 'i' && *t++ == 'b' && *t && (q = (Rule_t*)search(state.leaf, t, NiL)) && q != r))
 					{
-						if ((q = (Rule_t*)search(state.leaf, t, NiL)) && q != r || t[0] == 'l' && t[1] == 'i' && t[2] == 'b' && t[3] && (q = (Rule_t*)search(state.leaf, t + 3, NiL)) && q != r)
+						for (t = w = r->name; *w; w++)
+							if (*w == '/')
+								t = w + 1;
+						if (t[0] == 'l' && t[1] == 'i' && t[2] == 'b')
+							t += 3;
+						for (u = w = q->name; *w; w++)
+							if (*w == '/')
+								u = w + 1;
+						if (strcmp(t, u))
 							cons(r, q);
 					}
 					j = i;
@@ -1622,7 +1634,7 @@ main(int argc, char** argv)
 		case 'K':
 			continue;
 		case 'V':
-			fprintf(stdout, "%s\n", id + 5);
+			fprintf(stdout, "%s\n", id + 10);
 			exit(0);
 		case 'f':
 			append(state.opt, " -f ");
@@ -1694,7 +1706,7 @@ main(int argc, char** argv)
 			case 'K':
 				continue;
 			case 'V':
-				fprintf(stdout, "%s\n", id + 5);
+				fprintf(stdout, "%s\n", id + 10);
 				exit(0);
 			case 'f':
 			case 'r':

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2000 AT&T Corp.                *
+*                Copyright (c) 1985-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -22,7 +22,6 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -77,7 +76,6 @@ range(register char* s, char** e, char* set, int lo, int hi)
 	if (*s == '*')
 	{
 		*e = s + 1;
-		memset(set, 1, hi + 1);
 		return 0;
 	}
 	memset(set, 0, hi + 1);
@@ -342,67 +340,58 @@ tmdate(register const char* s, char** e, time_t* clock)
 				if (k)
 					flags |= WDAY;
 				s = t;
-
-				/*
-				 * day of month, month and day of week together
-				 */
-
-				switch (flags & (WDAY|MDAY|MONTH))
+				if (flags & (MONTH|MDAY|WDAY))
 				{
-				case 0:
-					continue;
-				case MONTH:
-					break;
-				case MDAY:
-					memset(day, 0, sizeof(day));
-					break;
-				case MDAY|MONTH:
-				case WDAY:
-				case WDAY|MONTH:
-					memset(hit, 0, sizeof(hit));
-					break;
-				}
-				tt = tmtime(tm, zone);
-				tm = tmmake(&tt);
-				i = tm->tm_mon + 1;
-				j = tm->tm_mday;
-				k = tm->tm_wday;
-				for (;;)
-				{
-					if (!mon[i])
+					tt = tmtime(tm, zone);
+					tm = tmmake(&tt);
+					i = tm->tm_mon + 1;
+					j = tm->tm_mday;
+					k = tm->tm_wday;
+					for (;;)
 					{
-						mon[i] = 1;
-						if (++i > 12)
+						if (flags & MONTH)
 						{
-							i = 1;
-							tm->tm_year++;
+							if (!mon[i])
+							{
+								mon[i] = 1;
+								if (++i > 12)
+								{
+									i = 1;
+									tm->tm_year++;
+								}
+								tm->tm_mon = i - 1;
+								tm->tm_mday = 1;
+								tt = tmtime(tm, zone);
+								tm = tmmake(&tt);
+								i = tm->tm_mon + 1;
+								j = tm->tm_mday;
+								k = tm->tm_wday;
+								continue;
+							}
+							if (!(flags & (MDAY|WDAY)))
+								break;
 						}
-						tm->tm_mon = i - 1;
-						tm->tm_mday = 1;
-						tt = tmtime(tm, zone);
-						tm = tmmake(&tt);
-						i = tm->tm_mon + 1;
-						j = tm->tm_mday;
-						k = tm->tm_wday;
+						if ((flags & MDAY) && hit[j])
+							break;
+						else if ((flags & WDAY) && day[k])
+							break;
+						else if ((flags & (MDAY|WDAY)) && ++j > 28)
+						{
+							tm->tm_mon = i - 1;
+							tm->tm_mday = j;
+							tt = tmtime(tm, zone);
+							tm = tmmake(&tt);
+							i = tm->tm_mon + 1;
+							j = tm->tm_mday;
+							k = tm->tm_wday;
+						}
+						else if ((flags & WDAY) && ++k > 6)
+							k = 0;
 					}
-					if (hit[j] || day[k])
-						break;
-					if (++j > 28)
-					{
-						tm->tm_mon = i - 1;
-						tm->tm_mday = j;
-						tt = tmtime(tm, zone);
-						tm = tmmake(&tt);
-						i = tm->tm_mon + 1;
-						j = tm->tm_mday;
-						k = tm->tm_wday;
-					}
-					else if (++k > 6)
-						k = 0;
+					tm->tm_mon = i - 1;
+					tm->tm_mday = j;
+					tm->tm_wday = k;
 				}
-				tm->tm_mon = i - 1;
-				tm->tm_mday = j;
-				tm->tm_wday = k;
 				continue;
 			}
 			s = t;

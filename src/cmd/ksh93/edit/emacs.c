@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2000 AT&T Corp.                *
+*                Copyright (c) 1982-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -20,7 +20,6 @@
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /* Adapted for ksh by David Korn */
@@ -106,7 +105,7 @@ directed to
 #   define genncpy(a,b,n)	strncpy((char*)(a),(char*)(b),n)
 #   define genlen(str)	strlen(str)
 #   define print(c)	isprint(c)
-#   define isword(c)	isalnum(out[c]||out[c]=='_')
+#   define isword(c)	(isalnum(out[c]) || (out[c]=='_'))
 #endif /*SHOPT_MULTIBYTE */
 
 typedef struct _emacs_
@@ -312,7 +311,7 @@ ed_emacsread(int fd,char *buff,int scend)
 		switch(c)
 		{
 		case cntl('V'):
-			show_info(ep,&e_version[5]);
+			show_info(ep,fmtident(e_version));
 			continue;
 		case '\0':
 			ep->mark = i;
@@ -1407,3 +1406,6 @@ static int _isword(register int c)
 	return((c&~STRIP) || isalnum(c) || c=='_');
 }
 #endif /* SHOPT_MULTIBYTE */
+#if __OBSOLETE__ < 20020101
+#include "../../lib/libast/string/fmtident.c"
+#endif

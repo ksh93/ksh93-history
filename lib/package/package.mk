@@ -1,7 +1,7 @@
 /*
  * source and binary package support
  *
- * @(#)package.mk (AT&T Labs Research) 2000-10-31
+ * @(#)package.mk (AT&T Labs Research) 2001-01-01
  *
  * usage:
  *
@@ -37,6 +37,9 @@
  *	release=NNNN
  *		package release (delta number)
  *
+ *	variants=cc-
+ *		include variants in binary packages
+ *
  * NOTE: the Makerules.mk :PACKAGE: operator defers to :package: when
  *	 a target is specified
  */
@@ -45,12 +48,13 @@ closure =
 format = tgz
 index =
 init = INIT
-licenses = ast gnu
+licenses = ast
 name =
 ratz = ratz
 style = tgz
 suffix = tgz
 type =
+variants =
 version = $("":T=R%Y-%m-%d)
 release = 0000
 
@@ -275,9 +279,12 @@ $$(PACKAGEGEN)/DETAILS.html : $$(INSTALLROOT)/bin/package
 		then	: $(name) is up to date
 		else	echo $(name) $(version) $(release) 1 > $(PACKAGEGEN)/$(name).ver
 			: > $(PACKAGEGEN)/$(name).req
-			if	test '' != '$(index)'
-			then	echo '$(index)' > $(PACKAGEGEN)/$(name).inx
-			fi
+			{
+				echo "name='$(name)'"
+				echo "index='$(index)'"
+				echo "covers='$(~covers)'"
+				echo "requires='$(~req)'"
+			} > $(PACKAGEGEN)/$(name).inx
 			{
 				echo '$($(name).txt)'
 				package help source
@@ -349,10 +356,12 @@ $$(PACKAGEGEN)/DETAILS.html : $$(INSTALLROOT)/bin/package
 			fi
 			sed 's,1$,0,' $(~req) < /dev/null > $(PACKAGEGEN)/$(name).req
 			echo ";;;$(PACKAGEGEN)/$(name).req"
-			if	test '' != '$(index)'
-			then	echo '$(index)' > $(PACKAGEGEN)/$(name).inx
-				echo ";;;$(PACKAGEGEN)/$(name).inx"
-			fi
+			{
+				echo "name='$(name)'"
+				echo "index='$(index)'"
+				echo "covers='$(~covers)'"
+				echo "requires='$(~req)'"
+			} > $(PACKAGEGEN)/$(name).inx
 			{
 				{
 				echo '$($(name).txt)'
@@ -384,7 +393,10 @@ $$(PACKAGEGEN)/DETAILS.html : $$(INSTALLROOT)/bin/package
 				set -- $(package.closure:B)
 				if	test $# != 0
 				then	echo 'Components in this package:'
-					echo '.nf'
+					echo '.P'
+					echo '.TS'
+					echo 'center expand;'
+					echo 'l l l l l l.'
 					if	test '' != "$hot"
 					then	hot="sed $hot"
 					else	hot=cat
@@ -392,9 +404,9 @@ $$(PACKAGEGEN)/DETAILS.html : $$(INSTALLROOT)/bin/package
 					for i
 					do	echo $i
 					done |
-					pr -6 -o4 -t |
+					pr -6 -t -s'	' |
 					$hot
-					echo '.fi'
+					echo '.TE'
 				fi
 				echo '.P'
 				if	test '' != '$(~covers)'
@@ -420,19 +432,29 @@ $$(PACKAGEGEN)/DETAILS.html : $$(INSTALLROOT)/bin/package
 						echo ".xx link=\"$i\""
 					done
 					echo .LE
+					echo 'Individual components may be covered by separate licenses;'
+					echo 'refer to the component source and/or binaries for more information.'
+					echo .P
 					;;
 				esac
 				echo 'A recent'
 				echo '.xx link="release change log"'
 				echo 'is also included.'
 				cat $(package.closure:C,.*,$(INSTALLROOT)/&/PROMO.mm,:T=F) < /dev/null
-				echo '.nf'
 				echo '.H 1 "release change log"'
+				echo '.nf'
 				package release $(name) |
-				sed -e 's/:::::::: \(.*\) ::::::::/.H 2 \1/'
+				sed -e 's/:::::::: \(.*\) ::::::::/.H 1 "\1 changes"/'
 				echo '.fi'
 			} |
 			$(MM2HTML) $(MM2HTMLFLAGS) -o nohtml.ident > $(PACKAGEGEN)/$(name).html
+			$(ED) - $(PACKAGEGEN)/$(name).html <<'!'
+	/^<!--LABELS-->$/+3,/^<TD.*><A href="#release change log">release change log/d
+	/^<!--LABELS-->$/,/^<!--\/LABELS-->$/s/ changes</</
+	/^<!--LABELS-->$/,/^<!--\/LABELS-->$/m/<A name="release change log">/
+	w
+	q
+	!
 			echo ";;;$(PACKAGEGEN)/$(name).html"
 			if	test '' != '$(deltasince)'
 			then	{
@@ -546,7 +568,7 @@ binary : .binary.init .binary.gen .binary.$$(style)
 			set -- $(package.closure)
 			for i
 			do	cd $(INSTALLROOT)/$i
-				$(MAKE) --noexec $(-) $(=) list.package.$(type) cc-
+				$(MAKE) --noexec $(-) $(=) list.package.$(type) $(variants)
 			done
 		} |
 		sort -u |
@@ -573,9 +595,12 @@ binary : .binary.init .binary.gen .binary.$$(style)
 		else	echo $(name) $(version) $(release) 1 > $(PACKAGEGEN)/$(name).ver
 			echo $(name) $(version) $(release) 1 > $(PACKAGEGEN)/$(name).ver
 			: > $(PACKAGEGEN)/$(name).req
-			if	test '' != '$(index)'
-			then	echo '$(index)' > $(PACKAGEGEN)/$(name).inx
-			fi
+			{
+				echo "name='$(name)'"
+				echo "index='$(index)'"
+				echo "covers='$(~covers)'"
+				echo "requires='$(~req)'"
+			} > $(PACKAGEGEN)/$(name).inx
 			{
 				echo '$($(name).txt)'
 				package help binary
@@ -606,10 +631,12 @@ binary : .binary.init .binary.gen .binary.$$(style)
 			fi
 			sed 's,1$,0,' $(~req) < /dev/null > $(PACKAGEGEN)/$(name).req
 			echo ";;;$(PACKAGEGEN)/$(name).req"
-			if	test '' != '$(index)'
-			then	echo '$(index)' > $(PACKAGEGEN)/$(name).inx
-				echo ";;;$(PACKAGEGEN)/$(name).inx"
-			fi
+			{
+				echo "name='$(name)'"
+				echo "index='$(index)'"
+				echo "covers='$(~covers)'"
+				echo "requires='$(~req)'"
+			} > $(PACKAGEGEN)/$(name).inx
 			{
 				{
 				echo '$($(name).txt)'
@@ -627,7 +654,7 @@ binary : .binary.init .binary.gen .binary.$$(style)
 			set -- $(package.closure)
 			for i
 			do	cd $(INSTALLROOT)/$i
-				$(MAKE) --noexec $(-) $(=) list.package.$(type) cc-
+				$(MAKE) --noexec $(-) $(=) list.package.$(type) $(variants)
 			done
 		} |
 		sort -u |

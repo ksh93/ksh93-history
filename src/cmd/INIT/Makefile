@@ -22,29 +22,6 @@ mamprobe :: mamprobe.sh
 
 silent :: silent.sh
 
-/*
- * these commands are built here for binary packages
- * the package command handles the $(BINDIR) install
- */
-
-":PACKAGE_INIT:" : .MAKE .OPERATOR /* drop after release 2000-02-14 */
-	local I B
-	.LIST.PACKAGE.BINARY : .LIST.PACKAGE.INIT
-	.LIST.PACKAGE.INIT : .MAKE
-		local I
-		for I $(*)
-			print ;;;$(I:T=F:P=A);$(BINDIR)/$(I:B)
-		end
-	for I $(>)
-		B := $(I:B)
-		$(BINDIR) :INSTALLDIR: $(B)
-			if	test ! -f $(<)
-			then	cp $(*) $(<)
-			fi
-		$(B) :: $(I)
-		.LIST.PACKAGE.INIT : $(B)
-	end
-
 :PACKAGE_INIT: mamake.c proto.c ratz.c release.c
 
 :: RELEASE hosttype.tst p.c
@@ -65,10 +42,12 @@ if ! CC.HOSTTYPE
 end
 
 $(BINDIR)/cc :INSTALL: (CC.HOSTTYPE) package hello.c \
+		cc.ibm.risc ldd.ibm.risc \
 		cc.darwin.ppc ldd.darwin.ppc \
 		cc.hp.pa ld.hp.pa \
 		cc.mvs.390 \
 		cc.next.i386 \
+		cc.next.m68k \
 		cc.osf.alpha \
 		cc.sco.i386 \
 		cc.sgi.mips2 ldd.sgi.mips2 \
@@ -90,6 +69,11 @@ $(BINDIR)/cc :INSTALL: (CC.HOSTTYPE) package hello.c \
 			test -f $cc &&
 			$cc -o hello.exe $(*:O=2) >/dev/null 2>&1 &&
 			hello.exe >/dev/null 2>&1 && {
+				case $(CC.HOSTTYPE) in
+				*.mips*)$cc -version >/dev/null 2>&1 ||
+					break
+					;;
+				esac
 				cmp -s $cc $(<) ||
 				cp $cc $(<)
 				for i in $argv
@@ -144,8 +128,6 @@ $(LIBDIR)/make :INSTALLDIR: PROBE.mk TEST.mk WWW.mk MSGFUN.mk MSGKEY.mk
 
 $(INCLUDEDIR) :INSTALLDIR: prototyped.h
 
-$(BINDIR)/proto : .TERMINAL .NULL
-
 prototyped.h : $(BINDIR)/proto
 	$(*) -f /dev/null > h.$(tmp).h
 	if	$(CMP) -s h.$(tmp).h $(<)
@@ -162,8 +144,8 @@ prototyped.h : $(BINDIR)/proto
 	for L $(>)
 		$(LIBDIR)/lib :INSTALLDIR: $(L)
 		$(L) : (CC) $(L).c
-			if	$(CC) -o $(<).exe $(*) -l$(<)
-			then	if	$(CC) -o $(<).exe $(*)
+			if	$(CC) -o $(<).exe $(*) -l$(<) > /dev/null
+			then	if	$(CC) -o $(<).exe $(*) > /dev/null
 				then	echo ' -'
 				else	echo ' -l$(<)'
 				fi
@@ -194,6 +176,7 @@ prototyped.h : $(BINDIR)/proto
 
 /*
  * proto.c is snarfed from the standalone src
+ * this is a gross hack to allow only one copy of the source
  */
 
 if ! "$(-mam)"
@@ -216,7 +199,7 @@ proto.c : ../proto/proto.c
 		-e '/\/\*NODELAY_CONTROL\*\//s/^/#undef	DELAY_CONTROL /' \
 		$(*)
 		} > c.$(tmp).c
-		$(CC) $(CCFLAGS) -DPROTO_STANDALONE -D-F$(*) -D-L -I-D -E c.$(tmp).c | $(PROTO) $(PROTOFLAGS:N!=-s) -f > $(<)
+		$(CC) $(CCFLAGS) -I$(INSTALLROOT)/include/ast -DPROTO_STANDALONE -D-F$(*) -D-L -I-D -E c.$(tmp).c | $(PROTO) $(PROTOFLAGS:N!=-s) -f > $(<)
 		$(RM) -f c.$(tmp).c
 	fi
 

@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1999-2000 AT&T Corp.                #
+#                Copyright (c) 1999-2001 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -20,7 +20,6 @@
 #                         Florham Park NJ                          #
 #                                                                  #
 #               Glenn Fowler <gsf@research.att.com>                #
-#                                                                  #
 ####################################################################
 # Glenn Fowler & Phong Vo
 # AT&T Labs Research
@@ -35,7 +34,7 @@ case $-:$BASH_VERSION in
 esac
 
 command=iffe
-version=2000-10-01
+version=2001-01-01
 
 pkg() # package
 {
@@ -304,7 +303,7 @@ case $1 in
 esac
 set=
 
-case `getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt` in
+case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
 @(#)iffe (AT&T Labs Research) '${version}$'
@@ -779,12 +778,22 @@ _END_EXTERNS_'
 
 # loop on op [ arg [ ... ] ] [ : op [ arg [ ... ] ] ]
 
+argx=0
 cur=.
 can=
 cansep=
+cctest=
+hdrtest=
 while	:
 do	case $in in
-	"")	case $# in
+	"")	case $argx:$* in
+		1:$argv);;
+		1:*)	argx=0
+			set x $argv
+			shift
+			;;
+		esac
+		case $# in
 		0)	set set out + ;;
 		esac
 		;;
@@ -1099,12 +1108,12 @@ do	case $in in
 					*)	sep=$nl ;;
 					esac
 					SEP=
-					case $posix_read in
-					'')	checkread ;;
-					esac
 					while	:
 					do	case $# in
-						0)	case $in in
+						0)	case $posix_read in
+							'')	checkread ;;
+							esac
+							case $in in
 							"")	echo "$command: missing }end" >&$stderr
 								exit 1
 								;;
@@ -1245,6 +1254,26 @@ do	case $in in
 		;;
 	esac
 
+	# check for local package root directories
+
+	case $PACKAGE_PATH in
+	?*)	for i in `echo $PACKAGE_PATH | sed 's,:, ,g'`
+		do	if	test -d $i/include
+			then	cc="$cc -I$i/include"
+				occ="$occ -I$i/include"
+			fi
+			if	test -d $i/lib
+			then	cc="$cc -L$i/lib"
+				occ="$occ -L$i/lib"
+				for y in $libpaths
+				do	eval $y=\"\$$y:\$i/lib\"
+					eval export $y
+				done
+			fi
+		done
+		;;
+	esac
+
 	# check for interactive queries
 
 	case $menu$prompt in
@@ -1354,6 +1383,11 @@ do	case $in in
 	"")	cc="$occ $includes" ;;
 	esac
 
+	# save $* for ancient shells
+
+	argx=1
+	argv=$*
+
 	# check the candidate macros
 
 	case $mac in
@@ -1384,6 +1418,38 @@ do	case $in in
 			exit 1
 			;;
 		esac
+		;;
+	esac
+
+	# check for global default headers (some cc -E insist on compiling)
+
+	case $hdrtest in
+	'')	hdrtest=1
+		allinc=
+		for x in types
+		do	c=_sys_$x
+			x=sys/$x.h
+			echo "${allinc}#include <$x>" > $tmp.c
+			is hdr $x
+			if	$cc -E $tmp.c <&$nullin >&$nullout
+			then	success
+				gothdr="$gothdr + $x"
+				can="$can$cansep#define	$c	1	/* #include <$x> ok */"
+				cansep=$nl
+				eval $c=1
+				allinc="${allinc}#include <$x>$nl"
+			else	failure
+				gothdr="$gothdr - $x"
+				case $all$config$undef in
+				?1?|??1)can="$can$cansep#undef	$c		/* #include <$x> not ok */"
+					cansep=$nl
+					;;
+				1??)	can="$can$cansep#define	$c	0	/* #include <$x> not ok */"
+					cansep=$nl
+					;;
+				esac
+			fi
+		done
 		;;
 	esac
 
@@ -1431,7 +1497,7 @@ do	case $in in
 						c=HAVE_${u}_H
 						;;
 					esac
-					echo "#include <$x>" > $tmp.c
+					echo "${allinc}#include <$x>" > $tmp.c
 					is hdr $x
 					if	$cc -E $tmp.c <&$nullin >&$nullout
 					then	success
@@ -2067,12 +2133,31 @@ main(){printf("hello");return(0);}' > ${tmp}s.c
 						rm -f $tmp.exe
 						if	$cc $ccflags $o -DTEST=$p -DID=$v -o $tmp.exe $tmp.c $lib $deflib <&$nullin >&$nullout && $executable $tmp.exe
 						then	case $run in
-							no[ls]*);;
-							[ls]*)	e= && break ;;
-							noo*)	$tmp.exe <&$nullin || break ;;
-							o*)	$tmp.exe <&$nullin && e= && break ;;
-							no*)	$tmp.exe <&$nullin >&$nullout || break ;;
-							*)	$tmp.exe <&$nullin >&$nullout && e= && break ;;
+
+			no[ls]*);;
+			[ls]*)	e= && break ;;
+			noo*)	if	test ! -d /NextDeveloper
+				then	$tmp.exe <&$nullin || break
+				elif	$tmp.exe <&$nullin >&$nullout
+				then	$tmp.exe <&$nullin | cat
+				else	$tmp.exe <&$nullin | cat
+					break
+				fi
+				;;
+			o*)	if	test ! -d /NextDeveloper
+				then	$tmp.exe <&$nullin && e= && break
+				elif	$tmp.exe <&$nullin >&$nullout
+				then	$tmp.exe <&$nullin | cat
+					e=
+					break
+				else	$tmp.exe <&$nullin | cat
+				fi
+				;;
+			noo*)	$tmp.exe <&$nullin || break ;;
+			o*)	$tmp.exe <&$nullin && e= && break ;;
+			no*)	$tmp.exe <&$nullin >&$nullout || break ;;
+			*)	$tmp.exe <&$nullin >&$nullout && e= && break ;;
+
 							esac
 						else	case $run in
 							no[ls]*)e=1 && break ;;
@@ -2332,7 +2417,7 @@ _END_EXTERNS_"
 							;;
 						*" + $x "*)
 							;;
-						*)	echo "#include <$x>" > $tmp.c
+						*)	echo "${allinc}#include <$x>" > $tmp.c
 							is hdr $x
 							if	$cc -E $tmp.c <&$nullin >&$nullout
 							then	success
@@ -2844,7 +2929,10 @@ _END_EXTERNS_
 					cp $a $tmp.c
 					$cc -o $tmp.exe $tmp.c $lib $deflib <&$nullin >&$stderr 2>&$stderr &&
 					$executable $tmp.exe &&
-					$tmp.exe $opt <&$nullin
+					if	test -d /NextDeveloper
+					then	$tmp.exe $opt <&$nullin | cat
+					else	$tmp.exe $opt <&$nullin
+					fi
 					;;
 				*.sh)	(
 					set "cc='$cc' executable='$executable' id='$m' static='$static' tmp='$tmp'" $opt $hdr $test

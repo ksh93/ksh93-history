@@ -1,4 +1,35 @@
+01-01-01 features/common: fix uwin __DEFINE__
+	 sftable: initialize decimal and thousand
+	 magic.tab: add forel wordperfect document
+	 syslog: add LOG_LEVEL, add '\n' only if needed
+	 include/tm.h: #undef daylight for _WIN32
+	 sfio.h: add _SF_APPEND and _SF_CLOSE for native namespace incursion
+	 ast_std.h: add AST_LC_multibyte for MB_CUR_MAX>1
+	 setlocale: set AST_LC_multibyte
+	 strmatch: check AST_LC_multibyte
+	 features/limits.c: add _BITS_POSIX1_LIM_H guard for linux
+	 features/libpath.sh: fix for aix LIBPATH
+	 optget.c: add enumerated option argument values
+	 procopen,procclose: block SIGCHLD if PROC_FOREGROUND (e.g., system(3))
+00-12-25 mnt.c: handle " and ' quoting for fstab
+	 sftmp.c: let pathtemp() open the fd O_EXCL
+00-12-15 conf.sh: add -v for verbose trace
+	 features/(limits|unistd).c: no FEATURE/types because of _POSIX_SOURCE
+	 features/time: add default for CLOCKS_PER_SEC
+	 features/lib: std_malloc now handles NeXT
+00-12-13 strton: recognize qualifier only if preceded by a digit
+	 features/lib: change return in vfork() test to exit() for linux sparc
+	 fmtquote: fix $'...' quote logic
+00-12-11 tmdate: fix cron format bug that mishandled months
+00-12-01 optget: handle $Id: ... $ in --?-version
+	 features/fcntl.c: fix _STDPP_ mmap munmap
+00-11-27 magic: drop dup sfclose() in load()
+	 optget: handle error_info.id==0
+00-11-22 features/stdio: add _FILEDEFED for sol9.sun4
+	 strton,stronll: handle [u|U][l|L][ll|LL] qualifiers
 00-10-31 tmdate: add TM_DATESTYLE and mmddHHMM[cc]yy
+	 astlicense.c: #include <hashkey.h> MAM workaround
+	 astlicense.c: check for non-empty CONTRIBUTORS
 00-10-26 features/stdio: add _FILE and __FILE for gnu
 	 misc/stk.c: fix stack pointer check off-by-one (dgk does it too!)
 00-10-23 syslog.h: sync with bsd values

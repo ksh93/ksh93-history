@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2000 AT&T Corp.                *
+*                Copyright (c) 1982-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -20,7 +20,6 @@
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -215,6 +214,7 @@ void	*sh_parse(Sfio_t *iop, int flag)
 {
 	register union anynode	*t;
 	Fcin_t	sav_input;
+	struct argnod *sav_arg = shlex.arg;
 	int	sav_prompt = sh.nextprompt;
 	if(sh.binscript && sffileno(iop)==sh.infd)
 		return((void*)sh_trestore(iop));
@@ -240,6 +240,7 @@ void	*sh_parse(Sfio_t *iop, int flag)
 			fcgetc(version);
 			fcclose();
 			fcrestore(&sav_input);
+			shlex.arg = sav_arg;
 			if(version > 2)
 				errormsg(SH_DICT,ERROR_exit(1),e_lexversion);
 			if(sffileno(iop)==sh.infd)
@@ -256,6 +257,7 @@ void	*sh_parse(Sfio_t *iop, int flag)
 	t = sh_cmd((flag&SH_EOF)?EOFSYM:'\n',SH_EMPTY|(flag&SH_NL));
 	fcclose();
 	fcrestore(&sav_input);
+	shlex.arg = sav_arg;
 	/* unstack any completed alias expansions */
 	if((sfset(iop,0,0)&SF_STRING) && !sfreserve(iop,0,-1))
 	{
@@ -528,6 +530,7 @@ static union anynode	*arithfor(register union anynode *tf)
 		register int c;
 		argp = (struct argnod*)stakseek(ARGVAL);
 		argp->argnxt.ap = 0;
+		argp->argchn.cp = 0;
 		argp->argflag = argflag;
 		if(n==2)
 			break;

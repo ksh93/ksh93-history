@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2000 AT&T Corp.                *
+*                Copyright (c) 1985-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -22,7 +22,6 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
-*                                                                  *
 *******************************************************************/
 #include	"sfhdr.h"
 
@@ -58,7 +57,8 @@ int		type;
 	int		base, fmt, flags, dot, width, precis;
 	ssize_t		n_str, size;
 	char		*t_str, *sp;
-	int		v, n, skip, dollar, decimal, thousand;
+	int		v, n, skip;
+	int		dollar=0, decimal=0, thousand=0;
 	Sffmt_t		*ft, savft;
 	Fmtpos_t*	fp;	/* position array of arguments	*/
 	int		argp, argn, maxp, need[FP_INDEX];
@@ -68,7 +68,7 @@ int		type;
 	else if(!(fp = sffmtpos(f,form,args,-1)) )
 		return NIL(Fmtpos_t*);
 
-	dollar = 0; argn = maxp = -1;
+	argn = maxp = -1;
 	while((n = *form) )
 	{	if(n != '%') /* collect the non-pattern chars */
 		{	sp = (char*)form++;

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2000 AT&T Corp.                *
+*                Copyright (c) 1985-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -22,7 +22,6 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -312,16 +311,19 @@ vsyslog(int priority, const char* format, va_list ap)
 	if (sp = sfstropen())
 	{
 		sfputr(sp, fmttime("%b %d %H:%M:%S", time(NiL)), -1);
-		if ((c = LOG_SEVERITY(priority)) < elementsof(log_severity))
-			s = (char*)log_severity[c].name;
-		else
-			sfsprintf(s = buf, sizeof(buf), "debug%d", c);
-		sfprintf(sp, " %-8s ", s);
-		if ((c = LOG_FACILITY(priority)) < elementsof(log_facility))
-			s = (char*)log_facility[c].name;
-		else
-			sfsprintf(s = buf, sizeof(buf), "local%d", c);
-		sfprintf(sp, " %-8s ", s);
+		if (log.flags & LOG_LEVEL)
+		{
+			if ((c = LOG_SEVERITY(priority)) < elementsof(log_severity))
+				s = (char*)log_severity[c].name;
+			else
+				sfsprintf(s = buf, sizeof(buf), "debug%d", c);
+			sfprintf(sp, " %-8s ", s);
+			if ((c = LOG_FACILITY(priority)) < elementsof(log_facility))
+				s = (char*)log_facility[c].name;
+			else
+				sfsprintf(s = buf, sizeof(buf), "local%d", c);
+			sfprintf(sp, " %-8s ", s);
+		}
 		if (log.flags & LOG_PID)
 			sfprintf(sp, "%05d ", getpid());
 		if (log.ident)
@@ -335,7 +337,8 @@ vsyslog(int priority, const char* format, va_list ap)
 			va_copy(fmt.args, ap);
 			sfprintf(sp, "%!", &fmt);
 		}
-		sfputc(sp, '\n');
+		if ((s = sfstrrel(sp, 0)) && *(s - 1) != '\n')
+			sfputc(sp, '\n');
 		sendlog(sfstruse(sp));
 		sfstrclose(sp);
 	}

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1996-2000 AT&T Corp.                *
+*                Copyright (c) 1996-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -20,7 +20,6 @@
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -30,7 +29,7 @@
  * man this is sum library
  */
 
-static const char id[] = "\n@(#)sumlib (AT&T Research) 1999-11-11\0\n";
+static const char id[] = "\n@(#)$Id: sumlib (AT&T Research) 1999-11-11 $\0\n";
 
 #define _SUM_PRIVATE_	\
 			struct Algorithm*	algorithm;	\
@@ -573,7 +572,7 @@ fddi_done(register Sum_t* p)
 #define md5_description \
 	"The RSA Data Security, Inc. MD5 Message-Digest Algorithm, 1991-2, \
 	used with permission. The block count is not printed."
-#define md5_notice	"\n@(#)md5 (RSA Data Security, Inc. MD5 Message-Digest, 1991-2) 02/29/96\0\n"
+#define md5_notice	"\n@(#)$Id: md5 (RSA Data Security, Inc. MD5 Message-Digest, 1991-2) 1996-02-29 $\0\n"
 #define md5_match	"md5|MD5"
 #define md5_scale	0
 

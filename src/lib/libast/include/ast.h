@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2000 AT&T Corp.                *
+*                Copyright (c) 1985-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -22,7 +22,6 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -198,6 +197,7 @@ extern char*		fmtelapsed(unsigned long, int);
 extern char*		fmterror(int);
 extern char*		fmtesc(const char*);
 extern char*		fmtesq(const char*, const char*);
+extern char*		fmtident(const char*);
 extern char*		fmtip4(unsigned _ast_int4_t, int);
 extern char*		fmtnesq(const char*, const char*, size_t);
 extern char*		fmtgid(int);
@@ -227,9 +227,10 @@ extern char*		pathkey(char*, char*, const char*, const char*);
 extern char*		pathpath(char*, const char*, const char*, int);
 extern char*		pathprobe(char*, char*, const char*, const char*, const char*, int);
 extern char*		pathrepl(char*, const char*, const char*);
-extern char*		pathtmp(char*, const char*, const char*, int*);
 extern int		pathsetlink(const char*, const char*);
 extern char*		pathshell(void);
+extern char*		pathtemp(char*, size_t, const char*, const char*, int*);
+extern char*		pathtmp(char*, const char*, const char*, int*);
 extern char*		setenviron(const char*);
 extern int		stracmp(const char*, const char*);
 extern char*		strcopy(char*, const char*);
@@ -273,7 +274,7 @@ extern void*		memetoa(void*, const void*, size_t);
  */
 
 #ifndef environ
-#if defined(__EXPORT__) && defined(__IMPORT__)
+#if defined(__EXPORT__) && defined(_BLD_DLL)
 #define	environ		(*_ast_getdll()->_ast_environ)
 #else
 extern char**		environ;

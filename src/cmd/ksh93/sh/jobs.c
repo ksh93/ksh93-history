@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2000 AT&T Corp.                *
+*                Copyright (c) 1982-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -20,7 +20,6 @@
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -531,7 +530,8 @@ static void job_set(register struct process *pw)
 		tty_set(job.fd,TCSAFLUSH,&pw->p_stty);
 	}
 #ifdef SIGTSTP
-	tcsetpgrp(job.fd,pw->p_fgrp);
+	if((pw->p_flag&P_STOPPED) || tcgetpgrp(job.fd) == job.mypgid)
+		tcsetpgrp(job.fd,pw->p_fgrp);
 	/* if job is stopped, resume it in the background */
 	job_unstop(pw);
 #endif	/* SIGTSTP */
@@ -680,7 +680,7 @@ int job_list(struct process *pw,register int flag)
 		return(0);
 	if((flag&JOB_PFLAG))
 	{
-		sfprintf(outfile,"%d\n",px->p_pgrp);
+		sfprintf(outfile,"%d\n",px->p_pgrp?px->p_pgrp:px->p_pid);
 		return(0);
 	}
 	if((px->p_flag&P_DONE) && job.waitall && !(flag&JOB_LFLAG))

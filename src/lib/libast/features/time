@@ -38,6 +38,13 @@ struct timeval
 	time_t	tv_usec;
 };
 #endif
+#ifndef CLOCKS_PER_SEC
+#ifdef	CLK_TCK
+#define CLOCKS_PER_SEC	CLK_TCK
+#else
+#define CLOCKS_PER_SEC	_AST_CLK_TCK
+#endif
+#endif
 }end
 
 tst	- -DN=1 - -DN=2 - -DN=3 - -DN=4 output{

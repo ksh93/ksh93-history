@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2000 AT&T Corp.                *
+*                Copyright (c) 1982-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -20,7 +20,6 @@
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 
@@ -154,7 +153,7 @@ double	arith_exec(Arith_t *ep)
 	{
 		if(c&T_NOFLOAT)
 		{
-			if(type || ((c&T_BINARY) && tp[-1]))
+			if(type || ((c&T_BINARY) && (c&T_OP)!=A_MOD  && tp[-1]))
 				arith_error(e_incompatible,ep->expr,ep->emode);
 		}
 		switch(c&T_OP)

@@ -6,6 +6,7 @@ iff	SFSTDIO
 cat{
 	#define __FILE_typedef	1
 	#define _FILE_DEFINED	1
+	#define _FILEDEFED	1
 
 	#undef	FILE
 	#undef	_FILE
@@ -310,7 +311,7 @@ cat{
 
 	#undef	extern
 
-	#if _DLL_BLD && _DLL_INDIRECT_DATA
+	#if _BLD_DLL && _DLL_INDIRECT_DATA
 
 	#define stdin		((FILE*)_ast_dll->_ast_stdin)
 	#define stdout		((FILE*)_ast_dll->_ast_stdout)

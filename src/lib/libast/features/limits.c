@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2000 AT&T Corp.                *
+*                Copyright (c) 1985-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -22,7 +22,6 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -81,7 +80,6 @@ __STDPP__directive pragma pp:hide getpagesize getdtablesize printf spawnve
 #include "FEATURE/lib"
 #include "FEATURE/unistd.lcl"
 #include "FEATURE/param"
-#include "FEATURE/types"
 
 #if defined(__STDPP__directive) && defined(__STDPP__hide)
 __STDPP__directive pragma pp:nohide getpagesize getdtablesize printf spawnve
@@ -377,6 +375,7 @@ main()
 	printf("\n");
 	printf("#if defined(__STDPP__directive) && defined(__STDPP__ignore)\n");
 	printf("__STDPP__directive pragma pp:ignore \"limits.h\"\n");
+	printf("__STDPP__directive pragma pp:ignore \"bits/posix1_lim.h\"\n");
 	printf("#else\n");
 #ifdef	_limits_h
 	printf("#define _limits_h\n");
@@ -389,6 +388,9 @@ main()
 #endif
 #ifdef	__sys_limits_h
 	printf("#define __sys_limits_h\n");
+#endif
+#ifdef	_BITS_POSIX1_LIM_H
+	printf("#define _BITS_POSIX1_LIM_H\n");
 #endif
 #ifdef	_LIMITS_H_
 	printf("#define _LIMITS_H_\n");

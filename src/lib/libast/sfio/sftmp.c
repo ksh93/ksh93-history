@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2000 AT&T Corp.                *
+*                Copyright (c) 1985-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -22,7 +22,6 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
-*                                                                  *
 *******************************************************************/
 #include	"sfhdr.h"
 
@@ -210,10 +209,16 @@ Sfio_t*	f;
 #endif
 {
 	reg char*	file;
-	reg int		fd;
+	int		fd;
+
+#if _PACKAGE_ast
+	if(!(file = pathtemp(NiL,PATH_MAX,NiL,"sf",&fd)))
+		return -1;
+	_rmtmp(f, file);
+	free(file);
+#else
 	int		t;
 
-#if !_PACKAGE_ast
 	/* set up path of dirs to create temp files */
 	if(!Tmppath && !(Tmppath = _sfgetpath("TMPPATH")) )
 	{	if(!(Tmppath = (char**)malloc(2*sizeof(char*))) )
@@ -234,12 +239,10 @@ Sfio_t*	f;
 		Tmpcur += 1;
 	if(!Tmpcur || !Tmpcur[0])
 		Tmpcur = Tmppath;
-#endif /*!_PACKAGE_ast*/
 
-	file = NIL(char*); fd = -1;
+	fd = -1;
 	for(t = 0; t < 10; ++t)
 	{	/* compute a random name */
-#if !_PACKAGE_ast
 		static ulong	Key, A;
 		if(A == 0 || t > 0)	/* get a quasi-random coefficient */
 		{	reg int	r;
@@ -254,10 +257,6 @@ Sfio_t*	f;
 		Key = A*Key + 987654321;
 		file = sfprints("%s/sf%3.3.32lu.%3.3.32lu",
 				Tmpcur[0], (Key>>15)&0x7fff, Key&0x7fff);
-#else
-		file = pathtmp(file,NiL,"sf",NiL);
-#endif /*!_PACKAGE_ast*/
-
 		if(!file)
 			return -1;
 #if _has_oflags
@@ -279,15 +278,11 @@ Sfio_t*	f;
 			while(remove(file) < 0 && errno == EINTR)
 				errno = 0;
 		}
-#endif
+#endif /* _has_oflags */
 	}
-
 	if(fd >= 0)
 		_rmtmp(f, file);
-#if _PACKAGE_ast
-	free(file);
-#endif /*_PACKAGE_ast*/
-
+#endif /* _PACKAGE_ast */
 	return fd;
 }
 

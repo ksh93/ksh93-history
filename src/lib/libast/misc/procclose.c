@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2000 AT&T Corp.                *
+*                Copyright (c) 1985-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -22,7 +22,6 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -73,6 +72,15 @@ procclose(register Proc_t* p)
 		{
 			signal(SIGINT, p->sigint);
 			signal(SIGQUIT, p->sigquit);
+#if defined(SIGCHLD)
+#if _lib_sigprocmask
+			sigprocmask(SIG_SETMASK, &p->mask, NiL);
+#else
+#if _lib_sigsetmask
+			sigsetmask(p->mask);
+#endif
+#endif
+#endif
 		}
 		procfree(p);
 		if (status != -1 && !(p->flags & PROC_FOREGROUND))

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2000 AT&T Corp.                *
+*                Copyright (c) 1982-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -20,7 +20,6 @@
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 
@@ -227,7 +226,7 @@ const char sh_set[] =
 	"\bnoclobber\b option.]";
 
 const char sh_optbreak[] =
-"[-?\n@(#)break (AT&T Labs Research) 1999-04-07\n]"
+"[-?\n@(#)$Id: break (AT&T Labs Research) 1999-04-07 $\n]"
 USAGE_LICENSE
 "[+NAME?break - break out of loop ]"
 "[+DESCRIPTION?\bbreak\b is a shell special built-in the exits the "
@@ -245,7 +244,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optcont[] =
-"[-?\n@(#)continue (AT&T Labs Research) 1999-04-07\n]"
+"[-?\n@(#)$Id: continue (AT&T Labs Research) 1999-04-07 $\n]"
 USAGE_LICENSE
 "[+NAME?continue - continue execution at top of the loop]"
 "[+DESCRIPTION?\bcontinue\b is a shell special built-in the continues " 
@@ -264,7 +263,7 @@ USAGE_LICENSE
 
 const char sh_optalarm[]	= "r [varname seconds]";
 const char sh_optalias[] =
-"[-?\n@(#)alias (AT&T Labs Research) 1999-07-07\n]"
+"[-?\n@(#)$Id: alias (AT&T Labs Research) 1999-07-07 $\n]"
 USAGE_LICENSE
 "[+NAME?alias - define or display aliases]"
 "[+DESCRIPTION?\balias\b creates or redefines alias definitions "
@@ -306,7 +305,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optbuiltin[] =
-"[-?\n@(#)builtin (AT&T Labs Research) 1999-07-10\n]"
+"[-?\n@(#)$Id: builtin (AT&T Labs Research) 1999-07-10 $\n]"
 USAGE_LICENSE
 "[+NAME?builtin - add, delete, or display shell built-ins]"
 "[+DESCRIPTION?\bbuiltin\b can be used to add, delete, or display "
@@ -360,7 +359,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optcd[] =
-"[-?\n@(#)cd (AT&T Labs Research) 1999-06-05\n]"
+"[-?\n@(#)$Id: cd (AT&T Labs Research) 1999-06-05 $\n]"
 USAGE_LICENSE
 "[+NAME?cd - change working directory ]"
 "[+DESCRIPTION?\bcd\b changes the current working directory of the "
@@ -413,7 +412,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optcommand[] =
-"[-?\n@(#)command (AT&T Labs Research) 1999-04-07\n]"
+"[-?\n@(#)$Id: command (AT&T Labs Research) 1999-04-07 $\n]"
 USAGE_LICENSE
 "[+NAME?command - execute a simple command]"
 "[+DESCRIPTION?Without \b-v\b or \b-V\b,  \bcommand\b executes \acommand\a "
@@ -443,7 +442,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optdot[]	 =
-"[-?@(#)\b.\b (AT&T Labs Research) 2000-04-02\n]"
+"[-?@(#)$Id: \b.\b (AT&T Labs Research) 2000-04-02 $\n]"
 USAGE_LICENSE
 "[+NAME?\b.\b - execute commands in the current environment]"
 "[+DESCRIPTION?\b.\b is a special built-in command that executes commands "
@@ -479,7 +478,7 @@ USAGE_LICENSE
 #endif /* !ECHOPRINT */
 
 const char sh_opteval[] =
-"[-?\n@(#)eval (AT&T Labs Research) 1999-07-07\n]"
+"[-?\n@(#)$Id: eval (AT&T Labs Research) 1999-07-07 $\n]"
 USAGE_LICENSE
 "[+NAME?eval - create a shell command and process it]"
 "[+DESCRIPTION?\beval\b is a shell special built-int command that constructs "
@@ -499,7 +498,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optexec[] =
-"[-?\n@(#)exec (AT&T Labs Research) 1999-07-10\n]"
+"[-?\n@(#)$Id: exec (AT&T Labs Research) 1999-07-10 $\n]"
 USAGE_LICENSE
 "[+NAME?exec - execute command, open/close and duplicate file descriptors]"
 "[+DESCRIPTION?\bexec\b is a special built-in command that can be used to "
@@ -538,7 +537,7 @@ USAGE_LICENSE
 
 
 const char sh_optexit[] =
-"[-?\n@(#)exit (AT&T Labs Research) 1999-07-07\n]"
+"[-?\n@(#)$Id: exit (AT&T Labs Research) 1999-07-07 $\n]"
 USAGE_LICENSE
 "[+NAME?exit - exit the current shell]"
 "[+DESCRIPTION?\bexit\b is shell special built-in that causes the "
@@ -556,7 +555,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optexport[] =
-"[-?\n@(#)export (AT&T Labs Research) 1999-07-07\n]"
+"[-?\n@(#)$Id: export (AT&T Labs Research) 1999-07-07 $\n]"
 USAGE_LICENSE
 "[+NAME?export - set export attribute on variables]"
 "[+DESCRIPTION?\bexport\b sets the export attribute on each of "
@@ -583,7 +582,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optgetopts[] =
-":[-?\n@(#)getopts (AT&T Labs Research) 1999-07-20\n]"
+":[-?\n@(#)$Id: getopts (AT&T Labs Research) 1999-07-20 $\n]"
 "[-author?Glenn Fowler <gsf@research.att.com>]"
 USAGE_LICENSE
 "[+NAME?\f?\f - parse utility options]"
@@ -690,7 +689,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optbg[] =
-"[-?@(#)bg (AT&T Labs Research) 2000-04-02\n]"
+"[-?@(#)$Id: bg (AT&T Labs Research) 2000-04-02 $\n]"
 USAGE_LICENSE
 "[+NAME?bg - resume jobs in the background]"
 "[+DESCRIPTION?\bbg\b places the given \ajob\as into the background "
@@ -719,7 +718,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optfg[] =
-"[-?@(#)fg (AT&T Labs Research) 2000-04-02\n]"
+"[-?@(#)$Id: fg (AT&T Labs Research) 2000-04-02 $\n]"
 USAGE_LICENSE
 "[+NAME?fg - move jobs to the foreground]"
 "[+DESCRIPTION?\bfg\b places the given \ajob\as into the foreground "
@@ -748,7 +747,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optdisown[] =
-"[-?@(#)disown (AT&T Labs Research) 2000-04-02\n]"
+"[-?@(#)$Id: disown (AT&T Labs Research) 2000-04-02 $\n]"
 USAGE_LICENSE
 "[+NAME?disown - disassociate a job with the current shell]"
 "[+DESCRIPTION?\bdisown\b prevents the current shell from sending "
@@ -777,7 +776,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optjobs[] =
-"[-?@(#)jobs (AT&T Labs Research) 2000-04-02\n]"
+"[-?@(#)$Id: jobs (AT&T Labs Research) 2000-04-02 $\n]"
 USAGE_LICENSE
 "[+NAME?jobs - display status of jobs]"
 "[+DESCRIPTION?\bjobs\b displays information about specified \ajob\as "
@@ -816,7 +815,7 @@ USAGE_LICENSE
 ;
 
 const char sh_opthist[]	= 
-"[-?@(#)\f?\f (AT&T Labs Research) 2000-04-02\n]"
+"[-?@(#)$Id: \f?\f (AT&T Labs Research) 2000-04-02 $\n]"
 USAGE_LICENSE
 "[+NAME?\f?\f - process command history list]"
 "[+DESCRIPTION?\b\f?\f\b lists, edits, or re-executes, commands  "
@@ -879,7 +878,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optkill[]	 = 
-"[-?\n@(#)kill (AT&T Labs Research) 1999-06-17\n]"
+"[-?\n@(#)$Id: kill (AT&T Labs Research) 1999-06-17 $\n]"
 USAGE_LICENSE
 "[+NAME?kill - terminate or signal process]"
 "[+DESCRIPTION?With the first form in which \b-l\b is not specified, "
@@ -935,7 +934,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optlet[]	=
-"[-?@(#)let (AT&T Labs Research) 2000-04-02\n]"
+"[-?@(#)$Id: let (AT&T Labs Research) 2000-04-02 $\n]"
 USAGE_LICENSE
 "[+NAME?let - evaluate arithmetic expressions]"
 "[+DESCRIPTION?\blet\b evaluates each \aexpr\a in the current "
@@ -958,7 +957,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optprint[] =
-"[-?\n@(#)print (AT&T Labs Research) 1999-04-07\n]"
+"[-?\n@(#)$Id: print (AT&T Labs Research) 1999-04-07 $\n]"
 USAGE_LICENSE
 "[+NAME?print - write arguments to standard output]"
 "[+DESCRIPTION?By default, \bprint\b writes each \astring\a operand to "
@@ -1009,7 +1008,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optprintf[] =
-"[-?\n@(#)printf (AT&T Labs Research) 1999-06-21\n]"
+"[-?\n@(#)$Id: printf (AT&T Labs Research) 1999-06-21 $\n]"
 USAGE_LICENSE
 "[+NAME?printf - write formatted output]"
 "[+DESCRIPTION?\bprintf\b writes each \astring\a operand to "
@@ -1080,7 +1079,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optpwd[] =
-"[-?\n@(#)pwd (AT&T Labs Research) 1999-06-07\n]"
+"[-?\n@(#)$Id: pwd (AT&T Labs Research) 1999-06-07 $\n]"
 USAGE_LICENSE
 "[+NAME?pwd - write working directory name]"
 "[+DESCRIPTION?\bpwd\b writes an absolute pathname of the current working "
@@ -1104,7 +1103,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optread[] =
-"[-?\n@(#)read (AT&T Labs Research) 1999-04-07\n]"
+"[-?\n@(#)$Id: read (AT&T Labs Research) 1999-04-07 $\n]"
 USAGE_LICENSE
 "[+NAME?read - read a line from standard input]"
 "[+DESCRIPTION?\bread\b reads a line from standard input and breaks it "
@@ -1143,7 +1142,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optreadonly[] =
-"[-?\n@(#)readonly (AT&T Labs Research) 1999-07-07\n]"
+"[-?\n@(#)$Id: readonly (AT&T Labs Research) 1999-07-07 $\n]"
 USAGE_LICENSE
 "[+NAME?readonly - set readonly attribute on variables]"
 "[+DESCRIPTION?\breadonly\b sets the readonly attribute on each of "
@@ -1170,7 +1169,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optreturn[] =
-"[-?\n@(#)return (AT&T Labs Research) 1999-07-07\n]"
+"[-?\n@(#)$Id: return (AT&T Labs Research) 1999-07-07 $\n]"
 USAGE_LICENSE
 "[+NAME?return - return from a function or dot script ]"
 "[+DESCRIPTION?\breturn\b is shell special built-in that causes the "
@@ -1193,7 +1192,7 @@ USAGE_LICENSE
 
 
 const char sh_optksh[] =
-"+[-?\n@(#)sh (AT&T Labs Research) 1999-09-28\n]"
+"+[-?\n@(#)$Id: sh (AT&T Labs Research) 1999-09-28 $\n]"
 USAGE_LICENSE
 "[+NAME?\b\f?\f\b - Shell, the standard command language interpreter]"
 "[+DESCRIPTION?\b\f?\f\b is a command language interpreter that "
@@ -1256,7 +1255,7 @@ USAGE_LICENSE
 "[+SEE ALSO?\bset\b(1), \bbuiltin\b(1)]"
 ;
 const char sh_optset[] =
-"+[-?\n@(#)set (AT&T Labs Research) 1999-09-28\n]"
+"+[-?\n@(#)$Id: set (AT&T Labs Research) 1999-09-28 $\n]"
 USAGE_LICENSE
 "[+NAME?set - set/unset options and positional parameters]"
 "[+DESCRIPTION?\bset\b sets or unsets options and positional parameters.  "
@@ -1294,7 +1293,7 @@ USAGE_LICENSE
 
 
 const char sh_optshift[] =
-"[-?\n@(#)shift (AT&T Labs Research) 1999-07-07\n]"
+"[-?\n@(#)$Id: shift (AT&T Labs Research) 1999-07-07 $\n]"
 USAGE_LICENSE
 "[+NAME?shift - shift positional parameters]"
 "[+DESCRIPTION?\bshift\b is shell special built-in that shifts the "
@@ -1317,7 +1316,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optsleep[] =
-"[-?\n@(#)sleep (AT&T Labs Research) 1999-04-07\n]"
+"[-?\n@(#)$Id: sleep (AT&T Labs Research) 1999-04-07 $\n]"
 USAGE_LICENSE
 "[+NAME?sleep - suspend execution for an interval]"
 "[+DESCRIPTION?\bsleep\b suspends execution for at least the time specified "
@@ -1337,7 +1336,7 @@ USAGE_LICENSE
 ;
 
 const char sh_opttrap[] =
-"[-?\n@(#)trap (AT&T Labs Research) 1999-07-17\n]"
+"[-?\n@(#)$Id: trap (AT&T Labs Research) 1999-07-17 $\n]"
 USAGE_LICENSE
 "[+NAME?trap - trap signals can conditions]"
 "[+DESCRIPTION?\btrap\b is a special built-in that defines actions to be "
@@ -1388,7 +1387,7 @@ USAGE_LICENSE
 ;
 
 const char sh_opttypeset[] =
-"+[-?\n@(#)typeset (AT&T Labs Research) 1999-07-07\n]"
+"+[-?\n@(#)$Id: typeset (AT&T Labs Research) 1999-07-07 $\n]"
 USAGE_LICENSE
 "[+NAME?typeset - declare or display variables with attributes]"
 "[+DESCRIPTION?Without the \b-f\b options, \btypeset\b sets, unsets, "
@@ -1478,7 +1477,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optulimit[] =
-"[-?@(#)ulimit (AT&T Labs Research) 2000-04-02\n]"
+"[-?@(#)$Id: ulimit (AT&T Labs Research) 2000-04-02 $\n]"
 USAGE_LICENSE
 "[+NAME?ulimit - set or display resource limits]"
 "[+DESCRIPTION?\bulimit\b sets or displays resource limits.  These "
@@ -1523,7 +1522,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optumask[] =
-"[-?\n@(#)umask (AT&T Labs Research) 1999-04-07\n]"
+"[-?\n@(#)$Id: umask (AT&T Labs Research) 1999-04-07 $\n]"
 USAGE_LICENSE
 "[+NAME?umask - get or set the file creation mask]"
 "[+DESCRIPTION?\bumask\b sets the file creation mask of the current "
@@ -1550,7 +1549,7 @@ USAGE_LICENSE
 ;
 const char sh_optuniverse[]	= " [name]";
 const char sh_optunset[] =
-"[-?\n@(#)unset (AT&T Labs Research) 1999-07-07\n]"
+"[-?\n@(#)$Id: unset (AT&T Labs Research) 1999-07-07 $\n]"
 USAGE_LICENSE
 "[+NAME?unset - unset values and attributes of variables and functions]"
 "[+DESCRIPTION?For each \aname\a specified, \bunset\b  unsets the variable, "
@@ -1576,7 +1575,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optunalias[] =
-"[-?\n@(#)unalias (AT&T Labs Research) 1999-07-07\n]"
+"[-?\n@(#)$Id: unalias (AT&T Labs Research) 1999-07-07 $\n]"
 USAGE_LICENSE
 "[+NAME?unalias - remove alias definitions]"
 "[+DESCRIPTION?\bunalias\b removes the definition of each named alias "
@@ -1598,7 +1597,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optwait[]	=
-"[-?\n@(#)wait (AT&T Labs Research) 1999-06-17\n]"
+"[-?\n@(#)$Id: wait (AT&T Labs Research) 1999-06-17 $\n]"
 USAGE_LICENSE
 "[+NAME?wait - wait for process or job completion]"
 "[+DESCRIPTION?\bwait\b with no operands, waits until all jobs "
@@ -1639,7 +1638,7 @@ USAGE_LICENSE
 #endif /* SHOPT_FS_3D */
 
 const char sh_optwhence[] =
-"[-?\n@(#)whence (AT&T Labs Research) 1999-07-07\n]"
+"[-?\n@(#)$Id: whence (AT&T Labs Research) 1999-07-07 $\n]"
 USAGE_LICENSE
 "[+NAME?whence - locate a command and describe its type]"
 "[+DESCRIPTION?Without \b-v\b, \bwhence\b writes on standard output an "

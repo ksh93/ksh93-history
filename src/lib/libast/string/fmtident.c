@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2000 AT&T Corp.                *
+*                Copyright (c) 1985-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -22,16 +22,60 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 
-/* OBSOLETE 19960509 -- use pathtmp */
-
 #include <ast.h>
+#include <ctype.h>
+
+#define IDENT	01
+#define USAGE	02
+
+/*
+ * format what(1) and/or ident(1) string a
+ */
 
 char*
-pathtemp(char* buf, const char* dir, const char* pfx)
+fmtident(const char* a)
 {
-	return pathtmp(buf, dir, pfx, NiL);
+	register char*	s = (char*)a;
+	register char*	t;
+	char*		buf;
+	int		i;
+
+	i = 0;
+	for (;;)
+	{
+		while (isspace(*s))
+			s++;
+		if (s[0] == '[')
+		{
+			while (*++s && *s != '\n');
+			i |= USAGE;
+		}
+		else if (s[0] == '@' && s[1] == '(' && s[2] == '#' && s[3] == ')')
+			s += 4;
+		else if (s[0] == '$' && s[1] == 'I' && s[2] == 'd' && s[3] == ':' && isspace(s[4]))
+		{
+			s += 5;
+			i |= IDENT;
+		}
+		else
+			break;
+	}
+	if (i)
+	{
+		i &= IDENT;
+		for (t = s; isprint(*t) && *t != '\n'; t++)
+			if (i && t[0] == ' ' && t[1] == '$')
+				break;
+		while (t > s && isspace(t[-1]))
+			t--;
+		i = t - s;
+		buf = fmtbuf(i + 1);
+		memcpy(buf, s, i);
+		s = buf;
+		s[i] = 0;
+	}
+	return s;
 }

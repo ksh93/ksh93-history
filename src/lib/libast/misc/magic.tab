@@ -1,5 +1,5 @@
 #
-# @(#)magic (AT&T Research) 2000-10-11
+# @(#)magic (AT&T Research) 2001-01-01
 #
 # magic number database for file(1) and magic(3)
 #
@@ -1160,6 +1160,8 @@ v()
 0	string		ms C/C++ program database	ms program database	application/x-dbx
 +33	string		*		, version %s
 
+0	string		\377WPC		corel wordperfect document	application/x-wordperfect
+
 0	beshort		0xedab
 &2	beshort		0xeedb		red hat package manager
 +4	byte		*		v%d
@@ -1279,8 +1281,8 @@ name	match		core.*			unknown core dump	x-system/core
 |name	match	*.dic	Text Document	application/x-ms-txtfile
 |name	match	*.dif	DV	video/x-dv
 |name	match	*.dll	Application Extension	application/x-msdownload
-|name	match	*.doc	Microsoft Word Document	application/msword
-|name	match	*.dot	Microsoft Word Template	application/msword
+|name	match	*.doc	Microsoft Word Document	application/x-ms-word
+|name	match	*.dot	Microsoft Word Template	application/x-ms-word
 |name	match	*.drv	Device driver	application/x-ms-drvfile
 |name	match	*.dsm	Developer Studio Macro File	application/x-ms-dsmfile
 |name	match	*.dsn	Microsoft OLE DB Provider for ODBC Drivers	application/x-ms-msdasql
@@ -1427,7 +1429,7 @@ name	match		core.*			unknown core dump	x-system/core
 |name	match	*.res	Intermediate File	application/x-ms-mdpxfile
 |name	match	*.rmi	MIDI Sequence	audio/mid
 |name	match	*.rnk	Dial-Up Shortcut	application/x-ms-rnkfile
-|name	match	*.rtf	Rich Text Format	application/msword
+|name	match	*.rtf	Rich Text Format	application/x-ms-word
 |name	match	*.rx	XRX Files	application/x-ms-hclbroadway
 |name	match	*.sbr	Intermediate File	application/x-ms-mdpxfile
 |name	match	*.sc2	Microsoft Schedule+ 7.0 Application	application/x-ms-scheduleplus
@@ -1458,8 +1460,9 @@ name	match		core.*			unknown core dump	x-system/core
 |name	match	*.vir	Virus Infected File	application/x-ms-virfile
 |name	match	*.wav	Wave Sound	audio/x-wav
 |name	match	*.wbk	Microsoft Word Backup Document	application/x-ms-word
-|name	match	*.wiz	Microsoft Word Wizard	application/msword
+|name	match	*.wiz	Microsoft Word Wizard	application/x-ms-word
 |name	match	*.wll	Microsoft Word Addin	application/x-ms-word
+|name	match	*.wpd	corel wordperfect document	application/x-wordperfect
 |name	match	*.wri	Write Document	application/x-ms-wrifile
 |name	match	*.wrl	SGI.CosmoPlayer.1	application/x-ms-sgi
 |name	match	*.wrz	SGI.CosmoPlayer.1	application/x-ms-sgi

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2000 AT&T Corp.                *
+*                Copyright (c) 1985-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -22,7 +22,6 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -136,6 +135,8 @@ main()
 	printf("extern int	creat(const char*, _AST_mode_t);\n");
 	printf("extern int	fcntl(int, int, ...);\n");
 	printf("extern int	open(const char*, int, ...);\n");
+	printf("extern void*	mmap(void*, size_t, int, int, int, off_t);\n");
+	printf("extern int	munmap(void*, size_t);\n");
 	printf("#else\n");
 	printf("#ifdef	creat\n");
 	printf("#undef	creat\n");

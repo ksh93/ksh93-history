@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1999-2000 AT&T Corp.                *
+*                Copyright (c) 1999-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -20,7 +20,6 @@
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 
@@ -30,7 +29,7 @@
  * coded for portability
  */
 
-static char id[] = "\n@(#)release (AT&T Labs Research) 2000-01-28\0\n";
+static char id[] = "\n@(#)$Id: release (AT&T Labs Research) 2000-01-28 $\0\n";
 
 #if _PACKAGE_ast
 
@@ -38,7 +37,7 @@ static char id[] = "\n@(#)release (AT&T Labs Research) 2000-01-28\0\n";
 #include <error.h>
 
 static const char usage[] =
-"[-?@(#)release (AT&T Labs Research) 2000-01-28]"
+"[-?\n@(#)$Id: release (AT&T Labs Research) 2000-01-28 $\n]"
 USAGE_LICENSE
 "[+NAME?release - list recent changes]"
 "[+DESCRIPTION?\brelease\b lists the changes within the date range specified"
@@ -231,7 +230,7 @@ main(int argc, char** argv)
 			}
 			continue;
 		case 'V':
-			sfprintf(sfstdout, "%s\n", id + 5);
+			sfprintf(sfstdout, "%s\n", id + 10);
 			return 0;
 		case '?':
 			error(ERROR_USAGE|4, "%s", opt_info.arg);
@@ -300,7 +299,7 @@ main(int argc, char** argv)
 				}
 				break;
 			case 'V':
-				fprintf(stdout, "%s\n", id + 5);
+				fprintf(stdout, "%s\n", id + 10);
 				return 0;
 			default:
 				fprintf(stderr, "release: -%c: unknown option\n", i);

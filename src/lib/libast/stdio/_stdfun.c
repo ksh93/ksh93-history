@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2000 AT&T Corp.                *
+*                Copyright (c) 1985-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -22,7 +22,6 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 
@@ -36,43 +35,32 @@ void _STUB_stdfun(){}
 
 #include <windows.h>
 
-typedef struct
-{
-	char*		next;
-	int		endw_cnt;
-	int		endr_base;
-	int		endb_flag;
-	int		push_file;
-} Sfio_file_t;
+__declspec(dllimport) extern char* __cdecl __p__iob(void);
+
+#define IOBMAX	(512*32)
 
 #include "stdhdr.h"
 
 int
 _stdfun(Sfio_t* f, Funvec_t* vp)
 {
-#if _MAN_THIS_ALMOST_WORKS
+	static char *iob;
 	static HANDLE	hp;
-	Sfio_file_t*	mp = (Sfio_file_t*)f;
 
-	if (mp->endr_base && mp->endr_base == mp->endb_flag)
-		return 0;
-	if (mp->endw_cnt && mp->endw_cnt == mp->endb_flag)
-		return 0;
-	if (mp->push_file >= 0 && mp->push_file >= 100000)
-		return 0;
-	if (mp->endb_flag == 0)
-		return 0;
+	if(!iob)
+		iob = __p__iob();
+	if(!iob)
+		return(0);
+	if((char*)f < iob || (char*)f > iob+IOBMAX)
+		return(0);
 	if (!vp->vec[1])
 	{
-		if (!hp && !(hp = GetModuleHandle("msvcrt.dll")))
+		if (!hp && (!(hp = GetModuleHandle("msvcrtd.dll")) || !(hp = GetModuleHandle("msvcrt.dll"))))
 			return -1;
 		if (!(vp->vec[1] = (Fun_f)GetProcAddress(hp, vp->name)))
 			return -1;
 	}
 	return 1;
-#else
-	return 0;
-#endif
 }
 
 #endif

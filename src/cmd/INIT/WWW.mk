@@ -3,7 +3,7 @@
  * index generated from *.mm
  */
 
-WWWDIR = public_html wwwfiles
+WWWDIR = wwwfiles public_html
 WWWSAVE =
 WWWSTYLE =
 WWWTYPES =
@@ -33,7 +33,7 @@ WWWTYPES =
 	end
 	(html_info) : $$(MM2HTMLINFO) $$(MM2HTMLINIT)
 	if WWWSTYLE == "frame"
-		%.html %-index.html %-head.html %-body.html : %.mm (html_info)
+		%.html %-index.html : %.mm (html_info)
 			$(MM2HTML) $(MM2HTMLFLAGS) -f $(%) -x -o WWWTYPES=$(WWWTYPES:@Q:@Q) $(>)
 	else
 		%.html : %.mm (html_info)
@@ -44,12 +44,8 @@ WWWTYPES =
 	%-man.html : $(BINDIR)/% (html_info)
 		ignore $(>) --html 2> $(<)
 	.DO.WWW.MAN : .USE
-		if	test '' = '$(*)'
-		then	if	[[ "$( $(<:B) '--???html' -- 2>&1 )" == version=[1-9]* ]]
-			then	( $(<:B) '--??html' -- 2>$(<) ) || true
-			fi
-		elif	strings $(*) | egrep -q '\[\+NAME\?|libcmd\.|cmd[0-9][0-9]\.'
-		then	$(*) '--??html' -- 2>$(<) || true
+		if	{ test '' = '$(*)' || { strings $(*) | egrep -q '\[\+NAME\?|libcmd\.|cmd[0-9][0-9]\.' ;} ;} && [[ "$( $(<:B) '--???html' -- 2>&1 )" == version=[1-9]* ]]
+		then	( $(<:B) '--??html' -- 2>$(<) ) || true
 		fi
 	$(M)/%.html : .DONTCARE $(INSTALLROOT)/bin/%
 		$(@.DO.WWW.MAN)
@@ -128,8 +124,8 @@ WWWTYPES =
 				end
 			end
 			return $(E)
-		.WWW .WWW.BIN : $(D)/$(B)-$(CC.HOSTTYPE).tar.gz
-		$(D)/$(B)-$(CC.HOSTTYPE).tar.gz : $(X:V)
+		.WWW .WWW.BIN : $(D)/$(B)-$(CC.HOSTTYPE).tgz
+		$(D)/$(B)-$(CC.HOSTTYPE).tgz : $(X:V)
 			cat > X.$(tmp).X <<!
 			This archive contains $(CC.HOSTTYPE) binaries for
 				$(.WWW.LIST. $(*))
@@ -169,7 +165,7 @@ WWWTYPES =
 					$$(MAKE) $$(-) $$(=) www
 				end
 			else
-				BINS += $(WWWDIR)/$(ITEM)/$(ITEM)-$(TYPE).tar.gz
+				BINS += $(WWWDIR)/$(ITEM)/$(ITEM)-$(TYPE).tgz
 				DIRS += $(ARCH)/$(ITEM)
 			end
 		end
@@ -179,7 +175,7 @@ WWWTYPES =
 		$(BINS) :JOINT: .FORCE .WWW.semaphore
 			rsh $(HOST) "
 				eval \"\`bin/package debug use\`\"
-				PATH=\$PATH:$(PATH)
+				PATH=\$PATH:$(PATH):/usr/ccs/bin
 				umask 022
 				for dir in $(DIRS)
 				do	cd \$dir
@@ -191,23 +187,25 @@ WWWTYPES =
 	.WWW.ALL : .WWW.REMOTE - .WWW.LOCAL
 
 /*
- * :WWWPOST: host:dir
+ * :WWWPOST: [ host [ dir [ tmp ] ] ]
  *
- *	post local $(WWWDIR) to `host':`dir'
+ *	post local $(WWWDIR) to host:dir putting archives in host:tmp/www-*.pax
+ *	defaults: host=www dir=$(WWWDIR) tmp=tmp
  */
 
 ":WWWPOST:" : .MAKE .OPERATOR
+	local ( host dir tmp ignore ... ) $(>) www $(WWWDIR:B:S) tmp ignore
 	:ALL: delta.pax
 	eval
 	.POST : .VIRTUAL base.pax delta.pax
 		case "$$(>)" in
 		'')	;;
-		*)	rcp $$(>) $(>)
-			rsh $(>:C/:.*//) '
+		*)	$$(>:C,.*,rcp & $(host):$(tmp)/$(dir)-&;,)
+			rsh $(host) '
 				umask 022
 				PATH=$HOME/bin:$PATH
-				cd $(>:C/.*://)
-				pax -rvf delta.pax -z base.pax
+				cd $(dir)
+				pax -rvf $HOME/$(tmp)/$(dir)-delta.pax -z $HOME/$(tmp)/$(dir)-base.pax
 			'
 			;;
 		esac

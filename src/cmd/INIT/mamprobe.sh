@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1999-2000 AT&T Corp.                #
+#                Copyright (c) 1999-2001 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -20,7 +20,6 @@
 #                         Florham Park NJ                          #
 #                                                                  #
 #               Glenn Fowler <gsf@research.att.com>                #
-#                                                                  #
 ####################################################################
 # mamprobe - generate MAM cc probe info
 # this script written to make it through all sh variants
@@ -34,10 +33,10 @@ command=mamprobe
 
 # check the options
 
-case `getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt` in
+case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)mamprobe (AT&T Labs Research) 2000-06-14
+@(#)mamprobe (AT&T Labs Research) 2000-12-15
 ]
 [+NAME?mamprobe - generate MAM cc probe info]
 [+DESCRIPTION?\bmamprobe\b generates MAM (make abstract machine) \bcc\b(1)
@@ -50,7 +49,7 @@ case `getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt` in
 
 info-path cc-path
 
-[+SEE ALSO?\bpackage\b(1), \bmamake\b(1), \bnmake\b(1), probe(1)]
+[+SEE ALSO?\bpackage\b(1), \bmamake\b(1), \bnmake\b(1), \bprobe\b(1)]
 '
 	while	getopts -a "$command" "$USAGE" OPT
 	do	:

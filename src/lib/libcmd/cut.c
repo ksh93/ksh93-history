@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1992-2000 AT&T Corp.                *
+*                Copyright (c) 1992-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -21,7 +21,6 @@
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -34,7 +33,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)cut (AT&T Labs Research) 1999-04-10\n]"
+"[-?\n@(#)$Id: cut (AT&T Labs Research) 2000-12-01 $\n]"
 USAGE_LICENSE
 "[+NAME?cut - cut out selected columns or fields of each line of a file]"
 "[+DESCRIPTION?\bcut\b bytes, characters, or character-delimited fields "
@@ -117,9 +116,9 @@ static Cut_t *cutinit(int mode,char *str,int wdelim,int ldelim)
 	Cut_t *cuthdr;
 	if (!(cuthdr = (Cut_t*)stakalloc(sizeof(Cut_t)+strlen(cp)*sizeof(int))))
 		error(ERROR_exit(1), "out of space");
-	cuthdr->cflag = ((mode&C_CHARS)!=0);
-	cuthdr->sflag = (cuthdr->cflag ||((mode&C_SUPRESS)!=0));
-	cuthdr->wdelim = (cuthdr->cflag?0:wdelim);
+	cuthdr->cflag = ((mode&C_CHARS)!=0 && (MB_CUR_MAX>=1));
+	cuthdr->sflag = ((mode&C_SUPRESS)!=0);
+	cuthdr->wdelim = wdelim;
 	cuthdr->ldelim = ldelim;
 	cuthdr->seqno = ++seqno;
 	lp = cuthdr->list;
@@ -207,6 +206,27 @@ static Cut_t *cutinit(int mode,char *str,int wdelim,int ldelim)
 }
 
 /*
+ * advance <cp> by <n> multi-byte characters
+ */
+static int advance(const char *str, register int n, register int inlen)
+{
+	register int size, len=inlen;
+	register const char *cp=str;
+	while(len>0 && n-->0)
+	{
+		size = mblen(cp, len);
+		if(size<0)
+			size = 1;
+		cp += size;
+		len -= size;
+		
+	}
+	if(n>0)
+		return(inlen+1);
+	return(cp-str);
+}
+
+/*
  * cut each line of file <fdin> and put results to <fdout> using list <list>
  */
 
@@ -216,18 +236,16 @@ static int cutcols(const Cut_t *cuthdr,Sfio_t *fdin,Sfio_t *fdout)
 	register const int	*lp = cuthdr->list;
 	register char		*inp;
 	register int		skip; /* non-zero for don't copy */
-	int			inword = 0;
 	while(inp = sfgetr(fdin,'\n', 0))
 	{
 		len = sfvalue(fdin);
-		if(!inword && (ncol = skip  = *(lp = cuthdr->list)) == 0)
+		if((ncol = skip  = *(lp = cuthdr->list)) == 0)
 			ncol = *++lp;
-		inword = (inp[len-1]!='\n');
 		while(1)
 		{
-			if((c=ncol) > len)
+			if((c=(cuthdr->cflag?advance(inp,ncol,len):ncol)) > len)
 				c = len;
-			else if(c==len && !inword && !skip)
+			else if(c==len && !skip)
 				ncol++;
 			ncol -= c;
 			if(!skip && sfwrite(fdout,(char*)inp,c)<0)
@@ -239,7 +257,7 @@ static int cutcols(const Cut_t *cuthdr,Sfio_t *fdin,Sfio_t *fdout)
 			ncol = *++lp;
 			skip = !skip;
 		}
-		if(skip && !inword)
+		if(skip)
 			sfputc(fdout,'\n');
 	}
 	return(c);

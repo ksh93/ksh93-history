@@ -119,7 +119,7 @@ cat{
 	#undef	mount
 	#undef	umask
 	#undef	SF_APPEND
-	#define SF_APPEND	SF_APPENDWR
+	#define SF_APPEND	_SF_APPEND
 	#endif
 	#endif
 	#endif

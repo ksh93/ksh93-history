@@ -1,7 +1,37 @@
+01-01-01 ratz.c: #ifdef for uwin ncc
+	 iffe.sh,package.sh: check PACKAGE_PATH for local installations
+	 package.sh: add psrinfo for osf.alpha host cpu 
+	 package.sh: change pax --meter probe; some hang on /dev/tty
+	 package.sh: fix `install flat ARCH'
+	 mamake: eliminate loops from scan order
+	 C+probe: add probe_verbose -V for aix cc=xlc
+	 cc.ibm.risc,ldd.ibm.risc: add
+	 package.mk: list refs to top-level licenses only
+	 package.mk: add local link table to change log html
+00-12-25 package.sh: `no package archives' is a hard error, duh
+	 package.sh: reorder host type logic for lame shells
+	 mamake.c: getcwd => getwd for NeXT -- how about posix==default guys
+	 iffe.sh: really gross workaround for NeXT -lposix stdout null's
+	 iffe.sh: handle cc -E that insist on compiling
+00-12-15 iffe.sh: ancient sh function call blows $*; call only when $# == 0
+	 *.sh: `getopts 2>/dev/null` => `(getopts)2>/dev/null` for ancient sh
+	 package.sh: fix LD_LIBRARY*_PATH initialization
+	 cc.next.m68k: add for _POSIX_SOURCE and linker multiply defined syms
+00-12-12 ratz: add --meter
+	 package.sh: a few VPATH fixes
+	 Makefile: don't override *.mips* cc if -version not accepted
+00-12-11 package.mk: *.inx now contains name=value
+00-12-07 package.sh: handle PC netscape . => _ pathname mangle
+	 WWW.mk: .tar.gz => .tgz
+00-11-27 package.sh: add checklicense() to do license checks at read time
+	 package.mk: change component list from preformat to table
 00-10-31 package.mk: *.pkg must assert closure
 	 package.mk: add cc- variants to list.package.binary
 	 package.sh: omit dups from package list
 	 package.sh: invalid arg gives one line Usage
+	 package.sh: relax checkaout checks for non-owners
+	 package.sh: package use sets NPROC if not already set or [01]
+	 proto.c: add $(INSTALLROOT)/include/ast hack
 00-10-26 WWW.mk: add .SOURCE rhs to :WWWPAGE:
 00-10-25 package: fix install
 	 package.mk: add list.install

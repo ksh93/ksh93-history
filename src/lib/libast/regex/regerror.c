@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2000 AT&T Corp.                *
+*                Copyright (c) 1985-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -22,7 +22,6 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 
@@ -30,7 +29,7 @@
  * posix regex error message handler
  */
 
-const char id[] = "\n@(#)regex (AT&T Research) 1999-04-23\0\n";
+const char id[] = "\n@(#)$Id: regex (AT&T Research) 1999-04-23 $\0\n";
 
 #include "reglib.h"
 
@@ -54,7 +53,7 @@ static const char*	reg_error[] =
 	/* REG_ENULL	*/	"empty subexpr in pattern",
 	/* REG_ECOUNT	*/	"re component count overflow",
 	/* REG_BADESC	*/	"invalid \\char escape",
-	/* REG_VERSIONID*/	&id[5],
+	/* REG_VERSIONID*/	&id[10],
 };
 
 size_t

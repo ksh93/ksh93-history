@@ -20,7 +20,7 @@ SH = ksh		/* name of the shell program */
 VERSION = 1.1
 
 /* documentation files */
-DOCFILES = sh.memo grep.mm builtins.mm README RELEASE PROMO.mm COMPATIBILITY \
+DOCFILES = sh.memo builtins.mm README RELEASE PROMO.mm COMPATIBILITY \
 		DESIGN OBSOLETE RELEASE93 RELEASE88
 
 KSHELL == 1		/* this is ksh */
@@ -93,7 +93,7 @@ shcomp	::	CCFLAGS=$(NODLL) shcomp.c -lshell
 
 shcomp.o : _BLD_shell=
 
-:: syscall.s mamexec mamstate.c deparse.c shopen.c ksh.mk OPTIONS $(DOCFILES)
+:: syscall.s mamexec mamstate.c deparse.c shopen.c OPTIONS $(DOCFILES)
 
 :: alias.sh append.sh arith.sh arrays.sh attributes.sh basic.sh bracket.sh \
 	builtins.sh case.sh comvar.sh coprocess.sh exit.sh functions.sh \

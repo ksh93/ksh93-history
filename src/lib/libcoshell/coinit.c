@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1990-2000 AT&T Corp.                *
+*                Copyright (c) 1990-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -20,7 +20,6 @@
 *                         Florham Park NJ                          *
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -252,7 +251,7 @@ coinit(int flags)
 	done:
 		if (!(flags & CO_SERVER))
 		{
-			sfprintf(sp, "%s%s=%05d${!%s-$$}\n", old ? "" : "export ", CO_ENV_TEMP, getpid(), old ? "" : ":");
+			sfprintf(sp, "%s%s=%05d${!%s-$$}\n", old ? "" : "export ", CO_ENV_TEMP, getpid(), (flags & CO_OSH) ? "" : ":");
 			if (old) sfprintf(sp, "export %s\n", CO_ENV_TEMP);
 		}
 		sfputc(sp, 0);

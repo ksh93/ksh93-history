@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1982-2000 AT&T Corp.                *
+*                Copyright (c) 1982-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -20,7 +20,6 @@
 *                         Florham Park NJ                          *
 *                                                                  *
 *                David Korn <dgk@research.att.com>                 *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 #ifndef SH_INTERACTIVE
@@ -149,11 +148,11 @@ typedef struct sh_static
 /* symbolic value for sh_fdnotify */
 #define SH_FDCLOSE	(-1)
 
-#ifdef _DLL_BLD
+#if defined(__EXPORT__) && defined(_DLL)
 #   ifdef _BLD_shell
 #	define extern __EXPORT__
 #   endif /* _BLD_shell */
-#endif /* _DLL_BLD */
+#endif /* _DLL */
 
 extern Dt_t		*sh_bltin_tree(void);
 extern void		sh_subfork(void);
@@ -207,9 +206,9 @@ extern Shopt_t		sh_offoption(Shopt_t);
 	extern Shell_t sh;
 #endif
 
-#ifdef _DLL_BLD
+#ifdef _DLL
 #   undef extern
-#endif /* _DLL_BLD */
+#endif /* _DLL */
 
 #ifndef _SH_PRIVATE
 #   define access(a,b)	sh_access(a,b)

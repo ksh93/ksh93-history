@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2000 AT&T Corp.                *
+*                Copyright (c) 1985-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -22,7 +22,6 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -81,6 +80,7 @@
 #define	LOG_ODELAY	0x04	/* delay open until syslog() is called	*/
 #define LOG_NOWAIT	0x10	/* don't wait() for any child processes	*/
 #define LOG_PERROR	0x20	/* log to stderr too			*/
+#define LOG_LEVEL	0x40	/* tag messages with facility/level	*/
 
 #ifdef LOG_TABLES
 

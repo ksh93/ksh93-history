@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1985-2000 AT&T Corp.                #
+#                Copyright (c) 1985-2001 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -22,7 +22,6 @@
 #               Glenn Fowler <gsf@research.att.com>                #
 #                David Korn <dgk@research.att.com>                 #
 #                 Phong Vo <kpv@research.att.com>                  #
-#                                                                  #
 ####################################################################
 ok=0
 for i in \
@@ -54,9 +53,10 @@ elif	test -x /lib/dld.sl
 then	libpath=lib:SHLIB_PATH
 elif	test -x /usr/lib/dyld
 then	libpath=lib:DYLD_LIBRARY_PATH
-elif	test -x /bin/xlc -o -x /bin/tso -a -d /bin/IBM
-then	libpath=LIBPATH
-else	libpath=
+else	case `package` in
+	ibm.*)	libpath=lib:LIBPATH ;;
+	*)	libpath= ;;
+	esac
 fi
 if	test "" != "$libpath"
 then	echo "#define _LIBPATH		\"$libpath\""

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2000 AT&T Corp.                *
+*                Copyright (c) 1985-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -22,7 +22,6 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -43,7 +42,9 @@ temp(char* buf, int* fdp)
 	char*	s;
 	char*	d;
 	int	n;
+	size_t	len;
 
+	len = strlen(buf);
 	if (s = strrchr(buf, '/'))
 	{
 		*s++ = 0;
@@ -59,7 +60,7 @@ temp(char* buf, int* fdp)
 	else
 	{
 		*(s + n - 6) = 0;
-		if (!pathtmp(buf, d, s, fdp))
+		if (!pathtemp(buf, len, d, s, fdp))
 			*buf = 0;
 	}
 	return buf;

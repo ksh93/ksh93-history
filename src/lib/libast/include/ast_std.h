@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2000 AT&T Corp.                *
+*                Copyright (c) 1985-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -22,7 +22,6 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -371,6 +370,12 @@ extern void*		malloc(size_t);
 extern void*		realloc(void*, size_t);
 #endif
 
+#if _std_string
+
+#include <string.h>
+
+#else
+
 /* <string.h> */
 
 extern void*		memccpy(void*, const void*, int, size_t);
@@ -397,6 +402,8 @@ extern size_t		strspn(const char*, const char*);
 extern char*		strstr(const char*, const char*);
 extern char*		strtok(char*, const char*);
 extern size_t		strxfrm(char*, const char*, size_t);
+
+#endif
 
 #if defined(__STDPP__directive) && defined(__STDPP__ignore)
 
@@ -718,9 +725,9 @@ extern long		fpathconf(int, int);
 extern long		pathconf(const char*, int);
 extern long		sysconf(int);
 
-#endif
-
 extern char*		strdup(const char*);
+
+#endif
 
 #undef	extern
 
@@ -895,6 +902,7 @@ extern char*		setlocale(int, const char*);
 #define AST_LC_TIME	5
 #define AST_LC_ALL	6
 
+#define AST_LC_multibyte	(1<<12)
 #define AST_LC_debug		(1<<13)
 #define AST_LC_setlocale	(1<<14)
 #define AST_LC_translate	(1<<15)

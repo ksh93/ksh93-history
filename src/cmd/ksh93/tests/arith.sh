@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1982-2000 AT&T Corp.                #
+#                Copyright (c) 1982-2001 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -20,7 +20,6 @@
 #                         Florham Park NJ                          #
 #                                                                  #
 #                David Korn <dgk@research.att.com>                 #
-#                                                                  #
 ####################################################################
 function err_exit
 {
@@ -133,7 +132,7 @@ if [[ $? == 0 ]]
 then	err_exit 'preincrement of floating point allowed'
 fi
 x=1.5
-( ((x%2))  ) 2>/dev/null
+( ((x%1.1))  ) 2>/dev/null
 if [[ $? == 0 ]]
 then	err_exit 'floating point allowed with % operator'
 fi
@@ -231,5 +230,12 @@ fi
 (( x = y[$three] + y[$four] ))
 if	[[ $x != 11 ]]
 then	err_exit "variable subscript associative array arithmetic failure"
+fi
+$SHELL -nc '((a = 1))' 2> /dev/null || err_exit "sh -n fails with arithmetic"
+$SHELL -nc '((a.b++))' 2> /dev/null || err_exit "sh -n fails with arithmetic2"
+unset z
+float z=7.5
+if	{ (( z%2 != 1));} 2> /dev/null
+then	err_exit '% not working on floating point'
 fi
 exit $((Errors))

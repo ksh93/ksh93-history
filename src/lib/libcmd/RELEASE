@@ -1,3 +1,4 @@
+00-12-01 cut: multibyte support
 00-10-31 mkdir: handle races by checking EEXIST
 00-09-20 cp: copy argv to stack before modifying in place
 00-05-18 add setlocale(LC_ALL,"")

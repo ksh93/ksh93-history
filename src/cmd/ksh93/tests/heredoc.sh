@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1982-2000 AT&T Corp.                #
+#                Copyright (c) 1982-2001 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -20,7 +20,6 @@
 #                         Florham Park NJ                          #
 #                                                                  #
 #                David Korn <dgk@research.att.com>                 #
-#                                                                  #
 ####################################################################
 function err_exit
 {
@@ -125,4 +124,7 @@ $0
 !
 )
 [[ "$x" == "$0" ]] || err_exit '$0 not correct inside here documents'
+$SHELL -c 'x=$(
+cat << EOF
+EOF)' 2> /dev/null || err_exit 'here-doc cannot be terminated by )'
 exit $((Errors))

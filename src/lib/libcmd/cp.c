@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1992-2000 AT&T Corp.                *
+*                Copyright (c) 1992-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -21,7 +21,6 @@
 *                                                                  *
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -32,7 +31,7 @@
  */
 
 static const char usage_head[] =
-"[-?@(#)cp (AT&T Labs Research) 2000-09-20\n]"
+"[-?@(#)$Id: cp (AT&T Labs Research) 2000-09-20 $\n]"
 USAGE_LICENSE
 ;
 
@@ -766,7 +765,7 @@ b_cp(int argc, register char** argv, void* context)
 		error(3, "out of space");
 	memcpy(v, argv, (argc + 1) * sizeof(char*));
 	argv = v;
-	if (!argc)
+	if (!argc && strcmp(astconf("CONFORMANCE", NiL, NiL), "standard"))
 	{
 		argc++;
 		argv[1] = ".";

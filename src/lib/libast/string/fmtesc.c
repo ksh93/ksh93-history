@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2000 AT&T Corp.                *
+*                Copyright (c) 1985-2001 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -22,7 +22,6 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                David Korn <dgk@research.att.com>                 *
 *                 Phong Vo <kpv@research.att.com>                  *
-*                                                                  *
 *******************************************************************/
 #pragma prototyped
 /*
@@ -72,8 +71,7 @@ fmtquote(const char* as, const char* qb, const char* qe, size_t n, int flags)
 		q = qb[0] == '$' && qb[1] == '\'' && qb[2] == 0 ? 1 : 0;
 		while (*b = *qb++)
 			b++;
-		if (flags & 1)
-			k = q;
+		k = (flags & 1) ? 0 : (b - buf);
 	}
 	while (s < e)
 	{
@@ -124,7 +122,7 @@ fmtquote(const char* as, const char* qb, const char* qe, size_t n, int flags)
 		}
 		else if (qe && strchr(qe, c))
 		{
-			k = q;
+			k = 0;
 			*b++ = '\\';
 		}
 		else if (qb && isspace(c))

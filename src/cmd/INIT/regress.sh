@@ -1,7 +1,7 @@
 ####################################################################
 #                                                                  #
 #             This software is part of the ast package             #
-#                Copyright (c) 1999-2000 AT&T Corp.                #
+#                Copyright (c) 1999-2001 AT&T Corp.                #
 #        and it may only be used by you under license from         #
 #                       AT&T Corp. ("AT&T")                        #
 #         A copy of the Source Code Agreement is available         #
@@ -20,14 +20,13 @@
 #                         Florham Park NJ                          #
 #                                                                  #
 #               Glenn Fowler <gsf@research.att.com>                #
-#                                                                  #
 ####################################################################
 : regress - run regression tests in command.tst
 
 command=regress
 case $(getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt) in
 0123)	USAGE=$'
-[-?@(#)regress (AT&T Labs Research) 2000-10-22]
+[-?@(#)regress (AT&T Labs Research) 2001-01-01]
 '$USAGE_LICENSE$'
 [+NAME?regress - run regression tests]
 [+DESCRIPTION?\bregress\b runs the tests in \aunit\a, or \aunit\a\b.tst\b
@@ -664,7 +663,6 @@ function VIEW # var [ file ]
 {
 	nameref var=$1
 	typeset i bwd file pwd view root offset
-set -x
 	case $# in
 	1)	file=$1 ;;
 	*)	file=$2 ;;
