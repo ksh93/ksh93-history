@@ -86,8 +86,8 @@ cat{
 	#endif
 
 	/* windows variants and veneers */
-	#if !defined(_WIN32) && (_UWIN || __CYGWIN__ || __EMX__)
-	#	define _WIN32		1
+	#if !defined(_WINIX) && (_UWIN || __CYGWIN__ || __EMX__)
+	#	define _WINIX		1
 	#endif
 
 	/* dynamic linked library external scope handling */
@@ -122,7 +122,7 @@ cat{
 	#		define _astimport	extern
 	#	endif
 	#endif
-	#if _dll_import && ( !_BLD_DLL || _WIN32 && !_UWIN )
+	#if _dll_import && ( !_BLD_DLL || _WINIX && !_UWIN )
 	#	ifdef __STDC__
 	#	define __EXTERN__(T,obj)	extern T obj; T* _imp__ ## obj = &obj
 	#	define __DEFINE__(T,obj,val)	T obj = val; T* _imp__ ## obj = &obj

@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 4.2 2002-09-22
+info mam static 00000 1994-07-17 make (AT&T Research) 4.2 2002-10-02
 setv INSTALLROOT ../../..
 setv PACKAGE_ast ${INSTALLROOT}
 setv PACKAGE_ast_INCLUDE ${PACKAGE_ast}/include/ast
@@ -300,6 +300,7 @@ prev ../../../include/ast/times.h implicit
 prev ../../../include/ast/ast.h implicit
 prev ../../../include/ast/prototyped.h implicit
 done ../../../include/ast/tm.h
+prev ../../../include/ast/proc.h implicit
 prev ../../../include/ast/ls.h implicit
 prev cmdlib.h implicit
 done date.c
@@ -499,6 +500,7 @@ done features/utsname
 prev cmd.req
 exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} ${mam_libast} : run features/utsname
 done FEATURE/utsname generated
+prev ../../../include/ast/proc.h implicit
 prev cmdlib.h implicit
 done uname.c
 prev uname.c

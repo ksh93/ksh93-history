@@ -1,3 +1,12 @@
+02-10-04 package.sh: $INSTALLROOT/lib/package/tgz=>$PACKAGEROOT/lib/package/tgz
+	 package.mk: $(ED) => $(STDED), $(EDFLAGS) => $(STDEDFLAGS)
+	 iffe.sh: add identifier checks for tests that (implicitly) require them
+	 iffe.sh: disambiguate a few --config macros
+02-10-02 iffe.sh: fix shell=bsh `hdr a/b'
+02-09-30 package.sh: handle chmod of -* files
+	 package.sh: verify that $SHELL is Bourne compatible
+	 package.sh: tighten PACKAGE_USE logic PATH,LIBPATH,etc. validation
+	 iffe.sh: fix bug that didn't define mac variable on success
 02-09-22 package.sh: handle admin_action=ditto
 	 iffe.sh: --confix sizeof(foo) macro is SIZEOF_foo
 	 iffe.sh: fix long.long test so it doesn't defeat uwin "typ long.long"

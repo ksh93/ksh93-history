@@ -262,7 +262,7 @@ loop_fmt :
 			goto loop_flags;
 		case QUOTE:
 			SFSETLOCALE(&decimal,&thousand);
-			if(thousand)
+			if(thousand > 0)
 				flags |= SFFMT_THOUSAND;
 			goto loop_flags;
 

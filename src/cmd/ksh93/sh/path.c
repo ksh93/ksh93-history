@@ -405,8 +405,7 @@ int	path_search(register const char *name,Pathcomp_t *endpath, int flag)
 				return(1);
 			}
 			funload(shp,fno,name);
-			if((np=nv_search(name,sh.fun_tree,HASH_NOSCOPE))&&np->nvalue.ip)
-				return(1);
+			return(1);
 		}
 		*stakptr(PATH_OFFSET) = 0;
 		return(0);
@@ -446,9 +445,12 @@ Pathcomp_t *path_absolute(register const char *name, Pathcomp_t *endpath)
 		f = canexecute(stakptr(PATH_OFFSET),isfun);
 		if(isfun && f>=0)
 		{
-			funload(shp,f,stakptr(PATH_OFFSET));
+			Namval_t *np = nv_open(name,shp->fun_tree,NV_NOARRAY|NV_IDENT|NV_NOSCOPE);
+			nv_onattr(np,NV_LTOU|NV_FUNCTION);
+			close(f);
 			f = -1;
 			pp = 0;
+			return(0);
 		}
 		if(!pp || f>=0)
 			break;

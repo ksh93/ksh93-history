@@ -31,7 +31,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: date (AT&T Labs Research) 2002-04-05 $\n]"
+"[-?\n@(#)$Id: date (AT&T Labs Research) 2002-09-30 $\n]"
 USAGE_LICENSE
 "[+NAME?date - set/list/convert dates]"
 "[+DESCRIPTION?\bdate\b sets the current date and time (with appropriate"
@@ -168,6 +168,7 @@ USAGE_LICENSE
 
 #include <cmdlib.h>
 #include <ls.h>
+#include <proc.h>
 #include <tm.h>
 #include <times.h>
 
@@ -189,7 +190,7 @@ typedef struct Fmt
  */
 
 static int
-settime(time_t clock, int adjust, int network)
+settime(const char* cmd, time_t clock, int adjust, int network)
 {
 	char*		s;
 	char**		argv;
@@ -216,26 +217,29 @@ settime(time_t clock, int adjust, int network)
 	}
 #endif
 	argv = args;
-	*argv++ = error_info.id;
-	if (streq(astconf("UNIVERSE", NiL, NiL), "att"))
+	s = "/usr/bin/date";
+	if (!streq(cmd, s) && (!access(s, X_OK) || !access(s+=4, X_OK)))
 	{
-		tmfmt(buf, sizeof(buf), "%m%d%H%M%Y.%S", &clock);
-		if (adjust)
-			*argv++ = "-a";
+		*argv++ = s;
+		if (streq(astconf("UNIVERSE", NiL, NiL), "att"))
+		{
+			tmfmt(buf, sizeof(buf), "%m%d%H%M%Y.%S", &clock);
+			if (adjust)
+				*argv++ = "-a";
+		}
+		else
+		{
+			tmfmt(buf, sizeof(buf), "%Y%m%d%H%M.%S", &clock);
+			if (network)
+				*argv++ = "-n";
+			if (tm_info.flags & TM_UTC)
+				*argv++ = "-u";
+		}
+		*argv++ = buf;
+		*argv = 0;
+		if (!procrun(s, args))
+			return 0;
 	}
-	else
-	{
-		tmfmt(buf, sizeof(buf), "%Y%m%d%H%M.%S", &clock);
-		if (network)
-			*argv++ = "-n";
-		if (tm_info.flags & TM_UTC)
-			*argv++ = "-u";
-	}
-	*argv++ = buf;
-	*argv = 0;
-	s = "/bin/date";
-	execv(s, args);
-	error(ERROR_SYSTEM|2, "%s: cannot exec", s);
 	return -1;
 }
 
@@ -278,7 +282,8 @@ b_date(int argc, register char** argv, void* context)
 
 	time_t*		clock = 0;	/* use this time		*/
 	time_t*		filetime = 0;	/* use this st_ time field	*/
-	char*		format = 0;	/* tmform() format		*/
+	char*		cmd = argv[0];	/* original command path	*/
+	char*		format = 0;	/* tmfmt() format		*/
 	char*		string = 0;	/* date string			*/
 	int		elapsed = 0;	/* args are start/stop pairs	*/
 	int		increment = 0;	/* incrementally adjust time	*/
@@ -422,7 +427,7 @@ b_date(int argc, register char** argv, void* context)
 			tmfmt(buf, sizeof(buf), format, clock);
 			sfprintf(sfstdout, "%s\n", buf);
 		}
-		else if (settime(*clock, increment, network))
+		else if (settime(cmd, *clock, increment, network))
 			error(ERROR_SYSTEM|3, "cannot set system time");
 	}
 	while (fmts != &fmt)

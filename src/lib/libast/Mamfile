@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 4.2 2002-09-22
+info mam static 00000 1994-07-17 make (AT&T Research) 4.2 2002-10-02
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ar
@@ -2072,7 +2072,7 @@ make comp/strtol.c
 make string/strtoi.h implicit
 prev sfio/sfhdr.h implicit
 prev include/ast.h implicit
-done string/strtoi.h
+done string/strtoi.h dontcare
 done comp/strtol.c
 prev comp/strtol.c
 exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iport -Isfio -Istring -Iinclude -Istd -D_PACKAGE_ast -c comp/strtol.c
@@ -2320,6 +2320,7 @@ exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c comp/gross
 done gross.o generated
 make omitted.o
 make comp/omitted.c
+prev include/ast_windows.h implicit
 prev include/ls.h implicit
 make FEATURE/omitted implicit
 make features/omitted
@@ -5212,6 +5213,14 @@ exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_version.h
 exec - fi
 done ../../../include/ast/ast_version.h generated
+make ../../../include/ast/ast_windows.h
+prev include/ast_windows.h
+exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/ast_windows.h > 1.${COTEMP}.x
+exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_windows.h 1.${COTEMP}.x
+exec - then	rm -f 1.${COTEMP}.x
+exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_windows.h
+exec - fi
+done ../../../include/ast/ast_windows.h generated
 make ../../../include/ast/ccode.h
 prev include/ccode.h
 exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/ccode.h > 1.${COTEMP}.x

@@ -32,7 +32,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: uname (AT&T Labs Research) 2001-10-31 $\n]"
+"[-?\n@(#)$Id: uname (AT&T Labs Research) 2002-09-30 $\n]"
 USAGE_LICENSE
 "[+NAME?uname - identify the current system ]"
 "[+DESCRIPTION?By default \buname\b writes the operating system name to"
@@ -72,6 +72,7 @@ __STDPP__directive pragma pp:hide getdomainname gethostid gethostname sethostnam
 
 #include <cmdlib.h>
 #include <ctype.h>
+#include <proc.h>
 
 #include "FEATURE/utsname"
 
@@ -325,11 +326,10 @@ b_uname(int argc, char** argv, void* context)
 			continue;
 		case ':':
 			s = "/usr/bin/uname";
-			if (!streq(argv[0], s))
+			if (!streq(argv[0], s) && (!access(s, X_OK) || !access(s+=4, X_OK)))
 			{
 				argv[0] = s;
-				if (!access(s, X_OK) || !access(s+=4, X_OK))
-					execv(s, argv);
+				return procrun(s, argv);
 			}
 			error(2, "%s", opt_info.arg);
 			break;

@@ -65,7 +65,7 @@
  * is matched against the candidate pathnames using the slower regexec()
  */
 
-static const char id[] = "\n@(#)$Id: fastfind (AT&T Research) 1999-04-19 $\0\n";
+static const char id[] = "\n@(#)$Id: fastfind (AT&T Research) 2002-10-02 $\0\n";
 
 static const char lib[] = "libast:fastfind";
 
@@ -540,10 +540,7 @@ findopen(const char* file, const char* pattern, const char* type, Finddisc_t* di
 					}
 					strsort(fp->dirs, q, strcasecmp);
 					for (i = 0; i < q; i++)
-					{
 						fp->lens[i] = strlen(fp->dirs[i]);
-error(-1, "AHA findopen [%d] %d %s", i, fp->lens[i], fp->dirs[i]);
-					}
 				}
 			}
 		}
@@ -1024,6 +1021,38 @@ findwrite(register Find_t* fp, const char* path, size_t len, const char* type)
 }
 
 /*
+ * findsync() helper
+ */
+
+static int
+finddone(register Find_t* fp)
+{
+	int	r;
+
+	if (sfsync(fp->fp))
+	{
+		if (fp->disc->errorf)
+			(*fp->disc->errorf)(fp, fp->disc, 2, "%s: write error [sfsync]", fp->encode.file);
+		return -1;
+	}
+	if (sferror(fp->fp))
+	{
+		if (fp->disc->errorf)
+			(*fp->disc->errorf)(fp, fp->disc, 2, "%s: write error [sferror]", fp->encode.file);
+		return -1;
+	}
+	r = sfclose(fp->fp);
+	fp->fp = 0;
+	if (r)
+	{
+		if (fp->disc->errorf)
+			(*fp->disc->errorf)(fp, fp->disc, 2, "%s: write error [sfclose]", fp->encode.file);
+		return -1;
+	}
+	return 0;
+}
+
+/*
  * finish the code table
  */
 
@@ -1040,7 +1069,6 @@ findsync(register Find_t* fp)
 	long			z;
 	Sfio_t*			sp;
 
-	sp = 0;
 	switch (fp->method)
 	{
 	case FF_dir:
@@ -1049,8 +1077,8 @@ findsync(register Find_t* fp)
 		 * replace the real file with the temp file
 		 */
 
-		if (sfsync(fp->fp) || sferror(fp->fp) || sfclose(fp->fp) && !(fp->fp = 0))
-			goto badwrite;
+		if (finddone(fp))
+			goto bad;
 		remove(fp->encode.file);
 		if (rename(fp->encode.temp, fp->encode.file))
 		{
@@ -1099,7 +1127,11 @@ findsync(register Find_t* fp)
 		 */
 
 		if (sfseek(fp->fp, (Sfoff_t)0, SEEK_SET))
-			goto badrewind;
+		{
+			if (fp->disc->errorf)
+				(*fp->disc->errorf)(fp, fp->disc, ERROR_SYSTEM|2, "cannot rewind tmp file");
+			return -1;
+		}
 		if (!(sp = sfopen(NiL, fp->encode.file, "w")))
 			goto badcreate;
 
@@ -1144,13 +1176,13 @@ findsync(register Find_t* fp)
 			}
 		}
 		sfclose(fp->fp);
-		fp->fp = 0;
-		if (sfsync(sp) || sferror(sp) || sfclose(sp) && !(sp = 0))
-			goto badwrite;
+		fp->fp = sp;
+		if (finddone(fp))
+			goto bad;
 		break;
 	case FF_typ:
-		if (sfsync(fp->fp) || sferror(fp->fp) || sfclose(fp->fp) && !(fp->fp = 0))
-			goto badwrite;
+		if (finddone(fp))
+			goto bad;
 		if (!(fp->fp = sfopen(NiL, fp->encode.temp, "r")))
 		{
 			if (fp->disc->errorf)
@@ -1185,29 +1217,30 @@ findsync(register Find_t* fp)
 		 * append the front compressed strings
 		 */
 
-		if (sfmove(fp->fp, sp, SF_UNBOUND, -1) < 0 || sfclose(sp) && !(sp = 0) || !sfeof(fp->fp))
-			goto badwrite;
+		if (sfmove(fp->fp, sp, SF_UNBOUND, -1) < 0 || !sfeof(fp->fp))
+		{
+			sfclose(sp);
+			if (fp->disc->errorf)
+				(*fp->disc->errorf)(fp, fp->disc, 2, "%s: cannot append codes", fp->encode.file);
+			goto bad;
+		}
 		sfclose(fp->fp);
+		fp->fp = sp;
+		if (finddone(fp))
+			goto bad;
 		remove(fp->encode.temp);
 		break;
 	}
 	return 0;
- badrewind:
-	if (fp->disc->errorf)
-		(*fp->disc->errorf)(fp, fp->disc, ERROR_SYSTEM|2, "cannot rewind tmp file");
-	return -1;
  badcreate:
 	if (fp->disc->errorf)
 		(*fp->disc->errorf)(fp, fp->disc, 2, "%s: cannot write codes", fp->encode.file);
-	goto bad;
- badwrite:
-	if (fp->disc->errorf)
-		(*fp->disc->errorf)(fp, fp->disc, 2, "%s: write error", fp->encode.file);
  bad:
 	if (fp->fp)
+	{
 		sfclose(fp->fp);
-	if (sp)
-		sfclose(sp);
+		fp->fp = 0;
+	}
 	remove(fp->encode.temp);
 	return -1;
 }

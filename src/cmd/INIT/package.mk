@@ -1,7 +1,7 @@
 /*
  * source and binary package support
  *
- * @(#)package.mk (AT&T Labs Research) 2002-02-14
+ * @(#)package.mk (AT&T Labs Research) 2002-10-04
  *
  * usage:
  *
@@ -491,7 +491,7 @@ $$(PACKAGEGEN)/DETAILS.html : $$(INSTALLROOT)/bin/package
 				echo '.fi'
 			} |
 			$(MM2HTML) $(MM2HTMLFLAGS) -o nohtml.ident > $(PACKAGEGEN)/$(name).html
-			$(ED) - $(PACKAGEGEN)/$(name).html <<'!'
+			$(STDED) $(STDEDFLAGS) $(PACKAGEGEN)/$(name).html <<'!'
 	/^<!--LABELS-->$/,/^<!--\/LABELS-->$/s/ changes</</
 	/^<!--LABELS-->$/,/^<!--\/LABELS-->$/m/<A name="release change log">/
 	w

@@ -192,7 +192,7 @@ int*		uflagp;
 	default :
 		if(!(oflags&O_CREAT) )
 			oflags &= ~O_EXCL;
-#if _WIN32 && !_UWIN
+#if _WIN32 && !_WINIX
 		if(!(oflags&(O_BINARY|O_TEXT)))
 			oflags |= O_BINARY;
 #endif

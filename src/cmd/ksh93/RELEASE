@@ -1,4 +1,15 @@
-02-09-14  --- Release ksh93n  ---
+02-09-30  --- Release ksh93n  ---
+02-09-30  The maximum indexed array size was increased to 16Megs.
+02-09-30  A bug which could cause a core dump when changing attributes
+	  of associative array has been fixed.
+02-09-30  A bug in which exporting an array variable would not export the
+	  0-th element has been fixed.
+02-09-30  A bug in which an array assignment of the form a=($a ...) would unset
+	  'a' before the right hand side was evaluated has been fixed.
+02-09-27  A bug in which the error message for ${var?message} when var was
+	  null or unset did not contain the variable name var has been fixed.
+02-09-27  A bug in which closing file descripts 0 through 2 could
+	  cause a subsequent here document to fail has been fixed. 
 02-09-14  A bug in whence which occurs when the specified name contained
 	  a / has been fixed.
 02-09-14  A bug in the parser for strings of the form name$((expr))=value

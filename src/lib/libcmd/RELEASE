@@ -1,3 +1,5 @@
+02-10-02 date.c: tmform() => tmfmt()
+02-09-30 date.c,uname.c: change execv() calls to procrun(): exec|exit => bad
 02-09-06 wclib.c: fix 1 char-at-a-time miscount bug
 02-08-19 chgrp.c: convert to use <cdt.h>
 02-07-23 join.c: fix comm snarf typo

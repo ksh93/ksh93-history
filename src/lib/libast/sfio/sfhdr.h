@@ -550,7 +550,7 @@
 	do if (*(dp) == 0) { \
 		Lc_numeric_t*	lv = (Lc_numeric_t*)LCINFO(AST_LC_NUMERIC)->data; \
 		*(dp) = lv->decimal; \
-		*(tp) = lv->thousand; \
+		if (tp) *(tp) = lv->thousand; \
 	} while (0)
 #endif /*!defined(SFSETLOCALE) && _PACKAGE_ast*/
 
@@ -560,12 +560,12 @@
 	do { struct lconv*	lv; \
 	  if(*(decimal) == 0) \
 	  { *(decimal) = '.'; \
-	    *(thousand) = 0; \
+	    if (thousand) *(thousand) = -1; \
 	    if((lv = localeconv())) \
-	    { if(lv->decimal_point && lv->decimal_point[0]) \
-	    	*(decimal) = lv->decimal_point[0]; \
-	      if(thousand && lv->thousands_sep && lv->thousands_sep[0]) \
-	    	*(thousand) = lv->thousands_sep[0]; \
+	    { if(lv->decimal_point && *lv->decimal_point) \
+	    	*(decimal) = *(unsigned char*)lv->decimal_point; \
+	      if(thousand && lv->thousands_sep && *lv->thousands_sep) \
+	    	*(thousand) = *(unsigned char*)lv->thousands_sep; \
 	    } \
 	  } \
 	} while (0)

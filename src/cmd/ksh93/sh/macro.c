@@ -794,7 +794,7 @@ static int varsub(Mac_t *mp)
 	Namarr_t	*ap=0;
 	int		dolmax=0, vsize= -1, offset, nulflg, replen=0, bysub=0;
 	char		*id = idbuff, *pattern=0, *repstr;
-	int		oldpat=mp->pattern;
+	int		oldpat=mp->pattern,idnum=0;
 	*id = 0;
 retry1:
 	switch(sh_lexstates[ST_DOL][c=fcget()])
@@ -868,6 +868,7 @@ retry1:
 				c = 10*c + (d-'0');
 			fcseek(-1);
 		}
+		idnum = c;
 		if(c==0)
 			v = special(c);
 #ifdef  SHOPT_FILESCAN
@@ -1383,6 +1384,10 @@ retry2:
 			mac_substitute(mp,repstr,v,0,0);
 		if(c=='?')
 		{
+			if(np)
+				id = nv_name(np);
+			else if(idnum)
+				id = ltos(idnum);
 			if(*argp)
 			{
 				stakputc(0);

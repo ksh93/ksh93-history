@@ -135,6 +135,7 @@ extern const char	e_trap[];
 extern const char	e_direct[];
 extern const char	e_defedit[];
 extern const char	e_cneedsarg[];
+extern const char	e_defined[];
 #ifdef SHOPT_FS_3D
     extern const char	e_cantset[];
     extern const char	e_cantget[];

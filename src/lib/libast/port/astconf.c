@@ -169,7 +169,7 @@ static Feature_t	dynamic[] =
 	{
 		&dynamic[7],
 		"PATH_ATTRIBUTES",
-#if _WIN32
+#if _WINIX
 		"c",
 #else
 		"",

@@ -468,8 +468,15 @@ void *nv_associative(register Namval_t *np,const char *sp,int mode)
 		return((void*)ap);
 	    case NV_ADELETE:
 		if(ap->cur)
-			dtdelete(ap->table,(void*)ap->cur);
-		ap->cur = 0;
+		{
+			if(nv_isattr(ap->cur,NV_NOFREE))
+				nv_offattr(ap->cur,NV_NOFREE);
+			else
+			{
+				dtdelete(ap->table,(void*)ap->cur);
+				ap->cur = 0;
+			}
+		}
 		return((void*)ap);
 	    case NV_AFREE:
 		ap->pos = 0;

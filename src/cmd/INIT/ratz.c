@@ -71,7 +71,11 @@ static const char usage[] =
 
 #if !_PACKAGE_ast
 
-#if _WIN32 && !_UWIN
+#if !defined(_WINIX) && (_UWIN || __CYGWIN__ || __EMX__)
+#define _WINIX		1
+#endif
+
+#if _WIN32 && !_WINIX
 
 #include <direct.h>
 #include <io.h>
@@ -3601,7 +3605,7 @@ char**	argv;
 				}
 			continue;
 #endif
-#if !_WIN32 || _UWIN
+#if !_WIN32 || _WINIX
 		case LNKTYPE:
 			while (link(header.linkname, path))
 				if (unlink(path))

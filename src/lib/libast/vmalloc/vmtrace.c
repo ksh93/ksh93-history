@@ -40,12 +40,12 @@ static int	Trfile = -1;
 static char	Trbuf[128];
 
 #if __STD_C
-static char* trstrcpy(char* to, char* from, int endc)
+static char* trstrcpy(char* to, const char* from, int endc)
 #else
 static char* trstrcpy(to, from, endc)
-char*	to;
-char*	from;
-int	endc;
+char*		to;
+const char*	from;
+int		endc;
 #endif
 {	reg int	n;
 
@@ -114,9 +114,9 @@ size_t		align;		/* alignment			*/
 {
 	char		buf[1024], *bufp, *endbuf;
 	Vmdata_t*	vd = vm->data;
-	char*		file = NIL(char*);
+	const char*	file = 0;
 	int		line = 0;
-	Void_t*		func = NIL(Void_t*);
+	const Void_t*	func = 0;
 	int		comma;
 	int		n;
 	int		m;

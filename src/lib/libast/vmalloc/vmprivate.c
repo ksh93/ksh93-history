@@ -274,7 +274,7 @@ Vmextern_t	_Vmextern =
 {	vmextend,						/* _Vmextend	*/
 	vmtruncate,						/* _Vmtruncate	*/
 	0,							/* _Vmpagesize	*/
-	NIL(char*(*)_ARG_((char*,char*,int))),			/* _Vmstrcpy	*/
+	NIL(char*(*)_ARG_((char*,const char*,int))),		/* _Vmstrcpy	*/
 	NIL(char*(*)_ARG_((Vmulong_t,int))),			/* _Vmitoa	*/
 	NIL(void(*)_ARG_((Vmalloc_t*,
 			  Vmuchar_t*,Vmuchar_t*,size_t,size_t))), /* _Vmtrace	*/

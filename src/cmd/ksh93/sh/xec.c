@@ -45,6 +45,8 @@
 #include	"FEATURE/locale"
 #include	"streval.h"
 
+#define SH_NTFORK	SH_TIMING
+
 #if defined(_UWIN) && defined(_M_ALPHA)
 #   undef _lib_fork
 #endif
@@ -306,7 +308,7 @@ sh_exec(register const union anynode *t, int flags)
 		int 		execflg = (type&SH_NOFORK);
 		int 		mainloop = (type&SH_INTERACTIVE);
 #ifdef SHOPT_SPAWN
-		int		ntflag = (type&SH_NOCLOBBER);
+		int		ntflag = (type&SH_NTFORK);
 #endif
 		int		topfd = sh.topfd;
 		char 		*sav=stakptr(0);
@@ -616,18 +618,26 @@ sh_exec(register const union anynode *t, int flags)
 					if(!np->nvalue.ip)
 					{
 #ifdef PATH_BFPATH
-						if(path_search(com0,NIL(Pathcomp_t*),0) == 1)
-							np = nv_search(com0,sh.fun_tree,HASH_NOSCOPE);
-#if 0
-						path_search(com0,NIL(Pathcomp_t*),0);
-#endif
+						indx = path_search(com0,NIL(Pathcomp_t*),0);
 #else
-						if(path_search(com0,NIL(char*),0) == 1)
-							np = nv_search(com0,sh.fun_tree,HASH_NOSCOPE);
-						path_search(com0,NIL(char*),0);
+						indx = path_search(com0,NIL(char*),0);
 #endif
+						if(indx==1)
+							np = nv_search(com0,sh.fun_tree,HASH_NOSCOPE);
 						if(!np->nvalue.ip)
-							errormsg(SH_DICT,ERROR_exit(1),e_found,"function");
+						{
+							if(indx==1)
+							{
+								errormsg(SH_DICT,ERROR_exit(0),e_defined,com0);
+								sh.exitval = ERROR_NOEXEC;
+							}
+							else
+							{
+								errormsg(SH_DICT,ERROR_exit(0),e_found,"function");
+								sh.exitval = ERROR_NOENT;
+							}
+							goto setexit;
+						}
 					}
 					/* increase refcnt for unset */
 					slp = (struct slnod*)np->nvenv;
@@ -937,7 +947,7 @@ sh_exec(register const union anynode *t, int flags)
 			/*  a list of commands are executed here */
 			do
 			{
-				sh_exec(t->lst.lstlef,errorflg);
+				sh_exec(t->lst.lstlef,errorflg|OPTIMIZE);
 				t = t->lst.lstrit;
 			}
 			while(t->tre.tretyp == TLST);
@@ -1291,6 +1301,10 @@ sh_exec(register const union anynode *t, int flags)
 				sfputr(sfstderr,sh_translate(e_real),'\t');
 				p_time(sfstderr,at,'\n');
 			}
+#if 0
+			else if(sh.optcount)
+				sfprintf(sfstderr,"%d optimizations\n",sh.optcount);
+#endif
 			sfputr(sfstderr,sh_translate(e_user),'\t');
 			at = after.tms_utime - before.tms_utime;
 			at += after.tms_cutime - before.tms_cutime;
@@ -2254,7 +2268,7 @@ static pid_t sh_ntfork(const union anynode *t,char *argv[],int *jobid,int flag)
 			}
 			else
 			{
-				sh_exec(tchild,SH_NOCLOBBER);
+				sh_exec(tchild,SH_NTFORK);
 				if(jobid)
 					*jobid = savejobid;
 			}

@@ -255,4 +255,27 @@ if	[[ ${foo[@]: -3:1} != four ]]
 then	err_exit 'array offset of -3:1 not working'
 fi
 $SHELL -c 'x=(if then else fi)' 2> /dev/null  || err_exit 'reserved words in x=() assignment not working'
+unset foo
+foo=one
+foo=( $foo two)
+if	[[ ${#foo[@]} != 2 ]]
+then	err_exit 'array getting unset before right hand side evaluation'
+fi
+foo=(143 3643 38732)
+export foo
+typeset -i foo
+if	[[ $($SHELL -c 'print $foo') != 143 ]]
+then	err_exit 'exporting indexed array not exporting 0-th element'
+fi
+( $SHELL   -c '
+	unset foo
+	typeset -A foo=([0]=143 [1]=3643 [2]=38732)
+	export foo
+	typeset -i foo
+	[[ $($SHELL -c "print $foo") == 143 ]]'
+) 2> /dev/null || 
+		err_exit 'exporting associative array not exporting 0-th element'
+unset foo
+typeset -A foo
+foo[$((10))]=ok 2> /dev/null || err_exit 'arithmetic expression as subscript not working'
 exit $((Errors))

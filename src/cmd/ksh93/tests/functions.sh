@@ -375,6 +375,14 @@ EOF
 if	[[ $($SHELL < tst)  == error ]]
 then	err_exit 'ERR trap not cleared'
 fi
+FPATH=/tmp/ksh$$
+print ': This does nothing' > /tmp/ksh$$/foobar
+chmod +x /tmp/ksh$$/foobar
+unset -f  foobar
+{ foobar;} 2> /dev/null
+if	[[ $? != 126 ]]
+then	err_exit 'function file without function definition processes wrong error'
+fi
 cd ~- || err_exit "cd back failed"
 rm -r /tmp/ksh$$ || err_exit "rm -r /tmp/ksh$$ failed"
 function errcheck

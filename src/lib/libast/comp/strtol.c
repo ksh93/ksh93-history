@@ -27,7 +27,11 @@
  * strtol() implementation
  */
 
+#if ! __CYGWIN__ /* 1.3.* static link conflict -- no iffe for this yet */
+
 #define S2I_function	strtol
 #define S2I_number	long
 
 #include "strtoi.h"
+
+#endif

@@ -61,10 +61,9 @@ union Value
 #include	"nval.h"
 
 /* used for arrays */
-#define ARRAY_MASK	((1L<<ARRAY_BITS)-1)	/* For index values */
+#define ARRAY_MAX 	(1L<<ARRAY_BITS) /* maximum number of elements in an array */
+#define ARRAY_MASK	(ARRAY_MAX-1)	/* For index values */
 
-#define ARRAY_MAX 	(1<<16)	/* maximum number of elements in an array
-				   This must be less than ARRAY_MASK */
 #define ARRAY_INCR	32	/* number of elements to grow when array 
 				   bound exceeded.  Must be a power of 2 */
 

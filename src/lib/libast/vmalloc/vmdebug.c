@@ -86,15 +86,15 @@ int		n;
 /* issue a warning of some type */
 #if __STD_C
 static void dbwarn(Vmalloc_t* vm, Void_t* data, int where,
-		   char* file, int line, Void_t* func, int type)
+		   const char* file, int line, const Void_t* func, int type)
 #else
 static void dbwarn(vm, data, where, file, line, func, type)
 Vmalloc_t*	vm;	/* region holding the block	*/
 Void_t*		data;	/* data block			*/
 int		where;	/* byte that was corrupted	*/
-char*		file;	/* file where call originates	*/
+const char*	file;	/* file where call originates	*/
 int		line;	/* line number of call		*/
-Void_t*		func;	/* function called from		*/
+const Void_t*	func;	/* function called from		*/
 int		type;	/* operation being done		*/
 #endif
 {
@@ -175,14 +175,14 @@ int		type;	/* operation being done		*/
 /* check for watched address and issue warnings */
 #if __STD_C
 static void dbwatch(Vmalloc_t* vm, Void_t* data,
-		    char* file, int line, Void_t* func, int type)
+		    const char* file, int line, const Void_t* func, int type)
 #else
 static void dbwatch(vm, data, file, line, func, type)
 Vmalloc_t*	vm;
 Void_t*		data;
-char*		file;
+const char*	file;
 int		line;
-Void_t*		func;
+const Void_t*	func;
 int		type;
 #endif
 {
@@ -198,12 +198,12 @@ int		type;
 
 /* record information about the block */
 #if __STD_C
-static void dbsetinfo(Vmuchar_t* data, size_t size, char* file, int line)
+static void dbsetinfo(Vmuchar_t* data, size_t size, const char* file, int line)
 #else
 static void dbsetinfo(data, size, file, line)
 Vmuchar_t*	data;	/* real address not the one from Vmbest	*/
 size_t		size;	/* the actual requested size		*/
-char*		file;	/* file where the request came from	*/
+const char*	file;	/* file where the request came from	*/
 int		line;	/* and line number			*/
 #endif
 {
@@ -358,12 +358,12 @@ Vmalloc_t*	vm;
 size_t		size;
 #endif
 {
-	reg size_t	s;
-	reg Vmuchar_t*	data;
-	reg char*	file;
-	reg int		line;
-	reg Void_t*	func;
-	reg Vmdata_t*	vd = vm->data;
+	reg size_t		s;
+	reg Vmuchar_t*		data;
+	reg const char*		file;
+	reg int			line;
+	reg const Void_t*	func;
+	reg Vmdata_t*		vd = vm->data;
 
 	VMFLF(vm,file,line,func);
 
@@ -410,9 +410,9 @@ Vmalloc_t*	vm;
 Void_t*		data;
 #endif
 {
-	char*		file;
+	const char*	file;
 	int		line;
-	Void_t*		func;
+	const Void_t*	func;
 	reg long	offset;
 	reg int		*ip, *endip;
 	reg Vmdata_t*	vd = vm->data;
@@ -471,9 +471,9 @@ int		type;		/* !=0 for movable, >0 for copy	*/
 	reg Vmuchar_t*	data;
 	reg size_t	s, oldsize;
 	reg long	offset;
-	char		*file, *oldfile;
+	const char	*file, *oldfile;
 	int		line, oldline;
-	Void_t*		func;
+	const Void_t*	func;
 	reg Vmdata_t*	vd = vm->data;
 
 	if(!addr)
@@ -653,12 +653,12 @@ size_t		size;
 size_t		align;
 #endif
 {
-	reg Vmuchar_t	*data;
-	reg size_t	s;
-	reg char*	file;
-	reg int		line;
-	reg Void_t*	func;
-	reg Vmdata_t*	vd = vm->data;
+	reg Vmuchar_t*		data;
+	reg size_t		s;
+	reg const char*		file;
+	reg int			line;
+	reg const Void_t*	func;
+	reg Vmdata_t*		vd = vm->data;
 
 	VMFLF(vm,file,line,func);
 

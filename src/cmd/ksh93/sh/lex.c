@@ -1356,7 +1356,7 @@ static int comsub(register Lex_t *lp)
 	register int	n,c,count=1;
 	register int	line=shlex.sh->inlineno;
 	char word[5];
-	int messages=0;
+	int messages=0, assignok=shlex.assignok;
 	struct lexstate	save;
 	save = lex;
 	sh_lexopen(lp,shlex.sh,1);
@@ -1419,7 +1419,7 @@ static int comsub(register Lex_t *lp)
 done:
 	lexd.dolparen--;
 	lex = save;
-	shlex.assignok = 0;
+	shlex.assignok = (endchar()==RBRACT?assignok:0);
 	return(messages);
 }
 

@@ -51,7 +51,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Labs Research) 2002-09-22 $
+@(#)$Id: package (AT&T Labs Research) 2002-10-04 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary packages.
@@ -231,14 +231,14 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 	[+update\b [ binary ]] [ source ]] [ \aarchitecture\a ... ]] [ \aurl\a ]] [ \apackage\a ... ]]?Download
 		the latest release of the selected packages from \aurl\a
 		(e.g., \bhttp://www.research.att.com/sw/download\b) into
-		the directory \b$INSTALLROOT/lib/package/tgz\b. If
+		the directory \b$PACKAGEROOT/lib/package/tgz\b. If
 		\aarchitecture\a is omitted then only architectures already
 		present in the tgz directory will be downloaded. If
 		\aarchitecture\a is \b-\b then all posted architectures will
 		be downloaded. If \aurl\a matches \b*.url\b then it is
 		interpreted as a file whose contents is the url, else if
 		\aurl\a is specified then it is copied to the file
-		\b$INSTALLROOT/lib/package/tgz/default.url\b, otherwise
+		\b$PACKAGEROOT/lib/package/tgz/default.url\b, otherwise
 		the url in \bdefault.url\b is used. If \apackage\a is omitted
 		then only packages already present in the tgz directory will
 		be downloaded. If \apackage\a is \b-\b then all posted packages
@@ -895,13 +895,13 @@ ${eL}${eO}"
 	update [ binary ] [ source ] [ ARCHITECTURE ... ] [ URL ] [ PACKAGE ... ]
 		Download the latest release of the selected packages from
 		URL (e.g., http://www.research.att.com/sw/download) into
-		the directory \$INSTALLROOT/lib/package/tgz. If ARCHITECTURE
+		the directory \$PACKAGEROOT/lib/package/tgz. If ARCHITECTURE
 		is omitted then only architectures already present in the tgz
 		directory will be downloaded. If ARCHITECTURE is - then
 		all posted architectures will be downloaded. If URL matches
 		*.url then is interpreted as a file whose contents is the url;
 		else if URL is specified then it is copied to the file
-		\$INSTALLROOT/lib/package/tgz/default.url, otherwise
+		\$PACKAGEROOT/lib/package/tgz/default.url, otherwise
 		the url in default.url is used. If PACKAGE is omitted then
 		only packages already present in the tgz directory will be
 		downloaded. If PACKAGE is - then all posted packages will be
@@ -1998,14 +1998,30 @@ host)	eval x=$package_use
 	echo $_hostinfo_
 	exit 0
 	;;
-use)	x=X$PACKAGE_USE
+use)	x=
 	;;
-*)	eval x=$package_use
+*)	x=
+	case $package_use in
+	$PACKAGE_USE)
+		case :$PATH: in
+		*:$INSTALLROOT/bin:*)
+			case $LIBPATH: in
+			$INSTALLROOT/bin:$INSTALLROOT/lib:*)
+				case $SHLIB_PATH: in
+				$INSTALLROOT/lib:*)
+					x=1
+					;;
+				esac
+				;;
+			esac
+			;;
+		esac
+		;;
+	esac
 	;;
 esac
 case $x in
-$PACKAGE_USE)
-	: accept the current package use environment
+1)	: accept the current package use environment
 
 	OK=ok
 	KSH=$EXECROOT/bin/ksh
@@ -2190,28 +2206,32 @@ cat $INITROOT/$i.sh
 		do	test -d $INSTALLROOT/$i || $exec mkdir $INSTALLROOT/$i || exit
 		done
 		i=$INSTALLROOT/lib/probe/C/make/probe
-		case `ls -t $INITROOT/C+probe $INITROOT/make.probe $i 2>/dev/null` in
-			*/make/probe*$INITROOT/*$INITROOT/*)
-				;;
-			*)	note update $i
+		j=$INITROOT/C+probe
+		k=$INITROOT/make.probe
+		case `ls -t $i $j $k 2>/dev/null` in
+		$i*$j*$k*)
+			;;
+		*)	if	test -f $j -a -f $k
+			then	note update $i
 				shellmagic
 				case $exec in
 				'')	{
 					case $SHELLMAGIC in
 					?*)	echo "$SHELLMAGIC" ;;
 					esac
-					cat $INITROOT/C+probe $INITROOT/make.probe
+					cat $j $k
 					} > $i || exit
 					;;
 				*)	echo "{
 echo $SHELLMAGIC
-cat $INITROOT/C+probe $INITROOT/make.probe
+cat $j $k
 } > $i"
 					;;
 				esac
 				$exec chmod +x $i || exit
-				;;
-			esac
+			fi
+			;;
+		esac
 		;;
 	esac
 
@@ -2432,6 +2452,17 @@ cat $INITROOT/C+probe $INITROOT/make.probe
 			then	SHELL=$KSH
 			fi
 			;;
+		esac
+		;;
+	esac
+
+	# $SHELL must be /bin/sh compatible
+
+	case $SHELL in
+	/bin/sh);;
+	*)	$SHELL -c 'trap "exit 0" 0; exit 1' 2>/dev/null
+		case $? in
+		1)	SHELL=/bin/sh ;;
 		esac
 		;;
 	esac
@@ -3859,7 +3890,7 @@ make|view)
 		if	test -d $i
 		then	test -d $INSTALLROOT/$i || $exec mkdir $INSTALLROOT/$i || exit
 			make_recurse $i
-			for j in `cd $i; find . $o 2>/dev/null | sed -e 's,^\./,,' -e 's,/[^/]*$,,' | sort -u`
+			for j in `cd $i; find . $o 2>/dev/null | sed -e 's,^\./,,' -e '/\//!d' -e 's,/[^/]*$,,' | sort -u`
 			do	case $j in
 				$k|$MAKESKIP) continue ;;
 				esac
@@ -4241,7 +4272,10 @@ read)	case ${PWD:-`pwd`} in
 				fi
 				if	test -f $PACKAGEBIN/gen/$p.sum
 				then	while	read md5 mode usr grp file
-					do	case $mode in
+					do	case $file in
+						-*)	file=./$file ;;
+						esac
+						case $mode in
 						0*)	case $grp in
 							-)	;;
 							*)	$exec chgrp $grp "$file" ;;

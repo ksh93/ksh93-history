@@ -265,4 +265,15 @@ x  y z
 if	[[ $b != y ]]
 then	err_exit 'IFS not restored after subshell'
 fi
+if	[[ $( (print ${12345:?}) 2>&1) != *12345* ]]
+then	err_exit 'Incorrect error message with ${12345?}'
+fi
+unset foobar
+if	[[ $( (print ${foobar:?}) 2>&1) != *foobar* ]]
+then	err_exit 'Incorrect error message with ${foobar?}'
+fi
+unset bar
+if	[[ $( (print ${bar:?bam}) 2>&1) != *bar*bam* ]]
+then	err_exit 'Incorrect error message with ${foobar?}'
+fi
 exit $((Errors))

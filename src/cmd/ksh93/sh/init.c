@@ -932,7 +932,7 @@ int sh_init(register int argc,register char *argv[], void(*userinit)(int))
 		{
 			sh.st.dolc--;
 			sh.st.dolv++;
-#ifdef _WIN32
+#if defined (_WIN32) || _WINIX
 			name = sh.st.dolv[0];
 			if(name[1]==':' && (name[2]=='/' || name[2]=='\\'))
 			{

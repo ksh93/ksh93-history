@@ -593,8 +593,8 @@ set_numeric(Lc_category_t* cp)
 	{
 		if ((lp = localeconv()) && (dp = newof(0, Lc_numeric_t, 1, 0)))
 		{
-			dp->decimal = !lp->decimal_point ? '.' : *lp->decimal_point ? *lp->decimal_point : -1;
-			dp->thousand = !lp->thousands_sep ? '.' : *lp->thousands_sep ? *lp->thousands_sep : -1;
+			dp->decimal = lp->decimal_point && *lp->decimal_point ? *(unsigned char*)lp->decimal_point : '.';
+			dp->thousand = lp->thousands_sep && *lp->thousands_sep ? *(unsigned char*)lp->thousands_sep : -1;
 		}
 		else
 			dp = &default_numeric;

@@ -218,6 +218,7 @@ struct _a_s
 struct _align_s
 {	char	data[MULTIPLE(ALIGNA,ALIGNB)];
 };
+#undef	ALIGN	/* bsd sys/param.h defines this */
 #define ALIGN	sizeof(struct _align_s)
 
 /* make sure that the head of a block is a multiple of ALIGN */
@@ -436,7 +437,7 @@ typedef struct _vmextern_
 {	Block_t*	(*vm_extend)_ARG_((Vmalloc_t*, size_t, Vmsearch_f ));
 	int		(*vm_truncate)_ARG_((Vmalloc_t*, Seg_t*, size_t, int));
 	size_t		vm_pagesize;
-	char*		(*vm_strcpy)_ARG_((char*, char*, int));
+	char*		(*vm_strcpy)_ARG_((char*, const char*, int));
 	char*		(*vm_itoa)_ARG_((Vmulong_t, int));
 	void		(*vm_trace)_ARG_((Vmalloc_t*,
 					  Vmuchar_t*, Vmuchar_t*, size_t, size_t));

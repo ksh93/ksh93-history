@@ -76,9 +76,9 @@ struct _vmethod_s
 
 struct _vmalloc_s
 {	Vmethod_t	meth;		/* method for allocation	*/
-	char*		file;		/* file name			*/
+	const char*	file;		/* file name			*/
 	int		line;		/* line number			*/
-	Void_t*		func;		/* calling function		*/
+	const Void_t*	func;		/* calling function		*/
 #ifdef _VM_PRIVATE_
 	_VM_PRIVATE_
 #endif
@@ -195,9 +195,9 @@ _END_EXTERNS_
 #ifdef VMFL
 
 #if defined(__FILE__)
-#define _VMFILE_(vm)	(_VM_(vm)->file = (char*)__FILE__)
+#define _VMFILE_(vm)	(_VM_(vm)->file = __FILE__)
 #else
-#define _VMFILE_(vm)	(_VM_(vm)->file = (char*)0)
+#define _VMFILE_(vm)	(_VM_(vm)->file = 0)
 #endif
 
 #if defined(__LINE__)
@@ -207,9 +207,9 @@ _END_EXTERNS_
 #endif
 
 #if defined(__FUNCTION__)
-#define _VMFUNC_(vm)	(_VM_(vm)->func = (Void_t*)__FUNCTION__)
+#define _VMFUNC_(vm)	(_VM_(vm)->func = (const Void_t*)__FUNCTION__)
 #else
-#define _VMFUNC_(vm)	(_VM_(vm)->func = (Void_t*)0)
+#define _VMFUNC_(vm)	(_VM_(vm)->func = 0)
 #endif
 
 #define _VMFL_(vm)	(_VMFILE_(vm), _VMLINE_(vm), _VMFUNC_(vm))

@@ -33,7 +33,7 @@
 
 #include <ctype.h>
 
-#if _WIN32
+#if _WINIX
 
 #include <ast_windows.h>
 
@@ -391,7 +391,7 @@ lccanon(Lc_t* lc, unsigned long flags, char* buf, size_t siz)
 {
 	if ((flags & LC_local) && (!lc->language || !(lc->language->flags & (LC_debug|LC_default))))
 	{
-#if _WIN32
+#if _WINIX
 		char	lang[64];
 		char	code[64];
 		char	ctry[64];
@@ -749,7 +749,7 @@ lcmake(const char* name)
 	lc->attributes = al;
 	for (i = 0; i < elementsof(lc->info); i++)
 		lc->info[i].lc = lc;
-#if _WIN32
+#if _WINIX
 	n = SUBLANG_DEFAULT;
 	if (tp)
 		for (i = 0; i < elementsof(tp->languages); i++)
@@ -820,7 +820,7 @@ lcscan(Lc_t* lc)
 		}
 	}
 	ls->lc.attributes = ls->list.attribute ? &ls->list : (Lc_attribute_list_t*)0;
-#if _WIN32
+#if _WINIX
 	if (!ls->lc.language || !ls->lc.language->index)
 		ls->lc.index = 0;
 	else

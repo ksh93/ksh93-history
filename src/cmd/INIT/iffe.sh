@@ -34,7 +34,7 @@ case $-:$BASH_VERSION in
 esac
 
 command=iffe
-version=2002-09-22 # update in USAGE too #
+version=2002-10-04 # update in USAGE too #
 
 pkg() # package
 {
@@ -90,6 +90,7 @@ is() # op name
 			dfn)	mm="a macro with extractable value" ;;
 			exp)	mm="true" ;;
 			hdr)	mm="a header" ;;
+			id)	mm="an identifier" ;;
 			lcl)	mm="a native header" ;;
 			key)	mm="a reserved keyword" ;;
 			lib)	mm="a library function" ;;
@@ -373,6 +374,8 @@ $RANDOM)shell=bsh
 	esac
 	;;
 esac
+idno=
+idyes=
 reallystatic=
 reallystatictest=
 static=.
@@ -421,7 +424,7 @@ set=
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: iffe (AT&T Labs Research) 2002-09-22 $
+@(#)$Id: iffe (AT&T Labs Research) 2002-10-04 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?iffe - host C compilation environment feature probe]
@@ -1803,10 +1806,7 @@ do	case $in in
 					esac
 					case $x in
 					*[\\/]*)case $shell in
-						bsh)	case $x in
-							.)	x="\\$x" ;;
-							esac
-							eval `echo $x | sed -e 's,\\(.*\\)'"${x}"'\\(.*\\),p=\\1 v=\\2,'`
+						bsh)	eval `echo $x | sed -e 's,\\(.*\\)[\\\\//]\\(.*\\),p=\\1 v=\\2,'`
 							;;
 						*)	eval 'p=${x%/*}'
 							eval 'v=${x##*/}'
@@ -1881,6 +1881,46 @@ do	case $in in
 			'')	c=$v ;;
 			esac
 			M=$m
+			case $o in
+			out)	;;
+			*)	case " $idyes " in
+				*" $m "*)
+					i=1
+					;;
+				*)	case " $idno " in
+					*" $m "*)
+						i=0
+						;;
+					*)	case $m in
+						*[!abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_]*)
+							is id $m
+							copy $tmp.c "int $m = 0;"
+							if	$cc -c $tmp.c
+							then	success
+								idyes="$idyes $m"
+								i=1
+							else	failure
+								idno="$idno $m"
+								i=0
+							fi
+							;;
+						*)	i=1
+							;;
+						esac
+						;;
+					esac
+					case $i in
+					0)	case $o in
+						dat|dfn|key|lib|mac|mth|nos|npt|siz|sym|typ|val)
+							continue
+							;;
+						esac
+						;;
+					esac
+					;;
+				esac
+				;;
+			esac
 			case $m in
 			*[!abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_]*)
 				m=`echo "X$m" | sed -e 's,^.,,' -e 's,[^abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_],_,g'`
@@ -2126,7 +2166,10 @@ do	case $in in
 						;;
 					esac
 					;;
+				dat)	m=HAVE${u}_DATA ;;
 				hdr|lcl)m=HAVE${u}_H ;;
+				key)	m=HAVE${u}_RESERVED ;;
+				mth)	m=HAVE${u}_MATH ;;
 				npt|pth)case $op in
 					npt)	m=${u}_DECLARED ;;
 					pth)	m=${u}_PATH ;;
@@ -2873,6 +2916,7 @@ $inc
 				if	$cc -E $tmp.c <&$nullin | sed -e "/#define/!d" -e "s/'//g" -e "s/^[ 	][ 	]*//"
 				then	success
 					usr="$usr$nl#define $m 1"
+					eval $m=1
 				else	failure
 					case $all$config$undef in
 					?1?|??1)echo "#undef	$m	0 /* $v is not a macro */" ;;

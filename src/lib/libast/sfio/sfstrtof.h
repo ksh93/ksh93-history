@@ -34,7 +34,7 @@
  * define these macros to instantiate an implementation:
  *
  *	S2F_function	the function name
- *	S2F_static	1 if S2F_function is static
+ *	S2F_static	<0:export =0:extern >0:static
  *	S2F_type	0:float 1:double 2:long.double
  *	S2F_scan	1 for alternate interface with these arguments:
  *				void* handle
@@ -143,14 +143,16 @@ typedef struct S2F_part_s
 #define ERANGE		EINVAL
 #endif
 
-#if S2F_static
+#if S2F_static > 0
 static
 #else
+#if S2F_static < 0 || !defined(S2F_static)
 #if defined(__EXPORT__)
 #define extern		__EXPORT__
 #endif
 extern
 #undef	extern
+#endif
 #endif
 S2F_number
 #if S2F_scan

@@ -113,7 +113,7 @@ fixup(Lc_info_t* li, register char** b)
 	li->data = (void*)b;
 }
 
-#if _WIN32
+#if _WINIX
 
 #include <ast_windows.h>
 

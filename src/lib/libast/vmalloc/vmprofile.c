@@ -77,18 +77,18 @@ static Pfobj_t**	Pftable;	/* hash table		*/
 static Vmalloc_t*	Vmpf;		/* heap for our own use	*/
 
 #if __STD_C
-static Pfobj_t* pfsearch(Vmalloc_t* vm, char* file, int line)
+static Pfobj_t* pfsearch(Vmalloc_t* vm, const char* file, int line)
 #else
 static Pfobj_t* pfsearch(vm, file, line)
 Vmalloc_t*	vm;	/* region allocating from			*/
-char*		file;	/* the file issuing the allocation request	*/
+const char*	file;	/* the file issuing the allocation request	*/
 int		line;	/* line number					*/
 #endif
 {
 	reg Pfobj_t		*pf, *last;
 	reg Vmulong_t		h;
 	reg int			n;
-	reg char*		cp;
+	reg const char*		cp;
 
 	if(!Vmpf && !(Vmpf = vmopen(Vmdcheap,Vmpool,0)) )
 		return NIL(Pfobj_t*);
@@ -211,13 +211,13 @@ Vmalloc_t*	vm;
 }
 
 #if __STD_C
-static void pfsetinfo(Vmalloc_t* vm, Vmuchar_t* data, size_t size, char* file, int line)
+static void pfsetinfo(Vmalloc_t* vm, Vmuchar_t* data, size_t size, const char* file, int line)
 #else
 static void pfsetinfo(vm, data, size, file, line)
 Vmalloc_t*	vm;
 Vmuchar_t*	data;
 size_t		size;
-char*		file;
+const char*	file;
 int		line;
 #endif
 {
@@ -472,12 +472,12 @@ Vmalloc_t*	vm;
 size_t		size;
 #endif
 {
-	reg size_t	s;
-	reg Void_t*	data;
-	reg char*	file;
-	reg int		line;
-	reg Void_t*	func;
-	reg Vmdata_t*	vd = vm->data;
+	reg size_t		s;
+	reg Void_t*		data;
+	reg const char*		file;
+	reg int			line;
+	reg const Void_t*	func;
+	reg Vmdata_t*		vd = vm->data;
 
 	VMFLF(vm,file,line,func);
 	if(!(vd->mode&VM_TRUST) && ISLOCK(vd,0))
@@ -507,12 +507,12 @@ Vmalloc_t*	vm;
 Void_t*		data;
 #endif
 {
-	reg Pfobj_t*	pf;
-	reg size_t	s;
-	reg char*	file;
-	reg int		line;
-	reg Void_t*	func;
-	reg Vmdata_t*	vd = vm->data;
+	reg Pfobj_t*		pf;
+	reg size_t		s;
+	reg const char*		file;
+	reg int			line;
+	reg const Void_t*	func;
+	reg Vmdata_t*		vd = vm->data;
 
 	VMFLF(vm,file,line,func);
 
@@ -561,14 +561,15 @@ size_t		size;
 int		type;
 #endif
 {
-	reg Pfobj_t*	pf;
-	reg size_t	s, news;
-	reg Void_t*	addr;
-	reg char*	file;
-	reg int		line;
-	reg Void_t*	func;
-	reg size_t	oldsize;
-	reg Vmdata_t*	vd = vm->data;
+	reg Pfobj_t*		pf;
+	reg size_t		s;
+	reg size_t		news;
+	reg Void_t*		addr;
+	reg const char*		file;
+	reg int			line;
+	reg const Void_t*	func;
+	reg size_t		oldsize;
+	reg Vmdata_t*		vd = vm->data;
 
 	if(!data)
 	{	oldsize = 0;
@@ -675,12 +676,12 @@ size_t		size;
 size_t		align;
 #endif
 {
-	reg size_t	s;
-	reg Void_t*	data;
-	reg char*	file;
-	reg int		line;
-	reg Void_t*	func;
-	reg Vmdata_t*	vd = vm->data;
+	reg size_t		s;
+	reg Void_t*		data;
+	reg const char*		file;
+	reg int			line;
+	reg const Void_t*	func;
+	reg Vmdata_t*		vd = vm->data;
 
 	VMFLF(vm,file,line,func);
 

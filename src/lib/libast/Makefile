@@ -27,7 +27,7 @@ CONF_LIBSUFFIX == "$(CC.SUFFIX.DYNAMIC|CC.SUFFIX.SHARED)"
 DEBUG ==
 __OBSOLETE__ == 20020101
 
-HEADERSRC = ast.h ast_dir.h ast_std.h ast_version.h \
+HEADERSRC = ast.h ast_dir.h ast_std.h ast_version.h ast_windows.h \
 	ccode.h cdt.h debug.h dt.h error.h find.h ftw.h ftwalk.h fts.h \
 	fs3d.h getopt.h glob.h hash.h hashkey.h hashpart.h int.h lc.h ls.h \
 	magic.h mc.h mime.h mnt.h modecanon.h modex.h namval.h option.h \

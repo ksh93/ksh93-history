@@ -28,7 +28,7 @@
  * Glenn Fowler
  * AT&T Research
  *
- * return tmform() formatted time
+ * return tmfmt() formatted time
  */
 
 #include "tm.h"

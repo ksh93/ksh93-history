@@ -1,4 +1,4 @@
-: unix wrapper for mac os10 cc : 2002-06-12 :
+: unix wrapper for mac os10 cc : 2002-10-04 :
 
 HOSTTYPE=darwin.ppc
 
@@ -33,6 +33,9 @@ done
 case $# in
 0)	;;
 *)	shift ;;
+esac
+case $* in
+-v)	$cc "$@"; exit ;;
 esac
 case $op in
 init)	echo "cc: arguments expected" >&2

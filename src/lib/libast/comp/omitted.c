@@ -48,6 +48,7 @@
  *	(1) .exe suffix inconsistencies
  *	(2) /bin/sh reference in execve()
  *	(3) bogus getpagesize() return values
+ *	(4) a fork() bug that screws up shell fork()+script
  *
  * NOTE: Not all workarounds can be handled by unix syscall intercepts.
  *	 In particular, { ksh nmake } have workarounds for case-ignorant
@@ -92,16 +93,17 @@ suffix(register const char* path)
 static int
 execrate(const char* path, char* buf, int size, int physical)
 {
+	char*	s;
 	int	n;
 	int	oerrno;
 
 	if (suffix(path))
 		return 0;
 	oerrno = errno;
-	if (!physical && (n = readlink(path, buf, size)) > 0 && n < (size - 4))
-		strcpy(buf + n, ".exe");
-	else
+	if (physical || strlen(path) >= size || !(s = pathcanon(strcpy(buf, path), PATH_PHYSICAL|PATH_DOTDOT|PATH_EXISTS)))
 		snprintf(buf, size, "%s.exe", path);
+	else if (!suffix(buf) && ((buf + size) - s) >= 4)
+		strcpy(s, ".exe");
 	errno = oerrno;
 	return 1;
 }
@@ -206,13 +208,15 @@ execve(const char* path, char* const argv[], char* const envv[])
 	char		buf[PATH_MAX];
 
 #if DEBUG
-	static int	trace = -1;
+	char*		s;
+
+	static int	trace;
 #endif
 
 	oerrno = errno;
 #if DEBUG
-	if (trace < 0)
-		trace = getenv("_AST_execve_trace") != 0;
+	if (!trace)
+		trace = (s = getenv("_AST_execve_trace")) ? *s : 'n';
 #endif
 	if (execrate(path, buf, sizeof(buf), 0))
 	{
@@ -230,20 +234,44 @@ execve(const char* path, char* const argv[], char* const envv[])
 	}
 	if (magic(path, MAGIC_exec))
 	{
+#if _CYGWIN_fork_works
 		errno = ENOEXEC;
 		return -1;
+#else
+		register char**	p;
+		register char**	v;
+
+		p = (char**)argv;
+		while (*p++);
+		if (!(v = (char**)malloc((p - (char**)argv + 2) * sizeof(char*))))
+		{
+			errno = EAGAIN;
+			return -1;
+		}
+		p = v;
+		*p++ = (char*)path;
+		*p++ = (char*)path;
+		path = (const char*)pathshell();
+		if (*argv)
+			argv++;
+		while (*p++ = (char*)*argv++);
+		argv = (char*const*)v;
+#endif
 	}
 #if DEBUG
-	if (trace > 0)
+	if (trace == 'a' || trace == 'e')
 	{
 		int	n;
 
 		sfprintf(sfstderr, "_execve %s [", path);
 		for (n = 0; argv[n]; n++)
 			sfprintf(sfstderr, " '%s'", argv[n]);
-		sfprintf(sfstderr, " ] [");
-		for (n = 0; envv[n]; n++)
-			sfprintf(sfstderr, " '%s'", envv[n]);
+		if (trace == 'e')
+		{
+			sfprintf(sfstderr, " ] [");
+			for (n = 0; envv[n]; n++)
+				sfprintf(sfstderr, " '%s'", envv[n]);
+		}
 		sfprintf(sfstderr, " ]\n");
 	}
 #endif
@@ -487,6 +515,10 @@ unlink(const char* path)
 
 #if _win32_botch_utime
 
+#if __CYGWIN__
+#include <ast_windows.h>
+#endif
+
 extern int
 utime(const char* path, struct utimbuf* ut)
 {
@@ -498,8 +530,40 @@ utime(const char* path, struct utimbuf* ut)
 	if ((r = _utime(path, ut)) && errno == ENOENT && execrate(path, buf, sizeof(buf), 0))
 	{
 		errno = oerrno;
-		r = _utime(buf, ut);
+		r = _utime(path = buf, ut);
 	}
+#if __CYGWIN__
+
+	/*
+	 * cygwin refuses to set st_ctime
+	 * utime() (at least) rejects that refusal
+	 */
+
+	if (!r)
+	{
+		HANDLE		hp;
+		SYSTEMTIME	st;
+		FILETIME	ct;
+		WIN32_FIND_DATA	ff;
+		struct stat	fs;
+		char		tmp[MAX_PATH];
+
+		if (_stat(path, &fs) || (fs.st_mode & S_IWUSR) || _chmod(path, (fs.st_mode | S_IWUSR) & S_IPERM))
+			fs.st_mode = 0;
+		cygwin_conv_to_win32_path(path, tmp);
+		hp = CreateFile(tmp, GENERIC_WRITE, FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+		if (hp && hp != INVALID_HANDLE_VALUE)
+		{
+			GetSystemTime(&st);
+			SystemTimeToFileTime(&st, &ct);
+			SetFileTime(hp, &ct, 0, 0);
+			CloseHandle(hp);
+		}
+		if (fs.st_mode)
+			_chmod(path, fs.st_mode & S_IPERM);
+		errno = oerrno;
+	}
+#endif
 	return r;
 }
 

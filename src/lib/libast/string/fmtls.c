@@ -89,7 +89,7 @@ fmtls(char* buf, const char* name, register struct stat* st, const char* info, c
 		else
 			s += sfsprintf(s, LS_W_MAX, "%8I*u ", sizeof(st->st_size), st->st_size);
 		tm = (flags & LS_ATIME) ? st->st_atime : (flags & LS_CTIME) ? st->st_ctime : st->st_mtime;
-		s = tmform(s, "%?%l", &tm);
+		s = tmfmt(s, LS_W_LONG / 2, "%?%l", &tm);
 		*s++ = ' ';
 	}
 	if (info)

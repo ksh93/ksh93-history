@@ -96,17 +96,15 @@ $(BINDIR)/ldd :INSTALL: .VIRTUAL (CC.HOSTTYPE) package $(BINDIR)/cc \
 		ldd.sgi.mips2 \
 		ldd.sgi.mips3 \
 		ldd.sgi.mips4
-	if	$(SILENT) test -x $(BINDIR)/cc
-	then	for ldd in $(*:N=*ldd.*.*)
-		do	case $ldd in
-			*ldd.$(CC.HOSTTYPE))
-				if	$(SILENT) test -f $ldd -a ! -x /usr/bin/ldd -a ! -x /bin/ldd
-				then	cmp -s $ldd $(<) ||
-					cp $ldd $(<)
-				fi
-			esac
-		done
-	fi
+	for ldd in $(*:N=*ldd.*.*)
+	do	case $ldd in
+		*ldd.$(CC.HOSTTYPE))
+			if	$(SILENT) test -f $ldd -a ! -x /usr/bin/ldd -a ! -x /bin/ldd
+			then	cmp -s $ldd $(<) ||
+				cp $ldd $(<)
+			fi
+		esac
+	done
 
 $(BINDIR)/mkdir :INSTALL: mkdir.sh
 	if	test ! -x $(<) -a -x /bin/mkdir

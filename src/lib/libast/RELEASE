@@ -1,3 +1,10 @@
+02-10-04 sfio/sfstrtof.h: S2F_static <0:export =0:private >0:static
+02-10-02 features/common: don't define _WIN32; define _WINIX => unix on windows
+	 features/tty: finally stomp the bsd _POSIX_VDISABLE redefinition
+	 misc/fastfind.c: add more specific findwrite() error messages
+	 comp/omitted.c: fix cygwin utime() to update st_ctime
+	 comp/strtol.c,strtoul.c: __CYGWIN__ static link workaround XXX
+	 string/fmtls.c,fmttime.c: tmform() => tmfmt()
 02-09-22 port/astconf.c: return values in fmtbuf() buffer instead of stack
 	 port/mnt.c: don't set MNT_REMOTE for win32 ?:\* paths
 	 sfio/sfvscanf.c: _sfdscan() is library global (not static)

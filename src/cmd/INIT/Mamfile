@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 4.2 2002-09-22
+info mam static 00000 1994-07-17 make (AT&T Research) 4.2 2002-10-02
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ar
@@ -722,17 +722,15 @@ make ldd.sgi.mips3
 done ldd.sgi.mips3
 make ldd.sgi.mips4
 done ldd.sgi.mips4
-exec - if	silent test -x ${INSTALLROOT}/bin/cc
-exec - then	for ldd in ldd.cygwin.i386 ldd.darwin.ppc ldd.ibm.risc ldd.mvs.390 ldd.sgi.mips2 ldd.sgi.mips3 ldd.sgi.mips4
-exec - 	do	case $ldd in
-exec - 		*ldd.${mam_cc_HOSTTYPE})
-exec - 			if	silent test -f $ldd -a ! -x /usr/bin/ldd -a ! -x /bin/ldd
-exec - 			then	cmp -s $ldd ${INSTALLROOT}/bin/ldd ||
-exec - 				cp $ldd ${INSTALLROOT}/bin/ldd
-exec - 			fi
-exec - 		esac
-exec - 	done
-exec - fi
+exec - for ldd in ldd.cygwin.i386 ldd.darwin.ppc ldd.ibm.risc ldd.mvs.390 ldd.sgi.mips2 ldd.sgi.mips3 ldd.sgi.mips4
+exec - do	case $ldd in
+exec - 	*ldd.${mam_cc_HOSTTYPE})
+exec - 		if	silent test -f $ldd -a ! -x /usr/bin/ldd -a ! -x /bin/ldd
+exec - 		then	cmp -s $ldd ${INSTALLROOT}/bin/ldd ||
+exec - 			cp $ldd ${INSTALLROOT}/bin/ldd
+exec - 		fi
+exec - 	esac
+exec - done
 make ../../../bin/mkdir
 make mkdir.sh
 done mkdir.sh
@@ -749,7 +747,7 @@ make ../../../bin/.paths
 exec - {
 exec - echo FPATH=../fun
 exec - set x x lib64 LD_LIBRARY64_PATH lib32 LD_LIBRARYN32_PATH lib LD_LIBRARY_PATH
-exec - case $#:static,port:/dev/stdout:2729837 in
+exec - case $#:static,port:/dev/stdout:29452 in
 exec - 2:*|*:1)if	test -x /lib/dld.sl
 exec - 	then	echo SHLIB_PATH=../lib
 exec - 	elif	test -x /usr/lib/dyld

@@ -83,12 +83,20 @@ static void(*nullscan)(Namval_t*,void*);
 void env_put(Env_t* ep,Namval_t *np)
 {
 	int offset = staktell();
-	char *val = nv_getval(np);
-	if(!val)
+	Namarr_t *ap = nv_arrayptr(np);
+	char *val;
+	if(ap)
+	{
+		if(ap->nelem&ARRAY_UNDEF)
+			nv_putsub(np,"0",0L);
+		else if(!(val=nv_getsub(np)) || strcmp(val,"0"))
+			return;
+	}
+	if(!(val = nv_getval(np)))
 		return;
 	stakputs(nv_name(np));
 	stakputc('=');
-	stakputs(nv_getval(np));
+	stakputs(val);
 	stakseek(offset);
 	env_add(ep,stakptr(offset),ENV_STRDUP);
 }
@@ -175,7 +183,7 @@ static int nv_clone(Namval_t *np, Namval_t *mp, int flags)
 		do
 		{
 		        if(array_assoc(ap))
-		                name = (char*)((*ap->fun)(np,NIL(char*),NV_ANAME));
+				name = (char*)((*ap->fun)(np,NIL(char*),NV_ANAME));
 			else
 				name = nv_getsub(np);
 			nv_putsub(mp,name,NV_ADD);
@@ -360,13 +368,13 @@ void nv_setlist(register struct argnod *arg,register int flags)
 				np = nv_open(cp,sh.var_tree,flag);
 				if(prefix)
 					*cp++ = 0;
-				if(!(arg->argflag&ARG_APPEND))
-					nv_unset(np);
 				/* check for array assignment */
 				if(tp->tre.tretyp!=TLST && tp->com.comarg && !tp->com.comset)
 				{
 					int argc;
 					char **argv = sh_argbuild(&argc,&tp->com,0);
+					if(!(arg->argflag&ARG_APPEND))
+						nv_unset(np);
 					nv_setvec(np,(arg->argflag&ARG_APPEND),argc,argv);
 					if(traceon)
 					{
@@ -1523,7 +1531,11 @@ static void	unset(register Namval_t *np,int forced)
 done:
 #ifdef _ENV_H
 	if(nv_isattr(np,NV_EXPORT))
-		env_delete(sh.env,nv_name(np));
+	{
+		char *sub;
+		if(!ap || ((sub=nv_getsub(np)) && strcmp(sub,"0")==0))
+			env_delete(sh.env,nv_name(np));
+	}
 #endif
 	if(!nv_isattr(np,NV_ARRAY))
 	{
@@ -1893,8 +1905,11 @@ void nv_newattr (register Namval_t *np, unsigned newatts, int size)
 			strcpy(cp, sp);
 			if(ap)	/* add element to prevent array deletion */
 			{
+				Namval_t *mp;
 				ap->nelem &= ~ARRAY_SCAN;
 				ap->nelem++;
+				if(mp=nv_opensub(np))
+					nv_onattr(mp,NV_NOFREE);
 			}
 			nv_unset(np);
 			if(ap)

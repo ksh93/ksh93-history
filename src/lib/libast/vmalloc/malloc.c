@@ -201,9 +201,9 @@ static int vmflinit()
 	Vmalloc_t*	vm;
 	int		fd;
 	Vmulong_t	addr;
-	char*		file;
+	const char*	file;
 	int		line;
-	Void_t*		func;
+	const Void_t*	func;
 
 	/* this must be done now to avoid any inadvertent recursion (more below) */
 	_Vmflinit = 1;
