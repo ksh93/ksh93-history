@@ -50,9 +50,7 @@ __STDPP__directive pragma pp:nohide getdate
 #undef	getdate
 #endif
 
-#if !__GNUC__ || !__ia64__
 #undef	_lib_getdate	/* we can pass X/Open */
-#endif
 
 #if _lib_getdate
 

@@ -1,3 +1,4 @@
+01-10-31 dlfcn.c: change hp.pa dlopen() prototype (<dlfcn.h> but no -ldl!)
 01-09-25 dllfind: add LIBSUFFIX
 01-07-17 dllfind: do at least one dlopen() to prime dlerror()
 01-05-29 dlopen: fix dlopen(0,0) for HP

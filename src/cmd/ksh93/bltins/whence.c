@@ -72,7 +72,7 @@ int	b_command(register int argc,char *argv[],void *extra)
 	    case ':':
 		if(argc==0)
 			return(0);
-		errormsg(SH_DICT,2, opt_info.arg);
+		errormsg(SH_DICT,2, "%s", opt_info.arg);
 		break;
 	    case '?':
 		if(argc==0)
@@ -113,7 +113,7 @@ int	b_whence(int argc,char *argv[],void *extra)
 		flags |= P_FLAG;
 		break;
 	    case ':':
-		errormsg(SH_DICT,2, opt_info.arg);
+		errormsg(SH_DICT,2, "%s", opt_info.arg);
 		break;
 	    case '?':
 		errormsg(SH_DICT,ERROR_usage(2), "%s", opt_info.arg);

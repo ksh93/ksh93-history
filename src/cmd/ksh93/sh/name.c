@@ -586,6 +586,8 @@ Namval_t	*nv_open(const char *name,Dt_t *root,int flags)
 					*cp = '.';
 					if(np && nv_isref(np))
 					{
+						/* don't optimize */
+						sh.argaddr = 0; 
 						/* substitute ref name */
 						while(nv_isref(np))
 						{

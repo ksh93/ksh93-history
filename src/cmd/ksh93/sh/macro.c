@@ -1640,7 +1640,7 @@ static void mac_copy(register Mac_t *mp,register const char *str, register int s
 			{
 				mp->patfound = mp->pattern;
 				stakputc(ESCAPE);
-				if((n=sh_lexstates[ST_MACRO][*(unsigned char*)cp])==S_PAT || n==S_DIG || *cp=='-')
+				if((n=sh_lexstates[ST_MACRO][*(unsigned char*)cp])==S_PAT || n==S_DIG || *cp=='-' || *cp=='\\')
 				{
 					stakputc(ESCAPE);
 					stakputc(ESCAPE);

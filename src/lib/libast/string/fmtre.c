@@ -201,6 +201,12 @@ fmtre(const char* as)
 			if (p->min)
 				*t++ = '?';
 			continue;
+		case '^':
+		case '.':
+		case '$':
+			*t++ = '\\';
+			*t++ = c;
+			continue;
 		case '|':
 			if (t == buf || *(t - 1) == '(')
 				return 0;

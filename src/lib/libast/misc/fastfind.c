@@ -90,6 +90,7 @@ static char*		findcodes[] =
 	"/var/spool",
 	"/usr/local/var",
 	"/var/lib",
+	"/var/lib/slocate",
 	"/var/db",
 };
 
@@ -100,6 +101,7 @@ static char*		findnames[] =
 	"locate/locatedb",
 	"locatedb",
 	"locate.database",
+	"slocate.db",
 };
 
 /*
@@ -400,6 +402,8 @@ findopen(const char* file, const char* pattern, const char* type, Finddisc_t* di
 				(*fp->disc->errorf)(fp, fp->disc, 2, "%s: cannot stat codes", path);
 			goto drop;
 		}
+		if (fp->secure = ((st.st_mode & (S_IRGRP|S_IROTH)) == S_IRGRP) && st.st_gid == getegid() && getegid() != getgid())
+			setgid(getgid());
 		fp->stamp = st.st_mtime;
 		b = (s = fp->decode.temp) + 1;
 		for (i = 0; i < elementsof(fp->decode.bigram1); i++) 
@@ -413,7 +417,7 @@ findopen(const char* file, const char* pattern, const char* type, Finddisc_t* di
 			}
 			if ((j = sfgetc(fp->fp)) == EOF)
 				goto invalid;
-			if (!(*s++ = fp->decode.bigram2[i] = j) && i)
+			if (!(*s++ = fp->decode.bigram2[i] = j) && (i || fp->decode.bigram1[0] >= '0' && fp->decode.bigram1[0] <= '1'))
 				break;
 		}
 		if (streq(b, FF_typ_magic))
@@ -444,6 +448,16 @@ findopen(const char* file, const char* pattern, const char* type, Finddisc_t* di
 			fp->method = FF_dir;
 		else if (streq(b, FF_gnu_magic))
 			fp->method = FF_gnu;
+		else if (!*b && *--b >= '0' && *b <= '1')
+		{
+			fp->method = FF_gnu;
+			while (j = sfgetc(fp->fp))
+			{
+				if (j == EOF || fp->decode.count >= sizeof(fp->decode.path))
+					goto invalid;
+				fp->decode.path[fp->decode.count++] = j;
+			}
+		}
 		else
 		{
 			fp->method = FF_old;
@@ -871,7 +885,8 @@ findread(register Find_t* fp)
 								fp->decode.peek = c;
 								if (*p == '/')
 									*(fp->decode.restore = p) = 0;
-								return fp->decode.path;
+								if (!fp->secure || !access(fp->decode.path, F_OK))
+									return fp->decode.path;
 							}
 							break;
 						}
@@ -882,7 +897,8 @@ findread(register Find_t* fp)
 				fp->decode.peek = c;
 				if (*p == '/' && p > fp->decode.path)
 					*(fp->decode.restore = p) = 0;
-				return fp->decode.path;
+				if (!fp->secure || !access(fp->decode.path, F_OK))
+					return fp->decode.path;
 			}
 			else if (n != REG_NOMATCH)
 			{

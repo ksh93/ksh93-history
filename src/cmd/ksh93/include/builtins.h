@@ -30,7 +30,7 @@
 #include	"FEATURE/dynamic"
 #include	"shtable.h"
 
-#define SH_RELEASE	"1993-12-28 m-"
+#define SH_RELEASE	"1993-12-28 m"
 
 #define	SYSLOGIN	(sh.bltin_cmds)
 #define SYSEXEC		(sh.bltin_cmds+1)

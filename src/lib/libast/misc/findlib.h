@@ -114,6 +114,7 @@ typedef struct
 	Findverify_f	verifyf;	\
 	int		generate;	\
 	int		method;		\
+	int		secure;		\
 	int		types;		\
 	int		verify;		\
 	Code_t		code;

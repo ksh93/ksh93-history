@@ -34,7 +34,7 @@ case $-:$BASH_VERSION in
 esac
 
 command=iffe
-version=2001-08-11
+version=2001-10-31
 
 pkg() # package
 {
@@ -1128,7 +1128,7 @@ do	case $in in
 		verbose)verbose=1
 			continue
 			;;
-		*)	echo "$command: $op: unkown option" >&$stderr
+		*)	echo "$command: $op: unknown option" >&$stderr
 			exit 1
 			;;
 		esac
@@ -2568,12 +2568,15 @@ $usr
 $pre
 $inc
 $ext
+typedef int (*_IFFE_fun)();
+#ifdef _IFFE_extern
 _BEGIN_EXTERNS_
 extern int $v();
 _END_EXTERNS_
-static int ((*i)())=$v;main(){return(i==0);}
+#endif
+static _IFFE_fun i=(_IFFE_fun)$v;main(){return(i==0);}
 "
-				if	$cc -c $tmp.c <&$nullin >&$nullout
+				if	$cc -D_IFFE_extern -c $tmp.c <&$nullin >&$nullout || $cc -c $tmp.c <&$nullin >&$nullout
 				then	rm -f $tmp.exe
 					if	$cc $static -o $tmp.exe $tmp.o $lib $deflib <&$nullin >&$nullout && $executable $tmp.exe
 					then	case $o in

@@ -24,9 +24,10 @@
 function err_exit
 {
 	print -u2 -n "\t"
-	print -u2 -r $Command: "$@"
+	print -u2 -r ${Command}[$1]: "${@:2}"
 	let Errors+=1
 }
+alias err_exit='err_exit $LINENO'
 
 Command=$0
 integer Errors=0
@@ -314,4 +315,10 @@ fi
 ###########################################################
 ###########################################################
 print foo) ]] || err_exit "command subsitution with long comments broken"
+x=$'print -r s/\\(\\<3d\\>\\)/\\\\h\'0*1\'\\1\\\\h\'0\'/'
+set +f
+unset IFS
+if	[[ $($x) != $'s/\\(\\<3d\\>\\)/\\\\h\'0*1\'\\1\\\\h\'0\'/' ]]
+then	err_exit 'complex quoting with pattern chars not working'
+fi
 exit $((Errors))

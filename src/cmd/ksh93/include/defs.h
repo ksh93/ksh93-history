@@ -210,6 +210,7 @@ extern Sfio_t		*sh_sfeval(char*[]);
 extern void		sh_setmatch(const char*,int,int,int[]);
 extern Dt_t		*sh_subaliastree(int);
 extern Dt_t		*sh_subfuntree(int);
+extern int		sh_subsavefd(int);
 extern void		sh_subtmpfile(void);
 extern char 		*sh_substitute(const char*,const char*,char*);
 extern const char	*_sh_translate(const char*);

@@ -450,6 +450,8 @@ int	sh_pipe(register int pv[])
 	pv[1] = sh_iomovefd(pv[1]);
 	sh.fdstatus[pv[0]] = IONOSEEK|IOREAD|IODUP;
 	sh.fdstatus[pv[1]] = IONOSEEK|IOWRITE;
+	sh_subsavefd(pv[0]);
+	sh_subsavefd(pv[1]);
 	return(0);
 }
 
@@ -624,7 +626,7 @@ int	sh_redirect(struct ionod *iop, int flag)
 		trace:
 			if(traceon && fname)
 				sfprintf(sfstderr,"%s %s%c",io_op,fname,iop->ionxt?' ':'\n');
-			if(flag==0)
+			if(flag==0 || sh_subsavefd(fn))
 				sh_iosave(fn,indx); /* save file descriptor */
 			if(fd<0)
 			{

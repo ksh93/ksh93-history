@@ -47,9 +47,11 @@ tst	note{ check for win32 .exe botches }end output{
 			fix++,printf("#define _win32_botch_copy	1\n");
 		if (_getpagesize() != 64 * 1024)
 			fix++,printf("#define _win32_botch_getpagesize	1\n");
+	#if !__EMX__
 		if (_link("foo", "bar") || _access("bar.exe", X_OK))
 			fix++,printf("#define _win32_botch_link	1\n");
 		else
+	#endif
 			cp("foo.exe", "bar.exe");
 		if ((fd = _open("foo", O_RDONLY)) < 0)
 			fix++,printf("#define _win32_botch_open	1\n");

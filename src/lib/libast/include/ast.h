@@ -44,7 +44,7 @@
 #include <sfio.h>
 #endif
 
-#if !defined(_WIN32) && (_UWIN || __CYGWIN__)
+#if !defined(_WIN32) && (_UWIN || __CYGWIN__ || __EMX__)
 #define _WIN32		1
 #endif
 

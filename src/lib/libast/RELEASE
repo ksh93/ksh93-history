@@ -1,3 +1,16 @@
+01-10-31 regex/ucs_names.h: add string catenation to keep line length low
+	 misc/fastfind.c: handle gnu slocate db read
+	 misc/optget.c: add --?+SECTION queries
+	 comp/fnmatch.h: add FNM_NOSYS
+01-10-30 tm/tmdate.c: fix cron specs when both wday and mday are specified
+01-10-20 misc/glob.c: fix bug that called \ trim() twice on same path
+	 misc/glob.c: fix \ trim() bug that restored / to wrong position
+	 string/fmtre.c: fix { ^ . $ } translations
+	 misc/optget.c: use original string if translation fails -- duh
+	 sfio/sfhdr.h: assume <errno.h> assigns proper atttibutes to errno
+	 comp/regcmp.c: __ia64 workaround fixed by proper CC.DLL probe
+	 comp/getdate.c: __ia64 workaround fixed by proper CC.DLL probe
+	 features/lib: add lib getdate
 01-10-18 features/lib: check for strtod static link collision
 	 features/float: add another signed cast for old bsd cc
 	 features/wchar: add <stdlib.h> <stdio.h> before <wchar.h> for old bsd

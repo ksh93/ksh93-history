@@ -1,7 +1,7 @@
 /*
  * source and binary package support
  *
- * @(#)package.mk (AT&T Labs Research) 2001-10-18
+ * @(#)package.mk (AT&T Labs Research) 2001-10-20
  *
  * usage:
  *
@@ -61,13 +61,55 @@ variants = !(cc-g)
 version = $("":T=R%Y-%m-%d)
 release =
 
+package.notice.text = NOTICE -- LICENSED SOFTWARE -- SEE README FOR DETAILS
+package.notice.delimiter = $("\r\v\v")
+package.notice = $(package.notice.delimiter)$(package.notice.text)$(package.notice.delimiter)
+
+package.readme = $(@.package.readme.)
+
+.package.readme. :
+	This is a package root directory $PACKAGEROOT. Source and binary
+	packages in this directory tree are controlled by the command
+	$()
+		bin/package
+	$()
+	Binary package files are in the install root directory
+	$()
+		INSTALLROOT=$PACKAGEROOT/arch/`bin/package`
+	$()
+	For more information run
+	$()
+		bin/package help
+	$()
+	Each package has its own license file
+	$()
+		lib/package/LICENSES/<prefix>
+	$()
+	where <prefix> is the longest matching prefix of the package name.
+	At the top of each license file is a URL; the license covers all
+	software referring to this URL. For details run
+	$()
+		bin/package license [<package>]
+	$()
+	A component within a package may have its own license file
+	$()
+		lib/package/LICENSES/<prefix>-<component>
+	$()
+	or it may have a separate license detailed in the component
+	source directory.
+	$()
+	Any archives, distributions or packages made from source or
+	binaries covered by license(s) must contain the corresponding
+	license file(s), this README file, and the empty file
+	$()
+		$(package.notice.text)
+
 PACKAGEROOT = $(VROOT:T=F:P=L*:N!=*/arch/+([!/]):O=1)
 PACKAGESRC = $(PACKAGEROOT)/lib/package
 PACKAGEBIN = $(INSTALLROOT)/lib/package
 PACKAGEDIR = $(PACKAGESRC)/$(style)
 INSTALLOFFSET = $(INSTALLROOT:C%$(PACKAGEROOT)/%%)
 
-package.notice = $("\r\v\v")NOTICE -- LICENSED SOFTWARE -- SEE README FOR DETAILS$("\r\v\v")
 package.omit = -|*/$(init)
 package.glob.all = $(INSTALLROOT)/src/($(MAKEDIRS:/:/|/G))/*/($(MAKEFILES:/:/|/G))
 package.all = $(package.glob.all:P=G:W=O=$(?$(name):A=.VIRTUAL):N!=$(package.omit):T=F:$(VROOT:T=F:P=L*:C,.*,C;^&/;;,:/ /:/G))
@@ -273,34 +315,14 @@ $$(PACKAGEGEN)/DETAILS.html : $$(INSTALLROOT)/bin/package
 		mkdir $tmp
 		{
 			integer m
-			if	test '$(init)' = '$(name)'
-			then	: > $tmp/HEAD
-				echo ";;;$tmp/HEAD;$(package.notice)"
-				cat > $tmp/README <<'!'
-	This is a package root directory $PACKAGEROOT. All source and binary
-	packages in this directory tree are controlled by the command
-
-		bin/package
-
-	Binary package files are in the install root directory $INSTALLROOT,
-	named arch/`bin/package`. For more information run
-
-		bin/package help
-	
-	Each package has its own license, named by the file
-
-		lib/package/LICENSES/<package>
-
-	A component within a package may have its own license named by
-
-		lib/package/LICENSES/<package>-<component>
-
-	At the top of each license file is a URL; the license covers all
-	software referring to this URL. For details run
-
-		bin/package license
+			: > $tmp/HEAD
+			echo ";;;$tmp/HEAD;$(package.notice)"
+			cat > $tmp/README <<'!'
+	$(package.readme)
 	!
-				echo ";;;$tmp/README;README"
+			echo ";;;$tmp/README;README"
+			if	test '$(init)' = '$(name)'
+			then	
 				cat > $tmp/Makefile <<'!'
 	:MAKE:
 	!
@@ -655,6 +677,10 @@ binary : .binary.init .binary.gen .binary.$$(style)
 		sort -u | {
 			: > $tmp/HEAD
 			echo ";;;$tmp/HEAD;$(package.notice)"
+			cat > $tmp/README <<'!'
+	$(package.readme)
+	!
+			echo ";;;$tmp/README;README"
 			cat
 			: > $tmp/TAIL
 			echo ";;;$tmp/TAIL;$(package.notice)"

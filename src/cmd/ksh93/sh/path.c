@@ -710,8 +710,15 @@ static Pathcomp_t *execs(Pathcomp_t *pp,const char *arg0,register char **argv, s
 	    case EACCES:
 	    {
 		struct stat statb;
-		if(stat(path,&statb)>=0 && S_ISDIR(statb.st_mode))
-			errno = EISDIR;
+		if(stat(path,&statb)>=0)
+		{
+			if(S_ISDIR(statb.st_mode))
+				errno = EISDIR;
+#ifdef S_ISSOCK
+			if(S_ISSOCK(statb.st_mode))
+				exscript(shp,path,argv,dp->envp);
+#endif
+		}
 	    }
 		/* FALL THROUGH */
 #endif /* !apollo */

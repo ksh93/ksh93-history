@@ -68,7 +68,7 @@ static const char id[] = "\n@(#)$Id: dll library (AT&T Labs Research) 2001-07-17
 	static shl_t	all;
 	static int	err;
 
-	extern void* dlopen(const char* path, int mode)
+	extern void* dlopen(const char* path, unsigned int mode)
 	{
 		void*	dll;
 

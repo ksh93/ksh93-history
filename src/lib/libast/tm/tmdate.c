@@ -95,8 +95,6 @@ range(register char* s, char** e, char* set, int lo, int hi)
 			m = n;
 		while (n <= m)
 			set[n++] = 1;
-		if (!*s)
-			break;
 		if (*s != ',')
 			break;
 		s++;
@@ -260,6 +258,7 @@ tmdate(register const char* s, char** e, time_t* clock)
 			}
 			if (i == 5)
 			{
+				time_t	bt;
 				time_t	tt;
 				char	hit[60];
 				char	mon[12];
@@ -330,6 +329,9 @@ tmdate(register const char* s, char** e, time_t* clock)
 					break;
 				if (k)
 					flags |= MONTH;
+				else
+					for (i = 1; i <= 12; i++)
+						mon[i] = 1;
 
 				/*
 				 * day of week
@@ -342,51 +344,57 @@ tmdate(register const char* s, char** e, time_t* clock)
 				s = t;
 				if (flags & (MONTH|MDAY|WDAY))
 				{
-					tt = tmtime(tm, zone);
-					tm = tmmake(&tt);
+					bt = tmtime(tm, zone);
+					tm = tmmake(&bt);
 					i = tm->tm_mon + 1;
 					j = tm->tm_mday;
 					k = tm->tm_wday;
 					for (;;)
 					{
-						if (flags & MONTH)
+						if (!mon[i])
 						{
-							if (!mon[i])
+							if (++i > 12)
 							{
-								mon[i] = 1;
-								if (++i > 12)
-								{
-									i = 1;
-									tm->tm_year++;
-								}
+								i = 1;
+								tm->tm_year++;
+							}
+							tm->tm_mon = i - 1;
+							tm->tm_mday = 1;
+							tt = tmtime(tm, zone);
+							if ((unsigned long)tt < (unsigned long)bt)
+								goto done;
+							tm = tmmake(&tt);
+							i = tm->tm_mon + 1;
+							j = tm->tm_mday;
+							k = tm->tm_wday;
+							continue;
+						}
+						if (flags & (MDAY|WDAY))
+						{
+							if ((flags & (MDAY|WDAY)) == (MDAY|WDAY))
+							{
+								if (hit[j] && day[k])
+									break;
+							}
+							else if ((flags & MDAY) && hit[j])
+								break;
+							else if ((flags & WDAY) && day[k])
+								break;
+							if (++j > 28)
+							{
 								tm->tm_mon = i - 1;
-								tm->tm_mday = 1;
+								tm->tm_mday = j;
 								tt = tmtime(tm, zone);
 								tm = tmmake(&tt);
 								i = tm->tm_mon + 1;
 								j = tm->tm_mday;
 								k = tm->tm_wday;
-								continue;
 							}
-							if (!(flags & (MDAY|WDAY)))
-								break;
+							else if ((flags & WDAY) && ++k > 6)
+								k = 0;
 						}
-						if ((flags & MDAY) && hit[j])
+						else if (flags & MONTH)
 							break;
-						else if ((flags & WDAY) && day[k])
-							break;
-						else if ((flags & (MDAY|WDAY)) && ++j > 28)
-						{
-							tm->tm_mon = i - 1;
-							tm->tm_mday = j;
-							tt = tmtime(tm, zone);
-							tm = tmmake(&tt);
-							i = tm->tm_mon + 1;
-							j = tm->tm_mday;
-							k = tm->tm_wday;
-						}
-						else if ((flags & WDAY) && ++k > 6)
-							k = 0;
 					}
 					tm->tm_mon = i - 1;
 					tm->tm_mday = j;

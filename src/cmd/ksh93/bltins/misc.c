@@ -80,7 +80,7 @@ int    b_exec(int argc,char *argv[], void *extra)
 		logdata.clear=1;
 		break;
 	    case ':':
-		errormsg(SH_DICT,2, opt_info.arg);
+		errormsg(SH_DICT,2, "%s", opt_info.arg);
 		break;
 	    case '?':
 		errormsg(SH_DICT,ERROR_usage(0), "%s", opt_info.arg);
@@ -172,7 +172,7 @@ int    b_let(int argc,char *argv[],void *extra)
 	while (r = optget(argv,sh_optlet)) switch (r)
 	{
 	    case ':':
-		errormsg(SH_DICT,2, opt_info.arg);
+		errormsg(SH_DICT,2, "%s", opt_info.arg);
 		break;
 	    case '?':
 		errormsg(SH_DICT,ERROR_usage(2), "%s", opt_info.arg);
@@ -194,7 +194,7 @@ int    b_eval(int argc,char *argv[], void *extra)
 	while (r = optget(argv,sh_opteval)) switch (r)
 	{
 	    case ':':
-		errormsg(SH_DICT,2, opt_info.arg);
+		errormsg(SH_DICT,2, "%s", opt_info.arg);
 		break;
 	    case '?':
 		errormsg(SH_DICT,ERROR_usage(0), "%s",opt_info.arg);
@@ -226,7 +226,7 @@ int    b_dot_cmd(register int n,char *argv[],void* extra)
 	while (n = optget(argv,sh_optdot)) switch (n)
 	{
 	    case ':':
-		errormsg(SH_DICT,2, opt_info.arg);
+		errormsg(SH_DICT,2, "%s", opt_info.arg);
 		break;
 	    case '?':
 		errormsg(SH_DICT,ERROR_usage(0), "%s",opt_info.arg);
@@ -329,7 +329,7 @@ int    b_shift(register int n, register char *argv[], void *extra)
 	while((n = optget(argv,sh_optshift))) switch(n)
 	{
 		case ':':
-			errormsg(SH_DICT,2, opt_info.arg);
+			errormsg(SH_DICT,2, "%s", opt_info.arg);
 			break;
 		case '?':
 			errormsg(SH_DICT,ERROR_usage(0), "%s",opt_info.arg);
@@ -355,7 +355,7 @@ int    b_wait(int n,register char *argv[],void *extra)
 	while((n = optget(argv,sh_optwait))) switch(n)
 	{
 		case ':':
-			errormsg(SH_DICT,2, opt_info.arg);
+			errormsg(SH_DICT,2, "%s", opt_info.arg);
 			break;
 		case '?':
 			errormsg(SH_DICT,ERROR_usage(2), "%s",opt_info.arg);
@@ -386,7 +386,7 @@ int    b_bg(register int n,register char *argv[],void *extra)
 	while((n = optget(argv,optstr))) switch(n)
 	{
 	    case ':':
-		errormsg(SH_DICT,2, opt_info.arg);
+		errormsg(SH_DICT,2, "%s", opt_info.arg);
 		break;
 	    case '?':
 		errormsg(SH_DICT,ERROR_usage(2), "%s",opt_info.arg);
@@ -424,7 +424,7 @@ int    b_jobs(register int n,char *argv[],void *extra)
 		flag = JOB_PFLAG;
 		break;
 	    case ':':
-		errormsg(SH_DICT,2, opt_info.arg);
+		errormsg(SH_DICT,2, "%s", opt_info.arg);
 		break;
 	    case '?':
 		errormsg(SH_DICT,ERROR_usage(2), "%s",opt_info.arg);
@@ -455,7 +455,7 @@ int	b_universe(int argc, char *argv[],void *extra)
 	while((n = optget(argv,sh_optuniverse))) switch(n)
 	{
 	    case ':':
-		errormsg(SH_DICT,2, opt_info.arg);
+		errormsg(SH_DICT,2, "%s", opt_info.arg);
 		break;
 	    case '?':
 		errormsg(SH_DICT,ERROR_usage(2), "%s",opt_info.arg);
@@ -505,7 +505,7 @@ int	b_universe(int argc, char *argv[],void *extra)
 	while(n = optget(argv, optstr)) switch(n)
 	{
 	    case ':':
-		errormsg(SH_DICT,2, opt_info.arg);
+		errormsg(SH_DICT,2, "%s", opt_info.arg);
 		break;
 	    case '?':
 		errormsg(SH_DICT,ERROR_usage(2), "%s",opt_info.arg);
@@ -513,6 +513,8 @@ int	b_universe(int argc, char *argv[],void *extra)
 	}
 	if(error_info.errors)
 		errormsg(SH_DICT,ERROR_usage(2),"%s",optusage((char*)0));
+	if(!shp->lim.fs3d)
+		goto failed;
 	argv += opt_info.index;
 	argc -= opt_info.index;
 	switch(argc)

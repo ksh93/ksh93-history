@@ -3562,7 +3562,7 @@ char**	argv;
 				}
 			continue;
 #endif
-#if !_WIN32 || _UWIN
+#if !_WIN32 && !__EMX__ || _UWIN
 		case LNKTYPE:
 			while (link(header.linkname, path))
 				if (unlink(path))

@@ -193,7 +193,7 @@ int    b_alias(int argc,register char *argv[],void *extra)
 			flag |= NV_EXPORT;
 			break;
 		    case ':':
-			errormsg(SH_DICT,2, opt_info.arg);
+			errormsg(SH_DICT,2, "%s", opt_info.arg);
 			break;
 		    case '?':
 			errormsg(SH_DICT,ERROR_usage(0), "%s", opt_info.arg);
@@ -311,7 +311,7 @@ int    b_typeset(int argc,register char *argv[],void *extra)
 				flag |= (NV_EXPORT|NV_IDENT);
 				break;
 			case ':':
-				errormsg(SH_DICT,2, opt_info.arg);
+				errormsg(SH_DICT,2, "%s", opt_info.arg);
 				break;
 			case '?':
 				errormsg(SH_DICT,ERROR_usage(0), "%s", opt_info.arg);
@@ -572,7 +572,7 @@ int	b_builtin(int argc,char *argv[],void *extra)
 #endif /* SHOPT_DYNAMIC */
 		break;
 	    case ':':
-		errormsg(SH_DICT,2, opt_info.arg);
+		errormsg(SH_DICT,2, "%s", opt_info.arg);
 		break;
 	    case '?':
 		errormsg(SH_DICT,ERROR_usage(2), "%s", opt_info.arg);
@@ -745,7 +745,7 @@ static int b_unall(int argc, char **argv, register Dt_t *troot, Shell_t* shp)
 			troot = shp->var_tree;
 			break;
 		case ':':
-			errormsg(SH_DICT,2, opt_info.arg);
+			errormsg(SH_DICT,2, "%s", opt_info.arg);
 			break;
 		case '?':
 			errormsg(SH_DICT,ERROR_usage(0), "%s", opt_info.arg);

@@ -505,7 +505,7 @@ sh_exec(register const union anynode *t, int flags)
 				if(np && is_abuiltin(np))
 				{
 					void *context;
-					int scope=0, jmpval, save_prompt;
+					int scope=0, jmpval, save_prompt,share;
 					struct checkpt buff;
 					unsigned long edopts=0;
 					if(strchr(nv_name(np),'/'))
@@ -526,20 +526,19 @@ sh_exec(register const union anynode *t, int flags)
 						if(io)
 						{
 							struct openlist *item;
-							if(sh.subshell)
-								type = 0;
-							else if(np==SYSLOGIN)
+							if(np==SYSLOGIN)
 								type=1;
 							else if(np==SYSEXEC)
 								type=1+!com[1];
 							else
-								type = (execflg!=0);
+								type = (execflg && !sh.subshell);
 							sh_redirect(io,type);
 							for(item=buff.olist;item;item=item->next)
 								item->strm=0;
 						}
 						if(!(nv_isattr(np,BLT_ENV)))
 						{
+							share = sfset(sfstdin,SF_SHARE,0);
 							sh_onstate(SH_STOPOK);
 							sfpool(sfstderr,NIL(Sfio_t*),SF_WRITE);
 							save_prompt = sh.nextprompt;
@@ -578,6 +577,8 @@ sh_exec(register const union anynode *t, int flags)
 					if(!(nv_isattr(np,BLT_ENV)))
 					{
 						sh_offstate(SH_STOPOK);
+						if(share&SF_SHARE)
+							sfset(sfstdin,SF_SHARE,1);
 						sfpool(sfstderr,sh.outpool,SF_WRITE);
 						sfpool(sfstdin,NIL(Sfio_t*),SF_WRITE);
 						sh.nextprompt = save_prompt;
@@ -853,6 +854,7 @@ sh_exec(register const union anynode *t, int flags)
 
 		    case TPAR:
 			echeck = 1;
+			flags &= ~OPTIMIZE_FLAG;
 			if(!sh.subshell && (flags&SH_NOFORK))
 			{
 				int jmpval;

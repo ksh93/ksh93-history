@@ -29,7 +29,7 @@
  * coded for portability
  */
 
-static char id[] = "\n@(#)$Id: mamake (AT&T Labs Research) 2001-05-01 $\0\n";
+static char id[] = "\n@(#)$Id: mamake (AT&T Labs Research) 2001-10-31 $\0\n";
 
 #if _PACKAGE_ast
 
@@ -37,7 +37,7 @@ static char id[] = "\n@(#)$Id: mamake (AT&T Labs Research) 2001-05-01 $\0\n";
 #include <error.h>
 
 static const char usage[] =
-"[-?\n@(#)$Id: mamake (AT&T Labs Research) 2001-05-01 $\n]"
+"[-?\n@(#)$Id: mamake (AT&T Labs Research) 2001-10-31 $\n]"
 USAGE_LICENSE
 "[+NAME?mamake - make abstract machine make]"
 "[+DESCRIPTION?\bmamake\b reads \amake abstract machine\a target and"
@@ -107,11 +107,12 @@ USAGE_LICENSE
 #include <string.h>
 #endif
 
-#define add(b,c)	(((b)->nxt >= (b)->end) ? append(b, "") : NiL, *(b)->nxt++ = (c))
 #define delimiter(c)	((c)==' '||(c)=='\t'||(c)=='\n'||(c)==';'||(c)=='('||(c)==')'||(c)=='`'||(c)=='|'||(c)=='&'||(c)=='=')
-#define use(b)		(*(b)->nxt=0,(b)->nxt=(b)->buf)
 
-#define MAMFILE		"Mamfile"
+#define add(b,c)	(((b)->nxt >= (b)->end) ? append(b, "") : NiL, *(b)->nxt++ = (c))
+#define get(b)		((b)->nxt-(b)->buf)
+#define set(b,o)	((b)->nxt=(b)->buf+(o))
+#define use(b)		(*(b)->nxt=0,(b)->nxt=(b)->buf)
 
 #define CHUNK		1024
 #define KEY(a,b,c,d)	((((unsigned long)(a))<<15)|(((unsigned long)(b))<<10)|(((unsigned long)(c))<<5)|(((unsigned long)(d))))
@@ -228,11 +229,12 @@ static struct				/* program state		*/
 	Stream_t	streams[4];	/* input file stream stack	*/
 	Stream_t*	sp;		/* input stream stack pointer	*/
 
-	char		input[8*1024];	/* input buffer			*/
+	char		input[8*CHUNK];	/* input buffer			*/
 } state;
 
 static unsigned long	make(Rule_t*);
 
+static char		mamfile[] = "Mamfile";
 static char		sh[] = "/bin/sh";
 
 extern char**		environ;
@@ -627,7 +629,7 @@ view(void)
 	Stat_t			st;
 	Stat_t			ts;
 
-	char			buf[1024];
+	char			buf[CHUNK];
 
 	if (stat(".", &st))
 		report(3, "cannot stat", ".");
@@ -783,6 +785,45 @@ expand(Buf_t* buf, char* s)
 }
 
 /*
+ * stat() with .exe check
+ */
+
+static char*
+status(Buf_t* buf, int off, char* path, struct stat* st)
+{
+	int		r;
+	char*		s;
+	Buf_t*		tmp;
+
+	if (!stat(path, st))
+		return path;
+	if (!(tmp = buf))
+	{
+		tmp = buffer();
+		off = 0;
+	}
+	if (off)
+		set(tmp, off);
+	else
+		append(tmp, path);
+	append(tmp, ".exe");
+	s = use(tmp);
+	r = stat(s, st);
+	if (!buf)
+	{
+		drop(tmp);
+		s = path;
+	}
+	if (r)
+	{
+		if (off)
+			s[off] = 0;
+		s = 0;
+	}
+	return s;
+}
+
+/*
  * return path to file
  */
 
@@ -793,11 +834,12 @@ find(Buf_t* buf, char* file, struct stat* st)
 	View_t*		vp;
 	int		node;
 	int		c;
+	int		o;
 
-	if (!stat(file, st))
+	if (s = status(buf, 0, file, st))
 	{
-		report(-2, file, "find");
-		return file;
+		report(-2, s, "find");
+		return s;
 	}
 	if (vp = state.view)
 	{
@@ -832,13 +874,13 @@ find(Buf_t* buf, char* file, struct stat* st)
 					append(buf, "/");
 				}
 				append(buf, file);
+				o = get(buf);
 				s = use(buf);
-				if (!stat(s, st))
+				if (s = status(buf, o, s, st))
 				{
 					report(-2, s, "find");
 					return s;
 				}
-				report(-3, s, "nope");
 			} while (vp = vp->next);
 	}
 	return 0;
@@ -1091,13 +1133,13 @@ run(Rule_t* r, register char* s)
 	{
 		if (c = execute(s))
 			dont(r, c, state.keepgoing);
-		if (stat(r->name, &st))
-			r->time = NOW;
-		else
+		if (status((Buf_t*)0, 0, r->name, &st))
 		{
 			r->time = st.st_mtime;
 			r->flags |= RULE_exists;
 		}
+		else
+			r->time = NOW;
 	}
 	else
 	{
@@ -1122,12 +1164,13 @@ path(Buf_t* buf, char* s, int must)
 	char*		e;
 	register int	c;
 	int		t;
+	int		o;
 	Stat_t		st;
 
 	for (e = s; *e && *e != ' ' && *e != '\t'; e++);
 	t = *e;
-	if (!stat(s, &st) && (st.st_mode & S_IXOTH))
-		return s;
+	if ((x = status(buf, 0, s, &st)) && (st.st_mode & S_IXOTH))
+		return x;
 	if (!(p = (char*)search(state.vars, "PATH", NiL)))
 		report(3, "variable not defined", "PATH");
 	do
@@ -1146,8 +1189,9 @@ path(Buf_t* buf, char* s, int must)
 		append(buf, s);
 		if (t)
 			*e = t;
+		o = get(buf);
 		x = use(buf);
-		if (!stat(x, &st) && (st.st_mode & S_IXOTH))
+		if ((x = status(buf, o, x, &st)) && (st.st_mode & S_IXOTH))
 			return x;
 	} while (*p++);
 	if (must)
@@ -1748,7 +1792,7 @@ recurse(char* pattern)
 	{
 		append(buf, s);
 		add(buf, '/');
-		append(buf, MAMFILE);
+		append(buf, mamfile);
 		if (find(tmp, use(buf), &st))
 		{
 			r = rule(s);
@@ -1799,7 +1843,7 @@ main(int argc, char** argv)
 	state.id = "mamake";
 	state.active = 1;
 	state.exec = 1;
-	state.file = MAMFILE;
+	state.file = mamfile;
 	state.opt = buffer();
 	state.rules = dictionary();
 	state.vars = dictionary();

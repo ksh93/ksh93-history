@@ -225,6 +225,9 @@ fi
 if	[[	$(printf '%H\n' $'<>"& \'\tabc') != '&lt;&gt;&quot;&amp;&nbsp;&apos;&#9;abc' ]]
 then	err_exit 'printf %H not working'
 fi
+if	[[	$(printf '%R %R %R %R\n' 'a.b' '*.c' '^'  '!(*.*)') != '^a\.b$ \.c$ ^\^$ ^(.*\..*)!$' ]]
+then	err_exit 'printf %R not working'
+fi
 if	[[ $(printf '%..:c\n' abc) != a:b:c ]]
 then	err_exit	"printf '%..:c' not working"
 fi

@@ -156,4 +156,13 @@ unset -n x foo bar
 if	[[ $(nameref x=foo;for x in foo bar;do print ${!x};done) != $'foo\nbar' ]]
 then	err_exit 'for loop optimization with namerefs not working'
 fi
+if	[[ $(
+	p=(x=(r=3) y=(r=4))
+	for i in x y
+	do	nameref x=p.$i
+		print ${x.r}
+	done
+) != $'3\n4' ]]
+then	err_exit 'nameref optimization error'
+fi
 exit $((Errors))

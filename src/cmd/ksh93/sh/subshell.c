@@ -77,6 +77,7 @@ static struct subshell
 	char		jobcontrol;
 	char		monitor;
 	unsigned char	fdstatus;
+	int		fdsaved; /* bit make for saved files */
 } *subshell_data;
 
 static int subenv;
@@ -298,6 +299,18 @@ Dt_t *sh_subfuntree(int create)
 		sh.fun_tree = sp->sfun;
 	}
 	return(sp->sfun);
+}
+
+int sh_subsavefd(register int fd)
+{
+	register struct subshell *sp = subshell_data;
+	register int old=0;
+	if(sp)
+	{
+		old = !(sp->fdsaved&(1<<(fd-1)));
+		sp->fdsaved |= (1<<(fd-1));
+	}
+	return(old);
 }
 
 /*

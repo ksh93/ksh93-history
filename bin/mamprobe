@@ -13,7 +13,7 @@ command=mamprobe
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: mamprobe (AT&T Labs Research) 2001-10-10 $
+@(#)$Id: mamprobe (AT&T Labs Research) 2001-10-31 $
 ]
 [+NAME?mamprobe - generate MAM cc probe info]
 [+DESCRIPTION?\bmamprobe\b generates MAM (make abstract machine) \bcc\b(1)
@@ -126,14 +126,15 @@ echo "setv _hosttype_ $_hosttype_"
 # mam_cc_DLL is the cc dll compilation option
 
 case $_hosttype_ in
-win32.*|cygwin.*)
+win32.*|cygwin.*|os2.*)
 	echo "setv mam_cc_DLL -D_BLD_DLL"
 	echo "setv mam_cc_DLLBIG -D_BLD_DLL"
 	;;
 *)	dll=
 	echo '#include <stdio.h>
-extern int f(){return(0);}
-int main(){FILE* fp=stdin;return(f());}' > dll$src
+extern int i;
+int i = 1;
+extern int f(){return(i);} int main(){FILE* fp=stdin;return(f());}' > dll$src
 	if	$cc -c dll$src 2>e
 	then	e=`wc -l e`
 		s=`wc dll$obj`
@@ -226,7 +227,7 @@ esac
 # mam_cc_L defined if cc -Ldir works
 
 case $_hosttype_ in
-win32.*|cygwin.*)
+win32.*|cygwin.*|os2.*)
 	echo "setv mam_cc_L 1"
 	;;
 *)	echo 'main(){return 0;}' > main$src
@@ -242,7 +243,6 @@ win32.*|cygwin.*)
 esac
 
 # mam_cc_SHELLMAGIC defined if installed shell scripts need magic
-# currently only cygwin has the honor
 
 echo 'exec 4<&0
 echo ok' > ok
@@ -254,7 +254,15 @@ exec 4<&0
 echo ok' > ok
 	chmod +x ok
 	case `(eval ./ok | /bin/sh) 2>/dev/null` in
-	ok)	echo 'setv mam_cc_SHELLMAGIC #!/bin/env sh' ;;
+	ok)	echo 'setv mam_cc_SHELLMAGIC #!/bin/env sh'
+		;;
+	*)	for i in /emx/bin/bash.exe /emx/bin/sh.exe
+		do	if	test -x $i
+			then	echo 'setv mam_cc_SHELLMAGIC #!'$i
+				break
+			fi
+		done
+		;;
 	esac
 	;;
 esac

@@ -1,4 +1,17 @@
+01-10-31 package.sh: handle *.sum paths with embedded space
+	 package.sh: change executable() to onpath()
+	 package.sh: executable([!] foo) replaces test [!] -x foo (.exe hack)
+	 package.sh: add os2 fix to `host type'
+	 mamake.c: add .exe hack
+	 iffe.sh: fix intrinsic function lib test
+	 mamprobe.sh: update pic probe to match make.probe for linux.ia64
+01-10-30 package.sh: make action skeleton view now checks subdirs
 01-10-20 package.sh: don't recurse into leaf dirs matching $MAKESKIP
+	 package.mk: tarball package.notice replaces `license accepted' prompt
+	 package.sh: eliminate `license accepted' prompt
+	 package.sh: add update to download latest from a url
+	 package.sh: use builtin arithmetic when we know its ksh
+	 iffe.sh: unkown -> unknown
 01-10-18 package.sh: convert to YYYY-MM-DD delta releases instead of NNNN
 	 package.mk: convert to YYYY-MM-DD delta releases instead of NNNN
 	 ratz.c: fix -m for paths containing \f\n\r\v

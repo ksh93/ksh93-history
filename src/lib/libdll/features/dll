@@ -1,7 +1,8 @@
 set	prototyped
 hdr	dl,dlfcn,dll,rld_interface,mach-o/dyld
 sys	ldr
-lib	dllload,dlopen,loadbind,shl_load -ldl
+lib	dlopen -ldl
+lib	dllload,loadbind,shl_load -ldl
 tst	dll_DYNAMIC link{
 	#include <sys/types.h>
 	#include <link.h>

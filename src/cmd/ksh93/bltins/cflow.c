@@ -58,7 +58,7 @@ int	b_return(register int n, register char *argv[],void *extra)
 	{
 	    case ':':
 		if(!strmatch(argv[opt_info.index],"[+-]+([0-9])"))
-			errormsg(SH_DICT,2, opt_info.arg);
+			errormsg(SH_DICT,2, "%s", opt_info.arg);
 		goto done;
 	    case '?':
 		errormsg(SH_DICT,ERROR_usage(0), "%s", opt_info.arg);
@@ -93,7 +93,7 @@ int	b_break(register int n, register char *argv[],void *extra)
 	while((n = optget(argv,cont?sh_optcont:sh_optbreak))) switch(n)
 	{
 	    case ':':
-		errormsg(SH_DICT,2, opt_info.arg);
+		errormsg(SH_DICT,2, "%s", opt_info.arg);
 		break;
 	    case '?':
 		errormsg(SH_DICT,ERROR_usage(0), "%s", opt_info.arg);

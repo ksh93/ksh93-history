@@ -1693,6 +1693,8 @@ static char	*fmttoken(Lex_t *lp, register int sym, char *tok)
 		return((char*)sh_translate(e_lexzerobyte));
 	if(sym==0)
 		return(shlex.arg?shlex.arg->argval:"?");
+	if(lex.intest && shlex.arg)
+		return(shlex.arg->argval);
 	if(sym&SYMRES)
 	{
 		register const Shtable_t *tp=shtab_reserved;
@@ -1775,11 +1777,12 @@ void	sh_syntax(void)
 		errormsg(SH_DICT,ERROR_exit(SYNBAD),e_lexsyntax2,tokstr,cp);
 }
 
-static char *stack_shift(register char *sp,int shift)
+static char *stack_shift(register char *sp,char *dp)
 {
 	register char *ep;
 	register int offset = staktell();
 	register int left = offset-(sp-stakptr(0));
+	register int shift = (dp+1-sp);
 	offset += shift;
 	stakseek(offset);
 	sp = stakptr(offset);
@@ -1901,8 +1904,7 @@ struct argnod *sh_endword(int mode)
 					dp = ep+n;
 					if(sp-dp <= 1)
 					{
-						int shift = (dp+1-sp);
-						sp = stack_shift(sp,shift);
+						sp = stack_shift(sp,dp);
 						dp = sp-1;
 						ep = dp-n;
 					}
@@ -1950,7 +1952,10 @@ struct argnod *sh_endword(int mode)
 				if(mode<0)
 				{
 					if(dp>=sp)
-						sp = stack_shift(sp,2);
+					{
+						sp = stack_shift(sp,dp+1);
+						dp = sp-2;
+					}
 					*dp++ = '\\';
 				}
 				if(ep)
@@ -1972,6 +1977,8 @@ struct argnod *sh_endword(int mode)
 			}
 			break;
 		    case S_POP:
+			if(sp[-1]!=RBRACT)
+				break;
 			if(!inlit && !(inquote&1))
 			{
 				inquote >>= 1;
@@ -1984,6 +1991,11 @@ struct argnod *sh_endword(int mode)
 			else if((inlit||inquote) && mode<0)
 			{
 				dp[-1] = '\\';
+				if(dp>=sp)
+				{
+					sp = stack_shift(sp,dp);
+					dp = sp-1;
+				}
 				*dp++ = ']';
 			}
 			break;
@@ -1995,6 +2007,11 @@ struct argnod *sh_endword(int mode)
 				if(inlit || (bracket&&inquote))
 				{
 					dp[-1] = '\\';
+					if(dp>=sp)
+					{
+						sp = stack_shift(sp,dp);
+						dp = sp-1;
+					}
 					*dp++ = '[';
 				}
 				else if(bracket++==0)

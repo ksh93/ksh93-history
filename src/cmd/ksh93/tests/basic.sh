@@ -24,9 +24,10 @@
 function err_exit
 {
 	print -u2 -n "\t"
-	print -u2 -r $Command: "$@"
+	print -u2 -r ${Command}[$1]: "${@:2}"
 	let Errors+=1
 }
+alias err_exit='err_exit $LINENO'
 
 # test basic file operations like redirection, pipes, file expansion
 Command=$0
@@ -249,4 +250,11 @@ fi
 if	[[ $(print x{a,b}y) != 'xay xby' ]]
 then	err_exit 'brace expansion not working'
 fi
+if	[[ $(for i in foo bar
+	  do ( tgz=$(print $i)
+	  print $tgz)
+	  done) != $'foo\nbar' ]]
+then	err_exit 'for loop subshell optimizer bug'
+fi
+
 exit $((Errors))

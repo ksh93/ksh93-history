@@ -25,9 +25,10 @@
 function err_exit
 {
 	print -u2 -n "\t"
-	print -u2 -r $Command: "$@"
+	print -u2 -r ${Command}[$1]: "${@:2}"
 	let Errors+=1
 }
+alias err_exit='err_exit $LINENO'
 
 Command=$0
 integer Errors=0
@@ -129,6 +130,15 @@ unset line
 	(( n==7 ))  && print ok
 )  | read -t 10 line
 if	[[ $line != ok ]]
-then	err_exit 'coprocess timimg bug'
+then	err_exit 'coprocess timing bug'
 fi
+(
+	/bin/cat |&
+	exec 6>&p
+	print -u6 ok
+	exec 6>&-
+	sleep 1
+	kill $! 2> /dev/null 
+) && err_exit 'coprocess with subshell would hang'
+
 exit $((Errors))

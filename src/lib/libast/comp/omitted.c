@@ -41,8 +41,7 @@
 
 /*
  * these workarounds assume each system call foo() has an _foo() entry
- * which is true for __CYGWIN__ which is currently the only _WIN32 system
- * that needs the workarounds
+ * which is true for __CYGWIN__ and __EMX__ (both gnu based)
  *
  * the workarounds handle .exe suffix omissions and the fixed /bin/sh
  * reference in execve() and bogus getpagesize() return values

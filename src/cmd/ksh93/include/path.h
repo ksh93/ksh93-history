@@ -74,7 +74,7 @@ extern Pathcomp_t 	*path_absolute(const char*, Pathcomp_t*);
 extern char 		*path_basename(const char*);
 extern int 		path_expand(const char*, struct argnod**);
 extern void 		path_exec(const char*,char*[],struct argnod*);
-#if defined(_DLL_BLD) && defined(_BLD_shell) 
+#if defined(__EXPORT__) && defined(_DLL_BLD) && defined(_BLD_shell)
 #   define extern __EXPORT__
 #endif
 extern int		path_open(const char*,Pathcomp_t*);

@@ -307,4 +307,6 @@ typeset -ui42 x=50
 if	[[ $x != 42#18 ]]
 then	err_exit 'display of unsigned integers in non-decimal bases wrong'
 fi
+$SHELL -c 'i=0;(( ofiles[i] != -1 && (ofiles[i] < mins || mins == -1) ));exit 0' 2> /dev/null || err_exit 'lexical error with arithemtic expression'
+rm -f core
 exit $((Errors))

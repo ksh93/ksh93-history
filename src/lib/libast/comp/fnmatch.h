@@ -36,6 +36,7 @@
 #define FNM_NOESCAPE	0x0001		/* \ is literal			*/
 #define FNM_PATHNAME	0x0002		/* explicit match for /		*/
 #define FNM_PERIOD	0x0004		/* explicit match for leading .	*/
+#define FNM_NOSYS	0x0010		/* not implemented		*/
 
 /* nonstandard fnmatch() flags */
 

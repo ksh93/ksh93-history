@@ -59,7 +59,7 @@ static void
 hung(int sig)
 {
 	NoP(sig);
-	sfclose(state.current->msgfp);
+	close(sffileno(state.current->msgfp));
 }
 
 /*

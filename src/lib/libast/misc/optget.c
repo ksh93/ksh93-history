@@ -799,8 +799,6 @@ localize(Push_t* psp, char* s, char* e, int term, int n, char* catalog, int vers
 	Push_t*		tsp;
 	int		c;
 
-	static Push_t	push;
-
 	t = skip(s, term, 0, 0, n, 0, 0, version);
 	if (e && t > e)
 		t = e;
@@ -821,12 +819,8 @@ localize(Push_t* psp, char* s, char* e, int term, int n, char* catalog, int vers
 		sfputc(ip, c);
 	}
 	s = sfstruse(ip);
-	if ((u = T(error_info.id, catalog, s)) != s)
-		c = 1;
-	else if (*s == ':' || *s == '?' || *s == ']')
-		c = -1;
-	else
-		c = 0;
+	if ((u = T(error_info.id, catalog, s)) == s)
+		return 0;
 	n = strlen(u);
 	if (tsp = newof(0, Push_t, 1, n + 1))
 	{
@@ -835,10 +829,8 @@ localize(Push_t* psp, char* s, char* e, int term, int n, char* catalog, int vers
 		strcpy(tsp->nb, u);
 		tsp->ob = t;
 		tsp->oe = e;
-		tsp->ch = c;
+		tsp->ch = 1;
 	}
-	else
-		tsp = &push;
 	tsp->next = psp;
 	return tsp;
 }
@@ -913,17 +905,13 @@ label(register Sfio_t* sp, int sep, register char* s, int z, int level, int styl
 		if (*(p = next(p, version)) == '[')
 			y = p + 1;
 	}
-	if (X(catalog) && (!level || *s == '\a' || *(s - 1) != '+'))
+	if (X(catalog) && (!level || *s == '\a' || *(s - 1) != '+') &&
+	    (tsp = localize(psp, s, e, (sep || level) ? '?' : 0, sep || level, catalog, version, ip)))
 	{
-		psp = localize(psp, s, e, (sep || level) ? '?' : 0, sep || level, catalog, version, ip);
-		if (psp->nb)
-		{
-			s = psp->nb;
-			e = psp->ne;
-			r = psp->ch > 0;
-		}
-		else
-			psp = psp->next;
+		psp= tsp;
+		s = psp->nb;
+		e = psp->ne;
+		r = psp->ch > 0;
 	}
 	switch (*s)
 	{
@@ -996,16 +984,11 @@ label(register Sfio_t* sp, int sep, register char* s, int z, int level, int styl
 					continue;
 				else if (sep)
 					goto restore;
-				else if (X(catalog))
+				else if (X(catalog) && (tsp = localize(psp, s, e, 0, 1, catalog, version, ip)))
 				{
-					psp = localize(psp, s, e, 0, 1, catalog, version, ip);
-					if (psp->nb)
-					{
-						s = psp->nb;
-						e = psp->ne;
-					}
-					else
-						psp = psp->next;
+					psp = tsp;
+					s = psp->nb;
+					e = psp->ne;
 				}
 				break;
 			case ']':
@@ -1447,13 +1430,10 @@ text(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip, i
 			sfputc(sp, c);
 		else
 		{
-			if (X(catalog))
+			if (X(catalog) && (tsp = localize(psp, p, NiL, 0, 1, catalog, version, ip)))
 			{
-				psp = localize(psp, p, NiL, 0, 1, catalog, version, ip);
-				if (psp->nb)
-					p = psp->nb;
-				else
-					psp = psp->next;
+				psp = tsp;
+				p = psp->nb;
 			}
 			if (style < STYLE_nroff)
 				for (n = 0; n < bump + 1; n++)
@@ -2358,6 +2338,12 @@ opthelp(const char* oopts, const char* what)
 							if (!(sp_body = sfstropen()))
 								goto nospace;
 						}
+						continue;
+					}
+					else if (style == STYLE_match && *what == '+' && match((char*)what + 1, p + 1, version, catalog))
+					{
+						p = text(sp, p, style, 1, 3, sp_info, version, catalog);
+						matched = -1;
 						continue;
 					}
 					if (!z)
@@ -3328,7 +3314,7 @@ opterror(register char* p, int version, char* catalog)
  * if any # option is specified then numeric options (e.g., -123)
  * are associated with the leftmost # option in opts
  *
- * usage info in placed opt_info.arg when '?' returned
+ * usage info placed in opt_info.arg when '?' returned
  * see help_text[] (--???) for more info
  */
 

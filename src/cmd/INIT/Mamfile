@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 4.2 2001-10-18
+info mam static 00000 1994-07-17 make (AT&T Research) 4.2 2001-10-31
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ar
@@ -622,7 +622,7 @@ make ../../../bin/.paths
 exec - {
 exec - echo FPATH=../fun
 exec - set x x lib64 LD_LIBRARY64_PATH lib32 LD_LIBRARYN32_PATH lib LD_LIBRARY_PATH
-exec - case $#:static,port:/dev/stdout:2533686 in
+exec - case $#:static,port:/dev/stdout:1716125 in
 exec - 2:*|*:1)if	test -x /lib/dld.sl
 exec - 	then	echo SHLIB_PATH=../lib
 exec - 	elif	test -x /usr/lib/dyld

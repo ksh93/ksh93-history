@@ -887,7 +887,7 @@ int sh_init(register int argc,register char *argv[], void(*userinit)(int))
 	if(sh.lim.clk_tck <=0)
 		sh.lim.clk_tck = CLK_TCK;
 #ifdef SHOPT_FS_3D
-	if(mount(".", NIL(char*),FS3D_GET|FS3D_VERSION,0) >= 0)
+	if(fs3d(FS3D_TEST))
 		sh.lim.fs3d = 1;
 #endif /* SHOPT_FS_3D */
 	sh_ioinit();

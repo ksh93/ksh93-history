@@ -32,7 +32,7 @@
  */
 
 static const char usage[] =
-"+[-?\n@(#)$Id: tail (AT&T Labs Research) 2001-09-06 $\n]"
+"+[-?\n@(#)$Id: tail (AT&T Labs Research) 2001-10-29 $\n]"
 USAGE_LICENSE
 "[+NAME?tail - output trailing portion of one or more files ]"
 "[+DESCRIPTION?\btail\b copies one or more input files to standard output "
@@ -377,6 +377,7 @@ b_tail(int argc, char** argv, void* context)
 				error(ERROR_warn(0), "%s: cannot open", ep->name);
 				continue;
 			}
+			sfset(ep->sp, SF_SHARE, 0);
 			if ((offset = tailpos(ep->sp, number, delim)) >= 0)
 			{
 				sfseek(ep->sp, offset, SEEK_SET);
@@ -454,12 +455,12 @@ b_tail(int argc, char** argv, void* context)
 				error(ERROR_system(0), "%s: cannot open", s);
 				continue;
 			}
-			sfset(ip, SF_SHARE, 1);
 			if (argc > header)
 				sfprintf(sfstdout, format, s);
 			format = header_fmt;
 			if (number <= 0)
 			{
+				sfset(ip, SF_SHARE, !(flags & F_FLAG));
 				if ((number = -number) > 1)
 					sfmove(ip, NiL, number - 1, delim);
 				if (flags & R_FLAG)
@@ -469,6 +470,7 @@ b_tail(int argc, char** argv, void* context)
 			}
 			else
 			{
+				sfset(ip, SF_SHARE, 0);
 				if ((offset = tailpos(ip, number, delim)) >= 0)
 				{
 					if (flags & R_FLAG)

@@ -30,7 +30,7 @@ case $-:$BASH_VERSION in
 esac
 
 command=package
-version=2001-10-20
+version=2001-10-31
 
 src="cmd contrib etc lib"
 use="/home /usr/common /exp /usr/local /usr/add-on /usr/addon /usr/tools /usr /opt"
@@ -43,6 +43,9 @@ package_use='=$HOSTTYPE=$PACKAGEROOT=$INSTALLROOT=$EXECROOT=$CC='
 
 admin_db=admin.db
 admin_env=admin.env
+default_url=default.url
+
+ARCH='*.*|sun4'		# all but sun4 match *.*
 
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
@@ -219,6 +222,24 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 		general a package must be made before it can be tested.
 		Components tested with the \bregress\b(1) command require
 		\bksh93\b.]
+	[+update\b [ binary ]] [ source ]] [ \aarchitecture\a ... ]] [ \aurl\a ]] [ \apackage\a ... ]]?Download
+		the latest release of the selected packages from \aurl\a
+		(e.g., \bhttp://www.research.att.com/sw/download\b) into
+		the directory \b$INSTALLROOT/lib/package/tgz\b. If
+		\aarchitecture\a is omitted then only architectures already
+		present in the tgz directory will be downloaded. If
+		\aarchitecture\a is \b-\b then all posted architectures will
+		be downloaded. If \aurl\a matches \b*.url\b then it is
+		interpreted as a file whose contents is the url, else if
+		\aurl\a is specified then it is copied to the file
+		\b$INSTALLROOT/lib/package/tgz/default.url\b, otherwise
+		the url in \bdefault.url\b is used. If \apackage\a is omitted
+		then only packages already present in the tgz directory will
+		be downloaded. If \apackage\a is \b-\b then all posted packages
+		will be downloaded. If \bsource\b and \bbinary\b are omitted
+		then both source and binary packages will be downloaded. This
+		action only works with shells or systems that support io to
+		\b/dev/tcp/\b\ahost\a/\aport\a.]
    	[+use\b [ \auid\a | \apackage\a | - ]] [ command ...]]?Run \acommand\a,
 		or an interactive shell if \acommand\a is omitted, with the
 		environment initialized for using the package (can you say
@@ -400,7 +421,7 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 	while	getopts -a $command "$USAGE" OPT
 	do	:
 	done
-	shift `expr $OPTIND - 1`
+	shift $OPTIND-1
 	;;
 esac
 
@@ -438,7 +459,7 @@ do	case $# in
 	0)	set host type ;;
 	esac
 	case $1 in
-	admin|contents|copyright|host|install|license|list|make|read|release|remove|results|test|use|verify|write|TEST)
+	admin|contents|copyright|host|install|license|list|make|read|release|remove|results|test|update|use|verify|write|TEST)
 		action=$1
 		shift
 		break
@@ -527,7 +548,7 @@ ${bT}(2)${bD}Choose a package root directory and cd to it. This will be a local 
       area for all packages. See ${bB}(7)${eB} for installing packages for public use.${eD}
 ${bT}(3)${bD}Create the subdirectory ${bB}lib/package/tgz${eB} and download all package archives
       into that directory. The ${Mpackage} command maintains the contents of this
-      directory, and deletes old archives as new ones are read in. Package
+      directory and deletes old archives as new ones are read in. Package
       delta archives require the most recent base, so manually removing files
       in this directory may invalidate future deltas.${eD}
 ${bT}(4)${bD}If the ${bB}bin/package${eB} command does not exist then manually read the ${bB}INIT${eB}
@@ -536,29 +557,27 @@ ${bT}(4)${bD}If the ${bB}bin/package${eB} command does not exist then manually r
 			tar xvf -${eX}
       where ${bI}HOSTTYPE${eI} is compatible with your host architecture. If your system
       does not have ${Mtar} or ${Mgunzip} then download the ${Mratz} binary package,
-      install it, and manually read the ${bB}INIT${eB} binary command:${bX}
+      install it, and manually read the ${bB}INIT${eB} binary package:${bX}
 		mkdir bin
 		cp lib/package/tgz/ratz.${bI}YYYY-MM-DD${eI}.${bI}HOSTTYPE${eI}${bB}.exe${eB} bin/ratz
 		bin/ratz -lm < lib/package/tgz/INIT.YYYY-MM-DD.${bI}HOSTTYPE${eI}.tgz${eX}${eD}
 ${bT}(5)${bD}Read all unread package archive(s):${bX}
 		bin/package read${eX}
       Both binary and source packages will be read by this step.${eD}
-${bT}(6)${bD}When ${bB}(5)${eB} completes run${bX}
-		bin/package use${eX}
-      to get an interactive ${bB}\$SHELL${eB} that sets up the environment
-      for using the package binaries:${bL2}
-	${bT}\$HOSTTYPE	${bD}the current host type${eD}
-	${bT}\$PACKAGEROOT	${bD}the root directory for all packages (${bB}\$P${eB})${eD}
-	${bT}\$INSTALLROOT	${bD}the installation root for the current host type (${bB}\$A${eB})${eD}
-	${bT}\$PATH		${bD}references to the install and package bin directories${eD}
-        ${bT}${bI}DLL-MAGIC${eI}	${bD}environment magic for locating package shared libraries${eD}${eL}${eD}
+${bT}(6)${bD}Run the binaries by${bX}
+		export PATH=\$INSTALLROOT/bin:\$PATH
+		ksh${eX}
+      or by adding ${bI}\$INSTALLROOT${eI}/lib to the runtime linker search list
+      (the variable that is assigned the value ${bB}../lib${eB} in the
+      ${bB}\$INSTALLROOT/bin/.paths${eB} file.)
 ${bT}(7)${bD}Once you are satisfied with a package its binaries can be installed in
       a public area by:${bX}
 		bin/package install ${bI}DIRECTORY PACKAGE${eI}${eX}
-      and users can access the binaries by${bX}
-		bin/package use ${bI}DIRECTORY${eI}${eX}
-      or by exporting the environment variable definitions listed by${bX}
-		bin/package environment use ${bI}DIRECTORY${eI}${eX}${eD}
+      or you can just copy the entire \$INSTALLROOT directory tree. Users can
+      run the binaries by${bX}
+		export PATH=${bI}DIRECTORY${eI}/bin:\$PATH
+		ksh${eX}
+      or by adding ${bI}DIRECTORY${eI}/lib to the runtime linker search list.
 ${eL}${eO}"
 			;;
 		intro)	echo "${bO}
@@ -659,10 +678,12 @@ ${bT}(3)${bD}Create the subdirectory ${bB}lib/package/tgz${eB} and download all 
       directory and deletes old archives as new ones are read in. Package
       delta archives require the most recent base, so manually removing files
       in this directory may invalidate future deltas.${eD}
-${bT}(4)${bD}If the ${bB}bin/package${eB} command does not exist then manually read the ${bB}INIT${eB} source package:${bX}
+${bT}(4)${bD}If the ${bB}bin/package${eB} command does not exist then manually read the ${bB}INIT${eB}
+      source package:${bX}
 		gunzip < lib/package/tgz/INIT.${bI}YYYY-MM-DD${eI}.tgz | tar xvf -${eX}
       If your system does not have ${Mtar} or ${Mgunzip} then download the ${Mratz}
-      source package, compile it, and manually read the ${bB}INIT${eB} source package:${bX}
+      source package, compile it, and manually read the ${bB}INIT${eB}
+      source package:${bX}
 		mkdir bin
 		cp lib/package/tgz/ratz.${bI}YYYY-MM-DD${eI}.c lib/package/tgz/ratz.c
 		cc -o bin/ratz lib/package/tgz/ratz.c
@@ -682,7 +703,13 @@ ${bT}(7)${bD}List make results and interesting errors from ${bB}(6)${eB}:${bX}
 		bin/package test${eX}
       List test results and errors:${bX}
 		bin/package results test${eX}${eD}
-${bT}(8)${bD}When ${bB}(6)${eB} or ${bB}(7)${eB} complete run:${bX}
+${bT}(8)${bD}Run the binaries by${bX}
+		export PATH=\$INSTALLROOT/bin:\$PATH
+		ksh${eX}
+      or by adding ${bI}\$INSTALLROOT${eI}/lib to the runtime linker search list
+      (the variable that is assigned the value ${bB}../lib${eB} in the
+      ${bB}\$INSTALLROOT/bin/.paths${eB} file.) If you want to build individual
+      components run:${bX}
 		bin/package use${eX}
       to get an interactive ${bB}\$SHELL${eB} that sets up the environment for using
       package binaries:${bL2}
@@ -700,10 +727,11 @@ ${bT}(8)${bD}When ${bB}(6)${eB} or ${bB}(7)${eB} complete run:${bX}
 ${bT}(9)${bD}Once you are satisfied with a package its binaries can be installed in
       a public area by:${bX}
 		bin/package install ${bI}DIRECTORY PACKAGE${eI}${eX}
-      and users can access the binaries by${bX}
-		bin/package use ${bI}DIRECTORY${eI}${eX}
-      or by exporting the environment variable definitions listed by${bX}
-		bin/package environment use ${bI}DIRECTORY${eI}${eX}${eD}
+      or you can just copy the entire \$INSTALLROOT directory tree. Users can
+      run the binaries by${bX}
+		export PATH=${bI}DIRECTORY${eI}/bin:\$PATH
+		ksh${eX}
+      or by adding ${bI}DIRECTORY${eI}/lib to the runtime linker search list.
 ${eL}${eO}"
 			;;
 		*)	echo "Usage: $command [ qualifier ... ] [ action ] [ arg ... ] [ n=v ... ]
@@ -841,6 +869,23 @@ ${eL}${eO}"
 		is a terminal then the output is also captured in
 		\$INSTALLROOT/lib/package/gen/test.out. In general a package
 		must be made before it can be tested.
+	update [ binary ] [ source ] [ ARCHITECTURE ... ] [ URL ] [ PACKAGE ... ]
+		Download the latest release of the selected packages from
+		URL (e.g., http://www.research.att.com/sw/download) into
+		the directory \$INSTALLROOT/lib/package/tgz. If ARCHITECTURE
+		is omitted then only architectures already present in the tgz
+		directory will be downloaded. If ARCHITECTURE is - then
+		all posted architectures will be downloaded. If URL matches
+		*.url then is interpreted as a file whose contents is the url;
+		else if URL is specified then it is copied to the file
+		\$INSTALLROOT/lib/package/tgz/default.url, otherwise
+		the url in default.url is used. If PACKAGE is omitted then
+		only packages already present in the tgz directory will be
+		downloaded. If PACKAGE is - then all posted packages will be
+		downloaded. If source and binary are omitted then both source
+		and binary packages will be downloaded. This action only
+		works with shells or systems that support io to
+		/dev/tcp/HOST/PORT.
    	use [ uid | PACKAGE | - ] [ COMMAND ... ]
    		Run COMMAND or an interactive shell if COMMAND is omitted, with
 		the environment initialized for using the package (can you say
@@ -1008,6 +1053,44 @@ packageroot() # dir
 	test -d $1/lib/$command
 }
 
+# true if arg is executable
+
+executable() # [!] command
+{
+	case $1 in
+	'!')	test ! -x "$2" -a ! -x "$2.exe"; return ;;
+	*)	test -x "$1" -o -x "$1.exe"; return ;;
+	esac
+}
+
+# true if arg is executable command on $PATH
+
+onpath() # command
+{
+	b=$1
+	case $b in
+	/*)	if	executable $b
+		then	_onpath_=$b
+			return 0
+		fi
+		;;
+	esac
+	IFS=':'
+	set '' $PATH
+	IFS=$ifs
+	shift
+	for d
+	do	case $d in
+		'')	d=. ;;
+		esac
+		if	executable "$d/$b"
+		then	_onpath_=$d/$b
+			return 0
+		fi
+	done
+	return 1
+}
+
 # true if no nmake or nmake too old
 
 nonmake() # nmake
@@ -1127,7 +1210,7 @@ hostinfo() # attribute ...
 			do	case $# in
 				0)	break ;;
 				esac
-				if	test -x $1
+				if	executable $1
 				then	case `$1 | grep -ic '^cpu '` in
 					1)	cpu=`$1 | grep -ic '^ *[0123456789][0123456789]* '`
 						break
@@ -1345,7 +1428,7 @@ main()
 			case $canon in
 			'')	case $cc in
 				/*|cc)	;;
-				*)	if	test -x $i/$cc
+				*)	if	executable $i/$cc
 					then	a=`$i/$cc -dumpmachine 2>/dev/null`
 						case $a in
 						''|*' '*|*/*:*)
@@ -1489,7 +1572,7 @@ main()
 				esac
 				;;
 			esac
-			if	test -x $cc
+			if	executable $cc
 			then	a=$cc
 			else	IFS=:
 				set /$IFS$PATH
@@ -1497,7 +1580,7 @@ main()
 				shift
 				for i
 				do	a=$i/$cc
-					if	test -x $a
+					if	executable $a
 					then	break
 					fi
 				done
@@ -1624,7 +1707,14 @@ main()
 				esac
 				type=stratus.$mach
 				;;
-			*)	type=`echo $os | sed -e 's/[0123456789].*//' -e 's/[^ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_0123456789.].*//'`
+			*)	case $arch in
+				[Oo][Ss][-/.]2)
+					type=os2
+					arch=$rel
+					;;
+				*)	type=`echo $os | sed -e 's/[0123456789].*//' -e 's/[^ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_0123456789.].*//'`
+					;;
+				esac
 				case $type in
 				[Cc][Yy][Gg][Ww][Ii][Nn]_*)
 					type=cygwin
@@ -1809,34 +1899,6 @@ int b() { return 0; }
 note() # message ...
 {
 	echo $command: "$@" >&2
-}
-
-# true if arg is executable command on $PATH
-
-executable() # command
-{
-	b=$1
-	case $b in
-	/*)	if	test -x $b
-		then	_executable_=$b
-			return 0
-		fi
-		;;
-	esac
-	IFS=':'
-	set '' $PATH
-	IFS=$ifs
-	shift
-	for d
-	do	case $d in
-		'')	d=. ;;
-		esac
-		if	test -x "$d/$b"
-		then	_executable_=$d/$b
-			return 0
-		fi
-	done
-	return 1
 }
 
 # some actions have their own PACKAGEROOT or kick out early
@@ -2042,7 +2104,7 @@ $PACKAGE_USE)
 		case $HOSTTYPE in
 		sgi.mips[0123456789]*)
 			x=rld
-			if	test -x /lib32/$x -o -x /lib64/$x
+			if	executable /lib32/$x || executable /lib64/$x
 			then	case $INSTALLROOT in
 				*/sgi.mips[0123456789]*)
 					u=`echo $INSTALLROOT | sed -e 's,-[^-/]*$,,' -e 's,.$,,'`
@@ -2061,7 +2123,7 @@ $PACKAGE_USE)
 						;;
 					esac
 					case $l in
-					?*)	if	test ! -x /$l/$x
+					?*)	if	executable ! /$l/$x
 						then	continue
 						fi
 						;;
@@ -2190,8 +2252,8 @@ $PACKAGE_USE)
 		export PATH
 		;;
 	*)	for i in package proto nmake
-		do	if	executable package
-			then	EXECROOT=`echo $_executable_ | sed -e 's,//*[^/]*//*[^/]*$,,'`
+		do	if	onpath package
+			then	EXECROOT=`echo $_onpath_ | sed -e 's,//*[^/]*//*[^/]*$,,'`
 				break
 			fi
 		done
@@ -2213,26 +2275,26 @@ $PACKAGE_USE)
 	# grab a decent default shell
 
 	case $KEEP_SHELL in
-	0)	test -x "$SHELL" || SHELL=
+	0)	executable "$SHELL" || SHELL=
 		case $SHELL in
 		''|/bin/*|/usr/bin/*)
 			case $SHELL in
 			'')	SHELL=/bin/sh ;;
 			esac
 			for i in ksh sh bash
-			do	if	executable $i
-				then	case `$_executable_ -c 'echo $KSH_VERSION'` in
+			do	if	onpath $i
+				then	case `$_onpath_ -c 'echo $KSH_VERSION'` in
 					*[Pp][Dd]*)
 						: pd ksh is unreliable
 						;;
-					*)	SHELL=$_executable_
+					*)	SHELL=$_onpath_
 						break
 						;;
 					esac
 				fi
 			done
 			;;
-		*/*ksh)	if	test -x $KSH
+		*/*ksh)	if	executable $KSH
 			then	SHELL=$KSH
 			fi
 			;;
@@ -2260,8 +2322,8 @@ $PACKAGE_USE)
 	# $INSTALLROOT may be an obsolete shipment
 
 	PAX=
-	if	executable pax
-	then	case `$_executable_ -rw --?meter 2>&1` in
+	if	onpath pax
+	then	case `$_onpath_ -rw --?meter 2>&1` in
 		*--meter*)	PAX=pax ;;
 		esac
 	fi
@@ -2307,7 +2369,7 @@ $PACKAGE_USE)
 				USER_VPATH_CHAIN="$USER_VPATH_CHAIN $p $i"
 				p=$i
 				case $PROTOROOT in
-				-)	test -x $i/bin/mamake && PROTOROOT= ;;
+				-)	executable $i/bin/mamake && PROTOROOT= ;;
 				esac
 				;;
 			esac
@@ -2430,20 +2492,20 @@ checkaout()	# cmd ...
 	-)	PROTOROOT=
 		test -f $INITROOT/hello.c -a -f $INITROOT/p.c -a -w $PACKAGEROOT || {
 			for i
-			do	executable $i || {
+			do	onpath $i || {
 					echo "$command: $i: command not found" >&2
 					exit 1
 				}
 			done
 			return 0
 		}
-		if	executable $CC
+		if	onpath $CC
 		then	_PACKAGE_cc=1
 			test -f $INITROOT/hello.c -a -f $INITROOT/p.c || {
 				echo "$command: $INITROOT: INIT package source not found" >&2
 				exit 1
 			}
-			test -x $INSTALLROOT/bin/nmake || {
+			executable $INSTALLROOT/bin/nmake || {
 				# check for prototyping cc
 				# NOTE: proto.c must be K&R compatible
 
@@ -2492,7 +2554,7 @@ checkaout()	# cmd ...
 		;;
 	esac
 	case $_PACKAGE_cc in
-	'')	if	executable $CC
+	'')	if	onpath $CC
 		then	_PACKAGE_cc=1
 		else	_PACKAGE_cc=0
 		fi
@@ -2509,7 +2571,7 @@ checkaout()	# cmd ...
 		then	k=${k}1
 		else	k=${k}0
 		fi
-		if	test -x $INSTALLROOT/bin/$i
+		if	executable $INSTALLROOT/bin/$i
 		then	k=${k}1
 		else	k=${k}0
 		fi
@@ -2537,7 +2599,7 @@ checkaout()	# cmd ...
 		case `ls -t $INITROOT/$i.c $INSTALLROOT/bin/$i 2>/dev/null` in
 		"$INITROOT/$i.c"*)
 			note update $INSTALLROOT/bin/$i
-			if	test -x $INSTALLROOT/bin/proto
+			if	executable $INSTALLROOT/bin/proto
 			then	case $exec in
 				'')	$INSTALLROOT/bin/proto -p $INITROOT/$i.c > $i.c || exit ;;
 				*)	$exec "$INSTALLROOT/bin/proto -p $INITROOT/$i.c > $i.c" ;;
@@ -2840,7 +2902,7 @@ capture() # file command ...
 			;;
 		esac
 		case $quiet in
-		0)	if	test ! -x $TEE
+		0)	if	executable ! $TEE
 			then	TEE=tee
 			fi
 			{
@@ -2877,8 +2939,8 @@ package_install() # dest sum
 		esac
 		case $t in
 		$ot)	;;
-		*)	if	test ! -d $t
-			then	$exec mkdir -p $t || exit
+		*)	if	test ! -d "$t"
+			then	$exec mkdir -p "$t" || exit
 			fi
 			ot=$t
 			;;
@@ -2888,13 +2950,13 @@ package_install() # dest sum
 			.)	f=$dir/$file ;;
 			*)	f=$arch/$dir/$file ;;
 			esac
-			if	test -f $f
+			if	test -f "$f"
 			then	t=$t/$file
 				case $quiet in
-				0)	echo $t ;;
+				0)	echo "$t" ;;
 				esac
-				$exec cp -f $f $t || code=1
-				$exec chmod $mode $t || code=1
+				$exec cp -f "$f" "$t" || code=1
+				$exec chmod $mode "$t" || code=1
 			fi
 			;;
 		esac
@@ -2909,19 +2971,48 @@ package_verify() # sum
 
 make_recurse() # dir
 {
-	k=0
-	for j in $makefiles
-	do	if	view - $1/$j
-		then	k=1
+	_make_recurse_k=0
+	for _make_recurse_j in $makefiles
+	do	if	view - $1/$_make_recurse_j
+		then	_make_recurse_k=1
 			break
 		fi
 	done
-	case $k in
+	case $_make_recurse_k in
 	0)	case $exec in
 		'')	echo :MAKE: > $1/Makefile || exit ;;
 		*)	$exec "echo :MAKE: > $1/Makefile" ;;
 		esac
 		;;
+	esac
+}
+
+get() # host path [ file size ]
+{
+	getfd=8
+	case $3 in
+	'')	eval "exec $getfd<> /dev/tcp/$1/80" || exit
+		echo "GET $2" >&$getfd
+		get=`grep '^[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ]' <&$getfd`
+		;;
+	*)	case $exec in
+		'')	echo "$3 ($4 bytes):"
+			eval "exec $getfd<> /dev/tcp/$1/80" || exit
+			echo "GET $2/$3" >&$getfd
+			cat <&$getfd > get.tmp || exit
+			case " `wc -c get.tmp` " in
+			*" $4 "*)
+				;;
+			*)	rm -f get.tmp
+				echo $command: $3: download error >&2
+				exit 1
+				;;
+			esac
+			mv get.tmp $3 || exit
+			;;
+		*)	echo "$3 ($4 bytes)"
+			;;
+		esac
 	esac
 }
 
@@ -3383,8 +3474,8 @@ install)cd $PACKAGEROOT
 			elif	test ! -d $dest
 			then	echo "$command: $dest: destination directory must exist" >&2
 			else	if	test "" != "$makecheck"
-				then	if	executable $MAKE
-					then	MAKE=$_executable_
+				then	if	onpath $MAKE
+					then	MAKE=$_onpath_
 					else	echo "$command: $MAKE: not found" >&2
 						exit 1
 					fi
@@ -3491,21 +3582,25 @@ make)	cd $PACKAGEROOT
 	do	test -d $INSTALLROOT/$i || $exec mkdir $INSTALLROOT/$i || exit
 	done
 	make_recurse src
+	o= k=
+	for i in $makefiles
+	do	case $o in
+		?*)	o="$o -o" k="$k|" ;;
+		esac
+		o="$o -name $i"
+		k="$k$i"
+	done
+	o="( $o ) -print"
 	for d in $src
 	do	i=src/$d
 		if	test -d $i
 		then	test -d $INSTALLROOT/$i || $exec mkdir $INSTALLROOT/$i || exit
 			make_recurse $i
-			for j in `cd src/$d && echo '' *`
+			for j in `cd $i; find . $o | sed -e 's,^\./,,' -e 's,/[^/]*$,,' | sort -u`
 			do	case $j in
-				$MAKESKIP) continue ;;
+				$k|$MAKESKIP) continue ;;
 				esac
-				for k in $makefiles
-				do	if	test -f $i/$j/$k
-					then	test -d $INSTALLROOT/$i/$j || $exec mkdir $INSTALLROOT/$i/$j || exit
-						break
-					fi
-				done
+				test -d $INSTALLROOT/$i/$j || $exec mkdir -p $INSTALLROOT/$i/$j || exit
 			done
 		fi
 	done
@@ -3561,7 +3656,7 @@ make)	cd $PACKAGEROOT
 
 	# generate nmake first if possible
 
-	if	test ! -x $NMAKE -a -d $PACKAGEROOT/src/cmd/nmake
+	if	executable ! $NMAKE && test -d $PACKAGEROOT/src/cmd/nmake
 	then	if	nonmake $MAKE
 		then	note make $NMAKE with mamake
 			c=$CC
@@ -3582,7 +3677,7 @@ make)	cd $PACKAGEROOT
 			assign=$a
 			CC=$c
 			case $make$noexec in
-			'')	if	test ! -x $NMAKE
+			'')	if	executable ! $NMAKE
 				then	echo "$command: $action: errors making $NMAKE" >&2
 					exit 1
 				fi
@@ -3604,7 +3699,7 @@ make)	cd $PACKAGEROOT
 			note make the remaining targets with $NMAKE
 		else	eval capture $MAKE \$makeflags \$noexec install nmake $assign
 			case $make$noexec in
-			'')	if	test ! -x $NMAKE
+			'')	if	executable ! $NMAKE
 				then	echo "$command: $action: errors making $NMAKE" >&2
 					exit 1
 				fi
@@ -3617,14 +3712,14 @@ make)	cd $PACKAGEROOT
 
 	# generate ksh next if possible
 
-	if	test "$KEEP_SHELL" != 1 -a ! -x $KSH -a -d $PACKAGEROOT/src/cmd/ksh93
+	if	test "$KEEP_SHELL" != 1 -a -d $PACKAGEROOT/src/cmd/ksh93 && executable ! $KSH
 	then	if	nonmake $MAKE
 		then	m=mamake
 		else	m=nmake
 		fi
 		eval capture $m \$makeflags \$noexec install ksh93 $assign
 		case $make$noexec in
-		'')	if	test ! -x $KSH
+		'')	if	executable ! $KSH
 			then	echo "$command: $action: errors making $KSH" >&2
 				exit 1
 			fi
@@ -3642,18 +3737,18 @@ make)	cd $PACKAGEROOT
 		for i in \
 			ksh nmake tee cp ln mv rm \
 			*ast*.dll *cmd*.dll *dll*.dll *shell*.dll
-		do	if	test -x $i
+		do	if	executable $i
 			then	cmp -s $i $OK/$i ||
 				$exec cp $i $OK/$i
 			fi
 		done
-		if	test -x $OK/nmake
+		if	executable $OK/nmake
 		then	MAKE=$INSTALLROOT/bin/$OK/nmake
 		fi
-		if	test -x $OK/tee
+		if	executable $OK/tee
 		then	TEE=$INSTALLROOT/bin/$OK/tee
 		fi
-		if	test "$KEEP_SHELL" != 1 -a -x $OK/ksh
+		if	test "$KEEP_SHELL" != 1 && executable $OK/ksh
 		then	SHELL=$INSTALLROOT/bin/$OK/ksh
 			export SHELL
 			COSHELL=$SHELL
@@ -3672,7 +3767,7 @@ make)	cd $PACKAGEROOT
 		case $target in
 		'')	target="install" ;;
 		esac
-		eval capture mamake \$makeflags \$noexec install $assign
+		eval capture mamake \$makeflags \$noexec \$target $assign
 	else	case $target in
 		'')	target="install cc-" ;;
 		esac
@@ -3829,7 +3924,7 @@ read)	case `pwd` in
 					code=1
 					continue
 				}
-			else	if	executable gunzip && executable tar
+			else	if	onpath gunzip && onpath tar
 				then	case $exec in
 					'')	$exec gunzip < "$f" | tar xvf - ;;
 					*)	$exec "gunzip < $f | tar xvf -" ;;
@@ -3854,13 +3949,13 @@ read)	case `pwd` in
 					do	case $mode in
 						0*)	case $grp in
 							-)	;;
-							*)	$exec chgrp $grp $file ;;
+							*)	$exec chgrp $grp "$file" ;;
 							esac
 							case $usr in
 							-)	;;
-							*)	$exec chown $usr $file ;;
+							*)	$exec chown $usr "$file" ;;
 							esac
-							$exec chmod $mode $file
+							$exec chmod $mode "$file"
 							;;
 						esac
 					done < $PACKAGEBIN/gen/$p.sum
@@ -3907,7 +4002,7 @@ $r:" | sort` in
 				case $exec in
 				'')	echo $p $v $v 1 > $w/gen/$p.ver
 					;;
-				*)	z=$d$p[_.]$v$q.tgz
+				*)	z=$d${p}[_.]$v$q.tgz
 					$exec "echo $p $v $v 1 > $w/gen/$p.ver"
 					gen="$gen $d$p.$v$q.tgz"
 					;;
@@ -3951,7 +4046,7 @@ $r:" | sort` in
 
 		# check for ini files
 
-		if	test -x $w/$p.ini
+		if	executable $w/$p.ini
 		then	$exec $w/$p.ini read || {
 				code=1
 				continue
@@ -3963,9 +4058,9 @@ $r:" | sort` in
 		k=
 		for i in `ls $d$p[_.][0123456789][0123456789][0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789][_.]????$m* $z 2>/dev/null`
 		do	case $i in
-			$d$p[_.][0123456789][0123456789][0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789][_.][0123456789][0123456789][0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789]$m*)
+			$d${p}[_.][0123456789][0123456789][0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789][_.][0123456789][0123456789][0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789]$m*)
 				;;
-			$d$p[_.][0123456789][0123456789][0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789]$m*)
+			$d${p}[_.][0123456789][0123456789][0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789]$m*)
 				continue
 				;;
 			esac
@@ -4225,6 +4320,292 @@ test)	requirements source $package
 	eval capture \$MAKE \$makeflags \$noexec \'test : .DONTCARE .ONOBJECT\' recurse \$package \$target test cc- $assign
 	;;
 
+update)	# download the latest release.version for selected packages
+
+	# all work in $PACKAGEROOT/lib/package/tgz
+
+	$make cd $PACKAGEROOT/lib/package/tgz
+
+	# get the architectures, update query url, and packages
+
+	set '' $args
+	source=
+	binary=
+	types=
+	url=
+	while	:
+	do	shift
+		case $# in
+		0)	break ;;
+		esac
+		case $1 in
+		binary)	binary=1
+			;;
+		source)	source=1
+			;;
+		*/*)	url=$1
+			shift
+			break
+			;;
+		*.url)	if	test ! -s $1
+			then	echo $command: $1: cannot read >&2; exit 1
+			fi
+			url=`cat $1`
+			shift
+			break
+			;;
+		$ARCH)	binary=1
+			types="$types $1"
+			;;
+		*)	break
+			;;
+		esac
+	done
+	case $source:$binary in
+	:)	source=1 binary=1 ;;
+	esac
+	case $url in
+	'')	if	test ! -f $default_url
+		then	echo $command: url argument expected >&2; exit 1
+		fi
+		url=`cat $default_url`
+		default_url=
+		;;
+	*)	case $exec in
+		?*)	default_url= ;;
+		esac
+		;;
+	esac
+
+	# get the update list cgi url
+
+	eval `echo $url | sed 's,\(.*\)://\([^/]*\)/\(.*\),prot=\"\1\" host=\"\2\" dir=\"\3\",'`
+	get $host /$dir/update.html
+	case $get in
+	'')	echo $command: $action: $url: browse error >&2; exit 1 ;;
+	esac
+	eval `echo $get | sed 's,\(.*\)://\([^/]*\)/\(.*\),prot=\"\1\" qhost=\"\2\" qpath=\"\3\",'`
+
+	# get/check the package names
+
+	case " $* " in
+	*" - "*)case $source in
+		1)	source_packages=$* ;;
+		*)	source_packages= ;;
+		esac
+		case $binary in
+		1)	binary_packages=$* ;;
+		*)	binary_packages= ;;
+		esac
+		package_hit=$*
+		;;
+	"  ")	nl="
+"
+		case $source in
+		1)	p=
+			for f in `ls *.????-??-??.* 2>/dev/null`
+			do	case $f in
+				*.????-??-??.????-??-??.*.*)
+					;;
+				*.????-??-??.????-??-??.*)
+					p=$p$nl$f
+					;;
+				*.????-??-??.*.*)
+					;;
+				*.????-??-??.*)
+					p=$p$nl$f
+					;;
+				esac
+			done
+			set '' `echo "$p" | sed 's,\..*,,' | sort -u`
+			shift
+			source_packages=$*
+			;;
+		*)	source_packages=
+			;;
+		esac
+		case $binary in
+		1)	p=
+			for f in `ls *.????-??-??.* 2>/dev/null`
+			do	case $f in
+				*.????-??-??.????-??-??.*.*)
+					p=$p$nl$f
+					;;
+				*.????-??-??.????-??-??.*)
+					;;
+				*.????-??-??.*.*)
+					p=$p$nl$f
+					;;
+				*.????-??-??.*)
+					;;
+				esac
+			done
+			set '' `echo "$p" | sed 's,\..*,,' | sort -u`
+			shift
+			binary_packages=$*
+			;;
+		*)	binary_packages=
+			;;
+		esac
+		package_hit="$source_packages $binary_packages"
+		;;
+	*)	case $source in
+		1)	source_packages=$* ;;
+		*)	source_packages= ;;
+		esac
+		case $binary in
+		1)	binary_packages=$* ;;
+		*)	binary_packages= ;;
+		esac
+		package_hit=
+		;;
+	esac
+
+	# get the latest updates
+
+	types_test=
+	types_local=
+	dir=$dir/tgz
+	case $default_url in
+	?*)	echo $url > $default_url ;;
+	esac
+	get $qhost /$qpath
+	echo "$get" |
+	while	read name suffix type base base_size delta delta_size sync sync_size comment
+	do	case $verbose in
+		1)	case $type in
+			-)	i= ;;
+			*)	i=.$type ;;
+			esac
+			echo $command: $name.$base$i.$suffix
+			case $sync in
+			-)	;;
+			*)	echo $command: $name.$base.$sync$i.$suffix ;;
+			esac
+			case $delta in
+			-)	;;
+			*)	echo $command: $name.$base.$delta$i.$suffix ;;
+			esac
+		esac
+		case " $package_hit " in
+		*" $name "*|*" - "*)
+			;;
+		*)	package_hit="$package_hit $name"
+			;;
+		esac
+		case $type in
+		-)	case " $source_packages " in
+			*" $name "*|*" - "*)
+				if	test -s $name.tim
+				then	continue
+				fi
+				if	test "0" != "$force" -a "X-" = "X$delta" -o ! -f $name.$base.$suffix
+				then	rmt=
+					case $sync in
+					-)	;;
+					*)	lcl=$name.$sync.$suffix
+						if	test -f $lcl
+						then	rmt=1
+							
+							get $host /$dir $lcl $sync_size
+						fi
+						;;
+					esac
+					case $rmt in
+					'')	lcl=$name.$base.$suffix
+						get $host /$dir $lcl $base_size
+						;;
+					esac
+				fi
+				case $delta in
+				-)	;;
+				*)	lcl=$name.$base.$delta.$suffix
+					if	test "0" != "$force" -o ! -f $lcl
+					then	get $host /$dir $lcl $delta_size
+					fi
+					;;
+				esac
+				;;
+			esac
+			;;
+		*)	case " $binary_packages " in
+			*" $name "*|*" - "*)
+				if	test -s $name.$type.tim
+				then	continue
+				fi
+				case " $types " in
+				*" - "*);;
+				"  ")	case " $types_test " in
+					*" $type "*)
+						;;
+					*)	types_test="$types_test $type"
+						for i in *.????-??-??*.$type.*
+						do	if	test -f $i
+							then	types_local="$types_local $type"
+							fi
+							break
+						done
+						;;
+					esac
+					case " $types_local " in
+					*" $type "*)
+						;;
+					*)	continue
+						;;
+					esac
+					;;
+				*)	case " $types " in
+					*" $type "*)
+						;;
+					*)	continue
+						;;
+					esac
+					;;
+				esac
+				if	test "0" != "$force" -a "X-" = "X$delta" -o ! -f $name.$base.$type.$suffix
+				then	rmt=
+					case $sync in
+					-)	;;
+					*)	lcl=$name.$sync.$type.$suffix
+						if	test -f $lcl
+						then	rmt=1
+							get $host /$dir $lcl $sync_size
+						fi
+						;;
+					esac
+					case $rmt in
+					'')	lcl=$name.$base.$type.$suffix
+						get $host /$dir $lcl $base_size
+						;;
+					esac
+				fi
+				case $delta in
+				-)	;;
+				*)	lcl=$name.$base.$delta.$type.$suffix
+					if	test "0" != "$force" -o ! -f $lcl
+					then	get $host /$dir $lcl $delta_size
+					fi
+					;;
+				esac
+				;;
+			esac
+			;;
+		esac
+	done
+	for name in $source_packages $binary_packages
+	do	case $name in
+		-)	;;
+		*)	case " $package_hit " in
+			*" $name "*)
+				;;
+			*)	echo $command: $name: unknown package >&2
+				;;
+			esac
+			;;
+		esac
+	done
+	;;
+
 use)	# finalize the environment
 
 	x=:..:$INSTALLROOT/src/cmd:$INSTALLROOT/src/lib:$INSTALLROOT
@@ -4273,7 +4654,7 @@ use)	# finalize the environment
 
 verify)	cd $PACKAGEROOT
 	requirements binary $package
-	if	test ! -x $SUM
+	if	executable ! $SUM
 	then	echo "$command: $action: $SUM command required" >&2
 		exit 1
 	fi

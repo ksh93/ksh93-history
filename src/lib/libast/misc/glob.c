@@ -190,20 +190,32 @@ errorcheck(register glob_t* gp, const char* path)
  * remove backslashes
  */
 
-static int
-trim(register char* sp)
+static void
+trim(register char* sp, register char* p1, int* n1, register char* p2, int* n2)
 {
 	register char*	dp = sp;
 	register int	c;
 	register int	n;
 
-	n = 0;
+	if (p1)
+		*n1 = 0;
+	if (p2)
+		*n2 = 0;
 	do
 	{
 		if ((c = *sp++) == '\\' && (c = *sp++))
 			n++;
+		if (sp == p1)
+		{
+			p1 = 0;
+			*n1 = sp - dp - 1;
+		}
+		if (sp == p2)
+		{
+			p2 = 0;
+			*n2 = sp - dp - 1;
+		}
 	} while (*dp++ = c);
-	return n;
 }
 
 static void
@@ -283,6 +295,8 @@ glob_dir(glob_t* gp, globlist_t* ap)
 	regex_t*		pre;
 	regex_t			rec;
 	regex_t			rei;
+	int			t1;
+	int			t2;
 
 	int			bracket = 0;
 	int			complete = 0;
@@ -312,7 +326,10 @@ glob_dir(glob_t* gp, globlist_t* ap)
 				break;
 			}
 			if (quote)
-				rescan -= trim(ap->gl_begin);
+			{
+				trim(ap->gl_begin, rescan, &t1, NiL, NiL);
+				rescan -= t1;
+			}
 			if (!first && !*rescan && *(rescan - 2) == gp->gl_delim)
 			{
 				*(rescan - 2) = 0;
@@ -375,10 +392,11 @@ glob_dir(glob_t* gp, globlist_t* ap)
 			dirname = "/";
 		if (savequote)
 		{
-			c = trim(ap->gl_begin);
-			pat -= c;
+			quote = 0;
+			trim(ap->gl_begin, pat, &t1, rescan, &t2);
+			pat -= t1;
 			if (rescan)
-				rescan -= c;
+				rescan -= t2;
 		}
 		*(pat - 1) = 0;
 	}
@@ -467,9 +485,9 @@ glob_dir(glob_t* gp, globlist_t* ap)
 		if (quote)
 		{
 			if (prefix)
-				trim(ap->gl_path);
+				trim(ap->gl_path, NiL, NiL, NiL, NiL);
 			else
-				trim(pat);
+				trim(pat, NiL, NiL, NiL, NiL);
 		}
 		addmatch(gp, NiL, ap->gl_path, NiL, NiL);
 	}

@@ -31,7 +31,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: mkdir (AT&T Labs Research) 2000-10-31 $\n]"
+"[-?\n@(#)$Id: mkdir (AT&T Labs Research) 2001-10-31 $\n]"
 USAGE_LICENSE
 "[+NAME?mkdir - make directories]"
 "[+DESCRIPTION?\bmkdir\b creates one or more directories.  By "
@@ -140,7 +140,7 @@ b_mkdir(int argc, char** argv, void* context)
 				while ((n = *arg) && n != '/')
 					arg++;
 				*arg = 0;
-				if (mkdir(name, n ? dmode : mode) < 0 && errno != EEXIST)
+				if (mkdir(name, n ? dmode : mode) < 0 && errno != EEXIST && access(name, F_OK) < 0)
 				{
 					*arg = n;
 					error(ERROR_system(0), "%s:", name);
@@ -154,4 +154,3 @@ b_mkdir(int argc, char** argv, void* context)
 		umask(mask);
 	return error_info.errors != 0;
 }
-

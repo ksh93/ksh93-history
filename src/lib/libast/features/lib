@@ -17,10 +17,11 @@ lib	BSDsetpgrp NutForkExecve
 lib	_cleanup
 lib	atexit,bcopy,bzero,catclose,catgets,catopen,confstr,dirread,dup2
 lib	execlp,execve,execvp,execvpe
-lib	fchmod,fcntl,fmtmsg,fnmatch,fork,fsync,getconf,getdents,getdirentries
-lib	getdtablesize,getgroups,getlogin,getpagesize,getrlimit,getuniverse
+lib	fchmod,fcntl,fmtmsg,fnmatch,fork,fsync
+lib	getconf,getdents,getdirentries,getdtablesize,getdate
+lib	getgroups,getlogin,getpagesize,getrlimit,getuniverse
 lib	glob,index,iswblank,iswctype,killpg,link,localeconv,madvise,mbtowc
-lib	memalign,memccpy,memchr,memcmp,memcpy,memdup,memmove,memset
+lib	memalign,memchr,memcmp,memcpy,memdup,memmove,memset
 lib	mkdir,mkfifo,mktemp,mktime
 lib	mount,on_exit,onexit,opendir,pathconf,pcreateve
 lib	readlink,remove,rename,rewinddir,rindex,rmdir,setlocale
@@ -372,6 +373,85 @@ tst	lib_mmap64 note{ mmap64 interface and implementation work }end execute{
 	}
 }end
 
+tst	lib_memccpy string.h unistd.h stdlib.h fcntl.h signal.h sys/types.h sys/stat.h mman.h sys/mman.h note{ standard memccpy interface that works }end execute{
+	#include "iffeio.h"
+
+	#if _STD_
+	static void gotcha(int sig)
+	#else
+	static int gotcha(sig) int sig;
+	#endif
+	{
+		exit(1);
+	}
+
+	main ()
+	{
+		char	buf[1024];
+	#if _lib_mmap
+		char*	srcbuf;
+		char*	dstbuf;
+		int	srcfd;
+		int	dstfd;
+		size_t	siz;
+		int	i;
+		char	c = 1;
+	
+		char	tmp1[] = "/tmp/ifXXXXXX";
+		char	tmp2[] = "/tmp/ifXXXXXX";
+	#endif
+	
+		/*
+		 * early mac osx failed here -- fixed 3Q 2001
+		 */
+
+		if (memccpy(buf, "abc", 0, sizeof(buf)) != (buf + 4))
+			return 1;
+		/*
+		 * sgi ia64 fails here as of 3Q 2001
+		 * they insist the behavior is not a bug
+		 */
+
+	#if _lib_mmap
+	#if _lib_getpagesize
+		siz = getpagesize();
+	#else
+		siz = 64 * 1024 * 1024;
+	#endif
+		if (!(dstbuf = malloc(2 * siz)))
+			return 0;
+		if ((srcfd = mkstemp(tmp1)) < 0)
+			return 0;
+		if (lseek(srcfd, siz - 1, SEEK_SET) != (siz - 1))
+			return 0;
+		if (write(srcfd, &c, 1) != 1)
+			return 0;
+		if ((dstfd = mkstemp(tmp2)) < 0)
+			return 0;
+		if (lseek(dstfd, siz - 1, SEEK_SET) != (siz - 1))
+			return 0;
+		if (write(dstfd, &c, 1) != 1)
+			return 0;
+		if (!(srcbuf = (char*)mmap(NULL, siz, PROT_READ|PROT_WRITE, MAP_PRIVATE, srcfd, 0)))
+			return 0;
+		if (!mmap(srcbuf + siz, siz, PROT_NONE, MAP_PRIVATE, dstfd, 0))
+			return 0;
+		for (i = 0; i < siz; i++)
+			srcbuf[i] = 'x';
+		srcbuf[siz - 1] = 0;
+		alarm(10);
+		signal(SIGSEGV, gotcha);
+		signal(SIGBUS, gotcha);
+		signal(SIGALRM, gotcha);
+		memccpy(dstbuf, srcbuf, 0, siz + 10);
+		alarm(0);
+		if (strcmp(srcbuf, dstbuf))
+			return 1;
+	#endif
+		return 0;
+	}
+}end
+
 tst	lib_utime_now note{ utime works with 0 time vector }end execute{
 	#include <sys/types.h>
 	_BEGIN_EXTERNS_
@@ -536,15 +616,4 @@ tst	no64 note{ largefile 64 broken }end execute{
 	echo "#undef	_lib_stat64"
 	echo "#undef	_lib_statvfs64"
 	echo "#undef	_lib_truncate64"
-}end
-
-tst	- note{ rotten apple? }end execute{
-	#include <string.h>
-	main()
-	{
-		char	buf[1024];
-		return memccpy(buf, "abc", 0, sizeof(buf)) == (buf + 4);	
-	}
-}end pass{
-	echo "#undef	_lib_memccpy	/* rotten apple? */"
 }end

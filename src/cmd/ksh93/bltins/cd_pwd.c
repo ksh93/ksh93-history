@@ -83,7 +83,7 @@ int	b_cd(int argc, char *argv[],void *extra)
 			flag = 1;
 			break;
 		case ':':
-			errormsg(SH_DICT,2, opt_info.arg);
+			errormsg(SH_DICT,2, "%s", opt_info.arg);
 			break;
 		case '?':
 			errormsg(SH_DICT,ERROR_usage(2), "%s", opt_info.arg);
@@ -246,7 +246,7 @@ int	b_pwd(int argc, char *argv[],void *extra)
 {
 	register int n, flag = 0;
 	register char *cp;
-	NOT_USED(extra);
+	register Shell_t *shp = (Shell_t*)extra;
 	NOT_USED(argc);
 	while((n = optget(argv,sh_optpwd))) switch(n)
 	{
@@ -257,7 +257,7 @@ int	b_pwd(int argc, char *argv[],void *extra)
 			flag = 1;
 			break;
 		case ':':
-			errormsg(SH_DICT,2, opt_info.arg);
+			errormsg(SH_DICT,2, "%s", opt_info.arg);
 			break;
 		case '?':
 			errormsg(SH_DICT,ERROR_usage(2), "%s", opt_info.arg);
@@ -270,7 +270,7 @@ int	b_pwd(int argc, char *argv[],void *extra)
 	if(flag)
 	{
 #ifdef SHOPT_FS_3D
-		if((flag = mount(e_dot,NIL(char*),FS3D_GET|FS3D_VIEW,0))>=0)
+		if(shp->lim.fs3d && (flag = mount(e_dot,NIL(char*),FS3D_GET|FS3D_VIEW,0))>=0)
 		{
 			cp = (char*)stakseek(++flag+PATH_MAX);
 			mount(e_dot,cp,FS3D_GET|FS3D_VIEW|FS3D_SIZE(flag),0);

@@ -58,7 +58,7 @@ int	b_trap(int argc,char *argv[],void *extra)
 		pflag=1;
 		break;
 	    case ':':
-		errormsg(SH_DICT,2, opt_info.arg);
+		errormsg(SH_DICT,2, "%s", opt_info.arg);
 		break;
 	    case '?':
 		errormsg(SH_DICT,ERROR_usage(0), "%s", opt_info.arg);
@@ -169,7 +169,7 @@ int	b_kill(int argc,char *argv[],void *extra)
 				goto endopts;
 			}
 			opt_info.index--;
-			errormsg(SH_DICT,2, opt_info.arg);
+			errormsg(SH_DICT,2, "%s", opt_info.arg);
 			break;
 		case 'n':
 			sig = (int)opt_info.num;

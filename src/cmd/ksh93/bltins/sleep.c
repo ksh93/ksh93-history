@@ -53,7 +53,7 @@ int	b_sleep(register int argc,char *argv[],void *extra)
 	while((argc = optget(argv,sh_optsleep))) switch(argc)
 	{
 		case ':':
-			errormsg(SH_DICT,2, opt_info.arg);
+			errormsg(SH_DICT,2, "%s", opt_info.arg);
 			break;
 		case '?':
 			errormsg(SH_DICT,ERROR_usage(2), "%s", opt_info.arg);

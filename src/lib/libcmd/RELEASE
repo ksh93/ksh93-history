@@ -1,3 +1,6 @@
+01-10-31 mkdir.c: mkdir() on existing dir could fail with errno!=EEXIST
+	 uname.c: add execve() loop check for unknown options
+01-10-29 tail.c: SF_SHARE on only if not reading through EOF
 01-10-11 getconf.c: fix usage typos
 01-09-11 cp.c,cmd.h: handle . in argv[0]
 	 cp.c: add O_BINARY to all open() calls

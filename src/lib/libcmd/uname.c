@@ -32,7 +32,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: uname (AT&T Labs Research) 2001-05-01 $\n]"
+"[-?\n@(#)$Id: uname (AT&T Labs Research) 2001-10-31 $\n]"
 USAGE_LICENSE
 "[+NAME?uname - identify the current system ]"
 "[+DESCRIPTION?By default \buname\b writes the operating system name to"
@@ -324,9 +324,13 @@ b_uname(int argc, char** argv, void* context)
 			sethost = opt_info.arg;
 			continue;
 		case ':':
-			argv[0] = "/usr/bin/uname";
-			if (!access(argv[0], X_OK) || !access(argv[0]+=4, X_OK))
-				execv(argv[0], argv);
+			s = "/usr/bin/uname";
+			if (!streq(argv[0], s))
+			{
+				argv[0] = s;
+				if (!access(s, X_OK) || !access(s+=4, X_OK))
+					execv(s, argv);
+			}
 			error(2, "%s", opt_info.arg);
 			break;
 		case '?':

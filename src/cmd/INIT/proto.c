@@ -253,7 +253,7 @@
 # define S_IXOTH		0001
 # endif
 
-# if !_WIN32
+# if !_WIN32 && !__EMX__
 # define remove(x)	unlink(x)
 # define rename(x,y)	((link(x,y)||remove(x))?-1:0)
 # endif

@@ -133,7 +133,7 @@ int sh_argopts(int argc,register char *argv[])
 			opt = 1L<<n;
 			if(n<=0 || (setflag && (opt&(SH_INTERACTIVE|SH_RESTRICTED))))
 			{
-				errormsg(SH_DICT,2, e_option, opt_info.arg);
+				errormsg(SH_DICT,2, "%s", e_option, opt_info.arg);
 				error_info.errors++;
 			}
 			break;
@@ -162,10 +162,10 @@ int sh_argopts(int argc,register char *argv[])
 				opt = flagval[cp-optksh];
 			break;
 		    case ':':
-			errormsg(SH_DICT,2, opt_info.arg);
+			errormsg(SH_DICT,2, "%s", opt_info.arg);
 			continue;
 		    case '?':
-			errormsg(SH_DICT,ERROR_usage(0), opt_info.arg);
+			errormsg(SH_DICT,ERROR_usage(0), "%s", opt_info.arg);
 			return(-1);
 		}
 		if(*opt_info.option=='-')
