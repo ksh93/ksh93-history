@@ -320,7 +320,7 @@ tst	note{ mmap is worth using }end output{
 
 cat{
 
-	/* some systems get it wrong but escape consise detection */
+	/* some systems get it wrong but escape concise detection */
 	#ifndef _NO_MMAP
 	#if __CYGWIN__
 	#define _NO_MMAP	1
