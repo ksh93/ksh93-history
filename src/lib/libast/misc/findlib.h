@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -86,7 +86,7 @@ typedef struct
 	unsigned char	bigram[2*FF_MAX];
 	unsigned short	code[FF_MAX][FF_MAX];
 	unsigned short	hits[USHRT_MAX+1];
-	unsigned char	path[PATH_MAX];
+	char		path[PATH_MAX];
 	char		mark[PATH_MAX];
 	char		file[PATH_MAX];
 	char		temp[PATH_MAX];

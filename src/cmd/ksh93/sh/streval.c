@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -38,6 +38,10 @@
 #include	<ctype.h>
 #include	<error.h>
 #include	"FEATURE/externs"
+
+#ifndef ERROR_dictionary
+#   define ERROR_dictionary(s)	(s)
+#endif
 
 #define MAXLEVEL	9
 
@@ -77,7 +81,8 @@ typedef double (*Math_2_f)(double,double);
 
 #define pushchr(s)	{struct vars old;old=cur;cur.nextchr=((char*)(s));cur.errmsg.value=0;cur.errstr=0;cur.paren=0;
 #define popchr()	cur=old;}
-#define ERROR(msg)	return(seterror(msg))
+#define seterror(msg,n)	_seterror(ERROR_dictionary(msg),n)
+#define ERROR(msg)	return(seterror(msg,n))
 
 static struct vars	cur;
 static char		noassign;	/* set to skip assignment	*/
@@ -85,7 +90,7 @@ static int		level;
 static double		(*convert)(const char**,struct lval*,int,double);
 				/* external conversion routine		*/
 static double		expr(int);	/* subexpression evaluator	*/
-static double		seterror(const char[]);	/* set error message string	*/
+static double		_seterror(const char[],double);	/* set error message string	*/
 
 
 /*
@@ -110,7 +115,7 @@ double strval(const char *s, char** end, double(*conv)(const char**,struct lval*
 	cur.isfloat = 0;
 	convert = conv;
 	if(level++ >= MAXLEVEL)
-		(void)seterror(e_recursive);
+		n = seterror(e_recursive,0);
 	else
 		n = expr(0);
 	if (cur.errmsg.value)
@@ -118,7 +123,6 @@ double strval(const char *s, char** end, double(*conv)(const char**,struct lval*
 		if(cur.errstr) s = cur.errstr;
 		(void)(*convert)( &s , &cur.errmsg, ERRMSG, n);
 		cur.nextchr = cur.errchr;
-		n = 0;
 	}
 	if (end) *end = (char*)cur.nextchr;
 	if(level>0) level--;
@@ -135,7 +139,7 @@ double strval(const char *s, char** end, double(*conv)(const char**,struct lval*
 static double expr(register int precedence)
 {
 	register int	c, op;
-	register double	n, x;
+	register double	n=0, x;
 	int		wasop, incr=0;
 	struct lval	lvalue, assignop;
 	const char	*pos;
@@ -379,7 +383,7 @@ static double expr(register int precedence)
 			break;
 
 		case A_COLON:
-			(void)seterror(e_badcolon);
+			seterror(e_badcolon,n);
 			break;
 
 		case A_OR:
@@ -550,14 +554,14 @@ static double expr(register int precedence)
  * set error message string
  */
 
-static double seterror(const char *msg)
+static double _seterror(const char *msg, double n)
 {
 	if(!cur.errmsg.value)
 		cur.errmsg.value = (char*)msg;
 	cur.errchr = cur.nextchr;
 	cur.nextchr = "";
 	level = 0;
-	return(0);
+	return(n);
 }
 
 #ifdef _mem_name_exception
@@ -568,13 +572,13 @@ static double seterror(const char *msg)
 	switch(ep->type)
 	{
 	    case DOMAIN:
-		message = e_domain;
+		message = ERROR_dictionary(e_domain);
 		break;
 	    case SING:
-		message = e_singularity;
+		message = ERROR_dictionary(e_singularity);
 		break;
 	    case OVERFLOW:
-		message = e_overflow;
+		message = ERROR_dictionary(e_overflow);
 		break;
 	    default:
 		return(1);

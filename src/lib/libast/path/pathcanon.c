@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -71,7 +71,7 @@ pathcanon(char* path, int flags)
 	dots = loop = 0;
 	phys = path;
 	v = path + ((flags >> 5) & 01777);
-	if (*path == '/' && *(path + 1) == '/' && *astconf("PATH_LEADING_SLASHES", NiL, NiL))
+	if (*path == '/' && *(path + 1) == '/' && *astconf("PATH_LEADING_SLASHES", NiL, NiL) == '1')
 		do path++; while (*path == '/' && *(path + 1) == '/');
 	p = r = s = t = path;
 	for (;;) switch (*t++ = *s++)

@@ -9,9 +9,9 @@
 #                                                              #
 #     http://www.research.att.com/sw/license/ast-open.html     #
 #                                                              #
-#     If you received this software without first entering     #
-#       into a license with AT&T, you have an infringing       #
-#           copy and cannot use it without violating           #
+#      If you have copied this software without agreeing       #
+#      to the terms of the license you are infringing on       #
+#         the license and copyright and are violating          #
 #             AT&T's intellectual property rights.             #
 #                                                              #
 #               This software was created by the               #
@@ -194,4 +194,40 @@ fi
 testing
 !
 ) 2> /dev/null || err_exit ksh read -s var fails
+if	[[ $(printf +3 2>/dev/null) !=   +3 ]]
+then	err_exit 'printf is not processing formats beginning with + correctly'
+fi
+if	printf "%d %d\n" 123bad 78 >/dev/null 2>/dev/null
+then	err_exit "printf not exiting non-zero with conversion errors"
+fi
+if	[[ $(trap --version 2> /dev/null;print done) != done ]]
+then	err_exit 'trap builtin terminating after --version'
+fi
+if	[[ $(set --version 2> /dev/null;print done) != done ]]
+then	err_exit 'set builtin terminating after --veresion'
+fi
+unset -f foobar
+function foobar
+{
+	print 'hello world'
+}
+OPTIND=1
+if	[[ $(getopts  $'[+?X\ffoobar\fX]' v --man 2>&1) != *'Xhello world'X* ]]
+then	err_exit '\f...\f not working in getopts usage strings'
+fi
+if	[[	$(printf '%H\n' $'<>"& \'\tabc') != '&lt;&gt;&quot;&amp;&nbsp;&apos;&#9;abc' ]]
+then	err_exit 'printf %H not working'
+fi
+if	[[ $(printf '%..:c\n' abc) != a:b:c ]]
+then	err_exit	"printf '%..:c' not working"
+fi
+if	[[ $(printf '%..*c\n' : abc) != a:b:c ]]
+then	err_exit	"printf '%..*c' not working"
+fi
+if	[[ $(printf '%..:s\n' abc def ) != abc:def ]]
+then	err_exit	"printf '%..:s' not working"
+fi
+if	[[ $(printf '%..*s\n' : abc def) != abc:def ]]
+then	err_exit	"printf '%..*s' not working"
+fi
 exit $((Errors))

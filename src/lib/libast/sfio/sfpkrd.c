@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -35,7 +35,7 @@
 
 /*	Read/Peek a record from an unseekable device
 **
-**	Written by Kiem-Phong Vo (03/25/93)
+**	Written by Kiem-Phong Vo.
 */
 
 #define STREAM_PEEK	001
@@ -139,6 +139,9 @@ int	action;	/* >0: peeking, if rc>=0, get action records,
 #if _lib_select
 			if(r == -2)
 			{
+#if _hpux_threads && vt_threaded
+#define fd_set	int
+#endif
 				fd_set		rd;
 				struct timeval	tmb, *tmp;
 				FD_ZERO(&rd);

@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -240,7 +240,7 @@ b_uname(int argc, char** argv, void* context)
 	static char	opts[sizeof(OPTBEG) + sizeof(OPTEND) + FLAGS] = OPTBEG;
 
 	NoP(argc);
-	cmdinit(argv, context);
+	cmdinit(argv, context, ERROR_CATALOG);
 	s = &opts[sizeof(OPTBEG) - 1];
 	*s++ = 'p';
 	all |= P_FLAG;

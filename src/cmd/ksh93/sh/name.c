@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -285,13 +285,14 @@ void nv_setlist(register struct argnod *arg,register int flags)
 				if(sh.fn_depth && (Namval_t*)tp->com.comnamp==SYSTYPESET)
 			                flag |= NV_NOSCOPE;
 				np = nv_open(cp,sh.var_tree,flag);
-				nv_unset(np);
+				if(!(arg->argflag&ARG_APPEND))
+					nv_unset(np);
 				/* check for array assignment */
 				if(tp->tre.tretyp!=TLST && !tp->com.comset)
 				{
 					int argc;
 					char **argv = sh_argbuild(&argc,&tp->com);
-					nv_setvec(np,argc,argv);
+					nv_setvec(np,(arg->argflag&ARG_APPEND),argc,argv);
 					if(traceon)
 					{
 						sh_trace(NIL(char**),0);
@@ -312,10 +313,24 @@ void nv_setlist(register struct argnod *arg,register int flags)
 						np = nv_open(cp,sh.var_tree,flag);
 					}
 #endif /* SHOPT_COMPOUND_ARRAY */
-					nv_setvtree(np);
+					if((arg->argflag&ARG_APPEND) && !nv_isarray(np))
+					{
+						nv_unset(np);
+						nv_setvtree(np);
+					}
+					else
+						nv_setvtree(np);
 				}
 				else
-					nv_setarray(np,nv_associative);
+				{
+					if((arg->argflag&ARG_APPEND) && (!nv_isarray(np) || (nv_aindex(np)>=0)))
+					{
+						nv_unset(np);
+						nv_setarray(np,nv_associative);
+					}
+					else
+						nv_setarray(np,nv_associative);
+				}
 				if(prefix)
 				{
 					stakputs(prefix);
@@ -418,6 +433,10 @@ Namval_t	*nv_open(const char *name,Dt_t *root,int flags)
 	register long mode = ((flags&NV_NOADD)?0:NV_ADD);
 	char *sub, *ptr;
 	int offset = -1, fun=0;
+#ifdef SHOPT_APPEND
+	int append=0;
+#endif /* SHOPT_APPEND */
+
 	if(root==sh.alias_tree)
 	{
 		while((sep= *(unsigned char*)cp) && (sep!='=') && (sep!='/') && 
@@ -604,8 +623,12 @@ Namval_t	*nv_open(const char *name,Dt_t *root,int flags)
 			&& (np=nv_search(name,sh.var_base,0)))
 		{
 			Namfun_t *disc = nv_cover(np);
+			char *name = nv_name(np);
 			if(np=nv_search((char*)np,root,mode|HASH_NOSCOPE|HASH_SCOPE|HASH_BUCKET))
+			{
 				np->nvfun = disc;
+				np->nvname = name;
+			}
 		}
 		if(!np)
 		{
@@ -669,7 +692,10 @@ Namval_t	*nv_open(const char *name,Dt_t *root,int flags)
 			nv_putsub(np,NIL(char*),ARRAY_UNDEF);
 #ifdef SHOPT_APPEND
 		if(sep=='+')
+		{
+			append = NV_APPEND;
 			sep = *++cp;
+		}
 #endif /* SHOPT_APPEND */
 		if(sep && ((sep!='=')||!(flags&NV_ASSIGN)))
 		{
@@ -693,7 +719,11 @@ Namval_t	*nv_open(const char *name,Dt_t *root,int flags)
 			}
 			else
 			{
+#ifdef SHOPT_APPEND
+				nv_putval(np, cp, append);
+#else
 				nv_putval(np, cp, 0);
+#endif /*SHOPT_APPEND */
 #ifdef SHOPT_BSH
 				if(flags&NV_EXPORT)
 					nv_offattr(np,NV_IMPORT);
@@ -727,7 +757,7 @@ failed:
 
 #ifdef SHOPT_MULTIBYTE
     static char *savep;
-    static char savechars[ESS_MAXCHAR+1];
+    static char savechars[MB_LEN_MAX+1];
     static int ja_size(char*, int, int);
     static void ja_restore(void);
 #endif /* SHOPT_MULTIBYTE */
@@ -791,7 +821,7 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 		{
 			if(nv_isattr(np, NV_LONG) && sizeof(double)<sizeof(Sfdouble_t))
 			{
-				Sfdouble_t ld;
+				Sfdouble_t ld, old=0;
 				if(flags&NV_INTEGER)
 				{
 					if(flags&NV_LONG)
@@ -803,11 +833,13 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 					ld = sh_arith(sp);
 				if(!up->ldp)
 					up->ldp = new_of(Sfdouble_t,0);
-				*(up->ldp) = ld;
+				else if(flags&NV_APPEND)
+					old = *(up->ldp);
+				*(up->ldp) = ld+old;
 			}
 			else
 			{
-				double d;
+				double d,od=0;
 				if(flags&NV_INTEGER)
 				{
 					if(flags&NV_LONG)
@@ -819,14 +851,16 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 					d = sh_arith(sp);
 				if(!up->dp)
 					up->dp = new_of(double,0);
-				*(up->dp) = d;
+				else if(flags&NV_APPEND)
+					od = *(up->dp);
+				*(up->dp) = d+od;
 			}
 		}
 		else
 		{
 			if(nv_isattr(np, NV_LONG) && sizeof(long)<sizeof(Sflong_t))
 			{
-				Sflong_t ll = 0;
+				Sflong_t ll=0,oll=0;
 				if(flags&NV_INTEGER)
 				{
 					if(flags&NV_LONG)
@@ -838,11 +872,13 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 					ll = (Sflong_t)sh_arith(sp);
 				if(!up->llp)
 					up->llp = new_of(Sflong_t,0);
-				*(up->llp) = ll;
+				else if(flags&NV_APPEND)
+					oll = *(up->llp);
+				*(up->llp) = ll+oll;
 			}
 			else
 			{
-				long l = 0;
+				long l=0,ol=0;
 				if(flags&NV_INTEGER)
 				{
 					if(flags&NV_LONG)
@@ -857,12 +893,19 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 				if(nv_size(np) <= 1)
 					nv_setsize(np,sh.lastbase);
 				if(nv_isattr (np, NV_SHORT))
-					up->s = (short)l;
+				{
+					short s=0;
+					if(flags&NV_APPEND)
+						s = up->s;
+					up->s = s+(short)l;
+				}
 				else
 				{
 					if(!up->lp)
 						up->lp = new_of(long,0);
-					*(up->lp) = l;
+					else if(flags&NV_APPEND)	
+						ol =  *(up->lp);
+					*(up->lp) = l+ol;
 					if(l && *sp++ == '0')
 						nv_onattr(np,NV_UNSIGN);
 				}
@@ -873,6 +916,9 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 	{
 		const char *tofree=0;
 		char numbuf[20];
+#ifdef SHOPT_APPEND
+		int offset;
+#endif /* SHOPT_APPEND */
 #ifdef _lib_uwin_path
 		char buff[PATH_MAX];
 #endif /* _lib_uwin_path */
@@ -910,6 +956,18 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 				size = ja_size((char*)sp,size,nv_isattr(np,NV_RJUST|NV_ZFILL));
 #endif /* SHOPT_MULTIBYTE */
 		}
+#ifdef SHOPT_APPEND
+		if(!up->cp)
+			flags &= ~NV_APPEND;
+		if(flags&NV_APPEND)
+		{
+			offset = staktell();
+			stakputs(up->cp);
+			stakputs(sp);
+			stakputc(0);
+			sp = stakptr(offset);
+		}
+#endif /*SHOPT_APPEND */
 		if(!nv_isattr(np, NV_NOFREE|NV_NOALLOC))
 		{
 			/* delay free in case <sp> points into free region */
@@ -958,6 +1016,10 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 				ja_restore();
 #endif /* SHOPT_MULTIBYTE */
 		}
+#ifdef SHOPT_APPEND
+		if(flags&NV_APPEND)
+			stakseek(offset);
+#endif /* SHOPT_APPEND */
 		if(tofree)
 			free((void*)tofree);
 	}

@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -32,7 +32,7 @@
  */
 
 static const char usage_head[] =
-"[-?@(#)cp (AT&T Labs Research) 2000-02-14\n]"
+"[-?@(#)cp (AT&T Labs Research) 2000-03-17\n]"
 USAGE_LICENSE
 ;
 
@@ -88,7 +88,7 @@ static const char usage_tail[] =
 "[f:force?Replace existing destination files.]"
 "[i:interactive|prompt?Prompt whether to replace existing destination files."
 "	An affirmative response (\by\b or \bY\b) replaces the file, a quit"
-"	response (\bq\b or \bQ\b) exits immediately, and and all other"
+"	response (\bq\b or \bQ\b) exits immediately, and all other"
 "	responses skip the file.]"
 "[r|R:recursive?Operate on the contents of directories recursively.]"
 "[s:symlink|symbolic-link?Make symbolic links to destination files.]"
@@ -575,7 +575,7 @@ visit(register Ftw_t* ftw)
 						if (sfclose(ip))
 							n |= 1;
 						if (n)
-							error(ERROR_SYSTEM|2, "%s: %s %s error", ftw->path, state.path, n == 1 ? ERROR_translate(0, "read") : n == 2 ? ERROR_translate(0, "write") : ERROR_translate(0, "io"));
+							error(ERROR_SYSTEM|2, "%s: %s %s error", ftw->path, state.path, n == 1 ? ERROR_translate(0, 0, 0, "read") : n == 2 ? ERROR_translate(0, 0, 0, "write") : ERROR_translate(0, 0, 0, "io"));
 					}
 					close(rfd);
 				}
@@ -624,13 +624,14 @@ int
 b_cp(int argc, register char** argv, void* context)
 {
 	register char*	file;
+	register char*	s;
 	char*		backup_type;
 	const char*	usage;
 	int		path_resolve;
 	struct stat	st;
 
 	memset(&state, 0, sizeof(state));
-	cmdinit(argv, context);
+	cmdinit(argv, context, ERROR_CATALOG);
 	backup_type = 0;
 	state.flags = FTW_DOT|FTW_MULTIPLE|FTW_TWICE|FTW_NOSEEDOTDIR;
 	state.uid = geteuid();
@@ -666,7 +667,7 @@ b_cp(int argc, register char** argv, void* context)
 		error(3, "not implemented");
 	sfputr(state.tmp, usage_tail, -1);
 	usage = sfstruse(state.tmp);
-	state.opname = state.op == CP ? ERROR_translate(0, "overwrite") : ERROR_translate(0, "replace");
+	state.opname = state.op == CP ? ERROR_translate(0, 0, 0, "overwrite") : ERROR_translate(0, 0, 0, "replace");
 	for (;;)
 	{
 		switch (optget(argv, usage))
@@ -816,9 +817,18 @@ b_cp(int argc, register char** argv, void* context)
 		state.flags |= ftwflags();
 	file = argv[argc];
 	argv[argc] = 0;
+	if (s = strrchr(file, '/'))
+	{
+		while (*s == '/')
+			s++;
+		if (!(!*s || *s == '.' && (!*++s || *s == '.' && !*++s)))
+			s = 0;
+	}
 	pathcanon(file, 0);
 	if (!(state.directory = !stat(file, &st) && S_ISDIR(st.st_mode)) && argc > 1)
 		error(ERROR_USAGE|4, "%s", optusage(NiL));
+	if (s && !state.directory)
+		error(3, "%s: not a directory", file);
 	if ((state.fs3d = fs3d(FS3D_TEST)) && strmatch(file, "...|*/...|.../*"))
 		state.official = 1;
 	state.postsiz = strlen(file);

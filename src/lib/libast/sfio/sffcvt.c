@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -26,11 +26,6 @@
 ***************************************************************/
 #include	"sfhdr.h"
 
-#if defined(__EXPORT__)
-#define extern	__EXPORT__
-#endif
-
-extern
 #if __STD_C
 char *sffcvt(double dval, int n_digit, int* decpt, int* sign)
 #else

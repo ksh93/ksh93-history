@@ -241,11 +241,11 @@ cat{
 	#if _typ_off64_t
 	#define off_t	off64_t
 	#endif
-	#if _lib_statvfs64
+	#if _lib_statvfs64 && !defined(statvfs)
 	#define statvfs		statvfs64
 	extern int		statvfs64(const char*, struct statvfs64*);
 	#endif
-	#if _lib_fstatvfs64
+	#if _lib_fstatvfs64 && !defined(fstatvfs)
 	#define fstatvfs	fstatvfs64
 	extern int		fstatvfs64(int, struct statvfs64*);
 	#endif

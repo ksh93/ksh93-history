@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -32,7 +32,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)expr (AT&T Labs Research) 1999-06-08\n]"
+"[-?\n@(#)expr (AT&T Labs Research) 2000-03-17\n]"
 USAGE_LICENSE
 "[+NAME?expr - evaluate arguments as an expression]"
 "[+DESCRIPTION?\bexpr\b evaluates an expression given as arguments and writes "
@@ -66,6 +66,7 @@ USAGE_LICENSE
 	"relationship is true, or 0 if the relationship is false.  \aop\a "
 	"can be one of the following:]{"
 		"[+=?Equal.]"
+		"[+==?Equal.]"
 		"[+>?Greater than.]"
 		"[+>=?Greater than or equal to.]"
 		"[+<?Less than.]"
@@ -136,6 +137,7 @@ static struct Optable
 	"|",	'|',
 	"&",	'&',
 	"=",	OP_EQ,
+	"==",	OP_EQ,
 	">",	OP_GT,
 	"<",	OP_LT,
 	">=",	OP_GE,
@@ -402,7 +404,7 @@ b_expr(int argc, char *argv[], void *context)
 	Node_t node;
 	int n;
 	NoP(argc);
-	cmdinit(argv,context);
+	cmdinit(argv,context, ERROR_CATALOG);
 #if 0
 	if (strcmp(astconf("CONFORMANCE", NiL, NiL), "standard"))
 		arglist = argv+1;

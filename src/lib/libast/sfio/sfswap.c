@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -31,7 +31,7 @@
 **	or the new stream. Note that this function will always work
 **	unless streams are locked by SF_PUSH.
 **
-**	Written by Kiem-Phong Vo (02/07/94)
+**	Written by Kiem-Phong Vo.
 */
 
 #if __STD_C
@@ -66,12 +66,13 @@ reg Sfio_t*	f2;
 		     f1->file == 1 ? sfstdout :
 		     f1->file == 2 ? sfstderr : NIL(Sfio_t*);
 		if((!f2 || !(f2->mode&SF_AVAIL)) )
-		{	if(!SFALLOC(f2) )
+		{	if(!(f2 = (Sfio_t*)malloc(sizeof(Sfio_t))) )
 			{	f1->mode = f1mode;
 				SFOPEN(f1,0);
 				return NIL(Sfio_t*);
 			}
-			else	SFCLEAR(f2);
+
+			SFCLEAR(f2,NIL(Vtmutex_t*));
 		}
 		f2->mode = SF_AVAIL|SF_LOCK;
 		f2mode = SF_AVAIL;
@@ -100,8 +101,6 @@ reg Sfio_t*	f2;
 	if(f1pool >= 0)
 		f2->pool->sf[f1pool] = f2;
 
-	_sfswap(f1,f2,0);
-
 	if(f2flags&SF_STATIC)
 		f2->flags |= SF_STATIC;
 	else	f2->flags &= ~SF_STATIC;
@@ -112,7 +111,7 @@ reg Sfio_t*	f2;
 
 	if(f2mode&SF_AVAIL)	/* swapping to a closed stream */
 	{	if(!(f1->flags&SF_STATIC) )
-			SFFREE(f1);
+			free(f1);
 	}
 	else
 	{	f1->mode = f2mode;

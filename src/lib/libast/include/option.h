@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -37,7 +37,7 @@
 
 #include <ast.h>
 
-#define OPT_VERSION	20000101L
+#define OPT_VERSION	20000401L
 
 #define opt_info	_opt_info_
 
@@ -52,11 +52,15 @@ typedef struct Optdisc_s
 {
 	unsigned long	version;	/* OPT_VERSION			*/
 	unsigned long	flags;		/* OPT_* flags			*/
-	char*		dictionary;	/* error dictionary id		*/
+	char*		catalog;	/* error catalog id		*/
 	Optinfo_f	infof;		/* runtime info function	*/
 } Optdisc_t;
 
 /* NOTE: Opt_t member order fixed by a previous binary release */
+
+#ifndef _OPT_PRIVATE_
+#define _OPT_PRIVATE_	void*	_opt_private;
+#endif
 
 typedef struct Opt_s
 {
@@ -70,11 +74,7 @@ typedef struct Opt_s
 	char		option[8];	/* current flag {-,+} + option  */
 	char		name[64];	/* current long name or flag	*/
 	Optdisc_t*	disc;		/* user discipline		*/
-
-#ifdef _OPT_PRIVATE
-	_OPT_PRIVATE
-#endif
-
+	_OPT_PRIVATE_
 } Opt_t;
 
 #if _BLD_ast && defined(__EXPORT__)

@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -55,7 +55,9 @@ pathpath(register char* path, const char* p, const char* a, int mode)
 		path = buf;
 	if (!p)
 	{
-		cmd = (char*)a;
+		if (cmd)
+			free(cmd);
+		cmd = a ? strdup(a) : (char*)0;
 		return 0;
 	}
 	if (*p == '/')
@@ -70,24 +72,34 @@ pathpath(register char* path, const char* p, const char* a, int mode)
 		}
 		else
 			a = 0;
-		if ((!cmd || *cmd) && (strchr(s, '/') || ((s = cmd) || opt_info.argv && (s = *opt_info.argv)) && strchr(s, '/') || (s = *environ) && *s++ == '_' && *s++ == '=' && strchr(s, '/') && !strneq(s, "/bin/", 5) && !strneq(s, "/usr/bin/", 9) || *x && !access(x, F_OK) && (s = getenv("PWD")) && *s == '/'))
+		if ((!cmd || *cmd) && (strchr(s, '/') ||
+		    ((s = cmd) ||
+		     opt_info.argv && (s = *opt_info.argv)) &&
+			strchr(s, '/') && !strchr(s, '\n') && !access(s, F_OK) ||
+		    environ && (s = *environ) &&
+			*s++ == '_' && *s++ == '=' && strchr(s, '/') && !strneq(s, "/bin/", 5) && !strneq(s, "/usr/bin/", 9) ||
+		    *x && !access(x, F_OK) &&
+			(s = getenv("PWD")) && *s == '/'))
 		{
 			if (!cmd)
-				cmd = s;
-			s = strcopy(path, s);
-			for (;;)
+				cmd = strdup(s);
+			if (strlen(s) < (sizeof(buf) - 6))
 			{
-				do if (s <= path) goto normal; while (*--s == '/');
-				do if (s <= path) goto normal; while (*--s != '/');
-				strcpy(s + 1, "bin");
-				if (!access(path, F_OK))
+				s = strcopy(path, s);
+				for (;;)
 				{
-					if (s = pathaccess(path, path, p, a, mode))
-						return path == buf ? strdup(s) : s;
-					goto normal;
+					do if (s <= path) goto normal; while (*--s == '/');
+					do if (s <= path) goto normal; while (*--s != '/');
+					strcpy(s + 1, "bin");
+					if (!access(path, F_OK))
+					{
+						if (s = pathaccess(path, path, p, a, mode))
+							return path == buf ? strdup(s) : s;
+						goto normal;
+					}
 				}
+			normal: ;
 			}
-		normal: ;
 		}
 	}
 	x = !a && strchr(p, '/') ? "" : pathbin();

@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -51,6 +51,25 @@ Tm_t*
 tmfix(register Tm_t* tm)
 {
 	register int	n;
+	register int	w;
+	Tm_t*		p;
+	time_t		t;
+
+	/*
+	 * check for special case that adjusts tm_wday at the end
+	 * this happens during
+	 *	nl_langinfo() => strftime() => tmfmt()
+	 */
+
+	if (w = !(tm->tm_sec | tm->tm_min | tm->tm_mday | tm->tm_year | tm->tm_yday | tm->tm_isdst))
+	{
+		tm->tm_year = 99;
+		tm->tm_mday = 2;
+	}
+
+	/*
+	 * adjust from shortest to longest units
+	 */
 
 	if ((n = tm->tm_sec) < 0)
 	{
@@ -82,6 +101,16 @@ tmfix(register Tm_t* tm)
 		tm->tm_mday += n / 24;
 		tm->tm_hour %= 24;
 	}
+	if (tm->tm_mon >= 12)
+	{
+		tm->tm_year += tm->tm_mon / 12;
+		tm->tm_mon %= 12;
+	}
+	else if (tm->tm_mon < 0)
+	{
+		tm->tm_year -= (12 - tm->tm_mon) / 12;
+		tm->tm_mon = (12 - tm->tm_mon) % 12;
+	}
 	while (tm->tm_mday < 1)
 	{
 		if (--tm->tm_mon < 0)
@@ -98,6 +127,20 @@ tmfix(register Tm_t* tm)
 		{
 			tm->tm_mon = 0;
 			tm->tm_year++;
+		}
+	}
+	if (w)
+	{
+		w = tm->tm_wday;
+		t = tmtime(tm, TM_LOCALZONE);
+		p = tmmake(&t);
+		if (w = (w - p->tm_wday))
+		{
+			if (w < 0)
+				w += 7;
+			tm->tm_wday += w;
+			if ((tm->tm_mday += w) > DAYS(tm))
+				tm->tm_mday -= 7;
 		}
 	}
 

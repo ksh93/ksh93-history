@@ -4,7 +4,7 @@ LICENSE = since=1997,author=gsf
 
 _HOSTTYPE_ == "$(CC.HOSTTYPE)"
 
-CCFLAGS = -O $(CC.DLL)
+CCFLAGS = $(CC.OPTIMIZE) $(CC.DLL)
 
 static = $(CC.SUFFIX.DYNAMIC:T!=V)
 

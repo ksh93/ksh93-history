@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -246,13 +246,13 @@ static void put_restricted(register Namval_t* np,const char *val,int flags,Namfu
      * error message translations
      */
 #if ERROR_VERSION >= 20000101L
-    static char *msg_translate(const char *dict, const char *message)
+    static char* msg_translate(const char* catalog, const char* message)
     {
-	NOT_USED(dict);
+	NOT_USED(catalog);
 	return((char*)message);
     }
 #else
-    static char *msg_translate(const char *message,int type)
+    static char* msg_translate(const char* message, int type)
     {
 	NOT_USED(type);
 	return((char*)message);
@@ -285,7 +285,9 @@ static void put_restricted(register Namval_t* np,const char *val,int flags,Namfu
     {
 	int type;
 	char *lc_all = nv_getval(LCALLNOD);
-	if(nv_name(np)==nv_name(LCTYPENOD))
+	if(nv_name(np)==nv_name(LCALLNOD))
+		type = LC_ALL;
+	else if(nv_name(np)==nv_name(LCTYPENOD))
 		type = LC_CTYPE;
 	else if(nv_name(np)==nv_name(LCMSGNOD))
 		type = LC_MESSAGES;
@@ -293,11 +295,11 @@ static void put_restricted(register Namval_t* np,const char *val,int flags,Namfu
 		type = LC_COLLATE;
 	else if(nv_name(np)==nv_name(LCNUMNOD))
 		type = LC_NUMERIC;
-	else if(nv_name(np)==nv_name(LANGNOD) && !lc_all)
-		type= -1;
-	else
+	else if(nv_name(np)==nv_name(LANGNOD) && (!lc_all || *lc_all==0))
 		type = LC_ALL;
-	if(type>=0 && type!=LC_ALL && !lc_all)
+	else
+		type= -1;
+	if(type>=0 && type!=LC_ALL && lc_all && *lc_all)
 		type= -1;
 	if(type>=0)
 	{
@@ -311,7 +313,7 @@ static void put_restricted(register Namval_t* np,const char *val,int flags,Namfu
 	{
 		if(sh_lexstates[ST_BEGIN]!=sh_lexrstates[ST_BEGIN])
 			free((void*)sh_lexstates[ST_BEGIN]);
-		if(ast.locale.set&LC_SET_CTYPE)
+		if(ast.locale.set&(1<<AST_LC_CTYPE))
 		{
 			register int c;
 			char *state[4];
@@ -355,8 +357,10 @@ static void put_restricted(register Namval_t* np,const char *val,int flags,Namfu
         	charsize_init();
 #endif /* SHOPT_MULTIBYTE */
 	}
+#if ERROR_VERSION < 20000101L
 	if(type==LC_ALL || type==LC_MESSAGES)
 		error_info.translate = msg_translate;
+#endif
 	nv_putv(np, val, flags, fp);
     }
 #endif /* _hdr_locale */
@@ -712,7 +716,7 @@ int sh_init(register int argc,register char *argv[], void(*userinit)(int))
 	error_info.exit = sh_exit;
 	error_info.id = path_basename(argv[0]);
 #if ERROR_VERSION >= 20000102L
-	error_info.dictionary = e_dict;
+	error_info.catalog = e_dict;
 #endif
 	sh.cpipe[0] = -1;
 	sh.coutpipe = -1;
@@ -784,6 +788,7 @@ int sh_init(register int argc,register char *argv[], void(*userinit)(int))
 			sh.exitval = 2;
 			sh_done(0);
 		}
+		opt_info.disc = 0;
 		sh.st.dolv=argv+(argc-1)-sh.st.dolc;
 		sh.st.dolv[0] = argv[0];
 		if(sh.st.dolc < 1)
@@ -890,6 +895,10 @@ Namfun_t *nv_cover(register Namval_t *np)
 {
 	if(np==IFSNOD || np==PATHNOD || np==SHELLNOD)
 		return(np->nvfun);
+#ifdef _hdr_locale
+	if(np==LCALLNOD || np==LCTYPENOD || np==LCMSGNOD || np==LCCOLLNOD || np==LCNUMNOD || np==LANGNOD)
+		return(np->nvfun);
+#endif
 	 return(0);
 }
 

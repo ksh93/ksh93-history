@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -45,6 +45,10 @@ extern Sfio_t	_Sfstderr;
 
 #include "sfhdr.h"
 
+#undef	sfstdin
+#undef	sfstdout
+#undef	sfstderr
+
 #if defined(__EXPORT__)
 #define extern		__EXPORT__
 #endif
@@ -67,10 +71,13 @@ _ast_libinit(void* in, void* out, void* err)
 
 	sp = (Sfio_t*)in;
 	*sp =  _Sfstdin;
+	sfstdin = sp;
 	sp = (Sfio_t*)out;
 	*sp =  _Sfstdout;
+	sfstdout = sp;
 	sp = (Sfio_t*)err;
 	*sp =  _Sfstderr;
+	sfstderr = sp;
 }
 
 extern void

@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -28,7 +28,7 @@
 
 /*	Get the size of a stream.
 **
-**	Written by Kiem-Phong Vo (02/12/91)
+**	Written by Kiem-Phong Vo.
 */
 #if __STD_C
 Sfoff_t sfsize(reg Sfio_t* f)
@@ -41,12 +41,14 @@ reg Sfio_t*	f;
 	reg int		mode;
 	Sfoff_t		s = f->here;
 
+	SFMTXSTART(f, (Sfoff_t)(-1));
+
 	if((mode = f->mode&SF_RDWR) != (int)f->mode && _sfmode(f,mode,0) < 0)
-		return -1;
+		SFMTXRETURN(f, (Sfoff_t)(-1));
 
 	if(f->flags&SF_STRING)
 	{	SFSTRSIZE(f);
-		return f->extent;
+		SFMTXRETURN(f, f->extent);
 	}
 
 	SFLOCK(f,0);
@@ -58,10 +60,10 @@ reg Sfio_t*	f;
 					break;
 			if(!_sys_stat || disc)
 			{	Sfoff_t	e;
-				if((e = SFSK(f,0,2,disc)) >= 0)
+				if((e = SFSK(f,0,SEEK_END,disc)) >= 0)
 					f->extent = e;
-				if(SFSK(f,f->here,0,disc) != f->here)
-					f->here = SFSK(f,(Sfoff_t)0,1,disc);
+				if(SFSK(f,f->here,SEEK_SET,disc) != f->here)
+					f->here = SFSK(f,(Sfoff_t)0,SEEK_CUR,disc);
 			}
 #if _sys_stat
 			else
@@ -69,13 +71,13 @@ reg Sfio_t*	f;
 				if(fstat(f->file,&st) < 0)
 					f->extent = -1;
 				else if((f->extent = st.st_size) < f->here)
-					f->here = SFSK(f,(Sfoff_t)0,1,disc);
+					f->here = SFSK(f,(Sfoff_t)0,SEEK_CUR,disc);
 			}
 #endif
 		}
 
 		if((f->flags&(SF_SHARE|SF_PUBLIC)) == (SF_SHARE|SF_PUBLIC))
-			f->here = SFSK(f,(Sfoff_t)0,1,f->disc);
+			f->here = SFSK(f,(Sfoff_t)0,SEEK_CUR,f->disc);
 	}
 
 	if(f->here != s && (f->mode&SF_READ) )
@@ -105,5 +107,5 @@ reg Sfio_t*	f;
 	}
 
 	SFOPEN(f,0);
-	return s;
+	SFMTXRETURN(f, s);
 }

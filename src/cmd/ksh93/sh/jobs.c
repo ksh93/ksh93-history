@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -230,11 +230,9 @@ static void job_waitsafe(register int sig)
 		if(WIFSTOPPED(wstat))
 		{
 			/* move to top of job list */
-			pid = job.curpgid;
 			job_unlink(px);
 			px->p_nxtjob = job.pwlist;
 			job.pwlist = px;
-			job.curpgid = pid;
 			pw->p_exit = WSTOPSIG(wstat);
 			pw->p_flag |= (P_NOTIFY|P_SIGNALLED|P_STOPPED);
 			if(pw->p_pgrp && pw->p_pgrp==job.curpgid && sh_isstate(SH_STOPOK))
@@ -706,13 +704,12 @@ int job_list(struct process *pw,register int flag)
 			msg = job_sigmsg((int)(px->p_exit));
 		else if(px->p_flag&P_NOTIFY)
 		{
-			msg = e_done;
+			msg = sh_translate(e_done);
 			n = px->p_exit;
 		}
 		else
-			msg = e_running;
+			msg = sh_translate(e_running);
 		px->p_flag &= ~P_NOTIFY;
-		msg = sh_translate(msg);
 		sfputr(outfile,msg,-1);
 		msize = strlen(msg);
 		if(n)
@@ -852,12 +849,12 @@ int job_kill(register struct process *pw,register int sig)
 	{
 	error:
 		if(pw && by_number)
-			msg = e_no_proc;
+			msg = sh_translate(e_no_proc);
 		else
-			msg = e_no_job;
+			msg = sh_translate(e_no_job);
 		if(errno == EPERM)
-			msg = e_access;
-		sfprintf(sfstderr,"kill: %s: %s\n",job_string, sh_translate(msg));
+			msg = sh_translate(e_access);
+		sfprintf(sfstderr,"kill: %s: %s\n",job_string, msg);
 		r = 2;
 	}
 	sh_delay(.001);
@@ -1454,7 +1451,7 @@ static void job_free(register int n)
 
 static char *job_sigmsg(int sig)
 {
-	static char signo[] = "Signal xxxx";
+	static char signo[40];
 #ifdef apollo
 	/*
 	 * This code handles the formatting for the apollo specific signal
@@ -1475,7 +1472,7 @@ static char *job_sigmsg(int sig)
 		return(sigrt);
 	}
 #endif
-	strncpy(signo+7,fmtbase((long)sig,10,0),4);
+	sfsprintf(signo,sizeof(signo),sh_translate(e_signo),sig);
 	return(signo);
 }
 

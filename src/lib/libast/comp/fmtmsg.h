@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -113,12 +113,37 @@ typedef struct
 
 #define MM_default	(MM_action|MM_label|MM_severity|MM_tag|MM_text)
 
-extern const MM_table_t		mm_class[];
+#if _BLD_ast && defined(__EXPORT__)
+#define __PUBLIC_DATA__		__EXPORT__
+#else
+#if !_BLD_ast && defined(__IMPORT__)
+#define __PUBLIC_DATA__		__IMPORT__
+#else
+#define __PUBLIC_DATA__
+#endif
+#endif
+
+extern __PUBLIC_DATA__ const MM_table_t		mm_class[];
+extern __PUBLIC_DATA__ const MM_table_t		mm_verb[];
+
+#undef	__PUBLIC_DATA__
+
+#if _BLD_ast && defined(__EXPORT__)
+#define extern		__EXPORT__
+#endif
+
 extern const MM_table_t*	mm_severity;
-extern const MM_table_t		mm_verb[];
+
+#undef	extern
 
 #endif
 
+#if _BLD_ast && defined(__EXPORT__)
+#define extern		__EXPORT__
+#endif
+
 extern int	fmtmsg(long, const char*, int, const char*, const char*, const char*);
+
+#undef	extern
 
 #endif

@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -48,6 +48,7 @@ putexport(Sfio_t* sp, char* n, int old)
 	char*	v;
 
 	if (cvt = *n == '%') n++;
+	if (old) cvt = 0;
 	if ((v = getenv(n)) && *v)
 	{
 		if (!old) sfprintf(sp, "\\\n");
@@ -206,7 +207,7 @@ coinit(int flags)
 		if (!pathpath(t, "ignore", NiL, PATH_ABSOLUTE|PATH_REGULAR|PATH_EXECUTE) && pathpath(t, "bin/ignore", "", PATH_ABSOLUTE|PATH_REGULAR|PATH_EXECUTE))
 		{
 			*strrchr(t, '/') = 0;
-			coquote(sp, t, 1);
+			coquote(sp, t, !old);
 			sfputc(sp, ':');
 		}
 		else if (!sync && (*s == ':' || *s == '.' && *(s + 1) == ':'))
@@ -216,7 +217,7 @@ coinit(int flags)
 		}
 		if (*s == ':') s++;
 		else if (*s == '.' && *(s + 1) == ':') s += 2;
-		coquote(sp, s, 1);
+		coquote(sp, s, !old);
 		sfputc(sp, '\'');
 		if (old) sfprintf(sp, "\nexport PATH");
 		sfputc(sp, '\n');

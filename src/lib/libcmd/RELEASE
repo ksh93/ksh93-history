@@ -1,3 +1,13 @@
+00-05-18 add setlocale(LC_ALL,"")
+00-04-30 join: drop wierd opt_info.argv reference
+00-03-17 expr: add == operator -- duh
+	 cp,ln,mv: delay pathcanon() on destination to verify `cp a b/.'
+	 getconf: use astgetconf for proper message control
+	 ERROR_translate: dictionary update
+00-03-08 tail: handle multiple -f files
+00-03-07 fmt: add
+00-03-07 dirname: handle PATH_LEADING_SLASHES as documented
+	 tail: accept + options
 00-02-14 chmod: --ignore-umask to ignore umask(2) in symbolic expressions
 	 chmod,chgrp,cp: use FTS_NOSEEDOTDIR for correct path construction
 	 cat: fix -n (was ignored, wow)

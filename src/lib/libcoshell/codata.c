@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -34,7 +34,7 @@
 
 char	coident[] = "\
 # @(#)libcoshell (AT&T Research) 1999-11-19\n\
-{ { test \"\" = \"$KSH_VERSION\" && PATH= print -u3 ksh; } || { times && echo bsh >&3; } || { echo osh >&3; } } >/dev/null 2>&1\n\
+{ { test \"\" = \"$KSH_VERSION\" && PATH= print -u3 ksh; } || { times && echo bsh >&3; } || { echo osh >&3; }; } >/dev/null 2>&1\n\
 ";
 
 char	cobinit[] = "\

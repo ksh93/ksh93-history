@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -157,7 +157,7 @@ typedef struct
 } Match_t;
 
 #if _lib_mbtowc && MB_LEN_MAX > 1
-#define mbgetchar(p)	((ast.locale.set&LC_SET_CTYPE)?((ast.tmp_int=mbtowc(&ast.tmp_wchar,p,MB_CUR_MAX))>=0?((p+=ast.tmp_int),ast.tmp_wchar):0):(*p++))
+#define mbgetchar(p)	((ast.locale.set&(1<<AST_LC_CTYPE))?((ast.tmp_int=mbtowc(&ast.tmp_wchar,p,MB_CUR_MAX))>=0?((p+=ast.tmp_int),ast.tmp_wchar):0):(*p++))
 #else
 #define mbgetchar(p)	(*p++)
 #endif
@@ -460,7 +460,7 @@ onematch(Match_t* mp, int g, char* s, char* p, char* e, char* r, int flags)
 	if (!sc)
 		return 0;
 #if _lib_fnmatch
-	if (ast.locale.set & LC_SET_COLLATE)
+	if (ast.locale.set & (1<<AST_LC_COLLATE))
 		range = p - 1;
 	else
 #endif
@@ -558,7 +558,7 @@ onematch(Match_t* mp, int g, char* s, char* p, char* e, char* r, int flags)
 				}
 			}
 #if _lib_fnmatch
-			else if (ast.locale.set & LC_SET_COLLATE)
+			else if (ast.locale.set & (1<<AST_LC_COLLATE))
 				ok = -1;
 #endif
 			else if (range)
@@ -611,14 +611,14 @@ onematch(Match_t* mp, int g, char* s, char* p, char* e, char* r, int flags)
 		else if (ok)
 			/*NOP*/;
 #if _lib_fnmatch
-		else if (range && !(ast.locale.set & LC_SET_COLLATE))
+		else if (range && !(ast.locale.set & (1<<AST_LC_COLLATE)))
 #else
 		else if (range)
 #endif
 		{
 		getrange:
 #if _lib_mbtowc
-			if (ast.locale.set & LC_SET_CTYPE)
+			if (ast.locale.set & (1<<AST_LC_CTYPE))
 			{
 				wchar_t	sw;
 				wchar_t	bw;
@@ -662,7 +662,7 @@ onematch(Match_t* mp, int g, char* s, char* p, char* e, char* r, int flags)
 		{
 			mbgetchar(p);
 #if _lib_fnmatch
-			if (ast.locale.set & LC_SET_COLLATE) ok = -1;
+			if (ast.locale.set & (1<<AST_LC_COLLATE)) ok = -1;
 			else
 #endif
 			range = oldp;
@@ -762,6 +762,7 @@ strgrpmatch(const char* b, const char* p, int* sub, int n, int flags)
 	{
 		match.best.next_s = 0;
 		match.current.groups = 0;
+		match.current.beg[0] = 0;
 		if ((i = grpmatch(&match, 0, s, (char*)p, e, flags)) || match.best.next_s)
 		{
 			if (!i)

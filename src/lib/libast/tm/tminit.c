@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -115,8 +115,10 @@ tzwest(time_t* clock, int* isdst)
 	tp = (Tm_t*)localtime(clock);
 	if (n = tp->tm_yday - n)
 	{
-		if (n > 1) n = -1;
-		else if (n < -1) n = 1;
+		if (n > 1)
+			n = -1;
+		else if (n < -1)
+			n = 1;
 	}
 	*isdst = tp->tm_isdst;
 	return (h - tp->tm_hour - n * 24) * 60 + m - tp->tm_min;
@@ -132,19 +134,22 @@ tmopt(void* a, const void* p, int n, const char* v)
 	Tm_zone_t*	zp;
 
 	NoP(a);
-	if (p) switch (((Namval_t*)p)->value)
-	{
-	case TM_DEFAULT:
-		tm_info.deformat = (n && (n = strlen(v)) > 0 && (n < 2 || v[n-2] != '%' || v[n-1] != '?')) ? strdup(v) : tm_info.format[TM_DEFAULT];
-		break;
-	case TM_type:
-		tm_info.local->type = (n && *v) ? ((zp = tmtype(v, NiL)) ? zp->type : strdup(v)) : 0;
-		break;
-	default:
-		if (n) tm_info.flags |= ((Namval_t*)p)->value;
-		else tm_info.flags &= ~((Namval_t*)p)->value;
-		break;
-	}
+	if (p)
+		switch (((Namval_t*)p)->value)
+		{
+		case TM_DEFAULT:
+			tm_info.deformat = (n && (n = strlen(v)) > 0 && (n < 2 || v[n-2] != '%' || v[n-1] != '?')) ? strdup(v) : tm_info.format[TM_DEFAULT];
+			break;
+		case TM_type:
+			tm_info.local->type = (n && *v) ? ((zp = tmtype(v, NiL)) ? zp->type : strdup(v)) : 0;
+			break;
+		default:
+			if (n)
+				tm_info.flags |= ((Namval_t*)p)->value;
+			else
+				tm_info.flags &= ~((Namval_t*)p)->value;
+			break;
+		}
 	return 0;
 }
 
@@ -168,10 +173,6 @@ tmlocal(void)
 
 	static Tm_zone_t	local;
 
-	/*
-	 * tm_info.format language support goes here
-	 */
-
 #if _lib_tzset
 	tzset();
 #endif
@@ -179,8 +180,7 @@ tmlocal(void)
 	local.standard = tzname[0];
 	local.daylight = tzname[1];
 #endif
-	tm_info.format = tm_data.format;
-	tm_info.deformat = tm_data.format[TM_DEFAULT];
+	tmlocale();
 
 	/*
 	 * tm_info.local
@@ -236,8 +236,10 @@ tmlocal(void)
 		 */
 
 		local.standard = s;
-		if (s = strchr(s, ',')) *s++ = 0;
-		else s = "";
+		if (s = strchr(s, ','))
+			*s++ = 0;
+		else
+			s = "";
 		local.daylight = s;
 	}
 	else if ((s = getenv("TZ")) && *s && *s != ':' && (s = strdup(s)))
@@ -253,7 +255,8 @@ tmlocal(void)
 			tmgoff(s, &t, 0);
 			s = t;
 		}
-		else s = "";
+		else
+			s = "";
 		local.daylight = s;
 	}
 	else
@@ -265,7 +268,8 @@ tmlocal(void)
 		t = 0;
 		for (zp = tm_data.zone; zp->standard; zp++)
 		{
-			if (zp->type) t = zp->type;
+			if (zp->type)
+				t = zp->type;
 			if (zp->west == n && zp->dst == m)
 			{
 				local.type = t;
@@ -311,7 +315,8 @@ tmlocal(void)
 		t = 0;
 		for (zp = tm_data.zone; zp->standard; zp++)
 		{
-			if (zp->type) t = zp->type;
+			if (zp->type)
+				t = zp->type;
 			if (tmword(s, NiL, zp->standard, NiL, 0))
 			{
 				local.type = t;
@@ -349,8 +354,10 @@ tmlocal(void)
 void
 tminit(register Tm_zone_t* zp)
 {
-	if (!tm_info.local) tmlocal();
-	if (!zp) zp = tm_info.local;
+	if (!tm_info.local)
+		tmlocal();
+	if (!zp)
+		zp = tm_info.local;
 #if HUH950804 /* it only worked on systems that ignored TZ=...! */
 	if (zp != tm_info.zone)
 	{
@@ -364,7 +371,8 @@ tminit(register Tm_zone_t* zp)
 		if (zp->daylight)
 		{
 			s += sfsprintf(s, sizeof(buf) - (s - buf), "%s", zp->daylight);
-			if (zp->dst != TM_DST) sfsprintf(s, sizeof(buf) - (s - buf), "%d", zp->dst);
+			if (zp->dst != TM_DST)
+				sfsprintf(s, sizeof(buf) - (s - buf), "%d", zp->dst);
 		}
 		s = *environ;
 		*environ = buf;

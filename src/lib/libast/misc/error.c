@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -39,23 +39,35 @@
  * NOTE: id && ERROR_NOID && !ERROR_USAGE implies format=id for errmsg()
  */
 
-#include <ast.h>
+#include "loclib.h"
+
 #include <ctype.h>
 #include <ccode.h>
-#include <error.h>
 #include <namval.h>
 #include <sig.h>
 #include <stk.h>
 #include <times.h>
 
-Error_info_t	_error_info_ = { 2, exit, write };
+Error_info_t	_error_info_ =
+{
+	2, exit, write,
+	0,0,0,0,0,0,0,0,
+	0,
+	0,
+	0,0,0,0,0,0,0,
+	0,0,0,0,0,0,0,
+	0,
+	translate,
+	0
+};
 
 __EXTERN__(Error_info_t, _error_info_);
 
-#define ERROR_DICTIONARY	(ERROR_LIBRARY<<1)
+#undef	ERROR_CATALOG
+#define ERROR_CATALOG	(ERROR_LIBRARY<<1)
 
-#define OPT_CORE	1
-#define OPT_DICTIONARY	2
+#define OPT_CATALOG	1
+#define OPT_CORE	2
 #define OPT_FD		3
 #define OPT_LIBRARY	4
 #define OPT_MASK	5
@@ -65,9 +77,9 @@ __EXTERN__(Error_info_t, _error_info_);
 
 static const Namval_t		options[] =
 {
+	"catalog",	OPT_CATALOG,
 	"core",		OPT_CORE,
 	"debug",	OPT_TRACE,
-	"dictionary",	OPT_DICTIONARY,
 	"fd",		OPT_FD,
 	"library",	OPT_LIBRARY,
 	"mask",		OPT_MASK,
@@ -109,11 +121,11 @@ setopt(void* a, const void* p, register int n, register const char* v)
 			}
 			else error_info.core = 0;
 			break;
-		case OPT_DICTIONARY:
+		case OPT_CATALOG:
 			if (n)
-				error_info.set |= ERROR_DICTIONARY;
+				error_info.set |= ERROR_CATALOG;
 			else
-				error_info.clear |= ERROR_DICTIONARY;
+				error_info.clear |= ERROR_CATALOG;
 			break;
 		case OPT_FD:
 			error_info.fd = n ? strtol(v, NiL, 0) : -1;
@@ -193,7 +205,7 @@ context(register Sfio_t* sp, register Error_context_t* cp)
 		if (cp->line > ((cp->flags & ERROR_INTERACTIVE) != 0))
 		{
 			if (cp->file)
-				sfprintf(sp, ": \"%s\", %s %d", cp->file, ERROR_translate(ast.id, "line"), cp->line);
+				sfprintf(sp, ": \"%s\", %s %d", cp->file, ERROR_translate(NiL, NiL, ast.id, "line"), cp->line);
 			else
 				sfprintf(sp, "[%d]", cp->line);
 		}
@@ -221,7 +233,7 @@ errorv(const char* id, int level, va_list ap)
 	char*		t;
 	char*		format;
 	char*		library;
-	const char*	dictionary;
+	const char*	catalog;
 
 	int		line;
 	char*		file;
@@ -250,20 +262,28 @@ errorv(const char* id, int level, va_list ap)
 		format = 0;
 	if (id)
 	{
-		dictionary = (char*)id;
-		if (!*dictionary || *dictionary == ':')
+		catalog = (char*)id;
+		if (!*catalog || *catalog == ':')
 		{
-			dictionary = 0;
+			catalog = 0;
 			library = 0;
 		}
-		else if ((library = strchr(dictionary, ':')) && !*++library)
+		else if ((library = strchr(catalog, ':')) && !*++library)
 			library = 0;
 	}
 	else
+	{
+		catalog = 0;
 		library = 0;
-	if (!dictionary && !(dictionary = error_info.dictionary))
-		dictionary = error_info.id;
-	if (level < error_info.trace || (flags & ERROR_LIBRARY & ((error_info.set | error_info.flags) ^ error_info.clear)) || level < 0 && error_info.mask && !(error_info.mask & (1<<(-level - 1))))
+	}
+	if (catalog)
+		id = 0;
+	else
+	{
+		id = (const char*)error_info.id;
+		catalog = error_info.catalog;
+	}
+	if (level < error_info.trace || (flags & ERROR_LIBRARY) && !(((error_info.set | error_info.flags) ^ error_info.clear) & ERROR_LIBRARY) || level < 0 && error_info.mask && !(error_info.mask & (1<<(-level - 1))))
 	{
 		if (level >= ERROR_FATAL)
 			(*error_info.exit)(level - 1);
@@ -290,7 +310,7 @@ errorv(const char* id, int level, va_list ap)
 			if (flags & ERROR_NOID)
 				sfprintf(stkstd, "       ");
 			else
-				sfprintf(stkstd, "%s: ", ERROR_translate(ast.id, "Usage"));
+				sfprintf(stkstd, "%s: ", ERROR_translate(NiL, NiL, ast.id, "Usage"));
 			if (file || opt_info.argv && (file = opt_info.argv[0]))
 				print(stkstd, file, " ");
 		}
@@ -302,18 +322,18 @@ errorv(const char* id, int level, va_list ap)
 					context(stkstd, error_info.context);
 				if (file)
 					print(stkstd, file, (flags & ERROR_LIBRARY) ? " " : ": ");
-				if (flags & (ERROR_DICTIONARY|ERROR_LIBRARY))
+				if (flags & (ERROR_CATALOG|ERROR_LIBRARY))
 				{
 					sfprintf(stkstd, "[");
-					if (flags & ERROR_DICTIONARY)
+					if (flags & ERROR_CATALOG)
 						sfprintf(stkstd, "%s %s%s",
-							dictionary ? dictionary : ERROR_translate(ast.id, "DEFAULT"),
-							ERROR_translate(ast.id, "dictionary"),
+							catalog ? catalog : ERROR_translate(NiL, NiL, ast.id, "DEFAULT"),
+							ERROR_translate(NiL, NiL, ast.id, "catalog"),
 							(flags & ERROR_LIBRARY) ? ", " : "");
 					if (flags & ERROR_LIBRARY)
 						sfprintf(stkstd, "%s %s",
 							library,
-							ERROR_translate(ast.id, "library"));
+							ERROR_translate(NiL, NiL, ast.id, "library"));
 					sfprintf(stkstd, "]: ");
 				}
 			}
@@ -321,7 +341,7 @@ errorv(const char* id, int level, va_list ap)
 			{
 				if (error_info.file && *error_info.file)
 					sfprintf(stkstd, "\"%s\", ", error_info.file);
-				sfprintf(stkstd, "%s %d: ", ERROR_translate(ast.id, "line"), error_info.line);
+				sfprintf(stkstd, "%s %d: ", ERROR_translate(NiL, NiL, ast.id, "line"), error_info.line);
 			}
 		}
 		if (error_info.time)
@@ -337,16 +357,16 @@ errorv(const char* id, int level, va_list ap)
 			break;
 		case ERROR_WARNING:
 			error_info.warnings++;
-			sfprintf(stkstd, "%s: ", ERROR_translate(ast.id, "warning"));
+			sfprintf(stkstd, "%s: ", ERROR_translate(NiL, NiL, ast.id, "warning"));
 			break;
 		case ERROR_PANIC:
 			error_info.errors++;
-			sfprintf(stkstd, "%s: ", ERROR_translate(ast.id, "panic"));
+			sfprintf(stkstd, "%s: ", ERROR_translate(NiL, NiL, ast.id, "panic"));
 			break;
 		default:
 			if (level < 0)
 			{
-				s = ERROR_translate(ast.id, "debug");
+				s = ERROR_translate(NiL, NiL, ast.id, "debug");
 				if (error_info.trace < -1)
 					sfprintf(stkstd, "%s%d:%s", s, level, level > -10 ? " " : "");
 				else
@@ -369,7 +389,7 @@ errorv(const char* id, int level, va_list ap)
 
 			file = va_arg(ap, char*);
 			line = va_arg(ap, int);
-			s = ERROR_translate(ast.id, "line");
+			s = ERROR_translate(NiL, NiL, ast.id, "line");
 			if (error_info.version)
 				sfprintf(stkstd, "(%s: \"%s\", %s %d) ", error_info.version, file, s, line);
 			else
@@ -378,7 +398,7 @@ errorv(const char* id, int level, va_list ap)
 		if (format || (format = va_arg(ap, char*)))
 		{
 			if (!(flags & ERROR_USAGE))
-				format = ERROR_translate(dictionary, format);
+				format = ERROR_translate(NiL, id, catalog, format);
 			sfvprintf(stkstd, format, ap);
 		}
 		if (!(flags & ERROR_PROMPT))

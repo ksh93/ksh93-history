@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -52,6 +52,7 @@ extern int	b_cp(int, char**, void*);
 extern int	b_cut(int, char**, void*);
 extern int	b_dirname(int, char**, void*);
 extern int	b_expr(int, char**, void*);
+extern int	b_fmt(int, char**, void*);
 extern int	b_fold(int, char**, void*);
 extern int	b_getconf(int, char**, void*);
 extern int	b_head(int, char**, void*);
@@ -88,7 +89,7 @@ extern int	b_wc(int, char**, void*);
  */
 
 static void
-cmdinit(register char** argv, void* context)
+cmdinit(register char** argv, void* context, const char* catalog)
 {
 	register char*	cp;
 
@@ -98,6 +99,8 @@ cmdinit(register char** argv, void* context)
 	else
 		cp = argv[0];
 	error_info.id = cp;
+	if (!error_info.catalog)
+		error_info.catalog = (char*)catalog;
 	opt_info.index = 0;
 }
 
@@ -118,7 +121,7 @@ main(int argc, char** argv)
 #endif
 
 extern int	cmdrecurse(int, char**, int, char**);
-extern void	cmdinit(char**, void*);
+extern void	cmdinit(char**, void*, const char*);
 
 #undef	extern
 

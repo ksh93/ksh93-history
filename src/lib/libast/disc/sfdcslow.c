@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -73,8 +73,10 @@ Sfio_t*	f;
 
 	if(!(disc = (Sfdisc_t*)malloc(sizeof(Sfdisc_t))) )
 		return(-1);
-	memset(disc, 0, sizeof(*disc));
 
+	disc->readf = NIL(Sfread_f);
+	disc->writef = NIL(Sfwrite_f);
+	disc->seekf = NIL(Sfseek_f);
 	disc->exceptf = slowexcept;
 
 	if(sfdisc(f,disc) != disc)

@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -35,6 +35,10 @@
 #ifndef _OPTLIB_H
 #define _OPTLIB_H
 
+#include <ast.h>
+#include <cdt.h>
+#include <sfstr.h>
+
 #define OPT_functions		0x01
 #define OPT_ignore		0x02
 #define OPT_long		0x04
@@ -46,6 +50,7 @@ typedef struct
 	struct Optdisc_s*	disc;
 	char*			opts;
 	char*			oopts;
+	char*			catalog;
 	unsigned char		version;
 	unsigned char		prefix;
 	unsigned char		flags;
@@ -59,27 +64,32 @@ typedef struct
 	int			colon;
 } Optstr_t;
 
-#define _OPT_PRIVATE \
-	Sfio_t*		mp;		/* opt_info.msg string stream	*/ \
-	Optpass_t	pass[6];	/* optjoin() list		*/ \
-	char*		strv[3];	/* optstr() argv		*/ \
-	char*		str;		/* optstr() string		*/ \
-	Sfio_t*		strp;		/* optstr() stream		*/ \
-	int		colon;		/* optstr : state		*/ \
-	int		spare1;		/* spare			*/ \
-	int		spare2;		/* spare			*/ \
-	int		pindex;		/* prev index for backup	*/ \
-	int		poffset;	/* prev offset for backup	*/ \
-	int		npass;		/* # optjoin() passes		*/ \
-	int		join;		/* optjoin() pass #		*/ \
-	int		plus;		/* + ok				*/ \
-	int		style;		/* default opthelp() style	*/ \
-	int		width;		/* format line width		*/ \
-	int		flags;		/* display flags		*/ \
+typedef struct
+{
+	Sfio_t*		mp;		/* opt_info.msg string stream	*/
+	Sfio_t*		xp;		/* translation string stream	*/
+	Optpass_t	pass[8];	/* optjoin() list		*/
+	char*		argv[2];	/* initial argv copy		*/
+	char*		strv[3];	/* optstr() argv		*/
+	char*		str;		/* optstr() string		*/
+	Sfio_t*		strp;		/* optstr() stream		*/
+	int		colon;		/* optstr : state		*/
+	int		force;		/* force this style		*/
+	int		pindex;		/* prev index for backup	*/
+	int		poffset;	/* prev offset for backup	*/
+	int		npass;		/* # optjoin() passes		*/
+	int		join;		/* optjoin() pass #		*/
+	int		plus;		/* + ok				*/
+	int		style;		/* default opthelp() style	*/
+	int		width;		/* format line width		*/
+	int		flags;		/* display flags		*/
 	int		emphasis;	/* ansi term emphasis ok	*/
+	Dtdisc_t	msgdisc;	/* msgdict discipline		*/
+	Dt_t*		msgdict;	/* default ast.id catalog msgs	*/
+} Optstate_t;
 
-#include <ast.h>
+#define _OPT_PRIVATE_	Optstate_t* state;
+
 #include <error.h>
-#include <sfstr.h>
 
 #endif

@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -33,7 +33,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)join (AT&T Labs Research) 1999-09-09\n]"
+"[-?\n@(#)join (AT&T Labs Research) 2000-04-30\n]"
 USAGE_LICENSE
 "[+NAME?join - relational database operator]"
 "[+DESCRIPTION?\bjoin\b performs an \aequality join\a on the files \afile1\a "
@@ -46,12 +46,12 @@ USAGE_LICENSE
 	"of lines in \afiles1\a and \afiles2\a that have identical join "
 	"fields.  The default output line consists of the join field, "
 	"then the remaining fields from \afile1\a, then the remaining "
-	"fields from \afile2\a but this can be changed with the \b-o\b "
+	"fields from \afile2\a, but this can be changed with the \b-o\b "
 	"option.  The \b-a\b option can be used to add unmatched lines "
 	"to the output.  The \b-v\b option can be used to output only "
 	"unmatched lines.]"
 "[+?The files \afile1\a and \afile2\a must be ordered in the collating "
-	"sequence of \bsort -b\b one the fields on which they are to be "
+	"sequence of \bsort -b\b on the fields on which they are to be "
 	"joined otherwise the results are unspecified.]"
 "[+?If either \afile1\a or \afiles2\a is \b-\b, \bcomm\b "
         "uses standard input starting at the current location.]"
@@ -61,7 +61,7 @@ USAGE_LICENSE
 "[o:output]:[list?Construct the output line to comprise the fields specified "
 	"in a blank or comma separated list \alist\a.  Each element in "
 	"\alist\a consists of a file number (either 1 or 2), a period, "
-	"and a field number or is \b0\b representing the join field.  "
+	"and a field number or \b0\b representing the join field.  "
 	"As an obsolete feature multiple occurrences of \b-o\b can "
 	"be specified.]"
 "[t:separator|tabs]:[delim?Use \adelim\a as the field separator for both input"
@@ -111,7 +111,7 @@ USAGE_LICENSE
 #define S_NL		3
 
 #if DEBUG_TRACE
-#define cmdinit(a,b)
+#define cmdinit(a,b,c)
 #endif
 
 typedef struct
@@ -645,7 +645,7 @@ b_join(int argc, char** argv, void* context)
 	register Join_t*	jp = init();
 	char*			e;
 
-	cmdinit(argv, context);
+	cmdinit(argv, context, ERROR_CATALOG);
 	if (!(jp = init()))
 		error(ERROR_system(1),"out of space");
 	for (;;)
@@ -710,7 +710,7 @@ b_join(int argc, char** argv, void* context)
 			continue;
 		case 'o':
 			/* need to accept obsolescent command syntax */
-			n = getolist(jp, opt_info.arg, opt_info.argv+opt_info.index);
+			n = getolist(jp, opt_info.arg, argv+opt_info.index);
 			opt_info.index += n;
 			continue;
 		case 't':

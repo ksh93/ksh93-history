@@ -7,6 +7,8 @@
 
 LICENSE = since=1982,author=dgk
 
+CATALOG = libshell
+
 SH_DICT         == (void*)e_dict
 
 .SOURCE : edit sh bltins data tests
@@ -19,7 +21,7 @@ VERSION = 1.1
 
 /* documentation files */
 DOCFILES = sh.memo grep.mm builtins.mm README RELEASE PROMO.mm COMPATIBILITY \
-		DESIGN OBSOLETE RELEASE88
+		DESIGN OBSOLETE RELEASE93 RELEASE88
 
 KSHELL == 1		/* this is ksh */
 
@@ -32,7 +34,7 @@ SHOPT_VSH == 1			/* vi edit mode */
 SHOPT_SPAWN == 			/* use spawnve for fork/exec */
 SHOPT_SUID_EXEC == 1		/* allow (safe) suid/sgid shell scripts */
 if  CC.HOSTTYPE == "win32.*"
-	CCFLAGS = -O $(CC.DLL)
+	CCFLAGS = $(CC.OPTIMIZE) $(CC.DLL)
 	SHOPT_CRNL == 1		/* <cr><nl> is eqivalent to <nl> */
 	SHOPT_NOCASE == 1	/* do case insensitive file compare */
 end
@@ -54,7 +56,7 @@ if SHOPT_X
 LDFLAGS += -u  _XtAppInitialize -L/usr/add-on/X11/lib
 end
 
-:ALL: $(SH) shcomp ksh.msg $(SHOPT_SUID_EXEC:T=V?suid_exec.c)
+:ALL: $(SH) shcomp ksh.str $(SHOPT_SUID_EXEC:T=V?suid_exec.c)
 
 /* the linux.sparc linker still has some problems */
 
@@ -72,6 +74,10 @@ shell $(VERSION) :LIBRARY: shell.3 nval.3 alarm.c cd_pwd.c cflow.c deparse.c \
 	trestore.c waitevent.c xec.c $(DATAFILES) $(FILES_opt) \
 	-lcmd -ldll -last -lm
 
+if CC.HOSTTYPE == "win32*" || "$(-mam)" == "static*"
+trestore.o : .CC.NOOPTIMIZE
+end
+
 :DLL:
 
 :READONLY: $(DATAFILES)
@@ -86,7 +92,7 @@ shcomp	::	CCFLAGS=$(NODLL) shcomp.c -lshell
 
 shcomp.o : _BLD_shell=
 
-ksh.msg :	$(DATAFILES)	/* build error message dictionary */
+ksh.str :	$(DATAFILES)	/* build error message dictionary */
 	{
 	$(SED) -e '/[ 	]e_[a-z].*".*[^\][a-z].*"/!d' -e '/\/[a-z][a-z][a-z]\//d' -e '/A__z/d' -e 's/.*=[ 	]*\(".*"\);.*/\1/' $(*)
 	$(SED) -e '/[ 	]sh_opt.*".*[^\][a-z].*"/!d' -e 's/.*=[ 	]*\(".*"\);.*/\1/' $(*)
@@ -94,7 +100,7 @@ ksh.msg :	$(DATAFILES)	/* build error message dictionary */
 	$(SED) -e '/[         ]e_notset/!d' -e 's/.*"....\(.*"\).*/"\1/' $(*)
 	$(SED) -e '/[         ]e_subst/!d' -e 's/.*"....\(.*"\).*/"\1/' $(*)
 	$(SED) -e '/[         ]e_file/!d' -e 's/.*"....\(.*"\).*/"\1/' $(*)
-	$(SED) -e '/,$/!d' -e 's/.*\(".*"\),/\1/' $(*:N=*signals.c)
+	$(SED) -e '/,$/!d' -e 's/.*S(\(".*"\)),/\1/' $(*:N=*signals.c)
 	} | sort -u > $(<)
 
 :: syscall.s mamexec mamstate.c deparse.c shopen.c ksh.mk OPTIONS $(DOCFILES)

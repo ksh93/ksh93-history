@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -28,7 +28,7 @@
 
 /*	The main engine for reading formatted data
 **
-**	Written by Kiem-Phong Vo (06/27/90)
+**	Written by Kiem-Phong Vo.
 */
 
 #define MAXWIDTH	(int)(((uint)~0)>>1)	/* max amount to scan	*/
@@ -133,8 +133,10 @@ va_list		args;
 				(int)(*d++) : -1 )
 #define SFUNGETC(f,c)	(--d)
 
+	SFMTXSTART(f,-1);
+
 	if(f->mode != SF_READ && _sfmode(f,SF_READ,0) < 0)
-		return -1;
+		SFMTXRETURN(f, -1);
 	SFLOCK(f,0);
 
 	SFCVINIT();	/* initialize conversion tables */
@@ -156,14 +158,12 @@ loop_fmt :
 			{	if(fmt != '\n' || !(f->flags&SF_LINE))
 					fmt = -1;
 				for(;;)
-				{	if(SFGETC(f,inp) < 0)
-						goto done;
+				{	if(SFGETC(f,inp) < 0 || inp == fmt)
+						goto loop_fmt;
 					else if(!isspace(inp))
 					{	SFUNGETC(f,inp);
 						goto loop_fmt;
 					}
-					else if(inp == fmt)	/* match only one \n */
-						goto loop_fmt;
 				}
 			}
 			else
@@ -360,11 +360,28 @@ loop_fmt :
 			goto loop_flags;
 		case 'h' :
 			size = -1;
-			flags = (flags&~SFFMT_TYPES) | SFFMT_SHORT;
+			flags &= ~SFFMT_TYPES;
+			if(*form == 'h')
+			{	form += 1;
+				flags |= SFFMT_SSHORT;
+			}
+			else	flags |= SFFMT_SHORT;
 			goto loop_flags;
 		case 'L' :
 			size = -1;
 			flags = (flags&~SFFMT_TYPES) | SFFMT_LDOUBLE;
+			goto loop_flags;
+		case 'j' :
+			size = -1;
+			flags = (flags&~SFFMT_TYPES) | SFFMT_JFLAG;
+			goto loop_flags;
+		case 'z' :
+			size = -1;
+			flags = (flags&~SFFMT_TYPES) | SFFMT_ZFLAG;
+			goto loop_flags;
+		case 't' :
+			size = -1;
+			flags = (flags&~SFFMT_TYPES) | SFFMT_TFLAG;
 			goto loop_flags;
 		}
 
@@ -373,7 +390,12 @@ loop_fmt :
 		{	if((_Sftype[fmt]&(SFFMT_INT|SFFMT_UINT)) || fmt == 'n')
 			{	size =	(flags&SFFMT_LLONG) ? sizeof(Sflong_t) :
 					(flags&SFFMT_LONG) ? sizeof(long) :
-					(flags&SFFMT_SHORT) ? sizeof(short) : -1;
+					(flags&SFFMT_SHORT) ? sizeof(short) :
+					(flags&SFFMT_SSHORT) ? sizeof(char) :
+					(flags&SFFMT_JFLAG) ? sizeof(Sflong_t) :
+					(flags&SFFMT_TFLAG) ? sizeof(ptrdiff_t) :
+					(flags&SFFMT_ZFLAG) ? sizeof(size_t) :
+					-1;
 			}
 			else if(_Sftype[fmt]&SFFMT_FLOAT)
 			{	size = (flags&SFFMT_LDOUBLE) ? sizeof(Sfdouble_t) :
@@ -436,7 +458,7 @@ loop_fmt :
 				fmstk->ft = ft = argv.ft;
 			}
 			else			/* stack a new environment */
-			{	if(!FMTALLOC(fm))
+			{	if(!(fm = (Fmt_t*)malloc(sizeof(Fmt_t))) )
 					goto done;
 
 				if(argv.ft->form)
@@ -476,6 +498,8 @@ loop_fmt :
 			else if(sizeof(short) < sizeof(int) &&
 				FMTCMP(size,short,Sflong_t))
 				*((short*)value) = (short)(n_input+SFLEN(f));
+			else if(size == sizeof(char))
+				*((char*)value) = (char)(n_input+SFLEN(f));
 			else	*((int*)value) = (int)(n_input+SFLEN(f));
 			continue;
 		}
@@ -687,6 +711,11 @@ loop_fmt :
 						*((short*)value) = (short)argv.ll;
 					else	*((ushort*)value) = (ushort)argv.lu;
 				}
+				else if(size == sizeof(char) )
+				{	if(fmt == 'd' || fmt == 'i')
+						*((char*)value) = (char)argv.ll;
+					else	*((uchar*)value) = (uchar)argv.lu;
+				}
 				else
 				{	if(fmt == 'd' || fmt == 'i')
 						*((int*)value) = (int)argv.ll;
@@ -768,7 +797,7 @@ pop_fmt:
 			fp = fm->fp;
 		}
 		ft = fm->ft;
-		FMTFREE(fm);
+		free(fm);
 		if(form && form[0])
 			goto loop_fmt;
 	}
@@ -780,10 +809,14 @@ done:
 	{	if(fm->eventf)
 			(*fm->eventf)(f,SF_FINAL,NIL(Void_t*),fm->ft);
 		fmstk = fm->next;
-		FMTFREE(fm);
+		free(fm);
 	}
 
 	SFEND(f);
 	SFOPEN(f,0);
-	return (n_assign == 0 && inp < 0) ? -1 : n_assign;
+
+	if(n_assign == 0 && inp < 0)
+		n_assign = -1;
+
+	SFMTXRETURN(f,n_assign);
 }

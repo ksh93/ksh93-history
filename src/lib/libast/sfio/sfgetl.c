@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -28,13 +28,13 @@
 
 /*	Read a long value coded in a portable format.
 **
-**	Written by Kiem-Phong Vo (06/27/90)
+**	Written by Kiem-Phong Vo
 */
 
 #if __STD_C
-Sflong_t _sfgetl(reg Sfio_t* f)
+Sflong_t sfgetl(reg Sfio_t* f)
 #else
-Sflong_t _sfgetl(f)
+Sflong_t sfgetl(f)
 reg Sfio_t*	f;
 #endif
 {
@@ -42,19 +42,13 @@ reg Sfio_t*	f;
 	reg uchar	*s, *ends, c;
 	reg int		p;
 
+	SFMTXSTART(f,(Sflong_t)(-1));
+
 	if(f->mode != SF_READ && _sfmode(f,SF_READ,0) < 0)
-		return (Sflong_t)(-1);
+		SFMTXRETURN(f, (Sflong_t)(-1));
 	SFLOCK(f,0);
 
-	v = (Sflong_t)f->val;
-	if(!(v&SF_MORE))
-	{	/* must be a small negative number */
-		v = -SFSVALUE(v)-1;
-		goto done;
-	}
-
-	v = SFUVALUE(v);
-	for(;;)
+	for(v = 0;;)
 	{	if(SFRPEEK(f,s,p) <= 0)
 		{	f->flags |= SF_ERROR;
 			v = (Sflong_t)(-1);
@@ -76,5 +70,5 @@ reg Sfio_t*	f;
 	}
 done :
 	SFOPEN(f,0);
-	return v;
+	SFMTXRETURN(f, v);
 }

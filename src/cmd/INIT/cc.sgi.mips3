@@ -1,0 +1,23 @@
+: sgi.mips3 cc wrapper that generates mips3 binaries
+
+# @(#)cc.sgi.mips3 (AT&T Labs Research) 1999-08-11
+
+# ld:
+#	  15
+#	  84
+#	  85
+#	 134
+# cc:
+#	1685 (first!!) Invalid error number: X.
+#	1048
+#	1155
+#	1171 The indicated expression has no effect.
+#	1184 "=" is used where where "==" may have been intended.
+#	1209 The controlling expression is constant.
+#	1343
+#	3169 X not marked as intrinsic because it is not yet declared
+#	3170 X not marked as intrinsic because it is not yet declared
+#	3433 X not marked as intrinsic because it is not yet declared
+#	3434 X not marked as intrinsic because it is not yet declared
+
+/usr/bin/cc -n32 -mips3 -G0 -OPT:Olimit=0 -Wl,-woff,15 -Wl,-woff,84 -Wl,-woff,85 -Wl,-woff,134 -woff 1685,1048,1155,1171,1184,1209,1343,3169,3170,3433,3434 "$@"

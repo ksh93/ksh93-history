@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -496,12 +496,29 @@ void *nv_associative(register Namval_t *np,const char *sp,int mode)
 /*
  * Assign values to an array
  */
-void nv_setvec(register Namval_t *np,register int argc,register char *argv[])
+void nv_setvec(register Namval_t *np,int append,register int argc,register char *argv[])
 {
+	int arg0=0;
+#ifdef SHOPT_APPEND
+	if(append)
+	{
+		if(nv_isarray(np))
+		{
+			struct index_array *ap = (struct index_array*)nv_arrayptr(np);
+			if(is_associative(ap))
+				errormsg(SH_DICT,ERROR_exit(1),"cannot append index array to associate array %s",nv_name(np));
+			arg0 = ap->maxi;
+			while(--arg0>0 && ap->val[arg0].cp==0);
+			arg0++;
+		}
+		else if(!nv_isnull(np))
+			arg0=1;
+	}
+#endif /* SHOPT_APPEND */
 	while(--argc >= 0)
 	{
 		if(argc>0  || nv_isattr(np,NV_ARRAY))
-			nv_putsub(np,NIL(char*),(long)argc);
+			nv_putsub(np,NIL(char*),(long)argc+arg0);
 		nv_putval(np,argv[argc],0);
 	}
 }

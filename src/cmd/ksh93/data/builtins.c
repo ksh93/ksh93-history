@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -33,6 +33,8 @@
 #   include	"jobs.h"
 #   include	"FEATURE/cmds"
 #   define	bltin(x)	(b_##x)
+    /* The following is for builtins that do not accept -- options */
+#   define	Bltin(x)	(B_##x)
 #else
 #   define bltin(x)	0
 #endif
@@ -42,31 +44,31 @@
  */
 const struct shtable3 shtab_builtins[] =
 {
-	"login",	NV_BLTIN|BLT_ENV|BLT_SPC,	bltin(login),
+	"login",	NV_BLTIN|BLT_ENV|BLT_SPC,	Bltin(login),
 	"exec",		NV_BLTIN|BLT_ENV|BLT_SPC,	bltin(exec),
 	"set",		NV_BLTIN|BLT_ENV|BLT_SPC,	bltin(set),	
 	":",		NV_BLTIN|BLT_ENV|BLT_SPC,	bltin(true),
 	"true",		NV_BLTIN|BLT_ENV,		bltin(true),
 	"command",	NV_BLTIN|BLT_ENV|BLT_EXIT,	bltin(command),
 	"cd",		NV_BLTIN|BLT_ENV,		bltin(cd),
-	"break",	NV_BLTIN|BLT_ENV|BLT_SPC,	bltin(brk_cont),
-	"continue",	NV_BLTIN|BLT_ENV|BLT_SPC,	bltin(brk_cont),
+	"break",	NV_BLTIN|BLT_ENV|BLT_SPC,	bltin(break),
+	"continue",	NV_BLTIN|BLT_ENV|BLT_SPC,	bltin(break),
 	"typeset",	NV_BLTIN|BLT_ENV|BLT_SPC|BLT_DCL,bltin(typeset),
 	"test",		NV_BLTIN|BLT_ENV|NV_NOFREE,	bltin(test),
 	"[",		NV_BLTIN|BLT_ENV,		bltin(test),
 #ifdef _bin_newgrp
-	"newgrp",	NV_BLTIN|BLT_ENV|BLT_SPC,	bltin(login),
+	"newgrp",	NV_BLTIN|BLT_ENV|BLT_SPC,	Bltin(login),
 #endif	/* _bin_newgrp */
 	".",		NV_BLTIN|BLT_ENV|BLT_SPC,	bltin(dot_cmd),
 	"alias",	NV_BLTIN|BLT_SPC|BLT_DCL,	bltin(alias),
 	"hash",		NV_BLTIN|BLT_SPC|BLT_DCL,	bltin(alias),
-	"exit",		NV_BLTIN|BLT_ENV|BLT_SPC,	bltin(ret_exit),
-	"export",	NV_BLTIN|BLT_SPC|BLT_DCL,	bltin(read_export),
+	"exit",		NV_BLTIN|BLT_ENV|BLT_SPC,	bltin(return),
+	"export",	NV_BLTIN|BLT_SPC|BLT_DCL,	bltin(readonly),
 	"eval",		NV_BLTIN|BLT_ENV|BLT_SPC|BLT_EXIT,bltin(eval),
 	"fc",		NV_BLTIN|BLT_ENV|BLT_EXIT,	bltin(hist),
 	"hist",		NV_BLTIN|BLT_ENV|BLT_EXIT,	bltin(hist),
-	"readonly",	NV_BLTIN|BLT_ENV|BLT_SPC|BLT_DCL,bltin(read_export),
-	"return",	NV_BLTIN|BLT_ENV|BLT_SPC,	bltin(ret_exit),
+	"readonly",	NV_BLTIN|BLT_ENV|BLT_SPC|BLT_DCL,bltin(readonly),
+	"return",	NV_BLTIN|BLT_ENV|BLT_SPC,	bltin(return),
 	"shift",	NV_BLTIN|BLT_ENV|BLT_SPC,	bltin(shift),
 	"trap",		NV_BLTIN|BLT_ENV|BLT_SPC,	bltin(trap),
 	"unalias",	NV_BLTIN|BLT_ENV|BLT_SPC,	bltin(unalias),
@@ -75,13 +77,13 @@ const struct shtable3 shtab_builtins[] =
 #ifdef SHOPT_ECHOPRINT
 	"echo",		NV_BLTIN|BLT_ENV,		bltin(print),
 #else
-	"echo",		NV_BLTIN|BLT_ENV,		bltin(echo),
+	"echo",		NV_BLTIN|BLT_ENV,		Bltin(echo),
 #endif /* SHOPT_ECHOPRINT */
 #ifdef JOBS
 #   ifdef SIGTSTP
-	"bg",		NV_BLTIN|BLT_ENV,		bltin(bg_fg),
-	"fg",		NV_BLTIN|BLT_ENV|BLT_EXIT,	bltin(bg_fg),
-	"disown",	NV_BLTIN|BLT_ENV,		bltin(bg_fg),
+	"bg",		NV_BLTIN|BLT_ENV,		bltin(bg),
+	"fg",		NV_BLTIN|BLT_ENV|BLT_EXIT,	bltin(bg),
+	"disown",	NV_BLTIN|BLT_ENV,		bltin(bg),
 	"kill",		NV_BLTIN|BLT_ENV|NV_NOFREE,	bltin(kill),
 #   else
 	"/bin/kill",	NV_BLTIN|BLT_ENV|NV_NOFREE,	bltin(kill),
@@ -104,8 +106,8 @@ const struct shtable3 shtab_builtins[] =
 	"universe",	NV_BLTIN|BLT_ENV,		bltin(universe),
 #endif /* _cmd_universe */
 #ifdef SHOPT_FS_3D
-	"vpath",	NV_BLTIN|BLT_ENV,		bltin(vpath_map),
-	"vmap",		NV_BLTIN|BLT_ENV,		bltin(vpath_map),
+	"vpath",	NV_BLTIN|BLT_ENV,		bltin(vpath),
+	"vmap",		NV_BLTIN|BLT_ENV,		bltin(vpath),
 #endif /* SHOPT_FS_3D */
 	"wait",		NV_BLTIN|BLT_ENV|BLT_EXIT,	bltin(wait),
 	"type",		NV_BLTIN|BLT_ENV,		bltin(whence),
@@ -139,6 +141,7 @@ const struct shtable3 shtab_builtins[] =
 #endif
 	"",		0, 0 
 };
+
 
 const char sh_set[] =
 "[a?Set the export attribute for each variable whose name does not "
@@ -231,7 +234,7 @@ USAGE_LICENSE
 	"smallest enclosing \bfor\b, \bselect\b, \bwhile\b, or \buntil\b loop, "
 	"or the \an\a-th enclosing loop if \an\a is specified.  "
 	"Execution continues at the command following the loop(s).]"
-"[+?If \an\a is given, it must be a positive integer >= 1. If \an\a"
+"[+?If \an\a is given, it must be a positive integer >= 1. If \an\a "
 	"is larger than the number of enclosing loops, the last enclosing "
 	"loop will be exited.]"
 "\n"
@@ -249,7 +252,7 @@ USAGE_LICENSE
 	"execution at the top of smallest enclosing enclosing \bfor\b, "
 	"\bselect\b, \bwhile\b, or \buntil\b loop, if any; or the top of "
 	"the \an\a-th enclosing loop if \an\a is specified.]"
-"[+?If \an\a is given, it must be a positive integer >= 1. If \an\a"
+"[+?If \an\a is given, it must be a positive integer >= 1. If \an\a "
 	"is larger than the number of enclosing loops, the last enclosing "
 	" loop will be used.]"
 
@@ -439,7 +442,38 @@ USAGE_LICENSE
 "[+SEE ALSO?\bwhence\b(1), \bgetconf\b(1)]"
 ;
 
-const char sh_optdot[]		= " name [arg...]";
+const char sh_optdot[]	 =
+"[-?@(#)\b.\b (AT&T Labs Research) 2000-04-02\n]"
+USAGE_LICENSE
+"[+NAME?\b.\b - execute commands in the current environment]"
+"[+DESCRIPTION?\b.\b is a special built-in command that executes commands "
+	"from a function or a file in the current environment.]"
+"[+?If \aname\a refers to a function defined with the \bfunction\b \aname\a "
+	"syntax, the function executes it in the current environment as "
+	"if it had been defined with the \aname\a\b()\b syntax so that "
+	"there is no scoping.  Otherwise, commands from the file defined "
+	"by \aname\a are executed in the current environment.  Note that "
+	"the complete script is read before it begins to execute so that "
+	"any aliases defined in this script will not take effect until "
+	"the script completes execution.]"
+"[+?When \aname\a refers to a file, the \bPATH\b variable is searched "
+	"for the file containing commands.  In this case execute permission "
+	"is not required for \aname\a.]" 
+"[+?If any \aarg\as are specified, these become the positional parameters "
+	"for the duration of the function or script and are restored "
+	"upon completion.]"
+"\n"
+"\n name [arg ...]\n"
+"\n"
+"[+EXIT STATUS?If \aname\a is found, then the exit status is that "
+	"of the last command executed.  Otherwise, since this is a special "
+	"built-in, an error will cause a non-interactive shell to exit with "
+	"a non-zero exit status.  A interactive shell returns a non-zero exit"
+	"status to indicate an error.]"
+
+"[+SEE ALSO?\bcommand\b(1), \bksh\b(1)]"
+;
+
 #ifndef ECHOPRINT
     const char sh_optecho[]	= " [-n] [arg...]";
 #endif /* !ECHOPRINT */
@@ -550,7 +584,7 @@ USAGE_LICENSE
 
 const char sh_optgetopts[] =
 ":[-?\n@(#)getopts (AT&T Labs Research) 1999-07-20\n]"
-"[-author?Glenn Folwer <gsf@research.att.com>]"
+"[-author?Glenn Fowler <gsf@research.att.com>]"
 USAGE_LICENSE
 "[+NAME?\f?\f - parse utility options]"
 "[+DESCRIPTION?The \bgetopts\b utility can be used to retrieve options and "
@@ -581,7 +615,9 @@ USAGE_LICENSE
   "Text between two \\b (backspace) characters indicates "
   "that the text should be emboldened when displayed. "
   "Text between two \\a (bell) characters indicates that the text should "
-  "be emphasised or italicized when displayed.]"
+  "be emphasised or italicized when displayed."  
+  "Text between two \\f (formfeed) characters will be replaced by the "
+    "output from the shell function whose name is that of the enclosed text.]"
 "[+?There are four types of groups:]{"
   "[+1.?An option specification of the form \aoption\a:\alongname\a. "
     "In this case the first field is the option character.  If there "
@@ -653,10 +689,195 @@ USAGE_LICENSE
 "}"
 ;
 
-const char sh_optgetconf[]	= " [name [pathname] ]";
-const char sh_optjoblist[]	= " [job...]";
-const char sh_opthist[]		= "e:[editor]lnrsN# [first] [last]";
-const char sh_optjobs[]		= "nlp [job...]";
+const char sh_optbg[] =
+"[-?@(#)bg (AT&T Labs Research) 2000-04-02\n]"
+USAGE_LICENSE
+"[+NAME?bg - resume jobs in the background]"
+"[+DESCRIPTION?\bbg\b places the given \ajob\as into the background "
+	"and sends it a \bCONT\b signal to start them running.]"
+"[+?If \ajob\a is omitted, the most recently started or stopped "
+	"background job is resumed or continued in the background.]"
+"[+?Each \ajob\a can be specified as one of the following:]{"
+	"[+\anumber\a?\anumber\a refers to a process id.]"
+	"[+-\anumber\a?\anumber\a refers to a process group id.]"
+	"[+%%\anumber\a?\anumber\a refer to a job number.]"
+	"[+%%\astring\a?Refers to a job whose name begins with \astring\a.]"
+	"[+%%??\astring\a?Refers to a job whose name contains \astring\a.]"
+	"[+%%+ \bor\b %%?Refers to the current job.]"
+	"[+%%-?Refers to the previous job.]"
+"}"
+"\n"
+"\n[job ...]\n"
+"\n"
+"[+EXIT STATUS?]{"
+	"[+0?If all background jobs are started.]"
+	"[+>0?If one more jobs does not exist or there are no background "
+		"jobs.]" 
+"}"
+
+"[+SEE ALSO?\bwait\b(1), \bfg\b(1), \bdisown\b(1), \bjobs\b(1)]"
+;
+
+const char sh_optfg[] =
+"[-?@(#)fg (AT&T Labs Research) 2000-04-02\n]"
+USAGE_LICENSE
+"[+NAME?fg - move jobs to the foreground]"
+"[+DESCRIPTION?\bfg\b places the given \ajob\as into the foreground "
+	"in sequence and sends it a \bCONT\b signal to start each running.]"
+"[+?If \ajob\a is omitted, the most recently started or stopped "
+	"background jobs is moved to the foreground.]"
+"[+?Each \ajob\a can be specified as one of the following:]{"
+	"[+\anumber\a?\anumber\a refers to a process id.]"
+	"[+-\anumber\a?\anumber\a refers to a process group id.]"
+	"[+%%\anumber\a?\anumber\a refer to a job number.]"
+	"[+%%\astring\a?Refers to a job whose name begins with \astring\a.]"
+	"[+%%??\astring\a?Refers to a job whose name contains \astring\a.]"
+	"[+%%+ \bor\b %%?Refers to the current job.]"
+	"[+%%-?Refers to the previous job.]"
+"}"
+"\n"
+"\n[job ...]\n"
+"\n"
+"[+EXIT STATUS?If \bfg\b brings one or more jobs into the foreground, "
+	"the exit status of \bfg\b  will be that of the last \ajob\a.  "
+	"If one or more jobs does exist or has completed, \bfg\b will "
+	"return a non-zero exit status.]"
+"}"
+
+"[+SEE ALSO?\bwait\b(1), \bbg\b(1), \bjobs\b(1)]"
+;
+
+const char sh_optdisown[] =
+"[-?@(#)disown (AT&T Labs Research) 2000-04-02\n]"
+USAGE_LICENSE
+"[+NAME?disown - disassociate a job with the current shell]"
+"[+DESCRIPTION?\bdisown\b prevents the current shell from sending "
+	"a \bHUP\b signal to each of the given \ajob\as when "
+	"when the current shell terminates a login session.]"
+"[+?If \ajob\a is omitted, the most recently started or stopped "
+	"background job used.]"
+"[+?Each \ajob\a can be specified as one of the following:]{"
+	"[+\anumber\a?\anumber\a refers to a process id.]"
+	"[+-\anumber\a?\anumber\a refers to a process group id.]"
+	"[+%%\anumber\a?\anumber\a refer to a job number.]"
+	"[+%%\astring\a?Refers to a job whose name begins with \astring\a.]"
+	"[+%%??\astring\a?Refers to a job whose name contains \astring\a.]"
+	"[+%%+ \bor\b %%?Refers to the current job.]"
+	"[+%%-?Refers to the previous job.]"
+"}"
+"\n"
+"\n[job ...]\n"
+"\n"
+"[+EXIT STATUS?]{"
+	"[+0?If all jobs are sucessfully disowned.]"
+	"[+>0?If one more \ajobs\a does not exist.]"
+"}"
+
+"[+SEE ALSO?\bwait\b(1), \bbg\b(1), \bjobs\b(1)]"
+;
+
+const char sh_optjobs[] =
+"[-?@(#)jobs (AT&T Labs Research) 2000-04-02\n]"
+USAGE_LICENSE
+"[+NAME?jobs - display status of jobs]"
+"[+DESCRIPTION?\bjobs\b displays information about specified \ajob\as "
+	"that were started by the current shell environment on standard "
+	"output.  The information contains the job number enclosed in "
+	"[...]], the status, and the command line that started the job.]"
+"[+?If \ajob\a is omitted, \bjobs\b displays that status of all stopped jobs, "
+	"background jobs, and all jobs whose status has changed that have "
+	"not been reported by the shell.]"
+"[+?When \bjobs\b reports the termination status of a job, the "
+	"shell removes the jobs from the list of known jobs in "
+	"the current shell environment.]"
+"[+?Each \ajob\a can be specified as one of the following:]{"
+	"[+\anumber\a?\anumber\a refers to a process id.]"
+	"[+-\anumber\a?\anumber\a refers to a process group id.]"
+	"[+%%\anumber\a?\anumber\a refer to a job number.]"
+	"[+%%\astring\a?Refers to a job whose name begins with \astring\a.]"
+	"[+%%??\astring\a?Refers to a job whose name contains \astring\a.]"
+	"[+%%+ \bor\b %%?Refers to the current job.]"
+	"[+%%-?Refers to the previous job.]"
+"}"
+"[l?\bjobs\b displays process id's after the job number in addition "
+	"to the usual information]"
+"[n?Only the jobs whose status has changed since the last prompt "
+	"is displayed.]"
+"[p?The process group leader id's for the specified jobs are displayed.]"
+"\n"
+"\n[job ...]\n"
+"\n"
+"[+EXIT STATUS?]{"
+	"[+0?The information for each job is written to standard output.]"
+	"[+>0?One or more jobs does not exist.]"
+"}"
+
+"[+SEE ALSO?\bwait\b(1), \bps\b(1), \bfg\b(1), \bbg\b(1)]"
+;
+
+const char sh_opthist[]	= 
+"[-?@(#)\f?\f (AT&T Labs Research) 2000-04-02\n]"
+USAGE_LICENSE
+"[+NAME?\f?\f - process command history list]"
+"[+DESCRIPTION?\b\f?\f\b lists, edits, or re-executes, commands  "
+	"previously entered into the current shell environment.]"
+"[+?The command history list references commands by number. The first number "
+	"in the list is selected arbitrarily.  The relationship of a number "
+	"to its command does not change during a login session.  When the "
+	"number reaches 32767 is wraps the number starting at 1 but "
+	" will maintain the ordering.]"
+"[+?When commands are edited (when the \b-l\b option is not specified), the "
+	"resulting lines will be entered at the end of the history list and "
+	"then reexecuted by the current shell.  The \f?\f command that caused "
+	"the editing will not be entered into the history list.  If the "
+	"editor returns a non-zero exit status, this will suppress the "
+	"entry into the history list and the command reexecution.  Command "
+	"line variable assignments and redirections affect both the \f?\f "
+	"command and the commands that are reexecuted.]"
+"[+?\afirst\a and \alast\a define the range of commands. \afirst\a and "
+		"\alast\a can be one of the following:]{"
+		"[+\anumber\a?A positive number representing a command "
+			"number.  A \b+\b sign can precede \anumber\a.]"
+		"[+-\anumber\a?A negative number representing a command "
+			"that was executed \anumber\a commands previously. "
+			"For example, \b-1\b is the previous command.]"
+		"[+\astring\a?\astring\a indicates the most recently "
+			"entered command that begins with \astring\a. "
+			"\astring\a should not contain an \b=\b.]"
+	"}"
+"[+?If \afirst\a is omitted, the previous command is used unless \b-l\b "
+	"is specified in which case it will default to \b-16\b and \alast\a "
+	"will default to \b-1\b.]"
+"[+?If \afirst\a specified and \alast\a is omitted, then \alast\a will "
+	"default to \afirst\a unless \b-l\b is specified in which case "
+	"it will default to \b-1\b.]"
+"[+?If no editor is specified, then the editor specfied by the \bFCEDIT\b "
+	"variable will be used, if set, otherwise, \bed\b will be used.]"
+"[e]:[editor?\aeditor\a specifies the editor to use to edit the history "
+	"command.   A value of \b-\b for \aeditor\a is equivalent to "
+	"specifiying the \b-s\b option.]"
+"[l?List the commands rather than editing and reexecuting them.]"
+"N#[num]" 
+"[n?Suppress the command numbers when the commands are listed.]"
+"[r?Reverse the order of the commands.]"
+"[s:?Reexecute the command without invoking an editor.  In this case "
+	"an operand of the form \aold\a\b-\b\anew\a can be specified "
+	"to change the first occurrence of the string \aold\a in the "
+	"command to \anew\a before reexecuting the command.]"
+
+"\n"
+"\n[first [last] ]\n"
+"\n"
+"[+EXIT STATUS?If a command is reexecuted, the exit status is that of "
+	"the command that gets reexecuted.  Otherwise, it is one of the "
+	"following:]{"
+	"[+0?Successfully completion of the listing.]"
+	"[+>0?An error occurred.]" 
+"}"
+
+"[+SEE ALSO?\bksh\b(1), \bsh\b(1), \bed\b(1)]"
+;
+
 const char sh_optkill[]	 = 
 "[-?\n@(#)kill (AT&T Labs Research) 1999-06-17\n]"
 USAGE_LICENSE
@@ -688,13 +909,13 @@ USAGE_LICENSE
 "[n]#[signum?Specify a signal number to send.  Signal numbers are not "
 	"portable across platforms, except for the following:]{"
 		"[+0?No signal]"
-		"[+1?HUP]"
-		"[+2?INT]"
-		"[+3?QUIT]"
-		"[+6?ABRT]"
-		"[+9?KILL]"
-		"[+14?ALRM]"
-		"[+15?TERM]"
+		"[+1?\bHUP\b]"
+		"[+2?\bINT\b]"
+		"[+3?\bQUIT\b]"
+		"[+6?\bABRT\b]"
+		"[+9?\bKILL\b]"
+		"[+14?\bALRM\b]"
+		"[+15?\bTERM\b]"
 	"}"
 "[s]:[signame?Specify a signal name to send.  The signal names are derived "
 	"from their names in \b<signal.h>\b without the \bSIG\b prefix and "
@@ -713,7 +934,29 @@ USAGE_LICENSE
 "[+SEE ALSO?\bps\b(1), \bjobs\b(1), \bkill\b(2), \bsignal\b(2)]"
 ;
 
-const char sh_optlet[]		= " expr...";
+const char sh_optlet[]	=
+"[-?@(#)let (AT&T Labs Research) 2000-04-02\n]"
+USAGE_LICENSE
+"[+NAME?let - evaluate arithmetic expressions]"
+"[+DESCRIPTION?\blet\b evaluates each \aexpr\a in the current "
+	"shell environment as an arithmetic expression using ANSI C "
+	"syntax.  Variables names are shell variables and they "
+	"are recursively evaluated as arithmetic expressions to "
+	"get numerical values.]"
+"[+?\blet\b has been made obsolete by the \b((\b...\b))\b syntax "
+	"of \bksh\b(1) which does not require quoting of the operators "
+	"to pass them as command arguments.]"
+"\n"
+"\n[expr ...]\n"
+"\n"
+"[+EXIT STATUS?]{"
+	"[+0?The last \aexpr\a evaluates to a non-zero value.]"
+	"[+>0?The last \aexpr\a evalues to \b0\b or an error occurred.]"
+"}"
+
+"[+SEE ALSO?\bexpr\b(1), \btest\b(1), \bksh\b(1)]"
+;
+
 const char sh_optprint[] =
 "[-?\n@(#)print (AT&T Labs Research) 1999-04-07\n]"
 USAGE_LICENSE
@@ -790,6 +1033,9 @@ USAGE_LICENSE
 		"}"
 	"[+%q?Output \astring\a quoted in a manner that it can be read in "
 		"by the shell to get back the same string.]"
+	"[+%H?Output \astring\a with characters \b<\b, \b&\b, \b>\b, "
+		"\b\"\b, and non-printable characters properly escaped for "
+		"use in HTML and XML documents.]"
 	"[+%P?Treat \astring\a as an extended regular expression and  "
 		"convert it to a shell pattern.]"
 	"[+%T?Treat \astring\a as a date/time string and format it.  The "
@@ -1231,7 +1477,51 @@ USAGE_LICENSE
 "[+SEE ALSO?\breadonly\b(1), \bexport\b(1)]"
 ;
 
-const char sh_optulimit[]	= "HSacdfmnstv [limit]";
+const char sh_optulimit[] =
+"[-?@(#)ulimit (AT&T Labs Research) 2000-04-02\n]"
+USAGE_LICENSE
+"[+NAME?ulimit - set or display resource limits]"
+"[+DESCRIPTION?\bulimit\b sets or displays resource limits.  These "
+	"limits apply to the current process and to each child process "
+	"created after the resource limit has been set.  If \alimit\a "
+	"specified, the resource limit is set, otherwise, its current value is "
+	"displayed on standard output.]"
+"[+?Increasing the limit for a resource usually requires special privileges.  "
+	"Some systems allow you to lower resource limits and later increase "
+	"them.  These are called soft limits.  Once a hard limit is "
+	"set the resource can not be increased.]"
+"[+?Different systems allow ou to specify different resources and some "
+	"restrict how much you can raise the limit of the resource.]"
+"[+?The value of \alimit\a depends on the unit of the resource listed "
+	"for each resource.  In addition, \alimit\a can be \bunlimited\b "
+	"to indicate no limit for that resource.]"
+"[+?If you do not specify \b-H\b or \b-S\b, then \b-S\b is used for "
+	"listing and both \b-S\b and \b-H\b are used for setting resources.]"
+"[+?If you do not specify any resource, the default is \b-f\b.]"
+"[H?A hard limit is set or displayed.]"
+"[S?A soft limit is set or displayed.]"
+"[a?Displays all current resource limits]"
+"[c?Core dump size.  Number of 512 byte blocks used for core dumps.]"
+"[d?Data region size.  Number of 1024 byte blocks for data region.]"
+"[f?File size.  Number of 512 byte blocks that can be written to a file.]"
+"[m?Physical memory.  Number of 1024 byte blocks of physical memory that a "
+	"process can use.]"
+"[n?Number file descriptors that can be opened by a process.]"
+"[s?Stack size.  Number of 1024 byte blocks for program stack region.]"
+"[t?Time.  Time limit in seconds to be used by each process.]"
+"[v?Virtual memory.  Number of 1024 byte blocks of virtual memory that a "
+	"process can use.]"
+"\n"
+"\n[limit]\n"
+"\n"
+"[+EXIT STATUS?]{"
+	"[+0?Successful completion.]"
+	"[+>0?A request for a higher limit was rejected or an error occurred.]"
+"}"
+
+"[+SEE ALSO?\bulimit\b(1)]"
+;
+
 const char sh_optumask[] =
 "[-?\n@(#)umask (AT&T Labs Research) 1999-04-07\n]"
 USAGE_LICENSE

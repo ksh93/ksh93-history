@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -109,7 +109,6 @@ extern struct jobs job;
 
 #ifdef JOBS
 extern const char	e_jobusage[];
-extern const char	e_kill[];
 extern const char	e_done[];
 extern const char	e_running[];
 extern const char	e_coredump[];
@@ -120,6 +119,7 @@ extern const char	e_nlspace[];
 extern const char	e_access[];
 extern const char	e_terminate[];
 extern const char	e_no_jctl[];
+extern const char	e_signo[];
 #ifdef SIGTSTP
    extern const char	e_no_start[];
 #endif /* SIGTSTP */

@@ -1,3 +1,48 @@
+00-06-01 strmatch: initialize match.current.beg[0] to avoid dump at line 670
+	 sfio/stdio: a few more errno tweaks
+	 astquery: sfstdin/sfstderr by default
+00-05-26 sfmode: errno=EBADF for invalid stream use
+00-05-22 rewind: fix for xopen test
+00-05-18 mcfind: returns absolute path
+00-05-16 optget: --keys must catch \f...\f too
+	 translate,mc: errno cleanup
+00-05-09 magic: add netbsd binary magic
+	 fts: PATH_RESOLVE!=logical => FTS_SEEDOTDIR
+	 ftwflags: call fts_flags()
+	 astconf: astconf(0,0,0) re-syncs with _AST_FEATURES
+00-05-08 optget: --usage & --keys for last -catalog group only
+00-05-02 iconv.c: add; use codes[] in ccmapid() and ccmapname(); "" for native
+00-05-01 pathtmp: copy env values (libshell or putenv may change)
+00-04-01 optget: drop bar from [-foo?bar] for --??keys
+	 sfvscanf: add %X -- duh
+	 features/common: fix va_listval() for power pc
+	 findopen: fix FIND_GENERATE codes file search
+	 magic: add ERROR_translate() and msgcat.key
+	 tmlocale: add for LC_TIME locale info
+	 tmlex: check tm_info.format and tm_data.format
+	 tmfix: fix for tm_wday special case (via nl_langinfo on LC_TIME fields)
+	 strftime: fix for nl_langinfo special case
+	 ast_std.h: provide LC_* defauls if not defined
+	 sfnew: check ${_AST_sfio_bufsize} -- don't tell kpv
+	 catopen,nl_types.h: add intercept to mc* routines
+	 magic.tab: add ast message catalog
+	 strerror: add _ast_strerror intercept with ERROR_translate("errno")
+	 fmtquote: escapes >0177 only if (flags&2)
+00-03-17 feof: stdio macro functions only for _UWIN
+	 optget: proper ERROR_translate() calls
+	 astgetconf: add for thread safe error message control
+	 astlicense: fix type=special but with non-null notice
+	 errorx: add for ERROR_translate() support
+	 ERROR_translate: add locale id args for alternate dictionary
+	 option.h: move _OPT_PRIVATE_ to pointer to avoid dll size mismatch
+	 ftwalk: fix FTW_CHILDREN bug that hit top level non-dirs twice
+	 translate.c: default error_info.translate
+	 astconf: fix dup loop thrash that never returns, add _AST_VERSION
+00-03-10 ast_std.h: do _LARGEFILE_SOURCE initialization before std headers
+	 fmtquote: handle $'...' quotes
+00-03-07 optget: fix numeric option support test
+	 sfkeyprintf: add %q for '...' quoting with ansi escapes
+00-03-06 features/stdio: fix _sfflsbuf prototype (dingold@gte.net)
 00-02-14 pathtmp: fix pid cache bug that sometimes repeated after ~10 attempts
 	 optget: "..." attribute quote
 	 pathfind: eliminate *: prefix in lib, not type

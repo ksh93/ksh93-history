@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 4.0 2000-02-14
+info mam static 00000 1994-07-17 make (AT&T Research) 4.0 2000-06-01
 setv INSTALLROOT ../../..
 setv PACKAGE_ast ${INSTALLROOT}
 setv PACKAGE_ast_INCLUDE ${PACKAGE_ast}/include/ast
@@ -46,7 +46,7 @@ exec - {
 exec - case "" in
 exec - *?)	echo " " ;;
 exec - esac
-exec - for i in sum ast
+exec - for i in sum  ast
 exec - do	case $i in
 exec - 	"sum"|sum)
 exec - 		;;
@@ -165,7 +165,7 @@ exec - fi
 done ${PACKAGE_ast_LIB} generated
 make ${PACKAGE_ast_LIB}/libsum.a archive
 prev libsum.a archive
-exec - mv ${PACKAGE_ast_LIB}/libsum.a ${PACKAGE_ast_LIB}/libsum.a.old 2>/dev/null || true; cp libsum.a ${PACKAGE_ast_LIB}/libsum.a
+exec - mv ${PACKAGE_ast_LIB}/libsum.a ${PACKAGE_ast_LIB}/libsum.a.old 2>/dev/null || true; test '' = 'libsum.a' || { cp libsum.a ${PACKAGE_ast_LIB}/libsum.a  		    		    ;}
 exec - (ranlib ${PACKAGE_ast_LIB}/libsum.a) >/dev/null 2>&1 || true
 done ${PACKAGE_ast_LIB}/libsum.a generated
 make ${PACKAGE_ast_LIB}/lib
@@ -194,7 +194,7 @@ exec - fi
 done ${PACKAGE_ast_LIB}/lib generated
 make ${PACKAGE_ast_LIB}/lib/sum
 prev sum.req
-exec - mv ${PACKAGE_ast_LIB}/lib/sum ${PACKAGE_ast_LIB}/lib/sum.old 2>/dev/null || true; cp sum.req ${PACKAGE_ast_LIB}/lib/sum
+exec - mv ${PACKAGE_ast_LIB}/lib/sum ${PACKAGE_ast_LIB}/lib/sum.old 2>/dev/null || true; test '' = 'sum.req' || { cp sum.req ${PACKAGE_ast_LIB}/lib/sum  		    		    ;}
 done ${PACKAGE_ast_LIB}/lib/sum generated
 make ${PACKAGE_ast_INCLUDE}
 exec - set -

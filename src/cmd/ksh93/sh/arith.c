@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -90,7 +90,7 @@ static double arith(const char **ptr, struct lval *lvalue, int type, double n)
 				}
 				if(lvalue->fun)
 					break;
-				lvalue->value = (char*)e_function;
+				lvalue->value = (char*)ERROR_dictionary(e_function);
 				return(r);
 			}
 			*str = 0;
@@ -155,7 +155,7 @@ static double arith(const char **ptr, struct lval *lvalue, int type, double n)
 		if((fatal==2 || level || sh_isoption(SH_NOUNSET)) && nv_isnull(np) && !nv_isattr(np,NV_INTEGER))
 		{
 			*ptr = nv_name(np);
-			lvalue->value = (char*)e_notset;
+			lvalue->value = (char*)ERROR_dictionary(e_notset);
 			return(0);
 		}
 		level++;

@@ -9,9 +9,9 @@
 #                                                              #
 #     http://www.research.att.com/sw/license/ast-open.html     #
 #                                                              #
-#     If you received this software without first entering     #
-#       into a license with AT&T, you have an infringing       #
-#           copy and cannot use it without violating           #
+#      If you have copied this software without agreeing       #
+#      to the terms of the license you are infringing on       #
+#         the license and copyright and are violating          #
 #             AT&T's intellectual property rights.             #
 #                                                              #
 #               This software was created by the               #
@@ -63,5 +63,16 @@ done > /dev/null 2>&1
 if	[[ $(PATH=:/usr/bin; date) != 'hello' ]]
 then	err_exit "leading : in path not working"
 fi
+(
+	PATH=$PWD:
+	builtin chmod
+	print 'print cannot execute' > noexec
+	chmod 644 noexec
+	if	[[ ! -x noexec ]]
+	then	noexec > /dev/null 2>&1
+	else	exit 126
+	fi
+)
+[[ $? == 126 ]] || err_exit 'exit status of non-executable is not 126' 
 cd /
 exit $((Errors))

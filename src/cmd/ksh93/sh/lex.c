@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -967,6 +967,8 @@ int sh_lex(void)
 					shlex.token = c;
 					sh_syntax();
 				}
+				if(c==RBRACE && (mode==ST_NAME||mode==ST_NORM))
+					goto epat;
 				continue;
 			case S_EQ:
 				assignment = shlex.assignok;
@@ -1039,6 +1041,7 @@ int sh_lex(void)
 				wordflags |= ARG_EXP;
 				/* FALL THRU */
 			case S_EPAT:
+			epat:
 				if(fcgetc(n)==LPAREN)
 				{
 					wordflags |= ARG_EXP;
@@ -1643,7 +1646,7 @@ done:
 static char	*fmttoken(Lex_t *lp, register int sym, char *tok)
 {
 	if(sym < 0)
-		return((char*)e_lexzerobyte);
+		return((char*)sh_translate(e_lexzerobyte));
 	if(sym==0)
 		return(shlex.arg?shlex.arg->argval:"?");
 	if(sym&SYMRES)
@@ -1654,9 +1657,9 @@ static char	*fmttoken(Lex_t *lp, register int sym, char *tok)
 		return((char*)tp->sh_name);
 	}
 	if(sym==EOFSYM)
-		return((char*)e_endoffile);
+		return((char*)sh_translate(e_endoffile));
 	if(sym==NL)
-		return((char*)e_newline);
+		return((char*)sh_translate(e_newline));
 	tok[0] = sym;
 	if(sym&SYMREP)
 		tok[1] = sym;
@@ -1691,7 +1694,7 @@ static char	*fmttoken(Lex_t *lp, register int sym, char *tok)
 void	sh_syntax(void)
 {
 	register Shell_t *shp = sh_getinterp();
-	register const char *cp = e_unexpected;
+	register const char *cp = sh_translate(e_unexpected);
 	register char *tokstr;
 	register Lex_t	*lp = (Lex_t*)shp->lex_context;
 	register int tok = shlex.token;
@@ -1700,7 +1703,7 @@ void	sh_syntax(void)
 	if((tok==EOFSYM) && shlex.lasttok)
 	{
 		tok = shlex.lasttok;
-		cp = e_unmatched;
+		cp = sh_translate(e_unmatched);
 	}
 	else
 		shlex.lastline = shp->inlineno;
@@ -1823,10 +1826,14 @@ struct argnod *sh_endword(int mode)
 						break;
 					}
 					*--dp = 0;
-#if ERROR_VERSION >= 20000101L
-					msg = ERROR_translate(error_info.id,ep);
+#if ERROR_VERSION >= 20000317L
+					msg = ERROR_translate(0,0,error_info.id,ep);
 #else
+#   if ERROR_VERSION >= 20000101L
+					msg = ERROR_translate(error_info.id,ep);
+#   else
 					msg = ERROR_translate(ep,2);
+#   endif
 #endif
 					n = strlen(msg);
 					dp = ep+n;

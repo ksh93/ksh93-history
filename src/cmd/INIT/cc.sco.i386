@@ -1,0 +1,5 @@
+: sco.i386 cc wrapper with reasonable binary and namespace defaults
+
+# @(#)sco.i386 (AT&T Labs Research) 1998-02-04
+
+/bin/cc -b elf -D_SVID3 "$@"

@@ -1,0 +1,81 @@
+set	prototyped
+hdr	iconv
+lib	iconv_open,iconv_close,iconv -liconv
+
+tst	output{
+	#if !_lib_iconv_open
+	#undef	_hdr_iconv
+	#endif
+	#if _hdr_iconv
+	#include <iconv.h>
+	#endif
+
+	main()
+	{
+		printf("#include <ast.h>\n");
+	#if _hdr_iconv
+		printf("#include <../include/iconv.h>	/* the native iconv.h */\n");
+	#endif
+		printf("\n");
+		printf("#define CC_ICONV	(-1)\n");
+		printf("#define CC_UCS		(-2)\n");
+		printf("#define CC_SCU		(-3)\n");
+		printf("#define CC_UTF		(-4)\n");
+		printf("#define CC_UME		(-5)\n");
+		printf("\n");
+	#if _lib_iconv_open
+		printf("#undef	iconv_t\n");
+		printf("#define	iconv_t		_ast_iconv_t\n");
+		printf("#undef	iconv_f\n");
+		printf("#define	iconv_f		_ast_iconv_f\n");
+		printf("#undef	iconv_list_t\n");
+		printf("#define	iconv_list_t	_ast_iconv_list_t\n");
+		printf("#undef	iconv_open\n");
+		printf("#define iconv_open	_ast_iconv_open\n");
+		printf("#undef	iconv\n");
+		printf("#define	iconv		_ast_iconv\n");
+		printf("#undef	iconv_close\n");
+		printf("#define iconv_close	_ast_iconv_close\n");
+		printf("#undef	iconv_list\n");
+		printf("#define iconv_list	_ast_iconv_list\n");
+		printf("#undef	iconv_move\n");
+		printf("#define iconv_move	_ast_iconv_move\n");
+		printf("#undef	iconv_name\n");
+		printf("#define iconv_name	_ast_iconv_name\n");
+		printf("#undef	iconv_write\n");
+		printf("#define iconv_write	_ast_iconv_write\n");
+	#endif
+		printf("\n");
+		printf("typedef void* iconv_t;\n");
+		printf("typedef size_t (*iconv_f)(iconv_t, char**, size_t*, char**, size_t*);\n");
+		printf("\n");
+		printf("typedef struct\n");
+		printf("{\n");
+		printf("	const char*	name;	/* code set name */\n");
+		printf("	const char*	match;	/* strmatch() pattern */\n");
+		printf("	const char*	desc;	/* code set description */\n");
+		printf("	const char*	canon;	/* canonical name format */\n");
+		printf("	const char*	index;	/* default index */\n");
+		printf("	int		ccode;	/* <ccode.h> code index */\n");
+		printf("#ifdef _ICONV_LIST_PRIVATE_\n");
+		printf("	_ICONV_LIST_PRIVATE_\n");
+		printf("#endif\n");
+		printf("} iconv_list_t;\n");
+		printf("\n");
+		printf("#if _BLD_ast && defined(__EXPORT__)\n");
+		printf("#define extern		__EXPORT__\n");
+		printf("#endif\n");
+		printf("\n");
+		printf("extern iconv_t		iconv_open(const char*, const char*);\n");
+		printf("extern size_t		iconv(iconv_t, char**, size_t*, char**, size_t*);\n");
+		printf("extern int		iconv_close(iconv_t);\n");
+		printf("extern iconv_list_t*	iconv_list(iconv_list_t*);\n");
+		printf("extern ssize_t		iconv_move(iconv_t, Sfio_t*, Sfio_t*, size_t, size_t*);\n");
+		printf("extern int		iconv_name(const char*, char*, size_t);\n");
+		printf("extern ssize_t		iconv_write(iconv_t, Sfio_t*, char**, size_t*, size_t*);\n");
+		printf("\n");
+		printf("#undef	extern\n");
+		printf("\n");
+		return 0;
+	}
+}end

@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -32,7 +32,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)getconf (AT&T Labs Research) 2000-01-27\n]"
+"[-?\n@(#)getconf (AT&T Labs Research) 2000-03-17\n]"
 USAGE_LICENSE
 "[+NAME?getconf - get configuration values]"
 "[+DESCRIPTION?\bgetconf\b displays the system configuration value for"
@@ -40,13 +40,14 @@ USAGE_LICENSE
 "	the value is determined relative to \apath\a or the current"
 "	directory if \apath\a is omitted. If \avalue\a is specified then"
 "	\bgetconf\b attempts to change the process local value to \avalue\a."
-"	\b-\b may be used in place of of \apath\a when it is not relevant."
+"	\b-\b may be used in place of \apath\a when it is not relevant."
 "	Only \bwritable\b variables may be set; \breadonly\b variables"
 "	cannot be changed.]"
-"[+?The current value for \aname\a is written to the standard output. An"
-"	unknown or invalid \aname\a results in \bundefined\b written to"
-"	the standard output, a diagnostic written to the standard error,"
-"	and a non-zero exit status.]"
+"[+?The current value for \aname\a is written to the standard output. If"
+"	\aname\a s valid but undefined then \bundefined\b is written to"
+"	the standard output. If \aname\a is invalid or an error occurs in"
+"	determining its value then a diagnostic written to the standard error"
+"	and \bgetconf\b exits with a non-zero exit status.]"
 "[+?More than one variable may be set or queried by providing the \aname\a"
 "	\apath\a \avalue\a 3-tuple for each variable, specifying \b-\b for"
 "	\avalue\a when querying.]"
@@ -71,7 +72,7 @@ USAGE_LICENSE
 "\n"
 
 "[+SEE ALSO?\bpathchk\b(1), \bconfstr\b(2), \bpathconf\b(2),"
-"	\bsysconf\b(2), \bastconf\b(3)]"
+"	\bsysconf\b(2), \bastgetconf\b(3)]"
 ;
 
 #include <cmdlib.h>
@@ -89,8 +90,7 @@ b_getconf(int argc, char** argv, void* context)
 	static char	empty[] = "-";
 
 	NoP(argc);
-	cmdinit(argv, context);
-	error_info.flags |= ERROR_LIBRARY;
+	cmdinit(argv, context, ERROR_CATALOG);
 	all = 0;
 	flags = 0;
 	for (;;)
@@ -121,7 +121,6 @@ b_getconf(int argc, char** argv, void* context)
 	argv += opt_info.index;
 	if (error_info.errors || (name = *argv) && all)
 		error(ERROR_usage(2), "%s", optusage(NiL));
-	astconf(NiL, "", ""); /* XXX: enable error messages */
 	do
 	{
 		if (!name)
@@ -145,7 +144,7 @@ b_getconf(int argc, char** argv, void* context)
 		}
 		if (!name)
 			astconflist(sfstdout, path, flags);
-		else if (!(s = astconf(name, path, value)))
+		else if (!(s = astgetconf(name, path, value, errorf)))
 			break;
 		else if (!value)
 		{
@@ -157,6 +156,6 @@ b_getconf(int argc, char** argv, void* context)
 			sfputr(sfstdout, *s ? s : "undefined", '\n');
 		}
 	} while (*argv && (name = *++argv));
-	astconf(NiL, "", NiL); /* XXX: disable error messages */
+	error_info.flags &= ~ERROR_LIBRARY;
 	return error_info.errors != 0;
 }

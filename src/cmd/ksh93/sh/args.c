@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -120,14 +120,14 @@ int sh_argopts(int argc,register char *argv[])
 		{
 	 	    case 'A':
 			np = nv_open(opt_info.arg,sh.var_tree,NV_NOASSIGN|NV_ARRAY|NV_VARNAME);
-			if(*opt_option=='-')
+			if(*opt_info.option=='-')
 				nv_unset(np);
 			continue;
 		    case 'o':
 			if(!opt_info.arg)
 			{
 				action = PRINT;
-				verbose = (*opt_option=='-');
+				verbose = (*opt_info.option=='-');
 				continue;
 			}
 			n = sh_lookup(opt_info.arg,shtab_options);
@@ -166,10 +166,10 @@ int sh_argopts(int argc,register char *argv[])
 			errormsg(SH_DICT,2, opt_info.arg);
 			continue;
 		    case '?':
-			errormsg(SH_DICT,ERROR_usage(2), opt_info.arg);
+			errormsg(SH_DICT,ERROR_usage(0), opt_info.arg);
 			return(-1);
 		}
-		if(*opt_option=='-')
+		if(*opt_info.option=='-')
 		{
 			if(opt&(SH_VI|SH_EMACS|SH_GMACS))
 				newflags &= ~(SH_VI|SH_EMACS|SH_GMACS);
@@ -185,17 +185,17 @@ int sh_argopts(int argc,register char *argv[])
 	if(error_info.errors)
 		errormsg(SH_DICT,ERROR_usage(2),optusage(NIL(char*)));
 	/* check for '-' or '+' argument */
-	if((cp=argv[opt_index]) && cp[1]==0 && (*cp=='+' || *cp=='-') &&
-		strcmp(argv[opt_index-1],"--"))
+	if((cp=argv[opt_info.index]) && cp[1]==0 && (*cp=='+' || *cp=='-') &&
+		strcmp(argv[opt_info.index-1],"--"))
 	{
-		opt_index++;
+		opt_info.index++;
 		newflags &= ~(SH_XTRACE|SH_VERBOSE);
 		trace = 0;
 	}
 	if(trace)
 		sh_trace(argv,1);
-	argc -= opt_index;
-	argv += opt_index;
+	argc -= opt_info.index;
+	argv += opt_info.index;
 	/* cannot set -n for interactive shells since there is no way out */
 	if(sh_isoption(SH_INTERACTIVE))
 		newflags &= ~SH_NOEXEC;
@@ -229,7 +229,7 @@ int sh_argopts(int argc,register char *argv[])
 		}
 		if(np)
 		{
-			nv_setvec(np,argc,argv);
+			nv_setvec(np,0,argc,argv);
 			nv_close(np);
 		}
 		else if(argc>0 || ((cp=argv[-1]) && strcmp(cp,"--")==0))
@@ -431,10 +431,10 @@ static void print_opts(Shopt_t oflags,register int mode)
 			sfputr(sfstdout,tp->sh_name,' ');
 			sfnputc(sfstdout,' ',16-strlen(tp->sh_name));
 			if(oflags&value)
-				msg = e_on;
+				msg = sh_translate(e_on);
 			else
-				msg = e_off;
-			sfputr(sfstdout,sh_translate(msg),'\n');
+				msg = sh_translate(e_off);
+			sfputr(sfstdout,msg,'\n');
 		}
 		else if(oflags&value&~(SH_INTERACTIVE|SH_RESTRICTED))
 			sfprintf(sfstdout," -o %s",tp->sh_name);

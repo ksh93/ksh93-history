@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -66,11 +66,13 @@
  * is matched against the candidate pathnames using the slower regexec()
  */
 
-static const char id[] = "\n@(#)fastfind (AT&T Research) 1999-10-18\0\n";
+static const char id[] = "\n@(#)fastfind (AT&T Research) 1999-04-19\0\n";
 
 static const char lib[] = "libast:fastfind";
 
 #include "findlib.h"
+
+#define FIND_MATCH	"*/(find|locate)/*"
 
 /*
  * this db could be anywhere
@@ -142,6 +144,7 @@ findopen(const char* file, const char* pattern, const char* type, Finddisc_t* di
 	int			k;
 	int			q;
 	int			fd;
+	int			uid;
 	Vmalloc_t*		vm;
 	Type_t*			tp;
 	struct stat		st;
@@ -168,6 +171,14 @@ findopen(const char* file, const char* pattern, const char* type, Finddisc_t* di
 #endif
 	if (!(vm = vmopen(Vmdcheap, Vmbest, 0)))
 		goto nospace;
+
+	/*
+	 * NOTE: searching for FIND_CODES would be much simpler if we
+	 *       just stuck with our own, but we also support GNU
+	 *	 locate codes and have to search for the one of a
+	 *	 bazillion possible names for that file
+	 */
+
 	if (!findcodes[1])
 		findcodes[1] = getenv(FIND_CODES_ENV);
 	if (disc->flags & FIND_GENERATE)
@@ -180,45 +191,90 @@ findopen(const char* file, const char* pattern, const char* type, Finddisc_t* di
 		fp->generate = 1;
 		if (file && (!*file || streq(file, "-")))
 			file = 0;
+		uid = geteuid();
 		j = (findcodes[0] = (char*)file) && *file == '/' ? 1 : elementsof(findcodes);
+
+		/*
+		 * look for the codes file, but since it may not exist yet,
+		 * also look for the containing directory if i<2 or if
+		 * it is sufficiently qualified (FIND_MATCH)
+		 */
+
 		for (i = 0; i < j; i++)
-			if ((path = findcodes[i]) && (!access(path, R_OK|W_OK) && (path = strcpy(fp->encode.file, path)) || (path = pathpath(fp->encode.file, path, "", PATH_REGULAR|PATH_READ)) && !access(path, R_OK|W_OK)))
-				break;
-		if (i >= j)
-		{
-			for (i = 0; i < elementsof(findcodes); i++)
-				if (p = findcodes[i])
+			if (path = findcodes[i])
+			{
+				if (*path == '/')
 				{
-					if (*p == '/' && !stat(p, &st))
+					if (!stat(path, &st))
 					{
 						if (S_ISDIR(st.st_mode))
-							sfsprintf(fp->encode.file, sizeof(fp->encode.file), "%s/%s", p, findnames[0]);
-						else
-							sfsprintf(fp->encode.file, sizeof(fp->encode.file), "%s", p);
-						break;
-					}
-					if (b = strrchr(p, '/'))
-					{
-						sfsprintf(fp->encode.file, sizeof(fp->encode.file), "%-.*s/.", b - p, p);
-						if (!access(fp->encode.file, R_OK|W_OK))
 						{
-							sfsprintf(fp->encode.file, sizeof(fp->encode.file), "%s", p);
+							for (k = 0; k < elementsof(findnames); k++)
+							{
+								sfsprintf(fp->encode.file, sizeof(fp->encode.file), "%s/%s", path, findnames[k]);
+								if (!access(fp->encode.file, R_OK|W_OK))
+								{
+									path = fp->encode.file;
+									break;
+								}
+								if (strchr(findnames[k], '/') && (b = strrchr(fp->encode.file, '/')))
+								{
+									*b = 0;
+									if (!stat(fp->encode.file, &st) && st.st_uid == uid && (st.st_mode & S_IWUSR))
+									{
+										*b = '/';
+										path = fp->encode.file;
+										break;
+									}
+								}
+							}
+							if (k < elementsof(findnames))
+								break;
+						}
+						else if (st.st_uid == uid && (st.st_mode & S_IWUSR))
+						{
+							sfsprintf(fp->encode.file, sizeof(fp->encode.file), "%s", path);
+							path = fp->encode.file;
 							break;
 						}
-						if ((path = pathpath(fp->encode.temp, fp->encode.file, "", PATH_READ|PATH_WRITE|PATH_EXECUTE)) && !access(path, R_OK|W_OK))
+					}
+					else if (i < 2 || strmatch(path, FIND_MATCH))
+					{
+						sfsprintf(fp->encode.file, sizeof(fp->encode.file), "%s", path);
+						if (b = strrchr(fp->encode.file, '/'))
 						{
-							sfsprintf(fp->encode.file, sizeof(fp->encode.file), "%s%s", path, b);
-							break;
+							*b = 0;
+							if (!stat(fp->encode.file, &st) && st.st_uid == uid && (st.st_mode & S_IWUSR))
+							{
+								*b = '/';
+								path = fp->encode.file;
+								break;
+							}
 						}
 					}
 				}
-			if (i >= elementsof(findcodes))
-			{
-				if (fp->disc->errorf)
-					(*fp->disc->errorf)(fp, fp->disc, 2, "%s: cannot locate codes", file ? file : findcodes[2]);
-				goto drop;
+				else if (pathpath(fp->encode.file, path, "", PATH_REGULAR|PATH_READ|PATH_WRITE))
+				{
+					path = fp->encode.file;
+					break;
+				}
+				else if (b = strrchr(path, '/'))
+				{
+					sfsprintf(fp->encode.file, sizeof(fp->encode.file), "%-.*s", b - path, path);
+					if (pathpath(fp->encode.temp, fp->encode.file, "", PATH_EXECUTE|PATH_READ|PATH_WRITE) &&
+					    !stat(fp->encode.temp, &st) && st.st_uid == uid && (st.st_mode & S_IWUSR))
+					{
+						sfsprintf(fp->encode.file, sizeof(fp->encode.file), "%s%s", fp->encode.temp, b);
+						path = fp->encode.file;
+						break;
+					}
+				}
 			}
-			path = fp->encode.file;
+		if (i >= j)
+		{
+			if (fp->disc->errorf)
+				(*fp->disc->errorf)(fp, fp->disc, 2, "%s: cannot locate codes", file ? file : findcodes[2]);
+			goto drop;
 		}
 		if (fp->disc->flags & FIND_OLD)
 		{
@@ -903,7 +959,7 @@ findwrite(register Find_t* fp, const char* path, size_t len, const char* type)
 		len = sizeof(fp->encode.path) - 1;
 		e = s + len;
 	}
-	p = fp->encode.path;
+	p = (unsigned char*)fp->encode.path;
 	while (s < e)
 	{
 		if (*s != *p++)

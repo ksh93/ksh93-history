@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -34,7 +34,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)dirname (AT&T Labs Research) 1999-04-10\n]"
+"[-?\n@(#)dirname (AT&T Labs Research) 2000-03-07\n]"
 USAGE_LICENSE
 "[+NAME?dirname - return directory portion of file name]"
 "[+DESCRIPTION?\bdirname\b treats \astring\a as a file name and returns "
@@ -63,7 +63,6 @@ USAGE_LICENSE
 "[+SEE ALSO?\bbasename\b(1), \bgetconf\b(1), \bdirname\b(3)]"
 ;
 
-
 #include <cmdlib.h>
 
 static void dirname(register Sfio_t *outfile, register const char *pathname)
@@ -80,17 +79,19 @@ static void dirname(register Sfio_t *outfile, register const char *pathname)
 		/* all '/' or "" */
 		if(*pathname!='/')
 			last = pathname = ".";
-		/* preserve // */
-		else if(pathname[1]=='/')
-			last++;
 	}
 	else
 	{
 		/* back over trailing '/' */
 		for(;*last=='/' && last > pathname; last--);
-		/* preserve // */
-		if(last==pathname && *pathname=='/' && pathname[1]=='/')
-			last++;
+	}
+	/* preserve // */
+	if(last!=pathname && pathname[0]=='/' && pathname[1]=='/')
+	{
+		while(pathname[2]=='/' && pathname<last)
+			pathname++;
+		if(last!=pathname && pathname[0]=='/' && pathname[1]=='/' && *astconf("PATH_LEADING_SLASHES",NiL,NiL)!='1')
+			pathname++;
 	}
 	sfwrite(outfile,pathname,last+1-pathname);
 	sfputc(outfile,'\n');
@@ -101,7 +102,7 @@ b_dirname(int argc,register char *argv[], void* context)
 {
 	register int n;
 
-	cmdinit(argv, context);
+	cmdinit(argv, context, ERROR_CATALOG);
 	while (n = optget(argv, usage)) switch (n)
 	{
 	case ':':
@@ -118,4 +119,3 @@ b_dirname(int argc,register char *argv[], void* context)
 	dirname(sfstdout,argv[0]);
 	return(0);
 }
-

@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -65,30 +65,32 @@ optjoin(char** argv, ...)
 	int			err_index;
 	int			err_offset;
 
+	if (!opt_info.state)
+		optget(NiL, NiL);
 	err = rep = 0;
 	for (;;)
 	{
 		va_start(ap, argv);
-		opt_info.join = 0;
+		opt_info.state->join = 0;
 		while (fun = va_arg(ap, Optpass_f))
 		{
 			last_index = opt_info.index;
 			last_offset = opt_info.offset;
-			opt_info.join++;
+			opt_info.state->join++;
 			user = (*fun)(argv, 0);
 			more = argv[opt_info.index] != 0;
 			if (!opt_info.again)
 			{
 				if (!more)
 				{
-					opt_info.join = 0;
+					opt_info.state->join = 0;
 					return 0;
 				}
 				if (!user)
 				{
 					if (*argv[opt_info.index] != '+')
 					{
-						opt_info.join = 0;
+						opt_info.state->join = 0;
 						return 1;
 					}
 					opt_info.again = -1;
@@ -105,9 +107,8 @@ optjoin(char** argv, ...)
 					err_offset = opt_info.offset;
 				}
 				opt_info.again = 0;
-				if (opt_info.pindex)
-					opt_info.index = opt_info.pindex;
-				opt_info.offset = opt_info.poffset;
+				opt_info.index = opt_info.state->pindex ? opt_info.state->pindex : 1;
+				opt_info.offset = opt_info.state->poffset;
 			}
 			if (!rep || opt_info.index != last_index || opt_info.offset != last_offset)
 				rep = fun;
@@ -115,7 +116,7 @@ optjoin(char** argv, ...)
 			{
 				if (!err)
 				{
-					opt_info.join = 0;
+					opt_info.state->join = 0;
 					return 1;
 				}
 				(*err)(argv, 1);

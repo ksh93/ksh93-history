@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -48,10 +48,11 @@
 #undef	END
 
 #define USAGE			1
-#define PROPRIETARY		2
-#define NONEXCLUSIVE		3
-#define OPEN			4
-#define COPYLEFT		5
+#define SPECIAL			2
+#define PROPRIETARY		3
+#define NONEXCLUSIVE		4
+#define OPEN			5
+#define COPYLEFT		6
 
 #define AUTHOR			0
 #define COMPANY			1
@@ -70,6 +71,7 @@
 
 #define COMDATA			62
 #define COMLINE			(COMDATA+4)
+#define COMLONG			(COMDATA-32)
 #define COMMENT(x,b,s,u)	comment(x,b,s,sizeof(s)-1,u)
 
 #define PUT(b,c)		(((b)->nxt<(b)->end)?(*(b)->nxt++=(c)):(-1))
@@ -318,7 +320,7 @@ astlicense(char* p, int size, char* file, char* options, int cc1, int cc2, int c
 
 	buf.end = (buf.buf = buf.nxt = p) + size;
 	tmp.end = (tmp.buf = tmp.nxt = tmpbuf) + sizeof(tmpbuf);
-	if (file)
+	if (file && *file)
 	{
 		if ((i = open(file, O_RDONLY)) < 0)
 		{
@@ -456,7 +458,9 @@ astlicense(char* p, int size, char* file, char* options, int cc1, int cc2, int c
 							notice.type = PROPRIETARY;
 						else if (!strncmp(v, "copyleft", 8) || !strncmp(v, "gpl", 3))
 							notice.type = COPYLEFT;
-						else if (!strncmp(v, "none", 4) || !strncmp(v, "special", 7))
+						else if (!strncmp(v, "special", 7))
+							notice.type = SPECIAL;
+						else if (!strncmp(v, "none", 4))
 							return 0;
 						else if (!strncmp(v, "open", 4))
 							notice.type = OPEN;
@@ -498,6 +502,8 @@ astlicense(char* p, int size, char* file, char* options, int cc1, int cc2, int c
 		options = 0;
 	}
 	if (!k)
+		return 0;
+	if (notice.type == SPECIAL && (!notice.verbose || !notice.item[NOTICE].data))
 		return 0;
 	if (notice.type != USAGE)
 	{
@@ -549,14 +555,16 @@ astlicense(char* p, int size, char* file, char* options, int cc1, int cc2, int c
 				comment(&notice, &buf, BUF(&tmp), USE(&tmp), 0);
 				comment(&notice, &buf, NiL, 0, 0);
 			}
-			COMMENT(&notice, &buf, "If you received this software without first entering", 0);
-			copy(&tmp, "into a license with ", -1);
+			COMMENT(&notice, &buf, "If you have copied this software without agreeing", 0);
+			COMMENT(&notice, &buf, "to the terms of the license you are infringing on", 0);
+			COMMENT(&notice, &buf, "the license and copyright and are violating", 0);
 			expand(&notice, &tmp, x, n);
-			copy(&tmp, ", you have an infringing", -1);
-			comment(&notice, &buf, BUF(&tmp), USE(&tmp), 0);
-			COMMENT(&notice, &buf, "copy and cannot use it without violating", 0);
-			expand(&notice, &tmp, x, n);
-			copy(&tmp, "'s intellectual property rights.", -1);
+			copy(&tmp, "'s", -1);
+			if (n >= COMLONG)
+				comment(&notice, &buf, BUF(&tmp), USE(&tmp), 0);
+			else
+				PUT(&tmp, ' ');
+			copy(&tmp, "intellectual property rights.", -1);
 			comment(&notice, &buf, BUF(&tmp), USE(&tmp), 0);
 			comment(&notice, &buf, NiL, 0, 0);
 		}
@@ -656,14 +664,22 @@ astlicense(char* p, int size, char* file, char* options, int cc1, int cc2, int c
 				copy(&tmp, "This software is licensed", -1);
 				if (x = notice.item[CORPORATION].data)
 				{
-					copy(&tmp, " by ", -1);
+					copy(&tmp, " by", -1);
+					if (notice.item[CORPORATION].size >= (COMLONG - 6))
+						comment(&notice, &buf, BUF(&tmp), USE(&tmp), 0);
+					else
+						PUT(&tmp, ' ');
 					expand(&notice, &tmp, x, notice.item[CORPORATION].size);
 					PUT(&tmp, ' ');
 					copy(&tmp, "Corp.", -1);
 				}
 				else if (x = notice.item[COMPANY].data)
 				{
-					copy(&tmp, " by ", -1);
+					copy(&tmp, " by", -1);
+					if (notice.item[COMPANY].size >= COMLONG)
+						comment(&notice, &buf, BUF(&tmp), USE(&tmp), 0);
+					else
+						PUT(&tmp, ' ');
 					expand(&notice, &tmp, x, notice.item[COMPANY].size);
 				}
 				comment(&notice, &buf, BUF(&tmp), USE(&tmp), 0);
@@ -768,8 +784,11 @@ astlicense(char* p, int size, char* file, char* options, int cc1, int cc2, int c
 	{
 		if (notice.verbose && (v = notice.item[NOTICE].data))
 		{
-			COMMENT(&notice, &buf, "DISCLAIMER", 0);
 			x = v + notice.item[NOTICE].size;
+			if (notice.type != SPECIAL)
+				COMMENT(&notice, &buf, "DISCLAIMER", 0);
+			else if (*v == '\n')
+				v++;
 			do
 			{
 				for (s = v; v < x && *v != '\n'; v++);

@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -129,6 +129,7 @@ struct Namval
 
 /*  options for nv_open */
 
+#define NV_APPEND	0x10000			/* append value */
 #define NV_ADD		8
 						/* add node if not found */
 #define NV_NOSCOPE	NV_NOALLOC		/* look only in current scope */
@@ -198,7 +199,7 @@ extern int	nv_scan(Dt_t*,void(*)(Namval_t*,void*),void*,int,int);
 extern Namval_t	*nv_scoped(Namval_t*);
 extern char 	*nv_setdisc(Namval_t*,const char*,Namval_t*,Namfun_t*);
 extern void	nv_setref(Namval_t*);
-extern void 	nv_setvec(Namval_t*,int,char*[]);
+extern void 	nv_setvec(Namval_t*,int,int,char*[]);
 extern void	nv_setvtree(Namval_t*);
 extern int 	nv_size(Namval_t*);
 extern Namfun_t *nv_stack(Namval_t*,Namfun_t*);

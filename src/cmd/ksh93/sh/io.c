@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -448,7 +448,7 @@ int	sh_redirect(struct ionod *iop, int flag)
 {
 	register char *fname;
 	register int 	fd, iof;
-	const char *message = e_open;
+	const char *message = ERROR_dictionary(e_open);
 	int o_mode;		/* mode flag for open */
 	static char io_op[5];	/* used for -x trace info */
 	static int	inuse_bits;	/* keep track of 3-9 in use */
@@ -507,7 +507,7 @@ int	sh_redirect(struct ionod *iop, int flag)
 					}
 					if(*number || dupfd > IOUFD)
 					{
-						message = e_file;
+						message = ERROR_dictionary(e_file);
 						goto fail;
 					}
 					if(sh.subshell && dupfd==1)
@@ -530,7 +530,7 @@ int	sh_redirect(struct ionod *iop, int flag)
 				}
 				else
 				{
-					message = e_file;
+					message = ERROR_dictionary(e_file);
 					goto fail;
 				}
 				if((fd=sh_fcntl(dupfd,F_DUPFD,3))<0)

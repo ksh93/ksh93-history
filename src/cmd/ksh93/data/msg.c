@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -46,9 +46,9 @@
 #include	"national.h"
 
 #ifdef SHOPT_MULTIBYTE
-    const char e_version[]	= "\n@(#)Version M 1993-12-28 i\0\n";
+    const char e_version[]	= "\n@(#)Version M 1993-12-28 j\0\n";
 #else
-    const char e_version[]	= "\n@(#)Version 1993-12-28 i\0\n";
+    const char e_version[]	= "\n@(#)Version 1993-12-28 j\0\n";
 #endif /* SHOPT_MULTIBYTE */
 
 /* error messages */
@@ -61,7 +61,6 @@ const char e_history[]		= "no history file";
 const char e_histopen[]		= "history file cannot open";
 const char e_option[]		= "%s: bad option(s)";
 const char e_toomany[]		= "open file limit exceeded";
-const char e_argexp[]		= "argument expected";
 const char e_argtype[]		= "invalid argument of type %c";
 const char e_formspec[]		= "%c: unknown format specifier";
 const char e_badregexp[]	= "%s: invalid regular expression";
@@ -109,9 +108,7 @@ const char e_nolabels[]		= "%s: label not implemented";
 const char e_notimp[]		= "%s: not implemented";
 const char e_nosupport[]	= "not supported";
 const char e_badrange[]		= "%d-%d: invalid range";
-const char e_needspath[]	= "%s: requires pathname argument";
 const char e_eneedsarg[]	= "-e - requires single argument";
-const char e_badconf[]		= "%s: fails %s";
 const char e_badbase[]		= "%s unknown base";
 const char e_loop[]		= "%s: would cause loop";
 const char e_overlimit[]	= "%s: limit exceeded";
@@ -143,12 +140,12 @@ const char is_ufunction[]	= " is an undefined function";
     const char e_jobsrunning[]	= "You have running jobs";
     const char e_no_job[]	= "no such job";
     const char e_no_proc[]	= "no such process";
-    const char e_jobusage[]	= "%s: Arguments must be %job or process ids";
-    const char e_kill[]		= "kill";
+    const char e_jobusage[]	= "%s: Arguments must be %%job or process ids";
 #endif /* JOBS */
 const char e_coredump[]		= "(coredump)";
 const char e_alphanum[]		= "[_[:alpha:]]*([_[:alnum:]])";
 const char e_devfdNN[]		= "/dev/fd/+([0-9])";
+const char e_signo[]		= "Signal %d";
 #ifdef SHOPT_FS_3D
     const char e_cantget[]	= "cannot get %s";
     const char e_cantset[]	= "cannot set %s";
@@ -180,4 +177,4 @@ const char e_envmarker[]	= "A__z";
 const char e_real[]		= "\nreal";
 const char e_user[]		= "user";
 const char e_sys[]		= "sys";
-const char e_dict[]		= "ksh";
+const char e_dict[]		= "libshell";

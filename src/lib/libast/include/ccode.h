@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -42,6 +42,20 @@
 #include <ast.h>
 #include <ast_ccode.h>
 
+typedef struct
+{
+	const unsigned char*	map;
+#ifdef _CC_PRIVATE_
+	_CC_PRIVATE_
+#endif
+} Cc_t;
+
+typedef struct
+{
+	const char*		name;
+	const char*		description;
+} Ccset_t;
+
 #if _BLD_ast && defined(__EXPORT__)
 #define __PUBLIC_DATA__		__EXPORT__
 #else
@@ -59,6 +73,11 @@ extern __PUBLIC_DATA__ const unsigned char*	_cc_map[];
 #if _BLD_ast && defined(__EXPORT__)
 #define extern		__EXPORT__
 #endif
+
+extern Cc_t*	ccopen(const char*, const char*);
+extern size_t	cccopy(Cc_t*, char**, size_t*, char**, size_t*);
+extern int	ccclose(Cc_t*);
+extern Ccset_t*	ccsets(void);
 
 extern int	ccmapc(int, int, int);
 extern void*	ccmapcpy(void*, const void*, size_t, int, int);

@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -94,6 +94,10 @@
 #   define fold(c)	((c)&~040)	/* lower and uppercase equivalent */
 #else
 #   define fold(c)	((c)|0100)	/* lower and uppercase equivalent */
+#endif
+
+#ifndef iswascii
+#define iswascii(c)	(!((c)&(~0177)))
 #endif
 
 typedef struct _vi_
@@ -183,10 +187,6 @@ typedef struct _vi_
 
 static genchar	_c;
 static const char paren_chars[] = "([{)]}";   /* for % command */
-
-#ifdef FIORDCHK
-    extern int ioctl(int, int, ...);
-#endif	/* FIORDCHK */
 
 static void	del_line(Vi_t*,int);
 static int	getcount(Vi_t*,int);
@@ -380,13 +380,13 @@ ed_viread(int fd, register char *shbuf, int nchar)
 	window[0] = '\0';
 
 #if KSHELL && (2*CHARSIZE*MAXLINE)<IOBSIZE
-	yankbuf = shbuf + MAXLINE*sizeof(genchar);
+	yankbuf = (genchar*)shbuf + MAXLINE*sizeof(genchar);
 #else
 	if(yankbuf==0)
 		yankbuf = (genchar*)malloc(sizeof(genchar)*(MAXLINE));
 #endif
 #if KSHELL && (3*CHARSIZE*MAXLINE)<IOBSIZE
-	vp->lastline = shbuf + (MAXLINE+MAXLINE)*sizeof(genchar);
+	vp->lastline = (genchar*)shbuf + (MAXLINE+MAXLINE)*sizeof(genchar);
 #else
 	if(vp->lastline==0)
 		vp->lastline = (genchar*)malloc(sizeof(genchar)*(MAXLINE));
@@ -1945,7 +1945,8 @@ static void replace(register Vi_t *vp, register int c, register int increment)
 		|| !is_print(virtual[cur_virt])
 		|| !is_print(vp->o_v_char)
 #ifdef SHOPT_MULTIBYTE
-		|| icharset(c) || out_csize(icharset(vp->o_v_char))>1
+		|| !iswascii(c) || wcwidth(vp->o_v_char)>1
+		|| !iswascii(virtual[cur_virt])
 #endif /* SHOPT_MULTIBYTE */
 		|| (increment && (cur_window==w_size-1)
 			|| !is_print(virtual[cur_virt+1])) )
@@ -2191,16 +2192,16 @@ static void sync_cursor(register Vi_t *vp)
 #ifdef SHOPT_MULTIBYTE
 		int d;
 		c = virtual[v];
-		if(d = icharset(c))
+		if((d = wcwidth(c)) > 1)
 		{
 			if( v != cur_virt )
-				p += (out_csize(d)-1);
+				p += (d-1);
 		}
-		else
+		else if(!iswprint(c))
 #else
 		c = virtual[v];
+		if(!isprint(c))
 #endif	/* SHOPT_MULTIBYTE */
-		if( !isprint(c) )
 		{
 			if( c == '\t' )
 			{
@@ -2569,7 +2570,7 @@ yankeol:
 #ifdef SHOPT_MULTIBYTE
     static int _isalph(register int v)
     {
-	return((v&~STRIP) || isalnum(v) || v=='_');
+	return(iswalnum(v) || v=='_');
     }
 
 

@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -36,7 +36,7 @@
 static const char usage[] =
 "[-?\n@(#)wc (AT&T Labs Research) 1999-04-20\n]"
 USAGE_LICENSE
-"[+NAME? wc - print the number of bytes, words, and lines in files]"
+"[+NAME?wc - print the number of bytes, words, and lines in files]"
 "[+DESCRIPTION?\bwc\b reads one or more input files and, by default, "
 	"for each file writes a line containing the number of newlines, "
 	"\aword\as, and bytes contained in each file followed by the "
@@ -45,7 +45,7 @@ USAGE_LICENSE
 	"characters.]"
 "[+?If more than one file is specified, \bwc\b writes a total count "
 	"for all of the named files with \btotal\b written instead "
-	"of the the file name.]"
+	"of the file name.]"
 "[+?By default, \bwc\b writes all three counts.  Options can specified "
 	"so that only certain counts are written.  The options \b-c\b "
 	"and \b-m\b are mutually exclusive.]"
@@ -95,7 +95,7 @@ b_wc(int argc,register char **argv, void* context)
 	struct stat	statb;
 
 	NoP(argc);
-	cmdinit(argv, context);
+	cmdinit(argv, context, ERROR_CATALOG);
 	while (n = optget(argv,usage)) switch (n)
 	{
 	case 'w':

@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 4.0 2000-02-14
+info mam static 00000 1994-07-17 make (AT&T Research) 4.0 2000-06-01
 setv INSTALLROOT ../../..
 setv PACKAGE_ast ${INSTALLROOT}
 setv PACKAGE_ast_INCLUDE ${PACKAGE_ast}/include/ast
@@ -46,7 +46,7 @@ exec - {
 exec - case "" in
 exec - *?)	echo " " ;;
 exec - esac
-exec - for i in coshell ast
+exec - for i in coshell  ast
 exec - do	case $i in
 exec - 	"coshell"|coshell)
 exec - 		;;
@@ -210,7 +210,7 @@ make cosync.o
 make cosync.c
 make FEATURE/nfsd implicit
 prev coshell.req
-setv mam_libast ${mam_cc_L+-last}${mam_cc_L-${PACKAGE_ast_LIB}/libast.a}
+setv mam_libast `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L--es,-last,${INSTALLROOT}/lib/libast.a,} ${mam_cc_L--es,-last,${INSTALLROOT}/lib/libast.a,} ${INSTALLROOT}/lib/lib/ast 2>/dev/null || echo '' ${mam_cc_L+-last}${mam_cc_L-${PACKAGE_ast_LIB}/libast.a}`
 exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} ${mam_libast} : def nfsd
 done FEATURE/nfsd generated
 prev ${PACKAGE_ast_INCLUDE}/ls.h implicit
@@ -334,7 +334,7 @@ exec - fi
 done ${PACKAGE_ast_LIB} generated
 make ${PACKAGE_ast_LIB}/libcoshell.a archive
 prev libcoshell.a archive
-exec - mv ${PACKAGE_ast_LIB}/libcoshell.a ${PACKAGE_ast_LIB}/libcoshell.a.old 2>/dev/null || true; cp libcoshell.a ${PACKAGE_ast_LIB}/libcoshell.a
+exec - mv ${PACKAGE_ast_LIB}/libcoshell.a ${PACKAGE_ast_LIB}/libcoshell.a.old 2>/dev/null || true; test '' = 'libcoshell.a' || { cp libcoshell.a ${PACKAGE_ast_LIB}/libcoshell.a  		    		    ;}
 exec - (ranlib ${PACKAGE_ast_LIB}/libcoshell.a) >/dev/null 2>&1 || true
 done ${PACKAGE_ast_LIB}/libcoshell.a generated
 make ${INSTALLROOT}/man/man3
@@ -364,7 +364,7 @@ done ${INSTALLROOT}/man/man3 generated
 make ${INSTALLROOT}/man/man3/coshell.3
 make coshell.3
 done coshell.3
-exec - mv ${INSTALLROOT}/man/man3/coshell.3 ${INSTALLROOT}/man/man3/coshell.3.old 2>/dev/null || true; cp coshell.3 ${INSTALLROOT}/man/man3/coshell.3
+exec - mv ${INSTALLROOT}/man/man3/coshell.3 ${INSTALLROOT}/man/man3/coshell.3.old 2>/dev/null || true; test '' = 'coshell.3' || { cp coshell.3 ${INSTALLROOT}/man/man3/coshell.3  		    		    ;}
 done ${INSTALLROOT}/man/man3/coshell.3 generated
 make ${PACKAGE_ast_LIB}/lib
 exec - set -
@@ -392,7 +392,7 @@ exec - fi
 done ${PACKAGE_ast_LIB}/lib generated
 make ${PACKAGE_ast_LIB}/lib/coshell
 prev coshell.req
-exec - mv ${PACKAGE_ast_LIB}/lib/coshell ${PACKAGE_ast_LIB}/lib/coshell.old 2>/dev/null || true; cp coshell.req ${PACKAGE_ast_LIB}/lib/coshell
+exec - mv ${PACKAGE_ast_LIB}/lib/coshell ${PACKAGE_ast_LIB}/lib/coshell.old 2>/dev/null || true; test '' = 'coshell.req' || { cp coshell.req ${PACKAGE_ast_LIB}/lib/coshell  		    		    ;}
 done ${PACKAGE_ast_LIB}/lib/coshell generated
 make ${INSTALLROOT}/bin
 exec - set -
@@ -420,11 +420,11 @@ exec - fi
 done ${INSTALLROOT}/bin generated
 make ${INSTALLROOT}/bin/ignore
 prev ignore
-exec - mv ${INSTALLROOT}/bin/ignore ${INSTALLROOT}/bin/ignore.old 2>/dev/null || true; cp ignore ${INSTALLROOT}/bin/ignore
+exec - mv ${INSTALLROOT}/bin/ignore ${INSTALLROOT}/bin/ignore.old 2>/dev/null || true; test '' = 'ignore' || { cp ignore ${INSTALLROOT}/bin/ignore  		    		    ;}
 done ${INSTALLROOT}/bin/ignore generated
 make ${INSTALLROOT}/bin/silent
 prev silent
-exec - mv ${INSTALLROOT}/bin/silent ${INSTALLROOT}/bin/silent.old 2>/dev/null || true; cp silent ${INSTALLROOT}/bin/silent
+exec - mv ${INSTALLROOT}/bin/silent ${INSTALLROOT}/bin/silent.old 2>/dev/null || true; test '' = 'silent' || { cp silent ${INSTALLROOT}/bin/silent  		    		    ;}
 done ${INSTALLROOT}/bin/silent generated
 make ${PACKAGE_ast_INCLUDE}
 exec - set -

@@ -1,5 +1,6 @@
 set	prototyped
 hdr,sys	time,times
+lib	_strftime
 mem	tm.tm_sec,timeval.tv_sec sys/time.h
 typ	clock_t,time_t
 

@@ -2,6 +2,8 @@
 # ast default license info
 #
 
+message_set=3
+
 contributor=(
 	[gsf]="Glenn Fowler <gsf@research.att.com>"
 	[dgk]="David Korn <dgk@research.att.com>"

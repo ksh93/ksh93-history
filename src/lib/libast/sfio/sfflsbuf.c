@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -29,7 +29,7 @@
 /*	Write a buffer out to a file descriptor or
 **	extending a buffer for a SF_STRING stream.
 **
-**	Written by Kiem-Phong Vo (06/27/90)
+**	Written by Kiem-Phong Vo
 */
 
 #if __STD_C
@@ -46,12 +46,14 @@ reg int		c;	/* if c>=0, c is also written out */
 	reg int		local, isall;
 	int		inpc = c;
 
+	SFMTXSTART(f,-1);
+
 	GETLOCAL(f,local);
 
 	for(;; f->mode &= ~SF_LOCK)
 	{	/* check stream mode */
 		if(SFMODE(f,local) != SF_WRITE && _sfmode(f,SF_WRITE,local) < 0)
-			return -1;
+			SFMTXRETURN(f, -1);
 		SFLOCK(f,local);
 
 		/* current data extent */
@@ -67,7 +69,7 @@ reg int		c;	/* if c>=0, c is also written out */
 				n = f->next - (data = f->data);
 			else
 			{	SFOPEN(f,local);
-				return -1;
+				SFMTXRETURN(f, -1);
 			}
 		}
 
@@ -104,12 +106,16 @@ reg int		c;	/* if c>=0, c is also written out */
 		}
 		else if(w == 0)
 		{	SFOPEN(f,local);
-			return -1;
+			SFMTXRETURN(f, -1);
 		}
 		else if(c < 0)
 			break;
 	}
 
 	SFOPEN(f,local);
-	return inpc < 0 ? (f->endb-f->next) : inpc;
+
+	if(inpc < 0)
+		inpc = f->endb-f->next;
+
+	SFMTXRETURN(f,inpc);
 }

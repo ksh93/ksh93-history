@@ -586,8 +586,18 @@ Nested variable assignment.
 \f3typeset\fP \*(OK\f2options\fP\*(CK \f2assignment\^\fP .\|.\|.
 Nested variable assignment.  Multiple assignments
 can be specified by separating each of them with a \f3;\fP.
+The previous value is unset before the assignment.
 .PD
 .RE
+.P
+In addition, a \f3+=\fP can be used in place of the \f3=\fP
+to signify adding to or appending to the previous value.
+When \f3+=\fP is applied to an arithmetic type, \f2word\^\fP
+is evaluated as an arithmetic expression and added to the current value.
+When applied to a sting variable, the value defined by \f2word\^\fP
+is appended to the value.  For compound assignments, the previous
+value is not unset and the new values are appended to the
+current ones provided that the types are compatible.
 .SS Comments.
 .PD 0
 A word beginning with
@@ -3116,14 +3126,40 @@ at the beginning or end of the path list.
 If the command name contains a \f3/\fP, then the search path
 is not used.
 Otherwise, each directory in the path is
-searched for an executable file that is not a directory.
-If the shell
+searched for an executable file
+of the given name
+that is not a directory.
+If found, and if the shell
 determines that there is a built-in version
 of a command corresponding to a given pathname,
 this built-in is invoked in the current process.
-A process is created and
+If found, and this directory is also contained in the value of the
+.B
+.SM FPATH
+variable,
+then this file is loaded into the current shell environment
+as if it were the argument to the \fB.\fP command
+and a function of the given name is executed
+as described above.
+If not found, and the file
+.B .fpath
+is found, and the contents of this file names an
+existing directory, and this directory contains
+a file of the given name,
+then this file is loaded into the current shell environment
+as if it were the argument to the \fB.\fP special built-in command
+and a function of the given name is executed.
+Otherwise, if found,
+a process is created and
 an attempt is made to execute the command via
 .IR exec (2).
+.P
+On systems that use an environment variable to
+determine the order of directories to search for
+shared libraries, the environment variable is
+modified by prepending the directory to its search list
+if the variable exists, or is created with
+the value of the directory otherwise.
 If the file has execute permission but is not an
 .B a.out
 file,
@@ -5093,6 +5129,15 @@ to cause escape sequences in the corresponding
 .I arg\^
 to be expanded as described in
 .BR print.
+.LI
+A
+.B %H
+format can be used instead of
+.B %s
+to cause characters in
+.I arg\^
+that are special in HTML and XML
+to be output to be output as their entity name.
 .LI
 A
 .B %P

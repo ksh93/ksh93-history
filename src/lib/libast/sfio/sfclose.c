@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -28,7 +28,7 @@
 
 /*	Close a stream. A file stream is synced before closing.
 **
-**	Written by Kiem-Phong Vo (06/27/90)
+**	Written by Kiem-Phong Vo
 */
 
 #if __STD_C
@@ -40,8 +40,7 @@ reg Sfio_t*	f;
 {
 	reg int		local, ex, rv;
 
-	if(!f)
-		return -1;
+	SFMTXSTART(f, -1);
 
 	GETLOCAL(f,local);
 
@@ -49,46 +48,40 @@ reg Sfio_t*	f;
 	   SFMODE(f,local) != (f->mode&SF_RDWR) &&
 	   SFMODE(f,local) != (f->mode&(SF_READ|SF_SYNCED)) &&
 	   _sfmode(f,0,local) < 0)
-		return -1;
+		SFMTXRETURN(f,-1);
 
 	/* closing a stack of streams */
 	while(f->push)
 	{	reg Sfio_t*	pop;
 
 		if(!(pop = (*_Sfstack)(f,NIL(Sfio_t*))) )
-			return -1;
+			SFMTXRETURN(f,-1);
 		if(sfclose(pop) < 0)
 		{	(*_Sfstack)(f,pop);
-			return -1;
+			SFMTXRETURN(f,-1);
 		}
-	}
-
-	/* this is from popen */
-	if(f->bits&SF_PROCESS)
-	{	if(local)
-			SETLOCAL(f);
-		return _sfpclose(f);
 	}
 
 	rv = 0;
 	if(f->disc == _Sfudisc)	/* closing the ungetc stream */
 		f->disc = NIL(Sfdisc_t*);
 	else if(f->file >= 0)	/* sync file pointer */
+	{	f->bits |= SF_CLOSING;
 		rv = sfsync(f);
+	}
 
 	SFLOCK(f,0);
 
-	/* zap any associated auxiliary buffer */
-	(void)_sfrsrv(f,-1);
-
 	/* raise discipline exceptions */
 	if(f->disc && (ex = SFRAISE(f,local ? SF_NEW : SF_CLOSE,NIL(Void_t*))) != 0)
-		return ex;
+		SFMTXRETURN(f,ex);
 
 	if(!local && f->pool)
 	{	/* remove from pool */
 		if(f->pool == &_Sfpool)
 		{	reg int	n;
+
+			POOLMTXLOCK(&_Sfpool);
 			for(n = 0; n < _Sfpool.n_sf; ++n)
 			{	if(_Sfpool.sf[n] != f)
 					continue;
@@ -98,15 +91,17 @@ reg Sfio_t*	f;
 					_Sfpool.sf[n] = _Sfpool.sf[n+1];
 				break;
 			}
+			POOLMTXUNLOCK(&_Sfpool);
 		}
 		else
 		{	f->mode &= ~SF_LOCK;	/**/ASSERT(_Sfpmove);
 			if((*_Sfpmove)(f,-1) < 0)
 			{	SFOPEN(f,0);
-				return -1;
+				SFMTXRETURN(f,-1);
 			}
 			f->mode |= SF_LOCK;
 		}
+		f->pool = NIL(Sfpool_t*);
 	}
 
 	if(f->data && (!local || (f->flags&SF_STRING) || (f->bits&SF_MMAP) ) )
@@ -136,13 +131,32 @@ reg Sfio_t*	f;
 	f->extent = -1;
 	f->endb = f->endr = f->endw = f->next = f->data;
 
+	/* zap any associated auxiliary buffer */
+	if(f->rsrv)
+	{	free(f->rsrv);
+		f->rsrv = NIL(Sfrsrv_t*);
+	}
+
+	/* delete any associated sfpopen-data */
+	if(f->proc)
+		rv = _sfpclose(f);
+
+	/* destroy the mutex */
+	if(f->mutex)
+	{	vtmtxclrlock(f->mutex);
+		if(f != sfstdin && f != sfstdout && f != sfstderr)
+		{	vtmtxclose(f->mutex);
+			f->mutex = NIL(Vtmutex_t*);
+		}
+	}
+
 	if(!local)
 	{	if(f->disc && (ex = SFRAISE(f,SF_FINAL,NIL(Void_t*))) != 0 )
 			return ex;
 
 		f->disc = NIL(Sfdisc_t*);
 		if(!(f->flags&SF_STATIC) )
-			SFFREE(f);
+			free(f);
 	}
 
 	return rv;

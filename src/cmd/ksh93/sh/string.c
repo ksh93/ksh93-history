@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -305,11 +305,15 @@ char	*sh_fmtq(const char *string)
 #   endif /* _lib_wcwidth */
 #endif /* SHOPT_MULTIBYTE */
 
-const char *sh_translate(const char *message)
+const char *_sh_translate(const char *message)
 {
+#if ERROR_VERSION >= 20000317L
+	return(ERROR_translate(0,0,e_dict,message));
+#else
 #if ERROR_VERSION >= 20000101L
 	return(ERROR_translate(e_dict,message));
 #else
 	return(ERROR_translate(message,1));
+#endif
 #endif
 }

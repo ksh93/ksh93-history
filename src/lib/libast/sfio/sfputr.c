@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -28,7 +28,7 @@
 
 /*	Put out a null-terminated string
 **
-**	Written by Kiem-Phong Vo
+**	Written by Kiem-Phong Vo.
 */
 #if __STD_C
 ssize_t sfputr(reg Sfio_t* f, const char* s, reg int rc)
@@ -42,8 +42,10 @@ reg int		rc;	/* record separator.	*/
 	reg ssize_t	p, n, w;
 	reg uchar*	ps;
 
+	SFMTXSTART(f,-1);
+
 	if(f->mode != SF_WRITE && _sfmode(f,SF_WRITE,0) < 0)
-		return -1;
+		SFMTXRETURN(f, -1);
 
 	SFLOCK(f,0);
 
@@ -67,17 +69,17 @@ reg int		rc;	/* record separator.	*/
 			}
 			else
 			{	/* create a reserve buffer to hold data */
-				Sfrsrv_t*	frs;
+				Sfrsrv_t*	rsrv;
 
 				p = n + (rc >= 0 ? 1 : 0);
-				if(!(frs = _sfrsrv(f, p)) )
+				if(!(rsrv = _sfrsrv(f, p)) )
 					n = 0;
 				else
 				{	if(n > 0)
-						memcpy(frs->data, s, n);
+						memcpy(rsrv->data, s, n);
 					if(rc >= 0)
-						frs->data[n] = rc;
-					if((n = SFWRITE(f,frs->data,p)) < 0 )
+						rsrv->data[n] = rc;
+					if((n = SFWRITE(f,rsrv->data,p)) < 0 )
 						n = 0;
 				}
 
@@ -120,5 +122,5 @@ reg int		rc;	/* record separator.	*/
 	}
 
 	SFOPEN(f,0);
-	return w;
+	SFMTXRETURN(f, w);
 }

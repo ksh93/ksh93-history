@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -61,37 +61,47 @@ strpsearch(const void* tab, size_t num, size_t siz, const char* name, char** nex
 	int			sequential = 0;
 
 	c = ccmapc(*((unsigned char*)name), CC_NATIVE, CC_ASCII);
-	while (lo <= hi) {
+	while (lo <= hi)
+	{
 		mid = lo + (sequential ? 0 : (((hi - lo) / siz) / 2) * siz);
-		if (!(v = c - ccmapc(*(s = *((unsigned char**)mid)), CC_NATIVE, CC_ASCII)) || *s == '[' && !(v = c - ccmapc(*++s, CC_NATIVE, CC_ASCII)) && (v = 1)) {
+		if (!(v = c - ccmapc(*(s = *((unsigned char**)mid)), CC_NATIVE, CC_ASCII)) || *s == '[' && !(v = c - ccmapc(*++s, CC_NATIVE, CC_ASCII)) && (v = 1))
+		{
 			t = (unsigned char*)name;
-			for (;;) {
-				if (!v && (*s == '[' || *s == '*')) {
+			for (;;)
+			{
+				if (!v && (*s == '[' || *s == '*'))
+				{
 					v = 1;
 					s++;
 				}
-				else if (v && *s == ']') {
+				else if (v && *s == ']')
+				{
 					v = 0;
 					s++;
 				}
-				else if (!isalpha(*t)) {
-					if (v || !*s) {
+				else if (!isalpha(*t))
+				{
+					if (v || !*s)
+					{
 						if (next)
 							*next = (char*)t;
 						return (void*)mid;
 					}
-					if (!sequential) {
+					if (!sequential)
+					{
 						while ((mid -= siz) >= lo && (s = *((unsigned char**)mid)) && ((c == ccmapc(*s, CC_NATIVE, CC_ASCII)) || *s == '[' && c == ccmapc(*(s + 1), CC_NATIVE, CC_ASCII)));
 						sequential = 1;
 					}
 					v = 1;
 					break;
 				}
-				else if (*t != *s) {
+				else if (*t != *s)
+				{
 					v = ccmapc(*t, CC_NATIVE, CC_ASCII) - ccmapc(*s, CC_NATIVE, CC_ASCII);
 					break;
 				}
-				else {
+				else
+				{
 					t++;
 					s++;
 				}

@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -91,7 +91,7 @@ int    b_exec(int argc,char *argv[], void *extra)
 	if(error_info.errors)
 		errormsg(SH_DICT,ERROR_usage(2),"%s",optusage((char*)0));
 	if(*argv)
-                b_login(0,argv,(void*)&logdata);
+                B_login(0,argv,(void*)&logdata);
 	return(0);
 }
 
@@ -101,7 +101,7 @@ static void     noexport(register Namval_t* np, void *data)
 	nv_offattr(np,NV_EXPORT);
 }
 
-int    b_login(int argc,char *argv[],void *extra)
+int    B_login(int argc,char *argv[],void *extra)
 {
 	struct checkpt *pp;
 	register struct login *logp=0;
@@ -334,7 +334,7 @@ int    b_shift(register int n, register char *argv[], void *extra)
 	return(0);
 }
 
-int    b_wait(register int n,register char *argv[],void *extra)
+int    b_wait(int n,register char *argv[],void *extra)
 {
 	register Shell_t *shp = (Shell_t*)extra;
 	while((n = optget(argv,sh_optwait))) switch(n)
@@ -354,11 +354,21 @@ int    b_wait(register int n,register char *argv[],void *extra)
 }
 
 #ifdef JOBS
-int    b_bg_fg(register int n,register char *argv[],void *extra)
+#   if 0
+    /* for the dictionary generator */
+	int    b_fg(int n,char *argv[],void *extra){}
+	int    b_disown(int n,char *argv[],void *extra){}
+#   endif
+int    b_bg(register int n,register char *argv[],void *extra)
 {
 	register int flag = **argv;
 	register Shell_t *shp = (Shell_t*)extra;
-	while((n = optget(argv,sh_optjoblist))) switch(n)
+	register const char *optstr = sh_optbg; 
+	if(*argv[0]=='f')
+		optstr = sh_optfg;
+	else if(*argv[0]=='d')
+		optstr = sh_optdisown;
+	while((n = optget(argv,optstr))) switch(n)
 	{
 	    case ':':
 		errormsg(SH_DICT,2, opt_info.arg);
@@ -457,7 +467,11 @@ int	b_universe(int argc, char *argv[],void *extra)
 #endif /* cmd_universe */
 
 #ifdef SHOPT_FS_3D
-    int	b_vpath_map(register int argc,char *argv[], void *extra)
+#   if 0
+    /* for the dictionary generator */
+    int	b_vmap(int argc,char *argv[], void *extra){}
+#   endif
+    int	b_vpath(register int argc,char *argv[], void *extra)
     {
 	register int flag, n;
 	register const char *optstr; 

@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -68,7 +68,7 @@ typedef char* (*_stk_overflow_)(int);
 static int stkexcept(Sfio_t*,int,void*,Sfdisc_t*);
 static Sfdisc_t stkdisc = { 0, 0, 0, stkexcept };
 
-Sfio_t _Stak_data = SFNEW((char*)0,0,-1,SF_STATIC|SF_WRITE|SF_STRING,&stkdisc);
+Sfio_t _Stak_data = SFNEW((char*)0,0,-1,SF_STATIC|SF_WRITE|SF_STRING,&stkdisc,0);
 
 __EXTERN__(Sfio_t, _Stak_data);
 

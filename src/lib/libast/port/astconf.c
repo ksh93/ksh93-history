@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -31,9 +31,7 @@
  * extended to allow some features to be set
  */
 
-static const char id[] = "\n@(#)getconf (AT&T Labs Research) 1998-04-15\0\n";
-
-#define ID		"getconf"
+static const char id[] = "\n@(#)getconf (AT&T Labs Research) 2000-05-11\0\n";
 
 #include "univlib.h"
 
@@ -181,13 +179,14 @@ static Feature_t	dynamic[] =
 typedef struct
 {
 
+	const char*	id;
 	const char*	name;
 	Feature_t*	features;
 
 	/* default initialization from here down */
 
-	int		errmsg;
 	int		prefix;
+	int		synthesizing;
 
 	char*		data;
 	char*		last;
@@ -196,9 +195,9 @@ typedef struct
 
 } State_t;
 
-static State_t	state = { "_AST_FEATURES", dynamic };
+static State_t	state = { "getconf", "_AST_FEATURES", dynamic };
 
-static char*	feature(const char*, const char*, const char*, int);
+static char*	feature(const char*, const char*, const char*, Ast_conferror_f);
 
 /*
  * synthesize state for fp
@@ -215,6 +214,8 @@ synthesize(register Feature_t* fp, const char* path, const char* value)
 	register char*		v;
 	register int		n;
 
+	if (state.synthesizing)
+		return "";
 	if (!state.data)
 	{
 		char*		se;
@@ -234,6 +235,7 @@ synthesize(register Feature_t* fp, const char* path, const char* value)
 		if (s)
 			strcpy(state.data, s);
 		ve = state.data;
+		state.synthesizing = 1;
 		for (;;)
 		{
 			for (s = ve; isspace(*s); s++);
@@ -257,6 +259,7 @@ synthesize(register Feature_t* fp, const char* path, const char* value)
 				break;
 			*ve++ = ' ';
 		}
+		state.synthesizing = 0;
 		state.last = state.data + n - 1;
 	}
 	if (!fp)
@@ -455,7 +458,7 @@ initialize(register Feature_t* fp, const char* path, const char* command, const 
  */
 
 static char*
-feature(const char* name, const char* path, const char* value, int errmsg)
+feature(const char* name, const char* path, const char* value, Ast_conferror_f conferror)
 {
 	register Feature_t*	fp;
 	register int		n;
@@ -468,8 +471,8 @@ feature(const char* name, const char* path, const char* value, int errmsg)
 	{
 		if (!value)
 		{
-			if (errmsg)
-				errormsg(ast.id, ERROR_LIBRARY|2, "%s: invalid symbol", name);
+			if (conferror)
+				(*conferror)(&state, &state, 2, "%s: invalid symbol", name);
 			return 0;
 		}
 		if (state.notify && !(*state.notify)(name, path, value))
@@ -477,8 +480,8 @@ feature(const char* name, const char* path, const char* value, int errmsg)
 		n = strlen(name);
 		if (!(fp = newof(0, Feature_t, 1, n + 1)))
 		{
-			if (errmsg)
-				errormsg(ast.id, ERROR_LIBRARY|2, "%s: out of space", name);
+			if (conferror)
+				(*conferror)(&state, &state, 2, "%s: out of space", name);
 			return 0;
 		}
 		fp->name = (const char*)fp + sizeof(Feature_t);
@@ -491,8 +494,8 @@ feature(const char* name, const char* path, const char* value, int errmsg)
 	{
 		if (fp->flags & CONF_READONLY)
 		{
-			if (errmsg)
-				errormsg(ast.id, ERROR_LIBRARY|2, "%s: cannot set readonly symbol", fp->name);
+			if (conferror)
+				(*conferror)(&state, &state, 2, "%s: cannot set readonly symbol", fp->name);
 			return 0;
 		}
 		if (state.notify && !streq(fp->value, value) && !(*state.notify)(name, path, value))
@@ -566,8 +569,8 @@ feature(const char* name, const char* path, const char* value, int errmsg)
 				n++;
 			if (n >= univ_max)
 			{
-				if (errmsg)
-					errormsg(ast.id, ERROR_LIBRARY|2, "%s: %s: universe value too large", fp->name, value);
+				if (conferror)
+					(*conferror)(&state, &state, 2, "%s: %s: universe value too large", fp->name, value);
 				return 0;
 			}
 		}
@@ -643,36 +646,26 @@ lookup(register Lookup_t* look, const char* name)
 		{
 			lo = (Conf_t*)conf;
 			hi = lo + conf_elements - 1;
-			if (look->standard >= 0 && look->standard != mid->standard) do
-			{
-				if (look->standard > mid->standard)
+			if (look->standard >= 0 && look->standard != mid->standard)
+				do
 				{
-					if (mid >= hi)
-						goto badstandard;
-					mid++;
-				}
-				else if (mid <= lo)
-					goto badstandard;
-				else
-					mid--;
-				if (!streq(name, mid->name))
-					goto badstandard;
-			} while (look->standard != mid->standard);
-			if (look->section >= 0 && look->section != mid->section) do
-			{
-				if (look->section > mid->section)
+					if (mid-- <= lo || !streq(mid->name, look->name))
+						do
+						{
+							if (++mid > hi || !streq(mid->name, look->name))
+								goto badstandard;
+						} while (mid->standard != look->standard);
+				} while (mid->standard != look->standard);
+			if (look->section >= 0 && look->section != mid->section)
+				do
 				{
-					if (mid >= hi)
-						goto badsection;
-					mid++;
-				}
-				else if (mid <= lo)
-					goto badsection;
-				else
-					mid--;
-				if (!streq(name, mid->name))
-					goto badsection;
-			} while (look->section != mid->section);
+					if (mid-- <= lo || !streq(mid->name, look->name))
+						do
+						{
+							if (++mid > hi || !streq(mid->name, look->name))
+								goto badstandard;
+						} while (mid->section != look->section);
+				} while (mid->section != look->section);
 			if (look->call >= 0 && look->call != mid->call)
 				goto badcall;
 			look->conf = mid;
@@ -703,7 +696,7 @@ lookup(register Lookup_t* look, const char* name)
  */
 
 static char*
-print(Sfio_t* sp, int errmsg, register Lookup_t* look, const char* name, const char* path)
+print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, Ast_conferror_f conferror)
 {
 	register Conf_t*	p = look->conf;
 	register int		flags = look->flags|CONF_DEFINED;
@@ -765,8 +758,11 @@ print(Sfio_t* sp, int errmsg, register Lookup_t* look, const char* name, const c
 		{
 			if (!sp)
 			{
-				if (errmsg)
-					errormsg(ast.id, ERROR_LIBRARY|ERROR_SYSTEM|2, "%s: %s error", p->name, call);
+				if (conferror)
+				{
+					(*conferror)(&state, &state, ERROR_SYSTEM|2, "%s: %s error", p->name, call);
+					return 0;
+				}
 				return "";
 			}
 			flags &= ~CONF_DEFINED;
@@ -836,23 +832,21 @@ print(Sfio_t* sp, int errmsg, register Lookup_t* look, const char* name, const c
  * value==0 gets value for name
  * value!=0 sets value for name and returns previous value
  * path==0 implies path=="/"
- * name==0 && path=="" => state.errmsg=value!=0
- * name==0 && path==0 => state.errmsg=0 name=value (OBSOLETE)
  *
  * settable return values are in permanent store
  * non-settable return values are on stkstd
  *
- *	if (!strcmp(astconf("PATH_RESOLVE", NiL, NiL), "logical"))
+ *	if (!strcmp(astgetconf("PATH_RESOLVE", NiL, NiL), "logical", 0))
  *		our_way();
  *
- *	universe = astconf("UNIVERSE", NiL, "att");
- *	astconf("UNIVERSE", NiL, universe);
+ *	universe = astgetconf("UNIVERSE", NiL, "att", 0);
+ *	astgetconf("UNIVERSE", NiL, universe, 0);
  */
 
 #define ALT	16
 
 char*
-astconf(const char* name, const char* path, const char* value)
+astgetconf(const char* name, const char* path, const char* value, Ast_conferror_f conferror)
 {
 	register char*	s;
 	char*		e;
@@ -863,20 +857,30 @@ astconf(const char* name, const char* path, const char* value)
 
 	static char	buf[MAXVAL];
 
-	INITIALIZE();
 	if (!name)
 	{
 		if (path)
+			return "";
+		if (!(name = value))
 		{
-			if (!*path)
-				state.errmsg = value != 0;
+			if (state.data)
+			{
+				Ast_confdisc_f	notify;
+
+#if _HUH20000515 /* doesn't work for shell builtins */
+				free(state.data - state.prefix);
+#endif
+				state.data = 0;
+				notify = state.notify;
+				state.notify = 0;
+				INITIALIZE();
+				state.notify = notify;
+			}
 			return "";
 		}
-		if (!(name = value))
-			return "";
 		value = 0;
-		state.errmsg = 0;
 	}
+	INITIALIZE();
 	if (!path)
 		path = "/";
 	if (isdigit(*name))
@@ -898,17 +902,24 @@ astconf(const char* name, const char* path, const char* value)
 		if (value)
 		{
 		ro:
-			if (state.errmsg)
-				errormsg(ast.id, ERROR_LIBRARY|2, "%s: cannot set value", name);
 			errno = EINVAL;
+			if (conferror)
+			{
+				(*conferror)(&state, &state, 2, "%s: cannot set value", name);
+				return 0;
+			}
 			return "";
 		}
-		return print(NiL, state.errmsg, &look, name, path);
+		return print(NiL, &look, name, path, conferror);
 	}
 	if (look.error)
 	{
-		if (state.errmsg)
-			errormsg(ast.id, ERROR_LIBRARY|2, "%s: invalid %s prefix", name, look.error);
+		errno = EINVAL;
+		if (conferror)
+		{
+			(*conferror)(&state, &state, 2, "%s: invalid %s prefix", name, look.error);
+			return 0;
+		}
 	}
 	else
 	{
@@ -943,12 +954,15 @@ astconf(const char* name, const char* path, const char* value)
 				{
 					if (value)
 					{
-						if (state.errmsg)
-							errormsg(ast.id, ERROR_LIBRARY|2, "%s: cannot set value", altname);
 						errno = EINVAL;
+						if (conferror)
+						{
+							(*conferror)(&state, &state, 2, "%s: cannot set value", altname);
+							return 0;
+						}
 						return "";
 					}
-					return print(NiL, state.errmsg, &altlook, altname, path);
+					return print(NiL, &altlook, altname, path, conferror);
 				}
 				for (s = altname; *s; s++)
 					if (isupper(*s))
@@ -969,10 +983,19 @@ astconf(const char* name, const char* path, const char* value)
 				}
 			}
 		}
-		if ((look.standard < 0 || look.standard == CONF_AST) && look.call <= 0 && look.section <= 1 && (s = feature(look.name, path, value, state.errmsg)))
+		if ((look.standard < 0 || look.standard == CONF_AST) && look.call <= 0 && look.section <= 1 && (s = feature(look.name, path, value, conferror)))
 			return s;
+		errno = EINVAL;
+		if (conferror)
+			return 0;
 	}
 	return "";
+}
+
+char*
+astconf(const char* name, const char* path, const char* value)
+{
+	return astgetconf(name, path, value, 0);
 }
 
 /*
@@ -1013,7 +1036,7 @@ astconflist(Sfio_t* sp, const char* path, int flags)
 		path = "/";
 	else if (access(path, F_OK))
 	{
-		errormsg(ast.id, ERROR_LIBRARY|2, "%s: not found", path);
+		errorf(&state, &state, 2, "%s: not found", path);
 		return;
 	}
 	olderrno = errno;
@@ -1024,7 +1047,7 @@ astconflist(Sfio_t* sp, const char* path, int flags)
 		flags = W_OK|X_OK;
 	if (flags & R_OK)
 		for (look.conf = (Conf_t*)conf; look.conf < (Conf_t*)&conf[conf_elements]; look.conf++)
-			print(sp, 1, &look, NiL, path);
+			print(sp, &look, NiL, path, errorf);
 	if (flags & W_OK)
 		for (fp = state.features; fp; fp = fp->next)
 		{
@@ -1035,7 +1058,7 @@ astconflist(Sfio_t* sp, const char* path, int flags)
 			if (!*(s = feature(fp->name, path, NiL, 0)))
 				s = "0";
 			if (flags & X_OK)
-				sfprintf(sp, "%s %s - %s\n", ID, fp->name, s); 
+				sfprintf(sp, "%s %s - %s\n", state.id, fp->name, s); 
 			else
 				sfprintf(sp, "%s=%s\n", fp->name, s);
 		}

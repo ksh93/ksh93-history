@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -35,7 +35,7 @@
 static const char usage[] =
 "[-?\n@(#)id (AT&T Labs Research) 1999-06-17\n]"
 USAGE_LICENSE
-"[+NAME? id - return user identity]"
+"[+NAME?id - return user identity]"
 "[+DESCRIPTION?If no \auser\a operand is specified \bid\b writes user and "
 	"group IDs and the corresponding user and group names of the "
 	"invoking process to standard output.  If the effective and "
@@ -427,7 +427,7 @@ b_id(int argc, char *argv[], void* context)
 	register int	flags = 0;
 	register int	n;
 
-	cmdinit(argv, context);
+	cmdinit(argv, context, ERROR_CATALOG);
 	while (n = optget(argv, usage)) switch (n)
 	{
 	case 'a':

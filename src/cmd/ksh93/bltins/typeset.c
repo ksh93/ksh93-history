@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -93,16 +93,13 @@ static const Namdisc_t treedisc =
 
 
 /*
- * The following few builtins are provided to set,print,
- * and test attributes and variables for shell variables,
- * aliases, and functions.
- * In addition, typeset -f can be used to test whether a
- * function has been defined or to list all defined functions
- * Note readonly is same as typeset -r.
- * Note export is same as typeset -x.
+ * Note export and readonly are the same
  */
-
-int    b_read_export(int argc,char *argv[],void *extra)
+#if 0
+    /* for the dictionary generator */
+    int    b_export(int argc,char *argv[],void *extra){}
+#endif
+int    b_readonly(int argc,char *argv[],void *extra)
 {
 	register int flag;
 	char *command = argv[0];
@@ -395,7 +392,7 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 			{
 				if(troot!=shp->var_tree && (nv_isnull(np) || !print_namval(sfstdout,np,0,tp)))
 				{
-					sfprintf(sfstderr,e_noalias,name);
+					sfprintf(sfstderr,sh_translate(e_noalias),name);
 					r++;
 				}
 				continue;

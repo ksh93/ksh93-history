@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -45,7 +45,11 @@
 /*
  * return and exit
  */
-int	b_ret_exit(register int n, register char *argv[],void *extra)
+#if 0
+    /* for the dictionary generator */
+    int	b_exit(int n, register char *argv[],void *extra){}
+#endif
+int	b_return(register int n, register char *argv[],void *extra)
 {
 	register char *arg;
 	register Shell_t *shp = (Shell_t*)extra;
@@ -78,7 +82,11 @@ done:
 /*
  * break and continue
  */
-int	b_brk_cont(register int n, register char *argv[],void *extra)
+#if 0
+    /* for the dictionary generator */
+    int	b_continue(int n, register char *argv[],void *extra){}
+#endif
+int	b_break(register int n, register char *argv[],void *extra)
 {
 	char *arg;
 	register int cont= **argv=='c';

@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -24,38 +24,17 @@
 *               Phong Vo <kpv@research.att.com>                *
 *                                                              *
 ***************************************************************/
-#if defined(__STDPP__directive) && defined(__STDPP__hide)
-__STDPP__directive pragma pp:hide ecvt fcvt
-#else
-#define ecvt		______ecvt
-#define fcvt		______fcvt
-#endif
-
 #include	"sfhdr.h"
-
-#if defined(__STDPP__directive) && defined(__STDPP__hide)
-__STDPP__directive pragma pp:nohide ecvt fcvt
-#else
-#undef	ecvt
-#undef	fcvt
-#endif
-
-#if _lib_cvt
-_BEGIN_EXTERNS_
-extern char*		fcvt _ARG_((double,int,int*,int*));
-extern char*		ecvt _ARG_((double,int,int*,int*));
-_END_EXTERNS_
-#endif /*_lib_cvt*/
 
 /*	Convert a floating point value to ASCII
 **
-**	Written by Kiem-Phong Vo (06/27/90)
+**	Written by Kiem-Phong Vo
 */
 
-static char	*Inf = "Inf", *Zero = "0";
-#define INTPART		(SF_IDIGITS/2)
-#define INFINITE	((_Sfi = 3), Inf)
-#define ZERO		((_Sfi = 1), Zero)
+static char		*Inf = "Inf", *Zero = "0";
+#define SF_INTPART	(SF_IDIGITS/2)
+#define SF_INFINITE	((_Sfi = 3), Inf)
+#define SF_ZERO		((_Sfi = 1), Zero)
 
 #if __STD_C
 char* _sfcvt(Void_t* dv, int n_digit, int* decpt, int* sign, int format)
@@ -75,7 +54,7 @@ int	format;		/* conversion format		*/
 
 	/* set up local buffer */
 	if(!Buf && !(Buf = (char*)malloc(SF_MAXDIGITS)))
-		return INFINITE;
+		return SF_INFINITE;
 
 	*sign = *decpt = 0;
 
@@ -84,7 +63,7 @@ int	format;		/* conversion format		*/
 	{	Sfdouble_t	dval = *((Sfdouble_t*)dv);
 
 		if(dval == 0.)
-			return ZERO;
+			return SF_ZERO;
 		else if((*sign = (dval < 0.)) )	/* assignment = */
 			dval = -dval;
 
@@ -99,13 +78,13 @@ int	format;		/* conversion format		*/
 				{
 					dval *= _Sfneg10[v];
 					if((n += (1<<v)) >= SF_IDIGITS)
-						return INFINITE;
+						return SF_INFINITE;
 				}
 			} while(dval >= (Sfdouble_t)SF_MAXLONG);
 		}
 		*decpt = (int)n;
 
-		buf = sp = Buf+INTPART;
+		buf = sp = Buf + SF_INTPART;
 		if((v = (int)dval) != 0)
 		{	/* translate the integer part */
 			dval -= (Sfdouble_t)v;
@@ -114,9 +93,9 @@ int	format;		/* conversion format		*/
 
 			n = buf-sp;
 			if((*decpt += (int)n) >= SF_IDIGITS)
-				return INFINITE;
+				return SF_INFINITE;
 			buf = sp;
-			sp = Buf+INTPART;
+			sp = Buf + SF_INTPART;
 		}
 		else	n = 0;
 
@@ -147,7 +126,7 @@ int	format;		/* conversion format		*/
 					goto done;
 				}
 				else if((n = (long)(dval *= 10.)) < 10)
-				{	*sp++ = (char)('0' + n);
+				{	*sp++ = '0' + n;
 					dval -= n;
 				}
 				else /* n == 10 */
@@ -160,7 +139,7 @@ int	format;		/* conversion format		*/
 	{	double	dval = *((double*)dv);
 
 		if(dval == 0.)
-			return ZERO;
+			return SF_ZERO;
 		else if((*sign = (dval < 0.)) )	/* assignment = */
 			dval = -dval;
 
@@ -174,13 +153,13 @@ int	format;		/* conversion format		*/
 				else
 				{	dval *= _Sfneg10[v];
 					if((n += (1<<v)) >= SF_IDIGITS)
-						return INFINITE;
+						return SF_INFINITE;
 				}
 			} while(dval >= (double)SF_MAXLONG);
 		}
 		*decpt = (int)n;
 
-		buf = sp = Buf+INTPART;
+		buf = sp = Buf + SF_INTPART;
 		if((v = (int)dval) != 0)
 		{	/* translate the integer part */
 			dval -= (double)v;
@@ -189,9 +168,9 @@ int	format;		/* conversion format		*/
 
 			n = buf-sp;
 			if((*decpt += (int)n) >= SF_IDIGITS)
-				return INFINITE;
+				return SF_INFINITE;
 			buf = sp;
-			sp = Buf+INTPART;
+			sp = Buf + SF_INTPART;
 		}
 		else	n = 0;
 

@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -91,6 +91,7 @@
 #	define nv_getval(s)	getenv("s")
 #   endif /* __STDC__ */
 #   define e_unknown	 	"unknown"
+#   define sh_translate(x)	(x)
     char login_sh =		0;
     char hist_fname[] =		"/.history";
 #endif	/* KSHELL */
@@ -802,7 +803,7 @@ void hist_list(register History_t *hp,Sfio_t *outfile, off_t offset,int last, ch
 	register int c;
 	if(offset<0 || !hp)
 	{
-		sfputr(outfile,e_unknown,'\n');
+		sfputr(outfile,sh_translate(e_unknown),'\n');
 		return;
 	}
 	sfseek(hp->histfp,offset,SEEK_SET);

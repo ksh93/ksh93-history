@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -61,7 +61,7 @@ int		type;
 	su = (Subfile_t*)disc;
 
 	/* read just what we need */
-	if(su->extent >= 0 && n > (io = (ssize_t)(su->extent - su->here)) )
+	if(su->extent >= 0 && (ssize_t)n > (io = (ssize_t)(su->extent - su->here)) )
 		n = io;
 	if(n <= 0)
 		return n;

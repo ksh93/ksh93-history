@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -431,6 +431,8 @@ toplist(FTS* fts, register char* const* pathnames)
 	FTSENT*			bot;
 	struct stat		st;
 
+	if (fts->flags & FTS_NOSEEDOTDIR)
+		fts->flags &= ~FTS_SEEDOTDIR;
 	physical = (fts->flags & FTS_PHYSICAL);
 	metaphysical = (fts->flags & (FTS_META|FTS_PHYSICAL)) == (FTS_META|FTS_PHYSICAL);
 	for (top = bot = root = 0; *pathnames; pathnames++)
@@ -446,11 +448,7 @@ toplist(FTS* fts, register char* const* pathnames)
 			break;
 		path = f->fts_name;
 		if (!physical)
-		{
-			f->fts_namelen = pathcanon(path, 0) - path;
-			if (fts->flags & FTS_NOSEEDOTDIR)
-				fts->flags &= ~FTS_SEEDOTDIR;
-		}
+			f->fts_namelen = (fts->flags & FTS_SEEDOTDIR) ? strlen(path) : (pathcanon(path, 0) - path);
 		else if (*path != '.')
 		{
 			f->fts_namelen = strlen(path);
@@ -1257,7 +1255,7 @@ fts_children(register FTS* fts, int flags)
 }
 
 /*
- * return default (FTS_LOGICAL|FTS_META|FTS_PHYSICAL) flags
+ * return default (FTS_LOGICAL|FTS_META|FTS_PHYSICAL|FTS_SEEDOTDIR) flags
  * conditioned by astconf()
  */
 
@@ -1267,11 +1265,11 @@ fts_flags(void)
 	register char*	s;
 	
 	s = astconf("PATH_RESOLVE", NiL, NiL);
+	if (streq(s, "logical"))
+		return FTS_LOGICAL;
 	if (streq(s, "physical"))
-		return FTS_PHYSICAL;
-	if (streq(s, "metaphysical"))
-		return FTS_META|FTS_PHYSICAL;
-	return FTS_LOGICAL;
+		return FTS_PHYSICAL|FTS_SEEDOTDIR;
+	return FTS_META|FTS_PHYSICAL|FTS_SEEDOTDIR;
 }
 
 /*

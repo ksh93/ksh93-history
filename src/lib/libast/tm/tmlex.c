@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -38,6 +38,7 @@
 
 /*
  * return the tab table index that matches s ignoring case and .'s
+ * tm_data.format checked if tminfo.format!=tm_data.format
  *
  * ntab and nsuf are the number of elements in tab and suf,
  * -1 for 0 sentinel
@@ -49,12 +50,22 @@
  */
 
 int
-tmlex(register const char* s, char** e, char** tab, register int ntab, char** suf, int nsuf)
+tmlex(register const char* s, char** e, char** tab, int ntab, char** suf, int nsuf)
 {
 	register char**	p;
+	register int	n;
 
-	for (p = tab; ntab-- && *p; p++)
+	for (p = tab, n = ntab; n-- && *p; p++)
 		if (tmword(s, e, *p, suf, nsuf))
-			return(p - tab);
-	return(-1);
+			return p - tab;
+	if (tm_info.format != tm_data.format && tab >= tm_info.format && tab < tm_info.format + TM_NFORM)
+	{
+		tab = tm_data.format + (tab - tm_info.format);
+		if (suf && tab >= tm_info.format && tab < tm_info.format + TM_NFORM)
+			suf = tm_data.format + (suf - tm_info.format);
+		for (p = tab, n = ntab; n-- && *p; p++)
+			if (tmword(s, e, *p, suf, nsuf))
+				return p - tab;
+	}
+	return -1;
 }

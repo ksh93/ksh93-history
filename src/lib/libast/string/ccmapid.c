@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -34,47 +34,13 @@
  */
 
 #include <ast.h>
-#include <ctype.h>
 #include <ccode.h>
-
-static const struct
-{
-	int		id;
-	const char*	name;
-	const char*	pattern;
-}
-maps[] =
-{
-CC_ASCII,	"ascii",	"a|ascii|iso646|iso8859*",
-CC_EBCDIC1,	"ebcdic",	"e|ebcdic?(1)",
-CC_EBCDIC2,	"ebcdic2",	"i|ebcdic2|ibm",
-CC_EBCDIC3,	"ebcdic3",	"o|ebcdic3|cp1047|ibm1047|mvs|openedition",
-CC_NATIVE,	"native",	"n|local",
-};
+#include <iconv.h>
 
 int
 ccmapid(const char* name)
 {
-	register int	c;
-	register char*	s;
-	register char*	t;
-	char		buf[64];
-
-	s = (char*)name;
-	t = buf;
-	while (t < &buf[sizeof(buf)-1] && (c = *s++))
-		if (isalnum(c))
-		{
-			if (isupper(c))
-				c = tolower(c);
-			*t++ = c;
-		}
-	*t = 0;
-	t = buf;
-	for (c = 0; c < elementsof(maps); c++)
-		if (strmatch(t, maps[c].pattern))
-			return maps[c].id;
-	return -1;
+	return iconv_name(name, NiL, 0);
 }
 
 /*
@@ -84,10 +50,10 @@ ccmapid(const char* name)
 char*
 ccmapname(register int id)
 {
-	register int	c;
+	register iconv_list_t*	ic;
 
-	for (c = 0; c < elementsof(maps); c++)
-		if (id == maps[c].id)
-			return (char*)maps[c].name;
+	for (ic = iconv_list(NiL); ic; ic = iconv_list(ic))
+		if (id == ic->ccode)
+			return (char*)ic->name;
 	return 0;
 }

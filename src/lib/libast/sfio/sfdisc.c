@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -28,21 +28,8 @@
 
 /*	Set a new discipline for a stream.
 **
-**	Written by Kiem-Phong Vo (06/27/90)
+**	Written by Kiem-Phong Vo
 */
-
-#ifndef KPVDEL /* drop in the next release */
-#if __STD_C
-Sfdisc_t* _sfdisc(Sfio_t* f, Sfdisc_t* disc)
-#else
-Sfdisc_t* _sfdisc(f,disc)
-Sfio_t*	f;
-Sfdisc_t*	disc;
-#endif
-{
-	return sfdisc(f, disc);
-}
-#endif/*KPVDEL*/
 
 #if __STD_C
 Sfdisc_t* sfdisc(reg Sfio_t* f, reg Sfdisc_t* disc)
@@ -58,13 +45,15 @@ reg Sfdisc_t*	disc;
 	reg Sfseek_f	oseekf;
 	ssize_t		n;
 
-	if((f->flags&SF_READ) && (f->bits&SF_PROCESS) && (f->mode&SF_WRITE) )
+	SFMTXSTART(f, NIL(Sfdisc_t*));
+
+	if((f->flags&SF_READ) && f->proc && (f->mode&SF_WRITE) )
 	{	/* make sure in read mode to check for read-ahead data */
 		if(_sfmode(f,SF_READ,0) < 0)
-			return NIL(Sfdisc_t*);
+			SFMTXRETURN(f, NIL(Sfdisc_t*));
 	}
 	else if((f->mode&SF_RDWR) != f->mode && _sfmode(f,0,0) < 0)
-		return NIL(Sfdisc_t*);
+		SFMTXRETURN(f, NIL(Sfdisc_t*));
 
 	SFLOCK(f,0);
 	rdisc = NIL(Sfdisc_t*);
@@ -81,14 +70,13 @@ reg Sfdisc_t*	disc;
 			reg Sfexcept_f	exceptf;
 			reg int		rv = 0;
 
-			exceptf = disc ? disc->exceptf : f->disc ? f->disc->exceptf :
-				  NIL(Sfexcept_f);
+			exceptf = disc ? disc->exceptf :
+				  f->disc ? f->disc->exceptf : NIL(Sfexcept_f);
 
 			/* check with application for course of action */
 			if(exceptf)
 			{	SFOPEN(f,0);
-				rv = (*exceptf)(f, SF_DBUFFER, &n,
-						disc ? disc : f->disc);
+				rv = (*exceptf)(f,SF_DBUFFER,&n, disc ? disc : f->disc);
 				SFLOCK(f,0);
 			}
 
@@ -177,5 +165,5 @@ reg Sfdisc_t*	disc;
 
 done :
 	SFOPEN(f,0);
-	return rdisc;
+	SFMTXRETURN(f, rdisc);
 }

@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -194,11 +194,16 @@ extern Dt_t		*sh_subaliastree(void);
 extern Dt_t		*sh_subfuntree(void);
 extern void		sh_subtmpfile(void);
 extern char 		*sh_substitute(const char*,const char*,char*);
-extern const char	*sh_translate(const char*);
+extern const char	*_sh_translate(const char*);
 extern int		sh_trace(char*[],int);
 extern void		sh_trim(char*);
 extern void		sh_utol(const char*, char*);
 extern int 		sh_whence(char**,int);
+
+#ifndef ERROR_dictionary
+#   define ERROR_dictionary(s)	(s)
+#endif
+#define sh_translate(s)	_sh_translate(ERROR_dictionary(s))
 
 #define sh_isoption(x)	(sh.options & (x))
 #define sh_onoption(x)	(sh.options |= (x))

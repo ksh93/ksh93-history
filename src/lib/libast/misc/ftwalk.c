@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -115,6 +115,9 @@ ftwalk(const char* path, int (*userf)(Ftw_t*), int flags, int (*comparf)(Ftw_t*,
 		e->parent->link = 0;
 		while (nd > 0)
 			dd[--nd]->info |= FTS_DD;
+		for (x = e; x; x = x->link)
+			if (!(x->info & FTS_D))
+				x->status = FTS_SKIP;
 	}
 	while (!rv && (e = fts_read(f)))
 	{

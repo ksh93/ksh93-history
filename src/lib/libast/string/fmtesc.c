@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -42,6 +42,7 @@
  * quote string as of length n with qb...qe
  * (flags&1) forces quote, otherwise quote output only if necessary
  * qe and the usual suspects are \... escaped
+ * (flags&2) doesn't quote 8 bit chars
  */
 
 char*
@@ -52,6 +53,7 @@ fmtquote(const char* as, const char* qb, const char* qe, size_t n, int flags)
 	register char*		b;
 	register int		c;
 	int			k;
+	int			q;
 
 	static char*		buf;
 	static int		bufsiz;
@@ -77,10 +79,11 @@ fmtquote(const char* as, const char* qb, const char* qe, size_t n, int flags)
 	b = buf;
 	if (qb)
 	{
+		q = qb[0] == '$' && qb[1] == '\'' && qb[2] == 0 ? 1 : 0;
 		while (*b = *qb++)
 			b++;
 		if (flags & 1)
-			k = 0;
+			k = q;
 	}
 	while (s < e)
 	{
@@ -115,23 +118,30 @@ fmtquote(const char* as, const char* qb, const char* qe, size_t n, int flags)
 			case CC_esc:
 				c = 'E';
 				break;
+			case '\\':
+				break;
 			default:
-				*b++ = '0' + ((c >> 6) & 07);
-				*b++ = '0' + ((c >> 3) & 07);
-				c = '0' + (c & 07);
+				if (!(flags & 2) || !(c & 0200))
+				{
+					*b++ = '0' + ((c >> 6) & 07);
+					*b++ = '0' + ((c >> 3) & 07);
+					c = '0' + (c & 07);
+				}
+				else
+					b--;
 				break;
 			}
 		}
 		else if (qe && strchr(qe, c))
 		{
-			k = 0;
+			k = q;
 			*b++ = '\\';
 		}
 		else if (qb && isspace(c))
-			k = 0;
+			k = q;
 		*b++ = c;
 	}
-	if (qb && !k && qe)
+	if (qb && k <= q && qe)
 		while (*b = *qe++)
 			b++;
 	*b = 0;

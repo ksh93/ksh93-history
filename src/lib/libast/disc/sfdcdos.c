@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -29,7 +29,7 @@
 /*	Discipline to turn \r\n into \n.
 **	This is useful to deal with DOS text files.
 **
-**	Written by David Korn (03/18/98).
+**	Written by David Korn (1998-03-18).
 */
 
 #define MINMAP	8
@@ -241,7 +241,7 @@ Sfio_t *iop;
 register int whence;
 #endif
 {
-	register int n,m=0;
+	register off_t n,m=0;
 	register char *cp;
 	if(whence==SEEK_CUR)
 	{

@@ -1,0 +1,6 @@
+This is a package root directory $PACKAGEROOT. All source and binary
+packages under this directory are controlled by the command
+	bin/package
+Binary package files are in the install root directory $INSTALLROOT,
+named arch/`bin/package`. For more information run
+	bin/package help

@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -174,6 +174,7 @@ pathtmp(char* buf, const char* dir, const char* pfx, int* fdp)
 				if (!(tmp.vec = newof(0, char*, n, strlen(x) + 1)))
 					return 0;
 				tmp.dir = tmp.vec;
+				x = strcpy((char*)(tmp.dir + n), x);
 				*tmp.dir++ = x;
 				while (x = strchr(x, ':'))
 				{
@@ -186,11 +187,16 @@ pathtmp(char* buf, const char* dir, const char* pfx, int* fdp)
 					tmp.dir--;
 				*tmp.dir = 0;
 			}
-			else if (!(tmp.vec = newof(0, char*, 2, 0)))
-				return 0;
+			else
+			{
+				if (((d = tmp.tmpdir) || (d = getenv(TMP_ENV))) && !VALID(d))
+					d = 0;
+				if (!(tmp.vec = newof(0, char*, 2, d ? (strlen(d) + 1) : 0)))
+					return 0;
+				if (d)
+					*tmp.vec = strcpy((char*)(tmp.vec + 2), d);
+			}
 			tmp.dir = tmp.vec;
-			if (!(d = *tmp.dir) && ((d = tmp.tmpdir) || (d = getenv(TMP_ENV))) && VALID(d))
-				*tmp.dir = d;
 		}
 		if (!(d = *tmp.dir++))
 		{

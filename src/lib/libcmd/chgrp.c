@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -33,7 +33,7 @@
  */
 
 static const char usage_1[] =
-"[-?@(#)chgrp (AT&T Labs Research) 2000-02-14\n]"
+"[-?@(#)chgrp (AT&T Labs Research) 2000-03-17\n]"
 USAGE_LICENSE
 ;
 
@@ -216,7 +216,7 @@ b_chgrp(int argc, char** argv, void* context)
 	int		(*chownf)(const char*, uid_t, gid_t);
 	int		(*statf)(const char*, struct stat*);
 
-	cmdinit(argv, context);
+	cmdinit(argv, context, ERROR_CATALOG);
 	flags = fts_flags() | FTS_TOP | FTS_NOPOSTORDER | FTS_NOSEEDOTDIR;
 	if (!(sp = sfstropen()))
 		error(ERROR_SYSTEM|3, "out of space");
@@ -341,13 +341,13 @@ b_chgrp(int argc, char** argv, void* context)
 	switch (options & (OPT_UID|OPT_GID))
 	{
 	case OPT_UID:
-		s = ERROR_translate(0, " owner");
+		s = ERROR_translate(0, 0, 0, " owner");
 		break;
 	case OPT_GID:
-		s = ERROR_translate(0, " group");
+		s = ERROR_translate(0, 0, 0, " group");
 		break;
 	case OPT_UID|OPT_GID:
-		s = ERROR_translate(0, " owner and group");
+		s = ERROR_translate(0, 0, 0, " owner and group");
 		break;
 	default:
 		s = "";

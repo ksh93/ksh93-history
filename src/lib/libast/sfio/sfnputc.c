@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -28,7 +28,7 @@
 
 /*	Write out a character n times
 **
-**	Written by Kiem-Phong Vo (06/27/90)
+**	Written by Kiem-Phong Vo.
 */
 
 #if __STD_C
@@ -45,9 +45,11 @@ reg size_t	n;	/* number of time to repeat */
 	uchar		buf[128];
 	reg int		local;
 
+	SFMTXSTART(f,-1);
+
 	GETLOCAL(f,local);
 	if(SFMODE(f,local) != SF_WRITE && _sfmode(f,SF_WRITE,local) < 0)
-		return -1;
+		SFMTXRETURN(f, -1);
 
 	SFLOCK(f,local);
 
@@ -79,5 +81,5 @@ reg size_t	n;	/* number of time to repeat */
 	}
 done :
 	SFOPEN(f,local);
-	return w;
+	SFMTXRETURN(f, w);
 }

@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -45,6 +45,10 @@
 
 #define REG_SUB_STOP	REG_SUB_USER
 
+/* drop after 20010301 */
+typedef int (*Of_key_lookup_t)(void*, const char*, const char*, int, char**, Sflong_t*);
+typedef char* (*Of_key_convert_t)(void*, const char*, const char*, int, char*, Sflong_t);
+
 typedef struct
 {
 	Sffmt_t			fmt;
@@ -54,6 +58,7 @@ typedef struct
 	Sfio_t*			tmp[2];
 	int			invisible;
 	int			level;
+	int			version;
 } Fmt_t;
 
 typedef struct
@@ -206,7 +211,7 @@ getfmt(Sfio_t* sp, void* vp, Sffmt_t* dp)
 			}
 			break;
 		}
-		h = (*fp->lookup)(fp->handle, fp->fmt.t_str, a, fp->fmt.fmt, &s, &n);
+		h = fp->version ? (*fp->lookup)(fp->handle, &fp->fmt, a, &s, &n) : (*(Of_key_lookup_t)fp->lookup)(fp->handle, fp->fmt.t_str, a, fp->fmt.fmt, &s, &n);
 		if (i)
 			*v++ = i;
 		fp->fmt.t_str[fp->fmt.n_str] = c;
@@ -229,6 +234,18 @@ getfmt(Sfio_t* sp, void* vp, Sffmt_t* dp)
 		break;
 	case 'p':
 		value->p = (char**)(s ? strtol(s, NiL, 0) : n);
+		break;
+	case 'q':
+		if (s)
+		{
+			fp->fmt.fmt = 's';
+			value->s = fmtquote(s, "$'", "'", strlen(s), 0);
+		}
+		else
+		{
+			fp->fmt.fmt = 'd';
+			value->q = n;
+		}
 		break;
 	case 's':
 		if (!s)
@@ -361,7 +378,7 @@ getfmt(Sfio_t* sp, void* vp, Sffmt_t* dp)
 		value->i = n;
 		break;
 	default:
-		if ((!fp->convert || !(value->s = (*fp->convert)(fp->handle, a, fp->fmt.t_str, fp->fmt.fmt, s, n))) && (fp->tmp[0] || (fp->tmp[0] = sfstropen())))
+		if ((!fp->convert || !(value->s = fp->version ? (*fp->convert)(fp->handle, &fp->fmt, a, s, n) : (*(Of_key_convert_t)fp->convert)(fp->handle, a, fp->fmt.t_str, fp->fmt.fmt, s, n))) && (fp->tmp[0] || (fp->tmp[0] = sfstropen())))
 		{
 			sfprintf(fp->tmp[0], "%%%c", fp->fmt.fmt);
 			value->s = sfstruse(fp->tmp[0]);
@@ -371,6 +388,38 @@ getfmt(Sfio_t* sp, void* vp, Sffmt_t* dp)
 	fp->level--;
 	return 0;
 }
+
+/*
+ * this is the 20000308 interface with Sffmt_t* callback args
+ */
+
+int
+sfkeyprintf(Sfio_t* sp, void* handle, const char* format, Sf_key_lookup_t lookup, Sf_key_convert_t convert)
+{
+	register int	i;
+	int		r;
+	Fmt_t		fmt;
+
+	memset(&fmt, 0, sizeof(fmt));
+	fmt.version = 20000308;
+	fmt.fmt.version = SFIO_VERSION;
+	fmt.fmt.form = (char*)format;
+	fmt.fmt.extf = getfmt;
+	fmt.handle = handle;
+	fmt.lookup = lookup;
+	fmt.convert = convert;
+	r = sfprintf(sp, "%!", &fmt) - fmt.invisible;
+	for (i = 0; i < elementsof(fmt.tmp); i++)
+		if (fmt.tmp[i])
+			sfclose(fmt.tmp[i]);
+	return r;
+}
+
+/*
+ * this is the original interface
+ */
+
+#undef	sfkeyprintf
 
 int
 sfkeyprintf(Sfio_t* sp, void* handle, const char* format, Sf_key_lookup_t lookup, Sf_key_convert_t convert)

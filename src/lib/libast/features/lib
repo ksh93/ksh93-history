@@ -1,6 +1,6 @@
 cmd	universe
 hdr	dirent,direntry,filio,fmtmsg,fnmatch,jioctl,libgen
-hdr	locale,mman,ndir,syslog,utime,vfork,wctype
+hdr	locale,mman,ndir,nl_types,syslog,utime,vfork,wctype
 hdr	wchar note{ <wchar.h> and isw*() really work }end execute{
 	#include <wchar.h>
 	main()
@@ -12,7 +12,8 @@ hdr	wchar note{ <wchar.h> and isw*() really work }end execute{
 dat	_tzname,tzname
 lib	BSDsetpgrp NutForkExecve
 lib	_cleanup
-lib	atexit,bcopy,bzero,confstr,dirread,dup2,execlp,execve,execvp,execvpe
+lib	atexit,bcopy,bzero,catclose,catgets,catopen,confstr,dirread,dup2
+lib	execlp,execve,execvp,execvpe
 lib	fchmod,fcntl,fmtmsg,fnmatch,fork,fsync,getconf,getdents,getdirentries
 lib	getdtablesize,getgroups,getlogin,getpagesize,getrlimit,getuniverse
 lib	glob,index,iswblank,iswctype,killpg,link,localeconv,madvise,mbtowc
@@ -27,8 +28,8 @@ lib	strcasecmp,strncasecmp,strrchr,strtod,strtol,strtoll,strtoul,strtoull
 lib	strxfrm,strftime,swab,symlink,sysconf,syslog
 lib	telldir,tmpnam,tzset,universe,unlink,utime,vfork,wctype
 lib	creat64,fstat64,fstatvfs64,ftruncate64 -D_LARGEFILE64_SOURCE
-lib	lseek64,lstat64 -D_LARGEFILE64_SOURCE
-lib	mmap64,open64,stat64,statvfs64,truncate64 -D_LARGEFILE64_SOURCE
+lib	lseek64,lstat64,mmap64 -D_LARGEFILE64_SOURCE
+lib	open64,readdir64,stat64,statvfs64,truncate64 -D_LARGEFILE64_SOURCE
 mem	direct.d_reclen sys/types.h sys/dir.h
 mem	dirent.d_fileno,dirent.d_ino,dirent.d_namlen,dirent.d_off,dirent.d_reclen sys/types.h dirent.h
 mem	DIR sys/types.h - dirent.h - sys/dir.h
@@ -36,6 +37,7 @@ mem	DIR.dd_fd sys/types.h - dirent.h - sys/dir.h
 sys	dir,filio,jioctl,localedef,mman,ptem,resource
 sys	socket,stream,universe,vfork
 typ	off64_t -D_LARGEFILE64_SOURCE
+typ	struct.dirent64 -D_LARGEFILE64_SOURCE dirent.h
 
 tst	tst_errno note{ errno can be assigned }end link{
 	_BEGIN_EXTERNS_

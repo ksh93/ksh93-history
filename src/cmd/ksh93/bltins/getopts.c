@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -38,6 +38,22 @@
 #include	<nval.h>
 #include	"builtins.h"
 
+static int infof(Opt_t* op, Sfio_t* sp, const char* s, Optdisc_t* dp)
+{
+	if(nv_search(s,sh.fun_tree,0))
+	{
+		int savtop = staktell();
+		char *savptr = stakfreeze(0);
+		stakputc('$');
+		stakputc('(');
+		stakputs(s);
+		stakputc(')');
+		sfputr(sp,sh_mactry(stakfreeze(1)),-1);
+		stakset(savptr,savtop);
+	}
+        return(1);
+}
+
 int	b_getopts(int argc,char *argv[],void *extra)
 {
 	register char *options=error_info.context->id;
@@ -47,6 +63,10 @@ int	b_getopts(int argc,char *argv[],void *extra)
 	char value[2], key[2];
 	int jmpval;
 	struct checkpt buff, *pp;
+        Optdisc_t disc;
+        memset(&disc, 0, sizeof(disc));
+        disc.version = OPT_VERSION;
+        disc.infof = infof;
 	value[1] = 0;
 	key[1] = 0;
 	while((flag = optget(argv,sh_optgetopts))) switch(flag)
@@ -92,6 +112,7 @@ int	b_getopts(int argc,char *argv[],void *extra)
 		pp->mode = SH_JMPERREXIT;
 		sh_exit(2);
 	}
+        opt_info.disc = &disc;
 	switch(opt_info.index<=argc?(opt_info.num= LONG_MIN,flag=optget(argv,options)):0)
 	{
 	    case '?':
@@ -156,6 +177,7 @@ int	b_getopts(int argc,char *argv[],void *extra)
 		nv_putval(np, opt_info.arg, NV_RDONLY);
 	nv_close(np);
 	sh_popcontext(&buff);
+        opt_info.disc = 0;
 	return(r);
 }
 

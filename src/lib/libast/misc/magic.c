@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -34,7 +34,7 @@
  * the sum of the hacks {s5,v10,planix} is _____ than the parts
  */
 
-static const char id[] = "\n@(#)magic library (AT&T Labs Research) 1999-04-28\0\n";
+static const char id[] = "\n@(#)magic library (AT&T Labs Research) 2000-04-19\0\n";
 
 static const char lib[] = "libast:magic";
 
@@ -47,6 +47,8 @@ static const char lib[] = "libast:magic";
 #include <regex.h>
 #include <swap.h>
 #include <sfstr.h>
+
+#define T(m)		(*m?ERROR_translate(NiL,NiL,lib,m):m)
 
 #if __OBSOLETE__ < 19980101 || _UWIN
 
@@ -466,6 +468,7 @@ ckmagic(register Magic_t* mp, const char* file, char* buf, struct stat* st, unsi
 	register int		level = 0;
 	int			call = -1;
 	int			c;
+	char*			q;
 	char*			t;
 	char*			base = 0;
 	unsigned long		num;
@@ -657,10 +660,11 @@ ckmagic(register Magic_t* mp, const char* file, char* buf, struct stat* st, unsi
 				}
 			}
 			p = sfstruse(mp->tmp);
-			t = *ep->desc ? ep->desc : p;
+			q = T(ep->desc);
+			t = *q ? q : p;
 			if (mp->keep[level]++ && b > buf && *(b - 1) != ' ' && *t && *t != ',' && *t != '.' && *t != '\b')
 				*b++ = ' ';
-			b += sfsprintf(b, PATH_MAX - (b - buf), *ep->desc ? ep->desc : "%s", p + (*p == '\b'));
+			b += sfsprintf(b, PATH_MAX - (b - buf), *q ? q : "%s", p + (*p == '\b'));
 			if (ep->mime)
 				mp->mime = ep->mime;
 			goto checknest;
@@ -686,11 +690,12 @@ ckmagic(register Magic_t* mp, const char* file, char* buf, struct stat* st, unsi
 				p[ep->mask] = 0;
 				ccmaps(p, ep->mask, !CC_NATIVE, CC_NATIVE);
 			}
-			if (mp->keep[level]++ && b > buf && *(b - 1) != ' ' && *ep->desc && *ep->desc != ',' && *ep->desc != '.' && *ep->desc != '\b')
+			q = T(ep->desc);
+			if (mp->keep[level]++ && b > buf && *(b - 1) != ' ' && *q && *q != ',' && *q != '.' && *q != '\b')
 				*b++ = ' ';
 			for (t = p; (c = *t) >= 0 && c <= 0177 && isprint(c) && c != '\n'; t++);
 			*t = 0;
-			b += sfsprintf(b, PATH_MAX - (b - buf), ep->desc + (*ep->desc == '\b'), p);
+			b += sfsprintf(b, PATH_MAX - (b - buf), q + (*q == '\b'), p);
 			*t = c;
 			if (ep->mime)
 				mp->mime = ep->mime;
@@ -823,7 +828,7 @@ ckmagic(register Magic_t* mp, const char* file, char* buf, struct stat* st, unsi
 				goto next;
 			if (!*ep->mime)
 			{
-				t = ep->desc;
+				t = T(ep->desc);
 				if (!strncasecmp(t, "microsoft", 9))
 					t += 9;
 				while (isspace(*t))
@@ -846,7 +851,7 @@ ckmagic(register Magic_t* mp, const char* file, char* buf, struct stat* st, unsi
 			if (!*ep->desc)
 				goto next;
 			if (!t)
-				for (t = ep->desc; *t; t++)
+				for (t = T(ep->desc); *t; t++)
 					if (*t == '.')
 						*t = ' ';
 			if (!mp->keep[level])
@@ -861,12 +866,13 @@ ckmagic(register Magic_t* mp, const char* file, char* buf, struct stat* st, unsi
 #endif
 		}
 	swapped:
-		if (mp->keep[level]++ && b > buf && *(b - 1) != ' ' && *ep->desc && *ep->desc != ',' && *ep->desc != '.' && *ep->desc != '\b')
+		q = T(ep->desc);
+		if (mp->keep[level]++ && b > buf && *(b - 1) != ' ' && *q && *q != ',' && *q != '.' && *q != '\b')
 			*b++ = ' ';
 		if (ep->type == 'd' || ep->type == 'D')
-			b += sfsprintf(b, PATH_MAX - (b - buf), ep->desc + (*ep->desc == '\b'), fmttime("%?%l", (time_t)num));
+			b += sfsprintf(b, PATH_MAX - (b - buf), q + (*q == '\b'), fmttime("%?%l", (time_t)num));
 		else
-			b += sfsprintf(b, PATH_MAX - (b - buf), ep->desc + (*ep->desc == '\b'), num);
+			b += sfsprintf(b, PATH_MAX - (b - buf), q + (*q == '\b'), num);
 		if (ep->mime && *ep->mime)
 			mp->mime = ep->mime;
 	checknest:
@@ -1004,7 +1010,7 @@ cklang(register Magic_t* mp, const char* file, char* buf, struct stat* st)
 				mp->mime = mp->mbuf;
 				if (strmatch(s, "*sh"))
 				{
-					t1 = "command";
+					t1 = T("command");
 					if (streq(s, "sh"))
 						*s = 0;
 					else
@@ -1015,11 +1021,11 @@ cklang(register Magic_t* mp, const char* file, char* buf, struct stat* st)
 				}
 				else
 				{
-					t1 = "interpreter";
+					t1 = T("interpreter");
 					*b++ = ' ';
 					*b = 0;
 				}
-				sfsprintf(mp->sbuf, sizeof(mp->sbuf), "%s%s script", s, t1);
+				sfsprintf(mp->sbuf, sizeof(mp->sbuf), T("%s%s script"), s, t1);
 				s = mp->sbuf;
 				goto qualify;
 			}
@@ -1150,13 +1156,13 @@ cklang(register Magic_t* mp, const char* file, char* buf, struct stat* st)
 	{
 		if (st->st_mode & (S_IXUSR|S_IXGRP|S_IXOTH))
 		{
-			s = "command script";
+			s = T("command script");
 			mp->mime = "application/sh";
 			goto qualify;
 		}
 		if (strmatch(mp->fbuf, "From * [0-9][0-9]:[0-9][0-9]:[0-9][0-9] *"))
 		{
-			s = "mail message";
+			s = T("mail message");
 			mp->mime = "message/rfc822";
 			goto qualify;
 		}
@@ -1174,13 +1180,13 @@ cklang(register Magic_t* mp, const char* file, char* buf, struct stat* st)
 		}
 		if (mp->multi['.'] >= 3)
 		{
-			s = "nroff input";
+			s = T("nroff input");
 			mp->mime = "application/x-troff";
 			goto qualify;
 		}
 		if (mp->multi['X'] >= 3)
 		{
-			s = "TeX input";
+			s = T("TeX input");
 			mp->mime = "application/x-tex";
 			goto qualify;
 		}
@@ -1201,7 +1207,7 @@ cklang(register Magic_t* mp, const char* file, char* buf, struct stat* st)
 			{
 				t1 = "";
 				t2 = "c ";
-				t3 = "program";
+				t3 = T("program");
 				switch (*suff)
 				{
 				case 'c':
@@ -1214,7 +1220,7 @@ cklang(register Magic_t* mp, const char* file, char* buf, struct stat* st)
 					mp->mime = "application/x-lex";
 					break;
 				default:
-					t3 = "header";
+					t3 = T("header");
 					if (mp->identifier[ID_YACC] < 5 || mp->count['%'] < 5)
 					{
 						mp->mime = "application/x-cc";
@@ -1241,37 +1247,37 @@ cklang(register Magic_t* mp, const char* file, char* buf, struct stat* st)
 		    (mp->fbsz < SF_BUFSIZE && mp->identifier[ID_MAM1] == mp->identifier[ID_MAM2] ||
 		     mp->fbsz >= SF_BUFSIZE && mp->identifier[ID_MAM1] >= mp->identifier[ID_MAM2]))
 		{
-			s = "mam program";
+			s = T("mam program");
 			mp->mime = "application/x-mam";
 			goto qualify;
 		}
 		if (mp->identifier[ID_FORTRAN] >= 8 || mp->identifier[ID_FORTRAN] > 0 && (*suff == 'f' || *suff == 'F'))
 		{
-			s = "fortran program";
+			s = T("fortran program");
 			mp->mime = "application/x-fortran";
 			goto qualify;
 		}
 		if (strmatch(suff, "[hH][tT][mM]+([Ll])") || mp->identifier[ID_HTML] > 0 && mp->count['<'] >= 8 && (c = mp->count['<'] - mp->count['>']) >= -2 && c <= 2)
 		{
-			s = "html input";
+			s = T("html input");
 			mp->mime = "text/html";
 			goto qualify;
 		}
 		if (strmatch(suff, "[tT][eE][xX]") || mp->count['{'] >= 6 && (c = mp->count['{'] - mp->count['}']) >= -2 && c <= 2 && mp->count['\\'] >= mp->count['{'])
 		{
-			s = "TeX input";
+			s = T("TeX input");
 			mp->mime = "text/tex";
 			goto qualify;
 		}
 		if (mp->identifier[ID_ASM] >= 4 || mp->identifier[ID_ASM] > 0 && (*suff == 's' || *suff == 'S'))
 		{
-			s = "as program";
+			s = T("as program");
 			mp->mime = "application/x-as";
 			goto qualify;
 		}
 		if (ckenglish(mp, pun, badpun))
 		{
-			s = "english text";
+			s = T("english text");
 			mp->mime = "text/plain";
 			goto qualify;
 		}
@@ -1279,7 +1285,7 @@ cklang(register Magic_t* mp, const char* file, char* buf, struct stat* st)
 	else if (streq(base, "core"))
 	{
 		mp->mime = "x-system/core";
-		return "core dump";
+		return T("core dump");
 	}
 	if (flags & (CC_binary|CC_notext))
 	{
@@ -1300,24 +1306,25 @@ cklang(register Magic_t* mp, const char* file, char* buf, struct stat* st)
 			d /= mp->fbsz;
 		}
 		if (d <= 0)
-			s = "binary";
+			s = T("binary");
 		else if (d < 4)
-			s = "encrypted";
+			s = T("encrypted");
 		else if (d < 16)
-			s = "packed";
+			s = T("packed");
 		else if (d < 64)
-			s = "compressed";
+			s = T("compressed");
 		else if (d < 256)
-			s = "delta";
-		else s = "data";
+			s = T("delta");
+		else
+			s = T("data");
 		mp->mime = "application/octet-stream";
 		return s;
 	}
 	mp->mime = "text/plain";
 	if (flags & CC_latin)
-		s = (flags & CC_control) ? "latin text with control characters" : "latin text";
+		s = (flags & CC_control) ? T("latin text with control characters") : T("latin text");
 	else
-		s = (flags & CC_control) ? "text with control characters" : "text";
+		s = (flags & CC_control) ? T("text with control characters") : T("text");
  qualify:
 	if (!flags && mp->count['\n'] >= mp->count['\r'] && mp->count['\n'] <= (mp->count['\r'] + 1) && mp->count['\r'])
 	{
@@ -1358,27 +1365,27 @@ type(register Magic_t* mp, const char* file, struct stat* st, char* buf, int siz
 		if (S_ISDIR(st->st_mode))
 		{
 			mp->mime = "x-system/dir";
-			return "directory";
+			return T("directory");
 		}
 		if (S_ISLNK(st->st_mode))
 		{
 			mp->mime = "x-system/lnk";
 			s = buf;
-			s += sfsprintf(s, PATH_MAX, "symbolic link to ");
+			s += sfsprintf(s, PATH_MAX, T("symbolic link to "));
 			if (pathgetlink(file, s, size - (s - buf)) < 0)
-				return "cannot read symbolic link text";
+				return T("cannot read symbolic link text");
 			return buf;
 		}
 		if (S_ISBLK(st->st_mode))
 		{
 			mp->mime = "x-system/blk";
-			sfsprintf(buf, PATH_MAX, "block special (%s)", fmtdev(st));
+			sfsprintf(buf, PATH_MAX, T("block special (%s)"), fmtdev(st));
 			return buf;
 		}
 		if (S_ISCHR(st->st_mode))
 		{
 			mp->mime = "x-system/chr";
-			sfsprintf(buf, PATH_MAX, "character special (%s)", fmtdev(st));
+			sfsprintf(buf, PATH_MAX, T("character special (%s)"), fmtdev(st));
 			return buf;
 		}
 		if (S_ISFIFO(st->st_mode))
@@ -1395,16 +1402,16 @@ type(register Magic_t* mp, const char* file, struct stat* st, char* buf, int siz
 #endif
 	}
 	if (!(mp->fbmx = st->st_size))
-		s = "empty";
+		s = T("empty");
 	else if (!mp->fp)
-		s = "cannot read";
+		s = T("cannot read");
 	else
 	{
 		mp->fbsz = sfread(mp->fp, mp->fbuf, sizeof(mp->fbuf) - 1);
 		if (mp->fbsz < 0)
 			s = fmterror(errno);
 		else if (mp->fbsz == 0)
-			s = "empty";
+			s = T("empty");
 		else
 		{
 			mp->fbuf[mp->fbsz] = 0;
@@ -2200,7 +2207,7 @@ magictype(register Magic_t* mp, Sfio_t* fp, const char* file, register struct st
 
 	mp->mime = 0;
 	if (!st)
-		s = "cannot stat";
+		s = T("cannot stat");
 	else
 	{
 		if (mp->fp = fp)
@@ -2211,10 +2218,10 @@ magictype(register Magic_t* mp, Sfio_t* fp, const char* file, register struct st
 		if (!(mp->disc->flags & MAGIC_MIME))
 		{
 			if (S_ISREG(st->st_mode) && (st->st_size > 0) && (st->st_size < 128))
-				sfprintf(mp->tmp, "short ");
+				sfprintf(mp->tmp, "%s ", T("short"));
 			sfprintf(mp->tmp, "%s", s);
 			if (!mp->fp && (st->st_mode & (S_IXUSR|S_IXGRP|S_IXOTH)))
-				sfprintf(mp->tmp, ", %s", S_ISDIR(st->st_mode) ? "searchable" : "executable");
+				sfprintf(mp->tmp, ", %s", S_ISDIR(st->st_mode) ? T("searchable") : T("executable"));
 			if (st->st_mode & S_ISUID)
 				sfprintf(mp->tmp, ", setuid=%s", fmtuid(st->st_uid));
 			if (st->st_mode & S_ISGID)
@@ -2227,7 +2234,7 @@ magictype(register Magic_t* mp, Sfio_t* fp, const char* file, register struct st
 	if (mp->disc->flags & MAGIC_MIME)
 		s = mp->mime;
 	if (!s)
-		s = "error";
+		s = T("error");
 	return s;
 }
 

@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -39,7 +39,7 @@
 #include <option.h>
 #include <errno.h>
 
-#define ERROR_VERSION	20000121L
+#define ERROR_VERSION	20000401L
 
 #ifndef	error_info
 #define error_info	_error_info_
@@ -56,11 +56,21 @@
 #define ERROR_usage(n)	((((n)?2:0)+ERROR_ERROR)|ERROR_USAGE)
 #define ERROR_warn(n)	(ERROR_WARNING)
 
-#define ERROR_dictionary(t)	(t)
+#ifndef ERROR_catalog
+#define ERROR_catalog(t)		t
+#endif
+#ifndef ERROR_dictionary
+#define ERROR_dictionary(t)		t
+#endif
+
+#ifndef ERROR_translate
 #if _hdr_locale && _lib_setlocale
-#define ERROR_translate(d,m)	((error_info.translate&&(ast.locale.set&LC_SET_MESSAGES))?(*error_info.translate)(d,m):(m))
+#define ERROR_translating()		(error_info.translate&&(ast.locale.set&(1<<AST_LC_MESSAGES)))
+#define ERROR_translate(l,i,d,m)	(ERROR_translating()?errorx((const char*)l,(const char*)i,(const char*)d,(const char*)m):(m))
 #else
-#define ERROR_translate(d,m)	(m)
+#define ERROR_translating()		0
+#define ERROR_translate(l,i,d,m)	(m)
+#endif
 #endif
 
 #define ERROR_INFO	0		/* info message -- no err_id	*/
@@ -132,8 +142,8 @@ typedef struct				/* error state			*/
 
 	unsigned long	time;		/* debug time trace		*/
 
-	char*	(*translate)(const char*, const char*);	/* format translator */
-	const char*	dictionary;	/* default translate dictionary	*/
+	char*	(*translate)(const char*, const char*, const char*, const char*);	/* format translator */
+	const char*	catalog;	/* default message catalog	*/
 
 } Error_info_t;
 
@@ -161,8 +171,9 @@ extern __PUBLIC_DATA__ Error_info_t	error_info;
 
 extern void	error(int, ...);
 extern int	errormsg(const char*, int, ...);
-extern void	errorv(const char*, int, va_list);
 extern int	errorf(void*, void*, int, ...);
+extern void	errorv(const char*, int, va_list);
+extern char*	errorx(const char*, const char*, const char*, const char*);
 
 extern void	liberror(const char*, int, ...);	/* OBSOLETE 20000101 */
 extern int	libevent(void*, void*, int, ...);	/* OBSOLETE 19990101 */

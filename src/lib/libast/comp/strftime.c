@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -61,7 +61,30 @@ strftime(char* buf, size_t len, const char* format, const struct tm* tm)
 {
 	register char*	s;
 	time_t		t;
+	Tm_t		tl;
 
+	/*
+	 * nl_langinfo() may call strftime() with bogus tm except for
+	 * one value -- what a way to go
+	 */
+
+	if (tm->tm_sec < 0 || tm->tm_sec > 61 ||
+	    tm->tm_min < 0 || tm->tm_min > 59 ||
+	    tm->tm_hour < 0 || tm->tm_hour > 59 ||
+	    tm->tm_wday < 0 || tm->tm_wday > 6 ||
+	    tm->tm_mday < 1 || tm->tm_mday > 31 ||
+	    tm->tm_mon < 0 || tm->tm_mon > 11 ||
+	    tm->tm_year < 0 || tm->tm_year > (2138 - 1900))
+	{
+		memset(&tl, 0, sizeof(tl));
+		if (tm->tm_hour >= 0 && tm->tm_hour <= 23)
+			tl.tm_hour = tm->tm_hour;
+		if (tm->tm_wday >= 0 && tm->tm_wday <= 6)
+			tl.tm_wday = tm->tm_wday;
+		if (tm->tm_mon >= 0 && tm->tm_mon <= 11)
+			tl.tm_mon = tm->tm_mon;
+		tm = (const struct tm*)&tl;
+	}
 	t = tmtime((struct tm*)tm, TM_LOCALZONE);
 	if (!(s = tmfmt(buf, len, format, &t)))
 		return 0;

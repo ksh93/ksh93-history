@@ -1,5 +1,5 @@
 #
-# @(#)magic (AT&T Research) 2000-02-14
+# @(#)magic (AT&T Research) 2000-06-14
 #
 # magic number database for file(1) and magic(3)
 #
@@ -554,6 +554,133 @@ o{
 &5	byte		2
 o()
 
+0	lelong			000000407	netbsd little-endian object	x-system/obj
++16	lelong			0		, stripped
+0	belong			000000407	netbsd big-endian object	x-system/obj
++16	belong			0		, stripped
+
+0	belong&0377777777	041400413	netbsd i386
+d{
+0	byte			&0x80		
++20	lelong			<4096		shared library			x-system/dll
++20	lelong			>=4096		executable, dynamically linked	x-system/exe
+}
++0	byte			^0x80		executable			x-system/exe
++16	lelong			0		, stripped
+0	belong&0377777777	041400410	netbsd i386 pure
+p{
++0	byte			&0x80		executable, dynamically linked	x-system/exe
++0	byte			^0x80		executable			x-system/exe
++16	lelong			0		, stripped
+}
+0	belong&0377777777	041400407	netbsd i386
+n{
++0	byte			&0x80		executable, dynamically linked, impure	x-system/exe
+{
+0	byte			^0x80
++0	byte			&0x40		position independent
++20	lelong			!0		executable			x-system/exe
++20	lelong			=0		object				x-system/obj
+}
++16	lelong			0		, stripped
+}
+0	belong&0377777777	041400507	netbsd i386 core
+c{
++12	string			*		from '%s'			x-system/core
+}
+
+0	belong&0377777777	042000413	netbsd m68k4k
+d()
+0	belong&0377777777	042000410	netbsd m68k4k pure
+p()
+0	belong&0377777777	042000407	netbsd m68k4k
+n()
+0	belong&0377777777	042000507	netbsd m68k4k core
+c()
+
+0	belong&0377777777	042200413	netbsd ns32532
+d()
+0	belong&0377777777	042200410	netbsd ns32532 pure
+p()
+0	belong&0377777777	042200407	netbsd ns32532
+n()
+0	belong&0377777777	042200507	netbsd ns32532 core
+c()
+
+0	belong&0377777777	042600413	netbsd pmax
+d()
+0	belong&0377777777	042600410	netbsd pmax pure
+p()
+0	belong&0377777777	042600407	netbsd pmax
+n()
+0	belong&0377777777	042600507	netbsd pmax core
+c()
+
+0	belong&0377777777	043000413	netbsd vax 1k
+d()
+0	belong&0377777777	043000410	netbsd vax 1k pure
+p()
+0	belong&0377777777	043000407	netbsd vax 1k
+n()
+0	belong&0377777777	043000507	netbsd vax 1k core
+c()
+
+0	belong&0377777777	045400413	netbsd vax 4k
+d()
+0	belong&0377777777	045400410	netbsd vax 4k pure
+p()
+0	belong&0377777777	045400407	netbsd vax 4k
+n()
+0	belong&0377777777	045400507	netbsd vax 4k core
+c()
+
+0	belong&0377777777	041600413	netbsd m68k
+d{
+0	byte			&0x80		
++20	belong			<8192		shared library			x-system/dll
++20	belong			>=8192		executable, dynamically linked	x-system/exe
+}
++0	byte			^0x80		executable			x-system/exe
++16	belong			0		, stripped
+0	belong&0377777777	041600410	netbsd m68k pure
+p()
+0	belong&0377777777	041600407	netbsd m68k
+n()
+0	belong&0377777777	041600507	netbsd m68k core
+c()
+0	belong&0377777777	042400413	netbsd sparc
+d()
+
+0	belong&0377777777	042400410	netbsd sparc pure
+p()
+0	belong&0377777777	042400407	netbsd sparc
+n()
+0	belong&0377777777	042400507	netbsd sparc core
+c()
+
+0	belong&0377777777	043400413	netbsd mips
+d()
+0	belong&0377777777	043400410	netbsd mips pure
+p()
+0	belong&0377777777	043400407	netbsd mips
+n()
+0	belong&0377777777	043400507	netbsd mips core
+c()
+
+0	belong&0377777777	043600413	netbsd arm32
+d()
+0	belong&0377777777	043600410	netbsd arm32 pure
+p()
+0	belong&0377777777	043600407	netbsd arm32
+n()
+0	belong&0377777777	043600507	netbsd arm32 core
+c()
+
+0	lelong			0x00070185	ECOFF netbsd alpha binary
++10	leshort			0x0000		, stripped			x-system/obj
+0	belong&0377777777	043200507	netbsd alpha core
+c()
+
 0	short		0560		3b
 {
 16	short		>0		executable			x-system/exe
@@ -1068,6 +1195,15 @@ v()
 
 0	match		info mam		mam program		application/x-mam
 0	edit		%^!<\([^>]*\)>.*%\1%l	%s data			application/x-%s
+0	string		\015\023\007\000	ast message catalog	application/x-catalog
++4	string		*			, %s
+
+0	long		0x09100201		ip address binary	application/x-ipmask
+0	long		0x09101312		ip netmask binary	application/x-ipmask
++8	string		*			, %s
++64	long		*			, %d masks
++68	long		*			, %d retries
++72	long		*			, %d slots
 
 #
 # last chance

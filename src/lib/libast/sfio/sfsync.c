@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -29,7 +29,7 @@
 /*	Synchronize data in buffers with the file system.
 **	If f is nil, all streams are sync-ed
 **
-**	Written by Kiem-Phong Vo (06/27/90)
+**	Written by Kiem-Phong Vo.
 */
 
 #if __STD_C
@@ -91,25 +91,32 @@ int sfsync(f)
 reg Sfio_t*	f;	/* stream to be synchronized */
 #endif
 {
-	reg int	local, rv, mode;
+	int	local, rv, mode;
+	Sfio_t*	origf;
 
-	if(!f)
+	if(!(origf = f) )
 		return _sfall();
 
-	GETLOCAL(f,local);
+	SFMTXSTART(origf,-1);
 
-	if(f->disc == _Sfudisc)	/* throw away ungetc */
-		(void)sfclose((*_Sfstack)(f,NIL(Sfio_t*)));
+	GETLOCAL(origf,local);
+
+	if(origf->disc == _Sfudisc)	/* throw away ungetc */
+		(void)sfclose((*_Sfstack)(origf,NIL(Sfio_t*)));
 
 	rv = 0;
 
-	if((f->mode&SF_RDWR) != SFMODE(f,local) && _sfmode(f,0,local) < 0)
+	if((origf->mode&SF_RDWR) != SFMODE(origf,local) && _sfmode(origf,0,local) < 0)
 	{	rv = -1;
 		goto done;
 	}
 
 	for(; f; f = f->push)
-	{	SFLOCK(f,local);
+	{	
+		if((f->flags&SF_IOCHECK) && f->disc && f->disc->exceptf)
+			(void)(*f->disc->exceptf)(f,SF_SYNC,(Void_t*)((int)1),f->disc);
+
+		SFLOCK(f,local);
 
 		/* pretend that this stream is not on a stack */
 		mode = f->mode&SF_PUSH;
@@ -127,7 +134,7 @@ reg Sfio_t*	f;	/* stream to be synchronized */
 				rv = -1;
 			if(!SFISNULL(f) && (f->bits&SF_HOLE) )
 			{	/* realize a previously created hole of 0's */
-				if(SFSK(f,(Sfoff_t)(-1),1,f->disc) >= 0)
+				if(SFSK(f,(Sfoff_t)(-1),SEEK_CUR,f->disc) >= 0)
 					(void)SFWR(f,"",1,f->disc);
 				f->bits &= ~SF_HOLE;
 			}
@@ -140,7 +147,7 @@ reg Sfio_t*	f;	/* stream to be synchronized */
 			f->here -= (f->endb-f->next);
 			f->endr = f->endw = f->data;
 			f->mode = SF_READ|SF_SYNCED|SF_LOCK;
-			(void)SFSK(f,f->here,0,f->disc);
+			(void)SFSK(f,f->here,SEEK_SET,f->disc);
 
 			if((f->flags&SF_SHARE) && !(f->flags&SF_PUBLIC) &&
 			   !(f->bits&SF_MMAP) )
@@ -153,14 +160,13 @@ reg Sfio_t*	f;	/* stream to be synchronized */
 		f->mode |= mode;
 		SFOPEN(f,local);
 
-		if(!local && !(f->flags&SF_ERROR) && (f->mode&~SF_RDWR) == 0 &&
-		   (f->flags&SF_IOCHECK) && f->disc && f->disc->exceptf)
-			(void)(*f->disc->exceptf)(f,SF_SYNC,NIL(Void_t*),f->disc);
+		if((f->flags&SF_IOCHECK) && f->disc && f->disc->exceptf)
+			(void)(*f->disc->exceptf)(f,SF_SYNC,(Void_t*)((int)0),f->disc);
 	}
 
 done:
 	if(!local && f && (f->mode&SF_POOL) && f->pool && f != f->pool->sf[0])
 		SFSYNC(f->pool->sf[0]);
 
-	return rv;
+	SFMTXRETURN(origf, rv);
 }

@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -33,28 +33,69 @@
  * return error message string given errno
  */
 
-#if defined(__STDPP__directive) && defined(__STDPP__hide)
-__STDPP__directive pragma pp:hide strerror
-#else
-#define strerror	______strerror
-#endif
-
 #include <ast.h>
+#include <error.h>
 
-#if defined(__STDPP__directive) && defined(__STDPP__hide)
-__STDPP__directive pragma pp:nohide strerror
-#else
+#include "FEATURE/errno"
+
 #undef	strerror
+
+#if !_def_errno_sys_nerr
+extern int	sys_nerr;
+#endif
+#if !_def_errno_sys_errlist
+extern char*	sys_errlist[];
 #endif
 
 #if _lib_strerror
+extern char*	strerror(int);
+#endif
 
-NoN(strerror)
+char*
+_ast_strerror(int err)
+{
+	static int	sys;
+	static char	msg[28];
 
-#else
+	if (err > 0 && err <= sys_nerr)
+	{
+		if (ERROR_translating())
+		{
+#if _lib_strerror
+			if (!sys)
+			{
+				char*	s;
+				char*	p;
+				int	n;
 
-extern int	sys_nerr;
-extern char*	sys_errlist[];
+				/*
+				 * make sure strerror() translates
+				 */
+
+				if (!(s = strerror(1)))
+					sys = -1;
+				else
+				{
+					if ((n = strlen(s)) >= sizeof(msg))
+						n = sizeof(msg) - 1;
+					strncpy(msg, s, n);
+					p = setlocale(LC_MESSAGES, "C");
+					sys = (s = strerror(1)) && strncmp(s, msg, n) ? 1 : -1;
+					setlocale(LC_MESSAGES, p);
+				}
+			}
+			if (sys > 0)
+				return strerror(err);
+#endif
+			return ERROR_translate(NiL, NiL, "errlist", (char*)sys_errlist[err]);
+		}
+		return (char*)sys_errlist[err];
+	}
+	sfsprintf(msg, sizeof(msg), ERROR_translate(NiL, NiL, "errlist", "Error %d"), err);
+	return msg;
+}
+
+#if !_lib_strerror
 
 #if defined(__EXPORT__)
 #define extern		__EXPORT__
@@ -63,12 +104,7 @@ extern char*	sys_errlist[];
 extern char*
 strerror(int err)
 {
-	static char	msg[28];
-
-	if (err > 0 && err <= sys_nerr)
-		return sys_errlist[err];
-	sfsprintf(msg, sizeof(msg), "Error %d", err);
-	return msg;
+	return _ast_strerror(err);
 }
 
 #endif

@@ -1,0 +1,5 @@
+: osf.alpha cc wrapper with reasonable namespace defaults
+
+# @(#)osf.alpha (AT&T Labs Research) 1998-02-04
+
+/usr/bin/cc -std -Dnoshare=_noshare_ -Dreadonly=_readonly_ "$@"

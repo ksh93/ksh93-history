@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -28,7 +28,7 @@
 
 /*	Delete all pending data in the buffer
 **
-**	Written by Kiem-Phong Vo (07/08/91)
+**	Written by Kiem-Phong Vo.
 */
 
 #if __STD_C
@@ -40,8 +40,13 @@ reg Sfio_t*	f;
 {
 	reg int	mode;
 
+	SFMTXSTART(f,-1);
+
 	if((mode = f->mode&SF_RDWR) != (int)f->mode && _sfmode(f,mode,0) < 0)
-		return -1;
+		SFMTXRETURN(f, -1);
+
+	if((f->flags&SF_IOCHECK) && f->disc && f->disc->exceptf)
+		(void)(*f->disc->exceptf)(f,SF_PURGE,(Void_t*)((int)1),f->disc);
 
 	if(f->disc == _Sfudisc)
 		(void)sfclose((*_Sfstack)(f,NIL(Sfio_t*)));
@@ -58,20 +63,21 @@ reg Sfio_t*	f;
 	{	f->here -= f->endb - f->next;
 		if(f->data)
 		{	SFMUNMAP(f,f->data,f->endb-f->data);
-			SFSK(f,f->here,0,f->disc);
+			SFSK(f,f->here,SEEK_SET,f->disc);
 		}
 		SFOPEN(f,0);
-		return 0;
+		SFMTXRETURN(f, 0);
 	}
 #endif
 
 	switch(f->mode&~SF_LOCK)
 	{
 	default :
-		return -1;
+		SFOPEN(f,0);
+		SFMTXRETURN(f, -1);
 	case SF_WRITE :
 		f->next = f->data;
-		if(!(f->bits&SF_PROCESS) || !(f->flags&SF_READ) || !(f->mode&SF_WRITE) )
+		if(!f->proc || !(f->flags&SF_READ) || !(f->mode&SF_WRITE) )
 			break;
 
 		/* 2-way pipe, must clear read buffer */
@@ -80,7 +86,7 @@ reg Sfio_t*	f;
 	case SF_READ:
 		if(f->extent >= 0 && f->endb > f->next)
 		{	f->here -= f->endb-f->next;
-			SFSK(f,f->here,0,f->disc);
+			SFSK(f,f->here,SEEK_SET,f->disc);
 		}
 		f->endb = f->next = f->data;
 		break;
@@ -90,7 +96,7 @@ reg Sfio_t*	f;
 
 done:
 	if((f->flags&SF_IOCHECK) && f->disc && f->disc->exceptf)
-		(void)(*f->disc->exceptf)(f,SF_PURGE,NIL(Void_t*),f->disc);
+		(void)(*f->disc->exceptf)(f,SF_PURGE,(Void_t*)((int)0),f->disc);
 
-	return 0;
+	SFMTXRETURN(f, 0);
 }

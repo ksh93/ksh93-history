@@ -1,0 +1,171 @@
+00-06-14 mamprobe: fix win32.* probe
+	 mamake: fix bug that used lower view path for generation
+	 package: don't clobber $PACKAGEROOT/bin/nmake
+00-06-01 C+probe: fix stdinclude *again*
+	 package: fix write delta source to use default pax format
+	 package: add disambiguating bias for sgi.mips3 over sgi.mips4
+	 package.mk: fix for directory content packages lib ast-locale
+00-05-01 iffe: fix invalid _LIB_ macro identifier 
+00-04-11 C+probe: uniq stdinclude and stdlib, fix usrinclude
+00-04-01 regress: fix explicit OUTPUT bug that didn't compare with expected
+00-03-17 package: all archives are .tgz for binary download
+	 package: $(PACKAGEROOT)/LICENSES/* in source and binary archives
+	 package: implement install and verify actions
+	 iffe: add exp, pth file dir ..., fix lib - -lfoo, fix lib - - -la -lb
+	 iffe: -L* must affect LD_LIBRARY* hacks for .exe tests -- yuk
+	 package.mk: add *.pkg :INDEX:
+00-03-07 package: add admin action
+00-03-06 makefile: install optional make probe override script C+make+probe.lcl
+00-02-14 --- release 1.0 ---
+	 ratz: treat "foo/" as a dir, not a regular file
+	 package: clarify source and binary installation instructions
+	 package: fix so binary packages can install without cc
+	 package: "ratz" now a non-archive package (the only one) for bootstrap
+	 package: handle VPATH=a:b arg
+	 package.mk: "ratz" package adjustments
+	 Makefile: use :PACKAGE_INIT: to support binary INIT packages
+	 WWW.mk: add :WWWALL:
+	 C.probe: fix .so check that let .dll slip through
+	 iffe: fix config sh var assignment for HAVE_member_IN_struct
+	 iffe: fix config sh var assignment for symbol_DECLARED
+	 package: delay PATH export until dll hack exports complete
+	 package: don't forget binary package $(INSTALLROOT)/lib(32|64)
+	 package: add delta change log for source packages
+00-02-10 mamprobe: add mam_cc_DLLBIG
+	 package: fix spelling typos
+	 package: add html help output
+	 package.mk: beef up source and binary help => html
+00-02-08 package: mkdir man/man[138] in the new arch to cover MAM bug
+00-01-28 package,release: add -rcount to release
+	 package: fix linux "host cpu" and "host rating"
+	 package: copy *.lic to $PACKAGEBIN for "make" and "write binary"
+	 package: fix 'release change log' case match
+00-01-24 package: add copyright action
+	 mamprobe: add -D_BLD_DLL to mam_cc_DLL
+00-01-11 package: tsort for package write
+	 package: early verification that $CC works
+	 package: add non-interactive command arg for use action
+	 proto: fix -C intermediate mkdir()
+	 mamprobe: unixware.i386 ksh workaround
+	 C.probe: move hosttype to C.probe (with unixware.i386 workaround)
+	 WWW.mk: fix mm2html option quoting
+	 WWW.mk: add .SCAN.mm
+	 WWW.mk: don't force static=1; grab dll's instead
+	 *.sh: fix getopts test to handle botched implementations like osf.alpha
+	 iffe.sh: fix read -r test
+99-12-25 iffe: tweak verbose messages
+	 iffe: hand code non-optget getopts parse
+	 iffe: fix bash quoting bug again
+	 iffe: do test -w . after option parse
+	 package: fix PACKAGEROOT search
+99-11-19 --- release 0.2 ---
+99-11-19 first working package & friends
+99-10-31 change from lib0ast to INIT; add MAM and package bootstrap
+	 hostinfo: gobbled by package
+99-10-01 iffe: add --config, yes{...}end no{...}end, fix read -r workaround
+99-09-27 iffe: add --all --verbose, --* set options
+99-09-22 regress: -v disables long line truncation
+99-09-11 WWW.mk: WWWDIR and MM2HTMLINFO are now lists searched in $(HOME)
+99-08-11 hostinfo: fix type sgi.mips4
+99-06-24 WWW.mk: add
+99-06-08 hostinfo.sh: ${TMPDIR:-/tmp}
+99-06-07 TEST.mk: add
+99-06-01 iffe: add `siz type' for _siz_type == sizeof(type)
+99-05-11 hostinfo,iffe,regress,use: long options
+99-05-01 C.probe: fix over aggressive stdinclude, e.g., /usr/include/machine
+99-04-01 hostinfo: sgi.mips? -o32 and -n32 checks
+	 iffe: check that . is writable
+99-03-17 hostinfo: fix for cc not found
+	 dl.c,hello.c,m.c: headers in conditionals to force .DONTCARE
+	 C.probe: extra check for include dirs pulled in by <sys/types.h>
+99-03-03 regress: add `UNIT - ...' for extra args
+	 Makefile: add (_hosttype_) prereq for cc
+99-01-23 hostinfo: tweak rating, use /proc/cpuinfo if there
+99-01-11 C.probe: shlib before lib, /usr before /
+98-12-25 iffe: work around win32.alpha intrinsic clash with -O
+98-11-11 regress: fix UNIT PATH lookup
+98-11-01 regress: add PROG
+98-10-01 hostinfo: add unixware.*
+	 use: export PACKAGE_* 
+98-08-11 C.probe: add /usr/include check (for sco CC)
+	 hostinfo: handle uwin uname update
+98-05-01 regress: fix bug sometimes didn't list last test
+98-04-01 hostinfo: add cc path arg
+	 hostinfo: now works with /bin/sh
+	 Makefile: strengthed -lm probe
+98-01-23 Makefile: check for -ldl -lm
+	 C.probe: handle gcc -v -E phony include dirs
+	 iffe: fix lcl by dropping sort -u -- we need the real first
+	 iffe: `mem x' to test if x is a non-opaque struct
+98-01-11 $(INSTALLROOT)/lib32 for sgi.mips3
+	 $(INSTALLROOT)/lib64 for sgi.mips4
+	 add cc.hp.pa
+98-01-01 cc.sgi.mips*: turn off ld library multiply defined
+97-10-11 regress: add VIEW function for locating data
+97-10-01 Makefile: -ldl test moved to libdll Makefile
+97-08-11 regress: add MOVE
+	 regress: add SAME
+	 regress: use getopts
+	 regress: `EXEC' repeats previous test
+97-07-17 use: tweak PATH and LIBPATH bootstrap order
+	 iffe: fix lcl bug that botched pathnames with embedded spaces
+97-06-12 iffe: add npt `needs prototype' test
+97-05-09 hostinfo: mvs.* => mvs.390
+	 Makefile: cc.$(_hosttype_) workaround installed here
+	 iffe: fix nolink{ ... }end
+	 iffe: add [no]static{ ... }end for static link test
+	 C.probe: _probe_PATH => _probe_export which must be eval'd
+97-04-01 use: _RLD_ROOT set too
+97-03-17 mm2html: changed inner loop
+	 mm2html: handle .if|.ie|.el, .so
+	 mm2html: handle different man styles
+	 mm2html: differentiate mm/man in some non-obvious cases
+	 hostinfo: r5000 is not mips4
+97-02-14 hostinfo: validate type with cc
+96-12-25 C.probe: uwin tweaks
+	 iffe: use `...` instead of $(...) for alpha /bin/sh
+	 iffe: fix `typ' divide by 0
+	 iffe: `lcl' now drops X: prefix
+	 iffe: +l* -> -l*
+	 iffe: eval around ${...#%...} for bsd /bin/sh
+	 use: add sgi.mips LD_LIBRARY<abi>_PATH variants
+	 use: add -e to list exports
+	 iffe: lcl leaves leading [a-zA-Z]: for dos
+	 iffe: fix no{link|output|execute} logic
+	 C.probe: don't automatically add /usr/include for non-hosted compilers
+	 C.probe: don't automatically place /usr/include last
+	 C.probe: check gcc style -v -E for stdinclude usrinclude
+96-11-28 iffe: check BASH_VERSION for IFS botch
+	 iffe: typ long.xxx only if sizeof(long xxx) != sizeof(xxx)
+	 hostinfo: fix sgi.mips[234] tests
+	 hostinfo: fix ncr.i386 tests
+96-10-31 iffe: work around old bsh here doc bug by running separate sh
+96-10-11 iffe: *.iffe and *.iff for iffe src files
+	 hostinfo: tighten sgi.mips cpu type check
+96-10-01 C.probe: add probe_libdir to catch alpha /usr/shlib
+96-09-17 iffe: fix typ bug that failed for single id types!
+96-08-31 hostinfo: handle recent sgi hinv cpu changes
+96-07-17 make sure sizeof(long xxx)>sizeof(xxx) for typ long.xxx
+96-05-09 C.probe: drop multiple / in stdinclude
+96-02-29 use: package root must have bin and lib subdir
+	 mm2html: add
+	 C.probe: probe_members += -whole-archive for gcc
+	 iffe: add + fix the blasted `...'...\\...'...`
+96-01-31 use: add pkg dir
+	 hostinfo: add tandem
+96-01-01 hostinfo: windows_nt|windows[0-9][0-9] -> win32
+95-11-24 hostinfo: linux-aout.* for non-elf linux
+95-11-11 use: add aix LIBPATH
+95-10-11 hostinfo: no args prints type
+95-08-11 use: add
+95-05-09 save original PATH in _probe_PATH
+	 beef up library dir probe
+95-04-01 use c source suffix if it still preserves the dialect
+	 add hostinfo
+	 add lib/hostinfo/typemap user type map
+	 add sol.sun4 cpu count
+	 fix C.probe to properly handle C/C++ combined compiler drivers
+	 add NeXT to hostinfo
+	 bummer: mach has /usr/bin/hostinfo
+95-03-19 fix dialect executable test
+95-03-19 --- release 0.0 ---

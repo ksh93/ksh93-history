@@ -1,0 +1,5 @@
+: hp.pa cc wrapper for reasonable ansi C defaults
+
+# @(#)cc.hp.pa (AT&T Labs Research) 1998-05-11
+
+/opt/ansic/bin/cc -Ae +e -Wl,+s -Wl,+vnocompatwarnings "$@"

@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -28,7 +28,7 @@
 
 /*	Push back one byte to a given SF_READ stream
 **
-**	Written by Kiem-Phong Vo (03/02/91)
+**	Written by Kiem-Phong Vo.
 */
 #if __STD_C
 static int _uexcept(reg Sfio_t* f, reg int type, Void_t* val, reg Sfdisc_t* disc)
@@ -63,8 +63,10 @@ reg int		c;	/* the value to be pushed back */
 {
 	reg Sfio_t*	uf;
 
+	SFMTXSTART(f, -1)
+
 	if(c < 0 || (f->mode != SF_READ && _sfmode(f,SF_READ,0) < 0))
-		return -1;
+		SFMTXRETURN(f, -1);
 	SFLOCK(f,0);
 
 	/* fast handling of the typical unget */
@@ -106,5 +108,5 @@ reg int		c;	/* the value to be pushed back */
 	*--f->next = (uchar)c;
 done:
 	SFOPEN(f,0);
-	return c;
+	SFMTXRETURN(f, c);
 }

@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -129,6 +129,13 @@ USAGE_LICENSE
 		"greater than \anum2\a.]"
 	"[+\anum1\a -ge \anum2\a?True if numerical value of \anum1\a is "
 		"greater than or equal to \anum2\a.]"
+	"[+\afile1\a -nt \afile2\a?True if \afile1\a is newer than \afile2\a "
+		"or \afile2\a does not exist.]"
+	"[+\afile1\a -ot \afile2\a?True if \afile1\a is older than \afile2\a "
+		"or \afile2\a does not exist.]"
+	"[+\afile1\a -ef \afile2\a?True if \afile1\a is another name for "
+		"\afile2\a.  This will be true if \afile1\a is a hard link "
+		"or a symbolic link to \afiles2\a.]"
 "}"
 "\n"
 "\n[expression]\n"

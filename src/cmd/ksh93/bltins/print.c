@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -69,6 +69,7 @@ union types_t
 	int		intvar;
 	char		**nextarg;
 	char		cescape;
+	char		err;
 	Shell_t		*sh;
     };
 #if SFIO_VERSION >= 19980401L
@@ -110,7 +111,7 @@ static int outexceptf(Sfio_t* iop, int mode, void* data, Sfdisc_t* dp)
 }
 
 #ifndef	SHOPT_ECHOPRINT
-   int    b_echo(int argc, char *argv[],void *extra)
+   int    B_echo(int argc, char *argv[],void *extra)
    {
 	static char bsd_univ;
 	struct print prdata;
@@ -153,7 +154,7 @@ int    b_printf(int argc, char *argv[],void *extra)
 int    b_print(int argc, char *argv[], void *extra)
 {
 	register Sfio_t *outfile;
-	register int n, fd = 1;
+	register int exitval=0,n, fd = 1;
 	register Shell_t *shp = (Shell_t*)extra;
 	const char *options, *msg = e_file+4;
 	char *format = 0;
@@ -292,6 +293,7 @@ skip2:
 		Sfio_t *pool;
 		struct printf pdata;
 		pdata.sh = shp;
+		pdata.err = 0;
 		pdata.cescape = 0;
 		memset(&pdata, 0, sizeof(pdata));
 #if SFIO_VERSION >= 19970311L
@@ -317,6 +319,7 @@ skip2:
 		if(pdata.nextarg == &nullarg && pdata.argsize>0)
 			sfwrite(outfile,stakptr(staktell()),pdata.argsize);
 		sfpool(sfstderr,pool,SF_WRITE);
+		exitval = pdata.err;
 	}
 	else
 	{
@@ -334,7 +337,7 @@ skip2:
 		sfset(outfile,SF_SHARE|SF_PUBLIC,1);
 		sfsync(outfile);
 	}
-	return(0);
+	return(exitval);
 }
 
 /*
@@ -349,6 +352,7 @@ int sh_echolist(Sfio_t *outfile, int raw, char *argv[])
 	register int	n;
 	struct printf pdata;
 	pdata.cescape = 0;
+	pdata.err = 0;
 	while(!pdata.cescape && (cp= *argv++))
 	{
 		if(!raw  && (n=fmtvecho(cp,&pdata))>=0)
@@ -414,6 +418,42 @@ static char *genformat(char *format)
 }
 
 #if SFIO_VERSION >= 19980401L
+
+static char *fmthtml(const char *string)
+{
+	register const char *cp = string;
+	register int c, offset = staktell();
+	while(c= *(unsigned char*)cp++)
+	{
+#ifdef SHOPT_MULTIBYTE
+		register int s;
+		if((s=mblen(cp-1,MB_CUR_MAX)) > 1)
+		{
+			cp += (s-1);
+			continue;
+		}
+#endif /* SHOPT_MULTIBYTE */
+		if(c=='<')
+			stakputs("&lt;");
+		else if(c=='>')
+			stakputs("&gt;");
+		else if(c=='&')
+			stakputs("&amp;");
+		else if(c=='"')
+			stakputs("&quot;");
+		else if(c=='\'')
+			stakputs("&apos;");
+		else if(c==' ')
+			stakputs("&nbsp;");
+		else if(!isprint(c) && c!='\n' && c!='\r')
+			sfprintf(stkstd,"&#%X;",c);
+		else
+			stakputc(c);
+	}
+	stakputc(0);
+	return(stakptr(offset));
+}
+
 static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 {
 	char*		lastchar = "";
@@ -437,12 +477,14 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 			break;
 		case 's':
 		case 'q':
+		case 'H':
 		case 'P':
 		case 'R':
 		case 'Z':
 		case 'b':
 			fe->fmt = 's';
 			fe->size = -1;
+			fe->base = -1;
 			value->s = "";
 			break;
 		case 'e':
@@ -499,14 +541,27 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 		case 'q':
 		case 'b':
 		case 's':
+		case 'H':
 		case 'P':
 		case 'R':
 			fe->fmt = 's';
 			fe->size = -1;
-			value->s = argp;
+			if(format=='s' && fe->base>=0)
+			{
+				value->p = pp->nextarg;
+				pp->nextarg = (char**)&nullarg;
+			}
+			else
+			{
+				fe->base = -1;
+				value->s = argp;
+			}
 			break;
 		case 'c':
-			value->c = *argp;
+			if(fe->base >=0)
+				value->s = argp;
+			else
+				value->c = *argp;
 			break;
 		case 'o':
 		case 'x':
@@ -515,6 +570,11 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 		case 'U':
 			longmax = (unsigned long)ULONG_MAX;
 		case '.':
+			if(fe->size==2 && strchr("bcsqHPRQTZ",*fe->form))
+			{
+				value->l = ((unsigned char*)argp)[0];
+				break;
+			}
 		case 'd':
 		case 'D':
 		case 'i':
@@ -529,11 +589,13 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 				if(d<longmin)
 				{
 					errormsg(SH_DICT,ERROR_warn(0),e_overflow,argp);
+					pp->err = 1;
 					d = longmin;
 				}
 				else if(d>longmax)
 				{
 					errormsg(SH_DICT,ERROR_warn(0),e_overflow,argp);
+					pp->err = 1;
 					d = longmax;
 				}
 				value->l = (long)d;
@@ -570,13 +632,17 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 			break;
 		}
 		if(*lastchar)
+		{
 			errormsg(SH_DICT,ERROR_warn(0),e_argtype,format);
+			pp->err = 1;
+		}
 		pp->nextarg++;
 	}
 	switch(format)
 	{
 	case 'Z':
 		fe->fmt = 'c';
+		fe->base = -1;
 		value->c = 0;
 		break;
 	case 'b':
@@ -589,6 +655,9 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 			}
 			value->s = stakptr(staktell());
 		}
+		break;
+	case 'H':
+		value->s = fmthtml(value->s);
 		break;
 	case 'q':
 		value->s = sh_fmtq(value->s);
@@ -734,11 +803,13 @@ static int getarg(Sfio_t *sp, void* v, Sffmt_t* fe)
 					if(d<longmin)
 					{
 						errormsg(SH_DICT,ERROR_warn(0),e_overflow,argp);
+						pp->err = 1;
 						d = longmin;
 					}
 					else if(d>longmax)
 					{
 						errormsg(SH_DICT,ERROR_warn(0),e_overflow,argp);
+						pp->err = 1;
 						d = longmax;
 					}
 					value->l = (long)d;
@@ -784,7 +855,10 @@ static int getarg(Sfio_t *sp, void* v, Sffmt_t* fe)
 			errormsg(SH_DICT,ERROR_exit(1),e_formspec,format);
 	}
 	if(*lastchar)
+	{
 		errormsg(SH_DICT,ERROR_warn(0),e_argtype,format);
+		pp->err = 1;
+	}
 	nextarg++;
 	return(1);
 }

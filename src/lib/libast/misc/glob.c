@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -597,9 +597,14 @@ glob(const char* pattern, int flags, int (*errfn)(const char*, int), register gl
 #if _UWIN /* hack for dll consistency -- drop in 20010101 */
 	if (!(gp->gl_flags & (GLOB_DISC|GLOB_ALTDIRFUNC)))
 	{
-		up->gl_pathc = gp->gl_pathc;
-		up->gl_pathv = gp->gl_pathv;
 		up->gl_flags = gp->gl_flags;
+		if (flags & GLOB_LIST)
+			up->gl_list = gp->gl_match;
+		else
+		{
+			up->gl_pathc = gp->gl_pathc;
+			up->gl_pathv = gp->gl_pathv;
+		}
 	}
 #endif
 	return gp->gl_error;

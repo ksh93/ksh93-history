@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -31,7 +31,7 @@
 **	of stacking streams, pool, and discipline.
 **	If you must change it, be gentle.
 **
-**	Written by Kiem-Phong Vo (12/07/90)
+**	Written by Kiem-Phong Vo.
 */
 #define MAX_SSIZE	((ssize_t)((~((size_t)0)) >> 1))
 
@@ -53,8 +53,9 @@ reg int		rc;	/* record separator */
 	uchar		*rbuf = NIL(uchar*);
 	ssize_t		rsize = 0;
 
-	if(!fr)
-		return 0;
+	SFMTXSTART(fr, (Sfoff_t)0);
+	if(fw)
+		SFMTXLOCK(fw);
 
 	for(n_move = 0; n != 0; )
 	{	/* get the streams into the right mode */
@@ -225,7 +226,7 @@ reg int		rc;	/* record separator */
 			memcpy((Void_t*)fr->data,(Void_t*)cp,w);
 			fr->endb = fr->data+w;
 			if((w = endb - (cp+w)) > 0)
-				(void)SFSK(fr,(Sfoff_t)(-w),1,fr->disc);
+				(void)SFSK(fr,(Sfoff_t)(-w),SEEK_CUR,fr->disc);
 		}
 
 		if(fw)
@@ -268,7 +269,9 @@ done:
 
 	SFOPEN(fr,0);
 	if(fw)
-		SFOPEN(fw,0);
+	{	SFOPEN(fw,0);
+		SFMTXUNLOCK(fw);
+	}
 
-	return n_move;
+	SFMTXRETURN(fr, n_move);
 }

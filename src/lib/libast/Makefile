@@ -10,7 +10,7 @@ ID = ast
 
 HOSTTYPE == "$(CC.HOSTTYPE)"
 
-CCFLAGS = -O -D_BLD_ast $(CC.DLL)
+CCFLAGS = $(CC.OPTIMIZE) -D_BLD_ast $(CC.DLL)
 
 .SOURCE : obsolete cdt comp dir disc hash man misc path port preroot \
 		regex sfio stdio string tm uwin vec vmalloc
@@ -24,13 +24,13 @@ __OBSOLETE__ == 20010101
 HEADERSRC = ast.h ast_dir.h ast_std.h ast_version.h \
 	ccode.h cdt.h debug.h error.h find.h ftw.h ftwalk.h fts.h \
 	fs3d.h getopt.h glob.h hash.h hashkey.h hashpart.h int.h ls.h \
-	magic.h mime.h mnt.h modecanon.h modex.h namval.h option.h \
+	magic.h mc.h mime.h mnt.h modecanon.h modex.h namval.h option.h \
 	proc.h re.h re_comp.h regex.h regexp.h sfio.h sfio_t.h sfdisc.h \
 	sfstr.h stack.h stak.h stk.h swap.h tar.h times.h tm.h \
-	tok.h vdb.h vecargs.h vmalloc.h wait.h wordexp.h \
+	tok.h usage.h vdb.h vecargs.h vmalloc.h wait.h wordexp.h \
 	bytesex.h endian.h
 
-HEADERGEN = align.h limits.h preroot.h sig.h \
+HEADERGEN = align.h iconv.h limits.h nl_types.h preroot.h sig.h \
 	$(ID)_botch.h $(ID)_ccode.h $(ID)_common.h $(ID)_fcntl.h \
 	$(ID)_fs.h $(ID)_hdr.h $(ID)_lib.h $(ID)_mode.h $(ID)_param.h \
 	$(ID)_time.h $(ID)_tty.h $(ID)_types.h $(ID)_unistd.h \
@@ -67,7 +67,9 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	fs3d.c ftwalk.c ftwflags.c fts.c setenviron.c \
 	optget.c optjoin.c strsort.c \
 	magic.c mime.c mimetype.c signal.c systrace.c \
-	error.c errorf.c errormsg.c liberror.c libevent.c \
+	error.c errorf.c errormsg.c errorx.c setlocale.c translate.c \
+	catopen.c iconv.c mc.c \
+	liberror.c libevent.c \
 	fmtbase.c fmtdev.c fmtelapsed.c fmterror.c fmtesc.c fmtfs.c \
 	fmtls.c fmtmatch.c fmtmode.c fmtnum.c fmtperm.c fmtre.c \
 	fmttime.c fmtuid.c fmtgid.c fmtsignal.c \
@@ -76,7 +78,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	sigdata.c sigcrit.c sigunblock.c \
 	proclib.h procopen.c procclose.c procrun.c procfree.c \
 	tmdate.c tmfix.c tmfmt.c tmform.c tmgoff.c \
-	tminit.c tmleap.c tmlex.c tmmake.c tmpoff.c \
+	tminit.c tmleap.c tmlex.c tmlocale.c tmmake.c tmpoff.c \
 	tmscan.c tmtime.c tmtype.c tmword.c tmzone.c \
 	vecargs.c vecfile.c vecfree.c vecload.c vecstring.c \
 	univlib.h univdata.c touch.c mnt.c \
@@ -85,7 +87,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	strdup.c strchr.c strrchr.c \
 	strtod.c strtol.c strtoll.c strtoul.c strtoull.c strton.c strtonll.c \
 	strcasecmp.c strncasecmp.c strerror.c \
-	setlocale.c mktemp.c tmpnam.c \
+	mktemp.c tmpnam.c \
 	execlp.c execve.c execvp.c execvpe.c \
 	spawnlp.c spawnve.c spawnveg.c spawnvp.c spawnvpe.c \
 	vfork.c killpg.c \
@@ -132,11 +134,12 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	sfsetbuf.c sfsetfd.c sfsize.c sfsk.c sfstack.c sfstrtod.c sfsync.c \
 	sfswap.c sftable.c sftell.c sftmp.c sfungetc.c sfvprintf.c \
 	sfvscanf.c sfwr.c sfwrite.c sfpurge.c sfraise.c \
+	sfgetm.c sfmutex.c sfputm.c \
 	_sfclrerr.c _sfeof.c _sferror.c _sffileno.c \
 	_sfstacked.c _sfvalue.c \
 	_sfgetc.c _sfgetl.c _sfgetl2.c _sfgetu.c _sfgetu2.c \
 	_sfdlen.c _sfllen.c _sfslen.c _sfulen.c \
-	_sfputc.c _sfputd.c _sfputl.c _sfputu.c \
+	_sfputc.c _sfputd.c _sfputl.c _sfputm.c _sfputu.c \
 	/* stdio */ \
 	clearerr.c fclose.c fdopen.c feof.c ferror.c fflush.c \
 	fgetc.c fgetpos.c fgets.c fileno.c fopen.c fprintf.c \
@@ -164,7 +167,8 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	err.c exp.c exp__E.c expm1.c gamma.c getpass.c lgamma.c log.c log1p.c \
 	log__L.c rand48.c random.c rcmd.c rint.c support.c \
 	/* misc */ \
-	atmain.C
+	atmain.C \
+	-liconv /* please OSF, this *has* to be wrong */
 
 /*
  * man is stdio.h problematic
@@ -192,7 +196,7 @@ if CC.HOSTTYPE == "sol*.*" || "$(-mam)" == "static*"
 sfrd.o sfvprintf.o : .CC.NOOPTIMIZE
 end
 if CC.HOSTTYPE == "win32.*" || "$(-mam)" == "static*"
-fastfind.o : .CC.NOOPTIMIZE
+fastfind.o mc.o : .CC.NOOPTIMIZE
 end
 
 :INSTALLDIR: conf
@@ -338,3 +342,12 @@ $(MINI)$$(CC.SUFFIX.SHARED) : $(MINI).sym $(ID)
 	rm -rf $(MINI).tmp
 
 end
+
+:MSGKEY: misc/magic.tab
+	$(SED) \
+		-e '/^#/d' \
+		-e '/[^	]*		*[^	]*		*[^	]*		*./!d' \
+		-e 's,^[^	]*		*[^	]*		*[^	]*		*\(.[^	]*\).*$,\1,' \
+		-e 's,[\\"],\\&,g' \
+		-e 's,.*,"&",' \
+		$(*)

@@ -1,0 +1,14 @@
+tst	def_errno_sys_nerr note{ sys_nerr declared in errno.h }end compile{
+	#include <errno.h>
+	int f()
+	{
+		return sys_nerr > 0;
+	}
+}end
+tst	def_errno_sys_errlist note{ sys_errlist declared in errno.h }end compile{
+	#include <errno.h>
+	int f()
+	{
+		return *sys_errlist[1] != 0;
+	}
+}end

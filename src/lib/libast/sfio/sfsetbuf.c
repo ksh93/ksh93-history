@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -49,7 +49,7 @@ _END_EXTERNS_
 **	kind of stream. The actual buffer size allocated is dependent
 **	on how much memory is available.
 **
-**	Written by Kiem-Phong Vo (06/27/90)
+**	Written by Kiem-Phong Vo.
 */
 
 #if !_sys_stat
@@ -73,15 +73,19 @@ reg size_t	size;	/* buffer size, -1 for default size */
 	reg uchar*	obuf;
 	reg Sfdisc_t*	disc;
 	reg ssize_t	osize, blksize;
-	reg int		oflags, justopen, init, okmmap, local;
+	reg int		oflags, init, okmmap, local;
 	Stat_t		st;
+
+	SFONCE();
+
+	SFMTXSTART(f,NIL(Void_t*));
 
 	GETLOCAL(f,local);
 
 	if(size == 0 && buf)
 	{	/* special case to get buffer info */
 		_Sfi = f->val = (f->bits&SF_MMAP) ? (f->endb-f->data) : f->size;
-		return (Void_t*)f->data;
+		SFMTXRETURN(f, (Void_t*)f->data);
 	}
 
 	/* cleanup actions already done, don't allow write buffering any more */
@@ -92,26 +96,25 @@ reg size_t	size;	/* buffer size, -1 for default size */
 
 	if((init = f->mode&SF_INIT) )
 	{	if(!f->pool && _sfsetpool(f) < 0)
-			return NIL(Void_t*);
+			SFMTXRETURN(f, NIL(Void_t*));
 	}
 	else if((f->mode&SF_RDWR) != SFMODE(f,local) && _sfmode(f,0,local) < 0)
-		return NIL(Void_t*);
+		SFMTXRETURN(f, NIL(Void_t*));
 
-	justopen = f->mode&SF_OPEN; f->mode &= ~SF_OPEN;
 	if(init)
 		f->mode = (f->mode&SF_RDWR)|SF_LOCK;
 	else
 	{	int	rv;
 
 		/* make sure there is no hidden read data */
-		if((f->bits&SF_PROCESS) && (f->flags&SF_READ) && (f->mode&SF_WRITE) &&
+		if(f->proc && (f->flags&SF_READ) && (f->mode&SF_WRITE) &&
 		   _sfmode(f,SF_READ,local) < 0)
-			return NIL(Void_t*);
+			SFMTXRETURN(f, NIL(Void_t*));
 
 		/* synchronize first */
 		SFLOCK(f,local); rv = SFSYNC(f); SFOPEN(f,local);
 		if(rv < 0)
-			return NIL(Void_t*);
+			SFMTXRETURN(f, NIL(Void_t*));
 
 		/* turn off the SF_SYNCED bit because buffer is changing */
 		f->mode &= ~SF_SYNCED;
@@ -160,13 +163,13 @@ reg size_t	size;	/* buffer size, -1 for default size */
 
 		/* if has discipline, set size by discipline if possible */
 		if(!_sys_stat || disc)
-		{	if((f->here = SFSK(f,(Sfoff_t)0,1,disc)) < 0)
+		{	if((f->here = SFSK(f,(Sfoff_t)0,SEEK_CUR,disc)) < 0)
 				goto unseekable;
 			else
 			{	Sfoff_t	e;
-				if((e = SFSK(f,(Sfoff_t)0,2,disc)) >= 0)
+				if((e = SFSK(f,(Sfoff_t)0,SEEK_END,disc)) >= 0)
 					f->extent = e > f->here ? e : f->here;
-				(void)SFSK(f,f->here,0,disc);
+				(void)SFSK(f,f->here,SEEK_SET,disc);
 				goto setbuf;
 			}
 		}
@@ -184,7 +187,7 @@ reg size_t	size;	/* buffer size, -1 for default size */
 			if(S_ISDIR(st.st_mode) || (int)st.st_size < SF_GRAIN)
 				okmmap = 0;
 			if(S_ISREG(st.st_mode) || S_ISDIR(st.st_mode))
-				f->here = justopen ? 0 : SFSK(f,(Sfoff_t)0,1,f->disc);
+				f->here = SFSK(f,(Sfoff_t)0,SEEK_CUR,f->disc);
 			else	f->here = -1;
 
 #if O_TEXT /* no memory mapping with O_TEXT because read()/write() alter data stream */
@@ -230,19 +233,20 @@ reg size_t	size;	/* buffer size, -1 for default size */
 					errno = oerrno;
 				}
 
-				/* initialize save input buffer for r+w streams */
-				if(!(f->bits&SF_PROCESS) && (f->bits&SF_BOTH) )
-					(void)_sfpopen(f,-1,-1);
+				/* initialize side buffer for r+w unseekable streams */
+				if(!f->proc && (f->bits&SF_BOTH) )
+					(void)_sfpopen(f,-1,-1,0);
 			}
 		}
 
 		/* set page size, this is also the desired default buffer size */
+		if(_Sfpage <= 0)
+		{
 #if _lib_getpagesize
-		if(_Sfpage <= 0)
-			_Sfpage = (size_t)getpagesize();
+			if((_Sfpage = (size_t)getpagesize()) <= 0)
 #endif
-		if(_Sfpage <= 0)
-			_Sfpage = SF_PAGE;
+				_Sfpage = SF_PAGE;
+		}
 	}
 
 #ifdef MAP_TYPE
@@ -255,7 +259,12 @@ reg size_t	size;	/* buffer size, -1 for default size */
 		if(!disc)
 		{	f->bits |= SF_MMAP;
 			if(size == (size_t)SF_UNBOUND)
-				size = _Sfpage * SF_NMAP;
+			{	if(blksize > _Sfpage)
+					size = blksize * SF_NMAP;
+				else	size = _Sfpage * SF_NMAP;
+				if(size > 256*1024)
+					size = 256*1024;
+			}
 		}
 	}
 #endif
@@ -289,10 +298,6 @@ setbuf:
 		}
 		if(!buf)
 		{	/* do allocation */
-#if _lib_memalign
-			if(!(f->flags&SF_STRING) && _Sfpage && (size % _Sfpage) == 0)
-				buf = (Void_t*)memalign(_Sfpage,size);
-#endif
 			while(!buf && size > 0)
 			{	if((buf = (Void_t*)malloc(size)) )
 					break;
@@ -335,5 +340,5 @@ setbuf:
 
 	SFOPEN(f,local);
 
-	return (Void_t*)obuf;
+	SFMTXRETURN(f, (Void_t*)obuf);
 }

@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -33,7 +33,7 @@
 **	If n > 0, even if the buffer is not empty, try a read to get as
 **		close to n as possible. n is reset to -1 if stack pops.
 **
-**	Written by Kiem-Phong Vo (06/27/90)
+**	Written by Kiem-Phong Vo
 */
 
 #if __STD_C
@@ -45,7 +45,9 @@ reg int	n;	/* see above */
 #endif
 {
 	reg ssize_t	r;
-	reg int		first, local, rcrv, rc;
+	reg int		first, local, rcrv, rc, justseek;
+
+	SFMTXSTART(f,-1);
 
 	GETLOCAL(f,local);
 
@@ -53,10 +55,12 @@ reg int	n;	/* see above */
 	rcrv = f->mode&(SF_RC|SF_RV|SF_LOCK);
 	rc = f->getr;
 
+	justseek = f->bits&SF_JUSTSEEK; f->bits &= ~SF_JUSTSEEK;
+
 	for(first = 1;; first = 0, (f->mode &= ~SF_LOCK) )
 	{	/* check mode */
 		if(SFMODE(f,local) != SF_READ && _sfmode(f,SF_READ,local) < 0)
-			return -1;
+			SFMTXRETURN(f,-1);
 		SFLOCK(f,local);
 
 		/* current extent of available data */
@@ -70,21 +74,9 @@ reg int	n;	/* see above */
 			/* try shifting left to make room for new data */
 			if(!(f->bits&SF_MMAP) && f->next > f->data &&
 			   n > (f->size - (f->endb-f->data)) )
-			{	uchar*	copy;
-
-				if(f->extent < 0 || f->size < SF_PAGE)
-					copy = f->next;
-				else	/* try keeping alignment */
-				{	Sfoff_t	a = ((f->here-r)/SF_PAGE)*SF_PAGE;
-					if(a < (f->here-r) &&
-					   a > (f->here - (f->endb-f->data)) )
-						copy = f->endb - (f->here-a);
-					else	break;
-				}
-
-				memcpy((char*)f->data, (char*)copy, f->endb-copy);
-				f->next = f->data + (f->next - copy);
-				f->endb = f->data + (f->endb - copy);
+			{	memcpy(f->data, f->next, r);
+				f->next = f->data;
+				f->endb = f->data + r;
 			}
 		}
 		else if(!(f->flags&SF_STRING) && !(f->bits&SF_MMAP) )
@@ -93,10 +85,13 @@ reg int	n;	/* see above */
 		if(f->bits&SF_MMAP)
 			r = n > 0 ? n : f->size;
 		else if(!(f->flags&SF_STRING) )
-		{	/* make sure we read no more than required */
-			r = f->size - (f->endb - f->data);
-			if(n > 0 && r > n && f->extent < 0 && (f->flags&SF_SHARE) )
-				r = n;
+		{	r = f->size - (f->endb - f->data); /* available buffer */
+			if(n > 0)
+			{	if(r > n && f->extent < 0 && (f->flags&SF_SHARE) )
+					r = n;	/* read only as much as requested */
+				else if(justseek && n <= f->iosz && f->iosz <= f->size)
+					r = f->iosz;	/* limit buffer filling */
+			}
 		}
 
 		/* SFRD takes care of discipline read and stack popping */
@@ -109,5 +104,8 @@ reg int	n;	/* see above */
 	}
 
 	SFOPEN(f,local);
-	return (n == 0) ? (r > 0 ? (int)(*f->next++) : EOF) : (int)r;
+
+	rcrv = (n == 0) ? (r > 0 ? (int)(*f->next++) : EOF) : (int)r;
+
+	SFMTXRETURN(f,rcrv);
 }

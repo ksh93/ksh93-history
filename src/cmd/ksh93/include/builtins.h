@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -30,14 +30,6 @@
 #include	"FEATURE/options"
 #include	"FEATURE/dynamic"
 #include	"shtable.h"
-
-#ifndef opt_arg
-#   define opt_arg      opt_info.arg
-#   define opt_num      opt_info.num
-#   define opt_char     opt_info.offset
-#   define opt_option   opt_info.option
-#   define opt_index    opt_info.index
-#endif
 
 #define	SYSLOGIN	(sh.bltin_cmds)
 #define SYSEXEC		(sh.bltin_cmds+1)
@@ -58,15 +50,15 @@
 #endif
 
 extern int b_alias(int, char*[],void*);
-extern int b_brk_cont(int, char*[],void*);
+extern int b_break(int, char*[],void*);
 extern int b_dot_cmd(int, char*[],void*);
 extern int b_exec(int, char*[],void*);
 extern int b_eval(int, char*[],void*);
-extern int b_ret_exit(int, char*[],void*);
-extern int b_login(int, char*[],void*);
+extern int b_return(int, char*[],void*);
+extern int B_login(int, char*[],void*);
 extern int b_true(int, char*[],void*);
 extern int b_false(int, char*[],void*);
-extern int b_read_export(int, char*[],void*);
+extern int b_readonly(int, char*[],void*);
 extern int b_set(int, char*[],void*);
 extern int b_shift(int, char*[],void*);
 extern int b_trap(int, char*[],void*);
@@ -79,7 +71,7 @@ extern int b_unalias(int, char*[],void*);
     extern int b_jobs(int, char*[],void*);
     extern int b_kill(int, char*[],void*);
 #   ifdef SIGTSTP
-	extern int b_bg_fg(int, char*[],void*);
+	extern int b_bg(int, char*[],void*);
 #   endif	/* SIGTSTP */
 #endif
 
@@ -97,7 +89,7 @@ extern int b_umask(int, char*[],void*);
     extern int b_universe(int, char*[],void*);
 #endif /* _cmd_universe */
 #ifdef SHOPT_FS_3D
-    extern int b_vpath_map(int, char*[],void*);
+    extern int b_vpath(int, char*[],void*);
 #endif /* SHOPT_FS_3D */
 extern int b_wait(int, char*[],void*);
 extern int b_whence(int, char*[],void*);
@@ -109,7 +101,7 @@ extern int b_pwd(int, char*[],void*);
 extern int b_sleep(int, char*[],void*);
 extern int b_test(int, char*[],void*);
 #ifndef SHOPT_ECHOPRINT
-    extern int b_echo(int, char*[],void*);
+    extern int B_echo(int, char*[],void*);
 #endif /* SHOPT_ECHOPRINT */
 
 #undef	extern
@@ -126,10 +118,8 @@ extern const char	e_nosupport[];
 extern const char	e_badbase[];
 extern const char	e_overlimit[];
 
-extern const char	e_needspath[];
 extern const char	e_eneedsarg[];
 extern const char	e_toodeep[];
-extern const char	e_badconf[];
 extern const char	e_badname[];
 extern const char	e_badwrite[];
 extern const char	e_badsyntax[];
@@ -169,8 +159,9 @@ extern const char sh_optexec[];
 extern const char sh_optexit[];
 extern const char sh_optexport[];
 extern const char sh_optgetopts[];
-extern const char sh_optgetconf[];
-extern const char sh_optjoblist[];
+extern const char sh_optbg[];
+extern const char sh_optdisown[];
+extern const char sh_optfg[];
 extern const char sh_opthist[];
 extern const char sh_optjobs[];
 extern const char sh_optkill[];

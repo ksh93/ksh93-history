@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -28,7 +28,7 @@
 
 /*	Invoke event handlers for a stream
 **
-**	Written by Kiem-Phong Vo (05/21/96)
+**	Written by Kiem-Phong Vo.
 */
 #if __STD_C
 int sfraise(Sfio_t* f, int type, Void_t* data)
@@ -42,13 +42,15 @@ Void_t*	data;	/* associated data	*/
 	reg Sfdisc_t	*disc, *next, *d;
 	reg int		local, rv;
 
+	SFMTXSTART(f, -1);
+
 	GETLOCAL(f,local);
 	if(!SFKILLED(f) &&
 	   !(local &&
 	     (type == SF_NEW || type == SF_CLOSE ||
 	      type == SF_FINAL || type == SF_ATEXIT)) &&
 	   SFMODE(f,local) != (f->mode&SF_RDWR) && _sfmode(f,0,local) < 0)
-		return -1;
+		SFMTXRETURN(f, -1);
 	SFLOCK(f,local);
 
 	for(disc = f->disc; disc; )
@@ -57,7 +59,7 @@ Void_t*	data;	/* associated data	*/
 		if(disc->exceptf)
 		{	SFOPEN(f,0);
 			if((rv = (*disc->exceptf)(f,type,data,disc)) != 0 )
-				return rv;
+				SFMTXRETURN(f, rv);
 			SFLOCK(f,0);
 		}
 
@@ -72,5 +74,5 @@ Void_t*	data;	/* associated data	*/
 	}
 
 	SFOPEN(f,local);
-	return 0;
+	SFMTXRETURN(f, 0);
 }

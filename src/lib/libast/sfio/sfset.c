@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -28,7 +28,7 @@
 
 /*	Set some control flags or file descript for the stream
 **
-**	Written by Kiem-Phong Vo (07/16/90)
+**	Written by Kiem-Phong Vo.
 */
 
 #if __STD_C
@@ -42,14 +42,16 @@ reg int		set;
 {
 	reg int	oflags;
 
+	SFMTXSTART(f,0);
+
 	if(flags == 0 && set == 0)
-		return (f->flags&SF_FLAGS);
+		SFMTXRETURN(f, (f->flags&SF_FLAGS));
 
 	if((oflags = (f->mode&SF_RDWR)) != (int)f->mode && _sfmode(f,oflags,0) < 0)
-		return 0;
+		SFMTXRETURN(f, 0);
 
 	if(flags == 0)
-		return (f->flags&SF_FLAGS);
+		SFMTXRETURN(f, (f->flags&SF_FLAGS));
 
 	SFLOCK(f,0);
 
@@ -57,17 +59,6 @@ reg int		set;
 	oflags = f->flags;
 	if(!(f->bits&SF_BOTH) || (flags&SF_RDWR) == SF_RDWR )
 		flags &= ~SF_RDWR;
-
-	/* make sure that mapped area has the right mode */
-#ifdef MAP_TYPE
-	if(f->data && (f->bits&SF_MMAP) && (flags&SF_BUFCONST) &&
-	   ((set && !(f->flags&SF_BUFCONST)) || (!set && (f->flags&SF_BUFCONST)) ) )
-	{	f->here -= f->endb-f->next;
-		SFSK(f,f->here,0,f->disc);
-		SFMUNMAP(f,f->data,f->endb-f->data);
-		f->endb = f->endr = f->endw = f->next = f->data = NIL(uchar*);
-	}
-#endif
 
 	/* set the flag */
 	if(set)
@@ -97,6 +88,10 @@ reg int		set;
 	if(!(f->flags&SF_SHARE) || f->extent < 0)
 		f->flags &= ~SF_PUBLIC;
 
+	/* so that SF_LINE will never be turned off by sfio */
+	if((flags&SF_LINE) && set)
+		f->bits |= SF_KEEPLINE;
+
 	SFOPEN(f,0);
-	return (oflags&SF_FLAGS);
+	SFMTXRETURN(f, (oflags&SF_FLAGS));
 }

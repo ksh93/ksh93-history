@@ -1,0 +1,5 @@
+: sgi.mips3-o32 cc wrapper that generates mips3 o32 binaries
+
+# @(#)cc.sgi.mips3-o32 (AT&T Labs Research) 1999-08-11
+
+/usr/bin/cc -o32 -mips3 -G0 -OPT:Olimit=0 -Wl,-woff,15 -Wl,-woff,84 -Wl,-woff,85 -Wl,-woff,134 -woff 1685,1048,1155,1171,1184,1209,1343,3169,3170,3433 "$@"

@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -30,7 +30,7 @@
 **	The argument flags defines the type of stream and the scheme
 **	of buffering.
 **
-**	Written by Kiem-Phong Vo (06/27/90)
+**	Written by Kiem-Phong Vo.
 */
 
 #if __STD_C
@@ -47,13 +47,19 @@ int	flags;	/* type of file stream */
 	reg Sfio_t*	f;
 	reg int		sflags;
 
+	SFONCE();	/* initialize mutexes */
+
 	if(!(flags&SF_RDWR))
 		return NIL(Sfio_t*);
 
 	sflags = 0;
 	if((f = oldf) )
 	{	if(flags&SF_EOF)
+		{	if(f != sfstdin && f != sfstdout && f != sfstderr)
+				f->mutex = NIL(Vtmutex_t*);
+			SFCLEAR(f, f->mutex);
 			oldf = NIL(Sfio_t*);
+		}
 		else if(f->mode&SF_AVAIL)
 		{	/* only allow SF_STATIC to be already closed */
 			if(!(f->flags&SF_STATIC) )
@@ -63,11 +69,12 @@ int	flags;	/* type of file stream */
 		}
 		else
 		{	/* reopening an open stream, close it first */
-			if((f->mode&SF_RDWR) != f->mode && _sfmode(f,0,0) < 0)
-				return NIL(Sfio_t*);
 			sflags = f->flags;
-			if(SFCLOSE(f) < 0)
+
+			if(((f->mode&SF_RDWR) != f->mode && _sfmode(f,0,0) < 0) ||
+			   SFCLOSE(f) < 0 )
 				return NIL(Sfio_t*);
+
 			if(f->data && ((flags&SF_STRING) || size != (size_t)SF_UNBOUND) )
 			{	if(sflags&SF_MALLOC)
 					free((Void_t*)f->data);
@@ -82,17 +89,25 @@ int	flags;	/* type of file stream */
 	{	/* reuse a standard stream structure if possible */
 		if(!(flags&SF_STRING) && file >= 0 && file <= 2)
 		{	f = file == 0 ? sfstdin : file == 1 ? sfstdout : sfstderr;
-			if(!(f->mode&SF_AVAIL) )
-				f = NIL(Sfio_t*);
-			else	sflags = f->flags;
+			if(f)
+			{	if(f->mode&SF_AVAIL)
+				{	sflags = f->flags;
+					SFCLEAR(f, f->mutex);
+				}
+				else	f = NIL(Sfio_t*);
+			}
 		}
 
-		if(!f && !SFALLOC(f))	/* make a new one */
-			return NIL(Sfio_t*);
+		if(!f)
+		{	if(!(f = (Sfio_t*)malloc(sizeof(Sfio_t))) )
+				return NIL(Sfio_t*);
+			SFCLEAR(f, NIL(Vtmutex_t*));
+		}
 	}
 
-	if(!oldf)
-		SFCLEAR(f);
+	/* create a mutex */
+	if(!f->mutex)
+		f->mutex = vtmtxopen(NIL(Vtmutex_t*), VT_INIT);
 
 	/* stream type */
 	f->mode = (flags&SF_READ) ? SF_READ : SF_WRITE;
@@ -102,7 +117,10 @@ int	flags;	/* type of file stream */
 	f->here = f->extent = 0;
 	f->getr = f->tiny[0] = 0;
 
-	f->mode |= SF_INIT | (flags&SF_OPEN);
+	if(f->flags&SF_LINE)
+		f->bits |= SF_KEEPLINE;
+
+	f->mode |= SF_INIT;
 	if(size != (size_t)SF_UNBOUND)
 	{	f->size = size;
 		f->data = size <= 0 ? NIL(uchar*) : (uchar*)buf;

@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -848,6 +848,19 @@ static char *execs(const char *ap,const char *arg0,register char **argv, struct 
 						}
 						stakputc(0);
 						*dp->envp-- = stakptr(offset);
+						if (pp)
+						{
+							char*	s;
+							char*	v = nv_name(vp);
+							int	n = strlen(v);
+							char**	xp = dp->envp + 2;
+							while (s = *xp++)
+								if (strneq(s, v, n) && s[n] == '=')
+								{
+									*--xp = stakptr(offset);
+									break;
+								}
+						}
 					}
 					break;
 				}
@@ -920,8 +933,8 @@ static char *execs(const char *ap,const char *arg0,register char **argv, struct 
 #endif /* ENAMETOOLONG */
 #ifndef SHOPT_SUID_EXEC
 	    case EPERM:
-		dp->exec_err = errno;
 #endif
+		dp->exec_err = errno;
 	    case ENOTDIR:
 	    case ENOENT:
 	    case EINTR:

@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -28,7 +28,7 @@
 
 /*	Read formated data from a stream
 **
-**	Written by Kiem-Phong Vo (06/27/90)
+**	Written by Kiem-Phong Vo.
 */
 
 #if __STD_C
@@ -71,8 +71,9 @@ va_list	args;
 		return -1;
 
 	/* make a fake stream */
-	SFCLEAR(&f);
+	SFCLEAR(&f,NIL(Vtmutex_t*));
 	f.flags = SF_STRING|SF_READ;
+	f.bits = SF_PRIVATE;
 	f.mode = SF_READ;
 	f.size = strlen((char*)s);
 	f.data = f.next = f.endw = (uchar*)s;

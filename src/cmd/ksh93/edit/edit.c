@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -756,60 +756,62 @@ static int putstack(Edit_t *ep,char string[], register int nbyte, int type)
 {
 	register int c;
 #ifdef SHOPT_MULTIBYTE
-	register int max,last;
-	last = max = nbyte;
-	nbyte = 0;
-	while (nbyte < max)
+	char *endp, *p=string;
+	int size, offset = ep->e_lookahead + nbyte;
+	wchar_t widechar;
+	endp = &p[nbyte];
+	do
 	{
-		c = string[nbyte++] & STRIP;
-	next:
-		if(ep->e_cursize-- > 0)
+		c = (int)((*p) & STRIP);
+		if(c< 0x80)
 		{
-			ep->e_curchar = (ep->e_curchar<<7) | (c&~HIGHBIT);
-			if(ep->e_cursize==0)
-			{
-				c = ep->e_curchar;
-				goto gotit;
-			}
-			else if(nbyte>=max)
-				return(0);
-			continue;
-		}
-		else if(ep->e_curchar = echarset(c))
-		{
-			ep->e_cursize = in_csize(ep->e_curchar);
-			if(ep->e_curchar != 1)
-				c = 0;
-			ep->e_curchar <<= 7*(ESS_MAXCHAR-ep->e_cursize);
-			if(c)
-				goto next;
-			else if(nbyte>=max)
-				return(0);
-			continue;
-		}
-		else if(type)
-			c = -c;
-	gotit:
-		ep->e_lbuf[ep->e_lookahead+ (--last)] = c;
+			if (type)
+				c = -c;
 #   ifndef CBREAK
-		if( c == '\0' )
-		{
-			/*** user break key ***/
-			ep->e_lookahead = 0;
+			if(c == '\0')
+			{
+				/*** user break key ***/
+				ep->e_lookahead = 0;
 #	ifdef KSHELL
-			sh_fault(SIGINT);
-			siglongjmp(ep->e_env, UINTR);
-#	endif	/* KSHELL */
-		}
+				sh_fault(SIGINT);
+				siglongjmp(ep->e_env, UINTR);
+#	endif   /* KSHELL */
+			}
 #   endif /* CBREAK */
+
+		}
+		else
+		{
+		again:
+			if((size = mbtowc(&widechar, p, (endp - p))) >0)
+			{
+				c = (int)widechar;
+				p += (size - 1);  /* more increment below */
+			}
+#ifdef EILSEQ
+			else if(errno == EILSEQ)
+				errno = 0;
+#endif
+			else if((endp-p) < MB_CUR_MAX)
+			{
+				if (ed_read(ep->e_fd,endp, 1) == 1)
+				{
+					endp++;
+					goto again;
+				}
+			}
+		}
+		ep->e_lbuf[--offset] = c;
+		p++;
 	}
+	while (p < endp);
 	/* shift lookahead buffer if necessary */
-	if(last)
+	if(offset -= ep->e_lookahead)
 	{
-		for(nbyte=last;nbyte < max;nbyte++)
-			ep->e_lbuf[ep->e_lookahead+nbyte-last] = ep->e_lbuf[ep->e_lookahead+nbyte];
+		for(size=offset;size < nbyte;size++)
+			ep->e_lbuf[ep->e_lookahead+size-offset] = ep->e_lbuf[ep->e_lookahead+size];
 	}
-	ep->e_lookahead += max-last;
+	ep->e_lookahead += nbyte-offset;
 #else
 	while (nbyte > 0)
 	{
@@ -916,25 +918,26 @@ void ed_ungetchar(Edit_t *ep,register int c)
 
 void	ed_putchar(register Edit_t *ep,register int c)
 {
+	char buf[MB_LEN_MAX];
 	register char *dp = ep->e_outptr;
+	register int i,size=1;
+	buf[0] = c;
 #ifdef SHOPT_MULTIBYTE
-	register int d;
 	/* check for place holder */
 	if(c == MARKER)
 		return;
-	if(d = icharset(c))
+	if((size = wctomb(buf, (wchar_t)c)) > 1)
 	{
-		if(d == 2)
-			*dp++ = ESS2;
-		else if(d == 3)
-			*dp++ = ESS3;
-		d = in_csize(d);
-		while(--d>0)
-			*dp++ = HIGHBIT|(c>>(7*d));
-		c |= HIGHBIT;
+		for (i = 0; i < (size-1); i++)
+			*dp++ = buf[i];
+	}
+	else
+	{
+		buf[0] = c;
+		size = 1;
 	}
 #endif	/* SHOPT_MULTIBYTE */
-	if (c == '_')
+	if (buf[0] == '_' && size==1)
 	{
 		*dp++ = ' ';
 		*dp++ = '\b';
@@ -958,18 +961,19 @@ ed_virt_to_phys(Edit_t *ep,genchar *virt,genchar *phys,int cur,int voff,int poff
 	register int c;
 	genchar *curp = sp + cur;
 	genchar *dpmax = phys+MAXLINE;
-	int r;
-#ifdef SHOPT_MULTIBYTE
-	int d;
-#endif /* SHOPT_MULTIBYTE */
+	int d, r;
 	sp += voff;
 	dp += poff;
 	for(r=poff;c= *sp;sp++)
 	{
 		if(curp == sp)
 			r = dp - phys;
+#ifdef _lib_wcwidth
+		d = wcwidth((wint_t)c);
+#else
+		d = (is_print(c)?1:-1);
+#endif
 #ifdef SHOPT_MULTIBYTE
-		d = out_csize(icharset(c));
 		if(d>1)
 		{
 			/* multiple width character put in place holders */
@@ -983,7 +987,7 @@ ed_virt_to_phys(Edit_t *ep,genchar *virt,genchar *phys,int cur,int voff,int poff
 		}
 		else
 #endif	/* SHOPT_MULTIBYTE */
-		if(!is_print(c))
+		if(d<0)
 		{
 			if(c=='\t')
 			{
@@ -1022,37 +1026,34 @@ ed_virt_to_phys(Edit_t *ep,genchar *virt,genchar *phys,int cur,int voff,int poff
 int	ed_internal(const char *src, genchar *dest)
 {
 	register const unsigned char *cp = (unsigned char *)src;
-	register int c;
-	register genchar *dp = dest;
-	register int d;
-	register int size;
+	register int c, size, remainder;
+	register wchar_t *dp = (wchar_t*)dest;
 	if((unsigned char*)dest == cp)
 	{
 		genchar buffer[MAXLINE];
 		c = ed_internal(src,buffer);
-		ed_gencpy(dp,buffer);
+		ed_gencpy((genchar*)dp,buffer);
 		return(c);
 	}
-	while(c = *cp++)
+	remainder = strlen(src);
+	while(remainder>0)
 	{
-		if(size = echarset(c))
+		size = mbtowc(dp, (const char *)cp, remainder);
+		if (size <= 0)
 		{
-			d = (size==1?c:0);
-			c = size;
-			size = in_csize(c);
-			c <<= 7*(ESS_MAXCHAR-size);
-			if(d)
-			{
-				size--;
-				c = (c<<7) | (d&~HIGHBIT);
-			}
-			while(size-- >0)
-				c = (c<<7) | ((*cp++)&~HIGHBIT);
+			/*
+			 * got a bogus character; just copy it over
+			 * and continue.
+			 */
+			*dp = *cp;
+			size = 1;
 		}
-		*dp++ = c;
+		dp++;
+		remainder -= size;
+		cp += size;
 	}
 	*dp = 0;
-	return(dp-dest);
+	return(dp-(wchar_t*)dest);
 }
 
 /*
@@ -1063,31 +1064,31 @@ int	ed_internal(const char *src, genchar *dest)
 
 int	ed_external(const genchar *src, char *dest)
 {
-	register int c;
+	register genchar wc;
+	register int c,size;
 	register char *dp = dest;
-	register int d;
 	char *dpmax = dp+sizeof(genchar)*MAXLINE-2;
 	if((char*)src == dp)
 	{
 		char buffer[MAXLINE*sizeof(genchar)];
 		c = ed_external(src,buffer);
+
+#ifdef _lib_wcscpy
+		wcscpy((wchar_t *)dest,(const wchar_t *)buffer);
+#else
 		strcpy(dest,buffer);
+#endif
 		return(c);
 	}
-	while((c = *src++) && dp<dpmax)
+	while((wc = *src++) && dp<dpmax)
 	{
-		if(d = icharset(c))
+		if((size = wctomb(dp, wc)) < 0)
 		{
-			if(d == 2)
-				*dp++ = ESS2;
-			else if(d == 3)
-				*dp++ = ESS3;
-			d = in_csize(d);
-			while(--d>0)
-				*dp++ = HIGHBIT|(c>>(7*d));
-			c |= HIGHBIT;
+			/* copy the character as is */
+			size = 1;
+			*dp = wc;
 		}
-		*dp++ = c;
+		dp += size;
 	}
 	*dp = 0;
 	return(dp-dest);

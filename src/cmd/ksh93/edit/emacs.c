@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -203,7 +203,7 @@ ed_emacsread(int fd,char *buff,int scend)
 		location.hist_command =  -5;
 	}
 #if KSHELL && (2*CHARSIZE*MAXLINE)<IOBSIZE
-	kstack = buff + MAXLINE*sizeof(genchar);
+	kstack = (genchar*)buff + MAXLINE*sizeof(genchar);
 #else
 	if(kstack==0)
 	{

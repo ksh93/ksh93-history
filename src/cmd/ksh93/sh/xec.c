@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -402,7 +402,8 @@ sh_exec(register const union anynode *t, int flags)
 							scope++;
 							nv_scope(argp);
 						}
-						opt_index = opt_char = 0;
+						opt_info.index = opt_info.offset = 0;
+						opt_info.disc = 0;
 						error_info.id = *com;
 						sh.exitval = 0;
 						if(!(context=nv_context(np)))
@@ -1037,14 +1038,14 @@ sh_exec(register const union anynode *t, int flags)
 #endif	/* timeofday */
 			if(t->par.partre)
 			{
-				sfputr(sfstderr,e_real,'\t');
+				sfputr(sfstderr,sh_translate(e_real),'\t');
 				p_time(sfstderr,at,'\n');
 			}
-			sfputr(sfstderr,e_user,'\t');
+			sfputr(sfstderr,sh_translate(e_user),'\t');
 			at = after.tms_utime - before.tms_utime;
 			at += after.tms_cutime - before.tms_cutime;
 			p_time(sfstderr,at,'\n');
-			sfputr(sfstderr,e_sys,'\t');
+			sfputr(sfstderr,sh_translate(e_sys),'\t');
 			at = after.tms_stime - before.tms_stime;
 			at += after.tms_cstime - before.tms_cstime;
 			p_time(sfstderr,at,'\n');
@@ -1633,10 +1634,14 @@ static void sh_funct(Namval_t *np,int argn, char *argv[],struct argnod *envlist,
 	struct funenv fun;
 	if(nv_isattr(np,NV_FPOSIX))
 	{
+		char *save;
 		sh.posix_fun = np;
-		opt_index = opt_char = 0;
+		opt_info.index = opt_info.offset = 0;
 		error_info.errors = 0;
+		save = argv[-1];
+		argv[-1] = 0;
 		b_dot_cmd(argn+1,argv-1,&sh);
+		argv[-1] = save;
 		return;
 	}
 	fun.env = envlist;
@@ -1681,7 +1686,8 @@ int _sh_fun(Namval_t *np, Namval_t *nq, char *argv[])
 			void *context = nv_context(np);
 			errorpush(&buff.err,0);
 			error_info.id = argv[0];
-			opt_index = opt_char = 0;
+			opt_info.index = opt_info.offset = 0;
+			opt_info.disc = 0;
 			sh.exitval = 0;
 			if(!context)
 				context = (void*)&sh;
@@ -2108,7 +2114,7 @@ static pid_t sh_ntfork(const union anynode *t,char *argv[],int *jobid,int flag)
 		nv_unscope();
 	if(t->com.comio)
 		sh_iorestore(buff.topfd);
-	else if(jmpval>SH_JMPCMD)
+	if(jmpval>SH_JMPCMD)
 		siglongjmp(*sh.jmplist,jmpval);
 	if(spawnpid>0)
 	{

@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -26,14 +26,22 @@
 ***************************************************************/
 #include	"sfhdr.h"
 
-#undef sfgetu
+/*
+ * for backwards compatibility with pre-threaded sfgetl() inline
+ */
 
+#ifdef __EXPORT__
+#define extern	__EXPORT__
+#endif
+
+extern
 #if __STD_C
-Sfulong_t sfgetu(reg Sfio_t* f)
+Sfulong_t _sfgetu(reg Sfio_t* f)
 #else
-Sfulong_t sfgetu(f)
+Sfulong_t _sfgetu(f)
 reg Sfio_t*	f;
 #endif
 {
-	return __sf_getu(f);
+	sfungetc(f, (unsigned char)_SF_(f)->val);
+	return sfgetu(f);
 }

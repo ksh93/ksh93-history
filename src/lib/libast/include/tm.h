@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -147,6 +147,7 @@ extern int		tmgoff(const char*, char**, int);
 extern void		tminit(Tm_zone_t*);
 extern time_t		tmleap(time_t*);
 extern int		tmlex(const char*, char**, char**, int, char**, int);
+extern char*		tmlocale(void);
 extern Tm_t*		tmmake(time_t*);
 extern char*		tmpoff(char*, const char*, int, int);
 extern time_t		tmscan(const char*, char**, const char*, char**, time_t*, long);

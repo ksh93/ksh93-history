@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -157,10 +157,10 @@ static int whence(Shell_t *shp,char **argv, register int flags)
 			if(flags&V_FLAG)
 			{
 				if(nv_isattr(np,NV_EXPORT))
-					msg = is_xalias;
+					msg = sh_translate(is_xalias);
 				else
-					msg = is_alias;
-				sfprintf(sfstdout,sh_translate(msg),name);
+					msg = sh_translate(is_alias);
+				sfprintf(sfstdout,msg,name);
 			}
 			sfputr(sfstdout,sh_fmtq(cp),'\n');
 			if(!aflag)
@@ -181,16 +181,16 @@ static int whence(Shell_t *shp,char **argv, register int flags)
 				{
 					if(!nv_isattr(np,NV_FUNCTION))
 						goto search;
-					cp = is_ufunction;
+					cp = sh_translate(is_ufunction);
 				}
 				else if(is_abuiltin(np))
-					cp = is_builtin;
+					cp = sh_translate(is_builtin);
 				else if(nv_isattr(np,NV_EXPORT))
-					cp = is_xfunction;
+					cp = sh_translate(is_xfunction);
 				else
-					cp = is_function;
+					cp = sh_translate(is_function);
 			}
-			sfprintf(sfstdout,"%s%s\n",name,sh_translate(cp));
+			sfprintf(sfstdout,"%s%s\n",name,cp);
 			if(!aflag)
 				continue;
 			cp = 0;
@@ -220,13 +220,13 @@ static int whence(Shell_t *shp,char **argv, register int flags)
 				sfputr(sfstdout,sh_fmtq(name),' ');
 				/* built-in version of program */
 				if(*cp=='/' && (np=nv_search(cp,shp->bltin_tree,0)))
-					msg = is_builtver;
+					msg = sh_translate(is_builtver);
 				/* tracked aliases next */
 				else if(!notrack && *name == '/')
-					msg = "is";
+					msg = sh_translate("is");
 				else
-					msg = is_talias;
-				sfputr(sfstdout,sh_translate(msg),' ');
+					msg = sh_translate(is_talias);
+				sfputr(sfstdout,msg,' ');
 			}
 			sfputr(sfstdout,sh_fmtq(cp),'\n');
 		}

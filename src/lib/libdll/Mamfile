@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 4.0 2000-02-14
+info mam static 00000 1994-07-17 make (AT&T Research) 4.0 2000-06-01
 setv INSTALLROOT ../../..
 setv PACKAGE_ast ${INSTALLROOT}
 setv PACKAGE_ast_INCLUDE ${PACKAGE_ast}/include/ast
@@ -140,10 +140,10 @@ make FEATURE/dll
 make features/dll
 done features/dll
 prev dll.req
-setv mam_libast ${mam_cc_L+-last}${mam_cc_L-${PACKAGE_ast_LIB}/libast.a}
+setv mam_libast `${mam_cc_L+cat} ${mam_cc_L-sed} ${mam_cc_L--es,-last,${INSTALLROOT}/lib/libast.a,} ${mam_cc_L--es,-last,${INSTALLROOT}/lib/libast.a,} ${INSTALLROOT}/lib/lib/ast 2>/dev/null || echo '' ${mam_cc_L+-last}${mam_cc_L-${PACKAGE_ast_LIB}/libast.a}`
 exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} ${mam_libast} : run features/dll
 done FEATURE/dll generated
-exec - cmp 2>/dev/null -s FEATURE/dll dlldefs.h || { rm -f dlldefs.h; cp FEATURE/dll dlldefs.h; }
+exec - cmp 2>/dev/null -s FEATURE/dll dlldefs.h || { rm -f dlldefs.h; silent test -d . || mkdir .; cp FEATURE/dll dlldefs.h; }
 done dlldefs.h generated
 prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done dlfcn.c
@@ -211,7 +211,7 @@ exec - fi
 done ${PACKAGE_ast_LIB} generated
 make ${PACKAGE_ast_LIB}/libdll.a archive
 prev libdll.a archive
-exec - mv ${PACKAGE_ast_LIB}/libdll.a ${PACKAGE_ast_LIB}/libdll.a.old 2>/dev/null || true; cp libdll.a ${PACKAGE_ast_LIB}/libdll.a
+exec - mv ${PACKAGE_ast_LIB}/libdll.a ${PACKAGE_ast_LIB}/libdll.a.old 2>/dev/null || true; test '' = 'libdll.a' || { cp libdll.a ${PACKAGE_ast_LIB}/libdll.a  		    		    ;}
 exec - (ranlib ${PACKAGE_ast_LIB}/libdll.a) >/dev/null 2>&1 || true
 done ${PACKAGE_ast_LIB}/libdll.a generated
 make ${PACKAGE_ast_LIB}/lib
@@ -240,7 +240,7 @@ exec - fi
 done ${PACKAGE_ast_LIB}/lib generated
 make ${PACKAGE_ast_LIB}/lib/dll
 prev dll.req
-exec - mv ${PACKAGE_ast_LIB}/lib/dll ${PACKAGE_ast_LIB}/lib/dll.old 2>/dev/null || true; cp dll.req ${PACKAGE_ast_LIB}/lib/dll
+exec - mv ${PACKAGE_ast_LIB}/lib/dll ${PACKAGE_ast_LIB}/lib/dll.old 2>/dev/null || true; test '' = 'dll.req' || { cp dll.req ${PACKAGE_ast_LIB}/lib/dll  		    		    ;}
 done ${PACKAGE_ast_LIB}/lib/dll generated
 make ${PACKAGE_ast_INCLUDE}
 exec - set -

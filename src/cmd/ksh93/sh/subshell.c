@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -47,6 +47,10 @@
 
 #undef nv_name
 
+#ifndef PIPE_BUF
+#   define PIPE_BUF	512
+#endif
+
 /*
  * The following structure is used for command substitution and (...)
  */
@@ -66,6 +70,7 @@ static struct subshell
 	const char	*shpwd;	/* saved pointer to sh.pwd */
 	int		mask;	/* present umask */
 	short		tmpfd;	/* saved tmp file descriptor */
+	short		pipefd;	/* read fd if pipe is created */
 	char		jobcontrol;
 	char		monitor;
 	unsigned char	fdstatus;
@@ -74,7 +79,8 @@ static struct subshell
 static int subenv;
 
 /*
- * This routine will turn the sftmp() file into a real /tmp file
+ * This routine will turn the sftmp() file into a real /tmp file or pipe
+ * if the /tmp file create fails
  */
 void	sh_subtmpfile(void)
 {
@@ -94,15 +100,34 @@ void	sh_subtmpfile(void)
 			errormsg(SH_DICT,ERROR_system(1),e_toomany);
 		/* popping a discipline forces a /tmp file create */
 		sfdisc(sfstdout,SF_POPDISC);
-		sh.fdstatus[fd=sffileno(sfstdout)] = IOREAD|IOWRITE;
-		sfsync(sfstdout);
-		if(fd==1)
-			fcntl(1,F_SETFD,0);
+		if((fd=sffileno(sfstdout))<0)
+		{
+			/* unable to create the /tmp file so use a pipe */
+			int fds[2];
+			Sfoff_t off;
+			sh_pipe(fds);
+			sp->pipefd = fds[0];
+			sh_fcntl(sp->pipefd,F_SETFD,FD_CLOEXEC);
+			/* write the data to the pipe */
+			if(off = sftell(sfstdout))
+				write(fds[1],sfsetbuf(sfstdout,(Void_t*)sfstdout,0),(size_t)off);
+			sfclose(sfstdout);
+			if((sh_fcntl(fds[1],F_DUPFD, 1)) != 1)
+				errormsg(SH_DICT,ERROR_system(1),e_file+4);
+			sh_close(fds[1]);
+		}
 		else
 		{
-			sfsetfd(sfstdout,1);
-			sh.fdstatus[1] = sh.fdstatus[fd];
-			sh.fdstatus[fd] = IOCLOSE;
+			sh.fdstatus[fd] = IOREAD|IOWRITE;
+			sfsync(sfstdout);
+			if(fd==1)
+				fcntl(1,F_SETFD,0);
+			else
+			{
+				sfsetfd(sfstdout,1);
+				sh.fdstatus[1] = sh.fdstatus[fd];
+				sh.fdstatus[fd] = IOCLOSE;
+			}
 		}
 		sh_iostream(1);
 		sfset(sfstdout,SF_SHARE|SF_PUBLIC,1);
@@ -197,6 +222,12 @@ static void nv_restore(struct subshell *sp)
 			mp->nvalue.cp = np->nvalue.cp;
 			mp->nvflag = np->nvflag;
 			np->nvfun = 0;
+			if(nv_isattr(mp,NV_EXPORT))
+			{
+				char *name = nv_name(mp);
+				if(*name=='_' && strcmp(name,"_AST_FEATURES")==0)
+					astconf(NiL, NiL, NiL);
+			}
 		}
 		np->nvalue.cp = 0;
 		np->nvflag = NV_DEFAULT;
@@ -258,6 +289,7 @@ Sfio_t *sh_subshell(union anynode *t, int flags, int comsub)
 	struct checkpt buff;
 	struct sh_scoped savst;
 	struct dolnod   *argsav=0;
+	memset((char*)sp, 0, sizeof(*sp));
 	sfsync(sh.outpool);
 	argsav = sh_arguse();
 	if(sh.curenv==0)
@@ -271,14 +303,9 @@ Sfio_t *sh_subshell(union anynode *t, int flags, int comsub)
 	sh.subshell++;
 	sp->prev = subshell_data;
 	subshell_data = sp;
-	sp->subpid = 0;
 	sp->errcontext = &buff.err;
 	sp->var = sh.var_tree;
 	sp->options = sh.options;
-	sp->pipe = 0;
-	sp->sfun = 0;
-	sp->salias = 0;
-	sp->svar = 0;
 	if(!sh.pwd)
 		path_pwd(0);
 	if(!comsub || !sh_isoption(SH_SUBSHARE))
@@ -313,8 +340,9 @@ Sfio_t *sh_subshell(union anynode *t, int flags, int comsub)
 			sp->saveout = sfswap(sfstdout,NIL(Sfio_t*));
 			sp->fdstatus = sh.fdstatus[1];
 			sp->tmpfd = -1;
+			sp->pipefd = -1;
 			/* use sftmp() file for standard output */
-			if(!(iop = sftmp(IOBSIZE+1)))
+			if(!(iop = sftmp(PIPE_BUF)))
 			{
 				sfswap(sp->saveout,sfstdout);
 				errormsg(SH_DICT,ERROR_system(1),e_tmpcreate);
@@ -351,23 +379,33 @@ Sfio_t *sh_subshell(union anynode *t, int flags, int comsub)
 		job.jobcontrol = sp->jobcontrol;
 		if(sp->monitor)
 			sh_onstate(SH_MONITOR);
-		/* move tmp file to iop and restore sfstdout */
-		iop = sfswap(sfstdout,NIL(Sfio_t*));
-		if(!iop)
+		if(sp->pipefd>=0)
 		{
-			/* maybe locked try again */
-			sfclrlock(sfstdout);
-			iop = sfswap(sfstdout,NIL(Sfio_t*));
+			/* sftmp() file has been returned into pipe */
+			iop = sh_iostream(sp->pipefd);
+			sfdisc(iop,SF_POPDISC);
+			sfclose(sfstdout);
 		}
-		if(iop && sffileno(iop)==1)
+		else
 		{
-			int fd=sfsetfd(iop,3);
-			if(fd<0)
-				errormsg(SH_DICT,ERROR_system(1),e_toomany);
-			sh.sftable[fd] = iop;
-			fcntl(fd,F_SETFD,FD_CLOEXEC);
-			sh.fdstatus[fd] = (sh.fdstatus[1]|IOCLEX);
-			sh.fdstatus[1] = IOCLOSE;
+			/* move tmp file to iop and restore sfstdout */
+			iop = sfswap(sfstdout,NIL(Sfio_t*));
+			if(!iop)
+			{
+				/* maybe locked try again */
+				sfclrlock(sfstdout);
+				iop = sfswap(sfstdout,NIL(Sfio_t*));
+			}
+			if(iop && sffileno(iop)==1)
+			{
+				int fd=sfsetfd(iop,3);
+				if(fd<0)
+					errormsg(SH_DICT,ERROR_system(1),e_toomany);
+				sh.sftable[fd] = iop;
+				fcntl(fd,F_SETFD,FD_CLOEXEC);
+				sh.fdstatus[fd] = (sh.fdstatus[1]|IOCLEX);
+				sh.fdstatus[1] = IOCLOSE;
+			}
 		}
 		sfswap(sp->saveout,sfstdout);
 		/*  check if standard output was preserved */

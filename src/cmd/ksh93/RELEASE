@@ -1,9 +1,40 @@
-00-10-28  --- Release ksh93i ---
-00-10-28  Most of the built-in commands and ksh itself are now
+
+00-05-09  --- Release ksh93j  ---
+00-05-09  Modified command substitution to avoid using /tmp files when
+          run on read-only file systems. 
+00-04-17  Modified printf to handle '%..Xc' and '%..Xs' options where X
+	  is not an alpha character.  Previous versions core dumped with this.
+00-04-10  Changes to multibyte editing code were made to use standard
+	  ISO C functions rather than methods devised before the standard.
+00-04-09  Add %H options to printf to output strings with <"'&\t> properly
+	  converted for use in HTML and XML documents.
+00-04-07  Modified getopts builtin to handle \f...\f in usage string
+	  by invoking specified function.
+00-04-04  Added self generating man pages for bg, fc, fg, disown, jobs,
+	  hist, let, ., and ulimit.
+00-03-30  The apppend operator += has been added and can be used
+	  for all assignments, strings, arrays, and compount variables.
+00-03-30  Code was modified in several places to support automatic
+	  generation of C locale dictionaries.
+00-03-28  A bug in which the set and trap commands invoked with --name
+	  type arguments would terminate the invoking script  has
+	  been fixed.
+00-03-27  A bug in which the library path variable was not updated  
+	  correcly on some systems as described in the 'g' point
+	  release has been fixed. 
+00-03-07  printf now returns a non-zero exit status when one of
+          its arguments cannot be converted to the given type. 
+00-03-05  The return value and error message for a command that
+          was found on the path but was not executable was set
+          incorrectly.
+00-03-05  A prototype for ioctl() was removed from the vi edit mode.
+
+00-01-28  --- Release ksh93i  ---
+00-01-28  Most of the built-in commands and ksh itself are now
           self documenting.  Running command --man will produce
           screen output.  Running command --html produces the
           man page in html format.
-00-10-28  The getopts builtin can process command description
+00-01-28  The getopts builtin can process command description
           strings to produce man pages.
 00-01-28  A bug in which a script could terminate when getopts
           encountered an error when invoked inside a function
@@ -15,7 +46,7 @@
 00-01-28  A bug in which the precision given as an argument
 	  to printf was not working has been fixed.
 
-99-03-31  --- Release ksh93h ---
+99-03-31  --- Release ksh93h  ---
 99-03-31  The PATH search algorithm has been modified to look
 	  for a file named .fpath in each bin directory and if
 	  found, to search for functions in this directory if
@@ -32,7 +63,7 @@
 99-03-31  A bug in shcomp for compilation of unary operators with [[...]]
 	  has been fixed.
 99-03-31  A bug in which the value of $? was changed when executing
-	  a keyboard trap has been fixed.
+	  a keyboard trap has been fixed. 
 99-03-31  The handling of SIGCHLD has been changed so that the
 	  trap is not triggered while executing trap commands
 	  to avoid recursive trap calls.
@@ -53,7 +84,7 @@
 	  a stream was repeatedly opened with exec and read from
 	  has been fixed.
 
-98-04-30  --- Release ksh93g ---
+98-04-30  --- Release ksh93g  ---
 98-04-30  The pipefail option has been added.  With pipefail
 	  enabled, a pipeline will not complete until all
 	  commands are complete, and the return value will
@@ -78,7 +109,7 @@
 	  evaluation has been fixed.
 98-04-30  A bug when a name reference with a shorter name than
           the variable it references was the subject of a compound
-	  assignment has been fixed.
+	  assignment has been fixed. 
 98-04-30  A bug which in which assignment to array variables in
 	  a subshell could effect the parent shell has been
 	  fixed.
@@ -93,7 +124,7 @@
 	  fixed.
 98-04-30  The default base when not specified with typeset -i is
 	  10 in accordance with the documentation.  Previously,
-	  the value was determined by the first assignment.
+	  the value was determined by the first assignment.   
 98-04-30  A parsing bug in which a # preceded alphanumeric
 	  characters inside a command substitution caused
 	  a syntax error to be reported has been fixed.
@@ -110,7 +141,7 @@
 98-04-30  When ksh is compiled on systems that do not use fork()
 	  current option settings where not propagated to sub-shells.
 
-97-06-30  == Release ksh93f ---
+97-06-30  --- Release ksh93f  ---
 97-06-30  Hostnames in addition to host addresses can be given in
 	  /dev/tcp/host/port virtual file names.
 97-06-30  File name completion and expansion now quotes special
@@ -166,7 +197,7 @@
           such as {foo\,bar,bam} to expand incorrectly have been fixed.
 
 
-96-07-31  --- Release ksh93e ---
+96-07-31  --- Release ksh93e  ---
 96-07-31  The math functions, atan2, hypot, fmod, and pow were added.
 96-07-31  When a shared library is loaded, if the function lib_init()
 	  is defined in the library, it is invoked the first time that
@@ -175,7 +206,7 @@
           has been revamped.
 96-07-31  Empty command substitutions of the form $() now work.
 	  whence -v foo now gives the correct result after calling
-	  builtin -d foo.
+	  builtin -d foo. 
 96-07-31  A bug in right to left arithmetic assignment for which
 	  the arithmetic expression (( y = x = 1.5 )) did not
 	  yield 1 for y when x was declared typeset -i was fixed.
@@ -227,7 +258,7 @@
 	  incorrectly created a local variable of the same name
 	  and applied the discipline to it.
 
-95-08-28  --- Release ksh93d ---
+95-08-28  --- Release ksh93d  ---
 95-08-28  The \ character was not handled correctly in replacement
 	  patterns with ${x/pattern/replace}.
 95-08-28  A bug with read in which the line did not end with
@@ -249,7 +280,7 @@
 95-08-28  The nv_scan() function can restrict the scope of a walk
           to the top scope.
 
-95-04-31  --- Release ksh93c ---
+95-04-31  --- Release ksh93c  ---
 95-04-31  The expansion of "$@" was incorrect when $1 was the null
 	  string.
 95-04-31  A bug which could incorrectly report a syntax error in
@@ -286,7 +317,7 @@
 95-04-31  Variables that were unset but had attributes such as readonly
 	  and export were not listed with readonly, export and typeset.
 95-04-31  Several problems with signals have been fixed.
-95-04-31  A bug which prevented ulimit -t from working has been fixed.
+95-04-31  A bug which prevented ulimit -t from working has been fixed. 
 	  Also, a bug in which failed ulimits could cause a core dump
 	  has also been fixed.
 95-04-31  A bug in expansion of the form ${name/#pattern/string} and
@@ -330,7 +361,7 @@
 95-04-31  The name-value library interface has undergone significant
           change for this revision.  See the new nval.3 man page.
 
-94-12-31  --- Release ksh93b ---
+94-12-31  --- Release ksh93b  ---
 94-12-31  Variables inside functions are now statically scoped.
           The previous behavior was never documented.
 94-12-31  If IFS contains two consecutive identical characters belonging
@@ -381,7 +412,7 @@
 	  been fixed.
 94-12-31  More signal names have been added for Solaris
 
-94-06-30  --- Release ksh93a ---
+94-06-30  --- Release ksh93a  ---
 94-06-30  An expansion bug which causes portions of a word after
 	  a $((...)) expansion that contains a nested $var expansion
 	  to be lost has been fixed.
@@ -398,7 +429,7 @@
 94-06-30  If foo is a function, and not a program, then command foo
 	  now reports that foo isn't found rather than invoking foo.
 94-06-30  The previous version incorrectly listed -A as an
-	  invocation option.  The -A option is only for set.
+	  invocation option.  The -A option is only for set. 
 94-06-30  A bug was fixed which caused ksh to loop when execution trace
 	  was enabled and the PS4 prompt required command substitution.
 94-06-30  A bug which could cause the job control switch character
@@ -433,3 +464,4 @@
 94-06-30  A bug which caused the shell to incorrectly parse
 	  $() command substitutions with nested case statements
 	  has been fixed.
+

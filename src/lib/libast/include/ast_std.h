@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -60,14 +60,6 @@
 #include <ast_lib.h>
 #include <getopt.h>	/* <stdlib.h> does this */
 
-#if _BLD_ast
-#define _BLD_cdt	1
-#define _BLD_sfio	1
-#if !_WIN32
-#define _BLD_vmalloc	1
-#endif
-#endif
-
 #if (__hppa || __mips == 2) && !defined(_NO_LARGEFILE64_SOURCE)
 #define	_NO_LARGEFILE64_SOURCE	1
 #endif
@@ -78,6 +70,7 @@
 #else
 #undef	_LARGEFILE64_SOURCE
 #undef	_typ_off64_t
+#undef	_typ_struct_dirent64
 #undef	_lib_creat64
 #undef	_lib_fstat64
 #undef	_lib_fstatvfs64
@@ -86,9 +79,18 @@
 #undef	_lib_lstat64
 #undef	_lib_mmap64
 #undef	_lib_open64
+#undef	_lib_readdir64
 #undef	_lib_stat64
 #undef	_lib_statvfs64
 #undef	_lib_truncate64
+#endif
+
+#if _BLD_ast
+#define _BLD_cdt	1
+#define _BLD_sfio	1
+#if !_WIN32
+#define _BLD_vmalloc	1
+#endif
 #endif
 
 #include <ast_hdr.h>
@@ -691,11 +693,16 @@ extern ssize_t		write(int, const void*, size_t);
 #define extern		__EXPORT__
 #endif
 
-#if !_WIN32
-
 /*
  * yes, we don't trust anyone's interpretation but our own
  */
+
+#undef	strerror
+#define strerror	_ast_strerror
+
+extern char*		strerror(int);
+
+#if !_WIN32
 
 #undef	confstr
 #define confstr		_ast_confstr
@@ -876,11 +883,42 @@ __STDPP__directive pragma pp:ignore "sysent.h"
 #endif
 
 #undef	setlocale
-extern char*		_ast_setlocale(int, const char*);
-#ifdef LC_ALL
 #define setlocale	_ast_setlocale
-#else
-#define setlocale(a,b)	_ast_setlocale(0,b)
+
+extern char*		setlocale(int, const char*);
+
+#define AST_LC_COLLATE	0
+#define AST_LC_CTYPE	1
+#define AST_LC_MESSAGES	2
+#define AST_LC_MONETARY	3
+#define AST_LC_NUMERIC	4
+#define AST_LC_TIME	5
+#define AST_LC_ALL	6
+
+#define AST_LC_debug		(1<<13)
+#define AST_LC_setlocale	(1<<14)
+#define AST_LC_translate	(1<<15)
+
+#ifndef LC_COLLATE
+#define LC_COLLATE	AST_LC_COLLATE
+#endif
+#ifndef LC_CTYPE
+#define LC_CTYPE	AST_LC_CTYPE
+#endif
+#ifndef LC_MESSAGES
+#define LC_MESSAGES	LC_ALL
+#endif
+#ifndef LC_MONETARY
+#define LC_MONETARY	AST_LC_MONETARY
+#endif
+#ifndef LC_NUMERIC
+#define LC_NUMERIC	AST_LC_NUMERIC
+#endif
+#ifndef LC_TIME
+#define LC_TIME		AST_LC_TIME
+#endif
+#ifndef LC_ALL
+#define LC_ALL		AST_LC_ALL
 #endif
 
 #undef	extern
@@ -891,13 +929,6 @@ extern char*		_ast_setlocale(int, const char*);
 #else
 #define strcoll		strcmp
 #endif
-
-#define LC_SET_COLLATE	(1<<0)
-#define LC_SET_CTYPE	(1<<1)
-#define LC_SET_MESSAGES	(1<<2)
-#define LC_SET_MONETARY	(1<<3)
-#define LC_SET_NUMERIC	(1<<4)
-#define LC_SET_TIME	(1<<5)
 
 typedef struct
 {

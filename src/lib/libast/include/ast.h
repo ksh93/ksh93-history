@@ -9,9 +9,9 @@
 *                                                              *
 *     http://www.research.att.com/sw/license/ast-open.html     *
 *                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
+*      If you have copied this software without agreeing       *
+*      to the terms of the license you are infringing on       *
+*         the license and copyright and are violating          *
 *             AT&T's intellectual property rights.             *
 *                                                              *
 *               This software was created by the               *
@@ -172,6 +172,7 @@ typedef struct
 #define NOT_USED(x)	NoP(x)
 
 typedef int (*Ast_confdisc_f)(const char*, const char*, const char*);
+typedef int (*Ast_conferror_f)(void*, void*, int, ...);
 typedef int (*Strcmp_context_f)(const char*, const char*, void*);
 typedef int (*Strcmp_f)(const char*, const char*);
 
@@ -179,6 +180,7 @@ typedef int (*Strcmp_f)(const char*, const char*);
 #define extern		__EXPORT__
 #endif
 
+extern char*		astgetconf(const char*, const char*, const char*, Ast_conferror_f);
 extern char*		astconf(const char*, const char*, const char*);
 extern Ast_confdisc_f	astconfdisc(Ast_confdisc_f);
 extern void		astconflist(Sfio_t*, const char*, int);
