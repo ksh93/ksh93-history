@@ -694,7 +694,11 @@ int sh_lex(void)
 			case S_ESC2:
 				/* \ inside '' */
 				if(endchar()=='$')
+				{
 					fcgetc(n);
+					if(n=='\n')
+						shp->inlineno++;
+				}
 				continue;
 			case S_GRAVE:
 				if(lexd.warn && (mode!=ST_QUOTE || endchar()!='`'))

@@ -106,6 +106,9 @@ va_list	args;		/* arg list if !argf	*/
 
 	SFMTXSTART(f,-1);
 
+	if(!form)
+		SFMTXRETURN(f, -1);
+
 	/* make sure stream is in write mode and buffer is not NULL */
 	if(f->mode != SF_WRITE && _sfmode(f,SF_WRITE,0) < 0)
 		SFMTXRETURN(f, -1);

@@ -30,13 +30,14 @@ case $-:$BASH_VERSION in
 esac
 
 command=package
-version=2001-01-01
+version=2001-02-02
 
 src="cmd contrib etc lib"
 use="/home /usr/common /exp /usr/local /usr/add-on /usr/addon /usr/tools /usr /opt"
 lib="/usr/local/lib /usr/local/shlib"
 ccs="/usr/kvm /usr/ccs/bin"
 org="gnu GNU"
+makefiles="Mamfile Nmakefile nmakefile Makefile makefile"
 
 admin_db=admin.db
 admin_env=admin.env
@@ -447,7 +448,7 @@ do	case $# in
 	verbose)verbose=1
 		;;
 	DEBUG)	DEBUG=1
-		PS4='+$LINENO+ '
+		PS4='+$LINENO:$SECONDS+ '
 		set -x
 		;;
 	help|HELP|html|man|--[?m]*)
@@ -1845,9 +1846,16 @@ PACKAGEBIN=$INSTALLROOT/lib/package
 abi=
 case $HOSTTYPE in
 sgi.mips[0-9]*)
-	if	test -d /lib32 -a -d /lib64
-	then	u=`echo $INSTALLROOT | sed -e 's,-[^-/]*$,,' -e 's,.$,,'`
-		for a in "n=2 v=" "n=3 v=N32" "n=4-n32 v=N32" "n=4 v=64"
+	x=rld
+	if	test -x /lib32/$x -o -x /lib64/$x
+	then	case $INSTALLROOT in
+		*/sgi.mips[0-9]*)
+			u=`echo $INSTALLROOT | sed -e 's,-[^-/]*$,,' -e 's,.$,,'`
+			;;
+		*)	u=
+			;;
+		esac
+		for a in "n=2 v= l=" "n=3 v=N32 l=lib32" "n=4-n32 v=N32 l=lib32" "n=4 v=64 l=lib64"
 		do	eval $a
 			case $v in
 			N32)	case $n:$HOSTTYPE in
@@ -1857,9 +1865,26 @@ sgi.mips[0-9]*)
 				esac
 				;;
 			esac
-			if	test -d $u$n
-			then	abi="$abi 'd=$u$n v=$v'"
-			fi
+			case $l in
+			?*)	if	test ! -x /$l/$x
+				then	continue
+				fi
+				;;
+			esac
+			case $u in
+			'')	case $HOSTTYPE in
+				sgi.mips$n|sgi.mips$n-*)
+					abi="$abi 'd=$INSTALLROOT v=$v'"
+					;;
+				*)	continue
+					;;
+				esac
+				;;
+			*)	if	test -d $u$n
+				then	abi="$abi 'd=$u$n v=$v'"
+				fi
+				;;
+			esac
 		done
 	fi
 	;;
@@ -2715,6 +2740,24 @@ package_verify() # sum
 	$exec $SUM -cp $1
 }
 
+make_recurse() # dir
+{
+	k=0
+	for j in $makefiles
+	do	if	view - $1/$j
+		then	k=1
+			break
+		fi
+	done
+	case $k in
+	0)	case $exec in
+		'')	echo :MAKE: > $1/Makefile || exit ;;
+		*)	$exec "echo :MAKE: > $1/Makefile" ;;
+		esac
+		;;
+	esac
+}
+
 case $action in
 
 admin)	checklicenses
@@ -3216,13 +3259,15 @@ make)	checklicenses
 	for i in bin fun include lib lib/package lib/package/gen src man man/man1 man/man3 man/man8
 	do	test -d $INSTALLROOT/$i || $exec mkdir $INSTALLROOT/$i || exit
 	done
+	make_recurse src
 	for d in $src
 	do	i=src/$d
-		if	test -d $PACKAGEROOT/$i
+		if	test -d $i
 		then	test -d $INSTALLROOT/$i || $exec mkdir $INSTALLROOT/$i || exit
+			make_recurse $i
 		fi
 		for i in src/$d/*
-		do	for j in Mamfile Nmakefile nmakefile Makefile makefile
+		do	for j in $makefiles
 			do	if	test -f $i/$j
 				then	test -d $INSTALLROOT/$i || $exec mkdir $INSTALLROOT/$i || exit
 					break

@@ -387,18 +387,12 @@ make ${INSTALLROOT}/bin/cc
 prev package
 make hello.c
 done hello.c
-make cc.ibm.risc
-done cc.ibm.risc
-make ldd.ibm.risc
-done ldd.ibm.risc
 make cc.darwin.ppc
 done cc.darwin.ppc
-make ldd.darwin.ppc
-done ldd.darwin.ppc
 make cc.hp.pa
 done cc.hp.pa
-make ld.hp.pa
-done ld.hp.pa
+make cc.ibm.risc
+done cc.ibm.risc
 make cc.mvs.390
 done cc.mvs.390
 make cc.next.i386
@@ -411,55 +405,37 @@ make cc.sco.i386
 done cc.sco.i386
 make cc.sgi.mips2
 done cc.sgi.mips2
-make ldd.sgi.mips2
-done ldd.sgi.mips2
 make cc.sgi.mips3
 done cc.sgi.mips3
-make ldd.sgi.mips3
-done ldd.sgi.mips3
 make cc.sgi.mips3-o32
 done cc.sgi.mips3-o32
 make cc.sgi.mips4
 done cc.sgi.mips4
-make ldd.sgi.mips4
-done ldd.sgi.mips4
 make cc.sgi.mips4-n32
 done cc.sgi.mips4-n32
-exec - set x cc.ibm.risc ldd.ibm.risc cc.darwin.ppc ldd.darwin.ppc cc.hp.pa ld.hp.pa cc.mvs.390 cc.next.i386 cc.next.m68k cc.osf.alpha cc.sco.i386 cc.sgi.mips2 ldd.sgi.mips2 cc.sgi.mips3 ldd.sgi.mips3 cc.sgi.mips3-o32 cc.sgi.mips4 ldd.sgi.mips4 cc.sgi.mips4-n32
+exec - set x cc.darwin.ppc cc.hp.pa cc.ibm.risc cc.mvs.390 cc.next.i386 cc.next.m68k cc.osf.alpha cc.sco.i386 cc.sgi.mips2 cc.sgi.mips3 cc.sgi.mips3-o32 cc.sgi.mips4 cc.sgi.mips4-n32
+exec - shift
 exec - while	:
 exec - do	case $# in
 exec - 	0)	break ;;
 exec - 	esac
 exec - 	cc=$1
 exec - 	shift
-exec - 	argv=$*
-exec - 	export cc argv
+exec - 	export cc
 exec - 	case $cc in
 exec - 	*cc.${_hosttype_=`package`})
 exec - 		test -f $cc &&
 exec - 		$cc -o hello.exe hello.c >/dev/null 2>&1 &&
 exec - 		hello.exe >/dev/null 2>&1 && {
 exec - 			case ${_hosttype_=`package`} in
-exec - 			*.mips*)$cc -version >/dev/null 2>&1 ||
-exec - 				break
+exec - 			*.mips*)$cc -version >/dev/null 2>&1 || {
+exec - 					: no ${_hosttype_=`package`} cc workaround needed
+exec - 					break
+exec - 				}
 exec - 				;;
 exec - 			esac
 exec - 			cmp -s $cc ${INSTALLROOT}/bin/cc ||
 exec - 			cp $cc ${INSTALLROOT}/bin/cc
-exec - 			for i in $argv
-exec - 			do	case $i in
-exec - 				*ld.${_hosttype_=`package`})
-exec - 					cmp -s $i ${INSTALLROOT}/bin/ld ||
-exec - 					cp $i ${INSTALLROOT}/bin/ld
-exec - 					;;
-exec - 				*ldd.${_hosttype_=`package`})
-exec - 					cmp -s $i ${INSTALLROOT}/bin/ldd ||
-exec - 					cp $i ${INSTALLROOT}/bin/ldd
-exec - 					;;
-exec - 				*)	break
-exec - 					;;
-exec - 				esac
-exec - 			done
 exec - 		} ||
 exec - 		: no ${_hosttype_=`package`} cc workaround needed
 exec - 		break
@@ -479,6 +455,62 @@ exec - 	fi
 exec - 	;;
 exec - esac
 done ${INSTALLROOT}/bin/cc generated
+make ${INSTALLROOT}/bin/ld
+prev package
+prev ${INSTALLROOT}/bin/cc
+make ld.hp.pa
+done ld.hp.pa
+exec - set x ld.hp.pa
+exec - while	:
+exec - do	case $# in
+exec - 	0)	break ;;
+exec - 	esac
+exec - 	ld=$1
+exec - 	shift
+exec - 	export ld
+exec - 	case $ld in
+exec - 	*ld.${_hosttype_=`package`})
+exec - 		if	test -f $ld -a -x ${INSTALLROOT}/bin/cc
+exec - 		then	cmp -s $ld ${INSTALLROOT}/bin/ld ||
+exec - 			cp $ld ${INSTALLROOT}/bin/ld
+exec - 		else	: no ${_hosttype_=`package`} ld workaround needed
+exec - 		fi
+exec - 		break
+exec - 	esac
+exec - done
+done ${INSTALLROOT}/bin/ld virtual
+make ${INSTALLROOT}/bin/ldd
+prev package
+prev ${INSTALLROOT}/bin/cc
+make ldd.darwin.ppc
+done ldd.darwin.ppc
+make ldd.ibm.risc
+done ldd.ibm.risc
+make ldd.sgi.mips2
+done ldd.sgi.mips2
+make ldd.sgi.mips3
+done ldd.sgi.mips3
+make ldd.sgi.mips4
+done ldd.sgi.mips4
+exec - set x ldd.darwin.ppc ldd.ibm.risc ldd.sgi.mips2 ldd.sgi.mips3 ldd.sgi.mips4
+exec - while	:
+exec - do	case $# in
+exec - 	0)	break ;;
+exec - 	esac
+exec - 	ldd=$1
+exec - 	shift
+exec - 	export ldd
+exec - 	case $ldd in
+exec - 	*ldd.${_hosttype_=`package`})
+exec - 		if	test -f $ldd -a -x ${INSTALLROOT}/bin/cc -a ! -x /usr/bin/ldd -a ! -x /bin/ldd
+exec - 		then	cmp -s $ldd ${INSTALLROOT}/bin/ldd ||
+exec - 			cp $ldd ${INSTALLROOT}/bin/ldd
+exec - 		else	: no ${_hosttype_=`package`} ldd workaround needed
+exec - 		fi
+exec - 		break
+exec - 	esac
+exec - done
+done ${INSTALLROOT}/bin/ldd virtual
 make ${INSTALLROOT}/lib/probe/C
 exec - set -
 exec - if	test ! -d ${INSTALLROOT}/lib/probe/C

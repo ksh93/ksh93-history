@@ -1,3 +1,4 @@
+01-01-23 cp: `cp foo' => `cp foo .' only for CONFORMANCE!=standard
 00-12-01 cut: multibyte support
 00-10-31 mkdir: handle races by checking EEXIST
 00-09-20 cp: copy argv to stack before modifying in place

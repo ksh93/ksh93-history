@@ -38,7 +38,7 @@
 #include <ctype.h>
 
 #define KEEP		"*[A-Za-z][A-Za-z]*"
-#define OMIT		"*@(\\[[-+]*\\?*\\]|\\@\\(#\\)|Copyright \\(c\\))*"
+#define OMIT		"*@(\\[[-+]*\\?*\\]|\\@\\(#\\)|Copyright \\(c\\)|\\$\\I\\d\\: )*"
 
 #define GO		'{'		/* group nest open		*/
 #define OG		'}'		/* group nest close		*/
@@ -99,6 +99,12 @@ typedef struct
 	const char*	text;		/* default message text		*/
 	Dtlink_t	link;		/* cdt link			*/
 } Msg_t;
+
+typedef struct
+{
+	Dtlink_t	link;		/* cdt link			*/
+	char		text[1];	/* saved text text		*/
+} Save_t;
 
 typedef struct Push_s
 {
@@ -514,6 +520,34 @@ search(const void* tab, size_t num, size_t siz, char* s)
 }
 
 /*
+ * save s and return the saved pointer
+ */
+
+static char*
+save(const char* s)
+{
+	Save_t*		p;
+
+	static Dtdisc_t	disc;
+	static Dt_t*	dict;
+
+	if (!dict)
+	{
+		disc.key = offsetof(Save_t, text);
+		if (!(dict = dtopen(&disc, Dthash)))
+			return (char*)s;
+	}
+	if (!(p = (Save_t*)dtmatch(dict, s)))
+	{
+		if (!(p = newof(0, Save_t, 1, strlen(s))))
+			return (char*)s;
+		strcpy(p->text, s);
+		dtinsert(dict, p);
+	}
+	return p->text;
+}
+
+/*
  * initialize the attributes for pass p from opt string s
  */
 
@@ -609,7 +643,7 @@ init(register char* s, Optpass_t* p)
 					if (!error_info.id && strneq(s - 1, "+NAME?", 6))
 					{
 						for (t = s += 5; *t && *t != ' ' && *t != ']'; t++);
-						error_info.id = strdup(sfprints("%-.*s", t - s, s));
+						error_info.id = save(sfprints("%-.*s", t - s, s));
 					}
 					break;
 				}
@@ -619,7 +653,7 @@ init(register char* s, Optpass_t* p)
 				{
 					s += 8;
 					if ((t = strchr(s, ']')) && (!error_info.id || (t - s) != strlen(error_info.id) || !strneq(s, error_info.id, t - s)))
-						p->catalog = strdup(sfprints("%-.*s", t - s, s));
+						p->catalog = save(sfprints("%-.*s", t - s, s));
 					if (error_info.id)
 						break;
 				}
@@ -628,7 +662,7 @@ init(register char* s, Optpass_t* p)
 	if (!p->catalog)
 	{
 		if (p->disc && p->disc->catalog && (!error_info.id || !streq(p->disc->catalog, error_info.id)))
-			p->catalog = strdup(p->disc->catalog);
+			p->catalog = p->disc->catalog;
 		else
 			p->catalog = ast.id;
 	}
@@ -1074,8 +1108,9 @@ args(register Sfio_t* sp, register char* p, register int n, int flags, int style
 static int
 item(Sfio_t* sp, char* s, int level, int style, Sfio_t* ip, int version, char* catalog)
 {
-	int	n;
-	int	par;
+	register char*	t;
+	int		n;
+	int		par;
 
 	sfputc(sp, '\n');
 	if (*s != ']' && (*s != '?' || *(s + 1) == '?'))
@@ -1094,6 +1129,13 @@ item(Sfio_t* sp, char* s, int level, int style, Sfio_t* ip, int version, char* c
 			if (!level)
 				sfputr(sp, "<H4>", -1);
 			sfputr(sp, "<A name=\"", -1);
+			if (s[-1] == '-' && s[0] == 'l' && s[1] == 'i' && s[2] == 'c' && s[3] == 'e' && s[4] == 'n' && s[5] == 's' && s[6] == 'e' && s[7] == '?')
+				for (t = s + 8; *t && *t != ']'; t++)
+					if (t[0] == 'p' && strmatch(t, "(proprietary|private)*"))
+					{
+						opt_info.state->flags |= OPT_proprietary;
+						break;
+					}
 			label(sp, 0, s, -1, level, 0, 0, 0, ip, version, catalog);
 			sfputr(sp, "\">", -1);
 			label(sp, 0, s, -1, level, style, 0, !!level, ip, version, catalog);
@@ -1215,9 +1257,14 @@ text(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip, i
 			}
 			else if (isalpha(c) && *t-- == ':')
 			{
-				sfprintf(ip, "%s", t);
-				t = sfstruse(ip);
-				*(t + 1) = '|';
+				if (X(catalog))
+					t += 2;
+				else
+				{
+					sfprintf(ip, "%s", t);
+					t = sfstruse(ip);
+					*(t + 1) = '|';
+				}
 			}
 			par = item(sp, t, level, style, ip, version, catalog);
 			c = *p;
@@ -1734,7 +1781,7 @@ opthelp(const char* oopts, const char* what)
 					}
 					continue;
 				}
-				else if ((c == ':' || c == '#') && *p == '[')
+				else if ((c == ':' || c == '#') && (*p == '[' || *p == '?' && *(p + 1) == '[' && p++))
 					p++;
 				else if (c != '[')
 				{
@@ -2612,7 +2659,7 @@ opthelp(const char* oopts, const char* what)
 			ts = OPT_USAGE + m;
 		if (style == STYLE_html)
 		{
-			sfprintf(mp, "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">\n<HTML>\n<HEAD>\n<META name=\"generator\" content=\"optget (AT&T Labs Research) 2000-04-01\">\n<TITLE>%s man document</TITLE>\n</HEAD>\n<BODY bgcolor=white>\n", name);
+			sfprintf(mp, "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">\n<HTML>\n<HEAD>\n<META name=\"generator\" content=\"optget (AT&T Labs Research) 2000-04-01\">\n%s<TITLE>%s man document</TITLE>\n</HEAD>\n<BODY bgcolor=white>\n", (opt_info.state->flags & OPT_proprietary) ? "<!--INTERNAL-->\n" : "", name);
 			sfprintf(mp, "<H4><TABLE width=100%%><TR><TH align=left>&nbsp;%s&nbsp;(&nbsp;%d&nbsp;)&nbsp;<TH align=center><A href=\"\" title=\"Index\">%s</A><TH align=right>%s&nbsp;(&nbsp;%d&nbsp;)</TR></TABLE></H4>\n<HR>\n", name, section, T(NiL, ast.id, heading[section % 10]), name, section);
 			sfprintf(mp, "<DL compact>\n<DT>");
 			co = 2;
@@ -3114,12 +3161,8 @@ optget(register char** argv, const char* oopts)
 			if (opt_info.index == 1)
 			{
 				opt_info.argv = 0;
-				if (s = opt_info.state->argv[0])
-				{
-					opt_info.state->argv[0] = 0;
-					free(s);
-				}
-				if (argv[0] && (opt_info.state->argv[0] = strdup(argv[0])))
+				opt_info.state->argv[0] = 0;
+				if (argv[0] && (opt_info.state->argv[0] = save(argv[0])))
 					opt_info.argv = opt_info.state->argv;
 				opt_info.state->style = STYLE_short;
 			}

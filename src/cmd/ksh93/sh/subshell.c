@@ -470,6 +470,10 @@ Sfio_t *sh_subshell(union anynode *t, int flags, int comsub)
 	if(sh.topfd != buff.topfd)
 		sh_iorestore(buff.topfd);
 	if(sh.exitval > SH_EXITSIG)
-		sh_fault(sh.exitval&SH_EXITMASK);
+	{
+		int sig = sh.exitval&SH_EXITMASK;
+		if(sig==SIGINT || sig== SIGQUIT)
+			sh_fault(sig);
+	}
 	return(iop);
 }

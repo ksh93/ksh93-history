@@ -122,7 +122,7 @@ va_list		args;
 	Void_t*		value;	/* location to assign scanned value */
 	char*		t_str;
 	ssize_t		n_str;
-	int		rs = (f->extent < 0 && (f->flags&SF_SHARE)) ? 1 : 0;
+	int		rs;
 
 #define SFBUF(f)	(_sfbuf(f,&rs), (data = d = f->next), (endd = f->endb) )
 #define SFLEN(f)	(d-data)
@@ -134,9 +134,14 @@ va_list		args;
 
 	SFMTXSTART(f,-1);
 
+	if(!form)
+		SFMTXRETURN(f, -1);
+
 	if(f->mode != SF_READ && _sfmode(f,SF_READ,0) < 0)
 		SFMTXRETURN(f, -1);
 	SFLOCK(f,0);
+
+	rs = (f->extent < 0 && (f->flags&SF_SHARE)) ? 1 : 0;
 
 	SFCVINIT();	/* initialize conversion tables */
 

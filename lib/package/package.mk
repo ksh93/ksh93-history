@@ -442,6 +442,7 @@ $$(PACKAGEGEN)/DETAILS.html : $$(INSTALLROOT)/bin/package
 				echo 'is also included.'
 				cat $(package.closure:C,.*,$(INSTALLROOT)/&/PROMO.mm,:T=F) < /dev/null
 				echo '.H 1 "release change log"'
+				echo '.xx index'
 				echo '.nf'
 				package release $(name) |
 				sed -e 's/:::::::: \(.*\) ::::::::/.H 1 "\1 changes"/'
@@ -449,7 +450,6 @@ $$(PACKAGEGEN)/DETAILS.html : $$(INSTALLROOT)/bin/package
 			} |
 			$(MM2HTML) $(MM2HTMLFLAGS) -o nohtml.ident > $(PACKAGEGEN)/$(name).html
 			$(ED) - $(PACKAGEGEN)/$(name).html <<'!'
-	/^<!--LABELS-->$/+3,/^<TD.*><A href="#release change log">release change log/d
 	/^<!--LABELS-->$/,/^<!--\/LABELS-->$/s/ changes</</
 	/^<!--LABELS-->$/,/^<!--\/LABELS-->$/m/<A name="release change log">/
 	w

@@ -45,6 +45,10 @@
 #include	"path.h"
 
 
+#ifndef SHOPT_BRACEPAT
+#   define SHOPT_BRACEPAT	0
+#endif
+
 #ifdef KSHELL
 #   define argbegin	argnxt.cp
     static	const char	*sufstr;

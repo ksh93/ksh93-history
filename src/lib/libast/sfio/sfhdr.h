@@ -174,8 +174,8 @@
 
 #define SFONCE()		(0)
 
-#define SFMTXLOCK(f)		{;}
-#define SFMTXUNLOCK(f)		{;}
+#define SFMTXLOCK(f)		(0)
+#define SFMTXUNLOCK(f)		(0)
 #define SFMTXSTART(f,v)		{ if(!f) return(v); }
 #define SFMTXRETURN(f,v)	{ return(v); }
 
@@ -330,13 +330,6 @@ typedef struct stat	Stat_t;
 #define SF_NULL		00000010	/* stream is /dev/null			*/
 #define SF_SEQUENTIAL	00000020	/* sequential access			*/
 #define SF_JUSTSEEK	00000040	/* just did a sfseek			*/
-
-/* SF_LINE for certain device can slow down a program significantly.
-   So we may turn it off after some number of outputs without any
-   intervening input on some unseekable device. The below bit is
-   used in sfrd(), sfset() and sfwr().
-*/
-#define SF_KEEPLINE	00000100	/* do not turn off SF_LINE 		*/
 
 /* this bit signals sfmutex() not to create a mutex for a private stream */
 #define SF_PRIVATE	00000200	/* private stream to Sfio		*/

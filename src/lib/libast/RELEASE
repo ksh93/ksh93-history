@@ -1,6 +1,7 @@
+01-02-06 sfraise.c: add SF_FINAL check to avoid (posibly) freed disciplines
 01-01-01 features/common: fix uwin __DEFINE__
 	 sftable: initialize decimal and thousand
-	 magic.tab: add forel wordperfect document
+	 magic.tab: add corel wordperfect document
 	 syslog: add LOG_LEVEL, add '\n' only if needed
 	 include/tm.h: #undef daylight for _WIN32
 	 sfio.h: add _SF_APPEND and _SF_CLOSE for native namespace incursion
@@ -9,8 +10,11 @@
 	 strmatch: check AST_LC_multibyte
 	 features/limits.c: add _BITS_POSIX1_LIM_H guard for linux
 	 features/libpath.sh: fix for aix LIBPATH
-	 optget.c: add enumerated option argument values
 	 procopen,procclose: block SIGCHLD if PROC_FOREGROUND (e.g., system(3))
+	 optget.c: add enumerated option argument values
+	 optget.c: add <!--INTERNAL--> for private --html
+	 optget.c: fix memory leak that hit shell builtins hard
+	 sfio: drop sfread small chunk logic
 00-12-25 mnt.c: handle " and ' quoting for fstab
 	 sftmp.c: let pathtemp() open the fd O_EXCL
 00-12-15 conf.sh: add -v for verbose trace

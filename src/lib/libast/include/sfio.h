@@ -26,7 +26,7 @@
 #ifndef _SFIO_H
 #define _SFIO_H	1
 
-#define SFIO_VERSION	20000731L
+#define SFIO_VERSION	20010201L
 
 /*	Public header file for the sfio library
 **
@@ -96,6 +96,7 @@ typedef struct _sfdisc_s	Sfdisc_t;
 
 #ifndef FILE
 #define _FILE_DEFINED	1	/* stop MS headers from defining FILE	*/
+#define _FILEDEFED	1	/* stop SUNOS5.8 from defining FILE	*/
 #define FILE	struct _sfio_s	/* because certain stdarg.h needs FILE	*/
 #endif
 
@@ -255,7 +256,7 @@ struct _sffmt_s
 #define SF_DPOP		6	/* when discipline is being popped	*/
 #define SF_DPOLL	7	/* see if stream is ready for I/O	*/
 #define SF_DBUFFER	8	/* buffer not empty during push or pop	*/
-#define SF_SYNC		9	/* sfsync() successfully finished	*/
+#define SF_SYNC		9	/* announcing start/end synchronization */
 #define SF_PURGE	10	/* a sfpurge() call was issued		*/
 #define SF_FINAL	11	/* closing is done except stream free	*/
 #define SF_READY	12	/* a polled stream is ready		*/
@@ -299,29 +300,6 @@ extern __PUBLIC_DATA__ Sfio_t*		sfstderr;
 extern Sfio_t		_Sfstdin;
 extern Sfio_t		_Sfstdout;
 extern Sfio_t		_Sfstderr;
-
-#if !_BLD_sfio
-
-/* the sfstd* macros will be dropped 4Q2000 */
-
-#if _BLD_DLL && _DLL_INDIRECT_DATA
-
-/* The Uwin shared library environment requires these to be defined
-   in a global structure set up by the Uwin start-up procedure.
-*/
-#define sfstdin		((Sfio_t*)_ast_dll->_ast_stdin)
-#define sfstdout	((Sfio_t*)_ast_dll->_ast_stdout)
-#define sfstderr	((Sfio_t*)_ast_dll->_ast_stderr)
-
-#else
-
-#define	sfstdin		(&_Sfstdin)	/* standard input stream	*/
-#define	sfstdout	(&_Sfstdout)	/* standard output stream	*/
-#define	sfstderr	(&_Sfstderr)	/* standard error stream	*/
-
-#endif
-
-#endif /* !_BLD_sfio */
 
 #if _BLD_sfio && defined(__EXPORT__)
 #define extern	__EXPORT__

@@ -224,4 +224,15 @@ setdisc y
 if	[[ $y != good ]]
 then	err_exit 'setdisc function not working'
 fi
+integer x=$LINENO
+: $'\
+'
+if	(( LINENO != x+3  ))
+then	err_exit '\<newline> gets linenumber count wrong'
+fi
+set --
+set -- "${@-}"
+if	(( $# !=1 ))
+then	err_exit	'"${@-}" not expanding to null string'
+fi
 exit $((Errors))

@@ -33,8 +33,6 @@ setv SILENT
 setv TAR tar
 setv YACC yacc
 setv YACCFLAGS -d
-make ${PACKAGE_ast_LIB}/package/ast.lic
-done ${PACKAGE_ast_LIB}/package/ast.lic
 make install
 make sum
 make libsum.a archive
@@ -223,7 +221,7 @@ exec - fi
 done ${PACKAGE_ast_INCLUDE} generated
 make ${PACKAGE_ast_INCLUDE}/sum.h
 prev sum.h
-exec - proto -p -s -l ${PACKAGE_ast_LIB}/package/ast.lic '-o since=1996,author=gsf' sum.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1996,author=gsf' sum.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${PACKAGE_ast_INCLUDE}/sum.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${PACKAGE_ast_INCLUDE}/sum.h

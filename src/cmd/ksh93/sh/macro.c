@@ -936,17 +936,17 @@ retry1:
 		}
 		c = RBRACE;
 	}
-	/* check for quotes @ */
-	if(mode=='@' && mp->quote && !v)
-		mp->quoted-=2;
 	nulflg = 0;
+	if(type && c==':')
+	{
+		nulflg=1;
+		c = fcget();
+	}
+	/* check for quotes @ */
+	if(mode=='@' && mp->quote && !v && c!='-')
+		mp->quoted-=2;
 	if(type)
 	{
-		if(c==':')
-		{
-			nulflg=1;
-			c = fcget();
-		}
 		if(!isbracechar(c))
 		{
 			if(!nulflg)

@@ -62,8 +62,6 @@ reg char*	mode;		/* mode of the stream */
 
 			/* set all non read-write flags */
 			f->flags |= (sflags & (SF_FLAGS & ~SF_RDWR));
-			if(f->flags&SF_LINE)
-				f->bits |= SF_KEEPLINE;
 
 			/* reset read/write modes */
 			if((sflags &= SF_RDWR) != 0)

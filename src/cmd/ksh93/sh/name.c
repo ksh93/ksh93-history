@@ -1328,9 +1328,14 @@ void	nv_close(Namval_t *np)
 
 static void table_unset(register Dt_t *root, int force)
 {
-	register Namval_t *np;
-	for(np=(Namval_t*)dtfirst(root);np;np=(Namval_t*)dtnext(root,np))
+	register Namval_t *np,*nq;
+	for(np=(Namval_t*)dtfirst(root);np;np=nq)
+	{
 		unset(np,force);
+		nq = (Namval_t*)dtnext(root,np);
+		dtdelete(root,np);
+		free((void*)np);
+	}
 }
 
 /*

@@ -42,54 +42,42 @@ if ! CC.HOSTTYPE
 end
 
 $(BINDIR)/cc :INSTALL: (CC.HOSTTYPE) package hello.c \
-		cc.ibm.risc ldd.ibm.risc \
-		cc.darwin.ppc ldd.darwin.ppc \
-		cc.hp.pa ld.hp.pa \
+		cc.darwin.ppc \
+		cc.hp.pa \
+		cc.ibm.risc \
 		cc.mvs.390 \
 		cc.next.i386 \
 		cc.next.m68k \
 		cc.osf.alpha \
 		cc.sco.i386 \
-		cc.sgi.mips2 ldd.sgi.mips2 \
-		cc.sgi.mips3 ldd.sgi.mips3 \
+		cc.sgi.mips2 \
+		cc.sgi.mips3 \
 		cc.sgi.mips3-o32 \
-		cc.sgi.mips4 ldd.sgi.mips4 \
+		cc.sgi.mips4 \
 		cc.sgi.mips4-n32
-	set x $(*:O>2)
+	set x $(*:N=*cc.*.*)
+	shift
 	while	:
 	do	case $# in
 		0)	break ;;
 		esac
 		cc=$1 # hp /bin/sh scripts modify parent args!
 		shift
-		argv=$*
-		export cc argv
+		export cc
 		case $cc in
 		*cc.$(CC.HOSTTYPE))
 			test -f $cc &&
 			$cc -o hello.exe $(*:O=2) >/dev/null 2>&1 &&
 			hello.exe >/dev/null 2>&1 && {
 				case $(CC.HOSTTYPE) in
-				*.mips*)$cc -version >/dev/null 2>&1 ||
-					break
+				*.mips*)$cc -version >/dev/null 2>&1 || {
+						: no $(CC.HOSTTYPE) cc workaround needed
+						break
+					}
 					;;
 				esac
 				cmp -s $cc $(<) ||
 				cp $cc $(<)
-				for i in $argv
-				do	case $i in
-					*ld.$(CC.HOSTTYPE))
-						cmp -s $i $(<:D:B=ld) ||
-						cp $i $(<:D:B=ld)
-						;;
-					*ldd.$(CC.HOSTTYPE))
-						cmp -s $i $(<:D:B=ldd) ||
-						cp $i $(<:D:B=ldd)
-						;;
-					*)	break
-						;;
-					esac
-				done
 			} ||
 			: no $(CC.HOSTTYPE) cc workaround needed
 			break
@@ -108,6 +96,52 @@ $(BINDIR)/cc :INSTALL: (CC.HOSTTYPE) package hello.c \
 		fi
 		;;
 	esac
+
+$(BINDIR)/ld :INSTALL: (CC.HOSTTYPE) package $(BINDIR)/cc \
+		ld.hp.pa
+	set x $(*:N=*ld.*.*)
+	while	:
+	do	case $# in
+		0)	break ;;
+		esac
+		ld=$1 # hp /bin/sh scripts modify parent args!
+		shift
+		export ld
+		case $ld in
+		*ld.$(CC.HOSTTYPE))
+			if	test -f $ld -a -x $(BINDIR)/cc
+			then	cmp -s $ld $(<) ||
+				cp $ld $(<)
+			else	: no $(CC.HOSTTYPE) ld workaround needed
+			fi
+			break
+		esac
+	done
+
+$(BINDIR)/ldd :INSTALL: (CC.HOSTTYPE) package $(BINDIR)/cc \
+		ldd.darwin.ppc \
+		ldd.ibm.risc \
+		ldd.sgi.mips2 \
+		ldd.sgi.mips3 \
+		ldd.sgi.mips4
+	set x $(*:N=*ldd.*.*)
+	while	:
+	do	case $# in
+		0)	break ;;
+		esac
+		ldd=$1 # hp /bin/sh scripts modify parent args!
+		shift
+		export ldd
+		case $ldd in
+		*ldd.$(CC.HOSTTYPE))
+			if	test -f $ldd -a -x $(BINDIR)/cc -a ! -x /usr/bin/ldd -a ! -x /bin/ldd
+			then	cmp -s $ldd $(<) ||
+				cp $ldd $(<)
+			else	: no $(CC.HOSTTYPE) ldd workaround needed
+			fi
+			break
+		esac
+	done
 
 /*
  * probe initialization

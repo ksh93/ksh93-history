@@ -38,7 +38,7 @@ reg Sfio_t*	f;
 {
 	Sfdisc_t*	disc;
 	reg int		mode;
-	Sfoff_t		s = f->here;
+	Sfoff_t		s;
 
 	SFMTXSTART(f, (Sfoff_t)(-1));
 
@@ -51,6 +51,8 @@ reg Sfio_t*	f;
 	}
 
 	SFLOCK(f,0);
+
+	s = f->here;
 
 	if(f->extent >= 0)
 	{	if(f->flags&(SF_SHARE|SF_APPENDWR))

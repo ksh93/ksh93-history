@@ -41,6 +41,7 @@
 #define OPT_functions		0x01
 #define OPT_ignore		0x02
 #define OPT_long		0x04
+#define OPT_proprietary		0x08
 
 struct Optdisc_s;
 

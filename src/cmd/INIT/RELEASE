@@ -1,3 +1,7 @@
+01-02-06 Makefile: separate out cc,ld,ldd workarounds (so they will be packaged)
+01-02-02 package.sh: fix package use for $INSTALLROOT != */$HOSTTYPE
+	 package.sh: create intermediate recursion makefiles when needed
+	 package.sh: add $SECONDS to the DEBUG trace prompt
 01-01-01 ratz.c: #ifdef for uwin ncc
 	 iffe.sh,package.sh: check PACKAGE_PATH for local installations
 	 package.sh: add psrinfo for osf.alpha host cpu 
@@ -12,7 +16,7 @@
 	 package.sh: reorder host type logic for lame shells
 	 mamake.c: getcwd => getwd for NeXT -- how about posix==default guys
 	 iffe.sh: really gross workaround for NeXT -lposix stdout null's
-	 iffe.sh: handle cc -E that insist on compiling
+	 iffe.sh: handle cc -E that insists on compiling
 00-12-15 iffe.sh: ancient sh function call blows $*; call only when $# == 0
 	 *.sh: `getopts 2>/dev/null` => `(getopts)2>/dev/null` for ancient sh
 	 package.sh: fix LD_LIBRARY*_PATH initialization

@@ -57,8 +57,7 @@ int		type;
 	int		base, fmt, flags, dot, width, precis;
 	ssize_t		n_str, size;
 	char		*t_str, *sp;
-	int		v, n, skip;
-	int		dollar=0, decimal=0, thousand=0;
+	int		v, n, skip, dollar, decimal, thousand;
 	Sffmt_t		*ft, savft;
 	Fmtpos_t*	fp;	/* position array of arguments	*/
 	int		argp, argn, maxp, need[FP_INDEX];
@@ -68,7 +67,7 @@ int		type;
 	else if(!(fp = sffmtpos(f,form,args,-1)) )
 		return NIL(Fmtpos_t*);
 
-	argn = maxp = -1;
+	dollar = decimal = thousand = 0; argn = maxp = -1;
 	while((n = *form) )
 	{	if(n != '%') /* collect the non-pattern chars */
 		{	sp = (char*)form++;

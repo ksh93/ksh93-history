@@ -54,6 +54,8 @@ Void_t*	data;	/* associated data	*/
 
 	for(disc = f->disc; disc; )
 	{	next = disc->disc;
+		if(type == SF_FINAL)
+			f->disc = next;
 
 		if(disc->exceptf)
 		{	SFOPEN(f,0);

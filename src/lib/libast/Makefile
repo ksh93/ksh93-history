@@ -73,6 +73,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	fmtbase.c fmtbuf.c fmtclock.c fmtdev.c fmtelapsed.c fmterror.c \
 	fmtesc.c fmtfs.c fmtident.c fmtip4.c fmtls.c fmtmatch.c fmtmode.c \
 	fmtnum.c fmtperm.c fmtre.c fmttime.c fmtuid.c fmtgid.c fmtsignal.c \
+	fmtscale.c \
 	strelapsed.c strperm.c struid.c strgid.c strtoip4.c stack.c stk.c \
 	swapget.c swapmem.c swapop.c swapput.c \
 	sigdata.c sigcrit.c sigunblock.c \

@@ -33,8 +33,6 @@ setv SILENT
 setv TAR tar
 setv YACC yacc
 setv YACCFLAGS -d
-make ${PACKAGE_ast_LIB}/package/ast.lic
-done ${PACKAGE_ast_LIB}/package/ast.lic
 make install
 make ksh
 make pmain.o
@@ -873,7 +871,7 @@ prev ${PACKAGE_ast_INCLUDE}/error.h implicit
 prev include/streval.h implicit
 done sh/streval.c
 prev sh/streval.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSH_DICT='(void*)e_dict' -D_PACKAGE_ast -c sh/streval.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSH_DICT='(void*)e_dict' -D_PACKAGE_ast -c sh/streval.c
 done streval.o generated
 make subshell.o
 make sh/subshell.c
@@ -1318,7 +1316,7 @@ exec - fi
 done ${PACKAGE_ast_INCLUDE} generated
 make ${PACKAGE_ast_INCLUDE}/nval.h
 prev include/nval.h
-exec - proto -p -s -l ${PACKAGE_ast_LIB}/package/ast.lic '-o since=1982,author=dgk' include/nval.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1982,author=dgk' include/nval.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${PACKAGE_ast_INCLUDE}/nval.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${PACKAGE_ast_INCLUDE}/nval.h
@@ -1326,7 +1324,7 @@ exec - fi
 done ${PACKAGE_ast_INCLUDE}/nval.h generated
 make ${PACKAGE_ast_INCLUDE}/shell.h
 prev include/shell.h
-exec - proto -p -s -l ${PACKAGE_ast_LIB}/package/ast.lic '-o since=1982,author=dgk' include/shell.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1982,author=dgk' include/shell.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${PACKAGE_ast_INCLUDE}/shell.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${PACKAGE_ast_INCLUDE}/shell.h
@@ -1334,7 +1332,7 @@ exec - fi
 done ${PACKAGE_ast_INCLUDE}/shell.h generated
 make ${PACKAGE_ast_INCLUDE}/history.h
 prev include/history.h
-exec - proto -p -s -l ${PACKAGE_ast_LIB}/package/ast.lic '-o since=1982,author=dgk' include/history.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1982,author=dgk' include/history.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${PACKAGE_ast_INCLUDE}/history.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${PACKAGE_ast_INCLUDE}/history.h

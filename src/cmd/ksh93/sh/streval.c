@@ -740,9 +740,23 @@ double strval(const char *s,char **end,double(*conv)(const char**,struct lval*,i
 	return(d);
 }
 
-#ifdef _mem_name_exception
-#undef error
-    int matherr(struct exception *ep)
+#if _mem_name__exception
+#undef	_mem_name_exception
+#define	_mem_name_exception	1
+#undef	exception
+#define	exception		_exception
+#undef	matherr
+#endif
+
+#if _mem_name_exception
+
+#undef	error
+
+#if _BLD_shell && defined(__EXPORT__)
+#define extern			__EXPORT__
+#endif
+
+    extern int matherr(struct exception *ep)
     {
 	const char *message;
 	switch(ep->type)
@@ -763,4 +777,7 @@ double strval(const char *s,char **end,double(*conv)(const char**,struct lval*,i
 	errormsg(SH_DICT,ERROR_exit(1),message,ep->name);
 	return(0);
     }
+
+#undef	extern
+
 #endif /* _mem_name_exception */

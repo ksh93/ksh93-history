@@ -57,12 +57,7 @@ static void _sfwrsync()
 
 		if(!SFFROZEN(f) && f->next > f->data &&
 		   (f->mode&SF_WRITE) && f->extent < 0 )
-		{	/* make sure that line mode is kept for this stream */
-			if(!(f->bits&SF_BOTH) && (f->flags&SF_LINE))
-				f->bits |= SF_KEEPLINE;
-
 			(void)_sfflsbuf(f,-1);
-		}
 	}
 }
 
