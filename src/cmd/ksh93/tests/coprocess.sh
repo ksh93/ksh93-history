@@ -141,5 +141,10 @@ fi
 	sleep 1
 	kill $! 2> /dev/null 
 ) && err_exit 'coprocess with subshell would hang'
+[[ $(cat |&
+pid=$!
+trap 'print IOT' IOT
+( sleep 2; kill -IOT $$; sleep 2; kill -IOT $$; kill $pid ) 2> /dev/null &
+read -p) != $'IOT\nIOT' ]] && err_exit 'traps when reading from coprocess not working'
 
 exit $((Errors))

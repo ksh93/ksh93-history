@@ -190,8 +190,9 @@ typedef struct
 
 #define NOT_USED(x)	NoP(x)
 
+typedef int (*Error_f)(void*, void*, int, ...);
+
 typedef int (*Ast_confdisc_f)(const char*, const char*, const char*);
-typedef int (*Ast_conferror_f)(void*, void*, int, ...);
 typedef int (*Strcmp_context_f)(const char*, const char*, void*);
 typedef int (*Strcmp_f)(const char*, const char*);
 
@@ -199,7 +200,7 @@ typedef int (*Strcmp_f)(const char*, const char*);
 #define extern		__EXPORT__
 #endif
 
-extern char*		astgetconf(const char*, const char*, const char*, Ast_conferror_f);
+extern char*		astgetconf(const char*, const char*, const char*, Error_f);
 extern char*		astconf(const char*, const char*, const char*);
 extern Ast_confdisc_f	astconfdisc(Ast_confdisc_f);
 extern void		astconflist(Sfio_t*, const char*, int);
@@ -234,6 +235,7 @@ extern char*		fmtscale(Sfulong_t, int);
 extern char*		fmtsignal(int);
 extern char*		fmttime(const char*, time_t);
 extern char*		fmtuid(int);
+extern char*		fmtversion(unsigned long);
 extern void*		memdup(const void*, size_t);
 extern void		memfatal(void);
 extern unsigned int	memhash(const void*, int);
@@ -271,6 +273,13 @@ extern void*		strlook(const void*, size_t, const char*);
 extern int		strmatch(const char*, const char*);
 extern int		strmode(const char*);
 extern int		strnacmp(const char*, const char*, size_t);
+extern char*		strncopy(char*, const char*, size_t);
+extern double		strntod(const char*, size_t, char**);
+extern _ast_fltmax_t	strntold(const char*, size_t, char**);
+extern long		strntol(const char*, size_t, char**, int);
+extern _ast_intmax_t	strntoll(const char*, size_t, char**, int);
+extern unsigned long	strntoul(const char*, size_t, char**, int);
+extern unsigned _ast_intmax_t	strntoull(const char*, size_t, char**, int);
 extern int		stropt(const char*, const void*, int, int(*)(void*, const void*, int, const char*), void*);
 extern int		strperm(const char*, char**, int);
 extern void*		strpsearch(const void*, size_t, size_t, const char*, char**);
@@ -284,6 +293,7 @@ extern int		strtoip4(const char*, char**, unsigned _ast_int4_t*, unsigned char*)
 extern long		strton(const char*, char**, char*, int);
 extern _ast_intmax_t	strtonll(const char*, char**, char*, int);
 extern int		struid(const char*);
+extern int		struniq(char**, int);
 
 /*
  * obsolete ast symbols

@@ -31,7 +31,7 @@
 	Namfun_t	*nvfun;		/* pointer to trap functions */ \
 	union Value	nvalue; 	/* value field */ \
 	char		*nvenv;		/* pointer to environment name */ \
-	int		nvsize;	
+	int		nvextra;	
 
 #include	<ast.h>
 #include	<cdt.h>
@@ -55,12 +55,14 @@ union Value
 	Dt_t		*hp;	/* value is a dictionary */
 	union Value	*up;	/* for indirect node */
 	struct Ufunction *rp;	/* shell user defined functions */
+	struct Namdisc	*disp;	/* type discipline pointer */
 	int (*bfp)(int,char*[],void*);/* builtin entry point function pointer */
 };
 
 #include	"nval.h"
 
 /* used for arrays */
+
 #define ARRAY_MAX 	(1L<<ARRAY_BITS) /* maximum number of elements in an array */
 #define ARRAY_MASK	(ARRAY_MAX-1)	/* For index values */
 
@@ -87,9 +89,10 @@ struct Ufunction
 /* The following attributes are for internal use */
 #define NV_NOCHANGE	(NV_EXPORT|NV_IMPORT|NV_RDONLY|NV_TAGGED|NV_NOFREE)
 #define NV_ATTRIBUTES	(~(NV_NOSCOPE|NV_ARRAY|NV_IDENT|NV_ASSIGN|NV_REF|NV_VARNAME))
-#define NV_PARAM	(1<<14)		/* expansion use positional params */
+#define NV_PARAM	NV_NODISC	/* expansion use positional params */
 
 /* This following are for use with nodes which are not name-values */
+#define NV_TYPE		0x1000000
 #define NV_FUNCTION	(NV_RJUST|NV_FUNCT)	/* value is shell function */
 #define NV_FPOSIX	NV_LJUST		/* posix function semantics */
 
@@ -117,7 +120,6 @@ struct Ufunction
 #define nv_onattr(n,f)	((n)->nvflag |= (f))
 #define nv_setattr(n,f)	((n)->nvflag = (f))
 #define nv_offattr(n,f)	((n)->nvflag &= ~(f))
-#define nv_name(n)	((n)->nvname)
 #define nv_context(n)	((void*)(n)->nvfun)		/* for builtins */
 #define nv_table(n)	((Namval_t*)((n)->nvfun))	/* for references */
 #define nv_refnode(n)	((Namval_t*)((n)->nvalue.np))	/* for references */
@@ -128,28 +130,35 @@ struct Ufunction
 /* ... etc */
 
 #define nv_setsize(n,s)	((n)->nvsize = (s))
+#undef nv_size
 #define nv_size(np)	((np)->nvsize)
 #define nv_isnull(np)	(!(np)->nvalue.cp && !(np)->nvfun)
 
 /* ...	for arrays */
 
-#define nv_arrayptr(np)	(nv_isattr(np,NV_ARRAY)?(np)->nvalue.array:(Namarr_t*)0)
 #define array_elem(ap)	((ap)->nelem&ARRAY_MASK)
 #define array_assoc(ap)	((ap)->fun)
 
-extern void		array_check(Namval_t*, int);
-extern union Value	*array_find(Namval_t*, int);
 extern int		array_maxindex(Namval_t*);
 extern char 		*nv_endsubscript(Namval_t*, char*, int);
 extern Namfun_t 	*nv_cover(Namval_t*);
-extern void		nv_optimize(Namval_t*);
 struct argnod;		/* struct not declared yet */
+extern Namarr_t 	*nv_arrayptr(Namval_t*);
 extern int		nv_setnotify(Namval_t*,char **);
 extern int		nv_unsetnotify(Namval_t*,char **);
 extern void		nv_setlist(struct argnod*, int);
+extern void 		nv_optimize(Namval_t*);
 extern void		nv_outname(Sfio_t*,char*, int);
 extern void 		nv_scope(struct argnod*);
 extern void 		nv_unref(Namval_t*);
+extern void		_nv_unset(Namval_t*,int);
+extern int		nv_clone(Namval_t*, Namval_t*, int);
+extern void		*nv_diropen(const char*);
+extern char		*nv_dirnext(void*);
+extern void		nv_dirclose(void*); 
+extern char		*nv_getvtree(Namval_t*, Namfun_t*);
+extern void		nv_attribute(Namval_t*, Sfio_t*, char*, int);
+
 
 extern Dtdisc_t		_Nvdisc;
 extern const char	e_subscript[];

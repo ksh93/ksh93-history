@@ -171,7 +171,7 @@ b_paste(int argc,register char *argv[], void* context)
 
 	static char		defdelim[] = "\t";
 
-	cmdinit(argv, context, ERROR_CATALOG);
+	cmdinit(argv, context, ERROR_CATALOG, 0);
 	delim = defdelim;
 	while (n = optget(argv, usage)) switch (n)
 	{

@@ -67,15 +67,18 @@ struct Namdisc
 
 struct Namfun
 {
-	const Namdisc_t *disc;
-	Namfun_t *next;
-	short	nofree;
+	const Namdisc_t	*disc;
+	Namfun_t	*next;
+	Namval_t	*type;
+	short		nofree;
+	unsigned short	dsize;
 };
 
 /* This is an array template header */
 struct Namarray
 {
-	long	nelem;					/* number of elements */
+	Namfun_t	hdr;
+	long		nelem;				/* number of elements */
 	void	*(*fun)(Namval_t*,const char*,int);	/* associative arrays */
 };
 
@@ -88,7 +91,7 @@ struct Namval
 	Dtlink_t	nvlink;		/* space for cdt links */
 	char		*nvname;	/* pointer to name of the node */
 	unsigned short	nvflag; 	/* attributes */
-	short 		nvref;		/* referernce count */
+	unsigned short 	nvsize;		/* size or base */
 #ifdef _NV_PRIVATE
 	_NV_PRIVATE
 #else
@@ -99,12 +102,17 @@ struct Namval
 #endif /* _NV_PRIVATE */
 };
 
+#define NV_CLASS	".sh.type."
+#define NV_MINSZ	(sizeof(struct Namval)-sizeof(Dtlink_t)-sizeof(char*)-sizeof(int))
+#define nv_namptr(p,n)	((Namval_t*)((char*)(p)+(n)*NV_MINSZ-sizeof(Dtlink_t)))
+
 /* The following attributes are for internal use */
 #define NV_NOALLOC	0x100	/* don't allocate space for the value */
 #define NV_NOFREE	0x200	/* don't free the space when releasing value */
 #define NV_ARRAY	0x400	/* node is an array */
 #define NV_TABLE	0x800	/* node is a dictionary table */
 #define NV_IMPORT	0x1000	/* value imported from environment */
+#define NV_MINIMAL	NV_IMPORT	/* node does not contain all fields */
 
 #define NV_INTEGER	0x2	/* integer attribute */
 /* The following attributes are valid only when NV_INTEGER is off */
@@ -131,6 +139,7 @@ struct Namval
 /*  options for nv_open */
 
 #define NV_APPEND	0x10000			/* append value */
+#define NV_MOVE		0x20000			/* for use with nv_clone */
 #define NV_ADD		8
 						/* add node if not found */
 #define NV_NOSCOPE	NV_NOALLOC		/* look only in current scope */
@@ -140,7 +149,7 @@ struct Namval
 #define NV_NOREF	NV_REF			/* don't follow reference */
 #define NV_IDENT	0x80			/* name must be identifier */
 #define NV_VARNAME	0x20000			/* name must be ?(.)id*(.id) */
-#define NV_NOADD	NV_IMPORT		/* do not add node */ 	
+#define NV_NOADD	0x40000			/* do not add node */ 	
 #define NV_NODISC	NV_IDENT		/* ignore disciplines */
 
 #define NV_FUNCT	NV_IDENT		/* option for nv_create */
@@ -159,6 +168,11 @@ struct Namval
 #define NV_ADELETE	5	/* delete current subscript */
 #define NV_AADD		6	/* add subscript if not found */
 #define NV_ACURRENT	7	/* return current subscript Namval_t* */
+
+/* The following are for nv_disc */
+#define NV_FIRST	1
+#define NV_LAST		2
+#define NV_POP		3
 
 /* The following are operations for nv_putsub() */
 #define ARRAY_BITS	24
@@ -197,19 +211,24 @@ extern Namval_t	*nv_open(const char*,Dt_t*,int);
 extern void 	nv_putval(Namval_t*,const char*,int);
 extern void 	nv_putv(Namval_t*,const char*,int,Namfun_t*);
 extern int	nv_scan(Dt_t*,void(*)(Namval_t*,void*),void*,int,int);
+extern Dt_t 	*nv_root(char*);
 extern Namval_t	*nv_scoped(Namval_t*);
 extern char 	*nv_setdisc(Namval_t*,const char*,Namval_t*,Namfun_t*);
 extern void	nv_setref(Namval_t*);
+extern int	nv_settype(Namval_t*, Namval_t*, int);
 extern void 	nv_setvec(Namval_t*,int,int,char*[]);
 extern void	nv_setvtree(Namval_t*);
-extern int 	nv_size(Namval_t*);
-extern Namfun_t *nv_stack(Namval_t*,Namfun_t*);
+extern int 	nv_setsize(Namval_t*,int);
+extern Namfun_t *nv_disc(Namval_t*,Namfun_t*,int);
 extern void 	nv_unset(Namval_t*);
 extern Namval_t	*nv_search(const char *, Dt_t*, int);
 extern void	nv_unscope(void);
 #ifdef _DLL
 #   undef extern
 #endif /* _DLL */
+
+#define nv_size(np)		nv_setsize((np),-1)
+#define nv_stack(np,nf)		nv_disc(np,nf,0)
 
 #if 0
 /*

@@ -61,11 +61,13 @@ shut(register Coshell_t* co)
 	close(co->cmdfd);
 	if (co->pid)
 	{
-		if (co->running > 0) killpg(co->pid, SIGTERM);
+		if (co->running > 0)
+			killpg(co->pid, SIGTERM);
 		state.current = co;
 		handler = signal(SIGALRM, hung);
 		n = alarm(3);
-		if (waitpid(co->pid, &status, 0) != co->pid) status = -1;
+		if (waitpid(co->pid, &status, 0) != co->pid)
+			status = -1;
 		alarm(n);
 		signal(SIGALRM, handler);
 		killpg(co->pid, SIGTERM);
@@ -87,15 +89,17 @@ shut(register Coshell_t* co)
 		if (cs == co)
 		{
 			cs = cs->next;
-			if (ps) ps->next = cs;
-			else state.coshells = cs;
+			if (ps)
+				ps->next = cs;
+			else
+				state.coshells = cs;
 			free(co);
 			break;
 		}
 		ps = cs;
 		cs = cs->next;
 	}
-	return(status);
+	return status;
 }
 
 /*
@@ -105,8 +109,9 @@ shut(register Coshell_t* co)
 int
 coclose(register Coshell_t* co)
 {
-	if (co) return(shut(co));
-	for (co = state.coshells; co; co = co->next)
-		shut(co);
-	return(0);
+	if (co)
+		return shut(co);
+	while (state.coshells)
+		shut(state.coshells);
+	return 0;
 }

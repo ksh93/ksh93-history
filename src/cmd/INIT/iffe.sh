@@ -1,26 +1,4 @@
-####################################################################
-#                                                                  #
-#             This software is part of the ast package             #
-#                Copyright (c) 1999-2002 AT&T Corp.                #
-#        and it may only be used by you under license from         #
-#                       AT&T Corp. ("AT&T")                        #
-#         A copy of the Source Code Agreement is available         #
-#                at the AT&T Internet web site URL                 #
-#                                                                  #
-#       http://www.research.att.com/sw/license/ast-open.html       #
-#                                                                  #
-#    If you have copied or used this software without agreeing     #
-#        to the terms of the license you are infringing on         #
-#           the license and copyright and are violating            #
-#               AT&T's intellectual property rights.               #
-#                                                                  #
-#            Information and Software Systems Research             #
-#                        AT&T Labs Research                        #
-#                         Florham Park NJ                          #
-#                                                                  #
-#               Glenn Fowler <gsf@research.att.com>                #
-#                                                                  #
-####################################################################
+USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-author?Phong Vo <kpv@research.att.com>][-copyright?Copyright (c) 1994-2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"
 # Glenn Fowler & Phong Vo
 # AT&T Labs Research
 #
@@ -34,7 +12,7 @@ case $-:$BASH_VERSION in
 esac
 
 command=iffe
-version=2002-10-04 # update in USAGE too #
+version=2002-12-10 # update in USAGE too #
 
 pkg() # package
 {
@@ -261,7 +239,7 @@ a z
 			}
 			return 1;
 		}"
-		if	$cc -o ${tmp}r.exe ${tmp}r.c
+		if	$cc -o ${tmp}r.exe ${tmp}r.c <&$nullin >&$nullout
 		then	posix_read=${tmp}r.exe
 		else	echo "$command: cannot compile read -r workaround" >&$stderr
 			exit 1
@@ -424,7 +402,7 @@ set=
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: iffe (AT&T Labs Research) 2002-10-04 $
+@(#)$Id: iffe (AT&T Labs Research) 2002-12-10 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?iffe - host C compilation environment feature probe]
@@ -1892,6 +1870,9 @@ do	case $in in
 						i=0
 						;;
 					*)	case $m in
+						*[-+/\\]*)
+							i=0
+							;;
 						*[!abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_]*)
 							is id $m
 							copy $tmp.c "int $m = 0;"

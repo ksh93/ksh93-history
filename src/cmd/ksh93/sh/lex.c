@@ -824,7 +824,13 @@ int sh_lex(void)
 				if(isaletter(n) || n==LBRACT)
 					continue;
 				if(mode==ST_NAME)
+				{
+					if(n=='=')
+						continue;
 					break;
+				}
+				else if(n==RBRACE)
+					continue;
 				if(isastchar(n))
 					continue;
 				goto err;

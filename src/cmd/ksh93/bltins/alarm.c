@@ -122,11 +122,11 @@ static void	print_alarms(void *list)
 static void	trap_timeout(void* handle)
 {
 	register struct tevent *tp = (struct tevent*)handle;
-	tp->sh->trapnote |= SH_SIGTRAP;
+	tp->sh->trapnote |= SH_SIGALRM;
 	if(!(tp->flags&R_FLAG))
 		tp->timeout = 0;
 	tp->flags |= L_FLAG;
-	tp->sh->sigflag[SIGALRM] |= SH_SIGTRAP;
+	tp->sh->sigflag[SIGALRM] |= SH_SIGALRM;
 	if(sh_isstate(SH_TTYWAIT))
 		sh_timetraps();
 }
@@ -137,7 +137,7 @@ void	sh_timetraps(void)
 	register struct tevent *tptop;
 	while(1)
 	{
-		sh.sigflag[SIGALRM] &= ~SH_SIGTRAP;
+		sh.sigflag[SIGALRM] &= ~SH_SIGALRM;
 		tptop= (struct tevent*)sh.st.timetrap;
 		for(tp=tptop;tp;tp=tpnext)
 		{
@@ -155,7 +155,7 @@ void	sh_timetraps(void)
 				}
 			}
 		}
-		if(!(sh.sigflag[SIGALRM]&SH_SIGTRAP))
+		if(!(sh.sigflag[SIGALRM]&SH_SIGALRM))
 			break;
 	}
 }

@@ -231,7 +231,7 @@ b_fmt(int argc, char** argv, void *context)
 	fmt.endbuff = &outbuff[72];
 	fmt.outp = 0;
 	fmt.nwords = 0;
-	cmdinit(argv, context, ERROR_CATALOG);
+	cmdinit(argv, context, ERROR_CATALOG, 0);
 	while (n = optget(argv, usage)) switch (n)
 	{
 	    case 'c':

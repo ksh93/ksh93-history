@@ -268,7 +268,7 @@ b_uname(int argc, char** argv, void* context)
 	char		buf[257];
 
 	NoP(argc);
-	cmdinit(argv, context, ERROR_CATALOG);
+	cmdinit(argv, context, ERROR_CATALOG, 0);
 	for (;;)
 	{
 		switch (optget(argv, usage))

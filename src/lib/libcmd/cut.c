@@ -401,7 +401,7 @@ b_cut(int argc,char *argv[], void* context)
 	int	ldelim = '\n';
 
 	NoP(argc);
-	cmdinit(argv, context, ERROR_CATALOG);
+	cmdinit(argv, context, ERROR_CATALOG, 0);
 	while (n = optget(argv, usage)) switch (n)
 	{
 	  case 'b':

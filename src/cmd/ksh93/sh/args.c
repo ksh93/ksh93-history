@@ -133,7 +133,7 @@ int sh_argopts(int argc,register char *argv[])
 			opt = 1L<<n;
 			if(n<=0 || (setflag && (opt&(SH_INTERACTIVE|SH_RESTRICTED))))
 			{
-				errormsg(SH_DICT,2, "%s", e_option, opt_info.arg);
+				errormsg(SH_DICT,2, e_option, opt_info.arg);
 				error_info.errors++;
 			}
 			break;
@@ -182,7 +182,7 @@ int sh_argopts(int argc,register char *argv[])
 		}
 	}
 	if(error_info.errors)
-		errormsg(SH_DICT,ERROR_usage(2),optusage(NIL(char*)));
+		errormsg(SH_DICT,ERROR_usage(2),"%s",optusage(NIL(char*)));
 	/* check for '-' or '+' argument */
 	if((cp=argv[opt_info.index]) && cp[1]==0 && (*cp=='+' || *cp=='-') &&
 		strcmp(argv[opt_info.index-1],"--"))

@@ -31,7 +31,7 @@
  */
 
 static const char usage_head[] =
-"[-?@(#)$Id: cp (AT&T Labs Research) 2001-09-11 $\n]"
+"[-?@(#)$Id: cp (AT&T Labs Research) 2002-11-14 $\n]"
 USAGE_LICENSE
 ;
 
@@ -151,6 +151,7 @@ static struct				/* program state		*/
 	int		fs3d;		/* 3d fs enabled		*/
 	int		hierarchy;	/* preserve hierarchy		*/
 	int		interactive;	/* prompt for approval		*/
+	int		interrupt;	/* interrupt -- punt		*/
 	int		missmode;	/* default missing dir mode	*/
 	int		official;	/* move to next view		*/
 	int		op;		/* {CP,LN,MV}			*/
@@ -231,6 +232,8 @@ visit(register Ftw_t* ftw)
 
 	static int	presiz;
 
+	if (state.interrupt)
+		return -1;
 	if (ftw->level == 0)
 	{
 		base = ftw->name;
@@ -633,8 +636,13 @@ b_cp(int argc, register char** argv, void* context)
 	int		path_resolve;
 	struct stat	st;
 
+	if (argc < 0)
+	{
+		state.interrupt = 1;
+		return -1;
+	}
 	memset(&state, 0, sizeof(state));
-	cmdinit(argv, context, ERROR_CATALOG);
+	cmdinit(argv, context, ERROR_CATALOG, ERROR_NOTIFY);
 	backup_type = 0;
 	state.flags = FTW_DOT|FTW_MULTIPLE|FTW_TWICE|FTW_NOSEEDOTDIR;
 	state.uid = geteuid();

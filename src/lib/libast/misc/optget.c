@@ -606,7 +606,6 @@ init(register char* s, Optpass_t* p)
 	error(-1, "optget debug");
 #endif
 	p->oopts = s;
-	p->disc = opt_info.disc;
 	p->version = 0;
 	p->prefix = 2;
 	p->section = 1;
@@ -699,8 +698,8 @@ init(register char* s, Optpass_t* p)
 	}
 	if (!p->catalog)
 	{
-		if (p->disc && p->disc->catalog && (!error_info.id || !streq(p->disc->catalog, error_info.id)))
-			p->catalog = p->disc->catalog;
+		if (opt_info.disc && opt_info.disc->catalog && (!error_info.id || !streq(opt_info.disc->catalog, error_info.id)))
+			p->catalog = opt_info.disc->catalog;
 		else
 			p->catalog = ast.id;
 	}
@@ -1774,7 +1773,6 @@ opthelp(const char* oopts, const char* what)
 	Optpass_t*		e;
 	Optpass_t		one;
 	Help_t*			hp;
-	Optdisc_t*		dp;
 	short			ptstk[elementsof(indent) + 2];
 	short*			pt;
 	Push_t*			tsp;
@@ -1793,7 +1791,6 @@ opthelp(const char* oopts, const char* what)
 	Sfio_t*			sp_info = 0;
 	Sfio_t*			sp_misc = 0;
 
-	dp = opt_info.disc;
 	if (!(mp = opt_info.state->mp) && !(mp = opt_info.state->mp = sfstropen()))
 		goto nospace;
 	if (!what)
@@ -2226,7 +2223,6 @@ opthelp(const char* oopts, const char* what)
 		head = 0;
 		mode = 0;
 		mutex = 0;
-		opt_info.disc = q->disc;
 		if (style > STYLE_short && style < STYLE_nroff && version < 1)
 		{
 			style = STYLE_short;
@@ -2712,7 +2708,7 @@ opthelp(const char* oopts, const char* what)
 							if (f)
 								sfprintf(sp_info, " %s; -\b%c\b %s --\bno%-.*s\b.", T(NiL, ast.id, "On by default"), f, T(NiL, ast.id, "means"), u - w, w);
 							else
-								sfprintf(sp_info, " %s --\bno%-.*s\b %s.", T(NiL, ast.id, "On by default; use"), u - w, w, T(NiL, ast.id, "to turn off"));
+								sfprintf(sp_info, " %s %s\bno%-.*s\b %s.", T(NiL, ast.id, "On by default; use"), "--"+2-prefix, u - w, w, T(NiL, ast.id, "to turn off"));
 							text(sp_body, sfstruse(sp_info), style, 0, 0, sp_info, version, NiL);
 						}
 						if (*p == GO)
@@ -2766,7 +2762,6 @@ opthelp(const char* oopts, const char* what)
 	{
 		if (sp_info)
 			sfclose(sp_info);
-		opt_info.disc = dp;
 		if (style == STYLE_keys && sfstrtell(mp) > 1)
 			sfstrrel(mp, -1);
 		return opt_info.msg = sfstruse(mp);
@@ -3195,7 +3190,6 @@ opthelp(const char* oopts, const char* what)
 		sfputr(mp, p, 0);
 	if (sp)
 		sfclose(sp);
-	opt_info.disc = dp;
 	return opt_info.msg = sfstruse(mp);
  nospace:
 	s = T(NiL, ast.id, "[* out of space *]");
@@ -3216,7 +3210,6 @@ opthelp(const char* oopts, const char* what)
 		sfclose(sp_body);
 	if (sp_misc)
 		sfclose(sp_misc);
-	opt_info.disc = dp;
 	return s;
 }
 

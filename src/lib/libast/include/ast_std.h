@@ -128,11 +128,11 @@ __STDPP__directive pragma pp:hide valloc
 __STDPP__directive pragma pp:hide execl execle execlp execv
 __STDPP__directive pragma pp:hide execve execvp execvpe
 __STDPP__directive pragma pp:hide getcwd getopt getsubopt putenv realpath
-__STDPP__directive pragma pp:hide setenv setpgrp sleep spawnlp
+__STDPP__directive pragma pp:hide resolvepath setenv setpgrp sleep spawnlp
 __STDPP__directive pragma pp:hide spawnve spawnveg spawnvp spawnvpe
 __STDPP__directive pragma pp:hide strtol strtoul strtoll strtoull
 __STDPP__directive pragma pp:hide strtod strtold
-__STDPP__directive pragma pp:hide strdup vfprintf vprintf vsprintf
+__STDPP__directive pragma pp:hide strdup unsetenv vfprintf vprintf vsprintf
 #else
 #if !_std_def_calloc
 #define calloc		______calloc
@@ -161,6 +161,7 @@ __STDPP__directive pragma pp:hide strdup vfprintf vprintf vsprintf
 #define getsubopt	______getsubopt
 #define putenv		______putenv
 #define realpath	______realpath
+#define resolvepath	______resolvepath
 #define setenv		______setenv
 #define setpgrp		______setpgrp
 #define sleep		______sleep
@@ -176,6 +177,7 @@ __STDPP__directive pragma pp:hide strdup vfprintf vprintf vsprintf
 #define strtod		______strtod
 #define strtold		______strtold
 #define strdup		______strdup
+#define unsetenv	______unsetenv
 #define vfprintf	______vfprintf
 #define vprintf		______vprintf
 #define vsprintf	______vsprintf
@@ -248,11 +250,11 @@ __STDPP__directive pragma pp:nohide valloc
 __STDPP__directive pragma pp:nohide execl execle execlp execv
 __STDPP__directive pragma pp:nohide execve execvp execvpe
 __STDPP__directive pragma pp:nohide getcwd getopt getsubopt putenv realpath
-__STDPP__directive pragma pp:nohide setenv setpgrp sleep spawnlp
+__STDPP__directive pragma pp:nohide resolvepath setenv setpgrp sleep spawnlp
 __STDPP__directive pragma pp:nohide spawnve spawnveg spawnvp spawnvpe
 __STDPP__directive pragma pp:nohide strtol strtoul strtoll strtoull
 __STDPP__directive pragma pp:nohide strtod strtold
-__STDPP__directive pragma pp:nohide strdup vfprintf vprintf vsprintf
+__STDPP__directive pragma pp:nohide strdup unsetenv vfprintf vprintf vsprintf
 #else
 #if !_std_def_calloc
 #undef	calloc	
@@ -281,6 +283,7 @@ __STDPP__directive pragma pp:nohide strdup vfprintf vprintf vsprintf
 #undef	getsubopt
 #undef	putenv
 #undef	realpath
+#undef	resolvepath
 #undef	setenv
 #undef	setpgrp
 #undef	sleep
@@ -296,6 +299,7 @@ __STDPP__directive pragma pp:nohide strdup vfprintf vprintf vsprintf
 #undef	strtod
 #undef	strtold
 #undef	strdup
+#undef	unsetenv
 #undef	vfprintf
 #undef	vprintf
 #undef	vsprintf
@@ -320,6 +324,7 @@ extern int		atexit(void(*)(void));
 extern void		exit(int);
 extern char*		getenv(const char*);
 extern char*		realpath(const char*, char*);
+extern char*		resolvepath(const char*, char*, size_t);
 extern void		swab(const void*, void*, ssize_t);
 extern int		system(const char*);
 
@@ -1083,15 +1088,15 @@ extern int		rename(const char*, const char*);
 #undef	off_t
 #define off_t		off64_t
 #endif
-#if _lib_ftruncate64
+#if !defined(ftruncate) && _lib_ftruncate64
 #define ftruncate	ftruncate64
 extern int		ftruncate64(int, off64_t);
 #endif
-#if _lib_lseek64
+#if !defined(lseek) && _lib_lseek64
 #define lseek		lseek64
 extern off64_t		lseek64(int, off64_t, int);
 #endif
-#if _lib_truncate64
+#if !defined(truncate) && _lib_truncate64
 #define truncate	truncate64
 extern int		truncate64(const char*, off64_t);
 #endif

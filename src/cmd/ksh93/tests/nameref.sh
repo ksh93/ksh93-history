@@ -175,4 +175,14 @@ if	[[ $(
 ) != $'3\n4' ]]
 then	err_exit 'nameref optimization error'
 fi
+[[ $(
+unset x y var
+var=(foo=bar)
+for i in y var
+do	typeset -n x=$i
+	if	[[ ${!x.@} ]]
+	then	print ok
+	fi
+	typeset +n x
+done) != ok ]] && err_exit 'invalid for loop optimization of name references'
 exit $((Errors))

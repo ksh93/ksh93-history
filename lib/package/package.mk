@@ -1,7 +1,7 @@
 /*
  * source and binary package support
  *
- * @(#)package.mk (AT&T Labs Research) 2002-10-04
+ * @(#)package.mk (AT&T Labs Research) 2002-11-13
  *
  * usage:
  *
@@ -761,7 +761,7 @@ binary : .binary.init .binary.gen .binary.$$(style)
 		fi
 	fi
 
-list.install list.manifest :
+list.installed list.manifest :
 	set -- $(package.closure)
 	for i
 	do	cd $(INSTALLROOT)/$i

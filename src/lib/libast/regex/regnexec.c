@@ -1364,7 +1364,8 @@ DEBUG_TEST(0x0200,(sfprintf(sfstdout,"AHA#%04d 0x%04x parse %s=>%s `%-.*s'\n", _
 							r = BEST;
 							break;
 						case CUT:
-							return CUT;
+							r = CUT;
+							break;
 						case GOOD:
 							r = GOOD;
 							/*FALLTHROUGH*/

@@ -54,14 +54,13 @@
 struct Find_s;
 struct Finddisc_s;
 
-typedef int (*Finderror_f)(struct Find_s*, struct Finddisc_s*, int, const char*, ...);
 typedef int (*Findverify_f)(struct Find_s*, const char*, size_t, struct Finddisc_s*);
 
 typedef struct Finddisc_s
 {
 	unsigned long	version;	/* interface version		*/
 	unsigned long	flags;		/* FIND_* flags			*/
-	Finderror_f	errorf;		/* error function		*/
+	Error_f		errorf;		/* error function		*/
 	Findverify_f	verifyf;	/* dir verify function		*/
 	char**		dirs;		/* dir prefixes to search	*/
 } Finddisc_t;

@@ -199,7 +199,7 @@ b_cmp(int argc, register char** argv, void* context)
 	int		flags = 0;
 
 	NoP(argc);
-	cmdinit(argv, context, ERROR_CATALOG);
+	cmdinit(argv, context, ERROR_CATALOG, 0);
 	while (n = optget(argv, usage)) switch (n)
 	{
 	case 'l':

@@ -32,7 +32,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: chmod (AT&T Labs Research) 2000-02-14 $\n]"
+"[-?\n@(#)$Id: chmod (AT&T Labs Research) 2002-11-14 $\n]"
 USAGE_LICENSE
 "[+NAME?chmod - change the access permissions of files]"
 "[+DESCRIPTION?\bchmod\b changes the permission of each file "
@@ -147,8 +147,12 @@ __STDPP__directive pragma pp:nohide lchmod
 #define OPT_FORCE	(1<<2)		/* ignore errors		*/
 #define OPT_LCHOWN	(1<<5)		/* lchown			*/
 
-
 extern int	lchmod(const char*, mode_t);
+
+static struct State_s
+{
+	int		interrupt;
+} state;
 
 int
 b_chmod(int argc, char* argv[], void* context)
@@ -167,7 +171,13 @@ b_chmod(int argc, char* argv[], void* context)
 	int		chlink = 0;
 #endif
 
-	cmdinit(argv, context, ERROR_CATALOG);
+	if (argc < 0)
+	{
+		state.interrupt = 1;
+		return -1;
+	}
+	state.interrupt = 0;
+	cmdinit(argv, context, ERROR_CATALOG, ERROR_NOTIFY);
 	flags = fts_flags() | FTS_TOP | FTS_NOPOSTORDER | FTS_NOSEEDOTDIR;
 
 	/*
@@ -240,7 +250,7 @@ b_chmod(int argc, char* argv[], void* context)
 			umask(ignore);
 		error(ERROR_system(1), "%s: not found", argv[1]);
 	}
-	while (ent = fts_read(fts))
+	while (!state.interrupt && (ent = fts_read(fts)))
 		switch (ent->fts_info)
 		{
 		case FTS_F:

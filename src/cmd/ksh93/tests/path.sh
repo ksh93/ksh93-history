@@ -35,6 +35,22 @@ mkdir /tmp/ksh$$
 cd /tmp/ksh$$
 trap 'rm -rf /tmp/ksh$$' EXIT
 cat > bug1 <<- \EOF
+	print print ok > /tmp/ok$$
+	/bin/chmod 755 /tmp/ok$$
+	trap 'rm -f /tmp/ok$$' EXIT
+	function a
+	{
+	        typeset -x PATH=/tmp
+	        ok$$
+	}
+	path=$PATH
+	unset PATH
+	a
+	PATH=$path
+}
+EOF
+[[ $($SHELL ./bug1  2> /dev/null) == ok ]]  || err_exit "PATH in function not working"
+cat > bug1 <<- \EOF
 	function lock_unlock
 	{
 	typeset PATH=/usr/bin
@@ -136,4 +152,9 @@ then	PATH=
 	then	err_exit 'unsetting path  not working'
 	fi
 fi
+PATH=/dev:/tmp/ksh$$
+x=$(whence rm)
+typeset foo=$(PATH=/xyz:/abc :)
+y=$(whence rm)
+[[ $x != "$y" ]] && err_exit 'PATH not restored after command substitution'
 exit $((Errors))

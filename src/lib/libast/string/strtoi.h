@@ -32,6 +32,8 @@
  *
  *	strtol		strtoul		strton
  *	strtoll		strtoull	strtonll
+ *	strntol		strntoul	strnton
+ *	strntoll	strntoull	strntonll
  *
  * define these macros to instantiate an implementation:
  *
@@ -39,6 +41,7 @@
  *	S2I_number	the signed number type
  *	S2I_unsigned	1 for unsigned, 0 for signed
  *	S2I_multiplier	1 for optional multiplier suffix, 0 otherwise
+ *	S2I_size	the second argument is the input string size
  *
  * convert string to number
  * errno=ERANGE on overflow (LONG_MAX) or underflow (LONG_MIN)
@@ -106,6 +109,12 @@
 #define S2I_type	S2I_number
 #define S2I_min		(-S2I_max-1)
 #define S2I_max		(S2I_umax>>1)
+#endif
+
+#if S2I_size
+#define S2I_valid(s)	((s)<(z))
+#else
+#define S2I_valid(s)	1
 #endif
 
 #define ADDOVER(n,c,s)	((S2I_umax-(n))<((S2I_utype)((c)+(s))))
@@ -185,6 +194,21 @@ static const S2I_utype	mm[] =
 #endif
 extern S2I_type
 #undef	extern
+#if S2I_size
+#if S2I_multiplier
+#if __STD_C
+S2I_function(const char* a, size_t size, char** e, char* basep, int m)
+#else
+S2I_function(a, size, e, basep, m) const char* a; size_t size; char** e; char* basep; int m;
+#endif
+#else
+#if __STD_C
+S2I_function(const char* a, size_t size, char** e, int base)
+#else
+S2I_function(a, size, e, base) const char* a; size_t size; char** e; int base;
+#endif
+#endif
+#else
 #if S2I_multiplier
 #if __STD_C
 S2I_function(const char* a, char** e, char* basep, int m)
@@ -198,8 +222,12 @@ S2I_function(const char* a, char** e, int base)
 S2I_function(a, e, base) const char* a; char** e; int base;
 #endif
 #endif
+#endif
 {
 	register unsigned char*	s = (unsigned char*)a;
+#if S2I_size
+	register unsigned char*	z = s + size;
+#endif
 	register S2I_utype	n;
 	register S2I_utype	x;
 	register int		c;
@@ -237,22 +265,22 @@ S2I_function(a, e, base) const char* a; char** e; int base;
 		errno = EINVAL;
 		return 0;
 	}
-	while (isspace(*s))
+	while (S2I_valid(s) && isspace(*s))
 		s++;
-	if ((negative = (*s == '-')) || *s == '+')
+	if ((negative = S2I_valid(s) && (*s == '-')) || S2I_valid(s) && *s == '+')
 		s++;
 	p = s;
 	if (!base)
 	{
-		if ((c = *p++) >= '0' && c <= '9')
+		if (S2I_valid(p) && (c = *p++) >= '0' && c <= '9')
 		{
 			n = c - '0';
-			if ((c = *p) >= '0' && c <= '9')
+			if (S2I_valid(p) && (c = *p) >= '0' && c <= '9')
 			{
 				n = (n << 3) + (n << 1) + c - '0';
 				p++;
 			}
-			if (*p == '#')
+			if (S2I_valid(p) && *p == '#')
 			{
 				if (n >= 2 && n <= 64)
 				{
@@ -262,7 +290,7 @@ S2I_function(a, e, base) const char* a; char** e; int base;
 			}
 			else if (base)
 				base = 0;
-			else if (*s == '0')
+			else if (S2I_valid(s) && *s == '0' && S2I_valid(s + 1))
 			{
 				if ((c = *(s + 1)) == 'x' || c == 'X')
 				{
@@ -310,7 +338,7 @@ S2I_function(a, e, base) const char* a; char** e; int base;
 		p = 0;
 		for (;;)
 		{
-			if ((c = *s++) >= '0' && c <= '9')
+			if (S2I_valid(s) && (c = *s++) >= '0' && c <= '9')
 			{
 				if (n > x)
 					overflow = 1;
@@ -323,7 +351,7 @@ S2I_function(a, e, base) const char* a; char** e; int base;
 					n += c;
 				}
 			}
-			else if (p && (s - p) != 4)
+			else if (p && (s - p) != (3 + S2I_valid(s)))
 			{
 				s = p;
 				n = v;
@@ -369,7 +397,7 @@ S2I_function(a, e, base) const char* a; char** e; int base;
 				shift = base < 16 ? 3 : 4;
 			else
 				shift = base < 64 ? 5 : 6;
-			while ((c = cv[*s++]) < base)
+			while (S2I_valid(s) && (c = cv[*s++]) < base)
 			{
 				if (n > x)
 					overflow = 1;
@@ -383,7 +411,7 @@ S2I_function(a, e, base) const char* a; char** e; int base;
 			}
 		}
 		else
-			while ((c = cv[*s++]) < base)
+			while (S2I_valid(s) && (c = cv[*s++]) < base)
 			{
 				if (n > x)
 					overflow = 1;
@@ -402,7 +430,7 @@ S2I_function(a, e, base) const char* a; char** e; int base;
 	 * optional qualifier suffix
 	 */
 
-	if (s > (unsigned char*)(a + 1))
+	if (S2I_valid(s) && s > (unsigned char*)(a + 1))
 	{
 		base = 0;
 		for (;;)
@@ -410,9 +438,15 @@ S2I_function(a, e, base) const char* a; char** e; int base;
 			if (!(base & QL) && (c == 'l' || c == 'L'))
 			{
 				base |= QL;
+				if (!S2I_valid(s))
+					break;
 				c = *s++;
 				if (c == 'l' || c == 'L')
+				{
+					if (!S2I_valid(s))
+						break;
 					c = *s++;
+				}
 			}
 			else if (!(base & QU) && (c == 'u' || c == 'U'))
 			{
@@ -420,97 +454,100 @@ S2I_function(a, e, base) const char* a; char** e; int base;
 #if !S2I_unsigned
 				qualifier |= QU;
 #endif
+				if (!S2I_valid(s))
+					break;
 				c = *s++;
 			}
 			else
 				break;
 		}
 	}
-
-#if S2I_multiplier
-
-	/*
-	 * optional multiplier suffix
-	 */
-
-	if (m < 0 || s == (unsigned char*)(a + 1))
-		s--;
-	else
+	if (S2I_valid(s))
 	{
-		switch (c)
+#if S2I_multiplier
+		/*
+		 * optional multiplier suffix
+		 */
+
+		if (m < 0 || s == (unsigned char*)(a + 1))
+			s--;
+		else
 		{
-		case 'b':
-		case 'B':
-			v = 512;
-			break;
-		case 'c':
-		case 'C':
-			break;
-		case 'g':
-		case 'G':
-			v = 1024 * 1024 * 1024;
-			break;
-		case 'k':
-		case 'K':
-			v = 1024;
-			break;
-		case 'l':
-		case 'L':
-			v = 4;
-			break;
-		case 'm':
-		case 'M':
-			v = 1024 * 1024;
-			break;
-		case 'q':
-		case 'Q':
-			v = 8;
-			break;
-		case 't':
-		case 'T':
-			if (sizeof(S2I_number) <= 4)
-				overflow = 1;
-			v *= 1024 * 1024;
-			v *= 1024 * 1024;
-			break;
-		case 'w':
-		case 'W':
-			v = 2;
-			break;
-		default:
-			if (c == decimal)
+			switch (c)
 			{
-				if (MPYOVER(n, 100))
+			case 'b':
+			case 'B':
+				v = 512;
+				break;
+			case 'c':
+			case 'C':
+				break;
+			case 'g':
+			case 'G':
+				v = 1024 * 1024 * 1024;
+				break;
+			case 'k':
+			case 'K':
+				v = 1024;
+				break;
+			case 'l':
+			case 'L':
+				v = 4;
+				break;
+			case 'm':
+			case 'M':
+				v = 1024 * 1024;
+				break;
+			case 'q':
+			case 'Q':
+				v = 8;
+				break;
+			case 't':
+			case 'T':
+				if (sizeof(S2I_number) <= 4)
 					overflow = 1;
-				n *= 100;
-				v = 0;
-				for (m = 10; (c = *s++) >= '0' && c <= '9'; m /= 10) 
-					v += m * (c - '0');
-				if (ADDOVER(n, v, negative))
-					overflow = 1;
-				n += v;
-				v = 0;
-			}
-			else
-			{
-				s--;
-				if (m > 1)
-					v = m;
-				else
+				v *= 1024 * 1024;
+				v *= 1024 * 1024;
+				break;
+			case 'w':
+			case 'W':
+				v = 2;
+				break;
+			default:
+				if (c == decimal)
+				{
+					if (MPYOVER(n, 100))
+						overflow = 1;
+					n *= 100;
 					v = 0;
+					for (m = 10; (c = *s++) >= '0' && c <= '9'; m /= 10) 
+						v += m * (c - '0');
+					if (ADDOVER(n, v, negative))
+						overflow = 1;
+					n += v;
+					v = 0;
+				}
+				else
+				{
+					s--;
+					if (m > 1)
+						v = m;
+					else
+						v = 0;
+				}
+				break;
 			}
-			break;
+			if (v)
+			{
+				if (MPYOVER(n, v))
+					overflow = 1;
+				n *= v;
+			}
 		}
-		if (v)
-		{
-			if (MPYOVER(n, v))
-				overflow = 1;
-			n *= v;
-		}
-	}
 #else
-	s--;
+		s--;
 #endif
+	}
 #if !S2I_unsigned
 	if (!(qualifier & QU) && (n - negative) > S2I_max)
 		overflow = 1;

@@ -30,7 +30,7 @@
  * extended to allow some features to be set
  */
 
-static const char id[] = "\n@(#)$Id: getconf (AT&T Labs Research) 2002-09-22 $\0\n";
+static const char id[] = "\n@(#)$Id: getconf (AT&T Labs Research) 2002-10-29 $\0\n";
 
 #include "univlib.h"
 
@@ -226,7 +226,7 @@ typedef struct
 
 static State_t	state = { "getconf", "_AST_FEATURES", dynamic };
 
-static char*	feature(const char*, const char*, const char*, Ast_conferror_f);
+static char*	feature(const char*, const char*, const char*, Error_f);
 
 /*
  * return fmtbuf() copy of s
@@ -268,6 +268,7 @@ synthesize(register Feature_t* fp, const char* path, const char* value)
 		n = roundof(n, 32);
 		if (!(state.data = newof(0, char, n, 0)))
 			return 0;
+		state.last = state.data + n - 1;
 		strcpy(state.data, state.name);
 		state.data += state.prefix - 1;
 		*state.data++ = '=';
@@ -299,7 +300,6 @@ synthesize(register Feature_t* fp, const char* path, const char* value)
 			*ve++ = ' ';
 		}
 		state.synthesizing = 0;
-		state.last = state.data + n - 1;
 	}
 	if (!fp)
 		return state.data;
@@ -504,7 +504,7 @@ initialize(register Feature_t* fp, const char* path, const char* command, const 
  */
 
 static char*
-feature(const char* name, const char* path, const char* value, Ast_conferror_f conferror)
+feature(const char* name, const char* path, const char* value, Error_f conferror)
 {
 	register Feature_t*	fp;
 	register int		n;
@@ -742,7 +742,7 @@ lookup(register Lookup_t* look, const char* name)
  */
 
 static char*
-print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, Ast_conferror_f conferror)
+print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, Error_f conferror)
 {
 	register Conf_t*	p = look->conf;
 	register int		flags = look->flags|CONF_DEFINED;
@@ -887,7 +887,7 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, A
 #define ALT	16
 
 char*
-astgetconf(const char* name, const char* path, const char* value, Ast_conferror_f conferror)
+astgetconf(const char* name, const char* path, const char* value, Error_f conferror)
 {
 	register char*	s;
 	char*		e;

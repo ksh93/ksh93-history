@@ -696,6 +696,8 @@ static int hist_write(Sfio_t *iop,const void *buff,register int insize,Sfdisc_t*
 	register char *bufptr = ((char*)buff)+insize;
 	register int c,size = insize;
 	register off_t cur;
+	int saved=0;
+	char saveptr[HIST_MARKSZ];
 	if(!hp->histflush)
 		return(write(sffileno(iop),(char*)buff,size));
 	if((cur = lseek(sffileno(iop),(off_t)0,SEEK_END)) <0)
@@ -745,13 +747,18 @@ static int hist_write(Sfio_t *iop,const void *buff,register int insize,Sfdisc_t*
 	hp->histcmds[c] = hp->histcnt;
 	if(hp->histflush>HIST_MARKSZ && hp->histcnt > hp->histmarker+HIST_BSIZE/2)
 	{
+		memcpy((void*)saveptr,(void*)bufptr,HIST_MARKSZ);
+		saved=1;
 		hp->histcnt += HIST_MARKSZ;
 		hist_marker(bufptr,hp->histind);
 		hp->histmarker = hp->histcmds[hist_ind(hp,c)] = hp->histcnt;
 		size += HIST_MARKSZ;
 	}
 	errno = 0;
-	if(write(sffileno(iop),(char*)buff,size)>=0)
+	size = write(sffileno(iop),(char*)buff,size);
+	if(saved)
+		memcpy((void*)bufptr,(void*)saveptr,HIST_MARKSZ);
+	if(size>=0)
 	{
 		hp->histwfail = 0;
 		return(insize);

@@ -1,26 +1,4 @@
-####################################################################
-#                                                                  #
-#             This software is part of the ast package             #
-#                Copyright (c) 1999-2002 AT&T Corp.                #
-#        and it may only be used by you under license from         #
-#                       AT&T Corp. ("AT&T")                        #
-#         A copy of the Source Code Agreement is available         #
-#                at the AT&T Internet web site URL                 #
-#                                                                  #
-#       http://www.research.att.com/sw/license/ast-open.html       #
-#                                                                  #
-#    If you have copied or used this software without agreeing     #
-#        to the terms of the license you are infringing on         #
-#           the license and copyright and are violating            #
-#               AT&T's intellectual property rights.               #
-#                                                                  #
-#            Information and Software Systems Research             #
-#                        AT&T Labs Research                        #
-#                         Florham Park NJ                          #
-#                                                                  #
-#               Glenn Fowler <gsf@research.att.com>                #
-#                                                                  #
-####################################################################
+USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1999-2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"
 # package - source and binary package control
 # this script is written to make it through all sh variants
 # Glenn Fowler <gsf@research.att.com>
@@ -51,7 +29,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Labs Research) 2002-10-04 $
+@(#)$Id: package (AT&T Labs Research) 2002-11-26 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary packages.
@@ -99,7 +77,8 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 	[+admin\b [\ball\b]] [\bdb\b \afile\a]] [\bon\b \apattern\a]] [\aaction\a ...]]?Apply \aaction\a ... to
 		the hosts listed in \afile\a. If \afile\a  is omitted then
 		\badmin.db\b is assumed. The caller must have
-		\brcp\b(1) and \brsh\b(1) access to the hosts. Output for
+		\brcp\b(1) and \brsh\b(1) or \bscp\b(1) and \bssh\b(1)
+		access to the hosts. Output for
 		\aaction\a is saved per-host in the file
 		\aaction\a\b.log/\b\ahost\a. Logs can be viewed by
 		\bpackage admin\b [\bon\b \ahost\a]] \bresults\b [\aaction\a]].
@@ -463,6 +442,8 @@ DEBUG=
 PROTOROOT=-
 SHELLMAGIC=-
 
+unset FIGNORE 2>/dev/null || true
+
 while	:
 do	case $# in
 	0)	set host type ;;
@@ -770,10 +751,10 @@ ${eL}${eO}"
 	admin [ all ] [ db FILE ] [ on PATTERN ] [ action ... ]
 		Apply ACTION ... to the hosts listed in FILE. If FILE is
 		omitted then "admin.db" is assumed. The caller must have rcp(1)
-		and rsh(1) access to the hosts. Output for the action is save
-		per-host in ACTION.log/HOST. Logs can be viewed by
-		\"package admin [on HOST] results [ACTION]\". By default
-		only local PACKAGEROOT hosts are selected from FILE;
+		and rsh(1) or scp(1) and ssh(1) access to the hosts. Output
+		for the action is saved per-host in ACTION.log/HOST. Logs
+		can be viewed by \"package admin [on HOST] results [ACTION]\".
+		By default only local PACKAGEROOT hosts are selected from FILE;
 		\"all\" selects all hosts. \"on PATTERN\" selects only
 		hosts matching the | separated PATTERN. FILE contains four
 		types of lines. Blank lines and lines beginning with # are
@@ -1989,8 +1970,8 @@ note() # message ...
 # some actions have their own PACKAGEROOT or kick out early
 
 case $action in
-host)	eval x=$package_use
-	case $x in
+host)	eval u=$package_use
+	case $u in
 	$PACKAGE_USE)	;;
 	*)		KEEP_HOSTTYPE=0 ;;
 	esac
@@ -2001,7 +1982,8 @@ host)	eval x=$package_use
 use)	x=
 	;;
 *)	x=
-	case $package_use in
+	eval u=$package_use
+	case $u in
 	$PACKAGE_USE)
 		case :$PATH: in
 		*:$INSTALLROOT/bin:*)
@@ -2209,8 +2191,7 @@ cat $INITROOT/$i.sh
 		j=$INITROOT/C+probe
 		k=$INITROOT/make.probe
 		case `ls -t $i $j $k 2>/dev/null` in
-		$i*$j*$k*)
-			;;
+		$i*)	;;
 		*)	if	test -f $j -a -f $k
 			then	note update $i
 				shellmagic
@@ -2536,6 +2517,19 @@ cat $j $k
 esac
 PACKAGESRC=$PACKAGEROOT/lib/package
 PACKAGEBIN=$INSTALLROOT/lib/package
+
+# more cygwin hassles
+
+case $HOSTTYPE in
+cygwin.*)
+	case $CYGWIN in
+	*ntsec*);;
+	*)	echo "$command: $HOSTTYPE: export CYGWIN=ntsec or languish in windows" >&2
+		exit 1
+		;;
+	esac
+	;;
+esac
 
 # set up the view state
 
@@ -3187,15 +3181,54 @@ get() # host path [ file size ]
 {
 	getfd=8
 	case $3 in
-	'')	eval "exec $getfd<> /dev/tcp/$1/80" || exit
-		echo "GET $2" >&$getfd
-		get=`grep '^[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ]' <&$getfd`
+	'')	host=$1
+		path=$2
+		while	:
+		do	eval "exec $getfd<> /dev/tcp/$host/80" || exit
+			print "GET $path HTTP/1.0\\r\\nHost: $host\\r\\n\\r" >&$getfd
+			cat <&8 > get.tmp
+			get=`sed -e 1q get.tmp`
+			case $get in
+			*" 200 "*)
+				break
+				;;
+			*" 302 "*)
+				get=`sed -e '/^Location: /!d' -e 's,^Location: \(.*\)://\([^/]*\)\(/.*\),prot='\''\1'\'' host='\''\2'\'' path='\''\3'\'',' get.tmp`
+				case $get in
+				'')	rm get.tmp
+					echo "$command: $action: $url: redirect error" >&2
+					exit 1
+					;;
+				esac
+				eval $get
+				;;
+			*)	rm get.tmp
+				echo "$command: $action: $url: $get" >&2
+				exit 1
+				;;
+			esac
+		done
+		get=`sed -e '1,/^.$/d' -e '/^[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWYZ]/!d' get.tmp`
+		rm get.tmp
 		;;
 	*)	case $exec in
 		'')	echo "$3 ($4 bytes):"
 			eval "exec $getfd<> /dev/tcp/$1/80" || exit
-			echo "GET $2/$3" >&$getfd
-			cat <&$getfd > get.tmp || exit
+			print "GET $2/$3 HTTP/1.0\\r\\nHost: $host\\r\\n\\r" >&$getfd
+			read get <&$getfd
+			case $get in
+			*" 200 "*)
+				;;
+			*)	echo "$command: $action: $url: $get" >&2
+				exit 1
+				;;
+			esac
+			while	read get <&$getfd
+			do	case $get in
+				''|?)	break ;;
+				esac
+			done
+			cat <&$getfd > get.tmp
 			case " `wc -c get.tmp` " in
 			*" $4 "*)
 				;;
@@ -3729,7 +3762,6 @@ install)cd $PACKAGEROOT
 						INSTALLROOT=$PACKAGEROOT/arch/$a
 						VPATH=$INSTALLROOT:$PACKAGEROOT:$VPATH
 						export INSTALLROOT VPATH
-						echo lib/$command
 						$MAKE -s $makeflags -f $i.pkg $qualifier list.installed $assign
 						) | sort -u
 					)
@@ -3863,6 +3895,34 @@ make|view)
 			;;
 		esac
 	done
+
+	# check $CC
+
+	case $exec in
+	'')	tmp=pk$$
+		trap 'rm -f $tmp.*' 0 1 2
+		cat > $tmp.c <<'!'
+#include <stdio.h>
+main()
+{
+	printf("hello world\n");
+	return 0;
+}
+!
+		$CC -o $tmp.exe $tmp.c >/dev/null 2>&1
+		case `(./$tmp.exe) 2>&1` in
+		'hello world')
+			;;
+		*)	echo "$command: $CC: failed to compile this program:" >&2
+			cat $tmp.c >&2
+			echo "$command: $CC: not a C compiler" >&2
+			exit 1
+			;;
+		esac
+		rm -f $tmp.*
+		trap - 0 1 2
+		;;
+	esac
 
 	# verify the top view
 
@@ -4507,6 +4567,11 @@ release)count= lo= hi=
 					do	if	test -f $i/$f
 						then	$exec $EXECROOT/bin/release $release $i/$f
 							x="$x $i"
+							for f in $i/*/$f
+							do	if	test -f $f
+								then	$exec $EXECROOT/bin/release $release $f
+								fi
+							done
 							break
 						fi
 					done
@@ -4699,7 +4764,7 @@ update)	# download the latest release.version for selected packages
 			;;
 		source)	source=1
 			;;
-		*/*)	url=$1
+		*://*)	url=$1
 			shift
 			break
 			;;
@@ -4734,14 +4799,10 @@ update)	# download the latest release.version for selected packages
 		;;
 	esac
 
-	# get the update list cgi url
+	# get the update list
 
 	eval `echo $url | sed 's,\(.*\)://\([^/]*\)/\(.*\),prot=\"\1\" host=\"\2\" dir=\"\3\",'`
 	get $host /$dir/update.html
-	case $get in
-	'')	echo $command: $action: $url: browse error >&2; exit 1 ;;
-	esac
-	eval `echo $get | sed 's,\(.*\)://\([^/]*\)/\(.*\),prot=\"\1\" qhost=\"\2\" qpath=\"\3\",'`
 
 	# get/check the package names
 
@@ -4826,7 +4887,6 @@ update)	# download the latest release.version for selected packages
 	case $default_url in
 	?*)	echo $url > $default_url ;;
 	esac
-	get $qhost /$qpath
 	echo "$get" |
 	while	read name suffix type base base_size delta delta_size sync sync_size comment
 	do	case $verbose in

@@ -291,7 +291,7 @@ b_date(int argc, register char** argv, void* context)
 	int		show = 0;	/* show date and don't set	*/
 
 	NoP(argc);
-	cmdinit(argv, context, ERROR_CATALOG);
+	cmdinit(argv, context, ERROR_CATALOG, 0);
 	setlocale(LC_ALL, "");
 	tm_info.flags |= TM_DATESTYLE;
 	fmts = &fmt;

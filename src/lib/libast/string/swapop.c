@@ -49,6 +49,15 @@ swapop(const void* internal, const void* external, int size)
 	if (size <= sizeof(int_max))
 		for (op = 0; op < size; op++)
 			if (!memcmp(internal, swapmem(op, external, tmp, size), size))
+			{
+				/*
+				 * le on 4 bytes is also le on 8
+				 * nuxi pdp is the anomaly
+				 */
+
+				if (op == 3 && size == 4)
+					op = 7;
 				return op;
+			}
 	return -1;
 }

@@ -29,7 +29,8 @@
  */
 
 #include <ast.h>
-#include <error.h>
+
+extern char*		resolvepath(const char*, char*, size_t);
 
 #if defined(__EXPORT__)
 #define extern	__EXPORT__
@@ -38,30 +39,5 @@
 extern char*
 realpath(const char* file, char* path)
 {
-	register char*	s;
-	register int	n;
-	register int	r;
-
-	r = *file == '/';
-	n = strlen(file) + r + 1;
-	if (n >= PATH_MAX)
-	{
-#ifdef ENAMETOOLONG
-		errno = ENAMETOOLONG;
-#else
-		errno = ENOMEM;
-#endif
-		return 0;
-	}
-	if (!r)
-		s = path;
-	else if (!getcwd(path, PATH_MAX - n))
-		return 0;
-	else
-	{
-		s = path + strlen(path);
-		*s++ = '/';
-	}
-	strcpy(s, file);
-	return pathcanon(path, PATH_PHYSICAL|PATH_DOTDOT|PATH_EXISTS) ? path : (char*)0;
+	return resolvepath(file, path, PATH_MAX);
 }

@@ -93,7 +93,7 @@ static double arith(const char **ptr, struct lval *lvalue, int type, double n)
 	    {
 		register Namval_t *np = (Namval_t*)(lvalue->value);
 		np = scope(np,lvalue,1);
-		nv_putval(np, (char*)&n, NV_INTEGER);
+		nv_putval(np, (char*)&n, NV_INTEGER|NV_DOUBLE);
 		r=nv_getnum(np);
 		break;
 	    }
@@ -152,7 +152,10 @@ static double arith(const char **ptr, struct lval *lvalue, int type, double n)
 			if(sh_isoption(SH_NOEXEC))
 				np = L_ARGNOD;
 			else
-				np = nv_open(*ptr,sh.var_tree,NV_NOASSIGN|NV_VARNAME);
+			{
+				Dt_t  *root = (lvalue->emode&ARITH_COMP)?sh.var_base:sh.var_tree;
+				np = nv_open(*ptr,root,NV_NOASSIGN|NV_VARNAME);
+			}
 			*str = c;
 			lvalue->value = (char*)np;
 			if((lvalue->emode&ARITH_COMP) || (nv_isarray(np) && nv_aindex(np)<0))

@@ -780,6 +780,7 @@ static struct argnod *assign(register struct argnod *ap)
 		tp = &t->lst.lstrit;
 	}
 	*tp = (union anynode*)ac;
+	shlex.assignok = 0;
 	return(ap);
 }
 

@@ -87,4 +87,100 @@ foo=(integer x=3)
 if	[[ ${foo} != *x=3* ]]
 then	err_exit "compound variable with integer subvariable not working"
 fi
+$SHELL -c $'x=(foo=bar)\n[[ x == x ]]' 2> /dev/null || 
+	err_exit '[[ ... ]] not working after compound assignment'
+unset foo
+[[ ${!foo.@} ]] && err_exit 'unset compound variable leaves subvariables'
+suitable=(
+  label="Table Viewer"
+  langs="ksh"
+  uselang=ksh
+  launch=no
+  groups="default"
+  default=(
+    label="Table Viewer Preferences"
+    entrylist=" \
+      vieworigin viewsize viewcolor viewfontname viewfontsize \
+      showheader header showfooter footer showtitle title showlegends \
+      class_td_lg1_style class_tr_tr1_style \
+      class_th_th1_style class_td_td1_style \
+      fields fieldorder \
+    "
+    entries=(
+      vieworigin=(
+        type=coord var=vieworigin val="0 0" label="Window Position"
+      )
+      viewsize=(
+        type=coord var=viewsize val="400 400" label="Window Size"
+      )
+      viewcolor=(
+        type=2colors var=viewcolor val="gray black"
+        label="Window Colors"
+      )
+      viewfontname=(
+        type=fontname var=viewfontname val="Times-Roman"
+        label="Window Font Name"
+      )
+      viewfontsize=(
+        type=fontsize var=viewfontsize val=14 label="Window Font Size"
+      )
+
+      showheader=(
+        type=yesno var=showheader val=no label="Show Header"
+      )
+      header=(
+        type=text var=header val="" label="Header"
+      )
+
+      showfooter=(
+        type=yesno var=showfooter val=no label="Show Footer"
+      )
+      footer=(
+        type=text var=footer val="" label="Footer"
+      )
+
+      showtitle=(
+        type=yesno var=showtitle val=yes label="Show Title"
+      )
+      title=(
+        type=text var=title val="SWIFTUI - Table View" label="Title"
+      )
+
+      showlegends=(
+        type=yesno var=showlegends val=yes label="Show Legends"
+      )
+
+      class_td_lg1_style=(
+        type=style var=class_td_lg1_style
+        val="color: black; font-family: Times-Roman; font-size: 14pt"
+        label="Legend 1 Style"
+      )
+
+      class_tr_tr1_style=(
+        type=style var=class_tr_tr1_style val="background: black"
+        label="Table Row 1 Style"
+      )
+
+      class_th_th1_style=(
+        type=style var=class_th_th1_style
+        val="color: black; font-family: Times-Roman; font-size: 14pt; text-align: left"
+        label="Table Header 1 Style"
+      )
+
+      class_td_td1_style=(
+        type=style var=class_td_td1_style
+        val="color: black; font-family: Times-Roman; font-size: 14pt; text-align: left"
+        label="Table Cell 1 Style"
+      )
+
+      fields=(
+        type=text var=fields val= label="List of Fields"
+      )
+      fieldorder=(
+        type=text var=fieldorder val= label="Order of Fields"
+      )
+    )
+  )
+)
+[[ "${suitable}" == *entrylist=* ]] || err_exit 'compound variable expansion omitting fields'
 exit $((Errors))

@@ -27,6 +27,7 @@
 
 #include <ast.h>
 #include <error.h>
+#include <tm.h>
 
 #include "FEATURE/omitted"
 
@@ -55,19 +56,20 @@
  *	 filesystems and { libast } has workarounds for win32 locale info.
  */
 
-extern int	_access(const char*, int);
-extern int	_chmod(const char*, mode_t);
-extern int	_close(int);
-extern int	_execve(const char*, char*const[], char*const[]);
-extern int	_link(const char*, const char*);
-extern int	_open(const char*, int, ...);
-extern long	_pathconf(const char*, int);
-extern ssize_t	_read(int, void*, size_t);
-extern int	_rename(const char*, const char*);
-extern int	_stat(const char*, struct stat*);
-extern int	_unlink(const char*);
-extern int	_utime(const char*, struct utimbuf*);
-extern ssize_t	_write(int, const void*, size_t);
+extern int		_access(const char*, int);
+extern unsigned int	_alarm(unsigned int);
+extern int		_chmod(const char*, mode_t);
+extern int		_close(int);
+extern int		_execve(const char*, char*const[], char*const[]);
+extern int		_link(const char*, const char*);
+extern int		_open(const char*, int, ...);
+extern long		_pathconf(const char*, int);
+extern ssize_t		_read(int, void*, size_t);
+extern int		_rename(const char*, const char*);
+extern int		_stat(const char*, struct stat*);
+extern int		_unlink(const char*);
+extern int		_utime(const char*, struct utimbuf*);
+extern ssize_t		_write(int, const void*, size_t);
 
 #undef pathconf
 #undef stat
@@ -160,6 +162,28 @@ access(const char* path, int op)
 		errno = oerrno;
 		r = _access(buf, op);
 	}
+	return r;
+}
+
+#endif
+
+#if _win32_botch_alarm
+
+extern unsigned int
+alarm(unsigned int s)
+{
+	unsigned int		n;
+	unsigned int		r;
+
+	static unsigned int	a;
+
+	n = (unsigned int)time(NiL);
+	if (a <= n)
+		r = 0;
+	else
+		r = a - n;
+	a = n + s - 1;
+	(void)_alarm(s);
 	return r;
 }
 

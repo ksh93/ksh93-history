@@ -93,6 +93,7 @@ struct fdsave
 {
 	int	orig_fd;	/* original file descriptor */
 	int	save_fd;	/* saved file descriptor */
+	int	subshell;	/* saved for subshell */
 };
 
 
@@ -394,10 +395,22 @@ int sh_open(register const char *path, int flags, ...)
 					fd = -1;
 				}
 			}
-			else if(connect(fd, (struct sockaddr*)&addr, sizeof(addr)))
+			else while(connect(fd, (struct sockaddr*)&addr, sizeof(addr)))
 			{
+				if(errno==EINTR)
+				{
+					if(sh.trapnote&SH_SIGSET)
+					{
+						close(fd);
+						sh_exit(SH_EXITSIG);
+					}
+					if(sh.trapnote)
+						sh_chktrap();
+					continue;
+				}
 				close(fd);
 				fd = -1;
+				break;
 			}
 		}
 	}
@@ -627,8 +640,10 @@ int	sh_redirect(struct ionod *iop, int flag)
 		trace:
 			if(traceon && fname)
 				sfprintf(sfstderr,"%s %s%c",io_op,fname,iop->ionxt?' ':'\n');
-			if(flag==0 || sh_subsavefd(fn))
-				sh_iosave(fn,indx); /* save file descriptor */
+			if(flag==0)
+				sh_iosave(fn,indx);
+			else if(sh_subsavefd(fn))
+				sh_iosave(fn,indx|IOSUBSHELL);
 			if(fd<0)
 			{
 				if(sh_inuse(fn) || fn==sh.infd)
@@ -736,6 +751,8 @@ void sh_iosave(register int origfd, int oldtop)
 @*/
  
 	register int	savefd;
+	int flag = (oldtop&IOSUBSHELL);
+	oldtop &= ~IOSUBSHELL;
 	/* see if already saved, only save once */
 	for(savefd=sh.topfd; --savefd>=oldtop; )
 	{
@@ -762,6 +779,7 @@ void sh_iosave(register int origfd, int oldtop)
 		if((savefd = sh_fcntl(origfd, F_DUPFD, 3)) < 0 && errno!=EBADF)
 			errormsg(SH_DICT,ERROR_system(1),e_toomany);
 	}
+	filemap[sh.topfd].subshell = flag;
 	filemap[sh.topfd].orig_fd = origfd;
 	filemap[sh.topfd++].save_fd = savefd;
 	if(savefd >=0)
@@ -812,8 +830,12 @@ void	sh_iounsave(void)
 void	sh_iorestore(int last)
 {
 	register int 	origfd, savefd, fd;
+	int flag = (last&IOSUBSHELL);
+	last &= ~IOSUBSHELL;
 	for (fd = sh.topfd - 1; fd >= last; fd--)
 	{
+		if(!flag && filemap[fd].subshell)
+			continue;
 		origfd = filemap[fd].orig_fd;
 		sh_close(origfd);
 		if ((savefd = filemap[fd].save_fd) >= 0)
@@ -835,6 +857,15 @@ void	sh_iorestore(int last)
 				sh.sftable[origfd] = sh.sftable[savefd];
 			sh.sftable[savefd] = 0;
 			sh_close(savefd);
+		}
+	}
+	if(!flag)
+	{
+		/* keep file descriptors for subshell restore */
+		for (fd = last ; fd < sh.topfd; fd++)
+		{
+			if(filemap[fd].subshell)
+				filemap[last++] = filemap[fd];
 		}
 	}
 	if(last < sh.topfd)

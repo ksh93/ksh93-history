@@ -83,8 +83,9 @@
 #define ERROR_NOID	0x2000		/* omit err_id			*/
 #define ERROR_LIBRARY	0x4000		/* library routine error	*/
 
-#define ERROR_INTERACTIVE	000001	/* context is interactive	*/
-#define ERROR_SILENT		000002	/* context is silent		*/
+#define ERROR_INTERACTIVE	0x0001	/* context is interactive	*/
+#define ERROR_SILENT		0x0002	/* context is silent		*/
+#define ERROR_NOTIFY		0x0004	/* main(-sig,0,ctx) on signal	*/
 
 #define errorpush(p,f)	(*(p)=*ERROR_CONTEXT_BASE,*ERROR_CONTEXT_BASE=error_info.empty,error_info.context=(p),error_info.flags=(f))
 #define errorpop(p)	(*ERROR_CONTEXT_BASE=*(p))
@@ -100,14 +101,16 @@
 	char*	file;			/* input|output file name	*/ \
 	char*	id;			/* command id			*/
 
-typedef struct errorcontext Error_context_t;
+#define errorcontext Error_context_s	/* compatibility til 2004	*/
 
-struct errorcontext			/* context stack element	*/
+typedef struct Error_context_s Error_context_t;
+
+struct Error_context_s			/* context stack element	*/
 {
 	ERROR_CONTEXT
 };
 
-typedef struct				/* error state			*/
+typedef struct Error_info_s		/* error state			*/
 {
 	int	fd;			/* write(2) fd			*/
 

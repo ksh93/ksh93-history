@@ -167,7 +167,7 @@ b_fold(int argc, char *argv[], void* context)
 	register Sfio_t *fp;
 	register char *cp;
 
-	cmdinit(argv, context, ERROR_CATALOG);
+	cmdinit(argv, context, ERROR_CATALOG, 0);
 	cols['\t'] = T_TAB;
 	cols['\b'] = T_BS;
 	cols['\n'] = T_NL;

@@ -57,7 +57,7 @@ b_tty(int argc, char *argv[], void* context)
 	register char *tty;
 
 	NoP(argc);
-	cmdinit(argv, context, ERROR_CATALOG);
+	cmdinit(argv, context, ERROR_CATALOG, 0);
 	while (n = optget(argv, usage)) switch (n)
 	{
 	case 's':

@@ -103,12 +103,11 @@ extern int STANDALONE(int, char**, void*);
  */
 
 static void
-cmdinit(register char** argv, void* context, const char* catalog)
+cmdinit(register char** argv, void* context, const char* catalog, int flags)
 {
 	register char*	cp;
 	register char*	pp;
 
-	NoP(context);
 	if (cp = strrchr(argv[0], '/'))
 		cp++;
 	else
@@ -119,6 +118,8 @@ cmdinit(register char** argv, void* context, const char* catalog)
 	if (!error_info.catalog)
 		error_info.catalog = (char*)catalog;
 	opt_info.index = 0;
+	if (context)
+		error_info.flags |= flags;
 }
 
 #endif
@@ -177,7 +178,7 @@ main(int argc, char** argv)
 #endif
 
 extern int	cmdrecurse(int, char**, int, char**);
-extern void	cmdinit(char**, void*, const char*);
+extern void	cmdinit(char**, void*, const char*, int);
 
 #undef	extern
 

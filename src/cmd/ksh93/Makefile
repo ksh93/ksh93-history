@@ -91,12 +91,13 @@ shell $(VERSION) :LIBRARY: shell.3 nval.3 alarm.c cd_pwd.c cflow.c deparse.c \
 	typeset.c ulimit.c umask.c whence.c main.c \
 	arith.c args.c array.c completion.c defs.c edit.c expand.c \
 	fault.c fcin.c history.c init.c io.c jobs.c lex.c macro.c name.c \
-	parse.c path.c string.c streval.c subshell.c tdump.c timers.c \
+	nvtree.c parse.c path.c string.c streval.c subshell.c tdump.c timers.c \
 	trestore.c waitevent.c xec.c env.c $(DATAFILES) $(FILES_opt) \
 	-lcmd -ldll -last -lm
 
-if CC.HOSTTYPE == "win32.*" || "$(-mam)" == "static*"
-trestore.o : .CC.NOOPTIMIZE
+"win32*" :NOOPTIMIZE: trestore.c
+
+if CC.HOSTTYPE == "win32*"
 :DLL: $(CC.DEBUG)
 else
 :DLL: $(CC.OPTIMIZE)

@@ -201,7 +201,7 @@ b_pathchk(int argc, char** argv, void* context)
 	register int n, mode=0;
 	register char *cp;
 
-	cmdinit(argv, context, ERROR_CATALOG);
+	cmdinit(argv, context, ERROR_CATALOG, 0);
 	while (n = optget(argv, usage)) switch (n)
 	{
   	    case 'p':

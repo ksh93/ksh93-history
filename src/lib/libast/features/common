@@ -311,7 +311,7 @@ tst	- -DN=1 - -DN=0 output{
 	#endif
 		for (t = 0; t < elementsof(flt_type); t++)
 		{
-			while (t < elementsof(flt_type) && flt_type[t].size == flt_type[t + 1].size)
+			while (t < (elementsof(flt_type) - 1) && flt_type[t].size == flt_type[t + 1].size)
 				t++;
 			m = flt_type[t].size;
 			printf("#define _ast_flt%d_t		%s\n", flt_type[t].size, flt_type[t].name);

@@ -12,19 +12,21 @@
 .ft 5
 #include	<nval.h>
 
-Namval_t 	*nv_open(const char *\fIname\fP, Hashtab_t *\fItable\fP, int \fIflags\fP);
+Namval_t 	*nv_open(const char *\fIname\fP, Dt_t *\fItable\fP, int \fIflags\fP);
 void	nv_close(Namval_t *\fInp\fP);
-Hashtab_t	*nv_getscope(int \fIindex\fP);
+Dt_t	*nv_getscope(int \fIindex\fP);
 
 char	*nv_getval(Namval_t *\fInp\fP);
 double	nv_getnum(Namval_t *\fInp\fP);
-unsigned	nv_isattr(Namval_t *\fInp\fP, unsigned \fIflags\fP);
+unsigned long	nv_isattr(Namval_t *\fInp\fP, unsigned \fIflags\fP);
+unsigned long	nv_isarray(Namval_t *\fInp\fP);
 char	*nv_name(Namval_t *\fInp\fP);
 void	nv_newattr(Namval_t *\fInp\fP, unsigned \fIflags\fP, int \fIsize\fP);
 void	nv_putval(Namval_t *\fInp\fP, const char *\fIval\fP, int \fIflags\fP);
-int	nv_size(Namval_t *\fInp\fP);
-Namfun_t	*nv_stack(Namval_t *\fInp\fP, Namfun_t *\fIfp\fP);
-int	nv_scan(Hashtab_t *\fItable\fP, void(*\fIfn\fP)(Namval_t*,void*), void *\fIdata\fP, int \fImask\fP, int \fIflags\fP);
+int	nv_setsize(Namval_t *\fInp\fP, int \fIsize\fP);
+Namfun_t	*nv_disc(Namval_t *\fInp\fP, Namfun_t *\fIfp\fP, int \fIflags\fP);
+int	nv_scan(Dt_t *\fItable\fP, void(*\fIfn\fP)(Namval_t*,void*), void *\fIdata\fP, int \fImask\fP, int \fIflags\fP);
+inv	nv_clone(Namval_t *\fIsrc\fP, Namval_t *\fIdest\fP, int \fIflags\fP);
 void	nv_unset(Namval_t *\fInp\fP);
 
 Namarr_t	*nv_setarray(Namval_t *\fInp\fP,void*(*\fIfun\fP)(Namval_t*,const char*,int));
@@ -132,10 +134,12 @@ the name-value pair may be freed.
 .PP
 The \f5nv_name()\fP function returns the name of the given name-value
 pair \fInp\fP.
-The \f5nv_size()\fP function returns the size of the field for
+The \f5nv_setsize()\fP function returns the size of the field for
 justified variables, the arithmetic base for integer variables,
 and the precision or number of places after the decimal point
-for floating point variables.
+for floating point variables.  If \fIsize\fP is greater than or
+equal to zero, the current size is changed to this value. 
+.PP
 The \f5nv_getval()\fP function returns the value of the given
 name-value pair as a string.  A \f5NULL\fP return value indicates
 that the name-value pair is unset.
@@ -221,21 +225,24 @@ the precision of the mantissa.
 .IP
 \f5NV_REF\fP:
 The name-value pair is a name reference variable.
+.IP
 \f5NV_NODISC\fP:
 All discipline functions are ignored when performing assignments
 and lookups.
 .PP
 The \f5nv_isattr()\fP function can test whether or not any of
 the attributes given by \fIflags\fP is set.
-The attribute \f5NV_ARRAY\fP can be used to test whether
-or not the given name-value pair is an array.
 The \f5nv_newattr()\fP function can be used to change the
 attributes of the given name-value pair.
 The \fIsize\fP argument is needed for attributes that require
-an additional argument.
+an additional argument such as justifies variables.
 Changing the attribute may require changing the value
 to agree with the new attributes.
-For an array variable, each of the values will be changed.
+For an array variable, the values for each of the
+subscripts will be changed.
+.PP
+The \f5nv_isarray()\fP function returns a non-zero value if the specified
+name-value pair is an array. 
 .PP
 The \f5nv_scan()\fP function is used to walk through
 all name-value pairs in the table given by \fItable\fP.
@@ -252,10 +259,14 @@ The arguments to \fIfn\fP will be a pointer to the name-value pair
 and the \fIdata\fP pointer passed to \f5nv_scan()\fP.
 The number of elements visited will be returned.
 .PP
+The \f5nv_clone()\fP function is used make a copy of the contents of
+name-value pair \f5src\fP to another name-value pair \f5dest\fP.
+.PP
 Disciplines provide a way to
-intercept the lookup and assignment operations and to
-extend the operations permitted on a name-value pair.
-A discipline consists of a set of functions and related
+intercept the lookup and assignment operations,
+to manage the creation of sub-variables,
+and to extend the operations permitted on a name-value pair.
+A discipline consists of a set of one or more functions and related
 data that are used to override and extend the operations
 on a name-value pair. 
 A discipline is defined by the types
@@ -264,22 +275,31 @@ The \f5Namdisc_t\fP is not modified by any of these functions and
 can therefore be shared by several name-value pairs. 
 It contains following public fields in the order listed:
 .nf
-      \f5size_t		dsize;\fP
-      \f5void		(*putval)(Namval_t*,const char*,int,Namfun_t*);\fP
-      \f5char		*(*getval)(Namval_t*,Namfun_t*);\fP
-      \f5double		(*getnum)(Namval_t*,Namfun_t*);\fP
-      \f5char		*(*setdisc)(Namval_t*,const char*,Namval_t*,Namfun_t*);\fP
+      \f5size_t	dsize;\fP
+      \f5void	(*putval)(Namval_t*,const char*,int,Namfun_t*);\fP
+      \f5char	*(*getval)(Namval_t*,Namfun_t*);\fP
+      \f5double	(*getnum)(Namval_t*,Namfun_t*);\fP
+      \f5char	*(*setdisc)(Namval_t*,const char*,Namval_t*,Namfun_t*);\fP
       \f5Namval_t	*(*create)(Namval_t*,const char*,Namfun_t*);\fP
+      \f5Namfun_t	*(*clone)(Namval_t*,Namval_t*,int,Namfun_t*);\fP
+      \f5Nchar	*(*name)(Namval_t*,Namfun_t*);\fP
+      \f5Namval_t	*(*nextf)(Namval_t*,Dt_t*,Namfun_t*);\fP
 .fi
 The \f5Namfun_t\fP type contains a member named
 \f5disc\fP which points to a \f5Namdisc_t\fP structure.
 To create a discipline with additional user data,
 define a structure with an instance of \f5Namfun_t\fP
 as the first element.
+An application must initialize the \f5Namfun_t\fP portion of
+the structure to zero and then set the \fIdisc\fP field to point
+to the \f5Namdisc_t\fP structure.
 The \f5dsize\fP field of the \f5Namdisc_t\fP structure must be
 the size of this structure.  A value of 0,
 indicates that there are no additional fields and is equivalent
 to \f5sizeof(Namfun_t)\fP.
+If different instances of this structure uses different sizes, then
+the \f5size\fP field in the \f5Namfun_t\fP can must be set to
+this size and overrides the value in the \f5Namdisc_t\fP structure.
 .PP
 When a variable is referenced by calling the \f5nv_getval()\fP function,
 and the \f5NV_NODISC\fP attribute is not set,
@@ -360,13 +380,49 @@ must be returned.
 This allows an application to get the list of valid discipline
 action names allowed by a given name-value pair.
 .PP
+The \f5clone()\fP discipline function is called by \f5nv_clone()\fP
+when making a copy of the \f5Namfun_t\fP discipline to the new node.  
+It must return a new instance of the \f5Namfun_t*\fP \f5fp\fP.
+If omitted, then memory whose size is determinated by the \f5size\fP
+field of \f5fp\fP, if non-zero, or \f5fp->disc\fP, will be allocated
+and copied from \f5fp\fP.
+.PP
+The \f5name()\fP discipline function returns the name for this name-value pair.
+.PP
+The \f5nextf()\fP is used for walking through the list of sub-variables
+associated with this name-value pair.  If the dictionary argument is
+\f5NULL\fP, it must return the first sub-variable.  Otherwise,
+it must return the next sub-variable, or \f5NULL\fP if there are
+no more variables.
+.PP
 A discipline is installed or removed with the
-\f5nv_stack()\fP function.
-If \fIfp\fP is non-\f5NULL\fP, the discipline is pushed onto
-the stack of disciplines associated with the given name-value
-pair \fInp\fP.
-Otherwise, the most recently pushed discipline is popped
+\f5nv_disc()\fP function.
+The following flags can be specified:
+.IP
+\f5NV_FIRST\fP:
+If \fIfp\fP is non-\f5NULL\fP, the discipline is moved to the top
+of the stack or pushed onto the top of the stack of disciplines
+associated with the given name-value
+pair \fInp\fP if not already present.
+Otherwise, the top of the discipline stack is returned.
+.IP
+\f5NV_LAST\fP:
+If \fIfp\fP is non-\f5NULL\fP, the discipline is moved to the bottom
+of the stack or pushed onto the bottom of the stack of disciplines
+associated with the given name-value
+pair \fInp\fP if not already present.
+Otherwise, the bottom of the discipline stack is returned.
+.IP
+\f5NV_POP\fP:
+If \fIfp\fP is non-\f5NULL\fP and it is on the stack,
+it is removed and \fIfp\fP is returned.  If  \fIfp\fP is non-\f5NULL\fP
+and is not on the stack, \f5NULL\fP is returned.
+Otherwise, the the top discipline is popped
 and returned.
+.IP
+\f50\fP:
+If \fIfp\fP is non-\f5NULL\fP then it is equivalent to \f5NV_FIRST\fP.
+Otherwise, it is equivalent to \f5NV_POP\fP.
 .PP
 The \f5nv_aindex()\fP function returns
 the current index for
@@ -434,7 +490,7 @@ given subscript is not found.
 .IP
 \f5ARRAY_SCAN\fP:
 Begin a walk through the subscripts starting at the subscript
-given by \f5name\fP if given.  Otherwise,
+given by \f5name\fP.  If \f5name\fP is \f5NULL\fP
 the walk is started from the beginning.
 .IP
 \f5ARRAY_UNDEF\fP:

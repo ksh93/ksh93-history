@@ -32,7 +32,6 @@
  *
  *   David Korn
  *   AT&T Labs
- *   research!dgk
  *
  */
 
@@ -66,9 +65,7 @@ typedef struct  _mac_
 	char		patfound;	/* set if pattern character found */
 	char		assign;		/* set for assignments */
 	char		arith;		/* set for ((...)) */
-	Namval_t	*hp;		/* position for tree walk */
-	Namval_t        *(*nextnode)(Namval_t*,Dt_t*,Namfun_t*);
-	Dt_t		*root;		/* tree root for nextname */
+	void		*nvwalk;	/* for name space walking*/
 } Mac_t;
 
 #define mac	(*((Mac_t*)(sh.mac_context)))
@@ -82,11 +79,12 @@ typedef struct  _mac_
 
 /* type of macro expansions */
 #define M_BRACE		1	/* ${var}	*/
-#define M_SIZE		2	/* ${#var}	*/
-#define M_VNAME		3	/* ${!var}	*/
-#define M_SUBNAME	4	/* ${!var[sub]}	*/
-#define M_NAMESCAN	5	/* ${!var*)	*/
-#define M_CLASS		6	/* ${-var)	*/
+#define M_TREE		2	/* ${var.)	*/
+#define M_SIZE		3	/* ${#var}	*/
+#define M_VNAME		4	/* ${!var}	*/
+#define M_SUBNAME	5	/* ${!var[sub]}	*/
+#define M_NAMESCAN	6	/* ${!var*)	*/
+#define M_CLASS		7	/* ${-var)	*/
 
 static char	*nextname(Mac_t*,const char*, int);
 static int	substring(const char*, const char*, int[], int);
@@ -749,6 +747,7 @@ static char *prefix(char *id)
 		{
 			int n;
 			char *sp;
+			sh.argaddr = 0;
 			while(nv_isref(np))
 				np = nv_refnode(np);
 			id = (char*)malloc((cp-id)+(n=strlen(sp=nv_name(np)))+1);
@@ -897,17 +896,26 @@ retry1:
 		do
 			stakputc(c);
 		while((c=fcget()),isaname(c)||(c=='.' && type));
-		if(type && c==LBRACT && fcpeek(-2)=='.')
+		if(type && (c==LBRACT||c==RBRACE) && fcpeek(-2)=='.')
 		{
-			char *last;
-			stakputc(c);
-			v = stakptr(subcopy(mp,1));
-			stakputc(']');
-			last = stakptr(staktell());
-			if(sh_checkid(v,last)!=last)
-				stakseek(staktell()-2);
-			if((c=fcget())=='.')
-				goto more;
+			if(c==RBRACE)
+			{
+				stakseek(staktell()-1);
+				type = M_TREE;
+			}
+			else
+			{
+				char *last;
+				sh.argaddr=0;
+				stakputc(c);
+				v = stakptr(subcopy(mp,1));
+				stakputc(']');
+				last = stakptr(staktell());
+				if(sh_checkid(v,last)!=last)
+					stakseek(staktell()-2);
+				if((c=fcget())=='.')
+					goto more;
+			}
 		}
 		stakputc(0);
 		id=stakptr(offset);
@@ -954,6 +962,7 @@ retry1:
 				{
 					int loc = subcopy(mp,0);
 					stakputc(0);
+					sh.argaddr=0;
 					nv_putsub(np,stakptr(loc),ARRAY_ADD);
 #ifdef SHOPT_COMPOUND_ARRAY
 
@@ -1005,6 +1014,8 @@ retry1:
 			else if(sh.cur_line && np==REPLYNOD)
 				v = sh.cur_line;
 #endif  /* SHOPT_FILESCAN */
+			else if(type==M_TREE)
+				v = nv_getvtree(np,(Namfun_t*)0);
 			else
 				v = nv_getval(np);
 		}
@@ -1027,7 +1038,7 @@ retry1:
 		goto nosub;
 	}
 	c = fcget();
-	if(type>M_BRACE)
+	if(type>M_TREE)
 	{
 		if(c!=RBRACE)
 			mac_error(np);
@@ -1257,9 +1268,6 @@ retry1:
 				type = 0;
 		}
 		pattern = strdup(argp);
-#if 0
-sfprintf(sfstderr,"pattern=%s\n",pattern);
-#endif
 		if((type=='/' || c=='/') && (repstr = mac_getstring(pattern)))
 			replen = strlen(repstr);
 		if(v || c=='/')
@@ -1981,73 +1989,15 @@ static char *mac_getstring(char *pattern)
 	return(NIL(char*));
 }
 
-/*
- * this needs to be modified to handle virtual nodes
- */
-static Namval_t *firstnode(Mac_t *mp, const char *prefix)
-{
-	register Namval_t *np, *xp;
-	register  char *cp = (char*)prefix;
-	mp->root = mp->shp->var_tree;
-	mp->nextnode = 0;
-	while(1)
-	{
-		while(*++cp && *cp!='.');
-		if(*cp==0)
-			break;
-		*cp = 0;
-		if((np = nv_search(prefix,mp->root,0)) && nv_istable(np))
-		{
-			if(np->nvfun && (mp->nextnode = np->nvfun->disc->nextf))
-				xp = np;
-			mp->root = np->nvalue.hp;
-		}
-		*cp++ = '.';
-	}
-	if(mp->nextnode)
-		return((*mp->nextnode)(0,(Dt_t*)xp,(Namfun_t*)0));
-	return((Namval_t*)dtfirst(mp->root));
-}
-
-static Namval_t *nextnode(Mac_t *mp)
-{
-	if(mp->nextnode)
-		return((*mp->nextnode)(mp->hp,mp->root,(Namfun_t*)0));
-	return((Namval_t*)dtnext(mp->root,mp->hp));
-}
-
-/*
- * return the next name starting with the given prefix
- */
 static char *nextname(Mac_t *mp,const char *prefix, int len)
 {
-	register Namval_t *np;
-	register char *cp;
+	char *cp;
 	if(len==0)
-		mp->hp = firstnode(mp,prefix);
-	else if(mp->hp)
 	{
-		while(np=mp->hp)
-		{
-#ifdef SHOPT_OO
-			Namval_t *nq=np;
-			mp->hp = nextnode(mp);
-			while(nq && nv_isnull(nq))
-				nq = nv_class(nq);
-			if(!nq)
-				continue;
-				
-#else
-			mp->hp = nextnode(mp);
-			if(nv_isnull(np))
-				continue;
-#endif /* SHOPT_OO */
-			cp = nv_name(np);
-			if(memcmp(cp,prefix,len)==0)
-				return(cp);
-		}
-		mp->hp = 0;
-		free((char*)prefix);
+		mp->nvwalk = nv_diropen(prefix);
+		return((char*)mp->nvwalk);
 	}
-	return(NIL(char*));
+	if(!(cp=nv_dirnext(mp->nvwalk)))
+		nv_dirclose(mp->nvwalk);
+	return(cp);
 }

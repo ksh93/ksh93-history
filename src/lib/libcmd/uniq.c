@@ -210,7 +210,7 @@ b_uniq(int argc, char** argv, void* context)
 	Sfio_t *fpin, *fpout;
 
 	NoP(argc);
-	cmdinit(argv, context, ERROR_CATALOG);
+	cmdinit(argv, context, ERROR_CATALOG, 0);
 	while (n = optget(argv, usage)) switch (n)
 	{
 	    case 'c':

@@ -64,9 +64,9 @@ number(register char* s, register char* e, register long n, register int p, int 
 		break;
 	}
 	if (p > 0)
-		s += sfsprintf(s, 64, "%0*lu", p, n);
+		s += sfsprintf(s, e - s, "%0*lu", p, n);
 	else if (p < 0)
-		s += sfsprintf(s, 64, "%*lu", -p, n);
+		s += sfsprintf(s, e - s, "%*lu", -p, n);
 	else
 		s += sfsprintf(s, e - s, "%lu", n);
 	return s;
@@ -323,7 +323,7 @@ tmfmt(char* buf, size_t len, const char* format, time_t* clock)
 			continue;
 		case 'z':	/* time zone west offset */
 			if ((ep - cp) >= 16)
-				cp = tmpoff(cp, "", (tm_info.flags & TM_UTC) ? 0 : tm_info.zone->west, 24 * 60);
+				cp = tmpoff(cp, ep - cp, "", (tm_info.flags & TM_UTC) ? 0 : tm_info.zone->west, 24 * 60);
 			continue;
 		case 'Z':	/* time zone */
 			p = (tm_info.flags & TM_UTC) ? tm_info.format[TM_UT] : tp->tm_isdst && tm_info.zone->daylight ? tm_info.zone->daylight : tm_info.zone->standard;

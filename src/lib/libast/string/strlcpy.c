@@ -25,7 +25,19 @@
 *******************************************************************/
 #pragma prototyped
 
+#if defined(__STDPP__directive) && defined(__STDPP__hide)
+__STDPP__directive pragma pp:hide strlcpy
+#else
+#define strlcpy		______strlcpy
+#endif
+
 #include <ast.h>
+
+#if defined(__STDPP__directive) && defined(__STDPP__hide)
+__STDPP__directive pragma pp:nohide strlcpy
+#else
+#undef	strlcpy
+#endif
 
 /*
  * copy at most n chars from t into s

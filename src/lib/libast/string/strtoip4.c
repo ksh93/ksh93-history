@@ -30,7 +30,7 @@
 /*
  * convert string to 4 byte local byte order ip address
  * with optional prefix bits
- * pointer to first unused char placed in *e
+ * pointer to first unused char placed in *e, even on error
  * return 0:ok <0:error
  *
  * valid addresses match the egrep RE:
@@ -55,8 +55,10 @@ strtoip4(register const char* s, char** e, unsigned _ast_int4_t* paddr, unsigned
 	register unsigned char		bits;
 	unsigned _ast_int4_t		z;
 	int				old;
+	int				r;
 	const char*			b;
 
+	r = -1;
 	while ((c = *s) == ' ' || c == '\t')
 		s++;
 	b = s;
@@ -87,14 +89,12 @@ strtoip4(register const char* s, char** e, unsigned _ast_int4_t* paddr, unsigned
 			break;
 		}
 		if (n > 0xff)
-			return -1;
+			goto done;
 		addr = (addr << 8) | n;
 		part++;
 	} while (c == '.');
-	if ((s - b) == 1 && c != '/')
-		return -1;
-	if (part > 4)
-		return -1;
+	if ((s - b) == 1 && c != '/' || part > 4)
+		goto done;
 	if (old = part < 4)
 		while (part++ < 4)
 			addr <<= 8;
@@ -116,7 +116,7 @@ strtoip4(register const char* s, char** e, unsigned _ast_int4_t* paddr, unsigned
 				old = 1;
 			}
 			if (part > 4)
-				return -1;
+				goto done;
 			if (z <= 32 && (!old || part < 2))
 				bits = z;
 			else if (z)
@@ -145,7 +145,9 @@ strtoip4(register const char* s, char** e, unsigned _ast_int4_t* paddr, unsigned
 	}
 	if (paddr)
 		*paddr = addr;
+	r = 0;
+ done:
 	if (e)
 		*e = (char*)(s - 1);
-	return 0;
+	return r;
 }

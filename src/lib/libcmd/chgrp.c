@@ -32,7 +32,7 @@
  */
 
 static const char usage_1[] =
-"[-?@(#)$Id: chgrp (AT&T Labs Research) 2002-08-19 $\n]"
+"[-?@(#)$Id: chgrp (AT&T Labs Research) 2002-11-14 $\n]"
 USAGE_LICENSE
 ;
 
@@ -129,6 +129,11 @@ typedef struct				/* uid/gid map			*/
 
 extern int	lchown(const char*, uid_t, gid_t);
 
+static struct State_s
+{
+	int		interrupt;
+} state;
+
 #if !_lib_lchown
 
 #ifndef ENOSYS
@@ -221,7 +226,13 @@ b_chgrp(int argc, char** argv, void* context)
 	struct stat	st;
 	int		(*chownf)(const char*, uid_t, gid_t);
 
-	cmdinit(argv, context, ERROR_CATALOG);
+	if (argc < 0)
+	{
+		state.interrupt = 1;
+		return -1;
+	}
+	state.interrupt = 0;
+	cmdinit(argv, context, ERROR_CATALOG, ERROR_NOTIFY);
 	flags = fts_flags() | FTS_TOP | FTS_NOPOSTORDER | FTS_NOSEEDOTDIR;
 	if (!(sp = sfstropen()))
 		error(ERROR_SYSTEM|3, "out of space");
@@ -323,7 +334,7 @@ b_chgrp(int argc, char** argv, void* context)
 					if (m->gid == NOID)
 						m->gid = ngid;
 				}
-				else if (m = newof(0, Map_t, 1, 0))
+				else if (m = (Map_t*)stakalloc(sizeof(Map_t)))
 				{
 					m->id = uid;
 					m->uid = nuid;
@@ -337,7 +348,7 @@ b_chgrp(int argc, char** argv, void* context)
 			{
 				if (gid == uid || (m = (Map_t*)dtmatch(map, &gid)))
 					m->gid = ngid;
-				else if (m = newof(0, Map_t, 1, 0))
+				else if (m = (Map_t*)stakalloc(sizeof(Map_t)))
 				{
 					m->id = gid;
 					m->uid = NOID;
@@ -376,7 +387,7 @@ b_chgrp(int argc, char** argv, void* context)
 	}
 	if (!(fts = fts_open(argv + 1, flags, NiL)))
 		error(ERROR_system(1), "%s: not found", argv[1]);
-	while (ent = fts_read(fts))
+	while (!state.interrupt && (ent = fts_read(fts)))
 		switch (ent->fts_info)
 		{
 		case FTS_F:
@@ -452,5 +463,7 @@ b_chgrp(int argc, char** argv, void* context)
 			break;
 		}
 	fts_close(fts);
+	if (map)
+		dtclose(map);
 	return error_info.errors != 0;
 }

@@ -31,7 +31,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: rm (AT&T Labs Research) 2001-04-17 $\n]"
+"[-?\n@(#)$Id: rm (AT&T Labs Research) 2002-11-14 $\n]"
 USAGE_LICENSE
 "[+NAME?rm - remove files]"
 "[+DESCRIPTION?\brm\b removes the named \afile\a arguments. By default it"
@@ -87,6 +87,7 @@ static struct				/* program state		*/
 	int		force;		/* force actions		*/
 	int		fs3d;		/* 3d enabled			*/
 	int		interactive;	/* prompt for approval		*/
+	int		interrupt;	/* interrupt -- unwind		*/
 	int		recursive;	/* remove subtrees too		*/
 	int		terminal;	/* attached to terminal		*/
 	int		uid;		/* caller uid			*/
@@ -109,6 +110,8 @@ rm(register Ftw_t* ftw)
 	int		v;
 	struct stat	st;
 
+	if (state.interrupt)
+		return -1;
 	if (ftw->info == FTW_NS)
 	{
 		if (!state.force)
@@ -309,8 +312,13 @@ rm(register Ftw_t* ftw)
 int
 b_rm(int argc, register char** argv, void* context)
 {
-	NoP(argc);
-	cmdinit(argv, context, ERROR_CATALOG);
+	if (argc < 0)
+	{
+		state.interrupt = 1;
+		return -1;
+	}
+	memset(&state, 0, sizeof(state));
+	cmdinit(argv, context, ERROR_CATALOG, ERROR_NOTIFY);
 	state.fs3d = fs3d(FS3D_TEST);
 	state.terminal = isatty(0);
 	for (;;)

@@ -69,14 +69,14 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	_ccmaps.c ccmapc.c ccmapcpy.c ccmapid.c ccmaps.c ccnative.c \
 	chresc.c chrtoi.c streval.c strexpr.c strmatch.c strcopy.c \
 	modelib.h modei.c modex.c strmode.c \
-	strlcat.c strlcpy.c strlook.c strsearch.c strpsearch.c \
+	strlcat.c strlcpy.c strlook.c strncopy.c strsearch.c strpsearch.c \
 	stresc.c stropt.c strtape.c tok.c tokline.c tokscan.c \
 	pathaccess.c pathcat.c pathcanon.c pathcheck.c pathpath.c \
 	pathexists.c pathfind.c pathkey.c pathprobe.c pathrepl.c \
 	pathnative.c pathtemp.c pathtmp.c pathstat.c \
 	pathgetlink.c pathsetlink.c pathbin.c pathshell.c pathcd.c \
 	fs3d.c ftwalk.c ftwflags.c fts.c setenviron.c \
-	optget.c optjoin.c strsort.c \
+	optget.c optjoin.c optesc.c strsort.c struniq.c \
 	magic.c mime.c mimetype.c signal.c systrace.c \
 	error.c errorf.c errormsg.c errorx.c \
 	localeconv.c setlocale.c translate.c \
@@ -85,7 +85,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	fmtbase.c fmtbuf.c fmtclock.c fmtdev.c fmtelapsed.c fmterror.c \
 	fmtesc.c fmtfmt.c fmtfs.c fmtident.c fmtip4.c fmtls.c fmtmatch.c \
 	fmtmode.c fmtnum.c fmtperm.c fmtre.c fmttime.c fmtuid.c fmtgid.c \
-	fmtsignal.c fmtscale.c \
+	fmtsignal.c fmtscale.c fmtversion.c \
 	strelapsed.c strperm.c struid.c strgid.c strtoip4.c stack.c stk.c \
 	swapget.c swapmem.c swapop.c swapput.c \
 	sigdata.c sigcrit.c sigunblock.c \
@@ -100,6 +100,8 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	strdup.c strchr.c strrchr.c strstr.c \
 	strtod.c strtold.c \
 	strtol.c strtoll.c strtoul.c strtoull.c strton.c strtonll.c \
+	strntod.c strntold.c \
+	strntol.c strntoll.c strntoul.c strntoull.c \
 	strcasecmp.c strncasecmp.c strerror.c \
 	mktemp.c tmpnam.c \
 	execlp.c execve.c execvp.c execvpe.c \
@@ -125,7 +127,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	/* standards */ \
 	basename.c closelog.c dirname.c fmtmsglib.c fnmatch.c ftw.c \
 	getdate.c getsubopt.c glob.c nftw.c openlog.c re_comp.c \
-	realpath.c regcmp.c regexp.c setlogmask.c strftime.c \
+	resolvepath.c realpath.c regcmp.c regexp.c setlogmask.c strftime.c \
 	strptime.c swab.c syslog.c sysloglib.h tempnam.c \
 	wordexp.c mktime.c \
 	/* regex */ \
@@ -208,12 +210,8 @@ ignore		iffeio.h
 scan.ignore	iffeio.h
 virtual		ast/stdio.h
 
-if CC.HOSTTYPE == "sol*.*" || "$(-mam)" == "static*"
-sfrd.o sfvprintf.o : .CC.NOOPTIMIZE
-end
-if CC.HOSTTYPE == "win32.*" || "$(-mam)" == "static*"
-fastfind.o mc.o : .CC.NOOPTIMIZE
-end
+"sol*.*"	:NOOPTIMIZE: sfrd.c sfvprintf.c
+"win32*"	:NOOPTIMIZE: fastfind.c mc.c
 
 :INSTALLDIR: conf
 

@@ -6,8 +6,6 @@
 
 LICENSE = since=1992,author=gsf+dgk
 
-ERROR_CATALOG == "libcmd"	/* drop in 2001 */
-
 CCFLAGS = $(CC.OPTIMIZE) $(CC.DLL)
 
 CP = $(STDCP|"cp")
@@ -25,6 +23,4 @@ cmd 1.2 :LIBRARY: RELEASE cmdinit.c cmdrecurse.c \
 
 $(INCLUDEDIR) :INSTALLPROTO: cmd.h
 
-if CC.HOSTTYPE == "win32.*" || "$(-mam)" == "static*"
-id.o : .CC.NOOPTIMIZE
-end
+"win32*" :NOOPTIMIZE: id.c

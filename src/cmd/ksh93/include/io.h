@@ -55,6 +55,7 @@
 #define IOCLEX 		0100
 #define IOCLOSE		(IOSEEK|IONOSEEK)
 
+#define IOSUBSHELL	0x8000	/* must be larger than any file descriptor */
 
 /*
  * The remainder of this file is only used when compiled with shell

@@ -557,7 +557,8 @@ sh_exec(register const union anynode *t, int flags)
 						sh.exitval = 0;
 						if(!(context=nv_context(np)))
 							context = (void*)&sh;
-						sh.exitval = (*funptr(np))(argn,com,context);
+						sh.bltinfun = funptr(np);
+						sh.exitval = (*sh.bltinfun)(argn,com,context);
 						if(!nv_isattr(np,BLT_EXIT) && sh.exitval!=SH_RUNPROG)
 							sh.exitval &= SH_EXITMASK;
 					}
@@ -586,6 +587,8 @@ sh_exec(register const union anynode *t, int flags)
 						sh.nextprompt = save_prompt;
 					}
 					sh_popcontext(&buff);
+					errorpop(&buff.err);
+					sh.bltinfun = 0;
 					if(buff.olist)
 					{
 						/* free list */
@@ -1608,7 +1611,12 @@ int sh_trace(register char *argv[], register int nl)
 				if(bracket==0 || *argv || *cp!=']')
 					cp = sh_fmtq(cp);
 				if(sh.prefix && cp!=argv0 && *cp!='-')
-					sfputr(sfstderr,sh.prefix,'.');
+				{
+					if(*cp=='.' && cp[1]==0)
+						cp = sh.prefix;
+					else
+						sfputr(sfstderr,sh.prefix,'.');
+				}
 				sfputr(sfstderr,cp,*argv?' ':nl);
 			}
 			sfset(sfstderr,SF_SHARE|SF_PUBLIC,1);
@@ -2311,28 +2319,6 @@ static pid_t sh_ntfork(const union anynode *t,char *argv[],int *jobid,int flag)
 		return(spawnpid);
 	}
 #   endif /* !_lib_fork */
-	if(!strchr(path=argv[0],'/')) 
-	{
-#ifdef PATH_BFPATH
-		Namval_t *np;
-		if((np=nv_search(path,shp->track_tree,0)) && !nv_isattr(np,NV_NOALIAS) && np->nvalue.cp)
-			path = nv_getval(np);
-		else
-		{
-			Pathcomp_t *pp=path_get(path);
-			while(pp)
-			{
-				if(pp->len==1 && *pp->name=='.')
-					break;
-				pp = pp->next;
-			}
-			if(!pp)
-				path = 0;
-		}
-#else
-		path = shp->lastpath;
-#endif
-	}
 	sh_pushcontext(&buff,SH_JMPCMD);
 	errorpush(&buff.err,ERROR_SILENT);
 	jmpval = sigsetjmp(buff.buff,0);
@@ -2347,16 +2333,40 @@ static pid_t sh_ntfork(const union anynode *t,char *argv[],int *jobid,int flag)
 		if(t->com.comio)
 			sh_redirect(t->com.comio,0);
 		error_info.id = *argv;
+		if(t->com.comset)
+		{
+			scope++;
+			nv_scope(t->com.comset);
+		}
+		if(!strchr(path=argv[0],'/')) 
+		{
+#ifdef PATH_BFPATH
+			Namval_t *np;
+			if((np=nv_search(path,shp->track_tree,0)) && !nv_isattr(np,NV_NOALIAS) && np->nvalue.cp)
+				path = nv_getval(np);
+			else if(path_absolute(path,NIL(Pathcomp_t*)))
+				path = stakptr(PATH_OFFSET);
+			else
+			{
+				Pathcomp_t *pp=path_get(path);
+				while(pp)
+				{
+					if(pp->len==1 && *pp->name=='.')
+						break;
+					pp = pp->next;
+				}
+				if(!pp)
+					path = 0;
+			}
+#else
+			path = shp->lastpath;
+#endif
+		}
 		if(!path)
 		{
 			spawnpid = -1;
 			errno = shp->path_err;
 			goto fail;
-		}
-		if(t->com.comset)
-		{
-			scope++;
-			nv_scope(t->com.comset);
 		}
 		arge = sh_envgen();
 		shp->exitval = 0;

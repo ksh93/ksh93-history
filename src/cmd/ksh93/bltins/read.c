@@ -227,10 +227,12 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 			np = REPLYNOD;
 	}
 	sfclrerr(iop);
+	if(np->nvfun && np->nvfun->disc->readf)
+		return((* np->nvfun->disc->readf)(np,iop,delim,np->nvfun));
 	was_write = (sfset(iop,SF_WRITE,0)&SF_WRITE)!=0;
 	if(fd==0)
 		was_share = (sfset(iop,SF_SHARE,1)&SF_SHARE)!=0;
-	if(timeout || was_write || ((flags>>D_FLAG) && (shp->fdstatus[fd]&IOTTY)))
+	if(timeout || (shp->fdstatus[fd]&(IOTTY|IONOSEEK)))
 	{
 		sh_pushcontext(&buff,1);
 		jmpval = sigsetjmp(buff.buff,0);
@@ -524,7 +526,7 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 		val = 0;
 	}
 done:
-	if(timeout || was_write || ((flags>>D_FLAG) && (shp->fdstatus[fd]&IOTTY)))
+	if(timeout || (shp->fdstatus[fd]&(IOTTY|IONOSEEK)))
 		sh_popcontext(&buff);
 	if(was_write)
 		sfset(iop,SF_WRITE,1);

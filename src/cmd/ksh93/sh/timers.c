@@ -43,6 +43,7 @@ typedef struct _timer
 #define IN_ADDTIMEOUT	1
 #define IN_SIGALRM	2
 #define DEFER_SIGALRM	4
+#define SIGALRM_CALL	8
 
 static Timer_t *tptop, *tpmin;
 static char time_state;
@@ -94,6 +95,10 @@ static void sigalrm(int sig)
 	static double left;
 	NOT_USED(sig);
 	left = 0;
+	if(time_state&SIGALRM_CALL)
+		time_state &= ~SIGALRM_CALL;
+	else if(alarm(0))
+		sh_fault(SIGALRM|SH_TRAP);
 	if(time_state)
 	{
 		if(time_state&IN_ADDTIMEOUT)
@@ -162,6 +167,8 @@ static void sigalrm(int sig)
 		else
 			break;
 	}
+	if(!tpmin)
+		signal(SIGALRM,(sh.sigflag[SIGALRM]&SH_SIGFAULT)?sh_fault:SIG_DFL);
 	time_state &= ~IN_SIGALRM;
 	errno = EINTR;
 }
@@ -208,7 +215,7 @@ void *sh_timeradd(unsigned long msec,int flags,void (*action)(void*),void *handl
 	time_state &= ~IN_ADDTIMEOUT;
 	if(time_state&DEFER_SIGALRM)
 	{
-		time_state=0;
+		time_state=SIGALRM_CALL;
 		sigalrm(SIGALRM);
 		if(tp!=tptop)
 			tp=0;
@@ -233,6 +240,7 @@ void	timerdel(void *handle)
 			tpmin = 0;
 			setalarm((double)0);
 		}
+		signal(SIGALRM,(sh.sigflag[SIGALRM]&SH_SIGFAULT)?sh_fault:SIG_DFL);
 	}
 }
 

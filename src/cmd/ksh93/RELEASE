@@ -1,3 +1,34 @@
+02-11-30  --- Release ksh93n+  ---
+02-11-30  A bug that can show up in evaluating arithmetic statements that
+	  are in an autoloaded function when the function is autoload from
+	  another function has been fixed.
+02-11-30  An optimization bug in which an expansion of the form ${!name.@},
+	  which occurred inside a for or a while loop, when name is a name
+	  reference, has been fixed.
+02-11-18  A bug in which modifying array variables in a subshell could leave
+	  side effects in the parent shell environment has been fixed.
+02-11-18  A memory leak when unsetting an associative array has been fixed.
+02-11-14  The code to display compound objects was rewritten to make
+	  it easier for runtime extensions to reuse this code.
+02-11-14  A change was made to allow runtime builtins to be notified when
+	  a signal is received so that cleanup can be performed.
+02-10-31  User applications can now trap the ALRM signal.  Previously,
+	  the ALRM signal was used internally and could not be used
+	  by applications. 
+02-10-31  A bug in which signals received while reading from a coprocess
+	  for which traps were set was not handled correctly has been fixed.
+02-10-31  A bug in which a file opened with exec inside a subshell could
+	  be closed before the subshell completed has been fixed.
+02-10-21  A bug in which setting PATH or FPATH inside a function might not
+	  take effect has been fixed.
+02-10-21  A bug which could cause a core dump when a local SECONDS variable
+	  is defined in a function has been fixed.
+02-10-15  A bug in which the associate array name operator ${!array[@]}
+	  could return the same name multiple times has been fixed.
+02-10-15  A bug in which the zero'th element of an associative array was
+	  not getting set when an assignment was made without a subscript
+	  specified has been fixed.
+
 02-09-30  --- Release ksh93n  ---
 02-09-30  The maximum indexed array size was increased to 16Megs.
 02-09-30  A bug which could cause a core dump when changing attributes
@@ -8,7 +39,7 @@
 	  'a' before the right hand side was evaluated has been fixed.
 02-09-27  A bug in which the error message for ${var?message} when var was
 	  null or unset did not contain the variable name var has been fixed.
-02-09-27  A bug in which closing file descripts 0 through 2 could
+02-09-27  A bug in which closing file descriptors 0 through 2 could
 	  cause a subsequent here document to fail has been fixed. 
 02-09-14  A bug in whence which occurs when the specified name contained
 	  a / has been fixed.
@@ -22,7 +53,7 @@
 02-09-09  A bug in which a background job was not removed from the job list
 	  when a subshell completed has been fixed, for example (prog&). 
 02-09-03  A bug in which an assignment of the form name=(integer x=3)
-	  could be intepreted as an array assignment rather than a
+	  could be interpretted as an array assignment rather than a
 	  compound variable assignment has been fixed.
 02-08-19  A command completion bug which occured on file systems that
 	  are case insensitive has been fixed.
@@ -104,9 +135,9 @@
 	  directory when PATH have no valid directories has been fixed.
 01-11-28  The value of $? was not being set when called with exit.
 01-11-28  If the last command was of the form (...) and a trap on EXIT or
-	  ERR was set, and the command inside () modifed the trap, then
+	  ERR was set, and the command inside () modified the trap, then
 	  the original trap wasn't executed.
-01-11-26  The value for 0 is now precdeded by the base number when
+01-11-26  The value for 0 is now preceded by the base number when
 	  the base was not 10.
 01-11-26  The default has compilation mode has been changes so that
 	  viraw mode will always be on.
@@ -122,7 +153,7 @@
 01-10-11  An optimization bug in which ${!x) was treated as invariant in
 	  a for loop has been fixed.
 01-10-11  Unsigned integer variables in bases other than 10 are printed now
-	  exxpand in that base with the base prefix.
+	  expand in that base with the base prefix.
 01-10-10  A number of typos in the self generating man pages for shell
 	  built-ins have been fixed.
 01-10-04  The self generated man pages for hist and fc were not working
@@ -143,7 +174,7 @@
 	  associative.
 01-09-25  The code was modified to use the ast multibyte macros
 	  and functions for handing multibyte locales.
-01-09-25  The expansion ${parameter:offset:length} now hanles negative
+01-09-25  The expansion ${parameter:offset:length} now handles negative
 	  offsets which cause offsets to be measured from the end.
 01-09-25  Some spelling errors in the documentation were corrected.
 01-09-24  The /dev/tcp/host/port and /dev/udp/host/port now allow
@@ -176,7 +207,7 @@
 	  reference has been fixed.
 01-09-04  A bug introduced in ksh93l in which export -p did not prefix
 	  each export with the word export has been fixed.
-01-08-29  A bug in multibyte input which occurered when a partial multibyte
+01-08-29  A bug in multibyte input which occurred when a partial multibyte
 	  character was received has been fixed.
 01-08-29  A bug introduced in ksh93l which could cause a core dump
 	  when an assignment list containing PATH is specified inside
@@ -184,7 +215,7 @@
 01-08-09  Another bug in the optimization of for loops in ksh93l caused
 	  errors in recursive functions using local variables that
 	  contained for loops has been fixed.
-01-07-27  A bug in which IFS would be unset after a command substituion
+01-07-27  A bug in which IFS would be unset after a command substitution
 	  inside a here document has been fixed.
 01-07-26  To conform to the POSIX standard, if you invoked ksh name,
 	  and name does not contain a /,  it will first try to run
@@ -195,7 +226,7 @@
 01-07-23  A bug in which unset -f invoked in a subshell could unset a
 	  function defined in the parent has been fixed.
 01-07-16  A bug in the optimization of for loops in ksh93l caused
-	  name references to be treated as invariantes has been fixed.
+	  name references to be treated as invariants has been fixed.
 01-07-09  A bug in which a discipline function applied to a local variable
 	  could cause a shell exception has been fixed.  Discipline
 	  functions can only be specified for global variables. 
@@ -595,7 +626,7 @@
 	  the value of a name reference contained a positional
 	  parameter and the name reference was not defined inside
 	  a function has been fixed.
-97-06-30  Arithmetic expressions now correctly handle hexidecimal
+97-06-30  Arithmetic expressions now correctly handle hexadecimal
 	  constants.
 97-06-30  A bug in which integer variables could be expanded
 	  with a leading 10# when declared with typeset -i

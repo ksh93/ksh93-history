@@ -64,7 +64,7 @@ b_rmdir(int argc, char** argv, void* context)
 	int		pflag = 0;
 
 	NoP(argc);
-	cmdinit(argv, context, ERROR_CATALOG);
+	cmdinit(argv, context, ERROR_CATALOG, 0);
 	while (n = optget(argv, usage)) switch (n)
 	{
 	case 'p':

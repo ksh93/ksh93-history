@@ -426,7 +426,7 @@ b_id(int argc, char *argv[], void* context)
 	register int	flags = 0;
 	register int	n;
 
-	cmdinit(argv, context, ERROR_CATALOG);
+	cmdinit(argv, context, ERROR_CATALOG, 0);
 	while (n = optget(argv, usage)) switch (n)
 	{
 	case 'a':

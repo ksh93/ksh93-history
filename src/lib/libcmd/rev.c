@@ -89,7 +89,7 @@ b_rev(int argc, register char** argv, void* context)
 	NOT_USED(argc);
 
 	NoP(argc);
-	cmdinit(argv, context, ERROR_CATALOG);
+	cmdinit(argv, context, ERROR_CATALOG, 0);
 	while (n = optget(argv, usage)) switch (n)
 	{
 	    case 'l':

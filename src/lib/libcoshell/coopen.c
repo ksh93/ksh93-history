@@ -228,7 +228,8 @@ coopen(const char* path, int flags, const char* attributes)
 	}
 	if (attributes)
 		coquote(sp, attributes, 0);
-	sfprintf(sp, "'\n%s", coident);
+	sfprintf(sp, "'\n", coident);
+	sfprintf(sp, coident, CO_MSGFD, CO_MSGFD, CO_MSGFD);
 	i = sfstrtell(sp);
 	sfstrset(sp, 0);
 	sfprintf(sp, "#%05d\n", i - 7);
@@ -260,7 +261,7 @@ coopen(const char* path, int flags, const char* attributes)
 		break;
 	case 'k':
 		co->flags |= CO_KSH;
-		s = cokinit;
+		s = sfprints(cokinit, CO_MSGFD, CO_MSGFD);
 		break;
 	case 'i':	/* NOTE: 'i' is obsolete */
 	case 's':

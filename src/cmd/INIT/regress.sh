@@ -1,33 +1,12 @@
-####################################################################
-#                                                                  #
-#             This software is part of the ast package             #
-#                Copyright (c) 1999-2002 AT&T Corp.                #
-#        and it may only be used by you under license from         #
-#                       AT&T Corp. ("AT&T")                        #
-#         A copy of the Source Code Agreement is available         #
-#                at the AT&T Internet web site URL                 #
-#                                                                  #
-#       http://www.research.att.com/sw/license/ast-open.html       #
-#                                                                  #
-#    If you have copied or used this software without agreeing     #
-#        to the terms of the license you are infringing on         #
-#           the license and copyright and are violating            #
-#               AT&T's intellectual property rights.               #
-#                                                                  #
-#            Information and Software Systems Research             #
-#                        AT&T Labs Research                        #
-#                         Florham Park NJ                          #
-#                                                                  #
-#               Glenn Fowler <gsf@research.att.com>                #
-#                                                                  #
-####################################################################
+: regress - run regression tests in command.tst
+USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1995-2002 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"
 : regress - run regression tests in command.tst
 
 command=regress
 case $(getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt) in
 0123)	USAGE=$'
 [-?
-@(#)$Id: regress (AT&T Labs Research) 2001-04-01 $
+@(#)$Id: regress (AT&T Labs Research) 2002-10-08 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?regress - run regression tests]
@@ -731,6 +710,8 @@ typeset ARGS_ORIG COMMAND_ORIG UNIT ARGV
 typeset dump file quiet select trace verbose truncate=-L70
 typeset -A SAME
 typeset -Z LAST=00
+
+unset FIGNORE
 
 while	getopts -a $command "$USAGE" OPT
 do	case $OPT in

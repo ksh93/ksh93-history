@@ -57,13 +57,11 @@
 struct Magic_s;
 struct Magicdisc_s;
 
-typedef int (*Magicerror_f)(struct Magic_s*, struct Magicdisc_s*, int, const char*, ...);
-
 typedef struct Magicdisc_s
 {
 	unsigned long	version;	/* interface version		*/
 	unsigned long	flags;		/* MAGIC_* flags		*/
-	Magicerror_f	errorf;		/* error function		*/
+	Error_f		errorf;		/* error function		*/
 } Magicdisc_t;
 
 typedef struct Magic_s

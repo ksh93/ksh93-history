@@ -59,7 +59,7 @@ b_logname(int argc, char** argv, void* context)
 	register char*	logname;
 
 	NoP(argc);
-	cmdinit(argv, context, ERROR_CATALOG);
+	cmdinit(argv, context, ERROR_CATALOG, 0);
 	for (;;)
 	{
 		switch (optget(argv, usage))

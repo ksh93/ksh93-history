@@ -59,7 +59,6 @@ struct Optdisc_s;
 
 typedef struct Optpass_s
 {
-	struct Optdisc_s*	disc;
 	char*			opts;
 	char*			oopts;
 	char*			catalog;

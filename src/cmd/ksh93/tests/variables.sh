@@ -24,9 +24,10 @@
 function err_exit
 {
 	print -u2 -n "\t"
-	print -u2 -r $Command: "$@"
+	print -u2 -r $Command[$1]: "${@:2}"
 	let Errors+=1
 }
+alias err_exit='err_exit $LINENO'
 
 integer Errors=0
 Command=$0
@@ -276,4 +277,16 @@ unset bar
 if	[[ $( (print ${bar:?bam}) 2>&1) != *bar*bam* ]]
 then	err_exit 'Incorrect error message with ${foobar?}'
 fi
+{ $SHELL -c '
+function foo
+{
+	typeset SECONDS=0
+	sleep 1.5
+	print $SECONDS
+	
+}
+x=$(foo)
+(( x >1 && x < 2 )) 
+'
+} 2> /dev/null   || err_exit 'SECONDS not working in function'
 exit $((Errors))

@@ -37,3 +37,23 @@ putenv(const char* s)
 	return setenviron(s) ? 0 : -1;
 }
 
+extern int
+setenv(const char* name, const char* value, int overwrite)
+{
+	char*	s;
+
+	if (overwrite || !getenv(name))
+	{
+		if (!(s = sfprints("%s=%s", name, value)) || !(s = strdup(s)))
+			return -1;
+		return setenviron(s) ? 0 : -1;
+	}
+	return 0;
+}
+
+extern void
+unsetenv(const char *name)
+{
+	if (!strchr(name, '='))
+		setenviron(name);
+}

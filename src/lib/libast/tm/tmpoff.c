@@ -45,11 +45,13 @@
  */
 
 char*
-tmpoff(register char* s, register const char* p, register int n, int d)
+tmpoff(register char* s, size_t z, register const char* p, register int n, int d)
 {
-	while (*s = *p++)
+	register char*	e = s + z;
+
+	while (s < e && (*s = *p++))
 		s++;
-	if (n != d)
+	if (n != d && s < e)
 	{
 		if (n < 0)
 		{
@@ -58,7 +60,7 @@ tmpoff(register char* s, register const char* p, register int n, int d)
 		}
 		else
 			*s++ = '-';
-		s += sfsprintf(s, 16, "%02d%02d", n / 60, n % 60);
+		s += sfsprintf(s, e - s, "%02d%02d", n / 60, n % 60);
 	}
 	return s;
 }

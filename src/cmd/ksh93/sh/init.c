@@ -101,7 +101,6 @@ struct seconds
 {
 	Namfun_t	hdr;
 	Shell_t		*sh;
-	double		sec_offset;
 	char		*bufptr;
 	int		maxbufsize;
 };
@@ -247,10 +246,11 @@ static void put_restricted(register Namval_t* np,const char *val,int flags,Namfu
 	Shell_t *shp = ((struct shell*)fp)->sh;
 #ifdef PATH_BFPATH
 	Pathcomp_t *pp;
+	char *name = nv_name(np);
 #endif
 	if(!(flags&NV_RDONLY) && sh_isoption(SH_RESTRICTED))
 		errormsg(SH_DICT,ERROR_exit(1),e_restricted,nv_name(np));
-	if(nv_name(np)==nv_name(PATHNOD))			
+	if(name==(PATHNOD)->nvname)			
 	{
 #ifndef PATH_BFPATH
 		shp->lastpath = 0;
@@ -260,7 +260,7 @@ static void put_restricted(register Namval_t* np,const char *val,int flags,Namfu
 	if(val && !(flags&NV_RDONLY) && np->nvalue.cp && strcmp(val,np->nvalue.cp)==0)
 		 return;
 #ifdef PATH_BFPATH
-	if(shp->defpathlist  && nv_name(np)==nv_name(FPATHNOD))
+	if(shp->defpathlist  && name==(FPATHNOD)->nvname)
 		shp->pathlist = (void*)path_unsetfpath((Pathcomp_t*)shp->pathlist);
 #endif
 	nv_putv(np, val, flags, fp);
@@ -268,9 +268,9 @@ static void put_restricted(register Namval_t* np,const char *val,int flags,Namfu
 	if(shp->defpathlist)
 	{
 		val = np->nvalue.cp;
-		if(nv_name(np)==nv_name(PATHNOD))
+		if(name==(PATHNOD)->nvname)
 			pp = (void*)path_addpath((Pathcomp_t*)shp->pathlist,val,PATH_PATH);
-		else if(val && nv_name(np)==nv_name(FPATHNOD))
+		else if(val && name==(FPATHNOD)->nvname)
 			pp = (void*)path_addpath((Pathcomp_t*)shp->pathlist,val,PATH_FPATH);
 		else
 			return;
@@ -283,7 +283,7 @@ static void put_restricted(register Namval_t* np,const char *val,int flags,Namfu
 				nv_putval(mp,val,NV_RDONLY);
 		}
 #if 0
-sfprintf(sfstderr,"%d: name=%s val=%s\n",getpid(),nv_name(np),val);
+sfprintf(sfstderr,"%d: name=%s val=%s\n",getpid(),name,val);
 path_dump((Pathcomp_t*)shp->pathlist);
 #endif
 	}
@@ -352,17 +352,18 @@ static void put_cdpath(register Namval_t* np,const char *val,int flags,Namfun_t 
     {
 	int type;
 	char *lc_all = nv_getval(LCALLNOD);
-	if(nv_name(np)==nv_name(LCALLNOD))
+	char *name = nv_name(np);
+	if(name==(LCALLNOD)->nvname)
 		type = LC_ALL;
-	else if(nv_name(np)==nv_name(LCTYPENOD))
+	else if(name==(LCTYPENOD)->nvname)
 		type = LC_CTYPE;
-	else if(nv_name(np)==nv_name(LCMSGNOD))
+	else if(name==(LCMSGNOD)->nvname)
 		type = LC_MESSAGES;
-	else if(nv_name(np)==nv_name(LCCOLLNOD))
+	else if(name==(LCCOLLNOD)->nvname)
 		type = LC_COLLATE;
-	else if(nv_name(np)==nv_name(LCNUMNOD))
+	else if(name==(LCNUMNOD)->nvname)
 		type = LC_NUMERIC;
-	else if(nv_name(np)==nv_name(LANGNOD) && (!lc_all || *lc_all==0))
+	else if(name==(LANGNOD)->nvname && (!lc_all || *lc_all==0))
 		type = LC_ALL;
 	else
 		type= -1;
@@ -372,7 +373,8 @@ static void put_cdpath(register Namval_t* np,const char *val,int flags,Namfun_t 
 	{
 		if(!setlocale(type,val?val:""))
 		{
-			errormsg(SH_DICT,0,e_badlocale,val);
+			if(!sh_isstate(SH_INIT) || sh.login_sh==0)
+				errormsg(SH_DICT,0,e_badlocale,val);
 			return;
 		}
 	}
@@ -478,6 +480,8 @@ static char* get_ifs(register Namval_t* np, Namfun_t *fp)
 				n = S_DELIM;
 				if(c== *cp)
 					cp++;
+				else if(c=='\n')
+					n = S_NL;
 				else if(isspace(c))
 					n = S_SPACE;
 				shp->ifstable[c] = n;
@@ -505,7 +509,6 @@ static char* get_ifs(register Namval_t* np, Namfun_t *fp)
 
 static void put_seconds(register Namval_t* np,const char *val,int flags,Namfun_t *fp)
 {
-	struct seconds *sp = (struct seconds*)fp;
 	double d;
 	struct tms tp;
 	if(!val)
@@ -519,12 +522,12 @@ static void put_seconds(register Namval_t* np,const char *val,int flags,Namfun_t
 	else
 		d = sh_arith(val);
 	timeofday(&tp);
-	sp->sec_offset = dtime(&tp)-d;
 	if(!np->nvalue.dp)
 	{
 		nv_setsize(np,3);
-		np->nvalue.dp = &sp->sec_offset;
+		np->nvalue.dp = new_of(double,0);
 	}
+	*np->nvalue.dp = dtime(&tp)-d;
 }
 
 static char* get_seconds(register Namval_t* np, Namfun_t *fp)
@@ -533,14 +536,14 @@ static char* get_seconds(register Namval_t* np, Namfun_t *fp)
 	static int maxbufsize;
 	register int places = nv_size(np);
 	struct tms tp;
-	double d;
+	double d, offset = (np->nvalue.dp?*np->nvalue.dp:0);
 	NOT_USED(fp);
 	timeofday(&tp);
-	d = dtime(&tp)- *np->nvalue.dp;
+	d = dtime(&tp)- offset;
 	if(!bufptr)
-		bufptr = (char*)malloc(maxbufsize=places+8);
-	else if(places+8 > maxbufsize)
-		bufptr = (char*)realloc(bufptr,maxbufsize=places+8);
+		bufptr = (char*)malloc(maxbufsize=places+20);
+	else if(places+20 > maxbufsize)
+		bufptr = (char*)realloc(bufptr,maxbufsize=places+20);
 	sfsprintf(bufptr,maxbufsize,"%.*f\0",places,d);
 	return(bufptr);
 }
@@ -548,9 +551,10 @@ static char* get_seconds(register Namval_t* np, Namfun_t *fp)
 static double nget_seconds(register Namval_t* np, Namfun_t *fp)
 {
 	struct tms tp;
+	double offset = (np->nvalue.dp?*np->nvalue.dp:0);
 	NOT_USED(fp);
 	timeofday(&tp);
-	return(dtime(&tp)- *np->nvalue.dp);
+	return(dtime(&tp)- offset);
 }
 
 /*
@@ -715,7 +719,7 @@ static char* get_match(register Namval_t* np, Namfun_t *fp)
 	return(mp->rval);
 }
 
-static const Namdisc_t SH_MATCH_disc  = {  0, 0, get_match };
+static const Namdisc_t SH_MATCH_disc  = {  sizeof(struct match), 0, get_match };
 
 #ifdef SHOPT_FS_3D
     /*
@@ -752,17 +756,119 @@ static const Namdisc_t SH_MATCH_disc  = {  0, 0, get_match };
     static Namfun_t VPATH_init	= { &VPATH_disc  };
 #endif /* SHOPT_FS_3D */
 
-static const Namdisc_t IFS_disc		= {  0, put_ifs, get_ifs };
-static const Namdisc_t RESTRICTED_disc	= {  0, put_restricted };
+#ifdef SHOPT_OO
+/*
+ * disciplines for the "time" type
+*/ 
+struct dctime
+{
+	Namfun_t	fun;
+	char		node[NV_MINSZ];
+};
+
+static char *get_time(Namval_t* np, Namfun_t* nfp)
+{
+	static char buff[256];
+	struct dctime *dp = (struct dctime*)nfp;
+	Namval_t *nq = nv_namptr(dp->node,0);
+	time_t t = (time_t)nv_getn(np,(Namfun_t*)0);
+	char *format = nv_getval(nq);
+	tmfmt(buff,sizeof(buff),format,&t);
+	return(buff);
+}
+
+static void put_time(Namval_t* np, const char* val, int flag, Namfun_t* nfp)
+{
+	struct dctime *dp = (struct dctime*)nfp;
+	char *last;
+	if(val)
+	{
+		time_t t;
+		if(flag&NV_INTEGER)
+		{
+			if(flag&NV_LONG)
+				t = (time_t)*(Sfdouble_t*)val;
+			else
+				t = (time_t)*(double*)val;
+		}
+		else
+		{
+			if(sizeof(time_t)==sizeof(Sflong_t) && sizeof(Sflong_t)>sizeof(long))
+				t = (time_t)strtoull(val, &last, 0);
+			else
+				t = (time_t)strtoul(val, &last, 0);
+			
+			if(*last)
+				t = tmdate(val, &last, (time_t*)0);
+		}
+		if(*last)
+			errormsg(SH_DICT,ERROR_exit(1),"%s: invalid date/time string",val);
+		flag = (flag&NV_RDONLY)|NV_INTEGER;
+		if(sizeof(time_t)==sizeof(Sflong_t) && sizeof(Sflong_t)>sizeof(long))
+			flag |= NV_LONG;
+		nv_putv(np,(char*)&t,flag,(Namfun_t*)0);
+	}
+	else
+	{
+		Namval_t *nq = nv_namptr(dp->node,0);
+		nv_unset(nq);
+		nv_putv(np,val,flag,nfp);
+	}
+}
+
+static Namval_t *create_time(Namval_t *np, const char *name, int flags, Namfun_t *nfp)
+{
+	struct dctime *dp = (struct dctime*)nfp;
+	Namval_t *nq;
+	if(strcmp(name,"format"))
+		return((Namval_t*)0);
+	nq = nv_namptr(dp->node,0);
+	if(!nq->nvname)
+	{
+		nq->nvname = "format";
+		nv_stack(np,nfp);
+		nfp = nv_stack(np,(Namfun_t*)0);
+		nv_putval(nq,"", NV_MINIMAL|NV_NOFREE);
+		nv_stack(np,nfp);
+	}
+	return(nq);
+}
+
+static Namval_t *next_time(register Namval_t* np, Dt_t *root,Namfun_t *nfp)
+{
+	struct dctime *dp = (struct dctime*)nfp;
+	if(!root)
+		return(nv_namptr(dp->node,0));
+	return(0);
+}
+
+static const Namdisc_t timedisc =
+{
+        sizeof(struct dctime),
+        put_time,
+        get_time,
+        0,
+        0,
+        create_time,
+	0,
+	0,
+	0,
+	next_time
+};
+#endif /* SHOPT_OO */
+
+
+static const Namdisc_t IFS_disc		= {  sizeof(struct ifs), put_ifs, get_ifs };
+static const Namdisc_t RESTRICTED_disc	= {  sizeof(struct shell), put_restricted };
 #ifdef PATH_BFPATH
-static const Namdisc_t CDPATH_disc	= {  0, put_cdpath }; 
+static const Namdisc_t CDPATH_disc	= {  sizeof(struct shell), put_cdpath }; 
 #endif
-static const Namdisc_t EDITOR_disc	= {  0, put_ed };
-static const Namdisc_t OPTINDEX_disc	= {  0, put_optindex };
-static const Namdisc_t SECONDS_disc	= {  0, put_seconds, get_seconds, nget_seconds };
-static const Namdisc_t RAND_disc	= {  0, put_rand, get_rand, nget_rand };
-static const Namdisc_t LINENO_disc	= {  0, put_lineno, get_lineno, nget_lineno };
-static const Namdisc_t L_ARG_disc	= {  0, put_lastarg, get_lastarg };
+static const Namdisc_t EDITOR_disc	= {  sizeof(struct shell), put_ed };
+static const Namdisc_t OPTINDEX_disc	= {  sizeof(struct shell), put_optindex };
+static const Namdisc_t SECONDS_disc	= {  sizeof(struct seconds), put_seconds, get_seconds, nget_seconds };
+static const Namdisc_t RAND_disc	= {  sizeof(struct rand), put_rand, get_rand, nget_rand };
+static const Namdisc_t LINENO_disc	= {  sizeof(struct shell), put_lineno, get_lineno, nget_lineno };
+static const Namdisc_t L_ARG_disc	= {  sizeof(struct shell), put_lastarg, get_lastarg };
 
 #ifdef SHOPT_NAMESPACE
     static char* get_nspace(Namval_t* np, Namfun_t *fp)
@@ -776,7 +882,7 @@ static const Namdisc_t L_ARG_disc	= {  0, put_lastarg, get_lastarg };
 #endif /* SHOPT_NAMESPACE */
 
 #ifdef _hdr_locale
-    static const Namdisc_t LC_disc	= {  0, put_lang };
+    static const Namdisc_t LC_disc	= {  sizeof(struct shell), put_lang };
 #endif /* _hdr_locale */
 #ifdef SHOPT_MULTIBYTE
     static const Namdisc_t CSWIDTH_disc	= {  0, put_cswidth };
@@ -894,6 +1000,15 @@ int sh_init(register int argc,register char *argv[], void(*userinit)(int))
 #ifdef SHOPT_MULTIBYTE
        	charsize_init();
 #endif /* SHOPT_MULTIBYTE */
+	if(argc>0)
+	{
+		name = path_basename(*argv);
+		if(*name=='-')
+		{
+			name++;
+			sh.login_sh = 2;
+		}
+	}
 	env_init(&sh);
 	nv_putval(IFSNOD,(char*)e_sptbnl,NV_RDONLY);
 #ifdef SHOPT_FS_3D
@@ -907,12 +1022,6 @@ int sh_init(register int argc,register char *argv[], void(*userinit)(int))
 	job_clear();
 	if(argc>0)
 	{
-		name = path_basename(*argv);
-		if(*name=='-')
-		{
-			name++;
-			sh.login_sh = 2;
-		}
 		/* check for restricted shell */
 		if(argc>0 && strmatch(name,rsh_pattern))
 			sh_onoption(SH_RESTRICTED);
@@ -1110,10 +1219,10 @@ static Init_t *nv_init(Shell_t *shp)
 	nv_stack(OPTINDNOD, &ip->OPTINDEX_init.hdr);
 	nv_stack(SECONDS, &ip->SECONDS_init.hdr);
 	nv_stack(L_ARGNOD, &ip->L_ARG_init.hdr);
-	nv_putval(SECONDS, (char*)&d, NV_INTEGER);
+	nv_putval(SECONDS, (char*)&d, NV_INTEGER|NV_DOUBLE);
 	nv_stack(RANDNOD, &ip->RAND_init.hdr);
 	d = (shp->pid&RANDMASK);
-	nv_putval(RANDNOD, (char*)&d, NV_INTEGER);
+	nv_putval(RANDNOD, (char*)&d, NV_INTEGER|NV_DOUBLE);
 	nv_stack(LINENO, &ip->LINENO_init.hdr);
 	nv_putsub(SH_MATCHNOD,(char*)0,10);
 	nv_onattr(SH_MATCHNOD,NV_RDONLY);
@@ -1150,7 +1259,7 @@ static Init_t *nv_init(Shell_t *shp)
 	nv_putval(np,(char*)shp->bltin_tree,NV_TABLE|NV_RDONLY|NV_NOFREE);
 	np = nv_search("alias",DOTSHNOD->nvalue.hp,NV_ADD);
 	nv_putval(np,(char*)shp->alias_tree,NV_TABLE|NV_RDONLY|NV_NOFREE);
-	np = nv_search("class",DOTSHNOD->nvalue.hp,NV_ADD);
+	np = nv_search("type",DOTSHNOD->nvalue.hp,NV_ADD);
 	np->nvalue.hp = dtopen(&_Nvdisc,Dtset);
 	nv_onattr(np,NV_TABLE|NV_RDONLY|NV_NOFREE);
 	np = nv_search("namespace",DOTSHNOD->nvalue.hp,NV_ADD);
@@ -1158,6 +1267,28 @@ static Init_t *nv_init(Shell_t *shp)
 	nv_stack(np, &NSPACE_init);
 	}
 #endif /* SHOPT_NAMESPACE */
+#ifdef SHOPT_OO
+	{
+	Namval_t *np;
+	int flags;
+	time_t t=time(0);
+	struct dctime *dp = newof(0,struct dctime,1,0);
+	np = nv_search("type",DOTSHNOD->nvalue.hp,NV_ADD);
+	np->nvalue.hp = dtopen(&_Nvdisc,Dtset);
+	np = nv_search("time", np->nvalue.hp, NV_ADD);
+	if(sizeof(Sflong_t)>sizeof(long) && sizeof(time_t)==sizeof(Sflong_t))
+		flags = NV_INTEGER|NV_LONG;
+	else
+		flags = NV_INTEGER;
+	nv_onattr(np,flags);
+	nv_putval(np,(char*)&t, flags);
+	dp->fun.disc = &timedisc;
+	dp->fun.type = np;
+	nv_stack(np,&dp->fun);
+	np = nv_namptr(dp->node,0);
+	nv_onattr(np,NV_MINIMAL);
+	}
+#endif /* SHOPT_OO */
 	return(ip);
 }
 

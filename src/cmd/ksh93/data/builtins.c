@@ -38,6 +38,7 @@
 #   define bltin(x)	0
 #endif
 
+
 /*
  * The order up through "[" is significant
  */
@@ -1500,9 +1501,6 @@ USAGE_LICENSE
 "[A?Associative array.  Each \aname\a will converted to an associate "
 	"array.  If a variable already exists, the current value will "
 	"become index \b0\b.]"
-#ifdef SHOPT_OO
-"[C]:[cname?\acname\a is the class name for each \aname\a.]"
-#endif /* SHOPT_OO */
 "[E]#?[n:=10?Floating point number represented in scientific notation. "
 	"\an\a specifies the number of significant figures when the "
 	"value is expanded.]"
@@ -1518,6 +1516,9 @@ USAGE_LICENSE
 "[R]#?[n?Right justify.  If \an\a is given it represents the field width.  If "
 	"the \b-Z\b attribute is also specified, then zeros will "
 	"be used as the fill character.  Otherwise, spaces are used.]"
+#ifdef SHOPT_OO
+"[T]:[tname?\atname\a is the name of a type name given to each \aname\a.]"
+#endif /* SHOPT_OO */
 "[Z]#?[n?Zero fill.  If \an\a is given it represents the field width.]"
 "\n"
 "\n[name[=value]...]\n"

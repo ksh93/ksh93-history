@@ -32,7 +32,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: join (AT&T Labs Research) 2000-04-30 $\n]"
+"[-?\n@(#)$Id: join (AT&T Labs Research) 2002-11-14 $\n]"
 USAGE_LICENSE
 "[+NAME?join - relational database operator]"
 "[+DESCRIPTION?\bjoin\b performs an \aequality join\a on the files \afile1\a "
@@ -110,7 +110,7 @@ USAGE_LICENSE
 #define S_NL		3
 
 #if DEBUG_TRACE
-#define cmdinit(a,b,c)
+#define cmdinit(a,b,c,d)
 #endif
 
 typedef struct
@@ -141,6 +141,11 @@ typedef struct
 	int		ignorecase;
 	File_t		file[2];
 } Join_t;
+
+static struct State_s
+{
+	int		interrupt;
+} state;
 
 static void
 done(register Join_t* jp)
@@ -265,13 +270,15 @@ getolist(Join_t* jp, const char* first, char** arglist)
 static unsigned char*
 getrec(Join_t* jp, int index)
 {
-	register unsigned char*	state = jp->state;
+	register unsigned char*	sp = jp->state;
 	register File_t*	fp = &jp->file[index];
 	register char**		ptr = fp->fieldlist;
 	register char**		ptrmax = ptr + fp->maxfields;
 	register char*		cp;
 	register int		n = 0;
 
+	if (state.interrupt)
+		return 0;
 	fp->spaces = 0;
 	fp->hit = 0;
 	if (!(cp = sfgetr(fp->iop, '\n', 0)))
@@ -297,13 +304,13 @@ getrec(Join_t* jp, int index)
 			ptrmax = fp->fieldlist+n;
 		}
 		*ptr++ = cp;
-		if (jp->delim<=0 && state[*(unsigned char*)cp]==S_SPACE)
+		if (jp->delim<=0 && sp[*(unsigned char*)cp]==S_SPACE)
 		{
 			fp->spaces = 1;
-			while (state[*(unsigned char*)cp++]==S_SPACE);
+			while (sp[*(unsigned char*)cp++]==S_SPACE);
 			cp--;
 		}
-		while ((n=state[*(unsigned char*)cp++])==0);
+		while ((n=sp[*(unsigned char*)cp++])==0);
 	}
 	*ptr = cp;
 	fp->nfields = ptr - fp->fieldlist;
@@ -313,7 +320,7 @@ getrec(Join_t* jp, int index)
 		/* eliminate leading spaces */
 		if (fp->spaces)
 		{
-			while (state[*(unsigned char*)cp++]==S_SPACE);
+			while (sp[*(unsigned char*)cp++]==S_SPACE);
 			cp--;
 		}
 		fp->fieldlen = (fp->fieldlist[n+1]-cp)-1;
@@ -644,7 +651,13 @@ b_join(int argc, char** argv, void* context)
 	register Join_t*	jp = init();
 	char*			e;
 
-	cmdinit(argv, context, ERROR_CATALOG);
+	if (argc < 0)
+	{
+		state.interrupt = 1;
+		return 1;
+	}
+	state.interrupt = 0;
+	cmdinit(argv, context, ERROR_CATALOG, ERROR_NOTIFY);
 	if (!(jp = init()))
 		error(ERROR_system(1),"out of space");
 	for (;;)

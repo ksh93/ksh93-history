@@ -611,6 +611,7 @@ procopen(const char* cmd, char** argv, char** envv, long* modv, long flags)
 #endif
 			env[0] = '_';
 			env[1] = '=';
+			env[2] = 0;
 			if (!setenviron(env)) goto cleanup;
 		}
 		if ((flags & PROC_PARANOID) && !setenviron("PATH=:/bin:/usr/bin")) goto cleanup;

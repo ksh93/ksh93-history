@@ -136,7 +136,6 @@ double	arith_exec(Arith_t *ep)
 	register char *tp;
 	double small_stack[SMALL_STACK+1];
 	const char *ptr = "";
-	int ftype;
 	Fun_t fun;
 	struct lval node;
 	node.emode = ep->emode;
@@ -230,9 +229,9 @@ double	arith_exec(Arith_t *ep)
 			break;
 		    case A_PUSHF:
 			cp = roundptr(ep,cp,Fun_t);
-			fun = *((Fun_t*)cp);
+			*++sp = (double)(cp-ep->code);
 			cp += sizeof(Fun_t);
-			ftype = *cp++;
+			*++tp = *cp++;
 			continue;
 		    case A_PUSHN:
 			cp = roundptr(ep,cp,double);
@@ -324,18 +323,22 @@ double	arith_exec(Arith_t *ep)
 			type=0;
 			break;
 		    case A_CALL1:
+			sp--,tp--;
+			fun = *((Fun_t*)(ep->code+(int)(*sp)));
+			type = *tp;
 			num = (*fun)(num);
-		        type = ftype;
 			break;
 		    case A_CALL2:
-			num = (*((Math_2_f)fun))(sp[-1],num);
-			sp--,tp--;
-		        type = ftype;
+			sp-=2,tp-=2;
+			fun = *((Fun_t*)(ep->code+(int)(*sp)));
+			type = *tp;
+			num = (*((Math_2_f)fun))(sp[1],num);
 			break;
 		    case A_CALL3:
-			num = (*((Math_3_f)fun))(sp[-2],sp[-1],num);
-			sp-=2,tp-=2;
-		    	type = ftype;
+			sp-=3,tp-=3;
+			fun = *((Fun_t*)(ep->code+(int)(*sp)));
+			type = *tp;
+			num = (*((Math_3_f)fun))(sp[1],sp[2],num);
 			break;
 		}
 		if(c&T_BINARY)
@@ -544,6 +547,8 @@ again:
 			lvalue.fun = 0;
 			if(fun)
 			{
+				if(vp->staksize++>=vp->stakmaxsize)
+					vp->stakmaxsize = vp->staksize;
 				vp->infun=1;
 				stakputc(A_PUSHF);
 				stakpush(vp,fun,Fun_t);

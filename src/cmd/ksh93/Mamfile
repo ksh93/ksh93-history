@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 4.2 2002-10-02
+info mam static 00000 1994-07-17 make (AT&T Research) 4.3 2002-12-21
 setv INSTALLROOT ../../..
 setv PACKAGE_ast ${INSTALLROOT}
 setv PACKAGE_ast_INCLUDE ${PACKAGE_ast}/include/ast
@@ -504,10 +504,6 @@ exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DS
 done test.o generated
 make typeset.o
 make bltins/typeset.c
-prev include/argnod.h implicit
-make include/fcin.h implicit
-prev ../../../include/ast/sfio.h implicit
-done include/fcin.h
 prev ../../../include/ast/dlldefs.h implicit
 prev include/variables.h implicit
 prev include/builtins.h implicit
@@ -518,7 +514,7 @@ prev ../../../include/ast/error.h implicit
 prev include/defs.h implicit
 done bltins/typeset.c
 prev bltins/typeset.c
-exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_COMPOUND_ARRAY -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -D_BLD_shell -c bltins/typeset.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -D_BLD_shell -c bltins/typeset.c
 done typeset.o generated
 make ulimit.o
 make bltins/ulimit.c
@@ -613,7 +609,9 @@ prev include/io.h implicit
 prev include/path.h implicit
 prev include/variables.h implicit
 prev include/defs.h implicit
-prev include/fcin.h implicit
+make include/fcin.h implicit
+prev ../../../include/ast/sfio.h implicit
+done include/fcin.h
 prev ../../../include/ast/ls.h implicit
 prev ../../../include/ast/stak.h implicit
 prev ../../../include/ast/sfio.h implicit
@@ -890,6 +888,15 @@ done sh/name.c
 prev sh/name.c
 exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_OPTIMIZE -DSHOPT_MULTIBYTE -DSHOPT_APPEND -DSHOPT_COMPOUND_ARRAY -DSHOPT_NAMESPACE -D_BLD_shell -D_PACKAGE_ast -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_ESH -c sh/name.c
 done name.o generated
+make nvtree.o
+make sh/nvtree.c
+prev include/argnod.h implicit
+prev include/name.h implicit
+prev include/defs.h implicit
+done sh/nvtree.c
+prev sh/nvtree.c
+exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_COMPOUND_ARRAY -D_PACKAGE_ast -D_BLD_shell -DSHOPT_ESH -DSHOPT_MULTIBYTE -DSHOPT_VSH -DSHOPT_SUID_EXEC -c sh/nvtree.c
+done nvtree.o generated
 make parse.o
 make sh/parse.c
 prev include/path.h implicit
@@ -1181,7 +1188,7 @@ prev edit/vi.c
 exec - ${CC} ${CCFLAGS}  -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DKSHELL -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_SUID_EXEC -D_BLD_shell -c edit/vi.c
 done vi.o generated
 exec - ${AR} cr libshell.a alarm.o cd_pwd.o cflow.o deparse.o getopts.o hist.o misc.o print.o read.o sleep.o trap.o test.o typeset.o ulimit.o umask.o whence.o main.o arith.o args.o array.o completion.o defs.o edit.o expand.o fault.o fcin.o history.o init.o io.o jobs.o
-exec - ${AR} cr libshell.a lex.o macro.o name.o parse.o path.o string.o streval.o subshell.o tdump.o timers.o trestore.o waitevent.o xec.o env.o limits.o msg.o strdata.o testops.o keywords.o options.o signals.o aliases.o builtins.o variables.o lexstates.o emacs.o vi.o
+exec - ${AR} cr libshell.a lex.o macro.o name.o nvtree.o parse.o path.o string.o streval.o subshell.o tdump.o timers.o trestore.o waitevent.o xec.o env.o limits.o msg.o strdata.o testops.o keywords.o options.o signals.o aliases.o builtins.o variables.o lexstates.o emacs.o vi.o
 exec - (ranlib libshell.a) >/dev/null 2>&1 || true
 done libshell.a generated
 bind -lshell
@@ -1189,7 +1196,7 @@ prev +ljobs
 prev +li
 prev +lintl
 prev ${mam_libdl}
-exec - ${CC} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}}  -o ksh pmain.o ${mam_libshell} ${mam_libm} ${mam_libast}
+exec - ${CC} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}}   -o ksh pmain.o ${mam_libshell} ${mam_libm} ${mam_libast}
 done ksh generated
 make shcomp
 make shcomp.o
@@ -1212,7 +1219,7 @@ prev +lintl
 prev ${mam_libdl}
 setv CC.DLL -UCC.DLL
 setv SH_DICT -DSH_DICT="\"libshell\""
-exec - ${CC} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}}  -o shcomp shcomp.o ${mam_libshell} ${mam_libm} ${mam_libast}
+exec - ${CC} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}}   -o shcomp shcomp.o ${mam_libshell} ${mam_libm} ${mam_libast}
 done shcomp generated
 make sh/suid_exec.c
 prev ../../../include/ast/error.h implicit
@@ -1238,7 +1245,7 @@ prev +li
 prev +lintl
 prev ${mam_libdl}
 setv CC.DLL -UCC.DLL
-exec - ${CC} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}}  -o suid_exec suid_exec.o ${mam_libast} ${mam_libm} ${mam_libast}
+exec - ${CC} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}}   -o suid_exec suid_exec.o ${mam_libast} ${mam_libm} ${mam_libast}
 done suid_exec generated
 make ../../../bin
 exec - set -

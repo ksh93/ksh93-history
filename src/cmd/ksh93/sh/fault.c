@@ -27,10 +27,6 @@
  *
  *   David Korn
  *   AT&T Labs
- *   Room 2B-102
- *   Murray Hill, N. J. 07974
- *   Tel. x7975
- *   research!dgk
  *
  */
 
@@ -52,12 +48,15 @@ void	sh_fault(register int sig)
 	register int 	flag;
 	register char	*trap;
 	register struct checkpt	*pp = (struct checkpt*)sh.jmplist;
+	int	action=0;
 	/* reset handler */
+	if(!(sig&SH_TRAP))
+		signal(sig, sh_fault);
+	sig &= ~SH_TRAP;
 #ifdef DEBUGSIG
 	if (sig == SIGBUS || sig == SIGILL || sig == SIGSEGV)
 		return;
 #endif
-	signal(sig, sh_fault);
 	/* handle ignored signals */
 	if((trap=sh.st.trapcom[sig]) && *trap==0)
 		return;
@@ -113,11 +112,19 @@ void	sh_fault(register int sig)
 		}
 #endif /* SIGTSTP */
 	}
+#ifdef ERROR_NOTIFY
+	if((error_info.flags&ERROR_NOTIFY) && sh.bltinfun)
+		action = (*sh.bltinfun)(-sig,(char**)0,(void*)0);
+#endif
+	if(action>0)
+		return;
 	sh.trapnote |= flag;
 	if(sig < sh.sigmax)
 		sh.sigflag[sig] |= flag;
 	if(pp->mode==SH_JMPCMD && sh_isstate(SH_STOPOK))
 	{
+		if(action<0)
+			return;
 		sigrelease(sig);
 		sh_exit(SH_EXITSIG);
 	}
@@ -175,19 +182,24 @@ void sh_siginit(void)
 void	sh_sigtrap(register int sig)
 {
 	register int flag;
+	void (*fun)(int);
 	sh.st.otrapcom = 0;
 	if(sig==0)
 		sh_sigdone();
 	else if(!((flag=sh.sigflag[sig])&(SH_SIGFAULT|SH_SIGOFF)))
 	{
 		/* don't set signal if already set or off by parent */
-		if(signal(sig,sh_fault)==SIG_IGN) 
+		if((fun=signal(sig,sh_fault))==SIG_IGN) 
 		{
 			signal(sig,SIG_IGN);
 			flag |= SH_SIGOFF;
 		}
 		else
+		{
 			flag |= SH_SIGFAULT;
+			if(sig==SIGALRM && fun!=SIG_DFL && fun!=sh_fault)
+				signal(sig,fun);
+		}
 		flag &= ~(SH_SIGSET|SH_SIGTRAP);
 		sh.sigflag[sig] = flag;
 	}
@@ -298,7 +310,7 @@ void	sh_chktrap(void)
 			sh_exit(sh.exitval);
 		}
 	}
-	if(sh.sigflag[SIGALRM]&SH_SIGTRAP)
+	if(sh.sigflag[SIGALRM]&SH_SIGALRM)
 		sh_timetraps();
 	while(--sig>=0)
 	{

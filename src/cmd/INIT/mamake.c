@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1999-2002 AT&T Corp.                *
+*                Copyright (c) 1990-2002 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -29,7 +29,7 @@
  * coded for portability
  */
 
-static char id[] = "\n@(#)$Id: mamake (AT&T Labs Research) 2002-09-11 $\0\n";
+static char id[] = "\n@(#)$Id: mamake (AT&T Labs Research) 2002-12-04 $\0\n";
 
 #if _PACKAGE_ast
 
@@ -37,7 +37,7 @@ static char id[] = "\n@(#)$Id: mamake (AT&T Labs Research) 2002-09-11 $\0\n";
 #include <error.h>
 
 static const char usage[] =
-"[-?\n@(#)$Id: mamake (AT&T Labs Research) 2002-09-11 $\n]"
+"[-?\n@(#)$Id: mamake (AT&T Labs Research) 2002-12-04 $\n]"
 USAGE_LICENSE
 "[+NAME?mamake - make abstract machine make]"
 "[+DESCRIPTION?\bmamake\b reads \amake abstract machine\a target and"
@@ -758,12 +758,6 @@ substitute(Buf_t* buf, register char* s)
 			}
 			switch (c)
 			{
-			case 0:
-			case '=':
-			case '}':
-				if (v)
-					substitute(buf, v);
-				break;
 			case '+':
 			case '-':
 				if ((v == 0 || *v == 0) == (c == '-'))
@@ -772,7 +766,16 @@ substitute(Buf_t* buf, register char* s)
 					*s = 0;
 					substitute(buf, t);
 					*s = c;
+					break;
 				}
+				if (c != '-')
+					break;
+				/*FALLTHROUGH*/
+			case 0:
+			case '=':
+			case '}':
+				if (v)
+					substitute(buf, v);
 				break;
 			}
 			if (*s)
@@ -1430,6 +1433,8 @@ make(Rule_t* r)
 		state.indent++;
 		report(-1, r->name, "make");
 	}
+	else
+		z = 0;
 	buf = buffer();
 	while (s = input())
 	{

@@ -32,6 +32,7 @@
  */
 
 #include <ast.h>
+#include <error.h>
 
 typedef struct Dir_s			/* directory list element	*/
 {
@@ -54,8 +55,11 @@ pathinclude(const char* dir)
 {
 	register Dir_t*	dp;
 
-	if (dir && *dir && !streq(dir, "."))
+	if (dir && *dir && !streq(dir, ".") && !access(dir, X_OK))
 	{
+		for (dp = state.head; dp; dp = dp->next)
+			if (streq(dir, dp->dir))
+				return 0;
 		if (!(dp = oldof(0, Dir_t, 1, strlen(dir))))
 			return -1;
 		strcpy(dp->dir, dir);
@@ -83,6 +87,14 @@ pathfind(const char* name, const char* lib, const char* type, char* buf, size_t 
 	register char*		s;
 	char			tmp[PATH_MAX];
 
+	if (((s = strrchr(name, '/')) || (s = (char*)name)) && strchr(s, '.'))
+		type = 0;
+
+	/*
+	 * always check the unadorned path first
+	 * this handles . and absolute paths
+	 */
+
 	if (access(name, R_OK) >= 0)
 		return strncpy(buf, name, size);
 	if (type)
@@ -91,35 +103,60 @@ pathfind(const char* name, const char* lib, const char* type, char* buf, size_t 
 		if (access(buf, R_OK) >= 0)
 			return buf;
 	}
-	if (*name != '/')
+	if (*name == '/')
+		return 0;
+
+	/*
+	 * check the directory of the including file
+	 * on the assumption that error_info.file is properly stacked
+	 */
+
+	if (error_info.file && (s = strrchr(error_info.file, '/')))
 	{
-		if (strchr(name, '.'))
-			type = 0;
-		for (dp = state.head; dp; dp = dp->next)
+		sfsprintf(buf, sizeof(buf), "%-.*s%s", s - error_info.file + 1, error_info.file, name);
+		if (access(buf, R_OK) >= 0)
+			return buf;
+		if (type)
 		{
-			sfsprintf(tmp, sizeof(tmp), "%s/%s", dp->dir, name);
-			if (pathpath(buf, tmp, "", PATH_REGULAR))
+			sfsprintf(buf, sizeof(buf), "%-.*s%s%.s", s - error_info.file + 1, error_info.file, name, type);
+			if (access(buf, R_OK) >= 0)
 				return buf;
-			if (type)
-			{
-				sfsprintf(tmp, sizeof(tmp), "%s/%s.%s", dp->dir, name, type);
-				if (pathpath(buf, tmp, "", PATH_REGULAR))
-					return buf;
-			}
 		}
-		if (lib)
+	}
+
+	/*
+	 * check the include dir list
+	 */
+
+	for (dp = state.head; dp; dp = dp->next)
+	{
+		sfsprintf(tmp, sizeof(tmp), "%s/%s", dp->dir, name);
+		if (pathpath(buf, tmp, "", PATH_REGULAR))
+			return buf;
+		if (type)
 		{
-			if (s = strrchr((char*)lib, ':'))
-				lib = (const char*)s + 1;
-			sfsprintf(tmp, sizeof(tmp), "lib/%s/%s", lib, name);
+			sfsprintf(tmp, sizeof(tmp), "%s/%s.%s", dp->dir, name, type);
 			if (pathpath(buf, tmp, "", PATH_REGULAR))
 				return buf;
-			if (type)
-			{
-				sfsprintf(tmp, sizeof(tmp), "lib/%s/%s.%s", lib, name, type);
-				if (pathpath(buf, tmp, "", PATH_REGULAR))
-					return buf;
-			}
+		}
+	}
+
+	/*
+	 * finally a lib related search on PATH
+	 */
+
+	if (lib)
+	{
+		if (s = strrchr((char*)lib, ':'))
+			lib = (const char*)s + 1;
+		sfsprintf(tmp, sizeof(tmp), "lib/%s/%s", lib, name);
+		if (pathpath(buf, tmp, "", PATH_REGULAR))
+			return buf;
+		if (type)
+		{
+			sfsprintf(tmp, sizeof(tmp), "lib/%s/%s.%s", lib, name, type);
+			if (pathpath(buf, tmp, "", PATH_REGULAR))
+				return buf;
 		}
 	}
 	return 0;

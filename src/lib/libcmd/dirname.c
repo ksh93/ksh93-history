@@ -101,7 +101,7 @@ b_dirname(int argc,register char *argv[], void* context)
 {
 	register int n;
 
-	cmdinit(argv, context, ERROR_CATALOG);
+	cmdinit(argv, context, ERROR_CATALOG, 0);
 	while (n = optget(argv, usage)) switch (n)
 	{
 	case ':':

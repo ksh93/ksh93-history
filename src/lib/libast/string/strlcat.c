@@ -25,7 +25,19 @@
 *******************************************************************/
 #pragma prototyped
 
+#if defined(__STDPP__directive) && defined(__STDPP__hide)
+__STDPP__directive pragma pp:hide strlcat
+#else
+#define strlcat		______strlcat
+#endif
+
 #include <ast.h>
+
+#if defined(__STDPP__directive) && defined(__STDPP__hide)
+__STDPP__directive pragma pp:nohide strlcat
+#else
+#undef	strlcat
+#endif
 
 /*
  * append at t onto s limiting total size of s to n

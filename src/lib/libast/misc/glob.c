@@ -66,7 +66,8 @@ typedef int (*GL_stat_f)(const char*, struct stat*);
 	regex_t*	gl_ignorei; \
 	regex_t		re_ignore; \
 	regex_t		re_ignorei; \
-	char*		gl_pad[7];
+	unsigned long	gl_starstar; \
+	char*		gl_pad[6];
 
 #include <glob.h>
 
@@ -91,7 +92,13 @@ gl_dirnext(glob_t* gp, void* handle)
 
 	while (dp = (struct dirent*)(*gp->gl_readdir)(handle))
 		if (D_FILENO(dp))
+		{
+#if defined(DT_UNKNOWN) && defined(DT_DIR) && defined(DT_LNK)
+			if (dp->d_type != DT_UNKNOWN && dp->d_type != DT_DIR && dp->d_type != DT_LNK)
+				gp->gl_status |= GLOB_NOTDIR;
+#endif
 			return dp->d_name;
+		}
 	return 0;
 }
 
@@ -262,7 +269,7 @@ addmatch(register glob_t* gp, const char* dir, const char* pat, register const c
 				stakseek(0);
 				return;
 			}
-			else if (type == GLOB_DIR)
+			else if (type == GLOB_DIR && (gp->gl_flags & GLOB_MARK))
 				stakputc(gp->gl_delim);
 		}
 		ap = (globlist_t*)stakfreeze(1);
@@ -296,6 +303,7 @@ glob_dir(glob_t* gp, globlist_t* ap)
 	regex_t*		pre;
 	regex_t			rec;
 	regex_t			rei;
+	int			notdir;
 	int			t1;
 	int			t2;
 
@@ -309,6 +317,8 @@ glob_dir(glob_t* gp, globlist_t* ap)
 	char*			restore2 = 0;
 	regex_t*		prec = 0;
 	regex_t*		prei = 0;
+	char*			matchdir = 0;
+	int			starstar = 0;
 
 	if (*gp->gl_intr)
 	{
@@ -318,6 +328,7 @@ glob_dir(glob_t* gp, globlist_t* ap)
 	pat = rescan = ap->gl_begin;
 	prefix = dirname = ap->gl_path;
 	first = (rescan == prefix);
+again:
 	for (;;)
 	{
 		switch (c = *rescan++)
@@ -378,6 +389,8 @@ glob_dir(glob_t* gp, globlist_t* ap)
 		}
 		break;
 	}
+	if(matchdir)
+		goto skip;
 	if (pat == prefix)
 	{
 		prefix = 0;
@@ -403,8 +416,48 @@ glob_dir(glob_t* gp, globlist_t* ap)
 		}
 		*(restore1 = pat - 1) = 0;
 	}
+	if (!complete && (gp->gl_flags & GLOB_STARSTAR))
+		while ( pat[0] == '*' && pat[1] == '*' && (pat[2] == '/'  || pat[2]==0))
+		{
+			matchdir = pat;
+			if(pat[2])
+			{
+				pat += 3;
+				while(*pat=='/') pat++;
+				if(*pat)
+					continue;
+			}
+			rescan = *pat?0:pat;
+			pat = "*";
+			goto skip;
+		}
+	if(matchdir)
+	{
+		rescan = pat;
+		goto again;
+	}
+skip:
 	if (rescan)
 		*(restore2 = rescan - 1) = 0;
+	if (rescan && !complete && (gp->gl_flags & GLOB_STARSTAR))
+	{
+		register char *p = rescan;
+		while ( p[0] == '*' && p[1] == '*' && (p[2] == '/'  || p[2]==0))
+		{
+			rescan = p;
+			if(starstar = (p[2]==0))
+				break;
+			p += 3;
+			while(*p=='/') p++;
+			if(*p==0)
+			{
+				starstar = 2;
+				break;
+			}
+		}
+	}
+	if (matchdir)
+		gp->gl_starstar++;
 	for (;;)
 	{
 		if (complete)
@@ -451,12 +504,23 @@ glob_dir(glob_t* gp, globlist_t* ap)
 				pre = prec;
 				ire = gp->gl_ignore;
 			}
+			if (restore2)
+				*restore2 = gp->gl_delim;
 			while ((name = (*gp->gl_dirnext)(gp, dirf)) && !*gp->gl_intr)
 			{
+				if (notdir = (gp->gl_status & GLOB_NOTDIR))
+					gp->gl_status &= ~GLOB_NOTDIR;
 				if (ire && !regexec(ire, name, 0, NiL, 0))
 					continue;
+				if (matchdir && (name[0] != '.' || name[1] && (name[1] != '.' || name[2])) && !notdir)
+					addmatch(gp,prefix,name,matchdir,NiL);
 				if (!regexec(pre, name, 0, NiL, 0))
-					addmatch(gp, prefix, name, rescan, NiL);
+				{
+					if(!rescan || !notdir)
+						addmatch(gp, prefix, name, rescan, NiL);
+					if(starstar==1 || (starstar==2 && !notdir))
+						addmatch(gp, prefix, name, starstar==2?"":NiL, NiL);
+				}
 				errno = 0;
 			}
 			(*gp->gl_dirclose)(gp, dirf);
@@ -509,6 +573,10 @@ glob(const char* pattern, int flags, int (*errfn)(const char*, int), register gl
 			return GLOB_APPERR;
 		if (((gp->gl_flags & GLOB_STACK) == 0) == (gp->gl_stak == 0))
 			return GLOB_APPERR;
+		if (gp->gl_starstar > 1)
+			gp->gl_flags |= GLOB_STARSTAR;
+		else
+			gp->gl_starstar = 0;
 	}
 	else
 	{
@@ -517,6 +585,7 @@ glob(const char* pattern, int flags, int (*errfn)(const char*, int), register gl
 		gp->gl_pathc = 0;
 		gp->gl_ignore = 0;
 		gp->gl_ignorei = 0;
+		gp->gl_starstar = 0;
 		if (!(flags & GLOB_DISC))
 		{
 			gp->gl_fignore = 0;
@@ -536,7 +605,7 @@ glob(const char* pattern, int flags, int (*errfn)(const char*, int), register gl
 			gp->gl_opendir = (GL_opendir_f)opendir;
 			gp->gl_readdir = (GL_readdir_f)readdir;
 			gp->gl_closedir = (GL_closedir_f)closedir;
-			gp->gl_stat = (GL_stat_f)pathstat;
+			gp->gl_stat = (flags & GLOB_STARSTAR) ? (GL_stat_f)lstat : (GL_stat_f)pathstat;
 		}
 		if (!gp->gl_intr)
 			gp->gl_intr = &intr;
@@ -630,8 +699,15 @@ glob(const char* pattern, int flags, int (*errfn)(const char*, int), register gl
 		}
 		*argv = 0;
 		if (!(flags & GLOB_NOSORT) && (argv - av) > 1)
+		{
 			strsort(av, argv - av, strcoll);
+			if (gp->gl_starstar > 1)
+				av[gp->gl_pathc = struniq(av, argv - av)] = 0;
+			gp->gl_starstar = 0;
+		}
 	}
+	if (gp->gl_starstar > 1)
+		gp->gl_flags &= ~GLOB_STARSTAR;
 	if (gp->gl_stak)
 		stakinstall(oldstak, 0);
 	return gp->gl_error;

@@ -98,7 +98,7 @@ b_getconf(int argc, char** argv, void* context)
 	static char	empty[] = "-";
 
 	NoP(argc);
-	cmdinit(argv, context, ERROR_CATALOG);
+	cmdinit(argv, context, ERROR_CATALOG, 0);
 	all = 0;
 	flags = 0;
 	for (;;)

@@ -1,5 +1,5 @@
 #
-# @(#)magic (AT&T Research) 2002-04-30
+# @(#)magic (AT&T Research) 2002-11-18
 #
 # magic number database for file(1) and magic(3)
 #
@@ -1334,13 +1334,14 @@ v()
 &4	string		*		%s			application/x-%s
 &12	string		*		%s data
 &24	version		*		, version %s
++28	long		>0		, size %u
 {
 &28	long		>=4
-&32	long		*		, %u
+&32	long		>0		, %u
 }
 {
 &28	long		>=8
-&36	long		*		, %u
+&36	long		>0		, %u
 }
 
 #

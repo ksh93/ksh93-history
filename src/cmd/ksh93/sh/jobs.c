@@ -1540,7 +1540,7 @@ void job_subrestore(void* ptr)
 	for(pw=job.pwlist; pw; pw=pwnext)
 	{
 		pwnext = pw->p_nxtjob;
-		if(pw->p_env != sh.jobenv)
+		if(pw->p_env != sh.curenv)
 			continue;
 		for(px=pw; px; px=px->p_nxtproc)
 			px->p_flag |= P_DONE;

@@ -33,7 +33,7 @@
  * the sum of the hacks {s5,v10,planix} is _____ than the parts
  */
 
-static const char id[] = "\n@(#)$Id: magic library (AT&T Labs Research) 2002-08-20 $\0\n";
+static const char id[] = "\n@(#)$Id: magic library (AT&T Labs Research) 2002-11-22 $\0\n";
 
 static const char lib[] = "libast:magic";
 
@@ -804,19 +804,7 @@ ckmagic(register Magic_t* mp, const char* file, char* buf, struct stat* st, unsi
 		if (ep->type == 'd' || ep->type == 'D')
 			b += sfsprintf(b, PATH_MAX - (b - buf), q + (*q == '\b'), fmttime("%?%l", (time_t)num));
 		else if (ep->type == 'v')
-		{
-			if (num >= 19700101L)
-				sfprintf(mp->tmp, "%04lu-%02lu-%02lu", (num / 10000) % 10000, (num / 100) % 100, num % 100);
-			else
-			{
-				if (c = (num >> 24) & 0xff)
-					sfprintf(mp->tmp, "%d.", c);
-				if (c = (num >> 16) & 0xff)
-					sfprintf(mp->tmp, "%d.", c);
-				sfprintf(mp->tmp, "%ld.%ld", (num >> 8) & 0xff, num & 0xff);
-			}
-			b += sfsprintf(b, PATH_MAX - (b - buf), q + (*q == '\b'), sfstruse(mp->tmp));
-		}
+			b += sfsprintf(b, PATH_MAX - (b - buf), q + (*q == '\b'), fmtversion(num));
 		else
 			b += sfsprintf(b, PATH_MAX - (b - buf), q + (*q == '\b'), num);
 		if (ep->mime && *ep->mime)

@@ -32,6 +32,16 @@ alias err_exit='err_exit $LINENO'
 Command=$0
 integer Errors=0
 # cut here
+function fun
+{
+	while  command exec 3>&1 
+	do	break  
+	done 2>   /dev/null
+	print -u3 good
+}
+exec 3> /dev/null
+[[ $(fun) == good ]] || err_exit 'file 3 closed before subshell completes'
+exec 3>&-
 mkdir /tmp/ksh$$ || err_exit "mkdir /tmp/ksh$$ failed"
 cd /tmp/ksh$$ || err_exit "cd /tmp/ksh$$ failed"
 print foo > file1

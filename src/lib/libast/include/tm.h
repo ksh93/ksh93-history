@@ -163,7 +163,7 @@ extern time_t		tmleap(time_t*);
 extern int		tmlex(const char*, char**, char**, int, char**, int);
 extern char**		tmlocale(void);
 extern Tm_t*		tmmake(time_t*);
-extern char*		tmpoff(char*, const char*, int, int);
+extern char*		tmpoff(char*, size_t, const char*, int, int);
 extern time_t		tmscan(const char*, char**, const char*, char**, time_t*, long);
 extern time_t		tmtime(Tm_t*, int);
 extern Tm_zone_t*	tmtype(const char*, char**);

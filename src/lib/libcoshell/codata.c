@@ -32,8 +32,8 @@
 #include "colib.h"
 
 char	coident[] = "\
-# @(#)$Id: libcoshell (AT&T Research) 2002-01-24 $\n\
-{ { (eval 'function fun { trap \":\" 0; return 1; }; trap \"exit 0\" 0; fun; exit 1') && PATH= print -u3 ksh; } || { times && echo bsh >&3; } || { echo osh >&3; }; } >/dev/null 2>&1\n\
+# @(#)$Id: libcoshell (AT&T Research) 2002-10-31 $\n\
+{ { (eval 'function fun { trap \":\" 0; return 1; }; trap \"exit 0\" 0; fun; exit 1') && PATH= print -u%d ksh; } || { times && echo bsh >&%d; } || { echo osh >&%d; }; } >/dev/null 2>&1\n\
 ";
 
 char	cobinit[] = "\
@@ -121,7 +121,7 @@ fi\n\
 
 char	cokinit[] = "\
 set +o bgnice -o monitor\n\
-exec 3>&3\n\
+exec %d>&%d\n\
 (wait $$; exit 0) 2>/dev/null || alias wait=:\n\
 alias ignore='ignore '\n\
 function ignore\n\

@@ -104,7 +104,7 @@ b_tee(int argc, register char** argv, void* context)
 	register int*		hp;
 	register char*		cp;
 
-	cmdinit(argv, context, ERROR_CATALOG);
+	cmdinit(argv, context, ERROR_CATALOG, 0);
 	while (n = optget(argv, usage)) switch (n)
 	{
 	case 'a':

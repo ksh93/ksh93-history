@@ -94,7 +94,7 @@ b_wc(int argc,register char **argv, void* context)
 	struct stat	statb;
 
 	NoP(argc);
-	cmdinit(argv, context, ERROR_CATALOG);
+	cmdinit(argv, context, ERROR_CATALOG, 0);
 	while (n = optget(argv,usage)) switch (n)
 	{
 	case 'w':

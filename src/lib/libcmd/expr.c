@@ -403,7 +403,7 @@ b_expr(int argc, char *argv[], void *context)
 	Node_t node;
 	int n;
 	NoP(argc);
-	cmdinit(argv,context, ERROR_CATALOG);
+	cmdinit(argv,context, ERROR_CATALOG, 0);
 #if 0
 	if (strcmp(astconf("CONFORMANCE", NiL, NiL), "standard"))
 		arglist = argv+1;

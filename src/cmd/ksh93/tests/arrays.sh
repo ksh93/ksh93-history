@@ -278,4 +278,48 @@ fi
 unset foo
 typeset -A foo
 foo[$((10))]=ok 2> /dev/null || err_exit 'arithmetic expression as subscript not working'
+unset foo
+typeset -A foo
+integer foo=0
+[[ $foo == 0 ]] || err_exit 'zero element of associative array not being set'
+unset foo
+typeset -A foo=( [two]=1)
+for i in one three four five
+do	: ${foo[$i]}
+done
+if	[[ ${!foo[@]} != two ]]
+then	err_exit 'Error in subscript names'
+fi
+unset x
+x=( 1 2 3)
+(x[1]=8)
+[[ ${x[1]} == 2 ]] || err_exit 'index array produce side effects in subshells'
+x=( 1 2 3)
+(
+	x+=(8)
+	[[ ${#x[@]} == 4 ]] || err_exit 'index array append in subshell error'
+)
+[[ ${#x[@]} == 3 ]] || err_exit 'index array append in subshell effects parent'
+x=( [one]=1 [two]=2 [three]=3)
+(x[two]=8)
+[[ ${x[two]} == 2 ]] || err_exit 'associative array produce side effects in subshells'
+unset x
+x=( [one]=1 [two]=2 [three]=3)
+(
+	x+=( [four]=4 )
+	[[ ${#x[@]} == 4 ]] || err_exit 'associative array append in subshell error'
+)
+[[ ${#x[@]} == 3 ]] || err_exit 'associative array append in subshell effects parent'
+unset x
+integer i
+for ((i=0; i < 40; i++))
+do	x[i]=$i
+done
+[[  ${#x[@]} == 40 ]] || err_exit 'index arrays loosing values'
+[[ $( ($SHELL -c 'typeset -A var; (IFS=: ; set -A var a:b:c ;print ${var[@]});:' )2>junk2) == 'a b c' ]] || err_exit 'change associative to index failed'
+unset foo
+[[ $(foo=good
+for ((i=0; i < 2; i++))
+do	[[ ${foo[i]} ]] && print ok
+done) == ok ]] || err_exit 'invalid optimization for subscripted variables'
 exit $((Errors))

@@ -20,8 +20,8 @@ lib	execlp,execve,execvp,execvpe
 lib	fchmod,fcntl,fmtmsg,fnmatch,fork,fsync
 lib	getconf,getdents,getdirentries,getdtablesize,getdate
 lib	getgroups,gethostname,getlogin,getpagesize,getrlimit,getuniverse
-lib	glob,index,iswblank,iswctype,killpg,link,localeconv,madvise,mbtowc
-lib	memalign,memchr,memcmp,memcpy,memdup,memmove,memset
+lib	glob,index,iswblank,iswctype,killpg,link,localeconv,madvise
+lib	mbtowc,mbrtowc,memalign,memchr,memcmp,memcpy,memdup,memmove,memset
 lib	mkdir,mkfifo,mktemp,mktime
 lib	mount,on_exit,onexit,opendir,pathconf,pcreateve
 lib	readlink,remove,rename,rewinddir,rindex,rmdir,setlocale

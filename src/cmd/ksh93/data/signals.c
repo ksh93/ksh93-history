@@ -56,7 +56,7 @@ const struct shtable2 shtab_signals[] =
 	"AIO",		VAL(SIGAIO,SH_SIGIGNORE), 	S("Asynchronous I/O"),
 #endif /*SIGAIO */
 #ifdef SIGALRM
-	"ALRM",		VAL(SIGALRM,SH_SIGFAULT),	S("Alarm call"),
+	"ALRM",		VAL(SIGALRM,SH_SIGDONE),	S("Alarm call"),
 #endif /* SIGALRM */
 #ifdef SIGAPOLLO
 	"APOLLO",	VAL(SIGAPOLLO,0),		"SIGAPOLLO"),

@@ -234,7 +234,7 @@ static void path_init(Shell_t *shp)
 	Pathcomp_t *pp = (void*)path_addpath((Pathcomp_t*)0,(val?val:e_defpath),PATH_PATH);
 	if(shp->defpathlist = (void*)pp)
 		pp->shp = shp;
-	if(val=(PATHNOD)->nvalue.cp)
+	if(val=nv_scoped((PATHNOD))->nvalue.cp)
 	{
 		pp = (void*)path_addpath((Pathcomp_t*)shp->pathlist,val,PATH_PATH);
 		if(shp->pathlist = (void*)pp)
@@ -242,7 +242,7 @@ static void path_init(Shell_t *shp)
 	}
 	else
 		shp->pathlist = (void*)path_dup(pp);
-	if(val=(FPATHNOD)->nvalue.cp)
+	if(val=nv_scoped((FPATHNOD))->nvalue.cp)
 	{
 		pp = (void*)path_addpath((Pathcomp_t*)shp->pathlist,val,PATH_FPATH);
 		if(shp->pathlist = (void*)pp)

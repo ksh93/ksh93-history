@@ -1,3 +1,28 @@
+02-12-15 include/error.h: errorcontext => Error_context_s (compatible til 2004)
+02-12-06 misc/sigdata.c: add NoF(sigdadata) -- why nmake was uninterruptable!
+02-12-03 comp/omitted.c,features/omitted: handle cygwin alarm() return botch
+02-11-27 misc/swapop.c: op=3,size=4 => op=7
+	 string/strlcat.c,strlcpy.c: fix uwin decl clash
+02-11-26 sfio/sfvprintf.c: fix sfsprintf() '\0' termination bug
+02-11-22 misc/glob.c: move static struniq() to libast extern
+	 string/fmtversion.c,include/ast.h: add fmtversion
+02-11-18 string/strncopy.c: add
+	 misc/magic.tab: list size for magicid.h magic
+02-11-14 sfio/sfvprintf.c: add %#c for C escapes
+	 include/error.h: add ERROR_NOTIFY context flag for builtin commands
+02-11-11 string/strtoi.h: add S2I_size for strnto*() size_t 2nd arg
+	 sfio/sfstrtof.h: add S2I_size for strnto*() size_t 2nd arg
+	 comp/putenv.c: add setenv() and unsetenv() wrappers for setenviron()
+02-10-31 path/pathfind.c: add dir of including file to the pathinclude() list
+	 misc/optesc.c: add
+02-10-30 string/strtoip4.c: set next char pointer even on error
+02-10-29 comp/resolvepath.c: add (size_t version of realpath())
+	 misc/mime.c: fix mimehead() to ignore null content values
+02-10-28 misc/glob.c: add GLOB_STARSTAR for /**/ and GLOB_NOTDIR optimization
+02-10-27 string/struniq.c: add
+02-10-23 features/common: fix off-by-one loop check
+02-10-18 include/ast_std.h: avoid off_t,ftruncate,lseek,truncate redefinitions
+02-10-17 misc/mime.c: handle type/* match, fix bogus header parse
 02-10-04 sfio/sfstrtof.h: S2F_static <0:export =0:private >0:static
 02-10-02 features/common: don't define _WIN32; define _WINIX => unix on windows
 	 features/tty: finally stomp the bsd _POSIX_VDISABLE redefinition

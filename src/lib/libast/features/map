@@ -51,6 +51,7 @@ tst	- output{
 		printf("#define regrecord       _ast_regrecord\n");
 		printf("#define regrexec	_ast_regrexec\n");
 		printf("#define regsub		_ast_regsub\n");
+		printf("#define resolvepath	_ast_resolvepath\n");
 		printf("#define setenviron      _ast_setenviron\n");
 		printf("#define strftime	_ast_strftime\n");
 		printf("#define strptime	_ast_strptime\n");

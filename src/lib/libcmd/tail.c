@@ -32,7 +32,7 @@
  */
 
 static const char usage[] =
-"+[-?\n@(#)$Id: tail (AT&T Labs Research) 2001-10-29 $\n]"
+"+[-?\n@(#)$Id: tail (AT&T Labs Research) 2002-11-14 $\n]"
 USAGE_LICENSE
 "[+NAME?tail - output trailing portion of one or more files ]"
 "[+DESCRIPTION?\btail\b copies one or more input files to standard output "
@@ -241,7 +241,7 @@ b_tail(int argc, char** argv, void* context)
 	register Tail_t*	hp;
 	Tail_t*			files;
 
-	cmdinit(argv, context, ERROR_CATALOG);
+	cmdinit(argv, context, ERROR_CATALOG, 0);
 	while (n = optget(argv, usage)) switch (n)
 	{
 	    case 'q':
@@ -365,7 +365,7 @@ b_tail(int argc, char** argv, void* context)
 		 * multiple forever
 		 */
 
-		if (!(files = newof(0, Tail_t, argc, 0)))
+		if (!(files = (Tail_t*)stakalloc(argc * sizeof(Tail_t))))
 			error(ERROR_system(1), "out of space [files]");
 		ep = files;
 		while (ep->name = *argv++)
@@ -382,6 +382,8 @@ b_tail(int argc, char** argv, void* context)
 			{
 				sfseek(ep->sp, offset, SEEK_SET);
 				ep->size = offset;
+				ep->last = 0;
+				ep->warn = 0;
 				ep++;
 			}
 		}

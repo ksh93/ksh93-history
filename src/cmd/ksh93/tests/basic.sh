@@ -271,4 +271,17 @@ optbug()
 	return 1
 }
 optbug ||  err_exit 'array size optimzation bug'
+sleep 20 &
+if	[[ $(jobs -p) != *$!* ]]
+then	err_exit 'jobs -p not reporting a background job' 
+fi
+sleep 20 &
+foo()
+{
+	set -- $(jobs -p)
+	(( $# == 2 )) || err_exit 'both jobs not reported'
+}
+: $(jobs -p)
+foo
+[[ $( (trap 'print alarm' ALRM; sleep 4) & sleep 2; kill -ALRM $!) == alarm ]] || print -u2 'ALRM signal not working'
 exit $((Errors))

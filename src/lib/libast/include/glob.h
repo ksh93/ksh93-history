@@ -31,7 +31,7 @@
 #ifndef _GLOB_H
 #define _GLOB_H
 
-#define GLOB_VERSION	20010916L
+#define GLOB_VERSION	20021031L
 
 #include <stdlib.h>
 
@@ -86,6 +86,7 @@ struct _glob_
 	/* ast additions */
 
 	char*		(*gl_nextdir)(glob_t*, char*);
+	unsigned long	gl_status;
 
 #ifdef _GLOB_PRIVATE_
 	_GLOB_PRIVATE_
@@ -105,6 +106,7 @@ struct _glob_
 #define GLOB_NOSORT	0x0040		/* don't sort the list		*/
 
 /* extended interface */
+#define GLOB_STARSTAR	0x0080		/* enable [/]**[/] expansion	*/
 #define GLOB_BRACE	0x0100		/* enable {...} expansion	*/
 #define GLOB_ICASE	0x0200		/* ignore case on match		*/
 #define GLOB_COMPLETE	0x0400		/* shell file completeion	*/
@@ -113,6 +115,9 @@ struct _glob_
 #define GLOB_LIST	0x2000		/* just create gl_list		*/
 #define GLOB_ALTDIRFUNC	0x4000		/* gnu discipline functions	*/
 #define GLOB_DISC	0x8000		/* discipline initialized	*/
+
+/* gl_status */
+#define GLOB_NOTDIR	0x0001		/* last gl_dirnext() not a dir	*/
 
 /* gl_type return */
 #define GLOB_NOTFOUND	0		/* does not exist		*/

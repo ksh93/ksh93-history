@@ -22,6 +22,7 @@ WWWTYPES =
 
 ":WWW:" : .MAKE .OPERATOR
 	local A B D I J L X E P R M
+	.WWW.LOCAL .WWW.REMOTE : .DO.NOTHING
 	WWWDIR := $(HOME:X=$(WWWDIR):T=F:O=1)
 	B := $(*:N=*.mm::O=1:B)
 	D := $(WWWDIR)/$(B)
@@ -70,7 +71,6 @@ WWWTYPES =
 	end
 	.WWW.req : .FUNCTION
 		return $(*$(%:T=SR):N=-l*:T=F:P=B:N!=-l*|/*)
-	.WWW.LOCAL .WWW.REMOTE : .CLEAR
 	A = 0
 	for I $(R:N!=*.mm)
 		if I == "-"
@@ -184,7 +184,6 @@ WWWTYPES =
 				"
 		end
 	end
-	.WWW.ALL : .WWW.REMOTE - .WWW.LOCAL
 
 /*
  * :WWWPOST: [ host [ dir [ tmp ] ] ]
@@ -196,6 +195,7 @@ WWWTYPES =
 ":WWWPOST:" : .MAKE .OPERATOR
 	local ( host dir tmp ignore ... ) $(>) www $(WWWDIR:B:S) tmp ignore
 	:ALL: delta.pax
+	.WWW.ALL : .WWW.REMOTE - .WWW.LOCAL
 	eval
 	.POST : .VIRTUAL base.pax delta.pax
 		case "$$(>)" in

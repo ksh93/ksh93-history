@@ -54,6 +54,6 @@ procrun(const char* path, char** argv)
 		sfputc(tmp, '\'');
 	}
 	n = system(sfstruse(tmp));
-	free(tmp);
+	sfstrclose(tmp);
 	return n;
 }

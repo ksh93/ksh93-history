@@ -32,7 +32,7 @@
  * mime/mailcap support library
  */
 
-static const char id[] = "\n@(#)$Id: mime library (AT&T Research) 2002-09-07 $\0\n";
+static const char id[] = "\n@(#)$Id: mime library (AT&T Research) 2002-10-29 $\0\n";
 
 static const char lib[] = "libast:mime";
 
@@ -429,7 +429,7 @@ find(Mime_t* mp, const char* type)
 		} while (*rp);
 		while (*lp && *lp++ != '-');
 	} while (*lp);
-	return 0;
+	return (Ent_t*)dtmatch(mp->cap, buf);
 }
 
 /*
@@ -522,7 +522,7 @@ arg(register Parse_t* pp, int first)
 			pp->name.size = s - pp->name.data - 1;
 			pp->value.data = s;
 		}
-		else if (first < 0 && isspace(c))
+		else if (first >= 0 && isspace(c))
 			break;
 	}
 	pp->next = s - (c != ';');
@@ -531,7 +531,12 @@ arg(register Parse_t* pp, int first)
 	if (pp->value.data)
 		pp->value.size = s - pp->value.data - (q && first < 0);
 	else
+	{
+		pp->value.size = 0;
 		pp->name.size = s - pp->name.data - (q && first < 0);
+	}
+	if (first >= 0 && pp->name.size > 0 && pp->name.data[pp->name.size - 1] == ':')
+		return 0;
 	return pp->name.size > 0;
 }
 
@@ -742,7 +747,8 @@ mimehead(Mime_t* mp, void* tab, size_t num, size_t siz, register char* s)
 				if ((*set)(mp, p, pp.name.data, pp.name.size, mp->disc))
 					return 0;
 				while (arg(&pp, 0))
-					if ((p = strsearch(tab, num, siz, (Strcmp_f)mimecmp, pp.name.data, &e)) &&
+					if (pp.value.size &&
+					    (p = strsearch(tab, num, siz, (Strcmp_f)mimecmp, pp.name.data, &e)) &&
 					    (*set)(mp, p, pp.value.data, pp.value.size, mp->disc))
 						return 0;
 				return 1;

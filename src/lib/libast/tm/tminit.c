@@ -158,6 +158,7 @@ tmlocal(void)
 	register Tm_zone_t*	zp;
 	register int		n;
 	register char*		s;
+	register char*		e;
 	int			i;
 	int			m;
 	int			isdst;
@@ -274,9 +275,13 @@ tmlocal(void)
 				local.standard = zp->standard;
 				if (!(s = zp->daylight))
 				{
-					s = tmpoff(buf, zp->standard, 0, 0);
-					*s++ = ' ';
-					tmpoff(s, tm_info.format[TM_DT], m, TM_DST);
+					e = (s = buf) + sizeof(buf);
+					s = tmpoff(s, e - s, zp->standard, 0, 0);
+					if (s < e - 1)
+					{
+						*s++ = ' ';
+						tmpoff(s, e - s, tm_info.format[TM_DT], m, TM_DST);
+					}
 					s = strdup(buf);
 				}
 				local.daylight = s;
@@ -289,11 +294,15 @@ tmlocal(void)
 			 * not in the table
 			 */
 
-			s = tmpoff(buf, tm_info.format[TM_UT], n, 0);
+			e = (s = buf) + sizeof(buf);
+			s = tmpoff(s, e - s, tm_info.format[TM_UT], n, 0);
 			local.standard = strdup(buf);
-			*s++ = ' ';
-			tmpoff(s, tm_info.format[TM_UT], m, TM_DST);
-			local.daylight = strdup(buf);
+			if (s < e - 1)
+			{
+				*s++ = ' ';
+				tmpoff(s, e - s, tm_info.format[TM_UT], m, TM_DST);
+				local.daylight = strdup(buf);
+			}
 		}
 	}
 

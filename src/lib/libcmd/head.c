@@ -84,7 +84,7 @@ b_head(int argc, register  char *argv[], void* context)
 	int			header = 1;
 	char			*format = header_fmt+1;
 
-	cmdinit(argv, context, ERROR_CATALOG);
+	cmdinit(argv, context, ERROR_CATALOG, 0);
 	while (n = optget(argv, usage)) switch (n)
 	{
 	case 'c':

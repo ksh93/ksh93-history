@@ -1,5 +1,5 @@
 .fp 5 CW
-.TH SFIO 3 "01 August 2001"
+.TH SFIO 3 "01 December 2002"
 .SH NAME
 \fBsfio\fR \- safe/fast string/file input/output
 .SH SYNOPSIS
@@ -1277,6 +1277,10 @@ the form is \fIbase#number\fP where \fIbase\fP is the conversion base
 and \fInumber\fP is represented by digits for this \fIbase\fP.
 For example, a base \f52\fP conversion with \f5%#..2d\fP for \f510\fP
 is \f52#1010\fP instead of \f51010\fP as printed with \f5%..2d\fP.
+Finally, for \f5%c\fP, bytes will be printed in the C format.
+For example, when the ASCII character set is used,
+the byte value 10 will be printed as \f5\\n\fP while 255 is printed
+as \f5\\377\fP.
 .Tp
 \f5width\fP:
 This defines the width of the printing field. A value to be printed will
@@ -2228,6 +2232,11 @@ and to conform to the C99 standard.
 The function \f5sfpoll()\fP was rehauled to make it useful
 for writing servers that must commnunicate with multiple streams
 without blocking.
+.PP
+The formatting pattern \f5%c\fP for \f5sf*printf\fP was extended
+to allow the flag \f5#\fP to print unprintable character values
+using the C convention. For example, \f5%#c\fP prints the octal value 012
+as \f5\\n\fP.
 
 .SH AUTHORS
 Kiem-Phong Vo, kpv@research.att.com,

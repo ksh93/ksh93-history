@@ -82,7 +82,8 @@ struct limits
 	unsigned char	fs3d;		/* non-zero for 3-d file system */
 };
 
-typedef void (*Sh_init_f)(int);
+typedef void	(*Sh_init_f)(int);
+typedef int	(*Sh_bltin_f)(int, char*[], void*);
 
 #define _SH_PRIVATE \
 	struct sh_scoped st;		/* scoped information */ \
@@ -157,6 +158,7 @@ typedef void (*Sh_init_f)(int);
 	struct sh_scoped global; \
 	struct checkpt	checkbase; \
 	Sh_init_f	userinit; \
+	Sh_bltin_f	bltinfun; \
 	char		*cur_line; \
 	short		offsets[10]; \
 	char		ifstable[256];

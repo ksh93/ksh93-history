@@ -889,7 +889,7 @@ b_stty(int argc, char** argv, void* context)
 	Optdisc_t		disc;
 
 	NoP(argc);
-	cmdinit(argv, context, ERROR_CATALOG);
+	cmdinit(argv, context, ERROR_CATALOG, 0);
 	if (tcgetattr(0, &tty) < 0)
 		error(ERROR_system(1),"not a tty");
 	memset(&disc, 0, sizeof(disc));

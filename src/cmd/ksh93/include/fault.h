@@ -55,6 +55,7 @@ typedef void (*SH_SIGTYPE)(int,void(*)(int));
 #define SH_SIGIGNORE		040	/* default is ingore signal */
 #define SH_SIGINTERACTIVE	0100	/* handle interactive specially */
 #define SH_SIGTSTP		0200	/* tstp signal received */
+#define SH_SIGALRM		0200	/* timer alarm received */
 #define SH_SIGTERM		SH_SIGOFF /* term signal received */
 
 /*
@@ -86,7 +87,7 @@ struct checkpt
 	int		topfd;
 	int		mode;
 	struct openlist	*olist;
-	struct errorcontext err;
+	struct Error_context_s err;
 };
 
 #define sh_pushcontext(bp,n)	( (bp)->mode=(n) , (bp)->olist=0,  \

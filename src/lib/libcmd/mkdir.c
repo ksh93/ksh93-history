@@ -76,7 +76,7 @@ b_mkdir(int argc, char** argv, void* context)
 	mode_t		dmode;
 
 	NoP(argc);
-	cmdinit(argv, context, ERROR_CATALOG);
+	cmdinit(argv, context, ERROR_CATALOG, 0);
 	while (n = optget(argv, usage)) switch (n)
 	{
 	case 'p':
