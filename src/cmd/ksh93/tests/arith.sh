@@ -343,4 +343,10 @@ do	(( ipx = ip % 256 ))
 	(( ip /= 256 ))
 	(( ipx != hex[3-i] )) && err_exit "hex digit $((3-i)) not correct"
 done	
+unset x
+x=010
+(( x == 10 )) || err_exit 'leading zeros not ignored for arithmetic'
+(( $x == 10 )) || err_exit 'leading zeros not ignored for arithmetic with $x'
+typeset -i i=x
+(( i == 10 )) || err_exit 'leading zeros not ignored for arithmetic assignment'
 exit $((Errors))

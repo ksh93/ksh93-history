@@ -173,11 +173,11 @@ int	b_kill(int argc,char *argv[],void *extra)
 			break;
 		case 'n':
 			sig = (int)opt_info.num;
-			break;
+			goto endopts;
 		case 's':
 			flag |= S_FLAG;
 			signame = opt_info.arg;
-			break;
+			goto endopts;
 		case 'l':
 			flag |= L_FLAG;
 			break;

@@ -1,4 +1,9 @@
-03-07-15 fmt.c: ix trailing space bug
+03-09-18 tail.c: add --log
+03-09-11 rm.c: add --unconditional
+03-08-11 fold.c: add --delimiter=c to break at c
+03-07-28 features/time: change settimeofday() test to 2nd arg of (void*)0
+	 expr.c: add {match,substr,index,length,quote}
+03-07-15 fmt.c: fix trailing space bug
 03-06-20 uname.c: fix -p constant string overwrite
 03-06-04 stty.c: add undef to control assignment docs
 03-05-31 uname.c: add -f and sysinfo()/confstr() compatibility via astconf()

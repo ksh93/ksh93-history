@@ -456,7 +456,8 @@ int		type;	/* >0: scanf, =0: printf, -1: internal	*/
 					else fp[n].argv.wc = va_arg(args,wchar_t);
 				}
 #endif
-				else	fp[n].argv.c = (char)va_arg(args,int);
+					/* observe promotion rule */
+				else	fp[n].argv.i = va_arg(args,int);
 				break;
 			  default: /* unknown pattern */
 				break;

@@ -94,6 +94,23 @@ pathnative(const char* path, char* buf, size_t siz)
 
 #else
 
+#if __INTERIX
+
+#include <interix/interix.h>
+
+size_t
+pathnative(const char* path, char* buf, size_t siz)
+{
+	*buf = 0;
+	if (path[1] == ':')
+		strlcpy(buf, path, siz);
+	else
+		unixpath2win(path, 0, buf, siz);
+	return strlen(buf);
+}
+
+#else
+
 size_t
 pathnative(const char* path, char* buf, size_t siz)
 {
@@ -103,6 +120,8 @@ pathnative(const char* path, char* buf, size_t siz)
 		memcpy(buf, path, n + 1);
 	return n;
 }
+
+#endif
 
 #endif
 

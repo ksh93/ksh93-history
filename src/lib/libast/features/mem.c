@@ -35,7 +35,7 @@
 
 extern int	printf(const char*, ...);
 
-/* different methods to get raw memory for MEM_METHOD */
+/* different methods to get raw memory */
 
 #define RAW_MALLOC	0x01	/* native malloc		*/
 #define RAW_MMAP_ANON	0x02	/* mmap MAP_ANON is ok		*/
@@ -43,9 +43,7 @@ extern int	printf(const char*, ...);
 #define RAW_SBRK	0x08	/* sbrk				*/
 #define RAW_WIN32	0x10	/* WIN32 VirtualAlloc		*/
 
-#undef	MEM_METHOD		/* inclusive | of MEM_*		*/
-
-/* first some availability tests for MEM_METHOD */
+/* first some availability tests */
 
 #if _map_malloc || _std_malloc
 #define MEM_MALLOC	RAW_MALLOC
@@ -77,35 +75,9 @@ extern int	printf(const char*, ...);
 #define MEM_WIN32	0
 #endif
 
-/* finally the selection for MEM_METHOD */
-
-#if !MEM_METHOD && MEM_MALLOC && ( _BLD_INSTRUMENT || _WINIX && !_UWIN )
-#define MEM_METHOD	MEM_MALLOC
-#endif
-
-#if !MEM_METHOD && MEM_WIN32
-#define MEM_METHOD	MEM_WIN32
-#endif
-
-#if !MEM_METHOD && MEM_MMAP_ANON
-#define MEM_METHOD	MEM_MMAP_ANON
-#endif
-
-#if !MEM_METHOD && MEM_MMAP_DEV
-#define MEM_METHOD	MEM_MMAP_DEV
-#endif
-
-#if !MEM_METHOD && MEM_SBRK
-#define MEM_METHOD	MEM_SBRK
-#endif
-
-#if !MEM_METHOD && MEM_MALLOC
-#define MEM_METHOD	MEM_MALLOC
-#endif
-
 main()
 {
-	char*	s;
+	int	c;
 	int	x;
 
 	printf("\n");
@@ -135,25 +107,41 @@ main()
 	printf("\n");
 	printf("/* preferred memory allocation method */\n");
 	printf("\n");
-#if !MEM_METHOD
-	s = "0";
+	printf("#define _mem_method	");
+	c = '(';
+#if MEM_MALLOC && ( _BLD_INSTRUMENT || _WINIX && !_UWIN )
+	printf("_mem_malloc");
+	c = ')';
+#else
+#	if MEM_WIN32
+		printf("_mem_win32");
+#	else
+#		if MEM_SBRK
+			printf("%c_mem_sbrk", c);
+			c = '|';
+#		endif
+#		if MEM_MMAP_ANON
+			printf("%c_mem_mmap_anon", c);
+			c = '|';
+#		else
+#			if MEM_MMAP_DEV
+				printf("%c_mem_mmap_dev", c);
+				c = '|';
+#			endif
+#		endif
+#		if MEM_MALLOC
+			if (c != '|')
+			{
+				printf("_mem_malloc");
+				c = ')';
+			}
+#		endif
+#	endif
 #endif
-#if MEM_METHOD & MEM_MALLOC
-	s = "_mem_malloc";
-#endif
-#if MEM_METHOD & MEM_MMAP_ANON
-	s = "_mem_mmap_anon";
-#endif
-#if MEM_METHOD & MEM_MMAP_DEV
-	s = "_mem_mmap_dev";
-#endif
-#if MEM_METHOD & MEM_SBRK
-	s = "_mem_sbrk";
-#endif
-#if MEM_METHOD & MEM_WIN32
-	s = "_mem_win32";
-#endif
-	printf("#define _mem_method	%s\n", s);
-	printf("\n");
+	if (c == '(')
+		printf("0");
+	else if (c == '|')
+		printf(")");
+	printf("\n\n");
 	return 0;
 }

@@ -31,7 +31,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: rm (AT&T Labs Research) 2003-05-27 $\n]"
+"[-?\n@(#)$Id: rm (AT&T Labs Research) 2003-09-11 $\n]"
 USAGE_LICENSE
 "[+NAME?rm - remove files]"
 "[+DESCRIPTION?\brm\b removes the named \afile\a arguments. By default it"
@@ -57,6 +57,10 @@ USAGE_LICENSE
 "	response (\bq\b or \bQ\b) causes \brm\b to exit immediately, and"
 "	all other responses skip the current file.]"
 "[r|R:recursive?Remove the contents of directories recursively.]"
+"[u:unconditional?If \b--recursive\b and \b--force\b are also enabled then"
+"	the owner read, write and execute modes are enabled (if not already"
+"	enabled) for each directory before attempting to remove directory"
+"	contents.]"
 "[v:verbose?Print the name of each file before removing it.]"
 
 "\n"
@@ -90,6 +94,7 @@ static struct				/* program state		*/
 	int		recursive;	/* remove subtrees too		*/
 	int		terminal;	/* attached to terminal		*/
 	int		uid;		/* caller uid			*/
+	int		unconditional;	/* enable dir rwx on preorder	*/
 	int		verbose;	/* display each file		*/
 } state;
 
@@ -122,7 +127,16 @@ rm(register Ftw_t* ftw)
 	{
 	case FTW_DNR:
 	case FTW_DNX:
-		if (!state.force)
+		if (state.unconditional)
+		{
+			if (!chmod(ftw->name, (ftw->statb.st_mode & S_IPERM)|S_IRWXU))
+			{
+				ftw->status = FTW_AGAIN;
+				break;
+			}
+			error_info.errors++;
+		}
+		else if (!state.force)
 			error(2, "%s: cannot %s directory", ftw->path, (ftw->info & FTW_NR) ? "read" : "search");
 		else
 			error_info.errors++;
@@ -149,6 +163,8 @@ rm(register Ftw_t* ftw)
 		}
 		if (!beenhere(ftw))
 		{
+			if (state.unconditional && (ftw->statb.st_mode ^ S_IRWXU))
+				chmod(path, (ftw->statb.st_mode & S_IPERM)|S_IRWXU);
 			if (ftw->level > 0)
 			{
 				char*	s;
@@ -352,6 +368,9 @@ b_rm(int argc, register char** argv, void* context)
 			error(1, "%s not implemented on this system", opt_info.name);
 #endif
 			continue;
+		case 'u':
+			state.unconditional = 1;
+			continue;
 		case 'v':
 			state.verbose = 1;
 			continue;
@@ -377,6 +396,7 @@ b_rm(int argc, register char** argv, void* context)
 	if (state.interactive)
 		state.verbose = 0;
 	state.uid = geteuid();
+	state.unconditional = state.unconditional && state.recursive && state.force;
 	ftwalk((char*)argv, rm, FTW_MULTIPLE|FTW_PHYSICAL|FTW_TWICE, NiL);
 	return error_info.errors != 0;
 }

@@ -283,4 +283,7 @@ i=20030704
 LC_ALL=posix
 i="   ."
 [[ $(printf "<%s>\n" ${i#' '}) == '<.>' ]] || err_exit 'printf "<%s>\n" ${i#' '} failed'
+unset x
+x=foo
+[[ "${x%o}(1)" == "fo(1)" ]] ||  err_exit 'print ${}() treated as pattern'
 exit $((Errors))

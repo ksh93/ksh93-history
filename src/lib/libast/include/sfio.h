@@ -26,7 +26,7 @@
 #ifndef _SFIO_H
 #define _SFIO_H	1
 
-#define SFIO_VERSION	20030519L
+#define SFIO_VERSION	20030831L
 
 /*	Public header file for the sfio library
 **
@@ -257,8 +257,8 @@ extern ssize_t		sfnputc _ARG_((Sfio_t*, int, size_t));
 extern int		sfungetc _ARG_((Sfio_t*, int));
 extern int		sfprintf _ARG_((Sfio_t*, const char*, ...));
 extern char*		sfprints _ARG_((const char*, ...));
-extern int		sfsprintf _ARG_((char*, int, const char*, ...));
-extern int		sfvsprintf _ARG_((char*, int, const char*, _ast_va_list));
+extern ssize_t		sfsprintf _ARG_((char*, size_t, const char*, ...));
+extern ssize_t		sfvsprintf _ARG_((char*, size_t, const char*, _ast_va_list));
 extern int		sfvprintf _ARG_((Sfio_t*, const char*, _ast_va_list));
 extern int		sfscanf _ARG_((Sfio_t*, const char*, ...));
 extern int		sfsscanf _ARG_((const char*, const char*, ...));

@@ -32,7 +32,7 @@
  */
 
 static const char usage[] =
-"+[-?\n@(#)$Id: tail (AT&T Labs Research) 2002-11-14 $\n]"
+"+[-?\n@(#)$Id: tail (AT&T Labs Research) 2003-09-18 $\n]"
 USAGE_LICENSE
 "[+NAME?tail - output trailing portion of one or more files ]"
 "[+DESCRIPTION?\btail\b copies one or more input files to standard output "
@@ -62,14 +62,21 @@ USAGE_LICENSE
 "[f:forever|follow?Loop forever trying to read more characters as the "
 	"end of each file to copy new data. Ignored if reading from a pipe "
 	"or fifo.]"
-"[q:quiet|silent?Never ouput filename headers.]"
+"[h!:headers?Output filename headers.]"
+"[l:log?When a \b--forever\b file times out via \b--timeout\b, verify that "
+	"the curent file has not been renamed and replaced by another file "
+	"of the same name (a common log file practice) before giving up on "
+	"the file.]"
+"[q:quiet?Don't output filename headers. For GNU compatibility.]"
 "[r:reverse?Output lines in reverse order.]"
-"[t:timeout?Exit after \atimeout\a elapses with no additional \b--forever\b "
-	"output. There is no timeout by default. The default \atimeout\a "
-	"unit is seconds. \atimeout\a may be a catenation of 1 or more "
-	"integers, each followed by a 1 character suffix. The suffix may be "
-	"omitted from the last integer, in which case it is interpreted as "
-	"seconds. The supported suffixes are:]:[timeout]{"
+"[s:silent?Don't warn about timeout expiration and log file changes.]"
+"[t:timeout?Stop checking after \atimeout\a elapses with no additional "
+	"\b--forever\b output. A separate elapsed time is maintained for "
+	"each file operand. There is no timeout by default. The default "
+	"\atimeout\a unit is seconds. \atimeout\a may be a catenation of 1 "
+	"or more integers, each followed by a 1 character suffix. The suffix "
+	"may be omitted from the last integer, in which case it is "
+	"interpreted as seconds. The supported suffixes are:]:[timeout]{"
 		"[+s?seconds]"
 		"[+m?minutes]"
 		"[+h?hours]"
@@ -87,7 +94,7 @@ USAGE_LICENSE
 	"[+0?All files copied successfully.]"
 	"[+>0?One or more files did not copy.]"
 "}"
-"[+SEE ALSO?\bcat\b(1), \btail\b(1), \brev\b(1)]"
+"[+SEE ALSO?\bcat\b(1), \bhead\b(1), \brev\b(1)]"
 ;
 
 #include <cmdlib.h>
@@ -95,20 +102,30 @@ USAGE_LICENSE
 #include <ls.h>
 #include <tm.h>
 
-#define F_FLAG		1
-#define R_FLAG		2
-#define N_FLAG		4
+#define COUNT		(1<<0)
+#define FOLLOW		(1<<1)
+#define HEADERS		(1<<2)
+#define LOG		(1<<3)
+#define REVERSE		(1<<4)
+#define SILENT		(1<<5)
+#define TIMEOUT		(1<<6)
+#define VERBOSE		(1<<7)
 
 #define NOW		(unsigned long)time(NiL)
 
-typedef struct
+struct Tail_s; typedef struct Tail_s Tail_t;
+
+struct Tail_s
 {
+	Tail_t*		next;
 	char*		name;
 	Sfio_t*		sp;
 	size_t		size;
 	size_t		last;
-	int		warn;
-} Tail_t;
+	unsigned long	expire;
+	long		dev;
+	long		ino;
+};
 
 /*
  * if file is seekable, position file to tail location and return offset
@@ -214,6 +231,58 @@ pipetail(Sfio_t* infile, Sfio_t* outfile, int nitems, int delim)
 	sfclose(tmp[1]);
 }
 
+/*
+ * (re)initialize a tail stream
+ */
+
+static int
+init(Tail_t* tp, long number, int delim, int flags)
+{
+	Sfoff_t		offset;
+	struct stat	st;
+
+	if (tp->sp)
+	{
+		offset = 0;
+		if (tp->sp == sfstdin)
+			tp->sp = 0;
+	}
+	else
+		offset = 1;
+	if (streq(tp->name, "-"))
+		tp->sp = sfstdin;
+	else if (!(tp->sp = sfopen(tp->sp, tp->name, "r")))
+	{
+		error(ERROR_system(0), "%s: cannot open", tp->name);
+		return -1;
+	}
+	sfset(tp->sp, SF_SHARE, 0);
+	tp->last = 0;
+	if (offset)
+	{
+		if ((offset = tailpos(tp->sp, number, delim)) < 0)
+			goto bad;
+		sfseek(tp->sp, offset, SEEK_SET);
+	}
+	tp->size = offset;
+	if (flags & LOG)
+	{
+		if (fstat(sffileno(tp->sp), &st))
+		{
+			error(ERROR_system(0), "%s: cannot stat", tp->name);
+			goto bad;
+		}
+		tp->dev = st.st_dev;
+		tp->ino = st.st_ino;
+	}
+	return 0;
+ bad:
+	if (tp->sp != sfstdin)
+		sfclose(tp->sp);
+	tp->sp = 0;
+	return -1;
+}
+
 int
 b_tail(int argc, char** argv, void* context)
 {
@@ -221,24 +290,23 @@ b_tail(int argc, char** argv, void* context)
 
 	register Sfio_t*	ip;
 	register int		n;
+	register int		i;
 	register int		delim = '\n';
-	register int		flags = 0;
+	register int		flags = HEADERS;
 	char*			s;
 	char*			t;
 	char*			r;
 	char*			e;
+	char*			file;
 	Sfoff_t			offset;
 	long			number = 10;
 	unsigned long		timeout = 0;
-	unsigned long		expire;
 	struct stat		st;
-	int			header = 1;
-	int			quiet = 0;
 	const char*		format = header_fmt+1;
 	size_t			z;
 	Sfio_t*			op;
 	register Tail_t*	fp;
-	register Tail_t*	ep;
+	register Tail_t*	pp;
 	register Tail_t*	hp;
 	Tail_t*			files;
 
@@ -246,40 +314,52 @@ b_tail(int argc, char** argv, void* context)
 	while (n = optget(argv, usage)) switch (n)
 	{
 	    case 'q':
-		quiet = 1;
-		header = argc;
+		flags &= ~HEADERS;
 		break;
 	    case 'v':
-		header = 0;
+		flags |= VERBOSE;
 		break;
 	    case 'r':
-		flags |= R_FLAG;
+		flags |= REVERSE;
+		break;
+	    case 's':
+		flags |= SILENT;
+		break;
+	    case 'h':
+		if (opt_info.num)
+			flags |= HEADERS;
+		else
+			flags &= ~HEADERS;
 		break;
 	    case 't':
+		flags |= TIMEOUT;
 		timeout = strelapsed(opt_info.arg, &s, 1);
 		if (*s)
 			error(ERROR_exit(1), "%s: invalid elapsed time", opt_info.arg);
 		break;
+	    case 'l':
+		flags |= LOG;
+		break;
 	    case 'f':
-		flags |= F_FLAG;
+		flags |= FOLLOW;
 		break;
 	    case 'c':
 		delim = -1;
 		if (*opt_info.arg=='f' && opt_info.arg[1]==0)
 		{
-			flags |= F_FLAG;
+			flags |= FOLLOW;
 			break;
 		}
 		/* Fall Thru */
 	    case 'n':
 	    case 'N':
-		flags |= N_FLAG;
+		flags |= COUNT;
 		s = opt_info.arg;
 		number = strtol(s, &s, 10);
 		if (n=='c' && *s=='f')
 		{
 			s++;
-			flags |= F_FLAG;
+			flags |= FOLLOW;
 		}
 		if (*s)
 		{
@@ -296,16 +376,16 @@ b_tail(int argc, char** argv, void* context)
 		s = argv[opt_info.index];
 		number = strtol(s, &s, 10);
 		if (s!=argv[opt_info.index])
-			flags |= N_FLAG;
+			flags |= COUNT;
 		while (n = *s++)
 		{
 			switch(n)
 			{
 			    case 'r':
-				flags |= R_FLAG;
+				flags |= REVERSE;
 				continue;
 			    case 'f':
-				flags |= F_FLAG;
+				flags |= FOLLOW;
 				continue;
 			    case 'b':
 				number *= 512;
@@ -334,7 +414,7 @@ b_tail(int argc, char** argv, void* context)
 		if (n==0)
 		{
 			opt_info.offset = (s-1) - argv[opt_info.index];
-			if (number==0 && !(flags&N_FLAG))
+			if (number==0 && !(flags&COUNT))
 				number = (opt_info.option[0]=='-'?10:-10);
 			number = -number;
 		}
@@ -345,51 +425,51 @@ b_tail(int argc, char** argv, void* context)
 	}
 	argv += opt_info.index;
 	argc -= opt_info.index;
-	if (flags & R_FLAG)
+	if (flags & REVERSE)
 	{
 		if (delim < 0)
 			error(2, "--reverse requires line mode");
-		else if (!(flags & N_FLAG))
+		else if (!(flags & COUNT))
 			number = 0;
-		flags &= ~F_FLAG;
+		flags &= ~FOLLOW;
 	}
-	if (timeout && !(flags & F_FLAG))
+	if ((flags & (FOLLOW|TIMEOUT)) == TIMEOUT)
 	{
+		flags &= ~TIMEOUT;
 		timeout = 0;
 		error(ERROR_warn(0), "--timeout ignored for --noforever");
 	}
+	if ((flags & (LOG|TIMEOUT)) == LOG)
+	{
+		flags &= ~LOG;
+		error(ERROR_warn(0), "--log ignored for --notimeout");
+	}
+	if (argc <= 1)
+		flags &= ~HEADERS;
 	if (error_info.errors)
 		error(ERROR_usage(2), "%s", optusage(NiL));
-	if (argc > 1 && (flags & F_FLAG))
+	if (flags & FOLLOW)
 	{
-		/*
-		 * multiple forever
-		 */
-
-		if (!(files = (Tail_t*)stakalloc(argc * sizeof(Tail_t))))
-			error(ERROR_system(1), "out of space [files]");
-		ep = files;
-		while (ep->name = *argv++)
+		if (!(fp = (Tail_t*)stakalloc(argc * sizeof(Tail_t))))
+			error(ERROR_system(1), "out of space");
+		files = 0;
+		while (fp->name = *argv++)
 		{
-			if (streq(ep->name, "-"))
-				ep->sp = sfstdin;
-			else if (!(ep->sp = sfopen(NiL, ep->name, "r")))
+			fp->sp = 0;
+			if (!init(fp, number, delim, flags))
 			{
-				error(ERROR_warn(0), "%s: cannot open", ep->name);
-				continue;
-			}
-			sfset(ep->sp, SF_SHARE, 0);
-			if ((offset = tailpos(ep->sp, number, delim)) >= 0)
-			{
-				sfseek(ep->sp, offset, SEEK_SET);
-				ep->size = offset;
-				ep->last = 0;
-				ep->warn = 0;
-				ep++;
+				fp->expire = timeout ? (NOW + timeout + 1) : 0;
+				if (files)
+					pp->next = fp;
+				else
+					files = fp;
+				pp = fp;
+				fp++;
 			}
 		}
-		if (timeout)
-			expire = NOW + timeout;
+		if (!files)
+			return error_info.errors != 0;
+		pp->next = 0;
 		hp = 0;
 		for (;;)
 		{
@@ -397,76 +477,102 @@ b_tail(int argc, char** argv, void* context)
 				error(ERROR_system(1), "write error");
 			sleep(1);
 			n = 0;
-			for (fp = files; fp < ep; fp++)
+			pp = 0;
+			fp = files;
+			while (fp)
 			{
-				if (!fstat(sffileno(fp->sp), &st))
+				if (fstat(sffileno(fp->sp), &st))
+					error(ERROR_system(0), "%s: cannot stat", fp->name);
+				else if (st.st_size > fp->last)
 				{
-					if (st.st_size > fp->last)
+					n = 1;
+					if (timeout)
+						fp->expire = NOW + timeout;
+					fp->last = st.st_size;
+					z = st.st_size - fp->size;
+					if (s = sfreserve(fp->sp, z, 1))
 					{
-						n = 1;
-						fp->last = st.st_size;
-						z = st.st_size - fp->size;
-						if (s = sfreserve(fp->sp, z, 1))
+						r = 0;
+						for (e = (t = s) + z; t < e; t++)
+							if (*t == '\n')
+								r = t;
+						if (r)
 						{
-							r = 0;
-							for (e = (t = s) + z; t < e; t++)
-								if (*t == '\n')
-									r = t;
-							if (r)
+							if ((flags & (HEADERS|VERBOSE)) && hp != fp)
 							{
-								if (hp != fp && !quiet)
-								{
-									hp = fp;
-									sfprintf(sfstdout, format, fp->name);
-									format = header_fmt;
-								}
-								z = r - s + 1;
-								fp->size += z;
-								sfwrite(sfstdout, s, z);
+								hp = fp;
+								sfprintf(sfstdout, format, fp->name);
+								format = header_fmt;
 							}
-							else
-								z = 0;
-							sfread(fp->sp, s, z);
+							z = r - s + 1;
+							fp->size += z;
+							sfwrite(sfstdout, s, z);
+						}
+						else
+							z = 0;
+						sfread(fp->sp, s, z);
+					}
+					goto next;
+				}
+				else if (!timeout || fp->expire > NOW)
+					goto next;
+				else
+				{
+					if (flags & LOG)
+					{
+						i = 3;
+						while (--i && stat(fp->name, &st))
+							sleep(1);
+						if (i && (fp->dev != st.st_dev || fp->ino != st.st_ino) && !init(fp, 0, 0, flags))
+						{
+							if (!(flags & SILENT))
+								error(ERROR_warn(0), "%s: log file change", fp->name);
+							fp->expire = NOW + timeout;
+							goto next;
 						}
 					}
+					if (!(flags & SILENT))
+						error(ERROR_warn(0), "%s: %s timeout", fp->name, fmtelapsed(timeout, 1));
 				}
-				else if (!fp->warn)
-				{
-					fp->warn = 1;
-					error(ERROR_warn(0), "%s: cannot stat", fp->name);
-				}
-			}
-			if (timeout)
-			{
-				if (n)
-					expire = NOW + timeout;
-				else if (expire < NOW)
-					break;
+				if (fp->sp && fp->sp != sfstdin)
+					sfclose(fp->sp);
+				if (pp)
+					pp = pp->next = fp->next;
+				else if (!(files = files->next))
+					return error_info.errors != 0;
+				fp = fp->next;
+				continue;
+			next:
+				pp = fp;
+				fp = fp->next;
 			}
 		}
 	}
 	else
 	{
-		if (s = *argv)
+		if (file = *argv)
 			argv++;
 		do
 		{
-			if (!s || streq(s, "-"))
-				ip = sfstdin;
-			else if (!(ip = sfopen(NiL, s, "r")))
+			if (!file || streq(file, "-"))
 			{
-				error(ERROR_system(0), "%s: cannot open", s);
+				file = "/dev/stdin";
+				ip = sfstdin;
+			}
+			else if (!(ip = sfopen(NiL, file, "r")))
+			{
+				error(ERROR_system(0), "%s: cannot open", file);
 				continue;
 			}
-			if (argc > header)
-				sfprintf(sfstdout, format, s);
+			if (flags & (HEADERS|VERBOSE))
+				sfprintf(sfstdout, format, file);
 			format = header_fmt;
 			if (number <= 0)
 			{
-				sfset(ip, SF_SHARE, !(flags & F_FLAG));
+				sfset(ip, SF_SHARE, !(flags & FOLLOW));
 				if ((number = -number) > 1)
 					sfmove(ip, NiL, number - 1, delim);
-				if (flags & R_FLAG)
+				if (flags & REVERSE)
 					rev_line(ip, sfstdout, sfseek(ip, (Sfoff_t)0, SEEK_CUR));
 				else
 					sfmove(ip, sfstdout, SF_UNBOUND, -1);
@@ -476,7 +582,7 @@ b_tail(int argc, char** argv, void* context)
 				sfset(ip, SF_SHARE, 0);
 				if ((offset = tailpos(ip, number, delim)) >= 0)
 				{
-					if (flags & R_FLAG)
+					if (flags & REVERSE)
 						rev_line(ip, sfstdout, offset);
 					else
 					{
@@ -486,9 +592,9 @@ b_tail(int argc, char** argv, void* context)
 				}
 				else
 				{
-					op = (flags & R_FLAG) ? sftmp(4*SF_BUFSIZE) : sfstdout;
+					op = (flags & REVERSE) ? sftmp(4*SF_BUFSIZE) : sfstdout;
 					pipetail(ip, op, number, delim);
-					if (flags & R_FLAG)
+					if (flags & REVERSE)
 					{
 						sfseek(op, (Sfoff_t)0, SEEK_SET);
 						rev_line(op, sfstdout, (Sfoff_t)0);
@@ -497,34 +603,9 @@ b_tail(int argc, char** argv, void* context)
 					flags = 0;
 				}
 			}
-			if (flags & F_FLAG)
-			{
-				if (timeout)
-					expire = NOW + timeout;
-				for (;;)
-				{
-					if (sfsync(sfstdout))
-						error(ERROR_system(1), "write error");
-					offset = sftell(ip);
-					sleep(1);
-					if (offset > 0 && !fstat(sffileno(ip), &st) && st.st_size < offset)
-						sfseek(ip, 0, SEEK_SET);
-					if ((s = sfreserve(ip, 0, 0)) && (z = sfvalue(ip)) > 0)
-					{
-						sfwrite(sfstdout, s, z);
-						sfread(ip, s, z);
-						if (timeout)
-							expire = NOW + timeout;
-					}
-					else if (timeout && expire < NOW)
-						break;
-				}
-			}
 			if (ip != sfstdin)
 				sfclose(ip);
-		} while(s = *argv++);
+		} while (file = *argv++);
 	}
-	if (timeout && !quiet)
-		error(ERROR_warn(0), "%s timeout", fmtelapsed(timeout, 1));
 	return error_info.errors != 0;
 }

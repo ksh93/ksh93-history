@@ -52,7 +52,7 @@ fs3d(register int op)
 	 * get the current setting
 	 */
 
-	if (!fsview && mount(NiL, NiL, 0, NiL))
+	if (!fsview && mount("", "", 0, NiL))
 		goto nope;
 	if (FS3D_op(op) == FS3D_OP_INIT && mount(FS3D_init, NiL, FS3D_VIEW, NiL))
 		goto nope;

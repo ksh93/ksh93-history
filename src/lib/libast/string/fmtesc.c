@@ -51,30 +51,26 @@ fmtquote(const char* as, const char* qb, const char* qe, size_t n, int flags)
 	register unsigned char*	e = s + n;
 	register char*		b;
 	register int		c;
-	int			k;
-	int			q;
+	register int		escaped;
+	register int		spaced;
+	int			shell;
 	char*			buf;
 
 	c = 4 * (n + 1);
 	if (qb)
-	{
-		k = strlen((char*)qb);
-		c += k;
-	}
-	else
-	{
-		k = 0;
-		if (qe)
-			c += strlen((char*)qe);
-	}
+		c += strlen((char*)qb);
+	if (qe)
+		c += strlen((char*)qe);
 	b = buf = fmtbuf(c);
+	shell = 0;
 	if (qb)
 	{
-		q = qb[0] == '$' && qb[1] == '\'' && qb[2] == 0 ? 1 : 0;
+		if (qb[0] == '$' && qb[1] == '\'' && qb[2] == 0)
+			shell = 1;
 		while (*b = *qb++)
 			b++;
-		k = (flags & FMT_ALWAYS) ? 0 : (b - buf);
 	}
+	escaped = spaced = !!(flags & FMT_ALWAYS);
 	while (s < e)
 	{
 		if ((c = mbsize(s)) > 1)
@@ -87,7 +83,7 @@ fmtquote(const char* as, const char* qb, const char* qe, size_t n, int flags)
 			c = *s++;
 			if (!(flags & FMT_ESCAPED) && (iscntrl(c) || !isprint(c) || c == '\\'))
 			{
-				k = 0;
+				escaped = 1;
 				*b++ = '\\';
 				switch (c)
 				{
@@ -131,25 +127,31 @@ fmtquote(const char* as, const char* qb, const char* qe, size_t n, int flags)
 			}
 			else if (c == '\\')
 			{
+				escaped = 1;
 				*b++ = c;
 				if (*s)
 					c = *s++;
 			}
 			else if (qe && strchr(qe, c) || (flags & FMT_SHELL) && (c == '$' || c == '`'))
 			{
-				k = 0;
+				escaped = 1;
 				*b++ = '\\';
 			}
-			else if (qb && isspace(c))
-				k = q;
+			else if (!spaced && isspace(c))
+				spaced = 1;
 			*b++ = c;
 		}
 	}
-	if (qb && k <= q && qe)
-		while (*b = *qe++)
-			b++;
+	if (qb)
+	{
+		if (!escaped)
+			buf += shell + !spaced;
+		if (qe && (escaped || spaced))
+			while (*b = *qe++)
+				b++;
+	}
 	*b = 0;
-	return buf + k;
+	return buf;
 }
 
 /*

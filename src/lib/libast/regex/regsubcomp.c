@@ -145,7 +145,7 @@ regsubcomp(regex_t* p, register const char* s, const regflags_t* map, int minmat
 	p->env->sub = 1;
 	op = sub->re_ops;
 	o = s;
-	if (!(p->env->flags & (REG_DELIMITED|REG_DELIMITED_OLD)))
+	if (!(p->env->flags & REG_DELIMITED))
 		d = 0;
 	else
 		switch (d = *(s - 1))

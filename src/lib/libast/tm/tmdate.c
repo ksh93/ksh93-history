@@ -114,7 +114,7 @@ time_t
 tmdate(register const char* s, char** e, time_t* clock)
 {
 	register Tm_t*	tm;
-	register int	n;
+	register long	n;
 	register int	w;
 	unsigned long	set;
 	unsigned long	state;
@@ -132,7 +132,7 @@ tmdate(register const char* s, char** e, time_t* clock)
 	int		j;
 	int		k;
 	int		l;
-	int		m;
+	long		m;
 	Tm_zone_t*	zp;
 	char		skip[UCHAR_MAX + 1];
 
@@ -755,8 +755,14 @@ tmdate(register const char* s, char** e, time_t* clock)
 						set |= DAY;
 						goto clear_hour;
 					case TM_PARTS+0:
-						tm->tm_sec += m;
 						set |= SECOND;
+						if ((m < 0 ? -m : m) > (365L*24L*60L*60L))
+						{
+							now = tmtime(tm, zone) + m;
+							clock = &now;
+							goto reset;
+						}
+						tm->tm_sec += m;
 						continue;
 					case TM_PARTS+1:
 						tm->tm_min += m;

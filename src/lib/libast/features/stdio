@@ -91,6 +91,7 @@ cat{
 
 	extern int	_doprnt(const char*, _ast_va_list, FILE*);
 	extern int	_doscan(FILE*, const char*, _ast_va_list);
+	extern int	asprintf(char**, const char*, ...);
 	extern int	clearerr(FILE*);
 	extern int	fclose(FILE*);
 	extern FILE*	fdopen(int, const char*);
@@ -137,6 +138,7 @@ cat{
 	extern int	sscanf(const char*, const char*, ...);
 	extern FILE*	tmpfile(void);
 	extern int	ungetc(int, FILE*);
+	extern int	vasprintf(char**, const char*, _ast_va_list);
 	extern int	vfprintf(FILE*, const char*, _ast_va_list);
 	extern int	vfscanf(FILE*, const char*, _ast_va_list);
 	extern int	vprintf(const char*, _ast_va_list);
@@ -226,6 +228,7 @@ output{
 		printf("\n");
 		printf("#define _doprnt		_ast_doprnt\n");
 		printf("#define _doscan		_ast_doscan\n");
+		printf("#define asprintf	_ast_asprintf\n");
 		printf("#define clearerr	_ast_clearerr\n");
 		printf("#define fclose		_ast_fclose\n");
 		printf("#define fdopen		_ast_fdopen\n");
@@ -268,6 +271,7 @@ output{
 		printf("#define sscanf		_ast_sscanf\n");
 		printf("#define tmpfile		_ast_tmpfile\n");
 		printf("#define ungetc		_ast_ungetc\n");
+		printf("#define vasprintf	_ast_vasprintf\n");
 		printf("#define vfprintf	_ast_vfprintf\n");
 		printf("#define vfscanf		_ast_vfscanf\n");
 		printf("#define vprintf		_ast_vprintf\n");
@@ -363,6 +367,7 @@ cat{
 
 	extern int	_doprnt(const char*, _ast_va_list, FILE*);
 	extern int	_doscan(FILE*, const char*, _ast_va_list);
+	extern int	asprintf(char**, const char*, ...);
 	extern int	clearerr(FILE*);
 	extern int	fclose(FILE*);
 	extern FILE*	fdopen(int, const char*);
@@ -409,6 +414,7 @@ cat{
 	extern int	sscanf(const char*, const char*, ...);
 	extern FILE*	tmpfile(void);
 	extern int	ungetc(int, FILE*);
+	extern int	vasprintf(char**, const char*, _ast_va_list);
 	extern int	vfprintf(FILE*, const char*, _ast_va_list);
 	extern int	vfscanf(FILE*, const char*, _ast_va_list);
 	extern int	vprintf(const char*, _ast_va_list);

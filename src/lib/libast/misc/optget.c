@@ -151,16 +151,8 @@ static const Font_t	fonts[] =
 	"</TT>","<TT>","\\fP",	"\\f5",	"",			"",
 };
 
-#define OPT_INFO_STATE	0 /* drop this after the 2003-06-14 release */
-#if OPT_INFO_STATE
-#define STATE		opt_info.state
-#else
-#define STATE		(&state)
-#define number		num
-#endif
-
 #define C(s)		ERROR_catalog(s)
-#define D(s)		(STATE->msgdict && dtmatch(STATE->msgdict, (s)))
+#define D(s)		(opt_info.state->msgdict && dtmatch(opt_info.state->msgdict, (s)))
 #define T(i,c,m)	(X(c)?translate(i,c,C(m)):(m))
 #define X(c)		(ERROR_translating()&&(c)!=native)
 #define Z(x)		C(x),sizeof(x)-1
@@ -299,7 +291,7 @@ static unsigned char	map[UCHAR_MAX];
 
 static Optstate_t	state;
 
-Opt_t			opt_info = { 0,0,0,0,0,0,0,{0},{0},0,0,{0},&state };
+Opt_t			opt_info = { 0,0,0,0,0,0,0,{0},{0},0,0,0,{0},{0},&state };
 
 __EXTERN__(Opt_t, _opt_info_);
 
@@ -652,18 +644,18 @@ init(register char* s, Optpass_t* p)
 	register int	c;
 	register int	n;
 
-	if (!STATE->msgdict)
+	if (!opt_info.state->msgdict)
 	{
 		if (!ast.locale.serial)
 			setlocale(LC_ALL, "");
-		STATE->vp = sfstropen();
-		STATE->xp = sfstropen();
-		STATE->msgdisc.key = offsetof(Msg_t, text);
-		STATE->msgdisc.size = -1;
-		STATE->msgdisc.link = offsetof(Msg_t, link);
-		if (STATE->msgdict = dtopen(&STATE->msgdisc, Dthash))
+		opt_info.state->vp = sfstropen();
+		opt_info.state->xp = sfstropen();
+		opt_info.state->msgdisc.key = offsetof(Msg_t, text);
+		opt_info.state->msgdisc.size = -1;
+		opt_info.state->msgdisc.link = offsetof(Msg_t, link);
+		if (opt_info.state->msgdict = dtopen(&opt_info.state->msgdisc, Dthash))
 			for (n = 0; n < elementsof(C_LC_MESSAGES_libast); n++)
-				dtinsert(STATE->msgdict, C_LC_MESSAGES_libast + n);
+				dtinsert(opt_info.state->msgdict, C_LC_MESSAGES_libast + n);
 		if (!map[OPT_FLAGS[0]])
 			for (n = 0, t = OPT_FLAGS; *t; t++)
 				map[*t] = ++n;
@@ -800,7 +792,7 @@ font(int f, int style, int set)
 	case STYLE_api:
 		break;
 	default:
-		if (STATE->emphasis > 0)
+		if (opt_info.state->emphasis > 0)
 			return fonts[f].term[set];
 		break;
 	}
@@ -1350,7 +1342,7 @@ item(Sfio_t* sp, char* s, int level, int style, Sfio_t* ip, int version, char* c
 				for (t = s + 8; *t && *t != ']'; t++)
 					if (t[0] == 'p' && strmatch(t, "(proprietary|private)*"))
 					{
-						STATE->flags |= OPT_proprietary;
+						opt_info.state->flags |= OPT_proprietary;
 						break;
 					}
 			label(sp, 0, s, -1, level, 0, 0, ip, version, catalog);
@@ -1485,7 +1477,7 @@ text(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip, i
 				if (*t == ':')
 					t++;
 			}
-			else if (isalpha(c) && *t-- == ':')
+			else if (isalnum(c) && *t-- == ':')
 			{
 				if (X(catalog) || *t == *(t + 2))
 					t += 2;
@@ -1817,7 +1809,7 @@ list(Sfio_t* sp, register const List_t* lp)
 
 /*
  * return pointer to help message sans `Usage: command'
- * if oopts is 0 then STATE->pass is used
+ * if oopts is 0 then opt_info.state->pass is used
  * what:
  *	0	?short by default, ?long if any long options used
  *	*	otherwise see help_text[] (--???)
@@ -1898,10 +1890,10 @@ opthelp(const char* oopts, const char* what)
 	Sfio_t*			sp_info = 0;
 	Sfio_t*			sp_misc = 0;
 
-	if (!(mp = STATE->mp) && !(mp = STATE->mp = sfstropen()))
+	if (!(mp = opt_info.state->mp) && !(mp = opt_info.state->mp = sfstropen()))
 		goto nospace;
 	if (!what)
-		style = STATE->style;
+		style = opt_info.state->style;
 	else if (!*what)
 		style = STYLE_options;
 	else if (*what != '?')
@@ -1916,7 +1908,7 @@ opthelp(const char* oopts, const char* what)
 	}
 	else
 	{
-		if ((style = STATE->force) < STYLE_man)
+		if ((style = opt_info.state->force) < STYLE_man)
 			style = STYLE_man;
 		if (!(sp_help = sfstropen()))
 			goto nospace;
@@ -1932,27 +1924,27 @@ opthelp(const char* oopts, const char* what)
  again:
 	if (opts)
 	{
-		for (i = 0; i < STATE->npass; i++)
-			if (STATE->pass[i].oopts == opts)
+		for (i = 0; i < opt_info.state->npass; i++)
+			if (opt_info.state->pass[i].oopts == opts)
 			{
-				o = &STATE->pass[i];
+				o = &opt_info.state->pass[i];
 				break;
 			}
-		if (i >= STATE->npass)
+		if (i >= opt_info.state->npass)
 		{
 			o = &one;
 			init((char*)opts, o);
 		}
 		e = o + 1;
 	}
-	else if (STATE->npass > 0)
+	else if (opt_info.state->npass > 0)
 	{
-		o = STATE->pass;
-		e = o + STATE->npass;
+		o = opt_info.state->pass;
+		e = o + opt_info.state->npass;
 	}
-	else if (STATE->npass < 0)
+	else if (opt_info.state->npass < 0)
 	{
-		o = &STATE->cache->pass;
+		o = &opt_info.state->cache->pass;
 		e = o + 1;
 	}
 	else
@@ -1969,7 +1961,7 @@ opthelp(const char* oopts, const char* what)
 	case STYLE_api:
 	case STYLE_html:
 	case STYLE_nroff:
-		STATE->emphasis = 0;
+		opt_info.state->emphasis = 0;
 		break;
 	case STYLE_usage:
 	case STYLE_keys:
@@ -1979,7 +1971,7 @@ opthelp(const char* oopts, const char* what)
 		sfputc(mp, '\f');
 		break;
 	default:
-		if (!STATE->emphasis)
+		if (!opt_info.state->emphasis)
 		{
 			if (x = getenv("ERROR_OPTIONS"))
 			{
@@ -1987,12 +1979,12 @@ opthelp(const char* oopts, const char* what)
 					break;
 				if (strmatch(x, "*emphasi*"))
 				{
-					STATE->emphasis = 1;
+					opt_info.state->emphasis = 1;
 					break;
 				}
 			}
 			if ((x = getenv("TERM")) && strmatch(x, "(ansi|vt100|xterm)*") && isatty(sffileno(sfstderr)))
-				STATE->emphasis = 1;
+				opt_info.state->emphasis = 1;
 		}
 		break;
 	}
@@ -2147,7 +2139,7 @@ opthelp(const char* oopts, const char* what)
 				}
 				else
 				{
-					if (*(p + 1) == '\f' && (vp = STATE->vp))
+					if (*(p + 1) == '\f' && (vp = opt_info.state->vp))
 						p = expand(p + 2, NiL, &t, vp);
 					p = skip(p, ':', '?', 0, 1, 0, 0, version);
 					if (*p == ':')
@@ -2535,7 +2527,7 @@ opthelp(const char* oopts, const char* what)
 					}
 					else
 					{
-						if (*p == '\f' && (vp = STATE->vp))
+						if (*p == '\f' && (vp = opt_info.state->vp))
 							p = expand(p + 1, NiL, &t, vp);
 						else
 							t = 0;
@@ -3059,13 +3051,13 @@ opthelp(const char* oopts, const char* what)
 	p = sfstruse(sp);
 	name = error_info.id ? error_info.id : "command";
 	m = strlen(name) + 1;
-	if (!STATE->width)
+	if (!opt_info.state->width)
 	{
-		astwinsize(1, NiL, &STATE->width);
-		if (STATE->width < 20)
-			STATE->width = OPT_WIDTH;
+		astwinsize(1, NiL, &opt_info.state->width);
+		if (opt_info.state->width < 20)
+			opt_info.state->width = OPT_WIDTH;
 	}
-	if (!(STATE->flags & OPT_preformat))
+	if (!(opt_info.state->flags & OPT_preformat))
 	{
 		if (style >= STYLE_man || matched < 0)
 		{
@@ -3076,7 +3068,7 @@ opthelp(const char* oopts, const char* what)
 			ts = OPT_USAGE + m;
 		if (style == STYLE_html)
 		{
-			sfprintf(mp, "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">\n<HTML>\n<HEAD>\n<META name=\"generator\" content=\"optget (AT&T Labs Research) 2000-04-01\">\n%s<TITLE>%s man document</TITLE>\n</HEAD>\n<BODY bgcolor=white>\n", (STATE->flags & OPT_proprietary) ? "<!--INTERNAL-->\n" : "", name);
+			sfprintf(mp, "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">\n<HTML>\n<HEAD>\n<META name=\"generator\" content=\"optget (AT&T Labs Research) 2000-04-01\">\n%s<TITLE>%s man document</TITLE>\n</HEAD>\n<BODY bgcolor=white>\n", (opt_info.state->flags & OPT_proprietary) ? "<!--INTERNAL-->\n" : "", name);
 			sfprintf(mp, "<H4><TABLE width=100%%><TR><TH align=left>&nbsp;%s&nbsp;(&nbsp;%d&nbsp;)&nbsp;<TH align=center><A href=\".\" title=\"Index\">%s</A><TH align=right>%s&nbsp;(&nbsp;%d&nbsp;)</TR></TABLE></H4>\n<HR>\n", name, section, T(NiL, ast.id, heading[section % 10]), name, section);
 			sfprintf(mp, "<DL compact>\n<DT>");
 			co = 2;
@@ -3084,7 +3076,7 @@ opthelp(const char* oopts, const char* what)
 		}
 		else
 			co = 0;
-		if ((rm = STATE->width - ts - 1) < OPT_MARGIN)
+		if ((rm = opt_info.state->width - ts - 1) < OPT_MARGIN)
 			rm = OPT_MARGIN;
 		ip = indent;
 		ip->stop = (ip+1)->stop = style >= STYLE_html ? 0 : 2;
@@ -3102,7 +3094,7 @@ opthelp(const char* oopts, const char* what)
 				tp = 0;
 				sfputc(mp, '\n');
 				co = 0;
-				rm = STATE->width - 1;
+				rm = opt_info.state->width - 1;
 				ts = ip->stop;
 				if (*p == '\n')
 				{
@@ -3167,7 +3159,7 @@ opthelp(const char* oopts, const char* what)
 						{
 							sfputc(mp, '\n');
 							co = 0;
-							rm = STATE->width - 1;
+							rm = opt_info.state->width - 1;
 							ts = ip->stop;
 						}
 					}
@@ -3312,7 +3304,7 @@ opthelp(const char* oopts, const char* what)
 						sfputc(mp, '\n');
 						for (co = 0; co < ts; co++)
 							sfputc(mp, ' ');
-						rm = STATE->width - 1;
+						rm = opt_info.state->width - 1;
 					}
 				}
 				else
@@ -3384,8 +3376,8 @@ opterror(register char* p, int version, char* catalog)
 	register int		c;
 
 	if (opt_info.num != LONG_MIN)
-		opt_info.number = opt_info.num = 0;
-	if (!p || !(mp = STATE->mp) && !(mp = STATE->mp = sfstropen()))
+		opt_info.num = opt_info.number = 0;
+	if (!p || !(mp = opt_info.state->mp) && !(mp = opt_info.state->mp = sfstropen()))
 		opt_info.arg = T(NiL, ast.id, "[* out of space *]");
 	else
 	{
@@ -3409,7 +3401,7 @@ opterror(register char* p, int version, char* catalog)
 			if (*(p = next(p + 1, version)) == '[')
 			{
 				p = skip(s = p + 1, ':', '?', 0, 1, 0, 0, version);
-				tp = X(catalog) ? STATE->xp : mp;
+				tp = X(catalog) ? opt_info.state->xp : mp;
 				while (s < p)
 				{
 					if ((c = *s++) == '?' || c == ']')
@@ -3524,27 +3516,25 @@ optget(register char** argv, const char* oopts)
 	Optcache_t*	pcache;
 	Optpass_t*	pass;
 
-#if OPT_INFO_STATE
-	STATE = &state; /* not initialized in some dll's! */
-#endif
+	opt_info.state = &state; /* not initialized in some dll's! */
 	if (!oopts)
 		return 0;
-	STATE->pindex = opt_info.index;
-	STATE->poffset = opt_info.offset;
+	opt_info.state->pindex = opt_info.index;
+	opt_info.state->poffset = opt_info.offset;
 	if (!opt_info.index)
 	{
 		opt_info.index = 1;
 		opt_info.offset = 0;
-		if (STATE->npass)
+		if (opt_info.state->npass)
 		{
-			STATE->npass = 0;
-			STATE->join = 0;
+			opt_info.state->npass = 0;
+			opt_info.state->join = 0;
 		}
 	}
 	if (!argv)
 		cache = 0;
 	else
-		for (pcache = 0, cache = STATE->cache; cache; pcache = cache, cache = cache->next)
+		for (pcache = 0, cache = opt_info.state->cache; cache; pcache = cache, cache = cache->next)
 			if (cache->pass.oopts == (char*)oopts)
 				break;
 	if (cache)
@@ -3552,40 +3542,40 @@ optget(register char** argv, const char* oopts)
 		if (pcache)
 		{
 			pcache->next = cache->next;
-			cache->next = STATE->cache;
-			STATE->cache = cache;
+			cache->next = opt_info.state->cache;
+			opt_info.state->cache = cache;
 		}
 		pass = &cache->pass;
-		STATE->npass = -1;
+		opt_info.state->npass = -1;
 	}
 	else
 	{
 		if (!argv)
-			n = STATE->npass ? STATE->npass : 1;
-		else if ((n = STATE->join - 1) < 0)
+			n = opt_info.state->npass ? opt_info.state->npass : 1;
+		else if ((n = opt_info.state->join - 1) < 0)
 			n = 0;
-		if (n >= STATE->npass || STATE->pass[n].oopts != (char*)oopts)
+		if (n >= opt_info.state->npass || opt_info.state->pass[n].oopts != (char*)oopts)
 		{
-			for (m = 0; m < STATE->npass && STATE->pass[m].oopts != (char*)oopts; m++);
-			if (m < STATE->npass)
+			for (m = 0; m < opt_info.state->npass && opt_info.state->pass[m].oopts != (char*)oopts; m++);
+			if (m < opt_info.state->npass)
 				n = m;
 			else
 			{
-				if (n >= elementsof(STATE->pass))
-					n = elementsof(STATE->pass) - 1;
-				init((char*)oopts, &STATE->pass[n]);
-				if (STATE->npass <= n)
-					STATE->npass = n + 1;
+				if (n >= elementsof(opt_info.state->pass))
+					n = elementsof(opt_info.state->pass) - 1;
+				init((char*)oopts, &opt_info.state->pass[n]);
+				if (opt_info.state->npass <= n)
+					opt_info.state->npass = n + 1;
 			}
 		}
 		if (!argv)
 			return 0;
-		pass = &STATE->pass[n];
+		pass = &opt_info.state->pass[n];
 	}
 	opts = pass->opts;
 	prefix = pass->prefix;
 	version = pass->version;
-	if (!(xp = STATE->xp) || (catalog = pass->catalog) && !X(catalog))
+	if (!(xp = opt_info.state->xp) || (catalog = pass->catalog) && !X(catalog))
 		catalog = 0;
  again:
 	psp = 0;
@@ -3595,6 +3585,7 @@ optget(register char** argv, const char* oopts)
 	 * next option is short or long
 	 */
 
+	opt_info.assignment = 0;
 	num = 1;
 	w = v = 0;
 	for (;;)
@@ -3608,10 +3599,10 @@ optget(register char** argv, const char* oopts)
 			if (opt_info.index == 1)
 			{
 				opt_info.argv = 0;
-				STATE->argv[0] = 0;
-				if (argv[0] && (STATE->argv[0] = save(argv[0])))
-					opt_info.argv = STATE->argv;
-				STATE->style = STYLE_short;
+				opt_info.state->argv[0] = 0;
+				if (argv[0] && (opt_info.state->argv[0] = save(argv[0])))
+					opt_info.argv = opt_info.state->argv;
+				opt_info.state->style = STYLE_short;
 			}
 			if (!(s = argv[opt_info.index]))
 				return 0;
@@ -3689,7 +3680,7 @@ optget(register char** argv, const char* oopts)
 			if (n == 2)
 			{
 				x = 0;
-				STATE->style = STYLE_long;
+				opt_info.state->style = STYLE_long;
 				opt_info.option[0] = opt_info.name[0] = opt_info.name[1] = c;
 				w = &opt_info.name[prefix];
 				if ((*s == 'n' || *s == 'N') && (*(s + 1) == 'o' || *(s + 1) == 'O') && *(s + 2) && *(s + 2) != '=')
@@ -3700,6 +3691,10 @@ optget(register char** argv, const char* oopts)
 				{
 					if (*s == '=')
 					{
+						if (*(s + 1) == '=')
+							s++;
+						if (!isalnum(*(s - 1)) && *(w - 1) == (opt_info.assignment = *(s - 1)))
+							w--;
 						v = ++s;
 						break;
 					}
@@ -3783,7 +3778,7 @@ optget(register char** argv, const char* oopts)
 					 */
 
 					if (opt_info.num != LONG_MIN)
-						opt_info.number = opt_info.num = !(k & OPT_cache_invert);
+						opt_info.num = opt_info.number = !(k & OPT_cache_invert);
 					if (!(k & (OPT_cache_string|OPT_cache_numeric)))
 						return c;
 					if (*(opt_info.arg = &argv[opt_info.index++][opt_info.offset]))
@@ -3858,8 +3853,8 @@ optget(register char** argv, const char* oopts)
 				cache->caching = c;
 				c = 0;
 				cache->pass = *pass;
-				cache->next = STATE->cache;
-				STATE->cache = cache;
+				cache->next = opt_info.state->cache;
+				opt_info.state->cache = cache;
 			}
 		}
 		else
@@ -3912,7 +3907,7 @@ optget(register char** argv, const char* oopts)
 			}
 			if (*s == '\f')
 			{
-				psp = info(psp, s + 1, NiL, STATE->xp);
+				psp = info(psp, s + 1, NiL, opt_info.state->xp);
 				if (psp->nb)
 					s = psp->nb;
 				else
@@ -3922,7 +3917,7 @@ optget(register char** argv, const char* oopts)
 				}
 				continue;
 			}
-			message((-20, "optget: opt %s", show(s)));
+			message((-20, "optget: opt %s w %s num %ld", show(s), w, num));
 			if (*s == c && !w)
 				break;
 			else if (*s == '[')
@@ -3936,7 +3931,7 @@ optget(register char** argv, const char* oopts)
 				else if (w && !cache)
 				{
 					nov = no;
-					if (*(s + 1) == '\f' && (vp = STATE->vp))
+					if (*(s + 1) == '\f' && (vp = opt_info.state->vp))
 					{
 						sfputc(vp, k);
 						s = expand(s + 2, NiL, &t, vp);
@@ -4052,7 +4047,9 @@ optget(register char** argv, const char* oopts)
 							s = p;
 						if (!*w)
 						{
-							if (!(n = (num = !n) && (m || *s == ':' || *s == '|' || *s == '?' || *s == ']' || *s == 0)) && x)
+							if (n)
+								num = 0;
+							if (!(n = num && (m || *s == ':' || *s == '|' || *s == '?' || *s == ']' || *s == 0)) && x)
 							{
 								psp = pop(psp);
 								return opterror("?", version, catalog);
@@ -4294,10 +4291,17 @@ optget(register char** argv, const char* oopts)
 			}
 			if ((s - b) >= elementsof(opt_info.name))
 				s = b + elementsof(opt_info.name) - 1;
-			while (b < s)
-				if ((*w = *b++) != '*')
-					w++;
-			*w = 0;
+			for (;;)
+			{
+				if (b >= s)
+				{
+					*w = 0;
+					break;
+				}
+				if (*b == '*')
+					break;
+				*w++ = *b++;
+			}
 			if (!num && v)
 				return opterror(no ? "!" : "=", version, catalog);
 			w = &opt_info.name[prefix];
@@ -4337,7 +4341,7 @@ optget(register char** argv, const char* oopts)
 	 */
 
 	if (opt_info.num != LONG_MIN)
-		opt_info.number = opt_info.num = num;
+		opt_info.num = opt_info.number = num;
 	if (*++s == ':' || *s == '#')
 	{
 		if (w)
@@ -4349,7 +4353,7 @@ optget(register char** argv, const char* oopts)
 					pop(psp);
 					return opterror("!", version, catalog);
 				}
-				opt_info.num = 0;
+				opt_info.num = opt_info.number = 0;
 			}
 			else
 			{
@@ -4520,7 +4524,9 @@ optget(register char** argv, const char* oopts)
 								s = p;
 							if (!*w)
 							{
-								if (!(n = (num = !n) && (m || *s == ':' || *s == '|' || *s == '?' || *s == ']')) && x)
+								if (n)
+									num = 0;
+								if (!(n = (m || *s == ':' || *s == '|' || *s == '?' || *s == ']')) && x)
 								{
 									pop(psp);
 									return opterror("?", version, catalog);
@@ -4552,7 +4558,7 @@ optget(register char** argv, const char* oopts)
 						}
 					}
 				} while (*(s = skip(s, 0, 0, 0, 1, 0, 1, version)) == '[');
-				if (!(opt_info.num = x))
+				if (!(opt_info.num = opt_info.number = x))
 				{
 					pop(psp);
 					return opterror("*", version, catalog);
@@ -4567,7 +4573,7 @@ optget(register char** argv, const char* oopts)
 	}
 	else
 	{
-		opt_info.number = opt_info.num = num;
+		opt_info.num = opt_info.number = num;
 		if (!w && !argv[opt_info.index][opt_info.offset])
 		{
 			opt_info.offset = 0;
@@ -4595,16 +4601,16 @@ optget(register char** argv, const char* oopts)
 				pop(psp);
 				return '?';
 			}
-			STATE->force = hp->style;
+			opt_info.state->force = hp->style;
 		}
 		else if (match(s, "ESC", -1, NiL) || match(s, "EMPHASIS", -1, NiL))
-			STATE->emphasis = n;
+			opt_info.state->emphasis = n;
 		else if (match(s, "PREFORMAT", -1, NiL))
-			STATE->flags |= OPT_preformat;
+			opt_info.state->flags |= OPT_preformat;
 		else if (match(s, "TEST", -1, NiL))
 		{
-			STATE->width = OPT_WIDTH;
-			STATE->emphasis = 1;
+			opt_info.state->width = OPT_WIDTH;
+			opt_info.state->emphasis = 1;
 		}
 		else
 		{
@@ -4612,7 +4618,7 @@ optget(register char** argv, const char* oopts)
 			return opterror(v, version, catalog);
 		}
 		psp = pop(psp);
-		if (argv == STATE->strv)
+		if (argv == opt_info.state->strv)
 			return '#';
 		goto again;
 	}
@@ -4629,10 +4635,9 @@ optget(register char** argv, const char* oopts)
  * parse long options sans leading -- from string and pass to optget()
  * syntax is
  *
- *	[no]name[[:]=['"{(]value[)}"']][, ]...
+ *	[no]name[[-+:|&=]=['"{(]value[)}"']][, ]...
  *
  * \x escapes passed to chresc()
- * := negates opt_info.num
  *
  * return '#' for `label:', with opt_info.name==label
  * str[opt_info.offset]	next arg
@@ -4658,10 +4663,10 @@ optstr(const char* str, const char* opts)
  again:
 	if (s)
 	{
-		if (!(mp = STATE->strp) && !(mp = STATE->strp = sfstropen()))
+		if (!(mp = opt_info.state->strp) && !(mp = opt_info.state->strp = sfstropen()))
 			return 0;
-		if (STATE->str != s)
-			STATE->str = s;
+		if (opt_info.state->str != s)
+			opt_info.state->str = s;
 		else if (opt_info.index == 1)
 			s += opt_info.offset;
 		while (*s == ',' || *s == ' ' || *s == '\t' || *s == '\n' || *s == '\r')
@@ -4672,26 +4677,22 @@ optstr(const char* str, const char* opts)
 		sfputc(mp, '-');
 		while (*s && *s != ',' && *s != ' ' && *s != '\t' && *s != '\n' && *s != '\r' && *s != '=' && *s != ':')
 			sfputc(mp, *s++);
-		if (*s != ':')
-			STATE->colon = 0;
-		else if (*++s != '=')
+		if ((c = *s) == ':' && *(s + 1) != '=')
 		{
 			opt_info.index = 1;
-			opt_info.offset = s - (char*)str;
+			opt_info.offset = ++s - (char*)str;
 			s = sfstruse(mp) + 2;
 			e = opt_info.name;
 			while (e < &opt_info.name[sizeof(opt_info.name)-1] && (*e++ = *s++));
 			opt_info.arg = 0;
-			opt_info.number = opt_info.num = 0;
+			opt_info.num = opt_info.number = 0;
 			opt_info.option[0] = ':';
 			opt_info.option[1] = 0;
 			return '#';
 		}
-		else
-			STATE->colon = 1;
-		if (*s == '=')
+		if (c == ':' || c == '=')
 		{
-			sfputc(mp, '=');
+			sfputc(mp, c);
 			ql = qr = 0;
 			while (c = *++s)
 			{
@@ -4739,25 +4740,25 @@ optstr(const char* str, const char* opts)
 				}
 			}
 		}
-		opt_info.argv = STATE->strv;
-		STATE->strv[0] = T(NiL, ast.id, "option");
-		STATE->strv[1] = sfstruse(mp);
-		STATE->strv[2] = 0;
+		opt_info.argv = opt_info.state->strv;
+		opt_info.state->strv[0] = T(NiL, ast.id, "option");
+		opt_info.state->strv[1] = sfstruse(mp);
+		opt_info.state->strv[2] = 0;
 		opt_info.offset = s - (char*)str;
 	}
 	if (opts)
 	{
-		if (!STATE->strv[1])
+		if (!opt_info.state->strv[1])
 			return 0;
 		opt_info.index = 1;
 		v = opt_info.offset;
 		opt_info.offset = 0;
-		c = optget(STATE->strv, opts);
+		c = optget(opt_info.state->strv, opts);
 		opt_info.index = 1;
 		opt_info.offset = v;
 		if (c == '#')
 		{
-			s = STATE->str;
+			s = opt_info.state->str;
 			goto again;
 		}
 		if ((c == '?' || c == ':') && (opt_info.arg[0] == '-' && opt_info.arg[1] == '-'))
@@ -4768,8 +4769,6 @@ optstr(const char* str, const char* opts)
 			e = opt_info.name;
 			while (*e++ = *s++);
 		}
-		if (STATE->colon)
-			opt_info.num = -opt_info.num;
 	}
 	else
 		c = '-';

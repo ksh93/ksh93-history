@@ -30,7 +30,6 @@
 
 #include "reglib.h"
 
-#include <cdt.h>
 #include <ccode.h>
 
 #ifndef UCS_BYTE
@@ -82,7 +81,7 @@ initialize(void)
 	local.dtdisc.link = offsetof(Ucs_map_t, link);
 	local.dtdisc.key = offsetof(Ucs_map_t, name);
 	local.dtdisc.size = -1;
-	if (!(w = newof(0, Ucs_map_t, elementsof(ucs_attrs) + elementsof(ucs_names), 0)))
+	if (!(w = (Ucs_map_t*)malloc(sizeof(Ucs_map_t) * (elementsof(ucs_attrs) + elementsof(ucs_names)))))
 	{
 		local.fatal = 1;
 		return -1;
@@ -104,12 +103,14 @@ initialize(void)
 	{
 		memcpy(w, &ucs_attrs[i], offsetof(Ucs_dat_t, table));
 		w->name = ucs_strings[ucs_attrs[i].table] + ucs_attrs[i].index;
+		w->next = 0;
 		dtinsert(local.attrs, w);
 	}
 	for (i = 0; i < elementsof(ucs_names); i++, w++)
 	{
 		memcpy(w, &ucs_names[i], offsetof(Ucs_dat_t, table));
 		w->name = ucs_strings[ucs_names[i].table] + ucs_names[i].index;
+		w->next = 0;
 		if (a = (Ucs_map_t*)dtsearch(local.names, w))
 		{
 			while (a->next)

@@ -629,7 +629,7 @@ static union anynode *funct(void)
 	t->funct.functloc = first = fctell();
 	if(!sh.st.filename || sffileno(iop)<0)
 	{
-		if(fcfill() < 0)
+		if(fcfill() >= 0)
 			fcseek(-1);
 		if(sh_isstate(SH_HISTORY))
 			t->funct.functloc = sfseek(sh.hist_ptr->histfp,(off_t)0,SEEK_CUR);

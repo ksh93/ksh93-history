@@ -42,10 +42,6 @@
 #define FMT_case	1
 #define FMT_edit	2
 
-/* drop after 20010301 */
-typedef int (*Of_key_lookup_t)(void*, const char*, const char*, int, char**, Sflong_t*);
-typedef char* (*Of_key_convert_t)(void*, const char*, const char*, int, char*, Sflong_t);
-
 typedef struct
 {
 	Sffmt_t			fmt;
@@ -149,22 +145,24 @@ getfmt(Sfio_t* sp, void* vp, Sffmt_t* dp)
 	register Fmt_t*	fp = (Fmt_t*)dp;
 	Value_t*	value = (Value_t*)vp;
 	register char*	v;
+	char*		t;
+	char*		b;
 	char*		a = 0;
 	char*		s = 0;
 	Sflong_t	n = 0;
 	int		h = 0;
 	int		i = 0;
 	int		x = 0;
-	int		c;
 	int		d;
 	Field_t		f;
 	regmatch_t	match[10];
 
 	fp->level++;
-	if ((v = fp->fmt.t_str) && fp->fmt.n_str > 0)
+	if (fp->fmt.t_str && fp->fmt.n_str > 0 && (v = fmtbuf(fp->fmt.n_str + 1)))
 	{
-		c = v[fp->fmt.n_str];
+		memcpy(v, fp->fmt.t_str, fp->fmt.n_str);
 		v[fp->fmt.n_str] = 0;
+		b = v;
 		for (;;)
 		{
 			switch (*v++)
@@ -207,10 +205,18 @@ getfmt(Sfio_t* sp, void* vp, Sffmt_t* dp)
 			}
 			break;
 		}
-		h = fp->version ? (*fp->lookup)(fp->handle, &fp->fmt, a, &s, &n) : (*(Of_key_lookup_t)fp->lookup)(fp->handle, fp->fmt.t_str, a, fp->fmt.fmt, &s, &n);
+		n = i;
+		t = fp->fmt.t_str;
+		fp->fmt.t_str = b;
+		h = (*fp->lookup)(fp->handle, &fp->fmt, a, &s, &n);
+		fp->fmt.t_str = t;
 		if (i)
 			*v++ = i;
-		fp->fmt.t_str[fp->fmt.n_str] = c;
+	}
+	else
+	{
+		h = (*fp->lookup)(fp->handle, &fp->fmt, a, &s, &n);
+		v = 0;
 	}
 	fp->fmt.flags |= SFFMT_VALUE;
 	switch (fp->fmt.fmt)
@@ -261,8 +267,6 @@ getfmt(Sfio_t* sp, void* vp, Sffmt_t* dp)
 		}
 		if (x)
 		{
-			c = fp->fmt.t_str[fp->fmt.n_str];
-			fp->fmt.t_str[fp->fmt.n_str] = 0;
 			h = 0;
 			d = initfield(&f, v + 4);
 			switch (x)
@@ -320,7 +324,6 @@ getfmt(Sfio_t* sp, void* vp, Sffmt_t* dp)
 				h = 1;
 				break;
 			}
-			fp->fmt.t_str[fp->fmt.n_str] = c;
 			if (!h)
 				s = "";
 		}
@@ -340,7 +343,7 @@ getfmt(Sfio_t* sp, void* vp, Sffmt_t* dp)
 		value->i = n;
 		break;
 	default:
-		if ((!fp->convert || !(value->s = fp->version ? (*fp->convert)(fp->handle, &fp->fmt, a, s, n) : (*(Of_key_convert_t)fp->convert)(fp->handle, a, fp->fmt.t_str, fp->fmt.fmt, s, n))) && (fp->tmp[0] || (fp->tmp[0] = sfstropen())))
+		if (!fp->convert || !(value->s = (*fp->convert)(fp->handle, &fp->fmt, a, s, n)) && (fp->tmp[0] || (fp->tmp[0] = sfstropen())))
 		{
 			sfprintf(fp->tmp[0], "%%%c", fp->fmt.fmt);
 			value->s = sfstruse(fp->tmp[0]);
@@ -363,7 +366,7 @@ sfkeyprintf(Sfio_t* sp, void* handle, const char* format, Sf_key_lookup_t lookup
 	Fmt_t		fmt;
 
 	memset(&fmt, 0, sizeof(fmt));
-	fmt.version = 20000308;
+	fmt.version = 20030909;
 	fmt.fmt.version = SFIO_VERSION;
 	fmt.fmt.form = (char*)format;
 	fmt.fmt.extf = getfmt;

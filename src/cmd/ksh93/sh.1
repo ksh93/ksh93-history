@@ -4886,7 +4886,8 @@ the shell will invoke command
 .I name\^
 multiple times with a subset of the arguments on each invocation.
 Arguments that occur prior to the first word that
-expands to multiple arguments will be passed on each invocation.
+expands to multiple arguments and after the last word
+that expands to multiple arguments will be passed on each invocation.
 The exit status will be the maximum invocation exit status.
 With the
 .B \-v
@@ -6689,6 +6690,8 @@ setting or unsetting the value or attributes of
 .BR SHELL ,
 .SM
 .BR ENV ,
+.SM
+.BR FPATH ,
 or
 .SM
 .BR PATH\*S,
@@ -6705,6 +6708,10 @@ and
 .BR >> ).
 .br
 adding or deleting built-in commands.
+.br
+using
+.B "command -p"
+to invoke a command.
 .PD
 .RE
 .PP

@@ -610,7 +610,7 @@ char **sh_argbuild(int *nargs, const struct comnod *comptr,int flag)
 {
 	register struct argnod	*argp;
 	struct argnod *arghead=0;
-	sh.xargs = 0;
+	sh.xargmin = 0;
 	{
 		register const struct comnod	*ac = comptr;
 		register int n;
@@ -637,8 +637,12 @@ char **sh_argbuild(int *nargs, const struct comnod *comptr,int flag)
 			while(argp)
 			{
 				n = arg_expand(argp,&arghead,flag);
-				if(n>1 && sh.xargs==0)
-					sh.xargs = *nargs;
+				if(n>1)
+				{
+					if(sh.xargmin==0)
+						sh.xargmin = *nargs;
+					sh.xargmax = *nargs+n;
+				}
 				*nargs += n;
 				argp = argp->argnxt.ap;
 			}

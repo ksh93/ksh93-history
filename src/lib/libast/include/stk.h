@@ -47,6 +47,7 @@
 #define STK_NULL	2		/* return NULL on overflow	*/
 
 #define	stkptr(sp,n)	((char*)((sp)->_data)+(n))
+#define stktop(sp)	((char*)(sp)->_next)
 #define	stktell(sp)	((sp)->_next-(sp)->_data)
 #define stkseek(sp,n)	((n)==0?(char*)((sp)->_next=(sp)->_data):_stkseek(sp,n))
 

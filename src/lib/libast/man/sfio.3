@@ -768,16 +768,17 @@ This function moves objects
 from input stream \f5fr\fP to output stream \f5fw\fP.
 \f5sfmove()\fP returns the number of objects moved or \f5-1\fP on failure.
 
-An object is either a byte or a record.
-The latter is indicated by a non-negative value for the record separator
-character \f5rsc\fP.
-If \f5n\fP is negative, all of \f5fr\fP will be moved.
+An object can be either a byte if the record separator argument
+\f5rsc\fP is negative or a record of \f5rsc\fP is non-negative.
+In the latter case, a record is incomplete if it does not end in \f5rsc\fP. 
+Generally speaking, a stream can have at most one incomplete record.
+If \f5n\fP is negative, all complete objects of \f5fr\fP will be moved.
 Otherwise, \f5n\fP indicates the number of objects to move.
 If either \f5fr\fP or \f5fw\fP is \f5NULL\fP, it acts
 as if it is a stream corresponding to \f5/dev/null\fP,
 the UNIX device that has no read data and throws away any write data.
 For example, the call \f5sfmove(f,(Sfio_t*)0,(Sfoff_t)(-1),'\en')\fP
-simply counts the number of lines in stream \f5f\fP.
+counts the number of complete lines in stream \f5f\fP.
 
 .Ss "  ssize_t sfread(Sfio_t* f, Void_t* buf, size_t n)"
 This function reads up to \f5n\fP bytes from \f5f\fP into buffer \f5buf\fP.
@@ -1513,14 +1514,21 @@ If \fIbase\fP is larger than \f536\fP, the set of digits is:
 .Ss "BUFFERING, SYNCHRONIZATION"
 .PP
 .Ss "  Void_t* sfsetbuf(Sfio_t* f, Void_t* buf, size_t size)"
-This function changed the buffering scheme for \f5f\fP.
-Except for buffer inquiry (the case \f5size == 0\fP),
-\f5f\fP will be synchronized before any buffer modification.
+This function changed the buffering scheme for the stream \f5f\fP.
+The stream will be synchronized before any buffer modification.
 If a new buffer is successfully set and the old buffer has not been freed,
 \f5sfsetbuf()\fP returns the old buffer. Otherwise, it returns \f5NULL\fP.
-
 After a \f5sfsetbuf()\fP call,
 \f5sfvalue()\fP returns the size of the returned buffer.
+
+Sfio attempts to read data in blocks likely to be serviced fast by the file system.
+This means block sizes being multiples of a suitable alignment value
+(e.g., 512, 1024 or 8192). By default, the alignment value
+is computed via some internal mechanism depending on the local platform but
+it can also be explicitly set via the call \f5sfsetbuf(f, (Void_t*)f, size)\fP.
+
+In invocations of \f5sfsetbuf()\fP other than the above case,
+the \f5size\fP argument is treated as follows:
 .Tp
 \f5size == SF_UNBOUND\fP:
 Sfio will pick a suitable buffer size.

@@ -363,6 +363,7 @@ static void copyto(register Mac_t *mp,int endch, int newquote)
 	int		oldquote = mp->quote;
 	int		ansi_c = 0;
 	int		paren = 0;
+	int		brace = 0;
 	Sfio_t		*sp = mp->sp;
 	mp->sp = NIL(Sfio_t*);
 	mp->quote = newquote;
@@ -475,7 +476,7 @@ static void copyto(register Mac_t *mp,int endch, int newquote)
 		    case S_ENDCH:
 			if((mp->lit || cp[-1]!=endch || mp->quote!=newquote))
 				goto pattern;
-			if(endch==RBRACE && *cp==LPAREN && mp->pattern)
+			if(endch==RBRACE && *cp==LPAREN && mp->pattern && brace)
 				goto pattern;
 		    case S_EOF:
 			if(c)
@@ -557,9 +558,13 @@ static void copyto(register Mac_t *mp,int endch, int newquote)
 				else if(n==RPAREN)
 					--paren;
 			}
+			goto pattern;
 		    case S_BRACE:
 			if(!(mp->quote || mp->lit))
+			{
 				mp->patfound = mp->pattern;
+				brace = 1;
+			}
 		    pattern:
 			if(!mp->pattern || !(mp->quote || mp->lit))
 			{

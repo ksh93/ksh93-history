@@ -37,6 +37,7 @@
 #define _REGLIB_H
 
 #define REG_VERSION_EXEC	20020509L
+#define REG_VERSION_MAP		20030916L	/* regdisc_t.re_map	*/
 
 #define re_info		env
 
@@ -60,27 +61,20 @@ typedef struct regsubop_s
 	char		re_rhs[1];	/* substitution rhs		*/
 
 #include <ast.h>
+#include <cdt.h>
+#include <stk.h>
 
 #include "regex.h"
 
-#include <cdt.h>
-#include <stk.h>
 #include <ctype.h>
 #include <errno.h>
-
-#if __OBSOLETE__ && __OBSOLETE__ < 20040101
-/* old REG_DELIMITED that did not skip past delimiter */
-#define REG_DELIMITED_OLD	0x00008000
-#else
-#define REG_DELIMITED_OLD	0
-#endif
 
 #undef	RE_DUP_MAX			/* posix puts this in limits.h!	*/
 #define RE_DUP_MAX	(INT_MAX/2-1)	/* 2*RE_DUP_MAX won't overflow	*/
 #define RE_DUP_INF	(RE_DUP_MAX+1)	/* infinity, for *		*/
 #define BACK_REF_MAX	9
 
-#define REG_COMP	(REG_DELIMITED|REG_DELIMITED_OLD|REG_EXTENDED|REG_ICASE|REG_NOSUB|REG_NEWLINE|REG_SHELL|REG_AUGMENTED|REG_LEFT|REG_LITERAL|REG_MINIMAL|REG_NULL|REG_RIGHT|REG_LENIENT|REG_MUSTDELIM)
+#define REG_COMP	(REG_DELIMITED|REG_EXTENDED|REG_FIRST|REG_ICASE|REG_NOSUB|REG_NEWLINE|REG_SHELL|REG_AUGMENTED|REG_LEFT|REG_LITERAL|REG_MINIMAL|REG_NULL|REG_RIGHT|REG_LENIENT|REG_MUSTDELIM)
 #define REG_EXEC	(REG_ADVANCE|REG_INVERT|REG_NOTBOL|REG_NOTEOL|REG_STARTEND)
 
 #define REX_NULL		0	/* null string (internal)	*/
@@ -318,6 +312,7 @@ typedef struct Bm_s
 	size_t*		skip;
 	size_t*		fail;
 	size_t		size;
+	ssize_t		back;
 	ssize_t		left;
 	ssize_t		right;
 	size_t		complete;
@@ -441,6 +436,7 @@ typedef struct Trie_s
 {
 	Trie_node_t**	root;
 	int		min;
+	int		max;
 } Trie_t;
 
 /*
@@ -457,6 +453,7 @@ typedef struct Rex_s
 	struct Rex_s*	next;			/* remaining parts	*/
 	int		lo;			/* lo dup count		*/
 	int		hi;			/* hi dup count		*/
+	unsigned char*	map;			/* fold and/or ccode map*/
 	union
 	{
 	Alt_catch_t	alt_catch;		/* alt catcher		*/
@@ -496,10 +493,12 @@ typedef struct reglib_s			/* library private regex_t info	*/
 	regflags_t	flags;		/* flags from regcomp()		*/
 	int		error;		/* last error			*/
 	int		explicit;	/* explicit match on this char	*/
+	int		leading;	/* leading match on this char	*/
 	int		refs;		/* regcomp()+regdup() references*/
 	Rex_t		done;		/* the last continuation	*/
+	regstat_t	stats;		/* for regstat()		*/
+	unsigned char	fold[UCHAR_MAX+1]; /* REG_ICASE map		*/
 	unsigned char	hard;		/* hard comp			*/
-	unsigned char	leading;	/* explicit match on leading .	*/
 	unsigned char	once;		/* if 1st parse fails, quit	*/
 	unsigned char	separate;	/* cannot combine		*/
 	unsigned char	stack;		/* hard comp or exec		*/

@@ -426,5 +426,5 @@ a()
 }
 b() { : ;}
 [[ $(a) == a ]] || err_exit '.sh.fun not set correctly in a function'
+print $'a(){\ndate\n}'  | $SHELL 2> /dev/null || err_exit 'parser error in a(){;date;}'
 exit $((Errors))
-

@@ -133,6 +133,7 @@ struct limits
 	char		lastbase; \
 	char		forked;	\
 	char		binscript; \
+	char		deftype; \
 	char		used_pos;	/* used postional parameter */\
 	unsigned char	lastsig;	/* last signal received */ \
 	char		*readscript;	/* set before reading a script */ \
@@ -144,7 +145,8 @@ struct limits
 	struct dolnod	*arglist; \
 	int		fn_depth; \
 	int		dot_depth; \
-	int		xargs; \
+	int		xargmin; \
+	int		xargmax; \
 	int		xargexit; \
 	long		nforks; \
 	Env_t		*env; \

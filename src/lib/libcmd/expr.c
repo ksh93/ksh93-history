@@ -31,7 +31,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: expr (AT&T Labs Research) 2000-03-17 $\n]"
+"[-?\n@(#)$Id: expr (AT&T Labs Research) 2003-07-28 $\n]"
 USAGE_LICENSE
 "[+NAME?expr - evaluate arguments as an expression]"
 "[+DESCRIPTION?\bexpr\b evaluates an expression given as arguments and writes "
@@ -84,8 +84,18 @@ USAGE_LICENSE
 		"and 0 on failure.  However, if the pattern contains at "
 		"least one sub-expression [\\( . . .\\)]], the string "
 		"corresponding to \\1 will be returned.]"
-	"[+\b(\b \aexpr1\a \b)\b?Grouping symbols.  An expression can "
+	"[+( \aexpr1\a )?Grouping symbols.  An expression can "
 		"be placed within parenthesis to change precedence.]"
+	"[+match\b \astring\a \aexpr\a?Equivalent to \astring\a \b:\b "
+		"\aexpr\a.]"
+	"[+substr\b \astring\a \apos\a \alength\a?\alength\a character "
+		"substring of \astring\a starting at \apos\a "
+		"(counting from 1).]"
+	"[+index\b \astring\a \achars\a?The position in \astring\a "
+		"(counting from 1) of the leftmost occurrence of any "
+		"character in \achars\a.]"
+	"[+length\b \astring\a?The number of characters in \astring\a.]"
+	"[+quote\b \atoken\a?Treat \atoken\a as a string operand.]"
 	"}"
 "[+?For backwards compatibility, unrecognized options beginning with "
 	"a \b-\b will be treated as operands.  Portable applications "
@@ -110,6 +120,7 @@ USAGE_LICENSE
 #define T_ADD	0x100
 #define T_MULT	0x200
 #define T_CMP	0x400
+#define T_FUN	0x800
 #define T_OP	7
 #define T_NUM	1
 #define T_STR	2
@@ -125,13 +136,20 @@ USAGE_LICENSE
 #define OP_MULT		(T_MULT|0)
 #define OP_DIV		(T_MULT|1)
 #define OP_MOD		(T_MULT|2)
+#define OP_INDEX	(T_FUN|0)
+#define OP_LENGTH	(T_FUN|1)
+#define OP_MATCH	(T_FUN|2)
+#define OP_QUOTE	(T_FUN|3)
+#define OP_SUBSTR	(T_FUN|4)
+
 #define numeric(np)	((np)->type&T_NUM)
 
-static struct Optable
+static struct Optable_s
 {
 	char	opname[3];
 	int	op;
-} optable[] =
+}
+optable[] =
 {
 	"|",	'|',
 	"&",	'&',
@@ -152,32 +170,106 @@ static struct Optable
 	")",	')'
 };
 
-typedef struct _node_
+typedef struct Node_s
 {
 	int	type;
 	long	num;
 	char	*str;
 } Node_t;
 
-static int expr_or(Node_t*);
-static char **arglist;
-
-static int getnode(Node_t *np)
+typedef struct State_s
 {
-	char *cp;
-	register int i,tok;
-	if (!(cp = *arglist++))
-		error(ERROR_exit(2),"argument expected");
-	if (streq(cp,"match"))
-	{
-		if (!(np->str = *arglist++))
-			error(ERROR_exit(2),"argument expected");
-		np->type = T_STR;
-		return ':';
-	}
+	int	standard;
+	char**	arglist;
+	char	buf[36];
+} State_t;
+
+static int expr_or(State_t*, Node_t*);
+
+static int getnode(State_t* state, Node_t *np)
+{
+	register char*	sp;
+	register char*	cp;
+	register int	i;
+	register int	j;
+	register int	k;
+	register int	tok;
+	char*		ep;
+
+	if (!(cp = *state->arglist++))
+		error(ERROR_exit(2), "argument expected");
+	if (!state->standard)
+		switch (cp[0])
+		{
+		case 'i':
+			if (cp[1] == 'n' && !strcmp(cp, "index"))
+			{
+				if (!(cp = *state->arglist++))
+					error(ERROR_exit(2), "string argument expected");
+				if (!(ep = *state->arglist++))
+					error(ERROR_exit(2), "chars argument expected");
+				np->num = (ep = strpbrk(cp, ep)) ? (ep - cp + 1) : 0;
+				np->type = T_NUM;
+				goto next;
+			}
+			break;
+		case 'l':
+			if (cp[1] == 'e' && !strcmp(cp, "length"))
+			{
+				if (!(cp = *state->arglist++))
+					error(ERROR_exit(2), "string argument expected");
+				np->num = strlen(cp);
+				np->type = T_NUM;
+				goto next;
+			}
+			break;
+		case 'm':
+			if (cp[1] == 'a' && !strcmp(cp, "match"))
+			{
+				if (!(np->str = *state->arglist++))
+					error(ERROR_exit(2), "pattern argument expected");
+				np->type = T_STR;
+				return ':';
+			}
+			break;
+		case 'q':
+			if (cp[1] == 'u' && !strcmp(cp, "quote") && !(cp = *state->arglist++))
+				error(ERROR_exit(2), "string argument expected");
+			break;
+		case 's':
+			if (cp[1] == 'u' && !strcmp(cp, "substr"))
+			{
+				if (!(sp = *state->arglist++))
+					error(ERROR_exit(2), "string argument expected");
+				if (!(cp = *state->arglist++))
+					error(ERROR_exit(2), "position argument expected");
+				i = strtol(cp, &ep, 10);
+				if (*ep || --i <= 0)
+					i = -1;
+				if (!(cp = *state->arglist++))
+					error(ERROR_exit(2), "length argument expected");
+				j = strtol(cp, &ep, 10);
+				if (*ep)
+					j = -1;
+				k = strlen(sp);
+				if (i < 0 || i >= k || j < 0)
+					sp = "";
+				else
+				{
+					sp += i;
+					k -= i;
+					if (j < k)
+						sp[j] = 0;
+				}
+				np->type = T_STR;
+				np->str = sp;
+				goto next;
+			}
+			break;
+		}
 	if (*cp=='(' && cp[1]==0)
 	{
-		tok = expr_or(np);
+		tok = expr_or(state, np);
 		if (tok != ')')
 			error(ERROR_exit(2),"closing parenthesis missing");
 	}
@@ -187,27 +279,26 @@ static int getnode(Node_t *np)
 		np->str = cp;
 		if (*cp)
 		{
-			np->num = strtol(np->str,&cp,10);
-			if (*cp==0)
+			np->num = strtol(np->str,&ep,10);
+			if (!*ep)
 				np->type |= T_NUM;
 		}
 	}
-	if (!(cp = *arglist))
+ next:
+	if (!(cp = *state->arglist))
 		return 0;
-	arglist++;
+	state->arglist++;
 	for (i=0; i < sizeof(optable)/sizeof(*optable); i++)
-	{
 		if (*cp==optable[i].opname[0] && cp[1]==optable[i].opname[1])
 			return optable[i].op;
-	}
 	error(ERROR_exit(2),"%s: unknown operator argument",cp);
 	return 0;
 }
 
-static int expr_cond(Node_t *np)
+static int expr_cond(State_t* state, Node_t *np)
 {
-	register int tok = getnode(np);
-	static char buff[36];
+	register int	tok = getnode(state, np);
+
 	while (tok==':')
 	{
 		regex_t re;
@@ -215,11 +306,11 @@ static int expr_cond(Node_t *np)
 		int n;
 		Node_t rp;
 		char *cp;
-		tok = getnode(&rp);
+		tok = getnode(state, &rp);
 		if (np->type&T_STR)
 			cp = np->str;
 		else
-			sfsprintf(cp=buff,sizeof(buff),"%d",np->num);
+			sfsprintf(cp=state->buf,sizeof(state->buf),"%d",np->num);
 		np->num = 0;
 		np->type = T_NUM;
 		if (n = regcomp(&re, rp.str, REG_LEFT|REG_LENIENT))
@@ -254,14 +345,15 @@ static int expr_cond(Node_t *np)
 	return tok;
 }
 
-static int expr_mult(Node_t *np)
+static int expr_mult(State_t* state, Node_t *np)
 {
-	register int tok = expr_cond(np);
+	register int	tok = expr_cond(state, np);
+
 	while ((tok&~T_OP)==T_MULT)
 	{
 		Node_t rp;
 		int op = (tok&T_OP);
-		tok = expr_cond(&rp);
+		tok = expr_cond(state, &rp);
 		if (!numeric(np) || !numeric(&rp))
 			error(ERROR_exit(2),"non-numeric argument");
 		if (op && rp.num==0)
@@ -282,14 +374,15 @@ static int expr_mult(Node_t *np)
 	return tok;
 }
 
-static int expr_add(Node_t *np)
+static int expr_add(State_t* state, Node_t *np)
 {
-	register int tok = expr_mult(np);
+	register int	tok = expr_mult(state, np);
+
 	while ((tok&~T_OP)==T_ADD)
 	{
 		Node_t rp;
 		int op = (tok&T_OP);
-		tok = expr_mult(&rp);
+		tok = expr_mult(state, &rp);
 		if (!numeric(np) || !numeric(&rp))
 			error(ERROR_exit(2),"non-numeric argument");
 		if (op)
@@ -301,16 +394,17 @@ static int expr_add(Node_t *np)
 	return tok;
 }
 
-static int expr_cmp(Node_t *np)
+static int expr_cmp(State_t* state, Node_t *np)
 {
-	register int tok = expr_add(np);
+	register int	tok = expr_add(state, np);
+
 	while ((tok&~T_OP)==T_CMP)
 	{
 		Node_t rp;
 		register char *left,*right;
 		char buff1[36],buff2[36];
 		int op = (tok&T_OP);
-		tok = expr_add(&rp);
+		tok = expr_add(state, &rp);
 		if (numeric(&rp) && numeric(np))
 			op |= 010;
 		else
@@ -368,13 +462,13 @@ static int expr_cmp(Node_t *np)
 	return tok;
 }
 
-static int expr_and(Node_t *np)
+static int expr_and(State_t* state, Node_t *np)
 {
-	register int tok = expr_cmp(np);
+	register int	tok = expr_cmp(state, np);
 	while (tok=='&')
 	{
 		Node_t rp;
-		tok = expr_cmp(&rp);
+		tok = expr_cmp(state, &rp);
 		if ((numeric(&rp) && rp.num==0) || *rp.str==0)
 		{
 			np->num = 0;
@@ -384,13 +478,13 @@ static int expr_and(Node_t *np)
 	return tok;
 }
 
-static int expr_or(Node_t *np)
+static int expr_or(State_t* state, Node_t *np)
 {
-	register int tok = expr_and(np);
+	register int	tok = expr_and(state, np);
 	while (tok=='|')
 	{
 		Node_t rp;
-		tok = expr_and(&rp);
+		tok = expr_and(state, &rp);
 		if ((numeric(np) && np->num==0) || *np->str==0)
 			*np = rp;
 	}
@@ -400,13 +494,16 @@ static int expr_or(Node_t *np)
 int
 b_expr(int argc, char *argv[], void *context)
 {
-	Node_t node;
-	int n;
+	State_t	state;
+	Node_t	node;
+	int	n;
+
 	NoP(argc);
 	cmdinit(argv,context, ERROR_CATALOG, 0);
+	state.standard = !strcmp(astconf("CONFORMANCE", NiL, NiL), "standard");
 #if 0
-	if (strcmp(astconf("CONFORMANCE", NiL, NiL), "standard"))
-		arglist = argv+1;
+	if (state.standard)
+		state.arglist = argv+1;
 	else
 #endif
 	{
@@ -427,9 +524,9 @@ b_expr(int argc, char *argv[], void *context)
 		}
 		if (error_info.errors)
 			error(ERROR_usage(2),"%s",optusage((char*)0));
-		arglist = argv+opt_info.index;
+		state.arglist = argv+opt_info.index;
 	}
-	if (expr_or(&node))
+	if (expr_or(&state, &node))
 		error(ERROR_exit(2),"syntax error");
 	if (node.type&T_STR)
 	{

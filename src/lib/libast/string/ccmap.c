@@ -494,10 +494,22 @@ _ccmap(int i, int o)
 	register int		n;
 	int			op;
 
-	if (o == 0 || CCCONVERT(i))
+	if (CCCONVERT(i))
 	{
 		o = CCOUT(i);
 		i = CCIN(i);
+	}
+	else if (CCCONVERT(o))
+	{
+		i = CCIN(o);
+		o = CCOUT(o);
+	}
+	else
+	{
+		if (i == 0)
+			i = CC_NATIVE;
+		if (o == 0)
+			o = CC_NATIVE;
 	}
 	if (i == o || i < 1 || i > MAPS || o < 1 || o > MAPS)
 		return 0;

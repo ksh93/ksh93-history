@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 4.3 2003-07-17
+info mam static 00000 1994-07-17 make (AT&T Research) 4.3 2003-09-19
 setv INSTALLROOT ../../..
 setv PACKAGE_ast ${INSTALLROOT}
 setv PACKAGE_ast_INCLUDE ${PACKAGE_ast}/include/ast
@@ -229,8 +229,7 @@ make cosync.c
 make FEATURE/nfsd implicit
 prev coshell.req
 bind -last
-bind -lm dontcare
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} ${mam_libm} ${mam_libast} ${mam_libm} : def nfsd
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}    ${LDFLAGS} '  ref ${mam_cc_L+-L${PACKAGE_ast_LIB}} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} ${mam_libast} : def nfsd
 done FEATURE/nfsd generated
 prev ../../../include/ast/ls.h implicit
 prev colib.h implicit
@@ -292,22 +291,19 @@ exec - 		;;
 exec - 	*)	{
 exec - 		i=`(read x; echo $x) < ignore.sh`
 exec - 		case $i in
-exec - 		'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo $i ;;
+exec - 		'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo "$i" ;;
 exec - 		esac
-exec - 		echo 
-exec - 		cat ignore.sh
+exec - 		cat - ignore.sh <<'!'
+exec - 
+exec - !
 exec - 		} > ignore
 exec - 		;;
 exec - 	esac
 exec - 	;;
-exec - *)	{
-exec - 	echo '${mam_cc_SHELLMAGIC}'
-exec - 	case 0 in
-exec - 	0)	;;
-exec - 	*)	echo  ;;
-exec - 	esac
-exec - 	cat ignore.sh
-exec - 	} > ignore
+exec - *)	cat - ignore.sh > ignore <<'!'
+exec - ${mam_cc_SHELLMAGIC}
+exec - 
+exec - !
 exec - 	;;
 exec - esac
 exec - chmod u+w,+x ignore
@@ -331,22 +327,19 @@ exec - 		;;
 exec - 	*)	{
 exec - 		i=`(read x; echo $x) < silent.sh`
 exec - 		case $i in
-exec - 		'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo $i ;;
+exec - 		'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo "$i" ;;
 exec - 		esac
-exec - 		echo 
-exec - 		cat silent.sh
+exec - 		cat - silent.sh <<'!'
+exec - 
+exec - !
 exec - 		} > silent
 exec - 		;;
 exec - 	esac
 exec - 	;;
-exec - *)	{
-exec - 	echo '${mam_cc_SHELLMAGIC}'
-exec - 	case 0 in
-exec - 	0)	;;
-exec - 	*)	echo  ;;
-exec - 	esac
-exec - 	cat silent.sh
-exec - 	} > silent
+exec - *)	cat - silent.sh > silent <<'!'
+exec - ${mam_cc_SHELLMAGIC}
+exec - 
+exec - !
 exec - 	;;
 exec - esac
 exec - chmod u+w,+x silent

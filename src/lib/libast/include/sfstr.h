@@ -41,6 +41,7 @@
 #define sfstrclose(f)	sfclose(f)
 
 #define sfstrtell(f)	((f)->_next - (f)->_data)
+#define sfstrpend(f)	((f)->_endb - (f)->_next)
 #define sfstrrel(f,p)	((p) == (0) ? (char*)(f)->_next : \
 			 ((f)->_next += (p), \
 			  ((f)->_next >= (f)->_data && (f)->_next  <= (f)->_endb) ? \

@@ -39,7 +39,11 @@
  */
 
 #define S2F_function	_sfdscan
+#if _PACKAGE_ast
 #define S2F_static	0
+#else
+#define S2F_static	1
+#endif
 #define S2F_type	2
 #define S2F_scan	1
 

@@ -31,7 +31,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: fold (AT&T Labs Research) 1999-04-10 $\n]"
+"[-?\n@(#)$Id: fold (AT&T Labs Research) 2003-08-11 $\n]"
 USAGE_LICENSE
 "[+NAME?fold - fold lines]"
 "[+DESCRIPTION?\bfold\b is a filter that folds lines from its input, "
@@ -59,6 +59,7 @@ USAGE_LICENSE
 
 "[b:bytes?Count bytes rather than columns so that each carriage-return, "
 	"backspace, and tab counts as 1.]"
+"[d:delimiter?Break at \adelim\a boundaries.]:[delim]"
 "[s:spaces?Break at word boundaries.  If the line contains any blanks, "
 	"(spaces or tabs), within the first \awidth\a column positions or "
 	"bytes, the line is broken after the last blank meeting the "
@@ -93,11 +94,18 @@ static char cols[1<<CHAR_BIT];
 static void fold(Sfio_t *in, Sfio_t *out, register int width)
 {
 	register char *cp, *first;
-	register int n, col=0;
+	register int n, col=0, x=0;
 	register char *last_space=0;
 	cols[0] = 0;
-	while(cp  = sfgetr(in,'\n',0))
+	for (;;)
 	{
+		if (!(cp  = sfgetr(in,'\n',0)))
+		{
+			if (!(cp = sfgetr(in,'\n',-1)) || (n = sfvalue(in)) <= 0)
+				break;
+			x = cp[--n];
+			cp[n] = '\n';
+		}
 		/* special case -b since no column adjustment is needed */ 
 		if(cols['\b']==0 && (n=sfvalue(in))<=width)
 		{
@@ -107,7 +115,7 @@ static void fold(Sfio_t *in, Sfio_t *out, register int width)
 		first = cp;
 		col = 0;
 		last_space = 0;
-		while(1)
+		for(;;)
 		{
 			while((n=cols[*(unsigned char*)cp++])==0);
 			while((cp-first) > (width-col))
@@ -123,17 +131,19 @@ static void fold(Sfio_t *in, Sfio_t *out, register int width)
 				if(cp>first+1 || (n!=T_NL && n!=T_BS))
 					sfputc(out,'\n');
 			}
-			if(n==T_NL)
-				break;
 			switch(n)
 			{
+			    case T_NL:
+				if(x)
+					*(cp-1) = x;
+				break;
 			    case T_RET:
 				col = 0;
-				break;
+				continue;
 			    case T_BS:
 				if((cp+(--col)-first)>0) 
 					col--;
-				break;
+				continue;
 			    case T_TAB:
 				n = (TABSIZE-1) - (cp+col-1-first)&(TABSIZE-1);
 				col +=n;
@@ -148,16 +158,17 @@ static void fold(Sfio_t *in, Sfio_t *out, register int width)
 				}
 				if(cols[' '])
 					last_space = cp;
-				break;
+				continue;
 			    case T_SP:
 				last_space = cp;
-				break;
+				continue;
+			    default:
+				continue;
 			}
+			break;
 		}
 		sfwrite(out,first,cp-first);
 	}
-	if(cp = sfgetr(in,'\n',-1))
-		sfwrite(out,cp,sfvalue(in));
 }
 
 int
@@ -172,26 +183,36 @@ b_fold(int argc, char *argv[], void* context)
 	cols['\b'] = T_BS;
 	cols['\n'] = T_NL;
 	cols['\r'] = T_RET;
-	while (n = optget(argv, usage)) switch (n)
+	for (;;)
 	{
-	    case 'b':
-		cols['\r'] = cols['\b'] = 0;
-		cols['\t'] = cols[' '];
-		break;
-	    case 's':
-		cols[' '] = T_SP;
-		if(cols['\t']==0)
-			cols['\t'] = T_SP;
-		break;
-	    case 'w':
-		if((width =  opt_info.num) <= 0)
-			error(2, "%d: width must be positive", opt_info.num);
-		break;
-	    case ':':
-		error(2, "%s", opt_info.arg);
-		break;
-	    case '?':
-		error(ERROR_usage(2), "%s", opt_info.arg);
+		switch (optget(argv, usage))
+		{
+		case 0:
+			break;
+		case 'b':
+			cols['\r'] = cols['\b'] = 0;
+			cols['\t'] = cols[' '];
+			continue;
+		case 'd':
+			if (n = *opt_info.arg)
+				cols[n] = T_SP;
+			continue;
+		case 's':
+			cols[' '] = T_SP;
+			if(cols['\t']==0)
+				cols['\t'] = T_SP;
+			continue;
+		case 'w':
+			if ((width = opt_info.num) <= 0)
+				error(2, "%d: width must be positive", opt_info.num);
+			continue;
+		case ':':
+			error(2, "%s", opt_info.arg);
+			continue;
+		case '?':
+			error(ERROR_usage(2), "%s", opt_info.arg);
+			continue;
+		}
 		break;
 	}
 	argv += opt_info.index;
@@ -217,4 +238,3 @@ b_fold(int argc, char *argv[], void* context)
 	while(cp= *argv++);
 	return(error_info.errors);
 }
-

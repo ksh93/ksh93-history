@@ -134,7 +134,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	/* regex */ \
 	reglib.h regalloc.c regclass.c regcoll.c regcomp.c \
 	regerror.c regexec.c regfatal.c reginit.c regnexec.c \
-	regsubcomp.c regsubexec.c regsub.c regrecord.c regrexec.c \
+	regsubcomp.c regsubexec.c regsub.c regrecord.c regrexec.c regstat.c \
 	/* cdt */ \
 	dthdr.h dtclose.c dtdisc.c dtextract.c dtflatten.c dthash.c \
 	dtlist.c dtmethod.c dtnew.c dtopen.c dtrenew.c dtrestore.c dtsize.c \
@@ -166,6 +166,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	putc.c putchar.c puts.c putw.c rewind.c scanf.c \
 	setbuf.c setbuffer.c setlinebuf.c setvbuf.c \
 	snprintf.c sprintf.c sscanf.c \
+	asprintf.c vasprintf.c \
 	stdio/tmpfile.c ungetc.c vfprintf.c vfscanf.c vprintf.c \
 	vscanf.c vsnprintf.c vsprintf.c vsscanf.c \
 	_doprnt.c _doscan.c _filbuf.c _flsbuf.c _stdfun.c \
@@ -326,8 +327,8 @@ atmain.o : atmain.C
 
 .check.lib : .AFTER astmath.exe
 	if	test -x $(~)
-	then	echo ' -lm' >> $(<<)
-	else	touch $(<<)
+	then	touch $(<<)
+	else	echo ' -lm' >> $(<<)
 	fi
 
 astmath.exe : .DONTCARE astmath.c

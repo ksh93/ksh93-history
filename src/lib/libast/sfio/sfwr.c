@@ -214,8 +214,8 @@ reg Sfdisc_t*	disc;
 				errno = oerrno;
 
 			if(w > 0)
-			{	if(!(f->bits&SF_DCDOWN))
-				{	if(f->flags&(SF_APPENDWR|SF_PUBLIC) )
+			{	if(!(f->bits&SF_DCDOWN) )
+				{	if((f->flags&(SF_APPENDWR|SF_PUBLIC)) && f->extent >= 0 )
 						f->here = SFSK(f,(Sfoff_t)0,SEEK_CUR,dc);
 					else	f->here += w;
 					if(f->extent >= 0 && f->here > f->extent)

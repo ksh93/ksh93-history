@@ -34,7 +34,7 @@
 
 #include <ast_common.h>
 
-#define REG_VERSION	20020509L
+#define REG_VERSION	20030916L
 
 /* regcomp flags */
 
@@ -54,6 +54,7 @@
 #define REG_RIGHT	0x00001000	/* implicit ...$		*/
 #define REG_LENIENT	0x00002000	/* look the other way		*/
 #define REG_ESCAPE	0x00004000	/* \ escapes delimiter in [...]	*/
+#define REG_FIRST	0x00008000	/* first match found will do	*/
 #define REG_MULTIPLE	0x00010000	/* multiple \n sep patterns	*/
 #define REG_DISCIPLINE	0x00020000	/* regex_t.re_disc is valid	*/
 #define REG_SPAN	0x00040000	/* . matches \n			*/
@@ -119,15 +120,15 @@
 #define REG_EDELIM	19		/* invalid or omitted delimiter	*/
 #define REG_PANIC	20		/* unrecoverable internal error	*/
 
-struct regex_s;
-struct regdisc_s;
+struct regex_s; typedef struct regex_s regex_t;
+struct regdisc_s; typedef struct regdisc_s regdisc_t;
 
 typedef int (*regclass_t)(int);
 typedef _ast_int4_t regflags_t;
 typedef int regoff_t;
-typedef int (*regerror_t)(const struct regex_s*, struct regdisc_s*, int, ...);
-typedef void* (*regcomp_t)(const struct regex_s*, const char*, size_t, struct regdisc_s*);
-typedef int (*regexec_t)(const struct regex_s*, void*, const char*, size_t, const char*, size_t, char**, struct regdisc_s*);
+typedef int (*regerror_t)(const regex_t*, regdisc_t*, int, ...);
+typedef void* (*regcomp_t)(const regex_t*, const char*, size_t, regdisc_t*);
+typedef int (*regexec_t)(const regex_t*, void*, const char*, size_t, const char*, size_t, char**, regdisc_t*);
 typedef void* (*regresize_t)(void*, void*, size_t);
 typedef int (*regrecord_t)(void*, const char*, size_t);
 
@@ -148,7 +149,7 @@ typedef struct regsub_s
 #endif
 } regsub_t;
 
-typedef struct regdisc_s
+struct regdisc_s
 {
 	unsigned long	re_version;	/* discipline version		*/
 	regflags_t	re_flags;	/* discipline flags		*/
@@ -158,16 +159,25 @@ typedef struct regdisc_s
 	void*		re_resizehandle;/* resizef handle		*/
 	regcomp_t	re_compf;	/* (?{...}) compile function	*/
 	regexec_t	re_execf;	/* (?{...}) execute function	*/
-} regdisc_t;
+	unsigned char*	re_map;		/* external to native ccode map	*/
+};
 
-typedef struct regex_s
+typedef struct regstat_s
+{
+	regflags_t	re_flags;	/* REG_LEFT|REG_RIGHT		*/
+	ssize_t		re_min;		/* min anchored match length	*/
+	ssize_t		re_max;		/* max anchored match length	*/
+	ssize_t		re_record;	/* regreexec() match length	*/
+} regstat_t;
+
+struct regex_s
 {
 	size_t		re_nsub;	/* number of subexpressions	*/
 	struct reglib_s*re_info;	/* library private info		*/
 	size_t		re_npat;	/* number of pattern chars used	*/
 	regdisc_t*	re_disc;	/* REG_DISCIPLINE discipline	*/
 	regsub_t*	re_sub;		/* regsubcomp() data		*/
-} regex_t;
+};
 
 #define reginit(disc)	(memset(disc,0,sizeof(*disc)),disc->re_version=REG_VERSION)
 
@@ -187,18 +197,21 @@ extern void	regfree(regex_t*);
 #define _REG_fatal	1	/* have regfatal(), regfatalpat()	*/
 #define _REG_nexec	1	/* have regnexec()			*/
 #define _REG_rexec	1	/* have regrexec(), regrecord()		*/
+#define _REG_stat	1	/* have regstat()			*/
 #define _REG_subcomp	1	/* have regsubcomp(), regsubexec()	*/
 
-extern void	regalloc(void*, regresize_t, regflags_t); /*OBSOLETE*/
 extern regclass_t regclass(const char*, char**);
+extern int	regaddclass(const char*, regclass_t);
 extern int	regcollate(const char*, char**, char*, int);
 extern int	regcomb(regex_t*, regex_t*);
 extern int	regdup(regex_t*, regex_t*);
+extern int	regncomp(regex_t*, const char*, size_t, regflags_t);
 extern int	regnexec(const regex_t*, const char*, size_t, size_t, regmatch_t*, regflags_t);
 extern void	regfatal(regex_t*, int, int);
 extern void	regfatalpat(regex_t*, int, int, const char*);
 extern int	regrecord(const regex_t*);
-extern int	regrexec(const regex_t*, const char*, size_t, size_t, regmatch_t*, regflags_t, int, void*, regrecord_t);
+extern int	regrexec(const regex_t*, const char*, size_t, size_t, regmatch_t*, regflags_t, regflags_t, void*, regrecord_t);
+extern regstat_t* regstat(const regex_t*);
 
 extern int	regsubcomp(regex_t*, const char*, const regflags_t*, int, regflags_t);
 extern int	regsubexec(const regex_t*, const char*, size_t, regmatch_t*);
@@ -211,6 +224,7 @@ extern void	regsubfree(regex_t*);
 struct _sfio_s;
 #endif
 
+extern void	regalloc(void*, regresize_t, regflags_t);
 extern int	regsub(const regex_t*, struct _sfio_s*, const char*, const char*, size_t, regmatch_t*, regflags_t);
 
 #undef	extern

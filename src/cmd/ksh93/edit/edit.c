@@ -831,7 +831,11 @@ static int putstack(Edit_t *ep,char string[], register int nbyte, int type)
 		{
 		again:
 			if((c=mbchar(p)) >=0)
+			{
 				p--;	/* incremented below */
+				if(type)
+					c = -c;
+			}
 #ifdef EILSEQ
 			else if(errno == EILSEQ)
 				errno = 0;

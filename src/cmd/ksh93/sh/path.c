@@ -104,39 +104,49 @@ static pid_t path_xargs(const char *path, char *argv[],char *const envp[], int s
 {
 	static long argmax;
 	register char *cp, **av, **xv;
+	char **avlast= &argv[sh.xargmax], **saveargs=0;
 	char *const *ev;
 	long size, left;
-	int n,exitval=0;
+	int nlast=1,n,exitval=0;
 	pid_t pid;
 	if(!argmax)
 		argmax = sysconf(_SC_ARG_MAX);
-	if(sh.xargs < 0)
+	if(sh.xargmin < 0)
 		return((pid_t)-1);
 	size = argmax-1024;
 	for(ev=envp; cp= *ev; ev++)
 		size -= strlen(cp)-1;
-	for(av=argv; (cp= *av) && av< &argv[sh.xargs]; av++)  
+	for(av=argv; (cp= *av) && av< &argv[sh.xargmin]; av++)  
 		size -= strlen(cp)-1;
-	av =  &argv[sh.xargs];
+	for(av=avlast; cp= *av; av++,nlast++)  
+		size -= strlen(cp)-1;
+	av =  &argv[sh.xargmin];
 	if(!spawn)
 		job_clear();
 	sh.exitval = 0;
-	while(*av)
+	while(av<avlast)
 	{
-		for(xv=av,left=size; left>0 && *av;)
+		for(xv=av,left=size; left>0 && av<avlast;)
 			left -= strlen(*av++)+1;
-		if(xv==&argv[sh.xargs])
+		/* leave at least two for last */
+		if(left<0 && (avlast-av)<2)
+			av--;
+		if(xv==&argv[sh.xargmin])
 		{
-			cp = *av;
-			*av = 0;
+			n = nlast*sizeof(char*);
+			saveargs = (char**)malloc(n);
+			memcpy((void*)saveargs, (void*)av, n);
+			memcpy((void*)av,(void*)avlast,n);
 		}
 		else
 		{
-			for(n=sh.xargs; xv < av; xv++)
+			for(n=sh.xargmin; xv < av; xv++)
 				argv[n++] = *xv;
+			for(xv=avlast; cp=  *xv; xv++)
+				argv[n++] = cp;
 			argv[n] = 0;
 		}
-		if(cp || *av || (exitval && !spawn))
+		if(saveargs || av<avlast || (exitval && !spawn))
 		{
 			if((pid=spawnveg(path,argv,envp,0)) < 0)
 				return(-1);
@@ -144,9 +154,12 @@ static pid_t path_xargs(const char *path, char *argv[],char *const envp[], int s
 			job_wait(pid);
 			if(sh.exitval>exitval)
 				exitval = sh.exitval;
-			if(cp)
-				*av = cp;
-			cp = 0;
+			if(saveargs)
+			{
+				memcpy((void*)av,saveargs,n);
+				free((void*)saveargs);
+				saveargs = 0;
+			}
 		}
 		else if(spawn)
 		{
@@ -899,7 +912,9 @@ retry:
 #endif
 		errno = ENOEXEC;
 		if(spawn)
+		{
 			return(-1);
+		}
 		exscript(shp,path,argv,envp);
 #ifndef apollo
 	    case EACCES:
@@ -933,7 +948,7 @@ retry:
 #endif /* EMLINK */
 		return(-1);
 	    case E2BIG:
-		if(sh.xargs)
+		if(sh.xargmin)
 		{
 			pid = path_xargs(opath, &argv[0] ,envp,spawn);
 			if(pid<0)

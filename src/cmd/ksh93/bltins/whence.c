@@ -60,6 +60,8 @@ int	b_command(register int argc,char *argv[],void *extra)
 	while((n = optget(argv,sh_optcommand))) switch(n)
 	{
 	    case 'p':
+		if(sh_isoption(SH_RESTRICTED))
+			 errormsg(SH_DICT,ERROR_exit(1),e_restricted,"-p");
 		sh_onstate(SH_DEFPATH);
 		break;
 	    case 'v':

@@ -70,7 +70,10 @@ tst	lib_poll_fd_1 note{ fd is first arg to poll() }end execute{
 		fd.fd = rw[0];
 		fd.events = POLLIN;
 		fd.revents = 0;
-		return poll(&fd, 1, 0) < 0;
+		if (poll(&fd, 1, 0) < 0 || fd.revents != 0) return 1;
+		if (write(rw[1], "x", 1) != 1) return 1;
+		if (poll(&fd, 1, 0) < 0 || fd.revents == 0) return 1;
+		return 0;
 	}
 }end
 
@@ -87,14 +90,14 @@ tst	lib_poll_fd_2 note{ fd is second arg to poll() }end execute{
 		fd.events = POLLIN;
 		fd.revents = 0;
 		return poll(1, &fd, 0) < 0;
+		if (poll(1, &fd, 0) < 0 || fd.revents != 0) return 1;
+		if (write(rw[1], "x", 1) != 1) return 1;
+		if (poll(1, &fd, 0) < 0 || fd.revents == 0) return 1;
+		return 0;
 	}
 }end
 
-cat{
-	#if _lib_poll_fd_1 || _lib_poll_fd_2
-	#define _lib_poll	1
-	#endif
-}end
+exp	_lib_poll	_lib_poll_fd_1||_lib_poll_fd_2
 
 tst	lib_poll_notimer note{ poll with no fds ignores timeout }end execute{
 	#include <sys/types.h>
@@ -297,12 +300,32 @@ tst	stream_peek note{ ioctl(I_PEEK) works }end link{
 	}
 }end
 
-tst	socket_peek note{ recv(MSG_PEEK) works }end link{
+tst	socket_peek note{ recv(MSG_PEEK) works }end execute{
+	#include <unistd.h>
 	#include <sys/types.h>
 	#include <sys/socket.h>
 	main()
-	{	char	buf[128];
-		recv(0,buf,sizeof(buf),MSG_PEEK);
+	{	
+		int		i;
+		int		fds[2];
+		char		buf[128];
+
+		static char	msg[] = "abcd";
+
+		if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds))
+			return 1;
+		if (write(fds[1], msg, sizeof(msg)) != sizeof(msg))
+				return 1;
+		if (recv(fds[0], buf, sizeof(buf), MSG_PEEK) != sizeof(msg))
+			return 1;
+		for (i = 0; i < sizeof(msg); i++)
+			if (buf[i] != msg[i])
+				return 1;
+		if (read(fds[0], buf, sizeof(msg)) != sizeof(msg))
+			return 1;
+		for (i = 0; i < sizeof(msg); i++)
+			if (buf[i] != msg[i])
+				return 1;
 		return 0;
 	}
 }end
@@ -457,7 +480,9 @@ tst	- output{
 	#endif
 
 	#if _lib_spawnveg || _lib_posix_spawn || _lib_spawn_mode || _lib_spawn && _hdr_spawn && _mem_pgroup_inheritance || _lib_vfork && _real_vfork
+		printf("#if !_AST_no_spawnveg\n");
 		printf("#define _use_spawnveg	1\n");
+		printf("#endif\n");
 		printf("\n");
 	#endif
 

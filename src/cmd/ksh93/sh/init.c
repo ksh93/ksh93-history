@@ -867,6 +867,8 @@ Shell_t *sh_init(register int argc,register char *argv[], void(*userinit)(int))
 		sh.lim.child_max = CHILD_MAX;
 	if(sh.lim.open_max <0)
 		sh.lim.open_max = OPEN_MAX;
+	if(sh.lim.open_max > (SHRT_MAX-2))
+		sh.lim.open_max = SHRT_MAX-2;
 	if(sh.lim.clk_tck <=0)
 		sh.lim.clk_tck = CLK_TCK;
 #if SHOPT_FS_3D

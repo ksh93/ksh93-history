@@ -5,8 +5,7 @@ tst	lib_2_timeofday note{ 2 arg settimeofday() }end link{
 	main()
 	{
 		struct timeval tv;
-		struct timezone tz;
-		return settimeofday(&tv, &tz);
+		return settimeofday(&tv, (void*)0);
 	}
 }end
 tst	lib_1_timeofday note{ 1 arg settimeofday() }end link{

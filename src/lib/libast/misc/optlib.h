@@ -80,7 +80,6 @@ typedef struct Optstr_s
 {
 	char*			argv[3];
 	char*			str;
-	int			colon;
 } Optstr_t;
 
 typedef struct Optstate_s
@@ -93,7 +92,6 @@ typedef struct Optstate_s
 	char*		strv[3];	/* optstr() argv		*/
 	char*		str;		/* optstr() string		*/
 	Sfio_t*		strp;		/* optstr() stream		*/
-	int		colon;		/* optstr : state		*/
 	int		force;		/* force this style		*/
 	int		pindex;		/* prev index for backup	*/
 	int		poffset;	/* prev offset for backup	*/
@@ -110,8 +108,7 @@ typedef struct Optstate_s
 } Optstate_t;
 
 #define _OPT_PRIVATE_ \
-	_ast_intmax_t	number; \
-	char            pad[3*sizeof(void*)]; \
+	char            pad[2*sizeof(void*)]; \
 	Optstate_t*	state;
 
 #include <error.h>

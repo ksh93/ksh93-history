@@ -29,7 +29,7 @@
  * AT&T Bell Laboratories
  *
  * convert \x character constants in s in place
- * the length of the converted s is returned (may have imbedded \0's)
+ * the length of the converted s is returned (may have embedded \0's)
  */
 
 #include <ast.h>

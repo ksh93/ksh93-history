@@ -1818,11 +1818,8 @@ Sfdouble_t nv_getnum(register Namval_t *np)
 	}
 	else if((str=nv_getval(np)) && *str!=0)
 	{
-	     	if(nv_isattr (np, NV_ZFILL))
-		{
-			while(*str=='0')
-				str++;
-		}
+		while(*str=='0')
+			str++;
 		r = sh_arith(str);
 	}
 	return(r);

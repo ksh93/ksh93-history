@@ -24,7 +24,7 @@
 *                                                                  *
 *******************************************************************/
 #include	"sfhdr.h"
-static char*	Version = "\n@(#)sfio (AT&T Labs - kpv) 2002-11-15\0\n";
+static char*	Version = "\n@(#)sfio (AT&T Labs - kpv) 2003-05-31\0\n";
 
 /*	Functions to set a given stream to some desired mode
 **
@@ -46,6 +46,8 @@ static char*	Version = "\n@(#)sfio (AT&T Labs - kpv) 2002-11-15\0\n";
 **		05/31/2002 (multi-byte handling in sfvprintf/vscanf)
 **		09/06/2002 (SF_IOINTR flag)
 **		11/15/2002 (%#c for sfvprintf)
+**		05/31/2003 (sfsetbuf(f,f,align_size) to set alignment for data)
+**			   (%I1d is fixed to handle "signed char" correctly)
 */
 
 /* the below is for protecting the application from SIGPIPE */

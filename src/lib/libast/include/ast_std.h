@@ -140,8 +140,8 @@ __STDPP__directive pragma pp:hide execve execvp execvpe
 __STDPP__directive pragma pp:hide getcwd getopt getsubopt putenv realpath
 __STDPP__directive pragma pp:hide resolvepath setenv setpgrp sleep spawnveg
 __STDPP__directive pragma pp:hide strtol strtoul strtoll strtoull
-__STDPP__directive pragma pp:hide strtod strtold
-__STDPP__directive pragma pp:hide strdup unsetenv vfprintf vprintf vsprintf
+__STDPP__directive pragma pp:hide strtod strtold strdup strmode
+__STDPP__directive pragma pp:hide unsetenv vfprintf vprintf vsprintf
 #else
 #if !_std_def_calloc
 #define calloc		______calloc
@@ -191,6 +191,7 @@ __STDPP__directive pragma pp:hide strdup unsetenv vfprintf vprintf vsprintf
 #define strtod		______strtod
 #define strtold		______strtold
 #define strdup		______strdup
+#define strmode		______strmode
 #define unsetenv	______unsetenv
 #define vfprintf	______vfprintf
 #define vprintf		______vprintf
@@ -275,8 +276,8 @@ __STDPP__directive pragma pp:nohide execve execvp execvpe
 __STDPP__directive pragma pp:nohide getcwd getopt getsubopt putenv realpath
 __STDPP__directive pragma pp:nohide resolvepath setenv setpgrp sleep spawnveg
 __STDPP__directive pragma pp:nohide strtol strtoul strtoll strtoull
-__STDPP__directive pragma pp:nohide strtod strtold
-__STDPP__directive pragma pp:nohide strdup unsetenv vfprintf vprintf vsprintf
+__STDPP__directive pragma pp:nohide strtod strtold strdup strmode
+__STDPP__directive pragma pp:nohide unsetenv vfprintf vprintf vsprintf
 #else
 #if !_std_def_calloc
 #undef	calloc	
@@ -326,6 +327,7 @@ __STDPP__directive pragma pp:nohide strdup unsetenv vfprintf vprintf vsprintf
 #undef	strtod
 #undef	strtold
 #undef	strdup
+#undef	strmode
 #undef	unsetenv
 #undef	vfprintf
 #undef	vprintf

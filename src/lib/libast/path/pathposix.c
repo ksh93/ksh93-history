@@ -94,6 +94,25 @@ pathposix(const char* path, char* buf, size_t siz)
 
 #else
 
+#if __INTERIX
+
+#include <interix/interix.h>
+
+size_t
+pathposix(const char* path, char *buf, size_t siz)
+{
+	static const char	pfx[] = "/dev/fs";
+
+	*buf = 0;
+	if (!strncasecmp(path, pfx, sizeof(pfx) - 1))
+		strlcpy(buf, path, siz);
+	else
+		winpath2unix(path, PATH_NONSTRICT, buf, siz);
+	return strlen(buf);
+}
+
+#else
+
 size_t
 pathposix(const char* path, char* buf, size_t siz)
 {
@@ -103,6 +122,8 @@ pathposix(const char* path, char* buf, size_t siz)
 		memcpy(buf, path, n + 1);
 	return n;
 }
+
+#endif
 
 #endif
 

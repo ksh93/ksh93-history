@@ -1,6 +1,7 @@
 hdr	float,floatingpoint,math,values
 sys	filio,ioctl
 lib	qfrexp,qldexp
+key	signed
 
 tst	tmp_rmfail note{ open files cannot be removed }end execute{
 	#include "iffeio.h"

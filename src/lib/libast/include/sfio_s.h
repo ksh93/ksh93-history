@@ -30,7 +30,7 @@
  * sfio file structure used by sfio and the stdio source compatibility library
  */
 
-#if !defined(_SFHDR_H) && defined(_SFIO_H) && _SFIO_VERSION < 20020214L
+#if !defined(_SFHDR_H) && defined(_SFIO_H) && SFIO_VERSION < 20020214L
 #define	_data		data
 #define	_endb		endb
 #define	_next		next

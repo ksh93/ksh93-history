@@ -27,7 +27,7 @@
 
 #include <ast.h>
 
-#if _lib_memccpy
+#if _lib_memccpy && !_UWIN
 
 NoN(memccpy)
 

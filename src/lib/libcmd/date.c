@@ -108,7 +108,7 @@ USAGE_LICENSE
 "		[+j?1-offset Julian date]"
 "		[+J?0-offset Julian date]"
 "		[+k?\bdate\b(1) style date]"
-"		[+K?date as \ayyyy-mm-dd+HH:MM:SS\a]"
+"		[+K?all numeric date; equivalent to \b%Y-%m-%d+%H:%M:%S\b]"
 "		[+l?\bls\b(1) \b-l\b date; equivalent to \b%Q/%g/%G/\b]"
 "		[+m?month number]"
 "		[+M?minutes]"

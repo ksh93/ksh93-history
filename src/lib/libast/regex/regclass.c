@@ -30,15 +30,20 @@
 
 #include "reglib.h"
 
-typedef struct Ctype_s
+struct Ctype_s; typedef struct Ctype_s Ctype_t;
+
+struct Ctype_s
 {
 	const char*	name;
 	size_t		size;
 	regclass_t	ctype;
+	Ctype_t*	next;
 #if _lib_wctype
 	wctype_t	wtype;
 #endif
-} Ctype_t;
+};
+
+static Ctype_t*		ctypes;
 
 #define CTYPES		12
 #if _lib_wctype
@@ -153,8 +158,8 @@ static int Is_wc_8(int c) { return iswctype(c, ctype[CTYPES+7].wtype); }
 regclass_t
 regclass(const char* s, char** e)
 {
+	register Ctype_t*	cp;
 	register int		c;
-	register int		i;
 	register size_t		n;
 	register const char*	t;
 
@@ -164,29 +169,61 @@ regclass(const char* s, char** e)
 		if (*t != c)
 			return 0;
 		n = t - s;
-		for (i = 0; i < elementsof(ctype); i++)
+		for (cp = ctypes; cp; cp = cp->next)
+			if (n == cp->size && strneq(s, cp->name, n))
+				goto found;
+		for (cp = ctype; cp < &ctype[elementsof(ctype)]; cp++)
 		{
 #if _lib_wctype
-			if (!ctype[i].size && (ctype[i].name = (const char*)memdup(s, n + 1)))
+			if (!cp->size && (cp->name = (const char*)memdup(s, n + 1)))
 			{
-				*((char*)ctype[i].name + n) = 0;
+				*((char*)cp->name + n) = 0;
 				/* mvs.390 needs the (char*) cast -- barf */
-				if (!(ctype[i].wtype = wctype((char*)ctype[i].name)))
+				if (!(cp->wtype = wctype((char*)cp->name)))
 				{
-					free((char*)ctype[i].name);
+					free((char*)cp->name);
 					return 0;
 				}
-				ctype[i].size = n;
+				cp->size = n;
+				goto found;
 			}
 #endif
-			if (n == ctype[i].size && strneq(s, ctype[i].name, n))
-			{
-				if (e)
-					*e = (char*)t + 2;
-				return ctype[i].ctype;
-			}
+			if (n == cp->size && strneq(s, cp->name, n))
+				goto found;
 		}
 	}
+	return 0;
+ found:
+	if (e)
+		*e = (char*)t + 2;
+	return cp->ctype;
+}
+
+/*
+ * associate the ctype function fun with name
+ */
+
+int
+regaddclass(const char* name, regclass_t fun)
+{
+	register Ctype_t*	cp;
+	register Ctype_t*	np;
+	register size_t		n;
+
+	n = strlen(name);
+	for (cp = ctypes; cp; cp = cp->next)
+		if (cp->size == n && strneq(name, cp->name, n))
+		{
+			cp->ctype = fun;
+			return 0;
+		}
+	if (!(np = newof(0, Ctype_t, 1, n + 1)))
+		return REG_ESPACE;
+	np->size = n;
+	np->name = strcpy((char*)(np + 1), name);
+	np->ctype = fun;
+	np->next = ctypes;
+	ctypes = np;
 	return 0;
 }
 

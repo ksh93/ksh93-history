@@ -1,6 +1,6 @@
 set	prototyped
 hdr	float,limits,math,values
-lib	frexp,frexpl,ldexp,ldexpl
+lib	frexp,frexpl,ldexp,ldexpl -lm
 
 tst	ast_no_um2fm note{ no unsigned intmax => floatmax cast }end nolink{
 	#include "FEATURE/common"

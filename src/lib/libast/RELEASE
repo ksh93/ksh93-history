@@ -1,3 +1,30 @@
+03-09-22 regex.h,regcomp.c: add regncomp()
+	 regclass.c: fix for loop dangling ; in regaddclass()
+03-09-20 sftable.c,sfvprintf.c: fix SFFMT_CHAR handling to match extf api
+03-09-19 sfmode.c: update release to kpv's
+03-09-16 regnexec.c: exec time REG_LEFT => don't advance past initial position
+	 regclass.c: add regaddclass() for user defined [:class:]
+	 regexec.h: REG_VERSION_N2X, add redisc_t {re_map} ccode map
+	 regstat.c: add regstat_t
+03-09-11 optget.c: --n:=v sets opt_info.assign=':', opt_info.number enabled
+03-09-09 disc/sfkeyprintf.c: *pn on lookup is arg separator; lookup "" arg too
+03-09-05 optget.c: [f:l*?] preserves user long name past '*' in opt_info.name[]
+03-09-03 sfstr.h: add sfstrpend() for #pending bytes in read buffer
+03-08-25 regex: add REG_FIRST, optimize bm
+	 features/lib: _AST_no_spawnveg==1 falls back to fork/exec
+03-08-22 features/stdio,stdio/asprintf.c,stdio/vasprintf.c: add
+03-08-21 path/pathnative.c,path/pathposix.c: interix updates
+	 features/botched: add cygwin _stat => _stat64
+03-08-15 include/ast.h: map out bsd strmode()
+	 features/common: add interix _ast_intmax_t workarounds
+	 misc/fs3d.c: 3d mount test now uses "" instead of NiL (or cygwin dumps)
+03-08-11 string/fmtesc.c: fix optional quoting checks
+	 tm/tmdate.c: fix > 1 year of seconds arithmetic
+	 tm/tmfix.c: fix leap year adjustments
+03-08-01 features/lib: beef up sock_peek test for interix
+03-07-29 features/float: add -lm to frexp... test
+	 Makefile: fix -lm astmath test sense
+03-07-26 features/mem.c: favor _mem_sbrk over _mem_mmap_*
 03-07-22 vmalloc/vmbest.c: fall back to sbrk() if mmap() fails
 	 features/mem.c: _mem_sbrk means sbrk() and brk() work
 03-07-17 regex/regcomp.c: fix bug that treated KRE X{n,m} like {n,m}(X)

@@ -155,6 +155,12 @@ fi
  ]] || err_exit 'SIGTERM not recognized'
 [[ $($SHELL -c 'trap "print ok" sigterm; kill -s sigterm $$' 2> /dev/null) == ok
  ]] || err_exit 'SIGTERM not recognized'
+${SHELL} -c 'kill -1 -$$' 2> /dev/null
+[[ $(kill -l $?) == HUP ]] || err_exit 'kill -1 -pid not working' 
+${SHELL} -c 'kill -1 -$$' 2> /dev/null
+[[ $(kill -l $?) == HUP ]] || err_exit 'kill -n1 -pid not working' 
+${SHELL} -c 'kill -s HUP -$$' 2> /dev/null
+[[ $(kill -l $?) == HUP ]] || err_exit 'kill -HUP -pid not working' 
 n=123
 typeset -A base
 base[o]=8#
@@ -340,6 +346,18 @@ then	for i in $(command command -x ${SHELL:-ksh} -c 'print $#;[[ $1 != argument0
 	do	((sum += $i))
 	done
 	(( sum == n )) || err_exit "command -x processed only $sum arguments"
+	command -p command -x ${SHELL:-ksh} -c 'print $#;[[ $1 != argument0 ]]' count $(longline $n) > /dev/null  2>&1
+	[[ $? != 1 ]] && err_exit 'incorrect exit status for command -x'
+fi
+# test command -x option with extra arguments
+integer sum=0 n=10000
+if      ! ${SHELL:-ksh} -c 'print $#' count $(longline $n) > /dev/null  2>&1
+then    for i in $(command command -x ${SHELL:-ksh} -c 'print $#;[[ $1 != argument0 ]]' count $(longline $n) one two three) #2> /dev/null)
+	do      ((sum += $i))
+	done
+	(( sum  > n )) || err_exit "command -x processed only $sum arguments"
+	(( (sum-n)%3==0 )) || err_exit "command -x processed only $sum arguments"
+	(( sum == n+3)) && err_exit "command -x processed only $sum arguments"
 	command -p command -x ${SHELL:-ksh} -c 'print $#;[[ $1 != argument0 ]]' count $(longline $n) > /dev/null  2>&1
 	[[ $? != 1 ]] && err_exit 'incorrect exit status for command -x'
 fi

@@ -889,9 +889,18 @@ loop_fmt :
 				goto int_cvt;
 			}
 			else if(size == sizeof(char))
-			{	if(fmt == 'd')
-					v = (int)((char)argv.i);
-				else	v = (int)((uchar)argv.i);
+			{	if(fmt != 'd')
+					v = (int)((uchar)argv.i);
+				else
+				{
+#if _key_signed
+					v = (int)((signed char)argv.i);
+#else
+					if(argv.i < 0)
+						v = -((int)((char)(-argv.i)));
+					else	v =  ((int)((char)( argv.i)));
+#endif
+				}
 				goto int_cvt;
 			}
 			else

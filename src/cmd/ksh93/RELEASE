@@ -1,3 +1,25 @@
+03-09-12  --- Release ksh93p-  ---
+03-09-12  To improve conformance with ksh88, leading zeros will be ignored
+	  when getting the numerical value of a string variable so that
+	  they will not be treated as octal constants.
+03-09-03  The builtin kill command now processes obsolete invocations
+	  such as kill -1 -pid.
+03-09-02  The restriction on modifying FPATH in a restricted shell (sh -r)
+	  has been documented.
+03-09-02  The restricted shell (sh -r) has been modified to disallow
+	  executing command -p.
+03-08-07  A bug in which the KEYBD trap was not being invoked when
+	  characters with the 8th bit set has been fixed.
+03-08-02  A parser bug introduced in ksh93o which caused the character
+	  after () in a Posix function definition to be skipped 
+	  when reading from standard input has been fixed.
+03-08-01  A bug in which "${foo#pattern}(x)" treated (x) as if it were
+	  part of the pattern has been fixed.
+03-08-01  The command -x option has been modified so that any trailing
+	  arguments that do expand to a single word will be included
+	  on each invocation, so that commands like command -x mv * dir
+	  work as expected.
+
 03-07-20  --- Release ksh93o+  ---
 03-07-20  A bug in which could cause memory corruption when a posix
 	  function invoked another one has been fixed.

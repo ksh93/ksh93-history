@@ -191,6 +191,7 @@ typedef struct
 #define ssizeof(x)	((int)sizeof(x))
 #define streq(a,b)	(*(a)==*(b)&&!strcmp(a,b))
 #define strneq(a,b,n)	(*(a)==*(b)&&!strncmp(a,b,n))
+#define strsignal(s)	fmtsignal(s)
 
 #if defined(__STDC__) || defined(__cplusplus) || defined(c_plusplus)
 #define NiL		0
@@ -312,7 +313,6 @@ extern unsigned _ast_intmax_t	strntoull(const char*, size_t, char**, int);
 extern int		stropt(const char*, const void*, int, int(*)(void*, const void*, int, const char*), void*);
 extern int		strperm(const char*, char**, int);
 extern void*		strpsearch(const void*, size_t, size_t, const char*, char**);
-extern char*		strsignal(int);
 extern void*		strsearch(const void*, size_t, size_t, Strcmp_f, const char*, void*);
 extern void		strsort(char**, int, int(*)(const char*, const char*));
 extern char*		strsubmatch(const char*, const char*, int);

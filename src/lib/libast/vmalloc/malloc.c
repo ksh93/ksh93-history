@@ -47,6 +47,10 @@ void _STUB_malloc(){}
  * will simply call malloc etc.
  */
 
+#if !defined(_AST_std_malloc) && __CYGWIN__ /* cygwin fork() omission? */
+#define _AST_std_malloc	1
+#endif
+
 #if !_std_malloc && !_AST_std_malloc
 
 /*	malloc compatibility functions.

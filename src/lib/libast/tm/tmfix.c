@@ -34,8 +34,8 @@
 #include <ast.h>
 #include <tm.h>
 
-#define DAYS(p)	(tm_data.days[(p)->tm_mon]+LEAP(p))
-#define LEAP(p)	((p)->tm_mon==1&&tmisleapyear((p)->tm_year))
+#define DAYS(p)	(tm_data.days[(p)->tm_mon]+((p)->tm_mon==1&&LEAP(p)))
+#define LEAP(p)	(tmisleapyear((p)->tm_year))
 
 /*
  * correct out of bounds fields in tm

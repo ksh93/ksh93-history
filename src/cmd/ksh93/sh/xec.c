@@ -605,7 +605,13 @@ sh_exec(register const union anynode *t, int flags)
 					break;
 				np = nv_bfsearch(com0, sh.bltin_tree, &nq, &cp); 
 			}
-			sh.xargs = sh.xargexit?sh.xargs-command:0;
+			if(sh.xargexit)
+			{
+				sh.xargmin -= command;
+				sh.xargmax -= command;
+			}
+			else
+				sh.xargmin = 0;
 			argn -= command;
 			if(!command && np && is_abuiltin(np))
 				np = dtsearch(sh.fun_tree,np);

@@ -59,8 +59,7 @@ typedef struct Optdisc_s
 
 #ifndef _OPT_PRIVATE_
 #define _OPT_PRIVATE_	\
-	_ast_intmax_t	number; \
-	char		pad[4*sizeof(void*)];
+	char		pad[3*sizeof(void*)];
 #endif
 
 typedef struct Opt_s
@@ -70,11 +69,14 @@ typedef struct Opt_s
 	char**		argv;		/* most recent argv		*/
 	int		index;		/* argv index			*/
 	char*		msg;		/* error/usage message buffer	*/
-	long		num;		/* # numeric argument		*/
+	long		num;		/* OBSOLETE -- use number	*/
 	int		offset;		/* char offset in argv[index]	*/
 	char		option[8];	/* current flag {-,+} + option  */
 	char		name[64];	/* current long name or flag	*/
 	Optdisc_t*	disc;		/* user discipline		*/
+	_ast_intmax_t	number;		/* # numeric argument		*/
+	unsigned char	assignment;	/* option arg assigment op	*/
+	unsigned char	pads[sizeof(void*)-1];
 	_OPT_PRIVATE_
 } Opt_t;
 
