@@ -1619,6 +1619,21 @@ text(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip, i
 							p++;
 							goto again;
 						}
+						else if (*p == '\f')
+						{
+							p++;
+							if (style != STYLE_keys)
+							{
+								psp = info(psp, p, NiL, ip);
+								if (psp->nb)
+									p = psp->nb;
+								else
+								{
+									p = psp->ob;
+									psp = psp->next;
+								}
+							}
+						}
 						else if (!*p)
 						{
 							if (!(tsp = psp))

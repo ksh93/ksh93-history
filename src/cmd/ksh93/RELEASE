@@ -1,13 +1,21 @@
-03-06-26  --- Release ksh93o+  ---
-03-06-26  Additional fields were added to the ulimit builtin.  Fields not
-	  supported by the local system are listed with reasonable sysconf(3),
-	  pathconf(3), or confstr(3) counterparts. Otherwise unsupported
-	  values are listed as "not supported".
-03-06-26  A bug in ulimit that improperly printed long long limit values
-	  has been fixed.
-03-06-23  A bug in which ${@:offset:len} could core dump when there
+03-07-20  --- Release ksh93o+  ---
+03-07-20  A bug in which could cause memory corruption when a posix
+	  function invoked another one has been fixed.
+03-07-15  A bug in which a file descriptor>2 could be closed before
+	  executing a script has been fixed.
+03-07-15  A parsing error for <() and >() process subsitituions inside
+	  command substitution has been fixed.
+03-07-15  A parsing error for patterns of the form {...}(...) when
+	  used inside ${...} has been fixed.
+03-07-15  An error in which expanding an indexed array inside a compound
+	  variable could cause a core dump has been fixed.
+03-07-15  A bug in which under on rare ocassions a job completion interrupt
+	  could cause to core dump has been fixed.
+03-06-26  A bug in which process substitution embeded within command
+	  substitution would generate a syntax error has been fixed.
+03-96-23  A bug in which ${@:offset:len} could core dump when there
 	  were no arguments has been fixed.
-03-06-23  A bug in which ${X[@]:offset:len} could core dump when X
+03-96-23  A bug in which ${X[@]:offset:len} could core dump when X
 	  was unset has been fixed.
 03-06-22  The -x option was added to the command builtin.  If this
 	  option is on, and the number of arguments would exceed ARG_MAX,

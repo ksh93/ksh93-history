@@ -30,7 +30,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: fmt (AT&T Labs Research) 1998-10-16 $\n]"
+"[-?\n@(#)$Id: fmt (AT&T Labs Research) 2003-07-15 $\n]"
 USAGE_LICENSE
 "[+NAME?fmt - simple text formatter]"
 "[+DESCRIPTION?\bfmt\b reads the input files and left justifies space separated"
@@ -169,10 +169,11 @@ static void split(Fmt_t *fp, char *buff)
 static int dofmt(Fmt_t *fp)
 {
 	char buff[8192];
-	char *cp, *dp, *ep=0;
+	char *cp, *dp, *ep;
 	register int c;
 	while((cp=sfgetr(fp->in,'\n',0)))
 	{
+		ep = 0;
 		dp = buff;
 		while(c=*cp++)
 		{

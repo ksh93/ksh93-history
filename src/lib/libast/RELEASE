@@ -1,3 +1,8 @@
+03-07-22 vmalloc/vmbest.c: fall back to sbrk() if mmap() fails
+	 features/mem.c: _mem_sbrk means sbrk() and brk() work
+03-07-17 regex/regcomp.c: fix bug that treated KRE X{n,m} like {n,m}(X)
+	 misc/magic.c: check MAGIC_VERBOSE for all load() messages
+03-07-14 misc/optget.c: handle [...]{[...]\f...\f...}
 03-06-21 misc/sigcrit.c: block SIGCHLD if _lib_sigprocmask || _lib_sigsetmask
 	 comp/spawnveg.c,sfio/sfmode.c: use sigcritical() SIG_REG_* macros
 	 comp/spawnveg.c: drop ENOEXEC logic

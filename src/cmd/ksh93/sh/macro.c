@@ -475,6 +475,8 @@ static void copyto(register Mac_t *mp,int endch, int newquote)
 		    case S_ENDCH:
 			if((mp->lit || cp[-1]!=endch || mp->quote!=newquote))
 				goto pattern;
+			if(endch==RBRACE && *cp==LPAREN && mp->pattern)
+				goto pattern;
 		    case S_EOF:
 			if(c)
 			{
@@ -1109,7 +1111,6 @@ retry1:
 		if(type==M_NAMESCAN || type==M_NAMECOUNT)
 		{
 			id = prefix(id);
-			dolmax = strlen(id);
 			stakseek(offset);
 			if(type==M_NAMECOUNT)
 			{
@@ -1118,6 +1119,7 @@ retry1:
 			}
 			else
 			{
+				dolmax = strlen(id);
 				dolg = -1;
 				nextname(mp,id,0);
 				v = nextname(mp,id,dolmax);
@@ -1204,12 +1206,14 @@ retry1:
 			{
 				int newquote = mp->quote;
 				int split = mp->split;
+				int quoted = mp->quoted;
 				if(newops)
 				{
 					type = fcget();
 					fcseek(-1);
 					mp->pattern = 1+(c=='/');
 					mp->split = 0;
+					mp->quoted = 0;
 					newquote = 0;
 				}
 				else if(c=='?' || c=='=')
@@ -1219,6 +1223,7 @@ retry1:
 					mp->patfound = 0;
 				mp->pattern = oldpat;
 				mp->split = split;
+				mp->quoted = quoted;
 				/* add null byte */
 				stakputc(0);
 				stakseek(staktell()-1);

@@ -47,20 +47,12 @@
 
 #define SH_NTFORK	SH_TIMING
 
-#if defined(_UWIN) && defined(_M_ALPHA)
-#   undef _lib_fork
-#endif
 #if _lib_nice
     extern int	nice(int);
 #endif /* _lib_nice */
 #if !_lib_spawnveg
-#   define spawnveg(a,b,c,d)	spawnve(a,b,c)
+#   define spawnveg(a,b,c,d)    spawnve(a,b,c)
 #endif /* !_lib_spawnveg */
-#if !defined(SHOPT_SPAWN)
-#   if _UWIN || _use_spawnveg || !_lib_fork
-#       define  SHOPT_SPAWN  1
-#   endif
-#endif /* !SHOPT_SPAWN */
 #if SHOPT_SPAWN
     static pid_t sh_ntfork(const union anynode*,char*[],int*,int);
 #endif /* SHOPT_SPAWN */
@@ -2234,7 +2226,7 @@ static void sh_funct(Namval_t *np,int argn, char *argv[],struct argnod *envlist,
 		fun.node = np;
 		sh_funscope(argn,argv,0,&fun,execflg);
 	}
-	nv_putval(SH_FUNNAMENOD,fname,0);
+	nv_putval(SH_FUNNAMENOD,fname,NV_NOFREE);
 	nv_putval(SH_PATHNAMENOD, sh.st.filename ,0);
 }
 
@@ -2683,12 +2675,21 @@ static pid_t sh_ntfork(const union anynode *t,char *argv[],int *jobid,int flag)
 		spawnpid = path_spawn(path,argv,arge,pp,(grp<<1)|1);
 		if(spawnpid < 0 && errno==ENOEXEC)
 		{
-			char *sp = argv[0];
+			char devfd[14];
+			int fd = open(path,O_RDONLY);
+			argv[-1] = argv[0];
+			argv[0] = path;
+			if(fd>=0)
+			{
+				sfsprintf(devfd,sizeof(devfd),"/dev/fd/%d\0",fd);
+				argv[0] =  devfd;
+			}
 			if(!shp->shpath)
 				shp->shpath = pathshell();
-			*--argv = "ksh";
-			spawnpid = path_spawn(shp->shpath,argv,arge,pp,(grp<<1)|1);
-			*++argv = sp;
+			spawnpid = path_spawn(shp->shpath,&argv[-1],arge,pp,(grp<<1)|1);
+			if(fd>=0)
+				close(fd);
+			argv[0] = argv[-1];
 		}
 	fail:
 		if(spawnpid < 0) switch(errno=shp->path_err)

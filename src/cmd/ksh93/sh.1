@@ -2113,7 +2113,7 @@ are not treated specially.
 Matches any string, including the null string.
 When used for filename expansion,
 if the
-.B globstart
+.B globstar
 option is on, two adjacent
 .BR \(** 's
 by itself
@@ -3416,6 +3416,7 @@ If found, and this directory is also contained in the value of the
 variable,
 then this file is loaded into the current shell environment
 as if it were the argument to the \fB.\fP command
+except that only preset aliases are expanded,
 and a function of the given name is executed
 as described above.
 If not found, and the file

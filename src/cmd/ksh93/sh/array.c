@@ -222,6 +222,7 @@ static struct index_array *array_grow(Namval_t *np, register struct index_array 
 	if (maxi >= ARRAY_MAX)
 		errormsg(SH_DICT,ERROR_exit(1),e_subscript, fmtbase((long)maxi,10,0));
 	ap = new_of(struct index_array,(newsize-1)*sizeof(union Value*));
+	memset((void*)ap,0,sizeof(*ap));
 	ap->maxi = newsize;
 	ap->cur = maxi;
 	if(arp)
@@ -551,7 +552,7 @@ void *nv_associative(register Namval_t *np,const char *sp,int mode)
 	switch(mode)
 	{
 	    case NV_AINIT:
-		if(ap = (struct assoc_array*)malloc(sizeof(struct assoc_array)))
+		if(ap = (struct assoc_array*)calloc(1,sizeof(struct assoc_array)))
 		{
 			ap->table = dtopen(&_Nvdisc,Dtbag);
 			ap->cur = 0;

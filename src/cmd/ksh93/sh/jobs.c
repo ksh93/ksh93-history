@@ -71,7 +71,9 @@ static struct jobsave *jobsave_create(pid_t pid)
 	register struct jobsave *jp = job_savelist;
 	if(jp && jp->next)
 		job_savelist = jp->next;
-	else if(!(jp = new_of(struct jobsave,0)))
+	else if(jp = new_of(struct jobsave,0))
+		jp->next = 0;
+	else
 	{
 		jp = job_savelist;
 		job_savelist = 0;
@@ -231,6 +233,7 @@ static void job_waitsafe(register int sig)
 			sfprintf(sfstderr,"%d: unknown job pid=%d pw=%x\n",getpid(),pid,pw);
 #endif /* DEBUG */
 			pw = &dummy;
+			pw->p_exit = 0;
 			pw->p_pgrp = 0;
 			if(bck.count++ > sh.lim.child_max)
 				job_chksave(0);
@@ -304,7 +307,7 @@ static void job_waitsafe(register int sig)
 			if(pw->p_pgrp==0)
 				pw->p_flag &= ~P_NOTIFY;
 		}
-		if(pw == &dummy)
+		if(jp && pw== &dummy)
 		{
 			jp->exitval = pw->p_exit;
 			if(pw->p_flag&P_SIGNALLED)
@@ -344,8 +347,7 @@ void job_init(int lflag)
 	register int ntry=0;
 
 	/* create a jobsave freelist */
-	jobsave_create(1);
-	job_chksave(1);
+	job_savelist = jobsave_create(0);
 	job.fd = JOBTTY;
 	signal(SIGCHLD,job_waitsafe);
 #   if defined(SIGCLD) && (SIGCLD!=SIGCHLD)
@@ -978,6 +980,8 @@ int job_post(pid_t pid, pid_t join)
 	register struct process *pw;
 	register History_t *hp = sh.hist_ptr;
 	sh.jobenv = sh.curenv;
+	if(!job_savelist)
+		job_savelist = jobsave_create(0);
 	if(job.toclear)
 	{
 		job_clear();
@@ -1548,8 +1552,15 @@ static int job_chksave(register pid_t pid)
 		else
 			bck.list = jp->next;
 		bck.count--;
-		jp->next = job_savelist; 
-		job_savelist = jp;
+		/* keep at most 10 jobs on the free list */
+		if(!job_savelist || job_savelist->pid <8)
+		{
+			jp->next = job_savelist; 
+			jp->pid = job_savelist?job_savelist->pid+1:0;
+			job_savelist = jp;
+		}
+		else
+			free((void*)jp);
 	}
 	return(r);
 }

@@ -967,7 +967,7 @@ static void exscript(Shell_t *shp,register char *path,register char *argv[],char
 	if(sp=fcfile())
 		while(sfstack(sp,SF_POPSTACK));
 	job_clear();
-	if(shp->infd>0)
+	if(shp->infd>0 && (shp->fdstatus[shp->infd]&IOCLEX))
 		sh_close(shp->infd);
 	sh_setstate(sh_state(SH_FORKED));
 	sfsync(sfstderr);

@@ -417,5 +417,14 @@ x="$(
 )"
 eval "$x"  || err_exit 'typeset -f generates syntax error'
 [[ $(foobar) != ok ]] && err_exit 'typeset -f not generating function'
+unset -f a b c
+a()
+{
+        b
+        b
+        print ${.sh.fun}
+}
+b() { : ;}
+[[ $(a) == a ]] || err_exit '.sh.fun not set correctly in a function'
 exit $((Errors))
 

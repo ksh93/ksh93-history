@@ -735,10 +735,12 @@ reg size_t	size;	/* desired block size		*/
 		}
 	
 		/**/ASSERT(vmcheck(vd,size,0) );
+#if !__MVS__ /* NOTE: recheck this 2003-08-01 */
 #if DEBUG || CHECK
 		if (!(Vmcheck & 02))
 #endif
 		KPVCOMPACT(vm,bestcompact);
+#endif
 		if((tp = (*_Vmextend)(vm,size,bestsearch)) )
 			goto got_block;
 		else if(vd->mode&VM_AGAIN)
@@ -1210,7 +1212,7 @@ typedef struct _mmapdisc_s
 #define	OPEN_PRIVATE	((OPEN_MAX*3)/4)
 #endif
 
-#if (_mem_method) & _mem_sbrk
+#if _mem_sbrk
 #define SBRK(z)		((Void_t*)sbrk(z))
 #if _lib_brk
 #define BRK(a,z)	brk((a)+(ssize_t)(z))
@@ -1324,17 +1326,29 @@ Vmdisc_t*	disc;	/* discipline structure			*/
 			return (Void_t*)addr;
 		}
 #endif /* _mem_mmap_anon|_mem_mmap_dev */
+#if _mem_sbrk && !((_mem_method) & _mem_sbrk)
+		addr = (Vmuchar_t*)SBRK(0);
+		if(addr == (Vmuchar_t*)BRK_FAILED)
+			addr = NIL(Vmuchar_t*);
+		if(addr && BRK(addr,nsize) == 0)
+			return (Void_t*)addr;
+#endif
 	}
 	else
 	{	
-#if (_mem_method) & _mem_sbrk
+#if _mem_sbrk
+#if !((_mem_method) & _mem_sbrk)
+		addr = (Vmuchar_t*)SBRK(0);
+		if(addr == (Vmuchar_t*)BRK_FAILED)
+			addr = NIL(Vmuchar_t*);
+#endif /* _mem_sbrk */
 		if(((Vmuchar_t*)caddr+csize) == addr) /* in sbrk-space */
 		{	if(BRK(addr,nsize-csize) == 0)
 				return caddr;
 		}
 #endif /* _mem_sbrk */
 #if (_mem_method) & (_mem_mmap_anon|_mem_mmap_dev)
-#if (_mem_method) & _mem_sbrk
+#if _mem_sbrk
 		else if(((Vmuchar_t*)caddr+csize) > addr)
 #endif /* _mem_sbrk */
 		if(nsize == 0 && munmap(caddr,csize) == 0)

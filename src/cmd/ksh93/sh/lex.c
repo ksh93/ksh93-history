@@ -1402,7 +1402,7 @@ static int comsub(register Lex_t *lp)
 				lex.incase=0;
 			switch(sh_lex())
 			{
-			    case LPAREN:
+			    case LPAREN: case IPROCSYM:	case OPROCSYM:
 				if(!lex.incase)
 					count++;
 				break;

@@ -553,6 +553,7 @@ magic(register Cenv_t* env, register int c, int escaped)
 	register int	n;
 	int		o = c;
 	int		e = env->error;
+	int		l = env->token.len;
 	short*		mp;
 	char*		ep;
 
@@ -719,14 +720,11 @@ magic(register Cenv_t* env, register int c, int escaped)
 						c = T_DOTSTAR;
 					else if (c == T_QUES)
 						c = T_DOT;
-					else if (c == T_PLUS)
-						c = '+';
-					else if (c == T_BANG)
-						c = '!';
-					else if (c == T_AT)
-						c = '@';
-					else if (c == T_TILDE)
-						c = '~';
+					else
+					{
+						c = o;
+						env->token.len = l;
+					}
 				}
 				else if (c > T_BACK)
 				{

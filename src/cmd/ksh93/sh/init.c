@@ -905,7 +905,7 @@ Shell_t *sh_init(register int argc,register char *argv[], void(*userinit)(int))
 			buff[n] = 0;
 			sh.shpath = strdup(buff);
 		}
-		else if((cp && (last=strrchr(cp,'/')) && strcmp((last[1]=='-'?&last[2]:&last[1]),name)==0) || (argc>0 && (last=strrchr(cp= *argv,'/'))))
+		else if((cp && (last=strrchr(cp,'/')) && strmatch(&last[1],"?(-)?(r)?(k)sh"EXE)) || (argc>0 && (last=strrchr(cp= *argv,'/'))))
 		{
 			if(*cp=='/')
 				sh.shpath = strdup(cp);
@@ -1019,7 +1019,11 @@ Shell_t *sh_init(register int argc,register char *argv[], void(*userinit)(int))
 	}
 	else
 		sh_offoption(SH_PRIVILEGED);
-	sh.shname = strdup(sh.st.dolv[0]); /* shname for $0 in profiles */
+	/* shname for $0 in profiles and . scripts */
+	if(strmatch(argv[1],e_devfdNN))
+		sh.shname = strdup(argv[0]);
+	else
+		sh.shname = strdup(sh.st.dolv[0]);
 	/*
 	 * return here for shell script execution
 	 * but not for parenthesis subshells

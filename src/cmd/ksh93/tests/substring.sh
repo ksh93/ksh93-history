@@ -277,4 +277,10 @@ b='[abc 123 def]'
 unset X
 $SHELL -c '[[ ! ${X[@]:0:300} ]]' 2> /dev/null || err_exit '${X[@]:0:300} with X undefined fails'
 $SHELL -c '[[ ${@:0:300} == "$0" ]]' 2> /dev/null || err_exit '${@:0:300} with no arguments fails'
+i=20030704
+[[ ${i#{6}(?)} == 04 ]] ||  err_exit '${i#{6}(?)} not working'
+[[ ${i#{6,6}(?)} == 04 ]] ||  err_exit '${i#{6,6}(?)} not working'
+LC_ALL=posix
+i="   ."
+[[ $(printf "<%s>\n" ${i#' '}) == '<.>' ]] || err_exit 'printf "<%s>\n" ${i#' '} failed'
 exit $((Errors))

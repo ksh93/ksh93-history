@@ -33,6 +33,12 @@
 #include	"FEATURE/options"
 #include	<nval.h>
 
+#if !defined(SHOPT_SPAWN)
+#   if _UWIN || _use_spawnveg || !_lib_fork
+#	define  SHOPT_SPAWN  1
+#   endif
+#endif /* !SHOPT_SPAWN */
+
 #define PATH_PATH	1
 #define PATH_FPATH	2
 #define PATH_CDPATH	4

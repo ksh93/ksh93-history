@@ -65,7 +65,7 @@ extern int	printf(const char*, ...);
 #define MEM_MMAP_DEV	0
 #endif
 
-#if _lib_sbrk
+#if _lib_sbrk && _lib_brk
 #define MEM_SBRK	RAW_SBRK
 #else
 #define MEM_SBRK	0

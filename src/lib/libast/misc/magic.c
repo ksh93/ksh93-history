@@ -33,7 +33,7 @@
  * the sum of the hacks {s5,v10,planix} is _____ than the parts
  */
 
-static const char id[] = "\n@(#)$Id: magic library (AT&T Labs Research) 2002-11-22 $\0\n";
+static const char id[] = "\n@(#)$Id: magic library (AT&T Labs Research) 2003-07-17 $\0\n";
 
 static const char lib[] = "libast:magic";
 
@@ -173,6 +173,7 @@ typedef unsigned long Cctype_t;
 	int		fbmx;			/* fbuf max size	*/ \
 	int		xbsz;			/* xbuf size		*/ \
 	int		swap;			/* swap() operation	*/ \
+	unsigned long	flags;			/* disc+open flags	*/ \
 	long		xoff;			/* xbuf offset		*/ \
 	int		identifier[ID_MAX + 1];	/* Info_t identifier	*/ \
 	Sfio_t*		fp;			/* fbuf fp		*/ \
@@ -344,7 +345,7 @@ indirect(const char* cs, char** e, void* handle)
 		}
 		*e = s;
 	}
-	else if (mp->disc->errorf)
+	else if ((mp->flags & MAGIC_VERBOSE) && mp->disc->errorf)
 		(*mp->disc->errorf)(mp, mp->disc, 2, "%s in indirect expression", *e);
 	return n;
 }
@@ -358,7 +359,7 @@ regmessage(Magic_t* mp, regex_t* re, int code)
 {
 	char	buf[128];
 
-	if (mp->disc->errorf)
+	if ((mp->flags & MAGIC_VERBOSE) && mp->disc->errorf)
 	{
 		regerror(code, re, buf, sizeof(buf));
 		(*mp->disc->errorf)(mp, mp->disc, 3, "regex: %s", buf);
@@ -1403,7 +1404,7 @@ type(register Magic_t* mp, const char* file, struct stat* st, char* buf, int siz
  */
 
 static int
-load(register Magic_t* mp, char* file, register Sfio_t* fp, unsigned long flags)
+load(register Magic_t* mp, char* file, register Sfio_t* fp)
 {
 	register Entry_t*	ep;
 	register char*		p;
@@ -1449,7 +1450,7 @@ load(register Magic_t* mp, char* file, register Sfio_t* fp, unsigned long flags)
 		case '{':
 			if (++lev < MAXNEST)
 				ep->nest = *p;
-			else if ((flags & MAGIC_VERBOSE) && mp->disc->errorf)
+			else if ((mp->flags & MAGIC_VERBOSE) && mp->disc->errorf)
 				(*mp->disc->errorf)(mp, mp->disc, 1, "{ ... } operator nesting too deep -- %d max", MAXNEST);
 			continue;
 		case '}':
@@ -1551,7 +1552,7 @@ load(register Magic_t* mp, char* file, register Sfio_t* fp, unsigned long flags)
 			ep->cont = *p++;
 			break;
 		default:
-			if ((flags & MAGIC_VERBOSE) && !isalpha(*p) && mp->disc->errorf)
+			if ((mp->flags & MAGIC_VERBOSE) && !isalpha(*p) && mp->disc->errorf)
 				(*mp->disc->errorf)(mp, mp->disc, 1, "`%c': invalid line continuation operator", *p);
 			/*FALLTHROUGH*/
 		case '*':
@@ -1596,7 +1597,7 @@ load(register Magic_t* mp, char* file, register Sfio_t* fp, unsigned long flags)
 			for (p2 = p; *p2 && !isspace(*p2); p2++);
 			if (!*p2)
 			{
-				if ((flags & MAGIC_VERBOSE) && mp->disc->errorf)
+				if ((mp->flags & MAGIC_VERBOSE) && mp->disc->errorf)
 					(*mp->disc->errorf)(mp, mp->disc, 1, "not enough fields: `%s'", p);
 				continue;
 			}
@@ -1642,7 +1643,7 @@ load(register Magic_t* mp, char* file, register Sfio_t* fp, unsigned long flags)
 		for (p = p2; *p2 && !isspace(*p2); p2++);
 		if (!*p2)
 		{
-			if ((flags & MAGIC_VERBOSE) && mp->disc->errorf)
+			if ((mp->flags & MAGIC_VERBOSE) && mp->disc->errorf)
 				(*mp->disc->errorf)(mp, mp->disc, 1, "not enough fields: `%s'", p);
 			continue;
 		}
@@ -1875,7 +1876,7 @@ load(register Magic_t* mp, char* file, register Sfio_t* fp, unsigned long flags)
 					ep->mime = vmnewof(mp->vm, 0, char, 32, 0);
 					break;
 				default:
-					if ((flags & MAGIC_VERBOSE) && mp->disc->errorf)
+					if ((mp->flags & MAGIC_VERBOSE) && mp->disc->errorf)
 						(*mp->disc->errorf)(mp, mp->disc, 1, "%-.*s: unknown function", p - t, t);
 					break;
 				}
@@ -1946,7 +1947,7 @@ load(register Magic_t* mp, char* file, register Sfio_t* fp, unsigned long flags)
 		mp->magiclast = last;
 	}
 	vmfree(mp->vm, ep);
-	if ((flags & MAGIC_VERBOSE) && mp->disc->errorf)
+	if ((mp->flags & MAGIC_VERBOSE) && mp->disc->errorf)
 	{
 		if (lev < 0)
 			(*mp->disc->errorf)(mp, mp->disc, 1, "too many } operators");
@@ -1975,7 +1976,7 @@ magicload(register Magic_t* mp, const char* file, unsigned long flags)
 	int			list;
 	Sfio_t*			fp;
 
-	flags |= mp->disc->flags;
+	mp->flags = mp->disc->flags | flags;
 	found = 0;
 	if (list = !(s = (char*)file) || !*s || (*s == '-' || *s == '.') && !*(s + 1))
 	{
@@ -2026,7 +2027,7 @@ magicload(register Magic_t* mp, const char* file, unsigned long flags)
 			}
 		}
 		found = 1;
-		n = load(mp, s, fp, flags);
+		n = load(mp, s, fp);
 		sfclose(fp);
 		if (n && !list)
 			return -1;
@@ -2037,7 +2038,7 @@ magicload(register Magic_t* mp, const char* file, unsigned long flags)
 	}
 	if (!found)
 	{
-		if (flags & MAGIC_VERBOSE)
+		if (mp->flags & MAGIC_VERBOSE)
 		{
 			if (mp->disc->errorf)
 				(*mp->disc->errorf)(mp, mp->disc, 2, "cannot find magic file");
@@ -2072,6 +2073,7 @@ magicopen(Magicdisc_t* disc)
 	mp->id = lib;
 	mp->disc = disc;
 	mp->vm = vm;
+	mp->flags = disc->flags;
 	mp->redisc.re_version = REG_VERSION;
 	mp->redisc.re_flags = REG_NOFREE;
 	mp->redisc.re_errorf = (regerror_t)disc->errorf;
@@ -2129,6 +2131,7 @@ magictype(register Magic_t* mp, Sfio_t* fp, const char* file, register struct st
 	off_t	off;
 	char*	s;
 
+	mp->flags = mp->disc->flags;
 	mp->mime = 0;
 	if (!st)
 		s = T("cannot stat");
@@ -2139,7 +2142,7 @@ magictype(register Magic_t* mp, Sfio_t* fp, const char* file, register struct st
 		s = type(mp, file, st, mp->tbuf, sizeof(mp->tbuf));
 		if (mp->fp)
 			sfseek(mp->fp, off, SEEK_SET);
-		if (!(mp->disc->flags & MAGIC_MIME))
+		if (!(mp->flags & MAGIC_MIME))
 		{
 			if (S_ISREG(st->st_mode) && (st->st_size > 0) && (st->st_size < 128))
 				sfprintf(mp->tmp, "%s ", T("short"));
@@ -2155,7 +2158,7 @@ magictype(register Magic_t* mp, Sfio_t* fp, const char* file, register struct st
 			s = sfstruse(mp->tmp);
 		}
 	}
-	if (mp->disc->flags & MAGIC_MIME)
+	if (mp->flags & MAGIC_MIME)
 		s = mp->mime;
 	if (!s)
 		s = T("error");
@@ -2172,6 +2175,7 @@ magiclist(register Magic_t* mp, register Sfio_t* sp)
 	register Entry_t*	ep = mp->magic;
 	register Entry_t*	rp = 0;
 
+	mp->flags = mp->disc->flags;
 	sfprintf(sp, "cont\toffset\ttype\top\tmask\tvalue\tmime\tdesc\n");
 	while (ep)
 	{

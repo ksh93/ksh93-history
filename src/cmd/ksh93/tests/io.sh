@@ -39,10 +39,18 @@ function fun
 	done 2>   /dev/null
 	print -u3 good
 }
+print 'read -r a;print -r -u$1 -- "$a"' >  mycat
+chmod 755 ./mycat
+for ((i=3; i < 10; i++))
+do
+	eval 'a=$(print foo | ./mycat' $i $i'>&1 > /dev/null |cat)' 2> /dev/null
+	[[ $a == foo ]] || err_exit "bad file descriptor $i in comsub script"
+done
 exec 3> /dev/null
 [[ $(fun) == good ]] || err_exit 'file 3 closed before subshell completes'
 exec 3>&-
 mkdir /tmp/ksh$$ || err_exit "mkdir /tmp/ksh$$ failed"
+trap 'rm -rf /tmp/ksh$$' EXIT
 cd /tmp/ksh$$ || err_exit "cd /tmp/ksh$$ failed"
 print foo > file1
 print bar >> file1
