@@ -6124,16 +6124,20 @@ typedef struct Sufcom_s
 static const Sufcom_t	sufcom[] =
 {
 	"c",		"/*",
+	"cpp",		"/*",
 	"cxx",		"/*",
 	"c++",		"/*",
 	"C",		"/*",
+	"CPP",		"/*",
 	"CXX",		"/*",
 	"C++",		"/*",
 	"f",		"C",
 	"F",		"C",
 	"h",		"/*",
+	"hpp",		"/*",
 	"hxx",		"/*",
 	"H",		"/*",
+	"HPP",		"/*",
 	"HXX",		"/*",
 	"ksh",		"#",
 	"KSH",		"#",
@@ -6209,11 +6213,8 @@ main __PARAM__((int argc, char** argv), (argc, argv)) __OTORP__(int argc; char**
 			case 0:
 				break;
 			case 'c':
-				if (!*(comment = ++file) && !(comment = *++argv))
-				{
-					file = "??";
-					continue;
-				}
+				if (!*(comment = ++file))
+					comment = *++argv;
 				break;
 			case 'd':
 				flags |= (1<<1);

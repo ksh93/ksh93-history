@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2002 AT&T Corp.                *
+*                Copyright (c) 1985-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -730,11 +730,11 @@ char**		argv;
 	fprintf(lf, "\t0\n};\n");
 	fprintf(lf, "\nstatic const Lc_territory_t territory[] =\n{\n");
 	fprintf(lf, "{\"C\",\"C\",LC_default,0,&language[0],");
-	for (i = 1; i < territory_language_max; i++)
+	for (i = 1; i < 2 * territory_language_max; i++)
 		fprintf(lf, "0,");
 	fprintf(lf, "},\n");
 	fprintf(lf, "{\"debug\",\"debug\",LC_debug,0,&language[1],");
-	for (i = 1; i < territory_language_max; i++)
+	for (i = 1; i < 2 * territory_language_max; i++)
 		fprintf(lf, "0,");
 	fprintf(lf, "},\n");
 	for (tp = (Territory_t*)state.territory.root; tp; tp = (Territory_t*)tp->link.next)

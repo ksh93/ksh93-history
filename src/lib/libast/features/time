@@ -45,6 +45,9 @@ struct timeval
 #define CLOCKS_PER_SEC	_AST_CLK_TCK
 #endif
 #endif
+#ifndef CLK_TCK
+#define CLK_TCK		_AST_CLK_TCK
+#endif
 }end
 
 tst	- -DN=1 - -DN=2 - -DN=3 - -DN=4 output{

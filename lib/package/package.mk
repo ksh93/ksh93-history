@@ -1,7 +1,7 @@
 /*
  * source and binary package support
  *
- * @(#)package.mk (AT&T Labs Research) 2004-02-29
+ * @(#)package.mk (AT&T Labs Research) 2004-04-15
  *
  * usage:
  *
@@ -72,12 +72,14 @@ url = http://www.research.att.com/sw/download
 base =
 category = utils
 closure =
+checksum = md5
 delta =
 format = tgz
 incremental =
 index =
 init = INIT
 licenses = $(org)
+mamfile = 1
 opt =
 name =
 release =
@@ -88,6 +90,8 @@ type =
 variants = !(cc-g)
 vendor =
 version = $("":T=R%Y-%m-%d)
+
+SUM = sum
 
 package.notice = ------------ NOTICE -- LICENSED SOFTWARE -- SEE README FOR DETAILS ------------
 
@@ -145,7 +149,18 @@ package.readme = $(@.package.readme.)
 	end
 	return $(R)
 
-PACKAGEROOT = $(VROOT:T=F:P=L*:N!=*/arch/+([!/]):O=1)
+.MAKEINIT : .package.init
+
+.package.init : .MAKE .VIRTUAL .FORCE
+	local V
+	V := $(VROOT:T=F:P=L*)
+	if ! PACKAGEROOT
+	PACKAGEROOT := $(V:N!=*/arch/+([!/]):O=1)
+	end
+	V += $(INSTALLROOT) $(PACKAGEROOT)
+	PACKAGEVIEW := $(V:U)
+	INSTALLOFFSET := $(INSTALLROOT:C%$(PACKAGEROOT)/%%)
+
 PACKAGESRC = $(PACKAGEROOT)/lib/package
 PACKAGEBIN = $(INSTALLROOT)/lib/package
 PACKAGEDIR = $(PACKAGESRC)/$(style)
@@ -153,9 +168,9 @@ INSTALLOFFSET = $(INSTALLROOT:C%$(PACKAGEROOT)/%%)
 
 package.omit = -|*/$(init)
 package.glob.all = $(INSTALLROOT)/src/*/*/($(MAKEFILES:/:/|/G))
-package.all = $(package.glob.all:P=G:W=O=$(?$(name):A=.VIRTUAL):N!=$(package.omit):T=F:$(VROOT:T=F:P=L*:C,.*,C;^&/;;,:/ /:/G):U)
-package.glob.pkg = $(INSTALLROOT)/src/*/($(~$(name):/ /|/G))/($(MAKEFILES:/:/|/G))
-package.pkg = $(package.glob.pkg:P=G:D:N!=$(package.omit):T=F:$(VROOT:T=F:P=L*:C,.*,C;^&/;;,:/ /:/G):U)
+package.all = $(package.glob.all:P=G:W=O=$(?$(name):A=.VIRTUAL):N!=$(package.omit):T=F:$(PACKAGEVIEW:C,.*,C;^&/;;,:/ /:/G):U)
+package.glob.pkg = $(INSTALLROOT)/src/*/($(~$(name):/ /|/G))/($(MAKEFILES:/:/|/G)) $(~$(name):N=$(name):?$$(INSTALLROOT)/src/$$(name)/($$(MAKEFILES:/:/|/G))??)
+package.pkg = $(package.glob.pkg:P=G:D:N!=$(package.omit):T=F:$(PACKAGEVIEW:C,.*,C;^&/;;,:/ /:/G):U)
 package.closure = $(closure:?$(package.all)?$(package.pkg)?)
 
 package.ini = ignore mamprobe manmake package silent
@@ -205,7 +220,7 @@ $(init) : .VIRTUAL $(init)
 		end
 		for I $(J)
 			while 1
-				LICENSEFILE := $(LICENSEFILE):$(I:D=${PACKAGEROOT}/lib/package:B:S=.lic)
+				LICENSEFILE := $(LICENSEFILE):$(I:D=$(PACKAGEROOT)/lib/package:B:S=.lic)
 				if I != "*-*"
 					break
 				end
@@ -311,7 +326,7 @@ $(init) : .VIRTUAL $(init)
 						requires : $(I:B)
 					end
 					if V = "$(I:D:B=gen/$(I:B):S=.ver:T=F)"
-						req : $(V)
+						req : $(I:B)
 					else
 						error $(--exec:?3?1?) package $(I) must be written before $(P)
 					end
@@ -568,125 +583,8 @@ vendor.cyg = gnu
 			echo ";;;$tmp/Makefile;src/Makefile"
 			echo ";;;$tmp/Makefile;src/cmd/Makefile"
 			echo ";;;$tmp/Makefile;src/lib/Makefile"
-			cat > $tmp/Mamfile1 <<'!'
-	info mam static
-	note source level :MAKE: equivalent
-	make install
-	make all
-	exec - ${MAMAKE} -r '*/*' ${MAMAKEARGS}
-	done all virtual
-	done install virtual
-	!
-			echo ";;;$tmp/Mamfile1;src/Mamfile"
-			cat > $tmp/Mamfile2 <<'!'
-	info mam static
-	note component level :MAKE: equivalent
-	make install
-	make all
-	exec - ${MAMAKE} -r '*' ${MAMAKEARGS}
-	done all virtual
-	done install virtual
-	!
-			echo ";;;$tmp/Mamfile2;src/cmd/Mamfile"
-			echo ";;;$tmp/Mamfile2;src/lib/Mamfile"
-			$(package.src:T=F:/.*/echo ";;;&"$("\n")/)
-			echo ";;;$(PACKAGEGEN)/$(name.original).req"
-			set -- $(package.closure)
-			for i
-			do	cd $(INSTALLROOT)/$i
-				(( m++ ))
-				s=$( $(MAKE) --noexec recurse=list 2>/dev/null )
-				if	test "" != "$s"
-				then	(( m++ ))
-					cat > $tmp/$m.mam <<'!'
-	info mam static
-	note subcomponent level :MAKE: equivalent
-	make install
-	make all
-	exec - ${MAMAKE} -r '*' ${MAMAKEARGS}
-	done all virtual
-	done install virtual
-	!
-					echo ";;;$tmp/$m.mam;$i/Mamfile"
-					for j in $s
-					do	if	test -d $j
-						then	cd $j
-							(( m++ ))
-							$(MAKE) --never --force --mam=static --corrupt=accept CC=$(CC.DIALECT:N=C++:?CC?cc?) $(=) 'dontcare test' install test > $tmp/$m.mam
-							echo ";;;$tmp/$m.mam;$i/$j/Mamfile"
-							cd $(INSTALLROOT)/$i
-						fi
-					done
-				else	(( m++ ))
-					$(MAKE) --never --force --mam=static --corrupt=accept CC=$(CC.DIALECT:N=C++:?CC?cc?) $(=) 'dontcare test' install test > $tmp/$m.mam
-					echo ";;;$tmp/$m.mam;$i/Mamfile"
-				fi
-				$(MAKE) --noexec $(-) $(=) recurse list.package.$(type)
-			done
-			set -- $(package.dir:P=G)
-			for i
-			do	tw -d $i -e "action:printf(';;;%s\n',path);"
-			done
-			: > $tmp/TAIL
-			echo ";;;$tmp/TAIL;$(package.notice)"
-		} |
-		$(PAX)	--filter=- \
-			--to=ascii \
-			--format=$(format) \
-			--local \
-			-wvf $(source) $(base) \
-			$(VROOT:T=F:P=L*:C%.*%-s",^&/,,"%) \
-			$(vendor:?-s",^[^/],$(opt),"??)
-		rm -rf $tmp
-	fi
-
-.source.lcl :
-	if	test '' != '$(~$(name))'
-	then	tmp=/tmp/pkg$(tmp)
-		mkdir $tmp
-		{
-			integer m
-			$(package.src:T=F:/.*/echo ";;;&"$("\n")/)
-			set -- $(package.closure)
-			for i
-			do	cd $(INSTALLROOT)/$i
-				$(MAKE) --noexec $(-) $(=) .FILES.+=Mamfile recurse list.package.local
-			done
-			set -- $(package.dir:P=G)
-			for i
-			do	tw -d $i -e "action:printf(';;;%s\n',path);"
-			done
-		} |
-		$(PAX)	--filter=- \
-			--to=ascii \
-			$(op:N=delta:??--format=$(format)?) \
-			--local \
-			-wvf $(source) $(base) \
-			$(VROOT:T=F:P=L*:C%.*%-s",^&/,,"%)
-		rm -rf $tmp
-	fi
-
-.source.tgz :
-	if	test '' != '$(~$(name))'
-	then	tmp=/tmp/pkg$(tmp)
-		mkdir $tmp
-		{
-			integer m=0
-			: > $tmp/HEAD
-			echo ";;;$tmp/HEAD;$(package.notice)"
-			cat > $tmp/README <<'!'
-	$(package.readme)
-	!
-			echo ";;;$tmp/README;README"
-			if	test '$(init)' = '$(name)'
-			then	
-				cat > $tmp/Makefile <<'!'
-	:MAKE:
-	!
-				echo ";;;$tmp/Makefile;src/Makefile"
-				echo ";;;$tmp/Makefile;src/cmd/Makefile"
-				echo ";;;$tmp/Makefile;src/lib/Makefile"
-				cat > $tmp/Mamfile1 <<'!'
+			if	test '1' = '$(mamfile)'
+			then	cat > $tmp/Mamfile1 <<'!'
 	info mam static
 	note source level :MAKE: equivalent
 	make install
@@ -708,7 +606,129 @@ vendor.cyg = gnu
 				echo ";;;$tmp/Mamfile2;src/cmd/Mamfile"
 				echo ";;;$tmp/Mamfile2;src/lib/Mamfile"
 			fi
-			$(package.src:T=F:/.*/echo ";;;&"$("\n")/)
+			$(package.src:U:U:T=F:/.*/echo ";;;&"$("\n")/)
+			echo ";;;$(PACKAGEGEN)/$(name.original).req"
+			set -- $(package.closure)
+			for i
+			do	cd $(INSTALLROOT)/$i
+				if	test '1' = '$(mamfile)'
+				then	s=$( $(MAKE) --noexec recurse=list recurse 2>/dev/null )
+					if	test "" != "$s"
+					then	(( m++ ))
+						cat > $tmp/$m.mam <<'!'
+	info mam static
+	note subcomponent level :MAKE: equivalent
+	make install
+	make all
+	exec - ${MAMAKE} -r '*' ${MAMAKEARGS}
+	done all virtual
+	done install virtual
+	!
+						echo ";;;$tmp/$m.mam;$i/Mamfile"
+						for j in $s
+						do	if	test -d $j
+							then	cd $j
+								(( m++ ))
+								$(MAKE) --never --force --mam=static --corrupt=accept CC=$(CC.DIALECT:N=C++:?CC?cc?) $(=) 'dontcare test' install test > $tmp/$m.mam
+								echo ";;;$tmp/$m.mam;$i/$j/Mamfile"
+								cd $(INSTALLROOT)/$i
+							fi
+						done
+					else	(( m++ ))
+						$(MAKE) --never --force --mam=static --corrupt=accept CC=$(CC.DIALECT:N=C++:?CC?cc?) $(=) 'dontcare test' install test > $tmp/$m.mam
+						echo ";;;$tmp/$m.mam;$i/Mamfile"
+					fi
+				fi
+				$(MAKE) --noexec $(-) $(=) recurse list.package.$(type)
+			done
+			set -- $(package.dir:P=G)
+			for i
+			do	tw -d $i -e "action:printf(';;;%s\n',path);"
+			done
+			: > $tmp/TAIL
+			echo ";;;$tmp/TAIL;$(package.notice)"
+		} |
+		$(PAX)	--filter=- \
+			--to=ascii \
+			--format=$(format) \
+			--local \
+			-wvf $(source) $(base) \
+			$(PACKAGEVIEW:C%.*%-s",^&/,,"%) \
+			$(vendor:?-s",^[^/],$(opt),"??)
+		$(SUM) -x $(checksum) < $(source) > $(source:D:B:S=.$(checksum))
+		rm -rf $tmp
+	fi
+
+.source.lcl :
+	if	test '' != '$(~$(name))'
+	then	tmp=/tmp/pkg$(tmp)
+		mkdir $tmp
+		{
+			integer m
+			$(package.src:U:T=F:/.*/echo ";;;&"$("\n")/)
+			set -- $(package.closure)
+			for i
+			do	cd $(INSTALLROOT)/$i
+				$(MAKE) --noexec $(-) $(=) .FILES.+=Mamfile recurse list.package.local
+			done
+			set -- $(package.dir:P=G)
+			for i
+			do	tw -d $i -e "action:printf(';;;%s\n',path);"
+			done
+		} |
+		$(PAX)	--filter=- \
+			--to=ascii \
+			$(op:N=delta:??--format=$(format)?) \
+			--local \
+			-wvf $(source) $(base) \
+			$(PACKAGEVIEW:C%.*%-s",^&/,,"%)
+		rm -rf $tmp
+	fi
+
+.source.tgz :
+	if	test '' != '$(~$(name))'
+	then	tmp=/tmp/pkg$(tmp)
+		mkdir $tmp
+		{
+			integer m=0
+			: > $tmp/HEAD
+			echo ";;;$tmp/HEAD;$(package.notice)"
+			cat > $tmp/README <<'!'
+	$(package.readme)
+	!
+			echo ";;;$tmp/README;README"
+			if	test '$(init)' = '$(name)'
+			then	cat > $tmp/Makefile <<'!'
+	:MAKE:
+	!
+				echo ";;;$tmp/Makefile;src/Makefile"
+				echo ";;;$tmp/Makefile;src/cmd/Makefile"
+				echo ";;;$tmp/Makefile;src/lib/Makefile"
+				if	test '1' = '$(mamfile)'
+				then	cat > $tmp/Mamfile1 <<'!'
+	info mam static
+	note source level :MAKE: equivalent
+	make install
+	make all
+	exec - ${MAMAKE} -r '*/*' ${MAMAKEARGS}
+	done all virtual
+	done install virtual
+	!
+					echo ";;;$tmp/Mamfile1;src/Mamfile"
+					cat > $tmp/Mamfile2 <<'!'
+	info mam static
+	note component level :MAKE: equivalent
+	make install
+	make all
+	exec - ${MAMAKE} -r '*' ${MAMAKEARGS}
+	done all virtual
+	done install virtual
+	!
+					echo ";;;$tmp/Mamfile2;src/cmd/Mamfile"
+					echo ";;;$tmp/Mamfile2;src/lib/Mamfile"
+				fi
+			fi
+			$(package.src:U:T=F:/.*/echo ";;;&"$("\n")/)
 			echo $(name) $(version) $(release|version) 1 > $(PACKAGEGEN)/$(name).ver
 			echo ";;;$(PACKAGEGEN)/$(name).ver"
 			if	test '' != '$(~covers)'
@@ -788,7 +808,7 @@ vendor.cyg = gnu
 				fi
 				case $(name) in
 				$(init))set -- $(licenses:B:S=.lic:U:T=F) ;;
-				*)	set -- $(package.src:N=*.lic:U:T=F) ;;
+				*)	set -- $(package.src:U:N=*.lic:U:T=F) ;;
 				esac
 				case $# in
 				0)	;;
@@ -847,10 +867,11 @@ vendor.cyg = gnu
 			set -- $(package.closure)
 			for i
 			do	cd $(INSTALLROOT)/$i
-				s=$( $(MAKE) --noexec recurse=list 2>/dev/null )
-				if	test "" != "$s"
-				then	(( m++ ))
-					cat > $tmp/$m.mam <<'!'
+				if	test '1' = '$(mamfile)'
+				then	s=$( $(MAKE) --noexec recurse=list recurse 2>/dev/null )
+					if	test "" != "$s"
+					then	(( m++ ))
+						cat > $tmp/$m.mam <<'!'
 	info mam static
 	note subcomponent level :MAKE: equivalent
 	make install
@@ -859,19 +880,20 @@ vendor.cyg = gnu
 	done all virtual
 	done install virtual
 	!
-					echo ";;;$tmp/$m.mam;$i/Mamfile"
-					for j in $s
-					do	if	test -d $j
-						then	cd $j
-							(( m++ ))
-							$(MAKE) --never --force --mam=static --corrupt=accept CC=$(CC.DIALECT:N=C++:?CC?cc?) $(=) 'dontcare test' install test > $tmp/$m.mam
-							echo ";;;$tmp/$m.mam;$i/$j/Mamfile"
-							cd $(INSTALLROOT)/$i
-						fi
-					done
-				else	(( m++ ))
-					$(MAKE) --never --force --mam=static --corrupt=accept CC=$(CC.DIALECT:N=C++:?CC?cc?) $(=) 'dontcare test' install test > $tmp/$m.mam
-					echo ";;;$tmp/$m.mam;$i/Mamfile"
+						echo ";;;$tmp/$m.mam;$i/Mamfile"
+						for j in $s
+						do	if	test -d $j
+							then	cd $j
+								(( m++ ))
+								$(MAKE) --never --force --mam=static --corrupt=accept CC=$(CC.DIALECT:N=C++:?CC?cc?) $(=) 'dontcare test' install test > $tmp/$m.mam
+								echo ";;;$tmp/$m.mam;$i/$j/Mamfile"
+								cd $(INSTALLROOT)/$i
+							fi
+						done
+					else	(( m++ ))
+						$(MAKE) --never --force --mam=static --corrupt=accept CC=$(CC.DIALECT:N=C++:?CC?cc?) $(=) 'dontcare test' install test > $tmp/$m.mam
+						echo ";;;$tmp/$m.mam;$i/Mamfile"
+					fi
 				fi
 				$(MAKE) --noexec $(-) $(=) recurse list.package.$(type)
 			done
@@ -887,10 +909,13 @@ vendor.cyg = gnu
 			$(op:N=delta:??--format=$(format)?) \
 			--local \
 			-wvf $(source) $(base) \
-			$(VROOT:T=F:P=L*:C%.*%-s",^&/,,"%)
+			$(PACKAGEVIEW:C%.*%-s",^&/,,"%)
+		$(SUM) -x $(checksum) < $(source) > $(source:D:B:S=.$(checksum))
 		echo local > $(source:D:B=$(name):S=.tim)
-		test '1' = '$(incremental)' -a '' != '$(old.source)' &&
-		$(PAX) -rf $(source) -wvf $(old.new.source) -z $(old.source)
+		if test '1' = '$(incremental)' -a '' != '$(old.source)'
+		then	$(PAX) -rf $(source) -wvf $(old.new.source) -z $(old.source)
+			$(SUM) -x $(checksum) < $(old.new.source) > $(old.new.source:D:B:S=.$(checksum))
+		fi
 		rm -rf $tmp
 	else	if	test '' != '$(old.source)' &&
 			cmp -s $(source.$(name)) $(source)
@@ -920,6 +945,7 @@ vendor.cyg = gnu
 					package help source
 				} > $(PACKAGEGEN)/$(name).txt
 				cp $(source.$(name)) $(source)
+				$(SUM) -x $(checksum) < $(source) > $(source:D:B:S=.$(checksum))
 			fi
 			echo local > $(source:D:B=$(name):S=.tim)
 		fi
@@ -1044,6 +1070,7 @@ binary : .binary.init .binary.gen .binary.$$(style)
 			--format=$(format) \
 			--local \
 			-wvf $(binary)
+		$(SUM) -x $(checksum) < $(binary) > $(binary:D:B:S=.$(checksum))
 		rm -rf $tmp
 	fi
 
@@ -1052,8 +1079,8 @@ binary : .binary.init .binary.gen .binary.$$(style)
 	then	tmp=/tmp/pkg$(tmp)
 		mkdir $tmp
 		{
-			$(package.src:T=F:/.*/echo ";;;&"$("\n")/)
-			$(package.bin:T=F:/.*/echo ";;;&"$("\n")/)
+			$(package.src:U:T=F:/.*/echo ";;;&"$("\n")/)
+			$(package.bin:U:T=F:/.*/echo ";;;&"$("\n")/)
 			set -- $(package.closure)
 			for i
 			do	cd $(INSTALLROOT)/$i
@@ -1070,6 +1097,7 @@ binary : .binary.init .binary.gen .binary.$$(style)
 			-wvf $(binary) $(base) \
 			-s",^$tmp/,$(INSTALLOFFSET)/," \
 			$(PACKAGEROOT:C%.*%-s",^&/,,"%)
+		$(SUM) -x $(checksum) < $(binary) > $(binary:D:B:S=.$(checksum))
 		echo local > $(binary:D:B=$(name):S=.$(CC.HOSTTYPE).tim)
 		rm -rf $tmp
 	fi
@@ -1086,9 +1114,9 @@ binary : .binary.init .binary.gen .binary.$$(style)
 					fi
 				done
 			fi
-			$(package.src:T=F:/.*/echo ";;;&"$("\n")/)
-			$(package.src:T=F:N=*/LICENSES/*:B:C,.*,echo ";;;$(PACKAGESRC)/LICENSES/&;$(PACKAGEBIN)/LICENSES/&"$("\n"),)
-			$(package.bin:T=F:/.*/echo ";;;&"$("\n")/)
+			$(package.src:U:T=F:/.*/echo ";;;&"$("\n")/)
+			$(package.src:U:T=F:N=*/LICENSES/*:B:C,.*,echo ";;;$(PACKAGESRC)/LICENSES/&;$(PACKAGEBIN)/LICENSES/&"$("\n"),)
+			$(package.bin:U:T=F:/.*/echo ";;;&"$("\n")/)
 			echo $(name) $(version) $(release|version) 1 > $(PACKAGEGEN)/$(name).ver
 			echo ";;;$(PACKAGEGEN)/$(name).ver"
 			if	test '' != '$(~covers)'
@@ -1153,9 +1181,12 @@ binary : .binary.init .binary.gen .binary.$$(style)
 			-wvf $(binary) $(base) \
 			-s",^$tmp/,$(INSTALLOFFSET)/," \
 			$(PACKAGEROOT:C%.*%-s",^&/,,"%)
+		$(SUM) -x $(checksum) < $(binary) > $(binary:D:B:S=.$(checksum))
 		echo local > $(binary:D:B=$(name):S=.$(CC.HOSTTYPE).tim)
-		test '1' = '$(incremental)' -a '' != '$(old.binary)' &&
-		$(PAX) -rf $(binary) -wvf $(old.new.binary) -z $(old.binary)
+		if test '1' = '$(incremental)' -a '' != '$(old.binary)'
+		then	$(PAX) -rf $(binary) -wvf $(old.new.binary) -z $(old.binary)
+			$(SUM) -x $(checksum) < $(old.new.binary) > $(old.new.binary:D:B:S=.$(checksum))
+		fi
 		rm -rf $tmp
 	else	if	test '' != '$(binary.$(name))'
 		then	exe=$(binary.$(name))
@@ -1180,6 +1211,7 @@ binary : .binary.init .binary.gen .binary.$$(style)
 			*.gz)	gzip < $exe > $(binary) ;;
 			*)	cp $exe $(binary) ;;
 			esac
+			$(SUM) -x $(checksum) < $(binary) > $(binary:D:B:S=.$(checksum))
 			echo local > $(binary:D:B=$(name):S=.$(CC.HOSTTYPE).tim)
 		fi
 	fi

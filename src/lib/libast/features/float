@@ -959,6 +959,9 @@ tst	- -lm -DSCAN=1 - -DEXP=1 - -DADD=1 - -DMPY=1 note{ nan memory representation
 	#if !defined(DBL_MAX) && defined(MAXDOUBLE)
 	#define DBL_MAX		MAXDOUBLE
 	#endif
+	#if _ast_fltmax_double
+	#undef	LDBL_MAX
+	#endif
 	static void
 	#if _STD_
 	list(const char* pfx, void* val, int siz)

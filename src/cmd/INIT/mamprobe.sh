@@ -38,7 +38,7 @@ opt=
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: mamprobe (AT&T Labs Research) 2003-04-25 $
+@(#)$Id: mamprobe (AT&T Labs Research) 2004-04-04 $
 ]
 [+NAME?mamprobe - generate MAM cc probe info]
 [+DESCRIPTION?\bmamprobe\b generates MAM (make abstract machine) \bcc\b(1)
@@ -57,6 +57,8 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 		[+_hosttype_?the \bpackage\b(1) host type]
 		[+mam_cc_L?\b-L\b\adir\a supported]
 		[+STDCAT?command to execute for \bcat\b(1); prefixed by
+			\bexecrate\b(1) on \b.exe\b challenged systems]
+		[+STDCHMOD?command to execute for \bchmod\b(1); prefixed by
 			\bexecrate\b(1) on \b.exe\b challenged systems]
 		[+STDCMP?command to execute for \bcmp\b(1); prefixed by
 			\bexecrate\b(1) on \b.exe\b challenged systems]
@@ -224,7 +226,7 @@ then	STDED=ed
 else	STDED=ex
 fi
 STDEDFLAGS=-
-set STDCAT cat STDCMP cmp STDCP cp STDLN ln STDMV mv STDRM rm
+set STDCAT cat STDCHMOD chmod STDCMP cmp STDCP cp STDLN ln STDMV mv STDRM rm
 while	:
 do	case $# in
 	0|1)	break ;;
@@ -241,11 +243,11 @@ do	case $# in
 	shift
 done
 if	execrate
-then	for n in STDCAT STDCMP STDCP STDLN STDMV STDRM
+then	for n in STDCAT STDCHMOD STDCMP STDCP STDLN STDMV STDRM
 	do	eval $n=\"execrate \$$n\"
 	done
 fi
-for n in STDCAT STDCMP STDCP STDED STDEDFLAGS STDLN STDMV STDRM
+for n in STDCAT STDCHMOD STDCMP STDCP STDED STDEDFLAGS STDLN STDMV STDRM
 do	eval echo setv \$n \$$n
 done
 

@@ -1,3 +1,30 @@
+04-05-01 package.sh: $CC must be C, not C++; allow release command on $PATH
+04-04-15 make.probe: check probe_libdir false positives
+	 package.sh: add lib/package/*.lic src package subdirs
+	 package.mk: add mamfile=0 to inhibit Mamfile generation
+	 iffe.sh: config name_DECLARED => HAVE_name_DECL
+	 iffe.sh: fix mac to handle default value
+04-04-11 iffe.sh: normalize sed [\\\\/] quoting
+04-04-04 package.mk: only checksum generated tarballs
+	 mamprobe.sh: add STDCHMOD
+04-04-01 C+probe: set export LANG=C for uniform error messages
+	 make.probe: another CC.STDLIB tweak
+	 package.sh: fix regress core dump pattern, expand [a-z] match ranges
+04-03-31 Makefile: add intl :MAPLIB: test
+	 make.probe: fix CC.STDLIB search; drop CC.* path duplicates
+04-03-28 iffe.sh: drop unused exec $stdin<&0 dup
+04-03-25 Makefile: add iconv :MAPLIB:
+	 package.sh: use ${PING:-ping -c 1 -w 4}, allowing admin.db override
+04-03-24 package.mk: add *.md5 checksum for each *.(c|exe|tgz)
+	 package.sh: update base change on md5 sum instead of size
+	 iffe.sh: adjust case label \ and keyword quoting for ancient /bin/sh
+04-03-22 probe.win32: ncc => nld
+04-03-19 CONVERT.mk: change the instructions and old source dir default
+	 package.mk: fix recurse=list check
+	 package.mk: add *.md5 checksum for each *.(c|exe|tgz)
+	 package.sh: fix update base/delta/sync existence check
+04-03-18 iffe.sh: -d2 does not remove core dumps on exit
+04-03-17 package.sh: fix make recurse arg/action order
 04-02-29 package.sh: add regress action to compare current and previous tests
 	 package.sh: fix sgi.mips[23] HOSTTYPE test for old irix cc
 	 package.sh: add `export variable ...'

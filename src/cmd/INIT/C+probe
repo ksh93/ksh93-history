@@ -2,7 +2,7 @@
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)C probe (AT&T Research) 2004-02-14
+# @(#)C probe (AT&T Research) 2004-04-01
 #
 # probe [ -d ] c-compiler-path [ attributes ]
 #
@@ -67,7 +67,8 @@ undef="define defined elif else endif error if ifdef ifndef include line pragma 
 #
 
 DISPLAY=
-export DISPLAY
+LANG=C
+export DISPLAY LANG
 
 #
 # now the common probes

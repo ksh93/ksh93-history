@@ -37,6 +37,7 @@ lib="/usr/local/lib /usr/local/shlib"
 ccs="/usr/kvm /usr/ccs/bin"
 org="gnu GNU"
 makefiles="Mamfile Nmakefile nmakefile Makefile makefile"
+checksum=md5sum
 
 package_use='=$HOSTTYPE=$PACKAGEROOT=$INSTALLROOT=$EXECROOT=$CC='
 
@@ -51,7 +52,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Labs Research) 2004-02-29 $
+@(#)$Id: package (AT&T Labs Research) 2004-05-01 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary packages.
@@ -111,7 +112,8 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 		only hosts matching the \b|\b separated \apattern\a. \afile\a
 		contains four types of lines. Blank lines and lines beginning
 		with \b#\b are ignored. Lines starting with \aid\a=\avalue\a
-		are variable assignments. If a package list is not specified on
+		are variable assignments. Set PING to local conventions if
+		\"ping -c 1 -w 4\" fails. If a package list is not specified on
 		the command line the \aaction\a applies to all packages; a
 		variable assigment \bpackage\b=\"\alist\a\" applies \aaction\a
 		to the packages in \alist\a for subsequent hosts in
@@ -253,9 +255,9 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 		Components tested with the \bregress\b(1) command require
 		\bksh93\b.]
 	[+update\b [ beta ]] [ binary ]] [ source ]] [ \aarchitecture\a ... ]] [ \aurl\a ]] [ \apackage\a ... ]]?Download
-		the latest release of the selected packages from \aurl\a
-		(e.g., \bhttp://www.research.att.com/sw/download\b) into
-		the directory \b$PACKAGEROOT/lib/package/tgz\b. \bbeta\b
+		the latest release of the selected and required packages from
+		\aurl\a (e.g., \bhttp://www.research.att.com/sw/download\b)
+		into the directory \b$PACKAGEROOT/lib/package/tgz\b. \bbeta\b
 		acesses beta packages; download these at your own risk. If
 		\aarchitecture\a is omitted then only architectures already
 		present in the tgz directory will be downloaded. If
@@ -268,7 +270,9 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 		then only packages already present in the tgz directory will
 		be downloaded. If \apackage\a is \b-\b then all posted packages
 		will be downloaded. If \bsource\b and \bbinary\b are omitted
-		then both source and binary packages will be downloaded. This
+		then both source and binary packages will be downloaded. If
+		\bonly\b is specified then only the named packages are updated;
+		otherwise the closure of required packages is updated. This
 		action requires \bcurl\b(1), \bwget\b(1) or a shell that
 		supports io to \b/dev/tcp/\b\ahost\a/\aport\a.]
    	[+use\b [ \auid\a | \apackage\a | - ]] [ command ...]]?Run \acommand\a,
@@ -487,11 +491,13 @@ lo=
 make=
 makeflags='-k -K'
 nmakeflags=
+nmakesep=
 nl="
 "
 noexec=
 only=0
 output=
+package_src=
 quiet=0
 show=:
 tab="        "
@@ -627,15 +633,16 @@ ${bT}(5)${bD}Determine the list of package names you want from the download site
       use the ${Mpackage} command to do the actual download:${bX}
 		bin/package setup binary \$URL \\
 			${bB}package-name${eB} ...${eX}
-      This downloads the latest binary package(s); up-to-date local packages
-      are not downloaded again unless ${bB}package force ...${eB} is specified.
-      If the package root will contain only one architecture then you can
-      install in ${bB}bin${eB} and ${bB}lib${eB} instead of ${bB}arch/${eB}${bI}HOSTTYPE${eI}${bB}/bin${eB} and ${bB}arch/${eB}${bI}HOSTTYPE${eI}${bB}/lib${eB}
-      by running this instead:${bX}
+      This downloads the closure of the latest binary package(s); covered and
+      up-to-date packages are not downloaded again unless ${bB}package force ...${eB}
+      is specified. Package content is verified using ${bB}${checksum}${eB}. If the package
+      root will contain only one architecture then you can install in ${bB}bin${eB} and
+      ${bB}lib${eB} instead of ${bB}arch/${eB}${bI}HOSTTYPE${eI}${bB}/bin${eB} and ${bB}arch/${eB}${bI}HOSTTYPE${eI}${bB}/lib${eB} by running this
+      instead:${bX}
 		bin/package setup flat binary \$URL \\
 			${bI}PACKAGE${eI} ...${eX}
       To update the same packages from the same URL run:${bX}
-			bin/package setup binary${eX}${eD}
+		bin/package setup binary${eX}${eD}
 ${bT}(6)${bD}The packaged binaries are position independent, i.e., they do not
       contain hard-coded paths. However, commands with related files, like
       ${Mfile} and ${Mnmake}, require the path of the bin directory to be
@@ -779,15 +786,16 @@ ${bT}(5)${bD}Determine the list of package names you want from the download site
       use the ${Mpackage} command to do the actual download:${bX}
 		bin/package setup source \$URL \\
 			${bB}package-name${eB} ...${eX}
-      This downloads the latest source package(s); up-to-date local packages
-      are not downloaded again unless ${bB}package force ...${eB} is specified.
-      If the package root will contain only one architecture then you can
-      install in ${bB}bin${eB} and ${bB}lib${eB} instead of ${bB}arch/${eB}${bI}HOSTTYPE${eI}${bB}/bin${eB} and ${bB}arch/${eB}${bI}HOSTTYPE${eI}${bB}/lib${eB}
-      by running this instead:${bX}
+      This downloads the closure of latest source package(s); covered and
+      up-to-date packages are not downloaded again unless ${bB}package force ...${eB}
+      is specified. Package content is verified using ${bB}${checksum}${eB}. If the package
+      root will contain only one architecture then you can install in ${bB}bin${eB} and
+      ${bB}lib${eB} instead of ${bB}arch/${eB}${bI}HOSTTYPE${eI}${bB}/bin${eB} and ${bB}arch/${eB}${bI}HOSTTYPE${eI}${bB}/lib${eB} by running this
+      instead:${bX}
 		bin/package setup flat source \$URL \\
 			${bI}PACKAGE${eI} ...${eX}
       To update the same packages from the same URL run:${bX}
-			bin/package setup source${eX}${eD}
+		bin/package setup source${eX}${eD}
 ${bT}(6)${bD}Build and install; all generated files are placed under ${bB}arch/${eB}${bI}HOSTTYPE${eI}
       (${bB}\$INSTALLROOT${eB}), where ${bI}HOSTTYPE${eI} is the output of ${bB}bin/package${eB} (with no
       arguments.) ${bI}name=value${eI} arguments are supported; ${bB}CC${eB} and ${bB}debug=1${eB} (compile
@@ -866,6 +874,7 @@ ${bT}(5)${bD}Read all unread package archive(s):${bX}
 		hosts matching the | separated PATTERN. FILE contains four
 		types of lines. Blank lines and lines beginning with # are
 		ignored. Lines starting with id=value are variable assignments.
+		Set PING to local conventions if \"ping -c 1 -w 4\" fails.
 		If a package list is not specified on the command line the
 		action applies to all packages; a variable assigment
 		package=list applies action to the packages in list for
@@ -1002,22 +1011,25 @@ ${bT}(5)${bD}Read all unread package archive(s):${bX}
 		\$INSTALLROOT/lib/package/gen/test.out. In general a package
 		must be made before it can be tested.
 	update [ beta ] [ binary ] [ source ] [ ARCHITECTURE ... ] [ URL ] [ PACKAGE ... ]
-		Download the latest release of the selected packages from
-		URL (e.g., http://www.research.att.com/sw/download) into
-		the directory \$PACKAGEROOT/lib/package/tgz. beta acesses beta
-		packages; download these at your own risk. If ARCHITECTURE
-		is omitted then only architectures already present in the tgz
-		directory will be downloaded. If ARCHITECTURE is - then
-		all posted architectures will be downloaded. If URL matches
-		*.url then is interpreted as a file whose contents is the url;
-		else if URL is specified then it is copied to the file
-		\$PACKAGEROOT/lib/package/tgz/default.url, otherwise
-		the url in default.url is used. If PACKAGE is omitted then
-		only packages already present in the tgz directory will be
+		Download the latest release of the selected and required
+		packages from URL (e.g.,
+		http://www.research.att.com/sw/download) into the directory
+		\$PACKAGEROOT/lib/package/tgz. beta acesses beta packages;
+		download these at your own risk. If ARCHITECTURE is omitted
+		then only architectures already present in the tgz directory
+		will be downloaded. If ARCHITECTURE is - then all posted
+		architectures will be downloaded. If URL matches *.url then
+		is interpreted as a file whose contents is the url; else if
+		URL is specified then it is copied to the file
+		\$PACKAGEROOT/lib/package/tgz/default.url, otherwise the url
+		in default.url is used. If PACKAGE is omitted then only
+		packages already present in the tgz directory will be
 		downloaded. If PACKAGE is - then all posted packages will be
 		downloaded. If source and binary are omitted then both source
-		and binary packages will be downloaded. This action requires
-		curl(1), wget(1) or a shell that supports io to
+		and binary packages will be downloaded. If \bonly\b is
+		specified then only the named packages are updated; otherwise
+		the closure of required packages is updated. This action
+		requires curl(1), wget(1) or a shell that supports io to
 		/dev/tcp/HOST/PORT.
    	use [ uid | PACKAGE | - ] [ COMMAND ... ]
    		Run COMMAND or an interactive shell if COMMAND is omitted, with
@@ -1471,7 +1483,7 @@ main()
 			done
 			)`
 			case $cpu in
-			[0-9]*)	;;
+			[0123456789]*)	;;
 			*)	cpu=1 ;;
 			esac
 			;;
@@ -2392,15 +2404,37 @@ cat $INITROOT/$i.sh
 	CROSS=0
 	if	test -f $INITROOT/hello.c
 	then	(
-		cd /tmp
-		cp $INITROOT/hello.c pkg$$.c
-		if $CC -o pkg$$.exe pkg$$.c && ./pkg$$.exe 
+		cd /tmp || exit 3
+		cp $INITROOT/hello.c pkg$$.c || exit 3
+		$CC -o pkg$$.exe pkg$$.c > pkg$$.e 2>&1 || {
+			if $CC -Dnew=old -o pkg$$.exe pkg$$.c > /dev/null 2>&1
+			then	echo "$command: $CC: must be a C compiler (not C++)" >&2
+			else	cat pkg$$.e
+				echo "$command: $CC: failed to compile and link $INITROOT/hello.c -- is it a C compiler?" >&2
+			fi
+			exit 2
+		}
+		if ./pkg$$.exe >/dev/null
 		then	code=0
 		else	code=1
 		fi
 		rm -f pkg$$.*
 		exit $code
-		) >/dev/null 2>&1 || CROSS=1
+		)
+		case $? in
+		1)	CROSS=1
+			hostinfo type
+			case $HOSTTYPE in
+			$_hostinfo_)
+				echo "$command: $CC: seems to be a cross-compiler" >&2
+				echo "$command: set HOSTTYPE to something other than the native $HOSTTYPE" >&2
+				exit 1
+				;;
+			esac
+			;;
+		2)	exit 1
+			;;
+		esac
 	fi
 	EXECTYPE=$HOSTTYPE
 	EXECROOT=$INSTALLROOT
@@ -3193,8 +3227,7 @@ order() # [ package ]
 	fi
 	for _order_f_
 	do	while	:
-		do	
-			view - src $_order_f_ && break
+		do	view - src $_order_f_ && break
 			case $_order_f_ in
 			*.pkg)	;;
 			*)	_order_f_=$_order_f_.pkg; view - src $_order_f_ && break ;;
@@ -3457,7 +3490,11 @@ get() # host path [ file size ]
 			path=$2
 			while	:
 			do	eval "exec $getfd<> /dev/tcp/$host/80" || exit
-				print "GET /$path HTTP/1.0\\r\\nHost: $host\\r\\n\\r" >&$getfd
+				case $path in
+				/*)	;;
+				*)	path=/$path ;;
+				esac
+				print "GET $path HTTP/1.0\\r\\nHost: $host\\r\\n\\r" >&$getfd
 				cat <&8 > get.tmp
 				got=`sed -e 1q get.tmp`
 				case $got in
@@ -3492,7 +3529,12 @@ get() # host path [ file size ]
 		'')	echo "$3 ($4 bytes):"
 			case $urlget in
 			.)	eval "exec $getfd<> /dev/tcp/$1/80" || exit
-				print "GET $2/$3 HTTP/1.0\\r\\nHost: $host\\r\\n\\r" >&$getfd
+				path=$2/$3
+				case $path in
+				/*)	;;
+				*)	path=/$path ;;
+				esac
+				print "GET $path HTTP/1.0\\r\\nHost: $host\\r\\n\\r" >&$getfd
 				read got <&$getfd
 				case $got in
 				*" 200 "*)
@@ -3511,12 +3553,26 @@ get() # host path [ file size ]
 			*)	$urlget http://$1/$2/$3 || exit
 				;;
 			esac
-			case " `wc -c get.tmp` " in
-			*" $4 "*)
+			case $checksum:$5 in
+			:*|*:-)	z=`wc -c < get.tmp`
+				case " $z " in
+				*" $4 "*)
+					;;
+				*)	rm -f get.tmp
+					echo $command: $3: download error: expected $4 bytes, got $z >&2
+					exit 1
+					;;
+				esac
 				;;
-			*)	rm -f get.tmp
-				echo $command: $3: download error >&2
-				exit 1
+			*)	z=`$checksum < get.tmp | sed -e 's,^[ 	][ 	]*,,' -e 's,[ 	].*,,'`
+				case " $z " in
+				*" $5 "*)
+					;;
+				*)	rm -f get.tmp
+					echo $command: $3: download $checksum error: expected $5, got $z >&2
+					exit 1
+					;;
+				esac
 				;;
 			esac
 			mv get.tmp $3 || exit
@@ -3569,8 +3625,8 @@ remote() # host background
 		esac
 		;;
 	esac
-	if	ping -c 1 -w 4 $name >/dev/null 2>&1
-	then	cmd=". ./.profile && cd $root && { test -f lib/package/admin/$admin_env && . ./lib/package/admin/$admin_env || true ;} && touch lib/package/tgz/.package.tim && PATH=\`pwd\`/bin:\$PATH \${SHELL:-/bin/sh} -c 'package $admin_args PACKAGEROOT=\`pwd\` HOSTTYPE=$type VPATH='"
+	if	$PING $name >/dev/null 2>&1
+	then	cmd=". ./.profile && cd $root && { test -f lib/package/admin/$admin_env && . ./lib/package/admin/$admin_env || true ;} && touch lib/package/tgz/.package.tim && PATH=\${PWD:-\`pwd\`}/bin:\$PATH \${SHELL:-/bin/sh} -c 'package $admin_args PACKAGEROOT=\${PWD:-\`pwd\`} HOSTTYPE=$type VPATH='"
 		case $admin_binary in
 		'')	snarf= ;;
 		esac
@@ -3587,6 +3643,24 @@ remote() # host background
 		esac
 	else	echo "$command: $name: down" >&2
 	fi
+}
+
+# update package_src
+
+checksrc()
+{
+	case $package_src in
+	'')	package_src=$src
+		for _i_ in `cd $PACKAGESRC; ls *.lic 2>/dev/null | sed 's/[-.].*//'`
+		do	case " $package_src " in
+			*" $_i_ "*)
+				;;
+			*)	package_src="$package_src $_i_"
+				;;
+			esac
+		done
+		;;
+	esac
 }
 
 case $action in
@@ -3607,6 +3681,7 @@ admin)	while	test ! -f $admin_db
 	esac
 	: all work done in $PACKAGESRC/admin
 	cd $PACKAGESRC/admin || exit
+	checksrc
 	packages=
 	admin_log=$admin_action.log
 	exec < $admin_db || exit
@@ -3627,6 +3702,7 @@ admin)	while	test ! -f $admin_db
 	*)	admin_binary=
 		;;
 	esac
+	PING='ping -c 1 -w 4'
 	trap 'kill $pids >/dev/null 2>&1' 1 2 3 15
 	while	read type host root date time make test write junk
 	do	case $type in
@@ -3637,7 +3713,7 @@ admin)	while	test ! -f $admin_db
 			make|test|write)
 				eval f='$'$admin_action
 				case $f in
-				*[!0-9]*)	continue ;;
+				*[!0123456789]*)	continue ;;
 				esac
 			esac
 			rsh=rsh
@@ -3788,7 +3864,7 @@ admin)	while	test ! -f $admin_db
 			:?*)	eval syncname='$'${sync}_name
 				test -x $PACKAGEROOT/bin/package && $admin_ditto --remote=$rsh --expr="name=='package'" $PACKAGEROOT/bin $user$syncname:$root/bin
 				test -d $PACKAGESRC && $admin_ditto --remote=$rsh --expr="if(level>1)status=SKIP;name=='*.(pkg|lic)'" $PACKAGESRC $user$syncname:$root/lib/package
-				for dir in $src
+				for dir in $package_src
 				do	case $MAKESKIP in
 					'')	expr="--expr=if(name=='$admin_ditto_skip')status=SKIP" ;;
 					*)	expr="--expr=if(name=='$admin_ditto_skip'||level==1&&name=='$MAKESKIP')status=SKIP" ;;
@@ -3825,7 +3901,7 @@ admin)	while	test ! -f $admin_db
 			case $admin_binary:$sync in
 			:?*)	eval syncname='$'${sync}_name
 				test -d $PACKAGESRC && echo $admin_ditto --remote=$rsh --expr="if(level>1)status=SKIP;name=='*.(pkg|lic)'" $PACKAGESRC $user$syncname:$root/lib/package
-				for dir in $src
+				for dir in $package_src
 				do	case $MAKESKIP in
 					'')	expr="--expr=if(name=='$admin_ditto_skip')status=SKIP" ;;
 					*)	expr="--expr=if(name=='$admin_ditto_skip'||level==1&&name=='$MAKESKIP')status=SKIP" ;;
@@ -3928,8 +4004,26 @@ admin)	while	test ! -f $admin_db
 					??)	E="    $E" ;;
 					?)	E="     $E" ;;
 					esac
-					echo "$1$t1	$2$t2	$3$t3	$D	$E	${M:-0} ${T:-0} ${W:-0}"
-					echo "$1$t1	$2$t2	$3$t3	$D	$E	${M:-0} ${T:-0} ${W:-0}" >&9
+					case $M in
+					???)	M="$M" ;;
+					??)	M=" $M" ;;
+					?)	M="  $M" ;;
+					'')	M="  0" ;;
+					esac
+					case $T in
+					???)	T="$T" ;;
+					??)	T=" $T" ;;
+					?)	T="  $T" ;;
+					'')	T="  0" ;;
+					esac
+					case $W in
+					???)	W="$W" ;;
+					??)	W=" $W" ;;
+					?)	W="  $W" ;;
+					'')	W="  0" ;;
+					esac
+					echo "$1$t1	$2$t2	$3$t3	$D	$E	$M $T $W"
+					echo "$1$t1	$2$t2	$3$t3	$D	$E	$M $T $W" >&9
 					continue
 					;;
 				esac
@@ -4334,6 +4428,7 @@ make|view)
 		done
 		;;
 	esac
+	checksrc
 	requirements source $package
 	components $package
 	package=$_components_
@@ -4410,7 +4505,7 @@ make|view)
 		k="$k$i"
 	done
 	o="( $o ) -print"
-	for d in $src
+	for d in $package_src
 	do	i=src/$d
 		if	test -d $i
 		then	test -d $INSTALLROOT/$i || $exec mkdir $INSTALLROOT/$i || exit
@@ -4710,7 +4805,7 @@ cat $j $k
 				fi
 			fi
 			note believe generated files for $accept
-			eval capture \$NMAKE \$makeflags \$nmakeflags \$noexec recurse believe $accept $assign
+			eval capture \$NMAKE \$makeflags \$nmakeflags \$noexec recurse believe \$nmakesep $accept $assign
 			$exec touch $INSTALLROOT/bin/.paths
 			note make the remaining targets with $NMAKE
 		else	eval capture $MAKE \$makeflags \$nmakeflags \$noexec install nmake $assign
@@ -4796,7 +4891,7 @@ cat $j $k
 	else	case $target in
 		'')	target="install cc-" ;;
 		esac
-		eval capture \$MAKE \$makeflags \$nmakeflags \$noexec recurse \$package \$target $assign
+		eval capture \$MAKE \$makeflags \$nmakeflags \$noexec recurse \$target \$nmakesep \$package $assign
 	fi
 	;;
 
@@ -5154,12 +5249,11 @@ regress)if	test ! -d $PACKAGEBIN/gen
 			then	$exec mv regress.$s regress.old
 			fi
 			case $exec in
-			'')	egrep -i '\*\*\*|FAIL|^TEST.* [1-9][0-9]* error|core.*dump' test.$s |
-				sed 	-e '/\*\*\* [0-9]/d' \
+			'')	egrep -i '\*\*\*|FAIL|^TEST.* [123456789][0123456789]* error|core.*dump' test.$s |
+				sed 	-e '/\*\*\* [0123456789]/d' \
 					-e '/^TEST.\//s,/[^ ]*/,,' \
 					-e 's,[ 	][ 	]*$,,' \
-					-e 's/[0-9][0-9]*: Memory fault/Memory fault/' \
-					-e 's/[0-9][0-9]*: Bus error/Bus error/' \
+					-e 's/[0123456789][0123456789]*:* \([abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789 ]*([abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789 ]*[Cc][Oo][Rr][Ee][abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789 ]*)\)/\1/' \
 					-e 's/\.sh failed at .* with /.sh failed /' \
 					> regress.$s
 				;;
@@ -5177,6 +5271,7 @@ regress)if	test ! -d $PACKAGEBIN/gen
 	;;
 
 release)count= lo= hi=
+	checksrc
 	checkaout release
 	requirements source $package
 	components $package
@@ -5236,7 +5331,7 @@ release)count= lo= hi=
 	esac
 	x=
 	for r in $INSTALLROOT $PACKAGEROOT
-	do	for s in $src
+	do	for s in $package_src
 		do	d=$r/src/$s
 			if	test -d $d
 			then	cd $d
@@ -5249,11 +5344,11 @@ release)count= lo= hi=
 					esac
 					for f in RELEASE CHANGES ChangeLog
 					do	if	test -f $i/$f
-						then	$exec $EXECROOT/bin/release $release $i/$f
+						then	$exec release $release $i/$f
 							x="$x $i"
 							for f in $i/*/$f
 							do	if	test -f $f
-								then	$exec $EXECROOT/bin/release $release $f
+								then	$exec release $release $f
 								fi
 							done
 							break
@@ -5359,7 +5454,7 @@ results)set '' $target
 			do	echo "$sep==> $j <=="
 				sep=$nl
 				case $filter in
-				err)	$exec egrep -i '\*\*\*|FAIL|^TEST.* [1-9][0-9]* error|core.*dump' $j | sed -e '/^TEST.\//s,/[^ ]*/,,'
+				err)	$exec egrep -i '\*\*\*|FAIL|^TEST.* [123456789][0123456789]* error|core.*dump' $j | sed -e '/^TEST.\//s,/[^ ]*/,,'
 					;;
 				cat)	$exec cat $j
 					;;
@@ -5422,7 +5517,7 @@ test)	requirements source $package
 
 	# do the tests
 
-	eval capture \$MAKE \$makeflags \$noexec recurse \$package \$target test cc- $assign
+	eval capture \$MAKE \$makeflags \$noexec recurse test cc- \$target \$nmakesep \$package $assign
 	;;
 
 update)	# download the latest release.version for selected packages
@@ -5585,146 +5680,257 @@ update)	# download the latest release.version for selected packages
 	case $default_url in
 	?*)	echo $url > $default_url ;;
 	esac
-	echo "$got" | {
-		while	read name suffix type base base_size delta delta_size sync sync_size comment
-		do	case $verbose in
-			1)	case $type in
-				-)	i= ;;
-				*)	i=.$type ;;
-				esac
-				j="$name.$base$i.$suffix"
-				case $delta in
-				-)	j="$j -" ;;
-				*)	j="$j $name.$base.$delta$i.$suffix" ;;
-				esac
-				case $sync in
-				-)	j="$j -" ;;
-				*)	j="$j $name.$base.$sync$i.$suffix" ;;
-				esac
-				echo $command: $j :$base_size:$delta_size:$sync_size: >&2
+	echo "$got" > got.tmp
+	case $only in
+	0)	exec < got.tmp
+		covered=
+		while	read name suffix type base base_size delta delta_size sync sync_size requires covers base_sum delta_sum sync_sum comment
+		do	case $requires in
+			''|-*)	continue ;;
 			esac
-			case " $package_hit " in
-			*" $name "*|*" - "*)
-				;;
-			*)	package_hit="$package_hit $name"
-				;;
-			esac
+			IFS=:
+			set '' $requires
+			IFS=$ifs
 			case $type in
 			-)	case " $source_packages " in
 				*" $name "*|*" - "*)
-					if	test -s $name.tim
-					then	continue
-					fi
-					if	test -f $name.$base.$suffix
-					then	size=`wc -c < $name.$base.$suffix  | sed 's/[ 	]//g'`
-					else	size=X
-					fi
-					if	test "0" != "$force" -a "X-" = "X$delta" -o ! -f $name.$base.$suffix -o "$base_size" != "$size"
-					then	rmt=
-						case $sync in
-						-)	;;
-						*)	lcl=$name.$base.$sync.$suffix
-							if	test -f $lcl
-							then	rmt=1
-								
-								get $host $dir $lcl $sync_size
-							fi
+					for name
+					do	case " $source_packages " in
+						*" $name "*)
+							;;
+						*)	source_packages="$source_packages $name"
+							covered=$covered:$covers
 							;;
 						esac
-						case $rmt in
-						'')	lcl=$name.$base.$suffix
-							get $host $dir $lcl $base_size
-							;;
-						esac
-					fi
-					case $delta in
-					-)	;;
-					*)	lcl=$name.$base.$delta.$suffix
-						if	test "0" != "$force" -o ! -f $lcl
-						then	get $host $dir $lcl $delta_size
-						fi
-						;;
-					esac
+					done
 					;;
 				esac
 				;;
 			*)	case " $binary_packages " in
 				*" $name "*|*" - "*)
-					if	test -s $name.$type.tim
-					then	continue
-					fi
-					case " $types " in
-					*" - "*);;
-					"  ")	case " $types_test " in
-						*" $type "*)
+					for name
+					do	case " $binary_packages " in
+						*" $name "*)
 							;;
-						*)	types_test="$types_test $type"
-							for i in *.????-??-??.$type.* *.????-??-??.????-??-??.$type.*
-							do	if	test -f $i
-								then	types_local="$types_local $type"
-								fi
-								break
-							done
+						*)	binary_packages="$binary_packages $name"
+							covered=$covered:$covers
 							;;
 						esac
-						case " $types_local " in
-						*" $type "*)
-							;;
-						*)	continue
-							;;
-						esac
-						;;
-					*)	case " $types " in
-						*" $type "*)
-							;;
-						*)	continue
-							;;
-						esac
-						;;
+					done
+					;;
+				esac
+				;;
+			esac
+		done
+		case $covered in
+		?*)	x=$source_packages
+			source_packages=
+			for name in $x
+			do	case :$covered: in
+				*:$name:*)	;;
+				*)		source_packages="$source_packages $name" ;;
+				esac
+			done
+			x=$binary_packages
+			binary_packages=
+			for name in $x
+			do	case :$covered: in
+				*:$name:*)	;;
+				*)		binary_packages="$binary_packages $name" ;;
+				esac
+			done
+			;;
+		esac
+		;;
+	esac
+	( $checksum ) < /dev/null > /dev/null 2>&1 || {
+		echo $command: warning: $checksum: command not found -- only download sizes will be checked >&2
+		checksum=
+	}
+	exec < got.tmp
+	while	read name suffix type base base_size delta delta_size sync sync_size requires covers base_sum delta_sum sync_sum comment
+	do	case $verbose in
+		1)	case $type in
+			-)	i= ;;
+			*)	i=.$type ;;
+			esac
+			j="$name.$base$i.$suffix"
+			case $delta in
+			-)	j="$j -" ;;
+			*)	j="$j $name.$base.$delta$i.$suffix" ;;
+			esac
+			case $sync in
+			-)	j="$j -" ;;
+			*)	j="$j $name.$base.$sync$i.$suffix" ;;
+			esac
+			echo $command: $j $base_size:$base_sum $delta_size:$delta_sum $sync_size:$sync_sum $requires >&2
+		esac
+		case " $package_hit " in
+		*" $name "*|*" - "*)
+			;;
+		*)	package_hit="$package_hit $name"
+			;;
+		esac
+		case $type in
+		-)	case " $source_packages " in
+			*" $name "*|*" - "*)
+				if	test -s $name.tim
+				then	continue
+				fi
+				lcl=$name.$base.$suffix
+				if	test -f $lcl
+				then	case $checksum:$base_sum in
+					:*|*:-)	size=`wc -c < $lcl | sed 's, ,,g'` sum=$base_sum ;;
+					*)	size=$base_size sum=`$checksum < $lcl | sed -e 's,^[ 	][ 	]*,,' -e 's,[ 	].*,,'` ;;
 					esac
-					if	test "0" != "$force" -a "X-" = "X$delta" -o ! -f $name.$base.$type.$suffix
-					then	rmt=
-						case $sync in
-						-)	;;
-						*)	lcl=$name.$base.$sync.$type.$suffix
-							if	test -f $lcl
-							then	rmt=1
-								get $host $dir $lcl $sync_size
-							fi
-							;;
-						esac
-						case $rmt in
-						'')	lcl=$name.$base.$type.$suffix
-							get $host $dir $lcl $base_size
-							;;
-						esac
-					fi
-					case $delta in
-					-)	;;
-					*)	lcl=$name.$base.$delta.$type.$suffix
-						if	test "0" != "$force" -o ! -f $lcl
-						then	get $host $dir $lcl $delta_size
+				else	size=X sum=X
+				fi
+				if	test "0" != "$force" -a "X-" = "X$delta" -o "$base_size" != "$size" -o "$base_sum" != "$sum"
+				then	rmt=
+					case $sync:$sync_size in
+					-*|*[-:])
+						;;
+					*)	lcl=$name.$base.$sync.$suffix
+						if	test -f $lcl
+						then	rmt=1
+							get $host $dir $lcl $sync_size $sync_sum
 						fi
 						;;
 					esac
+					case $base:$base_size in
+					-*|*[-:])
+						;;
+					*)	case $rmt in
+						'')	lcl=$name.$base.$suffix
+							get $host $dir $lcl $base_size $base_sum
+							;;
+						esac
+						;;
+					esac
+				fi
+				case $delta:$delta_size in
+				-*|*[-:])
+					;;
+				*)	lcl=$name.$delta.$base.$suffix
+					if	test -f $lcl
+					then	case $checksum:$delta_sum in
+						:*|*:-)	size=`wc -c < $lcl | sed 's, ,,g'` sum=$delta_sum ;;
+						*)	size=$base_size sum=`$checksum < $lcl | sed -e 's,^[ 	][ 	]*,,' -e 's,[ 	].*,,'` ;;
+						esac
+					else	size=X sum=X
+					fi
+					if	test "0" != "$force" -o "$delta_size" != "$size" -o "$delta_sum" != "$sum"
+					then	get $host $dir $lcl $delta_size $delta_sum
+					fi
 					;;
 				esac
 				;;
 			esac
-		done
-		for name in $source_packages $binary_packages
-		do	case $name in
-			-)	;;
-			*)	case " $package_hit " in
-				*" $name "*)
+			;;
+		*)	case " $binary_packages " in
+			*" $name "*|*" - "*)
+				if	test -s $name.$type.tim
+				then	continue
+				fi
+				case " $types " in
+				*" - "*);;
+				"  ")	case " $types_test " in
+					*" $type "*)
+						;;
+					*)	types_test="$types_test $type"
+						for i in *.????-??-??.$type.* *.????-??-??.????-??-??.$type.*
+						do	if	test -f $i
+							then	types_local="$types_local $type"
+							fi
+							break
+						done
+						;;
+					esac
+					case " $types_local " in
+					*" $type "*)
+						;;
+					*)	continue
+						;;
+					esac
 					;;
-				*)	echo $command: $name: unknown package >&2
+				*)	case " $types " in
+					*" $type "*)
+						;;
+					*)	continue
+						;;
+					esac
+					;;
+				esac
+				lcl=$name.$base.$type.$suffix
+				if	test -f $lcl
+				then	case $checksum:$base_sum in
+					:*|*:-)	size=`wc -c < $lcl | sed 's, ,,g'` sum=$base_sum ;;
+					*)	size=$base_size sum=`$checksum < $lcl | sed -e 's,^[ 	][ 	]*,,' -e 's,[ 	].*,,'` ;;
+					esac
+				else	size=X sum=X
+				fi
+				if	test "0" != "$force" -a "X-" = "X$delta" -o "$base_size" != "$size" -o "$base_sum" != "$sum"
+				then	rmt=
+					case $sync:$sync_size in
+					-*|*[-:])
+						;;
+					*)	lcl=$name.$base.$sync.$type.$suffix
+						if	test -f $lcl
+						then	rmt=1
+							get $host $dir $lcl $sync_size $sync_sum
+						fi
+						;;
+					esac
+					case $base:$base_size in
+					-*|*[-:])
+						;;
+					*)	case $rmt in
+						'')	lcl=$name.$base.$type.$suffix
+							get $host $dir $lcl $base_size $base_sum
+							;;
+						esac
+						;;
+					esac
+				fi
+				case $delta:$delta_size in
+				-*|*[-:])
+					;;
+				*)	lcl=$name.$delta.$base.$type.$suffix
+					if	test -f $lcl
+					then	sum=`$checksum < $lcl | sed -e 's,^[ 	][ 	]*,,' -e 's,[ 	].*,,'`
+					else	sum=X
+					fi
+					if	test -f $lcl
+					then	case $checksum:$delta_sum in
+						:*|*:-)	size=`wc -c < $lcl | sed 's, ,,g'` sum=$delta_sum ;;
+						*)	size=$base_size sum=`$checksum < $lcl | sed -e 's,^[ 	][ 	]*,,' -e 's,[ 	].*,,'` ;;
+						esac
+					else	size=X sum=X
+					fi
+					if	test "0" != "$force" -o "$delta_size" != "$size" -o "$delta_sum" != "$sum"
+					then	get $host $dir $lcl $delta_size $delta_sum
+					fi
 					;;
 				esac
 				;;
 			esac
-		done
-	}
+			;;
+		esac
+	done
+	for name in $source_packages $binary_packages
+	do	case $name in
+		-)	;;
+		*)	case " $package_hit " in
+			*" $name "*)
+				;;
+			*)	echo $command: $name: unknown package >&2
+				;;
+			esac
+			;;
+		esac
+	done
+	exec <&-
+	rm -f got.tmp
 	;;
 
 use)	# finalize the environment

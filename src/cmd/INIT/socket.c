@@ -25,8 +25,10 @@
  * small test for -lnsl
  */
 
+#ifndef socket
 #include <sys/types.h>
 #include <sys/socket.h>
+#endif
 
 main()
 {

@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 4.4 2004-02-29
+info mam static 00000 1994-07-17 make (AT&T Research) 4.4 2004-04-15
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ar
@@ -8,6 +8,7 @@ setv ASFLAGS
 setv CC cc
 setv mam_cc_FLAGS 
 setv CCFLAGS ${debug?1?${mam_cc_DEBUG} -D_BLD_DEBUG?${mam_cc_OPTIMIZE}?}
+setv CCLDFLAGS  ${strip?1?${mam_cc_LD_STRIP}??}
 setv COTEMP $$
 setv CPIO cpio
 setv CPIOFLAGS
@@ -412,7 +413,7 @@ done mamake.c
 prev mamake.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}   -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2004 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\" -c mamake.c
 done mamake.o generated
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS}    -o mamake mamake.o
+exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS}  -o mamake mamake.o
 done mamake generated
 make proto
 make proto.o
@@ -421,7 +422,7 @@ done proto.c
 prev proto.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}    -c proto.c
 done proto.o generated
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS}    -o proto proto.o
+exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS}  -o proto proto.o
 done proto generated
 make ratz
 make ratz.o
@@ -440,7 +441,7 @@ done ratz.c
 prev ratz.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}    -c ratz.c
 done ratz.o generated
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS}    -o ratz ratz.o
+exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS}  -o ratz ratz.o
 done ratz generated
 make release
 make release.o
@@ -451,7 +452,7 @@ done release.c
 prev release.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}   -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2004 AT&T Corp.][-license?http://www.research.att.com/sw/license/ast-open.html][--catalog?INIT]"\" -c release.c
 done release.o generated
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS}    -o release release.o
+exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS}  -o release release.o
 done release generated
 make mprobe
 make mprobe.sh
@@ -880,6 +881,44 @@ exec - rm -f dl.exe dl.o
 done dl.req generated
 exec - test '' = 'dl.req' || ${STDCMP} 2>/dev/null -s dl.req ${INSTALLROOT}/lib/lib/dl || { ${STDMV} ${INSTALLROOT}/lib/lib/dl ${INSTALLROOT}/lib/lib/dl.old 2>/dev/null || true; ${STDCP} dl.req ${INSTALLROOT}/lib/lib/dl  		    		    ;}
 done ../../../lib/lib/dl generated
+make ../../../lib/lib/iconv
+make iconv.req
+make iconv.c
+done iconv.c
+exec - r='-'
+exec - for i in iconv.c
+exec - do	if	${CC} -o iconv.exe $i -liconv > /dev/null
+exec - 	then	${CC} -o iconv.exe $i > /dev/null || {
+exec - 			r='-liconv'
+exec - 			break
+exec - 		}
+exec - 	fi
+exec - done 2>/dev/null
+exec - echo " $r" > iconv.req
+exec - rm -f iconv.exe iconv.o
+done iconv.req generated
+exec - test '' = 'iconv.req' || ${STDCMP} 2>/dev/null -s iconv.req ${INSTALLROOT}/lib/lib/iconv || { ${STDMV} ${INSTALLROOT}/lib/lib/iconv ${INSTALLROOT}/lib/lib/iconv.old 2>/dev/null || true; ${STDCP} iconv.req ${INSTALLROOT}/lib/lib/iconv  		    		    ;}
+done ../../../lib/lib/iconv generated
+make ../../../lib/lib/intl
+make intl.req
+make intl.c
+make libintl.h implicit
+done libintl.h dontcare virtual
+done intl.c
+exec - r='-'
+exec - for i in intl.c
+exec - do	if	${CC} -o intl.exe $i -lintl > /dev/null
+exec - 	then	${CC} -o intl.exe $i > /dev/null || {
+exec - 			r='-lintl'
+exec - 			break
+exec - 		}
+exec - 	fi
+exec - done 2>/dev/null
+exec - echo " $r" > intl.req
+exec - rm -f intl.exe intl.o
+done intl.req generated
+exec - test '' = 'intl.req' || ${STDCMP} 2>/dev/null -s intl.req ${INSTALLROOT}/lib/lib/intl || { ${STDMV} ${INSTALLROOT}/lib/lib/intl ${INSTALLROOT}/lib/lib/intl.old 2>/dev/null || true; ${STDCP} intl.req ${INSTALLROOT}/lib/lib/intl  		    		    ;}
+done ../../../lib/lib/intl generated
 make ../../../lib/lib/m
 make m.req
 make m.c

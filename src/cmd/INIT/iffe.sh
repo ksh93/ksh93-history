@@ -34,7 +34,7 @@ case $-:$BASH_VERSION in
 esac
 
 command=iffe
-version=2004-02-11 # update in USAGE too #
+version=2004-04-11 # update in USAGE too #
 
 pkg() # package
 {
@@ -88,7 +88,7 @@ is() # op name
 			cmd)	mm="a command" ;;
 			dat)	mm="a library data symbol" ;;
 			dfn)	mm="a macro with extractable value" ;;
-			exp|if|elif|else)
+			exp|"if"|"elif"|"else")
 				mm="true" ;;
 			hdr)	mm="a header" ;;
 			id)	mm="an identifier" ;;
@@ -117,7 +117,7 @@ is() # op name
 			*)	yy= mm= ;;
 			esac
 			case $ii in
-			[abcdefghijklmnopqrstuvwxyz]*[abcdefghijklmnopqrstuvwxyz]"{") ii="$ii ... }end" ;;
+			[abcdefghijklmnopqrstuvwxyz]*[abcdefghijklmnopqrstuvwxyz]'{') ii="$ii ... }end" ;;
 			esac
 			$show "$command: test:" $yy $ii $mm "...$SHOW" >&$stderr
 			complete=1
@@ -426,7 +426,7 @@ set=
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: iffe (AT&T Labs Research) 2004-02-11 $
+@(#)$Id: iffe (AT&T Labs Research) 2004-04-15 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?iffe - host C compilation environment feature probe]
@@ -439,7 +439,7 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 	operand list with the \b:\b operand or \bnewline\b as the line
 	delimiter. The standard input is read if there are no command
 	line statements or if \afile\a\b.iffe\b is omitted.]
-[+?Though similar in concept to \bautoconfig\b(1) and \bconfig\b(1), there
+[+?Though similar in concept to \bautoconf\b(1) and \bconfig\b(1), there
 	are fundamental differences. The latter tend to generate global
 	headers accessed by all components in a package, whereas \biffe\b is
 	aimed at localized, self contained feature testing.]
@@ -465,7 +465,8 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 	\bconfig\b.]
 [d:debug?Sets the debug level. Level 0 inhibits most
 	error messages, level 1 shows compiler messages, and
-	level 2 traces internal \biffe\b \bsh\b(1) actions.]#[level]
+	level 2 traces internal \biffe\b \bsh\b(1) actions and does
+	not remove core dumps on exit.]#[level]
 [D:define?Successful test macro definitions are emitted. This is the default.]
 [i:input?Sets the input file name to \afile\a, which
 	must contain \biffe\b statements.]:[file]
@@ -550,8 +551,8 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 		[+#endif?]
 		[+#define _NIL_(x) ((x)0)?]
 	}
-[+?= \adefault\a may be specified for the \bkey\b, \blib\b, \bmth\b and \btyp\b
-	commands. If the test fails for \aarg\a then
+[+?= \adefault\a may be specified for the \bkey\b, \blib\b, \bmac\b, \bmth\b
+	and \btyp\b commands. If the test fails for \aarg\a then
 	\b#define\b \aarg\a \adefault\a is emitted. \bkey\b accepts multiple
 	\b= \b\adefault\a values; the first valid one is used.]
 [+?Each test statement generates a portion of a C language header that contains
@@ -560,7 +561,7 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 	\b#endif\b guards the generated header from multiple \b#include\bs,
 	where \aname\a is determined by either the \brun\b command input file
 	name if any, or the first \aop\a of the first command, and \adirectory\a
-	is the basname component of either the \brun\b command file, if any,
+	is the basename component of either the \brun\b command file, if any,
 	or the current working directory. The output file name is determined
 	in this order:]{
 		[+-?If the first command line operand is \b-\b then the output
@@ -578,7 +579,7 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 	\b#include\b prerequisites are automatically detected, \bnmake\b(1)
 	ensures that all prerequisite \biffe\b headers are generated before
 	compilation. Note that the directories are deliberately named
-	\bFEATURE\b and \bfeatures\b to keep case-insensitive file systems
+	\bFEATURE\b and \bfeatures\b to keep case-ignorant file systems
 	happy.]
 [+?The feature test commands are:]{
 	[+# \acomment\a?Comment line - ignored.]
@@ -633,7 +634,7 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 		Otherwise this command is ignored.]
 	[+npt \aname\a?Defines \b_npt_\b\aname\a if the \aname\a symbol
 		requires a prototype. The \b--config\b macro name is
-		\b\aNAME\a\b_DECLARED\b with the opposite sense.]
+		\bHAVE_\aNAME\a\b_DECL\b with the opposite sense.]
 	[+num \aname\a?Defines \b_num_\b\aname\a if \aname\a is a numeric
 		constant \aenum\a or \amacro\a.]
 	[+nxt \aname\a?Defines a string macro \b_nxt_\b\aname\a suitable for
@@ -698,7 +699,8 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 		exported to the script.]
 	[+execute?The block is compiled, linked, and executed. \b0\b exit
 		status means success.]
-	[+fail?If the test fails then the block text evaluated by \bsh\b(1).]
+	[+fail?If the test fails then the block text is evaluated by
+		\bsh\b(1).]
 	[+link?The block is compiled and linked (\bcc -o\b).]
 	[+macro?The block is preprocessed (\bcc -E\b) and lines containing
 		text bracketed by \b<<"\b ... \b">>\b (\aless-than less-than
@@ -710,7 +712,8 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 		as a \b/*\b ... \b*/\b comment.]
 	[+output?The block is compiled, linked, and executed, and the output
 		is copied to the output file.]
-	[+pass?If the test succeeds then the block text evaluated by \bsh\b(1).]
+	[+pass?If the test succeeds then the block text is evaluated by
+		\bsh\b(1).]
 	[+preprocess?The block is preprocessed (\bcc -E\b).]
 	[+run?The block is executed as a shell script and the output is
 		copied to the output file. Succesful test macros are also
@@ -721,7 +724,7 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 		output file. \byes{\b ... \b}end\b is equivalent to the
 		unnamed block \b{\b ... \b}\b.]
 }
-[+SEE ALSO?\bautoconfig\b(1), \bconfig\b(1), \bcrossexec\b(1), \bnmake\b(1),
+[+SEE ALSO?\bautoconf\b(1), \bconfig\b(1), \bcrossexec\b(1), \bnmake\b(1),
 	\bpackage\b(1), \bproto\b(1), \bsh\b(1)]
 '
 	while	getopts -a "$command" "$USAGE" OPT
@@ -892,8 +895,8 @@ esac
 #	nullin	/dev/null input
 #	nullout	/dev/null output
 
-stdin=4 stdout=5 stderr=6 nullin=7 nullout=8
-eval "exec $stdin<&0 $nullin</dev/null $nullout>/dev/null $stdout>&1 $stderr>&2"
+stdout=5 stderr=6 nullin=7 nullout=8
+eval "exec $nullin</dev/null $nullout>/dev/null $stdout>&1 $stderr>&2"
 case " $* " in
 *" set debug "[3456789]*)
 	;;
@@ -916,11 +919,16 @@ esac
 # status: 0:success 1:failure 2:interrupt
 
 status=1
-if	(ulimit -c 0) >/dev/null 2>&1
-then	ulimit -c 0
-	core=
-else	core=core
-fi
+case $debug in
+2)	core=
+	;;
+*)	if	(ulimit -c 0) >/dev/null 2>&1
+	then	ulimit -c 0
+		core=
+	else	core="core core.??*"
+	fi
+	;;
+esac
 trap "rm -f $core $tmp*.*; exit \$status" 0 1 2
 if	(:>$tmp.c) 2>/dev/null
 then	rm -f $tmp.c
@@ -1005,7 +1013,7 @@ do	case $in in
 		;;
 	run)	case $shell in
 		bsh)	case $2 in
-			*/*)	x=`echo $2 | sed -e 's,.*[\\/],,'` ;;
+			*/*)	x=`echo $2 | sed -e 's,.*[\\\\/],,'` ;;
 			*)	x=$2 ;;
 			esac
 			;;
@@ -1024,11 +1032,11 @@ do	case $in in
 	# set drops out early
 
 	case $1 in
-	""|\#*)	continue
+	""|"#"*)continue
 		;;
 	set)	shift
 		case $1 in
-		""|\#*)	op=
+		""|"#"*)op=
 			;;
 		*)	arg=
 			op=$1
@@ -1080,7 +1088,7 @@ do	case $in in
 				*" "*)	shift
 					continue
 					;;
-				""|\#*)	break
+				""|"#"*)break
 					;;
 				:)	shift
 					break
@@ -1180,7 +1188,7 @@ do	case $in in
 				"")	case $in in
 					*[.\\/]*)
 						case $shell in
-						bsh)	eval `echo $in | sed -e 's,.*[\\/],,' -e 's/\\.[^.]*//' -e 's/^/out=/'`
+						bsh)	eval `echo $in | sed -e 's,.*[\\\\/],,' -e 's/\\.[^.]*//' -e 's/^/out=/'`
 							;;
 						*)	eval 'out=${in##*[\\/]}'
 							eval 'out=${out%.*}'
@@ -1257,7 +1265,7 @@ do	case $in in
 		esac
 		;;
 	*)	case $1 in
-		*\{)	op=-
+		*'{')	op=-
 			;;
 		*)	op=$1
 			shift
@@ -1286,13 +1294,13 @@ do	case $in in
 		case $# in
 		0)	;;
 		*)	case $1 in
-			\#*)	set x
+			"#"*)	set x
 				shift
 				;;
 			*)	case $op in
 				ref)	;;
 				*)	case $1 in
-					*\{)	arg=-
+					*'{')	arg=-
 						;;
 					*)	arg=$1
 						shift
@@ -1308,9 +1316,9 @@ do	case $in in
 				esac
 				case $1 in
 				"")	;;
-				\#*)	set x
+				"#"*)	set x
 					;;
-				\=)	shift
+				"=")	shift
 					set=$*
 					case $set in
 					"")	set=" " ;;
@@ -1323,16 +1331,17 @@ do	case $in in
 					done
 					break
 					;;
-				[abcdefghijklmnopqrstuvwxyz]*\{|\{)
+				[abcdefghijklmnopqrstuvwxyz]*'{'|'{')
 					v=$1
 					shift
 					x=
 					case $v in
-					note\{)	sep=" " ;;
+					"note{")
+						sep=" " ;;
 					*)	sep=$nl ;;
 					esac
 					case $v in
-					\{)	e='}' ;;
+					'{')	e='}' ;;
 					*)	e='}end' ;;
 					esac
 					SEP=
@@ -1384,14 +1393,14 @@ do	case $in in
 					done
 					x="$x$nl" # \r\n bash needs this barf #
 					case $v in
-					fail\{)		fail=$x ;;
-					nofail\{)	pass=$x v=pass\{ ;;
-					nopass\{)	fail=$x v=fail\{ ;;
-					no\{)		no=$x ;;
-					note\{)		note=$x ;;
-					pass\{)		pass=$x ;;
-					test\{)		test=$x ;;
-					yes\{|\{)	yes=$x ;;
+					'fail{')	fail=$x ;;
+					'nofail{')	pass=$x v='pass{' ;;
+					'nopass{')	fail=$x v='fail{' ;;
+					'no{')		no=$x ;;
+					'note{')	note=$x ;;
+					'pass{')	pass=$x ;;
+					'test{')	test=$x ;;
+					'yes{'|'{')	yes=$x ;;
 					*)		src=$x run=$v ;;
 					esac
 					;;
@@ -1618,7 +1627,7 @@ do	case $in in
 				*" + $x "*)
 					;;
 				*)	case $shell in
-					bsh)	eval `echo $x | sed -e 's,^\\([^\\/]*\\).*[\\/]\\([^\\/]*\\)\$,\\1_\\2,' -e 's/\\..*//' -e 's/^/c=/'`
+					bsh)	eval `echo $x | sed -e 's,^\\([^\\\\/]*\\).*[\\\\/]\\([^\\\\/]*\\)\$,\\1_\\2,' -e 's/\\..*//' -e 's/^/c=/'`
 						;;
 					*)	eval 'c=${x##*[\\/]}'
 						eval 'c=${c%%.*}'
@@ -1879,7 +1888,7 @@ do	case $in in
 					esac
 					;;
 				*)	case $shell in
-					bsh)	eval `echo $a | sed -e 's,.*[\\/],,' -e 's/\\(.*\\)\\.\\(.*\\)/p=\\1 v=\\2/'`
+					bsh)	eval `echo $a | sed -e 's,.*[\\\\/],,' -e 's/\\(.*\\)\\.\\(.*\\)/p=\\1 v=\\2/'`
 						;;
 					*)	eval 'p=${a%.*}'
 						eval 'p=${p##*[\\/]}'
@@ -1931,7 +1940,7 @@ do	case $in in
 			esac
 			M=$m
 			case $o in
-			if|elif|else|out)
+			"if"|"elif"|"else"|"out")
 				case $a in
 				-)	a=-
 					;;
@@ -2101,7 +2110,12 @@ do	case $in in
 							;;
 						*)	case $x in
 							*-*)	;;
-							*)	x=`pwd | sed -e 's,.*[\\/],,' -e 's,\\..*,,' -e 's,^lib,,' -e 's,^,'${x}_',' -e 's,[^abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_],_,g'`
+							*)	x=`pwd | sed -e 's,.*[\\\\/],,' -e 's,\\..*,,' -e 's,^lib,,' -e 's,^,'${x}_',' -e 's,[^abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_],_,g'`
+								# ksh n+ bug workaround
+								case $x in
+								*[!_]*)	;;
+								*)	x=_$$ ;;
+								esac
 								iff=_def${x}
 								;;
 							esac
@@ -2135,7 +2149,7 @@ do	case $in in
 			for x in $defhdr $hdr
 			do	case $x in
 				*.h)	case $shell in
-					bsh)	eval `echo $x | sed -e 's,^\\([^\\/]*\\).*[\\/]\\([^\\/]*\\)\$,\\1_\\2,' -e 's/\\..*//' -e 's/^/c=/'`
+					bsh)	eval `echo $x | sed -e 's,^\\([^\\\\/]*\\).*[\\\\/]\\([^\\\\/]*\\)\$,\\1_\\2,' -e 's/\\..*//' -e 's/^/c=/'`
 						;;
 					*)	eval 'c=${x##*[\\/]}'
 						eval 'c=${c%%.*}'
@@ -2235,10 +2249,8 @@ do	case $in in
 				hdr|lcl)m=HAVE${u}_H ;;
 				key)	m=HAVE${u}_RESERVED ;;
 				mth)	m=HAVE${u}_MATH ;;
-				npt|pth)case $op in
-					npt)	m=${u}_DECLARED ;;
-					pth)	m=${u}_PATH ;;
-					esac
+				npt)	m=HAVE${u}_DECL ;;
+				pth)	m=${u}_PATH
 					case $shell in
 					ksh)	m=${m#_} ;;
 					*)	m=`echo $m | sed 's,^_,,'` ;;
@@ -2601,9 +2613,9 @@ $inc
 				else	failure
 				fi
 				;;
-			exp|if|elif|else)
+			exp|"if"|"elif"|"else")
 				case $o in
-				else)	case $test in
+				"else")	case $test in
 					?*)	echo "$command: $file$sline: test expression invalid for $o" >&$stderr
 						exit 1
 						;;
@@ -2617,14 +2629,16 @@ $inc
 					;;
 				esac
 				case $o in
-				exp|if)	ifelse=0:$o
+				exp|"if")
+					ifelse=0:$o
 					;;
-				elif|else)
+				"elif"|"else")
 					case $ifelse in
 					?:error)echo "$command: $file$sline: no if for $o" >&$stderr
 						exit 1
 						;;
-					?:else)	echo "$command: $file$sline: $o after else" >&$stderr
+					?:"else")
+						echo "$command: $file$sline: $o after else" >&$stderr
 						exit 1
 						;;
 					1:*)	ifelse=1:$o
@@ -2643,7 +2657,7 @@ $inc
 					;;
 				esac
 				case $test in
-				\ \"*\"|\ [01])
+				' "'*'"'|' '[01])
 					case $a in
 					-|'')	;;
 					*)	case $define$note in
@@ -2726,10 +2740,10 @@ $inc
 #include <$f.h>" > $tmp.c
 					case $f in
 					sys/*)	e= ;;
-					*)	e='-e /[\\\/]sys[\\\/]'$f'\\.h"/d' ;;
+					*)	e='-e /[\\\\\/]sys[\\\\\/]'$f'\\.h"/d' ;;
 					esac
 					if	$cc -E $tmp.c <&$nullin >$tmp.i
-					then	i=`sed -e '/^#[line 	]*[0123456789][0123456789]*[ 	][ 	]*"[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:]*[\\\\\\/].*[\\\\\\/]'$f'\\.h"/!d' $e -e s'/.*"\\(.*\\)".*/\\1/' -e 's,\\\\,/,g' -e 's,///*,/,g' $tmp.i | sed 1q`
+					then	i=`sed -e '/^#[line 	]*[0123456789][0123456789]*[ 	][ 	]*"[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:]*[\\\\\/].*[\\\\\/]'$f'\\.h"/!d' $e -e s'/.*"\\(.*\\)".*/\\1/' -e 's,\\\\,/,g' -e 's,///*,/,g' $tmp.i | sed 1q`
 						case $i in
 						[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ]:[\\/]*)
 							;;
@@ -2738,7 +2752,7 @@ $inc
 $inc
 #include <$k>" > $tmp.c
 							if	$cc -E $tmp.c <&$nullin >$tmp.i
-							then	j=`sed -e '/^#[line 	]*[0123456789][0123456789]*[ 	][ 	]*"[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:]*[\\\\\\/].*[\\\\\\/]'$f'\\.h"/!d' $e -e s'/.*"\\(.*\\)".*/\\1/' -e 's,\\\\,/,g' -e 's,///*,/,g' $tmp.i | sed 1q`
+							then	j=`sed -e '/^#[line 	]*[0123456789][0123456789]*[ 	][ 	]*"[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:]*[\\\\\/].*[\\\\\/]'$f'\\.h"/!d' $e -e s'/.*"\\(.*\\)".*/\\1/' -e 's,\\\\,/,g' -e 's,///*,/,g' $tmp.i | sed 1q`
 								wi=`wc < "$i"`
 								wj=`wc < "$j"`
 								case $wi in
@@ -3050,16 +3064,20 @@ static int ((*i)())=foo;main(){return(i==0);}
 				echo "$pre
 $inc
 #ifdef $v
-'#define $m	1	/* $v is a macro */'
+'$m:$v'
 #endif" > $tmp.c
-				if	$cc -E $tmp.c <&$nullin | sed -e "/#define/!d" -e "s/'//g" -e "s/^[ 	][ 	]*//"
+				if	$cc -E $tmp.c <&$nullin | grep -c "'$m:$v'" >&$nullout
 				then	success
 					usr="$usr$nl#define $m 1"
 					eval $m=1
+					echo "#define	$m	1	/* $v is a macro */"
 				else	failure
 					case $define$all$config$undef in
-					1?1?|1??1)echo "#undef	$m	0 /* $v is not a macro */" ;;
-					11??)	echo "#define	$m	0 /* $v is not a macro */" ;;
+					1?1?|1??1)echo "#undef	$m		/* $v is not a macro */" ;;
+					11??)	echo "#define	$m	0	/* $v is not a macro */" ;;
+					esac
+					case $define$set in
+					1?*)	echo "#define	$v	$set	/* default for macro $v */" ;;
 					esac
 					eval $m=0
 				fi
@@ -3256,9 +3274,9 @@ _END_EXTERNS_
 						if	$cc -E $tmp.c <&$nullin >$tmp.i
 						then	c=$i
 							case $c in
-							*[\\/]*)	c=`echo $c | sed 's,[\\\\\\/],[\\\\\\/],g'` ;;
+							*[\\/]*)	c=`echo $c | sed 's,[\\\\/],[\\\\/],g'` ;;
 							esac
-							case `sed -e '/^#[line 	]*1[ 	][ 	]*"[\\\\\\/].*[\\\\\\/]'$c'"/!d' $tmp.i` in
+							case `sed -e '/^#[line 	]*1[ 	][ 	]*"[\\\\\/].*[\\\\\/]'$c'"/!d' $tmp.i` in
 							?*)	break ;;
 							esac
 						fi
@@ -3532,7 +3550,7 @@ struct xxx* f() { return &v; }"
 				fi
 				;;
 			val)	case $arg in
-				\"*\")	echo $arg=\'$val\' ;;
+				'"'*'"')echo $arg=\'$val\' ;;
 				*)	echo $arg=\"$val\" ;;
 				esac
 				;;

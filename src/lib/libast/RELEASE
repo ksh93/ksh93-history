@@ -1,3 +1,6 @@
+04-05-05 conf.tab,conf.sh: update to align with standards
+	 magic.tab: ms suffix update
+04-05-04 port/lcgen.c: fix territory initialization
 04-04-15 tm/tmdate.c,include/tm.h: fix specific and ordinal days
 04-04-08 astconf: retain { HOSTTYPE LIBPATH LIBPREFIX LIBSUFFIX } strict vals
 04-04-07 vmalloc/vmbest.c: fix alpha tiny block bug

@@ -1,7 +1,7 @@
 /*******************************************************************
 *                                                                  *
 *             This software is part of the ast package             *
-*                Copyright (c) 1985-2003 AT&T Corp.                *
+*                Copyright (c) 1985-2004 AT&T Corp.                *
 *        and it may only be used by you under license from         *
 *                       AT&T Corp. ("AT&T")                        *
 *         A copy of the Source Code Agreement is available         *
@@ -472,7 +472,7 @@ int		type;	/* >0: scanf, =0: printf, -1: internal	*/
 
 static const unsigned char	flt_nan[] = { _ast_flt_nan_init };
 static const unsigned char	dbl_nan[] = { _ast_dbl_nan_init };
-#ifdef LDBL_MAX
+#ifdef _ast_ldbl_nan_init
 static const unsigned char	ldbl_nan[] = { _ast_ldbl_nan_init };
 #endif
 
@@ -525,7 +525,7 @@ static int sfcvinit()
 
 	memcpy((char*)&_Sffhuge, (char*)flt_nan, sizeof(_Sffhuge));
 	memcpy((char*)&_Sfdhuge, (char*)dbl_nan, sizeof(_Sfdhuge));
-#ifdef LDBL_MAX
+#ifdef _ast_ldbl_nan_init
 	memcpy((char*)&_Sflhuge, (char*)ldbl_nan, sizeof(_Sflhuge));
 #else
 	memcpy((char*)&_Sflhuge, (char*)dbl_nan, sizeof(_Sfdhuge));

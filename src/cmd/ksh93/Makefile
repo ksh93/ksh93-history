@@ -103,6 +103,9 @@ if CC.HOSTTYPE == "linux.sparc"
 	LIBS_opt += -ldll
 end
 LIBS_opt += -lsecdb +lintl -ldl
+if CC.HOSTTYPE == "sol.*"
+	LIBS_opt += +lw
+end
 $(LIBS_opt)	: .DONTCARE
 
 LDLIBRARIES = $(LIBS_opt)

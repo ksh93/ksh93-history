@@ -2,7 +2,7 @@
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)make.probe (AT&T Research) 2004-02-29
+# @(#)make.probe (AT&T Research) 2004-04-15
 #
 # C probe for make
 #
@@ -1215,40 +1215,65 @@ esac
 $cc -c doti.$src > all.tmp
 for f in $probe_libdir
 do	for d in $stdlib $libstd $tstlib
-	do	if	test -d ${d}${f} &&
-			ls ${d}${f} ${PREROOT:+$PREROOT/../${d}${f}} > tmp.tmp &&
-			test -s tmp.tmp
-		then	if	egrep -i "\\.$lib\$" tmp.tmp >lib.tmp ||
-				egrep -i "\\.$obj\$" tmp.tmp >/dev/null ||
-				egrep -i "\\$so(.[0-9]+)*\$" tmp.tmp >>lib.tmp
-			then	if	test -s lib.tmp
-				then	sed -e "s,.*/,," -e 's,^'${prefix_archive}'\(.*\)\.'$lib'$,\1,g' -e 's,^'${prefix_shared}'\(.*\)\'$so'[.0-9]*,\1,g' lib.tmp | sort -u > tmp.tmp
-					xs=`sort all.tmp all.tmp tmp.tmp | uniq -u`
-					case $xs in
-					'')	continue ;;
-					esac
-					ok=0
-					for x in $xs
-					do	if	$cc -o doti.$exe doti.$obj -l$x
-						then	ok=1
-							break
-						fi
-					done
-					case $ok in
-					0)	continue ;;
-					esac
-					sort -u all.tmp tmp.tmp > lib.tmp
-					mv lib.tmp all.tmp
-				fi
-				case " $stdlib $libstd " in
-				*" ${d}${f} "*)
-					;;
-				*)	if	test -d ${d}${f}/fsoft
-					then	stdlib="$stdlib ${d}${f}/"'$(FLOAT_OPTION)'
+	do	if	test -d ${d}${f}
+		then	ls ${d}${f} ${PREROOT:+$PREROOT/../${d}${f}} |
+			while read i
+			do	for j in ${d}${f}/${i} ${PREROOT:+$PREROOT/../${d}${f}/${i}}
+				do	if	test -f $j -a -r $j -a -s $j
+					then	echo $i
+						break
 					fi
-					stdlib="$stdlib ${d}${f}"
-					;;
-				esac
+				done
+			done > tmp.tmp
+			if	test -s tmp.tmp
+			then	if	egrep -i "^${prefix_archive}[abcdefghijklmnopqrstuvwxyz0123456789_][abcdefghijklmnopqrstuvwxyz0123456789_]*\\.$lib\$" tmp.tmp >lib.tmp ||
+					egrep -i "\\.$obj\$" tmp.tmp >/dev/null ||
+					egrep -i "^${prefix_shared}[abcdefghijklmnopqrstuvwxyz0123456789_][abcdefghijklmnopqrstuvwxyz0123456789_]*\\$so(.[0-9]+)*\$" tmp.tmp >>lib.tmp
+				then	if	test -s lib.tmp
+					then	sed -e "s,.*/,," -e 's,^'${prefix_archive}'\(.*\)\.'$lib'$,\1,g' -e 's,^'${prefix_shared}'\(.*\)\'$so'[.0-9]*,\1,g' lib.tmp | sort -u > tmp.tmp
+						xs=`sort all.tmp all.tmp tmp.tmp | uniq -u`
+						case $xs in
+						'')	continue ;;
+						esac
+						ok=0
+						for x in $xs
+						do	case $x in
+							*_p)	continue ;; # linux gcc known to hang for -lc_p
+							esac
+							if	$cc -o doti.$exe doti.$obj -l$x 2>e
+							then	ok=1
+							else	if	test -s e && egrep -i ":.*[ 	](find|found|locate|search|-l$x)[ 	]" e > /dev/null
+								then	if	egrep -i ":.*[ 	](access|permission)[ 	]" e
+									then	: maybe
+									else	ok=0
+										break
+									fi
+								fi
+								case $Lflag in
+								1)	if	$cc -L${d}${f} -o doti.$exe doti.$obj -l$x
+									then	ok=0
+										break
+									fi
+									;;
+								esac
+							fi
+						done
+						case $ok in
+						0)	continue ;;
+						esac
+						sort -u all.tmp tmp.tmp > lib.tmp
+						mv lib.tmp all.tmp
+					fi
+					case " $stdlib $libstd " in
+					*" ${d}${f} "*)
+						;;
+					*)	if	test -d ${d}${f}/fsoft
+						then	stdlib="$stdlib ${d}${f}/"'$(FLOAT_OPTION)'
+						fi
+						stdlib="$stdlib ${d}${f}"
+						;;
+					esac
+				fi
 			fi
 		fi
 	done
@@ -1593,11 +1618,93 @@ esac
 #
 
 for i in ar ccnative dld ld nm size stdinclude stdlib strip 
-do	eval v='$'$i
+do	eval o='$'$i
+	v=$o
 	case $v in
-	*//*)	v=`echo $v | sed 's,///*,/,g'`
-		eval $i='$'v
-		;;
+	*//*)	v=`echo $v | sed 's,///*,/,g'` ;;
+	esac
+	if	(test . -ef "`pwd`")
+	then	k=
+		for x in $v
+		do	case $x in
+			*/../*|*/..)
+				case $x in
+				/*)	a=/ ;;
+				*)	a= ;;
+				esac
+				IFS=/
+				set '' $x
+				IFS=$ifs
+				r=
+				for d
+				do	r="$d $r"
+				done
+				p=
+				g=
+				for d in $r
+				do	case $d in
+					..)	g="$g $d" ;;
+					*)	case $g in
+						'')	case $p in
+							'')	p=$d ;;
+							*)	p=$d/$p ;;
+							esac
+							;;
+						*)	set $g
+							shift
+							g=$*
+							;;
+						esac
+						;;
+					esac
+				done
+				case $a in
+				'')	for d in $g
+					do	p=$d/$p
+					done
+					;;
+				*)	p=$a$p
+					;;
+				esac
+				case $p in
+				/)	continue ;;
+				esac
+				test $x -ef $p && x=$p
+				;;
+			esac
+			k="$k $x"
+		done
+		set '' $k
+		shift
+		v=$1
+		case $# in
+		0)	;;
+		*)	shift
+			while	:
+			do	case $# in
+				0)	break ;;
+				esac
+				k=
+				for d
+				do	for j in $v
+					do	test $d -ef $j && continue 2
+					done
+					k="$k $d"
+				done
+				set '' $k
+				case $# in
+				1)	break ;;
+				esac
+				shift
+				v="$v $1"
+				shift
+			done
+			;;
+		esac
+	fi
+	case $v in
+	$o)	;;
+	*)	eval $i='$'v ;;
 	esac
 done
 

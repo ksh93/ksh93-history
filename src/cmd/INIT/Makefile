@@ -207,8 +207,16 @@ prototyped.h : $(BINDIR)/proto
 dl :MAPLIB: dl.c
 
 /*
+ * requiring -liconv is a botch
+ */
+
+iconv :MAPLIB: iconv.c
+
+/*
  * miscellaneous -l* checks
  */
+
+intl :MAPLIB: intl.c
 
 m :MAPLIB: m.c
 

@@ -21,7 +21,12 @@
 *               Glenn Fowler <gsf@research.att.com>                *
 *                                                                  *
 *******************************************************************/
-#ifndef printf
-#include <stdio.h>
+#ifndef iconv
+#include <iconv.h>
 #endif
-main() { int new = 0; printf("hello world\n"); return new;}
+
+main()
+{
+	iconv(0, 0, 0, 0, 0);
+	return 0;
+}

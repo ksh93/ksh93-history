@@ -1,5 +1,5 @@
 :
-# @(#)probe.win32 (AT&T Labs Research) 2004-02-29
+# @(#)probe.win32 (AT&T Labs Research) 2004-03-22
 #
 # win32 specific make C probe initialization
 # ms vc is easy on uwin
@@ -96,6 +96,16 @@ case $versionb$versiond$versionm$versiong$versionl:$include in
 		cplus=1
 		;;
 	esac
+	ld=${cc%cc}ld
+	if [[ ! -x $ld ]]
+	then	ld=${cc%/*}/ld
+		if [[ ! -x $ld ]]
+		then	case $cc in
+			*/ncc)	ld=/usr/bin/nld ;;
+			*)	ld=/usr/bin/ld ;;
+			esac
+		fi
+	fi
 	cat >&3 <<!
 CC.CC = $*
 CC.NATIVE = $*
@@ -115,7 +125,7 @@ CC.DLL.LIBRARIES =
 CC.DLL.VARIANTS =
 CC.DYNAMIC =
 CC.EXPORT.DYNAMIC =
-CC.LD = /usr/bin/ld
+CC.LD = $ld
 CC.LD.DYNAMIC = -Bdynamic
 CC.LD.LAZY =
 CC.LD.NOLAZY =
@@ -138,7 +148,7 @@ CC.PICBIG =
 CC.READONLY =
 CC.REPOSITORY =
 CC.SHARED = -G
-CC.SHARED.LD = /usr/bin/ld
+CC.SHARED.LD = $ld
 CC.SHARED.REGISTRY =
 CC.SHARED.REGISTRY.PATH =
 CC.SHELLMAGIC =
