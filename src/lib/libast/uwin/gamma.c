@@ -1,6 +1,6 @@
 #ifndef _UWIN
 
-int _STUB_gamma;
+void _STUB_gamma(){}
 
 #else
 

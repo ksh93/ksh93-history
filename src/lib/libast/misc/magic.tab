@@ -1,5 +1,5 @@
 #
-# @(#)magic (AT&T Research) 2000-06-14
+# @(#)magic (AT&T Research) 2000-10-11
 #
 # magic number database for file(1) and magic(3)
 #
@@ -97,6 +97,7 @@ o{
 o()
 0	string		!<arch>		ar archive			application/x-ar
 0	string		<aiaff>\n	aix ar library			application/x-ar
+0	string		<bigaf>\n	aix ar library, big		application/x-ar
 20	short		0xa7dc		zoo archive			application/x-zoo
 &22	short		0xfdc4
 +32	byte		*		, version %ld
@@ -304,10 +305,13 @@ n{
 &mode	long		&0111==0
 }
 +12	long		2		executable			x-system/exe
-+12	long		3		shared library			x-system/dll
++12	long		3		fixed vm shared library		x-system/dll
 +12	long		4		core				x-system/core
 +12	long		5		preload executable		x-system/exe
-+12	long		>=6		filetype=%ld
++12	long		6		shared library			x-system/dll
++12	long		7		dynamic link editor		x-system/exe
++12	long		8		bundle				x-system/dll
++12	long		>=9		filetype=%ld
 
 2	short		0407
 m{
@@ -1114,8 +1118,6 @@ v()
 v()
 
 0	string		begin 0		uuencoded data			application/x-uuencode
-0	byte		0
-&4	string		moov		quicktime movie			video/quicktime
 0	string		\377\330\377	JPEG image			image/jpeg
 0	string		GIF		GIF image			image/gif
 +3	string		*		, version %s
@@ -1139,6 +1141,17 @@ v()
 0	short		000732		sgi imagelib image		image/x-imagelib
 +6	short		*		, %d
 +8	short		*		x %d
+
+0	string		MOVI		sgi movie			video/x-sgi
+
+0	byte		0
+&4	string		moov		quicktime movie			video/quicktime
+0	byte		0
+&4	string		mdat		quicktime movie			video/quicktime
+8	string		AVI		avi movie			video/avi
+0	long		0x000001BA	mpeg movie			video/mpeg
+0	long		0x000001B3	mpeg movie			video/mpeg
+
 0	string		<MakerFile	frame maker file		application/framemaker
 0	string		{\\rtf		rich text			application/rtf
 
@@ -1198,12 +1211,15 @@ v()
 0	string		\015\023\007\000	ast message catalog	application/x-catalog
 +4	string		*			, %s
 
-0	long		0x09100201		ip address binary	application/x-ipmask
-0	long		0x09101312		ip netmask binary	application/x-ipmask
+0	long		0x02071012		bgp route dump, fixed record
++4	byte		*			, version %d
++5	byte		*			.%d
+0	long		0x09100104		4 byte ip address binary	application/x-ipmask
+0	long		0x09101704		4 byte ip retrie binary	application/x-ipmask
 +8	string		*			, %s
 +64	long		*			, %d masks
-+68	long		*			, %d retries
-+72	long		*			, %d slots
++76	long		*			, %d slots
++80	long		*			, %d leaves
 
 #
 # last chance

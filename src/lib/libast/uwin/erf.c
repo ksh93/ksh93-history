@@ -1,6 +1,6 @@
 #ifndef _UWIN
 
-int _STUB_erf;
+void _STUB_erf(){}
 
 #else
 

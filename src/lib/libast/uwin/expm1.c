@@ -1,6 +1,6 @@
 #ifndef _UWIN
 
-int _STUB_expm1;
+void _STUB_expm1(){}
 
 #else
 

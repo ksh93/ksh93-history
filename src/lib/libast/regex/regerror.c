@@ -1,29 +1,29 @@
-/***************************************************************
-*                                                              *
-*           This software is part of the ast package           *
-*              Copyright (c) 1985-2000 AT&T Corp.              *
-*      and it may only be used by you under license from       *
-*                     AT&T Corp. ("AT&T")                      *
-*       A copy of the Source Code Agreement is available       *
-*              at the AT&T Internet web site URL               *
-*                                                              *
-*     http://www.research.att.com/sw/license/ast-open.html     *
-*                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
-*             AT&T's intellectual property rights.             *
-*                                                              *
-*               This software was created by the               *
-*               Network Services Research Center               *
-*                      AT&T Labs Research                      *
-*                       Florham Park NJ                        *
-*                                                              *
-*             Glenn Fowler <gsf@research.att.com>              *
-*              David Korn <dgk@research.att.com>               *
-*               Phong Vo <kpv@research.att.com>                *
-*                                                              *
-***************************************************************/
+/*******************************************************************
+*                                                                  *
+*             This software is part of the ast package             *
+*                Copyright (c) 1985-2000 AT&T Corp.                *
+*        and it may only be used by you under license from         *
+*                       AT&T Corp. ("AT&T")                        *
+*         A copy of the Source Code Agreement is available         *
+*                at the AT&T Internet web site URL                 *
+*                                                                  *
+*       http://www.research.att.com/sw/license/ast-open.html       *
+*                                                                  *
+*        If you have copied this software without agreeing         *
+*        to the terms of the license you are infringing on         *
+*           the license and copyright and are violating            *
+*               AT&T's intellectual property rights.               *
+*                                                                  *
+*                 This software was created by the                 *
+*                 Network Services Research Center                 *
+*                        AT&T Labs Research                        *
+*                         Florham Park NJ                          *
+*                                                                  *
+*               Glenn Fowler <gsf@research.att.com>                *
+*                David Korn <dgk@research.att.com>                 *
+*                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
+*******************************************************************/
 #pragma prototyped
 
 /*
@@ -54,7 +54,7 @@ static const char*	reg_error[] =
 	/* REG_ENULL	*/	"empty subexpr in pattern",
 	/* REG_ECOUNT	*/	"re component count overflow",
 	/* REG_BADESC	*/	"invalid \\char escape",
-	/* REG_VERSION	*/	&id[5],
+	/* REG_VERSIONID*/	&id[5],
 };
 
 size_t
@@ -72,4 +72,21 @@ regerror(int code, const regex_t* p, char* buf, size_t size)
 	else
 		buf = (char*)s;
 	return strlen(buf) + 1;
+}
+
+/*
+ * discipline error intercept
+ */
+
+int
+fatal(regdisc_t* disc, int code, const char* pattern)
+{
+	if (disc->re_errorf)
+	{
+		if (pattern)
+			(*disc->re_errorf)(NiL, disc, disc->re_errorlevel, "regular expression: %s: %s", pattern, reg_error[code+1]);
+		else
+			(*disc->re_errorf)(NiL, disc, disc->re_errorlevel, "regular expression: %s", reg_error[code+1]);
+	}
+	return code;
 }

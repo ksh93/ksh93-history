@@ -16,13 +16,9 @@ $(PACKAGEROOT)/lib/package :INSTALLDIR: package.mk
 
 $(PACKAGEROOT)/bin :INSTALLDIR: ignore mamprobe package silent
 
-$(PACKAGEROOT)/bin/nmake :INSTALL: manmake
-
 ignore :: ignore.sh
 
 mamprobe :: mamprobe.sh
-
-manmake :: manmake.sh
 
 silent :: silent.sh
 
@@ -69,25 +65,26 @@ if ! CC.HOSTTYPE
 end
 
 $(BINDIR)/cc :INSTALL: (CC.HOSTTYPE) package hello.c \
+		cc.darwin.ppc ldd.darwin.ppc \
 		cc.hp.pa ld.hp.pa \
 		cc.mvs.390 \
 		cc.next.i386 \
 		cc.osf.alpha \
 		cc.sco.i386 \
-		cc.sgi.mips2 \
-		cc.sgi.mips3 \
+		cc.sgi.mips2 ldd.sgi.mips2 \
+		cc.sgi.mips3 ldd.sgi.mips3 \
 		cc.sgi.mips3-o32 \
-		cc.sgi.mips4 \
+		cc.sgi.mips4 ldd.sgi.mips4 \
 		cc.sgi.mips4-n32
 	set x $(*:O>2)
 	while	:
-	do	shift
-		case $# in
+	do	case $# in
 		0)	break ;;
 		esac
 		cc=$1 # hp /bin/sh scripts modify parent args!
-		ld=$2
-		export cc ld
+		shift
+		argv=$*
+		export cc argv
 		case $cc in
 		*cc.$(CC.HOSTTYPE))
 			test -f $cc &&
@@ -95,12 +92,20 @@ $(BINDIR)/cc :INSTALL: (CC.HOSTTYPE) package hello.c \
 			hello.exe >/dev/null 2>&1 && {
 				cmp -s $cc $(<) ||
 				cp $cc $(<)
-				case $ld in
-				*ld.$(CC.HOSTTYPE))
-					cmp -s $ld $(<:D:B=ld) ||
-					cp $ld $(<:D:B=ld)
-					;;
-				esac
+				for i in $argv
+				do	case $i in
+					*ld.$(CC.HOSTTYPE))
+						cmp -s $i $(<:D:B=ld) ||
+						cp $i $(<:D:B=ld)
+						;;
+					*ldd.$(CC.HOSTTYPE))
+						cmp -s $i $(<:D:B=ldd) ||
+						cp $i $(<:D:B=ldd)
+						;;
+					*)	break
+						;;
+					esac
+				done
 			} ||
 			: no $(CC.HOSTTYPE) cc workaround needed
 			break

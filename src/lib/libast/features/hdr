@@ -52,3 +52,4 @@ tst std_def_valloc note{ <std*.h> defines valloc macro }end compile{
 	(
 	#endif
 }end
+npt	getpagesize,sbrk

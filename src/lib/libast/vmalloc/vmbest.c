@@ -1,32 +1,32 @@
-/***************************************************************
-*                                                              *
-*           This software is part of the ast package           *
-*              Copyright (c) 1985-2000 AT&T Corp.              *
-*      and it may only be used by you under license from       *
-*                     AT&T Corp. ("AT&T")                      *
-*       A copy of the Source Code Agreement is available       *
-*              at the AT&T Internet web site URL               *
-*                                                              *
-*     http://www.research.att.com/sw/license/ast-open.html     *
-*                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
-*             AT&T's intellectual property rights.             *
-*                                                              *
-*               This software was created by the               *
-*               Network Services Research Center               *
-*                      AT&T Labs Research                      *
-*                       Florham Park NJ                        *
-*                                                              *
-*             Glenn Fowler <gsf@research.att.com>              *
-*              David Korn <dgk@research.att.com>               *
-*               Phong Vo <kpv@research.att.com>                *
-*                                                              *
-***************************************************************/
+/*******************************************************************
+*                                                                  *
+*             This software is part of the ast package             *
+*                Copyright (c) 1985-2000 AT&T Corp.                *
+*        and it may only be used by you under license from         *
+*                       AT&T Corp. ("AT&T")                        *
+*         A copy of the Source Code Agreement is available         *
+*                at the AT&T Internet web site URL                 *
+*                                                                  *
+*       http://www.research.att.com/sw/license/ast-open.html       *
+*                                                                  *
+*        If you have copied this software without agreeing         *
+*        to the terms of the license you are infringing on         *
+*           the license and copyright and are violating            *
+*               AT&T's intellectual property rights.               *
+*                                                                  *
+*                 This software was created by the                 *
+*                 Network Services Research Center                 *
+*                        AT&T Labs Research                        *
+*                         Florham Park NJ                          *
+*                                                                  *
+*               Glenn Fowler <gsf@research.att.com>                *
+*                David Korn <dgk@research.att.com>                 *
+*                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
+*******************************************************************/
 #ifdef _UWIN
 
-int _STUB_vmbest;
+void _STUB_vmbest(){}
 
 #else
 
@@ -1188,13 +1188,13 @@ Vmdisc_t*	disc;	/* discipline structure			*/
 	NOTUSED(disc);
 
 	/* sbrk, see if still own current address */
-	if(csize > 0 && sbrk(0) != (Vmuchar_t*)caddr+csize)
+	if(csize > 0 && (Vmuchar_t*)sbrk(0) != (Vmuchar_t*)caddr+csize)
 		return NIL(Void_t*);
 
 	/* do this because sbrk() uses 'ssize_t' argument */
 	size = nsize > csize ? (ssize_t)(nsize-csize) : -(ssize_t)(csize-nsize);
 
-	if((addr = sbrk(size)) == (Vmuchar_t*)(-1))
+	if((addr = (Vmuchar_t*)sbrk(size)) == (Vmuchar_t*)(-1))
 		return NIL(Void_t*);
 	else	return csize == 0 ? (Void_t*)addr : caddr;
 #endif

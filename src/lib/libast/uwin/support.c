@@ -1,6 +1,6 @@
 #ifndef _UWIN
 
-int _STUB_support;
+void _STUB_support(){}
 
 #else
 

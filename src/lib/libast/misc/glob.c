@@ -1,29 +1,29 @@
-/***************************************************************
-*                                                              *
-*           This software is part of the ast package           *
-*              Copyright (c) 1985-2000 AT&T Corp.              *
-*      and it may only be used by you under license from       *
-*                     AT&T Corp. ("AT&T")                      *
-*       A copy of the Source Code Agreement is available       *
-*              at the AT&T Internet web site URL               *
-*                                                              *
-*     http://www.research.att.com/sw/license/ast-open.html     *
-*                                                              *
-*      If you have copied this software without agreeing       *
-*      to the terms of the license you are infringing on       *
-*         the license and copyright and are violating          *
-*             AT&T's intellectual property rights.             *
-*                                                              *
-*               This software was created by the               *
-*               Network Services Research Center               *
-*                      AT&T Labs Research                      *
-*                       Florham Park NJ                        *
-*                                                              *
-*             Glenn Fowler <gsf@research.att.com>              *
-*              David Korn <dgk@research.att.com>               *
-*               Phong Vo <kpv@research.att.com>                *
-*                                                              *
-***************************************************************/
+/*******************************************************************
+*                                                                  *
+*             This software is part of the ast package             *
+*                Copyright (c) 1985-2000 AT&T Corp.                *
+*        and it may only be used by you under license from         *
+*                       AT&T Corp. ("AT&T")                        *
+*         A copy of the Source Code Agreement is available         *
+*                at the AT&T Internet web site URL                 *
+*                                                                  *
+*       http://www.research.att.com/sw/license/ast-open.html       *
+*                                                                  *
+*        If you have copied this software without agreeing         *
+*        to the terms of the license you are infringing on         *
+*           the license and copyright and are violating            *
+*               AT&T's intellectual property rights.               *
+*                                                                  *
+*                 This software was created by the                 *
+*                 Network Services Research Center                 *
+*                        AT&T Labs Research                        *
+*                         Florham Park NJ                          *
+*                                                                  *
+*               Glenn Fowler <gsf@research.att.com>                *
+*                David Korn <dgk@research.att.com>                 *
+*                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
+*******************************************************************/
 #pragma prototyped
 
 /*
@@ -451,7 +451,7 @@ glob(const char* pattern, int flags, int (*errfn)(const char*, int), register gl
 	size_t			skip = 0;
 	int			suflen = 0;
 	int			extra = 1;
-	char			intr = 0;
+	unsigned char		intr = 0;
 
 #if _UWIN /* hack for dll consistency -- drop in 20010101 */
 	glob_t*			up;
@@ -482,6 +482,9 @@ glob(const char* pattern, int flags, int (*errfn)(const char*, int), register gl
 	{
 		gp->gl_flags = (flags&0xffff)|GLOB_MAGIC;
 		gp->re_flags = REG_SHELL|REG_AUGMENTED|REG_NOSUB|REG_LEFT|REG_RIGHT;
+		gp->gl_pathc = 0;
+		gp->gl_ignore = 0;
+		gp->gl_ignorei = 0;
 		if (!(flags & GLOB_DISC))
 		{
 			gp->gl_fignore = 0;
@@ -528,9 +531,6 @@ glob(const char* pattern, int flags, int (*errfn)(const char*, int), register gl
 			gp->gl_stak = 0;
 		else if (!(gp->gl_stak = stakcreate(0)))
 			return GLOB_NOSPACE;
-		gp->gl_pathc = 0;
-		gp->gl_ignore = 0;
-		gp->gl_ignorei = 0;
 	}
 	if (gp->gl_stak)
 		oldstak = stakinstall(gp->gl_stak, 0);

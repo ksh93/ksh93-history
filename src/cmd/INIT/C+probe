@@ -2,7 +2,7 @@
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)C.probe (AT&T Research) 2000-06-01
+# @(#)C.probe (AT&T Research) 2000-10-18
 #
 # probe [ -d ] c-compiler-path [ attributes ]
 #
@@ -14,9 +14,11 @@
 # probe_* are first eval'd and then attempted from left to right
 #
 
-probe_binding="-dy -dn -Bdynamic -Bstatic '-Wl,-ashared -Wl,+s' -Wl,-aarchive -call_shared -non_shared '' -static"
+probe_binding="-dy -dn -Bdynamic -Bstatic '-Wl,-ashared -Wl,+s' -Wl,-aarchive -call_shared -non_shared -dynamic -static '' -static"
 probe_env="CC_OPTIONS CCOPTS LD_OPTIONS LDOPTS LIBPATH LPATH"
 probe_include="stdio.h iostream.h complex.h ctype.h plot.h stdarg.h varargs.h ranlib.h hash.h sys/types.h stab.h"
+probe_longlong="long 'long long'"
+probe_longlong_t="__int64_t _int64_t __int64 _int64 int64"
 probe_l="l yyreject m sin mopt sin"
 probe_lxx="C exit ++ exit g++ exit"
 probe_ppprefix="a n"
@@ -24,7 +26,7 @@ probe_size="size"
 probe_src="cxx C cc c"
 probe_sa=".sa"
 probe_sd=".dll .lib .dll .x"
-probe_so=".so .sl"
+probe_so=".so .sl .dylib"
 probe_symprefix="_"
 probe_verbose="'-v -v' '-# -#' '-d -d' -dryrun"
 
@@ -35,7 +37,7 @@ probe_verbose="'-v -v' '-# -#' '-d -d' -dryrun"
 cc=cc
 debug=
 dir=.
-dll=dll
+dll=.dll
 dynamic=
 exe=exe
 executable="test -x"
@@ -230,10 +232,16 @@ do	shift
 done
 
 hosttype=`package CC=$cc || $SHELL -c "package CC=$cc"`
+case $hosttype in
+*[Uu][Ss][Aa][Gg][Ee]:*)
+	hosttype=`PATH=$_probe_PATH; export PATH; package CC=$cc || $SHELL -c "package CC=$cc"`
+	;;
+esac
 
 echo '#include <stdio.h>
 main(){printf("hello");return(0);}' > dynamic.$src
-if	$cc -c dynamic.$src
+echo 'extern int sfclose() { return 0; }' > fun.$src
+if	$cc -c dynamic.$src && $cc -c fun.$src
 then	eval set x $probe_so
 	while	:
 	do	shift
@@ -244,7 +252,8 @@ then	eval set x $probe_so
 		do	rm -f dynamic.$exe
 			if	$cc -L. -o dynamic.$exe dynamic.$obj -l$i
 			then	: "there's really a -l$i"?
-			else	rm -f dynamic.$exe > lib$i$1
+			else	rm -f dynamic.$exe
+				cat fun.$obj > lib$i$1
 				$cc -L. -o dynamic.$exe dynamic.$obj -l$i && $executable dynamic.$exe
 				x=$?
 				rm lib$i$1

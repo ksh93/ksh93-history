@@ -70,10 +70,10 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	error.c errorf.c errormsg.c errorx.c setlocale.c translate.c \
 	catopen.c iconv.c mc.c \
 	liberror.c libevent.c \
-	fmtbase.c fmtdev.c fmtelapsed.c fmterror.c fmtesc.c fmtfs.c \
-	fmtls.c fmtmatch.c fmtmode.c fmtnum.c fmtperm.c fmtre.c \
-	fmttime.c fmtuid.c fmtgid.c fmtsignal.c \
-	strelapsed.c strperm.c struid.c strgid.c stack.c stk.c \
+	fmtbase.c fmtbuf.c fmtclock.c fmtdev.c fmtelapsed.c fmterror.c \
+	fmtesc.c fmtfs.c fmtip4.c fmtls.c fmtmatch.c fmtmode.c fmtnum.c \
+	fmtperm.c fmtre.c fmttime.c fmtuid.c fmtgid.c fmtsignal.c \
+	strelapsed.c strperm.c struid.c strgid.c strtoip4.c stack.c stk.c \
 	swapget.c swapmem.c swapop.c swapput.c \
 	sigdata.c sigcrit.c sigunblock.c \
 	proclib.h procopen.c procclose.c procrun.c procfree.c \
@@ -134,7 +134,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	sfsetbuf.c sfsetfd.c sfsize.c sfsk.c sfstack.c sfstrtod.c sfsync.c \
 	sfswap.c sftable.c sftell.c sftmp.c sfungetc.c sfvprintf.c \
 	sfvscanf.c sfwr.c sfwrite.c sfpurge.c sfraise.c \
-	sfgetm.c sfmutex.c sfputm.c \
+	sfgetm.c sfmutex.c sfputm.c sfresize.c \
 	_sfclrerr.c _sfeof.c _sferror.c _sffileno.c \
 	_sfstacked.c _sfvalue.c \
 	_sfgetc.c _sfgetl.c _sfgetl2.c _sfgetu.c _sfgetu2.c \

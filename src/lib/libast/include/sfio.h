@@ -1,33 +1,33 @@
-/***************************************************************
-*                                                              *
-*           This software is part of the ast package           *
-*              Copyright (c) 1985-2000 AT&T Corp.              *
-*      and it may only be used by you under license from       *
-*                     AT&T Corp. ("AT&T")                      *
-*       A copy of the Source Code Agreement is available       *
-*              at the AT&T Internet web site URL               *
-*                                                              *
-*     http://www.research.att.com/sw/license/ast-open.html     *
-*                                                              *
-*      If you have copied this software without agreeing       *
-*      to the terms of the license you are infringing on       *
-*         the license and copyright and are violating          *
-*             AT&T's intellectual property rights.             *
-*                                                              *
-*               This software was created by the               *
-*               Network Services Research Center               *
-*                      AT&T Labs Research                      *
-*                       Florham Park NJ                        *
-*                                                              *
-*             Glenn Fowler <gsf@research.att.com>              *
-*              David Korn <dgk@research.att.com>               *
-*               Phong Vo <kpv@research.att.com>                *
-*                                                              *
-***************************************************************/
+/*******************************************************************
+*                                                                  *
+*             This software is part of the ast package             *
+*                Copyright (c) 1985-2000 AT&T Corp.                *
+*        and it may only be used by you under license from         *
+*                       AT&T Corp. ("AT&T")                        *
+*         A copy of the Source Code Agreement is available         *
+*                at the AT&T Internet web site URL                 *
+*                                                                  *
+*       http://www.research.att.com/sw/license/ast-open.html       *
+*                                                                  *
+*        If you have copied this software without agreeing         *
+*        to the terms of the license you are infringing on         *
+*           the license and copyright and are violating            *
+*               AT&T's intellectual property rights.               *
+*                                                                  *
+*                 This software was created by the                 *
+*                 Network Services Research Center                 *
+*                        AT&T Labs Research                        *
+*                         Florham Park NJ                          *
+*                                                                  *
+*               Glenn Fowler <gsf@research.att.com>                *
+*                David Korn <dgk@research.att.com>                 *
+*                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
+*******************************************************************/
 #ifndef _SFIO_H
 #define _SFIO_H	1
 
-#define SFIO_VERSION	20000515L
+#define SFIO_VERSION	20000731L
 
 /*	Public header file for the sfio library
 **
@@ -337,6 +337,7 @@ extern Sfio_t*		sftmp _ARG_((size_t));
 extern int		sfpurge _ARG_((Sfio_t*));
 extern int		sfpoll _ARG_((Sfio_t**, int, int));
 extern Void_t*		sfreserve _ARG_((Sfio_t*, ssize_t, int));
+extern int		sfresize _ARG_((Sfio_t*, Sfoff_t));
 extern int		sfsync _ARG_((Sfio_t*));
 extern int		sfclrlock _ARG_((Sfio_t*));
 extern Void_t*		sfsetbuf _ARG_((Sfio_t*, Void_t*, size_t));

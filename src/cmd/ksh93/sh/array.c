@@ -1,27 +1,27 @@
-/***************************************************************
-*                                                              *
-*           This software is part of the ast package           *
-*              Copyright (c) 1982-2000 AT&T Corp.              *
-*      and it may only be used by you under license from       *
-*                     AT&T Corp. ("AT&T")                      *
-*       A copy of the Source Code Agreement is available       *
-*              at the AT&T Internet web site URL               *
-*                                                              *
-*     http://www.research.att.com/sw/license/ast-open.html     *
-*                                                              *
-*      If you have copied this software without agreeing       *
-*      to the terms of the license you are infringing on       *
-*         the license and copyright and are violating          *
-*             AT&T's intellectual property rights.             *
-*                                                              *
-*               This software was created by the               *
-*               Network Services Research Center               *
-*                      AT&T Labs Research                      *
-*                       Florham Park NJ                        *
-*                                                              *
-*              David Korn <dgk@research.att.com>               *
-*                                                              *
-***************************************************************/
+/*******************************************************************
+*                                                                  *
+*             This software is part of the ast package             *
+*                Copyright (c) 1982-2000 AT&T Corp.                *
+*        and it may only be used by you under license from         *
+*                       AT&T Corp. ("AT&T")                        *
+*         A copy of the Source Code Agreement is available         *
+*                at the AT&T Internet web site URL                 *
+*                                                                  *
+*       http://www.research.att.com/sw/license/ast-open.html       *
+*                                                                  *
+*        If you have copied this software without agreeing         *
+*        to the terms of the license you are infringing on         *
+*           the license and copyright and are violating            *
+*               AT&T's intellectual property rights.               *
+*                                                                  *
+*                 This software was created by the                 *
+*                 Network Services Research Center                 *
+*                        AT&T Labs Research                        *
+*                         Florham Park NJ                          *
+*                                                                  *
+*                David Korn <dgk@research.att.com>                 *
+*                                                                  *
+*******************************************************************/
 #pragma prototyped
 /*
  * Array processing routines
@@ -373,12 +373,12 @@ char *nv_endsubscript(Namval_t *np, register char *cp, int mode)
 		stakwrite(sp,1+cp-sp);
 		sh_trim(sp=stakptr(count));
 	}
-	if(mode)
+	if(mode && np)
 		nv_putsub(np, sp, ARRAY_ADD);
 	if(quoted)
 		stakseek(count);
 	*cp = c;
-	if(*++cp == '[')
+	if(*++cp == '[' && np)
 		errormsg(SH_DICT,ERROR_exit(1),e_subscript, nv_name(np));
 	return(cp);
 }
@@ -517,7 +517,7 @@ void nv_setvec(register Namval_t *np,int append,register int argc,register char 
 #endif /* SHOPT_APPEND */
 	while(--argc >= 0)
 	{
-		if(argc>0  || nv_isattr(np,NV_ARRAY))
+		if((argc+arg0)>0  || nv_isattr(np,NV_ARRAY))
 			nv_putsub(np,NIL(char*),(long)argc+arg0);
 		nv_putval(np,argv[argc],0);
 	}

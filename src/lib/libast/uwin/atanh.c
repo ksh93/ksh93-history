@@ -1,6 +1,6 @@
 #ifndef _UWIN
 
-int _STUB_atanh;
+void _STUB_atanh(){}
 
 #else
 

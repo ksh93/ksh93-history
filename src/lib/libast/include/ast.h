@@ -1,29 +1,29 @@
-/***************************************************************
-*                                                              *
-*           This software is part of the ast package           *
-*              Copyright (c) 1985-2000 AT&T Corp.              *
-*      and it may only be used by you under license from       *
-*                     AT&T Corp. ("AT&T")                      *
-*       A copy of the Source Code Agreement is available       *
-*              at the AT&T Internet web site URL               *
-*                                                              *
-*     http://www.research.att.com/sw/license/ast-open.html     *
-*                                                              *
-*      If you have copied this software without agreeing       *
-*      to the terms of the license you are infringing on       *
-*         the license and copyright and are violating          *
-*             AT&T's intellectual property rights.             *
-*                                                              *
-*               This software was created by the               *
-*               Network Services Research Center               *
-*                      AT&T Labs Research                      *
-*                       Florham Park NJ                        *
-*                                                              *
-*             Glenn Fowler <gsf@research.att.com>              *
-*              David Korn <dgk@research.att.com>               *
-*               Phong Vo <kpv@research.att.com>                *
-*                                                              *
-***************************************************************/
+/*******************************************************************
+*                                                                  *
+*             This software is part of the ast package             *
+*                Copyright (c) 1985-2000 AT&T Corp.                *
+*        and it may only be used by you under license from         *
+*                       AT&T Corp. ("AT&T")                        *
+*         A copy of the Source Code Agreement is available         *
+*                at the AT&T Internet web site URL                 *
+*                                                                  *
+*       http://www.research.att.com/sw/license/ast-open.html       *
+*                                                                  *
+*        If you have copied this software without agreeing         *
+*        to the terms of the license you are infringing on         *
+*           the license and copyright and are violating            *
+*               AT&T's intellectual property rights.               *
+*                                                                  *
+*                 This software was created by the                 *
+*                 Network Services Research Center                 *
+*                        AT&T Labs Research                        *
+*                         Florham Park NJ                          *
+*                                                                  *
+*               Glenn Fowler <gsf@research.att.com>                *
+*                David Korn <dgk@research.att.com>                 *
+*                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
+*******************************************************************/
 #pragma prototyped
 /*
  * Advanced Software Technology Library
@@ -163,7 +163,7 @@ typedef struct
 #endif
 
 #if !defined(NoN)
-#define NoN(x)		int _STUB_ ## x;
+#define NoN(x)		void _STUB_ ## x () {}
 #if !defined(_STUB_)
 #define _STUB_
 #endif
@@ -192,10 +192,13 @@ extern void		astwinsize(int, int*, int*);
 extern int		chresc(const char*, char**);
 extern int		chrtoi(const char*);
 extern char*		fmtbase(long, int, int);
+extern char*		fmtbuf(size_t);
+extern char*		fmtclock(Sfulong_t);
 extern char*		fmtelapsed(unsigned long, int);
 extern char*		fmterror(int);
 extern char*		fmtesc(const char*);
 extern char*		fmtesq(const char*, const char*);
+extern char*		fmtip4(unsigned _ast_int4_t, int);
 extern char*		fmtnesq(const char*, const char*, size_t);
 extern char*		fmtgid(int);
 extern char*		fmtmatch(const char*);
@@ -251,6 +254,7 @@ extern void		strsort(char**, int, int(*)(const char*, const char*));
 extern char*		strsubmatch(const char*, const char*, int);
 extern unsigned long	strsum(const char*, unsigned long);
 extern char*		strtape(const char*, char**);
+extern int		strtoip4(const char*, char**, unsigned _ast_int4_t*, unsigned char*);
 extern long		strton(const char*, char**, char*, int);
 extern _ast_intmax_t	strtonll(const char*, char**, char*, int);
 extern int		struid(const char*);

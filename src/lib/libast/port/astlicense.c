@@ -1,29 +1,29 @@
-/***************************************************************
-*                                                              *
-*           This software is part of the ast package           *
-*              Copyright (c) 1985-2000 AT&T Corp.              *
-*      and it may only be used by you under license from       *
-*                     AT&T Corp. ("AT&T")                      *
-*       A copy of the Source Code Agreement is available       *
-*              at the AT&T Internet web site URL               *
-*                                                              *
-*     http://www.research.att.com/sw/license/ast-open.html     *
-*                                                              *
-*      If you have copied this software without agreeing       *
-*      to the terms of the license you are infringing on       *
-*         the license and copyright and are violating          *
-*             AT&T's intellectual property rights.             *
-*                                                              *
-*               This software was created by the               *
-*               Network Services Research Center               *
-*                      AT&T Labs Research                      *
-*                       Florham Park NJ                        *
-*                                                              *
-*             Glenn Fowler <gsf@research.att.com>              *
-*              David Korn <dgk@research.att.com>               *
-*               Phong Vo <kpv@research.att.com>                *
-*                                                              *
-***************************************************************/
+/*******************************************************************
+*                                                                  *
+*             This software is part of the ast package             *
+*                Copyright (c) 1985-2000 AT&T Corp.                *
+*        and it may only be used by you under license from         *
+*                       AT&T Corp. ("AT&T")                        *
+*         A copy of the Source Code Agreement is available         *
+*                at the AT&T Internet web site URL                 *
+*                                                                  *
+*       http://www.research.att.com/sw/license/ast-open.html       *
+*                                                                  *
+*        If you have copied this software without agreeing         *
+*        to the terms of the license you are infringing on         *
+*           the license and copyright and are violating            *
+*               AT&T's intellectual property rights.               *
+*                                                                  *
+*                 This software was created by the                 *
+*                 Network Services Research Center                 *
+*                        AT&T Labs Research                        *
+*                         Florham Park NJ                          *
+*                                                                  *
+*               Glenn Fowler <gsf@research.att.com>                *
+*                David Korn <dgk@research.att.com>                 *
+*                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
+*******************************************************************/
 #pragma prototyped
 
 /*
@@ -51,8 +51,9 @@
 #define SPECIAL			2
 #define PROPRIETARY		3
 #define NONEXCLUSIVE		4
-#define OPEN			5
-#define COPYLEFT		6
+#define NONCOMMERCIAL		5
+#define OPEN			6
+#define COPYLEFT		7
 
 #define AUTHOR			0
 #define COMPANY			1
@@ -69,7 +70,7 @@
 
 #define IDS			64
 
-#define COMDATA			62
+#define COMDATA			66
 #define COMLINE			(COMDATA+4)
 #define COMLONG			(COMDATA-32)
 #define COMMENT(x,b,s,u)	comment(x,b,s,sizeof(s)-1,u)
@@ -431,7 +432,7 @@ astlicense(char* p, int size, char* file, char* options, int cc1, int cc2, int c
 					continue;
 				}
 				v = s;
-				while ((c = *s) && (q && c != q || !q && c != ' ' && c != '\t' && c != '\n' && c != '\r' && c != ',' && c != ';'))
+				while ((c = *s) && (q && (c != q || c == '\\' && *(s + 1) && s++) || !q && c != ' ' && c != '\t' && c != '\n' && c != '\r' && c != ',' && c != ';'))
 					s++;
 				if (contributor)
 				{
@@ -452,8 +453,10 @@ astlicense(char* p, int size, char* file, char* options, int cc1, int cc2, int c
 				{
 					if ((c = index(h)) == STYLE)
 					{
-						if (!strncmp(v, "nonexclusive", 12))
+						if (!strncmp(v, "nonexclusive", 12) || !strncmp(v, "individual", 10))
 							notice.type = NONEXCLUSIVE;
+						else if (!strncmp(v, "noncommercial", 13))
+							notice.type = NONCOMMERCIAL;
 						else if (!strncmp(v, "proprietary", 11))
 							notice.type = PROPRIETARY;
 						else if (!strncmp(v, "copyleft", 8) || !strncmp(v, "gpl", 3))
@@ -648,6 +651,11 @@ astlicense(char* p, int size, char* file, char* options, int cc1, int cc2, int c
 			else if (notice.type == NONEXCLUSIVE)
 			{
 				COMMENT(&notice, &buf, "For nonexclusive individual use", 1);
+				comment(&notice, &buf, NiL, 0, 0);
+			}
+			else if (notice.type == NONCOMMERCIAL)
+			{
+				COMMENT(&notice, &buf, "For noncommercial use", 1);
 				comment(&notice, &buf, NiL, 0, 0);
 			}
 			copyright(&notice, &tmp);

@@ -1,6 +1,6 @@
 #ifndef _UWIN
 
-int _STUB_log__L;
+void _STUB_log__L(){}
 
 #else
 

@@ -1,29 +1,29 @@
-/***************************************************************
-*                                                              *
-*           This software is part of the ast package           *
-*              Copyright (c) 1985-2000 AT&T Corp.              *
-*      and it may only be used by you under license from       *
-*                     AT&T Corp. ("AT&T")                      *
-*       A copy of the Source Code Agreement is available       *
-*              at the AT&T Internet web site URL               *
-*                                                              *
-*     http://www.research.att.com/sw/license/ast-open.html     *
-*                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
-*             AT&T's intellectual property rights.             *
-*                                                              *
-*               This software was created by the               *
-*               Network Services Research Center               *
-*                      AT&T Labs Research                      *
-*                       Florham Park NJ                        *
-*                                                              *
-*             Glenn Fowler <gsf@research.att.com>              *
-*              David Korn <dgk@research.att.com>               *
-*               Phong Vo <kpv@research.att.com>                *
-*                                                              *
-***************************************************************/
+/*******************************************************************
+*                                                                  *
+*             This software is part of the ast package             *
+*                Copyright (c) 1985-2000 AT&T Corp.                *
+*        and it may only be used by you under license from         *
+*                       AT&T Corp. ("AT&T")                        *
+*         A copy of the Source Code Agreement is available         *
+*                at the AT&T Internet web site URL                 *
+*                                                                  *
+*       http://www.research.att.com/sw/license/ast-open.html       *
+*                                                                  *
+*        If you have copied this software without agreeing         *
+*        to the terms of the license you are infringing on         *
+*           the license and copyright and are violating            *
+*               AT&T's intellectual property rights.               *
+*                                                                  *
+*                 This software was created by the                 *
+*                 Network Services Research Center                 *
+*                        AT&T Labs Research                        *
+*                         Florham Park NJ                          *
+*                                                                  *
+*               Glenn Fowler <gsf@research.att.com>                *
+*                David Korn <dgk@research.att.com>                 *
+*                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
+*******************************************************************/
 #pragma prototyped
 
 /*
@@ -37,7 +37,7 @@
  */
 
 static int
-sub(register Sfio_t* dp, const char* op, register const char* sp, size_t nmatch, register regmatch_t* match, register int flags)
+sub(register Sfio_t* dp, const char* op, register const char* sp, size_t nmatch, register regmatch_t* match, register regflags_t flags)
 {
 	register int	c;
 	char*		s;
@@ -111,7 +111,7 @@ sub(register Sfio_t* dp, const char* op, register const char* sp, size_t nmatch,
  */
 
 int
-regsub(const regex_t* p, Sfio_t* dp, const char* op, const char* sp, size_t nmatch, regmatch_t* match, int flags)
+regsub(const regex_t* p, Sfio_t* dp, const char* op, const char* sp, size_t nmatch, regmatch_t* match, regflags_t flags)
 {
 	int	r;
 
@@ -121,7 +121,7 @@ regsub(const regex_t* p, Sfio_t* dp, const char* op, const char* sp, size_t nmat
 	{
 		sfwrite(dp, op, match->rm_so);
 		if (r = sub(dp, op, sp, nmatch, match, flags))
-			return r;
+			return fatal(p->env->disc, r, NiL);
 		op += match->rm_eo;
 	} while ((flags & REG_SUB_ALL) && *op && match->rm_so != match->rm_eo && !(r = regexec(p, op, nmatch, match, p->env->flags)));
 	sfputr(dp, op, -1);

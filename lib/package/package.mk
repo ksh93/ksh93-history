@@ -1,7 +1,7 @@
 /*
  * source and binary package support
  *
- * @(#)package.mk (AT&T Labs Research) 2000-06-01
+ * @(#)package.mk (AT&T Labs Research) 2000-10-31
  *
  * usage:
  *
@@ -34,6 +34,9 @@
  *	version=YYYY-MM-DD
  *		package version
  *
+ *	release=NNNN
+ *		package release (delta number)
+ *
  * NOTE: the Makerules.mk :PACKAGE: operator defers to :package: when
  *	 a target is specified
  */
@@ -51,19 +54,20 @@ type =
 version = $("":T=R%Y-%m-%d)
 release = 0000
 
-PACKAGEROOT = $(VROOT:T=F:P=L*:O=n)
+PACKAGEROOT = $(VROOT:T=F:P=L*:N!=*/arch/+([!/]):O=1)
 PACKAGESRC = $(PACKAGEROOT)/lib/package
 PACKAGEBIN = $(INSTALLROOT)/lib/package
 PACKAGEDIR = $(PACKAGESRC)/$(style)
 INSTALLOFFSET = $(INSTALLROOT:C%$(PACKAGEROOT)/%%)
 
 package.omit = -|*/$(init)
-package.glob = $(INSTALLROOT)/src/($(MAKEDIRS:/:/|/G))/*/($(MAKEFILES:/:/|/G))
-package.all = $(package.glob:P=G:W=O=$(?$(name):A=.VIRTUAL):N!=$(package.omit):$(VROOT:T=F:P=L*:C,.*,C;^&/;;,:/ /:/G))
-package.req = $(~requires:@Y%$(package.glob:P=G:W=O=$(?$(~requires):A=.VIRTUAL):N!=$(package.omit):$(VROOT:T=F:P=L*:C,.*,C;^&/;;,:/ /:/G))%%)
-package.closure = $(package.all:N!=$(closure:??$$(package.req:/ /|/G)?))
+package.glob.all = $(INSTALLROOT)/src/($(MAKEDIRS:/:/|/G))/*/($(MAKEFILES:/:/|/G))
+package.all = $(package.glob.all:P=G:W=O=$(?$(name):A=.VIRTUAL):N!=$(package.omit):T=F:$(VROOT:T=F:P=L*:C,.*,C;^&/;;,:/ /:/G))
+package.glob.pkg = $(INSTALLROOT)/src/($(MAKEDIRS:/:/|/G))/($(~$(name):/ /|/G))/($(MAKEFILES:/:/|/G))
+package.pkg = $(package.glob.pkg:P=G:D:N!=$(package.omit):T=F:$(VROOT:T=F:P=L*:C,.*,C;^&/;;,:/ /:/G))
+package.closure = $(closure:?$(package.all)?$(package.pkg)?)
 
-package.ini = ignore mamprobe nmake package silent
+package.ini = ignore mamprobe manmake package silent
 package.src.pat = $(PACKAGESRC)/($(name).(ini|lic|pkg)|($(name:N=*-*:/-.*/|/)$(licenses:/ /|/G)).lic) $(PACKAGESRC)/LICENSES/($(name)|$(licenses:/ /|/G)|$(name:N=*-*:/-.*//)|$(package.closure:B:/ /|/G))
 package.src = $(package.src.pat:P=G)
 package.bin = $(PACKAGEBIN)/$(name).ini
@@ -87,7 +91,7 @@ $(init) : .VIRTUAL $(init)
 ":package:" : .MAKE .OPERATOR
 	local P I R V
 	P := $(<:O=1)
-	$(P) : $(>)
+	$(P) : $(>:V)
 	if ! name
 		name := $(P)
 		.PACKAGE. := $(P)
@@ -110,6 +114,15 @@ $(init) : .VIRTUAL $(init)
 				version := $(I)
 			end
 		end
+		I := $(name)
+		while 1
+			LICENSEFILE := $(LICENSEFILE):$(I:D=$(LIBDIR)/package:B:S=.lic)
+			if I != "*-*"
+				break
+			end
+			I := $(I:/-[^-]*$//)
+		end
+		export LICENSEFILE
 	end
 	if "$(>)"
 		for I $(>:V)
@@ -142,13 +155,13 @@ $(init) : .VIRTUAL $(init)
 ":INDEX:" : .MAKE .OPERATOR
 	index := $(>)
 
-base delta : .MAKE
+base delta : .MAKE .VIRTUAL .FORCE
 	op := $(<)
 
-closure : .MAKE
+closure : .MAKE .VIRTUAL .FORCE
 	$(<) := 1
 
-exp lcl pkg rpm : .MAKE
+exp lcl pkg rpm : .MAKE .VIRTUAL .FORCE
 	style := $(<)
 
 source : .source.init .source.gen .source.$$(style)
@@ -168,12 +181,16 @@ source : .source.init .source.gen .source.$$(style)
 			error 3 delta requires a base archive
 		end
 		base := -z $(B)
-		if D
-			D := $(D:B:/.*\.0*//)
-		end
-		let D = D + 1
-		if D > 999
-			error 3 $(source:B:S): too many deltas
+		if "$(release)" != "0000"
+			D := $(release)
+		else
+			if D
+				D := $(D:B:/.*\.0*//)
+			end
+			let D = D + 1
+			if D > 999
+				error 3 $(source:B:S): too many deltas
+			end
 		end
 		release := $(D:F=%04d)
 		source := $(B:D)/$(B:D:B:B:S=.$(release).$(suffix))
@@ -229,11 +246,11 @@ $$(PACKAGEGEN)/DETAILS.html : $$(INSTALLROOT)/bin/package
 		mkdir $tmp
 		{
 			integer m
-			$(package.src:/.*/echo ";;;&"$("\n")/)
+			$(package.src:T=F:/.*/echo ";;;&"$("\n")/)
 			set -- $(package.closure)
 			for i
 			do	cd $(INSTALLROOT)/$i
-				$(MAKE) --noexec $(-) $(=) list.package.$(type)
+				$(MAKE) --noexec $(-) $(=) list.package.local
 			done
 			set -- $(package.dir:P=G)
 			for i
@@ -321,7 +338,7 @@ $$(PACKAGEGEN)/DETAILS.html : $$(INSTALLROOT)/bin/package
 				echo ";;;$tmp/Mamfile2;src/cmd/Mamfile"
 				echo ";;;$tmp/Mamfile2;src/lib/Mamfile"
 			fi
-			$(package.src:/.*/echo ";;;&"$("\n")/)
+			$(package.src:T=F:/.*/echo ";;;&"$("\n")/)
 			echo $(name) $(version) $(release) 1 > $(PACKAGEGEN)/$(name).ver
 			echo ";;;$(PACKAGEGEN)/$(name).ver"
 			if	test '' != '$(~covers)'
@@ -359,17 +376,12 @@ $$(PACKAGEGEN)/DETAILS.html : $$(INSTALLROOT)/bin/package
 				echo '$(name) package'
 				echo '.H 1 "$(name) package"'
 				echo '$($(name).txt)'
-				set '' $(package.closure:C,.*,$(INSTALLROOT)/&/PROMO.mm,:T=F:D::B)
+				set -- $(package.closure:C,.*,$(INSTALLROOT)/&/PROMO.mm,:T=F:D::B)
 				hot=
-				while	:
-				do	shift
-					case $# in
-					0)	break ;;
-					esac
-					hot="$hot -e s/\\(\\<$1\\>\\)/\\\\h'0*1'\\1\\\\h'0'/"
+				for i
+				do	hot="$hot -e s/\\(\\<$i\\>\\)/\\\\h'0*1'\\1\\\\h'0'/"
 				done
-				set '' $(package.closure:B)
-				shift
+				set -- $(package.closure:B)
 				if	test $# != 0
 				then	echo 'Components in this package:'
 					echo '.nf'
@@ -392,25 +404,20 @@ $$(PACKAGEGEN)/DETAILS.html : $$(INSTALLROOT)/bin/package
 				then	echo 'It requires the following package$(~requires:O=2:?s??): $(~requires).'
 				fi
 				case $(name) in
-				$(init))set '' $(licenses:D=$(PACKAGESRC):B:S=.lic) ;;
-				*)	set '' $(package.src:N=*.lic) ;;
+				$(init))set -- $(licenses:B:S=.lic:T=F) ;;
+				*)	set -- $(package.src:N=*.lic) ;;
 				esac
 				case $# in
-				1)	;;
-				*)	shift
-					case $# in
+				0)	;;
+				*)	case $# in
 					1)	echo 'The software is covered by this license:' ;;
 					*)	echo 'The software is covered by these licenses:' ;;
 					esac
 					echo .BL
-					while	:
-					do	i=`$(PROTO) -l $1 -p -h -o type=usage /dev/null | sed -e 's,.*\[-license?\([^]]*\).*,\1,'`
+					for j
+					do	i=`$(PROTO) -l $j -p -h -o type=usage /dev/null | sed -e 's,.*\[-license?\([^]]*\).*,\1,'`
 						echo .LI
 						echo ".xx link=\"$i\""
-						case $# in
-						1)	break ;;
-						esac
-						shift
 					done
 					echo .LE
 					;;
@@ -486,12 +493,16 @@ binary : .binary.init .binary.gen .binary.$$(style)
 			error 3 delta requires a base archive
 		end
 		base := -z $(B)
-		if D
-			D := $(D:B:/.*\.0*//)
-		end
-		let D = D + 1
-		if D > 999
-			error 3 $(binary:B:S): too many deltas
+		if "$(release)" != "0000"
+			D := $(release)
+		else
+			if D
+				D := $(D:B:/.*\.0*//)
+			end
+			let D = D + 1
+			if D > 999
+				error 3 $(binary:B:S): too many deltas
+			end
 		end
 		release := $(D:F=%04d)
 	elif B || op == "base"
@@ -532,11 +543,13 @@ binary : .binary.init .binary.gen .binary.$$(style)
 		{
 			$(package.src:T=F:/.*/echo ";;;&"$("\n")/)
 			$(package.bin:T=F:/.*/echo ";;;&"$("\n")/)
-			for i in $(package.closure)
+			set -- $(package.closure)
+			for i
 			do	cd $(INSTALLROOT)/$i
-				$(MAKE) --noexec $(-) $(=) list.package.$(type)
+				$(MAKE) --noexec $(-) $(=) list.package.$(type) cc-
 			done
 		} |
+		sort -u |
 		$(PAX)	--filter=- \
 			$(op:N=delta:??--format=$(format)?) \
 			--local \
@@ -611,11 +624,13 @@ binary : .binary.init .binary.gen .binary.$$(style)
 				package release $(name)
 			} > $(PACKAGEGEN)/$(name).txt
 			echo ";;;$(PACKAGEGEN)/$(name).txt"
-			for i in $(package.closure)
+			set -- $(package.closure)
+			for i
 			do	cd $(INSTALLROOT)/$i
-				$(MAKE) --noexec $(-) $(=) list.package.$(type)
+				$(MAKE) --noexec $(-) $(=) list.package.$(type) cc-
 			done
 		} |
+		sort -u |
 		$(PAX)	--filter=- \
 			$(op:N=delta:??--format=$(format)?) \
 			--local \
@@ -630,3 +645,10 @@ binary : .binary.init .binary.gen .binary.$$(style)
 		$(PAX) -rf $(old.binary) -wvf $(new.old.binary) -z $(binary)
 		rm -rf $tmp
 	fi
+
+list.install list.manifest :
+	set -- $(package.closure)
+	for i
+	do	cd $(INSTALLROOT)/$i
+		$(MAKE) --noexec $(-) $(=) $(<)
+	done

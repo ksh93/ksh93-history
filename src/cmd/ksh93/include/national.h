@@ -1,27 +1,27 @@
-/***************************************************************
-*                                                              *
-*           This software is part of the ast package           *
-*              Copyright (c) 1982-2000 AT&T Corp.              *
-*      and it may only be used by you under license from       *
-*                     AT&T Corp. ("AT&T")                      *
-*       A copy of the Source Code Agreement is available       *
-*              at the AT&T Internet web site URL               *
-*                                                              *
-*     http://www.research.att.com/sw/license/ast-open.html     *
-*                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
-*             AT&T's intellectual property rights.             *
-*                                                              *
-*               This software was created by the               *
-*               Network Services Research Center               *
-*                      AT&T Labs Research                      *
-*                       Florham Park NJ                        *
-*                                                              *
-*              David Korn <dgk@research.att.com>               *
-*                                                              *
-***************************************************************/
+/*******************************************************************
+*                                                                  *
+*             This software is part of the ast package             *
+*                Copyright (c) 1982-2000 AT&T Corp.                *
+*        and it may only be used by you under license from         *
+*                       AT&T Corp. ("AT&T")                        *
+*         A copy of the Source Code Agreement is available         *
+*                at the AT&T Internet web site URL                 *
+*                                                                  *
+*       http://www.research.att.com/sw/license/ast-open.html       *
+*                                                                  *
+*        If you have copied this software without agreeing         *
+*        to the terms of the license you are infringing on         *
+*           the license and copyright and are violating            *
+*               AT&T's intellectual property rights.               *
+*                                                                  *
+*                 This software was created by the                 *
+*                 Network Services Research Center                 *
+*                        AT&T Labs Research                        *
+*                         Florham Park NJ                          *
+*                                                                  *
+*                David Korn <dgk@research.att.com>                 *
+*                                                                  *
+*******************************************************************/
 #pragma prototyped
 /*
  *  national.h -  definitions for international character sets
@@ -33,6 +33,8 @@
  *   Tel. x7975
  *
  */
+
+#include	"FEATURE/locale"
 
 #ifdef SHOPT_MULTIBYTE
 /*
@@ -62,7 +64,7 @@
  * This part is generic
  */
 
-#define MARKER		0x100	/* Must be invalid character */
+#define MARKER		0x7fff	/* Must be invalid character */
 #define ESS2		0x8e	/* Escape to char set 2 */
 #define ESS3		0x8f	/* Escape to char set 3 */
 #define ESS_SETMASK	(3<<(7*ESS_MAXCHAR))	/* character set bits */

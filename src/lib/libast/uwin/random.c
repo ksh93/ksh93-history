@@ -1,6 +1,6 @@
 #ifndef _UWIN
 
-int _STUB_random;
+void _STUB_random(){}
 
 #else
 

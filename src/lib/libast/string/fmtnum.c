@@ -1,35 +1,35 @@
-/***************************************************************
-*                                                              *
-*           This software is part of the ast package           *
-*              Copyright (c) 1985-2000 AT&T Corp.              *
-*      and it may only be used by you under license from       *
-*                     AT&T Corp. ("AT&T")                      *
-*       A copy of the Source Code Agreement is available       *
-*              at the AT&T Internet web site URL               *
-*                                                              *
-*     http://www.research.att.com/sw/license/ast-open.html     *
-*                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
-*             AT&T's intellectual property rights.             *
-*                                                              *
-*               This software was created by the               *
-*               Network Services Research Center               *
-*                      AT&T Labs Research                      *
-*                       Florham Park NJ                        *
-*                                                              *
-*             Glenn Fowler <gsf@research.att.com>              *
-*              David Korn <dgk@research.att.com>               *
-*               Phong Vo <kpv@research.att.com>                *
-*                                                              *
-***************************************************************/
+/*******************************************************************
+*                                                                  *
+*             This software is part of the ast package             *
+*                Copyright (c) 1985-2000 AT&T Corp.                *
+*        and it may only be used by you under license from         *
+*                       AT&T Corp. ("AT&T")                        *
+*         A copy of the Source Code Agreement is available         *
+*                at the AT&T Internet web site URL                 *
+*                                                                  *
+*       http://www.research.att.com/sw/license/ast-open.html       *
+*                                                                  *
+*        If you have copied this software without agreeing         *
+*        to the terms of the license you are infringing on         *
+*           the license and copyright and are violating            *
+*               AT&T's intellectual property rights.               *
+*                                                                  *
+*                 This software was created by the                 *
+*                 Network Services Research Center                 *
+*                        AT&T Labs Research                        *
+*                         Florham Park NJ                          *
+*                                                                  *
+*               Glenn Fowler <gsf@research.att.com>                *
+*                David Korn <dgk@research.att.com>                 *
+*                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
+*******************************************************************/
 #pragma prototyped
 /*
  * Glenn Fowler
  * AT&T Research
  *
- * return scaled number n in static buffer
+ * return scaled number n
  * string width is 5 chars or less
  * if m>1 then n divided by m before scaling
  */
@@ -41,14 +41,11 @@ fmtnum(register unsigned long n, int m)
 {
 	register int		i;
 	register unsigned long	r;
+	char*			buf;
+	int			z;
 
 	char			suf[2];
 
-	static char		buf[4][8];
-	static int		bf;
-
-	if (++bf >= elementsof(buf))
-		bf = 0;
 	if (m > 1)
 	{
 		r = n;
@@ -91,9 +88,10 @@ fmtnum(register unsigned long n, int m)
 		else
 			i = 2;
 	}
+	buf = fmtbuf(z = 8);
 	if (r)
-		sfsprintf(buf[bf], sizeof(buf[bf]), "%lu.%0*lu%s", n, i, r, suf);
+		sfsprintf(buf, z, "%lu.%0*lu%s", n, i, r, suf);
 	else
-		sfsprintf(buf[bf], sizeof(buf[bf]), "%lu%s", n, suf);
-	return buf[bf];
+		sfsprintf(buf, z, "%lu%s", n, suf);
+	return buf;
 }

@@ -192,6 +192,7 @@ SF_EVENT
 .Ss "STREAM CONTROL"
 .nf
 .ft 5
+int        sfresize(Sfio_t* f, Sfoff_t size);
 int        sfset(Sfio_t* f, int flags, int i);
 int        sfsetfd(Sfio_t* f, int fd);
 Sfio_t*    sfstack(Sfio_t* base, Sfio_t* top);
@@ -1782,6 +1783,13 @@ or the value returned by the exception handler.
 .PP
 .Ss "STREAM CONTROL"
 .PP
+.Ss "  int sfresize(Sfio_t* f, Sfoff_t size)"
+This function resizes the stream \f5f\P so that its extent is \f5size\fP.
+If the stream corresponds to a file, the file size is set to \f5size\fP
+via the system call \f5ftruncate()\fP.
+When a stream is made larger, the new data space is filled with zero's.
+\f5sfresize()\fP returns \f50\fP on success and a negative value on failure.
+
 .Ss "  int sfset(Sfio_t* f, int flags, int set)"
 This function sets control flags for the stream \f5f\fP.
 It returns the previous set of flags or \f50\fP on error.

@@ -1,3 +1,21 @@
+00-10-31 package.mk: *.pkg must assert closure
+	 package.mk: add cc- variants to list.package.binary
+	 package.sh: omit dups from package list
+	 package.sh: invalid arg gives one line Usage
+00-10-26 WWW.mk: add .SOURCE rhs to :WWWPAGE:
+00-10-25 package: fix install
+	 package.mk: add list.install
+00-10-22 regress: fix VIEW to skip empty dirs
+00-10-19 package.mk: $(PACKAGEROOT)/bin/nmake => $(PACKAGEROOT)/bin/manmake
+	 iffe: validate #define identifiers
+00-10-18 C+probe: mac os10 additions
+	 package: add DYLD_LIBRARY_PATH initialization
+	 add ldd.$(CC.HOSTTYPE)
+00-10-01 iffe: handle -I* -L* options
+00-09-21 mamake: add libxxx and xxx to makefile ordered prereqs
+00-09-19 C+probe: add probe_longlong
+00-09-11 package: drop manmake and $PACKAGEROOT/bin/nmake
+00-09-08 iffe: verfiy that $cc is a C compiler
 00-06-14 mamprobe: fix win32.* probe
 	 mamake: fix bug that used lower view path for generation
 	 package: don't clobber $PACKAGEROOT/bin/nmake

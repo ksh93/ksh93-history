@@ -1,27 +1,27 @@
-/***************************************************************
-*                                                              *
-*           This software is part of the ast package           *
-*              Copyright (c) 1982-2000 AT&T Corp.              *
-*      and it may only be used by you under license from       *
-*                     AT&T Corp. ("AT&T")                      *
-*       A copy of the Source Code Agreement is available       *
-*              at the AT&T Internet web site URL               *
-*                                                              *
-*     http://www.research.att.com/sw/license/ast-open.html     *
-*                                                              *
-*      If you have copied this software without agreeing       *
-*      to the terms of the license you are infringing on       *
-*         the license and copyright and are violating          *
-*             AT&T's intellectual property rights.             *
-*                                                              *
-*               This software was created by the               *
-*               Network Services Research Center               *
-*                      AT&T Labs Research                      *
-*                       Florham Park NJ                        *
-*                                                              *
-*              David Korn <dgk@research.att.com>               *
-*                                                              *
-***************************************************************/
+/*******************************************************************
+*                                                                  *
+*             This software is part of the ast package             *
+*                Copyright (c) 1982-2000 AT&T Corp.                *
+*        and it may only be used by you under license from         *
+*                       AT&T Corp. ("AT&T")                        *
+*         A copy of the Source Code Agreement is available         *
+*                at the AT&T Internet web site URL                 *
+*                                                                  *
+*       http://www.research.att.com/sw/license/ast-open.html       *
+*                                                                  *
+*        If you have copied this software without agreeing         *
+*        to the terms of the license you are infringing on         *
+*           the license and copyright and are violating            *
+*               AT&T's intellectual property rights.               *
+*                                                                  *
+*                 This software was created by the                 *
+*                 Network Services Research Center                 *
+*                        AT&T Labs Research                        *
+*                         Florham Park NJ                          *
+*                                                                  *
+*                David Korn <dgk@research.att.com>                 *
+*                                                                  *
+*******************************************************************/
 #pragma prototyped
 /*
  * UNIX shell parse tree executer
@@ -44,6 +44,7 @@
 #include	"FEATURE/time"
 #include	"FEATURE/externs"
 #include	"FEATURE/locale"
+#include	"streval.h"
 
 #if defined(_UWIN) && defined(_M_ALPHA)
 #   undef _lib_fork
@@ -81,6 +82,9 @@ struct funenv
 };
 
 /* ========	command execution	========*/
+
+#   define OPTIMIZE_FLAG	(0)
+#   define OPTIMIZE		(0)
 
 /*
  * Given stream <iop> compile and execute
@@ -167,6 +171,24 @@ static int pipe_exec(int pv[], union anynode *t, int errorflg)
 }
 #endif /* SHOPT_FASTPIPE */
 
+/*
+ * returns 1 when setting name references
+ */
+static int checkref(char *argv[])
+{
+	char *cp;
+	while(cp = *++argv)
+	{
+		if(*cp=='+')
+			continue;
+		if(*cp!='-' || cp[1]=='-')
+			break;
+		if(strchr(cp,'n'))
+			return(1);
+	}
+	return(0);
+}
+
 sh_exec(register const union anynode *t, int flags)
 {
 	sh_sigcheck();
@@ -174,7 +196,7 @@ sh_exec(register const union anynode *t, int flags)
 	{
 		register int 	type = flags;
 		register char	*com0 = 0;
-		int 		errorflg = (type&SH_ERREXIT);
+		int 		errorflg = (type&SH_ERREXIT)|OPTIMIZE;
 		int 		execflg = (type&SH_NOFORK);
 		int 		mainloop = (type&SH_INTERACTIVE);
 #ifdef SHOPT_SPAWN
@@ -211,7 +233,7 @@ sh_exec(register const union anynode *t, int flags)
 			struct ionod	*io;
 			int		command=0;
 			error_info.line = t->com.comline-sh.st.firstline;
-			com = sh_argbuild(&argn,&(t->com));
+			com = sh_argbuild(&argn,&(t->com),OPTIMIZE);
 			echeck = 1;
 			if(t->tre.tretyp&COMSCAN)
 			{
@@ -319,15 +341,19 @@ sh_exec(register const union anynode *t, int flags)
 			{
 				if(argn==0 || (np && !command && nv_isattr(np,BLT_SPC)))
 				{
-					register int flags=NV_VARNAME|NV_ASSIGN;
+					register int flgs=NV_VARNAME|NV_ASSIGN;
 					if(np==SYSTYPESET)
 					{
+						if(checkref(com))
+							flgs |= NV_REF;
 						if(sh.fn_depth)
-							flags |= NV_NOSCOPE;
+							flgs |= NV_NOSCOPE;
 					}
 					else if(np)
-						flags = NV_IDENT|NV_ASSIGN;
-					nv_setlist(argp,flags);
+						flgs = NV_IDENT|NV_ASSIGN;
+					if(OPTIMIZE)
+						flgs |= NV_TAGGED;
+					nv_setlist(argp,flgs);
 					argp = NULL;
 				}
 			}
@@ -477,7 +503,7 @@ sh_exec(register const union anynode *t, int flags)
 					staklink(slp->slptr);
 					if(io)
 						indx = sh_redirect(io,execflg);
-					sh_funct(np,argn,com,t->com.comset,flags);
+					sh_funct(np,argn,com,t->com.comset,(flags&~OPTIMIZE_FLAG));
 					if(io)
 						sh_iorestore(indx);
 					sh_funstaks(slp->slchild,-1);
@@ -791,14 +817,14 @@ sh_exec(register const union anynode *t, int flags)
 		    case TAND:
 			if(type&TTEST)
 				skipexitset++;
-			if(sh_exec(t->lst.lstlef,0)==0)
+			if(sh_exec(t->lst.lstlef,OPTIMIZE)==0)
 				sh_exec(t->lst.lstrit,flags);
 			break;
 
 		    case TORF:
 			if(type&TTEST)
 				skipexitset++;
-			if(sh_exec(t->lst.lstlef,0)!=0)
+			if(sh_exec(t->lst.lstlef,OPTIMIZE)!=0)
 				sh_exec(t->lst.lstrit,flags);
 			break;
 
@@ -807,6 +833,7 @@ sh_exec(register const union anynode *t, int flags)
 			register char **args;
 			register int nargs;
 			register Namval_t *np;
+			int flag = errorflg|OPTIMIZE_FLAG;
 			struct dolnod	*argsav=0;
 			struct comnod	*tp;
 			char *cp, *nullptr = 0;
@@ -819,7 +846,7 @@ sh_exec(register const union anynode *t, int flags)
 			}
 			else
 			{
-				args=sh_argbuild(&argn,tp);
+				args=sh_argbuild(&argn,tp,0);
 				nargs = argn;
 			}
 			np = nv_open(t->for_.fornam, sh.var_tree,NV_NOASSIGN|NV_ARRAY|NV_VARNAME|NV_REF);
@@ -877,7 +904,8 @@ sh_exec(register const union anynode *t, int flags)
 				nv_putval(np,cp,0);
 				if(nameref)
 					nv_setref(np);
-				sh_exec(t->for_.fortre,errorflg);
+				sh_exec(t->for_.fortre,flag);
+				flag &= ~OPTIMIZE_FLAG;
 				if(t->tre.tretyp == TSELECT)
 				{
 					if((cp=nv_getval(nv_scoped(REPLYNOD))) && *cp==0)
@@ -900,15 +928,17 @@ sh_exec(register const union anynode *t, int flags)
 		    case TWH: /* while and until */
 		    {
 			register int 	r=0;
+			int first = OPTIMIZE_FLAG;
 			sh.st.loopcnt++;
-			while(sh.st.execbrk==0 && (sh_exec(t->wh.whtre,0)==0)==(type==TWH))
+			while(sh.st.execbrk==0 && (sh_exec(t->wh.whtre,first)==0)==(type==TWH))
 			{
-				r = sh_exec(t->wh.dotre,errorflg);
+				r = sh_exec(t->wh.dotre,first|errorflg);
 				if(sh.st.breakcnt<0)
 					sh.st.execbrk = (++sh.st.breakcnt !=0);
 				/* This is for the arithmetic for */
 				if(sh.st.execbrk==0 && t->wh.whinc)
-					sh_exec((union anynode*)t->wh.whinc,0);
+					sh_exec((union anynode*)t->wh.whinc,first);
+				first = 0;
 			}
 			if(sh.st.breakcnt>0)
 				sh.st.execbrk = (--sh.st.breakcnt !=0);
@@ -928,7 +958,7 @@ sh_exec(register const union anynode *t, int flags)
 				sh.st.trap[SH_DEBUGTRAP] = trap;
 			}
 			if(!(t->ar.arexpr->argflag&ARG_RAW))
-				arg[1] = word_trim(t->ar.arexpr,3);
+				arg[1] = word_trim(t->ar.arexpr,OPTIMIZE|ARG_ARITH);
 			else
 				arg[1] = t->ar.arexpr->argval;
 			if(sh_isoption(SH_XTRACE))
@@ -936,12 +966,15 @@ sh_exec(register const union anynode *t, int flags)
 				sh_trace(NIL(char**),0);
 				sfprintf(sfstderr,"((%s))\n",arg[1]);
 			}
-			sh.exitval = !sh_arith(arg[1]);
+			if(t->ar.arcomp)
+				sh.exitval  = !arith_exec((Arith_t*)t->ar.arcomp);
+			else
+				sh.exitval = !sh_arith(arg[1]);
 			break;
 		    }
 
 		    case TIF:
-			if(sh_exec(t->if_.iftre,0)==0)
+			if(sh_exec(t->if_.iftre,OPTIMIZE)==0)
 				sh_exec(t->if_.thtre,flags);
 			else if(t->if_.eltre)
 				sh_exec(t->if_.eltre, flags);
@@ -951,8 +984,9 @@ sh_exec(register const union anynode *t, int flags)
 
 		    case TSW:
 		    {
-			char *r = word_trim(t->sw.swarg,0);
-			t= (union anynode*)(t->sw.swlst);
+			union anynode *tt = (union anynode*)t;
+			char *r = word_trim(tt->sw.swarg,OPTIMIZE);
+			t= (union anynode*)(tt->sw.swlst);
 			while(t)
 			{
 				register struct argnod	*rex=(struct argnod*)t->reg.regptr;
@@ -961,7 +995,7 @@ sh_exec(register const union anynode *t, int flags)
 					register char *s;
 					if(rex->argflag&ARG_MAC)
 					{
-						s = sh_mactrim(rex->argval,1);
+						s = word_trim(rex,OPTIMIZE|ARG_EXP);
 						while(*s=='\\' && s[1]==0)
 							s+=2;
 					}
@@ -999,7 +1033,7 @@ sh_exec(register const union anynode *t, int flags)
 #endif	/* timeofday */
 			if(type!=TTIME)
 			{
-				sh_exec(t->par.partre,0);
+				sh_exec(t->par.partre,OPTIMIZE);
 				sh.exitval = !sh.exitval;
 				break;
 			}
@@ -1015,7 +1049,7 @@ sh_exec(register const union anynode *t, int flags)
 #endif	/* timeofday */
 				job.waitall = 1;
 				sh_onstate(SH_TIMING);
-				sh_exec(t->par.partre,0);
+				sh_exec(t->par.partre,OPTIMIZE);
 				if(!timer_on)
 					sh_offstate(SH_TIMING);
 				job.waitall = 0;
@@ -1176,7 +1210,7 @@ sh_exec(register const union anynode *t, int flags)
 			echeck = 1;
 			if((type&TPAREN)==TPAREN)
 			{
-				sh_exec(t->lst.lstlef,0);
+				sh_exec(t->lst.lstlef,OPTIMIZE);
 				n = !sh.exitval;
 			}
 			else
@@ -1185,9 +1219,9 @@ sh_exec(register const union anynode *t, int flags)
 				register char *right;
 				register char *trap;
 				n = type>>TSHIFT;
-				left = word_trim(&(t->lst.lstlef->arg),0);
+				left = word_trim(&(t->lst.lstlef->arg),OPTIMIZE);
 				if(type&TBINARY)
-					right = word_trim(&(t->lst.lstrit->arg),(n==TEST_PEQ||n==TEST_PNE));
+					right = word_trim(&(t->lst.lstrit->arg),((n==TEST_PEQ||n==TEST_PNE)?ARG_EXP:0)|OPTIMIZE);
 				if(trap=sh.st.trap[SH_DEBUGTRAP])
 				{
 					sh.st.trap[SH_DEBUGTRAP] = 0;
@@ -1275,10 +1309,13 @@ sh_exec(register const union anynode *t, int flags)
 		}
 		if(!skipexitset)
 			exitset();
-		if(sav != stakptr(0))
-			stakset(sav,0);
-		else if(staktell())
-			stakseek(0);
+		if(!(OPTIMIZE))
+		{
+			if(sav != stakptr(0))
+				stakset(sav,0);
+			else if(staktell())
+				stakseek(0);
+		}
 		if(sh.trapnote&SH_SIGSET)
 			sh_exit(SH_EXITSIG|sh.lastsig);
 		sh_onstate(save_states);
@@ -1352,12 +1389,20 @@ int sh_trace(register char *argv[], register int nl)
 }
 
 
-static char *word_trim(register struct argnod *arg, int flag)
+static char *word_trim(register struct argnod *arg, int flags)
 {
 	register char *sp = arg->argval;
 	if((arg->argflag&ARG_RAW))
 		return(sp);
-	return(sh_mactrim(sp,flag));
+	if(!(sp=arg->argchn.cp))
+	{
+		sh_macexpand(arg,NIL(struct argnod**),flags);
+		sp = arg->argchn.cp;
+		if(!OPTIMIZE || !(arg->argflag&ARG_MAKE))
+			arg->argchn.cp = 0;
+		arg->argflag &= ~ARG_MAKE;
+	}
+	return(sp);
 }
 
 

@@ -1,28 +1,28 @@
-/***************************************************************
-*                                                              *
-*           This software is part of the ast package           *
-*              Copyright (c) 1992-2000 AT&T Corp.              *
-*      and it may only be used by you under license from       *
-*                     AT&T Corp. ("AT&T")                      *
-*       A copy of the Source Code Agreement is available       *
-*              at the AT&T Internet web site URL               *
-*                                                              *
-*     http://www.research.att.com/sw/license/ast-open.html     *
-*                                                              *
-*      If you have copied this software without agreeing       *
-*      to the terms of the license you are infringing on       *
-*         the license and copyright and are violating          *
-*             AT&T's intellectual property rights.             *
-*                                                              *
-*               This software was created by the               *
-*               Network Services Research Center               *
-*                      AT&T Labs Research                      *
-*                       Florham Park NJ                        *
-*                                                              *
-*             Glenn Fowler <gsf@research.att.com>              *
-*              David Korn <dgk@research.att.com>               *
-*                                                              *
-***************************************************************/
+/*******************************************************************
+*                                                                  *
+*             This software is part of the ast package             *
+*                Copyright (c) 1992-2000 AT&T Corp.                *
+*        and it may only be used by you under license from         *
+*                       AT&T Corp. ("AT&T")                        *
+*         A copy of the Source Code Agreement is available         *
+*                at the AT&T Internet web site URL                 *
+*                                                                  *
+*       http://www.research.att.com/sw/license/ast-open.html       *
+*                                                                  *
+*        If you have copied this software without agreeing         *
+*        to the terms of the license you are infringing on         *
+*           the license and copyright and are violating            *
+*               AT&T's intellectual property rights.               *
+*                                                                  *
+*                 This software was created by the                 *
+*                 Network Services Research Center                 *
+*                        AT&T Labs Research                        *
+*                         Florham Park NJ                          *
+*                                                                  *
+*               Glenn Fowler <gsf@research.att.com>                *
+*                David Korn <dgk@research.att.com>                 *
+*                                                                  *
+*******************************************************************/
 #pragma prototyped
 /*
  * Glenn Fowler
@@ -32,7 +32,7 @@
  */
 
 static const char usage_head[] =
-"[-?@(#)cp (AT&T Labs Research) 2000-03-17\n]"
+"[-?@(#)cp (AT&T Labs Research) 2000-09-20\n]"
 USAGE_LICENSE
 ;
 
@@ -130,6 +130,7 @@ static const char usage_tail[] =
 #include <fs3d.h>
 #include <hashkey.h>
 #include <sfstr.h>
+#include <stk.h>
 
 #define PATH_CHUNK	256
 
@@ -625,6 +626,7 @@ b_cp(int argc, register char** argv, void* context)
 {
 	register char*	file;
 	register char*	s;
+	char**		v;
 	char*		backup_type;
 	const char*	usage;
 	int		path_resolve;
@@ -760,6 +762,10 @@ b_cp(int argc, register char** argv, void* context)
 		argc--;
 		argv++;
 	}
+	if (!(v = (char**)stkalloc(stkstd, (argc + 2) * sizeof(char*))))
+		error(3, "out of space");
+	memcpy(v, argv, (argc + 1) * sizeof(char*));
+	argv = v;
 	if (!argc)
 	{
 		argc++;

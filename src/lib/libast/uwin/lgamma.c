@@ -1,6 +1,6 @@
 #ifndef _UWIN
 
-int _STUB_lgamma;
+void _STUB_lgamma(){}
 
 #else
 

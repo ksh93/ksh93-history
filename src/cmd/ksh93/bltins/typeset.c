@@ -1,27 +1,27 @@
-/***************************************************************
-*                                                              *
-*           This software is part of the ast package           *
-*              Copyright (c) 1982-2000 AT&T Corp.              *
-*      and it may only be used by you under license from       *
-*                     AT&T Corp. ("AT&T")                      *
-*       A copy of the Source Code Agreement is available       *
-*              at the AT&T Internet web site URL               *
-*                                                              *
-*     http://www.research.att.com/sw/license/ast-open.html     *
-*                                                              *
-*      If you have copied this software without agreeing       *
-*      to the terms of the license you are infringing on       *
-*         the license and copyright and are violating          *
-*             AT&T's intellectual property rights.             *
-*                                                              *
-*               This software was created by the               *
-*               Network Services Research Center               *
-*                      AT&T Labs Research                      *
-*                       Florham Park NJ                        *
-*                                                              *
-*              David Korn <dgk@research.att.com>               *
-*                                                              *
-***************************************************************/
+/*******************************************************************
+*                                                                  *
+*             This software is part of the ast package             *
+*                Copyright (c) 1982-2000 AT&T Corp.                *
+*        and it may only be used by you under license from         *
+*                       AT&T Corp. ("AT&T")                        *
+*         A copy of the Source Code Agreement is available         *
+*                at the AT&T Internet web site URL                 *
+*                                                                  *
+*       http://www.research.att.com/sw/license/ast-open.html       *
+*                                                                  *
+*        If you have copied this software without agreeing         *
+*        to the terms of the license you are infringing on         *
+*           the license and copyright and are violating            *
+*               AT&T's intellectual property rights.               *
+*                                                                  *
+*                 This software was created by the                 *
+*                 Network Services Research Center                 *
+*                        AT&T Labs Research                        *
+*                         Florham Park NJ                          *
+*                                                                  *
+*                David Korn <dgk@research.att.com>                 *
+*                                                                  *
+*******************************************************************/
 #pragma prototyped
 /*
  * export [-p] [arg...]
@@ -76,7 +76,6 @@ static void	print_scan(Sfio_t*, int, Dt_t*, int, struct tdata*t);
 static int	b_unall(int, char**, Dt_t*, Shell_t*);
 static int	b_common(char**, int, Dt_t*, struct tdata*);
 static void	pushname(Namval_t*,void*);
-static void	unref(Namval_t*);
 static void(*nullscan)(Namval_t*,void*);
 
 static char *get_tree(Namval_t*, Namfun_t *);
@@ -469,7 +468,7 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 				if(tp->aflag=='-')
 					nv_setref(np);
 				else
-					unref(np);
+					nv_unref(np);
 			}
 			nv_close(np);
 		}
@@ -865,6 +864,7 @@ static void genvalue(struct argnod *argp, const char *prefix, int n, int indent,
 	register struct argnod *ap;
 	register char *cp,*nextcp;
 	register int m,isarray;
+	int associative=0;
 	Namval_t *np;
 	if(n==0)
 		m = strlen(prefix);
@@ -917,6 +917,7 @@ static void genvalue(struct argnod *argp, const char *prefix, int n, int indent,
 					isarray=2;
 				else
 					nv_putsub(np,NIL(char*),ARRAY_SCAN);
+				associative= nv_aindex(np)<0;
 			}
 			if(!tp->outfile)
 			{
@@ -924,7 +925,7 @@ static void genvalue(struct argnod *argp, const char *prefix, int n, int indent,
 				continue;
 			}
 			sfnputc(tp->outfile,'\t',indent);
-			if(nv_isattr(np,~NV_DEFAULT))
+			if(nv_isattr(np,~NV_ARRAY) || associative)
 				print_attribute(np,tp);
 			sfputr(tp->outfile,cp,(isarray==2?'\n':'='));
 			if(isarray)
@@ -936,14 +937,24 @@ static void genvalue(struct argnod *argp, const char *prefix, int n, int indent,
 			}
 			while(1)
 			{
-				char *fmtq;
-				if(isarray)
+				char *fmtq,*ep;
+				if(isarray && associative)
 				{
 					sfprintf(tp->outfile,"[%s]",sh_fmtq(nv_getsub(np)));
 					sfputc(tp->outfile,'=');
 				}
 				if(!(fmtq = sh_fmtq(nv_getval(np))))
 					fmtq = "";
+				else if(!associative && (ep=strchr(fmtq,'=')))
+				{
+					char *qp = strchr(fmtq,'\'');
+					if(!qp || qp>ep)
+					{
+						sfwrite(tp->outfile,fmtq,ep-fmtq);
+						sfputc(tp->outfile,'\\');
+						fmtq = ep;
+					}
+				}
 				sfputr(tp->outfile,fmtq,'\n');
 				if(!ap || !nv_nextsub(np))
 					break;
@@ -996,7 +1007,7 @@ static char *walk_tree(register Namval_t *np, int dlete)
 	ap = (struct argnod*)stakfreeze(1);
 	ap->argflag = ARG_MAC;
 	fcsave(&save);
-	sh_macexpand(ap,&arglist);
+	sh_macexpand(ap,&arglist,0);
 	fcrestore(&save);
 	ap->argval[strlen(ap->argval)-(subscript?4:3)] = 0;
 	name = (char*)&ap->argval[4];
@@ -1200,18 +1211,5 @@ static void pushname(Namval_t *np,void *data)
 {
 	struct tdata *tp = (struct tdata*)data;
 	*tp->argnam++ = nv_name(np);
-}
-
-/*
- * The inverse of creating a reference node
- */
-static void unref(register Namval_t *np)
-{
-	if(!nv_isref(np))
-		return;
-	nv_offattr(np,NV_NOFREE|NV_REF);
-	np->nvalue.cp = strdup(nv_name(nv_refnode(np)));
-	np->nvfun = 0;
-	return;
 }
 

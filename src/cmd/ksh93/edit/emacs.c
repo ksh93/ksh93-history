@@ -1,27 +1,27 @@
-/***************************************************************
-*                                                              *
-*           This software is part of the ast package           *
-*              Copyright (c) 1982-2000 AT&T Corp.              *
-*      and it may only be used by you under license from       *
-*                     AT&T Corp. ("AT&T")                      *
-*       A copy of the Source Code Agreement is available       *
-*              at the AT&T Internet web site URL               *
-*                                                              *
-*     http://www.research.att.com/sw/license/ast-open.html     *
-*                                                              *
-*      If you have copied this software without agreeing       *
-*      to the terms of the license you are infringing on       *
-*         the license and copyright and are violating          *
-*             AT&T's intellectual property rights.             *
-*                                                              *
-*               This software was created by the               *
-*               Network Services Research Center               *
-*                      AT&T Labs Research                      *
-*                       Florham Park NJ                        *
-*                                                              *
-*              David Korn <dgk@research.att.com>               *
-*                                                              *
-***************************************************************/
+/*******************************************************************
+*                                                                  *
+*             This software is part of the ast package             *
+*                Copyright (c) 1982-2000 AT&T Corp.                *
+*        and it may only be used by you under license from         *
+*                       AT&T Corp. ("AT&T")                        *
+*         A copy of the Source Code Agreement is available         *
+*                at the AT&T Internet web site URL                 *
+*                                                                  *
+*       http://www.research.att.com/sw/license/ast-open.html       *
+*                                                                  *
+*        If you have copied this software without agreeing         *
+*        to the terms of the license you are infringing on         *
+*           the license and copyright and are violating            *
+*               AT&T's intellectual property rights.               *
+*                                                                  *
+*                 This software was created by the                 *
+*                 Network Services Research Center                 *
+*                        AT&T Labs Research                        *
+*                         Florham Park NJ                          *
+*                                                                  *
+*                David Korn <dgk@research.att.com>                 *
+*                                                                  *
+*******************************************************************/
 #pragma prototyped
 /* Adapted for ksh by David Korn */
 /* EMACS_MODES: c tabstop=4 
@@ -329,6 +329,13 @@ ed_emacsread(int fd,char *buff,int scend)
 		case cntl('Q') :
 			continue;
 #endif	/* u370 */
+		case '\t':
+			if(cur>0 && cur>=eol && out[cur-1]!='\t' && out[cur-1]!=' ')
+			{
+				ed_ungetchar(ep->ed,ESC);
+				ed_ungetchar(ep->ed,ESC);
+				continue;
+			}
 		default:
 			if ((eol+1) >= (scend)) /*  will not fit on line */
 			{
@@ -359,10 +366,6 @@ ed_emacsread(int fd,char *buff,int scend)
 				eol = genlen(out);
 				continue;
 			}
-		case '\t':
-			ed_ungetchar(ep->ed,ESC);
-			ed_ungetchar(ep->ed,ESC);
-			continue;
 		case '\n':
 		case '\r':
 			c = '\n';
@@ -1017,7 +1020,12 @@ static void xcommands(register Emacs_t *ep,int count)
 			if(ed_fulledit(ep->ed)==-1)
 				beep();
 			else
+			{
+#ifdef SHOPT_MULTIBYTE
+				ed_internal((char*)drawbuff,drawbuff);
+#endif /* SHOPT_MULTIBYTE */
 				ed_ungetchar(ep->ed,'\n');
+			}
 			return;
 
 #	define itos(i)	fmtbase((long)(i),0,0)/* want signed conversion */
@@ -1099,7 +1107,7 @@ static void search(Emacs_t* ep,genchar *out,int direction)
 	draw(ep,UPDATE);
 	while ((i = ed_getchar(ep->ed,1))&&(i != '\r')&&(i != '\n'))
 	{
-		if (i==usrerase)
+		if (i==usrerase || i==DELETE || i=='\b' || i==ERASECHAR)
 		{
 			if (sl > 2)
 			{

@@ -1,29 +1,29 @@
-/***************************************************************
-*                                                              *
-*           This software is part of the ast package           *
-*              Copyright (c) 1985-2000 AT&T Corp.              *
-*      and it may only be used by you under license from       *
-*                     AT&T Corp. ("AT&T")                      *
-*       A copy of the Source Code Agreement is available       *
-*              at the AT&T Internet web site URL               *
-*                                                              *
-*     http://www.research.att.com/sw/license/ast-open.html     *
-*                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
-*             AT&T's intellectual property rights.             *
-*                                                              *
-*               This software was created by the               *
-*               Network Services Research Center               *
-*                      AT&T Labs Research                      *
-*                       Florham Park NJ                        *
-*                                                              *
-*             Glenn Fowler <gsf@research.att.com>              *
-*              David Korn <dgk@research.att.com>               *
-*               Phong Vo <kpv@research.att.com>                *
-*                                                              *
-***************************************************************/
+/*******************************************************************
+*                                                                  *
+*             This software is part of the ast package             *
+*                Copyright (c) 1985-2000 AT&T Corp.                *
+*        and it may only be used by you under license from         *
+*                       AT&T Corp. ("AT&T")                        *
+*         A copy of the Source Code Agreement is available         *
+*                at the AT&T Internet web site URL                 *
+*                                                                  *
+*       http://www.research.att.com/sw/license/ast-open.html       *
+*                                                                  *
+*        If you have copied this software without agreeing         *
+*        to the terms of the license you are infringing on         *
+*           the license and copyright and are violating            *
+*               AT&T's intellectual property rights.               *
+*                                                                  *
+*                 This software was created by the                 *
+*                 Network Services Research Center                 *
+*                        AT&T Labs Research                        *
+*                         Florham Park NJ                          *
+*                                                                  *
+*               Glenn Fowler <gsf@research.att.com>                *
+*                David Korn <dgk@research.att.com>                 *
+*                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
+*******************************************************************/
 #pragma prototyped
 
 /*
@@ -44,7 +44,7 @@
 char*
 fmtfs(struct stat* st)
 {
-	return(st->st_fstype);
+	return st->st_fstype;
 }
 
 #else
@@ -58,9 +58,9 @@ fmtfs(struct stat* st)
 	register Mnt_t*		mnt;
 	register char*		s;
 	struct stat		rt;
+	char*			buf;
 
 	static Hash_table_t*	tab;
-	static char		typ[16];
 
 	if ((tab || (tab = hashalloc(NiL, HASH_set, HASH_ALLOCATE, HASH_namesize, sizeof(dev_t), HASH_name, "fstype", 0))) && (s = (char*)hashget(tab, &st->st_dev)))
 		return(s);
@@ -70,14 +70,16 @@ fmtfs(struct stat* st)
 		while ((mnt = mntread(mp)) && (stat(mnt->dir, &rt) || rt.st_dev != st->st_dev));
 		if (mnt && mnt->type && (!tab || !(s = strdup(mnt->type))))
 		{
-			strncpy(typ, mnt->type, sizeof(typ) - 1);
+			buf = fmtbuf(strlen(mnt->type) + 1);
+			strcpy(buf, mnt->type);
 			mntclose(mp);
-			return(typ);
+			return buf;
 		}
 		mntclose(mp);
 	}
-	if (tab) hashput(tab, NiL, s);
-	return(s);
+	if (tab)
+		hashput(tab, NiL, s);
+	return s;
 }
 
 #endif

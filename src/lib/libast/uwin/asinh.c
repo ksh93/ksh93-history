@@ -1,6 +1,6 @@
 #ifndef _UWIN
 
-int _STUB_asinh;
+void _STUB_asinh(){}
 
 #else
 

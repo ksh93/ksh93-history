@@ -1,29 +1,29 @@
-/***************************************************************
-*                                                              *
-*           This software is part of the ast package           *
-*              Copyright (c) 1985-2000 AT&T Corp.              *
-*      and it may only be used by you under license from       *
-*                     AT&T Corp. ("AT&T")                      *
-*       A copy of the Source Code Agreement is available       *
-*              at the AT&T Internet web site URL               *
-*                                                              *
-*     http://www.research.att.com/sw/license/ast-open.html     *
-*                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
-*             AT&T's intellectual property rights.             *
-*                                                              *
-*               This software was created by the               *
-*               Network Services Research Center               *
-*                      AT&T Labs Research                      *
-*                       Florham Park NJ                        *
-*                                                              *
-*             Glenn Fowler <gsf@research.att.com>              *
-*              David Korn <dgk@research.att.com>               *
-*               Phong Vo <kpv@research.att.com>                *
-*                                                              *
-***************************************************************/
+/*******************************************************************
+*                                                                  *
+*             This software is part of the ast package             *
+*                Copyright (c) 1985-2000 AT&T Corp.                *
+*        and it may only be used by you under license from         *
+*                       AT&T Corp. ("AT&T")                        *
+*         A copy of the Source Code Agreement is available         *
+*                at the AT&T Internet web site URL                 *
+*                                                                  *
+*       http://www.research.att.com/sw/license/ast-open.html       *
+*                                                                  *
+*        If you have copied this software without agreeing         *
+*        to the terms of the license you are infringing on         *
+*           the license and copyright and are violating            *
+*               AT&T's intellectual property rights.               *
+*                                                                  *
+*                 This software was created by the                 *
+*                 Network Services Research Center                 *
+*                        AT&T Labs Research                        *
+*                         Florham Park NJ                          *
+*                                                                  *
+*               Glenn Fowler <gsf@research.att.com>                *
+*                David Korn <dgk@research.att.com>                 *
+*                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
+*******************************************************************/
 #pragma prototyped
 
 /*
@@ -720,7 +720,7 @@ parse(Env_t* env, Rex_t* rex, Rex_t* cont, unsigned char* s)
  */
 
 int
-regnexec(const regex_t* p, const char* s, size_t len, size_t nmatch, regmatch_t* match, int flags)
+regnexec(const regex_t* p, const char* s, size_t len, size_t nmatch, regmatch_t* match, regflags_t flags)
 {
 	register int	n;
 	register int	i;
@@ -730,7 +730,7 @@ regnexec(const regex_t* p, const char* s, size_t len, size_t nmatch, regmatch_t*
 	Rex_t*		e;
 
 	if (!s || !p || !(env = p->env))
-		return REG_BADPAT;
+		return fatal(p->env->disc, REG_BADPAT, NiL);
 	if (len < env->min)
 		return REG_NOMATCH;
 	env->regex = p;
@@ -823,6 +823,8 @@ regnexec(const regex_t* p, const char* s, size_t len, size_t nmatch, regmatch_t*
  done:
 	stkold(stkstd, &env->stk);
 	env->stk.base = 0;
+	if (k > REG_NOMATCH)
+		fatal(p->env->disc, k, NiL);
 	return k;
 }
 
@@ -834,13 +836,13 @@ regfree(regex_t* p)
 	if (p && (env = p->env))
 	{
 		p->env = 0;
-		drop(env->rex);
+		drop(env->disc, env->rex);
 		if (env->pos)
 			vecclose(env->pos);
 		if (env->bestpos)
 			vecclose(env->bestpos);
 		if (env->stk.base)
 			stkold(stkstd, &env->stk);
-		alloc(env, 0);
+		alloc(env->disc, env, 0);
 	}
 }

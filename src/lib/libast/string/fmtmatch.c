@@ -1,29 +1,29 @@
-/***************************************************************
-*                                                              *
-*           This software is part of the ast package           *
-*              Copyright (c) 1985-2000 AT&T Corp.              *
-*      and it may only be used by you under license from       *
-*                     AT&T Corp. ("AT&T")                      *
-*       A copy of the Source Code Agreement is available       *
-*              at the AT&T Internet web site URL               *
-*                                                              *
-*     http://www.research.att.com/sw/license/ast-open.html     *
-*                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
-*             AT&T's intellectual property rights.             *
-*                                                              *
-*               This software was created by the               *
-*               Network Services Research Center               *
-*                      AT&T Labs Research                      *
-*                       Florham Park NJ                        *
-*                                                              *
-*             Glenn Fowler <gsf@research.att.com>              *
-*              David Korn <dgk@research.att.com>               *
-*               Phong Vo <kpv@research.att.com>                *
-*                                                              *
-***************************************************************/
+/*******************************************************************
+*                                                                  *
+*             This software is part of the ast package             *
+*                Copyright (c) 1985-2000 AT&T Corp.                *
+*        and it may only be used by you under license from         *
+*                       AT&T Corp. ("AT&T")                        *
+*         A copy of the Source Code Agreement is available         *
+*                at the AT&T Internet web site URL                 *
+*                                                                  *
+*       http://www.research.att.com/sw/license/ast-open.html       *
+*                                                                  *
+*        If you have copied this software without agreeing         *
+*        to the terms of the license you are infringing on         *
+*           the license and copyright and are violating            *
+*               AT&T's intellectual property rights.               *
+*                                                                  *
+*                 This software was created by the                 *
+*                 Network Services Research Center                 *
+*                        AT&T Labs Research                        *
+*                         Florham Park NJ                          *
+*                                                                  *
+*               Glenn Fowler <gsf@research.att.com>                *
+*                David Korn <dgk@research.att.com>                 *
+*                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
+*******************************************************************/
 #pragma prototyped
 /*
  * Glenn Fowler
@@ -34,8 +34,6 @@
  */
 
 #include <ast.h>
-
-#define CHUNK		32
 
 char*
 fmtmatch(const char* as)
@@ -50,20 +48,15 @@ fmtmatch(const char* as)
 	int		a;
 	int		e;
 	int		n;
+	char*		buf;
 	char*		stack[32];
 
-	static char*	buf;
-	static int	bufsiz;
-
 	c = 3 * (strlen(s) + 1);
-	if (bufsiz < c)
-	{
-		bufsiz = ((c + CHUNK - 1) / CHUNK) * CHUNK;
-		if (!(buf = newof(buf, char, bufsiz, 0))) return(0);
-	}
+	buf = fmtbuf(c);
 	t = b = buf + 3;
 	p = stack;
-	if (a = *s == '^') s++;
+	if (a = *s == '^')
+		s++;
 	e = 0;
 	for (;;)
 	{
@@ -72,7 +65,8 @@ fmtmatch(const char* as)
 		case 0:
 			break;
 		case '\\':
-			if (!(c = *s++)) return(0);
+			if (!(c = *s++))
+				return 0;
 			switch (*s)
 			{
 			case '*':
@@ -117,8 +111,10 @@ fmtmatch(const char* as)
 			}
 			for (;;)
 			{
-				if (!(*t++ = c)) return(0);
-				if (c == '\\') *t++ = c;
+				if (!(*t++ = c))
+					return 0;
+				if (c == '\\')
+					*t++ = c;
 				if ((c = *s++) == ']')
 				{
 					*t++ = c;
@@ -139,13 +135,15 @@ fmtmatch(const char* as)
 			}
 			continue;
 		case '(':
-			if (p >= &stack[elementsof(stack)]) return(0);
+			if (p >= &stack[elementsof(stack)])
+				return 0;
 			*p++ = t;
 			*t++ = '@';
 			*t++ = '(';
 			continue;
 		case ')':
-			if (p == stack) return(0);
+			if (p == stack)
+				return 0;
 			p--;
 			*t++ = c;
 			switch (*s)
@@ -193,16 +191,19 @@ fmtmatch(const char* as)
 		case '+':
 		case '?':
 			n = *(t - 1);
-			if (t == b || n == '(' || n == '|') return(0);
+			if (t == b || n == '(' || n == '|')
+				return 0;
 			*(t - 1) = c;
 			*t++ = '(';
 			*t++ = n;
 			*t++ = ')';
 			continue;
 		case '|':
-			if (t == b || *(t - 1) == '(') return(0);
+			if (t == b || *(t - 1) == '(')
+				return 0;
 		alternate:
-			if (!*s || *s == ')') return(0);
+			if (!*s || *s == ')')
+				return 0;
 			if (p == stack && b == buf + 3)
 			{
 				*--b = '(';
@@ -211,7 +212,8 @@ fmtmatch(const char* as)
 			*t++ = c;
 			continue;
 		case '$':
-			if (e = !*s) break;
+			if (e = !*s)
+				break;
 			/*FALLTHROUGH*/
 		default:
 			*t++ = c;
@@ -219,10 +221,14 @@ fmtmatch(const char* as)
 		}
 		break;
 	}
-	if (p != stack) return(0);
-	if (b != buf + 3) *t++ = ')';
-	if (!a && *b != '*') *--b = '*';
-	if (!e) *t++ = '*';
+	if (p != stack)
+		return 0;
+	if (b != buf + 3)
+		*t++ = ')';
+	if (!a && *b != '*')
+		*--b = '*';
+	if (!e)
+		*t++ = '*';
 	*t = 0;
-	return(b);
+	return b;
 }

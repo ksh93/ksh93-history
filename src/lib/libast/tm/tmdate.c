@@ -1,29 +1,29 @@
-/***************************************************************
-*                                                              *
-*           This software is part of the ast package           *
-*              Copyright (c) 1985-2000 AT&T Corp.              *
-*      and it may only be used by you under license from       *
-*                     AT&T Corp. ("AT&T")                      *
-*       A copy of the Source Code Agreement is available       *
-*              at the AT&T Internet web site URL               *
-*                                                              *
-*     http://www.research.att.com/sw/license/ast-open.html     *
-*                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
-*             AT&T's intellectual property rights.             *
-*                                                              *
-*               This software was created by the               *
-*               Network Services Research Center               *
-*                      AT&T Labs Research                      *
-*                       Florham Park NJ                        *
-*                                                              *
-*             Glenn Fowler <gsf@research.att.com>              *
-*              David Korn <dgk@research.att.com>               *
-*               Phong Vo <kpv@research.att.com>                *
-*                                                              *
-***************************************************************/
+/*******************************************************************
+*                                                                  *
+*             This software is part of the ast package             *
+*                Copyright (c) 1985-2000 AT&T Corp.                *
+*        and it may only be used by you under license from         *
+*                       AT&T Corp. ("AT&T")                        *
+*         A copy of the Source Code Agreement is available         *
+*                at the AT&T Internet web site URL                 *
+*                                                                  *
+*       http://www.research.att.com/sw/license/ast-open.html       *
+*                                                                  *
+*        If you have copied this software without agreeing         *
+*        to the terms of the license you are infringing on         *
+*           the license and copyright and are violating            *
+*               AT&T's intellectual property rights.               *
+*                                                                  *
+*                 This software was created by the                 *
+*                 Network Services Research Center                 *
+*                        AT&T Labs Research                        *
+*                         Florham Park NJ                          *
+*                                                                  *
+*               Glenn Fowler <gsf@research.att.com>                *
+*                David Korn <dgk@research.att.com>                 *
+*                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
+*******************************************************************/
 #pragma prototyped
 /*
  * Glenn Fowler
@@ -125,6 +125,8 @@ tmdate(register const char* s, char** e, time_t* clock)
 	unsigned long	flags;
 	time_t		now;
 	char*		t;
+	char*		u;
+	const char*	x;
 	char*		last;
 	char*		type;
 	int		dst;
@@ -461,41 +463,65 @@ tmdate(register const char* s, char** e, time_t* clock)
 						break;
 					else
 					{
+						u = t;
 						if (i == 12)
 						{
-							dig4(s, m);
+							x = s;
+							dig2(x, m);
+							if (m <= 12)
+							{
+								u -= 4;
+								i -= 4;
+								x = s + 8;
+								dig4(x, m);
+							}
+							else
+								dig4(s, m);
 							if ((m -= 1900) < TM_WINDOW)
 								break;
 						}
-						else if (i < 10)
+						else if (i == 10)
+						{
+							x = s;
+							if (!dig2(x, m) || m > 12 || !dig2(x, m) || m > 31 || dig2(x, m) > 24 || dig2(x, m) > 60 || dig2(x, m) <= 60 && !(tm_info.flags & TM_DATESTYLE))
+								dig2(s, m);
+							else
+							{
+								u -= 2;
+								i -= 2;
+								x = s + 8;
+								dig2(x, m);
+							}
+							if (m < TM_WINDOW)
+								m += 100;
+						}
+						else
 							m = tm->tm_year;
-						else if (dig2(s, m) < TM_WINDOW)
-							m += 100;
-						if ((t - s) < 8)
+						if ((u - s) < 8)
 							l = tm->tm_mon + 1;
 						else if (dig2(s, l) <= 0 || l > 12)
 							break;
 						else
 							flags |= MONTH;
-						if ((t - s) < 6)
+						if ((u - s) < 6)
 							k = tm->tm_mday;
 						else if (dig2(s, k) < 1 || k > 31)
 							break;
 						else
 							flags |= DAY;
-						if ((t - s) < 4)
+						if ((u - s) < 4)
 							break;
 						if (dig2(s, j) > 24)
 							break;
 						if (dig2(s, i) > 59)
 							break;
 						flags |= HOUR|MINUTE;
-						if ((t - s) == 2)
+						if ((u - s) == 2)
 						{
 							dig2(s, n);
 							flags |= SECOND;
 						}
-						else if (t - s)
+						else if (u - s)
 							break;
 						else if (*t != '.')
 							n = 0;

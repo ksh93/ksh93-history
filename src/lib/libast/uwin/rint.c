@@ -1,6 +1,6 @@
 #ifndef _UWIN
 
-int _STUB_rint;
+void _STUB_rint(){}
 
 #else
 

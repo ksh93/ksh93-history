@@ -1,6 +1,6 @@
 #ifndef _UWIN
 
-int _STUB_rcmd;
+void _STUB_rcmd(){}
 
 #else
 

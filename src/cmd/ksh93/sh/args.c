@@ -1,27 +1,27 @@
-/***************************************************************
-*                                                              *
-*           This software is part of the ast package           *
-*              Copyright (c) 1982-2000 AT&T Corp.              *
-*      and it may only be used by you under license from       *
-*                     AT&T Corp. ("AT&T")                      *
-*       A copy of the Source Code Agreement is available       *
-*              at the AT&T Internet web site URL               *
-*                                                              *
-*     http://www.research.att.com/sw/license/ast-open.html     *
-*                                                              *
-*      If you have copied this software without agreeing       *
-*      to the terms of the license you are infringing on       *
-*         the license and copyright and are violating          *
-*             AT&T's intellectual property rights.             *
-*                                                              *
-*               This software was created by the               *
-*               Network Services Research Center               *
-*                      AT&T Labs Research                      *
-*                       Florham Park NJ                        *
-*                                                              *
-*              David Korn <dgk@research.att.com>               *
-*                                                              *
-***************************************************************/
+/*******************************************************************
+*                                                                  *
+*             This software is part of the ast package             *
+*                Copyright (c) 1982-2000 AT&T Corp.                *
+*        and it may only be used by you under license from         *
+*                       AT&T Corp. ("AT&T")                        *
+*         A copy of the Source Code Agreement is available         *
+*                at the AT&T Internet web site URL                 *
+*                                                                  *
+*       http://www.research.att.com/sw/license/ast-open.html       *
+*                                                                  *
+*        If you have copied this software without agreeing         *
+*        to the terms of the license you are infringing on         *
+*           the license and copyright and are violating            *
+*               AT&T's intellectual property rights.               *
+*                                                                  *
+*                 This software was created by the                 *
+*                 Network Services Research Center                 *
+*                        AT&T Labs Research                        *
+*                         Florham Park NJ                          *
+*                                                                  *
+*                David Korn <dgk@research.att.com>                 *
+*                                                                  *
+*******************************************************************/
 #pragma prototyped
 /*
  * UNIX shell
@@ -46,7 +46,7 @@
 #define SORT		1
 #define PRINT		2
 
-static int 		arg_expand(struct argnod*,struct argnod**);
+static int 		arg_expand(struct argnod*,struct argnod**,int);
 static void		print_opts(Shopt_t,int);
 
 static	char		*null;
@@ -447,7 +447,7 @@ static void print_opts(Shopt_t oflags,register int mode)
 /*
  * build an argument list
  */
-char **sh_argbuild(int *nargs, const struct comnod *comptr)
+char **sh_argbuild(int *nargs, const struct comnod *comptr,int flag)
 {
 	register struct argnod	*argp;
 	struct argnod *arghead=0;
@@ -472,7 +472,7 @@ char **sh_argbuild(int *nargs, const struct comnod *comptr)
 			argp = ac->comarg;
 			while(argp)
 			{
-				*nargs += arg_expand(argp,&arghead);
+				*nargs += arg_expand(argp,&arghead,flag);
 				argp = argp->argnxt.ap;
 			}
 			argp = arghead;
@@ -514,7 +514,7 @@ char **sh_argbuild(int *nargs, const struct comnod *comptr)
 }
 
 /* Argument expansion */
-static int arg_expand(register struct argnod *argp, struct argnod **argchain)
+static int arg_expand(register struct argnod *argp, struct argnod **argchain,int flag)
 {
 	register int count = 0;
 	argp->argflag &= ~ARG_MAKE;
@@ -556,7 +556,9 @@ static int arg_expand(register struct argnod *argp, struct argnod **argchain)
 	else
 #endif	/* SHOPT_DEVFD */
 	if(!(argp->argflag&ARG_RAW))
-		count = sh_macexpand(argp,argchain);
+	{
+		count = sh_macexpand(argp,argchain,flag);
+	}
 	else
 	{
 		argp->argchn.ap = *argchain;

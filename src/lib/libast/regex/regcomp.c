@@ -1,29 +1,29 @@
-/***************************************************************
-*                                                              *
-*           This software is part of the ast package           *
-*              Copyright (c) 1985-2000 AT&T Corp.              *
-*      and it may only be used by you under license from       *
-*                     AT&T Corp. ("AT&T")                      *
-*       A copy of the Source Code Agreement is available       *
-*              at the AT&T Internet web site URL               *
-*                                                              *
-*     http://www.research.att.com/sw/license/ast-open.html     *
-*                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
-*             AT&T's intellectual property rights.             *
-*                                                              *
-*               This software was created by the               *
-*               Network Services Research Center               *
-*                      AT&T Labs Research                      *
-*                       Florham Park NJ                        *
-*                                                              *
-*             Glenn Fowler <gsf@research.att.com>              *
-*              David Korn <dgk@research.att.com>               *
-*               Phong Vo <kpv@research.att.com>                *
-*                                                              *
-***************************************************************/
+/*******************************************************************
+*                                                                  *
+*             This software is part of the ast package             *
+*                Copyright (c) 1985-2000 AT&T Corp.                *
+*        and it may only be used by you under license from         *
+*                       AT&T Corp. ("AT&T")                        *
+*         A copy of the Source Code Agreement is available         *
+*                at the AT&T Internet web site URL                 *
+*                                                                  *
+*       http://www.research.att.com/sw/license/ast-open.html       *
+*                                                                  *
+*        If you have copied this software without agreeing         *
+*        to the terms of the license you are infringing on         *
+*           the license and copyright and are violating            *
+*               AT&T's intellectual property rights.               *
+*                                                                  *
+*                 This software was created by the                 *
+*                 Network Services Research Center                 *
+*                        AT&T Labs Research                        *
+*                         Florham Park NJ                          *
+*                                                                  *
+*               Glenn Fowler <gsf@research.att.com>                *
+*                David Korn <dgk@research.att.com>                 *
+*                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
+*******************************************************************/
 #pragma prototyped
 
 /*
@@ -73,7 +73,7 @@ typedef struct
 	int		delimiter;	/* pattern delimiter		*/
 	int		error;		/* last error			*/
 	int		explicit;	/* explicit match on this char	*/
-	int		flags;		/* flags arg to regcomp		*/
+	regflags_t	flags;		/* flags arg to regcomp		*/
 	int		type;		/* BRE,ERE,ARE,SRE,KRE		*/
 	unsigned char*	cursor;		/* curent point in re		*/
 	unsigned char*	pattern;	/* the original pattern		*/
@@ -85,6 +85,7 @@ typedef struct
 	Stats_t		stats;		/* RE statistics		*/
 	unsigned char	paren[2*(BACK_REF_MAX+2)];
 					/* paren[i]==1 if \i defined	*/
+	regdisc_t*	disc;		/* user discipline		*/
 } Cenv_t;
 
 /*
@@ -92,11 +93,11 @@ typedef struct
  */
 
 static Rex_t*
-node(int type, int lo, int hi, size_t extra)
+node(Cenv_t* env, int type, int lo, int hi, size_t extra)
 {
 	register Rex_t*	e;
 
-	if (e = (Rex_t*)alloc(0, sizeof(Rex_t) + extra))
+	if (e = (Rex_t*)alloc(env->disc, 0, sizeof(Rex_t) + extra))
 	{
 		memset(e, 0, sizeof(Rex_t) + extra);
 		e->type = type;
@@ -113,13 +114,13 @@ node(int type, int lo, int hi, size_t extra)
  */
 
 static void
-triedrop(Trie_node_t* e)
+triedrop(regdisc_t* disc, Trie_node_t* e)
 {
 	if (e)
 	{
-		triedrop(e->son);
-		triedrop(e->sib);
-		alloc(e, 0);
+		triedrop(disc, e->son);
+		triedrop(disc, e->sib);
+		alloc(disc, e, 0);
 	}
 }
 
@@ -128,33 +129,33 @@ triedrop(Trie_node_t* e)
  */
 
 void
-drop(Rex_t* e)
+drop(regdisc_t* disc, Rex_t* e)
 {
 	int	i;
 	Rex_t*	x;
 
-	if (e && !state.nofree)
+	if (e && !(disc->re_flags & REG_NOFREE))
 		do
 		{
 			switch (e->type)
 			{
 			case REX_ALT:
 			case REX_CONJ:
-				drop(e->re.group.expr.binary.left);
-				drop(e->re.group.expr.binary.right);
+				drop(disc, e->re.group.expr.binary.left);
+				drop(disc, e->re.group.expr.binary.right);
 				break;
 			case REX_GROUP:
 			case REX_NEG:
 			case REX_REP:
-				drop(e->re.group.expr.rex);
+				drop(disc, e->re.group.expr.rex);
 				break;
 			case REX_TRIE:
 				for (i = 0; i <= UCHAR_MAX; i++)
-					triedrop(e->re.trie.root[i]);
+					triedrop(disc, e->re.trie.root[i]);
 				break;
 			}
 			x = e->next;
-			alloc(e, 0);
+			alloc(disc, e, 0);
 		} while (e = x);
 }
 
@@ -163,7 +164,7 @@ drop(Rex_t* e)
  */
 
 static int
-serialize(Rex_t* e, int n)
+serialize(Cenv_t* env, Rex_t* e, int n)
 {
 	do
 	{
@@ -171,18 +172,18 @@ serialize(Rex_t* e, int n)
 		switch (e->type)
 		{
 		case REX_ALT:
-			n = serialize(e->re.group.expr.binary.left, n);
+			n = serialize(env, e->re.group.expr.binary.left, n);
 			e->re.group.expr.binary.serial = n++;
-			n = serialize(e->re.group.expr.binary.right, n);
+			n = serialize(env, e->re.group.expr.binary.right, n);
 			break;
 		case REX_CONJ:
-			n = serialize(e->re.group.expr.binary.left, n);
-			n = serialize(e->re.group.expr.binary.right, n);
+			n = serialize(env, e->re.group.expr.binary.left, n);
+			n = serialize(env, e->re.group.expr.binary.right, n);
 			break;
 		case REX_GROUP:
 		case REX_NEG:
 		case REX_REP:
-			n = serialize(e->re.group.expr.rex, n);
+			n = serialize(env, e->re.group.expr.rex, n);
 			break;
 		}
 	} while (e = e->next);
@@ -194,25 +195,25 @@ serialize(Rex_t* e, int n)
  */
 
 static Rex_t*
-cat(Rex_t* e, Rex_t* f)
+cat(Cenv_t* env, Rex_t* e, Rex_t* f)
 {
 	Rex_t*	g;
 
 	if (!f)
 	{
-		drop(e);
+		drop(env->disc, e);
 		return 0;
 	}
 	if (e->type == REX_NULL)
 	{
-		drop(e);
+		drop(env->disc, e);
 		return f;
 	}
 	if (f->type == REX_NULL)
 	{
 		g = f->next;
 		f->next = 0;
-		drop(f);
+		drop(env->disc, f);
 		f = g;
 	}
 	else if (e->type == REX_DOT && f->type == REX_DOT)
@@ -234,7 +235,7 @@ cat(Rex_t* e, Rex_t* f)
 				e->hi = n;
 				g = f->next;
 				f->next = 0;
-				drop(f);
+				drop(env->disc, f);
 				f = g;
 			}
 		}
@@ -632,7 +633,7 @@ bra(Cenv_t* env)
 	unsigned char*	begin;
 	regclass_t	f;
 
-	if (!(e = node(REX_CLASS, 1, 1, sizeof(Set_t))))
+	if (!(e = node(env, REX_CLASS, 1, 1, sizeof(Set_t))))
 		return 0;
 	start = env->cursor + 1;
 	if (*env->cursor == (env->type >= SRE ? '!' : '^'))
@@ -727,8 +728,8 @@ bra(Cenv_t* env)
 						if (i)
 						{
 							env->cursor += 5;
-							drop(e);
-							return node(i, 0, 0, 0);
+							drop(env->disc, e);
+							return node(env, i, 0, 0, 0);
 						}
 					}
 					env->error = REG_ECTYPE;
@@ -806,7 +807,7 @@ bra(Cenv_t* env)
  erange:
 	env->error = REG_ERANGE;
  error:
-	drop(e);
+	drop(env->disc, e);
 	if (!env->error)
 		env->error = REG_EBRACK;
 	return 0;
@@ -825,9 +826,9 @@ rep(Cenv_t* env, Rex_t* e, int number, int last)
 	{
 	case T_BANG:
 		eat(env);
-		if (!(f = node(REX_NEG, m, n, 0)))
+		if (!(f = node(env, REX_NEG, m, n, 0)))
 		{
-			drop(e);
+			drop(env->disc, e);
 			return 0;
 		}
 		f->re.group.expr.rex = e;
@@ -860,9 +861,9 @@ rep(Cenv_t* env, Rex_t* e, int number, int last)
 		e->hi = n;
 		return e;
 	}
-	if (!(f = node(REX_REP, m, n, 0)))
+	if (!(f = node(env, REX_REP, m, n, 0)))
 	{
-		drop(e);
+		drop(env->disc, e);
 		return 0;
 	}
 	f->re.group.expr.rex = e;
@@ -885,11 +886,11 @@ isstring(Rex_t* e)
 }
 
 static Trie_node_t*
-trienode(int c)
+trienode(Cenv_t* env, int c)
 {
 	Trie_node_t*	t;
 
-	if (t = (Trie_node_t*)alloc(0, sizeof(Trie_node_t)))
+	if (t = (Trie_node_t*)alloc(env->disc, 0, sizeof(Trie_node_t)))
 	{
 		memset(t, 0, sizeof(Trie_node_t));
 		t->c = c;
@@ -898,7 +899,7 @@ trienode(int c)
 }
 
 static int
-insert(Rex_t* f, Rex_t* g)
+insert(Cenv_t* env, Rex_t* f, Rex_t* g)
 {
 	unsigned char*	s;
 	Trie_node_t*	t;
@@ -918,7 +919,7 @@ insert(Rex_t* f, Rex_t* g)
 	default:
 		return 1;
 	}
-	if (!(t = g->re.trie.root[*s]) && !(t = g->re.trie.root[*s] = trienode(*s)))
+	if (!(t = g->re.trie.root[*s]) && !(t = g->re.trie.root[*s] = trienode(env, *s)))
 		return 1;
 	for (len = 1;;)
 	{
@@ -926,14 +927,14 @@ insert(Rex_t* f, Rex_t* g)
 		{
 			if (!*++s)
 				break;
-			if (!t->son && !(t->son = trienode(*s)))
+			if (!t->son && !(t->son = trienode(env, *s)))
 				return 1;
 			t = t->son;
 			len++;
 		}
 		else
 		{
-			if (!t->sib && !(t->sib = trienode(*s)))
+			if (!t->sib && !(t->sib = trienode(env, *s)))
 				return 1;
 			t = t->sib;
 		}
@@ -951,7 +952,7 @@ insert(Rex_t* f, Rex_t* g)
  */
 
 static Rex_t*
-trie(Rex_t* e, Rex_t* f)
+trie(Cenv_t* env, Rex_t* e, Rex_t* f)
 {
 	Rex_t*	g;
 
@@ -959,23 +960,23 @@ trie(Rex_t* e, Rex_t* f)
 		return 0;
 	if (isstring(f))
 	{
-		if (!(g = node(REX_TRIE, 0, 0, (UCHAR_MAX + 1) * sizeof(Trie_node_t*))))
+		if (!(g = node(env, REX_TRIE, 0, 0, (UCHAR_MAX + 1) * sizeof(Trie_node_t*))))
 			return 0;
 		g->re.trie.min = INT_MAX;
-		if (insert(f, g))
+		if (insert(env, f, g))
 			goto nospace;
-		drop(f);
+		drop(env->disc, f);
 	}
 	else if (f->type != REX_TRIE)
 		return 0;
 	else g = f;
-	if (insert(e, g))
+	if (insert(env, e, g))
 		goto nospace;
-	drop(e);
+	drop(env->disc, e);
 	return g;
  nospace:
 	if (g != f)
-		drop(g);
+		drop(env->disc, g);
 	return 0;
 }
 
@@ -1015,33 +1016,33 @@ seq(Cenv_t* env)
 			{
 				*s = 0;
 				c = s - buf;
-				if (!(e = node(REX_STRING, 0, 0, c + 1)))
+				if (!(e = node(env, REX_STRING, 0, 0, c + 1)))
 					return 0;
 				strcpy((char*)(e->re.string.base = (unsigned char*)e->re.data), (char*)buf);
 				e->re.string.size = c;
 			}
-			if (!(f = node(REX_ONECHAR, 1, 1, 0)))
+			if (!(f = node(env, REX_ONECHAR, 1, 1, 0)))
 			{
-				drop(e);
+				drop(env->disc, e);
 				return 0;
 			}
 			f->re.onechar = env->map[last];
-			if (!(f = rep(env, f, 0, 0)) || !(f = cat(f, seq(env))))
+			if (!(f = rep(env, f, 0, 0)) || !(f = cat(env, f, seq(env))))
 			{
-				drop(e);
+				drop(env->disc, e);
 				return 0;
 			}
 			if (e)
-				f = cat(e, f);
+				f = cat(env, e, f);
 			return f;
 		default:
 			*s = 0;
 			c = s - buf;
-			if (!(e = node(REX_STRING, 0, 0, c + 1)))
+			if (!(e = node(env, REX_STRING, 0, 0, c + 1)))
 				return 0;
 			strcpy((char*)(e->re.string.base = (unsigned char*)e->re.data), (char*)buf);
 			e->re.string.size = c;
-			return cat(e, seq(env));
+			return cat(env, e, seq(env));
 		}
 		else if (c > T_BACK)
 		{
@@ -1052,7 +1053,7 @@ seq(Cenv_t* env)
 				env->error = REG_ESUBREG;
 				return 0;
 			}
-			e = rep(env, node(REX_BACK, c, 0, 0), 0, 0);
+			e = rep(env, node(env, REX_BACK, c, 0, 0), 0, 0);
 		}
 		else switch (c)
 		{
@@ -1060,14 +1061,14 @@ seq(Cenv_t* env)
 		case T_CLOSE:
 		case T_BAR:
 		case T_END:
-			return node(REX_NULL, 0, 0, 0);
+			return node(env, REX_NULL, 0, 0, 0);
 		case T_DOLL:
 			eat(env);
-			e = rep(env, node(REX_END, 0, 0, 0), 0, 0);
+			e = rep(env, node(env, REX_END, 0, 0, 0), 0, 0);
 			break;
 		case T_CFLX:
 			eat(env);
-			if ((e = node(REX_BEG, 0, 0, 0)) && (env->flags & REG_EXTENDED))
+			if ((e = node(env, REX_BEG, 0, 0, 0)) && (env->flags & REG_EXTENDED))
 				e = rep(env, e, 0, 0);
 			break;
 		case T_OPEN:
@@ -1081,13 +1082,13 @@ seq(Cenv_t* env)
 				break;
 			if (e->type == REX_NULL && env->type == ERE && !(env->flags & REG_NULL))
 			{
-				drop(e);
+				drop(env->disc, e);
 				env->error = (*env->cursor == 0 || env->delimiter && (*env->cursor == env->delimiter || *env->cursor == '\n')) ? REG_EPAREN : REG_ENULL;
 				return 0;
 			} 
 			if (token(env) != T_CLOSE)
 			{
-				drop(e);
+				drop(env->disc, e);
 				env->error = REG_EPAREN;
 				return 0;
 			} 
@@ -1095,9 +1096,9 @@ seq(Cenv_t* env)
 			eat(env);
 			if (parno < elementsof(env->paren))
 				env->paren[parno] = 1;
-			if (!(f = node(REX_GROUP, 0, 0, 0)))
+			if (!(f = node(env, REX_GROUP, 0, 0, 0)))
 			{
-				drop(e);
+				drop(env->disc, e);
 				return 0;
 			}
 			f->re.group.number = parno;
@@ -1113,9 +1114,9 @@ seq(Cenv_t* env)
 			{
 				if (--parno < elementsof(env->paren))
 					env->paren[parno] = 1;
-				if (!(f = node(REX_GROUP, 0, 0, 0)))
+				if (!(f = node(env, REX_GROUP, 0, 0, 0)))
 				{
-					drop(e);
+					drop(env->disc, e);
 					return 0;
 				}
 				f->re.group.number = parno;
@@ -1139,27 +1140,27 @@ seq(Cenv_t* env)
 			break;
 		case T_LT:
 			eat(env);
-			e = rep(env, node(REX_WBEG, 0, 0, 0), 0, 0);
+			e = rep(env, node(env, REX_WBEG, 0, 0, 0), 0, 0);
 			break;
 		case T_GT:
 			eat(env);
-			e = rep(env, node(REX_WEND, 0, 0, 0), 0, 0);
+			e = rep(env, node(env, REX_WEND, 0, 0, 0), 0, 0);
 			break;
 		case T_DOT:
 			eat(env);
-			e = rep(env, node(REX_DOT, 1, 1, 0), 0, 0);
+			e = rep(env, node(env, REX_DOT, 1, 1, 0), 0, 0);
 			break;
 		case T_DOTSTAR:
 			eat(env);
 			env->token.lex = T_STAR;
 			env->token.push = 1;
-			e = rep(env, node(REX_DOT, 1, 1, 0), 0, 0);
+			e = rep(env, node(env, REX_DOT, 1, 1, 0), 0, 0);
 			break;
 		case T_SLASHPLUS:
 			eat(env);
 			env->token.lex = T_PLUS;
 			env->token.push = 1;
-			if (e = node(REX_ONECHAR, 1, 1, 0))
+			if (e = node(env, REX_ONECHAR, 1, 1, 0))
 			{
 				e->re.onechar = '/';
 				e = rep(env, e, 0, 0);
@@ -1170,7 +1171,7 @@ seq(Cenv_t* env)
 			return 0;
 		}
 		if (e && *env->cursor != 0 && (!env->delimiter || *env->cursor != env->delimiter && *env->cursor != '\n'))
-			e = cat(e, seq(env));
+			e = cat(env, e, seq(env));
 		return e;
 	}
 }
@@ -1187,13 +1188,13 @@ conj(Cenv_t* env)
 	eat(env);
 	if (!(f = conj(env)))
 	{
-		drop(e);
+		drop(env->disc, e);
 		return 0;
 	}
-	if (!(g = node(REX_CONJ, 0, 0, 0)))
+	if (!(g = node(env, REX_CONJ, 0, 0, 0)))
 	{
-		drop(e);
-		drop(f);
+		drop(env->disc, e);
+		drop(env->disc, f);
 		return 0;
 	}
 	g->re.group.expr.binary.left = e;
@@ -1213,14 +1214,14 @@ alt(Cenv_t* env, int number)
 	eat(env);
 	if (!(f = alt(env, number)))
 	{
-		drop(e);
+		drop(env->disc, e);
 		return 0;
 	}
-	if (g = trie(e, f))
+	if (g = trie(env, e, f))
 		return g;
 	if ((e->type == REX_NULL || f->type == REX_NULL) && !(env->flags & REG_NULL))
 		goto bad;
-	if (!(g = node(REX_ALT, 0, 0, 0)))
+	if (!(g = node(env, REX_ALT, 0, 0, 0)))
 	{
 		env->error = REG_ESPACE;
 		goto bad;
@@ -1231,8 +1232,8 @@ alt(Cenv_t* env, int number)
 	g->re.group.expr.binary.right = f;
 	return g;
  bad:
-	drop(e);
-	drop(f);
+	drop(env->disc, e);
+	drop(env->disc, f);
 	if (!env->error)
 		env->error = REG_ENULL;
 	return 0;
@@ -1364,11 +1365,11 @@ special(Cenv_t* env, regex_t* p)
 				n = t->re.trie.min;
 				l = env->stats.k;
 			}
-			if (!(q = (size_t*)alloc(0, (n + 1) * sizeof(size_t))))
+			if (!(q = (size_t*)alloc(env->disc, 0, (n + 1) * sizeof(size_t))))
 				return 1;
-			if (!(a = node(REX_BM, 0, 0, n * (sizeof(Bm_mask_t*) + (UCHAR_MAX + 1) * sizeof(Bm_mask_t)) + (UCHAR_MAX + n + 2) * sizeof(size_t))))
+			if (!(a = node(env, REX_BM, 0, 0, n * (sizeof(Bm_mask_t*) + (UCHAR_MAX + 1) * sizeof(Bm_mask_t)) + (UCHAR_MAX + n + 2) * sizeof(size_t))))
 			{
-				alloc(q, 0);
+				alloc(env->disc, q, 0);
 				return 1;
 			}
 			a->re.bm.size = n;
@@ -1484,7 +1485,7 @@ special(Cenv_t* env, regex_t* p)
 				sfprintf(sfstderr, "\n");
 			}
 #endif
-			alloc(q, 0);
+			alloc(env->disc, q, 0);
 			a->next = e;
 			p->env->rex = a;
 			return 0;
@@ -1514,7 +1515,7 @@ special(Cenv_t* env, regex_t* p)
 				return 0;
 			s = e->re.string.base;
 			n = e->re.string.size;
-			if (!(a = node(REX_KMP, 0, 0, n * (sizeof(int*) + 1) + 1)))
+			if (!(a = node(env, REX_KMP, 0, 0, n * (sizeof(int*) + 1) + 1)))
 				return 1;
 			f = a->re.string.fail;
 			strcpy((char*)(a->re.string.base = (unsigned char*)&f[n]), (char*)s);
@@ -1532,7 +1533,7 @@ special(Cenv_t* env, regex_t* p)
 			a->next = e->next;
 			p->env->rex = a;
 			e->next = 0;
-			drop(e);
+			drop(env->disc, e);
 			break;
 		default:
 			return 0;
@@ -1553,57 +1554,57 @@ minimal(Cenv_t* env, Rex_t* e)
 	Rex_t*	g;
 	Rex_t*	h;
 
-	if (!(f = node(REX_DOT, 1, RE_DUP_INF, 0)))
+	if (!(f = node(env, REX_DOT, 1, RE_DUP_INF, 0)))
 	{
-		drop(e);
+		drop(env->disc, e);
 		return 0;
 	}
 	env->cursor = env->pattern;
 	if (!(g = alt(env, 1)))
 	{
-		drop(e);
-		drop(f);
+		drop(env->disc, e);
+		drop(env->disc, f);
 		return 0;
 	}
 	if (++env->parno < elementsof(env->paren))
 		env->paren[env->parno] = 1;
-	if (!(h = node(REX_GROUP, 0, 0, 0)))
+	if (!(h = node(env, REX_GROUP, 0, 0, 0)))
 	{
-		drop(e);
-		drop(f);
-		drop(g);
+		drop(env->disc, e);
+		drop(env->disc, f);
+		drop(env->disc, g);
 		return 0;
 	}
 	h->re.group.number = env->parno;
 	h->re.group.expr.rex = g;
-	if (!(g = cat(h, f)))
+	if (!(g = cat(env, h, f)))
 	{
-		drop(e);
-		drop(f);
-		drop(h);
+		drop(env->disc, e);
+		drop(env->disc, f);
+		drop(env->disc, h);
 		return 0;
 	}
-	if (!(f = node(REX_NEG, 0, 0, 0)))
+	if (!(f = node(env, REX_NEG, 0, 0, 0)))
 	{
-		drop(e);
-		drop(g);
+		drop(env->disc, e);
+		drop(env->disc, g);
 		return 0;
 	}
 	f->re.group.expr.rex = g;
 	if (++env->parno < elementsof(env->paren))
 		env->paren[env->parno] = 1;
-	if (!(h = node(REX_GROUP, 0, 0, 0)))
+	if (!(h = node(env, REX_GROUP, 0, 0, 0)))
 	{
-		drop(e);
-		drop(f);
+		drop(env->disc, e);
+		drop(env->disc, f);
 		return 0;
 	}
 	h->re.group.number = env->parno;
 	h->re.group.expr.rex = e;
-	if (!(g = node(REX_CONJ, 0, 0, 0)))
+	if (!(g = node(env, REX_CONJ, 0, 0, 0)))
 	{
-		drop(h);
-		drop(f);
+		drop(env->disc, h);
+		drop(env->disc, f);
 		return 0;
 	}
 	g->re.group.expr.binary.left = h;
@@ -1612,23 +1613,34 @@ minimal(Cenv_t* env, Rex_t* e)
 }
 
 int
-regcomp(regex_t* p, const char* pattern, int flags)
+regcomp(regex_t* p, const char* pattern, regflags_t flags)
 {
 	Rex_t*		e;
 	Rex_t*		f;
+	regdisc_t*	disc;
 	int		i;
 	Cenv_t		env;
 
 	if (!p)
 		return REG_BADPAT;
+	if (flags & REG_DISCIPLINE)
+	{
+		flags &= ~REG_DISCIPLINE;
+		disc = p->re_disc;
+	}
+	else
+		disc = &state.disc;
+	if (!disc->re_errorlevel)
+		disc->re_errorlevel = 2;
 	p->env = 0;
 	if (!pattern || (flags & (REG_MINIMAL|REG_EXTENDED|REG_AUGMENTED)) == REG_MINIMAL)
-		return REG_BADPAT;
-	if (!(p->env = (Env_t*)alloc(0, sizeof(Env_t))))
-		return REG_ESPACE;
+		return fatal(disc, REG_BADPAT, pattern);
+	if (!(p->env = (Env_t*)alloc(disc, 0, sizeof(Env_t))))
+		return fatal(disc, REG_ESPACE, pattern);
 	memset(p->env, 0, sizeof(*p->env));
 	memset(&env, 0, sizeof(env));
 	env.flags = flags;
+	env.disc = p->env->disc = disc;
 	if (env.flags & REG_AUGMENTED)
 		env.flags |= REG_EXTENDED;
 	if (!state.fold[UCHAR_MAX])
@@ -1662,24 +1674,24 @@ regcomp(regex_t* p, const char* pattern, int flags)
 	if (!(p->env->rex = alt(&env, 1)))
 	{
 		regfree(p);
-		return env.error ? env.error : REG_ESPACE;
+		return fatal(disc, env.error ? env.error : REG_ESPACE, pattern);
 	}
 	if (env.parnest)
 	{
 		regfree(p);
-		return REG_EPAREN;
+		return fatal(disc, REG_EPAREN, pattern);
 	}
 	if ((env.flags & REG_MINIMAL) && !(p->env->rex = minimal(&env, p->env->rex)))
 	{
 		regfree(p);
-		return env.error ? env.error : REG_ESPACE;
+		return fatal(disc, env.error ? env.error : REG_ESPACE, pattern);
 	}
 	if ((env.flags & REG_LEFT) && p->env->rex->type != REX_BEG)
 	{
-		if (!(e = node(REX_BEG, 0, 0, 0)))
+		if (!(e = node(&env, REX_BEG, 0, 0, 0)))
 		{
 			regfree(p);
-			return REG_ESPACE;
+			return fatal(disc, REG_ESPACE, pattern);
 		}
 		e->next = p->env->rex;
 		p->env->rex = e;
@@ -1690,10 +1702,10 @@ regcomp(regex_t* p, const char* pattern, int flags)
 		for (f = p->env->rex; f->next; f = f->next);
 		if (f->type != REX_END)
 		{
-			if (!(e = node(REX_END, 0, 0, 0)))
+			if (!(e = node(&env, REX_END, 0, 0, 0)))
 			{
 				regfree(p);
-				return REG_ESPACE;
+				return fatal(disc, REG_ESPACE, pattern);
 			}
 			f->next = e;
 		}
@@ -1701,16 +1713,16 @@ regcomp(regex_t* p, const char* pattern, int flags)
 	if (stats(&env, p->env->rex))
 	{
 		regfree(p);
-		return env.error ? env.error : REG_ECOUNT;
+		return fatal(disc, env.error ? env.error : REG_ECOUNT, pattern);
 	}
 	if (env.stats.a || env.stats.b || env.stats.c > 1 && env.stats.c != env.stats.s || env.stats.t && (env.stats.t > 1 || env.stats.a || env.stats.c))
 		p->env->hard = 1;
 	if (special(&env, p))
 	{
 		regfree(p);
-		return env.error ? env.error : REG_ESPACE;
+		return fatal(disc, env.error ? env.error : REG_ESPACE, pattern);
 	}
-	serialize(p->env->rex, 1);
+	serialize(&env, p->env->rex, 1);
 	p->re_nsub = env.stats.p;
 	if (env.flags & REG_DELIMITED)
 		p->re_npat = (env.cursor - env.pattern) + 1;
@@ -1739,19 +1751,21 @@ regcomb(regex_t* p, regex_t* q)
 	Cenv_t	env;
 
 	if (!e || !f)
-		return REG_BADPAT;
+		return fatal(p->env->disc, REG_BADPAT, NiL);
+	memset(&env, 0, sizeof(env));
+	env.disc = p->env->disc;
 	if (e->type == REX_BM)
 	{
 		p->env->rex = e->next;
 		e->next = 0;
-		drop(e);
+		drop(env.disc, e);
 		e = p->env->rex;
 	}
 	if (f->type == REX_BM)
 	{
 		q->env->rex = f->next;
 		f->next = 0;
-		drop(f);
+		drop(env.disc, f);
 		f = q->env->rex;
 	}
 	if (e->type == REX_BEG && f->type == REX_BEG)
@@ -1759,33 +1773,33 @@ regcomb(regex_t* p, regex_t* q)
 		p->env->flags |= REG_LEFT;
 		p->env->rex = e->next;
 		e->next = 0;
-		drop(e);
+		drop(env.disc, e);
 		e = p->env->rex;
 		q->env->rex = f->next;
 		f->next = 0;
-		drop(f);
+		drop(env.disc, f);
 		f = q->env->rex;
 	}
 	if (e->next && e->next->type == REX_END && f->next && f->next->type == REX_END)
 	{
 		p->env->flags |= REG_RIGHT;
-		drop(e->next);
+		drop(env.disc, e->next);
 		e->next = 0;
-		drop(f->next);
+		drop(env.disc, f->next);
 		f->next = 0;
 	}
-	if (!(g = trie(f, e)))
-		return REG_BADPAT;
+	if (!(g = trie(&env, f, e)))
+		return fatal(p->env->disc, REG_BADPAT, NiL);
 	p->env->rex = g;
 	if (!q->env->once)
 		p->env->once = 0;
 	q->env->rex = 0;
 	if (p->env->flags & REG_LEFT)
 	{
-		if (!(e = node(REX_BEG, 0, 0, 0)))
+		if (!(e = node(&env, REX_BEG, 0, 0, 0)))
 		{
 			regfree(p);
-			return REG_ESPACE;
+			return fatal(p->env->disc, REG_ESPACE, NiL);
 		}
 		e->next = p->env->rex;
 		p->env->rex = e;
@@ -1796,27 +1810,27 @@ regcomb(regex_t* p, regex_t* q)
 		for (f = p->env->rex; f->next; f = f->next);
 		if (f->type != REX_END)
 		{
-			if (!(e = node(REX_END, 0, 0, 0)))
+			if (!(e = node(&env, REX_END, 0, 0, 0)))
 			{
 				regfree(p);
-				return REG_ESPACE;
+				return fatal(p->env->disc, REG_ESPACE, NiL);
 			}
 			f->next = e;
 		}
 	}
-	memset(&env, 0, sizeof(env));
 	env.explicit = p->env->explicit;
 	env.flags = p->env->flags;
 	env.map = p->env->map;
+	env.disc = p->env->disc;
 	if (stats(&env, p->env->rex))
 	{
 		regfree(p);
-		return env.error ? env.error : REG_ECOUNT;
+		return fatal(p->env->disc, env.error ? env.error : REG_ECOUNT, NiL);
 	}
 	if (special(&env, p))
 	{
 		regfree(p);
-		return env.error ? env.error : REG_ESPACE;
+		return fatal(p->env->disc, env.error ? env.error : REG_ESPACE, NiL);
 	}
 	p->env->min = g->re.trie.min;
 	return 0;

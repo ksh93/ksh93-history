@@ -1,27 +1,27 @@
-/***************************************************************
-*                                                              *
-*           This software is part of the ast package           *
-*              Copyright (c) 1982-2000 AT&T Corp.              *
-*      and it may only be used by you under license from       *
-*                     AT&T Corp. ("AT&T")                      *
-*       A copy of the Source Code Agreement is available       *
-*              at the AT&T Internet web site URL               *
-*                                                              *
-*     http://www.research.att.com/sw/license/ast-open.html     *
-*                                                              *
-*      If you have copied this software without agreeing       *
-*      to the terms of the license you are infringing on       *
-*         the license and copyright and are violating          *
-*             AT&T's intellectual property rights.             *
-*                                                              *
-*               This software was created by the               *
-*               Network Services Research Center               *
-*                      AT&T Labs Research                      *
-*                       Florham Park NJ                        *
-*                                                              *
-*              David Korn <dgk@research.att.com>               *
-*                                                              *
-***************************************************************/
+/*******************************************************************
+*                                                                  *
+*             This software is part of the ast package             *
+*                Copyright (c) 1982-2000 AT&T Corp.                *
+*        and it may only be used by you under license from         *
+*                       AT&T Corp. ("AT&T")                        *
+*         A copy of the Source Code Agreement is available         *
+*                at the AT&T Internet web site URL                 *
+*                                                                  *
+*       http://www.research.att.com/sw/license/ast-open.html       *
+*                                                                  *
+*        If you have copied this software without agreeing         *
+*        to the terms of the license you are infringing on         *
+*           the license and copyright and are violating            *
+*               AT&T's intellectual property rights.               *
+*                                                                  *
+*                 This software was created by the                 *
+*                 Network Services Research Center                 *
+*                        AT&T Labs Research                        *
+*                         Florham Park NJ                          *
+*                                                                  *
+*                David Korn <dgk@research.att.com>                 *
+*                                                                  *
+*******************************************************************/
 #pragma prototyped
 /*
  * UNIX shell
@@ -627,7 +627,8 @@ char *path_join(register char *path,const char *name)
 		stakputc(*scanp++);
 	if(scanp!=path)
 	{
-		stakputc('/');
+		if(*path!='/' || scanp!= (path+1))
+			stakputc('/');
 		/* position past ":" unless a trailing colon after pathname */
 		if(*scanp && *++scanp==0)
 			scanp--;
@@ -648,10 +649,11 @@ void	path_exec(register const char *arg0,register char *argv[],struct argnod *lo
 @*/
 {
 	register const char *path = "";
+	char *libpath, **envp;
 	struct edata data;
 	nv_setlist(local,NV_EXPORT|NV_IDENT|NV_ASSIGN);
 	data.sh = &sh;
-	data.envp=sh_envgen();
+	envp=sh_envgen();
 	if(strchr(arg0,'/'))
 	{
 		/* name containing / not allowed for restricted shell */
@@ -661,11 +663,16 @@ void	path_exec(register const char *arg0,register char *argv[],struct argnod *lo
 	else
 		path=path_get(arg0);
 	/* leave room for inserting _= pathname in environment */
-	data.envp--;
+	envp--;
 	data.exec_err = ENOENT;
 	sfsync(NIL(Sfio_t*));
 	timerdel(NIL(void*));
-	data.libpath = astconf("LIBPATH",NIL(char*),NIL(char*));
+	libpath = astconf("LIBPATH",NIL(char*),NIL(char*));
+	do
+	{
+		data.libpath = libpath;
+		data.envp = envp;
+	}
 	while(path=execs(path,arg0,argv,&data));
 	/* force an exit */
 	((struct checkpt*)sh.jmplist)->mode = SH_JMPEXIT;

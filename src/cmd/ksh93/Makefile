@@ -27,6 +27,7 @@ KSHELL == 1		/* this is ksh */
 
 /* set these variables to 1 to enable, null to disable */
 DEBUG ==			/* debugging purposes only */
+SHOPT_APPEND == 1		/* var+=val string append */
 SHOPT_NAMESPACE == 1		/* allow namespaces */
 SHOPT_COMPOUND_ARRAY == 1	/* allow compound arrays */
 SHOPT_ESH == 1			/* emacs/gmacs edit mode */
@@ -56,7 +57,7 @@ if SHOPT_X
 LDFLAGS += -u  _XtAppInitialize -L/usr/add-on/X11/lib
 end
 
-:ALL: $(SH) shcomp ksh.str $(SHOPT_SUID_EXEC:T=V?suid_exec.c)
+:ALL: $(SH) shcomp $(SHOPT_SUID_EXEC:T=V?suid_exec.c)
 
 /* the linux.sparc linker still has some problems */
 
@@ -92,20 +93,9 @@ shcomp	::	CCFLAGS=$(NODLL) shcomp.c -lshell
 
 shcomp.o : _BLD_shell=
 
-ksh.str :	$(DATAFILES)	/* build error message dictionary */
-	{
-	$(SED) -e '/[ 	]e_[a-z].*".*[^\][a-z].*"/!d' -e '/\/[a-z][a-z][a-z]\//d' -e '/A__z/d' -e 's/.*=[ 	]*\(".*"\);.*/\1/' $(*)
-	$(SED) -e '/[ 	]sh_opt.*".*[^\][a-z].*"/!d' -e 's/.*=[ 	]*\(".*"\);.*/\1/' $(*)
-	$(SED) -e '/[ 	]is_[a-z].*".*[^\][a-z].*"/!d' -e 's/.*=[ 	]*\(".*"\);.*/\1/' $(*)
-	$(SED) -e '/[         ]e_notset/!d' -e 's/.*"....\(.*"\).*/"\1/' $(*)
-	$(SED) -e '/[         ]e_subst/!d' -e 's/.*"....\(.*"\).*/"\1/' $(*)
-	$(SED) -e '/[         ]e_file/!d' -e 's/.*"....\(.*"\).*/"\1/' $(*)
-	$(SED) -e '/,$/!d' -e 's/.*S(\(".*"\)),/\1/' $(*:N=*signals.c)
-	} | sort -u > $(<)
-
 :: syscall.s mamexec mamstate.c deparse.c shopen.c ksh.mk OPTIONS $(DOCFILES)
 
-:: alias.sh arith.sh arrays.sh attributes.sh basic.sh bracket.sh \
+:: alias.sh append.sh arith.sh arrays.sh attributes.sh basic.sh bracket.sh \
 	builtins.sh case.sh comvar.sh coprocess.sh exit.sh functions.sh \
 	grep.sh heredoc.sh io.sh nameref.sh options.sh path.sh quoting.sh \
 	quoting2.sh return.sh select.sh substring.sh tilde.sh variables.sh \

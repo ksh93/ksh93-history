@@ -1,27 +1,27 @@
-/***************************************************************
-*                                                              *
-*           This software is part of the ast package           *
-*              Copyright (c) 1982-2000 AT&T Corp.              *
-*      and it may only be used by you under license from       *
-*                     AT&T Corp. ("AT&T")                      *
-*       A copy of the Source Code Agreement is available       *
-*              at the AT&T Internet web site URL               *
-*                                                              *
-*     http://www.research.att.com/sw/license/ast-open.html     *
-*                                                              *
-*      If you have copied this software without agreeing       *
-*      to the terms of the license you are infringing on       *
-*         the license and copyright and are violating          *
-*             AT&T's intellectual property rights.             *
-*                                                              *
-*               This software was created by the               *
-*               Network Services Research Center               *
-*                      AT&T Labs Research                      *
-*                       Florham Park NJ                        *
-*                                                              *
-*              David Korn <dgk@research.att.com>               *
-*                                                              *
-***************************************************************/
+/*******************************************************************
+*                                                                  *
+*             This software is part of the ast package             *
+*                Copyright (c) 1982-2000 AT&T Corp.                *
+*        and it may only be used by you under license from         *
+*                       AT&T Corp. ("AT&T")                        *
+*         A copy of the Source Code Agreement is available         *
+*                at the AT&T Internet web site URL                 *
+*                                                                  *
+*       http://www.research.att.com/sw/license/ast-open.html       *
+*                                                                  *
+*        If you have copied this software without agreeing         *
+*        to the terms of the license you are infringing on         *
+*           the license and copyright and are violating            *
+*               AT&T's intellectual property rights.               *
+*                                                                  *
+*                 This software was created by the                 *
+*                 Network Services Research Center                 *
+*                        AT&T Labs Research                        *
+*                         Florham Park NJ                          *
+*                                                                  *
+*                David Korn <dgk@research.att.com>                 *
+*                                                                  *
+*******************************************************************/
 #pragma prototyped
 /*
  * AT&T Labs
@@ -270,7 +270,7 @@ void nv_setlist(register struct argnod *arg,register int flags)
 		else
 		{
 			stakseek(0);
-			if(*arg->argval==0 && arg->argchn.ap)
+			if(*arg->argval==0 && arg->argchn.ap && !(arg->argflag&~ARG_APPEND))
 			{
 #ifdef SHOPT_COMPOUND_ARRAY
 				int flag = (NV_VARNAME|NV_ASSIGN);
@@ -291,7 +291,7 @@ void nv_setlist(register struct argnod *arg,register int flags)
 				if(tp->tre.tretyp!=TLST && !tp->com.comset)
 				{
 					int argc;
-					char **argv = sh_argbuild(&argc,&tp->com);
+					char **argv = sh_argbuild(&argc,&tp->com,0);
 					nv_setvec(np,(arg->argflag&ARG_APPEND),argc,argv);
 					if(traceon)
 					{
@@ -422,6 +422,7 @@ static char *newname(register const char *prefix, register const char *name, con
  * If <flags> & NV_IDENT then name must be an identifier
  * If <flags> & NV_VARNAME then name must be a valid variable name
  * If <flags> & NV_NOADD then node will not be added if not found
+ * If <flags> & NV_REF then don't follow reference
  * SH_INIT is only set while initializing the environment
  */
 Namval_t	*nv_open(const char *name,Dt_t *root,int flags)
@@ -642,10 +643,12 @@ Namval_t	*nv_open(const char *name,Dt_t *root,int flags)
 #endif /* SHOPT_NAMESPACE */
 		if(sep)
 			*cp = sep;
-		if((flags&NV_REF) || (!np && (flags&NV_NOADD)))
+		if(((flags&NV_REF) && sep==0) || (!np && (flags&NV_NOADD)))
 			return(np);
 		sub = 0;
-		while(nv_isref(np))
+		if(flags&NV_REF)
+			nv_unref(np);
+		else while(nv_isref(np))
 		{
 			sub = np->nvenv;
 			sh.last_table = nv_table(np);
@@ -888,10 +891,8 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 				}
 				else if(sp)
 					l = (long)sh_arith(sp);
-				else
-					sh.lastbase = 10;
 				if(nv_size(np) <= 1)
-					nv_setsize(np,sh.lastbase);
+					nv_setsize(np,10);
 				if(nv_isattr (np, NV_SHORT))
 				{
 					short s=0;
@@ -2284,6 +2285,19 @@ void nv_unscope(void)
 	sh.var_tree=dp;
 	table_unset(root,1);
 	dtclose(root);
+}
+
+/*
+ * The inverse of creating a reference node
+ */
+void nv_unref(register Namval_t *np)
+{
+	if(!nv_isref(np))
+		return;
+	nv_offattr(np,NV_NOFREE|NV_REF);
+	np->nvalue.cp = strdup(nv_name(nv_refnode(np)));
+	np->nvfun = 0;
+	return;
 }
 
 /*

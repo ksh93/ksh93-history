@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 4.0 2000-06-01
+info mam static 00000 1994-07-17 make (AT&T Research) 4.0 2000-10-31
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ar
@@ -170,33 +170,6 @@ exec - 	;;
 exec - esac
 exec - chmod u+w,+x mamprobe
 done mamprobe generated
-make manmake
-make manmake.sh
-done manmake.sh
-prev manmake.sh
-exec - case static,port:$OPTIND:$RANDOM in
-exec - ?*:*:*|*::*|*:*:$RANDOM)
-exec - 	;;
-exec - *)	if	ENV= x= $SHELL -n -c '${list[level]} ' 2>/dev/null
-exec - 	then	ENV= $SHELL -n manmake.sh
-exec - 	fi
-exec - 	;;
-exec - esac
-exec - case '' in
-exec - "")	cp manmake.sh manmake
-exec - 	;;
-exec - *)	{
-exec - 	i=`(read x; echo $x) < manmake.sh`
-exec - 	case $i in
-exec - 	'#!'*|*'||'*|':'*|'":"'*|"':'"*)	echo $i ;;
-exec - 	esac
-exec - 	echo 
-exec - 	cat manmake.sh
-exec - 	} > manmake
-exec - 	;;
-exec - esac
-exec - chmod u+w,+x manmake
-done manmake generated
 make silent
 make silent.sh
 done silent.sh
@@ -379,10 +352,6 @@ make ${PACKAGEROOT}/bin/silent
 prev silent
 exec - mv ${PACKAGEROOT}/bin/silent ${PACKAGEROOT}/bin/silent.old 2>/dev/null || true; test '' = 'silent' || { cp silent ${PACKAGEROOT}/bin/silent  		    		    ;}
 done ${PACKAGEROOT}/bin/silent generated
-make ${PACKAGEROOT}/bin/nmake
-prev manmake
-exec - mv ${PACKAGEROOT}/bin/nmake ${PACKAGEROOT}/bin/nmake.old 2>/dev/null || true; test '' = 'manmake' || { cp manmake ${PACKAGEROOT}/bin/nmake  		    		    ;}
-done ${PACKAGEROOT}/bin/nmake generated
 make ${INSTALLROOT}/bin/mamake
 prev mamake
 exec - if	test ! -f ${INSTALLROOT}/bin/mamake
@@ -411,6 +380,10 @@ make ${INSTALLROOT}/bin/cc
 prev package
 make hello.c
 done hello.c
+make cc.darwin.ppc
+done cc.darwin.ppc
+make ldd.darwin.ppc
+done ldd.darwin.ppc
 make cc.hp.pa
 done cc.hp.pa
 make ld.hp.pa
@@ -425,23 +398,29 @@ make cc.sco.i386
 done cc.sco.i386
 make cc.sgi.mips2
 done cc.sgi.mips2
+make ldd.sgi.mips2
+done ldd.sgi.mips2
 make cc.sgi.mips3
 done cc.sgi.mips3
+make ldd.sgi.mips3
+done ldd.sgi.mips3
 make cc.sgi.mips3-o32
 done cc.sgi.mips3-o32
 make cc.sgi.mips4
 done cc.sgi.mips4
+make ldd.sgi.mips4
+done ldd.sgi.mips4
 make cc.sgi.mips4-n32
 done cc.sgi.mips4-n32
-exec - set x cc.hp.pa ld.hp.pa cc.mvs.390 cc.next.i386 cc.osf.alpha cc.sco.i386 cc.sgi.mips2 cc.sgi.mips3 cc.sgi.mips3-o32 cc.sgi.mips4 cc.sgi.mips4-n32
+exec - set x cc.darwin.ppc ldd.darwin.ppc cc.hp.pa ld.hp.pa cc.mvs.390 cc.next.i386 cc.osf.alpha cc.sco.i386 cc.sgi.mips2 ldd.sgi.mips2 cc.sgi.mips3 ldd.sgi.mips3 cc.sgi.mips3-o32 cc.sgi.mips4 ldd.sgi.mips4 cc.sgi.mips4-n32
 exec - while	:
-exec - do	shift
-exec - 	case $# in
+exec - do	case $# in
 exec - 	0)	break ;;
 exec - 	esac
 exec - 	cc=$1
-exec - 	ld=$2
-exec - 	export cc ld
+exec - 	shift
+exec - 	argv=$*
+exec - 	export cc argv
 exec - 	case $cc in
 exec - 	*cc.${_hosttype_=`package`})
 exec - 		test -f $cc &&
@@ -449,12 +428,20 @@ exec - 		$cc -o hello.exe hello.c >/dev/null 2>&1 &&
 exec - 		hello.exe >/dev/null 2>&1 && {
 exec - 			cmp -s $cc ${INSTALLROOT}/bin/cc ||
 exec - 			cp $cc ${INSTALLROOT}/bin/cc
-exec - 			case $ld in
-exec - 			*ld.${_hosttype_=`package`})
-exec - 				cmp -s $ld ${INSTALLROOT}/bin/ld ||
-exec - 				cp $ld ${INSTALLROOT}/bin/ld
-exec - 				;;
-exec - 			esac
+exec - 			for i in $argv
+exec - 			do	case $i in
+exec - 				*ld.${_hosttype_=`package`})
+exec - 					cmp -s $i ${INSTALLROOT}/bin/ld ||
+exec - 					cp $i ${INSTALLROOT}/bin/ld
+exec - 					;;
+exec - 				*ldd.${_hosttype_=`package`})
+exec - 					cmp -s $i ${INSTALLROOT}/bin/ldd ||
+exec - 					cp $i ${INSTALLROOT}/bin/ldd
+exec - 					;;
+exec - 				*)	break
+exec - 					;;
+exec - 				esac
+exec - 			done
 exec - 		} ||
 exec - 		: no ${_hosttype_=`package`} cc workaround needed
 exec - 		break

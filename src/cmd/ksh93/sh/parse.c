@@ -1,27 +1,27 @@
-/***************************************************************
-*                                                              *
-*           This software is part of the ast package           *
-*              Copyright (c) 1982-2000 AT&T Corp.              *
-*      and it may only be used by you under license from       *
-*                     AT&T Corp. ("AT&T")                      *
-*       A copy of the Source Code Agreement is available       *
-*              at the AT&T Internet web site URL               *
-*                                                              *
-*     http://www.research.att.com/sw/license/ast-open.html     *
-*                                                              *
-*      If you have copied this software without agreeing       *
-*      to the terms of the license you are infringing on       *
-*         the license and copyright and are violating          *
-*             AT&T's intellectual property rights.             *
-*                                                              *
-*               This software was created by the               *
-*               Network Services Research Center               *
-*                      AT&T Labs Research                      *
-*                       Florham Park NJ                        *
-*                                                              *
-*              David Korn <dgk@research.att.com>               *
-*                                                              *
-***************************************************************/
+/*******************************************************************
+*                                                                  *
+*             This software is part of the ast package             *
+*                Copyright (c) 1982-2000 AT&T Corp.                *
+*        and it may only be used by you under license from         *
+*                       AT&T Corp. ("AT&T")                        *
+*         A copy of the Source Code Agreement is available         *
+*                at the AT&T Internet web site URL                 *
+*                                                                  *
+*       http://www.research.att.com/sw/license/ast-open.html       *
+*                                                                  *
+*        If you have copied this software without agreeing         *
+*        to the terms of the license you are infringing on         *
+*           the license and copyright and are violating            *
+*               AT&T's intellectual property rights.               *
+*                                                                  *
+*                 This software was created by the                 *
+*                 Network Services Research Center                 *
+*                        AT&T Labs Research                        *
+*                         Florham Park NJ                          *
+*                                                                  *
+*                David Korn <dgk@research.att.com>                 *
+*                                                                  *
+*******************************************************************/
 #pragma prototyped
 /*
  * UNIX shell
@@ -45,6 +45,7 @@
 #include	"history.h"
 #include	"builtins.h"
 #include	"test.h"
+#include	"history.h"
 
 #define hash	nvlink.hl._hash
 
@@ -171,6 +172,19 @@ static union anynode	*makeparent(int flag, union anynode *child)
 	return(par);
 }
 
+static union anynode *getanode(struct argnod *ap)
+{
+	register union anynode *t = getnode(arithnod);
+	t->ar.artyp = TARITH;
+	t->ar.arline = sh_getlineno();
+	t->ar.arexpr = ap;
+	if(ap->argflag&ARG_RAW)
+		t->ar.arcomp = sh_arithcomp(ap->argval);
+	else
+		t->ar.arcomp = 0;
+	return(t);
+}
+
 /*
  *  Make a node corresponding to a command list
  */
@@ -275,10 +289,7 @@ union anynode *sh_dolparen(void)
 	{
 	    /* ((...)) arithmetic expression */
 	    case EXPRSYM:
-		t = getnode(arithnod);
-		t->ar.artyp = TARITH;
-		t->ar.arline = sh_getlineno();
-		t->ar.arexpr = shlex.arg;
+		t = getanode(shlex.arg);
 		break;
 	    case LPAREN:
 		t = sh_cmd(RPAREN,SH_NL|SH_EMPTY);
@@ -536,10 +547,7 @@ static union anynode	*arithfor(register union anynode *tf)
 		if(offset==ARGVAL)
 			stakputc('1');
 		argp = (struct argnod*)stakfreeze(1);
-		t = getnode(arithnod);
-		t->ar.artyp=TARITH;
-		t->ar.arline = sh_getlineno();
-		t->ar.arexpr = argp;
+		t = getanode(argp);
 		if(n==0)
 			tf = makelist(TLST,t,tw);
 		else
@@ -558,10 +566,7 @@ static union anynode	*arithfor(register union anynode *tf)
 	/* check whether the increment is present */
 	if(*argp->argval)
 	{
-		t = getnode(arithnod);
-		t->ar.artyp=TARITH;
-		t->ar.arline = sh_getlineno();
-		t->ar.arexpr = argp;
+		t = getanode(argp);
 		tw->wh.whinc = (struct arithnod*)t;
 	}
 	else
@@ -797,10 +802,7 @@ static union anynode	*item(int flag)
 		break;
 	    /* ((...)) arithmetic expression */
 	    case EXPRSYM:
-		t = getnode(arithnod);
-		t->ar.artyp=TARITH;
-		t->ar.arline = sh_getlineno();
-		t->ar.arexpr = shlex.arg;
+		t = getanode(shlex.arg);
 		sh_lex();
 		goto done;
 
@@ -813,6 +815,8 @@ static union anynode	*item(int flag)
 		if(sh_lex())
 			sh_syntax();
 		t->sw.swarg=shlex.arg;
+		t->sw.swtyp=TSW;
+		t->sw.swio = 0;
 		if((tok=skipnl())!=INSYM && tok!=LBRACE)
 			sh_syntax();
 		if(!(t->sw.swlst=syncase(tok==INSYM?ESACSYM:RBRACE)) && shlex.token==EOFSYM)
@@ -821,7 +825,6 @@ static union anynode	*item(int flag)
 			shlex.lastline = saveline;
 			sh_syntax();
 		}
-		t->sw.swtyp=TSW;
 		break;
 	    }
 
@@ -1057,7 +1060,7 @@ static union anynode *simple(int flag, struct ionod *io)
 		{
 			if(!(argp->argflag&ARG_RAW))
 				argno = -1;
-			if(argno>=0 && argno++==0)
+			if(argno>=0 && argno++==0 && !(flag&SH_ASSIGN))
 			{
 				/* check for builtin command */
 				Namval_t *np = nv_search(argp->argval,sh.fun_tree,0);
@@ -1109,10 +1112,13 @@ static union anynode *simple(int flag, struct ionod *io)
 				shlex.token = LPAREN;
 			}
 		}
-		else if(tok==RPAREN && (flag&SH_ASSIGN))
-			break;
-		else if(tok==NL && shlex.assignok==SH_ASSIGN)
-			goto retry;
+		else if(flag&SH_ASSIGN)
+		{
+			if(tok==RPAREN)
+				break;
+			else if(tok==NL)
+				goto retry;
+		}
 		if(!(flag&SH_NOIO))
 		{
 			if(io)
@@ -1215,7 +1221,8 @@ static int	skipnl(void)
 
 /*
  * check for and process and i/o redirections
- * if flag is set then an alias can be in the next word
+ * if flag>0 then an alias can be in the next word
+ * if flag<0 only one redirection will be processed
  */
 static struct ionod	*inout(struct ionod *lastio,int flag)
 {
@@ -1267,22 +1274,27 @@ static struct ionod	*inout(struct ionod *lastio,int flag)
 			iof |= IORAW;
 	}
 	iop->iofile=iof;
-	if(flag)
+	if(flag>0)
 		/* allow alias substitutions and parameter assignments */
 		shlex.aliasok = shlex.assignok = 1;
 #ifdef SHOPT_KIA
 	if(shlex.kiafile)
 	{
-		flag = sh.inlineno-(shlex.token=='\n');
+		int n = sh.inlineno-(shlex.token=='\n');
 		if(!(iof&IOMOV))
 		{
 			unsigned long r=kiaentity((iof&IORAW)?sh_fmtq(iop->ioname):iop->ioname,-1,'f',0,0,shlex.script,'f',0,"");
-			sfprintf(shlex.kiatmp,"p;%..64d;f;%..64d;%d;%d;%c;%d\n",shlex.current,r,flag,flag,(iof&IOPUT)?((iof&IOAPP)?'a':'w'):((iof&IODOC)?'h':'r'),iof&IOUFD);
+			sfprintf(shlex.kiatmp,"p;%..64d;f;%..64d;%d;%d;%c;%d\n",shlex.current,r,n,n,(iof&IOPUT)?((iof&IOAPP)?'a':'w'):((iof&IODOC)?'h':'r'),iof&IOUFD);
 		}
 	}
 #endif /* SHOPT_KIA */
-	sh_lex();
-	iop->ionxt=inout(lastio,flag);
+	if(flag>=0)
+	{
+		sh_lex();
+		iop->ionxt=inout(lastio,flag);
+	}
+	else
+		iop->ionxt=0;
 	return(iop);
 }
 

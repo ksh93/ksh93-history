@@ -1,27 +1,27 @@
-################################################################
-#                                                              #
-#           This software is part of the ast package           #
-#              Copyright (c) 1982-2000 AT&T Corp.              #
-#      and it may only be used by you under license from       #
-#                     AT&T Corp. ("AT&T")                      #
-#       A copy of the Source Code Agreement is available       #
-#              at the AT&T Internet web site URL               #
-#                                                              #
-#     http://www.research.att.com/sw/license/ast-open.html     #
-#                                                              #
-#     If you received this software without first entering     #
-#       into a license with AT&T, you have an infringing       #
-#           copy and cannot use it without violating           #
-#             AT&T's intellectual property rights.             #
-#                                                              #
-#               This software was created by the               #
-#               Network Services Research Center               #
-#                      AT&T Labs Research                      #
-#                       Florham Park NJ                        #
-#                                                              #
-#              David Korn <dgk@research.att.com>               #
-#                                                              #
-################################################################
+####################################################################
+#                                                                  #
+#             This software is part of the ast package             #
+#                Copyright (c) 1982-2000 AT&T Corp.                #
+#        and it may only be used by you under license from         #
+#                       AT&T Corp. ("AT&T")                        #
+#         A copy of the Source Code Agreement is available         #
+#                at the AT&T Internet web site URL                 #
+#                                                                  #
+#       http://www.research.att.com/sw/license/ast-open.html       #
+#                                                                  #
+#        If you have copied this software without agreeing         #
+#        to the terms of the license you are infringing on         #
+#           the license and copyright and are violating            #
+#               AT&T's intellectual property rights.               #
+#                                                                  #
+#                 This software was created by the                 #
+#                 Network Services Research Center                 #
+#                        AT&T Labs Research                        #
+#                         Florham Park NJ                          #
+#                                                                  #
+#                David Korn <dgk@research.att.com>                 #
+#                                                                  #
+####################################################################
 function err_exit
 {
 	print -u2 -n "\t"
@@ -132,6 +132,11 @@ fi
 if [[ $? == 0 ]]
 then	err_exit 'preincrement of floating point allowed'
 fi
+x=1.5
+( ((x%2))  ) 2>/dev/null
+if [[ $? == 0 ]]
+then	err_exit 'floating point allowed with % operator'
+fi
 x=.125
 if	[[ $(( 4 * x/2 )) != 0.25 ]] 
 then	err_exit '(( 4 * x/2 )) is not 0.25, with x=.125'
@@ -162,5 +167,69 @@ typeset -Z3 z=010
 (( z=z+1))
 if	[[ $z != 011 ]]
 then	err_exit "leading 0's in -Z not treated as decimal"
+fi
+unset x
+integer x=0
+if	[[ $((x+=1)) != 1  ]] || ((x!=1))
+then	err_exit "+= not working"
+	x=1
+fi
+x=1
+if	[[ $((x*=5)) != 5  ]] || ((x!=5))
+then	err_exit "*= not working"
+	x=5
+fi
+if	[[ $((x%=4)) != 1  ]] || ((x!=1))
+then	err_exit "%= not working"
+	x=1
+fi
+if	[[ $((x|=6)) != 7  ]] || ((x!=7))
+then	err_exit "|= not working"
+	x=7
+fi
+if	[[ $((x&=5)) != 5  ]] || ((x!=5))
+then	err_exit "&= not working"
+	x=5
+fi
+function newscope
+{
+	float x=1.5 
+	(( x += 1 ))
+	print -r -- $x
+}
+if	[[ $(newscope) != 2.5 ]]
+then	err_exit "arithmetic using wrong scope"
+fi
+unset x
+integer y[3]=9 y[4]=2 i=3
+(( x = y[3] + y[4] ))
+if	[[ $x != 11 ]]
+then	err_exit "constant index array arithmetic failure"
+fi
+(( x = $empty y[3] + y[4] ))
+if	[[ $x != 11 ]]
+then	err_exit "empty constant index array arithmetic failure"
+fi
+(( x = y[i] + y[i+1] ))
+if	[[ $x != 11 ]]
+then	err_exit "variable subscript index array arithmetic failure"
+fi
+integer a[5]=3 a[2]=4
+(( x = y[a[5]] + y[a[2]] ))
+if	[[ $x != 11 ]]
+then	err_exit "nested subscript index array arithmetic failure"
+fi
+unset y
+typeset -Ai y
+y[three]=9 y[four]=2
+three=four
+four=three
+(( x = y[three] + y[four] ))
+if	[[ $x != 11 ]]
+then	err_exit "constant associative array arithmetic failure"
+fi
+(( x = y[$three] + y[$four] ))
+if	[[ $x != 11 ]]
+then	err_exit "variable subscript associative array arithmetic failure"
 fi
 exit $((Errors))

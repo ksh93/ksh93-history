@@ -1,29 +1,29 @@
-################################################################
-#                                                              #
-#           This software is part of the ast package           #
-#              Copyright (c) 1985-2000 AT&T Corp.              #
-#      and it may only be used by you under license from       #
-#                     AT&T Corp. ("AT&T")                      #
-#       A copy of the Source Code Agreement is available       #
-#              at the AT&T Internet web site URL               #
-#                                                              #
-#     http://www.research.att.com/sw/license/ast-open.html     #
-#                                                              #
-#     If you received this software without first entering     #
-#       into a license with AT&T, you have an infringing       #
-#           copy and cannot use it without violating           #
-#             AT&T's intellectual property rights.             #
-#                                                              #
-#               This software was created by the               #
-#               Network Services Research Center               #
-#                      AT&T Labs Research                      #
-#                       Florham Park NJ                        #
-#                                                              #
-#             Glenn Fowler <gsf@research.att.com>              #
-#              David Korn <dgk@research.att.com>               #
-#               Phong Vo <kpv@research.att.com>                #
-#                                                              #
-################################################################
+####################################################################
+#                                                                  #
+#             This software is part of the ast package             #
+#                Copyright (c) 1985-2000 AT&T Corp.                #
+#        and it may only be used by you under license from         #
+#                       AT&T Corp. ("AT&T")                        #
+#         A copy of the Source Code Agreement is available         #
+#                at the AT&T Internet web site URL                 #
+#                                                                  #
+#       http://www.research.att.com/sw/license/ast-open.html       #
+#                                                                  #
+#        If you have copied this software without agreeing         #
+#        to the terms of the license you are infringing on         #
+#           the license and copyright and are violating            #
+#               AT&T's intellectual property rights.               #
+#                                                                  #
+#                 This software was created by the                 #
+#                 Network Services Research Center                 #
+#                        AT&T Labs Research                        #
+#                         Florham Park NJ                          #
+#                                                                  #
+#               Glenn Fowler <gsf@research.att.com>                #
+#                David Korn <dgk@research.att.com>                 #
+#                 Phong Vo <kpv@research.att.com>                  #
+#                                                                  #
+####################################################################
 : generate conf info
 #
 # @(#)conf.sh (AT&T Research) 2000-01-31
@@ -114,7 +114,7 @@ do	if	test -x $getconf/getconf
 done
 set `$getconf -a 2>/dev/null | wc -l`
 case $1 in
-0)	for i in `strings $getconf | grep '^[A-Z_][A-Z_0-9]*$'`
+0)	for i in `strings $getconf 2>/dev/null | grep '^[A-Z_][A-Z_0-9]*$'`
 	do	if	$getconf $i >/dev/null 2>&1 || $getconf $i / >/dev/null 2>&1
 		then	echo $i=`$getconf $i 2>/dev/null || $getconf $i / 2>/dev/null`
 		fi

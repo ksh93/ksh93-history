@@ -1,29 +1,29 @@
-/***************************************************************
-*                                                              *
-*           This software is part of the ast package           *
-*              Copyright (c) 1985-2000 AT&T Corp.              *
-*      and it may only be used by you under license from       *
-*                     AT&T Corp. ("AT&T")                      *
-*       A copy of the Source Code Agreement is available       *
-*              at the AT&T Internet web site URL               *
-*                                                              *
-*     http://www.research.att.com/sw/license/ast-open.html     *
-*                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
-*             AT&T's intellectual property rights.             *
-*                                                              *
-*               This software was created by the               *
-*               Network Services Research Center               *
-*                      AT&T Labs Research                      *
-*                       Florham Park NJ                        *
-*                                                              *
-*             Glenn Fowler <gsf@research.att.com>              *
-*              David Korn <dgk@research.att.com>               *
-*               Phong Vo <kpv@research.att.com>                *
-*                                                              *
-***************************************************************/
+/*******************************************************************
+*                                                                  *
+*             This software is part of the ast package             *
+*                Copyright (c) 1985-2000 AT&T Corp.                *
+*        and it may only be used by you under license from         *
+*                       AT&T Corp. ("AT&T")                        *
+*         A copy of the Source Code Agreement is available         *
+*                at the AT&T Internet web site URL                 *
+*                                                                  *
+*       http://www.research.att.com/sw/license/ast-open.html       *
+*                                                                  *
+*        If you have copied this software without agreeing         *
+*        to the terms of the license you are infringing on         *
+*           the license and copyright and are violating            *
+*               AT&T's intellectual property rights.               *
+*                                                                  *
+*                 This software was created by the                 *
+*                 Network Services Research Center                 *
+*                        AT&T Labs Research                        *
+*                         Florham Park NJ                          *
+*                                                                  *
+*               Glenn Fowler <gsf@research.att.com>                *
+*                David Korn <dgk@research.att.com>                 *
+*                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
+*******************************************************************/
 #pragma prototyped
 /*
  * syslog implementation
@@ -49,10 +49,7 @@ Syslog_state_t		log = { 0, LOG_USER, -1, 0, ~0 };
 
 static const Namval_t	attempt[] =
 {
-#if 0
-	"/dev/tcp/share/syslog",	0,
-	"/dev/tcp/local/syslog",	0,
-#endif
+	"/dev/log",			0,
 	"lib/syslog/log",		0,
 	"/dev/console",			LOG_CONS,
 };
@@ -72,9 +69,15 @@ const Namval_t		log_facility[] =
 	"cron",		LOG_CRON,
 	"audit",	LOG_AUDIT,
 	"logalert",	LOG_LFMT,
+#ifdef LOG_SYSTEM2
 	"system2",	LOG_SYSTEM2,
+#endif
+#ifdef LOG_SYSTEM1
 	"system1",	LOG_SYSTEM1,
+#endif
+#ifdef LOG_SYSTEM0
 	"system0",	LOG_SYSTEM0,
+#endif
 	0,		0
 };
 
@@ -90,6 +93,161 @@ const Namval_t		log_severity[] =
 	"debug",	LOG_DEBUG,
 	0,		0
 };
+
+#if _UWIN
+
+/*
+ * open /dev/(fdp|tcp|udp)/HOST/SERVICE for read
+ */
+
+#include <ctype.h>
+#include <ls.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <netdb.h>
+#include <netinet/in.h>
+
+#if !defined(htons) && !_lib_htons
+#	define htons(x)	(x)
+#endif
+#if !defined(htonl) && !_lib_htonl
+#	define htonl(x)	(x)
+#endif
+
+#ifndef INADDR_LOOPBACK
+#define INADDR_LOOPBACK		0x7f000001L
+#endif
+
+/*
+ * convert s to sockaddr_in
+ * -1 returned on error
+ */
+
+static int
+str2inet(register char* s, char* prot, struct sockaddr_in* addr)
+{
+	register int	c;
+	register int	v;
+	register int	n = 0;
+	unsigned long	a = 0;
+	unsigned short	p = 0;
+
+	if (!memcmp(s, "local/", 6))
+	{
+		a = INADDR_LOOPBACK;
+		n = 4;
+		s += 6;
+	}
+	else if (!isdigit(*s))
+	{
+		struct hostent*	hp;
+		char*		e = strchr(s, '/');
+
+		if (!(e = strchr(s, '/')))
+			return -1;
+		*e = 0;
+		hp = gethostbyname(s);
+		*e = '/';
+		if (!hp || hp->h_addrtype != AF_INET || hp->h_length > sizeof(struct in_addr))
+			return -1;
+		a = (unsigned long)((struct in_addr*)hp->h_addr)->s_addr;
+		n = 6;
+		s = e + 1;
+	}
+	for (;;)
+	{
+		v = 0;
+		while ((c = *s++) >= '0' && c <= '9')
+			v = v * 10 + c - '0';
+		if (++n <= 4)
+			a = (a << 8) | (v & 0xff);
+		else
+		{
+			if (n <= 5)
+				a = htonl(a);
+			if (c)
+			{
+				struct servent*	sp;
+
+				if (!(sp = getservbyname(s - 1, prot)))
+					return -1;
+				p = sp->s_port;
+			}
+			else
+				p = htons(v);
+			break;
+		}
+		if (c != '.' && c != '/')
+			return -1;
+	}
+	memset((char*)addr, 0, sizeof(*addr));
+	addr->sin_family = AF_INET;
+	addr->sin_addr.s_addr = a;
+	addr->sin_port = p;
+	return 0;
+}
+
+/*
+ * call this after open fails to see if path is a socket
+ */
+
+int
+sockopen(const char* path)
+{
+	int			fd;
+	struct sockaddr_in	addr;
+	char			buf[PATH_MAX];
+
+	if (pathgetlink(path, buf, sizeof(buf)) <= 0)
+	{
+		if (strlen(path) >= sizeof(buf))
+			return -1;
+		strcpy(buf, path);
+	}
+#if LOCAL
+	{
+		int			ul;
+		struct sockaddr_un	ua;
+		struct stat		st;
+
+		if ((ul = strlen(buf)) < sizeof(ua.sun_path) && !stat(buf, &st) && S_ISSOCK(st.st_mode))
+		{
+			if ((fd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0)
+				return -1;
+			ua.sun_family = AF_UNIX;
+			strcpy(ua.sun_path, buf);
+			ul += sizeof(ua.sun_family) + 1;
+			if (!connect(fd, (struct sockaddr*)&ua, ul))
+				return fd;
+			close(fd);
+			return -1;
+		}
+	}
+#endif
+	if (!strmatch(buf, "/dev/(tcp|udp)/*/*"))
+		return -1;
+	buf[8] = 0;
+	if (str2inet(buf + 9, buf + 5, &addr))
+		return -1;
+	if ((fd = socket(AF_INET, buf[5] == 't' ? SOCK_STREAM : SOCK_DGRAM, 0)) < 0)
+		return -1;
+	if (connect(fd, (struct sockaddr*)&addr, sizeof(addr)))
+	{
+		close(fd);
+		return -1;
+	}
+	return fd;
+}
+
+#else
+
+int
+sockopen(const char* path)
+{
+	return -1;
+}
+
+#endif
 
 void
 sendlog(const char* msg)
@@ -112,7 +270,7 @@ sendlog(const char* msg)
 				continue;
 			if (*(s = p->name) != '/' && !(s = pathpath(buf, s, "", PATH_REGULAR|PATH_READ)))
 				continue;
-			if ((log.fd = open(s, O_CREAT|O_WRONLY|O_APPEND|O_NOCTTY)) < 0)
+			if ((log.fd = open(s, O_WRONLY|O_APPEND|O_NOCTTY)) < 0 && (log.fd = sockopen(s)) < 0)
 				continue;
 			fcntl(log.fd, F_SETFD, FD_CLOEXEC);
 		}

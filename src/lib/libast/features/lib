@@ -1,4 +1,5 @@
 cmd	universe
+
 hdr	dirent,direntry,filio,fmtmsg,fnmatch,jioctl,libgen
 hdr	locale,mman,ndir,nl_types,syslog,utime,vfork,wctype
 hdr	wchar note{ <wchar.h> and isw*() really work }end execute{
@@ -9,7 +10,9 @@ hdr	wchar note{ <wchar.h> and isw*() really work }end execute{
 		return iswalnum(w) == 0;
 	}
 }end
+
 dat	_tzname,tzname
+
 lib	BSDsetpgrp NutForkExecve
 lib	_cleanup
 lib	atexit,bcopy,bzero,catclose,catgets,catopen,confstr,dirread,dup2
@@ -27,15 +30,19 @@ lib	spawnve,spawnveg,spawnvp,spawnvpe,strchr,strcoll,strdup,strerror
 lib	strcasecmp,strncasecmp,strrchr,strtod,strtol,strtoll,strtoul,strtoull
 lib	strxfrm,strftime,swab,symlink,sysconf,syslog
 lib	telldir,tmpnam,tzset,universe,unlink,utime,vfork,wctype
+lib	ftruncate,truncate
 lib	creat64,fstat64,fstatvfs64,ftruncate64 -D_LARGEFILE64_SOURCE
 lib	lseek64,lstat64,mmap64 -D_LARGEFILE64_SOURCE
 lib	open64,readdir64,stat64,statvfs64,truncate64 -D_LARGEFILE64_SOURCE
+
 mem	direct.d_reclen sys/types.h sys/dir.h
 mem	dirent.d_fileno,dirent.d_ino,dirent.d_namlen,dirent.d_off,dirent.d_reclen sys/types.h dirent.h
 mem	DIR sys/types.h - dirent.h - sys/dir.h
 mem	DIR.dd_fd sys/types.h - dirent.h - sys/dir.h
+
 sys	dir,filio,jioctl,localedef,mman,ptem,resource
 sys	socket,stream,universe,vfork
+
 typ	off64_t -D_LARGEFILE64_SOURCE
 typ	struct.dirent64 -D_LARGEFILE64_SOURCE dirent.h
 
@@ -134,6 +141,10 @@ tst	pipe_rw note{ full duplex pipes }end execute{
 	_END_EXTERNS_
 	main()
 	{
+	#if defined(__sgi) || defined(_sgi) || defined(sgi)
+		/* boot tuneable pipes force one way for bin compatibility */
+		return 1;
+	#else
 		static char	test[] = "test\n";
 		int		io[2];
 		char		buf[sizeof(test)];
@@ -145,6 +156,7 @@ tst	pipe_rw note{ full duplex pipes }end execute{
 		if (read(io[1], buf, sizeof(test)) != sizeof(test)) return 1;
 		if (strcmp(test, buf)) return 1;
 		return 0;
+	#endif
 	}
 }end
 
@@ -429,4 +441,26 @@ tst	no64 note{ largefile 64 broken }end execute{
 	echo "#undef	_lib_stat64"
 	echo "#undef	_lib_statvfs64"
 	echo "#undef	_lib_truncate64"
+}end
+
+tst	rotten note{ rotten apple? }end execute{
+	#include <string.h>
+	main()
+	{
+		char	buf[1024];
+		return memccpy(buf, "abc", 0, sizeof(buf)) == (buf + 4);	
+	}
+}end pass{
+	echo "#undef	_lib_memccpy	/* rotten apple? */"
+}end
+
+std	malloc note{ stuck with standard malloc -- wimp-o mach? }end noexecute{
+	_BEGIN_EXTERNS_
+	#if _STD_
+	void* calloc(unsigned n, unsigned m) { return 0; }
+	#else
+	void* calloc(n, m) unsigned n, m; { return 0; }
+	#endif
+	_END_EXTERNS_
+	main() { return 0; }
 }end

@@ -11,11 +11,14 @@ contributor=(
 
 	[alb]="Adam Buchsbaum <alb@research.att.com>"
 	[kwc]="Ken Church <kwc@research.att.com>"
+	[griffin]="Tim Griffin <griffin@research.att.com>"
 	[jlk]="Jeff Korn <jlk@research.att.com>"
-	[ek]="Lefty Koutsofios <ek@research.at.com>"
+	[ek]="Lefty Koutsofios <ek@research.att.com>"
 	[bala]="Bala Krishnamurthy <bala@research.att.com>"
 	[ekrell]="Eduardo Krell <ekrell@adexus.cl>"
 	[doug]="Doug McIlroy <doug@research.bell-labs.com>"
+	[bwk]="Brian Kernigham <bwk@research.bell-labs.com>"
+	[dmr]="Dennis Ritchie <dmr@research.bell-labs.com>"
 )
 
 license=(

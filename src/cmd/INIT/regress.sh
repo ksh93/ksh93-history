@@ -1,33 +1,33 @@
-################################################################
-#                                                              #
-#           This software is part of the ast package           #
-#              Copyright (c) 1999-2000 AT&T Corp.              #
-#      and it may only be used by you under license from       #
-#                     AT&T Corp. ("AT&T")                      #
-#       A copy of the Source Code Agreement is available       #
-#              at the AT&T Internet web site URL               #
-#                                                              #
-#     http://www.research.att.com/sw/license/ast-open.html     #
-#                                                              #
-#      If you have copied this software without agreeing       #
-#      to the terms of the license you are infringing on       #
-#         the license and copyright and are violating          #
-#             AT&T's intellectual property rights.             #
-#                                                              #
-#               This software was created by the               #
-#               Network Services Research Center               #
-#                      AT&T Labs Research                      #
-#                       Florham Park NJ                        #
-#                                                              #
-#             Glenn Fowler <gsf@research.att.com>              #
-#                                                              #
-################################################################
+####################################################################
+#                                                                  #
+#             This software is part of the ast package             #
+#                Copyright (c) 1999-2000 AT&T Corp.                #
+#        and it may only be used by you under license from         #
+#                       AT&T Corp. ("AT&T")                        #
+#         A copy of the Source Code Agreement is available         #
+#                at the AT&T Internet web site URL                 #
+#                                                                  #
+#       http://www.research.att.com/sw/license/ast-open.html       #
+#                                                                  #
+#        If you have copied this software without agreeing         #
+#        to the terms of the license you are infringing on         #
+#           the license and copyright and are violating            #
+#               AT&T's intellectual property rights.               #
+#                                                                  #
+#                 This software was created by the                 #
+#                 Network Services Research Center                 #
+#                        AT&T Labs Research                        #
+#                         Florham Park NJ                          #
+#                                                                  #
+#               Glenn Fowler <gsf@research.att.com>                #
+#                                                                  #
+####################################################################
 : regress - run regression tests in command.tst
 
 command=regress
 case $(getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt) in
 0123)	USAGE=$'
-[-?@(#)regress (AT&T Labs Research) 2000-04-30]
+[-?@(#)regress (AT&T Labs Research) 2000-10-22]
 '$USAGE_LICENSE$'
 [+NAME?regress - run regression tests]
 [+DESCRIPTION?\bregress\b runs the tests in \aunit\a, or \aunit\a\b.tst\b
@@ -663,7 +663,8 @@ function SET # [no]name[=value]
 function VIEW # var [ file ]
 {
 	nameref var=$1
-	typeset bwd file pwd view root offset
+	typeset i bwd file pwd view root offset
+set -x
 	case $# in
 	1)	file=$1 ;;
 	*)	file=$2 ;;
@@ -673,29 +674,47 @@ function VIEW # var [ file ]
 	bwd=${bwd%/*}
 	case $var in
 	'')	var=$pwd/$file
-		if	test ! -r $var
-		then	ifs=$IFS
-			IFS=:
-			set -- $VPATH
-			IFS=$ifs
-			for view
-			do	case $view in
-				/*)	;;
-				*)	view=$pwd/$view ;;
+		if	test -r $file
+		then	if	test ! -d $file
+			then	return
+			fi
+			for i in $file/*
+			do	if	test -r $i
+				then	return
+				fi
+				break
+			done
+		fi
+		ifs=$IFS
+		IFS=:
+		set -- $VPATH
+		IFS=$ifs
+		for view
+		do	case $view in
+			/*)	;;
+			*)	view=$pwd/$view ;;
+			esac
+			case $offset in
+			'')	case $pwd in
+				$view/*)	offset=${pwd#$view} ;;
+				*)		offset=${bwd#$view} ;;
 				esac
-				case $offset in
-				'')	case $pwd in
-					$view/*)	offset=${pwd#$view} ;;
-					*)		offset=${bwd#$view} ;;
-					esac
-					;;
-				esac
-				if	test -r $view$offset/$file
+				;;
+			esac
+			if	test -r $view$offset/$file
+			then	if	test ! -d $view$offset/$file
 				then	var=$view$offset/$file
 					break
 				fi
-			done
-		fi
+				for i in $view$offset/$file/*
+				do	if	test -f $i
+					then	var=$view$offset/$file
+						break
+					fi
+					break
+				done
+			fi
+		done
 		;;
 	esac
 }

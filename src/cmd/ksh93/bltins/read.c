@@ -1,27 +1,27 @@
-/***************************************************************
-*                                                              *
-*           This software is part of the ast package           *
-*              Copyright (c) 1982-2000 AT&T Corp.              *
-*      and it may only be used by you under license from       *
-*                     AT&T Corp. ("AT&T")                      *
-*       A copy of the Source Code Agreement is available       *
-*              at the AT&T Internet web site URL               *
-*                                                              *
-*     http://www.research.att.com/sw/license/ast-open.html     *
-*                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
-*             AT&T's intellectual property rights.             *
-*                                                              *
-*               This software was created by the               *
-*               Network Services Research Center               *
-*                      AT&T Labs Research                      *
-*                       Florham Park NJ                        *
-*                                                              *
-*              David Korn <dgk@research.att.com>               *
-*                                                              *
-***************************************************************/
+/*******************************************************************
+*                                                                  *
+*             This software is part of the ast package             *
+*                Copyright (c) 1982-2000 AT&T Corp.                *
+*        and it may only be used by you under license from         *
+*                       AT&T Corp. ("AT&T")                        *
+*         A copy of the Source Code Agreement is available         *
+*                at the AT&T Internet web site URL                 *
+*                                                                  *
+*       http://www.research.att.com/sw/license/ast-open.html       *
+*                                                                  *
+*        If you have copied this software without agreeing         *
+*        to the terms of the license you are infringing on         *
+*           the license and copyright and are violating            *
+*               AT&T's intellectual property rights.               *
+*                                                                  *
+*                 This software was created by the                 *
+*                 Network Services Research Center                 *
+*                        AT&T Labs Research                        *
+*                         Florham Park NJ                          *
+*                                                                  *
+*                David Korn <dgk@research.att.com>                 *
+*                                                                  *
+*******************************************************************/
 #pragma prototyped
 /*
  * read [-Aprs] [-d delim] [-u filenum] [-t timeout] [name...]
@@ -167,6 +167,7 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 	char			was_escape = 0;
 	char			use_stak = 0;
 	char			was_write = 0;
+	char			was_share = 0;
 	int			rel;
 	long			array_index = 0;
 	void			*timeslot=0;
@@ -228,6 +229,8 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 	}
 	sfclrerr(iop);
 	was_write = sfset(iop,SF_WRITE,0);
+	if(fd==0)
+		was_share = sfset(iop,SF_SHARE,1);
 	if(timeout || was_write || ((flags>>D_FLAG) && (shp->fdstatus[fd]&IOTTY)))
 	{
 		sh_pushcontext(&buff,1);
@@ -504,6 +507,8 @@ done:
 		sh_popcontext(&buff);
 	if(was_write)
 		sfset(iop,SF_WRITE,1);
+	if(fd==0 && !was_share)
+		was_share = sfset(iop,SF_SHARE,0);
 	nv_close(np);
 	if((flags>>D_FLAG) && (shp->fdstatus[fd]&IOTTY))
 		tty_cooked(fd);

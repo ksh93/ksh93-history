@@ -1,27 +1,27 @@
-/***************************************************************
-*                                                              *
-*           This software is part of the ast package           *
-*              Copyright (c) 1982-2000 AT&T Corp.              *
-*      and it may only be used by you under license from       *
-*                     AT&T Corp. ("AT&T")                      *
-*       A copy of the Source Code Agreement is available       *
-*              at the AT&T Internet web site URL               *
-*                                                              *
-*     http://www.research.att.com/sw/license/ast-open.html     *
-*                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
-*             AT&T's intellectual property rights.             *
-*                                                              *
-*               This software was created by the               *
-*               Network Services Research Center               *
-*                      AT&T Labs Research                      *
-*                       Florham Park NJ                        *
-*                                                              *
-*              David Korn <dgk@research.att.com>               *
-*                                                              *
-***************************************************************/
+/*******************************************************************
+*                                                                  *
+*             This software is part of the ast package             *
+*                Copyright (c) 1982-2000 AT&T Corp.                *
+*        and it may only be used by you under license from         *
+*                       AT&T Corp. ("AT&T")                        *
+*         A copy of the Source Code Agreement is available         *
+*                at the AT&T Internet web site URL                 *
+*                                                                  *
+*       http://www.research.att.com/sw/license/ast-open.html       *
+*                                                                  *
+*        If you have copied this software without agreeing         *
+*        to the terms of the license you are infringing on         *
+*           the license and copyright and are violating            *
+*               AT&T's intellectual property rights.               *
+*                                                                  *
+*                 This software was created by the                 *
+*                 Network Services Research Center                 *
+*                        AT&T Labs Research                        *
+*                         Florham Park NJ                          *
+*                                                                  *
+*                David Korn <dgk@research.att.com>                 *
+*                                                                  *
+*******************************************************************/
 #pragma prototyped
 /*
  *  completion.c - command and file completion for shell editors
@@ -87,6 +87,7 @@ ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode)
 	int addstar;
 	int rval = 0;
 	int strip;
+	int var=0;
 	int nomarkdirs = !sh_isoption(SH_MARKDIRS);
 #ifdef SHOPT_MULTIBYTE
 	{
@@ -108,6 +109,7 @@ ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode)
 	ap->argnxt.ap = 0;
 	{
 		register int c;
+		var = isaname(*out);
 		if(out>outbuff)
 		{
 			/* go to beginning of word */
@@ -115,6 +117,15 @@ ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode)
 			{
 				out--;
 				c = *(unsigned char*)out;
+				if(c=='$' && var==1)
+					var= 2*isaletter(out[1]);
+				else if(var==2)
+				{
+					if(c!='"')
+						var++;
+				}
+				else if(!isaname(c))
+					var = 0;
 			}
 			while(out>outbuff && !ismeta(c));
 			/* copy word into arg */
@@ -127,6 +138,18 @@ ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode)
 		/* addstar set to zero if * should not be added */
 		addstar = '*';
 		strip = 1;
+		var = var==3;
+		if(var)
+		{
+			stakputs("${!");
+			addstar = 0;
+			if(*out++=='"')
+			{
+				var=2;
+				out++;
+			}
+
+		}
 		/* copy word to arg */
 		do
 		{
@@ -139,6 +162,8 @@ ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode)
 					strip = 0;
 				dir = out+1;
 			}
+			if(var && c==0)
+				stakputs("@}");
 			stakputc(c);
 			out++;
 
@@ -147,7 +172,7 @@ ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode)
 			dir = ".";
 
 		out--;
-		if(mode=='\\')
+		if(!var && mode=='\\')
 			addstar = '*';
 		if(*begin=='~' && !strchr(begin,'/'))
 			addstar = 0;
@@ -164,12 +189,12 @@ ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode)
 		register int size;
 		while(cp>outbuff && ((size=cp[-1])==' ' || size=='\t'))
 			cp--;
-		if((cp==outbuff || strchr(";&|(",size)) && *begin!='~' && !strchr(ap->argval,'/'))
+		if(!var && ((cp==outbuff || strchr(";&|(",size)) && *begin!='~' && !strchr(ap->argval,'/')))
 		{
 			cmd_completion=1;
 			sh_onstate(SH_COMPLETE);
 		}
-		com = sh_argbuild(&narg,comptr);
+		com = sh_argbuild(&narg,comptr,0);
 		sh_offstate(SH_COMPLETE);
                 /* allow a search to be aborted */
 		if(sh.trapnote&SH_SIGSET)
@@ -202,7 +227,7 @@ ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode)
 		if(mode=='\\')
 		{
 			/* just expand until name is unique */
-			size += strlen(*com);
+			size += var+strlen(*com);
 		}
 		else
 		{
@@ -210,7 +235,7 @@ ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode)
 			{
 				char **savcom = com;
 				while (*com)
-					size += strlen(sh_fmtq(*com++));
+					size += var+strlen(sh_fmtq(*com++));
 				com = savcom;
 			}
 		}
@@ -223,6 +248,12 @@ ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode)
 		/* save remainder of the buffer */
 		if(*out)
 			left=stakcopy(out);
+		if(var)
+		{
+			if(var==2)
+				*begin++ = '"';
+			*begin++ = '$';
+		}
 		if(cmd_completion && mode=='\\')
 			out = strcopy(begin,path_basename(cp= *com++));
 		else if(mode=='*')
@@ -235,7 +266,7 @@ ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode)
 			int nocase;
 			if(saveout=astconf("PATH_ATTRIBUTES",dir,(char*)0))
 				nocase = (strchr(saveout,'c')!=0);
-			if(addstar==0)
+			if(!var && addstar==0)
 				*out++ = '/';
 			saveout= ++out;
 			while (*com && *begin)
@@ -261,6 +292,8 @@ ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode)
 				/* add quotes if necessary */
 				if((cp=sh_fmtq(begin))!=begin)
 					out = strcopy(begin,cp);
+				if(var==2)
+					*out++='"';
 				*out++ = ' ';
 				*out = 0;
 			}
@@ -270,11 +303,23 @@ ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode)
 				ed_ringbell();
 		}
 		else
+		{
 			while (*com)
 			{
+				if(var==2)
+					*out++  = '"';
 				*out++  = ' ';
+				if(var)
+				{
+					if(var==2)
+						*out++  = '"';
+					*out++  = '$';
+				}
 				out = strcopy(out,sh_fmtq(*com++));
 			}
+			if(var==2)
+				*out++  = '"';
+		}
 		*cur = (out-outbuff);
 		/* restore rest of buffer */
 		if(left)
@@ -359,6 +404,6 @@ ed_fulledit(Edit_t *ep)
 	}
 	cp = strcopy((char*)ep->e_inbuf,e_runvi);
 	cp = strcopy(cp, fmtbase((long)ep->e_hline,10,0));
-	ep->e_eol = ((unsigned char*)cp - (unsigned char*)ep->e_inbuf)-1;
+	ep->e_eol = ((unsigned char*)cp - (unsigned char*)ep->e_inbuf)-(sh_isoption(SH_VI)!=0);
 	return(0);
 }

@@ -41,6 +41,8 @@ WWWTYPES =
 	end
 	%.html : %.1 (html_info)
 		$(MM2HTML) $(MM2HTMLFLAGS) $(>) > $(<)
+	%-man.html : $(BINDIR)/% (html_info)
+		ignore $(>) --html 2> $(<)
 	.DO.WWW.MAN : .USE
 		if	test '' = '$(*)'
 		then	if	[[ "$( $(<:B) '--???html' -- 2>&1 )" == version=[1-9]* ]]
@@ -223,7 +225,7 @@ WWWTYPES =
 		pax -wvf $(<:P=A) -z $(*:N=*.pax:P=A) .
 
 /*
- * [ dir ] :WWWPAGE: file.mm file
+ * [ dir ] :WWWPAGE: [ source ... ] file.mm file
  *
  *	*.mm generates *.html
  *	other files copied to $(WWWDIR)[/dir]
@@ -233,14 +235,17 @@ WWWTYPES =
 ":WWWPAGE:" : .MAKE .OPERATOR
 	local B D I J O X G A
 	A = 0
-	if D = "$(<)"
+	if D = "$(<:O=1)"
 		B := $(D:B)
 		if D != "/*"
 			D := $(WWWDIR)/$(D)
 			$(D) :INSTALLDIR:
 			.WWW.LOCAL : $(D)
 		end
-		.WWW.LOCAL : $(WWWDIR)/man/man1/$(B).html
+		for I $(<:B)
+			.WWW.LOCAL : $(WWWDIR)/man/man1/$(I).html
+			$(WWWDIR)/man/man1/$(I).html : .DONTCARE
+		end
 		for I $(>)
 			if I == "-"
 				let A = !A
@@ -248,6 +253,10 @@ WWWTYPES =
 			end
 			if A || I == "$(WWWSAVE)"
 				:: $(I)
+				continue
+			end
+			if "$(I:T=FD)"
+				.SOURCE : $(I)
 				continue
 			end
 			if I == "*.html"
@@ -289,6 +298,10 @@ WWWTYPES =
 			end
 			if A || I == "$(WWWSAVE)"
 				:: $(I)
+				continue
+			end
+			if "$(I:T=FD)"
+				.SOURCE : $(I)
 				continue
 			end
 			if I == "*.html"

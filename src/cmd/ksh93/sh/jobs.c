@@ -1,27 +1,27 @@
-/***************************************************************
-*                                                              *
-*           This software is part of the ast package           *
-*              Copyright (c) 1982-2000 AT&T Corp.              *
-*      and it may only be used by you under license from       *
-*                     AT&T Corp. ("AT&T")                      *
-*       A copy of the Source Code Agreement is available       *
-*              at the AT&T Internet web site URL               *
-*                                                              *
-*     http://www.research.att.com/sw/license/ast-open.html     *
-*                                                              *
-*      If you have copied this software without agreeing       *
-*      to the terms of the license you are infringing on       *
-*         the license and copyright and are violating          *
-*             AT&T's intellectual property rights.             *
-*                                                              *
-*               This software was created by the               *
-*               Network Services Research Center               *
-*                      AT&T Labs Research                      *
-*                       Florham Park NJ                        *
-*                                                              *
-*              David Korn <dgk@research.att.com>               *
-*                                                              *
-***************************************************************/
+/*******************************************************************
+*                                                                  *
+*             This software is part of the ast package             *
+*                Copyright (c) 1982-2000 AT&T Corp.                *
+*        and it may only be used by you under license from         *
+*                       AT&T Corp. ("AT&T")                        *
+*         A copy of the Source Code Agreement is available         *
+*                at the AT&T Internet web site URL                 *
+*                                                                  *
+*       http://www.research.att.com/sw/license/ast-open.html       *
+*                                                                  *
+*        If you have copied this software without agreeing         *
+*        to the terms of the license you are infringing on         *
+*           the license and copyright and are violating            *
+*               AT&T's intellectual property rights.               *
+*                                                                  *
+*                 This software was created by the                 *
+*                 Network Services Research Center                 *
+*                        AT&T Labs Research                        *
+*                         Florham Park NJ                          *
+*                                                                  *
+*                David Korn <dgk@research.att.com>                 *
+*                                                                  *
+*******************************************************************/
 #pragma prototyped
 /*
  *  Job control for UNIX Shell
@@ -782,7 +782,7 @@ int job_kill(register struct process *pw,register int sig)
 #else
 #	define stopsig	1
 #endif	/* SIGTSTP */
-	errno = 0;
+	errno = ECHILD;
 	if(pw==0)
 		goto error;
 	pid = pw->p_pid;
@@ -805,7 +805,8 @@ int job_kill(register struct process *pw,register int sig)
 				{
 					if(pw->p_flag&P_STOPPED)
 						pw->p_flag &= ~(P_STOPPED|P_SIGNALLED);
-					kill(pid,SIGCONT);
+					if(sig)
+						kill(pid,SIGCONT);
 				}
 			}
 			else
@@ -813,7 +814,8 @@ int job_kill(register struct process *pw,register int sig)
 				if((r = killpg(-pid,sig))>=0 && !stopsig)
 				{
 					job_unstop(job_bypid(pw->p_pid));
-					killpg(-pid,SIGCONT);
+					if(sig)
+						killpg(-pid,SIGCONT);
 				}
 			}
 		}
@@ -1121,6 +1123,7 @@ void	job_wait(register pid_t pid)
 	if(pw)
 		sfprintf(sfstderr,"%d: job_wait flags=%o\n",getpid(),pw->p_flag);
 #endif /* DEBUG*/
+	errno = 0;
 	while(1)
 	{
 		job.in_critical = 1;

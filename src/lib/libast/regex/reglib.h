@@ -1,29 +1,29 @@
-/***************************************************************
-*                                                              *
-*           This software is part of the ast package           *
-*              Copyright (c) 1985-2000 AT&T Corp.              *
-*      and it may only be used by you under license from       *
-*                     AT&T Corp. ("AT&T")                      *
-*       A copy of the Source Code Agreement is available       *
-*              at the AT&T Internet web site URL               *
-*                                                              *
-*     http://www.research.att.com/sw/license/ast-open.html     *
-*                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
-*             AT&T's intellectual property rights.             *
-*                                                              *
-*               This software was created by the               *
-*               Network Services Research Center               *
-*                      AT&T Labs Research                      *
-*                       Florham Park NJ                        *
-*                                                              *
-*             Glenn Fowler <gsf@research.att.com>              *
-*              David Korn <dgk@research.att.com>               *
-*               Phong Vo <kpv@research.att.com>                *
-*                                                              *
-***************************************************************/
+/*******************************************************************
+*                                                                  *
+*             This software is part of the ast package             *
+*                Copyright (c) 1985-2000 AT&T Corp.                *
+*        and it may only be used by you under license from         *
+*                       AT&T Corp. ("AT&T")                        *
+*         A copy of the Source Code Agreement is available         *
+*                at the AT&T Internet web site URL                 *
+*                                                                  *
+*       http://www.research.att.com/sw/license/ast-open.html       *
+*                                                                  *
+*        If you have copied this software without agreeing         *
+*        to the terms of the license you are infringing on         *
+*           the license and copyright and are violating            *
+*               AT&T's intellectual property rights.               *
+*                                                                  *
+*                 This software was created by the                 *
+*                 Network Services Research Center                 *
+*                        AT&T Labs Research                        *
+*                         Florham Park NJ                          *
+*                                                                  *
+*               Glenn Fowler <gsf@research.att.com>                *
+*                David Korn <dgk@research.att.com>                 *
+*                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
+*******************************************************************/
 #pragma prototyped
 
 /*
@@ -46,6 +46,7 @@
 
 #define alloc		_reg_alloc
 #define drop		_reg_drop
+#define fatal		_reg_fatal
 #define state		_reg_state
 
 #include "regex.h"
@@ -147,6 +148,7 @@ typedef struct
 typedef struct Reginfo			/* library private regex_t info	*/
 {
 	struct Rex*	rex;		/* compiled expression		*/
+	regdisc_t*	disc;		/* REG_DISCIPLINE discipline	*/
 	unsigned char*	map;		/* for REG_ICASE folding	*/
 	const regex_t*	regex;		/* from regexec			*/
 	unsigned char*	beg;		/* beginning of string		*/
@@ -157,7 +159,7 @@ typedef struct Reginfo			/* library private regex_t info	*/
 	regmatch_t*	best;		/* ditto in best match yet	*/
 	Stk_pos_t	stk;		/* exec stack pos		*/
 	size_t		min;		/* minimum match length		*/
-	int		flags;		/* flags from regcomp()		*/
+	regflags_t	flags;		/* flags from regcomp()		*/
 	int		error;		/* last error			*/
 	int		explicit;	/* explicit match on this char	*/
 	unsigned char	hard;		/* hard comp			*/
@@ -334,14 +336,12 @@ typedef struct					/* shared state		*/
 	unsigned char	ident[UCHAR_MAX+1];
 	unsigned char	fold[UCHAR_MAX+1];
 	short*		magic[UCHAR_MAX+1];
-	void*		handle;
-	void*		(*resize)(void*,void*,size_t);
-	int		nofree;
+	regdisc_t	disc;
 } State_t;
 
 extern State_t		state;
 
-extern void*		alloc(void*, size_t);
-extern void		drop(Rex_t*);
+extern void*		alloc(regdisc_t*, void*, size_t);
+extern void		drop(regdisc_t*, Rex_t*);
 
 #endif

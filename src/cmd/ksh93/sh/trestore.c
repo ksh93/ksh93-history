@@ -1,27 +1,27 @@
-/***************************************************************
-*                                                              *
-*           This software is part of the ast package           *
-*              Copyright (c) 1982-2000 AT&T Corp.              *
-*      and it may only be used by you under license from       *
-*                     AT&T Corp. ("AT&T")                      *
-*       A copy of the Source Code Agreement is available       *
-*              at the AT&T Internet web site URL               *
-*                                                              *
-*     http://www.research.att.com/sw/license/ast-open.html     *
-*                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
-*             AT&T's intellectual property rights.             *
-*                                                              *
-*               This software was created by the               *
-*               Network Services Research Center               *
-*                      AT&T Labs Research                      *
-*                       Florham Park NJ                        *
-*                                                              *
-*              David Korn <dgk@research.att.com>               *
-*                                                              *
-***************************************************************/
+/*******************************************************************
+*                                                                  *
+*             This software is part of the ast package             *
+*                Copyright (c) 1982-2000 AT&T Corp.                *
+*        and it may only be used by you under license from         *
+*                       AT&T Corp. ("AT&T")                        *
+*         A copy of the Source Code Agreement is available         *
+*                at the AT&T Internet web site URL                 *
+*                                                                  *
+*       http://www.research.att.com/sw/license/ast-open.html       *
+*                                                                  *
+*        If you have copied this software without agreeing         *
+*        to the terms of the license you are infringing on         *
+*           the license and copyright and are violating            *
+*               AT&T's intellectual property rights.               *
+*                                                                  *
+*                 This software was created by the                 *
+*                 Network Services Research Center                 *
+*                        AT&T Labs Research                        *
+*                         Florham Park NJ                          *
+*                                                                  *
+*                David Korn <dgk@research.att.com>                 *
+*                                                                  *
+*******************************************************************/
 #pragma prototyped
 /*
  * David Korn
@@ -109,6 +109,9 @@ static union anynode *r_tree()
 			t = getnode(arithnod);
 			t->ar.arline = sfgetu(infile);
 			t->ar.arexpr = r_arg();
+			t->ar.arcomp = 0;
+			if((t->ar.arexpr)->argflag&ARG_RAW)
+				 t->ar.arcomp = sh_arithcomp((t->ar.arexpr)->argval);
 			break;
 		case TFOR:
 			t = getnode(fornod);
@@ -119,6 +122,10 @@ static union anynode *r_tree()
 		case TSW:
 			t = getnode(swnod);
 			t->sw.swarg = r_arg();
+			if(t->tre.tretyp&COMSCAN)
+				t->sw.swio = r_redirect();
+			else
+				t->sw.swio = 0;
 			t->sw.swlst = r_switch();
 			break;
 		case TFUN:
@@ -189,7 +196,7 @@ static struct argnod *r_arg(void)
 		}
 		else
 			ap = (struct argnod*)stakfreeze(0);
-		if(*ap->argval==0 && ap->argflag==0)
+		if(*ap->argval==0 && (ap->argflag&~ARG_APPEND)==0)
 		{
 			struct fornod *fp = (struct fornod*)getnode(fornod);
 			fp->fortre = r_tree();

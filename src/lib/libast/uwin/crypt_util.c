@@ -1,6 +1,6 @@
 #ifndef _UWIN
 
-int _STUB_crypt_util;
+void _STUB_crypt_util(){}
 
 #else
 

@@ -1,28 +1,28 @@
-/***************************************************************
-*                                                              *
-*           This software is part of the ast package           *
-*              Copyright (c) 1992-2000 AT&T Corp.              *
-*      and it may only be used by you under license from       *
-*                     AT&T Corp. ("AT&T")                      *
-*       A copy of the Source Code Agreement is available       *
-*              at the AT&T Internet web site URL               *
-*                                                              *
-*     http://www.research.att.com/sw/license/ast-open.html     *
-*                                                              *
-*      If you have copied this software without agreeing       *
-*      to the terms of the license you are infringing on       *
-*         the license and copyright and are violating          *
-*             AT&T's intellectual property rights.             *
-*                                                              *
-*               This software was created by the               *
-*               Network Services Research Center               *
-*                      AT&T Labs Research                      *
-*                       Florham Park NJ                        *
-*                                                              *
-*             Glenn Fowler <gsf@research.att.com>              *
-*              David Korn <dgk@research.att.com>               *
-*                                                              *
-***************************************************************/
+/*******************************************************************
+*                                                                  *
+*             This software is part of the ast package             *
+*                Copyright (c) 1992-2000 AT&T Corp.                *
+*        and it may only be used by you under license from         *
+*                       AT&T Corp. ("AT&T")                        *
+*         A copy of the Source Code Agreement is available         *
+*                at the AT&T Internet web site URL                 *
+*                                                                  *
+*       http://www.research.att.com/sw/license/ast-open.html       *
+*                                                                  *
+*        If you have copied this software without agreeing         *
+*        to the terms of the license you are infringing on         *
+*           the license and copyright and are violating            *
+*               AT&T's intellectual property rights.               *
+*                                                                  *
+*                 This software was created by the                 *
+*                 Network Services Research Center                 *
+*                        AT&T Labs Research                        *
+*                         Florham Park NJ                          *
+*                                                                  *
+*               Glenn Fowler <gsf@research.att.com>                *
+*                David Korn <dgk@research.att.com>                 *
+*                                                                  *
+*******************************************************************/
 #pragma prototyped
 /*
  * Glenn Fowler
@@ -32,7 +32,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)getconf (AT&T Labs Research) 2000-03-17\n]"
+"[-?\n@(#)getconf (AT&T Labs Research) 2000-10-31\n]"
 USAGE_LICENSE
 "[+NAME?getconf - get configuration values]"
 "[+DESCRIPTION?\bgetconf\b displays the system configuration value for"
@@ -71,6 +71,15 @@ USAGE_LICENSE
 "\n[ name [ path [ value ] ] ... ]\n"
 "\n"
 
+"[+ENVIRONMENT]{"
+"	[+_AST_FEATURES?Process local writable values that are different from"
+"		the default are stored in the \b_AST_FEATURES\b environment"
+"		variable. The \b_AST_FEATURES\b value is a space separated"
+"		list of \aname\a \apath\a \avalue\a 3-tuples, where"
+"		\aname\a is the system configuration name, \apath\a is the"
+"		corresponding path, \b-\b if no path is applicable, and"
+"		\avalue\a is the system configuration value.]"
+"}"
 "[+SEE ALSO?\bpathchk\b(1), \bconfstr\b(2), \bpathconf\b(2),"
 "	\bsysconf\b(2), \bastgetconf\b(3)]"
 ;

@@ -1,27 +1,27 @@
-################################################################
-#                                                              #
-#           This software is part of the ast package           #
-#              Copyright (c) 1999-2000 AT&T Corp.              #
-#      and it may only be used by you under license from       #
-#                     AT&T Corp. ("AT&T")                      #
-#       A copy of the Source Code Agreement is available       #
-#              at the AT&T Internet web site URL               #
-#                                                              #
-#     http://www.research.att.com/sw/license/ast-open.html     #
-#                                                              #
-#      If you have copied this software without agreeing       #
-#      to the terms of the license you are infringing on       #
-#         the license and copyright and are violating          #
-#             AT&T's intellectual property rights.             #
-#                                                              #
-#               This software was created by the               #
-#               Network Services Research Center               #
-#                      AT&T Labs Research                      #
-#                       Florham Park NJ                        #
-#                                                              #
-#             Glenn Fowler <gsf@research.att.com>              #
-#                                                              #
-################################################################
+####################################################################
+#                                                                  #
+#             This software is part of the ast package             #
+#                Copyright (c) 1999-2000 AT&T Corp.                #
+#        and it may only be used by you under license from         #
+#                       AT&T Corp. ("AT&T")                        #
+#         A copy of the Source Code Agreement is available         #
+#                at the AT&T Internet web site URL                 #
+#                                                                  #
+#       http://www.research.att.com/sw/license/ast-open.html       #
+#                                                                  #
+#        If you have copied this software without agreeing         #
+#        to the terms of the license you are infringing on         #
+#           the license and copyright and are violating            #
+#               AT&T's intellectual property rights.               #
+#                                                                  #
+#                 This software was created by the                 #
+#                 Network Services Research Center                 #
+#                        AT&T Labs Research                        #
+#                         Florham Park NJ                          #
+#                                                                  #
+#               Glenn Fowler <gsf@research.att.com>                #
+#                                                                  #
+####################################################################
 # Glenn Fowler & Phong Vo
 # AT&T Labs Research
 #
@@ -35,7 +35,7 @@ case $-:$BASH_VERSION in
 esac
 
 command=iffe
-version=2000-03-17
+version=2000-10-01
 
 pkg() # package
 {
@@ -233,6 +233,7 @@ gothdr=
 gotlib=
 ifs=$IFS
 in=
+includes=
 intrinsic=
 libpaths="LD_LIBRARY_PATH LD_LIBRARYN32_PATH LD_LIBRARY64_PATH LIBPATH SHLIB_PATH"
 menu=
@@ -348,6 +349,8 @@ case `getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt` in
 	level 2 traces internal \biffe\b \bsh\b(1) actions.]#[level]
 [i:input?Sets the input file name to \afile\a, which
 	must contain \biffe\b statements.]:[file]
+[I:include?Adds \b-I\b\adir\a to the C compiler flags.]:[dir]
+[L:library?Adds \b-L\b\adir\a to the C compiler flags.]:[dir]
 [o:output?Sets the output file name to \afile\a.]:[file]
 [e:package?Sets the \bproto\b(1) package name to \aname\a.]:[name]
 [p:prototyped?Emits \b#pragma prototyped\b at the top of the
@@ -570,6 +573,8 @@ case `getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt` in
 		C)	set="$set set config :" ;;
 		d)	set="$set set debug $OPTARG :" ;;
 		i)	set="$set set input $OPTARG :" ;;
+		I)	set="$set set include $OPTARG :" ;;
+		L)	set="$set set library $OPTARG :" ;;
 		o)	set="$set set output $OPTARG :" ;;
 		e)	set="$set set package $OPTARG :" ;;
 		p)	set="$set set prototyped :" ;;
@@ -603,8 +608,14 @@ case `getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt` in
 		--d=*|--de=*|--deb=*|--debu=*|--debug=*)
 			REM=d`echo $1 | sed -e 's,[^=]*=,,'`
 			;;
-		--i=*|--in=*|--inp=*|--inpu=*|--input=*)
+		--inp=*|--inpu=*|--input=*)
 			REM=i`echo $1 | sed -e 's,[^=]*=,,'`
+			;;
+		--inc=*|--incl=*|--inclu=*|--includ=*|--include=*)
+			REM=I`echo $1 | sed -e 's,[^=]*=,,'`
+			;;
+		--l=*|--li=*|--lib=*|--libr=*|--libra=*|--librar=*|--library=*)
+			REM=L`echo $1 | sed -e 's,[^=]*=,,'`
 			;;
 		--o=*|--ou=*|--out=*|--outp=*|--outpu=*|--output=*)
 			REM=o`echo $1 | sed -e 's,[^=]*=,,'`
@@ -645,7 +656,7 @@ case `getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt` in
 			esac
 			eval `echo $REM | sed -e "s,\(.\)\(.*\),OPT='\1' REM='\2',"`
 			case $OPT in
-			[cdioePsS])
+			[cdiILoePsS])
 				case $REM in
 				'')	case $# in
 					0)	echo $command: -$OPT: option argument expected >&2
@@ -666,6 +677,8 @@ case `getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt` in
 			C)	set="$set set config :" ;;
 			d)	set="$set set debug $OPTARG :" ;;
 			i)	set="$set set input $OPTARG :" ;;
+			I)	set="$set set include $OPTARG :" ;;
+			L)	set="$set set library $OPTARG :" ;;
 			o)	set="$set set output $OPTARG :" ;;
 			e)	set="$set set package $OPTARG :" ;;
 			p)	set="$set set prototyped :" ;;
@@ -676,7 +689,7 @@ case `getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt` in
 			v)	set="$set set verbose :" ;;
 			*)	echo "Usage: $command [-aCpuv] [-c C-compiler-name [C-compiler-flags ...]] [-d level]
 	    [-i file] [-o file] [-e name] [-P text] [-s shell-path] [-S[flags]]
-	    [ - ] [ file.iffe | statement [ : statement ... ] ]" >&2
+	    [-I dir] [-L dir] [ - ] [ file.iffe | statement [ : statement ... ] ]" >&2
 				exit 2
 				;;
 			esac
@@ -839,6 +852,8 @@ do	case $in in
 				C)	op=config ;;
 				d)	op=debug ;;
 				i)	op=input ;;
+				I)	op=include ;;
+				L)	op=library ;;
 				o)	op=output ;;
 				e)	op=package ;;
 				p)	op=prototyped ;;
@@ -957,6 +972,16 @@ do	case $in in
 			esac
 			continue
 			;;
+		include)case $arg in
+			""|-)	includes= ;;
+			*)	includes="$includes -I$arg" ;;
+			esac
+			;;
+		library)for y in $libpaths
+			do	eval $y=\"\$$y:\$arg\"
+				eval export $y
+			done
+			;;
 		nodebug)exec 2>&$nullout
 			set -
 			continue
@@ -966,11 +991,12 @@ do	case $in in
 			defhdr=
 			usr=
 			deflib=
-			#2000-03-17#gothdr=
-			#2000-03-17#gotlib=
 			one=
 			puthdr=
 			putlib=
+			case $op in
+			output)	continue ;;
+			esac
 			;;
 		package)protoflags="$protoflags -e $arg"
 			continue
@@ -1005,7 +1031,7 @@ do	case $in in
 			;;
 		esac
 		arg=
-		cc=$occ
+		cc="$occ $includes"
 		fail=
 		hdr=
 		lib=
@@ -1324,6 +1350,9 @@ do	case $in in
 		op=val
 		;;
 	esac
+	case $cc in
+	"")	cc="$occ $includes" ;;
+	esac
 
 	# check the candidate macros
 
@@ -1332,6 +1361,27 @@ do	case $in in
 		*" - "*);;
 		*)	cc="$cc $mac"
 			mac=
+			;;
+		esac
+		;;
+	esac
+
+	# make sure $cc compiles C
+
+	case $cctest in
+	"")	echo "int i = 1;" > $tmp.c
+		if	$cc -c $tmp.c <&$nullin >&$nullout
+		then	echo "(;" > $tmp.c
+			if	$cc -c $tmp.c <&$nullin >&$nullout
+			then	cctest="should not compile '(;'"
+			fi
+		else	cctest="should compile 'int i = 1;'"
+		fi
+		case $cctest in
+		"")	cctest=0
+			;;
+		*)	echo "$command: $cc: not a C compiler: $cctest" >&$stderr
+			exit 1
 			;;
 		esac
 		;;
@@ -1635,6 +1685,12 @@ do	case $in in
 				m=_${v}
 				;;
 			esac
+			M=$m
+			case $m in
+			*[!a-zA-Z0-9_]*)
+				m=`echo "X$m" | sed -e 's,^.,,' -e 's,[^a-zA-Z0-9_],_,g'`
+				;;
+			esac
 
 			# check output redirection
 
@@ -1737,7 +1793,7 @@ do	case $in in
 							;;
 						esac
 						case $o in
-						iff)	case $m in
+						iff)	case $M in
 							""|*-*)	;;
 							*)	iff=${m}_H ;;
 							esac
@@ -2041,7 +2097,7 @@ main(){printf("hello");return(0);}' > ${tmp}s.c
 				esac
 				case $e in
 				"")	success
-					case $m in
+					case $M in
 					*-*)	;;
 					*)	usr="$usr$nl#define $m 1"
 						echo "#define $m	1	/* "${note:-"$run passed"}" */"
@@ -2051,7 +2107,7 @@ main(){printf("hello");return(0);}' > ${tmp}s.c
 					user_pf=$pass user_yn=$yes
 					;;
 				*)	failure
-					case $m in
+					case $M in
 					*-*)	;;
 					*)	case $all$config$undef in
 						?1?|??1)echo "#undef	$m		/* "${note:-"$run"}" failed */" ;;
@@ -2711,12 +2767,7 @@ _END_EXTERNS_
 				;;
 			out|output)
 				;;
-			pth)	case $m in
-				*[!a-zA-Z0-9_]*)
-					m=`echo "X$m" | sed -e 's,^.,,' -e 's,[^a-zA-Z0-9_],_,g'`
-					;;
-				esac
-				is pth $a
+			pth)	is pth $a
 				pkg $pth
 				tab="  "
 				e=

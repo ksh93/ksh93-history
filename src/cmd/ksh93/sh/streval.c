@@ -1,42 +1,43 @@
-/***************************************************************
-*                                                              *
-*           This software is part of the ast package           *
-*              Copyright (c) 1982-2000 AT&T Corp.              *
-*      and it may only be used by you under license from       *
-*                     AT&T Corp. ("AT&T")                      *
-*       A copy of the Source Code Agreement is available       *
-*              at the AT&T Internet web site URL               *
-*                                                              *
-*     http://www.research.att.com/sw/license/ast-open.html     *
-*                                                              *
-*      If you have copied this software without agreeing       *
-*      to the terms of the license you are infringing on       *
-*         the license and copyright and are violating          *
-*             AT&T's intellectual property rights.             *
-*                                                              *
-*               This software was created by the               *
-*               Network Services Research Center               *
-*                      AT&T Labs Research                      *
-*                       Florham Park NJ                        *
-*                                                              *
-*              David Korn <dgk@research.att.com>               *
-*                                                              *
-***************************************************************/
+/*******************************************************************
+*                                                                  *
+*             This software is part of the ast package             *
+*                Copyright (c) 1982-2000 AT&T Corp.                *
+*        and it may only be used by you under license from         *
+*                       AT&T Corp. ("AT&T")                        *
+*         A copy of the Source Code Agreement is available         *
+*                at the AT&T Internet web site URL                 *
+*                                                                  *
+*       http://www.research.att.com/sw/license/ast-open.html       *
+*                                                                  *
+*        If you have copied this software without agreeing         *
+*        to the terms of the license you are infringing on         *
+*           the license and copyright and are violating            *
+*               AT&T's intellectual property rights.               *
+*                                                                  *
+*                 This software was created by the                 *
+*                 Network Services Research Center                 *
+*                        AT&T Labs Research                        *
+*                         Florham Park NJ                          *
+*                                                                  *
+*                David Korn <dgk@research.att.com>                 *
+*                                                                  *
+*******************************************************************/
 #pragma prototyped
+
 /*
- * G. S. Fowler
  * D. G. Korn
  * AT&T Labs
  *
  * arithmetic expression evaluator
  *
- * NOTE: all operands are evaluated as both the parse
- *	 and evaluation are done on the fly
+ * this version compiles the expression onto a stack
+ *	 and has a separate executor
  */
 
 #include	"streval.h"
 #include	<ctype.h>
 #include	<error.h>
+#include	<stak.h>
 #include	"FEATURE/externs"
 
 #ifndef ERROR_dictionary
@@ -44,30 +45,52 @@
 #endif
 
 #define MAXLEVEL	9
+#define SMALL_STACK	12
 
-struct vars			 /* vars stacked per invocation		*/
+/*
+ * The following are used with tokenbits() macro
+ */
+#define T_OP		0x3f		/* mask for operator number */
+#define T_BINARY	0x40		/* binary operators */
+#define T_NOFLOAT	0x80		/* non floating point operator */
+
+#define round(x,size)		(((x)+(size)-1)&~((size)-1))
+#define stakpush(v,val,type)	((((v)->offset=round(staktell(),sizeof(type))),\
+				stakseek((v)->offset+sizeof(type)), \
+				*((type*)stakptr((v)->offset)) = (val)),(v)->offset)
+#define roundptr(ep,cp,type)	(((unsigned char*)(ep))+round(cp-((unsigned char*)(ep)),sizeof(type)))
+
+static int level;
+
+struct vars				/* vars stacked per invocation */
 {
-	const char*	nextchr; /* next char in current expression	*/
-	const char*	errchr;	 /* next char after error		*/
-	struct lval	errmsg;	 /* error message text			*/
-	const char*	errstr;  /* error string			*/
-	unsigned char	paren;	 /* parenthesis level			*/
-	char		isfloat; /* set when floating number		*/
-	char		wascomma;/* incremented by comma operator	*/
-	double		ovalue;  /* value at comma operator		*/
+	const char	*expr;		/* current expression */	
+	const char	*nextchr;	/* next char in current expression */	
+	const char	*errchr; 	/* next char after error	*/
+	const char	*errstr;	/* error string			*/
+	struct lval	errmsg;	 	/* error message text		*/
+	int		offset;		/* offset for pushchr macro	*/
+	int		staksize;	/* current stack size needed	*/
+	int		stakmaxsize;	/* maximum stack size needed	*/
+	unsigned char	paren;	 	/* parenthesis level		*/
+	char		infun;	/* incremented by comma inside function	*/
+	int		emode;
+	double		(*convert)(const char**,struct lval*,int,double);
 };
 
+typedef double (*Fun_t)(double,...);
 typedef double (*Math_1_f)(double);
 typedef double (*Math_2_f)(double,double);
+typedef double (*Math_3_f)(double,double,double);
 
-#define getchr()	(*cur.nextchr++)
-#define peekchr()	(*cur.nextchr)
-#define ungetchr()	(cur.nextchr--)
+#define getchr(vp)	(*(vp)->nextchr++)
+#define peekchr(vp)	(*(vp)->nextchr)
+#define ungetchr(vp)	((vp)->nextchr--)
 
 #if ('a'==97)	/* ASCII encodings */
 #   define getop(c)	(((c) >= sizeof(strval_states))? \
-			((c)=='|' ? A_OR: ((c)=='^'?A_XOR:A_REG)): \
-			strval_states[(c)])
+				((c)=='|'?A_OR:((c)=='^'?A_XOR:((c)=='~'?A_TILDE:A_REG))):\
+				strval_states[(c)])
 #else
 #   define getop(c)	(isdigit(c)?A_DIG:((c==' '||c=='\t' ||c=='\n')?0: \
 			(c=='<'?A_LT:(c=='>'?A_GT:(c=='='?A_ASSIGN: \
@@ -76,22 +99,619 @@ typedef double (*Math_2_f)(double,double);
 			(c=='&'?A_AND:(c=='!'?A_NOT:(c=='('?A_LPAR: \
 			(c==')'?A_RPAR:(c==0?A_EOF:(c==':'?A_COLON: \
 			(c=='?'?A_QUEST:(c=='|'?A_OR:(c=='^'?A_XOR: \
-			(c=='.'?A_DOT:A_REG)))))))))))))))))))))
+			(c=='.'?A_DOT:(c=='~'?A_TILDE:A_REG))))))))))))))))))))))
 #endif
 
-#define pushchr(s)	{struct vars old;old=cur;cur.nextchr=((char*)(s));cur.errmsg.value=0;cur.errstr=0;cur.paren=0;
-#define popchr()	cur=old;}
-#define seterror(msg,n)	_seterror(ERROR_dictionary(msg),n)
-#define ERROR(msg)	return(seterror(msg,n))
+#define seterror(v,msg)		_seterror(v,ERROR_dictionary(msg))
+#define ERROR(vp,msg)		return(seterror((vp),msg))
 
-static struct vars	cur;
-static char		noassign;	/* set to skip assignment	*/
-static int		level;
-static double		(*convert)(const char**,struct lval*,int,double);
-				/* external conversion routine		*/
-static double		expr(int);	/* subexpression evaluator	*/
-static double		_seterror(const char[],double);	/* set error message string	*/
+/*
+ * set error message string and return(0)
+ */
+static int _seterror(struct vars *vp,const char *msg)
+{
+	if(!vp->errmsg.value)
+		vp->errmsg.value = (char*)msg;
+	vp->errchr = vp->nextchr;
+	vp->nextchr = "";
+	level = 0;
+	return(0);
+}
 
+
+static void arith_error(const char *message,const char *expr, int mode)
+{
+        level = 0;
+	mode = (mode&3)!=0;
+        errormsg(SH_DICT,ERROR_exit(mode),message,expr);
+}
+
+double	arith_exec(Arith_t *ep)
+{
+	register double num=0,*dp,*sp;
+	register unsigned char *cp = ep->code;
+	register int c,type=0;
+	register char *tp;
+	double small_stack[SMALL_STACK+1];
+	const char *ptr = "";
+	int ftype;
+	Fun_t fun;
+	struct lval node;
+	node.emode = ep->emode;
+	node.expr = ep->expr;
+	if(level++ >=MAXLEVEL)
+	{
+		arith_error(e_recursive,ep->expr,ep->emode);
+		return(0);
+	}
+	if(ep->staksize < SMALL_STACK)
+		sp = small_stack;
+	else
+		sp = (double*)stakalloc(ep->staksize*(sizeof(double)+1));
+	tp = (char*)(sp+ep->staksize);
+	tp--,sp--;
+	while(c = *cp++)
+	{
+		if(c&T_NOFLOAT)
+		{
+			if(type || ((c&T_BINARY) && tp[-1]))
+				arith_error(e_incompatible,ep->expr,ep->emode);
+		}
+		switch(c&T_OP)
+		{
+		    case A_JMP: case A_JMPZ: case A_JMPNZ:
+			c &= T_OP;
+			cp = roundptr(ep,cp,short);
+			if((c==A_JMPZ && num) || (c==A_JMPNZ &&!num))
+				cp += sizeof(short);
+			else
+				cp = (unsigned char*)ep + *((short*)cp);
+			continue;
+		    case A_NOTNOT:
+			num = (num!=0);
+			type=0;
+			break;
+		    case A_PLUSPLUS:
+			(*ep->fun)(&ptr,&node,ASSIGN,num+1);
+			break;
+		    case A_MINUSMINUS:
+			(*ep->fun)(&ptr,&node,ASSIGN,num-1);
+			break;
+		    case A_INCR:
+			num = num+1;
+			num = (*ep->fun)(&ptr,&node,ASSIGN,num);
+			break;
+		    case A_DECR:
+			num = num-1;
+			num = (*ep->fun)(&ptr,&node,ASSIGN,num);
+			break;
+		    case A_SWAP:
+			num = sp[-1];
+			sp[-1] = *sp;
+			type = tp[-1];
+			tp[-1] = *tp;
+			break;
+		    case A_POP:
+			sp--;
+			continue;
+		    case A_PUSHV:
+			cp = roundptr(ep,cp,double*);
+			dp = *((double**)cp);
+			cp += sizeof(double*);
+			c = *(short*)cp;
+			cp += sizeof(short);
+			node.value = (char*)dp;
+			node.flag = c;
+			node.isfloat=0;
+			node.level = level;
+			num = (*ep->fun)(&ptr,&node,VALUE,num);
+			if(node.value != (char*)dp)
+				arith_error(node.value,ptr,ep->emode);
+			*++sp = num;
+			type = node.isfloat;
+			if(!node.isfloat && (long)num!=num)
+				type = 1;
+			*++tp = type;
+			c = 0;
+			break;
+		    case A_STORE:
+			cp = roundptr(ep,cp,double*);
+			dp = *((double**)cp);
+			cp += sizeof(char*);
+			c = *(short*)cp;
+			if(c<0)
+				c = 0;
+			cp += sizeof(short);
+			node.value = (char*)dp;
+			node.flag = c;
+			num = (*ep->fun)(&ptr,&node,ASSIGN,num);
+			break;
+		    case A_PUSHF:
+			cp = roundptr(ep,cp,Fun_t);
+			fun = *((Fun_t*)cp);
+			cp += sizeof(Fun_t);
+			ftype = *cp++;
+			continue;
+		    case A_PUSHN:
+			cp = roundptr(ep,cp,double);
+			num = *((double*)cp);
+			cp += sizeof(double);
+			*++sp = num;
+			*++tp = type = *cp++;
+			break;
+		    case A_NOT:
+			type=0;
+			num = !num;
+			break;
+		    case A_UMINUS:
+			num = -num;
+			break;
+		    case A_TILDE:
+			num = ~((long)(num));
+			break;
+		    case A_PLUS:
+			num += sp[-1];
+			break;
+		    case A_MINUS:
+			num = sp[-1] - num;
+			break;
+		    case A_TIMES:
+			num *= sp[-1];
+			break;
+		    case A_MOD:
+			if(!num)
+				arith_error(e_divzero,ep->expr,ep->emode);
+			num = (long)(sp[-1]) % (long)(num);
+			break;
+		    case A_DIV:
+			if(!num)
+				arith_error(e_divzero,ep->expr,ep->emode);
+			if(type || tp[-1])
+				num = sp[-1]/num;
+			else
+				num = (long)(sp[-1]) / (long)(num);
+			break;
+		    case A_LSHIFT:
+			num = (long)(sp[-1]) << (long)(num);
+			break;
+		    case A_RSHIFT:
+			num = (long)(sp[-1]) >> (long)(num);
+			break;
+		    case A_XOR:
+			num = (long)(sp[-1]) ^ (long)(num);
+			break;
+		    case A_OR:
+			num = (long)(sp[-1]) | (long)(num);
+			break;
+		    case A_AND:
+			num = (long)(sp[-1]) & (long)(num);
+			break;
+		    case A_EQ:
+			num = (sp[-1]==num);
+			type=0;
+			break;
+		    case A_NEQ:
+			num = (sp[-1]!=num);
+			type=0;
+			break;
+		    case A_LE:
+			num = (sp[-1]<=num);
+			type=0;
+			break;
+		    case A_GE:
+			num = (sp[-1]>=num);
+			type=0;
+			break;
+		    case A_GT:
+			num = (sp[-1]>num);
+			type=0;
+			break;
+		    case A_LT:
+			num = (sp[-1]<num);
+			type=0;
+			break;
+		    case A_CALL1:
+			num = (*fun)(num);
+		        type = ftype;
+			break;
+		    case A_CALL2:
+			num = (*((Math_2_f)fun))(sp[-1],num);
+			sp--,tp--;
+		        type = ftype;
+			break;
+		    case A_CALL3:
+			num = (*((Math_3_f)fun))(sp[-2],sp[-1],num);
+			sp-=2,tp-=2;
+		    	type = ftype;
+			break;
+		}
+		if(c&T_BINARY)
+			sp--,tp--;
+		*sp = num;
+		*tp = type;
+	}
+	if(level>0)
+		level--;
+	return(num);
+}
+
+/*
+ * This returns operator tokens or A_REG or A_NUM
+ */
+static int gettok(register struct vars *vp)
+{
+	register int c,op;
+	vp->errchr = vp->nextchr;
+	while(1)
+	{
+		c = getchr(vp);
+		switch(op=getop(c))
+		{
+		    case 0:
+			vp->errchr = vp->nextchr;
+			continue;
+		    case A_EOF:
+			vp->nextchr--;
+			break;
+			/*FALL THRU*/
+		    case A_DIG: case A_REG: case A_DOT:
+			if(op==A_DOT)
+			{
+				if((c=peekchr(vp))>='0' && c<='9')
+					op = A_DIG;
+				else
+					op = A_REG;
+			}
+			ungetchr(vp);
+			break;
+		    case A_QUEST:
+			if(peekchr(vp)==':')
+			{
+				getchr(vp);
+				op = A_QCOLON;
+			}
+			break;
+		    case A_LT:	case A_GT:
+			if(peekchr(vp)==c)
+			{
+				getchr(vp);
+				op -= 2;
+				break;
+			}
+			/* FALL THRU */
+		    case A_NOT:	case A_COLON:
+			c = '=';
+			/* FALL THRU */
+		    case A_ASSIGN:
+		    case A_PLUS:	case A_MINUS:
+		    case A_OR:	case A_AND:
+			if(peekchr(vp)==c)
+			{
+				getchr(vp);
+				op--;
+			}
+		}
+		return(op);
+	}
+}
+
+/*   
+ * evaluate a subexpression with precedence
+ */
+
+static int expr(register struct vars *vp,register int precedence)
+{
+	register int	c, op;
+	int		invalid,wasop=0;
+	struct lval	lvalue,assignop;
+	const char	*pos;
+	double		d;
+
+	lvalue.value = 0;
+	lvalue.fun = 0;
+	op = gettok(vp);
+	switch(op)
+	{
+	    case A_PLUS:
+		break;
+	    case A_EOF:
+		if(precedence>5)
+			ERROR(vp,e_moretokens);
+		return(1);
+	    case A_MINUS:
+		op =  A_UMINUS;
+		goto common;
+	    case A_NOT:
+		goto common;
+	    case A_MINUSMINUS:
+		op = A_DECR|T_NOFLOAT;
+		goto common;
+	    case A_PLUSPLUS:
+		op = A_INCR|T_NOFLOAT;
+		/* FALL THRU */
+	    case A_TILDE:
+		op |= T_NOFLOAT;
+	    common:
+		if(!expr(vp,2*MAXPREC-1))
+			return(0);
+		stakputc(op);
+		break;
+	    default:
+		vp->nextchr = vp->errchr;
+		wasop = 1;
+	}
+	invalid = wasop;
+	while(1)
+	{
+		assignop.value = 0;
+		op = gettok(vp);
+		if(op==A_DIG || op==A_REG)
+		{
+			if(!wasop)
+				ERROR(vp,e_synbad);
+			goto number;
+		}
+		if(wasop++ && op!=A_LPAR)
+			ERROR(vp,e_synbad);
+		/* check for assignment operation */
+		if(peekchr(vp)== '=' && !(strval_precedence[op]&NOASSIGN))
+		{
+			if((!lvalue.value || precedence > 2))
+				ERROR(vp,e_notlvalue);
+			assignop = lvalue;
+			getchr(vp);
+			c = 3;
+		}
+		else
+		{
+			c = (strval_precedence[op]&PRECMASK);
+			c *= 2;
+		}
+		/* from here on c is the new precedence level */
+		if(lvalue.value && (op!=A_ASSIGN))
+		{
+			if(vp->staksize++>=vp->stakmaxsize)
+				vp->stakmaxsize = vp->staksize;
+			stakputc(A_PUSHV);
+			stakpush(vp,lvalue.value,char*);
+			if(lvalue.flag<0)
+				lvalue.flag = 0;
+			stakpush(vp,lvalue.flag,short);
+			if(vp->nextchr==0)
+				ERROR(vp,e_badnum);
+			if(!(strval_precedence[op]&SEQPOINT))
+				lvalue.value = 0;
+			invalid = 0;
+		}
+		if(invalid && op>A_ASSIGN)
+			ERROR(vp,e_synbad);
+		if(precedence >= c)
+			goto done;
+		if(strval_precedence[op]&RASSOC)
+			c--;
+		if(c < 2*MAXPREC && !(strval_precedence[op]&SEQPOINT))
+		{
+			wasop = 0;
+			if(!expr(vp,c))
+				return(0);
+		}
+		switch(op)
+		{
+		case A_RPAR:
+			if(!vp->paren)
+				ERROR(vp,e_paren);
+			if(invalid)
+				ERROR(vp,e_synbad);
+			goto done;
+
+		case A_COMMA:
+			wasop = 0;
+			if(vp->infun)
+				vp->infun++;
+			else
+			{
+				stakputc(A_POP);
+				vp->staksize--;
+			}
+			if(!expr(vp,c))
+				return(0);
+			lvalue.value = 0;
+			break;
+
+		case A_LPAR:
+		{
+			int	infun = vp->infun;
+			double (*fun)(double,...);
+			int nargs = lvalue.nargs;
+			fun = lvalue.fun;
+			lvalue.fun = 0;
+			if(fun)
+			{
+				vp->infun=1;
+				stakputc(A_PUSHF);
+				stakpush(vp,fun,Fun_t);
+				stakputc(1);
+			}
+			else
+				vp->infun = 0;
+			if(!invalid)
+				ERROR(vp,e_synbad);
+			vp->paren++;
+			if(!expr(vp,1))
+				return(0);
+			vp->paren--;
+			if(fun)
+			{
+				if(vp->infun != nargs)
+					ERROR(vp,e_argcount);
+				if(vp->staksize+=nargs>=vp->stakmaxsize)
+					vp->stakmaxsize = vp->staksize+nargs;
+				stakputc(A_CALL1+nargs-1);
+				vp->staksize -= nargs;
+			}
+			vp->infun = infun;
+			if (gettok(vp) != A_RPAR)
+				ERROR(vp,e_paren);
+			wasop = 0;
+			break;
+		}
+
+		case A_PLUSPLUS:
+		case A_MINUSMINUS:
+			wasop=0;
+			op |= T_NOFLOAT;
+		case A_ASSIGN:
+			if(!lvalue.value)
+				ERROR(vp,e_notlvalue);
+			if(op==A_ASSIGN)
+			{
+				stakputc(A_STORE);
+				stakpush(vp,lvalue.value,char*);
+				stakpush(vp,lvalue.flag,short);
+				vp->staksize--;
+			}
+			else
+				stakputc(op);
+			lvalue.value = 0;
+			break;
+
+		case A_QUEST:
+		{
+			int offset1,offset2;
+			stakputc(A_JMPZ);
+			offset1 = stakpush(vp,0,short);
+			stakputc(A_POP);
+			if(!expr(vp,1))
+				return(0);
+			if(gettok(vp)!=A_COLON)
+				ERROR(vp,e_questcolon);
+			stakputc(A_JMP);
+			offset2 = stakpush(vp,0,short);
+			*((short*)stakptr(offset1)) = staktell();
+			stakputc(A_POP);
+			if(!expr(vp,c))
+				return(0);
+			*((short*)stakptr(offset2)) = staktell();
+			lvalue.value = 0;
+			wasop = 0;
+			break;
+		}
+
+		case A_COLON:
+			ERROR(vp,e_badcolon);
+			break;
+
+		case A_QCOLON:
+		case A_ANDAND:
+		case A_OROR:
+		{
+			int offset;
+			if(op==A_ANDAND)
+				op = A_JMPZ;
+			else
+				op = A_JMPNZ;
+			stakputc(op);
+			offset = stakpush(vp,0,short);
+			stakputc(A_POP);
+			if(!expr(vp,c))
+				return(0);
+			if(op!=A_QCOLON)
+				stakputc(A_NOTNOT);
+			*((short*)stakptr(offset)) = staktell();
+			lvalue.value = 0;
+			wasop=0;
+			break;
+		}
+		case A_AND:	case A_OR:	case A_XOR:	case A_LSHIFT:
+		case A_RSHIFT:	case A_MOD:
+			op |= T_NOFLOAT;
+			/* FALL THRU */
+		case A_PLUS:	case A_MINUS:	case A_TIMES:	case A_DIV:
+		case A_EQ:	case A_NEQ:	case A_LT:	case A_LE:
+		case A_GT:	case A_GE:
+			stakputc(op|T_BINARY);
+			vp->staksize--;
+			break;
+		case A_NOT: case A_TILDE:
+		default:
+			ERROR(vp,e_synbad);
+		number:
+			wasop = 0;
+			pos = vp->nextchr;
+			lvalue.isfloat = 0;
+			lvalue.expr = vp->expr;
+			lvalue.emode = vp->emode;
+			d = (*vp->convert)(&vp->nextchr, &lvalue, LOOKUP, d);
+			if (vp->nextchr == pos)
+			{
+				if(vp->errmsg.value = lvalue.value)
+					vp->errstr = pos;
+				ERROR(vp,e_synbad);
+			}
+			if(op==A_DIG)
+			{
+				stakputc(A_PUSHN);
+				if(vp->staksize++>=vp->stakmaxsize)
+					vp->stakmaxsize = vp->staksize;
+				stakpush(vp,d,double);
+				stakputc(lvalue.isfloat);
+			}
+	
+			/* check for function call */
+			if(lvalue.fun)
+				continue;
+			break;
+		}
+		invalid = 0;
+		if(assignop.value)
+		{
+			if(vp->staksize++>=vp->stakmaxsize)
+				vp->stakmaxsize = vp->staksize;
+			if(assignop.flag<0)
+				assignop.flag = 0;
+			stakputc(A_STORE);
+			stakpush(vp,assignop.value,char*);
+			stakpush(vp,assignop.flag,short);
+		}
+	}
+ done:
+	vp->nextchr = vp->errchr;
+	return(1);
+}
+
+Arith_t *arith_compile(const char *string,char **last,double(*fun)(const char**,struct lval*,int,double),int emode)
+{
+	struct vars cur;
+	register Arith_t *ep;
+	int offset;
+	memset((void*)&cur,0,sizeof(cur));
+	cur.emode = emode;
+     	cur.expr = cur.nextchr = string;
+	cur.convert = fun;
+	cur.emode = emode;
+	cur.errmsg.value = 0;
+	cur.errmsg.emode = emode;
+	stakseek(sizeof(Arith_t));
+	if(!expr(&cur,0) && cur.errmsg.value)
+        {
+		if(cur.errstr)
+			string = cur.errstr;
+		(*fun)( &string , &cur.errmsg, ERRMSG, 0);
+		cur.nextchr = cur.errchr;
+	}
+	stakputc(0);
+	offset = staktell();
+	ep = (Arith_t*)stakfreeze(0);
+	ep->expr = string;
+	ep->code = (unsigned char*)(ep+1);
+	ep->fun = fun;
+	ep->emode = emode;
+	ep->size = offset - sizeof(Arith_t);
+	ep->staksize = cur.stakmaxsize+1;
+	if(last)
+		*last = (char*)(cur.nextchr);
+	return(ep);
+}
 
 /*
  * evaluate an integer arithmetic expression in s
@@ -106,462 +726,19 @@ static double		_seterror(const char[],double);	/* set error message string	*/
  * NOTE: (*convert)() may call strval()
  */
 
-double strval(const char *s, char** end, double(*conv)(const char**,struct lval*,int,double))
+double strval(const char *s,char **end,double(*conv)(const char**,struct lval*,int,double),int emode)
 {
-	register double	n;
-	int wasfloat;
-
-	pushchr(s);
-	cur.isfloat = 0;
-	convert = conv;
-	if(level++ >= MAXLEVEL)
-		n = seterror(e_recursive,0);
-	else
-		n = expr(0);
-	if (cur.errmsg.value)
-	{
-		if(cur.errstr) s = cur.errstr;
-		(void)(*convert)( &s , &cur.errmsg, ERRMSG, n);
-		cur.nextchr = cur.errchr;
-	}
-	if (end) *end = (char*)cur.nextchr;
-	if(level>0) level--;
-	wasfloat = cur.isfloat;
-	popchr();
-	cur.isfloat |= wasfloat;
-	return(n);
-}
-
-/*   
- * evaluate a subexpression with precedence
- */
-
-static double expr(register int precedence)
-{
-	register int	c, op;
-	register double	n=0, x;
-	int		wasop, incr=0;
-	struct lval	lvalue, assignop;
-	const char	*pos;
-	char		invalid=0;
-
-	while ((c=getchr()) && isspace(c));
-	switch (c)
-	{
-	case 0:
-		if(precedence>5)
-			ERROR(e_moretokens);
-		return(0);
-
-	case '-':
-		incr = -2;
-		/* FALL THRU */
-	case '+':
-		incr++;
-		if(c != peekchr())
-		{
-			/* unary plus or minus */
-			n = incr*expr(2*MAXPREC-1);
-			incr = 0;
-		}
-		else /* ++ or -- */
-		{
-			invalid = 1;
-			getchr();
-		}
-		break;
-
-	case '!':
-		n = !expr(2*MAXPREC-1);
-		break;
-	case '~':
-	{
-		long nl;
-		n = expr(2*MAXPREC-1);
-		nl = (long)n;
-		if(nl != n)
-			ERROR(e_incompatible);
-		else
-			n = ~nl;
-		break;
-	}
-	default:
-		ungetchr();
-		invalid = 1;
-		break;
-	}
-	wasop = invalid;
-	lvalue.value = 0;
-	lvalue.fun = 0;
-	while(1)
-	{
-		cur.errchr = cur.nextchr;
-		c = getchr();
-		if((op=getop(c))==0)
-			continue;
-		switch(op)
-		{
-			case A_EOF:
-				ungetchr();
-				break;
-			case A_DIG:
-#ifdef future
-				n = c - '0';
-				while((c=getchr()), isdigit(c))
-					n = (10*n) + (c-'0');
-				wasop = 0;
-				ungetchr();
-				continue;
-#endif
-			case A_REG:	case A_DOT:
-				op = 0;
-				break;
-			case A_QUEST:
-				if(*cur.nextchr==':')
-				{
-					cur.nextchr++;
-					op = A_QCOLON;
-				}
-				break;
-			case A_LT:	case A_GT: 
-				if(*cur.nextchr==c)
-				{
-					cur.nextchr++;
-					op -= 2;
-					break;
-				}
-				/* FALL THRU */
-			case A_NOT:	case A_COLON:
-				c = '=';
-				/* FALL THRU */
-			case A_ASSIGN:
-			case A_PLUS:	case A_MINUS:
-			case A_OR:	case A_AND:
-				if(*cur.nextchr==c)
-				{
-					cur.nextchr++;
-					op--;
-				}
-		}
-		assignop.value = 0;
-		if(op && wasop++ && op!=A_LPAR)
-			ERROR(e_synbad);
-		/* check for assignment operation */
-		if(peekchr()== '=' && !(strval_precedence[op]&NOASSIGN))
-		{
-			if(!noassign && (!lvalue.value || precedence > 2))
-				ERROR(e_notlvalue);
-			assignop = lvalue;
-			getchr();
-			c = 3;
-		}
-		else
-		{
-			c = (strval_precedence[op]&PRECMASK);
-			c *= 2;
-		}
-		/* from here on c is the new precedence level */
-		if(lvalue.value && (op!=A_ASSIGN))
-		{
-			if(noassign)
-				n = 1;
-			else
-			{
-				pos = cur.nextchr;
-				n = (*convert)(&cur.nextchr, &lvalue, VALUE, n);
-				if (cur.nextchr!=pos)
-				{
-					if(cur.errmsg.value = lvalue.value)
-						cur.errstr = cur.nextchr;
-					ERROR(e_synbad);
-				}
-			}
-			if(cur.nextchr==0)
-				ERROR(e_badnum);
-			if(!(strval_precedence[op]&SEQPOINT))
-				lvalue.value = 0;
-			invalid = 0;
-		}
-		if(invalid && op>A_ASSIGN)
-			ERROR(e_synbad);
-		if(precedence >= c)
-			goto done;
-		if(strval_precedence[op]&RASSOC)
-			c--;
-		if(c < 2*MAXPREC && !(strval_precedence[op]&SEQPOINT))
-		{
-			wasop = 0;
-			x = expr(c);
-		}
-		if((strval_precedence[op]&NOFLOAT) && !noassign && cur.isfloat)
-			ERROR(e_incompatible);
-		switch(op)
-		{
-		case A_RPAR:
-			if(!cur.paren)
-				ERROR(e_paren);
-			if(invalid)
-				ERROR(e_synbad);
-			goto done;
-
-		case A_COMMA:
-			wasop = 0;
-			cur.wascomma++;
-			cur.ovalue = n;
-			n = expr(c);
-			lvalue.value = 0;
-			break;
-
-		case A_LPAR:
-		{
-			char	savefloat = cur.isfloat;
-			int	savecomma = cur.wascomma;
-			double (*fun)(double,...);
-			int nargs = lvalue.nargs;
-			fun = lvalue.fun;
-			lvalue.fun = 0;
-			cur.wascomma=0;
-			cur.isfloat = 0;
-			if(!invalid)
-				ERROR(e_synbad);
-			cur.paren++;
-			n = expr(1);
-			cur.paren--;
-			if(fun)
-			{
-				if(cur.wascomma+1 != nargs)
-					ERROR(e_argcount);
-				if(cur.wascomma)
-					n = (*((Math_2_f)fun))(cur.ovalue,n);
-				else
-					n = (*((Math_1_f)fun))(n);
-				cur.isfloat = ((void*)fun!=(void*)floor);
-			}
-			cur.isfloat |= savefloat;
-			cur.wascomma = savecomma;
-			if (getchr() != ')')
-				ERROR(e_paren);
-			wasop = 0;
-			break;
-		}
-
-		case A_PLUSPLUS:
-			incr = 1;
-			goto common;
-		case A_MINUSMINUS:
-			incr = -1;
-		common:
-			x = n;
-			wasop=0;
-		case A_ASSIGN:
-			if(!noassign && !lvalue.value)
-				ERROR(e_notlvalue);
-			n = x;
-			assignop = lvalue;
-			lvalue.value = 0;
-			break;
-
-		case A_QUEST:
-			if(!n)
-				noassign++;
-			x = expr(1);
-			if(!n)
-				noassign--;
-			if(getchr()!=':')
-				ERROR(e_questcolon);
-			if(n)
-			{
-				n = x;
-				noassign++;
-				(void)expr(c);
-				noassign--;
-			}
-			else
-				n = expr(c);
-			lvalue.value = 0;
-			wasop = 0;
-			break;
-
-		case A_COLON:
-			seterror(e_badcolon,n);
-			break;
-
-		case A_OR:
-			n = (long)n | (long)x;
-			break;
-
-		case A_QCOLON:
-		case A_OROR:
-			if(n)
-			{
-				noassign++;
-				expr(c);
-				noassign--;
-			}
-			else
-				n = expr(c);
-			if(op==A_OROR)
-				n = (n!=0);
-			lvalue.value = 0;
-			wasop=0;
-			break;
-
-		case A_XOR:
-			n = (long)n ^ (long)x;
-			break;
-
-		case A_NOT:
-			ERROR(e_synbad);
-
-		case A_AND:
-			n = (long)n & (long)x;
-			break;
-
-		case A_ANDAND:
-			if(n==0)
-			{
-				noassign++;
-				expr(c);
-				noassign--;
-			}
-			else
-				n = (expr(c)!=0);
-			lvalue.value = 0;
-			wasop=0;
-			break;
-
-		case A_EQ:
-			n = n == x;
-			break;
-
-		case A_NEQ:
-			n = n != x;
-			break;
-
-		case A_LT:
-			n = n < x;
-			break;
-
-		case A_LSHIFT:
-			n = (long)n << (long)x;
-			break;
-
-		case A_LE:
-			n = n <= x;
-			break;
-
-		case A_GT:
-			n = n > x;
-			break;
-
-		case A_RSHIFT:
-			n = (long)n >> (long)x;
-			break;
-
-		case A_GE:
-			n = n >= x;
-			break;
-
-		case A_PLUS:
-			n +=  x;
-			break;
-
-		case A_MINUS:
-			n -=  x;
-			break;
-
-		case A_TIMES:
-			n *=  x;
-			break;
-
-		case A_DIV:
-			if(x!=0)
-			{
-				if(cur.isfloat)
-					n /=  x;
-				else
-					n =  (long)n / (long)x;
-				break;
-			}
-
-		case A_MOD:
-			if(x!=0)
-				n = (long)n % (long)x;
-			else if(!noassign)
-				ERROR(e_divzero);
-			break;
-
-		default:
-			if(!wasop)
-				ERROR(e_synbad);
-			wasop = 0;
-			pos = --cur.nextchr;
-			lvalue.isfloat = 0;
-			n = (*convert)(&cur.nextchr, &lvalue, LOOKUP, n);
-			if (cur.nextchr == pos)
-			{
-				if(cur.errmsg.value = lvalue.value)
-					cur.errstr = pos;
-				ERROR(e_synbad);
-			}
-			cur.isfloat |= lvalue.isfloat;
-	
-			/* check for function call */
-			if(lvalue.fun)
-				continue;
-			/* this handles ++x and --x */
-			if(!noassign && incr)
-			{
-				if(cur.isfloat)
-					ERROR(e_incompatible);
-				if(lvalue.value)
-				{
-					pos = cur.nextchr;
-					n = (*convert)(&cur.nextchr, &lvalue, VALUE, n);
-					if (cur.nextchr!=pos)
-					{
-						if(cur.errmsg.value = lvalue.value)
-							cur.errstr=cur.nextchr;
-						ERROR(e_synbad);
-					}
-				}
-				n += incr;
-				incr = 0;
-				goto common;
-			}
-			break;
-		}
-		invalid = 0;
-		if(!noassign && assignop.value)
-		{
-			/*
-			 * Here the output of *convert must be reassigned to n
-			 * in case a cast is done in *convert.
-			 * The value of the increment must be subsequently
-			 * subtracted for the postincrement return value 
-			*/
-			n=(*convert)(&cur.nextchr,&assignop,ASSIGN,n+incr);
-			n -= incr;
-		}
-		incr = 0;
-	}
- done:
-	cur.nextchr = cur.errchr;
-	return(n);
-}
-
-/*
- * set error message string
- */
-
-static double _seterror(const char *msg, double n)
-{
-	if(!cur.errmsg.value)
-		cur.errmsg.value = (char*)msg;
-	cur.errchr = cur.nextchr;
-	cur.nextchr = "";
-	level = 0;
-	return(n);
+	Arith_t *ep;
+	double d;
+	char *sp=0;
+	int offset;
+	if(offset=staktell())
+		sp = stakfreeze(1);
+	ep = arith_compile(s,end,conv,emode);
+	ep->emode = emode;
+	d = arith_exec(ep);
+	stakset(sp?sp:(char*)ep,offset);
+	return(d);
 }
 
 #ifdef _mem_name_exception

@@ -1,27 +1,27 @@
-/***************************************************************
-*                                                              *
-*           This software is part of the ast package           *
-*              Copyright (c) 1982-2000 AT&T Corp.              *
-*      and it may only be used by you under license from       *
-*                     AT&T Corp. ("AT&T")                      *
-*       A copy of the Source Code Agreement is available       *
-*              at the AT&T Internet web site URL               *
-*                                                              *
-*     http://www.research.att.com/sw/license/ast-open.html     *
-*                                                              *
-*      If you have copied this software without agreeing       *
-*      to the terms of the license you are infringing on       *
-*         the license and copyright and are violating          *
-*             AT&T's intellectual property rights.             *
-*                                                              *
-*               This software was created by the               *
-*               Network Services Research Center               *
-*                      AT&T Labs Research                      *
-*                       Florham Park NJ                        *
-*                                                              *
-*              David Korn <dgk@research.att.com>               *
-*                                                              *
-***************************************************************/
+/*******************************************************************
+*                                                                  *
+*             This software is part of the ast package             *
+*                Copyright (c) 1982-2000 AT&T Corp.                *
+*        and it may only be used by you under license from         *
+*                       AT&T Corp. ("AT&T")                        *
+*         A copy of the Source Code Agreement is available         *
+*                at the AT&T Internet web site URL                 *
+*                                                                  *
+*       http://www.research.att.com/sw/license/ast-open.html       *
+*                                                                  *
+*        If you have copied this software without agreeing         *
+*        to the terms of the license you are infringing on         *
+*           the license and copyright and are violating            *
+*               AT&T's intellectual property rights.               *
+*                                                                  *
+*                 This software was created by the                 *
+*                 Network Services Research Center                 *
+*                        AT&T Labs Research                        *
+*                         Florham Park NJ                          *
+*                                                                  *
+*                David Korn <dgk@research.att.com>                 *
+*                                                                  *
+*******************************************************************/
 #pragma prototyped
 /*
  * Shell arithmetic - uses streval library
@@ -40,8 +40,22 @@
 #include	"streval.h"
 #include	"FEATURE/locale"
 
-static int level;
-static int fatal;
+static Namval_t *scope(register Namval_t *np,register struct lval *lvalue,int assign)
+{
+	register Namval_t *mp;
+	register Namarr_t *ap;
+	if((lvalue->emode&ARITH_COMP) && dtvnext(sh.var_tree) && (mp=nv_search((char*)np,sh.var_tree,HASH_NOSCOPE|HASH_SCOPE|HASH_BUCKET)))
+		np = mp;
+	if(lvalue->flag)
+	{
+		if(((ap=nv_arrayptr(np)) && array_assoc(ap)) || (lvalue->emode&ARITH_COMP))
+			nv_endsubscript(np,(char*)&lvalue->expr[lvalue->flag],NV_ADD);
+		else
+			nv_putsub(np, NIL(char*),lvalue->flag);
+	}
+	return(np);
+}
+
 static double arith(const char **ptr, struct lval *lvalue, int type, double n)
 {
 	register double r= 0;
@@ -51,12 +65,7 @@ static double arith(const char **ptr, struct lval *lvalue, int type, double n)
 	    case ASSIGN:
 	    {
 		register Namval_t *np = (Namval_t*)(lvalue->value);
-		register Namarr_t *ap;
-		if(ap = nv_arrayptr(np))
-		{
-			if(!array_assoc(ap))
-				nv_putsub(np, NIL(char*),lvalue->flag);
-		}
+		np = scope(np,lvalue,1);
 		nv_putval(np, (char*)&n, NV_INTEGER);
 		r=nv_getnum(np);
 		break;
@@ -96,27 +105,37 @@ static double arith(const char **ptr, struct lval *lvalue, int type, double n)
 			*str = 0;
 			np = nv_open(*ptr,sh.var_tree,NV_NOASSIGN|NV_VARNAME);
 			*str = c;
-			if(nv_isattr(np,NV_INTEGER|NV_DOUBLE)==(NV_INTEGER|NV_DOUBLE))
-				lvalue->isfloat=1;
+			lvalue->value = (char*)np;
+			if((lvalue->emode&ARITH_COMP) || (nv_isarray(np) && nv_aindex(np)<0))
+			{
+				/* bind subscript later */
+				lvalue->flag = 0;
+				if(c=='[')
+				{
+					lvalue->flag = (str-lvalue->expr);
+					str = nv_endsubscript(np,str,0);
+				}
+				break;
+			}
 			if(c=='[')
 				str = nv_endsubscript(np,str,NV_ADD);
-			else if(nv_isattr(np,NV_ARRAY))
+			else if(nv_isarray(np))
 				nv_putsub(np,NIL(char*),ARRAY_UNDEF);
-			lvalue->value = (char*)np;
+			if(nv_isattr(np,NV_INTEGER|NV_DOUBLE)==(NV_INTEGER|NV_DOUBLE))
+				lvalue->isfloat=1;
 			lvalue->flag = nv_aindex(np);
 		}
 		else
 		{
-			char	*val = str;
-			sh.lastbase = 0;
-			r = strton(val,&str, &sh.lastbase,-1);
+			char	lastbase=0, *val = str;
+			r = strton(val,&str, &lastbase,-1);
 			if(*str=='8' || *str=='9')
 			{
-				sh.lastbase=10;
-				r = strton(val,&str, &sh.lastbase,-1);
+				lastbase=10;
+				r = strton(val,&str, &lastbase,-1);
 			}
-			if(sh.lastbase<=1)
-				sh.lastbase=10;
+			if(lastbase<=1)
+				lastbase=10;
 			if(*val=='0')
 			{
 				while(*val=='0')
@@ -129,7 +148,7 @@ static double arith(const char **ptr, struct lval *lvalue, int type, double n)
 				lvalue->isfloat=1;
 				r = strtod(val,&str);
 			}
-			else if(sh.lastbase==10 && val[1])
+			else if(lastbase==10 && val[1])
 			{
 				if(val[2]=='#')
 					val += 3;
@@ -152,27 +171,27 @@ static double arith(const char **ptr, struct lval *lvalue, int type, double n)
 		register Namval_t *np = (Namval_t*)(lvalue->value);
 		if(sh_isoption(SH_NOEXEC))
 			return(0);
-		if((fatal==2 || level || sh_isoption(SH_NOUNSET)) && nv_isnull(np) && !nv_isattr(np,NV_INTEGER))
+		np = scope(np,lvalue,0);
+		if(((lvalue->emode&2) || lvalue->level>1 || sh_isoption(SH_NOUNSET)) && nv_isnull(np) && !nv_isattr(np,NV_INTEGER))
 		{
 			*ptr = nv_name(np);
 			lvalue->value = (char*)ERROR_dictionary(e_notset);
 			return(0);
 		}
-		level++;
 		r = nv_getnum(np);
-		level--;
+		if(nv_isattr(np,NV_INTEGER|NV_DOUBLE)==(NV_INTEGER|NV_DOUBLE))
+			lvalue->isfloat=1;
 		return(r);
 	    }
 
 	    case ERRMSG:
-		level=0;
 		sfsync(NIL(Sfio_t*));
 #if 0
 		if(warn)
 			errormsg(SH_DICT,ERROR_warn(0),lvalue->value,*ptr);
 		else
 #endif
-			errormsg(SH_DICT,ERROR_exit(fatal),lvalue->value,*ptr);
+			errormsg(SH_DICT,ERROR_exit((lvalue->emode&3)!=0),lvalue->value,*ptr);
 	}
 	*ptr = str;
 	return(r);
@@ -185,20 +204,32 @@ static double arith(const char **ptr, struct lval *lvalue, int type, double n)
  */
 double sh_strnum(register const char *str, char** ptr, int mode)
 {
-	fatal=mode;
-	return(strval(str,(char**)ptr, arith));
+	return(strval(str,(char**)ptr, arith,mode));
 }
 
 double sh_arith(register const char *str)
 {
+	char base=0;
 	const char *ptr = str;
 	register double d;
-	fatal = 1;
 	if(*str==0)
 		return(0);
-	d = strval(str,(char**)&ptr,arith);
+	d = strton(str,(char**)&ptr,&base,-1);
 	if(*ptr)
-		errormsg(SH_DICT,ERROR_exit(1),e_lexbadchar,*ptr,str);
+	{
+		d = strval(str,(char**)&ptr,arith,1);
+		if(*ptr)
+			errormsg(SH_DICT,ERROR_exit(1),e_lexbadchar,*ptr,str);
+	}
 	return(d);
 }
 
+void	*sh_arithcomp(register char *str)
+{
+	const char *ptr = str;
+	Arith_t *ep;
+	ep = arith_compile(str,(char**)&ptr,arith,ARITH_COMP|1);
+	if(*ptr)
+		errormsg(SH_DICT,ERROR_exit(1),e_lexbadchar,*ptr,str);
+	return((void*)ep);
+}

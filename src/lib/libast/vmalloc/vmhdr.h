@@ -1,29 +1,29 @@
-/***************************************************************
-*                                                              *
-*           This software is part of the ast package           *
-*              Copyright (c) 1985-2000 AT&T Corp.              *
-*      and it may only be used by you under license from       *
-*                     AT&T Corp. ("AT&T")                      *
-*       A copy of the Source Code Agreement is available       *
-*              at the AT&T Internet web site URL               *
-*                                                              *
-*     http://www.research.att.com/sw/license/ast-open.html     *
-*                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
-*             AT&T's intellectual property rights.             *
-*                                                              *
-*               This software was created by the               *
-*               Network Services Research Center               *
-*                      AT&T Labs Research                      *
-*                       Florham Park NJ                        *
-*                                                              *
-*             Glenn Fowler <gsf@research.att.com>              *
-*              David Korn <dgk@research.att.com>               *
-*               Phong Vo <kpv@research.att.com>                *
-*                                                              *
-***************************************************************/
+/*******************************************************************
+*                                                                  *
+*             This software is part of the ast package             *
+*                Copyright (c) 1985-2000 AT&T Corp.                *
+*        and it may only be used by you under license from         *
+*                       AT&T Corp. ("AT&T")                        *
+*         A copy of the Source Code Agreement is available         *
+*                at the AT&T Internet web site URL                 *
+*                                                                  *
+*       http://www.research.att.com/sw/license/ast-open.html       *
+*                                                                  *
+*        If you have copied this software without agreeing         *
+*        to the terms of the license you are infringing on         *
+*           the license and copyright and are violating            *
+*               AT&T's intellectual property rights.               *
+*                                                                  *
+*                 This software was created by the                 *
+*                 Network Services Research Center                 *
+*                        AT&T Labs Research                        *
+*                         Florham Park NJ                          *
+*                                                                  *
+*               Glenn Fowler <gsf@research.att.com>                *
+*                David Korn <dgk@research.att.com>                 *
+*                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
+*******************************************************************/
 #ifndef _VMHDR_H
 #define _VMHDR_H	1
 #ifndef _BLD_vmalloc
@@ -49,24 +49,17 @@
 
 #if _PACKAGE_ast
 
-#if defined(__STDPP__directive) && defined(__STDPP__hide)
-__STDPP__directive pragma pp:hide getpagesize
-#else
-#define getpagesize	______getpagesize
-#endif
-
 #include	<ast.h>
-
-#if defined(__STDPP__directive) && defined(__STDPP__hide)
-__STDPP__directive pragma pp:nohide getpagesize
-#else
-#undef	getpagesize
-#endif
 
 #else
 
 #include	<ast_common.h>
 #include	"FEATURE/vmalloc"
+
+#if !_UWIN
+#define _npt_getpagesize	1
+#define _npt_sbrk		1
+#endif
 
 #endif /*_PACKAGE_ast*/
 
@@ -472,7 +465,7 @@ _BEGIN_EXTERNS_
 
 extern Vmextern_t	_Vmextern;
 
-#if !_WIN32
+#if _npt_getpagesize
 extern size_t		getpagesize _ARG_((void));
 #endif
 
@@ -510,7 +503,7 @@ extern void		_cleanup _ARG_(( void ));
 #if !_typ_ssize_t
 typedef int		ssize_t;
 #endif
-#if !_WIN32
+#if _npt_sbrk
 extern Vmuchar_t*	sbrk _ARG_(( ssize_t ));
 #endif
 

@@ -1,27 +1,27 @@
-/***************************************************************
-*                                                              *
-*           This software is part of the ast package           *
-*              Copyright (c) 1982-2000 AT&T Corp.              *
-*      and it may only be used by you under license from       *
-*                     AT&T Corp. ("AT&T")                      *
-*       A copy of the Source Code Agreement is available       *
-*              at the AT&T Internet web site URL               *
-*                                                              *
-*     http://www.research.att.com/sw/license/ast-open.html     *
-*                                                              *
-*      If you have copied this software without agreeing       *
-*      to the terms of the license you are infringing on       *
-*         the license and copyright and are violating          *
-*             AT&T's intellectual property rights.             *
-*                                                              *
-*               This software was created by the               *
-*               Network Services Research Center               *
-*                      AT&T Labs Research                      *
-*                       Florham Park NJ                        *
-*                                                              *
-*              David Korn <dgk@research.att.com>               *
-*                                                              *
-***************************************************************/
+/*******************************************************************
+*                                                                  *
+*             This software is part of the ast package             *
+*                Copyright (c) 1982-2000 AT&T Corp.                *
+*        and it may only be used by you under license from         *
+*                       AT&T Corp. ("AT&T")                        *
+*         A copy of the Source Code Agreement is available         *
+*                at the AT&T Internet web site URL                 *
+*                                                                  *
+*       http://www.research.att.com/sw/license/ast-open.html       *
+*                                                                  *
+*        If you have copied this software without agreeing         *
+*        to the terms of the license you are infringing on         *
+*           the license and copyright and are violating            *
+*               AT&T's intellectual property rights.               *
+*                                                                  *
+*                 This software was created by the                 *
+*                 Network Services Research Center                 *
+*                        AT&T Labs Research                        *
+*                         Florham Park NJ                          *
+*                                                                  *
+*                David Korn <dgk@research.att.com>                 *
+*                                                                  *
+*******************************************************************/
 #pragma prototyped
 /* Adapted for ksh by David Korn */
 /*+	VI.C			P.D. Sullivan
@@ -72,6 +72,9 @@
 #   define genlen(str)	ed_genlen(str)
 #   define digit(c)	((c&~STRIP)==0 && isdigit(c))
 #   define is_print(c)	((c&~STRIP) || isprint(c))
+#   ifndef _lib_iswprint
+#	define iswprint(c)	is_print((c))
+#   endif
     static int _isalph(int);
     static int _ismetach(int);
     static int _isblank(int);
@@ -80,6 +83,7 @@
 #   define ismetach(v)	_ismetach(virtual[v])
 #   include	"lexstates.h"
 #else
+    static genchar	_c;
 #   define gencpy(a,b)	strcpy((char*)(a),(char*)(b))
 #   define genncpy(a,b,n) strncpy((char*)(a),(char*)(b),n)
 #   define genlen(str)	strlen(str)
@@ -185,7 +189,6 @@ typedef struct _vi_
 
 #define	INVALID	(-1)			/* invalid column */
 
-static genchar	_c;
 static const char paren_chars[] = "([{)]}";   /* for % command */
 
 static void	del_line(Vi_t*,int);
@@ -1335,6 +1338,8 @@ static void getline(register Vi_t* vp,register int mode)
 {
 	register int c;
 	register int tmp;
+	int	max_virt=0, last_save;
+	genchar saveline[MAXLINE];
 
 	vp->addnl = 1;
 
@@ -1378,7 +1383,17 @@ static void getline(register Vi_t* vp,register int mode)
 			{
 	escape:
 				if( mode == REPLACE )
+				{
+					c = max_virt-cur_virt;
+					if(c > 0 && last_save>=cur_virt)
+					{
+						genncpy((&virtual[cur_virt]),&saveline[cur_virt],c);
+						if(last_virt>=last_save)
+							last_virt=last_save-1;
+						refresh(vp,INPUT);
+					}
 					--cur_virt;
+				}
 				tmp = cntlmode(vp);
 				if( tmp == ENTER || tmp == BIGVI )
 				{
@@ -1393,6 +1408,13 @@ static void getline(register Vi_t* vp,register int mode)
 					continue;
 				}
 				mode = tmp;
+				if(mode==REPLACE)
+				{
+					c = last_save = last_virt+1;
+					if(c >= MAXLINE)
+						c = MAXLINE-1;
+					genncpy(saveline, virtual, c);
+				}
 			}
 			break;
 
@@ -1413,7 +1435,18 @@ static void getline(register Vi_t* vp,register int mode)
 					cdelete(vp,1, BAD);
 					return;
 				}
-				cdelete(vp,1, BAD);
+				if(mode==REPLACE || (last_save>0 && last_virt<=last_save))
+				{
+					if(cur_virt<=first_virt)
+						ed_ringbell();
+					else if(mode==REPLACE)
+						--cur_virt;
+					mode = REPLACE;
+					sync_cursor(vp);
+					continue;
+				}
+				else
+					cdelete(vp,1, BAD);
 			}
 			break;
 
@@ -1469,7 +1502,7 @@ static void getline(register Vi_t* vp,register int mode)
 			return;
 
 		case '\t':		/** command completion **/
-			if(mode != SEARCH)
+			if(mode!=SEARCH && last_virt>=0 && cur_virt>=last_virt && !isblank(cur_virt))
 			{
 				ed_ungetchar(vp->ed,'\\');
 				goto escape;
@@ -1481,10 +1514,13 @@ static void getline(register Vi_t* vp,register int mode)
 				if( cur_virt < last_virt )
 				{
 					replace(vp,c, 1);
+					if(cur_virt>max_virt)
+						max_virt = cur_virt;
 					continue;
 				}
 				cdelete(vp,1, BAD);
 				mode = APPEND;
+				max_virt = last_virt+3;
 			}
 			append(vp,c, mode);
 			break;
@@ -2570,7 +2606,11 @@ yankeol:
 #ifdef SHOPT_MULTIBYTE
     static int _isalph(register int v)
     {
+#ifdef _lib_iswalnum
 	return(iswalnum(v) || v=='_');
+#else
+	return((v&~STRIP) || isalnum(v) || v=='_');
+#endif
     }
 
 

@@ -1,27 +1,27 @@
-/***************************************************************
-*                                                              *
-*           This software is part of the ast package           *
-*              Copyright (c) 1999-2000 AT&T Corp.              *
-*      and it may only be used by you under license from       *
-*                     AT&T Corp. ("AT&T")                      *
-*       A copy of the Source Code Agreement is available       *
-*              at the AT&T Internet web site URL               *
-*                                                              *
-*     http://www.research.att.com/sw/license/ast-open.html     *
-*                                                              *
-*      If you have copied this software without agreeing       *
-*      to the terms of the license you are infringing on       *
-*         the license and copyright and are violating          *
-*             AT&T's intellectual property rights.             *
-*                                                              *
-*               This software was created by the               *
-*               Network Services Research Center               *
-*                      AT&T Labs Research                      *
-*                       Florham Park NJ                        *
-*                                                              *
-*             Glenn Fowler <gsf@research.att.com>              *
-*                                                              *
-***************************************************************/
+/*******************************************************************
+*                                                                  *
+*             This software is part of the ast package             *
+*                Copyright (c) 1999-2000 AT&T Corp.                *
+*        and it may only be used by you under license from         *
+*                       AT&T Corp. ("AT&T")                        *
+*         A copy of the Source Code Agreement is available         *
+*                at the AT&T Internet web site URL                 *
+*                                                                  *
+*       http://www.research.att.com/sw/license/ast-open.html       *
+*                                                                  *
+*        If you have copied this software without agreeing         *
+*        to the terms of the license you are infringing on         *
+*           the license and copyright and are violating            *
+*               AT&T's intellectual property rights.               *
+*                                                                  *
+*                 This software was created by the                 *
+*                 Network Services Research Center                 *
+*                        AT&T Labs Research                        *
+*                         Florham Park NJ                          *
+*                                                                  *
+*               Glenn Fowler <gsf@research.att.com>                *
+*                                                                  *
+*******************************************************************/
 #pragma prototyped
 
 /*
@@ -30,7 +30,7 @@
  * coded for portability
  */
 
-static char id[] = "\n@(#)mamake (AT&T Labs Research) 2000-06-14\0\n";
+static char id[] = "\n@(#)mamake (AT&T Labs Research) 2000-09-21\0\n";
 
 #if _PACKAGE_ast
 
@@ -38,7 +38,7 @@ static char id[] = "\n@(#)mamake (AT&T Labs Research) 2000-06-14\0\n";
 #include <error.h>
 
 static const char usage[] =
-"[-?@(#)mamake (AT&T Labs Research) 2000-06-14]"
+"[-?@(#)mamake (AT&T Labs Research) 2000-09-21]"
 USAGE_LICENSE
 "[+NAME?mamake - make abstract machine make]"
 "[+DESCRIPTION?\bmamake\b reads \amake abstract machine\a target and"
@@ -59,6 +59,8 @@ USAGE_LICENSE
 "		[+recursion?Ordered subdirectory recursion over unrelated"
 "			makefiles.]"
 "	}"
+"[+?For compatibility with \bnmake\b(1) the \b-K\b option and the \brecurse\b"
+"	and \bcc-*\b command line targets are ignored.]"
 "[f:?Read \afile\a instead of the default.]:[file:=Mamfile]"
 "[i:?Ignore action errors.]"
 "[k:?Continue after error with sibling prerequisites.]"
@@ -75,6 +77,7 @@ USAGE_LICENSE
 "[D:?Set the debug trace level to \alevel\a. Higher levels produce more"
 "	output.]#[level]"
 "[F:?Force all targets to be out of date.]"
+"[K:?Ignored.]"
 "[N:?Like \b-n\b but recursion actions (see \b-r\b) are also disabled.]"
 "[V:?Print the program version and exit.]"
 
@@ -238,7 +241,7 @@ extern char**		environ;
 static void
 usage()
 {
-	fprintf(stderr, "Usage: %s [-iknFNV] [-f mamfile] [-r pattern] [-C directory] [-D level] [target ...] [name=value ...]\n", state.id);
+	fprintf(stderr, "Usage: %s [-iknFKNV] [-f mamfile] [-r pattern] [-C directory] [-D level] [target ...] [name=value ...]\n", state.id);
 	exit(2);
 }
 
@@ -1452,8 +1455,11 @@ scan(Dict_item_t* item, void* handle)
 								k = 0;
 								break;
 							}
-					if (k && (q = (Rule_t*)search(state.leaf, t, NiL)) && q != r)
-						cons(r, q);
+					if (k)
+					{
+						if ((q = (Rule_t*)search(state.leaf, t, NiL)) && q != r || t[0] == 'l' && t[1] == 'i' && t[2] == 'b' && t[3] && (q = (Rule_t*)search(state.leaf, t + 3, NiL)) && q != r)
+							cons(r, q);
+					}
 					j = i;
 				}
 			}
@@ -1613,6 +1619,8 @@ main(int argc, char** argv)
 			append(state.opt, " -F");
 			state.force = 1;
 			continue;
+		case 'K':
+			continue;
 		case 'V':
 			fprintf(stdout, "%s\n", id + 5);
 			exit(0);
@@ -1682,6 +1690,8 @@ main(int argc, char** argv)
 			case 'F':
 				append(state.opt, " -F");
 				state.force = 1;
+				continue;
+			case 'K':
 				continue;
 			case 'V':
 				fprintf(stdout, "%s\n", id + 5);
@@ -1758,6 +1768,14 @@ main(int argc, char** argv)
 			}
 		if (!*t)
 		{
+			/*
+			 * handle a few targets for nmake compatibility
+			 */
+
+			if (*s == 'e' && !strncmp(s, "error 0 $(MAKEVERSION:", 22))
+				exit(1);
+			if (*s == 'r' && !strcmp(s, "recurse") || *s == 'c' && !strncmp(s, "cc-", 3))
+				continue;
 			rule(s)->flags |= RULE_active;
 			state.active = 0;
 			if (state.recurse)

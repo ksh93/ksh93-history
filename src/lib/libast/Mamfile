@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 4.0 2000-06-01
+info mam static 00000 1994-07-17 make (AT&T Research) 4.0 2000-10-31
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ar
@@ -30,8 +30,6 @@ setv SILENT
 setv TAR tar
 setv YACC yacc
 setv YACCFLAGS -d
-make ${INSTALLROOT}/lib/package/ast.lic
-done ${INSTALLROOT}/lib/package/ast.lic
 make include/ast_version.h
 done include/ast_version.h
 make install
@@ -54,6 +52,7 @@ exec - iffe -v -c '${CC} ${CCFLAGS}    ${LDFLAGS} '   run features/stdio
 done FEATURE/stdio generated
 exec - cmp 2>/dev/null -s FEATURE/stdio stdio.h || { rm -f stdio.h; silent test -d . || mkdir .; cp FEATURE/stdio stdio.h; }
 done stdio.h generated
+exec - set -
 exec - echo 'main(){return(0);}' > 1.${COTEMP}.c
 exec - ${CC} ${CCFLAGS}    -c 1.${COTEMP}.c &&
 exec - x=`${CC} ${CCFLAGS}    ${LDFLAGS}  -o 1.${COTEMP}.x 1.${COTEMP}.o -l'*' 2>&1 | sed -e 's/[][()+@?]/#/g' || :` &&
@@ -66,7 +65,7 @@ exec - do	case $i in
 exec - 	"ast"|ast)
 exec - 		;;
 exec - 	*)	if	test ! -f ${INSTALLROOT}/lib/lib$i.a
-exec - 		then	case `{ ${CC} ${CCFLAGS}    -L. -Lobsolete -Lcdt -Lcomp -Ldir -Ldisc -Lhash -Lman -Lmisc -Lpath -Lport -Lpreroot -Lregex -Lsfio -Lstdio -Lstring -Ltm -Luwin -Lvec -Lvmalloc ${LDFLAGS}  -o 1.${COTEMP}.x 1.${COTEMP}.o  -l$i 2>&1 || echo '' $x ;} | sed -e 's/[][()+@?]/#/g' || :` in
+exec - 		then	case `{ ${CC} ${CCFLAGS}     ${LDFLAGS}  -o 1.${COTEMP}.x 1.${COTEMP}.o  -l$i 2>&1 || echo '' $x ;} | sed -e 's/[][()+@?]/#/g' || :` in
 exec - 			*$x*)	case `{ ${CC} ${CCFLAGS}    ${LDFLAGS}  -o 1.${COTEMP}.x 1.${COTEMP}.o  -l$i 2>&1 || echo '' $x ;} | sed -e 's/[][()+@?]/#/g' || :` in
 exec - 				*$x*) continue ;;
 exec - 				esac
@@ -375,7 +374,7 @@ exec - *)	header=dir/dirstd.h
 exec - 	;;
 exec - esac
 exec - case $header in
-exec - ?*)	proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' $header > 1.${COTEMP}.x
+exec - ?*)	proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' $header > 1.${COTEMP}.x
 exec - 	if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/dirent.h 1.${COTEMP}.x
 exec - 	then	rm -f 1.${COTEMP}.x
 exec - 	else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/dirent.h
@@ -1265,6 +1264,21 @@ done string/fmtbase.c
 prev string/fmtbase.c
 exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -D_PACKAGE_ast -c string/fmtbase.c
 done fmtbase.o generated
+make fmtbuf.o
+make string/fmtbuf.c
+prev include/ast.h implicit
+done string/fmtbuf.c
+prev string/fmtbuf.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -D_PACKAGE_ast -c string/fmtbuf.c
+done fmtbuf.o generated
+make fmtclock.o
+make string/fmtclock.c
+prev include/tm.h implicit
+prev include/ast.h implicit
+done string/fmtclock.c
+prev string/fmtclock.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -D_PACKAGE_ast -c string/fmtclock.c
+done fmtclock.o generated
 make fmtdev.o
 make string/fmtdev.c
 prev include/ls.h implicit
@@ -1307,6 +1321,13 @@ done string/fmtfs.c
 prev string/fmtfs.c
 exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -D_PACKAGE_ast -c string/fmtfs.c
 done fmtfs.o generated
+make fmtip4.o
+make string/fmtip4.c
+prev include/ast.h implicit
+done string/fmtip4.c
+prev string/fmtip4.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -D_PACKAGE_ast -c string/fmtip4.c
+done fmtip4.o generated
 make fmtls.o
 make string/fmtls.c
 prev include/tm.h implicit
@@ -1417,6 +1438,13 @@ done string/strgid.c
 prev string/strgid.c
 exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -D_PACKAGE_ast -c string/strgid.c
 done strgid.o generated
+make strtoip4.o
+make string/strtoip4.c
+prev include/ast.h implicit
+done string/strtoip4.c
+prev string/strtoip4.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -D_PACKAGE_ast -c string/strtoip4.c
+done strtoip4.o generated
 make stack.o
 make misc/stack.c
 make include/stack.h implicit
@@ -2722,6 +2750,8 @@ exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -D_PACKAGE_ast -c comp/swab.c
 done swab.o generated
 make syslog.o
 make comp/syslog.c
+prev stdio.h implicit
+prev include/ls.h implicit
 prev include/tm.h implicit
 prev include/error.h implicit
 prev include/sfstr.h implicit
@@ -3383,6 +3413,13 @@ done sfio/sfputm.c
 prev sfio/sfputm.c
 exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfputm.c
 done sfputm.o generated
+make sfresize.o
+make sfio/sfresize.c
+prev sfio/sfhdr.h implicit
+done sfio/sfresize.c
+prev sfio/sfresize.c
+exec - ${CC} ${CCFLAGS}  -I. -Icomp -Isfio -Iinclude -D_PACKAGE_ast -c sfio/sfresize.c
+done sfresize.o generated
 make _sfclrerr.o
 make sfio/_sfclrerr.c
 prev sfio/sfhdr.h implicit
@@ -4338,7 +4375,6 @@ prev ast_common.h implicit
 done include/bytesex.h dontcare
 done include/endian.h dontcare
 prev stdio.h implicit
-prev stdio.h implicit
 prev include/ast_std.h implicit
 done uwin/rlib.h dontcare
 done uwin/rcmd.c
@@ -4370,11 +4406,11 @@ exec - 	${CC} -c ${CCFLAGS}    atmain.c
 exec - fi
 done atmain.o generated
 exec - ${AR} cr libast.a state.o opendir.o readdir.o rewinddir.o seekdir.o telldir.o getcwd.o fastfind.o hashalloc.o hashdump.o hashfree.o hashlast.o hashlook.o hashscan.o hashsize.o hashview.o hashwalk.o memhash.o memsum.o strhash.o strkey.o strsum.o stracmp.o strnacmp.o _ccmaps.o ccmapc.o ccmapcpy.o ccmapid.o ccmaps.o ccnative.o
-exec - ${AR} cr libast.a mematoe.o memetoa.o chresc.o chrtoi.o streval.o strexpr.o strmatch.o strcopy.o modei.o modex.o strmode.o strlook.o strsearch.o strpsearch.o stresc.o stropt.o strtape.o tok.o tokline.o tokscan.o pathaccess.o pathcat.o pathcanon.o pathcheck.o pathpath.o pathfind.o pathkey.o pathprobe.o pathrepl.o pathtmp.o pathstat.o pathgetlink.o pathsetlink.o pathbin.o pathshell.o pathcd.o fs3d.o ftwalk.o ftwflags.o fts.o setenviron.o optget.o optjoin.o strsort.o magic.o mime.o mimetype.o signal.o systrace.o error.o errorf.o errormsg.o errorx.o setlocale.o translate.o catopen.o iconv.o mc.o liberror.o libevent.o fmtbase.o fmtdev.o fmtelapsed.o fmterror.o fmtesc.o fmtfs.o fmtls.o fmtmatch.o fmtmode.o fmtnum.o fmtperm.o fmtre.o fmttime.o fmtuid.o fmtgid.o fmtsignal.o strelapsed.o strperm.o struid.o strgid.o stack.o stk.o swapget.o swapmem.o swapop.o swapput.o sigdata.o sigcrit.o sigunblock.o procopen.o procclose.o procrun.o procfree.o tmdate.o tmfix.o tmfmt.o tmform.o tmgoff.o tminit.o tmleap.o tmlex.o
-exec - ${AR} cr libast.a tmlocale.o tmmake.o tmpoff.o tmscan.o tmtime.o tmtype.o tmword.o tmzone.o vecargs.o vecfile.o vecfree.o vecload.o vecstring.o univdata.o touch.o mnt.o memccpy.o memchr.o memcmp.o memcpy.o memdup.o memmove.o memset.o mkdir.o mkfifo.o mknod.o rmdir.o remove.o rename.o link.o unlink.o strdup.o strchr.o strrchr.o strtod.o strtol.o strtoll.o strtoul.o strtoull.o strton.o strtonll.o strcasecmp.o strncasecmp.o strerror.o mktemp.o tmpnam.o execlp.o execve.o execvp.o execvpe.o spawnlp.o spawnve.o spawnveg.o spawnvp.o spawnvpe.o vfork.o killpg.o hsearch.o tsearch.o getlogin.o putenv.o lstat.o statvfs.o gross.o omitted.o readlink.o symlink.o getpgrp.o setpgid.o setsid.o waitpid.o confmap.o conftab.o confstr.o pathconf.o sysconf.o creat64.o fcntl.o open.o atexit.o getdents.o getwd.o dup2.o errno.o getpreroot.o ispreroot.o realopen.o setpreroot.o getgroups.o mount.o system.o iblocks.o modedata.o tmdata.o memfatal.o sfkeyprintf.o sfstrtmp.o sfdcold.o sfdcdio.o sfdcdos.o sfdcfilter.o
-exec - ${AR} cr libast.a sfdcseekable.o sfdcslow.o sfdcsubstream.o sfdctee.o sfdcunion.o sfdcmore.o sfdcprefix.o libc.o basename.o closelog.o dirname.o fmtmsglib.o fnmatch.o ftw.o getdate.o getsubopt.o glob.o nftw.o openlog.o re_comp.o realpath.o regcmp.o regexp.o setlogmask.o strftime.o strptime.o swab.o syslog.o tempnam.o tmpfile.o wordexp.o mktime.o regalloc.o regclass.o regcomp.o regerror.o regexec.o regfatal.o reginit.o regnexec.o regsub.o regrecord.o regrexec.o dtclose.o dtdisc.o dtextract.o dtflatten.o dthash.o dtlist.o dtmethod.o dtopen.o dtrenew.o dtrestore.o dtsize.o dtstat.o dtstrhash.o dttree.o dtview.o dtwalk.o sfclose.o sfclrlock.o sfdisc.o sfdlen.o sfexcept.o sfgetl.o sfgetu.o sfcvt.o sfecvt.o sffcvt.o sfextern.o sffilbuf.o sfflsbuf.o sfprints.o sfgetd.o sfgetr.o sfllen.o sfmode.o sfmove.o sfnew.o sfpkrd.o sfnotify.o sfnputc.o sfopen.o sfpeek.o sfpoll.o sfpool.o sfpopen.o sfprintf.o sfputd.o sfputl.o sfputr.o sfputu.o sfrd.o sfread.o sfreserve.o sfscanf.o sfseek.o sfset.o sfsetbuf.o sfsetfd.o sfsize.o
-exec - ${AR} cr libast.a sfsk.o sfstack.o sfstrtod.o sfsync.o sfswap.o sftable.o sftell.o sftmp.o sfungetc.o sfvprintf.o sfvscanf.o sfwr.o sfwrite.o sfpurge.o sfraise.o sfgetm.o sfmutex.o sfputm.o _sfclrerr.o _sfeof.o _sferror.o _sffileno.o _sfstacked.o _sfvalue.o _sfgetc.o _sfgetl.o _sfgetl2.o _sfgetu.o _sfgetu2.o _sfdlen.o _sfllen.o _sfslen.o _sfulen.o _sfputc.o _sfputd.o _sfputl.o _sfputm.o _sfputu.o clearerr.o fclose.o fdopen.o feof.o ferror.o fflush.o fgetc.o fgetpos.o fgets.o fileno.o fopen.o fprintf.o fpurge.o fputc.o fputs.o fread.o freopen.o fscanf.o fseek.o fsetpos.o ftell.o fwrite.o getc.o getchar.o getw.o pclose.o popen.o printf.o putc.o putchar.o puts.o putw.o rewind.o scanf.o setbuf.o setbuffer.o setlinebuf.o setvbuf.o snprintf.o sprintf.o sscanf.o ungetc.o vfprintf.o vfscanf.o vprintf.o vscanf.o vsnprintf.o vsprintf.o vsscanf.o _doprnt.o _doscan.o _stdfun.o _stdopen.o _stdprintf.o _stdscanf.o _stdsprnt.o _stdvbuf.o _stdvsnprnt.o _stdvsprnt.o _stdvsscn.o astcopy.o astconf.o astdynamic.o
-exec - ${AR} cr libast.a astlicense.o astquery.o astwinsize.o aststatic.o getopt.o vmbest.o vmclear.o vmclose.o vmdcheap.o vmdebug.o vmdisc.o vmexit.o vmlast.o vmopen.o vmpool.o vmprivate.o vmprofile.o vmregion.o vmsegment.o vmset.o vmstat.o vmstrdup.o vmtrace.o vmwalk.o malloc.o a64l.o acosh.o asinh.o atanh.o cbrt.o crypt.o crypt_util.o erf.o err.o exp.o exp__E.o expm1.o gamma.o getpass.o lgamma.o log.o log1p.o log__L.o rand48.o random.o rcmd.o rint.o support.o atmain.o
+exec - ${AR} cr libast.a mematoe.o memetoa.o chresc.o chrtoi.o streval.o strexpr.o strmatch.o strcopy.o modei.o modex.o strmode.o strlook.o strsearch.o strpsearch.o stresc.o stropt.o strtape.o tok.o tokline.o tokscan.o pathaccess.o pathcat.o pathcanon.o pathcheck.o pathpath.o pathfind.o pathkey.o pathprobe.o pathrepl.o pathtmp.o pathstat.o pathgetlink.o pathsetlink.o pathbin.o pathshell.o pathcd.o fs3d.o ftwalk.o ftwflags.o fts.o setenviron.o optget.o optjoin.o strsort.o magic.o mime.o mimetype.o signal.o systrace.o error.o errorf.o errormsg.o errorx.o setlocale.o translate.o catopen.o iconv.o mc.o liberror.o libevent.o fmtbase.o fmtbuf.o fmtclock.o fmtdev.o fmtelapsed.o fmterror.o fmtesc.o fmtfs.o fmtip4.o fmtls.o fmtmatch.o fmtmode.o fmtnum.o fmtperm.o fmtre.o fmttime.o fmtuid.o fmtgid.o fmtsignal.o strelapsed.o strperm.o struid.o strgid.o strtoip4.o stack.o stk.o swapget.o swapmem.o swapop.o swapput.o sigdata.o sigcrit.o sigunblock.o procopen.o procclose.o procrun.o procfree.o tmdate.o tmfix.o tmfmt.o tmform.o
+exec - ${AR} cr libast.a tmgoff.o tminit.o tmleap.o tmlex.o tmlocale.o tmmake.o tmpoff.o tmscan.o tmtime.o tmtype.o tmword.o tmzone.o vecargs.o vecfile.o vecfree.o vecload.o vecstring.o univdata.o touch.o mnt.o memccpy.o memchr.o memcmp.o memcpy.o memdup.o memmove.o memset.o mkdir.o mkfifo.o mknod.o rmdir.o remove.o rename.o link.o unlink.o strdup.o strchr.o strrchr.o strtod.o strtol.o strtoll.o strtoul.o strtoull.o strton.o strtonll.o strcasecmp.o strncasecmp.o strerror.o mktemp.o tmpnam.o execlp.o execve.o execvp.o execvpe.o spawnlp.o spawnve.o spawnveg.o spawnvp.o spawnvpe.o vfork.o killpg.o hsearch.o tsearch.o getlogin.o putenv.o lstat.o statvfs.o gross.o omitted.o readlink.o symlink.o getpgrp.o setpgid.o setsid.o waitpid.o confmap.o conftab.o confstr.o pathconf.o sysconf.o creat64.o fcntl.o open.o atexit.o getdents.o getwd.o dup2.o errno.o getpreroot.o ispreroot.o realopen.o setpreroot.o getgroups.o mount.o system.o iblocks.o modedata.o tmdata.o memfatal.o sfkeyprintf.o sfstrtmp.o
+exec - ${AR} cr libast.a sfdcold.o sfdcdio.o sfdcdos.o sfdcfilter.o sfdcseekable.o sfdcslow.o sfdcsubstream.o sfdctee.o sfdcunion.o sfdcmore.o sfdcprefix.o libc.o basename.o closelog.o dirname.o fmtmsglib.o fnmatch.o ftw.o getdate.o getsubopt.o glob.o nftw.o openlog.o re_comp.o realpath.o regcmp.o regexp.o setlogmask.o strftime.o strptime.o swab.o syslog.o tempnam.o tmpfile.o wordexp.o mktime.o regalloc.o regclass.o regcomp.o regerror.o regexec.o regfatal.o reginit.o regnexec.o regsub.o regrecord.o regrexec.o dtclose.o dtdisc.o dtextract.o dtflatten.o dthash.o dtlist.o dtmethod.o dtopen.o dtrenew.o dtrestore.o dtsize.o dtstat.o dtstrhash.o dttree.o dtview.o dtwalk.o sfclose.o sfclrlock.o sfdisc.o sfdlen.o sfexcept.o sfgetl.o sfgetu.o sfcvt.o sfecvt.o sffcvt.o sfextern.o sffilbuf.o sfflsbuf.o sfprints.o sfgetd.o sfgetr.o sfllen.o sfmode.o sfmove.o sfnew.o sfpkrd.o sfnotify.o sfnputc.o sfopen.o sfpeek.o sfpoll.o sfpool.o sfpopen.o sfprintf.o sfputd.o sfputl.o sfputr.o sfputu.o sfrd.o sfread.o sfreserve.o sfscanf.o sfseek.o
+exec - ${AR} cr libast.a sfset.o sfsetbuf.o sfsetfd.o sfsize.o sfsk.o sfstack.o sfstrtod.o sfsync.o sfswap.o sftable.o sftell.o sftmp.o sfungetc.o sfvprintf.o sfvscanf.o sfwr.o sfwrite.o sfpurge.o sfraise.o sfgetm.o sfmutex.o sfputm.o sfresize.o _sfclrerr.o _sfeof.o _sferror.o _sffileno.o _sfstacked.o _sfvalue.o _sfgetc.o _sfgetl.o _sfgetl2.o _sfgetu.o _sfgetu2.o _sfdlen.o _sfllen.o _sfslen.o _sfulen.o _sfputc.o _sfputd.o _sfputl.o _sfputm.o _sfputu.o clearerr.o fclose.o fdopen.o feof.o ferror.o fflush.o fgetc.o fgetpos.o fgets.o fileno.o fopen.o fprintf.o fpurge.o fputc.o fputs.o fread.o freopen.o fscanf.o fseek.o fsetpos.o ftell.o fwrite.o getc.o getchar.o getw.o pclose.o popen.o printf.o putc.o putchar.o puts.o putw.o rewind.o scanf.o setbuf.o setbuffer.o setlinebuf.o setvbuf.o snprintf.o sprintf.o sscanf.o ungetc.o vfprintf.o vfscanf.o vprintf.o vscanf.o vsnprintf.o vsprintf.o vsscanf.o _doprnt.o _doscan.o _stdfun.o _stdopen.o _stdprintf.o _stdscanf.o _stdsprnt.o _stdvbuf.o _stdvsnprnt.o
+exec - ${AR} cr libast.a _stdvsprnt.o _stdvsscn.o astcopy.o astconf.o astdynamic.o astlicense.o astquery.o astwinsize.o aststatic.o getopt.o vmbest.o vmclear.o vmclose.o vmdcheap.o vmdebug.o vmdisc.o vmexit.o vmlast.o vmopen.o vmpool.o vmprivate.o vmprofile.o vmregion.o vmsegment.o vmset.o vmstat.o vmstrdup.o vmtrace.o vmwalk.o malloc.o a64l.o acosh.o asinh.o atanh.o cbrt.o crypt.o crypt_util.o erf.o err.o exp.o exp__E.o expm1.o gamma.o getpass.o lgamma.o log.o log1p.o log__L.o rand48.o random.o rcmd.o rint.o support.o atmain.o
 exec - (ranlib libast.a) >/dev/null 2>&1 || true
 done libast.a generated
 done ast virtual
@@ -4728,7 +4764,7 @@ done ${INSTALLROOT}/lib/lib/ast generated
 prev ${INSTALLROOT}/include/ast
 make ${INSTALLROOT}/include/ast/ast.h
 prev include/ast.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/ast.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/ast.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast.h
@@ -4736,7 +4772,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast.h generated
 make ${INSTALLROOT}/include/ast/ast_dir.h
 prev include/ast_dir.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/ast_dir.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/ast_dir.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_dir.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_dir.h
@@ -4744,7 +4780,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_dir.h generated
 make ${INSTALLROOT}/include/ast/ast_std.h
 prev include/ast_std.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/ast_std.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/ast_std.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_std.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_std.h
@@ -4752,7 +4788,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_std.h generated
 make ${INSTALLROOT}/include/ast/ast_version.h
 prev include/ast_version.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/ast_version.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/ast_version.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_version.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_version.h
@@ -4760,7 +4796,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_version.h generated
 make ${INSTALLROOT}/include/ast/ccode.h
 prev include/ccode.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/ccode.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/ccode.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ccode.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ccode.h
@@ -4768,7 +4804,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ccode.h generated
 make ${INSTALLROOT}/include/ast/cdt.h
 prev include/cdt.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/cdt.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/cdt.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/cdt.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/cdt.h
@@ -4776,7 +4812,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/cdt.h generated
 make ${INSTALLROOT}/include/ast/debug.h
 prev include/debug.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/debug.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/debug.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/debug.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/debug.h
@@ -4784,7 +4820,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/debug.h generated
 make ${INSTALLROOT}/include/ast/error.h
 prev include/error.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/error.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/error.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/error.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/error.h
@@ -4792,7 +4828,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/error.h generated
 make ${INSTALLROOT}/include/ast/find.h
 prev include/find.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/find.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/find.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/find.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/find.h
@@ -4800,7 +4836,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/find.h generated
 make ${INSTALLROOT}/include/ast/ftw.h
 prev comp/ftw.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' comp/ftw.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/ftw.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ftw.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ftw.h
@@ -4808,7 +4844,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ftw.h generated
 make ${INSTALLROOT}/include/ast/ftwalk.h
 prev include/ftwalk.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/ftwalk.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/ftwalk.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ftwalk.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ftwalk.h
@@ -4816,7 +4852,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ftwalk.h generated
 make ${INSTALLROOT}/include/ast/fts.h
 prev include/fts.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/fts.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/fts.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/fts.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/fts.h
@@ -4824,7 +4860,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/fts.h generated
 make ${INSTALLROOT}/include/ast/fs3d.h
 prev include/fs3d.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/fs3d.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/fs3d.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/fs3d.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/fs3d.h
@@ -4832,7 +4868,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/fs3d.h generated
 make ${INSTALLROOT}/include/ast/getopt.h
 prev comp/getopt.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' comp/getopt.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/getopt.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/getopt.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/getopt.h
@@ -4840,7 +4876,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/getopt.h generated
 make ${INSTALLROOT}/include/ast/glob.h
 prev include/glob.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/glob.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/glob.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/glob.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/glob.h
@@ -4848,7 +4884,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/glob.h generated
 make ${INSTALLROOT}/include/ast/hash.h
 prev include/hash.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/hash.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/hash.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/hash.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/hash.h
@@ -4856,7 +4892,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/hash.h generated
 make ${INSTALLROOT}/include/ast/hashkey.h
 prev include/hashkey.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/hashkey.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/hashkey.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/hashkey.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/hashkey.h
@@ -4864,7 +4900,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/hashkey.h generated
 make ${INSTALLROOT}/include/ast/hashpart.h
 prev include/hashpart.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/hashpart.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/hashpart.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/hashpart.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/hashpart.h
@@ -4872,7 +4908,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/hashpart.h generated
 make ${INSTALLROOT}/include/ast/int.h
 prev include/int.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/int.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/int.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/int.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/int.h
@@ -4880,7 +4916,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/int.h generated
 make ${INSTALLROOT}/include/ast/ls.h
 prev include/ls.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/ls.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/ls.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ls.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ls.h
@@ -4888,7 +4924,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ls.h generated
 make ${INSTALLROOT}/include/ast/magic.h
 prev include/magic.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/magic.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/magic.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/magic.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/magic.h
@@ -4896,7 +4932,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/magic.h generated
 make ${INSTALLROOT}/include/ast/mc.h
 prev include/mc.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/mc.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/mc.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/mc.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/mc.h
@@ -4904,7 +4940,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/mc.h generated
 make ${INSTALLROOT}/include/ast/mime.h
 prev include/mime.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/mime.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/mime.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/mime.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/mime.h
@@ -4912,7 +4948,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/mime.h generated
 make ${INSTALLROOT}/include/ast/mnt.h
 prev include/mnt.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/mnt.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/mnt.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/mnt.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/mnt.h
@@ -4920,7 +4956,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/mnt.h generated
 make ${INSTALLROOT}/include/ast/modecanon.h
 prev include/modecanon.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/modecanon.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/modecanon.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/modecanon.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/modecanon.h
@@ -4928,7 +4964,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/modecanon.h generated
 make ${INSTALLROOT}/include/ast/modex.h
 prev include/modex.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/modex.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/modex.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/modex.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/modex.h
@@ -4936,7 +4972,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/modex.h generated
 make ${INSTALLROOT}/include/ast/namval.h
 prev include/namval.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/namval.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/namval.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/namval.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/namval.h
@@ -4944,7 +4980,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/namval.h generated
 make ${INSTALLROOT}/include/ast/option.h
 prev include/option.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/option.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/option.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/option.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/option.h
@@ -4952,7 +4988,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/option.h generated
 make ${INSTALLROOT}/include/ast/proc.h
 prev include/proc.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/proc.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/proc.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/proc.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/proc.h
@@ -4961,7 +4997,7 @@ done ${INSTALLROOT}/include/ast/proc.h generated
 make ${INSTALLROOT}/include/ast/re.h
 make include/re.h
 done include/re.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/re.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/re.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/re.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/re.h
@@ -4969,7 +5005,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/re.h generated
 make ${INSTALLROOT}/include/ast/re_comp.h
 prev comp/re_comp.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' comp/re_comp.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/re_comp.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/re_comp.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/re_comp.h
@@ -4977,7 +5013,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/re_comp.h generated
 make ${INSTALLROOT}/include/ast/regex.h
 prev include/regex.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/regex.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/regex.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/regex.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/regex.h
@@ -4985,7 +5021,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/regex.h generated
 make ${INSTALLROOT}/include/ast/regexp.h
 prev comp/regexp.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' comp/regexp.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/regexp.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/regexp.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/regexp.h
@@ -4993,7 +5029,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/regexp.h generated
 make ${INSTALLROOT}/include/ast/sfio.h
 prev include/sfio.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/sfio.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/sfio.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/sfio.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/sfio.h
@@ -5001,7 +5037,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/sfio.h generated
 make ${INSTALLROOT}/include/ast/sfio_t.h
 prev include/sfio_t.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/sfio_t.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/sfio_t.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/sfio_t.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/sfio_t.h
@@ -5009,7 +5045,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/sfio_t.h generated
 make ${INSTALLROOT}/include/ast/sfdisc.h
 prev include/sfdisc.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/sfdisc.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/sfdisc.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/sfdisc.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/sfdisc.h
@@ -5017,7 +5053,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/sfdisc.h generated
 make ${INSTALLROOT}/include/ast/sfstr.h
 prev include/sfstr.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/sfstr.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/sfstr.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/sfstr.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/sfstr.h
@@ -5025,7 +5061,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/sfstr.h generated
 make ${INSTALLROOT}/include/ast/stack.h
 prev include/stack.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/stack.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/stack.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/stack.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/stack.h
@@ -5033,7 +5069,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/stack.h generated
 make ${INSTALLROOT}/include/ast/stak.h
 prev include/stak.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/stak.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/stak.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/stak.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/stak.h
@@ -5041,7 +5077,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/stak.h generated
 make ${INSTALLROOT}/include/ast/stk.h
 prev include/stk.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/stk.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/stk.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/stk.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/stk.h
@@ -5049,7 +5085,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/stk.h generated
 make ${INSTALLROOT}/include/ast/swap.h
 prev include/swap.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/swap.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/swap.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/swap.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/swap.h
@@ -5058,7 +5094,7 @@ done ${INSTALLROOT}/include/ast/swap.h generated
 make ${INSTALLROOT}/include/ast/tar.h
 make include/tar.h
 done include/tar.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/tar.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/tar.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/tar.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/tar.h
@@ -5066,7 +5102,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/tar.h generated
 make ${INSTALLROOT}/include/ast/times.h
 prev include/times.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/times.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/times.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/times.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/times.h
@@ -5074,7 +5110,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/times.h generated
 make ${INSTALLROOT}/include/ast/tm.h
 prev include/tm.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/tm.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/tm.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/tm.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/tm.h
@@ -5082,7 +5118,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/tm.h generated
 make ${INSTALLROOT}/include/ast/tok.h
 prev include/tok.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/tok.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/tok.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/tok.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/tok.h
@@ -5091,7 +5127,7 @@ done ${INSTALLROOT}/include/ast/tok.h generated
 make ${INSTALLROOT}/include/ast/usage.h
 make include/usage.h
 done include/usage.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/usage.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/usage.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/usage.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/usage.h
@@ -5100,7 +5136,7 @@ done ${INSTALLROOT}/include/ast/usage.h generated
 make ${INSTALLROOT}/include/ast/vdb.h
 make include/vdb.h
 done include/vdb.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/vdb.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/vdb.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/vdb.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/vdb.h
@@ -5108,7 +5144,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/vdb.h generated
 make ${INSTALLROOT}/include/ast/vecargs.h
 prev include/vecargs.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/vecargs.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/vecargs.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/vecargs.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/vecargs.h
@@ -5116,7 +5152,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/vecargs.h generated
 make ${INSTALLROOT}/include/ast/vmalloc.h
 prev include/vmalloc.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/vmalloc.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/vmalloc.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/vmalloc.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/vmalloc.h
@@ -5124,7 +5160,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/vmalloc.h generated
 make ${INSTALLROOT}/include/ast/wait.h
 prev include/wait.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/wait.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/wait.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/wait.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/wait.h
@@ -5132,7 +5168,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/wait.h generated
 make ${INSTALLROOT}/include/ast/wordexp.h
 prev comp/wordexp.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' comp/wordexp.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/wordexp.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/wordexp.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/wordexp.h
@@ -5140,7 +5176,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/wordexp.h generated
 make ${INSTALLROOT}/include/ast/bytesex.h
 prev include/bytesex.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/bytesex.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/bytesex.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/bytesex.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/bytesex.h
@@ -5148,7 +5184,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/bytesex.h generated
 make ${INSTALLROOT}/include/ast/endian.h
 prev include/endian.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' include/endian.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' include/endian.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/endian.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/endian.h
@@ -5156,7 +5192,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/endian.h generated
 make ${INSTALLROOT}/include/ast/align.h
 prev align.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' align.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' align.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/align.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/align.h
@@ -5164,7 +5200,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/align.h generated
 make ${INSTALLROOT}/include/ast/iconv.h
 prev iconv.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' iconv.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' iconv.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/iconv.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/iconv.h
@@ -5172,7 +5208,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/iconv.h generated
 make ${INSTALLROOT}/include/ast/limits.h
 prev limits.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' limits.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' limits.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/limits.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/limits.h
@@ -5180,7 +5216,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/limits.h generated
 make ${INSTALLROOT}/include/ast/nl_types.h
 prev nl_types.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' nl_types.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' nl_types.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/nl_types.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/nl_types.h
@@ -5188,7 +5224,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/nl_types.h generated
 make ${INSTALLROOT}/include/ast/preroot.h
 prev preroot.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' preroot.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' preroot.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/preroot.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/preroot.h
@@ -5196,7 +5232,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/preroot.h generated
 make ${INSTALLROOT}/include/ast/sig.h
 prev sig.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' sig.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' sig.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/sig.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/sig.h
@@ -5204,7 +5240,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/sig.h generated
 make ${INSTALLROOT}/include/ast/ast_botch.h
 prev ast_botch.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' ast_botch.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_botch.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_botch.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_botch.h
@@ -5212,7 +5248,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_botch.h generated
 make ${INSTALLROOT}/include/ast/ast_ccode.h
 prev ast_ccode.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' ast_ccode.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_ccode.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_ccode.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_ccode.h
@@ -5220,7 +5256,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_ccode.h generated
 make ${INSTALLROOT}/include/ast/ast_common.h
 prev ast_common.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' ast_common.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_common.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_common.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_common.h
@@ -5228,7 +5264,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_common.h generated
 make ${INSTALLROOT}/include/ast/ast_fcntl.h
 prev ast_fcntl.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' ast_fcntl.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_fcntl.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_fcntl.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_fcntl.h
@@ -5236,7 +5272,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_fcntl.h generated
 make ${INSTALLROOT}/include/ast/ast_fs.h
 prev ast_fs.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' ast_fs.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_fs.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_fs.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_fs.h
@@ -5244,7 +5280,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_fs.h generated
 make ${INSTALLROOT}/include/ast/ast_hdr.h
 prev ast_hdr.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' ast_hdr.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_hdr.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_hdr.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_hdr.h
@@ -5252,7 +5288,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_hdr.h generated
 make ${INSTALLROOT}/include/ast/ast_lib.h
 prev ast_lib.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' ast_lib.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_lib.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_lib.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_lib.h
@@ -5260,7 +5296,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_lib.h generated
 make ${INSTALLROOT}/include/ast/ast_mode.h
 prev ast_mode.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' ast_mode.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_mode.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_mode.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_mode.h
@@ -5268,7 +5304,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_mode.h generated
 make ${INSTALLROOT}/include/ast/ast_param.h
 prev ast_param.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' ast_param.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_param.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_param.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_param.h
@@ -5276,7 +5312,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_param.h generated
 make ${INSTALLROOT}/include/ast/ast_time.h
 prev ast_time.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' ast_time.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_time.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_time.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_time.h
@@ -5284,7 +5320,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_time.h generated
 make ${INSTALLROOT}/include/ast/ast_tty.h
 prev ast_tty.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' ast_tty.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_tty.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_tty.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_tty.h
@@ -5292,7 +5328,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_tty.h generated
 make ${INSTALLROOT}/include/ast/ast_types.h
 prev ast_types.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' ast_types.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_types.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_types.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_types.h
@@ -5300,7 +5336,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_types.h generated
 make ${INSTALLROOT}/include/ast/ast_unistd.h
 prev ast_unistd.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' ast_unistd.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_unistd.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_unistd.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_unistd.h
@@ -5308,7 +5344,7 @@ exec - fi
 done ${INSTALLROOT}/include/ast/ast_unistd.h generated
 make ${INSTALLROOT}/include/ast/ast_wait.h
 prev ast_wait.h
-exec - proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' ast_wait.h > 1.${COTEMP}.x
+exec - proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ast_wait.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_wait.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_wait.h
@@ -5351,7 +5387,7 @@ make ${INSTALLROOT}/include/ast/fmtmsg.h
 prev comp/fmtmsg.h
 prev ast_lib.h
 exec - silent grep -l 'define[ 	][ 	]*_[hl][di][rb]_fmtmsg' ast_lib.h > /dev/null || {
-exec - 	proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' comp/fmtmsg.h > 1.${COTEMP}.x
+exec - 	proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/fmtmsg.h > 1.${COTEMP}.x
 exec - 	if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/fmtmsg.h 1.${COTEMP}.x
 exec - 	then	rm -f 1.${COTEMP}.x
 exec - 	else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/fmtmsg.h
@@ -5362,7 +5398,7 @@ make ${INSTALLROOT}/include/ast/fnmatch.h
 prev comp/fnmatch.h
 prev ast_lib.h
 exec - silent grep -l 'define[ 	][ 	]*_[hl][di][rb]_fnmatch' ast_lib.h > /dev/null || {
-exec - 	proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' comp/fnmatch.h > 1.${COTEMP}.x
+exec - 	proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/fnmatch.h > 1.${COTEMP}.x
 exec - 	if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/fnmatch.h 1.${COTEMP}.x
 exec - 	then	rm -f 1.${COTEMP}.x
 exec - 	else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/fnmatch.h
@@ -5373,7 +5409,7 @@ make ${INSTALLROOT}/include/ast/libgen.h
 prev comp/libgen.h
 prev ast_lib.h
 exec - silent grep -l 'define[ 	][ 	]*_[hl][di][rb]_libgen' ast_lib.h > /dev/null || {
-exec - 	proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' comp/libgen.h > 1.${COTEMP}.x
+exec - 	proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/libgen.h > 1.${COTEMP}.x
 exec - 	if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/libgen.h 1.${COTEMP}.x
 exec - 	then	rm -f 1.${COTEMP}.x
 exec - 	else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/libgen.h
@@ -5384,7 +5420,7 @@ make ${INSTALLROOT}/include/ast/syslog.h
 prev comp/syslog.h
 prev ast_lib.h
 exec - silent grep -l 'define[ 	][ 	]*_[hl][di][rb]_syslog' ast_lib.h > /dev/null || {
-exec - 	proto -p -s -l ${INSTALLROOT}/lib/package/ast.lic -o since='1985,author=gsf+dgk+kpv' comp/syslog.h > 1.${COTEMP}.x
+exec - 	proto -p -s -l /home/gsf/arch/sgi.mips3/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' comp/syslog.h > 1.${COTEMP}.x
 exec - 	if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/syslog.h 1.${COTEMP}.x
 exec - 	then	rm -f 1.${COTEMP}.x
 exec - 	else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/syslog.h

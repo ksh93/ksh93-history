@@ -1,3 +1,22 @@
+00-10-31 tmdate: add TM_DATESTYLE and mmddHHMM[cc]yy
+00-10-26 features/stdio: add _FILE and __FILE for gnu
+	 misc/stk.c: fix stack pointer check off-by-one (dgk does it too!)
+00-10-23 syslog.h: sync with bsd values
+00-10-18 _STUB_* now functions instead of common symbols
+	 all extern data declared with definition to eliminate common symbols
+	 fastfind: add mac/bsd /var/db/locate.database
+00-10-17 features/lib: add apple osX (darwin.ppc) workarounds
+00-10-12 add: fmtbuf(), fmtclock(), fmtip4(), strtoip4()
+	 fmt*() now use fmtbuf() for tmp fmt buf allocation
+00-10-05 regex: add REG_DISCIPLINE and regdisc_t for alloc/error disc
+00-09-29 features/lib: pipe_rw==0 for sgi: boot rw == bin incompatibility
+00-09-21 astlicense: handle \' and \" in license values
+00-09-20 sfwrite: fix write() error in sfprintf() loop
+00-08-11 hdr,vmhdr.h: check/hide { getpagesize sbrk } prototypes
+	 astlicense: add noncommercial
+00-07-31 fflush: don't seek on pipes
+	 sfresize: add
+	 setlocale: fix bad newof() call
 00-06-01 strmatch: initialize match.current.beg[0] to avoid dump at line 670
 	 sfio/stdio: a few more errno tweaks
 	 astquery: sfstdin/sfstderr by default

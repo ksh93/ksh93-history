@@ -1,27 +1,27 @@
-/***************************************************************
-*                                                              *
-*           This software is part of the ast package           *
-*              Copyright (c) 1982-2000 AT&T Corp.              *
-*      and it may only be used by you under license from       *
-*                     AT&T Corp. ("AT&T")                      *
-*       A copy of the Source Code Agreement is available       *
-*              at the AT&T Internet web site URL               *
-*                                                              *
-*     http://www.research.att.com/sw/license/ast-open.html     *
-*                                                              *
-*      If you have copied this software without agreeing       *
-*      to the terms of the license you are infringing on       *
-*         the license and copyright and are violating          *
-*             AT&T's intellectual property rights.             *
-*                                                              *
-*               This software was created by the               *
-*               Network Services Research Center               *
-*                      AT&T Labs Research                      *
-*                       Florham Park NJ                        *
-*                                                              *
-*              David Korn <dgk@research.att.com>               *
-*                                                              *
-***************************************************************/
+/*******************************************************************
+*                                                                  *
+*             This software is part of the ast package             *
+*                Copyright (c) 1982-2000 AT&T Corp.                *
+*        and it may only be used by you under license from         *
+*                       AT&T Corp. ("AT&T")                        *
+*         A copy of the Source Code Agreement is available         *
+*                at the AT&T Internet web site URL                 *
+*                                                                  *
+*       http://www.research.att.com/sw/license/ast-open.html       *
+*                                                                  *
+*        If you have copied this software without agreeing         *
+*        to the terms of the license you are infringing on         *
+*           the license and copyright and are violating            *
+*               AT&T's intellectual property rights.               *
+*                                                                  *
+*                 This software was created by the                 *
+*                 Network Services Research Center                 *
+*                        AT&T Labs Research                        *
+*                         Florham Park NJ                          *
+*                                                                  *
+*                David Korn <dgk@research.att.com>                 *
+*                                                                  *
+*******************************************************************/
 #pragma prototyped
 
 #include	<shell.h>
@@ -615,7 +615,7 @@ USAGE_LICENSE
   "Text between two \\b (backspace) characters indicates "
   "that the text should be emboldened when displayed. "
   "Text between two \\a (bell) characters indicates that the text should "
-  "be emphasised or italicized when displayed."  
+  "be emphasised or italicized when displayed."
   "Text between two \\f (formfeed) characters will be replaced by the "
     "output from the shell function whose name is that of the enclosed text.]"
 "[+?There are four types of groups:]{"
@@ -927,7 +927,7 @@ USAGE_LICENSE
 "\n"
 "[+EXIT STATUS?]{"
 	"[+0?At least one matching process was found for each \ajob\a "
-	"operand, and the specified signal was successfully send for at "
+	"operand, and the specified signal was successfully sent to at "
 	"least one matching process.]"
 	"[+>0?An error occurred.]"
 "}"
@@ -1195,8 +1195,8 @@ USAGE_LICENSE
 const char sh_optksh[] =
 "+[-?\n@(#)sh (AT&T Labs Research) 1999-09-28\n]"
 USAGE_LICENSE
-"[+NAME?\bsh\b - Shell, the standard command language interpreter]"
-"[+DESCRIPTION?\bsh\b is a command language interpreter that "
+"[+NAME?\b\f?\f\b - Shell, the standard command language interpreter]"
+"[+DESCRIPTION?\b\f?\f\b is a command language interpreter that "
 	"executes commands read from a command line string, the "
 	"standard input, or a specified file.]"
 "[+?If the \b-i\b option is present, or there are no \aarg\as and "
@@ -1240,7 +1240,7 @@ USAGE_LICENSE
 "\n"
 "\n[arg ...]\n"
 "\n"
-"[+EXIT STATUS?If \bsh\b executes command, the exit status will be that "
+"[+EXIT STATUS?If \b\f?\f\b executes command, the exit status will be that "
         "of the last command executed.  Otherwise, it will be one of"
         "the following:]{"
         "[+0?The script or command line to be executed consists entirely "
@@ -1275,7 +1275,7 @@ USAGE_LICENSE
 "[+?For backward compatibility, a \bset\b command without any options "
 	"specified whose first \aarg\a is \b-\b will turn off "
 	"the \b-v\b and \b-x\b options.  If any additional \aarg\as "
-	"are specified, then will replace the positional parameters.]"
+	"are specified, they will replace the positional parameters.]"
 "[s?Sort the positional parameters.]"
 "[A]:[name?Assign the arguments sequentially to the array named by \aname\a "
 	"starting at subscript 0 rather than to the positional parameters.]"

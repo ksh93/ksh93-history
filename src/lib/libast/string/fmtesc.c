@@ -1,29 +1,29 @@
-/***************************************************************
-*                                                              *
-*           This software is part of the ast package           *
-*              Copyright (c) 1985-2000 AT&T Corp.              *
-*      and it may only be used by you under license from       *
-*                     AT&T Corp. ("AT&T")                      *
-*       A copy of the Source Code Agreement is available       *
-*              at the AT&T Internet web site URL               *
-*                                                              *
-*     http://www.research.att.com/sw/license/ast-open.html     *
-*                                                              *
-*      If you have copied this software without agreeing       *
-*      to the terms of the license you are infringing on       *
-*         the license and copyright and are violating          *
-*             AT&T's intellectual property rights.             *
-*                                                              *
-*               This software was created by the               *
-*               Network Services Research Center               *
-*                      AT&T Labs Research                      *
-*                       Florham Park NJ                        *
-*                                                              *
-*             Glenn Fowler <gsf@research.att.com>              *
-*              David Korn <dgk@research.att.com>               *
-*               Phong Vo <kpv@research.att.com>                *
-*                                                              *
-***************************************************************/
+/*******************************************************************
+*                                                                  *
+*             This software is part of the ast package             *
+*                Copyright (c) 1985-2000 AT&T Corp.                *
+*        and it may only be used by you under license from         *
+*                       AT&T Corp. ("AT&T")                        *
+*         A copy of the Source Code Agreement is available         *
+*                at the AT&T Internet web site URL                 *
+*                                                                  *
+*       http://www.research.att.com/sw/license/ast-open.html       *
+*                                                                  *
+*        If you have copied this software without agreeing         *
+*        to the terms of the license you are infringing on         *
+*           the license and copyright and are violating            *
+*               AT&T's intellectual property rights.               *
+*                                                                  *
+*                 This software was created by the                 *
+*                 Network Services Research Center                 *
+*                        AT&T Labs Research                        *
+*                         Florham Park NJ                          *
+*                                                                  *
+*               Glenn Fowler <gsf@research.att.com>                *
+*                David Korn <dgk@research.att.com>                 *
+*                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
+*******************************************************************/
 #pragma prototyped
 /*
  * Glenn Fowler
@@ -35,8 +35,6 @@
 #include <ast.h>
 #include <ccode.h>
 #include <ctype.h>
-
-#define CHUNK	32
 
 /*
  * quote string as of length n with qb...qe
@@ -54,9 +52,7 @@ fmtquote(const char* as, const char* qb, const char* qe, size_t n, int flags)
 	register int		c;
 	int			k;
 	int			q;
-
-	static char*		buf;
-	static int		bufsiz;
+	char*			buf;
 
 	c = 4 * (n + 1);
 	if (qb)
@@ -70,13 +66,7 @@ fmtquote(const char* as, const char* qb, const char* qe, size_t n, int flags)
 		if (qe)
 			c += strlen((char*)qe);
 	}
-	if (bufsiz < c)
-	{
-		bufsiz = ((c + CHUNK - 1) / CHUNK) * CHUNK;
-		if (!(buf = newof(buf, char, bufsiz, 0)))
-			return 0;
-	}
-	b = buf;
+	b = buf = fmtbuf(c);
 	if (qb)
 	{
 		q = qb[0] == '$' && qb[1] == '\'' && qb[2] == 0 ? 1 : 0;

@@ -1,27 +1,27 @@
-/***************************************************************
-*                                                              *
-*           This software is part of the ast package           *
-*              Copyright (c) 1982-2000 AT&T Corp.              *
-*      and it may only be used by you under license from       *
-*                     AT&T Corp. ("AT&T")                      *
-*       A copy of the Source Code Agreement is available       *
-*              at the AT&T Internet web site URL               *
-*                                                              *
-*     http://www.research.att.com/sw/license/ast-open.html     *
-*                                                              *
-*     If you received this software without first entering     *
-*       into a license with AT&T, you have an infringing       *
-*           copy and cannot use it without violating           *
-*             AT&T's intellectual property rights.             *
-*                                                              *
-*               This software was created by the               *
-*               Network Services Research Center               *
-*                      AT&T Labs Research                      *
-*                       Florham Park NJ                        *
-*                                                              *
-*              David Korn <dgk@research.att.com>               *
-*                                                              *
-***************************************************************/
+/*******************************************************************
+*                                                                  *
+*             This software is part of the ast package             *
+*                Copyright (c) 1982-2000 AT&T Corp.                *
+*        and it may only be used by you under license from         *
+*                       AT&T Corp. ("AT&T")                        *
+*         A copy of the Source Code Agreement is available         *
+*                at the AT&T Internet web site URL                 *
+*                                                                  *
+*       http://www.research.att.com/sw/license/ast-open.html       *
+*                                                                  *
+*        If you have copied this software without agreeing         *
+*        to the terms of the license you are infringing on         *
+*           the license and copyright and are violating            *
+*               AT&T's intellectual property rights.               *
+*                                                                  *
+*                 This software was created by the                 *
+*                 Network Services Research Center                 *
+*                        AT&T Labs Research                        *
+*                         Florham Park NJ                          *
+*                                                                  *
+*                David Korn <dgk@research.att.com>                 *
+*                                                                  *
+*******************************************************************/
 #pragma prototyped
 /*
  * Shell macro expander
@@ -66,7 +66,8 @@ typedef struct  _mac_
 	char		pattern;	/* set when file expansion follows */
 	char		assign;		/* set for assignments */
 	char		arith;		/* set for ((...)) */
-	Namval_t	*hp;		/* /* position for tree walk */
+	char		**notify;	/* set to record notification */
+	Namval_t	*hp;		/* position for tree walk */
 } Mac_t;
 
 #define mac	(*((Mac_t*)(sh.mac_context)))
@@ -99,7 +100,7 @@ static void	endfield(Mac_t*,int);
 static void	mac_error(Namval_t*);
 static char	*mac_getstring(char*);
 #ifdef SHOPT_MULTIBYTE
-    static int	charlen(const char*);
+    static int	charlen(const char*,int);
     static char	*lastchar(const char*,const char*);
 #endif /* SHOPT_MULTIBYTE */
 
@@ -144,6 +145,7 @@ char *sh_mactrim(char *str, register int mode)
 	savemac = *mp;
 	stakseek(0);
 	mp->arith = (mode==3);
+	mp->notify = 0;
 	mp->pattern = (mode==1||mode==2);
 	mp->assign = (mode<0);
 	mp->quote = mp->lit = mp->split = mp->quoted = 0;
@@ -173,18 +175,22 @@ char *sh_mactrim(char *str, register int mode)
 /*
  * Perform all the expansions on the argument <argp>
  */
-int sh_macexpand(register struct argnod *argp, struct argnod **arghead)
+int sh_macexpand(register struct argnod *argp, struct argnod **arghead,int flag)
 {
 	register int flags = argp->argflag;
 	register char *str = argp->argval;
 	register Mac_t  *mp = (Mac_t*)sh.mac_context;
 	Mac_t savemac;
 	savemac = *mp;
-	stakseek(ARGVAL);
 	mp->sp = 0;
+	if(flag&ARG_OPTIMIZE)
+		mp->notify = (char**)&argp->argchn.ap;
+	else
+		mp->notify = 0;
 	mp->arghead = arghead;
-	mp->quote = mp->lit = mp->quoted = mp->arith = 0;
-	mp->split = !(flags&ARG_ASSIGN);
+	mp->quote = mp->lit = mp->quoted = 0;
+	mp->arith = ((flag&ARG_ARITH)!=0);
+	mp->split = !(flag&ARG_ASSIGN);
 	mp->assign = !mp->split;
 	mp->pattern = mp->split && !sh_isoption(SH_NOGLOB);
 	if(mp->ifsp=nv_getval(nv_scoped(IFSNOD)))
@@ -194,9 +200,28 @@ int sh_macexpand(register struct argnod *argp, struct argnod **arghead)
 	str = argp->argval;
 	fcsopen(str);
 	mp->fields = 0;
+	if(!arghead)
+	{
+		mp->split = 0;
+		mp->pattern = ((flag&ARG_EXP)!=0);
+		stakseek(0);
+	}
+	else
+		stakseek(ARGVAL);
 	copyto(mp,0,0);
-	endfield(mp,mp->quoted);
-	flags = mp->fields;
+	if(!arghead)
+	{
+		argp->argchn.cp = stakfreeze(1);
+		if(mp->notify)
+			argp->argflag |= ARG_MAKE;
+	}
+	else
+	{
+		endfield(mp,mp->quoted);
+		flags = mp->fields;
+		if(flags==1 && mp->notify)
+			argp->argchn.ap = *arghead; 
+	}
 	*mp = savemac;
 	return(flags);
 }
@@ -215,6 +240,7 @@ void sh_machere(Sfio_t *infile, Sfio_t *outfile, char *string)
 	Mac_t		savemac;
 	savemac = *mp;
 	stakseek(0);
+	mp->notify = 0;
 	mp->sp = outfile;
 	mp->split = mp->assign = mp->pattern = mp->lit = mp->arith = 0;
 	mp->quote = 1;
@@ -327,6 +353,9 @@ static void copyto(register Mac_t *mp,int endch, int newquote)
 	first = cp = fcseek(0);
 	if(!mp->quote && *cp=='~')
 		tilde = staktell();
+	/* handle // operator specially */
+	if(mp->pattern==2 && *cp=='/')
+		cp++;
 	while(1)
 	{
 		while((n=state[*(unsigned char*)cp++])==0);
@@ -614,6 +643,49 @@ static void mac_substitute(Mac_t *mp, register char *cp,char *str,register int s
 }
 
 /*
+ * get the prefix after name reference resolution
+ */
+static char *prefix(char *id)
+{
+	Namval_t *np;
+	register char *cp = strchr(id,'.');
+	if(cp)
+	{
+		*cp = 0;
+		np = nv_search(id, sh.var_tree,0);
+		*cp = '.';
+		if(np && nv_isref(np))
+		{
+			int n;
+			char *sp;
+			while(nv_isref(np))
+				np = nv_refnode(np);
+			id = (char*)malloc((cp-id)+(n=strlen(sp=nv_name(np)))+1);
+			strcpy(&id[n],cp);
+			memcpy(id,sp,n);
+			return(id);
+		}
+	}
+	return(strdup(id));
+}
+
+/*
+ * copy to ']' onto the stack and return offset to it
+ */
+static int subcopy(Mac_t *mp)
+{
+	int split = mp->split;
+	int xpattern = mp->pattern;
+	int loc = staktell();
+	mp->split = 0;
+	mp->pattern = 0;
+	copyto(mp,RBRACT,0);
+	mp->pattern = xpattern;
+	mp->split = split;
+	return(loc);
+}
+
+/*
  * This routine handles $param,  ${parm}, and ${param op word}
  * The input stream is assumed to be a string
  */
@@ -685,6 +757,7 @@ retry1:
 		return(1);
 	    case S_DIG:
 		c -= '0';
+		mac.notify = 0;
 		if(type)
 		{
 			register int d;
@@ -748,14 +821,7 @@ retry1:
 				}
 				else
 				{
-					int split = mp->split;
-					int xpattern = mp->pattern;
-					int loc = staktell();
-					mp->split = 0;
-					mp->pattern = 0;
-					copyto(mp,RBRACT,0);
-					mp->pattern = xpattern;
-					mp->split = split;
+					int loc = subcopy(mp);
 					stakputc(0);
 					nv_putsub(np,stakptr(loc),ARRAY_ADD);
 #ifdef SHOPT_COMPOUND_ARRAY
@@ -829,8 +895,8 @@ retry1:
 			mac_error(np);
 		if(type==M_NAMESCAN)
 		{
-			id = strdup(id);
-			dolmax = staktell()-offset-1;
+			id = prefix(id);
+			dolmax = strlen(id);
 			stakseek(offset);
 			nextname(mp,NIL(char*),0);
 			v = nextname(mp,id,dolmax);
@@ -854,12 +920,14 @@ retry1:
 		{
 			if(!isastchar(mode))
 #ifdef SHOPT_MULTIBYTE
-				c = (v?charlen(v):0);
+				c = (v?charlen(v,vsize):0);
 #else
 				c = (v?strlen(v):0);
 #endif /* SHOPT_MULTIBYTE */
 			else if(dolg>0)
+			{
 				c = sh.st.dolc;
+			}
 			else if(dolg<0)
 				c = array_elem(ap);
 			else
@@ -959,7 +1027,9 @@ retry1:
 		}
 		else if(v)
 		{
-			if((vsize=strlen(v)) < type)
+			if(vsize<0)
+				vsize=strlen(v);
+			if(vsize < type)
 				v = 0;
 			else
 			{
@@ -1173,6 +1243,7 @@ static void comsubst(Mac_t *mp,int type)
 	int			newlines;
 	register union anynode	*t;
 	Namval_t		*np;
+	mp->notify = 0;
 	savemac = mac;
 	sh.st.staklist=0;
 	if(type)
@@ -1446,6 +1517,7 @@ static void endfield(register Mac_t *mp,int split)
 	if(staktell() > ARGVAL || split)
 	{
 		argp = (struct argnod*)stakfreeze(1);
+		argp->argnxt.cp = 0;
 		argp->argflag = 0;
 		if(mp->pattern)
 #ifdef SHOPT_BRACEPAT
@@ -1521,7 +1593,7 @@ static int substring(register const char *string,const char *pat,int match[], in
 		}
 		return(str);
 	}
-	static int	charlen(const char *string)
+	static int	charlen(const char *string,int len)
 	{
 		register const char *str = string;
 		register int n=0;
@@ -1531,12 +1603,12 @@ static int substring(register const char *string,const char *pat,int match[], in
 		while(*str)
 		{
 			if((c=mbtowc(&w,str,MB_CUR_MAX))>0)
-			{
 				n += wcwidth(w);
-				str += c;
-			}
 			else
-				str++;
+				c = 1;
+			str += c;
+			if(len>=0 && (len-=c) <=0) 
+				break;
 		}
 		return(n);
 	}
@@ -1609,6 +1681,7 @@ static char *sh_tilde(register const char *string)
 static char *special(register int c)
 {
 	register Namval_t *np;
+	mac.notify = 0;
 	switch(c)
 	{
 	    case '@':
