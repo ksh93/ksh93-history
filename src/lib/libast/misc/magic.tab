@@ -1,5 +1,5 @@
 #
-# @(#)magic (AT&T Research) 1999-05-28
+# @(#)magic (AT&T Research) 2000-02-14
 #
 # magic number database for file(1) and magic(3)
 #
@@ -770,6 +770,7 @@ o{
 &99	byte		0
 &107	byte		0
 &115	byte		0
+&100	string		+([ 0-7])
 &0	string		*		, [ %s ... ]
 }
 99	byte		0		tar archive			application/pax

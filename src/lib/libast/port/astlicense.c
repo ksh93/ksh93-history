@@ -36,12 +36,13 @@
  *	 not so for the legal department
  */
 
-#ifndef _PPLIB_H
+#ifdef	_PPLIB_H
+#include "../include/hashkey.h"
+#else
 #include <ast.h>
 #include <time.h>
-#endif
-
 #include <hashkey.h>
+#endif
 
 #undef	copy
 #undef	END

@@ -43,8 +43,10 @@ procrun(const char* path, char** argv)
 	register Sfio_t*	tmp;
 	int			n;
 
-	if (!(a = argv)) return(procclose(procopen(path, a, NiL, NiL, PROC_GID|PROC_UID)));
-	if (!(tmp = sfstropen())) return(EXIT_NOEXEC);
+	if (!(a = argv))
+		return procclose(procopen(path, a, NiL, NiL, PROC_FOREGROUND|PROC_GID|PROC_UID));
+	if (!(tmp = sfstropen()))
+		return -1;
 	sfputr(tmp, path ? path : "sh", -1);
 	while (s = *++a)
 	{
@@ -54,5 +56,5 @@ procrun(const char* path, char** argv)
 	}
 	n = system(sfstruse(tmp));
 	free(tmp);
-	return(n);
+	return n;
 }

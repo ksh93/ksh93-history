@@ -5,16 +5,17 @@
 .SA 1  \"  right justified
 .TL "311466-6713" "49059-6"  \" charging case filing case
 Guidelines for writing \f5ksh-93\fP built-in commands
-.AU "David G. Korn" DGK MH 11267 7975 3C-526B "(research!dgk)"
+.AU "David G. Korn" DGK FP 11267 8062 D-237 "(research!dgk)"
 .TM  11267-930???-93  \"  technical memo + TM numbers
+.MT 4
 .AS 2   \" abstract start for TM
 One of the features of \f5ksh93\fP, the latest version of \f5ksh\fP,
 is the ability to add built-in commands at run time.
 This feature only works on operating systems that have the ability
 to load and link code into the current process at run time.
 Some examples of the systems that have this feature
-are System V Release 4, Solaris, Sun OS, HP-UX Release 8 and above
-and AIX 3.2 and above.
+are System V Release 4, Solaris, Sun OS, HP-UX Release 8 and above,
+AIX 3.2 and above, and Microsoft Windows systems. 
 .P
 This memo describes how to write and compile programs
 to can be loaded into \f5ksh\fP at run  time as built-in
@@ -107,7 +108,7 @@ use the rule
 in their makefiles and not have to specify any \f5-I\fP switches
 to the compiler.
 .P
-A built-in command has the same calling convention as
+A built-in command has a calling convention similar to
 the \f5main\fP function of a program,
 .nf
 .in .5i
@@ -117,6 +118,8 @@ the \f5main\fP function of a program,
 However, instead of \f5main\fP, you must use the function name
 \f5b_\fP\fIname\fP, where \fIname\fP is the name
 of the built-in you wish to define.
+The built-in function takes a third
+\f5void*\fP  argument which you can define as \f5NULL\fP. 
 Instead of \f5exit\fP, you need to use \f5return\fP
 to terminate your command.
 The return value, will become the exit status of the command.
@@ -130,7 +133,7 @@ by its argument.  First, write the following program in the file
 .nf
 .in .5i
 \f5#include     <stdio.h>
-int b_hello(int argc, char *argv[])
+int b_hello(int argc, char *argv[], void *context)
 {
         if(argc != 2)
         {
@@ -164,25 +167,11 @@ On some systems, you cannot load \f5hello.o\fP directly,
 you must build a shared library instead.
 Unfortunately, the method for generating a shared library
 differs with operating system.
+However, if you are building with the AT\&T \f5nmake\fP
+program you can use the \f5:LIBRARY:\fP rule to specify
+this in a system independent fashion. 
 In addition, if you have several built-ins, it is desirable
 to build a shared library that contains them all.
-The shell script named
-\f5genbuiltin\fP in the development kit
-calls the linker with appropriate arguments.
-It is invoked as
-.nf
-.in .5i
-\f5genbuiltin -o \fP\fIlibname objectname\fP \f5...\fP.
-.in
-.fi
-In our example we invoke
-.nf
-.in .5i
-\f5genbuiltin -o hello.so hello.o\fP
-.in
-.fi
-to build a shared library named \f5hello.so\fP that can be
-added to \f5ksh\fP at run time.
 .P
 The final step is using the built-in.
 This can be done with the \f5ksh\fP command \f5builtin\fP.
@@ -190,9 +179,12 @@ To load the shared library \f5hello.so\fP and to add
 the built-in \f5hello\fP, invoke the command,
 .nf
 .in .5i
-\f5builtin -f hello.so hello\fP
+\f5builtin -f hello hello\fP
 .in
 .fi
+The suffix for the shared library can be omitted in
+which case the shell will add an appropriate suffix
+for the system that it is loading from.
 Once this command has been invoked, you can invoke \f5hello\fP
 as you do any other command. 
 .P
@@ -207,7 +199,7 @@ with the following contents:
 \f5function hello
 {
         unset -f hello
-        builtin -f hello.so hello
+        builtin -f hello hello
         hello "$@"
 }\fP
 .in
@@ -315,21 +307,24 @@ and if you plan any major extensions I recommend
 that you use it natively.
 .H 2 "Error Handling"
 For error messages it is best to use the \fBast\fP library
-function \f5error()\fP rather that sending output to
+function \f5errormsg()\fP rather that sending output to
 \f5stderr\fP or the equivalent \f5sfstderr\fP directly.
-Using \f5error()\fP will make error message appear
+Using \f5errormsg()\fP will make error message appear
 more uniform to the user.
-Furthermore, using \f5error()\fP should make it easier
+Furthermore, using \f5errormsg()\fP should make it easier
 to do error message translation for other locales
 in future versions of \f5ksh\fP.
 .P
-The first argument to \f5error()\fP contains that error type
-and value.  The second argument is a \fIprintf\fP style format
+The first argument to
+\f5errormsg()\fP specifies the dictionary in which the string
+will be searched for translation.
+The second argument to \f5errormsg()\fP contains that error type
+and value.  The third argument is a \fIprintf\fP style format
 and the remaining arguments are arguments to be printed
 as part of the message.  A new-line is inserted at the
 end of each message and therefore, should not appear as
 part of the format string.
-The first argument should be one of the following:
+The second argument should be one of the following:
 .VL .5i
 .LI \f5ERROR_exit(\fP\fIn\fP\f5)\fP:
 If \fIn\fP is not-zero, the builtin will exit value \fIn\fP after
@@ -371,6 +366,9 @@ where \f5argv\fP is the argument list and \f5optstring\fP
 is a string that specifies the allowable arguments and
 additional information that is used to format \fIusage\fP
 messages.
+In fact a complete man page in \f5troff\fP or \f5html\fP
+can be generated by passing a usage string as described
+by the \f5getopts\fP command.
 Like \f5getopt()\fP,
 single letter options are represented by the letter itself,
 and options that take a string argument are followed by the \f5:\fP
@@ -380,12 +378,12 @@ Option strings have the following special characters:
 .LI \f5:\fP
 Used after a letter option to indicate that the option
 takes an option argument.
-The variable \f5opt_arg\fP will point to this
+The variable \f5opt_info.arg\fP will point to this
 value after the given argument is encountered.
 .LI \f5#\fP
 Used after a letter option to indicate that the option
 can only take a numerical value.
-The variable \f5opt_num\fP will contain this
+The variable \f5opt_info.num\fP will contain this
 value after the given argument is encountered.
 .LI \f5?\fP
 Used after a \f5:\fP or \f5#\fP (and after the optional \f5?\fP)
@@ -405,11 +403,11 @@ one of the legal option is matched.
 Otherwise, \f5optget()\fP returns
 .VL .5i
 .LI \f5':'\fP
-If there is an error.  In this case the variable \f5opt_arg\fP
+If there is an error.  In this case the variable \f5opt_info.arg\fP
 contains the error string.
 .LI \f50\fP
 Indicates the end of options.
-The variable \f5opt_ind\fP contains the number of arguments
+The variable \f5opt_info.index\fP contains the number of arguments
 processed.
 .LI \f5'?'\fP
 A usage message has been required.
@@ -425,13 +423,13 @@ of the \f5wc\fP utility.
 while(1) switch(n=optget(argv,"xf:[file]"))
 {
 	case 'f':
-		file = opt_arg;
+		file = opt_info.arg;
 		break;
 	case ':':
-		error(ERROR_exit(0), opt_arg);
+		error(ERROR_exit(0), opt_info.arg);
 		break;
 	case '?':
-		error(ERROR_usage(2), opt_arg);
+		error(ERROR_usage(2), opt_info.arg);
 		break;
 }\fP
 .in
@@ -584,7 +582,7 @@ function.
 The application determines when these functions are actually
 executed.
 By default, \f5ksh\fP defines \f5get\fP,
-f5set\fP, and \f5unset\fP as discipline functions.
+\f5set\fP, and \f5unset\fP as discipline functions.
 .P
 In addition, it is possible to provide a data area that
 will be passed as an argument to
@@ -604,6 +602,15 @@ that looks like
 There are several functions that are used by \f5ksh\fP itself
 that can also be called from built-in commands.
 The man page for these routines are in the Appendix.
+.P
+The \f5sh_addbuiltin()\fP function can be used to add or delete
+builtin commands.  It takes the name of the built-in, the
+address of the function that implements the built-in, and
+a \f5void*\fP pointer that will be passed to this function
+as the third agument whenever it is invoked.
+If the function address is \f5NULL\fP, the specified built-in
+will be deleted.  However, special built-in functions cannot
+be deleted or modified.
 .P
 The \f5sh_fmtq()\fP function takes a string and returns
 a string that is quoted as necessary so that it can

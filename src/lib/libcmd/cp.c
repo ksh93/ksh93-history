@@ -32,7 +32,7 @@
  */
 
 static const char usage_head[] =
-"[-?@(#)cp (AT&T Labs Research) 1999-06-11\n]"
+"[-?@(#)cp (AT&T Labs Research) 2000-02-14\n]"
 USAGE_LICENSE
 ;
 
@@ -473,7 +473,7 @@ visit(register Ftw_t* ftw)
 				s = state.path;
 			}
 			n = strlen(s);
-			if (fts = fts_open((char**)e, FTS_NOCHDIR|FTS_ONEPATH|FTS_PHYSICAL|FTS_NOPOSTORDER|FTS_NOSTAT, NiL))
+			if (fts = fts_open((char**)e, FTS_NOCHDIR|FTS_ONEPATH|FTS_PHYSICAL|FTS_NOPOSTORDER|FTS_NOSTAT|FTS_NOSEEDOTDIR, NiL))
 			{
 				while (ent = fts_read(fts))
 				{
@@ -632,7 +632,7 @@ b_cp(int argc, register char** argv, void* context)
 	memset(&state, 0, sizeof(state));
 	cmdinit(argv, context);
 	backup_type = 0;
-	state.flags = FTW_DOT|FTW_MULTIPLE|FTW_TWICE;
+	state.flags = FTW_DOT|FTW_MULTIPLE|FTW_TWICE|FTW_NOSEEDOTDIR;
 	state.uid = geteuid();
 	if (!(state.tmp = sfstropen()))
 		error(ERROR_SYSTEM|3, "out of space [tmp string]");
@@ -816,6 +816,7 @@ b_cp(int argc, register char** argv, void* context)
 		state.flags |= ftwflags();
 	file = argv[argc];
 	argv[argc] = 0;
+	pathcanon(file, 0);
 	if (!(state.directory = !stat(file, &st) && S_ISDIR(st.st_mode)) && argc > 1)
 		error(ERROR_USAGE|4, "%s", optusage(NiL));
 	if ((state.fs3d = fs3d(FS3D_TEST)) && strmatch(file, "...|*/...|.../*"))

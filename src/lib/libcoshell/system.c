@@ -37,12 +37,26 @@ system(const char* cmd)
 {
 	Coshell_t*	co;
 	Cojob_t*	cj;
+	int		status;
 
 	if (!cmd)
 		return !access(pathshell(), X_OK);
 	if (!(co = coopen(NiL, CO_ANY, NiL)))
-		return EXIT_NOEXEC;
+		return -1;
 	if (cj = coexec(co, cmd, CO_SILENT, NiL, NiL, NiL))
 		cj = cowait(co, cj);
-	return cj ? cj->status : EXIT_NOEXEC;
+	if (!cj)
+		return -1;
+
+	/*
+	 * synthesize wait() status from shell status
+	 * lack of synthesis is the standard's proprietary sellout
+	 */
+
+	status = cj->status;
+	if (EXITED_TERM(status))
+		status &= ((1<<(EXIT_BITS-1))-1);
+	else
+		status = (status & ((1<<EXIT_BITS)-1)) << EXIT_BITS;
+	return status;
 }

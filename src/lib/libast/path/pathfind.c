@@ -73,7 +73,7 @@ pathinclude(const char* dir)
  * path placed in <buf,size>
  * if lib!=0 then pathpath() attempted after include search
  * if type!=0 and name has no '.' then file.type also attempted
- * any *: prefix in type is ignored (discipline library dictionary support)
+ * any *: prefix in lib is ignored (discipline library dictionary support)
  */
 
 char*
@@ -87,8 +87,6 @@ pathfind(const char* name, const char* lib, const char* type, char* buf, size_t 
 		return strncpy(buf, name, size);
 	if (type)
 	{
-		if (s = strchr((char*)type, ':'))
-			type = (const char*)s + 1;
 		sfsprintf(buf, size, "%s.%s", name, type);
 		if (access(buf, R_OK) >= 0)
 			return buf;
@@ -111,6 +109,8 @@ pathfind(const char* name, const char* lib, const char* type, char* buf, size_t 
 		}
 		if (lib)
 		{
+			if (s = strrchr((char*)lib, ':'))
+				lib = (const char*)s + 1;
 			sfsprintf(tmp, sizeof(tmp), "lib/%s/%s", lib, name);
 			if (pathpath(buf, tmp, "", PATH_REGULAR))
 				return buf;

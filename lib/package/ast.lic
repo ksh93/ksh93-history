@@ -30,6 +30,7 @@ license=(
 	location="Florham Park NJ"
 
 	url=http://www.${license.domain}/sw/license/${license.package}-${license.type}.html
+	bin=http://www.${license.domain}/sw/license/${license.package}-${license.type}-bin.html
 
 	notice='
 This product contains certain software code or other

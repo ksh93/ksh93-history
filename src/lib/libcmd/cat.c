@@ -36,7 +36,7 @@
 #include <fcntl.h>
 
 static const char usage[] =
-"[-?\n@(#)cat (AT&T Labs Research) 1999-06-16\n]"
+"[-?\n@(#)cat (AT&T Labs Research) 2000-02-14\n]"
 USAGE_LICENSE
 "[+NAME?cat - concatenate files]"
 "[+DESCRIPTION?\bcat\b copies each \afile\a in sequence to the standard"
@@ -320,18 +320,13 @@ b_cat(int argc, char** argv, void* context)
 		if (!(flags&T_FLAG))
 			states['\t'] = 0;
 	}
-	if (flags&(V_FLAG|T_FLAG|E_FLAG))
+	if (flags&(V_FLAG|T_FLAG|N_FLAG|E_FLAG|B_FLAG))
 	{
 		states['\n'] = T_NEWLINE;
 		dovcat = 1;
 	}
 	if (flags&B_FLAG)
-	{
-		flags &= ~(T_FLAG|E_FLAG);
 		flags |= S_FLAG;
-	}
-	if (flags&N_FLAG)
-		flags &= ~(B_FLAG|S_FLAG|E_FLAG);
 #ifdef O_TEXT
 	if (flags&D_FLAG)
 	{

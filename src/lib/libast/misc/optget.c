@@ -649,7 +649,7 @@ label(register Sfio_t* sp, int sep, register char* s, int z, int style, int a, i
 					while (++t < e && isdigit(*t));
 					if (t < e && *t == ')' && t > u + 1)
 					{
-						sfprintf(sp, "<NOBR><A HREF=\"../man%-.*s/%-.*s.html\"><I>%-.*s</I></A>%-.*s</NOBR>"
+						sfprintf(sp, "<NOBR><A href=\"../man%-.*s/%-.*s.html\"><I>%-.*s</I></A>%-.*s</NOBR>"
 							, t - u - 1, u + 1
 							, u - s - 1, s
 							, u - s - 1, s
@@ -674,7 +674,7 @@ label(register Sfio_t* sp, int sep, register char* s, int z, int style, int a, i
 					while (++t < e && isdigit(*t));
 					if (*t == ')' && t > u + 1)
 					{
-						sfprintf(sp, "<NOBR><A HREF=\"../man%-.*s/%-.*s.html\"><B>%-.*s</B></A>%-.*s</NOBR>"
+						sfprintf(sp, "<NOBR><A href=\"../man%-.*s/%-.*s.html\"><B>%-.*s</B></A>%-.*s</NOBR>"
 							, t - u - 1, u + 1
 							, u - s - 1, s
 							, u - s - 1, s
@@ -699,6 +699,26 @@ label(register Sfio_t* sp, int sep, register char* s, int z, int style, int a, i
 			if (style == STYLE_html)
 			{
 				sfputr(sp, "&lt;", -1);
+				c = 0;
+				for (t = s; t < e; t++)
+					if (!isalnum(*t) && *t != '_' && *t != '.')
+					{
+						if (*t == '@')
+						{
+							if (c)
+								break;
+							c = 1;
+						}
+						else if (*t == '>')
+						{
+							if (c)
+							{
+								sfprintf(sp, "<A href=\"mailto:%-.*s>%-.*s</A>&gt;", t - s, s, t - s, s);
+								s = t + 1;
+							}
+							break;
+						}
+					}
 				continue;
 			}
 			break;
@@ -825,7 +845,7 @@ item(Sfio_t* sp, char* s, int level, int style, int version)
 		{
 			if (!level)
 				sfputr(sp, "<H4>", -1);
-			sfputr(sp, "<A NAME=\"", -1);
+			sfputr(sp, "<A name=\"", -1);
 			label(sp, 0, s, -1, 0, 0, 0, version);
 			sfputr(sp, "\">", -1);
 			label(sp, 0, s, -1, style, 0, !!level, version);
@@ -1023,7 +1043,7 @@ text(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip, i
 						while (isdigit(*++t));
 						if (*t == ')' && t > e + 1)
 						{
-							sfprintf(sp, "<NOBR><A HREF=\"../man%-.*s/%-.*s.html\"><I>%-.*s</I></A>%-.*s</NOBR>"
+							sfprintf(sp, "<NOBR><A href=\"../man%-.*s/%-.*s.html\"><I>%-.*s</I></A>%-.*s</NOBR>"
 								, t - e - 1, e + 1
 								, e - p - 1, p
 								, e - p - 1, p
@@ -1048,7 +1068,7 @@ text(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip, i
 						while (isdigit(*++t));
 						if (*t == ')' && t > e + 1)
 						{
-							sfprintf(sp, "<NOBR><A HREF=\"../man%-.*s/%-.*s.html\"><B>%-.*s</B></A>%-.*s</NOBR>"
+							sfprintf(sp, "<NOBR><A href=\"../man%-.*s/%-.*s.html\"><B>%-.*s</B></A>%-.*s</NOBR>"
 								, t - e - 1, e + 1
 								, e - p - 1, p
 								, e - p - 1, p
@@ -1080,6 +1100,26 @@ text(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip, i
 				if (style == STYLE_html)
 				{
 					sfputr(sp, "&lt;", -1);
+					c = 0;
+					for (t = p; *t; t++)
+						if (!isalnum(*t) && *t != '_' && *t != '.')
+						{
+							if (*t == '@')
+							{
+								if (c)
+									break;
+								c = 1;
+							}
+							else if (*t == '>')
+							{
+								if (c)
+								{
+									sfprintf(sp, "<A href=\"mailto:%-.*s\">%-.*s</A>&gt;", t - p, p, t - p, p);
+									p = t + 1;
+								}
+								break;
+							}
+						}
 					continue;
 				}
 				break;
@@ -2125,9 +2165,9 @@ opthelp(const char* oopts, const char* what)
 			ts = OPT_USAGE + m;
 		if (style == STYLE_html)
 		{
-			sfprintf(mp, "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">\n<HTML>\n<HEAD>\n<META NAME=\"generator\" CONTENT=\"optget (AT&T Labs Research) 1999-08-11\">\n<TITLE>%s man document</TITLE>\n</HEAD>\n<BODY bgcolor='#ffffff'>\n", name);
-			sfprintf(mp, "<H4><TABLE WIDTH=100%%><TR><TH ALIGN=LEFT>&nbsp;%s&nbsp;(&nbsp;%d&nbsp;)&nbsp;<TH ALIGN=CENTER><A HREF=\"\" TITLE=\"Index\">%s</A><TH ALIGN=RIGHT>%s&nbsp;(&nbsp;%d&nbsp;)</TR></TABLE></H4>\n<HR>\n", name, section, heading[section % 10], name, section);
-			sfprintf(mp, "<DL COMPACT>\n<DT>");
+			sfprintf(mp, "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">\n<HTML>\n<HEAD>\n<META name=\"generator\" content=\"optget (AT&T Labs Research) 1999-08-11\">\n<TITLE>%s man document</TITLE>\n</HEAD>\n<BODY bgcolor=white>\n", name);
+			sfprintf(mp, "<H4><TABLE width=100%%><TR><TH align=left>&nbsp;%s&nbsp;(&nbsp;%d&nbsp;)&nbsp;<TH align=center><A href=\"\" title=\"Index\">%s</A><TH align=right>%s&nbsp;(&nbsp;%d&nbsp;)</TR></TABLE></H4>\n<HR>\n", name, section, heading[section % 10], name, section);
+			sfprintf(mp, "<DL compact>\n<DT>");
 			co = 2;
 			*(pt = ptstk) = 0;
 		}
@@ -2176,9 +2216,9 @@ opthelp(const char* oopts, const char* what)
 					if (j > *pt)
 					{
 						if (pt > ptstk)
-							sfprintf(mp, "<DL COMPACT>\n");
+							sfprintf(mp, "<DL compact>\n");
 						*++pt = j;
-						sfprintf(mp, "<DL COMPACT>\n");
+						sfprintf(mp, "<DL compact>\n");
 					}
 					else while (j < *pt)
 					{
@@ -2306,7 +2346,7 @@ opthelp(const char* oopts, const char* what)
 							if (*(y - 1) == '.')
 								y--;
 							p--;
-							sfprintf(mp, "<A HREF=\"%-.*s\">%-.*s</A", y - p, p, y - p, p);
+							sfprintf(mp, "<A href=\"%-.*s\">%-.*s</A", y - p, p, y - p, p);
 							p = y;
 							c = '>';
 						}

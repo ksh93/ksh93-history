@@ -47,7 +47,7 @@ struct _globlist_
 {
 	globlist_t*	gl_next;
 	char*		gl_begin;
-	unsigned int	gl_flags;
+	unsigned char	gl_flags;
 	char		gl_path[1];
 };
 
@@ -100,6 +100,7 @@ struct _glob_
 #define GLOB_NOSORT	0x0040		/* don't sort the list		*/
 
 /* extended interface */
+#define GLOB_BRACE	0x0100		/* enable {...} expansion	*/
 #define GLOB_ICASE	0x0200		/* ignore case on match		*/
 #define GLOB_COMPLETE	0x0400		/* shell file completeion	*/
 #define GLOB_STACK	0x1000		/* allocate on current stack	*/

@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 4.0 2000-02-01
+info mam static 00000 1994-07-17 make (AT&T Research) 4.0 2000-02-14
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ar
@@ -3855,9 +3855,10 @@ make astlicense.o
 make port/astlicense.c
 prev include/hashkey.h implicit
 prev include/ast.h implicit
+prev include/hashkey.h implicit
 done port/astlicense.c
 prev port/astlicense.c
-exec - ${CC} ${CCFLAGS}  -I. -Icomp -Iinclude -D_PACKAGE_ast -c port/astlicense.c
+exec - ${CC} ${CCFLAGS}  -I. -Iobsolete -Icomp -Iinclude -D_PACKAGE_ast -c port/astlicense.c
 done astlicense.o generated
 make astquery.o
 make port/astquery.c
@@ -5224,6 +5225,14 @@ exec - 	fi
 exec - }
 done ${INSTALLROOT}/include/ast/syslog.h virtual
 prev ${INSTALLROOT}/include/ast/dirent.h
+make ${INSTALLROOT}/include/ast/prototyped.h
+prev ${INSTALLROOT}/include/ast
+exec - echo "#include <../prototyped.h>" > 1.${COTEMP}.x
+exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/prototyped.h 1.${COTEMP}.x
+exec - then	rm -f 1.${COTEMP}.x
+exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/prototyped.h
+exec - fi
+done ${INSTALLROOT}/include/ast/prototyped.h generated
 done install virtual
 make test
 done test dontcare virtual

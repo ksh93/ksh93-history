@@ -67,10 +67,6 @@ typedef int (*GL_stat_f)(const char*, struct stat*);
 	regex_t		re_ignore; \
 	regex_t		re_ignorei;
 
-#define _GLOB_LIST_PRIVATE_ \
-	unsigned int	gl_flags; \
-	char		gl_path[4];
-
 #include <glob.h>
 
 /*
@@ -181,10 +177,11 @@ trim(register char* sp)
 static void
 addmatch(register glob_t* gp, const char* dir, const char* pat, const register char* rescan, char* endslash)
 {
-	register globlist_t*	ap = (globlist_t*)stakseek(MATCHPATH);
+	register globlist_t*	ap;
 	int			offset;
 	int			type;
 
+	stakseek(MATCHPATH);
 	if (dir)
 	{
 		stakputs(dir);
@@ -213,7 +210,7 @@ addmatch(register glob_t* gp, const char* dir, const char* pat, const register c
 	}
 	else
 	{
-		if (!endslash && (gp->gl_flags & GLOB_MARK) && (type = (*gp->gl_type)(gp, ap->gl_path)))
+		if (!endslash && (gp->gl_flags & GLOB_MARK) && (type = (*gp->gl_type)(gp, stakptr(MATCHPATH))))
 		{
 			if ((gp->gl_flags & GLOB_COMPLETE) && type != GLOB_EXE)
 			{

@@ -33,7 +33,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)chmod (AT&T Labs Research) 1999-04-10\n]"
+"[-?\n@(#)chmod (AT&T Labs Research) 2000-02-14\n]"
 USAGE_LICENSE
 "[+NAME?chmod - change the access permissions of files]"
 "[+DESCRIPTION?\bchmod\b changes the permission of each file "
@@ -41,9 +41,9 @@ USAGE_LICENSE
 	"of changes to make, or an octal number representing the bit "
 	"pattern for the new permissions.]"
 "[+?Symbolic mode strings consist of one or more comma separated list "
-	"of operations that can be perfomed on the mode. Each "
-	"operation is of the form \auser\a \aop\a \aperm\a where \auser\a "
-	"is zero or more of the following letters:]{"
+	"of operations that can be perfomed on the mode. Each operation is of "
+	"the form \auser\a \aop\a \aperm\a where \auser\a is zero or more of "
+	"the following letters:]{"
 	"[+u?User permission bits.]"
 	"[+g?Group permission bits.]"
 	"[+o?Other permission bits.]"
@@ -61,7 +61,6 @@ USAGE_LICENSE
 		"must be off.]"
 	"[+t?Sticky bit on systems that support it.]"
 	"}"
-
 "[+?The \aop\a portion consists of one or more of the following characters:]{"
 	"[++?Cause the permission selected to be added to the existing "
 		"permissions. | is equivalent to +.]"
@@ -71,6 +70,9 @@ USAGE_LICENSE
 	"[+&?Cause the permission selected to be \aand\aed with the existing "
 		"permissions.]"
 	"}"
+"[+?Symbolic modes with the \auser\a portion omitted are subject to "
+	"\bumask\b(2) settings unless the \b=\b \aop\a or the "
+	"\b--ignore-umask\b option is specified.]"
 "[+?A numeric mode is from one to four octal digits (0-7), "
 	"derived by adding up the bits with values 4, 2, and 1. "
 	"Any omitted digits are assumed to be leading zeros. The "
@@ -110,6 +112,8 @@ USAGE_LICENSE
 "[f:quiet|silent?Do not report files whose permissioins fail to change.]"
 "[h:symlink?Change the mode of the symbolic links on systems that "
 	"support this.]"
+"[i:ignore-umask?Ignore the \bumask\b(2) value in symbolic mode "
+	"expressions. This is probably how you expect \bchmod\b to work.]"
 "[v:verbose?Describe changed permissions of all files.]"
 "\n"
 "\nmode file ...\n"
@@ -118,7 +122,8 @@ USAGE_LICENSE
 	"[+0?All files changed successfully.]"
 	"[+>0?Unable to change mode of one or more files.]"
 "}"
-"[+SEE ALSO?\bchgrp\b(1), \bchown\b(1), \btw\b(1), \bgetconf\b(1), \bls\b(1)]"
+"[+SEE ALSO?\bchgrp\b(1), \bchown\b(1), \btw\b(1), \bgetconf\b(1), \bls\b(1), "
+	"\bumask\b(2)]"
 ;
 
 
@@ -158,12 +163,13 @@ b_chmod(int argc, char* argv[], void* context)
 	char*		last;
 	int		(*chmodf)(const char*, mode_t);
 	int		notify = 0;
+	int		ignore = 0;
 #if _lib_lchmod
 	int		chlink = 0;
 #endif
 
 	cmdinit(argv, context);
-	flags = fts_flags() | FTS_TOP | FTS_NOPOSTORDER;
+	flags = fts_flags() | FTS_TOP | FTS_NOPOSTORDER | FTS_NOSEEDOTDIR;
 
 	/*
 	 * NOTE: we diverge from the normal optget boilerplate
@@ -187,6 +193,9 @@ b_chmod(int argc, char* argv[], void* context)
 			continue;
 		case 'v':
 			notify = 2;
+			continue;
+		case 'i':
+			ignore = 1;
 			continue;
 		case 'H':
 			flags |= FTS_META|FTS_PHYSICAL;
@@ -212,16 +221,26 @@ b_chmod(int argc, char* argv[], void* context)
 	if (error_info.errors || argc < 2)
 		error(ERROR_usage(2), "%s", optusage(NiL));
 	amode = *argv;
+	if (ignore)
+		ignore = umask(0);
 	mode = strperm(amode, &last, 0);
 	if (*last)
+	{
+		if (ignore)
+			umask(ignore);
 		error(ERROR_exit(1), "%s: invalid mode", amode);
+	}
 	chmodf =
 #if _lib_lchmod
 		chlink ? lchmod :
 #endif
 		chmod;
 	if (!(fts = fts_open(argv + 1, flags, NiL)))
+	{
+		if (ignore)
+			umask(ignore);
 		error(ERROR_system(1), "%s: not found", argv[1]);
+	}
 	while (ent = fts_read(fts))
 		switch (ent->fts_info)
 		{
@@ -258,5 +277,7 @@ b_chmod(int argc, char* argv[], void* context)
 			break;
 		}
 	fts_close(fts);
+	if (ignore)
+		umask(ignore);
 	return error_info.errors != 0;
 }

@@ -35,7 +35,7 @@ sscanf(const char* s, const char* fmt, ...)
 	int	v;
 
 	va_start(args, fmt);
-	v = sfsscanf(s, fmt, args);
+	v = sfvsscanf(s, fmt, args);
 	va_end(args);
 	return v;
 }

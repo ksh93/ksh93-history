@@ -75,10 +75,10 @@ procclose(register Proc_t* p)
 			signal(SIGQUIT, p->sigquit);
 		}
 		procfree(p);
-		if (status != -1)
+		if (status != -1 && !(p->flags & PROC_FOREGROUND))
 			status = WIFSIGNALED(status) ?
 				EXIT_TERM(WTERMSIG(status)) :
 				EXIT_CODE(WEXITSTATUS(status));
 	}
-	return status ;
+	return status;
 }

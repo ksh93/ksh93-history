@@ -575,7 +575,7 @@ main()
 !
 						;;
 					*)	cat <<!
-#if	defined(${i}) && ${i} > 0
+#if	defined(${i})
 !
 						;;
 					esac
@@ -626,7 +626,7 @@ $endif"
 		num = -1;
 	lim[${limit_max}] = num;
 #ifndef ${conf_name}
-#define ${conf_name}	(lim+${limit_max})
+#define ${conf_name}	(lim[${limit_max}])
 #endif
 !
 			} >> $tmp.l

@@ -4,7 +4,7 @@
  * coded for portability
  */
 
-static char id[] = "\n@(#)ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 1999-11-19\0\n";
+static char id[] = "\n@(#)ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 2000-02-14\0\n";
 
 #if _PACKAGE_ast
 
@@ -12,7 +12,7 @@ static char id[] = "\n@(#)ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 1999
 #include <error.h>
 
 static const char usage[] =
-"[-?@(#)ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 1999-11-19]"
+"[-?@(#)ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 2000-02-14]"
 "[-author?Jean-loup Gailly]"
 "[-author?Mark Adler]"
 "[-author?Glenn Fowler <gsf@research.att.com>]"
@@ -2823,7 +2823,7 @@ char**	argv;
 	ungetc(c, stdin);
 	if (c != gz_magic[0])
 		gz = 0;
-	else if (!(gz = gzfopen(stdin, "r")))
+	else if (!(gz = gzfopen(stdin, "rb")))
 	{
 		fprintf(stderr, "%s: gunzip open error\n", state.id);
 		return 1;
@@ -2941,7 +2941,10 @@ char**	argv;
 					}
 				} while (*s++);
 			}
-			*t = '/';
+			if (*(t + 1))
+				*t = '/';
+			else
+				header.typeflag = DIRTYPE;
 		}
 
 		/*
@@ -2976,7 +2979,7 @@ char**	argv;
 		{
 		case REGTYPE:
 		case AREGTYPE:
-			while (!(fp = fopen(path, "w")))
+			while (!(fp = fopen(path, "wb")))
 				if (unlink(path))
 				{
 					fprintf(stderr, "%s: %s: cannot create file\n", state.id, path);

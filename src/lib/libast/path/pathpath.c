@@ -93,5 +93,5 @@ pathpath(register char* path, const char* p, const char* a, int mode)
 	x = !a && strchr(p, '/') ? "" : pathbin();
 	if (!(s = pathaccess(path, x, p, a, mode)) && !*x && (x = getenv("FPATH")))
 		s = pathaccess(path, x, p, a, mode);
-	return path == buf ? strdup(s) : s;
+	return (s && path == buf) ? strdup(s) : s;
 }

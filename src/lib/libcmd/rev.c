@@ -131,4 +131,3 @@ b_rev(int argc, register char** argv, void* context)
 	while(cp= *argv++);
 	return(n);
 }
-

@@ -61,17 +61,17 @@ main(int argc, char *argv[])
 		nflag=1;
 		break;
 	    case ':':
-		errormsg(SH_DICT,2, opt_info.arg);
+		errormsg(SH_DICT,2,"%s",opt_info.arg);
 		break;
 	    case '?':
-		errormsg(SH_DICT,ERROR_usage(2), opt_info.arg);
+		errormsg(SH_DICT,ERROR_usage(2),"%s",opt_info.arg);
 		break;
 	}
 	sh_init(argc,argv,(void(*)(int))0);
 	argv += opt_info.index;
 	argc -= opt_info.index;
 	if(error_info.errors || argc>2)
-		errormsg(SH_DICT,ERROR_usage(2),optusage((char*)0));
+		errormsg(SH_DICT,ERROR_usage(2),"%s",optusage((char*)0));
 	if(cp= *argv)
 	{
 		argv++;

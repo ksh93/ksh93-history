@@ -468,8 +468,9 @@ toplist(FTS* fts, register char* const* pathnames)
 						s++;
 					if (!*s)
 						break;
-					path = f->fts_name = s;
-
+					path = f->fts_name;
+					while (*path++ = *s++);
+					path = f->fts_name;
 				}
 			}
 			else

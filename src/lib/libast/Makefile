@@ -265,6 +265,13 @@ $(INCLUDEDIR)/dirent.h :INSTALL: $(INCLUDEDIR) dir64.h dirstd.h dirnsys.h dirsys
 		fi
 	esac
 
+$(INCLUDEDIR)/prototyped.h :INSTALL: $(INCLUDEDIR)
+	echo "#include <../prototyped.h>" > 1.$(tmp).x
+	if	$(CMP) -s $(<) 1.$(tmp).x
+	then	$(RM) -f 1.$(tmp).x
+	else	$(MV) 1.$(tmp).x $(<)
+	fi
+
 ast.req : .check.hdr .check.lib
 
 /*

@@ -33,7 +33,7 @@
  */
 
 static const char usage_1[] =
-"[-?@(#)chgrp (AT&T Labs Research) 1999-04-24\n]"
+"[-?@(#)chgrp (AT&T Labs Research) 2000-02-14\n]"
 USAGE_LICENSE
 ;
 
@@ -217,7 +217,7 @@ b_chgrp(int argc, char** argv, void* context)
 	int		(*statf)(const char*, struct stat*);
 
 	cmdinit(argv, context);
-	flags = fts_flags() | FTS_TOP | FTS_NOPOSTORDER;
+	flags = fts_flags() | FTS_TOP | FTS_NOPOSTORDER | FTS_NOSEEDOTDIR;
 	if (!(sp = sfstropen()))
 		error(ERROR_SYSTEM|3, "out of space");
 	sfputr(sp, usage_1, -1);

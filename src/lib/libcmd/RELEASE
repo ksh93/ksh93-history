@@ -1,3 +1,6 @@
+00-02-14 chmod: --ignore-umask to ignore umask(2) in symbolic expressions
+	 chmod,chgrp,cp: use FTS_NOSEEDOTDIR for correct path construction
+	 cat: fix -n (was ignored, wow)
 00-01-27 getconf: add "-a" and "-v spec" for sol7.* compatibility
 99-09-09 join: fix -j1 vs. -j 1, add --ignorecase
 99-06-22 paste: defualt delim in writable string

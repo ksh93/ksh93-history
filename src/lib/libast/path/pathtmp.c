@@ -103,10 +103,12 @@ pathtmp(char* buf, const char* dir, const char* pfx, int* fdp)
 	register char*		b;
 	register char*		s;
 	register char*		x;
+	char*			fmt;
+	int			m;
 	int			n;
+	int			z;
 	int			len;
 	int			attempt;
-	pid_t			pid;
 
 	if (pfx && *pfx == '/')
 	{
@@ -206,6 +208,19 @@ pathtmp(char* buf, const char* dir, const char* pfx, int* fdp)
 		if (!(b = newof(0, char, len, 1)))
 			return 0;
 	}
+	if (buf && dir && pfx && (buf == (char*)dir && (buf + strlen(buf) + 1) == (char*)pfx || buf == (char*)pfx && !*dir) && !strcmp((char*)pfx + strlen(pfx) + 1, "XXXXX"))
+	{
+		z = 0;
+		d = (char*)dir;
+		len = m = strlen(d) + strlen(pfx) + 8;
+		fmt = "%03.3.32lu%03.3.32lu";
+	}
+	else
+	{
+		z = '.';
+		m = 5;
+		fmt = "%02.2.32lu.%03.3.32lu";
+	}
 	x = b + len;
 	s = b;
 	if (d)
@@ -217,25 +232,19 @@ pathtmp(char* buf, const char* dir, const char* pfx, int* fdp)
 	}
 	if (!pfx && !(pfx = tmp.pfx))
 		pfx = "ast";
-	if ((x - s) > 5)
-		x = s + 5;
+	if ((x - s) > m)
+		x = s + m;
 	while (s < x && (n = *pfx++))
 	{
-		if (n == '/' || n == '\\' || n == '.')
+		if (n == '/' || n == '\\' || n == z)
 			n = '_';
 		*s++ = n;
 	}
-
-	/*
-	 * kluge check to avoid mktemp() overflow
-	 */
-
-	n = buf && streq(s + 1, "XXXXX") ? 0x3ff : 0x7fff;
 	*s = 0;
 	len -= (s - b);
 	for (attempt = 0; attempt < ATTEMPT; attempt++)
 	{
-		if (!tmp.rng || attempt || tmp.pid != (pid = getpid()))
+		if (!tmp.rng || attempt || tmp.pid != getpid())
 		{	
 			register int	r;
 
@@ -243,8 +252,8 @@ pathtmp(char* buf, const char* dir, const char* pfx, int* fdp)
 			 * get a quasi-random coefficient
 			 */
 
-			tmp.pid = pid;
-			tmp.rng = (unsigned long)tmp.pid ^ (unsigned long)time(NiL) ^ (((unsigned long)(&attempt)) >> 3) ^ (((unsigned long)tmp.dir) >> 3);
+			tmp.pid = getpid();
+			tmp.rng = (unsigned long)tmp.pid * ((unsigned long)time(NiL) ^ (((unsigned long)(&attempt)) >> 3) ^ (((unsigned long)tmp.dir) >> 3));
 			if (!tmp.key)
 				tmp.key = (tmp.rng >> 16) | ((tmp.rng & 0xffff) << 16);
 			tmp.rng ^= tmp.key;
@@ -262,7 +271,7 @@ pathtmp(char* buf, const char* dir, const char* pfx, int* fdp)
 		 */
 
 		tmp.key = tmp.rng * tmp.key + 987654321L;
-		sfsprintf(s, len, "%02.2.32lu.%03.3.32lu", (tmp.key >> 15) & n, tmp.key & 0x7fff);
+		sfsprintf(s, len, fmt, (tmp.key >> 15) & 0x7fff, tmp.key & 0x7fff);
 		if (fdp)
 		{
 			if ((n = open(b, O_CREAT|O_RDWR|O_EXCL|O_TEMPORARY, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH)) >= 0)

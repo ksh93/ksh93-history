@@ -1,3 +1,16 @@
+00-02-14 pathtmp: fix pid cache bug that sometimes repeated after ~10 attempts
+	 optget: "..." attribute quote
+	 pathfind: eliminate *: prefix in lib, not type
+	 proc: PROC_FOREGROUND for system(3) semantics (wait status return)
+	 pathtmp: fix mktemp() logic
+	 fts: fix FTS_NOSEEDOTDIR bug that botched ./* in top list
+	 include/ast/prototyped.h includes include/prototyped.h
+	 pathpath: fix strdup(0) bug
+	 optget: --html <foo@bar> => ...mailto:foo@bar...
+	 sscanf: fix sfsscanf => sfvsscanf typo
+	 magic.tab: strengthen tar recognition
+00-02-08 conf.sh: fix ifdef for systems that think sysconf(FOO) is const
+00-02-04 glob: fix globlist_t.gl_flags
 00-02-02 vm*: add NoF() for data only files
 00-01-27 fts: fix top level .==.. statp bug (thanks to dr. ek)
 00-01-25 conf.tab: fix LFS*_*LAGS typo
