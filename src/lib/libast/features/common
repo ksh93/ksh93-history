@@ -1,5 +1,5 @@
 iff	AST_COMMON
-hdr	pthread,stdarg,stddef,types
+hdr	pthread,stdarg,stddef,types,unistd
 sys	types
 typ	long.double,size_t,ssize_t
 

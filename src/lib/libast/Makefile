@@ -25,7 +25,7 @@ PARANOID ==
 CONF_LIBPREFIX == "$(CC.PREFIX.DYNAMIC|CC.PREFIX.SHARED)"
 CONF_LIBSUFFIX == "$(CC.SUFFIX.DYNAMIC|CC.SUFFIX.SHARED)"
 DEBUG ==
-__OBSOLETE__ == 20030101
+__OBSOLETE__ == $("6 months ago":@F=%(%Y0101)T)
 
 HEADERSRC = ast.h ast_dir.h ast_getopt.h ast_std.h \
 	ast_version.h ast_windows.h \
@@ -33,13 +33,13 @@ HEADERSRC = ast.h ast_dir.h ast_getopt.h ast_std.h \
 	fs3d.h getopt.h glob.h hash.h hashkey.h hashpart.h int.h lc.h ls.h \
 	magic.h mc.h mime.h mnt.h modecanon.h modex.h namval.h option.h \
 	proc.h re_comp.h recfmt.h regex.h regexp.h \
-	sfio.h sfio_s.h sfio_t.h sfdisc.h sfstr.h \
-	stack.h stak.h stk.h swap.h tar.h times.h tm.h \
-	tok.h usage.h vdb.h vecargs.h vmalloc.h wait.h wordexp.h \
+	sfio.h sfio_s.h sfio_t.h sfdisc.h \
+	stack.h stak.h stk.h swap.h tar.h times.h tm.h tok.h \
+	usage.h vdb.h vecargs.h vmalloc.h wait.h wordexp.h \
 	bytesex.h endian.h fnmatch.h magicid.h fnv.h \
 	$(HEADERSTD)
 
-HEADERGEN = align.h preroot.h sig.h \
+HEADERGEN = align.h preroot.h sig.h tmx.h tv.h \
 	$(ID)_botch.h $(ID)_ccode.h $(ID)_common.h $(ID)_fcntl.h \
 	$(ID)_float.h $(ID)_fs.h $(ID)_hdr.h $(ID)_lib.h $(ID)_map.h \
 	$(ID)_mmap.h $(ID)_mode.h $(ID)_param.h $(ID)_time.h $(ID)_tty.h \
@@ -51,14 +51,14 @@ HEADEROPT = fmtmsg.h libgen.h syslog.h
 HEADERSTD = dirent.h iconv.h limits.h nl_types.h stdio.h wchar.h
 
 $(ID) 5.4 :LIBRARY: README RELEASE \
-	LIBAST.3 ast.3 cdt.3 chr.3 compat.3 error.3 find.3 fmt.3 \
+	LIBAST.3 ast.3 astsa.3 cdt.3 chr.3 compat.3 error.3 find.3 fmt.3 \
 	fmtls.3 fs3d.3 ftwalk.3 getcwd.3 hash.3 iblocks.3 int.3 \
 	magic.3 mem.3 mime.3 modecanon.3 optget.3 path.3 preroot.3 \
 	proc.3 re.3 setenviron.3 sfdisc.3 sfio.3 sig.3 spawnveg.3 \
 	stak.3 stk.3 strcopy.3 strdup.3 strelapsed.3 strerror.3 stresc.3 \
 	streval.3 strgid.3 strmatch.3 stropt.3 strperm.3 strsignal.3 \
-	strsort.3 strtape.3 strton.3 struid.3 swap.3 tab.3 tm.3 \
-	tok.3 touch.3 vecargs.3 vmalloc.3 \
+	strsort.3 strtape.3 strton.3 struid.3 swap.3 tab.3 tm.3 tmx.3  \
+	tok.3 touch.3 tv.3 vecargs.3 vmalloc.3 \
 	$(HEADERSRC) \
 	state.c \
 	dirlib.h opendir.c readdir.c rewinddir.c seekdir.c telldir.c \
@@ -87,14 +87,17 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	fmtbase.c fmtbuf.c fmtclock.c fmtdev.c fmtelapsed.c fmterror.c \
 	fmtesc.c fmtfmt.c fmtfs.c fmtident.c fmtip4.c fmtls.c fmtmatch.c \
 	fmtmode.c fmtnum.c fmtperm.c fmtre.c fmttime.c fmtuid.c fmtgid.c \
-	fmtsignal.c fmtscale.c fmtversion.c \
+	fmtsignal.c fmtscale.c fmttmx.c fmttv.c fmtversion.c \
 	strelapsed.c strperm.c struid.c strgid.c strtoip4.c stack.c stk.c \
 	swapget.c swapmem.c swapop.c swapput.c \
 	sigdata.c sigcrit.c sigunblock.c \
 	proclib.h procopen.c procclose.c procrun.c procfree.c \
-	tmdate.c tmfix.c tmfmt.c tmform.c tmgoff.c \
-	tminit.c tmleap.c tmlex.c tmlocale.c tmmake.c tmpoff.c \
-	tmscan.c tmtime.c tmtype.c tmword.c tmzone.c \
+	tmdate.c tmequiv.c tmfix.c tmfmt.c tmform.c tmgoff.c tminit.c \
+	tmleap.c tmlex.c tmlocale.c tmmake.c tmpoff.c tmscan.c \
+	tmsleep.c tmtime.c tmtype.c tmword.c tmzone.c \
+	tmxdate.c tmxfmt.c tmxgettime.c tmxleap.c tmxmake.c \
+	tmxscan.c tmxsettime.c tmxsleep.c tmxtime.c tmxtouch.c \
+	tvcmp.c tvgettime.c tvsettime.c tvsleep.c tvtouch.c \
 	vecargs.c vecfile.c vecfree.c vecload.c vecstring.c \
 	univlib.h univdata.c touch.c mnt.c \
 	memccpy.c memchr.c memcmp.c memcpy.c memdup.c memmove.c memset.c \
@@ -120,8 +123,8 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	getpreroot.c ispreroot.c realopen.c setpreroot.c \
 	getgroups.c mount.c system.c iblocks.c \
 	modedata.c tmdata.c \
-	memfatal.c sfkeyprintf.c sfstrtmp.c \
-	sfdcold.c sfdcdio.c sfdcdos.c sfdcfilter.c sfdcseekable.c \
+	memfatal.c sfkeyprintf.c \
+	sfdcdio.c sfdcdos.c sfdcfilter.c sfdcseekable.c \
 	sfdcslow.c sfdcsubstr.c sfdctee.c sfdcunion.c \
 	sfdcmore.c sfdcprefix.c \
 	wc.c \
@@ -191,12 +194,12 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	vmregion.c vmsegment.c vmset.c vmstat.c vmstrdup.c vmtrace.c vmwalk.c \
 	vmmopen.c malloc.c vmgetmem.c \
 	/* uwin */ \
-	mathimpl.h rlib.h ufc-crypt.h \
-	a64l.c acosh.c asinh.c atanh.c cbrt.c crypt.c crypt_util.c erf.c \
+	mathimpl.h rlib.h \
+	a64l.c acosh.c asinh.c atanh.c cbrt.c crypt.c erf.c \
 	err.c exp.c exp__E.c expm1.c gamma.c getpass.c lgamma.c log.c log1p.c \
 	log__L.c rand48.c random.c rcmd.c rint.c support.c \
 	/* obsolete */ \
-	spawn.c \
+	sfstrtmp.c spawn.c \
 	-liconv /* this *has* to be wrong */
 
 /*
@@ -342,6 +345,26 @@ astmath.exe : .DONTCARE astmath.c
 	else	$(RM) -f $(*:N=*.c:B:S=.exe)
 	fi
 	$(RM) -f $(*:N=*.c:B:S=$(CC.SUFFIX.OBJECT))
+
+/* astsa is a subset of standalone functions that just needs sfio+cdt */
+
+PAXFILTER = ;*.[ch];$(PROTO) $(PROTOFLAGS) -c "" -p
+
+astsa.tgz :  \
+		astsa/README \
+		man/astsa.3 man/optget.3 \
+		prototyped.h \
+		include/ccode.h include/debug.h include/error.h \
+		include/hashkey.h include/namval.h include/option.h \
+		include/stk.h misc/optlib.h string/strtoi.h \
+		misc/error.c misc/errorf.c misc/optesc.c misc/optget.c \
+		misc/stk.c string/chresc.c string/strerror.c string/stropt.c \
+		string/ccmap.c string/ccmapid.c string/strtonll.c \
+		features/ccode features/errno \
+		astsa/align.h astsa/ast.h astsa/ccode.h astsa/lclib.h \
+		astsa/sig.h astsa/times.h \
+		astsa/astwinsize.c astsa/strmatch.c
+	$(PAX) $(PAXFLAGS) -s ',.*/,astsa/,' -s ',astsa/ccode$,features/ccode,' -s ',astsa/errno$,features/errno,' -x $(<:/.*\.//) -wvf $(<) -A $(PAXFILTER:@Q) $(*)
 
 /* libmini.a is a bootstrap dll for uwin cc -D_BLD_ast that exports part of ast */
 

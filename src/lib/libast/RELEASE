@@ -1,3 +1,33 @@
+04-12-23 vmalloc/vmbest.c: fix vmresize bug that didn't 0 new data
+04-12-19 misc/optget.c: broaden - long option match
+04-12-09 string/strtoi.h: fix terabyte 't' suffix math
+	 string/strmatch.c: flush cache on locale change
+04-12-01 tm/tmsleep.c: add
+	 tv.h,tv*.c,tv.3: move from pax
+	 tmx.h,tmx*.c,tmx.3: add high resolution tm(3) counterparts
+	 features/lib: add *another* sgi linux.ia64 memccpy bug check
+04-10-31 Makefile: __OBSOLETE__ now computed <6 months ago year>0101
+	 ccode.h,ccmapid.c: add ccmaplist(Ccmap_t*) iterator
+	 option.h,optesc.c: add 3rd arg, 1 => quote '?' too
+	 misc/magic.c: fix bug that terminated `string \0a' at \0
+	 misc/magic.c: handle vcodex() via decompose()
+	 misc/magic.tab: add vcodex magic
+	 features/stdio: handle _LARGEFILE64_SOURCE -- oops
+	 stdio/(fseek|ftell|fseeko|fsetpos|fgetpos|ftello).c: oops^2
+04-10-28 string/swapop.c: size==-4 => size=4 and extend op=3 to op=7
+	 tm/tmfix.c: fix tm_mon<0 logic
+04-10-22 tm/tmdate.c: handle 'final day feb 2004'
+	 port/astlicense.c: add query=all|id|${...}${...}
+	 port/astlicense.c: "free" => "mit"
+	 comp/omitted.c: revert to the open source license
+	 string/stropt.c: drop siz==0 => tab is hash table
+	 include/sfio.h: incorporate <sfstr.h>
+	 include/sfstr.h: drop
+	 disc/sfstrtmp.c: drop -- use sfstrbuf()
+04-10-20 misc/magic.tab: update tar magic
+04-10-18 ufc-crypt.h,crypt_util.c: drop GPL code
+	 crypt.c: add BSD code
+	 pathpath.c: disable { $0 $_ $PWD } related root search
 04-10-01 normalize ident stamps
 	 port/astlicense.c: add type=cpl -- yeah
 04-09-25 string/swapop.c: return op < size -- duh

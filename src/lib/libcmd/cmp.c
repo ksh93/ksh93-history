@@ -3,14 +3,12 @@
 *               This software is part of the ast package               *
 *                  Copyright (c) 1992-2004 AT&T Corp.                  *
 *                      and is licensed under the                       *
-*          Common Public License, Version 1.0 (the "License")          *
-*                        by AT&T Corp. ("AT&T")                        *
-*      Any use, downloading, reproduction or distribution of this      *
-*      software constitutes acceptance of the License.  A copy of      *
-*                     the License is available at                      *
+*                  Common Public License, Version 1.0                  *
+*                            by AT&T Corp.                             *
 *                                                                      *
-*         http://www.research.att.com/sw/license/cpl-1.0.html          *
-*         (with md5 checksum 8a5e0081c856944e76c69a1cf29c2e8b)         *
+*                A copy of the License is available at                 *
+*            http://www.opensource.org/licenses/cpl1.0.txt             *
+*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -30,7 +28,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: cmp (AT&T Labs Research) 1999-04-28 $\n]"
+"[-?\n@(#)$Id: cmp (AT&T Labs Research) 2004-12-01 $\n]"
 USAGE_LICENSE
 "[+NAME?cmp - compare two files]"
 "[+DESCRIPTION?\bcmp\b compares two files \afile1\a and \afile2\a.  "
@@ -104,10 +102,10 @@ cmp(const char* file1, Sfio_t* f1, const char* file2, Sfio_t* f2, int flags)
 	register int		c2;
 	register unsigned char*	p1 = 0;
 	register unsigned char*	p2 = 0;
-	register int		lines = 1;
+	register Sfoff_t	lines = 1;
 	register unsigned char*	e1 = 0;
 	register unsigned char*	e2 = 0;
-	unsigned long		pos = 0;
+	Sfoff_t			pos = 0;
 	int			ret = 0;
 	unsigned char*		last;
 
@@ -159,16 +157,16 @@ cmp(const char* file1, Sfio_t* f1, const char* file2, Sfio_t* f2, int flags)
 						ret = 1;
 						if(flags&CMP_CHARS)
 						{
-							sfprintf(sfstdout, "%6ld ", pos - (last - p1));
+							sfprintf(sfstdout, "%6I*d ", sizeof(pos), pos - (last - p1));
 							outchar(sfstdout,c1,' ');
 							outchar(sfstdout,*(p2-1),'\n');
 						}
 						else
-							sfprintf(sfstdout, "%6ld %3o %3o\n", pos - (last - p1), c1, *(p2 - 1));
+							sfprintf(sfstdout, "%6I*d %3o %3o\n", sizeof(pos), pos - (last - p1), c1, *(p2 - 1));
 					}
 					else
 					{
-						sfprintf(sfstdout, "%s %s differ: char %ld, line %d\n", file1, file2, pos - (last - p1), lines);
+						sfprintf(sfstdout, "%s %s differ: char %I*d, line %I*u\n", file1, file2, sizeof(pos), pos - (last - p1), sizeof(lines), lines);
 						return(1);
 					}
 				}
@@ -288,4 +286,3 @@ b_cmp(int argc, register char** argv, void* context)
 	if (f2 && f2 != sfstdin) sfclose(f2);
 	return(n);
 }
-

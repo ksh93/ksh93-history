@@ -3,14 +3,12 @@
 *               This software is part of the ast package               *
 *                  Copyright (c) 1982-2004 AT&T Corp.                  *
 *                      and is licensed under the                       *
-*          Common Public License, Version 1.0 (the "License")          *
-*                        by AT&T Corp. ("AT&T")                        *
-*      Any use, downloading, reproduction or distribution of this      *
-*      software constitutes acceptance of the License.  A copy of      *
-*                     the License is available at                      *
+*                  Common Public License, Version 1.0                  *
+*                            by AT&T Corp.                             *
 *                                                                      *
-*         http://www.research.att.com/sw/license/cpl-1.0.html          *
-*         (with md5 checksum 8a5e0081c856944e76c69a1cf29c2e8b)         *
+*                A copy of the License is available at                 *
+*            http://www.opensource.org/licenses/cpl1.0.txt             *
+*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -64,19 +62,19 @@ static int 		arg_expand(struct argnod*,struct argnod**,int);
 static	char		*null;
 
 /* The following order is determined by sh_optset */
-static  const char optksh[] =  PFSHOPT BASHOPT "DircabefhkmnpstuvxCG" HFLAG;
+static  const char optksh[] =  PFSHOPT BASHOPT "DircabefhkmnpstuvxCGE" HFLAG;
 static const int flagval[]  =
 {
 #if SHOPT_PFSH
 	SH_PFSH,
 #endif
 #if SHOPT_BASH
-	SH_LOGIN_SHELL, SH_NOPROFILE, SH_NORC, SH_POSIX,
+	SH_LOGIN_SHELL, SH_NOPROFILE, SH_RC, SH_POSIX,
 #endif
 	SH_DICTIONARY, SH_INTERACTIVE, SH_RESTRICTED, SH_CFLAG,
 	SH_ALLEXPORT, SH_NOTIFY, SH_ERREXIT, SH_NOGLOB, SH_TRACKALL,
 	SH_KEYWORD, SH_MONITOR, SH_NOEXEC, SH_PRIVILEGED, SH_SFLAG, SH_TFLAG,
-	SH_NOUNSET, SH_VERBOSE,  SH_XTRACE, SH_NOCLOBBER, SH_GLOBSTARS,
+	SH_NOUNSET, SH_VERBOSE,  SH_XTRACE, SH_NOCLOBBER, SH_GLOBSTARS, SH_RC,
 #if SHOPT_HISTEXPAND
         SH_HISTEXPAND,
 #endif
@@ -144,7 +142,7 @@ int sh_argopts(int argc,register char *argv[])
 	int setflag=0, action=0, trace=(int)sh_isoption(SH_XTRACE);
 	Namval_t *np = NIL(Namval_t*);
 	const char *cp;
-	int verbose;
+	int verbose,f;
 	Optdisc_t disc;
 	newflags=sh.options;
 	memset(&disc, 0, sizeof(disc));
@@ -159,11 +157,12 @@ int sh_argopts(int argc,register char *argv[])
 	while((n = optget(argv,setflag?sh_optset:sh_optksh)))
 	{
 		o=0;
+		f=*opt_info.option=='-';
 		switch(n)
 		{
 	 	    case 'A':
 			np = nv_open(opt_info.arg,sh.var_tree,NV_NOASSIGN|NV_ARRAY|NV_VARNAME);
-			if(*opt_info.option=='-')
+			if(f)
 				nv_unset(np);
 			continue;
 #if SHOPT_BASH
@@ -178,12 +177,20 @@ int sh_argopts(int argc,register char *argv[])
 				/* print style: -O => shopt options
 				 * bash => print unset options also, no heading
 				 */
-				verbose = (*opt_info.option=='-'?PRINT_VERBOSE:PRINT_NO_HEADER)|
+				verbose = (f?PRINT_VERBOSE:PRINT_NO_HEADER)|
 					  (n=='O'?PRINT_SHOPT:0)|
 					  (sh_isoption(SH_BASH)?PRINT_ALL|PRINT_NO_HEADER:0);
 				continue;
 			}
-			o = sh_lookup(opt_info.arg,shtab_options);
+		    byname:
+			if ((o = sh_lookup(opt_info.arg,shtab_options)) <= 0)
+			{
+				f = !f;
+				if (opt_info.arg[0] == 'n' && opt_info.arg[1] == 'o')
+					o = sh_lookup(opt_info.arg+2,shtab_options);
+				else
+					o = sh_lookup(sfprints("no%s", opt_info.arg),shtab_options);
+			}
 			if(o<=0
 				|| (!sh_isoption(SH_BASH) && (o&SH_BASHEXTRA))
 				|| ((!sh_isoption(SH_BASH) || n=='o') && (o&SH_BASHOPT))
@@ -212,8 +219,10 @@ int sh_argopts(int argc,register char *argv[])
 			off_option(&newflags,SH_GMACS);
 			continue;
 
-		    case -3:	/* --noprofile */
-		    case -4:	/* --norc */
+		    case -3:	/* --profile */
+			f = !f;
+			/*FALLTHROUGH*/
+		    case -4:	/* --rc */
 		    case -5:	/* --posix */
 			/* mask lower 8 bits to find char in optksh string */
 			n&=0xff;
@@ -246,13 +255,19 @@ int sh_argopts(int argc,register char *argv[])
 				o = flagval[cp-optksh];
 			break;
 		    case ':':
+			if(opt_info.name[0]=='-'&&opt_info.name[1]=='-')
+			{
+				opt_info.arg = opt_info.name + 2;
+				f = 1;
+				goto byname;
+			}
 			errormsg(SH_DICT,2, "%s", opt_info.arg);
 			continue;
 		    case '?':
 			errormsg(SH_DICT,ERROR_usage(0), "%s", opt_info.arg);
 			return(-1);
 		}
-		if(*opt_info.option=='-')
+		if(f)
 		{
 			if(o==SH_VI || o==SH_EMACS || o==SH_GMACS)
 			{
@@ -261,12 +276,15 @@ int sh_argopts(int argc,register char *argv[])
 				off_option(&newflags,SH_GMACS);
 			}
 			on_option(&newflags,o);
+			off_option(&sh.offoptions,o);
 		}
 		else
 		{
 			if(o==SH_XTRACE)
 				trace = 0;
 			off_option(&newflags,o);
+			if(setflag==0)
+				on_option(&sh.offoptions,o);
 		}
 	}
 	if(error_info.errors)

@@ -3,14 +3,12 @@
 #               This software is part of the ast package               #
 #                  Copyright (c) 1982-2004 AT&T Corp.                  #
 #                      and is licensed under the                       #
-#          Common Public License, Version 1.0 (the "License")          #
-#                        by AT&T Corp. ("AT&T")                        #
-#      Any use, downloading, reproduction or distribution of this      #
-#      software constitutes acceptance of the License.  A copy of      #
-#                     the License is available at                      #
+#                  Common Public License, Version 1.0                  #
+#                            by AT&T Corp.                             #
 #                                                                      #
-#         http://www.research.att.com/sw/license/cpl-1.0.html          #
-#         (with md5 checksum 8a5e0081c856944e76c69a1cf29c2e8b)         #
+#                A copy of the License is available at                 #
+#            http://www.opensource.org/licenses/cpl1.0.txt             #
+#         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         #
 #                                                                      #
 #              Information and Software Systems Research               #
 #                            AT&T Research                             #
@@ -357,7 +355,7 @@ then	for i in $(command command -x ${SHELL:-ksh} -c 'print $#;[[ $1 != argument0
 	do	((sum += $i))
 	done
 	(( sum == n )) || err_exit "command -x processed only $sum arguments"
-	command -p command -x ${SHELL:-ksh} -c 'print $#;[[ $1 != argument0 ]]' count $(longline $n) > /dev/null  2>&1
+	command -p command -x ${SHELL:-ksh} -c 'print $#;[[ $1 == argument0 ]]' count $(longline $n) > /dev/null  2>&1
 	[[ $? != 1 ]] && err_exit 'incorrect exit status for command -x'
 fi
 # test command -x option with extra arguments
@@ -369,7 +367,7 @@ then    for i in $(command command -x ${SHELL:-ksh} -c 'print $#;[[ $1 != argume
 	(( sum  > n )) || err_exit "command -x processed only $sum arguments"
 	(( (sum-n)%3==0 )) || err_exit "command -x processed only $sum arguments"
 	(( sum == n+3)) && err_exit "command -x processed only $sum arguments"
-	command -p command -x ${SHELL:-ksh} -c 'print $#;[[ $1 != argument0 ]]' count $(longline $n) > /dev/null  2>&1
+	command -p command -x ${SHELL:-ksh} -c 'print $#;[[ $1 == argument0 ]]' count $(longline $n) > /dev/null  2>&1
 	[[ $? != 1 ]] && err_exit 'incorrect exit status for command -x'
 fi
 # test for debug trap

@@ -52,11 +52,18 @@ typ	struct.dirent64 -D_LARGEFILE64_SOURCE dirent.h
 
 tst	tst_errno note{ errno can be assigned }end link{
 	_BEGIN_EXTERNS_
+	#define error		______error
+	#define strerror	______strerror
+	#include <errno.h>
+	#undef	error
+	#undef	strerror
+	#ifndef errno
 	extern int errno;
+	#endif
 	error() { }
 	strerror() { }
 	_END_EXTERNS_
-	int main() { errno = 0; error(); strerror(); }
+	int main() { errno = 0; error(); strerror(); return 0; }
 }end
 
 tst	lib_poll_fd_1 note{ fd is first arg to poll() }end execute{
@@ -363,6 +370,62 @@ tst	lib_memccpy string.h unistd.h stdlib.h fcntl.h signal.h sys/types.h sys/stat
 	{
 		exit(1);
 	}
+	#ifdef MAP_PRIVATE
+	static const char x[] = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxN";
+	#if _STD_
+	static int indict_sgi_ia64_4Q_2004(int n)
+	#else
+	static int indict_sgi_ia64_4Q_2004(n) int n;
+	#endif
+	{
+		char*		b;
+		char*		s;
+		char*		e;
+		char*		t;
+		long		m;
+		int		d;
+		char		u[1024];
+
+		static char	p[32] = {'/','t','m','p','/','m','m'};
+
+		for (d = 7; d < 13; d++)
+			p[d] = 'X';
+		p[d] = 0;
+		if ((d = mkstemp(p)) < 0)
+			return 1;
+		remove(p);
+		for (m = 0; m < n; m++)
+			if (write(d, x, sizeof(x)-1) != sizeof(x)-1)
+			{
+				close(d);
+				return 1;
+			}
+		if (lseek(d, (off_t)0, SEEK_SET))
+		{
+			close(d);
+			return 1;
+		}
+		m = n * (sizeof(x)-1);
+		if (!(b = mmap((void*)0, m, PROT_READ|PROT_WRITE, MAP_PRIVATE, d, (off_t)0)))
+		{
+			close(d);
+			return 1;
+		}
+		for (e = (s = b) + m; s < e && (t = memccpy(u, s, 'N', (e-s) > sizeof(u) ? sizeof(u) : (e-s))); s += (t-u))
+			if ((t-u) != (sizeof(x)-1) || memcmp(u, s, t-u))
+			{
+				close(d);
+				return 1;
+			}
+		if (s < e)
+		{
+			close(d);
+			return 1;
+		}
+		close(d);
+		return 0;
+	}
+	#endif
 
 	int
 	main ()
@@ -374,7 +437,6 @@ tst	lib_memccpy string.h unistd.h stdlib.h fcntl.h signal.h sys/types.h sys/stat
 		int	fd;
 		size_t	siz;
 		int	i;
-		char	c = 1;
 	#endif
 	
 		/*
@@ -407,6 +469,10 @@ tst	lib_memccpy string.h unistd.h stdlib.h fcntl.h signal.h sys/types.h sys/stat
 		memccpy(dstbuf, srcbuf, 0, siz + 10);
 		alarm(0);
 		if (strcmp(srcbuf, dstbuf))
+			return 1;
+		if (indict_sgi_ia64_4Q_2004(1))
+			return 1;
+		if (indict_sgi_ia64_4Q_2004(257))
 			return 1;
 	#endif
 		return 0;

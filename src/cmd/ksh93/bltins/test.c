@@ -3,14 +3,12 @@
 *               This software is part of the ast package               *
 *                  Copyright (c) 1982-2004 AT&T Corp.                  *
 *                      and is licensed under the                       *
-*          Common Public License, Version 1.0 (the "License")          *
-*                        by AT&T Corp. ("AT&T")                        *
-*      Any use, downloading, reproduction or distribution of this      *
-*      software constitutes acceptance of the License.  A copy of      *
-*                     the License is available at                      *
+*                  Common Public License, Version 1.0                  *
+*                            by AT&T Corp.                             *
 *                                                                      *
-*         http://www.research.att.com/sw/license/cpl-1.0.html          *
-*         (with md5 checksum 8a5e0081c856944e76c69a1cf29c2e8b)         *
+*                A copy of the License is available at                 *
+*            http://www.opensource.org/licenses/cpl1.0.txt             *
+*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -40,6 +38,14 @@
 #include	"builtins.h"
 #include	"FEATURE/externs"
 #include	"FEATURE/poll"
+#include	<tm.h>
+#if TM_VERSION >= 20041201L
+#include	<tmx.h>
+#else
+typedef unsigned long Time_t;
+#define tmxgetatime(s)	((s)->st_atime)
+#define tmxgetmtime(s)	((s)->st_mtime)
+#endif
 
 #ifndef _lib_setregid
 #   undef _lib_setreuid
@@ -329,12 +335,9 @@ int test_unop(register int op,register const char *arg)
 #endif
 	    case 'L':
 	    case 'h': /* undocumented, and hopefully will disappear */
-	    {
-		struct stat statb;
 		if(*arg==0 || arg[strlen(arg)-1]=='/' || lstat(arg,&statb)<0)
 			return(0);
 		return(S_ISLNK(statb.st_mode));
-	    }
 
 	    case 'C':
 #ifdef S_ISCTG
@@ -362,7 +365,7 @@ int test_unop(register int op,register const char *arg)
 	    case 'S':
 		return(isasock(arg,&statb));
 	    case 'N':
-		return(test_stat(arg,&statb)>=0 && (statb.st_mtime>statb.st_atime));
+		return(test_stat(arg,&statb)>=0 && tmxgetmtime(&statb) > tmxgetatime(&statb));
 	    case 'p':
 		return(isapipe(arg,&statb));
 	    case 'n':
@@ -373,8 +376,6 @@ int test_unop(register int op,register const char *arg)
 		sfsync(sfstdout);
 	    case 'O':
 	    case 'G':
-	    {
-		struct stat statb;
 		if(*arg==0 || test_stat(arg,&statb)<0)
 			return(0);
 		if(op=='s')
@@ -382,7 +383,6 @@ int test_unop(register int op,register const char *arg)
 		else if(op=='O')
 			return(statb.st_uid==sh.userid);
 		return(statb.st_gid==sh.groupid);
-	    }
 	    case 'a':
 	    case 'e':
 		return(permission(arg, F_OK));
@@ -463,13 +463,20 @@ int test_binop(register int op,const char *left,const char *right)
 
 static time_t test_time(const char *file1,const char *file2)
 {
+	Time_t t1, t2;
 	struct stat statb1,statb2;
 	int r=test_stat(file2,&statb2);
 	if(test_stat(file1,&statb1)<0)
 		return(r<0?0:-1);
 	if(r<0)
 		return(1);
-	return(statb1.st_mtime-statb2.st_mtime);
+	t1 = tmxgetmtime(&statb1);
+	t2 = tmxgetmtime(&statb2);
+	if (t1 > t2)
+		return(1);
+	if (t1 < t2)
+		return(-1);
+	return(0);
 }
 
 /*

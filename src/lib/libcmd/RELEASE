@@ -1,4 +1,15 @@
+04-12-15 cp.c: add --preserve high resolution time support
+04-12-08 date.c: add high resolution time support
+04-12-01 cmp.c: fix %6I*ld => %6I*d -- doh
+	 fmt.c: handle "\n\n operands \n\n"
+	 head.c: handle -cN -nN, N > 4Gb
+04-11-22 cmp.c: handle >2G chars/lines
+04-11-18 fold.c: add --prepend=text, --append=text
+04-10-31 tail.c: use SF_LOCKR macro
+04-10-28 tail.c: use strtol() for old stype [+-]number[suffix] -- doh
+04-10-22 cp.c: check rename() errno==ENOENT to retain destination
 04-10-11 fmt.c: fix -o,--optget sublist bugs
+	 tail.c: use strton() for number conversion
 04-10-08 pathchk.c: add empty path and -p - first component char
 04-10-01 fmt.c: add -o,--optget concatenated usage string format
 	 stty.c: context is ERROR_INTERCATIVE

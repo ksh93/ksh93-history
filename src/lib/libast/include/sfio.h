@@ -3,14 +3,12 @@
 *               This software is part of the ast package               *
 *                  Copyright (c) 1985-2004 AT&T Corp.                  *
 *                      and is licensed under the                       *
-*          Common Public License, Version 1.0 (the "License")          *
-*                        by AT&T Corp. ("AT&T")                        *
-*      Any use, downloading, reproduction or distribution of this      *
-*      software constitutes acceptance of the License.  A copy of      *
-*                     the License is available at                      *
+*                  Common Public License, Version 1.0                  *
+*                            by AT&T Corp.                             *
 *                                                                      *
-*         http://www.research.att.com/sw/license/cpl-1.0.html          *
-*         (with md5 checksum 8a5e0081c856944e76c69a1cf29c2e8b)         *
+*                A copy of the License is available at                 *
+*            http://www.opensource.org/licenses/cpl1.0.txt             *
+*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -401,5 +399,46 @@ __INLINE__ ssize_t sfvalue(Sfio_t* f)		{ return __sf_value(f); }
 #define sfslen()				( __sf_slen() )
 
 #endif /*__INLINE__*/
+
+#ifndef _SFSTR_H /* GSF's string manipulation stuff */
+#define _SFSTR_H		1
+
+#define sfstropen()		sfnew(0, 0, -1, -1, SF_READ|SF_WRITE|SF_STRING)
+#define sfstrclose(f)		sfclose(f)
+
+#define sfstrseek(f,p,m) \
+	( (m) == SEEK_SET ? \
+	 	(((p) < 0 || (p) > (f)->_size) ? (char*)0 : \
+		 (char*)((f)->_next = (f)->_data+(p)) ) \
+	: (m) == SEEK_CUR ? \
+		((f)->_next += (p), \
+		 (((f)->_next < (f)->_data || (f)->_next > (f)->_data+(f)->_size) ? \
+			((f)->_next -= (p), (char*)0) : (char*)(f)->_next ) ) \
+	: (m) == SEEK_END ? \
+		( ((p) > 0 || (f)->_size+(p) < 0) ? (char*)0 : \
+			(char*)((f)->_next = (f)->_data+(f)->_size+(p)) ) \
+	: (char*)0 \
+	)
+
+#define sfstrsize(f)		((f)->_size)
+#define sfstrtell(f)		((f)->_next - (f)->_data)
+#define sfstrpend(f)		((f)->_size - sfstrtell())
+#define sfstrbase(f)		((char*)(f)->_data)
+
+#define sfstruse(f) \
+	(sfputc((f),0) < 0 ? (char*)0 : (char*)((f)->_next = (f)->_data) \
+	)
+
+#define sfstrrsrv(f,n) \
+	(sfreserve((f),(n),SF_WRITE|SF_LOCKR), sfwrite((f),(f)->_next,0), \
+	 ((f)->_next+(n) <= (f)->_data+(f)->_size ? (char*)(f)->_next : (char*)0) \
+	)
+
+#define sfstrbuf(f,b,n,m) \
+	(sfsetbuf((f),(b),(n)), ((f)->_flags |= (m) ? SF_MALLOC : 0), \
+	 ((f)->_data == (unsigned char*)(b) ? 0 : -1) \
+	)
+
+#endif /* _SFSTR_H */
 
 #endif /* _SFIO_H */

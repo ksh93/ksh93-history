@@ -1,26 +1,28 @@
-/***********************************************************************
-*                                                                      *
-*               This software is part of the ast package               *
-*                  Copyright (c) 1985-2004 AT&T Corp.                  *
-*                      and is licensed under the                       *
-*          Common Public License, Version 1.0 (the "License")          *
-*                        by AT&T Corp. ("AT&T")                        *
-*      Any use, downloading, reproduction or distribution of this      *
-*      software constitutes acceptance of the License.  A copy of      *
-*                     the License is available at                      *
-*                                                                      *
-*         http://www.research.att.com/sw/license/cpl-1.0.html          *
-*         (with md5 checksum 8a5e0081c856944e76c69a1cf29c2e8b)         *
-*                                                                      *
-*              Information and Software Systems Research               *
-*                            AT&T Research                             *
-*                           Florham Park NJ                            *
-*                                                                      *
-*                 Glenn Fowler <gsf@research.att.com>                  *
-*                  David Korn <dgk@research.att.com>                   *
-*                   Phong Vo <kpv@research.att.com>                    *
-*                                                                      *
-***********************************************************************/
+/*******************************************************************
+*                                                                  *
+*             This software is part of the ast package             *
+*                Copyright (c) 1985-2004 AT&T Corp.                *
+*        and it may only be used by you under license from         *
+*                       AT&T Corp. ("AT&T")                        *
+*         A copy of the Source Code Agreement is available         *
+*                at the AT&T Internet web site URL                 *
+*                                                                  *
+*       http://www.research.att.com/sw/license/ast-open.html       *
+*                                                                  *
+*    If you have copied or used this software without agreeing     *
+*        to the terms of the license you are infringing on         *
+*           the license and copyright and are violating            *
+*               AT&T's intellectual property rights.               *
+*                                                                  *
+*            Information and Software Systems Research             *
+*                        AT&T Labs Research                        *
+*                         Florham Park NJ                          *
+*                                                                  *
+*               Glenn Fowler <gsf@research.att.com>                *
+*                David Korn <dgk@research.att.com>                 *
+*                 Phong Vo <kpv@research.att.com>                  *
+*                                                                  *
+*******************************************************************/
 #include	"sfhdr.h"
 
 /*	Open a file/string for IO.
@@ -98,7 +100,7 @@ reg char*	mode;		/* mode of the stream */
 		while((fd = sysopenf((char*)file,oflags,SF_CREATMODE)) < 0 && errno == EINTR)
 			errno = 0;
 #else
-		while((fd = sysopenf(file,oflags&O_ACCMODE)) < 0 && errno == EINTR)
+		while((fd = sysopenf(file,oflags&(O_WRONLY|O_RDWR))) < 0 && errno == EINTR)
 			errno = 0;
 		if(fd >= 0)
 		{	if((oflags&(O_CREAT|O_EXCL)) == (O_CREAT|O_EXCL) )
@@ -116,10 +118,10 @@ reg char*	mode;		/* mode of the stream */
 		else if(oflags&O_CREAT)
 		{	while((fd = syscreatf(file,SF_CREATMODE)) < 0 && errno == EINTR)
 				errno = 0;
-			if((oflags&O_ACCMODE) != O_WRONLY)
+			if(!(oflags&O_WRONLY))
 			{	/* the file now exists, reopen it for read/write */
 				CLOSE(fd);
-				while((fd = sysopenf(file,oflags&O_ACCMODE)) < 0 &&
+				while((fd = sysopenf(file,oflags&(O_WRONLY|O_RDWR))) < 0 &&
 				      errno == EINTR)
 					errno = 0;
 			}
@@ -201,7 +203,7 @@ int*		uflagp;
 			oflags |= O_BINARY;
 #endif
 		if((sflags&SF_RDWR) == SF_RDWR)
-			oflags = (oflags&~O_ACCMODE)|O_RDWR;
+			oflags = (oflags&~(O_RDONLY|O_WRONLY))|O_RDWR;
 		if(oflagsp)
 			*oflagsp = oflags;
 		if(uflagp)

@@ -3,14 +3,12 @@
 *               This software is part of the ast package               *
 *                  Copyright (c) 1985-2004 AT&T Corp.                  *
 *                      and is licensed under the                       *
-*          Common Public License, Version 1.0 (the "License")          *
-*                        by AT&T Corp. ("AT&T")                        *
-*      Any use, downloading, reproduction or distribution of this      *
-*      software constitutes acceptance of the License.  A copy of      *
-*                     the License is available at                      *
+*                  Common Public License, Version 1.0                  *
+*                            by AT&T Corp.                             *
 *                                                                      *
-*         http://www.research.att.com/sw/license/cpl-1.0.html          *
-*         (with md5 checksum 8a5e0081c856944e76c69a1cf29c2e8b)         *
+*                A copy of the License is available at                 *
+*            http://www.opensource.org/licenses/cpl1.0.txt             *
+*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -27,17 +25,15 @@
  * AT&T Research
  *
  * return full path to p with mode access using $PATH
- * if a!=0 then it and $0 and $_ with $PWD are used for
- * related root searching
+ * a!=0 enables related root search
+ * a!=0 && a!="" searches a dir first
  * the related root must have a bin subdir
  * p==0 sets the cached relative dir to a
- * p==0 a=="" disables $0 $_ $PWD relative search
  * full path returned in path buffer
  * if path==0 then the space is malloc'd
  */
 
 #include <ast.h>
-#include <option.h>
 
 char*
 pathpath(register char* path, const char* p, const char* a, int mode)
@@ -85,16 +81,9 @@ pathpath(register char* path, const char* p, const char* a, int mode)
 		}
 		else
 			a = 0;
-		if ((!cmd || *cmd) && (strchr(s, '/') ||
-		    ((s = cmd) ||
-		     opt_info.argv && (s = *opt_info.argv)) &&
-			strchr(s, '/') && !strchr(s, '\n') && !access(s, F_OK) ||
-		    environ && (s = *environ) &&
-			*s++ == '_' && *s++ == '=' && strchr(s, '/') && !strneq(s, "/bin/", 5) && !strneq(s, "/usr/bin/", 9) ||
-		    *x && !access(x, F_OK) &&
-			(s = getenv("PWD")) && *s == '/'))
+		if ((!cmd || *cmd) && (strchr(s, '/') || (s = cmd)))
 		{
-			if (!cmd)
+			if (!cmd && *s == '/')
 				cmd = strdup(s);
 			if (strlen(s) < (sizeof(buf) - 6))
 			{

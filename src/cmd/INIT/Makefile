@@ -33,6 +33,8 @@ $(PACKAGEROOT)/lib/package :INSTALLDIR: package.mk CONVERT.mk
 $(LIBDIR)/make :INSTALLDIR: package.mk PROBE.mk TEST.mk WWW.mk \
 	MSGFUN.mk MSGKEY.mk
 
+:TEST: iffe
+
 cc ld ldd :PACKAGE_INIT: mamake.c proto.c ratz.c release.c
 
 :: RELEASE hosttype.tst p.c hello.c \
@@ -62,59 +64,107 @@ $(BINDIR)/mkdir :INSTALL: mkdir.sh
 
 /*
  * ksh93 function search on PATH
+ * ksh93 builtin command library -lcmd
  * ksh93 ld library path search on PATH
  */
 
-$(BINDIR)/.paths :INSTALL:
-	{
-	echo FPATH=../fun
-	set x x : $(-mam:??$(.GETCONF LIBPATH:/:/ /G:/,/ : /G:Q)?)
-	p=
-	while	:
-	do	while	:
-		do	case $# in
-			0)	break ;;
-			esac
-			x=$1
-			shift
-			case $x in
-			:)	break ;;
-			esac
-		done
-		case $# in
-		0|1)	break
+$(BINDIR)/.paths :INSTALL: (CC.DIALECT)
+	if	test ! -e $(<) -o -w $(<)
+	then	nl="
+"
+		o=`cat $(<) 2>/dev/null`
+		v=
+		n=
+		case $nl$o in
+		*${nl}FPATH=*|*#FPATH=*)
 			;;
-		2)	p=$2
-			;;
-		*)	case "$(CC.HOSTTYPE)" in
-			$3)	p=$2; break ;;
+		*)	case $n in
+			'')	;;
+			*)	n="$n$nl" v="$v|" ;;
 			esac
+			n="${n}FPATH=../fun"
+			v="${v}FPATH"
 			;;
 		esac
-	done
-	case $p in
-	'')	if	test -x /lib/dld.sl
-		then	p=SHLIB_PATH
-		elif	test -x /usr/lib/dyld
-		then	p=DYLD_LIBRARY_PATH
-		else	case "$(CC.HOSTTYPE)" in
-			ibm.*|mvs.*)
-				p=LIBPATH
+		case $nl$o in
+		*${nl}BUILTIN_LIB=*|*#BUILTIN_LIB=*)
+			;;
+		*)	case $n in
+			'')	;;
+			*)	n="$n$nl" v="$v|" ;;
+			esac
+			case '$(CC.DIALECT:N=*EXPORT=[AD]LL*)' in
+			?*)	p= ;;
+			*)	p='no' ;;
+			esac
+			n="${n}${p}BUILTIN_LIB=cmd"
+			v="${v}BUILTIN_LIB"
+			;;
+		esac
+		set x x : $(-mam:??$(.GETCONF LIBPATH:/:/ /G:/,/ : /G:Q)?)
+		p=
+		while	:
+		do	while	:
+			do	case $# in
+				0)	break ;;
+				esac
+				x=$1
+				shift
+				case $x in
+				:)	break ;;
+				esac
+			done
+			case $# in
+			0|1)	break
 				;;
-			sgi.mips3)	
-				p=LD_LIBRARYN32_PATH
+			2)	p=$2
 				;;
-			sgi.mips4)	
-				p=LD_LIBRARYN64_PATH
-				;;
-			*)	p=LD_LIBRARY_PATH
+			*)	case "$(CC.HOSTTYPE)" in
+				$3)	p=$2; break ;;
+				esac
 				;;
 			esac
-		fi
-		;;
-	esac
-	echo $p=../lib
-	} > $(<)
+		done
+		case $p in
+		'')	if	test -x /lib/dld.sl
+			then	p=SHLIB_PATH
+			elif	test -x /usr/lib/dyld
+			then	p=DYLD_LIBRARY_PATH
+			else	case "$(CC.HOSTTYPE)" in
+				ibm.*|mvs.*)
+					p=LIBPATH
+					;;
+				sgi.mips3)	
+					p=LD_LIBRARYN32_PATH
+					;;
+				sgi.mips4)	
+					p=LD_LIBRARYN64_PATH
+					;;
+				*)	p=LD_LIBRARY_PATH
+					;;
+				esac
+			fi
+			;;
+		esac
+		case $nl$o in
+		*${nl}${p}=*|*#${p}=*)
+			;;
+		*)	case $n in
+			'')	;;
+			*)	n="$n$nl" v="$v|" ;;
+			esac
+			n="${n}${p}=../lib"
+			v="${v}${p}"
+			;;
+		esac
+		case $n in
+		?*)	case $o in
+			?*)	o=`egrep -v "($v)=" $(<)`$nl ;;
+			esac
+			echo "$o$n" > $(<)
+			;;
+		esac
+	fi
 
 /*
  * probe initialization
@@ -191,7 +241,7 @@ prototyped.h : $(BINDIR)/proto
 			fi
 		done 2>/dev/null
 		echo " $r" > $(<)
-		rm -f $(<:B).exe $(<:B)$(CC.SUFFIX.OBJECT)
+		rm -f $(<:B).exe $(*:B:S=$(CC.SUFFIX.OBJECT))
 
 /*
  * check if -ldl is required
@@ -218,7 +268,7 @@ iconv :MAPLIB: iconv.c
 
 intl :MAPLIB: intl.c
 
-m :MAPLIB: m.c
+m :MAPLIB: m.c m2.c m3.c
 
 nsl :MAPLIB: nsl.c
 

@@ -1,16 +1,14 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1990-2004 AT&T Corp.                  *
+*                  Copyright (c) 1994-2004 AT&T Corp.                  *
 *                      and is licensed under the                       *
-*          Common Public License, Version 1.0 (the "License")          *
-*                        by AT&T Corp. ("AT&T")                        *
-*      Any use, downloading, reproduction or distribution of this      *
-*      software constitutes acceptance of the License.  A copy of      *
-*                     the License is available at                      *
+*                  Common Public License, Version 1.0                  *
+*                            by AT&T Corp.                             *
 *                                                                      *
-*         http://www.research.att.com/sw/license/cpl-1.0.html          *
-*         (with md5 checksum 8a5e0081c856944e76c69a1cf29c2e8b)         *
+*                A copy of the License is available at                 *
+*            http://www.opensource.org/licenses/cpl1.0.txt             *
+*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -27,7 +25,7 @@
  * coded for portability
  */
 
-static char id[] = "\n@(#)$Id: mamake (AT&T Labs Research) 2003-12-19 $\0\n";
+static char id[] = "\n@(#)$Id: mamake (AT&T Labs Research) 2004-10-22 $\0\n";
 
 #if _PACKAGE_ast
 
@@ -35,7 +33,7 @@ static char id[] = "\n@(#)$Id: mamake (AT&T Labs Research) 2003-12-19 $\0\n";
 #include <error.h>
 
 static const char usage[] =
-"[-?\n@(#)$Id: mamake (AT&T Labs Research) 2003-12-19 $\n]"
+"[-?\n@(#)$Id: mamake (AT&T Labs Research) 2004-10-22 $\n]"
 USAGE_LICENSE
 "[+NAME?mamake - make abstract machine make]"
 "[+DESCRIPTION?\bmamake\b reads \amake abstract machine\a target and"
@@ -81,6 +79,8 @@ USAGE_LICENSE
 "[K:?Ignored.]"
 "[N:?Like \b-n\b but recursion actions (see \b-r\b) are also disabled.]"
 "[V:?Print the program version and exit.]"
+"[G:debug-symbols?Compile and link with debugging symbol options enabled.]"
+"[S:strip-symbols?Strip link-time static symbols from executables.]"
 
 "\n"
 "\n[ target ... ] [ name=value ... ]\n"
@@ -772,7 +772,7 @@ substitute(Buf_t* buf, register char* s)
 	{
 		if (c == '$' && *s == '{')
 		{
-			for (t = ++s; (c = *s) && c != '?' && c != '+' && c != '-' && c != ':' && c != '=' && c != '[' && c != '}'; s++);
+			for (n = *(t = ++s) == '-' ? 0 : '-'; (c = *s) && c != '?' && c != '+' && c != n && c != ':' && c != '=' && c != '[' && c != '}'; s++);
 			*s = 0;
 			if (c == '[')
 			{
@@ -1870,9 +1870,17 @@ scan(Dict_item_t* item, void* handle)
 			{
 				*(t - 3) = 0;
 				q = (Rule_t*)search(state.leaf, r->name, NiL);
-				*(t - 3) = 'l';
 				if (q && q != r)
 					cons(r, q);
+				for (t = w = r->name; *w; w++)
+					if (*w == '/')
+						t = w + 1;
+				append(buf, "lib");
+				append(buf, t);
+				q = (Rule_t*)search(state.leaf, use(buf), NiL);
+				if (q && q != r)
+					cons(r, q);
+				*(t - 3) = 'l';
 			}
 			break;
 		}
@@ -2058,6 +2066,10 @@ main(int argc, char** argv)
 			append(state.opt, opt_info.arg);
 			state.debug = -opt_info.num;
 			continue;
+		case 'G':
+		case 'S':
+			search(state.vars, opt_info.name + 1, "1");
+			continue;
 		case '?':
 			error(ERROR_USAGE|4, "%s", opt_info.arg);
 			continue;
@@ -2080,6 +2092,28 @@ main(int argc, char** argv)
 				append(state.opt, " --");
 				argv++;
 				break;
+			}
+			for (t = s += 2; *t && *t != '='; t++);
+			if (!strncmp(s, "debug-symbols", t - s) || !strncmp(s, "strip-symbols", t - s))
+			{
+				if (*t)
+				{
+					v = t + 1;
+					if (t > s && *(t - 1) == '+')
+						t--;
+					c = *t;
+					*t = 0;
+				}
+				else
+				{
+					c = 0;
+					v = "1";
+				}
+				fprintf(stderr, "AHA setv \"%s\" \"%s\"\n", s - 1, v);
+				search(state.vars, s - 1, v);
+				if (c)
+					*t = c;
+				continue;
 			}
 			usage();
 			break;

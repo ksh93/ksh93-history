@@ -3,14 +3,12 @@
 #               This software is part of the ast package               #
 #                  Copyright (c) 1982-2004 AT&T Corp.                  #
 #                      and is licensed under the                       #
-#          Common Public License, Version 1.0 (the "License")          #
-#                        by AT&T Corp. ("AT&T")                        #
-#      Any use, downloading, reproduction or distribution of this      #
-#      software constitutes acceptance of the License.  A copy of      #
-#                     the License is available at                      #
+#                  Common Public License, Version 1.0                  #
+#                            by AT&T Corp.                             #
 #                                                                      #
-#         http://www.research.att.com/sw/license/cpl-1.0.html          #
-#         (with md5 checksum 8a5e0081c856944e76c69a1cf29c2e8b)         #
+#                A copy of the License is available at                 #
+#            http://www.opensource.org/licenses/cpl1.0.txt             #
+#         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         #
 #                                                                      #
 #              Information and Software Systems Research               #
 #                            AT&T Research                             #
@@ -415,5 +413,7 @@ chmod +x /tmp/script$$
 [[ $(/tmp/script$$ 5) != '( fuz=777 )' ]] 2>/dev/null && err_exit 'ojbect arithmetic test 5 failed'
 [[ $(/tmp/script$$ 6) != '0' ]] 2>/dev/null && err_exit 'ojbect arithmetic test 6 failed'
 [[ $(/tmp/script$$ 7) != '0' ]] 2>/dev/null && err_exit 'ojbect arithmetic test 7 failed'
-
+unset foo
+typeset -F1 foo=123456789.19
+[[ $foo == 123456789.2 ]] || err_exit 'typeset -F1 not working correctly'
 exit $((Errors))

@@ -1,26 +1,22 @@
-####################################################################
-#                                                                  #
-#             This software is part of the ast package             #
-#                Copyright (c) 1994-2004 AT&T Corp.                #
-#        and it may only be used by you under license from         #
-#                       AT&T Corp. ("AT&T")                        #
-#         A copy of the Source Code Agreement is available         #
-#                at the AT&T Internet web site URL                 #
-#                                                                  #
-#       http://www.research.att.com/sw/license/ast-open.html       #
-#                                                                  #
-#    If you have copied or used this software without agreeing     #
-#        to the terms of the license you are infringing on         #
-#           the license and copyright and are violating            #
-#               AT&T's intellectual property rights.               #
-#                                                                  #
-#            Information and Software Systems Research             #
-#                        AT&T Labs Research                        #
-#                         Florham Park NJ                          #
-#                                                                  #
-#               Glenn Fowler <gsf@research.att.com>                #
-#                                                                  #
-####################################################################
+########################################################################
+#                                                                      #
+#               This software is part of the ast package               #
+#                  Copyright (c) 1994-2004 AT&T Corp.                  #
+#                      and is licensed under the                       #
+#                  Common Public License, Version 1.0                  #
+#                            by AT&T Corp.                             #
+#                                                                      #
+#                A copy of the License is available at                 #
+#            http://www.opensource.org/licenses/cpl1.0.txt             #
+#         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         #
+#                                                                      #
+#              Information and Software Systems Research               #
+#                            AT&T Research                             #
+#                           Florham Park NJ                            #
+#                                                                      #
+#                 Glenn Fowler <gsf@research.att.com>                  #
+#                                                                      #
+########################################################################
 # package - source and binary package control
 # this script is written to make it through all sh variants
 # Glenn Fowler <gsf@research.att.com>
@@ -38,6 +34,7 @@ ccs="/usr/kvm /usr/ccs/bin"
 org="gnu GNU"
 makefiles="Mamfile Nmakefile nmakefile Makefile makefile"
 checksum=md5sum
+md5sum="$checksum md5"
 
 package_use='=$HOSTTYPE=$PACKAGEROOT=$INSTALLROOT=$EXECROOT=$CC='
 
@@ -45,406 +42,418 @@ admin_db=admin.db
 admin_env=admin.env
 admin_ditto="ditto --checksum --delete --update --verbose"
 admin_ditto_skip="OFFICIAL|core|old|*.core|*.tmp|.nfs*"
+admin_ping="ping -c 1 -w 5"
 default_url=default.url
+MAKESKIP=${MAKESKIP:-"*[-.]*"}
 
 all_types='*.*|sun4'		# all but sun4 match *.*
 
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Labs Research) 2004-05-01 $
+@(#)$Id: package (AT&T Research) 2004-12-05 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
-[+DESCRIPTION?The \bpackage\b command controls source and binary packages.
-	It is a \bsh\b(1) script coded for maximal portability. All package
-	files are in the \b$PACKAGEROOT\b directory tree. \b$PACKAGEROOT\b
-	must at minumum contain a \bbin/package\b command or a
-	\blib/package\b directory. Binary package files are in the
-	\b$INSTALLROOT\b (\b$PACKAGEROOT/arch/\b\ahosttype\a) tree, where
-	\ahosttpe\a=`\bpackage\b`. All \aactions\a but \bhost\b and \buse\b
-	require the current directory to be under \b$PACKAGEROOT\b. See
-	\bDETAILS\b for more information.]
-[+?Note that no environment variables need be set by the user; \bpackage\b
-	determines the environment based on the current working directory.
-	The \buse\b action starts a \bsh\b(1) with the environment initialized.
-	\bCC\b, \bCCFLAGS\b, \bHOSTTYPE\b and \bSHELL\b may be set by explicit
-	command argument assignments to override the defaults.]
-[+?Packages are composed of components. Each component is built and installed
-	by an \bast\b \bnmake\b(1) makefile. Each package is also described by
-	an \bnmake\b makefile that lists its components and provides a content
-	description. The package makefile and component makefiles provide all
-	the information required to read, write, build and install packages.]
-[+?Package recipients only need \bsh\b(1) and \bcc\b(1) to build and install
-	source packages, and \bsh\b to install binary packages. \bnmake\b and
-	\bksh93\b are required to write new packages. An \b$INSTALLROOT/bin/cc\b
-	script may be supplied for some architectures. This script supplies
-	a reasonable set of default options for compilers that accept multiple
-	dialects or generate multiple object/executable formats.]
-[+?The command arguments are composed of a sequence of words: zero or more
-	\aqualifiers\a, one \aaction\a, and zero or more action-specific
-	\aarguments\a, and zero or more \aname=value\a definitions.
-	\apackage\a names a particular package. The naming scheme is a \b-\b
-	separated hierarchy; the leftmost parts describe ownership, e.g.,
-	\bgnu-fileutils\b, \bast-base\b. If no packages are specified then all
-	packages are operated on. \boptget\b(3) documentation options are also
-	supported. The default with no arguments is \bhost type\b.]
-[+?The qualifiers are:]{
-	[+debug|environment?Show environment and actions but do not execute.]
-	[+force?Force the action to override saved state.]
-	[+never?Run make -N and show other actions.]
-	[+only?Only operate on the specified packages.]
-	[+quiet?Do not list captured action output.]
-	[+show?Run make -n and show other actions.]
-	[+verbose?Provide detailed action output.]
-	[+DEBUG?Trace the package script actions in detail.]
-}
-[+?The actions are:]{
-	[+admin\b [\ball\b]] [\bdb\b \afile\a]] [\bon\b \apattern\a]] [\aaction\a ...]]?Apply \aaction\a ... to
-		the hosts listed in \afile\a. If \afile\a  is omitted then
-		\badmin.db\b is assumed. The caller must have
-		\brcp\b(1) and \brsh\b(1) or \bscp\b(1) and \bssh\b(1)
-		access to the hosts. Output for
-		\aaction\a is saved per-host in the file
-		\aaction\a\b.log/\b\ahost\a. Logs can be viewed by
-		\bpackage admin\b [\bon\b \ahost\a]] \bresults\b [\aaction\a]].
-		By default only local PACKAGEROOT hosts are selected from
-		\afile\a; \ball\b selects all hosts. \bon\b \apattern\a selects
-		only hosts matching the \b|\b separated \apattern\a. \afile\a
-		contains four types of lines. Blank lines and lines beginning
-		with \b#\b are ignored. Lines starting with \aid\a=\avalue\a
-		are variable assignments. Set PING to local conventions if
-		\"ping -c 1 -w 4\" fails. If a package list is not specified on
-		the command line the \aaction\a applies to all packages; a
-		variable assigment \bpackage\b=\"\alist\a\" applies \aaction\a
-		to the packages in \alist\a for subsequent hosts in
-		\afile\a. The remaining line type is a host description
-		consisting of 6 tab separated fields. The first 3 are mandatory;
-		the remaining 3 are updated by the \badmin\b action.
-		\afile\a is saved in \afile\a\b.old\b before update.
-		The fields are:]{
-			[+hosttype?The host type as reported by
-				\"\bpackage\b\".]
-			[+[user@]]host?The host name and optionally user name
-				for \brcp\b(1) and \brsh\b(1) access.]
-			[+[remote::]]PACKAGEROOT?The absolute remote package
-				root directory and optionally the remote
-				protocol (rsh or ssh) if the directory is on
-				a different server than the master package
-				root directory. If \blib/package/admin/'$admin_env$'\b
-				exists under this directory then it is sourced
-				by \bsh\b(1) before \aaction\a is done. If this
-				field begins with \b-\b then the host is
-				ignored. If this field contains \b:\b then
-				\bditto\b(1) is used to sync the remote \bsrc\b
-				directory hierarchy to the local one. These
-				directories must exist on the remote side:
-				\blib/package\b, \bsrc/cmd\b, \bsrc/lib\b.]
-			[+date?\aYYMMDD\a of the last action.]
-			[+time?Elapsed wall time for the last action.]
-			[+M T W?The \badmin\b action \bmake\b, \btest\b and
-				\bwrite\b action error counts. A non-numeric
-				value in any of these fields disables the
-				corresponding action.]
-		}
-	[+contents\b [ \apackage\a ... ]]?List description and components
-		for \apackage\a on the standard output.]
-	[+copyright\b [ \apackage\a ... ]]?List the general copyright notice(s)
-		for \apackage\a on the standard output. Note that individual
-		components in \apackage\a may contain additional or replacement
-		notices.]
-	[+export\b \avariable\a ...?List \aname\a=\avalue\a for \avariable\a,
-		one per line. If the \bonly\b attribute is specified then only
-		the variable values are listed.]
-	[+help\b [ \aaction\a ]]?Display help text on the standard error
-		(standard output for \aaction\a).]
-	[+host\b [ \aattribute\a ... ]]?List architecture/implementation
-		dependent host information on the standard output. \btype\b is
-		listed if no attributes are specified. Information is listed on
-		a single line in \aattribute\a order. The attributes are:]{
-			[+canon \aname\a?An external host type name to be
-				converted to \bpackage\b syntax.]
-			[+cpu?The number of cpus; 1 if the host is not a
-				multiprocessor.]
-			[+name?The host name.]
-			[+rating?The cpu rating in pseudo mips; the value is
-				useful useful only in comparisons with rating
-				values of other hosts. Other than a vax rating
-				(mercifully) fixed at 1, ratings can vary
-				wildly but consistently from vendor mips
-				ratings. \bcc\b(1) may be required to determine
-				the rating.]
-			[+type?The host type, usually in the form
-				\avendor\a.\aarchitecture\a, with an optional
-				trailing -\aversion\a. The main theme is that
-				type names within a family of architectures are
-				named in a similar, predictable style. OS point
-				release information is avoided as much as
-				possible, but vendor resistance to release
-				incompatibilities has for the most part
-				been futile.]
-		}
-	[+html\b [ \aaction\a ]]?Display html help text on the standard error
-		(standard output for \aaction\a).]
-	[+install\b [ flat ]] [ \aarchitecture\a ... ]] \adirectory\a [ \apackage\a ... ]]?Copy
-		the package binary hierarchy to \adirectory\a. If
-		\aarchitecture\a is omitted then all architectures are
-		installed. If \bflat\b is specified then exactly
-		one \aarchitecture\a must be specified; this architecture will
-		be installed in \adirectory\a without the \barch/\b\aHOSTTYPE\a
-		directory prefixes. Otherwise each architecture will be
-		installed in a separate \barch/\b\aHOSTTYPE\a subdirectory of
-		\adirectory\a. The \aarchitecture\a \b-\b names the current
-		architecture. \adirectory\a must be an existing directory. If
-		\apackage\a is omitted then all binary packages are installed.
-		This action requires \bnmake\b.]
-	[+license\b [ \apackage\a ... ]]?List the source license(s) for
-		\apackage\a on the standard output. Note that individual
-		components in \apackage\a may contain additional or replacement
-		licenses.]
-	[+list\b [ \apackage\a ... ]]?List the name, version and prerequisites
-		for \apackage\a on the standard output.]
-	[+make\b [ \apackage\a ]] [ \atarget\a ... ]]?Build and install. The
-		default \atarget\a is \binstall\b, which makes and installs
-		\apackage\a. If the standard output is a terminal then the
-		output is also captured in
-		\b$INSTALLROOT/lib/package/gen/make.out\b. The build is done
-		in the \b$INSTALLROOT\b directory tree viewpathed on top of
-		the \b$PACKAGEROOT\b directory tree. Leaf directory names
-		matching the \b|\b-separated shell pattern \b$MAKESKIP\b
-		are ignored. The \bview\b action is done before making.]
-	[+read\b [ \apackage\a ... | \aarchive\a ... ]]?Read the named
-		package or archive(s). Must be run from the package root
-		directory. Archives are searched for in \b.\b and
-		\blib/package/tgz\b. Each package archive is read only once.
-		The file \blib/package/tgz/\b\apackage\a[.\atype\a]]\b.tim\b tracks
-		the read time. See the \bwrite\b action for archive naming
-		conventions. Text file archive member are assumed to be ASCII
-		or UTF-8 encoded.]
-	[+regress?\bdiff\b(1) the current and previous \bpackage test\b results.]
-	[+release\b [ [\aCC\a]]\aYY-MM-DD\a [ [\acc\a]]\ayy-mm-dd\a ]] ]]
-		[ \apackage\a ]]?Display recent changes for the date range
-		[\aCC\a]]\aYY-MM-DD\a (up to [\acc\a]]\ayy-mm-dd\a.), where
-		\b-\b means lowest (or highest.) If no dates are specified
-		then changes for the last 4 months are listed. \apackage\a may
-		be a package or component name.]
-	[+remove\b [ \apackage\a ]]?Remove files installed for \apackage\a.]
-	[+results\b [ \bfailed\b ]] [ \bpath\b ]] [ \bold\b ]] [ \bmake\b | \btest\b | \bwrite\b ]]?List
-		results and interesting messages captured by the most recent
-		\bmake\b (default), \btest\b or \bwrite\b action. \bold\b
-		specifies the previous results, if any (current and previous
-		results are retained.) \b$HOME/.pkgresults\b, if it exists,
-		must contain an \begrep\b(1) expression of result lines to be
-		ignored. \bfailed\b lists failures only and \bpath\b lists the
-		results file path name only.]
-	[+setup\b [ beta ]] [ flat ]] [ binary ]] [ source ]] [ \aarchitecture\a ... ]] [ \aurl\a ]] [ \apackage\a ... ]]?This
-		action initializes the current directory as a package root,
-		runs the \bupdate\b action to download new or out of date
-		packages, and runs the \bread\b action on those packages. If
-		\bflat\b is specified then the \b$INSTALLROOT\b { bin fun
-		include lib } directories are linked to the same directories
-		in the package root. Only one architecture may be \bflat\b.
-		\bbeta\b acesses beta packages; download these at your own
-		risk. The \bmake\b action must be run separately to build
-		updated source packages. If \aurl\a is omitted then the most
-		recent \aurl\a is used. If no packages are specified then all
-		previously downloaded packages are updated.]
-	[+test\b [ \apackage\a ]]?Run the regression tests for \apackage\a.
-		If the standard output is a terminal then the output is also
-		captured in \b$INSTALLROOT/lib/package/gen/test.out\b. In
-		general a package must be made before it can be tested.
-		Components tested with the \bregress\b(1) command require
-		\bksh93\b.]
-	[+update\b [ beta ]] [ binary ]] [ source ]] [ \aarchitecture\a ... ]] [ \aurl\a ]] [ \apackage\a ... ]]?Download
-		the latest release of the selected and required packages from
-		\aurl\a (e.g., \bhttp://www.research.att.com/sw/download\b)
-		into the directory \b$PACKAGEROOT/lib/package/tgz\b. \bbeta\b
-		acesses beta packages; download these at your own risk. If
-		\aarchitecture\a is omitted then only architectures already
-		present in the tgz directory will be downloaded. If
-		\aarchitecture\a is \b-\b then all posted architectures will
-		be downloaded. If \aurl\a matches \b*.url\b then it is
-		interpreted as a file whose contents is the url, else if
-		\aurl\a is specified then it is copied to the file
-		\b$PACKAGEROOT/lib/package/tgz/default.url\b, otherwise
-		the url in \bdefault.url\b is used. If \apackage\a is omitted
-		then only packages already present in the tgz directory will
-		be downloaded. If \apackage\a is \b-\b then all posted packages
-		will be downloaded. If \bsource\b and \bbinary\b are omitted
-		then both source and binary packages will be downloaded. If
-		\bonly\b is specified then only the named packages are updated;
-		otherwise the closure of required packages is updated. This
-		action requires \bcurl\b(1), \bwget\b(1) or a shell that
-		supports io to \b/dev/tcp/\b\ahost\a/\aport\a.]
-   	[+use\b [ \auid\a | \apackage\a | - ]] [ command ...]]?Run \acommand\a,
-		or an interactive shell if \acommand\a is omitted, with the
-		environment initialized for using the package (can you say
-		\ashared\a \alibrary\a or \adll\a without cussing?) If either
-		\auid\a or \apackage\a is specified then it is used to
-		determine a \b$PACKAGEROOT\b, possibly different from the
-		current directory. For example, to try out bozo`s package:
-		\bpackage use bozo\b. The \buse\b action may be run from any
-		directory. If the file \b$INSTALLROOT/lib/package/profile\b
-		is readable then it is sourced to initialize the environment.]
-	[+verify\b [ \apackage\a ]]?Verify installed binary files against the
-		checksum files in
-		\b$INSTALLROOT/lib/\b\apackage\a\b/gen/*.sum\b.
-		The checksum files contain mode, user and group information.
-		If the checksum matches for a given file then the mode, user
-		and group are changed as necessary to match the checksum entry.
-		A warning is printed on the standard error for each mismatch.
-		Requires the \bast\b package \bcksum\b(1) command.]
-	[+view?Initialize the architecture specific viewpath hierarchy. The
-		\bmake\b action implicitly calls this action.]
-	[+write\b [\aformat\a]] \atype\a ... [ \apackage\a ...]]?Write a
-		package archive for \apackage\a. All work is done in the
-		\b$PACKAGEROOT/lib/package\b directory. \aformat\a-specific
-		files are placed in the \aformat\a subdirectory. A
-		\apackage\a[.\atype\a]]\b.tim\b file in this directory tracks
-		the write time and prevents a package from being read in the
-		same root it was written. If more than one file is generated
-		for a particular \aformat\a then those files are placed in the
-		\aformat\a/\apackage\a subdirectory. File names in the
-		\aformat\a subdirectory will contain the package name,
-		a \ayyyy-mm-dd\a date, and for binary packages,
-		\aHOSTTYPE\a. If \apackage\a is omitted then an ordered list
-		previously written packages is generated. If \bonly\b is
-		specified then only named packages will be written; otherwise
-		prerequisite packages are written first. Package components
-		must be listed in \apackage\a\b.pkg\b. \aformat\a may be
-		one of:]{
-			[+cyg?Generate a \bcygwin\b package.]
-			[+exp?Generate an \bexptools\b maintainer source
-				archive and \aNPD\a file, suitable for
-				\bexpmake\b(1)]
-			[+lcl?Generate a package archive suitable for
-				restoration into the local source tree (i.e.,
-				the source is not annotated for licencing.)]
-			[+pkg?Generate a \bpkgmk\b(1) package suitable for
-				\bpkgadd\b(1).]
-			[+rpm?Generate an \brpm\b(1) package.]
-			[+tgz?Generate a \bgzip\b(1) \btar\b(1) package
-				archive. This is the default.]
-		}
-		[+?\btype\b specifies the package type. A package may be either
-			\bsource\b or \bbinary\b. A source package contains all
-			the source needed to build the corresponding binary
-			package. One of \bsource\b or \bbinary\b must be
-			specified.]
-		[+?A package may be either a \bbase\b or \bdelta\b. A base
-			package contains a complete copy of all components.
-			A delta package contains only changes from a previous
-			base package. Delta recipients must have the \bast\b
-			\bpax\b(1) command (in the \bast-base\b package.) If
-			neither \bbase\b nor \bdelta\b is specified, then the
-			current base is overwritten if there are no deltas
-			referring to the current base. Only the \btgz\b and
-			\blcl\b formats support \bdelta\b. If \bbase\b is
-			specified then a new base and two delta archives are
-			generated: one delta to generate the new base from the
-			old, and one delta to generate the old base from the
-			new; the old base is then removed. If \bdelta\b is
-			specified then a new delta referring to the current
-			base is written.]
-		[+?\apackage\a\b.pkg\b may reference other packages. By default
-			a pointer to those packages is written. The recipient
-			\bpackage read\b will then check that all required
-			packages have been downloaded. If \bclosure\b is
-			specified then the components for all package
-			references are included in the generated package.
-			This may be useful for \blcl\b and versioning.]
-		[+?All formats but \blcl\b annotate each \bsource\b file (not
-			already annotated) with a license comment as it is
-			written to the package archive using \bproto\b(1).]
-}
-[+DETAILS?The package directory hierarchy is rooted at \b$PACKAGEROOT\b. All
-	source and binaries reside under this tree. A two level viewpath is
-	used to separate source and binaries. The top view is architecture
-	specific, the bottom view is shared source. All building is done in
-	the architecture specific view; no source view files are intentionally
-	changed. This means that many different binary architectures can be
-	made from a single copy of the source.]
-[+?Independent \b$PACKAGEROOT\b hierarchies can be combined by appending
-	\b$INSTALLROOT:$PACKAGEROOT\b pairs to \bVPATH\b. The \bVPATH\b viewing
-	order is from left to right. Each \b$PACKAGEROOT\b must have a
-	\b$PACKAGEROOT/lib/package\b directory.]
-[+?Each package contains one or more components. Component source for the
-	\afoo\a command is in \b$PACKAGEROOT/src/cmd/\b\afoo\a, and source for
-	the \abar\a library is in \b$PACKAGEROOT/src/lib/lib\b\abar\a. This
-	naming is for convenience only; the underlying makefiles handle
-	inter-component build order. The \bINIT\b component, which contains
-	generic package support files, is always made first, then the
-	components named \bINIT\b*, then the component order determined by
-	the closure of component makefile dependencies.]
-[+?\b$PACKAGEROOT/lib/package\b contains package specific files. The package
-	naming convention is \agroup\a[-\apart\a]]; e.g., \bast-base\b,
-	\bgnu-fileutils\b. The *\b.pkg\b files are ast \bnmake\b(1) makefiles
-	that contain the package name, package components, references to other
-	packages, and a short package description. *\b.pkg\b files are used by
-	\bpackage write\b to generate new source and binary packages.]
+[+DESCRIPTION?The \bpackage\b command controls source and binary
+    packages. It is a \bsh\b(1) script coded for maximal portability. All
+    package files are in the \b$PACKAGEROOT\b directory tree.
+    \b$PACKAGEROOT\b must at minumum contain a \bbin/package\b command or a
+    \blib/package\b directory. Binary package files are in the
+    \b$INSTALLROOT\b (\b$PACKAGEROOT/arch/\b\ahosttype\a) tree, where
+    \ahosttpe\a=`\bpackage\b`. All \aactions\a but \bhost\b and \buse\b
+    require the current directory to be under \b$PACKAGEROOT\b. See
+    \bDETAILS\b for more information.]
+[+?Note that no environment variables need be set by the user;
+    \bpackage\b determines the environment based on the current working
+    directory. The \buse\b action starts a \bsh\b(1) with the environment
+    initialized. \bCC\b, \bCCFLAGS\b, \bHOSTTYPE\b and \bSHELL\b may be set
+    by explicit command argument assignments to override the defaults.]
+[+?Packages are composed of components. Each component is built and
+    installed by an \bast\b \bnmake\b(1) makefile. Each package is also
+    described by an \bnmake\b makefile that lists its components and
+    provides a content description. The package makefile and component
+    makefiles provide all the information required to read, write, build
+    and install packages.]
+[+?Package recipients only need \bsh\b(1) and \bcc\b(1) to build and
+    install source packages, and \bsh\b to install binary packages.
+    \bnmake\b and \bksh93\b are required to write new packages. An
+    \b$INSTALLROOT/bin/cc\b script may be supplied for some architectures.
+    This script supplies a reasonable set of default options for compilers
+    that accept multiple dialects or generate multiple object/executable
+    formats.]
+[+?The command arguments are composed of a sequence of words: zero or
+    more \aqualifiers\a, one \aaction\a, and zero or more action-specific
+    \aarguments\a, and zero or more \aname=value\a definitions. \apackage\a
+    names a particular package. The naming scheme is a \b-\b separated
+    hierarchy; the leftmost parts describe ownership, e.g.,
+    \bgnu-fileutils\b, \bast-base\b. If no packages are specified then all
+    packages are operated on. \boptget\b(3) documentation options are also
+    supported. The default with no arguments is \bhost type\b.]
+[+?The qualifiers are:]
+    {
+        [+authorize \aname\a?Remote authorization user name or license
+            acceptance phrase.]
+        [+debug|environment?Show environment and actions but do not
+            execute.]
+        [+flat?Collapse \b$INSTALLROOT\b { bin fun include lib } onto
+            \b$PACKAGEROOT\b.]
+        [+force?Force the action to override saved state.]
+        [+|--*-symbolsnever?Run make -N and show other actions.]
+        [+only?Only operate on the specified packages.]
+        [+password \apassword\a?Remote authorization or license
+	    acceptance password.]
+        [+quiet?Do not list captured action output.]
+        [+show?Run make -n and show other actions.]
+        [+verbose?Provide detailed action output.]
+        [+DEBUG?Trace the package script actions in detail.]
+    }
+[+?The actions are:]
+    {
+        [+admin\b [\ball\b]] [\bdb\b \afile\a]] [\bon\b \apattern\a]][\aaction\a ...]]?Apply
+            \aaction\a ... to the hosts listed in \afile\a. If \afile\a is
+            omitted then \badmin.db\b is assumed. The caller must have
+            \brcp\b(1) and \brsh\b(1) or \bscp\b(1) and \bssh\b(1) access
+            to the hosts. Output for \aaction\a is saved per-host in the
+            file \aaction\a\b.log/\b\ahost\a. Logs can be viewed by
+            \bpackage admin\b [\bon\b \ahost\a]] \bresults\b [\aaction\a]].
+            By default only local PACKAGEROOT hosts are selected from
+            \afile\a; \ball\b selects all hosts. \bon\b \apattern\a selects
+            only hosts matching the \b|\b separated \apattern\a. \afile\a
+            contains four types of lines. Blank lines and lines beginning
+            with \b#\b are ignored. Lines starting with \aid\a=\avalue\a
+            are variable assignments. Set admin_ping to local conventions
+            if \"'$admin_ping$'\" fails. If a package list is not specified
+            on the command line the \aaction\a applies to all packages; a
+            variable assigment \bpackage\b=\"\alist\a\" applies \aaction\a
+            to the packages in \alist\a for subsequent hosts in \afile\a.
+            The remaining line type is a host description consisting of 6
+            tab separated fields. The first 3 are mandatory; the remaining
+            3 are updated by the \badmin\b action. \afile\a is saved in
+            \afile\a\b.old\b before update. The fields are:]
+            {
+                [+hosttype?The host type as reported by
+                    \"\bpackage\b\".]
+                [+[user@]]host?The host name and optionally user name
+                    for \brcp\b(1) and \brsh\b(1) access.]
+                [+[remote::]]PACKAGEROOT?The absolute remote package
+                    root directory and optionally the remote protocol (rsh
+                    or ssh) if the directory is on a different server than
+                    the master package root directory. If
+                    \blib/package/admin/'$admin_env$'\b exists under this
+                    directory then it is sourced by \bsh\b(1) before
+                    \aaction\a is done. If this field begins with \b-\b
+                    then the host is ignored. If this field contains \b:\b
+                    then \bditto\b(1) is used to sync the remote \bsrc\b
+                    directory hierarchy to the local one. These directories
+                    must exist on the remote side: \blib/package\b,
+                    \bsrc/cmd\b, \bsrc/lib\b.]
+                [+date?\aYYMMDD\a of the last action.]
+                [+time?Elapsed wall time for the last action.]
+                [+M T W?The \badmin\b action \bmake\b, \btest\b and
+                    \bwrite\b action error counts. A non-numeric value in
+                    any of these fields disables the corresponding action.]
+            }
+        [+contents\b [ \apackage\a ... ]]?List description and
+            components for \apackage\a on the standard output.]
+        [+copyright\b [ \apackage\a ... ]]?List the general copyright
+            notice(s) for \apackage\a on the standard output. Note that
+            individual components in \apackage\a may contain additional or
+            replacement notices.]
+        [+export\b \avariable\a ...?List \aname\a=\avalue\a for
+            \avariable\a, one per line. If the \bonly\b attribute is
+            specified then only the variable values are listed.]
+        [+help\b [ \aaction\a ]]?Display help text on the standard
+            error (standard output for \aaction\a).]
+        [+host\b [ \aattribute\a ... ]]?List
+            architecture/implementation dependent host information on the
+            standard output. \btype\b is listed if no attributes are
+            specified. Information is listed on a single line in
+            \aattribute\a order. The attributes are:]
+            {
+                [+canon \aname\a?An external host type name to be
+                    converted to \bpackage\b syntax.]
+                [+cpu?The number of cpus; 1 if the host is not a
+                    multiprocessor.]
+                [+name?The host name.]
+                [+rating?The cpu rating in pseudo mips; the value is
+                    useful useful only in comparisons with rating values of
+                    other hosts. Other than a vax rating (mercifully) fixed
+                    at 1, ratings can vary wildly but consistently from
+                    vendor mips ratings. \bcc\b(1) may be required to
+                    determine the rating.]
+                [+type?The host type, usually in the form
+                    \avendor\a.\aarchitecture\a, with an optional trailing
+                    -\aversion\a. The main theme is that type names within
+                    a family of architectures are named in a similar,
+                    predictable style. OS point release information is
+                    avoided as much as possible, but vendor resistance to
+                    release incompatibilities has for the most part been
+                    futile.]
+            }
+        [+html\b [ \aaction\a ]]?Display html help text on the standard
+            error (standard output for \aaction\a).]
+        [+install\b [ flat ]] [ \aarchitecture\a ... ]] \adirectory\a [ \apackage\a ... ]]?Copy
+            the package binary hierarchy to \adirectory\a. If
+            \aarchitecture\a is omitted then all architectures are
+            installed. If \bflat\b is specified then exactly one
+            \aarchitecture\a must be specified; this architecture will be
+            installed in \adirectory\a without the \barch/\b\aHOSTTYPE\a
+            directory prefixes. Otherwise each architecture will be
+            installed in a separate \barch/\b\aHOSTTYPE\a subdirectory of
+            \adirectory\a. The \aarchitecture\a \b-\b names the current
+            architecture. \adirectory\a must be an existing directory. If
+            \apackage\a is omitted then all binary packages are installed.
+            This action requires \bnmake\b.]
+        [+license\b [ \apackage\a ... ]]?List the source license(s) for
+            \apackage\a on the standard output. Note that individual
+            components in \apackage\a may contain additional or replacement
+            licenses.]
+        [+list\b [ \apackage\a ... ]]?List the name, version and
+            prerequisites for \apackage\a on the standard output.]
+        [+make\b [ \apackage\a ]] [ \atarget\a ... ]]?Build and
+            install. The default \atarget\a is \binstall\b, which makes and
+            installs \apackage\a. If the standard output is a terminal then
+            the output is also captured in
+            \b$INSTALLROOT/lib/package/gen/make.out\b. The build is done in
+            the \b$INSTALLROOT\b directory tree viewpathed on top of the
+            \b$PACKAGEROOT\b directory tree. If \bflat\b is specified then
+            the \b$INSTALLROOT\b { bin fun include lib } directories are
+            linked to the same directories in the package root. Only one
+            architecture may be \bflat\b. Leaf directory names matching the
+            \b|\b-separated shell pattern \b$MAKESKIP\b are ignored. The
+            \bview\b action is done before making.]
+        [+read\b [ \apackage\a ... | \aarchive\a ... ]]?Read the named
+            package or archive(s). Must be run from the package root
+            directory. Archives are searched for in \b.\b and
+            \blib/package/tgz\b. Each package archive is read only once.
+            The file \blib/package/tgz/\b\apackage\a[.\atype\a]]\b.tim\b
+            tracks the read time. See the \bwrite\b action for archive
+            naming conventions. Text file archive member are assumed to be
+            ASCII or UTF-8 encoded.]
+        [+regress?\bdiff\b(1) the current and previous \bpackage test\b
+            results.]
+        [+release\b [ [\aCC\a]]\aYY-MM-DD\a [ [\acc\a]]\ayy-mm-dd\a ]]]] [ \apackage\a ]]?Display
+            recent changes for the date range [\aCC\a]]\aYY-MM-DD\a (up to
+        [\acc\a]]\ayy-mm-dd\a.), where \b-\b means lowest (or highest.)
+            If no dates are specified then changes for the last 4 months
+            are listed. \apackage\a may be a package or component name.]
+        [+remove\b [ \apackage\a ]]?Remove files installed for
+            \apackage\a.]
+        [+results\b [ \bfailed\b ]] [ \bpath\b ]] [ \bold\b ]] [\bmake\b | \btest\b | \bwrite\b ]]?List
+            results and interesting messages captured by the most recent
+            \bmake\b (default), \btest\b or \bwrite\b action. \bold\b
+            specifies the previous results, if any (current and previous
+            results are retained.) \b$HOME/.pkgresults\b, if it exists,
+            must contain an \begrep\b(1) expression of result lines to be
+            ignored. \bfailed\b lists failures only and \bpath\b lists the
+            results file path name only.]
+        [+setup\b [ beta ]] [ binary ]] [ source ]] [ \aarchitecture\a ... ]] [ \aurl\a ]] [ \apackage\a ... ]]?This
+            action initializes the current directory as a package root, runs the
+            \bupdate\b action to download new or out of date packages, and runs the
+            \bread\b action on those packages. If \bflat\b is specified then the
+            \b$INSTALLROOT\b { bin fun include lib } directories are linked to the
+            same directories in the package root. Only one architecture may be
+            \bflat\b. See the \bupdate\b and \bread\b action descriptions for
+            argument details.]
+        [+test\b [ \apackage\a ]]?Run the regression tests for
+            \apackage\a. If the standard output is a terminal then the
+            output is also captured in
+            \b$INSTALLROOT/lib/package/gen/test.out\b. In general a package
+            must be made before it can be tested. Components tested with
+            the \bregress\b(1) command require \bksh93\b.]
+        [+update\b [ beta ]] [ binary ]] [ source ]] [\aarchitecture\a ... ]] [ \aurl\a ]] [ \apackage\a ... ]]?Download
+            the latest release of the selected and required packages from \aurl\a
+            (e.g., \bhttp://www.research.att.com/sw/download\b) into the directory
+            \b$PACKAGEROOT/lib/package/tgz\b. \bbeta\b acesses beta packages;
+            download these at your own risk. If \aarchitecture\a is omitted then
+            only architectures already present in the \btgz\b directory will be
+            downloaded. If \aarchitecture\a is \b-\b then all posted architectures
+            will be downloaded. If \aurl\a matches \b*.url\b then it is interpreted
+            as a file containing shell variable assignments for \burl\b,
+            \bauthorize\b and \bpassword\b. If \aurl\a is omitted then the
+            definitions for \burl\b, \bauthorize\b and \bpassword\b in
+            \b$PACKAGEROOT/lib/package/tgz/default.url\b, if it exists, are used.
+            If \b$PACKAGEROOT/lib/package/tgz/default.url\b does not exist then it
+            is initialized with the current \burl\b, \bauthorize\b and \bpassword\b
+            values and read permission for the current user only. If \apackage\a is
+            omitted then only packages already present in the tgz directory will be
+            downloaded. If \apackage\a is \b-\b then all posted packages will be
+            downloaded. If \bsource\b and \bbinary\b are omitted then both source
+            and binary packages will be downloaded. If \bonly\b is specified then
+            only the named packages are updated; otherwise the closure of required
+            packages is updated. This action requires \bwget\b(1), \blynx\b(1),
+            \bcurl\b(1) or a shell that supports io to
+	    \b/dev/tcp/\b\ahost\a/\aport\a.]
+        [+use\b [ \auid\a | \apackage\a | - ]] [ command ...]]?Run
+            \acommand\a, or an interactive shell if \acommand\a is omitted,
+            with the environment initialized for using the package (can you
+            say \ashared\a \alibrary\a or \adll\a without cussing?) If
+            either \auid\a or \apackage\a is specified then it is used to
+            determine a \b$PACKAGEROOT\b, possibly different from the
+            current directory. For example, to try out bozo`s package:
+            \bpackage use bozo\b. The \buse\b action may be run from any
+            directory. If the file \b$INSTALLROOT/lib/package/profile\b is
+            readable then it is sourced to initialize the environment.]
+        [+verify\b [ \apackage\a ]]?Verify installed binary files
+            against the checksum files in
+            \b$INSTALLROOT/lib/\b\apackage\a\b/gen/*.sum\b. The checksum
+            files contain mode, user and group information. If the checksum
+            matches for a given file then the mode, user and group are
+            changed as necessary to match the checksum entry. A warning is
+            printed on the standard error for each mismatch. Requires the
+            \bast\b package \bcksum\b(1) command.]
+        [+view\b?Initialize the architecture specific viewpath
+            hierarchy. If \bflat\b is specified then the \b$INSTALLROOT\b {
+            bin fun include lib } directories are linked to the same
+            directories in the package root. Only one architecture may be
+            \bflat\b. The \bmake\b action implicitly calls this action.]
+        [+write\b [\aformat\a]] \atype\a ... [ \apackage\a ...]]?Write
+            a package archive for \apackage\a. All work is done in the
+            \b$PACKAGEROOT/lib/package\b directory. \aformat\a-specific
+            files are placed in the \aformat\a subdirectory. A
+            \apackage\a[.\atype\a]]\b.tim\b file in this directory tracks
+            the write time and prevents a package from being read in the
+            same root it was written. If more than one file is generated
+            for a particular \aformat\a then those files are placed in the
+            \aformat\a/\apackage\a subdirectory. File names in the
+            \aformat\a subdirectory will contain the package name, a
+            \ayyyy-mm-dd\a date, and for binary packages, \aHOSTTYPE\a. If
+            \apackage\a is omitted then an ordered list of previously
+            written packages is generated. If \bonly\b is specified then
+            only the named packages will be written; otherwise prerequisite
+            packages are written first. Package components must be listed
+            in \apackage\a\b.pkg\b. \aformat\a may be one of:]
+            {
+                [+cyg?Generate a \bcygwin\b package.]
+                [+exp?Generate an \bexptools\b maintainer source
+                    archive and \aNPD\a file, suitable for \bexpmake\b(1)]
+                [+lcl?Generate a package archive suitable for
+                    restoration into the local source tree (i.e., the
+                    source is not annotated for licencing.)]
+                [+pkg?Generate a \bpkgmk\b(1) package suitable for
+                    \bpkgadd\b(1).]
+                [+rpm?Generate an \brpm\b(1) package.]
+                [+tgz?Generate a \bgzip\b(1) \btar\b(1) package
+                    archive. This is the default.]
+            }
+        [+?\btype\b specifies the package type which must be one of
+            \bsource\b, \bbinary\b or \bruntime\b. A source package
+            contains the source needed to build the corresponding binary
+            package. A binary package includes the libraries and headers
+            needed for compiling and linking against the public interfaces.
+            A runtime package contains the commands and required dynamic
+            libraries.]
+        [+?A package may be either a \bbase\b or \bdelta\b. A base
+            package contains a complete copy of all components. A delta
+            package contains only changes from a previous base package.
+            Delta recipients must have the \bast\b \bpax\b(1) command (in
+            the \bast-base\b package.) If neither \bbase\b nor \bdelta\b is
+            specified, then the current base is overwritten if there are no
+            deltas referring to the current base. Only the \btgz\b and
+            \blcl\b formats support \bdelta\b. If \bbase\b is specified
+            then a new base and two delta archives are generated: one delta
+            to generate the new base from the old, and one delta to
+            generate the old base from the new; the old base is then
+            removed. If \bdelta\b is specified then a new delta referring
+            to the current base is written.]
+        [+?\apackage\a\b.pkg\b may reference other packages. By default
+            a pointer to those packages is written. The recipient \bpackage
+            read\b will then check that all required packages have been
+            downloaded. If \bclosure\b is specified then the components for
+            all package references are included in the generated package.
+            This may be useful for \blcl\b and versioning.]
+        [+?All formats but \blcl\b annotate each \bsource\b file (not
+            already annotated) with a license comment as it is written to
+            the package archive using \bproto\b(1).]
+    }
+[+DETAILS?The package directory hierarchy is rooted at
+    \b$PACKAGEROOT\b. All source and binaries reside under this tree. A two
+    level viewpath is used to separate source and binaries. The top view is
+    architecture specific, the bottom view is shared source. All building
+    is done in the architecture specific view; no source view files are
+    intentionally changed. This means that many different binary
+    architectures can be made from a single copy of the source.]
+[+?Independent \b$PACKAGEROOT\b hierarchies can be combined by
+    appending \b$INSTALLROOT:$PACKAGEROOT\b pairs to \bVPATH\b. The
+    \bVPATH\b viewing order is from left to right. Each \b$PACKAGEROOT\b
+    must have a \b$PACKAGEROOT/lib/package\b directory.]
+[+?Each package contains one or more components. Component source for
+    the \afoo\a command is in \b$PACKAGEROOT/src/cmd/\b\afoo\a, and source
+    for the \abar\a library is in \b$PACKAGEROOT/src/lib/lib\b\abar\a. This
+    naming is for convenience only; the underlying makefiles handle
+    inter-component build order. The \bINIT\b component, which contains
+    generic package support files, is always made first, then the
+    components named \bINIT\b*, then the component order determined by the
+    closure of component makefile dependencies.]
+[+?\b$PACKAGEROOT/lib/package\b contains package specific files. The
+    package naming convention is \agroup\a[-\apart\a]]; e.g., \bast-base\b,
+    \bgnu-fileutils\b. The *\b.pkg\b files are ast \bnmake\b(1) makefiles
+    that contain the package name, package components, references to other
+    packages, and a short package description. *\b.pkg\b files are used by
+    \bpackage write\b to generate new source and binary packages.]
 [+?\b$PACKAGEROOT/lib/package/\b\agroup\a\b.lic\b files contain license
-	information that is used by the \bast\b \bproto\b(1) and \bnmake\b(1)
-	commands to generate source and binary license strings. \agroup\a is
-	determined by the first \b:PACKAGE:\b operator name listed in the
-	component \bnmake\b makefile. \agroup\a\b.lic\b files are part of the
-	licensing documentation and must not be altered; doing so violates the
-	license. Each component may have its own \bLICENSE\b file that
-	overrides the \agroup\a\b.lic\b file. The full text of the licenses
-	are in the \b$PACKAGEROOT/lib/package/LICENSES\b and
-	\b$INSTALLROOT/lib/package/LICENSES\b directories.]
+    information that is used by the \bast\b \bproto\b(1) and \bnmake\b(1)
+    commands to generate source and binary license strings. \agroup\a is
+    determined by the first \b:PACKAGE:\b operator name listed in the
+    component \bnmake\b makefile. \agroup\a\b.lic\b files are part of the
+    licensing documentation and must not be altered; doing so violates the
+    license. Each component may have its own \bLICENSE\b file that
+    overrides the \agroup\a\b.lic\b file. The full text of the licenses are
+    in the \b$PACKAGEROOT/lib/package/LICENSES\b and
+    \b$INSTALLROOT/lib/package/LICENSES\b directories.]
 [+?A few files are generated in \b$PACKAGEROOT/lib/package/gen\b and
-	\b$INSTALLROOT/lib/package/gen\b. \apackage\a\b.ver\b contains one
-	line consisting of \apackage version release\a \b1\b for the most
-	recent instance of \apackage\a read into \b$PACKAGEROOT\b, where
-	\apackage\a is the package name, \aversion\a is the \aYYYY-MM-DD\a
-	base version, and \arelease\a is \aversion\a for the base release or
-	\aYYYY-MM-DD\a for delta releases. \apackage\a\b.req\b contains
-	*\b.ver\b entries for the packages required by \apackage\a, except
-	that the fourth field is \b0\b instead of \b1\b. All packages except
-	\bINIT\b require the \bINIT\b package. A simple sort of
-	\apackage\a\b.pkg\b and *\b.ver\b determines if the required package
-	have been read in. Finally, \apackage\a\b.txt\b and
-	\apackage\a\a.html\b contain the README text for \apackage\a and
-	all its components. Included are all changes added to the component
-	\bRELEASE\b, \bCHANGES\b or \bChangeLog\b files dated since the two
-	most recent base releases. Component \bRELEASE\b files contain tag
-	lines of the form [\aYY\a]]\aYY-MM-DD\a [ \atext\a ]] (or \bdate\b(1)
-	format dates) followed by README text, in reverse chronological
-	order (newer entries at the top of the file.) \bpackage release\b
-	lists this information, and \bpackage contents ...\b lists the
-	descriptions and components.]
-[+?\b$HOSTYPE\b names the current binary architecture and is determined by the
-	output of \bpackage\b (no arguments.) The \b$HOSTTYPE\b naming scheme
-	is used to separate incompatible executable and object formats. All
-	architecture specific binaries are placed under \b$INSTALLROOT\b
-	(\b$PACKAGEROOT/arch/$HOSTTYPE\b.) There are a few places that match
-	against \b$HOSTTYPE\b when making binaries; these are limited to
-	makefile compiler workarounds, e.g., if \b$HOSTTYPE\b matches
-	\bhp.*\b then turn off the optimizer for these objects. All other
-	architecture dependent logic is handled either by the \bast\b
-	\biffe\b(1) command or by component specific configure scripts.]
+    \b$INSTALLROOT/lib/package/gen\b. \apackage\a\b.ver\b contains one line
+    consisting of \apackage version release\a \b1\b for the most recent
+    instance of \apackage\a read into \b$PACKAGEROOT\b, where \apackage\a
+    is the package name, \aversion\a is the \aYYYY-MM-DD\a base version,
+    and \arelease\a is \aversion\a for the base release or \aYYYY-MM-DD\a
+    for delta releases. \apackage\a\b.req\b contains *\b.ver\b entries for
+    the packages required by \apackage\a, except that the fourth field is
+    \b0\b instead of \b1\b. All packages except \bINIT\b require the
+    \bINIT\b package. A simple sort of \apackage\a\b.pkg\b and *\b.ver\b
+    determines if the required package have been read in. Finally,
+    \apackage\a\b.README\b and \apackage\a\a.html\b contain the README text
+    for \apackage\a and all its components. Included are all changes added
+    to the component \bRELEASE\b, \bCHANGES\b or \bChangeLog\b files dated
+    since the two most recent base releases. Component \bRELEASE\b files
+    contain tag lines of the form [\aYY\a]]\aYY-MM-DD\a [ \atext\a ]] (or
+    \bdate\b(1) format dates) followed by README text, in reverse
+    chronological order (newer entries at the top of the file.) \bpackage
+    release\b lists this information, and \bpackage contents ...\b lists
+    the descriptions and components.]
+[+?\b$HOSTYPE\b names the current binary architecture and is determined
+    by the output of \bpackage\b (no arguments.) The \b$HOSTTYPE\b naming
+    scheme is used to separate incompatible executable and object formats.
+    All architecture specific binaries are placed under \b$INSTALLROOT\b
+    (\b$PACKAGEROOT/arch/$HOSTTYPE\b.) There are a few places that match
+    against \b$HOSTTYPE\b when making binaries; these are limited to
+    makefile compiler workarounds, e.g., if \b$HOSTTYPE\b matches \bhp.*\b
+    then turn off the optimizer for these objects. All other architecture
+    dependent logic is handled either by the \bast\b \biffe\b(1) command or
+    by component specific configure scripts.]
 [+?Each component contains an \bast\b \bnmake\b(1) makefile (either
-	\bNmakefile\b or \bMakefile\b) and a \bMAM\b (make abstract machine)
-	file (\bMamfile\b.) A Mamfile contains a portable makefile description
-	that is used by \bmamake\b(1) to simulate \bnmake\b. Currently there is
-	no support for old-make/gnu-make makefiles; if the binaries are just
-	being built then \bmamake\b will suffice; if source or makefile
-	modifications are anticipated then \bnmake\b (in the \bast-base\b
-	package) should be used. Mamfiles are automatically generated by
-	\bpackage write\b.]
-[+?Most component C source is prototyped. If \b$CC\b (default value \bcc\b) is
-	not a prototyping C compiler then \bpackage make\b runs \bproto\b(1) on
-	portions of the \b$PACKAGEROOT/src\b tree and places the converted
-	output files in the \b$PACKAGEROOT/proto/src\b tree. Converted files
-	are then viewpathed over the original source. \bproto\b(1) converts an
-	ANSI C subset to code that is compatible with K&R, ANSI, and C++
-	dialects.]
-[+?All scripts and commands under \b$PACKAGEROOT\b use \b$PATH\b relative
-	pathnames (via the \bast\b \bpathpath\b(3) function); there are no
-	imbedded absolute pathnames. This means that binaries generated
-	under \b$PACKAGEROOT\b may be copied to a different root; users need
-	only change their \b$PATH\b variable to reference the new installation
-	root \bbin\b directory. \bpackage install\b installs binary packages
-	in a new \b$INSTALLROOT\b.]
+    \bNmakefile\b or \bMakefile\b) and a \bMAM\b (make abstract machine)
+    file (\bMamfile\b.) A Mamfile contains a portable makefile description
+    that is used by \bmamake\b(1) to simulate \bnmake\b. Currently there is
+    no support for old-make/gnu-make makefiles; if the binaries are just
+    being built then \bmamake\b will suffice; if source or makefile
+    modifications are anticipated then \bnmake\b (in the \bast-base\b
+    package) should be used. Mamfiles are automatically generated by
+    \bpackage write\b.]
+[+?Most component C source is prototyped. If \b$CC\b (default value
+    \bcc\b) is not a prototyping C compiler then \bpackage make\b runs
+    \bproto\b(1) on portions of the \b$PACKAGEROOT/src\b tree and places
+    the converted output files in the \b$PACKAGEROOT/proto/src\b tree.
+    Converted files are then viewpathed over the original source.
+    \bproto\b(1) converts an ANSI C subset to code that is compatible with
+    K&R, ANSI, and C++ dialects.]
+[+?All scripts and commands under \b$PACKAGEROOT\b use \b$PATH\b
+    relative pathnames (via the \bast\b \bpathpath\b(3) function); there
+    are no imbedded absolute pathnames. This means that binaries generated
+    under \b$PACKAGEROOT\b may be copied to a different root; users need
+    only change their \b$PATH\b variable to reference the new installation
+    root \bbin\b directory. \bpackage install\b installs binary packages in
+    a new \b$INSTALLROOT\b.]
 
 [ qualifier ... ] [ action ] [ arg ... ] [ n=v ... ]
 
@@ -481,7 +490,9 @@ esac
 action=
 admin_all=1
 admin_on=
+authorize=
 exec=
+flat=0
 force=0
 global=
 hi=
@@ -498,12 +509,14 @@ noexec=
 only=0
 output=
 package_src=
+password=
 quiet=0
 show=:
 tab="        "
-urlget=
 verbose=0
+AUTHORIZE=
 DEBUG=
+HURL=
 PROTOROOT=-
 SHELLMAGIC=-
 
@@ -519,14 +532,34 @@ do	case $# in
 		shift
 		break
 		;;
+	authorize)
+		case $# in
+		1)	echo $command: $1: authorization user name argument expected >&2; exit 1 ;;
+		esac
+		shift
+		authorize=$1
+		shift
+		continue
+		;;
 	debug|environment)
 		exec=echo make=echo show=echo
+		;;
+	flat)	flat=1
 		;;
 	force)	force=1
 		;;
 	never)	exec=echo noexec=-N
 		;;
 	only)	only=1
+		;;
+	password)
+		case $# in
+		1)	echo $command: $1: authorization password argument expected >&2; exit 1 ;;
+		esac
+		shift
+		password=$1
+		shift
+		continue
 		;;
 	quiet)	quiet=1
 		;;
@@ -577,6 +610,7 @@ do	case $# in
 			Mfile='<A href=../../man/man1/file.html>file</A>(1)'
 			Mgunzip='<A href=../../man/man1/gzip.html>gunzip</A>(1)'
 			Mhurl='<A href=../../man/man1/hurl.html>hurl</A>(1)'
+			Mlynx='<A href=../../man/man1/lynx.html>lynx</A>(1)'
 			Mnmake='<A href=../../man/man1/nmake.html>nmake</A>(1)'
 			Mpackage='<A href=../../man/man1/package.html>package</A>(1)'
 			Mproto='<A href=../../man/man1/proto.html>proto</A>(1)'
@@ -601,6 +635,7 @@ do	case $# in
 			Mfile='file(1)'
 			Mgunzip='gunzip(1)'
 			Mhurl='hurl(1)'
+			Mlynx='lynx(1)'
 			Mnmake='nmake(1)'
 			Mpackage='package(1)'
 			Mproto='proto(1)'
@@ -620,14 +655,14 @@ ${bT}(2)${bD}Choose a package root directory and cd to it. This will be a local 
       area for all packages.${eD}
 ${bT}(3)${bD}These instructions bypass the ${bI}click to download${eI} package links on the
       download site. If you already clicked, or if your system does not have
-      ${Mcurl}, ${Mhurl}, or ${Mwget} then use the alternate instructions for
-      (3),(4),(5) in plan ${bB}B${eB} below. Plan ${bB}B${eB} installs the ${Mhurl}
+      ${Mcurl}, ${Mhurl}, ${Mlynx} or ${Mwget} then use the alternate instructions
+      for (3),(4),(5) in plan ${bB}B${eB} below. Plan ${bB}B${eB} installs the ${Mhurl}
       script which works with ksh and modern bash. The top level URL is:${bX}
 		URL=http://www.research.att.com/sw/download${eX}${eD}
 ${bT}(4)${bD}If the ${bB}bin/package${eB} script does not exist then run:${bX}
 		test -d bin || mkdir bin
 		url=\$URL/package
-		(curl \$url||wget -O bin/package \$url||hurl \$url) > bin/package
+		(wget -O bin/package \$url||curl \$url||hurl \$url) > bin/package
 		chmod +x bin/package${eX}${eD}
 ${bT}(5)${bD}Determine the list of package names you want from the download site, then
       use the ${Mpackage} command to do the actual download:${bX}
@@ -639,7 +674,7 @@ ${bT}(5)${bD}Determine the list of package names you want from the download site
       root will contain only one architecture then you can install in ${bB}bin${eB} and
       ${bB}lib${eB} instead of ${bB}arch/${eB}${bI}HOSTTYPE${eI}${bB}/bin${eB} and ${bB}arch/${eB}${bI}HOSTTYPE${eI}${bB}/lib${eB} by running this
       instead:${bX}
-		bin/package setup flat binary \$URL \\
+		bin/package flat setup binary \$URL \\
 			${bI}PACKAGE${eI} ...${eX}
       To update the same packages from the same URL run:${bX}
 		bin/package setup binary${eX}${eD}
@@ -649,7 +684,7 @@ ${bT}(6)${bD}The packaged binaries are position independent, i.e., they do not
       exported in ${bB}PATH${eb}.${eD}
 ${bT}(7)${bD}You can run the binaries directly from the package root, or you can
       install them in a public root (requires the ${bI}AT${Camp}T${eI} ${Mnmake} command):${bX}
-		bin/package install flat ${bI}DIRECTORY PACKAGE${eI}${eX}
+		bin/package flat install ${bI}DIRECTORY PACKAGE${eI}${eX}
       This will install in ${bI}DIRECTORY${eI}${bB}/bin${eB} and ${bI}DIRECTORY${eI}${bB}/lib${eB}. If you want to
       preserve the ${bB}arch/${eB}${bI}HOSTTYPE${eI} hierarchy under ${bI}DIRECTORY${eI} then omit the
       ${bB}flat${eB} argument. If you don't have ${Mnmake} then the following will do a
@@ -721,7 +756,7 @@ ${bI}PACKAGE${eI}${bB}.req${eB} contains *${bB}.ver${eB} entries for the package
 ${bI}PACKAGE${eI}, except that the fourth field is 0 instead of 1. All packages
 except ${bB}INIT${eB} and ${Mratz} require the ${bB}INIT${eB} package. A simple sort of ${bI}PACKAGE${eI}${bB}.pkg${eB}
 and *${bB}.ver${eB} determines if the required package have been read in. Finally,
-${bI}PACKAGE${eI}${bB}.txt${eB} contains the ${bB}README${eB} text for ${bI}PACKAGE${eI} and all its
+${bI}PACKAGE${eI}${bB}.README${eB} contains the ${bB}README${eB} text for ${bI}PACKAGE${eI} and all its
 components. Included are all changes added to the component ${bB}RELEASE${eB},
 ${bB}CHANGES${eB} or ${bB}ChangeLog${eB} files dated since the two most recent base
 releases. Component ${bB}RELEASE${eB} files contain tag lines of the form
@@ -773,14 +808,14 @@ ${bT}(2)${bD}Choose a package root directory and cd to it. This will be a local 
       area for all packages.
 ${bT}(3)${bD}These instructions bypass the ${bI}click to download${eI} package links on the
       download site. If you already clicked, or if your system does not have
-      ${Mcurl}, ${Mhurl}, or ${Mwget} then use the alternate instructions for
-      (3),(4),(5) in plan ${bB}B${eB} below. Plan ${bB}B${eB} installs the ${Mhurl}
+      ${Mcurl}, ${Mhurl}, ${Mlynx} or ${Mwget} then use the alternate instructions
+      for (3),(4),(5) in plan ${bB}B${eB} below. Plan ${bB}B${eB} installs the ${Mhurl}
       script which works with ksh and modern bash. The top level URL is:${bX}
 		URL=http://www.research.att.com/sw/download${eX}${eD}
 ${bT}(4)${bD}If the ${bB}bin/package${eB} script does not exist then run:${bX}
 		test -d bin || mkdir bin
 		url=\$URL/package
-		(curl \$url||wget -O bin/package \$url||hurl \$url) > bin/package
+		(wget -O bin/package \$url||curl \$url||hurl \$url) > bin/package
 		chmod +x bin/package${eX}${eD}
 ${bT}(5)${bD}Determine the list of package names you want from the download site, then
       use the ${Mpackage} command to do the actual download:${bX}
@@ -792,7 +827,7 @@ ${bT}(5)${bD}Determine the list of package names you want from the download site
       root will contain only one architecture then you can install in ${bB}bin${eB} and
       ${bB}lib${eB} instead of ${bB}arch/${eB}${bI}HOSTTYPE${eI}${bB}/bin${eB} and ${bB}arch/${eB}${bI}HOSTTYPE${eI}${bB}/lib${eB} by running this
       instead:${bX}
-		bin/package setup flat source \$URL \\
+		bin/package flat setup source \$URL \\
 			${bI}PACKAGE${eI} ...${eX}
       To update the same packages from the same URL run:${bX}
 		bin/package setup source${eX}${eD}
@@ -815,7 +850,7 @@ ${bT}(8)${bD}The generated binaries are position independent, i.e., they do not
 ${bT}(9)${bD}You can run the binaries directly from the package root, or you can
       install them in a public root after you are satisfied with the make and
       test actions (requires the ${bI}AT${Camp}T${eI} ${Mnmake} command):${bX}
-		bin/package install flat ${bI}DIRECTORY PACKAGE${eI}${eX}
+		bin/package flat install ${bI}DIRECTORY PACKAGE${eI}${eX}
       This will install in ${bI}DIRECTORY${eI}${bB}/bin${eB} and ${bI}DIRECTORY${eI}${bB}/lib${eB}. If you want to
       preserve the ${bB}arch/${eB}${bI}HOSTTYPE${eI} hierarchy under ${bI}DIRECTORY${eI} then omit the
       ${bB}flat${eB} argument. If you don't have ${Mnmake} then the following will do a
@@ -855,10 +890,13 @@ ${bT}(5)${bD}Read all unread package archive(s):${bX}
    action is \"host type\".
 
    qualifier:
+	authorize NAME Remote authorization name or license acceptance phrase.
 	debug|environment Show environment and actions; do not execute.
+	flat    Collapse \$INSTALLROOT { bin fun include lib } onto \$PACKAGEROOT.
 	force	Force the action to override saved state.
 	never	Run make -N; otherwise show other actions.
 	only	Only operate on the specified packages.
+	password PASSWORD Remote authorization or license acceptance password.
 	quiet	Do not list captured make and test action output.
 	show	Run make -n; otherwise show other actions.
 	DEBUG	Trace the package script actions in detail for debugging.
@@ -874,7 +912,7 @@ ${bT}(5)${bD}Read all unread package archive(s):${bX}
 		hosts matching the | separated PATTERN. FILE contains four
 		types of lines. Blank lines and lines beginning with # are
 		ignored. Lines starting with id=value are variable assignments.
-		Set PING to local conventions if \"ping -c 1 -w 4\" fails.
+		Set admin_ping to local conventions if \"$admin_ping\" fails.
 		If a package list is not specified on the command line the
 		action applies to all packages; a variable assigment
 		package=list applies action to the packages in list for
@@ -891,7 +929,7 @@ ${bT}(5)${bD}Read all unread package archive(s):${bX}
 			   optionally the remote prorocol (rsh or ssh) if
 			   the directory is on a different server than the
 			   master package root directory. If
-			   lib/package/admin/'$admin_env$' exists under
+			   lib/package/admin/$admin_env exists under
 			   this directory then it is sourced by sh(1)
 			   before ACTION is done. If this field begins with -
 			   then the host is ignored. If this field contains
@@ -945,7 +983,7 @@ ${bT}(5)${bD}Read all unread package archive(s):${bX}
 	html [ ACTION ]
 		Display html help text on the standard error [ standard output
 		for ACTION ].
-	install [ flat ] [ ARCHITECTURE ... ] DIR [ PACKAGE ... ]
+	install [ ARCHITECTURE ... ] DIR [ PACKAGE ... ]
 		Copy the package binary hierarchy to DIR. If ARCHITECTURE is
 		omitted then all architectures are installed. If the \"flat\"
 		attribute is specified then exactly one ARCHITECTURE must be
@@ -969,9 +1007,12 @@ ${bT}(5)${bD}Read all unread package archive(s):${bX}
 		is a terminal then the output is also captured in
 		\$INSTALLROOT/lib/package/gen/make.out. The build is done
 		in the \$INSTALLROOT directory tree viewpathed on top of
-		the \$PACKAGEROOT directory tree. Leaf directory names
-		matching the |-separated shell pattern \$MAKESKIP
-		are ignored. The view action is done before making.
+		the \$PACKAGEROOT directory tree. If \"flat\" is specified then
+		the \$INSTALLROOT { bin fun include lib } directories are
+		linked to the same directories in the package root. Only
+		one architecture may be flat. Leaf directory names matching
+		the |-separated shell pattern \$MAKESKIP are ignored. The
+		view action is done before making.
 	read [ package ... | archive ... ]
 		Read the named package archive(s). Must be run from the
 		package root directory. Archives are searched for in .
@@ -994,17 +1035,14 @@ ${bT}(5)${bD}Read all unread package archive(s):${bX}
 		retained.) $HOME/.pkgresults, if it exists, must contain an
 		egrep(1) expression of result lines to be ignored. failed lists
 		failures only and path lists the results file path only.
-	setup [ beta ] [ flat ] [ binary ] [ source ] [ ARCHITECTURE ... ] [ URL ] [ PACKAGE ... ]
+	setup [ beta ] [ binary ] [ source ] [ ARCHITECTURE ... ] [ URL ] [ PACKAGE ... ]
 		The action initializes the current directory as a package root,
 		runs the update action to download new or out of date packages,
-		and runs the read action on those packages. beta acesses beta
-		packages; download these at your own risk. If flat is specified
-		then the \$INSTALLROOT { bin fun include lib } directories are
-		linked to the same directories in the package root. Only one
-		architecture may be flat. The make action must be run
-		separately to build updated source packages. If URL is omitted
-		then the most recent URL is used. If no PACKAGEs are specified
-		then all previously downloaded packages are updated.
+		and runs the read action on those packages. If \"flat\" is
+		specified then the \$INSTALLROOT { bin fun include lib }
+		directories are linked to the same directories in the package
+		root. Only one architecture may be flat. See the update and
+		read actions for argument details.
 	test [ PACKAGE ]
 		Run the regression tests for PACKAGE. If the standard output
 		is a terminal then the output is also captured in
@@ -1019,18 +1057,22 @@ ${bT}(5)${bD}Read all unread package archive(s):${bX}
 		then only architectures already present in the tgz directory
 		will be downloaded. If ARCHITECTURE is - then all posted
 		architectures will be downloaded. If URL matches *.url then
-		is interpreted as a file whose contents is the url; else if
-		URL is specified then it is copied to the file
-		\$PACKAGEROOT/lib/package/tgz/default.url, otherwise the url
-		in default.url is used. If PACKAGE is omitted then only
+		it is interpreted as a file containing shell variable
+		assignments for url, authorize and password. If URL is
+		omitted then the definitions for url, authorize and password
+		in \$PACKAGEROOT/lib/package/tgz/$default_url, if it exists,
+		are used. If \$PACKAGEROOT/lib/package/tgz/$default_url does
+		not exist then it is initialized with the current url,
+		authorize and password values and read permission for the
+		current user only. If PACKAGE is omitted then only
 		packages already present in the tgz directory will be
 		downloaded. If PACKAGE is - then all posted packages will be
 		downloaded. If source and binary are omitted then both source
 		and binary packages will be downloaded. If \bonly\b is
 		specified then only the named packages are updated; otherwise
 		the closure of required packages is updated. This action
-		requires curl(1), wget(1) or a shell that supports io to
-		/dev/tcp/HOST/PORT.
+		requires wget(1), lynx(1), curl(1) or a shell that supports
+		io to /dev/tcp/HOST/PORT.
    	use [ uid | PACKAGE | - ] [ COMMAND ... ]
    		Run COMMAND or an interactive shell if COMMAND is omitted, with
 		the environment initialized for using the package (can you say
@@ -1049,46 +1091,67 @@ ${bT}(5)${bD}Read all unread package archive(s):${bX}
 		as necessary to match the checksum entry. A warning is printed
 		on the standard error for each mismatch. Requires the ast
 		package cksum(1) command.
-	view	Initialize the architecture specific viewpath hierarchy. The
-		make action implicitly calls this action.]
-	write [closure] [cyg|exp|lcl|pkg|rpm] [base|delta] [binary|source]
-			PACKAGE
-		Write an archive for PACKAGE. The archive name is
-		lib/package/SAVE/PACKAGE.RELEASE[.VERSION][.HOSTTYPE].SUFFIX:
-		   SAVE      [cyg|exp|lcl|pkg|rpm] or tgz by default
-		   PACKAGE   package name
-		   RELEASE   YYYY-MM-DD when the base archive was generated
-		   VERSION   omitted for base archive or YYYY-MM-DD for deltas
-		   HOSTTYPE  the current host type via "package host type"
-			     for binary archives, omitted for source archives
-		   SUFFIX    \".tgz\" or \".gz\" for all packages except \"ratz\",
-			     which either has the \".c\" source package suffix
-			     or the \".exe\" binary package suffix.
-		closure writes the closure of all package components, useful
-		with lcl for backup and versioning. lcl omits the proto(1)
-		source licensing; otherwise source files not already annotated
-		are written to the archive with a license comment prepended.
-		Requires the ast package nmake(1) and pax(1) commands. If a
-		new base is written then two delta archives are also generated:
-		one to generate the new base from the old, and one to generate
-		the old base from the new; the old base is then removed.
-		PACKAGE is omitted then an ordered list previously written
-		packages is generated. If only is specified then only named
-		packages will be written; otherwise prerequisite packages are
-		written first. Package components must be listed in PACKAGE.pkg.
-		Text file archive members are written with ASCII encoding.
-		Other package styles are supported, but only the lcl style
-		supports deltas:
+	view
+		Initialize the architecture specific viewpath hierarchy. The
+		make action implicitly calls this action. If \"flat\" is specified
+		then the \$INSTALLROOT { bin fun include lib } directories are
+		linked to the same directories in the package root. Only one
+		architecture may be flat.
+	write [closure] [cyg|exp|lcl|pkg|rpm|tgz] [base|delta]
+			[binary|runtime|source] PACKAGE
+		Write a package archive for PACKAGE. All work is done in the
+		\$PACKAGEROOT/lib/package directory. FORMAT-specific files
+		are placed in the FORMAT subdirectory. A PACKAGE[.TYPE].tim
+		file in this directory tracksthe write time and prevents a
+		package from being read in the same root it was written. If
+		more than one file is generated for a particular FORMAT then
+		those files are placed in the FORMAT/PACKAGE subdirectory.
+		File names in the FORMAT subdirectory will contain the package
+		name, a YYYY-MM-DD date, and for binary packages, HOSTTYPE.
+		If PACKAGE is omitted then an ordered list of previously
+		written packages is generated. If \"only\" is specified then
+		only the named packages will be written; otherwise
+		prerequisite packages are written first. Package components
+		must be listed in PACKAGE.pkg. FORMAT may be one of:
 		   cyg  generate a cygwin package
-		   exp  create an exptools(1) maintainer source archive
+		   exp  generate an exptools(1) maintainer source archive
 		        and NPD file in the exp subdirectory, suitable for
 			expmake(1); support files are placed in the
 			exp/PACKAGE subdirectory
 		   lcl	generate a package archive or delta in the lcl
 			subdirectory, suitable for restoration into the
 			primary source tree (no source licence annotation)
-		   pkg	create a pkgmk(1) package, suitable for pkgadd(1)
-		   rpm  create an rpm(1) package
+		   pkg	generate a pkgmk(1) package, suitable for pkgadd(1)
+		   rpm  generate an rpm(1) package
+		   tgz  generate a gzip(1) tar(1) package archive; this is
+			the default
+		The package type must be one of source, binary or runtime.
+		A source package contains the source needed to build the
+		corresponding binary package. A binary package includes the
+		libraries and headers needed for compiling and linking
+		against the public interfaces. A runtime package contains
+		the commands and required dynamic libraries.  A package may
+		be either a base or delta. A base package contains a
+		complete copy of all components.  A delta package contains
+		only changes from a previous base package. Delta recipients
+		must have the ast pax(1) command (in the ast-base package.)
+		If neither base nor delta is specified, then the current
+		base is overwritten if there are no deltas referring to the
+		current base. Only the tgz and lcl formats support delta.
+		If base is specified then a new base and two delta archives
+		are generated: one delta to generate the new base from the
+		old, and one delta to generate the old base from the new;
+		the old base is then removed. If delta is specified then a
+		new delta referring to the current base is written.
+		package.pkg may reference other packages. By default a
+		pointer to those packages is written. The recipient package
+		read will then check that all required packages have been
+		downloaded. If closure is specified then the components for
+		all package references are included in the generated
+		package.  This may be useful for lcl and versioning.  All
+		formats but lcl annotate each source file (not already
+		annotated) with a license comment as it is written to the
+		package archive using proto(1).
    name=value:
 	variable definition: typically CC=cc or CCFLAGS=-g."
 			;;
@@ -1137,6 +1200,8 @@ do	case $i in
 		?*)	KEEP_HOSTTYPE=1 ;;
 		esac
 		;;
+	HURL=*)	eval $i
+		;;
 	PACKAGEROOT=*)
 		eval $i
 		case $PACKAGEROOT in
@@ -1149,6 +1214,12 @@ do	case $i in
 		esac
 		;;
 	VPATH=*)eval USER_$i
+		;;
+	'debug=1')
+		makeflags="$makeflags --debug-symbols"
+		;;
+	'strip=1')
+		makeflags="$makeflags --strip-symbols"
 		;;
 	*=*)	assign="$assign '$i'"
 		;;
@@ -1280,13 +1351,10 @@ onpath() # command
 nonmake() # nmake
 {
 	_nonmake_version=`( $1 -n -f - 'print $(MAKEVERSION:@/.* //:/-//G)' . ) </dev/null 2>/dev/null || echo 19840919`
-	if	test $_nonmake_version -ge 20001031
-	then	case " $assign " in
-		*" physical=1 "*)	;;
-		*)			assign="physical=1 $assign" ;;
-		esac
+	if	test $_nonmake_version -lt 20001031
+	then	return 0
 	fi
-	test 20000101 -gt $_nonmake_version
+	return 1
 }
 
 # determine local host attributes
@@ -1468,7 +1536,7 @@ hostinfo() # attribute ...
 			cat > $tmp.c <<!
 #include <stdio.h>
 #include <pthread.h>
-main()
+int main()
 {
 	printf("%d\n", pthread_num_processors_np());
 	return 0;
@@ -1511,7 +1579,7 @@ main()
 #else
 extern time_t	time();
 #endif
-main()
+int main()
 {
 	register unsigned long	i;
 	register unsigned long	j;
@@ -1771,7 +1839,9 @@ main()
 			9000/[78]*)
 				type=hp.pa
 				;;
-			*)	type=hp.ux
+			*/*)	type=hp.`echo $arch | sed 's,/,_,g'`
+				;;
+			*)	type=hp.$arch
 				;;
 			esac
 			;;
@@ -1859,8 +1929,10 @@ main()
 		[Ss]ol*)
 			v=`echo $rel | sed -e 's/^[25]\.//' -e 's/\.[^.]*$//'`
 			case $v in
-			[6789])	;;
-			*)	v= ;;
+			[6789]|[1-9][0-9])
+				;;
+			*)	v=
+				;;
 			esac
 			case $arch in
 			'')	case $mach in
@@ -1897,8 +1969,10 @@ main()
 				esac
 				v=`echo $rel | sed -e 's/^[25]\.//' -e 's/\.[^.]*$//'`
 				case $v in
-				[6789])	;;
-				*)	v= ;;
+				[6789]|[1-9][0-9])
+					;;
+				*)	v=
+					;;
 				esac
 				type=sol$v.$type
 				;;
@@ -2078,7 +2152,7 @@ main()
 				trap 'rm -f $tmp.*' 0 1 2
 				cat > $tmp.a.c <<!
 extern int b();
-main() { return b(); }
+int main() { return b(); }
 !
 				cat > $tmp.b.c <<!
 int b() { return 0; }
@@ -2576,14 +2650,14 @@ cat $INITROOT/$i.sh
 		#
 		# NOTE: PACKAGEROOT==INSTALLROOT is possible for binary installations
 
-		case :$PATH: in
-		*:$PACKAGEROOT/bin:*)
+		case $PATH: in
+		$PACKAGEROOT/bin:*)
 			;;
 		*)	PATH=$PACKAGEROOT/bin:$PATH
 			;;
 		esac
-		case :$PATH: in
-		*:$INSTALLROOT/bin:*)
+		case $PATH: in
+		$INSTALLROOT/bin:*)
 			;;
 		*)	PATH=$INSTALLROOT/bin:$PATH
 			;;
@@ -2865,7 +2939,6 @@ setup)	# { update read } with optional (bin|fun|include|lib) symlinks
 
 	set '' $args
 	shift
-	flat=
 	types=
 	url=
 	while	:
@@ -2873,12 +2946,15 @@ setup)	# { update read } with optional (bin|fun|include|lib) symlinks
 		0)	break ;;
 		esac
 		case $1 in
+		--)	shift
+			break
+			;;
+		flat)	flat=1 # backwards compatibility -- documentation dropped
+			;;
 		*://*|*.url)
 			url=$1
 			shift
 			break
-			;;
-		flat)	flat=1
 			;;
 		*)	types="$types $1"
 			;;
@@ -2888,17 +2964,6 @@ setup)	# { update read } with optional (bin|fun|include|lib) symlinks
 	if	test ! -d $PACKAGEROOT/lib/package/tgz
 	then	$exec mkdir -p $PACKAGEROOT/lib/package/tgz || exit
 	fi
-	case $flat in
-	1)	if	test ! -d $INSTALLROOT
-		then	$exec mkdir -p $INSTALLROOT || exit
-		fi
-		for i in bin include lib fun
-		do	if	test ! -d $INSTALLROOT/$i
-			then	$exec ln -s ../../$i $INSTALLROOT/$i
-			fi
-		done
-		;;
-	esac
 	case " $types " in
 	*" source "*)
 		case " $* " in
@@ -2911,8 +2976,10 @@ setup)	# { update read } with optional (bin|fun|include|lib) symlinks
 		esac
 		;;
 	esac
-	$0 $global update $types $url "$@" PACKAGEROOT=$PACKAGEROOT || exit
-	$0 $global read "$@" PACKAGEROOT=$PACKAGEROOT || exit
+	packages=`$0 $global ${authorize:+authorize "$authorize"} ${password:+password "$password"} update setup $types $url "$@" PACKAGEROOT=$PACKAGEROOT`
+	case $packages in
+	?*)	$0 $global read $packages PACKAGEROOT=$PACKAGEROOT
+	esac
 	exit
 	;;
 *)	package=
@@ -2921,16 +2988,46 @@ setup)	# { update read } with optional (bin|fun|include|lib) symlinks
 	while	:
 	do	shift
 		case $# in
-		0)	break
+		0)	break ;;
+		esac
+		case $1 in
+		''|-)	target="$target $package"
+			package=
 			;;
-		1)	if	test '' != "$1" && view - src "lib/package/$1.pkg"
-			then	package=$1
-				break
+		*)	if	view - src "lib/package/$1.pkg"
+			then	package="$package $1"
+			else	target="$target $package $1"
+				package=
 			fi
 			;;
 		esac
-		target="$target $1"
 	done
+	;;
+esac
+
+# flatten -- assumes symlink support
+
+case $flat in
+1)	case $action in
+	make|read|setup|update|use|view)
+		if	test ! -d $INSTALLROOT
+		then	$exec mkdir -p $INSTALLROOT || exit
+		fi
+		for i in bin include lib fun
+		do	if	test ! -d $INSTALLROOT/$i
+			then	$exec ln -s ../../$i $INSTALLROOT/$i
+			elif	test ! -L $INSTALLROOT/$i
+			then	for x in $INSTALLROOT/$i/.[a-z]* $INSTALLROOT/$i/*
+				do	if	test ! -d $INSTALLROOT/$i/$x || test ! -d ../../$i/$x
+					then	$exec mv $x ../../$i
+					fi
+				done
+				$exec rm -rf $INSTALLROOT/$i
+				$exec ln -s ../../$i $INSTALLROOT/$i
+			fi
+		done
+		;;
+	esac
 	;;
 esac
 
@@ -2970,7 +3067,7 @@ checkaout()	# cmd ...
 					INITPROTO=$PROTOROOT/src/cmd/INIT
 					note proto convert $PACKAGEROOT/src into $PROTOROOT/src
 					if	test -d $PACKAGEROOT/src/cmd/nmake
-					then	dirs="src/cmd/INIT src/lib/libast src/lib/libcoshell src/lib/libpp src/cmd/probe src/cmd/cpp src/cmd/nmake"
+					then	dirs="src/cmd/INIT src/lib/libast src/lib/libardir src/lib/libcoshell src/lib/libpp src/cmd/probe src/cmd/cpp src/cmd/nmake"
 					else	dirs="src"
 					fi
 					(
@@ -3059,7 +3156,7 @@ checkaout()	# cmd ...
 		case `ls -t $INITROOT/$i.c $INSTALLROOT/bin/$i 2>/dev/null` in
 		"$INITROOT/$i.c"*)
 			note update $INSTALLROOT/bin/$i
-			if	executable $INSTALLROOT/bin/proto
+			if	test proto != "$i" && executable $INSTALLROOT/bin/proto
 			then	case $exec in
 				'')	$INSTALLROOT/bin/proto -p $INITROOT/$i.c > $i.c || exit ;;
 				*)	$exec "$INSTALLROOT/bin/proto -p $INITROOT/$i.c > $i.c" ;;
@@ -3075,6 +3172,13 @@ checkaout()	# cmd ...
 				then	$exec $CC $CCFLAGS -o $INSTALLROOT/bin/$i $INITPROTO/$i.c || exit
 				else	$exec $CC $CCFLAGS -o $INSTALLROOT/bin/$i $INITROOT/$i.c || exit
 				fi
+				case $i:$exec in
+				proto:)	test -d $INSTALLROOT/include || mkdir $INSTALLROOT/include
+					$INSTALLROOT/bin/proto -f /dev/null > $i.c
+					cmp -s $i.c $INSTALLROOT/include/prototyped.h 2>/dev/null || cp $i.c $INSTALLROOT/include/prototyped.h
+					rm $i.c
+					;;
+				esac
 			fi
 			test -f $i.o && $exec rm -f $i.o
 			;;
@@ -3474,18 +3578,23 @@ make_recurse() # dir
 
 get() # host path [ file size ]
 {
-	case $urlget in
-	'')	if	onpath curl
-		then	urlget="$_onpath_ -s -L -o get.tmp"
-		elif	onpath wget
-		then	urlget="$_onpath_ -q -O get.tmp"
-		else	urlget=.
-		fi
+	case $HURL in
+	'')	HURL=.
+		for i in wget lynx curl
+		do	if	onpath $i
+			then	HURL=$i
+				break;
+			fi
+		done
+		AUTHORIZE="User-Agent: package AT&T Research\\r\\n"
+		case $HURL:$authorize in
+		.:?*)	AUTHORIZE="${AUTHORIZE}Authorization: Basic `print -n -r -- $authorize:$password | uuencode -h -x base64`\\r\\n" ;;
+		esac
 		;;
 	esac
 	getfd=8
 	case $3 in
-	'')	case $urlget in
+	'')	case $HURL in
 		.)	host=$1
 			path=$2
 			while	:
@@ -3494,11 +3603,14 @@ get() # host path [ file size ]
 				/*)	;;
 				*)	path=/$path ;;
 				esac
-				print "GET $path HTTP/1.0\\r\\nHost: $host\\r\\n\\r" >&$getfd
+				print "GET $path HTTP/1.0\\r\\nHost: $host\\r\\n$AUTHORIZE\\r" >&$getfd
 				cat <&8 > get.tmp
 				got=`sed -e 1q get.tmp`
 				case $got in
 				*" 200 "*)
+					got=`sed -e '1,/^.$/d' -e '/^[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWYZ]/!d' get.tmp`
+					: > get.err
+					code=0
 					break
 					;;
 				*" 302 "*)
@@ -3513,34 +3625,71 @@ get() # host path [ file size ]
 					;;
 				*)	rm get.tmp
 					echo "$command: $action: $url: $got" >&2
-					exit 1
+					echo '' "$got" > get.err
+					code=1
+					break
 					;;
 				esac
 			done
-			got=`sed -e '1,/^.$/d' -e '/^[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWYZ]/!d' get.tmp`
 			;;
-		*)	$urlget http://$1/$2 || exit
+		curl)	curl -s -L -o get.tmp ${authorize:+-u "$authorize":"$password"} http://$1/$2 2> get.err
+			code=$?
+			got=`grep '^[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWYZ]' get.tmp`
+			case $code in
+			0)	if	grep '^<H1>Authorization Required</H1>' get.tmp > get.err
+				then	code=1
+				fi
+				;;
+			esac
+			;;
+		hurl)	hurl ${authorize:+-a "$authorize":"$password"} http://$1/$2 > get.tmp 2> get.err
+			code=$?
 			got=`grep '^[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWYZ]' get.tmp`
 			;;
+		lynx)	lynx -source ${authorize:+-auth "$authorize":"$password"} http://$1/$2 > get.tmp 2> get.err
+			code=$?
+			got=`grep '^[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWYZ]' get.tmp`
+			;;
+		wget)	wget -nv -O get.tmp ${authorize:+--http-user="$authorize"} ${password:+--http-pass="$password"} http://$1/$2 2> get.err
+			code=$?
+			got=`grep '^[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWYZ]' get.tmp`
+			;;
+		*)	echo $command: $action: $HURL: url get command not found >&2
+			exit 1
+			;;
 		esac
-		rm get.tmp
+		if	test 0 != "$code"
+		then	case `cat get.err get.tmp` in
+			*[Aa][Uu][Tt][Hh][Oo][Rr][Ii][SsZz]*|*[Dd][Ee][Nn][Ii][Ee][Dd]*)
+				echo $command: $action: authorization required -- see $url for license acceptance authorization name and password >&2
+				;;
+			*)	cat get.err
+				;;
+			esac
+			rm get.tmp get.err
+			echo $command: $action: $2: download failed >&2
+			exit 1
+		fi
+		rm get.tmp get.err
 		;;
 	*)	case $exec in
-		'')	echo "$3 ($4 bytes):"
-			case $urlget in
+		'')	echo "$3 ($4 bytes):" >&2
+			case $HURL in
 			.)	eval "exec $getfd<> /dev/tcp/$1/80" || exit
 				path=$2/$3
 				case $path in
 				/*)	;;
 				*)	path=/$path ;;
 				esac
-				print "GET $path HTTP/1.0\\r\\nHost: $host\\r\\n\\r" >&$getfd
+				print "GET $path HTTP/1.0\\r\\nHost: $host\\r\\n$AUTHORIZE\\r" >&$getfd
 				read got <&$getfd
 				case $got in
 				*" 200 "*)
+					code=0
+					: > get.err
 					;;
-				*)	echo "$command: $action: $url: $got" >&2
-					exit 1
+				*)	echo '' "$got" > get.err
+					code=1
 					;;
 				esac
 				while	read got <&$getfd
@@ -3550,9 +3699,41 @@ get() # host path [ file size ]
 				done
 				cat <&$getfd > get.tmp
 				;;
-			*)	$urlget http://$1/$2/$3 || exit
+			curl)	curl -s -L -o get.tmp ${authorize:+-u "$authorize":"$password"} http://$1/$2/$3 2> get.err
+				code=$?
+				case $code in
+				0)	if	grep '^<H1>Authorization Required</H1>' get.tmp > get.err
+					then	code=1
+					fi
+					;;
+				esac
+				;;
+			hurl)	ksh -x hurl ${authorize:+-a "$authorize":"$password"} http://$1/$2/$3 > get.tmp 2> get.err
+				code=$?
+				;;
+			lynx)	lynx -source ${authorize:+-auth "$authorize":"$password"} http://$1/$2/$3 > get.tmp 2> get.err
+				code=$?
+				;;
+			wget)	wget -nv -O get.tmp ${authorize:+--http-user="$authorize"} ${password:+--http-pass="$password"} http://$1/$2/$3 2> get.err
+				code=$?
+				;;
+			*)	echo $command: $action: $HURL: url get command not found >&2
+				exit 1
 				;;
 			esac
+			if	test 0 != "$code"
+			then	case `cat get.err get.tmp` in
+				*[Aa][Uu][Tt][Hh][Oo][Rr][Ii][SsZz]*|*[Dd][Ee][Nn][Ii][Ee][Dd]*)
+					echo $command: $action: authorization required -- see $url for license acceptance authorization name and password >&2
+					;;
+				*)	cat get.err
+					;;
+				esac
+				rm get.tmp get.err
+				echo $command: $action: $3: download failed >&2
+				exit 1
+			fi
+			rm get.err
 			case $checksum:$5 in
 			:*|*:-)	z=`wc -c < get.tmp`
 				case " $z " in
@@ -3577,7 +3758,7 @@ get() # host path [ file size ]
 			esac
 			mv get.tmp $3 || exit
 			;;
-		*)	echo "$3 ($4 bytes)"
+		*)	echo "$3 ($4 bytes)" >&2
 			;;
 		esac
 	esac
@@ -3625,7 +3806,7 @@ remote() # host background
 		esac
 		;;
 	esac
-	if	$PING $name >/dev/null 2>&1
+	if	$admin_ping $name >/dev/null 2>&1 || $admin_ping $name >/dev/null 2>&1
 	then	cmd=". ./.profile && cd $root && { test -f lib/package/admin/$admin_env && . ./lib/package/admin/$admin_env || true ;} && touch lib/package/tgz/.package.tim && PATH=\${PWD:-\`pwd\`}/bin:\$PATH \${SHELL:-/bin/sh} -c 'package $admin_args PACKAGEROOT=\${PWD:-\`pwd\`} HOSTTYPE=$type VPATH='"
 		case $admin_binary in
 		'')	snarf= ;;
@@ -3702,7 +3883,6 @@ admin)	while	test ! -f $admin_db
 	*)	admin_binary=
 		;;
 	esac
-	PING='ping -c 1 -w 4'
 	trap 'kill $pids >/dev/null 2>&1' 1 2 3 15
 	while	read type host root date time make test write junk
 	do	case $type in
@@ -4271,7 +4451,7 @@ install)cd $PACKAGEROOT
 	set '' $target
 	shift
 	case $1 in
-	flat)	flat=1
+	flat)	flat=1 # backwards compatibility -- documentation dropped
 		shift
 		;;
 	*)	flat=0
@@ -4492,7 +4672,7 @@ make|view)
 	for i in arch arch/$HOSTTYPE
 	do	test -d $PACKAGEROOT/$i || $exec mkdir $PACKAGEROOT/$i || exit
 	done
-	for i in bin bin/$OK fun include lib lib/package lib/package/gen src man man/man1 man/man3 man/man8
+	for i in bin bin/$OK bin/$OK/lib fun include lib lib/package lib/package/gen src man man/man1 man/man3 man/man8
 	do	test -d $INSTALLROOT/$i || $exec mkdir $INSTALLROOT/$i || exit
 	done
 	make_recurse src
@@ -4524,12 +4704,49 @@ make|view)
 		cmp -s $i $INSTALLROOT/$i 2>/dev/null ||
 		$exec cp $PACKAGEROOT/$i $INSTALLROOT/$i
 	done
-	if	test ! -f $INSTALLROOT/bin/.paths
-	then	case $exec in
-		'')	echo FPATH=../fun > $INSTALLROOT/bin/.paths ;;
-		*)	$exec "echo FPATH=../fun > $INSTALLROOT/bin/.paths" ;;
-		esac
-	fi
+	case $exec in
+	'')	if	test ! -e $INSTALLROOT/bin/.paths -o -w $INSTALLROOT/bin/.paths
+		then	nl="
+"
+			o=`cat $INSTALLROOT/bin/.paths 2>/dev/null`
+			v=
+			n=
+			case $nl$o in
+			*${nl}FPATH=*|*#FPATH=*)
+				;;
+			*)	case $n in
+				'')	;;
+				*)	n="$n$nl" v="$v|" ;;
+				esac
+				n="${n}FPATH=../fun"
+				v="${v}FPATH"
+				;;
+			esac
+			case $nl$o in
+			*${nl}BUILTIN_LIB=*|*#BUILTIN_LIB=*)
+				;;
+			*)	case $n in
+				'')	;;
+				*)	n="$n$nl" v="$v|" ;;
+				esac
+				if	(probe -l C make cc | grep '^CC.DIALECT .* EXPORT=[AD]LL') >/dev/null 2>&1
+				then	x=
+				else	x='no'
+				fi
+				n="${n}${x}BUILTIN_LIB=cmd"
+				v="${v}BUILTIN_LIB"
+				;;
+			esac
+			case $n in
+			?*)	case $o in
+				?*)	o=`egrep -v "($v)=" $INSTALLROOT/bin/.paths`$nl ;;
+				esac
+				echo "$o$n" > $INSTALLROOT/bin/.paths
+				;;
+			esac
+		fi
+		;;
+	esac
 
 	# check $CC
 
@@ -4550,7 +4767,7 @@ make|view)
 				;;
 			$s*)	cd $INSTALLROOT/lib/package/gen
 				tmp=pkg$$
-				eval '$'exec echo "'main(){return 0;}' > $tmp.c"
+				eval '$'exec echo "'int main(){return 0;}' > $tmp.c"
 				if	$exec $s -o $tmp.exe $tmp.c >/dev/null 2>&1 &&
 					test -x $tmp.exe
 				then	case $HOSTTYPE in
@@ -4604,7 +4821,7 @@ make|view)
 	case $exec in
 	'')	cd $INSTALLROOT/lib/package/gen
 		tmp=pkg$$
-		echo 'main(){return 0;}' > $tmp.c
+		echo 'int main(){return 0;}' > $tmp.c
 		if	$CC -o $tmp.exe $tmp.c >/dev/null 2>&1 &&
 			test -x $tmp.exe
 		then	: ok
@@ -4691,7 +4908,7 @@ cat $j $k
 
 	# initialize a few mamake related commands
 
-	checkaout mamake ratz release
+	checkaout mamake proto ratz release
 
 	# execrate if necessary
 
@@ -4752,7 +4969,7 @@ cat $j $k
 	*-*)	a=
 		for t in $target
 		do	case $t in
-			-[eiknFKNV]*)
+			-[eiknFKNV]*|--*-symbols)
 				makeflags="$makeflags $t"
 				;;
 			-*)	nmakeflags="$nmakeflags $t"
@@ -4845,20 +5062,44 @@ cat $j $k
 	case $EXECROOT in
 	$INSTALLROOT)
 		$make cd $INSTALLROOT/bin
-		if	test -x /bin/cp
+		if	executable /bin/cp
 		then	cp=/bin/cp
 		else	cp=cp
+		fi
+		if	executable /bin/mv
+		then	mv=/bin/mv
+		else	mv=mv
+		fi
+		if	executable /bin/rm
+		then	rm=/bin/rm
+		else	rm=rm
 		fi
 		for i in \
 			ksh nmake tee cp ln mv rm \
 			*ast*.dll *cmd*.dll *dll*.dll *shell*.dll
-		do	if	executable $i
-			then	cmp -s $i $OK/$i 2>/dev/null ||
-				$exec $execrate $cp $i $OK/$i
-			fi
+		do	executable $i && {
+				cmp -s $i $OK/$i 2>/dev/null || {
+					test -f $OK/$i &&
+					$exec $execrate $rm $OK/$i </dev/null
+					test -f $OK/$i &&
+					$exec $execrate $mv $OK/$i $OK/$i.old </dev/null
+					test -f $OK/$i &&
+					case $exec:$i in
+					:nmake|:ksh)
+						echo "$command: $OK/$i: cannot update [may be in use by a running process] remove manually and try again" >&2
+						exit 1
+						;;
+					esac
+					$exec $execrate $cp $i $OK/$i
+				}
+			}
 		done
+		if	test -f ../lib/make/makerules.mo
+		then	cmp -s ../lib/make/makerules.mo $OK/lib/makerules.mo ||
+			$exec $execrate $cp ../lib/make/makerules.mo $OK/lib/makerules.mo
+		fi
 		if	executable $OK/nmake
-		then	MAKE=$INSTALLROOT/bin/$OK/nmake
+		then	MAKE="$INSTALLROOT/bin/$OK/nmake LOCALRULESPATH=$INSTALLROOT/bin/$OK/lib"
 		fi
 		if	executable $OK/tee
 		then	TEE=$INSTALLROOT/bin/$OK/tee
@@ -5537,18 +5778,25 @@ update)	# download the latest release.version for selected packages
 	tgz=tgz
 	source=
 	binary=
+	setup=
 	types=
 	url=
+	urlfile=$default_url
 	while	:
 	do	shift
 		case $# in
 		0)	break ;;
 		esac
 		case $1 in
+		--)	shift
+			break
+			;;
 		beta)	op=beta
 			tgz=beta
 			;;
 		binary)	binary=1
+			;;
+		setup)	setup=1
 			;;
 		source)	source=1
 			;;
@@ -5556,11 +5804,10 @@ update)	# download the latest release.version for selected packages
 			shift
 			break
 			;;
-		*.url)	if	test ! -s $1
-			then	echo $command: $1: cannot read >&2; exit 1
+		*.url)	urlfile=$1
+			if	test ! -s $urlfile
+			then	echo $command: $urlfile: not found >&2; exit 1
 			fi
-			url=`cat $1`
-			shift
 			break
 			;;
 		$all_types)
@@ -5580,16 +5827,42 @@ update)	# download the latest release.version for selected packages
 		;;
 	esac
 	case $url in
-	'')	if	test ! -f $default_url
-		then	echo $command: url argument expected >&2; exit 1
-		fi
-		url=`cat $default_url`
-		default_url=
-		;;
-	*)	case $exec in
-		?*)	default_url= ;;
+	'')	case $urlfile in
+		$default_url)
+			if	test ! -s $urlfile
+			then	echo $command: url argument expected >&2; exit 1
+			fi
+			;;
+		*)	default_url=
+			;;
 		esac
+		url=
+		if	grep '^url=' $urlfile >/dev/null
+		then	a=$authorize
+			p=$password
+			case $urlfile in
+			*/*)	;;
+			*)	urlfile=./$urlfile ;;
+			esac
+			. $urlfile
+			case $a:$p in
+			$authorize:$password)
+				default_url=
+				;;
+			*)	case $a in
+				?*)	authorize=$a ;;
+				esac
+				case $p in
+				?*)	password=$p ;;
+				esac
+				;;
+			esac
+		else	url=`cat $urlfile`
+		fi
 		;;
+	esac
+	case $exec in
+	?*)	default_url= ;;
 	esac
 
 	# get the update list
@@ -5678,7 +5951,11 @@ update)	# download the latest release.version for selected packages
 	types_local=
 	dir=$dir/$tgz
 	case $default_url in
-	?*)	echo $url > $default_url ;;
+	?*)	echo "url='$url' authorize='$authorize' password='$password'" > $default_url
+		case $authorize in
+		?*)	chmod go-rwx $default_url ;;
+		esac
+		;;
 	esac
 	echo "$got" > got.tmp
 	case $only in
@@ -5743,10 +6020,18 @@ update)	# download the latest release.version for selected packages
 		esac
 		;;
 	esac
-	( $checksum ) < /dev/null > /dev/null 2>&1 || {
-		echo $command: warning: $checksum: command not found -- only download sizes will be checked >&2
-		checksum=
-	}
+	checksum=
+	for i in $md5sum
+	do	case `( $i ) < /dev/null 2> /dev/null` in
+		d41d8cd98f00b204e9800998ecf8427e)
+			checksum=$i
+			break
+			;;
+		esac
+	done
+	case $checksum in
+	'')	echo $command: warning: $checksum: command not found -- only download sizes will be checked >&2 ;;
+	esac
 	exec < got.tmp
 	while	read name suffix type base base_size delta delta_size sync sync_size requires covers base_sum delta_sum sync_sum comment
 	do	case $verbose in
@@ -5917,11 +6202,21 @@ update)	# download the latest release.version for selected packages
 			;;
 		esac
 	done
+	closure=
 	for name in $source_packages $binary_packages
 	do	case $name in
 		-)	;;
 		*)	case " $package_hit " in
 			*" $name "*)
+				case $setup in
+				1)	case " $closure " in
+					*" $name "*)
+						;;
+					*)	closure="$closure $name"
+						;;
+					esac
+					;;
+				esac
 				;;
 			*)	echo $command: $name: unknown package >&2
 				;;
@@ -5931,11 +6226,18 @@ update)	# download the latest release.version for selected packages
 	done
 	exec <&-
 	rm -f got.tmp
+	case $closure in
+	?*)	echo $closure ;;
+	esac
 	;;
 
 use)	# finalize the environment
 
-	x=:..:$INSTALLROOT/src/cmd:$INSTALLROOT/src/lib:$INSTALLROOT
+	x=:..
+	for d in `( cd $PACKAGEROOT; ls src/*/Makefile src/*/Nmakefile 2>/dev/null | sed 's,/[^/]*$,,' | sort -u )`
+	do	x=$x:$INSTALLROOT/$d
+	done
+	x=$x:$INSTALLROOT
 	case $CDPATH: in
 	$x:*)	;;
 	*)	CDPATH=$x:$CDPATH
@@ -6026,7 +6328,7 @@ write)	set '' $target
 		base|closure|delta|exp|lcl|pkg|rpm|tgz)
 			qualifier="$qualifier $1"
 			;;
-		binary|source)
+		binary|runtime|source)
 			action=$1
 			;;
 		cyg)	qualifier="$qualifier $1"

@@ -11,7 +11,7 @@ if CC.HOSTTYPE == "linux.alpha"
 	:PACKAGE: - m:static:noinclude noCC.EXPORT.DYNAMIC
 end
 
-if "$(CC.DIALECT:N=EXPORT=[AD]LL)" || "$(PACKAGE_OPTIMIZE:N=space)"
+if "$(CC.DIALECT:N=EXPORT=DLL)" || "$(PACKAGE_OPTIMIZE:N=space)"
 	CCFLAGS += $$(CC.DLL)
 	LIBS_req = -lshell
 else

@@ -3,14 +3,12 @@
 *               This software is part of the ast package               *
 *                  Copyright (c) 1992-2004 AT&T Corp.                  *
 *                      and is licensed under the                       *
-*          Common Public License, Version 1.0 (the "License")          *
-*                        by AT&T Corp. ("AT&T")                        *
-*      Any use, downloading, reproduction or distribution of this      *
-*      software constitutes acceptance of the License.  A copy of      *
-*                     the License is available at                      *
+*                  Common Public License, Version 1.0                  *
+*                            by AT&T Corp.                             *
 *                                                                      *
-*         http://www.research.att.com/sw/license/cpl-1.0.html          *
-*         (with md5 checksum 8a5e0081c856944e76c69a1cf29c2e8b)         *
+*                A copy of the License is available at                 *
+*            http://www.opensource.org/licenses/cpl1.0.txt             *
+*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -30,7 +28,7 @@
  */
 
 static const char usage[] =
-"+[-?\n@(#)$Id: tail (AT&T Labs Research) 2004-03-19 $\n]"
+"+[-?\n@(#)$Id: tail (AT&T Labs Research) 2004-10-31 $\n]"
 USAGE_LICENSE
 "[+NAME?tail - output trailing portion of one or more files ]"
 "[+DESCRIPTION?\btail\b copies one or more input files to standard output "
@@ -155,7 +153,7 @@ tailpos(register Sfio_t* fp, register long nitems, int delim)
 	{
 		sfseek(fp, offset, SEEK_SET);
 		n = last - offset;
-		if (!(s = sfreserve(fp, n, 1)))
+		if (!(s = sfreserve(fp, n, SF_LOCKR)))
 			return -1;
 		t = s + n;
 		while (t > s)
@@ -259,7 +257,10 @@ init(Tail_t* tp, long number, int delim, int flags)
 	if (offset)
 	{
 		if ((offset = tailpos(tp->sp, number, delim)) < 0)
+		{
+			error(ERROR_SYSTEM|2, "%s: cannot position file to tail", tp->name);
 			goto bad;
+		}
 		sfseek(tp->sp, offset, SEEK_SET);
 	}
 	tp->size = offset;
@@ -353,7 +354,7 @@ b_tail(int argc, char** argv, void* context)
 	    case 'N':
 		flags |= COUNT;
 		s = opt_info.arg;
-		number = strtol(s, &s, 10);
+		number = strton(s, &s, NiL, 0);
 		if (n=='c' && *s=='f')
 		{
 			s++;
@@ -372,7 +373,7 @@ b_tail(int argc, char** argv, void* context)
 	    case ':':
 		/* handle old style arguments */
 		s = argv[opt_info.index];
-		number = strtol(s, &s, 10);
+		number = strtol(s, &s, 0);
 		if (s!=argv[opt_info.index])
 			flags |= COUNT;
 		while (n = *s++)
@@ -451,8 +452,9 @@ b_tail(int argc, char** argv, void* context)
 		if (!(fp = (Tail_t*)stakalloc(argc * sizeof(Tail_t))))
 			error(ERROR_system(1), "out of space");
 		files = 0;
-		while (fp->name = *argv++)
+		while (s = *argv++)
 		{
+			fp->name = s;
 			fp->sp = 0;
 			if (!init(fp, number, delim, flags))
 			{
@@ -489,7 +491,7 @@ b_tail(int argc, char** argv, void* context)
 					fp->last = st.st_size;
 					z = st.st_size - fp->size;
 					i = 0;
-					if ((s = sfreserve(fp->sp, z, 1)) || (z = sfvalue(fp->sp)) && (s = sfreserve(fp->sp, z, 1)) && (i = 1))
+					if ((s = sfreserve(fp->sp, z, SF_LOCKR)) || (z = sfvalue(fp->sp)) && (s = sfreserve(fp->sp, z, SF_LOCKR)) && (i = 1))
 					{
 						r = 0;
 						for (e = (t = s) + z; t < e; t++)

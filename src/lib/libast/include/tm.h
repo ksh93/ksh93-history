@@ -3,14 +3,12 @@
 *               This software is part of the ast package               *
 *                  Copyright (c) 1985-2004 AT&T Corp.                  *
 *                      and is licensed under the                       *
-*          Common Public License, Version 1.0 (the "License")          *
-*                        by AT&T Corp. ("AT&T")                        *
-*      Any use, downloading, reproduction or distribution of this      *
-*      software constitutes acceptance of the License.  A copy of      *
-*                     the License is available at                      *
+*                  Common Public License, Version 1.0                  *
+*                            by AT&T Corp.                             *
 *                                                                      *
-*         http://www.research.att.com/sw/license/cpl-1.0.html          *
-*         (with md5 checksum 8a5e0081c856944e76c69a1cf29c2e8b)         *
+*                A copy of the License is available at                 *
+*            http://www.opensource.org/licenses/cpl1.0.txt             *
+*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -32,7 +30,7 @@
 #ifndef _TM_H
 #define _TM_H
 
-#define TM_VERSION	20040415L
+#define TM_VERSION	20041201L
 
 #define tm_data		_tm_data_
 #define tm_info		_tm_info_
@@ -51,9 +49,11 @@
 
 #define TM_PEDANTIC	(1<<3)		/* pedantic date parse		*/
 #define TM_DATESTYLE	(1<<4)		/* date(1) style mmddHHMMccyy	*/
+#define TM_SUBSECOND	(1<<5)		/* <something>%S => ...%S.%P	*/
 
 #define TM_DST		(-60)		/* default minutes for DST	*/
 #define TM_LOCALZONE	(25 * 60)	/* use local time zone offset	*/
+#define TM_UTCZONE	(26 * 60)	/* UTC "time zone"		*/
 #define TM_MAXLEAP	1		/* max leap secs per leap	*/
 #define TM_WINDOW	69		/* century windowing guard year	*/
 
@@ -135,7 +135,20 @@ typedef struct				/* tm library global info	*/
 	Tm_zone_t*	zone;		/* current timezone		*/
 } Tm_info_t;
 
-typedef struct tm Tm_t;
+typedef struct Tm_s
+{
+	int			tm_sec;
+	int			tm_min;
+	int			tm_hour;
+	int			tm_mday;
+	int			tm_mon;
+	int			tm_year;
+	int			tm_wday;
+	int			tm_yday;
+	int			tm_isdst;
+	unsigned _ast_int4_t	tm_nsec;
+	Tm_zone_t*		tm_zone;
+} Tm_t;
 
 #if _BLD_ast && defined(__EXPORT__)
 #define extern		extern __EXPORT__
@@ -154,6 +167,7 @@ extern Tm_info_t	tm_info;
 #endif
 
 extern time_t		tmdate(const char*, char**, time_t*);
+extern int		tmequiv(Tm_t*);
 extern Tm_t*		tmfix(Tm_t*);
 extern char*		tmfmt(char*, size_t, const char*, time_t*);
 extern char*		tmform(char*, const char*, time_t*);
@@ -165,6 +179,7 @@ extern char**		tmlocale(void);
 extern Tm_t*		tmmake(time_t*);
 extern char*		tmpoff(char*, size_t, const char*, int, int);
 extern time_t		tmscan(const char*, char**, const char*, char**, time_t*, long);
+extern int		tmsleep(time_t, time_t);
 extern time_t		tmtime(Tm_t*, int);
 extern Tm_zone_t*	tmtype(const char*, char**);
 extern int		tmword(const char*, char**, const char*, char**, int);

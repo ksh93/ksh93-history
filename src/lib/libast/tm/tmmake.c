@@ -3,14 +3,12 @@
 *               This software is part of the ast package               *
 *                  Copyright (c) 1985-2004 AT&T Corp.                  *
 *                      and is licensed under the                       *
-*          Common Public License, Version 1.0 (the "License")          *
-*                        by AT&T Corp. ("AT&T")                        *
-*      Any use, downloading, reproduction or distribution of this      *
-*      software constitutes acceptance of the License.  A copy of      *
-*                     the License is available at                      *
+*                  Common Public License, Version 1.0                  *
+*                            by AT&T Corp.                             *
 *                                                                      *
-*         http://www.research.att.com/sw/license/cpl-1.0.html          *
-*         (with md5 checksum 8a5e0081c856944e76c69a1cf29c2e8b)         *
+*                A copy of the License is available at                 *
+*            http://www.opensource.org/licenses/cpl1.0.txt             *
+*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -24,58 +22,20 @@
 #pragma prototyped
 /*
  * Glenn Fowler
- * AT&T Bell Laboratories
+ * AT&T Research
  *
  * time conversion support
  */
 
-#include <ast.h>
-#include <tm.h>
+#include <tmx.h>
 
 /*
  * return Tm_t for clock
- * time zone and leap seconds accounted for in return value
+ * see tmxmake() for details
  */
 
 Tm_t*
 tmmake(time_t* clock)
 {
-	register Tm_t*		tp;
-	register Tm_leap_t*	lp;
-	int			leapsec;
-	time_t			now;
-
-	tmset(tm_info.zone);
-	if (clock)
-		now = *clock;
-	else
-		time(&now);
-	leapsec = 0;
-	if ((tm_info.flags & (TM_ADJUST|TM_LEAP)) == (TM_ADJUST|TM_LEAP) && now > 0)
-	{
-		for (lp = &tm_data.leap[0]; now < lp->time; lp++);
-		if (lp->total)
-		{
-			if (now == lp->time && (leapsec = (lp->total - (lp+1)->total)) < 0)
-				leapsec = 0;
-			now -= lp->total;
-		}
-	}
-	if (!(tm_info.flags & TM_UTC))
-	{
-		now += 60 * ((tm_info.local->west + (tm_info.local->daylight ? tm_info.local->dst : 0)) - (tm_info.zone->west + (tm_info.zone->daylight ? tm_info.zone->dst : 0)));
-		if (!(tp = (Tm_t*)localtime(&now)))
-		{
-			now = 0;
-			tp = (Tm_t*)localtime(&now);
-		}
-	}
-	else if (!(tp = (Tm_t*)gmtime(&now)))
-	{
-		now = 0;
-		tp = (Tm_t*)gmtime(&now);
-	}
-	if (tp)
-		tp->tm_sec += leapsec;
-	return tp;
+	return tmxmake(tmxclock(clock));
 }

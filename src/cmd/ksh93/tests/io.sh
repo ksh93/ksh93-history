@@ -3,14 +3,12 @@
 #               This software is part of the ast package               #
 #                  Copyright (c) 1982-2004 AT&T Corp.                  #
 #                      and is licensed under the                       #
-#          Common Public License, Version 1.0 (the "License")          #
-#                        by AT&T Corp. ("AT&T")                        #
-#      Any use, downloading, reproduction or distribution of this      #
-#      software constitutes acceptance of the License.  A copy of      #
-#                     the License is available at                      #
+#                  Common Public License, Version 1.0                  #
+#                            by AT&T Corp.                             #
 #                                                                      #
-#         http://www.research.att.com/sw/license/cpl-1.0.html          #
-#         (with md5 checksum 8a5e0081c856944e76c69a1cf29c2e8b)         #
+#                A copy of the License is available at                 #
+#            http://www.opensource.org/licenses/cpl1.0.txt             #
+#         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         #
 #                                                                      #
 #              Information and Software Systems Research               #
 #                            AT&T Research                             #
@@ -128,7 +126,7 @@ line 1
 line 2
 line 3
 !) == $'line 1\nline 2\nline 3' ]] || err_exit 'read error with subshells'
-# 04-05-11 bug fix
+# 2004-05-11 bug fix
 cat > /tmp/io$$.1 <<- \++EOF++  
 	script=/tmp/io$$.2
 	trap 'rm -f $script' EXIT
@@ -148,4 +146,26 @@ cat > /tmp/io$$.1 <<- \++EOF++
 chmod +x /tmp/io$$.1
 [[ $($SHELL  /tmp/io$$.1) == ok ]]  || err_exit "parent i/o causes child script to fail"
 rm -rf /tmp/io$$.[12]
+# 2004-11-25 ancient /dev/fd/NN redirection bug fix
+x=$(
+	{
+		print -n 1
+		print -n 2 > /dev/fd/2
+		print -n 3
+		print -n 4 > /dev/fd/2
+	}  2>&1
+)
+[[ $x == "1234" ]] || err_exit "/dev/fd/NN redirection fails to dup"
+# 2004-12-20 redirction loss bug fix
+cat > /tmp/io$$.1 <<- \++EOF++  
+	function a
+	{
+		trap 'print ok' EXIT
+		: > /dev/null
+	}
+	a
+++EOF++
+chmod +x /tmp/io$$.1
+[[ $(/tmp/io$$.1) == ok ]] || err_exit "trap on EXIT loses last command redirection"
+rm -rf /tmp/io$$.1
 exit $((Errors))

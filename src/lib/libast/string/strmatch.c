@@ -3,14 +3,12 @@
 *               This software is part of the ast package               *
 *                  Copyright (c) 1985-2004 AT&T Corp.                  *
 *                      and is licensed under the                       *
-*          Common Public License, Version 1.0 (the "License")          *
-*                        by AT&T Corp. ("AT&T")                        *
-*      Any use, downloading, reproduction or distribution of this      *
-*      software constitutes acceptance of the License.  A copy of      *
-*                     the License is available at                      *
+*                  Common Public License, Version 1.0                  *
+*                            by AT&T Corp.                             *
 *                                                                      *
-*         http://www.research.att.com/sw/license/cpl-1.0.html          *
-*         (with md5 checksum 8a5e0081c856944e76c69a1cf29c2e8b)         *
+*                A copy of the License is available at                 *
+*            http://www.opensource.org/licenses/cpl1.0.txt             *
+*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -71,13 +69,31 @@ typedef struct Cache_s
 	char		pattern[256];
 } Cache_t;
 
-static Cache_t*		cache[8];
+static struct State_s
+{
+	Cache_t*	cache[8];
+	unsigned long	serial;
+	regmatch_t*	match;
+	int		nmatch;
+	char*		locale;
+} matchstate;
 
-static unsigned long	serial;
+/*
+ * flush the cache
+ */
 
-static regmatch_t*	match;
+static void
+flushcache(void)
+{
+	register int		i;
 
-static int		nmatch;
+	for (i = 0; i < elementsof(matchstate.cache); i++)
+		if (matchstate.cache[i] && matchstate.cache[i]->keep)
+		{
+			matchstate.cache[i]->keep = 0;
+			regfree(&matchstate.cache[i]->re);
+		}
+}
 
 /*
  * subgroup match
@@ -95,6 +111,7 @@ strgrpmatch(const char* b, const char* p, int* sub, int n, int flags)
 	register Cache_t*	cp;
 	register int*		end;
 	register int		i;
+	char*			s;
 	int			m;
 	int			empty;
 	int			unused;
@@ -108,22 +125,23 @@ strgrpmatch(const char* b, const char* p, int* sub, int n, int flags)
 	if (!p || !b)
 	{
 		if (!p && !b)
-		{
-			/*
-			 * flush the cache
-			 */
-
-			for (i = 0; i < elementsof(cache); i++)
-				if (cache[i] && cache[i]->keep)
-				{
-					cache[i]->keep = 0;
-					regfree(&cache[i]->re);
-				}
-		}
+			flushcache();
 		return 0;
 	}
 	if (!*p)
 		return *b == 0;
+
+	/*
+	 * flush the cache if the locale changed
+	 * the ast setlocale() intercept maintains
+	 * persistent setlocale() return values
+	 */
+
+	if ((s = setlocale(LC_CTYPE, NiL)) != matchstate.locale)
+	{
+		matchstate.locale = s;
+		flushcache();
+	}
 
 	/*
 	 * check if the pattern is in the cache
@@ -132,16 +150,16 @@ strgrpmatch(const char* b, const char* p, int* sub, int n, int flags)
 	once = 0;
 	empty = unused = -1;
 	old = 0;
-	for (i = 0; i < elementsof(cache); i++)
-		if (!cache[i])
+	for (i = 0; i < elementsof(matchstate.cache); i++)
+		if (!matchstate.cache[i])
 			empty = i;
-		else if (!cache[i]->keep)
+		else if (!matchstate.cache[i]->keep)
 			unused = i;
-		else if (streq(cache[i]->pattern, p) && cache[i]->flags == flags && cache[i]->n == n)
+		else if (streq(matchstate.cache[i]->pattern, p) && matchstate.cache[i]->flags == flags && matchstate.cache[i]->n == n)
 			break;
-		else if (!cache[old] || cache[old]->serial > cache[i]->serial)
+		else if (!matchstate.cache[old] || matchstate.cache[old]->serial > matchstate.cache[i]->serial)
 			old = i;
-	if (i >= elementsof(cache))
+	if (i >= elementsof(matchstate.cache))
 	{
 		if (unused < 0)
 		{
@@ -150,7 +168,7 @@ strgrpmatch(const char* b, const char* p, int* sub, int n, int flags)
 			else
 				unused = empty;
 		}
-		if (!(cp = cache[unused]) && !(cp = cache[unused] = newof(0, Cache_t, 1, 0)))
+		if (!(cp = matchstate.cache[unused]) && !(cp = matchstate.cache[unused] = newof(0, Cache_t, 1, 0)))
 			return 0;
 		if (cp->keep)
 		{
@@ -184,18 +202,18 @@ strgrpmatch(const char* b, const char* p, int* sub, int n, int flags)
 		cp->keep = 1;
 	}
 	else
-		cp = cache[i];
+		cp = matchstate.cache[i];
 #if 0
-error(-1, "AHA strmatch b=`%s' p=`%s' sub=%p n=%d flags=%08x cp=%d\n", b, p, sub, n, flags, cp - &cache[0]);
+error(-1, "AHA strmatch b=`%s' p=`%s' sub=%p n=%d flags=%08x cp=%d\n", b, p, sub, n, flags, cp - &matchstate.cache[0]);
 #endif
-	cp->serial = ++serial;
-	if (n > nmatch)
+	cp->serial = ++matchstate.serial;
+	if (n > matchstate.nmatch)
 	{
-		if (!(match = newof(match, regmatch_t, n, 0)))
+		if (!(matchstate.match = newof(matchstate.match, regmatch_t, n, 0)))
 			return 0;
-		nmatch = n;
+		matchstate.nmatch = n;
 	}
-	m = regexec(&cp->re, b, n, match, cp->reflags);
+	m = regexec(&cp->re, b, n, matchstate.match, cp->reflags);
 	i = cp->re.re_nsub;
 	if (once)
 	{
@@ -209,8 +227,8 @@ error(-1, "AHA strmatch b=`%s' p=`%s' sub=%p n=%d flags=%08x cp=%d\n", b, p, sub
 	end = sub + n * 2;
 	for (n = 0; sub < end && n <= i; n++)
 	{
-		*sub++ = match[n].rm_so;
-		*sub++ = match[n].rm_eo;
+		*sub++ = matchstate.match[n].rm_so;
+		*sub++ = matchstate.match[n].rm_eo;
 	}
 	return i + 1;
 }

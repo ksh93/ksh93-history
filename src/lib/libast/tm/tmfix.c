@@ -3,14 +3,12 @@
 *               This software is part of the ast package               *
 *                  Copyright (c) 1985-2004 AT&T Corp.                  *
 *                      and is licensed under the                       *
-*          Common Public License, Version 1.0 (the "License")          *
-*                        by AT&T Corp. ("AT&T")                        *
-*      Any use, downloading, reproduction or distribution of this      *
-*      software constitutes acceptance of the License.  A copy of      *
-*                     the License is available at                      *
+*                  Common Public License, Version 1.0                  *
+*                            by AT&T Corp.                             *
 *                                                                      *
-*         http://www.research.att.com/sw/license/cpl-1.0.html          *
-*         (with md5 checksum 8a5e0081c856944e76c69a1cf29c2e8b)         *
+*                A copy of the License is available at                 *
+*            http://www.opensource.org/licenses/cpl1.0.txt             *
+*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -38,8 +36,7 @@
 /*
  * correct out of bounds fields in tm
  *
- * tm_wday, tm_yday and tm_isdst are not changed
- * as these can be computed from the other fields
+ * tm_isdst is not changed -- call tmxmake() to get that
  *
  * tm is the return value
  */
@@ -81,9 +78,9 @@ tmfix(register Tm_t* tm)
 	if ((n = tm->tm_min) < 0)
 	{
 		tm->tm_hour -= (60 - n) / 60;
-		tm->tm_min = 60 - (-n) % 60;
+		n = tm->tm_min = 60 - (-n) % 60;
 	}
-	else if (n > 59)
+	if (n > 59)
 	{
 		tm->tm_hour += n / 60;
 		tm->tm_min %= 60;
@@ -93,7 +90,7 @@ tmfix(register Tm_t* tm)
 		tm->tm_mday -= (23 - n) / 24;
 		tm->tm_hour = 24 - (-n) % 24;
 	}
-	else if (n > 24)
+	else if (n >= 24)
 	{
 		tm->tm_mday += n / 24;
 		tm->tm_hour %= 24;
@@ -105,13 +102,22 @@ tmfix(register Tm_t* tm)
 	}
 	else if (tm->tm_mon < 0)
 	{
-		tm->tm_year -= (12 - tm->tm_mon) / 12;
-		tm->tm_mon = (12 - tm->tm_mon) % 12;
+		tm->tm_year--;
+		if ((tm->tm_mon += 12) < 0)
+		{
+			tm->tm_year += tm->tm_mon / 12;
+			tm->tm_mon = (-tm->tm_mon) % 12;
+		}
 	}
 	while (tm->tm_mday < -365)
 	{
 		tm->tm_year--;
 		tm->tm_mday += 365 + LEAP(tm);
+	}
+	while (tm->tm_mday > 365)
+	{
+		tm->tm_mday -= 365 + LEAP(tm);
+		tm->tm_year++;
 	}
 	while (tm->tm_mday < 1)
 	{
@@ -121,11 +127,6 @@ tmfix(register Tm_t* tm)
 			tm->tm_year--;
 		}
 		tm->tm_mday += DAYS(tm);
-	}
-	while (tm->tm_mday > 365)
-	{
-		tm->tm_mday -= 365 + LEAP(tm);
-		tm->tm_year++;
 	}
 	while (tm->tm_mday > (n = DAYS(tm)))
 	{
@@ -150,6 +151,9 @@ tmfix(register Tm_t* tm)
 				tm->tm_mday -= 7;
 		}
 	}
+	tm->tm_yday = tm_data.sum[tm->tm_mon] + (tm->tm_mon > 1 && LEAP(tm)) + tm->tm_mday - 1;
+	n = tm->tm_year + 1900 - 1;
+	tm->tm_wday = (n + n / 4 - n / 100 + n / 400 + tm->tm_yday + 1) % 7;
 
 	/*
 	 * tm_isdst is adjusted by tmtime()

@@ -3,14 +3,12 @@
 *               This software is part of the ast package               *
 *                  Copyright (c) 1985-2004 AT&T Corp.                  *
 *                      and is licensed under the                       *
-*          Common Public License, Version 1.0 (the "License")          *
-*                        by AT&T Corp. ("AT&T")                        *
-*      Any use, downloading, reproduction or distribution of this      *
-*      software constitutes acceptance of the License.  A copy of      *
-*                     the License is available at                      *
+*                  Common Public License, Version 1.0                  *
+*                            by AT&T Corp.                             *
 *                                                                      *
-*         http://www.research.att.com/sw/license/cpl-1.0.html          *
-*         (with md5 checksum 8a5e0081c856944e76c69a1cf29c2e8b)         *
+*                A copy of the License is available at                 *
+*            http://www.opensource.org/licenses/cpl1.0.txt             *
+*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -23,33 +21,37 @@
 ***********************************************************************/
 #pragma prototyped
 /*
- * obsolete discipline names
+ * Glenn Fowler
+ * AT&T Research
+ *
+ * time_t conversion support
  */
 
-#include	<ast.h>
+#include <tm.h>
 
-#if __OBSOLETE__ > 20010101
+/*
+ * use one of the 14 equivalent calendar years to determine
+ * daylight savings time for future years beyond the range
+ * of the local system (via tmxmake())
+ */
 
-NoN(sfdcold)
-
-#else
-
-#include	<sfdisc.h>
-
-#if defined(__EXPORT__)
-#define extern	__EXPORT__
-#endif
-
-extern int
-sfdostext(Sfio_t* sp)
+static const short equiv[] =
 {
-	return sfdcdos(sp);
-}
+	2006, 2012,
+	2001, 2024,
+	2002, 2008,
+	2003, 2020,
+	2009, 2004,
+	2010, 2016,
+	2005, 2000,
+};
 
-extern int
-sfslowio(Sfio_t* sp)
+/*
+ * return the circa 2000 equivalent calendar year for tm
+ */
+
+int
+tmequiv(Tm_t* tm)
 {
-	return sfdcslow(sp);
+	return tm->tm_year < (2038 - 1900) ? (tm->tm_year + 1900) : equiv[tm->tm_wday + tmisleapyear(tm->tm_year)];
 }
-
-#endif

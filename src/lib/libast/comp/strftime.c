@@ -3,14 +3,12 @@
 *               This software is part of the ast package               *
 *                  Copyright (c) 1985-2004 AT&T Corp.                  *
 *                      and is licensed under the                       *
-*          Common Public License, Version 1.0 (the "License")          *
-*                        by AT&T Corp. ("AT&T")                        *
-*      Any use, downloading, reproduction or distribution of this      *
-*      software constitutes acceptance of the License.  A copy of      *
-*                     the License is available at                      *
+*                  Common Public License, Version 1.0                  *
+*                            by AT&T Corp.                             *
 *                                                                      *
-*         http://www.research.att.com/sw/license/cpl-1.0.html          *
-*         (with md5 checksum 8a5e0081c856944e76c69a1cf29c2e8b)         *
+*                A copy of the License is available at                 *
+*            http://www.opensource.org/licenses/cpl1.0.txt             *
+*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -66,6 +64,8 @@ strftime(char* buf, size_t len, const char* format, const struct tm* tm)
 	time_t		t;
 	Tm_t		tl;
 
+	memset(&tl, 0, sizeof(tl));
+
 	/*
 	 * nl_langinfo() may call strftime() with bogus tm except for
 	 * one value -- what a way to go
@@ -79,7 +79,6 @@ strftime(char* buf, size_t len, const char* format, const struct tm* tm)
 	    tm->tm_mon < 0 || tm->tm_mon > 11 ||
 	    tm->tm_year < 0 || tm->tm_year > (2138 - 1900))
 	{
-		memset(&tl, 0, sizeof(tl));
 		if (tm->tm_sec >= 0 && tm->tm_sec <= 60)
 			tl.tm_sec = tm->tm_sec;
 		if (tm->tm_min >= 0 && tm->tm_min <= 59)
@@ -94,9 +93,20 @@ strftime(char* buf, size_t len, const char* format, const struct tm* tm)
 			tl.tm_mon = tm->tm_mon;
 		if (tm->tm_year >= 0 && tm->tm_year <= (2138 - 1900))
 			tl.tm_year = tm->tm_year;
-		tm = (const struct tm*)&tl;
 	}
-	t = tmtime((struct tm*)tm, TM_LOCALZONE);
+	else
+	{
+		tl.tm_sec = tm->tm_sec;
+		tl.tm_min = tm->tm_min;
+		tl.tm_hour = tm->tm_hour;
+		tl.tm_mday = tm->tm_mday;
+		tl.tm_mon = tm->tm_mon;
+		tl.tm_year = tm->tm_year;
+		tl.tm_wday = tm->tm_wday;
+		tl.tm_yday = tm->tm_yday;
+		tl.tm_isdst = tm->tm_isdst;
+	}
+	t = tmtime(&tl, TM_LOCALZONE);
 	if (!(s = tmfmt(buf, len, format, &t)))
 		return 0;
 	return s - buf;

@@ -3,14 +3,12 @@
 *               This software is part of the ast package               *
 *                  Copyright (c) 1985-2004 AT&T Corp.                  *
 *                      and is licensed under the                       *
-*          Common Public License, Version 1.0 (the "License")          *
-*                        by AT&T Corp. ("AT&T")                        *
-*      Any use, downloading, reproduction or distribution of this      *
-*      software constitutes acceptance of the License.  A copy of      *
-*                     the License is available at                      *
+*                  Common Public License, Version 1.0                  *
+*                            by AT&T Corp.                             *
 *                                                                      *
-*         http://www.research.att.com/sw/license/cpl-1.0.html          *
-*         (with md5 checksum 8a5e0081c856944e76c69a1cf29c2e8b)         *
+*                A copy of the License is available at                 *
+*            http://www.opensource.org/licenses/cpl1.0.txt             *
+*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -24,118 +22,20 @@
 #pragma prototyped
 /*
  * Glenn Fowler
- * AT&T Bell Laboratories
+ * AT&T Research
  *
  * time conversion support
  */
 
-#include <ast.h>
-#include <tm.h>
+#include <tmx.h>
 
 /*
  * convert Tm_t to time_t
- *
- * if west==TM_LOCALZONE then the local timezone is used
- * otherwise west is the number of minutes west
- * of GMT with DST taken into account
- *
- * this routine works with a copy of Tm_t to avoid clashes
- * with the low level localtime() and gmtime()
+ * see tmxtime() for details
  */
 
 time_t
 tmtime(register Tm_t* tm, int west)
 {
-	register _ast_int4_t	clock;
-	register Tm_leap_t*	lp;
-	register Tm_t*		tn;
-	Tm_t*			to;
-	int			n;
-	int			sec;
-	time_t			now;
-	Tm_t			ts;
-
-	ts = *tm;
-	to = tm;
-	tm = &ts;
-	tmset(tm_info.zone);
-	tmfix(tm);
-	if (tm->tm_year < 69 || tm->tm_year > (2038 - 1900))
-		return -1;
-	clock = (tm->tm_year * (4 * 365 + 1) - 69) / 4 - 70 * 365;
-	if ((n = tm->tm_mon) > 11)
-		n = 11;
-	if (n > 1 && !(tm->tm_year % 4) && ((tm->tm_year % 100) || !((1900 + tm->tm_year) % 400)))
-		clock++;
-	clock += tm_data.sum[n] + tm->tm_mday - 1;
-	clock *= 24;
-	clock += tm->tm_hour;
-	clock *= 60;
-	clock += tm->tm_min;
-	clock *= 60;
-	clock += sec = tm->tm_sec;
-	tn = 0;
-	if (!(tm_info.flags & TM_UTC))
-	{
-		/*
-		 * time zone adjustments
-		 */
-
-		if (west == TM_LOCALZONE)
-		{
-			clock += tm_info.zone->west * 60;
-			if (!tm_info.zone->daylight)
-				tm->tm_isdst = 0;
-			else
-			{
-				now = clock;
-				if (!(tn = tmmake(&now)))
-					return -1;
-				if (tm->tm_isdst = tn->tm_isdst)
-					clock += tm_info.zone->dst * 60;
-			}
-		}
-		else
-		{
-			clock += west * 60;
-			if (!tm_info.zone->daylight)
-				tm->tm_isdst = 0;
-			else if (tm->tm_isdst < 0)
-			{
-				now = clock;
-				if (!(tn = tmmake(&now)))
-					return -1;
-				tm->tm_isdst = tn->tm_isdst;
-			}
-		}
-	}
-	else if (tm->tm_isdst)
-		tm->tm_isdst = 0;
-	if (!tn)
-	{
-		now = clock;
-		if (!(tn = tmmake(&now)))
-			return -1;
-	}
-	tm->tm_wday = tn->tm_wday;
-	tm->tm_yday = tn->tm_yday;
-	*to = *tm;
-	if (tm_info.flags & TM_LEAP)
-	{
-		/*
-		 * leap second adjustments
-		 */
-
-		if (clock > 0)
-		{
-			for (lp = &tm_data.leap[0]; clock < lp->time - (lp+1)->total; lp++);
-			clock += lp->total;
-			n = lp->total - (lp+1)->total;
-			if (clock <= (lp->time + n) && (n > 0 && sec > 59 || n < 0 && sec > (59 + n) && sec <= 59))
-				clock -= n;
-		}
-	}
-	if (clock < 0)
-		return -1;
-	return clock;
+	return tmxsec(tmxtime(tm, west));
 }

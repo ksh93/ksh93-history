@@ -3,14 +3,12 @@
 *               This software is part of the ast package               *
 *                  Copyright (c) 1985-2004 AT&T Corp.                  *
 *                      and is licensed under the                       *
-*          Common Public License, Version 1.0 (the "License")          *
-*                        by AT&T Corp. ("AT&T")                        *
-*      Any use, downloading, reproduction or distribution of this      *
-*      software constitutes acceptance of the License.  A copy of      *
-*                     the License is available at                      *
+*                  Common Public License, Version 1.0                  *
+*                            by AT&T Corp.                             *
 *                                                                      *
-*         http://www.research.att.com/sw/license/cpl-1.0.html          *
-*         (with md5 checksum 8a5e0081c856944e76c69a1cf29c2e8b)         *
+*                A copy of the License is available at                 *
+*            http://www.opensource.org/licenses/cpl1.0.txt             *
+*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -22,7 +20,7 @@
 *                                                                      *
 ***********************************************************************/
 /*
- * AT&T Labs Research
+ * AT&T Research
  * Glenn Fowler
  * Phong Vo
  *
@@ -478,18 +476,18 @@ S2I_function(a, e, base) const char* a; char** e; int base;
 			{
 			case 'b':
 			case 'B':
-				v = 512;
+				v = ((S2I_utype)1) << 9;
 				break;
 			case 'c':
 			case 'C':
 				break;
 			case 'g':
 			case 'G':
-				v = 1024 * 1024 * 1024;
+				v = ((S2I_utype)1) << 30;
 				break;
 			case 'k':
 			case 'K':
-				v = 1024;
+				v = ((S2I_utype)1) << 10;
 				break;
 			case 'l':
 			case 'L':
@@ -497,7 +495,7 @@ S2I_function(a, e, base) const char* a; char** e; int base;
 				break;
 			case 'm':
 			case 'M':
-				v = 1024 * 1024;
+				v = ((S2I_utype)1) << 20;
 				break;
 			case 'q':
 			case 'Q':
@@ -507,8 +505,7 @@ S2I_function(a, e, base) const char* a; char** e; int base;
 			case 'T':
 				if (sizeof(S2I_number) <= 4)
 					overflow = 1;
-				v *= 1024 * 1024;
-				v *= 1024 * 1024;
+				v = ((S2I_utype)1) << 40;
 				break;
 			case 'w':
 			case 'W':

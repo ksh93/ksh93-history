@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 4.4 2004-10-01
+info mam static 00000 1994-07-17 make (AT&T Research) 5.0 2005-01-01
 setv INSTALLROOT ${INSTALLROOT}
 setv PACKAGE_ast ${INSTALLROOT}
 setv PACKAGE_ast_INCLUDE ${PACKAGE_ast}/include/ast
@@ -9,9 +9,9 @@ setv ARFLAGS cr
 setv AS as
 setv ASFLAGS
 setv CC cc
-setv mam_cc_FLAGS ${mam_cc_DLL}
-setv CCFLAGS ${debug?1?${mam_cc_DEBUG} -D_BLD_DEBUG?${mam_cc_OPTIMIZE}?}
-setv CCLDFLAGS  ${strip?1?${mam_cc_LD_STRIP}??}
+setv mam_cc_FLAGS
+setv CCFLAGS ${-debug-symbols?1?${mam_cc_DEBUG} -D_BLD_DEBUG?${mam_cc_OPTIMIZE}?}
+setv CCLDFLAGS  ${-strip-symbols?1?${mam_cc_LD_STRIP}??}
 setv COTEMP $$
 setv CPIO cpio
 setv CPIOFLAGS
@@ -529,6 +529,13 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${INSTALLROOT}/include/a
 done trap.o generated
 make test.o
 make bltins/test.c
+make ${INSTALLROOT}/include/ast/tmx.h implicit
+make ${INSTALLROOT}/include/ast/tv.h implicit
+prev ${INSTALLROOT}/include/ast/ast.h implicit
+done ${INSTALLROOT}/include/ast/tv.h dontcare
+prev ${INSTALLROOT}/include/ast/tm.h implicit
+done ${INSTALLROOT}/include/ast/tmx.h dontcare
+prev ${INSTALLROOT}/include/ast/tm.h implicit
 prev FEATURE/poll implicit
 make FEATURE/externs implicit
 meta FEATURE/externs features/%>FEATURE/% features/externs externs
@@ -552,7 +559,7 @@ prev include/defs.h implicit
 done bltins/test.c
 meta test.o %.c>%.o bltins/test.c test
 prev bltins/test.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${INSTALLROOT}/include/ast -D_BLD_shell -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -DKSHELL -DSHOPT_DYNAMIC -DSHOPT_OO -DSHOPT_ESH -c bltins/test.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${INSTALLROOT}/include/ast -D_PACKAGE_ast -D_BLD_shell -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DKSHELL -DSHOPT_DYNAMIC -DSHOPT_OO -DSHOPT_ESH -c bltins/test.c
 done test.o generated
 make typeset.o
 make bltins/typeset.c
@@ -681,7 +688,7 @@ prev ${INSTALLROOT}/include/ast/ast.h implicit
 done sh/main.c
 meta main.o %.c>%.o sh/main.c main
 prev sh/main.c
-exec - ${CC} ${mam_cc_FLAGS} ${debug?1?${mam_cc_DEBUG} -D_BLD_DEBUG??} -I. -Iinclude -I${INSTALLROOT}/include/ast -DSHOPT_BRACEPAT -D_PACKAGE_ast -DSHOPT_ESH -DSHOPT_KIA -D_BLD_shell -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DKSHELL -DSHOPT_SUID_EXEC -DSHOPT_DYNAMIC -DSHOPT_OO -c sh/main.c
+exec - ${CC} ${mam_cc_FLAGS} ${-debug-symbols?1?${mam_cc_DEBUG} -D_BLD_DEBUG??} -I. -Iinclude -I${INSTALLROOT}/include/ast -DSHOPT_BRACEPAT -D_PACKAGE_ast -DSHOPT_ESH -DSHOPT_KIA -D_BLD_shell -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DKSHELL -DSHOPT_SUID_EXEC -DSHOPT_DYNAMIC -DSHOPT_OO -c sh/main.c
 done main.o generated
 make nvdisc.o
 make sh/nvdisc.c
@@ -1095,7 +1102,7 @@ prev ${INSTALLROOT}/include/ast/ccode.h implicit
 done sh/trestore.c
 meta trestore.o %.c>%.o sh/trestore.c trestore
 prev sh/trestore.c
-exec - ${CC} ${mam_cc_FLAGS} ${debug?1?${mam_cc_DEBUG} -D_BLD_DEBUG??} -I. -Iinclude -I${INSTALLROOT}/include/ast -D_BLD_shell -DKSHELL -D_PACKAGE_ast -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DSHOPT_KIA -DSHOPT_DYNAMIC -DSHOPT_OO -DSHOPT_ESH -c sh/trestore.c
+exec - ${CC} ${mam_cc_FLAGS} ${-debug-symbols?1?${mam_cc_DEBUG} -D_BLD_DEBUG??} -I. -Iinclude -I${INSTALLROOT}/include/ast -D_BLD_shell -DKSHELL -D_PACKAGE_ast -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DSHOPT_KIA -DSHOPT_DYNAMIC -DSHOPT_OO -DSHOPT_ESH -c sh/trestore.c
 done trestore.o generated
 make waitevent.o
 make sh/waitevent.c
@@ -1196,7 +1203,7 @@ prev ${INSTALLROOT}/include/ast/ast.h implicit
 done data/testops.c
 meta testops.o %.c>%.o data/testops.c testops
 prev data/testops.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${INSTALLROOT}/include/ast -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2004 AT&T Corp.][-license?http://www.research.att.com/sw/license/cpl-1.0.html][--catalog?libshell]"\" -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -c data/testops.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${INSTALLROOT}/include/ast -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2004 AT&T Corp.][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libshell]"\" -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -c data/testops.c
 done testops.o generated
 make keywords.o
 make data/keywords.c
@@ -1266,7 +1273,7 @@ prev include/shell.h implicit
 done data/builtins.c
 meta builtins.o %.c>%.o data/builtins.c builtins
 prev data/builtins.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${INSTALLROOT}/include/ast -DSHOPT_KIA -DSHOPT_PFSH -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2004 AT&T Corp.][-license?http://www.research.att.com/sw/license/cpl-1.0.html][--catalog?libshell]"\" -DSHOPT_MULTIBYTE -D_PACKAGE_ast -D_BLD_shell -DKSHELL -DSHOPT_OO -DSHOPT_DYNAMIC -c data/builtins.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${INSTALLROOT}/include/ast -DSHOPT_KIA -DSHOPT_PFSH -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2004 AT&T Corp.][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libshell]"\" -DSHOPT_MULTIBYTE -D_PACKAGE_ast -D_BLD_shell -DKSHELL -DSHOPT_OO -DSHOPT_DYNAMIC -c data/builtins.c
 done builtins.o generated
 make variables.o
 make data/variables.c
@@ -1344,7 +1351,7 @@ setv CC.DLL -UCC.DLL
 setv SH_DICT -DSH_DICT="\"libshell\""
 setv _BLD_shell -U_BLD_shell
 setv _BLD_DLL -U_BLD_DLL
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -Iinclude -I${INSTALLROOT}/include/ast -DSH_DICT=\""libshell"\" -DSHOPT_KIA -D_PACKAGE_ast -DSHOPT_DYNAMIC -DSHOPT_OO -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2004 AT&T Corp.][-license?http://www.research.att.com/sw/license/cpl-1.0.html][--catalog?libshell]"\" -c sh/shcomp.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -Iinclude -I${INSTALLROOT}/include/ast -DSH_DICT=\""libshell"\" -DSHOPT_KIA -D_PACKAGE_ast -DSHOPT_DYNAMIC -DSHOPT_OO -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2004 AT&T Corp.][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libshell]"\" -c sh/shcomp.c
 done shcomp.o generated
 prev libshell.a archive
 prev +ljobs
@@ -1382,7 +1389,7 @@ prev ${mam_libsecdb}
 prev +lintl
 prev ${mam_libdl}
 setv CC.DLL -UCC.DLL
-exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L${INSTALLROOT}/lib} -o suid_exec suid_exec.o ${mam_libast} ${mam_libast}
+exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L${INSTALLROOT}/lib} -o suid_exec suid_exec.o ${mam_libast}
 done suid_exec generated
 make ${INSTALLROOT}/bin
 exec - if	silent test ! -d ${INSTALLROOT}/bin

@@ -3,14 +3,12 @@
 *               This software is part of the ast package               *
 *                  Copyright (c) 1985-2004 AT&T Corp.                  *
 *                      and is licensed under the                       *
-*          Common Public License, Version 1.0 (the "License")          *
-*                        by AT&T Corp. ("AT&T")                        *
-*      Any use, downloading, reproduction or distribution of this      *
-*      software constitutes acceptance of the License.  A copy of      *
-*                     the License is available at                      *
+*                  Common Public License, Version 1.0                  *
+*                            by AT&T Corp.                             *
 *                                                                      *
-*         http://www.research.att.com/sw/license/cpl-1.0.html          *
-*         (with md5 checksum 8a5e0081c856944e76c69a1cf29c2e8b)         *
+*                A copy of the License is available at                 *
+*            http://www.opensource.org/licenses/cpl1.0.txt             *
+*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -35,13 +33,7 @@
 #include <dirent.h>
 
 #define DEBUG_TRACE		0
-
-#if _UWIN
-#define _ICONV_LIST_PRIVATE_ \
-	DIR*		dir;
-#else
 #define _ICONV_LIST_PRIVATE_
-#endif
 
 #include <ccode.h>
 #include <ctype.h>
@@ -102,71 +94,8 @@ static const char		name_native[] = "native";
 static const _ast_iconv_list_t	codes[] =
 {
 	{
-	"ascii",
-	"(a|ascii|?(iso)?(-)646|?(iso)?(-)8859|latin)",
-	"8 bit ascii",
-	"ISO-8859-%s",
-	"1",
-	CC_ASCII,
-	},
-
-	{
-	"ebcdic",
-	"(e|ebcdic?(-)?([1e]))",
-	"X/Open ebcdic",
-	"EBCDIC",
-	0,
-	CC_EBCDIC_E,
-	},
-
-	{
-	"ebcdic-o",
-	"(o|ebcdic?(-)[3o]|?(cp|ibm)1047|mvs|openedition)",
-	"mvs OpenEdition ebcdic",
-	"EBCDIC-O",
-	0,
-	CC_EBCDIC_O,
-	},
-
-	{
-	"ebcdic-h",
-	"(h|ebcdic?(-)h|?(cp|ibm)?(00)37|[oa]s?(/-)400)",
-	"ibm OS/400 AS/400 ebcdic",
-	"EBCDIC-H",
-	0,
-	CC_EBCDIC_H,
-	},
-
-	{
-	"ebcdic-s",
-	"(s|ebcdic?(-)s|siemens|posix-bc)",
-	"siemens posix-bc ebcdic",
-	"EBCDIC-S",
-	0,
-	CC_EBCDIC_S,
-	},
-
-	{
-	"ebcdic-2",
-	"(i|ebcdic?(-)[2i]|ibm)",
-	"X/Open ibm",
-	"EBCDIC-I",
-	0,
-	CC_EBCDIC_I,
-	},
-
-	{
-	"native",
-	"(n|native|local)",
-	"native code set",
-	0,
-	0,
-	CC_NATIVE,
-	},
-
-	{
 	"utf",
-	"(u|unicode|utf)",
+	"u|unicode|utf",
 	"multibyte 8-bit unicode",
 	"UTF-%s",
 	"8",
@@ -175,7 +104,7 @@ static const _ast_iconv_list_t	codes[] =
 
 	{
 	"ume",
-	"(m|ume|utf?(-)7)",
+	"m|ume|utf?(-)7",
 	"multibyte 7-bit unicode",
 	"UTF-7",
 	0,
@@ -184,7 +113,7 @@ static const _ast_iconv_list_t	codes[] =
 
 	{
 	"euc",
-	"((big|euc)*)",
+	"(big|euc)*",
 	"euc family",
 	0,
 	0,
@@ -496,16 +425,30 @@ _ast_iconv_name(register const char* m, register char* b, size_t n)
 	register char*				e;
 	int					sub[2];
 	char					buf[16];
+#if DEBUG_TRACE
+	char*					o;
+#endif
 
 	if (!b)
 	{
 		b = buf;
 		n = sizeof(buf);
 	}
+#if DEBUG_TRACE
+	o = b;
+#endif
 	e = b + n - 1;
 	bp = 0;
 	n = 0;
-	for (cp = codes; cp->name; cp++)
+	cp = ccmaplist(NiL);
+#if DEBUG_TRACE
+if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug-%d: AHA%d _ast_iconv_name m=\"%s\"\n", error_info.id, error_info.trace, __LINE__, m);
+#endif
+	for (;;)
+	{
+#if DEBUG_TRACE
+if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug-%d: AHA%d _ast_iconv_name n=%d bp=%p cp=%p ccode=%d name=\"%s\"\n", error_info.id, error_info.trace, __LINE__, n, bp, cp, cp->ccode, cp->name);
+#endif
 		if (strgrpmatch(m, cp->match, sub, elementsof(sub) / 2, STR_MAXIMAL|STR_LEFT|STR_ICASE))
 		{
 			if (!(c = m[sub[1]]))
@@ -519,6 +462,14 @@ _ast_iconv_name(register const char* m, register char* b, size_t n)
 				n = sub[1];
 			}
 		}
+		if (cp->ccode < 0)
+		{
+			if (!(++cp)->name)
+				break;
+		}
+		else if (!(cp = (const _ast_iconv_list_t*)ccmaplist((_ast_iconv_list_t*)cp)))
+			cp = codes;
+	}
 	if (cp = bp)
 	{
 		if (cp->canon)
@@ -554,6 +505,9 @@ _ast_iconv_name(register const char* m, register char* b, size_t n)
 			b += sfsprintf(b, e - b, "%s", m);
 		}
 		*b = 0;
+#if DEBUG_TRACE
+if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug-%d: AHA%d _ast_iconv_name ccode=%d canon=\"%s\"\n", error_info.id, error_info.trace, __LINE__, cp->ccode, o);
+#endif
 		return cp->ccode;
 	}
 	while (b < e && (c = *m++))
@@ -563,6 +517,9 @@ _ast_iconv_name(register const char* m, register char* b, size_t n)
 		*b++ = c;
 	}
 	*b = 0;
+#if DEBUG_TRACE
+if (error_info.trace < DEBUG_TRACE) sfprintf(sfstderr, "%s: debug-%d: AHA%d _ast_iconv_name ccode=%d canon=\"%s\"\n", error_info.id, error_info.trace, __LINE__, CC_ICONV, o);
+#endif
 	return CC_ICONV;
 }
 
@@ -1391,7 +1348,7 @@ _ast_iconv_write(_ast_iconv_t cd, Sfio_t* op, char** fb, size_t* fn, size_t* e)
 	tn = 0;
 	while (*fn > 0)
 	{
-		if (!(tb = (char*)sfreserve(op, -(tn + 1), SF_LOCKR)))
+		if (!(tb = (char*)sfreserve(op, -(tn + 1), SF_WRITE|SF_LOCKR)))
 			return r ? r : -1;
 		ts = tb;
 		tn = sfvalue(op);
@@ -1458,7 +1415,7 @@ _ast_iconv_move(_ast_iconv_t cd, Sfio_t* ip, Sfio_t* op, size_t n, size_t* e)
 			break;
 		fs = fb;
 		fn = fo = sfvalue(ip);
-		if (!(tb = (char*)sfreserve(op, SF_UNBOUND, SF_LOCKR)))
+		if (!(tb = (char*)sfreserve(op, SF_UNBOUND, SF_WRITE|SF_LOCKR)))
 		{
 			sfread(ip, fb, 0);
 			return r ? r : -1;
@@ -1508,35 +1465,28 @@ _ast_iconv_list(_ast_iconv_list_t* cp)
 #if _UWIN
 	struct dirent*	ent;
 
-	if (!cp)
+	if (!cp && !(cp = newof(0, _ast_iconv_list_t, 1, 0)) || !(cp->data = opendir(_win_maps)))
 	{
-		if (cp = newof(0, _ast_iconv_list_t, 1, 0))
-		{
-			if (!(cp->dir = opendir(_win_maps)))
-			{
-				free(cp);
-				return (_ast_iconv_list_t*)codes;
-			}
-		}
-		else
-			return (_ast_iconv_list_t*)codes;
+		if (cp)
+			free(cp);
+		return ccmaplist(NiL);
 	}
-	if (cp->dir)
+	if (cp->data)
 	{
-		if (ent = readdir(cp->dir))
+		if (ent = readdir((DIR*)cp->data))
 		{
 			cp->name = cp->match = cp->desc = (const char*)ent->d_name;
 			return cp;
 		}
-		closedir(cp->dir);
+		closedir((DIR*)cp->data);
 		free(cp);
-		return (_ast_iconv_list_t*)codes;
+		return ccmaplist(NiL);
 	}
 #else
 	if (!cp)
-		return (_ast_iconv_list_t*)codes;
+		return ccmaplist(NiL);
 #endif
-	if (++cp >= (_ast_iconv_list_t*)&codes[elementsof(codes) - 1])
-		return 0;
-	return cp;
+	if (cp->ccode >= 0)
+		return (cp = ccmaplist(cp)) ? cp : (_ast_iconv_list_t*)codes;
+	return (++cp)->name ? cp : (_ast_iconv_list_t*)0;
 }

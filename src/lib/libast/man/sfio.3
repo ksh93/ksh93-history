@@ -436,7 +436,7 @@ This flag guarantees that data written in any single \f5sfwrite()\fP or
 \f5sfputr()\fP call will always be output as a whole to the output device.
 This is useful in certain applications (e.g., networking) where a complex object
 must be output without being split in different system calls.
-Note that the respective stream still buffers data as the buffer can accomodate.
+Note that the respective stream still buffers data as much as the buffer can accomodate.
 .Tp
 \f5SF_MTSAFE\fP:
 This flag indicates that the respective stream may be accessed by more than one threads.
@@ -831,10 +831,12 @@ If \f5f\fP is a \f5SF_READ\fP stream, the data block is a segment of input data.
 If \f5f\fP is a \f5SF_WRITE\fP stream, the data block is a buffer
 suitable for writing output data.
 For consistency, if \f5f\fP is opened with \f5SF_READ|SF_WRITE\fP,
-it will be treated as if it is a \f5SF_READ\fP stream
+it will normally be treated as if it is a \f5SF_READ\fP stream
 (see \f5sfset()\fP for forcing a particular mode) but the returned
 buffer can also be written into (more below).
-Such a reserved data block is guaranteed to be valid only until
+However, it is possible to bias to \f5SF_WRITE\fP when the \f5type\fP
+argument is non-negative by adding the \f5SF_WRITE\fP bit \f5type\fP.
+In any case, a reserved data block is guaranteed to be valid only until
 a future access to the stream \f5f\fP.
 
 When \f5f\fP is \f5SF_READ\fP, \f5SF_SHARE\fP and unseekable,

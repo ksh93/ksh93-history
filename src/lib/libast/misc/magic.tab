@@ -1,5 +1,5 @@
 #
-# @(#)magic (AT&T Research) 2004-05-05
+# @(#)magic (AT&T Research) 2004-10-31
 #
 # magic number database for file(1) and magic(3)
 #
@@ -28,9 +28,6 @@
 # the description string may have one printf format spec for the
 # matched magic number
 #
-
-0	string		VOL1
-&24	string		POSIX		posix archive			application/pax
 
 0	short		070707		binary cpio archive		application/pax
 0	string		070707		cpio archive			application/pax
@@ -104,6 +101,9 @@ o()
 &22	short		0xfdc4
 +32	byte		*		, version %ld
 +33	byte		*		.%ld
+
+0	string		\326\303\304\330				vcodex data		application/x-vczip
++5	void		vcodex(0,delta,1,huffman,2,huffgroup,3,arith,4,bwt,5,rle,6,mtf,7,transpose,8,table,9,huffpart,50,map,100,recfm,101,ss7)
 
 0	long		0x080456
 {
@@ -1017,22 +1017,23 @@ v()
 &156	match		[gx]
 o{
 &99	byte		0
-&107	byte		' '
-&115	byte		' '
-&100	match		+([ 0-7])[gx]
+&100	match		+([ 0-7])?
 }
 
-257	string		ustar		ustar archive			application/pax
+257	string		ustar\ \ 	gnu tar archive			application/pax
 o{
 &99	byte		0
-&107	byte		' '
-&115	byte		' '
-&100	match		+([ 0-7])
-&0	string		*		, [ %s ... ]
+&100	match		+([ 0-7])?
++0	match		???*		, [ %s ... ]
 }
 
-99	byte		0		tar archive			application/pax
+257	string		ustar		tar archive			application/pax
 o()
+
+99	byte		0		old tar archive			application/pax
+o()
+
+0	string		\301\304\331\100\323\311\302\331\306	ca librarian archive	application/pax
 
 0	match		<[hH][tT][mM][lL]>	html input		text/html
 0	match		<!?(--)[Dd][Oo][Cc][Tt][Yy][Pp][Ee] [Hh][Tt][Mm][Ll]	html input		text/html

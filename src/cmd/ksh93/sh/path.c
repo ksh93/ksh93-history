@@ -3,14 +3,12 @@
 *               This software is part of the ast package               *
 *                  Copyright (c) 1982-2004 AT&T Corp.                  *
 *                      and is licensed under the                       *
-*          Common Public License, Version 1.0 (the "License")          *
-*                        by AT&T Corp. ("AT&T")                        *
-*      Any use, downloading, reproduction or distribution of this      *
-*      software constitutes acceptance of the License.  A copy of      *
-*                     the License is available at                      *
+*                  Common Public License, Version 1.0                  *
+*                            by AT&T Corp.                             *
 *                                                                      *
-*         http://www.research.att.com/sw/license/cpl-1.0.html          *
-*         (with md5 checksum 8a5e0081c856944e76c69a1cf29c2e8b)         *
+*                A copy of the License is available at                 *
+*            http://www.opensource.org/licenses/cpl1.0.txt             *
+*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -253,7 +251,7 @@ void  path_delete(Pathcomp_t *first)
 		{
 			if(pp->lib)
 				free((void*)pp->lib);
-			if(pp->bltin_lib && pp->bltin_lib!=(void*)pp)
+			if(pp->bltin_lib && pp->bltin_lib != (void*)e_dot)
 			{
 				nv_scan(sh_bltin_tree(),free_bltin,pp->bltin_lib,0,0);
 				dlclose(pp->bltin_lib);
@@ -621,7 +619,7 @@ Pathcomp_t *path_absolute(register const char *name, Pathcomp_t *endpath)
 			pp = path_nextcomp(pp,name,0);
 		if(endpath)
 			return(endpath);
-		if(!isfun && oldpp->bltin_lib)
+		if(!isfun && oldpp->bltin_lib && oldpp->bltin_lib != (void*)e_dot)
 		{
 			typedef int (*Fptr_t)(int, char*[], void*);
 			Fptr_t addr;
@@ -1200,10 +1198,11 @@ static Pathcomp_t *path_addcomp(Pathcomp_t *first, Pathcomp_t *old,const char *n
 			stakputc(*cp++);
 		len = staktell()-offset;
 		stakputc(0);
+		stakseek(offset);
+		name = (const char*)stakptr(offset);
 	}
 	else
 		len = strlen(name);
-	stakseek(offset);
 	for(pp=first; pp; pp=pp->next)
 	{
 		if(memcmp(name,pp->name,len)==0 && (pp->name[len]==':' || pp->name[len]==0))
@@ -1212,14 +1211,14 @@ static Pathcomp_t *path_addcomp(Pathcomp_t *first, Pathcomp_t *old,const char *n
 			return(first);
 		}
 	}
-	if(old && (old=path_dirfind(old,stakptr(offset),0)))
+	if(old && (old=path_dirfind(old,name,0)))
 	{
 		statb.st_ino = old->ino;
 		statb.st_dev = old->dev;
 		if(old->ino==0 && old->dev==0)
 			flag |= PATH_SKIP;
 	}
-	else if(stat(stakptr(offset),&statb)<0 || !S_ISDIR(statb.st_mode))
+	else if(stat(name,&statb)<0 || !S_ISDIR(statb.st_mode))
 	{
 		if(*name=='/')
 			return(first);
@@ -1241,7 +1240,7 @@ static Pathcomp_t *path_addcomp(Pathcomp_t *first, Pathcomp_t *old,const char *n
 	}
 	pp = newof((Pathcomp_t*)0,Pathcomp_t,1,len+1);
 	pp->refcount = 1;
-	memcpy((char*)(pp+1),stakptr(offset),len+1);
+	memcpy((char*)(pp+1),name,len+1);
 	pp->name = (char*)(pp+1);
 	pp->len = len;
 	pp->dev = statb.st_dev;
@@ -1320,7 +1319,7 @@ static int path_chkfpath(Pathcomp_t *first, Pathcomp_t* old,Pathcomp_t *pp, int 
 					pp->bltin_lib = dllfind(ep, NiL, RTLD_LAZY, NiL, 0);
 #endif
 					if (!pp->bltin_lib)
-						pp->bltin_lib = (void*)pp;
+						pp->bltin_lib = (void*)e_dot;
 				}
 			}
 			else if(m)

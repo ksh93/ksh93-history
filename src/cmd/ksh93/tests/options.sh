@@ -3,14 +3,12 @@
 #               This software is part of the ast package               #
 #                  Copyright (c) 1982-2004 AT&T Corp.                  #
 #                      and is licensed under the                       #
-#          Common Public License, Version 1.0 (the "License")          #
-#                        by AT&T Corp. ("AT&T")                        #
-#      Any use, downloading, reproduction or distribution of this      #
-#      software constitutes acceptance of the License.  A copy of      #
-#                     the License is available at                      #
+#                  Common Public License, Version 1.0                  #
+#                            by AT&T Corp.                             #
 #                                                                      #
-#         http://www.research.att.com/sw/license/cpl-1.0.html          #
-#         (with md5 checksum 8a5e0081c856944e76c69a1cf29c2e8b)         #
+#                A copy of the License is available at                 #
+#            http://www.opensource.org/licenses/cpl1.0.txt             #
+#         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         #
 #                                                                      #
 #              Information and Software Systems Research               #
 #                            AT&T Research                             #
@@ -44,6 +42,50 @@ if	[[ $x != good ]]
 then	err_exit 'sh -e not workuing'
 fi
 [[ $($SHELL -D -c 'print hi; print $"hello"') == '"hello"' ]] || err_exit 'ksh -D not working'
+
+tmp=/tmp/ksh$$
+mkdir $tmp
+rc=$tmp/.kshrc
+print $'function env_hit\n{\n\tprint OK\n}' > $rc
+
+export ENV=$rc
+[[ $(print env_hit | $SHELL 2>&1) == "OK" ]] &&
+	err_exit 'non-interactive shell reads $ENV file'
+[[ $(print env_hit | $SHELL -E 2>&1) == "OK" ]] ||
+	err_exit '-E ignores $ENV file'
+[[ $(print env_hit | $SHELL +E 2>&1) == "OK" ]] &&
+	err_exit '+E reads $ENV file'
+[[ $(print env_hit | $SHELL --rc 2>&1) == "OK" ]] ||
+	err_exit '--rc ignores $ENV file'
+[[ $(print env_hit | $SHELL --norc 2>&1) == "OK" ]] &&
+	err_exit '--norc reads $ENV file'
+
+export ENV=
+[[ $(print env_hit | HOME=$tmp $SHELL 2>&1) == "OK" ]] &&
+	err_exit 'non-interactive shell reads $HOME/.kshrc file'
+[[ $(print env_hit | HOME=$tmp $SHELL -E 2>&1) == "OK" ]] &&
+	err_exit '-E ignores empty $ENV'
+[[ $(print env_hit | HOME=$tmp $SHELL +E 2>&1) == "OK" ]] &&
+	err_exit '+E reads $HOME/.kshrc file'
+[[ $(print env_hit | HOME=$tmp $SHELL --rc 2>&1) == "OK" ]] &&
+	err_exit '--rc ignores empty $ENV'
+[[ $(print env_hit | HOME=$tmp $SHELL --norc 2>&1) == "OK" ]] &&
+	err_exit '--norc reads $HOME/.kshrc file'
+
+unset ENV
+[[ $(print env_hit | HOME=$tmp $SHELL 2>&1) == "OK" ]] &&
+	err_exit 'non-interactive shell reads $HOME/.kshrc file'
+[[ $(print env_hit | HOME=$tmp $SHELL -E 2>&1) == "OK" ]] ||
+	err_exit '-E ignores $HOME/.kshrc file'
+[[ $(print env_hit | HOME=$tmp $SHELL +E 2>&1) == "OK" ]] &&
+	err_exit '+E reads $HOME/.kshrc file'
+[[ $(print env_hit | HOME=$tmp $SHELL --rc 2>&1) == "OK" ]] ||
+	err_exit '--rc ignores $HOME/.kshrc file'
+[[ $(print env_hit | HOME=$tmp $SHELL --norc 2>&1) == "OK" ]] &&
+	err_exit '--norc reads $HOME/.kshrc file'
+
+rm -rf $tmp
+
 if	command set -G 2> /dev/null
 then	mkdir /tmp/ksh$$
 	cd /tmp/ksh$$

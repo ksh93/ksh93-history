@@ -3,14 +3,12 @@
 *               This software is part of the ast package               *
 *                  Copyright (c) 1982-2004 AT&T Corp.                  *
 *                      and is licensed under the                       *
-*          Common Public License, Version 1.0 (the "License")          *
-*                        by AT&T Corp. ("AT&T")                        *
-*      Any use, downloading, reproduction or distribution of this      *
-*      software constitutes acceptance of the License.  A copy of      *
-*                     the License is available at                      *
+*                  Common Public License, Version 1.0                  *
+*                            by AT&T Corp.                             *
 *                                                                      *
-*         http://www.research.att.com/sw/license/cpl-1.0.html          *
-*         (with md5 checksum 8a5e0081c856944e76c69a1cf29c2e8b)         *
+*                A copy of the License is available at                 *
+*            http://www.opensource.org/licenses/cpl1.0.txt             *
+*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -38,8 +36,10 @@
 #include	"jobs.h"
 #include	"history.h"
 
-#ifndef WCONTINUED
+#if !defined(WCONTINUED) || !defined(WIFCONTINUED)
+#   undef  WCONTINUED
 #   define WCONTINUED	0
+#   undef  WIFCONTINUED
 #   define WIFCONTINUED(wstat)	(0)
 #endif
 
@@ -135,6 +135,7 @@ static struct back_save	bck;
 #ifdef JOBS
     static void			job_set(struct process*);
     static void			job_reset(struct process*);
+    static void			job_reap(int);
     static void			job_waitsafe(int);
     static struct process	*job_byname(char*);
     static struct process	*job_bystring(char*);
@@ -171,15 +172,16 @@ static struct back_save	bck;
 #   undef NTTYDISC
 #endif /* OTTYDISC */
 
-
 #ifdef JOBS
 
+#define job_lock()	(job.in_critical++)
+#define job_unlock()	do{if(!--job.in_critical&&savesig)job_reap(savesig);}while(0)
 
 /*
- * This is the SIGCLD interrupt routine
+ * Reap one job
  * When called with sig==0, it does a blocking wait
  */
-static void job_waitsafe(register int sig)
+static void job_reap(register int sig)
 {
 	register pid_t pid;
 	register struct process *pw;
@@ -188,20 +190,15 @@ static void job_waitsafe(register int sig)
 	struct process dummy;
 	struct jobsave *jp;
 	int wstat, (*waitevent)(int,long,int) = sh.waitevent;
+	static int wcontinued = WCONTINUED;
 #ifdef DEBUG
-	if(sfprintf(sfstderr,"%d: signal %d critical=%d\n",getpid(),sig,job.in_critical) <=0)
+	if(sfprintf(sfstderr,"ksh: job line %4d: reap pid=%d critical=%d signal=%d\n",__LINE__,getpid(),job.in_critical,sig) <=0)
 		write(2,"waitsafe\n",9);
 	sfsync(sfstderr);
 #endif /* DEBUG */
-	if(job.in_critical && sig)
-	{
-		savesig = sig;
-		job.waitsafe++;
-		return;
-	}
 	savesig = 0;
 	if(sig)
-		flags = WNOHANG|WUNTRACED|WCONTINUED;
+		flags = WNOHANG|WUNTRACED|wcontinued;
 	else
 		flags = WUNTRACED;
 	sh.waitevent = 0;
@@ -213,6 +210,14 @@ static void job_waitsafe(register int sig)
 				flags |= WNOHANG;
 		}
 		pid = waitpid((pid_t)-1,&wstat,flags);
+
+		/*
+		 * some systems (linux 2.6) may return EINVAL
+		 * when there are no continued children
+		 */
+
+		if (pid<0 && errno==EINVAL && (flags&WCONTINUED))
+			pid = waitpid((pid_t)-1,&wstat,flags&=~WCONTINUED);
 		sh_sigcheck();
 		if(sig && pid<0 && errno==EINTR)
 			continue;
@@ -223,7 +228,7 @@ static void job_waitsafe(register int sig)
 		if(!(pw=job_bypid(pid)))
 		{
 #ifdef DEBUG
-			sfprintf(sfstderr,"%d: unknown job pid=%d pw=%x\n",getpid(),pid,pw);
+			sfprintf(sfstderr,"ksh: job line %4d: reap pid=%d critical=%d unknown job pid=%d pw=%x\n",__LINE__,getpid(),job.in_critical,pid,pw);
 #endif /* DEBUG */
 			pw = &dummy;
 			pw->p_exit = 0;
@@ -260,7 +265,7 @@ static void job_waitsafe(register int sig)
 				sh_fault(pw->p_exit); 
 			continue;
 		}
-		else if (WIFCONTINUED(wstat))
+		else if (WIFCONTINUED(wstat) && wcontinued)
 			pw->p_flag &= ~(P_NOTIFY|P_SIGNALLED|P_STOPPED);
 		else
 #endif /* SIGTSTP */
@@ -307,7 +312,7 @@ static void job_waitsafe(register int sig)
 				jp->exitval |= SH_EXITSIG;
 		}
 #ifdef DEBUG
-		sfprintf(sfstderr,"%d: job %d with pid %d flags=%o complete with status=%x exit=%d\n",getpid(),pw->p_job,pid,pw->p_flag,wstat,pw->p_exit);
+		sfprintf(sfstderr,"ksh: job line %4d: reap pid=%d critical=%d job %d with pid %d flags=%o complete with status=%x exit=%d\n",__LINE__,getpid(),job.in_critical,pw->p_job,pid,pw->p_flag,wstat,pw->p_exit);
 		sfsync(sfstderr);
 #endif /* DEBUG*/
 		/* only top-level process in job should have notify set */
@@ -329,6 +334,20 @@ static void job_waitsafe(register int sig)
 	}
 	if(sig)
 		signal(sig, job_waitsafe);
+}
+
+/*
+ * This is the SIGCLD interrupt routine
+ */
+static void job_waitsafe(int sig)
+{
+	if(job.in_critical)
+	{
+		savesig = sig;
+		job.waitsafe++;
+	}
+	else
+		job_reap(sig);
 }
 
 /*
@@ -479,7 +498,7 @@ void job_init(int lflag)
  */
 int job_close(void)
 {
-	register struct process *pw = job.pwlist;
+	register struct process *pw;
 	register int count = 0, running = 0;
 	if(possible && !job.jobcontrol)
 		return(0);
@@ -487,9 +506,10 @@ int job_close(void)
 		return(0);
 	else if(getpid() != job.mypid)
 		return(0);
+	job_lock();
 	if(!tty_check(0))
 		beenhere++;
-	for(;pw;pw=pw->p_nxtjob)
+	for(pw=job.pwlist;pw;pw=pw->p_nxtjob)
 	{
 		if(!(pw->p_flag&P_STOPPED))
 		{
@@ -514,6 +534,7 @@ int job_close(void)
 			return(-1);
 		}
 	}
+	job_unlock();
 #   ifdef SIGTSTP
 	if(possible && setpgid(0,job.mypgid)>=0)
 		tcsetpgrp(job.fd,job.mypgid);
@@ -596,24 +617,27 @@ static void job_reset(register struct process *pw)
 
 void job_bwait(char **jobs)
 {
-	register char *job;
+	register char *jp;
 	register struct process *pw;
 	register pid_t pid;
 	if(*jobs==0)
 		job_wait((pid_t)-1);
-	else while(job = *jobs++)
+	else while(jp = *jobs++)
 	{
 #ifdef JOBS
-		if(*job == '%')
+		if(*jp == '%')
 		{
-			if(pw = job_bystring(job))
+			job_lock();
+			pw = job_bystring(jp);
+			job_unlock();
+			if(pw)
 				pid = pw->p_pid;
 			else
 				return;
 		}
 		else
 #endif /* JOBS */
-			pid = (int)strtol(job, (char**)0, 10);
+			pid = (int)strtol(jp, (char**)0, 10);
 		job_wait(-pid);
 	}
 }
@@ -625,13 +649,15 @@ void job_bwait(char **jobs)
 
 int job_walk(Sfio_t *file,int (*fun)(struct process*,int),int arg,char *joblist[])
 {
-	register struct process *pw = job.pwlist;
+	register struct process *pw;
 	register int r = 0;
 	register char *jobid, **jobs=joblist;
 	register struct process *px;
 	job_string = 0;
 	outfile = file;
 	by_number = 0;
+	job_lock();
+	pw = job.pwlist;
 	if(jobs==0)
 	{
 		/* do all jobs */
@@ -680,6 +706,7 @@ int job_walk(Sfio_t *file,int (*fun)(struct process*,int),int arg,char *joblist[
 			r = 2;
 		by_number = 0;
 	}
+	job_unlock();
 	return(r);
 }
 
@@ -719,6 +746,7 @@ int job_list(struct process *pw,register int flag)
 	}
 	if((px->p_flag&P_DONE) && job.waitall && !(flag&JOB_LFLAG))
 		return(0);
+	job_lock();
 	n = px->p_job;
 	if(px==job.pwlist)
 		msize = '+';
@@ -772,6 +800,7 @@ int job_list(struct process *pw,register int flag)
 			sfputr(outfile, e_nlspace, -1);
 	}
 	while(px);
+	job_unlock();
 	return(0);
 }
 
@@ -816,6 +845,7 @@ int job_kill(register struct process *pw,register int sig)
 #else
 #	define stopsig	1
 #endif	/* SIGTSTP */
+	job_lock();
 	errno = ECHILD;
 	if(pw==0)
 		goto error;
@@ -894,6 +924,7 @@ int job_kill(register struct process *pw,register int sig)
 		r = 2;
 	}
 	sh_delay(.001);
+	job_unlock();
 	return(r);
 }
 
@@ -942,6 +973,7 @@ void	job_clear(void)
 	register struct process *pwnext;
 	register int j = BYTE(sh.lim.child_max);
 	register struct jobsave *jp,*jpnext;
+	job_lock();
 	for(pw=job.pwlist; pw; pw=pwnext)
 	{
 		pwnext = pw->p_nxtjob;
@@ -967,6 +999,7 @@ void	job_clear(void)
 		job.freejobs = (unsigned char*)malloc((unsigned)(j+1));
 	while(j >=0)
 		job.freejobs[j--]  = 0;
+	job_unlock();
 }
 
 /*
@@ -984,6 +1017,7 @@ int job_post(pid_t pid, pid_t join)
 		job_clear();
 		return(0);
 	}
+	job_lock();
 	if(pw = job_bypid(pid))
 		job_unpost(pw,0);
 	if(join && (pw=job_bypid(join)))
@@ -1032,7 +1066,7 @@ int job_post(pid_t pid, pid_t join)
 		pw->p_fgrp = 0;
 	pw->p_pgrp = pw->p_fgrp;
 #ifdef DEBUG
-	sfprintf(sfstderr,"%d: posting %d pid=%d pgid=%d savesig=%d join=%d\n",getpid(),pw->p_job,
+	sfprintf(sfstderr,"ksh: job line %4d: post pid=%d critical=%d job=%d pid=%d pgid=%d savesig=%d join=%d\n",__LINE__,getpid(),job.in_critical,pw->p_job,
 		pw->p_pid,pw->p_pgrp,savesig,join);
 	sfsync(sfstderr);
 #endif /* DEBUG */
@@ -1055,9 +1089,7 @@ int job_post(pid_t pid, pid_t join)
 			pw->p_flag |= (P_DONE|P_NOTIFY);
 	}
 	lastpid = 0;
-	job.in_critical=0;
-	if(savesig)
-		job_waitsafe(savesig);
+	job_unlock();
 	return(pw->p_job);
 }
 
@@ -1133,7 +1165,7 @@ void	job_wait(register pid_t pid)
 		pid = -pid;
 		intr = 1;
 	}
-	job.in_critical = 1;
+	job_lock();
 	if(pid > 1)
 	{
 		if(!(pw=job_bypid(pid)))
@@ -1142,14 +1174,13 @@ void	job_wait(register pid_t pid)
 			if((sh.exitval = job_chksave(pid)) < 0)
 				sh.exitval = ERROR_NOENT;
 			exitset();
-			job.in_critical = 0;
-			if(savesig)
-				job_waitsafe(savesig);
+			job_unlock();
 			return;
 		}
 		else if(intr && pw->p_env!=sh.curenv)
 		{
 			sh.exitval = ERROR_NOENT;
+			job_unlock();
 			return;
 		}
 		jobid = pw->p_job;
@@ -1159,14 +1190,13 @@ void	job_wait(register pid_t pid)
 			job_set(job_byjid(jobid));
 	}
 #ifdef DEBUG
-	sfprintf(sfstderr,"%d: job_wait job=%d pid=%d\n",getpid(),jobid,pid);
+	sfprintf(sfstderr,"ksh: job line %4d: wait pid=%d critical=%d job=%d pid=%d\n",__LINE__,getpid(),job.in_critical,jobid,pid);
 	if(pw)
-		sfprintf(sfstderr,"%d: job_wait flags=%o\n",getpid(),pw->p_flag);
+		sfprintf(sfstderr,"ksh: job line %4d: wait pid=%d critical=%d flags=%o\n",__LINE__,getpid(),job.in_critical,pw->p_flag);
 #endif /* DEBUG*/
 	errno = 0;
 	while(1)
 	{
-		job.in_critical = 1;
 		if(job.waitsafe)
 		{
 			for(px=job.pwlist;px; px = px->p_nxtjob)
@@ -1246,9 +1276,8 @@ void	job_wait(register pid_t pid)
 			}
 		}
 		sfsync(sfstderr);
-		job.in_critical = !savesig;
 		job.waitsafe = 0;
-		job_waitsafe(savesig);
+		job_reap(savesig);
 		if(job.waitsafe)
 			continue;
 		if(errno==ECHILD)
@@ -1258,9 +1287,7 @@ void	job_wait(register pid_t pid)
 		if((intr && sh.trapnote) || (pid==1 && !intr))
 			break;
 	}
-	job.in_critical = 0;
-	if(savesig)
-		job_waitsafe(savesig);
+	job_unlock();
 	if(pid==1)
 		return;
 	exitset();
@@ -1283,11 +1310,13 @@ void	job_wait(register pid_t pid)
 done:
 	if(!sh.intrap)
 	{
+		job_lock();
 		for(pw=job.pwlist; pw; pw=px)
 		{
 			px = pw->p_nxtjob;
 			job_unpost(pw,0);
 		}
+		job_unlock();
 	}
 }
 
@@ -1300,12 +1329,17 @@ done:
 int job_switch(register struct process *pw,int bgflag)
 {
 	register const char *msg;
+	job_lock();
 	if(!pw || !(pw=job_byjid((int)pw->p_job)))
+	{
+		job_unlock();
 		return(1);
+	}
 	if(bgflag=='d')
 	{
 		for(; pw; pw=pw->p_nxtproc)
 			pw->p_flag |= P_DISOWN;
+		job_unlock();
 		return(0);
 	}
 #ifdef SIGTSTP
@@ -1327,7 +1361,10 @@ int job_switch(register struct process *pw,int bgflag)
 	if(bgflag=='f')
 	{
 		if(!(pw=job_unpost(pw,1)))
+		{
+			job_unlock();
 			return(1);
+		}
 		job.waitall = 1;
 		job_wait(pw->p_pid);
 		job.waitall = 0;
@@ -1335,6 +1372,7 @@ int job_switch(register struct process *pw,int bgflag)
 	else if(pw->p_flag&P_STOPPED)
 		job_unstop(pw);
 #endif /* SIGTSTP */
+	job_unlock();
 	return(0);
 }
 
@@ -1388,7 +1426,7 @@ static struct process *job_unpost(register struct process *pwtop,int notify)
 	register struct process *pw;
 	/* make sure all processes are done */
 #ifdef DEBUG
-	sfprintf(sfstderr,"%d: unpost pid=%d env=%d\n",getpid(),pwtop->p_pid,pwtop->p_env);
+	sfprintf(sfstderr,"ksh: job line %4d: drop pid=%d critical=%d pid=%d env=%d\n",__LINE__,getpid(),job.in_critical,pwtop->p_pid,pwtop->p_env);
 	sfsync(sfstderr);
 #endif /* DEBUG */
 	pwtop = pw = job_byjid((int)pwtop->p_job);
@@ -1422,7 +1460,7 @@ static struct process *job_unpost(register struct process *pwtop,int notify)
 		freelist = pw;
 	}
 #ifdef DEBUG
-	sfprintf(sfstderr,"%d: free job=%d\n",getpid(),pwtop->p_job);
+	sfprintf(sfstderr,"ksh: job line %4d: free pid=%d critical=%d job=%d\n",__LINE__,getpid(),job.in_critical,pwtop->p_job);
 	sfsync(sfstderr);
 #endif /* DEBUG */
 	job_free((int)pwtop->p_job);
@@ -1558,9 +1596,11 @@ static int job_chksave(register pid_t pid)
 void *job_subsave(void)
 {
 	struct back_save *bp = new_of(struct back_save,0);
+	job_lock();
 	*bp = bck;
 	bck.count = 0;
 	bck.list = 0;
+	job_unlock();
 	return((void*)bp);
 }
 
@@ -1569,6 +1609,7 @@ void job_subrestore(void* ptr)
 	register struct jobsave *jp,*jpnext;
 	register struct back_save *bp = (struct back_save*)ptr;
 	register struct process *pw, *px, *pwnext;
+	job_lock();
 	for(pw=job.pwlist; pw; pw=pwnext)
 	{
 		pwnext = pw->p_nxtjob;
@@ -1585,9 +1626,31 @@ void job_subrestore(void* ptr)
 		job_savelist = jp;
 	}
 	free(ptr);
+	job_unlock();
 }
 
 int sh_waitsafe(void)
 {
 	return(job.waitsafe);
+}
+
+void job_fork(pid_t parent)
+{
+#ifdef DEBUG
+	sfprintf(sfstderr,"ksh: job line %4d: fork pid=%d critical=%d parent=%d\n",__LINE__,getpid(),job.in_critical,parent);
+#endif /* DEBUG */
+	switch (parent)
+	{
+	case -1:
+		job_lock();
+		break;
+	case 0:
+		job_unlock();
+		job.waitsafe = 0;
+		job.in_critical = 0;
+		break;
+	default:
+		job_unlock();
+		break;
+	}
 }

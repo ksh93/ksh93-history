@@ -3,14 +3,12 @@
 *               This software is part of the ast package               *
 *                  Copyright (c) 1985-2004 AT&T Corp.                  *
 *                      and is licensed under the                       *
-*          Common Public License, Version 1.0 (the "License")          *
-*                        by AT&T Corp. ("AT&T")                        *
-*      Any use, downloading, reproduction or distribution of this      *
-*      software constitutes acceptance of the License.  A copy of      *
-*                     the License is available at                      *
+*                  Common Public License, Version 1.0                  *
+*                            by AT&T Corp.                             *
 *                                                                      *
-*         http://www.research.att.com/sw/license/cpl-1.0.html          *
-*         (with md5 checksum 8a5e0081c856944e76c69a1cf29c2e8b)         *
+*                A copy of the License is available at                 *
+*            http://www.opensource.org/licenses/cpl1.0.txt             *
+*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -39,18 +37,16 @@
 #include <ast.h>
 #include <ast_ccode.h>
 
-/* _cc_map[] for backwards compatibility -- drop 20050101 */
-
-#if _BLD_ast && defined(__EXPORT__)
-#define extern		extern __EXPORT__
-#endif
-#if !_BLD_ast && defined(__IMPORT__)
-#define extern		extern __IMPORT__
-#endif
-
-extern const unsigned char*	_cc_map[];
-
-#undef	extern
+typedef struct Ccmap_s
+{
+	const char*	name;	/* code set name		*/
+	const char*	match;	/* strmatch() pattern		*/
+	const char*	desc;	/* code set description		*/
+	const char*	canon;	/* canonical name format	*/
+	const char*	index;	/* default index		*/
+	int		ccode;	/* <ccode.h> code index		*/
+	void*		data;	/* map specific data		*/
+} Ccmap_t;
 
 #if _BLD_ast && defined(__EXPORT__)
 #define extern		__EXPORT__
@@ -63,6 +59,7 @@ extern void*		_ccmapstr(unsigned char*, void*, size_t);
 extern int		ccmapid(const char*);
 extern char*		ccmapname(int);
 extern void*		ccnative(void*, const void*, size_t);
+extern Ccmap_t*		ccmaplist(Ccmap_t*);
 
 #undef	extern
 

@@ -3,14 +3,12 @@
 *               This software is part of the ast package               *
 *                  Copyright (c) 1985-2004 AT&T Corp.                  *
 *                      and is licensed under the                       *
-*          Common Public License, Version 1.0 (the "License")          *
-*                        by AT&T Corp. ("AT&T")                        *
-*      Any use, downloading, reproduction or distribution of this      *
-*      software constitutes acceptance of the License.  A copy of      *
-*                     the License is available at                      *
+*                  Common Public License, Version 1.0                  *
+*                            by AT&T Corp.                             *
 *                                                                      *
-*         http://www.research.att.com/sw/license/cpl-1.0.html          *
-*         (with md5 checksum 8a5e0081c856944e76c69a1cf29c2e8b)         *
+*                A copy of the License is available at                 *
+*            http://www.opensource.org/licenses/cpl1.0.txt             *
+*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -29,15 +27,24 @@
  * sfio tmp string buffer support
  */
 
+#if __OBSOLETE__ >= 20070101 /* sfstr* macros now use sfsetbuf() */
+
+NoN(sfstrtmp)
+
+#else
+
 #include <sfio_t.h>
 #include <ast.h>
-#include <sfstr.h>
+
+#if defined(__EXPORT__)
+#define extern	__EXPORT__
+#endif
 
 /*
  * replace buffer in string stream f for either SF_READ or SF_WRITE
  */
 
-int
+extern int
 sfstrtmp(register Sfio_t* f, int mode, void* buf, size_t siz)
 {
 	if (!(f->_flags & SF_STRING))
@@ -51,3 +58,5 @@ sfstrtmp(register Sfio_t* f, int mode, void* buf, size_t siz)
 	f->_size = siz;
 	return 0;
 }
+
+#endif

@@ -3,14 +3,12 @@
 *               This software is part of the ast package               *
 *                  Copyright (c) 1985-2004 AT&T Corp.                  *
 *                      and is licensed under the                       *
-*          Common Public License, Version 1.0 (the "License")          *
-*                        by AT&T Corp. ("AT&T")                        *
-*      Any use, downloading, reproduction or distribution of this      *
-*      software constitutes acceptance of the License.  A copy of      *
-*                     the License is available at                      *
+*                  Common Public License, Version 1.0                  *
+*                            by AT&T Corp.                             *
 *                                                                      *
-*         http://www.research.att.com/sw/license/cpl-1.0.html          *
-*         (with md5 checksum 8a5e0081c856944e76c69a1cf29c2e8b)         *
+*                A copy of the License is available at                 *
+*            http://www.opensource.org/licenses/cpl1.0.txt             *
+*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -24,16 +22,15 @@
 #pragma prototyped
 /*
  * Glenn Fowler
- * AT&T Bell Laboratories
+ * AT&T Research
  */
 
 #include <ast.h>
 #include <ctype.h>
-#include <hash.h>
 
 /*
  * parse option expression in s using options in tab with element size siz
- * siz==0 implies Hash_table_t*tab
+ * first element in tab must be a char*
  * options match
  *
  *	[no]name[[:]=['"]value["']][, ]...
@@ -91,22 +88,11 @@ stropt(const char* as, const void* tab, int siz, int(*f)(void*, const void*, int
 			}
 			if (tab)
 			{
-				if (!siz)
-				{
-					v = s;
-					while ((c = *v++) && !isspace(c) && c != '=' && c != ':' && c != ',');
-					*--v = 0;
-					t = (p = (char**)hashget((Hash_table_t*)tab, s)) ? s : (char*)0;
-					if ((*v = c) == ':' && *(v + 1) == '=')
-					{
-						v++;
-						n = -1;
-					}
-				}
-				else for (p = (char**)tab; t = *p; p = (char**)((char*)p + siz))
+				for (p = (char**)tab; t = *p; p = (char**)((char*)p + siz))
 				{
 					for (v = s; *t && *t++ == *v; v++);
-					if (!*t || isspace(*v) || *v == ',' || *v == '=') break;
+					if (!*t || isspace(*v) || *v == ',' || *v == '=')
+						break;
 					if (*v == ':' && *(v + 1) == '=')
 					{
 						v++;
@@ -128,13 +114,15 @@ stropt(const char* as, const void* tab, int siz, int(*f)(void*, const void*, int
 			while (*v && !isspace(*v) && *v != '=' && *v != ',')
 				if (*v++ == ':' && *v == '=')
 				{
-					if (!t) *(v - 1) = 0;
+					if (!t)
+						*(v - 1) = 0;
 					n = -n;
 					break;
 				}
 			if (*v == '=')
 			{
-				if (!t) *v = 0;
+				if (!t)
+					*v = 0;
 				t = s = ++v;
 				ql = qr = 0;
 				while (c = *s++)
@@ -191,9 +179,10 @@ stropt(const char* as, const void* tab, int siz, int(*f)(void*, const void*, int
 				*s++ = 0;
 			}
 			n = p ? (*f)(a, p, n, v) : (*f)(a, p, v - u, u);
-			if (n || !c) break;
+			if (n || !c)
+				break;
 		}
 		free(x);
 	}
-	return(n);
+	return n;
 }

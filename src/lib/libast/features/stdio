@@ -64,6 +64,14 @@ cat{
 
 	#endif
 
+	#ifdef _NO_LARGEFILE64_SOURCE
+	#undef _LARGEFILE64_SOURCE
+	#endif
+
+	#ifdef _LARGEFILE64_SOURCE
+	#undef	off_t
+	#endif
+
 	#define fpos_t		_ast_fpos_t
 	#ifdef _ast_int8_t
 	#define fpos64_t	_ast_fpos_t
@@ -148,17 +156,14 @@ cat{
 	extern int	vsprintf(char*, const char*, _ast_va_list);
 	extern int	vsscanf(const char*, const char*, _ast_va_list);
 
-	#ifdef fpos64_t
-
-	extern int	fgetpos64(FILE*, fpos64_t*);
-	extern int	fsetpos64(FILE*, const fpos64_t*);
-
-	#endif
-
 	#ifdef _ast_int8_t
 
+	extern int		fgetpos64(FILE*, fpos64_t*);
+	extern int		fsetpos64(FILE*, const fpos64_t*);
 	extern int		fseek64(FILE*, _ast_int8_t, int);
+	extern int		fseeko64(FILE*, _ast_int8_t, int);
 	extern _ast_int8_t	ftell64(FILE*);
+	extern _ast_int8_t	ftello64(FILE*);
 
 	#endif
 
@@ -247,13 +252,15 @@ output{
 		printf("#define freopen		_ast_freopen\n");
 		printf("#define fscanf		_ast_fscanf\n");
 		printf("#define fseek		_ast_fseek\n");
-		printf("#define fseeko		_ast_fseeko\n");
 		printf("#define fseek64		_ast_fseek64\n");
+		printf("#define fseeko		_ast_fseeko\n");
+		printf("#define fseeko64	_ast_fseeko64\n");
 		printf("#define fsetpos		_ast_fsetpos\n");
 		printf("#define fsetpos64	_ast_fsetpos64\n");
 		printf("#define ftell		_ast_ftell\n");
-		printf("#define ftello		_ast_ftello\n");
 		printf("#define ftell64		_ast_ftell64\n");
+		printf("#define ftello		_ast_ftello\n");
+		printf("#define ftello64	_ast_ftello64\n");
 		printf("#define fwrite		_ast_fwrite\n");
 		printf("#define gets		_ast_gets\n");
 		printf("#define getw		_ast_getw\n");
@@ -418,17 +425,41 @@ cat{
 	extern int	vsprintf(char*, const char*, _ast_va_list);
 	extern int	vsscanf(const char*, const char*, _ast_va_list);
 
-	#ifdef fpos64_t
-
-	extern int	fgetpos64(FILE*, fpos64_t*);
-	extern int	fsetpos64(FILE*, const fpos64_t*);
-
-	#endif
-
 	#ifdef _ast_int8_t
 
+	extern int		fgetpos64(FILE*, fpos64_t*);
+	extern int		fsetpos64(FILE*, const fpos64_t*);
 	extern int		fseek64(FILE*, _ast_int8_t, int);
+	extern int		fseeko64(FILE*, _ast_int8_t, int);
 	extern _ast_int8_t	ftell64(FILE*);
+	extern _ast_int8_t	ftello64(FILE*);
+
+	#ifdef _LARGEFILE64_SOURCE
+
+	#undef	fpos_t
+	#undef	off_t
+	#undef	fgetpos
+	#undef	fsetpos
+	#undef	fseek
+	#undef	fseeko
+	#undef	ftell
+	#undef	ftello
+
+	#define	fpos_t		fpos64_t
+	#if _typ_off64_t
+	#define	off_t		off64_t
+	#else
+	#define	off_t		_ast_int8_t
+	#endif
+
+	#define fgetpos		fgetpos64
+	#define fsetpos		fsetpos64
+	#define	fseek		fseek64
+	#define	fseeko		fseeko64
+	#define ftell		ftell64
+	#define ftello		ftello64
+
+	#endif
 
 	#endif
 

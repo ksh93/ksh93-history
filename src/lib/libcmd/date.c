@@ -3,14 +3,12 @@
 *               This software is part of the ast package               *
 *                  Copyright (c) 1992-2004 AT&T Corp.                  *
 *                      and is licensed under the                       *
-*          Common Public License, Version 1.0 (the "License")          *
-*                        by AT&T Corp. ("AT&T")                        *
-*      Any use, downloading, reproduction or distribution of this      *
-*      software constitutes acceptance of the License.  A copy of      *
-*                     the License is available at                      *
+*                  Common Public License, Version 1.0                  *
+*                            by AT&T Corp.                             *
 *                                                                      *
-*         http://www.research.att.com/sw/license/cpl-1.0.html          *
-*         (with md5 checksum 8a5e0081c856944e76c69a1cf29c2e8b)         *
+*                A copy of the License is available at                 *
+*            http://www.opensource.org/licenses/cpl1.0.txt             *
+*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -29,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: date (AT&T Labs Research) 2004-02-29 $\n]"
+"[-?\n@(#)$Id: date (AT&T Research) 2004-12-20 $\n]"
 USAGE_LICENSE
 "[+NAME?date - set/list/convert dates]"
 "[+DESCRIPTION?\bdate\b sets the current date and time (with appropriate"
@@ -66,7 +64,7 @@ USAGE_LICENSE
 "[d:date?Use \adate\a as the current date and do not set the system"
 "	clock.]:[date]"
 "[e:epoch?Output the date in seconds since the epoch."
-"	Equivalent to \b--format=%#\b.]"
+"	Equivalent to \b--format=%s\b.]"
 "[E:elapsed?Interpret pairs of arguments as start and stop dates, sum the"
 "	differences between all pairs, and list the result as a"
 "	\bfmtelapsed\b(3) elapsed time on the standard output. If there are"
@@ -76,7 +74,7 @@ USAGE_LICENSE
 "	For backwards compatibility, a first argument of the form"
 "	\b+\b\aformat\a is equivalent to \b-f\b format."
 "	\aformat\a is in \bprintf\b(3) style, where %\afield\a names"
-"	fixed size field, zero padded if necessary,"
+"	a fixed size field, zero padded if necessary,"
 "	and \\\ac\a and \\\annn\a sequences are as in C. Invalid"
 "	%\afield\a specifications and all other characters are copied"
 "	without change. \afield\a may be preceded by \b%-\b to turn off"
@@ -84,7 +82,9 @@ USAGE_LICENSE
 "	are padded with \b0\b and string fields are padded with space."
 "	\afield\a may also be preceded by \bE\b for alternate era"
 "	representation or \bO\b for alternate digit representation (if"
-"	supported by the current locale.) The fields are:]:[format]{"
+"	supported by the current locale.) Finally, an integral \awidth\a"
+"	preceding \afield\a truncates the field to \awidth\a characters."
+"	The fields are:]:[format]{"
 "		[+%?% character]"
 "		[+a?abbreviated weekday name]"
 "		[+A?full weekday name]"
@@ -111,15 +111,18 @@ USAGE_LICENSE
 "		[+m?month number]"
 "		[+M?minutes]"
 "		[+n?newline character]"
-"		[+N?time zone type name]"
+"		[+N?nanoseconds 000000000-999999999]"
 "		[+p?meridian (e.g., \bAM\b or \bPM\b)]"
+"		[+q?time zone type name (nation code)]"
 "		[+Q?\a<del>recent<del>distant<del>\a: \a<del>\a is a unique"
 "			delimter character; \arecent\a format for recent"
 "			dates, \adistant\a format otherwise]"
 "		[+r?12-hour time as \ahh:mm:ss meridian\a]"
 "		[+R?24-hour time as \ahh:mm\a]"
-"		[+s?number of seconds since the epoch]"
-"		[+S?seconds]"
+"		[+s?number of seconds since the epoch; \a.prec\a preceding"
+"			\bs\b appends \aprec\a nanosecond digits, \b9\b if"
+"			\aprec\a is omitted]"
+"		[+S?seconds 00-60]"
 "		[+t?tab character]"
 "		[+T?24-hour time as \ahh:mm:ss\a]"
 "		[+u?weekday number 1(Monday)-7]"
@@ -134,12 +137,14 @@ USAGE_LICENSE
 "		[+z?time zone \aSHHMM\a west of GMT offset where S is"
 "			\b+\b or \b-\b]"
 "		[+Z?time zone name]"
-"		[++|!flag?set (+) or clear (!) \aflag\a for the remainder"
-"			of \aformat\a. \aflag\a may be:]{"
+"		[+=[=]][-+]]flag?set (default or +) or clear (-) \aflag\a"
+"			for the remainder of \aformat\a, or for the remainder"
+"			of the process if \b==\b is specified. \aflag\a may be:]{"
 "			[+l?enable leap second adjustments]"
+"			[+n?convert \b%S\b as \b%S.%N\b]"
 "			[+u?UTC time zone]"
 "		}"
-"		[+#?number of seconds since the epoch]"
+"		[+#?equivalent to %s]"
 "		[+??alternate?use \aalternate\a format if a default format"
 "			override has not been specified, e.g., \bls\b(1) uses"
 "			\"%?%l\"; export TM_OPTIONS=\"format='\aoverride\a'\""
@@ -175,14 +180,8 @@ USAGE_LICENSE
 #include <cmdlib.h>
 #include <ls.h>
 #include <proc.h>
-#include <tm.h>
+#include <tmx.h>
 #include <times.h>
-
-#include "FEATURE/time"
-
-#if _lib_stime
-extern int		stime(const time_t*);
-#endif
 
 typedef struct Fmt
 {
@@ -200,32 +199,15 @@ typedef struct Fmt
  */
 
 static int
-settime(const char* cmd, time_t clock, int adjust, int network)
+settime(const char* cmd, Time_t now, int adjust, int network)
 {
 	char*		s;
 	char**		argv;
 	char*		args[5];
 	char		buf[128];
 
-#if _lib_stime || _lib_settimeofday
 	if (!adjust && !network)
-	{
-#if _lib_stime
-		return stime(&clock);
-#else
-#if _lib_settimeofday
-		struct timeval	tv;
-		memset(&tv, 0, sizeof(tv));
-		tv.tv_sec = clock;
-#if _lib_2_timeofday
-		return settimeofday(&tv, NiL);
-#else
-		return settimeofday(&tv);
-#endif
-#endif
-#endif
-	}
-#endif
+		return tmxsettime(now);
 	argv = args;
 	s = "/usr/bin/date";
 	if (!streq(cmd, s) && (!eaccess(s, X_OK) || !eaccess(s+=4, X_OK)))
@@ -233,13 +215,13 @@ settime(const char* cmd, time_t clock, int adjust, int network)
 		*argv++ = s;
 		if (streq(astconf("UNIVERSE", NiL, NiL), "att"))
 		{
-			tmfmt(buf, sizeof(buf), "%m%d%H%M%Y.%S", &clock);
+			tmxfmt(buf, sizeof(buf), "%m%d%H%M%Y.%S", now);
 			if (adjust)
 				*argv++ = "-a";
 		}
 		else
 		{
-			tmfmt(buf, sizeof(buf), "%Y%m%d%H%M.%S", &clock);
+			tmxfmt(buf, sizeof(buf), "%Y%m%d%H%M.%S", now);
 			if (network)
 				*argv++ = "-n";
 			if (tm_info.flags & TM_UTC)
@@ -254,18 +236,18 @@ settime(const char* cmd, time_t clock, int adjust, int network)
 }
 
 /*
- * convert s to time_t with error checking
+ * convert s to Time_t with error checking
  */
 
-static time_t
-convert(register Fmt_t* f, char* s, time_t now)
+static Time_t
+convert(register Fmt_t* f, char* s, Time_t now)
 {
 	char*	t;
 	char*	u;
 
 	do
 	{
-		now = tmscan(s, &t, f->format, &u, now ? &now : (time_t*)0, 0L);
+		now = tmxscan(s, &t, f->format, &u, now, 0);
 		if (!*t && (!f->format || !*u))
 			break;
 	} while (f = f->next);
@@ -281,21 +263,20 @@ b_date(int argc, register char** argv, void* context)
 	register char*	s;
 	register Fmt_t*	f;
 	char*		t;
-	time_t		now;
-	unsigned long	ts;
-	unsigned long	te;
-	unsigned long	e;
+	Time_t		now;
+	Time_t		ts;
+	Time_t		te;
+	Time_t		e;
 	char		buf[128];
 	Fmt_t*		fmts;
 	Fmt_t		fmt;
 	struct stat	st;
 
-	time_t*		clock = 0;	/* use this time		*/
-	time_t*		filetime = 0;	/* use this st_ time field	*/
 	char*		cmd = argv[0];	/* original command path	*/
-	char*		format = 0;	/* tmfmt() format		*/
+	char*		format = 0;	/* tmxfmt() format		*/
 	char*		string = 0;	/* date string			*/
 	int		elapsed = 0;	/* args are start/stop pairs	*/
+	int		filetime = 0;	/* use this st_ time field	*/
 	int		increment = 0;	/* incrementally adjust time	*/
 	int		network = 0;	/* don't set network time	*/
 	int		show = 0;	/* show date and don't set	*/
@@ -303,7 +284,7 @@ b_date(int argc, register char** argv, void* context)
 	NoP(argc);
 	cmdinit(argv, context, ERROR_CATALOG, 0);
 	setlocale(LC_ALL, "");
-	tm_info.flags |= TM_DATESTYLE;
+	tm_info.flags = TM_DATESTYLE;
 	fmts = &fmt;
 	fmt.format = "";
 	fmt.next = 0;
@@ -312,10 +293,9 @@ b_date(int argc, register char** argv, void* context)
 		switch (optget(argv, usage))
 		{
 		case 'a':
-			filetime = &st.st_atime;
-			continue;
 		case 'c':
-			filetime = &st.st_ctime;
+		case 'm':
+			filetime = opt_info.option[1];
 			continue;
 		case 'd':
 			string = opt_info.arg;
@@ -335,9 +315,6 @@ b_date(int argc, register char** argv, void* context)
 			continue;
 		case 'l':
 			tm_info.flags |= TM_LEAP;
-			continue;
-		case 'm':
-			filetime = &st.st_mtime;
 			continue;
 		case 'n':
 			network = 1;
@@ -367,6 +344,7 @@ b_date(int argc, register char** argv, void* context)
 	argv += opt_info.index;
 	if (error_info.errors)
 		error(ERROR_USAGE|4, "%s", optusage(NiL));
+	now = tmxgettime();
 	if (elapsed)
 	{
 		e = 0;
@@ -377,14 +355,14 @@ b_date(int argc, register char** argv, void* context)
 				argv--;
 				t = "now";
 			}
-			ts = convert(fmts, s, 0);
-			te = convert(fmts, t, 0);
+			ts = convert(fmts, s, now);
+			te = convert(fmts, t, now);
 			if (te > ts)
 				e += te - ts;
 			else
 				e += ts - te;
 		}
-		sfputr(sfstdout, fmtelapsed(e, 1), '\n');
+		sfputr(sfstdout, fmtelapsed((unsigned long)tmxsec(e), 1), '\n');
 	}
 	else if (filetime)
 	{
@@ -397,7 +375,19 @@ b_date(int argc, register char** argv, void* context)
 				error(2, "%s: not found", s);
 			else
 			{
-				tmfmt(buf, sizeof(buf), format, filetime);
+				switch (filetime)
+				{
+				case 'a':
+					now = tmxgetatime(&st);
+					break;
+				case 'c':
+					now = tmxgetctime(&st);
+					break;
+				default:
+					now = tmxgetmtime(&st);
+					break;
+				}
+				tmxfmt(buf, sizeof(buf), format, now);
 				if (n)
 					sfprintf(sfstdout, "%s: %s\n", s, buf);
 				else
@@ -417,14 +407,13 @@ b_date(int argc, register char** argv, void* context)
 		{
 			if (*argv && string)
 				error(ERROR_USAGE|4, "%s", optusage(NiL));
-			now = convert(fmts, s, 0);
-			clock = &now;
+			now = convert(fmts, s, now);
 			if (*argv && (s = *++argv))
 			{
 				show = 1;
 				do
 				{
-					tmfmt(buf, sizeof(buf), format, clock);
+					tmxfmt(buf, sizeof(buf), format, now);
 					sfprintf(sfstdout, "%s\n", buf);
 					now = convert(fmts, s, now);
 				} while (s = *++argv);
@@ -434,10 +423,10 @@ b_date(int argc, register char** argv, void* context)
 			show = 1;
 		if (format || show)
 		{
-			tmfmt(buf, sizeof(buf), format, clock);
+			tmxfmt(buf, sizeof(buf), format, now);
 			sfprintf(sfstdout, "%s\n", buf);
 		}
-		else if (settime(cmd, *clock, increment, network))
+		else if (settime(cmd, now, increment, network))
 			error(ERROR_SYSTEM|3, "cannot set system time");
 	}
 	while (fmts != &fmt)
@@ -446,5 +435,6 @@ b_date(int argc, register char** argv, void* context)
 		fmts = fmts->next;
 		free(f);
 	}
+	tm_info.flags = 0;
 	return error_info.errors != 0;
 }

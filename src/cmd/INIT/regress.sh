@@ -1,33 +1,29 @@
-####################################################################
-#                                                                  #
-#             This software is part of the ast package             #
-#                Copyright (c) 1994-2004 AT&T Corp.                #
-#        and it may only be used by you under license from         #
-#                       AT&T Corp. ("AT&T")                        #
-#         A copy of the Source Code Agreement is available         #
-#                at the AT&T Internet web site URL                 #
-#                                                                  #
-#       http://www.research.att.com/sw/license/ast-open.html       #
-#                                                                  #
-#    If you have copied or used this software without agreeing     #
-#        to the terms of the license you are infringing on         #
-#           the license and copyright and are violating            #
-#               AT&T's intellectual property rights.               #
-#                                                                  #
-#            Information and Software Systems Research             #
-#                        AT&T Labs Research                        #
-#                         Florham Park NJ                          #
-#                                                                  #
-#               Glenn Fowler <gsf@research.att.com>                #
-#                                                                  #
-####################################################################
+########################################################################
+#                                                                      #
+#               This software is part of the ast package               #
+#                  Copyright (c) 1994-2004 AT&T Corp.                  #
+#                      and is licensed under the                       #
+#                  Common Public License, Version 1.0                  #
+#                            by AT&T Corp.                             #
+#                                                                      #
+#                A copy of the License is available at                 #
+#            http://www.opensource.org/licenses/cpl1.0.txt             #
+#         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         #
+#                                                                      #
+#              Information and Software Systems Research               #
+#                            AT&T Research                             #
+#                           Florham Park NJ                            #
+#                                                                      #
+#                 Glenn Fowler <gsf@research.att.com>                  #
+#                                                                      #
+########################################################################
 : regress - run regression tests in command.tst
 
 command=regress
 case $(getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt) in
 0123)	USAGE=$'
 [-?
-@(#)$Id: regress (AT&T Labs Research) 2004-01-11 $
+@(#)$Id: regress (AT&T Labs Research) 2004-07-17 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?regress - run regression tests]
@@ -42,17 +38,19 @@ case $(getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt) in
 [k:keep?Do not remove the temporary directory \aunit\a\b.tmp\b on exit.]
 [q:quiet?Output information on \bFAILED\b tests only.]
 [t:test?Run only tests matching \apattern\a. Tests are numbered and consist of
-	at least two digits (0 filled if necessary).]:[pattern]
+	at least two digits (0 filled if necessary.) Tests matching \b+(0) are
+	always run.]:[pattern]
 [v:verbose?List differences between actual (<) and expected (>) output, errors
 	and exit codes. Also disable long output line truncation.]
 [D:debug?Enable debug tracing.]
 
 unit [ command [ arg ... ] ]
 
-[+INPUT FILES?The regression test file \aunit\a\b.tst\b is a \bsh\b(1) script
+[+INPUT FILES?The regression test file \aunit\a\b.tst\b is a \bksh\b(1) script
 	that is executed in an environment with the following functions
 	defined:]{
 	[+BODY { ... }?Defines the test body; used for complex tests.]
+	[+CD \adirectory\a?Create and change to working directory for one test.]
 	[+CLEANUP \astatus\a?Called at exit time to remove the temporary
 		directory \aunit\a\b.tmp\b, list the tests totals via
 		\bTALLY\b, and exit with status \astatus\a.]
@@ -79,12 +77,15 @@ unit [ command [ arg ... ] ]
 		expected results.]
 	[+EXIT \astatus\a?The command exit status is expected to match the
 		pattern \astatus\a.]
-	[+EXPORT \aname\a=\avalue\a ...?Export environment variables for one
-		test.]
+	[+EXPORT [-]] \aname\a=\avalue\a ...?Export environment variables for
+		one test.]
 	[+FATAL \amessage\a ...?\amessage\a is printed on the standard error
 		and \bregress\b exits with status \b1\b.]
 	[+IGNORE \afile\a ...?\afile\a is ignored for subsequent result
 		comparisons. \afile\a may be \bOUTPUT\b or \bERROR\b.]
+	[+INCLUDE \afile\a ...?One or more \afile\a operands are read
+		via the \bksh\b(1) \b.\b(1) command. \bVIEW\b is used to
+		locate the files.]
 	[+INFO \adescription\a?\adescription\a is printed on the standard
 		error.]
 	[+INITIALIZE?Called by \bregress\b to initialize a each \bTEST\b
@@ -116,6 +117,13 @@ unit [ command [ arg ... ] ]
 	[+TALLY?Called by \bregress\b display the \bTEST\b results.]
 	[+TEST \anumber\a [ \adescription\a ... ]]?Define a new test group
 		labelled \anumber\a with option \adescripion\a.]
+	[+TWD [ \adir\a ... ]]?Set the temporary test dir to \adir\a. The
+		default is \aunit\a\b.tmp\b, where \aunit\a is the test
+		input file sans directory and suffix. If \adir\a matches \b/*\b
+		then it is the directory name; if \adir\a is non-null then the
+		prefix \b${TMPDIR:-/tmp}\b is added; otherwise if \adir\a is
+		omitted then \b${TMPDIR:-/tmp}/tst-\b\aunit\a-$$-$RANDOM.\b\aunit\a
+		is used.]
 	[+UNIT \acommand\a [ \aarg\a ... ]]?Define the command and optional
 		default arguments to be tested. \bUNIT\b explicitly overrides
 		the default command name derived from the test script
@@ -124,7 +132,7 @@ unit [ command [ arg ... ] ]
 		\avar\a [ \afile\a ]] in the current \b$VPATH\b view if
 		defined.]
 }
-[+SEE ALSO?\bnmake\b(1), \bsh\b(1)]
+[+SEE ALSO?\bnmake\b(1), \bksh\b(1)]
 '
 	;;
 *)	USAGE='ko:[[no]name[=value]]t:[test]v unit [path [arg ...]]'
@@ -150,9 +158,9 @@ function EMPTY
 function INITIALIZE # void
 {
 	typeset i j
-	cd "$TMP"
+	cd "$TWD"
 	case $KEEP in
-	"")	rm $rmflags *
+	"")	RM *
 		;;
 	*)	for i in *
 		do	case $i in
@@ -160,7 +168,7 @@ function INITIALIZE # void
 			esac
 		done
 		case $j in
-		?*)	rm $rmflags $j ;;
+		?*)	RM $j ;;
 		esac
 		;;
 	esac
@@ -181,8 +189,19 @@ function INITIALIZE # void
 
 function INTRO
 {
+	typeset base command
+
 	case $quiet in
-	"")	print -u2 "TEST	$COMMAND" ;;
+	"")	base=${REGRESS##*/}
+		base=${base%.tst}
+		command=${COMMAND##*/}
+		command=${command%' '*}
+		if [[ $command == $base ]]
+		then	TITLE=$COMMAND
+		else	TITLE="$COMMAND, $base"
+		fi
+		print -u2 "TEST	$TITLE"
+		;;
 	esac
 }
 
@@ -191,7 +210,7 @@ function TALLY
 	typeset msg
 	case $GROUP in
 	INIT)	;;
-	*)	msg="TEST	$COMMAND, $TESTS test"
+	*)	msg="TEST	$TITLE, $TESTS test"
 		case $TESTS in
 		1)	;;
 		*)	msg=${msg}s ;;
@@ -211,21 +230,29 @@ function TALLY
 
 function CLEANUP # status
 {
-	case $dump in
-	"")	cd $SOURCE
-		rm $rmflags "$TMP"
-		;;
-	esac
+	if	[[ ! $dump && $GROUP!=INIT ]]
+	then	cd $SOURCE
+		RM "$TWD"
+	fi
 	TALLY
 	exit $1
 }
 
-function RUN # void
+function RUN # [ op ]
 {
 	typeset failed i j s
 	typeset $truncate SHOW
 	case $GROUP in
-	INIT)	if	test "" != "$UNIT"
+	INIT)	RM "$TWD"
+		mkdir "$TWD" || FATAL "$TWD": cannot create directory
+		cd "$TWD"
+		TWD=$PWD
+		: > rmu
+		if	rm -u rmu >/dev/null 2>&1
+		then	rmu=-u
+		else	rm rmu
+		fi
+		if	[[ $UNIT ]]
 		then	set -- "${ARGV[@]}"
 			case $1 in
 			""|[-+]*)
@@ -238,7 +265,11 @@ function RUN # void
 		INTRO
 		;;
 	FINI)	;;
-	$select)((COUNT++))
+	$select)if	[[ $ITEM == $FLUSHED ]]
+		then	return
+		fi
+		FLUSHED=$ITEM
+		((COUNT++))
 		if	(( $ITEM <= $LASTITEM ))
 		then	LABEL=$TEST#$COUNT
 		else	LASTITEM=$ITEM
@@ -253,10 +284,10 @@ function RUN # void
 		for i in $INPUT
 		do	case " $OUTPUT " in
 			*" $i "*)
-				if	test -f $i.sav
+				if	[[ -f $i.sav ]]
 				then	cp $i.sav $i
 					compare="$compare $i"
-				elif	test -f $i
+				elif	[[ -f $i ]]
 				then	cp $i $i.sav
 					compare="$compare $i"
 				fi
@@ -275,7 +306,7 @@ function RUN # void
 		do	$i $TEST INIT
 		done
 		case $BODY in
-		"")	COMMAND "${ARGS[@]}" <INPUT >OUTPUT 2>ERROR
+		"")	COMMAND "${ARGS[@]}" <$TWD/INPUT >$TWD/OUTPUT 2>$TWD/ERROR
 			failed=""
 			ignore=""
 			set -- $COPY
@@ -296,33 +327,35 @@ function RUN # void
 				esac
 				shift 2
 			done
-			for i in $compare OUTPUT ERROR
+			for i in $compare $TWD/OUTPUT $TWD/ERROR
 			do	case " $IGNORE $ignore " in
 				*" $i "*)	continue ;;
 				esac
 				ignore="$ignore $i"
-				case ${SAME[$i]} in
-				"")	for s in ex sav err
-					do	test -f $i.$s && break
+				j=${SAME[${i##*/}]}
+				if	[[ ! $j ]]
+				then	if	[[ $i == /* ]]
+					then	k=$i
+					else	k=$TWD/$i
+					fi
+					for s in ex sav err
+					do	[[ -f $k.$s ]] && break
 					done
-					j=$i.$s
-					;;
-				*)	j=${SAME[$i]}
-					;;
-				esac
+					j=$k.$s
+				fi
 				case $DIAGNOSTICS:$i in
-				?*:ERROR)
+				?*:*/ERROR)
 					case $STATUS in
-					0)	test ! -s ERROR && failed=$failed${failed:+,}DIAGNOSTICS ;;
+					0)	[[ ! -s $TWD/ERROR ]] && failed=$failed${failed:+,}DIAGNOSTICS ;;
 					esac
 					continue
 					;;
 				*)	cmp -s $i $j && continue
 					;;
 				esac
-				failed=$failed${failed:+,}$i
+				failed=$failed${failed:+,}${i#$TWD/}
 				case $verbose in
-				?*)	print -u2 "	=== diff $i <actual >expected ==="
+				?*)	print -u2 "	=== diff ${i#$TWD/} <actual >expected ==="
 					diff $i $j >&2
 					;;
 				esac
@@ -368,7 +401,7 @@ function RUN # void
 		#DEBUG#set +x
 		;;
 	esac
-	if	test "" != "$COMMAND_ORIG"
+	if	[[ $COMMAND_ORIG ]]
 	then	COMMAND=$COMMAND_ORIG
 		COMMAND_ORIG=
 		ARGS=(${ARGS_ORIG[@]})
@@ -386,7 +419,7 @@ function UNIT # cmd arg ...
 		return
 		;;
 	esac
-	if	test "" != "$UNIT"
+	if	[[ $UNIT ]]
 	then	set -- "${ARGV[@]}"
 		case $1 in
 		"")	set -- "$cmd" ;;
@@ -398,15 +431,24 @@ function UNIT # cmd arg ...
 	COMMAND=$1
 	shift
 	typeset cmd=$(PATH=$SOURCE:$PATH:/usr/5bin:/bin:/usr/bin whence $COMMAND)
-	if	test "" = "$cmd"
+	if	[[ ! $cmd ]]
 	then	FATAL $COMMAND: not found
-	elif	test ! -x "$cmd"
+	elif	[[ ! $cmd ]]
 	then	FATAL $cmd: not found
 	fi
 	COMMAND=$cmd
 	case $# in
 	0)	;;
 	*)	COMMAND="$COMMAND $*" ;;
+	esac
+}
+
+function TWD # [ dir ]
+{
+	case $1 in
+	'')	TWD=${TMPDIR:-/tmp}/tst-${TWD%.*}-$$-$RANDOM ;;
+	/*)	TWD=$1 ;;
+	*)	TWD=${TMPDIR:-/tmp}/$1 ;;
 	esac
 }
 
@@ -442,6 +484,7 @@ function TEST # number description arg ...
 		;;
 	esac
 	((SUBTESTS=0))
+	[[ $TEST == $select ]]
 }
 
 function EXEC # arg ...
@@ -460,9 +503,18 @@ function EXEC # arg ...
 	ARGS=("$@")
 }
 
+function CD
+{
+	RUN
+	case $GROUP in
+	$select)	mkdir -p "$@" && cd "$@" || FATAL cannot initialize working directory "$@" ;;
+	esac
+}
+
 function EXPORT
 {
 	typeset x
+	RUN
 	case $GROUP in
 	!($select))	return ;;
 	esac
@@ -501,17 +553,20 @@ function NOTE # description
 	NOTE=$*
 }
 
-function IO # INPUT|OUTPUT|ERROR [-n] file|- data ...
+function IO # INPUT|OUTPUT|ERROR [-f|-n] file|- data ...
 {
-	typeset op i v f file
+	typeset op i v f file x
 	case $GROUP in
 	!($select))	return ;;
 	esac
 	op=$1
 	shift
-	file=$op
+	file=$TWD/$op
 	case $1 in
-	-n)	f=$1; shift ;;
+	-x)	x=1; shift ;;
+	esac
+	case $1 in
+	-[fn])	f=$1; shift ;;
 	esac
 	case $# in
 	0)	;;
@@ -542,15 +597,29 @@ function IO # INPUT|OUTPUT|ERROR [-n] file|- data ...
 		;;
 	esac
 	case $op in
-	OUTPUT|ERROR)	file=$file.ex ;;
+	OUTPUT|ERROR)
+		file=$file.ex
+		if [[ $file != /* ]]
+		then	file=$TWD/$file
+		fi
+		;;
 	esac
 	#unset SAME[$op]
 	SAME[$op]=
-	rm $rmflags $file.sav
-	case $#:$f in
-	0:)	: > $file ;;
-	*)	print $f -r -- "$@" > $file ;;
-	esac
+	RM $TWD/$file.sav
+	if	[[ $file == */* ]]
+	then	mkdir -p ${file%/*}
+	fi
+	if	[[ $file != */ ]]
+	then	case $#:$f in
+		0:)	: > $file ;;
+		*:-f)	printf -- "$@" > $file ;;
+		*)	print $f -r -- "$@" > $file ;;
+		esac
+		if [[ $x ]]
+		then	chmod +x $file
+		fi
+	fi
 }
 
 function INPUT # file|- data ...
@@ -568,10 +637,21 @@ function COPY # from to
 
 function MOVE # from to
 {
+	typeset f
 	case $GROUP in
 	!($select))	return ;;
 	esac
-	MOVE="$MOVE $@"
+	for f
+	do	case $f in
+		INPUT|OUTPUT|ERROR)
+			f=$TWD/$f
+			;;
+		/*)	;;
+		*)	f=$PWD/$f
+			;;
+		esac
+		MOVE="$MOVE $f"
+	done
 }
 
 function SAME # new old
@@ -623,11 +703,19 @@ function ERROR # file|- data ...
 	IO $0 "$@"
 }
 
+function RM # rm(1) args
+{
+	if	[[ ! $rmu ]]
+	then	chmod -R u+rwx "$@" >/dev/null 2>&1
+	fi
+	rm $rmu $rmflags "$@"
+}
+
 function REMOVE # file ...
 {
 	typeset i
 	for i
-	do	rm $rmflags $i $i.sav
+	do	RM $i $i.sav
 	done
 }
 
@@ -635,7 +723,12 @@ function IGNORE # file ...
 {
 	typeset i
 	for i
-	do	case " $IGNORE " in
+	do	case $i in
+		INPUT|OUTPUT|ERROR)
+			i=$TWD/$i
+			;;
+		esac
+		case " $IGNORE " in
 		*" $i "*)
 			;;
 		*)	IGNORE="$IGNORE $i"
@@ -687,8 +780,8 @@ function COMMAND # arg ...
 		set -x
 		print -r -- "${EXPORT[@]}" $COMMAND "$@"
 		) 2>&1 >/dev/null |
-		sed 's,^print -r -- ,,' >COMMAND
-		chmod +x COMMAND
+		sed 's,^print -r -- ,,' >$TWD/COMMAND
+		chmod +x $TWD/COMMAND
 		;; 
 	esac
 	eval "${EXPORT[@]}" '$'COMMAND '"$@"'
@@ -713,68 +806,77 @@ function VIEW # var [ file ]
 {
 	nameref var=$1
 	typeset i bwd file pwd view root offset
+	if	[[ $var ]]
+	then	return 0
+	fi
 	case $# in
 	1)	file=$1 ;;
 	*)	file=$2 ;;
 	esac
-	pwd=${PWD%/*}
-	bwd=$(/bin/pwd)
-	bwd=${bwd%/*}
-	case $var in
-	'')	var=$pwd/$file
-		if	test -r $file
-		then	if	test ! -d $file
-			then	return
+	pwd=${TWD%/*}
+	bwd=${PMP%/*}
+	if	[[ -r $file ]]
+	then	if	[[ ! -d $file ]]
+		then	var=$PWD/$file
+			return 0
+		fi
+		for i in $file/*
+		do	if	[[ -r $i ]]
+			then	var=$PWD/$file
+				return 0
 			fi
-			for i in $file/*
-			do	if	test -r $i
-				then	return
+			break
+		done
+	fi
+	for view in ${VIEWS[@]}
+	do	case $view in
+		/*)	;;
+		*)	view=$pwd/$view ;;
+		esac
+		case $offset in
+		'')	case $pwd in
+			$view/*)	offset=${pwd#$view} ;;
+			*)		offset=${bwd#$view} ;;
+			esac
+			;;
+		esac
+		if	[[ -r $view$offset/$file ]]
+		then	if	[[ ! -d $view$offset/$file ]]
+			then	var=$view$offset/$file
+				return 0
+			fi
+			for i in $view$offset/$file/*
+			do	if	[[ -f $i ]]
+				then	var=$view$offset/$file
+					return 0
 				fi
 				break
 			done
 		fi
-		ifs=$IFS
-		IFS=:
-		set -- $VPATH
-		IFS=$ifs
-		for view
-		do	case $view in
-			/*)	;;
-			*)	view=$pwd/$view ;;
-			esac
-			case $offset in
-			'')	case $pwd in
-				$view/*)	offset=${pwd#$view} ;;
-				*)		offset=${bwd#$view} ;;
-				esac
-				;;
-			esac
-			if	test -r $view$offset/$file
-			then	if	test ! -d $view$offset/$file
-				then	var=$view$offset/$file
-					break
-				fi
-				for i in $view$offset/$file/*
-				do	if	test -f $i
-					then	var=$view$offset/$file
-						break
-					fi
-					break
-				done
-			fi
-		done
-		;;
-	esac
+	done
+	var=
+	return 1
+}
+
+function INCLUDE # file ...
+{
+	typeset f v
+	for f
+	do	if	VIEW v $f || [[ $PREFIX && $f != /* ]] && VIEW v $PREFIX$f
+		then	. $v
+		else	FATAL $f: not found
+		fi
+	done
 }
 
 # main
 
 integer ERRORS=0 EXPORTS=0 TESTS=0 SUBTESTS=0 LINE=0 ITEM=0 LASTITEM=0 COUNT
-typeset ARGS COMMAND COPY DIAGNOSTICS ERROR EXEC GROUP=INIT
+typeset ARGS COMMAND COPY DIAGNOSTICS ERROR EXEC FLUSHED=0 GROUP=INIT
 typeset IGNORE INPUT KEEP OUTPUT TEST SOURCE MOVE NOTE
-typeset ARGS_ORIG COMMAND_ORIG UNIT ARGV
-typeset dump file quiet rmflags='-rfu --' select trace verbose truncate=-L70
-typeset -A EXPORT SAME
+typeset ARGS_ORIG COMMAND_ORIG TITLE UNIT ARGV PREFIX OFFSET
+typeset dump file quiet rmflags='-rf --' rmu select trace verbose truncate=-L70
+typeset -A EXPORT SAME VIEWS
 typeset -Z LAST=00
 
 unset FIGNORE
@@ -809,29 +911,42 @@ SOURCE=$PWD
 PATH=$SOURCE:${PATH#:}
 UNIT=$1
 shift
-if	test -f $UNIT -a ! -x $UNIT
+if	[[ -f $UNIT && ! -x $UNIT ]]
 then	REGRESS=$UNIT
 else	REGRESS=${UNIT%.tst}
 	REGRESS=$REGRESS.tst
-	test -f $REGRESS || FATAL $REGRESS: regression tests not found
+	[[ -f $REGRESS ]] || FATAL $REGRESS: regression tests not found
 fi
 UNIT=${UNIT##*/}
 UNIT=${UNIT%.tst}
-TMP=$UNIT.tmp
+if	[[ $VPATH ]]
+then	set -A VIEWS ${VPATH//:/' '}
+	OFFSET=${SOURCE#${VIEWS[0]}}
+	if	[[ $OFFSET ]]
+	then	OFFSET=${OFFSET#/}/
+	fi
+fi
+if	[[ $REGRESS == */* ]]
+then	PREFIX=${REGRESS%/*}
+	if	[[ ${#VIEWS[@]} ]]
+	then	for i in ${VIEWS[@]}
+		do	PREFIX=${PREFIX#$i/}
+		done
+	fi
+	PREFIX=${PREFIX#$OFFSET}
+	if	[[ $PREFIX ]]
+	then	PREFIX=$PREFIX/
+	fi
+fi
+TWD=$PWD/$UNIT.tmp
+PMP=$(/bin/pwd)/$UNIT.tmp
 ARGV=("$@")
+trap 'RUN; CLEANUP 0' EXIT
+trap 'CLEANUP $?' HUP INT PIPE TERM
 case $select in
 "")	select="[0123456789]*" ;;
-*'|'*)	select="@($select)" ;;
 esac
-
-# all work done in local temp dir
-
-trap "RUN; CLEANUP 0" 0
-trap "CLEANUP $?" 1 2 13 15
-rm $rmflags "$TMP"
-mkdir "$TMP" || FATAL "$TMP": cannot create directory
-cd "$TMP"
-TMP=$PWD
+select="@($select|+(0))"
 case $trace in
 ?*)	PS4='+$LINENO+ '
 	set -x
@@ -841,7 +956,7 @@ esac
 # some last minute shenanigans
 
 alias BODY='BODY=BODY; function BODY'
-alias DO='[[ $GROUP == $select ]] &&'
+alias DO='(( $ITEM != $FLUSHED )) && RUN DO; [[ $GROUP == $select ]] &&'
 alias DONE='DONE=DONE; function DONE'
 alias EXEC='LINE=$LINENO; EXEC'
 alias INIT='INIT=INIT; function INIT'

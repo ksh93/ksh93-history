@@ -3,14 +3,12 @@
 *               This software is part of the ast package               *
 *                  Copyright (c) 1982-2004 AT&T Corp.                  *
 *                      and is licensed under the                       *
-*          Common Public License, Version 1.0 (the "License")          *
-*                        by AT&T Corp. ("AT&T")                        *
-*      Any use, downloading, reproduction or distribution of this      *
-*      software constitutes acceptance of the License.  A copy of      *
-*                     the License is available at                      *
+*                  Common Public License, Version 1.0                  *
+*                            by AT&T Corp.                             *
 *                                                                      *
-*         http://www.research.att.com/sw/license/cpl-1.0.html          *
-*         (with md5 checksum 8a5e0081c856944e76c69a1cf29c2e8b)         *
+*                A copy of the License is available at                 *
+*            http://www.opensource.org/licenses/cpl1.0.txt             *
+*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -82,13 +80,13 @@ struct jobs
 	pid_t		mypid;		/* process id of shell */
 	pid_t		mypgid;		/* process group id of shell */
 	pid_t		mytgid;		/* terminal group id of shell */
+	unsigned int	in_critical;	/* >0 => in critical region */
 	int		numpost;	/* number of posted jobs */
 	short		fd;		/* tty descriptor number */
 #ifdef JOBS
 	int		suspend;	/* suspend character */
 	int		linedisc;	/* line dicipline */
 #endif /* JOBS */
-	char		in_critical;	/* set when in critical region */
 	char		jobcontrol;	/* turned on for real job control */
 	char		waitsafe;	/* wait will not block */
 	char		waitall;	/* wait for all jobs in pipe */
@@ -144,9 +142,11 @@ extern void	job_subrestore(void*);
 	extern int	job_list(struct process*,int);
 	extern int	job_terminate(struct process*,int);
 	extern int	job_switch(struct process*,int);
+	extern void	job_fork(pid_t);
 #else
 #	define job_init(flag)
 #	define job_close()	(0)
+#	define job_fork(p)
 #endif	/* JOBS */
 
 

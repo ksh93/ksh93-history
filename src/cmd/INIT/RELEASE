@@ -1,3 +1,55 @@
+04-12-28 WWW.mk: add :WWWPAGE: faq.*.mm index generator
+04-12-21 ratz.c: make sure tmp dir is writable -- doh
+04-12-08 iffe.sh: fix dat test for aggressive -O
+04-12-01 iffe.sh: add `include file' to pull in #define's for `exp'
+04-11-11 package.sh: default MAKESKIP is "*[-.]*"
+04-10-22 ratz.c: change docs to note zlib license
+	 mamake.c: handle --debug-symbols and --strip-symbols
+	 package.sh: make (debug|strip)=1 => --(debug|strip)-symbols
+	 package.mk: add :LICENSE: => package.license.class
+	 mamake.c: fix recursive order logic
+04-10-18 package.mk: add :LICENSE:, :OMIT: to omit package subdirs
+04-10-11 package.sh: add 'authorize name' and 'password password'
+04-10-01 iffe.sh: double check $static link with ! $static
+	 Makefile: add BUILTIN_LIB to $INSTALLROOT/bin/.paths
+	 make.probe: add CC.DIALECT EXPORT={ALL,REF,EXT,DLL}
+	 package.sh: add BUILTIN_LIB to $INSTALLROOT/bin/.paths
+04-09-21 package.mk: $(init)$(name) is now an implicit prereq
+04-09-09 package.sh: copy makerules.mo to $INSTALLROOT/bin/ok
+04-09-01 package.mk,package.sh: rename *.txt => *.README
+	 package.mk: add the runtime package type (no *.[ah])
+	 iffe.sh: fix key test reports
+04-08-26 Makefile: { add m2.c m3.c } -lm tests for { frexp[l] ldexp[l] }
+04-08-11 package.mk: handle HOSTTYPE for solaris > 9 
+	 package.sh: add `checkaout proto' for { make view }
+	 package.sh: check for { md5sum md5 }
+	 iffe.sh: add {if|elif|else|endif} test ...
+	 iffe.sh: add 'exp - expression' and '( expression )'
+	 iffe.sh: add 'name = test ...' user defined macros
+	 iffe.sh: add '! test ...' negation
+	 TEST.mk: add implied { .c .sh } generated prereq
+	 cc.darwin.ppc: handle 10.3 -dylib mess
+04-08-01 package.mk: let include handle nested requirements -- duh
+04-07-31 package.sh: attempt a second ping before admin assumes host down
+04-07-26 package.sh: fix hp.ia64 HOSTTYPE
+04-07-23 probe.win32: generalize #include dir order search
+04-07-17 regress.sh: add INPUT -x for chmod +x
+04-07-01 regress.sh: TMP => TWD
+04-06-29 regress.sh: put COMMAND in $TWD too
+04-06-21 regress.sh: mkdir -p INPUT and OUTPUT intermediate dirs
+	 TEST.mk: add :TEST: -- to disable .c .sh search
+04-06-18 TEST.mk: add .SCAN.tst
+04-06-17 regress.sh: TEST returns true if active, false otherwise
+	 regress.sh: add CD to change test pwd from $TWD
+04-06-16 regress.sh: add TWD for ./unit.tmp override
+	 regress.sh: DO now flushes previous test
+	 regress.sh: INPUT and OUTPUT handle -f for printf instead of print
+04-06-11 package.sh: make sure $INSTALLROOT/bin is in front of $PATH
+	 package.sh: skip nmake if older than 2000-10-31
+04-05-20 package.sh: fix arg vs. package parse with - or '' to disambuguate
+04-05-11 package.sh: package verbose update lists closure for package setup
+	 package.sh: add src/lib/libardir to nmake proto bootstrap
+	 regress.sh: probe for rm -u vs. chmod -R u+rwx
 04-05-01 package.sh: $CC must be C, not C++; allow release command on $PATH
 04-04-15 make.probe: check probe_libdir false positives
 	 package.sh: add lib/package/*.lic src package subdirs
@@ -61,7 +113,7 @@
 03-10-11 regress.sh: add EXPORT, export COLUMNS=80 for message consistency
 03-09-23 ratz.c: fix tar header number parse bug that skipped to next number
 	 regress.sh: rm cleanup now handles files matching -*
-03-09-11 iffe.sh: add if-elif-else and unnamed { ... } blocks
+03-09-11 iffe.sh: add unnamed { ... } blocks
 	 regress.sh: add COPY from to, like MOVE but comprison still done
 	 regress.sh: rm -rfu to handle test dirs w/o u+rwx
 03-08-14 Makfile: add hello.c to the manifest

@@ -3,14 +3,12 @@
 *               This software is part of the ast package               *
 *                  Copyright (c) 1992-2004 AT&T Corp.                  *
 *                      and is licensed under the                       *
-*          Common Public License, Version 1.0 (the "License")          *
-*                        by AT&T Corp. ("AT&T")                        *
-*      Any use, downloading, reproduction or distribution of this      *
-*      software constitutes acceptance of the License.  A copy of      *
-*                     the License is available at                      *
+*                  Common Public License, Version 1.0                  *
+*                            by AT&T Corp.                             *
 *                                                                      *
-*         http://www.research.att.com/sw/license/cpl-1.0.html          *
-*         (with md5 checksum 8a5e0081c856944e76c69a1cf29c2e8b)         *
+*                A copy of the License is available at                 *
+*            http://www.opensource.org/licenses/cpl1.0.txt             *
+*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -29,7 +27,7 @@
  */
 
 static const char usage_head[] =
-"[-?@(#)$Id: cp (AT&T Labs Research) 2004-08-27 $\n]"
+"[-?@(#)$Id: cp (AT&T Labs Research) 2004-12-15 $\n]"
 USAGE_LICENSE
 ;
 
@@ -128,8 +126,8 @@ static const char usage_tail[] =
 #include <ftwalk.h>
 #include <fs3d.h>
 #include <hashkey.h>
-#include <sfstr.h>
 #include <stk.h>
+#include <tmx.h>
 
 #define PATH_CHUNK	256
 
@@ -189,8 +187,8 @@ preserve(const char* path, struct stat* ns, struct stat* os)
 {
 	int	n;
 
-	if (touch(path, os->st_atime, os->st_mtime, 0))
-		error(ERROR_SYSTEM|2, "%s: cannot reset directory times", path);
+	if (tmxtouch(path, tmxgetatime(os), tmxgetmtime(os), TMX_NOTIME, 0))
+		error(ERROR_SYSTEM|2, "%s: cannot reset access and modify times", path);
 	n = ((ns->st_uid != os->st_uid) << 1) | (ns->st_gid != os->st_gid);
 	if (n && chown(state.path, os->st_uid, os->st_gid))
 		switch (n)
@@ -531,7 +529,9 @@ visit(register Ftw_t* ftw)
 		{
 			if (!rename(ftw->path, state.path))
 				return 0;
-			if (!rm && st.st_mode && !remove(state.path))
+			if (errno == ENOENT)
+				rm = 1;
+			else if (!rm && st.st_mode && !remove(state.path))
 			{
 				rm = 1;
 				continue;

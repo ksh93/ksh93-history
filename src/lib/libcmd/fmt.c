@@ -3,14 +3,12 @@
 *               This software is part of the ast package               *
 *                  Copyright (c) 1992-2004 AT&T Corp.                  *
 *                      and is licensed under the                       *
-*          Common Public License, Version 1.0 (the "License")          *
-*                        by AT&T Corp. ("AT&T")                        *
-*      Any use, downloading, reproduction or distribution of this      *
-*      software constitutes acceptance of the License.  A copy of      *
-*                     the License is available at                      *
+*                  Common Public License, Version 1.0                  *
+*                            by AT&T Corp.                             *
 *                                                                      *
-*         http://www.research.att.com/sw/license/cpl-1.0.html          *
-*         (with md5 checksum 8a5e0081c856944e76c69a1cf29c2e8b)         *
+*                A copy of the License is available at                 *
+*            http://www.opensource.org/licenses/cpl1.0.txt             *
+*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -22,38 +20,35 @@
 ***********************************************************************/
 #pragma prototyped
 /*
- * fmt.c
- * Written by David Korn
- * Tue Oct  6 23:57:44 EDT 1998
+ * fmt
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: fmt (AT&T Labs Research) 2004-10-11 $\n]"
+"[-?\n@(#)$Id: fmt (AT&T Research) 2004-12-01 $\n]"
 USAGE_LICENSE
 "[+NAME?fmt - simple text formatter]"
-"[+DESCRIPTION?\bfmt\b reads the input files and left justifies space separated"
-"	words into lines \awidth\a characters or less in length and writes"
-"	the lines to the standard output. The standard input is read if \b-\b"
-"	or no files are specified. Blank lines and interword spacing are"
-"	preserved in the output. Indentation is preserved, and lines with"
-"	identical indentation are joined and justified.]"
-"[+?\bfmt\b is meant to format mail messages prior to sending, but may also be"
-"	useful for other simple tasks. For example, in \bvi\b(1) the command"
-"	\b:!}fmt\b will justify the lines in the current paragraph.]"
-
-"[c:crown-margin?Preserve the indentation of the first two lines within a"
-"	paragraph, and align the left margin of each subsequent line with"
-"	that of the second line.]"
+"[+DESCRIPTION?\bfmt\b reads the input files and left justifies space "
+    "separated words into lines \awidth\a characters or less in length and "
+    "writes the lines to the standard output. The standard input is read if "
+    "\b-\b or no files are specified. Blank lines and interword spacing are "
+    "preserved in the output. Indentation is preserved, and lines with "
+    "identical indentation are joined and justified.]"
+"[+?\bfmt\b is meant to format mail messages prior to sending, but may "
+    "also be useful for other simple tasks. For example, in \bvi\b(1) the "
+    "command \b:!}fmt\b will justify the lines in the current paragraph.]"
+"[c:crown-margin?Preserve the indentation of the first two lines within "
+    "a paragraph, and align the left margin of each subsequent line with "
+    "that of the second line.]"
 "[o:optget?Format concatenated \boptget\b(3) usage strings.]"
-"[s:split-only?Split lines only; do not join short lines to form longer ones.]"
+"[s:split-only?Split lines only; do not join short lines to form longer "
+    "ones.]"
 "[u:uniform-spacing?One space between words, two after sentences.]"
 "[w:width?Set the output line width to \acolumns\a.]#[columns:=72]"
-
-"\n"
-"\n[ file ... ]\n"
-"\n"
-
-"[+SEE ALSO?\bmailx\b(1), \bnroff\b(1), \btroff\b(1), \bvi\b(1), \boptget\b(3)]"
+    "\n\n"
+"[ file ... ]"
+    "\n\n"
+"[+SEE ALSO?\bmailx\b(1), \bnroff\b(1), \btroff\b(1), \bvi\b(1), "
+    "\boptget\b(3)]"
 ;
 
 #include <cmdlib.h>
@@ -89,6 +84,7 @@ outline(Fmt_t* fp)
 	register char*	cp = fp->outbuf;
 	int		n = 0;
 	int		c;
+	int		d;
 
 	if (!fp->outp)
 		return;
@@ -122,7 +118,10 @@ outline(Fmt_t* fp)
 			sfputc(fp->out, ' ');
 		if (fp->quote)
 		{
-			c = fp->outp > fp->outbuf ? fp->outp[-1] : 0;
+			if ((d = (fp->outp - cp)) <= 0)
+				c = 0;
+			else if ((c = fp->outp[-1]) == 'n' && d > 1 && fp->outp[-2] == '\\')
+				c = '}';
 			sfprintf(fp->out, "\"%s%s\"\n", cp, c == ']' || c == '{' || c == '}' ? "" : " ");
 		}
 		else
@@ -142,7 +141,9 @@ split(Fmt_t* fp, char* buf)
 {
 	register char*	cp;
 	register char*	ep;
+	register char*	qp;
 	register int	c = 1;
+	register int	q = 0;
 	register int	n;
 	int		prefix;
 
@@ -188,8 +189,19 @@ split(Fmt_t* fp, char* buf)
 				ep++;
 		}
 		n = (ep-cp);
-		if (fp->nwords > 0 && &fp->outp[n] >= fp->endbuf && !fp->retain)
+		if (n && isoption(fp, 'o'))
+		{
+			for (qp = cp; qp < ep; qp++)
+				if (*qp == '\\')
+					qp++;
+				else if (*qp == '"')
+					q = !q;
+			if (*(ep-1) == '"')
+				goto skip;
+		}
+		if (fp->nwords > 0 && &fp->outp[n] >= fp->endbuf && !fp->retain && !q)
 			outline(fp);
+	skip:
 		if (fp->nwords == 0)
 		{
 			if (fp->prefix)
@@ -213,7 +225,7 @@ split(Fmt_t* fp, char* buf)
 
 		if (!isoption(fp, 'o') && strchr(".:!?", fp->outp[-1]))
 			*fp->outp++ = ' ';
-		if (!fp->retain)
+		if (!fp->retain && (!fp->quote || (fp->outp - fp->outbuf) < 2 || fp->outp[-2] != '\\' || fp->outp[-1] != 'n' && fp->outp[-1] != 't' && fp->outp[-1] != ' '))
 			*fp->outp++ = ' ';
 	}
 }
@@ -284,11 +296,25 @@ dofmt(Fmt_t* fp)
 			c = *cp++;
 			if (isoption(fp, 'o'))
 			{
-				if (c == '"')
+				if (c == '\\')
 				{
-					if (fp->quote && (b || *(cp - 2) != '\\'))
-						continue;
-					fp->section = 0;
+					if (cp < lp)
+					{
+						*dp++ = c;
+						c = *cp++;
+						if (c == 'n' || c == 't' || c == ' ')
+							while (cp < lp && (*cp == ' ' || *cp == '\t'))
+								cp++;
+					}
+				}
+				else if (c == '"')
+				{
+					if (b || cp >= lp)
+					{
+						if (fp->quote)
+							continue;
+						fp->section = 0;
+					}
 				}
 				else if (c == ']' && (cp >= lp || *cp != ':' && *cp != '#' && *cp != '!'))
 				{
@@ -365,7 +391,7 @@ dofmt(Fmt_t* fp)
 					if (fp->retain)
 					{
 						cp--;
-						while (cp < lp && *cp != ' ' && *cp != '\t' && *cp != ']' && dp < &buf[elementsof(buf)-2])
+						while (cp < lp && *cp != ' ' && *cp != '\t' && *cp != ']' && dp < &buf[sizeof(buf)-3])
 							*dp++ = *cp++;
 						if (cp < lp && (*cp == ' ' || *cp == '\t'))
 							*dp++ = *cp++;
@@ -401,7 +427,7 @@ dofmt(Fmt_t* fp)
 				if (!ep)
 					ep = dp;
 				c = isoption(fp, 'o') ? 1 : TABSZ - (dp - buf) % TABSZ;
-				if (dp >= &buf[sizeof(buf) - c - 2])
+				if (dp >= &buf[sizeof(buf) - c - 3])
 				{
 					cp--;
 					break;
@@ -412,7 +438,7 @@ dofmt(Fmt_t* fp)
 			}
 			else if (!isprint(c))
 				continue;
-			if (dp >= &buf[sizeof(buf) - 2])
+			if (dp >= &buf[sizeof(buf) - 3])
 			{
 				tp = dp;
 				while (--tp > buf)

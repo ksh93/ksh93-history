@@ -3,14 +3,12 @@
 *               This software is part of the ast package               *
 *                  Copyright (c) 1982-2004 AT&T Corp.                  *
 *                      and is licensed under the                       *
-*          Common Public License, Version 1.0 (the "License")          *
-*                        by AT&T Corp. ("AT&T")                        *
-*      Any use, downloading, reproduction or distribution of this      *
-*      software constitutes acceptance of the License.  A copy of      *
-*                     the License is available at                      *
+*                  Common Public License, Version 1.0                  *
+*                            by AT&T Corp.                             *
 *                                                                      *
-*         http://www.research.att.com/sw/license/cpl-1.0.html          *
-*         (with md5 checksum 8a5e0081c856944e76c69a1cf29c2e8b)         *
+*                A copy of the License is available at                 *
+*            http://www.opensource.org/licenses/cpl1.0.txt             *
+*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -106,6 +104,7 @@ int sh_main(int ac, char *av[], void (*userinit)(int))
 	register int 	rshflag;	/* set for restricted shell */
 	register Shell_t *shp;
 	int prof;
+	int i;
 	char *command;
 #ifdef _lib_sigvec
 	/* This is to clear mask that my be left on by rlogin */
@@ -154,7 +153,12 @@ int sh_main(int ac, char *av[], void (*userinit)(int))
 		{
 			sh_onoption(SH_INTERACTIVE);
 			sh_onoption(SH_BGNICE);
+			sh_onoption(SH_RC);
 		}
+		if(sh_isoption(SH_BASH) && !sh_isoption(SH_POSIX))
+			sh_onoption(SH_RC);
+		for(i=0; i<elementsof(sh.offoptions.v); i++)
+			sh.options.v[i] &= ~sh.offoptions.v[i];
 		if(sh_isoption(SH_INTERACTIVE))
 		{
 #ifdef SIGXCPU
@@ -203,23 +207,12 @@ int sh_main(int ac, char *av[], void (*userinit)(int))
 		name = "";
 		if(!sh_isoption(SH_NOEXEC))
 		{
-			if(prof && shp->rcfile && sh_isoption(SH_INTERACTIVE))
-			{
-#ifdef PATH_BFPATH
-				if((fdin = path_open(shp->rcfile,NIL(Pathcomp_t*))) >= 0)
+			if(prof && sh_isoption(SH_RC))
+#ifdef SHOPT_BASH
+				name = shp->rcfile ? shp->rcfile : sh_mactry("$HOME/.bashrc");
 #else
-				if((fdin = path_open(shp->rcfile,"")) >= 0)
-#endif
-				{
-					char *saveid = error_info.id;
-					error_info.id = shp->rcfile;
-					shp->st.filename = path_fullname(stakptr(PATH_OFFSET));
-					exfile(shp,iop,fdin);
-					error_info.id = saveid;
-				}
-			}
-			if(prof && (sh_isoption(SH_INTERACTIVE) || sh_isoption(SH_BASH) && !sh_isoption(SH_POSIX)))
 				name = sh_mactry(nv_getval(ENVNOD));
+#endif
 			else if(sh_isoption(SH_INTERACTIVE) && sh_isoption(SH_PRIVILEGED))
 				name = (char*)e_suidprofile;
 		}

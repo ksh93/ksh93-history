@@ -2,7 +2,7 @@
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)make.probe (AT&T Research) 2004-04-15
+# @(#)make.probe (AT&T Research) 2004-10-01
 #
 # C probe for make
 #
@@ -45,8 +45,8 @@ probe_warn="-Wall -fullwarn -w3 '-A -A' +w1"
 
 echo '#pragma pp:version' > libpp.$src
 echo '#define dDflag on' > dDflag.$src
-echo 'main(){return 0;}' > doti.$src
-echo 'int code(){return 0;}main(){return code();}' > export.$src
+echo 'int main(){return 0;}' > doti.$src
+echo 'int code(){return 0;} int main(){return code();}' > export.$src
 echo '#include <stdio.h>' > imstd.$src
 echo '#include "_i_.h"' > imusr.$src
 echo 'int x;' > _i_.h
@@ -67,7 +67,7 @@ echo 'int prefix(){return 0;}' > prefix.$src
 echo 'template<class T> int gt(T a, T b);
 template<class T> int gt(T a, T b) { return a > b; }
 int main () { return gt(2,1); }' > ptr.$src
-echo 'main(){return 0;}' > require.$src
+echo 'int main(){return 0;}' > require.$src
 echo '#if test_const
 #define CONST const
 #else
@@ -77,18 +77,18 @@ static CONST char x[]={1,2,3,4,5,6,7,8,9,0};
 #if mips && !sgi
 {
 #endif
-main(){*(char*)x=0;return(0);}' > readonly.$src
+int main(){*(char*)x=0;return(0);}' > readonly.$src
 # NOTE:	sfclose() defined on uwin, not defined on all other systems
 echo 'extern int sfclose(); extern int ShareD(){return(sfclose());}' > shared.$src
 echo '#define g(a,b) a ## b
 volatile int a;
 const int g(x,y)=1;
 extern int c(int);' > stdc.$src
-echo 'extern int f(); main() { return f(); }' > sovmain.$src
+echo 'extern int f(); int main() { return f(); }' > sovmain.$src
 echo 'int f() { return 0; }' > sovlib.$src
 echo '#include <stdio.h>
 int i;
-main(){int j;j = i * 10;return j;}' > strip.$src
+int main(){int j;j = i * 10;return j;}' > strip.$src
 echo 'template <class T> void f(T){}
 int main(){f(1);return 0;}' > toucho.$src
 echo '#if defined(__STDC__) || defined(__cplusplus)
@@ -949,7 +949,7 @@ case $shared in
 	;;
 *)	case $lib_dll in
 	symbol)	echo 'extern int f();
-	main() { f(); return 0; }' > main.$src
+	int main() { f(); return 0; }' > main.$src
 		echo '#include <stdio.h>
 	int f() { printf("hello world"); return 0; }' > member.$src
 		if	$cc -c main.$src && $cc -c member.$src
@@ -1010,6 +1010,7 @@ extern int fun()
 	return 0;
 }" > dllib.$src
 	echo "extern int fun();
+int
 main()
 {
 	return fun();
@@ -1585,6 +1586,69 @@ case $hosted in
 	;;
 *)	ccnative=$cc
 	exectype=$hosttype
+	;;
+esac
+
+# runtime shared lib exported symbol resolution
+
+case $cc_dll:$shared in
+:|:*|*:);;
+*)	cat > cmd.c <<'!'
+#include <stdio.h>
+#include <dlfcn.h>
+typedef int (*Lib_f)(int**, int**, int**);
+int	gbl_def = 1;
+int	gbl_ref = 1;
+int	gbl_ext;
+int main(int argc, char** argv)
+{
+	void*	dll;
+	Lib_f	lib;
+	int*	def;
+	int*	ref;
+	int*	ext;
+
+	if (!(dll = dlopen(*++argv, RTLD_LAZY)))
+		fprintf(stderr, "library not found\n");
+	else if (!((lib = (Lib_f)dlsym(dll, "lib"))) && !(lib = (Lib_f)dlsym(dll, "_lib")))
+		fprintf(stderr, "symbol not found\n");
+	else if ((*lib)(&def, &ref, &ext))
+		fprintf(stderr, "function failed\n");
+	else if (def == &gbl_def && ref == &gbl_ref && ext == &gbl_ext)
+		printf("ALL\n");
+	else if (ref == &gbl_ref && ext == &gbl_ext)
+		printf("REF\n");
+	else if (ext == &gbl_ext)
+		printf("EXT\n");
+	return 0;
+}
+!
+	cat > lib.c <<'!'
+int	gbl_def = 1;
+int	gbl_ref;
+int	gbl_ext;
+int lib(int** def, int** ref, int** ext)
+{
+	*def = &gbl_def;
+	*ref = &gbl_ref;
+	*ext = &gbl_ext;
+	return 0;
+}
+!
+	if	$cc -c $cc_dll $cc_pic cmd.c &&
+		$cc -c $cc_dll $cc_pic lib.c && {
+			$cc $cc_dll $export_dynamic -o cmd.exe cmd.o ||
+			$cc $cc_dll $export_dynamic -o cmd.exe cmd.o -ldl
+		} &&
+		$dld $shared -o libgbl.dll lib.o
+	then	x=`./cmd.exe ./libgbl.dll`
+		case $x in
+		?*)	dialect="$dialect EXPORT=$x" ;;
+		esac
+	else	case $sd:$hosttype in
+		.dll:*win*)	dialect="$dialect EXPORT=DLL" ;;
+		esac
+	fi
 	;;
 esac
 

@@ -3,14 +3,12 @@
 *               This software is part of the ast package               *
 *                  Copyright (c) 1997-2004 AT&T Corp.                  *
 *                      and is licensed under the                       *
-*          Common Public License, Version 1.0 (the "License")          *
-*                        by AT&T Corp. ("AT&T")                        *
-*      Any use, downloading, reproduction or distribution of this      *
-*      software constitutes acceptance of the License.  A copy of      *
-*                     the License is available at                      *
+*                  Common Public License, Version 1.0                  *
+*                            by AT&T Corp.                             *
 *                                                                      *
-*         http://www.research.att.com/sw/license/cpl-1.0.html          *
-*         (with md5 checksum 8a5e0081c856944e76c69a1cf29c2e8b)         *
+*                A copy of the License is available at                 *
+*            http://www.opensource.org/licenses/cpl1.0.txt             *
+*         (with md5 checksum 059e8cd6165cb4c31e351f2b69388fd9)         *
 *                                                                      *
 *              Information and Software Systems Research               *
 *                            AT&T Research                             *
@@ -62,7 +60,6 @@
 #include <ctype.h>
 #include <error.h>
 #include <fts.h>
-#include <sfstr.h>
 #include <vmalloc.h>
 
 typedef struct Uniq_s
@@ -397,14 +394,14 @@ dllsread(register Dllscan_t* scan)
 			}
 			if (scan->flags & (DLL_MATCH_NAME|DLL_MATCH_VERSION))
 			{
-				sfstrset(scan->tmp, scan->off);
+				sfstrseek(scan->tmp, scan->off, SEEK_SET);
 				if ((scan->fts = fts_open((char**)sfstruse(scan->tmp), FTS_LOGICAL|FTS_NOPOSTORDER|FTS_ONEPATH, vercmp)) && (scan->ent = fts_read(scan->fts)) && (scan->ent = fts_children(scan->fts, FTS_NOSTAT)))
 					break;
 			}
 		}
 	} while (!strmatch(scan->ent->fts_name, scan->pat));
 	b = scan->ent->fts_name;
-	sfstrset(scan->tmp, scan->off);
+	sfstrseek(scan->tmp, scan->off, SEEK_SET);
 	sfprintf(scan->tmp, "/%s", b);
 	p = sfstruse(scan->tmp);
  found:
