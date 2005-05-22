@@ -205,6 +205,7 @@ struct _sffmt_s
 _BEGIN_EXTERNS_
 
 extern ssize_t		_Sfi;
+extern ssize_t		_Sfmaxr;
 
 /* standard in/out/err streams */
 
@@ -321,6 +322,7 @@ extern int		sffileno _ARG_((Sfio_t*));
 extern int		sfstacked _ARG_((Sfio_t*));
 extern ssize_t		sfvalue _ARG_((Sfio_t*));
 extern ssize_t		sfslen _ARG_((void));
+extern ssize_t		sfmaxr _ARG_((ssize_t, int));
 
 #undef extern
 _END_EXTERNS_
@@ -366,6 +368,7 @@ _END_EXTERNS_
 #define __sf_stacked(f)	(_SF_(f)->_push != (Sfio_t*)0)
 #define __sf_value(f)	(_SF_(f)->_val)
 #define __sf_slen()	(_Sfi)
+#define __sf_maxr(n,s)	((s)?((_Sfi=_Sfmaxr),(_Sfmaxr=(n)),_Sfi):_Sfmaxr)
 
 #if defined(__INLINE__) && !_BLD_sfio
 
@@ -388,6 +391,8 @@ __INLINE__ int sferror(Sfio_t* f)		{ return __sf_error(f); }
 __INLINE__ int sfclrerr(Sfio_t* f)		{ return __sf_clrerr(f); }
 __INLINE__ int sfstacked(Sfio_t* f)		{ return __sf_stacked(f); }
 __INLINE__ ssize_t sfvalue(Sfio_t* f)		{ return __sf_value(f); }
+__INLINE__ ssize_t sfslen()			{ return __sf_slen(); }
+__INLINE__ ssize_t sfmaxr(ssize_t n, int s)	{ return __sf_maxr(n,s); }
 
 #else
 
@@ -410,6 +415,7 @@ __INLINE__ ssize_t sfvalue(Sfio_t* f)		{ return __sf_value(f); }
 #define sfstacked(f)				( __sf_stacked(f) )
 #define sfvalue(f)				( __sf_value(f) )
 #define sfslen()				( __sf_slen() )
+#define sfmaxr(n,s)				( __sf_maxr(n,s) )
 
 #endif /*__INLINE__*/
 

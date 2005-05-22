@@ -36,6 +36,10 @@ __STDPP__directive pragma pp:hide ioctl sleep
 #define sleep		______sleep
 #endif
 
+#if _sys_ioctl
+#include <sys/ioctl.h>
+#endif
+
 #if defined(TIOCGWINSZ)
 #if _sys_stream && _sys_ptem
 #include <sys/stream.h>

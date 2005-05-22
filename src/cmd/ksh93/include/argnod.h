@@ -36,6 +36,7 @@ struct ionod
 	char		*iodelim;
 	off_t		iooffset;
 	long		iosize;
+	char		*iovname;
 };
 
 struct comnod

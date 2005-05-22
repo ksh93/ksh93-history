@@ -155,9 +155,21 @@ const char e_devnull[]		= "/dev/null";
 const char e_traceprompt[]	= "+ ";
 const char e_supprompt[]	= "# ";
 const char e_stdprompt[]	= "$ ";
-const char e_profile[]		= "${HOME}/.profile";
+const char e_profile[]		= "$HOME/.profile";
 const char e_sysprofile[]	= "/etc/profile";
 const char e_suidprofile[]	= "/etc/suid_profile";
+#if SHOPT_SYSRC
+const char e_sysrc[]		= "/etc/ksh.kshrc";
+#endif
+#if SHOPT_BASH
+#if SHOPT_SYSRC
+const char e_bash_sysrc[]	= "/etc/bash.bashrc";
+#endif
+const char e_bash_rc[]		= "$HOME/.bashrc";
+const char e_bash_login[]	= "$HOME/.bash_login";
+const char e_bash_logout[]	= "$HOME/.bash_logout";
+const char e_bash_profile[]	= "$HOME/.bash_profile";
+#endif
 const char e_crondir[]		= "/usr/spool/cron/atjobs";
 const char e_prohibited[]	= "login setuid/setgid shells prohibited";
 #if SHOPT_SUID_EXEC

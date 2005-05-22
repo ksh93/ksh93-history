@@ -96,6 +96,40 @@ static char	beenhere = 0;
     }
 #endif /* _lib_fts_notify */
 
+#ifdef PATH_BFPATH
+#define PATHCOMP	NIL(Pathcomp_t*)
+#else
+#define PATHCOMP	""
+#endif
+
+/*
+ * search for file and exfile() it if it exists
+ * 1 returned if file found, 0 otherwise
+ */
+
+int sh_source(Shell_t *shp, Sfio_t *iop, const char *file)
+{
+	char*	oid;
+	char*	nid;
+	int	fd;
+
+	if (!file || !*file || (fd = path_open(file, PATHCOMP)) < 0)
+		return 0;
+	oid = error_info.id;
+	nid = error_info.id = strdup(file);
+	shp->st.filename = path_fullname(stakptr(PATH_OFFSET));
+	exfile(shp, iop, fd);
+	error_info.id = oid;
+	free(nid);
+	return 1;
+}
+
+#ifdef S_ISSOCK
+#define REMOTE(m)	(S_ISSOCK(m)||!(m))
+#else
+#define REMOTE(m)	!(m)
+#endif
+
 int sh_main(int ac, char *av[], void (*userinit)(int))
 {
 	register char	*name;
@@ -103,6 +137,7 @@ int sh_main(int ac, char *av[], void (*userinit)(int))
 	register Sfio_t  *iop;
 	register int 	rshflag;	/* set for restricted shell */
 	register Shell_t *shp;
+	struct stat	statb;
 	int i;
 	char *command;
 #ifdef _lib_sigvec
@@ -155,7 +190,11 @@ int sh_main(int ac, char *av[], void (*userinit)(int))
 			sh_onoption(SH_BGNICE);
 			sh_onoption(SH_RC);
 		}
-		if(sh_isoption(SH_BASH) && !sh_isoption(SH_POSIX))
+		if(!sh_isoption(SH_RC) && (sh_isoption(SH_BASH) && !sh_isoption(SH_POSIX)
+#if SHOPT_REMOTE
+		   || !fstat(0, &statb) && REMOTE(statb.st_mode)
+#endif
+		  ))
 			sh_onoption(SH_RC);
 		for(i=0; i<elementsof(sh.offoptions.v); i++)
 			sh.options.v[i] &= ~sh.offoptions.v[i];
@@ -173,61 +212,38 @@ int sh_main(int ac, char *av[], void (*userinit)(int))
 		if(sh_isoption(SH_LOGIN_SHELL) && !sh_isoption(SH_NOPROFILE))
 		{
 			/*	system profile	*/
-#ifdef PATH_BFPATH
-			if((fdin=path_open(e_sysprofile,NIL(Pathcomp_t*))) >= 0)
-#else
-			if((fdin=path_open(e_sysprofile,"")) >= 0)
-#endif
-			{
-				error_info.id = (char*)e_sysprofile;
-				shp->st.filename = path_fullname(stakptr(PATH_OFFSET));
-				exfile(shp,iop,fdin);	/* file exists */
-			}
+			sh_source(shp, iop, e_sysprofile);
 			if(!sh_isoption(SH_NOUSRPROFILE) && !sh_isoption(SH_PRIVILEGED))
 			{
 				char **files = shp->login_files;
-				while(name = *files++)
-				{
-#ifdef PATH_BFPATH
-					if((fdin=path_open(sh_mactry(name),NIL(Pathcomp_t*))) >= 0)
-#else
-					if((fdin=path_open(sh_mactry(name),"")) >= 0)
-#endif
-					{
-						shp->st.filename = path_fullname(stakptr(PATH_OFFSET));
-						error_info.id = path_basename(name);
-						exfile(shp,iop,fdin);
-						break;
-					}
-				}
+				while ((name = *files++) && !sh_source(shp, iop, sh_mactry(name)));
 			}
 		}
 		/* make sure PWD is set up correctly */
 		path_pwd(1);
-		name = "";
 		if(!sh_isoption(SH_NOEXEC))
 		{
 			if(!sh_isoption(SH_NOUSRPROFILE) && !sh_isoption(SH_PRIVILEGED) && sh_isoption(SH_RC))
-#ifdef SHOPT_BASH
-				name = shp->rcfile ? shp->rcfile : sh_mactry("$HOME/.bashrc");
-#else
-				name = sh_mactry(nv_getval(ENVNOD));
+			{
+#if SHOPT_BASH
+				if(sh_isoption(SH_BASH) && !sh_isoption(SH_POSIX))
+				{
+#if SHOPT_SYSRC
+					sh_source(shp, iop, e_bash_sysrc);
 #endif
+					sh_source(shp, iop, shp->rcfile ? shp->rcfile : sh_mactry((char*)e_bash_rc));
+				}
+				else
+#endif
+				{
+#if SHOPT_SYSRC
+					sh_source(shp, iop, e_sysrc);
+#endif
+					sh_source(shp, iop, sh_mactry(nv_getval(ENVNOD)));
+				}
+			}
 			else if(sh_isoption(SH_INTERACTIVE) && sh_isoption(SH_PRIVILEGED))
-				name = (char*)e_suidprofile;
-		}
-#ifdef PATH_BFPATH
-		if(*name && (fdin = path_open(name,NIL(Pathcomp_t*))) >= 0)
-#else
-		if(*name && (fdin = path_open(name,"")) >= 0)
-#endif
-		{
-			char *cp, *saveid = error_info.id;
-			cp = error_info.id = strdup(name);
-			shp->st.filename = path_fullname(stakptr(PATH_OFFSET));
-			exfile(shp,iop,fdin);
-			error_info.id = saveid;
-			free(cp);
+				sh_source(shp, iop, e_suidprofile);
 		}
 		shp->st.cmdname = error_info.id = command;
 		sh_offstate(SH_PROFILE);
@@ -251,7 +267,6 @@ int sh_main(int ac, char *av[], void (*userinit)(int))
 				/* open stream should have been passed into shell */
 				if(strmatch(name,e_devfdNN))
 				{
-					struct stat statb;
 					char *cp;
 					fdin = (int)strtol(name+8, (char**)0, 10);
 					if(fstat(fdin,&statb)<0)
@@ -283,7 +298,6 @@ int sh_main(int ac, char *av[], void (*userinit)(int))
 				}
 				else
 				{
-					struct stat statb;
 					int isdir = 0;
 					if((fdin=sh_open(name,O_RDONLY,0))>=0 &&(fstat(fdin,&statb)<0 || S_ISDIR(statb.st_mode)))
 					{

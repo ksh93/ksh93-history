@@ -30,7 +30,6 @@
  * <K.Fleischer@omnium.de>
  */
 
-#include <ctype.h>
 
 #include "defs.h"
 #include "edit.h"
@@ -40,6 +39,8 @@
 NoN(hexpand)
 
 #else
+
+#include <ctype.h>
 
 static char *modifiers = "htrepqxs&";
 static int mod_flags[] = { 0, 0, 0, 0, HIST_PRINT, HIST_QUOTE, HIST_QUOTE|HIST_QUOTE_BR, 0, 0 };

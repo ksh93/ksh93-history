@@ -28,8 +28,9 @@
 #include "colib.h"
 
 char	coident[] = "\
-# @(#)$Id: libcoshell (AT&T Research) 2004-09-01 $\n\
-{ { (eval 'function fun { trap \":\" 0; return 1; }; trap \"exit 0\" 0; fun; exit 1') && PATH= print -u%d ksh; } || { times && echo bsh >&%d; } || { echo osh >&%d; }; } >/dev/null 2>&1\n\
+# @(#)$Id: libcoshell (AT&T Research) 2005-04-11 $\n\
+_coshell_msgfd=%d\n\
+{ { (eval 'function fun { trap \":\" 0; return 1; }; trap \"exit 0\" 0; fun; exit 1') && PATH= print -u$_coshell_msgfd ksh; } || { times && echo bsh >&$_coshell_msgfd; } || { echo osh >&$_coshell_msgfd; }; } >/dev/null 2>&1\n\
 ";
 
 char	cobinit[] = "\
@@ -117,7 +118,6 @@ fi\n\
 
 char	cokinit[] = "\
 set +o bgnice -o monitor\n\
-exec %d>&%d\n\
 (wait $$; exit 0) 2>/dev/null || alias wait=:\n\
 alias ignore='ignore '\n\
 function ignore\n\
@@ -147,7 +147,7 @@ function silent\n\
 {\n\
 	case $_coshell_flags_ in\n\
 	*x*)	trap '	_coshell_status_=$?\n\
-		if ((_coshell_status_==0))\n\
+		if	((_coshell_status_==0))\n\
 		then	set -x\n\
 		else	set -x;(set +x;exit $_coshell_status_)\n\
 		fi' 0\n\

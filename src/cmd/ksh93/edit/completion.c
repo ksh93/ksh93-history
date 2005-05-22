@@ -60,6 +60,21 @@ static char *overlaid(register char *str,register const char *newstr,int nocase)
 	return(str);
 }
 
+/*
+ * returns 1 if the quote at *out is an open quote, 0 otherwise
+ */
+static int openq(char *outbuff, char *out)
+{
+	register int quote= *out, c, count=1;
+	while(outbuff < out)
+	{
+		if((c= *outbuff++)=='\\' && quote=='"')
+			continue;
+		if(c==quote)
+			count = !count;
+	}
+	return(count);
+}
 
 /*
  * file name generation for edit modes
@@ -123,15 +138,26 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 	ap->argchn.cp = 0;
 	{
 		register int c;
+		char *last = out;
 		var = isaname(*out);
 		if(out>outbuff)
 		{
 			/* go to beginning of word */
 			if(ep->e_nlist)
 				out++;
-			do
+			if((*--out=='\'' || *out=='"') && !openq(outbuff,out))
 			{
+				int q = *out;
+				var = 0;
+				do
+				{
+					c = *(unsigned char*)--out;
+				}
+				while(out>outbuff &&  c!=q && c!='=');
 				out--;
+			}
+			else while(1)
+			{
 				c = *(unsigned char*)out;
 				if(c=='$' && var==1)
 					var= 2*isaletter(out[1]);
@@ -142,13 +168,18 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 				}
 				else if(!isaname(c))
 					var = 0;
+				if(out <= outbuff)
+					break;
+				if(*--out!='\\' && (ismeta(c) || c=='`' || c=='='))
+				{
+					c = *++out;
+					/* special handling for leading quote */
+					if((c=='\'' || c=='"') && openq(outbuff,out))
+						out++;
+					break;
+				}
 			}
-			while(out>outbuff && !ismeta(c) && c!='`' && c!='=');
-			/* copy word into arg */
-			if(ismeta(c) || c=='`' || c=='=')
-				out++;
-			/* special handling for leading quotes */
-			if(*out=='\'' || *out=='"')
+			if(*out==' ' || *out=='\t')
 				out++;
 		}
 		else
@@ -186,7 +217,7 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 			stakputc(c);
 			out++;
 
-		} while (c && !ismeta(c) && c!='`');
+		} while (out<last ||  (c && !ismeta(c) && c!='`'));
 		out--;
 		if(!var && mode=='\\')
 			addstar = '*';
@@ -205,7 +236,7 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 		register int size='x';
 		while(cp>outbuff && ((size=cp[-1])==' ' || size=='\t'))
 			cp--;
-		if(!var && *ap->argval!='~' && !strchr(ap->argval,'/') && ((cp==outbuff || (strchr(";&|(",size)) && (cp==outbuff+1||size=='('||cp[-2]!='>') && *begin!='~' )))
+		if(!var && !strchr(ap->argval,'/') && ((cp==outbuff || (strchr(";&|(",size)) && (cp==outbuff+1||size=='('||cp[-2]!='>') && *begin!='~' )))
 		{
 			cmd_completion=1;
 			sh_onstate(SH_COMPLETE);

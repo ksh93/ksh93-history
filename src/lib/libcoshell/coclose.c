@@ -70,7 +70,7 @@ shut(register Coshell_t* co)
 	}
 	else status = 0;
 	if (co->flags & CO_DEBUG)
-		sfprintf(sfstderr, "%s: jobs %d user %s sys %s\n", CO_ID, co->total, fmtelapsed(co->user, CO_QUANT), fmtelapsed(co->sys, CO_QUANT));
+		errormsg(state.lib, 2, "jobs %d user %s sys %s", co->total, fmtelapsed(co->user, CO_QUANT), fmtelapsed(co->sys, CO_QUANT));
 	cj = co->jobs;
 	while (cj)
 	{

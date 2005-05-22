@@ -27,13 +27,13 @@
  * generate mode features
  */
 
+#include <stdio.h>
+
 #include "limits.h"
 
 #include "FEATURE/param"
 
 #include <modecanon.h>
-
-extern int		printf(const char*, ...);
 
 int
 main()

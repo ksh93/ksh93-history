@@ -20,7 +20,7 @@
 *                                                                      *
 ***********************************************************************/
 #include	"dthdr.h"
-static char*     Version = "\n@(#)$Id: cdt (AT&T Research) 2002-05-31 $\0\n";
+static char*     Version = "\n@(#)$Id: cdt (AT&T Labs - Research) 2005-04-20 $\0\n";
 
 /* 	Make a new dictionary
 **
@@ -54,6 +54,7 @@ Dtmethod_t*	meth;
 	dt->type = DT_MALLOC;
 	dt->nview = 0;
 	dt->view = dt->walk = NIL(Dt_t*);
+	dt->user = NIL(Void_t*);
 
 	if(disc->eventf)
 	{	/* if shared/persistent dictionary, get existing data */

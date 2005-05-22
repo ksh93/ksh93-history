@@ -22,8 +22,6 @@
  * originally provided by Karsten Fleischer
  */
 
-#include <string.h>
-
 #include "defs.h"
 #include "path.h"
 #include "io.h"
@@ -44,7 +42,6 @@ void	sh_applyopts(Shopt_t);
 
 extern const char	bash_pre_rc[];
 
-static const char	e_bash_logout[] = "$HOME/.bash_logout";
 static char *login_files[4];
 
 const char sh_bash1[] =
@@ -205,7 +202,7 @@ int     b_shopt(int argc,register char *argv[],void *extra)
 	int verbose=PRINT_SHOPT|PRINT_ALL|PRINT_NO_HEADER|PRINT_VERBOSE;
 	int setflag=0, quietflag=0, oflag=0;
 	memset(&opt,0,sizeof(opt));
-#ifdef SHOPT_RAWONLY
+#if SHOPT_RAWONLY
 	on_option(&newflags,SH_VIRAW);
 #endif
 	while((n = optget(argv,sh_optshopt)))
@@ -328,21 +325,8 @@ void bash_init(int mode)
 	if(mode < 0)
 	{
 		/* termination code */
-		int fdin;
-		if(sh_isoption(SH_LOGIN_SHELL) && !sh_isoption(SH_POSIX)
-#ifdef PATH_BFPATH
-			&& (fdin = path_open(sh_mactry((char*)e_bash_logout),NIL(Pathcomp_t*))) >= 0)
-#else
-			&& (fdin = path_open(sh_mactry((char*)e_bash_logout),"")) >= 0))
-#endif		
-		{
-			char buff[IOBSIZE+1];
-			sh_offstate(SH_INTERACTIVE);
-			sh_onstate(SH_PROFILE);
-			error_info.id = path_basename(e_bash_logout);
-			iop = sfnew(NIL(Sfio_t*),buff,IOBSIZE,fdin,SF_READ);
-			sh_eval(iop,0);
-		}
+		if(sh_isoption(SH_LOGIN_SHELL) && !sh_isoption(SH_POSIX))
+			sh_source(&sh, NiL, sh_mactry((char*)e_bash_logout));
 		return;	
 	}
 
@@ -424,8 +408,8 @@ void bash_init(int mode)
 	{
 		if(!sh_isoption(SH_POSIX))
 		{
-			login_files[n++] = "$HOME/.bash_profile";
-			login_files[n++] = "$HOME/.bash_login";
+			login_files[n++] = (char*)e_bash_profile;
+			login_files[n++] = (char*)e_bash_login;
 		}
 		login_files[n++] = (char*)e_profile;
 	}

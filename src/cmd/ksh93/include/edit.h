@@ -52,7 +52,7 @@
 #	include	"national.h"
 #   endif /* ESS_MAXCHAR */
     typedef wchar_t genchar;
-#   define CHARSIZE	3
+#   define CHARSIZE	(sizeof(wchar_t)<=2?3:sizeof(wchar_t))
 #else
     typedef char genchar;
 #   define CHARSIZE	1
@@ -64,15 +64,15 @@
 
 typedef struct edit
 {
+	sigjmp_buf e_env;
 	int	e_kill;
 	int	e_erase;
 	int	e_werase;
 	int	e_eof;
 	int	e_lnext;
 	int	e_fchar;
-	char	e_plen;		/* length of prompt string */
-	char	e_crlf;		/* zero if cannot return to beginning of line */
-	sigjmp_buf e_env;
+	int	e_plen;		/* length of prompt string */
+	int	e_crlf;		/* zero if cannot return to beginning of line */
 	int	e_llimit;	/* line length limit */
 	int	e_hline;	/* current history line number */
 	int	e_hloff;	/* line number offset for command */

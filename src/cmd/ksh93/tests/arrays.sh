@@ -20,7 +20,7 @@
 function err_exit
 {
 	print -u2 -n "\t"
-	print -u2 -r $Command[$1]: "${@:2}"
+	print -u2 -r ${Command}[$1]: "${@:2}"
 	let Errors+=1
 }
 alias err_exit='err_exit $LINENO'
@@ -355,4 +355,20 @@ foo=(one two)
 unset foo
 foo=one
 [[ ! ${foo[@]:1} ]] || err_exit '${foo[@]:1} not null'
+function EMPTY
+{
+        typeset i
+        typeset -n ARRAY=$1
+        for i in ${!ARRAY[@]}
+        do      unset ARRAY[$i]
+        done
+}
+unset foo
+typeset -A foo
+foo[bar]=bam
+foo[x]=y
+EMPTY foo
+[[ $(typeset | grep foo$) == *associative* ]] || err_exit 'array lost associative attribute'
+[[ ! ${foo[@]}  ]] || err_exit 'array not empty'
+[[ ! ${!foo[@]}  ]] || err_exit 'array names not empty'
 exit $((Errors))

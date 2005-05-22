@@ -47,7 +47,7 @@
 
 #include <ast.h>
 #include <coshell.h>
-#include <errno.h>
+#include <error.h>
 #include <sig.h>
 #include <wait.h>
 
@@ -64,10 +64,10 @@
 
 #define CO_BUFSIZ	(PATH_MAX/2)	/* temporary buffer size	*/
 #define CO_MAXEVAL	(PATH_MAX*8)	/* max eval'd action size	*/
-#define CO_MSGFD	3		/* action side msg fd [3..9]	*/
 
 typedef struct				/* global coshell state		*/
 {
+	const char*	lib;		/* library id			*/
 	Coshell_t*	coshells;	/* list of all coshells		*/
 	Coshell_t*	current;	/* current coshell		*/
 	char*		pwd;		/* pwd				*/

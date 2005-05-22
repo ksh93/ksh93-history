@@ -56,7 +56,7 @@
 #define DT_MINP		(sizeof(size_t)*8 - 2)
 
 /* hash start size and load factor */
-#define HSLOT		(32)
+#define HSLOT		(256)
 #define HRESIZE(n)	((n) << 1)
 #define HLOAD(s)	((s) << 1)
 #define HINDEX(n,h)	((h)&((n)-1))

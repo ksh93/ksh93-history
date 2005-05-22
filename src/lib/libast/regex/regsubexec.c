@@ -149,6 +149,7 @@ regsubexec(const regex_t* p, const char* s, size_t nmatch, regmatch_t* match)
 {
 	register int		c;
 	register regsub_t*	b;
+	const char*		e;
 	int			m;
 
 	if (!p->env->sub || (p->env->flags & REG_NOSUB) || !nmatch)
@@ -156,6 +157,7 @@ regsubexec(const regex_t* p, const char* s, size_t nmatch, regmatch_t* match)
 	b = p->re_sub;
 	m = b->re_min;
 	b->re_cur = b->re_buf;
+	e = (const char*)p->env->end;
 	for (;;)
 	{
 		if (--m > 0)
@@ -169,15 +171,18 @@ regsubexec(const regex_t* p, const char* s, size_t nmatch, regmatch_t* match)
 		s += match->rm_eo;
 		if (m <= 0 && !(b->re_flags & REG_SUB_ALL))
 			break;
-		if (c = regexec(p, s, nmatch, match, p->env->flags|(match->rm_so == match->rm_eo ? REG_ADVANCE : 0)))
+		if (c = regnexec(p, s, e - s, nmatch, match, p->env->flags|(match->rm_so == match->rm_eo ? REG_ADVANCE : 0)))
 		{
 			if (c != REG_NOMATCH)
 				return fatal(p->env->disc, c, NiL);
 			break;
 		}
 	}
-	while (c = *s++)
+	while (s < e)
+	{
+		c = *s++;
 		PUTC(p, b, c, return fatal(p->env->disc, c, NiL));
+	}
 	NEED(p, b, 1, return fatal(p->env->disc, c, NiL));
 	*b->re_cur = 0;
 	b->re_len = b->re_cur - b->re_buf;

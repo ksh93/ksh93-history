@@ -59,7 +59,6 @@ USAGE_LICENSE
 "[+SEE ALSO?\blogname\b(1), \bwho\b(1), \bgetgroups\b(2)]"
 ;
 
-
 #include <cmdlib.h>
 
 #include "FEATURE/ids"

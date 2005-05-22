@@ -20,7 +20,7 @@
 *                                                                      *
 ***********************************************************************/
 #include	"sfhdr.h"
-static char*	Version = "\n@(#)$Id: sfio (AT&T Research) 2005-02-02 $\0\n";
+static char*	Version = "\n@(#)$Id: sfio (AT&T Research) 2005-05-01 $\0\n";
 
 /*	Functions to set a given stream to some desired mode
 **

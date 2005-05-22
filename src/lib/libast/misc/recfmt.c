@@ -25,10 +25,10 @@
  * determine record format by sampling data in <buf,size>
  * total is the total file size, <=0 if not available
  * return r:
- *	0				could not determine
- *	RECTYPE(r)==REC_fixed		fixed length RECSIZE(r)
- *	RECTYPE(r)==REC_delimited	variable length delimiter=RECSIZE(r)
- *	RECTYPE(r)==REC_variable	variable length RECSIZE(r) bytes
+ *	-1				could not determine
+ *	RECTYPE(r)==REC_fixed		fixed length REC_F_SIZE(r)
+ *	RECTYPE(r)==REC_delimited	variable length delimiter=REC_D_DELIMITER(r)
+ *	RECTYPE(r)==REC_variable	variable length
  */
 
 #include <recfmt.h>
@@ -39,7 +39,7 @@ typedef struct
 	unsigned int	hit[UCHAR_MAX + 1];
 } Sample_t;
 
-size_t
+Recfmt_t
 recfmt(const void* buf, size_t size, off_t total)
 {
 	register unsigned char*		s;
@@ -64,9 +64,13 @@ recfmt(const void* buf, size_t size, off_t total)
 	s = (unsigned char*)buf;
 	t = s + size;
 	while ((k = (t - s)) >= 4 && !s[2] && !s[3])
-		s += (s[0]<<16)|s[1];
+	{
+		if ((i = (s[0]<<8)|s[1]) > k)
+			break;
+		s += i;
+	}
 	if (!k || size > 2 * k)
-		return RECMAKE(REC_variable, 4);
+		return REC_V_TYPE(4, 0, 2, 0, 1);
 	s = (unsigned char*)buf;
 
 	/*
@@ -83,7 +87,7 @@ recfmt(const void* buf, size_t size, off_t total)
 					break;
 				}
 			if (n)
-				return n;
+				return REC_D_TYPE(terminators[i]);
 		}
 
 	/*
@@ -91,7 +95,7 @@ recfmt(const void* buf, size_t size, off_t total)
 	 */
 
 	if (!(q = newof(0, Sample_t, 1, 0)))
-		return 0;
+		return REC_N_TYPE();
 	x = 0;
 	for (i = 0; i < size; i++)
 	{
@@ -136,7 +140,7 @@ recfmt(const void* buf, size_t size, off_t total)
 		n = n ? 0 : total;
 	}
 	free(q);
-	return n;
+	return n ? REC_F_TYPE(n) : REC_N_TYPE();
 }
 
 #if MAIN

@@ -295,12 +295,14 @@ static void out_pattern(Sfio_t *iop, register const char *cp, int n)
 			sfputr(iop,"$'\\n",'\'');
 			continue;
 		    case '\\':
-			if(c= *cp)
-				cp++;
+			if (!(c = *++cp))
+				c = '\\';
+			/*FALLTHROUGH*/
 		    case ' ':
 		    case '<': case '>': case ';':
 		    case '$': case '`': case '\t':
 			sfputc(iop,'\\');
+			break;
 		}
 		sfputc(iop,c);
 	}
@@ -726,6 +728,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 					int scope=0, jmpval, save_prompt,share;
 					struct checkpt buff;
 					unsigned long was_vi=0, was_emacs=0, was_gmacs=0;
+					struct stat statb;
 					if(strchr(nv_name(np),'/'))
 					{
 						/*
@@ -761,6 +764,10 @@ int sh_exec(register const Shnode_t *t, int flags)
 						}
 						if(!(nv_isattr(np,BLT_ENV)))
 						{
+							if(!sh.pwd)
+								path_pwd(0);
+							if(sh.pwd)
+								stat(".",&statb);
 							share = sfset(sfstdin,SF_SHARE,0);
 							sh_onstate(SH_STOPOK);
 							sfpool(sfstderr,NIL(Sfio_t*),SF_WRITE);
@@ -824,6 +831,14 @@ int sh_exec(register const Shnode_t *t, int flags)
 					}
 					if(!(nv_isattr(np,BLT_ENV)))
 					{
+						if(sh.pwd)
+						{
+							struct stat stata;
+							stat(".:",&stata);
+							/* restore directory changed */
+							if(statb.st_ino!=stata.st_ino || statb.st_dev!=stata.st_dev)
+								chdir(sh.pwd);
+						}
 						sh_offstate(SH_STOPOK);
 						if(share&SF_SHARE)
 							sfset(sfstdin,SF_PUBLIC|SF_SHARE,1);
@@ -962,7 +977,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 				if(type&FCOOP)
 					coproc_init(pipes);
 				nv_getval(RANDNOD);
-#ifdef SHOPT_AMP
+#if SHOPT_AMP
 				if((type&(FAMP|FINT)) == (FAMP|FINT))
 					parent = sh_ntfork(t,com,&jobid,ntflag);
 				else
@@ -1679,7 +1694,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 				int offset = staktell();
 				stakwrite(fname,cp-fname);
 				stakputc(0);
-				npv = nv_open(stakptr(offset),sh.var_base,NV_NOASSIGN|NV_ARRAY|NV_VARNAME);
+				npv = nv_open(stakptr(offset),sh.var_tree,NV_NOASSIGN|NV_ARRAY|NV_VARNAME);
 				offset = staktell();
 				stakputs(nv_name(npv));
 				stakputs(cp);
@@ -1824,6 +1839,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 					sfwrite(sfstderr,e_tstend,4);
 			}
 			sh.exitval = ((!n)^negate); 
+			if(!skipexitset)
+				exitset();
 			break;
 		    }
 		}
@@ -2397,7 +2414,7 @@ static void coproc_init(int pipes[])
 #if SHOPT_SPAWN
 
 
-#if defined(SHOPT_AMP) || !defined(_lib_fork)
+#if SHOPT_AMP || !defined(_lib_fork)
 /*
  * print out function definition
  */
@@ -2523,7 +2540,7 @@ static pid_t sh_ntfork(const Shnode_t *t,char *argv[],int *jobid,int flag)
 		otype = savetype;
 		savetype=0;
 	}
-#   if defined(SHOPT_AMP) || !defined(_lib_fork)
+#   if SHOPT_AMP || !defined(_lib_fork)
 	if(!argv)
 	{
 		register Shnode_t *tchild = t->fork.forktre;

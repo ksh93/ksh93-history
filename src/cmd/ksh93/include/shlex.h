@@ -94,6 +94,7 @@ struct shlex_t
 #define SYMLPAR		020000	/* trailing LPAREN */
 #define SYMAMP		040000	/* trailing '&' */
 #define SYMGT		0100000	/* trailing '>' */
+#define SYMSEMI		0110000	/* trailing ';' */
 #define IOMOV0SYM	(SYMAMP|'<')
 #define IOMOV1SYM	(SYMAMP|'>')
 #define FALLTHRUSYM	(SYMAMP|';')
@@ -106,6 +107,7 @@ struct shlex_t
 #define TESTUNOP	04001
 #define TESTBINOP	04002
 #define LABLSYM		04003
+#define IOVNAME		04004
 
 /* additional parser flag, others in <shell.h> */
 #define SH_EMPTY	04

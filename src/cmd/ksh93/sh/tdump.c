@@ -190,7 +190,10 @@ static int p_redirect(register const struct ionod *iop)
 {
 	while(iop)
 	{
-		sfputl(outfile,iop->iofile);
+		if(iop->iovname)
+			sfputl(outfile,iop->iofile|IOVNM);
+		else
+			sfputl(outfile,iop->iofile);
 		p_string(iop->ioname);
 		if(iop->iodelim)
 		{
@@ -202,6 +205,8 @@ static int p_redirect(register const struct ionod *iop)
 		else
 			sfputu(outfile,0);
 		iop = iop->ionxt;
+		if(iop->iovname)
+			p_string(iop->iovname);
 	}
 	return(sfputl(outfile,-1));
 }

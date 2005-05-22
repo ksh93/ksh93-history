@@ -94,11 +94,10 @@ coexec(register Coshell_t* co, const char* action, int flags, const char* out, c
 	{
 		if (flags & CO_DEBUG)
 			sfprintf(sp, "set -x\n");
-		sfprintf(sp, "%s%s\necho x %d $? >&%d\n",
+		sfprintf(sp, "%s%s\necho x %d $? >&$_coshell_msgfd\n",
 			env,
 			action,
-			cj->id,
-			CO_MSGFD);
+			cj->id);
 	}
 	else if (flags & CO_KSH)
 	{
@@ -109,9 +108,8 @@ coexec(register Coshell_t* co, const char* action, int flags, const char* out, c
 		if (!(sp = sfstropen()))
 			sp = tp;
 #endif
-		sfprintf(sp, "{\ntrap 'set %s$?; trap \"\" 0; IFS=\"\n\"; print -u%d x %d $1 $(times); exit $1' 0 HUP INT QUIT TERM%s\n%s%s%s",
+		sfprintf(sp, "{\ntrap 'set %s$?; trap \"\" 0; IFS=\"\n\"; print -u$_coshell_msgfd x %d $1 $(times); exit $1' 0 HUP INT QUIT TERM%s\n%s%s%s",
 			(flags & CO_SILENT) ? "" : "+x ",
-			CO_MSGFD,
 			cj->id,
 			(flags & CO_IGNORE) ? "" : " ERR",
 			env,
@@ -155,13 +153,12 @@ coexec(register Coshell_t* co, const char* action, int flags, const char* out, c
 		{
 			sfprintf(tp, "%s -c '", state.sh);
 			coquote(tp, sfstruse(sp), 0);
-			sfprintf(tp, "' %d>&%d", CO_MSGFD, CO_MSGFD);
+			sfprintf(tp, "'");
 			sfstrclose(sp);
 			sp = tp;
 		}
 #endif
-		sfprintf(sp, " &\nprint -u%d j %d $!\n",
-			CO_MSGFD,
+		sfprintf(sp, " &\nprint -u$_coshell_msgfd j %d $!\n",
 			cj->id);
 	}
 	else
@@ -212,17 +209,13 @@ coexec(register Coshell_t* co, const char* action, int flags, const char* out, c
 				sfprintf(sp, " 2>%s", cj->err);
 		}
 		if (flags & CO_OSH)
-			sfprintf(sp, " && echo x %d 0 >&%d || echo x %d $? >&%d",
+			sfprintf(sp, " && echo x %d 0 >&$_coshell_msgfd || echo x %d $? >&$_coshell_msgfd",
 				cj->id,
-				CO_MSGFD,
-				cj->id,
-				CO_MSGFD);
+				cj->id);
 		else
-			sfprintf(sp, " && echo x %d 0 `times` >&%d || echo x %d $? `times` >&%d",
+			sfprintf(sp, " && echo x %d 0 `times` >&$_coshell_msgfd || echo x %d $? `times` >&$_coshell_msgfd",
 				cj->id,
-				CO_MSGFD,
-				cj->id,
-				CO_MSGFD);
+				cj->id);
 #if !_lib_fork && defined(_map_spawnve)
 		if (sp != tp)
 		{
@@ -233,9 +226,8 @@ coexec(register Coshell_t* co, const char* action, int flags, const char* out, c
 			sp = tp;
 		}
 #endif
-		sfprintf(sp, " &\necho j %d $! >&%d\n",
-			cj->id,
-			CO_MSGFD);
+		sfprintf(sp, " &\necho j %d $! >&$_coshell_msgfd\n",
+			cj->id);
 	}
 	n = sfstrtell(sp);
 	sfstruse(sp);
@@ -243,7 +235,7 @@ coexec(register Coshell_t* co, const char* action, int flags, const char* out, c
 		sfprintf(sp, "#%05d\n", n - 7);
 	s = sfstrseek(sp, 0, SEEK_SET);
 	if (flags & CO_DEBUG)
-		sfprintf(sfstderr, "%s: job %d commands:\n\n%s\n", CO_ID, cj->id, s);
+		errormsg(state.lib, ERROR_LIBRARY|2, "job %d commands:\n\n%s\n", cj->id, s);
 
 	/*
 	 * send it off

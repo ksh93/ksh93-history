@@ -27,7 +27,7 @@
 **      Written by Kiem-Phong Vo
 */
 
-#define CDT_VERSION	20020531L
+#define CDT_VERSION	20050420L
 
 #if _PACKAGE_ast
 #include	<ast_std.h>
@@ -83,6 +83,7 @@ struct _dtdata_s
 	int		size;	/* number of objects			*/
 	int		loop;	/* number of nested loops		*/
 	int		minp;	/* min path before splay, always even	*/
+				/* for hash dt, > 0: fixed table size 	*/
 };
 
 /* structure to hold methods that manipulate an object */
@@ -121,6 +122,7 @@ struct _dt_s
 	int		nview;	/* number of parent view dictionaries	*/
 	Dt_t*		view;	/* next on viewpath			*/
 	Dt_t*		walk;	/* dictionary being walked		*/
+	Void_t*		user;	/* for user's usage			*/
 };
 
 /* structure to get status of a dictionary */
@@ -168,13 +170,14 @@ struct _dtstat_s
 #define DT_METH		4	/* method is about to be changed	*/
 #define DT_ENDOPEN	5	/* dtopen() is done			*/
 #define DT_ENDCLOSE	6	/* dtclose() is done			*/
+#define DT_HASHSIZE	7	/* setting hash table size		*/
 
 _BEGIN_EXTERNS_	/* public data */
 #if _BLD_cdt && defined(__EXPORT__)
-#define extern		extern __EXPORT__
+#define extern	__EXPORT__
 #endif
 #if !_BLD_cdt && defined(__IMPORT__)
-#define extern		extern __IMPORT__
+#define extern	__IMPORT__
 #endif
 
 extern Dtmethod_t* 	Dtset;
@@ -296,8 +299,7 @@ _END_EXTERNS_
 #define dtdetach(d,o)	(*(_DT(d)->searchf))((d),(Void_t*)(o),DT_DETACH)
 #define dtclear(d)	(*(_DT(d)->searchf))((d),(Void_t*)(0),DT_CLEAR)
 
-/* A linear congruential hash: h*63 + c + 97531 */
-#define dtcharhash(h,c)	((((unsigned int)(h))<<6) - ((unsigned int)(h)) + \
-			 ((unsigned char)(c)) + 97531 )
+#define DT_PRIME	17109811 /* 2#00000001 00000101 00010011 00110011 */
+#define dtcharhash(h,c) (((unsigned int)(h) + (unsigned int)(c)) * DT_PRIME )
 
 #endif /* _CDT_H */

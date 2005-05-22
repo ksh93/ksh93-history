@@ -74,6 +74,7 @@ static const char*	rexnames[] =
 	"REX_KMP",
 	"REX_NEG",
 	"REX_NEG_CATCH",
+	"REX_NEST",
 	"REX_ONECHAR",
 	"REX_REP",
 	"REX_REP_CATCH",
@@ -721,6 +722,71 @@ collmatch(Rex_t* rex, unsigned char* s, unsigned char* e, unsigned char** p)
 	return rex->re.collate.invert ? !r : r;
 }
 
+static unsigned char*
+nestmatch(register unsigned char* s, register unsigned char* e, const unsigned short* type, register int co, register int cc, int quote)
+{
+	register int	c;
+	unsigned int	n;
+
+	if (quote)
+	{
+		n = (quote & REX_NEST_literal) ? 0 : REX_NEST_escape;
+		while (s < e)
+		{
+			c = *s++;
+			if (c == co)
+				return s;
+			else if (type[c] & n)
+			{
+				if (s >= e)
+					return 0;
+				s++;
+			}
+		}
+	}
+	else
+	{
+		n = 1;
+		while (s < e)
+		{
+			c = *s++;
+			switch (type[c] & (REX_NEST_delimiter|REX_NEST_escape|REX_NEST_open|REX_NEST_close))
+			{
+			case REX_NEST_delimiter:
+				return 0;
+			case REX_NEST_escape:
+				if (s >= e)
+					return 0;
+				s++;
+				break;
+			case REX_NEST_open|REX_NEST_close:
+				if (c == cc)
+				{
+					if (!--n)
+						return s;
+				}
+				/*FALLTHROUGH*/
+			case REX_NEST_open:
+				if (c == co)
+				{
+					if (!++n)
+						return 0;
+				}
+				else if (!(s = nestmatch(s, e, type, c, type[c] >> REX_NEST_SHIFT, type[c] & (REX_NEST_literal|REX_NEST_quote))))
+					return 0;
+				break;
+			case REX_NEST_close:
+				if (c != cc)
+					return 0;
+				if (!--n)
+					return s;
+				break;
+			}
+		}
+	}
+	return 0;
+}
+
 static int
 parse(Env_t* env, Rex_t* rex, Rex_t* cont, unsigned char* s)
 {
@@ -1040,7 +1106,7 @@ DEBUG_TEST(0x0008,(sfprintf(sfstdout, "AHA#%04d 0x%04x parse %s `%-.*s'\n", __LI
 						return BAD;
 					}
 					e = env->end;
-					for (i = 0; s < e && i < n && s[i] != c; i++)
+					for (i = 0; s < e && i < n && *s != c; i++)
 						s += b[i] = MBSIZE(s);
 					for (; i-- >= m; s -= b[i])
 						switch (follow(env, rex, cont, s))
@@ -1081,7 +1147,7 @@ DEBUG_TEST(0x0008,(sfprintf(sfstdout, "AHA#%04d 0x%04x parse %s `%-.*s'\n", __LI
 				else
 				{
 					e = env->end;
-					for (i = 0; s < e && i < m && s[i] != c; i++)
+					for (i = 0; s < e && i < m && *s != c; i++)
 						s += MBSIZE(s);
 					if (i >= m)
 						for (; s <= e && i <= n; s += MBSIZE(s), i++)
@@ -1383,6 +1449,10 @@ DEBUG_TEST(0x0200,(sfprintf(sfstdout,"AHA#%04d 0x%04x parse %s=>%s `%-.*s'\n", _
 		case REX_NEG_CATCH:
 			bitset(rex->re.neg_catch.index, s - rex->re.neg_catch.beg);
 			return NONE;
+		case REX_NEST:
+			if ((env->end - s) < 2 || (c = *s++) != rex->re.nest.primary || !(s = nestmatch(s, env->end, rex->re.nest.type, c, rex->re.nest.type[c] >> REX_NEST_SHIFT, rex->re.nest.type[c] & (REX_NEST_literal|REX_NEST_quote))))
+				return NONE;
+			break;
 		case REX_NULL:
 			break;
 		case REX_ONECHAR:

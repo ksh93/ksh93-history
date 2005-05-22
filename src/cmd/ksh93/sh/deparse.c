@@ -422,16 +422,23 @@ static void p_redirect(register const struct ionod *iop)
 	{
 		iof=iop->iofile;
 		cp = io_op;
-		*cp = '0'+(iof&IOUFD);
+		if(iop->iovname)
+		{
+			sfwrite(outfile,"(;",2);
+			sfputr(outfile,iop->iovname,')');
+			cp++;
+		}
+		else
+			*cp = '0'+(iof&IOUFD);
 		if(iof&IOPUT)
 		{
-			if(*cp == '1')
+			if(*cp == '1' && !iop->iovname)
 				cp++;
 			io_op[1] = '>';
 		}
 		else
 		{
-			if(*cp == '0')
+			if(*cp == '0' && !iop->iovname)
 				cp++;
 			io_op[1] = '<';
 		}

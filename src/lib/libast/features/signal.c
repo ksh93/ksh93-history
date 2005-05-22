@@ -27,6 +27,7 @@
  * generate signal features
  */
 
+#include <stdio.h>
 #include <signal.h>
 
 struct _m_
@@ -215,8 +216,6 @@ static struct _m_ map[] =
 #define RANGE_SIG	(~(RANGE_MIN|RANGE_MAX|RANGE_RT))
 
 static int		index[64];
-
-extern int		printf(const char*, ...);
 
 int
 main()

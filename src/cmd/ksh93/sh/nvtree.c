@@ -49,11 +49,9 @@ static void put_tree(Namval_t*, const char*, int,Namfun_t*);
 
 static Namval_t *create_tree(Namval_t *np,const char *name,int flag,Namfun_t *fp)
 {
-	NOT_USED(np);
 	NOT_USED(name);
-	NOT_USED(flag);
 	NOT_USED(fp);
-	return(0);
+	return((flag&NV_NOADD)?0:np);
 }
 
 static const Namdisc_t treedisc =
@@ -345,17 +343,26 @@ void nv_attribute(register Namval_t *np,Sfio_t *out,char *prefix,int noname)
 	}
 }
 
-static void outval(char *name, char *vname, Sfio_t *outfile, int indent)
+static void outval(char *name, char *vname, Sfio_t *outfile, int indent, int noscope)
 {
 	register Namval_t *np;
         register Namfun_t *fp;
 	int isarray, associative=0;
-	if(!(np=nv_open(vname,sh.var_tree,NV_VARNAME|NV_NOADD|NV_NOASSIGN|NV_NOARRAY)))
+	if(!(np=nv_open(vname,sh.var_tree,NV_VARNAME|NV_NOADD|NV_NOASSIGN|noscope)))
 		return;
         for(fp=np->nvfun;fp;fp=fp->next)
 	{
 		if(fp && fp->disc== &treedisc)
+		{
+			if(!outfile)
+			{
+				fp = nv_stack(np,fp);
+				if(fp = nv_stack(np,NIL(Namfun_t*)))
+					free((void*)fp);
+				np->nvfun = 0;
+			}
 			return;
+		}
 	}
 	if(nv_isnull(np))
 		return;
@@ -425,7 +432,7 @@ static void outval(char *name, char *vname, Sfio_t *outfile, int indent)
 /*
  * format initialization list given a list of assignments <argp>
  */
-static char **genvalue(char **argv, register Sfio_t *outfile, const char *prefix, int n, int indent)
+static char **genvalue(char **argv, register Sfio_t *outfile, const char *prefix, int n, int indent, int noscope)
 {
 	register char *cp,*nextcp,*arg;
 	register int m;
@@ -457,7 +464,7 @@ static char **genvalue(char **argv, register Sfio_t *outfile, const char *prefix
 					nv_outname(outfile,cp,nextcp-cp);
 					sfputc(outfile,'=');
 				}
-				argv = genvalue(argv,outfile,cp,n+m ,indent);
+				argv = genvalue(argv,outfile,cp,n+m ,indent,noscope);
 				if(outfile)
 					sfputc(outfile,'\n');
 				if(*argv)
@@ -465,7 +472,7 @@ static char **genvalue(char **argv, register Sfio_t *outfile, const char *prefix
 				break;
 			}
 			else
-				outval(cp,arg,outfile,indent);
+				outval(cp,arg,outfile,indent,noscope);
 		}
 		else
 			break;
@@ -474,7 +481,7 @@ static char **genvalue(char **argv, register Sfio_t *outfile, const char *prefix
 	{
 		cp = (char*)prefix;
 		cp[m-1] = 0;
-		outval(".",cp-n,outfile,indent);
+		outval(".",cp-n,outfile,indent,noscope);
 		cp[m-1] = '.';
 		sfnputc(outfile,'\t',indent-1);
 		sfputc(outfile,')');
@@ -491,12 +498,12 @@ static char *walk_tree(register Namval_t *np, int dlete)
 	Sfio_t *outfile;
 	int savtop = staktell();
 	char *savptr = stakfreeze(0);
-	register struct argnod *ap; 
+	register struct argnod *ap=0; 
 	struct argnod *arglist=0;
 	char *name,*cp, **argv;
 	char *subscript=0;
 	void *dir;
-	int n=0;
+	int n=0, noscope=(dlete&NV_NOSCOPE);
 	stakputs(nv_name(np));
 #if SHOPT_COMPOUND_ARRAY
 	if(subscript = nv_getsub(np))
@@ -526,13 +533,13 @@ static char *walk_tree(register Namval_t *np, int dlete)
 		*--argv = ap->argval;
 	strsort(argv,n,strcmp);
 	nv_dirclose(dir);
-	if(dlete)
+	if(dlete&1)
 		outfile = 0;
 	else if(!(outfile=out))
 		outfile = out =  sfnew((Sfio_t*)0,(char*)0,-1,-1,SF_WRITE|SF_STRING);
 	else
 		sfseek(outfile,0L,SEEK_SET);
-	genvalue(argv,outfile,name,0,0);
+	genvalue(argv,outfile,name,0,0,noscope);
 	stakset(savptr,savtop);
 	if(!outfile)
 		return((char*)0);
@@ -559,7 +566,7 @@ static void put_tree(register Namval_t *np, const char *val, int flags,Namfun_t 
 	struct Namarray *ap;
 	int nleft = 0;
 	if(!nv_isattr(np,NV_INTEGER))
-		walk_tree(np,1);
+		walk_tree(np,(flags&NV_NOSCOPE)|1);
 	nv_putv(np, val, flags,fp);
 	if(nv_isattr(np,NV_INTEGER))
 		return;

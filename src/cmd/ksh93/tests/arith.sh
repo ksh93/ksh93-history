@@ -20,7 +20,7 @@
 function err_exit
 {
 	print -u2 -n "\t"
-	print -u2 -r $Command[$1]: "${@:2}"
+	print -u2 -r ${Command}[$1]: "${@:2}"
 	let Errors+=1
 }
 alias err_exit='err_exit $LINENO'
@@ -364,55 +364,57 @@ trap 'rm -f /tmp/script$$ /tmp/data$$.[12]' EXIT
 cat > /tmp/script$$ <<-\!
 tests=$*
 typeset -A blop
-function blop.get {
+function blop.get
+{
 	.sh.value=777
 }
-function mkObj {
+function mkobj
+{
 	nameref obj=$1
 	obj=()
-[[ $tests == *1* ]] && {
-	(( obj.foo = 1 ))
-	(( obj.bar = 2 ))
-	(( obj.baz = obj.foo + obj.bar ))	# ok
-	echo $obj
+	[[ $tests == *1* ]] && {
+		(( obj.foo = 1 ))
+		(( obj.bar = 2 ))
+		(( obj.baz = obj.foo + obj.bar ))	# ok
+		echo $obj
+	}
+	[[ $tests == *2* ]] && {
+		(( obj.faz = faz = obj.foo + obj.bar ))	# ok
+		echo $obj
+	}
+	[[ $tests == *3* ]] && {
+		# case 3, 'active' variable involved, w/ intermediate variable
+		(( obj.foz = foz = ${blop[1]} ))	# coredump
+		echo $obj
+	}
+	[[ $tests == *4* ]] && {
+		# case 4, 'active' variable, in two steps
+		(( foz = ${blop[1]} ))	# ok
+		(( obj.foz = foz ))		# ok
+		echo $obj
+	}
+	[[ $tests == *5* ]] && {
+		# case 5, 'active' variable involved, w/o intermediate variable
+		(( obj.fuz = ${blop[1]} ))	# coredump
+		echo $obj
+	}
+	[[ $tests == *6* ]] && {
+		echo $(( obj.baz = obj.foo + obj.bar ))	# coredump
+	}
+	[[ $tests == *7* ]] && {
+		echo $(( obj.foo + obj.bar ))	# coredump
+	}
 }
-[[ $tests == *2* ]] && {
-	(( obj.faz = faz = obj.foo + obj.bar ))	# ok
-	echo $obj
-}
-[[ $tests == *3* ]] && {
-	# case 3, 'active' variable involved, w/ intermediate variable
-	(( obj.foz = foz = ${blop[1]} ))	# coredump
-	echo $obj
-}
-[[ $tests == *4* ]] && {
-	# case 4, 'active' variable, in two steps
-	(( foz = ${blop[1]} ))	# ok
-	(( obj.foz = foz ))		# ok
-	echo $obj
-}
-[[ $tests == *5* ]] && {
-	# case 5, 'active' variable involved, w/o intermediate variable
-	(( obj.fuz = ${blop[1]} ))	# coredump
-	echo $obj
-}
-[[ $tests == *6* ]] && {
-	echo $(( obj.baz = obj.foo + obj.bar ))	# coredump
-}
-[[ $tests == *7* ]] && {
-	echo $(( obj.foo + obj.bar ))	# coredump
-}
-}
-mkObj bla
+mkobj bla
 !
 chmod +x /tmp/script$$
-[[ $(/tmp/script$$ 1) != '( bar=2 baz=3 foo=1 )' ]] 2>/dev/null && err_exit 'ojbect arithmetic test 1 failed'
-[[ $(/tmp/script$$ 2) != '( faz=0 )' ]] 2>/dev/null && err_exit 'ojbect arithmetic test 2 failed'
-[[ $(/tmp/script$$ 3) != '( foz=777 )' ]] 2>/dev/null && err_exit 'ojbect arithmetic test 3 failed'
-[[ $(/tmp/script$$ 4) != '( foz=777 )' ]] 2>/dev/null && err_exit 'ojbect arithmetic test 4 failed'
-[[ $(/tmp/script$$ 5) != '( fuz=777 )' ]] 2>/dev/null && err_exit 'ojbect arithmetic test 5 failed'
-[[ $(/tmp/script$$ 6) != '0' ]] 2>/dev/null && err_exit 'ojbect arithmetic test 6 failed'
-[[ $(/tmp/script$$ 7) != '0' ]] 2>/dev/null && err_exit 'ojbect arithmetic test 7 failed'
+[[ $(/tmp/script$$ 1) != '( bar=2 baz=3 foo=1 )' ]] 2>/dev/null && err_exit 'compound var arithmetic failed'
+[[ $(/tmp/script$$ 2) != '( faz=0 )' ]] 2>/dev/null && err_exit 'compound var arithmetic failed'
+[[ $(/tmp/script$$ 3) != '( foz=777 )' ]] 2>/dev/null && err_exit 'compound var arithmetic failed'
+[[ $(/tmp/script$$ 4) != '( foz=777 )' ]] 2>/dev/null && err_exit 'compound var arithmetic failed'
+[[ $(/tmp/script$$ 5) != '( fuz=777 )' ]] 2>/dev/null && err_exit 'compound var arithmetic failed'
+[[ $(/tmp/script$$ 6) != '0' ]] 2>/dev/null && err_exit 'compound var arithmetic failed'
+[[ $(/tmp/script$$ 7) != '0' ]] 2>/dev/null && err_exit 'compound var arithmetic failed'
 unset foo
 typeset -F1 foo=123456789.19
 [[ $foo == 123456789.2 ]] || err_exit 'typeset -F1 not working correctly'

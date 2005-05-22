@@ -524,8 +524,8 @@ match(char* s, char* t, int version, const char* catalog)
 {
 	register char*	w;
 	register char*	x;
-	register char*	q;
-	char*		b;
+	char*		xw;
+	char*		ww;
 	int		n;
 	int		v;
 	int		j;
@@ -551,13 +551,17 @@ match(char* s, char* t, int version, const char* catalog)
 			x = t;
 			break;
 		}
-		b = x--;
 		do
 		{
 			v = 0;
-			w = s;
-			while (*++x && *w)
+			xw = x;
+			w = ww = s;
+			while (*x && *w)
 			{
+				if (isupper(*x))
+					xw = x;
+				if (isupper(*w))
+					ww = w;
 				if (*x == '*' && !v++ || *x == '\a')
 				{
 					if (*x == '\a')
@@ -574,30 +578,32 @@ match(char* s, char* t, int version, const char* catalog)
 						while (*w)
 							w++;
 				}
-				else if (*x == *w || sep(*x) && sep(*w))
-					w++;
-				else if (!sep(*x) || x == b)
+				else if (sep(*x))
+					xw = ++x;
+				else if (sep(*w) && w != s)
+					ww = ++w;
+				else if (*x == *w)
 				{
-					if (sep(*w))
-					{
-						if (sep(*s))
-							break;
-						if (*++w == *x)
-						{
-							w++;
-							continue;
-						}
-					}
-					else if (w == s || sep(*(w - 1)) || isupper(*(w - 1)) && islower(*w))
-						break;
-					for (q = x; *q && !sep(*q) && *q != '|' && *q != '?' && *q != ']'; q++);
-					if (!sep(*q))
-						break;
-					for (x = q; w > s && *w != *(x + 1); w--);
+					x++;
+					w++;
 				}
+				else if (w == ww && x == xw)
+					break;
 				else
-					while (*w && *w != *x)
-						w++;
+				{
+					if (x != xw)
+					{
+						while (*x && !sep(*x) && !isupper(*x))
+							x++;
+						if (!*x)
+							break;
+						if (sep(*x))
+							x++;
+						xw = x;
+					}
+					while (w > ww && *w != *x)
+						w--;
+				}
 			}
 			if (!*w)
 			{
@@ -624,7 +630,7 @@ match(char* s, char* t, int version, const char* catalog)
 				}
 				return 1;
 			}
-		} while (*(x = skip(x, '|', 0, 0, 1, 0, 0, version)) == '|');
+		} while (*(x = skip(x, '|', 0, 0, 1, 0, 0, version)) == '|' && x++);
 	}
 	return 0;
 }
@@ -4467,7 +4473,7 @@ optget(register char** argv, const char* oopts)
 
 	if (opt_info.num != LONG_MIN)
 		opt_info.num = opt_info.number = num;
-	if (*++s == ':' || *s == '#')
+	if ((n = *++s == '#') || *s == ':' || w && !nov && v && (strtonll(v, &e, NiL, 0), n = !*e))
 	{
 		if (w)
 		{
@@ -4511,7 +4517,7 @@ optget(register char** argv, const char* oopts)
 								break;
 							}
 				}
-				if (opt_info.arg && *s == '#')
+				if (opt_info.arg && n)
 				{
 					opt_info.num = (long)(opt_info.number = strtonll(opt_info.arg, &e, NiL, 0));
 					if (e == opt_info.arg)

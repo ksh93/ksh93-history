@@ -1,4 +1,26 @@
-05-03-03  --- Release ksh93q+  ---
+05-05-23  --- Release ksh93q+  ---
+05-05-23  An extension to shell patterns that allows matching of nested
+	  groups while skipping over quoted strings has been added.
+05-05-18  A bug in which the line number for errors was not correct for
+          functions loaded from FPATH has been fixed.
+05-04-18  A bug in which the exit status $? is not set when a trap triggered
+	  by the [[...]] command is executed has been fixed.
+05-04-08  Redirection operators can be directly preceded with {varname}
+	  with no intervening space, where varname is a variable name which
+	  allows the shell to select a file descriptor > 10 and store it
+	  into varname.
+05-04-08  SHOPT_CMDLIB_BLTIN=1 now includes <cmdlist.h> generated table.
+05-04-07  [[ -o ?option ]] is true if "option" is a supported option.
+05-04-05  A bug in handling file completion with spaces in the names
+          has been fixed.
+05-03-25  The SIGWINCH signal is caught by default to keeps the LINES and
+	  COLUMNS variables in sync with the actual window size.
+05-03-25  Building ksh with SHOPT_REMOTE=1 causes ksh to set --rc if stdin is
+	  a socket (presumably part of a remote shell invocation.)
+05-03-25  Building ksh with SHOPT_SYSRC=1 causes interactive ksh to source
+	  /etc/ksh.kshrc (if it exists) before sourcing the $ENV file.
+05-03-25  {first..last[..incr][%fmt]} sequences added to brace expansions
+	  when braceexpand is enabled.
 05-03-03  A bug where a SIGCHLD interrupt could cause a fifo open to fail has
 	  been fixed.
 05-02-25  A bug in which a builtin command run in the background could

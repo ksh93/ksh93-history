@@ -129,6 +129,7 @@ magic(const char* path, int* ux)
 	int		fd;
 	int		r;
 	int		n;
+	int		m;
 	int		oerrno;
 #if CONVERT
 	unsigned char	buf[512];
@@ -145,14 +146,16 @@ magic(const char* path, int* ux)
 		else
 #endif
 			n = 2;
-		r = _read(fd, buf, n) == n && (buf[1] == 0x5a && (buf[0] == 0x4c || buf[0] == 0x4d) || ux && buf[0] == '#' && buf[1] == '!' && (*ux = 1) && !(ux = 0)) ? 0 : -1;
+		r = (m = _read(fd, buf, n)) >= 2 && (buf[1] == 0x5a && (buf[0] == 0x4c || buf[0] == 0x4d) || ux && buf[0] == '#' && buf[1] == '!' && (*ux = 1) && !(ux = 0)) ? 0 : -1;
 		close(fd);
 		if (ux)
 		{
 			if (r)
 				oerrno = ENOEXEC;
-			else if ((n = buf[60] | (buf[61]<<8) + 92) < sizeof(buf))
+			else if (m > 61 && (n = buf[60] | (buf[61]<<8) + 92) < (m - 1))
 				*ux = (buf[n] | (buf[n+1]<<8)) == 3;
+			else
+				*ux = 0;
 		}
 	}
 	else if (!ux)

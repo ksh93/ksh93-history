@@ -75,6 +75,8 @@
 
 #include	"FEATURE/vmalloc"
 
+#include	<setjmp.h>
+
 /* the below macros decide which combinations of sbrk() or mmap() to used */
 #if defined(_WIN32)
 #define _mem_win32	1
@@ -239,6 +241,7 @@ union _align_u
 	Block_t*	block;
 	Vmuchar_t	a[ALIGNB];
 	_ast_fltmax_t	ld, *ldp;
+	jmp_buf		jmp;
 };
 struct _a_s
 {	char		c;

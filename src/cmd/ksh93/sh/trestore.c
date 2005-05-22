@@ -243,6 +243,11 @@ static struct ionod *r_redirect(void)
 			sfmove(infile,sh.heredocs, iop->iosize, -1);
 		}
 		iopold = iop;
+		if(iop->iofile&IOVNM)
+			iop->iovname = r_string();
+		else
+			iop->iovname = 0;
+		iop->iofile &= ~IOVNM;
 	}
 	if(iop)
 		iop->ionxt = 0;

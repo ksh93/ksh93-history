@@ -32,11 +32,10 @@
  */
 
 #if defined(__STDPP__directive) && defined(__STDPP__hide)
-__STDPP__directive pragma pp:hide getpagesize getdtablesize printf
+__STDPP__directive pragma pp:hide getpagesize getdtablesize
 #else
 #define getpagesize	______getpagesize
 #define getdtablesize	______getdtablesize
-#define printf		______printf
 #endif
 
 /*
@@ -55,6 +54,7 @@ __STDPP__directive pragma pp:hide getpagesize getdtablesize printf
 #define _timespec	timespec
 #endif
 
+#include <stdio.h>
 #include <sys/types.h>
 
 #undef	_SGIAPI
@@ -71,15 +71,10 @@ __STDPP__directive pragma pp:hide getpagesize getdtablesize printf
 #include "FEATURE/param"
 
 #if defined(__STDPP__directive) && defined(__STDPP__hide)
-__STDPP__directive pragma pp:nohide getpagesize getdtablesize printf
+__STDPP__directive pragma pp:nohide getpagesize getdtablesize
 #else
 #undef	getpagesize
 #undef	getdtablesize   
-#endif
-
-#if defined(__STDPP__hide) || defined(printf)
-#undef	printf
-extern int		printf(const char*, ...);
 #endif
 
 #include "conflib.h"

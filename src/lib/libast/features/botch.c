@@ -33,7 +33,6 @@
 #include "FEATURE/types"
 
 extern int		getgroups(int, gid_t*);
-extern int		printf(const char*, ...);
 
 int
 main()

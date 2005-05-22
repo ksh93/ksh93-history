@@ -197,18 +197,8 @@ int ed_emacsread(void *context, int fd,char *buff,int scend, int reedit)
 		ep->prevdirection =  1;
 		location.hist_command =  -5;
 	}
-#if KSHELL && (2*CHARSIZE*MAXLINE)<IOBSIZE
-	kstack = (genchar*)(buff + MAXLINE*sizeof(genchar));
-#else
-	if(kstack==0)
-	{
-		kstack = (genchar*)malloc(sizeof(genchar)*(MAXLINE));
-		kstack[0] = '\0';
-	}
-#endif
 	Prompt = prompt;
 	ep->screen = Screen;
-	drawbuff = out = (genchar*)buff;
 	if(tty_raw(ERRIO,0) < 0)
 	{
 		 return(reedit?reedit:ed_read(context, fd,buff,scend,0));
@@ -217,9 +207,17 @@ int ed_emacsread(void *context, int fd,char *buff,int scend, int reedit)
 	/* This mess in case the read system call fails */
 	
 	ed_setup(ep->ed,fd,reedit);
+	out = (genchar*)buff;
 #if SHOPT_MULTIBYTE
+	out = (genchar*)roundof((char*)out-(char*)0,sizeof(genchar));
 	ed_internal(buff,out);
 #endif /* SHOPT_MULTIBYTE */
+	if(!kstack)
+	{
+		kstack = (genchar*)malloc(CHARSIZE*MAXLINE);
+		kstack[0] = '\0';
+	}
+	drawbuff = out;
 #ifdef ESH_NFIRST
 	if (location.hist_command == -5)		/* to be initialized */
 	{

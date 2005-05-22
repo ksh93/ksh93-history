@@ -520,6 +520,7 @@ int	sh_redirect(struct ionod *iop, int flag)
 	int clexec=0, fn, traceon;
 	int indx = sh.topfd;
 	char *trace = sh.st.trap[SH_DEBUGTRAP];
+	Namval_t *np=0;
 	if(flag==2)
 		clexec = 1;
 	if(iop)
@@ -548,14 +549,25 @@ int	sh_redirect(struct ionod *iop, int flag)
 		errno=0;
 		if(*fname)
 		{
+			if(iop->iovname)
+			{
+				np = nv_open(iop->iovname,sh.var_tree,NV_NOASSIGN|NV_VARNAME);
+				if(nv_isattr(np,NV_RDONLY))
+					errormsg(SH_DICT,ERROR_exit(1),e_readonly, nv_name(np));
+				if(traceon)
+					sfprintf(sfstderr,"{%s",nv_name(np));
+				io_op[0] = '}';
+				if((iof&IOMOV) && *fname=='-')
+					fn = nv_getnum(np);
+			}
 			if(iof&IODOC)
 			{
+				fd = io_heredoc(iop,fname);
 				if(traceon)
 				{
 					io_op[2] = '<';
 					sfputr(sfstderr,io_op,'\n');
 				}
-				fd = io_heredoc(iop,fname);
 				fname = 0;
 			}
 			else if(iof&IOMOV)
@@ -665,16 +677,27 @@ int	sh_redirect(struct ionod *iop, int flag)
 				sfprintf(sfstderr,"%s %s%c",io_op,fname,iop->ionxt?' ':'\n');
 			if(trace && fname)
 			{
-				char *av[3];
-				av[0] = io_op;
-				av[1] = fname;
-				av[2] = 0;;
+				char *argv[6], **av=argv;
+				av[3] = io_op;
+				av[4] = fname;
+				av[5] = 0;
+				if(np)
+				{
+					av[0] = "{";
+					av[1] = nv_name(np);
+					av[2] = "}";
+				}
+				else
+					av +=3;
 				sh_debug(trace,(char*)0,(char*)0,av,ARG_NOGLOB);
 			}
-			if(flag==0)
-				sh_iosave(fn,indx);
-			else if(sh_subsavefd(fn))
-				sh_iosave(fn,indx|IOSUBSHELL);
+			if(!np)
+			{
+				if(flag==0)
+					sh_iosave(fn,indx);
+				else if(sh_subsavefd(fn))
+					sh_iosave(fn,indx|IOSUBSHELL);
+			}
 			if(fd<0)
 			{
 				if(sh_inuse(fn) || fn==sh.infd)
@@ -690,13 +713,32 @@ int	sh_redirect(struct ionod *iop, int flag)
 				return(fd);
 			if(fd>=0)
 			{
-				if(fn>2 && fn<10)
+				if(np)
 				{
-					if(sh.inuse_bits&(1<<fn))
-						sh_close(fn);
-					sh.inuse_bits |= (1<<fn);
+					fn = fd;
+					if(fd<10)
+					{
+						if((fn=fcntl(fd,F_DUPFD,10)) < 0)
+							goto fail;
+						sh.fdstatus[fn] = sh.fdstatus[fd];
+						sh_close(fd);
+						fd = fn;
+					}
+					nv_unset(np);
+					nv_onattr(np,NV_INTEGER);
+					nv_putval(np,(void*)&fn, NV_INTEGER);
+					sh_iocheckfd(fd);
 				}
-				fd = sh_iorenumber(sh_iomovefd(fd),fn);
+				else
+				{
+					if(fn>2 && fn<10)
+					{
+						if(sh.inuse_bits&(1<<fn))
+							sh_close(fn);
+						sh.inuse_bits |= (1<<fn);
+					}
+					fd = sh_iorenumber(sh_iomovefd(fd),fn);
+				}
 			}
 			if(fd >2 && clexec)
 			{

@@ -127,6 +127,7 @@ tmxdate(register const char* s, char** e, Time_t now)
 	int		dir;
 	int		dst;
 	int		zone;
+	int		c;
 	int		f;
 	int		i;
 	int		j;
@@ -328,7 +329,7 @@ tmxdate(register const char* s, char** e, Time_t now)
 				if ((k = range(t, &t, hit, 1, 31)) < 0)
 					break;
 				if (k)
-					flags |= MDAY;
+					flags |= DAY|MDAY;
 
 				/*
 				 * month
@@ -651,8 +652,9 @@ tmxdate(register const char* s, char** e, Time_t now)
 					continue;
 				}
 				for (s = t; skip[*s]; s++);
-				if (*s == ':')
+				if (*s == ':' || *s == '.' && ((set|state) & (YEAR|MONTH|DAY|HOUR)) == (YEAR|MONTH|DAY))
 				{
+					c = *s;
 					if ((state & HOUR) || n > 24)
 						break;
 					while (isspace(*++s) || *s == '_');
@@ -665,7 +667,7 @@ tmxdate(register const char* s, char** e, Time_t now)
 						break;
 					j = n;
 					m = 0;
-					if (*s == ':')
+					if (*s == c)
 					{
 						while (isspace(*++s) || *s == '_');
 						if (!isdigit(*s))
@@ -755,7 +757,7 @@ tmxdate(register const char* s, char** e, Time_t now)
 		{
 			if (*s == '-' || *s == '+')
 			{
-				if (((set|state) & (MONTH|DAY|HOUR|MINUTE)) == (MONTH|DAY|HOUR|MINUTE) || *s == '+' && (!isdigit(s[1]) || !isdigit(s[2]) || s[3] != ':'))
+				if (((set|state) & (MONTH|DAY|HOUR|MINUTE)) == (MONTH|DAY|HOUR|MINUTE) || *s == '+' && (!isdigit(s[1]) || !isdigit(s[2]) || s[3] != ':' && (s[3] != '.' || ((set|state) & (YEAR|MONTH)) != (YEAR|MONTH))))
 					break;
 				s++;
 			}
@@ -1001,7 +1003,7 @@ tmxdate(register const char* s, char** e, Time_t now)
 					{
 						if (n > 31)
 							goto done;
-						state |= MDAY;
+						state |= DAY|MDAY;
 						tm->tm_mday = n;
 						if (f > 0)
 							tm->tm_year += f;
@@ -1126,7 +1128,7 @@ tmxdate(register const char* s, char** e, Time_t now)
 		{
 			if (state & (MONTH|MDAY|WDAY))
 				break;
-			state |= MONTH|MDAY;
+			state |= MONTH|DAY|MDAY;
 			tm->tm_mon = 0;
 			tm->tm_mday = n;
 		}
@@ -1144,7 +1146,7 @@ tmxdate(register const char* s, char** e, Time_t now)
 		}
 		else if (!(state & (MDAY|WDAY)) && n >= 1 && n <= 31)
 		{
-			state |= MDAY|WDAY;
+			state |= DAY|MDAY|WDAY;
 			tm->tm_mday = n;
 		}
 		else

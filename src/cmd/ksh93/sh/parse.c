@@ -1296,9 +1296,15 @@ static struct ionod	*inout(struct ionod *lastio,int flag)
 {
 	register int 		iof = shlex.digits, token=shlex.token;
 	register struct ionod	*iop;
+	char *iovname=0;
 #if SHOPT_BASH
 	register int		errout=0;
 #endif
+	if(token==IOVNAME)
+	{
+		iovname=shlex.arg->argval+1;
+		token= sh_lex();
+	}
 	switch(token&0xff)
 	{
 	    case '<':
@@ -1335,6 +1341,7 @@ static struct ionod	*inout(struct ionod *lastio,int flag)
 		sh_syntax();
 	iop=(struct ionod*) stakalloc(sizeof(struct ionod));
 	iop->ioname=shlex.arg->argval;
+	iop->iovname = iovname;
 	iop->iodelim = 0;
 	if(iof&IODOC)
 	{

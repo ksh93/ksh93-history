@@ -41,6 +41,7 @@ reg int		type;
 	reg Dtlink_t	*r, *t;
 	reg Void_t	*key, *k;
 
+	UNFLATTEN(dt);
 	disc = dt->disc; _DTDSC(disc,ky,sz,lk,cmpf);
 
 	if(!obj)

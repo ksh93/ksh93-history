@@ -222,7 +222,6 @@ tst	note{ mmap is worth using }end output{
 	#if !_lib_mmap
 	(
 	#endif
-	#include <stdio.h>
 	#include <unistd.h>
 	#include <fcntl.h>
 	#include <sys/types.h>

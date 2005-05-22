@@ -72,6 +72,7 @@ struct Namfun
 	unsigned short	dsize;
 	Namfun_t	*next;
 	Namval_t	*type;
+	char		*last;
 };
 
 struct Nambfun
@@ -237,7 +238,7 @@ extern int		nv_adddisc(Namval_t*, const char**names);
 extern int		nv_clone(Namval_t*, Namval_t*, int);
 extern void 		nv_close(Namval_t*);
 extern void		*nv_context(Namval_t*);
-extern Namval_t		*nv_create(Namval_t*,const char*,int,Namfun_t*);
+extern Namval_t		*nv_create(const char*, Dt_t*, int,Namfun_t*);
 extern Dt_t		*nv_dict(Namval_t*);
 extern Sfdouble_t 	nv_getn(Namval_t*, Namfun_t*);
 extern Sfdouble_t 	nv_getnum(Namval_t*);

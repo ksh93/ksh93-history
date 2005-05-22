@@ -27,6 +27,7 @@
  * generate POSIX fcntl.h
  */
 
+#include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
@@ -35,7 +36,6 @@
 #define getdtablesize	______getdtablesize
 #define getpagesize	______getpagesize
 #define ioctl		______ioctl
-#define printf		______printf
 
 #if _typ_off64_t
 #undef	off_t
@@ -51,7 +51,6 @@
 #undef	getdtablesize   
 #undef	getpagesize
 #undef	ioctl
-#undef	printf
 
 #include "FEATURE/tty"
 
@@ -59,8 +58,6 @@
 #undef	off_t
 #define	off_t	off64_t
 #endif
-
-extern int		printf(const char*, ...);
 
 int
 main()

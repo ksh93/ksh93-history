@@ -144,12 +144,8 @@ tst	ast_LL note{ LL numeric suffix supported }end compile{
 tst	- -DN=1 - -DN=2 - -DN=3 - -DN=4 - -DN=5 - -DN=6 - -DN=7 - -DN=8 - -DN=0 output{
 	#define _BYTESEX_H
 
+	#include <string.h>
 	#include <sys/types.h>
-
-	_BEGIN_EXTERNS_
-	extern int	sprintf _ARG_((const char*, ...));
-	extern int	strcmp _ARG_((const char*, const char*));
-	_END_EXTERNS_
 
 	#if _STD_
 	#if N == 1
@@ -280,12 +276,9 @@ tst	- -DN=1 - -DN=2 - -DN=3 - -DN=4 - -DN=5 - -DN=6 - -DN=7 - -DN=8 - -DN=0 outp
 tst	- -DN=1 - -DN=0 output{
 	#define _BYTESEX_H
 
+	#include <stdio.h>
+	#include <string.h>
 	#include <sys/types.h>
-
-	_BEGIN_EXTERNS_
-	extern int	sprintf _ARG_((const char*, ...));
-	extern int	strcmp _ARG_((const char*, const char*));
-	_END_EXTERNS_
 
 	#if !N || !_STD_
 	#undef	_typ_long_double

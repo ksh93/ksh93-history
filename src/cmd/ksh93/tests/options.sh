@@ -20,7 +20,7 @@
 function err_exit
 {
 	print -u2 -n "\t"
-	print -u2 -r $Command[$1]: "${@:2}"
+	print -u2 -r ${Command}[$1]: "${@:2}"
 	let Errors+=1
 }
 alias err_exit='err_exit $LINENO'
@@ -107,42 +107,102 @@ fi
 
 mkdir /tmp/ksh$$
 cd /tmp/ksh$$
-echo 'echo .profile' > .profile
-[[ $(HOME=$PWD $SHELL -l </dev/null 2>&1) == *.profile ]] || err_exit '-l ignores .profile'
-[[ $(HOME=$PWD $SHELL --login </dev/null 2>&1) == *.profile ]] || err_exit '--login ignores .profile'
-[[ $(HOME=$PWD $SHELL --login-shell </dev/null 2>&1) == *.profile ]] || err_exit '--login-shell ignores .profile'
-[[ $(HOME=$PWD $SHELL --login_shell </dev/null 2>&1) == *.profile ]] || err_exit '--login_shell ignores .profile'
-[[ $(HOME=$PWD exec -a -ksh $SHELL </dev/null 2>&1) == *.profile ]]  || err_exit 'exec -a -ksh ksh ignores .profile'
+t="<$$>.profile.<$$>"
+echo "echo '$t'" > .profile
+[[ $(HOME=$PWD $SHELL -l </dev/null 2>&1) == *$t* ]] || err_exit '-l ignores .profile'
+[[ $(HOME=$PWD $SHELL --login </dev/null 2>&1) == *$t* ]] || err_exit '--login ignores .profile'
+[[ $(HOME=$PWD $SHELL --login-shell </dev/null 2>&1) == *$t* ]] || err_exit '--login-shell ignores .profile'
+[[ $(HOME=$PWD $SHELL --login_shell </dev/null 2>&1) == *$t* ]] || err_exit '--login_shell ignores .profile'
+[[ $(HOME=$PWD exec -a -ksh $SHELL </dev/null 2>&1) == *$t* ]]  || err_exit 'exec -a -ksh ksh ignores .profile'
 cp $SHELL ./-ksh
-[[ $(HOME=$PWD ./-ksh -i </dev/null 2>&1) == *.profile ]] || err_exit './-ksh ignores .profile'
-[[ $(HOME=$PWD ./-ksh -ip </dev/null 2>&1) == *.profile ]] && err_exit './-ksh -p does not ignore .profile'
+[[ $(HOME=$PWD ./-ksh -i </dev/null 2>&1) == *$t* ]] || err_exit './-ksh ignores .profile'
+[[ $(HOME=$PWD ./-ksh -ip </dev/null 2>&1) == *$t* ]] && err_exit './-ksh -p does not ignore .profile'
 cd ~-
 rm -rf /tmp/ksh$$
 
-# { exec interactive login_shell restricted xtrace } skipped
+# { exec interactive login_shell restricted xtrace } in the following test
 
 for opt in \
-	allexport bgnice clobber emacs errexit glob globstar gmacs \
-	ignoreeof keyword log markdirs monitor notify pipefail \
-	trackall unset verbose vi viraw
+	allexport all-export all_export \
+	bgnice bg-nice bg_nice \
+	clobber emacs \
+	errexit err-exit err_exit \
+	glob \
+	globstar glob-star glob_star \
+	gmacs \
+	ignoreeof ignore-eof ignore_eof \
+	keyword log markdirs monitor notify \
+	pipefail pipe-fail pipe_fail \
+	trackall track-all track_all \
+	unset verbose vi \
+	viraw vi-raw vi_raw
 do	old=$opt
 	if [[ ! -o $opt ]]
 	then	old=no$opt
 	fi
+
 	set --$opt || err_exit "set --$opt failed"
 	[[ -o $opt ]] || err_exit "[[ -o $opt ]] failed"
 	[[ -o no$opt ]] && err_exit "[[ -o no$opt ]] failed"
+	[[ -o no-$opt ]] && err_exit "[[ -o no-$opt ]] failed"
+	[[ -o no_$opt ]] && err_exit "[[ -o no_$opt ]] failed"
+	[[ -o ?$opt ]] || err_exit "[[ -o ?$opt ]] failed"
+	[[ -o ?no$opt ]] || err_exit "[[ -o ?no$opt ]] failed"
+	[[ -o ?no-$opt ]] || err_exit "[[ -o ?no-$opt ]] failed"
+	[[ -o ?no_$opt ]] || err_exit "[[ -o ?no_$opt ]] failed"
+
 	set --no$opt || err_exit "set --no$opt failed"
 	[[ -o no$opt ]] || err_exit "[[ -o no$opt ]] failed"
 	[[ -o $opt ]] && err_exit "[[ -o $opt ]] failed"
+
+	set --no-$opt || err_exit "set --no-$opt failed"
+	[[ -o no$opt ]] || err_exit "[[ -o no$opt ]] failed"
+	[[ -o $opt ]] && err_exit "[[ -o $opt ]] failed"
+
+	set --no_$opt || err_exit "set --no_$opt failed"
+	[[ -o no$opt ]] || err_exit "[[ -o no$opt ]] failed"
+	[[ -o $opt ]] && err_exit "[[ -o $opt ]] failed"
+
 	set -o $opt || err_exit "set -o $opt failed"
 	[[ -o $opt ]] || err_exit "[[ -o $opt ]] failed"
+	set -o $opt=1 || err_exit "set -o $opt=1 failed"
+	[[ -o $opt ]] || err_exit "[[ -o $opt ]] failed"
+	set -o no$opt=0 || err_exit "set -o no$opt=0 failed"
+	[[ -o $opt ]] || err_exit "[[ -o $opt ]] failed"
+	set --$opt=1 || err_exit "set --$opt=1 failed"
+	[[ -o $opt ]] || err_exit "[[ -o $opt ]] failed"
+	set --no$opt=0 || err_exit "set --no$opt=0 failed"
+	[[ -o $opt ]] || err_exit "[[ -o $opt ]] failed"
+
 	set -o no$opt || err_exit "set -o no$opt failed"
 	[[ -o no$opt ]] || err_exit "[[ -o no$opt ]] failed"
+	set -o $opt=0 || err_exit "set -o $opt=0 failed"
+	[[ -o no$opt ]] || err_exit "[[ -o no$opt ]] failed"
+	set -o no$opt=1 || err_exit "set -o no$opt=1 failed"
+	[[ -o no$opt ]] || err_exit "[[ -o no$opt ]] failed"
+	set --$opt=0 || err_exit "set --$opt=0 failed"
+	[[ -o no$opt ]] || err_exit "[[ -o no$opt ]] failed"
+	set --no$opt=1 || err_exit "set --no$opt=1 failed"
+	[[ -o no$opt ]] || err_exit "[[ -o no$opt ]] failed"
+
+	set -o no-$opt || err_exit "set -o no-$opt failed"
+	[[ -o no-$opt ]] || err_exit "[[ -o no-$opt ]] failed"
+
+	set -o no_$opt || err_exit "set -o no_$opt failed"
+	[[ -o no_$opt ]] || err_exit "[[ -o no_$opt ]] failed"
+
 	set +o $opt || err_exit "set +o $opt failed"
 	[[ -o no$opt ]] || err_exit "[[ -o no$opt ]] failed"
+
 	set +o no$opt || err_exit "set +o no$opt failed"
 	[[ -o $opt ]] || err_exit "[[ -o $opt ]] failed"
+
+	set +o no-$opt || err_exit "set +o no-$opt failed"
+	[[ -o $opt ]] || err_exit "[[ -o $opt ]] failed"
+
+	set +o no_$opt || err_exit "set +o no_$opt failed"
+	[[ -o $opt ]] || err_exit "[[ -o $opt ]] failed"
+
 	set --$old
 done
 
@@ -157,6 +217,16 @@ do	[[ -o $opt ]]
 	10|01)	;;
 	*)	err_exit "[[ -o $opt ]] == [[ -o no$opt ]]" ;;
 	esac
+done
+
+for opt in \
+	foo foo-bar foo_bar
+do	if	[[ -o ?$opt ]]
+	then	err_exit "[[ -o ?$opt ]] should fail"
+	fi
+	if	[[ -o ?no$opt ]]
+	then	err_exit "[[ -o ?no$opt ]] should fail"
+	fi
 done
 
 exit $((Errors))

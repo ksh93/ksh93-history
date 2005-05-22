@@ -155,6 +155,7 @@ extern char		*nv_getvtree(Namval_t*, Namfun_t*);
 extern void		nv_attribute(Namval_t*, Sfio_t*, char*, int);
 extern Namval_t		*nv_bfsearch(const char*, Dt_t*, Namval_t**, char**);
 extern Namval_t		*nv_mkclone(Namval_t*);
+extern Namval_t		*nv_parent(Namval_t*);
 extern char		*nv_getbuf(size_t);
 extern Namval_t		*nv_mount(Namval_t*, const char *name, Dt_t*);
 

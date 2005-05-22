@@ -45,6 +45,8 @@ Dtmethod_t*	meth;
 	   (*disc->eventf)(dt,DT_METH,(Void_t*)meth,disc) < 0)
 		return NIL(Dtmethod_t*);
 
+	dt->data->minp = 0;
+
 	/* get the list of elements */
 	list = dtflatten(dt);
 

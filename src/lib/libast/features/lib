@@ -223,7 +223,6 @@ tst	real_vfork note{ vfork child shares data with parent }end execute{
 tst	lib_posix_spawn unistd.h stdlib.h spawn.h note{ posix_spawn exists and it works and its worth using }end execute{
 	#include <spawn.h>
 	#include <signal.h>
-	#include <stdio.h>
 	/* if it uses fork() why bother? */
 	int fork() { return -1; }
 	int _fork() { return -1; }

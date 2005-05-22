@@ -45,7 +45,7 @@ cat(Cojob_t* job, char** path, Sfio_t* op)
 		sfclose(sp);
 	}
 	else
-		sfprintf(sfstderr, "%s: %s: cannot open job %d serialized output\n", CO_ID, *path, job->id);
+		errormsg(state.lib, ERROR_LIBRARY|2, "%s: cannot open job %d serialized output", *path, job->id);
 	remove(*path);
 	free(*path);
 	*path = 0;
@@ -57,6 +57,7 @@ cowait(register Coshell_t* co, Cojob_t* job)
 	register char*		s;
 	register Cojob_t*	cj;
 	register ssize_t	n;
+	char*			b;
 	char*			e;
 	int			id;
 	int			noblock;
@@ -77,9 +78,9 @@ cowait(register Coshell_t* co, Cojob_t* job)
 	for (;;)
 	{
 		if (noblock && sfpoll(&co->msgfp, 1, 0) != 1)
-			break;
-		if (!(s = sfgetr(co->msgfp, '\n', 1)) || !*s)
-			break;
+			return 0;
+		if (!(s = b = sfgetr(co->msgfp, '\n', 1)))
+			return 0;
 
 		/*
 		 * read and parse a coshell message packet of the form
@@ -90,11 +91,12 @@ cowait(register Coshell_t* co, Cojob_t* job)
 
 		while (isspace(*s))
 			s++;
-		if (n = *s)
-			s++;
-		while (*s && !isspace(*s))
-			s++;
+		if (!(n = *s) || n != 'a' && n != 'j' && n != 'x')
+			break;
+		while (*++s && !isspace(*s));
 		id = strtol(s, &e, 10);
+		if (!isspace(*e))
+			break;
 		for (s = e; isspace(*s); s++);
 
 		/*
@@ -105,9 +107,12 @@ cowait(register Coshell_t* co, Cojob_t* job)
 			if (id == cj->id)
 				break;
 		if ((co->flags | (cj ? cj->flags : 0)) & CO_DEBUG)
-			sfprintf(sfstderr, "%s: message: %c %d %s\n", CO_ID, n, id, s);
+			errormsg(state.lib, 2, "message \"%c %d %s\"", n, id, s);
 		if (!cj)
+		{
+			errormsg(state.lib, 2, "job id %d not found [%s]", id, b);
 			return 0;
+		}
 
 		/*
 		 * now interpret the message
@@ -184,15 +189,8 @@ cowait(register Coshell_t* co, Cojob_t* job)
 				cj->pid = CO_PID_WARPED;
 			break;
 
-		default:
-			/*
-			 * unknown message
-			 */
-
-			sfprintf(sfstderr, "%s: %c: unknown message type\n", CO_ID, n);
-			break;
-
 		}
 	}
+	errormsg(state.lib, 2, "invalid message \"%-.*s>>>%s<<<\"", s - b, b, s);
 	return 0;
 }

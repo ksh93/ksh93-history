@@ -167,5 +167,10 @@ cat > /tmp/io$$.1 <<- \++EOF++
 ++EOF++
 chmod +x /tmp/io$$.1
 [[ $(/tmp/io$$.1) == ok ]] || err_exit "trap on EXIT loses last command redirection"
+print > /dev/null {n}> /tmp/io$$.1 
+[[ ! -s /tmp/io$$.1 ]] && newio=1
 rm -rf /tmp/io$$.1
+if	[[ $newio && $(print hello | while read -u$n; do print $REPLY; done {n}<&0) != hello ]] 
+then	err_exit "{n}<&0 not working with for loop"
+fi
 exit $((Errors))

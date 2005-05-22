@@ -82,6 +82,7 @@ extern void 	sh_iounsave(void);
 extern int	sh_chkopen(const char*);
 extern int	sh_ioaccess(int,int);
 extern int	sh_devtofd(const char*);
+extern int	sh_source(Shell_t*, Sfio_t*, const char*);
 
 /* the following are readonly */
 extern const char	e_pexists[];
@@ -101,6 +102,18 @@ extern const char	e_unknown[];
 extern const char	e_devnull[];
 extern const char	e_profile[];
 extern const char	e_sysprofile[];
+#if SHOPT_SYSRC
+extern const char	e_sysrc[];
+#endif
+#if SHOPT_BASH
+#if SHOPT_SYSRC
+extern const char	e_bash_sysrc[];
+#endif
+extern const char	e_bash_rc[];
+extern const char	e_bash_login[];
+extern const char	e_bash_logout[];
+extern const char	e_bash_profile[];
+#endif
 extern const char	e_stdprompt[];
 extern const char	e_supprompt[];
 extern const char	e_ambiguous[];

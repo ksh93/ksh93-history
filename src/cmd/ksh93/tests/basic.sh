@@ -155,14 +155,19 @@ if	[[ $x != $'foo\nbar' ]]
 then	err_exit " ( (/bin/echo);(/bin/echo bar ) failed"
 fi
 cat > /tmp/ksh$$ <<\!
-builtin cat
-cat - > /dev/null
-test -p /dev/fd/0 && print yes
+if	[[ -p /dev/fd/0 ]]
+then	builtin cat
+	cat - > /dev/null
+	[[ -p /dev/fd/0 ]] && print ok
+else	print no
+fi
 !
 chmod +x /tmp/ksh$$
-if	[[ $( (print) | /tmp/ksh$$;:) != yes ]]
-then	err_exit "standard input no longer a pipe"
-fi
+case $( (print) | /tmp/ksh$$;:) in
+ok)	;;
+no)	err_exit "[[ -p /dev/fd/0 ]] fails for standard input pipe" ;;
+*)	err_exit "builtin replaces standard input pipe" ;;
+esac
 print 'print $0' > /tmp/ksh$$
 print ". /tmp/ksh$$" > /tmp/ksh$$x
 chmod +x /tmp/ksh$$x

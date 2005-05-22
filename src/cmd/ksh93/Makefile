@@ -36,9 +36,11 @@ SHOPT_OPTIMIZE == 1		/* optimize loop invariants */
 SHOPT_PFSH == 1			/* solaris exec_attr(4) profile execution */
 SHOPT_P_SUID ==			/* real uid's that require -p for set[ug]id */
 SHOPT_RAWONLY == 1		/* make viraw the only vi mode */
+SHOPT_REMOTE ==			/* enable --rc if running as a remote shell */
 SHOPT_SEVENBIT ==		/* strip the eigth bit from characters */
 SHOPT_SPAWN ==			/* use spawnveg for fork/exec */
 SHOPT_SUID_EXEC == 1		/* allow (safe) suid/sgid shell scripts */
+SHOPT_SYSRC ==			/* attempt . /etc/ksh.kshrc if interactive */
 SHOPT_TIMEOUT ==		/* number of seconds for shell timeout */
 SHOPT_VSH == 1			/* vi edit mode */
 
@@ -162,6 +164,8 @@ end
 
 $(INCLUDEDIR) :INSTALLPROTO: nval.h shell.h history.h
 
+LIBCMD = $(.LIB.NAME. cmd:T=F)
+
 suid_exec ::	CC.DLL= suid_exec.c +last
 
 shcomp	::	CC.DLL= SH_DICT='"libshell"' shcomp.c $(LIBS_req)
@@ -182,11 +186,12 @@ end
 :: syscall.s mamexec mamstate.c deparse.c shopen.c $(DOCFILES) \
 	bash.c bash_pre_rc.sh hexpand.c
 
-:: alias.sh append.sh arith.sh arrays.sh attributes.sh basic.sh bracket.sh \
-	builtins.sh case.sh comvar.sh coprocess.sh exit.sh functions.sh \
-	grep.sh heredoc.sh io.sh nameref.sh options.sh path.sh quoting.sh \
-	quoting2.sh return.sh select.sh substring.sh tilde.sh variables.sh \
-	shtests
+:: shtests \
+	alias.sh append.sh arith.sh arrays.sh attributes.sh basic.sh \
+	bracket.sh builtins.sh case.sh comvar.sh coprocess.sh exit.sh \
+	expand.sh functions.sh glob.sh grep.sh heredoc.sh io.sh \
+	nameref.sh options.sh path.sh quoting.sh quoting2.sh return.sh \
+	select.sh substring.sh tilde.sh variables.sh 
 
 if "$(PWD:B:N=cc-*)"
 
@@ -199,5 +204,11 @@ test : $(BINDIR)/$(SH) $(SH) shtests
 	echo "make install to run the tests on the latest $(SH)" >&2
 	cd $(*:O=3:P=L!:D)
 	SHELL=$(*:O=1:P=A) $(*:O=1:P=A) $(*:O=3:B)
+
+test.% : %.sh $(BINDIR)/$(SH) $(SH) shtests
+	$(SILENT) $(CMP) $(CMPFLAGS) $(*:O=2) $(*:O=3) 2>/dev/null ||
+	echo "make install to run the tests on the latest $(SH)" >&2
+	cd $(*:O=4:P=L!:D)
+	SHELL=$(*:O=2:P=A) $(*:O=2:P=A) $(*:O=4:B) $(*:O=1:P=A)
 
 end

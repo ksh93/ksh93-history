@@ -515,6 +515,7 @@ static void funload(Shell_t *shp,int fno, const char *name)
 	sh_onstate(SH_NOALIAS);
 	shp->readscript = (char*)name;
 	shp->st.filename = path_fullname(stakptr(PATH_OFFSET));
+	error_info.line = 0;
 	sh_eval(sfnew(NIL(Sfio_t*),buff,IOBSIZE,fno,SF_READ),0);
 	shp->readscript = 0;
 	free((void*)shp->st.filename);

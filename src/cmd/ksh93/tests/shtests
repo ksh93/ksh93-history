@@ -24,9 +24,22 @@ then	PATH=$INSTALLROOT/bin:$PATH
 fi
 for i in ${*-*.sh}
 do	echo test $i begins at `date`
+	t=$(grep -c err_exit $i)
+	if	(( $t ))
+	then	(( t = $t - 1 ))
+	fi
+	T=test
+	if	(( $t != 1 ))
+	then	T=${T}s
+	fi
+	E=error
 	if	$SHELL $i
-	then echo test $i passed at `date`
-	else	rval=$?
-		echo test $i failed at `date` with exit code $rval
+	then	echo test $i passed at `date` "[ $t $T 0 ${E}s ]"
+	else	e=$?
+		E=error
+		if	(( $e != 1 ))
+		then	E=${E}s
+		fi
+		echo test $i failed at `date` with exit code $e "[ $t $T $e $E ]"
 	fi
 done

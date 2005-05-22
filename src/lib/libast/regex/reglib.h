@@ -110,15 +110,16 @@ typedef struct regsubop_s
 #define REX_KMP			32	/* Knuth-Morris-Pratt		*/
 #define REX_NEG			33	/* negation			*/
 #define REX_NEG_CATCH		34	/* REX_NEG catcher		*/
-#define REX_ONECHAR		35	/* a single-character literal	*/
-#define REX_REP			36	/* Kleene closure		*/
-#define REX_REP_CATCH		37	/* REX_REP catcher		*/
-#define REX_STRING		38	/* some chars			*/
-#define REX_TRIE		39	/* alternation of strings	*/
-#define REX_WBEG		40	/* \<				*/
-#define REX_WEND		41	/* \>				*/
-#define REX_WORD		42	/* word boundary		*/
-#define REX_WORD_NOT		43	/* not word boundary		*/
+#define REX_NEST		35	/* nested match			*/
+#define REX_ONECHAR		36	/* a single-character literal	*/
+#define REX_REP			37	/* Kleene closure		*/
+#define REX_REP_CATCH		38	/* REX_REP catcher		*/
+#define REX_STRING		39	/* some chars			*/
+#define REX_TRIE		40	/* alternation of strings	*/
+#define REX_WBEG		41	/* \<				*/
+#define REX_WEND		42	/* \>				*/
+#define REX_WORD		43	/* word boundary		*/
+#define REX_WORD_NOT		44	/* not word boundary		*/
 
 #define T_META		((int)UCHAR_MAX+1)
 #define T_STAR		(T_META+0)
@@ -127,8 +128,9 @@ typedef struct regsubop_s
 #define T_BANG		(T_META+3)
 #define T_AT		(T_META+4)
 #define T_TILDE		(T_META+5)
-#define T_LEFT		(T_META+6)
-#define T_OPEN		(T_META+7)
+#define T_PERCENT	(T_META+6)
+#define T_LEFT		(T_META+7)
+#define T_OPEN		(T_META+8)
 #define T_CLOSE		(T_OPEN+1)
 #define T_RIGHT		(T_OPEN+2)
 #define T_CFLX		(T_OPEN+3)
@@ -388,6 +390,21 @@ typedef struct Exec_s
 	size_t		size;
 } Exec_t;
 
+#define REX_NEST_open		0x01
+#define REX_NEST_close		0x02
+#define REX_NEST_escape		0x04
+#define REX_NEST_delimiter	0x08
+#define REX_NEST_quote		0x10
+#define REX_NEST_literal	0x20
+
+#define REX_NEST_SHIFT		6
+
+typedef struct Nest_s
+{
+	int		primary;
+	unsigned short	type[1];
+} Nest_t;
+
 /*
  * REX_ALT catcher, solely to get control at the end of an
  * alternative to keep records for comparing matches.
@@ -493,6 +510,7 @@ typedef struct Rex_s
 	Group_t		group;			/* a|b or rep		*/
 	Group_catch_t	group_catch;		/* group catcher	*/
 	Neg_catch_t	neg_catch;		/* neg catcher		*/
+	Nest_t		nest;			/* nested match		*/
 	unsigned char	onechar;		/* single char		*/
 	Rep_catch_t	rep_catch;		/* rep catcher		*/
 	String_t	string;			/* string/kmp		*/
@@ -538,10 +556,10 @@ typedef struct State_s				/* shared state		*/
 	unsigned char	key;
 	short		val[15];
 	}		escape[52];
-	unsigned char	fold[UCHAR_MAX+1];
 	short*		magic[UCHAR_MAX+1];
 	regdisc_t	disc;
 	int		fatal;
+	int		initialized;
 	Dt_t*		attrs;
 	Dt_t*		names;
 	Dtdisc_t	dtdisc;

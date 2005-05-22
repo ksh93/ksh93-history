@@ -31,10 +31,6 @@
 #include	<fcin.h>
 #include	<nval.h>
 #include	"FEATURE/options"
-#include	"argnod.h"
-#include	"test.h"
-#include	"lexstates.h"
-#include	"io.h"
 
 #if KSHELL
 #   include	"defs.h"
@@ -43,6 +39,11 @@
 #   define	nv_getval(np)	((np)->nvalue)
     Shell_t sh  =  {1};
 #endif /* KSHELL */
+
+#include	"argnod.h"
+#include	"test.h"
+#include	"lexstates.h"
+#include	"io.h"
 
 #define SYNBAD		3	/* exit value for syntax errors */
 #define STACK_ARRAY	3	/* size of depth match stack growth */
@@ -931,6 +932,25 @@ int sh_lex(void)
 				if(shlex.kiafile)
 					refvar(1);
 #endif /* SHOPT_KIA */
+				if(c!=':' && fcgetc(n)>0)
+				{
+					if(n!=c)
+						c = 0;
+					if(!c || (fcgetc(n)>0))
+					{
+						fcseek(-1);
+						if(n==LPAREN)
+						{
+							if(c!='%')
+							{
+								shlex.token = n;
+								sh_syntax();
+							}
+							else if(lexd.warn)
+								errormsg(SH_DICT,ERROR_warn(0),e_lexquote,shp->inlineno,'%');
+						}
+					}
+				}
 				mode = ST_NESTED;
 				continue;
 			case S_LBRA:
@@ -1090,14 +1110,9 @@ int sh_lex(void)
 					&& !lex.skipword)
 				{
 					wordflags |= ARG_EXP;
-					pushlevel(RBRACE,mode);
-					mode = ST_NESTED;
-					continue;
 				}
 				if(c==RBRACE && n==LPAREN)
 					goto epat;
-				if(lexd.warn)
-					errormsg(SH_DICT,ERROR_warn(0),e_lexquote,shp->inlineno,c);
 				break;
 			}
 			case S_PAT:
@@ -1148,6 +1163,8 @@ breakloop:
 		stakputc(lexd.balance);
 		lexd.balance = 0;
 	}
+	stakputc(0);
+	stakseek(staktell()-1);
 	state = stakptr(ARGVAL);
 	n = staktell()-ARGVAL;
 	lexd.first=0;
@@ -1168,6 +1185,16 @@ breakloop:
 		else
 			c = (wordflags&ARG_EXP);
 		n = 1;
+	}
+	else if(n>2 && state[0]=='{' && state[n-1]=='}' && !lex.intest && !lex.incase && (c=='<' || c== '>') && sh_isoption(SH_BRACEEXPAND))
+	{
+		if(!strchr(state,','))
+		{
+			stakseek(staktell()-1);
+			shlex.arg = (struct argnod*)stakfreeze(1);
+			return(shlex.token=IOVNAME);
+		}
+		c = wordflags;
 	}
 	else
 		c = wordflags;

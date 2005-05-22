@@ -44,17 +44,20 @@ const Shtable_t shtab_options[] =
 	"bash",				(SH_BASH|SH_COMMANDLINE),
 #endif
 	"bgnice",			SH_BGNICE,
-	bashextra("braceexpand",	SH_BRACEEXPAND)
+	"braceexpand",			SH_BRACEEXPAND,
 	bashopt("cdable_vars",		SH_CDABLE_VARS)
 	bashopt("cdspell",		SH_CDSPELL)
 	bashopt("checkhash",		SH_CHECKHASH)
 	bashopt("checkwinsize",		SH_CHECKWINSIZE)
+	"noclobber",			SH_NOCLOBBER,
 	bashopt("dotglob",		SH_DOTGLOB)
 	"emacs",			SH_EMACS,
 	"errexit",			SH_ERREXIT,
+	"noexec",			SH_NOEXEC,
 	bashopt("execfail",		SH_EXECFAIL)
 	bashopt("expand_aliases",	SH_EXPAND_ALIASES)
 	bashopt("extglob",		SH_EXTGLOB)
+	"noglob",			SH_NOGLOB,
 	"globstar",			SH_GLOBSTARS,
 	"gmacs",			SH_GMACS,
 	bashextra("hashall",		SH_TRACKALL)
@@ -74,18 +77,14 @@ const Shtable_t shtab_options[] =
 	bashextra("interactive_comments",	SH_INTERACTIVE_COMM)
 	"keyword",			SH_KEYWORD,
 	bashopt("lithist",		SH_LITHIST)
+	"nolog",			SH_NOLOG,
 	"login_shell",			SH_LOGIN_SHELL|SH_COMMANDLINE,
 	bashopt("mailwarn",		SH_MAILWARN)
 	"markdirs",			SH_MARKDIRS,
 	"monitor",			SH_MONITOR,
 	bashopt("no_empty_cmd_completion", SH_NOEMPTYCMDCOMPL)
 	bashopt("nocaseglob",		SH_NOCASEGLOB)
-	"noclobber",			SH_NOCLOBBER,
-	"noexec",			SH_NOEXEC,
-	"noglob",			SH_NOGLOB,
-	"nolog",			SH_NOLOG,
 	"notify",			SH_NOTIFY,
-	"nounset",			SH_NOUNSET,
 	bashopt("nullglob",		SH_NULLGLOB)
 	bashextra("onecmd",		SH_TFLAG)
 	"pipefail",			SH_PIPEFAIL,
@@ -103,6 +102,7 @@ const Shtable_t shtab_options[] =
 	bashopt("shift_verbose",	SH_SHIFT_VERBOSE)
 	bashopt("sourcepath",		SH_SOURCEPATH)
 	"trackall",			SH_TRACKALL,
+	"nounset",			SH_NOUNSET,
 	"verbose",			SH_VERBOSE,
 	"vi",				SH_VI,
 	"viraw",			SH_VIRAW,

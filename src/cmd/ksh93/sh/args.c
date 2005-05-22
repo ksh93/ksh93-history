@@ -61,7 +61,7 @@ static int 		arg_expand(struct argnod*,struct argnod**,int);
 static	char		*null;
 
 /* The following order is determined by sh_optset */
-static  const char optksh[] =  PFSHOPT BASHOPT "DircabefhkmnpstuvxCGEl" HFLAG;
+static  const char optksh[] =  PFSHOPT BASHOPT "DircabefhkmnpstuvxBCGEl" HFLAG;
 static const int flagval[]  =
 {
 #if SHOPT_PFSH
@@ -73,8 +73,8 @@ static const int flagval[]  =
 	SH_DICTIONARY, SH_INTERACTIVE, SH_RESTRICTED, SH_CFLAG,
 	SH_ALLEXPORT, SH_NOTIFY, SH_ERREXIT, SH_NOGLOB, SH_TRACKALL,
 	SH_KEYWORD, SH_MONITOR, SH_NOEXEC, SH_PRIVILEGED, SH_SFLAG, SH_TFLAG,
-	SH_NOUNSET, SH_VERBOSE,  SH_XTRACE, SH_NOCLOBBER, SH_GLOBSTARS, SH_RC,
-	SH_LOGIN_SHELL,
+	SH_NOUNSET, SH_VERBOSE,  SH_XTRACE, SH_BRACEEXPAND, SH_NOCLOBBER,
+	SH_GLOBSTARS, SH_RC, SH_LOGIN_SHELL,
 #if SHOPT_HISTEXPAND
         SH_HISTEXPAND,
 #endif
@@ -171,7 +171,8 @@ int sh_argopts(int argc,register char *argv[])
 				errormsg(SH_DICT,ERROR_exit(1), e_option, opt_info.name);
 #endif
 		    case 'o':	/* set options */
-			if(!opt_info.arg)
+		    byname:
+			if(!opt_info.arg||!*opt_info.arg||*opt_info.arg=='-')
 			{
 				action = PRINT;
 				/* print style: -O => shopt options
@@ -179,10 +180,10 @@ int sh_argopts(int argc,register char *argv[])
 				 */
 				verbose = (f?PRINT_VERBOSE:PRINT_NO_HEADER)|
 					  (n=='O'?PRINT_SHOPT:0)|
-					  (sh_isoption(SH_BASH)?PRINT_ALL|PRINT_NO_HEADER:0);
+					  (sh_isoption(SH_BASH)?PRINT_ALL|PRINT_NO_HEADER:0)|
+					  ((opt_info.arg&&(!*opt_info.arg||*opt_info.arg=='-'))?(PRINT_TABLE|PRINT_NO_HEADER):0);
 				continue;
 			}
-		    byname:
 			o = sh_lookopt(opt_info.arg,&f);
 			if(o<=0
 				|| (!sh_isoption(SH_BASH) && (o&SH_BASHEXTRA))
@@ -250,7 +251,7 @@ int sh_argopts(int argc,register char *argv[])
 		    case ':':
 			if(opt_info.name[0]=='-'&&opt_info.name[1]=='-')
 			{
-				opt_info.arg = opt_info.name + 2;
+				opt_info.arg = argv[opt_info.index-1] + 2;
 				f = 1;
 				goto byname;
 			}
@@ -552,15 +553,67 @@ struct dolnod *sh_arguse(void)
 
 /*
  *  Print option settings on standard output
- *  if mode==1 for -o format, otherwise +o format
+ *  if mode is inclusive or of PRINT_*
  *  if <mask> is set, only options with this mask value are displayed
  */
 void sh_printopts(Shopt_t oflags,register int mode, Shopt_t *mask)
 {
 	register const Shtable_t *tp;
+	const char *name;
+	int on;
 	int value;
-	if(!(mode&PRINT_NO_HEADER))	/* bash doesn't print heading */
+	if(!(mode&PRINT_NO_HEADER))
 		sfputr(sfstdout,sh_translate(e_heading),'\n');
+	if(mode&PRINT_TABLE)
+	{
+		int	w;
+		int	c;
+		int	r;
+		int	i;
+
+		c = 0;
+		for(tp=shtab_options; value=tp->sh_number; tp++)
+		{
+			if(mask && !is_option(mask,value&0xff))
+				continue;
+			name = tp->sh_name;
+			if(name[0] == 'n' && name[1] == 'o' && name[2] != 't')
+				name += 2;
+			if(c<(w=strlen(name)))
+				c = w;
+		}
+		c += 4;
+		if((w = ed_window()) < (2*c))
+			w = 2*c;
+		r = w / c;
+		i = 0;
+		for(tp=shtab_options; value=tp->sh_number; tp++)
+		{
+			if(mask && !is_option(mask,value&0xff))
+				continue;
+			on = !!is_option(&oflags,value);
+			value &= 0xff;
+			name = tp->sh_name;
+			if(name[0] == 'n' && name[1] == 'o' && name[2] != 't')
+			{
+				name += 2;
+				on = !on;
+			}
+			if(++i>=r)
+			{
+				i = 0;
+				sfprintf(sfstdout, "%s%s\n", on ? "" : "no", name);
+			}
+			else
+				sfprintf(sfstdout, "%s%-*s", on ? "" : "no", on ? c : (c-2), name);
+		}
+		if(i)
+			sfputc(sfstdout,'\n');
+		return;
+	}
+#if SHOPT_RAWONLY
+	on_option(&oflags,SH_VIRAW);
+#endif
 	if(!(mode&(PRINT_ALL|PRINT_VERBOSE))) /* only print set options */
 	{
 		if(mode&PRINT_SHOPT)
@@ -568,47 +621,44 @@ void sh_printopts(Shopt_t oflags,register int mode, Shopt_t *mask)
 		else
 			sfwrite(sfstdout,"set",3);
 	}
-#if SHOPT_RAWONLY
-	on_option(&oflags,SH_VIRAW);
-#endif
 	for(tp=shtab_options; value=tp->sh_number; tp++)
 	{
 		if(mask && !is_option(mask,value&0xff))
 			continue;
-		if(!sh_isoption(SH_BASH) && (value&(SH_BASHEXTRA|SH_BASHOPT)))
+		if(sh_isoption(SH_BASH))
+		{
+			if (!(mode&PRINT_SHOPT) != !(value&SH_BASHOPT))
+				continue;
+		}
+		else if (value&(SH_BASHEXTRA|SH_BASHOPT))
 			continue;
-		if(sh_isoption(SH_BASH) && (mode&PRINT_SHOPT) && !(value&SH_BASHOPT))
-			continue;
-		if(sh_isoption(SH_BASH) && !(mode&PRINT_SHOPT) && (value&SH_BASHOPT))
-			continue;
+		on = !!is_option(&oflags,value);
 		value &= 0xff;
+		name = tp->sh_name;
+		if(name[0] == 'n' && name[1] == 'o' && name[2] != 't')
+		{
+			name += 2;
+			on = !on;
+		}
 		if(mode&PRINT_VERBOSE)
 		{
-			char const *msg;
-			sfputr(sfstdout,tp->sh_name,' ');
-			sfnputc(sfstdout,' ',24-strlen(tp->sh_name));
-			if(is_option(&oflags,value))
-				msg = sh_translate(e_on);
-			else
-				msg = sh_translate(e_off);
-			sfputr(sfstdout,msg,'\n');
+			sfputr(sfstdout,name,' ');
+			sfnputc(sfstdout,' ',24-strlen(name));
+			sfputr(sfstdout,on ? sh_translate(e_on) : sh_translate(e_off),'\n');
 		}
-		else 
+		else if(mode&PRINT_ALL) /* print unset options also */
 		{
-			if(mode&PRINT_ALL) /* print unset options also */
-			{
-				if(mode&PRINT_SHOPT)
-					sfprintf(sfstdout, "shopt -%c %s\n",
-						is_option(&oflags,value)?'s':'u',
-						tp->sh_name);
-				else
-					sfprintf(sfstdout, "set %co %s\n",
-						is_option(&oflags,value)?'-':'+',
-						tp->sh_name);
-			}
-			else if(value!=SH_INTERACTIVE && value!=SH_RESTRICTED && value!=SH_PFSH && is_option(&oflags,value))
-				sfprintf(sfstdout,"%s %s",(mode&PRINT_SHOPT)?"":" -o",tp->sh_name);
+			if(mode&PRINT_SHOPT)
+				sfprintf(sfstdout, "shopt -%c %s\n",
+					on?'s':'u',
+					name);
+			else
+				sfprintf(sfstdout, "set %co %s\n",
+					on?'-':'+',
+					name);
 		}
+		else if(value!=SH_INTERACTIVE && value!=SH_RESTRICTED && value!=SH_PFSH && is_option(&oflags,value))
+			sfprintf(sfstdout," %s%s%s",(mode&PRINT_SHOPT)?"":"--",on?"":"no",name);
 	}
 	if(!(mode&(PRINT_VERBOSE|PRINT_ALL)))
 		sfputc(sfstdout,'\n');

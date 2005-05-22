@@ -128,7 +128,7 @@
 #if KSHELL
      static int keytrap(Edit_t *,char*, int, int, int);
 #else
-     struct edit editb;
+     Edit_t editb;
 #endif	/* KSHELL */
 
 
@@ -380,7 +380,7 @@ int tty_raw(register int fd, int echomode)
  */
 
 #   ifdef TIOCGETC
-tty_alt(register int fd)
+int tty_alt(register int fd)
 {
 	register Edit_t *ep = (Edit_t*)(sh_getinterp()->ed_context);
 	int mask;
@@ -428,7 +428,7 @@ tty_alt(register int fd)
 #	    define IEXTEN	0
 #	endif /* IEXTEN */
 
-tty_alt(register int fd)
+int tty_alt(register int fd)
 {
 	register Edit_t *ep = (Edit_t*)(sh_getinterp()->ed_context);
 	switch(ep->e_raw)
@@ -585,6 +585,13 @@ void	ed_setup(register Edit_t *ep, int fd, int reedit)
 	register int qlen = 1;
 	char inquote = 0;
 	ep->e_fd = fd;
+#ifdef SIGWINCH
+	if(!(sh.sigflag[SIGWINCH]&SH_SIGFAULT))
+	{
+		signal(SIGWINCH,sh_fault);
+		sh.sigflag[SIGWINCH] |= SH_SIGFAULT;
+	}
+#endif
 #if KSHELL
 	ep->e_stkptr = stakptr(0);
 	ep->e_stkoff = staktell();
@@ -1085,7 +1092,7 @@ int	ed_internal(const char *src, genchar *dest)
 	register const unsigned char *cp = (unsigned char *)src;
 	register int c;
 	register wchar_t *dp = (wchar_t*)dest;
-	if((unsigned char*)dest == cp)
+	if(dest == (genchar*)roundof(cp-(unsigned char*)0,sizeof(genchar)))
 	{
 		genchar buffer[MAXLINE];
 		c = ed_internal(src,buffer);
@@ -1142,6 +1149,8 @@ int	ed_external(const genchar *src, char *dest)
 
 void	ed_gencpy(genchar *dp,const genchar *sp)
 {
+	dp = (genchar*)roundof((char*)dp-(char*)0,sizeof(genchar));
+	sp = (const genchar*)roundof((char*)sp-(char*)0,sizeof(genchar));
 	while(*dp++ = *sp++);
 }
 
@@ -1151,6 +1160,8 @@ void	ed_gencpy(genchar *dp,const genchar *sp)
 
 void	ed_genncpy(register genchar *dp,register const genchar *sp, int n)
 {
+	dp = (genchar*)roundof((char*)dp-(char*)0,sizeof(genchar));
+	sp = (const genchar*)roundof((char*)sp-(char*)0,sizeof(genchar));
 	while(n-->0 && (*dp++ = *sp++));
 }
 
@@ -1161,6 +1172,7 @@ void	ed_genncpy(register genchar *dp,register const genchar *sp, int n)
 int	ed_genlen(register const genchar *str)
 {
 	register const genchar *sp = str;
+	sp = (const genchar*)roundof((char*)sp-(char*)0,sizeof(genchar));
 	while(*sp++);
 	return(sp-str-1);
 }
@@ -1303,7 +1315,7 @@ static int keytrap(Edit_t *ep,char *inbuff,register int insize, int bufsize, int
 
 void	*ed_open(Shell_t *shp)
 {
-	Edit_t *ed = newof(0,struct edit ,1,0);
+	Edit_t *ed = newof(0,Edit_t,1,0);
 	ed->sh = shp;
 	strcpy(ed->e_macro,"_??");
 	return((void*)ed);

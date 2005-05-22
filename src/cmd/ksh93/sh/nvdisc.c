@@ -138,6 +138,7 @@ void nv_putv(Namval_t *np, const char *value, int flags, register Namfun_t *nfp)
 	}
 }
 
+#if 0
 /*
  * node creation discipline
  */
@@ -150,6 +151,7 @@ Namval_t *nv_create(register Namval_t* np,const char *name,int flag,register Nam
 		return((*fp->disc->createf)(np,name,flag,fp));
 	return(NIL(Namval_t*));
 }
+#endif
 
 #define	LOOKUP		0
 #define	ASSIGN		1
@@ -825,12 +827,19 @@ Namval_t *nv_search(const char *name, Dt_t *root, int mode)
 Namval_t *nv_bfsearch(const char *name, Dt_t *root, Namval_t **var, char **last)
 {
 	int		offset = staktell();
-	register char	*cp;
+	register char	*sp, *cp=0;
 	Namval_t	*np, *nq;
 	if(var)
 		*var = 0;
-	/* check for . in the name */
-	if(!(cp=strrchr(name+1,'.')))
+	/* check for . in the name before = */
+	for(sp=(char*)name+1; *sp; sp++) 
+	{
+		if(*sp=='=')
+			return(0);
+		if(*sp=='.')
+			cp = sp; 
+	}
+	if(!cp)
 		return(var?nv_search(name,root,0):0);
 	stakputs(name);
 	stakputc(0);
@@ -945,6 +954,13 @@ struct table
 	Dt_t		*dict;
 };
 
+Namval_t *nv_parent(Namval_t *np)
+{
+	if(!nv_istable(np))
+		return(0);
+	return(((struct table*)(np->nvfun))->parent);
+}
+
 static Namval_t *next_table(register Namval_t* np, Dt_t *root,Namfun_t *fp)
 {
 	struct table *tp = (struct table *)fp;
@@ -957,29 +973,8 @@ static Namval_t *next_table(register Namval_t* np, Dt_t *root,Namfun_t *fp)
 static Namval_t *create_table(Namval_t *np,const char *name,int flags,Namfun_t *fp)
 {
 	struct table *tp = (struct table *)fp;
-	char *cp;
-	if(!name)
-	{
-		if(flags==NV_LAST)
-			return(tp->parent);
-		return(0);
-	}
 	tp->shp->last_table = np;
-	if(np = nv_search(name,tp->dict,0))
-		return(np);
-	cp = strrchr(name, '.');
-	while(cp > (char*)name)
-	{
-		*cp = 0;
-		np = nv_search(name,tp->dict, 0);
-		*cp = '.';
-		if(np)
-			return(nv_create(np, cp+1, flags, (Namfun_t*)0));
-		while(*--cp!='.' && cp!=(char*)name);
-	}
-	if(flags&NV_NOADD)
-		return(0);
-	return(nv_search(name,tp->dict,NV_ADD));
+	return(nv_create(name, tp->dict, flags, fp));
 }
 
 static Namfun_t *clone_table(Namval_t* np, Namval_t *mp, int flags, Namfun_t *fp)
@@ -1072,7 +1067,9 @@ Dt_t *nv_dict(Namval_t* np)
 	{
 		if(tp = (struct table*)nv_hasdisc(np,&table_disc))
 			return(tp->dict);
+#if 0
 		np = nv_create(np,(const char*)0, NV_FIRST, (Namfun_t*)0);
+#endif
 	}
 	return(sh.var_tree);
 }
@@ -1094,7 +1091,10 @@ Namval_t *nv_mount(Namval_t *np, const char *name, Dt_t *dict)
 	if(!(tp = newof((struct table*)0, struct table,1,0)))
 		return(0);
 	if(name)
-		mp = nv_create(pp,name,0,(Namfun_t*)0);
+	{
+		Namfun_t *fp = pp->nvfun;
+		mp = (*fp->disc->createf)(pp,name,0,fp);
+	}
 	else
 		mp = np;
 	if(!nv_isnull(mp))

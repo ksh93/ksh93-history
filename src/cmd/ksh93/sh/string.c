@@ -64,12 +64,14 @@ int sh_locate(register const char *sp,const Shtable_t *table,int size)
  *  shtab_options lookup routine
  */
 
+#define sep(c)		((c)=='-'||(c)=='_')
+
 int sh_lookopt(register const char *sp, int *invert)
 {
 	register int			first;
 	register const Shtable_t	*tp;
 	register int			c;
-	register const char		*s, *t, *b;
+	register const char		*s, *t, *sw, *tw;
 	int				amb;
 	int				hit;
 	int				inv;
@@ -79,6 +81,8 @@ int sh_lookopt(register const char *sp, int *invert)
 	if(*sp=='n' && *(sp+1)=='o' && (*(sp+2)!='t' || *(sp+3)!='i'))
 	{
 		sp+=2;
+		if(sep(*sp))
+			sp++;
 		*invert = !*invert;
 	}
 	if((first= *sp)==0)
@@ -99,12 +103,14 @@ int sh_lookopt(register const char *sp, int *invert)
 				*invert ^= no;
 				return(tp->sh_number);
 			}
-			s=sp;
-			b=t;
+			s=sw=sp;
+			tw=t;
 			for(;;)
 			{
-				if(!*s)
+				if(!*s || *s=='=')
 				{
+					if (*s == '=' && !strtol(s+1, NiL, 0))
+						no = !no;
 					if (!*t)
 					{
 						*invert ^= no;
@@ -124,28 +130,30 @@ int sh_lookopt(register const char *sp, int *invert)
 				}
 				else if(!*t)
 					break;
-				else if(*s==*t || (*s=='-' || *s=='_') && (*t=='-' || *t=='_'))
+				else if(sep(*s))
+					sw = ++s;
+				else if(sep(*t))
+					tw = ++t;
+				else if(*s==*t)
 				{
 					s++;
 					t++;
 				}
-				else if(*t=='-' || *t=='_')
-					t++;
-				else if(*t!='-' && *t != '_' || t==b)
-				{
-					if(*s=='-' || *s=='_')
-						s++;
-					else if(s==sp || *(s-1)=='-' || *(s-1)=='_')
-						break;
-					while(*t && *t!='-' && *t!='_')
-						t++;
-					if(*t!='-' && *t!='_')
-						break;
-					for(t++; s>sp && *s != *t; s--);
-				}
+				else if(s==sw && t==tw)
+					break;
 				else
-					while (*s && *s != *t)
-						s++;
+				{
+					if(t!=tw)
+					{
+						while(*t && !sep(*t))
+							t++;
+						if(!*t)
+							break;
+						tw = ++t;
+					}
+					while (s>sw && *s!=*t)
+						s--;
+				}
 			}
 		}
 		tp = (Shtable_t*)((char*)tp+sizeof(*shtab_options));

@@ -41,6 +41,7 @@
 
 #define MATCH_RAW	1
 #define MATCH_MAKE	2
+#define MATCH_META	4
 
 #define MATCHPATH	offsetof(globlist_t, gl_path)
 
@@ -225,7 +226,7 @@ trim(register char* sp, register char* p1, int* n1, register char* p2, int* n2)
 }
 
 static void
-addmatch(register glob_t* gp, const char* dir, const char* pat, register const char* rescan, char* endslash)
+addmatch(register glob_t* gp, const char* dir, const char* pat, register const char* rescan, char* endslash, int meta)
 {
 	register globlist_t*	ap;
 	int			offset;
@@ -275,7 +276,7 @@ addmatch(register glob_t* gp, const char* dir, const char* pat, register const c
 		gp->gl_match = ap;
 		gp->gl_pathc++;
 	}
-	ap->gl_flags = MATCH_RAW;
+	ap->gl_flags = MATCH_RAW|meta;
 	if (gp->gl_flags & GLOB_COMPLETE)
 		ap->gl_flags |= MATCH_MAKE;
 }
@@ -304,8 +305,9 @@ glob_dir(glob_t* gp, globlist_t* ap)
 	int			notdir;
 	int			t1;
 	int			t2;
+	int			bracket;
 
-	int			bracket = 0;
+	int			anymeta = ap->gl_flags & MATCH_META;
 	int			complete = 0;
 	int			err = 0;
 	int			meta = 0;
@@ -327,6 +329,7 @@ glob_dir(glob_t* gp, globlist_t* ap)
 	prefix = dirname = ap->gl_path;
 	first = (rescan == prefix);
 again:
+	bracket = 0;
 	for (;;)
 	{
 		switch (c = *rescan++)
@@ -348,13 +351,20 @@ again:
 				c = (*gp->gl_type)(gp, prefix);
 				*(rescan - 2) = gp->gl_delim;
 				if (c == GLOB_DIR)
-					addmatch(gp, NiL, prefix, NiL, rescan - 1);
+					addmatch(gp, NiL, prefix, NiL, rescan - 1, anymeta);
 			}
-			else if ((*gp->gl_type)(gp, prefix))
-				addmatch(gp, NiL, prefix, NiL, NiL);
+			else if ((anymeta || !(gp->gl_flags & GLOB_NOCHECK)) && (*gp->gl_type)(gp, prefix))
+				addmatch(gp, NiL, prefix, NiL, NiL, anymeta);
 			return;
 		case '[':
-			bracket = 1;
+			if (!bracket)
+			{
+				bracket = MATCH_META;
+				if (*rescan == '!')
+					rescan++;
+				if (*rescan == ']')
+					rescan++;
+			}
 			continue;
 		case ']':
 			meta |= bracket;
@@ -364,7 +374,7 @@ again:
 				continue;
 		case '*':
 		case '?':
-			meta = 1;
+			meta = MATCH_META;
 			continue;
 		case '\\':
 			if (!(gp->gl_flags & GLOB_NOESCAPE))
@@ -387,7 +397,8 @@ again:
 		}
 		break;
 	}
-	if(matchdir)
+	anymeta |= meta;
+	if (matchdir)
 		goto skip;
 	if (pat == prefix)
 	{
@@ -415,21 +426,21 @@ again:
 		*(restore1 = pat - 1) = 0;
 	}
 	if (!complete && (gp->gl_flags & GLOB_STARSTAR))
-		while ( pat[0] == '*' && pat[1] == '*' && (pat[2] == '/'  || pat[2]==0))
+		while (pat[0] == '*' && pat[1] == '*' && (pat[2] == '/'  || pat[2]==0))
 		{
 			matchdir = pat;
-			if(pat[2])
+			if (pat[2])
 			{
 				pat += 3;
-				while(*pat=='/') pat++;
-				if(*pat)
+				while (*pat=='/') pat++;
+				if (*pat)
 					continue;
 			}
 			rescan = *pat?0:pat;
 			pat = "*";
 			goto skip;
 		}
-	if(matchdir)
+	if (matchdir)
 	{
 		rescan = pat;
 		goto again;
@@ -440,14 +451,15 @@ skip:
 	if (rescan && !complete && (gp->gl_flags & GLOB_STARSTAR))
 	{
 		register char *p = rescan;
-		while ( p[0] == '*' && p[1] == '*' && (p[2] == '/'  || p[2]==0))
+		while (p[0] == '*' && p[1] == '*' && (p[2] == '/'  || p[2]==0))
 		{
 			rescan = p;
-			if(starstar = (p[2]==0))
+			if (starstar = (p[2]==0))
 				break;
 			p += 3;
-			while(*p=='/') p++;
-			if(*p==0)
+			while (*p=='/')
+				p++;
+			if (*p==0)
 			{
 				starstar = 2;
 				break;
@@ -511,13 +523,13 @@ skip:
 				if (ire && !regexec(ire, name, 0, NiL, 0))
 					continue;
 				if (matchdir && (name[0] != '.' || name[1] && (name[1] != '.' || name[2])) && !notdir)
-					addmatch(gp,prefix,name,matchdir,NiL);
+					addmatch(gp, prefix, name, matchdir, NiL, anymeta);
 				if (!regexec(pre, name, 0, NiL, 0))
 				{
-					if(!rescan || !notdir)
-						addmatch(gp, prefix, name, rescan, NiL);
-					if(starstar==1 || (starstar==2 && !notdir))
-						addmatch(gp, prefix, name, starstar==2?"":NiL, NiL);
+					if (!rescan || !notdir)
+						addmatch(gp, prefix, name, rescan, NiL, anymeta);
+					if (starstar==1 || (starstar==2 && !notdir))
+						addmatch(gp, prefix, name, starstar==2?"":NiL, NiL, anymeta);
 				}
 				errno = 0;
 			}

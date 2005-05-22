@@ -21,10 +21,10 @@
 ***********************************************************************/
 #pragma prototyped
 
+#include <stdio.h>
+
 #include "FEATURE/mmap"
 #include "FEATURE/vmalloc"
-
-extern int	printf(const char*, ...);
 
 int
 main()

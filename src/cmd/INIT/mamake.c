@@ -25,7 +25,7 @@
  * coded for portability
  */
 
-static char id[] = "\n@(#)$Id: mamake (AT&T Labs Research) 2005-03-11 $\0\n";
+static char id[] = "\n@(#)$Id: mamake (AT&T Labs Research) 2005-03-19 $\0\n";
 
 #if _PACKAGE_ast
 
@@ -33,7 +33,7 @@ static char id[] = "\n@(#)$Id: mamake (AT&T Labs Research) 2005-03-11 $\0\n";
 #include <error.h>
 
 static const char usage[] =
-"[-?\n@(#)$Id: mamake (AT&T Labs Research) 2005-03-11 $\n]"
+"[-?\n@(#)$Id: mamake (AT&T Labs Research) 2005-03-19 $\n]"
 USAGE_LICENSE
 "[+NAME?mamake - make abstract machine make]"
 "[+DESCRIPTION?\bmamake\b reads \amake abstract machine\a target and"
@@ -2025,6 +2025,7 @@ main(int argc, char** argv)
 	register char*		s;
 	register char*		t;
 	register char*		v;
+	Buf_t*			tmp;
 	int			c;
 
 	/*
@@ -2258,6 +2259,11 @@ main(int argc, char** argv)
 				c = *t;
 				*t = 0;
 				search(state.vars, s, v);
+				tmp = buffer();
+				append(tmp, s);
+				append(tmp, ".FORCE");
+				search(state.vars, use(tmp), v);
+				drop(tmp);
 				*t = c;
 				break;
 			}

@@ -1,3 +1,8 @@
+05-05-17 cat.c,head.c: disable EPIPE error messages
+05-04-14 chgrp.c: -f means all non-syntax error messages
+05-04-11 fds.c: add from old internal open(1)
+05-04-09 cmdext.h,cmdlist.h: generate from source -- about time
+05-03-24 features/symlink: verify { lchmod lchown } implementations
 05-03-07 date.c: add --listzones to list the time zone table
 05-02-14 chmod.c: add --reference=file
 05-01-11 cat.c: restore output stream to binary mode on exit

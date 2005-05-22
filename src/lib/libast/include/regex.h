@@ -163,7 +163,7 @@ typedef struct regstat_s
 	regflags_t	re_flags;	/* REG_LEFT|REG_RIGHT		*/
 	ssize_t		re_min;		/* min anchored match length	*/
 	ssize_t		re_max;		/* max anchored match length	*/
-	ssize_t		re_record;	/* regreexec() match length	*/
+	ssize_t		re_record;	/* regrexec() match length	*/
 } regstat_t;
 
 struct regex_s

@@ -31,6 +31,8 @@
 
 #include "FEATURE/common"
 
+#include <setjmp.h>
+
 union _u_
 {
 	long			u1;
@@ -42,6 +44,7 @@ union _u_
 	_ast_fltmax_t		u7;
 	void*			u8;
 	char*			(*u9)();
+	jmp_buf			u10;
 };
 
 struct _s_
@@ -51,8 +54,6 @@ struct _s_
 };
 
 #define roundof(x,y)	(((x)+((y)-1))&~((y)-1))
-
-extern int		printf(const char*, ...);
 
 static union _u_	u;
 static union _u_	v;

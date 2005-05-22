@@ -179,6 +179,7 @@ struct arithnod
 #define IOSTRG	0x2000		/* here-document stored as incore string */
 #define IOSTRIP 0x4000		/* strip leading tabs for here-document */
 #define IOQUOTE	0x8000		/* here-document delimiter was quoted */
+#define IOVNM	0x10000		/* iovname field is non-zero */
 
 union Shnode_u
 {

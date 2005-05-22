@@ -80,13 +80,13 @@ typedef struct  _mac_
 
 /* type of macro expansions */
 #define M_BRACE		1	/* ${var}	*/
-#define M_TREE		2	/* ${var.)	*/
+#define M_TREE		2	/* ${var.}	*/
 #define M_SIZE		3	/* ${#var}	*/
 #define M_VNAME		4	/* ${!var}	*/
 #define M_SUBNAME	5	/* ${!var[sub]}	*/
-#define M_NAMESCAN	6	/* ${!var*)	*/
-#define M_NAMECOUNT	7	/* ${#var*)	*/
-#define M_CLASS		8	/* ${-var)	*/
+#define M_NAMESCAN	6	/* ${!var*}	*/
+#define M_NAMECOUNT	7	/* ${#var*}	*/
+#define M_CLASS		8	/* ${-var}	*/
 
 static int	substring(const char*, const char*, int[], int);
 static void	copyto(Mac_t*, int, int);
@@ -391,7 +391,7 @@ static void copyto(register Mac_t *mp,int endch, int newquote)
 					stakputc(ESCAPE);
 				break;
 			}
-			else if(sh_isoption(SH_BRACEEXPAND) && mp->pattern==4 && (*cp==',' || *cp==LBRACE || *cp==RBRACE))
+			else if(sh_isoption(SH_BRACEEXPAND) && mp->pattern==4 && (*cp==',' || *cp==LBRACE || *cp==RBRACE || *cp=='.'))
 				break;
 			else if(mp->split && endch && !mp->quote && !mp->lit)
 			{
@@ -559,7 +559,7 @@ static void copyto(register Mac_t *mp,int endch, int newquote)
 		    case S_BRACE:
 			if(!(mp->quote || mp->lit))
 			{
-				mp->patfound = mp->pattern;
+				mp->patfound = mp->split && sh_isoption(SH_BRACEEXPAND);
 				brace = 1;
 			}
 		    pattern:
@@ -932,7 +932,7 @@ retry1:
 #endif /* SHOPT_COMPOUND_ARRAY */
 		do
 			stakputc(c);
-		while((c=fcget()),isaname(c)||(c=='.' && type));
+		while(((c=fcget()),isaname(c))||type && c=='.');
 		if(type && (c==LBRACT||c==RBRACE) && fcpeek(-2)=='.')
 		{
 			if(c==RBRACE)
@@ -1208,6 +1208,13 @@ retry1:
 				if(newops)
 				{
 					type = fcget();
+					if(type=='%' || type=='#')
+					{
+						int d = fcget();
+						fcseek(-1);
+						if(d=='(')
+							type = 0;
+					}
 					fcseek(-1);
 					mp->pattern = 1+(c=='/');
 					mp->split = 0;

@@ -227,14 +227,14 @@ int ed_viread(void *context, int fd, register char *shbuf, int nchar, int reedit
 	int esc_or_hang=0;		/* <ESC> or hangup */
 	char cntl_char=0;		/* TRUE if control character present */
 #if SHOPT_RAWONLY
-# 	define viraw	1
+#   define viraw	1
 #else
 	int viraw = (sh_isoption(SH_VIRAW) || sh.st.trap[SH_KEYTRAP]);
-#endif /* SHOPT_RAWONLY */
-#ifndef FIORDCHK
+#   ifndef FIORDCHK
 	clock_t oldtime, newtime;
 	struct tms dummy;
-#endif	/* FIORDCHK */
+#   endif /* FIORDCHK */
+#endif /* SHOPT_RAWONLY */
 	if(!vp)
 	{
 		ed->e_vi = vp =  newof(0,Vi_t,1,0);
@@ -359,9 +359,8 @@ int ed_viread(void *context, int fd, register char *shbuf, int nchar, int reedit
 	/*** Initialize some things ***/
 
 	virtual = (genchar*)shbuf;
-#undef virtual
-#define virtual		((genchar*)shbuf)
 #if SHOPT_MULTIBYTE
+	virtual = (genchar*)roundof((char*)virtual-(char*)0,sizeof(genchar));
 	shbuf[i+1] = 0;
 	i = ed_internal(shbuf,virtual)-1;
 #endif /* SHOPT_MULTIBYTE */
@@ -386,18 +385,11 @@ int ed_viread(void *context, int fd, register char *shbuf, int nchar, int reedit
 	window = Window;
 	window[0] = '\0';
 
-#if KSHELL && (2*CHARSIZE*MAXLINE)<IOBSIZE
-	yankbuf = (genchar*)(shbuf + MAXLINE*sizeof(genchar));
-#else
-	if(yankbuf==0)
-		yankbuf = (genchar*)malloc(sizeof(genchar)*(MAXLINE));
-#endif
-#if KSHELL && (3*CHARSIZE*MAXLINE)<IOBSIZE
-	vp->lastline = (genchar*)(shbuf + (MAXLINE+MAXLINE)*sizeof(genchar));
-#else
-	if(vp->lastline==0)
-		vp->lastline = (genchar*)malloc(sizeof(genchar)*(MAXLINE));
-#endif
+	if(!yankbuf)
+	{
+		yankbuf = (genchar*)malloc(MAXLINE*CHARSIZE);
+		vp->lastline = (genchar*)malloc(MAXLINE*CHARSIZE);
+	}
 	if( vp->last_cmd == '\0' )
 	{
 		/*** first time for this shell ***/
@@ -632,9 +624,6 @@ int ed_viread(void *context, int fd, register char *shbuf, int nchar, int reedit
  *		REPLACE, replace char if possible
  *
 }*/
-
-#undef virtual
-#define virtual		editb.e_inbuf	/* pointer to virtual image buffer */
 
 static void append(Vi_t *vp,int c, int mode)
 {

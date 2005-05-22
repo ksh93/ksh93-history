@@ -1,3 +1,21 @@
+05-05-23 regex: REX_NEST (?[D.][E.][L.][Q.][oc]...)
+05-05-21 regex: state.fold[] is now locale specific -- doh
+05-05-19 regex: add REX_NEST (?%\\()<>[]""...) %(...) nested match
+05-05-15 recfmt.h: add recstr() reclen() fmtrec()
+05-05-13 optget.c: allow boolean options to take numeric values
+05-05-12 recfmt.c: add to recfmt.h, adjust Recfmt_t encodings
+05-04-30 sfio: add sfmaxr(), default 64K
+05-04-22 comp/omitted.c: fix magic() logic for files < 512 bytes
+05-04-20 cdt: snarf update from kpv; void* Dt_t.user added
+	 misc/error.c: library => ERROR_LIBRARY
+05-04-19 regex/regcomp.c: handle REG_SHELL [^...] == [!...]
+05-04-11 tm/tmxscan.c: handle yyy.mm.dd[-+.]hh.mm.ss.nnnnnn
+05-04-07 regex/regnexec.c: fix out of bounds boundary check -- ouch
+	 features/align.c: add jmp_buf to the alignment mix (ia64)
+	 vmalloc/vmhdr.h: add jmp_buf to the alignment mix (ia64)
+05-03-31 misc/optget.c: fix option { - _ } separator matching
+05-03-30 misc/glob.c: eliminate superfluous GLOB_NOMATCH stat() calls
+05-03-24 port/astwinsize.c: include <sys/ioctl.h> if possible
 05-03-23 string/ccmap.c: add ebcdic-m mvs cobol table
 05-03-11 comp/omitted.c: handle utime[s](const,const)
 	 comp/conf.tab: fix linux PID_MAX probe

@@ -23,6 +23,7 @@ function err_exit
 	print -u2 -r $Command: "$@"
 	let Errors+=1
 }
+alias err_exit='err_exit $LINENO'
 
 function home # id
 {
@@ -66,13 +67,9 @@ fi
 for u in root Administrator
 do	h=$(home $u)
 	if	[[ $h != . ]]
-	then	if	[[ ~$u != $h ]]
-		then	err_exit "~$u not $h"
-		fi
+	then	[[ ~$u -ef $h ]] || err_exit "~$u not $h"
 		x=~$u
-		if	[[ $x != $h ]]
-		then	err_exit "x=~$u not $h"
-		fi
+		[[ $x -ef $h ]] || "x=~$u not $h"
 		break
 	fi
 done
