@@ -276,7 +276,7 @@ typedef Sfdouble_t (*mathf)(Sfdouble_t,...);
 #   define fmodl local_fmodl
 #else
 #   if defined(_npt_fmodl)
-	protodef(fmodl)
+	protodef2(fmodl)
 #   endif
 #endif 
 

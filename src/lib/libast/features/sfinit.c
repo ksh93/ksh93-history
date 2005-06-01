@@ -23,7 +23,8 @@
  * generate sfio _Sftable static initializers
  */
 
-#include "iffeio.h"
+#include <stdio.h>
+
 #include "FEATURE/common"
 #include "FEATURE/float"
 

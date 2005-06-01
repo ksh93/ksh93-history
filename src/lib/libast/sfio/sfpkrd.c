@@ -203,6 +203,29 @@ int	action;	/* >0: peeking, if rc>=0, get action records,
 #if _socket_peek
 		if(t&SOCKET_PEEK)
 		{
+#if __MACH__ && __APPLE__
+			/*
+			 * work around macos 10.4 recv(MSG_PEEK) bug that consumes pipe() data
+			 */
+
+			static int	recv_peek_ok;
+			if (!recv_peek_ok)
+			{
+				int	fds[2];
+				char	tst[2];
+				tst[0] = 'a';
+				tst[1] = 'z';
+				recv_peek_ok = (!pipe(fds) && write(fds[1], tst, 2) && recv(fds[0], tst, 1, MSG_PEEK) == 1 && tst[0] == 'a' && recv(fds[0], tst, 1, MSG_PEEK) == 1 && tst[0] == 'a') ? 1 : -1;
+				close(fds[0]);
+				close(fds[1]);
+			}
+			if (recv_peek_ok < 0)
+			{
+				r = -1;
+				t &= ~SOCKET_PEEK;
+			}
+			else
+#endif
 			while((r = recv(fd,(char*)buf,n,MSG_PEEK)) < 0)
 			{	if(errno == EINTR)
 					return -1;

@@ -196,7 +196,7 @@ cat{
 	#endif
 }end
 output{
-	#include "iffeio.h"
+	#include <stdio.h>
 	#include "FEATURE/limits"
 	#ifndef FILENAME_MAX
 	#ifndef NAME_MAX
@@ -317,7 +317,7 @@ output{
 	}
 }end
 macro{
-	#include "iffeio.h"
+	#include <stdio.h>
 	<<"#if defined(__STDPP__directive) && defined(__STDPP__initial)">>
 	<<"__STDPP__directive pragma pp:initial">>
 	<<"#endif">>

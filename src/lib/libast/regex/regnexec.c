@@ -723,14 +723,16 @@ collmatch(Rex_t* rex, unsigned char* s, unsigned char* e, unsigned char** p)
 }
 
 static unsigned char*
-nestmatch(register unsigned char* s, register unsigned char* e, const unsigned short* type, register int co, register int cc, int quote)
+nestmatch(register unsigned char* s, register unsigned char* e, const unsigned short* type, register int co)
 {
 	register int	c;
+	register int	cc;
 	unsigned int	n;
+	int		oc;
 
-	if (quote)
+	if (type[co] & (REX_NEST_literal|REX_NEST_quote))
 	{
-		n = (quote & REX_NEST_literal) ? 0 : REX_NEST_escape;
+		n = (type[co] & REX_NEST_literal) ? REX_NEST_terminator : (REX_NEST_escape|REX_NEST_terminator);
 		while (s < e)
 		{
 			c = *s++;
@@ -738,22 +740,29 @@ nestmatch(register unsigned char* s, register unsigned char* e, const unsigned s
 				return s;
 			else if (type[c] & n)
 			{
-				if (s >= e)
-					return 0;
+				if (s >= e || (type[c] & REX_NEST_terminator))
+					break;
 				s++;
 			}
 		}
 	}
 	else
 	{
+		cc = type[co] >> REX_NEST_SHIFT;
+		oc = type[co] & (REX_NEST_open|REX_NEST_close);
 		n = 1;
 		while (s < e)
 		{
 			c = *s++;
-			switch (type[c] & (REX_NEST_delimiter|REX_NEST_escape|REX_NEST_open|REX_NEST_close))
+			switch (type[c] & (REX_NEST_escape|REX_NEST_open|REX_NEST_close|REX_NEST_delimiter|REX_NEST_separator|REX_NEST_terminator))
 			{
 			case REX_NEST_delimiter:
-				return 0;
+			case REX_NEST_terminator:
+				return oc ? 0 : s;
+			case REX_NEST_separator:
+				if (!oc)
+					return s;
+				break;
 			case REX_NEST_escape:
 				if (s >= e)
 					return 0;
@@ -772,7 +781,7 @@ nestmatch(register unsigned char* s, register unsigned char* e, const unsigned s
 					if (!++n)
 						return 0;
 				}
-				else if (!(s = nestmatch(s, e, type, c, type[c] >> REX_NEST_SHIFT, type[c] & (REX_NEST_literal|REX_NEST_quote))))
+				else if (!(s = nestmatch(s, e, type, c)))
 					return 0;
 				break;
 			case REX_NEST_close:
@@ -783,6 +792,7 @@ nestmatch(register unsigned char* s, register unsigned char* e, const unsigned s
 				break;
 			}
 		}
+		return (oc || !(type[UCHAR_MAX+1] & REX_NEST_terminator)) ? 0 : s;
 	}
 	return 0;
 }
@@ -1450,8 +1460,21 @@ DEBUG_TEST(0x0200,(sfprintf(sfstdout,"AHA#%04d 0x%04x parse %s=>%s `%-.*s'\n", _
 			bitset(rex->re.neg_catch.index, s - rex->re.neg_catch.beg);
 			return NONE;
 		case REX_NEST:
-			if ((env->end - s) < 2 || (c = *s++) != rex->re.nest.primary || !(s = nestmatch(s, env->end, rex->re.nest.type, c, rex->re.nest.type[c] >> REX_NEST_SHIFT, rex->re.nest.type[c] & (REX_NEST_literal|REX_NEST_quote))))
-				return NONE;
+			do
+			{
+				if ((c = *s++) == rex->re.nest.primary)
+				{
+					if (s >= env->end || !(s = nestmatch(s, env->end, rex->re.nest.type, c)))
+						return NONE;
+					break;
+				}
+				if (rex->re.nest.primary >= 0)
+					return NONE;
+			    	if (rex->re.nest.type[c] & (REX_NEST_delimiter|REX_NEST_separator|REX_NEST_terminator))
+					break;
+			    	if (!(s = nestmatch(s, env->end, rex->re.nest.type, c)))
+					return NONE;
+			} while (s < env->end && !(rex->re.nest.type[*(s-1)] & (REX_NEST_delimiter|REX_NEST_separator|REX_NEST_terminator)));
 			break;
 		case REX_NULL:
 			break;

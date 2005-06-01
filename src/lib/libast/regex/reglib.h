@@ -393,15 +393,18 @@ typedef struct Exec_s
 #define REX_NEST_open		0x01
 #define REX_NEST_close		0x02
 #define REX_NEST_escape		0x04
-#define REX_NEST_delimiter	0x08
-#define REX_NEST_quote		0x10
-#define REX_NEST_literal	0x20
+#define REX_NEST_quote		0x08
+#define REX_NEST_literal	0x10
+#define REX_NEST_delimiter	0x20
+#define REX_NEST_terminator	0x40
+#define REX_NEST_separator	0x80
 
-#define REX_NEST_SHIFT		6
+#define REX_NEST_SHIFT		8
 
 typedef struct Nest_s
 {
 	int		primary;
+	unsigned short	none;		/* for Nest_t.type[-1] */
 	unsigned short	type[1];
 } Nest_t;
 

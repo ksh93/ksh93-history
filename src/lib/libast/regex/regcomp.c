@@ -1972,7 +1972,7 @@ chr(register Cenv_t* env, int* escaped)
 
 	*escaped = 0;
 	if (!(c = *env->cursor))
-		return 0;
+		return -1;
 	env->cursor++;
 	if (c == '\\')
 	{
@@ -1983,7 +1983,7 @@ chr(register Cenv_t* env, int* escaped)
 			if (env->flags & REG_LENIENT)
 				return c ? c : '\\';
 			env->error = REG_EESCAPE;
-			return 0;
+			return -1;
 		}
 		p = env->cursor;
 		c = chresc((char*)env->cursor - 1, (char**)&env->cursor);
@@ -2161,46 +2161,61 @@ grp(Cenv_t* env, int parno)
 		break;
 	case '%':
 	case T_PERCENT:
-		e = node(env, REX_NEST, 0, 0, UCHAR_MAX);
-		e->re.nest.primary = *(env->cursor + !!isalnum(*env->cursor));
+		e = node(env, REX_NEST, 0, 0, (UCHAR_MAX + 1) * sizeof(unsigned short));
+		e->re.nest.primary = isalnum(*env->cursor) ? -1 : *env->cursor;
 		n = 1;
 		for (;;)
 		{
 			switch (i = chr(env, &esc))
 			{
+			case -1:
 			case 0:
 			invalid:
 				env->cursor -= esc + 1;
 				env->error = REG_EPAREN;
 				return 0;
 			case 'D':
-				if (!(i = chr(env, &esc)))
+				x = REX_NEST_delimiter;
+				/*FALLTHROUGH*/
+			delimiter:
+				if ((i = chr(env, &esc)) < 0)
 					goto invalid;
-				if (e->re.nest.type[i] & (REX_NEST_open|REX_NEST_close|REX_NEST_escape|REX_NEST_literal|REX_NEST_quote))
+				if (e->re.nest.type[i] & ~x)
 					goto invalid;
-				e->re.nest.type[i] = REX_NEST_delimiter;
+				e->re.nest.type[i] = x;
 				continue;
 			case 'E':
-				if (!(i = chr(env, &esc)))
-					goto invalid;
-				if (e->re.nest.type[i] & (REX_NEST_open|REX_NEST_close|REX_NEST_delimiter|REX_NEST_literal|REX_NEST_quote))
-					goto invalid;
-				e->re.nest.type[i] = REX_NEST_escape;
-				continue;
+				x = REX_NEST_escape;
+				goto delimiter;
 			case 'L':
-				if (!(i = chr(env, &esc)))
+				x = REX_NEST_literal;
+				goto quote;
+			case 'O':
+				switch (i = chr(env, &esc))
+				{
+				case 'T':
+					e->re.nest.type[UCHAR_MAX+1] |= REX_NEST_terminator;
+					break;
+				default:
 					goto invalid;
-				if (e->re.nest.type[i] & (REX_NEST_open|REX_NEST_close|REX_NEST_delimiter|REX_NEST_escape|REX_NEST_quote))
-					goto invalid;
-				e->re.nest.type[i] = REX_NEST_open|REX_NEST_close|REX_NEST_literal|(i<<REX_NEST_SHIFT);
+				}
 				continue;
 			case 'Q':
-				if (!(i = chr(env, &esc)))
+				x = REX_NEST_quote;
+				/*FALLTHROUGH*/
+			quote:
+				if ((i = chr(env, &esc)) < 0)
 					goto invalid;
-				if (e->re.nest.type[i] & (REX_NEST_open|REX_NEST_close|REX_NEST_delimiter|REX_NEST_escape|REX_NEST_literal))
+				if (e->re.nest.type[i] & ~x)
 					goto invalid;
-				e->re.nest.type[i] = REX_NEST_open|REX_NEST_close|REX_NEST_quote|(i<<REX_NEST_SHIFT);
+				e->re.nest.type[i] = x|REX_NEST_open|REX_NEST_close|(i<<REX_NEST_SHIFT);
 				continue;
+			case 'S':
+				x = REX_NEST_separator;
+				goto delimiter;
+			case 'T':
+				x = REX_NEST_terminator;
+				goto delimiter;
 			case '|':
 			case '&':
 				if (!esc)
@@ -2216,10 +2231,10 @@ grp(Cenv_t* env, int parno)
 				goto nesting;
 			default:
 			nesting:
-				if (isalnum(i) || (e->re.nest.type[i] & (REX_NEST_close|REX_NEST_delimiter|REX_NEST_escape|REX_NEST_literal|REX_NEST_quote)))
+				if (isalnum(i) || (e->re.nest.type[i] & (REX_NEST_close|REX_NEST_escape|REX_NEST_literal|REX_NEST_quote|REX_NEST_delimiter|REX_NEST_separator|REX_NEST_terminator)))
 					goto invalid;
 				e->re.nest.type[i] = REX_NEST_open;
-				if (!(x = chr(env, &esc)) || (e->re.nest.type[x] & (REX_NEST_close|REX_NEST_delimiter|REX_NEST_escape)))
+				if ((x = chr(env, &esc)) < 0 || (e->re.nest.type[x] & (REX_NEST_close|REX_NEST_escape|REX_NEST_delimiter|REX_NEST_separator|REX_NEST_terminator)))
 					goto invalid;
 				if (!esc)
 				{

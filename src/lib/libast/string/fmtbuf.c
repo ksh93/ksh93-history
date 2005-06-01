@@ -52,8 +52,12 @@ fmtbuf(size_t n)
 			{
 				bigsiz = roundof(n, 8 * 1024);
 				if (!(big = newof(big, char, bigsiz, 0)))
+				{
+					lck--;
 					return 0;
+				}
 			}
+			lck--;
 			return big;
 		}
 		nxt = buf;

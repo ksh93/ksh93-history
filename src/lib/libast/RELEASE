@@ -1,4 +1,9 @@
-05-05-23 regex: REX_NEST (?[D.][E.][L.][Q.][oc]...)
+05-06-02 features/*,Makefile: drop vestigel iffeio.h bootstrap workaround
+05-05-31 string/fmtbuf.c: unlock (spin) before each return -- doh
+05-05-30 sfio/sfpkrd.c: work around macos 10.4 recv(MSG_PEEK) bug
+05-05-27 regex: add REX_NEST (?%[S.][T.][OT])
+	 magic.tab: ammend bsd db magic
+05-05-23 regex: REX_NEST (?%[D.][E.][L.][Q.][oc]...)
 05-05-21 regex: state.fold[] is now locale specific -- doh
 05-05-19 regex: add REX_NEST (?%\\()<>[]""...) %(...) nested match
 05-05-15 recfmt.h: add recstr() reclen() fmtrec()

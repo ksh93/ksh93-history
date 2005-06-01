@@ -4,7 +4,7 @@ lib	qfrexp,qldexp
 key	signed
 
 tst	tmp_rmfail note{ open files cannot be removed }end execute{
-	#include "iffeio.h"
+	#include <stdio.h>
 	#include <string.h>
 	int
 	main()
@@ -106,7 +106,7 @@ tst	lib_cvt note{ native floating point conversions ok }end link{
 }end
 
 tst	xopen_stdio note{ Stdio fseek/fflush are X/Open-compliant }end execute{
-	#include	"iffeio.h"
+	#include <stdio.h>
 	#define Failed(file)	(unlink(file),1)
 	int
 	main(argc, argv)

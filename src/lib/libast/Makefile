@@ -215,8 +215,6 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	CCFLAGS += -D_BLD_ast
 
 parameter	(_BLD_ast) (_AST_VERSION) ast_version.h
-ignore		iffeio.h
-scan.ignore	iffeio.h
 virtual		ast/stdio.h
 
 		:NOOPTIMIZE: spawnveg.c
@@ -244,8 +242,6 @@ confmap.c conftab.c confstr.c pathconf.c sysconf.c :JOINT: \
 $(INCLUDEDIR) :INSTALLPROTO: $(HEADERSRC) $(HEADERGEN)
 
 $(HEADERGEN) :COPY: FEATURE/$$(<:B:/$(ID)_//)
-
-iffeio.h :COPY: FEATURE/iffeio
 
 lcgen : lcgen.c
 	$(CC.NATIVE|CC) -o $(<) $(*)
@@ -315,13 +311,12 @@ atmain.o : atmain.C
  * more stdio.h complications ...
  * prepare for compilation by generating these headers first;
  * this helps mam by catching headers that might be indirectly
- * included on other systems; it also catches iffeio.h early in
- * the process since the ast stdio.h is useless until -last is built
+ * included on other systems
  */
 
 .check.hdr : .IGNORE .VIRTUAL \
-		FEATURE/standards - ast_common.h - iffeio.h - \
-		ast_limits.h - ast_stdio.h ast_nl_types.h - ast_wchar.h
+		FEATURE/standards - ast_common.h - ast_limits.h - \
+		ast_stdio.h ast_nl_types.h - ast_wchar.h
 	rm -f $(HEADERSTD)	/* clean up pre-2002-03-17 headers */
 
 /*
