@@ -119,9 +119,24 @@ static int outexceptf(Sfio_t* iop, int mode, void* data, Sfdisc_t* dp)
 		return(b_print(0,argv,&prdata));
 	prdata.options = sh_optecho;
 	prdata.raw = 1;
-	if(argv[1] && strcmp(argv[1],"-n")==0)
-		prdata.echon = 1;
-	return(b_print(0,argv+prdata.echon,&prdata));
+	while(argv[1] && *argv[1]=='-')
+	{
+		if(strcmp(argv[1],"-n")==0)
+			prdata.echon = 1;
+#if !SHOPT_ECHOE
+		else if(strcmp(argv[1],"-e")==0)
+			prdata.raw = 0;
+		else if(strcmp(argv[1],"-ne")==0 || strcmp(argv[1],"-en"))
+		{
+			prdata.raw = 0;
+			prdata.echon = 1;
+		}
+#endif /* SHOPT_ECHOE */
+		else
+			break;
+		argv++;
+	}
+	return(b_print(0,argv,&prdata));
    }
 #endif /* SHOPT_ECHOPRINT */
 

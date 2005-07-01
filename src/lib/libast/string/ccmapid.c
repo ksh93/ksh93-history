@@ -98,6 +98,15 @@ static const Ccmap_t	maps[] =
 	},
 
 	{
+	"ebcdic-u",
+	"u|ebcdic?(-)(u|mf)|microfocus",
+	"microfocus cobol ebcdic",
+	"EBCDIC-U",
+	0,
+	CC_EBCDIC_U,
+	},
+
+	{
 	"native",
 	"n|native|local",
 	"native code set",

@@ -95,7 +95,7 @@ static const _ast_iconv_list_t	codes[] =
 {
 	{
 	"utf",
-	"u|unicode|utf",
+	"un|unicode|utf",
 	"multibyte 8-bit unicode",
 	"UTF-%s",
 	"8",
@@ -104,7 +104,7 @@ static const _ast_iconv_list_t	codes[] =
 
 	{
 	"ume",
-	"m|ume|utf?(-)7",
+	"um|ume|utf?(-)7",
 	"multibyte 7-bit unicode",
 	"UTF-7",
 	0,

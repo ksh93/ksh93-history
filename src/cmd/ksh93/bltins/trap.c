@@ -221,8 +221,9 @@ endopts:
 
 static int sig_number(const char *string)
 {
-	register int n;
-	char *last;
+	const Shtable_t	*tp;
+	register int	n,sig=0;
+	char		*last;
 	if(isdigit(*string))
 	{
 		n = strtol(string,&last,10);
@@ -243,8 +244,20 @@ static int sig_number(const char *string)
 		while(c);
 		stakseek(n);
 		if(memcmp(stakptr(n),"SIG",3)==0)
+		{
+			sig = 1;
 			n += 3;
-		n = sh_lookup(stakptr(n),shtab_signals);
+		}
+		tp = sh_locate(stakptr(n),(const Shtable_t*)shtab_signals,sizeof(*shtab_signals));
+		n = tp->sh_number;
+		if(sig==1 && (n>=(SH_TRAP-1) && n < (1<<SH_SIGBITS)))
+		{
+			/* sig prefix cannot match internal traps */
+			n = 0;
+			tp = (Shtable_t*)((char*)tp + sizeof(*shtab_signals));
+			if(strcmp(stakptr(n),tp->sh_name)==0)
+				n = tp->sh_number;
+		}
 		n &= (1<<SH_SIGBITS)-1;
 		if(n < SH_TRAP)
 			n--;

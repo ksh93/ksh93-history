@@ -1,3 +1,10 @@
+05-07-21 port/astconf.c: retain most recent synthesized lookup
+05-07-20 sfio/sfsetbuf.c: default file io size now 64K on all systems
+05-07-17 ccmap*: add microfocus cobol EBCDIC_U
+05-06-29 regex/regcomp.c: fix the A & B inline flag logic
+05-06-15 include/recfmt.h: add fs format flag to fmtrec()
+05-06-14 error.c: add ERROR_OPTIONS { break count match }
+05-06-07 features/stdio: drop FEATURE/limits to fix bootstrap circular dep
 05-06-02 features/*,Makefile: drop vestigel iffeio.h bootstrap workaround
 05-05-31 string/fmtbuf.c: unlock (spin) before each return -- doh
 05-05-30 sfio/sfpkrd.c: work around macos 10.4 recv(MSG_PEEK) bug

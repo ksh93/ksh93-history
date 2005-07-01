@@ -43,21 +43,22 @@
  *  This is only used for small tables and is used to save non-sharable memory 
  */
 
-int sh_locate(register const char *sp,const Shtable_t *table,int size)
+const Shtable_t *sh_locate(register const char *sp,const Shtable_t *table,int size)
 {
 	register int			first;
 	register const Shtable_t	*tp;
 	register int			c;
+	static const Shtable_t		empty = {0,0};
 	if(sp==0 || (first= *sp)==0)
-		return(0);
+		return(&empty);
 	tp=table;
 	while((c= *tp->sh_name) && (CC_NATIVE!=CC_ASCII || c <= first))
 	{
 		if(first == c && strcmp(sp,tp->sh_name)==0)
-			return(tp->sh_number);
+			return(tp);
 		tp = (Shtable_t*)((char*)tp+size);
 	}
-	return(0);
+	return(&empty);
 }
 
 /*

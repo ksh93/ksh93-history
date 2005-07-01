@@ -597,8 +597,7 @@ tst	- output{
 
 }end
 
-tst	no64 note{ largefile 64 broken }end execute{
-	#define _LARGEFILE64_SOURCE 1
+tst	no64 -D_LARGEFILE64_SOURCE note{ largefile 64 broken }end execute{
 	#include <sys/types.h>
 	#include <sys/stat.h>
 	int

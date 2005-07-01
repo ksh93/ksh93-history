@@ -29,7 +29,7 @@
 #include <ctype.h>
 
 char*
-fmtrec(Recfmt_t f)
+fmtrec(Recfmt_t f, int fs)
 {
 	char*	b;
 	char*	e;
@@ -46,13 +46,18 @@ fmtrec(Recfmt_t f)
 		if ((del[0] = REC_D_DELIMITER(f)) != '\n')
 		{
 			del[1] = 0;
-			sfsprintf(s, e - s, "%s", fmtquote(del, NiL, NiL, 1, 0));
+			if (fs)
+				sfsprintf(s, e - s, "0x%02x", del);
+			else
+				sfsprintf(s, e - s, "%s", fmtquote(del, NiL, NiL, 1, 0));
 		}
 		else
 			*s = 0;
 		break;
 	case REC_fixed:
-		sfsprintf(b, e - b, "f%lu", REC_F_SIZE(f));
+		if (!fs)
+			*s++ = 'f';
+		sfsprintf(s, e - s, "%lu", REC_F_SIZE(f));
 		break;
 	case REC_variable:
 		*s++ = 'v';
@@ -71,16 +76,17 @@ fmtrec(Recfmt_t f)
 		*s = 0;
 		break;
 	case REC_method:
+		*s++ = 'm';
 		switch (n = REC_M_INDEX(f))
 		{
 		case REC_M_data:
-			sfsprintf(s, e - s, "mdata");
+			sfsprintf(s, e - s, "data");
 			break;
 		case REC_M_path:
-			sfsprintf(s, e - s, "mpath");
+			sfsprintf(s, e - s, "path");
 			break;
 		default:
-			sfsprintf(s, e - s, "m%lu", n);
+			sfsprintf(s, e - s, "%lu", n);
 			break;
 		}
 		break;

@@ -10,11 +10,10 @@ hdr	dirent,ndir
 sys	dir
 nxt	dirent
 
-tst	botch_d_ino_dirent64 note{ dirent64.d_ino vs. readdir64 mismatch }end compile{
+tst	botch_d_ino_dirent64 -D_LARGEFILE64_SOURCE note{ dirent64.d_ino vs. readdir64 mismatch }end compile{
 	#if !__arm__
 	)
 	#endif
-	#define _LARGEFILE64_SOURCE	1
 	#include <dirent.h>
 	int
 	main()

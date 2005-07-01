@@ -42,6 +42,7 @@
 #include <sig.h>
 #include <stk.h>
 #include <times.h>
+#include <regex.h>
 
 Error_info_t	_error_info_ =
 {
@@ -58,29 +59,46 @@ Error_info_t	_error_info_ =
 
 __EXTERN__(Error_info_t, _error_info_);
 
-static char*	error_info_prefix;	/* should this be in error_info? */
+/*
+ * these should probably be in error_info
+ */
+
+static struct State_s
+{
+	char*		prefix;
+	Sfio_t*		tty;
+	unsigned long	count;
+	int		breakpoint;
+	regex_t*	match;
+} error_state;
 
 #undef	ERROR_CATALOG
 #define ERROR_CATALOG	(ERROR_LIBRARY<<1)
 
-#define OPT_CATALOG	1
-#define OPT_CORE	2
-#define OPT_FD		3
-#define OPT_LIBRARY	4
-#define OPT_MASK	5
-#define OPT_PREFIX	6
-#define OPT_SYSTEM	7
-#define OPT_TIME	8
-#define OPT_TRACE	9
+#define OPT_BREAK	1
+#define OPT_CATALOG	2
+#define OPT_CORE	3
+#define OPT_COUNT	4
+#define OPT_FD		5
+#define OPT_LIBRARY	6
+#define OPT_MASK	7
+#define OPT_MATCH	8
+#define OPT_PREFIX	9
+#define OPT_SYSTEM	10
+#define OPT_TIME	11
+#define OPT_TRACE	12
 
 static const Namval_t		options[] =
 {
+	"break",	OPT_BREAK,
 	"catalog",	OPT_CATALOG,
 	"core",		OPT_CORE,
+	"count",	OPT_COUNT,
 	"debug",	OPT_TRACE,
 	"fd",		OPT_FD,
 	"library",	OPT_LIBRARY,
 	"mask",		OPT_MASK,
+	"match",	OPT_MATCH,
 	"prefix",	OPT_PREFIX,
 	"system",	OPT_SYSTEM,
 	"time",		OPT_TIME,
@@ -99,32 +117,43 @@ setopt(void* a, const void* p, register int n, register const char* v)
 	if (p)
 		switch (((Namval_t*)p)->value)
 		{
+		case OPT_BREAK:
 		case OPT_CORE:
-			if (n) switch (*v)
-			{
-			case 'e':
-			case 'E':
-				error_info.core = ERROR_ERROR;
-				break;
-			case 'f':
-			case 'F':
-				error_info.core = ERROR_FATAL;
-				break;
-			case 'p':
-			case 'P':
-				error_info.core = ERROR_PANIC;
-				break;
-			default:
-				error_info.core = strtol(v, NiL, 0);
-				break;
-			}
-			else error_info.core = 0;
+			if (n)
+				switch (*v)
+				{
+				case 'e':
+				case 'E':
+					error_state.breakpoint = ERROR_ERROR;
+					break;
+				case 'f':
+				case 'F':
+					error_state.breakpoint = ERROR_FATAL;
+					break;
+				case 'p':
+				case 'P':
+					error_state.breakpoint = ERROR_PANIC;
+					break;
+				default:
+					error_state.breakpoint = strtol(v, NiL, 0);
+					break;
+				}
+			else
+				error_state.breakpoint = 0;
+			if (((Namval_t*)p)->value == OPT_CORE)
+				error_info.core = error_state.breakpoint;
 			break;
 		case OPT_CATALOG:
 			if (n)
 				error_info.set |= ERROR_CATALOG;
 			else
 				error_info.clear |= ERROR_CATALOG;
+			break;
+		case OPT_COUNT:
+			if (n)
+				error_state.count = strtol(v, NiL, 0);
+			else
+				error_state.count = 0;
 			break;
 		case OPT_FD:
 			error_info.fd = n ? strtol(v, NiL, 0) : -1;
@@ -141,13 +170,30 @@ setopt(void* a, const void* p, register int n, register const char* v)
 			else
 				error_info.mask = 0;
 			break;
+		case OPT_MATCH:
+			if (error_state.match)
+				regfree(error_state.match);
+			if (n)
+			{
+				if ((error_state.match || (error_state.match = newof(0, regex_t, 1, 0))) && regcomp(error_state.match, v, REG_EXTENDED|REG_LENIENT))
+				{
+					free(error_state.match);
+					error_state.match = 0;
+				}
+			}
+			else if (error_state.match)
+			{
+				free(error_state.match);
+				error_state.match = 0;
+			}
+			break;
 		case OPT_PREFIX:
 			if (n)
-				error_info_prefix = strdup(v);
-			else if (error_info_prefix)
+				error_state.prefix = strdup(v);
+			else if (error_state.prefix)
 			{
-				free(error_info_prefix);
-				error_info_prefix = 0;
+				free(error_state.prefix);
+				error_state.prefix = 0;
 			}
 			break;
 		case OPT_SYSTEM:
@@ -247,6 +293,27 @@ context(register Sfio_t* sp, register Error_context_t* cp)
 	}
 }
 
+/*
+ * debugging breakpoint
+ */
+
+extern void
+error_break(void)
+{
+	char*	s;
+
+	if (error_state.tty || (error_state.tty = sfopen(NiL, "/dev/tty", "r+")))
+	{
+		sfprintf(error_state.tty, "error breakpoint: ");
+		if (s = sfgetr(error_state.tty, '\n', 1))
+		{
+			if (streq(s, "q") || streq(s, "quit"))
+				exit(0);
+			stropt(s, options, sizeof(*options), setopt, NiL);
+		}
+	}
+}
+
 void
 error(int level, ...)
 {
@@ -341,8 +408,8 @@ errorv(const char* id, int level, va_list ap)
 		if (off = stktell(stkstd))
 			stkfreeze(stkstd, 0);
 		file = error_info.id;
-		if (error_info_prefix)
-			sfprintf(stkstd, "%s: ", error_info_prefix);
+		if (error_state.prefix)
+			sfprintf(stkstd, "%s: ", error_state.prefix);
 		if (flags & ERROR_USAGE)
 		{
 			if (flags & ERROR_NOID)
@@ -485,11 +552,18 @@ errorv(const char* id, int level, va_list ap)
 				(*error_info.write)(fd, s, n);
 		}
 		else
+		{
+			s = 0;
 			level &= ERROR_LEVEL;
+		}
 		stkset(stkstd, bas, off);
 	}
-	if (level >= error_info.core && error_info.core)
+	else
+		s = 0;
+	if (level >= error_state.breakpoint && error_state.breakpoint && (!error_state.match || !regexec(error_state.match, s ? s : format, 0, NiL, 0)) && (!error_state.count || !--error_state.count))
 	{
+		if (error_info.core)
+		{
 #ifndef SIGABRT
 #ifdef	SIGQUIT
 #define SIGABRT	SIGQUIT
@@ -500,12 +574,15 @@ errorv(const char* id, int level, va_list ap)
 #endif
 #endif
 #ifdef	SIGABRT
-		signal(SIGABRT, SIG_DFL);
-		kill(getpid(), SIGABRT);
-		pause();
+			signal(SIGABRT, SIG_DFL);
+			kill(getpid(), SIGABRT);
+			pause();
 #else
-		abort();
+			abort();
 #endif
+		}
+		else
+			error_break();
 	}
 	if (level >= ERROR_FATAL)
 		(*error_info.exit)(level - ERROR_FATAL + 1);

@@ -1205,6 +1205,8 @@ retry1:
 				int newquote = mp->quote;
 				int split = mp->split;
 				int quoted = mp->quoted;
+				int arith = mp->arith;
+				int zeros = mp->zeros;
 				if(newops)
 				{
 					type = fcget();
@@ -1219,6 +1221,7 @@ retry1:
 					mp->pattern = 1+(c=='/');
 					mp->split = 0;
 					mp->quoted = 0;
+					mp->arith = mp->zeros = 0;
 					newquote = 0;
 				}
 				else if(c=='?' || c=='=')
@@ -1229,6 +1232,8 @@ retry1:
 				mp->pattern = oldpat;
 				mp->split = split;
 				mp->quoted = quoted;
+				mp->arith = arith;
+				mp->zeros = zeros;
 				/* add null byte */
 				stakputc(0);
 				stakseek(staktell()-1);

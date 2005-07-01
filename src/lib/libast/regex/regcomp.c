@@ -2006,12 +2006,16 @@ grp(Cenv_t* env, int parno)
 	int		n;
 	int		x;
 	int		esc;
+	int		typ;
+	int		beg;
 	unsigned char*	p;
 
+	beg = env->pattern == env->cursor - env->token.len;
 	if (!(c = env->token.lex) && (c = *env->cursor))
 		env->cursor++;
 	env->token.len = 0;
 	env->parnest++;
+	typ = -1;
 	switch (c)
 	{
 	case '-':
@@ -2092,27 +2096,28 @@ grp(Cenv_t* env, int parno)
 					env->flags &= ~REG_COMMENT;
 				break;
 			case 'A':
+				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_SHELL);
 				env->flags |= REG_AUGMENTED|REG_EXTENDED;
-				env->type = ARE;
+				typ = ARE;
 				break;
 			case 'B':
 				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_SHELL);
-				env->type = BRE;
+				typ = BRE;
 				break;
 			case 'E':
 				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_SHELL);
 				env->flags |= REG_EXTENDED;
-				env->type = ERE;
+				typ = ERE;
 				break;
 			case 'K':
 				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_SHELL);
 				env->flags |= REG_AUGMENTED|REG_SHELL;
-				env->type = KRE;
+				typ = KRE;
 				break;
 			case 'S':
 				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_SHELL);
 				env->flags |= REG_SHELL;
-				env->type = SRE;
+				typ = SRE;
 				break;
 			case 'U': /* PCRE_UNGREEDY */
 				if (i)
@@ -2412,6 +2417,12 @@ grp(Cenv_t* env, int parno)
 		return 0;
 	}
 	eat(env);
+	if (typ >= 0)
+	{
+		if (beg)
+			env->pattern = env->cursor;
+		env->type = typ;
+	}
 	if (!x)
 		return 0;
 	if (!(f = node(env, x, 0, 0, 0)))

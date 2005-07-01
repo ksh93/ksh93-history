@@ -2,10 +2,7 @@ set	prototyped
 lib	_fxstat,__fxstat,_lxstat,__lxstat,_xmknod,__xmknod,_xstat,__xstat,lstat,mknod,sync sys/types.h sys/stat.h
 lib	_fxstat64,__fxstat64,_lxstat64,__lxstat64,_xstat64,__xstat64 -D_LARGEFILE64_SOURCE sys/types.h sys/stat.h
 mac	fstat,lstat,stat,mknod sys/types.h sys/stat.h
-lcl	xstat link{
-	#ifndef _LARGEFILE64_SOURCE
-	#define _LARGEFILE64_SOURCE	1
-	#endif
+lcl	xstat -D_LARGEFILE64_SOURCE link{
 	#include <sys/types.h>
 	#include <sys/stat.h>
 	struct stat64 { int xxx; }; /* disable if stat64 available */
@@ -30,10 +27,7 @@ lcl	xstat link{
 		return stat(".",&st) < 0;
 	}
 }end
-lcl	xstat64 link{
-	#ifndef _LARGEFILE64_SOURCE
-	#define _LARGEFILE64_SOURCE	1
-	#endif
+lcl	xstat64 -D_LARGEFILE64_SOURCE link{
 	#include <sys/types.h>
 	#include <sys/stat.h>
 	#if _STD_

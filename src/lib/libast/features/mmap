@@ -116,11 +116,10 @@ tst	lib_mmap note{ standard mmap interface that works }end execute{
 	}
 }end
 
-tst	lib_mmap64 note{ mmap64 interface and implementation work }end execute{
+tst	lib_mmap64 -D_LARGEFILE64_SOURCE note{ mmap64 interface and implementation work }end execute{
 	#if !_lib_mmap
 	(
 	#endif
-	#define _LARGEFILE64_SOURCE     1
 	
 	#include <unistd.h>
 	#include <fcntl.h>

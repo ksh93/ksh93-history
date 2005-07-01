@@ -485,4 +485,10 @@ x=$'-(-\\"\')\\\'\\"-)-'
 x=$'-(-\\"\')\\\'\\"\'-)-'
 [[ ${x/*%(()E\\L\'Q\")*/\1} == $'-(-\\"\')\\\'\\"\'-)-' ]] || err_exit $M
 
+pattern=00
+var=100
+[[ $( print $(( ${var%%00} )) ) == 1 ]] || err_exit "arithmetic with embeddded patterns fails"
+[[ $( print $(( ${var%%$pattern} )) ) == 1 ]] || err_exit "arithmetic with embeddded pattern variables fails"
+
+
 exit $((Errors))

@@ -73,7 +73,7 @@ typedef unsigned _ast_int4_t Recfmt_t;
 #define extern		__EXPORT__
 #endif
 
-extern char*		fmtrec(Recfmt_t);
+extern char*		fmtrec(Recfmt_t, int);
 extern Recfmt_t		recfmt(const void*, size_t, off_t);
 extern Recfmt_t		recstr(const char*, char**);
 extern ssize_t		reclen(Recfmt_t, const void*, size_t);

@@ -26,7 +26,7 @@
  * extended to allow some features to be set
  */
 
-static const char id[] = "\n@(#)$Id: getconf (AT&T Research) 2004-04-08 $\0\n";
+static const char id[] = "\n@(#)$Id: getconf (AT&T Research) 2005-07-17 $\0\n";
 
 #include "univlib.h"
 
@@ -240,6 +240,8 @@ typedef struct
 
 	char*		data;
 	char*		last;
+
+	Feature_t*	recent;
 
 	Ast_confdisc_f	notify;
 
@@ -533,51 +535,15 @@ initialize(register Feature_t* fp, const char* path, const char* command, const 
 }
 
 /*
- * value==0 get feature name
- * value!=0 set feature name
- * 0 returned if error or not defined; otherwise previous value
+ * format synthesized value
  */
 
 static char*
-feature(const char* name, const char* path, const char* value, Error_f conferror)
+format(register Feature_t* fp, const char* path, const char* value, Error_f conferror)
 {
-	register Feature_t*	fp;
-	register int		n;
 	register Feature_t*	sp;
+	register int		n;
 
-	if (value && (streq(value, "-") || streq(value, "0")))
-		value = null;
-	for (fp = state.features; fp && !streq(fp->name, name); fp = fp->next);
-	if (!fp)
-	{
-		if (!value)
-			return 0;
-		if (state.notify && !(*state.notify)(name, path, value))
-			return 0;
-		n = strlen(name);
-		if (!(fp = newof(0, Feature_t, 1, n + 1)))
-		{
-			if (conferror)
-				(*conferror)(&state, &state, 2, "%s: out of space", name);
-			return 0;
-		}
-		fp->name = (const char*)fp + sizeof(Feature_t);
-		strcpy((char*)fp->name, name);
-		fp->length = n;
-		fp->next = state.features;
-		state.features = fp;
-	}
-	else if (value)
-	{
-		if (fp->flags & CONF_READONLY)
-		{
-			if (conferror)
-				(*conferror)(&state, &state, 2, "%s: cannot set readonly symbol", fp->name);
-			return 0;
-		}
-		if (state.notify && !streq(fp->value, value) && !(*state.notify)(name, path, value))
-			return 0;
-	}
 	switch (fp->op)
 	{
 
@@ -675,6 +641,56 @@ feature(const char* name, const char* path, const char* value, Error_f conferror
 
 	}
 	return fp->value;
+}
+
+/*
+ * value==0 get feature name
+ * value!=0 set feature name
+ * 0 returned if error or not defined; otherwise previous value
+ */
+
+static char*
+feature(const char* name, const char* path, const char* value, Error_f conferror)
+{
+	register Feature_t*	fp;
+	register int		n;
+
+	if (value && (streq(value, "-") || streq(value, "0")))
+		value = null;
+	for (fp = state.features; fp && !streq(fp->name, name); fp = fp->next);
+	if (!fp)
+	{
+		if (!value)
+			return 0;
+		if (state.notify && !(*state.notify)(name, path, value))
+			return 0;
+		n = strlen(name);
+		if (!(fp = newof(0, Feature_t, 1, n + 1)))
+		{
+			if (conferror)
+				(*conferror)(&state, &state, 2, "%s: out of space", name);
+			return 0;
+		}
+		fp->name = (const char*)fp + sizeof(Feature_t);
+		strcpy((char*)fp->name, name);
+		fp->length = n;
+		fp->next = state.features;
+		state.features = fp;
+	}
+	else if (value)
+	{
+		if (fp->flags & CONF_READONLY)
+		{
+			if (conferror)
+				(*conferror)(&state, &state, 2, "%s: cannot set readonly symbol", fp->name);
+			return 0;
+		}
+		if (state.notify && !streq(fp->value, value) && !(*state.notify)(name, path, value))
+			return 0;
+	}
+	else
+		state.recent = fp;
+	return format(fp, path, value, conferror);
 }
 
 /*
@@ -984,7 +1000,7 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, i
  * settable return values are in permanent store
  * non-settable return values copied to a tmp fmtbuf() buffer
  *
- *	if (!strcmp(astgetconf("PATH_RESOLVE", NiL, NiL), "logical", 0))
+ *	if (streq(astgetconf("PATH_RESOLVE", NiL, NiL, 0), "logical"))
  *		our_way();
  *
  *	universe = astgetconf("UNIVERSE", NiL, "att", 0);
@@ -1044,6 +1060,8 @@ astgetconf(const char* name, const char* path, const char* value, Error_f confer
 			return s;
 		}
 	}
+	if (state.recent && streq(name, state.recent->name) && (s = format(state.recent, path, value, conferror)))
+		return s;
 	if (lookup(&look, name))
 	{
 		if (value)
@@ -1062,7 +1080,7 @@ astgetconf(const char* name, const char* path, const char* value, Error_f confer
 	}
 	if ((n = strlen(name)) > 3 && n < (ALT + 3))
 	{
-		if (!strcmp(name + n - 3, "DEV"))
+		if (streq(name + n - 3, "DEV"))
 		{
 			if (tmp = sfstropen())
 			{
@@ -1081,7 +1099,7 @@ astgetconf(const char* name, const char* path, const char* value, Error_f confer
 				sfclose(tmp);
 			}
 		}
-		else if (!strcmp(name + n - 3, "DIR"))
+		else if (streq(name + n - 3, "DIR"))
 		{
 			Lookup_t		altlook;
 			char			altname[ALT];

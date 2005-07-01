@@ -50,7 +50,7 @@ struct shtable3
 	int		(*sh_value)(int, char*[], void*);
 };
 
-#define sh_lookup(name,value)	sh_locate(name,(Shtable_t*)(value),sizeof(*(value)))
+#define sh_lookup(name,value)	(sh_locate(name,(Shtable_t*)(value),sizeof(*(value)))->sh_number)
 extern const Shtable_t		shtab_testops[];
 extern const Shtable_t		shtab_options[];
 extern const Shtable_t		shtab_attributes[];
@@ -59,7 +59,7 @@ extern const struct shtable2	shtab_aliases[];
 extern const struct shtable2	shtab_signals[];
 extern const struct shtable3	shtab_builtins[];
 extern const Shtable_t		shtab_reserved[];
-extern int	sh_locate(const char*, const Shtable_t*, int);
-extern int	sh_lookopt(const char*, int*);
+extern const Shtable_t		*sh_locate(const char*, const Shtable_t*, int);
+extern int			sh_lookopt(const char*, int*);
 
 #endif /* SH_TABLE_H */

@@ -994,7 +994,9 @@ int sh_lex(void)
 				n = endchar();
 				if(c==RBRACT  && !(n==RBRACT || n==RPAREN))
 					continue;
-				if(c==';' && n!=';')
+				else if(c==RBRACE && n==RPAREN && fcpeek(0)==LPAREN)
+					continue;
+				else if(c==';' && n!=';')
 				{
 					if(lexd.warn && n==RBRACE)
 						errormsg(SH_DICT,ERROR_warn(0),e_lexusequote,shp->inlineno,c);
@@ -1393,6 +1395,7 @@ static int comsub(register Lex_t *lp)
 	sh_lexopen(lp,shlex.sh,1);
 	lexd.dolparen++;
 	lex.incase=0;
+	pushlevel(0,0);
 	if(sh_lex()==LPAREN)
 	{
 		while(1)
@@ -1448,7 +1451,8 @@ static int comsub(register Lex_t *lp)
 		}
 	}
 done:
-shlex.lastline = line;
+	poplevel();
+	shlex.lastline = line;
 	lexd.dolparen--;
 	lex = save;
 	shlex.assignok = (endchar()==RBRACT?assignok:0);

@@ -571,6 +571,22 @@ Namval_t *nv_open(const char *name, Dt_t *root, int flags)
 			flags &=  ~NV_IDENT;
 		}
 	}
+	else if(!(flags&(NV_IDENT|NV_VARNAME|NV_ASSIGN)))
+	{
+		long mode = ((flags&NV_NOADD)?0:NV_ADD);
+		if(flags&NV_NOSCOPE)
+			mode |= HASH_SCOPE|HASH_NOSCOPE;
+		np = nv_search(name,root,mode);
+		if(np && !(flags&NV_REF))
+		{
+			while(nv_isref(np))
+			{
+				sh.last_table = nv_table(np);
+				np = nv_refnode(np);
+			}
+		}
+		return(np);
+	}
 	else if(sh.prefix && (flags&NV_ASSIGN))
 	{
 		name = cp = copystack(sh.prefix,name,(const char*)0);

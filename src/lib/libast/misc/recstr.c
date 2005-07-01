@@ -26,7 +26,7 @@
  * e!=0 set to the first unrecognized char after the format
  * REC_N_TYPE() returned on error
  *
- *	d[delimiter] (delimited, newline default)
+ *	d[0xNN|delimiter] (delimited, newline default)
  *	[f][+]size (fixed length)
  *	v hN oN zN b|l i|n (variable length with size header)
  *	  h   header size in bytes (ibm V 4)
@@ -53,19 +53,23 @@ recstr(register const char* s, char** e)
 	{
 	case 'd':
 	case 'D':
-		if (*s)
+		if (!*s)
+			n = '\n';
+		else
 		{
-			n = chresc(s, &t);
+			if (*s == '0' && (*(s + 1) == 'x' || *(s + 1) == 'X'))
+				n = (int)strtol(s, &t, 0);
+			else
+				n = chresc(s, &t);
 			s = (const char*)t;
 		}
-		else
-			n = '\n';
 		if (e)
 			*e = (char*)s;
 		return REC_D_TYPE(n);
 	case 'f':
 	case 'F':
 		while (*++s == ' ' || *s == '\t' || *s == ',');
+		/*FALLTHROUGH*/
 	case '+':
 	case '0': case '1': case '2': case '3': case '4':
 	case '5': case '6': case '7': case '8': case '9':
@@ -169,7 +173,6 @@ recstr(register const char* s, char** e)
 			case ' ':
 			case '\t':
 			case ',':
-			case '.':
 			case '-':
 			case '+':
 				continue;
