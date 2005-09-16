@@ -41,6 +41,11 @@ getopts :r:s var -r
 if	[[ $var != : || $OPTARG != r ]]
 then	err_exit "'getopts :r:s var -r' not working"
 fi
+OPTIND=1
+getopts :d#u var -d 100
+if	[[ $var != d || $OPTARG != 100 ]]
+then	err_exit "'getopts :d#u var -d 100' not working var=$var"
+fi
 false ${foo=bar} &&  err_exit "false failed"
 read <<!
 hello world
@@ -354,7 +359,7 @@ function longline
 # test command -x option
 integer sum=0 n=10000
 if	! ${SHELL:-ksh} -c 'print $#' count $(longline $n) > /dev/null  2>&1
-then	for i in $(command command -x ${SHELL:-ksh} -c 'print $#;[[ $1 != argument0 ]]' count $(longline $n) 2> /dev/null)
+then	for i in $(command command -x ${SHELL:-ksh} -c 'print $#;[[ $1 != argument0 ]]' count $(longline $n) 2> null)
 	do	((sum += $i))
 	done
 	(( sum == n )) || err_exit "command -x processed only $sum arguments"

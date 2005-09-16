@@ -297,5 +297,8 @@ chmod +x /tmp/ksh$$x
 [[ $($SHELL -c "print foo | /tmp/ksh$$x ;:" 2> /dev/null ) == foo ]] || err_exit 'piping into script fails'
 [[ $($SHELL -c 'X=1;print -r -- ${X:=$(expr "a(0)" : '"'a*(\([^)]\))')}'" 2> /dev/null) == 1 ]] || err_exit 'x=1;${x:=$(..."...")} failure'
 [[ $($SHELL -c 'print -r -- ${X:=$(expr "a(0)" : '"'a*(\([^)]\))')}'" 2> /dev/null) == 0 ]] || err_exit '${x:=$(..."...")} failure'
-exit $((Errors))
+if	[[ -d /dev/fd ]]
+then	[[ $(cat <(print hello) ) == hello ]] || err_exit "process substitution not working outside for or while loop"
+	[[ $(for i in 1;do cat <(print hello);done ) == hello ]] || err_exit "process substitution not working in for or while loop"
+fi
 exit $((Errors))

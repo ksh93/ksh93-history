@@ -31,6 +31,10 @@
 #include <ccode.h>
 #include <ctype.h>
 
+#ifndef FMT_PARAM
+#define FMT_PARAM	0x10	/* disable FMT_SHELL ${ $( quote */
+#endif
+
 /*
  * quote string as of length n with qb...qe
  * (flags&FMT_ALWAYS) always quotes, otherwise quote output only if necessary
@@ -49,6 +53,8 @@ fmtquote(const char* as, const char* qb, const char* qe, size_t n, int flags)
 	register int		c;
 	register int		escaped;
 	register int		spaced;
+	register int		doublequote;
+	register int		singlequote;
 	int			shell;
 	char*			f;
 	char*			buf;
@@ -60,13 +66,24 @@ fmtquote(const char* as, const char* qb, const char* qe, size_t n, int flags)
 		c += strlen((char*)qe);
 	b = buf = fmtbuf(c);
 	shell = 0;
+	doublequote = 0;
+	singlequote = 0;
 	if (qb)
 	{
 		if (qb[0] == '$' && qb[1] == '\'' && qb[2] == 0)
 			shell = 1;
+		else if ((flags & FMT_SHELL) && qb[1] == 0)
+		{
+			if (qb[0] == '"')
+				doublequote = 1;
+			else if (qb[0] == '\'')
+				singlequote = 1;
+		}
 		while (*b = *qb++)
 			b++;
 	}
+	else if (flags & FMT_SHELL)
+		doublequote = 1;
 	f = b;
 	escaped = spaced = !!(flags & FMT_ALWAYS);
 	while (s < e)
@@ -130,10 +147,50 @@ fmtquote(const char* as, const char* qb, const char* qe, size_t n, int flags)
 				if (*s)
 					c = *s++;
 			}
-			else if (qe && strchr(qe, c) || (flags & FMT_SHELL) && !shell && (c == '$' || c == '`'))
+			else if (qe && strchr(qe, c))
 			{
-				escaped = 1;
-				*b++ = '\\';
+				if (singlequote && c == '\'')
+				{
+					spaced = 1;
+					*b++ = '\'';
+					*b++ = '\\';
+					*b++ = '\'';
+					c = '\'';
+				}
+				else
+				{
+					escaped = 1;
+					*b++ = '\\';
+				}
+			}
+			else if (c == '$' || c == '`')
+			{
+				if (c == '$' && (flags & FMT_PARAM) && (*s == '{' || *s == '('))
+				{
+					if (singlequote || shell)
+					{
+						escaped = 1;
+						*b++ = '\'';
+						*b++ = c;
+						*b++ = *s++;
+						if (shell)
+						{
+							spaced = 1;
+							*b++ = '$';
+						}
+						c = '\'';
+					}
+					else
+					{
+						escaped = 1;
+						*b++ = c;
+						c = *s++;
+					}
+				}
+				else if (doublequote)
+					*b++ = '\\';
+				else if (singlequote || (flags & FMT_SHELL))
+					spaced = 1;
 			}
 			else if (!spaced && !escaped && (isspace(c) || ((flags & FMT_SHELL) || shell) && (strchr("\";~&|()<>[]*?", c) || c == '#' && (b == f || isspace(*(b - 1))))))
 				spaced = 1;

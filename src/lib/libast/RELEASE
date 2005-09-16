@@ -1,3 +1,9 @@
+05-09-12 misc/optget.c: reset opt_info.offset on error
+	 string/strtoi.h: strton() '.' multiplier only if m>1
+	 string/fmtesc.c: add unadvertized FMT_PARM for FMT_SHELL
+05-09-09 string/fmtesc.c: fix FMT_SHELL logic w.r.t. [$`]
+05-08-11 string/strerror.c: fix { sys_errlist sys_nerr } prototypes
+05-08-03 sfio: snarf sfvaprints sfaprints
 05-07-21 port/astconf.c: retain most recent synthesized lookup
 05-07-20 sfio/sfsetbuf.c: default file io size now 64K on all systems
 05-07-17 ccmap*: add microfocus cobol EBCDIC_U

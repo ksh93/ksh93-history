@@ -994,8 +994,12 @@ int sh_lex(void)
 				n = endchar();
 				if(c==RBRACT  && !(n==RBRACT || n==RPAREN))
 					continue;
-				else if(c==RBRACE && n==RPAREN && fcpeek(0)==LPAREN)
+				else if((c==RBRACE||c==RPAREN) && n==RPAREN && fcpeek(0)==LPAREN)
+				{
+					if(c==RPAREN)
+						fcseek(1);
 					continue;
+				}
 				else if(c==';' && n!=';')
 				{
 					if(lexd.warn && n==RBRACE)

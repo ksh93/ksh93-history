@@ -593,6 +593,8 @@ int	sh_redirect(struct ionod *iop, int flag)
 						sh_subtmpfile();
 						dupfd = sffileno(sfstdout);
 					}
+					else if(sh.sftable[dupfd])
+						sfsync(sh.sftable[dupfd]);
 				}
 				else if(fd=='-' && fname[1]==0)
 				{

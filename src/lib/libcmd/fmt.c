@@ -24,7 +24,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: fmt (AT&T Research) 2004-12-01 $\n]"
+"[-?\n@(#)$Id: fmt (AT&T Research) 2005-08-11 $\n]"
 USAGE_LICENSE
 "[+NAME?fmt - simple text formatter]"
 "[+DESCRIPTION?\bfmt\b reads the input files and left justifies space "
@@ -235,6 +235,7 @@ dofmt(Fmt_t* fp)
 {
 	register int	c;
 	int		b;
+	int		x;
 	char*		cp;
 	char*		dp;
 	char*		ep;
@@ -298,14 +299,75 @@ dofmt(Fmt_t* fp)
 			{
 				if (c == '\\')
 				{
-					if (cp < lp)
+					x = 0;
+					c = ' ';
+					cp--;
+					while (cp < lp)
 					{
-						*dp++ = c;
-						c = *cp++;
-						if (c == 'n' || c == 't' || c == ' ')
-							while (cp < lp && (*cp == ' ' || *cp == '\t'))
+						if (*cp == '\\')
+						{
+							cp++;
+							if ((lp - cp) < 1)
+							{
+								c = '\\';
+								break;
+							}
+							if (*cp == 'n')
+							{
 								cp++;
+								c = '\n';
+								if ((lp - cp) > 2)
+								{
+									if (*cp == ']' || *cp == '@' && *(cp + 1) == '(')
+									{
+										*dp++ = '\\';
+										*dp++ = 'n';
+										c = *cp++;
+										break;
+									}
+									if (*cp == '\\' && *(cp + 1) == 'n')
+									{
+										cp += 2;
+										*dp++ = '\n';
+										break;
+									}
+								}
+							}
+							else if (*cp == 't' || *cp == ' ')
+							{
+								cp++;
+								x = 1;
+								c = ' ';
+							}
+							else
+							{
+								if (x && dp != buf && *(dp - 1) != ' ')
+									*dp++ = ' ';
+								*dp++ = '\\';
+								c = *cp++;
+								break;
+							}
+						}
+						else if (*cp == ' ' || *cp == '\t')
+						{
+							cp++;
+							c = ' ';
+							x = 1;
+						}
+						else
+						{
+							if (x && c != '\n' && dp != buf && *(dp - 1) != ' ')
+								*dp++ = ' ';
+							break;
+						}
 					}
+					if (c == '\n')
+					{
+						c = 0;
+						goto flush;
+					}
+					if (c == ' ' && (dp == buf || *(dp - 1) == ' '))
+						continue;
 				}
 				else if (c == '"')
 				{
@@ -315,6 +377,26 @@ dofmt(Fmt_t* fp)
 							continue;
 						fp->section = 0;
 					}
+				}
+				else if (c == '\a')
+				{
+					*dp++ = '\\';
+					c = 'a';
+				}
+				else if (c == '\b')
+				{
+					*dp++ = '\\';
+					c = 'b';
+				}
+				else if (c == '\f')
+				{
+					*dp++ = '\\';
+					c = 'f';
+				}
+				else if (c == '\v')
+				{
+					*dp++ = '\\';
+					c = 'v';
 				}
 				else if (c == ']' && (cp >= lp || *cp != ':' && *cp != '#' && *cp != '!'))
 				{
@@ -344,16 +426,14 @@ dofmt(Fmt_t* fp)
 						else
 						{
 							cp--;
-							*dp = 0;
-							split(fp, buf);
-							outline(fp);
-							goto again;
+							c = 0;
+							goto flush;
 						}
 						fp->section = 0;
 					}
 					else if (c == '{')
 					{
-						if (cp >= lp || *cp != '\\')
+						if (cp >= lp || *cp == '[' || *cp != '\\' || (lp - cp) > 1 && *(cp + 1) == 'n')
 						{
 							if (fp->endbuf > (fp->outbuf + fp->indent + 2*INDENT))
 								fp->nextdent = 2*INDENT;

@@ -4489,7 +4489,10 @@ optget(register char** argv, const char* oopts)
 			else
 			{
 				if (!v && *(s + 1) != '?' && (v = argv[opt_info.index]))
+				{
 					opt_info.index++;
+					opt_info.offset = 0;
+				}
 				if (!(opt_info.arg = v) || (*v == '0' || *v == '1') && !*(v + 1))
 				{
 					if (*(s + 1) != '?')
@@ -4542,7 +4545,10 @@ optget(register char** argv, const char* oopts)
 						opt_info.index--;
 					}
 					else
+					{
+						opt_info.offset = 0;
 						c = opterror(s, version, catalog);
+					}
 					pop(psp);
 					return c;
 				}
@@ -4576,6 +4582,7 @@ optget(register char** argv, const char* oopts)
 					else
 					{
 						pop(psp);
+						opt_info.offset = 0;
 						return opterror(s, version, catalog);
 					}
 				}

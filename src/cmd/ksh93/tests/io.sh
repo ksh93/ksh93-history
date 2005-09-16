@@ -173,4 +173,8 @@ rm -rf /tmp/io$$.1
 if	[[ $newio && $(print hello | while read -u$n; do print $REPLY; done {n}<&0) != hello ]] 
 then	err_exit "{n}<&0 not working with for loop"
 fi
+[[ $({ read -r;read -u3 3<&0; print -- "$REPLY" ;} <<!
+hello
+world
+!) == world ]] || err_exit 'I/O not synchronized with <&'
 exit $((Errors))

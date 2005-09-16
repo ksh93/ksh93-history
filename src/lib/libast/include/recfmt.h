@@ -45,7 +45,7 @@ typedef unsigned _ast_int4_t Recfmt_t;
 
 #define RECTYPE(f)		(((f)>>28)&((1<<4)-1))
 
-#define REC_D_TYPE(d)		((REC_delimited<<28)|(d)&((1<<8)-1))
+#define REC_D_TYPE(d)		((REC_delimited<<28)|((d)&((1<<8)-1)))
 #define REC_D_DELIMITER(f)	((f)&((1<<8)-1))
 
 #define REC_F_TYPE(s)		((REC_fixed<<28)|((s)&((1<<28)-1)))

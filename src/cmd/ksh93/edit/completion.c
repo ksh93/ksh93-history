@@ -245,6 +245,8 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 		{
 			narg = 1;
 			com = av;
+			if(dir)
+				begin += (dir-begin);
 		}
 		else
 			com = sh_argbuild(&narg,comptr,0);

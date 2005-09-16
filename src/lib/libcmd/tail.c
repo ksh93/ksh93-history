@@ -536,7 +536,10 @@ b_tail(int argc, char** argv, void* context)
 						error(ERROR_warn(0), "%s: %s timeout", fp->name, fmtelapsed(timeout, 1));
 				}
 				if (fp->sp && fp->sp != sfstdin)
+				{
+					error(-1, "AHA close name=%s sp=%p", fp->name, fp->sp);
 					sfclose(fp->sp);
+				}
 				if (pp)
 					pp = pp->next = fp->next;
 				else if (!(files = files->next))

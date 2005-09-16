@@ -35,22 +35,21 @@
 
 #undef	strerror
 
-#if !_dat_sys_errlist
-#undef		_dat_sys_nerr
-#undef		sys_errlist
-char*		sys_errlist[] = { 0 };
-#else
-#if !_def_errno_sys_errlist
+#if !defined(sys_errlist) && !_def_errno_sys_errlist
+#if _dat_sys_errlist
 extern char*	sys_errlist[];
+#else
+#undef		_dat_sys_nerr
+char*		sys_errlist[] = { 0 };
 #endif
 #endif
 
-#if !_dat_sys_nerr
-#undef		sys_nerr
-int		sys_nerr = 0;
-#else
-#if !_def_errno_sys_nerr
+#if !defined(sys_nerr) && !_def_errno_sys_nerr
+#if _dat_sys_nerr
 extern int	sys_nerr;
+#else
+#undef		_dat_sys_nerr
+int		sys_nerr = 0;
 #endif
 #endif
 

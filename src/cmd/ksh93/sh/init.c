@@ -1321,7 +1321,7 @@ static void env_init(Shell_t *shp)
 		{
 			if(*cp=='A' && cp[1]=='_' && cp[2]=='_' && cp[3]=='z' && cp[4]=='=')
 				next = cp+4;
-			else if(np=nv_open(cp,shp->var_tree,(NV_EXPORT|NV_IDENT|NV_ASSIGN))) 
+			else if(np=nv_open(cp,shp->var_tree,(NV_EXPORT|NV_IDENT|NV_ASSIGN|NV_NOFAIL))) 
 			{
 				nv_onattr(np,NV_IMPORT);
 				np->nvenv = cp;

@@ -520,6 +520,7 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 	Sfdouble_t	longmax = LDBL_LONGLONG_MAX;
 	int		format = fe->fmt;
 	int		n;
+	int		fold = fe->base;
 	union types_t*	value = (union types_t*)v;
 	struct printf*	pp = (struct printf*)fe;
 	register char*	argp = *pp->nextarg;
@@ -736,7 +737,7 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 		value->s = fmthtml(value->s);
 		break;
 	case 'q':
-		value->s = sh_fmtq(value->s);
+		value->s = sh_fmtqf(value->s, !!(fe->flags & SFFMT_ALTER), fold);
 		break;
 	case 'P':
 		value->s = fmtmatch(value->s);

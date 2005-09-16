@@ -127,6 +127,7 @@ int        sfvscanf(Sfio_t* f, const char* format, va_list args);
 
 int        sfprintf(Sfio_t* f, const char* format, ...);
 char*      sfprints(const char* format, ...);
+char*      sfvprints(const char* format, va_list args);
 ssize_t    sfaprints(char** sp, const char* format, ...);
 ssize_t    sfvaprints(char** sp, const char* format, va_list args);
 int        sfsprintf(char* s, int n, const char* format, ...);
@@ -223,6 +224,7 @@ int        sfnotify(void (*notify)(Sfio_t* f, int type, int fd));
 .Ss "MISCELLANEOUS FUNCTIONS"
 .nf
 .ft 5
+ssize_t    sfmaxr(ssize_t maxr, int s);
 ssize_t    sfslen();
 int        sfulen(Sfulong_t v);
 int        sfllen(Sflong_t v);
@@ -746,6 +748,7 @@ This function reads a record of data ending in the record separator \f5rsc\fP.
 After \f5sfgetr()\fP returns, the length of the record even if it is incomplete
 can be retrieved with \f5sfvalue()\fP.
 \f5sfgetr()\fP returns the record on success and \f5NULL\fP on error.
+See also \f5sfmaxr()\fP for limiting the amount of data read to construct a record.
 
 The \f5type\fP argument is composed of some subset of the below bit flags:
 .Tp
@@ -1174,24 +1177,26 @@ when the format of the structure \f5Sffmt_t\fP changes.
 Note that the version number corresponds to the Sfio version number
 which is defined in the macro value \f5SFIO_VERSION\fP.
 
-.Ss "  int sfprintf(Sfio_t* f, const char* format, ...)"
-.Ss "  char* sfprints(const char* format, ...)"
+.Ss "  int sfprintf(Sfio_t* f, const char* format, ...);"
+.Ss "  char* sfprints(const char* format, ...);"
+.Ss "  char* sfvprints(const char* format, va_list args);"
 .Ss "  ssize_t sfaprints(char** sp, const char* format, ...);"
 .Ss "  ssize_t sfvaprints(char** sp, const char* format, va_list args);"
 .Ss "  int sfsprintf(char* s, int n, const char* format, ...)"
-.Ss "  int sfvsprintf(char* s, int n, const char* format, va_list args)"
-.Ss "  int sfvprintf(Sfio_t* f, const char* format, va_list args)"
+.Ss "  int sfvsprintf(char* s, int n, const char* format, va_list args);"
+.Ss "  int sfvprintf(Sfio_t* f, const char* format, va_list args);"
 These functions format output data.
 \f5sfprintf()\fP and \f5sfvprintf()\fP write to output stream \f5f\fP.
 \f5sfsprintf()\fP and \f5sfvsprintf()\fP write to buffer \f5s\fP
 which is of size \f5n\fP.
-\f5sfprints()\fP constructs output in some Sfio-defined buffer.
+\f5sfprints()\fP and \f5sfvprints()\fP construct data in some Sfio-defined buffer.
 \f5sfaprints()\fP and \f5sfvaprints()\fP are similar to \f5sfprints()\fP
-but they return the constructed string in  \f5*sp\fP and expect this string
-to be freed by the caller when no longer needed.
+and \f5sfvprints()\fP
+but they return a string constructed via \f5malloc()\fP in \f5*sp\fP
+and expect this string to be freed by the caller when no longer needed.
 \f5sfvprintf()\fP is the underlying primitive for the other functions.
-Except for \f5sfprints()\fP
-which returns a null-terminated string or \f5NULL\fP,
+Except for \f5sfprints()\fP and \f5sfvprints()\fP
+which return a null-terminated string or \f5NULL\fP,
 other functions return the number of output bytes or \f5-1\fP on failure.
 
 The length of string constructed by \f5sfprints()\fP, \f5sfsprintf()\fP, or
@@ -2006,6 +2011,16 @@ An attempt to change \f5f\fP to write mode failed.
 .PP
 .Ss "MISCELLANEOUS FUNCTIONS"
 .PP
+.Ss "  ssize_t sfmaxr(ssize_t maxr, int set)"
+Certain records may require too much memory for storage, thus, causing
+undesirable side effects. Therefore, the library normally bounds the amount
+of memory used by \f5sfgetr()\fP. A different memory bound
+can be set via \f5sfmaxr()\fP. While a positive \f5maxr\fP hints to \f5sfgetr()\fP
+to use only about that much memory to construct a record, a non-positive bound
+allows \f5sfgetr()\fP to use as much memory as necessary.
+\f5sfmaxr()\fP sets the value only if \f5set\fP is non-zero.
+It returns the value before setting or the current value if not setting.
+
 .Ss "  ssize_t sfslen()"
 This function returns the length of a string just constructed
 by \f5sfsprintf()\fP or \f5sfprints()\fP.  See also \f5sfvalue()\fP.

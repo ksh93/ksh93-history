@@ -41,6 +41,9 @@
 #	include	<exec_attr.h>
 #   endif
 #endif
+#ifndef ARG_MAX
+#   define ARG_MAX	4096
+#endif
 
 #define RW_ALL	(S_IRUSR|S_IRGRP|S_IROTH|S_IWUSR|S_IWGRP|S_IWOTH)
 
@@ -106,8 +109,8 @@ static pid_t path_xargs(const char *path, char *argv[],char *const envp[], int s
 	long size, left;
 	int nlast=1,n,exitval=0;
 	pid_t pid;
-	if(!argmax)
-		argmax = sysconf(_SC_ARG_MAX);
+	if(!argmax && (argmax = sysconf(_SC_ARG_MAX)) < 0)
+		argmax = ARG_MAX;
 	if(sh.xargmin < 0)
 		return((pid_t)-1);
 	size = argmax-1024;
@@ -1273,6 +1276,8 @@ static int path_chkpaths(Pathcomp_t *first, Pathcomp_t* old,Pathcomp_t *pp, int 
 	int k,m,n,fd;
 	char *sp,*cp,*ep;
 	stakseek(offset+pp->len);
+	if(pp->len==1 && *stakptr(offset)=='/')
+		stakseek(offset);
 	stakputs("/.paths");
 	if((fd=open(stakptr(offset),O_RDONLY))>=0)
 	{

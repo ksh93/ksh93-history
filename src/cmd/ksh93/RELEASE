@@ -1,4 +1,20 @@
-05-06-24  --- Release ksh93r-  ---
+05-09-05  --- Release ksh93r-  ---
+05-09-05  A bug in which a history command that invoked a history
+	  command could go into an infinite loop has been fixed.
+05-08-31  In the case that IFS contains to adjacent new-lines so that
+	  new-line is not treated as a space delimiter, only a single
+	  new-line is deleted at the end of a command substitution.
+05-08-19  When a tilde substitution expands to the / directory and is
+	  followed by a /, it is replaced by the empty string.
+05-08-16  A bug in which n<&m did not synchronize m has been fixed.
+05-08-16  A bug in which process substitution  ( <() and >() ) was not
+	  working within for and while loops has been fixed.
+05-07-24  A bug in which the pattern ~(E)(foo|bar) was treated as a syntax
+	  error has been fixed.
+05-07-24  A bug in completion with <n>=, where n was the one of the
+	  previous selection choices has been fixed.
+05-07-21  A bug with multibyte input when no edit mode was specified which
+	  caused the input line to shift left/right has been fixed.
 05-06-24  A race condition which could cause the exit status to get lost
 	  on some fast systems has been fixed.
 05-06-21  A bug in which nested patterns of the form {m,n}(pat) would cause

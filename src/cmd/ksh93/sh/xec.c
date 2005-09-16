@@ -254,7 +254,7 @@ static void p_arg(register struct argnod *arg,int flag)
 {
 	while(arg)
 	{
-		if(strlen(arg->argval) || (flag==0 && (arg->argflag&~ARG_APPEND)))
+		if(strlen(arg->argval) || (flag==0 && (arg->argflag&~(ARG_APPEND|ARG_EXP))))
 			arg->argchn.ap = 0;
 		else
 			sh_tclear(((struct fornod*)arg->argchn.ap)->fortre);

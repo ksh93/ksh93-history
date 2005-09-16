@@ -48,7 +48,7 @@ USAGE_LICENSE
 "[u:user?Writes only the user ID.]"
 "[G:groups?Writes only the supplementary group IDs.]"
 "[s:fair-share?Writes fair share scheduler IDs and groups on systems that "
-	"support fair share scheduling.] ]"
+	"support fair share scheduling.]"
 "\n"
 "\n[user]\n"
 "\n"

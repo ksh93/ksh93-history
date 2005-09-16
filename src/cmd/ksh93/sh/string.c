@@ -32,6 +32,10 @@
 #include	"lexstates.h"
 #include	"national.h"
 
+#if !SHOPT_MULTIBYTE
+#define mbchar(p)	(*(unsigned char*)p++)
+#endif
+
 #if !_lib_iswprint && !defined(iswprint)
 #   define iswprint(c)		((c&~0377) || isprint(c))
 #endif
@@ -276,7 +280,7 @@ void sh_utol(register char const *str1,register char *str2)
 }
 
 /*
- * print <str> qouting chars so that it can be read by the shell
+ * print <str> quoting chars so that it can be read by the shell
  * puts null terminated result on stack, but doesn't freeze it
  */
 char	*sh_fmtq(const char *string)
@@ -398,6 +402,213 @@ char	*sh_fmtq(const char *string)
 		}
 		stakputc('\'');
 	}
+	stakputc(0);
+	return(stakptr(offset));
+}
+
+/*
+ * print <str> quoting chars so that it can be read by the shell
+ * puts null terminated result on stack, but doesn't freeze it
+ * single!=0 limits quoting to '...'
+ * fold>0 prints raw newlines and inserts appropriately
+ * escaped newlines every (fold-x) chars
+ */
+char	*sh_fmtqf(const char *string, int single, int fold)
+{
+	register const char *cp = string;
+	register const char *bp;
+	register const char *vp;
+	register int c;
+	register int n;
+	register int q;
+	register int a;
+	int offset;
+
+	if (--fold < 8)
+		fold = 0;
+	if (!cp || !*cp || !single && !fold || fold && strlen(string) < fold)
+		return sh_fmtq(cp);
+	offset = staktell();
+	single = single ? 1 : 3;
+	c = mbchar(string);
+	a = isaletter(c) ? '=' : 0;
+	vp = cp + 1;
+	do
+	{
+		q = 0;
+		n = fold;
+		bp = cp;
+		while ((!n || n-- > 0) && (c = mbchar(cp)))
+		{
+			if (a && !isaname(c))
+				a = 0;
+#if SHOPT_MULTIBYTE
+			if (c >= 0x200)
+				continue;
+			if (c == '\'' || !iswprint(c))
+#else
+			if (c == '\'' || !isprint(c))
+#endif /* SHOPT_MULTIBYTE */
+			{
+				q = single;
+				break;
+			}
+			if (c == '\n')
+				q = 1;
+			else if (c == a)
+			{
+				stakwrite(bp, cp - bp);
+				bp = cp;
+				vp = cp + 1;
+				a = 0;
+			}
+			else if ((c == '#' || c == '~') && cp == vp || c == ']' || c != ':' && (c = sh_lexstates[ST_NORM][c]) && c != S_EPAT)
+				q = 1;
+		}
+		if (q & 2)
+		{
+			stakputc('$');
+			stakputc('\'');
+			cp = bp;
+			n = fold - 3;
+			q = 1;
+			while (c = mbchar(cp))
+			{
+				switch (c)
+				{
+		    		case ('a'==97?'\033':39):
+					c = 'E';
+					break;
+		    		case '\n':
+					q = 0;
+					n = fold - 1;
+					break;
+		    		case '\r':
+					c = 'r';
+					break;
+		    		case '\t':
+					c = 't';
+					break;
+		    		case '\f':
+					c = 'f';
+					break;
+		    		case '\b':
+					c = 'b';
+					break;
+		    		case '\a':
+					c = 'a';
+					break;
+		    		case '\\':
+					if (*cp == 'n')
+					{
+						c = '\n';
+						q = 0;
+						n = fold - 1;
+						break;
+					}
+				case '\'':
+					break;
+		    		default:
+#if SHOPT_MULTIBYTE
+					if(!iswprint(c))
+#else
+					if(!isprint(c))
+#endif
+					{
+						if ((n -= 4) <= 0)
+						{
+							stakwrite("'\\\n$'", 5);
+							n = fold - 7;
+						}
+						sfprintf(staksp, "\\%03o", c);
+						continue;
+					}
+					q = 0;
+					break;
+				}
+				if ((n -= q + 1) <= 0)
+				{
+					if (!q)
+					{
+						stakputc('\'');
+						cp = bp;
+						break;
+					}
+					stakwrite("'\\\n$'", 5);
+					n = fold - 5;
+				}
+				if (q)
+					stakputc('\\');
+				else
+					q = 1;
+				stakputc(c);
+				bp = cp;
+			}
+			if (!c)
+				stakputc('\'');
+		}
+		else if (q & 1)
+		{
+			stakputc('\'');
+			cp = bp;
+			n = fold ? (fold - 2) : 0;
+			while (c = mbchar(cp))
+			{
+				if (c == '\n')
+					n = fold - 1;
+				else if (n && --n <= 0)
+				{
+					n = fold - 2;
+					stakwrite(bp, --cp - bp);
+					bp = cp;
+					stakwrite("'\\\n'", 4);
+				}
+				else if (n == 1 && *cp == '\'')
+				{
+					n = fold - 5;
+					stakwrite(bp, --cp - bp);
+					bp = cp;
+					stakwrite("'\\\n\\''", 6);
+				}
+				else if (c == '\'')
+				{
+					stakwrite(bp, cp - bp - 1);
+					bp = cp;
+					if (n && (n -= 4) <= 0)
+					{
+						n = fold - 5;
+						stakwrite("'\\\n\\''", 6);
+					}
+					else
+						stakwrite("'\\''", 4);
+				}
+			}
+			stakwrite(bp, cp - bp - 1);
+			stakputc('\'');
+		}
+		else if (n = fold)
+		{
+			cp = bp;
+			while (c = mbchar(cp))
+			{
+				if (--n <= 0)
+				{
+					n = fold;
+					stakwrite(bp, --cp - bp);
+					bp = cp;
+					stakwrite("\\\n", 2);
+				}
+			}
+			stakwrite(bp, cp - bp - 1);
+		}
+		else
+			stakwrite(bp, cp - bp);
+		if (c)
+		{
+			stakputc('\\');
+			stakputc('\n');
+		}
+	} while (c);
 	stakputc(0);
 	return(stakptr(offset));
 }

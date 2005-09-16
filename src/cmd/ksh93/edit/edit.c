@@ -612,7 +612,10 @@ void	ed_setup(register Edit_t *ep, int fd, int reedit)
 		ep->e_hismax = ep->e_hismin = ep->e_hloff = 0;
 	}
 	ep->e_hline = ep->e_hismax;
-	ep->e_wsize = ed_window()-2;
+	if(!sh_isoption(SH_VI) && !sh_isoption(SH_EMACS) && !sh_isoption(SH_GMACS))
+		ep->e_wsize = MAXLINE;
+	else
+		ep->e_wsize = ed_window()-2;
 	ep->e_crlf = 1;
 	ep->e_plen = 0;
 	pp = ep->e_prompt;

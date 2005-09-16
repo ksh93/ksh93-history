@@ -1702,6 +1702,15 @@ static void comsubst(Mac_t *mp,int type)
 		}
 		mac_copy(mp,str,c);
 	}
+	if(--newlines>0 && sh.ifstable['\n']==S_DELIM)
+	{
+		if(mp->sp)
+			sfnputc(mp->sp,'\n',newlines);
+		else if(!mp->quote && mp->split && sh.ifstable['\n'])
+			endfield(mp,0);
+		else	while(newlines--)
+				stakputc('\n');
+	}
 	if(lastc)
 		mac_copy(mp,&lastc,1);
 	sfclose(sp);

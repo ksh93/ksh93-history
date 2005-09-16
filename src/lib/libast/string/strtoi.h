@@ -70,7 +70,7 @@
  *			[lL][lL][uU]
  *			[uU][lL][lL]
  *
- *	multiplier:	.		pseudo-float (100) + subsequent digits
+ *	multiplier:	.		pseudo-float if m>1
  *			[bB]		block (512)
  *			[cC]		char (1)
  *			[gG]		giga (1024*1024*1024)
@@ -512,23 +512,23 @@ S2I_function(a, e, base) const char* a; char** e; int base;
 				v = 2;
 				break;
 			default:
-				if (c == decimal && *s >= '0' && *s <= '9')
-				{
-					if (MPYOVER(n, 100))
-						overflow = 1;
-					n *= 100;
+				if (m <= 1)
 					v = 0;
-					for (m = 10; (c = *s++) >= '0' && c <= '9'; m /= 10) 
-						v += m * (c - '0');
+				else if (c == decimal && S2I_valid(s))
+				{
+					if (MPYOVER(n, m))
+						overflow = 1;
+					n *= m;
+					v = 0;
+					while (S2I_valid(s) && (c = *s++) >= '0' && c <= '9')
+						v += (m /= 10) * (c - '0');
 					if (ADDOVER(n, v, negative))
 						overflow = 1;
 					n += v;
 					v = 0;
 				}
-				else if (m > 1)
-					v = m;
 				else
-					v = 0;
+					v = m;
 				s--;
 				break;
 			}
