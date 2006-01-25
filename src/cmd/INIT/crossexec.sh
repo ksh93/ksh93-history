@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#                  Copyright (c) 1994-2005 AT&T Corp.                  #
+#                  Copyright (c) 1994-2006 AT&T Corp.                  #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                            by AT&T Corp.                             #
@@ -132,7 +132,7 @@ case $cp in
 scp)	cp="$cp -q" ;;
 esac
 
-trap "rm -f $tmp" 0 1 2 3
+trap "rm -f $tmp" 0 1 2 3 15
 $exec $cp $cmd $cpu$hostname:$dir </dev/null || exit 1
 cmd=./${cmd##*/}
 $exec $sh $shu $hostname "cd $dir; LD_LIBRARY_PATH=: $cmd $@ </dev/null 2>/dev/null; code=\$?; rm -f $cmd; echo $command: exit \$code >&2" </dev/null 2>$tmp

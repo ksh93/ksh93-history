@@ -809,6 +809,10 @@ The command substitution
 \^\f3$(\^cat file\^)\fP\^
 can be replaced by the equivalent but faster
 \^\f3$(\^<file\^)\fP\^.
+The command substitution
+\^\f3$(\^\fP\f2n\^\fP\f3\<#\^)\fP
+will expand to the current byte offset for file descriptor
+.IR n .
 .SS Arithmetic Substitution.
 An arithmetic expression enclosed in double
 parentheses preceded by a dollar sign (
@@ -1465,7 +1469,8 @@ The name of the current function that is being executed.
 .TP
 .B .sh.match
 An indexed array which stores the most recent match and sub-pattern
-matches after variables expansions using the operators
+matches after conditional pattern matches that match and after
+variables expansions using the operators
 .BR # ,
 .BR % ,
 or
@@ -2893,6 +2898,9 @@ matches
 Any part of
 .I pattern\^
 can be quoted to cause it to be matched as a string.
+With a successful match to a pattern, the
+.B .sh.match
+array variable will contain the match and sub-pattern matches.
 .TP
 \f2string\fP \f3=\fP \f2pattern\fP
 Same as \f3==\fP above, but is obsolete.
@@ -2902,6 +2910,13 @@ True, if
 .I string\^
 does not match
 .IR pattern .
+With the
+.I string\^
+matches the
+.I pattern\^
+the
+.B .sh.match
+array variable will contain the match and sub-pattern matches.
 .TP
 \f2string1\fP \f3<\fP \f2string2\fP
 True, if
@@ -3032,6 +3047,8 @@ is a service given by name or an integer port number,
 then the redirection attempts to make a
 \f3tcp\fP or \f3udp\fP connection to the corresponding
 socket.
+.PP
+No intervening space is allowed between the characters of redirection operators.
 .TP 14
 .BI < word
 Use file
@@ -3135,6 +3152,25 @@ The input from the co-process is moved to standard input.
 .TP
 .B >&p
 The output to the co-process is moved to standard output.
+.TP
+.BI <# \^\^\^  (( expr ))
+Evaluate arithmetic expression
+.I expr\^
+and position file descriptor 0
+to the resulting value
+bytes from the start of the file.
+The variables
+.B CUR
+and
+.B EOF
+evaluate to the current offset and end-of-file offset
+respectively when evaluating
+.IR expr.
+.TP
+.BI ># \^\^\^ (( offset ))
+The same as
+.B <#
+except applies to file descriptor 1.
 .PP
 If one of the above is preceded by a digit,
 with no intervening space, then the
@@ -3142,7 +3178,12 @@ file descriptor number referred to is that specified
 by the digit
 (instead of the default 0 or 1).
 If one of the above, other than
-.BR >&\- , 
+.BR >&\- 
+and the
+.B >#
+and
+.B >#
+forms,
 is preceded by
 .BI { varname }
 with no intervening space,
@@ -3152,11 +3193,16 @@ the shell and stored in the variable
 .IR varname .
 If
 .B >&\-
+or the any of the
+.B >#
+and
+.B >#
+forms
 is preceded by
 .BI { varname }
 the value of
 .I varname\^
-defines the file descriptor to close.
+defines the file descriptor to close or position.
 For example:
 .PP
 .RS
@@ -3799,7 +3845,10 @@ accept `RETURN' as carriage return without line feed
 and that a space (`\ ') must overwrite the current character on
 the screen.
 .PP
-The editing modes implement a concept where the user is looking through a
+Unless the
+.B multiline
+option is on,
+the editing modes implement a concept where the user is looking through a
 window at the current line.
 The window width is the value of
 .SM
@@ -5307,7 +5356,13 @@ or
 or the argument
 .B \-\|\-
 ends the options.
-.I optstring
+Options beginning with
+.B +
+are only recognized when
+.I optstring\^
+begins with a
+.BR + .
+.I optstring\^
 contains the letters that
 .B getopts
 recognizes.
@@ -6048,6 +6103,11 @@ appended.
 .B monitor
 Same as
 .BR \-m .
+.TP 8
+.B multiline
+The built-in editors will use multiple lines on the screen for lines
+that are longer than the width of the screen.  This may not work
+for all terminals.
 .TP 8
 .B noclobber
 Same as

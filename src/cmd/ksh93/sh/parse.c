@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2005 AT&T Corp.                  *
+*                  Copyright (c) 1982-2006 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -288,6 +288,7 @@ Shnode_t *sh_dolparen(void)
 	int line = sh.inlineno;
 	sh.inlineno = error_info.line+sh.st.firstline;
 	sh_lexopen(lp,&sh,1);
+	shlex.comsub = 1;
 	switch(sh_lex())
 	{
 	    /* ((...)) arithmetic expression */
@@ -298,6 +299,7 @@ Shnode_t *sh_dolparen(void)
 		t = sh_cmd(RPAREN,SH_NL|SH_EMPTY);
 		break;
 	}
+	shlex.comsub = 0;
 	if(!sp && (sp=fcfile()))
 	{
 		/*
@@ -1314,6 +1316,8 @@ static struct ionod	*inout(struct ionod *lastio,int flag)
 			iof |= IOMOV;
 		else if(token==IORDWRSYM)
 			iof |= IORDW;
+		else if((token&SYMSHARP) == SYMSHARP)
+			iof |= IOLSEEK;
 		break;
 
 	    case '>':
@@ -1331,18 +1335,33 @@ static struct ionod	*inout(struct ionod *lastio,int flag)
 			iof |= IOMOV;
 		else if(token==IOCLOBSYM)
 			iof |= IOCLOB;
+		else if((token&SYMSHARP) == SYMSHARP)
+			iof |= IOLSEEK;
 		break;
 
 	    default:
 		return(lastio);
 	}
 	shlex.digits=0;
-	if(sh_lex())
-		sh_syntax();
 	iop=(struct ionod*) stakalloc(sizeof(struct ionod));
+	iop->iodelim = 0;
+	if(token=sh_lex())
+	{
+		if(token==RPAREN && (iof&IOLSEEK) && shlex.comsub) 
+		{
+			shlex.arg = (struct argnod*)stakalloc(sizeof(struct argnod)+3);
+			strcpy(shlex.arg->argval,"CUR");
+			shlex.arg->argflag = ARG_RAW;
+			iof |= IOARITH;
+			fcseek(-1);
+		}
+		else if(token==EXPRSYM && (iof&IOLSEEK))
+			iof |= IOARITH;
+		else
+			sh_syntax();
+	}
 	iop->ioname=shlex.arg->argval;
 	iop->iovname = iovname;
-	iop->iodelim = 0;
 	if(iof&IODOC)
 	{
 		if(shlex.digits==2)
@@ -1507,7 +1526,8 @@ static Shnode_t *test_primary(void)
 		t = makelist(TTST|TTEST|TPAREN ,t, (Shnode_t*)sh.inlineno);
 		break;
 	    case '!':
-		t = test_primary();
+		if(!(t = test_primary()))
+			sh_syntax();
 		t->tre.tretyp |= TNEGATE;
 		return(t);
 	    case TESTUNOP:
@@ -1574,6 +1594,9 @@ static Shnode_t *test_primary(void)
 			sfprintf(shlex.kiatmp,"p;%..64d;f;%..64d;%d;%d;t;\n",shlex.current,r,line,line);
 		}
 #endif /* SHOPT_KIA */
+		break;
+	    default:
+		return(0);
 	}
 	skipnl();
 	return(t);

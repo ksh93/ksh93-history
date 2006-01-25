@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2005 AT&T Corp.                  *
+*                  Copyright (c) 1982-2006 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -31,6 +31,7 @@
 #include	"path.h"
 #include	"builtins.h"
 #include	"terminal.h"
+#include	"FEATURE/poll"
 #if SHOPT_KIA
 #   include	"shlex.h"
 #   include	"io.h"
@@ -748,6 +749,26 @@ char **sh_argbuild(int *nargs, const struct comnod *comptr,int flag)
 		return(comargn);
 	}
 }
+
+#if _pipe_socketpair && !_socketpair_devfd
+#   define sh_pipe	arg_pipe
+/*
+ * create a real pipe (not a socked) and print message on failure
+ */
+static int	arg_pipe(register int pv[])
+{
+	int fd[2];
+	if(pipe(fd)<0 || (pv[0]=fd[0])<0 || (pv[1]=fd[1])<0)
+		errormsg(SH_DICT,ERROR_system(1),e_pipe);
+	pv[0] = sh_iomovefd(pv[0]);
+	pv[1] = sh_iomovefd(pv[1]);
+	sh.fdstatus[pv[0]] = IONOSEEK|IOREAD;
+	sh.fdstatus[pv[1]] = IONOSEEK|IOWRITE;
+	sh_subsavefd(pv[0]);
+	sh_subsavefd(pv[1]);
+	return(0);
+}
+#endif
 
 /* Argument expansion */
 static int arg_expand(register struct argnod *argp, struct argnod **argchain,int flag)

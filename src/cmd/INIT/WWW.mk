@@ -35,13 +35,13 @@ WWWTYPES =
 	(html_info) : $$(MM2HTMLINFO) $$(MM2HTMLINIT)
 	if WWWSTYLE == "frame"
 		%.html %-index.html : %.mm (html_info)
-			$(MM2HTML) $(MM2HTMLFLAGS) $(%:N=faq.*:?> $(<:O=1)?-f $(%) -x?) -o WWWTYPES=$(WWWTYPES:@Q:@Q) $(>)
+			$(MM2HTML) $(MM2HTMLFLAGS) $(%:N=faq.*:?> $(<:O=1)?-f $(%) -x?) -o WWWTYPES=$(WWWTYPES:@Q:@Q) $(WWWSOURCE.$(%)) $(>)
 	else
 		%.html : %.mm (html_info)
-			$(MM2HTML) $(MM2HTMLFLAGS) -o WWWTYPES=$(WWWTYPES:@Q:@Q) $(>) > $(<)
+			$(MM2HTML) $(MM2HTMLFLAGS) -o WWWTYPES=$(WWWTYPES:@Q:@Q) $(>) $(WWWSOURCE.$(%)) > $(<)
 	end
 	%.html : %.1 (html_info)
-		$(MM2HTML) $(MM2HTMLFLAGS) $(>) > $(<)
+		$(MM2HTML) $(MM2HTMLFLAGS) $(>) $(WWWSOURCE.$(%)) > $(<)
 	%-man.html : $(BINDIR)/% (html_info)
 		ignore $(>) --html 2> $(<)
 	.DO.WWW.MAN : .USE
@@ -323,6 +323,9 @@ WWWTYPES =
 			end
 			if "$(I:T=FD)"
 				.SOURCE : $(I)
+				if "$(<)"
+					WWWSOURCE.$(<:O=1) += $(I:T=F:P=L=*)
+				end
 				continue
 			end
 			if I == "*.html"

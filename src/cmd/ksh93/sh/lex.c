@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2005 AT&T Corp.                  *
+*                  Copyright (c) 1982-2006 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -253,6 +253,7 @@ Lex_t *sh_lexopen(Lex_t *lp, Shell_t *sp, int mode)
 		lexd.noarg = lexd.level= lexd.dolparen = 0;
 		lexd.nocopy = lexd.docword = lexd.nest = lexd.paren = 0;
 	}
+	shlex.comsub = 0;
 	return(lp);
 }
 
@@ -537,7 +538,7 @@ int sh_lex(void)
 				}
 				if(fcgetc(n)>0)
 					fcseek(-1);
-				if(state[n]==S_OP)
+				if(state[n]==S_OP || n=='#')
 				{
 					if(n==c)
 					{
@@ -577,6 +578,8 @@ int sh_lex(void)
 						c  |= SYMPIPE;
 					else if(c=='<' && n=='>')
 						c = IORDWRSYM;
+					else if(n=='#' && (c=='<'||c=='>'))
+						c |= SYMSHARP;
 					else
 						n = 0;
 					if(n)
@@ -1476,7 +1479,7 @@ static void nested_here(register Lex_t *lp)
 	if(offset=staktell())
 		base = stakfreeze(0);
 	n = fcseek(0)-lexd.docend;
-	iop = newof(0,struct ionod,1,n+1);
+	iop = newof(0,struct ionod,1,n+ARGVAL);
 	iop->iolst = shlex.heredoc;
 	stakseek(ARGVAL);
 	stakwrite(lexd.docend,n);
@@ -1762,7 +1765,7 @@ static char	*fmttoken(Lex_t *lp, register int sym, char *tok)
 		return((char*)sh_translate(e_lexzerobyte));
 	if(sym==0)
 		return(shlex.arg?shlex.arg->argval:"?");
-	if(lex.intest && shlex.arg)
+	if(lex.intest && shlex.arg && *shlex.arg->argval)
 		return(shlex.arg->argval);
 	if(sym&SYMRES)
 	{
@@ -1793,6 +1796,9 @@ static char	*fmttoken(Lex_t *lp, register int sym, char *tok)
 				break;
 			case SYMLPAR:
 				sym = LPAREN;
+				break;
+			case SYMSHARP:
+				sym = '#';
 				break;
 			default:
 				sym = 0;

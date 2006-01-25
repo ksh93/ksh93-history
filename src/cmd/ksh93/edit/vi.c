@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2005 AT&T Corp.                  *
+*                  Copyright (c) 1982-2006 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -186,6 +186,7 @@ typedef struct _vi_
 
 static const char paren_chars[] = "([{)]}";   /* for % command */
 
+static void	cursor(Vi_t*, int);
 static void	del_line(Vi_t*,int);
 static int	getcount(Vi_t*,int);
 static void	getline(Vi_t*,int);
@@ -222,7 +223,7 @@ int ed_viread(void *context, int fd, register char *shbuf, int nchar, int reedit
 	genchar Physical[2*MAXLINE];	/* physical image */
 	genchar Ubuf[MAXLINE];	/* used for U command */
 	genchar ubuf[MAXLINE];	/* used for u command */
-	genchar Window[MAXWINDOW+10];	/* window image */
+	genchar Window[MAXLINE];	/* window image */
 	int Globals[9];			/* local global variables */
 	int esc_or_hang=0;		/* <ESC> or hangup */
 	char cntl_char=0;		/* TRUE if control character present */
@@ -583,6 +584,8 @@ int ed_viread(void *context, int fd, register char *shbuf, int nchar, int reedit
 		getline(vp,APPEND);
 	else
 		getline(vp,ESC);
+	if(vp->ed->e_multiline)
+		cursor(vp, last_phys);
 	/*** add a new line if user typed unescaped \n ***/
 	/* to cause the shell to process the line */
 	tty_cooked(ERRIO);
@@ -1022,42 +1025,11 @@ static int cntlmode(Vi_t *vp)
 
 static void cursor(Vi_t *vp,register int x)
 {
-	register int delta;
-
 #if SHOPT_MULTIBYTE
 	while(physical[x]==MARKER)
 		x++;
 #endif /* SHOPT_MULTIBYTE */
-	delta = x - cur_phys;
-
-	if( delta == 0 )
-		return;
-
-	if( delta > 0 )
-	{
-		/*** move to right ***/
-		putstring(vp,cur_phys, delta);
-	}
-	else
-	{
-		/*** move to left ***/
-
-		delta = -delta;
-
-		/*** attempt to optimize cursor movement ***/
-		if(!crallowed || (delta <= ((cur_phys-vp->first_wind)+plen)>>1) )
-		{
-			while( delta-- )
-				putchar('\b');
-		}
-		else
-		{
-			pr_string(vp,Prompt);
-			putstring(vp,vp->first_wind, x - vp->first_wind);
-		}
-	}
-	cur_phys = x;
-	return;
+	cur_phys = ed_setcursor(vp->ed, physical, cur_phys,x,vp->first_wind);
 }
 
 /*{	DELETE( nchars, mode )

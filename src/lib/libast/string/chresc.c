@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2005 AT&T Corp.                  *
+*                  Copyright (c) 1985-2006 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -79,6 +79,7 @@ chresc(register const char* s, char** p)
 			c = '\b';
 			break;
 		case 'c':
+		control:
 			if (c = *s)
 			{
 				s++;
@@ -89,22 +90,34 @@ chresc(register const char* s, char** p)
 			c ^= 0x40;
 			c = ccmapc(c, CC_ASCII, CC_NATIVE);
 			break;
-#if !_PACKAGE_astsa
 		case 'C':
+			if (*s == '-' && *(s + 1))
+			{
+				s++;
+				goto control;
+			}
+#if !_PACKAGE_astsa
 			if (*s == '[' && (n = regcollate(s + 1, (char**)&e, buf, sizeof(buf))) >= 0)
 			{
 				if (n == 1)
 					c = buf[0];
 				s = e;
 			}
-			break;
 #endif
+			break;
 		case 'e':
 		case 'E':
 			c = CC_esc;
 			break;
 		case 'f':
 			c = '\f';
+			break;
+		case 'M':
+			if (*s == '-')
+			{
+				s++;
+				c = CC_esc;
+			}
 			break;
 		case 'n':
 			c = '\n';

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2005 AT&T Corp.                  *
+*                  Copyright (c) 1982-2006 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -43,12 +43,14 @@
 #   include	"variables.h"
 #else
     extern char ed_errbuf[];
-    char e_version[] = "\n@(#)$Id: Editlib version 1993-12-28 p- $\0\n";
+    char e_version[] = "\n@(#)$Id: Editlib version 1993-12-28 r $\0\n";
 #endif	/* KSHELL */
 #include	"io.h"
 #include	"terminal.h"
 #include	"history.h"
 #include	"edit.h"
+
+#define CURSOR_UP       "\E[A"
 
 #if SHOPT_MULTIBYTE
 #   define is_print(c)	((c&~STRIP) || isprint(c))
@@ -585,6 +587,7 @@ void	ed_setup(register Edit_t *ep, int fd, int reedit)
 	register int qlen = 1;
 	char inquote = 0;
 	ep->e_fd = fd;
+	ep->e_multiline = sh_isoption(SH_MULTILINE)!=0;
 #ifdef SIGWINCH
 	if(!(sh.sigflag[SIGWINCH]&SH_SIGFAULT))
 	{
@@ -616,6 +619,7 @@ void	ed_setup(register Edit_t *ep, int fd, int reedit)
 		ep->e_wsize = MAXLINE;
 	else
 		ep->e_wsize = ed_window()-2;
+	ep->e_winsz = ep->e_wsize+2;
 	ep->e_crlf = 1;
 	ep->e_plen = 0;
 	pp = ep->e_prompt;
@@ -723,6 +727,8 @@ void	ed_setup(register Edit_t *ep, int fd, int reedit)
 		sfset(sfstderr,SF_READ,1);
 	sfwrite(sfstderr,ep->e_outptr,0);
 	ep->e_eol = reedit;
+	if(ep->e_multiline)
+		ep->e_wsize = MAXLINE - (ep->e_plen-2);
 }
 
 /*
@@ -1019,9 +1025,133 @@ void	ed_putchar(register Edit_t *ep,register int c)
 }
 
 /*
+ * returns the line and column corresponding to offset <off> in the physical buffer
+ * if <cur> is non-zero and <= <off>, then correspodning <curpos> will start the search 
+ */
+Edpos_t ed_curpos(Edit_t *ep,genchar *phys, int off, int cur, Edpos_t curpos)
+{
+	register genchar *sp=phys;
+	register int c=1, col=ep->e_plen;
+	Edpos_t pos;
+	char p;
+	if(cur && off>=cur)
+	{
+		sp += cur; 
+		off -= cur;
+		pos = curpos;
+		col = pos.col;
+	}
+	else
+		pos.line = 0;
+	while(off-->0)
+	{
+		if(c)
+			c = *sp++;
+#if SHOPT_MULTIBYTE
+		if(c && (mbconv(&p, (wchar_t)c))==1 && p=='\n')
+#else
+		if(c=='\n')
+#endif /* SHOPT_MULTIBYTE */
+			col = 0;
+		else
+			col++;
+		if(col >  ep->e_winsz)
+			col = 0;
+		if(col==0)
+			pos.line++;
+	}
+	pos.col = col;
+	return(pos);
+}
+
+static void ed_putstring(register Edit_t *ep, const char *str)
+{
+	register int c;
+	while(c = *str++)
+		ed_putchar(ep,c);
+}
+
+int ed_setcursor(register Edit_t *ep,genchar *physical,register int old,register int new,int first)
+{
+	static int oldline;
+	register int delta;
+	Edpos_t newpos;
+
+	delta = new - old;
+	if( delta == 0 )
+		return(new);
+	if(ep->e_multiline)
+	{
+		ep->e_curpos = ed_curpos(ep, physical, old,0,ep->e_curpos);
+		newpos =     ed_curpos(ep, physical, new,old,ep->e_curpos);
+		if(ep->e_curpos.col==0 && ep->e_curpos.line>0 && oldline<ep->e_curpos.line && delta<0)
+			ed_putstring(ep,"\r\n");
+		oldline = newpos.line;
+		if(ep->e_curpos.line > newpos.line)
+		{
+			int n;
+			for(;ep->e_curpos.line > newpos.line; ep->e_curpos.line--)
+				ed_putstring(ep,CURSOR_UP);
+			if(newpos.line==0 && (n=ep->e_plen- ep->e_curpos.col)>0)
+			{
+				ep->e_curpos.col += n;
+				ed_putchar(ep,'\r');
+				if(!ep->e_crlf)
+					ed_putstring(ep,ep->e_prompt);
+				else
+				{
+					int m = ep->e_winsz+1-ep->e_plen;
+					ed_putchar(ep,'\n');
+					n = ep->e_plen;
+					if(m < ed_genlen(physical))
+					{
+						while(physical[m] && n-->0)
+							ed_putchar(ep,physical[m++]);
+					}
+					while(n-->0)
+						ed_putchar(ep,' ');
+					ed_putstring(ep,CURSOR_UP);
+				}
+			}
+		}
+		else if(ep->e_curpos.line < newpos.line)
+		{
+			for(;ep->e_curpos.line < newpos.line;ep->e_curpos.line++)
+				ed_putchar(ep,'\n');
+			ed_putchar(ep,'\r');
+			ep->e_curpos.col = 0;
+		}
+		delta = newpos.col - ep->e_curpos.col;
+		old   =  new - delta;
+	}
+	else
+		newpos.line=0;
+	if(delta<0)
+	{
+		/*** move to left ***/
+		delta = -delta;
+		/*** attempt to optimize cursor movement ***/
+		if(!ep->e_crlf || (2*delta <= ((old-first)+(newpos.line?0:ep->e_plen))) )
+		{
+			for( ; delta; delta-- )
+				ed_putchar(ep,'\b');
+		}
+		else
+		{
+			if(newpos.line==0)
+				ed_putstring(ep,ep->e_prompt);
+			old = first;
+			delta = new-first;
+		}
+	}
+	while(delta-->0)
+		ed_putchar(ep,physical[old++]);
+	return(new);
+}
+
+/*
  * copy virtual to physical and return the index for cursor in physical buffer
  */
-
 int ed_virt_to_phys(Edit_t *ep,genchar *virt,genchar *phys,int cur,int voff,int poff)
 {
 	register genchar *sp = virt;

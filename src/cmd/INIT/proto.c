@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1990-2005 AT&T Corp.                  *
+*                  Copyright (c) 1990-2006 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -77,10 +77,11 @@
 #if !defined(__LINKAGE__)
 #define __LINKAGE__		/* 2004-08-11 transition */
 #endif
-#line 1 "/home/gsf/src/cmd/proto/proto.c"
+#line 1 "proto.c"
  
 
 #line 142
+# ifndef __STDC__
 # ifndef creat
 # define creat		_huh_creat
 # endif
@@ -95,18 +96,23 @@
 # define mkdir		_huh_mkdir
 # endif
 # endif
+# endif
 
 # include <sys/types.h>
 # include <sys/stat.h>
 # include <fcntl.h>
-# if !1
+# if 1
+# include <stdio.h>
+# else
 # include <time.h>
 # endif
 
+# ifndef __STDC__
 # undef	access
 # undef	ctime
 # undef	creat
 # undef	mkdir
+# endif
 
 # ifndef O_RDONLY
 # define O_RDONLY	0
@@ -140,9 +146,17 @@
 # define S_IXOTH		0001
 # endif
 
+# ifndef __STDC__
 # if !_WIN32 && !_WINIX
 # define remove(x)	unlink(x)
 # define rename(x,y)	((link(x,y)||remove(x))?-1:0)
+# endif
+
+# if 1
+extern __MANGLE__ int	access __PROTO__((const char*, int));
+extern __MANGLE__ int	mkdir __PROTO__((const char*, int));
+# endif
+
 # endif
 
  
@@ -176,14 +190,14 @@ replace __PARAM__((const char* newfile, const char* oldfile, int preserve), (new
 	return preserve;
 }
 
-#line 1 "/home/gsf/src/lib/libpp/ppproto.c"
+#line 1 "../../lib/libpp/ppproto.c"
  
 #line 13
 static const char id[] = "\n@(#)$Id: proto (AT&T Research) 2004-10-22 $\000\n";
 
-#line 1 "/home/gsf/src/lib/libpp/ppfsm.c"
+#line 1 "../../lib/libpp/ppfsm.c"
  
-#line 1 "/home/gsf/src/lib/libpp/pplib.h"
+#line 1 "../../lib/libpp/pplib.h"
    
 #line 107
 struct ppsymbol;
@@ -280,7 +294,7 @@ struct pptuple
 	char		token[1];	 
 };
 
-#line 1 "/home/gsf/src/lib/libpp/pp.h"
+#line 1 "../../lib/libpp/pp.h"
  
 #line 206
  
@@ -384,20 +398,20 @@ extern __MANGLE__ void		pppragma __PROTO__((char*, char*, char*, char*, int));
 extern __MANGLE__ int		ppprintf __PROTO__((char*, ...));
 extern __MANGLE__ int		ppsync __PROTO__((void));
 
-#line 349 "/home/gsf/src/lib/libpp/pplib.h"
+#line 349 "../../lib/libpp/pplib.h"
 
 #line 1 "../../lib/libpp/ppdef.h"
  
-#line 350 "/home/gsf/src/lib/libpp/pplib.h"
+#line 350 "../../lib/libpp/pplib.h"
 
-#line 1 "/home/gsf/src/lib/libpp/ppkey.h"
+#line 1 "../../lib/libpp/ppkey.h"
  
 #line 16
         
 #line 125
 extern __MANGLE__ struct ppkeyword	ppkey[];
 
-#line 351 "/home/gsf/src/lib/libpp/pplib.h"
+#line 351 "../../lib/libpp/pplib.h"
   
 #line 663
 struct ppcontext			 
@@ -433,12 +447,21 @@ struct ppsymkey
 };
 
 #line 709
-extern __MANGLE__ __V_*		realloc __PROTO__((__V_*, int));
-extern __MANGLE__ __V_*		calloc __PROTO__((int, int));
+# ifdef __STDC__
+
+# include <stdlib.h>
+# include <unistd.h>
+# include <time.h>
+# include <string.h>
+
+# else
+
+# define size_t		int
+
+extern __MANGLE__ __V_*		realloc __PROTO__((__V_*, size_t));
+extern __MANGLE__ __V_*		calloc __PROTO__((size_t, size_t));
 extern __MANGLE__ char*		ctime __PROTO__((time_t*));
 extern __MANGLE__ void		free __PROTO__((__V_*));
-
-
 
 # ifndef O_RDONLY
 
@@ -455,7 +478,9 @@ extern __MANGLE__ int		write __PROTO__((int, const __V_*, int));
 
 # endif
 
-#line 770
+# endif
+
+#line 781
 extern __MANGLE__ void		ppassert __PROTO__((int, char*, char*));
 extern __MANGLE__ void		ppbuiltin __PROTO__((void));
 extern __MANGLE__ int		ppcall __PROTO__((struct ppsymbol*, int));
@@ -486,9 +511,9 @@ extern __MANGLE__ char*		ppstatestr __PROTO__((long));
 extern __MANGLE__ char*		pptokstr __PROTO__((char*, int));
 extern __MANGLE__ void		pptrace __PROTO__((int));
 
-#line 11 "/home/gsf/src/lib/libpp/ppfsm.c"
+#line 11 "../../lib/libpp/ppfsm.c"
 
-#line 1 "/home/gsf/src/lib/libpp/ppfsm.h"
+#line 1 "../../lib/libpp/ppfsm.h"
      
 #line 183
      
@@ -503,7 +528,7 @@ extern __MANGLE__ char		_pp_trigraph[255+1];
 
 extern __MANGLE__ void		_pp_refill __PROTO__((int));
 
-#line 12 "/home/gsf/src/lib/libpp/ppfsm.c"
+#line 12 "../../lib/libpp/ppfsm.c"
 
   
 #line 67
@@ -1219,17 +1244,17 @@ ppfsm __PARAM__((int op, register char* s), (op, s)) __OTORP__(int op; register 
 
 
 
-#line 18 "/home/gsf/src/lib/libpp/ppproto.c"
+#line 18 "../../lib/libpp/ppproto.c"
 
 #line 1 "../../../include/ast/hashkey.h"
   
-#line 28
+#line 24
                   
  
-#line 72
+#line 68
 extern __MANGLE__  long	strkey  __PROTO__((const char*));
 
-#line 20 "/home/gsf/src/lib/libpp/ppproto.c"
+#line 20 "../../lib/libpp/ppproto.c"
 
 #line 40
 struct proto 
@@ -1389,7 +1414,7 @@ memcopy __PARAM__((register char* s, register char* t, int n), (s, t, n)) __OTOR
 	return s;
 }
 
-#line 1 "/home/gsf/src/lib/libast/port/astlicense.c"
+#line 1 "../../lib/libast/port/astlicense.c"
 
 
  
@@ -2397,7 +2422,7 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 		comment(&notice, &buf, ((char*)0), -1, 0);
 	return (*(( &buf)->nxt>=( &buf)->end?(( &buf)->nxt=( &buf)->end-1):( &buf)->nxt)=0,( &buf)->nxt-( &buf)->buf);
 }
-#line 302 "/home/gsf/src/lib/libpp/ppproto.c"
+#line 302 "../../lib/libpp/ppproto.c"
  
 #line 314
 static char*
@@ -4490,15 +4515,10 @@ pppread __PARAM__((char* iob), (iob)) __OTORP__(char* iob;){
 
 
 
-#line 239 "/home/gsf/src/cmd/proto/proto.c"
+#line 253 "proto.c"
 
 
 
-
-
-
-extern __MANGLE__ int	access __PROTO__((const char*, int));
-extern __MANGLE__ int	mkdir __PROTO__((const char*, int));
 
 
 static int

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2005 AT&T Corp.                  *
+*                  Copyright (c) 1982-2006 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -31,6 +31,7 @@
 #include	<ls.h>
 #include	<stdarg.h>
 #include	<ctype.h>
+#include	<regex.h>
 #include	"variables.h"
 #include	"path.h"
 #include	"io.h"
@@ -100,7 +101,7 @@ struct fdsave
 static int  	subexcept(Sfio_t*, int, void*, Sfdisc_t*);
 static int  	eval_exceptf(Sfio_t*, int, void*, Sfdisc_t*);
 static int  	slowexcept(Sfio_t*, int, void*, Sfdisc_t*);
-static int  	pipeexcept(Sfio_t*, int, void*, Sfdisc_t*);
+static int	pipeexcept(Sfio_t*, int, void*, Sfdisc_t*);
 static ssize_t	piperead(Sfio_t*, void*, size_t, Sfdisc_t*);
 static ssize_t	slowread(Sfio_t*, void*, size_t, Sfdisc_t*);
 static ssize_t	subread(Sfio_t*, void*, size_t, Sfdisc_t*);
@@ -121,6 +122,42 @@ struct subfile
 	long		size;
 	long		left;
 };
+
+struct Eof
+{
+	Namfun_t	hdr;
+	int		fd;
+};
+
+static Sfdouble_t nget_cur_eof(register Namval_t* np, Namfun_t *fp)
+{
+	struct Eof *ep = (struct Eof*)fp;
+	Sfoff_t end, cur =lseek(ep->fd, (Sfoff_t)0, SEEK_CUR);
+	if(*np->nvname=='C')
+	        return((Sfdouble_t)cur);
+	if(cur<0)
+		return((Sfdouble_t)-1);
+	end =lseek(ep->fd, (Sfoff_t)0, SEEK_END);
+	lseek(ep->fd, (Sfoff_t)0, SEEK_CUR);
+        return((Sfdouble_t)end);
+}
+
+static const Namdisc_t EOF_disc	= { sizeof(struct Eof), 0, 0, nget_cur_eof};
+
+#define	MATCH_BUFF	(64*1024)
+struct Match
+{
+	Sfoff_t	offset;
+	char	*base;
+};
+
+static int matchf(void *handle, char *ptr, size_t size)
+{
+	struct Match *mp = (struct Match*)handle;
+	mp->offset += (ptr-mp->base);
+	return(1);
+}
+
 
 static struct fdsave	*filemap;
 static short		filemapsize;
@@ -211,6 +248,7 @@ Sfio_t *sh_iostream(register int fd)
 		sfset(iop,SF_MALLOC,1);
 		{
 			dp = newof(0,Sfdisc_t,1,0);
+			dp->exceptf = slowexcept;
 			if(status&IOTTY)
 				dp->readf = slowread;
 			else if(status&IONOSEEK)
@@ -219,7 +257,6 @@ Sfio_t *sh_iostream(register int fd)
 				dp->readf = 0;
 			dp->seekf = 0;
 			dp->writef = 0;
-			dp->exceptf = slowexcept;
 			sfdisc(iop,dp);
 		}
 	}
@@ -274,7 +311,8 @@ int sh_iorenumber(register int f1,register int f2)
 		/* see whether file descriptor is in use */
 		if(sh_inuse(f2) || (f2>2 && sp))
 		{
-			io_preserve(sp,f2);
+			if(!(sh.inuse_bits&(1<<f2)))
+				io_preserve(sp,f2);
 			sp = 0;
 		}
 		else if(f2==0)
@@ -324,6 +362,8 @@ int sh_close(register int fd)
 	if(sh.fdptrs[fd])
 		*sh.fdptrs[fd] = -1;
 	sh.fdptrs[fd] = 0;
+	if(fd < 10)
+		sh.inuse_bits &= ~(1<<fd);
 	return(r);
 }
 
@@ -492,6 +532,32 @@ int	sh_pipe(register int pv[])
 	return(0);
 }
 
+static Sfoff_t	file_offset(int fn, char *fname)
+{
+	Sfio_t		*sp = sh.sftable[fn];
+	char		*cp;
+	Sfoff_t		off;
+	struct Eof	endf;
+	Namval_t	*mp = nv_open("EOF",sh.var_tree,0);
+	Namval_t	*pp = nv_open("CUR",sh.var_tree,0);
+	memset(&endf,0,sizeof(struct Eof));
+	endf.fd = fn;
+	endf.hdr.disc = &EOF_disc;
+	endf.hdr.nofree = 1;
+	if(mp)
+		nv_stack(mp, &endf.hdr);
+	if(pp)
+		nv_stack(pp, &endf.hdr);
+	if(sp)
+		sfsync(sp);
+	off = sh_strnum(fname, &cp, 0);
+	if(mp)
+		nv_stack(mp, NiL);
+	if(pp)
+		nv_stack(pp, NiL);
+	return(*cp?(Sfoff_t)-1:off);
+}
+
 /*
  * close a pipe
  */
@@ -512,14 +578,15 @@ void sh_pclose(register int pv[])
  */
 int	sh_redirect(struct ionod *iop, int flag)
 {
+	Sfoff_t off; 
 	register char *fname;
 	register int 	fd, iof;
-	const char *message = ERROR_dictionary(e_open);
+	const char *message = e_open;
 	int o_mode;		/* mode flag for open */
-	static char io_op[5];	/* used for -x trace info */
+	static char io_op[7];	/* used for -x trace info */
 	int clexec=0, fn, traceon;
-	int indx = sh.topfd;
-	char *trace = sh.st.trap[SH_DEBUGTRAP];
+	int r, indx = sh.topfd;
+	char *after="", *trace = sh.st.trap[SH_DEBUGTRAP];
 	Namval_t *np=0;
 	if(flag==2)
 		clexec = 1;
@@ -529,7 +596,6 @@ int	sh_redirect(struct ionod *iop, int flag)
 	{
 		iof=iop->iofile;
 		fn = (iof&IOUFD);
-		fname=iop->ioname;
 		io_op[0] = '0'+(iof&IOUFD);
 		if(iof&IOPUT)
 		{
@@ -545,7 +611,18 @@ int	sh_redirect(struct ionod *iop, int flag)
 		io_op[3] = 0;
 		fname = iop->ioname;
 		if(!(iof&IORAW))
-			fname=sh_mactrim(fname,(!sh_isoption(SH_NOGLOB)&&sh_isoption(SH_INTERACTIVE))?2:0);
+		{
+			if(iof&IOLSEEK)
+			{
+				struct argnod *ap = (struct argnod*)stakalloc(ARGVAL+strlen(iop->ioname));
+				memset(ap, 0, ARGVAL);
+				ap->argflag = ARG_MAC;
+				strcpy(ap->argval,iop->ioname);
+				fname=sh_macpat(ap,(iof&IOARITH)?ARG_ARITH:ARG_EXP);
+			}
+			else
+				fname=sh_mactrim(fname,(!sh_isoption(SH_NOGLOB)&&sh_isoption(SH_INTERACTIVE))?2:0);
+		}
 		errno=0;
 		if(*fname)
 		{
@@ -585,7 +662,7 @@ int	sh_redirect(struct ionod *iop, int flag)
 					}
 					if(*number || dupfd > IOUFD)
 					{
-						message = ERROR_dictionary(e_file);
+						message = e_file;
 						goto fail;
 					}
 					if(sh.subshell && dupfd==1)
@@ -610,7 +687,7 @@ int	sh_redirect(struct ionod *iop, int flag)
 				}
 				else
 				{
-					message = ERROR_dictionary(e_file);
+					message = e_file;
 					goto fail;
 				}
 				if((fd=sh_fcntl(dupfd,F_DUPFD,3))<0)
@@ -627,6 +704,16 @@ int	sh_redirect(struct ionod *iop, int flag)
 						sh_iosave(toclose,indx); /* save file descriptor */
 					sh_close(toclose);
 				}
+			}
+			else if(iof&IOLSEEK)
+			{
+				io_op[2] = '#';
+				if(iof&IOARITH)
+				{
+					strcpy(&io_op[3]," ((");
+					after = "))";
+				}
+				goto traceit;
 			}
 			else if(iof&IORDW)
 			{
@@ -676,13 +763,16 @@ int	sh_redirect(struct ionod *iop, int flag)
 			}
 		traceit:
 			if(traceon && fname)
-				sfprintf(sfstderr,"%s %s%c",io_op,fname,iop->ionxt?' ':'\n');
+				sfprintf(sfstderr,"%s %s%s%c",io_op,fname,after,iop->ionxt?' ':'\n');
 			if(trace && fname)
 			{
-				char *argv[6], **av=argv;
+				char *argv[7], **av=argv;
 				av[3] = io_op;
 				av[4] = fname;
 				av[5] = 0;
+				av[6] = 0;
+				if(iof&IOARITH)
+					av[5] = after;
 				if(np)
 				{
 					av[0] = "{";
@@ -693,10 +783,61 @@ int	sh_redirect(struct ionod *iop, int flag)
 					av +=3;
 				sh_debug(trace,(char*)0,(char*)0,av,ARG_NOGLOB);
 			}
+			if(iof&IOLSEEK)
+			{
+				Sfio_t *sp = sh.sftable[fn];
+				r = sh.fdstatus[fn];
+				if(!(r&(IOSEEK|IONOSEEK)))
+					r = sh_iocheckfd(fn);
+				sfsprintf(io_op,sizeof(io_op),"%d\0",fn);
+				if(r==IOCLOSE)
+				{
+					fname = io_op;
+					message = e_file;
+					goto fail;
+				}
+				if(iof&IOARITH)
+				{
+					if(r&IONOSEEK)
+					{
+						fname = io_op;
+						message = e_notseek;
+						goto fail;
+					}
+					message = e_badseek;
+					if((off = file_offset(fn,fname))<0)
+						goto fail;
+					if(sp)
+						r=sfseek(sp, off, SEEK_SET);
+					else
+						r=lseek(fn, off, SEEK_SET);
+				}
+				else
+				{
+					extern const char e_notimp[];
+					message = e_notimp;
+					goto fail;
+				}
+				if(r<0)
+					goto fail;
+				if(flag==3)
+					return(fn);
+				continue;
+			}
 			if(!np)
 			{
 				if(flag==0)
+				{
+					if(fd==fn)
+					{
+						if((r=sh_fcntl(fd,F_DUPFD,10)) > 0)
+						{
+							fd = r;
+							sh_close(fn);
+						}
+					}
 					sh_iosave(fn,indx);
+				}
 				else if(sh_subsavefd(fn))
 					sh_iosave(fn,indx|IOSUBSHELL);
 			}
@@ -708,8 +849,6 @@ int	sh_redirect(struct ionod *iop, int flag)
 						io_preserve(sh.sftable[fn],fn);
 				}
 				sh_close(fn);
-				if(fn<10)
-					sh.inuse_bits &= ~(1<<fn);
 			}
 			if(flag==3)
 				return(fd);
@@ -733,13 +872,9 @@ int	sh_redirect(struct ionod *iop, int flag)
 				}
 				else
 				{
-					if(fn>2 && fn<10)
-					{
-						if(sh.inuse_bits&(1<<fn))
-							sh_close(fn);
-						sh.inuse_bits |= (1<<fn);
-					}
 					fd = sh_iorenumber(sh_iomovefd(fd),fn);
+					if(fn>2 && fn<10)
+						sh.inuse_bits |= (1<<fn);
 				}
 			}
 			if(fd >2 && clexec)
@@ -849,7 +984,7 @@ void sh_iosave(register int origfd, int oldtop)
 	else
 #endif /* SHOPT_DEVFD */
 	{
-		if((savefd = sh_fcntl(origfd, F_DUPFD, 3)) < 0 && errno!=EBADF)
+		if((savefd = sh_fcntl(origfd, F_DUPFD, 10)) < 0 && errno!=EBADF)
 			errormsg(SH_DICT,ERROR_system(1),e_toomany);
 	}
 	filemap[sh.topfd].subshell = flag;
@@ -940,6 +1075,8 @@ void	sh_iorestore(int last, int jmpval)
 			sh.sftable[savefd] = 0;
 			sh_close(savefd);
 		}
+		else
+			sh.fdstatus[origfd] = IOCLOSE;
 	}
 	if(!flag)
 	{

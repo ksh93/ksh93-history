@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2005 AT&T Corp.                  *
+*                  Copyright (c) 1982-2006 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -215,6 +215,8 @@ const char sh_set[] =
 		"[+markdirs?A trailing \b/\b is appended to directories "
 			"resulting from pathname expansion.]"
 		"[+monitor?Equivalent to \b-m\b.]"
+		"[+multiline?Use multiple lines when editing lines that are "
+			"longer than the window width.]"
 		"[+noclobber?Equivalent to \b-C\b.]"
 		"[+noexec?Equivalent to \b-n\b.]"
 		"[+noglob?Equivalent to \b-f\b.]"
@@ -683,7 +685,7 @@ USAGE_LICENSE
     "specifies the interface version, currently \b1\b. The latest version is "
     "assumed if \aversion\a is omitted. Future enhancements "
     "may increment \aversion\a, but all versions will be supported. \atext\a "
-    "typcally specifies an SCCS or CVS identification string. Zero or more "
+    "typically specifies an SCCS or CVS identification string. Zero or more "
     "\aflags\a with optional \anumber\a values may be specified to control "
     "option parsing. "
     "The flags are:]{"
@@ -740,7 +742,7 @@ USAGE_LICENSE
   "[+6.?A group of the form [+\\n...]] will display the characters "
     "representing ... in fixed with font without adding line breaks.]"
   "[+7.?A group of the form [+\aname\a?\atext\a]] specifies a section "
-    "\aname\a with descriptiove \atext\a. If \aname\a is omitted then "
+    "\aname\a with descriptive \atext\a. If \aname\a is omitted then "
     "\atext\a is placed in a new paragraph.]"
   "[+8.?A group of the form [-\aname\a?\atext\a]] specifies entries "
     "for the \bIMPLEMENTATION\b section.]"
@@ -764,7 +766,7 @@ USAGE_LICENSE
 	"[+3.?A help argument is specified.]"
 	"[+4.?An error is encountered.]"
 "}"
-"[+?If \bOPTARG\b is set to the value \b1\b, a new set of arguments "
+"[+?If \bOPTIND\b is set to the value \b1\b, a new set of arguments "
   "can be used.]"
 "[+?\bgetopts\b can also be used to generate help messages containing command "
   "usage and detailed descriptions.  Specify \aargs\a as:]"

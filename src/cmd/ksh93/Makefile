@@ -26,7 +26,7 @@ SHOPT_ECHOPRINT ==		/* make echo equivalent to print */
 SHOPT_ESH == 1			/* emacs/gmacs edit mode */
 SHOPT_FILESCAN == 1		/* fast file scan */
 SHOPT_FS_3D == 			/* 3d file system */
-SHOPT_HISTEXPAND == 		/* csh-style history file expansions */
+SHOPT_HISTEXPAND == 1		/* csh-style history file expansions */
 SHOPT_KIA == 1			/* shell information database generation */
 SHOPT_MULTIBYTE == 1		/* multibyte character handling */
 SHOPT_NAMESPACE == 1		/* allow namespaces */
@@ -126,7 +126,11 @@ if SHOPT_VSH
 	FILES_opt += vi.c
 end
 if SHOPT_BASH
-	FILES_opt += bash.c bash_pre_rc.c hexpand.c
+	FILES_opt += bash.c bash_pre_rc.c
+	SHOPT_HISTEXPAND == 1
+end
+if SHOPT_HISTEXPAND
+	FILES_opt += hexpand.c
 end
 if SHOPT_DYNAMIC
 	FILES_opt += -ldll

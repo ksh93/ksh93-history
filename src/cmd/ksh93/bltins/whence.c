@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2005 AT&T Corp.                  *
+*                  Copyright (c) 1982-2006 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -132,6 +132,7 @@ static int whence(Shell_t *shp,char **argv, register int flags)
 	register const char *cp;
 	register int aflag,r=0;
 	register const char *msg;
+	int	tofree;
 	Dt_t *root;
 	Namval_t *nq;
 	char *notused;
@@ -141,6 +142,7 @@ static int whence(Shell_t *shp,char **argv, register int flags)
 	int notrack = 1;
 	while(name= *argv++)
 	{
+		tofree=0;
 		aflag = ((flags&A_FLAG)!=0);
 		cp = 0;
 		np = 0;
@@ -212,6 +214,11 @@ static int whence(Shell_t *shp,char **argv, register int flags)
 			cp = stakptr(PATH_OFFSET);
 			if(*cp==0)
 				cp = 0;
+			else if(*cp!='/')
+			{
+				cp = path_fullname(cp);
+				tofree=1;
+			}
 		}
 #else
 		if(path_search(name,cp,2))
@@ -248,6 +255,8 @@ static int whence(Shell_t *shp,char **argv, register int flags)
 				sfputr(sfstdout,msg,' ');
 			}
 			sfputr(sfstdout,sh_fmtq(cp),'\n');
+			if(tofree)
+				free((char*)cp);
 		}
 		else if(aflag<=1) 
 		{

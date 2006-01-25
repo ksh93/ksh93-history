@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2005 AT&T Corp.                  *
+*                  Copyright (c) 1985-2006 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -27,7 +27,7 @@ void _STUB_vmprivate(){}
 
 #include	"vmhdr.h"
 
-static char*	Version = "\n@(#)$Id: Vmalloc (AT&T Research) 2004-09-01 $\0\n";
+static char*	Version = "\n@(#)$Id: Vmalloc (AT&T Research) 2005-09-28 $\0\n";
 
 #if _sys_stat
 #include	<sys/stat.h>
@@ -85,6 +85,10 @@ Vmsearch_f	searchf;	/* tree search function		*/
 		return NIL(Block_t*);
 	if((size = ROUND(s,vd->incr)) < s)
 		return NIL(Block_t*);
+
+	/* increase the rounding factor to reduce # of future extensions */
+	if(size > 2*vd->incr && vm->disc->round < vd->incr)
+		vd->incr *= 2;
 
 	/* see if we can extend the current segment */
 	if(!(seg = vd->seg) )

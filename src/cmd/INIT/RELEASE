@@ -1,3 +1,69 @@
+06-01-30 package.sh,hurl.sh: use the backwards-compatible --http-passwd
+06-01-26 package.sh: wget --http-pass => --http-password
+	 package.sh: fix wget error logic
+	 hurl.sh: wget --http-pass => --http-password
+06-01-11 package.mk: pass package.license.class to make --mam too
+	 package.mk: variants=pattern => --variants=pattern
+	 package.sh: darwin rel<=7 => darwin7.ppc
+	 package.sh: freebsd rel<=4 => freebsd4
+	 package.sh: freebsd rel<=5 => freebsd5
+05-12-07 iffe.sh: don't emit <stdio.h> if <sfio.h>|<ast.h> (XXX)
+05-12-05 make.probe: disable readonly.exe core dump via ulimit -c 0
+05-09-22 mktest.sh: add EXEC [ ++NOOUTPUT ++NOERROR ++NOEXIT ]
+05-09-21 mktest.sh: fix --style=shell compare to ignore \r
+05-09-12 TEST.mk: all --force to force %.rt regeneration
+05-09-05 TEST.mk: regenerate from %.rt only if newer, :SAVE: %.tst
+05-08-25 mktest.sh: add
+	 TEST.mk: add %.rt=>%.tst for mktest
+05-08-18 package.sh: 'package host cpu' now checks $NPROC first
+05-07-17 iffe.sh: add { define extern include print } ops
+	 iffe.sh: accept output{...}end output on success only -- doh
+05-07-01 package.sh: add TARPROBE for tar B flag probe
+05-06-24 package.sh: fix binary read chmod via *.sum
+05-06-06 package.sh: fix KEEP_HOSTTYPE logic to handle synthesized types
+05-06-01 make.probe: verify that cc_pic works for hosted cc
+	 cc.lynxos.ppc: make -mshared the default
+	 package.sh: note $INSTALLROOT/bin/@(cc|ld|ldd) installation
+05-05-25 make.probe: add CC.INCLUDE.LOCAL instead of -I- in CC.DIALECT
+05-05-24 iffe.sh: really fix grouping logic -- with tests this time
+	 package.sh: pipe/socket configuration mismatches => use /bin/sh
+05-04-28 TEST.mk: add $(TESTS)
+05-04-19 package.sh: package results test uses rt if possible
+	 iffe.sh: fix 'op var - ... - ...' grouping logic
+05-04-15 rt.sh: handle autom4ate style
+05-04-11 regress.sh: fix unit name when command line unit also specified
+	 rt.sh: handle all ast package test output formats
+	 package.sh: fix make docs for options passed to underlying make
+05-04-08 package.sh: cp -p makerules.mo to $OK to preserve mtime
+	 regress.sh: add "TITLE name" to change TEST output title
+05-04-01 rt.sh: add pretty make test + regress.sh wrapper
+05-03-29 package.sh: test -e path => test -f path -o -d path
+05-03-24 make.probe: fix CC.PICBIG probe to prefer -fPIC over -fpic -- doh
+05-03-19 mamake.c: command line name=var also defines name.FORCE=var
+05-03-11 regress.sh: unset LC_ALL when LC_* EXPORT'd
+	 package.sh: old make.out saved in circular make.out.[1-9]
+	 mamake.c: sync with nmake :W=O:
+05-03-01 package.sh: fix flat hierarchy initialization
+	 package.sh: admin action now properly resets sibling remote logs
+	 package.mk: relax unknown/unwritten package messages to warnings
+	 package.sh: handle space in command line name=value
+	 make.probe: add mvs -Wc,dll,exportall,longname,rent to CC.DLL probe
+05-02-24 package.sh: hosttype *.powerpc => *.ppc
+	 cc.lynxos.ppc,ldd.lynxos.ppc: add
+05-02-22 mamake.c: fix { -G --debug-symbols -S --strip-symbols } MAMAKEFLAGS bug
+05-02-20 probe.win32: handle /platformsdk mount
+05-02-19 package.sh,package.mk: add write tst for tgz in tst subdir
+05-02-18 package.sh: accept cc -dumpmachine with 0 or 1 -
+05-02-14 package.sh: handle mutiple architectures per host in admin.db
+	 Makefile,package.sh: honor $INSTALLROOT/bin/.paths overrides
+	 package.sh: normalize trailing [-_]bits in host type
+	 iffe.sh: some ksh-compatible shells don't do *(pattern)
+05-02-11 iffe.sh: back out 05-01-11 child process stdin hijack
+	 cc.lynxos.i386: -dynamic instead of -static default
+05-02-10 package.sh: cyg usr/doc => usr/share/doc
+05-02-08 package.sh: drop -m with pax -- delta bug fixed 2005-02-08
+	 iffe.sh: work around old bash 0<... redirection bug
+05-02-06 package.mk: source.tgz: update generated files only when they change
 05-02-02 *.sh,*probe: IFS may be unset and { ash bsh } don't on startup -- wow
 05-01-11 package.sh: update setup docs to include authorize+password
 	 package.mk: fix .source.cyg final directory edit

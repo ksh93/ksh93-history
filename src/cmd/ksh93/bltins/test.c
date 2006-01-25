@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2005 AT&T Corp.                  *
+*                  Copyright (c) 1982-2006 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -93,6 +93,32 @@ struct test
 static char *nxtarg(struct test*,int);
 static int expr(struct test*,int);
 static int e3(struct test*);
+
+static int test_strmatch(const char *str, const char *pat)
+{
+	int match[2*(MATCH_MAX+1)],n;
+	register int c, m=0;
+	register const char *cp=pat; 
+	while(c = *cp++)
+	{
+		if(c=='(')
+			m++;
+		if(c=='\\' && *cp)
+			cp++;
+	}
+	if(m)
+		m++;
+	else
+		match[0] = 0;
+	if(m >  elementsof(match)/2)
+		m = elementsof(match)/2;
+	n = strgrpmatch(str, pat, match, m, STR_MAXIMAL|STR_LEFT|STR_RIGHT);
+	if(m==0 && n==1)
+		match[1] = strlen(str);
+	if(n)
+		sh_setmatch(str, -1, n, match);
+	return(n);
+}
 
 int b_test(int argc, char *argv[],void *extra)
 {
@@ -427,9 +453,9 @@ int test_binop(register int op,const char *left,const char *right)
 		case TEST_OR:
 			return(*left!=0);
 		case TEST_PEQ:
-			return(strmatch(left, right));
+			return(test_strmatch(left, right));
 		case TEST_PNE:
-			return(!strmatch(left, right));
+			return(!test_strmatch(left, right));
 		case TEST_SGT:
 			return(strcoll(left, right)>0);
 		case TEST_SLT:

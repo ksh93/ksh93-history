@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2005 AT&T Corp.                  *
+*                  Copyright (c) 1985-2006 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -571,6 +571,28 @@ reg size_t	size;
 	GETPAGESIZE(_Vmpagesize);
 	return VMRECORD((*Vmregion->meth.alignf)(Vmregion,ROUND(size,_Vmpagesize),_Vmpagesize));
 }
+
+#if !_PACKAGE_ast
+#if __STD_C
+char* strdup(const char* s)
+#else
+char* strdup(s)
+char*	s;
+#endif
+{
+	char	*ns;
+	size_t	n;
+
+	if(!s)
+		return NIL(char*);
+	else
+	{	n = strlen(s);
+		if((ns = malloc(n+1)) )
+			memcpy(ns,s,n+1);
+		return ns;
+	}
+}
+#endif /* _PACKAGE_ast */
 
 #if !_lib_alloca || _mal_alloca
 #ifndef _stk_down

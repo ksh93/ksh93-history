@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2005 AT&T Corp.                  *
+*                  Copyright (c) 1982-2006 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -56,7 +56,7 @@ static void p_tree(const Shnode_t*,int);
 static int level;
 static int begin_line;
 static int end_line;
-static char io_op[5];
+static char io_op[7];
 static char un_op[3] = "-?";
 static const struct ionod *here_doc;
 static Sfio_t *outfile;
@@ -416,8 +416,8 @@ static void p_arg(register const struct argnod *arg,register int endchar,int opt
 
 static void p_redirect(register const struct ionod *iop)
 {
-	register int iof;
 	register char *cp;
+	register int iof,iof2;
 	for(;iop;iop=iop->ionxt)
 	{
 		iof=iop->iofile;
@@ -444,7 +444,13 @@ static void p_redirect(register const struct ionod *iop)
 		}
 		io_op[2] = 0;
 		io_op[3] = 0;
-		if(iof&IOMOV)
+		if(iof&IOLSEEK)
+		{
+			io_op[1] = '#';
+			if(iof&IOARITH)
+				strcpy(&io_op[3]," ((");
+		}
+		else if(iof&IOMOV)
 			io_op[2] = '&';
 		else if(iof&(IORDW|IOAPP))
 			io_op[2] = '>';
@@ -471,6 +477,8 @@ static void p_redirect(register const struct ionod *iop)
 			if((iof=end_line)=='\n')
 				begin_line = 1;
 		}
+		if((iof&IOLSEEK) && (iof&IOARITH))
+			iof2 = iof, iof = ' ';
 		if(iop->iodelim)
 		{
 			if(!(iop->iofile&IODOC))
@@ -481,6 +489,8 @@ static void p_redirect(register const struct ionod *iop)
 			sfputr(outfile,sh_fmtq(iop->ioname),iof);
 		else
 			sfputr(outfile,iop->ioname,iof);
+		if((iof&IOLSEEK) && (iof&IOARITH))
+			sfputr(outfile, "))", iof2);
 	}
 	return;
 }

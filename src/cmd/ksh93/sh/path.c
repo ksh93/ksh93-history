@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2005 AT&T Corp.                  *
+*                  Copyright (c) 1982-2006 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -777,11 +777,10 @@ void	path_exec(register const char *arg0,register char *argv[],struct argnod *lo
 	sfsync(NIL(Sfio_t*));
 	timerdel(NIL(void*));
 	/* find first path that has a library component */
-	for(libpath=pp; libpath && !libpath->lib ; libpath=libpath->next);
 	if(pp || slash) do
 	{
 		sh_sigcheck();
-		if(pp)
+		if(libpath=pp)
 		{
 			pp = path_nextcomp(pp,arg0,0);
 			opath = stakfreeze(1)+PATH_OFFSET;
@@ -818,7 +817,9 @@ pid_t path_spawn(const char *opath,register char **argv, char **envp, Pathcomp_t
 	stakputs(opath);
 	opath = stakfreeze(1)+PATH_OFFSET;
 	np=nv_search(argv[0],shp->track_tree,0);
-	if(!np || nv_size(np)>0)
+	while(libpath && !libpath->lib)
+		libpath=libpath->next;
+	if(libpath && (!np || nv_size(np)>0))
 	{
 		/* check for symlink and use symlink name */
 		char buff[PATH_MAX+1];

@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#                  Copyright (c) 1994-2005 AT&T Corp.                  #
+#                  Copyright (c) 1994-2006 AT&T Corp.                  #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                            by AT&T Corp.                             #
@@ -28,7 +28,7 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	ARGV0="-a $command"
 	USAGE=$'
 [-?
-@(#)$Id: hurl (AT&T Research) 2004-10-11 $
+@(#)$Id: hurl (AT&T Research) 2006-01-30 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?hurl - copy http url data]
@@ -178,7 +178,7 @@ User-Agent: $agent${AUTHORIZE}
 					;;
 				esac
 			} <&8 
-		elif	wget ${authorize:+--http-user="${authorize%:*}"} ${password:+--http-pass="${password##*:}"} -nv -O - $url 2>/dev/null
+		elif	wget ${authorize:+--http-user="${authorize%:*}"} ${password:+--http-passwd="${password##*:}"} -nv -O - $url 2>/dev/null
 		then	test 0 != $verbose && echo "$command: using wget" >&2
 			exit
 		elif	lynx ${authorize:+-auth "$authorize"} -source $url 2>/dev/null

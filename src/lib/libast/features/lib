@@ -490,7 +490,7 @@ tst	lib_utime_now note{ utime works with 0 time vector }end execute{
 	}
 }end
 
-tst	run{
+tst	cross{
 	u=att
 	case `/bin/cat -s /dev/null/foo 2>&1` in
 	'')	;;

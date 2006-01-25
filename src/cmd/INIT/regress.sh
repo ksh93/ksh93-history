@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#                  Copyright (c) 1994-2005 AT&T Corp.                  #
+#                  Copyright (c) 1994-2006 AT&T Corp.                  #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                            by AT&T Corp.                             #
@@ -23,7 +23,7 @@ command=regress
 case $(getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt) in
 0123)	USAGE=$'
 [-?
-@(#)$Id: regress (AT&T Labs Research) 2004-07-17 $
+@(#)$Id: regress (AT&T Labs Research) 2005-05-29 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?regress - run regression tests]
@@ -35,10 +35,11 @@ case $(getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt) in
 	\bTEST\b group and the \anumber\a:\aline\a for each individual
 	\bEXEC\b test. Each test that fails results in a diagnostic that
 	contains the word \bFAILED\b; no other diagnostics contain this word.]
-[k:keep?Do not remove the temporary directory \aunit\a\b.tmp\b on exit.]
+[k:keep?Exit after the first test that fails and do not remove the temporary
+	directory \aunit\a\b.tmp\b.]
 [q:quiet?Output information on \bFAILED\b tests only.]
 [t:test?Run only tests matching \apattern\a. Tests are numbered and consist of
-	at least two digits (0 filled if necessary.) Tests matching \b+(0) are
+	at least two digits (0 filled if necessary.) Tests matching \b+(0)\b are
 	always run.]:[pattern]
 [v:verbose?List differences between actual (<) and expected (>) output, errors
 	and exit codes. Also disable long output line truncation.]
@@ -116,7 +117,11 @@ unit [ command [ arg ... ] ]
 		the current test completes.]
 	[+TALLY?Called by \bregress\b display the \bTEST\b results.]
 	[+TEST \anumber\a [ \adescription\a ... ]]?Define a new test group
-		labelled \anumber\a with option \adescripion\a.]
+		labelled \anumber\a with optional \adescripion\a.]
+	[+TITLE [+]] \atext\a?Set the \bTEST\b output title to \atext\a. If
+		\b+\b is specified then \atext\a is appended to the default
+		title. The default title is the test file base name, and, if
+		different from the test file base name, the test unit base name.]
 	[+TWD [ \adir\a ... ]]?Set the temporary test dir to \adir\a. The
 		default is \aunit\a\b.tmp\b, where \aunit\a is the test
 		input file sans directory and suffix. If \adir\a matches \b/*\b
@@ -196,10 +201,25 @@ function INTRO
 		base=${base%.tst}
 		command=${COMMAND##*/}
 		command=${command%' '*}
-		if [[ $command == $base ]]
-		then	TITLE=$COMMAND
-		else	TITLE="$COMMAND, $base"
-		fi
+		set -- $TITLE
+		TITLE=
+		case $1 in
+		''|+)	if	[[ $command == $base ]]
+			then	TITLE=$COMMAND
+			else	TITLE="$COMMAND, $base"
+			fi
+			if	(( $# ))
+			then	shift
+			fi
+			;;
+		esac
+		while	(( $# ))
+		do	if	[[ $TITLE ]]
+			then	TITLE="$TITLE, $1"
+			else	TITLE="$1"
+			fi
+			shift
+		done
 		print -u2 "TEST	$TITLE"
 		;;
 	esac
@@ -228,9 +248,14 @@ function TALLY
 	esac
 }
 
+function TITLE # text
+{
+	TITLE=$@
+}
+
 function CLEANUP # status
 {
-	if	[[ ! $dump && $GROUP!=INIT ]]
+	if	[[ ! $keep && $GROUP!=INIT ]]
 	then	cd $SOURCE
 		RM "$TWD"
 	fi
@@ -379,7 +404,7 @@ function RUN # [ op ]
 				esac
 				SHOW="FAILED [ $failed ] $NOTE"
 				print -r -u2 "	$SHOW"
-				case $dump in
+				case $keep in
 				?*)	GROUP=FINI; exit ;;
 				esac
 				;;
@@ -424,7 +449,7 @@ function UNIT # cmd arg ...
 		case $1 in
 		"")	set -- "$cmd" ;;
 		[-+]*)	set -- "$cmd" "${ARGV[@]}" ;;
-		*)	set -- "${ARGV[@]}" ;;
+		*)	set -- "${ARGV[@]}"; shift; set -- "$cmd" "$@" ;;
 		esac
 		UNIT=
 	fi
@@ -599,7 +624,7 @@ function IO # INPUT|OUTPUT|ERROR [-f|-n] file|- data ...
 	case $op in
 	OUTPUT|ERROR)
 		file=$file.ex
-		if [[ $file != /* ]]
+		if	[[ $file != /* ]]
 		then	file=$TWD/$file
 		fi
 		;;
@@ -616,7 +641,7 @@ function IO # INPUT|OUTPUT|ERROR [-f|-n] file|- data ...
 		*:-f)	printf -- "$@" > $file ;;
 		*)	print $f -r -- "$@" > $file ;;
 		esac
-		if [[ $x ]]
+		if	[[ $x ]]
 		then	chmod +x $file
 		fi
 	fi
@@ -774,7 +799,14 @@ function INFO # info description
 function COMMAND # arg ...
 {
 	((TESTS++))
-	case $dump in
+	case " ${EXPORT[*]}" in
+	*' 'LC_ALL=*)
+		;;
+	*' 'LC_+([A-Z])=*)
+		EXPORT[EXPORTS++]="LC_ALL="
+		;;
+	esac
+	case $keep in
 	?*)	(
 		PS4=''
 		set -x
@@ -875,7 +907,7 @@ integer ERRORS=0 EXPORTS=0 TESTS=0 SUBTESTS=0 LINE=0 ITEM=0 LASTITEM=0 COUNT
 typeset ARGS COMMAND COPY DIAGNOSTICS ERROR EXEC FLUSHED=0 GROUP=INIT
 typeset IGNORE INPUT KEEP OUTPUT TEST SOURCE MOVE NOTE
 typeset ARGS_ORIG COMMAND_ORIG TITLE UNIT ARGV PREFIX OFFSET
-typeset dump file quiet rmflags='-rf --' rmu select trace verbose truncate=-L70
+typeset file keep quiet rmflags='-rf --' rmu select trace verbose truncate=-L70
 typeset -A EXPORT SAME VIEWS
 typeset -Z LAST=00
 
@@ -883,7 +915,7 @@ unset FIGNORE
 
 while	getopts -a $command "$USAGE" OPT
 do	case $OPT in
-	k)	SET dump=1
+	k)	SET keep=1
 		;;
 	q)	SET quiet=1
 		;;

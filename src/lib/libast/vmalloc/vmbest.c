@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2005 AT&T Corp.                  *
+*                  Copyright (c) 1985-2006 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -45,6 +45,8 @@ static int	N_reclaim;	/* # of bestreclaim calls		*/
 #undef	VM_TRUST		/* always check for locking, etc.s	*/
 #define	VM_TRUST	0
 #endif /*DEBUG*/
+
+#define COMPACT		8	/* factor to decide when to compact	*/
 
 /* Check to see if a block is in the free tree */
 #if __STD_C
@@ -540,7 +542,7 @@ Vmalloc_t*	vm;
 {
 	reg Seg_t	*seg, *next;
 	reg Block_t	*bp, *t;
-	reg size_t	size, segsize;
+	reg size_t	size, segsize, round;
 	reg int		local;
 	reg Vmdata_t*	vd = vm->data;
 
@@ -563,7 +565,28 @@ Vmalloc_t*	vm;
 		bp = LAST(bp);	/**/ASSERT(vmisfree(vd,bp));
 		size = SIZE(bp);
 		if(bp == vd->wild)
+		{	/* During large block allocations, _Vmextend might
+			** have been enlarged the rounding factor. Reducing
+			** it a bit help avoiding getting large raw memory.
+			*/
+			if((round = vm->disc->round) == 0)
+				round = _Vmpagesize;
+			if(size > COMPACT*vd->incr && vd->incr > round)
+				vd->incr /= 2;
+
+			/* for the bottom segment, we don't necessarily want
+			** to return raw memory too early. vd->pool has an
+			** approximation of the average size of recently freed
+			** blocks. If this is large, the application is managing
+			** large blocks so we throttle back memory chopping
+			** to avoid thrashing the underlying memory system.
+			*/
+			if(size <= COMPACT*vd->incr || size <= COMPACT*vd->pool)
+				continue;
+
 			vd->wild = NIL(Block_t*);
+			vd->pool = 0;
+		}
 		else	REMOVE(vd,bp,INDEX(size),t,bestsearch);
 		CLRPFREE(SIZE(NEXT(bp)));
 
@@ -875,6 +898,13 @@ Void_t*		data;
 
 	/**/ASSERT(_vmbestcheck(vd, NIL(Block_t*)) == 0);
 	bp = BLOCK(data); s = SIZE(bp);
+
+	/* Keep an approximate average free block size.
+	** This is used in bestcompact() to decide when to release
+	** raw memory back to the underlying memory system.
+	*/
+	vd->pool = (vd->pool + (s&~BITS))/2;
+
 	if(ISBUSY(s) && !ISJUNK(s))
 	{	SETJUNK(SIZE(bp));
 	        if(s < MAXCACHE)
@@ -893,7 +923,7 @@ Void_t*		data;
 		/* coalesce on freeing large blocks to avoid fragmentation */
 		if(SIZE(bp) >= 2*vd->incr)
 		{	bestreclaim(vd,NIL(Block_t*),0);
-			if(vd->wild && SIZE(vd->wild) >= 4*vd->incr)
+			if(vd->wild && SIZE(vd->wild) >= COMPACT*vd->incr)
 				KPVCOMPACT(vm,bestcompact);
 		}
 	}

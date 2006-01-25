@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2005 AT&T Corp.                  *
+*                  Copyright (c) 1982-2006 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -37,11 +37,11 @@ const struct shtable2 shtab_aliases[] =
 	"autoload",	NV_NOFREE,	"typeset -fu",
 	"command",	NV_NOFREE,	"command ",
 	"fc",		NV_NOFREE,	"hist",
-	"float",	NV_NOFREE,	"typeset -E",
+	"float",	NV_NOFREE,	"typeset -lE",
 	"functions",	NV_NOFREE,	"typeset -f",
 	"hash",		NV_NOFREE,	"alias -t --",
 	"history",	NV_NOFREE,	"hist -l",
-	"integer",	NV_NOFREE,	"typeset -i",
+	"integer",	NV_NOFREE,	"typeset -li",
 	"nameref",	NV_NOFREE,	"typeset -n",
 	"nohup",	NV_NOFREE,	"nohup ",
 	"r",		NV_NOFREE,	"hist -s",

@@ -2,7 +2,7 @@
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)C probe (AT&T Research) 2005-02-02
+# @(#)C probe (AT&T Research) 2005-02-09
 #
 # probe [ -d ] c-compiler-path [ attributes ]
 #

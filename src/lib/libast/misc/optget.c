@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2005 AT&T Corp.                  *
+*                  Copyright (c) 1985-2006 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -532,9 +532,10 @@ match(char* s, char* t, int version, const char* catalog)
 
 	for (n = 0; n < 2; n++)
 	{
-		switch (n)
+		if (n)
+			x = t;
+		else
 		{
-		case 0:
 			if (catalog)
 			{
 				w = skip(t, ':', '?', 0, 1, 0, 0, version);
@@ -546,10 +547,6 @@ match(char* s, char* t, int version, const char* catalog)
 			x = T(NiL, ID, t);
 			if (x == t)
 				continue;
-			break;
-		case 1:
-			x = t;
-			break;
 		}
 		do
 		{

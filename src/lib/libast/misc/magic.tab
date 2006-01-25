@@ -103,7 +103,7 @@ o()
 +33	byte		*		.%ld
 
 0	string		\326\303\304\330				vcodex data		application/x-vczip
-+5	void		vcodex(0,delta,1,huffman,2,huffgroup,3,arith,4,bwt,5,rle,6,mtf,7,transpose,8,table,9,huffpart,50,map,100,recfm,101,ss7)
++5	void		vcodex()
 
 0	long		0x080456
 {

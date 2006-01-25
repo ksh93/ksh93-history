@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2005 AT&T Corp.                  *
+*                  Copyright (c) 1982-2006 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -44,6 +44,7 @@ struct shlex_t
 	char		assignok;	/* on when name=value is legal */
 	int		inlineno;	/* saved value of sh.inlineno */
 	int		firstline;	/* saved value of sh.st.firstline */
+	int		comsub;		/* parsing command substitution */
 #if SHOPT_KIA
 	Sfio_t		*kiafile;	/* kia output file */
 	Sfio_t		*kiatmp;	/* kia reference file */
@@ -95,6 +96,7 @@ struct shlex_t
 #define SYMAMP		040000	/* trailing '&' */
 #define SYMGT		0100000	/* trailing '>' */
 #define SYMSEMI		0110000	/* trailing ';' */
+#define SYMSHARP	0120000	/* trailing '#' */
 #define IOMOV0SYM	(SYMAMP|'<')
 #define IOMOV1SYM	(SYMAMP|'>')
 #define FALLTHRUSYM	(SYMAMP|';')

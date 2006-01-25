@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2005 AT&T Corp.                  *
+*                  Copyright (c) 1982-2006 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -525,8 +525,10 @@ again:
 		/* check for assignment operation */
 		if(peekchr(vp)== '=' && !(strval_precedence[op]&NOASSIGN))
 		{
-			if((!lvalue.value || precedence > 2))
+			if((!lvalue.value || precedence > 3))
 				ERROR(vp,e_notlvalue);
+			if(precedence==3)
+				precedence = 2;
 			assignop = lvalue;
 			getchr(vp);
 			c = 3;
@@ -664,7 +666,7 @@ again:
 			offset2 = stakpush(vp,0,short);
 			*((short*)stakptr(offset1)) = staktell();
 			stakputc(A_POP);
-			if(!expr(vp,c))
+			if(!expr(vp,3))
 				return(0);
 			*((short*)stakptr(offset2)) = staktell();
 			lvalue.value = 0;
@@ -690,9 +692,9 @@ again:
 			stakputc(A_POP);
 			if(!expr(vp,c))
 				return(0);
+			*((short*)stakptr(offset)) = staktell();
 			if(op!=A_QCOLON)
 				stakputc(A_NOTNOT);
-			*((short*)stakptr(offset)) = staktell();
 			lvalue.value = 0;
 			wasop=0;
 			break;

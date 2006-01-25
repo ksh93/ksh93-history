@@ -278,13 +278,13 @@ iffe: test: is _XXX_close a library function ... no'
 
 	EXEC	-r -v - t.iffe
 		INPUT t.iffe $'iff ifelse
-if mem stat.st_atime sys/stat.h {
+if mem stat.st_atime sys/types.h sys/stat.h {
 	#define ATIME	1
 }
-elif mem stat.st_ctime sys/stat.h {
+elif mem stat.st_ctime sys/types.h sys/stat.h {
 	#define CTIME	1
 }
-elif mem stat.st_mtime sys/stat.h {
+elif mem stat.st_mtime sys/types.h sys/stat.h {
 	#define MTIME	1
 }
 else pass{ no_stat_time=1 }end {
@@ -316,13 +316,13 @@ iffe: test: is ( !no_stat_time ) true ... yes'
 
 	EXEC	-r -v - t.iffe
 		INPUT t.iffe $'iff ifelse
-if mem foo_stat.st_atime sys/stat.h {
+if mem foo_stat.st_atime sys/types.h sys/stat.h {
 	#define ATIME	1
 }
-elif mem stat.st_ctime sys/stat.h {
+elif mem stat.st_ctime sys/types.h sys/stat.h {
 	#define CTIME	1
 }
-elif mem stat.st_mtime sys/stat.h {
+elif mem stat.st_mtime sys/types.h sys/stat.h {
 	#define MTIME	1
 }
 else pass{ no_stat_time=1 }end {
@@ -356,13 +356,13 @@ iffe: test: is ( !no_stat_time ) true ... yes'
 
 	EXEC	-r -v - t.iffe
 		INPUT t.iffe $'iff ifelse
-if mem foo_stat.st_atime sys/stat.h {
+if mem foo_stat.st_atime sys/types.h sys/stat.h {
 	#define ATIME	1
 }
-elif mem foo_stat.st_ctime sys/stat.h {
+elif mem foo_stat.st_ctime sys/types.h sys/stat.h {
 	#define CTIME	1
 }
-elif mem stat.st_mtime sys/stat.h {
+elif mem stat.st_mtime sys/types.h sys/stat.h {
 	#define MTIME	1
 }
 else pass{ no_stat_time=1 }end {
@@ -397,13 +397,13 @@ iffe: test: is ( !no_stat_time ) true ... yes'
 
 	EXEC	-r -v - t.iffe
 		INPUT t.iffe $'iff ifelse
-if mem foo_stat.st_atime sys/stat.h {
+if mem foo_stat.st_atime sys/types.h sys/stat.h {
 	#define ATIME	1
 }
-elif mem foo_stat.st_ctime sys/stat.h {
+elif mem foo_stat.st_ctime sys/types.h sys/stat.h {
 	#define CTIME	1
 }
-elif mem foo_stat.st_mtime sys/stat.h {
+elif mem foo_stat.st_mtime sys/types.h sys/stat.h {
 	#define MTIME	1
 }
 else pass{ no_stat_time=1 }end {
@@ -588,57 +588,305 @@ TEST 05 'test code option sequence'
 
 	EXEC	-r -v - t.iffe
 		INPUT t.iffe $'iff macro
-tst - -DN=1 stdio.h - -DN=2 note{ long int type }end output{
-	#include <stdio.h>
-	#if N == 1
+tst seq - -DA=1 - -DB=1 note{ long int type }end compile{
+	#if A == 1 && B == 0
 	#define t		long
-	#define s		"long"
-	#endif
-	#if N == 2
+	#else
 	#define t		error
-	#define s		"error"
 	#endif
 	t n = 0;
-	int
-	main()
-	{
-		printf("#define t %s\\n", s);
-		return 0;
-	}
 }end'
-		OUTPUT - $'/* : : generated from t.iffe by iffe version 1995-03-19 : : */
+		OUTPUT - '/* : : generated from t.iffe by iffe version 1995-03-19 : : */
 #ifndef _macro_H
 #define _macro_H	1
 #define _sys_types	1	/* #include <sys/types.h> ok */
-#define _hdr_stdio	1	/* #include <stdio.h> ok */
-#define t long
+#define _seq	1	/* long int type */
 #endif'
-		ERROR - $'iffe: test: is sys/types.h a header ... yes
-iffe: test: is stdio.h a header ... yes
+		ERROR - 'iffe: test: is sys/types.h a header ... yes
 iffe: test: long int type ... yes'
 
 	EXEC	-r -v -s bsh - t.iffe
 
 	EXEC	-r -v - t.iffe
 		INPUT t.iffe $'iff macro
-tst - -DN=2 stdio.h - -DN=1 note{ long int type }end output{
-	#include <stdio.h>
-	#if N == 1
+tst seq -DG=1 - -DN=1 - -DN=2 note{ long int type }end compile{
+	#if G == 1 && N == 1
 	#define t		long
-	#define s		"long"
-	#endif
-	#if N == 2
+	#else
 	#define t		error
-	#define s		"error"
 	#endif
 	t n = 0;
-	int
-	main()
-	{
-		printf("#define t %s\\n", s);
-		return 0;
-	}
 }end'
+
+	EXEC	-r -v -s bsh - t.iffe
+
+	EXEC	-r -v - t.iffe
+		INPUT t.iffe $'iff macro
+tst seq - -DA=1 - -DB=1 note{ long int type }end compile{
+	#if A == 0 && B == 1
+	#define t		long
+	#else
+	#define t		error
+	#endif
+	t n = 0;
+}end'
+		ERROR - 'iffe: test: is sys/types.h a header ... yes
+iffe: test: long int type ... 
+iffe: test: long int type ... yes'
+
+	EXEC	-r -v -s bsh - t.iffe
+
+	EXEC	-r -v - t.iffe
+		INPUT t.iffe $'iff macro
+tst seq -DG=1 - -DN=1 - -DN=2 note{ long int type }end compile{
+	#if G == 1 && N == 2
+	#define t		long
+	#else
+	#define t		error
+	#endif
+	t n = 0;
+}end'
+
+	EXEC	-r -v -s bsh - t.iffe
+
+	EXEC	-r -v - t.iffe
+		INPUT t.iffe $'iff macro
+tst seq - -DA=1 - -DB=1 note{ long int type }end compile{
+	#if A == 0 && B == 0
+	#define t		long
+	#else
+	#define t		error
+	#endif
+	t n = 0;
+}end'
+		OUTPUT - '/* : : generated from t.iffe by iffe version 1995-03-19 : : */
+#ifndef _macro_H
+#define _macro_H	1
+#define _sys_types	1	/* #include <sys/types.h> ok */
+#endif'
+		ERROR - 'iffe: test: is sys/types.h a header ... yes
+iffe: test: long int type ... 
+iffe: test: long int type ... no'
+
+	EXEC	-r -v -s bsh - t.iffe
+
+	EXEC	-r -v - t.iffe
+		INPUT t.iffe $'iff macro
+tst seq -DG=1 - -DN=1 - -DN=2 note{ long int type }end compile{
+	#if G == 1 && N == 0
+	#define t		long
+	#else
+	#define t		error
+	#endif
+	t n = 0;
+}end'
+
+	EXEC	-r -v -s bsh - t.iffe
+
+	EXEC	-r -v - t.iffe
+		INPUT t.iffe $'iff macro
+if tst - -DA=1 - -DB=1 note{ long int type }end compile{
+	#if A == 1 && B == 0
+	#define t		long
+	#else
+	#define t		error
+	#endif
+	t n = 0;
+}end {
+	#define seq 1
+}
+endif'
+		OUTPUT - '/* : : generated from t.iffe by iffe version 1995-03-19 : : */
+#ifndef _macro_H
+#define _macro_H	1
+#define _sys_types	1	/* #include <sys/types.h> ok */
+/* long int type */
+#define seq 1
+
+#endif'
+		ERROR - 'iffe: test: is sys/types.h a header ... yes
+iffe: test: long int type ... yes'
+
+	EXEC	-r -v -s bsh - t.iffe
+
+	EXEC	-r -v - t.iffe
+		INPUT t.iffe $'iff macro
+if tst -DG=1 - -DN=1 - -DN=2 note{ long int type }end compile{
+	#if G == 1 && N == 1
+	#define t		long
+	#else
+	#define t		error
+	#endif
+	t n = 0;
+}end {
+	#define seq 1
+}
+endif'
+
+	EXEC	-r -v -s bsh - t.iffe
+
+	EXEC	-r -v - t.iffe
+		INPUT t.iffe $'iff macro
+if tst - -DA=1 - -DB=1 note{ long int type }end compile{
+	#if A == 0 && B == 1
+	#define t		long
+	#else
+	#define t		error
+	#endif
+	t n = 0;
+}end {
+	#define seq 1
+}
+endif'
+		ERROR - 'iffe: test: is sys/types.h a header ... yes
+iffe: test: long int type ... 
+iffe: test: long int type ... yes'
+
+	EXEC	-r -v -s bsh - t.iffe
+
+	EXEC	-r -v - t.iffe
+		INPUT t.iffe $'iff macro
+if tst -DG=1 - -DN=1 - -DN=2 note{ long int type }end compile{
+	#if G == 1 && N == 2
+	#define t		long
+	#else
+	#define t		error
+	#endif
+	t n = 0;
+}end {
+	#define seq 1
+}
+endif'
+
+	EXEC	-r -v -s bsh - t.iffe
+
+	EXEC	-r -v - t.iffe
+		INPUT t.iffe $'iff macro
+if tst - -DA=1 - -DB=1 note{ long int type }end compile{
+	#if A == 0 && B == 0
+	#define t		long
+	#else
+	#define t		error
+	#endif
+	t n = 0;
+}end {
+	#define seq 1
+}
+endif'
+		OUTPUT - '/* : : generated from t.iffe by iffe version 1995-03-19 : : */
+#ifndef _macro_H
+#define _macro_H	1
+#define _sys_types	1	/* #include <sys/types.h> ok */
+#endif'
+		ERROR - 'iffe: test: is sys/types.h a header ... yes
+iffe: test: long int type ... 
+iffe: test: long int type ... no'
+
+	EXEC	-r -v -s bsh - t.iffe
+
+	EXEC	-r -v - t.iffe
+		INPUT t.iffe $'iff macro
+if tst -DG=1 - -DN=1 - -DN=2 note{ long int type }end compile{
+	#if G == 1 && N == 0
+	#define t		long
+	#else
+	#define t		error
+	#endif
+	t n = 0;
+}end {
+	#define seq 1
+}
+endif'
+
+	EXEC	-r -v -s bsh - t.iffe
+
+	EXEC	-r -v - t.iffe
+		INPUT t.iffe $'iff macro
+if tst - -DN=1 - -DN=2 - -DN=3 note{ long int type }end compile{
+	#if N == 1
+	#define t		long
+	#else
+	#define t		error
+	#endif
+	t n = 0;
+}end {
+	#define seq 1
+}
+endif'
+		OUTPUT - '/* : : generated from t.iffe by iffe version 1995-03-19 : : */
+#ifndef _macro_H
+#define _macro_H	1
+#define _sys_types	1	/* #include <sys/types.h> ok */
+/* long int type */
+#define seq 1
+
+#endif'
+		ERROR - 'iffe: test: is sys/types.h a header ... yes
+iffe: test: long int type ... yes'
+
+	EXEC	-r -v -s bsh - t.iffe
+
+	EXEC	-r -v - t.iffe
+		INPUT t.iffe $'iff macro
+if tst - -DN=1 - -DN=2 - -DN=3 note{ long int type }end compile{
+	#if N == 2
+	#define t		long
+	#else
+	#define t		error
+	#endif
+	t n = 0;
+}end {
+	#define seq 1
+}
+endif'
+		ERROR - 'iffe: test: is sys/types.h a header ... yes
+iffe: test: long int type ... 
+iffe: test: long int type ... yes'
+
+	EXEC	-r -v -s bsh - t.iffe
+
+	EXEC	-r -v - t.iffe
+		INPUT t.iffe $'iff macro
+if tst - -DN=1 - -DN=2 - -DN=3 note{ long int type }end compile{
+	#if N == 3
+	#define t		long
+	#else
+	#define t		error
+	#endif
+	t n = 0;
+}end {
+	#define seq 1
+}
+endif'
+		ERROR - 'iffe: test: is sys/types.h a header ... yes
+iffe: test: long int type ... 
+iffe: test: long int type ... 
+iffe: test: long int type ... yes'
+
+	EXEC	-r -v -s bsh - t.iffe
+
+	EXEC	-r -v - t.iffe
+		INPUT t.iffe $'iff macro
+if tst - -DN=1 - -DN=2 - -DN=3 note{ long int type }end compile{
+	#if N == 0
+	#define t		long
+	#else
+	#define t		error
+	#endif
+	t n = 0;
+}end {
+	#define seq 1
+}
+endif'
+		OUTPUT - '/* : : generated from t.iffe by iffe version 1995-03-19 : : */
+#ifndef _macro_H
+#define _macro_H	1
+#define _sys_types	1	/* #include <sys/types.h> ok */
+#endif'
+		ERROR - 'iffe: test: is sys/types.h a header ... yes
+iffe: test: long int type ... 
+iffe: test: long int type ... 
+iffe: test: long int type ... no'
 
 	EXEC	-r -v -s bsh - t.iffe
 
@@ -670,6 +918,37 @@ tst	- output{
 		return 0;
 	}
 }end'
+
+	EXEC	-r -s bsh - t.iffe
+
+	EXEC	-r - t.iffe
+		INPUT t.iffe $'iff
+tst	- output{
+	int
+	main()
+	{
+		printf("HIT\\n");
+		return 1;
+	}
+}end'
+		OUTPUT - $'/* : : generated from t.iffe by iffe version 1995-03-19 : : */
+#define _sys_types	1	/* #include <sys/types.h> ok */'
+
+	EXEC	-r -s bsh - t.iffe
+
+	EXEC	-r - t.iffe
+		INPUT t.iffe $'iff
+tst	- nooutput{
+	int
+	main()
+	{
+		printf("HIT\\n");
+		return 1;
+	}
+}end'
+		OUTPUT - $'/* : : generated from t.iffe by iffe version 1995-03-19 : : */
+#define _sys_types	1	/* #include <sys/types.h> ok */
+HIT'
 
 	EXEC	-r -s bsh - t.iffe
 
@@ -1195,9 +1474,9 @@ TEST 11 'set [no]define'
 
 	EXEC	-r -v - t.iffe
 		INPUT t.iffe $'set nodefine
-mem stat.st_mtime sys/stat.h
+mem stat.st_mtime sys/types.h sys/stat.h
 set define
-mem stat.st_mode sys/stat.h
+mem stat.st_mode sys/types.h sys/stat.h
 if ( _mem_st_mtime_stat ) {
 	1
 }
@@ -1341,10 +1620,10 @@ iffe: test: is char a reserved keyword ... yes'
 
 	EXEC	-C -r -v -s bsh - t.iffe
 
-TEST 14 'include file'
+TEST 14 'inc file'
 
 	EXEC	-r -v - t.iffe
-		INPUT t.iffe $'include t_lib.h
+		INPUT t.iffe $'inc t_lib.h
 if ( bar_foo ) {
 	#define all 1
 }
@@ -1366,7 +1645,7 @@ iffe: test: is ( bar_foo ) true ... no
 iffe: test: is ( _foo_bar ) true ... yes'
 
 	EXEC	-r -v - t.iffe
-		INPUT t.iffe $'include t_lib.h .
+		INPUT t.iffe $'inc t_lib.h .
 if ( bar_foo ) {
 	#define all 1
 }
@@ -1385,7 +1664,7 @@ endif'
 iffe: test: is ( bar_foo ) true ... yes'
 
 	EXEC	-r -v - t.iffe
-		INPUT t.iffe $'include t_lib.h . ?
+		INPUT t.iffe $'inc t_lib.h . ?
 if ( bar_foo ) {
 	#define all 1
 }
@@ -1393,19 +1672,19 @@ elif ( _foo_bar ) {
 	#define ok 1
 }
 endif'
-		ERROR - $'iffe: t.iffe:1: warning: ?: include operands ignored
+		ERROR - $'iffe: t.iffe:1: warning: ?: operands ignored
 iffe: test: is sys/types.h a header ... yes
 iffe: test: is ( bar_foo ) true ... yes'
 
 	EXEC	-r -v - t.iffe
-		INPUT t.iffe $'include foo_lib.h'
+		INPUT t.iffe $'inc foo_lib.h'
 		OUTPUT -
-		ERROR - $'iffe: t.iffe:1: foo_lib.h: include file not found'
+		ERROR - $'iffe: t.iffe:1: foo_lib.h: file not found'
 		EXIT 2
 
 	EXEC	-r -v - t.iffe
-		INPUT t.iffe $'include'
-		ERROR - $'iffe: t.iffe:1: include path expected'
+		INPUT t.iffe $'inc'
+		ERROR - $'iffe: t.iffe:1: path expected'
 
 TEST 15 'KnR compatibility'
 
@@ -1455,3 +1734,30 @@ iffe: test: cat{ ... }end ... yes'
 	EXEC	-r -v -s bsh - t.iffe
 
 	EXEC	-r -v -s osh - t.iffe
+
+TEST 16 '{ define extern include print }'
+
+	EXEC	-r -v - t.iffe
+		INPUT t.iffe $'
+print	/* test header */
+include	stdio.h
+define	EOF	-1
+define	FoobaR	(a,b)	((a)+(b))
+define	FoomaC	-1
+extern	fopen	FILE*	(char*, char*)
+extern	BarfoO	struct barfoo*	(int)
+extern	Tab_lE	struct barfoo*	[10]'
+		OUTPUT - $'/* test header */
+#include <stdio.h>
+#define FoobaR(a,b)	((a)+(b))
+#define FoomaC	-1
+extern struct barfoo*	BarfoO(int);
+extern struct barfoo*	Tab_lE[10];'
+		ERROR - $'iffe: test: is stdio.h a header ... yes
+iffe: test: is EOF a macro ... yes
+iffe: test: is FoobaR a macro ... no
+iffe: test: is FoomaC a macro ... no
+iffe: test: is fopen a symbol that needs a prototype ... no
+iffe: test: is BarfoO a symbol that needs a prototype ... yes
+iffe: test: is Tab_lE a symbol that needs a prototype ... yes
+iffe: test: is sys/types.h a header ... yes'

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2005 AT&T Corp.                  *
+*                  Copyright (c) 1982-2006 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -180,6 +180,8 @@ struct arithnod
 #define IOSTRIP 0x4000		/* strip leading tabs for here-document */
 #define IOQUOTE	0x8000		/* here-document delimiter was quoted */
 #define IOVNM	0x10000		/* iovname field is non-zero */
+#define IOLSEEK	0x20000		/* seek operators <# or >#  */
+#define IOARITH	0x40000		/* arithmetic seek <# ((expr))  */
 
 union Shnode_u
 {

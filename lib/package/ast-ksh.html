@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">
 <HTML>
 <HEAD>
-<META name="generator" content="mm2html (AT&T Labs Research) 2004-12-22">
+<META name="generator" content="mm2html (AT&T Labs Research) 2005-10-15">
 <META name="description" content="ast-ksh package">
 <META name="keywords" content="software, package">
 <TITLE> ast-ksh package </TITLE>
@@ -26,14 +26,6 @@ Components in this package:
 </TBODY></TABLE></TD></TR></TBODY></TABLE>
 <P>
 This package is a superset of the following package: ksh; you won't need this if you download ast-ksh.
-The software is covered by this license:
-<UL type=square>
-<LI>
-	<A href="http://www.opensource.org/licenses/cpl1.0.txt">http://www.opensource.org/licenses/cpl1.0.txt</A>
-</UL>
-Individual components may be covered by separate licenses;
-refer to the component source and/or binaries for more information.
-<P>
 A recent
 	<A href="#release change log">release change log</A>
 is also included.
@@ -200,9 +192,138 @@ All recorded changes follow.
 <P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="ksh93 changes">ksh93 changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
-04-12-01  --- Release ksh93q  ---
-04-12-01  A bug in which the tyset -Fn truncated in less than n digits
-          for large numbers has been fixed.
+06-01-24  --- Release ksh93r  ---
+06-01-24  A bug in which running commands with standard output closed would
+	  not work as expected has been fixed.
+06-01-23  A bug in which print -u&lt;n&gt; could fail when file descriptor &lt;n&gt; was
+	  open for writing has been fixed.
+06-01-19  The ?: arithmetic operator fixed to work when the operation after
+	  the colon was an assignment.
+05-12-24  A bug which could lead to a core dump when elements of a compound
+	  variable were array elements, i.e. foo=(bar=(1 2)), has been fixed.
+05-12-13  An arithmetic bug in which x+=y+=z was not working has been fixed. 
+05-12-13  An arithmetic bug in which x||y was returning x when x was non-zero
+	  rather than 1 has been fixed.
+05-12-07  The aliases for integer and float have been changed to use attributes
+	  -li and -lE to handle long long and long double types.
+05-12-07  The histexpand (-H) option has been added which allows C-shell
+	  style history expansios using the history character !.
+05-12-07  The multiline option was added which changes that way the edit
+	  modes handle lines longer than the window width.  Instead of
+	  horizontal scrolling, multiple lines on the screen are used.
+05-12-05  The whence builtin now returns an absolute pathname when the
+          command is found in the current directory.
+05-11-29  A bug which caused ksh -c '&#0091;&#0091; ! ((' to core dump rather than
+	  report a syntax error has been fixed.
+05-11-29  A bug when reading fixed length records into typeset -b variables
+	  which caused a zero byte to terminate the value has been fixed.
+05-11-22  The ability to seek to an offset within a file has been added
+	  with the new I/O redirection operators, &lt;#  and &gt;#.  Currently,
+	  these redirection operators must be followed by ((expr))
+	  but in a future release, it should be able to used to seek forward
+	  to the specified shell pattern.  In addition $(n&lt;#) expands to the
+	  current byte offset for file descriptor n.
+05-11-22  The .sh.match array variable is now set after each &#0091;&#0091; ... &#0093;&#0093;
+	  pattern match.  Previously it was only set for substring matches.
+05-10-17  A bug in which the library path variable could be prefixed
+          with a directory when a .path file was not encountered in
+	  the directory of the executable has been fixed.
+05-09-15  A for/while loop optimizer bug in which $OPTIND was not
+	  correctly expanded has been fixed.
+05-09-05  A bug in which a history command that invoked a history
+	  command could go into an infinite loop has been fixed.
+05-08-31  In the case that IFS contains to adjacent new-lines so that
+	  new-line is not treated as a space delimiter, only a single
+	  new-line is deleted at the end of a command substitution.
+05-08-19  When a tilde substitution expands to the / directory and is
+	  followed by a /, it is replaced by the empty string.
+05-08-16  A bug in which n&lt;&amp;m did not synchronize m has been fixed.
+05-08-16  A bug in which process substitution  ( &lt;() and &gt;() ) was not
+	  working within for and while loops has been fixed.
+05-07-24  A bug in which the pattern ~(E)(foo|bar) was treated as a syntax
+	  error has been fixed.
+05-07-24  A bug in completion with &lt;n&gt;=, where n was the one of the
+	  previous selection choices has been fixed.
+05-07-21  A bug with multibyte input when no edit mode was specified which
+	  caused the input line to shift left/right has been fixed.
+05-06-24  A race condition which could cause the exit status to get lost
+	  on some fast systems has been fixed.
+05-06-21  A bug in which nested patterns of the form {m,n}(pat) would cause
+	  syntax errors has been fixed.
+05-06-21  A bug in the macro expander has been fixed which could cause a
+          syntax error for an expansion of the form ${x-$(...)} when
+	  x is set and the command substitution contained certain strings.
+05-06-08  On systems for which echo does not do System V style &nbsp;expansions,
+	  the -e option was added to enable these expansion.
+05-06-08  A bug in which ${var op pattern} to not work when inside an
+	  arithmetic expression has been fixed.
+05-05-23  An extension to shell patterns that allows matching of nested
+	  groups while skipping over quoted strings has been added.
+05-05-18  A bug in which the line number for errors was not correct for
+          functions loaded from FPATH has been fixed.
+05-04-18  A bug in which the exit status $? is not set when a trap triggered
+	  by the &#0091;&#0091;...&#0093;&#0093; command is executed has been fixed.
+05-04-08  Redirection operators can be directly preceded with {varname}
+	  with no intervening space, where varname is a variable name which
+	  allows the shell to select a file descriptor &gt; 10 and store it
+	  into varname.
+05-04-08  SHOPT_CMDLIB_BLTIN=1 now includes &lt;cmdlist.h&gt; generated table.
+05-04-07  &#0091;&#0091; -o ?option &#0093;&#0093; is true if "option" is a supported option.
+05-04-05  A bug in handling file completion with spaces in the names
+          has been fixed.
+05-03-25  The SIGWINCH signal is caught by default to keeps the LINES and
+	  COLUMNS variables in sync with the actual window size.
+05-03-25  Building ksh with SHOPT_REMOTE=1 causes ksh to set --rc if stdin is
+	  a socket (presumably part of a remote shell invocation.)
+05-03-25  Building ksh with SHOPT_SYSRC=1 causes interactive ksh to source
+	  /etc/ksh.kshrc (if it exists) before sourcing the $ENV file.
+05-03-25  {first..last&#0091;..incr&#0093;&#0091;%fmt&#0093;} sequences added to brace expansions
+	  when braceexpand is enabled.
+05-03-03  A bug where a SIGCHLD interrupt could cause a fifo open to fail has
+	  been fixed.
+05-02-25  A bug in which a builtin command run in the background could
+	  keep a file descriptor open which could cause a foreground
+	  process to hang has been fixed.
+05-02-24  A bug where builtin library commands (e.g., date and TZ) failed to
+	  detect environment variable changes has been fixed.
+05-02-22  The read builtin and word splitting are now consistent with respect
+	  to IFS -- both treat IFS as field delimiters.
+05-02-22  The read builtin no longer strips off trailing delimiters that
+	  are not space characters when there are fewer variables than fields.
+05-02-17  A builtin bug on systems where dlsym(libcmd) returns link-time
+	  bindings has been fixed.
+05-02-12  A bug in which the lib_init() function for .paths BUILTIN_LIB
+	  libraries was not called has been fixed.
+05-02-06  A bug on some systems in which moving the write end of a co-process
+	  to a numbered file descriptor could cause it to close has been fixed. 
+05-02-06  A bug in the vi-edit mode in which the character under the cursor
+	  was not deleted in some cases with the d% directive has been fixed.
+05-02-06  A bug where external builtin stdout/stderr redirection corrupted
+          stdout has been fixed.
+05-02-04  A bug where times formatting assumed CLK_TCK==60 has been fixed.
+
+05-01-11  --- Release ksh93q  ---
+05-01-11  A bug in the integral divide by zero check has been fixed.
+05-01-11  The -l option has been added to read /etc/profile and
+	  $HOME/.profile, if they exist, before the first command.
+05-01-11  An argument parsing bug that caused `kill -s x -- n' to fail has
+	  been fixed.
+05-01-11  The .paths file, introduced in ksh93m, which can appear in
+	  any directory in PATH, now allows a line of the form 'BUILTIN_LIB=.'
+	  When a command is searched for this directory, and the full path
+	  matches the path of the built-in version of the command (listed
+	  by the 'builtin' command) then the built-in version of the command
+	  is used.  When ksh is built with SHOPT_CMDLIB_DIR=1 then all libcmd
+	  functions become builtins with the '/opt/ast/bin/' directory prefix.
+05-01-10  A bug in which a nameref to a compound name caused a core dump has
+	  been fixed.
+05-01-09  A bug in which some SIGCHLD interrupts (from child processes exiting)
+	  caused a fatal print/echo error diagnostic has been fixed.
+04-12-24  A bug in which some SIGCHLD interrupts (from child processes exiting)
+          corrupted the internal process/job list, sometimes causing the shell
+	  to hang, has been fixed.
+04-12-01  A bug in which typeset -Fn truncated less than n digits for large
+	  numbers has been fixed.
 04-11-25  A bug in which standard error could be closed after a redirection
 	  to /dev/stderr has been fixed.
 04-11-17  A bug in which an expansion of the form ${array&#0091;@&#0093;:3} could expand
@@ -212,7 +333,7 @@ All recorded changes follow.
           `--foo' equivalent to `-o foo', `--nofoo' equivalent to `+o foo'
 04-10-05  The .paths file, introduced in ksh93m, which can appear in
 	  any directory in PATH, now allows a line of the form
-	  BUILTIN_LIB=libname.  When a command is searched for this directory,
+	  'BUILTIN_LIB=libname'.  When a command is searched for this directory,
 	  the shared library named by libname will first be searched for a
 	  built-in version of the command.
 04-09-03  &lt;&lt;&lt; here documents now handle quotes in the word token correctly. 
@@ -245,9 +366,9 @@ All recorded changes follow.
 	  the same name was declared in a script invoked by name has
 	  been fixed.
 04-05-11  A bug in which an exec statement could close the script that
-	  is being proccessed in a script that is run by name causing
+	  is being processed in a script that is run by name causing
 	  a failure has been fixed.
-04-04-28  If the first character of assigment to an integer variable was 0,
+04-04-28  If the first character of assignment to an integer variable was 0,
           the variable had been treated as unsigned.  This behavior was
           undocumented and has been removed.
 04-04-05  A bug in which the positioning of standard input could be incorrect
@@ -301,15 +422,15 @@ All recorded changes follow.
 	  for interactive shells.
 03-11-21  A bug introduced in ksh93o in which the DEBUG trap could get
 	  disabled after it triggered has been fixed. 
-03-11-04  A bug in which using arithetic prefix opertors ++ or -- on a
+03-11-04  A bug in which using arithmetic prefix operators ++ or -- on a
 	  non-lvalue could cause a core dump has been fixed.
 03-11-04  A bug in which leading zeros were stripped from variable
-	  expansions within arithmetic compution to avoid being treated
+	  expansions within arithmetic computation to avoid being treated
 	  as octal constants when they should not have, has been fixed.
 03-10-08  A bug introduced in ksh93o in which a large here document inside
 	  a function definition could get corrupted has been fixed.
 03-09-22  A bug in which the .get discipline function was not being
-	  called when a string variable was implictly referenced from
+	  called when a string variable was implicitly referenced from
 	  within a numerical expression has been fixed.
 03-09-22  A bug in which a script without a leading #! could get executed
 	  by /bin/sh rather than the current shell on some systems has
@@ -340,7 +461,7 @@ All recorded changes follow.
 	  function invoked another one has been fixed.
 03-07-15  A bug in which a file descriptor&gt;2 could be closed before
 	  executing a script has been fixed.
-03-07-15  A parsing error for &lt;() and &gt;() process subsitituions inside
+03-07-15  A parsing error for &lt;() and &gt;() process substitutions inside
 	  command substitution has been fixed.
 03-07-15  A parsing error for patterns of the form {...}(...) when
 	  used inside ${...} has been fixed.
@@ -348,7 +469,7 @@ All recorded changes follow.
 	  variable could cause a core dump has been fixed.
 03-07-15  A bug in which under on rare ocassions a job completion interrupt
 	  could cause to core dump has been fixed.
-03-06-26  A bug in which process substitution embeded within command
+03-06-26  A bug in which process substitution embedded within command
 	  substitution would generate a syntax error has been fixed.
 03-96-23  A bug in which ${@:offset:len} could core dump when there
 	  were no arguments has been fixed.
@@ -379,7 +500,7 @@ All recorded changes follow.
 	  can be completed.
 03-05-20  A bug in which read -N could hang on some systems when reading
 	  from a terminal or a pipe has been fixed.
-03-05-19  A bug in which the ouput of uname from a command substitution
+03-05-19  A bug in which the output of uname from a command substitution
 	  would go to the standard output of the invoking command when
 	  uname was invoked with a non-standard option has been fixed.
 03-05-19  A job control bug which would cause the shell to exit because 
@@ -398,7 +519,7 @@ All recorded changes follow.
 	  some elements would not be output when the name was a prefix
 	  of another name in the compound variable has been fixed.
 03-05-08  The last item in the ksh93o release on 03-01-02 has been
-	  altered sligthly to preserve the leading 0's when the
+	  altered slightly to preserve the leading 0's when the
 	  preceding character is a digit.  Thus, with typeset -LZ3 x=10,
 	  $(( 1$x)) will be 1010 whereas $(( $x) will be 10.
 03-04-25  A bug in which if x is a name reference, then nameref y=x.foo
@@ -426,7 +547,7 @@ All recorded changes follow.
 	  that set -o nolog no longer has any meaning.
 03-02-28  All function definitions can be displayed with typeset -f not
 	  just those stored in the history file.  In addition, typeset +f
-	  displays the function name followed by a comment containg the
+	  displays the function name followed by a comment containing the
 	  line number and the path name for the file that defined this function.
 03-02-28  A bug in which the value of $LINENO was not correct when executing
 	  command contained inside mult-line command substitutions has been
@@ -1375,6 +1496,78 @@ All recorded changes follow.
 <P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="libast changes">libast changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
+06-01-06 features/lib: change _UNIV_DEFAULT probe to use cross{...}
+06-01-04 misc/stk.c: fix n**2 realloc behavior
+06-01-01 include/sfio.h: export { _Sfi _Sfmaxr }
+05-12-13 string/chresc.c: handle \C-X =&gt; control-X, \M- =&gt; ESC
+05-11-22 regex/regcache.c: add, convert string/strmatch.c to regcache()
+05-10-06 string/ccmap.c: update ebcdic-u to be idempotent
+05-09-28 vmalloc: snarf from kpv; fixes large block brk() thrashing
+05-09-26 misc/magic.c,misc/magic.tab: handle latest vcodex header
+05-09-12 misc/optget.c: reset opt_info.offset on error
+	 string/strtoi.h: strton() '.' multiplier only if m&gt;1
+	 string/fmtesc.c: add unadvertized FMT_PARM for FMT_SHELL
+05-09-09 string/fmtesc.c: fix FMT_SHELL logic w.r.t. &#0091;$`&#0093;
+05-08-11 string/strerror.c: fix { sys_errlist sys_nerr } prototypes
+05-08-03 sfio: snarf sfvaprints sfaprints
+05-07-21 port/astconf.c: retain most recent synthesized lookup
+05-07-20 sfio/sfsetbuf.c: default file io size now 64K on all systems
+05-07-17 ccmap*: add microfocus cobol EBCDIC_U
+05-06-29 regex/regcomp.c: fix the A &amp; B inline flag logic
+05-06-15 include/recfmt.h: add fs format flag to fmtrec()
+05-06-14 error.c: add ERROR_OPTIONS { break count match }
+05-06-07 features/stdio: drop FEATURE/limits to fix bootstrap circular dep
+05-06-02 features/*,Makefile: drop vestigel iffeio.h bootstrap workaround
+05-05-31 string/fmtbuf.c: unlock (spin) before each return -- doh
+05-05-30 sfio/sfpkrd.c: work around macos 10.4 recv(MSG_PEEK) bug
+05-05-27 regex: add REX_NEST (?%&#0091;S.&#0093;&#0091;T.&#0093;&#0091;OT&#0093;)
+	 magic.tab: ammend bsd db magic
+05-05-23 regex: REX_NEST (?%&#0091;D.&#0093;&#0091;E.&#0093;&#0091;L.&#0093;&#0091;Q.&#0093;&#0091;oc&#0093;...)
+05-05-21 regex: state.fold&#0091;&#0093; is now locale specific -- doh
+05-05-19 regex: add REX_NEST (?%lt;&gt;&#0091;&#0093;""...) %(...) nested match
+05-05-15 recfmt.h: add recstr() reclen() fmtrec()
+05-05-13 optget.c: allow boolean options to take numeric values
+05-05-12 recfmt.c: add to recfmt.h, adjust Recfmt_t encodings
+05-04-30 sfio: add sfmaxr(), default 64K
+05-04-22 comp/omitted.c: fix magic() logic for files &lt; 512 bytes
+05-04-20 cdt: snarf update from kpv; void* Dt_t.user added
+	 misc/error.c: library =&gt; ERROR_LIBRARY
+05-04-19 regex/regcomp.c: handle REG_SHELL &#0091;^...&#0093; == &#0091;!...&#0093;
+05-04-11 tm/tmxscan.c: handle yyy.mm.dd&#0091;-+.&#0093;hh.mm.ss.nnnnnn
+05-04-07 regex/regnexec.c: fix out of bounds boundary check -- ouch
+	 features/align.c: add jmp_buf to the alignment mix (ia64)
+	 vmalloc/vmhdr.h: add jmp_buf to the alignment mix (ia64)
+05-03-31 misc/optget.c: fix option { - _ } separator matching
+05-03-30 misc/glob.c: eliminate superfluous GLOB_NOMATCH stat() calls
+05-03-24 port/astwinsize.c: include &lt;sys/ioctl.h&gt; if possible
+05-03-23 string/ccmap.c: add ebcdic-m mvs cobol table
+05-03-11 comp/omitted.c: handle utime&#0091;s&#0093;(const,const)
+	 comp/conf.tab: fix linux PID_MAX probe
+05-03-10 comp/setlocale.c: LC_* value "" =&gt; unset -- doh
+	 misc/optget.c: reorder _PACKAGE_astsa code for msgcc
+05-03-08 misc/optget.c: delete leading space in STYLE_nroff output
+05-03-07 sfio/sfhdr.h: drop extern _sfdscan -- clashes with sfvscanf.c static
+05-03-01 tm/tminit.c: add tmlocaltime() for tzset() getenv() override workaround
+05-02-20 features/tvlib: tmsettimeofday only for systems that have settimeofday
+	 features/float: fix mvs.s390 NaN tests
+05-02-18 tm/tmxmake.c: fix &lt;0 west of GMT bug that warped to 1800's -- wow
+05-02-11 port/mnt.c: handle lynxos MOUNTED=/etc/fstab
+05-02-08 features/float,sfio.h,sfcvt.c,sftable.c: add INF and fix NAN
+05-02-04 features/lib: add _std_strtol (for lynxos)
+	 include/ast_std.h: add _std_strtol tests
+	 comp/strtod.c: #define S2F_function strtod
+	 misc/signal.c: fix ancient bsd SV_INTERRUPT vs. SV_ABORT clash
+05-01-11 sfio/sfmove.c: try to seek(fr) when fw==0
+	 comp/omitted.c: intercept utimes() too
+	 comp/omitted.c: add DOSPATHVARS env var path value conversions
+	 features/tvlib,tm/tvtouch.c: check for utimets()
+	 misc/optget.c: handle '-' or '_' option word separators
+	 sfio/_sfopen.c: allow stream mode changes after initialization
+	 sfio: sync with kpv: SF_SYNCED fix for ksh input loss bug
+05-01-09 tm/tmxfmt.c: fix %6N for n&lt;100000000
+05-01-08 regex/regcomp.c: conj() =&gt; con() to avoid C99 clash
+05-01-05 tm/*: fix { %U %V %W } logic -- my head hurts
+04-12-30 tm/tmxtime.c: fix tm_isdst&lt;0 loop
 04-12-23 vmalloc/vmbest.c: fix vmresize bug that didn't 0 new data
 04-12-19 misc/optget.c: broaden - long option match
 04-12-09 string/strtoi.h: fix terabyte 't' suffix math
@@ -2600,6 +2793,15 @@ All recorded changes follow.
 <P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="libcmd changes">libcmd changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
+05-08-11 fmt.c: fix -o to handle raw --usage strings
+05-05-17 cat.c,head.c: disable EPIPE error messages
+05-04-14 chgrp.c: -f means all non-syntax error messages
+05-04-11 fds.c: add from old internal open(1)
+05-04-09 cmdext.h,cmdlist.h: generate from source -- about time
+05-03-24 features/symlink: verify { lchmod lchown } implementations
+05-03-07 date.c: add --listzones to list the time zone table
+05-02-14 chmod.c: add --reference=file
+05-01-11 cat.c: restore output stream to binary mode on exit
 04-12-15 cp.c: add --preserve high resolution time support
 04-12-08 date.c: add high resolution time support
 04-12-01 cmp.c: fix %6I*ld =&gt; %6I*d -- doh
@@ -2762,6 +2964,7 @@ All recorded changes follow.
 <P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="libdll changes">libdll changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
+05-02-14 dllscan.c: "" || "-" =&gt; NiL
 04-10-01 dllfind.c: drop ksh "builtin" workaround
 	 dllscan.c: directory prefix in name limits search to dir and siblings
 04-07-22 dllscan.c: access() =&gt; eaccess()
@@ -2806,7 +3009,7 @@ All recorded changes follow.
 <TR>
 <TD align=left></TD>
 <TD align=center></TD>
-<TD align=right>December 29, 2004</TD>
+<TD align=right>January 24, 2006</TD>
 </TR>
 </TABLE>
 <P>

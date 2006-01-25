@@ -118,5 +118,8 @@ omitted features that are completely upward compatible.
 	to be treated as unsigned.  This behavior was removed
 	starting in ksh93p.
 
+27.	The getopts builtin in ksh93 requires that optstring contain
+	a leading + to allow options to begin with a +.
+
 I am interested in expanding this list so please let me know if you
 uncover any others.

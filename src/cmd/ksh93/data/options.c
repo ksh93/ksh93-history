@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2005 AT&T Corp.                  *
+*                  Copyright (c) 1982-2006 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -82,6 +82,7 @@ const Shtable_t shtab_options[] =
 	bashopt("mailwarn",		SH_MAILWARN)
 	"markdirs",			SH_MARKDIRS,
 	"monitor",			SH_MONITOR,
+	"multiline",			SH_MULTILINE,
 	bashopt("no_empty_cmd_completion", SH_NOEMPTYCMDCOMPL)
 	bashopt("nocaseglob",		SH_NOCASEGLOB)
 	"notify",			SH_NOTIFY,
@@ -117,8 +118,10 @@ const Shtable_t shtab_attributes[] =
 	{"-xexport",	NV_EXPORT},
 	{"-rreadonly",	NV_RDONLY},
 	{"-ttagged",	NV_TAGGED},
+	{"++long",	(NV_INTEGER|NV_DOUBLE|NV_LONG)},
 	{"-Eexponential",(NV_INTEGER|NV_DOUBLE|NV_EXPNOTE)},
 	{"-Ffloat",	(NV_INTEGER|NV_DOUBLE)},
+	{"++long",	(NV_INTEGER|NV_LONG)},
 	{"++short",	(NV_INTEGER|NV_SHORT)},
 	{"++unsigned",	(NV_INTEGER|NV_UNSIGN)},
 	{"-iinteger",	NV_INTEGER},

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2005 AT&T Corp.                  *
+*                  Copyright (c) 1982-2006 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -219,6 +219,8 @@ struct limits
 #define SH_BASH			41
 #define SH_BRACEEXPAND		42
 #define SH_POSIX		46
+#define SH_MULTILINE    	47
+
 #define SH_NOPROFILE		78
 #define SH_NOUSRPROFILE		79
 #define SH_LOGIN_SHELL		67
@@ -288,6 +290,7 @@ extern char 		*sh_mactrim(char*,int);
 extern int 		sh_macexpand(struct argnod*,struct argnod**,int);
 extern void 		sh_machere(Sfio_t*, Sfio_t*, char*);
 extern void 		*sh_macopen(Shell_t*);
+extern char 		*sh_macpat(struct argnod*,int);
 extern char 		*sh_mactry(char*);
 extern void		sh_printopts(Shopt_t,int,Shopt_t*);
 extern int 		sh_readline(Shell_t*,char**,int,int,long);

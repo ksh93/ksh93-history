@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#                  Copyright (c) 1982-2005 AT&T Corp.                  #
+#                  Copyright (c) 1982-2006 AT&T Corp.                  #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                            by AT&T Corp.                             #
@@ -301,4 +301,5 @@ if	[[ -d /dev/fd ]]
 then	[[ $(cat <(print hello) ) == hello ]] || err_exit "process substitution not working outside for or while loop"
 	[[ $(for i in 1;do cat <(print hello);done ) == hello ]] || err_exit "process substitution not working in for or while loop"
 fi
+rm -f /tmp/ksh$$x
 exit $((Errors))

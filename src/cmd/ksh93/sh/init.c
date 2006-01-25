@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2005 AT&T Corp.                  *
+*                  Copyright (c) 1982-2006 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -235,6 +235,11 @@ static void put_optindex(Namval_t* np,const char *val,int flags,Namfun_t *fp)
 	Shell_t *shp = ((struct shell*)fp)->sh;
 	shp->st.opterror = shp->st.optchar = 0;
 	nv_putv(np, val, flags, fp);
+}
+
+static Sfdouble_t nget_optindex(register Namval_t* np, Namfun_t *fp)
+{
+	return((Sfdouble_t)*np->nvalue.lp);
 }
 
 /* Trap for restricted variables FPATH, PATH, SHELL, ENV */
@@ -563,7 +568,7 @@ static Sfdouble_t nget_rand(register Namval_t* np, Namfun_t *fp)
 		cur = (rand()>>rand_shift)&RANDMASK;
 	while(cur==last);
 	*np->nvalue.lp = cur;
-	return((double)cur);
+	return((Sfdouble_t)cur);
 }
 
 static char* get_rand(register Namval_t* np, Namfun_t *fp)
@@ -747,7 +752,7 @@ const Namdisc_t RESTRICTED_disc	= {  sizeof(struct shell), put_restricted };
 static const Namdisc_t CDPATH_disc	= {  sizeof(struct shell), put_cdpath }; 
 #endif
 static const Namdisc_t EDITOR_disc	= {  sizeof(struct shell), put_ed };
-static const Namdisc_t OPTINDEX_disc	= {  sizeof(struct shell), put_optindex };
+static const Namdisc_t OPTINDEX_disc	= {  sizeof(struct shell), put_optindex, 0, nget_optindex };
 static const Namdisc_t SECONDS_disc	= {  sizeof(struct seconds), put_seconds, get_seconds, nget_seconds };
 static const Namdisc_t RAND_disc	= {  sizeof(struct rand), put_rand, get_rand, nget_rand };
 static const Namdisc_t LINENO_disc	= {  sizeof(struct shell), put_lineno, get_lineno, nget_lineno };

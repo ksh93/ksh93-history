@@ -1,4 +1,41 @@
-05-09-05  --- Release ksh93r-  ---
+06-01-24  --- Release ksh93r  ---
+06-01-24  A bug in which running commands with standard output closed would
+	  not work as expected has been fixed.
+06-01-23  A bug in which print -u<n> could fail when file descriptor <n> was
+	  open for writing has been fixed.
+06-01-19  The ?: arithmetic operator fixed to work when the operation after
+	  the colon was an assignment.
+05-12-24  A bug which could lead to a core dump when elements of a compound
+	  variable were array elements, i.e. foo=(bar=(1 2)), has been fixed.
+05-12-13  An arithmetic bug in which x+=y+=z was not working has been fixed. 
+05-12-13  An arithmetic bug in which x||y was returning x when x was non-zero
+	  rather than 1 has been fixed.
+05-12-07  The aliases for integer and float have been changed to use attributes
+	  -li and -lE to handle long long and long double types.
+05-12-07  The histexpand (-H) option has been added which allows C-shell
+	  style history expansios using the history character !.
+05-12-07  The multiline option was added which changes that way the edit
+	  modes handle lines longer than the window width.  Instead of
+	  horizontal scrolling, multiple lines on the screen are used.
+05-12-05  The whence builtin now returns an absolute pathname when the
+          command is found in the current directory.
+05-11-29  A bug which caused ksh -c '[[ ! ((' to core dump rather than
+	  report a syntax error has been fixed.
+05-11-29  A bug when reading fixed length records into typeset -b variables
+	  which caused a zero byte to terminate the value has been fixed.
+05-11-22  The ability to seek to an offset within a file has been added
+	  with the new I/O redirection operators, <#  and >#.  Currently,
+	  these redirection operators must be followed by ((expr))
+	  but in a future release, it should be able to used to seek forward
+	  to the specified shell pattern.  In addition $(n<#) expands to the
+	  current byte offset for file descriptor n.
+05-11-22  The .sh.match array variable is now set after each [[ ... ]]
+	  pattern match.  Previously it was only set for substring matches.
+05-10-17  A bug in which the library path variable could be prefixed
+          with a directory when a .path file was not encountered in
+	  the directory of the executable has been fixed.
+05-09-15  A for/while loop optimizer bug in which $OPTIND was not
+	  correctly expanded has been fixed.
 05-09-05  A bug in which a history command that invoked a history
 	  command could go into an infinite loop has been fixed.
 05-08-31  In the case that IFS contains to adjacent new-lines so that
@@ -21,7 +58,7 @@
 	  syntax errors has been fixed.
 05-06-21  A bug in the macro expander has been fixed which could cause a
           syntax error for an expansion of the form ${x-$(...)} when
-	  x is set and the command subsitution contained certain strings.
+	  x is set and the command substitution contained certain strings.
 05-06-08  On systems for which echo does not do System V style \ expansions,
 	  the -e option was added to enable these expansion.
 05-06-08  A bug in which ${var op pattern} to not work when inside an
@@ -81,7 +118,7 @@
 	  any directory in PATH, now allows a line of the form 'BUILTIN_LIB=.'
 	  When a command is searched for this directory, and the full path
 	  matches the path of the built-in version of the command (listed
-	  by the 'builtin' comman) then the built-in version of the command
+	  by the 'builtin' command) then the built-in version of the command
 	  is used.  When ksh is built with SHOPT_CMDLIB_DIR=1 then all libcmd
 	  functions become builtins with the '/opt/ast/bin/' directory prefix.
 05-01-10  A bug in which a nameref to a compound name caused a core dump has
@@ -135,9 +172,9 @@
 	  the same name was declared in a script invoked by name has
 	  been fixed.
 04-05-11  A bug in which an exec statement could close the script that
-	  is being proccessed in a script that is run by name causing
+	  is being processed in a script that is run by name causing
 	  a failure has been fixed.
-04-04-28  If the first character of assigment to an integer variable was 0,
+04-04-28  If the first character of assignment to an integer variable was 0,
           the variable had been treated as unsigned.  This behavior was
           undocumented and has been removed.
 04-04-05  A bug in which the positioning of standard input could be incorrect
@@ -191,15 +228,15 @@
 	  for interactive shells.
 03-11-21  A bug introduced in ksh93o in which the DEBUG trap could get
 	  disabled after it triggered has been fixed. 
-03-11-04  A bug in which using arithetic prefix opertors ++ or -- on a
+03-11-04  A bug in which using arithmetic prefix operators ++ or -- on a
 	  non-lvalue could cause a core dump has been fixed.
 03-11-04  A bug in which leading zeros were stripped from variable
-	  expansions within arithmetic compution to avoid being treated
+	  expansions within arithmetic computation to avoid being treated
 	  as octal constants when they should not have, has been fixed.
 03-10-08  A bug introduced in ksh93o in which a large here document inside
 	  a function definition could get corrupted has been fixed.
 03-09-22  A bug in which the .get discipline function was not being
-	  called when a string variable was implictly referenced from
+	  called when a string variable was implicitly referenced from
 	  within a numerical expression has been fixed.
 03-09-22  A bug in which a script without a leading #! could get executed
 	  by /bin/sh rather than the current shell on some systems has
@@ -230,7 +267,7 @@
 	  function invoked another one has been fixed.
 03-07-15  A bug in which a file descriptor>2 could be closed before
 	  executing a script has been fixed.
-03-07-15  A parsing error for <() and >() process subsitituions inside
+03-07-15  A parsing error for <() and >() process substitutions inside
 	  command substitution has been fixed.
 03-07-15  A parsing error for patterns of the form {...}(...) when
 	  used inside ${...} has been fixed.
@@ -238,7 +275,7 @@
 	  variable could cause a core dump has been fixed.
 03-07-15  A bug in which under on rare ocassions a job completion interrupt
 	  could cause to core dump has been fixed.
-03-06-26  A bug in which process substitution embeded within command
+03-06-26  A bug in which process substitution embedded within command
 	  substitution would generate a syntax error has been fixed.
 03-96-23  A bug in which ${@:offset:len} could core dump when there
 	  were no arguments has been fixed.
@@ -269,7 +306,7 @@
 	  can be completed.
 03-05-20  A bug in which read -N could hang on some systems when reading
 	  from a terminal or a pipe has been fixed.
-03-05-19  A bug in which the ouput of uname from a command substitution
+03-05-19  A bug in which the output of uname from a command substitution
 	  would go to the standard output of the invoking command when
 	  uname was invoked with a non-standard option has been fixed.
 03-05-19  A job control bug which would cause the shell to exit because 
@@ -288,7 +325,7 @@
 	  some elements would not be output when the name was a prefix
 	  of another name in the compound variable has been fixed.
 03-05-08  The last item in the ksh93o release on 03-01-02 has been
-	  altered sligthly to preserve the leading 0's when the
+	  altered slightly to preserve the leading 0's when the
 	  preceding character is a digit.  Thus, with typeset -LZ3 x=10,
 	  $(( 1$x)) will be 1010 whereas $(( $x) will be 10.
 03-04-25  A bug in which if x is a name reference, then nameref y=x.foo
@@ -316,7 +353,7 @@
 	  that set -o nolog no longer has any meaning.
 03-02-28  All function definitions can be displayed with typeset -f not
 	  just those stored in the history file.  In addition, typeset +f
-	  displays the function name followed by a comment containg the
+	  displays the function name followed by a comment containing the
 	  line number and the path name for the file that defined this function.
 03-02-28  A bug in which the value of $LINENO was not correct when executing
 	  command contained inside mult-line command substitutions has been

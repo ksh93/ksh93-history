@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2005 AT&T Corp.                  *
+*                  Copyright (c) 1982-2006 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -135,7 +135,7 @@ static struct back_save	bck;
 #ifdef JOBS
     static void			job_set(struct process*);
     static void			job_reset(struct process*);
-    static void			job_reap(int);
+    static int			job_reap(int);
     static void			job_waitsafe(int);
     static struct process	*job_byname(char*);
     static struct process	*job_bystring(char*);
@@ -177,11 +177,13 @@ static struct back_save	bck;
 #define job_lock()	(job.in_critical++)
 #define job_unlock()	do{if(!--job.in_critical&&savesig)job_reap(savesig);}while(0)
 
+typedef int (*Waitevent_f)(int,long,int);
+
 /*
  * Reap one job
  * When called with sig==0, it does a blocking wait
  */
-static void job_reap(register int sig)
+static int job_reap(register int sig)
 {
 	register pid_t pid;
 	register struct process *pw;
@@ -189,7 +191,8 @@ static void job_reap(register int sig)
 	register int flags;
 	struct process dummy;
 	struct jobsave *jp;
-	int wstat, (*waitevent)(int,long,int) = sh.waitevent;
+	int nochild=0, oerrno, wstat;
+	Waitevent_f waitevent = sh.waitevent;
 	static int wcontinued = WCONTINUED;
 #ifdef DEBUG
 	if(sfprintf(sfstderr,"ksh: job line %4d: reap pid=%d critical=%d signal=%d\n",__LINE__,getpid(),job.in_critical,sig) <=0)
@@ -202,6 +205,7 @@ static void job_reap(register int sig)
 	else
 		flags = WUNTRACED;
 	sh.waitevent = 0;
+	oerrno = errno;
 	while(1)
 	{
 		if(!(flags&WNOHANG) && !sh.intrap && waitevent && job.pwlist)
@@ -257,10 +261,13 @@ static void job_reap(register int sig)
 			px=job_byjid(pw->p_job);
 		if(WIFSTOPPED(wstat))
 		{
-			/* move to top of job list */
-			job_unlink(px);
-			px->p_nxtjob = job.pwlist;
-			job.pwlist = px;
+			if(px)
+			{
+				/* move to top of job list */
+				job_unlink(px);
+				px->p_nxtjob = job.pwlist;
+				job.pwlist = px;
+			}
 			pw->p_exit = WSTOPSIG(wstat);
 			pw->p_flag |= (P_NOTIFY|P_SIGNALLED|P_STOPPED);
 			if(pw->p_pgrp && pw->p_pgrp==job.curpgid && sh_isstate(SH_STOPOK))
@@ -321,6 +328,11 @@ static void job_reap(register int sig)
 		if(px && pw != px)
 			pw->p_flag &= ~P_NOTIFY;
 	}
+	if(errno==ECHILD)
+	{
+		errno = oerrno;
+		nochild = 1;
+	}
 	sh.waitevent = waitevent;
 	if(!sh.intrap && sh.st.trapcom[SIGCHLD])
 	{
@@ -336,6 +348,7 @@ static void job_reap(register int sig)
 	}
 	if(sig)
 		signal(sig, job_waitsafe);
+	return(nochild);
 }
 
 /*
@@ -1159,6 +1172,7 @@ void	job_wait(register pid_t pid)
 {
 	register struct process *pw=0,*px;
 	register int	jobid = 0;
+	int		nochild;
 	char		intr = 0;
 	if(pid <= 0)
 	{
@@ -1279,10 +1293,10 @@ void	job_wait(register pid_t pid)
 		}
 		sfsync(sfstderr);
 		job.waitsafe = 0;
-		job_reap(savesig);
+		nochild = job_reap(savesig);
 		if(job.waitsafe)
 			continue;
-		if(errno==ECHILD)
+		if(nochild)
 			break;
 		if(sh.sigflag[SIGALRM]&SH_SIGTRAP)
 			sh_timetraps();

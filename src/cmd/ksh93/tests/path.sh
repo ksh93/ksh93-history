@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#                  Copyright (c) 1982-2005 AT&T Corp.                  #
+#                  Copyright (c) 1982-2006 AT&T Corp.                  #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                            by AT&T Corp.                             #
@@ -115,7 +115,8 @@ fi
 	else	exit 126
 	fi
 )
-[[ $? == 126 ]] || err_exit 'exit status of non-executable is not 126' 
+status=$?
+[[ $status == 126 ]] || err_exit "exit status of non-executable is $status -- 126 expected"
 builtin -d rm 2> /dev/null
 rm=$(whence rm)
 d=$(dirname "$rm")
@@ -129,16 +130,16 @@ fi
 [[ $(whence ./xxxxx) ]] && err_exit 'whence ./xxxx not working'
 PATH=$d:
 cp "$rm" kshrm$$
-if	[[ $(whence kshrm$$) != kshrm$$  ]]
+if	[[ $(whence kshrm$$) != $PWD/kshrm$$  ]]
 then	err_exit 'trailing : in pathname not working'
 fi
 cp "$rm" rm
 PATH=:$d
-if	[[ $(whence rm) != rm ]]
+if	[[ $(whence rm) != $PWD/rm ]]
 then	err_exit 'leading : in pathname not working'
 fi
 PATH=$d: whence rm > /dev/null
-if	[[ $(whence rm) != rm ]]
+if	[[ $(whence rm) != $PWD/rm ]]
 then	err_exit 'pathname not restored after scoping'
 fi
 cd /
@@ -163,4 +164,14 @@ PATH=.:$PWD:${x%/ls}
 [[ $(whence ls) == "$x" ]] || err_exit 'PATH search bug when .:$PWD in path'
 PATH=$PWD:.:${x%/ls}
 [[ $(whence ls) == "$x" ]] || err_exit 'PATH search bug when :$PWD:. in path'
+cd   "${x%/ls}"
+[[ $(whence ls) == /* ]] || err_exit 'whence not generating absolute pathname'
+status=$($SHELL -c $'trap \'print $?\' EXIT;/a/b/c/d/e 2> /dev/null')
+[[ $status == 127 ]] || err_exit "not found command exit status $status -- expected 127"
+status=$($SHELL -c $'trap \'print $?\' EXIT;/dev/null 2> /dev/null')
+[[ $status == 126 ]] || err_exit "non executable command exit status $status -- expected 126"
+status=$($SHELL -c $'trap \'print $?\' ERR;/a/b/c/d/e 2> /dev/null')
+[[ $status == 127 ]] || err_exit "not found command with ERR trap exit status $status -- expected 127"
+status=$($SHELL -c $'trap \'print $?\' ERR;/dev/null 2> /dev/null')
+[[ $status == 126 ]] || err_exit "non executable command ERR trap exit status $status -- expected 126"
 exit $((Errors))

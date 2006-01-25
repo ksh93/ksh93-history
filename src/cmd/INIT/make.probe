@@ -2,7 +2,7 @@
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)make.probe (AT&T Research) 2005-02-02
+# @(#)make.probe (AT&T Research) 2005-12-05
 #
 # C probe for make
 #
@@ -14,8 +14,9 @@ cc_dll_def=-D_BLD_DLL
 probe_arflags="-xar"
 probe_ccs="strip size nm ld ar" # longest to shortest
 probe_debug="-g"
-probe_dll="'-G 0' -Wc,exportall -dynamic $cc_dll_def"
-probe_export_dynamic="-rdynamic --export-dynamic -Wl,-export-dynamic -Wl,-E -bexpall"
+probe_dll="'-G 0' -Wc,dll,exportall,longname,rent -Wc,exportall -dynamic $cc_dll_def"
+probe_export_dynamic="-rdynamic -export-dynamic -Wl,-export-dynamic -Wl,-E -bexpall"
+probe_include_local="-iquote -I-"
 probe_ldlazy='-zlazyload -znolazyload -Wl,-zlazyload -Wl,-znolazyload'
 probe_ldlib="LD_LIBRARY_PATH LIBPATH LPATH"
 probe_ldmap="'-Wl,-M' '-Qoption ld -M' '-Wl,-m' '-m'"
@@ -30,8 +31,8 @@ probe_lib_multiple="-Wl,-zmuldefs"
 probe_libdir="shlib lib"
 probe_nmflags="'' -p -B"
 probe_optimize="-O"
-probe_pic="-Kpic -KPIC -fpic -pic +z"
-probe_PIC="-Kpic -KPIC -fpic -fPIC -pic -PIC +z +Z"
+probe_pic="-Kpic -KPIC -fpic -fPIC -pic -PIC +z +Z"
+probe_PIC="-KPIC -Kpic -fPIC -fpic -PIC -pic +Z +z"
 probe_readonly="-R -Krodata -xMerge -Wa,-r"
 probe_shared="'' -G -b -c -shared -Wl,dll"
 probe_shared_nostart="-nostartfiles"
@@ -60,7 +61,7 @@ echo 'extern int NotalL(){return(0);}' > notall.$src
 echo '#include <stdio.h>
 extern int i;
 int i = 1;
-extern int f(){return(i);}
+extern int f(){return(!i);}
 int main(){FILE* fp=stdin;return(f());}' > pic.$src
 echo 'class x {int n;} m;' > plusplus.$src
 echo 'int prefix(){return 0;}' > prefix.$src
@@ -68,16 +69,17 @@ echo 'template<class T> int gt(T a, T b);
 template<class T> int gt(T a, T b) { return a > b; }
 int main () { return gt(2,1); }' > ptr.$src
 echo 'int main(){return 0;}' > require.$src
-echo '#if test_const
+echo '#if mips && !sgi || __CYGWIN__
+( /* some systems choke on this probe */
+#else
+#if test_const
 #define CONST const
 #else
 #define CONST
 #endif
-static CONST char x[]={1,2,3,4,5,6,7,8,9,0};
-#if mips && !sgi
-{
-#endif
-int main(){*(char*)x=0;return(0);}' > readonly.$src
+CONST char x[]={1,2,3,4,5,6,7,8,9,0};
+int main(){*(char*)x=0; return x[0];}
+#endif' > readonly.$src
 # NOTE:	sfclose() defined on uwin, not defined on all other systems
 echo 'extern int sfclose(); extern int ShareD(){return(sfclose());}' > shared.$src
 echo '#define g(a,b) a ## b
@@ -117,8 +119,8 @@ doti=
 exectype=
 export_dynamic=
 gnu=
-iminus=
 implicitc=
+include_local=
 lddynamic=
 ldlazy=
 ldnolazy=
@@ -285,19 +287,27 @@ fi
 test `$cc -E libpp.$src | grep -c '^#pragma pp:version "libpp '` -eq 1 && libpp=1
 $cc -E doti.$src > doti.i && $cc -c doti.i && test -s doti.$obj && doti=1
 if	$cc -c imusr.$src
-then	if	$cc -c -I- imusr.$src
-	then	: '-I- should skip "_i_.h" in .'
-	elif	$cc -c imstd.$src
-	then	if	$cc -c -Iim imstd.$src
-		then	: '-Idir should find <stdio.h> in dir'
-		elif	$cc -c -I- -Iim imstd.$src
-		then	: '-I- -Idir should find <stdio.h> in dir'
-		elif	$cc -c -Iim -I- imstd.$src
-		then	iminus=1
-		else	: '-Idir -I- should skip <stdio.h> in dir'
+then	eval set x $probe_include_local
+	while	:
+	do	shift
+		case $# in
+		0)	break ;;
+		esac
+		if	$cc -c $1 imusr.$src
+		then	: "$1 should skip \"_i_.h\" in ."
+		elif	$cc -c imstd.$src
+		then	if	$cc -c -Iim imstd.$src
+			then	: '-Idir should find <stdio.h> in dir'
+			elif	$cc -c $1 -Iim imstd.$src
+			then	: "$1 -Idir should find <stdio.h> in dir"
+			elif	$cc -c -Iim $1 imstd.$src
+			then	include_local=$1
+				break
+			else	: "-Idir $1 should skip <stdio.h> in dir"
+			fi
+		else	: should find stdio.h
 		fi
-	else	: should find stdio.h
-	fi
+	done
 else	: 'should find "_i_.h" in .'
 fi
 
@@ -322,8 +332,9 @@ then	e=`wc -l e`
 		esac
 		case $1 in
 		???*)	m=`echo " $1" | sed -e 's/^ [-+]//g' -e 's/./-& /g' -e 's/[-+] //g'`
-			rm -f pic.$obj
-			if	$cc $m -c pic.$src 2>e && test -f pic.$obj
+			rm -f pic.$obj pic1.$exe
+			if	$cc $m -c pic.$src 2>e && test -f pic.$obj &&
+				$cc -o pic1.$exe pic.$obj && test -f pic1.$exe
 			then	case `wc -l e` in
 				$e)	cc_pic=$m
 					break
@@ -343,9 +354,14 @@ then	e=`wc -l e`
 		esac
 	done
 	# this works around gcc 2.95 sun4 -fpic a.out core dump after exit
-	case $hosted in
-	1)      rm -f hosted.$exe hosted.$obj
-		$cc $cc_pic -o hosted.$exe hosted.$src && ./hosted.exe || cc_pic=
+	case $hosted:$cc_pic in
+	1:?*)   if	./pic.$exe
+		then	# this catches lynxos.ppc gcc that dumps -fpic and not -mshared
+			echo 'static int* f() { static int v; return &v; }
+int main() { f(); return 0; }' > picok.$src
+			$cc $cc_pic -o picok.$exe picok.$src && ./picok.$exe || cc_pic=
+		else	cc_pic=
+		fi
 		;;
 	esac
 	case $cc_pic in
@@ -378,7 +394,7 @@ then	e=`wc -l e`
 				$cc -o pic.$exe pic.$obj && test -f pic.$exe && continue
 			}
 			case $1 in
-			-Wc,exportall)
+			-Wc,*exportall*)
 				# get specific since sgi gets this far too
 				rm -f pic.$exe pic.x
 				$cc -Wl,dll -o pic.$exe pic.$obj || continue
@@ -543,27 +559,31 @@ then	eval set x $probe_stripflags
 fi
 
 rm -f export.$obj export.exe
-if	$cc -c export.$src && $cc -o export.exe export.$obj 2>e
-then	z=`wc -c < export.exe; $size export.exe 2>/dev/null`
-	eval set x $probe_export_dynamic
-	while	:
-	do	shift
-		case $# in
-		0)	break ;;
-		esac
-		rm -f export.exe
-		if	$cc -o export.exe $1 export.$obj 2>f && $executable export.exe
-		then	y=`wc -c < export.exe; $size export.exe 2>/dev/null`
-			case $y in
-			$z)	;;
-			*)	if	cmp -s e f
-				then	export_dynamic=$1
-					break
-				fi
-				;;
+if	$cc -c export.$src
+then	lm=
+	if	$cc -o export.exe export.$obj -lm 2>e && lm=-lm ||
+		$cc -o export.exe export.$obj 2>e
+	then	z=`wc -c < export.exe; $size export.exe 2>/dev/null`
+		eval set x $probe_export_dynamic
+		while	:
+		do	shift
+			case $# in
+			0)	break ;;
 			esac
-		fi
-	done
+			rm -f export.exe
+			if	$cc -o export.exe $1 export.$obj $lm 2>f && $executable export.exe
+			then	y=`wc -c < export.exe; $size export.exe 2>/dev/null`
+				case $y in
+				$z)	;;
+				*)	if	cmp -s e f
+					then	export_dynamic=$1
+						break
+					fi
+					;;
+				esac
+			fi
+		done
+	fi
 fi
 rm -f export.$obj export.exe
 
@@ -666,9 +686,18 @@ case $cc_dll:$cc_pic:$so:$dynamic:$static in
 		then	continue
 		fi
 		case `PATH=/bin:/usr/bin:$PATH file xxx$dll` in
-		*lib*|*obj*|*shared*)	;;
-		"")		$executable xxx$dll || continue ;;
-		*)		continue ;;
+		*lib*|*obj*|*shared*)
+			;;
+		"")	$executable xxx$dll || continue
+			;;
+		*ELF*|*elf*)
+			$executable xxx$dll || continue
+			case `strings xxx$dll | sed -e 's,.*[ |],,' | sort -u | egrep -i '^([._](dynamic|dynstr|dynsym))$'` in
+			[012])	continue ;;
+			esac
+			;;
+		*)	continue
+			;;
 		esac
 		dld=$xx
 		shared=$1
@@ -1395,7 +1424,7 @@ do	case $hosted in
 			for co in '' -Dtest_const
 			do	rm -f readonly.$exe
 				if	$cc -o readonly.$exe $co $1 readonly.$src && $executable readonly.$exe
-				then	if	./readonly.$exe
+				then	if	( ulimit -c 0; ./readonly.$exe ) >/dev/null 2>&1
 					then	:
 					else	readonly=$1
 						break 3
@@ -1412,7 +1441,7 @@ do	case $hosted in
 					-e 's/^\([ 	]*[.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_$:]*[ 	]*\.*\)space[ 	][ 	]*3/\1byte 0,0,0/' \
 					-e 's/^\([ 	]*[.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_$:]*[ 	]*\.*\)space[ 	][ 	]*4/\1byte 0,0,0,0/' \
 					readonly.s > ro.s && $cc -o readonly.$exe ro.s && $executable readonly.$exe
-			then	if	./readonly.$exe
+			then	if	( ulimit -c 0; ./readonly.$exe ) >/dev/null 2>&1
 				then	:
 				else	readonly='-S.data'
 					break
@@ -1426,7 +1455,7 @@ do	case $hosted in
 					-e 's/^\([ 	]*[.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_$:]*[ 	]*\.*\)space[ 	][ 	]*3/\1byte 0,0,0/' \
 					-e 's/^\([ 	]*[.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_$:]*[ 	]*\.*\)space[ 	][ 	]*4/\1byte 0,0,0,0/' \
 					readonly.s > ro.s && $cc -o readonly.$exe ro.s && $executable readonly.$exe
-			then	if	./readonly.$exe
+			then	if	( ulimit -c 0; ./readonly.$exe ) >/dev/null 2>&1
 				then	:
 				else	readonly='-S.idat'
 					break
@@ -1434,7 +1463,7 @@ do	case $hosted in
 			fi
 			if	sed	-e 's/^\([ 	]*[.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_$:]*[ 	]*\.*\)data/\1rdata/' \
 					readonly.s > ro.s && $cc -o readonly.$exe ro.s && $executable readonly.$exe
-			then	if	./readonly.$exe
+			then	if	( ulimit -c 0; ./readonly.$exe ) >/dev/null 2>&1
 				then	:
 				else	readonly='-S.rdata'
 					break
@@ -1490,7 +1519,8 @@ esac
 case $dDflag in
 ?*)	dialect="$dialect -dD" ;;
 esac
-case $iminus in
+# 2005-05-25 use $(CC.INCLUDE.LOCAL) instead
+case $include_local in
 ?*)	dialect="$dialect -I-" ;;
 esac
 case $Lflag in
@@ -1791,6 +1821,7 @@ CC_DLL_LIBRARIES=$dll_libraries
 CC_DLL_VARIANTS=$dll_variants
 CC_DYNAMIC=$dynamic
 CC_EXPORT_DYNAMIC=$export_dynamic
+CC_INCLUDE_LOCAL=$include_local
 CC_LD=$ld
 CC_LD_DYNAMIC=$lddynamic
 CC_LD_LAZY=$ldlazy
@@ -1882,6 +1913,7 @@ echo CC.DLL.LIBRARIES = $CC_DLL_LIBRARIES
 echo CC.DLL.VARIANTS = $CC_DLL_VARIANTS
 echo CC.DYNAMIC = $CC_DYNAMIC
 echo CC.EXPORT.DYNAMIC = $CC_EXPORT_DYNAMIC
+echo CC.INCLUDE.LOCAL = $CC_INCLUDE_LOCAL
 #
 # 2004-02-14 release workaround
 #

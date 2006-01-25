@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2005 AT&T Corp.                  *
+*                  Copyright (c) 1982-2006 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -285,7 +285,7 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 		if(nv_isattr(np,NV_BINARY))
 		{
 			if(c<sizeof(buf))
-				var = strdup(var);
+				var = memdup(var,c);
 			nv_putval(np,var, NV_RAW);
 			nv_setsize(np,c);
 		}

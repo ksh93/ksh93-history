@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2005 AT&T Corp.                  *
+*                  Copyright (c) 1982-2006 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -59,7 +59,6 @@
 
 static void	sh_funct(Namval_t*, int, char*[], struct argnod*,int);
 static int	trim_eq(const char*, const char*);
-static char	*word_trim(struct argnod*, int);
 static void	coproc_init(int pipes[]);
 
 static void	*timeout;
@@ -771,7 +770,6 @@ int sh_exec(register const Shnode_t *t, int flags)
 							share = sfset(sfstdin,SF_SHARE,0);
 							sh_onstate(SH_STOPOK);
 							sfpool(sfstderr,NIL(Sfio_t*),SF_WRITE);
-							sfsetbuf(sfstderr,sh.errbuff,IOBSIZE/4);
 							sfset(sfstderr,SF_LINE,1);
 							save_prompt = sh.nextprompt;
 							sh.nextprompt = 0;
@@ -834,7 +832,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 						if(sh.pwd)
 						{
 							struct stat stata;
-							stat(".:",&stata);
+							stat(".",&stata);
 							/* restore directory changed */
 							if(statb.st_ino!=stata.st_ino || statb.st_dev!=stata.st_dev)
 								chdir(sh.pwd);
@@ -844,7 +842,6 @@ int sh_exec(register const Shnode_t *t, int flags)
 							sfset(sfstdin,SF_PUBLIC|SF_SHARE,1);
 						sfset(sfstderr,SF_LINE,0);
 						sfpool(sfstderr,sh.outpool,SF_WRITE);
-						sfsetbuf(sfstderr,sh.outbuff,IOBSIZE);
 						sfpool(sfstdin,NIL(Sfio_t*),SF_WRITE);
 						sh.nextprompt = save_prompt;
 					}
@@ -1486,7 +1483,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 			static char *arg[4]=  {"((", 0, "))"};
 			error_info.line = t->ar.arline-sh.st.firstline;
 			if(!(t->ar.arexpr->argflag&ARG_RAW))
-				arg[1] = word_trim(t->ar.arexpr,OPTIMIZE|ARG_ARITH);
+				arg[1] = sh_macpat(t->ar.arexpr,OPTIMIZE|ARG_ARITH);
 			else
 				arg[1] = t->ar.arexpr->argval;
 			if(trap=sh.st.trap[SH_DEBUGTRAP])
@@ -1515,7 +1512,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 		    case TSW:
 		    {
 			Shnode_t *tt = (Shnode_t*)t;
-			char *trap, *r = word_trim(tt->sw.swarg,OPTIMIZE);
+			char *trap, *r = sh_macpat(tt->sw.swarg,OPTIMIZE);
 			error_info.line = t->sw.swline-sh.st.firstline;
 			t= (Shnode_t*)(tt->sw.swlst);
 			if(trap=sh.st.trap[SH_DEBUGTRAP])
@@ -1532,7 +1529,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 					register char *s;
 					if(rex->argflag&ARG_MAC)
 					{
-						s = word_trim(rex,OPTIMIZE|ARG_EXP);
+						s = sh_macpat(rex,OPTIMIZE|ARG_EXP);
 						while(*s=='\\' && s[1]==0)
 							s+=2;
 					}
@@ -1779,9 +1776,9 @@ int sh_exec(register const Shnode_t *t, int flags)
 				register char *trap;
 				char *argv[6];
 				n = type>>TSHIFT;
-				left = word_trim(&(t->lst.lstlef->arg),OPTIMIZE);
+				left = sh_macpat(&(t->lst.lstlef->arg),OPTIMIZE);
 				if(type&TBINARY)
-					right = word_trim(&(t->lst.lstrit->arg),((n==TEST_PEQ||n==TEST_PNE)?ARG_EXP:0)|OPTIMIZE);
+					right = sh_macpat(&(t->lst.lstrit->arg),((n==TEST_PEQ||n==TEST_PNE)?ARG_EXP:0)|OPTIMIZE);
 				if(trap=sh.st.trap[SH_DEBUGTRAP])
 					argv[0] = (type&TNEGATE)?((char*)e_tstbegin):"[[";
 				if(sh_isoption(SH_XTRACE))
@@ -1957,28 +1954,6 @@ int sh_trace(register char *argv[], register int nl)
 	}
 	return(0);
 }
-
-
-static char *word_trim(register struct argnod *arg, int flags)
-{
-	register char *sp = arg->argval;
-	if((arg->argflag&ARG_RAW))
-		return(sp);
-	if(flags&ARG_OPTIMIZE)
-		arg->argchn.ap=0;
-	if(!(sp=arg->argchn.cp))
-	{
-		sh_macexpand(arg,NIL(struct argnod**),flags);
-		sp = arg->argchn.cp;
-		if(!OPTIMIZE || !(arg->argflag&ARG_MAKE))
-			arg->argchn.cp = 0;
-		arg->argflag &= ~ARG_MAKE;
-	}
-	else
-		sh.optcount++;
-	return(sp);
-}
-
 
 /*
  * This routine creates a subshell by calling fork() or vfork()

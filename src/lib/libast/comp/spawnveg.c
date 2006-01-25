@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2005 AT&T Corp.                  *
+*                  Copyright (c) 1985-2006 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -141,7 +141,9 @@ spawnveg(const char* path, char* const argv[], char* const envv[], pid_t pgid)
 {
 #if _lib_fork || _lib_vfork
 	int			n;
+	int			m;
 	pid_t			pid;
+	pid_t			rid;
 #if _real_vfork
 	volatile int		exec_errno;
 	volatile int* volatile	exec_errno_ptr;
@@ -202,22 +204,45 @@ spawnveg(const char* path, char* const argv[], char* const envv[], pid_t pgid)
 #endif
 		_exit(errno == ENOENT ? EXIT_NOTFOUND : EXIT_NOEXEC);
 	}
+	rid = pid;
 #if _real_vfork
-	if (pid != -1 && *exec_errno_ptr)
+	if (pid != -1 && (m = *exec_errno_ptr))
 	{
-		while (waitpid(pid, NiL, 0) == -1 && errno == EINTR);
+		rid = -1;
+		n = errno;
+		while (waitpid(pid, NiL, 0) == -1)
+			if (errno == ECHILD)
+			{
+				if (m != ENOEXEC)
+					rid = pid;
+				break;
+			}
+			else if (errno != EINTR)
+				break;
 		pid = -1;
-		n = *exec_errno_ptr;
+		if (rid < 0)
+			n = m;
 	}
-#endif
-#if !_real_vfork
+#else
 	if (err[0] != -1)
 	{
 		close(err[1]);
-		if (read(err[0], &n, sizeof(n)) == sizeof(n))
+		if (read(err[0], &m, sizeof(m)) == sizeof(m))
 		{
-			while (waitpid(pid, NiL, 0) == -1 && errno == EINTR);
+			rid = -1;
+			n = errno;
+			while (waitpid(pid, NiL, 0) == -1)
+				if (errno == ECHILD)
+				{
+					if (m != ENOEXEC)
+						rid = pid;
+					break;
+				}
+				else if (errno != EINTR)
+					break;
 			pid = -1;
+			if (rid < 0)
+				n = m;
 		}
 		close(err[0]);
 	}
@@ -234,7 +259,7 @@ spawnveg(const char* path, char* const argv[], char* const envv[], pid_t pgid)
 			setpgid(pid, pid);
 	}
 	errno = n;
-	return pid;
+	return rid;
 #else
 	errno = ENOSYS;
 	return -1;

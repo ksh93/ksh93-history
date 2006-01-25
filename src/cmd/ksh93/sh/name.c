@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2005 AT&T Corp.                  *
+*                  Copyright (c) 1982-2006 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -191,7 +191,7 @@ void nv_setlist(register struct argnod *arg,register int flags)
 #endif /* SHOPT_COMPOUND_ARRAY */
 				struct fornod *fp=(struct fornod*)arg->argchn.ap;
 				register Shnode_t *tp=fp->fortre;
-				char *prefix = sh.prefix;
+				char *prefix = sh.prefix, savec;
 				flag |= (flags&NV_NOSCOPE);
 				if(arg->argflag&ARG_QUOTED)
 					cp = sh_mactrim(fp->fornam,-1);
@@ -201,10 +201,13 @@ void nv_setlist(register struct argnod *arg,register int flags)
 				if(sh.fn_depth && (Namval_t*)tp->com.comnamp==SYSTYPESET)
 			                flag |= NV_NOSCOPE;
 				if(prefix)
-					*--cp = '.';
+				{
+					savec = *--cp;
+					*cp = '.';
+				}
 				np = nv_open(cp,sh.var_tree,flag);
 				if(prefix)
-					*cp++ = 0;
+					*cp++ = savec;
 				/* check for array assignment */
 				if(tp->tre.tretyp!=TLST && tp->com.comarg && !tp->com.comset)
 				{

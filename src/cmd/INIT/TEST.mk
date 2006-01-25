@@ -1,7 +1,7 @@
 /*
  * regression test support
  *
- * @(#)TEST.mk (AT&T Labs Research) 2004-08-11
+ * @(#)TEST.mk (AT&T Labs Research) 2005-10-11
  *
  * test management is still in the design phase
  */
@@ -39,6 +39,7 @@
 		eval
 			test.$$(T) : $$(B).tst
 				$$(REGRESS) $$(REGRESSFLAGS) $$(*) $(>:V:O>1)
+			:SAVE: $$(B).tst
 		end
 	elif "$(P:N=*@(.sh|$(.SUFFIX.c:/ /|/G)|$(.SUFFIX.C:/ /|/G)))"
 		B := $(P:B)
@@ -84,6 +85,7 @@
 				test : - test.$(B)
 				test.$(B) : $(B).tst $(T)
 					$(REGRESS) $(REGRESSFLAGS) $(*)
+				:SAVE: $(B).tst
 			end
 		end
 	else
@@ -123,9 +125,34 @@
 		exit 0
 	end
 	set keepgoing
+	REGRESSFLAGS &= $(TESTS:@/ /|/G:/.*/--test=&/:@Q)
 
 .SCAN.tst : .SCAN
 	$(@.SCAN.sh)
 	I| INCLUDE@ % |
 
 .ATTRIBUTE.%.tst : .SCAN.tst
+
+MKTEST = mktest
+MKTESTFLAGS = --style=regress
+
+/*
+ * test scripts are only regenerated from *.rt when --force
+ * is specified or the .rt file is newer than the script
+ * otherwise the script is accepted if it exists
+ *
+ * this avoids the case where a fresh build with no state
+ * would regenerate the test script and encode current
+ * behavior instead of expected behavior
+ */
+
+%.tst : %.rt
+	if	[[ "$(-force)" || "$(>)" -nt "$(^|<)" ]]
+	then	$(MKTEST) $(MKTESTFLAGS) $(>) > $(<)
+	fi
+
+test%.sh test%.out : %.rt
+	if	[[ "$(-force)" || "$(>)" -nt "$(^|<:O=1)" ]]
+	then	$(MKTEST) --style=shell $(>) > $(<:N=*.sh)
+		$(SHELL) $(<:N=*.sh) --accept > $(<:N=*.out)
+	fi

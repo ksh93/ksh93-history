@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2005 AT&T Corp.                  *
+*                  Copyright (c) 1985-2006 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -58,42 +58,11 @@
 #include <ast.h>
 #include <regex.h>
 
-typedef struct Cache_s
-{
-	regex_t		re;
-	unsigned long	serial;
-	int		flags;
-	int		n;
-	int		keep;
-	int		reflags;
-	char		pattern[256];
-} Cache_t;
-
 static struct State_s
 {
-	Cache_t*	cache[8];
-	unsigned long	serial;
 	regmatch_t*	match;
 	int		nmatch;
-	char*		locale;
 } matchstate;
-
-/*
- * flush the cache
- */
-
-static void
-flushcache(void)
-{
-	register int		i;
-
-	for (i = 0; i < elementsof(matchstate.cache); i++)
-		if (matchstate.cache[i] && matchstate.cache[i]->keep)
-		{
-			matchstate.cache[i]->keep = 0;
-			regfree(&matchstate.cache[i]->re);
-		}
-}
 
 /*
  * subgroup match
@@ -106,17 +75,12 @@ flushcache(void)
  */
 
 int
-strgrpmatch(const char* b, const char* p, int* sub, int n, int flags)
+strgrpmatch(const char* b, const char* p, int* sub, int n, register int flags)
 {
-	register Cache_t*	cp;
+	register regex_t*	re;
 	register int*		end;
 	register int		i;
-	char*			s;
-	int			m;
-	int			empty;
-	int			unused;
-	int			old;
-	int			once;
+	register regflags_t	reflags;
 
 	/*
 	 * 0 and empty patterns are special
@@ -125,105 +89,42 @@ strgrpmatch(const char* b, const char* p, int* sub, int n, int flags)
 	if (!p || !b)
 	{
 		if (!p && !b)
-			flushcache();
+			regcache(NiL, 0, NiL);
 		return 0;
 	}
 	if (!*p)
 		return *b == 0;
 
 	/*
-	 * flush the cache if the locale changed
-	 * the ast setlocale() intercept maintains
-	 * persistent setlocale() return values
+	 * convert flags
 	 */
 
-	if ((s = setlocale(LC_CTYPE, NiL)) != matchstate.locale)
-	{
-		matchstate.locale = s;
-		flushcache();
-	}
-
-	/*
-	 * check if the pattern is in the cache
-	 */
-
-	once = 0;
-	empty = unused = -1;
-	old = 0;
-	for (i = 0; i < elementsof(matchstate.cache); i++)
-		if (!matchstate.cache[i])
-			empty = i;
-		else if (!matchstate.cache[i]->keep)
-			unused = i;
-		else if (streq(matchstate.cache[i]->pattern, p) && matchstate.cache[i]->flags == flags && matchstate.cache[i]->n == n)
-			break;
-		else if (!matchstate.cache[old] || matchstate.cache[old]->serial > matchstate.cache[i]->serial)
-			old = i;
-	if (i >= elementsof(matchstate.cache))
-	{
-		if (unused < 0)
-		{
-			if (empty < 0)
-				unused = old;
-			else
-				unused = empty;
-		}
-		if (!(cp = matchstate.cache[unused]) && !(cp = matchstate.cache[unused] = newof(0, Cache_t, 1, 0)))
-			return 0;
-		if (cp->keep)
-		{
-			cp->keep = 0;
-			regfree(&cp->re);
-		}
-		cp->flags = flags;
-		cp->n = n;
-		if (strlen(p) < sizeof(cp->pattern))
-		{
-			strcpy(cp->pattern, p);
-			p = (const char*)cp->pattern;
-		}
-		else
-			once = 1;
-		cp->reflags = REG_SHELL|REG_AUGMENTED;
-		if (!(flags & STR_MAXIMAL))
-			cp->reflags |= REG_MINIMAL;
-		if (flags & STR_GROUP)
-			cp->reflags |= REG_SHELL_GROUP;
-		if (flags & STR_LEFT)
-			cp->reflags |= REG_LEFT;
-		if (flags & STR_RIGHT)
-			cp->reflags |= REG_RIGHT;
-		if (flags & STR_ICASE)
-			cp->reflags |= REG_ICASE;
-		if (!sub || n <= 0)
-			cp->reflags |= REG_NOSUB;
-		if (regcomp(&cp->re, p, cp->reflags))
-			return 0;
-		cp->keep = 1;
-	}
-	else
-		cp = matchstate.cache[i];
-#if 0
-error(-1, "AHA strmatch b=`%s' p=`%s' sub=%p n=%d flags=%08x cp=%d\n", b, p, sub, n, flags, cp - &matchstate.cache[0]);
-#endif
-	cp->serial = ++matchstate.serial;
+	reflags = REG_SHELL|REG_AUGMENTED;
+	if (!(flags & STR_MAXIMAL))
+		reflags |= REG_MINIMAL;
+	if (flags & STR_GROUP)
+		reflags |= REG_SHELL_GROUP;
+	if (flags & STR_LEFT)
+		reflags |= REG_LEFT;
+	if (flags & STR_RIGHT)
+		reflags |= REG_RIGHT;
+	if (flags & STR_ICASE)
+		reflags |= REG_ICASE;
+	if (!sub || n <= 0)
+		reflags |= REG_NOSUB;
+	if (!(re = regcache(p, reflags, NiL)))
+		return 0;
 	if (n > matchstate.nmatch)
 	{
 		if (!(matchstate.match = newof(matchstate.match, regmatch_t, n, 0)))
 			return 0;
 		matchstate.nmatch = n;
 	}
-	m = regexec(&cp->re, b, n, matchstate.match, cp->reflags);
-	i = cp->re.re_nsub;
-	if (once)
-	{
-		cp->keep = 0;
-		regfree(&cp->re);
-	}
-	if (m)
+	if (regexec(re, b, n, matchstate.match, reflags))
 		return 0;
 	if (!sub || n <= 0)
 		return 1;
+	i = re->re_nsub;
 	end = sub + n * 2;
 	for (n = 0; sub < end && n <= i; n++)
 	{

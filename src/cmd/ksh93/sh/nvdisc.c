@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2005 AT&T Corp.                  *
+*                  Copyright (c) 1982-2006 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -49,7 +49,7 @@ char *nv_getv(Namval_t *np, register Namfun_t *nfp)
 	if(fp && fp->disc->getval)
 		cp = (*fp->disc->getval)(np,fp);
 	else if(fp && fp->disc->getnum)
-		sfsprintf(cp=numbuf,sizeof(numbuf),"%.*g\0",12,(*fp->disc->getnum)(np,fp));
+		sfsprintf(cp=numbuf,sizeof(numbuf),"%.*Lg\0",12,(*fp->disc->getnum)(np,fp));
 	else
 	{
 		nv_local=1;

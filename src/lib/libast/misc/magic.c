@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2005 AT&T Corp.                  *
+*                  Copyright (c) 1985-2006 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -73,13 +73,6 @@ typedef struct				/* loop info			*/
 	int		offset;		/* dynamic offset		*/
 } Loop_t;
 
-typedef struct Table
-{
-	struct Table*	next;		/* next in list			*/
-	int		value;		/* entry value			*/
-	char		name[1];	/* entry name			*/
-} Table_t;
-
 typedef struct Entry			/* magic file entry		*/
 {
 	struct Entry*	next;		/* next in list			*/
@@ -91,7 +84,6 @@ typedef struct Entry			/* magic file entry		*/
 	struct Entry*	lab;
 	regex_t*	sub;
 	Loop_t*		loop;
-	Table_t*	tab;
 	}		value;		/* comparison value		*/
 	char*		desc;		/* file description		*/
 	char*		mime;		/* file mime type		*/
@@ -400,31 +392,39 @@ regmessage(Magic_t* mp, regex_t* re, int code)
  */
 
 static char*
-decompose(register Table_t* tab, char* b, char* e, unsigned char* m, unsigned char* x)
+vcdecomp(char* b, char* e, unsigned char* m, unsigned char* x)
 {
+	unsigned char*	map;
+	int		c;
 	int		n;
+	int		i;
 
-	if ((n = *(m + 1) + 2) < (x - m))
+	map = CCMAP(CC_ASCII, CC_NATIVE);
+	i = 1;
+	for (;;)
 	{
-		b = decompose(tab, b, e, m + n, x);
-		if (b < e)
-			*b++ = ',';
-	}
-	n = *m++;
-	do
-	{
-		if (tab->value == n)
+		if (i)
+			i = 0;
+		else
+			*b++ = '^';
+		while (b < e && m < x && (c = *m++))
+		{
+			if (map)
+				c = map[c];
+			*b++ = c;
+		}
+		if (b >= e)
 			break;
-	} while (tab = tab->next);
-	if (tab)
-		b += sfsprintf(b, e - b, "%s", tab->name);
-	else
-		b += sfsprintf(b, e - b, "METHOD(%d)", n);
-	if (*m)
-	{
-		x = m + *m;
-		while (++m <= x)
-			b += sfsprintf(b, e - b, ".%d", *m);
+		n = 0;
+		while (m < x)
+		{
+			n = (n<<7) | (*m & 0x7f);
+			if (!(*m++ & 0x80))
+				break;
+		}
+		if (n >= (x - m))
+			break;
+		m += n;
 	}
 	return b;
 }
@@ -865,14 +865,22 @@ ckmagic(register Magic_t* mp, const char* file, char* buf, struct stat* st, unsi
 #endif
 
 		case 'v':
-			if (!(p = getdata(mp, num, 1)) || !(p = getdata(mp, num + 1, c = *(unsigned char*)p)))
+			if (!(p = getdata(mp, num, 4)))
+				goto next;
+			c = 0;
+			do
+			{
+				num++;
+				c = (c<<7) | (*p & 0x7f);
+			} while (*p++ & 0x80);
+			if (!(p = getdata(mp, num, c)))
 				goto next;
 			if (mp->keep[level]++ && b > buf && *(b - 1) != ' ')
 			{
 				*b++ = ',';
 				*b++ = ' ';
 			}
-			b = decompose(ep->value.tab, b, buf + PATH_MAX, (unsigned char*)p, (unsigned char*)p + c);
+			b = vcdecomp(b, buf + PATH_MAX, (unsigned char*)p, (unsigned char*)p + c);
 			goto checknest;
 
 		}
@@ -2007,28 +2015,6 @@ load(register Magic_t* mp, char* file, register Sfio_t* fp)
 					ep->mime = vmnewof(mp->vm, 0, char, 32, 0);
 					break;
 				case 'v':
-					{
-						Table_t*	tab;
-						Table_t*	ent;
-						int		c;
-
-						tab = 0;
-						while (*p && *p != ')')
-						{
-							n = (int)strtol(p, &t, 0);
-							if (!(c = *t++))
-								break;
-							for (p = t; *p && *p != c; p++);
-							if (!(c = p - t) || !*p++)
-								break;
-							ent = vmnewof(mp->vm, 0, Table_t, 1, c);
-							memcpy(ent->name, t, c);
-							ent->value = n;
-							ent->next = tab;
-							tab = ent;
-						}
-						ep->value.tab = tab;
-					}
 					break;
 				default:
 					if ((mp->flags & MAGIC_VERBOSE) && mp->disc->errorf)
@@ -2329,7 +2315,6 @@ magiclist(register Magic_t* mp, register Sfio_t* sp)
 {
 	register Entry_t*	ep = mp->magic;
 	register Entry_t*	rp = 0;
-	Table_t*		tp;
 
 	mp->flags = mp->disc->flags;
 	sfprintf(sp, "cont\toffset\ttype\top\tmask\tvalue\tmime\tdesc\n");
@@ -2354,14 +2339,7 @@ magiclist(register Magic_t* mp, register Sfio_t* sp)
 				sfprintf(sp, "loop(%d,%d,%d,%d)", ep->value.loop->start, ep->value.loop->size, ep->value.loop->count, ep->value.loop->offset);
 				break;
 			case 'v':
-				sfprintf(sp, "vcodex(");
-				for (tp = ep->value.tab; tp; tp = tp->next)
-				{
-					if (tp != ep->value.tab)
-						sfputc(sp, ',');
-					sfprintf(sp, "%d,%s", tp->value, tp->name);
-				}
-				sfputc(sp, ')');
+				sfprintf(sp, "vcodex()");
 				break;
 			default:
 				sfprintf(sp, "%p", ep->value.str);

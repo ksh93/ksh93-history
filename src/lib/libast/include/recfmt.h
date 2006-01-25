@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2005 AT&T Corp.                  *
+*                  Copyright (c) 1985-2006 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -67,7 +67,7 @@ typedef unsigned _ast_int4_t Recfmt_t;
 #define REC_M_TYPE(i)		((REC_method<<28)|(i))
 #define REC_M_INDEX(f)		((f)&((1<<28)-1))
 
-#define REC_N_TYPE()		(-1)
+#define REC_N_TYPE()		0xffffffff
 
 #if _BLD_ast && defined(__EXPORT__)
 #define extern		__EXPORT__

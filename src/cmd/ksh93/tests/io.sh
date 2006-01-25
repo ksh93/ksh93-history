@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#                  Copyright (c) 1982-2005 AT&T Corp.                  #
+#                  Copyright (c) 1982-2006 AT&T Corp.                  #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                            by AT&T Corp.                             #
@@ -177,4 +177,55 @@ fi
 hello
 world
 !) == world ]] || err_exit 'I/O not synchronized with <&'
+trap 'rm -f /tmp/seek$$; exit $((Errors+1))' EXIT
+x="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNSPQRSTUVWXYZ1234567890"
+for ((i=0; i < 62; i++))
+do	printf "%.39c\n"  ${x:i:1}
+done >  /tmp/seek$$
+if	command exec 3<> /tmp/seek$$
+then	(( $(3<#) == 0 )) || err_exit "not at position 0"
+	(( $(3<# ((EOF))) == 40*62 )) || err_exit "not at end-of-file"
+	command exec 3<# ((40*8)) || err_exit "absolute seek fails"	
+	read -u3
+	[[ $REPLY == +(i) ]] || err_exit "expecting iiii..."
+	[[ $(3<#) == $(3<# ((CUR)) ) ]] || err_exit '$(3<#)!=$(3<#((CUR)))'
+	command exec 3<# ((CUR+80))
+	read -u3
+	[[ $REPLY == {39}(l) ]] || err_exit "expecting lll..."
+	command exec 3<# ((EOF-80))
+	read -u3
+	[[ $REPLY == +(9) ]] || err_exit "expecting 999...; got $REPLY"
+	command exec 3># ((80))
+	print -u3 -f "%.39c\n"  @
+	command exec 3># ((80))
+	read -u3
+	[[ $REPLY == +(@) ]] || err_exit "expecting @@@..."
+	read -u3
+	[[ $REPLY == +(d) ]] || err_exit "expecting ddd..."
+	command exec 3># ((EOF))
+	print -u3 -f "%.39c\n"  ^
+	(( $(3<# ((CUR-0))) == 40*63 )) || err_exit "not at extended end-of-file"
+	command exec 3<# ((40*62)) 
+	read -u3
+	[[ $REPLY == +(^) ]] || err_exit "expecting ddd..."
+else	err_exit "/tmp/seek$$: cannot open for reading"
+fi
+trap "" EXIT
+rm -f  /tmp/seek$$
+$SHELL -ic '
+{
+    print -u2  || exit 2
+    print -u3  || exit 3
+    print -u4  || exit 4
+    print -u5  || exit 5
+    print -u6  || exit 6
+    print -u7  || exit 7
+    print -u8  || exit 8
+    print -u9  || exit 9
+}  3> /dev/null 4> /dev/null 5> /dev/null 6> /dev/null 7> /dev/null 8> /dev/null 9> /dev/null' > /dev/null 2>&1
+exitval=$?
+(( exitval ))  && err_exit  "print to unit $exitval failed"
+trap 'rm -rf /tmp/io.sh$$*' EXIT
+$SHELL -c "{ > /tmp/io.sh$$.1 ; date;} >&-" > /tmp/io.sh$$.2
+[[ -s /tmp/io.sh$$.1 || -s /tmp/io.sh$$.2 ]] && err_exit 'commands with standard output closed produce output'
 exit $((Errors))

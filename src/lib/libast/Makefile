@@ -135,7 +135,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	strptime.c swab.c syslog.c sysloglib.h tempnam.c \
 	wordexp.c mktime.c \
 	/* regex */ \
-	reglib.h regalloc.c regclass.c regcoll.c regcomp.c \
+	reglib.h regalloc.c regclass.c regcoll.c regcomp.c regcache.c \
 	regerror.c regexec.c regfatal.c reginit.c regnexec.c \
 	regsubcomp.c regsubexec.c regsub.c regrecord.c regrexec.c regstat.c \
 	/* cdt */ \

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2005 AT&T Corp.                  *
+*                  Copyright (c) 1985-2006 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -459,7 +459,7 @@ static char *stkgrow(register Sfio_t *stream, unsigned size)
 	register int n = size;
 	register struct stk *sp = stream2stk(stream);
 	register struct frame *fp;
-	register char *cp;
+	register char *cp, *dp=0;
 	register unsigned m = stktell(stream);
 	n += (m + sizeof(struct frame)+1);
 	if(sp->stkflags&STK_SMALL)
@@ -469,19 +469,26 @@ static char *stkgrow(register Sfio_t *stream, unsigned size)
 #endif /* !USE_REALLOC */
 		n = roundof(n,STK_FSIZE);
 	/* see whether current frame can be extended */
-	cp = newof((char*)0, char, n, 0);
+	if(stkptr(stream,0)==sp->stkbase+sizeof(struct frame))
+	{
+		dp=sp->stkbase;
+		sp->stkbase = ((struct frame*)dp)->prev;
+	}
+	cp = newof(dp, char, n, 0);
 	if(!cp && (!sp->stkoverflow || !(cp = (*sp->stkoverflow)(n))))
 		return(0);
 	increment(grow);
-	count(addsize,n);
+	count(addsize,n - (dp?m:0));
 	fp = (struct frame*)cp;
 	fp->prev = sp->stkbase;
 	sp->stkbase = cp;
 	sp->stkend = fp->end = cp+n;
 	cp = (char*)(fp+1);
-	if(m)
+	if(m && !dp)
+	{
 		memcpy(cp,(char*)stream->_data,m);
-	count(movsize,m);
+		count(movsize,m);
+	}
 	sfsetbuf(stream,cp,sp->stkend-cp);
 	return((char*)(stream->_next = stream->_data+m));
 }

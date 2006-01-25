@@ -10,9 +10,13 @@ hurl :: hurl.sh LICENSE=since=2003,author=gsf
 
 iffe :: iffe.sh LICENSE=since=1994,author=gsf+kpv
 
+mktest :: mktest.sh LICENSE=since=2005,author=gsf
+
 package :: package.sh
 
 regress :: regress.sh LICENSE=since=1995,author=gsf
+
+rt :: rt.sh LICENSE=since=2005,author=gsf
 
 $(PACKAGEROOT)/bin :INSTALLDIR: execrate ignore mamprobe package silent
 
@@ -38,13 +42,16 @@ $(LIBDIR)/make :INSTALLDIR: package.mk PROBE.mk TEST.mk WWW.mk \
 cc ld ldd :PACKAGE_INIT: mamake.c proto.c ratz.c release.c
 
 :: RELEASE hosttype.tst p.c hello.c \
-	cc.darwin.ppc cc.hp.pa cc.hp.pa64 cc.ibm.risc cc.mvs.390 \
-	cc.next.i386 cc.next.m68k cc.osf.alpha cc.sco.i386 cc.sgi.mips2 \
-	cc.sgi.mips3 cc.sgi.mips3-o32 cc.sgi.mips4 cc.sgi.mips4-n32 \
-	cc.unix.mc68k \
+	cc.specialize cc.pentium4 \
+	cc.darwin.ppc cc.darwin7.ppc \
+	cc.hp.pa cc.hp.pa64 cc.ibm.risc cc.lynxos.i386 \
+	cc.lynxos.ppc cc.mvs.390 cc.next.i386 cc.next.m68k cc.osf.alpha \
+	cc.sco.i386 cc.sgi.mips2 cc.sgi.mips3 cc.sgi.mips3-o32 cc.sgi.mips4 \
+	cc.sgi.mips4-n32 cc.unix.mc68k \
 	ld.hp.pa \
-	ldd.cygwin.i386 ldd.darwin.ppc ldd.hp.pa ldd.ibm.risc \
-	ldd.mvs.390 ldd.sgi.mips2 ldd.sgi.mips3 ldd.sgi.mips4
+	ldd.cygwin.i386 ldd.darwin.ppc ldd.darwin7.ppc ldd.hp.pa \
+	ldd.ibm.risc ldd.lynxos.i386 ldd.lynxos.ppc ldd.mvs.390 \
+	ldd.sgi.mips2 ldd.sgi.mips3 ldd.sgi.mips4
 
 LICENSE : .DONTCARE
 
@@ -76,7 +83,7 @@ $(BINDIR)/.paths :INSTALL: (CC.DIALECT)
 		v=
 		n=
 		case $nl$o in
-		*${nl}FPATH=*|*#FPATH=*)
+		*${nl}FPATH=*|*#FPATH=*|*[Nn][Oo]FPATH=*)
 			;;
 		*)	case $n in
 			'')	;;
@@ -87,15 +94,15 @@ $(BINDIR)/.paths :INSTALL: (CC.DIALECT)
 			;;
 		esac
 		case $nl$o in
-		*${nl}BUILTIN_LIB=*|*#BUILTIN_LIB=*)
+		*${nl}BUILTIN_LIB=*|*#BUILTIN_LIB=*|*[Nn][Oo]BUILTIN_LIB=*)
 			;;
 		*)	case $n in
 			'')	;;
 			*)	n="$n$nl" v="$v|" ;;
 			esac
 			case '$(CC.DIALECT:N=*EXPORT=[AD]LL*)' in
-			?*)	p= ;;
-			*)	p='no' ;;
+			?*)	p= c= ;;
+			*)	p='XX' ;;
 			esac
 			n="${n}${p}BUILTIN_LIB=cmd"
 			v="${v}BUILTIN_LIB"
@@ -147,7 +154,7 @@ $(BINDIR)/.paths :INSTALL: (CC.DIALECT)
 			;;
 		esac
 		case $nl$o in
-		*${nl}${p}=*|*#${p}=*)
+		*${nl}${p}=*|*#${p}=*|*[Nn][Oo]${p}=*)
 			;;
 		*)	case $n in
 			'')	;;
@@ -161,7 +168,7 @@ $(BINDIR)/.paths :INSTALL: (CC.DIALECT)
 		?*)	case $o in
 			?*)	o=`egrep -v "($v)=" $(<)`$nl ;;
 			esac
-			echo "$o$n" > $(<)
+			echo "# use { # no NO } prefix instead of XX to permanently disable #$nl$o$n" > $(<)
 			;;
 		esac
 	fi
@@ -268,7 +275,7 @@ iconv :MAPLIB: iconv.c
 
 intl :MAPLIB: intl.c
 
-m :MAPLIB: m.c m2.c m3.c
+m :MAPLIB: m.c m2.c m3.c m4.c m5.c
 
 nsl :MAPLIB: nsl.c
 

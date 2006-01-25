@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#                  Copyright (c) 1994-2005 AT&T Corp.                  #
+#                  Copyright (c) 1994-2006 AT&T Corp.                  #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                            by AT&T Corp.                             #
@@ -30,7 +30,7 @@ case $-:$BASH_VERSION in
 esac
 
 command=iffe
-version=2005-01-11 # update in USAGE too #
+version=2005-12-07 # update in USAGE too #
 
 pkg() # package
 {
@@ -171,9 +171,14 @@ failure()
 			;;
 		esac
 		complete=0
-		case $# in
-		0)	mm="no" ;;
-		*)	mm=$* ;;
+		case $group in
+		'')	case $# in
+			0)	mm="no" ;;
+			*)	mm=$* ;;
+			esac
+			;;
+		*)	mm=
+			;;
 		esac
 		case $debug in
 		0)	echo " $mm" >&$stderr ;;
@@ -226,8 +231,13 @@ report() # [-] [-0] [-1] status value success failure default
 	_report_status=$1
 	case $_report_ignore:$_report_status in
 	-:*)	;;
-	*:0)	success $_report_ignore ;;
-	*)	failure $_report_ignore ;;
+	*:0)	success $_report_ignore
+		;;
+	*)	failure $_report_ignore
+		case $group in
+		?*)	return ;;
+		esac
+		;;
 	esac
 	_report_value=$2
 	case $_report_not in
@@ -393,14 +403,6 @@ a z
 		fi
 		;;
 	esac
-	case `(set -f && set x * && echo $# && set +f) 2>/dev/null` in
-	2)	posix_noglob="set -f" posix_glob="set +f" ;;
-	*)	case `(set -F && set x * && echo $# && set +F) 2>/dev/null` in
-		2)	posix_noglob="set -F" posix_glob="set +F" ;;
-		*)	posix_noglob=":" posix_glob=":" ;;
-		esac
-		;;
-	esac
 }
 
 execute()
@@ -409,9 +411,9 @@ execute()
 	then	crossexec $cross "$@"
 		_execute_=$?
 	elif	test -d /NextDeveloper
-	then	"$@" >&$nullout
+	then	"$@" <&$nullin >&$nullout
 		_execute_=$?
-		"$@" | cat
+		"$@" <&$nullin | cat
 	else	"$@"
 		_execute_=$?
 	fi
@@ -489,6 +491,14 @@ occ=cc
 one=
 out=
 posix_read=-check
+case `(set -f && set x * && echo $# && set +f) 2>/dev/null` in
+2)	posix_noglob="set -f" posix_glob="set +f" ;;
+*)	case `(set -F && set x * && echo $# && set +F) 2>/dev/null` in
+	2)	posix_noglob="set -F" posix_glob="set +F" ;;
+	*)	posix_noglob=":" posix_glob=":" ;;
+	esac
+	;;
+esac
 protoflags=
 puthdr=
 putlib=
@@ -553,7 +563,7 @@ set=
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: iffe (AT&T Research) 2005-01-11 $
+@(#)$Id: iffe (AT&T Research) 2005-12-07 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?iffe - C compilation environment feature probe]
@@ -685,6 +695,7 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 		[+#define _END_EXTERNS_?]
 		[+#endif?]
 		[+#define _NIL_(x) ((x)0)?]
+		[+#include <stdio.h>?]
 	}
 [+?= \adefault\a may be specified for the \bkey\b, \blib\b, \bmac\b, \bmth\b
 	and \btyp\b tests. If the test fails for \aarg\a then
@@ -718,6 +729,16 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 	happy.]
 [+?The feature tests are:]{
 	[+# \acomment\a?Comment line - ignored.]
+	[+define \aname\a [ (\aarg,...\a) ]] [ \avalue\a ]]?Emit a macro
+		\b#define\b for \aname\a if it is not already defined. The
+		definition is passed to subsequent tests.]
+	[+extern \aname\a \atype\a [ (\aarg,...\a) | [\adimension\a]] ]]?Emit
+		an \bextern\b prototype for \aname\a if one is not already
+		defined. The prototype is passed to subsequent tests.]
+	[+include \aheader\a?Emit \b#include <\b\aheader\a\b>\b if \aheader\a
+		exists. The \b#include\b is passed to subsequent tests.]
+	[+print \atext\a?Copy \atext\a to the output file. \atext\a is passed
+		to subsequent tests.]
 	[+cmd \aname\a?Defines \b_cmd_\b\aname\a if \aname\a is an executable
 		in one of the standard system directories (\b/bin, /etc,
 		/usr/bin, /usr/etc, /usr/ucb\b).
@@ -748,7 +769,7 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 		| \bendif\b?Nested if-else test control.]
 	[+iff \aname\a?The generated header \b#ifndef-#endif\b macro guard is
 		\b_\b\aname\a\b_H\b.]
-	[+include \afile\a [ re ]]?Read #define macro names from \afile\a
+	[+inc \afile\a [ re ]]?Read #define macro names from \afile\a
 		and arrange for those names to evaluate to 1 in \bexp\b
 		expressions. If \are\a is specified then macros not matching
 		\are\a are ignored.]
@@ -815,7 +836,8 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 		\b<sys/\b\aname\a\b.h>\b exists. The \b--config\b macro name is
 		\bHAVE_SYS_\b\aNAME\a\b_H\b.]
 	[+tst \aname\a?A user defined test on name. A source block must be
-		supplied. Defines \b_\b\aname\a on success.]
+		supplied. Defines \b_\b\aname\a on success. \btst - ...\b is
+		treated as \btst - - ...\b.]
 	[+typ \aname\a?Defines \b_typ_\b\aname\a if \aname\a is a type in any
 		of \b<sys/types.h>, <times.h>, <stddef.h>, <stdlib.h>\b. Any
 		\b.\b characters in \aname\a are translated to space before
@@ -1040,14 +1062,13 @@ esac
 # standard error to /dev/null unless debugging
 # standard output to the current output file
 #
-#	stdin	original standard input
 #	stdout	original standard output
 #	stderr	original standard error
+#	nullin	/dev/null input
 #	nullout	/dev/null output
 
-stdin=5 stdout=6 stderr=7 nullout=8
-eval "exec $stdin<&0 $stdout>&1 $stderr>&2"
-eval "exec 0</dev/null $nullout>/dev/null"
+stdout=5 stderr=6 nullin=7 nullout=8
+eval "exec $nullin</dev/null $nullout>/dev/null $stdout>&1 $stderr>&2"
 case " $* " in
 *" set debug "[3456789]*)
 	;;
@@ -1110,15 +1131,8 @@ std='#if defined(__STDC__) || defined(__cplusplus) || defined(c_plusplus)
 #define _END_EXTERNS_
 #endif
 #define _NIL_(x)	((x)0)'
-ext='#if !defined(stdin) && !defined(feof) && !defined(L_tmpnam)
-_BEGIN_EXTERNS_
-#if _STD_
-extern int	printf(const char*, ...);
-#else
-extern int	printf();
-#endif
-_END_EXTERNS_
-#endif'
+ext='#include <stdio.h>'
+noext='*[<"][Ss][Tt][Dd][Ii][Oo].[Hh][">]*|*<ast.h>*|*<sfio.h>*'
 
 # loop on op [ arg [ ... ] ] [ : op [ arg [ ... ] ] ]
 
@@ -1142,12 +1156,14 @@ do	case $in in
 			;;
 		esac
 		;;
-	*)	if	read lin <&$stdin
+	*)	if	read lin
 		then	case $shell in
 			ksh)	let line=line+1 ;;
 			*)	line=`expr $line + 1` ;;
 			esac
+			$posix_noglob
 			set x $lin
+			$posix_glob
 			case $# in
 			1)	continue ;;
 			esac
@@ -1258,24 +1274,24 @@ do	case $in in
 		;;
 	esac
 
-	# { include set } drop out early
+	# { inc set } drop out early
 
 	case $1 in
 	""|"#"*)continue
 		;;
-	include)case $ifelse in
+	inc)	case $ifelse in
 		DONE|SKIP)	set ''; shift; continue ;;
 		esac
 		shift
 		case $# in
-		0)	echo "$command: $file$line: include path expected" >&$stderr
+		0)	echo "$command: $file$line: path expected" >&$stderr
 			exit 1
 			;;
 		esac
 		p=$1
 		shift
 		if	test ! -f $p
-		then	echo "$command: $file$line: $p: include file not found" >&$stderr
+		then	echo "$command: $file$line: $p: file not found" >&$stderr
 			exit 1
 		fi
 		case $# in
@@ -1287,7 +1303,7 @@ do	case $in in
 		1)	e=$1
 			;;
 		*)	shift
-			echo "$command: $file$line: warning: $*: include operands ignored" >&$stderr
+			echo "$command: $file$line: warning: $*: operands ignored" >&$stderr
 			;;
 		esac
 		eval `sed -e '/^#define[ 	]/!d' -e 's/#define[ 	]//' -e 's/[ 	(].*//' ${e:+"-e/$e/!d"} -e 's/.*/&=1/' $p | sort -u`
@@ -1450,7 +1466,7 @@ do	case $in in
 				then	echo "$command: $in: not found" >&$stderr
 					exit 1
 				fi
-				eval "exec $stdin<$in"
+				exec < $in
 				file=$in:
 				case $out in
 				"")	case $in in
@@ -1543,6 +1559,11 @@ do	case $in in
 			;;
 		esac
 		;;
+	define|extern|include|print)
+		op=$1
+		shift
+		arg=
+		;;
 	*)	case $2 in
 		'=')	def=$1
 			shift
@@ -1579,6 +1600,8 @@ do	case $in in
 		esac
 		arg=
 		cc="$occ $includes"
+		group=
+		groups=
 		fail=
 		hdr=
 		lib=
@@ -1593,10 +1616,6 @@ do	case $in in
 		src=
 		test=
 		yes=
-		case $op in
-		pth)	lst=$op ;;
-		*)	lst=hdr ;;
-		esac
 		case $# in
 		0)	;;
 		*)	case $1 in
@@ -1606,11 +1625,13 @@ do	case $in in
 			*)	case $op in
 				ref)	;;
 				*)	case $1 in
-					'('*|*'{'|'"'*'"'|'<'*'>')
-						arg=-
-						;;
-					'-')	case $2 in
-						-*)	arg=$1
+					'-')	case $op:$2 in
+						tst:*)	arg=$1
+							case $2 in
+							-)	shift ;;
+							esac
+							;;
+						*:-*)	arg=$1
 							shift
 							;;
 						*)	def=-
@@ -1628,6 +1649,9 @@ do	case $in in
 							esac
 							;;
 						esac
+						;;
+					-*|+*|'('*|*'{'|'"'*'"'|'<'*'>')
+						arg=-
 						;;
 					*)	arg=$1
 						shift
@@ -1714,15 +1738,18 @@ do	case $in in
 							while	:
 							do	case $posix_read in
 								1)	case $shell in
-									ksh)	IFS= read -r lin <&$stdin
+									ksh)	IFS= read -r lin
 										eof=$?
-										case $lin in
-										*[' 	']'#'*)	lin=${lin##*([' 	'])} ;;
-										*)		lin=${lin#[' 	']} ;;
-										esac
+										while	:
+										do	lin="${lin#[' 	']}"
+											case $lin in
+											[' 	']*'#'*);;
+											*)		break ;;
+											esac
+										done
 										;;
 									*)	IFS=
-										read -r lin <&$stdin
+										read -r lin
 										eof=$?
 										IFS=$ifs
 										case $lin in
@@ -1735,7 +1762,7 @@ $lin
 										;;
 									esac
 									;;
-								*)	lin=`$posix_read <&$stdin`
+								*)	lin=`$posix_read`
 									eof=$?
 									;;
 								esac
@@ -1817,7 +1844,6 @@ $lin
 				*[\"\'\(\)\{\}\ \	]*)
 					case $op in
 					pth)	pth="$pth $1"
-						lst=pth
 						;;
 					*)	case $test in
 						'')	test=$1 ;;
@@ -1826,26 +1852,32 @@ $lin
 						;;
 					esac
 					;;
-				-)	case $2 in
-					[-+]l*)	lst=lib ;;
-					-D*)	lst=mac ;;
-					esac
-					case $lst in
-					hdr)	hdr="$hdr $1" ;;
-					lib)	lib="$lib $1" ;;
-					mac)	mac="$mac $1" ;;
-					pth)	pth="$pth $1" ;;
+				-)	group=$group$1
+					case $group in
+					-)	com_hdr=$hdr
+						com_lib=$lib
+						com_mac=$mac
+						com_opt=$opt
+						com_pth=$pth
+						com_test=$test
+						;;
+					*)	groups="$groups $1"
+						;;
 					esac
 					;;
-				-l*)	lib="$lib $1"
-					lst=lib
+				-l*)	case $group in
+					--*)	groups="$groups $1" ;;
+					*)	lib="$lib $1" ;;
+					esac
 					;;
 				+l*)	case $shell in
-					bsh)	x=`echo '' $1 | sed 's/.*+//'` ;;
-					*)	eval 'x=${1#+}' ;;
+					bsh)	x=`echo '' $1 | sed 's/[^+]*+/-/'` ;;
+					*)	eval 'x=-${1#+}' ;;
 					esac
-					lib="$lib -$x"
-					lst=lib
+					case $group in
+					--*)	groups="$groups $x" ;;
+					*)	lib="$lib $x" ;;
+					esac
 					;;
 				-*|+*)	case $op in
 					ref)	cc="$cc $1"
@@ -1862,39 +1894,51 @@ $lin
 							;;
 						esac
 						;;
-					run)	opt="$opt $1"
-						;;
-					*)	case $1 in
-						-D*)	mac="$mac $1"
-							lst=mac
+					*)	case $group in
+						--*)	groups="$groups $1"
 							;;
-						*)	cc="$cc $1"
+						*)	case $op in
+							run)	opt="$opt $1"
+								;;
+							*)	case $1 in
+								-D*)	mac="$mac $1" ;;
+								*)	cc="$cc $1" ;;
+								esac
+								;;
+							esac
 							;;
 						esac
 						;;
 					esac
 					;;
 				*.[aAxX]|*.[dD][lL][lL]|*.[lL][iI][bB])
-					lib="$lib $1"
-					lst=lib
+					case $group in
+					--*)	groups="$groups $1" ;;
+					*)	lib="$lib $1" ;;
+					esac
 					;;
 				*[.\\/]*)
-					case $op in
-					pth)	pth="$pth $1"
-						lst=pth
+					case $group in
+					--*)	groups="$groups $1"
 						;;
-					*)	hdr="$hdr $1"
-						lst=hdr
+					*)	case $op in
+						pth)	pth="$pth $1" ;;
+						*)	hdr="$hdr $1" ;;
+						esac
 						;;
 					esac
 					;;
-				*)	case $op in
-					pth)	pth="$pth $1"
-						lst=pth
+				*)	case $group in
+					--*)	groups="$groups $1"
 						;;
-					*)	case $test in
-						'')	test=$1 ;;
-						*)	test="$test $1" ;;
+					*)	case $op in
+						pth)	pth="$pth $1"
+							;;
+						*)	case $test in
+							'')	test=$1 ;;
+							*)	test="$test $1" ;;
+							esac
+							;;
 						esac
 						;;
 					esac
@@ -1902,6 +1946,9 @@ $lin
 				esac
 				shift
 			done
+			case $group in
+			-)	group= ;;
+			esac
 			;;
 		esac
 		;;
@@ -1910,63 +1957,35 @@ $lin
 	DONE|SKIP)	continue ;;
 	esac
 
+	# make sure $cc compiles C
 
-	# check for local package root directories
-
-	case $PACKAGE_PATH in
-	?*)	for i in `echo $PACKAGE_PATH | sed 's,:, ,g'`
-		do	if	test -d $i/include
-			then	cc="$cc -I$i/include"
-				occ="$occ -I$i/include"
-			fi
-			if	test -d $i/lib
-			then	cc="$cc -L$i/lib"
-				occ="$occ -L$i/lib"
-				for y in $libpaths
-				do	eval $y=\"\$$y:\$i/lib\$${y}_default\"
-					eval export $y
-				done
-			fi
-		done
-		;;
-	esac
 	case $cc in
 	"")	cc="$occ $includes" ;;
 	esac
+	case $cctest in
+	"")	# check for local package root directories
 
-	# some ops allow no args
-
-	case $arg in
-	'')	case $op in
-		iff)	arg=- ;;
-		esac
-		;;
-	esac
-
-	# save $* for ancient shells
-
-	argx=1
-	argv=$*
-
-	# check the candidate macros
-
-	case $mac in
-	?*)	case " $mac " in
-		*" - "*);;
-		*)	cc="$cc $mac"
-			mac=
+		case $PACKAGE_PATH in
+		?*)	for i in `echo $PACKAGE_PATH | sed 's,:, ,g'`
+			do	if	test -d $i/include
+				then	cc="$cc -I$i/include"
+					occ="$occ -I$i/include"
+				fi
+				if	test -d $i/lib
+				then	cc="$cc -L$i/lib"
+					occ="$occ -L$i/lib"
+					for y in $libpaths
+					do	eval $y=\"\$$y:\$i/lib\$${y}_default\"
+						eval export $y
+					done
+				fi
+			done
 			;;
 		esac
-		;;
-	esac
-
-	# make sure $cc compiles C
-
-	case $cctest in
-	"")	echo "int i = 1;" > $tmp.c
-		if	$cc -c $tmp.c >&$nullout
+		echo "int i = 1;" > $tmp.c
+		if	$cc -c $tmp.c <&$nullin >&$nullout
 		then	echo "(;" > $tmp.c
-			if	$cc -c $tmp.c >&$nullout
+			if	$cc -c $tmp.c <&$nullin >&$nullout
 			then	cctest="should not compile '(;'"
 			fi
 		else	cctest="should compile 'int i = 1;'"
@@ -1981,239 +2000,891 @@ $lin
 		;;
 	esac
 
-	# check for global default headers (some cc -E insist on compiling)
+	# some ops allow no args
 
-	case $hdrtest in
-	'')	hdrtest=1
-		allinc=
-		for x in types
-		do	case $config in
-			0)	c=_sys_${x}
-				;;
-			1)	case $shell in
-				ksh)	typeset -u u=$x ;;
-				*)	u=`echo $x | tr abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ` ;;
-				esac
-				c=HAVE_SYS_${u}_H
+	case $arg in
+	'')	case $op in
+		iff)	arg=-
+			;;
+		comment)cat <<!
+/* $* */
+!
+			continue
+			;;
+		define)	x=$1
+			shift
+			case $1 in
+			'('*')')
+				arg=$1
+				shift
 				;;
 			esac
-			x=sys/$x.h
-			echo "${allinc}#include <$x>" > $tmp.c
-			is hdr $x
-			if	$cc -E $tmp.c >&$nullout
-			then	success
-				gothdr="$gothdr + $x"
-				case $explicit in
-				0)	can="$can$cansep#define $c	1	/* #include <$x> ok */"
-					cansep=$nl
+			case $in in
+			"")	v=
+				while	:
+				do	case $# in
+					0)	break ;;
+					esac
+					t=$1
+					shift
+					case $t in
+					":")	break ;;
+					esac
+					v="$v $t"
+				done
+				;;
+			*)	v=$*
+				;;
+			esac
+			is mac $x
+			copy $tmp.c "$std
+$usr
+#ifndef $x
+(
+#endif
+int x;"
+			if	$cc -c $tmp.c <&$nullin >&$nullout
+			then	success -
+			else	failure -
+				cat <<!
+#define $x$arg	$v
+!
+				usr="$usr${nl}#define $x$arg  $v"
+			fi
+			continue
+			;;
+		extern)	x=$1
+			shift
+			t=$1
+			shift
+			is npt $x
+			copy $tmp.c "
+$std
+#include <sys/types.h>
+$usr
+_BEGIN_EXTERNS_
+struct _iffe_struct { int _iffe_member; };
+extern struct _iffe_struct* $x _ARG_((struct _iffe_struct*));
+_END_EXTERNS_
+"
+			if	$cc -c $tmp.c <&$nullin >&$nullout
+			then	success -
+				while	:
+				do	case $1 in
+					''|'('*|'['*)
+						break
+						;;
+					esac
+					t="$t $1"
+					shift
+				done
+				case $in in
+				"")	v=
+					while	:
+					do	case $# in
+						0)	break ;;
+						esac
+						t=$1
+						shift
+						case $t in
+						":")	break ;;
+						esac
+						v="$v $t"
+					done
+					;;
+				*)	v=$*
 					;;
 				esac
-				eval $c=1
-				allinc="${allinc}#include <$x>$nl"
-			else	failure
-				gothdr="$gothdr - $x"
-				case $explicit$all$config$undef in
-				0?1?|0??1)
-					can="$can$cansep#undef	$c		/* #include <$x> not ok */"
-					cansep=$nl
-					;;
-				01??)	can="$can$cansep#define $c	0	/* #include <$x> not ok */"
-					cansep=$nl
+				cat <<!
+extern $t	$x$v;
+!
+				usr="$usr${nl}extern $t $x$v;"
+			else	failure -
+				case $in in
+				"")	while	:
+					do	case $# in
+						0)	break ;;
+						esac
+						case $1 in
+						":")	break ;;
+						esac
+					done
 					;;
 				esac
 			fi
-		done
-		;;
-	esac
-
-	# add implicit headers/libraries before the checks
-
-	case $op in
-	npt)	hdr="sys/types.h stdlib.h unistd.h $hdr"
-		;;
-	siz|typ)hdr="sys/types.h time.h sys/time.h sys/times.h stddef.h stdlib.h $hdr"
-		;;
-	esac
-
-	# check the candidate headers
-
-	case $hdr in
-	?*)	z=$hdr
-		hdr=
-		hit=0
-		dis=0
-		for x in $z
-		do	case $x in
-			-)	case $hit in
-				0)	hit=1 ;;
-				1)	;;
-				*)	break ;;
+			continue
+			;;
+		include)while	:
+			do	case $# in
+				0)	break ;;
 				esac
-				continue
-				;;
-			*.h)	case " $gothdr " in
+				x=$1
+				shift
+				case $x in
+				":")	break ;;
+				esac
+				case " $gothdr " in
 				*" - $x "*)
-					continue
 					;;
 				*" + $x "*)
+					case $usr in
+					*"# include <"$x">"*)
+						;;
+					*)	cat <<!
+#include <$x>
+!
+						usr="$usr${nl}#include <$x>"
+						;;
+					esac
 					;;
-				*)	case $shell in
-					bsh)	eval `echo $x | sed -e 's,^\\([^\\\\/]*\\).*[\\\\/]\\([^\\\\/]*\\)\$,\\1_\\2,' -e 's/\\..*//' -e 's/^/c=/'`
-						;;
-					*)	eval 'c=${x##*[\\/]}'
-						eval 'c=${c%%.*}'
-						case $x in
-						*/*)	eval 'c=${x%%[\\/]*}_${c}' ;;
-						esac
-						;;
-					esac
-					case $explicit in
-					0)	dis=0
-						;;
-					*)	case $x in
-						*/*)	dis=$c ;;
-						*)	dis=hdr ;;
-						esac
-						case ${dis}_ in
-						${op}_*)dis=0 ;;
-						*)	dis=1 ;;
-						esac
-						;;
-					esac
-					case $config in
-					0)	case $x in
-						*/*)	c=_${c} ;;
-						*)	c=_hdr_${c} ;;
-						esac
-						;;
-					1)	case $shell in
-						ksh)	typeset -u u=$c ;;
-						*)	u=`echo $c | tr abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ` ;;
-						esac
-						c=HAVE_${u}_H
-						;;
-					esac
-					echo "${allinc}#include <$x>" > $tmp.c
-					is hdr $x
-					if	$cc -E $tmp.c >&$nullout
-					then	success
+				*)	is hdr $x
+					copy $tmp.c "$std
+$usr
+#include <$x>
+int x;"
+					if	$cc -c $tmp.c <&$nullin >&$nullout
+					then	success -
 						gothdr="$gothdr + $x"
-						case $dis in
-						0)	can="$can$cansep#define $c	1	/* #include <$x> ok */"
-							cansep=$nl
-							;;
-						esac
-						eval $c=1
-					else	failure
+						cat <<!
+#include <$x>
+!
+						usr="$usr${nl}#include <$x>"
+					else	failure -
 						gothdr="$gothdr - $x"
-						case $dis$all$config$undef in
-						0?1?|0??1)
-							can="$can$cansep#undef	$c		/* #include <$x> not ok */"
-							cansep=$nl
-							;;
-						01??)	can="$can$cansep#define $c	0	/* #include <$x> not ok */"
-							cansep=$nl
-							;;
-						esac
-						continue
 					fi
 					;;
 				esac
+			done
+			continue
+			;;
+		print)	case $in in
+			"")	v=
+				while	:
+				do	case $# in
+					0)	break ;;
+					esac
+					t=$1
+					shift
+					case $t in
+					":")	break ;;
+					esac
+					v="$v $t"
+				done
 				;;
-			*)	test -r $x || continue
+			*)	v=$*
 				;;
 			esac
-			hdr="$hdr $x"
-			case $hit in
-			0)	;;
-			1)	hit=2 ;;
-			esac
-		done
+			cat <<!
+$*
+!
+			usr="$usr${nl}$v"
+			continue
+			;;
+		esac
 		;;
 	esac
 
-	# check the candidate libraries
+	# save $* for ancient shells
 
-	case $lib in
-	?*)	z=$lib
-		lib=
-		p=
-		hit=0
-		echo "int main(){return(0);}" > $tmp.c
-		for x in $z -
-		do	case $x in
-			-)	case $hit in
-				0)	hit=1
-					continue
+	argx=1
+	argv=$*
+
+	# loop on all candidate groups
+
+	while	:
+	do
+		# check the candidate macros
+
+		cc="$cc $mac"
+
+		# check for global default headers (some cc -E insist on compiling)
+
+		case $hdrtest in
+		'')	hdrtest=1
+			allinc=
+			for x in types
+			do	case $config in
+				0)	c=_sys_${x}
 					;;
-				esac
-				;;
-			*)	case $hit in
-				0)	p=$x
-					;;
-				*)	case $p in
-					'')	p=$x ;;
-					*)	p="$p $x" ;;
+				1)	case $shell in
+					ksh)	typeset -u u=$x ;;
+					*)	u=`echo $x | tr abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ` ;;
 					esac
-					continue
+					c=HAVE_SYS_${u}_H
 					;;
 				esac
-				;;
-			esac
-			case " $gotlib " in
-			*"- $p "*)
-				failure +
-				p=
-				;;
-			*"+ $p "*)
-				success +
-				lib="$lib $p"
-				;;
-			*)	rm -f $tmp.exe
-				is LIB $p
-				if	$cc -o $tmp.exe $tmp.c $p >&$nullout
+				x=sys/$x.h
+				echo "${allinc}#include <$x>" > $tmp.c
+				is hdr $x
+				if	$cc -E $tmp.c <&$nullin >&$nullout
 				then	success
-					gotlib="$gotlib + $p"
-					lib="$lib $p"
-					e=0
-				else	a=
-					e=1
-					for l in $z
-					do	case $l in
-						-)	a=
-							continue
-							;;
-						$p)	a=$p
-							continue
-							;;
-						*)	case $gotlib in
-							*" $l "*)	continue ;;
-							esac
-							;;
-						esac
-						case $a in
-						$p)	a="$a $l"
-							if	$cc -o $tmp.exe $tmp.c $a >&$nullout
-							then	success
-								gotlib="$gotlib + $p"
-								lib="$lib $p"
-								e=0
-								break
-							fi
-							;;
-						esac
-					done
-					case $e in
-					1)	failure
-						gotlib="$gotlib - $p"
+					gothdr="$gothdr + $x"
+					case $explicit in
+					0)	can="$can$cansep#define $c	1	/* #include <$x> ok */"
+						cansep=$nl
+						;;
+					esac
+					eval $c=1
+					allinc="${allinc}#include <$x>$nl"
+				else	failure
+					gothdr="$gothdr - $x"
+					case $explicit$all$config$undef in
+					0?1?|0??1)
+						can="$can$cansep#undef	$c		/* #include <$x> not ok */"
+						cansep=$nl
+						;;
+					01??)	can="$can$cansep#define $c	0	/* #include <$x> not ok */"
+						cansep=$nl
 						;;
 					esac
 				fi
-				y=
-				for x in $p
+			done
+			;;
+		esac
+
+		# add implicit headers/libraries before the checks
+
+		case $op in
+		npt)	hdr="sys/types.h stdlib.h unistd.h $hdr"
+			;;
+		siz|typ)hdr="sys/types.h time.h sys/time.h sys/times.h stddef.h stdlib.h $hdr"
+			;;
+		esac
+
+		# check the candidate headers
+
+		case $hdr in
+		?*)	z=$hdr
+			hdr=
+			dis=0
+			for x in $z
+			do	case $x in
+				*.h)	case " $gothdr " in
+					*" - $x "*)
+						continue
+						;;
+					*" + $x "*)
+						;;
+					*)	case $shell in
+						bsh)	eval `echo $x | sed -e 's,^\\([^\\\\/]*\\).*[\\\\/]\\([^\\\\/]*\\)\$,\\1_\\2,' -e 's/\\..*//' -e 's/^/c=/'`
+							;;
+						*)	eval 'c=${x##*[\\/]}'
+							eval 'c=${c%%.*}'
+							case $x in
+							*/*)	eval 'c=${x%%[\\/]*}_${c}' ;;
+							esac
+							;;
+						esac
+						case $explicit in
+						0)	dis=0
+							;;
+						*)	case $x in
+							*/*)	dis=$c ;;
+							*)	dis=hdr ;;
+							esac
+							case ${dis}_ in
+							${op}_*)dis=0 ;;
+							*)	dis=1 ;;
+							esac
+							;;
+						esac
+						case $config in
+						0)	case $x in
+							*/*)	c=_${c} ;;
+							*)	c=_hdr_${c} ;;
+							esac
+							;;
+						1)	case $shell in
+							ksh)	typeset -u u=$c ;;
+							*)	u=`echo $c | tr abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ` ;;
+							esac
+							c=HAVE_${u}_H
+							;;
+						esac
+						echo "${allinc}#include <$x>" > $tmp.c
+						is hdr $x
+						if	$cc -E $tmp.c <&$nullin >&$nullout
+						then	success
+							gothdr="$gothdr + $x"
+							case $dis in
+							0)	can="$can$cansep#define $c	1	/* #include <$x> ok */"
+								cansep=$nl
+								;;
+							esac
+							eval $c=1
+						else	failure
+							gothdr="$gothdr - $x"
+							case $dis$all$config$undef in
+							0?1?|0??1)
+								can="$can$cansep#undef	$c		/* #include <$x> not ok */"
+								cansep=$nl
+								;;
+							01??)	can="$can$cansep#define $c	0	/* #include <$x> not ok */"
+								cansep=$nl
+								;;
+							esac
+							continue
+						fi
+						;;
+					esac
+					;;
+				*)	test -r $x || continue
+					;;
+				esac
+				hdr="$hdr $x"
+			done
+			;;
+		esac
+
+		# check the candidate libraries
+
+		case $lib in
+		?*)	z=$lib
+			lib=
+			p=
+			hit=0
+			echo "int main(){return(0);}" > $tmp.c
+			for x in $z
+			do	p=$x
+				case " $gotlib " in
+				*"- $p "*)
+					failure +
+					p=
+					;;
+				*"+ $p "*)
+					success +
+					lib="$lib $p"
+					;;
+				*)	rm -f $tmp.exe
+					is LIB $p
+					if	$cc -o $tmp.exe $tmp.c $p <&$nullin >&$nullout
+					then	success
+						gotlib="$gotlib + $p"
+						lib="$lib $p"
+						e=0
+					else	a=
+						e=1
+						for l in $z
+						do	case $l in
+							-)	a=
+								continue
+								;;
+							$p)	a=$p
+								continue
+								;;
+							*)	case $gotlib in
+								*" $l "*)	continue ;;
+								esac
+								;;
+							esac
+							case $a in
+							$p)	a="$a $l"
+								if	$cc -o $tmp.exe $tmp.c $a <&$nullin >&$nullout
+								then	success
+									gotlib="$gotlib + $p"
+									lib="$lib $p"
+									e=0
+									break
+								fi
+								;;
+							esac
+						done
+						case $e in
+						1)	failure
+							gotlib="$gotlib - $p"
+							;;
+						esac
+					fi
+					y=
+					for x in $p
+					do	case $shell in
+						bsh)	c=`echo '' $x | sed 's, *-l,,'` ;;
+						*)	eval 'c=${x#-l}' ;;
+						esac
+						case $c in
+						*[!abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_]*)
+							c=`echo '' $c | sed -e 's,.*[\\\\/],,' -e 's,\.[^.]*$,,' -e 's,[^abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_],_,g' -e '/^lib./s,^lib,,'`
+							;;
+						esac
+						case $config in
+						0)	case $e$p in
+							0*' '*)	case " $gotlib " in
+								*[-+]" $x "*)
+									;;
+								*)	can="$can$cansep#define _LIB_$c	1	/* $x is a library */"
+									cansep=$nl
+									eval _LIB_$c=1
+									;;
+								esac
+								;;
+							esac
+							;;
+						1)	case $shell in
+							ksh)	typeset -u u=$c ;;
+							*)	u=`echo $c | tr abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ` ;;
+							esac
+							c=$u
+							case $e in
+							0*' '*)	case " $gotlib " in
+								*[-+]" $x "*)
+									;;
+								*)	can="$can$cansep#define HAVE_${c}_LIB	1	/* $x is a library */"
+									cansep=$nl
+									eval HAVE_${c}_LIB=1
+									;;
+								esac
+								;;
+							esac
+							;;
+						esac
+						y=${y}_$c
+					done
+					case $config in
+					0)	c=_LIB${y} ;;
+					1)	c=HAVE${y}_LIB ;;
+					esac
+					case $p in
+					*' '*)	q="a library group" ;;
+					*)	q="a library" ;;
+					esac
+					case $e in
+					0)	can="$can$cansep#define $c	1	/* $p is $q */"
+						cansep=$nl
+						eval $c=1
+						case $hit in
+						1)	break ;;
+						esac
+						;;
+					1)	case $all$config$undef in
+						?1?|??1)can="$can$cansep#undef	$c		/* $p is not $q */"
+							cansep=$nl
+							;;
+						1??)	can="$can$cansep#define $c	0	/* $p is not $q */"
+							cansep=$nl
+							;;
+						esac
+						eval $c=0
+						;;
+					esac
+					p=
+					;;
+				esac
+			done
+			;;
+		esac
+
+		# last op precheck
+
+		case $op in
+		ref)	deflib="$deflib $lib"
+			defhdr="$defhdr $hdr"
+			break
+			;;
+		esac
+		IFS=" ,"
+		case $shell in
+		bash)	op=`echo $op`
+			arg=`echo $arg`
+			;;
+		*)	eval op=\"$op\"
+			eval arg=\"$arg\"
+			;;
+		esac
+		IFS=$ifs
+
+		# check for op aliases
+
+		x=
+		for o in $op
+		do	case $o in
+			def|default)	x="$x cmd dat hdr key lib mth sys typ" ;;
+			*)		x="$x $o" ;;
+			esac
+		done
+
+		# loop on the ops o and args a
+
+		result=UNKNOWN
+		for o in $x
+		do	for a in $arg
+			do	c=
+				case $a in
+				*[.\\/]*)
+					case $o in
+					hdr|lcl|nxt|pth|sys)
+						x=$a
+						case $x in
+						*.lcl|*.nxt)
+							case $o in
+							sys)	x=sys/$x ;;
+							esac
+							case $shell in
+							bsh)	eval `echo $x | sed -e 's,\\(.*\\)\.\\([^.]*\\),x=\\1 o=\\2,'`
+								;;
+							*)	o=${x##*.}
+								x=${x%.${o}}
+								;;
+							esac
+							v=$x
+							;;
+						esac
+						case $x in
+						*[\\/]*)case $shell in
+							bsh)	eval `echo $x | sed -e 's,\\(.*\\)[\\\\//]\\(.*\\),p=\\1 v=\\2,'`
+								;;
+							*)	eval 'p=${x%/*}'
+								eval 'v=${x##*/}'
+								;;
+							esac
+							;;
+						*.*)	case $shell in
+							bsh)	eval `echo $x | sed -e 's,\\(.*\\)\\.\\(.*\\),p=\\1 v=\\2,'`
+								;;
+							*)	eval 'p=${x%.*}'
+								eval 'v=${x##*.}'
+								;;
+							esac
+							;;
+						*)	p=
+							;;
+						esac
+						case $o in
+						lcl|nxt)	c=$v.$o ;;
+						*)		c=$v ;;
+						esac
+						;;
+					*)	case $shell in
+						bsh)	eval `echo $a | sed -e 's,.*[\\\\/],,' -e 's/\\(.*\\)\\.\\(.*\\)/p=\\1 v=\\2/'`
+							;;
+						*)	eval 'p=${a%.*}'
+							eval 'p=${p##*[\\/]}'
+							eval 'v=${a##*.}'
+							eval 'v=${v##*[\\/]}'
+							;;
+						esac
+						;;
+					esac
+					case $p in
+					'')	f=${v} ;;
+					*)	f=${p}/${v} ;;
+					esac
+					case $o in
+					run)	v=$p
+						p=
+						m=_${v}
+						;;
+					mem)	case $p in
+						*.*)	case $shell in
+							bsh)	eval `echo $p | sed -e 's/\\([^.]*\\)\\.\\(.*\\)/p=\\1 m=\\2/'`
+								;;
+							*)	eval 'm=${p#*.}'
+								eval 'p=${p%%.*}'
+								;;
+							esac
+							v=${m}.${v}
+						esac
+						case $config in
+						0)	m=_${v}_${p} ;;
+						1)	m=_${v}_in_${p} ;;
+						esac
+						;;
+					*)	case $p in
+						'')	m=_${v} ;;
+						*)	m=_${p}_${v} ;;
+						esac
+						;;
+					esac
+					;;
+				*)	p=
+					v=$a
+					f=$a
+					m=_${v}
+					;;
+				esac
+				case $c in
+				'')	c=$v ;;
+				esac
+				M=$m
+				case $o in
+				out)	case $a in
+					-)	a=-
+						;;
+					?*)	test="$a $test"
+						a=
+						;;
+					esac
+					;;
+				*)	case " $idyes " in
+					*" $m "*)
+						i=1
+						;;
+					*)	case " $idno " in
+						*" $m "*)
+							i=0
+							;;
+						*)	case $m in
+							*'*')	m=`echo "$m" | sed 's,\*,_ptr,g'` ;;
+							esac
+							case $m in
+							*[-+/\\]*)
+								i=0
+								;;
+							*[!abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_]*)
+								is id $m
+								copy $tmp.c "int $m = 0;"
+								if	$cc -c $tmp.c
+								then	success -
+									idyes="$idyes $m"
+									i=1
+								else	failure -
+									idno="$idno $m"
+									i=0
+								fi
+								;;
+							*)	i=1
+								;;
+							esac
+							;;
+						esac
+						case $i in
+						0)	case $o in
+							dat|dfn|key|lib|mac|mth|nos|npt|siz|sym|typ|val)
+								continue
+								;;
+							esac
+							;;
+						esac
+						;;
+					esac
+					;;
+				esac
+				case $m in
+				*[!abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_]*)
+					m=`echo "X$m" | sed -e 's,^.,,' -e 's,[^abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_],_,g'`
+					;;
+				esac
+
+				# check output redirection
+
+				case $out in
+				$cur)	;;
+				*)	case $cur in
+					$a|$c)	;;
+					*)	case $cur in
+						.)	;;
+						-)	case $iff in
+							?*)	echo "#endif" ;;
+							esac
+							;;
+						*)	case $iff in
+							?*)	echo "#endif" ;;
+							esac
+							exec >/dev/null
+							case $cur in
+							*[\\/]*|*.h)	x=$cur ;;
+							*)		x=$dir/$cur ;;
+							esac
+							case $style in
+							C)	(proto -r $protoflags $tmp.h) >/dev/null 2>&1
+								sed 's,/\*[^/]*\*/, ,g' $tmp.h > $tmp.c
+								sed 's,/\*[^/]*\*/, ,g' $x > $tmp.t
+								;;
+							*)	sed '/^#/d' $tmp.h > $tmp.c
+								sed '/^#/d' $x > $tmp.t
+								;;
+							esac
+							if	cmp -s $tmp.c $tmp.t
+							then	rm -f $tmp.h
+								case $verbose in
+								1) echo "$command: $x: unchanged" >&$stderr ;;
+								esac
+							else	case $x in
+								${dir}[\\/]$cur)	test -d $dir || mkdir $dir || exit 1 ;;
+								esac
+								mv $tmp.h $x
+							fi
+							;;
+						esac
+						case $out in
+						+)	case $status in
+							1)	;;
+							*)	status=0 ;;
+							esac
+							exit $status
+							;;
+						-)	eval "exec >&$stdout"
+							;;
+						*)	exec >$tmp.h
+							;;
+						esac
+						case $out in
+						"")	case $a in
+							*[\\/]*|???????????????*) cur=$c ;;
+							*)			cur=$a ;;
+							esac
+							;;
+						*)	cur=$out
+							;;
+						esac
+						case $in in
+						""|-|+)	case $o in
+							run)	x=" from $a" ;;
+							*)	x= ;;
+							esac
+							;;
+						*)	x=" from $in"
+							;;
+						esac
+
+						# output header comments
+
+						case $style in
+						C)	
+							echo "/* : : generated$x by $command version $version : : */"
+							for x in $pragma
+							do	echo "#pragma $x"
+							done
+							case $out in
+							""|-|+)	x=$m
+								;;
+							*.*)	case $shell in
+								bsh)	eval `echo $in | sed -e 's,\\.,_,g' -e 's/^/x=/'`
+									;;
+								*)	i=$out
+									x=_
+									while	:
+									do	case $i in
+										*.*)	eval 'x=$x${i%%.*}_'
+											eval 'i=${i#*.}'
+											;;
+										*)	x=$x$i
+											break
+											;;
+										esac
+									done
+									;;
+								esac
+								;;
+							*)	x=_$out
+								;;
+							esac
+							case $o in
+							iff)	case $M in
+								""|*-*)	iff=  ;;
+								*)	iff=${m}_H ;;
+								esac
+								;;
+							*)	case $regress in
+								'')	case $x in
+									*-*)	;;
+									*)	x=`pwd | sed -e 's,.*[\\\\/],,' -e 's,\\..*,,' -e 's,^lib,,' -e 's,^,'${x}_',' -e 's,[^abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_],_,g'`
+										# ksh n+ bug workaround
+										case $x in
+										*[!_]*)	;;
+										*)	x=_$$ ;;
+										esac
+										iff=_def${x}
+										;;
+									esac
+									;;
+								*)	iff=_REGRESS
+									;;
+								esac
+								;;
+							esac
+							case $iff in
+							?*)	echo "#ifndef $iff"
+								echo "#define $iff	1"
+								;;
+							esac
+							;;
+						*)	echo "# : : generated$x by $command version $version : : #"
+							;;
+						esac
+						;;
+					esac
+					;;
+				esac
+				case $can in
+				?*)	case $define in
+					1)	echo "$can" ;;
+					esac
+					can=
+					cansep=
+					;;
+				esac
+
+				# set up the candidate include list
+
+				pre=
+				inc=
+				for x in $defhdr - $hdr
+				do	case $x in
+					-)	case $pre in
+						?*)	continue ;;
+						esac
+						case $v in
+						*.*)	for x in `echo $v | sed 's,\\., ,g'`
+							do	pre="$pre
+#undef	$x"
+							done
+							;;
+						*)	case $o in
+							siz|typ)case $v in
+								char|short|int|long)
+									;;
+								*)	pre="#undef	$v"
+									;;
+								esac
+								;;
+							*)	pre="#undef	$v"
+								;;
+							esac
+							;;
+						esac
+						;;
+					*.h)	case $shell in
+						bsh)	eval `echo $x | sed -e 's,^\\([^\\\\/]*\\).*[\\\\/]\\([^\\\\/]*\\)\$,\\1_\\2,' -e 's/\\..*//' -e 's/^/c=/'`
+							;;
+						*)	eval 'c=${x##*[\\/]}'
+							eval 'c=${c%%.*}'
+							case $x in
+							*/*)	eval 'c=${x%%[\\/]*}_${c}' ;;
+							esac
+							;;
+						esac
+						case $config in
+						0)	case $x in
+							*/*)	c=_${c} ;;
+							*)	c=_hdr_${c} ;;
+							esac
+							;;
+						1)	case $shell in
+							ksh)	typeset -u u=$c ;;
+							*)	u=`echo $c | tr abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ` ;;
+							esac
+							c=HAVE_${u}_H
+							;;
+						esac
+						case " $puthdr " in
+						*" $c "*)
+							;;
+						*)	puthdr="$puthdr $c"
+							usr="$usr$nl#define $c 1"
+							;;
+						esac
+						inc="$inc
+#include <$x>"
+						;;
+					esac
+				done
+
+				# set up the candidate lib list
+
+				for x in $lib $deflib
 				do	case $shell in
-					bsh)	c=`echo '' $x | sed 's, *-l,,'` ;;
-					*)	eval 'c=${x#-l}' ;;
+					ksh)	eval 'c=${x#-l}' ;;
+					*)	c=`echo '' $x | sed 's, *-l,,'` ;;
 					esac
 					case $c in
 					*[!abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_]*)
@@ -2221,699 +2892,225 @@ $lin
 						;;
 					esac
 					case $config in
-					0)	case $e$p in
-						0*' '*)	case " $gotlib " in
-							*[-+]" $x "*)
-								;;
-							*)	can="$can$cansep#define _LIB_$c	1	/* $x is a library */"
-								cansep=$nl
-								eval _LIB_$c=1
-								;;
-							esac
-							;;
-						esac
+					0)	c=_LIB_${c}
 						;;
 					1)	case $shell in
 						ksh)	typeset -u u=$c ;;
 						*)	u=`echo $c | tr abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ` ;;
 						esac
-						c=$u
-						case $e in
-						0*' '*)	case " $gotlib " in
-							*[-+]" $x "*)
-								;;
-							*)	can="$can$cansep#define HAVE_${c}_LIB	1	/* $x is a library */"
-								cansep=$nl
-								eval HAVE_${c}_LIB=1
-								;;
-							esac
-							;;
-						esac
+						c=HAVE_${u}_LIB
 						;;
 					esac
-					y=${y}_$c
-				done
-				case $config in
-				0)	c=_LIB${y} ;;
-				1)	c=HAVE${y}_LIB ;;
-				esac
-				case $p in
-				*' '*)	q="a library group" ;;
-				*)	q="a library" ;;
-				esac
-				case $e in
-				0)	can="$can$cansep#define $c	1	/* $p is $q */"
-					cansep=$nl
-					eval $c=1
-					case $hit in
-					1)	break ;;
-					esac
-					;;
-				1)	case $all$config$undef in
-					?1?|??1)can="$can$cansep#undef	$c		/* $p is not $q */"
-						cansep=$nl
-						;;
-					1??)	can="$can$cansep#define $c	0	/* $p is not $q */"
-						cansep=$nl
-						;;
-					esac
-					eval $c=0
-					;;
-				esac
-				p=
-				;;
-			esac
-		done
-		;;
-	esac
-
-	# last op precheck
-
-	case $op in
-	ref)	deflib="$deflib $lib"
-		defhdr="$defhdr $hdr"
-		continue
-		;;
-	esac
-	IFS=" ,"
-	case $shell in
-	bash)	op=`echo $op`
-		arg=`echo $arg`
-		;;
-	*)	eval op=\"$op\"
-		eval arg=\"$arg\"
-		;;
-	esac
-	IFS=$ifs
-
-	# check for op aliases
-
-	x=
-	for o in $op
-	do	case $o in
-		def|default)	x="$x cmd dat hdr key lib mth sys typ" ;;
-		*)		x="$x $o" ;;
-		esac
-	done
-
-	# loop on the ops o and args a
-
-	result=UNKNOWN
-	for o in $x
-	do	for a in $arg
-		do	c=
-			case $a in
-			*[.\\/]*)
-				case $o in
-				hdr|lcl|nxt|pth|sys)
-					x=$a
-					case $x in
-					*.lcl|*.nxt)
-						case $o in
-						sys)	x=sys/$x ;;
-						esac
-						case $shell in
-						bsh)	eval `echo $x | sed -e 's,\\(.*\\)\.\\([^.]*\\),x=\\1 o=\\2,'`
-							;;
-						*)	o=${x##*.}
-							x=${x%.${o}}
-							;;
-						esac
-						v=$x
-						;;
-					esac
-					case $x in
-					*[\\/]*)case $shell in
-						bsh)	eval `echo $x | sed -e 's,\\(.*\\)[\\\\//]\\(.*\\),p=\\1 v=\\2,'`
-							;;
-						*)	eval 'p=${x%/*}'
-							eval 'v=${x##*/}'
-							;;
-						esac
-						;;
-					*.*)	case $shell in
-						bsh)	eval `echo $x | sed -e 's,\\(.*\\)\\.\\(.*\\),p=\\1 v=\\2,'`
-							;;
-						*)	eval 'p=${x%.*}'
-							eval 'v=${x##*.}'
-							;;
-						esac
-						;;
-					*)	p=
-						;;
-					esac
-					case $o in
-					lcl|nxt)	c=$v.$o ;;
-					*)		c=$v ;;
-					esac
-					;;
-				*)	case $shell in
-					bsh)	eval `echo $a | sed -e 's,.*[\\\\/],,' -e 's/\\(.*\\)\\.\\(.*\\)/p=\\1 v=\\2/'`
-						;;
-					*)	eval 'p=${a%.*}'
-						eval 'p=${p##*[\\/]}'
-						eval 'v=${a##*.}'
-						eval 'v=${v##*[\\/]}'
-						;;
-					esac
-					;;
-				esac
-				case $p in
-				'')	f=${v} ;;
-				*)	f=${p}/${v} ;;
-				esac
-				case $o in
-				run)	v=$p
-					p=
-					m=_${v}
-					;;
-				mem)	case $p in
-					*.*)	case $shell in
-						bsh)	eval `echo $p | sed -e 's/\\([^.]*\\)\\.\\(.*\\)/p=\\1 m=\\2/'`
-							;;
-						*)	eval 'm=${p#*.}'
-							eval 'p=${p%%.*}'
-							;;
-						esac
-						v=${m}.${v}
-					esac
-					case $config in
-					0)	m=_${v}_${p} ;;
-					1)	m=_${v}_in_${p} ;;
-					esac
-					;;
-				*)	case $p in
-					'')	m=_${v} ;;
-					*)	m=_${p}_${v} ;;
-					esac
-					;;
-				esac
-				;;
-			*)	p=
-				v=$a
-				f=$a
-				m=_${v}
-				;;
-			esac
-			case $c in
-			'')	c=$v ;;
-			esac
-			M=$m
-			case $o in
-			out)	case $a in
-				-)	a=-
-					;;
-				?*)	test="$a $test"
-					a=
-					;;
-				esac
-				;;
-			*)	case " $idyes " in
-				*" $m "*)
-					i=1
-					;;
-				*)	case " $idno " in
-					*" $m "*)
-						i=0
-						;;
-					*)	case $m in
-						*'*')	m=`echo "$m" | sed 's,\*,_ptr,g'` ;;
-						esac
-						case $m in
-						*[-+/\\]*)
-							i=0
-							;;
-						*[!abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_]*)
-							is id $m
-							copy $tmp.c "int $m = 0;"
-							if	$cc -c $tmp.c
-							then	success -
-								idyes="$idyes $m"
-								i=1
-							else	failure -
-								idno="$idno $m"
-								i=0
-							fi
-							;;
-						*)	i=1
-							;;
-						esac
-						;;
-					esac
-					case $i in
-					0)	case $o in
-						dat|dfn|key|lib|mac|mth|nos|npt|siz|sym|typ|val)
-							continue
-							;;
-						esac
-						;;
-					esac
-					;;
-				esac
-				;;
-			esac
-			case $m in
-			*[!abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_]*)
-				m=`echo "X$m" | sed -e 's,^.,,' -e 's,[^abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_],_,g'`
-				;;
-			esac
-
-			# check output redirection
-
-			case $out in
-			$cur)	;;
-			*)	case $cur in
-				$a|$c)	;;
-				*)	case $cur in
-					.)	;;
-					-)	case $iff in
-						?*)	echo "#endif" ;;
-						esac
-						;;
-					*)	case $iff in
-						?*)	echo "#endif" ;;
-						esac
-						exec >/dev/null
-						case $cur in
-						*[\\/]*|*.h)	x=$cur ;;
-						*)		x=$dir/$cur ;;
-						esac
-						case $style in
-						C)	(proto -r $protoflags $tmp.h) >/dev/null 2>&1
-							sed 's,/\*[^/]*\*/, ,g' $tmp.h > $tmp.c
-							sed 's,/\*[^/]*\*/, ,g' $x > $tmp.t
-							;;
-						*)	sed '/^#/d' $tmp.h > $tmp.c
-							sed '/^#/d' $x > $tmp.t
-							;;
-						esac
-						if	cmp -s $tmp.c $tmp.t
-						then	rm -f $tmp.h
-							case $verbose in
-							1) echo "$command: $x: unchanged" >&$stderr ;;
-							esac
-						else	case $x in
-							${dir}[\\/]$cur)	test -d $dir || mkdir $dir || exit 1 ;;
-							esac
-							mv $tmp.h $x
-						fi
-						;;
-					esac
-					case $out in
-					+)	case $status in
-						1)	;;
-						*)	status=0 ;;
-						esac
-						exit $status
-						;;
-					-)	eval "exec >&$stdout"
-						;;
-					*)	exec >$tmp.h
-						;;
-					esac
-					case $out in
-					"")	case $a in
-						*[\\/]*|???????????????*) cur=$c ;;
-						*)			cur=$a ;;
-						esac
-						;;
-					*)	cur=$out
-						;;
-					esac
-					case $in in
-					""|-|+)	case $o in
-						run)	x=" from $a" ;;
-						*)	x= ;;
-						esac
-						;;
-					*)	x=" from $in"
-						;;
-					esac
-
-					# output header comments
-
-					case $style in
-					C)	
-						echo "/* : : generated$x by $command version $version : : */"
-						for x in $pragma
-						do	echo "#pragma $x"
-						done
-						case $out in
-						""|-|+)	x=$m
-							;;
-						*.*)	case $shell in
-							bsh)	eval `echo $in | sed -e 's,\\.,_,g' -e 's/^/x=/'`
-								;;
-							*)	i=$out
-								x=_
-								while	:
-								do	case $i in
-									*.*)	eval 'x=$x${i%%.*}_'
-										eval 'i=${i#*.}'
-										;;
-									*)	x=$x$i
-										break
-										;;
-									esac
-								done
-								;;
-							esac
-							;;
-						*)	x=_$out
-							;;
-						esac
-						case $o in
-						iff)	case $M in
-							""|*-*)	iff=  ;;
-							*)	iff=${m}_H ;;
-							esac
-							;;
-						*)	case $regress in
-							'')	case $x in
-								*-*)	;;
-								*)	x=`pwd | sed -e 's,.*[\\\\/],,' -e 's,\\..*,,' -e 's,^lib,,' -e 's,^,'${x}_',' -e 's,[^abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_],_,g'`
-									# ksh n+ bug workaround
-									case $x in
-									*[!_]*)	;;
-									*)	x=_$$ ;;
-									esac
-									iff=_def${x}
-									;;
-								esac
-								;;
-							*)	iff=_REGRESS
-								;;
-							esac
-							;;
-						esac
-						case $iff in
-						?*)	echo "#ifndef $iff"
-							echo "#define $iff	1"
-							;;
-						esac
-						;;
-					*)	echo "# : : generated$x by $command version $version : : #"
-						;;
-					esac
-					;;
-				esac
-				;;
-			esac
-			case $can in
-			?*)	case $define in
-				1)	echo "$can" ;;
-				esac
-				can=
-				cansep=
-				;;
-			esac
-
-			# set up the candidate include list
-
-			inc=
-			for x in $defhdr $hdr
-			do	case $x in
-				*.h)	case $shell in
-					bsh)	eval `echo $x | sed -e 's,^\\([^\\\\/]*\\).*[\\\\/]\\([^\\\\/]*\\)\$,\\1_\\2,' -e 's/\\..*//' -e 's/^/c=/'`
-						;;
-					*)	eval 'c=${x##*[\\/]}'
-						eval 'c=${c%%.*}'
-						case $x in
-						*/*)	eval 'c=${x%%[\\/]*}_${c}' ;;
-						esac
-						;;
-					esac
-					case $config in
-					0)	case $x in
-						*/*)	c=_${c} ;;
-						*)	c=_hdr_${c} ;;
-						esac
-						;;
-					1)	case $shell in
-						ksh)	typeset -u u=$c ;;
-						*)	u=`echo $c | tr abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ` ;;
-						esac
-						c=HAVE_${u}_H
-						;;
-					esac
-					case " $puthdr " in
+					case " $putlib " in
 					*" $c "*)
 						;;
-					*)	puthdr="$puthdr $c"
+					*)	putlib="$putlib $c"
 						usr="$usr$nl#define $c 1"
 						;;
 					esac
-					inc="$inc
-#include <$x>"
-					;;
-				esac
-			done
+				done
 
-			# set up the candidate lib list
+				# src overrides builtin test
 
-			for x in $lib $deflib
-			do	case $shell in
-				ksh)	eval 'c=${x#-l}' ;;
-				*)	c=`echo '' $x | sed 's, *-l,,'` ;;
-				esac
-				case $c in
-				*[!abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_]*)
-					c=`echo '' $c | sed -e 's,.*[\\\\/],,' -e 's,\.[^.]*$,,' -e 's,[^abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_],_,g' -e '/^lib./s,^lib,,'`
-					;;
-				esac
-				case $config in
-				0)	c=_LIB_${c}
-					;;
-				1)	case $shell in
-					ksh)	typeset -u u=$c ;;
-					*)	u=`echo $c | tr abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ` ;;
+				case $config:$def in
+				0:)	case $o in
+					tst|var);;
+					*)	m=_${o}${m} ;;
 					esac
-					c=HAVE_${u}_LIB
 					;;
-				esac
-				case " $putlib " in
-				*" $c "*)
-					;;
-				*)	putlib="$putlib $c"
-					usr="$usr$nl#define $c 1"
-					;;
-				esac
-			done
-
-			# src overrides builtin test
-
-			case $config:$def in
-			0:)	case $o in
-				tst|var);;
-				*)	m=_${o}${m} ;;
-				esac
-				;;
-			1:)	case $o in
-				tst|var)m=${v} ;;
-				esac
-				case $shell in
-				ksh)	typeset -u u=$m ;;
-				*)	u=`echo $m | tr abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ` ;;
-				esac
-				case $o in
-				tst|var)case $m in
-					$u)	;;
-					*)	case $m in
-						hdr_*|lib_*|sys_*)
-							case $shell in
-							ksh)	u=${u#????} ;;
-							*)	u=`echo $u | sed 's/....//'` ;;
+				1:)	case $o in
+					tst|var)m=${v} ;;
+					esac
+					case $shell in
+					ksh)	typeset -u u=$m ;;
+					*)	u=`echo $m | tr abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ` ;;
+					esac
+					case $o in
+					tst|var)case $m in
+						$u)	;;
+						*)	case $m in
+							hdr_*|lib_*|sys_*)
+								case $shell in
+								ksh)	u=${u#????} ;;
+								*)	u=`echo $u | sed 's/....//'` ;;
+								esac
+								;;
 							esac
+							m=HAVE_${u}
 							;;
 						esac
-						m=HAVE_${u}
 						;;
+					dat)	m=HAVE${u}_DATA ;;
+					hdr|lcl)m=HAVE${u}_H ;;
+					key)	m=HAVE${u}_RESERVED ;;
+					mth)	m=HAVE${u}_MATH ;;
+					npt)	m=HAVE${u}_DECL ;;
+					pth)	m=${u}_PATH
+						case $shell in
+						ksh)	m=${m#_} ;;
+						*)	m=`echo $m | sed 's,^_,,'` ;;
+						esac
+						;;
+					nxt)	m=HAVE${u}_NEXT ;;
+					siz)	m=SIZEOF${u} ;;
+					sys)	m=HAVE_SYS${u}_H ;;
+					*)	m=HAVE${u} ;;
 					esac
 					;;
-				dat)	m=HAVE${u}_DATA ;;
-				hdr|lcl)m=HAVE${u}_H ;;
-				key)	m=HAVE${u}_RESERVED ;;
-				mth)	m=HAVE${u}_MATH ;;
-				npt)	m=HAVE${u}_DECL ;;
-				pth)	m=${u}_PATH
-					case $shell in
-					ksh)	m=${m#_} ;;
-					*)	m=`echo $m | sed 's,^_,,'` ;;
+				*)	m=$def
+					M=$m
+					;;
+				esac
+				case $src in
+				?*)	case $src in
+					$noext)	EXT= ;;
+					*)	EXT=$ext ;;
 					esac
-					;;
-				nxt)	m=HAVE${u}_NEXT ;;
-				siz)	m=SIZEOF${u} ;;
-				sys)	m=HAVE_SYS${u}_H ;;
-				*)	m=HAVE${u} ;;
-				esac
-				;;
-			*)	m=$def
-				M=$m
-				;;
-			esac
-			case $v in
-			*.*)	pre=
-				for x in `echo $v | sed 's,\\., ,g'`
-				do	pre="$pre
-#undef	$x"
-				done
-				;;
-			*)	case $o in
-				siz|typ)case $v in
-					char|short|int|long)
-						;;
-					*)	pre="#undef	$v"
-						;;
-					esac
-					;;
-				*)	pre="#undef	$v"
-					;;
-				esac
-				;;
-			esac
-			case $src in
-			?*)	case $src in
-				*['<"'][Ss][Tt][Dd][Ii][Oo].[Hh]['">']*)EXT= ;;
-				*)					EXT=$ext ;;
-				esac
-				copy $tmp.c "$std
+					copy $tmp.c "$std
 $usr
 $inc
 $EXT
 $src"
-				e=0
-				is tst "${note:-$run}"
-				case $run in
-				cat*|nocat*)
-					copy - "$src"
-					;;
-				cross*|nocross*)
-					copy $tmp.sh "$src"
-					chmod +x $tmp.sh
-					execute $tmp.sh || e=1
-					;;
-				run*|norun*)
-					(eval "$src") || e=1
-					;;
-				mac*|nomac*)
-					if	$cc -E $tmp.c >$tmp.i
-					then	sed -e '/<<[ 	]*".*"[ 	]*>>/!d' -e 's/<<[ 	]*"//g' -e 's/"[ 	]*>>//g' $tmp.i
-					else	e=1
-					fi
-					;;
-				p*|nop*)$cc -DTEST=$p -DID=$v -E $tmp.c >&$nullout || e=1
-					;;
-				c*|noc*)$cc -DTEST=$p -DID=$v -c $tmp.c >&$nullout || e=1
-					;;
-				*)	case $run in
-					s*|nos*)case $reallystatictest in
-						'')	#UNDENT...
-
-		reallystatictest=.
-		echo '#include <stdio.h>
-int main(){printf("hello");return(0);}' > ${tmp}s.c
-		rm -f ${tmp}s.exe
-		if	$cc -c ${tmp}s.c >&$nullout && $cc -o ${tmp}s.exe ${tmp}s.o >&$nullout 2>${tmp}s.e && $executable ${tmp}s.exe
-		then	e=`wc -l ${tmp}s.e`
-			eval set x x $binding
-			while	:
-			do	shift
-				shift
-				case $# in
-				0)	break ;;
-				esac
-				rm -f ${tmp}s.exe
-				$cc -o ${tmp}s.exe $1 ${tmp}s.o >&$nullout 2>${tmp}s.e && $executable ${tmp}s.exe || continue
-				case `wc -l ${tmp}s.e` in
-				$e)	;;
-				*)	continue ;;
-				esac
-				d=`ls -s ${tmp}s.exe`
-				rm -f ${tmp}s.exe
-				$cc -o ${tmp}s.exe $2 ${tmp}s.o >&$nullout 2>${tmp}s.e && $executable ${tmp}s.exe || continue
-				case `wc -l ${tmp}s.e` in
-				$e)	;;
-				*)	continue ;;
-				esac
-				case `ls -s ${tmp}s.exe` in
-				$d)	;;
-				*)	reallystatic=$2
-					set x
-					shift
-					break
-					;;
-				esac
-			done
-		fi
-		rm -f ${tmp}s.*
-							#...INDENT
-							;;
-						esac
-						ccflags=$reallystatic
+					e=0
+					is tst "${note:-$run}"
+					case $run in
+					cat*|nocat*)
+						copy - "$src"
 						;;
-					*)	ccflags=
+					cross*|nocross*)
+						copy $tmp.sh "$src"
+						chmod +x $tmp.sh
+						execute $tmp.sh <&$nullin || e=1
 						;;
-					esac
-					set x $mac
-					e=1
-					while	:
-					do	o=
-						shift
-						while	:
-						do	case $# in
-							0)	break ;;
-							esac
-							case $1 in
-							-)	break ;;
-							esac
-							o="$o $1"
-							shift
-						done
-						rm -f $tmp.exe
-						if	$cc $ccflags $o -DTEST=$p -DID=$v -o $tmp.exe $tmp.c $lib $deflib >&$nullout && $executable $tmp.exe
-						then	case $run in
-
-			no[ls]*);;
-			[ls]*)	e=0 && break ;;
-			noo*)	execute $tmp.exe || break ;;
-			o*)	execute $tmp.exe && e=0 && break ;;
-			no*)	execute $tmp.exe >&$nullout || break ;;
-			*)	execute $tmp.exe >&$nullout && e=0 && break ;;
-
-							esac
-						else	case $run in
-							no[els]*)e=1 && break ;;
-							esac
+					run*|norun*)
+						(eval "$src") <&$nullin || e=1
+						;;
+					mac*|nomac*)
+						if	$cc -E $tmp.c <&$nullin >$tmp.i
+						then	sed -e '/<<[ 	]*".*"[ 	]*>>/!d' -e 's/<<[ 	]*"//g' -e 's/"[ 	]*>>//g' $tmp.i
+						else	e=1
 						fi
-						case $# in
-						0)	case $run in
-							no*)	e=0 ;;
+						;;
+					p*|nop*)$cc -DTEST=$p -DID=$v -E $tmp.c <&$nullin >&$nullout || e=1
+						;;
+					c*|noc*)$cc -DTEST=$p -DID=$v -c $tmp.c <&$nullin >&$nullout || e=1
+						;;
+					*)	case $run in
+						s*|nos*)case $reallystatictest in
+							'')	#UNDENT...
+
+			reallystatictest=.
+			echo '#include <stdio.h>
+int main(){printf("hello");return(0);}' > ${tmp}s.c
+			rm -f ${tmp}s.exe
+			if	$cc -c ${tmp}s.c <&$nullin >&$nullout && $cc -o ${tmp}s.exe ${tmp}s.o <&$nullin >&$nullout 2>${tmp}s.e && $executable ${tmp}s.exe
+			then	e=`wc -l ${tmp}s.e`
+				eval set x x $binding
+				while	:
+				do	shift
+					shift
+					case $# in
+					0)	break ;;
+					esac
+					rm -f ${tmp}s.exe
+					$cc -o ${tmp}s.exe $1 ${tmp}s.o <&$nullin >&$nullout 2>${tmp}s.e && $executable ${tmp}s.exe || continue
+					case `wc -l ${tmp}s.e` in
+					$e)	;;
+					*)	continue ;;
+					esac
+					d=`ls -s ${tmp}s.exe`
+					rm -f ${tmp}s.exe
+					$cc -o ${tmp}s.exe $2 ${tmp}s.o <&$nullin >&$nullout 2>${tmp}s.e && $executable ${tmp}s.exe || continue
+					case `wc -l ${tmp}s.e` in
+					$e)	;;
+					*)	continue ;;
+					esac
+					case `ls -s ${tmp}s.exe` in
+					$d)	;;
+					*)	reallystatic=$2
+						set x
+						shift
+						break
+						;;
+					esac
+				done
+			fi
+			rm -f ${tmp}s.*
+								#...INDENT
+								;;
 							esac
-							break
+							ccflags=$reallystatic
+							;;
+						*)	ccflags=
 							;;
 						esac
-					done
-					;;
-				esac
-				case $run in
-				no*)	case $e in
-					0)	e=1 ;;
-					*)	e=0 ;;
+						set x $mac
+						e=1
+						while	:
+						do	o=
+							shift
+							while	:
+							do	case $# in
+								0)	break ;;
+								esac
+								case $1 in
+								-)	break ;;
+								esac
+								o="$o $1"
+								shift
+							done
+							rm -f $tmp.exe
+							if	$cc $ccflags $o -DTEST=$p -DID=$v -o $tmp.exe $tmp.c $lib $deflib <&$nullin >&$nullout && $executable $tmp.exe
+							then	case $run in
+
+				no[ls]*);;
+				[ls]*)	e=0 && break ;;
+				noo*)	execute $tmp.exe <&$nullin >$tmp.out || break ;;
+				o*)	execute $tmp.exe <&$nullin >$tmp.out && e=0 && break ;;
+				no*)	execute $tmp.exe <&$nullin >&$nullout || break ;;
+				*)	execute $tmp.exe <&$nullin >&$nullout && e=0 && break ;;
+
+								esac
+							else	case $run in
+								no[els]*)e=1 && break ;;
+								esac
+							fi
+							case $# in
+							0)	case $run in
+								no*)	e=0 ;;
+								esac
+								break
+								;;
+							esac
+						done
+						;;
 					esac
+					case $run in
+					no*)	case $e in
+						0)	e=1 ;;
+						*)	e=0 ;;
+						esac
+						;;
+					esac
+					case $run in
+					o*|noo*)case $e in
+						0)	cat $tmp.out ;;
+						esac
+						rm -f $tmp.out
+						;;
+					esac
+					report $e 1 "${note:-$run\ passed}" "${note:-$run} failed"
+					continue
 					;;
 				esac
-				report $e 1 "${note:-$run\ passed}" "${note:-$run} failed"
-				continue
-				;;
-			esac
 
-			# initialize common builtin state
+				# initialize common builtin state
 
-			case $o in
-			dat|lib|mth|run)
-				case $statictest in
-				"")	statictest=FoobaR
-					copy $tmp.c "
+				case $o in
+				dat|lib|mth|run)
+					case $statictest in
+					"")	statictest=FoobaR
+						copy $tmp.c "
 $std
 $usr
 $ext
@@ -2922,446 +3119,446 @@ extern int $statictest;
 _END_EXTERNS_
 int main(){char* i = (char*)&$statictest; return ((unsigned int)i)^0xaaaa;}
 "
-					rm -f $tmp.exe
-					if	$cc -o $tmp.exe $tmp.c >&$nullout && $executable $tmp.exe
-					then	case $static in
-						.)	static=
-							echo '#include <stdio.h>
+						rm -f $tmp.exe
+						if	$cc -o $tmp.exe $tmp.c <&$nullin >&$nullout && $executable $tmp.exe
+						then	case $static in
+							.)	static=
+								echo '#include <stdio.h>
 int main(){printf("hello");return(0);}' > $tmp.c
-							rm -f $tmp.exe
-							if	$cc -c $tmp.c >&$nullout && $cc -o $tmp.exe $tmp.o >&$nullout 2>$tmp.e && $executable $tmp.exe
-							then	e=`wc -l $tmp.e`
-								eval set x x $binding
-								while	:
-								do	shift
-									shift
-									case $# in
-									0)	break ;;
-									esac
-									rm -f $tmp.exe
-									$cc -o $tmp.exe $1 $tmp.o >&$nullout 2>$tmp.e && $executable $tmp.exe || continue
-									case `wc -l $tmp.e` in
-									$e)	;;
-									*)	continue ;;
-									esac
-									d=`ls -s $tmp.exe`
-									rm -f $tmp.exe
-									$cc -o $tmp.exe $2 $tmp.o >&$nullout 2>$tmp.e && $executable $tmp.exe || continue
-									case `wc -l $tmp.e` in
-									$e)	;;
-									*)	continue ;;
-									esac
-									case `ls -s $tmp.exe` in
-									$d)	;;
-									*)	static=$2
-										set x
+								rm -f $tmp.exe
+								if	$cc -c $tmp.c <&$nullin >&$nullout && $cc -o $tmp.exe $tmp.o <&$nullin >&$nullout 2>$tmp.e && $executable $tmp.exe
+								then	e=`wc -l $tmp.e`
+									eval set x x $binding
+									while	:
+									do	shift
 										shift
-										break
-										;;
-									esac
-								done
-							fi
-							;;
-						esac
-					else	static=
-					fi
+										case $# in
+										0)	break ;;
+										esac
+										rm -f $tmp.exe
+										$cc -o $tmp.exe $1 $tmp.o <&$nullin >&$nullout 2>$tmp.e && $executable $tmp.exe || continue
+										case `wc -l $tmp.e` in
+										$e)	;;
+										*)	continue ;;
+										esac
+										d=`ls -s $tmp.exe`
+										rm -f $tmp.exe
+										$cc -o $tmp.exe $2 $tmp.o <&$nullin >&$nullout 2>$tmp.e && $executable $tmp.exe || continue
+										case `wc -l $tmp.e` in
+										$e)	;;
+										*)	continue ;;
+										esac
+										case `ls -s $tmp.exe` in
+										$d)	;;
+										*)	static=$2
+											set x
+											shift
+											break
+											;;
+										esac
+									done
+								fi
+								;;
+							esac
+						else	static=
+						fi
+						;;
+					esac
 					;;
 				esac
-				;;
-			esac
 
-			# builtin tests
+				# builtin tests
 
-			case $o in
-			cmd)	case $p in
-				?*)	continue ;;
-				esac
-				k=
-				for j in "" usr
-				do	case $j in
-					"")	d= s= ;;
-					*)	d=/$j s=_$j ;;
+				case $o in
+				cmd)	case $p in
+					?*)	continue ;;
 					esac
-					for i in bin etc ucb
-					do	if	test -f $d/$i/$a
-						then	case $k in
-							"")	k=1
-								case $M in
-								*-*)	;;
-								*)	usr="$usr$nl#define $m 1"
-									case $define in
-									1)	echo "#define $m	1	/* $a in ?(/usr)/(bin|etc|ucb) */" ;;
+					k=
+					for j in "" usr
+					do	case $j in
+						"")	d= s= ;;
+						*)	d=/$j s=_$j ;;
+						esac
+						for i in bin etc ucb
+						do	if	test -f $d/$i/$a
+							then	case $k in
+								"")	k=1
+									case $M in
+									*-*)	;;
+									*)	usr="$usr$nl#define $m 1"
+										case $define in
+										1)	echo "#define $m	1	/* $a in ?(/usr)/(bin|etc|ucb) */" ;;
+										esac
+										;;
 									esac
 									;;
 								esac
-								;;
-							esac
-							c=${s}_${i}_${v}
-							usr="$usr$nl#define $c 1"
-							case $define in
-							1)	echo "#define $c	1	/* $d/$i/$a found */" ;;
-							esac
-						fi
+								c=${s}_${i}_${v}
+								usr="$usr$nl#define $c 1"
+								case $define in
+								1)	echo "#define $c	1	/* $d/$i/$a found */" ;;
+								esac
+							fi
+						done
 					done
-				done
-				;;
-			dat)	case $p in
-				?*)	continue ;;
-				esac
-				{
-				copy - "
+					;;
+				dat)	case $p in
+					?*)	continue ;;
+					esac
+					{
+					copy - "
 $std
 $usr
 $pre
 "
-				case $inc in
-				?*)	echo "$inc"
-					;;
-				*)	echo "_BEGIN_EXTERNS_
+					case $inc in
+					?*)	echo "$inc"
+						;;
+					*)	echo "_BEGIN_EXTERNS_
 extern int $v;
 _END_EXTERNS_"
-					;;
-				esac
-				echo "$ext
+						;;
+					esac
+					echo "$ext
 #ifdef _DLL
 #define _REF_
 #else
 #define _REF_	&
 #endif
 int main(){char* i = (char*) _REF_ $v; return ((unsigned int)i)^0xaaaa;}"
-				} > $tmp.c
-				is $o $v
-				rm -f $tmp.exe
-				$cc -c $tmp.c >&$nullout &&
-				$cc $static -o $tmp.exe $tmp.o $lib $deflib >&$nullout &&
-				$executable $tmp.exe
-				report $? 1 "$v in default lib(s)" "$v not in default lib(s)"
-				;;
-			dfn)	case $p in
-				?*)	continue ;;
-				esac
-				is dfn $v
-				echo "$pre
+					} > $tmp.c
+					is $o $v
+					rm -f $tmp.exe
+					$cc -c $tmp.c <&$nullin >&$nullout &&
+					$cc $static -o $tmp.exe $tmp.o $lib $deflib <&$nullin >&$nullout &&
+					$executable $tmp.exe
+					report $? 1 "$v in default lib(s)" "$v not in default lib(s)"
+					;;
+				dfn)	case $p in
+					?*)	continue ;;
+					esac
+					is dfn $v
+					echo "$pre
 $inc
 #ifdef $v
 <<\"#ifndef $v\">>
 <<\"#define $v\">>	$v	<<\"/* native $v */\">>
 <<\"#endif\">>
 #endif" > $tmp.c
-				if	$cc -E $tmp.c >$tmp.i
-				then	sed -e '/<<[ 	]*".*"[ 	]*>>/!d' -e 's/<<[ 	]*"//g' -e 's/"[ 	]*>>//g' $tmp.i > $tmp.t
-					if	test -s $tmp.t
-					then	success
-						cat $tmp.t
+					if	$cc -E $tmp.c <&$nullin >$tmp.i
+					then	sed -e '/<<[ 	]*".*"[ 	]*>>/!d' -e 's/<<[ 	]*"//g' -e 's/"[ 	]*>>//g' $tmp.i > $tmp.t
+						if	test -s $tmp.t
+						then	success
+							cat $tmp.t
+						else	failure
+						fi
 					else	failure
 					fi
-				else	failure
-				fi
-				;;
-			exp)	case $test in
-				'')	echo "$command: $file$sline: test expression expected for $o" >&$stderr
-					exit 1
 					;;
-				esac
-				case $a in
-				-|'')	;;
-				*)	eval x='$'$a
-					case $x in
-					1)	result=FAILURE
+				exp)	case $test in
+					'')	echo "$command: $file$sline: test expression expected for $o" >&$stderr
+						exit 1
+						;;
+					esac
+					case $a in
+					-|'')	;;
+					*)	eval x='$'$a
+						case $x in
+						1)	result=FAILURE
+							continue
+							;;
+						esac
+						;;
+					esac
+					case $test in
+					[01]|'"'*'"'|'<'*'>')
+						case $a in
+						-|'')	;;
+						*)	case $define$note in
+							1)	echo "#define $a	$test" ;;
+							1*)	echo "#define $a	$test	/* $note */" ;;
+							esac
+							eval $a='$test'
+							;;
+						esac
+						;;
+					*)	case $note in
+						'')	note=$test ;;
+						esac
+						case $test in
+						'')	c=1
+							;;
+						*)	is exp "$note"
+							x=
+							for i in `echo '' $test | sed 's,[^abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_], & ,g'`
+							do	case $i in
+								[\ \	])
+									;;
+								[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_]*)
+									eval i='${'$i'}'
+									case $i in
+									'')	i=0
+										;;
+									'"'*'"');;
+									*[!-+0123456789]*)
+										case $i in
+										*'"'*)	i=1 ;;
+										*)	i='"'$i'"' ;;
+										esac
+										;;
+									esac
+									x="$x $i"
+									;;
+								'!')	x="$x 0 ="
+									;;
+								'&'|'|')case $x in
+									*"$i")	;;
+									*)	x="$x \\$i" ;;
+									esac
+									;;
+								*)	x="$x \\$i"
+									;;
+								esac
+							done
+							c=`eval expr $x 2>&$stderr`
+							;;
+						esac
+						case $c in
+						0)	c=1 ;;
+						*)	c=0 ;;
+						esac
+						M=$a
+						m=$a
+						report $c 1 "$note is true" "$note is false"
+						;;
+					esac
+					;;
+				hdr|lcl|nxt|sys)
+					case $o in
+					lcl|nxt)case $M in
+						*-*)	continue ;;
+						esac
+						eval x='$'_$m
+						case $x in
+						?*)	continue ;;
+						esac
+						eval _$m=1
+						is $o $f
+						echo "$pre
+$inc
+#include <$f.h>" > $tmp.c
+						case $f in
+						sys/*)	e= ;;
+						*)	e='-e /[\\\\\/]sys[\\\\\/]'$f'\\.h"/d' ;;
+						esac
+						if	$cc -E $tmp.c <&$nullin >$tmp.i
+						then	i=`sed -e '/^#[line 	]*[0123456789][0123456789]*[ 	][ 	]*"[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:]*[\\\\\/].*[\\\\\/]'$f'\\.h"/!d' $e -e s'/.*"\\(.*\\)".*/\\1/' -e 's,\\\\,/,g' -e 's,///*,/,g' $tmp.i | sed 1q`
+							case $i in
+							[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ]:[\\/]*)
+								;;
+							*/*/*)	k=`echo "$i" | sed 's,.*/\([^/]*/[^/]*\)$,../\1,'`
+								echo "$pre
+$inc
+#include <$k>" > $tmp.c
+								if	$cc -E $tmp.c <&$nullin >$tmp.i
+								then	j=`sed -e '/^#[line 	]*[0123456789][0123456789]*[ 	][ 	]*"[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:]*[\\\\\/].*[\\\\\/]'$f'\\.h"/!d' $e -e s'/.*"\\(.*\\)".*/\\1/' -e 's,\\\\,/,g' -e 's,///*,/,g' $tmp.i | sed 1q`
+									wi=`wc < "$i"`
+									wj=`wc < "$j"`
+									case $wi in
+									$wj)	i=$k	;;
+									esac
+								fi
+								;;
+							*)	echo "$pre
+$inc
+#include <../include/$f.h>" > $tmp.c
+								if	$cc -E $tmp.c <&$nullin >&$nullout
+								then	i=../include/$f.h
+								fi
+								;;
+							esac
+						else	i=
+						fi
+						case $i in
+						[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ]:[\\/]*|[\\/]*)
+							success
+							case $o in
+							lcl)	echo "#if defined(__STDPP__directive)"
+								echo "__STDPP__directive pragma pp:hosted"
+								echo "#endif"
+								echo "#include <$i>	/* the native <$f.h> */"
+								echo "#undef	$m"
+								usr="$usr$nl#define $m 1"
+								echo "#define $m	1"
+								;;
+							nxt)	echo "#define $m <$i>	/* include path for the native <$f.h> */"
+								echo "#define ${m}_str \"$i\"	/* include string for the native <$f.h> */"
+								usr="$usr$nl#define $m <$i>$nl#define ${m}_str \"$i\""
+								eval $m=\\\<$i\\\>
+								;;
+							esac
+							break
+							;;
+						../*/*)	success
+							case $o in
+							lcl)	echo "#include <$i>	/* the native <$f.h> */"
+								echo "#undef	$m"
+								usr="$usr$nl#define $m 1"
+								echo "#define $m	1"
+								eval $m=1
+								;;
+							nxt)	echo "#define $m <$i>	/* include path for the native <$f.h> */"
+								echo "#define ${m}_str \"$i\"	/* include string for the native <$f.h> */"
+								usr="$usr$nl#define $m <$i>$nl#define ${m}_str \"$i\""
+								eval $m=\\\<$i\\\>
+								;;
+							esac
+							break
+							;;
+						*)	failure
+							case $o in
+							lcl)	case $all$config$undef in
+								?1?|??1)echo "#undef	$m		/* no native <$f.h> */" ;;
+								1??)	echo "#define $m	0	/* no native <$f.h> */" ;;
+								esac
+								eval $m=0
+								;;
+							nxt)	case $all$config$undef in
+								?1?|??1)echo "#undef	$m		/* no include path for the native <$f.h> */" ;;
+								esac
+								;;
+							esac
+							;;
+						esac
+						;;
+					*)	case $o in
+						hdr)	x=$f.h ;;
+						sys)	x=sys/$f.h ;;
+						esac
+						case " $gothdr " in
+						*" - $x "*)
+							failure +
+							;;
+						*" + $x "*)
+							success +
+							;;
+						*)	echo "${allinc}#include <$x>" > $tmp.c
+							is hdr $x
+							if	$cc -E $tmp.c <&$nullin >&$nullout
+							then	success
+								gothdr="$gothdr + $x"
+								case $M in
+								*-*)	;;
+								*)	case " $puthdr " in
+									*" $m "*)
+										;;
+									*)	puthdr="$puthdr $m"
+										usr="$usr$nl#define $m 1"
+										;;
+									esac
+									case $define in
+									1)	echo "#define $m	1	/* #include <$x> ok */" ;;
+									esac
+									eval $m=1
+									;;
+								esac
+							else	failure
+								gothdr="$gothdr - $x"
+								case $M in
+								*-*)	;;
+								*)	case $define$all$config$undef in
+									1?1?|1??1)echo "#undef	$m		/* #include <$x> not ok */" ;;
+									11??)	echo "#define $m	0	/* #include <$x> not ok */" ;;
+									esac
+									eval $m=0
+									;;
+								esac
+							fi
+							;;
+						esac
 						continue
 						;;
 					esac
 					;;
-				esac
-				case $test in
-				[01]|'"'*'"'|'<'*'>')
-					case $a in
-					-|'')	;;
-					*)	case $define$note in
-						1)	echo "#define $a	$test" ;;
-						1*)	echo "#define $a	$test	/* $note */" ;;
-						esac
-						eval $a='$test'
-						;;
-					esac
-					;;
-				*)	case $note in
-					'')	note=$test ;;
-					esac
-					case $test in
-					'')	c=1
-						;;
-					*)	is exp "$note"
-						x=
-						for i in `echo '' $test | sed 's,[^abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_], & ,g'`
-						do	case $i in
-							[\ \	])
-								;;
-							[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_]*)
-								eval i='${'$i'}'
-								case $i in
-								'')	i=0
-									;;
-								'"'*'"');;
-								*[!-+0123456789]*)
-									case $i in
-									*'"'*)	i=1 ;;
-									*)	i='"'$i'"' ;;
-									esac
-									;;
-								esac
-								x="$x $i"
-								;;
-							'!')	x="$x 0 ="
-								;;
-							'&'|'|')case $x in
-								*"$i")	;;
-								*)	x="$x \\$i" ;;
-								esac
-								;;
-							*)	x="$x \\$i"
-								;;
-							esac
-						done
-						c=`eval expr $x 2>&$stderr`
-						;;
-					esac
-					case $c in
-					0)	c=1 ;;
-					*)	c=0 ;;
-					esac
-					M=$a
-					m=$a
-					report $c 1 "$note is true" "$note is false"
-					;;
-				esac
-				;;
-			hdr|lcl|nxt|sys)
-				case $o in
-				lcl|nxt)case $M in
-					*-*)	continue ;;
-					esac
-					eval x='$'_$m
-					case $x in
+				iff)	;;
+				key)	case $p in
 					?*)	continue ;;
 					esac
-					eval _$m=1
-					is $o $f
-					echo "$pre
-$inc
-#include <$f.h>" > $tmp.c
-					case $f in
-					sys/*)	e= ;;
-					*)	e='-e /[\\\\\/]sys[\\\\\/]'$f'\\.h"/d' ;;
-					esac
-					if	$cc -E $tmp.c >$tmp.i
-					then	i=`sed -e '/^#[line 	]*[0123456789][0123456789]*[ 	][ 	]*"[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:]*[\\\\\/].*[\\\\\/]'$f'\\.h"/!d' $e -e s'/.*"\\(.*\\)".*/\\1/' -e 's,\\\\,/,g' -e 's,///*,/,g' $tmp.i | sed 1q`
-						case $i in
-						[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ]:[\\/]*)
-							;;
-						*/*/*)	k=`echo "$i" | sed 's,.*/\([^/]*/[^/]*\)$,../\1,'`
-							echo "$pre
-$inc
-#include <$k>" > $tmp.c
-							if	$cc -E $tmp.c >$tmp.i
-							then	j=`sed -e '/^#[line 	]*[0123456789][0123456789]*[ 	][ 	]*"[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:]*[\\\\\/].*[\\\\\/]'$f'\\.h"/!d' $e -e s'/.*"\\(.*\\)".*/\\1/' -e 's,\\\\,/,g' -e 's,///*,/,g' $tmp.i | sed 1q`
-								wi=`wc < "$i"`
-								wj=`wc < "$j"`
-								case $wi in
-								$wj)	i=$k	;;
-								esac
-							fi
-							;;
-						*)	echo "$pre
-$inc
-#include <../include/$f.h>" > $tmp.c
-							if	$cc -E $tmp.c >&$nullout
-							then	i=../include/$f.h
-							fi
-							;;
-						esac
-					else	i=
-					fi
-					case $i in
-					[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ]:[\\/]*|[\\/]*)
-						success
-						case $o in
-						lcl)	echo "#if defined(__STDPP__directive)"
-							echo "__STDPP__directive pragma pp:hosted"
-							echo "#endif"
-							echo "#include <$i>	/* the native <$f.h> */"
-							echo "#undef	$m"
-							usr="$usr$nl#define $m 1"
-							echo "#define $m	1"
-							;;
-						nxt)	echo "#define $m <$i>	/* include path for the native <$f.h> */"
-							echo "#define ${m}_str \"$i\"	/* include string for the native <$f.h> */"
-							usr="$usr$nl#define $m <$i>$nl#define ${m}_str \"$i\""
-							eval $m=\\\<$i\\\>
-							;;
-						esac
-						break
-						;;
-					../*/*)	success
-						case $o in
-						lcl)	echo "#include <$i>	/* the native <$f.h> */"
-							echo "#undef	$m"
-							usr="$usr$nl#define $m 1"
-							echo "#define $m	1"
-							eval $m=1
-							;;
-						nxt)	echo "#define $m <$i>	/* include path for the native <$f.h> */"
-							echo "#define ${m}_str \"$i\"	/* include string for the native <$f.h> */"
-							usr="$usr$nl#define $m <$i>$nl#define ${m}_str \"$i\""
-							eval $m=\\\<$i\\\>
-							;;
-						esac
-						break
-						;;
-					*)	failure
-						case $o in
-						lcl)	case $all$config$undef in
-							?1?|??1)echo "#undef	$m		/* no native <$f.h> */" ;;
-							1??)	echo "#define $m	0	/* no native <$f.h> */" ;;
-							esac
-							eval $m=0
-							;;
-						nxt)	case $all$config$undef in
-							?1?|??1)echo "#undef	$m		/* no include path for the native <$f.h> */" ;;
-							esac
-							;;
-						esac
-						;;
-					esac
-					;;
-				*)	case $o in
-					hdr)	x=$f.h ;;
-					sys)	x=sys/$f.h ;;
-					esac
-					case " $gothdr " in
-					*" - $x "*)
-						failure +
-						;;
-					*" + $x "*)
-						success +
-						;;
-					*)	echo "${allinc}#include <$x>" > $tmp.c
-						is hdr $x
-						if	$cc -E $tmp.c >&$nullout
-						then	success
-							gothdr="$gothdr + $x"
-							case $M in
-							*-*)	;;
-							*)	case " $puthdr " in
-								*" $m "*)
+					w=$v
+					while	:
+					do	is $o $w
+						echo "$pre
+int f(){int $w = 1;return($w);}" > $tmp.c
+						if	$cc -c $tmp.c <&$nullin >&$nullout
+						then	failure
+							case $set in
+							*" ="|*" = "*)
+								set x $set
+								shift
+								w=
+								while	:
+								do	case $# in
+									0)	break ;;
+									esac
+									case $1 in
+									=)	break ;;
+									esac
+									case $w in
+									'')	w=$1 ;;
+									*)	w="$w $1" ;;
+									esac
+									shift
+								done
+								case $1 in
+								=)	shift
+									case $# in
+									0)	set=" " ;;
+									*)	set=$* ;;
+									esac
 									;;
-								*)	puthdr="$puthdr $m"
-									usr="$usr$nl#define $m 1"
+								*)	set=
 									;;
 								esac
-								case $define in
-								1)	echo "#define $m	1	/* #include <$x> ok */" ;;
+								case $shell in
+								ksh)	typeset -u u=$w ;;
+								*)	u=`echo $w | tr abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ` ;;
 								esac
-								eval $m=1
+								u=_$u
+								M=$w
+								case $M in
+								*[!abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_]*)
+									M=`echo "X$m" | sed -e 's,^.,,' -e 's,[^abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_],_,g'`
+									;;
+								esac
+								case $config in
+								1)	m=HAVE${u}_RESERVED ;;
+								*)	m=_key_${w} ;;
+								esac
+								continue
 								;;
 							esac
-						else	failure
-							gothdr="$gothdr - $x"
+							report - 1 - - "$w is not a reserved keyword" "default for reserved keyword $v"
+						else	report 0 1 "$w is a reserved keyword" -
 							case $M in
 							*-*)	;;
-							*)	case $define$all$config$undef in
-								1?1?|1??1)echo "#undef	$m		/* #include <$x> not ok */" ;;
-								11??)	echo "#define $m	0	/* #include <$x> not ok */" ;;
+							*)	case $define$w in
+								1$v)	;;
+								1*)	echo "#define $v	$w	/* alternate for reserved keyword $v */" ;;
 								esac
-								eval $m=0
 								;;
 							esac
 						fi
-						;;
-					esac
-					continue
+						break
+					done
 					;;
-				esac
-				;;
-			iff)	;;
-			key)	case $p in
-				?*)	continue ;;
-				esac
-				w=$v
-				while	:
-				do	is $o $w
-					echo "$pre
-int f(){int $w = 1;return($w);}" > $tmp.c
-					if	$cc -c $tmp.c >&$nullout
-					then	failure
-						case $set in
-						*" ="|*" = "*)
-							set x $set
-							shift
-							w=
-							while	:
-							do	case $# in
-								0)	break ;;
-								esac
-								case $1 in
-								=)	break ;;
-								esac
-								case $w in
-								'')	w=$1 ;;
-								*)	w="$w $1" ;;
-								esac
-								shift
-							done
-							case $1 in
-							=)	shift
-								case $# in
-								0)	set=" " ;;
-								*)	set=$* ;;
-								esac
-								;;
-							*)	set=
-								;;
-							esac
-							case $shell in
-							ksh)	typeset -u u=$w ;;
-							*)	u=`echo $w | tr abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ` ;;
-							esac
-							u=_$u
-							M=$w
-							case $M in
-							*[!abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_]*)
-								M=`echo "X$m" | sed -e 's,^.,,' -e 's,[^abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_],_,g'`
-								;;
-							esac
-							case $config in
-							1)	m=HAVE${u}_RESERVED ;;
-							*)	m=_key_${w} ;;
-							esac
-							continue
-							;;
-						esac
-						report - 1 - - "$w is not a reserved keyword" "default for reserved keyword $v"
-					else	report 0 1 "$w is a reserved keyword" -
-						case $M in
-						*-*)	;;
-						*)	case $define$w in
-							1$v)	;;
-							1*)	echo "#define $v	$w	/* alternate for reserved keyword $v */" ;;
-							esac
-							;;
-						esac
-					fi
-					break
-				done
-				;;
-			lib|mth)case $p in
-				?*)	continue ;;
-				esac
-				case $v in
-				-)	continue ;;
-				esac
-				is $o $v
-				copy $tmp.c "
+				lib|mth)case $p in
+					?*)	continue ;;
+					esac
+					case $v in
+					-)	continue ;;
+					esac
+					is $o $v
+					copy $tmp.c "
 $std
 $usr
 $pre
@@ -3375,34 +3572,34 @@ _END_EXTERNS_
 #endif
 static _IFFE_fun i=(_IFFE_fun)$v;int main(){return ((unsigned int)i)^0xaaaa;}
 "
-				d=-D_IFFE_extern
-				if	$cc -c $tmp.c >&$nullout
-				then	d=
-				elif	$cc $d -c $tmp.c >&$nullout
-				then	:
-				else	d=error
-				fi
-				if	test error != "$d"
-				then	rm -f $tmp.exe
-					if	$cc $d $static -o $tmp.exe $tmp.o $lib $deflib >&$nullout &&
-						$executable $tmp.exe
-					then	case $o in
-						lib)	c=0 ;;
-						*)	c=1 ;;
-						esac
-						report $c 1 "$v() in default lib(s)" "$v() not in default lib(s)" "default for function $v()"
-					else	case $o in
-						mth)	rm -f $tmp.exe
-							$cc $d $static -o $tmp.exe $tmp.o -lm >&$nullout &&
-							$executable $tmp.exe
-							report $? 1 "$v() in math lib" "$v() not in math lib" "default for function $v()"
-							;;
-						*)	report 1 1 - "$v() not in default lib(s)" "default for function $v()"
-							;;
-						esac
+					d=-D_IFFE_extern
+					if	$cc -c $tmp.c <&$nullin >&$nullout
+					then	d=
+					elif	$cc $d -c $tmp.c <&$nullin >&$nullout
+					then	:
+					else	d=error
 					fi
-				else	case $intrinsic in
-					'')	copy $tmp.c "
+					if	test error != "$d"
+					then	rm -f $tmp.exe
+						if	$cc $d $static -o $tmp.exe $tmp.o $lib $deflib <&$nullin >&$nullout &&
+							$executable $tmp.exe
+						then	case $o in
+							lib)	c=0 ;;
+							*)	c=1 ;;
+							esac
+							report $c 1 "$v() in default lib(s)" "$v() not in default lib(s)" "default for function $v()"
+						else	case $o in
+							mth)	rm -f $tmp.exe
+								$cc $d $static -o $tmp.exe $tmp.o -lm <&$nullin >&$nullout &&
+								$executable $tmp.exe
+								report $? 1 "$v() in math lib" "$v() not in math lib" "default for function $v()"
+								;;
+							*)	report 1 1 - "$v() not in default lib(s)" "default for function $v()"
+								;;
+							esac
+						fi
+					else	case $intrinsic in
+						'')	copy $tmp.c "
 $std
 $usr
 $pre
@@ -3413,104 +3610,104 @@ extern int foo();
 _END_EXTERNS_
 static int ((*i)())=foo;int main(){return(i==0);}
 "
-						$cc -c $tmp.c >&$nullout
-						intrinsic=$?
-						;;
+							$cc -c $tmp.c <&$nullin >&$nullout
+							intrinsic=$?
+							;;
+						esac
+						case $o in
+						mth)	report $intrinsic 1 "$v() in math lib" "$v() not in math lib" "default for function $v()" ;;
+						*)	report $intrinsic 1 "$v() in default lib(s)" "$v() not in default lib(s)" "default for function $v()" ;;
+						esac
+					fi
+					;;
+				mac)	case $p in
+					?*)	continue ;;
 					esac
-					case $o in
-					mth)	report $intrinsic 1 "$v() in math lib" "$v() not in math lib" "default for function $v()" ;;
-					*)	report $intrinsic 1 "$v() in default lib(s)" "$v() not in default lib(s)" "default for function $v()" ;;
-					esac
-				fi
-				;;
-			mac)	case $p in
-				?*)	continue ;;
-				esac
-				is mac $v
-				echo "$pre
+					is mac $v
+					echo "$pre
 $inc
 #ifdef $v
 '$m:$v'
 #endif" > $tmp.c
-				$cc -E $tmp.c | grep -c "'$m:$v'" >&$nullout
-				report $? 1 "$v is a macro" "$v is not a macro" "default for macro $v"
-				;;
-			mem)	case $p in
-				?*)	eval i='$'_iffe_typedef_$p
-					case $i in
-					0|1)	;;
-					*)	echo "$pre
+					$cc -E $tmp.c <&$nullin | grep -c "'$m:$v'" >&$nullout
+					report $? 1 "$v is a macro" "$v is not a macro" "default for macro $v"
+					;;
+				mem)	case $p in
+					?*)	eval i='$'_iffe_typedef_$p
+						case $i in
+						0|1)	;;
+						*)	echo "$pre
 $inc
 static $p i;
 int n = sizeof(i);" > $tmp.c
-						is typ $p
-						if	$cc -c $tmp.c >&$nullout
-						then	success -
-							eval _iffe_typedef_$p=1
-							i=1
-						else	failure -
-							eval _iffe_typedef_$p=0
-							i=0
-						fi
-						;;
-					esac
-					case $i in
-					0)	i="$v is not a member of $p" p="struct $p" ;;
-					*)	i=- ;;
-					esac
-					is mem $v "$p"
-					echo "$pre
+							is typ $p
+							if	$cc -c $tmp.c <&$nullin >&$nullout
+							then	success -
+								eval _iffe_typedef_$p=1
+								i=1
+							else	failure -
+								eval _iffe_typedef_$p=0
+								i=0
+							fi
+							;;
+						esac
+						case $i in
+						0)	i="$v is not a member of $p" p="struct $p" ;;
+						*)	i=- ;;
+						esac
+						is mem $v "$p"
+						echo "$pre
 $inc
 static $p i;
 int n = sizeof(i.$v);" > $tmp.c
-					$cc -c $tmp.c >&$nullout
-					report $? 1 "$v is a member of $p" "$i"
-					;;
-				*)	p=$v
-					eval i='$'_iffe_typedef_$p
-					case $i in
-					0|1)	;;
-					*)	echo "$pre
-$inc
-static $p i;
-int n = sizeof(i);" > $tmp.c
-						is typ $p
-						if	$cc -c $tmp.c >&$nullout
-						then	success -
-							eval _iffe_typedef_$p=1
-							i=1
-						else	failure -
-							eval _iffe_typedef_$p=0
-							i=0
-						fi
+						$cc -c $tmp.c <&$nullin >&$nullout
+						report $? 1 "$v is a member of $p" "$i"
 						;;
-					esac
-					case $i in
-					0)	i="$p is not a non-opaque struct" p="struct $p" ;;
-					*)	i=- ;;
-					esac
-					is nos "$p"
-					echo "$pre
+					*)	p=$v
+						eval i='$'_iffe_typedef_$p
+						case $i in
+						0|1)	;;
+						*)	echo "$pre
 $inc
 static $p i;
 int n = sizeof(i);" > $tmp.c
-					if	$cc -c $tmp.c >&$nullout
-					then	echo "$pre
+							is typ $p
+							if	$cc -c $tmp.c <&$nullin >&$nullout
+							then	success -
+								eval _iffe_typedef_$p=1
+								i=1
+							else	failure -
+								eval _iffe_typedef_$p=0
+								i=0
+							fi
+							;;
+						esac
+						case $i in
+						0)	i="$p is not a non-opaque struct" p="struct $p" ;;
+						*)	i=- ;;
+						esac
+						is nos "$p"
+						echo "$pre
+$inc
+static $p i;
+int n = sizeof(i);" > $tmp.c
+						if	$cc -c $tmp.c <&$nullin >&$nullout
+						then	echo "$pre
 $inc
 static $p i;
 unsigned long f() { return (unsigned long)i; }" > $tmp.c
-						if	$cc -c $tmp.c >&$nullout
-						then	c=1
-						else	c=0
+							if	$cc -c $tmp.c <&$nullin >&$nullout
+							then	c=1
+							else	c=0
+							fi
+						else	c=1
 						fi
-					else	c=1
-					fi
-					report $c 1 "$p is a non-opaque struct" "$i"
-				esac
-				;;
-			nop)	;;
-			npt)	is npt $v
-				copy $tmp.c "
+						report $c 1 "$p is a non-opaque struct" "$i"
+					esac
+					;;
+				nop)	;;
+				npt)	is npt $v
+					copy $tmp.c "
 $std
 $usr
 $pre
@@ -3521,11 +3718,11 @@ struct _iffe_struct { int _iffe_member; };
 extern struct _iffe_struct* $v _ARG_((struct _iffe_struct*));
 _END_EXTERNS_
 "
-				$cc -c $tmp.c >&$nullout
-				report -$config $? 1 "$v() needs a prototype" "$v() does not need a prototype"
-				;;
-			num)	is num $v
-				copy $tmp.c "
+					$cc -c $tmp.c <&$nullin >&$nullout
+					report -$config $? 1 "$v() needs a prototype" "$v() does not need a prototype"
+					;;
+				num)	is num $v
+					copy $tmp.c "
 $std
 $usr
 $pre
@@ -3535,328 +3732,433 @@ _BEGIN_EXTERNS_
 int _iffe_int = $v / 2;
 _END_EXTERNS_
 "
-				$cc -c $tmp.c >&$nullout
-				report $? 1 "$v is a numeric constant" "$v is not a numeric constant"
-				;;
-			one)	for i in $a $hdr
-				do	x="#include <$i>"
-					case " $gothdr " in
-					*" - $i "*)
-						continue
-						;;
-					*" + $i "*)
-						;;
-					*)	is hdr $x
-						echo "$x" > $tmp.c
-						if	$cc -E $tmp.c >&$nullout
-						then	success
-							gothdr="$gothdr + $x"
-						else	failure -
-							gothdr="$gothdr - $x"
+					$cc -c $tmp.c <&$nullin >&$nullout
+					report $? 1 "$v is a numeric constant" "$v is not a numeric constant"
+					;;
+				one)	for i in $a $hdr
+					do	x="#include <$i>"
+						case " $gothdr " in
+						*" - $i "*)
 							continue
-						fi
-						;;
-					esac
-					case $one in
-					"")	one=$x
-						;;
-					*"$x"*)	break
-						;;
-					*)	echo "$one" > $tmp.c
-						if	$cc -E $tmp.c >$tmp.i
-						then	c=$i
-							case $c in
-							*[\\/]*)	c=`echo $c | sed 's,[\\\\/],[\\\\/],g'` ;;
-							esac
-							case `sed -e '/^#[line 	]*1[ 	][ 	]*"[\\\\\/].*[\\\\\/]'$c'"/!d' $tmp.i` in
-							?*)	break ;;
-							esac
-						fi
-						one="$one$nl$x"
-						;;
-					esac
-					echo "$x"
-					break
-				done
-				;;
-			out|output)
-				;;
-			pth)	is pth $a
-				pkg $pth
-				tab="  "
-				e=
-				f=
-				for i in $pth
-				do	case $i in
-					'{')	e="${nl}}"
-						l=
-						x=i
-						v="\$${x}"
-						t=${nl}${tab}
-						b="fnd()${nl}{${t}for ${x} in"
-						;;
-					'}')	b="${b}${t}do${tab}if test -e ${v}/\${1}${t}${tab}${tab}then${tab}f=${v}/\${1}${t}${tab}${tab}${tab}return${t}${tab}${tab}fi"
-						e="${t}done${e}"
-						eval "${b}${e}"
-						fnd $a
-						case $f in
-						?*)	break ;;
-						esac
-						;;
-					-)	b="${b}${t}do${tab}test \"${v}\" = '' -o -d \"${v}\" &&${t}${tab}${tab}"
-						x=${x}i
-						v="${v}\$${x}"
-						b="${b}for ${x} in"
-						e="${t}done${e}"
-						t="${t}${tab}${tab}"
-						;;
-					*)	case $e in
-						'')	if	test -e ${i}/${a}
-							then	f=${i}/${a}
-								break
+							;;
+						*" + $i "*)
+							;;
+						*)	is hdr $x
+							echo "$x" > $tmp.c
+							if	$cc -E $tmp.c <&$nullin >&$nullout
+							then	success
+								gothdr="$gothdr + $x"
+							else	failure -
+								gothdr="$gothdr - $x"
+								continue
 							fi
 							;;
-						*)	case $i in
-							/|.)	b="${b} ''" ;;
-							*)	b="${b} /${i}" ;;
+						esac
+						case $one in
+						"")	one=$x
+							;;
+						*"$x"*)	break
+							;;
+						*)	echo "$one" > $tmp.c
+							if	$cc -E $tmp.c <&$nullin >$tmp.i
+							then	c=$i
+								case $c in
+								*[\\/]*)	c=`echo $c | sed 's,[\\\\/],[\\\\/],g'` ;;
+								esac
+								case `sed -e '/^#[line 	]*1[ 	][ 	]*"[\\\\\/].*[\\\\\/]'$c'"/!d' $tmp.i` in
+								?*)	break ;;
+								esac
+							fi
+							one="$one$nl$x"
+							;;
+						esac
+						echo "$x"
+						break
+					done
+					;;
+				out|output)
+					;;
+				pth)	is pth $a
+					pkg $pth
+					tab="  "
+					e=
+					f=
+					for i in $pth
+					do	case $i in
+						'{')	e="${nl}}"
+							l=
+							x=i
+							v="\$${x}"
+							t=${nl}${tab}
+							b="fnd()${nl}{${t}for ${x} in"
+							;;
+						'}')	b="${b}${t}do${tab}if test -e ${v}/\${1}${t}${tab}${tab}then${tab}f=${v}/\${1}${t}${tab}${tab}${tab}return${t}${tab}${tab}fi"
+							e="${t}done${e}"
+							eval "${b}${e}"
+							fnd $a
+							case $f in
+							?*)	break ;;
+							esac
+							;;
+						-)	b="${b}${t}do${tab}test \"${v}\" = '' -o -d \"${v}\" &&${t}${tab}${tab}"
+							x=${x}i
+							v="${v}\$${x}"
+							b="${b}for ${x} in"
+							e="${t}done${e}"
+							t="${t}${tab}${tab}"
+							;;
+						*)	case $e in
+							'')	if	test -e ${i}/${a}
+								then	f=${i}/${a}
+									break
+								fi
+								;;
+							*)	case $i in
+								/|.)	b="${b} ''" ;;
+								*)	b="${b} /${i}" ;;
+								esac
+								;;
 							esac
 							;;
 						esac
+					done
+					case $f in
+					'')	case $set in
+						' ')	f=$a ;;
+						?*)	f=$set ;;
+						esac
 						;;
 					esac
-				done
-				case $f in
-				'')	case $set in
-					' ')	f=$a ;;
-					?*)	f=$set ;;
+					case $f in
+					'')	c=1
+						;;
+					*)	c=0
+						f="\"$f\""
+						;;
 					esac
+					report $c "$f" "${note:-$a path}" "$a path not found"
 					;;
-				esac
-				case $f in
-				'')	c=1
-					;;
-				*)	c=0
-					f="\"$f\""
-					;;
-				esac
-				report $c "$f" "${note:-$a path}" "$a path not found"
-				;;
-			run)	is run $a
-				if	test ! -r $a
-				then	failure not found
-					case $verbose in
-					0)	echo "$command: $file$line: $a: not found" >&$stderr ;;
-					esac
-					exit 1
-				fi
-				noisy
-				case $a in
-				*.c)	rm -f $tmp.exe
-					cp $a $tmp.c
-					$cc -o $tmp.exe $tmp.c $lib $deflib >&$stderr 2>&$stderr &&
-					$executable $tmp.exe &&
-					execute $tmp.exe $opt
-					;;
-				*.sh)	{
-					cat <<!
+				run)	is run $a
+					if	test ! -r $a
+					then	failure not found
+						case $verbose in
+						0)	echo "$command: $file$line: $a: not found" >&$stderr ;;
+						esac
+						exit 1
+					fi
+					noisy
+					case $a in
+					*.c)	rm -f $tmp.exe
+						cp $a $tmp.c
+						$cc -o $tmp.exe $tmp.c $lib $deflib <&$nullin >&$stderr 2>&$stderr &&
+						$executable $tmp.exe &&
+						execute $tmp.exe $opt <&$nullin
+						;;
+					*.sh)	{
+						cat <<!
 :
 set "cc='$cc' executable='$executable' id='$m' static='$static' tmp='$tmp'" $opt $hdr $test
 !
-					cat $a
-					} > $tmp.sh
-					chmod +x $tmp.sh
-					( . $tmp.sh )
-					;;
-				*)	false
-					;;
-				esac
-				case $? in
-				0)	success
-					;;
-				*)	failure cannot run
-					case $verbose in
-					0)	echo "$command: $file$line: $a: cannot run" >&$stderr ;;
+						cat $a
+						} > $tmp.sh
+						chmod +x $tmp.sh
+						( . $tmp.sh ) <&$nullin
+						;;
+					*)	false
+						;;
 					esac
-					exit 1
+					case $? in
+					0)	success
+						;;
+					*)	failure cannot run
+						case $verbose in
+						0)	echo "$command: $file$line: $a: cannot run" >&$stderr ;;
+						esac
+						exit 1
+						;;
+					esac
 					;;
-				esac
-				;;
-			siz)	case $p in
-				"")	x= ;;
-				*)	x="$p " ;;
-				esac
-				is siz "$x$v"
-				{
-				case $p:$v in
-				long:*|*:*[_0123456789]int[_0123456789]*)
-					echo "$pre
+				siz)	case $p in
+					"")	x= ;;
+					*)	x="$p " ;;
+					esac
+					is siz "$x$v"
+					{
+					case $p:$v in
+					long:*|*:*[_0123456789]int[_0123456789]*)
+						echo "$pre
 $inc
 #include <stdio.h>
 static $x$v i;
 $x$v f() {
 $x$v v; i = 1; v = i;"
-					echo "i = v * i; i = i / v; v = v + i; i = i - v;"
-					case $v in
-					float|double) ;;
-					*)	echo "v <<= 4; i = v >> 2; i = 10; i = v % i; i |= v; v ^= i; i = 123; v &= i;" ;;
-					esac
-					echo "return v; }"
-					;;
-				*)	echo "$pre
+						echo "i = v * i; i = i / v; v = v + i; i = i - v;"
+						case $v in
+						float|double) ;;
+						*)	echo "v <<= 4; i = v >> 2; i = 10; i = v % i; i |= v; v ^= i; i = 123; v &= i;" ;;
+						esac
+						echo "return v; }"
+						;;
+					*)	echo "$pre
 $inc
 struct xxx { $x$v mem; };
 static struct xxx v;
 struct xxx* f() { return &v; }"
-					;;
-				esac
-				case $x in
-				""|"struct "|"union ")
-					echo "int g() { return 0; }"
-					;;
-				*)	echo "int g() { return sizeof($x$v)<=sizeof($v); }" ;;
-				esac
-				copy - "
+						;;
+					esac
+					case $x in
+					""|"struct "|"union ")
+						echo "int g() { return 0; }"
+						;;
+					*)	echo "int g() { return sizeof($x$v)<=sizeof($v); }" ;;
+					esac
+					copy - "
 int main() {
-	f();
-	g();
-	printf(\"%u\\n\", sizeof($x$v));
-	return 0;
+		f();
+		g();
+		printf(\"%u\\n\", sizeof($x$v));
+		return 0;
 }"
-				} > $tmp.c
-				rm -f $tmp.exe $tmp.dat
-				if	$cc -o $tmp.exe $tmp.c $lib $deflib >&$nullout &&
-					$executable $tmp.exe &&
-					execute $tmp.exe > $tmp.dat
-				then	z=`cat $tmp.dat`
-					c=0
-				else	z=0
-					c=1
-				fi
-				report $c "$z" "sizeof($x$v)" "$x$v not a type with known size"
-				;;
-			sym)	case $test in
-				"")	x=$v ;;
-				*)	x=$test ;;
-				esac
-				echo "$pre
+					} > $tmp.c
+					rm -f $tmp.exe $tmp.dat
+					if	$cc -o $tmp.exe $tmp.c $lib $deflib <&$nullin >&$nullout &&
+						$executable $tmp.exe &&
+						execute $tmp.exe > $tmp.dat
+					then	z=`cat $tmp.dat`
+						c=0
+					else	z=0
+						c=1
+					fi
+					report $c "$z" "sizeof($x$v)" "$x$v not a type with known size"
+					;;
+				sym)	case $test in
+					"")	x=$v ;;
+					*)	x=$test ;;
+					esac
+					echo "$pre
 $inc
 '=' $x '='" > $tmp.c
-				$cc -E $tmp.c \
-				| sed \
-					-e "/'='/!d" \
-					-e "s/'='//g" \
-					-e 's/[ 	]//g' \
-					-e 's/((([^()]*)))->/->/g' \
-					-e 's/(([^()]*))->/->/g' \
-					-e 's/([^()]*)->/->/g' \
-					-e 's/\([abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_][abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789]*\)\[/\
+					$cc -E $tmp.c <&$nullin \
+					| sed \
+						-e "/'='/!d" \
+						-e "s/'='//g" \
+						-e 's/[ 	]//g' \
+						-e 's/((([^()]*)))->/->/g' \
+						-e 's/(([^()]*))->/->/g' \
+						-e 's/([^()]*)->/->/g' \
+						-e 's/\([abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_][abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789]*\)\[/\
 ary \1[/g' \
-					-e 's/\([abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_][abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789]*\)(/\
+						-e 's/\([abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_][abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789]*\)(/\
 fun \1[/g' \
-					-e 's/\*->\([abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_]\)/->\
+						-e 's/\*->\([abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_]\)/->\
 ptr \1/g' \
-					-e 's/->\([abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_]\)/->\
+						-e 's/->\([abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_]\)/->\
 reg \1/g' \
-					-e "/^$v\$/d" \
-					-e 's/^[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_][abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789]*$/\
+						-e "/^$v\$/d" \
+						-e 's/^[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_][abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789]*$/\
 nam &/g' \
-				| sed \
-					-e '/^... /!d' \
-				| sort \
-					-u \
-				| sed \
-					-e 's/\(...\) \([abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_][abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789]*\).*/#ifndef _\1_'$v'\
+					| sed \
+						-e '/^... /!d' \
+					| sort \
+						-u \
+					| sed \
+						-e 's/\(...\) \([abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_][abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789]*\).*/#ifndef _\1_'$v'\
 #define _\1_'$v' \2\
 #define _\1_'$v'_str "\2"\
 #endif/'
-				;;
-			typ)	case $p in
-				"")	x= ;;
-				*)	x="$p " ;;
-				esac
-				is typ "$x$v"
-				{
-				case $p:$v in
-				long:*|*:*[_0123456789]int[_0123456789]*)
-					echo "$pre
+					;;
+				typ)	case $p in
+					"")	x= ;;
+					*)	x="$p " ;;
+					esac
+					is typ "$x$v"
+					{
+					case $p:$v in
+					long:*|*:*[_0123456789]int[_0123456789]*)
+						echo "$pre
 $inc
 static $x$v i;
 $x$v f() {
 $x$v v; i = 1; v = i;"
-					echo "i = v * i; i = i / v; v = v + i; i = i - v;"
-					case $v in
-					float|double) ;;
-					*)	echo "v <<= 4; i = v >> 2; i = 10; i = v % i; i |= v; v ^= i; i = 123; v &= i;" ;;
-					esac
-					echo "return v; }"
-					;;
-				*)	echo "$pre
+						echo "i = v * i; i = i / v; v = v + i; i = i - v;"
+						case $v in
+						float|double) ;;
+						*)	echo "v <<= 4; i = v >> 2; i = 10; i = v % i; i |= v; v ^= i; i = 123; v &= i;" ;;
+						esac
+						echo "return v; }"
+						;;
+					*)	echo "$pre
 $inc
 struct xxx { $x$v mem; };
 static struct xxx v;
 struct xxx* f() { return &v; }"
+						;;
+					esac
+					case $x in
+					""|"struct "|"union ")
+						echo "int main() { f(); return 0; }" ;;
+					*)	echo "int main() { f(); return sizeof($x$v)<=sizeof($v); }" ;;
+					esac
+					} > $tmp.c
+					rm -f $tmp.exe
+					$cc -o $tmp.exe $tmp.c $lib $deflib <&$nullin >&$nullout &&
+					$executable $tmp.exe &&
+					execute $tmp.exe
+					report $? 1 "$x$v is a type" "$x$v is not a type" "default for type $x$v"
+					;;
+				val)	case $arg in
+					'"'*'"')echo $arg=\'$val\' ;;
+					*)	echo $arg=\"$val\" ;;
+					esac
+					;;
+				0)	result=FAILURE
+					;;
+				1)	result=SUCCESS
+					;;
+				:)	;;
+				-)	;;
+				*)	echo "$command: $file$line: $o: unknown feature test" >&$stderr
+					status=1
 					;;
 				esac
-				case $x in
-				""|"struct "|"union ")
-					echo "int main() { f(); return 0; }" ;;
-				*)	echo "int main() { f(); return sizeof($x$v)<=sizeof($v); }" ;;
-				esac
-				} > $tmp.c
-				rm -f $tmp.exe
-				$cc -o $tmp.exe $tmp.c $lib $deflib >&$nullout &&
-				$executable $tmp.exe &&
-				execute $tmp.exe
-				report $? 1 "$x$v is a type" "$x$v is not a type" "default for type $x$v"
-				;;
-			val)	case $arg in
-				'"'*'"')echo $arg=\'$val\' ;;
-				*)	echo $arg=\"$val\" ;;
-				esac
-				;;
-			0)	result=FAILURE
-				;;
-			1)	result=SUCCESS
-				;;
-			:)	;;
-			-)	;;
-			*)	echo "$command: $file$line: $o: unknown feature test" >&$stderr
-				status=1
-				;;
-			esac
+			done
 		done
-	done
-	case $not in
-	1)	case $result in
-		FAILURE)	result=SUCCESS ;;
-		*)		result=FAILURE ;;
-		esac
-		;;
-	esac
-	case $result in
-	FAILURE)	user_pf=$fail user_yn=$no ;;
-	*)		user_pf=$pass user_yn=$yes ;;
-	esac
-	case $user_pf in
-	?*)	eval "$user_pf" ;;
-	esac
-	case $user_yn in
-	?*)	case $def in
-		-)	;;
-		*)	case $note in
-			?*)	case $user_yn in
-				*$nl*)	user_yn="/* $note */$nl$user_yn" ;;
-				*)	user_yn="$user_yn	/* $note */" ;;
-				esac
-				;;
+		case $not in
+		1)	case $result in
+			FAILURE)	result=SUCCESS ;;
+			*)		result=FAILURE ;;
 			esac
 			;;
 		esac
-		copy - "$user_yn"
-		;;
-	esac
-	case $ifelse:$result in
-	TEST:SUCCESS)	ifelse=KEEP ;;
-	TEST:*)		ifelse=SKIP ;;
-	esac
+		case $result in
+		FAILURE)	user_pf=$fail user_yn=$no ;;
+		*)		user_pf=$pass user_yn=$yes ;;
+		esac
+		case $user_pf in
+		?*)	eval "$user_pf" <&$nullin ;;
+		esac
+		case $user_yn in
+		?*)	case $def in
+			-)	;;
+			*)	case $note in
+				?*)	case $user_yn in
+					*$nl*)	user_yn="/* $note */$nl$user_yn" ;;
+					*)	user_yn="$user_yn	/* $note */" ;;
+					esac
+					;;
+				esac
+				;;
+			esac
+			copy - "$user_yn"
+			;;
+		esac
+		case $ifelse:$result in
+		TEST:SUCCESS)	ifelse=KEEP ;;
+		TEST:*)		ifelse=SKIP ;;
+		esac
+		case $group:$result in
+		:*|*:SUCCESS)	break ;;
+		esac
+		set '' $groups '' "$@"
+		shift
+		case $1 in
+		'')	shift; break ;;
+		esac
+		shift
+
+		# set up and try the next group
+
+		hdr=$com_hdr
+		lib=$com_lib
+		mac=$com_mac
+		opt=$com_opt
+		pth=$com_pth
+		test=$com_test
+		cc="$occ $includes"
+		group=
+		groups=
+		while	:
+		do	case $1 in
+			'')	shift; break ;;
+			esac
+			case $1 in
+			*[\"\'\(\)\{\}\ \	]*)
+				case $op in
+				pth)	pth="$pth $1"
+					;;
+				*)	case $test in
+					'')	test=$1 ;;
+					*)	test="$test $1" ;;
+					esac
+					;;
+				esac
+				;;
+			-)	group=$group$1
+				groups="$groups $1"
+				;;
+			-l*)	case $group in
+				-*)	groups="$groups $1" ;;
+				*)	lib="$lib $1" ;;
+				esac
+				;;
+			+l*)	case $shell in
+				bsh)	x=`echo '' $1 | sed 's/[^+]*+/-/'` ;;
+				*)	eval 'x=-${1#+}' ;;
+				esac
+				case $group in
+				-*)	groups="$groups $x" ;;
+				*)	lib="$lib $x" ;;
+				esac
+				;;
+			-*|+*)	case $group in
+				-*)	groups="$groups $1"
+					;;
+				*)	case $op in
+					run)	opt="$opt $1"
+						;;
+					*)	case $1 in
+						-D*)	mac="$mac $1" ;;
+						*)	cc="$cc $1" ;;
+						esac
+						;;
+					esac
+					;;
+				esac
+				;;
+			*.[aAxX]|*.[dD][lL][lL]|*.[lL][iI][bB])
+				case $group in
+				-*)	groups="$groups $1" ;;
+				*)	lib="$lib $1" ;;
+				esac
+				;;
+			*[.\\/]*)
+				case $group in
+				-*)	groups="$groups $1"
+					;;
+				*)	case $op in
+					pth)	pth="$pth $1" ;;
+					*)	hdr="$hdr $1" ;;
+					esac
+					;;
+				esac
+				;;
+			*)	case $group in
+				-*)	groups="$groups $1"
+					;;
+				*)	case $op in
+					pth)	pth="$pth $1"
+						;;
+					*)	case $test in
+						'')	test=$1 ;;
+						*)	test="$test $1" ;;
+						esac
+						;;
+					esac
+					;;
+				esac
+				;;
+			esac
+			shift
+		done
+	done
 done

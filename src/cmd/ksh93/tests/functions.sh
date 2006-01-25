@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#                  Copyright (c) 1982-2005 AT&T Corp.                  #
+#                  Copyright (c) 1982-2006 AT&T Corp.                  #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                            by AT&T Corp.                             #
@@ -715,6 +715,7 @@ cat /tmp/data$$.1 >> /tmp/script$$
 printf 'M\n}\n\nf\n\n' >> /tmp/script$$
 $SHELL -c /tmp/script$$  > /tmp/data$$.2
 cmp -s /tmp/data$$.[12] || err_exit 'error with long functions'
+rm -f /tmp/script$$ /tmp/data$$.[12]
 v=1
 function f
 {

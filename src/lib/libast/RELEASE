@@ -1,3 +1,11 @@
+06-01-06 features/lib: change _UNIV_DEFAULT probe to use cross{...}
+06-01-04 misc/stk.c: fix n**2 realloc behavior
+06-01-01 include/sfio.h: export { _Sfi _Sfmaxr }
+05-12-13 string/chresc.c: handle \C-X => control-X, \M- => ESC
+05-11-22 regex/regcache.c: add, convert string/strmatch.c to regcache()
+05-10-06 string/ccmap.c: update ebcdic-u to be idempotent
+05-09-28 vmalloc: snarf from kpv; fixes large block brk() thrashing
+05-09-26 misc/magic.c,misc/magic.tab: handle latest vcodex header
 05-09-12 misc/optget.c: reset opt_info.offset on error
 	 string/strtoi.h: strton() '.' multiplier only if m>1
 	 string/fmtesc.c: add unadvertized FMT_PARM for FMT_SHELL

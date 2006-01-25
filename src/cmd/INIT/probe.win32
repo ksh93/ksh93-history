@@ -1,5 +1,5 @@
 :
-# @(#)probe.win32 (AT&T Research) 2004-10-01
+# @(#)probe.win32 (AT&T Research) 2005-02-20
 #
 # win32 specific make C probe initialization
 # wrapped cc's are easy on uwin
@@ -10,7 +10,7 @@
 
 IFS=$'\n'
 
-typeset -A headers
+typeset -A header version
 
 # we are probing on behalf of libpp and nmake
 # so the native preprocessor must be forced in
@@ -36,71 +36,65 @@ for i in $probe_header
 do	echo "#include <$i>"
 done
 echo '#ifdef __cplusplus'
-echo "int cplus=__cplusplus;"
+echo "int _Pr0b3_cplus=__cplusplus;"
 echo '#endif'
 echo '#ifdef _UWIN'
-echo "int uwin=_UWIN;"
+echo "int _Pr0b3_uwin=_UWIN;"
 echo '#endif'
 echo '#ifdef __BORLANDC__'
-echo "int versionb=__BORLANDC__;"
+echo "int _Pr0b3_version_BORLAND=__BORLANDC__;"
 echo '#endif'
 echo '#ifdef __DMC__'
-echo "int versiond=__DMC__;"
+echo "int _Pr0b3_version_DM=__DMC__;"
 echo '#endif'
 echo '#ifdef _MSC_VER'
-echo "int versionm=_MSC_VER;"
+echo "int _Pr0b3_version_MS=_MSC_VER;"
 echo '#endif'
 echo '#ifdef __ICL'
-echo "int versioni=__ICL;"
+echo "int _Pr0b3_version_ICL=__ICL;"
 echo '#endif'
 echo '#ifdef __LCC__'
-echo "int versionl=0+__LCC__;"
+echo "int _Pr0b3_version_LCC=0+__LCC__;"
 echo '#endif'
 echo '#ifdef __MINGW32__'
-echo "int versiong=__MINGW32__;"
+echo "int _Pr0b3_version_MINGW=__MINGW32__;"
 echo '#endif'
 echo '#ifdef __INTERIX'
-echo "int versiono=__INTERIX;"
+echo "int _Pr0b3_version_INTERIX=__INTERIX;"
 echo '#endif'
 echo '#ifdef __WATCOMC__'
-echo "int versionw=__WATCOMC__;"
+echo "int _Pr0b3_version_WATCOM=__WATCOMC__;"
 echo '#endif'
 } > easy.c
 
 include=
 uwin=
 cplus=
-versionb=
-versiond=
-versionm=
-versionl=
-versiong=
-versioni=
-versiono=
-versionw=
 
 $cc -E easy.c 2>&1 |
-egrep -i '^(#(line)? 1 .*\.[hH]| *int +(cplus|uwin|version[bdiglmw]) *= *[0-9])' |
-sed	-e 's/.*"\(.*\)".*/\1/' \
+egrep -i '^(#(line)? 1 .*\.[hH]| *int +_Pr0b3_[a-zA-Z_]* *= *[0-9])' |
+sed	-e 's,_Pr0b3_,,' \
+	-e 's/.*"\(.*\)".*/\1/' \
 	-e 's,^  *,,' \
 	-e 's,  *$,,' \
 	-e 's, *= *,=,' \
 	-e 's,^\(.\):[\\/]*,/\1/,' \
 	-e 's,[\\/][\\/]*,/,g' \
-	-e 's,^\(/.*\)/\(.*\)$,headers[\2]="\1",' \
+	-e 's,^\(/.*\)/\(.*\)$,header[\2]="\1",' \
 	-e 's, *int *\(.*\);.*,\1,' \
+	-e 's,^version_\(.*\)=,version[\1]=,' \
 	> easy.sh
 . ./easy.sh
 
 include=
 for i in $probe_header
-do	d=${headers[$i]}
-	if [[ $d ]]
+do	d=${header[$i]}
+	if	[[ $d ]]
 	then	include="$include
 $d"
-	elif [[ $i == */* ]]
-	then	d=${headers[${i##*/}]}
-		if [[ $d == */${i%/*} ]]
+	elif	[[ $i == */* ]]
+	then	d=${header[${i##*/}]}
+		if	[[ $d == */${i%/*} ]]
 		then	include="$include
 ${d%/${i%/*}}"
 		fi
@@ -115,7 +109,10 @@ fi
 
 stdinclude=
 for inc in $include
-do	for dup in $stdinclude
+do	if	[[ ${inc%/*} -ef /platformsdk ]]
+	then	inc=/platformsdk/${inc##*/}
+	fi
+	for dup in $stdinclude
 	do	[[ $inc -ef $dup ]] && continue 2
 	done
 	stdinclude="$stdinclude
@@ -124,9 +121,8 @@ done
 
 # end preamble shared with the pp probe.ini
 
-case $versionb$versiond$versionm$versionl$versiong$versioni$versiono$versionw:$stdinclude in
-[0-9]*:*/*)
-	: the payoff
+if	[[ ${version[@]} == [0-9]* && $stdinclude ]]
+then	: the payoff
 	set -- $cc
 	cmd=$1
 	shift
@@ -139,9 +135,9 @@ case $versionb$versiond$versionm$versionl$versiong$versioni$versiono$versionw:$s
 		;;
 	esac
 	ld=${cc%cc}ld
-	if [[ ! -x $ld ]]
+	if	[[ ! -x $ld ]]
 	then	ld=${cc%/*}/ld
-		if [[ ! -x $ld ]]
+		if	[[ ! -x $ld ]]
 		then	case $cc in
 			*/ncc)	ld=/usr/bin/nld ;;
 			*)	ld=/usr/bin/ld ;;
@@ -199,18 +195,18 @@ CC.STATIC = -Bstatic
 !
 	inc=
 	lib=
-	if	[ X"$versionl" != X ]
+	if	[[ ${version[LCC]} ]]
 	then	lib=/lcc
 	fi
-	case $stdinclude in
-	*' '*)	stdinclude=`echo "$stdinclude" | sed -e 's/ //g'`;;
-	esac
+	if	[[ $stdinclude == *' '* ]]
+	then	stdinclude=${stdinclude//' '/''}
+	fi
 	stdinc=
 	stdlib=
 	for inc in $stdinclude
 	do	stdinc="$stdinc $inc"
 		d=${inc%/*}/lib
-		if [[ -d $d ]]
+		if	[[ -d $d ]]
 		then	stdlib="$stdlib $d"
 		fi
 	done
@@ -247,5 +243,4 @@ CC.PREROOT =
 CC.UNIVERSE = att
 !
 	exit 0
-	;;
-esac
+fi
