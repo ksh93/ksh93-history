@@ -25,6 +25,7 @@
 
 #include <ast.h>
 #include <dlldefs.h>
+#include <error.h>
 
 /*
  * find and load lib plugin/module library name with optional version ver and dlopen() flags
@@ -55,6 +56,8 @@ dllplug(const char* lib, const char* name, const char* ver, int flags, char* pat
 						strncopy(path, dle->path, size);
 					break;
 				}
+				else
+					errorf("dll", NiL, 1, "%s: dlopen failed: %s", dle->path, dlerror());
 			}
 			dllsclose(dls);
 		}

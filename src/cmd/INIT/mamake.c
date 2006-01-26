@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1994-2006 AT&T Corp.                  *
+*                  Copyright (c) 1990-2005 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *

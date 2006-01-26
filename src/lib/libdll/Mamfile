@@ -181,12 +181,13 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_
 done dllfind.o generated
 make dllplug.o
 make dllplug.c
+prev ${PACKAGE_ast_INCLUDE}/error.h implicit
 prev dlldefs.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done dllplug.c
 meta dllplug.o %.c>%.o dllplug.c dllplug
 prev dllplug.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_BLD_dll -D_PACKAGE_ast -c dllplug.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_dll -c dllplug.c
 done dllplug.o generated
 make dllnext.o
 make dllnext.c

@@ -168,7 +168,7 @@ static Feature_t	dynamic[] =
 		"lib",
 #endif
 		0,
-		7,
+		9,
 		CONF_AST,
 		0,
 		OP_libprefix
@@ -182,7 +182,7 @@ static Feature_t	dynamic[] =
 		".so",
 #endif
 		0,
-		7,
+		9,
 		CONF_AST,
 		0,
 		OP_libsuffix

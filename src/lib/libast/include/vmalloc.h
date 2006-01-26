@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2006 AT&T Corp.                  *
+*                  Copyright (c) 1985-2005 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                            by AT&T Corp.                             *
@@ -27,7 +27,7 @@
 **	Written by Kiem-Phong Vo, kpv@research.att.com, 01/16/94.
 */
 
-#define VMALLOC_VERSION	20050928L
+#define VMALLOC_VERSION	20040404L
 
 #if _PACKAGE_ast
 #include	<ast_std.h>
