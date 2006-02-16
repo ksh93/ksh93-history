@@ -1210,7 +1210,7 @@ prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done data/testops.c
 meta testops.o %.c>%.o data/testops.c testops
 prev data/testops.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2006 AT&T Corp.][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libshell]"\" -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH  -c data/testops.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2006 AT&T Knowledge Ventures][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libshell]"\" -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH  -c data/testops.c
 done testops.o generated
 make keywords.o
 make data/keywords.c
@@ -1283,7 +1283,7 @@ prev include/shell.h implicit
 done data/builtins.c
 meta builtins.o %.c>%.o data/builtins.c builtins
 prev data/builtins.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_KIA -DSHOPT_PFSH -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2006 AT&T Corp.][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libshell]"\" -DSHOPT_BRACEPAT -DSHOPT_HISTEXPAND -DSH_CMDLIB_DIR=\""/opt/ast/bin"\" -DSHOPT_CMDLIB_BLTIN=0 -DSHOPT_MULTIBYTE -D_PACKAGE_ast -D_BLD_shell -DKSHELL -DSHOPT_OO -DSHOPT_DYNAMIC  -c data/builtins.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_KIA -DSHOPT_PFSH -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2006 AT&T Knowledge Ventures][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libshell]"\" -DSHOPT_BRACEPAT -DSHOPT_HISTEXPAND -DSH_CMDLIB_DIR=\""/opt/ast/bin"\" -DSHOPT_CMDLIB_BLTIN=0 -DSHOPT_MULTIBYTE -D_PACKAGE_ast -D_BLD_shell -DKSHELL -DSHOPT_OO -DSHOPT_DYNAMIC  -c data/builtins.c
 done builtins.o generated
 make variables.o
 make data/variables.c
@@ -1370,7 +1370,7 @@ setv CC.DLL -UCC.DLL
 setv SH_DICT -DSH_DICT="\"libshell\""
 setv _BLD_shell -U_BLD_shell
 setv _BLD_DLL -U_BLD_DLL
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -Iinclude -I${PACKAGE_ast_INCLUDE} -DSH_DICT=\""libshell"\" -DSHOPT_KIA -D_PACKAGE_ast -DSHOPT_DYNAMIC -DSHOPT_OO -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2006 AT&T Corp.][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libshell]"\" -c sh/shcomp.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -Iinclude -I${PACKAGE_ast_INCLUDE} -DSH_DICT=\""libshell"\" -DSHOPT_KIA -D_PACKAGE_ast -DSHOPT_DYNAMIC -DSHOPT_OO -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2006 AT&T Knowledge Ventures][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libshell]"\" -c sh/shcomp.c
 done shcomp.o generated
 prev libshell.a archive
 prev +ljobs

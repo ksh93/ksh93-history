@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2006 AT&T Corp.                  *
+*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -2734,8 +2734,10 @@ static pid_t sh_ntfork(const Shnode_t *t,char *argv[],int *jobid,int flag)
 			argv[0] = path;
 			if(fd>=0)
 			{
+				struct stat statb;
 				sfsprintf(devfd,sizeof(devfd),"/dev/fd/%d\0",fd);
-				argv[0] =  devfd;
+				if(stat(devfd,&statb)>=0)
+					argv[0] =  devfd;
 			}
 			if(!shp->shpath)
 				shp->shpath = pathshell();
@@ -2753,6 +2755,8 @@ static pid_t sh_ntfork(const Shnode_t *t,char *argv[],int *jobid,int flag)
 			errormsg(SH_DICT,ERROR_system(ERROR_NOEXEC),e_exec+4);
 		}
 	}
+	else
+		exitset();
 	sh_popcontext(&buff);
 #ifdef SIGTSTP
 	if(jobwasset)

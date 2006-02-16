@@ -1,7 +1,7 @@
 /*
  * source and binary package support
  *
- * @(#)package.mk (AT&T Research) 2006-01-11
+ * @(#)package.mk (AT&T Research) 2006-02-01
  *
  * usage:
  *
@@ -729,7 +729,7 @@ vendor.cyg = gnu
 			done
 			set -- $(package.dir:P=G)
 			for i
-			do	tw -d $i -e "action:printf(';;;%s\n',path);"
+			do	tw -d $i -e "action:printf(';;;%s;%s\n',path,path);"
 			done
 		} |
 		{
@@ -767,7 +767,7 @@ vendor.cyg = gnu
 			done
 			set -- $(package.dir:P=G)
 			for i
-			do	tw -d $i -e "action:printf(';;;%s\n',path);"
+			do	tw -d $i -e "action:printf(';;;%s;%s\n',path,path);"
 			done
 		} |
 		$(PAX)	--filter=- \
@@ -1015,7 +1015,7 @@ vendor.cyg = gnu
 			done
 			set -- $(package.dir:P=G)
 			for i
-			do	tw -d $i -e "action:printf(';;;%s\n',path);"
+			do	tw -d $i -e "action:printf(';;;%s;%s\n',path,path);"
 			done
 		} |
 		{

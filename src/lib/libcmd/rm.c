@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1992-2005 AT&T Corp.                  *
+*           Copyright (c) 1992-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: rm (AT&T Labs Research) 2004-10-01 $\n]"
+"[-?\n@(#)$Id: rm (AT&T Labs Research) 2006-01-28 $\n]"
 USAGE_LICENSE
 "[+NAME?rm - remove files]"
 "[+DESCRIPTION?\brm\b removes the named \afile\a arguments. By default it"
@@ -177,10 +177,15 @@ rm(register Ftw_t* ftw)
 				v = 1;
 			if (v)
 			{
-				if (state.interactive && astquery(2, "remove directory %s? ", ftw->path) > 0)
+				if (state.interactive)
 				{
-					ftw->status = FTW_SKIP;
-					nonempty(ftw);
+					if ((v = astquery(-1, "remove directory %s? ", ftw->path)) < 0)
+						return -1;
+					if (v > 0)
+					{
+						ftw->status = FTW_SKIP;
+						nonempty(ftw);
+					}
 				}
 				if (ftw->info == FTW_D)
 					break;
@@ -246,7 +251,9 @@ rm(register Ftw_t* ftw)
 			sfputr(sfstdout, ftw->path, '\n');
 		if (state.interactive)
 		{
-			if (astquery(2, "remove %s? ", ftw->path) > 0)
+			if ((v = astquery(-1, "remove %s? ", ftw->path)) < 0)
+				return -1;
+			if (v > 0)
 			{
 				nonempty(ftw);
 				break;
@@ -263,12 +270,14 @@ rm(register Ftw_t* ftw)
 #ifdef EROFS
 					errno != EROFS &&
 #endif
-					astquery(2, "override protection %s for %s? ",
+					(v = astquery(-1, "override protection %s for %s? ",
 #ifdef ETXTBSY
 					errno == ETXTBSY ? "``running program''" : 
 #endif
 					ftw->statb.st_uid != state.uid ? "``not owner''" :
-					fmtmode(ftw->statb.st_mode & S_IPERM, 0) + 1, ftw->path) > 0)
+					fmtmode(ftw->statb.st_mode & S_IPERM, 0) + 1, ftw->path)) < 0)
+						return -1;
+					if (v > 0)
 					{
 						nonempty(ftw);
 						break;

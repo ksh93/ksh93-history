@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2005 AT&T Corp.                  *
+*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -482,7 +482,7 @@ static int hist_nearend(History_t *hp, Sfio_t *iop, register off_t size)
 		goto begin;
 	/* skip to marker command and return the number */
 	/* numbering commands occur after a null and begin with HIST_CMDNO */
-        while(cp=buff=(unsigned char*)sfreserve(iop,SF_UNBOUND,1))
+        while(cp=buff=(unsigned char*)sfreserve(iop,SF_UNBOUND,SF_LOCKR))
         {
 		n = sfvalue(iop);
                 *(endbuff=cp+n) = 0;
@@ -658,7 +658,7 @@ void hist_flush(register History_t *hp)
 	register char *buff;
 	if(hp)
 	{
-		if(buff=(char*)sfreserve(hp->histfp,0,1))
+		if(buff=(char*)sfreserve(hp->histfp,0,SF_LOCKR))
 		{
 			hp->histflush = sfvalue(hp->histfp)+1;
 			sfwrite(hp->histfp,buff,0);

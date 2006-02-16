@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2005 AT&T Corp.                  *
+*           Copyright (c) 1985-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -64,17 +64,19 @@
 #define CONTRIBUTOR		3
 #define CORPORATION		4
 #define DOMAIN			5
-#define LICENSE			6
-#define LOCATION		7
-#define NOTICE			8
-#define ORGANIZATION		9
-#define PACKAGE			10
-#define QUERY			11
-#define SINCE			12
-#define STYLE			13
-#define URL			14
-#define URLMD5			15
-#define VERSION			16
+#define INCORPORATION		6
+#define LICENSE			7
+#define LOCATION		8
+#define NOTICE			9
+#define ORGANIZATION		10
+#define PACKAGE			11
+#define PARENT			12
+#define QUERY			13
+#define SINCE			14
+#define STYLE			15
+#define URL			16
+#define URLMD5			17
+#define VERSION			18
 
 #define IDS			64
 
@@ -128,11 +130,13 @@ static const Item_t	key[] =
 	KEY("contributor"),
 	KEY("corporation"),
 	KEY("domain"),
+	KEY("incorporation"),
 	KEY("license"),
 	KEY("location"),
 	KEY("notice"),
 	KEY("organization"),
 	KEY("package"),
+	KEY("parent"),
 	KEY("query"),
 	KEY("since"),
 	KEY("type"),
@@ -327,12 +331,20 @@ copyright(Notice_t* notice, register Buffer_t* b)
 		PUT(b, '-');
 	}
 	copy(b, t, 4);
+	if (notice->item[PARENT].data)
+	{
+		PUT(b, ' ');
+		expand(notice, b, &notice->item[PARENT]);
+	}
 	if (notice->item[CORPORATION].data)
 	{
 		PUT(b, ' ');
 		expand(notice, b, &notice->item[CORPORATION]);
-		PUT(b, ' ');
-		copy(b, "Corp.", -1);
+		if (notice->item[INCORPORATION].data)
+		{
+			PUT(b, ' ');
+			expand(notice, b, &notice->item[INCORPORATION]);
+		}
 	}
 	else if (notice->item[COMPANY].data)
 	{
@@ -668,18 +680,25 @@ astlicense(char* p, int size, char* file, char* options, int cc1, int cc2, int c
 				expand(&notice, &tmp, &notice.item[VERSION]);
 			}
 			comment(&notice, &buf, BUF(&tmp), USE(&tmp), 0);
-			if (notice.item[CORPORATION].data)
+			if (notice.item[CORPORATION].data || notice.item[COMPANY].data)
 			{
 				copy(&tmp, "by ", -1);
-				expand(&notice, &tmp, &notice.item[CORPORATION]);
-				copy(&tmp, " Corp.", -1);
-				comment(&notice, &buf, BUF(&tmp), USE(&tmp), 0);
-			}
-			else if (notice.item[COMPANY].data)
-			{
-				copy(&tmp, "by", -1);
-				comment(&notice, &buf, BUF(&tmp), USE(&tmp), 0);
-				expand(&notice, &tmp, &notice.item[COMPANY]);
+				if (notice.item[PARENT].data)
+				{
+					expand(&notice, &tmp, &notice.item[PARENT]);
+					copy(&tmp, " ", -1);
+				}
+				if (notice.item[CORPORATION].data)
+				{
+					expand(&notice, &tmp, &notice.item[CORPORATION]);
+					if (notice.item[INCORPORATION].data)
+					{
+						copy(&tmp, " ", -1);
+						expand(&notice, &tmp, &notice.item[INCORPORATION]);
+					}
+				}
+				else if (notice.item[COMPANY].data)
+					expand(&notice, &tmp, &notice.item[COMPANY]);
 				comment(&notice, &buf, BUF(&tmp), USE(&tmp), 0);
 			}
 			comment(&notice, &buf, NiL, 0, 0);
@@ -707,15 +726,22 @@ astlicense(char* p, int size, char* file, char* options, int cc1, int cc2, int c
 			comment(&notice, &buf, BUF(&tmp), USE(&tmp), 0);
 			if (notice.item[i = CORPORATION].data)
 			{
-				expand(&notice, &tmp, &notice.item[i]);
-				copy(&tmp, " Corp. (\"", -1);
-				expand(&notice, &tmp, &notice.item[i]);
-				copy(&tmp, "\")", -1);
+				if (notice.item[PARENT].data)
+				{
+					expand(&notice, &tmp, &notice.item[i = PARENT]);
+					copy(&tmp, " ", -1);
+				}
+				expand(&notice, &tmp, &notice.item[CORPORATION]);
 				comment(&notice, &buf, BUF(&tmp), USE(&tmp), 0);
 			}
 			else if (notice.item[i = COMPANY].data)
 			{
-				expand(&notice, &tmp, &notice.item[i]);
+				if (notice.item[PARENT].data)
+				{
+					expand(&notice, &tmp, &notice.item[i = PARENT]);
+					copy(&tmp, " ", -1);
+				}
+				expand(&notice, &tmp, &notice.item[COMPANY]);
 				comment(&notice, &buf, BUF(&tmp), USE(&tmp), 0);
 			}
 			else
@@ -792,7 +818,7 @@ astlicense(char* p, int size, char* file, char* options, int cc1, int cc2, int c
 			COMMENT(&notice, &buf, "      materials provided with the distribution.", -1);
 			comment(&notice, &buf, NiL, 0, 0);
 			copy(&tmp, "   3. Neither the name of ", -1);
-			if (notice.item[i = CORPORATION].data || notice.item[i = COMPANY].data)
+			if (notice.item[i = PARENT].data || notice.item[i = CORPORATION].data || notice.item[i = COMPANY].data)
 				expand(&notice, &tmp, &notice.item[i]);
 			else
 				copy(&tmp, "the copyright holder", -1);
@@ -872,7 +898,7 @@ astlicense(char* p, int size, char* file, char* options, int cc1, int cc2, int c
 		{
 			if (notice.type == PROPRIETARY)
 			{
-				if (notice.item[i = CORPORATION].data || notice.item[i = COMPANY].data)
+				if (notice.item[i = PARENT].data || notice.item[i = CORPORATION].data || notice.item[i = COMPANY].data)
 				{
 					expand(&notice, &tmp, &notice.item[i]);
 					copy(&tmp, " - ", -1);
@@ -885,13 +911,17 @@ astlicense(char* p, int size, char* file, char* options, int cc1, int cc2, int c
 				if (notice.item[URL].data)
 				{
 					copy(&tmp, "This is proprietary source code", -1);
-					if (notice.item[CORPORATION].data || notice.item[COMPANY].data)
+					if (i >= 0)
 						copy(&tmp, " licensed by", -1);
 					comment(&notice, &buf, BUF(&tmp), USE(&tmp), 1);
+					if (notice.item[PARENT].data)
+					{
+						expand(&notice, &tmp, &notice.item[PARENT]);
+						copy(&tmp, " ", -1);
+					}
 					if (notice.item[CORPORATION].data)
 					{
 						expand(&notice, &tmp, &notice.item[CORPORATION]);
-						copy(&tmp, " Corp.", -1);
 						comment(&notice, &buf, BUF(&tmp), USE(&tmp), 1);
 					}
 					else if (notice.item[COMPANY].data)
@@ -906,8 +936,8 @@ astlicense(char* p, int size, char* file, char* options, int cc1, int cc2, int c
 					if (i >= 0)
 						copy(&tmp, " of", -1);
 					comment(&notice, &buf, BUF(&tmp), USE(&tmp), 1);
-					if (notice.item[CORPORATION].data)
-						expand(&notice, &tmp, &notice.item[CORPORATION]);
+					if (notice.item[i = PARENT].data || notice.item[i = CORPORATION].data)
+						expand(&notice, &tmp, &notice.item[i]);
 					if (notice.item[COMPANY].data)
 					{
 						if (SIZ(&tmp))
@@ -939,25 +969,29 @@ astlicense(char* p, int size, char* file, char* options, int cc1, int cc2, int c
 			if (notice.item[URL].data)
 			{
 				copy(&tmp, "This software is licensed", -1);
-				if (notice.item[CORPORATION].data)
+				if (notice.item[CORPORATION].data || notice.item[COMPANY].data)
 				{
 					copy(&tmp, " by", -1);
-					if (notice.item[CORPORATION].size >= (COMLONG - 6))
+					if ((notice.item[PARENT].size + (notice.item[CORPORATION].data ? (notice.item[CORPORATION].size + notice.item[INCORPORATION].size) : notice.item[COMPANY].size)) >= (COMLONG - 6))
 						comment(&notice, &buf, BUF(&tmp), USE(&tmp), 0);
 					else
 						PUT(&tmp, ' ');
-					expand(&notice, &tmp, &notice.item[CORPORATION]);
-					PUT(&tmp, ' ');
-					copy(&tmp, "Corp.", -1);
-				}
-				else if (notice.item[COMPANY].data)
-				{
-					copy(&tmp, " by", -1);
-					if (notice.item[COMPANY].size >= COMLONG)
-						comment(&notice, &buf, BUF(&tmp), USE(&tmp), 0);
-					else
-						PUT(&tmp, ' ');
-					expand(&notice, &tmp, &notice.item[COMPANY]);
+					if (notice.item[PARENT].data)
+					{
+						expand(&notice, &tmp, &notice.item[PARENT]);
+						copy(&tmp, " ", -1);
+					}
+					if (notice.item[CORPORATION].data)
+					{
+						expand(&notice, &tmp, &notice.item[CORPORATION]);
+						if (notice.item[INCORPORATION].data)
+						{
+							copy(&tmp, " ", -1);
+							expand(&notice, &tmp, &notice.item[INCORPORATION]);
+						}
+					}
+					else if (notice.item[COMPANY].data)
+						expand(&notice, &tmp, &notice.item[COMPANY]);
 				}
 				comment(&notice, &buf, BUF(&tmp), USE(&tmp), 0);
 				COMMENT(&notice, &buf, "under the terms and conditions of the license in", 0);
@@ -1006,8 +1040,8 @@ astlicense(char* p, int size, char* file, char* options, int cc1, int cc2, int c
 		{
 			expand(&notice, &tmp, &notice.item[ORGANIZATION]);
 			comment(&notice, &buf, BUF(&tmp), USE(&tmp), 0);
-			if (notice.item[CORPORATION].data)
-				expand(&notice, &tmp, &notice.item[CORPORATION]);
+			if (notice.item[i = PARENT].data || notice.item[i = CORPORATION].data)
+				expand(&notice, &tmp, &notice.item[i]);
 			if (notice.item[COMPANY].data)
 			{
 				if (SIZ(&tmp))

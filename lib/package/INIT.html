@@ -48,7 +48,14 @@ All recorded changes follow.
 <P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="INIT changes">INIT changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
+06-02-14 package.sh: "results failed test" == "results test failed"
+	 cc.sgi.*: add _AST_cc_OPTIONS parameterization, -OPT:Olimit=0
+	 cc.linux.ia64-icc: add for intel cc
+06-02-02 package.sh: freebsd stuck with os version for all arch
+06-02-01 package.mk: fix locale logic (tw -d requires dir arg)
+06-01-31 package.sh: require $CC only for make|test
 06-01-30 package.sh,hurl.sh: use the backwards-compatible --http-passwd
+	 package.sh: add more pdksh =&gt; /bin/sh checks
 06-01-26 package.sh: wget --http-pass =&gt; --http-password
 	 package.sh: fix wget error logic
 	 hurl.sh: wget --http-pass =&gt; --http-password
@@ -760,7 +767,7 @@ All recorded changes follow.
 <TR>
 <TD align=left></TD>
 <TD align=center></TD>
-<TD align=right>January 30, 2006</TD>
+<TD align=right>February 20, 2006</TD>
 </TR>
 </TABLE>
 <P>

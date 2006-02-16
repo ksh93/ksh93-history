@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2006 AT&T Corp.                  *
+*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -95,6 +95,16 @@ static int path_pfexecve(const char *path, char *argv[],char *const envp[])
 #endif
 }
 
+
+static pid_t _spawnveg(const char *path, char* const argv[], char* const envp[], pid_t pid)
+{
+	int waitsafe = job.waitsafe;
+	job.in_critical++;
+	pid = spawnveg(path,argv,envp,pid);
+	job.waitsafe = waitsafe;
+	job.in_critical--;
+	return(pid);
+}
 /*
  * used with command -x to run the command in multiple passes
  * spawn is non-zero when invoked via spawn
@@ -148,7 +158,7 @@ static pid_t path_xargs(const char *path, char *argv[],char *const envp[], int s
 		}
 		if(saveargs || av<avlast || (exitval && !spawn))
 		{
-			if((pid=spawnveg(path,argv,envp,0)) < 0)
+			if((pid=_spawnveg(path,argv,envp,0)) < 0)
 				return(-1);
 			job_post(pid,0);
 			job_wait(pid);
@@ -161,10 +171,10 @@ static pid_t path_xargs(const char *path, char *argv[],char *const envp[], int s
 				saveargs = 0;
 			}
 		}
-		else if(spawn)
+		else if(spawn && !sh_isoption(SH_PFSH))
 		{
 			sh.xargexit = exitval;
-			return(spawnveg(path,argv,envp,spawn>>1));
+			return(_spawnveg(path,argv,envp,spawn>>1));
 		}
 		else
 			return((pid_t)path_pfexecve(path,argv,envp));
@@ -913,8 +923,8 @@ pid_t path_spawn(const char *opath,register char **argv, char **envp, Pathcomp_t
 		path = sp;
 	}
 #endif /* SHELLMAGIC */
-	if(spawn)
-		pid = spawnveg(opath, &argv[0],envp, spawn>>1);
+	if(spawn && !sh_isoption(SH_PFSH))
+		pid = _spawnveg(opath, &argv[0],envp, spawn>>1);
 	else
 		path_pfexecve(opath, &argv[0] ,envp);
 	if(xp)
@@ -929,7 +939,7 @@ pid_t path_spawn(const char *opath,register char **argv, char **envp, Pathcomp_t
 	if(pid>0)
 		return(pid);
 retry:
-	switch(errno)
+	switch(sh.path_err = errno)
 	{
 #ifdef apollo
 	    /* 

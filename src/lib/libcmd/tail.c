@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1992-2006 AT&T Corp.                  *
+*           Copyright (c) 1992-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -28,7 +28,7 @@
  */
 
 static const char usage[] =
-"+[-?\n@(#)$Id: tail (AT&T Labs Research) 2004-10-31 $\n]"
+"+[-?\n@(#)$Id: tail (AT&T Labs Research) 2006-02-14 $\n]"
 USAGE_LICENSE
 "[+NAME?tail - output trailing portion of one or more files ]"
 "[+DESCRIPTION?\btail\b copies one or more input files to standard output "
@@ -116,7 +116,6 @@ struct Tail_s
 	Tail_t*		next;
 	char*		name;
 	Sfio_t*		sp;
-	Sfoff_t		size;
 	Sfoff_t		last;
 	unsigned long	expire;
 	long		dev;
@@ -253,7 +252,6 @@ init(Tail_t* tp, long number, int delim, int flags)
 		return -1;
 	}
 	sfset(tp->sp, SF_SHARE, 0);
-	tp->last = 0;
 	if (offset)
 	{
 		if ((offset = tailpos(tp->sp, number, delim)) < 0)
@@ -263,7 +261,7 @@ init(Tail_t* tp, long number, int delim, int flags)
 		}
 		sfseek(tp->sp, offset, SEEK_SET);
 	}
-	tp->size = offset;
+	tp->last = offset;
 	if (flags & LOG)
 	{
 		if (fstat(sffileno(tp->sp), &st))
@@ -488,8 +486,7 @@ b_tail(int argc, char** argv, void* context)
 					n = 1;
 					if (timeout)
 						fp->expire = NOW + timeout;
-					fp->last = st.st_size;
-					z = st.st_size - fp->size;
+					z = st.st_size - fp->last;
 					i = 0;
 					if ((s = sfreserve(fp->sp, z, SF_LOCKR)) || (z = sfvalue(fp->sp)) && (s = sfreserve(fp->sp, z, SF_LOCKR)) && (i = 1))
 					{
@@ -506,7 +503,7 @@ b_tail(int argc, char** argv, void* context)
 								format = header_fmt;
 							}
 							z = r - s + 1;
-							fp->size += z;
+							fp->last += z;
 							sfwrite(sfstdout, s, z);
 						}
 						else

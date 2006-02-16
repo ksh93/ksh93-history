@@ -1,10 +1,10 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#                  Copyright (c) 1994-2006 AT&T Corp.                  #
+#                     Copyright (c) 1994-2006 AT&T                     #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
-#                            by AT&T Corp.                             #
+#                               by AT&T                                #
 #                                                                      #
 #                A copy of the License is available at                 #
 #            http://www.opensource.org/licenses/cpl1.0.txt             #
@@ -55,7 +55,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2006-01-30 $
+@(#)$Id: package (AT&T Research) 2006-02-14 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -2160,7 +2160,7 @@ int main()
 						;;
 			freebsd)		case $rel in
 						[01234].*)	lhs=${lhs}4 ;;
-						[5].*)		lhs=${lhs}5 ;;
+						[123456789]*.*)	lhs=${lhs}`echo $rel | sed -e 's/\..*//'` ;;
 						esac
 						;;
 			hpux)			lhs=hp ;;
@@ -2539,25 +2539,34 @@ cat $INITROOT/$i.sh
 
 	CROSS=0
 	if	test -f $INITROOT/hello.c
-	then	(
-		cd /tmp || exit 3
-		cp $INITROOT/hello.c pkg$$.c || exit 3
-		$CC -o pkg$$.exe pkg$$.c > pkg$$.e 2>&1 || {
-			if $CC -Dnew=old -o pkg$$.exe pkg$$.c > /dev/null 2>&1
-			then	echo "$command: $CC: must be a C compiler (not C++)" >&2
-			else	cat pkg$$.e
-				echo "$command: $CC: failed to compile and link $INITROOT/hello.c -- is it a C compiler?" >&2
+	then	case $action in
+		make|test)	warn='' ;;
+		*)		warn='warning: ' ;;
+		esac
+		if	onpath $CC
+		then	(
+			cd /tmp || exit 3
+			cp $INITROOT/hello.c pkg$$.c || exit 3
+			$CC -o pkg$$.exe pkg$$.c > pkg$$.e 2>&1 || {
+				if $CC -Dnew=old -o pkg$$.exe pkg$$.c > /dev/null 2>&1
+				then	echo "$command: ${warn}$CC: must be a C compiler (not C++)" >&2
+				else	cat pkg$$.e
+					echo "$command: ${warn}$CC: failed to compile and link $INITROOT/hello.c -- is it a C compiler?" >&2
+				fi
+				exit 2
+			}
+			if ./pkg$$.exe >/dev/null
+			then	code=0
+			else	code=1
 			fi
-			exit 2
-		}
-		if ./pkg$$.exe >/dev/null
-		then	code=0
-		else	code=1
+			rm -f pkg$$.*
+			exit $code
+			)
+			code=$?
+		else	echo "$command: ${warn}$CC: not found" >&2
+			code=2
 		fi
-		rm -f pkg$$.*
-		exit $code
-		)
-		case $? in
+		case $code in
 		1)	CROSS=1
 			hostinfo type
 			case $HOSTTYPE in
@@ -2568,7 +2577,9 @@ cat $INITROOT/$i.sh
 				;;
 			esac
 			;;
-		2)	exit 1
+		2)	case $warn in
+			'')	exit 1 ;;
+			esac
 			;;
 		esac
 	fi
@@ -2755,17 +2766,22 @@ cat $INITROOT/$i.sh
 	case $KEEP_SHELL in
 	0)	executable "$SHELL" || SHELL=
 		case $SHELL in
+		?*)	case `$SHELL -c 'echo $KSH_VERSION' 2>&1` in
+			?*)	: any output here means $SHELL is not reliable for scripting
+				SHELL=
+				;;
+			esac
+			;;
+		esac
+		case $SHELL in
 		''|/bin/*|/usr/bin/*)
 			case $SHELL in
 			'')	SHELL=/bin/sh ;;
 			esac
 			for i in ksh sh bash
 			do	if	onpath $i
-				then	case `$_onpath_ -c 'echo $KSH_VERSION'` in
-					*[Pp][Dd]*)
-						: pd ksh is unreliable
-						;;
-					*)	SHELL=$_onpath_
+				then	case `$_onpath_ -c 'echo $KSH_VERSION' 2>&1` in
+					'')	SHELL=$_onpath_
 						break
 						;;
 					esac
@@ -2784,11 +2800,13 @@ cat $INITROOT/$i.sh
 
 	case $SHELL in
 	/bin/sh);;
+	'')	SHELL=/bin/sh
+		;;
 	*)	$SHELL -c 'trap "exit 0" 0; exit 1' 2>/dev/null
 		case $? in
 		1)	SHELL=/bin/sh
 			;;
-		*)	# catch pipe/socket configuration mismatches
+		*)	# catch (our own) pipe/socket configuration mismatches
 			date | $SHELL -c 'read x'
 			case $? in
 			0)	;;
@@ -3046,7 +3064,7 @@ setup)	# { update read } with optional (bin|fun|include|lib) symlinks
 		esac
 		;;
 	esac
-	packages=`$0 $global ${authorize:+authorize "$authorize"} ${password:+password "$password"} update setup $types $url "$@" PACKAGEROOT=$PACKAGEROOT`
+	packages=`$0 $global authorize "$authorize" password "$password" update setup $types $url "$@" PACKAGEROOT=$PACKAGEROOT`
 	case $packages in
 	?*)	$0 $global read $packages PACKAGEROOT=$PACKAGEROOT
 	esac
@@ -3730,8 +3748,10 @@ get() # host path [ file size ]
 				esac
 			done
 			;;
-		curl)	curl -s -L -o get.tmp ${authorize:+-u "$authorize":"$password"} http://$1/$2 2> get.err
-			code=$?
+		curl)	case $authorize in
+			'')	curl -s -L -o get.tmp http://$1/$2 2> get.err; code=$? ;;
+			*)	curl -s -L -o get.tmp -u "$authorize":"$password" http://$1/$2 2> get.err; code=$? ;;
+			esac
 			got=`grep '^[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWYZ]' get.tmp 2>/dev/null`
 			case $code in
 			0)	if	grep '^<H1>Authorization Required</H1>' get.tmp > get.err
@@ -3740,12 +3760,16 @@ get() # host path [ file size ]
 				;;
 			esac
 			;;
-		hurl)	hurl ${authorize:+-a "$authorize":"$password"} http://$1/$2 > get.tmp 2> get.err
-			code=$?
+		hurl)	case $authorize in
+			'')	hurl http://$1/$2 > get.tmp 2> get.err; code=$? ;;
+			*)	hurl -a "$authorize":"$password" http://$1/$2 > get.tmp 2> get.err; code=$? ;;
+			esac
 			got=`grep '^[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWYZ]' get.tmp`
 			;;
-		lynx)	lynx -source ${authorize:+-auth "$authorize":"$password"} http://$1/$2 > get.tmp 2> get.err
-			code=$?
+		lynx)	case $authorize in
+			'')	lynx -source http://$1/$2 > get.tmp 2> get.err; code=$? ;;
+			*)	lynx -source -auth "$authorize":"$password" http://$1/$2 > get.tmp 2> get.err; code=$? ;;
+			esac
 			got=`grep '^[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWYZ]' get.tmp`
 			;;
 		wget)	wget -nv -O get.tmp ${authorize:+--http-user="$authorize"} ${password:+--http-passwd="$password"} http://$1/$2 2> get.err
@@ -3797,8 +3821,10 @@ get() # host path [ file size ]
 				done
 				cat <&$getfd > get.tmp
 				;;
-			curl)	curl -s -L -o get.tmp ${authorize:+-u "$authorize":"$password"} http://$1/$2/$3 2> get.err
-				code=$?
+			curl)	case $authorize in
+				'')	curl -s -L -o get.tmp http://$1/$2/$3 2> get.err; code=$? ;;
+				*)	curl -s -L -o get.tmp -u "$authorize":"$password" http://$1/$2/$3 2> get.err; code=$?
+				esac
 				case $code in
 				0)	if	grep '^<H1>Authorization Required</H1>' get.tmp > get.err
 					then	code=1
@@ -3806,11 +3832,15 @@ get() # host path [ file size ]
 					;;
 				esac
 				;;
-			hurl)	ksh -x hurl ${authorize:+-a "$authorize":"$password"} http://$1/$2/$3 > get.tmp 2> get.err
-				code=$?
+			hurl)	case $authorize in
+				'')	ksh -x hurl http://$1/$2/$3 > get.tmp 2> get.err; code=$? ;;
+				*)	ksh -x hurl -a "$authorize":"$password" http://$1/$2/$3 > get.tmp 2> get.err; code=$? ;;
+				esac
 				;;
-			lynx)	lynx -source ${authorize:+-auth "$authorize":"$password"} http://$1/$2/$3 > get.tmp 2> get.err
-				code=$?
+			lynx)	case $authorize in
+				'')	lynx -source http://$1/$2/$3 > get.tmp 2> get.err; code=$? ;;
+				*)	lynx -source -auth "$authorize":"$password" http://$1/$2/$3 > get.tmp 2> get.err; code=$? ;;
+				esac
 				;;
 			wget)	wget -nv -O get.tmp ${authorize:+--http-user="$authorize"} ${password:+--http-passwd="$password"} http://$1/$2/$3 2> get.err
 				code=$?
@@ -5810,8 +5840,9 @@ results)set '' $target
 			;;
 		make|test|view|write)
 			def=$1
-			case $1:$SHELL in
-			test:*/ksh*)	filter=rt ;;
+			case $filter:$1:$SHELL in
+			errors:*:*)	;;
+			*:test:*/ksh*)	filter=rt ;;
 			esac
 			;;
 		old)	suf=old

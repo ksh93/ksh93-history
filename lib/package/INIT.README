@@ -89,7 +89,14 @@ All recorded changes follow.
 
 :::::::: INIT ::::::::
 
+06-02-14 package.sh: "results failed test" == "results test failed"
+	 cc.sgi.*: add _AST_cc_OPTIONS parameterization, -OPT:Olimit=0
+	 cc.linux.ia64-icc: add for intel cc
+06-02-02 package.sh: freebsd stuck with os version for all arch
+06-02-01 package.mk: fix locale logic (tw -d requires dir arg)
+06-01-31 package.sh: require $CC only for make|test
 06-01-30 package.sh,hurl.sh: use the backwards-compatible --http-passwd
+	 package.sh: add more pdksh => /bin/sh checks
 06-01-26 package.sh: wget --http-pass => --http-password
 	 package.sh: fix wget error logic
 	 hurl.sh: wget --http-pass => --http-password

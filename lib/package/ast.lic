@@ -41,7 +41,8 @@ license=(
 	organization="Information and Software Systems Research"
 
 	domain=research.att.com
-	corporation="AT&T"
+	parent="AT&T"
+	corporation="Knowledge Ventures"
 	company="Research"
 	location="Florham Park NJ"
 

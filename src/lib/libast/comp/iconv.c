@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2005 AT&T Corp.                  *
+*           Copyright (c) 1985-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -1465,11 +1465,15 @@ _ast_iconv_list(_ast_iconv_list_t* cp)
 #if _UWIN
 	struct dirent*	ent;
 
-	if (!cp && !(cp = newof(0, _ast_iconv_list_t, 1, 0)) || !(cp->data = opendir(_win_maps)))
+	if (!cp)
 	{
-		if (cp)
+		if (!(cp = newof(0, _ast_iconv_list_t, 1, 0)))
+			return ccmaplist(NiL);
+		if (!(cp->data = opendir(_win_maps)))
+		{
 			free(cp);
-		return ccmaplist(NiL);
+			return ccmaplist(NiL);
+		}
 	}
 	if (cp->data)
 	{

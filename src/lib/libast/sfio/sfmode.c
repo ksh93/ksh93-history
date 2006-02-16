@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2005 AT&T Corp.                  *
+*           Copyright (c) 1985-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -20,7 +20,7 @@
 *                                                                      *
 ***********************************************************************/
 #include	"sfhdr.h"
-static char*	Version = "\n@(#)$Id: sfio (AT&T Research) 2005-05-01 $\0\n";
+static char*	Version = "\n@(#)$Id: sfio (AT&T Research) 2006-02-07 $\0\n";
 
 /*	Functions to set a given stream to some desired mode
 **

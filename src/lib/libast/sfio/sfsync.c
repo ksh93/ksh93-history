@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2005 AT&T Corp.                  *
+*           Copyright (c) 1985-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -86,7 +86,7 @@ int sfsync(f)
 reg Sfio_t*	f;	/* stream to be synchronized */
 #endif
 {
-	int	local, rv, mode;
+	int	local, rv, mode, lock;
 	Sfio_t*	origf;
 
 	if(!(origf = f) )
@@ -101,6 +101,7 @@ reg Sfio_t*	f;	/* stream to be synchronized */
 
 	rv = 0;
 
+	lock = origf->mode&SF_LOCK;
 	if(origf->mode == (SF_SYNCED|SF_READ) ) /* already synced */
 		goto done;
 
@@ -144,7 +145,7 @@ reg Sfio_t*	f;	/* stream to be synchronized */
 		{	/* make sure the file pointer is at the right place */
 			f->here -= (f->endb-f->next);
 			f->endr = f->endw = f->data;
-			f->mode = SF_READ|SF_SYNCED|SF_LOCK;
+			f->mode = SF_READ|SF_SYNCED|lock;
 			(void)SFSK(f,f->here,SEEK_SET,f->disc);
 
 			if((f->flags&SF_SHARE) && !(f->flags&SF_PUBLIC) &&

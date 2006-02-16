@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2006 AT&T Corp.                  *
+*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -115,7 +115,7 @@ int	b_read(int argc,char *argv[], void *extra)
 	if((name = *argv) && (name=strchr(name,'?')) && (r&IOTTY))
 	{
 		r = strlen(++name)+1;
-		if(shp->prompt=(char*)sfreserve(sfstderr,r,1))
+		if(shp->prompt=(char*)sfreserve(sfstderr,r,SF_LOCKR))
 		{
 			memcpy(shp->prompt,name,r);
 			sfwrite(sfstderr,shp->prompt,r-1);

@@ -188,7 +188,7 @@ bash_pre_rc.c : bash_pre_rc.sh
 end
 
 :: syscall.s mamexec mamstate.c deparse.c shopen.c $(DOCFILES) \
-	bash.c bash_pre_rc.sh hexpand.c
+	bash.c bash_pre_rc.sh hexpand.c mkservice.c
 
 :: shtests \
 	alias.sh append.sh arith.sh arrays.sh attributes.sh basic.sh \

@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2006 AT&T Corp.                  *
+*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -721,7 +721,7 @@ void	ed_setup(register Edit_t *ep, int fd, int reedit)
 	}
 	qlen = sfset(sfstderr,SF_READ,0);
 	/* make sure SF_READ not on */
-	ep->e_outbase = ep->e_outptr = (char*)sfreserve(sfstderr,SF_UNBOUND,1);
+	ep->e_outbase = ep->e_outptr = (char*)sfreserve(sfstderr,SF_UNBOUND,SF_LOCKR);
 	ep->e_outlast = ep->e_outptr + sfvalue(sfstderr);
 	if(qlen)
 		sfset(sfstderr,SF_READ,1);

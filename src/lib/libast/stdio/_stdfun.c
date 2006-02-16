@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2005 AT&T Corp.                  *
+*           Copyright (c) 1985-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -31,6 +31,7 @@ void _STUB_stdfun(){}
 
 #include <ast_windows.h>
 #include <uwin.h>
+#include <dlfcn.h>
 
 #if _ALPHA_
 #define IOB		((char*)_iob)
@@ -47,8 +48,8 @@ _stdfun(Sfio_t* f, Funvec_t* vp)
 {
 	static char*	iob;
 	static int	init;
-	static HANDLE	bp;
-	static HANDLE	np;
+	static void*	bp;
+	static void*	np;
 
 	if (!iob && !(iob = IOB))
 		return 0;
@@ -59,19 +60,13 @@ _stdfun(Sfio_t* f, Funvec_t* vp)
 		if (!init)
 		{
 			init = 1;
-			if (!(bp = GetModuleHandle("stdio.dll")))
-			{
-				char	path[PATH_MAX];
-
-				if (uwin_path("/usr/lib/stdio.dll", path, sizeof(path)) >= 0)
-					bp = LoadLibraryEx(path, 0, 0);
-			}
+			bp = dlopen("/usr/bin/stdio.dll", 0);
 		}
-		if (bp && (vp->vec[1] = (Fun_f)GetProcAddress(bp, vp->name)))
+		if (bp && (vp->vec[1] = (Fun_f)dlsym(bp, vp->name)))
 			return 1;
-		if (!np && (!(np = GetModuleHandle("msvcrtd.dll")) || !(np = GetModuleHandle("msvcrt.dll"))))
+		if (!np && !(np = dlopen("/sys/msvcrt.dll", 0)))
 			return -1;
-		if (!(vp->vec[1] = (Fun_f)GetProcAddress(np, vp->name)))
+		if (!(vp->vec[1] = (Fun_f)dlsym(np, vp->name)))
 			return -1;
 	}
 	return 1;

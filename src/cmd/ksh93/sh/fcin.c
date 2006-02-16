@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2005 AT&T Corp.                  *
+*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -45,7 +45,7 @@ int	fcfopen(register Sfio_t* f)
 	_Fcin.fcbuff = _Fcin.fcptr;
 	_Fcin._fcfile = f;
 	fcsave(&save);
-	if(!(buff=(char*)sfreserve(f,SF_UNBOUND,1)))
+	if(!(buff=(char*)sfreserve(f,SF_UNBOUND,SF_LOCKR)))
 	{
 		fcrestore(&save);
 		_Fcin.fcchar = 0;
@@ -58,7 +58,7 @@ int	fcfopen(register Sfio_t* f)
 	fcrestore(&save);
 	sfread(f,buff,0);
 	_Fcin.fcoff = sftell(f);;
-	buff = (char*)sfreserve(f,SF_UNBOUND,1);
+	buff = (char*)sfreserve(f,SF_UNBOUND,SF_LOCKR);
 	_Fcin.fclast = (_Fcin.fcptr=_Fcin.fcbuff=(unsigned char*)buff)+n;
 	if(sffileno(f) >= 0)
 		*_Fcin.fclast = 0;

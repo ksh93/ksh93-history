@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2006 AT&T Corp.                  *
+*           Copyright (c) 1985-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -26,7 +26,7 @@
  * extended to allow some features to be set
  */
 
-static const char id[] = "\n@(#)$Id: getconf (AT&T Research) 2005-07-17 $\0\n";
+static const char id[] = "\n@(#)$Id: getconf (AT&T Research) 2006-02-10 $\0\n";
 
 #include "univlib.h"
 
@@ -705,6 +705,7 @@ lookup(register Lookup_t* look, const char* name)
 	register Conf_t*	hi = mid + conf_elements;
 	register int		v;
 	register int		c;
+	Conf_t*			hit;
 	const Prefix_t*		p;
 
 	look->flags = 0;
@@ -737,32 +738,44 @@ lookup(register Lookup_t* look, const char* name)
 			}
 			goto again;
 		}
+#if HUH_2006_02_10
 	if (look->section < 0)
 		look->section = 1;
+#endif
 	look->name = name;
+#if DEBUG
+	error(-1, "astconf lookup name=%s standard=%d section=%d call=%d", look->name, look->standard, look->section, look->call);
+#endif
 	c = *((unsigned char*)name);
 	while (lo <= hi)
 	{
 		mid = lo + (hi - lo) / 2;
 		if (!(v = c - *((unsigned char*)mid->name)) && !(v = strcmp(name, mid->name)))
 		{
-			lo = (Conf_t*)conf;
-			hi = mid;
-			do
+			hit = hi = mid;
+			for (;;)
 			{
-				if ((look->standard < 0 || look->standard == mid->standard) &&
-				    (look->section < 0 || look->section == mid->section) &&
-				    (look->call < 0 || look->call == mid->call))
-					goto found;
-			} while (mid-- > lo && streq(mid->name, look->name));
-			mid = hi;
-			hi = lo + conf_elements - 1;
-			while (++mid < hi && streq(mid->name, look->name))
-			{
-				if ((look->standard < 0 || look->standard == mid->standard) &&
-				    (look->section < 0 || look->section == mid->section) &&
-				    (look->call < 0 || look->call == mid->call))
-					goto found;
+				lo = (Conf_t*)conf;
+				do
+				{
+					if ((look->standard < 0 || look->standard == mid->standard) &&
+					    (look->section < 0 || look->section == mid->section) &&
+					    (look->call < 0 || look->call == mid->call))
+						goto found;
+				} while (mid-- > lo && streq(mid->name, look->name));
+				mid = hi;
+				hi = lo + conf_elements - 1;
+				while (++mid < hi && streq(mid->name, look->name))
+				{
+					if ((look->standard < 0 || look->standard == mid->standard) &&
+					    (look->section < 0 || look->section == mid->section) &&
+					    (look->call < 0 || look->call == mid->call))
+						goto found;
+				}
+				if (look->standard < 0)
+					break;
+				look->standard = -1;
+				hi = mid = hit;
 			}
 			break;
 		}

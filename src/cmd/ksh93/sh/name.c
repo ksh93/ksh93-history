@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2006 AT&T Corp.                  *
+*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -377,7 +377,7 @@ Namval_t *nv_create(const char *name, Dt_t *root, int flags, Namfun_t *dp)
 {
 	register char		*cp=(char*)name, *sp;
 	register int		c;
-	register Namval_t	*np=0, *nq;
+	register Namval_t	*np=0, *nq=0;
 	Namfun_t		*fp=0;
 	long			mode, add=0;
 	int			copy=1,isref,top=0,noscope=(flags&NV_NOSCOPE);
@@ -474,7 +474,9 @@ Namval_t *nv_create(const char *name, Dt_t *root, int flags, Namfun_t *dp)
 					if(sub && c!='.')
 						nv_putsub(np,sub,0L);
 				}
-				if(c)
+				if(np==nq)
+					flags &= ~(noscope?0:NV_NOSCOPE);
+				else if(c)
 				{
 					c = (cp-sp);
 					copy = strlen(cp=nv_name(np));
