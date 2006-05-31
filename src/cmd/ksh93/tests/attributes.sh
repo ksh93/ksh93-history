@@ -1,10 +1,10 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#                  Copyright (c) 1982-2006 AT&T Corp.                  #
+#           Copyright (c) 1982-2006 AT&T Knowledge Ventures            #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
-#                            by AT&T Corp.                             #
+#                      by AT&T Knowledge Ventures                      #
 #                                                                      #
 #                A copy of the License is available at                 #
 #            http://www.opensource.org/licenses/cpl1.0.txt             #
@@ -195,4 +195,11 @@ unset var
 typeset -b var
 printf '12%Z34' | read -r -N 5 var
 [[ $var == MTIAMzQ= ]] || err_exit 'binary files with zeros not working'
+unset var
+if	command typeset -usi var=0xfffff 2> /dev/null
+then	(( $var == 0xffff )) || err_exit 'unsigned short integers not working'
+else	err_exit 'typeset -usi cannot be used for unsigned short'
+fi
+[[ $($SHELL -c 'unset foo;typeset -Z2 foo; print ${foo:-3}' 2> /dev/null) == 3 ]]  || err_exit  '${foo:-3} not 3 when typeset -Z2 field undefined'
+[[ $($SHELL -c 'unset foo;typeset -Z2 foo; print ${foo:=3}' 2> /dev/null) == 03 ]]  || err_exit  '${foo:=-3} not 3 when typeset -Z2 foo undefined'
 exit	$((Errors))

@@ -1,10 +1,10 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#                  Copyright (c) 1982-2005 AT&T Corp.                  #
+#           Copyright (c) 1982-2006 AT&T Knowledge Ventures            #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
-#                            by AT&T Corp.                             #
+#                      by AT&T Knowledge Ventures                      #
 #                                                                      #
 #                A copy of the License is available at                 #
 #            http://www.opensource.org/licenses/cpl1.0.txt             #
@@ -178,4 +178,18 @@ sleep 5 &
 exec 6>&-
 wait $pid
 (( (SECONDS-s) > 3 )) && err_exit  'time out because builtin keeps fd open'
+cat |& 
+pid=$!
+print foo >&p 2> /dev/null || err_exit 'first write of foo to coprocess failed'
+print foo >&p 2> /dev/null || err_exit 'second write of foo to coprocess failed'
+kill $pid
+wait $pid 2> /dev/null
+cat |& 
+pid=$!
+print -p foo
+print -p bar
+read <&p || err_exit 'first read from coprocess failed'
+read <&p || err_exit 'second read from coprocess failed'
+kill $pid
+wait $pid 2> /dev/null
 exit $((Errors))

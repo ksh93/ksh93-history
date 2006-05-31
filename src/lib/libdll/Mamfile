@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.1 2006-01-21
+info mam static 00000 1994-07-17 make (AT&T Research) 5.1 2006-05-09
 setv INSTALLROOT ../../..
 setv PACKAGE_ast_INCLUDE ${INSTALLROOT}/include/ast
 setv PACKAGE_ast_LIB ${INSTALLROOT}/lib
@@ -154,7 +154,7 @@ prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/error.h
 make dlldefs.h implicit
 make FEATURE/dll
-meta FEATURE/dll features/%>FEATURE/% features/dll dll
+meta FEATURE/dll features/%>FEATURE/% ${PACKAGEROOT}/src/lib/libdll/features/dll dll
 make features/dll
 done features/dll
 prev dll.req
@@ -165,7 +165,7 @@ exec - cmp 2>/dev/null -s FEATURE/dll dlldefs.h || { rm -f dlldefs.h; silent tes
 done dlldefs.h generated
 prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done dlfcn.c
-meta dlfcn.o %.c>%.o dlfcn.c dlfcn
+meta dlfcn.o %.c>%.o ${PACKAGEROOT}/src/lib/libdll/dlfcn.c dlfcn
 prev dlfcn.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_BLD_dll -D_PACKAGE_ast -c dlfcn.c
 done dlfcn.o generated
@@ -175,7 +175,7 @@ prev ${PACKAGE_ast_INCLUDE}/error.h implicit
 prev dlldefs.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done dllfind.c
-meta dllfind.o %.c>%.o dllfind.c dllfind
+meta dllfind.o %.c>%.o ${PACKAGEROOT}/src/lib/libdll/dllfind.c dllfind
 prev dllfind.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_dll -c dllfind.c
 done dllfind.o generated
@@ -185,7 +185,7 @@ prev ${PACKAGE_ast_INCLUDE}/error.h implicit
 prev dlldefs.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done dllplug.c
-meta dllplug.o %.c>%.o dllplug.c dllplug
+meta dllplug.o %.c>%.o ${PACKAGEROOT}/src/lib/libdll/dllplug.c dllplug
 prev dllplug.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_dll -c dllplug.c
 done dllplug.o generated
@@ -196,7 +196,7 @@ done link.h dontcare virtual
 prev dlldefs.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done dllnext.c
-meta dllnext.o %.c>%.o dllnext.c dllnext
+meta dllnext.o %.c>%.o ${PACKAGEROOT}/src/lib/libdll/dllnext.c dllnext
 prev dllnext.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_BLD_dll -D_PACKAGE_ast -c dllnext.c
 done dllnext.o generated
@@ -205,7 +205,7 @@ make dlllook.c
 prev dlldefs.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done dlllook.c
-meta dlllook.o %.c>%.o dlllook.c dlllook
+meta dlllook.o %.c>%.o ${PACKAGEROOT}/src/lib/libdll/dlllook.c dlllook
 prev dlllook.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_BLD_dll -D_PACKAGE_ast -c dlllook.c
 done dlllook.o generated
@@ -224,7 +224,7 @@ prev ${PACKAGE_ast_INCLUDE}/ast_std.h implicit
 done ${PACKAGE_ast_INCLUDE}/cdt.h
 prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done dllscan.c
-meta dllscan.o %.c>%.o dllscan.c dllscan
+meta dllscan.o %.c>%.o ${PACKAGEROOT}/src/lib/libdll/dllscan.c dllscan
 prev dllscan.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_BLD_dll -D_PACKAGE_ast -c dllscan.c
 done dllscan.o generated

@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2005 AT&T Corp.                  *
+*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -23,7 +23,6 @@
  *
  *   David Korn
  *   AT&T Labs
- *   research!dgk
  *
  */
 
@@ -260,7 +259,7 @@ int	b_alarm(int argc,char *argv[],void *extra)
 	}
 	if(argc!=2)
 		errormsg(SH_DICT,ERROR_usage(2),optusage((char*)0));
-	np = nv_open(argv[0],shp->var_tree,NV_ARRAY|NV_VARNAME|NV_NOASSIGN);
+	np = nv_open(argv[0],shp->var_tree,NV_NOARRAY|NV_VARNAME|NV_NOASSIGN);
 	if(!nv_isnull(np))
 		nv_unset(np);
 	nv_setattr(np, NV_INTEGER|NV_DOUBLE);

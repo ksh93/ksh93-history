@@ -1,3 +1,5 @@
+06-05-09 uname.c: add -o; change -a to match linux
+06-05-03 date.c: add --last -L to list last of multiple time args
 06-02-14 tail.c: fix -f bug that lost fast stream data
 06-02-11 getconf.c: exit 1 if name invalid -- duh
 06-01-28 cp.c,rm.c: fix astquery() 'q' to return and not exit()

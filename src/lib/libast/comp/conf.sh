@@ -1,10 +1,10 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#                  Copyright (c) 1985-2005 AT&T Corp.                  #
+#           Copyright (c) 1985-2006 AT&T Knowledge Ventures            #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
-#                            by AT&T Corp.                             #
+#                      by AT&T Knowledge Ventures                      #
 #                                                                      #
 #                A copy of the License is available at                 #
 #            http://www.opensource.org/licenses/cpl1.0.txt             #
@@ -21,7 +21,7 @@
 ########################################################################
 : generate conf info
 #
-# @(#)conf.sh (AT&T Research) 2005-02-04
+# @(#)conf.sh (AT&T Research) 2006-05-09
 #
 # this script generates these files from the table file in the first arg
 # the remaining args are the C compiler name and flags
@@ -261,13 +261,16 @@ sed \
 	-e '/^#[^0123456789]*1[ 	]*".*".*/!d' \
 	-e 's/^#[^0123456789]*1[ 	]*"\(.*\)".*/\1/' |
 sort -u > $tmp.f
+{
 sed \
 	-e '/^[ 	]*#[ 	]*define[ 	][ 	]*[ABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789]*[CPS][CIS]_/!d' \
 	-e 's,^[ 	]*#[ 	]*define[ 	]*,,' \
 	-e '/^[^ 	]*[ 	][ 	]*[0123456789]/!d' \
 	-e 's,[ 	].*,,' \
 	-e '/^[S_]/!d' \
-	`cat $tmp.f` 2>/dev/null |
+	`cat $tmp.f` 2>/dev/null
+{ /bin/getconf -a || /usr/bin/getconf -a; } 2>/dev/null | sed 's,[= 	].*,,'
+} |
 sort -u > $tmp.v
 case $debug in
 -d2)	exit ;;

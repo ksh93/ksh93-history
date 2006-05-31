@@ -1,3 +1,31 @@
+06-05-19  --- Release ksh93r+  ---
+06-05-19  Modified arithmetic so that conversions to strings default to
+	  the maximum number of precision digits.
+06-05-16  Bug fixes for multibyte locales. 
+06-05-10  The =~ operator was added to [[...]] and  [[ string ~= ERE ]]
+	  is equivalent to [[ string == ~(E)ERE ]].
+06-05-10  Modified emacs and vi mode so that entering a TAB after a partial
+	  TAB conpletion, generates a listing of possible completions.
+06-04-25  A bug in the vi edit mode which could cause the shell to core dump
+	  when switching from emacs mode.
+06-04-17  A bug in which using LANG or LC_ in assignment lists with builtins
+	  did not restore the localed correctly has been fixed.
+06-04-04  A bug in which discipline functions could not be added to variables
+	  whose names started with .sh has been fixed.
+06-03-28  The -s option to typeset was added to modify -i to indicate short
+	  integers.
+06-03-28  A bug in which variables assignment lists before functions
+	  defined with function name were not passed on the functions
+	  invoked by this function has been fixed. 
+06-03-28  A bug in which name references defined within a function defined
+	  with function  name could not be used with compound variables has
+	  been fixed.
+06-03-27  A bug in which read <&p (print >&p) would cause the coprocess input
+	  (output) pipe to close before reading from (after writing to)
+          it has been fixed.
+06-02-28  A bug in which stopping a job created with the hist builtin command
+	  would create a job that could not be restarted has been fixed.  
+
 06-01-24  --- Release ksh93r  ---
 06-01-24  A bug in which running commands with standard output closed would
 	  not work as expected has been fixed.

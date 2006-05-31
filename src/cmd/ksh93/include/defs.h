@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2006 AT&T Corp.                  *
+*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -150,6 +150,7 @@ struct limits
 	struct dolnod	*arglist; \
 	int		fn_depth; \
 	int		dot_depth; \
+	int		hist_depth; \
 	int		xargmin; \
 	int		xargmax; \
 	int		xargexit; \
@@ -182,6 +183,7 @@ struct limits
 	History_t	*hist_ptr; \
 	char		universe; \
 	void		*jmpbuffer; \
+	Sfio_t		*strbuf; \
 	char		ifstable[256]; \
 	Shopt_t		offoptions;
 

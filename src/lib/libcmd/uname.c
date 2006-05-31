@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1992-2005 AT&T Corp.                  *
+*           Copyright (c) 1992-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -28,7 +28,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: uname (AT&T Labs Research) 2003-06-20 $\n]"
+"[-?\n@(#)$Id: uname (AT&T Labs Research) 2006-05-09 $\n]"
 USAGE_LICENSE
 "[+NAME?uname - identify the current system ]"
 "[+DESCRIPTION?By default \buname\b writes the operating system name to"
@@ -41,22 +41,24 @@ USAGE_LICENSE
 "[+?If any \aname\a operands are specified then the \bsysinfo\b(2) values"
 "	for each \aname\a are listed, separated by space, on one line."
 "	\bgetconf\b(1), a pre-existing \astandard\a interface, provides"
-"	access to the same information; do vendors read standards or just"
-"	worry about making new ones?]"
-"[a:all?Equivalent to \b-snrvm\b.]"
-"[d:domain?The domain name returned by \agetdomainname\a(2).]"
-"[f:list?List all \bsysinfo\b(2) names and values, one per line.]"
-"[h:host-id|id?The host id in hex.]"
-"[i:implementation|platform?The hardware implementation (platform);"
-"	this is \b--host-id\b on some systems.]"
-"[m:machine?The name of the hardware type the system is running on.]"
+"	access to the same information; vendors should spend more time"
+"	using standards than inventing them.]"
+"[+?Selected information is printed in the same order as the options below.]"
+"[a:all?Equivalent to \b-snrvmpio\b.]"
+"[s:system|sysname|kernel-name?The detailed kernel name. This is the default.]"
 "[n:nodename?The hostname or nodename.]"
+"[r:release|kernel-release?The kernel release level.]"
+"[v:version|kernel-version?The kernel version level.]"
+"[m:machine?The name of the hardware type the system is running on.]"
 "[p:processor?The name of the processor instruction set architecture.]"
-"[r:release?The release level of the operating system implementation.]"
-"[s:os|system|sysname?The operating system name. This is the default.]"
-"[v:version?The operating system implementation version level.]"
-"[A:everything?Equivalent to \b-snrvmphCdtbiRX\b.]"
+"[i:implementation|platform|herdware-platform?The hardware implementation;"
+"	this is \b--host-id\b on some systems.]"
+"[o:operating-system?The generic operating system name.]"
+"[h:host-id|id?The host id in hex.]"
+"[d:domain?The domain name returned by \agetdomainname\a(2).]"
 "[R:extended-release?The extended release name.]"
+"[A:everything?Equivalent to \b-snrvmpiohdR\b.]"
+"[f:list?List all \bsysinfo\b(2) names and values, one per line.]"
 "[S:sethost?Set the hostname or nodename to \aname\a. No output is"
 "	written to standard output.]:[name]"
 
@@ -185,23 +187,28 @@ uname(register struct utsname* ut)
 #define OPT_release		(1<<2)
 #define OPT_version		(1<<3)
 #define OPT_machine		(1<<4)
-
-#define OPT_ALL			5
-
 #define OPT_processor		(1<<5)
-#define OPT_hostid		(1<<6)
-#define OPT_vendor		(1<<7)
-#define OPT_domain		(1<<8)
-#define OPT_machine_type	(1<<9)
-#define OPT_base		(1<<10)
-#define OPT_implementation	(1<<11)
-#define OPT_extended_release	(1<<12)
-#define OPT_extra		(1<<13)
 
-#define OPT_TOTAL		14
+#define OPT_STANDARD		6
+
+#define OPT_implementation	(1<<6)
+#define OPT_operating_system	(1<<7)
+
+#define OPT_ALL			8
+
+#define OPT_hostid		(1<<8)
+#define OPT_vendor		(1<<9)
+#define OPT_domain		(1<<10)
+#define OPT_machine_type	(1<<11)
+#define OPT_base		(1<<12)
+#define OPT_extended_release	(1<<13)
+#define OPT_extra		(1<<14)
+
+#define OPT_TOTAL		15
 
 #define OPT_all			(1L<<29)
 #define OPT_total		(1L<<30)
+#define OPT_standard		((1<<OPT_STANDARD)-1)
 
 #ifndef MACHINE
 #if defined(__STDPP__)
@@ -223,7 +230,7 @@ uname(register struct utsname* ut)
 
 #define output(f,v,u)	do \
 			{ \
-				if ((flags&(f))&&(*(v)||!(flags&OPT_total))) \
+				if ((flags&(f))&&(*(v)||(flags&(OPT_all|OPT_total))==OPT_all&&((f)&OPT_standard)||!(flags&(OPT_all|OPT_total)))) \
 				{ \
 					if (sep) \
 						sfputc(sfstdout, ' '); \
@@ -282,6 +289,9 @@ b_uname(int argc, char** argv, void* context)
 			continue;
 		case 'n':
 			flags |= OPT_nodename;
+			continue;
+		case 'o':
+			flags |= OPT_operating_system;
 			continue;
 		case 'p':
 			flags |= OPT_processor;
@@ -381,6 +391,12 @@ b_uname(int argc, char** argv, void* context)
 		if (flags & OPT_processor)
 		{
 			if (!*(s = astconf("ARCHITECTURE", NiL, NiL)))
+				s = ut.machine;
+			output(OPT_processor, s, "processor");
+		}
+		if (flags & OPT_implementation)
+		{
+			if (!*(s = astconf("PLATFORM", NiL, NiL)) && !*(s = astconf("HW_NAME", NiL, NiL)))
 			{
 				if (t = strchr(hosttype, '.'))
 					t++;
@@ -388,13 +404,18 @@ b_uname(int argc, char** argv, void* context)
 					t = hosttype;
 				strncpy(s = buf, t, sizeof(buf) - 1);
 			}
-			output(OPT_processor, s, "processor");
-		}
-		if (flags & OPT_implementation)
-		{
-			if (!*(s = astconf("PLATFORM", NiL, NiL)))
-				s = astconf("HW_NAME", NiL, NiL);
 			output(OPT_implementation, s, "implementation");
+		}
+		if (flags & OPT_operating_system)
+		{
+			s = astconf("OPERATING_SYSTEM", NiL, NiL);
+			if (!*s)
+#ifdef _UNAME_os_DEFAULT
+				s = _UNAME_os_DEFAULT;
+#else
+				s = ut.sysname;
+#endif
+			output(OPT_operating_system, s, "operating-system");
 		}
 		if (flags & OPT_extended_release)
 		{

@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2006 AT&T Corp.                  *
+*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -41,6 +41,8 @@
 #include	"shnodes.h"
 #include	"path.h"
 #include	"national.h"
+#include	<float.h>
+
 
 #undef STR_GROUP
 #ifndef STR_GROUP
@@ -266,6 +268,29 @@ void sh_machere(Sfio_t *infile, Sfio_t *outfile, char *string)
 	cp = fcseek(0);
 	while(1)
 	{
+#if SHOPT_MULTIBYTE
+		if(mbwide())
+		{
+			do
+			{
+				ssize_t len;
+				switch(len = mbsize(cp))
+				{
+				    case -1:	/* illegal multi-byte char */
+				    case 0:
+				    case 1:
+					n=state[*(unsigned char*)cp++];
+					break;
+				    default:
+					/* use state of alpah character */
+					n=state['a'];
+					cp += len;
+				}
+			}
+			while(n == 0);
+		}
+		else
+#endif /* SHOPT_MULTIBYTE */
 		while((n=state[*(unsigned char*)cp++])==0);
 		if(n==S_NL || n==S_QUOTE || n==S_RBRA)
 			continue;
@@ -395,8 +420,35 @@ static void copyto(register Mac_t *mp,int endch, int newquote)
 		cp++;
 	while(1)
 	{
-		while((n=state[*(unsigned char*)cp++])==0);
-		c = (cp-1) - first;
+#if SHOPT_MULTIBYTE
+		if(mbwide())
+		{
+			ssize_t len;
+			do
+			{
+				switch(len = mbsize(sp))
+				{
+				    case -1:	/* illegal multi-byte char */
+				    case 0:
+					len = 1;
+				    case 1:
+					n = state[*(unsigned char*)cp++];
+					break;
+				    default:
+					/* treat as if alpha */
+					cp += len;
+					n=state['a'];
+				}
+			}
+			while(n == 0);
+			c = (cp-len) - first;
+		}
+		else
+#endif /* SHOPT_MULTIBYTE */
+		{
+			while((n=state[*(unsigned char*)cp++])==0);
+			c = (cp-1) - first;
+		}
 		switch(n)
 		{
 		    case S_ESC:
@@ -1581,7 +1633,6 @@ static void comsubst(Mac_t *mp,int type)
 		t = sh_dolparen();
 		if(t && t->tre.tretyp==TARITH)
 		{
-			char numbuf[20];
 			str =  t->ar.arexpr->argval;
 			fcsave(&save);
 			if(!(t->ar.arexpr->argflag&ARG_RAW))
@@ -1591,9 +1642,10 @@ static void comsubst(Mac_t *mp,int type)
 			stakset(savptr,savtop);
 			*mp = savemac;
 			if((Sflong_t)num==num)
-				sfsprintf(str=numbuf,sizeof(numbuf),"%lld\0",(Sflong_t)num);
+				sfprintf(sh.strbuf,"%lld",(Sflong_t)num);
 			else
-				sfsprintf(str=numbuf,sizeof(numbuf),"%.*Lg\0",12,num);
+				sfprintf(sh.strbuf,"%.*Lg",LDBL_DIG,num);
+			str = sfstruse(sh.strbuf);
 			mac_copy(mp,str,strlen(str));
 			sh.st.staklist = saveslp;
 			fcrestore(&save);
@@ -2175,7 +2227,8 @@ static char *special(register int c)
  */
 static void mac_error(Namval_t *np)
 {
-	nv_close(np);
+	if(np)
+		nv_close(np);
 	errormsg(SH_DICT,ERROR_exit(1),e_subst,fcfirst());
 }
 

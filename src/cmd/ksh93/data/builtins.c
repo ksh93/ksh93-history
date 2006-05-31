@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2006 AT&T Corp.                  *
+*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -1575,13 +1575,15 @@ USAGE_LICENSE
 "[f?Each of the options and \aname\as refers to a function.]"
 "[i]#?[base:=10?An integer. \abase\a represents the arithmetic base "
 	"from 2 to 64.]"
-"[l?Convert uppercase character to lowercase.  Unsets \b-u\b attribute.]"
+"[l?Convert uppercase character to lowercase.  Unsets \b-u\b attribute.  When"
+	"used with \b-i\b, \b-E\b, or \b-F\b indicates long variant.]"
 "[n?Name reference.  The value is the name of a variable that \aname\a "
 	"references.  \aname\a cannot contain a \b.\b.]"
 "[p?Causes the output to be in a format that can be used as input to the "
 	"shell to recreate the attributes for variables.]"
 "[r?Enables readonly.  Once enabled it cannot be disabled.  See "
 	"\breadonly\b(1).]"
+"[s?Used with \b-i\b to restrict integer size to short.]"
 "[t?When used with \b-f\b, enables tracing for each of the specified "
 	"functions.  Otherwise, \b-t\b is a user defined attribute and "
 	"has no meaning to the shell.]"

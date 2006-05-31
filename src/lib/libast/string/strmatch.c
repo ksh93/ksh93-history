@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2006 AT&T Corp.                  *
+*           Copyright (c) 1985-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -99,17 +99,22 @@ strgrpmatch(const char* b, const char* p, int* sub, int n, register int flags)
 	 * convert flags
 	 */
 
-	reflags = REG_SHELL|REG_AUGMENTED;
-	if (!(flags & STR_MAXIMAL))
-		reflags |= REG_MINIMAL;
-	if (flags & STR_GROUP)
-		reflags |= REG_SHELL_GROUP;
-	if (flags & STR_LEFT)
-		reflags |= REG_LEFT;
-	if (flags & STR_RIGHT)
-		reflags |= REG_RIGHT;
-	if (flags & STR_ICASE)
-		reflags |= REG_ICASE;
+	if (flags & REG_ADVANCE)
+		reflags = flags & ~REG_ADVANCE;
+	else
+	{
+		reflags = REG_SHELL|REG_AUGMENTED;
+		if (!(flags & STR_MAXIMAL))
+			reflags |= REG_MINIMAL;
+		if (flags & STR_GROUP)
+			reflags |= REG_SHELL_GROUP;
+		if (flags & STR_LEFT)
+			reflags |= REG_LEFT;
+		if (flags & STR_RIGHT)
+			reflags |= REG_RIGHT;
+		if (flags & STR_ICASE)
+			reflags |= REG_ICASE;
+	}
 	if (!sub || n <= 0)
 		reflags |= REG_NOSUB;
 	if (!(re = regcache(p, reflags, NiL)))

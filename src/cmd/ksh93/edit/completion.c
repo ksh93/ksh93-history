@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2005 AT&T Corp.                  *
+*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -139,7 +139,8 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 	{
 		register int c;
 		char *last = out;
-		var = isaname(*out);
+		c =  *(unsigned char*)out;
+		var = isaname(c);
 		if(out>outbuff)
 		{
 			/* go to beginning of word */
@@ -160,7 +161,10 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 			{
 				c = *(unsigned char*)out;
 				if(c=='$' && var==1)
-					var= 2*isaletter(out[1]);
+				{
+					var = *((unsigned char*)&out[1]);
+					var= 2*isaletter(var);
+				}
 				else if(var==2)
 				{
 					if(c!='"')
@@ -236,7 +240,7 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 		register int size='x';
 		while(cp>outbuff && ((size=cp[-1])==' ' || size=='\t'))
 			cp--;
-		if(!var && !strchr(ap->argval,'/') && ((cp==outbuff || (strchr(";&|(",size)) && (cp==outbuff+1||size=='('||cp[-2]!='>') && *begin!='~' )))
+		if(!var && !strchr(ap->argval,'/') && (((cp==outbuff&&sh.nextprompt==1) || (strchr(";&|(",size)) && (cp==outbuff+1||size=='('||cp[-2]!='>') && *begin!='~' )))
 		{
 			cmd_completion=1;
 			sh_onstate(SH_COMPLETE);

@@ -1,3 +1,6 @@
+06-05-09 comp/comf.sh: add native getconf -a names to the mix
+06-04-28 misc/optget.c: add solaris long option name compatibility
+06-03-09 string/strmatch.c: add REG_ADVANCE => REG_* flags
 06-02-14 comp/iconv.c: fix uwin iconv_list() /reg/ generator
 06-02-10 port/astconf.c: relax standard prefix filter
 06-02-08 sfrd.c,sfsync.c: lock logic bug fix

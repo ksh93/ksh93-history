@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2006 AT&T Corp.                  *
+*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -585,12 +585,12 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 		switch(format)
 		{
 		case 'p':
-			value->p = (char**)strtoll(argp,&lastchar,10);
+			value->p = (char**)strtol(argp,&lastchar,10);
 			break;
 		case 'n':
 		{
 			Namval_t *np;
-			np = nv_open(argp,sh.var_tree,NV_VARNAME|NV_NOASSIGN|NV_ARRAY);
+			np = nv_open(argp,sh.var_tree,NV_VARNAME|NV_NOASSIGN|NV_NOARRAY);
 			nv_unset(np);
 			nv_onattr(np,NV_INTEGER);
 			if (np->nvalue.lp = new_of(long,0))
@@ -688,8 +688,15 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 		case 'A':
 		case 'E':
 		case 'G':
-			value->d = sh_strnum(*pp->nextarg,&lastchar,0);
 			fe->size = sizeof(value->d);
+			d = sh_strnum(*pp->nextarg,&lastchar,0);
+                        if(SFFMT_LDOUBLE)
+			{
+				value->ld = d;
+				fe->size = sizeof(value->ld);
+			}
+			else
+				value->d = d;
 			break;
 		case 'Q':
 			value->ll = (Sflong_t)strelapsed(*pp->nextarg,&lastchar,1);

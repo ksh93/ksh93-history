@@ -99,10 +99,10 @@ if  CC.HOSTTYPE == "sol([89]|[1-9][0-9]).*"
 	LDFLAGS  += $(CC.LD.LAZY) $(CC.LD.NORECORD)
 end
 
-if ! "$(-mam:N=static*)" && CC.HOSTTYPE != "sgi.mips*"
+if ! "$(-mam:N=static*)"
 	if CC.HOSTTYPE == "sol([789]|[1-9][0-9]).*"
 		LIBS_opt += +lsocket -lnsl
-	else
+	elif CC.HOSTTYPE != "sgi.mips*"
 		LIBS_opt += +lsocket +lnsl
 	end
 end

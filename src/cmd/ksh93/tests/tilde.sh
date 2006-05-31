@@ -1,10 +1,10 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#                  Copyright (c) 1982-2005 AT&T Corp.                  #
+#           Copyright (c) 1982-2006 AT&T Knowledge Ventures            #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
-#                            by AT&T Corp.                             #
+#                      by AT&T Knowledge Ventures                      #
 #                                                                      #
 #                A copy of the License is available at                 #
 #            http://www.opensource.org/licenses/cpl1.0.txt             #
@@ -81,4 +81,7 @@ x=~:~
 if	[[ $x != "$HOME:$HOME" ]]
 then	err_exit x=~:~ not $HOME:$HOME
 fi
+HOME=/
+[[ ~ == / ]] || err_exit '~ should be /'
+[[ ~/foo == /foo ]] || err_exit '~/foo should be /foo when ~==/'
 exit $((Errors))

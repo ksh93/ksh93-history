@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2005 AT&T Corp.                  *
+*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -24,6 +24,7 @@
  */
 
 #include	<ast.h>
+#include	<ast_wchar.h>
 #include	"defs.h"
 #include	<stak.h>
 #include	<ctype.h>
@@ -36,8 +37,12 @@
 #define mbchar(p)	(*(unsigned char*)p++)
 #endif
 
+#if _hdr_wctype
+#   include <wctype.h>
+#endif
+
 #if !_lib_iswprint && !defined(iswprint)
-#   define iswprint(c)		((c&~0377) || isprint(c))
+#   define iswprint(c)		(((c)&~0377) || isprint(c))
 #endif
 
 

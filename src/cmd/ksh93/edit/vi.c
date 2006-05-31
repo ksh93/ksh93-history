@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2006 AT&T Corp.                  *
+*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -239,6 +239,7 @@ int ed_viread(void *context, int fd, register char *shbuf, int nchar, int reedit
 	if(!vp)
 	{
 		ed->e_vi = vp =  newof(0,Vi_t,1,0);
+		vp->lastline = (genchar*)malloc(MAXLINE*CHARSIZE);
 		vp->direction = -1;
 		vp->ed = ed;
 	}
@@ -387,10 +388,7 @@ int ed_viread(void *context, int fd, register char *shbuf, int nchar, int reedit
 	window[0] = '\0';
 
 	if(!yankbuf)
-	{
 		yankbuf = (genchar*)malloc(MAXLINE*CHARSIZE);
-		vp->lastline = (genchar*)malloc(MAXLINE*CHARSIZE);
-	}
 	if( vp->last_cmd == '\0' )
 	{
 		/*** first time for this shell ***/
@@ -1478,8 +1476,19 @@ static void getline(register Vi_t* vp,register int mode)
 		case '\t':		/** command completion **/
 			if(mode!=SEARCH && last_virt>=0 && cur_virt>=last_virt && !isblank(cur_virt) && vp->ed->sh->nextprompt)
 			{
-				ed_ungetchar(vp->ed,'\\');
-				goto escape;
+				if(vp->ed->e_tabcount==0)
+				{
+					ed_ungetchar(vp->ed,'\\');
+					vp->ed->e_tabcount=1;
+					goto escape;
+				}
+				else if(vp->ed->e_tabcount==1)
+				{
+					ed_ungetchar(vp->ed,'=');
+					vp->ed->e_tabcount = 0;
+					goto escape;
+				}
+				vp->ed->e_tabcount = 0;
 			}
 			/* FALL THRU*/
 		default:
@@ -2287,8 +2296,15 @@ addin:
 		i = last_virt;
 		++last_virt;
 		virtual[last_virt] = 0;
-		if( ed_expand(vp->ed,(char*)virtual, &cur_virt, &last_virt, c, vp->repeat_set?vp->repeat:-1) )
+		if(ed_expand(vp->ed,(char*)virtual, &cur_virt, &last_virt, c, vp->repeat_set?vp->repeat:-1)<0)
 		{
+			if(vp->ed->e_tabcount)
+			{
+				vp->ed->e_tabcount=2;
+				ed_ungetchar(vp->ed,'\t');
+				--last_virt;
+				return(APPEND);
+			}
 			last_virt = i;
 			ed_ringbell();
 		}

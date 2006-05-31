@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2006 AT&T Corp.                  *
+*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -997,13 +997,19 @@ int sh_lex(void)
 				n = endchar();
 				if(c==RBRACT  && !(n==RBRACT || n==RPAREN))
 					continue;
-				else if((c==RBRACE||c==RPAREN) && n==RPAREN && fcpeek(0)==LPAREN)
+				if((c==RBRACE||c==RPAREN) && n==RPAREN)
 				{
-					if(c==RPAREN)
-						fcseek(1);
-					continue;
+					if(fcgetc(n)==LPAREN)
+					{
+						if(c!=RPAREN)
+							fcseek(-1);
+						continue;
+					}
+					if(n>0)
+						fcseek(-1);
+					n = RPAREN;
 				}
-				else if(c==';' && n!=';')
+				if(c==';' && n!=';')
 				{
 					if(lexd.warn && n==RBRACE)
 						errormsg(SH_DICT,ERROR_warn(0),e_lexusequote,shp->inlineno,c);
@@ -1596,6 +1602,28 @@ static int here_copy(Lex_t *lp,register struct ionod *iop)
 	{
 		if(n!=S_NL)
 		{
+#if SHOPT_MULTIBYTE
+			if(mbwide())
+			{
+				do
+				{
+					switch(mbsize(_Fcin.fcptr))
+					{
+					    case -1:    /* bogus multiByte char - parse as bytes? */
+					    case 0:     /* NULL byte */
+					    case 1:
+						n = state[fcget()];
+						break;
+					    default:
+						/* treat as alpha */
+						mbchar(_Fcin.fcptr);
+						n = state['a'];
+					}
+				}
+				while(n == 0);
+			}
+			else
+#endif /* SHOPT_MULTIBYTE */
 			/* skip over regular characters */
 			while((n=state[fcget()])==0);
 		}

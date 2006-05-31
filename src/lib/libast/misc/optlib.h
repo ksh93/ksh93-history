@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2005 AT&T Corp.                  *
+*           Copyright (c) 1985-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -76,6 +76,7 @@ typedef struct Optstate_s
 	Sfio_t*		mp;		/* opt_info.msg string stream	*/
 	Sfio_t*		vp;		/* translation string stream	*/
 	Sfio_t*		xp;		/* translation string stream	*/
+	Sfio_t*		cp;		/* compatibility string stream	*/
 	Optpass_t	pass[8];	/* optjoin() list		*/
 	char*		argv[2];	/* initial argv copy		*/
 	char*		strv[3];	/* optstr() argv		*/

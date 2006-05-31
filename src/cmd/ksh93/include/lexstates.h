@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2005 AT&T Corp.                  *
+*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -79,8 +79,8 @@
 #define ST_NONE		11
 
 #if SHOPT_MULTIBYTE
-#   define isaname(c)	(((c)>=0x200) ||  sh_lexstates[ST_NAME][c]==0)
-#   define isaletter(c)	(((c)>=0x200) || sh_lexstates[ST_DOL][c]==S_ALP && (c)!='.')
+#   define isaname(c)	((c)>0xff?isalpha(c): sh_lexstates[ST_NAME][(c)]==0)
+#   define isaletter(c)	((c)>0xff?isalpha(c): sh_lexstates[ST_DOL][(c)]==S_ALP && (c)!='.')
 #else
 #   define isaname(c)	(sh_lexstates[ST_NAME][c]==0)
 #   define isaletter(c)	(sh_lexstates[ST_DOL][c]==S_ALP && (c)!='.')

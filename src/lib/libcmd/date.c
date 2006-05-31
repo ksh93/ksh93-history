@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1992-2005 AT&T Corp.                  *
+*           Copyright (c) 1992-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: date (AT&T Research) 2005-03-07 $\n]"
+"[-?\n@(#)$Id: date (AT&T Research) 2006-05-03 $\n]"
 USAGE_LICENSE
 "[+NAME?date - set/list/convert dates]"
 "[+DESCRIPTION?\bdate\b sets the current date and time (with appropriate"
@@ -153,6 +153,7 @@ USAGE_LICENSE
 "[i:incremental|adjust?Set the system time in incrementatl adjustments to"
 "	avoid complete time shift shock. Negative adjustments still maintain"
 "	monotonic increasing time. Not available on all systems.]"
+"[L:last?List only the last time for multiple \adate\a operands.]"
 "[l:leap-seconds?Include leap seconds in time calculations. Leap seconds"
 "	after the ast library release date are not accounted for.]"
 "[m:modify-time|mtime?List file argument modify times.]"
@@ -282,6 +283,7 @@ b_date(int argc, register char** argv, void* context)
 	int		elapsed = 0;	/* args are start/stop pairs	*/
 	int		filetime = 0;	/* use this st_ time field	*/
 	int		increment = 0;	/* incrementally adjust time	*/
+	int		last = 0;	/* display the last time arg	*/
 	Tm_zone_t*	listzones = 0;	/* known time zone table	*/
 	int		network = 0;	/* don't set network time	*/
 	int		show = 0;	/* show date and don't set	*/
@@ -320,6 +322,9 @@ b_date(int argc, register char** argv, void* context)
 			continue;
 		case 'l':
 			tm_info.flags |= TM_LEAP;
+			continue;
+		case 'L':
+			last = 1;
 			continue;
 		case 'n':
 			network = 1;
@@ -432,8 +437,11 @@ b_date(int argc, register char** argv, void* context)
 				show = 1;
 				do
 				{
-					tmxfmt(buf, sizeof(buf), format, now);
-					sfprintf(sfstdout, "%s\n", buf);
+					if (!last)
+					{
+						tmxfmt(buf, sizeof(buf), format, now);
+						sfprintf(sfstdout, "%s\n", buf);
+					}
 					now = convert(fmts, s, now);
 				} while (s = *++argv);
 			}

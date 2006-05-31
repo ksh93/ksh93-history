@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2006 AT&T Corp.                  *
+*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -102,8 +102,6 @@ struct seconds
 {
 	Namfun_t	hdr;
 	Shell_t		*sh;
-	char		*bufptr;
-	int		maxbufsize;
 };
 
 struct rand
@@ -252,7 +250,7 @@ static void put_restricted(register Namval_t* np,const char *val,int flags,Namfu
 #endif
 	if(!(flags&NV_RDONLY) && sh_isoption(SH_RESTRICTED))
 		errormsg(SH_DICT,ERROR_exit(1),e_restricted,nv_name(np));
-	if(name==(PATHNOD)->nvname)			
+	if(np==PATHNOD)			
 	{
 #ifndef PATH_BFPATH
 		shp->lastpath = 0;
@@ -262,7 +260,7 @@ static void put_restricted(register Namval_t* np,const char *val,int flags,Namfu
 	if(val && !(flags&NV_RDONLY) && np->nvalue.cp && strcmp(val,np->nvalue.cp)==0)
 		 return;
 #ifdef PATH_BFPATH
-	if(shp->pathlist  && name==(FPATHNOD)->nvname)
+	if(shp->pathlist  && np==FPATHNOD)
 		shp->pathlist = (void*)path_unsetfpath((Pathcomp_t*)shp->pathlist);
 #endif
 	nv_putv(np, val, flags, fp);
@@ -270,9 +268,9 @@ static void put_restricted(register Namval_t* np,const char *val,int flags,Namfu
 	if(shp->pathlist)
 	{
 		val = np->nvalue.cp;
-		if(name==(PATHNOD)->nvname)
+		if(np==PATHNOD)
 			pp = (void*)path_addpath((Pathcomp_t*)shp->pathlist,val,PATH_PATH);
-		else if(val && name==(FPATHNOD)->nvname)
+		else if(val && np==FPATHNOD)
 			pp = (void*)path_addpath((Pathcomp_t*)shp->pathlist,val,PATH_FPATH);
 		else
 			return;
@@ -508,20 +506,14 @@ static void put_seconds(register Namval_t* np,const char *val,int flags,Namfun_t
 
 static char* get_seconds(register Namval_t* np, Namfun_t *fp)
 {
-	static char *bufptr;
-	static int maxbufsize;
 	register int places = nv_size(np);
 	struct tms tp;
 	double d, offset = (np->nvalue.dp?*np->nvalue.dp:0);
 	NOT_USED(fp);
 	timeofday(&tp);
 	d = dtime(&tp)- offset;
-	if(!bufptr)
-		bufptr = (char*)malloc(maxbufsize=places+20);
-	else if(places+20 > maxbufsize)
-		bufptr = (char*)realloc(bufptr,maxbufsize=places+20);
-	sfsprintf(bufptr,maxbufsize,"%.*f\0",places,d);
-	return(bufptr);
+	sfprintf(sh.strbuf,"%.*f",places,d);
+	return(sfstruse(sh.strbuf));
 }
 
 static Sfdouble_t nget_seconds(register Namval_t* np, Namfun_t *fp)
@@ -623,11 +615,10 @@ static char* get_lastarg(Namval_t* np, Namfun_t *fp)
 
 static void put_lastarg(Namval_t* np,const char *val,int flags,Namfun_t *fp)
 {
-	char numbuf[20];
 	if(flags&NV_INTEGER)
 	{
-		sfsprintf(numbuf,sizeof(numbuf),"%.*g\0",12,*((double*)val));
-		val = numbuf;
+		sfprintf(sh.strbuf,"%.*g",12,*((double*)val));
+		val = sfstruse(sh.strbuf);
 	}
 	if(sh.lastarg && !nv_isattr(np,NV_NOFREE))
 		free((void*)sh.lastarg);
@@ -839,6 +830,8 @@ Shell_t *sh_init(register int argc,register char *argv[], void(*userinit)(int))
 	sh.arg_context = sh_argopen(&sh);
 	sh.lex_context = (void*)sh_lexopen(0,&sh,1);
 	sh.ed_context = (void*)ed_open(&sh);
+	sh.strbuf = sfstropen();
+	sfsetbuf(sh.strbuf,(char*)0,64);
 	sh_onstate(SH_INIT);
 	error_info.exit = sh_exit;
 	error_info.id = path_basename(argv[0]);
@@ -904,10 +897,10 @@ Shell_t *sh_init(register int argc,register char *argv[], void(*userinit)(int))
 		 * try using environment variable _ or argv[0]
 		 */
 		char *last, *cp=nv_getval(L_ARGNOD);
-		char path[50],buff[PATH_MAX+1];
+		char buff[PATH_MAX+1];
 		sh.shpath = 0;
-		sfsprintf(path,sizeof(path),"/proc/%d/exe\0",getpid());
-		if((n=readlink(path,buff,sizeof(buff)-1))>0)
+		sfprintf(sh.strbuf,"/proc/%d/exe",getpid());
+		if((n=readlink(sfstruse(sh.strbuf),buff,sizeof(buff)-1))>0)
 		{
 			buff[n] = 0;
 			sh.shpath = strdup(buff);
@@ -1254,7 +1247,7 @@ static Init_t *nv_init(Shell_t *shp)
 	nv_stack(np, &NSPACE_init);
 #endif /* SHOPT_NAMESPACE */
 	np = nv_mount(DOTSHNOD, "type", dtopen(&_Nvdisc,Dtset));
-	nv_adddisc(DOTSHNOD, shdiscnames);
+	nv_adddisc(DOTSHNOD, shdiscnames, (Namval_t**)0);
 	return(ip);
 }
 

@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2006 AT&T Corp.                  *
+*           Copyright (c) 1985-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -686,6 +686,7 @@ init(register char* s, Optpass_t* p)
 {
 	register char*	t;
 	register int	c;
+	register int	a;
 	register int	n;
 
 	if (!opt_info.state->msgdict)
@@ -816,6 +817,47 @@ init(register char* s, Optpass_t* p)
 	{
 		s++;
 		p->flags |= OPT_plus;
+	}
+	if (!p->version && (t = strchr(s, '(')) && strchr(t, ')') && (opt_info.state->cp || (opt_info.state->cp = sfstropen())))
+	{
+		/*
+		 * solaris long option compatibility
+		 */
+
+		p->version = 1;
+		for (t = p->oopts; t < s; t++)
+			sfputc(opt_info.state->cp, *t);
+		n = t - p->oopts;
+		sfputc(opt_info.state->cp, '[');
+		sfputc(opt_info.state->cp, '-');
+		sfputc(opt_info.state->cp, ']');
+		while (c = *s++)
+		{
+			sfputc(opt_info.state->cp, '[');
+			sfputc(opt_info.state->cp, c);
+			if (a = (c = *s++) == ':')
+				c = *s++;
+			if (c == '(')
+			{
+				sfputc(opt_info.state->cp, ':');
+				for (;;)
+				{
+					while ((c = *s++) && c != ')')
+						sfputc(opt_info.state->cp, c);
+					if (!c || *s != '(')
+						break;
+					sfputc(opt_info.state->cp, '|');
+					s++;
+				}
+			}
+			sfputc(opt_info.state->cp, ']');
+			if (a)
+				sfputr(opt_info.state->cp, ":[string]", -1);
+			if (!c)
+				break;
+		}
+		p->oopts = s = sfstruse(opt_info.state->cp);
+		s += n;
 	}
 	p->opts = s;
 }

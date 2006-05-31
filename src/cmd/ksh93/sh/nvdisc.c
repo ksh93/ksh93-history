@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2006 AT&T Corp.                  *
+*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -28,13 +28,14 @@
 #include        "builtins.h"
 #include        "path.h"
 
+static const char *discnames[] = { "get", "set", "append", "unset", 0 };
+
 /*
  * call the next getval function in the chain
  */
 char *nv_getv(Namval_t *np, register Namfun_t *nfp)
 {
 	register Namfun_t	*fp;
-	static char numbuf[20];
 	register char *cp;
 	if((fp = nfp) != NIL(Namfun_t*) && !nv_local)
 		fp = nfp = nfp->next;
@@ -49,7 +50,10 @@ char *nv_getv(Namval_t *np, register Namfun_t *nfp)
 	if(fp && fp->disc->getval)
 		cp = (*fp->disc->getval)(np,fp);
 	else if(fp && fp->disc->getnum)
-		sfsprintf(cp=numbuf,sizeof(numbuf),"%.*Lg\0",12,(*fp->disc->getnum)(np,fp));
+	{
+		sfprintf(sh.strbuf,"%.*Lg",12,(*fp->disc->getnum)(np,fp));
+		cp = sfstruse(sh.strbuf);
+	}
 	else
 	{
 		nv_local=1;
@@ -250,13 +254,16 @@ static void	assign(Namval_t *np,const char* val,int flags,Namfun_t *handle)
 		int n;
 		for(n=0; n < sizeof(vp->disc)/sizeof(*vp->disc); n++)
 		{
-			if(nq=vp->disc[n])
+			if((nq=vp->disc[n]) && !nv_isattr(nq,NV_NOFREE))
 			{
 				nv_unset(nq);
 				dtdelete(root,nq);
 			}
 		}
-		nv_unset(np);
+		nv_putv(np, val, flags, handle);
+		nv_disc(np,handle,NV_POP);
+		if(!handle->nofree)
+			free(handle);
 	}
 }
 
@@ -306,7 +313,6 @@ char *nv_setdisc(register Namval_t* np,register const char *event,Namval_t *acti
 	char *empty = "";
 	if(np == (Namval_t*)fp)
 	{
-		static const char *discnames[] = { "get", "set", "append", "unset", 0 };
 		register const char *name;
 		register int getname=0;
 		/* top level call, check for get/set */
@@ -437,7 +443,7 @@ static void putdisc(Namval_t* np, const char* val, int flag, Namfun_t* fp)
 		for(i=0; vp->bnames[i]; i++)
 		{
 			register Namval_t *mp;
-			if(mp=vp->bltins[i])
+			if((mp=vp->bltins[i]) && !nv_isattr(mp,NV_NOFREE))
 			{
 				if(is_abuiltin(mp))
 				{
@@ -449,10 +455,10 @@ static void putdisc(Namval_t* np, const char* val, int flag, Namfun_t* fp)
 			}
 		}
 		nv_disc(np,fp,NV_POP);
+		if(!fp->nofree)
+			free((void*)fp);
 			
 	}
-	if(!fp->nofree)
-		free((void*)fp);
 }
 
 static const Namdisc_t Nv_bdisc	= {   0, putdisc, 0, 0, setdisc };
@@ -470,7 +476,7 @@ static Namfun_t *nv_clone_disc(register Namfun_t *fp)
 	return(nfp);
 }
 
-int nv_adddisc(Namval_t *np, const char **names)
+int nv_adddisc(Namval_t *np, const char **names, Namval_t **funs)
 {
 	register Nambfun_t *vp;
 	register int n=0;
@@ -483,7 +489,10 @@ int nv_adddisc(Namval_t *np, const char **names)
 	if(!(vp = newof(NIL(Nambfun_t*),Nambfun_t,1,n*sizeof(Namval_t*))))
 		return(0);
 	vp->fun.dsize = sizeof(Nambfun_t)+n*sizeof(Namval_t*);
-	while(n>=0)
+	vp->fun.funs = 1;
+	if(funs)
+		memcpy((void*)vp->bltins, (void*)funs,n*sizeof(Namval_t*));
+	else while(n>=0)
 		vp->bltins[n--] = 0;
 	vp->fun.disc = &Nv_bdisc;
 	vp->bnames = names; 
@@ -680,28 +689,43 @@ static void *num_clone(register Namval_t *np, void *val)
 	return(nval);
 }
 
+static void clone_all_disc( Namval_t *np, Namval_t *mp, int flags)
+{
+	register Namfun_t *fp, **mfp = &mp->nvfun, *nfp;
+	for(fp=np->nvfun; fp;fp=fp->next)
+	{
+		if(fp->funs && (flags&NV_NODISC))
+			nfp = 0;
+		if(fp->disc && fp->disc->clonef)
+			nfp = (*fp->disc->clonef)(np,mp,flags,fp);
+		else
+			nfp = nv_clone_disc(fp);
+		if(!nfp)
+			continue;
+		nfp->next = 0;
+		*mfp = nfp;
+		mfp = &nfp->next;
+	}
+}
+
+/*
+ * clone <mp> from <np> flags can be one of the following
+ * NV_APPEND - append <np> onto <mp>
+ * NV_MOVE - move <np> to <mp>
+ * NV_NOFREE - mark the new node as nofree
+ * NV_NODISC - discplines with funs non-zero will not be copied
+ */
 int nv_clone(Namval_t *np, Namval_t *mp, int flags)
 {
 	Namfun_t *fp;
 	if(fp=np->nvfun)
 	{
-	        register Namfun_t **mfp = &mp->nvfun, *nfp;
 		if(flags&NV_MOVE)
 		{
 			mp->nvfun = fp;
 			goto skip;
 		}
-		while(fp)
-		{
-			if(fp->disc && fp->disc->clonef)
-				nfp = (*fp->disc->clonef)(np,mp,flags,fp);
-			else if(!(nfp = nv_clone_disc(fp)))
-				continue;
-			nfp->next = 0;
-			*mfp = nfp;
-			mfp = &nfp->next;
-	                fp = fp->next;
-		}
+		clone_all_disc(np, mp, flags);
 	}
 	if(flags&NV_APPEND)
 		return(1);
@@ -723,7 +747,7 @@ skip:
 	}
 	if(nv_isattr(np,NV_INTEGER))
 		mp->nvalue.ip = (int*)num_clone(np,(void*)np->nvalue.ip);
-	else if(flags)
+	else if(flags&NV_NOFREE)
 	        nv_onattr(np,NV_NOFREE);
 	return(1);
 }
@@ -748,7 +772,7 @@ static void clone_putv(Namval_t *np,const char* val,int flags,Namfun_t *handle)
 	if(!sh.subshell)
 		free((void*)dp);
 	if(val)
-		nv_clone(mp,np,1);
+		nv_clone(mp,np,NV_NOFREE);
 	np->nvalue.cp = 0;
 	nv_putval(np,val,flags);
 }
@@ -1119,3 +1143,29 @@ const Namdisc_t *nv_discfun(int which)
 	}
 	return(0);
 }
+
+/*
+ * This function turns variable <np>  to the type <tp>
+ */
+int nv_settype(Namval_t* np, Namval_t *tp, int flags)
+{
+	int isnull = nv_isnull(np);
+	char *val=0;
+	if(isnull)
+		flags &= ~NV_APPEND;
+	else
+	{
+		val = strdup(nv_getval(np));
+		if(!(flags&NV_APPEND))
+			_nv_unset(np, NV_RDONLY);
+	}
+	if(!nv_clone(tp,np,flags|NV_NOFREE))
+		return(0);
+	if(val)
+	{
+		nv_putval(np,val,NV_RDONLY);
+		free((void*)val);
+	}
+	return(0);
+}
+

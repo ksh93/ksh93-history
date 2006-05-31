@@ -1,10 +1,10 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#                  Copyright (c) 1982-2005 AT&T Corp.                  #
+#           Copyright (c) 1982-2006 AT&T Knowledge Ventures            #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
-#                            by AT&T Corp.                             #
+#                      by AT&T Knowledge Ventures                      #
 #                                                                      #
 #                A copy of the License is available at                 #
 #            http://www.opensource.org/licenses/cpl1.0.txt             #
@@ -492,4 +492,12 @@ case $? in
 1)	 err_exit 'append discipline not implemented';;
 *)	 err_exit 'append discipline not working';;
 esac
+.sh.foobar=hello
+{
+	function .sh.foobar.get
+	{
+		.sh.value=world
+	} 
+} 2> /dev/null || err_exit "Can't add get discipline to .sh.foobar"
+[[ ${.sh.foobar} == world ]]  || err_exit 'get discipline for .sh.foobar not working'
 exit $((Errors))

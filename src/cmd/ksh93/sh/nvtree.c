@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2005 AT&T Corp.                  *
+*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -47,10 +47,18 @@ struct nvdir
 char *nv_getvtree(Namval_t*, Namfun_t *);
 static void put_tree(Namval_t*, const char*, int,Namfun_t*);
 
-static Namval_t *create_tree(Namval_t *np,const char *name,int flag,Namfun_t *fp)
+static Namval_t *create_tree(Namval_t *np,const char *name,int flag,Namfun_t *dp)
 {
-	NOT_USED(name);
-	NOT_USED(fp);
+	register Namfun_t *fp=dp;
+	while(fp=fp->next)
+	{
+		if(fp->disc && fp->disc->createf)
+		{
+			if(np=(*fp->disc->createf)(np,name,flag,fp))
+				dp->last = fp->last;
+			return(np);
+		}
+	}
 	return((flag&NV_NOADD)?0:np);
 }
 
@@ -104,7 +112,7 @@ void *nv_diropen(const char *name)
 	last=dp->data;
 	if(name[len-1]=='*' || name[len-1]=='@')
 		len -= 1;
-	memcpy(last,name,len);
+	name = memcpy(last,name,len);
 	last[len] = 0;
 	dp->len = len;
 	dp->root = sh.var_tree;
@@ -516,6 +524,8 @@ static char *walk_tree(register Namval_t *np, int dlete)
 #endif /* SHOPT_COMPOUND_ARRAY */
 	name = stakfreeze(1);
 	dir = nv_diropen(name);
+	if(subscript)
+		name[strlen(name)-1] = 0;
 	while(cp = nv_dirnext(dir))
 	{
 		stakseek(ARGVAL);
@@ -590,31 +600,5 @@ void nv_setvtree(register Namval_t *np)
 	register Namfun_t *nfp = newof(NIL(void*),Namfun_t,1,0);
 	nfp->disc = &treedisc;
 	nv_stack(np, nfp);
-}
-
-/*
- * the following three functions are for creating types
- */
-
-int nv_settype(Namval_t* np, Namval_t *tp, int flags)
-{
-	int isnull = nv_isnull(np);
-	char *val=0;
-	if(isnull)
-		flags &= ~NV_APPEND;
-	else
-	{
-		val = strdup(nv_getval(np));
-		if(!(flags&NV_APPEND))
-			_nv_unset(np, NV_RDONLY);
-	}
-	if(!nv_clone(tp,np,flags|NV_NOFREE))
-		return(0);
-	if(val)
-	{
-		nv_putval(np,val,NV_RDONLY);
-		free((void*)val);
-	}
-	return(0);
 }
 

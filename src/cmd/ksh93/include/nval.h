@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2005 AT&T Corp.                  *
+*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -68,11 +68,12 @@ struct Namdisc
 struct Namfun
 {
 	const Namdisc_t	*disc;
-	short		nofree;
+	char		nofree;
+	char		funs;
 	unsigned short	dsize;
 	Namfun_t	*next;
-	Namval_t	*type;
 	char		*last;
+	Namval_t	*type;
 };
 
 struct Nambfun
@@ -89,6 +90,7 @@ struct Namarray
 	Namfun_t	hdr;
 	long		nelem;				/* number of elements */
 	void	*(*fun)(Namval_t*,const char*,int);	/* associative arrays */
+	Namval_t	*parent;		/* for multi-dimenstional */
 };
 
 /* Passed as third argument to a builtin when  NV_BLTINOPT is set on node */
@@ -234,7 +236,7 @@ extern Namval_t	*nv_putsub(Namval_t*, char*, long);
 extern Namval_t	*nv_opensub(Namval_t*);
 
 /* name-value pair function prototypes */
-extern int		nv_adddisc(Namval_t*, const char**names);
+extern int		nv_adddisc(Namval_t*, const char**names, Namval_t**);
 extern int		nv_clone(Namval_t*, Namval_t*, int);
 extern void 		nv_close(Namval_t*);
 extern void		*nv_context(Namval_t*);

@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2006 AT&T Corp.                  *
+*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -118,12 +118,12 @@ const Shtable_t shtab_attributes[] =
 	{"-xexport",	NV_EXPORT},
 	{"-rreadonly",	NV_RDONLY},
 	{"-ttagged",	NV_TAGGED},
-	{"++long",	(NV_INTEGER|NV_DOUBLE|NV_LONG)},
+	{"-llong",	(NV_INTEGER|NV_DOUBLE|NV_LONG)},
 	{"-Eexponential",(NV_INTEGER|NV_DOUBLE|NV_EXPNOTE)},
 	{"-Ffloat",	(NV_INTEGER|NV_DOUBLE)},
-	{"++long",	(NV_INTEGER|NV_LONG)},
-	{"++short",	(NV_INTEGER|NV_SHORT)},
-	{"++unsigned",	(NV_INTEGER|NV_UNSIGN)},
+	{"-llong",	(NV_INTEGER|NV_LONG)},
+	{"-lshort",	(NV_INTEGER|NV_SHORT)},
+	{"-lunsigned",	(NV_INTEGER|NV_UNSIGN)},
 	{"-iinteger",	NV_INTEGER},
 	{"-Hfilename",	NV_HOST},
 	{"-bbinary",    NV_BINARY},

@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1992-2005 AT&T Corp.                  *
+*           Copyright (c) 1992-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -31,7 +31,7 @@
 #include <fcntl.h>
 
 static const char usage[] =
-"[-?\n@(#)$Id: cat (AT&T Labs Research) 2005-05-17 $\n]"
+"[-?\n@(#)$Id: cat (AT&T Labs Research) 2006-05-17 $\n]"
 USAGE_LICENSE
 "[+NAME?cat - concatenate files]"
 "[+DESCRIPTION?\bcat\b copies each \afile\a in sequence to the standard"
@@ -48,13 +48,14 @@ USAGE_LICENSE
 "[t?Equivalent to \b-vT\b.]"
 "[u:unbuffer?The output is not delayed by buffering.]"
 "[v:show-nonprinting?Causes non-printing characters (whith the exception of"
-"	tabs, new-lines, and form-feeds) to be output is printable charater"
+"	tabs, new-lines, and form-feeds) to be output as printable charater"
 "	sequences. ASCII control characters are printed as \b^\b\an\a,"
 "	where \an\a is the corresponding ASCII character in the range"
 "	octal 100-137. The DEL character (octal 0177) is copied"
 "	as \b^?\b. Other non-printable characters are copied as \bM-\b\ax\a"
 "	where \ax\a is the ASCII character specified by the low-order seven"
-"	bits.]"
+"	bits.  Multibyte characters in the current locale are treated as"
+"	printable characters.]"
 "[A:show-all?Equivalent to \b-vET\b.]"
 "[B:squeeze-blank?Multiple adjacent new-line characters are replace by one"
 "	new-line.]"
@@ -106,6 +107,7 @@ vcat(Sfio_t *fdin, Sfio_t *fdout, int flags)
 	register unsigned char*	cp;
 	register unsigned char*	cpold;
 	register int		n;
+	register int		m;
 	register int		line = 1;
 	register unsigned char*	endbuff;
 	unsigned char*		inbuff;
@@ -133,8 +135,11 @@ vcat(Sfio_t *fdin, Sfio_t *fdout, int flags)
 		while (endbuff)
 		{
 			cpold = cp;
-			/* skip over ASCII characters */
-			while ((n = states[*cp++]) == 0);
+			/* skip over printable characters */
+			if (mbwide())
+				while ((n = (m = mbsize(cp)) < 2 ? states[*cp++] : (cp += m, states['a'])) == 0);
+			else
+				while ((n = states[*cp++]) == 0);
 			if (n==T_ENDBUF)
 			{
 				if (cp>endbuff)

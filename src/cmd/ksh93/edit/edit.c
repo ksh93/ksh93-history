@@ -972,6 +972,8 @@ int ed_getchar(register Edit_t *ep,int mode)
 		/*** map '\r' to '\n' ***/
 		if(c == '\r' && mode!=2)
 			c = '\n';
+		if(ep->e_tabcount && !(c=='\t'||c==ESC || c=='\\'))
+			ep->e_tabcount = 0;
 	}
 	else
 		siglongjmp(ep->e_env,(n==0?UEOF:UINTR));

@@ -396,7 +396,7 @@ is used in place of
 the next subsequent list, if any,  is executed.
 .TP
 \f3if\fP \f2list\^\fP \f3;then\fP \f2list\^\fP \*(OK \
-\f3elif\fP \f2list\^\fP \f3;then\fP \f2list\^\fP \*(CK .\|.\|. \
+\f3;elif\fP \f2list\^\fP \f3;then\fP \f2list\^\fP \*(CK .\|.\|. \
 \*(OK \f3;else\fP \f2list\^\fP \*(CK \f3;f\&i\fP
 The
 .I list\^
@@ -694,7 +694,7 @@ but can be unset or redefined:
 .TP
 .B "fc=hist"
 .TP
-.B "float=\(fmtypeset \-E\(fm"
+.B "float=\(fmtypeset \-lE\(fm"
 .TP
 .B "functions=\(fmtypeset \-f\(fm"
 .TP
@@ -702,7 +702,7 @@ but can be unset or redefined:
 .TP
 .B "history=\(fmhist \-l\(fm"
 .TP
-.B "integer=\(fmtypeset \-i\(fm"
+.B "integer=\(fmtypeset \-li\(fm"
 .TP
 .B "nameref=\(fmtypeset \-n\(fm"
 .TP
@@ -810,7 +810,7 @@ The command substitution
 can be replaced by the equivalent but faster
 \^\f3$(\^<file\^)\fP\^.
 The command substitution
-\^\f3$(\^\fP\f2n\^\fP\f3\<#\^)\fP
+\^\f3$(\^\fP\f2n\^\fP\f3<#\^)\fP
 will expand to the current byte offset for file descriptor
 .IR n .
 .SS Arithmetic Substitution.
@@ -936,7 +936,7 @@ To assign values to an indexed array, use
 The value of all
 subscripts must be in the
 range of
-0 through 4095.
+0 through 1,048,575.
 Indexed arrays need not be declared.
 Any reference to a variable
 with a valid subscript is
@@ -2918,6 +2918,15 @@ the
 .B .sh.match
 array variable will contain the match and sub-pattern matches.
 .TP
+\f2string\fP \f3\(ap=\fP \f2ere\fP
+True if
+.I string\^
+matches the pattern
+.BI \(ap(E) ere\^
+where
+.I ere\^
+is an extended regular expression.
+.TP
 \f2string1\fP \f3<\fP \f2string2\fP
 True, if
 .I string1\^
@@ -4325,8 +4334,17 @@ pattern characters.
 Command or file name completion as described above.
 .PP
 .TP 10
-.B ^I
-Command or file name completion as described above.
+.BI ^I " tab"
+Attempts command or file name completion as described above.
+If a partial completion occurs, repeating this will
+behave as if
+.B M-=
+were entered.
+If no match is found or entered after
+.IR space\^ ,
+a
+.I tab\^
+is inserted.
 .PP
 .TP 10
 .B M-=
@@ -4458,6 +4476,19 @@ Escape the next
 or
 .I kill
 character.
+.TP 10
+.BI ^I  " tab"
+Attempts command or file name completion as described above
+and returns to input mode.
+If a partial completion occurs, repeating this will
+behave as if
+.B =
+were entered from control mode.
+If no match is found or entered after
+.IR space\^ ,
+a
+.I tab\^
+is inserted.
 .RE
 .SS "\ \ \ \ \ Motion Edit Commands"
 .RS
@@ -4738,9 +4769,6 @@ Otherwise, the word is replaced
 by the matching pattern and input mode is entered.
 .TP 10
 .B \e 
-Command or file name completion as described above.
-.TP 10
-.B ^I 
 Command or file name completion as described above.
 .RE
 .SS "\ \ \ \ \ Other Edit Commands"

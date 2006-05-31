@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2006 AT&T Corp.                  *
+*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -1512,6 +1512,23 @@ static Shnode_t *test_and(void)
 	return(t);
 }
 
+/*
+ * convert =~ into == ~(E)
+ */
+static void ere_match(void)
+{
+	Sfio_t *base, *iop = sfopen((Sfio_t*)0," ~(E)","s");
+	register int c;
+	while( fcgetc(c),(c==' ' || c=='\t'));
+	if(c)
+		fcseek(-1);
+	if(!(base=fcfile()))
+		base = sfopen(NIL(Sfio_t*),fcseek(0),"s");
+	fcclose();
+        sfstack(base,iop);
+        fcfopen(base);
+}
+
 static Shnode_t *test_primary(void)
 {
 	register struct argnod *arg;
@@ -1550,7 +1567,15 @@ static Shnode_t *test_primary(void)
 	    case 0:
 		arg = shlex.arg;
 		if((token=sh_lex())==TESTBINOP)
+		{
 			num = shlex.digits;
+			if(num==TEST_REP)
+			{
+				ere_match();
+				num = TEST_PEQ;
+			}
+
+		}
 		else if(token=='<')
 			num = TEST_SLT;
 		else if(token=='>')

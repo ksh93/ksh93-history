@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2006 AT&T Corp.                  *
+*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -329,9 +329,18 @@ int ed_emacsread(void *context, int fd,char *buff,int scend, int reedit)
 		case '\t':
 			if(cur>0 && cur>=eol && out[cur-1]!='\t' && out[cur-1]!=' ' && ep->ed->sh->nextprompt)
 			{
-				ed_ungetchar(ep->ed,ESC);
-				ed_ungetchar(ep->ed,ESC);
-				continue;
+				if(ep->ed->e_tabcount==0)
+				{
+					ep->ed->e_tabcount=1;
+					ed_ungetchar(ep->ed,ESC);
+					goto do_escape;
+				}
+				else if(ep->ed->e_tabcount==1)
+				{
+					ed_ungetchar(ep->ed,'=');
+					goto do_escape;
+				}
+				ep->ed->e_tabcount = 0;
 			}
 		default:
 			if ((eol+1) >= (scend)) /*  will not fit on line */
@@ -578,6 +587,7 @@ update:
 			draw(ep,REFRESH);
 			continue;
 		case cntl('[') :
+		do_escape:
 			adjust = escape(ep,out,oadjust);
 			continue;
 		case cntl('R') :
@@ -910,7 +920,15 @@ static int escape(register Emacs_t* ep,register genchar *out,int count)
 		case '=':	/* escape = - list all matching file names */
 			ep->mark = cur;
 			if(ed_expand(ep->ed,(char*)out,&cur,&eol,i,count) < 0)
+			{
+				if(ep->ed->e_tabcount==1)
+				{
+					ep->ed->e_tabcount=2;
+					ed_ungetchar(ep->ed,cntl('\t'));
+					return(-1);
+				}
 				beep();
+			}
 			else if(i=='=')
 				draw(ep,REFRESH);
 			else

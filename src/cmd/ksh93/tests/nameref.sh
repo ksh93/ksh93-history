@@ -197,4 +197,20 @@ function selfref
 }
 ps=(a=1 b=2)
 [[ $(selfref ps) == *a=1* ]] ||  err_exit 'local nameref cannot reference global variable of the same name'
+function subref
+{
+	typeset -n foo=$1
+	print -r -- ${foo.a}
+}
+[[ $(subref ps) == 1 ]] ||  err_exit 'local nameref cannot reference global variable child'
+
+unset fun i
+foo=(x=hi)
+function fun
+{
+        nameref i=$1
+        print -r -- "${i.x}"
+}
+i=foo
+[[ $(fun $i) == hi ]] || err_exit 'nameref for compound variable with in function name of caller fails'
 exit $((Errors))

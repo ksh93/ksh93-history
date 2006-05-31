@@ -1299,7 +1299,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 				args=sh_argbuild(&argn,tp,0);
 				nargs = argn;
 			}
-			np = nv_open(t->for_.fornam, sh.var_tree,NV_NOASSIGN|NV_ARRAY|NV_VARNAME|NV_NOREF);
+			np = nv_open(t->for_.fornam, sh.var_tree,NV_NOASSIGN|NV_NOARRAY|NV_VARNAME|NV_NOREF);
 			nameref = nv_isref(np)!=0;
 			sh.st.loopcnt++;
 			cp = *args;
@@ -1652,7 +1652,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 				stakputc('.');
 				stakputs(fname);
 				stakputc(0);
-				np = nv_open(stakptr(offset),sh.var_base,NV_NOASSIGN|NV_ARRAY|NV_VARNAME);
+				np = nv_open(stakptr(offset),sh.var_base,NV_NOASSIGN|NV_NOARRAY|NV_VARNAME);
 				offset = staktell();
 				sh.namespace = np;
 				if(!(root=nv_dict(np)))
@@ -1691,7 +1691,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 				int offset = staktell();
 				stakwrite(fname,cp-fname);
 				stakputc(0);
-				npv = nv_open(stakptr(offset),sh.var_tree,NV_NOASSIGN|NV_ARRAY|NV_VARNAME);
+				npv = nv_open(stakptr(offset),sh.var_tree,NV_NOASSIGN|NV_NOARRAY|NV_VARNAME);
 				offset = staktell();
 				stakputs(nv_name(npv));
 				stakputs(cp);
@@ -1709,7 +1709,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 				fname = stakptr(offset);
 			}
 #endif /* SHOPT_NAMESPACE */
-			np = nv_open(fname,sh_subfuntree(1),NV_NOASSIGN|NV_ARRAY|NV_VARNAME|NV_NOSCOPE);
+			np = nv_open(fname,sh_subfuntree(1),NV_NOASSIGN|NV_NOARRAY|NV_VARNAME|NV_NOSCOPE);
 			if(npv)
 			{
 				cp = nv_setdisc(npv,cp+1,np,(Namfun_t*)npv);
@@ -2105,6 +2105,19 @@ pid_t sh_fork(int flags, int *jobid)
 }
 
 /*
+ * add exports from previous scope to the new scope
+ */
+static void  local_exports(register Namval_t *np, void *data)
+{
+	register Namval_t	*mp;
+	register char		*cp;
+	if(nv_isarray(np))
+		nv_putsub(np,NIL(char*),0);
+	if((cp = nv_getval(np)) && (mp = nv_search(nv_name(np), sh.var_tree, NV_ADD|HASH_NOSCOPE)) && nv_isnull(mp))
+		nv_putval(mp, cp, 0);
+}
+
+/*
  * This routine is used to execute the given function <fun> in a new scope
  * If <fun> is NULL, then arg points to a structure containing a pointer
  *  to a function that will be executed in the current environment.
@@ -2137,9 +2150,6 @@ int sh_funscope(int argn, char *argv[],int(*fun)(void*),void *arg,int execflg)
 	{
 		fp = (struct funenv*)arg;
 		envlist = fp->env;
-#if 0
-		sh.st.firstline = (fp->node)->nvalue.rp->lineno;
-#endif
 	}
 	prevscope->save_tree = sh.var_tree;
 	nv_scope(envlist);
@@ -2148,6 +2158,7 @@ int sh_funscope(int argn, char *argv[],int(*fun)(void*),void *arg,int execflg)
 		/* eliminate parent scope */
 		Dt_t *dt = dtview(sh.var_tree,0);
 		dtview(sh.var_tree,dtvnext(prevscope->save_tree));
+		nv_scan(prevscope->save_tree, local_exports,(void*)0,NV_EXPORT,NV_EXPORT|NV_NOSCOPE);
 	}
 	sh.st.save_tree = sh.var_tree;
 	if(!fun)
@@ -2728,15 +2739,15 @@ static pid_t sh_ntfork(const Shnode_t *t,char *argv[],int *jobid,int flag)
 		spawnpid = path_spawn(path,argv,arge,pp,(grp<<1)|1);
 		if(spawnpid < 0 && errno==ENOEXEC)
 		{
-			char devfd[14];
+			char *devfd;
 			int fd = open(path,O_RDONLY);
 			argv[-1] = argv[0];
 			argv[0] = path;
 			if(fd>=0)
 			{
 				struct stat statb;
-				sfsprintf(devfd,sizeof(devfd),"/dev/fd/%d\0",fd);
-				if(stat(devfd,&statb)>=0)
+				sfprintf(sh.strbuf,"/dev/fd/%d",fd);
+				if(stat(devfd=sfstruse(sh.strbuf),&statb)>=0)
 					argv[0] =  devfd;
 			}
 			if(!shp->shpath)
