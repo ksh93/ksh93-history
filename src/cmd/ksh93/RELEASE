@@ -1,11 +1,27 @@
-06-05-19  --- Release ksh93r+  ---
+06-06-13  --- Release ksh93r+  ---
+06-06-13  Internal change to use ordering for variables instead of hashing
+	  to speed up prefix matching.
+06-06-13  A window between fork/exec in which a signal could get lost
+	  and cause a peogram to hang has been eliminated
+06-06-13  A bug in edit completion with quoted strings has been fixed.
+06-06-07  The restricted options can now be enabled by set as well as on
+	  the command line.  Once set, it can not be disabled.
+06-06-04  Modified built-in binding so that for systems for which /bin
+          and /usr/bin are the same, a builtin bound to /bin will get
+	  selected when either /bin or /usr/bin is scanned.
+06-06-04  Added literal-next character processing for emacs/gmacs mode. 
+	  This change is not compatible with earlier versions of ksh93
+          and ksh88 when the stty lnext is control-v.  The sequence
+	  escape-control-v will display the shell version.
+06-05-31  Modified emacs and vi mode so that entering a TAB after a partial
+	  TAB conpletion, generates a listing of possible completions.
+	  After the second TAB, a number followed by a TAB will perform
+	  the completion with the corresponding item.
 06-05-19  Modified arithmetic so that conversions to strings default to
 	  the maximum number of precision digits.
 06-05-16  Bug fixes for multibyte locales. 
 06-05-10  The =~ operator was added to [[...]] and  [[ string ~= ERE ]]
 	  is equivalent to [[ string == ~(E)ERE ]].
-06-05-10  Modified emacs and vi mode so that entering a TAB after a partial
-	  TAB conpletion, generates a listing of possible completions.
 06-04-25  A bug in the vi edit mode which could cause the shell to core dump
 	  when switching from emacs mode.
 06-04-17  A bug in which using LANG or LC_ in assignment lists with builtins

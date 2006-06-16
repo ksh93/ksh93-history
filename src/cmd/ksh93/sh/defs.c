@@ -36,7 +36,7 @@ struct sh_static	sh = {0};
 
 Dtdisc_t	_Nvdisc =
 {
-	offsetof(Namval_t,nvname), -1
+	offsetof(Namval_t,nvname), -1 , 0, 0, 0, nv_compare
 };
 
 /* reserve room for writable state table */

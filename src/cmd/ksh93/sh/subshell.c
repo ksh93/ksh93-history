@@ -265,7 +265,7 @@ Dt_t *sh_subaliastree(int create)
 		return(sh.alias_tree);
 	if(!sp->salias && create)
 	{
-		sp->salias = dtopen(&_Nvdisc,Dtbag);
+		sp->salias = dtopen(&_Nvdisc,Dtoset);
 		dtview(sp->salias,sh.alias_tree);
 		sh.alias_tree = sp->salias;
 	}
@@ -283,7 +283,7 @@ Dt_t *sh_subfuntree(int create)
 		return(sh.fun_tree);
 	if(!sp->sfun && create)
 	{
-		sp->sfun = dtopen(&_Nvdisc,Dtbag);
+		sp->sfun = dtopen(&_Nvdisc,Dtoset);
 		dtview(sp->sfun,sh.fun_tree);
 		sh.fun_tree = sp->sfun;
 	}

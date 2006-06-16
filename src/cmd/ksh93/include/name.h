@@ -158,6 +158,7 @@ extern Namval_t		*nv_mkclone(Namval_t*);
 extern Namval_t		*nv_parent(Namval_t*);
 extern char		*nv_getbuf(size_t);
 extern Namval_t		*nv_mount(Namval_t*, const char *name, Dt_t*);
+extern int		nv_compare(Dt_t*, Void_t*, Void_t*, Dtdisc_t*);
 
 extern const Namdisc_t	RESTRICTED_disc;
 extern char		nv_local;

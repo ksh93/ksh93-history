@@ -189,12 +189,15 @@ int sh_argopts(int argc,register char *argv[])
 			if(o<=0
 				|| (!sh_isoption(SH_BASH) && (o&SH_BASHEXTRA))
 				|| ((!sh_isoption(SH_BASH) || n=='o') && (o&SH_BASHOPT))
+
 				|| (setflag && (o&SH_COMMANDLINE)))
 			{
 				errormsg(SH_DICT,2, e_option, opt_info.arg);
 				error_info.errors++;
 			}
 			o &= 0xff;
+			if(sh_isoption(SH_RESTRICTED) && !f && o==SH_RESTRICTED)
+				errormsg(SH_DICT,ERROR_exit(1), e_restricted, opt_info.arg);
 			break;
 #if SHOPT_BASH
 		    case -1:	/* --rcfile */

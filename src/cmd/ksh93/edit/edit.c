@@ -50,7 +50,7 @@
 #include	"history.h"
 #include	"edit.h"
 
-#define CURSOR_UP       "\E[A"
+static const char CURSOR_UP[] = { ESC, '[', 'A', 0 };
 
 #if SHOPT_MULTIBYTE
 #   define is_print(c)	((c&~STRIP) || isprint(c))
@@ -972,7 +972,7 @@ int ed_getchar(register Edit_t *ep,int mode)
 		/*** map '\r' to '\n' ***/
 		if(c == '\r' && mode!=2)
 			c = '\n';
-		if(ep->e_tabcount && !(c=='\t'||c==ESC || c=='\\'))
+		if(ep->e_tabcount && !(c=='\t'||c==ESC || c=='\\' || c=='=' || c==cntl('L') || isdigit(c)))
 			ep->e_tabcount = 0;
 	}
 	else

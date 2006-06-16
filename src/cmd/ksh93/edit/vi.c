@@ -1485,7 +1485,6 @@ static void getline(register Vi_t* vp,register int mode)
 				else if(vp->ed->e_tabcount==1)
 				{
 					ed_ungetchar(vp->ed,'=');
-					vp->ed->e_tabcount = 0;
 					goto escape;
 				}
 				vp->ed->e_tabcount = 0;
@@ -2287,6 +2286,10 @@ addin:
 			/***** Input commands *****/
 
 #if KSHELL
+        case '\t':
+		if(vp->ed->e_tabcount!=1)
+			return(BAD);
+		c = '=';
 	case '*':		/** do file name expansion in place **/
 	case '\\':		/** do file name completion in place **/
 		if( cur_virt == INVALID )
@@ -2320,6 +2323,8 @@ addin:
 			--cur_virt;
 			--last_virt;
 			vp->ocur_virt = MAXCHAR;
+			if(c=='=')
+				vp->ed->e_tabcount = 0;
 			return(APPEND);
 		}
 		break;

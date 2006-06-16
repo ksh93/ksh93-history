@@ -18,18 +18,11 @@
 *                                                                      *
 ***********************************************************************/
 #pragma prototyped
-/* Adapted for ksh by David Korn */
+/* Original version by Michael T. Veach 
+ * Adapted for ksh by David Korn */
 /* EMACS_MODES: c tabstop=4 
 
 One line screen editor for any program
-
-
-Questions and comments should be
-directed to 
-
-	Michael T. Veach
-	IX 1C-341 X1614
-	ihuxl!veach
 
 */
 
@@ -132,6 +125,7 @@ typedef struct _emacs_
 #define hloff		editb.e_hloff
 #define hismin		editb.e_hismin
 #define usrkill		editb.e_kill
+#define usrlnext	editb.e_lnext
 #define usreof		editb.e_eof
 #define usrerase	editb.e_erase
 #define crallowed	editb.e_crlf
@@ -152,6 +146,7 @@ typedef struct _emacs_
 #define KILLCHAR	UKILL
 #define ERASECHAR	UERASE
 #define EOFCHAR		UEOF
+#define LNEXTCHAR		ULNEXT
 #define DELETE		('a'==97?0177:7)
 
 /**********************
@@ -293,6 +288,10 @@ int ed_emacsread(void *context, int fd,char *buff,int scend, int reedit)
 		{
 			c = ERASECHAR ;
 		} 
+		else if (c == usrlnext)
+		{
+			c = LNEXTCHAR ;
+		}
 		else if ((c == usreof)&&(eol == 0))
 		{
 			c = EOFCHAR;
@@ -308,6 +307,9 @@ int ed_emacsread(void *context, int fd,char *buff,int scend, int reedit)
 		i = cur;
 		switch(c)
 		{
+		case LNEXTCHAR:
+			c = ed_getchar(ep->ed,2);
+			goto do_default_processing;
 		case cntl('V'):
 			show_info(ep,fmtident(e_version));
 			continue;
@@ -342,7 +344,9 @@ int ed_emacsread(void *context, int fd,char *buff,int scend, int reedit)
 				}
 				ep->ed->e_tabcount = 0;
 			}
+		do_default_processing:
 		default:
+
 			if ((eol+1) >= (scend)) /*  will not fit on line */
 			{
 				ed_ungetchar(ep->ed,c); /* save character for next line */
@@ -745,6 +749,9 @@ static int escape(register Emacs_t* ep,register genchar *out,int count)
 		value = 1;
 	switch(ch=i)
 	{
+		case cntl('V'):
+			show_info(ep,fmtident(e_version));
+			return(-1);
 		case ' ':
 			ep->mark = cur;
 			return(-1);
@@ -930,7 +937,18 @@ static int escape(register Emacs_t* ep,register genchar *out,int count)
 				beep();
 			}
 			else if(i=='=')
+			{
 				draw(ep,REFRESH);
+				if(count>0)
+					ep->ed->e_tabcount=0;
+				else
+				{
+					i=ed_getchar(ep->ed,0);
+					ed_ungetchar(ep->ed,i);
+					if(isdigit(i))
+						ed_ungetchar(ep->ed,ESC);
+				}
+			}
 			else
 				draw(ep,UPDATE);
 			return(-1);

@@ -131,6 +131,7 @@ struct limits
 	long		ppid;		/* parent process id of shell */ \
 	int		topfd; \
 	int		sigmax;		/* maximum number of signals */ \
+	int		savesig; \
 	unsigned char	*sigflag;	/* pointer to signal states */ \
 	char		intrap; \
 	char		login_sh; \

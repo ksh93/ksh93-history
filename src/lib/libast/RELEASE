@@ -1,3 +1,5 @@
+06-06-11 cdt/dtview.c: update from kpv
+06-05-31 sfio/sfhdr.h: fix _SFOPEN() typo
 06-05-09 comp/comf.sh: add native getconf -a names to the mix
 06-04-28 misc/optget.c: add solaris long option name compatibility
 06-03-09 string/strmatch.c: add REG_ADVANCE => REG_* flags

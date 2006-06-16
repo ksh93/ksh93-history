@@ -63,6 +63,9 @@
 #	define LDBL_LONGLONG_MIN	(-LDBL_LONGLONG_MAX)
 #   endif
 #endif
+#ifndef LDBL_DIG
+#   define LDBL_DIG DBL_DIG
+#endif
 
 struct lval
 {

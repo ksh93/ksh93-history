@@ -1212,6 +1212,17 @@ static Pathcomp_t *path_addcomp(Pathcomp_t *first, Pathcomp_t *old,const char *n
 	register Pathcomp_t *pp, *oldpp;
 	struct stat statb;
 	int len, offset=staktell();
+	static ino_t	bin_inode;
+	static dev_t	bin_dev;
+	if(bin_inode==0)
+	{
+		bin_inode = 1;
+		if(stat("/bin",&statb)>=0 && S_ISDIR(statb.st_mode))
+		{
+			bin_inode = statb.st_ino;
+			bin_dev = statb.st_dev;
+		}
+	}
 	if(!(flag&PATH_BFPATH))
 	{
 		register const char *cp = name;
@@ -1258,6 +1269,11 @@ static Pathcomp_t *path_addcomp(Pathcomp_t *first, Pathcomp_t *old,const char *n
 			/* keep the path but mark it as skip */
 			flag |= PATH_SKIP;
 		}
+	}
+	if(statb.st_ino==bin_inode && statb.st_dev==bin_dev)
+	{
+		name = "/bin";
+		len = 4;
 	}
 	pp = newof((Pathcomp_t*)0,Pathcomp_t,1,len+1);
 	pp->refcount = 1;

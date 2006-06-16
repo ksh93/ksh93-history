@@ -104,7 +104,7 @@ void *nv_diropen(const char *name)
 	char *next,*last;
 	int len=strlen(name);
 	struct nvdir *save, *dp = new_of(struct nvdir,len);
-	Namval_t *np;
+	Namval_t *np, fake;
 	Namfun_t *nfp;
 	if(!dp)
 		return(0);
@@ -117,7 +117,14 @@ void *nv_diropen(const char *name)
 	dp->len = len;
 	dp->root = sh.var_tree;
 	dp->table = sh.last_table;
-	dp->hp = (Namval_t*)dtfirst(dp->root);
+	if(*name)
+	{
+		fake.nvname = (char*)name;
+		dp->hp = (Namval_t*)dtprev(dp->root,&fake);
+		dp->hp = (Namval_t*)dtnext(dp->root,dp->hp);
+	}
+	else
+		dp->hp = (Namval_t*)dtfirst(dp->root);
 	while(next= nextdot(last))
 	{
 		*next = 0;
@@ -160,6 +167,8 @@ static Namval_t *nextnode(struct nvdir *dp)
 {
 	if(dp->nextnode)
 		return((*dp->nextnode)(dp->hp,dp->root,dp->fun));
+	if(dp->len && memcmp(dp->data, dp->hp->nvname, dp->len))
+		return(0);
 	return((Namval_t*)dtnext(dp->root,dp->hp));
 }
 
@@ -541,7 +550,6 @@ static char *walk_tree(register Namval_t *np, int dlete)
 	*argv = 0;
 	for(; ap; ap=ap->argchn.ap)
 		*--argv = ap->argval;
-	strsort(argv,n,strcmp);
 	nv_dirclose(dir);
 	if(dlete&1)
 		outfile = 0;

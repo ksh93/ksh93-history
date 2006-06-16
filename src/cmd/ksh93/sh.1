@@ -3928,6 +3928,15 @@ after the last
 are used to find the longest command prefix.
 If only a single name matches this prefix, then the
 word is replaced with the command name followed by a space.
+When using a
+.I tab\^
+for completion that does not yield a unique match,
+a subsequent
+.I tab\^
+will provide a numbered list of matching alternatives.
+A specific selection can be made by entering the
+selection number followed by a
+.IR tab .
 .SS Key Bindings.
 The
 .B
@@ -4090,6 +4099,18 @@ command, usually
 or
 .BR # .)
 Delete previous character.
+.PP
+.TP 10
+.I lnext
+(User defined literal next character as defined
+by the
+.IR stty (1)
+command.
+or
+.B ^V
+if not defined.)
+Removes the next character's
+editing features (if any).
 .PP
 .TP 10
 .BI ^D
@@ -4376,7 +4397,7 @@ removes the next character's
 editing features (if any).
 .PP
 .TP 10
-.B ^V
+.B M-^V
 Display version of the shell.
 .PP
 .TP 10
@@ -4457,15 +4478,14 @@ the shell to terminate unless the \f3ignoreeof\fP
 option is set.
 Otherwise this character is ignored.
 .TP 10
-.BI ^V
-Escape next character.
-Editing characters and the user's erase or kill
-characters may be entered
-in a command line or in a search string if preceded by a
-.BR ^V .
-The
+.I lnext
+(User defined literal next character as defined
+by the
+.IR stty (1)
+or
 .B ^V
-removes the next character's
+if not defined.)
+Removes the next character's
 editing features (if any).
 On some systems the \f3viraw\fP option
 may be required for this to work.
@@ -6000,7 +6020,7 @@ script,
 then it behaves the same as
 .BR exit .
 .TP
-\(dg \f3set\fP \*(OK \f3\(+-CGabefhkmnopstuvx\fP \*(CK \*(OK \f3\(+-o\fP \*(OK \f2option\^\fP \*(CK \*(CK .\|.\|. \*(OK \f3\(+-A\fP \f2vname\^\fP \*(CK  \*(OK \f2arg\^\fP .\|.\|. \*(CK
+\(dg \f3set\fP \*(OK \f3\(+-CGabefhkmnoprstuvx\fP \*(CK \*(OK \f3\(+-o\fP \*(OK \f2option\^\fP \*(CK \*(CK .\|.\|. \*(OK \f3\(+-A\fP \f2vname\^\fP \*(CK  \*(OK \f2arg\^\fP .\|.\|. \*(CK
 The options for this command have meaning as follows:
 .RS
 .PD 0
@@ -6213,6 +6233,10 @@ This mode is on whenever the effective uid (gid)
 is not equal to the real uid (gid).
 Turning this off causes the effective uid and gid to be
 set to the real uid and gid.
+.TP 8
+.B \-r
+Enables the restricted shell.  This option cannot be unset
+once set.
 .TP 8
 .B \-s
 Sort the positional parameters lexicographically.
@@ -7010,6 +7034,8 @@ except that the following are disallowed:
 .RS
 .PD 0
 .PP
+Unsetting the restricted option.
+.br
 changing directory (see
 .IR cd (1)),
 .br

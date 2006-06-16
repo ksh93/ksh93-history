@@ -1657,7 +1657,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 				sh.namespace = np;
 				if(!(root=nv_dict(np)))
 				{
-					root = dtopen(&_Nvdisc,Dtbag);
+					root = dtopen(&_Nvdisc,Dtoset);
 					nv_putval(np,(char*)root,NV_TABLE|NV_NOFREE);
 					sh.st.optindex = 1;
 				}
@@ -1983,6 +1983,7 @@ pid_t _sh_fork(register pid_t parent,int flags,int *jobid)
 	static long forkcnt = 1000L;
 	pid_t	curpgid = job.curpgid;
 	pid_t	postid = (flags&FAMP)?0:curpgid;
+	int sig;
 	if(parent<0)
 	{
 		if((forkcnt *= 2) > 1000L*SH_FORKLIM)
@@ -2079,12 +2080,18 @@ pid_t _sh_fork(register pid_t parent,int flags,int *jobid)
 	/* except for those `lost' by trap   */
 	sh_sigreset(2);
 	sh.subshell = 0;
+	sig = sh.savesig;
+	sh.savesig = 0;
+	if(sig>0)
+		sh_fault(sig);
+	sh_sigcheck();
 	return(0);
 }
 
 pid_t sh_fork(int flags, int *jobid)
 {
 	register pid_t parent;
+	register int sig;
 #if SHOPT_FASTPIPE
 	if(sffileno(sfstdin)<0)
 	{
@@ -2099,7 +2106,12 @@ pid_t sh_fork(int flags, int *jobid)
 	sfsync(NIL(Sfio_t*));
 	sh.trapnote &= ~SH_SIGTERM;
 	job_fork(-1);
+	sh.savesig = -1;
 	while(_sh_fork(parent=fork(),flags,jobid) < 0);
+	sig = sh.savesig;
+	sh.savesig = 0;
+	if(sig>0)
+		sh_fault(sig);
 	job_fork(parent);
 	return(parent);
 }

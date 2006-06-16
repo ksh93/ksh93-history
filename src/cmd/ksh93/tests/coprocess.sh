@@ -167,29 +167,47 @@ do	if	( trap - $sig ) 2> /dev/null
 		break
 	fi
 done
+
+trap 'sleep_pid=; kill $pid; err_exit "coprocess 1 hung"' TERM
+{ sleep 5; kill $$; } &
+sleep_pid=$!
 builtin cat
 cat |&
 pid=$!
 exec 5<&p 6>&p
 print -u6 hi; read -u5
 [[ $REPLY == hi ]] || err_exit 'REPLY is $REPLY not hi'
-integer s=SECONDS
-sleep 5 &
 exec 6>&-
 wait $pid
-(( (SECONDS-s) > 3 )) && err_exit  'time out because builtin keeps fd open'
+trap - TERM
+[[ $sleep_pid ]] && kill $sleep_pid
+
+trap 'sleep_pid=; kill $pid; err_exit "coprocess 2 hung"' TERM
+{ sleep 5; kill $$; } &
+sleep_pid=$!
 cat |& 
 pid=$!
 print foo >&p 2> /dev/null || err_exit 'first write of foo to coprocess failed'
 print foo >&p 2> /dev/null || err_exit 'second write of foo to coprocess failed'
 kill $pid
 wait $pid 2> /dev/null
+trap - TERM
+[[ $sleep_pid ]] && kill $sleep_pid
+
+trap 'sleep_pid=; kill $pid; err_exit "coprocess 3 hung"' TERM
+{ sleep 5; kill $$; } &
+sleep_pid=$!
 cat |& 
 pid=$!
 print -p foo
 print -p bar
 read <&p || err_exit 'first read from coprocess failed'
+[[ $REPLY == foo ]] || err_exit "first REPLY is $REPLY not foo"
 read <&p || err_exit 'second read from coprocess failed'
+[[ $REPLY == bar ]] || err_exit "second REPLY is $REPLY not bar"
 kill $pid
 wait $pid 2> /dev/null
+trap - TERM
+[[ $sleep_pid ]] && kill $sleep_pid
+
 exit $((Errors))

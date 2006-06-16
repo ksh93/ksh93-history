@@ -67,6 +67,12 @@ void	sh_fault(register int sig)
 	if(!(sig&SH_TRAP))
 		signal(sig, sh_fault);
 	sig &= ~SH_TRAP;
+	if(sh.savesig)
+	{
+		/* critical region, save and process later */
+		sh.savesig = sig;
+		return;
+	}
 #ifdef SIGWINCH
 	if(sig==SIGWINCH)
 	{

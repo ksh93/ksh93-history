@@ -315,6 +315,7 @@ if	[[ $(print x$((10))=foo) != x10=foo ]]
 then	err_exit 'parsing error with x$((10))=foo'
 fi
 $SHELL -c 'typeset x$((10))=foo' 2> /dev/null || err_exit 'typeset x$((10)) parse error'
+unset x
 x=$(( exp(log(2.0)) ))
 (( x > 1.999 && x < 2.001 )) || err_exit 'composit functions not working'
 unset x y n

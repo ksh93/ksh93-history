@@ -1267,6 +1267,11 @@ static ssize_t piperead(Sfio_t *iop,void *buff,register size_t size,Sfdisc_t *ha
 {
 	int fd = sffileno(iop);
 	NOT_USED(handle);
+	if(sh.trapnote)
+	{
+		errno = EINTR;
+		return(-1);
+	}
 	if(sh_isstate(SH_INTERACTIVE) && io_prompt(iop,sh.nextprompt)<0 && errno==EIO)
 		return(0);
 	if(!(sh.fdstatus[sffileno(iop)]&IOCLEX) && sfset(iop,0,0)&SF_SHARE)
@@ -1302,6 +1307,11 @@ static ssize_t slowread(Sfio_t *iop,void *buff,register size_t size,Sfdisc_t *ha
 	else
 #   endif	/* SHOPT_VSH */
 		readf = ed_read;
+	if(sh.trapnote)
+	{
+		errno = EINTR;
+		return(-1);
+	}
 	while(1)
 	{
 		if(io_prompt(iop,sh.nextprompt)<0 && errno==EIO)

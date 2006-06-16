@@ -1237,7 +1237,7 @@ static Init_t *nv_init(Shell_t *shp)
 #if SHOPT_BASH
 	nv_search("local",shp->bltin_tree,0)->nvfun = (void*)&typeset;
 #endif
-	shp->fun_tree = dtopen(&_Nvdisc,Dtset);
+	shp->fun_tree = dtopen(&_Nvdisc,Dtoset);
 	dtview(shp->fun_tree,shp->bltin_tree);
 #if SHOPT_NAMESPACE
 	np = nv_mount(DOTSHNOD, "global", shp->var_tree);
@@ -1246,7 +1246,7 @@ static Init_t *nv_init(Shell_t *shp)
 	nv_putval(np,".sh.global",NV_RDONLY|NV_NOFREE);
 	nv_stack(np, &NSPACE_init);
 #endif /* SHOPT_NAMESPACE */
-	np = nv_mount(DOTSHNOD, "type", dtopen(&_Nvdisc,Dtset));
+	np = nv_mount(DOTSHNOD, "type", dtopen(&_Nvdisc,Dtoset));
 	nv_adddisc(DOTSHNOD, shdiscnames, (Namval_t**)0);
 	return(ip);
 }
@@ -1269,7 +1269,7 @@ static Dt_t *inittree(Shell_t *shp,const struct shtable2 *name_vals)
 		shp->bltin_nodes = np;
 	else if(name_vals==(const struct shtable2*)shtab_builtins)
 		shp->bltin_cmds = np;
-	base_treep = treep = dtopen(&_Nvdisc,Dtset);
+	base_treep = treep = dtopen(&_Nvdisc,Dtoset);
 	for(tp=name_vals;*tp->sh_name;tp++,np++)
 	{
 		if((np->nvname = strrchr(tp->sh_name,'.')) && np->nvname!=((char*)tp->sh_name))
@@ -1286,7 +1286,7 @@ static Dt_t *inittree(Shell_t *shp,const struct shtable2 *name_vals)
 			np->nvalue.cp = (char*)tp->sh_value;
 		nv_setattr(np,tp->sh_number);
 		if(nv_istable(np))
-			nv_mount(np,(const char*)0,dict=dtopen(&_Nvdisc,Dtset));
+			nv_mount(np,(const char*)0,dict=dtopen(&_Nvdisc,Dtoset));
 		if(nv_isattr(np,NV_INTEGER))
 			nv_setsize(np,10);
 		else

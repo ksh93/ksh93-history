@@ -41,7 +41,7 @@
 #include	"shnodes.h"
 #include	"path.h"
 #include	"national.h"
-#include	<float.h>
+#include	"streval.h"
 
 
 #undef STR_GROUP

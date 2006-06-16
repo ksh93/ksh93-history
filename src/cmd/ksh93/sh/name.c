@@ -31,7 +31,7 @@
 #include	"timeout.h"
 #include	"FEATURE/locale"
 #include	"FEATURE/externs"
-#include	<float.h>
+#include	"streval.h"
 
 #if !_lib_pathnative && _lib_uwin_path
 
@@ -1328,7 +1328,7 @@ int nv_scan(Dt_t *root, void (*fn)(Namval_t*,void*), void *data,int mask, int fl
 void nv_scope(struct argnod *envlist)
 {
 	register Dt_t *newscope;
-	newscope = dtopen(&_Nvdisc,Dtbag);
+	newscope = dtopen(&_Nvdisc,Dtoset);
 	dtview(newscope,(Dt_t*)sh.var_tree);
 	sh.var_tree = (Dt_t*)newscope;
 	if(envlist)

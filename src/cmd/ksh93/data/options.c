@@ -98,7 +98,7 @@ const Shtable_t shtab_options[] =
 	bashopt("progcomp",		SH_PROGCOMP)
 	bashopt("promptvars",		SH_PROMPTVARS)
 	"rc",				SH_RC|SH_COMMANDLINE,
-	"restricted",			SH_RESTRICTED|SH_COMMANDLINE,
+	"restricted",			SH_RESTRICTED,
 	bashopt("restricted_shell",	SH_RESTRICTED2|SH_COMMANDLINE)
 	bashopt("shift_verbose",	SH_SHIFT_VERBOSE)
 	bashopt("sourcepath",		SH_SOURCEPATH)

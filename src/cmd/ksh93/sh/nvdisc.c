@@ -30,6 +30,13 @@
 
 static const char *discnames[] = { "get", "set", "append", "unset", 0 };
 
+int     nv_compare(Dt_t* dict, Void_t *sp, Void_t *dp, Dtdisc_t *disc)
+{
+	if(sp==dp)
+		return(0);
+	return(strcmp((char*)sp,(char*)dp));
+}
+
 /*
  * call the next getval function in the chain
  */
@@ -1005,7 +1012,7 @@ static Namfun_t *clone_table(Namval_t* np, Namval_t *mp, int flags, Namfun_t *fp
 {
 	struct table	*tp = (struct table*)fp;
 	struct table	*ntp = (struct table*)nv_clone_disc(fp);
-	Dt_t		*oroot=tp->dict,*nroot=dtopen(&_Nvdisc,Dtset);
+	Dt_t		*oroot=tp->dict,*nroot=dtopen(&_Nvdisc,Dtoset);
 	if(!nroot)
 		return(0);
 	memcpy((void*)ntp,(void*)fp,sizeof(struct table));

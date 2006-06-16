@@ -146,9 +146,9 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 			/* go to beginning of word */
 			if(ep->e_nlist)
 				out++;
-			if((*--out=='\'' || *out=='"') && !openq(outbuff,out))
+			if(((c= *out--)=='\'' || c=='"') && !openq(outbuff,out+1))
 			{
-				int q = *out;
+				int q = out[1];
 				var = 0;
 				do
 				{
@@ -176,10 +176,11 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 					break;
 				if(*--out!='\\' && (ismeta(c) || c=='`' || c=='='))
 				{
-					c = *++out;
+					out++;
+					c = out[1];
 					/* special handling for leading quote */
 					if((c=='\'' || c=='"') && openq(outbuff,out))
-						out++;
+						out+=2;
 					break;
 				}
 			}

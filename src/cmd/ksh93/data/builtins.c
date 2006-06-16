@@ -253,6 +253,8 @@ const char sh_set[] =
 	"whenever the real and effective user id is not equal or the "
 	"real and effective group id is not equal.  User profiles are "
 	"not processed when \b-p\b is enabled.]"
+"[r?restricted.  Enables restricted shell.  This option cannot be unset once "
+	"enabled.]"
 "[t?Obsolete.  The shell reads one command and then exits.]"
 "[u?If enabled, the shell displays an error message when it tries to expand "
 	"a variable that is unset.]"

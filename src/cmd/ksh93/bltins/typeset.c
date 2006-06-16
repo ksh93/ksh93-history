@@ -913,7 +913,8 @@ static void print_scan(Sfio_t *file, int flag, Dt_t *root, int option,struct tda
 	namec = nv_scan(root,nullscan,(void*)0,tp->scanmask,flag);
 	argv = tp->argnam  = (char**)stakalloc((namec+1)*sizeof(char*));
 	namec = nv_scan(root, pushname, (void*)tp, tp->scanmask, flag);
-	strsort(argv,namec,strcoll);
+	if(mbcoll())
+		strsort(argv,namec,strcoll);
 	while(namec--)
 	{
 		if((np=nv_search(*argv++,root,0)) && np!=onp && (!nv_isnull(np) || np->nvfun || nv_isattr(np,~NV_NOFREE)))
