@@ -1577,7 +1577,7 @@ USAGE_LICENSE
 "[f?Each of the options and \aname\as refers to a function.]"
 "[i]#?[base:=10?An integer. \abase\a represents the arithmetic base "
 	"from 2 to 64.]"
-"[l?Convert uppercase character to lowercase.  Unsets \b-u\b attribute.  When"
+"[l?Convert uppercase character to lowercase.  Unsets \b-u\b attribute.  When "
 	"used with \b-i\b, \b-E\b, or \b-F\b indicates long variant.]"
 "[n?Name reference.  The value is the name of a variable that \aname\a "
 	"references.  \aname\a cannot contain a \b.\b.]"

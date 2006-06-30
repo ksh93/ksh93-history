@@ -1,6 +1,6 @@
 # This program runs ksh regression tests
 
-unset ENV LANG LC_ALL
+unset ENV FIGNORE LANG LC_ALL
 export PATH PWD SHELL
 PWD=`pwd`
 SHELL=${SHELL-ksh}

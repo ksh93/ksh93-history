@@ -25,6 +25,7 @@
 
 #include	"defs.h"
 #include	<ctype.h>
+#include	<ast_wchar.h>
 #include	"lexstates.h"
 #include	"path.h"
 #include	"io.h"
@@ -60,20 +61,87 @@ static char *overlaid(register char *str,register const char *newstr,int nocase)
 	return(str);
 }
 
+
 /*
- * returns 1 if the quote at *out is an open quote, 0 otherwise
+ * returns pointer to beginning of expansion and sets type of expansion
  */
-static int openq(char *outbuff, char *out)
+static char *find_begin(char outbuff[], char *last, int endchar, int *type)
 {
-	register int quote= *out, c, count=1;
-	while(outbuff < out)
+	register char	*cp=outbuff, *bp, *xp;
+	register int 	c,inquote = 0;
+	bp = outbuff;
+	*type = 0;
+	while(cp < last)
 	{
-		if((c= *outbuff++)=='\\' && quote=='"')
-			continue;
-		if(c==quote)
-			count = !count;
+		xp = cp;
+		switch(c= mbchar(cp))
+		{
+		    case '\'': case '"':
+			if(!inquote)
+			{
+				inquote = c;
+				bp = xp;
+				break;
+			}
+			if(inquote==c)
+				inquote = 0;
+			break;
+		    case '\\':
+			if(inquote != '\'')
+				mbchar(cp);
+			break;
+		    case '$':
+			if(inquote == '\'')
+				break;
+			c = *(unsigned char*)cp;
+			if(isaletter(c) || c=='{')
+			{
+				int dot = '.';
+				if(c=='{')
+				{
+					xp = cp;
+					mbchar(cp);
+					c = *(unsigned char*)cp;
+					if(c!='.' && !isaletter(c))
+						break;
+				}
+				else
+					dot = 'a';
+				while(cp < last)
+				{
+					if((c= mbchar(cp)) , c!=dot && !isaname(c))
+						break;
+				}
+				if(cp>=last)
+				{
+					*type='$';
+					return(++xp);
+				}
+			}
+			else if(c=='(')
+			{
+				xp = find_begin(cp,last,')',type);
+				if(*(cp=xp)!=')')
+					bp = xp;
+				else
+					cp++;
+			}
+			break;
+		    case '=':
+			if(!inquote)
+				bp = cp;
+			break;
+		    default:
+			if(c && c==endchar)
+				return(xp);
+			if(!inquote && ismeta(c))
+				bp = cp;
+			break;
+		}
 	}
-	return(count);
+	if(inquote && *bp==inquote)
+		*type = *bp++;
+	return(bp);
 }
 
 /*
@@ -87,17 +155,12 @@ static int openq(char *outbuff, char *out)
 
 int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 {
-	struct comnod  *comptr;
-	struct argnod *ap;
-	register char *out;
-	char *av[2];
-	char *begin;
-	char *dir = 0;
-	int addstar;
-	int rval = 0;
-	int strip;
-	int var=0;
-	int nomarkdirs = !sh_isoption(SH_MARKDIRS);
+	struct comnod	*comptr;
+	struct argnod	*ap;
+	register char	*out;
+	char 		*av[2], *begin , *dir=0;
+	int		addstar=0, rval=0, var=0, strip=1;
+	int 		nomarkdirs = !sh_isoption(SH_MARKDIRS);
 	sh_onstate(SH_FCOMPLETE);
 	if(ep->e_nlist)
 	{
@@ -130,7 +193,7 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 		*eol = ed_external((genchar*)outbuff,outbuff);
 	}
 #endif /* SHOPT_MULTIBYTE */
-	out = outbuff + *cur;
+	out = outbuff + *cur + (sh_isoption(SH_VI)!=0);
 	comptr->comtyp = COMSCAN;
 	comptr->comarg = ap;
 	ap->argflag = (ARG_MAC|ARG_EXP);
@@ -140,105 +203,47 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 		register int c;
 		char *last = out;
 		c =  *(unsigned char*)out;
-		var = isaname(c);
-		if(out>outbuff)
-		{
-			/* go to beginning of word */
-			if(ep->e_nlist)
-				out++;
-			if(((c= *out--)=='\'' || c=='"') && !openq(outbuff,out+1))
-			{
-				int q = out[1];
-				var = 0;
-				do
-				{
-					c = *(unsigned char*)--out;
-				}
-				while(out>outbuff &&  c!=q && c!='=');
-				out--;
-			}
-			else while(1)
-			{
-				c = *(unsigned char*)out;
-				if(c=='$' && var==1)
-				{
-					var = *((unsigned char*)&out[1]);
-					var= 2*isaletter(var);
-				}
-				else if(var==2)
-				{
-					if(c!='"')
-						var++;
-				}
-				else if(!isaname(c))
-					var = 0;
-				if(out <= outbuff)
-					break;
-				if(*--out!='\\' && (ismeta(c) || c=='`' || c=='='))
-				{
-					out++;
-					c = out[1];
-					/* special handling for leading quote */
-					if((c=='\'' || c=='"') && openq(outbuff,out))
-						out+=2;
-					break;
-				}
-			}
-			if(*out==' ' || *out=='\t')
-				out++;
-		}
-		else
-			out = outbuff;
-		begin = out;
+		begin = out = find_begin(outbuff,last,0,&var);
 		/* addstar set to zero if * should not be added */
-		addstar = '*';
-		strip = 1;
-		var = var==3;
-		if(var)
+		if(var=='$')
 		{
 			stakputs("${!");
-			addstar = 0;
-			if(*out++=='"')
+			stakwrite(out,last-out);
+			stakputs("@}");
+			out = last;
+		}
+		else
+		{
+			addstar = '*';
+			while(out < last)
 			{
-				var=2;
+				c = *(unsigned char*)out;
+				if(isexp(c))
+					addstar = 0;
+				if (c == '/')
+				{
+					if(addstar == 0)
+						strip = 0;
+					dir = out+1;
+				}
+				stakputc(c);
 				out++;
 			}
-
 		}
-		/* copy word to arg */
-		do
-		{
-			c = *(unsigned char*)out;
-			if(isexp(c))
-				addstar = 0;
-			if (c == '/')
-			{
-				if(addstar == 0)
-					strip = 0;
-				dir = out+1;
-			}
-			if(var && c==0)
-				stakputs("@}");
-			stakputc(c);
-			out++;
-
-		} while (out<last ||  (c && !ismeta(c) && c!='`'));
-		out--;
-		if(!var && mode=='\\')
+		if(var!='$' && mode=='\\' && out[-1]!='*')
 			addstar = '*';
 		if(*begin=='~' && !strchr(begin,'/'))
 			addstar = 0;
-		*stakptr(staktell()-1) = addstar;
+		stakputc(addstar);
 		stakfreeze(1);
 	}
 	if(mode!='*')
 		sh_onoption(SH_MARKDIRS);
 	{
-		register char **com;
-		char	*cp=begin;
-		char	*left=0;
-		int	 narg,cmd_completion=0;
-		register int size='x';
+		register char	**com;
+		char		*cp=begin, *left=0, *saveout=".";
+		int	 	nocase=0,narg,cmd_completion=0;
+		register 	int size='x';
 		while(cp>outbuff && ((size=cp[-1])==' ' || size=='\t'))
 			cp--;
 		if(!var && !strchr(ap->argval,'/') && (((cp==outbuff&&sh.nextprompt==1) || (strchr(";&|(",size)) && (cp==outbuff+1||size=='('||cp[-2]!='>') && *begin!='~' )))
@@ -254,7 +259,12 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 				begin += (dir-begin);
 		}
 		else
+		{
 			com = sh_argbuild(&narg,comptr,0);
+			/* special handling for leading quotes */
+			if(begin>outbuff && (begin[-1]=='"' || begin[-1]=='\''))
+			begin--;
+		}
 		sh_offstate(SH_COMPLETE);
                 /* allow a search to be aborted */
 		if(sh.trapnote&SH_SIGSET)
@@ -263,14 +273,11 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 			goto done;
 		}
 		/*  match? */
-		if (*com==0 || (narg <= 1 && strcmp(ap->argval,*com)==0))
+		if (*com==0 || (narg <= 1 && (strcmp(ap->argval,*com)==0) || (addstar && com[0][strlen(*com)-1]=='*')))
 		{
 			rval = -1;
 			goto done;
 		}
-		/* special handling for leading quotes */
-		if(begin>outbuff && (begin[-1]=='"' || begin[-1]=='\''))
-			begin--;
 		if(mode=='=')
 		{
 			if (strip && !cmd_completion)
@@ -291,8 +298,19 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 		size = *eol - (out-begin);
 		if(mode=='\\')
 		{
+			int c;
+			if(dir)
+			{
+				c = *dir;
+				*dir = 0;
+				saveout = begin;
+			}
+			if(saveout=astconf("PATH_ATTRIBUTES",saveout,(char*)0))
+				nocase = (strchr(saveout,'c')!=0);
+			if(dir)
+				*dir = c;
 			/* just expand until name is unique */
-			size += var+strlen(*com);
+			size += strlen(*com);
 		}
 		else
 		{
@@ -300,7 +318,7 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 			{
 				char **savcom = com;
 				while (*com)
-					size += var+strlen(sh_fmtq(*com++));
+					size += strlen(cp=sh_fmtq(*com++));
 				com = savcom;
 			}
 		}
@@ -313,33 +331,28 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 		/* save remainder of the buffer */
 		if(*out)
 			left=stakcopy(out);
-		if(var)
-		{
-			if(var==2)
-				*begin++ = '"';
-			*begin++ = '$';
-		}
 		if(cmd_completion && mode=='\\')
 			out = strcopy(begin,path_basename(cp= *com++));
 		else if(mode=='*')
-			out = strcopy(begin,sh_fmtq(*com++));
+		{
+			if(ep->e_nlist && dir && var)
+			{
+				if(*cp==var)
+					cp++;
+				else
+					*begin++ = var;
+				out = strcopy(begin,cp);
+				var = 0;
+			}
+			else
+				out = strcopy(begin,sh_fmtq(*com));
+			com++;
+		}
 		else
 			out = strcopy(begin,*com++);
 		if(mode=='\\')
 		{
-			char *saveout = ".";
-			int c, nocase;
-			if(dir)
-			{
-				c = *dir;
-				*dir = 0;
-				saveout = begin;
-			}
-			if(saveout=astconf("PATH_ATTRIBUTES",saveout,(char*)0))
-				nocase = (strchr(saveout,'c')!=0);
-			if(dir)
-				*dir = c;
-			if(!var && addstar==0)
+			if(var!='$' && addstar==0)
 				*out++ = '/';
 			saveout= ++out;
 			while (*com && *begin)
@@ -371,13 +384,18 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 				/* add quotes if necessary */
 				if((cp=sh_fmtq(begin))!=begin)
 					out = strcopy(begin,cp);
-				if(var==2)
-					*out++='"';
-				*out++ = ' ';
-				*out = 0;
+				if(var=='$' && begin[-1]=='{')
+					*out = '}';
+				else
+					*out = ' ';
+				*++out = 0;
 			}
 			else if(out[-1]=='/' && (cp=sh_fmtq(begin))!=begin)
+			{
 				out = strcopy(begin,cp);
+				if(out[-1] =='"' || out[-1]=='\'')
+					  *--out = 0;;
+			}
 			if(*begin==0)
 				ed_ringbell();
 		}
@@ -385,23 +403,23 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 		{
 			while (*com)
 			{
-				if(var==2)
-					*out++  = '"';
 				*out++  = ' ';
-				if(var)
-				{
-					if(var==2)
-						*out++  = '"';
-					*out++  = '$';
-				}
 				out = strcopy(out,sh_fmtq(*com++));
 			}
-			if(var==2)
-				*out++  = '"';
 		}
 		if(ep->e_nlist)
 		{
-			*out++ = ' ';
+			cp = com[-1];
+			if(cp[strlen(cp)-1]!='/')
+			{
+				if(var=='$' && begin[-1]=='{')
+					*out = '}';
+				else
+					*out = ' ';
+				out++;
+			}
+			else if(out[-1] =='"' || out[-1]=='\'')
+				out--;
 			*out = 0;
 		}
 		*cur = (out-outbuff);

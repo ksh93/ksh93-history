@@ -124,6 +124,7 @@ int path_expand(const char *pattern, struct argnod **arghead)
 #   endif
 #endif /* KSHELL */
 		flags |= GLOB_COMPLETE;
+		flags &= ~GLOB_NOCHECK;
 	}
 #if SHOPT_BASH
 	if(off = staktell())
@@ -200,7 +201,6 @@ int path_expand(const char *pattern, struct argnod **arghead)
 		if(!ap->argnxt.ap)
 			ap->argchn.ap = *arghead;
 	}
-	*arghead = (struct argnod*)gp->gl_list;
 	if(gp->gl_list)
 		*arghead = (struct argnod*)gp->gl_list;
 	return(gp->gl_pathc+extra);

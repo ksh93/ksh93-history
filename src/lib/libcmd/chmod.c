@@ -28,7 +28,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: chmod (AT&T Labs Research) 2005-02-14 $\n]"
+"[-?\n@(#)$Id: chmod (AT&T Labs Research) 2006-06-25 $\n]"
 USAGE_LICENSE
 "[+NAME?chmod - change the access permissions of files]"
 "[+DESCRIPTION?\bchmod\b changes the permission of each file "
@@ -276,7 +276,7 @@ b_chmod(int argc, char** argv, void* context)
 				mode = strperm(amode, &last, ent->fts_statp->st_mode);
 			if ((*chmodf)(ent->fts_accpath, mode) >= 0)
 			{
-				if (notify == 2 || notify == 1 && mode != (ent->fts_statp->st_mode&S_IPERM))
+				if (notify == 2 || notify == 1 && (mode&S_IPERM) != (ent->fts_statp->st_mode&S_IPERM))
 					sfprintf(sfstdout, "%s: mode changed to %0.4o (%s)\n", ent->fts_accpath, mode, fmtmode(mode, 1)+1);
 			}
 			else if (!force)

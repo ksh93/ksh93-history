@@ -204,9 +204,9 @@ static int p_redirect(register const struct ionod *iop)
 		}
 		else
 			sfputu(outfile,0);
-		iop = iop->ionxt;
 		if(iop->iovname)
 			p_string(iop->iovname);
+		iop = iop->ionxt;
 	}
 	return(sfputl(outfile,-1));
 }

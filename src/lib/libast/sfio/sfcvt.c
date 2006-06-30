@@ -32,11 +32,13 @@ static char		*Inf = "Inf", *Zero = "0", *Nan = "NaN";
 #define SF_ZERO		((_Sfi = 1), Zero)
 #define SF_NAN		((_Sfi = 3), Nan)
 
-#if ! _lib_isnanl
-#define isnanl(n)	((n)==_Sflnan)
-#endif
 #if ! _lib_isnan
-#define isnan(n)	((n)==_Sfdnan)
+#define isnan(n)	(memcmp((void*)&n,(void*)&_Sfdnan,sizeof(n))==0)
+#define isnanl(n)	(memcmp((void*)&n,(void*)&_Sflnan,sizeof(n))==0)
+#else
+#if ! _lib_isnanl
+#define isnanl(n)	isnan(n)
+#endif
 #endif
 
 #if __STD_C

@@ -1,6 +1,12 @@
+06-06-27 features/float,sfio/sfcvt.c: fix Nan logic
+06-06-27 port/astmath.c: fix long double isnan() test
+06-06-27 features/map.c: _map_libc for std => _ast_std
+06-06-25 string/strperm.c: handle posix = w.r.t. umask
+06-06-19 port/mnt.c,features/fs: handle netbsd getmntent api change
+06-06-18 regex/regstat.c: add REG_LITERAL check
 06-06-11 cdt/dtview.c: update from kpv
 06-05-31 sfio/sfhdr.h: fix _SFOPEN() typo
-06-05-09 comp/comf.sh: add native getconf -a names to the mix
+06-05-09 comp/conf.sh: add native getconf -a names to the mix
 06-04-28 misc/optget.c: add solaris long option name compatibility
 06-03-09 string/strmatch.c: add REG_ADVANCE => REG_* flags
 06-02-14 comp/iconv.c: fix uwin iconv_list() /reg/ generator

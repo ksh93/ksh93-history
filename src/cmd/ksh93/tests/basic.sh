@@ -26,7 +26,7 @@ function err_exit
 alias err_exit='err_exit $LINENO'
 
 # test basic file operations like redirection, pipes, file expansion
-Command=$0
+Command=${0##*/}
 integer Errors=0
 umask u=rwx,go=rx || err_exit "umask u=rws,go=rx failed"
 if	[[ $(umask -S) != u=rwx,g=rx,o=rx ]]

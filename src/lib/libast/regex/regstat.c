@@ -30,6 +30,17 @@
 regstat_t*
 regstat(const regex_t* p)
 {
+	register Rex_t*	e;
+
+	e = p->env->rex;
+	if (e && e->type == REX_BM)
+		e = e->next;
+	if (e && e->type == REX_BEG)
+		e = e->next;
+	if (e && e->type == REX_STRING)
+		e = e->next;
+	if (!e || e->type == REX_END && !e->next)
+		p->env->stats.re_flags |= REG_LITERAL;
 	p->env->stats.re_record = (p && p->env && p->env->rex->type == REX_BM) ? p->env->rex->re.bm.size : -1;
 	return &p->env->stats;
 }

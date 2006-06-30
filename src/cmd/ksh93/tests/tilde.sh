@@ -36,8 +36,8 @@ function home # id
 	fi
 }
 
+Command=${0##*/}
 integer Errors=0
-Command=$0
 OLDPWD=/bin
 if	[[ ~ != $HOME ]]
 then	err_exit '~' not $HOME

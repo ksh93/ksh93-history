@@ -23,6 +23,7 @@
 
 #include <stdio.h>
 
+#include "FEATURE/lib"
 #include "FEATURE/mmap"
 #include "FEATURE/vmalloc"
 
@@ -30,13 +31,23 @@ int
 main()
 {
 #if __MVS__
+#undef	_map_libc
+#define _map_libc	1
 	printf("\n");
 	printf("/* mvs.390 libc.dll routines can't be intercepted by user dlls */\n");
 	printf("#undef	_mem_dd_fd_DIR\n");
 	printf("#undef	_typ_long_double\n");
+#endif
+#if _map_libc
+#undef	_map_malloc
+#define _map_malloc	1
+	printf("\n");
+	printf("#define	_map_libc	1\n");
 	printf("#define basename	_ast_basename\n");
 	printf("#define dirname		_ast_dirname\n");
+#if !_lib_execvpe
 	printf("#define execvpe		_ast_execvpe\n");
+#endif
 	printf("#define fts_children    _ast_fts_children\n");
 	printf("#define fts_close       _ast_fts_close\n");
 	printf("#define fts_flags       _ast_fts_flags\n");
@@ -47,10 +58,16 @@ main()
 	printf("#define ftw		_ast_ftw\n");
 	printf("#define ftwalk		_ast_ftwalk\n");
 	printf("#define ftwflags	_ast_ftwflags\n");
+#if !_WINIX
 	printf("#define getcwd		_ast_getcwd\n");
+#endif
 	printf("#define getdate		_ast_getdate\n");
+#if !_lib_getopt
 	printf("#define getopt		_ast_getopt\n");
+#endif
+#if !_lib_getsubopt
 	printf("#define getsubopt       _ast_getsubopt\n");
+#endif
 	printf("#define getwd		_ast_getwd\n");
 	printf("#define glob		_ast_glob\n");
 	printf("#define globfree	_ast_globfree\n");
@@ -82,9 +99,13 @@ main()
 	printf("#define resolvepath	_ast_resolvepath\n");
 	printf("#define setenviron      _ast_setenviron\n");
 	printf("#define strftime	_ast_strftime\n");
+#if !_lib_strptime
 	printf("#define strptime	_ast_strptime\n");
+#endif
+#if !__CYGWIN__
 	printf("#define strtol		_ast_strtol\n");
 	printf("#define strtoul		_ast_strtoul\n");
+#endif
 	printf("#define strtoll		_ast_strtoll\n");
 	printf("#define strtoull	_ast_strtoull\n");
 	printf("#define system		_ast_system\n");

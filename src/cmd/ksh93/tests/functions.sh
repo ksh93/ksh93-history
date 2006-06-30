@@ -26,7 +26,7 @@ function err_exit
 alias err_exit='err_exit $LINENO'
 
 integer Errors=0
-Command=$0
+Command=${0##*/}
 integer foo=33
 bar=bye
 # check for global variables and $0

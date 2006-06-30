@@ -1474,7 +1474,7 @@ static void getline(register Vi_t* vp,register int mode)
 			return;
 
 		case '\t':		/** command completion **/
-			if(mode!=SEARCH && last_virt>=0 && cur_virt>=last_virt && !isblank(cur_virt) && vp->ed->sh->nextprompt)
+			if(mode!=SEARCH && last_virt>=0 && cur_virt>=last_virt && (vp->ed->e_tabcount|| !isblank(cur_virt)) && vp->ed->sh->nextprompt)
 			{
 				if(vp->ed->e_tabcount==0)
 				{
@@ -2298,6 +2298,7 @@ addin:
 		save_v(vp);
 		i = last_virt;
 		++last_virt;
+		mode = cur_virt-1;
 		virtual[last_virt] = 0;
 		if(ed_expand(vp->ed,(char*)virtual, &cur_virt, &last_virt, c, vp->repeat_set?vp->repeat:-1)<0)
 		{
@@ -2323,7 +2324,7 @@ addin:
 			--cur_virt;
 			--last_virt;
 			vp->ocur_virt = MAXCHAR;
-			if(c=='=')
+			if(c=='=' || (mode>cur_virt && (virtual[cur_virt]==' ' || virtual[cur_virt]=='/')))
 				vp->ed->e_tabcount = 0;
 			return(APPEND);
 		}

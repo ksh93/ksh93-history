@@ -27,7 +27,7 @@ function err_exit
 }
 alias err_exit='err_exit $LINENO'
 
-Command=$0
+Command=${0##*/}
 integer Errors=0
 foo=NOVAL bar=NOVAL
 file=/tmp/shtest$$

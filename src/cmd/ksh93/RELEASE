@@ -1,4 +1,12 @@
-06-06-13  --- Release ksh93r+  ---
+06-06-23  --- Release ksh93r+  ---
+06-06-23  A number of bug fixes for  command, file, and variable completion
+	  have been mode.
+06-06-20  Floating point division by zero now yields the constant Inf or -Inf
+	  and floating functions with invalid arguments yield NaN. 
+06-06-20  The floating point constants Inf and NaN can be used in arithmetic
+	  expressions.
+06-06-20  The functions isinf(), isnan(), tanhl() have been added for
+	  arithmetic expressions.
 06-06-13  Internal change to use ordering for variables instead of hashing
 	  to speed up prefix matching.
 06-06-13  A window between fork/exec in which a signal could get lost

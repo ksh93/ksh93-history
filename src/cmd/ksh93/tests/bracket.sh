@@ -25,7 +25,7 @@ function err_exit
 }
 alias err_exit='err_exit $LINENO'
 
-Command=$0
+Command=${0##*/}
 integer Errors=0
 null=''
 if	[[ ! -z $null ]]
@@ -170,7 +170,7 @@ if	[[ -u $SHELL ]]
 then	err_exit "setuid on $SHELL"
 fi
 if	[[ -g $SHELL ]]
-then	err_exit "setuid on $SHELL"
+then	err_exit "setgid on $SHELL"
 fi
 test -d .  -a '(' ! -f . ')' || err_exit 'test not working'
 if	[[ '!' != ! ]]
@@ -210,9 +210,7 @@ done
 ) || err_exit 'Errors with {..}(...) patterns'
 [[ D290.2003.02.16.temp == D290.+(2003.02.16).temp* ]] || err_exit 'pattern match bug with +(...)'
 rm -rf $file
-print > $file
 {
-cat $file > /dev/null # should make st_atime>st_mtime
 [[ -N $file ]] && err_exit 'test -N /tmp/*: st_mtime>st_atime after creat'
 sleep 2
 print 'hello world'

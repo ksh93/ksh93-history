@@ -26,7 +26,7 @@ function err_exit
 alias err_exit='err_exit $LINENO'
 
 # test shell builtin commands
-Command=$0
+Command=${0##*/}
 integer Errors=0
 : ${foo=bar} || err_exit ": failed"
 [[ $foo = bar ]] || err_exit ": side effects failed"

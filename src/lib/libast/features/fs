@@ -203,6 +203,16 @@ lib	statfs4 sys/types.h - sys/statfs.h - sys/vfs.h - sys/mount.h compile{
 		return statfs("/",&fs,sizeof(fs),0);
 	}
 }end
+lib	getmntinfo_statvfs note{ getmntinfo uses statvfs -- since when? }end compile{
+	#include <sys/types.h>
+	#include <sys/mount.h>
+	int
+	gmi(struct statvfs* fs)
+	{
+		fs->f_flag = 0;
+		return getmntinfo(fs, 0);
+	}
+}end
 cat{
 	#if _sys_statvfs
 	#include <sys/statvfs.h>

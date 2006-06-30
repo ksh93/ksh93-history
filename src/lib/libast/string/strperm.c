@@ -77,6 +77,11 @@ strperm(const char* aexpr, char** e, register int perm)
 				expr--;
 				/*FALLTHROUGH*/
 			case '=':
+				if (who)
+					perm &= ~who;
+				else
+					perm = 0;
+				/*FALLTHROUGH*/
 			case '+':
 			case '|':
 			case '-':
@@ -111,7 +116,7 @@ strperm(const char* aexpr, char** e, register int perm)
 						{
 							if (e)
 								*e = expr - 1;
-							return perm;
+							return perm & S_IPERM;
 						}
 						typ |= S_ISGID;
 						continue;
@@ -128,6 +133,7 @@ strperm(const char* aexpr, char** e, register int perm)
 						else
 							switch (op)
 							{
+							case '=':
 							case '+':
 							case '|':
 							case '-':
@@ -228,7 +234,7 @@ strperm(const char* aexpr, char** e, register int perm)
 								}
 								perm |= typ;
 							}
-							return perm;
+							return perm & S_IPERM;
 						}
 						num = (num << 3) | (c - '0');
 						if (*expr < '0' || *expr > '7')

@@ -35,15 +35,7 @@
 #   include	<nval.h>
 #endif /* _SH_PRIVATE */
 
-#define SH_VERSION	20030620
-
-/*
- *  The following will disappear in a future release so change all sh_fun
- *  calls to use three arguments and sh_waitnotify specify a function
- *  that will be called with three arguments.  The third argument to
- *  the waitnotify function will 0 for input, 1 for output.
- */
-#define sh_waitnotify	_sh_waitnotify
+#define SH_VERSION	20060510
 
 #undef NOT_USED
 #define NOT_USED(x)	(&x,1)

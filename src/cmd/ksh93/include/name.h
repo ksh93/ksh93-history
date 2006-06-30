@@ -63,6 +63,7 @@ union Value
 #define ARRAY_INCR	32	/* number of elements to grow when array 
 				   bound exceeded.  Must be a power of 2 */
 #define ARRAY_FILL	(8L<<ARRAY_BITS)	/* used with nv_putsub() */
+#define ARRAY_NOCLONE	(16L<<ARRAY_BITS)	/* do not clone array disc */
 
 /* These flags are used as options to array_get() */
 #define ARRAY_ASSIGN	0
@@ -84,7 +85,7 @@ struct Ufunction
 
 /* The following attributes are for internal use */
 #define NV_NOCHANGE	(NV_EXPORT|NV_IMPORT|NV_RDONLY|NV_TAGGED|NV_NOFREE)
-#define NV_ATTRIBUTES	(~(NV_NOSCOPE|NV_ARRAY|NV_IDENT|NV_ASSIGN|NV_REF|NV_VARNAME))
+#define NV_ATTRIBUTES	(~(NV_NOSCOPE|NV_ARRAY|NV_NOARRAY|NV_IDENT|NV_ASSIGN|NV_REF|NV_VARNAME))
 #define NV_PARAM	NV_NODISC	/* expansion use positional params */
 
 /* This following are for use with nodes which are not name-values */
@@ -155,9 +156,12 @@ extern char		*nv_getvtree(Namval_t*, Namfun_t*);
 extern void		nv_attribute(Namval_t*, Sfio_t*, char*, int);
 extern Namval_t		*nv_bfsearch(const char*, Dt_t*, Namval_t**, char**);
 extern Namval_t		*nv_mkclone(Namval_t*);
+extern Namval_t		*nv_mktype(Namval_t**, int);
+extern void		nv_addnode(Namval_t*, int);
 extern Namval_t		*nv_parent(Namval_t*);
 extern char		*nv_getbuf(size_t);
 extern Namval_t		*nv_mount(Namval_t*, const char *name, Dt_t*);
+extern Namval_t		*nv_arraychild(Namval_t*, Namval_t*, int);
 extern int		nv_compare(Dt_t*, Void_t*, Void_t*, Dtdisc_t*);
 
 extern const Namdisc_t	RESTRICTED_disc;
@@ -174,6 +178,7 @@ extern const char	e_ident[];
 extern const char	e_varname[];
 extern const char	e_funname[];
 extern const char	e_noalias[];
+extern const char	e_noarray[];
 extern const char	e_aliname[];
 extern const char	e_badexport[];
 extern const char	e_badref[];
@@ -182,4 +187,5 @@ extern const char	e_selfref[];
 extern const char	e_envmarker[];
 extern const char	e_badlocale[];
 extern const char	e_loop[];
+extern const char	e_redef[];
 #endif /* _NV_PRIVATE */

@@ -26,7 +26,7 @@ function err_exit
 alias err_exit='err_exit $LINENO'
 
 #test for compound variables
-Command=$0
+Command=${0##*/}
 integer Errors=0
 Point=(
 	float x=1. y=0.
@@ -190,6 +190,6 @@ function localvar
 point=(integer x=6 y=8)
 localvar
 	(( (point.x*point.x + point.y*point.y) == 100 )) || err_exit "global compound variable not preserved"
-[[ $($SHELL -c 'foo=( [x]=(y z) ); print ${foo.x[@]}') == 'y z' ]] 2> /dev/null || err_exit 'foo=( [x]=(y z)  not working'
+[[ $($SHELL -c 'foo=();foo.[x]=(y z); print ${foo.x[@]}') == 'y z' ]] 2> /dev/null || err_exit 'foo=( [x]=(y z)  not working'
 exit $((Errors))
 

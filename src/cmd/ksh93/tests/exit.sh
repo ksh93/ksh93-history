@@ -34,7 +34,7 @@ function abspath
         print $newdir/$base
 }
 #test for proper exit of shell
-Command=$0
+Command=${0##*/}
 integer Errors=0
 ABSHELL=$(abspath)
 mkdir /tmp/ksh$$ || err_exit "mkdir /tmp/ksh$$ failed"
@@ -51,8 +51,11 @@ SHELL=$ABSSHELL \
 SHLIBPATH=$SHLIBPATH \
 exec -c -a -ksh ${ABSHELL} -c "exit 1" 1>/dev/null 2>&1
 !
-if [[ $(echo $?) != 0 ]]
-then err_exit 'exit in .profile is ignored'
+status=$(echo $?)
+if	[[ -o noprivileged && $status != 0 ]]
+then	err_exit 'exit in .profile is ignored'
+elif	[[ -o privileged && $status == 0 ]]
+then	err_exit 'privileged .profile not ignored'
 fi
 if	[[ $(trap 'code=$?; echo $code; trap 0; exit $code' 0; exit 123) != 123 ]]
 then	err_exit 'exit not setting $?'

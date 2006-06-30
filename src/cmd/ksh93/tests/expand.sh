@@ -25,7 +25,7 @@ function err_exit
 }
 
 integer Errors=0
-Command=$0
+Command=${0##*/}
 
 # {...} expansion tests -- ignore if not supported
 

@@ -589,7 +589,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 		    {
 			register struct argnod	*argp;
 			char		*trap;
-			Namval_t	*np, *nq;
+			Namval_t	*np, *nq, *last_table;
 			struct ionod	*io;
 			int		command=0;
 			error_info.line = t->com.comline-sh.st.firstline;
@@ -680,6 +680,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 					argp = NULL;
 				}
 			}
+			last_table = sh.last_table;
 			sh.last_table = 0;
 			if((io||argn))
 			{
@@ -874,6 +875,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 				{
 					int indx,jmpval=0;
 					struct checkpt buff;
+					Namval_t node;
 					register struct slnod *slp;
 					if(!np->nvalue.ip)
 					{
@@ -905,9 +907,18 @@ int sh_exec(register const Shnode_t *t, int flags)
 					staklink(slp->slptr);
 					if(nq)
 					{
+						sh.last_table = last_table;
 						nv_putval(SH_NAMENOD, nv_name(nq), NV_NOFREE);
+						memcpy(&node,L_ARGNOD,sizeof(node));
+						L_ARGNOD->nvalue.np = nq;
+						L_ARGNOD->nvenv = 0;
+						L_ARGNOD->nvfun = (Namfun_t*)sh.last_table;
+						L_ARGNOD->nvflag = NV_REF|NV_NOFREE;
 						if(nv_arrayptr(nq))
+						{
 							nv_putval(SH_SUBSCRNOD,nv_getsub(nq),NV_NOFREE);
+							L_ARGNOD->nvenv = (char*)SH_SUBSCRNOD->nvalue.cp;
+						}
 					}
 					if(io)
 					{
@@ -930,6 +941,10 @@ int sh_exec(register const Shnode_t *t, int flags)
 					}
 					if(nq)
 					{
+						L_ARGNOD->nvalue.np = node.nvalue.np;
+						L_ARGNOD->nvenv = node.nvenv;
+						L_ARGNOD->nvflag = node.nvflag;
+						L_ARGNOD->nvfun = node.nvfun;
 						nv_unset(SH_NAMENOD);
 						nv_unset(SH_SUBSCRNOD);
 					}
@@ -1684,20 +1699,33 @@ int sh_exec(register const Shnode_t *t, int flags)
 			/* look for discipline functions */
 			error_info.line = t->funct.functline-sh.st.firstline;
 			/* Function names cannot be special builtin */
-			if((np=nv_search(fname,sh.bltin_tree,0)) && nv_isattr(np,BLT_SPC))
-				errormsg(SH_DICT,ERROR_exit(1),e_badfun,fname);
-			if(cp)
+			if(cp || sh.prefix)
 			{
 				int offset = staktell();
-				stakwrite(fname,cp-fname);
-				stakputc(0);
-				npv = nv_open(stakptr(offset),sh.var_tree,NV_NOASSIGN|NV_NOARRAY|NV_VARNAME);
+				if(sh.prefix)
+				{
+					cp = sh.prefix;
+					sh.prefix = 0;
+					npv = nv_open(cp,sh.var_tree,NV_NOASSIGN|NV_NOARRAY|NV_VARNAME);
+					sh.prefix = cp;
+					cp = fname;
+				}
+				else
+				{
+					stakwrite(fname,cp-fname);
+					stakputc(0);
+					npv = nv_open(stakptr(offset),sh.var_tree,NV_NOASSIGN|NV_NOARRAY|NV_VARNAME);
+				}
 				offset = staktell();
 				stakputs(nv_name(npv));
+				if(*cp!='.')
+					stakputc('.');
 				stakputs(cp);
 				stakputc(0);
 				fname = stakptr(offset);
 			}
+			else if((np=nv_search(fname,sh.bltin_tree,0)) && nv_isattr(np,BLT_SPC))
+				errormsg(SH_DICT,ERROR_exit(1),e_badfun,fname);
 #if SHOPT_NAMESPACE
 			else if(sh.namespace)
 			{
@@ -2080,6 +2108,8 @@ pid_t _sh_fork(register pid_t parent,int flags,int *jobid)
 	/* except for those `lost' by trap   */
 	sh_sigreset(2);
 	sh.subshell = 0;
+	if((flags&FAMP) && sh.coutpipe>1)
+		sh_close(sh.coutpipe);
 	sig = sh.savesig;
 	sh.savesig = 0;
 	if(sig>0)
@@ -2170,7 +2200,7 @@ int sh_funscope(int argn, char *argv[],int(*fun)(void*),void *arg,int execflg)
 		/* eliminate parent scope */
 		Dt_t *dt = dtview(sh.var_tree,0);
 		dtview(sh.var_tree,dtvnext(prevscope->save_tree));
-		nv_scan(prevscope->save_tree, local_exports,(void*)0,NV_EXPORT,NV_EXPORT|NV_NOSCOPE);
+		nv_scan(prevscope->save_tree, local_exports,(void*)0, NV_EXPORT, NV_EXPORT|NV_NOSCOPE);
 	}
 	sh.st.save_tree = sh.var_tree;
 	if(!fun)
@@ -2300,6 +2330,7 @@ int sh_fun(Namval_t *np, Namval_t *nq, char *argv[])
 {
 	register int offset;
 	register char *base;
+	Namval_t node;
 	int n=0;
 	char *av[2];
 	Fcin_t save;
@@ -2316,9 +2347,21 @@ int sh_fun(Namval_t *np, Namval_t *nq, char *argv[])
 		n++;
 	if(nq)
 	{
+		/*
+		 * set ${.sh.name} and ${.sh.subscript}
+		 * set _ to reference for ${.sh.name}[$.sh.subscript]
+		 */
 		nv_putval(SH_NAMENOD, nv_name(nq), NV_NOFREE);
+		memcpy(&node,L_ARGNOD,sizeof(node));
+		L_ARGNOD->nvalue.np = nq;
+		L_ARGNOD->nvenv = 0;
+		L_ARGNOD->nvfun = (Namfun_t*)sh.last_table;
+		L_ARGNOD->nvflag = NV_REF|NV_NOFREE;
 		if(nv_arrayptr(nq))
+		{
 			nv_putval(SH_SUBSCRNOD,nv_getsub(nq),NV_NOFREE);
+			L_ARGNOD->nvenv = (char*)SH_SUBSCRNOD->nvalue.cp;
+		}
 	}
 	if(is_abuiltin(np))
 	{
@@ -2346,6 +2389,10 @@ int sh_fun(Namval_t *np, Namval_t *nq, char *argv[])
 		sh_funct(np,n,argv,(struct argnod*)0,sh_isstate(SH_ERREXIT));
 	if(nq)
 	{
+		L_ARGNOD->nvalue.np = node.nvalue.np;
+		L_ARGNOD->nvenv = node.nvenv;
+		L_ARGNOD->nvflag = node.nvflag;
+		L_ARGNOD->nvfun = node.nvfun;
 		nv_unset(SH_NAMENOD);
 		nv_unset(SH_SUBSCRNOD);
 	}

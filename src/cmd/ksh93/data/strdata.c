@@ -106,6 +106,7 @@ extern double	hypot(double, double);
 #endif
 
 typedef Sfdouble_t (*mathf)(Sfdouble_t,...);
+typedef int (*mathif)(Sfdouble_t);
 
 #ifdef _ast_fltmax_double
 
@@ -117,8 +118,12 @@ typedef Sfdouble_t (*mathf)(Sfdouble_t,...);
 #   define	cosl	cos
 #   define	coshl	cosh
 #   define	expl	exp
+#   define	finitel	finite
 #   define	fmodl	fmod
 #   define	hypotl	hypot
+#   define	isinfl	isinf
+#   define	isnanl	isnan
+#   define	isnormall	isnormal
 #   define	floorl	floor
 #   define	logl	log
 #   define	powl	pow
@@ -128,7 +133,7 @@ typedef Sfdouble_t (*mathf)(Sfdouble_t,...);
 #   define	tanl	tan
 #   define	tanhl	tanh
 
-#else
+#endif
 
 #ifdef __STDARG__
 #   define fundef(name)		static _ast_fltmax_t local_##name(_ast_fltmax_t d){ return(name(d));}
@@ -150,7 +155,7 @@ typedef Sfdouble_t (*mathf)(Sfdouble_t,...);
 {
 #endif
 
-#if defined(acosl) || !defined(_lib_acosl)
+#if defined(acosl) || !_lib_acosl
 #   ifndef acosl
 #       define acosl(x) macdef(acos,x)
 #   endif
@@ -158,12 +163,12 @@ typedef Sfdouble_t (*mathf)(Sfdouble_t,...);
 #   undef acosl
 #   define acosl local_acosl
 #else
-#   if defined(_npt_acosl)
+#   if _npt_acosl
 	protodef(acosl)
 #   endif
 #endif 
 
-#if defined(asinl) || !defined(_lib_asinl)
+#if defined(asinl) || !_lib_asinl
 #   ifndef asinl
 #       define asinl(x) macdef(asin,x)
 #   endif
@@ -171,12 +176,12 @@ typedef Sfdouble_t (*mathf)(Sfdouble_t,...);
 #   undef asinl
 #   define asinl local_asinl
 #else
-#   if defined(_npt_asinl)
+#   if _npt_asinl
 	protodef(asinl)
 #   endif
 #endif 
 
-#if defined(atanl) || !defined(_lib_atanl)
+#if defined(atanl) || !_lib_atanl
 #   ifndef atanl
 #       define atanl(x) macdef(atan,x)
 #   endif
@@ -184,12 +189,12 @@ typedef Sfdouble_t (*mathf)(Sfdouble_t,...);
 #   undef atanl
 #   define atanl local_atanl
 #else
-#   if defined(_npt_atanl)
+#   if _npt_atanl
 	protodef(atanl)
 #   endif
 #endif 
 
-#if defined(atan2l) || !defined(_lib_atan2l)
+#if defined(atan2l) || !_lib_atan2l
 #   ifndef atan2l
 #       define atan2l(x,y) macdef2(atan2,x,y)
 #   endif
@@ -197,12 +202,12 @@ typedef Sfdouble_t (*mathf)(Sfdouble_t,...);
 #   undef atan2l
 #   define atan2l local_atan2l
 #else
-#   if defined(_npt_atan2l)
+#   if _npt_atan2l
 	protodef2(atan2l)
 #   endif
 #endif 
 
-#if defined(expl) || !defined(_lib_expl)
+#if defined(expl) || !_lib_expl
 #   ifndef expl
 #       define expl(x) macdef(exp,x)
 #   endif
@@ -210,12 +215,12 @@ typedef Sfdouble_t (*mathf)(Sfdouble_t,...);
 #   undef expl
 #   define expl local_expl
 #else
-#   if defined(_npt_expl)
+#   if _npt_expl
 	protodef(expl)
 #   endif
 #endif 
 
-#if defined(cosl) || !defined(_lib_cosl)
+#if defined(cosl) || !_lib_cosl
 #   ifndef cosl
 #       define cosl(x) macdef(cos,x)
 #   endif
@@ -223,12 +228,12 @@ typedef Sfdouble_t (*mathf)(Sfdouble_t,...);
 #   undef cosl
 #   define cosl local_cosl
 #else
-#   if defined(_npt_cosl)
+#   if _npt_cosl
 	protodef(cosl)
 #   endif
 #endif 
 
-#if defined(coshl) || !defined(_lib_coshl)
+#if defined(coshl) || !_lib_coshl
 #   ifndef coshl
 #       define coshl(x) macdef(cosh,x)
 #   endif
@@ -236,12 +241,12 @@ typedef Sfdouble_t (*mathf)(Sfdouble_t,...);
 #   undef coshl
 #   define coshl local_coshl
 #else
-#   if defined(_npt_coshl)
+#   if _npt_coshl
 	protodef(coshl)
 #   endif
 #endif 
 
-#if defined(hypotl) || !defined(_lib_hypotl)
+#if defined(hypotl) || !_lib_hypotl
 #   ifndef hypotl
 #       define hypotl(x,y) macdef2(hypot,x,y)
 #   endif
@@ -249,12 +254,49 @@ typedef Sfdouble_t (*mathf)(Sfdouble_t,...);
 #   undef hypotl
 #   define hypotl local_hypotl
 #else
-#   if defined(_npt_hypotl)
+#   if _npt_hypotl
 	protodef2(hypotl)
 #   endif
 #endif 
 
-#if defined(floorl) || !defined(_lib_floorl)
+#if defined(finitel) || !_lib_finitel
+#   ifndef finitel
+#       define finitel(x) macdef(finite,x)
+#   endif
+#   ifdef _lib_finitel
+	fundef(finitel)
+#   else
+#       ifdef __STDARG__
+   	static int local_finitel(_ast_fltmax_t d)
+#       else
+   	static int local_finitel(d)
+	_ast_fltmax_t d;
+#       endif
+	{
+#     if _lib_isfinite
+	    return(isfinite(d));
+#     else
+#       if _lib_isinfl
+	    return(!isinfl(d) && !isnan(d));
+#       else
+#         if _lib_isinf
+	    return(!isinf(d) && !isnan(d));
+#         else
+	    return(!isnan(d));
+#         endif
+#       endif
+#     endif
+	}
+#   endif
+#   undef finitel
+#   define finitel local_finitel
+#else
+#   if _npt_finitel
+	protodef(finitel)
+#   endif
+#endif 
+
+#if defined(floorl) || !_lib_floorl
 #   ifndef floorl
 #       define floorl(x) macdef(floor,x)
 #   endif
@@ -262,12 +304,12 @@ typedef Sfdouble_t (*mathf)(Sfdouble_t,...);
 #   undef floorl
 #   define floorl local_floorl
 #else
-#   if defined(_npt_floorl)
+#   if _npt_floorl
 	protodef(floorl)
 #   endif
 #endif 
 
-#if defined(fmodl) || !defined(_lib_fmodl)
+#if defined(fmodl) || !_lib_fmodl
 #   ifndef fmodl
 #       define fmodl(x,y) macdef2(fmod,x,y)
 #   endif
@@ -275,12 +317,63 @@ typedef Sfdouble_t (*mathf)(Sfdouble_t,...);
 #   undef fmodl
 #   define fmodl local_fmodl
 #else
-#   if defined(_npt_fmodl)
+#   if _npt_fmodl
 	protodef2(fmodl)
 #   endif
 #endif 
 
-#if defined(logl) || !defined(_lib_logl)
+#if defined(isinfl) || !_lib_isinfl
+#   ifndef isinfl
+#       define isinfl(x) macdef(isinf,x)
+#   endif
+#   ifdef _lib_isinf
+	fundef(isinfl)
+#   else
+#       ifdef __STDARG__
+   	static int local_isinfl(_ast_fltmax_t d)
+#       else
+   	static int local_isinfl(d)
+	_ast_fltmax_t d;
+#       endif
+	{ return(!finitel(d) && !isnan(d)); }
+#   endif
+#   undef isinfl
+#   define isinfl local_isinfl
+#else
+#   if _npt_isinfl
+	protodef(isinfl)
+#   endif
+#endif 
+
+#if defined(isnanl) || !_lib_isnanl
+#   ifndef isnanl
+#       define isnanl(x) macdef(isnan,x)
+#   endif
+    fundef(isnanl)
+#   undef isnanl
+#   define isnanl local_isnanl
+#else
+#   if _npt_isnanl
+	protodef(isnanl)
+#   endif
+#endif 
+
+#if defined(isnormall) || !_lib_isnormall
+#   ifndef isnormall
+#       define isnormall(x) macdef(isnormal,x)
+#   endif
+#   ifdef _lib_isnormal
+	fundef(isnormall)
+#   endif
+#   undef isnormall
+#   define isnormall local_isnormall
+#else
+#   if _npt_isnormall
+	protodef(isnormall)
+#   endif
+#endif 
+
+#if defined(logl) || !_lib_logl
 #   ifndef logl
 #       define logl(x) macdef(log,x)
 #   endif
@@ -288,12 +381,12 @@ typedef Sfdouble_t (*mathf)(Sfdouble_t,...);
 #   undef logl
 #   define logl local_logl
 #else
-#   if defined(_npt_logl)
+#   if _npt_logl
 	protodef(logl)
 #   endif
 #endif 
 
-#if defined(sinl) || !defined(_lib_sinl)
+#if defined(sinl) || !_lib_sinl
 #   ifndef sinl
 #       define sinl(x) macdef(sin,x)
 #   endif
@@ -301,12 +394,12 @@ typedef Sfdouble_t (*mathf)(Sfdouble_t,...);
 #   undef sinl
 #   define sinl local_sinl
 #else
-#   if defined(_npt_sinl)
+#   if _npt_sinl
 	protodef(sinl)
 #   endif
 #endif 
 
-#if defined(sinhl) || !defined(_lib_sinhl)
+#if defined(sinhl) || !_lib_sinhl
 #   ifndef sinhl
 #       define sinhl(x) macdef(sinh,x)
 #   endif
@@ -314,12 +407,12 @@ typedef Sfdouble_t (*mathf)(Sfdouble_t,...);
 #   undef sinhl
 #   define sinhl local_sinhl
 #else
-#   if defined(_npt_sinhl)
+#   if _npt_sinhl
 	protodef(sinhl)
 #   endif
 #endif 
 
-#if defined(sqrtl) || !defined(_lib_sqrtl)
+#if defined(sqrtl) || !_lib_sqrtl
 #   ifndef sqrtl
 #       define sqrtl(x) macdef(sqrt,x)
 #   endif
@@ -327,12 +420,12 @@ typedef Sfdouble_t (*mathf)(Sfdouble_t,...);
 #   undef sqrtl
 #   define sqrtl local_sqrtl
 #else
-#   if defined(_npt_sqrtl)
+#   if _npt_sqrtl
 	protodef(sqrtl)
 #   endif
 #endif 
 
-#if defined(tanl) || !defined(_lib_tanl)
+#if defined(tanl) || !_lib_tanl
 #   ifndef tanl
 #       define tanl(x) macdef(tan,x)
 #   endif
@@ -340,12 +433,12 @@ typedef Sfdouble_t (*mathf)(Sfdouble_t,...);
 #   undef tanl
 #   define tanl local_tanl
 #else
-#   if defined(_npt_tanl)
+#   if _npt_tanl
 	protodef(tanl)
 #   endif
 #endif 
 
-#if defined(tanhl) || !defined(_lib_tanhl)
+#if defined(tanhl) || !_lib_tanhl
 #   ifndef tanhl
 #       define tanhl(x) macdef(tanh,x)
 #   endif
@@ -353,12 +446,12 @@ typedef Sfdouble_t (*mathf)(Sfdouble_t,...);
 #   undef tanhl
 #   define tanhl local_tanhl
 #else
-#   if defined(_npt_tanhl)
+#   if _npt_tanhl
 	protodef(tanhl)
 #   endif
 #endif 
 
-#if defined(powl) || !defined(_lib_powl)
+#if defined(powl) || !_lib_powl
 #   ifndef powl
 #       define powl(x,y) macdef2(pow,x,y)
 #   endif
@@ -366,12 +459,12 @@ typedef Sfdouble_t (*mathf)(Sfdouble_t,...);
 #   undef powl
 #   define powl local_powl
 #else
-#   if defined(_npt_powl)
+#   if _npt_powl
 	protodef2(powl)
 #   endif
 #endif 
 
-#if defined(fabsl) || !defined(_lib_fabsl)
+#if defined(fabsl) || !_lib_fabsl
 #   ifndef fabsl
 #       define fabsl(x) macdef(fabs,x)
 #   endif
@@ -379,19 +472,19 @@ typedef Sfdouble_t (*mathf)(Sfdouble_t,...);
 #   undef fabsl
 #   define fabsl local_fabsl
 #else
-#   if defined(_npt_fabsl)
+#   if _npt_fabsl
 	protodef(fabsl)
 #   endif
 #endif 
-
 
 #if 0 /* proto bug workaround */
 }
 #endif
 
-#endif
-
-
+/*
+ * first byte is two-digit octal number.  Last digit is number of args
+ * first digit is 0 if return value is double, 1 for integer
+ */
 const struct mathtab shtab_math[] =
 {
 	"\01abs",		(mathf)fabsl,
@@ -402,10 +495,16 @@ const struct mathtab shtab_math[] =
 	"\01cos",		(mathf)cosl,
 	"\01cosh",		(mathf)coshl,
 	"\01exp",		(mathf)expl,
+	"\011finite",		(mathf)finitel,
 	"\01floor",		(mathf)floorl,
 	"\02fmod",		(mathf)fmodl,
 	"\02hypot",		(mathf)hypotl,
 	"\01int",		(mathf)floorl,
+	"\011isinf",		(mathf)isinfl,
+	"\011isnan",		(mathf)isnanl,
+#ifdef _lib_isnormal
+	"\011isnormal",		(mathf)isnormall,
+#endif
 	"\01log",		(mathf)logl,
 	"\02pow",		(mathf)powl,
 	"\01sin",		(mathf)sinl,

@@ -118,6 +118,8 @@ struct shlex_t
 #define	SH_FUNDEF	040
 #define SH_ARRAY	0100
 
+#define SH_COMPASSIGN	010	/* allow compound assignments only */
+
 typedef struct  _shlex_
 {
 	struct shlex_t		_shlex;

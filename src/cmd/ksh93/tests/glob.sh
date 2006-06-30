@@ -20,7 +20,7 @@
 function err_exit
 {
 	print -u2 -n "\t"
-	print -u2 -r ${command}[$1]: "${@:2}"
+	print -u2 -r ${Command}[$1]: "${@:2}"
 	((errors++))
 }
 alias err_exit='err_exit $LINENO'
@@ -54,7 +54,7 @@ function test_case
 	fi
 }
 
-command=$0
+Command=${0##*/}
 tmp=/tmp/ksh$$
 integer errors=0
 unset undefined

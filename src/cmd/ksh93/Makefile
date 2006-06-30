@@ -203,7 +203,9 @@ test : .NULL
 
 else
 
-test : $(BINDIR)/$(SH) $(SH) shtests
+test : test.ksh - test.shcomp
+
+test.ksh : $(BINDIR)/$(SH) $(SH) shtests
 	$(SILENT) $(CMP) $(CMPFLAGS) $(*:O=1) $(*:O=2) 2>/dev/null ||
 	echo "make install to run the tests on the latest $(SH)" >&2
 	cd $(*:O=3:P=L!:D)
@@ -214,5 +216,19 @@ test.% : %.sh $(BINDIR)/$(SH) $(SH) shtests
 	echo "make install to run the tests on the latest $(SH)" >&2
 	cd $(*:O=4:P=L!:D)
 	SHELL=$(*:O=2:P=A) $(*:O=2:P=A) $(*:O=4:B) $(*:O=1:P=A)
+
+test.shcomp : $(BINDIR)/$(SH) $(SH) shtests shcomp
+	$(SILENT) $(CMP) $(CMPFLAGS) $(*:O=1) $(*:O=2) 2>/dev/null ||
+	echo "make install to run the tests on the latest $(SH)" >&2
+	cd $(*:O=3:P=L!:D)
+	tmp=/tmp/ksh-$(tmp)
+	mkdir $tmp
+	for i in *.sh
+	do	tst=$tmp/shcomp-${i%.sh}.ksh
+		shcomp $i > $tst
+		SHELL=$(*:O=1:P=A) $(*:O=1:P=A) $(*:O=3:B) $tst
+		rm -f $tst
+	done
+	rm -rf $tmp
 
 end

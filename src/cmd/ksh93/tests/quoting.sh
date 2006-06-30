@@ -25,7 +25,7 @@ function err_exit
 }
 alias err_exit='err_exit $LINENO'
 
-Command=$0
+Command=${0##*/}
 integer Errors=0
 if	[[ 'hi there' != "hi there" ]]
 then	err_exit "single quotes not the same as double quotes"

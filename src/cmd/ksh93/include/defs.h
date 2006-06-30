@@ -184,6 +184,7 @@ struct limits
 	History_t	*hist_ptr; \
 	char		universe; \
 	void		*jmpbuffer; \
+	void		*mktype; \
 	Sfio_t		*strbuf; \
 	char		ifstable[256]; \
 	Shopt_t		offoptions;

@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.1 2006-05-09
+info mam static 00000 1994-07-17 make (AT&T Research) 5.1 2006-05-21
 setv INSTALLROOT ../../..
 setv PACKAGE_ast_INCLUDE ${INSTALLROOT}/include/ast
 setv PACKAGE_ast_LIB ${INSTALLROOT}/lib
@@ -747,6 +747,11 @@ prev include/edit.h implicit
 prev include/io.h implicit
 prev include/path.h implicit
 prev include/lexstates.h implicit
+make ${PACKAGE_ast_INCLUDE}/ast_wchar.h implicit
+prev ${PACKAGE_ast_INCLUDE}/stdio.h implicit
+prev ${PACKAGE_ast_INCLUDE}/stdio.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast_wchar.h
 prev include/defs.h implicit
 done edit/completion.c
 meta completion.o %.c>%.o edit/completion.c completion
@@ -861,11 +866,7 @@ done history.o generated
 make init.o
 make sh/init.c
 make ${PACKAGE_ast_INCLUDE}/wchar.h implicit
-make ${PACKAGE_ast_INCLUDE}/ast_wchar.h implicit
-prev ${PACKAGE_ast_INCLUDE}/stdio.h implicit
-prev ${PACKAGE_ast_INCLUDE}/stdio.h implicit
-prev ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
-done ${PACKAGE_ast_INCLUDE}/ast_wchar.h dontcare
+prev ${PACKAGE_ast_INCLUDE}/ast_wchar.h implicit
 done ${PACKAGE_ast_INCLUDE}/wchar.h dontcare
 make include/version.h implicit
 done include/version.h
@@ -950,7 +951,7 @@ prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done sh/lex.c
 meta lex.o %.c>%.o sh/lex.c lex
 prev sh/lex.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_APPEND -DSHOPT_OO -DSHOPT_MULTIBYTE -DSHOPT_KIA -D_BLD_shell -D_PACKAGE_ast -DSHOPT_PFSH -DKSHELL -DSHOPT_DYNAMIC -DSHOPT_HISTEXPAND -DSHOPT_ESH -c sh/lex.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_OO -DSHOPT_MULTIBYTE -DSHOPT_KIA -D_BLD_shell -D_PACKAGE_ast -DSHOPT_PFSH -DKSHELL -DSHOPT_DYNAMIC -DSHOPT_HISTEXPAND -DSHOPT_ESH -c sh/lex.c
 done lex.o generated
 make macro.o
 make sh/macro.c
@@ -1010,7 +1011,7 @@ prev include/defs.h implicit
 done sh/parse.c
 meta parse.o %.c>%.o sh/parse.c parse
 prev sh/parse.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_NAMESPACE -DSHOPT_APPEND -DSHOPT_COMPOUND_ARRAY -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -D_BLD_shell -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DSHOPT_KIA -DSHOPT_ESH -DSHOPT_DYNAMIC -DSHOPT_OO -DSHOPT_HISTEXPAND -DKSHELL -c sh/parse.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_NAMESPACE -DSHOPT_COMPOUND_ARRAY -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -D_BLD_shell -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DSHOPT_KIA -DSHOPT_ESH -DSHOPT_DYNAMIC -DSHOPT_OO -DSHOPT_HISTEXPAND -DKSHELL -c sh/parse.c
 done parse.o generated
 make path.o
 make sh/path.c
@@ -1534,6 +1535,7 @@ exec - test '' = 'fun/pushd' || ${STDCMP} 2>/dev/null -s fun/pushd ${INSTALLROOT
 done ${INSTALLROOT}/fun/pushd generated
 done install virtual
 make test
+make test.ksh
 prev ${INSTALLROOT}/bin/ksh
 prev ksh
 make tests/shtests
@@ -1542,4 +1544,23 @@ exec - silent cmp 2>/dev/null -s ${INSTALLROOT}/bin/ksh ksh 2>/dev/null ||
 exec - echo "make install to run the tests on the latest ksh" >&2
 exec - cd ${PACKAGEROOT}/src/cmd/ksh93/tests
 exec - SHELL=${INSTALLROOT}/bin/ksh ${INSTALLROOT}/bin/ksh shtests
+done test.ksh virtual
+make test.shcomp
+prev ${INSTALLROOT}/bin/ksh
+prev ksh
+prev tests/shtests
+prev shcomp
+exec - silent cmp 2>/dev/null -s ${INSTALLROOT}/bin/ksh ksh 2>/dev/null ||
+exec - echo "make install to run the tests on the latest ksh" >&2
+exec - cd ${PACKAGEROOT}/src/cmd/ksh93/tests
+exec - tmp=/tmp/ksh-${COTEMP}
+exec - mkdir $tmp
+exec - for i in *.sh
+exec - do	tst=$tmp/shcomp-${i%.sh}.ksh
+exec - 	shcomp $i > $tst
+exec - 	SHELL=${INSTALLROOT}/bin/ksh ${INSTALLROOT}/bin/ksh shtests $tst
+exec - 	rm -f $tst
+exec - done
+exec - rm -rf $tmp
+done test.shcomp virtual
 done test dontcare virtual

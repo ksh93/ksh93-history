@@ -78,6 +78,7 @@ struct vars				/* vars stacked per invocation */
 	Sfdouble_t	(*convert)(const char**,struct lval*,int,Sfdouble_t);
 };
 
+typedef int	   (*Math_0_f)(Sfdouble_t);
 typedef Sfdouble_t (*Fun_t)(Sfdouble_t,...);
 typedef Sfdouble_t (*Math_1_f)(Sfdouble_t);
 typedef Sfdouble_t (*Math_2_f)(Sfdouble_t,Sfdouble_t);
@@ -303,10 +304,7 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 		    case A_DIV:
 			if(type==1 || tp[-1]==1)
 			{
-				if(!num)
-					arith_error(e_divzero,ep->expr,ep->emode);
-				else
-					num = sp[-1]/num;
+				num = sp[-1]/num;
 				type = 1;
 			}
 			else if((Sfulong_t)(num)==0)
@@ -369,6 +367,12 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 		    case A_LT:
 			num = (sp[-1]<num);
 			type=0;
+			break;
+		    case A_CALL0:
+			sp--,tp--;
+			fun = *((Fun_t*)(ep->code+(int)(*sp)));
+			type = 0;
+			num = (*((Math_0_f)fun))(num);
 			break;
 		    case A_CALL1:
 			sp--,tp--;
@@ -619,11 +623,13 @@ again:
 			vp->paren--;
 			if(fun)
 			{
+				int  x= (nargs>7);
+				nargs &= 7;
 				if(vp->infun != nargs)
 					ERROR(vp,e_argcount);
 				if(vp->staksize+=nargs>=vp->stakmaxsize)
 					vp->stakmaxsize = vp->staksize+nargs;
-				stakputc(A_CALL1+nargs-1);
+				stakputc(A_CALL0+nargs -x);
 				vp->staksize -= nargs;
 			}
 			vp->infun = infun;

@@ -751,7 +751,7 @@ static Shnode_t *funct(void)
 static struct argnod *assign(register struct argnod *ap)
 {
 	register int n;
-	register Shnode_t *t ,**tp;
+	register Shnode_t *t, **tp;
 	register struct comnod *ac;
 	int array=0;
 	Namval_t *np;
@@ -762,13 +762,11 @@ static struct argnod *assign(register struct argnod *ap)
 	if(ap->argval[n]!='=' || ap->argval[n-1]==']')
 #endif
 		sh_syntax();
-#if SHOPT_APPEND
 	if(ap->argval[n-1]=='+')
 	{
 		ap->argval[n--]=0;
 		array = ARG_APPEND;
 	}
-#endif /* SHOPT_APPEND */
 	/* shift right */
 	while(n > 0)
 	{
@@ -785,34 +783,65 @@ static struct argnod *assign(register struct argnod *ap)
 	ap->argflag |= array;
 	shlex.assignok = SH_ASSIGN;
 	array=0;
-	if(skipnl())
+	if((n=skipnl())==RPAREN || n==LPAREN)
 	{
-		if(shlex.token!=RPAREN)
-			sh_syntax();
 		ac = (struct comnod*)getnode(comnod);
 		memset((void*)ac,0,sizeof(*ac));
 		ac->comline = sh_getlineno();
+		while(n==LPAREN)
+		{
+			int index= 1;
+			struct argnod *ap, **settail= &(ac->comset);
+			ap = (struct argnod*)stakseek(ARGVAL);
+			ap->argflag= ARG_ASSIGN;
+			sfprintf(stkstd,"[%d]=",index++);
+			ap = (struct argnod*)stakfreeze(1);
+			ap->argnxt.ap = 0;
+			ap = assign(ap);
+			*settail = ap;
+			settail = &(ap->argnxt.ap);
+			n = skipnl();
+		}
 	}
+	else if(n)
+		sh_syntax();
 	else if(!(shlex.arg->argflag&ARG_ASSIGN) && !((np=nv_search(shlex.arg->argval,sh.fun_tree,0)) && nv_isattr(np,BLT_DCL)))
 		array=SH_ARRAY;
 	while(1)
 	{
-		if(shlex.token==RPAREN)
+		if((n=shlex.token)==RPAREN)
 			break;
-		ac = (struct comnod*)simple(SH_NOIO|SH_ASSIGN|array,NIL(struct ionod*));
+		if(n==FUNCTSYM || n==SYMRES)
+			ac = (struct comnod*)funct();
+		else
+			ac = (struct comnod*)simple(SH_NOIO|SH_ASSIGN|array,NIL(struct ionod*));
 		if((n=shlex.token)==RPAREN)
 			break;
 		if(n!=NL && n!=';')
 			sh_syntax();
 		shlex.assignok = SH_ASSIGN;
-		if(skipnl() || array)
+		if((n=skipnl()) || array)
 		{
-			if(shlex.token==RPAREN)
+			if(n==RPAREN)
 				break;
-			sh_syntax();
+			if(array ||  n!=FUNCTSYM)
+				sh_syntax();
 		}
-		if(!(shlex.arg->argflag&ARG_ASSIGN) && !((np=nv_search(shlex.arg->argval,sh.fun_tree,0)) && nv_isattr(np,BLT_DCL)))
-			sh_syntax();
+		if((n!=FUNCTSYM) && !(shlex.arg->argflag&ARG_ASSIGN) && !((np=nv_search(shlex.arg->argval,sh.fun_tree,0)) && nv_isattr(np,BLT_DCL)))
+		{
+			struct argnod *arg = shlex.arg;
+			if(n!=0)
+				sh_syntax();
+			/* check for sys5 style function */
+			if(sh_lex()!=LPAREN || sh_lex()!=RPAREN)
+			{
+				shlex.arg = arg;
+				shlex.token = 0;
+				sh_syntax();
+			}
+			shlex.arg = arg;
+			shlex.token = SYMRES;
+		}
 		t = makelist(TLST,(Shnode_t*)ac,t);
 		*tp = t;
 		tp = &t->lst.lstrit;
@@ -1071,11 +1100,8 @@ static Shnode_t *simple(int flag, struct ionod *io)
 	int	associative=0;
 	if((argp=shlex.arg) && (argp->argflag&ARG_ASSIGN) && argp->argval[0]=='[')
 	{
-		if(fcpeek(0)!=LPAREN)
-		{
-			flag |= SH_ARRAY;
-			associative = 1;
-		}
+		flag |= SH_ARRAY;
+		associative = 1;
 	}
 	t = (struct comnod*)getnode(comnod);
 	t->comio=io; /*initial io chain*/
@@ -1143,7 +1169,8 @@ static Shnode_t *simple(int flag, struct ionod *io)
 			}
 			*argtail = argp;
 			argtail = &(argp->argnxt.ap);
-			shlex.assignok = key_on;
+			if(!(shlex.assignok=key_on)  && !(flag&SH_NOIO))
+				shlex.assignok = SH_COMPASSIGN;
 			shlex.aliasok = 0;
 		}
 	retry:
@@ -1169,9 +1196,11 @@ static Shnode_t *simple(int flag, struct ionod *io)
 			if(argp->argflag&ARG_ASSIGN)
 			{
 				argp = assign(argp);
+				if(associative)
+					shlex.assignok |= SH_ASSIGN;
 				goto retry;
 			}
-			if(argno==1 && !t->comset)
+			else if(argno==1 && !t->comset)
 			{
 				/* SVR2 style function */
 				if(sh_lex() == RPAREN)
@@ -1574,7 +1603,6 @@ static Shnode_t *test_primary(void)
 				ere_match();
 				num = TEST_PEQ;
 			}
-
 		}
 		else if(token=='<')
 			num = TEST_SLT;

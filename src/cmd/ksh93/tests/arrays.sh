@@ -34,7 +34,7 @@ function fun
 	done
 }
 
-Command=$0
+Command=${0##*/}
 integer Errors=0
 set -A x zero one two three four 'five six'
 if	[[ $x != zero ]]

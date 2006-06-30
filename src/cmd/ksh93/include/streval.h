@@ -82,7 +82,7 @@ struct lval
 
 struct mathtab
 {
-	char		fname[8];
+	char		fname[10];
 	Sfdouble_t	(*fnptr)(Sfdouble_t,...);
 };
 
@@ -138,25 +138,26 @@ typedef struct _arith_
 #define A_TILDE		31
 #define A_REG		32
 #define A_DIG		33
-#define A_INCR          34
-#define A_DECR          35
-#define A_PUSHV         36
-#define A_PUSHL         37
-#define A_PUSHN         38
-#define A_PUSHF         39
-#define A_STORE         40
-#define A_POP           41
-#define A_SWAP          42
+#define A_INCR		34
+#define A_DECR  	35
+#define A_PUSHV 	36
+#define A_PUSHL 	37
+#define A_PUSHN 	38
+#define A_PUSHF 	39
+#define A_STORE 	40
+#define A_POP   	41
+#define A_SWAP  	42
 #define A_UMINUS	43
-#define A_JMPZ          44
-#define A_JMPNZ         45
-#define A_JMP           46
-#define A_CALL1         47
-#define A_CALL2         48
-#define A_CALL3         49
-#define A_DOT		50
-#define A_LIT		51
-#define A_NOTNOT        52
+#define A_JMPZ  	44
+#define A_JMPNZ		45
+#define A_JMP		46
+#define A_CALL0		47
+#define A_CALL1		48
+#define A_CALL2		49
+#define A_CALL3		50
+#define A_DOT		51
+#define A_LIT		52
+#define A_NOTNOT        53
 
 
 /* define error messages */

@@ -594,6 +594,7 @@ void	ed_setup(register Edit_t *ep, int fd, int reedit)
 		signal(SIGWINCH,sh_fault);
 		sh.sigflag[SIGWINCH] |= SH_SIGFAULT;
 	}
+	sh_fault(SIGWINCH);
 #endif
 #if KSHELL
 	ep->e_stkptr = stakptr(0);

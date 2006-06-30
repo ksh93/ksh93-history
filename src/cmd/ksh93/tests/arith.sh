@@ -25,7 +25,8 @@ function err_exit
 }
 alias err_exit='err_exit $LINENO'
 
-Command=$0
+Command=${0##*/}
+trap '' FPE # NOTE: osf.alpha requires this (no ieee math)
 integer Errors=0
 integer x=1 y=2 z=3
 if	(( 2+2 != 4 ))
@@ -436,4 +437,22 @@ unset x
 (( x = 4*atan(1.0) ))
 [[ $x == "$((x))" ]] || err_exit  '$x !- $((x)) when x is pi'
 $SHELL -c  "[[  ${x//./} == {14,100}(\d) ]]" 2> /dev/null || err_exit 'pi has less than 14 significant places'
+if	(( Inf+1 == Inf ))
+then	[[ $(printf "%g\n" $((Inf))) == Inf ]] || err_exit 'printf "%g\n" $((Inf) fails'
+#	[[ $(printf "%g\n" $((Nan))) == Inf ]] || err_exit 'printf "%g\n" $((Nan) fails'
+	[[ $(printf "%g\n" Inf) == Inf ]] || err_exit 'printf "%g\n" Inf fails'
+	[[ $(printf "%g\n" NaN) == NaN ]] || err_exit 'printf "%g\n" NaN fails'
+	[[ $(print -- $((Inf))) == Inf ]] || err_exit 'print -- $((Inf)) fails'
+	(( 1.0/0.0 == Inf )) || err_exit '1.0/0.0 != Inf'
+	[[ $(print -- $((0.0/0.0))) == NaN ]] || err_exit '0.0/0.0 != NaN'
+	(( Inf*Inf == Inf )) || err_exit 'Inf*Inf != Inf'
+	(( NaN != NaN )) || err_exit 'NaN == NaN'
+	(( -5*Inf == -Inf )) || err_exit '-5*Inf != -Inf'
+	[[ $(print -- $((sqrt(-1.0)))) == NaN ]]|| err_exit 'sqrt(-1.0) != NaN'
+	(( pow(1.0,Inf) == 1.0 )) || err_exit 'pow(1.0,Inf) != 1.0'
+	(( pow(Inf,0.0) == 1.0 )) || err_exit 'pow(Inf,0.0) != 1.0'
+	[[ $(print -- $((NaN/Inf))) == NaN ]] || err_exit 'NaN/Inf != NaN'
+	(( 4.0/Inf == 0.0 )) || err_exit '4.0/Inf != 0.0'
+else	err_exit 'Inf and NaN not working'
+fi
 exit $((Errors))

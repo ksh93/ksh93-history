@@ -1074,6 +1074,8 @@ int sh_lex(void)
 				{
 					if((c=fcget())=='~')
 						wordflags |= ARG_MAC;
+					else if(c!=LPAREN && assignment==SH_COMPASSIGN)
+						assignment = 0;
 					fcseek(-1);
 				}
 				break;
@@ -1144,11 +1146,9 @@ int sh_lex(void)
 				}
 				if(n>0)
 					fcseek(-1);
-#if SHOPT_APPEND
 				if(n=='=' && c=='+' && mode==ST_NAME)
 					continue;
 				break;
-#endif /* SHOPT_APPEND */
 		}
 		lex.comp_assign = 0;
 		if(mode==ST_NAME)
@@ -1383,8 +1383,8 @@ breakloop:
 			{
 				setupalias(lp,state,np);
 				nv_onattr(np,NV_NOEXPAND);
-				shlex.assignok++;
 				lex.reservok = 1;
+				shlex.assignok |= lex.reservok;
 				return(sh_lex());
 			}
 		}

@@ -329,7 +329,7 @@ int ed_emacsread(void *context, int fd,char *buff,int scend, int reedit)
 			continue;
 #endif	/* u370 */
 		case '\t':
-			if(cur>0 && cur>=eol && out[cur-1]!='\t' && out[cur-1]!=' ' && ep->ed->sh->nextprompt)
+			if(cur>0 && cur>=eol  && ep->ed->sh->nextprompt)
 			{
 				if(ep->ed->e_tabcount==0)
 				{
@@ -950,7 +950,11 @@ static int escape(register Emacs_t* ep,register genchar *out,int count)
 				}
 			}
 			else
+			{
+				if(i=='\\' && cur>ep->mark && (out[cur-1]=='/' || out[cur-1]==' '))
+					ep->ed->e_tabcount=0;
 				draw(ep,UPDATE);
+			}
 			return(-1);
 
 		/* search back for character */

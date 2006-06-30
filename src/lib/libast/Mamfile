@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.1 2006-05-09
+info mam static 00000 1994-07-17 make (AT&T Research) 5.1 2006-05-21
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ar
@@ -381,6 +381,7 @@ exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run 
 done FEATURE/mmap dontcare generated
 done FEATURE/vmalloc generated
 prev FEATURE/mmap implicit
+prev FEATURE/lib implicit
 prev std/stdio.h implicit
 done features/map.c
 prev ast.req
