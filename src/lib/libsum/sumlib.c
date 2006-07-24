@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1996-2005 AT&T Corp.                  *
+*           Copyright (c) 1996-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -161,6 +161,7 @@ long_data(Sum_t* p, Sumdata_t* data)
  * now the library interface
  */
 
+#undef	METHOD		/* solaris <sys/localedef.h>! */
 #define METHOD(x)	x##_match,x##_description,x##_options,x##_open,x##_init,x##_block,x##_data,x##_print,x##_done,x##_scale
 
 static const Method_t	methods[] =

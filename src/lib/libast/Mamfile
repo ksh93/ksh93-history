@@ -804,6 +804,7 @@ done strlcat.o generated
 make strlcpy.o
 make string/strlcpy.c
 prev include/ast.h implicit
+prev ast_map.h implicit
 done string/strlcpy.c
 meta strlcpy.o %.c>%.o string/strlcpy.c strlcpy
 prev string/strlcpy.c
@@ -5820,7 +5821,7 @@ prev include/sfio_t.h implicit
 done disc/sfstrtmp.c
 meta sfstrtmp.o %.c>%.o disc/sfstrtmp.c sfstrtmp
 prev disc/sfstrtmp.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -D__OBSOLETE__=20050101 -c disc/sfstrtmp.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -D__OBSOLETE__=20060101 -c disc/sfstrtmp.c
 done sfstrtmp.o generated
 make spawn.o
 make obsolete/spawn.c

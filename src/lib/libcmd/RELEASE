@@ -1,3 +1,5 @@
+06-07-17 cut.c: handle last line with no newline
+06-07-17 cut.c: --output-delimiter == --line-delimiter
 06-06-25 chmod.c: mask -c output with S_IPERM
 06-05-09 uname.c: add -o; change -a to match linux
 06-05-03 date.c: add --last -L to list last of multiple time args

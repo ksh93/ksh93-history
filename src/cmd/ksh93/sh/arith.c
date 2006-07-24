@@ -32,6 +32,10 @@
 #include	"variables.h"
 #include	"FEATURE/locale"
 
+#ifndef LONGLONG_MAX
+#define LONGLONG_MAX	LONG_MAX
+#endif
+
 static Sfdouble_t	Zero, NaN, Inf;
 static Namval_t Infnod =
 {
@@ -246,7 +250,7 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 				if(*val==0 || *val=='.')
 					val--;
 			}
-			if(r==LONG_MAX && errno)
+			if(r==LONGLONG_MAX && errno)
 				c='e';
 			else
 				c = *str;

@@ -51,7 +51,14 @@ strperm(const char* aexpr, char** e, register int perm)
 	int		mask;
 	int		masked;
 
-	masked = 0;
+	if (perm == -1)
+	{
+		perm = 0;
+		masked = 1;
+		mask = ~0;
+	}
+	else
+		masked = 0;
 	for (;;)
 	{
 		op = num = who = typ = 0;

@@ -1,5 +1,16 @@
-06-06-23  --- Release ksh93r+  ---
-06-06-23  A number of bug fixes for  command, file, and variable completion
+06-07-21  --- Release ksh93r+  ---
+06-07-21  A bug on some systems in which assigning PATH on a command line
+	  would not take effect has been fixed.
+06-07-20  Add ksh93 and rksh93 as allowable names for ksh binaries.
+06-07-20  Removed the SHOPT_OO compilation option which was only partially
+	  implemented.
+06-07-20  The ability to use egrep, grep, and fgrep expressions within
+	  shell patterns has been documented.
+06-07-17  A bug with arithmetic command expressions for locales in which
+	  the comma is a thousands separator has been fixed. 
+06-07-13  The default HISTSIZE was increased from 128 to 512.
+06-07-13  A multibyte problem with locales that use shift codes has been fixed.
+06-06-23  A number of bug fixes for command, file, and variable completion
 	  have been mode.
 06-06-20  Floating point division by zero now yields the constant Inf or -Inf
 	  and floating functions with invalid arguments yield NaN. 

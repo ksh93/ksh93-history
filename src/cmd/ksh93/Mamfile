@@ -153,7 +153,7 @@ done include/shell.h
 done sh/pmain.c
 meta pmain.o %.c>%.o sh/pmain.c pmain
 prev sh/pmain.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_DYNAMIC -D_BLD_shell -D_PACKAGE_ast -DSHOPT_OO -c sh/pmain.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_DYNAMIC -D_BLD_shell -D_PACKAGE_ast -c sh/pmain.c
 done pmain.o generated
 make libshell.a archive
 make shell.req
@@ -297,7 +297,7 @@ done include/defs.h
 done bltins/alarm.c
 meta alarm.o %.c>%.o bltins/alarm.c alarm
 prev bltins/alarm.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_shell -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_OO -DSHOPT_ESH -c bltins/alarm.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_shell -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -c bltins/alarm.c
 done alarm.o generated
 make cd_pwd.o
 make bltins/cd_pwd.c
@@ -329,7 +329,7 @@ prev include/defs.h implicit
 done bltins/cd_pwd.c
 meta cd_pwd.o %.c>%.o bltins/cd_pwd.c cd_pwd
 prev bltins/cd_pwd.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_OO -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -c bltins/cd_pwd.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -c bltins/cd_pwd.c
 done cd_pwd.o generated
 make cflow.o
 make bltins/cflow.c
@@ -344,7 +344,7 @@ prev include/defs.h implicit
 done bltins/cflow.c
 meta cflow.o %.c>%.o bltins/cflow.c cflow
 prev bltins/cflow.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_KIA -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_OO -DSHOPT_ESH -c bltins/cflow.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_KIA -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -c bltins/cflow.c
 done cflow.o generated
 make deparse.o
 make sh/deparse.c
@@ -357,7 +357,7 @@ prev include/defs.h implicit
 done sh/deparse.c
 meta deparse.o %.c>%.o sh/deparse.c deparse
 prev sh/deparse.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_KIA -D_BLD_shell -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_OO -DSHOPT_ESH -c sh/deparse.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_KIA -D_BLD_shell -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -c sh/deparse.c
 done deparse.o generated
 make getopts.o
 make bltins/getopts.c
@@ -369,7 +369,7 @@ prev include/defs.h implicit
 done bltins/getopts.c
 meta getopts.o %.c>%.o bltins/getopts.c getopts
 prev bltins/getopts.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_OO -DSHOPT_ESH -c bltins/getopts.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -c bltins/getopts.c
 done getopts.o generated
 make hist.o
 make bltins/hist.c
@@ -421,7 +421,7 @@ prev include/defs.h implicit
 done bltins/hist.c
 meta hist.o %.c>%.o bltins/hist.c hist
 prev bltins/hist.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_HISTEXPAND -DSHOPT_MULTIBYTE -DKSHELL -DSHOPT_ESH -DSHOPT_VSH -D_PACKAGE_ast -DSHOPT_PFSH -D_BLD_shell -DSHOPT_OO -DSHOPT_DYNAMIC -c bltins/hist.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_HISTEXPAND -DSHOPT_MULTIBYTE -DKSHELL -DSHOPT_ESH -DSHOPT_VSH -D_PACKAGE_ast -DSHOPT_PFSH -D_BLD_shell -DSHOPT_DYNAMIC -c bltins/hist.c
 done hist.o generated
 make misc.o
 make bltins/misc.c
@@ -442,7 +442,7 @@ prev include/defs.h implicit
 done bltins/misc.c
 meta misc.o %.c>%.o bltins/misc.c misc
 prev bltins/misc.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -D_BLD_shell -DSHOPT_ESH -DSHOPT_OO -DKSHELL -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_KIA -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -c bltins/misc.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -D_BLD_shell -DSHOPT_ESH -DKSHELL -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_KIA -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -c bltins/misc.c
 done misc.o generated
 make print.o
 make bltins/print.c
@@ -473,7 +473,7 @@ prev include/defs.h implicit
 done bltins/print.c
 meta print.o %.c>%.o bltins/print.c print
 prev bltins/print.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_MULTIBYTE -D_PACKAGE_ast -D_BLD_shell -DSHOPT_PFSH -DSHOPT_ESH -DSHOPT_OO -DKSHELL -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -c bltins/print.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_MULTIBYTE -D_PACKAGE_ast -D_BLD_shell -DSHOPT_PFSH -DSHOPT_ESH -DKSHELL -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -c bltins/print.c
 done print.o generated
 make read.o
 make bltins/read.c
@@ -492,7 +492,7 @@ prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done bltins/read.c
 meta read.o %.c>%.o bltins/read.c read
 prev bltins/read.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_MULTIBYTE -DSHOPT_HISTEXPAND -DKSHELL -DSHOPT_ESH -DSHOPT_VSH -D_PACKAGE_ast -DSHOPT_PFSH -D_BLD_shell -DSHOPT_OO -DSHOPT_DYNAMIC -c bltins/read.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_MULTIBYTE -DSHOPT_HISTEXPAND -DKSHELL -DSHOPT_ESH -DSHOPT_VSH -D_PACKAGE_ast -DSHOPT_PFSH -D_BLD_shell -DSHOPT_DYNAMIC -c bltins/read.c
 done read.o generated
 make sleep.o
 make bltins/sleep.c
@@ -517,7 +517,7 @@ prev include/defs.h implicit
 done bltins/sleep.c
 meta sleep.o %.c>%.o bltins/sleep.c sleep
 prev bltins/sleep.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_shell -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_OO -DSHOPT_ESH -c bltins/sleep.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_shell -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -c bltins/sleep.c
 done sleep.o generated
 make trap.o
 make bltins/trap.c
@@ -527,7 +527,7 @@ prev include/defs.h implicit
 done bltins/trap.c
 meta trap.o %.c>%.o bltins/trap.c trap
 prev bltins/trap.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_OO -DSHOPT_ESH -c bltins/trap.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -c bltins/trap.c
 done trap.o generated
 make test.o
 make bltins/test.c
@@ -561,7 +561,7 @@ prev include/defs.h implicit
 done bltins/test.c
 meta test.o %.c>%.o bltins/test.c test
 prev bltins/test.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_shell -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DKSHELL -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_OO -DSHOPT_ESH -c bltins/test.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_shell -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DKSHELL -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -c bltins/test.c
 done test.o generated
 make typeset.o
 make bltins/typeset.c
@@ -576,7 +576,7 @@ prev include/defs.h implicit
 done bltins/typeset.c
 meta typeset.o %.c>%.o bltins/typeset.c typeset
 prev bltins/typeset.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_DYNAMIC -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -D_BLD_shell -DSHOPT_ESH -DSHOPT_OO -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_HISTEXPAND -c bltins/typeset.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_DYNAMIC -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -D_BLD_shell -DSHOPT_ESH -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_HISTEXPAND -c bltins/typeset.c
 done typeset.o generated
 make ulimit.o
 make bltins/ulimit.c
@@ -604,7 +604,7 @@ prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done bltins/ulimit.c
 meta ulimit.o %.c>%.o bltins/ulimit.c ulimit
 prev bltins/ulimit.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -DSHOPT_OO -D_BLD_shell -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DSHOPT_DYNAMIC -c bltins/ulimit.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_shell -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DSHOPT_DYNAMIC -c bltins/ulimit.c
 done ulimit.o generated
 make umask.o
 make bltins/umask.c
@@ -617,7 +617,7 @@ prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done bltins/umask.c
 meta umask.o %.c>%.o bltins/umask.c umask
 prev bltins/umask.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_DYNAMIC -DSHOPT_OO -c bltins/umask.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_DYNAMIC -c bltins/umask.c
 done umask.o generated
 make whence.o
 make bltins/whence.c
@@ -637,7 +637,7 @@ prev include/defs.h implicit
 done bltins/whence.c
 meta whence.o %.c>%.o bltins/whence.c whence
 prev bltins/whence.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_KIA -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_OO -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -c bltins/whence.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_KIA -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -c bltins/whence.c
 done whence.o generated
 make main.o
 make sh/main.c
@@ -690,7 +690,7 @@ prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done sh/main.c
 meta main.o %.c>%.o sh/main.c main
 prev sh/main.c
-exec - ${CC} ${mam_cc_FLAGS} ${-debug-symbols?1?${mam_cc_DEBUG} -D_BLD_DEBUG?${CCFLAGS.FORCE}?} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_BRACEPAT -D_PACKAGE_ast -DSHOPT_ESH -DSHOPT_KIA -D_BLD_shell -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DKSHELL -DSHOPT_SUID_EXEC -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_OO -c sh/main.c
+exec - ${CC} ${mam_cc_FLAGS} ${-debug-symbols?1?${mam_cc_DEBUG} -D_BLD_DEBUG?${CCFLAGS.FORCE}?} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_BRACEPAT -D_PACKAGE_ast -DSHOPT_ESH -DSHOPT_KIA -D_BLD_shell -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DKSHELL -DSHOPT_SUID_EXEC -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -c sh/main.c
 done main.o generated
 make nvdisc.o
 make sh/nvdisc.c
@@ -701,7 +701,7 @@ prev include/defs.h implicit
 done sh/nvdisc.c
 meta nvdisc.o %.c>%.o sh/nvdisc.c nvdisc
 prev sh/nvdisc.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_NAMESPACE -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -D_BLD_shell -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_OO -DSHOPT_ESH -c sh/nvdisc.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_NAMESPACE -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -D_BLD_shell -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -c sh/nvdisc.c
 done nvdisc.o generated
 make arith.o
 make sh/arith.c
@@ -714,7 +714,7 @@ prev include/defs.h implicit
 done sh/arith.c
 meta arith.o %.c>%.o sh/arith.c arith
 prev sh/arith.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DSHOPT_OO -D_BLD_shell -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -c sh/arith.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_PFSH -D_BLD_shell -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -c sh/arith.c
 done arith.o generated
 make args.o
 make sh/args.c
@@ -728,7 +728,7 @@ prev include/defs.h implicit
 done sh/args.c
 meta args.o %.c>%.o sh/args.c args
 prev sh/args.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_OPTIMIZE -DSHOPT_RAWONLY -DSHOPT_HISTEXPAND -DSHOPT_PFSH -D_BLD_shell -DKSHELL -D_PACKAGE_ast -DSHOPT_KIA -DSHOPT_MULTIBYTE -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_DYNAMIC -DSHOPT_OO -DSHOPT_ESH -c sh/args.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_OPTIMIZE -DSHOPT_RAWONLY -DSHOPT_HISTEXPAND -DSHOPT_PFSH -D_BLD_shell -DKSHELL -D_PACKAGE_ast -DSHOPT_KIA -DSHOPT_MULTIBYTE -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_DYNAMIC -DSHOPT_ESH -c sh/args.c
 done args.o generated
 make array.o
 make sh/array.c
@@ -738,7 +738,7 @@ prev include/defs.h implicit
 done sh/array.c
 meta array.o %.c>%.o sh/array.c array
 prev sh/array.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_APPEND -DSHOPT_OO -D_BLD_shell -D_PACKAGE_ast -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -DSHOPT_MULTIBYTE -DSHOPT_PFSH -c sh/array.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_APPEND -D_BLD_shell -D_PACKAGE_ast -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -DSHOPT_MULTIBYTE -DSHOPT_PFSH -c sh/array.c
 done array.o generated
 make completion.o
 make edit/completion.c
@@ -756,7 +756,7 @@ prev include/defs.h implicit
 done edit/completion.c
 meta completion.o %.c>%.o edit/completion.c completion
 prev edit/completion.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_MULTIBYTE -DSHOPT_ESH -D_PACKAGE_ast -DSHOPT_HISTEXPAND -DKSHELL -DSHOPT_VSH -DSHOPT_PFSH -D_BLD_shell -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_DYNAMIC -DSHOPT_OO -c edit/completion.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_MULTIBYTE -DSHOPT_ESH -D_PACKAGE_ast -DSHOPT_HISTEXPAND -DKSHELL -DSHOPT_VSH -DSHOPT_PFSH -D_BLD_shell -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_DYNAMIC -c edit/completion.c
 done completion.o generated
 make defs.o
 make sh/defs.c
@@ -768,7 +768,7 @@ prev include/defs.h implicit
 done sh/defs.c
 meta defs.o %.c>%.o sh/defs.c defs
 prev sh/defs.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_HISTEXPAND -DSHOPT_MULTIBYTE -DKSHELL -DSHOPT_ESH -DSHOPT_VSH -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_KIA -D_BLD_shell -DSHOPT_DYNAMIC -DSHOPT_OO -c sh/defs.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_HISTEXPAND -DSHOPT_MULTIBYTE -DKSHELL -DSHOPT_ESH -DSHOPT_VSH -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_KIA -D_BLD_shell -DSHOPT_DYNAMIC -c sh/defs.c
 done defs.o generated
 make edit.o
 make edit/edit.c
@@ -786,7 +786,7 @@ prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done edit/edit.c
 meta edit.o %.c>%.o edit/edit.c edit
 prev edit/edit.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_RAWONLY -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_MULTIBYTE -DSHOPT_HISTEXPAND -DKSHELL -D_PACKAGE_ast -DSHOPT_PFSH -D_BLD_shell -DSHOPT_DYNAMIC -DSHOPT_OO -c edit/edit.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_RAWONLY -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_MULTIBYTE -DSHOPT_HISTEXPAND -DKSHELL -D_PACKAGE_ast -DSHOPT_PFSH -D_BLD_shell -DSHOPT_DYNAMIC -c edit/edit.c
 done edit.o generated
 make expand.o
 make sh/expand.c
@@ -815,7 +815,7 @@ prev include/defs.h implicit
 done sh/expand.c
 meta expand.o %.c>%.o sh/expand.c expand
 prev sh/expand.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_BRACEPAT -DSHOPT_SUID_EXEC -D_BLD_shell -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DKSHELL -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_OO -DSHOPT_ESH -c sh/expand.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_BRACEPAT -DSHOPT_SUID_EXEC -D_BLD_shell -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DKSHELL -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -c sh/expand.c
 done expand.o generated
 make fault.o
 make sh/fault.c
@@ -831,7 +831,7 @@ prev include/defs.h implicit
 done sh/fault.c
 meta fault.o %.c>%.o sh/fault.c fault
 prev sh/fault.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_KIA -DSHOPT_ESH -DSHOPT_VSH -D_PACKAGE_ast -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -D_BLD_shell -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DKSHELL -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_OO -c sh/fault.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_KIA -DSHOPT_ESH -DSHOPT_VSH -D_PACKAGE_ast -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -D_BLD_shell -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DKSHELL -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -c sh/fault.c
 done fault.o generated
 make fcin.o
 make sh/fcin.c
@@ -861,7 +861,7 @@ prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done edit/history.c
 meta history.o %.c>%.o edit/history.c history
 prev edit/history.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_VSH -DSHOPT_ESH -DSHOPT_MULTIBYTE -D_PACKAGE_ast -D_BLD_shell -DKSHELL -DSHOPT_PFSH -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_OO -c edit/history.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_VSH -DSHOPT_ESH -DSHOPT_MULTIBYTE -D_PACKAGE_ast -D_BLD_shell -DKSHELL -DSHOPT_PFSH -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -c edit/history.c
 done history.o generated
 make init.o
 make sh/init.c
@@ -889,7 +889,7 @@ prev include/defs.h implicit
 done sh/init.c
 meta init.o %.c>%.o sh/init.c init
 prev sh/init.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_PFSH -DSHOPT_NAMESPACE -DSHOPT_MULTIBYTE -D_PACKAGE_ast -D_BLD_shell -DSHOPT_KIA -DKSHELL -DSHOPT_HISTEXPAND -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_OO -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_DYNAMIC -c sh/init.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_PFSH -DSHOPT_NAMESPACE -DSHOPT_MULTIBYTE -D_PACKAGE_ast -D_BLD_shell -DSHOPT_KIA -DKSHELL -DSHOPT_HISTEXPAND -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_DYNAMIC -c sh/init.c
 done init.o generated
 make io.o
 make sh/io.c
@@ -915,7 +915,7 @@ prev include/defs.h implicit
 done sh/io.c
 meta io.o %.c>%.o sh/io.c io
 prev sh/io.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_RAWONLY -DSHOPT_VSH -DSHOPT_ESH -DSHOPT_HISTEXPAND -DSHOPT_MULTIBYTE -DKSHELL -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_KIA -D_BLD_shell -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_DYNAMIC -DSHOPT_OO -c sh/io.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_RAWONLY -DSHOPT_VSH -DSHOPT_ESH -DSHOPT_HISTEXPAND -DSHOPT_MULTIBYTE -DKSHELL -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_KIA -D_BLD_shell -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_DYNAMIC -c sh/io.c
 done io.o generated
 make jobs.o
 make sh/jobs.c
@@ -932,7 +932,7 @@ prev include/defs.h implicit
 done sh/jobs.c
 meta jobs.o %.c>%.o sh/jobs.c jobs
 prev sh/jobs.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_VSH -DSHOPT_ESH -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_PFSH -D_BLD_shell -DKSHELL -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_OO -c sh/jobs.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_VSH -DSHOPT_ESH -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_PFSH -D_BLD_shell -DKSHELL -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -c sh/jobs.c
 done jobs.o generated
 make lex.o
 make sh/lex.c
@@ -951,7 +951,7 @@ prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done sh/lex.c
 meta lex.o %.c>%.o sh/lex.c lex
 prev sh/lex.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_OO -DSHOPT_MULTIBYTE -DSHOPT_KIA -D_BLD_shell -D_PACKAGE_ast -DSHOPT_PFSH -DKSHELL -DSHOPT_DYNAMIC -DSHOPT_HISTEXPAND -DSHOPT_ESH -c sh/lex.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_MULTIBYTE -DSHOPT_KIA -D_BLD_shell -D_PACKAGE_ast -DSHOPT_PFSH -DKSHELL -DSHOPT_DYNAMIC -DSHOPT_HISTEXPAND -DSHOPT_ESH -c sh/lex.c
 done lex.o generated
 make macro.o
 make sh/macro.c
@@ -968,7 +968,7 @@ prev include/defs.h implicit
 done sh/macro.c
 meta macro.o %.c>%.o sh/macro.c macro
 prev sh/macro.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_BRACEPAT -DKSHELL -DSHOPT_COMPOUND_ARRAY -DSHOPT_OO -DSHOPT_FILESCAN -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_SUID_EXEC -D_BLD_shell -DSHOPT_PFSH -DSHOPT_KIA -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -c sh/macro.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_BRACEPAT -DKSHELL -DSHOPT_COMPOUND_ARRAY -DSHOPT_FILESCAN -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_SUID_EXEC -D_BLD_shell -DSHOPT_PFSH -DSHOPT_KIA -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -c sh/macro.c
 done macro.o generated
 make name.o
 make sh/name.c
@@ -985,7 +985,7 @@ prev include/defs.h implicit
 done sh/name.c
 meta name.o %.c>%.o sh/name.c name
 prev sh/name.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_OPTIMIZE -DSHOPT_MULTIBYTE -DSHOPT_COMPOUND_ARRAY -D_BLD_shell -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_KIA -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_OO -DSHOPT_ESH -c sh/name.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_OPTIMIZE -DSHOPT_MULTIBYTE -DSHOPT_COMPOUND_ARRAY -D_BLD_shell -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_KIA -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -c sh/name.c
 done name.o generated
 make nvtree.o
 make sh/nvtree.c
@@ -995,7 +995,7 @@ prev include/defs.h implicit
 done sh/nvtree.c
 meta nvtree.o %.c>%.o sh/nvtree.c nvtree
 prev sh/nvtree.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_COMPOUND_ARRAY -D_PACKAGE_ast -DSHOPT_OO -D_BLD_shell -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -DSHOPT_MULTIBYTE -DSHOPT_PFSH -c sh/nvtree.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_COMPOUND_ARRAY -D_PACKAGE_ast -D_BLD_shell -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -DSHOPT_MULTIBYTE -DSHOPT_PFSH -c sh/nvtree.c
 done nvtree.o generated
 make parse.o
 make sh/parse.c
@@ -1011,7 +1011,7 @@ prev include/defs.h implicit
 done sh/parse.c
 meta parse.o %.c>%.o sh/parse.c parse
 prev sh/parse.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_NAMESPACE -DSHOPT_COMPOUND_ARRAY -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -D_BLD_shell -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DSHOPT_KIA -DSHOPT_ESH -DSHOPT_DYNAMIC -DSHOPT_OO -DSHOPT_HISTEXPAND -DKSHELL -c sh/parse.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_NAMESPACE -DSHOPT_COMPOUND_ARRAY -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -D_BLD_shell -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DSHOPT_KIA -DSHOPT_ESH -DSHOPT_DYNAMIC -DSHOPT_HISTEXPAND -DKSHELL -c sh/parse.c
 done parse.o generated
 make path.o
 make sh/path.c
@@ -1033,7 +1033,7 @@ prev include/defs.h implicit
 done sh/path.c
 meta path.o %.c>%.o sh/path.c path
 prev sh/path.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -DSHOPT_SUID_EXEC -DSHOPT_PFSH -DSHOPT_MULTIBYTE -DSHOPT_ESH -D_BLD_shell -DKSHELL -DSHOPT_BRACEPAT -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_OO -c sh/path.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -DSHOPT_SUID_EXEC -DSHOPT_PFSH -DSHOPT_MULTIBYTE -DSHOPT_ESH -D_BLD_shell -DKSHELL -DSHOPT_BRACEPAT -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -c sh/path.c
 done path.o generated
 make string.o
 make sh/string.c
@@ -1048,7 +1048,7 @@ prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done sh/string.c
 meta string.o %.c>%.o sh/string.c string
 prev sh/string.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -D_BLD_shell -DSHOPT_OO -DSHOPT_ESH -DSHOPT_PFSH -c sh/string.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -D_BLD_shell -DSHOPT_ESH -DSHOPT_PFSH -c sh/string.c
 done string.o generated
 make streval.o
 make sh/streval.c
@@ -1075,7 +1075,7 @@ prev include/defs.h implicit
 done sh/subshell.c
 meta subshell.o %.c>%.o sh/subshell.c subshell
 prev sh/subshell.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -D_BLD_shell -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DSHOPT_KIA -DKSHELL -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_OO -DSHOPT_ESH -c sh/subshell.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -D_BLD_shell -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DSHOPT_KIA -DKSHELL -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -c sh/subshell.c
 done subshell.o generated
 make tdump.o
 make sh/tdump.c
@@ -1087,7 +1087,7 @@ prev ${PACKAGE_ast_INCLUDE}/ccode.h implicit
 done sh/tdump.c
 meta tdump.o %.c>%.o sh/tdump.c tdump
 prev sh/tdump.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DKSHELL -D_PACKAGE_ast -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DSHOPT_KIA -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_OO -DSHOPT_ESH -c sh/tdump.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DKSHELL -D_PACKAGE_ast -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DSHOPT_KIA -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -c sh/tdump.c
 done tdump.o generated
 make timers.o
 make sh/timers.c
@@ -1101,7 +1101,7 @@ prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done sh/timers.c
 meta timers.o %.c>%.o sh/timers.c timers
 prev sh/timers.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -D_BLD_shell -DSHOPT_OO -DSHOPT_ESH -DSHOPT_MULTIBYTE -DSHOPT_PFSH -c sh/timers.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -D_BLD_shell -DSHOPT_ESH -DSHOPT_MULTIBYTE -DSHOPT_PFSH -c sh/timers.c
 done timers.o generated
 make trestore.o
 make sh/trestore.c
@@ -1113,7 +1113,7 @@ prev ${PACKAGE_ast_INCLUDE}/ccode.h implicit
 done sh/trestore.c
 meta trestore.o %.c>%.o sh/trestore.c trestore
 prev sh/trestore.c
-exec - ${CC} ${mam_cc_FLAGS} ${-debug-symbols?1?${mam_cc_DEBUG} -D_BLD_DEBUG?${CCFLAGS.FORCE}?} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DKSHELL -D_PACKAGE_ast -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DSHOPT_KIA -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_OO -DSHOPT_ESH -c sh/trestore.c
+exec - ${CC} ${mam_cc_FLAGS} ${-debug-symbols?1?${mam_cc_DEBUG} -D_BLD_DEBUG?${CCFLAGS.FORCE}?} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DKSHELL -D_PACKAGE_ast -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DSHOPT_KIA -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -c sh/trestore.c
 done trestore.o generated
 make waitevent.o
 make sh/waitevent.c
@@ -1121,7 +1121,7 @@ prev include/defs.h implicit
 done sh/waitevent.c
 meta waitevent.o %.c>%.o sh/waitevent.c waitevent
 prev sh/waitevent.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -D_BLD_shell -D_PACKAGE_ast -DSHOPT_OO -DSHOPT_ESH -DSHOPT_MULTIBYTE -DSHOPT_PFSH -c sh/waitevent.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -D_BLD_shell -D_PACKAGE_ast -DSHOPT_ESH -DSHOPT_MULTIBYTE -DSHOPT_PFSH -c sh/waitevent.c
 done waitevent.o generated
 make xec.o
 make sh/xec.c
@@ -1147,7 +1147,7 @@ prev include/defs.h implicit
 done sh/xec.c
 meta xec.o %.c>%.o sh/xec.c xec
 prev sh/xec.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -DSHOPT_FILESCAN -DSHOPT_NAMESPACE -DSHOPT_OPTIMIZE -D_BLD_shell -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DSHOPT_KIA -DKSHELL -DSHOPT_OO -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -c sh/xec.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -DSHOPT_FILESCAN -DSHOPT_NAMESPACE -DSHOPT_OPTIMIZE -D_BLD_shell -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DSHOPT_KIA -DKSHELL -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -c sh/xec.c
 done xec.o generated
 make env.o
 make sh/env.c
@@ -1183,7 +1183,7 @@ prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done data/msg.c
 meta msg.o %.c>%.o data/msg.c msg
 prev data/msg.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_SUID_EXEC -DSHOPT_HISTEXPAND -DSHOPT_MULTIBYTE -DKSHELL -DSHOPT_ESH -DSHOPT_VSH -D_PACKAGE_ast -DSHOPT_PFSH -D_BLD_shell -DSHOPT_KIA -DSHOPT_BRACEPAT -DSHOPT_DYNAMIC -DSHOPT_OO  -c data/msg.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_SUID_EXEC -DSHOPT_HISTEXPAND -DSHOPT_MULTIBYTE -DKSHELL -DSHOPT_ESH -DSHOPT_VSH -D_PACKAGE_ast -DSHOPT_PFSH -D_BLD_shell -DSHOPT_KIA -DSHOPT_BRACEPAT -DSHOPT_DYNAMIC  -c data/msg.c
 done msg.o generated
 make strdata.o
 make data/strdata.c
@@ -1225,7 +1225,7 @@ prev include/shtable.h implicit
 done data/keywords.c
 meta keywords.o %.c>%.o data/keywords.c keywords
 prev data/keywords.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_NAMESPACE -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_KIA -D_BLD_shell -DSHOPT_DYNAMIC -DSHOPT_OO  -c data/keywords.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_NAMESPACE -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_KIA -D_BLD_shell -DSHOPT_DYNAMIC  -c data/keywords.c
 done keywords.o generated
 make options.o
 make data/options.c
@@ -1236,7 +1236,7 @@ prev include/defs.h implicit
 done data/options.c
 meta options.o %.c>%.o data/options.c options
 prev data/options.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_PFSH -DSHOPT_HISTEXPAND -DSHOPT_OO -D_BLD_shell -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_DYNAMIC -DSHOPT_ESH  -c data/options.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_PFSH -DSHOPT_HISTEXPAND -D_BLD_shell -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_DYNAMIC -DSHOPT_ESH  -c data/options.c
 done options.o generated
 make signals.o
 make data/signals.c
@@ -1258,7 +1258,7 @@ prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done data/aliases.c
 meta aliases.o %.c>%.o data/aliases.c aliases
 prev data/aliases.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_OO -D_BLD_shell -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_PFSH  -c data/aliases.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_PFSH  -c data/aliases.c
 done aliases.o generated
 make builtins.o
 make data/builtins.c
@@ -1287,7 +1287,7 @@ prev include/shell.h implicit
 done data/builtins.c
 meta builtins.o %.c>%.o data/builtins.c builtins
 prev data/builtins.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_KIA -DSHOPT_PFSH -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2006 AT&T Knowledge Ventures][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libshell]"\" -DSHOPT_BRACEPAT -DSHOPT_HISTEXPAND -DSH_CMDLIB_DIR=\""/opt/ast/bin"\" -DSHOPT_CMDLIB_BLTIN=0 -DSHOPT_MULTIBYTE -D_PACKAGE_ast -D_BLD_shell -DKSHELL -DSHOPT_OO -DSHOPT_DYNAMIC  -c data/builtins.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_KIA -DSHOPT_PFSH -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2006 AT&T Knowledge Ventures][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libshell]"\" -DSHOPT_BRACEPAT -DSHOPT_HISTEXPAND -DSH_CMDLIB_DIR=\""/opt/ast/bin"\" -DSHOPT_CMDLIB_BLTIN=0 -DSHOPT_MULTIBYTE -D_PACKAGE_ast -D_BLD_shell -DKSHELL -DSHOPT_DYNAMIC  -c data/builtins.c
 done builtins.o generated
 make variables.o
 make data/variables.c
@@ -1300,7 +1300,7 @@ prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done data/variables.c
 meta variables.o %.c>%.o data/variables.c variables
 prev data/variables.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_MULTIBYTE -DSHOPT_OO -D_BLD_shell -D_PACKAGE_ast -DSHOPT_DYNAMIC -DSHOPT_PFSH  -c data/variables.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_MULTIBYTE -D_BLD_shell -D_PACKAGE_ast -DSHOPT_DYNAMIC -DSHOPT_PFSH  -c data/variables.c
 done variables.o generated
 make lexstates.o
 make data/lexstates.c
@@ -1310,7 +1310,7 @@ prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done data/lexstates.c
 meta lexstates.o %.c>%.o data/lexstates.c lexstates
 prev data/lexstates.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_BRACEPAT -DSHOPT_OO -DSHOPT_NAMESPACE -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH  -c data/lexstates.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_BRACEPAT -DSHOPT_NAMESPACE -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH  -c data/lexstates.c
 done lexstates.o generated
 make emacs.o
 make edit/emacs.c
@@ -1323,7 +1323,7 @@ prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done edit/emacs.c
 meta emacs.o %.c>%.o edit/emacs.c emacs
 prev edit/emacs.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_MULTIBYTE -DSHOPT_HISTEXPAND -DKSHELL -DSHOPT_ESH -DSHOPT_VSH -D_PACKAGE_ast -DSHOPT_PFSH -D_BLD_shell -DSHOPT_DYNAMIC -DSHOPT_OO -c edit/emacs.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_MULTIBYTE -DSHOPT_HISTEXPAND -DKSHELL -DSHOPT_ESH -DSHOPT_VSH -D_PACKAGE_ast -DSHOPT_PFSH -D_BLD_shell -DSHOPT_DYNAMIC -c edit/emacs.c
 done emacs.o generated
 make vi.o
 make edit/vi.c
@@ -1339,7 +1339,7 @@ prev include/defs.h implicit
 done edit/vi.c
 meta vi.o %.c>%.o edit/vi.c vi
 prev edit/vi.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_RAWONLY -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_HISTEXPAND -DKSHELL -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_PFSH -D_BLD_shell -DSHOPT_DYNAMIC -DSHOPT_OO -c edit/vi.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_RAWONLY -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_HISTEXPAND -DKSHELL -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_PFSH -D_BLD_shell -DSHOPT_DYNAMIC -c edit/vi.c
 done vi.o generated
 make hexpand.o
 make edit/hexpand.c
@@ -1348,7 +1348,7 @@ prev include/defs.h implicit
 done edit/hexpand.c
 meta hexpand.o %.c>%.o edit/hexpand.c hexpand
 prev edit/hexpand.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_HISTEXPAND -DSHOPT_MULTIBYTE -DKSHELL -DSHOPT_ESH -DSHOPT_VSH -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_DYNAMIC -D_BLD_shell -DSHOPT_OO -c edit/hexpand.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_HISTEXPAND -DSHOPT_MULTIBYTE -DKSHELL -DSHOPT_ESH -DSHOPT_VSH -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_DYNAMIC -D_BLD_shell -c edit/hexpand.c
 done hexpand.o generated
 exec - ${AR} cr libshell.a alarm.o cd_pwd.o cflow.o deparse.o getopts.o hist.o misc.o print.o read.o sleep.o trap.o test.o typeset.o ulimit.o umask.o whence.o main.o nvdisc.o arith.o args.o array.o completion.o defs.o edit.o expand.o fault.o fcin.o history.o init.o io.o
 exec - ${AR} cr libshell.a jobs.o lex.o macro.o name.o nvtree.o parse.o path.o string.o streval.o subshell.o tdump.o timers.o trestore.o waitevent.o xec.o env.o limits.o msg.o strdata.o testops.o keywords.o options.o signals.o aliases.o builtins.o variables.o lexstates.o emacs.o vi.o hexpand.o
@@ -1374,7 +1374,7 @@ setv CC.DLL -UCC.DLL
 setv SH_DICT -DSH_DICT="\"libshell\""
 setv _BLD_shell -U_BLD_shell
 setv _BLD_DLL -U_BLD_DLL
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -Iinclude -I${PACKAGE_ast_INCLUDE} -DSH_DICT=\""libshell"\" -DSHOPT_KIA -D_PACKAGE_ast -DSHOPT_DYNAMIC -DSHOPT_OO -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2006 AT&T Knowledge Ventures][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libshell]"\" -c sh/shcomp.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -Iinclude -I${PACKAGE_ast_INCLUDE} -DSH_DICT=\""libshell"\" -DSHOPT_KIA -D_PACKAGE_ast -DSHOPT_DYNAMIC -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2006 AT&T Knowledge Ventures][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libshell]"\" -c sh/shcomp.c
 done shcomp.o generated
 prev libshell.a archive
 prev +ljobs

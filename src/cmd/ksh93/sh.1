@@ -1690,7 +1690,7 @@ If this variable is set when the shell is invoked, then
 the number of previously entered commands that
 are accessible by this shell
 will be greater than or equal to this number.
-The default is 128.
+The default is 512.
 .TP
 .B
 .SM HOME
@@ -2464,6 +2464,57 @@ Enable the following options.  This is the default.
 .B \-
 Disable the following options.
 .TP
+.B E
+The remainder of the pattern uses extended regular expression syntax
+like the
+.IR egrep (1)
+command.
+.TP
+.B F
+The remainder of the pattern uses
+.IR fgrep (1)
+expression syntax.
+.TP
+.B G
+The remainder of the pattern uses basic regular expression syntax
+like the
+.IR grep (1)
+command.
+.TP
+.B K
+The remainder of the pattern uses shell pattern syntax.
+This is the default.
+.TP
+.B i
+Treat the match as case insensitive.
+.TP
+.B g
+File the longest match (greedy).  This is the default.
+.TP
+.B l
+Left anchor the pattern.  This is the default for
+.B K
+style patterns.
+.TP
+.B r
+Right anchor the pattern.  This is the default for
+.B K
+style patterns.
+.PD
+.RE
+If both \f2options\^\fP and \f3:\fP\f2pattern-list\^\fP
+are specified, then the options apply only to  \f2pattern-list\^\fP.
+Otherwise, these options remain in effect until they are disabled
+by a subsequent \f3\(ap(\fP\f2...\^\fP\f3)\fP or at the end of
+the sub-pattern containing \f3\(ap(\fP\f2...\^\fP\f3)\fP.
+.SS Quoting.
+Each of the
+.I metacharacters\^
+listed earlier (see
+.I Definitions\^
+above)
+has a special meaning to the shell
+.TP
 .B i
 Treat the match as case insensitive.
 .TP
@@ -2918,7 +2969,7 @@ the
 .B .sh.match
 array variable will contain the match and sub-pattern matches.
 .TP
-\f2string\fP \f3\(ap=\fP \f2ere\fP
+\f2string\fP \f3=\(ap\fP \f2ere\fP
 True if
 .I string\^
 matches the pattern
@@ -7141,10 +7192,13 @@ cat(1),
 cd(1),
 chmod(1),
 cut(1),
+egrep(1),
 echo(1),
 emacs(1),
 env(1),
+fgrep(1),
 gmacs(1),
+grep(1),
 newgrp(1),
 pfexec(1),
 stty(1),

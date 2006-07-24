@@ -31,7 +31,6 @@ SHOPT_KIA == 1			/* shell information database generation */
 SHOPT_MULTIBYTE == 1		/* multibyte character handling */
 SHOPT_NAMESPACE == 1		/* allow namespaces */
 SHOPT_OLDTERMIO ==		/* support both TCGETA and TCGETS */
-SHOPT_OO == 1			/* object oriented extension, not complete */
 SHOPT_OPTIMIZE == 1		/* optimize loop invariants */
 SHOPT_PFSH == 1			/* solaris exec_attr(4) profile execution */
 SHOPT_P_SUID ==			/* real uid's that require -p for set[ug]id */

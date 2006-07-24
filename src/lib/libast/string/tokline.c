@@ -55,7 +55,7 @@ typedef struct
  */
 
 static int
-splice(Sfio_t* s, int op, void* val, Sfdisc_t* ad)
+spliceline(Sfio_t* s, int op, void* val, Sfdisc_t* ad)
 {
 	Splice_t*	d = (Splice_t*)ad;
 	register char*	b;
@@ -185,7 +185,7 @@ tokline(const char* arg, int flags, int* line)
 		flags = strtol(p + 5, &p, 10);
 		error(flags, "%s:%-.*s", arg, e - p - 4, p);
 	}
-	d->disc.exceptf = splice;
+	d->disc.exceptf = spliceline;
 	d->sp = f;
 	*(d->line = line ? line : &hidden) = 0;
 	sfdisc(s, (Sfdisc_t*)d);

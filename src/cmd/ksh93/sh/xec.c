@@ -161,15 +161,15 @@ static int p_time(Sfio_t *out, const char *format, clock_t *tm)
 /*
  * clear argument pointers that point into the stack
  */
-static void p_arg(struct argnod*,int);
-static void p_switch(struct regnod*);
-static void p_comarg(register struct comnod *com)
+static int p_arg(struct argnod*,int);
+static int p_switch(struct regnod*);
+static int p_comarg(register struct comnod *com)
 {
-	Namval_t *np;
-	p_arg(com->comset,ARG_ASSIGN);
+	Namval_t *np=com->comnamp;
+	int n = p_arg(com->comset,ARG_ASSIGN);
 	if(com->comarg && (com->comtyp&COMSCAN))
-		p_arg(com->comarg,0);
-	if(com->comstate  && (np=com->comnamp))
+		n+= p_arg(com->comarg,0);
+	if(com->comstate  && np)
 	{
 		/* call builtin to cleanup state */
 		Nambltin_t bdata; 
@@ -181,75 +181,70 @@ static void p_comarg(register struct comnod *com)
 		(*funptr(np))(0,(char**)0, &bdata);
 	}
 	com->comstate = 0;
+	if(com->comarg && !np)
+		n++;
+	return(n);
 }
 
 extern void sh_optclear(Shell_t*, void*);
 
-static void sh_tclear(register Shnode_t *t)
+static int sh_tclear(register Shnode_t *t)
 {
+	int n=0;
 	if(!t)
-		return;
+		return(0);
 	switch(t->tre.tretyp&COMMSK)
 	{
 		case TTIME:
 		case TPAR:
-			sh_tclear(t->par.partre); 
-			return;
+			return(sh_tclear(t->par.partre)); 
 		case TCOM:
-			p_comarg((struct comnod*)t);
-			return;
+			return(p_comarg((struct comnod*)t));
 		case TSETIO:
 		case TFORK:
-			sh_tclear(t->fork.forktre);
-			return;
+			return(sh_tclear(t->fork.forktre));
 		case TIF:
-			sh_tclear(t->if_.iftre);
-			sh_tclear(t->if_.thtre);
-			sh_tclear(t->if_.eltre);
-			return;
+			n=sh_tclear(t->if_.iftre);
+			n+=sh_tclear(t->if_.thtre);
+			n+=sh_tclear(t->if_.eltre);
+			return(n);
 		case TWH:
 			if(t->wh.whinc)
-				sh_tclear((Shnode_t*)(t->wh.whinc));
-			sh_tclear(t->wh.whtre);
-			sh_tclear(t->wh.dotre);
-			return;
+				n=sh_tclear((Shnode_t*)(t->wh.whinc));
+			n+=sh_tclear(t->wh.whtre);
+			n+=sh_tclear(t->wh.dotre);
+			return(n);
 		case TLST:
 		case TAND:
 		case TORF:
 		case TFIL:
-			sh_tclear(t->lst.lstlef);
-			sh_tclear(t->lst.lstrit);
-			return;
+			n=sh_tclear(t->lst.lstlef);
+			return(n+sh_tclear(t->lst.lstrit));
 		case TARITH:
-			p_arg(t->ar.arexpr,ARG_ARITH);
-			return;
+			return(p_arg(t->ar.arexpr,ARG_ARITH));
 		case TFOR:
-			sh_tclear(t->for_.fortre);
-			sh_tclear((Shnode_t*)t->for_.forlst);
-			return;
+			n=sh_tclear(t->for_.fortre);
+			return(n+sh_tclear((Shnode_t*)t->for_.forlst));
 		case TSW:
-			p_arg(t->sw.swarg,0);
-			p_switch(t->sw.swlst);
-			return;
+			n=p_arg(t->sw.swarg,0);
+			return(n+p_switch(t->sw.swlst));
 		case TFUN:
-			sh_tclear(t->funct.functtre);
-			sh_tclear((Shnode_t*)t->funct.functargs);
-			return;
+			n=sh_tclear(t->funct.functtre);
+			return(n+sh_tclear((Shnode_t*)t->funct.functargs));
 		case TTST:
 			if((t->tre.tretyp&TPAREN)==TPAREN)
-				sh_tclear(t->lst.lstlef); 
+				return(sh_tclear(t->lst.lstlef)); 
 			else
 			{
-				p_arg(&(t->lst.lstlef->arg),0);
+				n=p_arg(&(t->lst.lstlef->arg),0);
 				if(t->tre.tretyp&TBINARY)
-					p_arg(&(t->lst.lstrit->arg),0);
+					n+=p_arg(&(t->lst.lstrit->arg),0);
 			}
-			return;
 	}
-	return;
+	return(n);
 }
 
-static void p_arg(register struct argnod *arg,int flag)
+static int p_arg(register struct argnod *arg,int flag)
 {
 	while(arg)
 	{
@@ -259,16 +254,19 @@ static void p_arg(register struct argnod *arg,int flag)
 			sh_tclear(((struct fornod*)arg->argchn.ap)->fortre);
 		arg = arg->argnxt.ap;
 	}
+	return(0);
 }
 
-static void p_switch(register struct regnod *reg)
+static int p_switch(register struct regnod *reg)
 {
+	int n=0;
 	while(reg)
 	{
-		p_arg(reg->regptr,0);
-		sh_tclear(reg->regcom);
+		n+=p_arg(reg->regptr,0);
+		n+=sh_tclear(reg->regcom);
 		reg = reg->regnxt;
 	}
+	return(n);
 }
 #   define OPTIMIZE_FLAG	(ARG_OPTIMIZE)
 #   define OPTIMIZE		(flags&OPTIMIZE_FLAG)

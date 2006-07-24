@@ -29,7 +29,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: cut (AT&T Labs Research) 2003-05-27 $\n]"
+"[-?\n@(#)$Id: cut (AT&T Labs Research) 2006-07-17 $\n]"
 USAGE_LICENSE
 "[+NAME?cut - cut out selected columns or fields of each line of a file]"
 "[+DESCRIPTION?\bcut\b bytes, characters, or character-delimited fields "
@@ -62,9 +62,9 @@ USAGE_LICENSE
 "[s:suppress|only-delimited?Suppress lines with no delimiter characters, "
 	"when used with the \b-f\b option.  By default, lines with no "
 	"delimiters will be passsed in untouched.]"
-"[D:line-delimeter]:[ldelim?The line delimiter character for the \b-f\b "
-	"option is set to \aldelim\a.  The default is the \bnewline\b "
-	"character.]"
+"[D:line-delimeter|output-delimiter]:[ldelim?The line delimiter character for "
+	"the \b-f\b option is set to \aldelim\a.  The default is the "
+	"\bnewline\b character.]"
 "[N:nonewline?Do not output new-lines at end of each record when used "
 	"with the \b-b\b or \b-c\b option.]"
 "\n"
@@ -244,14 +244,13 @@ static int cutcols(const Cut_t *cuthdr,Sfio_t *fdin,Sfio_t *fdout)
 	register int		skip; /* non-zero for don't copy */
 	while(1)
 	{
-		if(cuthdr->reclen)
-			inp = sfreserve(fdin,cuthdr->reclen, -1);
+		if(len = cuthdr->reclen)
+			inp = sfreserve(fdin, len, -1);
 		else
 			inp = sfgetr(fdin, '\n', 0);
-		if(!inp)
+		if(!inp && !(inp = sfgetr(fdin, 0, SF_LASTR)))
 			break;
-		if(!(len=cuthdr->reclen))
-			len = sfvalue(fdin);
+		len = sfvalue(fdin);
 		if((ncol = skip  = *(lp = cuthdr->list)) == 0)
 			ncol = *++lp;
 		while(1)

@@ -176,8 +176,8 @@ static Dt_t		*inittree(Shell_t*,const struct shtable2*);
 #   define EXE
 #endif
 
-static const char	rsh_pattern[] = "@(rk|kr|r)sh" EXE;
-static const char	pfsh_pattern[] = "pf?(k)sh" EXE;
+static const char	rsh_pattern[] = "@(rk|kr|r)sh?(93)" EXE;
+static const char	pfsh_pattern[] = "pf?(k)sh?(93)" EXE;
 static const char	bash_pattern[] = "?(r)bash" EXE;
 static int		rand_shift;
 
@@ -244,18 +244,21 @@ static Sfdouble_t nget_optindex(register Namval_t* np, Namfun_t *fp)
 static void put_restricted(register Namval_t* np,const char *val,int flags,Namfun_t *fp)
 {
 	Shell_t *shp = ((struct shell*)fp)->sh;
+	int		path_scoped = 0;
 #ifdef PATH_BFPATH
 	Pathcomp_t *pp;
 	char *name = nv_name(np);
 #endif
 	if(!(flags&NV_RDONLY) && sh_isoption(SH_RESTRICTED))
 		errormsg(SH_DICT,ERROR_exit(1),e_restricted,nv_name(np));
-	if(np==PATHNOD)			
+	if(np==PATHNOD	|| (path_scoped=(strcmp(name,PATHNOD->nvname)==0)))		
 	{
 #ifndef PATH_BFPATH
 		shp->lastpath = 0;
 #endif
 		nv_scan(shp->track_tree,rehash,(void*)0,NV_TAGGED,NV_TAGGED);
+		if(path_scoped && !val)
+			val = PATHNOD->nvalue.cp;
 	}
 	if(val && !(flags&NV_RDONLY) && np->nvalue.cp && strcmp(val,np->nvalue.cp)==0)
 		 return;
@@ -268,7 +271,7 @@ static void put_restricted(register Namval_t* np,const char *val,int flags,Namfu
 	if(shp->pathlist)
 	{
 		val = np->nvalue.cp;
-		if(np==PATHNOD)
+		if(np==PATHNOD || path_scoped)
 			pp = (void*)path_addpath((Pathcomp_t*)shp->pathlist,val,PATH_PATH);
 		else if(val && np==FPATHNOD)
 			pp = (void*)path_addpath((Pathcomp_t*)shp->pathlist,val,PATH_FPATH);

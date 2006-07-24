@@ -48,6 +48,7 @@ int		type;
 
 	UNFLATTEN(dt);
 	disc = dt->disc; _DTDSC(disc,ky,sz,lk,cmpf);
+	dt->type &= ~DT_FOUND;
 
 	root = dt->data->here;
 	if(!obj)
@@ -228,6 +229,7 @@ int		type;
 
 	if(root)
 	{	/* found it, now isolate it */
+		dt->type |= DT_FOUND;
 		l->right = root->left;
 		r->left = root->right;
 
@@ -322,7 +324,11 @@ int		type;
 		r->left = NIL(Dtlink_t*);
 		l->right = NIL(Dtlink_t*);
 
-		if(type&(DT_SEARCH|DT_MATCH))
+		if(type&DT_NEXT)
+			goto dt_next;
+		else if(type&DT_PREV)
+			goto dt_prev;
+		else if(type&(DT_SEARCH|DT_MATCH))
 		{ no_root:
 			while((t = r->left) )
 				r = t;
@@ -354,10 +360,6 @@ int		type;
 			}
 			else	goto no_root;
 		}
-		else if(type&DT_NEXT)
-			goto dt_next;
-		else if(type&DT_PREV)
-			goto dt_prev;
 		else if(type&DT_RENEW)
 		{	root = me;
 			dt->data->size += 1;

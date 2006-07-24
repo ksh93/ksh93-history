@@ -224,7 +224,7 @@ then	[[ -L "$file" ]] || err_exit '-L not working'
 	[[ -L "$file"/ ]] && err_exit '-L with file/ not working'
 fi
 $SHELL -c 't=1234567890; [[ $t == @({10}(\d)) ]]' 2> /dev/null || err_exit ' @({10}(\d)) pattern not working'
-$SHELL -c 't=1234567890; [[ att_ == ~(E)(att|cus)_.* ]]' 2> /dev/null || err_exit ' ~(E)(att|cus)_* pattern not working'
-$SHELL -c 't=1234567890; [[ att_ =~ (att|cus)_.* ]]' 2> /dev/null || err_exit ' =~ ere not working'
+$SHELL -c '[[ att_ == ~(E)(att|cus)_.* ]]' 2> /dev/null || err_exit ' ~(E)(att|cus)_* pattern not working'
+$SHELL -c '[[ att_ =~ (att|cus)_.* ]]' 2> /dev/null || err_exit ' =~ ere not working'
 exit $((Errors))
 exit $((Errors))

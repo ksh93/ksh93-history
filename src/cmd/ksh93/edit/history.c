@@ -46,8 +46,8 @@
 #define HIST_RECENT	600
 #define HIST_UNDO	0201		/* invalidate previous command */
 #define HIST_CMDNO	0202		/* next 3 bytes give command number */
-#define HIST_BSIZE	1024		/* size of history file buffer */
-#define HIST_DFLT	128		/* default size of history list */
+#define HIST_BSIZE	4096		/* size of history file buffer */
+#define HIST_DFLT	512		/* default size of history list */
 
 #define _HIST_PRIVATE \
 	off_t	histcnt;	/* offset into history file */\

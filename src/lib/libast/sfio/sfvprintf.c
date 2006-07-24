@@ -199,11 +199,12 @@ loop_fmt :
 	while((n = *form) )
 	{	if(n != '%') /* collect the non-pattern chars */
 		{	sp = (char*)form;
-			for(;;)
-			{	form += SFMBLEN(form, &fmbs);
-				if(*form == 0 || *form == '%')
-					break;
-			}
+			do
+			{	if((n = SFMBLEN(form, &fmbs)) <= 0)
+				{	n = 1;
+					SFMBCLR(&fmbs);
+				}
+			} while(*(form += n) && *form != '%');
 
 			n = form-sp;
 			SFwrite(f,sp,n);

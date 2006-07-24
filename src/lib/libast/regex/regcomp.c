@@ -2020,15 +2020,20 @@ grp(Cenv_t* env, int parno)
 	{
 	case '-':
 	case '+':
+	case 'a':
 	case 'g':
 	case 'i':
 	case 'l':
 	case 'm':
+	case 'p':
+	case 'r':
 	case 's':
 	case 'x':
 	case 'A':
 	case 'B':
 	case 'E':
+	case 'F':
+	case 'G':
 	case 'K':
 	case 'S':
 	case 'U':	/* pcre */
@@ -2055,6 +2060,12 @@ grp(Cenv_t* env, int parno)
 			case '+':
 				i = 1;
 				break;
+			case 'a':
+				if (i)
+					env->flags |= (REG_LEFT|REG_RIGHT);
+				else
+					env->flags &= ~(REG_LEFT|REG_RIGHT);
+				break;
 			case 'g':
 				if (i)
 					env->flags &= ~REG_MINIMAL;
@@ -2069,9 +2080,9 @@ grp(Cenv_t* env, int parno)
 				break;
 			case 'l':
 				if (i)
-					env->flags |= REG_LENIENT;
+					env->flags |= REG_LEFT;
 				else
-					env->flags &= ~REG_LENIENT;
+					env->flags &= ~REG_LEFT;
 				break;
 			case 'm':
 				if (i)
@@ -2080,6 +2091,18 @@ grp(Cenv_t* env, int parno)
 					env->flags &= ~REG_NEWLINE;
 				if (env->type < SRE)
 					env->explicit = (env->flags & (REG_NEWLINE|REG_SPAN)) == REG_NEWLINE ? env->mappednewline : -1;
+				break;
+			case 'p':
+				if (i)
+					env->flags &= ~REG_LENIENT;
+				else
+					env->flags |= REG_LENIENT;
+				break;
+			case 'r':
+				if (i)
+					env->flags |= REG_RIGHT;
+				else
+					env->flags &= ~REG_RIGHT;
 				break;
 			case 's':
 				if (i)
@@ -2096,27 +2119,34 @@ grp(Cenv_t* env, int parno)
 					env->flags &= ~REG_COMMENT;
 				break;
 			case 'A':
-				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_SHELL);
+				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_LITERAL|REG_SHELL|REG_LEFT|REG_RIGHT);
 				env->flags |= REG_AUGMENTED|REG_EXTENDED;
 				typ = ARE;
 				break;
 			case 'B':
-				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_SHELL);
+			case 'G':
+				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_LITERAL|REG_SHELL|REG_LEFT|REG_RIGHT);
 				typ = BRE;
 				break;
 			case 'E':
-				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_SHELL);
+				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_LITERAL|REG_SHELL|REG_LEFT|REG_RIGHT);
 				env->flags |= REG_EXTENDED;
 				typ = ERE;
 				break;
+			case 'F':
+			case 'L':
+				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_LITERAL|REG_SHELL|REG_LEFT|REG_RIGHT);
+				env->flags |= REG_LITERAL;
+				typ = ERE;
+				break;
 			case 'K':
-				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_SHELL);
-				env->flags |= REG_AUGMENTED|REG_SHELL;
+				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_LITERAL|REG_SHELL|REG_LEFT|REG_RIGHT);
+				env->flags |= REG_AUGMENTED|REG_SHELL|REG_LEFT|REG_RIGHT;
 				typ = KRE;
 				break;
 			case 'S':
-				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_SHELL);
-				env->flags |= REG_SHELL;
+				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_LITERAL|REG_SHELL|REG_LEFT|REG_RIGHT);
+				env->flags |= REG_SHELL|REG_LEFT|REG_RIGHT;
 				typ = SRE;
 				break;
 			case 'U': /* PCRE_UNGREEDY */

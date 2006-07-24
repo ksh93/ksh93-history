@@ -1,3 +1,13 @@
+06-07-22 cdt: snarf from kpv
+06-07-17 string/strperm.c: perm==-1 skips umask(1)
+06-07-17 sfio/sfvprintf.c: handle format invalid mb seq
+06-07-17 regex/regcomp.c: inline REG_SHELL => anchored, otherwise not
+06-07-17 regex/regcomp.c: inline B|G:basic E:REG_EXTENDED F|L:REG_LITERAL
+06-07-17 regex/regcomp.c: inline l:REG_LEFT r:REG_RIGHT
+06-07-17 regex/regcomp.c: inline a:REG_LEFT|REG_RIGHT p:~REG_LENIENT
+06-07-17 string/chresc.c: add \Uxxxxxxxx
+06-07-17 sfio/sfstrtof.h: ignore thousands sep after decimal
+06-07-17 string/tokline.c: splice() => spliceline() for bsd
 06-06-27 features/float,sfio/sfcvt.c: fix Nan logic
 06-06-27 port/astmath.c: fix long double isnan() test
 06-06-27 features/map.c: _map_libc for std => _ast_std

@@ -402,6 +402,7 @@ S2F_function(str, end) char* str; char** end;
 		else if (c == decimal)
 		{
 			decimal = -1;
+			thousand = -1;
 			m = 0;
 			fraction = digits;
 		}

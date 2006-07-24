@@ -132,9 +132,10 @@ chresc(register const char* s, char** p)
 			c = CC_vt;
 			break;
 		case 'u':
+		case 'U':
 		case 'x':
 			c = 0;
-			q = c == 'u' ? (s + 4) : (char*)0;
+			q = c == 'u' ? (s + 4) : c == 'U' ? (s + 8) : (char*)0;
 			e = s;
 			while (!e || !q || s < q)
 			{

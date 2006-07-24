@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1996-2005 AT&T Corp.                  *
+*           Copyright (c) 1996-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -1129,7 +1129,7 @@ sha512_done(Sum_t* p)
 #if BYTE_ORDER == LITTLE_ENDIAN
 	{
 		/* Convert TO host byte order */
-		sha2_word64*	d = (sha2_word32*)sha->digest;
+		sha2_word64*	d = (sha2_word64*)sha->digest;
 		int		j;
 		for (j = 0; j < 8; j++) {
 			REVERSE64(sha->state[j],sha->state[j]);

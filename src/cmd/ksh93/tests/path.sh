@@ -142,6 +142,12 @@ PATH=$d: whence rm > /dev/null
 if	[[ $(whence rm) != $PWD/rm ]]
 then	err_exit 'pathname not restored after scoping'
 fi
+mkdir bin
+print 'print ok' > bin/tst
+chmod +x bin/tst
+if	[[ $(PATH=$PWD/bin tst 2>/dev/null) != ok ]]
+then	err_exit '(PATH=$PWD/bin foo) does not find $PWD/bin/foo'
+fi
 cd /
 if	whence ls > /dev/null
 then	PATH=

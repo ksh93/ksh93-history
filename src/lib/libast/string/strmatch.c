@@ -125,7 +125,7 @@ strgrpmatch(const char* b, const char* p, int* sub, int n, register int flags)
 			return 0;
 		matchstate.nmatch = n;
 	}
-	if (regexec(re, b, n, matchstate.match, reflags))
+	if (regexec(re, b, n, matchstate.match, reflags & ~(REG_MINIMAL|REG_SHELL_GROUP|REG_LEFT|REG_RIGHT|REG_ICASE)))
 		return 0;
 	if (!sub || n <= 0)
 		return 1;
