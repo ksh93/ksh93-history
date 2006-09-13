@@ -27,7 +27,7 @@
 #ifndef _GLOB_H
 #define _GLOB_H
 
-#define GLOB_VERSION	20021031L
+#define GLOB_VERSION	20060717L
 
 #include <stdlib.h>
 
@@ -83,11 +83,13 @@ struct _glob_
 
 	char*		(*gl_nextdir)(glob_t*, char*);
 	unsigned long	gl_status;
+	unsigned long	gl_version;
+	unsigned short	gl_extra;
 
 #ifdef _GLOB_PRIVATE_
 	_GLOB_PRIVATE_
 #else
-	char*		gl_pad[24];
+	char*		gl_pad[23];
 #endif
 
 };

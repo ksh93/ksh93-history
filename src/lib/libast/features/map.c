@@ -72,7 +72,9 @@ main()
 	printf("#define getwd		_ast_getwd\n");
 	printf("#define glob		_ast_glob\n");
 	printf("#define globfree	_ast_globfree\n");
+	printf("#define memdup		_ast_memdup\n");
 	printf("#define memfatal	_ast_memfatal\n");
+	printf("#define memhash		_ast_memhash\n");
 	printf("#define mkstemp		_ast_mkstemp\n");
 	printf("#define mktemp		_ast_mktemp\n");
 	printf("#define mktime		_ast_mktime\n");
@@ -114,6 +116,7 @@ main()
 	printf("#define realpath	_ast_realpath\n");
 	printf("#define regaddclass	_ast_regaddclass\n");
 	printf("#define regalloc	_ast_regalloc\n");
+	printf("#define regcache	_ast_regcache\n");
 	printf("#define regclass	_ast_regclass\n");
 	printf("#define regcmp		_ast_regcmp\n");
 	printf("#define regcollate      _ast_regcollate\n");
@@ -168,6 +171,7 @@ main()
 	printf("#define strsearch	_ast_strsearch\n");
 	printf("#define strsort		_ast_strsort\n");
 	printf("#define strsubmatch	_ast_strsubmatch\n");
+	printf("#define strsum		_ast_strsum\n");
 	printf("#define strtape		_ast_strtape\n");
 	printf("#define strtod		_ast_strtod\n");
 	printf("#define strtoip4	_ast_strtoip4\n");

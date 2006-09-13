@@ -43,7 +43,7 @@
 #define MATCH_MAKE	2
 #define MATCH_META	4
 
-#define MATCHPATH	offsetof(globlist_t, gl_path)
+#define MATCHPATH(g)	(offsetof(globlist_t,gl_path)+(g)->gl_extra)
 
 typedef int (*GL_error_f)(const char*, int);
 typedef void* (*GL_opendir_f)(const char*);
@@ -64,7 +64,9 @@ typedef int (*GL_stat_f)(const char*, struct stat*);
 	regex_t		re_ignore; \
 	regex_t		re_ignorei; \
 	unsigned long	gl_starstar; \
-	char*		gl_pad[6];
+	char*		gl_opt; \
+	char*		gl_pat; \
+	char*		gl_pad[4];
 
 #include <glob.h>
 
@@ -232,7 +234,7 @@ addmatch(register glob_t* gp, const char* dir, const char* pat, register const c
 	int			offset;
 	int			type;
 
-	stakseek(MATCHPATH);
+	stakseek(MATCHPATH(gp));
 	if (dir)
 	{
 		stakputs(dir);
@@ -243,7 +245,7 @@ addmatch(register glob_t* gp, const char* dir, const char* pat, register const c
 	stakputs(pat);
 	if (rescan)
 	{
-		if ((*gp->gl_type)(gp, stakptr(MATCHPATH)) != GLOB_DIR)
+		if ((*gp->gl_type)(gp, stakptr(MATCHPATH(gp))) != GLOB_DIR)
 			return;
 		stakputc(gp->gl_delim);
 		offset = staktell();
@@ -261,7 +263,7 @@ addmatch(register glob_t* gp, const char* dir, const char* pat, register const c
 	}
 	else
 	{
-		if (!endslash && (gp->gl_flags & GLOB_MARK) && (type = (*gp->gl_type)(gp, stakptr(MATCHPATH))))
+		if (!endslash && (gp->gl_flags & GLOB_MARK) && (type = (*gp->gl_type)(gp, stakptr(MATCHPATH(gp)))))
 		{
 			if ((gp->gl_flags & GLOB_COMPLETE) && type != GLOB_EXE)
 			{
@@ -310,7 +312,7 @@ glob_dir(glob_t* gp, globlist_t* ap)
 	int			anymeta = ap->gl_flags & MATCH_META;
 	int			complete = 0;
 	int			err = 0;
-	int			meta = 0;
+	int			meta = ((gp->re_flags & REG_ICASE) && *ap->gl_begin != '/') ? MATCH_META : 0;
 	int			quote = 0;
 	int			savequote = 0;
 	char*			restore1 = 0;
@@ -326,7 +328,7 @@ glob_dir(glob_t* gp, globlist_t* ap)
 		return;
 	}
 	pat = rescan = ap->gl_begin;
-	prefix = dirname = ap->gl_path;
+	prefix = dirname = ap->gl_path + gp->gl_extra;
 	first = (rescan == prefix);
 again:
 	bracket = 0;
@@ -360,7 +362,7 @@ again:
 			if (!bracket)
 			{
 				bracket = MATCH_META;
-				if (*rescan == '!')
+				if (*rescan == '!' || *rescan == '^')
 					rescan++;
 				if (*rescan == ']')
 					rescan++;
@@ -468,6 +470,8 @@ skip:
 	}
 	if (matchdir)
 		gp->gl_starstar++;
+	if (gp->gl_opt)
+		pat = strcpy(gp->gl_opt, pat);
 	for (;;)
 	{
 		if (complete)
@@ -569,7 +573,12 @@ glob(const char* pattern, int flags, int (*errfn)(const char*, int), register gl
 	char**			argv;
 	char**			av;
 	size_t			skip;
+	unsigned long		f;
+	int			n;
+	int			x;
 
+	const char*		nocheck = pattern;
+	int			optlen = 0;
 	int			suflen = 0;
 	int			extra = 1;
 	unsigned char		intr = 0;
@@ -610,6 +619,7 @@ glob(const char* pattern, int flags, int (*errfn)(const char*, int), register gl
 			gp->gl_attr = 0;
 			gp->gl_nextdir = 0;
 			gp->gl_stat = 0;
+			gp->gl_extra = 0;
 		}
 		if (!(flags & GLOB_ALTDIRFUNC))
 		{
@@ -657,13 +667,75 @@ glob(const char* pattern, int flags, int (*errfn)(const char*, int), register gl
 		extra += gp->gl_offs;
 	if (gp->gl_suffix)
 		suflen =  strlen(gp->gl_suffix);
-	top = ap = (globlist_t*)stakalloc(strlen(pattern) + sizeof(globlist_t) + suflen);
-	ap->gl_begin = ap->gl_path;
+	if (*(pat = (char*)pattern) == '~' && *(pat + 1) == '(')
+	{
+		f = gp->gl_flags;
+		n = 1;
+		x = 1;
+		pat += 2;
+		for (;;)
+		{
+			switch (*pat++)
+			{
+			case 0:
+			case ':':
+				break;
+			case '-':
+				n = 0;
+				continue;
+			case '+':
+				n = 1;
+				continue;
+			case 'i':
+				if (n)
+					f |= GLOB_ICASE;
+				else
+					f &= ~GLOB_ICASE;
+				continue;
+			case 'M':
+				if (n)
+					f |= GLOB_BRACE;
+				else
+					f &= ~GLOB_BRACE;
+				continue;
+			case 'N':
+				if (n)
+					f &= ~GLOB_NOCHECK;
+				else
+					f |= GLOB_NOCHECK;
+				continue;
+			case 'R':
+				if (n)
+					f |= GLOB_STARSTAR;
+				else
+					f &= ~GLOB_STARSTAR;
+				continue;
+			case ')':
+				flags = (gp->gl_flags = f) & 0xffff;
+				if (f & GLOB_ICASE)
+					gp->re_flags |= REG_ICASE;
+				else
+					gp->re_flags &= ~REG_ICASE;
+				if ((f & (GLOB_STARSTAR|GLOB_ALTDIRFUNC)) == GLOB_STARSTAR)
+					gp->gl_stat = (GL_stat_f)lstat;
+				if (x)
+					optlen = pat - (char*)pattern;
+				break;
+			default:
+				x = 0;
+				continue;
+			}
+			break;
+		}
+	}
+	top = ap = (globlist_t*)stakalloc((optlen ? 2 : 1) * strlen(pattern) + sizeof(globlist_t) + suflen + gp->gl_extra);
 	ap->gl_next = 0;
 	ap->gl_flags = 0;
-	pat = strcopy(ap->gl_path, pattern);
+	ap->gl_begin = ap->gl_path + gp->gl_extra;
+	pat = strcopy(ap->gl_begin, pattern + optlen);
 	if (suflen)
-		strcpy(pat, gp->gl_suffix);
+		pat = strcopy(pat, gp->gl_suffix);
+	gp->gl_pat = optlen ? strncpy(gp->gl_opt = pat + 1, pattern, optlen) : (char*)0;
 	suflen = 0;
 	if (!(flags & GLOB_LIST))
 		gp->gl_match = 0;
@@ -679,7 +751,7 @@ glob(const char* pattern, int flags, int (*errfn)(const char*, int), register gl
 			gp->gl_pathc++;
 			top->gl_next = gp->gl_match;
 			gp->gl_match = top;
-			strcopy(top->gl_path, pattern);
+			strcopy(top->gl_path + gp->gl_extra, nocheck);
 		}
 		else
 			gp->gl_error = GLOB_NOMATCH;
@@ -706,7 +778,7 @@ glob(const char* pattern, int flags, int (*errfn)(const char*, int), register gl
 		ap = gp->gl_match;
 		while (ap)
 		{
-			*argv++ = ap->gl_path;
+			*argv++ = ap->gl_path + gp->gl_extra;
 			ap = ap->gl_next;
 		}
 		*argv = 0;

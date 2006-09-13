@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: date (AT&T Research) 2006-05-03 $\n]"
+"[-?\n@(#)$Id: date (AT&T Research) 2006-09-08 $\n]"
 USAGE_LICENSE
 "[+NAME?date - set/list/convert dates]"
 "[+DESCRIPTION?\bdate\b sets the current date and time (with appropriate"
@@ -367,6 +367,7 @@ b_date(int argc, register char** argv, void* context)
 				s = listzones->type;
 			sfprintf(sfstdout, "%3s %4s %4s %4d %4d\n", s, *listzones->standard ? listzones->standard : "-", listzones->daylight ? listzones->daylight : "-", listzones->west, listzones->dst);
 			listzones++;
+			show = 1;
 		}
 	}
 	else if (elapsed)
@@ -387,6 +388,7 @@ b_date(int argc, register char** argv, void* context)
 				e += ts - te;
 		}
 		sfputr(sfstdout, fmtelapsed((unsigned long)tmxsec(e), 1), '\n');
+		show = 1;
 	}
 	else if (filetime)
 	{
@@ -416,6 +418,7 @@ b_date(int argc, register char** argv, void* context)
 					sfprintf(sfstdout, "%s: %s\n", s, buf);
 				else
 					sfprintf(sfstdout, "%s\n", buf);
+				show = 1;
 			}
 		}
 	}
@@ -463,5 +466,7 @@ b_date(int argc, register char** argv, void* context)
 		free(f);
 	}
 	tm_info.flags = 0;
+	if (show && sfsync(sfstdout))
+		error(ERROR_system(0), "write error");
 	return error_info.errors != 0;
 }

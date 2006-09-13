@@ -33,6 +33,7 @@
 #include <debug.h>
 #include <ccode.h>
 #include <ctype.h>
+#include <errno.h>
 
 #define KEEP		"*[A-Za-z][A-Za-z]*"
 #define OMIT		"*@(\\[[-+]*\\?*\\]|\\@\\(#\\)|Copyright \\(c\\)|\\$\\I\\d\\: )*"
@@ -3489,13 +3490,38 @@ optusage(const char* opts)
 }
 
 /*
+ * convert number using strtonll() *except* that
+ * 0*[[:digit:]].* is treated as [[:digit:]].*
+ * i.e., it looks octal but isn't, to meet
+ * posix Utility Argument Syntax -- use
+ * 0x.* or <base>#* for alternate bases
+ */
+
+static _ast_intmax_t     
+optnumber(const char* s, char** t, int* e)
+{
+	_ast_intmax_t	n;
+	int		oerrno;
+
+	while (*s == '0' && isdigit(*(s + 1)))
+		s++;
+	oerrno = errno;
+	errno = 0;
+	n = strtonll(s, t, NiL, 0);
+	if (e)
+		*e = errno;
+	errno = oerrno;
+	return n;
+}
+
+/*
  * point opt_info.arg to an error/info message for opt_info.name
  * p points to opts location for opt_info.name
  * optget() return value is returned
  */
 
 static int
-opterror(register char* p, int version, char* catalog)
+opterror(register char* p, int version, char* catalog, int err)
 {
 	register Sfio_t*	mp;
 	register Sfio_t*	tp;
@@ -3562,6 +3588,8 @@ opterror(register char* p, int version, char* catalog)
 		}
 		p = T(NiL, ID, p);
 		sfputr(mp, p, -1);
+		if (err)
+			sfputr(mp, " -- out of range", -1);
 		opt_info.arg = sfstruse(mp);
 	}
 	return ':';
@@ -3631,6 +3659,7 @@ optget(register char** argv, const char* oopts)
 	int		k;
 	int		j;
 	int		x;
+	int		err;
 	int		no;
 	int		nov;
 	int		num;
@@ -3718,6 +3747,7 @@ optget(register char** argv, const char* oopts)
 	opt_info.assignment = 0;
 	num = 1;
 	w = v = 0;
+	x = 0;
 	for (;;)
 	{
 		if (!opt_info.offset)
@@ -3895,6 +3925,7 @@ optget(register char** argv, const char* oopts)
 	}
 	else
 	{
+		a = 0;
 		if (!w && (pass->flags & OPT_cache))
 		{
 			if (cache)
@@ -3918,10 +3949,10 @@ optget(register char** argv, const char* oopts)
 							opt_info.offset = 0;
 							return c;
 						}
-						opt_info.num = (long)(opt_info.number = strtonll(opt_info.arg, &e, NiL, 0));
-						if (e == opt_info.arg)
+						opt_info.num = (long)(opt_info.number = optnumber(opt_info.arg, &e, &err));
+						if (err || e == opt_info.arg)
 						{
-							if (k & OPT_cache_optional)
+							if (!err && (k & OPT_cache_optional))
 							{
 								opt_info.arg = 0;
 								opt_info.index--;
@@ -3955,18 +3986,21 @@ optget(register char** argv, const char* oopts)
 							opt_info.offset = 0;
 							return c;
 						}
-						opt_info.num = (long)(opt_info.number = strtonll(opt_info.arg, &e, NiL, 0));
-						if (!*e)
+						opt_info.num = (long)(opt_info.number = optnumber(opt_info.arg, &e, &err));
+						if (!err)
 						{
-							opt_info.offset = 0;
-							return c;
-						}
-						if (k & OPT_cache_optional)
-						{
-							opt_info.arg = 0;
-							opt_info.index--;
-							opt_info.offset = 0;
-							return c;
+							if (!*e)
+							{
+								opt_info.offset = 0;
+								return c;
+							}
+							if (k & OPT_cache_optional)
+							{
+								opt_info.arg = 0;
+								opt_info.index--;
+								opt_info.offset = 0;
+								return c;
+							}
 						}
 					}
 					else if (k & OPT_cache_optional)
@@ -4222,7 +4256,7 @@ optget(register char** argv, const char* oopts)
 							if (!(n = (m || *s == ':' || *s == '|' || *s == '?' || *s == ']' || *s == 0)) && x)
 							{
 								psp = pop(psp);
-								return opterror("?", version, catalog);
+								return opterror("?", version, catalog, 0);
 							}
 							for (x = k; *(f + 1) == '|' && (j = *(f + 2)) && j != '!' && j != '=' && j != ':' && j != '?' && j != ']'; f += 2);
 							if (*f == ':')
@@ -4323,6 +4357,7 @@ optget(register char** argv, const char* oopts)
 								break;
 							else
 								cache->flags[map[*f]] = m;
+							j = 0;
 							while (*(f + 1) == '|')
 							{
 								f += 2;
@@ -4453,7 +4488,7 @@ optget(register char** argv, const char* oopts)
 		if (w && x)
 		{
 			s = skip(b, '|', '?', 0, 1, 0, 0, version);
-			if (v && (*a == 0 || *(a + 1) != ':' && *(a + 1) != '#') && (*v == '0' || *v == '1') && !*(v + 1))
+			if (v && (a == 0 || *a == 0 || *(a + 1) != ':' && *(a + 1) != '#') && (*v == '0' || *v == '1') && !*(v + 1))
 			{
 				if (*v == '0')
 					num = !num;
@@ -4473,7 +4508,7 @@ optget(register char** argv, const char* oopts)
 				*w++ = *b++;
 			}
 			if (!num && v)
-				return opterror(no ? "!" : "=", version, catalog);
+				return opterror(no ? "!" : "=", version, catalog, 0);
 			w = &opt_info.name[prefix];
 			c = x;
 			s = a;
@@ -4498,7 +4533,7 @@ optget(register char** argv, const char* oopts)
 		if (w || c < '0' || c > '9' || !numopt)
 		{
 			pop(psp);
-			return opterror("", version, catalog);
+			return opterror("", version, catalog, 0);
 		}
 		s = numopt;
 		c = opt_info.option[1] = numchr;
@@ -4512,7 +4547,7 @@ optget(register char** argv, const char* oopts)
 
 	if (opt_info.num != LONG_MIN)
 		opt_info.num = opt_info.number = num;
-	if ((n = *++s == '#') || *s == ':' || w && !nov && v && (strtonll(v, &e, NiL, 0), n = !*e))
+	if ((n = *++s == '#') || *s == ':' || w && !nov && v && (optnumber(v, &e, NiL), n = !*e))
 	{
 		if (w)
 		{
@@ -4521,7 +4556,7 @@ optget(register char** argv, const char* oopts)
 				if (v)
 				{
 					pop(psp);
-					return opterror("!", version, catalog);
+					return opterror("!", version, catalog, 0);
 				}
 				opt_info.num = opt_info.number = 0;
 			}
@@ -4539,7 +4574,7 @@ optget(register char** argv, const char* oopts)
 						if (!opt_info.arg)
 						{
 							pop(psp);
-							return opterror(s, version, catalog);
+							return opterror(s, version, catalog, 0);
 						}
 					}
 					else if (*(t = next(s + 2, version)) == '[')
@@ -4561,11 +4596,11 @@ optget(register char** argv, const char* oopts)
 				}
 				if (opt_info.arg && n)
 				{
-					opt_info.num = (long)(opt_info.number = strtonll(opt_info.arg, &e, NiL, 0));
-					if (e == opt_info.arg)
+					opt_info.num = (long)(opt_info.number = optnumber(opt_info.arg, &e, &err));
+					if (err || e == opt_info.arg)
 					{
 						pop(psp);
-						return opterror(s, version, catalog);
+						return opterror(s, version, catalog, err);
 					}
 				}
 			}
@@ -4575,10 +4610,10 @@ optget(register char** argv, const char* oopts)
 		{
 			if (*s == '#')
 			{
-				opt_info.num = (long)(opt_info.number = strtonll(opt_info.arg, &e, NiL, 0));
-				if (e == opt_info.arg)
+				opt_info.num = (long)(opt_info.number = optnumber(opt_info.arg, &e, &err));
+				if (err || e == opt_info.arg)
 				{
-					if (*(s + 1) == '?')
+					if (!err && *(s + 1) == '?')
 					{
 						opt_info.arg = 0;
 						opt_info.index--;
@@ -4586,7 +4621,7 @@ optget(register char** argv, const char* oopts)
 					else
 					{
 						opt_info.offset = 0;
-						c = opterror(s, version, catalog);
+						c = opterror(s, version, catalog, err);
 					}
 					pop(psp);
 					return c;
@@ -4610,10 +4645,10 @@ optget(register char** argv, const char* oopts)
 			}
 			else if (*s == '#')
 			{
-				opt_info.num = (long)(opt_info.number = strtonll(opt_info.arg, &e, NiL, 0));
-				if (*e)
+				opt_info.num = (long)(opt_info.number = optnumber(opt_info.arg, &e, &err));
+				if (err || *e)
 				{
-					if (*(s + 1) == '?')
+					if (!err && *(s + 1) == '?')
 					{
 						opt_info.arg = 0;
 						opt_info.index--;
@@ -4622,7 +4657,7 @@ optget(register char** argv, const char* oopts)
 					{
 						pop(psp);
 						opt_info.offset = 0;
-						return opterror(s, version, catalog);
+						return opterror(s, version, catalog, err);
 					}
 				}
 			}
@@ -4631,7 +4666,7 @@ optget(register char** argv, const char* oopts)
 		{
 			opt_info.index--;
 			pop(psp);
-			return opterror(s, version, catalog);
+			return opterror(s, version, catalog, 0);
 		}
 		opt_info.offset = 0;
 	optarg:
@@ -4744,7 +4779,7 @@ optget(register char** argv, const char* oopts)
 								if (!(n = (m || *s == ':' || *s == '|' || *s == '?' || *s == ']')) && x)
 								{
 									pop(psp);
-									return opterror("&", version, catalog);
+									return opterror("&", version, catalog, 0);
 								}
 								for (x = k; *(f + 1) == '|' && (j = *(f + 2)) && j != '!' && j != '=' && j != ':' && j != '?' && j != ']'; f += 2);
 								if (*f == ':')
@@ -4776,7 +4811,7 @@ optget(register char** argv, const char* oopts)
 				if (!(opt_info.num = opt_info.number = x))
 				{
 					pop(psp);
-					return opterror("*", version, catalog);
+					return opterror("*", version, catalog, 0);
 				}
 			}
 		}
@@ -4784,7 +4819,7 @@ optget(register char** argv, const char* oopts)
 	else if (w && v)
 	{
 		pop(psp);
-		return opterror("=", version, catalog);
+		return opterror("=", version, catalog, 0);
 	}
 	else
 	{
@@ -4830,7 +4865,7 @@ optget(register char** argv, const char* oopts)
 		else
 		{
 			pop(psp);
-			return opterror(v, version, catalog);
+			return opterror(v, version, catalog, 0);
 		}
 		psp = pop(psp);
 		if (argv == opt_info.state->strv)
@@ -4840,7 +4875,7 @@ optget(register char** argv, const char* oopts)
 	if ((opt_info.arg = opthelp(NiL, v)) == (char*)unknown)
 	{
 		pop(psp);
-		return opterror(v, version, catalog);
+		return opterror(v, version, catalog, 0);
 	}
 	pop(psp);
 	return '?';

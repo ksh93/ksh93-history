@@ -131,6 +131,7 @@ struct match
 	char		*rval;
 	int		vsize;
 	int		nmatch;
+	int		lastsub;
 	int		match[2*(MATCH_MAX+1)];
 };
 
@@ -672,6 +673,7 @@ void sh_setmatch(const char *v, int vsize, int nmatch, int match[])
 		memcpy(mp->val,v,vsize);
 		mp->val[vsize] = 0;
 		nv_putsub(SH_MATCHNOD, NIL(char*), nmatch|ARRAY_FILL);
+		mp->lastsub = -1;
 	}
 } 
 
@@ -682,14 +684,16 @@ static char* get_match(register Namval_t* np, Namfun_t *fp)
 	struct match *mp = (struct match*)fp;
 	int sub,n;
 	char *val;
+	sub = nv_aindex(np);
+	if(sub>=mp->nmatch)
+		return(0);
+	if(sub==mp->lastsub)
+		return(mp->rval);
 	if(mp->rval)
 	{
 		free((void*)mp->rval);
 		mp->rval = 0;
 	}
-	sub = nv_aindex(np);
-	if(sub>=mp->nmatch)
-		return(0);
 	n = mp->match[2*sub+1]-mp->match[2*sub];
 	if(n<=0)
 		return("");
@@ -697,6 +701,7 @@ static char* get_match(register Namval_t* np, Namfun_t *fp)
 	if(mp->val[mp->match[2*sub+1]]==0)
 		return(val);
 	mp->rval = (char*)malloc(n+1);
+	mp->lastsub = sub;
 	memcpy(mp->rval,val,n);
 	mp->rval[n] = 0;
 	return(mp->rval);

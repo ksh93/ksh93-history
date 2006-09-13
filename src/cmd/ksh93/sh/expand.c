@@ -187,6 +187,8 @@ int path_expand(const char *pattern, struct argnod **arghead)
 		gp->gl_suffix = sufstr;
 	gp->gl_intr = &sh.trapnote; 
 	suflen = 0;
+	if(memcmp(pattern,"~(N",3)==0)
+		flags &= ~GLOB_NOCHECK;
 	glob(pattern, flags, 0, gp);
 #if SHOPT_BASH
 	if(off)
@@ -382,15 +384,19 @@ again:
 			for(; ap; ap=apin)
 			{
 				apin = ap->argchn.ap;
-				if(!sh_isoption(SH_NOGLOB) && (brace = path_expand(ap->argval,arghead)))
-					count += brace;
+				if(!sh_isoption(SH_NOGLOB))
+					brace = (brace=path_expand(ap->argval,arghead));
 				else
 				{
 					ap->argchn.ap = *arghead;
 					*arghead = ap;
-					count++;
+					brace=1;
 				}
-				(*arghead)->argflag |= ARG_MAKE;
+				if(brace)
+				{
+					count += brace;
+					(*arghead)->argflag |= ARG_MAKE;
+				}
 			}
 			return(count);
 	}

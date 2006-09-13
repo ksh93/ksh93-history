@@ -268,6 +268,8 @@ int hist_expand(const char *ln, char **xp)
 			if(c == '-')
 				n = -n;
 			break;
+		case '$':
+			n = -1;
 		case ':':
 			break;
 		case '?':

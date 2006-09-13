@@ -58,7 +58,7 @@ static Shnode_t	*list(int);
 static struct regnod	*syncase(int);
 static Shnode_t	*item(int);
 static Shnode_t	*simple(int, struct ionod*);
-static int		skipnl(void);
+static int	skipnl(int);
 static Shnode_t	*test_expr(int);
 static Shnode_t	*test_and(void);
 static Shnode_t	*test_or(void);
@@ -255,7 +255,7 @@ void	*sh_parse(Shell_t *shp, Sfio_t *iop, int flag)
 #if KSHELL
 	shp->nextprompt = 2;
 #endif
-	t = sh_cmd((flag&SH_EOF)?EOFSYM:'\n',SH_EMPTY|(flag&SH_NL));
+	t = sh_cmd((flag&SH_EOF)?EOFSYM:'\n',SH_SEMI|SH_EMPTY|(flag&SH_NL));
 	fcclose();
 	fcrestore(&sav_input);
 	shlex.arg = sav_arg;
@@ -388,7 +388,7 @@ static Shnode_t	*sh_cmd(register int sym, int flag)
 		/* FALL THRU */		
 	    case ';':
 		if(!left)
-			 sh_syntax();
+			sh_syntax();
 		if(right=sh_cmd(sym,flag|SH_EMPTY))
 			left=makelist(TLST, left, right);
 		break;
@@ -417,7 +417,7 @@ static Shnode_t	*list(register int flag)
 	register Shnode_t	*t = term(flag);
 	register int 	token;
 	while(t && ((token=shlex.token)==ANDFSYM || token==ORFSYM))
-		t = makelist((token==ANDFSYM?TAND:TORF), t, term(SH_NL));
+		t = makelist((token==ANDFSYM?TAND:TORF), t, term(SH_NL|SH_SEMI));
 	return(t);
 }
 
@@ -431,7 +431,7 @@ static Shnode_t	*term(register int flag)
 	register Shnode_t	*t;
 	register int token;
 	if(flag&SH_NL)
-		token = skipnl();
+		token = skipnl(flag);
 	else
 		token = sh_lex();
 	/* check to see if pipeline is to be timed */
@@ -443,9 +443,10 @@ static Shnode_t	*term(register int flag)
 			t->par.partyp |= COMSCAN;
 		t->par.partre = term(0);
 	}
-	else if((t=item(SH_NL|SH_EMPTY)) && shlex.token=='|')
+	else if((t=item(SH_NL|SH_EMPTY|(flag&SH_SEMI))) && shlex.token=='|')
 	{
 		register Shnode_t	*tt;
+		int showme = t->tre.tretyp&FSHOWME;
 		t = makeparent(TFORK|FPOU,t);
 		if(tt=term(SH_NL))
 		{
@@ -461,6 +462,7 @@ static Shnode_t	*term(register int flag)
 				tt= makeparent(TSETIO|FPIN|FPCL,tt);
 			}
 			t=makelist(TFIL,t,tt);
+			t->tre.tretyp |= showme;
 		}
 		else if(shlex.token)
 			sh_syntax();
@@ -473,7 +475,7 @@ static Shnode_t	*term(register int flag)
  */
 static struct regnod*	syncase(register int esym)
 {
-	register int tok = skipnl();
+	register int tok = skipnl(0);
 	register struct regnod	*r;
 	if(tok==esym)
 		return(NIL(struct regnod*));
@@ -481,7 +483,7 @@ static struct regnod*	syncase(register int esym)
 	r->regptr=0;
 	r->regflag=0;
 	if(tok==LPAREN)
-		skipnl();
+		skipnl(0);
 	while(1)
 	{
 		if(!shlex.arg)
@@ -495,7 +497,7 @@ static struct regnod*	syncase(register int esym)
 		else
 			sh_syntax();
 	}
-	r->regcom=sh_cmd(0,SH_NL|SH_EMPTY);
+	r->regcom=sh_cmd(0,SH_NL|SH_EMPTY|SH_SEMI);
 	if((tok=shlex.token)==BREAKCASESYM)
 		r->regnxt=syncase(esym);
 	else if(tok==FALLTHRUSYM)
@@ -584,7 +586,7 @@ static Shnode_t	*arithfor(register Shnode_t *tf)
 		tw->wh.whinc = 0;
 	sh_lexopen((Lex_t*)sh.lex_context, &sh,1);
 	if((n=sh_lex())==NL)
-		n = skipnl();
+		n = skipnl(0);
 	else if(n==';')
 		n = sh_lex();
 	if(n!=DOSYM && n!=LBRACE)
@@ -662,7 +664,7 @@ static Shnode_t *funct(void)
 #endif
 	}
 	if(t->funct.functtyp&FPOSIX)
-		skipnl();
+		skipnl(0);
 	else
 	{
 		if(shlex.token==0)
@@ -756,11 +758,7 @@ static struct argnod *assign(register struct argnod *ap)
 	int array=0;
 	Namval_t *np;
 	n = strlen(ap->argval)-1;
-#if SHOPT_COMPOUND_ARRAY
 	if(ap->argval[n]!='=')
-#else
-	if(ap->argval[n]!='=' || ap->argval[n-1]==']')
-#endif
 		sh_syntax();
 	if(ap->argval[n-1]=='+')
 	{
@@ -783,24 +781,27 @@ static struct argnod *assign(register struct argnod *ap)
 	ap->argflag |= array;
 	shlex.assignok = SH_ASSIGN;
 	array=0;
-	if((n=skipnl())==RPAREN || n==LPAREN)
+	if((n=skipnl(0))==RPAREN || n==LPAREN)
 	{
+		int index= 0;
+		struct argnod **settail;
 		ac = (struct comnod*)getnode(comnod);
+		settail= &ac->comset;
 		memset((void*)ac,0,sizeof(*ac));
 		ac->comline = sh_getlineno();
 		while(n==LPAREN)
 		{
-			int index= 1;
-			struct argnod *ap, **settail= &(ac->comset);
+			struct argnod *ap;
 			ap = (struct argnod*)stakseek(ARGVAL);
 			ap->argflag= ARG_ASSIGN;
 			sfprintf(stkstd,"[%d]=",index++);
 			ap = (struct argnod*)stakfreeze(1);
 			ap->argnxt.ap = 0;
 			ap = assign(ap);
+			ap->argflag |= ARG_MESSAGE;
 			*settail = ap;
 			settail = &(ap->argnxt.ap);
-			n = skipnl();
+			n = skipnl(0);
 		}
 	}
 	else if(n)
@@ -820,7 +821,7 @@ static struct argnod *assign(register struct argnod *ap)
 		if(n!=NL && n!=';')
 			sh_syntax();
 		shlex.assignok = SH_ASSIGN;
-		if((n=skipnl()) || array)
+		if((n=skipnl(0)) || array)
 		{
 			if(n==RPAREN)
 				break;
@@ -869,6 +870,7 @@ static Shnode_t	*item(int flag)
 	register int tok = (shlex.token&0xff);
 	int savwdval = shlex.lasttok;
 	int savline = shlex.lastline;
+	int showme=0;
 	if(!(flag&SH_NOIO) && (tok=='<' || tok=='>'))
 		io=inout(NIL(struct ionod*),1);
 	else
@@ -904,7 +906,7 @@ static Shnode_t	*item(int flag)
 		t->sw.swio = 0;
 		t->sw.swtyp |= FLINENO;
 		t->sw.swline =  sh.inlineno;
-		if((tok=skipnl())!=INSYM && tok!=LBRACE)
+		if((tok=skipnl(0))!=INSYM && tok!=LBRACE)
 			sh_syntax();
 		if(!(t->sw.swlst=syncase(tok==INSYM?ESACSYM:RBRACE)) && shlex.token==EOFSYM)
 		{
@@ -922,9 +924,9 @@ static Shnode_t	*item(int flag)
 		t = getnode(ifnod);
 		t->if_.iftyp=TIF;
 		t->if_.iftre=sh_cmd(THENSYM,SH_NL);
-		t->if_.thtre=sh_cmd(ELSESYM,SH_NL);
+		t->if_.thtre=sh_cmd(ELSESYM,SH_NL|SH_SEMI);
 		tok = shlex.token;
-		t->if_.eltre=(tok==ELSESYM?sh_cmd(FISYM,SH_NL):
+		t->if_.eltre=(tok==ELSESYM?sh_cmd(FISYM,SH_NL|SH_SEMI):
 			(tok==ELIFSYM?(shlex.token=IFSYM, tt=item(SH_NOIO)):0));
 		if(tok==ELIFSYM)
 		{
@@ -983,7 +985,7 @@ static Shnode_t	*item(int flag)
 				t->for_.forlst=(struct comnod*)simple(SH_NOIO,NIL(struct ionod*));
 			if(shlex.token != NL && shlex.token !=';')
 				sh_syntax();
-			tok = skipnl();
+			tok = skipnl(0);
 		}
 		/* 'for i;do cmd' is valid syntax */
 		else if(tok==';')
@@ -991,7 +993,7 @@ static Shnode_t	*item(int flag)
 		if(tok!=DOSYM && tok!=LBRACE)
 			sh_syntax();
 		loop_level++;
-		t->for_.fortre=sh_cmd(tok==DOSYM?DONESYM:RBRACE,SH_NL);
+		t->for_.fortre=sh_cmd(tok==DOSYM?DONESYM:RBRACE,SH_NL|SH_SEMI);
 		if(--loop_level==0)
 			label_last = label_list;
 		break;
@@ -1023,7 +1025,7 @@ static Shnode_t	*item(int flag)
 		t->wh.whtyp=(shlex.token==WHILESYM ? TWH : TUN);
 		loop_level++;
 		t->wh.whtre = sh_cmd(DOSYM,SH_NL);
-		t->wh.dotre = sh_cmd(DONESYM,SH_NL);
+		t->wh.dotre = sh_cmd(DONESYM,SH_NL|SH_SEMI);
 		if(--loop_level==0)
 			label_last = label_list;
 		t->wh.whinc = 0;
@@ -1042,7 +1044,7 @@ static Shnode_t	*item(int flag)
 		label_list = shlex.arg;
 		label_list->argchn.len = sh_getlineno();
 		label_list->argflag = loop_level;
-		skipnl();
+		skipnl(flag);
 		if(!(t = item(SH_NL)))
 			sh_syntax();
 		tok = (t->tre.tretyp&(COMSCAN|COMSCAN-1));
@@ -1066,9 +1068,20 @@ static Shnode_t	*item(int flag)
 		if(io==0)
 			return(0);
 
+	    case ';':
+		if(io==0)
+		{
+			if(!(flag&SH_SEMI))
+				return(0);
+			if(sh_lex()==';')
+				sh_syntax();
+			showme =  FSHOWME;
+		}
 	    /* simple command */
 	    case 0:
-		return((Shnode_t*)simple(flag,io));
+		t = (Shnode_t*)simple(flag,io);
+		t->tre.tretyp |= showme;
+		return(t);
 	}
 	sh_lex();
 	if(io=inout(io,0))
@@ -1309,11 +1322,11 @@ static Shnode_t *simple(int flag, struct ionod *io)
 /*
  * skip past newlines but issue prompt if interactive
  */
-static int	skipnl(void)
+static int	skipnl(int flag)
 {
 	register int token;
 	while((token=sh_lex())==NL);
-	if(token==';')
+	if(token==';' && !(flag&SH_SEMI))
 		sh_syntax();
 	return(token);
 }
@@ -1407,6 +1420,8 @@ static struct ionod	*inout(struct ionod *lastio,int flag)
 			shlex.heredoc=iop;
 			if(shlex.arg->argflag&ARG_QUOTED)
 				iof |= IOQUOTE;
+			if(shlex.digits==3)
+				iof |= IOLSEEK;
 			if(shlex.digits)
 				iof |= IOSTRIP;
 		}
@@ -1563,13 +1578,13 @@ static Shnode_t *test_primary(void)
 	register struct argnod *arg;
 	register Shnode_t *t;
 	register int num,token;
-	token = skipnl();
+	token = skipnl(0);
 	num = shlex.digits;
 	switch(token)
 	{
 	    case '(':
 		t = test_expr(')');
-		t = makelist(TTST|TTEST|TPAREN ,t, (Shnode_t*)sh.inlineno);
+		t = makelist(TTST|TTEST|TPAREN ,t, (Shnode_t*)pointerof(sh.inlineno));
 		break;
 	    case '!':
 		if(!(t = test_primary()))
@@ -1651,7 +1666,7 @@ static Shnode_t *test_primary(void)
 	    default:
 		return(0);
 	}
-	skipnl();
+	skipnl(0);
 	return(t);
 }
 

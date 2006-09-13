@@ -2034,7 +2034,11 @@ grp(Cenv_t* env, int parno)
 	case 'E':
 	case 'F':
 	case 'G':
+	case 'I':
 	case 'K':
+	case 'M':
+	case 'N':
+	case 'R':
 	case 'S':
 	case 'U':	/* pcre */
 	case 'X':	/* pcre */
@@ -2143,6 +2147,15 @@ grp(Cenv_t* env, int parno)
 				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_LITERAL|REG_SHELL|REG_LEFT|REG_RIGHT);
 				env->flags |= REG_AUGMENTED|REG_SHELL|REG_LEFT|REG_RIGHT;
 				typ = KRE;
+				break;
+			case 'M':
+				/* used by caller to disable glob(3) GLOB_BRACE */
+				break;
+			case 'N':
+				/* used by caller to disable glob(3) GLOB_NOCHECK */
+				break;
+			case 'R':
+				/* used by caller to disable glob(3) GLOB_STARSTAR */
 				break;
 			case 'S':
 				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_LITERAL|REG_SHELL|REG_LEFT|REG_RIGHT);

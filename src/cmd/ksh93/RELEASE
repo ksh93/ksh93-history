@@ -1,4 +1,20 @@
-06-07-21  --- Release ksh93r+  ---
+06-09-08  --- Release ksh93s-  ---
+06-09-97  The -a option was added to typeset for indexed arrays.  This
+	  is only needed when using the ([subscript]=value ...) form.
+06-08-16  As a new feature, a leading ~(N) on a pattern has no effect 
+	  except when used for file expansion.  In this case if not
+	  matches are found, the pattern is replaced by nothing rathern
+	  than itself.
+06-08-11  A bug in the expansion of ${.sh.match[i]:${#.shmatch[i]}} has
+	  been fixed.
+06-08-10  The read builtin options -n and -N have been modified to treat
+          the size as characters rather than bytes unless storing into a
+	  binary (typeset -B) variable.
+06-07-27  When the here document operator << is followed directly by a #
+	  rather than a -, the first line of the here-document determines
+	  how much whitespace is removed for each line.
+06-07-26  A bug in the C-shell history (enabled with set -H) in which the
+	  history event !$ was not processed has been fixed.
 06-07-21  A bug on some systems in which assigning PATH on a command line
 	  would not take effect has been fixed.
 06-07-20  Add ksh93 and rksh93 as allowable names for ksh binaries.

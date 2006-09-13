@@ -105,4 +105,19 @@ do	((Line++))
 	#print -r -- "	'$pattern'			'$got' \\"
 done
 
+# ~(N) no expand glob pattern option
+set -- ~(N)/dev/null
+[[ $# == 1 && $1 == /dev/null ]] || err_exit "~(N)/dev/null not matching /dev/null"
+set -- ~(N)/dev/non_existant_file
+[[ $# == 0  ]] || err_exit "~(N)/dev/nonexistant not empty"
+set -- ""~(N)/dev/non_existant_file
+[[ $# == 1  && ! $1 ]] || err_exit '""~(N)/dev/nonexistant not null argument'
+set -- ~(N)/dev/non_existant_file""
+[[ $# == 1  && ! $1 ]] || err_exit '~(N)/dev/nonexistent"" not null argument'
+for i in ~(N)/dev/non_existent_file
+do	err_exit "~(N)/dev/non_existent_file in for loop is $i"
+done
+for i in ""~(N)/dev/non_existent_file
+do	[[ ! $i ]] || err_exit '""~(N)/dev/non_existent_file not null'
+done
 exit $((Errors))

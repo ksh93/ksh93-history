@@ -51,6 +51,20 @@ while getopts 'ab' option -a -b
 do	[[ $OPTIND == $((OPTIND)) ]] || err_exit "OPTIND optimization bug"
 done
 
+USAGE=$'[-][S:server?Operate on the specified \asubservice\a:]:[subservice:=pmserver]
+    {
+        [p:pmserver]
+        [r:repserver]
+        [11:notifyd]
+    }'
+set pmser p rep r notifyd -11
+while	(( $# > 1 ))
+do	OPTIND=1
+	getopts "$USAGE" OPT -S $1
+	[[ $OPT == S && $OPTARG == $2 ]] || err_exit "OPT=$OPT OPTARG=$OPTARG -- expected OPT=S OPTARG=$2"
+	shift 2
+done
+
 false ${foo=bar} &&  err_exit "false failed"
 read <<!
 hello world
@@ -407,4 +421,11 @@ fi
 	done) == $'0\n0\n1\n1\n2' ]]  || err_exit  "DEBUG trap not working"
 getconf UNIVERSE - ucb
 [[ $($SHELL -c 'echo -3') == -3 ]] || err_exit "echo -3 not working in ucb universe"
+typeset -F3 start_x=SECONDS total_t
+for (( i=0 ; i < 50 ; i++)) 
+do	{ sleep 2;date ;} 2> /dev/null | read -N1 -t .02
+done
+((total_t = SECONDS - start_x))
+(( total_t > 2.0 )) && err_exit "read -t in pipe taking $total_t secs - too long" 
+(( total_t < 1.0 )) &&  err_exit "read -t in pipe taking $total_t secs - too fast" 
 exit $((Errors))

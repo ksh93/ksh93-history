@@ -2,24 +2,25 @@
 .\" David Korn
 .\" AT&T Bell Laboratories
 .\"
-.\" @(#)sh.1 (research!dgk) 12/28/93
+.\" @(#)sh.1 (dgk@research.att.com) 12/28/93
 .\"
-.nr Z 1 \" set to 1 when command name is ksh rather than sh
-.nr Y 0 \" set to 1 for R&D UNIX
-.if \nY=1 .nr Z 1
+.nr Z 1 \" set to 1 when command name is ksh, 2 for ksh93
 .ds OK [\|
 .ds CK \|]
 .ds ' \s+4\v@.3m@\'\v@-.3m@\s-4
 .ds ` \s+4\v@.3m@\`\v@-.3m@\s-4
 .if \nZ=0 .TH SH 1
 .if \nZ=1 .TH KSH 1 "User Environment Utilities" "RDS Standard"
+.if \nZ=2 .TH KSH93 1
 .SH NAME
 .if \nZ=0 sh, rsh, pfsh \- shell, the
 .if \nZ=1 ksh, rksh, pfksh \- KornShell, a
+.if \nZ=2 ksh93, rksh93, pfksh93 \- KornShell, a
 standard/restricted command and programming language
 .SH SYNOPSIS
 .if \nZ=0 .B sh
 .if \nZ=1 .B ksh
+.if \nZ=2 .B ksh93
 [
 .B \(+-abcefhikmnoprstuvxBCDP
 ] [
@@ -32,6 +33,7 @@ option ] .\|.\|. [
 .br
 .if \nZ=0 .B rsh
 .if \nZ=1 .B rksh
+.if \nZ=1 .B rksh93
 [
 .B \(+-abcefhikmnoprstuvxBCD
 ] [
@@ -44,25 +46,30 @@ option ] .\|.\|.  [
 .SH DESCRIPTION
 .if \nZ=0 .I Sh\^
 .if \nZ=1 .I Ksh\^
+.if \nZ=2 .I Ksh93\^
 is a command and programming language
 that executes commands read from a terminal
 or a file.
 .if \nZ=0 .I Rsh\^
 .if \nZ=1 .I Rksh\^
+.if \nZ=2 .I Rksh93\^
 is a restricted version of the 
 .if \nZ=0 standard 
 command interpreter
 .if \nZ=0 .IR sh ;
 .if \nZ=1 .IR ksh ;
+.if \nZ=2 .IR ksh93 ;
 it is used to set up login names and execution environments whose
 capabilities are more controlled than those of the standard shell.
 .if \nZ=0 .I Rpfsh\^
 .if \nZ=1 .I Rpfksh\^
+.if \nZ=2 .I Rpfksh93\^
 is a profile shell version of the
 .if \nZ=0 standard
 command interpreter
 .if \nZ=0 .IR sh ;
 .if \nZ=1 .IR ksh ;
+.if \nZ=2 .IR ksh93 ;
 it is used to to execute commands with the attributes specified by
 the user's profiles (see
 .IR pfexec (1)).
@@ -258,6 +265,27 @@ One or more new-lines may appear in a
 .I list\^
 instead of a semicolon,
 to delimit a command.
+The first
+.I item \^
+of the first
+.I pipeline\^
+of a
+.I list\^
+that is a simple command not beginning
+with a redirection, and not occuring within a
+.BR while ,
+.BR until ,
+or
+.B if
+.IR list ,
+can be prededed by a semicolon.
+This semicolon
+is ignored unless the
+.B showme
+option is enabled as described with
+the
+.B set
+built-in below.
 .PP
 A
 .I command\^
@@ -738,9 +766,8 @@ below).
 If it does, then the word up to a
 .B /
 is checked to see if it matches a user name in the
-password database (often the
-.B /etc/passwd
-file).
+password database (See
+.IR getpwname (3).)
 If a match is found, the
 .B \(ap
 and the matched login name are replaced by the
@@ -784,14 +811,6 @@ The
 also terminates a
 .B \(ap
 login name.
-.if \nY=1 \{.PP 
-On R&D UNIX Systems with RFS, an additional capability,
-.BR \(aphost!user ,
-has been added to 
-.IR ksh .
-See
-.IR logdir (1)
-for a complete description of the capability.\}
 .SS Command Substitution.
 The standard output from a command enclosed in
 parentheses preceded by a dollar sign (
@@ -1860,6 +1879,7 @@ The user may not change
 if executing under
 .if \nZ=0 .B rsh
 .if \nZ=1 .B rksh
+.if \nZ=2 .B rksh93
 (except in
 .BR .profile\^).
 .TP
@@ -2203,7 +2223,10 @@ that matches the pattern
 from
 that directory.
 If no file name is found that matches the pattern, then
-that component of the filename is left unchanged.
+that component of the filename is left unchanged unless
+the pattern is prefixed with
+.B \(ap(N)\fP
+in which case it is removed as described below.
 If
 .SM
 .B FIGNORE
@@ -2484,6 +2507,11 @@ command.
 .B K
 The remainder of the pattern uses shell pattern syntax.
 This is the default.
+.TP
+.B N
+This is ignored.  However, when it is the first letter and is
+used with file name generation, and no matches occur,
+the file pattern expands to the empty string.
 .TP
 .B i
 Treat the match as case insensitive.
@@ -3180,6 +3208,16 @@ is appended to
 then all leading tabs are stripped from
 .I word\^
 and from the document.
+If
+.B #
+is appended to
+.BR << ,
+then leading spaces and tabs will be stripped off the first
+line of the document and up to an equivalent indentation will
+be stripped from the remaining lines and from
+.IR word .
+A tab stop is assumend to occur at every 8 columns for the
+purposes of determining the indentation.
 .TP
 \f3<<<\fP\f2word\fP
 A short form of here document in which \f2word\fP becomes the
@@ -3807,7 +3845,7 @@ The text of the last
 .B
 .SM
 HISTSIZE
-(default 128)
+(default 512)
 commands entered from a terminal device
 is saved in a
 .I history
@@ -5217,6 +5255,7 @@ The
 command may not be executed by
 .if \nZ=0 .B rsh\^.
 .if \nZ=1 .B rksh\^.
+.if \nZ=1 .B rksh93\^.
 .TP
 \f3command\fP \*(OK \f3\-pvxV\fP \*(CK \f2name\^\fP \*(OK \f2arg\^\fP .\|.\|. \*(CK
 Without the
@@ -6237,6 +6276,16 @@ of the pipeline have completed, and the return value
 will be the value of the last non-zero command
 to fail or zero of no command has failed.
 .TP 8
+.B showme
+When enabled, simple commands or pipelines preceded by a a semicolon
+.RB ( ; )
+will be displayed as if the
+.B xtrace
+option were enabled but will not be executed.
+Otherwise, the leading
+.B ;
+will be ignored.
+.TP 8
 .B privileged
 Same as
 .BR \-p .
@@ -7073,14 +7122,18 @@ as the first argument is ignored.
 .I Rsh\}
 .if \nZ=1 \{.SS Rksh Only.
 .I Rksh\}
+.if \nZ=2 \{.SS Rksh93 Only.
+.I Rksh93\}
 is used to set up login names and execution environments whose
 capabilities are more controlled than those of the standard shell.
 The actions of
 .if \nZ=0 .B rsh\^
 .if \nZ=1 .B rksh\^
+.if \nZ=2 .B rksh93\^
 are identical to those of
 .if \nZ=0 .BR sh\^ ,
 .if \nZ=1 .BR ksh\^ ,
+.if \nZ=2 .BR ksh93\^ ,
 except that the following are disallowed:
 .RS
 .PD 0
@@ -7133,6 +7186,9 @@ invokes
 .if \nZ=1 \{.B rksh\^
 invokes
 .I ksh\^\}
+.if \nZ=2 \{.B rksh93\^
+invokes
+.I ksh93\^\}
 to execute it.
 Thus, it is possible to provide to the end-user shell procedures
 that have access to the full power of
@@ -7157,6 +7213,7 @@ of commands
 that can be safely invoked by
 .if \nZ=0 .BR rsh .
 .if \nZ=1 .BR rksh .
+.if \nZ=2 .BR rksh93 .
 .SH EXIT STATUS
 Errors detected by the shell, such as syntax errors,
 cause the shell
@@ -7176,17 +7233,37 @@ then the line number is also printed in square brackets
 .RB ( "[]" )
 after the command or function name.
 .SH FILES
-/etc/passwd
-.br
 /etc/profile
-.br
-/etc/suid_profile
+The system wide initialization file, executed for login shells.
+.RE
+.if \nZ=2 \{.br
+/etc/ksh.kshrc
+.RS
+The system wide startup file, executed for interactive shells.
+.RE\}
 .br
 \s-1$HOME\s+1/\f3.\fPprofile
+.RS
+The personal initialization file, executed for login shells after /etc/profile.
+.RE
 .br
-/tmp/sh\(**
+\s-1$HOME\s+1/\f3.\fP.kshrc
+.RS
+Default personal initialization file, executed for interactive shells when
+.SM
+.B ENV
+is not set.
+.RE
+.br
+/etc/suid_profile
+.RS
+Alternative initialization file, executed when instead of personal initialization file when the real and effective user or group id do not match.
+.RE
 .br
 /dev/null
+.RS
+NULL device
+.RE
 .SH SEE ALSO
 cat(1),
 cd(1),
@@ -7208,6 +7285,7 @@ vi(1),
 dup(2),
 exec(2),
 fork(2),
+getpwnam(3),
 ioctl(2),
 lseek(2),
 paste(1),

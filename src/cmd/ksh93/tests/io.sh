@@ -226,6 +226,7 @@ $SHELL -ic '
 exitval=$?
 (( exitval ))  && err_exit  "print to unit $exitval failed"
 trap 'rm -rf /tmp/io.sh$$*' EXIT
-$SHELL -c "{ > /tmp/io.sh$$.1 ; date;} >&-" > /tmp/io.sh$$.2
+$SHELL -c "{ > /tmp/io.sh$$.1 ; date;} >&- 2> /dev/null" > /tmp/io.sh$$.2
 [[ -s /tmp/io.sh$$.1 || -s /tmp/io.sh$$.2 ]] && err_exit 'commands with standard output closed produce output'
+$SHELL -c "$SHELL -c ': 3>&1' 1>&- 2>/dev/null" && err_exit 'closed standard output not passed to subshell'
 exit $((Errors))

@@ -200,6 +200,9 @@ int    b_typeset(int argc,register char *argv[],void *extra)
 	{
 		switch(n)
 		{
+			case 'a':
+				flag |= NV_IARRAY;
+				break;
 			case 'A':
 				flag |= NV_ARRAY;
 				break;
@@ -414,6 +417,14 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 				nv_settype(np,tp->tp,tp->aflag=='-'?0:NV_APPEND);
 				flag = (np->nvflag&NV_NOCHANGE);
 			}
+			if(troot==shp->var_tree && (flag&NV_IARRAY))
+			{
+				flag &= ~NV_IARRAY;
+				if(nv_isnull(np))
+					nv_onattr(np,NV_ARRAY);
+				else
+					nv_putsub(np, (char*)0, 0);
+			}
 			if(troot==shp->var_tree && (nvflags&NV_ARRAY))
 				nv_setarray(np,nv_associative);
 			curflag = np->nvflag;
@@ -569,7 +580,7 @@ int	b_builtin(int argc,char *argv[],void *extra)
 	register char *arg=0, *name;
 	register int n, r=0, flag=0;
 	register Namval_t *np;
-	int dlete=0;
+	long dlete=0;
 	struct tdata tdata;
 	Fptr_t addr;
 	void *library=0;
@@ -647,7 +658,7 @@ int	b_builtin(int argc,char *argv[],void *extra)
 			/* (char*) added for some sgi-mips compilers */ 
 			if(dlete || (addr = (Fptr_t)dlllook(liblist[n],stakptr(flag))))
 			{
-				if(np = sh_addbuiltin(arg, addr,(void*)dlete))
+				if(np = sh_addbuiltin(arg, addr,pointerof(dlete)))
 				{
 					if(dlete || nv_isattr(np,BLT_SPC))
 						errmsg = "restricted name";

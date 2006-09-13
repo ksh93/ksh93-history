@@ -35,7 +35,7 @@
 #include	"history.h"
 #include	"builtins.h"
 #include	"streval.h"
-#include	<tm.h>
+#include	<tmx.h>
 #include	<ctype.h>
 #include	<ccode.h>
 
@@ -384,6 +384,14 @@ static char strformat(char *s)
 			if(*s==0)
 				break;
                         c = chresc(s - 1, &p);
+                        s = p;
+#if SHOPT_MULTIBYTE
+			if(c>UCHAR_MAX && mbwide())
+			{
+				t += wctomb(t, c);
+				continue;
+			}
+#endif /* SHOPT_MULTIBYTE */
 			if(c=='%')
 				*t++ = '%';
 			else if(c==0)
@@ -391,7 +399,6 @@ static char strformat(char *s)
 				*t++ = '%';
 				c = 'Z';
 			}
-                        s = p;
                         break;
                     case 0:
                         *t = 0;
@@ -570,7 +577,7 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 			break;
 		case 'T':
 			fe->fmt = 'd';
-			value->ll = time(NIL(time_t*));
+			value->ll = tmxgettime();
 			break;
 		default:
 			if(!strchr("DdXxoUu",format))
@@ -702,7 +709,7 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 			value->ll = (Sflong_t)strelapsed(*pp->nextarg,&lastchar,1);
 			break;
 		case 'T':
-			value->ll = (Sflong_t)tmdate(*pp->nextarg,&lastchar,NIL(time_t*));
+			value->ll = (Sflong_t)tmxdate(*pp->nextarg,&lastchar,TMX_NOW);
 			break;
 		default:
 			value->ll = 0;
@@ -775,10 +782,10 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 		{
 			n = fe->t_str[fe->n_str];
 			fe->t_str[fe->n_str] = 0;
-			value->s = fmttime(fe->t_str, value->ll);
+			value->s = fmttmx(fe->t_str, value->ll);
 			fe->t_str[fe->n_str] = n;
 		}
-		else value->s = fmttime(NIL(char*), value->ll);
+		else value->s = fmttmx(NIL(char*), value->ll);
 		fe->fmt = 's';
 		fe->size = -1;
 		break;

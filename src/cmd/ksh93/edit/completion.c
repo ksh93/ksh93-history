@@ -235,7 +235,7 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 		if(*begin=='~' && !strchr(begin,'/'))
 			addstar = 0;
 		stakputc(addstar);
-		stakfreeze(1);
+		ap = (struct argnod*)stakfreeze(1);
 	}
 	if(mode!='*')
 		sh_onoption(SH_MARKDIRS);
@@ -352,8 +352,6 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 			out = strcopy(begin,*com++);
 		if(mode=='\\')
 		{
-			if(var!='$' && addstar==0)
-				*out++ = '/';
 			saveout= ++out;
 			while (*com && *begin)
 			{

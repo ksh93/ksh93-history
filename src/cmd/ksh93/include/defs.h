@@ -35,6 +35,10 @@
 #include	"fault.h"
 #include	"argnod.h"
 
+#ifndef pointerof
+#define pointerof(x)		((void*)((char*)0+(x)))
+#endif
+
 #define	env_change()		(++ast.env_serial)
 #if SHOPT_ENV
 #   include	<env.h>
@@ -290,6 +294,7 @@ extern void 		sh_envnolocal(Namval_t*,void*);
 extern Sfdouble_t	sh_arith(const char*);
 extern void		*sh_arithcomp(char*);
 extern pid_t 		sh_fork(int,int*);
+extern pid_t		_sh_fork(pid_t, int ,int*);
 extern char 		*sh_mactrim(char*,int);
 extern int 		sh_macexpand(struct argnod*,struct argnod**,int);
 extern void 		sh_machere(Sfio_t*, Sfio_t*, char*);

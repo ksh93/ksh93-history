@@ -26,21 +26,9 @@
 
 #include <ast_lib.h>
 
-#if _lib_fnmatch && 0
-
-#include <ast.h>
-
-NoN(fnmatch)
-
-#else
-
-#define fnmatch		______fnmatch
-
 #include <ast.h>
 #include <regex.h>
 #include <fnmatch.h>
-
-#undef	fnmatch
 
 typedef struct
 {
@@ -89,5 +77,3 @@ fnmatch(const char* pattern, const char* subject, register int flags)
 	}
 	return reflags;
 }
-
-#endif

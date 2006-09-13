@@ -200,10 +200,10 @@ static const char sh_lexstate4[256] =
 static const char sh_lexstate5[256] =
 {
 	S_EOF,	0,	0,	0,	0,	0,	0,	0,
-	0,	0,	S_NL,	0,	0,	0,	0,	0,
+	0,	S_BLNK,	S_NL,	0,	0,	0,	0,	0,
 	0,	0,	0,	0,	0,	0,	0,	0,
 	0,	0,	0,	0,	0,	0,	0,	0,
-	0,	0,	S_QUOTE,0,	S_DOL,	0,	S_META,	S_LIT,
+	S_BLNK,	0,	S_QUOTE,0,	S_DOL,	0,	S_META,	S_LIT,
 	S_PUSH,	S_POP,	0,	0,	0,	0,	0,	0,
 	0,	0,	0,	0,	0,	0,	0,	0,
 	0,	0,	0,	S_POP,	S_META,	0,	S_META,	0,
@@ -228,15 +228,15 @@ static const char sh_lexstate6[256] =
 	S_ERR,	S_ERR,	S_ERR,	S_ERR,	S_ERR,	S_ERR,	S_ERR,	S_ERR,
 
 	S_ERR,	S_SPC1,	S_ERR,	S_SPC1,	S_SPC2,	S_ERR,	S_ERR,	S_LIT,
-#if SHOPT_OO
-	S_PAR,	S_ERR,	S_SPC2,	S_ERR,	S_ERR,	S_SPC1,	S_ALP,	S_ERR,
-#else
 	S_PAR,	S_ERR,	S_SPC2,	S_ERR,	S_ERR,	S_SPC2,	S_ALP,	S_ERR,
-#endif /* SHOPT_OO */
 	S_DIG,	S_DIG,	S_DIG,	S_DIG,	S_DIG,	S_DIG,	S_DIG,	S_DIG,
 	S_DIG,	S_DIG,	S_ERR,	S_ERR,	S_ERR,	S_ERR,	S_ERR,	S_SPC2,
 
+#if SHOPT_TYPEDEF
+	S_SPC1,	S_ALP,	S_ALP,	S_ALP,	S_ALP,	S_ALP,	S_ALP,	S_ALP,
+#else
 	S_SPC2,	S_ALP,	S_ALP,	S_ALP,	S_ALP,	S_ALP,	S_ALP,	S_ALP,
+#endif
 	S_ALP,	S_ALP,	S_ALP,	S_ALP,	S_ALP,	S_ALP,	S_ALP,	S_ALP,
 	S_ALP,	S_ALP,	S_ALP,	S_ALP,	S_ALP,	S_ALP,	S_ALP,	S_ALP,
 	S_ALP,	S_ALP,	S_ALP,	S_ERR,	S_ERR,	S_ERR,	S_ERR,	S_ALP,

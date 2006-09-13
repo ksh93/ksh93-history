@@ -88,7 +88,7 @@ hashlook(register Hash_table_t* tab, const char* name, long flags, const char* v
 		if (flags & HASH_BUCKET) n = last->bucket->hash;
 		else if (tab->flags & HASH_HASHED)
 		{
-			n = (unsigned int)name;
+			n = (unsigned int)integralof(name);
 			if (!(flags & HASH_HASHED)) n >>= 3;
 		}
 		else if (flags & HASH_HASHED) n = *((unsigned int*)value);
@@ -297,7 +297,7 @@ hashlook(register Hash_table_t* tab, const char* name, long flags, const char* v
 		else if (!(n = HASH_SIZEOF(flags)))
 		{
 			if (!(flags & HASH_FIXED)) n = m;
-			else if ((n = (int)value) < m) n = m;
+			else if ((n = (int)integralof(value)) < m) n = m;
 		}
 		else if (n < m) n = m;
 		if (!prev && (tab->flags & HASH_ALLOCATE))
@@ -355,7 +355,7 @@ hashlook(register Hash_table_t* tab, const char* name, long flags, const char* v
 	{
 	case HASH_CREATE|HASH_VALUE:
 		if (tab->root->local->free && !(tab->root->flags & HASH_BUCKET) && b->value) (*tab->root->local->free)(b->value);
-		if (value && tab->root->local->alloc) value = (*tab->root->local->alloc)((unsigned int)value);
+		if (value && tab->root->local->alloc) value = (*tab->root->local->alloc)((unsigned int)integralof(value));
 		b->value = (char*)value;
 		return((char*)hashname(b));
 	case HASH_VALUE:

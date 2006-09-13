@@ -101,6 +101,7 @@ const Shtable_t shtab_options[] =
 	"restricted",			SH_RESTRICTED,
 	bashopt("restricted_shell",	SH_RESTRICTED2|SH_COMMANDLINE)
 	bashopt("shift_verbose",	SH_SHIFT_VERBOSE)
+	"showme",			SH_SHOWME,
 	bashopt("sourcepath",		SH_SOURCEPATH)
 	"trackall",			SH_TRACKALL,
 	"nounset",			SH_NOUNSET,
@@ -132,7 +133,8 @@ const Shtable_t shtab_attributes[] =
 	{"-Lleftjust",	NV_LJUST},
 	{"-Rrightjust",	NV_RJUST},
 	{"-uuppercase",	NV_LTOU},
-	{"-Aarray",	NV_ARRAY},
+	{"-Aassociative array",	NV_ARRAY},
+	{"-aindexed array",	NV_ARRAY},
 	{"++namespace",	NV_TABLE},
 	{"",		0}
 };

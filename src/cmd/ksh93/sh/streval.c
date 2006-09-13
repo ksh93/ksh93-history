@@ -739,14 +739,9 @@ again:
 				}
 				else
 					d = chresc(pos+1,(char**)&vp->nextchr);
+				/* posix allows the trailing ' to be optional */
 				if(*vp->nextchr=='\'')
 					vp->nextchr++;
-				else
-				{
-					vp->nextchr = pos;
-					vp->errmsg.value = "invalid character constant";
-				}
-
 			}
 			else
 				d = (*vp->convert)(&vp->nextchr, &lvalue, LOOKUP, d);

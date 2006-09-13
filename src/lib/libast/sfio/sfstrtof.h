@@ -114,6 +114,8 @@
 
 #define S2F_batch	_ast_flt_unsigned_max_t
 
+#undef	ERR		/* who co-opted this namespace? */
+
 #if S2F_scan
 
 typedef int (*S2F_get_f)_ARG_((void*, int));

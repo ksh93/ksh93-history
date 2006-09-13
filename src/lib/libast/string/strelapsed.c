@@ -62,6 +62,8 @@ strelapsed(register const char* s, char** e, int n)
 			t = ~t;
 			last = s;
 		}
+		else
+			s--;
 		if (s == last)
 			break;
 		if (!p)
@@ -101,17 +103,16 @@ strelapsed(register const char* s, char** e, int n)
 			else
 				v *= 60;
 			break;
-		case 0:
-			s--;
-			/*FALLTHROUGH*/
 		case 's':
 			if (*s == 'c')
-				v *= 20 * 12 * 4 * 7 * 24 * 60 * 60;
-			else
 			{
-				v += f;
-				f = 0;
+				v *= 20 * 12 * 4 * 7 * 24 * 60 * 60;
+				break;
 			}
+			/*FALLTHROUGH*/
+		case 0:
+			v += f;
+			f = 0;
 			break;
 		default:
 			if (p)

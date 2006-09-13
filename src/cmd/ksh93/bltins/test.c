@@ -38,14 +38,7 @@
 #include	"builtins.h"
 #include	"FEATURE/externs"
 #include	"FEATURE/poll"
-#include	<tm.h>
-#if TM_VERSION >= 20041201L
 #include	<tmx.h>
-#else
-typedef unsigned long Time_t;
-#define tmxgetatime(s)	((s)->st_atime)
-#define tmxgetmtime(s)	((s)->st_mtime)
-#endif
 
 #ifndef _lib_setregid
 #   undef _lib_setreuid

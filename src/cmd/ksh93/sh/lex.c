@@ -45,8 +45,10 @@
 #include	"lexstates.h"
 #include	"io.h"
 
+#define TEST_RE		3
 #define SYNBAD		3	/* exit value for syntax errors */
 #define STACK_ARRAY	3	/* size of depth match stack growth */
+#undef	isblank
 #define isblank(c)	(c==' ' || c=='\t')
 
 /*
@@ -353,10 +355,10 @@ int sh_lex(void)
 	}
 	else if(lexd.docword)
 	{
-		if(fcgetc(c)=='-')
+		if(fcgetc(c)=='-' || c=='#')
 		{
 			lexd.docword++;
-			shlex.digits=1;
+			shlex.digits=(c=='#'?3:1);
 		}
 		else if(c=='<')
 		{
@@ -509,6 +511,16 @@ int sh_lex(void)
 				{
 					lex.comp_assign = 0;
 					return(shlex.token='\n');
+				}
+			case S_BLNK:
+				if(lex.incase<=TEST_RE)
+					continue;
+				/* implicit RPAREN for =~ test operator */
+				if(inlevel+1==lexd.level)
+				{
+					fcseek(-1);
+					c = RPAREN;
+					goto do_pop;
 				}
 				continue;
 			case S_OP:
@@ -863,9 +875,9 @@ int sh_lex(void)
 							poplevel();
 						}
 						break;
-#if SHOPT_OO
-					case '-':
-#endif /* SHOPT_OO */
+#if SHOPT_TYPEDEF
+					case '@':
+#endif /* SHOPT_TYPEDEF */
 					case '!':
 						if(n!=S_ALP)
 							goto dolerr;
@@ -992,6 +1004,7 @@ int sh_lex(void)
 				mode = ST_NESTED;
 				continue;
 			case S_POP:
+			do_pop:
 				if(lexd.level <= inlevel)
 					break;
 				n = endchar();
@@ -1139,6 +1152,12 @@ int sh_lex(void)
 			epat:
 				if(fcgetc(n)==LPAREN)
 				{
+					if(lex.incase==TEST_RE)
+					{
+						lex.incase++;
+						pushlevel(RPAREN,ST_NORM);
+						mode = ST_NESTED;
+					}
 					wordflags |= ARG_EXP;
 					pushlevel(RPAREN,mode);
 					mode = ST_NESTED;
@@ -1304,6 +1323,8 @@ breakloop:
 					errormsg(SH_DICT,ERROR_warn(0),e_lexobsolete4,shp->inlineno,state);
 				if(c&TEST_PATTERN)
 					lex.incase = 1;
+				else if(c==TEST_REP)
+					lex.incase = TEST_RE;
 				lex.testop2 = 0;
 				shlex.digits = c;
 				shlex.token = TESTBINOP;	
@@ -1570,7 +1591,7 @@ static int here_copy(Lex_t *lp,register struct ionod *iop)
 	register int		c,n;
 	register char		*bufp,*cp;
 	register Sfio_t		*sp=shlex.sh->heredocs, *funlog;
-	int			stripflg, nsave, special=0;
+	int			stripcol=0,stripflg, nsave, special=0;
 	if(funlog=shlex.sh->funlog)
 	{
 		if(fcfill()>0)
@@ -1588,7 +1609,19 @@ static int here_copy(Lex_t *lp,register struct ionod *iop)
 		while(*iop->iodelim=='\t')
 			iop->iodelim++;
 		/* skip over leading tabs in document */
-		while(fcgetc(c)=='\t');
+		if(iop->iofile&IOLSEEK)
+		{
+			iop->iofile &= ~IOLSEEK;
+			while(fcgetc(c)=='\t' || c==' ')
+			{
+				if(c==' ')
+					stripcol++;
+				else
+					stripcol += 8 - stripcol%8;
+			}
+		}
+		else
+			while(fcgetc(c)=='\t');
 		if(c>0)
 			fcseek(-1);
 	}
@@ -1657,7 +1690,7 @@ static int here_copy(Lex_t *lp,register struct ionod *iop)
 		{
 		    case S_NL:
 			shlex.sh->inlineno++;
-			if(stripflg && c=='\t')
+			if((stripcol && c==' ') || (stripflg && c=='\t'))
 			{
 				if(!lexd.dolparen)
 				{
@@ -1667,7 +1700,22 @@ static int here_copy(Lex_t *lp,register struct ionod *iop)
 						iop->iosize += n;
 				}
 				/* skip over tabs */
-				while(c=='\t')
+				if(stripcol)
+				{
+					int col=0;
+					do
+					{
+						fcgetc(c);
+						if(c==' ')
+							col++;
+						else
+							col += 8 - col%8;
+						if(col>stripcol)
+							break;
+					}
+					while (c==' ' || c=='\t');
+				}
+				else while(c=='\t')
 					fcgetc(c);
 				if(c<=0)
 					goto done;
@@ -2012,7 +2060,7 @@ struct argnod *sh_endword(int mode)
 						dp = sp-1;
 						ep = dp-n;
 					}
-					memcpy(ep,msg,n);
+					memmove(ep,msg,n);
 					*dp++ = '"';
 				}
 				ep = 0;

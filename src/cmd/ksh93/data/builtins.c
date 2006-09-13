@@ -239,6 +239,8 @@ const char sh_set[] =
 			"command to exit with non-zero exit status, or will "
 			"be zero if all commands return zero exit status.]"
 		"[+privileged?Equivalent to \b-p\b.]"
+		"[+showme?Simple commands preceded by a \b;\b will be traced "
+			"as if \b-x\b were enabled but not executed.]"
 		"[+trackall?Equivalent to \b-h\b.]"
 		"[+verbose?Equivalent to \b-v\b.]"
 		"[+vi?Enables/disables \bvi\b editing mode.]"
@@ -1259,8 +1261,10 @@ USAGE_LICENSE
 "[u]#[fd:=0?Read from file descriptor number \afd\a instead of standard input.]"
 "[t]:[timeout?Specify a timeout \atimeout\a in seconds when reading from "
 	"a terminal or pipe.]"
-"[n]#[nbyte?Read at most \anbyte\a bytes.]"
-"[N]#[nbyte?Read exactly \anbyte\a bytes.]"
+"[n]#[nbyte?Read at most \ansize\a characters.  For binary fields \asize\a "
+	"will be in bytes.]"
+"[N]#[nbyte?Read exactly \ansize\a characters.  For binary fields \asize\a "
+	"will be in bytes.]"
 "\n"
 "\n[var?prompt] [var ...]\n"
 "\n"
@@ -1571,6 +1575,7 @@ USAGE_LICENSE
 #if SHOPT_BASH
 "[a?Ignored, used for bash compatibility.]"
 #endif
+"[a?Indexed array. this is the default.]"
 "[b?Each \aname\a may contain binary data.  Its value is the mime "
 	"base64 encoding of the data. It can be used with \b-Z\b, "
 	"to specify fixed sized fields.]"
@@ -1820,7 +1825,6 @@ USAGE_LICENSE
 
 const char e_alrm1[]		= "alarm -r %s +%.3g\n";
 const char e_alrm2[]		= "alarm %s %.3f\n";
-const char e_badfun[]		= "%s: illegal function name";
 const char e_baddisc[]		= "%s: invalid discipline function";
 const char e_nospace[]		= "out of memory";
 const char e_nofork[]		= "cannot fork";

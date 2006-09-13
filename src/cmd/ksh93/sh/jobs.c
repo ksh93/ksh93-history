@@ -229,6 +229,7 @@ static int job_reap(register int sig)
 			break;
 		flags |= WNOHANG;
 		job.waitsafe++;
+		jp = 0;
 		if(!(pw=job_bypid(pid)))
 		{
 #ifdef DEBUG

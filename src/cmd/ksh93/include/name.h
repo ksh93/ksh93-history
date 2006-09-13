@@ -176,7 +176,6 @@ extern const char	e_badfield[];
 extern const char	e_restricted[];
 extern const char	e_ident[];
 extern const char	e_varname[];
-extern const char	e_funname[];
 extern const char	e_noalias[];
 extern const char	e_noarray[];
 extern const char	e_aliname[];

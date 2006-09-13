@@ -206,4 +206,8 @@ cat  > "$f" <<- '!!!!'
 if	[[ $($SHELL  "$f") != foobar ]]
 then	err_exit	'here document with stdin closed failed'
 fi
+printf $'cat   <<# \\!!!\n\thello\n\t\tworld\n!!!' > $f
+[[ $($SHELL "$f") == $'hello\n\tworld' ]] || err_exit "<<# not working for quoted here documents" 
+printf $'w=world;cat   <<# !!!\n\thello\n\t\t$w\n!!!' > $f
+[[ $($SHELL "$f") == $'hello\n\tworld' ]] || err_exit "<<# not working for non-quoted here documents" 
 exit $((Errors))

@@ -21,7 +21,7 @@
 ########################################################################
 : generate conf info
 #
-# @(#)conf.sh (AT&T Research) 2006-05-09
+# @(#)conf.sh (AT&T Research) 2006-07-25
 #
 # this script generates these files from the table file in the first arg
 # the remaining args are the C compiler name and flags
@@ -269,7 +269,7 @@ sed \
 	-e 's,[ 	].*,,' \
 	-e '/^[S_]/!d' \
 	`cat $tmp.f` 2>/dev/null
-{ /bin/getconf -a || /usr/bin/getconf -a; } 2>/dev/null | sed 's,[= 	].*,,'
+{ /bin/getconf -a || /usr/bin/getconf -a; } 2>/dev/null | sed 's,[=: 	].*,,'
 } |
 sort -u > $tmp.v
 case $debug in

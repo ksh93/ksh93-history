@@ -148,6 +148,8 @@ typedef struct edit
 	int	e_multiline;	/* allow multiple lines for editing */
 	int	e_winsz;	/* columns in window */ 
 	Edpos_t	e_curpos;	/* cursor line and column */
+	Namval_t *e_term;	/* TERM variable */
+	char 	e_termname[80];	/* terminal name */
 } Edit_t;
 
 #undef MAXWINDOW

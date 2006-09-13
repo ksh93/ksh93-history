@@ -194,6 +194,7 @@ node(FTS* fts, FTSENT* parent, register char* name, register int namelen)
 		}
 		f->fts = fts;
 	}
+	TYPE(f, DT_UNKNOWN);
 	f->status = 0;
 	f->symlink = 0;
 	f->fts_level = (f->fts_parent = parent)->fts_level + 1;
@@ -513,16 +514,19 @@ info(FTS* fts, register FTSENT* f, const char* path, struct stat* sp, int flags)
 		if ((flags & FTS_NOSTAT) && !fts->fs3d)
 		{
 			f->fts_parent->nlink--;
-			if (sp->st_nlink >= 2)
-			{
-				f->nlink = sp->st_nlink - 2;
-				f->must = 0;
-			}
-			else
+#ifdef D_TYPE
+			f->must = 0;
+			if ((f->nlink = sp->st_nlink) < 2)
+				f->nlink = 2;
+#else
+			if ((f->nlink = sp->st_nlink) >= 2)
 				f->must = 1;
+			else
+				f->must = 2;
+#endif
 		}
 		else
-			f->must = 1;
+			f->must = 2;
 		TYPE(f, DT_DIR);
 		f->fts_info = FTS_D;
 	}
@@ -736,7 +740,7 @@ fts_open(char* const* pathnames, int flags, int (*comparf)(FTSENT* const*, FTSEN
 	memcpy(fts->parent->fts_accpath = fts->parent->fts_path = fts->parent->fts_name = fts->parent->name, ".", 2);
 	fts->parent->fts_level = -1;
 	fts->parent->fts_statp = &fts->parent->statb;
-	fts->parent->must = 1;
+	fts->parent->must = 2;
 	fts->parent->type = DT_UNKNOWN;
 	fts->path = fts->home + strlen(fts->home) + 1;
 
@@ -958,12 +962,16 @@ fts_read(register FTS* fts)
 			{
 				if (s[1] == 0)
 				{
+					fts->current->nlink--;
 					if (!(fts->flags & FTS_SEEDOT))
 						continue;
 					n = 1;
 				}
 				else if (s[1] == '.' && s[2] == 0)
 				{
+					fts->current->nlink--;
+					if (fts->current->must == 1)
+						fts->current->must = 0;
 					if (!(fts->flags & FTS_SEEDOT))
 						continue;
 					n = 2;

@@ -31,6 +31,7 @@
 #include	"path.h"
 #include	"builtins.h"
 #include	"terminal.h"
+#include	"edit.h"
 #include	"FEATURE/poll"
 #if SHOPT_KIA
 #   include	"shlex.h"

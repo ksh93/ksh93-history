@@ -1,3 +1,22 @@
+06-09-12 string/strtoi.h: drop [cClLqQwW] multipliers
+06-09-11 misc/optget.c: add numeric arg validity check
+06-09-07 misc/optget.c,tm/tmfix.c: fix uninitialzed var refs
+06-09-05 path/pathprobe.c: add version header verification
+06-08-01 Makefile: handle iffe vs FEATURE/common vs ast_common.h
+06-08-31 Makefile: add ast_map.h to the bootstrap list
+06-08-30 misc/glob.c: fix ~(E)re bug that stripped ~(E) before regcomp
+06-08-30 include/ast.h: add { integralof(x) pointerof(x) }
+06-08-27 string/strelapsed.c: fix off-by-one (too little) parse bug
+06-08-25 misc/optget.c: 0*<n>.* numeric option args => <n>.*
+06-08-22 misc/glob.c: handle ~(...) pattern options
+06-08-16 string/strelapsed.c: fix off-by-one (too far) parse bug
+06-08-16 regex/regcomp.c: accept but ignore ~(N)
+06-08-14 features/libpath.sh: add solaris LD_LIBRARY_PATH_64 check
+06-08-05 sfio/sfpool.c: pool SF_READ|SF_WRITE loop fix
+06-08-02 misc/fts.c: fix FTS_NOSTAT optimization to check for ..
+06-07-28 include/glob.h: add gl_extra for user globlist_t expansion
+06-07-27 features/common: #include "ast_map.h"
+06-07-26 comp/fnmatch.[ch]: allow <ast_map.h> to map fnmatch()
 06-07-22 cdt: snarf from kpv
 06-07-17 string/strperm.c: perm==-1 skips umask(1)
 06-07-17 sfio/sfvprintf.c: handle format invalid mb seq

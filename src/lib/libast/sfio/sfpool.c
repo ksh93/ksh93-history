@@ -120,11 +120,11 @@ int		n;	/* current position in pool	*/
 	SFLOCK(head,0);
 	rv = -1;
 
-	if(!(p->mode&SF_SHARE) )
+	if(!(p->mode&SF_SHARE) || (head->mode&SF_READ) || (f->mode&SF_READ) )
 	{	if(SFSYNC(head) < 0)
 			goto done;
 	}
-	else	/* shared pool, data can be moved among streams */
+	else	/* shared pool of write-streams, data can be moved among streams */
 	{	if(SFMODE(head,1) != SF_WRITE && _sfmode(head,SF_WRITE,1) < 0)
 			goto done;
 		/**/ASSERT((f->mode&(SF_WRITE|SF_POOL)) == (SF_WRITE|SF_POOL) );
@@ -154,7 +154,7 @@ int		n;	/* current position in pool	*/
 
 	f->mode &= ~SF_POOL;
 	head->mode |= SF_POOL;
-	head->next = head->endr = head->endw = head->data;
+	head->next = head->endr = head->endw = head->data; /* clear write buffer */
 
 	p->sf[n] = head;
 	p->sf[0] = f;

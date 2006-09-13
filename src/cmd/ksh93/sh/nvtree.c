@@ -74,10 +74,10 @@ static const Namdisc_t treedisc =
 
 static char *nextdot(const char *str)
 {
-	char *cp;
+	register char *cp;
 	if(*str=='.')
 		str++;
-	if(*str=='[')
+	if(*str =='[')
 	{
 		cp = nv_endsubscript((Namval_t*)0,(char*)str,0);
 		return(*cp=='.'?cp:0);
@@ -102,7 +102,7 @@ static  Namfun_t *nextdisc(Namval_t *np)
 void *nv_diropen(const char *name)
 {
 	char *next,*last;
-	int len=strlen(name);
+	int c,len=strlen(name);
 	struct nvdir *save, *dp = new_of(struct nvdir,len);
 	Namval_t *np, fake;
 	Namfun_t *nfp;
@@ -127,9 +127,10 @@ void *nv_diropen(const char *name)
 		dp->hp = (Namval_t*)dtfirst(dp->root);
 	while(next= nextdot(last))
 	{
+		c = *next;
 		*next = 0;
 		np = nv_search(last,dp->root,0);
-		*next = '.';
+		*next = c;
 		if(np && ((nfp=nextdisc(np)) || nv_istable(np)))
 		{
 			if(!(save = new_of(struct nvdir,0)))
@@ -282,11 +283,16 @@ void nv_attribute(register Namval_t *np,Sfio_t *out,char *prefix,int noname)
 		if(fp->type || (fp->disc && fp->disc->typef &&(*fp->disc->typef)(np,fp)))
 			break;
 	}
+#if 0
 	if(!fp  && !nv_isattr(np,~NV_ARRAY))
 	{
 		if(!nv_isattr(np,NV_ARRAY)  || nv_aindex(np)>=0)
 			return;
 	}
+#else
+	if(!fp  && !nv_isattr(np,~NV_MINIMAL))
+		return;
+#endif
 
 	if ((attr=nv_isattr(np,~NV_NOFREE)) || fp)
 	{
@@ -319,13 +325,21 @@ void nv_attribute(register Namval_t *np,Sfio_t *out,char *prefix,int noname)
 				{
 					Namarr_t *ap = nv_arrayptr(np);
 					if(array_assoc(ap))
+					{
+						if(tp->sh_name[1]!='A')
+							continue;
+					}
+					else if(tp->sh_name[1]=='A')
+						continue;
+#if 0
 						cp = "associative";
 					else
 						cp = "indexed";
 					if(!prefix)
 						sfputr(out,cp,' ');
 					else if(*cp=='i')
-						continue;
+						tp++;
+#endif
 				}
 				if(prefix)
 				{
@@ -365,21 +379,18 @@ static void outval(char *name, char *vname, Sfio_t *outfile, int indent, int nos
 	register Namval_t *np;
         register Namfun_t *fp;
 	int isarray, associative=0;
-	if(!(np=nv_open(vname,sh.var_tree,NV_VARNAME|NV_NOADD|NV_NOASSIGN|noscope)))
+	if(!(np=nv_open(vname,sh.var_tree,NV_ARRAY|NV_VARNAME|NV_NOADD|NV_NOASSIGN|noscope)))
 		return;
-        for(fp=np->nvfun;fp;fp=fp->next)
+	if(fp=nv_hasdisc(np,&treedisc))
 	{
-		if(fp && fp->disc== &treedisc)
+		if(!outfile)
 		{
-			if(!outfile)
-			{
-				fp = nv_stack(np,fp);
-				if(fp = nv_stack(np,NIL(Namfun_t*)))
-					free((void*)fp);
-				np->nvfun = 0;
-			}
-			return;
+			fp = nv_stack(np,fp);
+			if(fp = nv_stack(np,NIL(Namfun_t*)))
+				free((void*)fp);
+			np->nvfun = 0;
 		}
+		return;
 	}
 	if(nv_isnull(np))
 		return;
@@ -452,11 +463,13 @@ static void outval(char *name, char *vname, Sfio_t *outfile, int indent, int nos
 static char **genvalue(char **argv, register Sfio_t *outfile, const char *prefix, int n, int indent, int noscope)
 {
 	register char *cp,*nextcp,*arg;
-	register int m;
+	register int m,r;
 	if(n==0)
 		m = strlen(prefix);
+	else if(cp=nextdot(prefix))
+		m = cp-prefix;
 	else
-		m = nextdot(prefix)-prefix;
+		m = strlen(prefix)-1;
 	m++;
 	if(outfile)
 	{
@@ -473,6 +486,8 @@ static char **genvalue(char **argv, register Sfio_t *outfile, const char *prefix
 		if(n==0 || strncmp(arg,prefix-n,m+n)==0)
 		{
 			cp +=m;
+			if(*cp=='.')
+				cp++;
 			if(nextcp=nextdot(cp))
 			{
 				if(outfile)
@@ -488,6 +503,23 @@ static char **genvalue(char **argv, register Sfio_t *outfile, const char *prefix
 					continue;
 				break;
 			}
+			else if(outfile && argv[1] && memcmp(arg,argv[1],r=strlen(arg))==0 && argv[1][r]=='[')
+			{
+				Namval_t *np = nv_open(arg,sh.var_tree,NV_VARNAME|NV_NOADD|NV_NOASSIGN|noscope);
+				sfnputc(outfile,'\t',indent);
+				nv_attribute(np,outfile,"typeset",1);
+				nv_close(np);
+				sfputr(outfile,arg+m,'=');
+				argv = genvalue(++argv,outfile,cp,cp-arg ,indent,noscope);
+				sfputc(outfile,'\n');
+			}
+			else if(outfile && *cp=='[')
+			{
+				sfnputc(outfile,'\t',indent);
+				sfputr(outfile,cp,'=');
+				argv = genvalue(++argv,outfile,cp,cp-arg ,indent,noscope);
+				sfputc(outfile,'\n');
+			}
 			else
 				outval(cp,arg,outfile,indent,noscope);
 		}
@@ -496,10 +528,13 @@ static char **genvalue(char **argv, register Sfio_t *outfile, const char *prefix
 	}
 	if(outfile)
 	{
+		int c;
 		cp = (char*)prefix;
+		m += *cp=='[';
+		c = cp[m-1];
 		cp[m-1] = 0;
 		outval(".",cp-n,outfile,indent,noscope);
-		cp[m-1] = '.';
+		cp[m-1] = c;
 		sfnputc(outfile,'\t',indent-1);
 		sfputc(outfile,')');
 	}
@@ -522,7 +557,6 @@ static char *walk_tree(register Namval_t *np, int dlete)
 	void *dir;
 	int n=0, noscope=(dlete&NV_NOSCOPE);
 	stakputs(nv_name(np));
-#if SHOPT_COMPOUND_ARRAY
 	if(subscript = nv_getsub(np))
 	{
 		stakputc('[');
@@ -530,7 +564,6 @@ static char *walk_tree(register Namval_t *np, int dlete)
 		stakputc(']');
 		stakputc('.');
 	}
-#endif /* SHOPT_COMPOUND_ARRAY */
 	name = stakfreeze(1);
 	dir = nv_diropen(name);
 	if(subscript)
@@ -605,7 +638,10 @@ static void put_tree(register Namval_t *np, const char *val, int flags,Namfun_t 
  */
 void nv_setvtree(register Namval_t *np)
 {
-	register Namfun_t *nfp = newof(NIL(void*),Namfun_t,1,0);
+	register Namfun_t *nfp;
+	if(nv_hasdisc(np, &treedisc))
+		return;
+	nfp = newof(NIL(void*),Namfun_t,1,0);
 	nfp->disc = &treedisc;
 	nv_stack(np, nfp);
 }

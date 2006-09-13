@@ -117,6 +117,7 @@ struct shlex_t
 #define	SH_ASSIGN	020
 #define	SH_FUNDEF	040
 #define SH_ARRAY	0100
+#define SH_SEMI		0200	/* semi-colon after NL ok */
 
 #define SH_COMPASSIGN	010	/* allow compound assignments only */
 

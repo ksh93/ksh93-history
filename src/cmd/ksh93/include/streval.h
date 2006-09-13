@@ -45,7 +45,7 @@
 #	ifdef LONGLONG_MAX
 #	   define LDBL_LONGLONG_MAX	((Sfdouble_t)LONGLONG_MAX)
 #	else
-#	   define LDBL_LONGLONG_MAX	((Sfdouble_t)((1LL << (8*sizeof(Sflong_t)-1)) -1 ))
+#	   define LDBL_LONGLONG_MAX	((Sfdouble_t)((((Sflong_t)1) << (8*sizeof(Sflong_t)-1)) -1 ))
 #	endif
 #   endif
 #endif

@@ -63,7 +63,7 @@ int	b_read(int argc,char *argv[], void *extra)
 		break;
 	    case 't':
 		sec = sh_strnum(opt_info.arg, (char**)0,1);
-		timeout = 1000*sec+1;
+		timeout = sec ? 1000*sec : 1;
 		break;
 	    case 'd':
 		if(opt_info.arg && *opt_info.arg!='\n')

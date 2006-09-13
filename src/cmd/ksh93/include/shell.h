@@ -88,6 +88,7 @@ typedef union Shnode_u Shnode_t;
 #define SH_GLOBSTARS	33
 #define SH_XARGS	34
 #define SH_RC		35
+#define SH_SHOWME	36
 
 /*
  * passed as flags to builtins in Nambltin_t struct when BLT_OPTIM is on

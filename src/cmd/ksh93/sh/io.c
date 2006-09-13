@@ -107,7 +107,7 @@ static ssize_t	slowread(Sfio_t*, void*, size_t, Sfdisc_t*);
 static ssize_t	subread(Sfio_t*, void*, size_t, Sfdisc_t*);
 static ssize_t	tee_write(Sfio_t*,const void*,size_t,Sfdisc_t*);
 static int	io_prompt(Sfio_t*,int);
-static int	io_heredoc(register struct ionod*, const char*);
+static int	io_heredoc(register struct ionod*, const char*, int);
 static void	sftrack(Sfio_t*,int,int);
 static const Sfdisc_t eval_disc = { NULL, NULL, NULL, eval_exceptf, NULL};
 static Sfdisc_t tee_disc = {NULL,tee_write,NULL,NULL,NULL};
@@ -575,6 +575,7 @@ void sh_pclose(register int pv[])
  * flag = 0 if files are to be restored
  * flag = 2 if files are to be closed on exec
  * flag = 3 when called from $( < ...), just open file and return
+ * flag = SH_SHOWME for trace only
  */
 int	sh_redirect(struct ionod *iop, int flag)
 {
@@ -639,12 +640,11 @@ int	sh_redirect(struct ionod *iop, int flag)
 			}
 			if(iof&IODOC)
 			{
-				fd = io_heredoc(iop,fname);
 				if(traceon)
-				{
-					io_op[2] = '<';
-					sfputr(sfstderr,io_op,'\n');
-				}
+					sfputr(sfstderr,io_op,'<');
+				fd = io_heredoc(iop,fname,traceon);
+				if(traceon && (flag==SH_SHOWME))
+					sh_close(fd);
 				fname = 0;
 			}
 			else if(iof&IOMOV)
@@ -692,6 +692,8 @@ int	sh_redirect(struct ionod *iop, int flag)
 					message = e_file;
 					goto fail;
 				}
+				if(flag==SH_SHOWME)
+					goto traceit;
 				if((fd=sh_fcntl(dupfd,F_DUPFD,3))<0)
 					goto fail;
 				sh_iocheckfd(dupfd);
@@ -724,7 +726,11 @@ int	sh_redirect(struct ionod *iop, int flag)
 				goto openit;
 			}
 			else if(!(iof&IOPUT))
+			{
+				if(flag==SH_SHOWME)
+					goto traceit;
 				fd=sh_chkopen(fname);
+			}
 			else if(sh_isoption(SH_RESTRICTED))
 				errormsg(SH_DICT,ERROR_exit(1),e_restricted,fname);
 			else
@@ -760,12 +766,17 @@ int	sh_redirect(struct ionod *iop, int flag)
 					}
 				}
 			openit:
-				if((fd=sh_open(fname,o_mode,RW_ALL)) <0)
-					errormsg(SH_DICT,ERROR_system(1),((o_mode&O_CREAT)?e_create:e_open),fname);
+				if(flag!=SH_SHOWME)
+				{
+					if((fd=sh_open(fname,o_mode,RW_ALL)) <0)
+						errormsg(SH_DICT,ERROR_system(1),((o_mode&O_CREAT)?e_create:e_open),fname);
+				}
 			}
 		traceit:
 			if(traceon && fname)
 				sfprintf(sfstderr,"%s %s%s%c",io_op,fname,after,iop->ionxt?' ':'\n');
+			if(flag==SH_SHOWME)
+				return(indx);
 			if(trace && fname)
 			{
 				char *argv[7], **av=argv;
@@ -858,6 +869,7 @@ int	sh_redirect(struct ionod *iop, int flag)
 			{
 				if(np)
 				{
+					long v;
 					fn = fd;
 					if(fd<10)
 					{
@@ -869,7 +881,8 @@ int	sh_redirect(struct ionod *iop, int flag)
 					}
 					nv_unset(np);
 					nv_onattr(np,NV_INTEGER);
-					nv_putval(np,(void*)&fn, NV_INTEGER);
+					v = fn;
+					nv_putval(np,(void*)&v, NV_INTEGER);
 					sh_iocheckfd(fd);
 				}
 				else
@@ -897,20 +910,31 @@ fail:
 /*
  * Create a tmp file for the here-document
  */
-static int io_heredoc(register struct ionod *iop, const char *name)
+static int io_heredoc(register struct ionod *iop, const char *name, int traceon)
 {
 	register Sfio_t	*infile = 0, *outfile;
-	register char		fd;
+	register int		fd;
 	if(!(iop->iofile&IOSTRG) && (!sh.heredocs || iop->iosize==0))
 		return(sh_open(e_devnull,O_RDONLY));
 	/* create an unnamed temporary file */
 	if(!(outfile=sftmp(0)))
 		errormsg(SH_DICT,ERROR_system(1),e_tmpcreate);
 	if(iop->iofile&IOSTRG)
+	{
+		if(traceon)
+			sfprintf(sfstderr,"< %s\n",name);
 		sfputr(outfile,name,'\n');
+	}
 	else
 	{
 		infile = subopen(sh.heredocs,iop->iooffset,iop->iosize);
+		if(traceon)
+		{
+			char *cp = sh_fmtq(iop->iodelim);
+			fd = (*cp=='$' || *cp=='\'')?' ':'\\';
+			sfprintf(sfstderr," %c%s\n",fd,cp);
+			sfdisc(outfile,&tee_disc);
+		}
 		if(iop->iofile&IOQUOTE)
 		{
 			/* This is a quoted here-document, not expansion */
@@ -920,8 +944,6 @@ static int io_heredoc(register struct ionod *iop, const char *name)
 		else
 		{
 			char *lastpath = sh.lastpath;
-			if(sh_isoption(SH_XTRACE))
-				sfdisc(outfile,&tee_disc);
 			sh_machere(infile,outfile,iop->ioname);
 			sh.lastpath = lastpath;
 			if(infile)
@@ -932,6 +954,8 @@ static int io_heredoc(register struct ionod *iop, const char *name)
 	fd = sffileno(outfile);
 	sfsetfd(outfile,-1);
 	sfclose(outfile);
+	if(traceon && !(iop->iofile&IOSTRG))
+		sfputr(sfstderr,iop->ioname,'\n');
 	lseek(fd,(off_t)0,SEEK_SET);
 	sh.fdstatus[fd] = IOREAD;
 	return(fd);

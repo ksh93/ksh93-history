@@ -28,7 +28,7 @@ DEBUG ==
 __OBSOLETE__ == $("6 months ago":@F=%(%Y0101)T)
 
 HEADERSRC = ast.h ast_dir.h ast_getopt.h ast_std.h \
-	ast_version.h ast_windows.h \
+	ast_version.h ast_windows.h $(ID)_common.h \
 	ccode.h cdt.h debug.h dt.h error.h find.h ftw.h ftwalk.h fts.h \
 	fs3d.h getopt.h glob.h hash.h hashkey.h hashpart.h int.h lc.h ls.h \
 	magic.h mc.h mime.h mnt.h modecanon.h modex.h namval.h option.h \
@@ -40,7 +40,7 @@ HEADERSRC = ast.h ast_dir.h ast_getopt.h ast_std.h \
 	$(HEADERSTD)
 
 HEADERGEN = align.h preroot.h sig.h tmx.h tv.h \
-	$(ID)_botch.h $(ID)_ccode.h $(ID)_common.h $(ID)_fcntl.h \
+	$(ID)_botch.h $(ID)_ccode.h $(ID)_fcntl.h \
 	$(ID)_float.h $(ID)_fs.h $(ID)_hdr.h $(ID)_lib.h $(ID)_map.h \
 	$(ID)_mmap.h $(ID)_mode.h $(ID)_param.h $(ID)_time.h $(ID)_tty.h \
 	$(ID)_types.h $(ID)_unistd.h $(ID)_vfork.h $(ID)_wait.h \
@@ -243,6 +243,15 @@ $(INCLUDEDIR) :INSTALLPROTO: $(HEADERSRC) $(HEADERGEN)
 
 $(HEADERGEN) :COPY: FEATURE/$$(<:B:/$(ID)_//)
 
+/* FEATURE/common for iffe probes, <ast_common.h> for ast source */
+
+$(ID)_common.h : FEATURE/$$(<:B:/$(ID)_//)
+	$(SED) 's/if _def_map_ast/if !_def_map_ast/' < $(*) > 1.$(tmp).x
+	if	$(CMP) -s $(<) 1.$(tmp).x
+	then	$(RM) -f 1.$(tmp).x
+	else	$(MV) 1.$(tmp).x $(<)
+	fi
+
 lcgen : lcgen.c
 	$(CC.NATIVE|CC) -o $(<) $(*)
 
@@ -315,7 +324,7 @@ atmain.o : atmain.C
  */
 
 .check.hdr : .IGNORE .VIRTUAL \
-		FEATURE/standards - ast_common.h - ast_limits.h - \
+		FEATURE/standards - ast_common.h - ast_map.h - ast_limits.h - \
 		ast_stdio.h ast_nl_types.h - ast_wchar.h
 	rm -f $(HEADERSTD)	/* clean up pre-2002-03-17 headers */
 

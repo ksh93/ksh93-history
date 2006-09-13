@@ -55,7 +55,7 @@ tmfix(register Tm_t* tm)
 	 *	nl_langinfo() => strftime() => tmfmt()
 	 */
 
-	if (w = !(tm->tm_sec | tm->tm_min | tm->tm_mday | tm->tm_year | tm->tm_yday | tm->tm_isdst))
+	if (w = !tm->tm_sec && !tm->tm_min && !tm->tm_mday && !tm->tm_year && !tm->tm_yday && !tm->tm_isdst)
 	{
 		tm->tm_year = 99;
 		tm->tm_mday = 2;

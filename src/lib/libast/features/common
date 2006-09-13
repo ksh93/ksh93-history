@@ -463,6 +463,9 @@ tst	- -DTRY=1 - -DTRY=1 -Dvoid=char - -DTRY=2 - -DTRY=3 - -DTRY=4 output{
 
 cat{
 	#ifndef _AST_STD_H
+	#	if _def_map_ast
+	#		include <ast_map.h>
+	#	endif
 	#	if __STD_C && _hdr_stddef
 	#	include	<stddef.h>
 	#	endif

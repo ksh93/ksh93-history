@@ -14,12 +14,10 @@ CATALOG = libshell
 
 SHOPT_ACCT ==  			/* accounting */
 SHOPT_ACCTFILE ==  		/* per user accounting info */
-SHOPT_APPEND == 1		/* var+=val string append */
 SHOPT_BASH ==			/* bash compatibility code */
 SHOPT_BRACEPAT == 1		/* C-shell {...,...} expansions (, required) */
 SHOPT_CMDLIB_BLTIN == 0		/* all -lcmd commands builtin */
 SHOPT_CMDLIB_DIR ==		/* SHOPT_CMDLIB_BLTIN prefix SH_CMDLIB_DIR */
-SHOPT_COMPOUND_ARRAY == 1	/* allow compound arrays */
 SHOPT_CRNL ==			/* accept <cr><nl> for <nl> */
 SHOPT_DYNAMIC == 1		/* dynamic loading for builtins */
 SHOPT_ECHOPRINT ==		/* make echo equivalent to print */

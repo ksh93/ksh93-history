@@ -57,12 +57,13 @@
 #define S_SPACE	S_BREAK	/* IFS space characters */
 #define S_DELIM	S_RES	/* IFS delimter characters */
 #define S_MBYTE S_NAME	/* IFS first byte of multi-byte char */
+#define S_BLNK	36	/* space or tab */
 /* The following must be the highest numbered states */
-#define S_QUOTE	36	/* double quote character */
-#define S_GRAVE	37	/* old comsub character */
-#define S_ESC	38	/* escape character */
-#define S_DOL	39	/* $ subsitution character */
-#define S_ESC2	40	/* escape character inside '...' */
+#define S_QUOTE	37	/* double quote character */
+#define S_GRAVE	38	/* old comsub character */
+#define S_ESC	39	/* escape character */
+#define S_DOL	40	/* $ subsitution character */
+#define S_ESC2	41	/* escape character inside '...' */
 
 /* These are the lexical state table names */
 #define ST_BEGIN	0

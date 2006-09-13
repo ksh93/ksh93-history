@@ -174,6 +174,7 @@ struct Namval
 #define NV_ASSIGN	NV_NOFREE	/* assignment is possible */
 #define NV_NOASSIGN	0		/* backward compatibility */
 #define NV_NOARRAY	0x200000	/* array name not possible */
+#define NV_IARRAY	0x400000	/* for indexed array */
 #define NV_NOREF	NV_REF		/* don't follow reference */
 #define NV_IDENT	0x80		/* name must be identifier */
 #define NV_VARNAME	0x20000		/* name must be ?(.)id*(.id) */

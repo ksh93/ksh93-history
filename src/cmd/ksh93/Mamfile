@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.1 2006-05-21
+info mam static 00000 1994-07-17 make (AT&T Research) 5.1 2006-08-11
 setv INSTALLROOT ../../..
 setv PACKAGE_ast_INCLUDE ${INSTALLROOT}/include/ast
 setv PACKAGE_ast_LIB ${INSTALLROOT}/lib
@@ -44,6 +44,8 @@ make include/shell.h implicit
 make include/nval.h implicit
 make ${PACKAGE_ast_INCLUDE}/cdt.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
+make ${PACKAGE_ast_INCLUDE}/ast_map.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast_map.h dontcare
 done ${PACKAGE_ast_INCLUDE}/ast_common.h dontcare
 make ${PACKAGE_ast_INCLUDE}/ast_std.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast_botch.h implicit
@@ -77,8 +79,7 @@ prev ${PACKAGE_ast_INCLUDE}/ast_fs.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_fcntl.h dontcare
 make ${PACKAGE_ast_INCLUDE}/ast_types.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_types.h dontcare
-make ${PACKAGE_ast_INCLUDE}/ast_map.h implicit
-done ${PACKAGE_ast_INCLUDE}/ast_map.h dontcare
+prev ${PACKAGE_ast_INCLUDE}/ast_map.h implicit
 make ${PACKAGE_ast_INCLUDE}/stdio.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast_stdio.h implicit
 make ${PACKAGE_ast_INCLUDE}/sfio_s.h implicit
@@ -452,11 +453,16 @@ done ${PACKAGE_ast_INCLUDE}/ast_ccode.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/ccode.h
+make ${PACKAGE_ast_INCLUDE}/tmx.h implicit
+make ${PACKAGE_ast_INCLUDE}/tv.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
+done ${PACKAGE_ast_INCLUDE}/tv.h dontcare
 make ${PACKAGE_ast_INCLUDE}/tm.h implicit
 prev ${PACKAGE_ast_INCLUDE}/times.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
-done ${PACKAGE_ast_INCLUDE}/tm.h
+done ${PACKAGE_ast_INCLUDE}/tm.h dontcare
+done ${PACKAGE_ast_INCLUDE}/tmx.h
 make include/streval.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast_float.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
@@ -531,13 +537,7 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -
 done trap.o generated
 make test.o
 make bltins/test.c
-make ${PACKAGE_ast_INCLUDE}/tmx.h implicit
-make ${PACKAGE_ast_INCLUDE}/tv.h implicit
-prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
-done ${PACKAGE_ast_INCLUDE}/tv.h dontcare
-prev ${PACKAGE_ast_INCLUDE}/tm.h implicit
-done ${PACKAGE_ast_INCLUDE}/tmx.h dontcare
-prev ${PACKAGE_ast_INCLUDE}/tm.h implicit
+prev ${PACKAGE_ast_INCLUDE}/tmx.h implicit
 prev FEATURE/poll implicit
 make FEATURE/externs implicit
 meta FEATURE/externs features/%>FEATURE/% features/externs externs
@@ -721,6 +721,7 @@ make sh/args.c
 prev include/io.h implicit
 prev include/shlex.h implicit
 prev FEATURE/poll implicit
+prev include/edit.h implicit
 prev include/terminal.h implicit
 prev include/builtins.h implicit
 prev include/path.h implicit
@@ -728,7 +729,7 @@ prev include/defs.h implicit
 done sh/args.c
 meta args.o %.c>%.o sh/args.c args
 prev sh/args.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_OPTIMIZE -DSHOPT_RAWONLY -DSHOPT_HISTEXPAND -DSHOPT_PFSH -D_BLD_shell -DKSHELL -D_PACKAGE_ast -DSHOPT_KIA -DSHOPT_MULTIBYTE -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_DYNAMIC -DSHOPT_ESH -c sh/args.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_OPTIMIZE -DSHOPT_RAWONLY -DSHOPT_HISTEXPAND -DSHOPT_PFSH -D_BLD_shell -DKSHELL -D_PACKAGE_ast -DSHOPT_KIA -DSHOPT_MULTIBYTE -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_DYNAMIC -c sh/args.c
 done args.o generated
 make array.o
 make sh/array.c
@@ -738,7 +739,7 @@ prev include/defs.h implicit
 done sh/array.c
 meta array.o %.c>%.o sh/array.c array
 prev sh/array.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_APPEND -D_BLD_shell -D_PACKAGE_ast -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -DSHOPT_MULTIBYTE -DSHOPT_PFSH -c sh/array.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -D_PACKAGE_ast -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -DSHOPT_MULTIBYTE -DSHOPT_PFSH -c sh/array.c
 done array.o generated
 make completion.o
 make edit/completion.c
@@ -779,6 +780,18 @@ prev include/io.h implicit
 prev include/variables.h implicit
 prev include/defs.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ls.h implicit
+make FEATURE/cmds implicit
+meta FEATURE/cmds features/%>FEATURE/% features/cmds cmds
+make features/cmds
+done features/cmds
+prev shell.req
+prev +ljobs
+prev +li
+prev ${mam_libsecdb}
+prev +lintl
+prev ${mam_libdl}
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libast} : run features/cmds
+done FEATURE/cmds generated
 prev FEATURE/time implicit
 prev FEATURE/options implicit
 prev ${PACKAGE_ast_INCLUDE}/ccode.h implicit
@@ -968,7 +981,7 @@ prev include/defs.h implicit
 done sh/macro.c
 meta macro.o %.c>%.o sh/macro.c macro
 prev sh/macro.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_BRACEPAT -DKSHELL -DSHOPT_COMPOUND_ARRAY -DSHOPT_FILESCAN -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_SUID_EXEC -D_BLD_shell -DSHOPT_PFSH -DSHOPT_KIA -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -c sh/macro.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_BRACEPAT -DKSHELL -DSHOPT_FILESCAN -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_SUID_EXEC -D_BLD_shell -DSHOPT_PFSH -DSHOPT_KIA -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -c sh/macro.c
 done macro.o generated
 make name.o
 make sh/name.c
@@ -985,7 +998,7 @@ prev include/defs.h implicit
 done sh/name.c
 meta name.o %.c>%.o sh/name.c name
 prev sh/name.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_OPTIMIZE -DSHOPT_MULTIBYTE -DSHOPT_COMPOUND_ARRAY -D_BLD_shell -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_KIA -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -c sh/name.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_OPTIMIZE -DSHOPT_MULTIBYTE -D_BLD_shell -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_KIA -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -c sh/name.c
 done name.o generated
 make nvtree.o
 make sh/nvtree.c
@@ -995,7 +1008,7 @@ prev include/defs.h implicit
 done sh/nvtree.c
 meta nvtree.o %.c>%.o sh/nvtree.c nvtree
 prev sh/nvtree.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_COMPOUND_ARRAY -D_PACKAGE_ast -D_BLD_shell -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -DSHOPT_MULTIBYTE -DSHOPT_PFSH -c sh/nvtree.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_shell -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -DSHOPT_MULTIBYTE -DSHOPT_PFSH -c sh/nvtree.c
 done nvtree.o generated
 make parse.o
 make sh/parse.c
@@ -1011,7 +1024,7 @@ prev include/defs.h implicit
 done sh/parse.c
 meta parse.o %.c>%.o sh/parse.c parse
 prev sh/parse.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_NAMESPACE -DSHOPT_COMPOUND_ARRAY -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -D_BLD_shell -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DSHOPT_KIA -DSHOPT_ESH -DSHOPT_DYNAMIC -DSHOPT_HISTEXPAND -DKSHELL -c sh/parse.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_NAMESPACE -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -D_BLD_shell -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DSHOPT_KIA -DSHOPT_ESH -DSHOPT_DYNAMIC -DSHOPT_HISTEXPAND -DKSHELL -c sh/parse.c
 done parse.o generated
 make path.o
 make sh/path.c
@@ -1265,18 +1278,7 @@ make data/builtins.c
 make ${PACKAGE_ast_INCLUDE}/cmdlist.h implicit
 prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/cmdlist.h dontcare
-make FEATURE/cmds implicit
-meta FEATURE/cmds features/%>FEATURE/% features/cmds cmds
-make features/cmds
-done features/cmds
-prev shell.req
-prev +ljobs
-prev +li
-prev ${mam_libsecdb}
-prev +lintl
-prev ${mam_libdl}
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libast} : run features/cmds
-done FEATURE/cmds dontcare generated
+prev FEATURE/cmds implicit
 prev include/jobs.h implicit
 prev include/builtins.h implicit
 prev include/version.h implicit
@@ -1389,6 +1391,7 @@ done shcomp generated
 make suid_exec
 make suid_exec.o
 make sh/suid_exec.c
+prev include/version.h implicit
 prev ${PACKAGE_ast_INCLUDE}/error.h implicit
 prev ${PACKAGE_ast_INCLUDE}/sig.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ls.h implicit
@@ -1399,7 +1402,7 @@ meta suid_exec.o %.c>%.o sh/suid_exec.c suid_exec
 prev sh/suid_exec.c
 setv CC.DLL -UCC.DLL
 setv _BLD_shell -U_BLD_shell
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c sh/suid_exec.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c sh/suid_exec.c
 done suid_exec.o generated
 prev +ljobs
 prev +li

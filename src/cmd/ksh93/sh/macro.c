@@ -43,7 +43,6 @@
 #include	"national.h"
 #include	"streval.h"
 
-
 #undef STR_GROUP
 #ifndef STR_GROUP
 #   define STR_GROUP	0
@@ -88,7 +87,7 @@ typedef struct  _mac_
 #define M_SUBNAME	5	/* ${!var[sub]}	*/
 #define M_NAMESCAN	6	/* ${!var*}	*/
 #define M_NAMECOUNT	7	/* ${#var*}	*/
-#define M_CLASS		8	/* ${-var}	*/
+#define M_TYPE		8	/* ${@var}	*/
 
 static int	substring(const char*, const char*, int[], int);
 static void	copyto(Mac_t*, int, int);
@@ -426,7 +425,7 @@ static void copyto(register Mac_t *mp,int endch, int newquote)
 			ssize_t len;
 			do
 			{
-				switch(len = mbsize(sp))
+				switch(len = mbsize(cp))
 				{
 				    case -1:	/* illegal multi-byte char */
 				    case 0:
@@ -461,6 +460,18 @@ static void copyto(register Mac_t *mp,int endch, int newquote)
 				c = chresc(cp,&addr);
 				cp = addr;
 				first = fcseek(cp-first);
+#if SHOPT_MULTIBYTE
+				if(c > UCHAR_MAX && mbwide())
+				{
+					int		i;
+					unsigned char	mb[8];
+
+					n = wctomb((char*)mb, c);
+					for(i=0;i<n;i++)
+						stakputc(mb[i]);
+				}
+				else
+#endif /* SHOPT_MULTIBYTE */
 				stakputc(c);
 				if(c==ESCAPE && mp->pattern)
 					stakputc(ESCAPE);
@@ -895,7 +906,6 @@ static char *nextname(Mac_t *mp,const char *prefix, int len)
  */
 static int varsub(Mac_t *mp)
 {
-	static char	idbuff[2];
 	register int	c;
 	register int	type=0; /* M_xxx */
 	register char	*v,*argp=0;
@@ -903,11 +913,12 @@ static int varsub(Mac_t *mp)
 	register int 	dolg=0, mode=0;
 	Namarr_t	*ap=0;
 	int		dolmax=0, vsize= -1, offset, nulflg, replen=0, bysub=0;
-	char		*id = idbuff, *pattern=0, *repstr;
-	int		oldpat=mp->pattern,idnum=0;
-	*id = 0;
+	char		idbuff[2], *id = idbuff, *pattern=0, *repstr;
+	int		oldpat=mp->pattern,idnum=0,flag=0,d;
 retry1:
 	mp->zeros = 0;
+	idbuff[0] = 0;
+	idbuff[1] = 0;
 	switch(sh_lexstates[ST_DOL][c=fcget()])
 	{
 	    case S_RBRA:
@@ -924,10 +935,13 @@ retry1:
 			{
 				if(c=='#')
 					type = M_SIZE;
-#if SHOPT_OO
-				else if(c=='-')
-					type = M_CLASS;
-#endif /* SHOPT_OO */
+#ifdef SHOPT_TYPEDEF
+				else if(c=='@')
+				{
+					type = M_TYPE;
+					goto retry1;
+				}
+#endif /* SHOPT_TYPEDEF */
 				else
 					type = M_VNAME;
 				mode = c;
@@ -1001,61 +1015,59 @@ retry1:
 		if(c=='.' && type==0)
 			goto nosub;
 		offset = staktell();
-#if SHOPT_COMPOUND_ARRAY
-	    more:
-		np = 0;
-#endif /* SHOPT_COMPOUND_ARRAY */
 		do
-			stakputc(c);
-		while(((c=fcget()),isaname(c))||type && c=='.');
-		if(type && (c==LBRACT||c==RBRACE) && fcpeek(-2)=='.')
 		{
-			if(c==RBRACE)
+			np = 0;
+			do
+				stakputc(c);
+			while(((c=fcget()),isaname(c))||type && c=='.');
+			while(c==LBRACT && type)
 			{
-				stakseek(staktell()-1);
-				type = M_TREE;
-			}
-			else
-			{
-				char *last;
 				sh.argaddr=0;
-				if((type==M_VNAME || type==M_SIZE) && (c=fcget(),isastchar(c)) && fcpeek(0)==RBRACT)
+				if((c=fcget(),isastchar(c)) && fcpeek(0)==RBRACT)
 				{
 					if(type==M_VNAME)
-						type = M_NAMESCAN;
-					else
-						type = M_NAMECOUNT;
+						type = M_SUBNAME;
 					idbuff[0] = mode = c;
-					stakputc(c);
 					fcget();
+					c = fcget();
+					if(c=='.' || c==LBRACT)
+					{
+						stakputc(LBRACT);
+						stakputc(mode);
+						stakputc(RBRACT);
+					}
+					else
+						flag = NV_ARRAY;
+					break;
 				}
 				else
 				{
-					if(type==M_VNAME || type==M_SIZE)
-						fcseek(-1);
+					fcseek(-1);
+					if(type==M_VNAME)
+						type = M_SUBNAME;
 					stakputc(LBRACT);
 					v = stakptr(subcopy(mp,1));
-					stakputc(']');
-					last = stakptr(staktell());
-					if(sh_checkid(v,last)!=last)
-						stakseek(staktell()-2);
+					stakputc(RBRACT);
+					c = fcget();
 				}
-				if((c=fcget())=='.')
-					goto more;
 			}
+		}
+		while(type && c=='.');
+		if(c==RBRACE && type &&  fcpeek(-2)=='.')
+		{
+			stakseek(staktell()-1);
+			type = M_TREE;
 		}
 		stakputc(0);
 		id=stakptr(offset);
-		if(type==M_NAMESCAN || type==M_NAMECOUNT)
-		{
-			fcseek(-1);
-			break;
-		}
 		if(isastchar(c) && type)
 		{
 			if(type==M_VNAME || type==M_SIZE)
 			{
 				idbuff[0] = mode = c;
+				if((d=fcpeek(0))==c)
+					idbuff[2] = fcget();
 				if(type==M_VNAME)
 					type = M_NAMESCAN;
 				else
@@ -1064,6 +1076,9 @@ retry1:
 			}
 			goto nosub;
 		}
+		flag |= NV_NOASSIGN|NV_VARNAME|NV_NOADD;
+		if(c=='=' || c=='?' || (c==':' && ((d=fcpeek(0))=='=' || d=='?')))
+			flag &= ~NV_NOADD;
 #if  SHOPT_FILESCAN
 		if(sh.cur_line && *id=='R' && strcmp(id,"REPLY")==0)
 		{
@@ -1072,51 +1087,13 @@ retry1:
 		}
 		else
 #endif  /* SHOPT_FILESCAN */
-		np = nv_open(id,sh.var_tree,NV_NOASSIGN|NV_VARNAME);
+		np = nv_open(id,sh.var_tree,flag);
+		ap = np?nv_arrayptr(np):0;
 		if(type)
 		{
-			if(c==LBRACT)
-			{
-				if(type==M_VNAME)
-					type = M_SUBNAME;
-#if SHOPT_OO
-				else if(type==M_CLASS)
-					mac_error(np);
-#endif /* SHOPT_OO */
-				if(((c=fcpeek(0)),isastchar(c)) && fcpeek(1)==']' && fcpeek(2)!='.')
-				{
-					/* ${id[*]} or ${id[@]} */
-					mode=c;
-					if(nv_arrayptr(np))
-						nv_putsub(np,NIL(char*),ARRAY_SCAN);
-					fcseek(2);
-
-				}
-				else
-				{
-					int loc = subcopy(mp,0);
-					stakputc(0);
-					sh.argaddr=0;
-					nv_putsub(np,stakptr(loc),ARRAY_ADD);
-#if SHOPT_COMPOUND_ARRAY
-
-					if(fcpeek(0)=='.')
-					{
-						stakseek(loc-1);
-						stakputc('[');
-						if(!(id=nv_getsub(np)))
-							id = "0";
-						stakputs(id);
-						stakputc(']');
-						c = fcget();
-						if(type==M_SUBNAME)
-							type = M_VNAME;
-						goto more;
-					}
-#endif /* SHOPT_COMPOUND_ARRAY */
-				}
-			}
-			else if(!isbracechar(c))
+			if(ap && isastchar(mode) && !(ap->nelem&ARRAY_SCAN))
+				nv_putsub(np,NIL(char*),ARRAY_SCAN);
+			if(!isbracechar(c))
 				goto nosub;
 			else
 				fcseek(-1);
@@ -1125,25 +1102,28 @@ retry1:
 			fcseek(-1);
 		if((type==M_VNAME||type==M_SUBNAME)  && sh.argaddr && strcmp(nv_name(np),id))
 			sh.argaddr = 0;
-		ap = nv_arrayptr(np);
 		c = (type>M_BRACE && isastchar(mode));
-		if(!c || !ap)
+		if(np && (!c || !ap))
 		{
 			if(type==M_VNAME)
 			{
 				type = M_BRACE;
 				v = nv_name(np);
 			}
-#if SHOPT_OO
-			else if(type==M_CLASS)
+#ifdef SHOPT_TYPEDEF
+			else if(type==M_TYPE)
 			{
+				Namval_t *nq = nv_type(np);
 				type = M_BRACE;
-				if(np = nv_class(np))
-					v = nv_name(np);
+				if(nq)
+					v = nv_name(nq);
 				else
-					v = 0;
+				{
+					nv_attribute(np,sh.strbuf,"typeset",1);
+					v = sfstruse(sh.strbuf);
+				}
 			}
-#endif /* SHOPT_OO */
+#endif /* SHOPT_TYPEDEF */
 #if  SHOPT_FILESCAN
 			else if(sh.cur_line && np==REPLYNOD)
 				v = sh.cur_line;
@@ -1332,7 +1312,7 @@ retry1:
 		type = (int)sh_strnum(argp,&ptr,1);
 		if(isastchar(mode))
 		{
-			if(!np)  /* ${@} or ${*} */
+			if(id==idbuff)  /* ${@} or ${*} */
 			{
 				if(type<0 && (type+= dolmax)<0)
 					type = 0;
@@ -1451,7 +1431,7 @@ retry2:
 				v= "";
 			if(c=='/' || c=='#' || c== '%')
 			{
-				int flag = (type || c=='/')?STR_GROUP|STR_MAXIMAL:STR_GROUP;
+				flag = (type || c=='/')?STR_GROUP|STR_MAXIMAL:STR_GROUP;
 				if(c!='/')
 					flag |= STR_LEFT;
 				while(1)
@@ -1733,6 +1713,7 @@ static void comsubst(Mac_t *mp,int type)
 	sfsetbuf(sp,(void*)sp,0);
 	bufsize = sfvalue(sp);
 	/* read command substitution output and put on stack or here-doc */
+	sfpool(sp, NIL(Sfio_t*), SF_WRITE);
 	while((str=(char*)sfreserve(sp,SF_UNBOUND,0)) && (c = sfvalue(sp))>0)
 	{
 #if SHOPT_CRNL
@@ -1829,10 +1810,10 @@ static void mac_copy(register Mac_t *mp,register const char *str, register int s
 		/* insert \ before file expansion characters */
 		while(size-->0)
 		{
-			c = state[*(unsigned char*)cp++];
+			c = state[n= *(unsigned char*)cp++];
 			if(nopat&&(c==S_PAT||c==S_ESC||c==S_BRACT||c==S_ENDCH) && mp->pattern!=3)
 				c=1;
-			else if(mp->pattern==4 && (c==S_ESC||c==S_BRACT||c==S_ENDCH))
+			else if(mp->pattern==4 && (c==S_ESC||c==S_BRACT||c==S_ENDCH || isastchar(n)))
 				c=1;
 			else if(mp->pattern==2 && c==S_SLASH)
 				c=1;
@@ -1962,6 +1943,7 @@ static void mac_copy(register Mac_t *mp,register const char *str, register int s
 static void endfield(register Mac_t *mp,int split)
 {
 	register struct argnod *argp;
+	register int count=0;
 	if(staktell() > ARGVAL || split)
 	{
 		argp = (struct argnod*)stakfreeze(1);
@@ -1971,20 +1953,29 @@ static void endfield(register Mac_t *mp,int split)
 		{
 			sh.argaddr = 0;
 #if SHOPT_BRACEPAT
-			mp->fields += path_generate(argp,mp->arghead);
+			count = path_generate(argp,mp->arghead);
 #else
-			mp->fields += path_expand(argp->argval,mp->arghead);
+			count = path_expand(argp->argval,mp->arghead);
 #endif /* SHOPT_BRACEPAT */
+			if(count)
+				mp->fields += count;
+			else if(split)	/* pattern is null string */
+				*argp->argval = 0;
+			else	/* pattern expands to nothing */
+				count = -1;
 		}
-		else
+		if(count==0)
 		{
 			argp->argchn.ap = *mp->arghead;
 			*mp->arghead = argp;
 			mp->fields++;
 		}
-		(*mp->arghead)->argflag |= ARG_MAKE;
-		if(mp->assign || sh_isoption(SH_NOGLOB))
-			argp->argflag |= ARG_RAW|ARG_EXP;
+		if(count>=0)
+		{
+			(*mp->arghead)->argflag |= ARG_MAKE;
+			if(mp->assign || sh_isoption(SH_NOGLOB))
+				argp->argflag |= ARG_RAW|ARG_EXP;
+		}
 		stakseek(ARGVAL);
 	}
 	mp->quoted = mp->quote;

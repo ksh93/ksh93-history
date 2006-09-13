@@ -30,6 +30,13 @@ function test_glob
 	typeset lineno expected arg got sep
 	lineno=$1 expected=$2
 	shift 2
+	if	[[ $expected == "<Beware> "* && 'B' > 'b' ]]
+	then	expected=${expected#"<Beware> "}
+		expected="$expected <Beware>"
+	fi
+	if	[[ $expected == *"<aXb> <abd>"* && 'B' > 'b' ]]
+	then	expected=${expected/"<aXb> <abd>"/"<abd> <aXb>"}
+	fi
 	for arg
 	do	got="$got$sep<$arg>"
 		sep=" "

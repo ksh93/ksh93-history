@@ -109,6 +109,8 @@ USAGE_LICENSE
 #define TABS	11
 #define WIND	12
 
+#undef	SS			/* who co-opted this namespace?	*/
+
 #define IG	0x0001		/* ignore display		*/
 #define NL	0x0002		/* entry ends line of display	*/
 #define SS	0x0004		/* set in sane mode		*/

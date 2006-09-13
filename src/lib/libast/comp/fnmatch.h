@@ -27,6 +27,8 @@
 #ifndef _FNMATCH_H
 #define _FNMATCH_H
 
+#include <ast_common.h>
+
 /* fnmatch flags */
 
 #define FNM_NOESCAPE	0x0001		/* \ is literal			*/

@@ -30,7 +30,7 @@
 
 static const char *discnames[] = { "get", "set", "append", "unset", 0 };
 
-int     nv_compare(Dt_t* dict, Void_t *sp, Void_t *dp, Dtdisc_t *disc)
+int nv_compare(Dt_t* dict, Void_t *sp, Void_t *dp, Dtdisc_t *disc)
 {
 	if(sp==dp)
 		return(0);
@@ -102,7 +102,7 @@ Sfdouble_t nv_getn(Namval_t *np, register Namfun_t *nfp)
 			str = (*fp->disc->getval)(np,fp);
 		else
 			str = nv_getv(np,fp?fp:nfp);
-		if(*str)
+		if(str && *str)
 		{
 			while(*str=='0')
 				str++;
@@ -259,6 +259,10 @@ static void	assign(Namval_t *np,const char* val,int flags,Namfun_t *handle)
 	{
 		Dt_t *root = sh_subfuntree(1);
 		int n;
+		Namarr_t *ap;
+		nv_putv(np, val, flags, handle);
+		if(nv_isarray(np) && (ap=nv_arrayptr(np)) && ap->nelem>0)
+			return;
 		for(n=0; n < sizeof(vp->disc)/sizeof(*vp->disc); n++)
 		{
 			if((nq=vp->disc[n]) && !nv_isattr(nq,NV_NOFREE))
@@ -267,7 +271,6 @@ static void	assign(Namval_t *np,const char* val,int flags,Namfun_t *handle)
 				dtdelete(root,nq);
 			}
 		}
-		nv_putv(np, val, flags, handle);
 		nv_disc(np,handle,NV_POP);
 		if(!handle->nofree)
 			free(handle);
@@ -878,7 +881,7 @@ Namval_t *nv_bfsearch(const char *name, Dt_t *root, Namval_t **var, char **last)
 	if(last)
 		*last = cp;
 	*cp = 0;
-	nq=nv_open(stakptr(offset),0,NV_VARNAME|NV_NOARRAY|NV_NOASSIGN|NV_NOADD|NV_NOFAIL);
+	nq=nv_open(stakptr(offset),0,NV_VARNAME|NV_NOASSIGN|NV_NOADD|NV_NOFAIL);
 	*cp = '.';
 	if(!nq)
 	{
@@ -1028,10 +1031,13 @@ static Namfun_t *clone_table(Namval_t* np, Namval_t *mp, int flags, Namfun_t *fp
 
 static void put_table(register Namval_t* np, const char* val, int flags, Namfun_t* fp)
 {
-	register Dt_t *root = ((struct table*)fp)->dict;
-	register Namval_t *nq, *mp;;
+	register Dt_t		*root = ((struct table*)fp)->dict;
+	register Namval_t	*nq, *mp;
+	Namarr_t		*ap;
 	nv_putv(np,val,flags,fp);
 	if(val)
+		return;
+	if(nv_isarray(np) && (ap=nv_arrayptr(np)) && array_elem(ap))
 		return;
 	for(mp=(Namval_t*)dtfirst(root);mp;mp=nq)
 	{

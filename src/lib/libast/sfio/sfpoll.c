@@ -231,7 +231,7 @@ int		tm;	/* time in millisecs for select/poll	*/
 
 		/* announce status */
 		if(f->disc && f->disc->exceptf)
-			(*f->disc->exceptf)(f,SF_READY,(Void_t*)status[c],f->disc);
+			(*f->disc->exceptf)(f,SF_READY,(Void_t*)(long)status[c],f->disc);
 
 		if(c > r) /* move to front of list */
 		{	fa[c] = fa[r];

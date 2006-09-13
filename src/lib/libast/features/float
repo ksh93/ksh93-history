@@ -832,9 +832,11 @@ tst	- note{ missing floating point limits }end output{
 	#ifdef SIGFPE
 		if (!caught)
 		{
+	#if !__MVS__
 			f = xf;
 			f *= 2;
 			if (!f)
+	#endif
 				caught = 1;
 		}
 		if (caught)

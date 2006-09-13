@@ -26,7 +26,6 @@
  *
  *  Written by David Korn
  *  AT&T Labs
- *  research!dgk
  *  Enhanced by Rob Stampfli
  */
 
@@ -53,6 +52,8 @@
 #include	<ls.h>
 #include	<sig.h>
 #include	<error.h>
+#include	<sys/wait.h>
+#include	"version.h"
 
 #define SPECIAL		04100	/* setuid execute only by owner */
 #define FDIN		10	/* must be same as /dev/fd below */
@@ -78,7 +79,7 @@ static int endsh(const char*);
     static void setids(int,int,int);
 #endif /* _lib_setreuid */
 
-static const char version[]	= "\n@(#)$Id: suid_exec 1993-12-28 h $\n";
+static const char version[]	= "\n@(#)$Id: suid_exec "SH_RELEASE" $\n";
 static const char badopen[]	= "cannot open";
 static const char badexec[]	= "cannot exec";
 static const char devfd[]	= "/dev/fd/10";	/* must match FDIN above */

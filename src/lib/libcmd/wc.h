@@ -31,10 +31,12 @@
 
 #include <ast.h>
 
-#define WC_LINES	1
-#define WC_WORDS	2
-#define WC_CHARS	4
-#define WC_MBYTE	8
+#define WC_LINES	0x01
+#define WC_WORDS	0x02
+#define WC_CHARS	0x04
+#define WC_MBYTE	0x08
+#define WC_LONGEST	0x10
+#define WC_QUIET	0x20
 
 typedef struct
 {
@@ -42,12 +44,14 @@ typedef struct
 	Sfoff_t words;
 	Sfoff_t lines;
 	Sfoff_t chars;
+	Sfoff_t longest;
+	int	mode;
 } Wc_t;
 
 #define wc_count	_cmd_wccount
 #define wc_init		_cmd_wcinit
 
-extern Wc_t*		wc_init(char*);
-extern int		wc_count(Wc_t*, Sfio_t*);
+extern Wc_t*		wc_init(int);
+extern int		wc_count(Wc_t*, Sfio_t*, const char*);
 
 #endif /* _WC_H */

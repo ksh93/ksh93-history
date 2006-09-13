@@ -39,12 +39,21 @@ do	case $i in
 done
 if	test "0" != "$ok"
 then	libpath=lib:LD_LIBRARY_PATH
-	if	test -d /lib32
-	then	libpath="lib32:LD_LIBRARYN32_PATH:sgi.mips3|sgi.*-n32,$libpath"
-	fi
-	if	test -d /lib64
-	then	libpath="lib64:LD_LIBRARY64_PATH:sgi.mips[4-9]|sgi.*-64,$libpath"
-	fi
+	case `package` in
+	sgi.*)	if	test -d /lib32
+		then	libpath="lib32:LD_LIBRARYN32_PATH:sgi.mips3|sgi.*-n32,$libpath"
+		fi
+		if	test -d /lib64
+		then	libpath="lib64:LD_LIBRARY64_PATH:sgi.mips[4-9]|sgi.*-64,$libpath"
+		fi
+		;;
+	sol*.sun*|sol*.sparc*)
+		if	test -d /lib/sparcv9
+		then	libpath="lib/sparcv9:LD_LIBRARY_PATH_64:sol.*64*,$libpath"
+		fi
+		libpath="$libpath,lib:LD_LIBRARY_PATH_32"
+		;;
+	esac
 elif	test -x /lib/dld.sl
 then	libpath=lib:SHLIB_PATH
 elif	test -x /usr/lib/dyld

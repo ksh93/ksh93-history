@@ -489,6 +489,7 @@ pattern=00
 var=100
 [[ $( print $(( ${var%%00} )) ) == 1 ]] || err_exit "arithmetic with embeddded patterns fails"
 [[ $( print $(( ${var%%$pattern} )) ) == 1 ]] || err_exit "arithmetic with embeddded pattern variables fails"
-
-
+if	[[ ax == @(a)* ]] && [[ ${.sh.match[1]:0:${#.sh.match[1]}}  != a ]] 
+then	err_exit '${.sh.match[1]:1:${#.sh.match[1]}} not expanding correctly'
+fi
 exit $((Errors))

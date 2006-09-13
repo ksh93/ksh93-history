@@ -665,6 +665,10 @@ int sh_exec(register const Shnode_t *t, int flags)
 					{
 						if(checkopt(com,'n'))
 							flgs |= NV_NOREF;
+						if(checkopt(com,'A'))
+							flgs |= NV_ARRAY;
+						else if(checkopt(com,'a'))
+							flgs |= NV_IARRAY;
 						if(sh.fn_depth || np==SYSLOCAL)
 							flgs |= NV_NOSCOPE;
 					}
@@ -694,6 +698,18 @@ int sh_exec(register const Shnode_t *t, int flags)
 				/* set +x doesn't echo */
 				else if((np!=SYSSET) && sh_isoption(SH_XTRACE))
 					sh_trace(com-command,1);
+				else if((t->tre.tretyp&FSHOWME) && sh_isoption(SH_SHOWME))
+				{
+					int ison = sh_isoption(SH_XTRACE);
+					if(!ison)
+						sh_onoption(SH_XTRACE);
+					sh_trace(com-command,1);
+					if(io)
+						sh_redirect(io,SH_SHOWME);
+					if(!ison)
+						sh_offoption(SH_XTRACE);
+					break;
+				}
 				if(trap=sh.st.trap[SH_DEBUGTRAP])
 					sh_debug(trap,(char*)0, (char*)0, com, ARG_RAW);
 				if(io)
@@ -1149,6 +1165,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 			if(jmpval==0)
 			{
 				sh_redirect(t->fork.forkio,execflg);
+				(t->fork.forktre)->tre.tretyp |= t->tre.tretyp&FSHOWME;
 				sh_exec(t->fork.forktre,flags);
 			}
 			sh_popcontext(&buff);
@@ -1201,6 +1218,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 			int	pvo[2];	/* old pipe for multi-stage */
 			int	pvn[2];	/* current set up pipe */
 			int	savepipe = pipejob;
+			int	showme = t->tre.tretyp&FSHOWME;
 			pid_t	savepgid = job.curpgid;
 			if(sh.subshell)
 				sh_subtmpfile();
@@ -1219,6 +1237,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 				/* create the pipe */
 				sh_pipe(pvn);
 				/* execute out part of pipe no wait */
+				(t->lst.lstlef)->tre.tretyp |= showme;
 				type = sh_exec(t->lst.lstlef, errorflg);
 #endif /* SHOPT_FASTPIPE */
 				pipejob=1;
@@ -1234,11 +1253,14 @@ int sh_exec(register const Shnode_t *t, int flags)
 			sh.inpipe = pvn;
 			sh.outpipe = 0;
 			if(type == 0)
+			{
 				/*
 				 * execute last element of pipeline
 				 * in the current process
 				 */
+				((Shnode_t*)t)->tre.tretyp |= showme;
 				sh_exec(t,flags);
+			}
 			else
 				/* execution failure, close pipe */
 				sh_pclose(pvn);
@@ -2131,6 +2153,8 @@ pid_t sh_fork(int flags, int *jobid)
 		sfseek(sfstdin,current,SEEK_SET);
 	}
 #endif /* SHOPT_FASTPIPE */
+	if(!sh.pathlist)
+		path_get("");
 	sfsync(NIL(Sfio_t*));
 	sh.trapnote &= ~SH_SIGTERM;
 	job_fork(-1);

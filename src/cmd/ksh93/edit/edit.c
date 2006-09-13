@@ -33,6 +33,7 @@
 #include	<ctype.h>
 #include	"FEATURE/options"
 #include	"FEATURE/time"
+#include	"FEATURE/cmds"
 #ifdef _hdr_utime
 #   include	<utime.h>
 #   include	<ls.h>
@@ -50,11 +51,13 @@
 #include	"history.h"
 #include	"edit.h"
 
-static const char CURSOR_UP[] = { ESC, '[', 'A', 0 };
+static char CURSOR_UP[20] = { ESC, '[', 'A', 0 };
 
 #if SHOPT_MULTIBYTE
+#   define is_cntrl(c)	((c<=STRIP) && iscntrl(c))
 #   define is_print(c)	((c&~STRIP) || isprint(c))
 #else
+#   define is_cntrl(c)	iscntrl(c)
 #   define is_print(c)	isprint(c)
 #endif
 
@@ -729,7 +732,22 @@ void	ed_setup(register Edit_t *ep, int fd, int reedit)
 	sfwrite(sfstderr,ep->e_outptr,0);
 	ep->e_eol = reedit;
 	if(ep->e_multiline)
+	{
+#ifdef _cmd_infocmp
+		char *term;
+		if(!ep->e_term)
+			ep->e_term = nv_search("TERM",sh.var_tree,0);
+		if(ep->e_term && (term=nv_getval(ep->e_term)) && strlen(term)<sizeof(ep->e_termname) && strcmp(term,ep->e_termname))
+		{
+			sh_trap("eval .sh.subscript=$(infocmp -1C | sed -e '/:up=/!d' -e 's/.*:up=//' -e 's/:\\\\*$//' -e \"s/[']/\\'/g\" -e \"s/.*/$'&'/\")",0);
+			if(pp=nv_getval(SH_SUBSCRNOD))
+				strncpy(CURSOR_UP,pp,sizeof(CURSOR_UP)-1);
+			nv_unset(SH_SUBSCRNOD);
+			strcpy(ep->e_termname,term);
+		}
+#endif
 		ep->e_wsize = MAXLINE - (ep->e_plen-2);
+	}
 }
 
 /*
@@ -1169,10 +1187,9 @@ int ed_virt_to_phys(Edit_t *ep,genchar *virt,genchar *phys,int cur,int voff,int 
 	{
 		if(curp == sp)
 			r = dp - phys;
-		d = (is_print(c)?1:-1);
 #if SHOPT_MULTIBYTE
 		d = mbwidth((wchar_t)c);
-		if(d==1 && !is_print(c))
+		if(d==1 && is_cntrl(c))
 			d = -1;
 		if(d>1)
 		{
@@ -1186,6 +1203,8 @@ int ed_virt_to_phys(Edit_t *ep,genchar *virt,genchar *phys,int cur,int voff,int 
 			continue;
 		}
 		else
+#else
+		d = (is_cntrl(c)?-1:1);
 #endif	/* SHOPT_MULTIBYTE */
 		if(d<0)
 		{

@@ -478,9 +478,6 @@ S2I_function(a, e, base) const char* a; char** e; int base;
 			case 'B':
 				v = ((S2I_utype)1) << 9;
 				break;
-			case 'c':
-			case 'C':
-				break;
 			case 'g':
 			case 'G':
 				v = ((S2I_utype)1) << 30;
@@ -489,27 +486,21 @@ S2I_function(a, e, base) const char* a; char** e; int base;
 			case 'K':
 				v = ((S2I_utype)1) << 10;
 				break;
-			case 'l':
-			case 'L':
-				v = 4;
-				break;
 			case 'm':
 			case 'M':
 				v = ((S2I_utype)1) << 20;
 				break;
-			case 'q':
-			case 'Q':
-				v = 8;
+			case 'p':
+			case 'P':
+				if (sizeof(S2I_number) <= 4)
+					overflow = 1;
+				v = ((S2I_utype)1) << 50;
 				break;
 			case 't':
 			case 'T':
 				if (sizeof(S2I_number) <= 4)
 					overflow = 1;
 				v = ((S2I_utype)1) << 40;
-				break;
-			case 'w':
-			case 'W':
-				v = 2;
 				break;
 			default:
 				if (m <= 1)
