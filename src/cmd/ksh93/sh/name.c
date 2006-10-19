@@ -23,6 +23,8 @@
  *
  */
 
+#define putenv	___putenv
+
 #include	"defs.h"
 #include	<ctype.h>
 #include	"variables.h"
@@ -1898,8 +1900,11 @@ Sfdouble_t nv_getnum(register Namval_t *np)
 	}
 	else if((str=nv_getval(np)) && *str!=0)
 	{
-		while(*str=='0')
-			str++;
+		if(np->nvfun ||  nv_isattr(np,NV_LJUST|NV_RJUST|NV_ZFILL))
+		{
+			while(*str=='0')
+				str++;
+		}
 		r = sh_arith(str);
 	}
 	return(r);

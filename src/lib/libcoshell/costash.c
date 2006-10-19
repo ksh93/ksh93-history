@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1985-2006 AT&T Knowledge Ventures            *
+*           Copyright (c) 1990-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -15,26 +15,26 @@
 *                           Florham Park NJ                            *
 *                                                                      *
 *                 Glenn Fowler <gsf@research.att.com>                  *
-*                  David Korn <dgk@research.att.com>                   *
-*                   Phong Vo <kpv@research.att.com>                    *
 *                                                                      *
 ***********************************************************************/
 #pragma prototyped
-
 /*
  * Glenn Fowler
  * AT&T Research
- *
- * character code map
  */
 
-#include <ast.h>
-#include <ccode.h>
+#include <colib.h>
 
-#undef	ccmapc
+/*
+ * 0 terminate string stream, reset, and return value
+ */
 
-int
-ccmapc(int c, int in, int out)
+char*
+costash(Sfio_t* sp)
 {
-	return CCMAPC(c, in, out);
+	char*			s;
+
+	if (!(s = sfstruse(sp)))
+		errormsg(state.lib, ERROR_LIBRARY|2, "out of space");
+	return s;
 }

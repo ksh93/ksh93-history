@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: expr (AT&T Labs Research) 2004-05-27 $\n]"
+"[-?\n@(#)$Id: expr (AT&T Research) 2004-05-27 $\n]"
 USAGE_LICENSE
 "[+NAME?expr - evaluate arguments as an expression]"
 "[+DESCRIPTION?\bexpr\b evaluates an expression given as arguments and writes "

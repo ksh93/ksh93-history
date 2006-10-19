@@ -31,7 +31,7 @@
 #include <fcntl.h>
 
 static const char usage[] =
-"[-?\n@(#)$Id: cat (AT&T Labs Research) 2006-05-17 $\n]"
+"[-?\n@(#)$Id: cat (AT&T Research) 2006-05-17 $\n]"
 USAGE_LICENSE
 "[+NAME?cat - concatenate files]"
 "[+DESCRIPTION?\bcat\b copies each \afile\a in sequence to the standard"

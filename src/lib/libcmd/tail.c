@@ -28,7 +28,7 @@
  */
 
 static const char usage[] =
-"+[-?\n@(#)$Id: tail (AT&T Labs Research) 2006-09-11 $\n]"
+"+[-?\n@(#)$Id: tail (AT&T Research) 2006-10-18 $\n]"
 USAGE_LICENSE
 "[+NAME?tail - output trailing portion of one or more files ]"
 "[+DESCRIPTION?\btail\b copies one or more input files to standard output "
@@ -303,7 +303,7 @@ init(Tail_t* tp, Sfoff_t number, int delim, int flags)
  */
 
 static _ast_intmax_t
-strtonum(register const char* s, char** e, int* f, int o)
+num(register const char* s, char** e, int* f, int o)
 {
 	_ast_intmax_t	number;
 	char*		t;
@@ -397,7 +397,7 @@ b_tail(int argc, char** argv, void* context)
 		case 'N':
 			flags |= COUNT;
 			if (s = opt_info.arg)
-				number = strtonum(s, &s, &flags, n);
+				number = num(s, &s, &flags, n);
 			else
 			{
 				number = LINES;
@@ -449,7 +449,7 @@ b_tail(int argc, char** argv, void* context)
 		case ':':
 			/* handle old style arguments */
 			r = s = argv[opt_info.index];
-			number = strtonum(s, &t, &flags, 0);
+			number = num(s, &t, &flags, 0);
 			for (;;)
 			{
 				switch (*t++)
@@ -473,7 +473,7 @@ b_tail(int argc, char** argv, void* context)
 					continue;
 				default:
 					error(2, "%s: invalid suffix", t - 1);
-					opt_info.offset = t - r;
+					opt_info.offset = strlen(r);
 					break;
 				}
 				break;

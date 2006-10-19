@@ -344,7 +344,8 @@ vsyslog(int priority, const char* format, va_list ap)
 		}
 		if ((s = sfstrseek(sp, 0, SEEK_CUR)) && *(s - 1) != '\n')
 			sfputc(sp, '\n');
-		sendlog(sfstruse(sp));
+		if (s = sfstruse(sp))
+			sendlog(s);
 		sfstrclose(sp);
 	}
 }

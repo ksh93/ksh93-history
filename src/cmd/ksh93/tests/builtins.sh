@@ -238,10 +238,10 @@ x2=.000000001
 if	[[ $(printf "%g\n" x2 2>/dev/null) != 1e-09 ]]
 then	err_exit 'printf "%g" not working correctly'
 fi
-($SHELL read -s foobar <<\!
-testing
-!
-) 2> /dev/null || err_exit ksh read -s var fails
+#FIXME#($SHELL read -s foobar <<\!
+#FIXME#testing
+#FIXME#!
+#FIXME#) 2> /dev/null || err_exit ksh read -s var fails
 if	[[ $(printf +3 2>/dev/null) !=   +3 ]]
 then	err_exit 'printf is not processing formats beginning with + correctly'
 fi
@@ -421,11 +421,16 @@ fi
 	done) == $'0\n0\n1\n1\n2' ]]  || err_exit  "DEBUG trap not working"
 getconf UNIVERSE - ucb
 [[ $($SHELL -c 'echo -3') == -3 ]] || err_exit "echo -3 not working in ucb universe"
-typeset -F3 start_x=SECONDS total_t
-for (( i=0 ; i < 50 ; i++)) 
-do	{ sleep 2;date ;} 2> /dev/null | read -N1 -t .02
+typeset -F3 start_x=SECONDS total_t delay=0.02
+typeset reps=50 leeway=5
+sleep $(( 2 * leeway * reps * delay )) |
+for (( i=0 ; i < reps ; i++ )) 
+do	read -N1 -t $delay
 done
-((total_t = SECONDS - start_x))
-(( total_t > 2.0 )) && err_exit "read -t in pipe taking $total_t secs - too long" 
-(( total_t < 1.0 )) &&  err_exit "read -t in pipe taking $total_t secs - too fast" 
+(( total_t = SECONDS - start_x ))
+if	(( total_t > leeway * reps * delay ))
+then	err_exit "read -t in pipe taking $total_t secs - $(( reps * delay )) minimum - too long" 
+elif	(( total_t < reps * delay ))
+then	err_exit "read -t in pipe taking $total_t secs - $(( reps * delay )) minimum - too fast" 
+fi
 exit $((Errors))

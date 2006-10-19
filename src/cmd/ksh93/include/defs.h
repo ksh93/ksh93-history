@@ -75,7 +75,7 @@ struct sh_scoped
 	short		optchar;
 	short		opterror;
 	int		ioset;
-	short		trapmax;
+	unsigned short	trapmax;
 	char		*trap[SH_DEBUGTRAP+1];
 	char		**trapcom;
 	char		**otrapcom;
@@ -84,6 +84,7 @@ struct sh_scoped
 
 struct limits
 {
+	long		arg_max;	/* max arg+env exec() size */
 	int		open_max;	/* maximum number of file descriptors */
 	int		clk_tck;	/* number of ticks per second */
 	int		child_max;	/* maxumum number of children */
@@ -159,6 +160,7 @@ struct limits
 	int		xargmin; \
 	int		xargmax; \
 	int		xargexit; \
+	mode_t		mask; \
 	long		nforks; \
 	Env_t		*env; \
 	void		*init_context; \
@@ -275,6 +277,10 @@ struct limits
 #   define SH_HISTORY2		44
 #   define SH_HISTREEDIT	61
 #   define SH_HISTVERIFY	62
+#endif
+
+#ifndef PIPE_BUF
+#   define PIPE_BUF		512
 #endif
 
 #define MATCH_MAX		64

@@ -26,7 +26,7 @@
  */
 
 static const char mkservice_usage[] =
-"[-?\n@(#)$Id: mkservice (AT&T Labs Research) 2001-06-13 $\n]"
+"[-?\n@(#)$Id: mkservice (AT&T Research) 2001-06-13 $\n]"
 USAGE_LICENSE
 "[+NAME? mkservice - create a shell server ]"
 "[+DESCRIPTION?\bmkservice\b creates a tcp or udp server that is "
@@ -67,7 +67,7 @@ USAGE_LICENSE
 
 
 static const char eloop_usage[] =
-"[-?\n@(#)$Id: eloop (AT&T Labs Research) 2001-06-13 $\n]"
+"[-?\n@(#)$Id: eloop (AT&T Research) 2001-06-13 $\n]"
 USAGE_LICENSE
 "[+NAME? eloop - process event loop]"
 "[+DESCRIPTION?\beloop\b causes the shell to block waiting for events "
@@ -86,9 +86,10 @@ USAGE_LICENSE
 ;
 
 
+#include	"defs.h"
+
 #include	<cmd.h>
 #include	<error.h>
-#include	<shell.h>
 #include	<nval.h>
 #include	<sys/socket.h>
 #include 	<netinet/in.h>
@@ -127,7 +128,6 @@ struct Service_s
 static short		*file_list;
 static Sfio_t		**poll_list;
 static Service_t	**service_list;
-static int		max_fd;
 static int		npoll;
 static int		nready;
 static int		ready;
@@ -262,10 +262,6 @@ static int waitnotify(int fd, long timeout, int rw)
 
 static int service_init(void)
 {
-	int n =  sysconf(_SC_OPEN_MAX);
-	if(n < 0)
-		n = OPEN_MAX;
-	max_fd = n;
 	file_list =  newof(NULL,short,n,0);
 	poll_list =  newof(NULL,Sfio_t*,n,0);
 	service_list =  newof(NULL,Service_t*,n,0);
@@ -385,7 +381,7 @@ static void putval(Namval_t* np, const char* val, int flag, Namfun_t* fp)
 	if (!val)
 	{
 		register int i;
-		for(i=0; i< max_fd; i++)
+		for(i=0; i< sh.lim.open_max; i++)
 		{
 			if(service_list[i]==sp)
 			{

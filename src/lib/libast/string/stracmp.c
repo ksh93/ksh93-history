@@ -36,8 +36,6 @@ NoN(stracmp)
 
 #include <ctype.h>
 
-#undef	stracmp
-
 int
 stracmp(const char* aa, const char* ab)
 {

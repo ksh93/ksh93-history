@@ -189,6 +189,7 @@ extern ssize_t 		sh_read(int, void*, size_t);
 extern ssize_t 		sh_write(int, const void*, size_t);
 extern off_t		sh_seek(int, off_t, int);
 extern int 		sh_pipe(int[]);
+extern mode_t 		sh_umask(mode_t);
 extern void		*sh_waitnotify(Shwait_f);
 extern Shscope_t	*sh_getscope(int,int);
 extern Shscope_t	*sh_setscope(Shscope_t*);
@@ -224,6 +225,7 @@ extern int		sh_exec(const Shnode_t*,int);
 #   define pipe(a)	sh_pipe(a)
 #   define read(a,b,c)	sh_read(a,b,c)
 #   define write(a,b,c)	sh_write(a,b,c)
+#   define umask(a)	sh_umask(a)
 #   define dup		sh_dup
 #   if _lib_lseek64
 #	define open64	sh_open

@@ -163,7 +163,8 @@ static Shnode_t *r_tree()
 					t->lst.lstrit = (Shnode_t*)r_arg();
 			}
 	}
-	t->tre.tretyp = type;
+	if(t)
+		t->tre.tretyp = type;
 	return(t);
 }
 

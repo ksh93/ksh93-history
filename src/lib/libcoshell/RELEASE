@@ -1,3 +1,11 @@
+06-08-22 coshell.h: procrun => coprocrun, system => cosystem
+06-08-09 coshell.h: export CO_ENV_MSGFD for COSHELL=coshell
+06-08-02 coexec.c: Cojob_t.flags&CO_SERVICE for service requests
+06-08-02 cokill.c: cokill() signal==0 => kill CO_SERVICE jobs
+06-07-27 coexec.c: drop server cowait() that bypassed caller
+06-06-21 coexec.c: add non-block cowait() to drain responses
+06-06-11 fix service intercept cleanup
+06-05-24 add service=name:init lightweight service intercepts
 05-04-19 cowait.c: beef up invalid message tests and diagnostics
 05-04-11 drop fixed CO_MSGFD for $_coshell_msgfd
 05-04-07 coexec.c: fix !_lib_fork&&_map_spawnve close-on-exec redirection

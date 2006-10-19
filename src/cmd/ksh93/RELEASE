@@ -1,4 +1,16 @@
-06-09-08  --- Release ksh93s-  ---
+06-10-12  --- Release ksh93s-  ---
+06-10-12  A bug when skipping over `...` with ${x:=`...`} when x is set
+	  has been fixed.
+06-10-11  A bug in process floating constants produced by the %a format
+	  of printf has been fixed.
+06-10-06  A bug in which IFS was not being restored correctly in some
+	  cases after a subshell has been fixed.
+06-10-06  A bug in which pipefail was not detecting some failures in
+	  pipelines with 3 or more states has been fixed.
+06-10-03  A bug in the processing of >(...) with builtins which could
+	  cause the builtin to hang has been fixed.
+06-10-03  A bug in the for loop optimizer which causes >(...) process
+	  substitution to be ignored has been fixed.
 06-09-97  The -a option was added to typeset for indexed arrays.  This
 	  is only needed when using the ([subscript]=value ...) form.
 06-08-16  As a new feature, a leading ~(N) on a pattern has no effect 

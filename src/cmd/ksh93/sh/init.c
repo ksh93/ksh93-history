@@ -98,6 +98,9 @@
     extern char	**environ;
 #endif
 
+#undef	getconf
+#define getconf(x)	strtol(astconf(x,NiL,NiL),NiL,0)
+
 struct seconds
 {
 	Namfun_t	hdr;
@@ -215,15 +218,12 @@ static void put_ed(register Namval_t* np,const char *val,int flags,Namfun_t *fp)
 		goto done;
 	/* turn on vi or emacs option if editor name is either*/
 	cp = path_basename(cp);
-	if(strmatch(cp,"*vi"))
+	if(strmatch(cp,"*[Vv][Ii]*"))
 		sh_onoption(SH_VI);
-	if(strmatch(cp,"*macs"))
-	{
-		if(*cp=='g')
-			sh_onoption(SH_GMACS);
-		else
-			sh_onoption(SH_EMACS);
-	}
+	else if(strmatch(cp,"*gmacs*"))
+		sh_onoption(SH_GMACS);
+	else if(strmatch(cp,"*macs*"))
+		sh_onoption(SH_EMACS);
 done:
 	nv_putv(np, val, flags, fp);
 }
@@ -834,6 +834,7 @@ Shell_t *sh_init(register int argc,register char *argv[], void(*userinit)(int))
 #else
 	init_ebcdic();
 #endif
+	umask(umask(0));
 	sh.mac_context = sh_macopen(&sh);
 	sh.arg_context = sh_argopen(&sh);
 	sh.lex_context = (void*)sh_lexopen(0,&sh,1);
@@ -861,14 +862,15 @@ Shell_t *sh_init(register int argc,register char *argv[], void(*userinit)(int))
 			break;
 		}
 	}
-#ifdef _SC_CLK_TCK
-	sh.lim.clk_tck = sysconf(_SC_CLK_TCK);
-#endif
-	sh.lim.open_max = sysconf(_SC_OPEN_MAX);
-	sh.lim.child_max = sysconf(_SC_CHILD_MAX);
-	sh.lim.ngroups_max = sysconf(_SC_NGROUPS_MAX);
-	sh.lim.posix_version = sysconf(_SC_VERSION);
-	sh.lim.posix_jobcontrol = sysconf(_SC_JOB_CONTROL);
+	sh.lim.clk_tck = getconf("CLK_TCK");
+	sh.lim.arg_max = getconf("ARG_MAX");
+	sh.lim.open_max = getconf("OPEN_MAX");
+	sh.lim.child_max = getconf("CHILD_MAX");
+	sh.lim.ngroups_max = getconf("NGROUPS_MAX");
+	sh.lim.posix_version = getconf("VERSION");
+	sh.lim.posix_jobcontrol = getconf("JOB_CONTROL");
+	if(sh.lim.arg_max <=0)
+		sh.lim.arg_max = ARG_MAX;
 	if(sh.lim.child_max <=0)
 		sh.lim.child_max = CHILD_MAX;
 	if(sh.lim.open_max <0)
@@ -1001,6 +1003,7 @@ Shell_t *sh_init(register int argc,register char *argv[], void(*userinit)(int))
 #endif /* _WINIX */
 		}
 	}
+#if SHOPT_PFSH
 	if (sh_isoption(SH_PFSH))
 	{
 		struct passwd *pw = getpwuid(sh.userid);
@@ -1008,6 +1011,7 @@ Shell_t *sh_init(register int argc,register char *argv[], void(*userinit)(int))
 			sh.user = strdup(pw->pw_name);
 		
 	}
+#endif
 	/* set[ug]id scripts require the -p flag */
 	if(sh.userid!=sh.euserid || sh.groupid!=sh.egroupid)
 	{
@@ -1248,8 +1252,8 @@ static Init_t *nv_init(Shell_t *shp)
 	shp->fun_tree = dtopen(&_Nvdisc,Dtoset);
 	dtview(shp->fun_tree,shp->bltin_tree);
 #if SHOPT_NAMESPACE
-	np = nv_mount(DOTSHNOD, "global", shp->var_tree);
-	nv_onattr(np,NV_RDONLY);
+	if(np = nv_mount(DOTSHNOD, "global", shp->var_tree))
+		nv_onattr(np,NV_RDONLY);
 	np = nv_search("namespace",nv_dict(DOTSHNOD),NV_ADD);
 	nv_putval(np,".sh.global",NV_RDONLY|NV_NOFREE);
 	nv_stack(np, &NSPACE_init);

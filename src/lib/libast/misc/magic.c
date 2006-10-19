@@ -794,8 +794,7 @@ ckmagic(register Magic_t* mp, const char* file, char* buf, struct stat* st, unsi
 			if (!(t = strrchr(file, '.')))
 				goto next;
 			sfprintf(mp->tmp, "/reg/classes_root/%s", t);
-			t = sfstruse(mp->tmp);
-			if (!(rp = sfopen(NiL, t, "r")))
+			if (!(t = sfstruse(mp->tmp)) || !(rp = sfopen(NiL, t, "r")))
 				goto next;
 			*ep->desc = 0;
 			*ep->mime = 0;
@@ -812,8 +811,7 @@ ckmagic(register Magic_t* mp, const char* file, char* buf, struct stat* st, unsi
 				else
 				{
 					sfprintf(mp->tmp, "/reg/classes_root/%s", t);
-					e = sfstruse(mp->tmp);
-					if (gp = sfopen(NiL, e, "r"))
+					if ((e = sfstruse(mp->tmp)) && (gp = sfopen(NiL, e, "r")))
 					{
 						ep->desc = vmnewof(mp->vm, ep->desc, char, strlen(t), 1);
 						strcpy(ep->desc, t);
@@ -2141,7 +2139,8 @@ magicload(register Magic_t* mp, const char* file, unsigned long flags)
 				s += n - 1;
 			}
 			sfwrite(mp->tmp, s, e - s);
-			s = sfstruse(mp->tmp);
+			if (!(s = sfstruse(mp->tmp)))
+				goto nospace;
 		}
 		if (!*s || streq(s, "-"))
 			s = MAGIC_FILE;
@@ -2153,7 +2152,8 @@ magicload(register Magic_t* mp, const char* file, unsigned long flags)
 				{
 					strcpy(mp->fbuf, s);
 					sfprintf(mp->tmp, "%s/%s", MAGIC_DIR, mp->fbuf);
-					s = sfstruse(mp->tmp);
+					if (!(s = sfstruse(mp->tmp)))
+						goto nospace;
 					if (!(t = pathpath(mp->fbuf, s, "", PATH_REGULAR|PATH_READ)))
 						goto next;
 				}
@@ -2187,6 +2187,10 @@ magicload(register Magic_t* mp, const char* file, unsigned long flags)
 		return -1;
 	}
 	return 0;
+ nospace:
+	if (mp->disc->errorf)
+		(*mp->disc->errorf)(mp, mp->disc, 3, "out of space");
+	return -1;
 }
 
 /*
@@ -2296,7 +2300,8 @@ magictype(register Magic_t* mp, Sfio_t* fp, const char* file, register struct st
 				sfprintf(mp->tmp, ", setgid=%s", fmtgid(st->st_gid));
 			if (st->st_mode & S_ISVTX)
 				sfprintf(mp->tmp, ", sticky");
-			s = sfstruse(mp->tmp);
+			if (!(s = sfstruse(mp->tmp)))
+				s = T("out of space");
 		}
 	}
 	if (mp->flags & MAGIC_MIME)

@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1990-2005 AT&T Corp.                  *
+*           Copyright (c) 1990-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -30,7 +30,7 @@
 #include <proc.h>
 
 int
-procrun(const char* path, char** argv)
+coprocrun(const char* path, char** argv)
 {
 	register char*		s;
 	register char**		a;
@@ -48,7 +48,9 @@ procrun(const char* path, char** argv)
 		coquote(tmp, s, 0);
 		sfputc(tmp, '\'');
 	}
-	n = system(sfstruse(tmp));
+	if (!(s = costash(tmp)))
+		return -1;
+	n = cosystem(s);
 	sfstrclose(tmp);
 	return n;
 }

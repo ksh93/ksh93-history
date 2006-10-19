@@ -20,20 +20,24 @@
 *                                                                      *
 ***********************************************************************/
 #pragma prototyped
+/*
+ * strlcat implementation
+ */
 
-#if defined(__STDPP__directive) && defined(__STDPP__hide)
-__STDPP__directive pragma pp:hide strlcat
-#else
 #define strlcat		______strlcat
-#endif
 
 #include <ast.h>
 
-#if defined(__STDPP__directive) && defined(__STDPP__hide)
-__STDPP__directive pragma pp:nohide strlcat
-#else
 #undef	strlcat
-#endif
+
+#undef	_def_map_ast
+#include <ast_map.h>
+
+#if _lib_strlcat
+
+NoN(strlcat)
+
+#else
 
 /*
  * append at t onto s limiting total size of s to n
@@ -70,3 +74,5 @@ strlcat(register char* s, register const char* t, register size_t n)
 		while (*t++);
 	return t - o - 1;
 }
+
+#endif

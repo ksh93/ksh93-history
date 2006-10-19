@@ -20,7 +20,7 @@
 #pragma prototyped
 /*
  * Glenn Fowler
- * AT&T Labs Research
+ * AT&T Research
  */
 
 #define _DLLINFO_PRIVATE_ \
@@ -258,11 +258,7 @@ dllsopen(const char* lib, const char* name, const char* version)
 	else if (t = strrchr(name, '/'))
 	{
 		if (!(scan->pb = vmnewof(vm, 0, char, t - (char*)name, 2)))
-		{
-			sfstrclose(scan->tmp);
-			vmclose(vm);
-			return 0;
-		}
+			goto bad;
 		memcpy(scan->pb, name, t - (char*)name);
 		name = (const char*)(t + 1);
 	}
@@ -279,7 +275,9 @@ dllsopen(const char* lib, const char* name, const char* version)
 			if (isdigit(*s))
 				sfputc(scan->tmp, *s);
 		sfprintf(scan->tmp, "%s", info->suffix);
-		sfsprintf(scan->nam, sizeof(scan->nam), "%s", sfstruse(scan->tmp));
+		if (!(s = sfstruse(scan->tmp)))
+			goto bad;
+		sfsprintf(scan->nam, sizeof(scan->nam), "%s", s);
 	}
 	else
 	{
@@ -315,6 +313,9 @@ dllsopen(const char* lib, const char* name, const char* version)
 	scan->prelen = strlen(info->prefix);
 	scan->suflen = strlen(info->suffix);
 	return scan;
+ bad:
+	dllsclose(scan);
+	return 0;
 }
 
 /*
@@ -384,7 +385,8 @@ dllsread(register Dllscan_t* scan)
 			if (!(scan->flags & DLL_MATCH_NAME))
 			{
 				sfprintf(scan->tmp, "/%s", scan->nam);
-				p = sfstruse(scan->tmp);
+				if (!(p = sfstruse(scan->tmp)))
+					return 0;
 				if (!eaccess(p, R_OK))
 				{
 					b = scan->nam;
@@ -396,7 +398,9 @@ dllsread(register Dllscan_t* scan)
 			if (scan->flags & (DLL_MATCH_NAME|DLL_MATCH_VERSION))
 			{
 				sfstrseek(scan->tmp, scan->off, SEEK_SET);
-				if ((scan->fts = fts_open((char**)sfstruse(scan->tmp), FTS_LOGICAL|FTS_NOPOSTORDER|FTS_ONEPATH, vercmp)) && (scan->ent = fts_read(scan->fts)) && (scan->ent = fts_children(scan->fts, FTS_NOSTAT)))
+				if (!(t = sfstruse(scan->tmp)))
+					return 0;
+				if ((scan->fts = fts_open((char**)t, FTS_LOGICAL|FTS_NOPOSTORDER|FTS_ONEPATH, vercmp)) && (scan->ent = fts_read(scan->fts)) && (scan->ent = fts_children(scan->fts, FTS_NOSTAT)))
 					break;
 			}
 		}
@@ -404,7 +408,8 @@ dllsread(register Dllscan_t* scan)
 	b = scan->ent->fts_name;
 	sfstrseek(scan->tmp, scan->off, SEEK_SET);
 	sfprintf(scan->tmp, "/%s", b);
-	p = sfstruse(scan->tmp);
+	if (!(p = sfstruse(scan->tmp)))
+		return 0;
  found:
 	b = scan->buf + sfsprintf(scan->buf, sizeof(scan->buf), "%s", b + scan->prelen);
 	if (!(scan->flags & DLL_INFO_PREVER))

@@ -24,8 +24,7 @@
  * dirname(3) implementation
  */
 
-#include <ast_map.h>
-#include <libgen.h>
+#include <ast_common.h>
 
 char *dirname(register char *pathname)
 {

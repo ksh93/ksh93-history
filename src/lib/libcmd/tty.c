@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: tty (AT&T Labs Research) 1999-04-10 $\n]"
+"[-?\n@(#)$Id: tty (AT&T Research) 1999-04-10 $\n]"
 USAGE_LICENSE
 "[+NAME?tty - write the name of the terminal to standard output]"
 "[+DESCRIPTION?\btty\b writes the name of the terminal that is connected "

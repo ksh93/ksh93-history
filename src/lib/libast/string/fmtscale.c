@@ -24,10 +24,12 @@
  * Glenn Fowler
  * AT&T Research
  *
- * return number n scaled to metric powers of k { 1000 1024 }
+ * return number n scaled to metric multiples of k { 1000 1024 }
+ * return string length is at most 7 chars + terminating nul
  */
 
 #include <ast.h>
+#include <lclib.h>
 
 char*
 fmtscale(register Sfulong_t n, int k)
@@ -36,13 +38,16 @@ fmtscale(register Sfulong_t n, int k)
 	int			r;
 	int			z;
 	const char*		u;
+	char			suf[3];
+	char*			s;
 	char*			buf;
+	Lc_numeric_t*		p = (Lc_numeric_t*)LCINFO(AST_LC_NUMERIC)->data;
 
-	static const char	scale[] = "bKMGTPX";
+	static const char	scale[] = "bkMGTPE";
 
 	m = 0;
 	u = scale;
-	while (n > k && *(u + 1))
+	while (n >= 1000 && *(u + 1))
 	{
 		m = n;
 		n /= k;
@@ -50,13 +55,25 @@ fmtscale(register Sfulong_t n, int k)
 	}
 	buf = fmtbuf(z = 8);
 	r = (m % k) / (k / 10 + 1);
+	s = suf;
+	if (u > scale)
+	{
+		if (k == 1024)
+		{
+			*s++ = *u == 'k' ? 'K' : *u;
+			*s++ = 'i';
+		}
+		else
+			*s++ = *u;
+	}
+	*s = 0;
 	if (n > 0 && n < 10)
-		sfsprintf(buf, z, "%I*u.%d%c", sizeof(n), n, r, *u);
+		sfsprintf(buf, z, "%I*u%c%d%s", sizeof(n), n, p->decimal >= 0 ? p->decimal : '.', r, suf);
 	else
 	{
 		if (r >= 5)
 			n++;
-		sfsprintf(buf, z, "%I*u%c", sizeof(n), n, *u);
+		sfsprintf(buf, z, "%I*u%s", sizeof(n), n, suf);
 	}
 	return buf;
 }

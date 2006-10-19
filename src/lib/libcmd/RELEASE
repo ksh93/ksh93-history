@@ -1,3 +1,12 @@
+06-10-18 tail.c: fix invalid suffix infinite loop
+06-10-11 chgrp.c,cp.c: add sfstruse() error checks
+06-10-10 tee.c: add --linebuffer, -l
+06-10-06 getconf.c: preserve native getconf(1) known variable behavior
+06-10-04 sync.c: add (thanks to Roland Mainz)
+06-10-04 getconf.c: add -v specification => run native getconf(1)
+06-09-28 stty.c: static setmode() => set() for darwin.i386
+06-09-27 head.c: handle -1c => -c1
+06-09-19 pathchk.c: pathconf() => astconf()
 06-09-11 tail.c: handle compatibility corner cases
 06-09-08 date.c: add output write error diagnostic
 06-09-04 tail.c: fix initial position for -n0, no args => no -f

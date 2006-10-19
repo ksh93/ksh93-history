@@ -74,7 +74,7 @@ const char sh_bash2[] =
 "[06:version?Print version number and exit.]";
 
 const char sh_optshopt[] =
-"+[-1c?\n@(#)$Id: shopt (AT&T Labs Research) 2003-02-13 $\n]"
+"+[-1c?\n@(#)$Id: shopt (AT&T Research) 2003-02-13 $\n]"
 "[-author?Karsten Fleischer <K.Fleischer@omnium.de>]"
 USAGE_LICENSE
 "[+NAME?shopt - set/unset variables controlling optional shell behavior]"
@@ -343,13 +343,13 @@ void bash_init(int mode)
 		sh_onoption(SH_NOEMPTYCMDCOMPL);
 		if(sh.login_sh==2)
 			sh_onoption(SH_LOGIN_SHELL);
-		if(strcmp(astgetconf("CONFORMANCE",0,0,0),"standard")==0)
+		if(strcmp(astconf("CONFORMANCE",0,0),"standard")==0)
 			sh_onoption(SH_POSIX);
-		if(strcmp(astgetconf("UNIVERSE",0,0,0),"att")==0)
+		if(strcmp(astconf("UNIVERSE",0,0),"att")==0)
 			sh_onoption(SH_XPG_ECHO);
 		else
 			sh_offoption(SH_XPG_ECHO);
-		if(strcmp(astgetconf("PATH_RESOLVE",0,0,0),"physical")==0)
+		if(strcmp(astconf("PATH_RESOLVE",0,0),"physical")==0)
 			sh_onoption(SH_PHYSICAL);
 		else
 			sh_offoption(SH_PHYSICAL);

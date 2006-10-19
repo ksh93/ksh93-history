@@ -1,7 +1,9 @@
+ref	-D_def_map_ast=1
+
 cmd	universe
 
-hdr	dirent,direntry,filio,fmtmsg,fnmatch,jioctl,libgen,locale
-hdr	ndir,nl_types,process,spawn,syslog,utime,vfork,wctype
+hdr	dirent,direntry,filio,fmtmsg,fnmatch,jioctl,libgen,limits
+hdr	locale,ndir,nl_types,process,spawn,syslog,utime,vfork,wctype
 hdr	wchar note{ <wchar.h> and isw*() really work }end execute{
 	#include <wchar.h>
 	int
@@ -21,6 +23,7 @@ lib	execlp,execve,execvp,execvpe
 lib	fchmod,fcntl,fmtmsg,fnmatch,fork,fsync
 lib	getconf,getdents,getdirentries,getdtablesize,getdate
 lib	getgroups,gethostname,getlogin,getpagesize,getrlimit,getuniverse
+lib	getopt,getsubopt,getopt_long,getopt_long_only
 lib	glob,index,iswblank,iswctype,killpg,link,localeconv,madvise
 lib	mbtowc,mbrtowc,memalign,memchr,memcpy,memdup,memmove,memset
 lib	mkdir,mkfifo,mktemp,mktime
@@ -30,13 +33,14 @@ lib	setpgid,setpgrp,setpgrp2,setreuid,setsid,setuid,sigaction
 lib	sigprocmask,sigsetmask,sigunblock,sigvec,socketpair
 lib	spawn,spawnve,spawnveg
 lib	strchr,strcoll,strdup,strerror,strcasecmp,strncasecmp,strrchr,strstr
-lib	strtod,strtold,strtol,strtoll,strtoul,strtoull
-lib	strxfrm,strftime,swab,symlink,sysconf,sysinfo,syslog
+lib	strmode,strxfrm,strftime,swab,symlink,sysconf,sysinfo,syslog
 lib	telldir,tmpnam,tzset,universe,unlink,utime,wctype
 lib	ftruncate,truncate
 lib	creat64,fstat64,fstatvfs64,ftruncate64 -D_LARGEFILE64_SOURCE
 lib	lseek64,lstat64 -D_LARGEFILE64_SOURCE
 lib	open64,readdir64,stat64,statvfs64,truncate64 -D_LARGEFILE64_SOURCE
+
+lib,npt	strtod,strtold,strtol,strtoll,strtoul,strtoull stdlib.h
 
 mem	direct.d_reclen sys/types.h sys/dir.h
 mem	dirent.d_fileno,dirent.d_ino,dirent.d_namlen,dirent.d_off,dirent.d_reclen,dirent.d_type sys/types.h dirent.h
@@ -559,13 +563,13 @@ std	strtol note{ stuck with standard strtol }end nostatic{
 	_BEGIN_EXTERNS_
 	#if _STD_
 	extern long atol(const char*);
-	long strtol(const char* s, char** e) { return 0; }
+	long strtol(const char* s, char** e, int b) { return 0; }
 	#else
 	extern long atol();
-	long strtol(s, e) char* s; char** e; { return 0; }
+	long strtol(s, e, b) char* s; char** e; int b; { return 0; }
 	#endif
 	_END_EXTERNS_
-	int main() { printf(""); return (atol("1") + strtol("1",0)) != 0; }
+	int main() { printf(""); return (atol("1") + strtol("1",(char**)0,0)) != 0; }
 }end
 
 tst	- output{

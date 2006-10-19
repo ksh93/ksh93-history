@@ -35,7 +35,7 @@
 
 #if _UWIN
 
-extern int	uwin_path(const char*, char*, int);
+#include <uwin.h>
 
 size_t
 pathposix(const char* path, char* buf, size_t siz)

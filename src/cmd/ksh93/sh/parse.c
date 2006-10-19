@@ -98,7 +98,7 @@ static unsigned long writedefs(struct argnod *arglist, int line, int type, struc
 	register char *cp;
 	register int n,eline;
 	int width=0;
-	unsigned long r;
+	unsigned long r=0;
 	static char atbuff[20];
 	int  justify=0;
 	char *attribute = atbuff;
@@ -930,7 +930,7 @@ static Shnode_t	*item(int flag)
 			(tok==ELIFSYM?(shlex.token=IFSYM, tt=item(SH_NOIO)):0));
 		if(tok==ELIFSYM)
 		{
-			if(tt->tre.tretyp!=TSETIO)
+			if(!tt || tt->tre.tretyp!=TSETIO)
 				goto done;
 			t->if_.eltre = tt->fork.forktre;
 			tt->fork.forktre = t;
@@ -1134,7 +1134,7 @@ static Shnode_t *simple(int flag, struct ionod *io)
 			shlex.token = LBRACE;
 			break;
 		}
-		if(associative && (!argp || argp->argval[0]!='['))
+		if(associative && argp->argval[0]!='[')
 			sh_syntax();
 		/* check for assignment argument */
 		if((argp->argflag&ARG_ASSIGN) && assignment!=2)

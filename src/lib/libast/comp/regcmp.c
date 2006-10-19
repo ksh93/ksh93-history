@@ -30,7 +30,7 @@
 #include <align.h>
 
 #define INC		(2*1024)
-#define MAX		(16*1024)
+#define TOT		(16*1024)
 #define SUB		10
 
 typedef struct
@@ -146,12 +146,16 @@ regcmp(const char* pattern, ...)
 		}
 	} while (s = va_arg(ap, char*));
 	va_end(ap);
-	s = sfstruse(sp);
+	if (!(s = sfstruse(sp)))
+	{
+		sfstrclose(sp);
+		return 0;
+	}
 	re = 0;
 	n = 0;
 	do
 	{
-		if ((n += INC) > MAX || !(re = newof(re, Regex_t, 0, n)))
+		if ((n += INC) > TOT || !(re = newof(re, Regex_t, 0, n)))
 		{
 			if (re)
 				free(re);

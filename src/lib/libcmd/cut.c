@@ -29,7 +29,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: cut (AT&T Labs Research) 2006-07-17 $\n]"
+"[-?\n@(#)$Id: cut (AT&T Research) 2006-07-17 $\n]"
 USAGE_LICENSE
 "[+NAME?cut - cut out selected columns or fields of each line of a file]"
 "[+DESCRIPTION?\bcut\b bytes, characters, or character-delimited fields "
@@ -93,7 +93,7 @@ typedef struct
 } Cut_t;
 
 #define HUGE		(1<<14)
-#define BSIZE		8*1024
+#define BLOCK		8*1024
 #define C_BYTES		1
 #define C_CHARS		2
 #define C_FIELDS	4
@@ -390,7 +390,7 @@ static int cutfields(const Cut_t *cuthdr,Sfio_t *fdin,Sfio_t *fdout)
 		{
 			/* copy line to tmpfile in case no fields */
 			if(!fdtmp)
-				fdtmp = sftmp(BSIZE);
+				fdtmp = sftmp(BLOCK);
 			sfwrite(fdtmp,(char*)first,c);
 			offset +=c;
 		}

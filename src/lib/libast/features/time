@@ -41,13 +41,6 @@ endif
 
 cat{
 #ifndef CLOCKS_PER_SEC
-#ifdef	CLK_TCK
 #define CLOCKS_PER_SEC	CLK_TCK
-#else
-#define CLOCKS_PER_SEC	_AST_CLK_TCK
-#endif
-#endif
-#ifndef CLK_TCK
-#define CLK_TCK		_AST_CLK_TCK
 #endif
 }end

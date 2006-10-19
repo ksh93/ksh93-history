@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.1 2006-01-21
+info mam static 00000 1994-07-17 make (AT&T Research) 5.1 2006-08-11
 setv INSTALLROOT ../../..
 setv PACKAGE_ast_INCLUDE ${INSTALLROOT}/include/ast
 setv PACKAGE_ast_LIB ${INSTALLROOT}/lib
@@ -73,56 +73,44 @@ make ${PACKAGE_ast_INCLUDE}/tok.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast.h implicit
 make ${PACKAGE_ast_INCLUDE}/vmalloc.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
+make ${PACKAGE_ast_INCLUDE}/ast_map.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast_map.h dontcare
 done ${PACKAGE_ast_INCLUDE}/ast_common.h dontcare
 make ${PACKAGE_ast_INCLUDE}/ast_std.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast_map.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast_botch.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_botch.h dontcare
-make ${PACKAGE_ast_INCLUDE}/ast_unistd.h implicit
-done ${PACKAGE_ast_INCLUDE}/ast_unistd.h dontcare
-make ${PACKAGE_ast_INCLUDE}/re_comp.h implicit
-make ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
-make ${INSTALLROOT}/include/prototyped.h implicit
-done ${INSTALLROOT}/include/prototyped.h dontcare
-done ${PACKAGE_ast_INCLUDE}/prototyped.h dontcare
-done ${PACKAGE_ast_INCLUDE}/re_comp.h dontcare
-make ${PACKAGE_ast_INCLUDE}/getopt.h implicit
-make ${PACKAGE_ast_INCLUDE}/ast_getopt.h implicit
-prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
-done ${PACKAGE_ast_INCLUDE}/ast_getopt.h dontcare
-prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
-done ${PACKAGE_ast_INCLUDE}/getopt.h dontcare
+make ${PACKAGE_ast_INCLUDE}/ast_limits.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast_limits.h dontcare
 make ${PACKAGE_ast_INCLUDE}/ast_fcntl.h implicit
-make ${PACKAGE_ast_INCLUDE}/ls.h implicit
-make ${PACKAGE_ast_INCLUDE}/ast_mode.h implicit
-done ${PACKAGE_ast_INCLUDE}/ast_mode.h dontcare
 make ${PACKAGE_ast_INCLUDE}/ast_fs.h implicit
 make error?--?old?ethernet?address?at?wrong?offset implicit
 done error?--?old?ethernet?address?at?wrong?offset dontcare virtual
 done ${PACKAGE_ast_INCLUDE}/ast_fs.h dontcare
-prev ${PACKAGE_ast_INCLUDE}/ast_std.h implicit
-prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
-done ${PACKAGE_ast_INCLUDE}/ls.h dontcare
-prev ${PACKAGE_ast_INCLUDE}/ast_fs.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_fcntl.h dontcare
-make ${PACKAGE_ast_INCLUDE}/ast_types.h implicit
-done ${PACKAGE_ast_INCLUDE}/ast_types.h dontcare
-make ${PACKAGE_ast_INCLUDE}/ast_map.h implicit
-done ${PACKAGE_ast_INCLUDE}/ast_map.h dontcare
+make ${PACKAGE_ast_INCLUDE}/ast_getopt.h implicit
+make ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+make ${INSTALLROOT}/include/prototyped.h implicit
+done ${INSTALLROOT}/include/prototyped.h dontcare
+done ${PACKAGE_ast_INCLUDE}/prototyped.h dontcare
+done ${PACKAGE_ast_INCLUDE}/ast_getopt.h dontcare
+make ${PACKAGE_ast_INCLUDE}/ast_sys.h implicit
+make ${PACKAGE_ast_INCLUDE}/re_comp.h implicit
+prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+done ${PACKAGE_ast_INCLUDE}/re_comp.h dontcare
+make ${PACKAGE_ast_INCLUDE}/getopt.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast_getopt.h implicit
+prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+done ${PACKAGE_ast_INCLUDE}/getopt.h dontcare
 make ${PACKAGE_ast_INCLUDE}/stdio.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast_stdio.h implicit
 make ${PACKAGE_ast_INCLUDE}/sfio_s.h implicit
 done ${PACKAGE_ast_INCLUDE}/sfio_s.h dontcare
-prev ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast_std.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_stdio.h dontcare
 done ${PACKAGE_ast_INCLUDE}/stdio.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/getopt.h implicit
-make ${PACKAGE_ast_INCLUDE}/limits.h implicit
-make ${PACKAGE_ast_INCLUDE}/ast_limits.h implicit
-done ${PACKAGE_ast_INCLUDE}/ast_limits.h dontcare
-done ${PACKAGE_ast_INCLUDE}/limits.h dontcare
-make ${PACKAGE_ast_INCLUDE}/ast_hdr.h implicit
-done ${PACKAGE_ast_INCLUDE}/ast_hdr.h dontcare
-prev ${PACKAGE_ast_INCLUDE}/ast_getopt.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast_sys.h dontcare
 make ${PACKAGE_ast_INCLUDE}/ast_lib.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_lib.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
@@ -190,7 +178,13 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_
 done coclose.o generated
 make coinit.o
 make coinit.c
-prev ${PACKAGE_ast_INCLUDE}/ls.h implicit
+make ${PACKAGE_ast_INCLUDE}/ls.h implicit
+make ${PACKAGE_ast_INCLUDE}/ast_mode.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast_mode.h dontcare
+prev ${PACKAGE_ast_INCLUDE}/ast_fs.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast_std.h implicit
+prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+done ${PACKAGE_ast_INCLUDE}/ls.h
 make ${PACKAGE_ast_INCLUDE}/fs3d.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast_fs.h implicit
 prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
@@ -203,12 +197,21 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_
 done coinit.o generated
 make coexec.o
 make coexec.c
+prev ${PACKAGE_ast_INCLUDE}/proc.h implicit
 prev colib.h implicit
 done coexec.c
 meta coexec.o %.c>%.o coexec.c coexec
 prev coexec.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c coexec.c
 done coexec.o generated
+make costash.o
+make costash.c
+prev colib.h implicit
+done costash.c
+meta costash.o %.c>%.o costash.c costash
+prev costash.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c costash.c
+done costash.o generated
 make cowait.o
 make cowait.c
 prev colib.h implicit
@@ -231,7 +234,7 @@ make FEATURE/nfsd implicit
 meta FEATURE/nfsd >FEATURE/%  nfsd
 prev coshell.req
 bind -last
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} ${mam_libast} : def nfsd
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} ${mam_libast}  : def nfsd
 done FEATURE/nfsd generated
 prev ${PACKAGE_ast_INCLUDE}/ls.h implicit
 prev colib.h implicit
@@ -273,7 +276,7 @@ meta system.o %.c>%.o system.c system
 prev system.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c system.c
 done system.o generated
-exec - ${AR} cr libcoshell.a coopen.o coclose.o coinit.o coexec.o cowait.o cokill.o cosync.o coquote.o codata.o procrun.o system.o
+exec - ${AR} cr libcoshell.a coopen.o coclose.o coinit.o coexec.o costash.o cowait.o cokill.o cosync.o coquote.o codata.o procrun.o system.o
 exec - (ranlib libcoshell.a) >/dev/null 2>&1 || true
 done libcoshell.a generated
 done coshell virtual

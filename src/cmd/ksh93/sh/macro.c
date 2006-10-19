@@ -741,7 +741,7 @@ static void mac_substitute(Mac_t *mp, register char *cp,char *str,register int s
 		while((c= *cp++) && c!=ESCAPE);
 		if(c==0)
 			break;
-		if((n= *cp++) >='0' && n<='9' && (n-='0')<subsize || n=='\\' || n==RBRACE)
+		if((n= *cp++)=='\\' || n==RBRACE || (n>='0' && n<='9' && (n-='0')<subsize))
 		{
 			c = cp-first-2;
 			if(c)
@@ -912,8 +912,8 @@ static int varsub(Mac_t *mp)
 	register Namval_t	*np = NIL(Namval_t*);
 	register int 	dolg=0, mode=0;
 	Namarr_t	*ap=0;
-	int		dolmax=0, vsize= -1, offset, nulflg, replen=0, bysub=0;
-	char		idbuff[2], *id = idbuff, *pattern=0, *repstr;
+	int		dolmax=0, vsize= -1, offset= -1, nulflg, replen=0, bysub=0;
+	char		idbuff[3], *id = idbuff, *pattern=0, *repstr;
 	int		oldpat=mp->pattern,idnum=0,flag=0,d;
 retry1:
 	mp->zeros = 0;
@@ -1067,7 +1067,7 @@ retry1:
 			{
 				idbuff[0] = mode = c;
 				if((d=fcpeek(0))==c)
-					idbuff[2] = fcget();
+					idbuff[1] = fcget();
 				if(type==M_VNAME)
 					type = M_NAMESCAN;
 				else
@@ -1113,7 +1113,11 @@ retry1:
 #ifdef SHOPT_TYPEDEF
 			else if(type==M_TYPE)
 			{
+#if 0
 				Namval_t *nq = nv_type(np);
+#else
+				Namval_t *nq = 0;
+#endif
 				type = M_BRACE;
 				if(nq)
 					v = nv_name(nq);
@@ -1134,7 +1138,7 @@ retry1:
 			{
 				v = nv_getval(np);
 				/* special case --- ignore leading zeros */  
-				if( (mp->arith||mp->let) && !nv_isattr(np,NV_INTEGER) && (offset==0 || !isalnum(*((unsigned char*)stakptr(offset-1)))))
+				if( (mp->arith||mp->let) && (np->nvfun || nv_isattr(np,(NV_LJUST|NV_RJUST|NV_ZFILL))) && (offset==0 || !isalnum(*((unsigned char*)stakptr(offset-1)))))
 					mp->zeros = 1;
 			}
 		}
@@ -1143,8 +1147,10 @@ retry1:
 		stakseek(offset);
 		if(ap)
 		{
+#if SHOPT_OPTIMIZE
 			if(sh.argaddr)
 				nv_optimize(np);
+#endif
 			if(isastchar(mode) && array_elem(ap)> !c)
 				dolg = -1;
 			else
@@ -1416,7 +1422,7 @@ retry1:
 		pattern = strdup(argp);
 		if((type=='/' || c=='/') && (repstr = mac_getstring(pattern)))
 			replen = strlen(repstr);
-		if(v || c=='/')
+		if(v || c=='/' && offset>=0)
 			stakseek(offset);
 	}
 retry2:
@@ -1568,12 +1574,14 @@ retry2:
 			mac_error(np);
 		}
 	}
-	else if(sh_isoption(SH_NOUNSET))
+	else if(sh_isoption(SH_NOUNSET) && (!np  || nv_isnull(np)))
 	{
-		nv_close(np);
+		if(np)
+			nv_close(np);
 		errormsg(SH_DICT,ERROR_exit(1),e_notset,id);
 	}
-	nv_close(np);
+	if(np)
+		nv_close(np);
 	return(1);
 nosub:
 	if(type)
@@ -1669,14 +1677,14 @@ static void comsubst(Mac_t *mp,int type)
 			register int fd;
 			int r;
 			struct checkpt buff;
-			struct ionod *ip;
+			struct ionod *ip=0;
 			sh_pushcontext(&buff,SH_JMPIO);
 			if((ip=t->tre.treio) && 
 				((ip->iofile&IOLSEEK) || !(ip->iofile&IOUFD)) &&
 				(r=sigsetjmp(buff.buff,0))==0)
 				fd = sh_redirect(ip,3);
 			else
-				fd = sh_chkopen((char*)"/dev/null");
+				fd = sh_chkopen(e_devnull);
 			sh_popcontext(&buff);
 			if(r==0 && ip && (ip->iofile&IOLSEEK))
 			{

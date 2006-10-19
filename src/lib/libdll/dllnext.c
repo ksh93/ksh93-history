@@ -20,11 +20,14 @@
 #pragma prototyped
 /*
  * Glenn Fowler
- * AT&T Labs Research
+ * AT&T Research
  */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE	1
+#endif
+#ifndef __EXTENSIONS__
+#define __EXTENSIONS__	1
 #endif
 
 #include <ast.h>
@@ -77,7 +80,7 @@ _dll_next(int flags, _DLL_RLD_SYM_TYPE* here)
 	{
 		do
 		{
-			if (!streq(vp, "MAIN") && (lp = dlopen(vp, flags)))
+			if (strcmp(vp, "MAIN") && (lp = dlopen(vp, flags)))
 			{
 				if (xr = (Write_f)dlsym(lp, "write"))
 					wr = xr;
@@ -89,7 +92,7 @@ _dll_next(int flags, _DLL_RLD_SYM_TYPE* here)
 	{
 		do
 		{
-			if (lp = dlopen(streq(vp, "MAIN") ? (char*)0 : vp, flags))
+			if (lp = dlopen(strcmp(vp, "MAIN") ? vp : (char*)0, flags))
 			{
 				if (found)
 				{

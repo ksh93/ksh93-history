@@ -144,6 +144,7 @@ int    b_printf(int argc, char *argv[],void *extra)
 {
 	struct print prdata;
 	NOT_USED(argc);
+	memset(&prdata,0,sizeof(prdata));
 	prdata.sh = (Shell_t*)extra;
 	prdata.options = sh_optprintf;
 	return(b_print(-1,argv,&prdata));
@@ -161,7 +162,7 @@ int    b_print(int argc, char *argv[], void *extra)
 	register Shell_t *shp = (Shell_t*)extra;
 	const char *options, *msg = e_file+4;
 	char *format = 0;
-	int sflag = 0, nflag, rflag;
+	int sflag = 0, nflag=0, rflag=0;
 	if(argc>0)
 	{
 		options = sh_optprint;
@@ -296,10 +297,8 @@ skip2:
 		/* printf style print */
 		Sfio_t *pool;
 		struct printf pdata;
-		pdata.sh = shp;
-		pdata.err = 0;
-		pdata.cescape = 0;
 		memset(&pdata, 0, sizeof(pdata));
+		pdata.sh = shp;
 		pdata.hdr.version = SFIO_VERSION;
 		pdata.hdr.extf = extend;
 		pdata.nextarg = argv;
@@ -755,10 +754,13 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 		value->s = sh_fmtqf(value->s, !!(fe->flags & SFFMT_ALTER), fold);
 		break;
 	case 'P':
-		value->s = fmtmatch(value->s);
-		if(*value->s==0)
+	{
+		char *s = fmtmatch(value->s);
+		if(!s || *s==0)
 			errormsg(SH_DICT,ERROR_exit(1),e_badregexp,value->s);
+		value->s = s;
 		break;
+	}
 	case 'R':
 		value->s = fmtre(value->s);
 		if(*value->s==0)

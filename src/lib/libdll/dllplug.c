@@ -20,7 +20,7 @@
 #pragma prototyped
 /*
  * Glenn Fowler
- * AT&T Labs Research
+ * AT&T Research
  */
 
 #include <ast.h>

@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: rmdir (AT&T Labs Research) 2006-08-24 $\n]"
+"[-?\n@(#)$Id: rmdir (AT&T Research) 2006-08-24 $\n]"
 USAGE_LICENSE
 "[+NAME?rmdir - remove empty directories]"
 "[+DESCRIPTION?\brmdir\b deletes each given directory.  The directory "

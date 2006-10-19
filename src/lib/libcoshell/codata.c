@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1990-2005 AT&T Corp.                  *
+*           Copyright (c) 1990-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -27,11 +27,13 @@
 
 #include "colib.h"
 
-char	coident[] = "\
-# @(#)$Id: libcoshell (AT&T Research) 2005-04-11 $\n\
-_coshell_msgfd=%d\n\
-{ { (eval 'function fun { trap \":\" 0; return 1; }; trap \"exit 0\" 0; fun; exit 1') && PATH= print -u$_coshell_msgfd ksh; } || { times && echo bsh >&$_coshell_msgfd; } || { echo osh >&$_coshell_msgfd; }; } >/dev/null 2>&1\n\
-";
+char	coident[] =
+"# @(#)$Id: libcoshell (AT&T Research) 2006-08-22 $\n"
+CO_ENV_MSGFD "=%d\n"
+"{ { (eval 'function fun { trap \":\" 0; return 1; }; trap \"exit 0\" 0; fun; exit 1') && PATH= print -u$"
+CO_ENV_MSGFD " ksh; } || { times && echo bsh >&$" CO_ENV_MSGFD
+"; } || { echo osh >&$" CO_ENV_MSGFD "; }; } >/dev/null 2>&1\n"
+;
 
 char	cobinit[] = "\
 if	(eval 'f() echo') >/dev/null 2>&1\n\

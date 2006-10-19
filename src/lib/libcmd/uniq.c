@@ -26,7 +26,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: uniq (AT&T Labs Research) 2006-08-28 $\n]"
+"[-?\n@(#)$Id: uniq (AT&T Research) 2006-08-28 $\n]"
 USAGE_LICENSE
 "[+NAME?uniq - Report or filter out repeated lines in a file]"
 "[+DESCRIPTION?\buniq\b reads an input, comparing adjacent lines, and "

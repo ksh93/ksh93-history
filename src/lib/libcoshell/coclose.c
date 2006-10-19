@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1990-2005 AT&T Corp.                  *
+*           Copyright (c) 1990-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -51,6 +51,8 @@ shut(register Coshell_t* co)
 	int			status;
 	Coshell_t*		ps;
 	Cojob_t*		pj;
+	Coservice_t*		pv;
+	Coservice_t*		sv;
 	Sig_handler_t		handler;
 
 	sfclose(co->msgfp);
@@ -68,7 +70,8 @@ shut(register Coshell_t* co)
 		signal(SIGALRM, handler);
 		killpg(co->pid, SIGTERM);
 	}
-	else status = 0;
+	else
+		status = 0;
 	if (co->flags & CO_DEBUG)
 		errormsg(state.lib, 2, "jobs %d user %s sys %s", co->total, fmtelapsed(co->user, CO_QUANT), fmtelapsed(co->sys, CO_QUANT));
 	cj = co->jobs;
@@ -77,6 +80,17 @@ shut(register Coshell_t* co)
 		pj = cj;
 		cj = cj->next;
 		free(pj);
+	}
+	sv = co->service;
+	while (sv)
+	{
+		if (sv->fd > 0)
+			close(sv->fd);
+		if (sv->pid)
+			waitpid(sv->pid, &status, 0);
+		pv = sv;
+		sv = sv->next;
+		free(pv);
 	}
 	cs = state.coshells;
 	ps = 0;

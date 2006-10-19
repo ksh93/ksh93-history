@@ -29,7 +29,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: paste (AT&T Labs Research) 1999-06-22 $\n]"
+"[-?\n@(#)$Id: paste (AT&T Research) 1999-06-22 $\n]"
 USAGE_LICENSE
 "[+NAME?paste - merge lines of files]"
 "[+DESCRIPTION?\bpaste\b concatenates the corresponding lines of a "

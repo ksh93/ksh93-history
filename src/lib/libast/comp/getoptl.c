@@ -95,7 +95,8 @@ golly(int argc, char* const* argv, const char* optstring, const struct option* l
 				}
 			}
 		sfputc(up, '\n');
-		usage = sfstruse(up);
+		if (!(usage = sfstruse(up)))
+			return -1;
 		lastoptstring = optstring;
 		lastlongopts = longopts;
 	}

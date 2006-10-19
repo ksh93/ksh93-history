@@ -27,7 +27,6 @@
  * generate signal features
  */
 
-#include <stdio.h>
 #include <signal.h>
 
 struct _m_

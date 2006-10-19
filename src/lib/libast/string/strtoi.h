@@ -476,31 +476,31 @@ S2I_function(a, e, base) const char* a; char** e; int base;
 			{
 			case 'b':
 			case 'B':
-				v = ((S2I_utype)1) << 9;
-				break;
-			case 'g':
-			case 'G':
-				v = ((S2I_utype)1) << 30;
+				shift = 9;
 				break;
 			case 'k':
 			case 'K':
-				v = ((S2I_utype)1) << 10;
+				shift = 10;
 				break;
 			case 'm':
 			case 'M':
-				v = ((S2I_utype)1) << 20;
+				shift = 20;
 				break;
-			case 'p':
-			case 'P':
-				if (sizeof(S2I_number) <= 4)
-					overflow = 1;
-				v = ((S2I_utype)1) << 50;
+			case 'g':
+			case 'G':
+				shift = 30;
 				break;
 			case 't':
 			case 'T':
-				if (sizeof(S2I_number) <= 4)
-					overflow = 1;
-				v = ((S2I_utype)1) << 40;
+				shift = 40;
+				break;
+			case 'p':
+			case 'P':
+				shift = 50;
+				break;
+			case 'e':
+			case 'E':
+				shift = 60;
 				break;
 			default:
 				if (m <= 1)
@@ -521,7 +521,32 @@ S2I_function(a, e, base) const char* a; char** e; int base;
 				else
 					v = m;
 				s--;
+				shift = 0;
 				break;
+			}
+			if (shift)
+			{
+				if (S2I_valid(s))
+					switch (*s)
+					{
+					case 'b':
+					case 'B':
+					case 'i':
+					case 'I':
+						s++;
+						break;
+					}
+#if S2I_unsigned
+				if (shift >= (sizeof(S2I_type) * CHAR_BIT))
+#else
+				if (shift >= (sizeof(S2I_type) * CHAR_BIT - 1))
+#endif
+				{
+					v = 0;
+					overflow = 1;
+				}
+				else
+					v = ((S2I_utype)1) << shift;
 			}
 			if (v)
 			{
@@ -543,8 +568,28 @@ S2I_function(a, e, base) const char* a; char** e; int base;
 #endif
 	}
 #if !S2I_unsigned
-	else if (!(qualifier & QU) && (n - negative) > S2I_max)
-		overflow = 1;
+	else if (!(qualifier & QU))
+	{
+		if (negative)
+		{
+			if (!n)
+			{
+				b = k;
+				do
+				{
+					if (b >= s)
+					{
+						negative = 0;
+						break;
+					}
+				} while (*b++ == '0');
+			}
+			if (negative && (n - 1) > S2I_max)
+				overflow = 1;
+		}
+		else if (n > S2I_max)
+			overflow = 1;
+	}
 #endif
 	if (e)
 		*e = (char*)s;

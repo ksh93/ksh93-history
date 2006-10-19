@@ -27,6 +27,7 @@
  * parse elapsed time in 1/n secs from s
  * compatible with fmtelapsed()
  * also handles ps [day-][hour:]min:sec
+ * also handles coshell % for 'infinity'
  * if e!=0 then it is set to first unrecognized char
  */
 
@@ -61,10 +62,9 @@ strelapsed(register const char* s, char** e, int n)
 		{
 			t = ~t;
 			last = s;
+			break;
 		}
-		else
-			s--;
-		if (s == last)
+		if (s == last + 1)
 			break;
 		if (!p)
 			while (isspace(c) || c == '_')
@@ -72,14 +72,23 @@ strelapsed(register const char* s, char** e, int n)
 		switch (c)
 		{
 		case 'S':
-			v *= 20 * 12 * 4 * 7 * 24 * 60 * 60;
+			if (*s == 'E' || *s == 'e')
+			{
+				v += f;
+				f = 0;
+			}
+			else
+				v *= 20 * 12 * 4 * 7 * 24 * 60 * 60;
 			break;
 		case 'y':
 		case 'Y':
 			v *= 12 * 4 * 7 * 24 * 60 * 60;
 			break;
 		case 'M':
-			v *= 4 * 7 * 24 * 60 * 60;
+			if (*s == 'I' || *s == 'i')
+				v *= 60;
+			else
+				v *= 4 * 7 * 24 * 60 * 60;
 			break;
 		case 'w':
 			v *= 7 * 24 * 60 * 60;

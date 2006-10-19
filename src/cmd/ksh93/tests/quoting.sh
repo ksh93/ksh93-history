@@ -323,4 +323,9 @@ string='\4'
 string='&foo'
 [[ ${subject/${re}/${string}} != '&foo' ]] && err_exit 'string replacement with $string not working with string=&foo'
 [[ ${subject/${re}/"${string}"} != '&foo' ]] && err_exit 'string replacement with "$string" not working with  string=&foo'
+{
+x=x
+x=${x:-`id | sed 's/^[^(]*(\([^)]*\)).*/\1/'`}
+} 2> /dev/null || err_exit 'skipping over `` failed' 
+[[ $x == x ]] || err_exit 'assignment ${x:=`...`} failed'
 exit $((Errors))

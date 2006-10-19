@@ -26,6 +26,8 @@
 
 #include <ast_lib.h>
 
+#undef	_lib_getsubopt	/* we can satisfy the api */
+
 #if _lib_getsubopt
 
 #include <ast.h>

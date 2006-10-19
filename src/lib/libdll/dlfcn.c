@@ -23,10 +23,10 @@
  *
  * David Korn
  * Glenn Fowler
- * AT&T Labs Research
+ * AT&T Research
  */
 
-static const char id[] = "\n@(#)$Id: dll library (AT&T Labs Research) 2005-02-14 $\0\n";
+static const char id[] = "\n@(#)$Id: dll library (AT&T Research) 2005-02-14 $\0\n";
 
 #include <ast.h>
 #include <dlldefs.h>

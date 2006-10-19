@@ -248,8 +248,10 @@ static int p_arg(register struct argnod *arg,int flag)
 {
 	while(arg)
 	{
-		if(strlen(arg->argval) || (flag==0 && (arg->argflag&~(ARG_APPEND|ARG_EXP))))
+		if(strlen(arg->argval) || (arg->argflag==ARG_RAW))
 			arg->argchn.ap = 0;
+		else if(flag==0)
+			sh_tclear((Shnode_t*)arg->argchn.ap);
 		else
 			sh_tclear(((struct fornod*)arg->argchn.ap)->fortre);
 		arg = arg->argnxt.ap;
@@ -347,9 +349,11 @@ static void put_level(Namval_t* np,const char *val,int flags,Namfun_t *fp)
 	}
 	if(level==oldlevel)
 		return;
-	sp = sh_getscope(level,SEEK_SET);
-	sh_setscope(sp);
-	error_info.line = sp->lineno;
+	if(sp = sh_getscope(level,SEEK_SET))
+	{
+			sh_setscope(sp);
+		error_info.line = sp->lineno;
+	}
 	nv_putval(SH_PATHNAMENOD, sh.st.filename ,NV_NOFREE);
 }
 
@@ -875,8 +879,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 					if(scope)
 						nv_unscope();
 					/* don't restore for subshell exec */
-					if(io && !sh.subshell || np!=SYSEXEC)
-						sh_iorestore(buff.topfd,jmpval);
+					if((sh.topfd>topfd) && !(sh.subshell && np==SYSEXEC))
+						sh_iorestore(topfd,jmpval);
 					if(jmpval)
 						siglongjmp(*sh.jmplist,jmpval);
 					if(sh.exitval >=0)
@@ -1925,7 +1929,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 			sh_exit(SH_EXITSIG|sh.lastsig);
 		if(was_interactive)
 			sh_onstate(SH_INTERACTIVE);
-		if(was_monitor)
+		if(was_monitor && sh_isoption(SH_MONITOR))
 			sh_onstate(SH_MONITOR);
 		if(was_errexit)
 			sh_onstate(SH_ERREXIT);
@@ -2073,6 +2077,8 @@ pid_t _sh_fork(register pid_t parent,int flags,int *jobid)
 			}
 		}
 #endif /* JOBS */
+		if(!sh_isstate(SH_MONITOR) && job.waitall && postid==0)
+			job.curpgid = parent;
 		if(flags&FCOOP)
 			sh.cpid = parent;
 		myjob = job_post(parent,postid);

@@ -35,11 +35,15 @@ fmtclock(register Sfulong_t t)
 	char*			buf;
 	int			z;
 
+	static unsigned int	clk_tck;
+
+	if (!clk_tck && !(clk_tck = (unsigned int)strtoul(astconf("CLK_TCK", NiL, NiL), NiL, 10)))
+		clk_tck = 60;
 	if (t == 0)
 		return "0";
 	if (t == ((Sfulong_t)~0))
 		return "%";
-	t = (t * 1000000) / CLOCKS_PER_SEC;
+	t = (t * 1000000) / clk_tck;
 	if (t < 1000)
 		u = 'u';
 	else if ((t /= 1000) < 1000)

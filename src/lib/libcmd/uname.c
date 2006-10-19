@@ -28,7 +28,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: uname (AT&T Labs Research) 2006-05-09 $\n]"
+"[-?\n@(#)$Id: uname (AT&T Research) 2006-05-09 $\n]"
 USAGE_LICENSE
 "[+NAME?uname - identify the current system ]"
 "[+DESCRIPTION?By default \buname\b writes the operating system name to"
@@ -51,7 +51,7 @@ USAGE_LICENSE
 "[v:version|kernel-version?The kernel version level.]"
 "[m:machine?The name of the hardware type the system is running on.]"
 "[p:processor?The name of the processor instruction set architecture.]"
-"[i:implementation|platform|herdware-platform?The hardware implementation;"
+"[i:implementation|platform|hardware-platform?The hardware implementation;"
 "	this is \b--host-id\b on some systems.]"
 "[o:operating-system?The generic operating system name.]"
 "[h:host-id|id?The host id in hex.]"

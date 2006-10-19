@@ -28,7 +28,7 @@
  */
 
 static const char usage_1[] =
-"[-?@(#)$Id: chgrp (AT&T Labs Research) 2005-04-14 $\n]"
+"[-?@(#)$Id: chgrp (AT&T Research) 2006-10-11 $\n]"
 USAGE_LICENSE
 ;
 
@@ -245,7 +245,8 @@ b_chgrp(int argc, char** argv, void* context)
 	else
 		sfputr(sp, ERROR_translate(0, 0, 0, "[[owner:]group]"), -1);
 	sfputr(sp, usage_3, -1);
-	usage = sfstruse(sp);
+	if (!(usage = sfstruse(sp)))
+		error(ERROR_SYSTEM|3, "out of space");
 	for (;;)
 	{
 		switch (optget(argv, usage))

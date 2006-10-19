@@ -24,25 +24,14 @@
  * mktime implementation
  */
 
-#define _def_map_ast	1
-
-#if defined(__STDPP__directive) && defined(__STDPP__hide)
-__STDPP__directive pragma pp:hide mktime
-#else
 #define mktime		______mktime
-#endif
 
 #include <ast.h>
 #include <tm.h>
 
-#if defined(__STDPP__directive) && defined(__STDPP__hide)
-__STDPP__directive pragma pp:nohide mktime
-#else
 #undef	mktime
-#endif
 
 #undef	_def_map_ast
-
 #include <ast_map.h>
 
 #undef	_lib_mktime	/* we can pass X/Open */

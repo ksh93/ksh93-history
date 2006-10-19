@@ -23,6 +23,8 @@
 
 #include <ast.h>
 
+#undef	_lib_getopt	/* we can satisfy the api */
+
 #if _lib_getopt
 
 NoN(getopt)

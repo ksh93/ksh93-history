@@ -1,10 +1,10 @@
+ref	-D_def_map_ast=1
 hdr	float,floatingpoint,math,values
 sys	filio,ioctl
 lib	qfrexp,qldexp
 key	signed
 
 tst	tmp_rmfail note{ open files cannot be removed }end execute{
-	#include <stdio.h>
 	#include <string.h>
 	#include <time.h>
 	int
@@ -116,7 +116,6 @@ tst	lib_cvt note{ native floating point conversions ok }end link{
 }end
 
 tst	xopen_stdio note{ Stdio fseek/fflush are X/Open-compliant }end execute{
-	#include <stdio.h>
 	#define Failed(file)	(unlink(file),1)
 	int
 	main(argc, argv)

@@ -28,7 +28,10 @@
 #include <ast.h>
 #include <wchar.h>
 
+#define STUB	1
+
 #if !_lib_mbtowc
+#undef	STUB
 size_t
 mbtowc(wchar_t* t, const char* s, size_t n)
 {
@@ -39,10 +42,12 @@ mbtowc(wchar_t* t, const char* s, size_t n)
 #endif
 
 #if !_lib_mbrtowc
+#undef	STUB
 size_t
 mbrtowc(wchar_t* t, const char* s, size_t n, mbstate_t* q)
 {
 #if _lib_mbtowc
+#undef	STUB
 	memset(q, 0, sizeof(*q));
 	return mbtowc(t, s, n);
 #else
@@ -55,6 +60,7 @@ mbrtowc(wchar_t* t, const char* s, size_t n, mbstate_t* q)
 #endif
 
 #if !_lib_mbstowcs
+#undef	STUB
 size_t
 mbstowcs(wchar_t* t, const char* s, size_t n)
 {
@@ -71,6 +77,7 @@ mbstowcs(wchar_t* t, const char* s, size_t n)
 #endif
 
 #if !_lib_wctomb
+#undef	STUB
 int
 wctomb(char* s, wchar_t c)
 {
@@ -81,10 +88,12 @@ wctomb(char* s, wchar_t c)
 #endif
 
 #if !_lib_wcrtomb
+#undef	STUB
 size_t
 wcrtomb(char* s, wchar_t c, mbstate_t* q)
 {
 #if _lib_wctomb
+#undef	STUB
 	memset(q, 0, sizeof(*q));
 	return wctomb(s, c);
 #else
@@ -97,6 +106,7 @@ wcrtomb(char* s, wchar_t c, mbstate_t* q)
 #endif
 
 #if !_lib_wcslen
+#undef	STUB
 size_t
 wcslen(const wchar_t* s)
 {
@@ -109,6 +119,7 @@ wcslen(const wchar_t* s)
 #endif
 
 #if !_lib_wcstombs
+#undef	STUB
 size_t
 wcstombs(char* t, register const wchar_t* s, size_t n)
 {
@@ -121,4 +132,8 @@ wcstombs(char* t, register const wchar_t* s, size_t n)
 		while (p++, *s++);
 	return p - t;
 }
+#endif
+
+#if STUB
+NoN(wc)
 #endif

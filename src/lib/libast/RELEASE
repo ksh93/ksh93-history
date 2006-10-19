@@ -1,3 +1,25 @@
+06-10-19 sfio/sfvprintf.c: %W.P.Bmd => fmtscale() using string W.P
+06-10-18 string/fmtscale.c: 1000: n[.]nn(kMGTPE), 1024: n[.]nn(KMGTPE)i
+06-10-11 ast_std.h: now implies <sys/stat.h> (did on most before anyway)
+06-10-11 strtoi.h: ignore sign for 0, validate scale shift
+06-10-11 strdup.c,vmstrdup.c: handle 0 arg
+06-10-11 add sfstruse()/sfstropen() error checks
+06-10-10 misc/procopen.c: envv==environ => don't modify environ
+06-10-10 misc/procclose.c: return valid exit(1) status
+06-10-06 port/astconf.c,comp/conf.sh,comp/conf.tab: play nice with getconf(1)
+06-10-01 comp/conf.tab: SHELL default checks { _CS_PATH } X { ksh ksh93 sh }
+06-10-01 comp/conf.sh: export CONF_getconf to shell actions
+06-10-01 comp/putenv.c: always enable setenv() for procopen()
+06-10-01 misc/procopen.c: use pathshell() or astconf("SHELL",0,0) if PARANOID
+06-10-01 path/pathshell.c: localize the shell path patterns and accept ksh93
+06-09-28 Makefile: avoid ast <stdio.h> vix iffe -X ast -- doh
+06-09-27 regex/regdecomp.c: add
+06-09-26 regex/regcomp.c: handle KRE ~(...)<invalid-kre>
+06-09-25 reorganize to avoid native header intercepts
+06-09-15 uwin/crypt.c: _UWIN only!
+06-09-14 Makefile: tweak the ast_common.h bootstrap again (finally?)
+06-09-14 misc/optget.c: noncommercial => OPT_proprietary
+06-09-12 string/strelapsed.c: fix multi-char qualifier parse
 06-09-12 string/strtoi.h: drop [cClLqQwW] multipliers
 06-09-11 misc/optget.c: add numeric arg validity check
 06-09-07 misc/optget.c,tm/tmfix.c: fix uninitialzed var refs

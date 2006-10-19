@@ -37,6 +37,7 @@
 #endif
 
 #undef	copy
+#undef	BSD			/* guess who defines this */
 #undef	END
 #undef	INLINE
 #undef	TEST

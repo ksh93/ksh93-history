@@ -200,13 +200,14 @@ extern regclass_t regclass(const char*, char**);
 extern int	regaddclass(const char*, regclass_t);
 extern int	regcollate(const char*, char**, char*, int);
 extern int	regcomb(regex_t*, regex_t*);
+extern size_t	regdecomp(regex_t*, regflags_t, char*, size_t);
 extern int	regdup(regex_t*, regex_t*);
 extern int	regncomp(regex_t*, const char*, size_t, regflags_t);
 extern int	regnexec(const regex_t*, const char*, size_t, size_t, regmatch_t*, regflags_t);
 extern void	regfatal(regex_t*, int, int);
 extern void	regfatalpat(regex_t*, int, int, const char*);
 extern int	regrecord(const regex_t*);
-extern int	regrexec(const regex_t*, const char*, size_t, size_t, regmatch_t*, regflags_t, regflags_t, void*, regrecord_t);
+extern int	regrexec(const regex_t*, const char*, size_t, size_t, regmatch_t*, regflags_t, int, void*, regrecord_t);
 extern regstat_t* regstat(const regex_t*);
 
 extern regex_t*	regcache(const char*, regflags_t, int*);

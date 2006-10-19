@@ -36,8 +36,6 @@ NoN(strnacmp)
 
 #include <ctype.h>
 
-#undef	strnacmp
-
 int
 strnacmp(const char* a, const char* b, size_t n)
 {

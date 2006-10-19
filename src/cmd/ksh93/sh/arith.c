@@ -247,7 +247,7 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 			{
 				while(*val=='0')
 					val++;
-				if(*val==0 || *val=='.')
+				if(*val==0 || *val=='.' || *val=='x' || *val=='X')
 					val--;
 			}
 			if(r==LONGLONG_MAX && errno)

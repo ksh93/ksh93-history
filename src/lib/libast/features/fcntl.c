@@ -27,9 +27,7 @@
  * generate POSIX fcntl.h
  */
 
-#include <stdio.h>
 #include <sys/types.h>
-#include <sys/stat.h>
 
 #include "FEATURE/lib"
 
@@ -44,8 +42,15 @@
 #endif
 #endif
 
-#include "FEATURE/fcntl.lcl"
-#include "FEATURE/unistd.lcl"
+#if _hdr_fcntl
+#include <fcntl.h>
+#endif
+#if _hdr_unistd
+#include <unistd.h>
+#endif
+
+#include <sys/stat.h>
+
 #include "FEATURE/fs"
 
 #undef	getdtablesize   
@@ -106,15 +111,13 @@ main()
 	printf("#define umask	______umask\n");
 	printf("#endif \n");
 	printf("\n");
-#if defined(S_IRUSR)
-	printf("#include <ast_fs.h>	/* <fcntl.h> includes <sys/stat.h>! part I*/\n");
+	printf("#include <ast_fs.h>\n");
 	printf("#if _typ_off64_t\n");
 	printf("#undef	off_t\n");
 	printf("#ifdef __STDC__\n");
 	printf("#define	off_t	off_t\n");
 	printf("#endif\n");
 	printf("#endif\n");
-#endif
 	printf("#include <fcntl.h>\n");
 #if _hdr_mman
 	printf("#include <mman.h>\n");
@@ -174,6 +177,22 @@ main()
 	printf("\n");
 	printf("#undef	_AST_mode_t\n");
 	printf("\n");
+#else
+	printf("#include <fcntl.h>\n");
+#if _hdr_mman || _sys_mman
+	printf("#define mmap		______mmap\n");
+	printf("#define mmap64		______mmap64\n");
+#if _hdr_mman
+	printf("#include <mman.h>\n");
+#else
+#if _sys_mman
+	printf("#include <sys/mman.h>\n");
+#endif
+#endif
+	printf("#undef	mmap\n");
+	printf("#undef	mmap64\n");
+#endif
+
 #endif
 
 #ifndef	FD_CLOEXEC
@@ -402,16 +421,6 @@ main()
 #ifndef	O_TEXT
 	printf("#define O_TEXT		0\n");
 #endif
-#if defined(S_IRUSR)
-	printf("\n");
-	printf("#include <ls.h>	/* <fcntl.h> includes <sys/stat.h> part II! */\n");
-	printf("#if _typ_off64_t\n");
-	printf("#undef	off_t\n");
-	printf("#ifdef __STDC__\n");
-	printf("#define	off_t	off_t\n");
-	printf("#endif\n");
-	printf("#endif\n");
-#endif
 #if	NEED_F || NEED_O
 	printf("\n");
 #if	NEED_F
@@ -421,9 +430,19 @@ main()
 	printf("extern int	open(const char*, int, ...);\n");
 #endif
 #endif
+	printf("#include <ast_fs.h>\n");
 	printf("#if _typ_off64_t\n");
 	printf("#undef	off_t\n");
 	printf("#define	off_t	off64_t\n");
+	printf("#endif\n");
+	printf("#if _lib_fstat64\n");
+	printf("#define fstat		fstat64\n");
+	printf("#endif\n");
+	printf("#if _lib_lstat64\n");
+	printf("#define lstat		lstat64\n");
+	printf("#endif\n");
+	printf("#if _lib_stat64\n");
+	printf("#define stat		stat64\n");
 	printf("#endif\n");
 	printf("#if _lib_creat64\n");
 	printf("#define creat	creat64\n");

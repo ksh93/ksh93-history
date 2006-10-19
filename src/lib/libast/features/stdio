@@ -1,4 +1,5 @@
 set	prototyped
+ref	-D_def_map_ast=1
 iff	SFSTDIO
 cat{
 	#define __FILE_typedef	1
@@ -49,7 +50,7 @@ cat{
 	#define SEEK_END	2
 	#endif
 
-	#include <ast_common.h>
+	#include <ast_std.h>
 
 	#include <sfio_s.h>
 
@@ -275,6 +276,7 @@ output{
 		printf("#define rewind		_ast_rewind\n");
 		printf("#define scanf		_ast_scanf\n");
 		printf("#define setbuf		_ast_setbuf\n");
+		printf("#undef	setbuffer\n");
 		printf("#define setbuffer	_ast_setbuffer\n");
 		printf("#define setlinebuf	_ast_setlinebuf\n");
 		printf("#define setvbuf		_ast_setvbuf\n");
@@ -320,7 +322,6 @@ output{
 	}
 }end
 macro{
-	#include <stdio.h>
 	<<"#if defined(__STDPP__directive) && defined(__STDPP__initial)">>
 	<<"__STDPP__directive pragma pp:initial">>
 	<<"#endif">>

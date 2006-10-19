@@ -31,7 +31,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: rev (AT&T Labs Research) 1999-04-10 $\n]"
+"[-?\n@(#)$Id: rev (AT&T Research) 1999-04-10 $\n]"
 USAGE_LICENSE
 "[+NAME?rev - reverse the characters or lines of one or more files]"
 "[+DESCRIPTION?\brev\b copies one or more files to standard output "

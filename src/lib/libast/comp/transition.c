@@ -20,45 +20,67 @@
 *                                                                      *
 ***********************************************************************/
 #pragma prototyped
+
 /*
- * macro interface for sfio write strings
- *
- * NOTE: see <stak.h> for an alternative interface
- *	 read operations require sfseek()
+ * transient code to aid transition between releases
  */
 
-#ifndef _SFSTR_H
-#define _SFSTR_H
+#include <ast.h>
 
-#include <sfio.h>
-
-#define sfstropen()	sfnew((Sfio_t*)0,(char*)0,-1,-1,SF_WRITE|SF_STRING)
-#define sfstrnew(m)	sfnew((Sfio_t*)0,(char*)0,-1,-1,(m)|SF_STRING)
-#define sfstrclose(f)	sfclose(f)
-
-#define sfstrtell(f)	((f)->_next - (f)->_data)
-#define sfstrpend(f)	((f)->_endb - (f)->_next)
-#define sfstrrel(f,p)	((p) == (0) ? (char*)(f)->_next : \
-			 ((f)->_next += (p), \
-			  ((f)->_next >= (f)->_data && (f)->_next  <= (f)->_endb) ? \
-				(char*)(f)->_next : ((f)->_next -= (p), (char*)0) ) )
-
-#define sfstrset(f,p)	(((p) >= 0 && (p) <= (f)->_size) ? \
-				(char*)((f)->_next = (f)->_data+(p)) : (char*)0 )
-
-#define sfstrbase(f)	((char*)(f)->_data)
-#define sfstrsize(f)	((f)->_size)
-
-#define sfstrrsrv(f,n)	(sfreserve(f,(long)(n),1)?(sfwrite(f,(char*)(f)->_next,0),(char*)(f)->_next):(char*)0)
-
-#define sfstruse(f)	(sfputc(f,0), (char*)((f)->_next = (f)->_data) )
-
-#if _BLD_ast && defined(__EXPORT__)
-#define extern		__EXPORT__
+#if defined(__EXPORT__)
+#define extern	__EXPORT__
 #endif
 
-extern int		sfstrtmp(Sfio_t*, int, void*, size_t);
+#define STUB		1
 
-#undef	extern
+/*
+ * 2006-09-28
+ *
+ *	on some systems the _std_strtol iffe changed (due to a faulty
+ *	test prototype) and the cause programs dynamically linked to
+ *	an updated -last to fail at runtime with missing _ast_strtol etc.
+ */
 
+#if !_std_strtol
+
+#ifndef strtol
+#undef	STUB
+extern long
+_ast_strtol(const char* a, char** b, int c)
+{
+	return strtol(a, b, c);
+}
+#endif
+
+#ifndef strtoul
+#undef	STUB
+extern unsigned long
+_ast_strtoul(const char* a, char** b, int c)
+{
+	return strtoul(a, b, c);
+}
+#endif
+
+#ifndef strtoll
+#undef	STUB
+extern _ast_intmax_t
+_ast_strtoll(const char* a, char** b, int c)
+{
+	return strtoll(a, b, c);
+}
+#endif
+
+#ifndef strtoull
+#undef	STUB
+extern unsigned
+_ast_intmax_t _ast_strtoull(const char* a, char** b, int c)
+{
+	return strtoull(a, b, c);
+}
+#endif
+
+#endif
+
+#if STUB
+NoN(transition)
 #endif

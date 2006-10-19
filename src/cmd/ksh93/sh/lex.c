@@ -78,6 +78,7 @@ struct lexdata
 	char		balance;
 	char		warn;
 	char		message;
+	char		arith;
 	char 		*first;
 	int		level;
 	int		lastc;
@@ -173,12 +174,11 @@ static void lex_advance(Sfio_t *iop, const char *buff, register int size)
 	register Sfio_t *log= shp->funlog;
 #if KSHELL
 	/* write to history file and to stderr if necessary */
-	if(!sfstacked(iop))
+	if(iop && !sfstacked(iop))
 	{
 		if(sh_isstate(SH_HISTORY) && shp->hist_ptr)
 			log = shp->hist_ptr->histfp;
-		if(iop)
-			sfwrite(log, (void*)buff, size);
+		sfwrite(log, (void*)buff, size);
 		if(sh_isstate(SH_VERBOSE))
 			sfwrite(sfstderr, buff, size);
 	}
@@ -347,6 +347,7 @@ int sh_lex(void)
 		shlex.assignok |= lex.reservok;
 	if(lex.comp_assign==2)
 		lex.comp_assign = lex.reservok = 0;
+	lexd.arith = (lexd.nest==1);
 	if(lexd.nest)
 	{
 		pushlevel(lexd.nest,ST_NONE);
@@ -764,7 +765,7 @@ int sh_lex(void)
 					ingrave = !ingrave;
 				/* FALL THRU */
 			case S_QUOTE:
-				if(oldmode()==ST_NONE)	/*  in ((...)) */
+				if(oldmode()==ST_NONE && lexd.arith)	/*  in ((...)) */
 					continue;
 				if(n==S_QUOTE)
 					wordflags |=ARG_QUOTED;
@@ -1958,7 +1959,7 @@ struct argnod *sh_endword(int mode)
 	register int n;
 	register char *sp,*dp;
 	register int inquote=0, inlit=0; /* set within quoted strings */
-	struct argnod* argp;
+	struct argnod* argp=0;
 	char	*ep=0, *xp=0;
 	int bracket=0;
 	stakputc(0);
@@ -2234,9 +2235,10 @@ static int alias_exceptf(Sfio_t *iop,int type,Sfdisc_t *handle)
 {
 	register struct alias *ap = (struct alias*)handle;
 	register Namval_t *np;
-	register Lex_t	*lp = ap->lp;
+	register Lex_t	*lp;
 	if(type==0 || type==SF_ATEXIT || !ap)
 		return(0);
+	lp = ap->lp;
 	np = ap->np;
 	if(type!=SF_READ)
 	{

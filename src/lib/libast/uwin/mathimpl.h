@@ -99,3 +99,5 @@ struct Double __log__D __P((double));
 #if defined(_BLD_ast) && defined(__EXPORT__)
 #define extern	__EXPORT__
 #endif
+
+extern double	copysign(double, double);

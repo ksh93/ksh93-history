@@ -44,15 +44,21 @@ make FEATURE/standards
 meta FEATURE/standards features/%>FEATURE/% features/standards standards
 make features/standards
 done features/standards
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/standards
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/standards
 done FEATURE/standards generated
-make ast_common.h
+make FEATURE/lib
+meta FEATURE/lib features/%>FEATURE/% features/lib lib
+make features/lib
+done features/lib
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/lib
+done FEATURE/lib generated
 make FEATURE/common
 meta FEATURE/common features/%>FEATURE/% features/common common
 make features/common
 done features/common
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/common
-make ast_map.h implicit
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/common
+done FEATURE/common generated
+make ast_map.h
 make FEATURE/map
 meta FEATURE/map features/%.c>FEATURE/% features/map.c map
 make features/map.c
@@ -60,55 +66,26 @@ make FEATURE/vmalloc implicit
 meta FEATURE/vmalloc features/%>FEATURE/% features/vmalloc vmalloc
 make features/vmalloc
 done features/vmalloc
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/vmalloc
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/vmalloc
 make FEATURE/mmap implicit
 meta FEATURE/mmap features/%>FEATURE/% features/mmap mmap
 make features/mmap
 done features/mmap
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/mmap
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/mmap
 done FEATURE/mmap dontcare generated
 done FEATURE/vmalloc generated
 prev FEATURE/mmap implicit
-make FEATURE/lib implicit
-meta FEATURE/lib features/%>FEATURE/% features/lib lib
-make features/lib
-done features/lib
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/lib
-done FEATURE/lib generated
-make std/stdio.h implicit
-make ast_stdio.h implicit
-make FEATURE/stdio
-meta FEATURE/stdio features/%>FEATURE/% features/stdio stdio
-make features/stdio
-done features/stdio
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/stdio
-make include/sfio_s.h implicit
-done include/sfio_s.h dontcare
-prev ast_common.h implicit
-done FEATURE/stdio generated
-exec - cmp 2>/dev/null -s FEATURE/stdio ast_stdio.h || { rm -f ast_stdio.h; silent test -d . || mkdir .; ${STDCP} FEATURE/stdio ast_stdio.h; }
-prev include/sfio_s.h implicit
-prev ast_common.h implicit
-done ast_stdio.h generated
-done std/stdio.h
+prev FEATURE/lib implicit
 done features/map.c
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -Istd  ${LDFLAGS} '   run features/map.c
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I.  ${LDFLAGS} '   run features/map.c
 done FEATURE/map generated
 exec - cmp 2>/dev/null -s FEATURE/map ast_map.h || { rm -f ast_map.h; silent test -d . || mkdir .; ${STDCP} FEATURE/map ast_map.h; }
-done ast_map.h dontcare generated
-done FEATURE/common generated
-exec - sed 's/if _def_map_ast/if !_def_map_ast/' < FEATURE/common > 1.${COTEMP}.x
-exec - if	cmp 2>/dev/null -s ast_common.h 1.${COTEMP}.x
-exec - then	rm -f 1.${COTEMP}.x
-exec - else	mv 1.${COTEMP}.x ast_common.h
-exec - fi
-prev ast_map.h implicit
-done ast_common.h dontcare generated
-prev ast_map.h
+done ast_map.h generated
 make ast_limits.h
 make FEATURE/limits
 meta FEATURE/limits features/%.c>FEATURE/% features/limits.c limits
 make features/limits.c
+make joint.conflim.h implicit joint
 make conflim.h implicit
 make conf
 make comp/conf.sh
@@ -151,85 +128,133 @@ make comp/conf.tab
 done comp/conf.tab
 exec - ${INSTALLROOT}/src/lib/libast/conf -v comp/conf.tab ${CC} ${mam_cc_FLAGS} ${CCFLAGS}
 done conflim.h generated
-make joint.conflib.h implicit joint
-make conflib.h implicit
-make FEATURE/wait implicit
-meta FEATURE/wait features/%>FEATURE/% features/wait wait
-make features/wait
-done features/wait
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/wait
-done FEATURE/wait generated
-done conflib.h
-prev conflim.h
-make confmap.h
-done confmap.h generated
 make conftab.h
 done conftab.h generated
-make confuni.h
-done confuni.h generated
-make confmap.c
-done confmap.c generated
 make conftab.c
 done conftab.c generated
-make confstr.c
-done confstr.c generated
-make pathconf.c
-done pathconf.c generated
-make sysconf.c
-done sysconf.c generated
-done joint.conflib.h virtual
+done joint.conflim.h virtual
 make FEATURE/param implicit
 meta FEATURE/param features/%.sh>FEATURE/% features/param.sh param
 make features/param.sh
 done features/param.sh
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/param.sh
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/param.sh
 make error?--?old?ethernet?address?at?wrong?offset implicit
 done error?--?old?ethernet?address?at?wrong?offset dontcare virtual
 done FEATURE/param generated
-make FEATURE/unistd.lcl implicit
-meta FEATURE/unistd.lcl >FEATURE/%  unistd.lcl
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   def unistd.lcl
 make comp/re_comp.h implicit
 done comp/re_comp.h dontcare
 make comp/getopt.h implicit
 make include/ast_getopt.h implicit
 done include/ast_getopt.h dontcare
 done comp/getopt.h dontcare
-done FEATURE/unistd.lcl generated
 prev FEATURE/common implicit
 prev FEATURE/lib implicit
-make FEATURE/limits.lcl implicit
-meta FEATURE/limits.lcl >FEATURE/%  limits.lcl
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   def limits.lcl
-done FEATURE/limits.lcl generated
-prev std/stdio.h implicit
 prev FEATURE/standards implicit
 done features/limits.c
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd  ${LDFLAGS} '   run features/limits.c
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude  ${LDFLAGS} '   run features/limits.c
 done FEATURE/limits generated
 exec - cmp 2>/dev/null -s FEATURE/limits ast_limits.h || { rm -f ast_limits.h; silent test -d . || mkdir .; ${STDCP} FEATURE/limits ast_limits.h; }
 done ast_limits.h generated
-prev ast_stdio.h
+make ast_stdio.h
+make FEATURE/stdio
+meta FEATURE/stdio features/%>FEATURE/% features/stdio stdio
+make features/stdio
+done features/stdio
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/stdio
+make include/sfio_s.h implicit
+done include/sfio_s.h dontcare
+make include/ast_std.h implicit
+prev ast_map.h implicit
+make ast_botch.h implicit
+make FEATURE/botch
+meta FEATURE/botch features/%.c>FEATURE/% features/botch.c botch
+make features/botch.c
+make FEATURE/types implicit
+meta FEATURE/types >FEATURE/%  types
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   def types
+done FEATURE/types generated
+prev FEATURE/lib implicit
+done features/botch.c
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I.  ${LDFLAGS} '   run features/botch.c
+done FEATURE/botch generated
+exec - cmp 2>/dev/null -s FEATURE/botch ast_botch.h || { rm -f ast_botch.h; silent test -d . || mkdir .; ${STDCP} FEATURE/botch ast_botch.h; }
+done ast_botch.h dontcare generated
+prev ast_limits.h implicit
+make ast_fcntl.h implicit
+make FEATURE/fcntl
+meta FEATURE/fcntl features/%.c>FEATURE/% features/fcntl.c fcntl
+make features/fcntl.c
+make FEATURE/tty implicit
+meta FEATURE/tty features/%>FEATURE/% features/tty tty
+make features/tty
+done features/tty
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/tty
+done FEATURE/tty generated
+make FEATURE/fs implicit
+meta FEATURE/fs features/%>FEATURE/% features/fs fs
+make features/fs
+done features/fs
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/fs
+done FEATURE/fs generated
+prev FEATURE/lib implicit
+done features/fcntl.c
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude  ${LDFLAGS} '   run features/fcntl.c
+make ast_fs.h implicit
+prev FEATURE/fs
+exec - cmp 2>/dev/null -s FEATURE/fs ast_fs.h || { rm -f ast_fs.h; silent test -d . || mkdir .; ${STDCP} FEATURE/fs ast_fs.h; }
+done ast_fs.h dontcare generated
+done FEATURE/fcntl generated
+exec - cmp 2>/dev/null -s FEATURE/fcntl ast_fcntl.h || { rm -f ast_fcntl.h; silent test -d . || mkdir .; ${STDCP} FEATURE/fcntl ast_fcntl.h; }
+prev ast_fs.h implicit
+done ast_fcntl.h dontcare generated
+prev include/ast_getopt.h implicit
+make ast_sys.h implicit
+make FEATURE/sys
+meta FEATURE/sys features/%>FEATURE/% features/sys sys
+make features/sys
+done features/sys
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/sys
+make std/stdio.h implicit
+prev ast_stdio.h implicit
+done std/stdio.h dontcare
+prev comp/getopt.h implicit
+done FEATURE/sys generated
+exec - cmp 2>/dev/null -s FEATURE/sys ast_sys.h || { rm -f ast_sys.h; silent test -d . || mkdir .; ${STDCP} FEATURE/sys ast_sys.h; }
+done ast_sys.h dontcare generated
+make ast_lib.h implicit
+prev FEATURE/lib
+exec - cmp 2>/dev/null -s FEATURE/lib ast_lib.h || { rm -f ast_lib.h; silent test -d . || mkdir .; ${STDCP} FEATURE/lib ast_lib.h; }
+done ast_lib.h dontcare generated
+make ast_common.h implicit
+prev FEATURE/common
+exec - sed '/define _def_map_ast/d' < FEATURE/common > 1.${COTEMP}.x
+exec - if	cmp 2>/dev/null -s ast_common.h 1.${COTEMP}.x
+exec - then	rm -f 1.${COTEMP}.x
+exec - else	mv 1.${COTEMP}.x ast_common.h
+exec - fi
+prev ast_map.h implicit
+done ast_common.h dontcare generated
+done include/ast_std.h dontcare
+done FEATURE/stdio generated
+exec - cmp 2>/dev/null -s FEATURE/stdio ast_stdio.h || { rm -f ast_stdio.h; silent test -d . || mkdir .; ${STDCP} FEATURE/stdio ast_stdio.h; }
+prev include/sfio_s.h implicit
+prev include/ast_std.h implicit
+done ast_stdio.h dontcare generated
 make ast_nl_types.h
 make FEATURE/nl_types
 meta FEATURE/nl_types features/%>FEATURE/% features/nl_types nl_types
 make features/nl_types
 done features/nl_types
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/nl_types
-make std/limits.h implicit
-prev ast_limits.h implicit
-done std/limits.h dontcare
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/nl_types
 done FEATURE/nl_types generated
 exec - cmp 2>/dev/null -s FEATURE/nl_types ast_nl_types.h || { rm -f ast_nl_types.h; silent test -d . || mkdir .; ${STDCP} FEATURE/nl_types ast_nl_types.h; }
-prev std/limits.h implicit
 done ast_nl_types.h generated
 make ast_wchar.h
 make FEATURE/wchar
 meta FEATURE/wchar features/%>FEATURE/% features/wchar wchar
 make features/wchar
 done features/wchar
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/wchar
-prev std/stdio.h implicit
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/wchar
 prev std/stdio.h implicit
 prev std/stdio.h implicit
 prev ast_common.h implicit
@@ -238,7 +263,10 @@ exec - cmp 2>/dev/null -s FEATURE/wchar ast_wchar.h || { rm -f ast_wchar.h; sile
 prev std/stdio.h implicit
 prev ast_common.h implicit
 done ast_wchar.h generated
-exec - rm -f dirent.h iconv.h limits.h nl_types.h stdio.h wchar.h
+exec - : clean up obsolete headers :
+exec - rm -rf dirent.h iconv.h nl_types.h stdio.h wchar.h ast_hdr.h ast_types.h ast_unistd.h iffeio.h \
+exec - 	${INSTALLROOT}/include/ast/limits.h ${INSTALLROOT}/include/ast/unistd.h \
+exec - 	${PACKAGEROOT}/src/lib/libast/std/limits.h
 exec - set -
 exec - echo 'int main(){return 0;}' > 1.${COTEMP}.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}   -c 1.${COTEMP}.c &&
@@ -294,124 +322,7 @@ make misc/state.c
 make include/ast.h implicit
 make include/vmalloc.h implicit
 prev ast_common.h implicit
-make include/ast_std.h implicit
-make ast_botch.h implicit
-make FEATURE/botch
-meta FEATURE/botch features/%.c>FEATURE/% features/botch.c botch
-make features/botch.c
-make FEATURE/types implicit
-meta FEATURE/types features/%>FEATURE/% features/types types
-make features/types
-done features/types
-prev ast.req
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/types
-done FEATURE/types generated
-prev FEATURE/lib implicit
-done features/botch.c
-prev ast.req
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I.  ${LDFLAGS} '   run features/botch.c
-done FEATURE/botch generated
-exec - cmp 2>/dev/null -s FEATURE/botch ast_botch.h || { rm -f ast_botch.h; silent test -d . || mkdir .; ${STDCP} FEATURE/botch ast_botch.h; }
-done ast_botch.h dontcare generated
-make ast_unistd.h implicit
-make FEATURE/unistd
-meta FEATURE/unistd features/%.c>FEATURE/% features/unistd.c unistd
-make features/unistd.c
-make confuni.h implicit
-done confuni.h
-prev conflib.h implicit
-prev FEATURE/unistd.lcl implicit
-prev FEATURE/limits implicit
-prev FEATURE/lib implicit
-prev std/stdio.h implicit
-prev FEATURE/standards implicit
-done features/unistd.c
-prev ast.req
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd  ${LDFLAGS} '   run features/unistd.c
-done FEATURE/unistd generated
-exec - cmp 2>/dev/null -s FEATURE/unistd ast_unistd.h || { rm -f ast_unistd.h; silent test -d . || mkdir .; ${STDCP} FEATURE/unistd ast_unistd.h; }
-done ast_unistd.h dontcare generated
-make ast_fcntl.h implicit
-make FEATURE/fcntl
-meta FEATURE/fcntl features/%.c>FEATURE/% features/fcntl.c fcntl
-make features/fcntl.c
-make FEATURE/tty implicit
-meta FEATURE/tty features/%>FEATURE/% features/tty tty
-make features/tty
-done features/tty
-prev ast.req
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/tty
-done FEATURE/tty generated
-make FEATURE/fs implicit
-meta FEATURE/fs features/%>FEATURE/% features/fs fs
-make features/fs
-done features/fs
-prev ast.req
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/fs
-done FEATURE/fs generated
-prev FEATURE/unistd.lcl implicit
-make FEATURE/fcntl.lcl implicit
-meta FEATURE/fcntl.lcl >FEATURE/%  fcntl.lcl
-prev ast.req
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   def fcntl.lcl
-done FEATURE/fcntl.lcl generated
-prev FEATURE/lib implicit
-prev std/stdio.h implicit
-done features/fcntl.c
-prev ast.req
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd  ${LDFLAGS} '   run features/fcntl.c
-make include/ls.h implicit
-make ast_mode.h implicit
-make FEATURE/mode
-meta FEATURE/mode features/%.c>FEATURE/% features/mode.c mode
-make features/mode.c
-make include/modecanon.h implicit
-done include/modecanon.h
-prev FEATURE/param implicit
-prev std/limits.h implicit
-prev std/stdio.h implicit
-done features/mode.c
-prev ast.req
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -Istd  ${LDFLAGS} '   run features/mode.c
-done FEATURE/mode generated
-exec - cmp 2>/dev/null -s FEATURE/mode ast_mode.h || { rm -f ast_mode.h; silent test -d . || mkdir .; ${STDCP} FEATURE/mode ast_mode.h; }
-done ast_mode.h dontcare generated
-make ast_fs.h implicit
-prev FEATURE/fs
-exec - cmp 2>/dev/null -s FEATURE/fs ast_fs.h || { rm -f ast_fs.h; silent test -d . || mkdir .; ${STDCP} FEATURE/fs ast_fs.h; }
-done ast_fs.h dontcare generated
 prev include/ast_std.h implicit
-done include/ls.h dontcare
-prev ast_fs.h implicit
-done FEATURE/fcntl generated
-exec - cmp 2>/dev/null -s FEATURE/fcntl ast_fcntl.h || { rm -f ast_fcntl.h; silent test -d . || mkdir .; ${STDCP} FEATURE/fcntl ast_fcntl.h; }
-prev include/ls.h implicit
-prev ast_fs.h implicit
-done ast_fcntl.h dontcare generated
-make ast_types.h implicit
-prev FEATURE/types
-exec - cmp 2>/dev/null -s FEATURE/types ast_types.h || { rm -f ast_types.h; silent test -d . || mkdir .; ${STDCP} FEATURE/types ast_types.h; }
-done ast_types.h dontcare generated
-prev ast_map.h implicit
-prev comp/getopt.h implicit
-prev std/limits.h implicit
-make ast_hdr.h implicit
-make FEATURE/hdr
-meta FEATURE/hdr features/%>FEATURE/% features/hdr hdr
-make features/hdr
-done features/hdr
-prev ast.req
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/hdr
-done FEATURE/hdr generated
-exec - cmp 2>/dev/null -s FEATURE/hdr ast_hdr.h || { rm -f ast_hdr.h; silent test -d . || mkdir .; ${STDCP} FEATURE/hdr ast_hdr.h; }
-done ast_hdr.h dontcare generated
-prev include/ast_getopt.h implicit
-make ast_lib.h implicit
-prev FEATURE/lib
-exec - cmp 2>/dev/null -s FEATURE/lib ast_lib.h || { rm -f ast_lib.h; silent test -d . || mkdir .; ${STDCP} FEATURE/lib ast_lib.h; }
-done ast_lib.h dontcare generated
-prev ast_common.h implicit
-done include/ast_std.h dontcare
 done include/vmalloc.h dontcare
 make include/sfio.h implicit
 prev include/sfio_s.h implicit
@@ -426,6 +337,14 @@ meta state.o %.c>%.o misc/state.c state
 prev misc/state.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c misc/state.c
 done state.o generated
+make transition.o
+make comp/transition.c
+prev include/ast.h implicit
+done comp/transition.c
+meta transition.o %.c>%.o comp/transition.c transition
+prev comp/transition.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c comp/transition.c
+done transition.o generated
 make opendir.o
 make dir/opendir.c
 make dir/dirlib.h implicit
@@ -433,7 +352,6 @@ make dir/dirstd.h implicit
 done dir/dirstd.h dontcare
 make direntry.h implicit
 done direntry.h dontcare virtual
-prev std/limits.h implicit
 make ast_param.h implicit
 prev FEATURE/param
 exec - cmp 2>/dev/null -s FEATURE/param ast_param.h || { rm -f ast_param.h; silent test -d . || mkdir .; ${STDCP} FEATURE/param ast_param.h; }
@@ -447,14 +365,30 @@ meta FEATURE/dirent features/%>FEATURE/% features/dirent dirent
 make features/dirent
 done features/dirent
 prev ast.req
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/dirent
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/dirent
 prev include/ast_std.h implicit
 done FEATURE/dirent generated
 exec - cmp 2>/dev/null -s FEATURE/dirent ast_dirent.h || { rm -f ast_dirent.h; silent test -d . || mkdir .; ${STDCP} FEATURE/dirent ast_dirent.h; }
 prev include/ast_std.h implicit
 done ast_dirent.h dontcare generated
 done std/dirent.h dontcare
-prev include/ls.h implicit
+make include/ls.h implicit
+make ast_mode.h implicit
+make FEATURE/mode
+meta FEATURE/mode features/%.c>FEATURE/% features/mode.c mode
+make features/mode.c
+make include/modecanon.h implicit
+done include/modecanon.h
+prev FEATURE/param implicit
+done features/mode.c
+prev ast.req
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude  ${LDFLAGS} '   run features/mode.c
+done FEATURE/mode generated
+exec - cmp 2>/dev/null -s FEATURE/mode ast_mode.h || { rm -f ast_mode.h; silent test -d . || mkdir .; ${STDCP} FEATURE/mode ast_mode.h; }
+done ast_mode.h dontcare generated
+prev ast_fs.h implicit
+prev include/ast_std.h implicit
+done include/ls.h dontcare
 prev include/ast.h implicit
 done dir/dirlib.h
 done dir/opendir.c
@@ -667,7 +601,7 @@ meta FEATURE/ccode features/%>FEATURE/% features/ccode ccode
 make features/ccode
 done features/ccode
 prev ast.req
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/ccode
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/ccode
 done FEATURE/ccode generated
 exec - cmp 2>/dev/null -s FEATURE/ccode ast_ccode.h || { rm -f ast_ccode.h; silent test -d . || mkdir .; ${STDCP} FEATURE/ccode ast_ccode.h; }
 done ast_ccode.h dontcare generated
@@ -799,6 +733,7 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Istring -Iinclude -Istd -D_P
 done strmode.o generated
 make strlcat.o
 make string/strlcat.c
+prev ast_map.h implicit
 prev include/ast.h implicit
 done string/strlcat.c
 meta strlcat.o %.c>%.o string/strlcat.c strlcat
@@ -807,8 +742,8 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_as
 done strlcat.o generated
 make strlcpy.o
 make string/strlcpy.c
-prev include/ast.h implicit
 prev ast_map.h implicit
+prev include/ast.h implicit
 done string/strlcpy.c
 meta strlcpy.o %.c>%.o string/strlcpy.c strlcpy
 prev string/strlcpy.c
@@ -937,7 +872,7 @@ meta FEATURE/time features/%>FEATURE/% features/time time
 make features/time
 done features/time
 prev ast.req
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/time
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/time
 done FEATURE/time generated
 exec - cmp 2>/dev/null -s FEATURE/time ast_time.h || { rm -f ast_time.h; silent test -d . || mkdir .; ${STDCP} FEATURE/time ast_time.h; }
 done ast_time.h dontcare generated
@@ -977,11 +912,11 @@ done port/lc.tab
 exec - ./lcgen ${COTEMP}.1 ${COTEMP}.2 < port/lc.tab
 exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv' ${COTEMP}.1 > ${COTEMP}.3
 exec - rm -f ${COTEMP}.1
-exec - if	cmp -s ${COTEMP}.3 lc.h
+exec - if	cmp 2>/dev/null -s ${COTEMP}.3 lc.h
 exec - then	rm ${COTEMP}.3
 exec - else	mv ${COTEMP}.3 lc.h
 exec - fi
-exec - if	cmp -s ${COTEMP}.2 lctab.h
+exec - if	cmp 2>/dev/null -s ${COTEMP}.2 lctab.h
 exec - then	rm ${COTEMP}.2
 exec - else	mv ${COTEMP}.2 lctab.h
 exec - fi
@@ -1018,7 +953,7 @@ meta FEATURE/preroot features/%.sh>FEATURE/% features/preroot.sh preroot
 make features/preroot.sh
 done features/preroot.sh
 prev ast.req
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/preroot.sh
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/preroot.sh
 done FEATURE/preroot generated
 exec - cmp 2>/dev/null -s FEATURE/preroot preroot.h || { rm -f preroot.h; silent test -d . || mkdir .; ${STDCP} FEATURE/preroot preroot.h; }
 done preroot.h generated
@@ -1060,6 +995,8 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_as
 done pathnative.o generated
 make pathposix.o
 make path/pathposix.c
+make uwin.h implicit
+done uwin.h dontcare virtual
 prev include/ast.h implicit
 done path/pathposix.c
 meta pathposix.o %.c>%.o path/pathposix.c pathposix
@@ -1298,13 +1235,14 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Imisc -Iinclude -Istd -D_PAC
 done mimetype.o generated
 make signal.o
 make misc/signal.c
+prev ast_map.h implicit
 make sig.h implicit
 make FEATURE/sig
 meta FEATURE/sig features/%.sh>FEATURE/% features/sig.sh sig
 make features/sig.sh
 done features/sig.sh
 prev ast.req
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/sig.sh
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/sig.sh
 done FEATURE/sig generated
 exec - cmp 2>/dev/null -s FEATURE/sig sig.h || { rm -f sig.h; silent test -d . || mkdir .; ${STDCP} FEATURE/sig sig.h; }
 done sig.h generated
@@ -1411,7 +1349,7 @@ meta FEATURE/iconv features/%>FEATURE/% features/iconv iconv
 make features/iconv
 done features/iconv
 prev ast.req
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/iconv
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/iconv
 prev include/ccode.h implicit
 prev ast_common.h implicit
 done FEATURE/iconv generated
@@ -1474,7 +1412,7 @@ meta FEATURE/float features/%>FEATURE/% features/float float
 make features/float
 done features/float
 prev ast.req
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/float
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/float
 prev ast_common.h implicit
 done FEATURE/float dontcare generated
 make mman.h implicit
@@ -1504,7 +1442,7 @@ meta FEATURE/sfio features/%>FEATURE/% features/sfio sfio
 make features/sfio
 done features/sfio
 prev ast.req
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/sfio
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/sfio
 done FEATURE/sfio dontcare generated
 done sfio/sfhdr.h
 done port/mc.c
@@ -1756,11 +1694,12 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_as
 done fmtsignal.o generated
 make fmtscale.o
 make string/fmtscale.c
+prev port/lclib.h implicit
 prev include/ast.h implicit
 done string/fmtscale.c
 meta fmtscale.o %.c>%.o string/fmtscale.c fmtscale
 prev string/fmtscale.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c string/fmtscale.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c string/fmtscale.c
 done fmtscale.o generated
 make fmttmx.o
 make string/fmttmx.c
@@ -1770,7 +1709,7 @@ meta FEATURE/tv features/%>FEATURE/% features/tv tv
 make features/tv
 done features/tv
 prev ast.req
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/tv
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/tv
 prev include/ast.h implicit
 done FEATURE/tv generated
 exec - cmp 2>/dev/null -s FEATURE/tv tv.h || { rm -f tv.h; silent test -d . || mkdir .; ${STDCP} FEATURE/tv tv.h; }
@@ -1783,7 +1722,7 @@ make features/tmx
 prev FEATURE/common implicit
 done features/tmx
 prev ast.req
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/tmx
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/tmx
 prev tv.h implicit
 prev include/tm.h implicit
 done FEATURE/tmx generated
@@ -1877,7 +1816,7 @@ make features/align.c
 prev FEATURE/common implicit
 done features/align.c
 prev ast.req
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I.  ${LDFLAGS} '   run features/align.c
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I.  ${LDFLAGS} '   run features/align.c
 done FEATURE/align generated
 exec - cmp 2>/dev/null -s FEATURE/align align.h || { rm -f align.h; silent test -d . || mkdir .; ${STDCP} FEATURE/align align.h; }
 done align.h generated
@@ -1929,10 +1868,9 @@ make misc/sigdata.c
 make FEATURE/signal implicit
 meta FEATURE/signal features/%.c>FEATURE/% features/signal.c signal
 make features/signal.c
-prev std/stdio.h implicit
 done features/signal.c
 prev ast.req
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -Istd  ${LDFLAGS} '   run features/signal.c
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/signal.c
 done FEATURE/signal generated
 prev sig.h implicit
 prev include/ast.h implicit
@@ -1977,7 +1915,13 @@ make procclose.o
 make misc/procclose.c
 make include/wait.h implicit
 make ast_wait.h implicit
-prev FEATURE/wait
+make FEATURE/wait
+meta FEATURE/wait features/%>FEATURE/% features/wait wait
+make features/wait
+done features/wait
+prev ast.req
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/wait
+done FEATURE/wait generated
 exec - cmp 2>/dev/null -s FEATURE/wait ast_wait.h || { rm -f ast_wait.h; silent test -d . || mkdir .; ${STDCP} FEATURE/wait ast_wait.h; }
 done ast_wait.h dontcare generated
 prev include/ast.h implicit
@@ -2062,7 +2006,7 @@ meta FEATURE/tmlib features/%>FEATURE/% features/tmlib tmlib
 make features/tmlib
 done features/tmlib
 prev ast.req
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/tmlib
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/tmlib
 done FEATURE/tmlib generated
 prev include/namval.h implicit
 prev include/tm.h implicit
@@ -2283,7 +2227,7 @@ meta FEATURE/tvlib features/%>FEATURE/% features/tvlib tvlib
 make features/tvlib
 done features/tvlib
 prev ast.req
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/tvlib
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/tvlib
 done FEATURE/tvlib generated
 prev include/tm.h implicit
 prev tv.h implicit
@@ -2504,6 +2448,7 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_as
 done rmdir.o generated
 make remove.o
 make comp/remove.c
+prev ast_map.h implicit
 prev include/ast.h implicit
 done comp/remove.c
 meta remove.o %.c>%.o comp/remove.c remove
@@ -2603,6 +2548,7 @@ done strtol.o generated
 make strtoll.o
 make comp/strtoll.c
 prev string/strtoi.h implicit
+prev include/ast.h implicit
 done comp/strtoll.c
 meta strtoll.o %.c>%.o comp/strtoll.c strtoll
 prev comp/strtoll.c
@@ -2619,6 +2565,7 @@ done strtoul.o generated
 make strtoull.o
 make comp/strtoull.c
 prev string/strtoi.h implicit
+prev include/ast.h implicit
 done comp/strtoull.c
 meta strtoull.o %.c>%.o comp/strtoull.c strtoull
 prev comp/strtoull.c
@@ -2713,7 +2660,7 @@ meta FEATURE/errno features/%>FEATURE/% features/errno errno
 make features/errno
 done features/errno
 prev ast.req
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/errno
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/errno
 done FEATURE/errno generated
 prev include/error.h implicit
 prev include/ast.h implicit
@@ -2797,7 +2744,7 @@ meta FEATURE/vfork features/%>FEATURE/% features/vfork vfork
 make features/vfork
 done features/vfork
 prev ast.req
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/vfork
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/vfork
 done FEATURE/vfork generated
 exec - cmp 2>/dev/null -s FEATURE/vfork ast_vfork.h || { rm -f ast_vfork.h; silent test -d . || mkdir .; ${STDCP} FEATURE/vfork ast_vfork.h; }
 done ast_vfork.h dontcare generated
@@ -2862,12 +2809,31 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_as
 done getlogin.o generated
 make putenv.o
 make comp/putenv.c
+prev ast_map.h implicit
 prev include/ast.h implicit
 done comp/putenv.c
 meta putenv.o %.c>%.o comp/putenv.c putenv
 prev comp/putenv.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c comp/putenv.c
 done putenv.o generated
+make setenv.o
+make comp/setenv.c
+prev ast_map.h implicit
+prev include/ast.h implicit
+done comp/setenv.c
+meta setenv.o %.c>%.o comp/setenv.c setenv
+prev comp/setenv.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c comp/setenv.c
+done setenv.o generated
+make unsetenv.o
+make comp/unsetenv.c
+prev ast_map.h implicit
+prev include/ast.h implicit
+done comp/unsetenv.c
+meta unsetenv.o %.c>%.o comp/unsetenv.c unsetenv
+prev comp/unsetenv.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c comp/unsetenv.c
+done unsetenv.o generated
 make lstat.o
 make comp/lstat.c
 prev include/ls.h implicit
@@ -2894,7 +2860,7 @@ meta FEATURE/eaccess features/%>FEATURE/% features/eaccess eaccess
 make features/eaccess
 done features/eaccess
 prev ast.req
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/eaccess
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/eaccess
 done FEATURE/eaccess generated
 prev include/ls.h implicit
 prev include/ast.h implicit
@@ -2912,7 +2878,7 @@ meta FEATURE/hack features/%>FEATURE/% features/hack hack
 make features/hack
 done features/hack
 prev ast.req
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/hack
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/hack
 done FEATURE/hack generated
 prev include/ls.h implicit
 prev include/ast.h implicit
@@ -2931,7 +2897,7 @@ meta FEATURE/omitted features/%>FEATURE/% features/omitted omitted
 make features/omitted
 done features/omitted
 prev ast.req
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/omitted
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/omitted
 done FEATURE/omitted generated
 prev include/tm.h implicit
 prev include/error.h implicit
@@ -3000,61 +2966,6 @@ meta waitpid.o %.c>%.o comp/waitpid.c waitpid
 prev comp/waitpid.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c comp/waitpid.c
 done waitpid.o generated
-make confmap.o
-make confmap.c
-make confmap.h implicit
-done confmap.h
-prev FEATURE/unistd.lcl implicit
-prev FEATURE/limits.lcl implicit
-done confmap.c
-meta confmap.o %.c>%.o confmap.c confmap
-prev confmap.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude  -c confmap.c
-done confmap.o generated
-make conftab.o
-make conftab.c
-make conftab.h implicit
-done conftab.h
-prev include/ast.h implicit
-done conftab.c
-meta conftab.o %.c>%.o conftab.c conftab
-prev conftab.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast  -c conftab.c
-done conftab.o generated
-make confstr.o
-make confstr.c
-prev conflib.h implicit
-prev confmap.h implicit
-prev include/error.h implicit
-prev include/ast.h implicit
-done confstr.c
-meta confstr.o %.c>%.o confstr.c confstr
-prev confstr.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c confstr.c
-done confstr.o generated
-make pathconf.o
-make pathconf.c
-prev conflib.h implicit
-prev confmap.h implicit
-prev include/ls.h implicit
-prev include/error.h implicit
-prev include/ast.h implicit
-done pathconf.c
-meta pathconf.o %.c>%.o pathconf.c pathconf
-prev pathconf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c pathconf.c
-done pathconf.o generated
-make sysconf.o
-make sysconf.c
-prev conflib.h implicit
-prev confmap.h implicit
-prev include/error.h implicit
-prev include/ast.h implicit
-done sysconf.c
-meta sysconf.o %.c>%.o sysconf.c sysconf
-prev sysconf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c sysconf.c
-done sysconf.o generated
 make creat64.o
 make comp/creat64.c
 prev include/ast.h implicit
@@ -3342,13 +3253,11 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_as
 done wc.o generated
 make basename.o
 make comp/basename.c
-make comp/libgen.h implicit
-done comp/libgen.h
-prev ast_map.h implicit
+prev ast_common.h implicit
 done comp/basename.c
 meta basename.o %.c>%.o comp/basename.c basename
 prev comp/basename.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp  -c comp/basename.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I.  -c comp/basename.c
 done basename.o generated
 make closelog.o
 make comp/closelog.c
@@ -3365,12 +3274,11 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_as
 done closelog.o generated
 make dirname.o
 make comp/dirname.c
-prev comp/libgen.h implicit
-prev ast_map.h implicit
+prev ast_common.h implicit
 done comp/dirname.c
 meta dirname.o %.c>%.o comp/dirname.c dirname
 prev comp/dirname.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp  -c comp/dirname.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I.  -c comp/dirname.c
 done dirname.o generated
 make fmtmsglib.o
 make comp/fmtmsglib.c
@@ -3473,6 +3381,7 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_as
 done re_comp.o generated
 make resolvepath.o
 make comp/resolvepath.c
+prev ast_map.h implicit
 prev include/error.h implicit
 prev include/ast.h implicit
 done comp/resolvepath.c
@@ -3482,6 +3391,7 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_as
 done resolvepath.o generated
 make realpath.o
 make comp/realpath.c
+prev ast_map.h implicit
 prev include/ast.h implicit
 done comp/realpath.c
 meta realpath.o %.c>%.o comp/realpath.c realpath
@@ -3492,7 +3402,8 @@ make regcmp.o
 make comp/regcmp.c
 prev align.h implicit
 prev include/regex.h implicit
-prev comp/libgen.h implicit
+make comp/libgen.h implicit
+done comp/libgen.h
 prev include/ast.h implicit
 done comp/regcmp.c
 meta regcmp.o %.c>%.o comp/regcmp.c regcmp
@@ -3647,6 +3558,14 @@ meta regcache.o %.c>%.o regex/regcache.c regcache
 prev regex/regcache.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c regex/regcache.c
 done regcache.o generated
+make regdecomp.o
+make regex/regdecomp.c
+prev regex/reglib.h implicit
+done regex/regdecomp.c
+meta regdecomp.o %.c>%.o regex/regdecomp.c regdecomp
+prev regex/regdecomp.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iregex -Iinclude -Istd -D_PACKAGE_ast -c regex/regdecomp.c
+done regdecomp.o generated
 make regerror.o
 make regex/regerror.c
 prev regex/reglib.h implicit
@@ -4275,10 +4194,9 @@ meta FEATURE/sfinit features/%.c>FEATURE/% features/sfinit.c sfinit
 make features/sfinit.c
 prev FEATURE/float implicit
 prev FEATURE/common implicit
-prev std/stdio.h implicit
 done features/sfinit.c
 prev ast.req
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -Istd  ${LDFLAGS} '   run features/sfinit.c
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I.  ${LDFLAGS} '   run features/sfinit.c
 done FEATURE/sfinit generated
 prev FEATURE/float implicit
 prev sfio/sfhdr.h implicit
@@ -5031,8 +4949,14 @@ done _flsbuf.o generated
 make _stdfun.o
 make stdio/_stdfun.c
 prev stdio/stdhdr.h implicit
-make uwin.h implicit
-done uwin.h dontcare virtual
+make FEATURE/uwin implicit
+meta FEATURE/uwin features/%>FEATURE/% features/uwin uwin
+make features/uwin
+done features/uwin
+prev ast.req
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/uwin
+done FEATURE/uwin dontcare generated
+prev uwin.h implicit
 prev include/ast_windows.h implicit
 prev include/ast.h implicit
 done stdio/_stdfun.c
@@ -5329,15 +5253,18 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_as
 done astcopy.o generated
 make astconf.o
 make port/astconf.c
+make sys.s implicit
+done sys.s dontcare virtual
 make FEATURE/libpath implicit
 meta FEATURE/libpath features/%.sh>FEATURE/% features/libpath.sh libpath
 make features/libpath.sh
 done features/libpath.sh
 prev ast.req
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/libpath.sh
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/libpath.sh
 done FEATURE/libpath generated
-prev conftab.h implicit
-prev confmap.h implicit
+make conftab.h implicit
+done conftab.h
+prev include/proc.h implicit
 prev include/regex.h implicit
 prev include/fs3d.h implicit
 prev include/error.h implicit
@@ -5346,7 +5273,7 @@ prev misc/univlib.h implicit
 done port/astconf.c
 meta astconf.o %.c>%.o port/astconf.c astconf
 prev port/astconf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Imisc -Iinclude -Istd -DCONF_LIBSUFFIX=\""${mam_cc_SUFFIX_DYNAMIC-${mam_cc_SUFFIX_SHARED}}"\" -DCONF_LIBPREFIX=\""${mam_cc_PREFIX_DYNAMIC-${mam_cc_PREFIX_SHARED}}"\" -DHOSTTYPE=\""${mam_cc_HOSTTYPE}"\" -D_PACKAGE_ast -c port/astconf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Imisc -Iinclude -Istd -D__OBSOLETE__=20060101 -DCONF_LIBSUFFIX=\""${mam_cc_SUFFIX_DYNAMIC-${mam_cc_SUFFIX_SHARED}}"\" -DCONF_LIBPREFIX=\""${mam_cc_PREFIX_DYNAMIC-${mam_cc_PREFIX_SHARED}}"\" -DHOSTTYPE=\""${mam_cc_HOSTTYPE}"\" -D_PACKAGE_ast -c port/astconf.c
 done astconf.o generated
 make astdynamic.o
 make port/astdynamic.c
@@ -5387,6 +5314,17 @@ meta astwinsize.o %.c>%.o port/astwinsize.c astwinsize
 prev port/astwinsize.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c port/astwinsize.c
 done astwinsize.o generated
+make conftab.o
+make conftab.c
+prev conftab.h implicit
+prev FEATURE/param implicit
+prev FEATURE/common implicit
+prev FEATURE/standards implicit
+done conftab.c
+meta conftab.o %.c>%.o conftab.c conftab
+prev conftab.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude  -c conftab.c
+done conftab.o generated
 make aststatic.o
 make port/aststatic.c
 prev include/ast.h implicit
@@ -5587,7 +5525,6 @@ done vmmopen.o generated
 make malloc.o
 make vmalloc/malloc.c
 prev include/ast_windows.h implicit
-prev std/limits.h implicit
 prev std/stdio.h implicit
 prev vmalloc/vmhdr.h implicit
 done vmalloc/malloc.c
@@ -5605,13 +5542,7 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Ivmalloc -Iinclude -Istd -D_
 done vmgetmem.o generated
 make a64l.o
 make uwin/a64l.c
-make FEATURE/uwin implicit
-meta FEATURE/uwin features/%>FEATURE/% features/uwin uwin
-make features/uwin
-done features/uwin
-prev ast.req
-exec - iffe -v -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/uwin
-done FEATURE/uwin generated
+prev FEATURE/uwin implicit
 done uwin/a64l.c
 meta a64l.o %.c>%.o uwin/a64l.c a64l
 prev uwin/a64l.c
@@ -5656,12 +5587,12 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iuwin  -c uwin/cbrt.c
 done cbrt.o generated
 make crypt.o
 make uwin/crypt.c
-prev std/limits.h implicit
 prev std/stdio.h implicit
+prev FEATURE/uwin implicit
 done uwin/crypt.c
 meta crypt.o %.c>%.o uwin/crypt.c crypt
 prev uwin/crypt.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -Istd  -c uwin/crypt.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd  -c uwin/crypt.c
 done crypt.o generated
 make erf.o
 make uwin/erf.c
@@ -5776,7 +5707,6 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd  -c uwin/rand
 done rand48.o generated
 make random.o
 make uwin/random.c
-prev std/limits.h implicit
 prev FEATURE/uwin implicit
 done uwin/random.c
 meta random.o %.c>%.o uwin/random.c random
@@ -5788,11 +5718,11 @@ make uwin/rcmd.c
 prev std/nl_types.h implicit
 make uwin/rlib.h implicit
 prev std/stdio.h implicit
-make include/endian.h implicit
-make include/bytesex.h implicit
+make std/endian.h implicit
+make std/bytesex.h implicit
 prev ast_common.h implicit
-done include/bytesex.h dontcare
-done include/endian.h dontcare
+done std/bytesex.h dontcare
+done std/endian.h dontcare
 prev std/stdio.h implicit
 prev include/ast_std.h implicit
 done uwin/rlib.h dontcare
@@ -5832,17 +5762,18 @@ make spawn.o
 make obsolete/spawn.c
 prev include/error.h implicit
 prev include/ast.h implicit
+prev ast_lib.h implicit
 done obsolete/spawn.c
 meta spawn.o %.c>%.o obsolete/spawn.c spawn
 prev obsolete/spawn.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c obsolete/spawn.c
 done spawn.o generated
-exec - ${AR} cr libast.a state.o opendir.o readdir.o rewinddir.o seekdir.o telldir.o getcwd.o fastfind.o hashalloc.o hashdump.o hashfree.o hashlast.o hashlook.o hashscan.o hashsize.o hashview.o hashwalk.o memhash.o memsum.o strhash.o strkey.o strsum.o stracmp.o strnacmp.o ccmap.o ccmapid.o ccnative.o chresc.o chrtoi.o streval.o
-exec - ${AR} cr libast.a strexpr.o strmatch.o strcopy.o modei.o modex.o strmode.o strlcat.o strlcpy.o strlook.o strncopy.o strsearch.o strpsearch.o stresc.o stropt.o strtape.o tok.o tokline.o tokscan.o pathaccess.o pathcat.o pathcanon.o pathcheck.o pathpath.o pathexists.o pathfind.o pathkey.o pathprobe.o pathrepl.o pathnative.o pathposix.o pathtemp.o pathtmp.o pathstat.o pathgetlink.o pathsetlink.o pathbin.o pathshell.o pathcd.o fs3d.o ftwalk.o ftwflags.o fts.o setenviron.o optget.o optjoin.o optesc.o strsort.o struniq.o magic.o mime.o mimetype.o signal.o systrace.o error.o errorf.o errormsg.o errorx.o localeconv.o setlocale.o translate.o catopen.o iconv.o lc.o mc.o liberror.o libevent.o base64.o recfmt.o recstr.o reclen.o fmtrec.o fmtbase.o fmtbuf.o fmtclock.o fmtdev.o fmtelapsed.o fmterror.o fmtesc.o fmtfmt.o fmtfs.o fmtident.o fmtip4.o fmtls.o fmtmatch.o fmtmode.o fmtnum.o fmtperm.o fmtre.o fmttime.o fmtuid.o fmtgid.o fmtsignal.o fmtscale.o fmttmx.o fmttv.o fmtversion.o strelapsed.o strperm.o struid.o strgid.o strtoip4.o
-exec - ${AR} cr libast.a stack.o stk.o swapget.o swapmem.o swapop.o swapput.o sigdata.o sigcrit.o sigunblock.o procopen.o procclose.o procrun.o procfree.o tmdate.o tmequiv.o tmfix.o tmfmt.o tmform.o tmgoff.o tminit.o tmleap.o tmlex.o tmlocale.o tmmake.o tmpoff.o tmscan.o tmsleep.o tmtime.o tmtype.o tmweek.o tmword.o tmzone.o tmxdate.o tmxfmt.o tmxgettime.o tmxleap.o tmxmake.o tmxscan.o tmxsettime.o tmxsleep.o tmxtime.o tmxtouch.o tvcmp.o tvgettime.o tvsettime.o tvsleep.o tvtouch.o vecargs.o vecfile.o vecfree.o vecload.o vecstring.o univdata.o touch.o mnt.o memccpy.o memchr.o memcmp.o memcpy.o memdup.o memmove.o memset.o mkdir.o mkfifo.o mknod.o rmdir.o remove.o rename.o link.o unlink.o strdup.o strchr.o strrchr.o strstr.o strtod.o strtold.o strtol.o strtoll.o strtoul.o strtoull.o strton.o strtonll.o strntod.o strntold.o strntol.o strntoll.o strntoul.o strntoull.o strcasecmp.o strncasecmp.o strerror.o mktemp.o tmpnam.o fsync.o execlp.o execve.o execvp.o execvpe.o spawnveg.o vfork.o killpg.o
-exec - ${AR} cr libast.a hsearch.o tsearch.o getlogin.o putenv.o lstat.o statvfs.o eaccess.o gross.o omitted.o readlink.o symlink.o getpgrp.o setpgid.o setsid.o waitpid.o confmap.o conftab.o confstr.o pathconf.o sysconf.o creat64.o fcntl.o open.o atexit.o getdents.o getwd.o dup2.o errno.o getpreroot.o ispreroot.o realopen.o setpreroot.o getgroups.o mount.o system.o iblocks.o modedata.o tmdata.o memfatal.o sfkeyprintf.o sfdcdio.o sfdcdos.o sfdcfilter.o sfdcseekable.o sfdcslow.o sfdcsubstr.o sfdctee.o sfdcunion.o sfdcmore.o sfdcprefix.o wc.o basename.o closelog.o dirname.o fmtmsglib.o fnmatch.o ftw.o getdate.o getsubopt.o glob.o nftw.o openlog.o re_comp.o resolvepath.o realpath.o regcmp.o regexp.o setlogmask.o strftime.o strptime.o swab.o syslog.o tempnam.o wordexp.o mktime.o regalloc.o regclass.o regcoll.o regcomp.o regcache.o regerror.o regexec.o regfatal.o reginit.o regnexec.o regsubcomp.o regsubexec.o regsub.o regrecord.o regrexec.o regstat.o dtclose.o dtdisc.o dtextract.o dtflatten.o dthash.o dtlist.o dtmethod.o dtnew.o dtopen.o dtrenew.o
-exec - ${AR} cr libast.a dtrestore.o dtsize.o dtstat.o dtstrhash.o dttree.o dttreeset.o dtview.o dtwalk.o sfclose.o sfclrlock.o sfdisc.o sfdlen.o sfexcept.o sfgetl.o sfgetu.o sfcvt.o sfecvt.o sffcvt.o sfextern.o sffilbuf.o sfflsbuf.o sfprints.o sfgetd.o sfgetr.o sfieee.o sfllen.o sfmode.o sfmove.o sfnew.o sfpkrd.o sfnotify.o sfnputc.o sfopen.o sfpeek.o sfpoll.o sfpool.o sfpopen.o sfprintf.o sfputd.o sfputl.o sfputr.o sfputu.o sfrd.o sfread.o sfreserve.o sfscanf.o sfseek.o sfset.o sfsetbuf.o sfsetfd.o sfsize.o sfsk.o sfstack.o sfstrtod.o sfsync.o sfswap.o sftable.o sftell.o sftmp.o sfungetc.o sfvprintf.o sfvscanf.o sfwr.o sfwrite.o sfpurge.o sfraise.o sfgetm.o sfmutex.o sfputm.o sfresize.o _sfclrerr.o _sfeof.o _sferror.o _sffileno.o _sfopen.o _sfstacked.o _sfvalue.o _sfgetc.o _sfgetl.o _sfgetl2.o _sfgetu.o _sfgetu2.o _sfdlen.o _sfllen.o _sfslen.o _sfulen.o _sfputc.o _sfputd.o _sfputl.o _sfputm.o _sfputu.o clearerr.o fclose.o fdopen.o feof.o ferror.o fflush.o fgetc.o fgetpos.o fgets.o fileno.o
-exec - ${AR} cr libast.a fopen.o fprintf.o fpurge.o fputc.o fputs.o fread.o freopen.o fscanf.o fseek.o fseeko.o fsetpos.o ftell.o ftello.o fwrite.o getc.o getchar.o getw.o pclose.o popen.o printf.o putc.o putchar.o puts.o putw.o rewind.o scanf.o setbuf.o setbuffer.o setlinebuf.o setvbuf.o snprintf.o sprintf.o sscanf.o asprintf.o vasprintf.o tmpfile.o ungetc.o vfprintf.o vfscanf.o vprintf.o vscanf.o vsnprintf.o vsprintf.o vsscanf.o _doprnt.o _doscan.o _filbuf.o _flsbuf.o _stdfun.o _stdopen.o _stdprintf.o _stdscanf.o _stdsprnt.o _stdvbuf.o _stdvsnprnt.o _stdvsprnt.o _stdvsscn.o fgetwc.o fwprintf.o putwchar.o vfwscanf.o wprintf.o fgetws.o fwscanf.o swprintf.o vswprintf.o wscanf.o fputwc.o getwc.o swscanf.o vswscanf.o fputws.o getwchar.o ungetwc.o vwprintf.o fwide.o putwc.o vfwprintf.o vwscanf.o stdio_c99.o stdio_gnu.o frexp.o frexpl.o astcopy.o astconf.o astdynamic.o astlicense.o astquery.o astwinsize.o aststatic.o getopt.o getoptl.o vmbest.o vmclear.o vmclose.o vmdcheap.o vmdebug.o vmdisc.o vmexit.o vmlast.o vmopen.o
+exec - ${AR} cr libast.a state.o transition.o opendir.o readdir.o rewinddir.o seekdir.o telldir.o getcwd.o fastfind.o hashalloc.o hashdump.o hashfree.o hashlast.o hashlook.o hashscan.o hashsize.o hashview.o hashwalk.o memhash.o memsum.o strhash.o strkey.o strsum.o stracmp.o strnacmp.o ccmap.o ccmapid.o ccnative.o chresc.o chrtoi.o
+exec - ${AR} cr libast.a streval.o strexpr.o strmatch.o strcopy.o modei.o modex.o strmode.o strlcat.o strlcpy.o strlook.o strncopy.o strsearch.o strpsearch.o stresc.o stropt.o strtape.o tok.o tokline.o tokscan.o pathaccess.o pathcat.o pathcanon.o pathcheck.o pathpath.o pathexists.o pathfind.o pathkey.o pathprobe.o pathrepl.o pathnative.o pathposix.o pathtemp.o pathtmp.o pathstat.o pathgetlink.o pathsetlink.o pathbin.o pathshell.o pathcd.o fs3d.o ftwalk.o ftwflags.o fts.o setenviron.o optget.o optjoin.o optesc.o strsort.o struniq.o magic.o mime.o mimetype.o signal.o systrace.o error.o errorf.o errormsg.o errorx.o localeconv.o setlocale.o translate.o catopen.o iconv.o lc.o mc.o liberror.o libevent.o base64.o recfmt.o recstr.o reclen.o fmtrec.o fmtbase.o fmtbuf.o fmtclock.o fmtdev.o fmtelapsed.o fmterror.o fmtesc.o fmtfmt.o fmtfs.o fmtident.o fmtip4.o fmtls.o fmtmatch.o fmtmode.o fmtnum.o fmtperm.o fmtre.o fmttime.o fmtuid.o fmtgid.o fmtsignal.o fmtscale.o fmttmx.o fmttv.o fmtversion.o strelapsed.o strperm.o struid.o strgid.o
+exec - ${AR} cr libast.a strtoip4.o stack.o stk.o swapget.o swapmem.o swapop.o swapput.o sigdata.o sigcrit.o sigunblock.o procopen.o procclose.o procrun.o procfree.o tmdate.o tmequiv.o tmfix.o tmfmt.o tmform.o tmgoff.o tminit.o tmleap.o tmlex.o tmlocale.o tmmake.o tmpoff.o tmscan.o tmsleep.o tmtime.o tmtype.o tmweek.o tmword.o tmzone.o tmxdate.o tmxfmt.o tmxgettime.o tmxleap.o tmxmake.o tmxscan.o tmxsettime.o tmxsleep.o tmxtime.o tmxtouch.o tvcmp.o tvgettime.o tvsettime.o tvsleep.o tvtouch.o vecargs.o vecfile.o vecfree.o vecload.o vecstring.o univdata.o touch.o mnt.o memccpy.o memchr.o memcmp.o memcpy.o memdup.o memmove.o memset.o mkdir.o mkfifo.o mknod.o rmdir.o remove.o rename.o link.o unlink.o strdup.o strchr.o strrchr.o strstr.o strtod.o strtold.o strtol.o strtoll.o strtoul.o strtoull.o strton.o strtonll.o strntod.o strntold.o strntol.o strntoll.o strntoul.o strntoull.o strcasecmp.o strncasecmp.o strerror.o mktemp.o tmpnam.o fsync.o execlp.o execve.o execvp.o execvpe.o spawnveg.o vfork.o
+exec - ${AR} cr libast.a killpg.o hsearch.o tsearch.o getlogin.o putenv.o setenv.o unsetenv.o lstat.o statvfs.o eaccess.o gross.o omitted.o readlink.o symlink.o getpgrp.o setpgid.o setsid.o waitpid.o creat64.o fcntl.o open.o atexit.o getdents.o getwd.o dup2.o errno.o getpreroot.o ispreroot.o realopen.o setpreroot.o getgroups.o mount.o system.o iblocks.o modedata.o tmdata.o memfatal.o sfkeyprintf.o sfdcdio.o sfdcdos.o sfdcfilter.o sfdcseekable.o sfdcslow.o sfdcsubstr.o sfdctee.o sfdcunion.o sfdcmore.o sfdcprefix.o wc.o basename.o closelog.o dirname.o fmtmsglib.o fnmatch.o ftw.o getdate.o getsubopt.o glob.o nftw.o openlog.o re_comp.o resolvepath.o realpath.o regcmp.o regexp.o setlogmask.o strftime.o strptime.o swab.o syslog.o tempnam.o wordexp.o mktime.o regalloc.o regclass.o regcoll.o regcomp.o regcache.o regdecomp.o regerror.o regexec.o regfatal.o reginit.o regnexec.o regsubcomp.o regsubexec.o regsub.o regrecord.o regrexec.o regstat.o dtclose.o dtdisc.o dtextract.o dtflatten.o dthash.o dtlist.o dtmethod.o dtnew.o dtopen.o dtrenew.o dtrestore.o
+exec - ${AR} cr libast.a dtsize.o dtstat.o dtstrhash.o dttree.o dttreeset.o dtview.o dtwalk.o sfclose.o sfclrlock.o sfdisc.o sfdlen.o sfexcept.o sfgetl.o sfgetu.o sfcvt.o sfecvt.o sffcvt.o sfextern.o sffilbuf.o sfflsbuf.o sfprints.o sfgetd.o sfgetr.o sfieee.o sfllen.o sfmode.o sfmove.o sfnew.o sfpkrd.o sfnotify.o sfnputc.o sfopen.o sfpeek.o sfpoll.o sfpool.o sfpopen.o sfprintf.o sfputd.o sfputl.o sfputr.o sfputu.o sfrd.o sfread.o sfreserve.o sfscanf.o sfseek.o sfset.o sfsetbuf.o sfsetfd.o sfsize.o sfsk.o sfstack.o sfstrtod.o sfsync.o sfswap.o sftable.o sftell.o sftmp.o sfungetc.o sfvprintf.o sfvscanf.o sfwr.o sfwrite.o sfpurge.o sfraise.o sfgetm.o sfmutex.o sfputm.o sfresize.o _sfclrerr.o _sfeof.o _sferror.o _sffileno.o _sfopen.o _sfstacked.o _sfvalue.o _sfgetc.o _sfgetl.o _sfgetl2.o _sfgetu.o _sfgetu2.o _sfdlen.o _sfllen.o _sfslen.o _sfulen.o _sfputc.o _sfputd.o _sfputl.o _sfputm.o _sfputu.o clearerr.o fclose.o fdopen.o feof.o ferror.o fflush.o fgetc.o fgetpos.o fgets.o fileno.o fopen.o
+exec - ${AR} cr libast.a fprintf.o fpurge.o fputc.o fputs.o fread.o freopen.o fscanf.o fseek.o fseeko.o fsetpos.o ftell.o ftello.o fwrite.o getc.o getchar.o getw.o pclose.o popen.o printf.o putc.o putchar.o puts.o putw.o rewind.o scanf.o setbuf.o setbuffer.o setlinebuf.o setvbuf.o snprintf.o sprintf.o sscanf.o asprintf.o vasprintf.o tmpfile.o ungetc.o vfprintf.o vfscanf.o vprintf.o vscanf.o vsnprintf.o vsprintf.o vsscanf.o _doprnt.o _doscan.o _filbuf.o _flsbuf.o _stdfun.o _stdopen.o _stdprintf.o _stdscanf.o _stdsprnt.o _stdvbuf.o _stdvsnprnt.o _stdvsprnt.o _stdvsscn.o fgetwc.o fwprintf.o putwchar.o vfwscanf.o wprintf.o fgetws.o fwscanf.o swprintf.o vswprintf.o wscanf.o fputwc.o getwc.o swscanf.o vswscanf.o fputws.o getwchar.o ungetwc.o vwprintf.o fwide.o putwc.o vfwprintf.o vwscanf.o stdio_c99.o stdio_gnu.o frexp.o frexpl.o astcopy.o astconf.o astdynamic.o astlicense.o astquery.o astwinsize.o conftab.o aststatic.o getopt.o getoptl.o vmbest.o vmclear.o vmclose.o vmdcheap.o vmdebug.o vmdisc.o vmexit.o vmlast.o vmopen.o
 exec - ${AR} cr libast.a vmpool.o vmprivate.o vmprofile.o vmregion.o vmsegment.o vmset.o vmstat.o vmstrdup.o vmtrace.o vmwalk.o vmmopen.o malloc.o vmgetmem.o a64l.o acosh.o asinh.o atanh.o cbrt.o crypt.o erf.o err.o exp.o exp__E.o expm1.o gamma.o getpass.o lgamma.o log.o log1p.o log__L.o rand48.o random.o rcmd.o rint.o support.o sfstrtmp.o spawn.o
 exec - (ranlib libast.a) >/dev/null 2>&1 || true
 done libast.a generated
@@ -6160,8 +6091,16 @@ exec - if	silent test ! -d ${INSTALLROOT}/include/ast
 exec - then	mkdir -p ${INSTALLROOT}/include/ast
 exec - fi
 done ${INSTALLROOT}/include/ast generated
-make ${INSTALLROOT}/include/ast/ast.h
+make ${INSTALLROOT}/include/ast/ast_common.h
 prev ${INSTALLROOT}/include/ast
+prev ast_common.h
+exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_common.h > 1.${COTEMP}.x
+exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_common.h 1.${COTEMP}.x
+exec - then	rm -f 1.${COTEMP}.x
+exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_common.h
+exec - fi
+done ${INSTALLROOT}/include/ast/ast_common.h generated
+make ${INSTALLROOT}/include/ast/ast.h
 prev include/ast.h
 exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/ast.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast.h 1.${COTEMP}.x
@@ -6209,14 +6148,6 @@ exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_windows.h
 exec - fi
 done ${INSTALLROOT}/include/ast/ast_windows.h generated
-make ${INSTALLROOT}/include/ast/ast_common.h
-prev ast_common.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_common.h > 1.${COTEMP}.x
-exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_common.h 1.${COTEMP}.x
-exec - then	rm -f 1.${COTEMP}.x
-exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_common.h
-exec - fi
-done ${INSTALLROOT}/include/ast/ast_common.h generated
 make ${INSTALLROOT}/include/ast/ccode.h
 prev include/ccode.h
 exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/ccode.h > 1.${COTEMP}.x
@@ -6613,16 +6544,16 @@ exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/wordexp.h
 exec - fi
 done ${INSTALLROOT}/include/ast/wordexp.h generated
 make ${INSTALLROOT}/include/ast/bytesex.h
-prev include/bytesex.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/bytesex.h > 1.${COTEMP}.x
+prev std/bytesex.h
+exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  std/bytesex.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/bytesex.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/bytesex.h
 exec - fi
 done ${INSTALLROOT}/include/ast/bytesex.h generated
 make ${INSTALLROOT}/include/ast/endian.h
-prev include/endian.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  include/endian.h > 1.${COTEMP}.x
+prev std/endian.h
+exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  std/endian.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/endian.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/endian.h
@@ -6672,14 +6603,6 @@ exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/iconv.h
 exec - fi
 done ${INSTALLROOT}/include/ast/iconv.h generated
-make ${INSTALLROOT}/include/ast/limits.h
-prev std/limits.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  std/limits.h > 1.${COTEMP}.x
-exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/limits.h 1.${COTEMP}.x
-exec - then	rm -f 1.${COTEMP}.x
-exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/limits.h
-exec - fi
-done ${INSTALLROOT}/include/ast/limits.h generated
 make ${INSTALLROOT}/include/ast/nl_types.h
 prev std/nl_types.h
 exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  std/nl_types.h > 1.${COTEMP}.x
@@ -6788,14 +6711,6 @@ exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_fs.h
 exec - fi
 done ${INSTALLROOT}/include/ast/ast_fs.h generated
-make ${INSTALLROOT}/include/ast/ast_hdr.h
-prev ast_hdr.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_hdr.h > 1.${COTEMP}.x
-exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_hdr.h 1.${COTEMP}.x
-exec - then	rm -f 1.${COTEMP}.x
-exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_hdr.h
-exec - fi
-done ${INSTALLROOT}/include/ast/ast_hdr.h generated
 make ${INSTALLROOT}/include/ast/ast_lib.h
 prev ast_lib.h
 exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_lib.h > 1.${COTEMP}.x
@@ -6836,6 +6751,14 @@ exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_param.h
 exec - fi
 done ${INSTALLROOT}/include/ast/ast_param.h generated
+make ${INSTALLROOT}/include/ast/ast_sys.h
+prev ast_sys.h
+exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_sys.h > 1.${COTEMP}.x
+exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_sys.h 1.${COTEMP}.x
+exec - then	rm -f 1.${COTEMP}.x
+exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_sys.h
+exec - fi
+done ${INSTALLROOT}/include/ast/ast_sys.h generated
 make ${INSTALLROOT}/include/ast/ast_time.h
 prev ast_time.h
 exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_time.h > 1.${COTEMP}.x
@@ -6853,21 +6776,16 @@ exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_tty.h
 exec - fi
 done ${INSTALLROOT}/include/ast/ast_tty.h generated
 make ${INSTALLROOT}/include/ast/ast_types.h
-prev ast_types.h
+make ast_types.h
+prev FEATURE/types
+exec - cmp 2>/dev/null -s FEATURE/types ast_types.h || { rm -f ast_types.h; silent test -d . || mkdir .; ${STDCP} FEATURE/types ast_types.h; }
+done ast_types.h generated
 exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_types.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_types.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_types.h
 exec - fi
 done ${INSTALLROOT}/include/ast/ast_types.h generated
-make ${INSTALLROOT}/include/ast/ast_unistd.h
-prev ast_unistd.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_unistd.h > 1.${COTEMP}.x
-exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_unistd.h 1.${COTEMP}.x
-exec - then	rm -f 1.${COTEMP}.x
-exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_unistd.h
-exec - fi
-done ${INSTALLROOT}/include/ast/ast_unistd.h generated
 make ${INSTALLROOT}/include/ast/ast_vfork.h
 prev ast_vfork.h
 exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_vfork.h > 1.${COTEMP}.x
@@ -6884,6 +6802,25 @@ exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_wait.h
 exec - fi
 done ${INSTALLROOT}/include/ast/ast_wait.h generated
+make ${INSTALLROOT}/include/ast/ast_limits.h
+prev ast_limits.h
+exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_limits.h > 1.${COTEMP}.x
+exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_limits.h 1.${COTEMP}.x
+exec - then	rm -f 1.${COTEMP}.x
+exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_limits.h
+exec - fi
+done ${INSTALLROOT}/include/ast/ast_limits.h generated
+make ${INSTALLROOT}/include/ast/ast_standards.h
+make ast_standards.h
+prev FEATURE/standards
+exec - cmp 2>/dev/null -s FEATURE/standards ast_standards.h || { rm -f ast_standards.h; silent test -d . || mkdir .; ${STDCP} FEATURE/standards ast_standards.h; }
+done ast_standards.h generated
+exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_standards.h > 1.${COTEMP}.x
+exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_standards.h 1.${COTEMP}.x
+exec - then	rm -f 1.${COTEMP}.x
+exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_standards.h
+exec - fi
+done ${INSTALLROOT}/include/ast/ast_standards.h generated
 make ${INSTALLROOT}/include/ast/ast_dirent.h
 prev ast_dirent.h
 exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_dirent.h > 1.${COTEMP}.x
@@ -6900,14 +6837,6 @@ exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_iconv.h
 exec - fi
 done ${INSTALLROOT}/include/ast/ast_iconv.h generated
-make ${INSTALLROOT}/include/ast/ast_limits.h
-prev ast_limits.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_limits.h > 1.${COTEMP}.x
-exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_limits.h 1.${COTEMP}.x
-exec - then	rm -f 1.${COTEMP}.x
-exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_limits.h
-exec - fi
-done ${INSTALLROOT}/include/ast/ast_limits.h generated
 make ${INSTALLROOT}/include/ast/ast_nl_types.h
 prev ast_nl_types.h
 exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_nl_types.h > 1.${COTEMP}.x

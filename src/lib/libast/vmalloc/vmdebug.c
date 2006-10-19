@@ -54,6 +54,8 @@ static Void_t*	Dbwatch[S_WATCH];
 #define DB_WATCH	4
 #define DB_RESIZED	5
 
+#define LONGV(x)	((Vmulong_t)(x))
+
 static int Dbinit = 0;
 #define DBINIT()	(Dbinit ? 0 : (dbinit(), Dbinit=1) )
 static void dbinit()
@@ -159,11 +161,11 @@ int		type;	/* operation being done		*/
 	}
 	else if(type == DB_CHECK)
 	{	bufp = (*_Vmstrcpy)(bufp, "bad byte at", '=');
-		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VLONG(where),-1), ':');
+		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(LONGV(where),-1), ':');
 		if((s = DBFILE(data)) && (bufp + strlen(s) + SLOP) < endbuf)
 		{	bufp = (*_Vmstrcpy)(bufp,"allocated at", '=');
 			bufp = (*_Vmstrcpy)(bufp, s, ',');
-			bufp = (*_Vmstrcpy)(bufp,(*_Vmitoa)(VLONG(DBLINE(data)),-1),':');
+			bufp = (*_Vmstrcpy)(bufp,(*_Vmitoa)(LONGV(DBLINE(data)),-1),':');
 		}
 	}
 
@@ -171,7 +173,7 @@ int		type;	/* operation being done		*/
 	if(file && file[0] && line > 0 && (bufp + strlen(file) + SLOP) < endbuf)
 	{	bufp = (*_Vmstrcpy)(bufp, "detected at", '=');
 		bufp = (*_Vmstrcpy)(bufp, file, ',');
-		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VLONG(line),-1), ',');
+		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(LONGV(line),-1), ',');
 		bufp = (*_Vmstrcpy)(bufp, (*_Vmitoa)(VLONG(func),-1), ':');
 	}
 

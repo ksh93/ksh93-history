@@ -629,6 +629,9 @@ Indexed array assignment.
 .TP
 \f3[\fP\f2word\^\fP\f3]=\fP\f2word\^\fP .\|.\|.
 Associative array assignment.
+If preceded by
+.B typeset \-a
+this will create an indexed array instead.
 .TP
 \f2assignment\^\fP .\|.\|.
 Compound variable assignment.
@@ -2715,13 +2718,13 @@ without using the parameter expansion syntax.
 When a variable is referenced, its value is evaluated as
 an arithmetic expression.
 .PP
-The following math library functions can be used with an arithmetic
-expression:
+Any of the following math library functions that are in the C math library
+can be used within an arithmetic expression: 
 .PP
 .if t .RS
 .B
-.if n abs acos asin atan atan2 cos cosh exp floor fmod hypot int log pow sin sinh sqrt tan tanh
-.if t abs   acos   asin   atan   atan2   cos   cosh   exp   floor  fmod   hypot   int   log   pow   sin   sinh   sqrt   tan   tanh
+.if n abs acos acosh asin asinh atan atan2 atanh cbrt copysign cos cosh erf erfc exp exp2 expm1 fabs fdim finite floor fma fmax fmod hypot ilogb int isinf isnan lgamma log log2 logb nearbyint nextafter nexttoward pow remainder rint round sin sinh sqrt tan tanh tgamma trunc
+.if t abs   acos   acosh   asin   asinh   atan   atan2   atanh   cbrt   copysign   cos   cosh   erf  erfc   exp   exp2   expm1   fabs   fdim   finite   floor  fma   fmax   fmod   hypot   ilogb   int   isinf   isnan   lgamma   log   log2   logb   nearbyint   nextafter   nextroward  pow   rint   round   sin   sinh   sqrt   tan   tanh   tgamma   trunc
 .if t .RE
 .PP
 An internal representation of a
@@ -6530,7 +6533,7 @@ Does nothing, and exits 0. Used with
 .B while
 for infinite loops.
 .TP
-\(dg\(dg \f3typeset\fP \*(OK \f3\(+-AHflbnprtux\^\fP \*(CK \*(OK \f3\(+-EFLRZi\*(OK\f2n\^\fP\*(CK \*(CK  \*(OK \f2vname\^\fP\*(OK\f3=\fP\f2value\^\fP \*(CK \^ \*(CK .\|.\|.
+\(dg\(dg \f3typeset\fP \*(OK \f3\(+-AHflabnprtux\^\fP \*(CK \*(OK \f3\(+-EFLRZi\*(OK\f2n\^\fP\*(CK \*(CK  \*(OK \f2vname\^\fP\*(OK\f3=\fP\f2value\^\fP \*(CK \^ \*(CK .\|.\|.
 Sets attributes and values for shell variables and functions.
 When invoked inside a function defined with the
 .B function
@@ -6551,6 +6554,12 @@ Declares
 to be an associative array.
 Subscripts are strings rather than arithmetic
 expressions.
+.TP
+.B \-a
+Declares
+.I vname\^
+to be an indexed array.
+This is optional unless except for compound variable assignments.
 .TP
 .B \-E
 Declares

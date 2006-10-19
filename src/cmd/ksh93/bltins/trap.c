@@ -306,6 +306,7 @@ static void sig_list(register Shell_t *shp,register int flag)
 	{
 		/* print the traps */
 		register char *trap,*sname,**trapcom;
+		char name[6];
 		sig = shp->st.trapmax;
 		/* use parent traps if otrapcom is set (for $(trap)  */
 		trapcom = (shp->st.otrapcom?shp->st.otrapcom:shp->st.trapcom);
@@ -315,6 +316,7 @@ static void sig_list(register Shell_t *shp,register int flag)
 				continue;
 			if(!(sname=(char*)names[sig+1]))
 			{
+				sname = name;
 				sname[0] = 'S';
 				sname[1] = 'I';
 				sname[2] = 'G';

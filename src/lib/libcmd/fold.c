@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: fold (AT&T Labs Research) 2004-11-18 $\n]"
+"[-?\n@(#)$Id: fold (AT&T Research) 2004-11-18 $\n]"
 USAGE_LICENSE
 "[+NAME?fold - fold lines]"
 "[+DESCRIPTION?\bfold\b is a filter that folds lines from its input, "

@@ -25,7 +25,6 @@
  * AT&T Research
  *
  * close a proc opened by procopen()
- * -1 returned if procopen() had a problem
  * otherwise exit() status of process is returned
  */
 
@@ -79,11 +78,14 @@ procclose(register Proc_t* p)
 			signal(SIGCHLD, p->sigchld);
 #endif
 		}
-		if (status != -1 && !(p->flags & PROC_FOREGROUND))
-			status = WIFSIGNALED(status) ?
-				EXIT_TERM(WTERMSIG(status)) :
-				EXIT_CODE(WEXITSTATUS(status));
+		status = status == -1 ?
+			 EXIT_QUIT :
+			 WIFSIGNALED(status) ?
+			 EXIT_TERM(WTERMSIG(status)) :
+			 EXIT_CODE(WEXITSTATUS(status));
 		procfree(p);
 	}
+	else
+		status = errno == ENOENT ? EXIT_NOTFOUND : EXIT_NOEXEC;
 	return status;
 }

@@ -73,45 +73,6 @@
 #define LS_W_MARK	1		/* LS_MARK field width		*/
 #define LS_W_NAME	9		/* group|user name field width	*/
 
-#if defined(_AST_H) || defined(_POSIX_SOURCE) || defined(_XOPEN_SOURCE)
-#define _AST_mode_t	mode_t
-#else
-#define _AST_mode_t	int
-#endif
-
-#if _typ_off64_t
-#undef	off_t
-#define off_t		off64_t
-#endif
-#if _lib_fstat64
-#define fstat		fstat64
-#endif
-#if _lib_lstat64
-#define lstat		lstat64
-#endif
-#if _lib_stat64
-#define stat		stat64
-#endif
-
-extern int		chmod(const char*, _AST_mode_t);
-#if !defined(_ver_fstat) && !defined(__USE_LARGEFILE64)
-extern int		fstat(int, struct stat*);
-#endif
-#if !defined(_ver_lstat) && !defined(__USE_LARGEFILE64)
-extern int		lstat(const char*, struct stat*);
-#endif
-extern int		mkdir(const char*, _AST_mode_t);
-extern int		mkfifo(const char*, _AST_mode_t);
-#if !defined(_lib__xmknod)
-extern int		mknod(const char*, _AST_mode_t, dev_t);
-#endif
-#if !defined(_ver_stat) && !defined(__USE_LARGEFILE64)
-extern int		stat(const char*, struct stat*);
-#endif
-extern _AST_mode_t	umask(_AST_mode_t);
-
-#undef	_AST_mode_t
-
 #if _BLD_ast && defined(__EXPORT__)
 #define extern		__EXPORT__
 #endif

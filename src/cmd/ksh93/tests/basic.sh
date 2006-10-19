@@ -290,6 +290,24 @@ foo
 if	[[ -d /dev/fd && -w /dev/fd/3 ]]
 then	[[ $($SHELL -c 'cat <(print foo)' 2> /dev/null) == foo ]] || err_exit 'process substitution not working'
 	[[ $($SHELL -c 'print $(cat <(print foo) )' 2> /dev/null) == foo ]] || err_exit 'process substitution in subshell not working'
+	[[ $($SHELL -c  $'tee >(grep \'1$\' > /tmp/ksh'$$'x) > /dev/null <<-  \!!!
+	line0
+	line1
+	line2
+	!!!
+	wait
+	cat /tmp/ksh'$$x 2> /dev/null)  == line1 ]] || err_exit '>() process substitution fails'
+	> /tmp/ksh$$x
+	[[ $($SHELL -c  $'
+	for i in 1
+	do	tee >(grep \'1$\' > /tmp/ksh'$$'x) > /dev/null  <<-  \!!!
+		line0
+		line1
+		line2
+		!!!
+	done
+	wait
+	cat /tmp/ksh'$$x 2>> /dev/null) == line1 ]] || err_exit '>() process substitution fails in for loop'
 fi
 [[ $($SHELL -r 'command -p :' 2>&1) == *restricted* ]]  || err_exit 'command -p not restricted'
 print cat >  /tmp/ksh$$x

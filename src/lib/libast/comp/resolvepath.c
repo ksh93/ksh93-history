@@ -24,8 +24,15 @@
  * resolvepath implementation
  */
 
+#define resolvepath	______resolvepath
+
 #include <ast.h>
 #include <error.h>
+
+#undef	resolvepath
+
+#undef	_def_map_ast
+#include <ast_map.h>
 
 #if defined(__EXPORT__)
 #define extern	__EXPORT__

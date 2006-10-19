@@ -164,6 +164,9 @@ x=$(whence rm)
 typeset foo=$(PATH=/xyz:/abc :)
 y=$(whence rm)
 [[ $x != "$y" ]] && err_exit 'PATH not restored after command substitution'
+whence getconf > /dev/null  &&  err_exit 'getconf should not be found'
+builtin /bin/getconf
+PATH=/bin
 PATH=$(getconf PATH)
 x=$(whence ls)
 PATH=.:$PWD:${x%/ls}

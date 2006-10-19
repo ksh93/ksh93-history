@@ -26,7 +26,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: pathchk (AT&T Labs Research) 2004-10-08 $\n]"
+"[-?\n@(#)$Id: pathchk (AT&T Research) 2006-09-19 $\n]"
 USAGE_LICENSE
 "[+NAME?pathchk - check pathnames for portability]"
 "[+DESCRIPTION?\bpathchk\b checks each \apathname\a to see if it "
@@ -79,8 +79,11 @@ USAGE_LICENSE
 static long mypathconf(const char *path, int op)
 {
 	register long r;
+
+	static const char*	ops[] = { "NAME_MAX", "PATH_MAX" };
+
 	errno=0;
-	if((r=pathconf(path, op))<0 && errno==0)
+	if((r=strtol(astconf(ops[op], path, NiL), NiL, 0))<0 && errno==0)
 		return(LONG_MAX);
 	return(r);
 }
@@ -110,9 +113,9 @@ static int pathchk(char* path, int mode)
 		static char buff[2];
 		name_max = path_max = 0;
 		buff[0] = (*cp=='/'? '/': '.');
-		if((r=mypathconf(buff, _PC_NAME_MAX)) > _POSIX_NAME_MAX)
+		if((r=mypathconf(buff, 0)) > _POSIX_NAME_MAX)
 			name_max = r;
-		if((r=mypathconf(buff, _PC_PATH_MAX)) > _POSIX_PATH_MAX)
+		if((r=mypathconf(buff, 1)) > _POSIX_PATH_MAX)
 			path_max = r;
 		if(*cp!='/')
 		{
@@ -131,9 +134,9 @@ static int pathchk(char* path, int mode)
 						if(cp>cpold)
 							while(--cp>cpold && *cp=='/');
 						*++cp = 0;
-						if(name_max==0 && (r=mypathconf(cpold, _PC_NAME_MAX)) > _POSIX_NAME_MAX)
+						if(name_max==0 && (r=mypathconf(cpold, 0)) > _POSIX_NAME_MAX)
 							name_max = r;
-						if(path_max==0 && (r=mypathconf(cpold, _PC_PATH_MAX)) > _POSIX_PATH_MAX)
+						if(path_max==0 && (r=mypathconf(cpold, 1)) > _POSIX_PATH_MAX)
 							path_max=r;
 						if(--cp==cpold)
 						{
@@ -160,7 +163,7 @@ static int pathchk(char* path, int mode)
 				goto err;
 			errno=0;
 			cp[-1] = 0;
-			r = mypathconf(path, _PC_NAME_MAX);
+			r = mypathconf(path, 0);
 			if((cp[-1]=c)==0)
 				cp--;
 			else while(*cp=='/')

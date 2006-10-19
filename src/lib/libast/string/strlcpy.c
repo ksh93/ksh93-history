@@ -20,30 +20,24 @@
 *                                                                      *
 ***********************************************************************/
 #pragma prototyped
+/*
+ * strlcpy implementation
+ */
 
+#define strlcpy		______strlcpy
+
+#include <ast.h>
+
+#undef	strlcpy
+
+#undef	_def_map_ast
 #include <ast_map.h>
 
-#ifdef strlcpy
+#if _lib_strlcpy
 
-#include <ast.h>
+NoN(strlcpy)
 
 #else
-
-#if defined(__STDPP__directive) && defined(__STDPP__hide)
-__STDPP__directive pragma pp:hide strlcpy
-#else
-#define strlcpy		______strlcpy
-#endif
-
-#include <ast.h>
-
-#if defined(__STDPP__directive) && defined(__STDPP__hide)
-__STDPP__directive pragma pp:nohide strlcpy
-#else
-#undef	strlcpy
-#endif
-
-#endif
 
 /*
  * copy at most n chars from t into s
@@ -73,3 +67,5 @@ strlcpy(register char* s, register const char* t, register size_t n)
 		while (*t++);
 	return t - o - 1;
 }
+
+#endif

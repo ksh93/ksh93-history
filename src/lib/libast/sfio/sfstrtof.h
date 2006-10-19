@@ -20,7 +20,7 @@
 *                                                                      *
 ***********************************************************************/
 /*
- * AT&T Labs Research
+ * AT&T Research
  * Glenn Fowler & Phong Vo
  *
  * common header and implementation for

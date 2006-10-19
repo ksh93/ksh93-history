@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                     Copyright (c) 1994-2006 AT&T                     *
+*           Copyright (c) 1990-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                               by AT&T                                *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -25,7 +25,7 @@
  * coded for portability
  */
 
-static char id[] = "\n@(#)$Id: release (AT&T Labs Research) 2000-01-28 $\0\n";
+static char id[] = "\n@(#)$Id: release (AT&T Research) 2000-01-28 $\0\n";
 
 #if _PACKAGE_ast
 
@@ -33,7 +33,7 @@ static char id[] = "\n@(#)$Id: release (AT&T Labs Research) 2000-01-28 $\0\n";
 #include <error.h>
 
 static const char usage[] =
-"[-?\n@(#)$Id: release (AT&T Labs Research) 2000-01-28 $\n]"
+"[-?\n@(#)$Id: release (AT&T Research) 2000-01-28 $\n]"
 USAGE_LICENSE
 "[+NAME?release - list recent changes]"
 "[+DESCRIPTION?\brelease\b lists the changes within the date range specified"

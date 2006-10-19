@@ -33,6 +33,8 @@
 #define X_ITYPE(m)	((m)&X_IFMT)
 
 #define	X_IFMT		0170000
+#define	X_IFWHT		0160000
+#define	X_IFDOOR	0150000
 #define	X_IFSOCK	0140000
 #define	X_IFLNK		0120000
 #define	X_IFCTG		0110000

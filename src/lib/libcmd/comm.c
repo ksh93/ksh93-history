@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: comm (AT&T Labs Research) 1999-04-28 $\n]"
+"[-?\n@(#)$Id: comm (AT&T Research) 1999-04-28 $\n]"
 USAGE_LICENSE
 "[+NAME?comm - select or reject lines common to two files]"
 "[+DESCRIPTION?\bcomm\b reads two files \afile1\a and \afile2\a "

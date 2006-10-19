@@ -425,7 +425,7 @@ procopen(const char* cmd, char** argv, char** envv, long* modv, long flags)
 	proc->wfd = -1;
 	proc->flags = flags;
 	sfsync(NiL);
-	if (environ && (envv || (flags & PROC_PARANOID) || argv && (environ[0][0] != '_' || environ[0][1] != '=')))
+	if (environ && envv != (char**)environ && (envv || (flags & PROC_PARANOID) || argv && (environ[0][0] != '_' || environ[0][1] != '=')))
 	{
 		if (!setenviron(NiL))
 			goto bad;
@@ -509,6 +509,7 @@ procopen(const char* cmd, char** argv, char** envv, long* modv, long flags)
 #endif
 	if (!proc->pid)
 	{
+		char*		s;
 #if _use_spawnveg
 		char**		oenviron = 0;
 		char*		oenviron0 = 0;
@@ -622,7 +623,7 @@ procopen(const char* cmd, char** argv, char** envv, long* modv, long flags)
 				goto cleanup;
 		}
 #endif
-		if (argv)
+		if (argv && envv != (char**)environ)
 		{
 #if _use_spawnveg
 			if (!newenv && environ[0][0] == '_' && environ[0][1] == '=')
@@ -634,9 +635,9 @@ procopen(const char* cmd, char** argv, char** envv, long* modv, long flags)
 			if (!setenviron(env))
 				goto cleanup;
 		}
-		if ((flags & PROC_PARANOID) && !setenviron("PATH=:/bin:/usr/bin"))
+		if ((flags & PROC_PARANOID) && setenv("PATH", astconf("PATH", NiL, NiL), 1))
 			goto cleanup;
-		if (p = envv)
+		if ((p = envv) && p != (char**)environ)
 			while (*p)
 				if (!setenviron(*p++))
 					goto cleanup;
@@ -692,17 +693,7 @@ sfsync(sfstderr);
 			*p = path;
 			*--p = "sh";
 		}
-		if (!(flags & PROC_PARANOID))
-		{
-			strcpy(env + 2, pathshell());
-			if (forked || (flags & PROC_OVERLAY))
-				execve(env + 2, p, environ);
-#if _use_spawnveg
-			else if ((proc->pid = spawnveg(env + 2, p, environ, proc->pgrp)) != -1)
-				goto cleanup;
-#endif
-		}
-		strcpy(env + 2, "/bin/sh");
+		strcpy(env + 2, (flags & PROC_PARANOID) ? astconf("SHELL", NiL, NiL) : pathshell());
 		if (forked || (flags & PROC_OVERLAY))
 			execve(env + 2, p, environ);
 #if _use_spawnveg

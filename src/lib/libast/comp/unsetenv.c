@@ -21,20 +21,30 @@
 ***********************************************************************/
 #pragma prototyped
 
-/*
- * Glenn Fowler
- * AT&T Research
- *
- * character code string map
- */
+#define unsetenv	______unsetenv
 
 #include <ast.h>
-#include <ccode.h>
 
-#undef	ccmaps
+#undef	unsetenv
 
-void*
-ccmaps(void* b, size_t n, int in, int out)
+#if _lib_unsetenv
+
+NoN(unsetenv)
+
+#else
+
+#undef	_def_map_ast
+#include <ast_map.h>
+
+#if defined(__EXPORT__)
+#define extern	__EXPORT__
+#endif
+
+extern void
+unsetenv(const char *name)
 {
-	return CCMAPS(b, n, in, out);
+	if (!strchr(name, '='))
+		setenviron(name);
 }
+
+#endif

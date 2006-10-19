@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: mkdir (AT&T Labs Research) 2006-08-27 $\n]"
+"[-?\n@(#)$Id: mkdir (AT&T Research) 2006-08-27 $\n]"
 USAGE_LICENSE
 "[+NAME?mkdir - make directories]"
 "[+DESCRIPTION?\bmkdir\b creates one or more directories.  By "

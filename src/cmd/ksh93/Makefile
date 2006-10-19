@@ -184,7 +184,7 @@ bash_pre_rc.c : bash_pre_rc.sh
 	echo ";" >> $(<)
 end
 
-:: syscall.s mamexec mamstate.c deparse.c shopen.c $(DOCFILES) \
+:: math.tab syscall.s mamexec mamstate.c deparse.c shopen.c $(DOCFILES) \
 	bash.c bash_pre_rc.sh hexpand.c mkservice.c
 
 :: shtests \

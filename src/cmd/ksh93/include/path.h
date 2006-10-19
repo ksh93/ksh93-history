@@ -41,7 +41,7 @@
 #define PATH_BFPATH		0010
 #define PATH_SKIP		0020
 #define PATH_BUILTIN_LIB	0040
-#define PATH_BUILTIN_SH		0100
+#define PATH_STD_DIR		0100	/* directory is on  $(getconf PATH) */
 
 #define PATH_OFFSET	2		/* path offset for path_join */
 #define MAXDEPTH	(sizeof(char*)==2?64:4096) /* maximum recursion depth*/
@@ -57,6 +57,7 @@ typedef struct pathcomp
 	ino_t		ino;
 	char		*name;
 	char		*lib;
+	char		*blib;
 	void		*bltin_lib;
 	unsigned short	len;
 	unsigned short	flags;

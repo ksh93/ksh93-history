@@ -28,7 +28,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: id (AT&T Labs Research) 2004-06-11 $\n]"
+"[-?\n@(#)$Id: id (AT&T Research) 2004-06-11 $\n]"
 USAGE_LICENSE
 "[+NAME?id - return user identity]"
 "[+DESCRIPTION?If no \auser\a operand is specified \bid\b writes user and "

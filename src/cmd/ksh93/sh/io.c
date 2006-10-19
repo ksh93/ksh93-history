@@ -532,6 +532,35 @@ int	sh_pipe(register int pv[])
 	return(0);
 }
 
+static int pat_seek(void *handle, const char *str, size_t sz)
+{
+	char **bp = (char**)handle;
+	*bp = (char*)str;
+	return(-1);
+}
+
+static int io_patseek(regex_t *rp, Sfio_t* sp)
+{
+	char *cp, *match;
+	int r;
+	size_t n,m;
+	while((cp=sfreserve(sp, -PIPE_BUF, SF_LOCKR)) || (cp=sfreserve(sp,SF_UNBOUND, SF_LOCKR)))
+	{
+		m = n = sfvalue(sp);
+		while(n>0 && cp[n-1]!='\n')
+			n--;
+		if(n)
+			m = n;
+		r = regrexec(rp,cp,m,0,(regmatch_t*)0, 0, '\n', (void*)&match, pat_seek);
+		if(r<0)
+			m = match-cp;
+		sfread(sp,cp,m);
+		if(r<0)
+			break;
+	}
+	return(0);
+}
+
 static Sfoff_t	file_offset(int fn, char *fname)
 {
 	Sfio_t		*sp = sh.sftable[fn];
@@ -827,9 +856,27 @@ int	sh_redirect(struct ionod *iop, int flag)
 				}
 				else
 				{
+					regex_t *rp;
 					extern const char e_notimp[];
-					message = e_notimp;
-					goto fail;
+					if(!(r&IOREAD))
+					{
+						message = e_noread;
+						goto fail;
+					}
+					if(!(rp = regcache(fname, REG_SHELL|REG_NOSUB|REG_NEWLINE|REG_AUGMENTED|REG_FIRST|REG_LEFT|REG_RIGHT, &r)))
+					{
+						message = e_badpattern;
+						goto fail;
+					}
+					if(!sp)
+						sp = sh_iostream(fn);
+					r=io_patseek(rp,sp);
+					if(sp && flag==3)
+					{
+						/* close stream but not fn */
+						sfsetfd(sp,-1);
+						sfclose(sp);
+					}
 				}
 				if(r<0)
 					goto fail;
@@ -1910,6 +1957,13 @@ int sh_fcntl(register int fd, int op, ...)
 			sh.fdstatus[fd] &= ~IOCLEX;
 	}
 	return(newfd);
+}
+
+#undef umask
+mode_t	sh_umask(mode_t m)
+{
+	sh.mask = m;
+	return(umask(m));
 }
 
 /*

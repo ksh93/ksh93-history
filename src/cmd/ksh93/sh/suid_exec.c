@@ -229,7 +229,9 @@ int main(int argc,char *argv[])
 		
 	if(mode)
 		setids(mode, effuid, effgid);
+#ifndef _lib_setreuid
 exec:
+#endif /* _lib_setreuid */
 	/* only use SHELL if file is in trusted directory and ends in sh */
 	shell = getenv("SHELL");
 	if(shell == 0 || !endsh(shell) || (

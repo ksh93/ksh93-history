@@ -392,13 +392,13 @@ void sh_applyopts(Shopt_t newflags)
 	on_option(&newflags,SH_NOEMPTYCMDCOMPL);
 
 	if(!is_option(&newflags,SH_XPG_ECHO) && sh_isoption(SH_XPG_ECHO))
-		astgetconf("UNIVERSE", 0, "ucb", 0);
+		astconf("UNIVERSE", 0, "ucb");
 	if(is_option(&newflags,SH_XPG_ECHO) && !sh_isoption(SH_XPG_ECHO))
-		astgetconf("UNIVERSE", 0, "att", 0);
+		astconf("UNIVERSE", 0, "att");
 	if(!is_option(&newflags,SH_PHYSICAL) && sh_isoption(SH_PHYSICAL))
-		astgetconf("PATH_RESOLVE", 0, "metaphysical", 0);
+		astconf("PATH_RESOLVE", 0, "metaphysical");
 	if(is_option(&newflags,SH_PHYSICAL) && !sh_isoption(SH_PHYSICAL))
-		astgetconf("PATH_RESOLVE", 0, "physical", 0);
+		astconf("PATH_RESOLVE", 0, "physical");
 	if(is_option(&newflags,SH_HISTORY2) && !sh_isoption(SH_HISTORY2))
 	{
 		sh_onstate(SH_HISTORY);

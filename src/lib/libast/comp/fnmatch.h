@@ -49,6 +49,12 @@
 
 #define FNM_NOMATCH	1		/* == REG_NOMATCH		*/
 
+#if _BLD_ast && defined(__EXPORT__)
+#define extern	__EXPORT__
+#endif
+
 extern int	fnmatch(const char*, const char*, int);
+
+#undef	extern
 
 #endif

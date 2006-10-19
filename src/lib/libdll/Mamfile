@@ -84,53 +84,40 @@ make ${PACKAGE_ast_INCLUDE}/ast_map.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_map.h dontcare
 done ${PACKAGE_ast_INCLUDE}/ast_common.h dontcare
 make ${PACKAGE_ast_INCLUDE}/ast_std.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast_map.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast_botch.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_botch.h dontcare
-make ${PACKAGE_ast_INCLUDE}/ast_unistd.h implicit
-done ${PACKAGE_ast_INCLUDE}/ast_unistd.h dontcare
-make ${PACKAGE_ast_INCLUDE}/re_comp.h implicit
-make ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
-make ${INSTALLROOT}/include/prototyped.h implicit
-done ${INSTALLROOT}/include/prototyped.h dontcare
-done ${PACKAGE_ast_INCLUDE}/prototyped.h dontcare
-done ${PACKAGE_ast_INCLUDE}/re_comp.h dontcare
-make ${PACKAGE_ast_INCLUDE}/getopt.h implicit
-make ${PACKAGE_ast_INCLUDE}/ast_getopt.h implicit
-prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
-done ${PACKAGE_ast_INCLUDE}/ast_getopt.h dontcare
-prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
-done ${PACKAGE_ast_INCLUDE}/getopt.h dontcare
+make ${PACKAGE_ast_INCLUDE}/ast_limits.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast_limits.h dontcare
 make ${PACKAGE_ast_INCLUDE}/ast_fcntl.h implicit
-make ${PACKAGE_ast_INCLUDE}/ls.h implicit
-make ${PACKAGE_ast_INCLUDE}/ast_mode.h implicit
-done ${PACKAGE_ast_INCLUDE}/ast_mode.h dontcare
 make ${PACKAGE_ast_INCLUDE}/ast_fs.h implicit
 make error?--?old?ethernet?address?at?wrong?offset implicit
 done error?--?old?ethernet?address?at?wrong?offset dontcare virtual
 done ${PACKAGE_ast_INCLUDE}/ast_fs.h dontcare
-prev ${PACKAGE_ast_INCLUDE}/ast_std.h implicit
-prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
-done ${PACKAGE_ast_INCLUDE}/ls.h dontcare
-prev ${PACKAGE_ast_INCLUDE}/ast_fs.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_fcntl.h dontcare
-make ${PACKAGE_ast_INCLUDE}/ast_types.h implicit
-done ${PACKAGE_ast_INCLUDE}/ast_types.h dontcare
-prev ${PACKAGE_ast_INCLUDE}/ast_map.h implicit
+make ${PACKAGE_ast_INCLUDE}/ast_getopt.h implicit
+make ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+make ${INSTALLROOT}/include/prototyped.h implicit
+done ${INSTALLROOT}/include/prototyped.h dontcare
+done ${PACKAGE_ast_INCLUDE}/prototyped.h dontcare
+done ${PACKAGE_ast_INCLUDE}/ast_getopt.h dontcare
+make ${PACKAGE_ast_INCLUDE}/ast_sys.h implicit
+make ${PACKAGE_ast_INCLUDE}/re_comp.h implicit
+prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+done ${PACKAGE_ast_INCLUDE}/re_comp.h dontcare
+make ${PACKAGE_ast_INCLUDE}/getopt.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast_getopt.h implicit
+prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+done ${PACKAGE_ast_INCLUDE}/getopt.h dontcare
 make ${PACKAGE_ast_INCLUDE}/stdio.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast_stdio.h implicit
 make ${PACKAGE_ast_INCLUDE}/sfio_s.h implicit
 done ${PACKAGE_ast_INCLUDE}/sfio_s.h dontcare
-prev ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast_std.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_stdio.h dontcare
 done ${PACKAGE_ast_INCLUDE}/stdio.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/getopt.h implicit
-make ${PACKAGE_ast_INCLUDE}/limits.h implicit
-make ${PACKAGE_ast_INCLUDE}/ast_limits.h implicit
-done ${PACKAGE_ast_INCLUDE}/ast_limits.h dontcare
-done ${PACKAGE_ast_INCLUDE}/limits.h dontcare
-make ${PACKAGE_ast_INCLUDE}/ast_hdr.h implicit
-done ${PACKAGE_ast_INCLUDE}/ast_hdr.h dontcare
-prev ${PACKAGE_ast_INCLUDE}/ast_getopt.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast_sys.h dontcare
 make ${PACKAGE_ast_INCLUDE}/ast_lib.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_lib.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
@@ -160,7 +147,7 @@ make features/dll
 done features/dll
 prev dll.req
 bind -last
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} ${mam_libast} : run features/dll
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} ${mam_libast}  : run features/dll
 done FEATURE/dll generated
 exec - cmp 2>/dev/null -s FEATURE/dll dlldefs.h || { rm -f dlldefs.h; silent test -d . || mkdir .; cp FEATURE/dll dlldefs.h; }
 done dlldefs.h generated
@@ -215,7 +202,13 @@ make dllscan.c
 prev dlldefs.h implicit
 prev ${PACKAGE_ast_INCLUDE}/vmalloc.h implicit
 make ${PACKAGE_ast_INCLUDE}/fts.h implicit
-prev ${PACKAGE_ast_INCLUDE}/ls.h implicit
+make ${PACKAGE_ast_INCLUDE}/ls.h implicit
+make ${PACKAGE_ast_INCLUDE}/ast_mode.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast_mode.h dontcare
+prev ${PACKAGE_ast_INCLUDE}/ast_fs.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast_std.h implicit
+prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+done ${PACKAGE_ast_INCLUDE}/ls.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/fts.h
 prev ${PACKAGE_ast_INCLUDE}/error.h implicit

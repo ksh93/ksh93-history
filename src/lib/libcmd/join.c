@@ -22,13 +22,13 @@
 /*
  * David Korn
  * Glenn Fowler
- * AT&T Labs Research
+ * AT&T Research
  *
  * join
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: join (AT&T Labs Research) 2003-05-15 $\n]"
+"[-?\n@(#)$Id: join (AT&T Research) 2003-05-15 $\n]"
 USAGE_LICENSE
 "[+NAME?join - relational database operator]"
 "[+DESCRIPTION?\bjoin\b performs an \aequality join\a on the files \afile1\a "

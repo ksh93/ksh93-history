@@ -24,7 +24,16 @@
  * realpath implementation
  */
 
+#define realpath	______realpath
+#define resolvepath	______resolvepath
+
 #include <ast.h>
+
+#undef	realpath
+#undef	resolvepath
+
+#undef	_def_map_ast
+#include <ast_map.h>
 
 extern char*		resolvepath(const char*, char*, size_t);
 

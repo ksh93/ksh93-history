@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1990-2005 AT&T Corp.                  *
+*           Copyright (c) 1990-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -28,8 +28,11 @@
 #ifndef _COLIB_H
 #define _COLIB_H
 
+#include <ast.h>
+
 #define _CO_JOB_PRIVATE_		/* Cojob_t private additions	*/ \
 	Cojob_t*	next;		/* next in list			*/ \
+	Coservice_t*	service;	/* service 			*/ \
 	int		pid;		/* pid				*/ \
 	char*		out;		/* serialized stdout file	*/ \
 	char*		err;		/* serialized stderr file	*/ \
@@ -38,14 +41,31 @@
 #define _CO_SHELL_PRIVATE_		/* Coshell_t private additions	*/ \
 	Coshell_t*	next;		/* next in list			*/ \
 	Cojob_t*	jobs;		/* job list			*/ \
+	Coservice_t*	service;	/* service 			*/ \
 	int		cmdfd;		/* command pipe fd		*/ \
+	int		gsmfd;		/* msgfp child write side	*/ \
 	int		mask;		/* CO_* flags to clear		*/ \
 	int		mode;		/* connection modes		*/ \
+	int		svc_outstanding;/* outstanding service intercepts */ \
+	int		svc_running;	/* running service intercepts	*/ \
 	int		pid;		/* pid				*/ \
 	int		slots;		/* number of job slots		*/ \
 					/* end of private additions	*/
 
-#include <ast.h>
+struct Coservice_s;
+typedef struct Coservice_s Coservice_t;
+
+struct Coservice_s			/* service info			*/
+{
+	Coservice_t*	next;		/* next in list			*/
+	char*		name;		/* instance name		*/
+	char*		path;		/* coexec() command path	*/
+	char*		db;		/* state/db path		*/
+	int		fd;		/* command pipe			*/
+	int		pid;		/* pid				*/
+	char*		argv[16];	/* coexec() command argv[]	*/
+};
+
 #include <coshell.h>
 #include <error.h>
 #include <sig.h>
@@ -65,7 +85,7 @@
 #define CO_BUFSIZ	(PATH_MAX/2)	/* temporary buffer size	*/
 #define CO_MAXEVAL	(PATH_MAX*8)	/* max eval'd action size	*/
 
-typedef struct				/* global coshell state		*/
+typedef struct Costate_s		/* global coshell state		*/
 {
 	const char*	lib;		/* library id			*/
 	Coshell_t*	coshells;	/* list of all coshells		*/
@@ -86,5 +106,7 @@ extern Costate_t	state;		/* global coshell info		*/
 #ifndef errno
 extern int		errno;
 #endif
+
+extern char*		costash(Sfio_t*);
 
 #endif

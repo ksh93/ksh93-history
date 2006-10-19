@@ -230,7 +230,9 @@ getfmt(Sfio_t* sp, void* vp, Sffmt_t* dp)
 		value->q = s ? (Sflong_t)strtoull(s, NiL, 0) : n;
 		break;
 	case 'p':
-		value->p = (char**)(s ? strtol(s, NiL, 0) : n);
+		if (s)
+			n = strtoll(s, NiL, 0);
+		value->p = pointerof(n);
 		break;
 	case 'q':
 		if (s)
@@ -245,21 +247,8 @@ getfmt(Sfio_t* sp, void* vp, Sffmt_t* dp)
 		}
 		break;
 	case 's':
-		if (!s)
-		{
-			if (h)
-			{
-				if (fp->tmp[1] || (fp->tmp[1] = sfstropen()))
-				{
-					sfprintf(fp->tmp[1], "%I*d", sizeof(n), n);
-					s = sfstruse(fp->tmp[1]);
-				}
-				else
-					s = "";
-			}
-			else
-				s = "";
-		}
+		if (!s && (!h || !fp->tmp[1] && !(fp->tmp[1] = sfstropen()) || sfprintf(fp->tmp[1], "%I*d", sizeof(n), n) <= 0 || !(s = sfstruse(fp->tmp[1]))))
+			s = "";
 		if (x)
 		{
 			h = 0;
@@ -277,12 +266,7 @@ getfmt(Sfio_t* sp, void* vp, Sffmt_t* dp)
 						fmt.fmt.form = v;
 						for (h = 0; h < elementsof(fmt.tmp); h++)
 							fmt.tmp[h] = 0;
-						if (fp->tmp[0] || (fp->tmp[0] = sfstropen()))
-						{
-							sfprintf(fp->tmp[0], "%!", &fmt);
-							s = sfstruse(fp->tmp[0]);
-						}
-						else
+						if (!fp->tmp[0] && !(fp->tmp[0] = sfstropen()) || sfprintf(fp->tmp[0], "%!", &fmt) <= 0 || !(s = sfstruse(fp->tmp[0])))
 							s = "";
 						*(v - 1) = d;
 						if (f.delimiter)
@@ -338,11 +322,8 @@ getfmt(Sfio_t* sp, void* vp, Sffmt_t* dp)
 		value->i = n;
 		break;
 	default:
-		if ((!fp->convert || !(value->s = (*fp->convert)(fp->handle, &fp->fmt, a, s, n))) && (fp->tmp[0] || (fp->tmp[0] = sfstropen())))
-		{
-			sfprintf(fp->tmp[0], "%%%c", fp->fmt.fmt);
-			value->s = sfstruse(fp->tmp[0]);
-		}
+		if ((!fp->convert || !(value->s = (*fp->convert)(fp->handle, &fp->fmt, a, s, n))) && (!fp->tmp[0] && !(fp->tmp[0] = sfstropen()) || sfprintf(fp->tmp[0], "%%%c", fp->fmt.fmt) <= 0 || !(value->s = sfstruse(fp->tmp[0]))))
+			value->s = "";
 		break;
 	}
 	fp->level--;

@@ -500,4 +500,16 @@ esac
 	} 
 } 2> /dev/null || err_exit "Can't add get discipline to .sh.foobar"
 [[ ${.sh.foobar} == world ]]  || err_exit 'get discipline for .sh.foobar not working'
+unset x
+x='a|b'
+IFS='|'
+set -- $x
+[[ $2 == b ]] || err_exit '$2 should be b after set'
+exec 3>&2 2> /dev/null
+set -x
+( IFS= ) 2> /dev/null
+set +x
+exec 2>&3-
+set -- $x
+[[ $2 == b ]] || err_exit '$2 should be b after subshell'
 exit $((Errors))

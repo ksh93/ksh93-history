@@ -75,7 +75,7 @@ static struct subshell
 	char		*pwd;	/* present working directory */
 	const char	*shpwd;	/* saved pointer to sh.pwd */
 	void		*jobs;	/* save job info */
-	int		mask;	/* present umask */
+	mode_t		mask;	/* saved umask */
 	short		tmpfd;	/* saved tmp file descriptor */
 	short		pipefd;	/* read fd if pipe is created */
 	char		jobcontrol;
@@ -235,7 +235,7 @@ static void nv_restore(struct subshell *sp)
 			mp->nvenv = np->nvenv;
 		mp->nvfun = np->nvfun;
 		mp->nvflag = np->nvflag;
-		if(mp==nv_scoped(PATHNOD))
+		if((mp==nv_scoped(PATHNOD)) || (mp==nv_scoped(IFSNOD)))
 			nv_putval(mp, np->nvalue.cp,0);
 		else
 			mp->nvalue.cp = np->nvalue.cp;
@@ -366,7 +366,7 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 	{
 		sp->shpwd = shp->pwd;
 		sp->pwd = (shp->pwd?strdup(shp->pwd):0);
-		umask(sp->mask=umask(0));
+		sp->mask = shp->mask;
 		/* save trap table */
 		shp->st.otrapcom = 0;
 		if((nsig=shp->st.trapmax*sizeof(char*))>0 || shp->st.trapcom[0])
@@ -534,7 +534,8 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 		}
 		else
 			free((void*)sp->pwd);
-		umask(sp->mask);
+		if(sp->mask!=shp->mask)
+			umask(shp->mask);
 	}
 	subshell_data = sp->prev;
 	sh_argfree(argsav,0);

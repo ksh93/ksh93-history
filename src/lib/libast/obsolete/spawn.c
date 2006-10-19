@@ -25,24 +25,34 @@
  * OBSOLETE 20030321 -- use spawnveg()
  */
 
-#if defined(__STDPP__directive) && defined(__STDPP__hide)
-__STDPP__directive pragma pp:hide spawnve spawnvpe spawnvp spawnlp
-#else
+#include <ast_lib.h>
+
+#if !_lib_spawnve
 #define spawnve		______spawnve
+#endif
+#if !_lib_spawnvpe
 #define spawnvpe	______spawnvpe
+#endif
+#if !_lib_spawnvp
 #define spawnvp		______spawnvp
+#endif
+#if !_lib_spawnlp
 #define spawnlp		______spawnlp
 #endif
 
 #include <ast.h>
 #include <error.h>
 
-#if defined(__STDPP__directive) && defined(__STDPP__hide)
-__STDPP__directive pragma pp:nohide spawnve spawnvpe spawnvp spawnlp
-#else
+#if !_lib_spawnve
 #undef	spawnve
+#endif
+#if !_lib_spawnvpe
 #undef	spawnvpe
+#endif
+#if !_lib_spawnvp
 #undef	spawnvp
+#endif
+#if !_lib_spawnlp
 #undef	spawnlp
 #endif
 
@@ -78,7 +88,7 @@ spawnvpe(const char* name, char* const argv[], char* const envv[])
 	char			buffer[PATH_MAX];
 
 	if (*path != '/')
-		path = pathpath(buffer, name, NULL, X_OK|PATH_REGULAR);
+		path = pathpath(buffer, name, NULL, PATH_REGULAR|PATH_EXECUTE);
 	if ((pid = spawnve(path, argv, envv)) >= 0)
 		return pid;
 	if (errno == ENOEXEC)

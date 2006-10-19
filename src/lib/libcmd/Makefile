@@ -19,8 +19,8 @@ cmd 1.2 :LIBRARY: RELEASE cmdinit.c cmdrecurse.c \
 	cp.c cut.c dirname.c date.c expr.c fds.c fmt.c fold.c \
 	getconf.c head.c id.c join.c ln.c logname.c mkdir.c \
 	mkfifo.c mv.c paste.c pathchk.c rev.c rm.c rmdir.c \
-	stty.c tail.c tee.c tty.c uname.c uniq.c wc.c revlib.c \
-	wclib.c \
+	stty.c sync.c tail.c tee.c tty.c uname.c uniq.c wc.c \
+	revlib.c wclib.c \
 	-lfsg
 
 $(INCLUDEDIR) :INSTALLPROTO: cmd.h cmdext.h cmdlist.h

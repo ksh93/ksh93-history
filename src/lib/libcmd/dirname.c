@@ -29,7 +29,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: dirname (AT&T Labs Research) 2000-03-07 $\n]"
+"[-?\n@(#)$Id: dirname (AT&T Research) 2000-03-07 $\n]"
 USAGE_LICENSE
 "[+NAME?dirname - return directory portion of file name]"
 "[+DESCRIPTION?\bdirname\b treats \astring\a as a file name and returns "
@@ -60,7 +60,7 @@ USAGE_LICENSE
 
 #include <cmdlib.h>
 
-static void dirname(register Sfio_t *outfile, register const char *pathname)
+static void l_dirname(register Sfio_t *outfile, register const char *pathname)
 {
 	register const char  *last;
 	/* go to end of path */
@@ -111,6 +111,6 @@ b_dirname(int argc,register char *argv[], void* context)
 	argc -= opt_info.index;
 	if(error_info.errors || argc != 1)
 		error(ERROR_usage(2),"%s", optusage(NiL));
-	dirname(sfstdout,argv[0]);
+	l_dirname(sfstdout,argv[0]);
 	return(0);
 }

@@ -27,7 +27,7 @@
  */
 
 static const char usage_head[] =
-"[-?@(#)$Id: cp (AT&T Labs Research) 2006-01-28 $\n]"
+"[-?@(#)$Id: cp (AT&T Research) 2006-10-11 $\n]"
 USAGE_LICENSE
 ;
 
@@ -505,7 +505,8 @@ visit(register Ftw_t* ftw)
 		case BAK_simple:
 			sfprintf(state.tmp, "%s%s", state.path, state.suffix);
 		backup:
-			s = sfstruse(state.tmp);
+			if (!(s = sfstruse(state.tmp)))
+				error(ERROR_SYSTEM|3, "%s: out of space", state.path);
 			if (rename(state.path, s))
 			{
 				error(ERROR_SYSTEM|2, "%s: cannot backup to %s", state.path, s);
@@ -705,7 +706,8 @@ b_cp(int argc, register char** argv, void* context)
 		break;
 	}
 	sfputr(state.tmp, usage_tail, -1);
-	usage = sfstruse(state.tmp);
+	if (!(usage = sfstruse(state.tmp)))
+		error(ERROR_SYSTEM|3, "%s: out of space", state.path);
 	state.opname = state.op == CP ? ERROR_translate(0, 0, 0, "overwrite") : ERROR_translate(0, 0, 0, "replace");
 	for (;;)
 	{

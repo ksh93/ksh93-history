@@ -59,13 +59,13 @@ pathshell(void)
 
 	static char*	val;
 
-	if ((sh = getenv("SHELL")) && *sh == '/' && strmatch(sh, "*/(sh|*[!cC]sh)?(-+([a-zA-Z0-9.]))?(.exe)"))
+	if ((sh = getenv("SHELL")) && *sh == '/' && strmatch(sh, "*/(sh|*[!cC]sh)*([[:digit:]])?(-+([.[:alnum:]]))?(.exe)"))
 	{
 		if (!(ru = getuid()) || !eaccess("/bin", W_OK))
 		{
 			if (stat(sh, &st))
 				goto defshell;
-			if (ru != st.st_uid && !strmatch(sh, "?(/usr)?(/local)/?(l)bin/?([a-z])sh?(.exe)"))
+			if (ru != st.st_uid && !strmatch(sh, "?(/usr)?(/local)/?([ls])bin/?([[:lower:]])sh?(.exe)"))
 				goto defshell;
 		}
 		else

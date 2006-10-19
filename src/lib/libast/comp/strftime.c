@@ -24,25 +24,14 @@
  * strftime implementation
  */
 
-#define _def_map_ast	1
-
-#if defined(__STDPP__directive) && defined(__STDPP__hide)
-__STDPP__directive pragma pp:hide strftime
-#else
 #define strftime	______strftime
-#endif
 
 #include <ast.h>
 #include <tm.h>
 
-#if defined(__STDPP__directive) && defined(__STDPP__hide)
-__STDPP__directive pragma pp:nohide strftime
-#else
 #undef	strftime
-#endif
 
 #undef	_def_map_ast
-
 #include <ast_map.h>
 
 #undef	_lib_strftime	/* we can pass X/Open */

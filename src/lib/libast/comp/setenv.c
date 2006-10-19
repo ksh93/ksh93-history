@@ -19,4 +19,40 @@
 *                   Phong Vo <kpv@research.att.com>                    *
 *                                                                      *
 ***********************************************************************/
-#include <ast_limits.h>
+#pragma prototyped
+
+#define setenv		______setenv
+
+#include <ast.h>
+
+#undef	setenv
+#undef	_lib_setenv	/* procopen() calls setenv() */
+
+#if _lib_setenv
+
+NoN(setenv)
+
+#else
+
+#undef	_def_map_ast
+#include <ast_map.h>
+
+#if defined(__EXPORT__)
+#define extern	__EXPORT__
+#endif
+
+extern int
+setenv(const char* name, const char* value, int overwrite)
+{
+	char*	s;
+
+	if (overwrite || !getenv(name))
+	{
+		if (!(s = sfprints("%s=%s", name, value)) || !(s = strdup(s)))
+			return -1;
+		return setenviron(s) ? 0 : -1;
+	}
+	return 0;
+}
+
+#endif

@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1990-2005 AT&T Corp.                  *
+*           Copyright (c) 1990-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -30,8 +30,11 @@
 
 #include <ast.h>
 
-typedef struct coshell Coshell_t;
-typedef struct cojob Cojob_t;
+#define procrun(a,b)		coprocrun(a,b)
+#define system(a)		cosystem(a)
+
+struct Coshell_s; typedef struct Coshell_s Coshell_t;
+struct Cojob_s; typedef struct Cojob_s Cojob_t;
 
 /*
  * DEPRECATED names for compatibility
@@ -45,6 +48,7 @@ typedef struct cojob Cojob_t;
 #define CO_ENV_ATTRIBUTES "COATTRIBUTES"/* coshell attributes env var	*/
 #define CO_ENV_EXPORT	"COEXPORT"	/* coshell env var export list	*/
 #define CO_ENV_HOST	"HOSTNAME"	/* coshell host name env var	*/
+#define CO_ENV_MSGFD	"_COSHELL_msgfd"/* msg fd			*/
 #define CO_ENV_OPTIONS	"COSHELL_OPTIONS"/* options environment var	*/
 #define CO_ENV_PROC	"NPROC" 	/* concurrency environment var	*/
 #define CO_ENV_SHELL	"COSHELL"	/* coshell path environment var	*/
@@ -73,10 +77,13 @@ typedef struct cojob Cojob_t;
 #define CO_DEVFD	(1<<11)		/* coshell handles /dev/fd/#	*/
 
 #define CO_SERIALIZE	(1<<12)		/* serialize stdout and stderr	*/
+#define CO_SERVICE	(1<<13)		/* service callouts		*/
+
+#define CO_APPEND	(1<<14)		/* append coexec() out/err	*/
 
 #define CO_USER		(1L<<16)	/* first user flag		*/
 
-struct cojob				/* coshell job info		*/
+struct Cojob_s				/* coshell job info		*/
 {
 	int		id;		/* job id			*/
 	int		status;		/* exit status			*/
@@ -89,7 +96,7 @@ struct cojob				/* coshell job info		*/
 #endif
 };
 
-struct coshell				/* coshell connection info	*/
+struct Coshell_s			/* coshell connection info	*/
 {
 	int		flags;		/* flags			*/
 	int		outstanding;	/* number of outstanding jobs	*/
@@ -111,5 +118,12 @@ extern Coshell_t*	coopen(const char*, int, const char*);
 extern void		coquote(Sfio_t*, const char*, int);
 extern int		cosync(Coshell_t*, const char*, int, int);
 extern Cojob_t*		cowait(Coshell_t*, Cojob_t*);
+
+extern int		cojobs(Coshell_t*);
+extern int		copending(Coshell_t*);
+extern int		cozombie(Coshell_t*);
+
+extern int		coprocrun(const char*, char**);
+extern int		cosystem(const char*);
 
 #endif

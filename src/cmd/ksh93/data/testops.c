@@ -56,7 +56,7 @@ const Shtable_t shtab_testops[] =
 };
 
 const char sh_opttest[] =
-"[-1c?\n@(#)$Id: test (AT&T Labs Research) 2003-03-18 $\n]"
+"[-1c?\n@(#)$Id: test (AT&T Research) 2003-03-18 $\n]"
 USAGE_LICENSE
 "[+NAME?test - evaluate expression]"
 "[+DESCRIPTION?\btest\b evaluates expressions and indicates its "

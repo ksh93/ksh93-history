@@ -23,6 +23,12 @@
  * strtoll() implementation
  */
 
+#define strtoll		______strtoll
+
+#include <ast.h>
+
+#undef	strtoll
+
 #define S2I_function	strtoll
 #define S2I_number	_ast_intmax_t
 

@@ -81,6 +81,7 @@ struct jobs
 	pid_t		mypgid;		/* process group id of shell */
 	pid_t		mytgid;		/* terminal group id of shell */
 	unsigned int	in_critical;	/* >0 => in critical region */
+	int		savesig;	/* active signal */
 	int		numpost;	/* number of posted jobs */
 	short		fd;		/* tty descriptor number */
 #ifdef JOBS
@@ -103,6 +104,10 @@ struct jobs
 extern struct jobs job;
 
 #ifdef JOBS
+
+#define job_lock()	(job.in_critical++)
+#define job_unlock()	do{if(!--job.in_critical&&job.savesig)job_reap(job.savesig);}while(0)
+
 extern const char	e_jobusage[];
 extern const char	e_done[];
 extern const char	e_running[];
@@ -143,6 +148,7 @@ extern void	job_subrestore(void*);
 	extern int	job_terminate(struct process*,int);
 	extern int	job_switch(struct process*,int);
 	extern void	job_fork(pid_t);
+	extern int	job_reap(int);
 #else
 #	define job_init(flag)
 #	define job_close()	(0)

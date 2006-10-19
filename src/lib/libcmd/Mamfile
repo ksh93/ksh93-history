@@ -80,52 +80,39 @@ make ${PACKAGE_ast_INCLUDE}/ast_map.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_map.h dontcare
 done ${PACKAGE_ast_INCLUDE}/ast_common.h dontcare
 make ${PACKAGE_ast_INCLUDE}/ast_std.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast_map.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast_botch.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_botch.h dontcare
-make ${PACKAGE_ast_INCLUDE}/ast_unistd.h implicit
-done ${PACKAGE_ast_INCLUDE}/ast_unistd.h dontcare
-make ${PACKAGE_ast_INCLUDE}/re_comp.h implicit
-make ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
-make ${INSTALLROOT}/include/prototyped.h implicit
-done ${INSTALLROOT}/include/prototyped.h dontcare
-done ${PACKAGE_ast_INCLUDE}/prototyped.h dontcare
-done ${PACKAGE_ast_INCLUDE}/re_comp.h dontcare
-make ${PACKAGE_ast_INCLUDE}/getopt.h implicit
-make ${PACKAGE_ast_INCLUDE}/ast_getopt.h implicit
-prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
-done ${PACKAGE_ast_INCLUDE}/ast_getopt.h dontcare
-prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
-done ${PACKAGE_ast_INCLUDE}/getopt.h dontcare
+make ${PACKAGE_ast_INCLUDE}/ast_limits.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast_limits.h dontcare
 make ${PACKAGE_ast_INCLUDE}/ast_fcntl.h implicit
-make ${PACKAGE_ast_INCLUDE}/ls.h implicit
-make ${PACKAGE_ast_INCLUDE}/ast_mode.h implicit
-done ${PACKAGE_ast_INCLUDE}/ast_mode.h dontcare
 make ${PACKAGE_ast_INCLUDE}/ast_fs.h implicit
 make error?--?old?ethernet?address?at?wrong?offset implicit
 done error?--?old?ethernet?address?at?wrong?offset dontcare virtual
 done ${PACKAGE_ast_INCLUDE}/ast_fs.h dontcare
-prev ${PACKAGE_ast_INCLUDE}/ast_std.h implicit
-prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
-done ${PACKAGE_ast_INCLUDE}/ls.h dontcare
-prev ${PACKAGE_ast_INCLUDE}/ast_fs.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_fcntl.h dontcare
-make ${PACKAGE_ast_INCLUDE}/ast_types.h implicit
-done ${PACKAGE_ast_INCLUDE}/ast_types.h dontcare
-prev ${PACKAGE_ast_INCLUDE}/ast_map.h implicit
+make ${PACKAGE_ast_INCLUDE}/ast_getopt.h implicit
+make ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+make ${INSTALLROOT}/include/prototyped.h implicit
+done ${INSTALLROOT}/include/prototyped.h dontcare
+done ${PACKAGE_ast_INCLUDE}/prototyped.h dontcare
+done ${PACKAGE_ast_INCLUDE}/ast_getopt.h dontcare
+make ${PACKAGE_ast_INCLUDE}/ast_sys.h implicit
+make ${PACKAGE_ast_INCLUDE}/re_comp.h implicit
+prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+done ${PACKAGE_ast_INCLUDE}/re_comp.h dontcare
+make ${PACKAGE_ast_INCLUDE}/getopt.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast_getopt.h implicit
+prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+done ${PACKAGE_ast_INCLUDE}/getopt.h dontcare
 make ${PACKAGE_ast_INCLUDE}/stdio.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast_stdio.h implicit
 prev ${PACKAGE_ast_INCLUDE}/sfio_s.h implicit
-prev ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast_std.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_stdio.h dontcare
 done ${PACKAGE_ast_INCLUDE}/stdio.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/getopt.h implicit
-make ${PACKAGE_ast_INCLUDE}/limits.h implicit
-make ${PACKAGE_ast_INCLUDE}/ast_limits.h implicit
-done ${PACKAGE_ast_INCLUDE}/ast_limits.h dontcare
-done ${PACKAGE_ast_INCLUDE}/limits.h dontcare
-make ${PACKAGE_ast_INCLUDE}/ast_hdr.h implicit
-done ${PACKAGE_ast_INCLUDE}/ast_hdr.h dontcare
-prev ${PACKAGE_ast_INCLUDE}/ast_getopt.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast_sys.h dontcare
 make ${PACKAGE_ast_INCLUDE}/ast_lib.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_lib.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
@@ -163,7 +150,13 @@ prev cmdinit.c
 make cmdrecurse.c
 make ${PACKAGE_ast_INCLUDE}/ftwalk.h implicit
 make ${PACKAGE_ast_INCLUDE}/fts.h implicit
-prev ${PACKAGE_ast_INCLUDE}/ls.h implicit
+make ${PACKAGE_ast_INCLUDE}/ls.h implicit
+make ${PACKAGE_ast_INCLUDE}/ast_mode.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast_mode.h dontcare
+prev ${PACKAGE_ast_INCLUDE}/ast_fs.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast_std.h implicit
+prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+done ${PACKAGE_ast_INCLUDE}/ls.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/fts.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
@@ -187,7 +180,7 @@ make features/symlink
 done features/symlink
 prev cmd.req
 bind -last
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} ${mam_libast} : run features/symlink
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} ${mam_libast}  : run features/symlink
 done FEATURE/symlink generated
 prev ${PACKAGE_ast_INCLUDE}/fts.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ls.h implicit
@@ -268,7 +261,7 @@ meta FEATURE/sockets features/%>FEATURE/% features/sockets sockets
 make features/sockets
 done features/sockets
 prev cmd.req
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} ${mam_libast} : run features/sockets
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} ${mam_libast}  : run features/sockets
 done FEATURE/sockets generated
 prev ${PACKAGE_ast_INCLUDE}/ls.h implicit
 prev cmdlib.h implicit
@@ -280,6 +273,7 @@ make fold.c
 prev cmdlib.h implicit
 done fold.c
 make getconf.c
+prev ${PACKAGE_ast_INCLUDE}/proc.h implicit
 prev cmdlib.h implicit
 done getconf.c
 make head.c
@@ -295,7 +289,7 @@ meta FEATURE/ids features/%>FEATURE/% features/ids ids
 make features/ids
 done features/ids
 prev cmd.req
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} ${mam_libast} : run features/ids
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} ${mam_libast}  : run features/ids
 done FEATURE/ids generated
 prev cmdlib.h implicit
 done id.c
@@ -355,6 +349,10 @@ prev ${PACKAGE_ast_INCLUDE}/error.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 prev cmd.h implicit
 done stty.c
+make sync.c
+prev ${PACKAGE_ast_INCLUDE}/ls.h implicit
+prev cmdlib.h implicit
+done sync.c
 make tail.c
 prev ${PACKAGE_ast_INCLUDE}/tm.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ls.h implicit
@@ -375,7 +373,7 @@ meta FEATURE/utsname features/%>FEATURE/% features/utsname utsname
 make features/utsname
 done features/utsname
 prev cmd.req
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} ${mam_libast} : run features/utsname
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} ${mam_libast}  : run features/utsname
 done FEATURE/utsname generated
 prev ${PACKAGE_ast_INCLUDE}/proc.h implicit
 prev cmdlib.h implicit
@@ -417,7 +415,7 @@ exec - 	-e '/^b_[a-z_]*(/!d' \
 exec - 	-e 's/^b_//' \
 exec - 	-e 's/(.*//' \
 exec - 	-e 's/.*/extern int	b_&(int, char**, void*);/' \
-exec - 	cmdinit.c cmdrecurse.c basename.c cat.c chgrp.c chmod.c chown.c cmp.c comm.c cp.c cut.c dirname.c date.c expr.c fds.c fmt.c fold.c getconf.c head.c id.c join.c ln.c logname.c mkdir.c mkfifo.c mv.c paste.c pathchk.c rev.c rm.c rmdir.c stty.c tail.c tee.c tty.c uname.c uniq.c wc.c revlib.c wclib.c |
+exec - 	cmdinit.c cmdrecurse.c basename.c cat.c chgrp.c chmod.c chown.c cmp.c comm.c cp.c cut.c dirname.c date.c expr.c fds.c fmt.c fold.c getconf.c head.c id.c join.c ln.c logname.c mkdir.c mkfifo.c mv.c paste.c pathchk.c rev.c rm.c rmdir.c stty.c sync.c tail.c tee.c tty.c uname.c uniq.c wc.c revlib.c wclib.c |
 exec - sort -u
 exec - } > 1.${COTEMP}.h
 exec - if	cmp 2>/dev/null -s 1.${COTEMP}.h cmdext.h
@@ -622,6 +620,12 @@ meta stty.o %.c>%.o stty.c stty
 prev stty.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2006 AT&T Knowledge Ventures][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c stty.c
 done stty.o generated
+make sync.o
+prev sync.c
+meta sync.o %.c>%.o sync.c sync
+prev sync.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2006 AT&T Knowledge Ventures][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c sync.c
+done sync.o generated
 make tail.o
 prev tail.c
 meta tail.o %.c>%.o tail.c tail
@@ -671,7 +675,7 @@ prev wclib.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_cmd -c wclib.c
 done wclib.o generated
 exec - ${AR} cr libcmd.a cmdinit.o cmdrecurse.o basename.o cat.o chgrp.o chmod.o chown.o cmp.o comm.o cp.o cut.o dirname.o date.o expr.o fds.o fmt.o fold.o getconf.o head.o id.o join.o ln.o logname.o mkdir.o mkfifo.o mv.o paste.o pathchk.o rev.o rm.o
-exec - ${AR} cr libcmd.a rmdir.o stty.o tail.o tee.o tty.o uname.o uniq.o wc.o revlib.o wclib.o
+exec - ${AR} cr libcmd.a rmdir.o stty.o sync.o tail.o tee.o tty.o uname.o uniq.o wc.o revlib.o wclib.o
 exec - (ranlib libcmd.a) >/dev/null 2>&1 || true
 done libcmd.a generated
 done cmd virtual
@@ -753,6 +757,7 @@ prev rev.c
 prev rm.c
 prev rmdir.c
 prev stty.c
+prev sync.c
 prev tail.c
 prev tee.c
 prev tty.c
@@ -774,7 +779,7 @@ exec - 	-e '/^b_[a-z_]*(/!d' \
 exec - 	-e 's/^b_//' \
 exec - 	-e 's/(.*//' \
 exec - 	-e 's/.*/CMDLIST(&)/' \
-exec - 	cmdinit.c cmdrecurse.c basename.c cat.c chgrp.c chmod.c chown.c cmp.c comm.c cp.c cut.c dirname.c date.c expr.c fds.c fmt.c fold.c getconf.c head.c id.c join.c ln.c logname.c mkdir.c mkfifo.c mv.c paste.c pathchk.c rev.c rm.c rmdir.c stty.c tail.c tee.c tty.c uname.c uniq.c wc.c revlib.c wclib.c |
+exec - 	cmdinit.c cmdrecurse.c basename.c cat.c chgrp.c chmod.c chown.c cmp.c comm.c cp.c cut.c dirname.c date.c expr.c fds.c fmt.c fold.c getconf.c head.c id.c join.c ln.c logname.c mkdir.c mkfifo.c mv.c paste.c pathchk.c rev.c rm.c rmdir.c stty.c sync.c tail.c tee.c tty.c uname.c uniq.c wc.c revlib.c wclib.c |
 exec - sort -u
 exec - } > 1.${COTEMP}.h
 exec - if	cmp 2>/dev/null -s 1.${COTEMP}.h cmdlist.h

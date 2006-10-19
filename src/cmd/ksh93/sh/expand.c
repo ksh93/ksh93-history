@@ -385,7 +385,7 @@ again:
 			{
 				apin = ap->argchn.ap;
 				if(!sh_isoption(SH_NOGLOB))
-					brace = (brace=path_expand(ap->argval,arghead));
+					brace=path_expand(ap->argval,arghead);
 				else
 				{
 					ap->argchn.ap = *arghead;

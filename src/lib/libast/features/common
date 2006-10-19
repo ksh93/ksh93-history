@@ -276,7 +276,6 @@ tst	- -DN=1 - -DN=2 - -DN=3 - -DN=4 - -DN=5 - -DN=6 - -DN=7 - -DN=8 - -DN=0 outp
 tst	- -DN=1 - -DN=0 output{
 	#define _BYTESEX_H
 
-	#include <stdio.h>
 	#include <string.h>
 	#include <sys/types.h>
 
@@ -331,7 +330,6 @@ tst	- -DN=1 - -DN=0 output{
 }end
 
 tst	- -DTRY=1 - -DTRY=1 -Dvoid=char - -DTRY=2 - -DTRY=3 - -DTRY=4 output{
-	#define printf	______printf
 	#if _STD_ && _hdr_stdarg
 	#include <stdarg.h>
 	static void
@@ -372,7 +370,6 @@ tst	- -DTRY=1 - -DTRY=1 -Dvoid=char - -DTRY=2 - -DTRY=3 - -DTRY=4 output{
 		va_end(ap);
 	}
 	#endif
-	#undef	printf
 	int
 	main()
 	{
@@ -402,6 +399,12 @@ tst	- -DTRY=1 - -DTRY=1 -Dvoid=char - -DTRY=2 - -DTRY=3 - -DTRY=4 output{
 			printf("/* va_arg() va_list type */\n");
 	#endif /*TRY == 4*/
 	
+	#if _UWIN
+		printf("#ifndef va_copy\n");
+		printf("#define va_copy(to,fr) ((to)=(fr))\t");
+			printf("/* copy va_list fr -> to */\n");
+		printf("#endif\n");
+	#else
 	#if !defined(va_copy)
 	#if defined(__va_copy)
 		printf("#ifndef va_copy\n");
@@ -419,6 +422,7 @@ tst	- -DTRY=1 - -DTRY=1 -Dvoid=char - -DTRY=2 - -DTRY=3 - -DTRY=4 output{
 		printf("#define va_copy(to,fr) ((to)=(fr))\t");
 			printf("/* copy va_list fr -> to */\n");
 		printf("#endif\n");
+	#endif
 	#endif
 	#endif
 	#endif
@@ -463,9 +467,6 @@ tst	- -DTRY=1 - -DTRY=1 -Dvoid=char - -DTRY=2 - -DTRY=3 - -DTRY=4 output{
 
 cat{
 	#ifndef _AST_STD_H
-	#	if _def_map_ast
-	#		include <ast_map.h>
-	#	endif
 	#	if __STD_C && _hdr_stddef
 	#	include	<stddef.h>
 	#	endif
@@ -480,6 +481,12 @@ cat{
 	#if !_typ_ssize_t
 	#	define _typ_ssize_t	1
 		typedef int ssize_t;
+	#endif
+	#ifndef _AST_STD_H
+	#	define _def_map_ast	1
+	#	if !_def_map_ast
+	#		include <ast_map.h>
+	#	endif
 	#endif
 }end
 

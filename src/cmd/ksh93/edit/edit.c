@@ -739,7 +739,7 @@ void	ed_setup(register Edit_t *ep, int fd, int reedit)
 			ep->e_term = nv_search("TERM",sh.var_tree,0);
 		if(ep->e_term && (term=nv_getval(ep->e_term)) && strlen(term)<sizeof(ep->e_termname) && strcmp(term,ep->e_termname))
 		{
-			sh_trap("eval .sh.subscript=$(infocmp -1C | sed -e '/:up=/!d' -e 's/.*:up=//' -e 's/:\\\\*$//' -e \"s/[']/\\'/g\" -e \"s/.*/$'&'/\")",0);
+			sh_trap("eval .sh.subscript=$(infocmp -1C 2>/dev/null | sed -e '/:up=/!d' -e 's/.*:up=//' -e 's/:\\\\*$//' -e \"s/[']/\\'/g\" -e \"s/.*/$'&'/\")",0);
 			if(pp=nv_getval(SH_SUBSCRNOD))
 				strncpy(CURSOR_UP,pp,sizeof(CURSOR_UP)-1);
 			nv_unset(SH_SUBSCRNOD);

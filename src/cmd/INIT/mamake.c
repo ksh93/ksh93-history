@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                     Copyright (c) 1994-2006 AT&T                     *
+*           Copyright (c) 1990-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                               by AT&T                                *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -25,7 +25,7 @@
  * coded for portability
  */
 
-static char id[] = "\n@(#)$Id: mamake (AT&T Labs Research) 2005-03-19 $\0\n";
+static char id[] = "\n@(#)$Id: mamake (AT&T Research) 2005-03-19 $\0\n";
 
 #if _PACKAGE_ast
 
@@ -33,7 +33,7 @@ static char id[] = "\n@(#)$Id: mamake (AT&T Labs Research) 2005-03-19 $\0\n";
 #include <error.h>
 
 static const char usage[] =
-"[-?\n@(#)$Id: mamake (AT&T Labs Research) 2005-03-19 $\n]"
+"[-?\n@(#)$Id: mamake (AT&T Research) 2005-03-19 $\n]"
 USAGE_LICENSE
 "[+NAME?mamake - make abstract machine make]"
 "[+DESCRIPTION?\bmamake\b reads \amake abstract machine\a target and"

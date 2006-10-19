@@ -23,6 +23,12 @@
  * strtoull() implementation
  */
 
+#define strtoull	______strtoull
+
+#include <ast.h>
+
+#undef	strtoull
+
 #define S2I_function	strtoull
 #define S2I_number	_ast_intmax_t
 #define S2I_unsigned	1

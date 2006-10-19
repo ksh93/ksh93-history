@@ -28,7 +28,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: chmod (AT&T Labs Research) 2006-06-25 $\n]"
+"[-?\n@(#)$Id: chmod (AT&T Research) 2006-06-25 $\n]"
 USAGE_LICENSE
 "[+NAME?chmod - change the access permissions of files]"
 "[+DESCRIPTION?\bchmod\b changes the permission of each file "

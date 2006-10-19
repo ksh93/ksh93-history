@@ -1,3 +1,5 @@
+ref	-D_def_map_ast=1
+
 sys	mman
 
 tst	lib_mmap note{ standard mmap interface that works }end execute{

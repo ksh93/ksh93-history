@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: tee (AT&T Labs Research) 1999-04-28 $\n]"
+"[-?\n@(#)$Id: tee (AT&T Research) 2006-10-10 $\n]"
 USAGE_LICENSE
 "[+NAME?tee - duplicate standard input]"
 "[+DESCRIPTION?\btee\b copies standard input to standard output "
@@ -41,6 +41,7 @@ USAGE_LICENSE
 "[a:append?Append the standard input to the given files rather "
 	"than overwriting them.]"
 "[i:ignore-interrupts?Ignore SIGINT signal.]"
+"[l:linebuffer?Set the standard output to be line buffered.]"
 "\n"
 "\n[file ...]\n"
 "\n"
@@ -99,8 +100,10 @@ b_tee(int argc, register char** argv, void* context)
 	register int		n;
 	register int*		hp;
 	register char*		cp;
+	int			line;
 
 	cmdinit(argv, context, ERROR_CATALOG, 0);
+	line = -1;
 	while (n = optget(argv, usage)) switch (n)
 	{
 	case 'a':
@@ -109,6 +112,13 @@ b_tee(int argc, register char** argv, void* context)
 		break;
 	case 'i':
 		signal(SIGINT, SIG_IGN);
+		break;
+	case 'l':
+		line = sfset(sfstdout, 0, 0) & SF_LINE;
+		if ((line == 0) == (opt_info.num == 0))
+			line = -1;
+		else
+			sfset(sfstdout, SF_LINE, !!opt_info.num);
 		break;
 	case ':':
 		error(2, "%s", opt_info.arg);
@@ -161,6 +171,8 @@ b_tee(int argc, register char** argv, void* context)
 	if (tp)
 	{
 		sfdisc(sfstdout, NiL);
+		if (line >= 0)
+			sfset(sfstdout, SF_LINE, line);
 		for(hp = tp->fd; (n = *hp) >= 0; hp++)
 			close(n);
 	}

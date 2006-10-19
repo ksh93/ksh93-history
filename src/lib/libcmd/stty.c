@@ -26,7 +26,7 @@
  */
 
 static const char usage[] =
-"[-?@(#)$Id: stty (AT&T Labs Research) 2003-06-04 $\n]"
+"[-?@(#)$Id: stty (AT&T Research) 2003-06-04 $\n]"
 USAGE_LICENSE
 "[+NAME?stty - set or get terminal modes]"
 "[+DESCRIPTION?\bstty\b sets certain terminal I/O modes for the device "
@@ -622,7 +622,7 @@ static int gettchar(register const char *cp)
 	return(*((unsigned char*)cp));
 }
 
-static void setmode(char *argv[], struct termios *sp)
+static void set(char *argv[], struct termios *sp)
 {
 	const Tty_t *tp;
 	register int c,off;
@@ -935,7 +935,7 @@ b_stty(int argc, char** argv, void* context)
 		if (!argv[1] && **argv == ':')
 			gin(*argv, &tty);
 		else
-			setmode(argv, &tty);
+			set(argv, &tty);
 		if (tcsetattr(0, TCSANOW, &tty) < 0)
 			error(ERROR_system(1), "cannot set tty");
 	}

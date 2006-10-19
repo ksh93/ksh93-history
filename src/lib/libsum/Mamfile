@@ -115,10 +115,6 @@ make ${PACKAGE_ast_INCLUDE}/ast.h implicit
 make ${PACKAGE_ast_INCLUDE}/vmalloc.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast_std.h implicit
-make ${PACKAGE_ast_INCLUDE}/regex.h implicit
-prev ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
-prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
-done ${PACKAGE_ast_INCLUDE}/regex.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/ast_map.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast_botch.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_botch.h dontcare
@@ -207,7 +203,7 @@ done ${PACKAGE_ast_INCLUDE} generated
 make ${PACKAGE_ast_INCLUDE}/sum.h
 prev ${PACKAGE_ast_INCLUDE}
 prev sum.h
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1996,author=gsf'  sum.h  > 1.${COTEMP}.x
+exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1996,author=gsf'  sum.h > 1.${COTEMP}.x
 exec - if	cmp 2>/dev/null -s ${PACKAGE_ast_INCLUDE}/sum.h 1.${COTEMP}.x
 exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${PACKAGE_ast_INCLUDE}/sum.h

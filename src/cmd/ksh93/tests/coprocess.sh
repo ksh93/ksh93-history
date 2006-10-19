@@ -29,6 +29,11 @@ alias err_exit='err_exit $LINENO'
 Command=${0##*/}
 integer Errors=0
 
+if	[[ -d /cygdrive ]]
+then	err_exit cygwin detected - coprocess tests disabled - enable at the risk of wedging your system
+	exit $((Errors))
+fi
+
 function ping # id
 {
 	integer x=0

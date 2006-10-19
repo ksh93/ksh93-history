@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1990-2005 AT&T Corp.                  *
+*           Copyright (c) 1990-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -56,6 +56,7 @@ cowait(register Coshell_t* co, Cojob_t* job)
 {
 	register char*		s;
 	register Cojob_t*	cj;
+	register Coservice_t*	cs;
 	register ssize_t	n;
 	char*			b;
 	char*			e;
@@ -63,18 +64,53 @@ cowait(register Coshell_t* co, Cojob_t* job)
 	int			noblock;
 	char			buf[32];
 
-	if (noblock = job == (Cojob_t*)co)
-		job = 0;
-	if (co->outstanding > co->running)
-		for (cj = co->jobs; cj; cj = cj->next)
-			if (cj->pid == CO_PID_ZOMBIE && (!job || cj == job))
-			{
-				cj->pid = CO_PID_FREE;
-				co->outstanding--;
-				return cj;
-			}
-	if (co->running <= 0)
+	if (co)
+	{
+		if (noblock = job == (Cojob_t*)co)
+			job = 0;
+	zombies:
+		if ((co->outstanding + co->svc_outstanding) > (co->running + co->svc_running))
+			for (cj = co->jobs; cj; cj = cj->next)
+				if (cj->pid == CO_PID_ZOMBIE && (!job || cj == job))
+				{
+					cj->pid = CO_PID_FREE;
+					if (cj->service)
+						co->svc_outstanding--;
+					else
+						co->outstanding--;
+					return cj;
+				}
+				else if (cj->service && !cj->service->pid)
+				{
+					cj->pid = CO_PID_ZOMBIE;
+					cj->status = 2;
+					cj->service = 0;
+					co->svc_running--;
+				}
+		if (co->running <= 0)
+		{
+			if (co->svc_running <= 0)
+				return 0;
+			n = 0;
+			for (cs = co->service; cs; cs = cs->next)
+				if (cs->pid && kill(cs->pid, 0))
+				{
+					cs->pid = 0;
+					close(cs->fd);
+					cs->fd = -1;
+					n = 1;
+				}
+			if (n)
+				goto zombies;
+		}
+	}
+	else if (!(co = (Coshell_t*)job))
 		return 0;
+	else
+	{
+		job = 0;
+		noblock = 1;
+	}
 	for (;;)
 	{
 		if (noblock && sfpoll(&co->msgfp, 1, 0) != 1)
@@ -95,7 +131,7 @@ cowait(register Coshell_t* co, Cojob_t* job)
 			break;
 		while (*++s && !isspace(*s));
 		id = strtol(s, &e, 10);
-		if (!isspace(*e))
+		if (*e && !isspace(*e))
 			break;
 		for (s = e; isspace(*s); s++);
 
@@ -164,7 +200,7 @@ cowait(register Coshell_t* co, Cojob_t* job)
 				cat(cj, &cj->out, sfstdout);
 			if (cj->err)
 				cat(cj, &cj->err, sfstderr);
-			if (cj->pid > 0 || (co->flags & (CO_INIT|CO_SERVER)))
+			if (cj->pid > 0 || cj->service || (co->flags & (CO_INIT|CO_SERVER)))
 			{
 			nuke:
 				if (cj->pid > 0)
@@ -176,11 +212,17 @@ cowait(register Coshell_t* co, Cojob_t* job)
 					n = sfsprintf(buf, sizeof(buf), "wait %d\n", cj->pid);
 					write(co->cmdfd, buf, n);
 				}
-				co->running--;
+				if (cj->service)
+					co->svc_running--;
+				else
+					co->running--;
 				if (!job || cj == job)
 				{
 					cj->pid = CO_PID_FREE;
-					co->outstanding--;
+					if (cj->service)
+						co->svc_outstanding--;
+					else
+						co->outstanding--;
 					return cj;
 				}
 				cj->pid = CO_PID_ZOMBIE;
@@ -193,4 +235,36 @@ cowait(register Coshell_t* co, Cojob_t* job)
 	}
 	errormsg(state.lib, 2, "invalid message \"%-.*s>>>%s<<<\"", s - b, b, s);
 	return 0;
+}
+
+/*
+ * the number of running+zombie jobs
+ * these would count against --jobs or NPROC
+ */
+
+int
+cojobs(Coshell_t* co)
+{
+	return co->outstanding;
+}
+
+/*
+ * the number of pending cowait()'s
+ */
+
+int
+copending(Coshell_t* co)
+{
+	return co->outstanding + co->svc_outstanding;
+}
+
+/*
+ * the number of completed jobs not cowait()'d for
+ * cowait() always reaps the zombies first
+ */
+
+int
+cozombie(Coshell_t* co)
+{
+	return (co->outstanding + co->svc_outstanding) - (co->running + co->svc_running);
 }

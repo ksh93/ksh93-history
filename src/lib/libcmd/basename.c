@@ -29,7 +29,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: basename (AT&T Labs Research) 1999-04-10 $\n]"
+"[-?\n@(#)$Id: basename (AT&T Research) 1999-04-10 $\n]"
 USAGE_LICENSE
 "[+NAME?basename - strip directory and suffix from filenames]"
 "[+DESCRIPTION?\bbasename\b removes all leading directory components "

@@ -28,7 +28,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: cmp (AT&T Labs Research) 2004-12-01 $\n]"
+"[-?\n@(#)$Id: cmp (AT&T Research) 2004-12-01 $\n]"
 USAGE_LICENSE
 "[+NAME?cmp - compare two files]"
 "[+DESCRIPTION?\bcmp\b compares two files \afile1\a and \afile2\a.  "

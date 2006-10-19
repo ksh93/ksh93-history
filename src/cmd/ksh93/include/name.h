@@ -64,6 +64,7 @@ union Value
 				   bound exceeded.  Must be a power of 2 */
 #define ARRAY_FILL	(8L<<ARRAY_BITS)	/* used with nv_putsub() */
 #define ARRAY_NOCLONE	(16L<<ARRAY_BITS)	/* do not clone array disc */
+#define ARRAY_NOCHILD   (32L<<ARRAY_BITS)	/* skip compound arrays */
 
 /* These flags are used as options to array_get() */
 #define ARRAY_ASSIGN	0

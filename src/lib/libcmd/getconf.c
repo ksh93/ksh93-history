@@ -21,13 +21,13 @@
 #pragma prototyped
 /*
  * Glenn Fowler
- * AT&T Labs Research
+ * AT&T Research
  *
  * getconf - get configuration values
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: getconf (AT&T Labs Research) 2006-06-11 $\n]"
+"[-?\n@(#)$Id: getconf (AT&T Research) 2006-10-11 $\n]"
 USAGE_LICENSE
 "[+NAME?getconf - get configuration values]"
 "[+DESCRIPTION?\bgetconf\b displays the system configuration value for"
@@ -49,10 +49,15 @@ USAGE_LICENSE
 "[+?If no operands are specified then all known variables are written in"
 "	\aname\a=\avalue\a form to the standard output, one per line."
 "	Only one of \b--call\b, \b--name\b or \b--standard\b may be specified.]"
+"[+?This implementation uses the \bastgetconf\b(3) string interface to the native"
+"	\bsysconf\b(2), \bconfstr\b(2), \bpathconf\b(2), and \bsysinfo\b(2)"
+"	system calls. If \bgetconf\b on \b$PATH\b is not the default native"
+"	\bgetconf\b, named by \b$(getconf GETCONF)\b, then \bastgetconf\b(3)"
+"	checks only \bast\b specific extensions and the native system calls;"
+"	invalid options and/or names not supported by \bastgetconf\b(3) cause"
+"	the \bgetconf\b on \b$PATH\b to be executed.]"
 
-"[a:all?All known variables are written in \aname\a=\avalue\a form to the"
-"	standard output, one per line. Present for compatibility with other"
-"	implementations.]"
+"[a:all?Call the native \bgetconf\b(1) with option \b-a\b.]"
 "[b:base?List base variable name sans call and standard prefixes.]"
 "[c:call?Display variables with call prefix that matches \aRE\a. The call"
 "	prefixes are:]:[RE]{"
@@ -78,6 +83,7 @@ USAGE_LICENSE
 "		[+AES]"
 "		[+AST]"
 "		[+C]"
+"		[+GNU]"
 "		[+POSIX]"
 "		[+SVID]"
 "		[+XBS5]"
@@ -89,7 +95,8 @@ USAGE_LICENSE
 "[w:writable?Display the named \bwritable\b variables in \aname\a=\avalue\a"
 "	form. If \aname\a is omitted then all \bwritable\b variables are"
 "	listed.]"
-"[v:specification?Ignored by this implementation.]:[name]"
+"[v:specification?Call the native \bgetconf\b(1) with option"
+"	\b-v\b \aname\a.]:[name]"
 
 "\n"
 "\n[ name [ path [ value ] ] ... ]\n"
@@ -109,6 +116,7 @@ USAGE_LICENSE
 ;
 
 #include <cmdlib.h>
+#include <proc.h>
 
 int
 b_getconf(int argc, char** argv, void* context)
@@ -118,22 +126,29 @@ b_getconf(int argc, char** argv, void* context)
 	register char*	value;
 	register char*	s;
 	char*		pattern;
-	int		all;
+	char*		native;
 	int		flags;
+	char**		a;
+	char**		oargv;
+	char		cmd[PATH_MAX];
 
 	static char	empty[] = "-";
 
 	NoP(argc);
+	oargv = argv;
 	cmdinit(argv, context, ERROR_CATALOG, 0);
-	all = 0;
+	if (*(native = astconf("GETCONF", NiL, NiL)) != '/')
+		native = 0;
 	flags = 0;
+	name = 0;
 	pattern = 0;
 	for (;;)
 	{
 		switch (optget(argv, usage))
 		{
 		case 'a':
-			all = opt_info.num;
+			if (native)
+				goto defer;
 			continue;
 		case 'b':
 			flags |= ASTCONF_base;
@@ -168,10 +183,16 @@ b_getconf(int argc, char** argv, void* context)
 		case 't':
 			flags |= ASTCONF_table;
 			continue;
+		case 'v':
+			if (native)
+				goto defer;
+			continue;
 		case 'w':
 			flags |= ASTCONF_write;
 			continue;
 		case ':':
+			if (native)
+				goto defer;
 			error(2, "%s", opt_info.arg);
 			break;
 		case '?':
@@ -181,46 +202,70 @@ b_getconf(int argc, char** argv, void* context)
 		break;
 	}
 	argv += opt_info.index;
-	if (error_info.errors || (name = *argv) && all)
-		error(ERROR_usage(2), "%s", optusage(NiL));
-	do
+	if (!(name = *argv))
+		path = 0;
+	else if (streq(name, empty))
 	{
-		if (!name)
+		name = 0;
+		if (path = *++argv)
 		{
-			path = 0;
-			value = 0;
+			argv++;
+			if (streq(path, empty))
+				path = 0;
 		}
-		else
+	}
+	if (error_info.errors || !name && *argv)
+		error(ERROR_usage(2), "%s", optusage(NiL));
+	if (!name)
+		astconflist(sfstdout, path, flags, pattern);
+	else
+	{
+		flags = native ? (ASTCONF_system|ASTCONF_error) : 0;
+		do
 		{
-			if (streq(name, empty))
-				name = 0;
 			if (!(path = *++argv))
 				value = 0;
 			else
 			{
 				if (streq(path, empty))
+				{
 					path = 0;
+					flags = 0;
+				}
 				if ((value = *++argv) && (streq(value, empty)))
+				{
 					value = 0;
+					flags = 0;
+				}
 			}
-		}
-		if (!name)
-			astconflist(sfstdout, path, flags, pattern);
-		else if (!(s = astgetconf(name, path, value, errorf)))
-		{
-			error_info.errors++;
-			break;
-		}
-		else if (!value)
-		{
-			if (flags & X_OK)
+			s = astgetconf(name, path, value, flags, errorf);
+			if (error_info.errors)
+				break;
+			if (!s)
+				goto defer;
+			if (!value)
 			{
-				sfputr(sfstdout, name, ' ');
-				sfputr(sfstdout, path ? path : empty, ' ');
+				if (flags & ASTCONF_write)
+				{
+					sfputr(sfstdout, name, ' ');
+					sfputr(sfstdout, path ? path : empty, ' ');
+				}
+				sfputr(sfstdout, *s ? s : "undefined", '\n');
 			}
-			sfputr(sfstdout, *s ? s : "undefined", '\n');
-		}
-	} while (*argv && (name = *++argv));
-	error_info.flags &= ~ERROR_LIBRARY;
+		} while (*argv && (name = *++argv));
+	}
 	return error_info.errors != 0;
+ defer:
+	if (!pathaccess(cmd, astconf("PATH", NiL, NiL), error_info.id, NiL, PATH_EXECUTE|PATH_REGULAR) &&
+	    !pathaccess(cmd, "/usr/sbin:/sbin", error_info.id, NiL, PATH_EXECUTE|PATH_REGULAR))
+	{
+		if (name)
+			error(3, "%s: unknown name -- no native getconf(1) to defer to", name);
+		else
+			error(3, "no native getconf(1) to defer to");
+		flags = 2;
+	}
+	else if ((flags = procrun(cmd, oargv)) >= EXIT_NOEXEC)
+		error(ERROR_SYSTEM|2, "%s: exec error [%d]", cmd, flags);
+	return flags;
 }

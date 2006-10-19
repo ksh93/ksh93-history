@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1990-2005 AT&T Corp.                  *
+*           Copyright (c) 1990-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -25,6 +25,8 @@
  * if co==0 then kill all coshell jobs with sig
  * elif cj==0 then kill co jobs with sig
  * else kill cj with sig
+ *
+ * if sig==0 then cause all CO_SERVICE jobs to fail
  */
 
 #include "colib.h"
@@ -38,10 +40,17 @@ cokilljob(register Coshell_t* co, register Cojob_t* cj, int sig)
 {
 	int	n;
 
-	if (cj->pid <= 0)
+	if (cj->pid < 0)
+		return 0;
+	if (cj->pid == 0)
 	{
-		errno = ESRCH;
-		return -1;
+		if (cj->service)
+			co->svc_running--;
+		else
+			co->running--;
+		cj->pid = CO_PID_ZOMBIE;
+		cj->status = EXIT_TERM(sig);
+		return 0;
 	}
 	if (sig == SIGKILL)
 	{
@@ -63,7 +72,7 @@ cokillshell(register Coshell_t* co, register Cojob_t* cj, int sig)
 {
 	int	n;
 
-	if (co->flags & CO_SERVER)
+	if (sig && (co->flags & CO_SERVER))
 	{
 		char	buf[CO_BUFSIZ];
 

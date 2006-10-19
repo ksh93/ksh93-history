@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1990-2005 AT&T Corp.                  *
+*           Copyright (c) 1990-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -39,6 +39,7 @@ static const Namval_t	options[] =
 	"devfd",	CO_DEVFD,
 	"ignore",	CO_IGNORE,
 	"silent",	CO_SILENT,
+	"service",	CO_SERVICE,
 	0,		0
 };
 
@@ -89,15 +90,54 @@ stop(int sig)
  */
 
 static int
-setopt(register void* a, register const void* p, int n, const char* v)
+setopt(register void* co, register const void* p, int n, const char* v)
 {
+	Coservice_t*	cs;
+	char*		s;
+	char**		a;
+
 	NoP(v);
 	if (p)
 	{
 		if (n)
-			((Coshell_t*)a)->flags |= ((Namval_t*)p)->value;
+		{
+			((Coshell_t*)co)->flags |= ((Namval_t*)p)->value;
+			if (((Namval_t*)p)->value == CO_SERVICE && v && (cs = newof(0, Coservice_t, 1, 2 * strlen(v))))
+			{
+				a = cs->argv;
+				*a++ = s = cs->path = cs->name = (char*)(cs + 1);
+				while (*s = *v++)
+					if (*s++ == ':')
+					{
+						*(s - 1) = 0;
+						if (*v == '-')
+						{
+							v++;
+							if (*v == '-')
+								v++;
+						}
+						if (strneq(v, "command=", 8))
+							cs->path = s + 8;
+						else if (strneq(v, "state=", 6))
+							cs->db = s + 6;
+						else if (strneq(v, "db=", 3))
+							cs->db = s + 3;
+						else if (a < &cs->argv[elementsof(cs->argv)-2] && *v && *v != ':')
+						{
+							*a++ = s;
+							*s++ = '-';
+							*s++ = '-';
+						}
+					}
+				if (cs->db)
+					*a++ = cs->db;
+				*a = 0;
+				cs->next = ((Coshell_t*)co)->service;
+				((Coshell_t*)co)->service = cs;
+			}
+		}
 		else
-			((Coshell_t*)a)->mask |= ((Namval_t*)p)->value;
+			((Coshell_t*)co)->mask |= ((Namval_t*)p)->value;
 	}
 	return 0;
 }
@@ -136,6 +176,8 @@ coopen(const char* path, int flags, const char* attributes)
 	pio[0] = -1;
 	pio[1] = -1;
 	stropt(getenv(CO_ENV_OPTIONS), options, sizeof(*options), setopt, co);
+	if (attributes)
+		stropt(attributes, options, sizeof(*options), setopt, co);
 	co->flags |= CO_INIT | ((flags | CO_DEVFD) & ~co->mask);
 	if (pipe(pex) < 0 || pipe(pio) < 0)
 	{
@@ -143,12 +185,15 @@ coopen(const char* path, int flags, const char* attributes)
 		goto bad;
 	}
 	co->cmdfd = pio[1];
+	co->gsmfd = pex[1];
 	if (!(co->msgfp = sfnew(NiL, NiL, 256, pex[0], SF_READ)))
 	{
 		errormsg(state.lib, ERROR_LIBRARY|ERROR_SYSTEM|2, "cannot allocate message stream");
 		goto bad;
 	}
 	sfdcslow(co->msgfp);
+	sfsprintf(devfd, sizeof(devfd), "%d", co->gsmfd);
+	setenv(CO_ENV_MSGFD, devfd, 1);
 	ops[0] = PROC_FD_DUP(pio[0], 0, PROC_FD_PARENT);
 	ops[1] = PROC_FD_CLOSE(pio[1], PROC_FD_CHILD);
 	ops[2] = PROC_FD_CLOSE(pex[0], PROC_FD_CHILD);
@@ -204,7 +249,7 @@ coopen(const char* path, int flags, const char* attributes)
 	}
 	if (attributes)
 		coquote(sp, attributes, 0);
-	sfprintf(sp, "'\n", coident);
+	sfprintf(sp, "'\n");
 	sfprintf(sp, coident, pex[1]);
 	i = sfstrtell(sp);
 	sfstrseek(sp, 0, SEEK_SET);
@@ -308,7 +353,7 @@ coopen(const char* path, int flags, const char* attributes)
 	return 0;
  nope:
 	i = errno;
-	if (!(s = getenv(CO_ENV_SHELL)) || (s = (t = strrchr(s, '/')) ? (t + 1) : s) && !strmatch(s, "?(k)sh") && !streq(s, CO_ID))
+	if (!(s = sh[1]) || (s = (t = strrchr(s, '/')) ? (t + 1) : s) && !strmatch(s, "?(k)sh") && !streq(s, CO_ID))
 		error(2, "export %s={ksh,sh,%s}", CO_ENV_SHELL, CO_ID);
 	coclose(co);
 	errno = i;

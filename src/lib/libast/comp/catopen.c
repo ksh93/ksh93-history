@@ -110,8 +110,11 @@ sfprintf(sfstderr, "AHA#%d:%s %s\n", __LINE__, __FILE__, s);
 			cc->cat = d;
 			if ((s || *name == '/') && (ast.locale.set & (1<<AST_LC_MESSAGES)))
 			{
-				cc->cvt = iconv_open("", "utf");
-				cc->tmp = sfstropen();
+				if ((cc->cvt = iconv_open("", "utf")) == (iconv_t)(-1) || !(cc->tmp = sfstropen()))
+				{
+					catclose(d);
+					return (_ast_nl_catd)(-1);
+				}
 			}
 			else
 				cc->cvt = (iconv_t)(-1);
@@ -147,7 +150,8 @@ _ast_catgets(_ast_nl_catd cat, int set, int num, const char* msg)
 			s = (char*)msg;
 			n = strlen(s);
 			iconv_write(((Cc_t*)cat)->cvt, ((Cc_t*)cat)->tmp, &s, &n, NiL);
-			return sfstruse(((Cc_t*)cat)->tmp);
+			if (s = sfstruse(((Cc_t*)cat)->tmp))
+				return s;
 		}
 		return (char*)msg;
 	}

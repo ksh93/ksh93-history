@@ -424,7 +424,6 @@ scan(register const char* s, char** e, const char* format, char** f, Time_t t, l
 					goto again;
 				}
 	}
- fix:
 	t = gen(tm, &set);
  done:
 	if (e)

@@ -106,6 +106,9 @@ va_list	args;		/* arg list if !argf	*/
 	Sflong_t	lv;
 	char		*sp, *ssp, *endsp, *ep, *endep;
 	int		dot, width, precis, sign, decpt;
+#if _PACKAGE_ast
+	int		scale;
+#endif
 	ssize_t		size;
 	Sfdouble_t	dval;
 	char		*tls[2], **ls;	/* for %..[separ]s		*/
@@ -213,6 +216,9 @@ loop_fmt :
 		else	form += 1;
 
 		flags = 0;
+#if _PACKAGE_ast
+		scale = 0;
+#endif
 		size = width = precis = base = n_s = argp = -1;
 		ssp = _Sfdigits;
 		endep = ep = NIL(char*);
@@ -455,6 +461,12 @@ loop_fmt :
 		case 't' :
 			size = -1; flags = (flags&~SFFMT_TYPES) | SFFMT_TFLAG;
 			goto loop_flags;
+#if _PACKAGE_ast
+		case 'm' :
+			scale = (base == 2) ? 1024 : 1000;
+			base = -1;
+			goto loop_flags;
+#endif
 		default:
 			break;
 		}
@@ -658,6 +670,13 @@ loop_fmt :
 				{	sp = "(null)";
 					flags &= ~SFFMT_LONG;
 				}
+#if _PACKAGE_ast
+		str_cvt:
+				if(scale)
+				{	size = base = -1;
+					flags &= ~SFFMT_LONG;
+				}
+#endif
 				ls = tls; tls[0] = sp;
 			}
 			for(sp = *ls;;)
@@ -857,6 +876,12 @@ loop_fmt :
 					lv = (Sflong_t)argv.l;
 				else	lv = (Sflong_t)argv.ul;
 			long_cvt:
+#if _PACKAGE_ast
+				if(scale)
+				{	sp = fmtscale(lv, scale);
+					goto str_cvt;
+				}
+#endif
 				if(lv == 0 && precis == 0)
 					break;
 				if(lv < 0 && fmt == 'd' )
@@ -908,6 +933,12 @@ loop_fmt :
 			else
 			{	v = argv.i;
 			int_cvt:
+#if _PACKAGE_ast
+				if(scale)
+				{	sp = fmtscale(v, scale);
+					goto str_cvt;
+				}
+#endif
 				if(v == 0 && precis == 0)
 					break;
 				if(v < 0 && fmt == 'd' )

@@ -1029,18 +1029,18 @@ bzero(void* b, size_t n)
 #undef	getpagesize
 
 #ifdef	_SC_PAGESIZE
-#undef	PAGESIZE
-#define PAGESIZE	(int)sysconf(_SC_PAGESIZE)
+#undef	_AST_PAGESIZE
+#define _AST_PAGESIZE	(int)sysconf(_SC_PAGESIZE)
 #else
-#ifndef PAGESIZE
-#define PAGESIZE	4096
+#ifndef _AST_PAGESIZE
+#define _AST_PAGESIZE	4096
 #endif
 #endif
 
 int
 getpagesize()
 {
-	return PAGESIZE;
+	return _AST_PAGESIZE;
 }
 
 #endif

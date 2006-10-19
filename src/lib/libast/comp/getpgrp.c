@@ -30,6 +30,8 @@
  * user		SOL
  */
 
+#undef	getpgrp
+
 extern int	getpgrp(int);
 
 #if defined(__EXPORT__)

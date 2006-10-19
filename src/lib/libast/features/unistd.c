@@ -34,20 +34,49 @@ __STDPP__directive pragma pp:hide getpagesize getdtablesize
 #define getdtablesize	______getdtablesize
 #endif
 
-#include "FEATURE/standards"
+/*
+ * we'd like as many symbols as possible defined
+ * the standards push the vendors the other way
+ * but don't provide guard that lets everything through
+ * so each vendor adds their own guard
+ * many now include something like <standards.h> to
+ * get it straight in one place -- <sys/types.h> should
+ * kick that in
+ */
 
-#include <stdio.h>
+#include "FEATURE/standards"
+#include "FEATURE/lib"
+
+#ifdef __sun
+#define _timespec	timespec
+#endif
+
 #include <sys/types.h>
 
+#undef	_SGIAPI
+#define _SGIAPI		1
+
+#if _hdr_limits
+#include <limits.h>
+#endif
+
+#undef	_SGIAPI
+#define _SGIAPI		0
+
 #include "FEATURE/lib"
-#include "FEATURE/limits"
-#include "FEATURE/unistd.lcl"
+#include "FEATURE/common"
+
+#if _hdr_unistd
+#include <unistd.h>
+#endif
+
+#include "FEATURE/param"
 
 #if defined(__STDPP__directive) && defined(__STDPP__hide)
 __STDPP__directive pragma pp:nohide getpagesize getdtablesize
 #else
-#undef  getpagesize
-#undef  getdtablesize
+#undef	getpagesize
+#undef	getdtablesize   
 #endif
 
 #include "conflib.h"

@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: shcomp (AT&T Labs Research) 2003-03-02 $\n]"
+"[-?\n@(#)$Id: shcomp (AT&T Research) 2003-03-02 $\n]"
 USAGE_LICENSE
 "[+NAME?shcomp - compile a shell script]"
 "[+DESCRIPTION?Unless \b-D\b is specified, \bshcomp\b takes a shell script, "
@@ -60,6 +60,7 @@ USAGE_LICENSE
 
 #include	<shell.h>
 #include	"shnodes.h"
+#include	"sys/stat.h"
 
 #define CNTL(x)	((x)&037)
 #define VERSION	3

@@ -195,6 +195,7 @@ fi
 cd ~-
 rm -rf /tmp/ksh$$
 
+
 # { exec interactive login_shell restricted xtrace } in the following test
 
 for opt in \
@@ -303,5 +304,10 @@ do	if	[[ -o ?$opt ]]
 	then	err_exit "[[ -o ?no$opt ]] should fail"
 	fi
 done
-
+false | true | true   || err_exit 'pipe not exiting exit value of last element'
+true | true | false   && err_exit 'pipe not exiting false'
+set -o pipefail
+false | true | true    && err_exit 'pipe with first not failing with pipefail'
+true | false | true    && err_exit 'pipe middle not failing with pipefail'
+true | true | false    && err_exit 'pipe last not failing with pipefail'
 exit $((Errors))

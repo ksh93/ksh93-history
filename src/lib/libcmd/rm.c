@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: rm (AT&T Labs Research) 2006-01-28 $\n]"
+"[-?\n@(#)$Id: rm (AT&T Research) 2006-01-28 $\n]"
 USAGE_LICENSE
 "[+NAME?rm - remove files]"
 "[+DESCRIPTION?\brm\b removes the named \afile\a arguments. By default it"

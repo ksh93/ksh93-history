@@ -28,7 +28,7 @@
 
 
 static const char usage[] =
-"[-?\n@(#)$Id: mkfifo (AT&T Labs Research) 1999-04-20 $\n]"
+"[-?\n@(#)$Id: mkfifo (AT&T Research) 1999-04-20 $\n]"
 USAGE_LICENSE
 "[+NAME?mkfifo - make FIFOs (named pipes)]"
 "[+DESCRIPTION?\bmkfifo\b creates one or more FIFO's.  By "

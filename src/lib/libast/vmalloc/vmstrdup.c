@@ -42,7 +42,7 @@ register char*	s;
 	register char*	t;
 	register int	n;
 
-	return((t = vmalloc(v, n = strlen(s) + 1)) ? (char*)memcpy(t, s, n) : (char*)0);
+	return (s && (t = vmalloc(v, n = strlen(s) + 1))) ? (char*)memcpy(t, s, n) : (char*)0;
 }
 
 #endif

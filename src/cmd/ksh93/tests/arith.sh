@@ -346,6 +346,10 @@ do	(( ipx = ip % 256 ))
 done	
 unset x
 x=010
+(( x == 8 )) || err_exit 'leading zeros not treated as octal arithmetic'
+(( $x == 8 )) || err_exit 'leading zeros not treated as octal arithmetic with $x'
+unset x
+typeset -Z x=010
 (( x == 10 )) || err_exit 'leading zeros not ignored for arithmetic'
 (( $x == 10 )) || err_exit 'leading zeros not ignored for arithmetic with $x'
 typeset -i i=x
@@ -455,4 +459,8 @@ then	[[ $(printf "%g\n" $((Inf))) == Inf ]] || err_exit 'printf "%g\n" $((Inf) f
 	(( 4.0/Inf == 0.0 )) || err_exit '4.0/Inf != 0.0'
 else	err_exit 'Inf and NaN not working'
 fi
+unset x y
+float x=14.555 y
+y=$(printf "%a" x)
+(( x == y )) || err_exit 'output of printf %a not self preserving'
 exit $((Errors))

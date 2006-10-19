@@ -18,7 +18,7 @@
 *                                                                      *
 ***********************************************************************/
 
-static const char id[] = "\n@(#)$Id: open (AT&T Labs) 1998-07-07 $\0\n";
+static const char id[] = "\n@(#)$Id: open (AT&T Research) 1998-07-07 $\0\n";
 
 #include	<sys/stat.h>
 #include	<fcntl.h>

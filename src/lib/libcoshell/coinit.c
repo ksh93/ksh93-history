@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1990-2005 AT&T Corp.                  *
+*           Copyright (c) 1990-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -130,6 +130,7 @@ coinit(int flags)
 
 		if (!(sp = sfstropen()))
 			return 0;
+		tp = 0;
 		old = !(flags & (CO_KSH|CO_SERVER));
 		if (!old)
 			sfprintf(sp, "export");
@@ -212,7 +213,9 @@ coinit(int flags)
 		if (!(t = sfstrrsrv(sp, n)))
 		{
 		bad:
-			sfclose(sp);
+			sfstrclose(sp);
+			if (tp)
+				sfstrclose(tp);
 			return 0;
 		}
 		t += n / 2;
@@ -248,7 +251,9 @@ coinit(int flags)
 		}
 		if (!(flags & CO_CROSS))
 			tp = 0;
-		else if (tp = sfstropen())
+		else if (!(tp = sfstropen()))
+			goto bad;
+		else
 		{
 			while (n = *s++)
 			{
@@ -271,7 +276,8 @@ coinit(int flags)
 				}
 				sfputc(tp, n);
 			}
-			s = sfstruse(tp);
+			if (!(s = costash(tp)))
+				goto bad;
 		}
 		coquote(sp, s, !old);
 		if (tp)

@@ -27,13 +27,14 @@
 
 #undef	remove
 
+#undef	_def_map_ast
+#include <ast_map.h>
+
 #if _std_remove || !_lib_unlink
 
 NoN(remove)
 
 #else
-
-#undef	remove
 
 #if defined(__EXPORT__)
 #define extern	__EXPORT__

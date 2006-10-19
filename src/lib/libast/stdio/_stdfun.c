@@ -32,8 +32,11 @@ void _STUB_stdfun(){}
 #include <ast_windows.h>
 #include <uwin.h>
 #include <dlfcn.h>
+#include "FEATURE/uwin"
 
-#if _ALPHA_
+#if _lib___iob_func
+#define IOB		((char*)__iob_func())
+#elif _dat__iob
 #define IOB		((char*)_iob)
 #else
 #define IOB		((char*)__p__iob())

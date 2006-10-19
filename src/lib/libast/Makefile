@@ -12,7 +12,7 @@ HOSTTYPE == "$(CC.HOSTTYPE)"
 
 CCFLAGS = $(CC.OPTIMIZE) $(CC.DLL)
 
-IFFEFLAGS = -v -X std
+IFFEFLAGS = -v -X ast -X std
 
 .SOURCE : cdt comp dir disc hash man misc obsolete path port preroot \
 		regex sfio stdio string tm uwin vec vmalloc
@@ -28,7 +28,7 @@ DEBUG ==
 __OBSOLETE__ == $("6 months ago":@F=%(%Y0101)T)
 
 HEADERSRC = ast.h ast_dir.h ast_getopt.h ast_std.h \
-	ast_version.h ast_windows.h $(ID)_common.h \
+	ast_version.h ast_windows.h \
 	ccode.h cdt.h debug.h dt.h error.h find.h ftw.h ftwalk.h fts.h \
 	fs3d.h getopt.h glob.h hash.h hashkey.h hashpart.h int.h lc.h ls.h \
 	magic.h mc.h mime.h mnt.h modecanon.h modex.h namval.h option.h \
@@ -40,15 +40,17 @@ HEADERSRC = ast.h ast_dir.h ast_getopt.h ast_std.h \
 	$(HEADERSTD)
 
 HEADERGEN = align.h preroot.h sig.h tmx.h tv.h \
-	$(ID)_botch.h $(ID)_ccode.h $(ID)_fcntl.h \
-	$(ID)_float.h $(ID)_fs.h $(ID)_hdr.h $(ID)_lib.h $(ID)_map.h \
-	$(ID)_mmap.h $(ID)_mode.h $(ID)_param.h $(ID)_time.h $(ID)_tty.h \
-	$(ID)_types.h $(ID)_unistd.h $(ID)_vfork.h $(ID)_wait.h \
+	$(ID)_botch.h $(ID)_ccode.h $(ID)_fcntl.h $(ID)_float.h $(ID)_fs.h \
+	$(ID)_lib.h $(ID)_map.h $(ID)_mmap.h $(ID)_mode.h $(ID)_param.h \
+	$(ID)_sys.h $(ID)_time.h $(ID)_time.h $(ID)_tty.h $(ID)_types.h \
+	$(ID)_vfork.h $(ID)_wait.h $(ID)_limits.h $(ID)_standards.h \
 	$(HEADERSTD:/^/$(ID)_/)
+
+HEADEREXP = $(ID)_common.h
 
 HEADEROPT = fmtmsg.h libgen.h syslog.h
 
-HEADERSTD = dirent.h iconv.h limits.h nl_types.h stdio.h wchar.h
+HEADERSTD = dirent.h iconv.h nl_types.h stdio.h wchar.h
 
 $(ID) 5.4 :LIBRARY: README RELEASE \
 	LIBAST.3 ast.3 astsa.3 cdt.3 chr.3 compat.3 error.3 find.3 fmt.3 \
@@ -60,7 +62,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	strsort.3 strtape.3 strton.3 struid.3 swap.3 tab.3 tm.3 tmx.3  \
 	tok.3 touch.3 tv.3 vecargs.3 vmalloc.3 \
 	$(HEADERSRC) \
-	state.c \
+	state.c transition.c \
 	dirlib.h opendir.c readdir.c rewinddir.c seekdir.c telldir.c \
 	getcwd.c fastfind.c \
 	hashlib.h hashalloc.c hashdump.c hashfree.c hashlast.c \
@@ -112,12 +114,11 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	execlp.c execve.c execvp.c execvpe.c spawnveg.c \
 	vfork.c killpg.c \
 	hsearch.c tsearch.c \
-	getlogin.c putenv.c \
+	getlogin.c putenv.c setenv.c unsetenv.c \
 	lstat.c statvfs.c \
 	eaccess.c gross.c gross_sgi.h omitted.c \
 	fakelink.h readlink.c symlink.c \
 	getpgrp.c setpgid.c setsid.c waitpid.c \
-	confmap.c conftab.c confstr.c pathconf.c sysconf.c \
 	creat64.c fcntl.c open.c \
 	atexit.c getdents.c getwd.c dup2.c errno.c \
 	getpreroot.c ispreroot.c realopen.c setpreroot.c \
@@ -136,7 +137,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	wordexp.c mktime.c \
 	/* regex */ \
 	reglib.h regalloc.c regclass.c regcoll.c regcomp.c regcache.c \
-	regerror.c regexec.c regfatal.c reginit.c regnexec.c \
+	regdecomp.c regerror.c regexec.c regfatal.c reginit.c regnexec.c \
 	regsubcomp.c regsubexec.c regsub.c regrecord.c regrexec.c regstat.c \
 	/* cdt */ \
 	dthdr.h dtclose.c dtdisc.c dtextract.c dtflatten.c dthash.c \
@@ -187,6 +188,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	frexp.c frexpl.c \
 	/* ast */ \
 	astcopy.c astconf.c astdynamic.c astlicense.c astquery.c astwinsize.c \
+	conftab.c \
 	$(CC.LD.STATIC) aststatic.c getopt.c getoptl.c $(CC.LD.DYNAMIC) \
 	/* vmalloc */ \
 	vmalloc.h vmhdr.h vmbest.c vmclear.c vmclose.c vmdcheap.c vmdebug.c \
@@ -221,36 +223,29 @@ virtual		ast/stdio.h
 "sol*.*"	:NOOPTIMIZE: sfrd.c sfvprintf.c
 "win32*"	:NOOPTIMIZE: fastfind.c mc.c
 
-:INSTALLDIR: conf
+/*
+ * NOTE: sun4 runtime link botches ro data so advertized sig_info is rw
+ */
 
-conf :: conf.sh
-
-conflib.h conflim.h confmap.h conftab.h confuni.h \
-confmap.c conftab.c confstr.c pathconf.c sysconf.c :JOINT: \
-		conf conf.tab
-	$(*:O=1:P=A) $(IFFEFLAGS:V:N=-v) $(*:O>1) $(CC) $(CCFLAGS:N!=-[DIU]*)
-
-/* NOTE: sun4 runtime link botches ro data so advertized sig_info is rw */
-
-:READONLY: confmap.c conftab.c modedata.c /*sftable.c*/ \
+:READONLY: conftab.c modedata.c /*sftable.c*/ \
 	/*sigdata.c*/ tmdata.c univdata.c
 
 :: atmain.C \
 	stdgets.c stdprintf.c stdscanf.c stdvbuf.c stdsprnt.c \
 	stdvsprnt.c stdvsnprnt.c stdvsscn.c stdopen.c
 
-$(INCLUDEDIR) :INSTALLPROTO: $(HEADERSRC) $(HEADERGEN)
+if "$(PWD:B)" != "cc-*"
+
+$(INCLUDEDIR) :INSTALLPROTO: $(HEADEREXP) $(HEADERSRC) $(HEADERGEN)
+
+:INSTALLDIR: conf
+
+conf :: conf.sh
+
+conflim.h conftab.h conftab.c :JOINT: conf conf.tab
+	$(*:O=1:P=A) $(IFFEFLAGS:V:N=-v) $(*:O>1) $(CC) $(CCFLAGS:N!=-[DIU]*)
 
 $(HEADERGEN) :COPY: FEATURE/$$(<:B:/$(ID)_//)
-
-/* FEATURE/common for iffe probes, <ast_common.h> for ast source */
-
-$(ID)_common.h : FEATURE/$$(<:B:/$(ID)_//)
-	$(SED) 's/if _def_map_ast/if !_def_map_ast/' < $(*) > 1.$(tmp).x
-	if	$(CMP) -s $(<) 1.$(tmp).x
-	then	$(RM) -f 1.$(tmp).x
-	else	$(MV) 1.$(tmp).x $(<)
-	fi
 
 lcgen : lcgen.c
 	$(CC.NATIVE|CC) -o $(<) $(*)
@@ -258,14 +253,14 @@ lcgen : lcgen.c
 lc.h lctab.h :JOINT: lcgen lc.tab
 	$(*:O=1:C,^[^/],./&,) $(tmp).1 $(tmp).2 < $(*:O=2) # :P=E: in 2006
 	$(PROTO) -p $(PROTOFLAGS) $(tmp).1 > $(tmp).3
-	rm -f $(tmp).1
-	if	cmp -s $(tmp).3 $(<:O=1)
-	then	rm $(tmp).3
-	else	mv $(tmp).3 $(<:O=1)
+	$(RM) -f $(tmp).1
+	if	$(CMP) -s $(tmp).3 $(<:O=1)
+	then	$(RM) $(tmp).3
+	else	$(MV) $(tmp).3 $(<:O=1)
 	fi
-	if	cmp -s $(tmp).2 $(<:O=2)
-	then	rm $(tmp).2
-	else	mv $(tmp).2 $(<:O=2)
+	if	$(CMP) -s $(tmp).2 $(<:O=2)
+	then	$(RM) $(tmp).2
+	else	$(MV) $(tmp).2 $(<:O=2)
 	fi
 
 $(LIBDIR)/file/magic :INSTALL: magic.tab
@@ -299,22 +294,20 @@ $(INCLUDEDIR)/prototyped.h :INSTALL: $(INCLUDEDIR)
 	else	$(MV) 1.$(tmp).x $(<)
 	fi
 
-ast.req : .check.hdr .check.lib
-
 /*
- * atmain.C is the only C++ and only for a few systems
+ * FEATURE/common for iffe probes, <ast_common.h> for ast source
+ * *but* <ast_common.h> may get pulled in by intercepted headers
+ * so both must be built very early
  */
 
-atmain.o : atmain.C
-	ignore $(CC) -c $(CCFLAGS) $(*)
-	if	test ! -f $(<)
-	then	$(CP) $(*) $(*:B:S=.cpp)
-		ignore $(CC) -c $(CCFLAGS) $(*:B:S=.cpp)
-		if	test ! -f $(<)
-		then	$(CP) $(*) $(*:B:S=.c)
-			$(CC) -c $(CCFLAGS) $(*:B:S=.c)
-		fi
+$(ID)_common.h : .SCAN.IGNORE FEATURE/common
+	$(SED) '/define _def_map_ast/d' < $(*) > 1.$(tmp).x
+	if	$(CMP) -s $(<) 1.$(tmp).x
+	then	$(RM) -f 1.$(tmp).x
+	else	$(MV) 1.$(tmp).x $(<)
 	fi
+
+FEATURE/common : .SCAN.IGNORE
 
 /*
  * more stdio.h complications ...
@@ -324,9 +317,20 @@ atmain.o : atmain.C
  */
 
 .check.hdr : .IGNORE .VIRTUAL \
-		FEATURE/standards - ast_common.h - ast_map.h - ast_limits.h - \
-		ast_stdio.h ast_nl_types.h - ast_wchar.h
-	rm -f $(HEADERSTD)	/* clean up pre-2002-03-17 headers */
+		FEATURE/standards - FEATURE/lib - FEATURE/common - \
+		ast_map.h - ast_limits.h - ast_stdio.h ast_nl_types.h - ast_wchar.h
+	: clean up obsolete headers :
+	$(RM) -rf $(HEADERSTD) ast_hdr.h ast_types.h ast_unistd.h iffeio.h \
+		$(INCLUDEDIR)/limits.h $(INCLUDEDIR)/unistd.h \
+		$(PACKAGEROOT)/src/lib/libast/std/limits.h
+
+ast.req : .check.hdr .check.lib
+
+else
+
+ast.req : .check.lib
+
+end
 
 /*
  * some systems move -lc routines to -lm
@@ -355,6 +359,21 @@ astmath.exe : .DONTCARE astmath.c
 	*)	touch $(*:N=*.c:B:S=.exe) ;;
 	esac
 	$(RM) -f $(*:N=*.c:B:S=$(CC.SUFFIX.OBJECT))
+
+/*
+ * atmain.C is the only C++ and only for a few systems
+ */
+
+atmain.o : atmain.C
+	ignore $(CC) -c $(CCFLAGS) $(*)
+	if	test ! -f $(<)
+	then	$(CP) $(*) $(*:B:S=.cpp)
+		ignore $(CC) -c $(CCFLAGS) $(*:B:S=.cpp)
+		if	test ! -f $(<)
+		then	$(CP) $(*) $(*:B:S=.c)
+			$(CC) -c $(CCFLAGS) $(*:B:S=.c)
+		fi
+	fi
 
 /* astsa is a subset of standalone functions that just needs sfio+cdt */
 
@@ -389,7 +408,7 @@ DLL = $(ID)$(VERSION:/[^0-9]//G)
 $(MINI) : $(MINI)$$(CC.SUFFIX.SHARED)
 
 $(MINI)$$(CC.SUFFIX.SHARED) : $(MINI).sym $(ID)
-	rm -rf $(MINI).tmp
+	$(RM) -rf $(MINI).tmp
 	mkdir $(MINI).tmp
 	{
 	echo LIBRARY $(DLL:F=%(upper)s)
@@ -403,8 +422,8 @@ $(MINI)$$(CC.SUFFIX.SHARED) : $(MINI).sym $(ID)
 	cd $(MINI).tmp
 	$(LD) $(CCFLAGS:N=-[gG]*) $(CC.SHARED) -o $(DLL) $(DLL)$(CC.SUFFIX.LD:O=1) $(*$(ID).so/$(DLL)$(CC.SUFFIX.DYNAMIC):C,^[^-],../&,)
 	cd ..
-	mv $(MINI).tmp/$(DLL)$(CC.SUFFIX.SHARED) $(<)
-	rm -rf $(MINI).tmp
+	$(MV) $(MINI).tmp/$(DLL)$(CC.SUFFIX.SHARED) $(<)
+	$(RM) -rf $(MINI).tmp
 
 end
 

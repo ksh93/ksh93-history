@@ -314,7 +314,8 @@ mimeload(Mime_t* mp, const char* file, unsigned long flags)
 				s += n - 1;
 			}
 			sfwrite(mp->buf, s, e - s);
-			s = sfstruse(mp->buf);
+			if (!(s = sfstruse(mp->buf)))
+				return -1;
 		}
 		if (fp = tokline(s, SF_READ, NiL))
 		{
@@ -382,6 +383,7 @@ find(Mime_t* mp, const char* type)
 	register char*	rv;
 	register int	rc;
 	register int	i;
+	char*		s;
 	Ent_t*		ent;
 	char		buf[256];
 
@@ -410,13 +412,17 @@ find(Mime_t* mp, const char* type)
 			for (i = 0; i < elementsof(prefix) - 1; i++)
 			{
 				sfprintf(mp->buf, "%s%s/%s%s", prefix[i], lp, prefix[i + 1], rp);
-				if (ent = (Ent_t*)dtmatch(mp->cap, sfstruse(mp->buf)))
+				if (!(s = sfstruse(mp->buf)))
+					return 0;
+				if (ent = (Ent_t*)dtmatch(mp->cap, s))
 					return ent;
 				if (rc)
 				{
 					*rv = 0;
 					sfprintf(mp->buf, "%s%s/%s%s", prefix[i], lp, prefix[i + 1], rp);
-					if (ent = (Ent_t*)dtmatch(mp->cap, sfstruse(mp->buf)))
+					if (!(s = sfstruse(mp->buf)))
+						return 0;
+					if (ent = (Ent_t*)dtmatch(mp->cap, s))
 						return ent;
 					*rv = rc;
 				}
