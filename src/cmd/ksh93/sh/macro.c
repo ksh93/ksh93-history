@@ -100,8 +100,8 @@ static char	*special(int);
 static void	endfield(Mac_t*,int);
 static void	mac_error(Namval_t*);
 static char	*mac_getstring(char*);
+static int	charlen(const char*,int);
 #if SHOPT_MULTIBYTE
-    static int	charlen(const char*,int);
     static char	*lastchar(const char*,const char*);
 #endif /* SHOPT_MULTIBYTE */
 
@@ -1202,16 +1202,7 @@ retry1:
 		else
 		{
 			if(!isastchar(mode))
-#if SHOPT_MULTIBYTE
-				c = (v?charlen(v,vsize):0);
-#else
-#   if  SHOPT_FILESCAN
-				if(vsize>0)
-					c = vsize;
-				else
-#   endif  /* SHOPT_FILESCAN */
-				c = (v?strlen(v):0);
-#endif /* SHOPT_MULTIBYTE */
+				c = charlen(v,vsize);
 			else if(dolg>0)
 			{
 #if  SHOPT_FILESCAN
@@ -1364,12 +1355,25 @@ retry1:
 		}
 		else if(v)
 		{
-			if(vsize<0)
-				vsize=strlen(v);
+			vsize = charlen(v,vsize);
 			if(type<0 && (type += vsize)<0)
 				type = 0;
 			if(vsize < type)
 				v = 0;
+#if SHOPT_MULTIBYTE
+			else if(mbwide())
+			{
+				mbinit();
+				while(type-->0)
+				{
+					if((c=mbsize(v))<1)
+						c = 1;
+					v += c;
+					vsize -= c;
+				}
+				c = ':';
+			}
+#endif /* SHOPT_MULTIBYTE */
 			else
 			{
 				v += type;
@@ -2051,30 +2055,34 @@ static int substring(register const char *string,const char *pat,int match[], in
 		}
 		return(str);
 	}
-	static int	charlen(const char *string,int len)
-	{
-		if(mbwide())
-		{
-			register const char *str = string, *strmax=string+len;
-			register int n=0;
-			mbinit();
-			if(len>0)
-			{
-				while(str<strmax && mbchar(str))
-					n++;
-			}
-			else while(mbchar(str))
-				n++;
-			return(n);
-		}
-		else
-		{
-			if(len<0)
-				return(strlen(string));
-			return(len);
-		}
-	}
 #endif /* SHOPT_MULTIBYTE */
+static int	charlen(const char *string,int len)
+{
+	if(!string)
+		return(0);
+#if SHOPT_MULTIBYTE
+	if(mbwide())
+	{
+		register const char *str = string, *strmax=string+len;
+		register int n=0;
+		mbinit();
+		if(len>0)
+		{
+			while(str<strmax && mbchar(str))
+				n++;
+		}
+		else while(mbchar(str))
+			n++;
+		return(n);
+	}
+	else
+#endif /* SHOPT_MULTIBYTE */
+	{
+		if(len<0)
+			return(strlen(string));
+		return(len);
+	}
+}
 
 /*
  * This is the default tilde discipline function

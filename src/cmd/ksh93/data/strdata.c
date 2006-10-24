@@ -22,10 +22,7 @@
  * data for string evaluator library
  */
 
-#ifndef _ISOC99_SOURCE
-#define _ISOC99_SOURCE		1
-#endif
-
+#include	"FEATURE/isoc"
 #include	"FEATURE/options"
 #include	"streval.h"
 

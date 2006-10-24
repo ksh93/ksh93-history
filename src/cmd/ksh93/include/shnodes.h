@@ -183,6 +183,7 @@ struct arithnod
 #define IOVNM	0x10000		/* iovname field is non-zero */
 #define IOLSEEK	0x20000		/* seek operators <# or >#  */
 #define IOARITH	0x40000		/* arithmetic seek <# ((expr))  */
+#define IOCOPY	IOCLOB		/* copy skipped lines onto standard output */
 
 union Shnode_u
 {

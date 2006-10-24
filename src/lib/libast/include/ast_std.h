@@ -87,6 +87,8 @@ struct _sfio_s;
 #if _std_strtod
 #undef	strtod
 #define strtod			_ast_strtod
+#undef	strtold
+#define strtold			_ast_strtold
 #endif
 
 #if _std_strtol

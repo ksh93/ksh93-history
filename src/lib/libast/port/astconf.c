@@ -1386,7 +1386,7 @@ astconflist(Sfio_t* sp, const char* path, int flags, const char* pattern)
 			print(sp, &look, NiL, path, flags, errorf);
 		}
 #ifdef _pth_getconf_a
-		if (pp = nativeconf(&proc, "-a"))
+		if (pp = nativeconf(&proc, _pth_getconf_a))
 		{
 			call = "GC";
 			while (f = sfgetr(pp, '\n', 1))

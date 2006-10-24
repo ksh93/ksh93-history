@@ -82,6 +82,7 @@ static struct subshell
 	char		monitor;
 	unsigned char	fdstatus;
 	int		fdsaved; /* bit make for saved files */
+	int		bckpid;
 } *subshell_data;
 
 static int subenv;
@@ -362,6 +363,7 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 #endif
 	if(!shp->pwd)
 		path_pwd(0);
+	sp->bckpid = shp->bckpid;
 	if(!comsub || !sh_isoption(SH_SUBSHARE))
 	{
 		sp->shpwd = shp->pwd;
@@ -487,6 +489,7 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 #endif
 	job_subrestore(sp->jobs);
 	shp->jobenv = savecurenv;
+	shp->bckpid = sp->bckpid;
 	if(sp->shpwd)	/* restore environment if saved */
 	{
 		shp->options = sp->options;

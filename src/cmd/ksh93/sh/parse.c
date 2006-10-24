@@ -1359,7 +1359,14 @@ static struct ionod	*inout(struct ionod *lastio,int flag)
 		else if(token==IORDWRSYM)
 			iof |= IORDW;
 		else if((token&SYMSHARP) == SYMSHARP)
+		{
+			int n;
 			iof |= IOLSEEK;
+			if(fcgetc(n)=='#')
+				iof |= IOCOPY;
+			else if(n>0)
+				fcseek(-1);
+		}
 		break;
 
 	    case '>':

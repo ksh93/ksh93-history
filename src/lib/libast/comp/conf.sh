@@ -21,7 +21,7 @@
 ########################################################################
 : generate getconf and limits info
 #
-# @(#)conf.sh (AT&T Research) 2006-10-19
+# @(#)conf.sh (AT&T Research) 2006-10-24
 #
 # this script generates these files from the table file in the first arg
 # the remaining args are the C compiler name and flags
@@ -304,7 +304,7 @@ sed \
 	`cat $tmp.f` 2>/dev/null |
 	egrep '^(SI|_(CS|PC|SC|SI))_.'
 	case $CONF_getconf_a in
-	?*)	$CONF_getconf_a | sed 's,[=:    ].*,,'
+	?*)	$CONF_getconf $CONF_getconf_a | sed 's,[=:    ].*,,'
 		;;
 	*)	case $CONF_getconf in
 		?*)	for v in `strings $CONF_getconf | grep '^[ABCDEFGHIJKLMNOPQRSTUVWXYZ_][ABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789]*$'`
@@ -971,6 +971,9 @@ ${script}
 						esac
 						case $x in
 						0)	x=`cat $tmp.x`
+							case $x in
+							"-")	x=$a ;;
+							esac
 							break
 							;;
 						*)	x=
@@ -1038,7 +1041,7 @@ printf("#endif\n");
 	conf_minmax=0
 	case $call:$standard:$flags in
 	*:C:*)	;;
-	[PSX][CX]:*:*[FM]*)
+	[CPSX][CSX]:*:*[FM]*)
 		x=
 		for s in _${standard}_${conf_name} ${values}
 		do	case $s in
@@ -1083,7 +1086,7 @@ ${script}
 				esac
 				case $args in
 				'')	set "" ;;
-				*)	eval set "" "$args"; shift ;;
+				*)	eval set '""' "$args"; shift ;;
 				esac
 				for a
 				do	case $script in
@@ -1096,6 +1099,9 @@ ${script}
 					esac
 					case $x in
 					0)	x=`cat $tmp.x`
+						case $x in
+						"-")	x=$a ;;
+						esac
 						break
 						;;
 					*)	x=
@@ -1297,7 +1303,7 @@ int	conf_elements = (int)sizeof(conf) / (int)sizeof(conf[0]);
 !
 } | proto > $tmp.3
 case $debug in
--d8)	echo $command: $tmp.3 ${base}.c ;;
+-d7)	echo $command: $tmp.3 ${base}.c ;;
 *)	cmp -s $tmp.3 ${base}.c 2>/dev/null || mv $tmp.3 ${base}.c ;;
 esac
 
@@ -1319,7 +1325,7 @@ ${generated}
 test -f $tmp.l && cat $tmp.l
 } > $tmp.5
 case $debug in
--d9)	echo $command: $tmp.5 ${base}.h ;;
+-d7)	echo $command: $tmp.5 ${base}.h ;;
 *)	cmp -s $tmp.5 ${base}.h 2>/dev/null || mv $tmp.5 ${base}.h ;;
 esac
 exit 0

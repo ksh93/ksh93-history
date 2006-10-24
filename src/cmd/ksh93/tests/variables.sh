@@ -512,4 +512,7 @@ set +x
 exec 2>&3-
 set -- $x
 [[ $2 == b ]] || err_exit '$2 should be b after subshell'
+: & pid=$!
+( : & )
+[[ $pid == $! ]] || err_exit '$! value not preserved across subshells'
 exit $((Errors))

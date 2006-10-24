@@ -318,7 +318,7 @@ fi
 $SHELL -c 'typeset x$((10))=foo' 2> /dev/null || err_exit 'typeset x$((10)) parse error'
 unset x
 x=$(( exp(log(2.0)) ))
-(( x > 1.999 && x < 2.001 )) || err_exit 'composit functions not working'
+(( x > 1.999 && x < 2.001 )) || err_exit 'composite functions not working'
 unset x y n
 typeset -Z8 x=0 y=0
 integer n

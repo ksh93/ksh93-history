@@ -1196,6 +1196,18 @@ make data/strdata.c
 make FEATURE/math implicit
 meta FEATURE/math features/%.sh>FEATURE/% features/math.sh math
 make features/math.sh
+make FEATURE/isoc implicit
+meta FEATURE/isoc features/%>FEATURE/% features/isoc isoc
+make features/isoc
+done features/isoc
+prev shell.req
+prev +ljobs
+prev +li
+prev ${mam_libsecdb}
+prev +lintl
+prev ${mam_libdl}
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libast}  : run features/isoc
+done FEATURE/isoc generated
 make data/math.tab implicit
 done data/math.tab
 done features/math.sh dontcare
@@ -1205,10 +1217,11 @@ prev +li
 prev ${mam_libsecdb}
 prev +lintl
 prev ${mam_libdl}
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libast}  : run features/math.sh data/math.tab
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libast}  : run features/math.sh FEATURE/isoc data/math.tab
 done FEATURE/math generated
 prev include/streval.h implicit
 prev FEATURE/options implicit
+prev FEATURE/isoc implicit
 done data/strdata.c
 meta strdata.o %.c>%.o data/strdata.c strdata
 prev data/strdata.c

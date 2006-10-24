@@ -19,20 +19,27 @@
 ########################################################################
 : generate the ksh math builtin table
 : include math.tab
+: include FEATURE/isoc
 
-# @(#)math.sh (AT&T Research) 2006-10-18
+# @(#)math.sh (AT&T Research) 2006-10-24
 
 command=$0
 iffeflags="-n -v"
+ifferefs=""
+table=/dev/null
 
 eval $1
 shift
-
-case $# in
-1)	;;
-*)	set /dev/null ;;
-esac
-table=$1
+while	:
+do	case $# in
+	0)	break ;;
+	esac
+	case $1 in
+	*.tab)	table=$1 ;;
+	*/isoc)	ifferefs=`sed -e '1,/-D/d' -e '/#define/!d' -e 's/#define.\([^        ]*\).*/-D\1/' $1` ;;
+	esac
+	shift
+done
 
 names=
 tests=
@@ -51,7 +58,7 @@ done
 
 : check the math library
 
-eval `iffe $iffeflags -c "$cc" - lib $tests math.h -D_ISOC99_SOURCE -lm 2>&$stderr`
+eval `iffe $iffeflags -c "$cc" - lib $tests math.h $ifferefs -lm 2>&$stderr`
 tests=
 for name in $names
 do	eval x='$'_lib_${name}l y='$'_lib_${name}
@@ -60,7 +67,7 @@ do	eval x='$'_lib_${name}l y='$'_lib_${name}
 	*:1)	tests="$tests,${name}" ;;
 	esac
 done
-eval `iffe $iffeflags -c "$cc" - dat $tests math.h -D_ISOC99_SOURCE -lm 2>&$stderr`
+eval `iffe $iffeflags -c "$cc" - dat $tests math.h $ifferefs -lm 2>&$stderr`
 tests=
 for name in $names
 do	eval x='$'_dat_${name}l y='$'_dat_${name}
@@ -69,7 +76,7 @@ do	eval x='$'_dat_${name}l y='$'_dat_${name}
 	*:1)	tests="$tests,${name}" ;;
 	esac
 done
-eval `iffe $iffeflags -c "$cc" - npt $tests math.h -D_ISOC99_SOURCE 2>&$stderr`
+eval `iffe $iffeflags -c "$cc" - npt $tests math.h $ifferefs 2>&$stderr`
 tests=
 for name in $names
 do	eval x='$'_lib_${name}l y='$'_lib_${name}
@@ -80,7 +87,7 @@ do	eval x='$'_lib_${name}l y='$'_lib_${name}
 	'')	tests="$tests,${name}" ;;
 	esac
 done
-eval `iffe $iffeflags -c "$cc" - mac $tests math.h -D_ISOC99_SOURCE 2>&$stderr`
+eval `iffe $iffeflags -c "$cc" - mac $tests math.h $ifferefs 2>&$stderr`
 
 cat <<!
 #pragma prototyped

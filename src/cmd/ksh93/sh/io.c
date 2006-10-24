@@ -539,7 +539,7 @@ static int pat_seek(void *handle, const char *str, size_t sz)
 	return(-1);
 }
 
-static int io_patseek(regex_t *rp, Sfio_t* sp)
+static int io_patseek(regex_t *rp, Sfio_t* sp, int flags)
 {
 	char *cp, *match;
 	int r;
@@ -554,6 +554,8 @@ static int io_patseek(regex_t *rp, Sfio_t* sp)
 		r = regrexec(rp,cp,m,0,(regmatch_t*)0, 0, '\n', (void*)&match, pat_seek);
 		if(r<0)
 			m = match-cp;
+		if(m && (flags&IOCOPY))
+			sfwrite(sfstdout,cp,m);
 		sfread(sp,cp,m);
 		if(r<0)
 			break;
@@ -639,6 +641,7 @@ int	sh_redirect(struct ionod *iop, int flag)
 		}
 		io_op[2] = 0;
 		io_op[3] = 0;
+		io_op[4] = 0;
 		fname = iop->ioname;
 		if(!(iof&IORAW))
 		{
@@ -746,6 +749,8 @@ int	sh_redirect(struct ionod *iop, int flag)
 					strcpy(&io_op[3]," ((");
 					after = "))";
 				}
+				else if(iof&IOCOPY)
+					io_op[3] = '#';
 				goto traceit;
 			}
 			else if(iof&IORDW)
@@ -870,7 +875,7 @@ int	sh_redirect(struct ionod *iop, int flag)
 					}
 					if(!sp)
 						sp = sh_iostream(fn);
-					r=io_patseek(rp,sp);
+					r=io_patseek(rp,sp,iof);
 					if(sp && flag==3)
 					{
 						/* close stream but not fn */
