@@ -693,7 +693,7 @@ sfsync(sfstderr);
 			*p = path;
 			*--p = "sh";
 		}
-		strcpy(env + 2, (flags & PROC_PARANOID) ? astconf("SHELL", NiL, NiL) : pathshell());
+		strcpy(env + 2, (flags & PROC_PARANOID) ? astconf("SH", NiL, NiL) : pathshell());
 		if (forked || (flags & PROC_OVERLAY))
 			execve(env + 2, p, environ);
 #if _use_spawnveg

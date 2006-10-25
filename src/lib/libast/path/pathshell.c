@@ -41,7 +41,7 @@
  *
  * root/administrator has its own test
  *
- * astconf("SHELL",NiL,NiL) is returned by default
+ * astconf("SH",NiL,NiL) is returned by default
  *
  * NOTE: csh is rejected because the bsh/csh differentiation is
  *       not done for `csh script arg ...'
@@ -104,7 +104,7 @@ pathshell(void)
  defshell:
 	if (!(sh = val))
 	{
-		if (!*(sh = astconf("SHELL", NiL, NiL)) || *sh != '/' || eaccess(sh, X_OK) || !(sh = strdup(sh)))
+		if (!*(sh = astconf("SH", NiL, NiL)) || *sh != '/' || eaccess(sh, X_OK) || !(sh = strdup(sh)))
 			sh = "/bin/sh";
 		val = sh;
 	}

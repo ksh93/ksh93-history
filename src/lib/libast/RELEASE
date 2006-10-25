@@ -1,3 +1,4 @@
+06-10-25 comp/conf.*: drop no-op duplicate conftab.c entries
 06-10-19 sfio/sfvprintf.c: %W.P.Bmd => fmtscale() using string W.P
 06-10-18 string/fmtscale.c: 1000: n[.]nn(kMGTPE), 1024: n[.]nn(KMGTPE)i
 06-10-11 ast_std.h: now implies <sys/stat.h> (did on most before anyway)

@@ -1,7 +1,7 @@
 #
 # posix { getconf limits } macro table
 #
-# @(#)conf.tab (AT&T Research) 2006-10-19
+# @(#)conf.tab (AT&T Research) 2006-10-25
 #
 # name standard section call flags [ header ... ] [ value ... ]
 #
@@ -330,8 +330,7 @@ SCHAR_MIN			C	XX 1 L		-127
 SEMAPHORES			POSIX	SC 1 FU
 SEM_NSEMS_MAX			POSIX	SC 1 LMU	256
 SEM_VALUE_MAX			POSIX	SC 1 LMU	32767
-SHARED_MEMORY_OBJECTS		POSIX	SC 1 FU
-SHELL				AST	CS 1 MU		sh{
+SH				AST	CS 1 MU		sh{
 	ifs=$IFS
 	IFS=:
 	set '' `$CONF_getconf PATH 2>/dev/null` /bin /usr/bin /sbin /usr/sbin
@@ -355,6 +354,7 @@ SHELL				AST	CS 1 MU		sh{
 	done
 	echo '"/bin/sh"'
 }
+SHARED_MEMORY_OBJECTS		POSIX	SC 1 FU
 SHM				XOPEN	SC 1 FSU
 SHRT_MAX			C	XX 1 L		32767
 SHRT_MIN			C	XX 1 L		-32767
@@ -555,14 +555,11 @@ ARCHITECTURE			SVID	SI 1 0
 BUSTYPES			SVID	SI 1 0
 HOSTNAME			SVID	SI 1 0
 HW_PROVIDER			SVID	SI 1 0
-HW_SERIAL			SVID	SI 1 0
 INITTAB_NAME			SVID	SI 1 0
 KERNEL_STAMP			SVID	SI 1 0
 MACHINE				SVID	SI 1 0
 OS_BASE				SVID	SI 1 0
 OS_PROVIDER			SVID	SI 1 0
-RELEASE				SVID	SI 1 0
-SRPC_DOMAIN			SVID	SI 1 0
 SYSNAME				SVID	SI 1 0
 USER_LIMIT			SVID	SI 1 0
 VERSION				SVID	SI 1 0

@@ -26,7 +26,7 @@
  * extended to allow some features to be set per-process
  */
 
-static const char id[] = "\n@(#)$Id: getconf (AT&T Research) 2006-10-11 $\0\n";
+static const char id[] = "\n@(#)$Id: getconf (AT&T Research) 2006-10-25 $\0\n";
 
 #include "univlib.h"
 
@@ -871,8 +871,8 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, i
 	olderrno = errno;
 	errno = 0;
 #if DEBUG || DEBUG_astconf
-	error(-1, "astconf print name=%s:%s standard=%d section=%d call=%d op=%d flags=|%s%s%s%s%s:|%s%s%s%s%s%s"
-		, name , p->name, p->standard, p->section, p->call, p->op
+	error(-1, "astconf print name=%s:%s standard=%d section=%d call=%s op=%d flags=|%s%s%s%s%s:|%s%s%s%s%s"
+		, name , p->name, p->standard, p->section, prefix[p->call + CONF_call].name, p->op
 		, (flags & CONF_FEATURE) ? "FEATURE|" : ""
 		, (flags & CONF_LIMIT) ? "LIMIT|" : ""
 		, (flags & CONF_MINMAX) ? "MINMAX|" : ""
@@ -941,6 +941,12 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, i
 		break;
 	case 0:
 		call = 0;
+		if (p->flags & CONF_MINMAX_DEF)
+		{
+			if (!((p->flags & CONF_LIMIT_DEF)))
+				flags |= CONF_MINMAX;
+			listflags &= ~ASTCONF_system;
+		}
 	predef:
 		if (!(listflags & ASTCONF_system))
 		{
