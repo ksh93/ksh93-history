@@ -1358,6 +1358,7 @@ int job_switch(register struct process *pw,int bgflag)
 	if(bgflag=='b')
 	{
 		sfprintf(outfile,"[%d]\t",(int)pw->p_job);
+		sh.bckpid = pw->p_pid;
 		msg = "&";
 	}
 	else

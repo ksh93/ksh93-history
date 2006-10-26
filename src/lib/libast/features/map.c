@@ -258,11 +258,13 @@ main()
 	printf("#define regsubfree	_ast_regsubfree\n");
 	printf("#undef	remove\n");
 	printf("#define remove		_ast_remove\n");
+	printf("extern int		remove(const char*);\n");
 	printf("#undef	resolvepath\n");
 	printf("#define resolvepath	_ast_resolvepath\n");
 	printf("extern char*		resolvepath(const char*, char*, size_t);\n");
 	printf("#undef	setenv\n");
 	printf("#define setenv		_ast_setenv\n");
+	printf("extern int		setenv(const char*, const char*, int);\n");
 	printf("#undef	setenviron\n");
 	printf("#define setenviron      _ast_setenviron\n");
 	printf("#undef	sigcritical\n");
@@ -298,7 +300,7 @@ main()
 	printf("extern size_t		strlcat(char*, const char*, size_t);\n");
 	printf("#undef	strlcpy\n");
 	printf("#define strlcpy		_ast_strlcpy\n");
-	printf("extern size_t		strlcat(char*, const char*, size_t);\n");
+	printf("extern size_t		strlcpy(char*, const char*, size_t);\n");
 	printf("#undef	strlook\n");
 	printf("#define strlook		_ast_strlook\n");
 	printf("#undef	strmatch\n");
@@ -345,12 +347,8 @@ main()
 	printf("#define strsum		_ast_strsum\n");
 	printf("#undef	strtape\n");
 	printf("#define strtape		_ast_strtape\n");
-	printf("#undef	strtod\n");
-	printf("#define strtod		_ast_strtod\n");
 	printf("#undef	strtoip4\n");
 	printf("#define strtoip4	_ast_strtoip4\n");
-	printf("#undef	strtold\n");
-	printf("#define strtold		_ast_strtold\n");
 	printf("#undef	strton\n");
 	printf("#define strton		_ast_strton\n");
 	printf("#undef	strtonll\n");
@@ -359,16 +357,6 @@ main()
 	printf("#define struid		_ast_struid\n");
 	printf("#undef	struniq\n");
 	printf("#define struniq		_ast_struniq\n");
-#if !__CYGWIN__
-	printf("#undef	strtol\n");
-	printf("#define strtol		_ast_strtol\n");
-	printf("#undef	strtoul\n");
-	printf("#define strtoul		_ast_strtoul\n");
-#endif
-	printf("#undef	strtoll\n");
-	printf("#define strtoll		_ast_strtoll\n");
-	printf("#undef	strtoull\n");
-	printf("#define strtoull	_ast_strtoull\n");
 	printf("#undef	system\n");
 	printf("#define system		_ast_system\n");
 	printf("extern int		system(const char*);\n");
@@ -391,12 +379,10 @@ main()
 	printf("\n");
 	printf("/* no local malloc override */\n");
 	printf("#define	_std_malloc	1\n");
-	printf("#define	_std_malloc	1\n");
 #else
 #if _map_malloc
 	printf("\n");
 	printf("/* cannot override local malloc */\n");
-	printf("#define	_map_malloc	1\n");
 	printf("#define	_map_malloc	1\n");
 	printf("#undef	calloc\n");
 	printf("#define calloc		_ast_calloc\n");
@@ -442,6 +428,89 @@ main()
 	printf("#define valloc		_ast_valloc\n");
 	printf("extern void*		valloc(size_t);\n");
 #endif
+#endif
+#endif
+
+	/*
+	 * overriding <stdlib.h> strto*() is problematic to say the least
+	 */
+
+#if _map_libc || _std_strtol
+#if !__CYGWIN__
+	printf("#undef	strtol\n");
+	printf("#define strtol		_ast_strtol\n");
+	printf("#undef	strtoul\n");
+	printf("#define strtoul		_ast_strtoul\n");
+#endif
+	printf("#undef	strtoll\n");
+	printf("#define strtoll		_ast_strtoll\n");
+	printf("#undef	strtoull\n");
+	printf("#define strtoull	_ast_strtoull\n");
+#endif
+#if _map_libc || _std_strtod
+	printf("#undef	strtod\n");
+	printf("#define strtod		_ast_strtod\n");
+	printf("#undef	strtold\n");
+	printf("#define strtold		_ast_strtold\n");
+#endif
+#if !__CYGWIN__
+#if _npt_strtol || _map_libc || _std_strtol
+#if _npt_strtol && !_map_libc && !_std_strtol
+	printf("#ifndef _ISOC99_SOURCE\n");
+#endif
+	printf("extern long		strtol(const char*, char**, int);\n");
+#if _npt_strtol && !_map_libc && !_std_strtol
+	printf("#endif\n");
+#endif
+#endif
+#if _npt_strtoul || _map_libc || _std_strtol
+#if _npt_strtoul && !_map_libc && !_std_strtol
+	printf("#ifndef _ISOC99_SOURCE\n");
+#endif
+	printf("extern unsigned long	strtoul(const char*, char**, int);\n");
+#if _npt_strtoul && !_map_libc && !_std_strtol
+	printf("#endif\n");
+#endif
+#endif
+#endif
+#if _npt_strtod || _map_libc || _std_strtod
+#if _npt_strtod && !_map_libc && !_std_strtod
+	printf("#ifndef _ISOC99_SOURCE\n");
+#endif
+	printf("extern double		strtod(const char*, char**);\n");
+#if _npt_strtod && !_map_libc && !_std_strtod
+	printf("#endif\n");
+#endif
+#endif
+	printf("#if !_UWIN\n");
+	printf("#undef	extern\n");
+	printf("#endif\n");
+#if _npt_strtold || _map_libc || _std_strtod
+#if _npt_strtold && !_map_libc && !_std_strtod
+	printf("#ifndef _ISOC99_SOURCE\n");
+#endif
+	printf("extern _ast_fltmax_t	strtold(const char*, char**);\n");
+#if _npt_strtold && !_map_libc && !_std_strtod
+	printf("#endif\n");
+#endif
+#endif
+	printf("#undef	extern\n");
+#if _npt_strtoll || _map_libc || _std_strtol
+#if _npt_strtoll && !_map_libc && !_std_strtol
+	printf("#ifndef _ISOC99_SOURCE\n");
+#endif
+	printf("extern _ast_intmax_t		strtoll(const char*, char**, int);\n");
+#if _npt_strtoll && !_map_libc && !_std_strtol
+	printf("#endif\n");
+#endif
+#endif
+#if _npt_strtoull || _map_libc || _std_strtol
+#if _npt_strtoull && !_map_libc && !_std_strtol
+	printf("#ifndef _ISOC99_SOURCE\n");
+#endif
+	printf("extern unsigned _ast_intmax_t	strtoull(const char*, char**, int);\n");
+#if _npt_strtoull && !_map_libc && !_std_strtoul
+	printf("#endif\n");
 #endif
 #endif
 	printf("\n");

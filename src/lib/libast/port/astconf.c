@@ -1397,7 +1397,7 @@ astconflist(Sfio_t* sp, const char* path, int flags, const char* pattern)
 			call = "GC";
 			while (f = sfgetr(pp, '\n', 1))
 			{
-				for (s = f; *s && *s != '=' && !isspace(*s); s++);
+				for (s = f; *s && *s != '=' && *s != ':' && !isspace(*s); s++);
 				if (*s)
 					for (*s++ = 0; isspace(*s); s++);
 				if (!lookup(&look, f, flags))

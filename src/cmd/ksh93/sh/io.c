@@ -376,7 +376,9 @@ int sh_open(register const char *path, int flags, ...)
 	mode_t			mode;
 	char			*e;
 #ifdef SOCKET
+	int			type = -1;
 	int			prot = -1;
+	int			info = 0;
 	struct sockaddr_in	addr;
 #endif /* SOCKET */
 	va_list			ap;
@@ -417,15 +419,31 @@ int sh_open(register const char *path, int flags, ...)
 						fd = 1;
 					break;
 				}
+#if defined(SOCKET) && defined(IPPROTO_SCTP)
+			else if (path[6]=='c' && path[7]=='t' && path[8]=='p' && path[9]=='/')
+			{
+				type = SOCK_STREAM;
+				prot = IPPROTO_SCTP;
+				info = 10;
+			}
+#endif
 			break;
 #ifdef SOCKET
 		case 't':
 			if (path[6]=='c' && path[7]=='p' && path[8]=='/')
-				prot = SOCK_STREAM;
+			{
+				type = SOCK_STREAM;
+				prot = 0;
+				info = 9;
+			}
 			break;
 		case 'u':
 			if (path[6]=='d' && path[7]=='p' && path[8]=='/')
-				prot = SOCK_DGRAM;
+			{
+				type = SOCK_DGRAM;
+				prot = 0;
+				info = 9;
+			}
 			break;
 #endif
 		}
@@ -442,9 +460,9 @@ int sh_open(register const char *path, int flags, ...)
 			return(-1);
 	}
 #ifdef SOCKET
-	else if (prot > 0 && str2inet(path + 5, &addr))
+	else if (type > 0 && str2inet(path+info, &addr))
 	{
-		if ((fd = socket(AF_INET, prot, 0)) >= 0)
+		if ((fd = socket(AF_INET, type, prot)) >= 0)
 		{
 			if(flags&O_SERVICE)
 			{

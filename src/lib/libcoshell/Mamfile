@@ -77,6 +77,13 @@ make ${PACKAGE_ast_INCLUDE}/ast_map.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_map.h dontcare
 done ${PACKAGE_ast_INCLUDE}/ast_common.h dontcare
 make ${PACKAGE_ast_INCLUDE}/ast_std.h implicit
+make ${PACKAGE_ast_INCLUDE}/regex.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
+make ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+make ${INSTALLROOT}/include/prototyped.h implicit
+done ${INSTALLROOT}/include/prototyped.h dontcare
+done ${PACKAGE_ast_INCLUDE}/prototyped.h dontcare
+done ${PACKAGE_ast_INCLUDE}/regex.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/ast_map.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast_botch.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_botch.h dontcare
@@ -89,10 +96,7 @@ done error?--?old?ethernet?address?at?wrong?offset dontcare virtual
 done ${PACKAGE_ast_INCLUDE}/ast_fs.h dontcare
 done ${PACKAGE_ast_INCLUDE}/ast_fcntl.h dontcare
 make ${PACKAGE_ast_INCLUDE}/ast_getopt.h implicit
-make ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
-make ${INSTALLROOT}/include/prototyped.h implicit
-done ${INSTALLROOT}/include/prototyped.h dontcare
-done ${PACKAGE_ast_INCLUDE}/prototyped.h dontcare
+prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_getopt.h dontcare
 make ${PACKAGE_ast_INCLUDE}/ast_sys.h implicit
 make ${PACKAGE_ast_INCLUDE}/re_comp.h implicit

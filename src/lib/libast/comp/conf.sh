@@ -732,7 +732,9 @@ unsigned int conf[] = {
 		then	break
 		fi
 		[[ -f $tmp.1.e ]] || cp $tmp.e $tmp.1.e
-		sed 's/[^_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789][^_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789]*/\n/g' $tmp.e |
+		snl='\
+'
+		sed "s/[^_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789][^_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789]*/${snl}/g" $tmp.e |
 		grep '^[_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz][_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789]*$' |
 		sort -u > $tmp.n
 		cmp -s $tmp.n $tmp.p && break

@@ -463,8 +463,7 @@ loop_fmt :
 			goto loop_flags;
 #if _PACKAGE_ast
 		case 'm' :
-			scale = (base == 2) ? 1024 : 1000;
-			base = -1;
+			scale = 1000;
 			goto loop_flags;
 #endif
 		default:
@@ -848,6 +847,8 @@ loop_fmt :
 			flags &= ~(SFFMT_SIGN|SFFMT_BLANK);
 			goto int_arg;
 		case 'i':
+			if(scale)
+				scale = 1024;
 			fmt = 'd';
 			goto d_format;
 		case 'u':

@@ -75,6 +75,12 @@ typ wint_t stdio.h wchar.h fail{
 	echo "typedef int $v;"
 	echo "#endif"
 }end
+typ socklen_t sys/socket.h fail{
+	echo "#ifndef $m"
+	echo "#define $m	1"
+	echo "typedef int $v;"
+	echo "#endif"
+}end
 typ size_t fail{
 	echo "#ifndef $m"
 	echo "#define $m	1"

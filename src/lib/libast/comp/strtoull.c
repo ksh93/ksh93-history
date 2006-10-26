@@ -29,6 +29,10 @@
 
 #undef	strtoull
 
+#undef	_def_map_ast
+
+#include <ast_map.h>
+
 #define S2I_function	strtoull
 #define S2I_number	_ast_intmax_t
 #define S2I_unsigned	1

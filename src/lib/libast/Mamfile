@@ -164,6 +164,17 @@ exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '
 make include/sfio_s.h implicit
 done include/sfio_s.h dontcare
 make include/ast_std.h implicit
+make include/regex.h implicit
+make ast_common.h implicit
+prev FEATURE/common
+exec - sed '/define _def_map_ast/d' < FEATURE/common > 1.${COTEMP}.x
+exec - if	cmp 2>/dev/null -s ast_common.h 1.${COTEMP}.x
+exec - then	rm -f 1.${COTEMP}.x
+exec - else	mv 1.${COTEMP}.x ast_common.h
+exec - fi
+prev ast_map.h implicit
+done ast_common.h dontcare generated
+done include/regex.h dontcare
 prev ast_map.h implicit
 make ast_botch.h implicit
 make FEATURE/botch
@@ -225,15 +236,7 @@ make ast_lib.h implicit
 prev FEATURE/lib
 exec - cmp 2>/dev/null -s FEATURE/lib ast_lib.h || { rm -f ast_lib.h; silent test -d . || mkdir .; ${STDCP} FEATURE/lib ast_lib.h; }
 done ast_lib.h dontcare generated
-make ast_common.h implicit
-prev FEATURE/common
-exec - sed '/define _def_map_ast/d' < FEATURE/common > 1.${COTEMP}.x
-exec - if	cmp 2>/dev/null -s ast_common.h 1.${COTEMP}.x
-exec - then	rm -f 1.${COTEMP}.x
-exec - else	mv 1.${COTEMP}.x ast_common.h
-exec - fi
-prev ast_map.h implicit
-done ast_common.h dontcare generated
+prev ast_common.h implicit
 done include/ast_std.h dontcare
 done FEATURE/stdio generated
 exec - cmp 2>/dev/null -s FEATURE/stdio ast_stdio.h || { rm -f ast_stdio.h; silent test -d . || mkdir .; ${STDCP} FEATURE/stdio ast_stdio.h; }
@@ -456,9 +459,7 @@ make misc/findlib.h implicit
 make include/find.h implicit
 done include/find.h dontcare
 prev include/vmalloc.h implicit
-make include/regex.h implicit
-prev ast_common.h implicit
-done include/regex.h dontcare
+prev include/regex.h implicit
 prev include/ls.h implicit
 prev include/error.h implicit
 make include/cdt.h implicit
@@ -2551,6 +2552,7 @@ done strtol.o generated
 make strtoll.o
 make comp/strtoll.c
 prev string/strtoi.h implicit
+prev ast_map.h implicit
 prev include/ast.h implicit
 done comp/strtoll.c
 meta strtoll.o %.c>%.o comp/strtoll.c strtoll
@@ -2568,6 +2570,7 @@ done strtoul.o generated
 make strtoull.o
 make comp/strtoull.c
 prev string/strtoi.h implicit
+prev ast_map.h implicit
 prev include/ast.h implicit
 done comp/strtoull.c
 meta strtoull.o %.c>%.o comp/strtoull.c strtoull
@@ -2752,6 +2755,7 @@ done FEATURE/vfork generated
 exec - cmp 2>/dev/null -s FEATURE/vfork ast_vfork.h || { rm -f ast_vfork.h; silent test -d . || mkdir .; ${STDCP} FEATURE/vfork ast_vfork.h; }
 done ast_vfork.h dontcare generated
 prev sig.h implicit
+prev include/wait.h implicit
 make process.h implicit
 done process.h dontcare virtual
 prev include/error.h implicit

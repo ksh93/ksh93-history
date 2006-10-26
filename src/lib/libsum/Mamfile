@@ -115,6 +115,10 @@ make ${PACKAGE_ast_INCLUDE}/ast.h implicit
 make ${PACKAGE_ast_INCLUDE}/vmalloc.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast_std.h implicit
+make ${PACKAGE_ast_INCLUDE}/regex.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
+prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+done ${PACKAGE_ast_INCLUDE}/regex.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/ast_map.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast_botch.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_botch.h dontcare

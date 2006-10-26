@@ -1,4 +1,6 @@
-06-10-23  --- Release ksh93s-  ---
+06-10-24  --- Release ksh93s-  ---
+06-10-24  The value of $! is now set to the process id of a job put
+	  into the background with the bg command as required by POSIX.
 06-10-23  A bug in which the value of $! was affected by a background
 	  job started from a subshell has been fixed.
 06-10-23  A bug in ${var:offset:len} in multibyte locales has been fixed.

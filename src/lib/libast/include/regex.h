@@ -25,8 +25,15 @@
  * regex library interface
  */
 
+#ifdef	_AST_STD_I
+#define _REGEX_H	-1
+#define regex_t		int
+#define regmatch_t	int
+#endif
 #ifndef _REGEX_H
-#define _REGEX_H
+#define _REGEX_H	1
+#undef	regex_t
+#undef	regmatch_t
 
 #include <ast_common.h>
 

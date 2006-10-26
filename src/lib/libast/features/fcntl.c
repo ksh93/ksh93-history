@@ -69,7 +69,6 @@ main()
 {
 	int		f_local = 0;
 	int		f_lck = 0;
-	int		f_lk = 0;
 	int		o_local = 2;
 
 	printf("#pragma prototyped\n");
@@ -77,47 +76,19 @@ main()
 	printf("#if _typ_off64_t\n");
 	printf("#undef	off_t\n");
 	printf("#ifdef __STDC__\n");
-	printf("#define	off_t	off_t\n");
+	printf("#define	off_t		off_t\n");
 	printf("#endif\n");
 	printf("#endif\n");
-	printf("\n");
-#if _lcl_fcntl || _hdr_lcl_fcntl /* _hdr_lcl_ workaround iffe pre 2002-09-11 */
-	printf("#if defined(__STDPP__directive) && defined(__STDPP__hide)\n");
-	printf("__STDPP__directive pragma pp:hide chmod creat fcntl mkdir mkfifo mmap mmap64 munmap");
-#if !_lib__xmknod && !defined(mknod)
-	printf(" mknod");
-#endif
-	printf(" open umask\n");
-	printf("#else\n");
-	printf("#define chmod	______chmod\n");
-#ifndef creat
-	printf("#undef	creat\n");
-	printf("#define creat	______creat\n");
-#endif
-	printf("#define fcntl	______fcntl\n");
-	printf("#define mkdir	______mkdir\n");
-	printf("#define mkfifo	______mkfifo\n");
-#if !_lib__xmknod && !defined(mknod)
-	printf("#define mknod	______mknod\n");
-#endif
-	printf("#undef	mmap\n");
-	printf("#define mmap	______mmap\n");
-	printf("#undef	mmap64\n");
-	printf("#define mmap64	______mmap64\n");
-	printf("#undef	munmap\n");
-	printf("#define munmap	______munmap\n");
-	printf("#undef	open\n");
-	printf("#define open	______open\n");
-	printf("#define umask	______umask\n");
-	printf("#endif \n");
 	printf("\n");
 	printf("#include <ast_fs.h>\n");
+	printf("\n");
 	printf("#if _typ_off64_t\n");
 	printf("#undef	off_t\n");
 	printf("#ifdef __STDC__\n");
-	printf("#define	off_t	off_t\n");
+	printf("#define	off_t		off_t\n");
 	printf("#endif\n");
 	printf("#endif\n");
+	printf("\n");
 	printf("#include <fcntl.h>\n");
 #if _hdr_mman
 	printf("#include <mman.h>\n");
@@ -127,74 +98,6 @@ main()
 #endif
 #endif
 	printf("\n");
-	printf("#if defined(_AST_STD_H) || defined(_POSIX_SOURCE) || defined(_XOPEN_SOURCE)\n");
-	printf("#define _AST_mode_t	mode_t\n");
-	printf("#else\n");
-	printf("#define _AST_mode_t	int\n");
-	printf("#endif\n");
-	printf("#if defined(__STDPP__directive) && defined(__STDPP__hide)\n");
-	printf("__STDPP__directive pragma pp:nohide chmod creat fcntl mkdir mkfifo mmap mmap64 munmap");
-#if !_lib__xmknod && !defined(mknod)
-	printf(" mknod");
-#endif
-	printf(" open umask\n");
-	printf("extern int	creat(const char*, _AST_mode_t);\n");
-	printf("extern int	fcntl(int, int, ...);\n");
-	printf("extern int	open(const char*, int, ...);\n");
-	printf("extern void*	mmap(void*, size_t, int, int, int, off_t);\n");
-	printf("extern int	munmap(void*, size_t);\n");
-	printf("#else\n");
-	printf("#ifdef	creat\n");
-	printf("#undef	creat\n");
-	printf("extern int	creat(const char*, _AST_mode_t);\n");
-	printf("#endif \n");
-	printf("#ifdef	fcntl\n");
-	printf("#undef	fcntl\n");
-	printf("extern int	fcntl(int, int, ...);\n");
-	printf("#endif \n");
-	printf("#ifdef	mmap\n");
-	printf("#undef	mmap\n");
-	printf("extern void*	mmap(void*, size_t, int, int, int, off_t);\n");
-	printf("#endif \n");
-	printf("#undef	mmap64\n");
-	printf("#ifdef	munmap\n");
-	printf("#undef	munmap\n");
-	printf("extern int	munmap(void*, size_t);\n");
-	printf("#endif \n");
-	printf("#ifdef	open\n");
-	printf("#undef	open\n");
-	printf("extern int	open(const char*, int, ...);\n");
-	printf("#endif \n");
-	printf("\n");
-	printf("#undef	chmod\n");
-	printf("#undef	mkdir\n");
-	printf("#undef	mkfifo\n");
-#if !_lib__xmknod && !defined(mknod)
-	printf("#undef	mknod\n");
-#endif
-	printf("#undef	umask\n");
-	printf("#endif \n");
-	printf("\n");
-	printf("#undef	_AST_mode_t\n");
-	printf("\n");
-#else
-	printf("#include <fcntl.h>\n");
-#if _hdr_mman || _sys_mman
-	printf("#define mmap		______mmap\n");
-	printf("#define mmap64		______mmap64\n");
-#if _hdr_mman
-	printf("#include <mman.h>\n");
-#else
-#if _sys_mman
-	printf("#include <sys/mman.h>\n");
-#endif
-#endif
-	printf("#undef	mmap\n");
-	printf("#undef	mmap64\n");
-#endif
-
-#endif
-
 #ifndef	FD_CLOEXEC
 	printf("#define FD_CLOEXEC	1\n");
 	printf("\n");
@@ -217,7 +120,6 @@ main()
 #endif
 #ifndef	F_GETLK
 #define NEED_F	1
-	f_lk++;
 #else
 	if (F_GETLK > f_local) f_local = F_GETLK;
 #endif
@@ -239,13 +141,11 @@ main()
 #endif
 #ifndef	F_SETLK
 #define NEED_F	1
-	f_lk++;
 #else
 	if (F_SETLK > f_local) f_local = F_SETLK;
 #endif
 #ifndef	F_SETLKW
 #define NEED_F	1
-	f_lk++;
 #else
 	if (F_SETLKW > f_local) f_local = F_SETLKW;
 #endif
@@ -365,61 +265,61 @@ main()
 #endif
 
 #if	NEED_O
-	printf("#define open		_ast_open\n");
-	printf("#define _ast_O_LOCAL	0%o\n", o_local<<1);
+	printf("#define open			_ast_open\n");
+	printf("#define _ast_O_LOCAL		0%o\n", o_local<<1);
 #ifndef	O_RDONLY
-	printf("#define O_RDONLY	0\n");
+	printf("#define O_RDONLY		0\n");
 #endif
 #ifndef	O_WRONLY
-	printf("#define O_WRONLY	1\n");
+	printf("#define O_WRONLY		1\n");
 #endif
 #ifndef	O_RDWR
-	printf("#define O_RDWR		2\n");
+	printf("#define O_RDWR			2\n");
 #endif
 #ifndef	O_APPEND
-	printf("#define O_APPEND	0%o\n", o_local <<= 1);
+	printf("#define O_APPEND		0%o\n", o_local <<= 1);
 #endif
 #ifndef	O_CREAT
-	printf("#define O_CREAT		0%o\n", o_local <<= 1);
+	printf("#define O_CREAT			0%o\n", o_local <<= 1);
 #endif
 #ifndef	O_EXCL
-	printf("#define O_EXCL		0%o\n", o_local <<= 1);
+	printf("#define O_EXCL			0%o\n", o_local <<= 1);
 #endif
 #ifndef	O_NOCTTY
 #ifdef	TIOCNOTTY
-	printf("#define O_NOCTTY	0%o\n", o_local <<= 1);
+	printf("#define O_NOCTTY		0%o\n", o_local <<= 1);
 #endif
 #endif
 #ifndef	O_NONBLOCK
 #ifndef	O_NDELAY
-	printf("#define O_NONBLOCK	0%o\n", o_local <<= 1);
+	printf("#define O_NONBLOCK		0%o\n", o_local <<= 1);
 #endif
 #endif
 #ifndef	O_TRUNC
-	printf("#define O_TRUNC		0%o\n", o_local <<= 1);
+	printf("#define O_TRUNC			0%o\n", o_local <<= 1);
 #endif
 #endif
 #ifndef	O_ACCMODE
-	printf("#define O_ACCMODE	(O_RDONLY|O_WRONLY|O_RDWR)\n");
+	printf("#define O_ACCMODE		(O_RDONLY|O_WRONLY|O_RDWR)\n");
 #endif
 #ifndef	O_NOCTTY
 #ifndef	TIOCNOTTY
-	printf("#define O_NOCTTY	0\n");
+	printf("#define O_NOCTTY		0\n");
 #endif
 #endif
 #ifndef	O_NONBLOCK
 #ifdef	O_NDELAY
-	printf("#define O_NONBLOCK	O_NDELAY\n");
+	printf("#define O_NONBLOCK		O_NDELAY\n");
 #endif
 #endif
 #ifndef	O_BINARY
-	printf("#define O_BINARY	0\n");
+	printf("#define O_BINARY		0\n");
 #endif
 #ifndef	O_TEMPORARY
-	printf("#define O_TEMPORARY	0\n");
+	printf("#define O_TEMPORARY		0\n");
 #endif
 #ifndef	O_TEXT
-	printf("#define O_TEXT		0\n");
+	printf("#define O_TEXT			0\n");
 #endif
 #if	NEED_F || NEED_O
 	printf("\n");
@@ -430,10 +330,11 @@ main()
 	printf("extern int	open(const char*, int, ...);\n");
 #endif
 #endif
+	printf("\n");
 	printf("#include <ast_fs.h>\n");
 	printf("#if _typ_off64_t\n");
 	printf("#undef	off_t\n");
-	printf("#define	off_t	off64_t\n");
+	printf("#define	off_t		off64_t\n");
 	printf("#endif\n");
 	printf("#if _lib_fstat64\n");
 	printf("#define fstat		fstat64\n");
@@ -445,20 +346,14 @@ main()
 	printf("#define stat		stat64\n");
 	printf("#endif\n");
 	printf("#if _lib_creat64\n");
-	printf("#define creat	creat64\n");
-	printf("#if !defined(__USE_LARGEFILE64)\n");
-	printf("extern int	creat64(const char*, mode_t);\n");
-	printf("#endif\n");
+	printf("#define creat		creat64\n");
 	printf("#endif\n");
 	printf("#if _lib_mmap64\n");
-	printf("#define mmap	mmap64\n");
-	printf("extern void*	mmap64(void*, size_t, int, int, int, off64_t);\n");
+	printf("#define mmap		mmap64\n");
 	printf("#endif\n");
 	printf("#if _lib_open64\n");
-	printf("#define open	open64\n");
-	printf("#if !defined(__USE_LARGEFILE64)\n");
-	printf("extern int	open64(const char*, int, ...);\n");
-	printf("#endif\n");
+	printf("#undef	open\n");
+	printf("#define open		open64\n");
 	printf("#endif\n");
 
 	return 0;

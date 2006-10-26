@@ -78,71 +78,6 @@ struct _sfio_s;
 #undef	FILE
 #endif
 
-#if !_UWIN || !_BLD_ast
-
-#if !_BLD_ast && defined(__IMPORT__)
-#define extern		__IMPORT__
-#endif
-
-#if _std_strtod
-#undef	strtod
-#define strtod			_ast_strtod
-#undef	strtold
-#define strtold			_ast_strtold
-#endif
-
-#if _std_strtol
-#undef	strtol
-#undef	strtoul
-#undef	strtoll
-#undef	strtoull
-#define strtol			_ast_strtol
-#define strtoul			_ast_strtoul
-#define strtoll			_ast_strtoll
-#define strtoull		_ast_strtoull
-#endif
-
-#if _std_strtol || _npt_strtol && !defined(_ISOC99_SOURCE)
-extern long			strtol(const char*, char**, int);
-#endif
-#if _std_strtol || _npt_strtoul && !defined(_ISOC99_SOURCE)
-extern unsigned long		strtoul(const char*, char**, int);
-#endif
-
-#if _std_strtod || _npt_strtod && !defined(_ISOC99_SOURCE)
-extern double			strtod(const char*, char**);
-#endif
-
-#if !_UWIN
-#undef	extern
-#endif
-
-#if _std_strtod || _npt_strtold && !defined(_ISOC99_SOURCE)
-extern _ast_fltmax_t		strtold(const char*, char**);
-#endif
-
-#undef	extern
-
-#if _std_strtol || _npt_strtoll && !defined(_ISOC99_SOURCE)
-extern _ast_intmax_t		strtoll(const char*, char**, int);
-#endif
-#if _std_strtol || _npt_strtoull && !defined(_ISOC99_SOURCE)
-extern unsigned _ast_intmax_t	strtoull(const char*, char**, int);
-#endif
-
-#endif
-
-#if _BLD_ast && defined(__EXPORT__)
-#define extern		__EXPORT__
-#endif
-
-#undef	strerror
-#define strerror	_ast_strerror
-
-extern char*		strerror(int);
-
-#undef	extern
-
 /* locale stuff */
 
 #if !_hdr_locale
@@ -176,13 +111,17 @@ struct lconv
 #endif
 
 #undef	localeconv
-#define localeconv		_ast_localeconv
+#define localeconv	_ast_localeconv
 
 #undef	setlocale
-#define setlocale		_ast_setlocale
+#define setlocale	_ast_setlocale
+
+#undef	strerror
+#define strerror	_ast_strerror
 
 extern struct lconv*	localeconv(void);
 extern char*		setlocale(int, const char*);
+extern char*		strerror(int);
 
 #define AST_MESSAGE_SET		3	/* see <mc.h> mcindex()		*/
 
@@ -347,14 +286,10 @@ extern int		truncate64(const char*, off64_t);
 #endif
 
 #if !defined(remove)
-#if _lib_remove
 extern int		remove(const char*);
-#else
-#define remove(p)	unlink(p)
-#endif
 #endif
 
-#if !defined(rename) && defined(_lib_rename)
+#if !defined(rename)
 extern int		rename(const char*, const char*);
 #endif
 
@@ -378,10 +313,18 @@ extern int		_ast_getpgrp(void);
 
 #undef	extern
 
-/* and finally, standard interfaces hijacked by ast */
+/*
+ * and finally, standard interfaces hijacked by ast
+ * _ATS_STD_I delays headers that require <ast_map.h>
+ */
 
 #include <ast_map.h>
 
 #undef	_AST_STD_I
+
+#if _REGEX_H < 0
+#undef	_REGEX_H
+#include <regex.h>
+#endif
 
 #endif

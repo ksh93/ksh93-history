@@ -186,8 +186,8 @@ static void process_stream(Sfio_t* iop)
 	Service_t * sp = service_list[fd];
 	if(fd==sp->fd)	/* connection socket */
 	{
-		struct sockaddr_in addr;
-		int addrlen = sizeof(addr);
+		struct sockaddr addr;
+		socklen_t addrlen = sizeof(addr);
 		fd = accept(fd, &addr, &addrlen);
 		service_list[fd] = sp;
 		sp->refcount++;

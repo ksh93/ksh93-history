@@ -138,6 +138,7 @@ const struct shtable3 shtab_builtins[] =
 	"/bin/cut",	NV_BLTIN|NV_NOFREE,		bltin(cut),
 	"/bin/uname",	NV_BLTIN|NV_NOFREE,		bltin(uname),
 	"/bin/wc",	NV_BLTIN|NV_NOFREE,		bltin(wc),
+	"/bin/sync",	NV_BLTIN|NV_NOFREE,		bltin(sync),
 #endif
 	"",		0, 0 
 };

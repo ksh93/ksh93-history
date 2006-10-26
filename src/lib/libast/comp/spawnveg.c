@@ -114,6 +114,7 @@ spawnveg(const char* path, char* const argv[], char* const envv[], pid_t pgid)
 #else
 
 #include <error.h>
+#include <wait.h>
 #include <sig.h>
 #include <ast_vfork.h>
 

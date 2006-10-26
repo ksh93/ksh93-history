@@ -1,3 +1,4 @@
+06-10-26 fds.c: handle sctp
 06-10-18 tail.c: fix invalid suffix infinite loop
 06-10-11 chgrp.c,cp.c: add sfstruse() error checks
 06-10-10 tee.c: add --linebuffer, -l
