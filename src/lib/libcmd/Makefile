@@ -13,8 +13,8 @@ CHMOD = $(STDCHMOD|"chmod")
 
 HOSTTYPE == "$(CC.HOSTTYPE)"
 
-cmd 1.2 :LIBRARY: RELEASE cmdinit.c cmdrecurse.c \
-	cmd.h cmdlib.h wc.h \
+cmd 1.2 :LIBRARY: RELEASE cmdinit.c \
+	cmd.h rev.h wc.h \
 	basename.c cat.c chgrp.c chmod.c chown.c cmp.c comm.c \
 	cp.c cut.c dirname.c date.c expr.c fds.c fmt.c fold.c \
 	getconf.c head.c id.c join.c ln.c logname.c mkdir.c \

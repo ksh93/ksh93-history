@@ -1,3 +1,9 @@
+06-10-31 global edit to eliminate most non-const static data0
+06-10-31 use <cmd.h> for all b_*() implementations; drop <cmdlib.h> 
+06-10-31 cmd.h: add CMD_ prefix to { BUILTIN DYNAMIC STANDALONE } 
+06-10-31 join.c: tone down /tmp usage vi SFSK_DISCARD
+06-10-31 cp.c,rm.c: update to <fts.h> to accomodate non-static data
+06-10-29 date.c: "...%H%..." => "...%H" "%..." to avoid SCCS conflict
 06-10-26 fds.c: handle sctp
 06-10-18 tail.c: fix invalid suffix infinite loop
 06-10-11 chgrp.c,cp.c: add sfstruse() error checks

@@ -29,9 +29,13 @@
 
 #undef	strtoll
 
+#if !_UWIN
+
 #undef	_def_map_ast
 
 #include <ast_map.h>
+
+#endif
 
 #define S2I_function	strtoll
 #define S2I_number	_ast_intmax_t

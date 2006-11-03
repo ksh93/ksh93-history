@@ -1,9 +1,20 @@
-06-10-24  --- Release ksh93s-  ---
+06-10-30  --- Release ksh93s-  ---
+06-10-30  The redirections <# pattern, and <## pattern have been added.
+	  Both seek forward to the beginning of the next line that contains
+	  the pattern.  The <## form copies the skipped portion to standard
+	  output.
+06-10-26  On systems that support stream control transport, the virtual file
+	  name /dev/sctp/host/port can now be used to establish connections.
+06-10-26  The printf modifier # when used with d produces units in thousands
+	  with a single letter suffix added.  The modifier # when used with
+	  the i specification provides units of 1024 with a two letter suffix.
 06-10-24  The value of $! is now set to the process id of a job put
 	  into the background with the bg command as required by POSIX.
 06-10-23  A bug in which the value of $! was affected by a background
 	  job started from a subshell has been fixed.
 06-10-23  A bug in ${var:offset:len} in multibyte locales has been fixed.
+06-10-15  The remaining math functions from C99 were added for any system
+	  that supports them.
 06-10-12  A bug when skipping over `...` with ${x:=`...`} when x is set
 	  has been fixed.
 06-10-11  A bug in process floating constants produced by the %a format
@@ -16,11 +27,16 @@
 	  cause the builtin to hang has been fixed.
 06-10-03  A bug in the for loop optimizer which causes >(...) process
 	  substitution to be ignored has been fixed.
-06-09-97  The -a option was added to typeset for indexed arrays.  This
+06-09-17  The -a option was added to typeset for indexed arrays.  This
 	  is only needed when using the ([subscript]=value ...) form.
+06-09-06  The showme option was added.  Each simple command not beginning
+	  with a redirection and not occurring with in the while, until, if,
+	  select condition can be preceded by a semi-colon which will
+	  be ignored when showme is off.  When showme is on, any command
+	  preceded by a colon will be traced but not executed.
 06-08-16  As a new feature, a leading ~(N) on a pattern has no effect 
 	  except when used for file expansion.  In this case if not
-	  matches are found, the pattern is replaced by nothing rathern
+	  matches are found, the pattern is replaced by nothing rather
 	  than itself.
 06-08-11  A bug in the expansion of ${.sh.match[i]:${#.shmatch[i]}} has
 	  been fixed.
@@ -54,7 +70,7 @@
 06-06-13  Internal change to use ordering for variables instead of hashing
 	  to speed up prefix matching.
 06-06-13  A window between fork/exec in which a signal could get lost
-	  and cause a peogram to hang has been eliminated
+	  and cause a program to hang has been eliminated
 06-06-13  A bug in edit completion with quoted strings has been fixed.
 06-06-07  The restricted options can now be enabled by set as well as on
 	  the command line.  Once set, it can not be disabled.
@@ -66,7 +82,7 @@
           and ksh88 when the stty lnext is control-v.  The sequence
 	  escape-control-v will display the shell version.
 06-05-31  Modified emacs and vi mode so that entering a TAB after a partial
-	  TAB conpletion, generates a listing of possible completions.
+	  TAB completion, generates a listing of possible completions.
 	  After the second TAB, a number followed by a TAB will perform
 	  the completion with the corresponding item.
 06-05-19  Modified arithmetic so that conversions to strings default to
@@ -109,7 +125,7 @@
 05-12-07  The aliases for integer and float have been changed to use attributes
 	  -li and -lE to handle long long and long double types.
 05-12-07  The histexpand (-H) option has been added which allows C-shell
-	  style history expansios using the history character !.
+	  style history expansions using the history character !.
 05-12-07  The multiline option was added which changes that way the edit
 	  modes handle lines longer than the window width.  Instead of
 	  horizontal scrolling, multiple lines on the screen are used.
@@ -259,7 +275,7 @@
 	  an integral number of seconds, for example even -t 'sin(.5)'
 	  is now valid.
 04-06-16  Two small memory leak problems were fixed.
-04-06-15  A bug in ${var/pattern/"string"} which occured when string
+04-06-15  A bug in ${var/pattern/"string"} which occurred when string
 	  contained pattern matching characters has been fixed.
 04-05-08  printf $'%d\n' produced an erroneous error message and has
 	  been fixed.
@@ -315,7 +331,7 @@
 03-12-05  On some systems, if the KEYBD trap is set, then commands that use
 	  the meta key were not processed until return was hit.  This
 	  has been fixed.
-03-12-05  A problem which occured when the login shell was not a group
+03-12-05  A problem which occurred when the login shell was not a group
 	  leader that could cause it to fail has been fixed.
 03-12-05  A problem in which a shell could core dump after receiving a signal
 	  that should cause it to terminate while it was in the process
@@ -369,7 +385,7 @@
 	  used inside ${...} has been fixed.
 03-07-15  An error in which expanding an indexed array inside a compound
 	  variable could cause a core dump has been fixed.
-03-07-15  A bug in which under on rare ocassions a job completion interrupt
+03-07-15  A bug in which under on rare occassions a job completion interrupt
 	  could cause to core dump has been fixed.
 03-06-26  A bug in which process substitution embedded within command
 	  substitution would generate a syntax error has been fixed.

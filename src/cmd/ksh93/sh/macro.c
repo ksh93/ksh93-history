@@ -1395,7 +1395,24 @@ retry1:
 					dolmax = type;
 			}
 			else if(type < vsize)
+			{
+#if SHOPT_MULTIBYTE
+				if(mbwide())
+				{
+					char *vp = v;
+					mbinit();
+					while(type-->0)
+					{
+						if((c=mbsize(vp))<1)
+							c = 1;
+						vp += c;
+					}
+					type = vp-v;
+					c = ':';
+				}
+#endif /* SHOPT_MULTIBYTE */
 				vsize = type;
+			}
 		}
 		if(*ptr)
 			mac_error(np);

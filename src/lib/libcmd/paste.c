@@ -70,7 +70,7 @@ USAGE_LICENSE
 ;
 
 
-#include <cmdlib.h>
+#include <cmd.h>
 
 /*
  * paste the lines of the <nstreams> defined in <streams> and put results
@@ -161,14 +161,13 @@ int
 b_paste(int argc,register char *argv[], void* context)
 {
 	register int		n, sflag=0;
-	register Sfio_t	*fp, **streams;
+	register Sfio_t		*fp, **streams;
 	register char 		*cp, *delim;
 	int			dlen;
+	char			defdelim[2];
 
-	static char		defdelim[] = "\t";
-
-	cmdinit(argv, context, ERROR_CATALOG, 0);
-	delim = defdelim;
+	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
+	delim = 0;
 	while (n = optget(argv, usage)) switch (n)
 	{
 	    case 'd':
@@ -187,7 +186,13 @@ b_paste(int argc,register char *argv[], void* context)
 	argv += opt_info.index;
 	if(error_info.errors)
 		error(ERROR_usage(2),"%s", optusage(NiL));
-	dlen = stresc(delim);
+	if(delim)
+		dlen = stresc(delim);
+	else
+	{
+		*(delim = defdelim) = '\t';
+		dlen = 1;
+	}
 	if(cp = *argv)
 	{
 		n = argc - opt_info.index;

@@ -51,7 +51,7 @@ USAGE_LICENSE
 "[+SEE ALSO?\bmkdir\b(1), \brm\b(1), \brmdir\b(2), \bunlink\b(2)]"
 ;
 
-#include <cmdlib.h>
+#include <cmd.h>
 
 int
 b_rmdir(int argc, char** argv, void* context)
@@ -63,8 +63,7 @@ b_rmdir(int argc, char** argv, void* context)
 	int		pflag = 0;
 	int		sflag = 0;
 
-	NoP(argc);
-	cmdinit(argv, context, ERROR_CATALOG, 0);
+	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
 	while (n = optget(argv, usage)) switch (n)
 	{
 	case 'e':

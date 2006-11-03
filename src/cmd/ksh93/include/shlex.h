@@ -97,6 +97,7 @@ struct shlex_t
 #define SYMGT		0100000	/* trailing '>' */
 #define SYMSEMI		0110000	/* trailing ';' */
 #define SYMSHARP	0120000	/* trailing '#' */
+#define IOSEEKSYM	(SYMSHARP|'<')
 #define IOMOV0SYM	(SYMAMP|'<')
 #define IOMOV1SYM	(SYMAMP|'>')
 #define FALLTHRUSYM	(SYMAMP|';')

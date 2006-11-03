@@ -25,7 +25,7 @@
  * AT&T Research
  *
  * return number n scaled to metric multiples of k { 1000 1024 }
- * return string length is at most 7 chars + terminating nul
+ * return string length is at most 5 chars + terminating nul
  */
 
 #include <ast.h>
@@ -45,16 +45,31 @@ fmtscale(register Sfulong_t n, int k)
 
 	static const char	scale[] = "bkMGTPE";
 
-	m = 0;
 	u = scale;
-	while (n >= 1000 && *(u + 1))
+	if (n < 1000)
+		r = 0;
+	else
 	{
-		m = n;
-		n /= k;
-		u++;
+		m = 0;
+		while (n >= k && *(u + 1))
+		{
+			m = n;
+			n /= k;
+			u++;
+		}
+		if ((r = (10 * (m % k) + (k / 2)) / k) > 9)
+		{
+			r = 0;
+			n++;
+		}
+		if (k == 1024 && n >= 1000)
+		{
+			n = 1;
+			r = 0;
+			u++;
+		}
 	}
 	buf = fmtbuf(z = 8);
-	r = (m % k) / (k / 10 + 1);
 	s = suf;
 	if (u > scale)
 	{

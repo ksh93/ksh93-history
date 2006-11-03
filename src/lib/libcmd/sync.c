@@ -47,14 +47,13 @@ USAGE_LICENSE
 "[+SEE ALSO?\bsync\b(2), \bshutdown\b(8)]"
 ;
 
-#include <cmdlib.h>
+#include <cmd.h>
 #include <ls.h>
 
 int
 b_sync(int argc, char** argv, void* context)
 {
-	NoP(argc);
-	cmdinit(argv, context, ERROR_CATALOG, 0);
+	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
 	for (;;)
 	{
 		switch (optget(argv, usage))

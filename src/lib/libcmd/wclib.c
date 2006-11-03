@@ -26,7 +26,7 @@
  * library interface for word count
  */
 
-#include <cmdlib.h>
+#include <cmd.h>
 #include <wc.h>
 #include <ctype.h>
 

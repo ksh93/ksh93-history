@@ -220,6 +220,7 @@ getfmt(Sfio_t* sp, void* vp, Sffmt_t* dp)
 		value->c = s ? *s : n;
 		break;
 	case 'd':
+	case 'i':
 		fp->fmt.size = sizeof(Sflong_t);
 		value->q = (Sflong_t)(s ? strtoll(s, NiL, 0) : n);
 		break;

@@ -65,12 +65,12 @@ USAGE_LICENSE
 "[+SEE ALSO?\bcat\b(1), \btail\b(1)]"
 ;
 
-#include <cmdlib.h>
+#include <cmd.h>
 
 int
 b_head(int argc, register char** argv, void* context)
 {
-	static char header_fmt[] = "\n==> %s <==\n";
+	static const char	header_fmt[] = "\n==> %s <==\n";
 
 	register Sfio_t*	fp;
 	register char*		cp;
@@ -78,9 +78,9 @@ b_head(int argc, register char** argv, void* context)
 	register off_t		skip = 0;
 	register int		delim = '\n';
 	int			header = 1;
-	char*			format = header_fmt+1;
+	char*			format = (char*)header_fmt+1;
 
-	cmdinit(argv, context, ERROR_CATALOG, 0);
+	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
 	for (;;)
 	{
 		switch (optget(argv, usage))
@@ -136,7 +136,7 @@ b_head(int argc, register char** argv, void* context)
 		}
 		if (argc > header)
 			sfprintf(sfstdout, format, cp);
-		format = header_fmt;
+		format = (char*)header_fmt;
 		if (skip > 0)
 			sfmove(fp, NiL, skip, delim);
 		if (sfmove(fp, sfstdout, keep, delim) < 0 && errno != EPIPE)

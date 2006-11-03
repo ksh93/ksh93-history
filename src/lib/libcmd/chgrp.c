@@ -89,7 +89,7 @@ __STDPP__directive pragma pp:hide lchown
 #define lchown		______lchown
 #endif
 
-#include <cmdlib.h>
+#include <cmd.h>
 #include <cdt.h>
 #include <ls.h>
 #include <ctype.h>
@@ -123,11 +123,6 @@ typedef struct				/* uid/gid map			*/
 #define OPT_VERBOSE	(1<<7)		/* have uid			*/
 
 extern int	lchown(const char*, uid_t, gid_t);
-
-static struct State_s
-{
-	int		interrupt;
-} state;
 
 #if !_lib_lchown
 
@@ -221,13 +216,7 @@ b_chgrp(int argc, char** argv, void* context)
 	struct stat	st;
 	int		(*chownf)(const char*, uid_t, gid_t);
 
-	if (argc < 0)
-	{
-		state.interrupt = 1;
-		return -1;
-	}
-	state.interrupt = 0;
-	cmdinit(argv, context, ERROR_CATALOG, ERROR_NOTIFY);
+	cmdinit(argc, argv, context, ERROR_CATALOG, ERROR_NOTIFY);
 	flags = fts_flags() | FTS_TOP | FTS_NOPOSTORDER | FTS_NOSEEDOTDIR;
 	if (!(sp = sfstropen()))
 		error(ERROR_SYSTEM|3, "out of space");
@@ -383,7 +372,7 @@ b_chgrp(int argc, char** argv, void* context)
 	}
 	if (!(fts = fts_open(argv + 1, flags, NiL)))
 		error(ERROR_system(1), "%s: not found", argv[1]);
-	while (!state.interrupt && (ent = fts_read(fts)))
+	while (!cmdquit() && (ent = fts_read(fts)))
 		switch (ent->fts_info)
 		{
 		case FTS_F:

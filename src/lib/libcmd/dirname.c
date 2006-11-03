@@ -58,7 +58,7 @@ USAGE_LICENSE
 "[+SEE ALSO?\bbasename\b(1), \bgetconf\b(1), \bdirname\b(3)]"
 ;
 
-#include <cmdlib.h>
+#include <cmd.h>
 
 static void l_dirname(register Sfio_t *outfile, register const char *pathname)
 {
@@ -97,7 +97,7 @@ b_dirname(int argc,register char *argv[], void* context)
 {
 	register int n;
 
-	cmdinit(argv, context, ERROR_CATALOG, 0);
+	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
 	while (n = optget(argv, usage)) switch (n)
 	{
 	case ':':

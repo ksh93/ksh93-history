@@ -63,7 +63,7 @@ USAGE_LICENSE
 ;
 
 
-#include <cmdlib.h>
+#include <cmd.h>
 #include <ls.h>
 #include <ctype.h>
 
@@ -195,7 +195,7 @@ b_cmp(int argc, register char** argv, void* context)
 	int		flags = 0;
 
 	NoP(argc);
-	cmdinit(argv, context, ERROR_CATALOG, 0);
+	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
 	while (n = optget(argv, usage)) switch (n)
 	{
 	case 'l':
@@ -260,14 +260,14 @@ b_cmp(int argc, register char** argv, void* context)
 			goto done;
 		}
 	}
-	if (o1 && sfseek(f1, o1, 0) != o1)
+	if (o1 && sfseek(f1, o1, SEEK_SET) != o1)
 	{
 		if (!(flags & CMP_SILENT))
 			error(ERROR_exit(0), "%s: EOF", file1);
 		n = 1;
 		goto done;
 	}
-	if (o2 && sfseek(f2, o2, 0) != o2)
+	if (o2 && sfseek(f2, o2, SEEK_SET) != o2)
 	{
 		if (!(flags & CMP_SILENT))
 			error(ERROR_exit(0), "%s: EOF", file2);

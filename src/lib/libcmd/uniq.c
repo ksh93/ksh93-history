@@ -69,7 +69,7 @@ USAGE_LICENSE
 "[+SEE ALSO?\bsort\b(1), \bgrep\b(1)]"
 ;
 
-#include <cmdlib.h>
+#include <cmd.h>
 
 #define C_FLAG	1
 #define D_FLAG	2
@@ -217,8 +217,7 @@ b_uniq(int argc, char** argv, void* context)
 	int sep;
 	Compare_f compare = (Compare_f)memcmp;
 
-	NoP(argc);
-	cmdinit(argv, context, ERROR_CATALOG, 0);
+	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
 	while (n = optget(argv, usage)) switch (n)
 	{
 	    case 'c':

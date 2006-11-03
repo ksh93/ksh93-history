@@ -23,6 +23,10 @@
 
 #define putenv		______putenv
 
+#if _UWIN
+#define _STDLIB_H_	1
+#endif
+
 #include <ast.h>
 
 #undef	putenv

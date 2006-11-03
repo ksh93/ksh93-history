@@ -53,16 +53,15 @@ USAGE_LICENSE
 ;
 
 
-#include <cmdlib.h>
-
+#include <cmd.h>
 #include <ls.h>
 #include <sig.h>
 
-struct tee
+typedef struct Tee_s
 {
 	Sfdisc_t	disc;
 	int		fd[1];
-};
+} Tee_t;
 
 /*
  * This discipline writes to each file in the list given in handle
@@ -72,7 +71,7 @@ static ssize_t tee_write(Sfio_t* fp, const void* buf, size_t n, Sfdisc_t* handle
 {
 	register const char*	bp;
 	register const char*	ep;
-	register int*		hp = ((struct tee*)handle)->fd;
+	register int*		hp = ((Tee_t*)handle)->fd;
 	register int		fd = sffileno(fp);
 	register ssize_t	r;
 
@@ -90,19 +89,18 @@ static ssize_t tee_write(Sfio_t* fp, const void* buf, size_t n, Sfdisc_t* handle
 	return(n);
 }
 
-static Sfdisc_t tee_disc = { 0, tee_write, 0, 0, 0 };
-
 int
 b_tee(int argc, register char** argv, void* context)
 {
-	register struct tee*	tp = 0;
+	register Tee_t*		tp = 0;
 	register int		oflag = O_WRONLY|O_TRUNC|O_CREAT|O_BINARY;
 	register int		n;
 	register int*		hp;
 	register char*		cp;
 	int			line;
+	Sfdisc_t		tee_disc;
 
-	cmdinit(argv, context, ERROR_CATALOG, 0);
+	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
 	line = -1;
 	while (n = optget(argv, usage)) switch (n)
 	{
@@ -144,8 +142,10 @@ b_tee(int argc, register char** argv, void* context)
 	}
 	if (argc > 0)
 	{
-		if (!(tp = (struct tee*)stakalloc(sizeof(struct tee) + argc * sizeof(int))))
+		if (!(tp = (Tee_t*)stakalloc(sizeof(Tee_t) + argc * sizeof(int))))
 			error(ERROR_exit(1), "no space");
+		memset(&tee_disc, 0, sizeof(tee_disc));
+		tee_disc.writef = tee_write;
 		tp->disc = tee_disc;
 		hp = tp->fd;
 		while (cp = *argv++)
@@ -154,7 +154,8 @@ b_tee(int argc, register char** argv, void* context)
 				error(ERROR_system(0), "%s: cannot create", cp);
 			else hp++;
 		}
-		if (hp == tp->fd) tp = 0;
+		if (hp == tp->fd)
+			tp = 0;
 		else
 		{
 			*hp = -1;

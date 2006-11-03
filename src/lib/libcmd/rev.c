@@ -51,7 +51,8 @@ USAGE_LICENSE
 "[+SEE ALSO?\bcat\b(1), \btail\b(1)]"
 ;
 
-#include	<cmdlib.h>
+#include	<cmd.h>
+#include	<rev.h>
 
 /*
  * reverse the characters within a line
@@ -84,8 +85,7 @@ b_rev(int argc, register char** argv, void* context)
 	register int n, line=0;
 	NOT_USED(argc);
 
-	NoP(argc);
-	cmdinit(argv, context, ERROR_CATALOG, 0);
+	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
 	while (n = optget(argv, usage)) switch (n)
 	{
 	    case 'l':

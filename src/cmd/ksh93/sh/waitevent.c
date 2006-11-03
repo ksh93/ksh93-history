@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2005 AT&T Corp.                  *
+*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -36,3 +36,19 @@ void	*sh_waitnotify(int(*newevent)(int,long,int))
 	return((void*)old);
 }
 
+#if __OBSOLETE__ < 20080101
+/*
+ * this used to be a private symbol
+ * retain the old name for a bit for a smooth transition
+ */
+
+#if defined(__EXPORT__)
+#define extern		__EXPORT__
+#endif
+
+extern void	*_sh_waitnotify(int(*newevent)(int,long,int))
+{
+	return sh_waitnotify(newevent);
+}
+
+#endif

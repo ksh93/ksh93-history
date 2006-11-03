@@ -1477,6 +1477,10 @@ static int comsub(register Lex_t *lp)
 				shlex.lastline = line;
 				shlex.lasttok = LPAREN;
 				sh_syntax();
+			    case IOSEEKSYM:
+				if(fcgetc(c)!='#' && c>0)
+					fcseek(-1);
+				break;
 			    case IODOCSYM:
 				sh_lex();
 				break;

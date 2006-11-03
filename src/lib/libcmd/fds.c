@@ -32,7 +32,7 @@ USAGE_LICENSE
 "[+SEE ALSO?\blogname\b(1), \bwho\b(1), \bgetgroups\b(2)]"
 ;
 
-#include <cmdlib.h>
+#include <cmd.h>
 #include <ls.h>
 
 #include "FEATURE/sockets"
@@ -70,7 +70,7 @@ b_fds(int argc, char** argv, void* context)
 	char			num[32];
 #endif
 
-	cmdinit(argv, context, ERROR_CATALOG, 0);
+	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
 	details = 0;
 	for (;;)
 	{

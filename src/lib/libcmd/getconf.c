@@ -115,28 +115,26 @@ USAGE_LICENSE
 "	\bsysconf\b(2), \bastgetconf\b(3)]"
 ;
 
-#include <cmdlib.h>
+#include <cmd.h>
 #include <proc.h>
 
 int
 b_getconf(int argc, char** argv, void* context)
 {
-	register char*	name;
-	register char*	path;
-	register char*	value;
-	register char*	s;
-	char*		pattern;
-	char*		native;
-	int		flags;
-	char**		a;
-	char**		oargv;
-	char		cmd[PATH_MAX];
+	register char*		name;
+	register char*		path;
+	register char*		value;
+	register char*		s;
+	char*			pattern;
+	char*			native;
+	int			flags;
+	char**			oargv;
+	char			cmd[PATH_MAX];
 
-	static char	empty[] = "-";
+	static const char	empty[] = "-";
 
-	NoP(argc);
+	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
 	oargv = argv;
-	cmdinit(argv, context, ERROR_CATALOG, 0);
 	if (*(native = astconf("GETCONF", NiL, NiL)) != '/')
 		native = 0;
 	flags = 0;

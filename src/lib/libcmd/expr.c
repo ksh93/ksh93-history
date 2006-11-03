@@ -140,10 +140,10 @@ USAGE_LICENSE
 
 #define numeric(np)	((np)->type&T_NUM)
 
-static struct Optable_s
+static const struct Optable_s
 {
-	char	opname[3];
-	int	op;
+	const char	opname[3];
+	int		op;
 }
 optable[] =
 {
@@ -495,8 +495,7 @@ b_expr(int argc, char *argv[], void *context)
 	Node_t	node;
 	int	n;
 
-	NoP(argc);
-	cmdinit(argv,context, ERROR_CATALOG, 0);
+	cmdinit(argc, argv,context, ERROR_CATALOG, 0);
 	state.standard = !strcmp(astconf("CONFORMANCE", NiL, NiL), "standard");
 #if 0
 	if (state.standard)
@@ -534,4 +533,3 @@ b_expr(int argc, char *argv[], void *context)
 		sfprintf(sfstdout,"%d\n",node.num);
 	return numeric(&node)?node.num==0:*node.str==0;
 }
-

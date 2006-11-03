@@ -26,7 +26,11 @@
 
 #include <ast_common.h>
 
-char *basename(register char *pathname)
+#if defined(__EXPORT__)
+#define extern	__EXPORT__
+#endif
+
+extern char *basename(register char *pathname)
 {
 	register char *first, *last;
 	for(first=last=pathname; *last; last++);

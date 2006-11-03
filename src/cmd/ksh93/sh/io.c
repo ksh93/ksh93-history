@@ -557,12 +557,26 @@ static int pat_seek(void *handle, const char *str, size_t sz)
 	return(-1);
 }
 
+static int pat_line(const regex_t* rp, const char *buff, register size_t n)
+{
+	register const char *cp=buff, *sp;
+	while(n>0)
+	{
+		for(sp=cp; n-->0 && *cp++ != '\n';);
+		if(regnexec(rp,sp,cp-sp, 0, (regmatch_t*)0, 0)==0)
+			return(sp-buff);
+	}
+	return(cp-buff);
+}
+
 static int io_patseek(regex_t *rp, Sfio_t* sp, int flags)
 {
-	char *cp, *match;
-	int r;
-	size_t n,m;
-	while((cp=sfreserve(sp, -PIPE_BUF, SF_LOCKR)) || (cp=sfreserve(sp,SF_UNBOUND, SF_LOCKR)))
+	char	*cp, *match;
+	int	r, close_exec = sh.fdstatus[sffileno(sp)]&IOCLEX;
+	int	s=(PIPE_BUF>SF_BUFSIZE?SF_BUFSIZE:PIPE_BUF);
+	size_t	n,m;
+	sh.fdstatus[sffileno(sp)] |= IOCLEX;
+	while((cp=sfreserve(sp, -s, SF_LOCKR)) || (cp=sfreserve(sp,SF_UNBOUND, SF_LOCKR)))
 	{
 		m = n = sfvalue(sp);
 		while(n>0 && cp[n-1]!='\n')
@@ -572,12 +586,19 @@ static int io_patseek(regex_t *rp, Sfio_t* sp, int flags)
 		r = regrexec(rp,cp,m,0,(regmatch_t*)0, 0, '\n', (void*)&match, pat_seek);
 		if(r<0)
 			m = match-cp;
+		else if(r==2)
+		{
+			if((m = pat_line(rp,cp,m)) < n)
+				r = -1;
+		}
 		if(m && (flags&IOCOPY))
 			sfwrite(sfstdout,cp,m);
 		sfread(sp,cp,m);
 		if(r<0)
 			break;
 	}
+	if(!close_exec)
+		sh.fdstatus[sffileno(sp)] &= ~IOCLEX;
 	return(0);
 }
 
@@ -675,19 +696,29 @@ int	sh_redirect(struct ionod *iop, int flag)
 				fname=sh_mactrim(fname,(!sh_isoption(SH_NOGLOB)&&sh_isoption(SH_INTERACTIVE))?2:0);
 		}
 		errno=0;
+		if(iop->iovname)
+		{
+			np = nv_open(iop->iovname,sh.var_tree,NV_NOASSIGN|NV_VARNAME);
+			if(nv_isattr(np,NV_RDONLY))
+				errormsg(SH_DICT,ERROR_exit(1),e_readonly, nv_name(np));
+			io_op[0] = '}';
+			if((iof&IOMOV) && *fname=='-')
+				fn = nv_getnum(np);
+		}
+		if(iof&IOLSEEK)
+		{
+			io_op[2] = '#';
+			if(iof&IOARITH)
+			{
+				strcpy(&io_op[3]," ((");
+				after = "))";
+			}
+			else if(iof&IOCOPY)
+				io_op[3] = '#';
+			goto traceit;
+		}
 		if(*fname)
 		{
-			if(iop->iovname)
-			{
-				np = nv_open(iop->iovname,sh.var_tree,NV_NOASSIGN|NV_VARNAME);
-				if(nv_isattr(np,NV_RDONLY))
-					errormsg(SH_DICT,ERROR_exit(1),e_readonly, nv_name(np));
-				if(traceon)
-					sfprintf(sfstderr,"{%s",nv_name(np));
-				io_op[0] = '}';
-				if((iof&IOMOV) && *fname=='-')
-					fn = nv_getnum(np);
-			}
 			if(iof&IODOC)
 			{
 				if(traceon)
@@ -759,18 +790,6 @@ int	sh_redirect(struct ionod *iop, int flag)
 					sh_close(toclose);
 				}
 			}
-			else if(iof&IOLSEEK)
-			{
-				io_op[2] = '#';
-				if(iof&IOARITH)
-				{
-					strcpy(&io_op[3]," ((");
-					after = "))";
-				}
-				else if(iof&IOCOPY)
-					io_op[3] = '#';
-				goto traceit;
-			}
 			else if(iof&IORDW)
 			{
 				io_op[2] = '>';
@@ -826,7 +845,11 @@ int	sh_redirect(struct ionod *iop, int flag)
 			}
 		traceit:
 			if(traceon && fname)
+			{
+				if(np)
+					sfprintf(sfstderr,"{%s",nv_name(np));
 				sfprintf(sfstderr,"%s %s%s%c",io_op,fname,after,iop->ionxt?' ':'\n');
+			}
 			if(flag==SH_SHOWME)
 				return(indx);
 			if(trace && fname)
@@ -1368,7 +1391,7 @@ static ssize_t piperead(Sfio_t *iop,void *buff,register size_t size,Sfdisc_t *ha
 	}
 	if(sh_isstate(SH_INTERACTIVE) && io_prompt(iop,sh.nextprompt)<0 && errno==EIO)
 		return(0);
-	if(!(sh.fdstatus[sffileno(iop)]&IOCLEX) && sfset(iop,0,0)&SF_SHARE)
+	if(!(sh.fdstatus[sffileno(iop)]&IOCLEX) && (sfset(iop,0,0)&SF_SHARE))
 		size = ed_read(sh.ed_context, fd, (char*)buff, size,0);
 	else
 		size = read(fd, (char*)buff, size);

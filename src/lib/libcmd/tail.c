@@ -93,10 +93,11 @@ USAGE_LICENSE
 "[+SEE ALSO?\bcat\b(1), \bhead\b(1), \brev\b(1)]"
 ;
 
-#include <cmdlib.h>
+#include <cmd.h>
 #include <ctype.h>
 #include <ls.h>
 #include <tm.h>
+#include <rev.h>
 
 #define COUNT		(1<<0)
 #define ERROR		(1<<1)
@@ -380,7 +381,7 @@ b_tail(int argc, char** argv, void* context)
 	register Tail_t*	hp;
 	Tail_t*			files;
 
-	cmdinit(argv, context, ERROR_CATALOG, 0);
+	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
 	for (;;)
 	{
 		switch (n = optget(argv, usage))

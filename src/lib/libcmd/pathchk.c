@@ -68,7 +68,7 @@ USAGE_LICENSE
 ;
 
 
-#include	<cmdlib.h>
+#include	<cmd.h>
 #include	<ls.h>
 
 #define isport(c)	(((c)>='a' && (c)<='z') || ((c)>='A' && (c)<='Z') || ((c)>='0' && (c)<='9') || (strchr("._-",(c))!=0) )
@@ -110,12 +110,13 @@ static int pathchk(char* path, int mode)
 	}
 	else
 	{
-		static char buff[2];
+		char tmp[2];
 		name_max = path_max = 0;
-		buff[0] = (*cp=='/'? '/': '.');
-		if((r=mypathconf(buff, 0)) > _POSIX_NAME_MAX)
+		tmp[0] = (*cp=='/'? '/': '.');
+		tmp[1] = 0;
+		if((r=mypathconf(tmp, 0)) > _POSIX_NAME_MAX)
 			name_max = r;
-		if((r=mypathconf(buff, 1)) > _POSIX_PATH_MAX)
+		if((r=mypathconf(tmp, 1)) > _POSIX_PATH_MAX)
 			path_max = r;
 		if(*cp!='/')
 		{
@@ -222,7 +223,7 @@ b_pathchk(int argc, char** argv, void* context)
 	register int n, mode=0;
 	register char *cp;
 
-	cmdinit(argv, context, ERROR_CATALOG, 0);
+	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
 	while (n = optget(argv, usage)) switch (n)
 	{
   	    case 'p':

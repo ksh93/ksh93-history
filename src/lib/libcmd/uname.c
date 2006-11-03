@@ -75,7 +75,7 @@ __STDPP__directive pragma pp:hide getdomainname gethostid gethostname sethostnam
 #define sethostname	______sethostname
 #endif
 
-#include <cmdlib.h>
+#include <cmd.h>
 #include <ctype.h>
 #include <proc.h>
 
@@ -115,7 +115,7 @@ extern int	sethostname(const char*, size_t);
 #define HOSTTYPE	"unknown"
 #endif
 
-static char	hosttype[] = HOSTTYPE;
+static const char	hosttype[] = HOSTTYPE;
 
 #if !_lib_uname || !_sys_utsname
 
@@ -149,7 +149,10 @@ uname(register struct utsname* ut)
 
 	if (*hosttype)
 	{
-		sys = hosttype;
+		static char	buf[sizeof(hosttype)];
+
+		strcpy(buf, hosttype);
+		sys = buf;
 		if (arch = strchr(sys, '.'))
 		{
 			*arch++ = 0;
@@ -257,8 +260,7 @@ b_uname(int argc, char** argv, void* context)
 	struct utsname	ut;
 	char		buf[257];
 
-	NoP(argc);
-	cmdinit(argv, context, ERROR_CATALOG, 0);
+	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
 	for (;;)
 	{
 		switch (optget(argv, usage))
@@ -401,7 +403,7 @@ b_uname(int argc, char** argv, void* context)
 				if (t = strchr(hosttype, '.'))
 					t++;
 				else
-					t = hosttype;
+					t = (char*)hosttype;
 				strncpy(s = buf, t, sizeof(buf) - 1);
 			}
 			output(OPT_implementation, s, "implementation");

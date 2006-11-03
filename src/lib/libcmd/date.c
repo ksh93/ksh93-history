@@ -182,7 +182,7 @@ USAGE_LICENSE
 "	\bstrftime\b(3), \bstrptime\b(3), \btm\b(3)]"
 ;
 
-#include <cmdlib.h>
+#include <cmd.h>
 #include <ls.h>
 #include <proc.h>
 #include <tmx.h>
@@ -220,13 +220,13 @@ settime(const char* cmd, Time_t now, int adjust, int network)
 		*argv++ = s;
 		if (streq(astconf("UNIVERSE", NiL, NiL), "att"))
 		{
-			tmxfmt(buf, sizeof(buf), "%m%d%H%M%Y.%S", now);
+			tmxfmt(buf, sizeof(buf), "%m%d%H" "%M%Y.%S", now);
 			if (adjust)
 				*argv++ = "-a";
 		}
 		else
 		{
-			tmxfmt(buf, sizeof(buf), "%Y%m%d%H%M.%S", now);
+			tmxfmt(buf, sizeof(buf), "%Y%m%d%H" "%M.%S", now);
 			if (network)
 				*argv++ = "-n";
 			if (tm_info.flags & TM_UTC)
@@ -289,7 +289,7 @@ b_date(int argc, register char** argv, void* context)
 	int		show = 0;	/* show date and don't set	*/
 
 	NoP(argc);
-	cmdinit(argv, context, ERROR_CATALOG, 0);
+	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
 	setlocale(LC_ALL, "");
 	tm_info.flags = TM_DATESTYLE;
 	fmts = &fmt;

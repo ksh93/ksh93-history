@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1992-2005 AT&T Corp.                  *
+*           Copyright (c) 1992-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -21,16 +21,11 @@
 #pragma prototyped
 
 /*
- * common ast cmd library definitions
+ * rev common definitions
  */
 
-#ifndef _CMDLIB_H
-#define _CMDLIB_H
-
-#include <ast.h>
-#include <cmd.h>
-#include <error.h>
-#include <stak.h>
+#ifndef _REVLIB_H
+#define _REVLIB_H
 
 #define rev_line	_cmd_revline
 

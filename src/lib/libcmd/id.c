@@ -59,7 +59,7 @@ USAGE_LICENSE
 "[+SEE ALSO?\blogname\b(1), \bwho\b(1), \bgetgroups\b(2)]"
 ;
 
-#include <cmdlib.h>
+#include <cmd.h>
 
 #include "FEATURE/ids"
 
@@ -421,7 +421,7 @@ b_id(int argc, char *argv[], void* context)
 	register int	flags = 0;
 	register int	n;
 
-	cmdinit(argv, context, ERROR_CATALOG, 0);
+	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
 	while (n = optget(argv, usage)) switch (n)
 	{
 	case 'a':

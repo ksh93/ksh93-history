@@ -224,13 +224,19 @@ tst	real_vfork note{ vfork child shares data with parent }end execute{
 	}
 }end
 
-tst	lib_posix_spawn unistd.h stdlib.h spawn.h note{ posix_spawn exists and it works and its worth using }end execute{
+tst	lib_posix_spawn unistd.h stdlib.h spawn.h -Dfork=______fork note{ posix_spawn exists and it works and its worth using }end status{
+	#include <sys/types.h>
+	#include <sys/stat.h>
+	#include <sys/wait.h>
 	#include <spawn.h>
 	#include <signal.h>
+	#include <fcntl.h>
+	#include <string.h>
+	#undef fork
 	/* if it uses fork() why bother? */
-	int fork() { return -1; }
-	int _fork() { return -1; }
-	int __fork() { return -1; }
+	pid_t fork _ARG_((void)) { return -1; }
+	pid_t _fork _ARG_((void)) { return -1; }
+	pid_t __fork _ARG_((void)) { return -1; }
 	int
 	main(argc, argv)
 	int	argc;
@@ -247,36 +253,40 @@ tst	lib_posix_spawn unistd.h stdlib.h spawn.h note{ posix_spawn exists and it wo
 			_exit(signal(SIGHUP, SIG_DFL) != SIG_IGN);
 		signal(SIGHUP, SIG_IGN);
 		if (posix_spawnattr_init(&attr))
-			_exit(1);
+			_exit(0);
 		if (posix_spawnattr_setpgroup(&attr, 0))
-			_exit(1);
+			_exit(0);
 		/* first try an a.out and verify that SIGHUP is ignored */
 		cmd[0] = argv[0];
 		cmd[1] = "test";
 		cmd[2] = 0;
 		if (posix_spawn(&pid, cmd[0], 0, &attr, cmd, 0))
-			_exit(1);
+			_exit(0);
 		status = 1;
 		if (wait(&status) < 0 || status != 0)
-			_exit(1);
+			_exit(0);
 		/* passing ENOEXEC to the shell is bogus */
 		n = strlen(cmd[0]);
 		if (n >= (sizeof(tmp) - 3))
-			_exit(1);
+			_exit(0);
 		strcpy(tmp, cmd[0]);
 		tmp[n] = '.';
 		tmp[n+1] = 's';
 		tmp[n+2] = 'h';
 		tmp[n+3] = 0;
-		if (close(creat(tmp, 0777)) < 0 || chmod(tmp, 0777) < 0)
-			_exit(1);
+		if (close(open(tmp, O_CREAT, S_IRWXU|S_IRWXG|S_IRWXO)) < 0 || chmod(tmp, S_IRWXU|S_IRWXG|S_IRWXO) < 0)
+			_exit(0);
 		cmd[0] = tmp;
-		if (!posix_spawn(&pid, cmd[0], 0, &attr, cmd, 0))
+		n = 0;
+		pid = -1;
+		if (posix_spawn(&pid, cmd[0], 0, &attr, cmd, 0))
+			n = 2;
+		else
 		{
+			n = pid != -1 && waitpid(pid, &status, WNOHANG|WNOWAIT) == pid && ((status>>8)&0x7f) == 127;
 			wait(&status);
-			_exit(1);
 		}
-		_exit(0);
+		_exit(n);
  	}
 }end
 

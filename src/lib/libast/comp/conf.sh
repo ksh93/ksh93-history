@@ -1288,7 +1288,8 @@ extern int		prefix_elements;
 
 #endif
 !
-} | proto > $tmp.2
+} > $tmp.1
+proto < $tmp.1 > $tmp.2
 case $debug in
 -d7)	echo $command: $tmp.2 ${base}.h ;;
 *)	cmp -s $tmp.2 ${base}.h 2>/dev/null || mv $tmp.2 ${base}.h ;;
@@ -1346,7 +1347,8 @@ cat <<!
 
 int	conf_elements = (int)sizeof(conf) / (int)sizeof(conf[0]);
 !
-} | proto > $tmp.3
+} > $tmp.2
+proto < $tmp.2 > $tmp.3
 case $debug in
 -d7)	echo $command: $tmp.3 ${base}.c ;;
 *)	cmp -s $tmp.3 ${base}.c 2>/dev/null || mv $tmp.3 ${base}.c ;;

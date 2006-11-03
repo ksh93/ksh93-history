@@ -44,7 +44,7 @@ USAGE_LICENSE
 ;
 
 
-#include <cmdlib.h>
+#include <cmd.h>
 
 int
 b_tty(int argc, char *argv[], void* context)
@@ -52,8 +52,7 @@ b_tty(int argc, char *argv[], void* context)
 	register int n,sflag=0;
 	register char *tty;
 
-	NoP(argc);
-	cmdinit(argv, context, ERROR_CATALOG, 0);
+	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
 	while (n = optget(argv, usage)) switch (n)
 	{
 	case 's':

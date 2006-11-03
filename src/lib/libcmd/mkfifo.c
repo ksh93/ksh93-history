@@ -47,7 +47,7 @@ USAGE_LICENSE
 "[+SEE ALSO?\bchmod\b(1), \bumask\b(1)]"
 ;
 
-#include <cmdlib.h>
+#include <cmd.h>
 #include <ls.h>
 
 #define RWALL	(S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH)
@@ -59,8 +59,7 @@ b_mkfifo(int argc, char *argv[], void* context)
 	register mode_t mode=RWALL, mask=0;
 	register int n;
 
-	NoP(argc);
-	cmdinit(argv, context, ERROR_CATALOG, 0);
+	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
 	while (n = optget(argv, usage)) switch (n)
 	{
 	  case 'm':

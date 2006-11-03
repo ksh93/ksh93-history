@@ -461,11 +461,6 @@ loop_fmt :
 		case 't' :
 			size = -1; flags = (flags&~SFFMT_TYPES) | SFFMT_TFLAG;
 			goto loop_flags;
-#if _PACKAGE_ast
-		case 'm' :
-			scale = 1000;
-			goto loop_flags;
-#endif
 		default:
 			break;
 		}
@@ -847,14 +842,24 @@ loop_fmt :
 			flags &= ~(SFFMT_SIGN|SFFMT_BLANK);
 			goto int_arg;
 		case 'i':
-			if(scale)
+#if _PACKAGE_ast
+			if((flags&SFFMT_ALTER) && base < 0)
+			{	flags &= ~SFFMT_ALTER;
 				scale = 1024;
+			}
+#endif
 			fmt = 'd';
 			goto d_format;
 		case 'u':
 			flags &= ~(SFFMT_SIGN|SFFMT_BLANK);
 		case 'd':
 		d_format:
+#if _PACKAGE_ast
+			if((flags&SFFMT_ALTER) && base < 0)
+			{	flags &= ~SFFMT_ALTER;
+				scale = 1000;
+			}
+#endif
 			if(base < 2 || base > SF_RADIX)
 				base = 10;
 			if((base&(n_s = base-1)) == 0)

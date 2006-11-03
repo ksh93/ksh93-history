@@ -2044,23 +2044,21 @@ These define a buffer and its size to read data into.
 .Tp
 \f5rsc\fP:
 If \f5>=0\fP, this defines a record separator.
-See \f5action\fP for detail.
+If the last returned byte is not the record separator, then
+the read data did not contain a complete record. Otherwise,
+it contains one or more records.
+See also \f5action\fP below.
 .Tp
 \f5tm\fP:
 If \f5>=0\fP, this defines a time interval in milliseconds to wait for incoming data.
 .Tp
 \f5action\fP:
-When \f5rsc >= 0\fP, the absolute value of \f5action\fP, \fIr\fP, determines
-the number of records to be read.
 If \f5action > 0\fP, \f5sfpkrd()\fP will peek on incoming data but
 will not read past it. Therefore, a future \f5sfpkrd()\fP or \f5read(2)\fP will see
 the same data again.
-If \f5action == 0\fP, \f5sfpkrd()\fP will not peek.
-If \f5action < 0\fP, there are two cases:
-if \f5rsc < 0\fP, \f5sfpkrd()\fP reads \f5n\fP bytes; otherwise,
-exactly \fIr\fP records will be read.
-Note that, in the last case, reading records from an unseekable device
-may be slow if the underlying platform does not allow peeking on such a device.
+If \f5action <= 0\fP, \f5sfpkrd()\fP will not peek and there are two cases.
+If \f5rsc < 0\fP, an attempt is made to read \f5n\fP bytes.
+If \f5rsc >= 0\fP, an attempt is made to read one record.
 
 .PP
 .Ss "FULL STRUCTURE SFIO_T"

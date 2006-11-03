@@ -65,10 +65,18 @@ void _STUB_crypt(){}
 static char sccsid[] = "@(#)crypt.c	8.1 (Berkeley) 6/4/93";
 #endif /* LIBC_SCCS and not lint */
 
+#define crypt		______crypt
+#define encrypt		______encrypt
+#define setkey		______setkey
+
 /* #include <unistd.h> */
 #include <stdio.h>
 #include <limits.h>
 #include <pwd.h>
+
+#undef	crypt
+#undef	encrypt
+#undef	setkey
 
 #ifndef _PASSWORD_EFMT1
 #define _PASSWORD_EFMT1 '-'

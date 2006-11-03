@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1992-2005 AT&T Corp.                  *
+*           Copyright (c) 1992-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -51,7 +51,7 @@ USAGE_LICENSE
     "\boptget\b(3)]"
 ;
 
-#include <cmdlib.h>
+#include <cmd.h>
 #include <ctype.h>
 
 typedef struct Fmt_s
@@ -565,7 +565,7 @@ b_fmt(int argc, char** argv, void *context)
 	fmt.quote = 0;
 	fmt.retain = 0;
 	fmt.section = 1;
-	cmdinit(argv, context, ERROR_CATALOG, 0);
+	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
 	while (n = optget(argv, usage))
 		switch (n)
 		{

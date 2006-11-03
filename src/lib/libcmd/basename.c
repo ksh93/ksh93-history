@@ -57,7 +57,7 @@ USAGE_LICENSE
 ;
 
 
-#include <cmdlib.h>
+#include <cmd.h>
 
 static void namebase(Sfio_t *outfile, register char *pathname, char *suffix)
 {
@@ -96,7 +96,7 @@ b_basename(int argc,register char *argv[], void* context)
 {
 	register int  n;
 
-	cmdinit(argv, context, ERROR_CATALOG, 0);
+	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
 	while (n = optget(argv, usage)) switch (n)
 	{
 	case ':':

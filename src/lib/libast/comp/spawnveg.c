@@ -42,6 +42,7 @@ NoN(spawnveg)
 
 #include <spawn.h>
 #include <error.h>
+#include <wait.h>
 
 pid_t
 spawnveg(const char* path, char* const argv[], char* const envv[], pid_t pgid)
@@ -62,6 +63,15 @@ spawnveg(const char* path, char* const argv[], char* const envv[], pid_t pgid)
 	if (err = posix_spawn(&pid, path, NiL, &attr, argv, envv ? envv : environ))
 		goto bad;
 	posix_spawnattr_destroy(&attr);
+#if _lib_posix_spawn < 2
+	if (waitpid(pid, &err, WNOHANG|WNOWAIT) == pid && EXIT_STATUS(err) == 127)
+	{
+		while (waitpid(pid, NiL, 0) == -1 && errno == EINTR);
+		if (!access(path, X_OK))
+			errno = ENOEXEC;
+		pid = -1;
+	}
+#endif
 	return pid;
  bad:
 	errno = err;

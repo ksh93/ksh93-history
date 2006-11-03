@@ -1110,7 +1110,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optprintf[] =
-"[-1c?\n@(#)$Id: printf (AT&T Research) 1999-06-21 $\n]"
+"[-1c?\n@(#)$Id: printf (AT&T Research) 2006-10-26 $\n]"
 USAGE_LICENSE
 "[+NAME?printf - write formatted output]"
 "[+DESCRIPTION?\bprintf\b writes each \astring\a operand to "
@@ -1172,7 +1172,15 @@ USAGE_LICENSE
 		"character corresponding to the hexidecimal value \ahex\a.]"
 	"[+-?Each of the integral format specifiers can have a third "
 		"modifier after width and precision that specifies the "
-		"base of the conversion from 2 to 64.]"
+		"base of the conversion from 2 to 64.  In this case the "
+		"\b#\b modifier will cause \abase\a\b#\b to be prepended to "
+		"the value.]"
+	"[+-?The \b#\b modifier can be used with the \bd\b specifier when "
+		"no base is specified cause the output to be written in units "
+		"of \b1000\b with a suffix of one of \bk M G T P E\b.]"
+	"[+-?The \b#\b modifier can be used with the \bi\b specifier to "
+		"cause the output to be written in units of \b1024\b with "
+		"a suffix of one of \bKi Mi Gi Ti Pi Ei\b.]"
 	"}"
 "[+?If there are more \astring\a operands than format specifiers, the "
 	"\aformat\a string is reprocessed from the beginning.  If there are "

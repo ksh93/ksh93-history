@@ -56,7 +56,7 @@ USAGE_LICENSE
 ;
 
 
-#include <cmdlib.h>
+#include <cmd.h>
 
 #define C_FILE1		1
 #define C_FILE2		2
@@ -127,7 +127,7 @@ static int comm(Sfio_t *in1, Sfio_t *in2, register Sfio_t *out,register int mode
 	if(!mode || !cp1)
 	{
 		if(cp1 && in1==sfstdin)
-			sfseek(in1,0L,SEEK_END);
+			sfseek(in1,(Sfoff_t)0,SEEK_END);
 		return(0);
 	}
 	/* process the remaining stream */
@@ -152,7 +152,7 @@ b_comm(int argc, char *argv[], void* context)
 	register char *cp;
 	Sfio_t *f1, *f2;
 
-	cmdinit(argv, context, ERROR_CATALOG, 0);
+	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
 	while (n = optget(argv, usage)) switch (n)
 	{
  	    case '1':
@@ -191,7 +191,7 @@ b_comm(int argc, char *argv[], void* context)
 			error(ERROR_system(1)," write error");
 	}
 	else if(f1==sfstdin || f2==sfstdin)
-		sfseek(sfstdin,0L,SEEK_END);
+		sfseek(sfstdin,(Sfoff_t)0,SEEK_END);
 	if(f1!=sfstdin)
 		sfclose(f1);
 	if(f2!=sfstdin)

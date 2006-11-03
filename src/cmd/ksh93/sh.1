@@ -1617,16 +1617,15 @@ lists.
 .TP
 .B
 .SM EDITOR
-If the value of this variable ends in
-.IR emacs ,
-.IR gmacs ,
-or
-.I vi
-and the
+If the
 .B
 .SM VISUAL
 variable is not set,
-then the corresponding option
+the value of this variable will be checked for the patterns
+as described with
+.B
+.SM VISUAL
+below and the corresponding editing option
 (see Special Command
 .B set
 below)
@@ -2028,15 +2027,25 @@ for this value which cannot be exceeded.)
 .TP
 .B
 .SM VISUAL
-If the value of this variable ends in
-.IR emacs ,
-.IR gmacs ,
-or
-.I vi
-then the corresponding option
+If the value of this variable matches the pattern
+.IR *[Vv][Ii]* ,
+then the
+.B vi
+option
 (see Special Command
 .B set
 below)
+is turned on.
+If the value matches the pattern
+.I *gmacs* ,
+the
+.B gmacs
+option is turned on.
+If the value matches the pattern
+.IR *macs* ,
+then the
+.B emacs
+option
 will be turned on.
 The value of
 .B
@@ -3129,6 +3138,7 @@ Field splitting is not performed.
 In each of the following redirections, if
 .I file\^
 is of the form
+\f3/dev/sctp/\fP\f2host\fP\f3/\fP\f2port\fP,
 \f3/dev/tcp/\fP\f2host\fP\f3/\fP\f2port\fP,
 or
 \f3/dev/udp/\fP\f2host\fP\f3/\fP\f2port\fP,
@@ -3139,7 +3149,7 @@ and
 .I port\^
 is a service given by name or an integer port number,
 then the redirection attempts to make a
-\f3tcp\fP or \f3udp\fP connection to the corresponding
+\f3tcp\fP, \f3sctp\fP or \f3udp\fP connection to the corresponding
 socket.
 .PP
 No intervening space is allowed between the characters of redirection operators.
@@ -3275,6 +3285,16 @@ respectively when evaluating
 The same as
 .B <#
 except applies to file descriptor 1.
+.TP
+.BI <# pattern 
+Seeks forward to the beginning of the next line containing
+.IR pattern .
+.TP
+.BI <## pattern 
+The same as
+.B <#
+except that the portion of the file that is skipped is copied to
+standard output.
 .PP
 If one of the above is preceded by a digit,
 with no intervening space, then the
@@ -5945,6 +5965,28 @@ The precision field of the
 format can be followed by a
 .B .
 and the output base.
+In this case, the 
+.B #
+flag character caues
+.IB base #
+to be prepended.
+.LI
+The
+.B #
+flag when used with the
+.B d
+specifier without an output base,
+causes the output to be displayed in thousands units with one of the suffixes
+.B "k M G T P E"
+to indicate the unit.
+.LI
+The
+.B #
+flag when used with the
+.B i
+specifier causes the output to be displayed in 1024 with one of the suffixes
+.B "Ki Mi Gi Ti Pi Ei"
+to indicate the unit.
 .LE
 .TP
 \f3pwd\fP \*(OK \f3\-LP\fP \*(CK

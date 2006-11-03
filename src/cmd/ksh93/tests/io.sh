@@ -208,6 +208,15 @@ then	(( $(3<#) == 0 )) || err_exit "not at position 0"
 	command exec 3<# ((40*62)) 
 	read -u3
 	[[ $REPLY == +(^) ]] || err_exit "expecting ddd..."
+	command exec 3<# ((0))
+	command exec 3<# *jjjj*
+	read -u3
+	[[  $REPLY == {39}(j) ]] || err_exit "<# pattern failed"
+	[[ $(command exec 3<## *llll*) = {39}(k) ]] || err_exit "<## pattern not saving standard output"
+	read -u3
+	[[  $REPLY == {39}(l) ]] || err_exit "<## pattern failed to position"
+	command exec 3<# *abc*
+	read -u3 && err_exit "not found pattern not positioning at eof"
 else	err_exit "/tmp/seek$$: cannot open for reading"
 fi
 trap "" EXIT

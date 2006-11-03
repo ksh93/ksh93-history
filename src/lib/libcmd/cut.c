@@ -77,19 +77,29 @@ USAGE_LICENSE
 "[+SEE ALSO?\bpaste\b(1), \bgrep\b(1)]"
 ;
 
-#include <cmdlib.h>
+#include <cmd.h>
 #include <ctype.h>
 
-typedef struct
+typedef struct Last_s
 {
-	int	cflag;
-	int	sflag;
-	int	nlflag;
-	int	wdelim;
-	int	ldelim;
-	int	seqno;
-	int	reclen;
-	int	list[2];
+	int		seqno;
+	int		seq;
+	int		wdelim;
+	int		ldelim;
+} Last_t;
+
+typedef struct Cut_s
+{
+	int		cflag;
+	int		sflag;
+	int		nlflag;
+	int		wdelim;
+	int		ldelim;
+	int		seqno;
+	int		reclen;
+	int		list[2];
+	signed char	space[UCHAR_MAX];
+	Last_t		last;
 } Cut_t;
 
 #define HUGE		(1<<14)
@@ -100,8 +110,6 @@ typedef struct
 #define C_SUPRESS	8
 #define C_NOCHOP	16
 #define C_NONEWLINE	32
-
-static int seqno;
 
 /*
  * compare the first of an array of integers
@@ -120,13 +128,18 @@ static Cut_t *cutinit(int mode,char *str,int wdelim,int ldelim,size_t reclen)
 	Cut_t *cuthdr;
 	if (!(cuthdr = (Cut_t*)stakalloc(sizeof(Cut_t)+strlen(cp)*sizeof(int))))
 		error(ERROR_exit(1), "out of space");
+	memset(cuthdr->space, 0, sizeof(cuthdr->space));
+	cuthdr->last.seqno = 0;
+	cuthdr->last.seq = 0;
+	cuthdr->last.wdelim = 0;
+	cuthdr->last.ldelim = '\n';
 	cuthdr->cflag = ((mode&C_CHARS)!=0 && mbwide());
 	cuthdr->sflag = ((mode&C_SUPRESS)!=0);
 	cuthdr->nlflag = ((mode&C_NONEWLINE)!=0);
 	cuthdr->wdelim = wdelim;
 	cuthdr->ldelim = ldelim;
 	cuthdr->reclen = reclen;
-	cuthdr->seqno = ++seqno;
+	cuthdr->seqno = ++cuthdr->last.seqno;
 	lp = cuthdr->list;
 	while(1) switch(c= *cp++)
 	{
@@ -236,7 +249,7 @@ static int advance(const char *str, register int n, register int inlen)
  * cut each line of file <fdin> and put results to <fdout> using list <list>
  */
 
-static int cutcols(const Cut_t *cuthdr,Sfio_t *fdin,Sfio_t *fdout)
+static int cutcols(Cut_t *cuthdr,Sfio_t *fdin,Sfio_t *fdout)
 {
 	register int		c, ncol=0,len;
 	register const int	*lp = cuthdr->list;
@@ -282,10 +295,8 @@ static int cutcols(const Cut_t *cuthdr,Sfio_t *fdin,Sfio_t *fdout)
 
 #define endline(c)	(((signed char)-1)<0?(c)<0:(c)==((char)-1))
 
-static int cutfields(const Cut_t *cuthdr,Sfio_t *fdin,Sfio_t *fdout)
+static int cutfields(Cut_t *cuthdr,Sfio_t *fdin,Sfio_t *fdout)
 {
-	static signed char space[1<<CHAR_BIT];
-	static int lastseq, lastwdelim = 0, lastldelim = '\n';
 	register unsigned char *cp;
 	register int c, nfields;
 	register const int *lp = cuthdr->list;
@@ -296,13 +307,13 @@ static int cutfields(const Cut_t *cuthdr,Sfio_t *fdin,Sfio_t *fdout)
 	int lastchar;
 	Sfio_t *fdtmp = 0;
 	long offset = 0;
-	if(cuthdr->seqno != lastseq)
+	if(cuthdr->seqno != cuthdr->last.seq)
 	{
-		space[lastldelim] = 0;
-		space[lastwdelim] = 0;
-		space[(lastwdelim=cuthdr->wdelim)] = 1;
-		space[(lastldelim=cuthdr->ldelim)] = -1;
-		lastseq = cuthdr->seqno;
+		cuthdr->space[cuthdr->last.ldelim] = 0;
+		cuthdr->space[cuthdr->last.wdelim] = 0;
+		cuthdr->space[cuthdr->last.wdelim=cuthdr->wdelim] = 1;
+		cuthdr->space[cuthdr->last.ldelim=cuthdr->ldelim] = -1;
+		cuthdr->last.seq = cuthdr->seqno;
 	}
 	/* process each buffer */
 	while ((inbuff = (unsigned char*)sfreserve(fdin, SF_UNBOUND, 0)) && (c = sfvalue(fdin)) > 0)
@@ -330,15 +341,15 @@ static int cutfields(const Cut_t *cuthdr,Sfio_t *fdin,Sfio_t *fdout)
 			while(!inword)
 			{
 				/* skip over non-delimiter characters */
-				while(!(c=space[*cp++]));
+				while(!(c=cuthdr->space[*cp++]));
 				/* check for end-of-line */
 				if(endline(c))
 				{
 					if(cp<=endbuff)
 						break;
-					if((c=space[lastchar]),endline(c))
+					if((c=cuthdr->space[lastchar]),endline(c))
 						break;
-					/* restore last character */
+					/* restore cuthdr->last. character */
 					if(lastchar != cuthdr->ldelim)
 						*endbuff = lastchar;
 					inword++;
@@ -370,7 +381,7 @@ static int cutfields(const Cut_t *cuthdr,Sfio_t *fdin,Sfio_t *fdout)
 						{
 							if(offset)
 							{
-								sfseek(fdtmp,0L,0);
+								sfseek(fdtmp,(Sfoff_t)0,SEEK_SET);
 								sfmove(fdtmp,fdout,offset,-1);
 							}
 							copy = first;
@@ -380,7 +391,7 @@ static int cutfields(const Cut_t *cuthdr,Sfio_t *fdin,Sfio_t *fdout)
 						sfputc(fdout,'\n');
 				}
 				if(offset)
-					sfseek(fdtmp,offset=0L,0);
+					sfseek(fdtmp,offset=0,SEEK_SET);
 			}
 			if(copy && (c=cp-copy)>0 && (!nodelim || !cuthdr->sflag) && sfwrite(fdout,(char*)copy,c)< 0)
 				goto failed;
@@ -413,8 +424,7 @@ b_cut(int argc,char *argv[], void* context)
 	int	ldelim = '\n';
 	size_t	reclen = 0;
 
-	NoP(argc);
-	cmdinit(argv, context, ERROR_CATALOG, 0);
+	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
 	while (n = optget(argv, usage)) switch (n)
 	{
 	  case 'b':
@@ -500,4 +510,3 @@ b_cut(int argc,char *argv[], void* context)
 	while(cp= *argv++);
 	return(error_info.errors?1:0);
 }
-

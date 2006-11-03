@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1992-2005 AT&T Corp.                  *
+*           Copyright (c) 1992-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -23,13 +23,21 @@
  * command initialization
  */
 
-#include <cmdlib.h>
+#include <cmd.h>
 
-void
-cmdinit(char** argv, void* context, const char* catalog, int flags)
+int	_cmd_quit = 0;
+
+int
+_cmd_init(int argc, char** argv, void* context, const char* catalog, int flags)
 {
 	register char*	cp;
 
+	if (argc < 0)
+	{
+		_cmd_quit = 1;
+		return -1;
+	}
+	_cmd_quit = 0;
 	if (cp = strrchr(argv[0], '/'))
 		cp++;
 	else
@@ -40,4 +48,17 @@ cmdinit(char** argv, void* context, const char* catalog, int flags)
 	opt_info.index = 0;
 	if (context)
 		error_info.flags |= flags;
+	return 0;
 }
+
+#if __OBSOLETE__ < 20080101
+
+#undef	cmdinit
+
+void
+cmdinit(char** argv, void* context, const char* catalog, int flags)
+{
+	_cmd_init(0, argv, context, catalog, flags);
+}
+
+#endif

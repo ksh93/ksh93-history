@@ -132,7 +132,7 @@ __STDPP__directive pragma pp:hide lchmod
 #define lchmod		______lchmod
 #endif
 
-#include <cmdlib.h>
+#include <cmd.h>
 #include <ls.h>
 #include <fts.h>
 
@@ -145,11 +145,6 @@ __STDPP__directive pragma pp:nohide lchmod
 #endif
 
 extern int	lchmod(const char*, mode_t);
-
-static struct State_s
-{
-	int		interrupt;
-} state;
 
 int
 b_chmod(int argc, char** argv, void* context)
@@ -169,13 +164,7 @@ b_chmod(int argc, char** argv, void* context)
 #endif
 	struct stat	st;
 
-	if (argc < 0)
-	{
-		state.interrupt = 1;
-		return -1;
-	}
-	state.interrupt = 0;
-	cmdinit(argv, context, ERROR_CATALOG, ERROR_NOTIFY);
+	cmdinit(argc, argv, context, ERROR_CATALOG, ERROR_NOTIFY);
 	flags = fts_flags() | FTS_TOP | FTS_NOPOSTORDER | FTS_NOSEEDOTDIR;
 
 	/*
@@ -258,7 +247,7 @@ b_chmod(int argc, char** argv, void* context)
 			umask(ignore);
 		error(ERROR_system(1), "%s: not found", *argv);
 	}
-	while (!state.interrupt && (ent = fts_read(fts)))
+	while (!cmdquit() && (ent = fts_read(fts)))
 		switch (ent->fts_info)
 		{
 		case FTS_SL:

@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1992-2005 AT&T Corp.                  *
+*           Copyright (c) 1992-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -32,6 +32,9 @@
 #include <error.h>
 #include <stak.h>
 
+#define cmdinit(a,b,c,d,e)	_cmd_init(a,b,c,d,e)
+#define cmdquit()		0
+
 #if _BLD_cmd && defined(__EXPORT__)
 #define extern		__EXPORT__
 #endif
@@ -40,13 +43,13 @@
 
 #undef	extern
 
-#if defined(BUILTIN) && !defined(STANDALONE)
-#define STANDALONE	BUILTIN
+#if defined(CMD_BUILTIN) && !defined(CMD_STANDALONE)
+#define CMD_STANDALONE	CMD_BUILTIN
 #endif
 
-#ifdef	STANDALONE
+#ifdef CMD_STANDALONE
 
-#if DYNAMIC
+#if CMD_DYNAMIC
 
 #include <dlldefs.h>
 
@@ -54,18 +57,18 @@ typedef int (*Builtin_f)(int, char**, void*);
 
 #else
 
-extern int STANDALONE(int, char**, void*);
+extern int CMD_STANDALONE(int, char**, void*);
 
 #endif
 
-#ifndef BUILTIN
+#ifndef CMD_BUILTIN
 
 /*
  * command initialization
  */
 
-static void
-cmdinit(register char** argv, void* context, const char* catalog, int flags)
+static int
+cmdinit(int argc, register char** argv, void* context, const char* catalog, int flags)
 {
 	register char*	cp;
 	register char*	pp;
@@ -82,6 +85,7 @@ cmdinit(register char** argv, void* context, const char* catalog, int flags)
 	opt_info.index = 0;
 	if (context)
 		error_info.flags |= flags;
+	return 0;
 }
 
 #endif
@@ -89,7 +93,7 @@ cmdinit(register char** argv, void* context, const char* catalog, int flags)
 int
 main(int argc, char** argv)
 {
-#if DYNAMIC
+#if CMD_DYNAMIC
 	register char*	s;
 	register char*	t;
 	void*		dll;
@@ -129,18 +133,38 @@ main(int argc, char** argv)
 	}
 	return (*fun)(argc, argv, NiL);
 #else
-	return STANDALONE(argc, argv, NiL);
+	return CMD_STANDALONE(argc, argv, NiL);
 #endif
 }
 
 #else
 
+#undef	cmdinit
+#define cmdinit(a,b,c,d,e)	do{if(_cmd_init(a,b,c,d,e))return -1;}while(0)
+
+#ifndef CMD_BUILTIN
+
+#undef	cmdquit
+#define cmdquit()		(_cmd_quit)
+
 #if _BLD_cmd && defined(__EXPORT__)
-#define extern		__EXPORT__
+#define extern			extern __EXPORT__
+#endif
+#if !_BLD_cmd && defined(__IMPORT__)
+#define extern			extern __IMPORT__
 #endif
 
-extern int	cmdrecurse(int, char**, int, char**);
-extern void	cmdinit(char**, void*, const char*, int);
+extern int	_cmd_quit;
+
+#undef	extern
+
+#endif
+
+#if _BLD_cmd && defined(__EXPORT__)
+#define extern			extern __EXPORT__
+#endif
+
+extern int	_cmd_init(int, char**, void*, const char*, int);
 
 #undef	extern
 

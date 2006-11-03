@@ -54,7 +54,7 @@ USAGE_LICENSE
 "[+SEE ALSO?\bchmod\b(1), \brmdir\b(1), \bumask\b(1)]"
 ;
 
-#include <cmdlib.h>
+#include <cmd.h>
 #include <ls.h>
 
 #define DIRMODE	(S_IRWXU|S_IRWXG|S_IRWXO)
@@ -71,8 +71,7 @@ b_mkdir(int argc, char** argv, void* context)
 	char*		name;
 	mode_t		dmode;
 
-	NoP(argc);
-	cmdinit(argv, context, ERROR_CATALOG, 0);
+	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
 	while (n = optget(argv, usage)) switch (n)
 	{
 	case 'p':

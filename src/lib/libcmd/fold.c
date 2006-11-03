@@ -74,7 +74,7 @@ USAGE_LICENSE
 ;
 
 
-#include <cmdlib.h>
+#include <cmd.h>
 
 #define WIDTH	80
 #define TABSIZE	8
@@ -86,9 +86,7 @@ USAGE_LICENSE
 #define T_SP	5
 #define T_RET	6
 
-static char cols[1<<CHAR_BIT];
-
-static void fold(Sfio_t *in, Sfio_t *out, register int width, const char *cont, size_t contsize)
+static void fold(Sfio_t *in, Sfio_t *out, register int width, const char *cont, size_t contsize, char *cols)
 {
 	register char *cp, *first;
 	register int n, col=0, x=0;
@@ -176,8 +174,10 @@ b_fold(int argc, char *argv[], void* context)
 	register char *cp;
 	char *cont="\n";
 	size_t contsize = 1;
+	char cols[1<<CHAR_BIT];
 
-	cmdinit(argv, context, ERROR_CATALOG, 0);
+	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
+	memset(cols, 0, sizeof(cols));
 	cols['\t'] = T_TAB;
 	cols['\b'] = T_BS;
 	cols['\n'] = T_NL;
@@ -233,7 +233,7 @@ b_fold(int argc, char *argv[], void* context)
 			error_info.errors = 1;
 			continue;
 		}
-		fold(fp,sfstdout,width,cont,contsize);
+		fold(fp,sfstdout,width,cont,contsize,cols);
 		if(fp!=sfstdin)
 			sfclose(fp);
 	}

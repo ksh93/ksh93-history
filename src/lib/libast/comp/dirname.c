@@ -26,7 +26,11 @@
 
 #include <ast_common.h>
 
-char *dirname(register char *pathname)
+#if defined(__EXPORT__)
+#define extern	__EXPORT__
+#endif
+
+extern char *dirname(register char *pathname)
 {
 	register char  *last;
 	/* go to end of path */

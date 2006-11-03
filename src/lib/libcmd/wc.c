@@ -62,7 +62,7 @@ USAGE_LICENSE
 ;
 
 
-#include <cmdlib.h>
+#include <cmd.h>
 #include <wc.h>
 #include <ls.h>
 
@@ -93,8 +93,7 @@ b_wc(int argc,register char **argv, void* context)
 	Sfoff_t		tlines=0, twords=0, tchars=0;
 	struct stat	statb;
 
-	NoP(argc);
-	cmdinit(argv, context, ERROR_CATALOG, 0);
+	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
 	while (n = optget(argv,usage)) switch (n)
 	{
 	case 'c':

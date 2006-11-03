@@ -27,7 +27,7 @@
  * cat
  */
 
-#include <cmdlib.h>
+#include <cmd.h>
 #include <fcntl.h>
 
 static const char usage[] =
@@ -95,14 +95,12 @@ USAGE_LICENSE
 
 #define printof(c)	((c)^0100)
 
-static char		states[UCHAR_MAX+1];
-
 /*
  * called for any special output processing
  */
 
 static int
-vcat(Sfio_t *fdin, Sfio_t *fdout, int flags)
+vcat(register char* states, Sfio_t *fdin, Sfio_t *fdout, int flags)
 {
 	register unsigned char*	cp;
 	register unsigned char*	cpold;
@@ -114,8 +112,10 @@ vcat(Sfio_t *fdin, Sfio_t *fdout, int flags)
 	int			printdefer = (flags&(B_FLAG|N_FLAG));
 	int			lastchar;
 
-	static unsigned char	meta[4] = "M-";
+	unsigned char		meta[4];
 
+	meta[0] = 'M';
+	meta[1] = '-';
 	for (;;)
 	{
 		/* read in a buffer full */
@@ -233,9 +233,10 @@ b_cat(int argc, char** argv, void* context)
 	char*			mode;
 	int			att;
 	int			dovcat=0;
+	char			states[UCHAR_MAX+1];
 
 	NoP(argc);
-	cmdinit(argv, context, ERROR_CATALOG, 0);
+	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
 	att = !strcmp(astconf("UNIVERSE", NiL, NiL), "att");
 	mode = "r";
 	for (;;)
@@ -296,6 +297,7 @@ b_cat(int argc, char** argv, void* context)
 	argv += opt_info.index;
 	if (error_info.errors)
 		error(ERROR_usage(2), "%s", optusage(NiL));
+	memset(states, 0, sizeof(states));
 	if (flags&V_FLAG)
 	{
 		memset(states, T_CONTROL, ' ');
@@ -354,7 +356,7 @@ b_cat(int argc, char** argv, void* context)
 		if (flags&U_FLAG)
 			sfsetbuf(fp, (void*)fp, -1);
 		if (dovcat)
-			n = vcat(fp, sfstdout, flags);
+			n = vcat(states, fp, sfstdout, flags);
 		else if (sfmove(fp, sfstdout, SF_UNBOUND, -1) >= 0 && sfeof(fp))
 			n = 0;
 		else
