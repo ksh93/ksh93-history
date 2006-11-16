@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2005 AT&T Corp.                  *
+*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -384,7 +384,13 @@ static void	exfile(register Shell_t *shp, register Sfio_t *iop,register int fno)
 	{
 		if(fno > 0)
 		{
-			fno = sh_iomovefd(fno);
+			int r;
+			if(fno < 10 && ((r=sh_fcntl(fno,F_DUPFD,10))>=10))
+			{
+				shp->fdstatus[r] = shp->fdstatus[fno];
+				sh_close(fno);
+				fno = r;
+			}
 			fcntl(fno,F_SETFD,FD_CLOEXEC);
 			shp->fdstatus[fno] |= IOCLEX;
 			iop = sh_iostream(fno);

@@ -24,7 +24,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: fmt (AT&T Research) 2005-08-11 $\n]"
+"[-?\n@(#)$Id: fmt (AT&T Research) 2006-11-11 $\n]"
 USAGE_LICENSE
 "[+NAME?fmt - simple text formatter]"
 "[+DESCRIPTION?\bfmt\b reads the input files and left justifies space "
@@ -433,7 +433,24 @@ dofmt(Fmt_t* fp)
 					}
 					else if (c == '{')
 					{
-						if (cp >= lp || *cp == '[' || *cp != '\\' || (lp - cp) > 1 && *(cp + 1) == 'n')
+						x = 1;
+						for (tp = cp; tp < lp; tp++)
+						{
+							if (*tp == '[' || *tp == '\n')
+								break;
+							if (*tp == ' ' || *tp == '\t' || *tp == '"')
+								continue;
+							if (*tp == '\\' && (lp - tp) > 1)
+							{
+								if (*++tp == 'n')
+									break;
+								if (*tp == 't' || *tp == '\n')
+									continue;
+							}
+							x = 0;
+							break;
+						}
+						if (x)
 						{
 							if (fp->endbuf > (fp->outbuf + fp->indent + 2*INDENT))
 								fp->nextdent = 2*INDENT;
@@ -610,7 +627,7 @@ b_fmt(int argc, char** argv, void *context)
 			sfclose(fmt.in);
 	} while (cp = *argv++);
 	outline(&fmt);
-	if (sferror(sfstdout))
+	if (sfsync(sfstdout))
 		error(ERROR_system(0), "write error");
 	return error_info.errors != 0;
 }

@@ -1,3 +1,7 @@
+06-11-15 cp.c: fix 06-10-31 ln -s enoent bug
+06-11-11 getconf.c: let astconf() handle "undefined" vs. ""
+06-11-11 getconf.c: fix deferred getconf path search
+06-11-11 fmt.c: handle two char { \t \n } in --usage ouput
 06-10-31 global edit to eliminate most non-const static data0
 06-10-31 use <cmd.h> for all b_*() implementations; drop <cmdlib.h> 
 06-10-31 cmd.h: add CMD_ prefix to { BUILTIN DYNAMIC STANDALONE } 

@@ -25,4 +25,4 @@
  * AT&T Research
  */
 
-#define _AST_VERSION	20061004L
+#define _AST_VERSION	20061111L

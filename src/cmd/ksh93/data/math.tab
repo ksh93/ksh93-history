@@ -52,8 +52,8 @@ f 2 pow
 f 2 remainder
 f 1 rint
 f 1 round
-f 1 scanb
-f 1 scanbn
+f 2 scalb
+f 2 scalbn
 i 1 signbit
 f 1 sin
 f 1 sinh

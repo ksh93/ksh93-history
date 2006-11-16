@@ -1,4 +1,6 @@
-06-10-30  --- Release ksh93s-  ---
+06-11-14  --- Release ksh93s-  ---
+06-11-14  A bug which could cause a core dump if a file descriptor for
+	  an internal file was closed from within a subshell has been fixed.
 06-10-30  The redirections <# pattern, and <## pattern have been added.
 	  Both seek forward to the beginning of the next line that contains
 	  the pattern.  The <## form copies the skipped portion to standard

@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: getconf (AT&T Research) 2006-10-11 $\n]"
+"[-?\n@(#)$Id: getconf (AT&T Research) 2006-11-11 $\n]"
 USAGE_LICENSE
 "[+NAME?getconf - get configuration values]"
 "[+DESCRIPTION?\bgetconf\b displays the system configuration value for"
@@ -118,6 +118,12 @@ USAGE_LICENSE
 #include <cmd.h>
 #include <proc.h>
 
+typedef struct Path_s
+{
+	char*		path;
+	int		len;
+} Path_t;
+
 int
 b_getconf(int argc, char** argv, void* context)
 {
@@ -125,11 +131,16 @@ b_getconf(int argc, char** argv, void* context)
 	register char*		path;
 	register char*		value;
 	register char*		s;
+	register char*		t;
 	char*			pattern;
 	char*			native;
+	Path_t*			e;
+	Path_t*			p;
 	int			flags;
+	int			n;
 	char**			oargv;
 	char			cmd[PATH_MAX];
+	Path_t			std[64];
 
 	static const char	empty[] = "-";
 
@@ -248,22 +259,87 @@ b_getconf(int argc, char** argv, void* context)
 					sfputr(sfstdout, name, ' ');
 					sfputr(sfstdout, path ? path : empty, ' ');
 				}
-				sfputr(sfstdout, *s ? s : "undefined", '\n');
+				sfputr(sfstdout, s, '\n');
 			}
 		} while (*argv && (name = *++argv));
 	}
 	return error_info.errors != 0;
+
  defer:
-	if (!pathaccess(cmd, astconf("PATH", NiL, NiL), error_info.id, NiL, PATH_EXECUTE|PATH_REGULAR) &&
-	    !pathaccess(cmd, "/usr/sbin:/sbin", error_info.id, NiL, PATH_EXECUTE|PATH_REGULAR))
+
+	/*
+	 * defer to the first getconf on $PATH that is also on the standard PATH
+	 */
+
+	e = std;
+	s = astconf("PATH", NiL, NiL); 
+	do
 	{
-		if (name)
-			error(3, "%s: unknown name -- no native getconf(1) to defer to", name);
-		else
-			error(3, "no native getconf(1) to defer to");
-		flags = 2;
+		for (t = s; *s && *s != ':'; s++);
+		if ((n = s - t) && *t == '/')
+		{
+			e->path = t;
+			e->len = n;
+			e++;
+		}
+		while (*s == ':')
+			s++;
+	} while (*s && e < &std[elementsof(std)]);
+	if (e < &std[elementsof(std)])
+	{
+		e->len = strlen(e->path = "/usr/sbin");
+		if (++e < &std[elementsof(std)])
+		{
+			e->len = strlen(e->path = "/sbin");
+			e++;
+		}
 	}
-	else if ((flags = procrun(cmd, oargv)) >= EXIT_NOEXEC)
-		error(ERROR_SYSTEM|2, "%s: exec error [%d]", cmd, flags);
-	return flags;
+	if (s = getenv("PATH"))
+		do
+		{
+			for (t = s; *s && *s != ':'; s++);
+			if ((n = s - t) && *t == '/')
+			{
+				for (p = std; p < e; p++)
+					if (p->len == n && !strncmp(t, p->path, n))
+					{
+						sfsprintf(cmd, sizeof(cmd), "%-*.*s/%s", n, n, t, error_info.id);
+						if (!access(cmd, X_OK))
+							goto found;
+					}
+			}
+			while (*s == ':')
+				s++;
+		} while (*s);
+
+	/*
+	 * defer to the first getconf on the standard PATH
+	 */
+
+	for (p = std; p < e; p++)
+	{
+		sfsprintf(cmd, sizeof(cmd), "%-*.*s/%s", p->len, p->len, p->path, error_info.id);
+		if (!access(cmd, X_OK))
+			goto found;
+	}
+
+	/*
+	 * out of deferrals
+	 */
+
+	if (name)
+		error(4, "%s: unknown name -- no native getconf(1) to defer to", name);
+	else
+		error(4, "no native getconf(1) to defer to");
+	return 2;
+
+ found:
+
+	/*
+	 * don't blame us for crappy diagnostics
+	 */
+
+	if ((n = procrun(cmd, oargv)) >= EXIT_NOEXEC)
+		error(ERROR_SYSTEM|2, "%s: exec error [%d]", cmd, n);
+	return n;
 }

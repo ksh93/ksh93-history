@@ -34,8 +34,8 @@ setv SILENT
 setv TAR tar
 setv YACC yacc
 setv YACCFLAGS -d
-make ${PACKAGEROOT}/lib/package/ast.lic
-done ${PACKAGEROOT}/lib/package/ast.lic
+make ${INSTALLROOT}/lib/package/ast.lic
+done ${INSTALLROOT}/lib/package/ast.lic
 make install
 make sum
 make libsum.a archive
@@ -75,6 +75,7 @@ make ${PACKAGE_ast_INCLUDE}/bytesex.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast_map.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_map.h dontcare
+prev ${PACKAGE_ast_INCLUDE}/endian.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_common.h dontcare
 done ${PACKAGE_ast_INCLUDE}/bytesex.h dontcare
 done ${PACKAGE_ast_INCLUDE}/endian.h dontcare
@@ -110,6 +111,7 @@ done ${PACKAGE_ast_INCLUDE}/int.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/swap.h
 prev ${PACKAGE_ast_INCLUDE}/int.h implicit
+prev ${PACKAGE_ast_INCLUDE}/endian.h implicit
 make sum.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast.h implicit
 make ${PACKAGE_ast_INCLUDE}/vmalloc.h implicit
@@ -126,29 +128,18 @@ make ${PACKAGE_ast_INCLUDE}/ast_limits.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_limits.h dontcare
 make ${PACKAGE_ast_INCLUDE}/ast_fcntl.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast_fs.h implicit
-make error?--?old?ethernet?address?at?wrong?offset implicit
-done error?--?old?ethernet?address?at?wrong?offset dontcare virtual
 done ${PACKAGE_ast_INCLUDE}/ast_fs.h dontcare
 done ${PACKAGE_ast_INCLUDE}/ast_fcntl.h dontcare
 make ${PACKAGE_ast_INCLUDE}/ast_getopt.h implicit
 prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_getopt.h dontcare
 make ${PACKAGE_ast_INCLUDE}/ast_sys.h implicit
-make ${PACKAGE_ast_INCLUDE}/re_comp.h implicit
-prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
-done ${PACKAGE_ast_INCLUDE}/re_comp.h dontcare
 make ${PACKAGE_ast_INCLUDE}/getopt.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast_getopt.h implicit
 prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/getopt.h dontcare
-make ${PACKAGE_ast_INCLUDE}/stdio.h implicit
-make ${PACKAGE_ast_INCLUDE}/ast_stdio.h implicit
-make ${PACKAGE_ast_INCLUDE}/sfio_s.h implicit
-done ${PACKAGE_ast_INCLUDE}/sfio_s.h dontcare
-prev ${PACKAGE_ast_INCLUDE}/ast_std.h implicit
-done ${PACKAGE_ast_INCLUDE}/ast_stdio.h dontcare
-done ${PACKAGE_ast_INCLUDE}/stdio.h dontcare
-prev ${PACKAGE_ast_INCLUDE}/getopt.h implicit
+prev ${PACKAGE_ast_INCLUDE}/endian.h implicit
+prev ${PACKAGE_ast_INCLUDE}/endian.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_sys.h dontcare
 make ${PACKAGE_ast_INCLUDE}/ast_lib.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_lib.h dontcare
@@ -157,7 +148,8 @@ prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_std.h dontcare
 done ${PACKAGE_ast_INCLUDE}/vmalloc.h dontcare
 make ${PACKAGE_ast_INCLUDE}/sfio.h implicit
-prev ${PACKAGE_ast_INCLUDE}/sfio_s.h implicit
+make ${PACKAGE_ast_INCLUDE}/sfio_s.h implicit
+done ${PACKAGE_ast_INCLUDE}/sfio_s.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast_std.h implicit
 done ${PACKAGE_ast_INCLUDE}/sfio.h dontcare
@@ -169,7 +161,7 @@ prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast.h dontcare
 done sum.h
 done sumlib.c
-meta sumlib.o %.c>%.o sumlib.c sumlib
+meta sumlib.o %.c>%.o ${PACKAGEROOT}/src/lib/libsum/sumlib.c sumlib
 prev sumlib.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c sumlib.c
 done sumlib.o generated

@@ -1,7 +1,7 @@
 #
 # posix { getconf limits } macro table
 #
-# @(#)conf.tab (AT&T Research) 2006-10-25
+# @(#)conf.tab (AT&T Research) 2006-11-15
 #
 # name standard section call flags [ header ... ] [ value ... ]
 #
@@ -10,6 +10,8 @@
 # section:	section number in standard
 # call:		CS=confstr PC=pathconf SC=sysconf SI=sysinfo QQ=query XX=none
 # flags:	0	no flags
+#		C	defer call to native getconf(1)
+#		D	defer minmax to native getconf(1)
 #		F	unistd.h feature
 #		L	limits.h constant
 #		M	has _<standard><section>_<name> minmax value
@@ -50,7 +52,7 @@ CHAR_BIT			C	XX 1 L		8
 CHAR_MAX			C	XX 1 L
 CHAR_MIN			C	XX 1 L
 CHAR_TERM			POSIX	SC 2 FU
-CHILD_MAX			POSIX	SC 1 LMUX	6	cc{
+CHILD_MAX			POSIX	SC 1 DLMUX	6	cc{
 	#if _lib_fork
 	#define child()		fork()
 	#else
@@ -211,7 +213,7 @@ NAME_MAX			POSIX	PC 1 LMU	14	cc{
 	}
 	#endif
 }
-NGROUPS_MAX			POSIX	SC 1 LMU	8	cc{
+NGROUPS_MAX			POSIX	SC 1 DLMU	8	cc{
 	#if _lib_getgroups
 	int main()
 	{
@@ -238,7 +240,7 @@ NO_TRUNC			POSIX	PC 1 FU
 NPROCESSORS_CONF		SVID	SC 1 0
 NPROCESSORS_ONLN		SVID	SC 1 0
 NZERO				XOPEN	XX 1 L		20
-OPEN_MAX			POSIX	SC 1 LMUX	16	cc{
+OPEN_MAX			POSIX	SC 1 DLMUX	16	cc{
 	#if _lib_getdtablesize
 	extern int		getdtablesize(void);
 	int main()
@@ -287,9 +289,9 @@ PAGESIZE			POSIX	SC 1 MU		PAGESIZE PAGE_SIZE 4096	cc{
 	}
 }
 PAGE_SIZE			POSIX	SC 1 MU		_AST_PAGESIZE
-PASS_MAX			SVID	SC 1 LMU	8
+PASS_MAX			SVID	SC 1 CDLMU	8
 PATH				POSIX	CS 1 MU		"/bin:/usr/bin"
-PATH_MAX			POSIX	PC 1 LMUX	MAXPATHLEN 1024
+PATH_MAX			POSIX	PC 1 DLMUX	MAXPATHLEN 1024
 PHYS_PAGES			SUN	SC 1 0
 PID_MAX				SVID	SC 1 LMU	30000	cc{
 	int main()
@@ -381,7 +383,7 @@ TIMERS				POSIX	SC 1 FU
 TIMER_MAX			POSIX	SC 1 LMU	32
 TMP				AST	CS 1 MU		"/tmp"
 TMP_MAX				C	SC 1 LMU	33520641
-TZNAME_MAX			POSIX	SC 1 LMU	6
+TZNAME_MAX			POSIX	SC 1 DLMU	6
 UCHAR_MAX			C	XX 1 L		255
 UID_MAX				SVID	SC 1 LMU	60002
 UINT_MAX			C	XX 1 L		65535
@@ -390,11 +392,11 @@ UNIX				XOPEN	SC 1 FSU
 UPE				POSIX	SC 2 FU
 USHRT_MAX			C	XX 1 L		65535
 VDISABLE			POSIX	PC 1 FU
-VERSION				POSIX	SC 1 FU		200112
-VERSION				POSIX	SC 2 FU		200112
-VERSION				XOPEN	SC 1 FSU	600
+VERSION				POSIX	SC 1 CDFSU	200112
+VERSION				POSIX	SC 2 CDFSU	200112
+VERSION				XOPEN	SC 1 CDFSU	600
 WORD_BIT			XOPEN	XX 1 L		(8*sizeof(int))
-XCU_VERSION			XOPEN	SC 1 FSU
+XCU_VERSION			XOPEN	SC 1 CDFSU
 XPG2				XOPEN	XX 1 FU
 XPG3				XOPEN	XX 1 FU
 XPG4				XOPEN	XX 1 FU
@@ -539,15 +541,15 @@ V6_ILP32_OFF32			POSIX	SC 1 FU
 V6_ILP32_OFFBIG			POSIX	SC 1 FU
 V6_LP64_OFF64			POSIX	SC 1 FU
 V6_LPBIG_OFFBIG			POSIX	SC 1 FU
-VERSION				XPG	SC 3 FU
-VERSION				XPG	SC 4 FU
-VERSION_88			POSIX	SC 1 FU
+VERSION				XPG	SC 3 DFSU
+VERSION				XPG	SC 4 DFSU
+VERSION_88			POSIX	SC 1 FSU
 VERSION_88			C	XX 1 L
-VERSION_90			POSIX	SC 1 FU
+VERSION_90			POSIX	SC 1 FSU
 VERSION_90			C	XX 1 L
-VERSION_93			POSIX	SC 1 FU
+VERSION_93			POSIX	SC 1 FSU
 VERSION_93			C	XX 1 L
-VERSION				AST	XX 1 MU		_AST_VERSION
+VERSION				AST	XX 1 MSU	_AST_VERSION
 
 # sys/systeminfo sysinfo additions
 
@@ -562,9 +564,9 @@ OS_BASE				SVID	SI 1 0
 OS_PROVIDER			SVID	SI 1 0
 SYSNAME				SVID	SI 1 0
 USER_LIMIT			SVID	SI 1 0
-VERSION				SVID	SI 1 0
+VERSION				SVID	SI 1 S
 
 # vendor prefixes
 
-VERSION				GNU		XX 1 0
-VERSION				TRUSTEDBSD	XX 1 0
+VERSION				GNU		XX 1 S
+VERSION				TRUSTEDBSD	XX 1 S

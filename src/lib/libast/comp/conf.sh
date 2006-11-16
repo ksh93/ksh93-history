@@ -21,7 +21,7 @@
 ########################################################################
 : generate getconf and limits info
 #
-# @(#)conf.sh (AT&T Research) 2006-10-25
+# @(#)conf.sh (AT&T Research) 2006-11-15
 #
 # this script generates these files from the table file in the first arg
 # the remaining args are the C compiler name and flags
@@ -200,6 +200,10 @@ case $append$extra in
 				;;
 			*)	standards="$standards $standard"
 				;;
+			esac
+			case $name:$flags in
+			*:*S*)	;;
+			VERSION)flags="${flags}S" ;;
 			esac
 			case $name in
 			*VERSION*)key=${standard}${section} ;;
@@ -457,8 +461,7 @@ do	flags=F
 	'')	;;
 	CONFORMANCE|FS_3D|HOSTTYPE|LIBPATH|LIBPREFIX|LIBSUFFIX|PATH_ATTRIBUTES|PATH_RESOLVE|UNIVERSE)
 		;;
-	*)	
-		values=
+	*)	values=
 		script=
 		args=
 		headers=
@@ -497,7 +500,7 @@ do	flags=F
 				eval CONF_standard_${key}='$'standard
 				eval CONF_call_${key}='$'call
 				eval CONF_section_${key}='$'section
-				eval CONF_flags_${key}=D'$'flags
+				eval CONF_flags_${key}=d'$'flags
 				eval CONF_define_${key}='$'define
 				eval CONF_values_${key}='$'values
 				eval CONF_script_${key}='$'script
@@ -533,7 +536,7 @@ do	flags=F
 					case $call in
 					SI)	flags=O$flags ;;
 					esac
-					eval CONF_flags_${key}=D'$'flags'$'CONF_flags_${key}
+					eval CONF_flags_${key}=d'$'flags'$'CONF_flags_${key}
 					;;
 				esac
 				old=QQ
@@ -634,19 +637,18 @@ do	eval name=\"'$'CONF_name_$key\"
 	case $call in
 	QQ)	call=XX
 		for c in SC PC CS
-		do	eval x='$'CONF_call_${c}_${name}
+		do	case $flags in
+			*S*)	case $section in
+				1)	eval x='$'CONF_call_${c}_${standard}_${name} ;;
+				*)	eval x='$'CONF_call_${c}_${standard}${section}_${name} ;;
+				esac
+				;;
+			*)	eval x='$'CONF_call_${c}_${name}
+				;;
+			esac
 			case $x in
 			?*)	call=$x
 				break
-				;;
-			esac
-			case $flags in
-			*S*)	eval x='$'CONF_call_${c}_${standard}_${name}
-				case $x in
-				?*)	call=$x
-					break
-					;;
-				esac
 				;;
 			esac
 		done
@@ -654,7 +656,11 @@ do	eval name=\"'$'CONF_name_$key\"
 		XX)	for c in SC PC CS
 			do	echo "_${c}_${name}"
 				case $flags in
-				*S*)	echo "_${c}_${standard}_${name}" ;;
+				*S*)	case $section in
+					1)	echo "_${c}_${standard}_${name}" ;;
+					*)	echo "_${c}_${standard}${section}_${name}" ;;
+					esac
+					;;
 				esac
 			done
 			;;
@@ -669,7 +675,7 @@ do	eval name=\"'$'CONF_name_$key\"
 		;;
 	esac
 	case $flags in
-	*[ABCEGHIJQTVWYZabcdefghijklmnopqrstuvwxyz_123456789]*)
+	*[ABEGHIJQTVWYZabcefghijklmnopqrstuvwxyz_123456789]*)
 		echo "$command: $name: $flags: invalid flag(s)" >&2
 		exit 1
 		;;
@@ -686,7 +692,7 @@ do	eval name=\"'$'CONF_name_$key\"
 	case $call in
 	XX)	;;
 	*)	case $flags in
-		*D*)	conf_op=${define} ;;
+		*d*)	conf_op=${define} ;;
 		*O*)	conf_op=${call}_${name} ;;
 		*R*)	conf_op=_${standard}_${call}_${name} ;;
 		*S*)	conf_op=_${call}_${standard}_${name} ;;
@@ -700,8 +706,15 @@ do	eval name=\"'$'CONF_name_$key\"
 	*:*L*)	echo "${conf_name}"
 		echo "_${standard}_${conf_name}"
 		;;
+	*:*M*)	case $section in
+		1)	echo "_${standard}_${conf_name}" ;;
+		*)	echo "_${standard}${section}_${conf_name}" ;;
+		esac
+		;;
 	esac
-done | sort -u >> $tmp.q
+done > $tmp.q
+sort -u < $tmp.q > $tmp.t
+mv $tmp.t $tmp.q
 sort -u < $tmp.v > $tmp.t
 mv $tmp.t $tmp.v
 case $debug in
@@ -833,37 +846,35 @@ do	eval name=\"'$'CONF_name_$key\"
 	case $call in
 	QQ)	call=XX
 		for c in SC PC CS
-		do	eval x='$'CONF_call_${c}_${name}
+		do	case $flags in
+			*S*)	case $section in
+				1)	eval x='$'CONF_call_${c}_${standard}_${name} ;;
+				*)	eval x='$'CONF_call_${c}_${standard}${section}_${name} ;;
+				esac
+				;;
+			*)	eval x='$'CONF_call_${c}_${name}
+				;;
+			esac
 			case $x in
 			?*)	call=$x
 				break
 				;;
 			esac
-			case $flags in
-			*S*)	eval x='$'CONF_call_${c}_${standard}_${name}
-				case $x in
-				?*)	call=$x
-					break
-					;;
-				esac
-				;;
-			esac
 		done
 		case $call in
 		XX)	for c in SC PC CS
-			do	eval x='$'CONF_const__${c}_${name}
+			do	case $flags in
+				*S*)	case $section in
+					1)	eval x='$'CONF_const__${c}_${standard}_${name} ;;
+					*)	eval x='$'CONF_const__${c}_${standard}${section}_${name} ;;
+					esac
+					;;
+				*)	eval x='$'CONF_const__${c}_${name}
+					;;
+				esac
 				case $x in
 				1)	call=$c
 					break
-					;;
-				esac
-				case $flags in
-				*S*)	eval x='$'CONF_const__${c}_${standard}_${name}
-					case $x in
-					1)	call=$c
-						break
-						;;
-					esac
 					;;
 				esac
 			done
@@ -898,7 +909,7 @@ do	eval name=\"'$'CONF_name_$key\"
 		;;
 	esac
 	conf_op=-1
-	for s in _${call}_${name} _${call}_${standard}_${name} _${call}_${standard}${section}_${name} ${call}_${name}
+	for s in _${call}_${standard}${section}_${name} _${call}_${standard}_${name} _${call}_${name} ${call}_${name}
 	do	eval x='$'CONF_const_${s}
 		case $x in
 		1)	conf_op=${s}
@@ -908,6 +919,12 @@ do	eval name=\"'$'CONF_name_$key\"
 	done
 	conf_section=$section
 	conf_flags=0
+	case $flags in
+	*C*)	conf_flags="${conf_flags}|CONF_DEFER_CALL" ;;
+	esac
+	case $flags in
+	*D*)	conf_flags="${conf_flags}|CONF_DEFER_MM" ;;
+	esac
 	case $flags in
 	*F*)	conf_flags="${conf_flags}|CONF_FEATURE" ;;
 	esac
@@ -1238,17 +1255,19 @@ case $CONF_getconf in
 esac
 cat <<!
 
-#define CONF_FEATURE	(1<<0)
-#define CONF_LIMIT	(1<<1)
-#define CONF_LIMIT_DEF	(1<<2)
-#define CONF_MINMAX	(1<<3)
-#define CONF_MINMAX_DEF	(1<<4)
-#define CONF_NOSECTION	(1<<5)
-#define CONF_PREFIXED	(1<<6)
-#define CONF_STANDARD	(1<<7)
-#define CONF_STRING	(1<<8)
-#define CONF_UNDERSCORE	(1<<9)
-#define CONF_USER	(1<<10)
+#define CONF_DEFER_CALL	0x0001
+#define CONF_DEFER_MM	0x0002
+#define CONF_FEATURE	0x0004
+#define CONF_LIMIT	0x0008
+#define CONF_LIMIT_DEF	0x0010
+#define CONF_MINMAX	0x0020
+#define CONF_MINMAX_DEF	0x0040
+#define CONF_NOSECTION	0x0080
+#define CONF_PREFIXED	0x0100
+#define CONF_STANDARD	0x0200
+#define CONF_STRING	0x0400
+#define CONF_UNDERSCORE	0x0800
+#define CONF_USER	0x1000
 
 struct Conf_s; typedef struct Conf_s Conf_t;
 

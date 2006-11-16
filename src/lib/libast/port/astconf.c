@@ -26,7 +26,7 @@
  * extended to allow some features to be set per-process
  */
 
-static const char id[] = "\n@(#)$Id: getconf (AT&T Research) 2006-10-25 $\0\n";
+static const char id[] = "\n@(#)$Id: getconf (AT&T Research) 2006-11-11 $\0\n";
 
 #include "univlib.h"
 
@@ -93,6 +93,7 @@ static const char id[] = "\n@(#)$Id: getconf (AT&T Research) 2006-10-25 $\0\n";
 #endif
 
 static char	null[1];
+static char	root[2] = "/";
 
 typedef struct Feature_s
 {
@@ -777,14 +778,14 @@ lookup(register Lookup_t* look, const char* name, int flags)
 #endif
 	look->name = name;
 #if DEBUG || DEBUG_astconf
-	error(-1, "astconf normal name=%s standard=%d section=%d call=%d flags=%04x elements=%d", look->name, look->standard, look->section, look->call, flags, conf_elements);
+	error(-2, "astconf normal name=%s standard=%d section=%d call=%d flags=%04x elements=%d", look->name, look->standard, look->section, look->call, flags, conf_elements);
 #endif
 	c = *((unsigned char*)name);
 	while (lo <= hi)
 	{
 		mid = lo + (hi - lo) / 2;
 #if DEBUG || DEBUG_astconf
-		error(-2, "astconf lookup name=%s mid=%s", name, mid->name);
+		error(-3, "astconf lookup name=%s mid=%s", name, mid->name);
 #endif
 		if (!(v = c - *((unsigned char*)mid->name)) && !(v = strcmp(name, mid->name)))
 		{
@@ -819,7 +820,7 @@ lookup(register Lookup_t* look, const char* name, int flags)
 		look->flags |= CONF_MINMAX;
 	look->conf = mid;
 #if DEBUG || DEBUG_astconf
-	error(-1, "astconf lookup name=%s standard=%d:%d section=%d:%d call=%d:%d", look->name, look->standard, mid->standard, look->section, mid->section, look->call, mid->call);
+	error(-2, "astconf lookup name=%s standard=%d:%d section=%d:%d call=%d:%d", look->name, look->standard, mid->standard, look->section, mid->section, look->call, mid->call);
 #endif
 	return 1;
 }
@@ -860,6 +861,7 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, i
 	char*			call;
 	char*			f;
 	const char*		s;
+	int			i;
 	int			olderrno;
 	int			drop;
 	_ast_intmax_t		v;
@@ -871,23 +873,60 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, i
 	olderrno = errno;
 	errno = 0;
 #if DEBUG || DEBUG_astconf
-	error(-1, "astconf print name=%s:%s standard=%d section=%d call=%s op=%d flags=|%s%s%s%s%s:|%s%s%s%s%s"
+	error(-1, "astconf name=%s:%s standard=%d section=%d call=%s op=%d flags=|%s%s%s%s%s:|%s%s%s%s%s%s%s"
 		, name , p->name, p->standard, p->section, prefix[p->call + CONF_call].name, p->op
 		, (flags & CONF_FEATURE) ? "FEATURE|" : ""
 		, (flags & CONF_LIMIT) ? "LIMIT|" : ""
 		, (flags & CONF_MINMAX) ? "MINMAX|" : ""
 		, (flags & CONF_PREFIXED) ? "PREFIXED|" : ""
 		, (flags & CONF_STRING) ? "STRING|" : ""
+		, (p->flags & CONF_DEFER_CALL) ? "DEFER_CALL|" : ""
+		, (p->flags & CONF_DEFER_MM) ? "DEFER_MM|" : ""
 		, (p->flags & CONF_FEATURE) ? "FEATURE|" : ""
 		, (p->flags & CONF_LIMIT_DEF) ? "LIMIT_DEF|" : (p->flags & CONF_LIMIT) ? "LIMIT|" : ""
 		, (p->flags & CONF_MINMAX_DEF) ? "MINMAX_DEF|" : (p->flags & CONF_MINMAX) ? "MINMAX|" : ""
 		, (p->flags & CONF_PREFIXED) ? "PREFIXED|" : ""
+		, (p->flags & CONF_STANDARD) ? "STANDARD|" : ""
 		, (p->flags & CONF_STRING) ? "STRING|" : ""
 		);
 #endif
 	flags |= CONF_LIMIT_DEF|CONF_MINMAX_DEF;
+	i = (p->op < 0 || (flags & CONF_MINMAX) && (p->flags & CONF_MINMAX_DEF)) ? 0 : p->call;
+	if (conferror && name)
+	{
+		if (!(flags & CONF_MINMAX))
+		{
+			switch (i)
+			{
+			case CONF_pathconf:
+				if (path == root)
+				{
+					(*conferror)(&state, &state, 2, "%s: path expected", p->name);
+					goto bad;
+				}
+				break;
+			case CONF_confstr:
+			case CONF_sysconf:
+			case CONF_sysinfo:
+				if (path != root)
+				{
+					(*conferror)(&state, &state, 2, "%s: path not expected", p->name);
+					goto bad;
+				}
+				break;
+			}
+#ifdef _pth_getconf
+			if (p->flags & CONF_DEFER_CALL)
+				goto bad;
+#endif
+		}
+#ifdef _pth_getconf
+		else if ((p->flags & CONF_DEFER_MM) || !(p->flags & CONF_MINMAX_DEF))
+			goto bad;
+#endif
+	}
 	s = 0;
-	switch ((p->op < 0 || (flags & CONF_MINMAX) && (p->flags & CONF_MINMAX_DEF)) ? 0 : p->call)
+	switch (i)
 	{
 	case CONF_confstr:
 		call = "confstr";
@@ -948,6 +987,14 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, i
 			listflags &= ~ASTCONF_system;
 		}
 	predef:
+		if (look->standard == CONF_AST)
+		{
+			if (streq(look->name, "VERSION"))
+			{
+				v = _AST_VERSION;
+				break;
+			}
+		}
 		if (!(listflags & ASTCONF_system))
 		{
 			if (flags & CONF_MINMAX)
@@ -978,7 +1025,9 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, i
 			if ((p->flags & CONF_FEATURE) || !(p->flags & (CONF_LIMIT|CONF_MINMAX)))
 				flags &= ~(CONF_LIMIT_DEF|CONF_MINMAX_DEF);
 		}
-		else if (!(flags & CONF_PREFIXED))
+		else if (flags & CONF_PREFIXED)
+			flags &= ~(CONF_LIMIT_DEF|CONF_MINMAX_DEF);
+		else if (errno != EINVAL || !i)
 		{
 			if (!sp)
 			{
@@ -989,22 +1038,27 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, i
 					else if (!(listflags & ASTCONF_system))
 						(*conferror)(&state, &state, 2, "%s: unknown name", p->name);
 				}
-				return (listflags & ASTCONF_error) ? (char*)0 : null;
+				goto bad;
 			}
-			flags &= ~(CONF_LIMIT_DEF|CONF_MINMAX_DEF);
-			flags |= CONF_ERROR;
+			else
+			{
+				flags &= ~(CONF_LIMIT_DEF|CONF_MINMAX_DEF);
+				flags |= CONF_ERROR;
+			}
 		}
-		else
-			flags &= ~(CONF_LIMIT_DEF|CONF_MINMAX_DEF);
 	}
 	errno = olderrno;
 	if ((listflags & ASTCONF_defined) && !(flags & (CONF_LIMIT_DEF|CONF_MINMAX_DEF)))
-		return null;
+		goto bad;
 	if ((drop = !sp) && !(sp = sfstropen()))
-		return null;
+		goto bad;
 	if (listflags & ASTCONF_table)
 	{
 		f = flg;
+		if (p->flags & CONF_DEFER_CALL)
+			*f++ = 'C';
+		if (p->flags & CONF_DEFER_MM)
+			*f++ = 'D';
 		if (p->flags & CONF_FEATURE)
 			*f++ = 'F';
 		if (p->flags & CONF_LIMIT)
@@ -1022,7 +1076,7 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, i
 		if (f == flg)
 			*f++ = 'X';
 		*f = 0;
-		sfprintf(sp, "%*s %*s %d %2s %4d %5s ", sizeof(p->name), p->name, sizeof(prefix[p->standard].name), prefix[p->standard].name, p->section, prefix[p->call + CONF_call].name, p->op, flg);
+		sfprintf(sp, "%*s %*s %d %2s %4d %6s ", sizeof(p->name), p->name, sizeof(prefix[p->standard].name), prefix[p->standard].name, p->section, prefix[p->call + CONF_call].name, p->op, flg);
 		if (p->flags & CONF_LIMIT_DEF)
 		{
 			if (p->limit.string)
@@ -1112,7 +1166,8 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, i
 		sfclose(sp);
 		return call;
 	}
-	return null;
+ bad:
+	return (listflags & ASTCONF_error) ? (char*)0 : null;
 }
 
 /*
@@ -1128,7 +1183,7 @@ nativeconf(Proc_t** pp, const char* operand)
 	long		ops[2];
 
 #if DEBUG || DEBUG_astconf
-	error(-1, "astconf defer %s %s", _pth_getconf, operand);
+	error(-2, "astconf defer %s %s", _pth_getconf, operand);
 #endif
 	cmd[0] = (char*)state.id;
 	cmd[1] = (char*)operand;
@@ -1210,7 +1265,7 @@ astgetconf(const char* name, const char* path, const char* value, int flags, Err
 	}
 	INITIALIZE();
 	if (!path)
-		path = "/";
+		path = root;
 	if (state.recent && streq(name, state.recent->name) && (s = format(state.recent, path, value, flags, conferror)))
 		return s;
 	if (lookup(&look, name, flags))
@@ -1344,7 +1399,7 @@ astconflist(Sfio_t* sp, const char* path, int flags, const char* pattern)
 
 	INITIALIZE();
 	if (!path)
-		path = "/";
+		path = root;
 	else if (access(path, F_OK))
 	{
 		errorf(&state, &state, 2, "%s: not found", path);

@@ -164,6 +164,7 @@ typedef struct
 #define FMT_ESCAPED	0x02		/* already escaped		*/
 #define FMT_SHELL	0x04		/* escape $ ` too		*/
 #define FMT_WIDE	0x08		/* don't escape 8 bit chars	*/
+#define FMT_PARAM	0x10		/* disable FMT_SHELL ${$( quote	*/
 
 /*
  * multibyte macros

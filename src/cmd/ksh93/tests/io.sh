@@ -99,6 +99,14 @@ $SHELL -c '
 	print -r -- "$(cat in$$)"
 	cmp -s in$$ out$$'  2> /dev/null
 [[ $? == 0 ]] || err_exit 'builtin cat truncates files'
+cat >| script <<-\!
+print hello
+( exec 3<&- 4<&-)
+exec 3<&- 4<&-
+print world
+!
+chmod +x script
+[[ $( $SHELL ./script) == $'hello\nworld' ]] || err_exit 'closing 3 & 4 causes script to fail'
 cd ~- || err_exit "cd back failed"
 ( exec  > '' ) 2> /dev/null  && err_exit '> "" does not fail'
 unset x
@@ -217,6 +225,8 @@ then	(( $(3<#) == 0 )) || err_exit "not at position 0"
 	[[  $REPLY == {39}(l) ]] || err_exit "<## pattern failed to position"
 	command exec 3<# *abc*
 	read -u3 && err_exit "not found pattern not positioning at eof"
+	cat /tmp/seek$$ | read -r <# *WWW*
+	[[ $REPLY == *WWWWW* ]] || err_exit '<# not working for pipes'
 else	err_exit "/tmp/seek$$: cannot open for reading"
 fi
 trap "" EXIT

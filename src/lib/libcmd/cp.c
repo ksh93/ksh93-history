@@ -27,7 +27,7 @@
  */
 
 static const char usage_head[] =
-"[-?@(#)$Id: cp (AT&T Research) 2006-10-31 $\n]"
+"[-?@(#)$Id: cp (AT&T Research) 2006-11-15 $\n]"
 USAGE_LICENSE
 ;
 
@@ -906,8 +906,21 @@ b_cp(int argc, register char** argv, void* context)
 		while ((ent = fts_read(fts)) && !visit(&state, ent));
 		fts_close(fts);
 	}
-	else
-		error(ERROR_SYSTEM|2, "%s: error", argv[0]);
+	else if (state.link != pathsetlink)
+		switch (state.op)
+		{
+		case CP:
+			error(ERROR_SYSTEM|2, "%s: cannot copy", argv[0]);
+			break;
+		case LN:
+			error(ERROR_SYSTEM|2, "%s: cannot link", argv[0]);
+			break;
+		case MV:
+			error(ERROR_SYSTEM|2, "%s: cannot move", argv[0]);
+			break;
+		}
+	else if ((*state.link)(*argv, state.path))
+		error(ERROR_SYSTEM|2, "%s: cannot link to %s", *argv, state.path);
 	free(state.path);
 	return error_info.errors != 0;
 }

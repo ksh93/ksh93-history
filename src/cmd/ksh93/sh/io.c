@@ -185,6 +185,7 @@ void sh_ioinit(void)
 	sh.sftable[2] = sfstderr;
 	sfnotify(sftrack);
 	sh_iostream(0);
+	sfset(sfstdin, SF_PUBLIC|SF_SHARE,1);
 	/* all write steams are in the same pool and share outbuff */
 	sh.outpool = sfopen(NIL(Sfio_t*),NIL(char*),"sw");  /* pool identifier */
 	sh.outbuff = (char*)malloc(IOBSIZE);
@@ -252,7 +253,10 @@ Sfio_t *sh_iostream(register int fd)
 			if(status&IOTTY)
 				dp->readf = slowread;
 			else if(status&IONOSEEK)
+			{
 				dp->readf = piperead;
+				sfset(iop, SF_IOINTR,1);
+			}
 			else
 				dp->readf = 0;
 			dp->seekf = 0;
@@ -572,10 +576,12 @@ static int pat_line(const regex_t* rp, const char *buff, register size_t n)
 static int io_patseek(regex_t *rp, Sfio_t* sp, int flags)
 {
 	char	*cp, *match;
-	int	r, close_exec = sh.fdstatus[sffileno(sp)]&IOCLEX;
-	int	s=(PIPE_BUF>SF_BUFSIZE?SF_BUFSIZE:PIPE_BUF);
+	int	r, fd=sffileno(sp), close_exec = sh.fdstatus[fd]&IOCLEX;
+	int	was_share,s=(PIPE_BUF>SF_BUFSIZE?SF_BUFSIZE:PIPE_BUF);
 	size_t	n,m;
 	sh.fdstatus[sffileno(sp)] |= IOCLEX;
+	if(fd==0)
+		was_share = sfset(sp,SF_SHARE,1);
 	while((cp=sfreserve(sp, -s, SF_LOCKR)) || (cp=sfreserve(sp,SF_UNBOUND, SF_LOCKR)))
 	{
 		m = n = sfvalue(sp);
@@ -599,6 +605,8 @@ static int io_patseek(regex_t *rp, Sfio_t* sp, int flags)
 	}
 	if(!close_exec)
 		sh.fdstatus[sffileno(sp)] &= ~IOCLEX;
+	if(fd==0 && !(was_share&SF_SHARE))
+		sfset(sp, SF_SHARE,0);
 	return(0);
 }
 
@@ -1394,7 +1402,7 @@ static ssize_t piperead(Sfio_t *iop,void *buff,register size_t size,Sfdisc_t *ha
 	if(!(sh.fdstatus[sffileno(iop)]&IOCLEX) && (sfset(iop,0,0)&SF_SHARE))
 		size = ed_read(sh.ed_context, fd, (char*)buff, size,0);
 	else
-		size = read(fd, (char*)buff, size);
+		size = sfrd(iop,buff,size,handle);
 	return(size);
 }
 /*

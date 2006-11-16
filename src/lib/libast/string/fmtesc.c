@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2005 AT&T Corp.                  *
+*           Copyright (c) 1985-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -30,10 +30,6 @@
 #include <ast.h>
 #include <ccode.h>
 #include <ctype.h>
-
-#ifndef FMT_PARAM
-#define FMT_PARAM	0x10	/* disable FMT_SHELL ${ $( quote */
-#endif
 
 /*
  * quote string as of length n with qb...qe
