@@ -63,7 +63,7 @@ cd /
 if	[[ $OLDPWD != $old ]]
 then	err_exit OLDPWD variable not working
 fi
-cd $d || err_exit cd failed
+cd $old || err_exit cd failed
 # REPLY
 read <<-!
 	foobar
@@ -125,6 +125,7 @@ unset foo
 foo=bar
 (
 	unset foo
+	set +u
 	if	[[ $foo != '' ]]
 	then	err_exit '$foo not null after unset in subsehll'
 	fi
@@ -145,6 +146,7 @@ set --
 if	[[ ${*:0:1} != "$0" ]]
 then	err_exit '${@:0} not expanding correctly'
 fi
+ACCESS=0
 function COUNT.set
 {
         (( ACCESS++ ))
@@ -500,7 +502,6 @@ esac
 	} 
 } 2> /dev/null || err_exit "Can't add get discipline to .sh.foobar"
 [[ ${.sh.foobar} == world ]]  || err_exit 'get discipline for .sh.foobar not working'
-unset x
 x='a|b'
 IFS='|'
 set -- $x
@@ -515,4 +516,41 @@ set -- $x
 : & pid=$!
 ( : & )
 [[ $pid == $! ]] || err_exit '$! value not preserved across subshells'
+unset foo
+typeset -A foo
+function foo.set
+{
+	case ${.sh.subscript} in
+	bar)	if	((.sh.value > 1 ))
+	        then	.sh.value=5
+			foo[barrier_hit]=yes
+		fi
+		;;
+	barrier_hit)
+		if	[[ ${.sh.value} = yes ]]
+		then	foo[barrier_not_hit]=no
+		else	foo[barrier_not_hit]=yes
+		fi
+		;;
+	esac
+}
+foo[barrier_hit]=no 
+foo[bar]=1
+(( foo[bar] == 1 )) || err_exit 'foo[bar] should be 1'
+[[ ${foo[barrier_hit]} == no ]] || err_exit 'foo[barrier_hit] should be no'
+[[ ${foo[barrier_not_hit]} == yes ]] || err_exit 'foo[barrier_not_hit] should be yes'
+foo[barrier_hit]=no 
+foo[bar]=2
+(( foo[bar] == 5 )) || err_exit 'foo[bar] should be 5'
+[[ ${foo[barrier_hit]} == yes ]] || err_exit 'foo[barrier_hit] should be yes'
+[[ ${foo[barrier_not_hit]} == no ]] || err_exit 'foo[barrier_not_hit] should be no'
+unset x
+typeset -i x
+function x.set
+{
+	typeset sub=${.sh.subscript}
+	(( sub > 0 )) && (( x[sub-1]= x[sub-1] + .sh.value ))
+}
+x[0]=0 x[1]=1 x[2]=2 x[3]=3
+[[ ${x[@]} == '12 8 5 3' ]] || err_exit 'set discipline for indexed array not working correctly'
 exit $((Errors))

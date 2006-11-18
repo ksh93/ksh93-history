@@ -191,5 +191,7 @@ point=(integer x=6 y=8)
 localvar
 	(( (point.x*point.x + point.y*point.y) == 100 )) || err_exit "global compound variable not preserved"
 [[ $($SHELL -c 'foo=();foo.[x]=(y z); print ${foo.x[@]}') == 'y z' ]] 2> /dev/null || err_exit 'foo=( [x]=(y z)  not working'
+unset z
+( [[ ${z.foo.bar:-abc} == abc ]] 2> /dev/null) || err_exit ':- not working with compound variables'
 exit $((Errors))
 

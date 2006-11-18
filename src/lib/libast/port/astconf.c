@@ -26,7 +26,7 @@
  * extended to allow some features to be set per-process
  */
 
-static const char id[] = "\n@(#)$Id: getconf (AT&T Research) 2006-11-11 $\0\n";
+static const char id[] = "\n@(#)$Id: getconf (AT&T Research) 2006-11-15 $\0\n";
 
 #include "univlib.h"
 
@@ -103,7 +103,7 @@ typedef struct Feature_s
 	char*		strict;
 	short		length;
 	short		standard;
-	short		flags;
+	unsigned short	flags;
 	short		op;
 } Feature_t;
 
@@ -111,7 +111,7 @@ typedef struct
 {
 	Conf_t*		conf;
 	const char*	name;
-	short		flags;
+	unsigned short	flags;
 	short		call;
 	short		standard;
 	short		section;
@@ -816,7 +816,7 @@ lookup(register Lookup_t* look, const char* name, int flags)
 	}
 	return 0;
  found:
-	if (look->call < 0 && look->standard >= 0)
+	if (look->call < 0 && look->standard >= 0 && (look->section <= 1 || (mid->flags & CONF_MINMAX)))
 		look->flags |= CONF_MINMAX;
 	look->conf = mid;
 #if DEBUG || DEBUG_astconf
@@ -873,7 +873,7 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, i
 	olderrno = errno;
 	errno = 0;
 #if DEBUG || DEBUG_astconf
-	error(-1, "astconf name=%s:%s standard=%d section=%d call=%s op=%d flags=|%s%s%s%s%s:|%s%s%s%s%s%s%s"
+	error(-1, "astconf name=%s:%s standard=%d section=%d call=%s op=%d flags=|%s%s%s%s%s:|%s%s%s%s%s%s%s%s%s%s"
 		, name , p->name, p->standard, p->section, prefix[p->call + CONF_call].name, p->op
 		, (flags & CONF_FEATURE) ? "FEATURE|" : ""
 		, (flags & CONF_LIMIT) ? "LIMIT|" : ""
@@ -885,32 +885,34 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, i
 		, (p->flags & CONF_FEATURE) ? "FEATURE|" : ""
 		, (p->flags & CONF_LIMIT_DEF) ? "LIMIT_DEF|" : (p->flags & CONF_LIMIT) ? "LIMIT|" : ""
 		, (p->flags & CONF_MINMAX_DEF) ? "MINMAX_DEF|" : (p->flags & CONF_MINMAX) ? "MINMAX|" : ""
+		, (p->flags & CONF_NOUNDERSCORE) ? "NOUNDERSCORE|" : ""
 		, (p->flags & CONF_PREFIXED) ? "PREFIXED|" : ""
+		, (p->flags & CONF_PREFIX_ONLY) ? "PREFIX_ONLY|" : ""
 		, (p->flags & CONF_STANDARD) ? "STANDARD|" : ""
 		, (p->flags & CONF_STRING) ? "STRING|" : ""
+		, (p->flags & CONF_UNDERSCORE) ? "UNDERSCORE|" : ""
 		);
 #endif
 	flags |= CONF_LIMIT_DEF|CONF_MINMAX_DEF;
-	i = (p->op < 0 || (flags & CONF_MINMAX) && (p->flags & CONF_MINMAX_DEF)) ? 0 : p->call;
 	if (conferror && name)
 	{
-		if (!(flags & CONF_MINMAX))
+		if ((p->flags & CONF_PREFIX_ONLY) && look->standard < 0)
+			goto bad;
+		if (!(flags & CONF_MINMAX) || !(p->flags & CONF_MINMAX))
 		{
-			switch (i)
+			switch (p->call)
 			{
 			case CONF_pathconf:
 				if (path == root)
 				{
-					(*conferror)(&state, &state, 2, "%s: path expected", p->name);
+					(*conferror)(&state, &state, 2, "%s: path expected", name);
 					goto bad;
 				}
 				break;
-			case CONF_confstr:
-			case CONF_sysconf:
-			case CONF_sysinfo:
+			default:
 				if (path != root)
 				{
-					(*conferror)(&state, &state, 2, "%s: path not expected", p->name);
+					(*conferror)(&state, &state, 2, "%s: path not expected", name);
 					goto bad;
 				}
 				break;
@@ -920,13 +922,23 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, i
 				goto bad;
 #endif
 		}
+		else
+		{
+			if (path != root)
+			{
+				(*conferror)(&state, &state, 2, "%s: path not expected", name);
+				goto bad;
+			}
 #ifdef _pth_getconf
-		else if ((p->flags & CONF_DEFER_MM) || !(p->flags & CONF_MINMAX_DEF))
-			goto bad;
+			if ((p->flags & CONF_DEFER_MM) || !(p->flags & CONF_MINMAX_DEF))
+				goto bad;
 #endif
+		}
+		if (look->standard >= 0 && (name[0] != '_' && ((p->flags & CONF_UNDERSCORE) || look->section <= 1) || name[0] == '_' && (p->flags & CONF_NOUNDERSCORE)) || look->standard < 0 && name[0] == '_')
+			goto bad;
 	}
 	s = 0;
-	switch (i)
+	switch (i = (p->op < 0 || (flags & CONF_MINMAX) && (p->flags & CONF_MINMAX_DEF)) ? 0 : p->call)
 	{
 	case CONF_confstr:
 		call = "confstr";
@@ -1073,6 +1085,10 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, i
 			*f++ = 'S';
 		if (p->flags & CONF_UNDERSCORE)
 			*f++ = 'U';
+		if (p->flags & CONF_NOUNDERSCORE)
+			*f++ = 'V';
+		if (p->flags & CONF_PREFIX_ONLY)
+			*f++ = 'W';
 		if (f == flg)
 			*f++ = 'X';
 		*f = 0;

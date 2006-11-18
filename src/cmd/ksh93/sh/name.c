@@ -35,6 +35,8 @@
 #include	"FEATURE/externs"
 #include	"streval.h"
 
+static char	*savesub = 0;
+
 #if !_lib_pathnative && _lib_uwin_path
 
 #define _lib_pathnative		1
@@ -315,7 +317,7 @@ void nv_setlist(register struct argnod *arg,register int flags)
 			char *sub=0;
 			int append = 0;
 			if(nv_isarray(np))
-				sub = nv_getsub(np);
+				sub = savesub;
 			if(cp=strchr(sp,'='))
 			{
 				if(cp[-1]=='+')
@@ -758,8 +760,12 @@ skip:
 		}
 		else
 		{
+			char *sub=0;
+			if(sh_isoption(SH_XTRACE) && nv_isarray(np))
+				sub = nv_getsub(np);
 			c = msg==e_aliname? 0: (append | (flags&NV_EXPORT)); 
 			nv_putval(np, cp, c);
+			savesub = sub;
 		}
 		nv_onattr(np, flags&NV_ATTRIBUTES);
 	}

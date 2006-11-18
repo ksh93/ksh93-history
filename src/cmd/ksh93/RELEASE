@@ -1,6 +1,9 @@
-06-11-14  --- Release ksh93s-  ---
+06-11-16  --- Release ksh93s  ---
+06-11-16  The discipline functions have been modified to allow each subscript
+	  to act independently.  Currently the discipline function will not
+	  be called when called from a discipline function of the same variable.
 06-11-14  A bug which could cause a core dump if a file descriptor for
-	  an internal file was closed from within a subshell has been fixed.
+	  an internal file was closed from with a subshell has been fixed.
 06-10-30  The redirections <# pattern, and <## pattern have been added.
 	  Both seek forward to the beginning of the next line that contains
 	  the pattern.  The <## form copies the skipped portion to standard

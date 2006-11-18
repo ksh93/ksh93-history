@@ -272,17 +272,18 @@ optbug()
 	return 1
 }
 optbug ||  err_exit 'array size optimzation bug'
+wait # not running --pipefile which would interfere with subsequent tests
+: $(jobs -p) # required to clear jobs for next jobs -p (interactive side effect)
 sleep 20 &
-if	[[ $(jobs -p) != *$!* ]]
+if	[[ $(jobs -p) != $! ]]
 then	err_exit 'jobs -p not reporting a background job' 
 fi
 sleep 20 &
 foo()
 {
 	set -- $(jobs -p)
-	(( $# == 2 )) || err_exit 'both jobs not reported'
+	(( $# == 2 )) || err_exit "$# jobs not reported -- 2 expected"
 }
-: $(jobs -p)
 foo
 [[ $( (trap 'print alarm' ALRM; sleep 4) & sleep 2; kill -ALRM $!) == alarm ]] || err_exit 'ALRM signal not working'
 [[ $($SHELL -c 'trap "" HUP; $SHELL -c "(sleep 2;kill -HUP $$)& sleep 4;print done"') != done ]] && err_exit 'ignored traps not being ignored'

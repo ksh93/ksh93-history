@@ -164,8 +164,6 @@ static Namval_t *array_find(Namval_t *np,Namarr_t *arp, int flag)
 		if(!(ap->header.nelem&ARRAY_SCAN) && ap->cur >= ap->maxi)
 			ap = array_grow(np, ap, (int)ap->cur);
 		if(ap->cur>=ap->maxi)
-			errormsg(SH_DICT,ERROR_exit(1),e_subscript, nv_name(np));
-		if(ap->cur >= ap->maxi)
 			errormsg(SH_DICT,ERROR_exit(1),e_subscript,nv_name(np));
 		up = &(ap->val[ap->cur]);
 		if(up->np && array_isbit(ap->bits,ap->cur))
@@ -373,7 +371,7 @@ static struct index_array *array_grow(Namval_t *np, register struct index_array 
 		ap->header.fun = 0;
 		if((ap->val[0].cp=np->nvalue.cp))
 			i++;
-		else if(np->nvfun)
+		else if(nv_hasdisc(np,&array_disc))
 		{
 			Namval_t *mp;
 			int offset = staktell();
@@ -644,6 +642,11 @@ Namval_t *nv_putsub(Namval_t *np,register char *sp,register long mode)
 	if(sp)
 	{
 		union Value *up;
+		if(mode&ARRAY_SETSUB)
+		{
+			(*ap->header.fun)(np, sp, NV_ASETSUB);
+			return(np);
+		}
 		up = (union Value*)(*ap->header.fun)(np, sp, (mode&ARRAY_ADD)?NV_AADD:0);
 		if(up && !up->cp && (mode&ARRAY_ADD) && (mode&ARRAY_FILL))
 		{
@@ -797,8 +800,11 @@ void *nv_associative(register Namval_t *np,const char *sp,int mode)
 			}
 		}
 		return(NIL(void*));
+	    case NV_ASETSUB:
+		ap->cur = (Namval_t*)sp;
+		/* FALL THROUGH*/
 	    case NV_ACURRENT:
-			return((void*)ap->cur);
+		return((void*)ap->cur);
 	    case NV_ANAME:
 		if(ap->cur)
 			return((void*)nv_name(ap->cur));

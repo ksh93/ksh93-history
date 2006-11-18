@@ -185,7 +185,6 @@ void sh_ioinit(void)
 	sh.sftable[2] = sfstderr;
 	sfnotify(sftrack);
 	sh_iostream(0);
-	sfset(sfstdin, SF_PUBLIC|SF_SHARE,1);
 	/* all write steams are in the same pool and share outbuff */
 	sh.outpool = sfopen(NIL(Sfio_t*),NIL(char*),"sw");  /* pool identifier */
 	sh.outbuff = (char*)malloc(IOBSIZE);

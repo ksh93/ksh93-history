@@ -176,6 +176,55 @@ struct	vardisc
 	Namval_t	*disc[4];
 };
 
+struct blocked
+{
+	struct blocked	*next;
+	Namval_t	*np;
+	int		flags;
+	void		*sub;
+	int		isub;
+};
+
+static struct blocked	*blist;
+
+#define isblocked(bp,type)	((bp)->flags & (1<<(type)))
+#define block(bp,type)		((bp)->flags |= (1<<(type)))
+#define unblock(bp,type)	((bp)->flags &= ~(1<<(type)))
+
+/*
+ * returns pointer to blocking structure
+ */
+static struct blocked *block_info(Namval_t *np, struct blocked *pp)
+{
+	register struct blocked	*bp;
+	void			*sub=0;
+	int			isub=0;
+	if(nv_isarray(np) && (isub=nv_aindex(np)) < 0)
+		sub = nv_associative(np,(const char*)0,NV_ACURRENT);
+	for(bp=blist ; bp; bp=bp->next)
+	{
+		if(bp->np==np && bp->sub==sub && bp->isub==isub)
+			return(bp);
+	}
+	if(pp)
+	{
+		pp->np = np;
+		pp->flags = 0;
+		pp->isub = isub;
+		pp->sub = sub;
+		pp->next = blist;
+		blist = pp;
+	}
+	return(pp);
+}
+
+static void block_done(struct blocked *bp)
+{
+	blist = bp = bp->next;
+	if(bp && (bp->isub>=0 || bp->sub))
+		nv_putsub(bp->np, bp->sub,(bp->isub<0?0:bp->isub)|ARRAY_SETSUB);
+}
+
 /*
  * free discipline if no more discipline functions
  */
@@ -201,34 +250,41 @@ static void chktfree(register Namval_t *np, register struct vardisc *vp)
  */
 static void	assign(Namval_t *np,const char* val,int flags,Namfun_t *handle)
 {
-	register struct vardisc *vp = (struct vardisc*)handle;
-	register Namval_t *nq, **disc;
-	disc =  &(vp->disc[(flags&NV_APPEND)?APPEND:ASSIGN]);
-	if(val || *disc==BLOCKED)
+	int		type = (flags&NV_APPEND)?APPEND:ASSIGN;
+	register	struct vardisc *vp = (struct vardisc*)handle;
+	register	Namval_t *nq =  vp->disc[type];
+	struct blocked	block, *bp = block_info(np, &block);
+	Namval_t	node;
+	if(val || isblocked(bp,type))
 	{
-		if(!(nq= *disc) || nq==BLOCKED)
+		if(!nq || isblocked(bp,type))
 		{
 			nv_putv(np,val,flags,handle);
-			return;
+			goto done;
+		}
+		node = *SH_VALNOD;
+		if(!nv_isnull(SH_VALNOD))
+		{
+			nv_onattr(SH_VALNOD,NV_NOFREE);
+			nv_unset(SH_VALNOD);
 		}
 		if(flags&NV_INTEGER)
 			nv_onattr(SH_VALNOD,(flags&(NV_INTEGER|NV_LONG|NV_DOUBLE|NV_EXPNOTE|NV_SHORT)));
 		nv_putval(SH_VALNOD, val, (flags&NV_INTEGER)?flags:NV_NOFREE);
 	}
 	else
-		disc =  &(vp->disc[UNASSIGN]);
-	if((nq= *disc) && nq!=BLOCKED)
+		nq =  vp->disc[type=UNASSIGN];
+	if(nq && !isblocked(bp,type))
 	{
-		Namval_t *nq1, **disc1;
-		*disc=BLOCKED;
-		if ((flags&NV_APPEND) && (disc1= &(vp->disc[LOOKUP])) && (nq1= *disc1) && nq1!=BLOCKED)
-			*disc1=BLOCKED;
+		int bflag;
+		block(bp,type);
+		if (type==APPEND && (bflag= !isblocked(bp,LOOKUP)))
+			block(bp,LOOKUP);
 		sh_fun(nq,np,(char**)0);
-		if((flags&NV_APPEND) && disc1 && nq1 && nq1!=BLOCKED)
-			*disc1=nq1;
-		if(*disc==BLOCKED)
-			*disc=nq;
-		else if(!*disc)
+		unblock(bp,type);
+		if(bflag)
+			unblock(bp,LOOKUP);
+		if(!vp->disc[type])
 			chktfree(np,vp);
 	}
 	if(val)
@@ -249,20 +305,22 @@ static void	assign(Namval_t *np,const char* val,int flags,Namfun_t *handle)
 		if(cp)
 			nv_putv(np,cp,flags|NV_RDONLY,handle);
 		nv_unset(SH_VALNOD);
+		/* restore everything but the nvlink field */
+		memcpy(&SH_VALNOD->nvname,  &node.nvname, sizeof(node)-sizeof(node.nvlink));
 	}
 	else if(sh_isstate(SH_INIT))
 	{
 		/* don't free functions during reinitialization */
 		nv_putv(np,val,flags,handle);
 	}
-	else if(!nq || nq!=BLOCKED)
+	else if(!nq || !isblocked(bp,type))
 	{
 		Dt_t *root = sh_subfuntree(1);
 		int n;
 		Namarr_t *ap;
 		nv_putv(np, val, flags, handle);
 		if(nv_isarray(np) && (ap=nv_arrayptr(np)) && ap->nelem>0)
-			return;
+			goto done;
 		for(n=0; n < sizeof(vp->disc)/sizeof(*vp->disc); n++)
 		{
 			if((nq=vp->disc[n]) && !nv_isattr(nq,NV_NOFREE))
@@ -275,6 +333,9 @@ static void	assign(Namval_t *np,const char* val,int flags,Namfun_t *handle)
 		if(!handle->nofree)
 			free(handle);
 	}
+done:
+	if(bp== &block)
+		block_done(bp);
 }
 
 /*
@@ -283,22 +344,24 @@ static void	assign(Namval_t *np,const char* val,int flags,Namfun_t *handle)
  */
 static char*	lookup(Namval_t *np, Namfun_t *handle)
 {
-	register struct vardisc *vp = (struct vardisc*)handle;
-	register Namval_t *nq;
+	register struct vardisc	*vp = (struct vardisc*)handle;
+	struct blocked		block, *bp = block_info(np, &block);
+	register Namval_t	*nq = vp->disc[LOOKUP];
 	register char *cp=0;
-	if((nq=vp->disc[LOOKUP]) &&  nq!=BLOCKED)
+	if(nq && !isblocked(bp,LOOKUP))
 	{
 		nv_unset(SH_VALNOD);
-		vp->disc[LOOKUP]=BLOCKED;
+		block(bp,LOOKUP);
 		sh_fun(nq,np,(char**)0);
-		if(vp->disc[LOOKUP]==BLOCKED)
-			vp->disc[LOOKUP]=nq;
-		else if(!vp->disc[LOOKUP])
+		unblock(bp,LOOKUP);
+		if(!vp->disc[LOOKUP])
 			chktfree(np,vp);
 		cp = nv_getval(SH_VALNOD);
 	}
 	if(!cp)
 		cp = nv_getv(np,handle);
+	if(bp== &block)
+		block_done(bp);
 	return(cp);
 }
 
@@ -385,9 +448,10 @@ char *nv_setdisc(register Namval_t* np,register const char *event,Namval_t *acti
 		vp->disc[type] = action;
 	else
 	{
+		struct blocked *bp;
 		action = vp->disc[type];
 		vp->disc[type] = 0;
-		if(action!=BLOCKED)
+		if(!(bp=block_info(np,(struct blocked*)0)) || !isblocked(bp,type))
 			chktfree(np,vp);
 	}
 	return(action?(char*)action:empty);

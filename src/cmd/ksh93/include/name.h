@@ -65,6 +65,8 @@ union Value
 #define ARRAY_FILL	(8L<<ARRAY_BITS)	/* used with nv_putsub() */
 #define ARRAY_NOCLONE	(16L<<ARRAY_BITS)	/* do not clone array disc */
 #define ARRAY_NOCHILD   (32L<<ARRAY_BITS)	/* skip compound arrays */
+#define ARRAY_SETSUB	(64L<<ARRAY_BITS)	/* set subscript */
+#define NV_ASETSUB	8			/* set subscript */
 
 /* These flags are used as options to array_get() */
 #define ARRAY_ASSIGN	0

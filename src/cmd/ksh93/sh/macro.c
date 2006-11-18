@@ -1087,7 +1087,7 @@ retry1:
 		}
 		else
 #endif  /* SHOPT_FILESCAN */
-		np = nv_open(id,sh.var_tree,flag);
+		np = nv_open(id,sh.var_tree,flag|NV_NOFAIL);
 		ap = np?nv_arrayptr(np):0;
 		if(type)
 		{
@@ -1595,10 +1595,20 @@ retry2:
 			mac_error(np);
 		}
 	}
-	else if(sh_isoption(SH_NOUNSET) && (!np  || nv_isnull(np)))
+	else if(sh_isoption(SH_NOUNSET) && (!np  || nv_isnull(np) || (nv_isarray(np) && !np->nvalue.cp)))
 	{
 		if(np)
+		{
+			if(nv_isarray(np))
+			{
+				sfprintf(sh.strbuf,"%s[%s]\0",nv_name(np),nv_getsub(np));
+				id = nv_getsub(np);
+				id = sfstruse(sh.strbuf);
+			}
+			else
+				id = nv_name(np);
 			nv_close(np);
+		}
 		errormsg(SH_DICT,ERROR_exit(1),e_notset,id);
 	}
 	if(np)

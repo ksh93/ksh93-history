@@ -342,6 +342,7 @@ exec < $tmp.g
 while	read line
 do	flags=F
 	section=
+	underscore=
 	define=$line
 	IFS=_
 	set $line
@@ -403,7 +404,7 @@ do	flags=F
 	case $flags in
 	*R*)	case $call in
 		SI)	;;
-		*)	flags=${flags}U ;;
+		*)	underscore=U ;;
 		esac
 		;;
 	*)	case " $standards " in
@@ -412,7 +413,9 @@ do	flags=F
 		*" $standard "*)
 			case $call in
 			SI)	;;
-			*)	flags=${flags}PU ;;
+			*)	flags=${flags}P
+				underscore=U
+				;;
 			esac
 			shift
 			;;
@@ -425,7 +428,7 @@ do	flags=F
 	'')	standard=$HOST
 		case $call in
 		SI)	;;
-		*)	flags=${flags}U ;;
+		*)	underscore=U ;;
 		esac
 		case $call in
 		CS|PC|SC)
@@ -465,6 +468,9 @@ do	flags=F
 		script=
 		args=
 		headers=
+		case $name in
+		V[1-9]_*|V[1-9][0-9]_*)	underscore=VW ;;
+		esac
 		case $call in
 		CS|SI)	key=CS ;;
 		*)	key=$call ;;
@@ -479,6 +485,9 @@ do	flags=F
 			case $x in
 			'')	case $call in
 				SI)	flags=O$flags ;;
+				esac
+				case $underscore in
+				?*)	flags=${flags}${underscore} ;;
 				esac
 				old=QQ
 				case $name in
@@ -675,7 +684,7 @@ do	eval name=\"'$'CONF_name_$key\"
 		;;
 	esac
 	case $flags in
-	*[ABEGHIJQTVWYZabcefghijklmnopqrstuvwxyz_123456789]*)
+	*[ABEGHIJQTYZabcefghijklmnopqrstuvwxyz_123456789]*)
 		echo "$command: $name: $flags: invalid flag(s)" >&2
 		exit 1
 		;;
@@ -909,7 +918,7 @@ do	eval name=\"'$'CONF_name_$key\"
 		;;
 	esac
 	conf_op=-1
-	for s in _${call}_${standard}${section}_${name} _${call}_${standard}_${name} _${call}_${name} ${call}_${name}
+	for s in _${call}_${standard}${section}_${name} _${call}_${standard}_${name} _${call}_${section}_${name} _${call}_${name} ${call}_${name}
 	do	eval x='$'CONF_const_${s}
 		case $x in
 		1)	conf_op=${s}
@@ -945,6 +954,12 @@ do	eval name=\"'$'CONF_name_$key\"
 	esac
 	case $flags in
 	*U*)	conf_flags="${conf_flags}|CONF_UNDERSCORE" ;;
+	esac
+	case $flags in
+	*V*)	conf_flags="${conf_flags}|CONF_NOUNDERSCORE" ;;
+	esac
+	case $flags in
+	*W*)	conf_flags="${conf_flags}|CONF_PREFIX_ONLY" ;;
 	esac
 	case $shell in
 	ksh)	conf_flags=${conf_flags#0?} ;;
@@ -1112,7 +1127,9 @@ printf("#endif\n");
 			esac
 			case $x in
 			1)	conf_minmax=$s
-				conf_flags="${conf_flags}|CONF_MINMAX_DEF"
+				case $flags in
+				*M*)	conf_flags="${conf_flags}|CONF_MINMAX_DEF" ;;
+				esac
 				break
 				;;
 			esac
@@ -1174,7 +1191,9 @@ ${script}
 			esac
 			case $x in
 			?*)	conf_minmax=$x
-				conf_flags="${conf_flags}|CONF_MINMAX_DEF"
+				case $flags in
+				*M*)	conf_flags="${conf_flags}|CONF_MINMAX_DEF" ;;
+				esac
 				;;
 			esac
 			;;
@@ -1255,19 +1274,21 @@ case $CONF_getconf in
 esac
 cat <<!
 
-#define CONF_DEFER_CALL	0x0001
-#define CONF_DEFER_MM	0x0002
-#define CONF_FEATURE	0x0004
-#define CONF_LIMIT	0x0008
-#define CONF_LIMIT_DEF	0x0010
-#define CONF_MINMAX	0x0020
-#define CONF_MINMAX_DEF	0x0040
-#define CONF_NOSECTION	0x0080
-#define CONF_PREFIXED	0x0100
-#define CONF_STANDARD	0x0200
-#define CONF_STRING	0x0400
-#define CONF_UNDERSCORE	0x0800
-#define CONF_USER	0x1000
+#define CONF_DEFER_CALL		0x0001
+#define CONF_DEFER_MM		0x0002
+#define CONF_FEATURE		0x0004
+#define CONF_LIMIT		0x0008
+#define CONF_LIMIT_DEF		0x0010
+#define CONF_MINMAX		0x0020
+#define CONF_MINMAX_DEF		0x0040
+#define CONF_NOSECTION		0x0080
+#define CONF_NOUNDERSCORE	0x0100
+#define CONF_PREFIX_ONLY	0x0200
+#define CONF_PREFIXED		0x0400
+#define CONF_STANDARD		0x0800
+#define CONF_STRING		0x1000
+#define CONF_UNDERSCORE		0x2000
+#define CONF_USER		0x4000
 
 struct Conf_s; typedef struct Conf_s Conf_t;
 
