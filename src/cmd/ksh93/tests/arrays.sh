@@ -371,4 +371,8 @@ EMPTY foo
 [[ $(typeset | grep foo$) == *associative* ]] || err_exit 'array lost associative attribute'
 [[ ! ${foo[@]}  ]] || err_exit 'array not empty'
 [[ ! ${!foo[@]}  ]] || err_exit 'array names not empty'
+unset foo
+foo=bar
+set -- "${foo[@]:1}"
+(( $# == 0 )) || err_exit '${foo[@]:1} should not have any values'
 exit $((Errors))

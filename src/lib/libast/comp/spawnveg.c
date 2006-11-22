@@ -163,6 +163,10 @@ spawnveg(const char* path, char* const argv[], char* const envv[], pid_t pgid)
 #endif
 #endif
 
+#if 0
+	if (access(path, X_OK))
+		return -1;
+#endif
 	if (!envv)
 		envv = environ;
 #if _lib_spawnve
@@ -219,41 +223,19 @@ spawnveg(const char* path, char* const argv[], char* const envv[], pid_t pgid)
 #if _real_vfork
 	if (pid != -1 && (m = *exec_errno_ptr))
 	{
-		rid = -1;
-		n = errno;
-		while (waitpid(pid, NiL, 0) == -1)
-			if (errno == ECHILD)
-			{
-				if (m != ENOEXEC)
-					rid = pid;
-				break;
-			}
-			else if (errno != EINTR)
-				break;
-		pid = -1;
-		if (rid < 0)
-			n = m;
+		while (waitpid(pid, NiL, 0) == -1 && errno == EINTR);
+		rid = pid = -1;
+		n = m;
 	}
 #else
-	if (err[0] != -1)
+	if (pid != -1 && err[0] != -1)
 	{
 		close(err[1]);
-		if (read(err[0], &m, sizeof(m)) == sizeof(m))
+		if (read(err[0], &m, sizeof(m)) == sizeof(m) && m)
 		{
-			rid = -1;
-			n = errno;
-			while (waitpid(pid, NiL, 0) == -1)
-				if (errno == ECHILD)
-				{
-					if (m != ENOEXEC)
-						rid = pid;
-					break;
-				}
-				else if (errno != EINTR)
-					break;
-			pid = -1;
-			if (rid < 0)
-				n = m;
+			while (waitpid(pid, NiL, 0) == -1 && errno == EINTR);
+			rid = pid = -1;
+			n = m;
 		}
 		close(err[0]);
 	}

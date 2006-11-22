@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2005 AT&T Corp.                  *
+*           Copyright (c) 1985-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -33,7 +33,9 @@
 #if defined(__STDPP__directive) && defined(__STDPP__hide)
 __STDPP__directive pragma pp:hide getdents getdirentries
 #else
+#undef	getdents
 #define getdents	______getdents
+#undef	getdirentries
 #define getdirentries	______getdirentries
 #endif
 
@@ -76,11 +78,17 @@ __STDPP__directive pragma pp:hide getdents getdirentries
 #if defined(__STDPP__directive) && defined(__STDPP__hide)
 __STDPP__directive pragma pp:hide DIR closedir opendir readdir seekdir telldir
 #else
+#undef	DIR
 #define DIR		______DIR
+#undef	closedir
 #define closedir	______closedir
+#undef	opendir
 #define opendir		______opendir
+#undef	readdir
 #define readdir		______readdir
+#undef	seekdir
 #define seekdir		______seekdir
+#undef	telldir
 #define telldir		______telldir
 #endif
 

@@ -106,7 +106,7 @@ strperm(const char* aexpr, char** e, register int perm)
 						typ |= S_IWUSR|S_IWGRP|S_IWOTH;
 						continue;
 					case 'X':
-						if (op != '+' || !S_ISDIR(perm) && !(perm & (S_IXUSR|S_IXGRP|S_IXOTH)))
+						if (!S_ISDIR(perm) && !(perm & (S_IXUSR|S_IXGRP|S_IXOTH)))
 							continue;
 						/*FALLTHROUGH*/
 					case 'x':

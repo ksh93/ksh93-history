@@ -131,6 +131,10 @@ static char *find_begin(char outbuff[], char *last, int endchar, int *type)
 			if(!inquote)
 				bp = cp;
 			break;
+		    case '~':
+			if(*cp=='(')
+				break;
+			/* fall through */
 		    default:
 			if(c && c==endchar)
 				return(xp);

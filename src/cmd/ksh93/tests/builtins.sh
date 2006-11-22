@@ -324,7 +324,16 @@ wait $pid1
 (( $? == 1 )) || err_exit "wait not saving exit value"
 wait $pid2
 (( $? == 127 )) || err_exit "subshell job known to parent"
-if	[[ $(foo=bar;foo=$foo exec -c $SHELL -c 'print $foo') != bar ]]
+ifs=$IFS
+IFS=:
+set -- $(getconf LIBPATH)
+env=
+while (($#>1))
+do	env="$env $2=\"\$$2\""
+	shift 2
+done
+IFS=$ifs
+if	[[ $(foo=bar; eval foo=\$foo $env exec -c \$SHELL -c \'print \$foo\') != bar ]]
 then	err_exit '"name=value exec -c ..." not working'
 fi
 $SHELL -c 'OPTIND=-1000000; getopts a opt -a' 2> /dev/null

@@ -153,12 +153,12 @@ tst	- -DN=1 - -DN=2 - -DN=3 - -DN=4 - -DN=5 - -DN=6 - -DN=7 - -DN=8 - -DN=0 outp
 	#define _ast_int8_str	"long"
 	#endif
 	#if N == 2
-	#define _ast_int8_t	__int64
-	#define _ast_int8_str	"__int64"
-	#endif
-	#if N == 3
 	#define _ast_int8_t	long long
 	#define _ast_int8_str	"long long"
+	#endif
+	#if N == 3
+	#define _ast_int8_t	__int64
+	#define _ast_int8_str	"__int64"
 	#endif
 	#if N == 4
 	#define _ast_int8_t	__int64_t

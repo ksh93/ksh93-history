@@ -1236,9 +1236,6 @@ retry1:
 			c = ':';
 		}
 	}
-	/* check for quoted @ */
-	if(mode=='@' && mp->quote && !v && c!='-')
-		mp->quoted-=2;
 	if(type)
 	{
 		if(!isbracechar(c))
@@ -1446,6 +1443,9 @@ retry1:
 		if(v || c=='/' && offset>=0)
 			stakseek(offset);
 	}
+	/* check for quoted @ */
+	if(mode=='@' && mp->quote && !v && c!='-')
+		mp->quoted-=2;
 retry2:
 	if(v && (!nulflg || *v ) && c!='+')
 	{

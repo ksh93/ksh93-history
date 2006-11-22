@@ -1,4 +1,6 @@
-06-11-16  --- Release ksh93s  ---
+06-11-20  --- Release ksh93s  ---
+06-11-20  A bug in which "${foo[@]:1}}" expands a null argument (instead of
+	  no argument), when foo[0] is not empty has been fixed. 
 06-11-16  The discipline functions have been modified to allow each subscript
 	  to act independently.  Currently the discipline function will not
 	  be called when called from a discipline function of the same variable.

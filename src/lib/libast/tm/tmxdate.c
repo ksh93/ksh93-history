@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2005 AT&T Corp.                  *
+*           Copyright (c) 1985-2006 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -67,6 +67,7 @@ range(register char* s, char** e, char* set, int lo, int hi)
 {
 	int	n;
 	int	m;
+	int	i;
 	char*	t;
 
 	while (isspace(*s) || *s == '_')
@@ -87,12 +88,21 @@ range(register char* s, char** e, char* set, int lo, int hi)
 			m = strtol(++s, &t, 10);
 			if (s == t || m < n || m > hi)
 				return -1;
-			s = t;
+			if (*(s = t) == '/')
+			{
+				i = strtol(++s, &t, 10);
+				if (s == t || i < 1)
+					return -1;
+				s = t;
+			}
 		}
 		else
+		{
 			m = n;
-		while (n <= m)
-			set[n++] = 1;
+			i = 1;
+		}
+		for (; n <= m; n += i)
+			set[n] = 1;
 		if (*s != ',')
 			break;
 		s++;
@@ -257,7 +267,7 @@ tmxdate(register const char* s, char** e, Time_t now)
 				else if (!isdigit(n))
 					break;
 				else
-					while ((n = *++s) == ',' || n == '-' || isdigit(n));
+					while ((n = *++s) == ',' || n == '-' || n == '/' || isdigit(n));
 				if (n != ' ' && n != '_' && n != ';')
 				{
 					if (!n)

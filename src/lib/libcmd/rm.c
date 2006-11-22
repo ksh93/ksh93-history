@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: rm (AT&T Research) 2006-10-31 $\n]"
+"[-?\n@(#)$Id: rm (AT&T Research) 2006-11-21 $\n]"
 USAGE_LICENSE
 "[+NAME?rm - remove files]"
 "[+DESCRIPTION?\brm\b removes the named \afile\a arguments. By default it"
@@ -407,7 +407,7 @@ b_rm(int argc, register char** argv, void* context)
 		fts_close(fts);
 	}
 	else if (!state.force)
-		error(ERROR_SYSTEM|2, "%s: error", argv[0]);
+		error(ERROR_SYSTEM|2, "%s: cannot remove", argv[0]);
 	if (set3d)
 		fs3d(set3d);
 	return error_info.errors != 0;

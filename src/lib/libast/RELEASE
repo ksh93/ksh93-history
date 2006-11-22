@@ -1,3 +1,6 @@
+06-11-22 comp/spawnveg.c: fix _real_vfork logic to work with 3d
+06-11-20 features/common: bias _ast_int8_t "long long" before "__int64"
+06-11-20 string/strperm.c: fix X to work with all ops (not just +)
 06-11-15 astconf.c,conf.tab: add CONF_DEFER_* for variable constants
 06-11-11 port/astconf.c: validate path arg w.r.t. underlying calls
 06-11-11 comp/conf.sh: fix S CONF_STANDARD bug, add D to defer to native
