@@ -53,9 +53,13 @@ _cmd_init(int argc, char** argv, void* context, const char* catalog, int flags)
 
 #if __OBSOLETE__ < 20080101
 
+#if defined(__EXPORT__)
+#define extern	__EXPORT__
+#endif
+
 #undef	cmdinit
 
-void
+extern void
 cmdinit(char** argv, void* context, const char* catalog, int flags)
 {
 	_cmd_init(0, argv, context, catalog, flags);

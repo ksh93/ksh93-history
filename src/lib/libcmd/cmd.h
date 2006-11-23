@@ -32,7 +32,7 @@
 #include <error.h>
 #include <stak.h>
 
-#define cmdinit(a,b,c,d,e)	_cmd_init(a,b,c,d,e)
+#define cmdinit			_cmd_init
 #define cmdquit()		0
 
 #if _BLD_cmd && defined(__EXPORT__)

@@ -252,7 +252,7 @@ lcgen : lcgen.c
 
 lc.h lctab.h :JOINT: lcgen lc.tab
 	$(*:O=1:C,^[^/],./&,) $(tmp).1 $(tmp).2 < $(*:O=2) # :P=E: in 2006
-	$(PROTO) -p $(PROTOFLAGS) $(tmp).1 > $(tmp).3
+	$(PROTO) -p $(PROTOFLAGS) $(tmp).1 $(PROTOINSTALL) > $(tmp).3
 	$(RM) -f $(tmp).1
 	if	$(CMP) -s $(tmp).3 $(<:O=1)
 	then	$(RM) $(tmp).3
@@ -269,14 +269,14 @@ $(LIBDIR)/file/magic :INSTALL: magic.tab
 
 $(HEADEROPT:D=$(INCLUDEDIR):B:S) : $$(<:B:S) ast_lib.h
 	case $(CC.HOSTTYPE) in
-	win32.*)$(PROTO) -p $(PROTOFLAGS) $(*:O=1) > 1.$(tmp).x
+	win32.*)$(PROTO) -p $(PROTOFLAGS) $(*:O=1) $(PROTOINSTALL) > 1.$(tmp).x
 		if	$(CMP) -s $(<) 1.$(tmp).x
 		then	$(RM) -f 1.$(tmp).x
 		else	$(MV) 1.$(tmp).x $(<)
 		fi
 		;;
 	*)	$(SILENT) $(GREP) -l 'define[ 	][ 	]*_[hl][di][rb]_$(<:B)' $(*:O>1) > /dev/null || {
-		$(PROTO) -p $(PROTOFLAGS) $(*:O=1) > 1.$(tmp).x
+		$(PROTO) -p $(PROTOFLAGS) $(*:O=1) $(PROTOINSTALL) > 1.$(tmp).x
 		if	$(CMP) -s $(<) 1.$(tmp).x
 		then	$(RM) -f 1.$(tmp).x
 		else	$(MV) 1.$(tmp).x $(<)

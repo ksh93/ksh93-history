@@ -45,11 +45,16 @@ HOME=$PWD \
 PATH=$PATH \
 SHELL=$ABSSHELL \
 $(
-	IFS=:
+	set --noglob
+	ifs=$IFS
+	IFS=,
 	set -- $(getconf LIBPATH)
-	while (($#>1))
-	do	eval [[ \$$2 ]] && eval print -n \" \"\$2=\"\$$2\"
-		shift 2
+	IFS=$ifs
+	for v
+	do	IFS=:
+		set -- $v
+		IFS=$ifs
+		eval [[ \$$2 ]] && eval print -n \" \"\$2=\"\$$2\"
 	done
 ) \
 exec -c -a -ksh ${ABSHELL} -c "exit 1" 1>/dev/null 2>&1
