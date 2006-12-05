@@ -533,23 +533,29 @@ Namval_t *nv_create(const char *name, Dt_t *root, int flags, Namfun_t *dp)
 			{
 				if(!np)
 					return(np);
-				if(c=='[')
+				if(c=='[' || (c=='.' && nv_isarray(np)))
 				{
-					int n = mode|nv_isarray(np);
-					if(!mode && (flags&NV_ARRAY) && ((c=sp[1])=='*' || c=='@') && sp[2]==']')
+					int n = 0;
+					if(c=='[')
 					{
-						/* not implemented yet */
-						dp->last = cp;
-						return(np);
+						n = mode|nv_isarray(np);
+						if(!mode && (flags&NV_ARRAY) && ((c=sp[1])=='*' || c=='@') && sp[2]==']')
+						{
+							/* not implemented yet */
+							dp->last = cp;
+							return(np);
+						}
+						if(n&&(flags&NV_ARRAY))
+							n |= ARRAY_FILL;
+						cp = nv_endsubscript(np,sp,n);
 					}
-					if(n&&(flags&NV_ARRAY))
-						n |= ARRAY_FILL;
-					cp = nv_endsubscript(np,sp,n);
+					else
+						cp = sp;
 					if((c = *cp)=='.' || c=='[' || (n&ARRAY_FILL))
 
 					{
 						int m = cp-sp;
-						char *sub = nv_getsub(np);
+						char *sub = m?nv_getsub(np):0;
 						if(!sub)
 							sub = "0";
 						n = strlen(sub)+2;
@@ -577,7 +583,9 @@ Namval_t *nv_create(const char *name, Dt_t *root, int flags, Namfun_t *dp)
 							m = sp-name;
 							name = stack_extend(name, cp-1, r);
 							sp = (char*)name + m;
+							*sp = '[';
 							memcpy(sp+1,sub,n-2);
+							sp[n-1] = ']';
 							cp = sp+n;
 							
 						}

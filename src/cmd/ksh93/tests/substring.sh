@@ -492,4 +492,9 @@ var=100
 if	[[ ax == @(a)* ]] && [[ ${.sh.match[1]:0:${#.sh.match[1]}}  != a ]] 
 then	err_exit '${.sh.match[1]:1:${#.sh.match[1]}} not expanding correctly'
 fi
+
+string='foo(d:\nt\box\something)bar'
+expected='d:\nt\box\something'
+[[ ${string/*\(+([!\)])\)*/\1} == "$expected" ]] || err_exit "substring expansion failed '${string/*\(+([!\)])\)*/\1}' returned -- '$expected' expected"
+
 exit $((Errors))

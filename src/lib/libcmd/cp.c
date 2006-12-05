@@ -868,7 +868,7 @@ b_cp(int argc, register char** argv, void* context)
 	if (argc <= 0 || error_info.errors)
 		error(ERROR_USAGE|4, "%s", optusage(NiL));
 	if (!path_resolve)
-		state.flags |= ftwflags();
+		state.flags |= fts_flags();
 	file = argv[argc];
 	argv[argc] = 0;
 	if (s = strrchr(file, '/'))

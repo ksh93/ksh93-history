@@ -1,6 +1,6 @@
 set	prototyped
 hdr	float,limits,math,values
-lib	frexp,frexpl,ldexp,ldexpl,finite,finitel,isnan,isnanl <math.h> -lm
+lib	fpclassify,frexp,frexpl,ldexp,ldexpl,finite,finitel,isinf,isinfl,isnan,isnanl,signbit,copysign,copysignl <math.h> -lm
 
 tst	ast_no_um2fm note{ no unsigned intmax => floatmax cast }end nolink{
 	#include "FEATURE/common"

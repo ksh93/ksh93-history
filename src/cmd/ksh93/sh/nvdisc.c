@@ -318,6 +318,7 @@ static void	assign(Namval_t *np,const char* val,int flags,Namfun_t *handle)
 		Dt_t *root = sh_subfuntree(1);
 		int n;
 		Namarr_t *ap;
+		block(bp,type);
 		nv_putv(np, val, flags, handle);
 		if(nv_isarray(np) && (ap=nv_arrayptr(np)) && ap->nelem>0)
 			goto done;
@@ -329,6 +330,7 @@ static void	assign(Namval_t *np,const char* val,int flags,Namfun_t *handle)
 				dtdelete(root,nq);
 			}
 		}
+		unblock(bp,type);
 		nv_disc(np,handle,NV_POP);
 		if(!handle->nofree)
 			free(handle);
@@ -347,16 +349,29 @@ static char*	lookup(Namval_t *np, Namfun_t *handle)
 	register struct vardisc	*vp = (struct vardisc*)handle;
 	struct blocked		block, *bp = block_info(np, &block);
 	register Namval_t	*nq = vp->disc[LOOKUP];
-	register char *cp=0;
+	register char		*cp=0;
+	Namval_t		node;
 	if(nq && !isblocked(bp,LOOKUP))
 	{
-		nv_unset(SH_VALNOD);
+		node = *SH_VALNOD;
+		if(!nv_isnull(SH_VALNOD))
+		{
+			nv_onattr(SH_VALNOD,NV_NOFREE);
+			nv_unset(SH_VALNOD);
+		}
 		block(bp,LOOKUP);
 		sh_fun(nq,np,(char**)0);
 		unblock(bp,LOOKUP);
 		if(!vp->disc[LOOKUP])
 			chktfree(np,vp);
 		cp = nv_getval(SH_VALNOD);
+		if(!nv_isnull(&node))
+		{
+			if(cp)
+				cp = strdup(cp);
+			/* restore everything but the nvlink field */
+			memcpy(&SH_VALNOD->nvname,  &node.nvname, sizeof(node)-sizeof(node.nvlink));
+		}
 	}
 	if(!cp)
 		cp = nv_getv(np,handle);
@@ -451,7 +466,7 @@ char *nv_setdisc(register Namval_t* np,register const char *event,Namval_t *acti
 		struct blocked *bp;
 		action = vp->disc[type];
 		vp->disc[type] = 0;
-		if(!(bp=block_info(np,(struct blocked*)0)) || !isblocked(bp,type))
+		if(!(bp=block_info(np,(struct blocked*)0)) || !isblocked(bp,UNASSIGN))
 			chktfree(np,vp);
 	}
 	return(action?(char*)action:empty);

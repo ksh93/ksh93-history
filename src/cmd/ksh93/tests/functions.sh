@@ -738,4 +738,21 @@ function g
 unset foo bar
 [[ $(foo=hello g) == hellobam ]] || err_exit 'function exports not passed on'
 [[ $(bar=hello g) == bam ]] || err_exit 'function exports not overridden'
+unset -f foo
+function foo
+{
+	typeset line=$1
+	set +n
+	while	[[ $line ]]
+	do	if	[[ ! $varname ]]
+		then	varname=${line%% *}
+			line=${line##"$varname"?( )}
+			[[ $line ]] && continue
+		else	print ok
+			return
+		fi
+		varname=
+	done
+}
+[[ $(foo 'NUMBERED RECORDSIZE') == ok ]] || err_exit 'optimization error with undefined variable'
 exit $((Errors))

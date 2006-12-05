@@ -323,6 +323,10 @@ fi
 exec 3> /dev/null
 print 'print foo "$@"' > /tmp/ksh$$x
 [[ $( print "(/tmp/ksh$$x bar)" | $SHELL 2>/dev/null) == 'foo bar' ]] || err_exit 'script pipe to shell fails'
+print "#! $SHELL" > /tmp/ksh$$x
+print 'print  -- $0' >> /tmp/ksh$$x
+chmod +x /tmp/ksh$$x
+[[ $(/tmp/ksh$$x) == /tmp/ksh$$x ]] || err_exit  "\$0 is $0 instead of /tmp/ksh$$x"
 rm -f /tmp/ksh$$x
 exec 3<&-
 exit $((Errors))

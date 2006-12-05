@@ -1,9 +1,0 @@
-if tst note{ -D_ISOC99_SOURCE cooperates with <stdlib.h> and <math.h> }end -D_ISOC99_SOURCE compile{
-		#include <stdlib.h>
-		#include <math.h>
-	}end {
-		#ifndef _ISOC99_SOURCE
-		#define _ISOC99_SOURCE		1
-		#endif
-	}
-endif

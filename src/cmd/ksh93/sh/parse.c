@@ -1348,6 +1348,7 @@ static struct ionod	*inout(struct ionod *lastio,int flag)
 	{
 		iovname=shlex.arg->argval+1;
 		token= sh_lex();
+		iof = 0;
 	}
 	switch(token&0xff)
 	{

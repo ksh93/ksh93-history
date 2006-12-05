@@ -329,7 +329,7 @@ int ed_emacsread(void *context, int fd,char *buff,int scend, int reedit)
 			continue;
 #endif	/* u370 */
 		case '\t':
-			if(cur>0 && cur>=eol  && ep->ed->sh->nextprompt)
+			if(cur>0  && ep->ed->sh->nextprompt)
 			{
 				if(ep->ed->e_tabcount==0)
 				{

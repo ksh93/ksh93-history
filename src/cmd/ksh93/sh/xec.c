@@ -839,7 +839,10 @@ int sh_exec(register const Shnode_t *t, int flags)
 							if(item->strm)
 							{
 								sfclrlock(item->strm);
-								sfclose(item->strm);
+								if(item->strm == sh.hist_ptr->histfp)
+									hist_close(sh.hist_ptr);
+								else
+									sfclose(item->strm);
 							}
 						}
 						/* failure on special built-ins fatal */

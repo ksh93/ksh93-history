@@ -1087,6 +1087,8 @@ retry1:
 		}
 		else
 #endif  /* SHOPT_FILESCAN */
+		if(sh.argaddr)
+			flag &= ~NV_NOADD;
 		np = nv_open(id,sh.var_tree,flag|NV_NOFAIL);
 		ap = np?nv_arrayptr(np):0;
 		if(type)

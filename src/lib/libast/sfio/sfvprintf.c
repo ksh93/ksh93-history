@@ -489,10 +489,10 @@ loop_fmt :
 					size = sizeof(int);
 			}
 			else if(_Sftype[fmt]&SFFMT_FLOAT)
-			{	if(flags&(SFFMT_LONG|SFFMT_LLONG))
-					size = sizeof(double);
-				else if(flags&SFFMT_LDOUBLE)
+			{	if(flags&SFFMT_LDOUBLE)
 					size = sizeof(Sfdouble_t);
+				else if(flags&(SFFMT_LONG|SFFMT_LLONG))
+					size = sizeof(double);
 				else if(flags&SFFMT_IFLAG)
 				{	if(size <= 0)
 						size = sizeof(Sfdouble_t);

@@ -1,3 +1,7 @@
+06-12-04 sfio/sfcvt.c: fix (int) vs. (long) cast mismatches
+06-12-01 comp/conf.tab: add changes to cover solaris { bin xpg4 xpg6 }
+06-12-01 regex/reginit.c: adjust { SRE KRE } escaped (){}*? inside [...]
+06-12-01 sfio/sfcvt.c: add signbit/copysign tests
 06-11-22 comp/spawnveg.c: fix _real_vfork logic to work with 3d
 06-11-20 features/common: bias _ast_int8_t "long long" before "__int64"
 06-11-20 string/strperm.c: fix X to work with all ops (not just +)

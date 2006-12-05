@@ -19,29 +19,18 @@
 ########################################################################
 : generate the ksh math builtin table
 : include math.tab
-: include FEATURE/isoc
 
-# @(#)math.sh (AT&T Research) 2006-10-26
+# @(#)math.sh (AT&T Research) 2006-12-04
 
 command=$0
-iffeflags="-n -v"
+iffeflags="-n -v -F ast_standards.h"
 iffehdrs="math.h ieeefp.h"
-ifferefs=""
 iffelibs="-lm"
 table=/dev/null
 
 eval $1
 shift
-while	:
-do	case $# in
-	0)	break ;;
-	esac
-	case $1 in
-	*.tab)	table=$1 ;;
-	*/isoc)	ifferefs=`sed -e '1,/-D/d' -e '/#define/!d' -e 's/#define.\([^        ]*\).*/-D\1/' $1` ;;
-	esac
-	shift
-done
+table=$1
 
 names=
 tests=
@@ -60,7 +49,7 @@ done
 
 : check the math library
 
-eval `iffe $iffeflags -c "$cc" - lib $tests $iffehdrs $ifferefs $iffelibs 2>&$stderr`
+eval `iffe $iffeflags -c "$cc" - lib $tests $iffehdrs $iffelibs 2>&$stderr`
 tests=
 for name in $names
 do	eval x='$'_lib_${name}l y='$'_lib_${name}
@@ -69,7 +58,7 @@ do	eval x='$'_lib_${name}l y='$'_lib_${name}
 	*:1)	tests="$tests,${name}" ;;
 	esac
 done
-eval `iffe $iffeflags -c "$cc" - dat $tests $iffehdrs $ifferefs $iffelibs 2>&$stderr`
+eval `iffe $iffeflags -c "$cc" - dat $tests $iffehdrs $iffelibs 2>&$stderr`
 tests=
 for name in $names
 do	eval x='$'_dat_${name}l y='$'_dat_${name}
@@ -78,7 +67,7 @@ do	eval x='$'_dat_${name}l y='$'_dat_${name}
 	*:1)	tests="$tests,${name}" ;;
 	esac
 done
-eval `iffe $iffeflags -c "$cc" - npt $tests $iffehdrs $ifferefs 2>&$stderr`
+eval `iffe $iffeflags -c "$cc" - npt $tests $iffehdrs 2>&$stderr`
 tests=
 for name in $names
 do	eval x='$'_lib_${name}l y='$'_lib_${name}
@@ -89,7 +78,7 @@ do	eval x='$'_lib_${name}l y='$'_lib_${name}
 	'')	tests="$tests,${name}" ;;
 	esac
 done
-eval `iffe $iffeflags -c "$cc" - mac $tests $iffehdrs $ifferefs 2>&$stderr`
+eval `iffe $iffeflags -c "$cc" - mac $tests $iffehdrs 2>&$stderr`
 
 cat <<!
 #pragma prototyped
@@ -99,6 +88,8 @@ cat <<!
 typedef Sfdouble_t (*Math_f)(Sfdouble_t,...);
 
 !
+echo "#include <ast_standards.h>"
+echo "#include <math.h>"
 case $_hdr_ieeefp in
 1)	echo "#include <ieeefp.h>"
 	echo

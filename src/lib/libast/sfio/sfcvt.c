@@ -33,8 +33,13 @@ static char		*Inf = "Inf", *Zero = "0", *Nan = "NaN";
 #define SF_NAN		((_Sfi = 3), Nan)
 
 #if ! _lib_isnan
+#if _lib_fpclassify
+#define isnan(n)	(fpclassify(n)==FP_NAN)
+#define isnanl(n)	(fpclassify(n)==FP_NAN)
+#else
 #define isnan(n)	(memcmp((void*)&n,(void*)&_Sfdnan,sizeof(n))==0)
 #define isnanl(n)	(memcmp((void*)&n,(void*)&_Sflnan,sizeof(n))==0)
+#endif
 #else
 #if ! _lib_isnanl
 #define isnanl(n)	isnan(n)
@@ -72,13 +77,50 @@ int		format;		/* conversion format		*/
 
 		if(isnanl(f))
 			return SF_NAN;
-		else if(f == 0.)
+#if _lib_isinf
+		if (n = isinf(f))
+		{	if (n < 0)
+				*sign = 1;
+			return SF_INFINITE;
+		}
+#endif
+#if _c99_in_the_wild
+#if _lib_signbit
+		if (signbit(f))
+#else
+#if _lib_copysignl
+		if (copysignl(1.0, f) < 0.0)
+#else
+#if _lib_copysign
+		if (copysign(1.0, (double)f) < 0.0)
+#else
+		if (f < 0.0)
+#endif
+#endif
+#endif
+		{	f = -f;
+			*sign = 1;
+		}
+#if _lib_fpclassify
+		switch (fpclassify(f))
+		{
+		case FP_INFINITE:
+			return SF_INFINITE;
+		case FP_NAN:
+			return SF_NAN;
+		case FP_ZERO:
 			return SF_ZERO;
-		else if((*sign = (f < 0.)) )	/* assignment = */
-			f = -f;
+		}
+#endif
+#else
+		if (f < 0.0)
+		{	f = -f;
+			*sign = 1;
+		}
+#endif
 		if(f < LDBL_MIN)
 			return SF_ZERO;
-		else if(f > LDBL_MAX)
+		if(f > LDBL_MAX)
 			return SF_INFINITE;
 
 		if(format & SFFMT_AFORMAT)
@@ -127,7 +169,7 @@ int		format;		/* conversion format		*/
 		*decpt = (int)n;
 
 		b = sp = buf + SF_INTPART;
-		if((v = (int)f) != 0)
+		if((v = (long)f) != 0)
 		{	/* translate the integer part */
 			f -= (Sfdouble_t)v;
 
@@ -157,7 +199,7 @@ int		format;		/* conversion format		*/
 		{
 			if((format&SFFMT_EFORMAT) && *decpt == 0 && f > 0.)
 			{	Sfdouble_t	d;
-				while((int)(d = f*10.) == 0)
+				while((long)(d = f*10.) == 0)
 				{	f = d;
 					*decpt -= 1;
 				}
@@ -183,15 +225,46 @@ int		format;		/* conversion format		*/
 #endif
 	{	double	f = (double)dv;
 
-		if(isnan(f))
+#if _lib_isinf
+		if (n = isinf(f))
+		{	if (n < 0)
+				*sign = 1;
+			return SF_INFINITE;
+		}
+#endif
+#if _c99_in_the_wild
+#if _lib_signbit
+		if (signbit(f))
+#else
+#if _lib_copysign
+		if (copysign(1.0, f) < 0.0)
+#else
+		if (f < 0.0)
+#endif
+#endif
+		{	f = -f;
+			*sign = 1;
+		}
+#if _lib_fpclassify
+		switch (fpclassify(f))
+		{
+		case FP_INFINITE:
+			return SF_INFINITE;
+		case FP_NAN:
 			return SF_NAN;
-		else if(f == 0.)
+		case FP_ZERO:
 			return SF_ZERO;
-		else if((*sign = (f < 0.)) )	/* assignment = */
-			f = -f;
+		}
+#endif
+#else
+		if (f < 0.0)
+		{	f = -f;
+			*sign = 1;
+		}
+#endif
 		if(f < DBL_MIN)
 			return SF_ZERO;
-		else if(f > DBL_MAX)
+		if(f > DBL_MAX)
 			return SF_INFINITE;
 
 		if(format & SFFMT_AFORMAT)
@@ -238,7 +311,7 @@ int		format;		/* conversion format		*/
 		*decpt = (int)n;
 
 		b = sp = buf + SF_INTPART;
-		if((v = (int)f) != 0)
+		if((v = (long)f) != 0)
 		{	/* translate the integer part */
 			f -= (double)v;
 
@@ -268,7 +341,7 @@ int		format;		/* conversion format		*/
 		{
 			if((format&SFFMT_EFORMAT) && *decpt == 0 && f > 0.)
 			{	reg double	d;
-				while((int)(d = f*10.) == 0)
+				while((long)(d = f*10.) == 0)
 				{	f = d;
 					*decpt -= 1;
 				}
@@ -281,7 +354,7 @@ int		format;		/* conversion format		*/
 					do { *sp++ = '0'; } while(sp < ep);
 					goto done;
 				}
-				else if((n = (int)(f *= 10.)) < 10)
+				else if((n = (long)(f *= 10.)) < 10)
 				{	*sp++ = (char)('0' + n);
 					f -= n;
 				}
