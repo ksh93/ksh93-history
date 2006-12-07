@@ -30,7 +30,9 @@
 
 #include <ast.h>
 
+#undef	procrun
 #define procrun(a,b)		coprocrun(a,b)
+#undef	system
 #define system(a)		cosystem(a)
 
 struct Coshell_s; typedef struct Coshell_s Coshell_t;

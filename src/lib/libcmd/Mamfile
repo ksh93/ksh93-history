@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.1 2006-08-11
+info mam static 00000 1994-07-17 make (AT&T Research) 5.1 2006-12-07
 setv INSTALLROOT ../../..
 setv PACKAGE_ast_INCLUDE ${INSTALLROOT}/include/ast
 setv PACKAGE_ast_LIB ${INSTALLROOT}/lib
@@ -94,8 +94,10 @@ meta FEATURE/symlink features/%>FEATURE/% features/symlink symlink
 make features/symlink
 done features/symlink
 prev cmd.req
-bind -last
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} ${mam_libast}  : run features/symlink
+make ${mam_libast} archive
+done ${mam_libast} dontcare virtual
+prev ${mam_libast} archive
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref  -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include  : run features/symlink
 done FEATURE/symlink generated
 make ${PACKAGE_ast_INCLUDE}/fts.h implicit
 make ${PACKAGE_ast_INCLUDE}/ls.h implicit
@@ -238,7 +240,9 @@ meta FEATURE/sockets features/%>FEATURE/% features/sockets sockets
 make features/sockets
 done features/sockets
 prev cmd.req
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} ${mam_libast}  : run features/sockets
+prev ${mam_libast} archive
+prev ${mam_libast} archive
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref  -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include  : run features/sockets
 done FEATURE/sockets generated
 prev ${PACKAGE_ast_INCLUDE}/ls.h implicit
 prev cmd.h implicit
@@ -271,7 +275,9 @@ meta FEATURE/ids features/%>FEATURE/% features/ids ids
 make features/ids
 done features/ids
 prev cmd.req
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} ${mam_libast}  : run features/ids
+prev ${mam_libast} archive
+prev ${mam_libast} archive
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref  -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include  : run features/ids
 done FEATURE/ids generated
 prev cmd.h implicit
 done id.c
@@ -356,7 +362,9 @@ meta FEATURE/utsname features/%>FEATURE/% features/utsname utsname
 make features/utsname
 done features/utsname
 prev cmd.req
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast} ${mam_libast}  : run features/utsname
+prev ${mam_libast} archive
+prev ${mam_libast} archive
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref  -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include  : run features/utsname
 done FEATURE/utsname generated
 prev ${PACKAGE_ast_INCLUDE}/proc.h implicit
 prev cmd.h implicit
@@ -687,6 +695,7 @@ make ${INSTALLROOT}/lib/lib/cmd
 prev ${INSTALLROOT}/lib/lib
 prev cmd.req
 exec - test '' = 'cmd.req' || ${STDCMP} 2>/dev/null -s cmd.req ${INSTALLROOT}/lib/lib/cmd || { ${STDMV} ${INSTALLROOT}/lib/lib/cmd ${INSTALLROOT}/lib/lib/cmd.old 2>/dev/null || true; ${STDCP} cmd.req ${INSTALLROOT}/lib/lib/cmd  		    		    ;}
+exec - (ranlib ${INSTALLROOT}/lib/lib/cmd) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/lib/lib/cmd generated
 make ${PACKAGE_ast_INCLUDE}
 exec - if	silent test ! -d ${PACKAGE_ast_INCLUDE}
