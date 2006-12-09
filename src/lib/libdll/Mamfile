@@ -145,12 +145,9 @@ meta FEATURE/dll features/%>FEATURE/% features/dll dll
 make features/dll
 done features/dll
 prev dll.req
-make ${mam_libdl}
-done ${mam_libdl} dontcare virtual
-make ${mam_libast} archive
-done ${mam_libast} dontcare virtual
-prev ${mam_libast} archive
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref  -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include  : run features/dll
+bind -ldl dontcare
+bind -last
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdl} ${mam_libast}  : run features/dll
 done FEATURE/dll generated
 exec - cmp 2>/dev/null -s FEATURE/dll dlldefs.h || { rm -f dlldefs.h; silent test -d . || mkdir .; cp FEATURE/dll dlldefs.h; }
 done dlldefs.h generated
@@ -251,7 +248,6 @@ make ${INSTALLROOT}/lib/lib/dll
 prev ${INSTALLROOT}/lib/lib
 prev dll.req
 exec - test '' = 'dll.req' || ${STDCMP} 2>/dev/null -s dll.req ${INSTALLROOT}/lib/lib/dll || { ${STDMV} ${INSTALLROOT}/lib/lib/dll ${INSTALLROOT}/lib/lib/dll.old 2>/dev/null || true; ${STDCP} dll.req ${INSTALLROOT}/lib/lib/dll  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/lib/lib/dll) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/lib/lib/dll generated
 make ${PACKAGE_ast_INCLUDE}
 exec - if	silent test ! -d ${PACKAGE_ast_INCLUDE}

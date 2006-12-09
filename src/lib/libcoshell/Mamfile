@@ -233,10 +233,8 @@ make cosync.c
 make FEATURE/nfsd implicit
 meta FEATURE/nfsd >FEATURE/%  nfsd
 prev coshell.req
-make ${mam_libast} archive
-done ${mam_libast} dontcare virtual
-prev ${mam_libast} archive
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref  -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include  : def nfsd
+bind -last
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast}  : def nfsd
 done FEATURE/nfsd generated
 prev ${PACKAGE_ast_INCLUDE}/ls.h implicit
 prev colib.h implicit
@@ -378,7 +376,6 @@ prev ${INSTALLROOT}/man/man3
 make coshell.3
 done coshell.3
 exec - test '' = 'coshell.3' || ${STDCMP} 2>/dev/null -s coshell.3 ${INSTALLROOT}/man/man3/coshell.3 || { ${STDMV} ${INSTALLROOT}/man/man3/coshell.3 ${INSTALLROOT}/man/man3/coshell.3.old 2>/dev/null || true; ${STDCP} coshell.3 ${INSTALLROOT}/man/man3/coshell.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/coshell.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/coshell.3 generated
 make ${INSTALLROOT}/lib/lib
 exec - if	silent test ! -d ${INSTALLROOT}/lib/lib
@@ -389,7 +386,6 @@ make ${INSTALLROOT}/lib/lib/coshell
 prev ${INSTALLROOT}/lib/lib
 prev coshell.req
 exec - test '' = 'coshell.req' || ${STDCMP} 2>/dev/null -s coshell.req ${INSTALLROOT}/lib/lib/coshell || { ${STDMV} ${INSTALLROOT}/lib/lib/coshell ${INSTALLROOT}/lib/lib/coshell.old 2>/dev/null || true; ${STDCP} coshell.req ${INSTALLROOT}/lib/lib/coshell  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/lib/lib/coshell) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/lib/lib/coshell generated
 make ${INSTALLROOT}/bin
 exec - if	silent test ! -d ${INSTALLROOT}/bin
@@ -400,12 +396,10 @@ make ${INSTALLROOT}/bin/ignore
 prev ${INSTALLROOT}/bin
 prev ignore
 exec - test '' = 'ignore' || ${STDCMP} 2>/dev/null -s ignore ${INSTALLROOT}/bin/ignore || { ${STDMV} ${INSTALLROOT}/bin/ignore ${INSTALLROOT}/bin/ignore.old 2>/dev/null || true; ${STDCP} ignore ${INSTALLROOT}/bin/ignore  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/bin/ignore) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/bin/ignore generated
 make ${INSTALLROOT}/bin/silent
 prev silent
 exec - test '' = 'silent' || ${STDCMP} 2>/dev/null -s silent ${INSTALLROOT}/bin/silent || { ${STDMV} ${INSTALLROOT}/bin/silent ${INSTALLROOT}/bin/silent.old 2>/dev/null || true; ${STDCP} silent ${INSTALLROOT}/bin/silent  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/bin/silent) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/bin/silent generated
 make ${PACKAGE_ast_INCLUDE}
 exec - if	silent test ! -d ${PACKAGE_ast_INCLUDE}

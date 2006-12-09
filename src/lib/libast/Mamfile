@@ -5805,337 +5805,281 @@ prev ${INSTALLROOT}/man/man3
 make man/LIBAST.3
 done man/LIBAST.3
 exec - test '' = 'man/LIBAST.3' || ${STDCMP} 2>/dev/null -s man/LIBAST.3 ${INSTALLROOT}/man/man3/LIBAST.3 || { ${STDMV} ${INSTALLROOT}/man/man3/LIBAST.3 ${INSTALLROOT}/man/man3/LIBAST.3.old 2>/dev/null || true; ${STDCP} man/LIBAST.3 ${INSTALLROOT}/man/man3/LIBAST.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/LIBAST.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/LIBAST.3 generated
 make ${INSTALLROOT}/man/man3/ast.3
 make man/ast.3
 done man/ast.3
 exec - test '' = 'man/ast.3' || ${STDCMP} 2>/dev/null -s man/ast.3 ${INSTALLROOT}/man/man3/ast.3 || { ${STDMV} ${INSTALLROOT}/man/man3/ast.3 ${INSTALLROOT}/man/man3/ast.3.old 2>/dev/null || true; ${STDCP} man/ast.3 ${INSTALLROOT}/man/man3/ast.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/ast.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/ast.3 generated
 make ${INSTALLROOT}/man/man3/astsa.3
 make man/astsa.3
 done man/astsa.3
 exec - test '' = 'man/astsa.3' || ${STDCMP} 2>/dev/null -s man/astsa.3 ${INSTALLROOT}/man/man3/astsa.3 || { ${STDMV} ${INSTALLROOT}/man/man3/astsa.3 ${INSTALLROOT}/man/man3/astsa.3.old 2>/dev/null || true; ${STDCP} man/astsa.3 ${INSTALLROOT}/man/man3/astsa.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/astsa.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/astsa.3 generated
 make ${INSTALLROOT}/man/man3/cdt.3
 make man/cdt.3
 done man/cdt.3
 exec - test '' = 'man/cdt.3' || ${STDCMP} 2>/dev/null -s man/cdt.3 ${INSTALLROOT}/man/man3/cdt.3 || { ${STDMV} ${INSTALLROOT}/man/man3/cdt.3 ${INSTALLROOT}/man/man3/cdt.3.old 2>/dev/null || true; ${STDCP} man/cdt.3 ${INSTALLROOT}/man/man3/cdt.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/cdt.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/cdt.3 generated
 make ${INSTALLROOT}/man/man3/chr.3
 make man/chr.3
 done man/chr.3
 exec - test '' = 'man/chr.3' || ${STDCMP} 2>/dev/null -s man/chr.3 ${INSTALLROOT}/man/man3/chr.3 || { ${STDMV} ${INSTALLROOT}/man/man3/chr.3 ${INSTALLROOT}/man/man3/chr.3.old 2>/dev/null || true; ${STDCP} man/chr.3 ${INSTALLROOT}/man/man3/chr.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/chr.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/chr.3 generated
 make ${INSTALLROOT}/man/man3/compat.3
 make man/compat.3
 done man/compat.3
 exec - test '' = 'man/compat.3' || ${STDCMP} 2>/dev/null -s man/compat.3 ${INSTALLROOT}/man/man3/compat.3 || { ${STDMV} ${INSTALLROOT}/man/man3/compat.3 ${INSTALLROOT}/man/man3/compat.3.old 2>/dev/null || true; ${STDCP} man/compat.3 ${INSTALLROOT}/man/man3/compat.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/compat.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/compat.3 generated
 make ${INSTALLROOT}/man/man3/error.3
 make man/error.3
 done man/error.3
 exec - test '' = 'man/error.3' || ${STDCMP} 2>/dev/null -s man/error.3 ${INSTALLROOT}/man/man3/error.3 || { ${STDMV} ${INSTALLROOT}/man/man3/error.3 ${INSTALLROOT}/man/man3/error.3.old 2>/dev/null || true; ${STDCP} man/error.3 ${INSTALLROOT}/man/man3/error.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/error.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/error.3 generated
 make ${INSTALLROOT}/man/man3/find.3
 make man/find.3
 done man/find.3
 exec - test '' = 'man/find.3' || ${STDCMP} 2>/dev/null -s man/find.3 ${INSTALLROOT}/man/man3/find.3 || { ${STDMV} ${INSTALLROOT}/man/man3/find.3 ${INSTALLROOT}/man/man3/find.3.old 2>/dev/null || true; ${STDCP} man/find.3 ${INSTALLROOT}/man/man3/find.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/find.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/find.3 generated
 make ${INSTALLROOT}/man/man3/fmt.3
 make man/fmt.3
 done man/fmt.3
 exec - test '' = 'man/fmt.3' || ${STDCMP} 2>/dev/null -s man/fmt.3 ${INSTALLROOT}/man/man3/fmt.3 || { ${STDMV} ${INSTALLROOT}/man/man3/fmt.3 ${INSTALLROOT}/man/man3/fmt.3.old 2>/dev/null || true; ${STDCP} man/fmt.3 ${INSTALLROOT}/man/man3/fmt.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/fmt.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/fmt.3 generated
 make ${INSTALLROOT}/man/man3/fmtls.3
 make man/fmtls.3
 done man/fmtls.3
 exec - test '' = 'man/fmtls.3' || ${STDCMP} 2>/dev/null -s man/fmtls.3 ${INSTALLROOT}/man/man3/fmtls.3 || { ${STDMV} ${INSTALLROOT}/man/man3/fmtls.3 ${INSTALLROOT}/man/man3/fmtls.3.old 2>/dev/null || true; ${STDCP} man/fmtls.3 ${INSTALLROOT}/man/man3/fmtls.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/fmtls.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/fmtls.3 generated
 make ${INSTALLROOT}/man/man3/fs3d.3
 make man/fs3d.3
 done man/fs3d.3
 exec - test '' = 'man/fs3d.3' || ${STDCMP} 2>/dev/null -s man/fs3d.3 ${INSTALLROOT}/man/man3/fs3d.3 || { ${STDMV} ${INSTALLROOT}/man/man3/fs3d.3 ${INSTALLROOT}/man/man3/fs3d.3.old 2>/dev/null || true; ${STDCP} man/fs3d.3 ${INSTALLROOT}/man/man3/fs3d.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/fs3d.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/fs3d.3 generated
 make ${INSTALLROOT}/man/man3/ftwalk.3
 make man/ftwalk.3
 done man/ftwalk.3
 exec - test '' = 'man/ftwalk.3' || ${STDCMP} 2>/dev/null -s man/ftwalk.3 ${INSTALLROOT}/man/man3/ftwalk.3 || { ${STDMV} ${INSTALLROOT}/man/man3/ftwalk.3 ${INSTALLROOT}/man/man3/ftwalk.3.old 2>/dev/null || true; ${STDCP} man/ftwalk.3 ${INSTALLROOT}/man/man3/ftwalk.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/ftwalk.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/ftwalk.3 generated
 make ${INSTALLROOT}/man/man3/getcwd.3
 make man/getcwd.3
 done man/getcwd.3
 exec - test '' = 'man/getcwd.3' || ${STDCMP} 2>/dev/null -s man/getcwd.3 ${INSTALLROOT}/man/man3/getcwd.3 || { ${STDMV} ${INSTALLROOT}/man/man3/getcwd.3 ${INSTALLROOT}/man/man3/getcwd.3.old 2>/dev/null || true; ${STDCP} man/getcwd.3 ${INSTALLROOT}/man/man3/getcwd.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/getcwd.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/getcwd.3 generated
 make ${INSTALLROOT}/man/man3/hash.3
 make man/hash.3
 done man/hash.3
 exec - test '' = 'man/hash.3' || ${STDCMP} 2>/dev/null -s man/hash.3 ${INSTALLROOT}/man/man3/hash.3 || { ${STDMV} ${INSTALLROOT}/man/man3/hash.3 ${INSTALLROOT}/man/man3/hash.3.old 2>/dev/null || true; ${STDCP} man/hash.3 ${INSTALLROOT}/man/man3/hash.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/hash.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/hash.3 generated
 make ${INSTALLROOT}/man/man3/iblocks.3
 make man/iblocks.3
 done man/iblocks.3
 exec - test '' = 'man/iblocks.3' || ${STDCMP} 2>/dev/null -s man/iblocks.3 ${INSTALLROOT}/man/man3/iblocks.3 || { ${STDMV} ${INSTALLROOT}/man/man3/iblocks.3 ${INSTALLROOT}/man/man3/iblocks.3.old 2>/dev/null || true; ${STDCP} man/iblocks.3 ${INSTALLROOT}/man/man3/iblocks.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/iblocks.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/iblocks.3 generated
 make ${INSTALLROOT}/man/man3/int.3
 make man/int.3
 done man/int.3
 exec - test '' = 'man/int.3' || ${STDCMP} 2>/dev/null -s man/int.3 ${INSTALLROOT}/man/man3/int.3 || { ${STDMV} ${INSTALLROOT}/man/man3/int.3 ${INSTALLROOT}/man/man3/int.3.old 2>/dev/null || true; ${STDCP} man/int.3 ${INSTALLROOT}/man/man3/int.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/int.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/int.3 generated
 make ${INSTALLROOT}/man/man3/magic.3
 make man/magic.3
 done man/magic.3
 exec - test '' = 'man/magic.3' || ${STDCMP} 2>/dev/null -s man/magic.3 ${INSTALLROOT}/man/man3/magic.3 || { ${STDMV} ${INSTALLROOT}/man/man3/magic.3 ${INSTALLROOT}/man/man3/magic.3.old 2>/dev/null || true; ${STDCP} man/magic.3 ${INSTALLROOT}/man/man3/magic.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/magic.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/magic.3 generated
 make ${INSTALLROOT}/man/man3/mem.3
 make man/mem.3
 done man/mem.3
 exec - test '' = 'man/mem.3' || ${STDCMP} 2>/dev/null -s man/mem.3 ${INSTALLROOT}/man/man3/mem.3 || { ${STDMV} ${INSTALLROOT}/man/man3/mem.3 ${INSTALLROOT}/man/man3/mem.3.old 2>/dev/null || true; ${STDCP} man/mem.3 ${INSTALLROOT}/man/man3/mem.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/mem.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/mem.3 generated
 make ${INSTALLROOT}/man/man3/mime.3
 make man/mime.3
 done man/mime.3
 exec - test '' = 'man/mime.3' || ${STDCMP} 2>/dev/null -s man/mime.3 ${INSTALLROOT}/man/man3/mime.3 || { ${STDMV} ${INSTALLROOT}/man/man3/mime.3 ${INSTALLROOT}/man/man3/mime.3.old 2>/dev/null || true; ${STDCP} man/mime.3 ${INSTALLROOT}/man/man3/mime.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/mime.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/mime.3 generated
 make ${INSTALLROOT}/man/man3/modecanon.3
 make man/modecanon.3
 done man/modecanon.3
 exec - test '' = 'man/modecanon.3' || ${STDCMP} 2>/dev/null -s man/modecanon.3 ${INSTALLROOT}/man/man3/modecanon.3 || { ${STDMV} ${INSTALLROOT}/man/man3/modecanon.3 ${INSTALLROOT}/man/man3/modecanon.3.old 2>/dev/null || true; ${STDCP} man/modecanon.3 ${INSTALLROOT}/man/man3/modecanon.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/modecanon.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/modecanon.3 generated
 make ${INSTALLROOT}/man/man3/optget.3
 make man/optget.3
 done man/optget.3
 exec - test '' = 'man/optget.3' || ${STDCMP} 2>/dev/null -s man/optget.3 ${INSTALLROOT}/man/man3/optget.3 || { ${STDMV} ${INSTALLROOT}/man/man3/optget.3 ${INSTALLROOT}/man/man3/optget.3.old 2>/dev/null || true; ${STDCP} man/optget.3 ${INSTALLROOT}/man/man3/optget.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/optget.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/optget.3 generated
 make ${INSTALLROOT}/man/man3/path.3
 make man/path.3
 done man/path.3
 exec - test '' = 'man/path.3' || ${STDCMP} 2>/dev/null -s man/path.3 ${INSTALLROOT}/man/man3/path.3 || { ${STDMV} ${INSTALLROOT}/man/man3/path.3 ${INSTALLROOT}/man/man3/path.3.old 2>/dev/null || true; ${STDCP} man/path.3 ${INSTALLROOT}/man/man3/path.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/path.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/path.3 generated
 make ${INSTALLROOT}/man/man3/preroot.3
 make man/preroot.3
 done man/preroot.3
 exec - test '' = 'man/preroot.3' || ${STDCMP} 2>/dev/null -s man/preroot.3 ${INSTALLROOT}/man/man3/preroot.3 || { ${STDMV} ${INSTALLROOT}/man/man3/preroot.3 ${INSTALLROOT}/man/man3/preroot.3.old 2>/dev/null || true; ${STDCP} man/preroot.3 ${INSTALLROOT}/man/man3/preroot.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/preroot.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/preroot.3 generated
 make ${INSTALLROOT}/man/man3/proc.3
 make man/proc.3
 done man/proc.3
 exec - test '' = 'man/proc.3' || ${STDCMP} 2>/dev/null -s man/proc.3 ${INSTALLROOT}/man/man3/proc.3 || { ${STDMV} ${INSTALLROOT}/man/man3/proc.3 ${INSTALLROOT}/man/man3/proc.3.old 2>/dev/null || true; ${STDCP} man/proc.3 ${INSTALLROOT}/man/man3/proc.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/proc.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/proc.3 generated
 make ${INSTALLROOT}/man/man3/re.3
 make man/re.3
 done man/re.3
 exec - test '' = 'man/re.3' || ${STDCMP} 2>/dev/null -s man/re.3 ${INSTALLROOT}/man/man3/re.3 || { ${STDMV} ${INSTALLROOT}/man/man3/re.3 ${INSTALLROOT}/man/man3/re.3.old 2>/dev/null || true; ${STDCP} man/re.3 ${INSTALLROOT}/man/man3/re.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/re.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/re.3 generated
 make ${INSTALLROOT}/man/man3/setenviron.3
 make man/setenviron.3
 done man/setenviron.3
 exec - test '' = 'man/setenviron.3' || ${STDCMP} 2>/dev/null -s man/setenviron.3 ${INSTALLROOT}/man/man3/setenviron.3 || { ${STDMV} ${INSTALLROOT}/man/man3/setenviron.3 ${INSTALLROOT}/man/man3/setenviron.3.old 2>/dev/null || true; ${STDCP} man/setenviron.3 ${INSTALLROOT}/man/man3/setenviron.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/setenviron.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/setenviron.3 generated
 make ${INSTALLROOT}/man/man3/sfdisc.3
 make man/sfdisc.3
 done man/sfdisc.3
 exec - test '' = 'man/sfdisc.3' || ${STDCMP} 2>/dev/null -s man/sfdisc.3 ${INSTALLROOT}/man/man3/sfdisc.3 || { ${STDMV} ${INSTALLROOT}/man/man3/sfdisc.3 ${INSTALLROOT}/man/man3/sfdisc.3.old 2>/dev/null || true; ${STDCP} man/sfdisc.3 ${INSTALLROOT}/man/man3/sfdisc.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/sfdisc.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/sfdisc.3 generated
 make ${INSTALLROOT}/man/man3/sfio.3
 make man/sfio.3
 done man/sfio.3
 exec - test '' = 'man/sfio.3' || ${STDCMP} 2>/dev/null -s man/sfio.3 ${INSTALLROOT}/man/man3/sfio.3 || { ${STDMV} ${INSTALLROOT}/man/man3/sfio.3 ${INSTALLROOT}/man/man3/sfio.3.old 2>/dev/null || true; ${STDCP} man/sfio.3 ${INSTALLROOT}/man/man3/sfio.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/sfio.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/sfio.3 generated
 make ${INSTALLROOT}/man/man3/sig.3
 make man/sig.3
 done man/sig.3
 exec - test '' = 'man/sig.3' || ${STDCMP} 2>/dev/null -s man/sig.3 ${INSTALLROOT}/man/man3/sig.3 || { ${STDMV} ${INSTALLROOT}/man/man3/sig.3 ${INSTALLROOT}/man/man3/sig.3.old 2>/dev/null || true; ${STDCP} man/sig.3 ${INSTALLROOT}/man/man3/sig.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/sig.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/sig.3 generated
 make ${INSTALLROOT}/man/man3/spawnveg.3
 make man/spawnveg.3
 done man/spawnveg.3
 exec - test '' = 'man/spawnveg.3' || ${STDCMP} 2>/dev/null -s man/spawnveg.3 ${INSTALLROOT}/man/man3/spawnveg.3 || { ${STDMV} ${INSTALLROOT}/man/man3/spawnveg.3 ${INSTALLROOT}/man/man3/spawnveg.3.old 2>/dev/null || true; ${STDCP} man/spawnveg.3 ${INSTALLROOT}/man/man3/spawnveg.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/spawnveg.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/spawnveg.3 generated
 make ${INSTALLROOT}/man/man3/stak.3
 make man/stak.3
 done man/stak.3
 exec - test '' = 'man/stak.3' || ${STDCMP} 2>/dev/null -s man/stak.3 ${INSTALLROOT}/man/man3/stak.3 || { ${STDMV} ${INSTALLROOT}/man/man3/stak.3 ${INSTALLROOT}/man/man3/stak.3.old 2>/dev/null || true; ${STDCP} man/stak.3 ${INSTALLROOT}/man/man3/stak.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/stak.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/stak.3 generated
 make ${INSTALLROOT}/man/man3/stk.3
 make man/stk.3
 done man/stk.3
 exec - test '' = 'man/stk.3' || ${STDCMP} 2>/dev/null -s man/stk.3 ${INSTALLROOT}/man/man3/stk.3 || { ${STDMV} ${INSTALLROOT}/man/man3/stk.3 ${INSTALLROOT}/man/man3/stk.3.old 2>/dev/null || true; ${STDCP} man/stk.3 ${INSTALLROOT}/man/man3/stk.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/stk.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/stk.3 generated
 make ${INSTALLROOT}/man/man3/strcopy.3
 make man/strcopy.3
 done man/strcopy.3
 exec - test '' = 'man/strcopy.3' || ${STDCMP} 2>/dev/null -s man/strcopy.3 ${INSTALLROOT}/man/man3/strcopy.3 || { ${STDMV} ${INSTALLROOT}/man/man3/strcopy.3 ${INSTALLROOT}/man/man3/strcopy.3.old 2>/dev/null || true; ${STDCP} man/strcopy.3 ${INSTALLROOT}/man/man3/strcopy.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/strcopy.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/strcopy.3 generated
 make ${INSTALLROOT}/man/man3/strdup.3
 make man/strdup.3
 done man/strdup.3
 exec - test '' = 'man/strdup.3' || ${STDCMP} 2>/dev/null -s man/strdup.3 ${INSTALLROOT}/man/man3/strdup.3 || { ${STDMV} ${INSTALLROOT}/man/man3/strdup.3 ${INSTALLROOT}/man/man3/strdup.3.old 2>/dev/null || true; ${STDCP} man/strdup.3 ${INSTALLROOT}/man/man3/strdup.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/strdup.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/strdup.3 generated
 make ${INSTALLROOT}/man/man3/strelapsed.3
 make man/strelapsed.3
 done man/strelapsed.3
 exec - test '' = 'man/strelapsed.3' || ${STDCMP} 2>/dev/null -s man/strelapsed.3 ${INSTALLROOT}/man/man3/strelapsed.3 || { ${STDMV} ${INSTALLROOT}/man/man3/strelapsed.3 ${INSTALLROOT}/man/man3/strelapsed.3.old 2>/dev/null || true; ${STDCP} man/strelapsed.3 ${INSTALLROOT}/man/man3/strelapsed.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/strelapsed.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/strelapsed.3 generated
 make ${INSTALLROOT}/man/man3/strerror.3
 make man/strerror.3
 done man/strerror.3
 exec - test '' = 'man/strerror.3' || ${STDCMP} 2>/dev/null -s man/strerror.3 ${INSTALLROOT}/man/man3/strerror.3 || { ${STDMV} ${INSTALLROOT}/man/man3/strerror.3 ${INSTALLROOT}/man/man3/strerror.3.old 2>/dev/null || true; ${STDCP} man/strerror.3 ${INSTALLROOT}/man/man3/strerror.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/strerror.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/strerror.3 generated
 make ${INSTALLROOT}/man/man3/stresc.3
 make man/stresc.3
 done man/stresc.3
 exec - test '' = 'man/stresc.3' || ${STDCMP} 2>/dev/null -s man/stresc.3 ${INSTALLROOT}/man/man3/stresc.3 || { ${STDMV} ${INSTALLROOT}/man/man3/stresc.3 ${INSTALLROOT}/man/man3/stresc.3.old 2>/dev/null || true; ${STDCP} man/stresc.3 ${INSTALLROOT}/man/man3/stresc.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/stresc.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/stresc.3 generated
 make ${INSTALLROOT}/man/man3/streval.3
 make man/streval.3
 done man/streval.3
 exec - test '' = 'man/streval.3' || ${STDCMP} 2>/dev/null -s man/streval.3 ${INSTALLROOT}/man/man3/streval.3 || { ${STDMV} ${INSTALLROOT}/man/man3/streval.3 ${INSTALLROOT}/man/man3/streval.3.old 2>/dev/null || true; ${STDCP} man/streval.3 ${INSTALLROOT}/man/man3/streval.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/streval.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/streval.3 generated
 make ${INSTALLROOT}/man/man3/strgid.3
 make man/strgid.3
 done man/strgid.3
 exec - test '' = 'man/strgid.3' || ${STDCMP} 2>/dev/null -s man/strgid.3 ${INSTALLROOT}/man/man3/strgid.3 || { ${STDMV} ${INSTALLROOT}/man/man3/strgid.3 ${INSTALLROOT}/man/man3/strgid.3.old 2>/dev/null || true; ${STDCP} man/strgid.3 ${INSTALLROOT}/man/man3/strgid.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/strgid.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/strgid.3 generated
 make ${INSTALLROOT}/man/man3/strmatch.3
 make man/strmatch.3
 done man/strmatch.3
 exec - test '' = 'man/strmatch.3' || ${STDCMP} 2>/dev/null -s man/strmatch.3 ${INSTALLROOT}/man/man3/strmatch.3 || { ${STDMV} ${INSTALLROOT}/man/man3/strmatch.3 ${INSTALLROOT}/man/man3/strmatch.3.old 2>/dev/null || true; ${STDCP} man/strmatch.3 ${INSTALLROOT}/man/man3/strmatch.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/strmatch.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/strmatch.3 generated
 make ${INSTALLROOT}/man/man3/stropt.3
 make man/stropt.3
 done man/stropt.3
 exec - test '' = 'man/stropt.3' || ${STDCMP} 2>/dev/null -s man/stropt.3 ${INSTALLROOT}/man/man3/stropt.3 || { ${STDMV} ${INSTALLROOT}/man/man3/stropt.3 ${INSTALLROOT}/man/man3/stropt.3.old 2>/dev/null || true; ${STDCP} man/stropt.3 ${INSTALLROOT}/man/man3/stropt.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/stropt.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/stropt.3 generated
 make ${INSTALLROOT}/man/man3/strperm.3
 make man/strperm.3
 done man/strperm.3
 exec - test '' = 'man/strperm.3' || ${STDCMP} 2>/dev/null -s man/strperm.3 ${INSTALLROOT}/man/man3/strperm.3 || { ${STDMV} ${INSTALLROOT}/man/man3/strperm.3 ${INSTALLROOT}/man/man3/strperm.3.old 2>/dev/null || true; ${STDCP} man/strperm.3 ${INSTALLROOT}/man/man3/strperm.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/strperm.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/strperm.3 generated
 make ${INSTALLROOT}/man/man3/strsignal.3
 make man/strsignal.3
 done man/strsignal.3
 exec - test '' = 'man/strsignal.3' || ${STDCMP} 2>/dev/null -s man/strsignal.3 ${INSTALLROOT}/man/man3/strsignal.3 || { ${STDMV} ${INSTALLROOT}/man/man3/strsignal.3 ${INSTALLROOT}/man/man3/strsignal.3.old 2>/dev/null || true; ${STDCP} man/strsignal.3 ${INSTALLROOT}/man/man3/strsignal.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/strsignal.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/strsignal.3 generated
 make ${INSTALLROOT}/man/man3/strsort.3
 make man/strsort.3
 done man/strsort.3
 exec - test '' = 'man/strsort.3' || ${STDCMP} 2>/dev/null -s man/strsort.3 ${INSTALLROOT}/man/man3/strsort.3 || { ${STDMV} ${INSTALLROOT}/man/man3/strsort.3 ${INSTALLROOT}/man/man3/strsort.3.old 2>/dev/null || true; ${STDCP} man/strsort.3 ${INSTALLROOT}/man/man3/strsort.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/strsort.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/strsort.3 generated
 make ${INSTALLROOT}/man/man3/strtape.3
 make man/strtape.3
 done man/strtape.3
 exec - test '' = 'man/strtape.3' || ${STDCMP} 2>/dev/null -s man/strtape.3 ${INSTALLROOT}/man/man3/strtape.3 || { ${STDMV} ${INSTALLROOT}/man/man3/strtape.3 ${INSTALLROOT}/man/man3/strtape.3.old 2>/dev/null || true; ${STDCP} man/strtape.3 ${INSTALLROOT}/man/man3/strtape.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/strtape.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/strtape.3 generated
 make ${INSTALLROOT}/man/man3/strton.3
 make man/strton.3
 done man/strton.3
 exec - test '' = 'man/strton.3' || ${STDCMP} 2>/dev/null -s man/strton.3 ${INSTALLROOT}/man/man3/strton.3 || { ${STDMV} ${INSTALLROOT}/man/man3/strton.3 ${INSTALLROOT}/man/man3/strton.3.old 2>/dev/null || true; ${STDCP} man/strton.3 ${INSTALLROOT}/man/man3/strton.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/strton.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/strton.3 generated
 make ${INSTALLROOT}/man/man3/struid.3
 make man/struid.3
 done man/struid.3
 exec - test '' = 'man/struid.3' || ${STDCMP} 2>/dev/null -s man/struid.3 ${INSTALLROOT}/man/man3/struid.3 || { ${STDMV} ${INSTALLROOT}/man/man3/struid.3 ${INSTALLROOT}/man/man3/struid.3.old 2>/dev/null || true; ${STDCP} man/struid.3 ${INSTALLROOT}/man/man3/struid.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/struid.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/struid.3 generated
 make ${INSTALLROOT}/man/man3/swap.3
 make man/swap.3
 done man/swap.3
 exec - test '' = 'man/swap.3' || ${STDCMP} 2>/dev/null -s man/swap.3 ${INSTALLROOT}/man/man3/swap.3 || { ${STDMV} ${INSTALLROOT}/man/man3/swap.3 ${INSTALLROOT}/man/man3/swap.3.old 2>/dev/null || true; ${STDCP} man/swap.3 ${INSTALLROOT}/man/man3/swap.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/swap.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/swap.3 generated
 make ${INSTALLROOT}/man/man3/tab.3
 make man/tab.3
 done man/tab.3
 exec - test '' = 'man/tab.3' || ${STDCMP} 2>/dev/null -s man/tab.3 ${INSTALLROOT}/man/man3/tab.3 || { ${STDMV} ${INSTALLROOT}/man/man3/tab.3 ${INSTALLROOT}/man/man3/tab.3.old 2>/dev/null || true; ${STDCP} man/tab.3 ${INSTALLROOT}/man/man3/tab.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/tab.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/tab.3 generated
 make ${INSTALLROOT}/man/man3/tm.3
 make man/tm.3
 done man/tm.3
 exec - test '' = 'man/tm.3' || ${STDCMP} 2>/dev/null -s man/tm.3 ${INSTALLROOT}/man/man3/tm.3 || { ${STDMV} ${INSTALLROOT}/man/man3/tm.3 ${INSTALLROOT}/man/man3/tm.3.old 2>/dev/null || true; ${STDCP} man/tm.3 ${INSTALLROOT}/man/man3/tm.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/tm.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/tm.3 generated
 make ${INSTALLROOT}/man/man3/tmx.3
 make man/tmx.3
 done man/tmx.3
 exec - test '' = 'man/tmx.3' || ${STDCMP} 2>/dev/null -s man/tmx.3 ${INSTALLROOT}/man/man3/tmx.3 || { ${STDMV} ${INSTALLROOT}/man/man3/tmx.3 ${INSTALLROOT}/man/man3/tmx.3.old 2>/dev/null || true; ${STDCP} man/tmx.3 ${INSTALLROOT}/man/man3/tmx.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/tmx.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/tmx.3 generated
 make ${INSTALLROOT}/man/man3/tok.3
 make man/tok.3
 done man/tok.3
 exec - test '' = 'man/tok.3' || ${STDCMP} 2>/dev/null -s man/tok.3 ${INSTALLROOT}/man/man3/tok.3 || { ${STDMV} ${INSTALLROOT}/man/man3/tok.3 ${INSTALLROOT}/man/man3/tok.3.old 2>/dev/null || true; ${STDCP} man/tok.3 ${INSTALLROOT}/man/man3/tok.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/tok.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/tok.3 generated
 make ${INSTALLROOT}/man/man3/touch.3
 make man/touch.3
 done man/touch.3
 exec - test '' = 'man/touch.3' || ${STDCMP} 2>/dev/null -s man/touch.3 ${INSTALLROOT}/man/man3/touch.3 || { ${STDMV} ${INSTALLROOT}/man/man3/touch.3 ${INSTALLROOT}/man/man3/touch.3.old 2>/dev/null || true; ${STDCP} man/touch.3 ${INSTALLROOT}/man/man3/touch.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/touch.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/touch.3 generated
 make ${INSTALLROOT}/man/man3/tv.3
 make man/tv.3
 done man/tv.3
 exec - test '' = 'man/tv.3' || ${STDCMP} 2>/dev/null -s man/tv.3 ${INSTALLROOT}/man/man3/tv.3 || { ${STDMV} ${INSTALLROOT}/man/man3/tv.3 ${INSTALLROOT}/man/man3/tv.3.old 2>/dev/null || true; ${STDCP} man/tv.3 ${INSTALLROOT}/man/man3/tv.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/tv.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/tv.3 generated
 make ${INSTALLROOT}/man/man3/vecargs.3
 make man/vecargs.3
 done man/vecargs.3
 exec - test '' = 'man/vecargs.3' || ${STDCMP} 2>/dev/null -s man/vecargs.3 ${INSTALLROOT}/man/man3/vecargs.3 || { ${STDMV} ${INSTALLROOT}/man/man3/vecargs.3 ${INSTALLROOT}/man/man3/vecargs.3.old 2>/dev/null || true; ${STDCP} man/vecargs.3 ${INSTALLROOT}/man/man3/vecargs.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/vecargs.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/vecargs.3 generated
 make ${INSTALLROOT}/man/man3/vmalloc.3
 make man/vmalloc.3
 done man/vmalloc.3
 exec - test '' = 'man/vmalloc.3' || ${STDCMP} 2>/dev/null -s man/vmalloc.3 ${INSTALLROOT}/man/man3/vmalloc.3 || { ${STDMV} ${INSTALLROOT}/man/man3/vmalloc.3 ${INSTALLROOT}/man/man3/vmalloc.3.old 2>/dev/null || true; ${STDCP} man/vmalloc.3 ${INSTALLROOT}/man/man3/vmalloc.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/vmalloc.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/vmalloc.3 generated
 make ${INSTALLROOT}/lib/lib
 exec - if	silent test ! -d ${INSTALLROOT}/lib/lib
@@ -6146,7 +6090,6 @@ make ${INSTALLROOT}/lib/lib/ast
 prev ${INSTALLROOT}/lib/lib
 prev ast.req
 exec - test '' = 'ast.req' || ${STDCMP} 2>/dev/null -s ast.req ${INSTALLROOT}/lib/lib/ast || { ${STDMV} ${INSTALLROOT}/lib/lib/ast ${INSTALLROOT}/lib/lib/ast.old 2>/dev/null || true; ${STDCP} ast.req ${INSTALLROOT}/lib/lib/ast  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/lib/lib/ast) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/lib/lib/ast generated
 make ${INSTALLROOT}/include/ast
 exec - if	silent test ! -d ${INSTALLROOT}/include/ast
@@ -6933,7 +6876,6 @@ prev ${INSTALLROOT}/lib/file
 make misc/magic.tab
 done misc/magic.tab
 exec - test '' = 'misc/magic.tab' || ${STDCMP} 2>/dev/null -s misc/magic.tab ${INSTALLROOT}/lib/file/magic || { ${STDMV} ${INSTALLROOT}/lib/file/magic ${INSTALLROOT}/lib/file/magic.old 2>/dev/null || true; ${STDCP} misc/magic.tab ${INSTALLROOT}/lib/file/magic  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/lib/file/magic) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/lib/file/magic generated
 prev comp/fmtmsg.h
 prev ast_lib.h

@@ -243,7 +243,7 @@ $(INCLUDEDIR) :INSTALLPROTO: $(HEADEREXP) $(HEADERSRC) $(HEADERGEN)
 conf :: conf.sh
 
 conflim.h conftab.h conftab.c :JOINT: conf conf.tab
-	$(*:O=1:P=A) $(IFFEFLAGS:V:N=-v) $(*:O>1) $(CC) $(CCFLAGS:VP:N!=-D_BLD_*)
+	$(*:O=1:P=A) $(IFFEFLAGS:V:N=-v) $(*:O>1) $(CC) $(CCFLAGS:VP:N!=-D_BLD_*|$\(*\)) /* 2007-07-01: $(CCFLAGS:VPX:N!=-D_BLD_*) */
 
 $(HEADERGEN) :COPY: FEATURE/$$(<:B:/$(ID)_//)
 

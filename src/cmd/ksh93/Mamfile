@@ -142,7 +142,6 @@ meta pmain.o %.c>%.o sh/pmain.c pmain
 prev sh/pmain.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_DYNAMIC -D_BLD_shell -D_PACKAGE_ast -c sh/pmain.c
 done pmain.o generated
-make shell
 make libshell.a archive
 make shell.req
 exec - set -
@@ -179,16 +178,11 @@ meta FEATURE/time features/%>FEATURE/% features/time time
 make features/time
 done features/time
 prev shell.req
-make ${mam_libdll}
-done ${mam_libdll} dontcare virtual
-make ${mam_libcmd}
-done ${mam_libcmd} dontcare virtual
-make ${mam_libast}
-done ${mam_libast} dontcare virtual
-make ${mam_libm}
-done ${mam_libm} dontcare virtual
-make ${mam_libdl}
-done ${mam_libdl} dontcare virtual
+bind -ldll
+bind -lcmd
+bind -last
+bind -lm dontcare
+bind -ldl dontcare
 make +ljobs
 done +ljobs dontcare virtual
 make +li
@@ -197,9 +191,7 @@ make ${mam_libsecdb}
 done ${mam_libsecdb} dontcare virtual
 make +lintl
 done +lintl dontcare virtual
-make +last archive
-done +last dontcare virtual
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref  -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include  : run features/time
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libdl}  : run features/time
 make ${PACKAGE_ast_INCLUDE}/times.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast_time.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_time.h dontcare
@@ -214,17 +206,11 @@ meta FEATURE/dynamic features/%>FEATURE/% features/dynamic dynamic
 make features/dynamic
 done features/dynamic
 prev shell.req
-prev ${mam_libdll}
-prev ${mam_libcmd}
-prev ${mam_libast}
-prev ${mam_libm}
-prev ${mam_libdl}
 prev +ljobs
 prev +li
 prev ${mam_libsecdb}
 prev +lintl
-prev +last archive
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref  -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include  : run features/dynamic
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libdl}  : run features/dynamic
 make ${PACKAGE_ast_INCLUDE}/fs3d.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast_fs.h implicit
 prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
@@ -235,17 +221,11 @@ meta FEATURE/options features/%>FEATURE/% features/options options
 make features/options
 done features/options
 prev shell.req
-prev ${mam_libdll}
-prev ${mam_libcmd}
-prev ${mam_libast}
-prev ${mam_libm}
-prev ${mam_libdl}
 prev +ljobs
 prev +li
 prev ${mam_libsecdb}
 prev +lintl
-prev +last archive
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref  -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include  : run features/options
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libdl}  : run features/options
 done FEATURE/options dontcare generated
 prev ${PACKAGE_ast_INCLUDE}/option.h implicit
 done include/builtins.h
@@ -264,34 +244,22 @@ meta FEATURE/sigfeatures features/%>FEATURE/% features/sigfeatures sigfeatures
 make features/sigfeatures
 done features/sigfeatures
 prev shell.req
-prev ${mam_libdll}
-prev ${mam_libcmd}
-prev ${mam_libast}
-prev ${mam_libm}
-prev ${mam_libdl}
 prev +ljobs
 prev +li
 prev ${mam_libsecdb}
 prev +lintl
-prev +last archive
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref  -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include  : run features/sigfeatures
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libdl}  : run features/sigfeatures
 done FEATURE/sigfeatures dontcare generated
 make FEATURE/setjmp implicit
 meta FEATURE/setjmp features/%>FEATURE/% features/setjmp setjmp
 make features/setjmp
 done features/setjmp
 prev shell.req
-prev ${mam_libdll}
-prev ${mam_libcmd}
-prev ${mam_libast}
-prev ${mam_libm}
-prev ${mam_libdl}
 prev +ljobs
 prev +li
 prev ${mam_libsecdb}
 prev +lintl
-prev +last archive
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref  -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include  : run features/setjmp
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libdl}  : run features/setjmp
 done FEATURE/setjmp dontcare generated
 prev ${PACKAGE_ast_INCLUDE}/sfio.h implicit
 prev ${PACKAGE_ast_INCLUDE}/error.h implicit
@@ -329,17 +297,11 @@ make include/path.h implicit
 make FEATURE/acct implicit
 meta FEATURE/acct >FEATURE/%  acct
 prev shell.req
-prev ${mam_libdll}
-prev ${mam_libcmd}
-prev ${mam_libast}
-prev ${mam_libm}
-prev ${mam_libdl}
 prev +ljobs
 prev +li
 prev ${mam_libsecdb}
 prev +lintl
-prev +last archive
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref  -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include  : def acct
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libdl}  : def acct
 done FEATURE/acct dontcare generated
 prev include/nval.h implicit
 prev FEATURE/options implicit
@@ -408,17 +370,11 @@ meta FEATURE/ttys features/%>FEATURE/% features/ttys ttys
 make features/ttys
 done features/ttys
 prev shell.req
-prev ${mam_libdll}
-prev ${mam_libcmd}
-prev ${mam_libast}
-prev ${mam_libm}
-prev ${mam_libdl}
 prev +ljobs
 prev +li
 prev ${mam_libsecdb}
 prev +lintl
-prev +last archive
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref  -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include  : run features/ttys
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libdl}  : run features/ttys
 done FEATURE/ttys dontcare generated
 done include/terminal.h dontcare
 prev FEATURE/setjmp implicit
@@ -428,17 +384,11 @@ meta FEATURE/locale features/%>FEATURE/% features/locale locale
 make features/locale
 done features/locale
 prev shell.req
-prev ${mam_libdll}
-prev ${mam_libcmd}
-prev ${mam_libast}
-prev ${mam_libm}
-prev ${mam_libdl}
 prev +ljobs
 prev +li
 prev ${mam_libsecdb}
 prev +lintl
-prev +last archive
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref  -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include  : run features/locale
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libdl}  : run features/locale
 done FEATURE/locale dontcare generated
 prev FEATURE/options implicit
 done include/edit.h dontcare
@@ -544,17 +494,11 @@ meta FEATURE/poll features/%>FEATURE/% features/poll poll
 make features/poll
 done features/poll
 prev shell.req
-prev ${mam_libdll}
-prev ${mam_libcmd}
-prev ${mam_libast}
-prev ${mam_libm}
-prev ${mam_libdl}
 prev +ljobs
 prev +li
 prev ${mam_libsecdb}
 prev +lintl
-prev +last archive
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref  -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include  : run features/poll
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libdl}  : run features/poll
 done FEATURE/poll generated
 prev FEATURE/time implicit
 prev include/builtins.h implicit
@@ -584,17 +528,11 @@ meta FEATURE/externs features/%>FEATURE/% features/externs externs
 make features/externs
 done features/externs
 prev shell.req
-prev ${mam_libdll}
-prev ${mam_libcmd}
-prev ${mam_libast}
-prev ${mam_libm}
-prev ${mam_libdl}
 prev +ljobs
 prev +li
 prev ${mam_libsecdb}
 prev +lintl
-prev +last archive
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref  -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include  : run features/externs
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libdl}  : run features/externs
 done FEATURE/externs generated
 prev include/builtins.h implicit
 prev include/test.h implicit
@@ -631,17 +569,11 @@ meta FEATURE/rlimits features/%>FEATURE/% features/rlimits rlimits
 make features/rlimits
 done features/rlimits
 prev shell.req
-prev ${mam_libdll}
-prev ${mam_libcmd}
-prev ${mam_libast}
-prev ${mam_libm}
-prev ${mam_libdl}
 prev +ljobs
 prev +li
 prev ${mam_libsecdb}
 prev +lintl
-prev +last archive
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref  -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include  : run features/rlimits
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libdl}  : run features/rlimits
 done FEATURE/rlimits dontcare generated
 prev FEATURE/time implicit
 done include/ulimit.h
@@ -703,32 +635,20 @@ prev FEATURE/externs implicit
 make FEATURE/execargs implicit
 meta FEATURE/execargs >FEATURE/%  execargs
 prev shell.req
-prev ${mam_libdll}
-prev ${mam_libcmd}
-prev ${mam_libast}
-prev ${mam_libm}
-prev ${mam_libdl}
 prev +ljobs
 prev +li
 prev ${mam_libsecdb}
 prev +lintl
-prev +last archive
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref  -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include  : def execargs
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libdl}  : def execargs
 done FEATURE/execargs generated
 make FEATURE/pstat implicit
 meta FEATURE/pstat >FEATURE/%  pstat
 prev shell.req
-prev ${mam_libdll}
-prev ${mam_libcmd}
-prev ${mam_libast}
-prev ${mam_libm}
-prev ${mam_libdl}
 prev +ljobs
 prev +li
 prev ${mam_libsecdb}
 prev +lintl
-prev +last archive
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref  -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include  : def pstat
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libdl}  : def pstat
 done FEATURE/pstat generated
 prev FEATURE/time implicit
 make include/timeout.h implicit
@@ -851,17 +771,11 @@ meta FEATURE/cmds features/%>FEATURE/% features/cmds cmds
 make features/cmds
 done features/cmds
 prev shell.req
-prev ${mam_libdll}
-prev ${mam_libcmd}
-prev ${mam_libast}
-prev ${mam_libm}
-prev ${mam_libdl}
 prev +ljobs
 prev +li
 prev ${mam_libsecdb}
 prev +lintl
-prev +last archive
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref  -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include  : run features/cmds
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libdl}  : run features/cmds
 done FEATURE/cmds generated
 prev FEATURE/time implicit
 prev FEATURE/options implicit
@@ -1275,17 +1189,11 @@ make data/math.tab implicit
 done data/math.tab
 done features/math.sh dontcare
 prev shell.req
-prev ${mam_libdll}
-prev ${mam_libcmd}
-prev ${mam_libast}
-prev ${mam_libm}
-prev ${mam_libdl}
 prev +ljobs
 prev +li
 prev ${mam_libsecdb}
 prev +lintl
-prev +last archive
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref  -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include  : run features/math.sh data/math.tab
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libdl}  : run features/math.sh data/math.tab
 make ${PACKAGE_ast_INCLUDE}/ast_standards.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_standards.h dontcare
 done FEATURE/math generated
@@ -1434,15 +1342,12 @@ exec - ${AR} cr libshell.a alarm.o cd_pwd.o cflow.o deparse.o getopts.o hist.o m
 exec - ${AR} cr libshell.a jobs.o lex.o macro.o name.o nvtree.o parse.o path.o string.o streval.o subshell.o tdump.o timers.o trestore.o waitevent.o xec.o env.o limits.o msg.o strdata.o testops.o keywords.o options.o signals.o aliases.o builtins.o variables.o lexstates.o emacs.o vi.o hexpand.o
 exec - (ranlib libshell.a) >/dev/null 2>&1 || true
 done libshell.a generated
-done shell virtual
 bind -lshell
 prev +ljobs
 prev +li
 prev ${mam_libsecdb}
 prev +lintl
-prev ${mam_libdl}
-prev +last archive
-exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.}  -o ksh pmain.o ${mam_libshell}
+exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib}  -o ksh pmain.o ${mam_libshell} ${mam_libdl} ${mam_libast}
 done ksh generated
 make shcomp
 make shcomp.o
@@ -1458,16 +1363,14 @@ setv _BLD_shell -U_BLD_shell
 setv _BLD_DLL -U_BLD_DLL
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -Iinclude -I${PACKAGE_ast_INCLUDE} -DSH_DICT=\""libshell"\" -DSHOPT_KIA -D_PACKAGE_ast -DSHOPT_DYNAMIC -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2006 AT&T Knowledge Ventures][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libshell]"\" -c sh/shcomp.c
 done shcomp.o generated
-prev shell
+prev libshell.a archive
 prev +ljobs
 prev +li
 prev ${mam_libsecdb}
 prev +lintl
-prev ${mam_libdl}
-prev +last archive
 setv CC.DLL -UCC.DLL
 setv SH_DICT -DSH_DICT="\"libshell\""
-exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.}  -o shcomp shcomp.o ${mam_libshell}
+exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib}  -o shcomp shcomp.o ${mam_libshell} ${mam_libdl} ${mam_libast}
 done shcomp generated
 make suid_exec
 make suid_exec.o
@@ -1485,17 +1388,16 @@ setv CC.DLL -UCC.DLL
 setv _BLD_shell -U_BLD_shell
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c sh/suid_exec.c
 done suid_exec.o generated
-prev +last archive
 prev +ljobs
 prev +li
 prev ${mam_libsecdb}
 prev +lintl
-prev ${mam_libdl}
-prev +last archive
 setv CC.DLL -UCC.DLL
-exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS}   -o suid_exec suid_exec.o
+exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib}  -o suid_exec suid_exec.o ${mam_libast} ${mam_libdl} ${mam_libast}
 done suid_exec generated
-prev shell
+make shell
+prev libshell.a archive
+done shell virtual
 prev libshell.a archive
 make ${INSTALLROOT}/bin
 exec - if	silent test ! -d ${INSTALLROOT}/bin
@@ -1506,7 +1408,6 @@ make ${INSTALLROOT}/bin/ksh
 prev ${INSTALLROOT}/bin
 prev ksh
 exec - test '' = 'ksh' || ${STDCMP} 2>/dev/null -s ksh ${INSTALLROOT}/bin/ksh || { ${STDMV} ${INSTALLROOT}/bin/ksh ${INSTALLROOT}/bin/ksh.old 2>/dev/null || true; ${STDCP} ksh ${INSTALLROOT}/bin/ksh  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/bin/ksh) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/bin/ksh generated
 make ${INSTALLROOT}/man/man1
 exec - if	silent test ! -d ${INSTALLROOT}/man/man1
@@ -1518,7 +1419,6 @@ prev ${INSTALLROOT}/man/man1
 make sh.1
 done sh.1
 exec - test '' = 'sh.1' || ${STDCMP} 2>/dev/null -s sh.1 ${INSTALLROOT}/man/man1/sh.1 || { ${STDMV} ${INSTALLROOT}/man/man1/sh.1 ${INSTALLROOT}/man/man1/sh.1.old 2>/dev/null || true; ${STDCP} sh.1 ${INSTALLROOT}/man/man1/sh.1  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man1/sh.1) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man1/sh.1 generated
 make ${INSTALLROOT}/lib
 exec - if	silent test ! -d ${INSTALLROOT}/lib
@@ -1541,13 +1441,11 @@ prev ${INSTALLROOT}/man/man3
 make shell.3
 done shell.3
 exec - test '' = 'shell.3' || ${STDCMP} 2>/dev/null -s shell.3 ${INSTALLROOT}/man/man3/shell.3 || { ${STDMV} ${INSTALLROOT}/man/man3/shell.3 ${INSTALLROOT}/man/man3/shell.3.old 2>/dev/null || true; ${STDCP} shell.3 ${INSTALLROOT}/man/man3/shell.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/shell.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/shell.3 generated
 make ${INSTALLROOT}/man/man3/nval.3
 make nval.3
 done nval.3
 exec - test '' = 'nval.3' || ${STDCMP} 2>/dev/null -s nval.3 ${INSTALLROOT}/man/man3/nval.3 || { ${STDMV} ${INSTALLROOT}/man/man3/nval.3 ${INSTALLROOT}/man/man3/nval.3.old 2>/dev/null || true; ${STDCP} nval.3 ${INSTALLROOT}/man/man3/nval.3  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/man/man3/nval.3) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/man/man3/nval.3 generated
 make ${INSTALLROOT}/lib/lib
 exec - if	silent test ! -d ${INSTALLROOT}/lib/lib
@@ -1558,7 +1456,6 @@ make ${INSTALLROOT}/lib/lib/shell
 prev ${INSTALLROOT}/lib/lib
 prev shell.req
 exec - test '' = 'shell.req' || ${STDCMP} 2>/dev/null -s shell.req ${INSTALLROOT}/lib/lib/shell || { ${STDMV} ${INSTALLROOT}/lib/lib/shell ${INSTALLROOT}/lib/lib/shell.old 2>/dev/null || true; ${STDCP} shell.req ${INSTALLROOT}/lib/lib/shell  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/lib/lib/shell) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/lib/lib/shell generated
 make ${PACKAGE_ast_INCLUDE}
 exec - if	silent test ! -d ${PACKAGE_ast_INCLUDE}
@@ -1593,12 +1490,10 @@ done ${PACKAGE_ast_INCLUDE}/history.h generated
 make ${INSTALLROOT}/bin/suid_exec
 prev suid_exec
 exec - test '' = 'suid_exec' || ${STDCMP} 2>/dev/null -s suid_exec ${INSTALLROOT}/bin/suid_exec || { ${STDMV} ${INSTALLROOT}/bin/suid_exec ${INSTALLROOT}/bin/suid_exec.old 2>/dev/null || true; ${STDCP} suid_exec ${INSTALLROOT}/bin/suid_exec  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/bin/suid_exec) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/bin/suid_exec generated
 make ${INSTALLROOT}/bin/shcomp
 prev shcomp
 exec - test '' = 'shcomp' || ${STDCMP} 2>/dev/null -s shcomp ${INSTALLROOT}/bin/shcomp || { ${STDMV} ${INSTALLROOT}/bin/shcomp ${INSTALLROOT}/bin/shcomp.old 2>/dev/null || true; ${STDCP} shcomp ${INSTALLROOT}/bin/shcomp  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/bin/shcomp) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/bin/shcomp generated
 make ${INSTALLROOT}/fun
 exec - if	silent test ! -d ${INSTALLROOT}/fun
@@ -1611,21 +1506,18 @@ make fun/dirs
 done fun/dirs
 setv mode -Dmode="+x"
 exec - test '' = 'fun/dirs' || ${STDCMP} 2>/dev/null -s fun/dirs ${INSTALLROOT}/fun/dirs || { ${STDMV} ${INSTALLROOT}/fun/dirs ${INSTALLROOT}/fun/dirs.old 2>/dev/null || true; ${STDCP} fun/dirs ${INSTALLROOT}/fun/dirs  		    		   && chmod ugo+x ${INSTALLROOT}/fun/dirs ;}
-exec - (ranlib ${INSTALLROOT}/fun/dirs) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/fun/dirs generated
 make ${INSTALLROOT}/fun/popd
 make fun/popd
 done fun/popd
 setv mode -Dmode="+x"
 exec - test '' = 'fun/popd' || ${STDCMP} 2>/dev/null -s fun/popd ${INSTALLROOT}/fun/popd || { ${STDMV} ${INSTALLROOT}/fun/popd ${INSTALLROOT}/fun/popd.old 2>/dev/null || true; ${STDCP} fun/popd ${INSTALLROOT}/fun/popd  		    		   && chmod ugo+x ${INSTALLROOT}/fun/popd ;}
-exec - (ranlib ${INSTALLROOT}/fun/popd) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/fun/popd generated
 make ${INSTALLROOT}/fun/pushd
 make fun/pushd
 done fun/pushd
 setv mode -Dmode="+x"
 exec - test '' = 'fun/pushd' || ${STDCMP} 2>/dev/null -s fun/pushd ${INSTALLROOT}/fun/pushd || { ${STDMV} ${INSTALLROOT}/fun/pushd ${INSTALLROOT}/fun/pushd.old 2>/dev/null || true; ${STDCP} fun/pushd ${INSTALLROOT}/fun/pushd  		    		   && chmod ugo+x ${INSTALLROOT}/fun/pushd ;}
-exec - (ranlib ${INSTALLROOT}/fun/pushd) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/fun/pushd generated
 done install virtual
 make test

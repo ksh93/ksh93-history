@@ -190,7 +190,6 @@ make ${INSTALLROOT}/lib/lib/sum
 prev ${INSTALLROOT}/lib/lib
 prev sum.req
 exec - test '' = 'sum.req' || ${STDCMP} 2>/dev/null -s sum.req ${INSTALLROOT}/lib/lib/sum || { ${STDMV} ${INSTALLROOT}/lib/lib/sum ${INSTALLROOT}/lib/lib/sum.old 2>/dev/null || true; ${STDCP} sum.req ${INSTALLROOT}/lib/lib/sum  		    		    ;}
-exec - (ranlib ${INSTALLROOT}/lib/lib/sum) >/dev/null 2>&1 || true
 done ${INSTALLROOT}/lib/lib/sum generated
 make ${PACKAGE_ast_INCLUDE}
 exec - if	silent test ! -d ${PACKAGE_ast_INCLUDE}
