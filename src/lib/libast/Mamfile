@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.1 2006-12-07
+info mam static 00000 1994-07-17 make (AT&T Research) 5.1 2006-12-12
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ar
@@ -58,7 +58,21 @@ make features/common
 done features/common
 exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/common
 done FEATURE/common generated
-make ast_map.h
+make FEATURE/param
+meta FEATURE/param features/%.sh>FEATURE/% features/param.sh param
+make features/param.sh
+done features/param.sh
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/param.sh
+make std/endian.h implicit
+make std/bytesex.h implicit
+make ast_common.h implicit
+prev FEATURE/common
+exec - sed '/define _def_map_ast/d' < FEATURE/common > 1.${COTEMP}.x
+exec - if	cmp 2>/dev/null -s ast_common.h 1.${COTEMP}.x
+exec - then	rm -f 1.${COTEMP}.x
+exec - else	mv 1.${COTEMP}.x ast_common.h
+exec - fi
+make ast_map.h implicit
 make FEATURE/map
 meta FEATURE/map features/%.c>FEATURE/% features/map.c map
 make features/map.c
@@ -80,7 +94,12 @@ done features/map.c
 exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I.  ${LDFLAGS} '   run features/map.c
 done FEATURE/map generated
 exec - cmp 2>/dev/null -s FEATURE/map ast_map.h || { rm -f ast_map.h; silent test -d . || mkdir .; ${STDCP} FEATURE/map ast_map.h; }
-done ast_map.h generated
+done ast_map.h dontcare generated
+done ast_common.h dontcare generated
+done std/bytesex.h dontcare
+done std/endian.h dontcare
+done FEATURE/param generated
+prev ast_map.h
 make ast_limits.h
 make FEATURE/limits
 meta FEATURE/limits features/%.c>FEATURE/% features/limits.c limits
@@ -133,25 +152,7 @@ done conftab.h generated
 make conftab.c
 done conftab.c generated
 done joint.conflim.h virtual
-make FEATURE/param implicit
-meta FEATURE/param features/%.sh>FEATURE/% features/param.sh param
-make features/param.sh
-done features/param.sh
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/param.sh
-make std/endian.h implicit
-make std/bytesex.h implicit
-make ast_common.h implicit
-prev FEATURE/common
-exec - sed '/define _def_map_ast/d' < FEATURE/common > 1.${COTEMP}.x
-exec - if	cmp 2>/dev/null -s ast_common.h 1.${COTEMP}.x
-exec - then	rm -f 1.${COTEMP}.x
-exec - else	mv 1.${COTEMP}.x ast_common.h
-exec - fi
-prev ast_map.h implicit
-done ast_common.h dontcare generated
-done std/bytesex.h dontcare
-done std/endian.h dontcare
-done FEATURE/param generated
+prev FEATURE/param implicit
 make comp/getopt.h implicit
 make include/ast_getopt.h implicit
 done include/ast_getopt.h dontcare

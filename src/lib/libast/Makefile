@@ -317,7 +317,7 @@ FEATURE/common : .SCAN.IGNORE
  */
 
 .check.hdr : .IGNORE .VIRTUAL \
-		FEATURE/standards - FEATURE/lib - FEATURE/common - \
+		FEATURE/standards - FEATURE/lib - FEATURE/common - FEATURE/param - \
 		ast_map.h - ast_limits.h - ast_stdio.h ast_nl_types.h - ast_wchar.h
 	: clean up obsolete headers :
 	$(RM) -rf $(HEADERSTD) ast_hdr.h ast_types.h ast_unistd.h iffeio.h \

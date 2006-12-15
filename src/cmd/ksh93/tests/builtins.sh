@@ -174,6 +174,7 @@ if	[[ $var != "" ]]
 then	err_exit "read -r of blank line not working"
 fi
 mkdir -p /tmp/ksh$$/a/b/c 2>/dev/null || err_exit  "mkdir -p failed"
+$SHELL -c "cd /tmp/ksh$$/a/b; cd c" 2>/dev/null || err_exit "initial script relative cd fails"
 rm -r /tmp/ksh$$ || err_exit "rm -r /tmp/ksh$$ failed"
 trap 'print HUP' HUP
 if	[[ $(trap) != "trap -- 'print HUP' HUP" ]]

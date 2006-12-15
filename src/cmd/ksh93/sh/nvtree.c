@@ -498,8 +498,9 @@ static char **genvalue(char **argv, register Sfio_t *outfile, const char *prefix
 		if(n==0 || strncmp(arg,prefix-n,m+n)==0)
 		{
 			cp +=m;
+			r = 0;
 			if(*cp=='.')
-				cp++;
+				cp++,r++;
 			if(nextcp=nextdot(cp))
 			{
 				if(outfile)
@@ -508,7 +509,7 @@ static char **genvalue(char **argv, register Sfio_t *outfile, const char *prefix
 					nv_outname(outfile,cp,nextcp-cp);
 					sfputc(outfile,'=');
 				}
-				argv = genvalue(argv,outfile,cp,n+m ,indent,noscope);
+				argv = genvalue(argv,outfile,cp,n+m+r ,indent,noscope);
 				if(outfile)
 					sfputc(outfile,'\n');
 				if(*argv)
@@ -523,7 +524,7 @@ static char **genvalue(char **argv, register Sfio_t *outfile, const char *prefix
 				sfnputc(outfile,'\t',indent);
 				nv_attribute(np,outfile,"typeset",1);
 				nv_close(np);
-				sfputr(outfile,arg+m,'=');
+				sfputr(outfile,arg+m+(n?n+1:0),'=');
 				argv = genvalue(++argv,outfile,cp,cp-arg ,indent,noscope);
 				sfputc(outfile,'\n');
 			}

@@ -1,3 +1,5 @@
+06-12-12 string/strperm.c: octal modes are absolute!
+06-12-11 comp/conf.tab: always defer ARG_MAX
 06-12-07 Makefile: fix conftab.c generation CCFLAGS to match build - doh
 06-12-04 sfio/sfcvt.c: fix (int) vs. (long) cast mismatches
 06-12-01 comp/conf.tab: add changes to cover solaris { bin xpg4 xpg6 }

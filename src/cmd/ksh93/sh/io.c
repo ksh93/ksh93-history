@@ -196,7 +196,7 @@ freeaddrinfo(struct addrinfo* ap)
  * return <protocol>/<host>/<service> fd
  */
 
-typedef int (*Inetintr_f)(int, void*);
+typedef int (*Inetintr_f)(struct addrinfo*, void*);
 
 static int
 inetopen(const char* path, int server, Inetintr_f onintr, void* handle)
@@ -278,15 +278,16 @@ inetopen(const char* path, int server, Inetintr_f onintr, void* handle)
 			p->ai_protocol = hint.ai_protocol;
 		if (!p->ai_socktype)
 			p->ai_socktype = hint.ai_socktype;
-		if ((fd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) >= 0)
+		while ((fd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) >= 0)
 		{
-			do
-			{
-				if (server && !bind(fd, p->ai_addr, p->ai_addrlen) && !listen(fd, 5) || !server && !connect(fd, p->ai_addr, p->ai_addrlen))
-					goto done;
-			} while (errno == EINTR && (!onintr || !(*onintr)(fd, handle)));
+			if (server && !bind(fd, p->ai_addr, p->ai_addrlen) && !listen(fd, 5) || !server && !connect(fd, p->ai_addr, p->ai_addrlen))
+				goto done;
 			close(fd);
 			fd = -1;
+			if (errno != EINTR || !onintr)
+				break;
+			if ((*onintr)(addr, handle))
+				return -1;
 		}
 	}
  done:
@@ -582,13 +583,13 @@ int sh_close(register int fd)
 }
 
 static int
-onintr(int fd, void* handle)
+onintr(struct addrinfo* addr, void* handle)
 {
 	Shell_t*	sh = (Shell_t*)handle;
 
 	if (sh->trapnote&SH_SIGSET)
 	{
-		close(fd);
+		freeaddrinfo(addr);
 		sh_exit(SH_EXITSIG);
 		return -1;
 	}

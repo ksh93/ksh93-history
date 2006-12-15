@@ -56,13 +56,14 @@ static const char	*std_path;
 static int onstdpath(const char *name)
 {
 	register const char *cp = std_path, *sp;
-	while(*cp)
-	{
-		for(sp=name; *sp && (*cp == *sp); sp++,cp++);
-		if(*sp==0 && (*cp==0 || *cp==':'))
-			return(1);
-		while(*cp && *cp++!=':');
-	}
+	if(cp)
+		while(*cp)
+		{
+			for(sp=name; *sp && (*cp == *sp); sp++,cp++);
+			if(*sp==0 && (*cp==0 || *cp==':'))
+				return(1);
+			while(*cp && *cp++!=':');
+		}
 	return(0);
 }
 

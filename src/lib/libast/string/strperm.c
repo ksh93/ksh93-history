@@ -80,7 +80,11 @@ strperm(const char* aexpr, char** e, register int perm)
 				continue;
 			default:
 				if (c >= '0' && c <= '7')
+				{
+					if (!who)
+						who = S_ISVTX|S_ISUID|S_ISGID|S_IRWXU|S_IRWXG|S_IRWXO;
 					c = '=';
+				}
 				expr--;
 				/*FALLTHROUGH*/
 			case '=':
@@ -244,6 +248,8 @@ strperm(const char* aexpr, char** e, register int perm)
 							return perm & S_IPERM;
 						}
 						num = (num << 3) | (c - '0');
+						if (!who && (op == '+' || op == '-'))
+							who = S_ISVTX|S_ISUID|S_ISGID|S_IRWXU|S_IRWXG|S_IRWXO;
 						if (*expr < '0' || *expr > '7')
 						{
 							typ |= modei(num);
