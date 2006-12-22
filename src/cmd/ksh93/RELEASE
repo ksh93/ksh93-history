@@ -1,4 +1,6 @@
-06-12-18  --- Release ksh93s  ---
+06-12-22  --- Release ksh93s  ---
+06-12-22  /dev/(tcp|udp|sctp)/HOST/SEVRICE now handles IPv6 addresses on
+	  systems that provide getaddrinfo(3).
 06-12-19  A -v option was added to read.  With this option the value of
 	  the first variable name argument will become the default value
 	  when read from a terminal device. 
