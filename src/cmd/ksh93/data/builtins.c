@@ -1225,7 +1225,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optread[] =
-"[-1c?\n@(#)$Id: read (AT&T Research) 2003-05-19 $\n]"
+"[-1c?\n@(#)$Id: read (AT&T Research) 2006-12-19 $\n]"
 USAGE_LICENSE
 "[+NAME?read - read a line from standard input]"
 "[+DESCRIPTION?\bread\b reads a line from standard input and breaks it "
@@ -1258,6 +1258,8 @@ USAGE_LICENSE
 	"will be in bytes.]"
 "[N]#[nbyte?Read exactly \ansize\a characters.  For binary fields \asize\a "
 	"will be in bytes.]"
+"[v?When reading from a terminal the value of the first variable is displayed "
+	"and used as a default value.]"
 "\n"
 "\n[var?prompt] [var ...]\n"
 "\n"

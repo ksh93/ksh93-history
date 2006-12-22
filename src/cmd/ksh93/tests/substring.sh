@@ -496,5 +496,5 @@ fi
 string='foo(d:\nt\box\something)bar'
 expected='d:\nt\box\something'
 [[ ${string/*\(+([!\)])\)*/\1} == "$expected" ]] || err_exit "substring expansion failed '${string/*\(+([!\)])\)*/\1}' returned -- '$expected' expected"
-
+LC_ALL=en_US.UTF-8 $SHELL -c 'b1="€€€€w€€€€"; [[ ${b1:4:1} == w ]]' || err_exit 'Multibyte ${var:offset:len} not working correctly'
 exit $((Errors))

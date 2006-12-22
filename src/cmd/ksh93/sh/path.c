@@ -39,6 +39,8 @@
 #if SHOPT_PFSH 
 #   ifdef _hdr_exec_attr
 #	include	<exec_attr.h>
+#   else
+#	undef SHOPT_PFSH
 #   endif
 #endif
 
@@ -1349,9 +1351,8 @@ static Pathcomp_t *path_addcomp(Pathcomp_t *first, Pathcomp_t *old,const char *n
 		strcpy(pp->blib,LIBCMD);
 		return(first);
 	}
-	if(flag!=PATH_PATH)
-		return(first);
-	path_chkpaths(first,old,pp,offset);
+	if((flag&(PATH_PATH|PATH_SKIP))==PATH_PATH)
+		path_chkpaths(first,old,pp,offset);
 	return(first);
 }
 
@@ -1559,7 +1560,7 @@ void path_newdir(Pathcomp_t *first)
 			if(pp->ino==pq->ino && pp->dev==pq->dev)
 				pq->flags |= PATH_SKIP;
 		}
-		if(pp->flags==PATH_PATH)
+		if((pp->flags&(PATH_PATH|PATH_SKIP))==PATH_PATH)
 		{
 			/* try to insert .paths component */
 			int offset = staktell();

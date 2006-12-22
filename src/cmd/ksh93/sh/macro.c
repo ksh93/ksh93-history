@@ -1368,16 +1368,13 @@ retry1:
 					if((c=mbsize(v))<1)
 						c = 1;
 					v += c;
-					vsize -= c;
 				}
 				c = ':';
 			}
 #endif /* SHOPT_MULTIBYTE */
 			else
-			{
 				v += type;
-				vsize -= type;
-			}
+			vsize -= type;
 		}
 		if(*ptr==':')
 		{

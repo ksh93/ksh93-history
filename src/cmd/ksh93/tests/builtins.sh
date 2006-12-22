@@ -335,7 +335,7 @@ for v
 do	IFS=:
 	set -- $v
 	IFS=$ifs
-	env="$env $2=\"\$$2\""
+	eval [[ \$$2 ]] && env="$env $2=\"\$$2\""
 done
 set --glob
 if	[[ $(foo=bar; eval foo=\$foo $env exec -c \$SHELL -c \'print \$foo\') != bar ]]

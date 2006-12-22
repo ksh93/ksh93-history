@@ -1,4 +1,7 @@
-06-11-20  --- Release ksh93s  ---
+06-12-18  --- Release ksh93s  ---
+06-12-19  A -v option was added to read.  With this option the value of
+	  the first variable name argument will become the default value
+	  when read from a terminal device. 
 06-11-20  A bug in which "${foo[@]:1}}" expands a null argument (instead of
 	  no argument), when foo[0] is not empty has been fixed. 
 06-11-16  The discipline functions have been modified to allow each subscript

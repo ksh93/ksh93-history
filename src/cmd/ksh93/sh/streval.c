@@ -744,7 +744,7 @@ again:
 					vp->nextchr++;
 			}
 			else
-				d = (*vp->convert)(&vp->nextchr, &lvalue, LOOKUP, d);
+				d = (*vp->convert)(&vp->nextchr, &lvalue, LOOKUP, 0);
 			if (vp->nextchr == pos)
 			{
 				if(vp->errmsg.value = lvalue.value)

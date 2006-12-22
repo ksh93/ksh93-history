@@ -748,6 +748,16 @@ void	ed_setup(register Edit_t *ep, int fd, int reedit)
 #endif
 		ep->e_wsize = MAXLINE - (ep->e_plen-2);
 	}
+	if(ep->e_default && (pp = nv_getval(ep->e_default)))
+	{
+		n = strlen(pp);
+		if(n > LOOKAHEAD)
+			n = LOOKAHEAD;
+		ep->e_lookahead = n;
+		while(n-- > 0)
+			ep->e_lbuf[n] = *pp++;
+		ep->e_default = 0;
+	}
 }
 
 /*

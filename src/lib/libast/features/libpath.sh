@@ -47,11 +47,12 @@ then	libpath=lib:LD_LIBRARY_PATH
 		then	libpath="lib64:LD_LIBRARY64_PATH:sgi.mips[4-9]|sgi.*-64,$libpath"
 		fi
 		;;
-	sol*.sun*|sol*.sparc*)
-		if	test -d /lib/sparcv9
-		then	libpath="lib/sparcv9:LD_LIBRARY_PATH_64:sol.*64*,$libpath"
+	sol*.*) if	test -d /lib/32
+		then	libpath="lib/32:LD_LIBRARY_PATH_32,$libpath"
 		fi
-		libpath="$libpath,lib:LD_LIBRARY_PATH_32"
+		if	test -d /lib/64
+		then	libpath="lib/64:LD_LIBRARY_PATH_64:sol.*64*,$libpath"
+		fi
 		;;
 	esac
 elif	test -x /lib/dld.sl

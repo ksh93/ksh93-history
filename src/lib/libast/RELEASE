@@ -1,3 +1,5 @@
+06-12-20 features/libpath.sh: generalize sol.* LIBPATH patterns
+06-12-18 comp/setlocale.c: include ast_standards.h and ast_wchar.h !
 06-12-12 string/strperm.c: octal modes are absolute!
 06-12-11 comp/conf.tab: always defer ARG_MAX
 06-12-07 Makefile: fix conftab.c generation CCFLAGS to match build - doh
