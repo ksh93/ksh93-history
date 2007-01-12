@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
+*           Copyright (c) 1982-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -532,7 +532,20 @@ Namval_t *nv_create(const char *name, Dt_t *root, int flags, Namfun_t *dp)
 			do
 			{
 				if(!np)
+				{
+					if(*sp=='[' && *cp==0 && cp[-1]==']') 
+					{
+						/*
+						 * for backward compatibility
+						 * evaluate subscript for
+						 * possible side effects
+						 */
+						cp[-1] = 0;
+						sh_arith(sp+1);
+						cp[-1] = ']';
+					}
 					return(np);
+				}
 				if(c=='[' || (c=='.' && nv_isarray(np)))
 				{
 					int n = 0;
@@ -793,10 +806,10 @@ skip:
 }
 
 #if SHOPT_MULTIBYTE
-    static char *savep;
-    static char savechars[8+1];
     static int ja_size(char*, int, int);
     static void ja_restore(void);
+    static char *savep;
+    static char savechars[8+1];
 #endif /* SHOPT_MULTIBYTE */
 
 /*

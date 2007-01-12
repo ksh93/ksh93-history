@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
+*           Copyright (c) 1982-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -238,6 +238,18 @@ struct limits
 #define SH_BASHEXTRA		0x200
 #define SH_BASHOPT		0x400
 
+#define SH_ID			"ksh"	/* ksh id */
+#define SH_STD			"sh"	/* standard sh id */
+
+/* defines for sh_type() */
+
+#define SH_TYPE_SH		001
+#define SH_TYPE_KSH		002
+#define SH_TYPE_BASH		004
+#define SH_TYPE_LOGIN		010
+#define SH_TYPE_PROFILE		020
+#define SH_TYPE_RESTRICTED	040
+
 #if SHOPT_BASH
 #   ifndef SHOPT_HISTEXPAND
 #	define SHOPT_HISTEXPAND	1
@@ -319,6 +331,7 @@ extern char 		*sh_substitute(const char*,const char*,char*);
 extern const char	*_sh_translate(const char*);
 extern int		sh_trace(char*[],int);
 extern void		sh_trim(char*);
+extern int		sh_type(const char*);
 extern void		sh_utol(const char*, char*);
 extern int 		sh_whence(char**,int);
 

@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#           Copyright (c) 1982-2006 AT&T Knowledge Ventures            #
+#           Copyright (c) 1982-2007 AT&T Knowledge Ventures            #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                      by AT&T Knowledge Ventures                      #
@@ -375,4 +375,7 @@ unset foo
 foo=bar
 set -- "${foo[@]:1}"
 (( $# == 0 )) || err_exit '${foo[@]:1} should not have any values'
+unset bar
+: ${_foo[bar=4]}
+(( bar == 4 )) || err_exit 'subscript of unset variable not evaluated'
 exit $((Errors))

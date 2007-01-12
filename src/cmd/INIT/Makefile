@@ -35,7 +35,7 @@ silent :: silent.sh
 $(PACKAGEROOT)/lib/package :INSTALLDIR: package.mk CONVERT.mk
 
 $(LIBDIR)/make :INSTALLDIR: package.mk PROBE.mk TEST.mk WWW.mk \
-	MSGFUN.mk MSGKEY.mk
+	MSGFUN.mk MSGKEY.mk MAPLIB.mk
 
 :TEST: iffe
 
@@ -43,16 +43,18 @@ cc ld ldd :PACKAGE_INIT: mamake.c proto.c ratz.c release.c
 
 :: RELEASE hosttype.tst p.c hello.c \
 	cc.specialize cc.pentium4 \
-	cc.darwin.ppc cc.darwin7.ppc \
-	cc.hp.pa cc.hp.pa64 cc.ibm.risc \
-	cc.linux.ia64-icc cc.lynxos.i386 cc.lynxos.ppc \
-	cc.mvs.390 cc.next.i386 cc.next.m68k cc.osf.alpha \
-	cc.sco.i386 cc.sgi.mips2 cc.sgi.mips3 cc.sgi.mips3-o32 cc.sgi.mips4 \
-	cc.sgi.mips4-n32 cc.unix.mc68k \
-	ld.hp.pa \
-	ldd.cygwin.i386 ldd.darwin.ppc ldd.darwin7.ppc ldd.hp.pa \
-	ldd.ibm.risc ldd.lynxos.i386 ldd.lynxos.ppc ldd.mvs.390 \
-	ldd.sgi.mips2 ldd.sgi.mips3 ldd.sgi.mips4
+	ldd.cygwin.i386 \
+	cc.darwin ldd.darwin \
+	cc.hp.pa cc.hp.pa64 ld.hp.pa ldd.hp.pa \
+	cc.ibm.risc ldd.ibm.risc \
+	cc.linux.ia64-icc \
+	cc.lynxos.i386 cc.lynxos.ppc ldd.lynxos \
+	cc.mvs.390 cc.next.i386 cc.next.m68k ldd.mvs.390 \
+	cc.osf.alpha \
+	cc.sco.i386 \
+	cc.sgi.mips2 cc.sgi.mips3 cc.sgi.mips3-o32 cc.sgi.mips4 \
+	cc.sgi.mips4-n32 ldd.sgi \
+	cc.unix.mc68k
 
 LICENSE : .DONTCARE
 
@@ -233,25 +235,6 @@ prototyped.h : $(BINDIR)/proto
 	fi
 
 /*
- * -l* library local conventions
- */
-
-":MAPLIB:" : .MAKE .OPERATOR
-	$(LIBDIR)/lib/$(<) :INSTALL: $(<).req
-	$(<).req : (CC) $(>)
-		r='-'
-		for i in $(*)
-		do	if	$(CC) -o $(<:B).exe $i -l$(<:B) > /dev/null
-			then	$(CC) -o $(<:B).exe $i > /dev/null || {
-					r='-l$(<:B)'
-					break
-				}
-			fi
-		done 2>/dev/null
-		echo " $r" > $(<)
-		rm -f $(<:B).exe $(*:B:S=$(CC.SUFFIX.OBJECT))
-
-/*
  * check if -ldl is required
  * this allows makefiles to use -ldl on all systems
  *
@@ -288,3 +271,13 @@ nsl :MAPLIB: nsl.c
  */
 
 socket :MAPLIB: socket.c nsl.c
+
+/*
+ * more substance abuse
+ * gdbm's ndbm "compatibility" doesn't supply <ndbm.h>, instead supplies
+ * <gdbm/ndbm.h> which provides K&R prototypes *and* it requires -lgdbm
+ * this is why unix is starting to look like windows
+ * this map allows makefiles to use -ldbm on all systems
+ */
+
+dbm gdbm :MAPLIB: gdbm.c gdbm2.c

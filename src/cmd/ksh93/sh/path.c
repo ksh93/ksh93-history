@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
+*           Copyright (c) 1982-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -689,7 +689,7 @@ Pathcomp_t *path_absolute(register const char *name, Pathcomp_t *endpath)
 						return(oldpp);
 					}
 #if (_AST_VERSION>=20040404)
-					if (oldpp->bltin_lib = dllplug("ksh", oldpp->blib, NiL, RTLD_LAZY, NiL, 0))
+					if (oldpp->bltin_lib = dllplug(SH_ID, oldpp->blib, NiL, RTLD_LAZY, NiL, 0))
 #else
 					if (oldpp->bltin_lib = dllfind(oldpp->blib, NiL, RTLD_LAZY, NiL, 0))
 #endif

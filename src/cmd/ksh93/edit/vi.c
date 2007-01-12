@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
+*           Copyright (c) 1982-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -60,29 +60,30 @@
 
 #define	MAXCHAR	MAXLINE-2		/* max char per line */
 
-#undef isblank
 #if SHOPT_MULTIBYTE
+#   include	"lexstates.h"
 #   define gencpy(a,b)	ed_gencpy(a,b)
 #   define genncpy(a,b,n)	ed_genncpy(a,b,n)
 #   define genlen(str)	ed_genlen(str)
 #   define digit(c)	((c&~STRIP)==0 && isdigit(c))
 #   define is_print(c)	((c&~STRIP) || isprint(c))
 #   if !_lib_iswprint && !defined(iswprint)
-#	define iswprint(c)	is_print((c))
+#	define iswprint(c)	((c&~0177) || isprint(c))
 #   endif
     static int _isalph(int);
     static int _ismetach(int);
     static int _isblank(int);
+#   undef  isblank
 #   define isblank(v)	_isblank(virtual[v])
 #   define isalph(v)	_isalph(virtual[v])
 #   define ismetach(v)	_ismetach(virtual[v])
-#   include	"lexstates.h"
 #else
     static genchar	_c;
 #   define gencpy(a,b)	strcpy((char*)(a),(char*)(b))
 #   define genncpy(a,b,n) strncpy((char*)(a),(char*)(b),n)
 #   define genlen(str)	strlen(str)
 #   define isalph(v)	((_c=virtual[v])=='_'||isalnum(_c))
+#   undef  isblank
 #   define isblank(v)	isspace(virtual[v])
 #   define ismetach(v)	ismeta(virtual[v])
 #   define digit(c)	isdigit(c)

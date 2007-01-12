@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
+*           Copyright (c) 1982-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -277,19 +277,14 @@ int sh_main(int ac, char *av[], void (*userinit)(int))
 					 * change for argv for setuid scripts
 					 */
 					cp = path_basename(*av);
-					if(strcmp(cp,"sh")==0 || strcmp(cp,"ksh")==0)
+					if(sh_type(cp) && (!(name=nv_getval(L_ARGNOD)) || !sh_type(cp = path_basename(name))))
 					{
-						if(name=nv_getval(L_ARGNOD))
-							cp = path_basename(name);
-						if(strcmp(cp,"sh")!=0 && strcmp(cp,"ksh")!=0)
-						{
-							av[0] = cp;
-							/*  exec to change $0 for ps */
-							execv(pathshell(),av);
-							/* exec fails */
-							shp->st.dolv[0] = av[0];
-							fixargs(shp->st.dolv,1);
-						}
+						av[0] = cp;
+						/*  exec to change $0 for ps */
+						execv(pathshell(),av);
+						/* exec fails */
+						shp->st.dolv[0] = av[0];
+						fixargs(shp->st.dolv,1);
 					}
 #endif
 					name = av[0];

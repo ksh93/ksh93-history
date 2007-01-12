@@ -1,3 +1,8 @@
+07-01-11 misc/stk.c: a 2 day marathon bug fix (can we release now dr ek?)
+07-01-05 comp/spawnveg.c: posix_spawnattr_setflags(POSIX_SPAWN_SETPGROUP)
+07-01-05 misc/error.c: fix multibyte vs. printable logic
+07-01-01 comp/conf.sh: LC_ALL=C
+06-12-26 tm/tmxdate.c: handle nn*.nnnn* == sec.ns
 06-12-20 features/libpath.sh: generalize sol.* LIBPATH patterns
 06-12-18 comp/setlocale.c: include ast_standards.h and ast_wchar.h !
 06-12-12 string/strperm.c: octal modes are absolute!

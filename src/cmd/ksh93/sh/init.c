@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
+*           Copyright (c) 1982-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -55,38 +55,6 @@
 
 #if SHOPT_BASH
     extern void bash_init(int);
-#endif
-
-#if _hdr_wchar && _lib_wctype && _lib_iswctype
-#   include <wchar.h>
-#   if _hdr_wctype
-#	include <wctype.h>
-#   endif
-#   undef  isalpha
-#   define isalpha(x)      iswalpha(x)
-#   undef  isblank
-#   define isblank(x)      iswblank(x)
-#   if !defined(iswblank) && !_lib_iswblank
-
-	static int
-	iswblank(wchar_t wc)
-	{
-		static int      initialized;
-		static wctype_t wt;
-
-		if (!initialized)
-		{
-			initialized = 1;
-			wt = wctype("blank");
-		}
-		return(iswctype(wc, wt));
-	}
-#   endif
-#else
-#   undef  _lib_wctype
-#   ifndef isblank
-#	define isblank(x)      ((x)==' '||(x)=='\t')
-#   endif
 #endif
 
 #define RANDMASK	0x7fff
@@ -180,9 +148,6 @@ static Dt_t		*inittree(Shell_t*,const struct shtable2*);
 #   define EXE
 #endif
 
-static const char	rsh_pattern[] = "@(rk|kr|r)sh?(93)" EXE;
-static const char	pfsh_pattern[] = "pf?(k)sh?(93)" EXE;
-static const char	bash_pattern[] = "?(r)bash" EXE;
 static int		rand_shift;
 
 
@@ -419,7 +384,8 @@ static void put_ifs(register Namval_t* np,const char *val,int flags,Namfun_t *fp
 {
 	register struct ifs *ip = (struct ifs*)fp;
 	ip->ifsnp = 0;
-	nv_putv(np, val, flags, fp);
+	if(val != np->nvalue.cp)
+		nv_putv(np, val, flags, fp);
 	
 }
 
@@ -495,16 +461,14 @@ static void put_seconds(register Namval_t* np,const char *val,int flags,Namfun_t
 		nv_unset(np);
 		return;
 	}
-	if(flags&NV_INTEGER)
-		d = *(double*)val;
-	else
-		d = sh_arith(val);
-	timeofday(&tp);
 	if(!np->nvalue.dp)
 	{
 		nv_setsize(np,3);
 		np->nvalue.dp = new_of(double,0);
 	}
+	nv_putv(np, val, flags, fp);
+	d = *np->nvalue.dp;
+	timeofday(&tp);
 	*np->nvalue.dp = dtime(&tp)-d;
 }
 
@@ -819,12 +783,82 @@ static int newconf(const char *name, const char *path, const char *value)
 #endif
 
 /*
+ * return SH_TYPE_* bitmask for path
+ * 0 for "not a shell"
+ */
+int sh_type(register const char *path)
+{
+	register const char*	s;
+	register int		t = 0;
+	
+	if (s = (const char*)strrchr(path, '/'))
+		s++;
+	else
+		s = path;
+	if (*s == '-')
+	{
+		s++;
+		t |= SH_TYPE_LOGIN;
+	}
+	for (;;)
+	{
+		if (!(t & (SH_TYPE_KSH|SH_TYPE_BASH)))
+		{
+			if (*s == 'k')
+			{
+				s++;
+				t |= SH_TYPE_KSH;
+				continue;
+			}
+#if SHOPT_BASH
+			if (*s == 'b' && *(s+1) == 'a')
+			{
+				s += 2;
+				t |= SH_TYPE_BASH;
+				continue;
+			}
+#endif
+		}
+		if (!(t & (SH_TYPE_PROFILE|SH_TYPE_RESTRICTED)))
+		{
+#if SHOPT_PFSH
+			if (*s == 'p' && *(s+1) == 'f')
+			{
+				s += 2;
+				t |= SH_TYPE_PROFILE;
+				continue;
+			}
+#endif
+			if (*s == 'r')
+			{
+				s++;
+				t |= SH_TYPE_RESTRICTED;
+				continue;
+			}
+		}
+		break;
+	}
+	if (*s++ != 's' || *s++ != 'h')
+		return 0;
+	t |= SH_TYPE_SH;
+	if ((t & SH_TYPE_KSH) && *s == '9' && *(s+1) == '3')
+		s += 2;
+#if _WINIX
+	if (*s == '.' && *(s+1) == 'e' && *(s+2) == 'x' && *(s+3) == 'e')
+		s += 4;
+#endif
+	if (*s)
+		t &= ~(SH_TYPE_PROFILE|SH_TYPE_RESTRICTED);
+	return t;
+}
+
+/*
  * initialize the shell
  */
 Shell_t *sh_init(register int argc,register char *argv[], void(*userinit)(int))
 {
-	register char *name;
 	register int n;
+	int type;
 	static char *login_files[3];
 	n = strlen(e_version);
 	if(e_version[n-1]=='$' && e_version[n-2]==' ')
@@ -892,12 +926,9 @@ Shell_t *sh_init(register int argc,register char *argv[], void(*userinit)(int))
 	/* read the environment */
 	if(argc>0)
 	{
-		name = path_basename(*argv);
-		if(*name=='-')
-		{
-			name++;
+		type = sh_type(*argv);
+		if(type&SH_TYPE_LOGIN)
 			sh.login_sh = 2;
-		}
 	}
 	env_init(&sh);
 #if SHOPT_SPAWN
@@ -915,7 +946,7 @@ Shell_t *sh_init(register int argc,register char *argv[], void(*userinit)(int))
 			buff[n] = 0;
 			sh.shpath = strdup(buff);
 		}
-		else if((cp && (last=strrchr(cp,'/')) && strmatch(&last[1],"?(-)?(r)?(k)sh"EXE)) || (argc>0 && (last=strrchr(cp= *argv,'/'))))
+		else if((cp && (last=strrchr(cp,'/')) && sh_type(last+1)) || (argc>0 && (last=strrchr(cp= *argv,'/'))))
 		{
 			if(*cp=='/')
 				sh.shpath = strdup(cp);
@@ -945,21 +976,19 @@ Shell_t *sh_init(register int argc,register char *argv[], void(*userinit)(int))
 	if(argc>0)
 	{
 		/* check for restricted shell */
-		if(strmatch(name,rsh_pattern))
+		if(type&SH_TYPE_RESTRICTED)
 			sh_onoption(SH_RESTRICTED);
 #if SHOPT_PFSH
 		/* check for profile shell */
-		else if(strmatch(name,pfsh_pattern))
+		else if(type&SH_TYPE_PROFILE)
 			sh_onoption(SH_PFSH);
 #endif
 #if SHOPT_BASH
 		/* check for invocation as bash */
-		else if(strmatch(name,bash_pattern))
+		if(type&SH_TYPE_BASH)
 		{
 		        sh.userinit = userinit = bash_init;
 			sh_onoption(SH_BASH);
-			if(*name=='r')
-				sh_onoption(SH_RESTRICTED);
 			sh_onstate(SH_PREINIT);
 			(*userinit)(0);
 			sh_offstate(SH_PREINIT);
@@ -982,22 +1011,25 @@ Shell_t *sh_init(register int argc,register char *argv[], void(*userinit)(int))
 			sh.st.dolc--;
 			sh.st.dolv++;
 #if _WINIX
-			name = sh.st.dolv[0];
-			if(name[1]==':' && (name[2]=='/' || name[2]=='\\'))
 			{
+				char*	name;
+				name = sh.st.dolv[0];
+				if(name[1]==':' && (name[2]=='/' || name[2]=='\\'))
+				{
 #if _lib_pathposix
-				char*	p;
+					char*	p;
 
-				if((n = pathposix(name, NIL(char*), 0)) > 0 && (p = (char*)malloc(++n)))
-				{
-					pathposix(name, p, n);
-					name = p;
-				}
-				else
+					if((n = pathposix(name, NIL(char*), 0)) > 0 && (p = (char*)malloc(++n)))
+					{
+						pathposix(name, p, n);
+						name = p;
+					}
+					else
 #endif
-				{
-					name[1] = name[0];
-					name[0] = name[2] = '/';
+					{
+						name[1] = name[0];
+						name[0] = name[2] = '/';
+					}
 				}
 			}
 #endif /* _WINIX */
@@ -1387,7 +1419,7 @@ static void env_init(Shell_t *shp)
 	if(cp = nv_getval(SHELLNOD))
 	{
 		cp = path_basename(cp);
-		if(strmatch(cp,rsh_pattern))
+		if(sh_type(cp)&SH_TYPE_RESTRICTED)
 			sh_onoption(SH_RESTRICTED); /* restricted shell */
 	}
 	return;

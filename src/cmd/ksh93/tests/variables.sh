@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#           Copyright (c) 1982-2006 AT&T Knowledge Ventures            #
+#           Copyright (c) 1982-2007 AT&T Knowledge Ventures            #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                      by AT&T Knowledge Ventures                      #
@@ -553,4 +553,6 @@ function x.set
 }
 x[0]=0 x[1]=1 x[2]=2 x[3]=3
 [[ ${x[@]} == '12 8 5 3' ]] || err_exit 'set discipline for indexed array not working correctly'
+((SECONDS=3*4))
+(( SECONDS < 12 || SECONDS > 12.1 )) &&  err_exit "SECONDS is $SECONDS and should be close to 12"
 exit $((Errors))

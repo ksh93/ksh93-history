@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#           Copyright (c) 1982-2006 AT&T Knowledge Ventures            #
+#           Copyright (c) 1982-2007 AT&T Knowledge Ventures            #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                      by AT&T Knowledge Ventures                      #
@@ -20,7 +20,7 @@
 : generate the ksh math builtin table
 : include math.tab
 
-# @(#)math.sh (AT&T Research) 2006-12-04
+# @(#)math.sh (AT&T Research) 2007-01-04
 
 command=$0
 iffeflags="-n -v -F ast_standards.h"
@@ -49,36 +49,25 @@ done
 
 : check the math library
 
-eval `iffe $iffeflags -c "$cc" - lib $tests $iffehdrs $iffelibs 2>&$stderr`
-tests=
-for name in $names
-do	eval x='$'_lib_${name}l y='$'_lib_${name}
-	case $x:$y in
-	1:*)	tests="$tests,${name}l" ;;
-	*:1)	tests="$tests,${name}" ;;
-	esac
-done
-eval `iffe $iffeflags -c "$cc" - dat $tests $iffehdrs $iffelibs 2>&$stderr`
-tests=
-for name in $names
-do	eval x='$'_dat_${name}l y='$'_dat_${name}
-	case $x:$y in
-	1:*)	tests="$tests,${name}l" ;;
-	*:1)	tests="$tests,${name}" ;;
-	esac
-done
-eval `iffe $iffeflags -c "$cc" - npt $tests $iffehdrs 2>&$stderr`
-tests=
+eval `iffe $iffeflags -c "$cc" - typ long.double : lib $tests $iffehdrs $iffelibs 2>&$stderr`
+lib=
+mac=
 for name in $names
 do	eval x='$'_lib_${name}l y='$'_lib_${name}
 	case $x in
-	'')	tests="$tests,${name}l" ;;
+	1)	lib="$lib,${name}l" ;;
+	'')	mac="$mac,${name}l" ;;
 	esac
 	case $y in
-	'')	tests="$tests,${name}" ;;
+	1)	case $x in
+		'')	lib="$lib,${name}" ;;
+		esac
+		;;
+	'')	mac="$mac,${name}" ;;
 	esac
 done
-eval `iffe $iffeflags -c "$cc" - mac $tests $iffehdrs 2>&$stderr`
+eval `iffe $iffeflags -c "$cc" - dat,npt $lib $iffehdrs $iffelibs 2>&$stderr`
+eval `iffe $iffeflags -c "$cc" - mac $mac $iffehdrs 2>&$stderr`
 
 cat <<!
 #pragma prototyped
@@ -102,15 +91,6 @@ nl='
 '
 ht='	'
 tab=
-ldouble=
-for name in $names
-do	eval x='$'_lib_${name}l y='$'_lib_${name}
-	case $x:$y in
-	1:1)	ldouble=1
-		break
-		;;
-	esac
-done
 for name in $names
 do	eval x='$'_lib_${name}l y='$'_lib_${name} r='$'TYPE_${name} a='$'ARGS_${name} aka='$'AKA_${name}
 	case $x:$y in
@@ -120,7 +100,7 @@ do	eval x='$'_lib_${name}l y='$'_lib_${name} r='$'TYPE_${name} a='$'ARGS_${name}
 		;;
 	*:1)	f=${name}
 		t=double
-		local=$ldouble
+		local=$_typ_long_double
 		;;
 	*)	continue
 		;;
@@ -146,8 +126,8 @@ do	eval x='$'_lib_${name}l y='$'_lib_${name} r='$'TYPE_${name} a='$'ARGS_${name}
 		echo "$code"
 		;;
 	esac
-	case $local:$m:$d in
-	1:*:*|*:1:*|*:*:)
+	case $local:$m:$n:$d in
+	1:*:*:*|*:1:*:*|*:*::)
 		args=
 		code="static $L local_$f("
 		sep=

@@ -2,7 +2,7 @@
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)make.probe (AT&T Research) 2005-12-05
+# @(#)make.probe (AT&T Research) 2006-12-22
 #
 # C probe for make
 #
@@ -16,7 +16,7 @@ probe_ccs="strip size nm ld ar" # longest to shortest
 probe_debug="-g"
 probe_dll="'-G 0' -Wc,dll,exportall,longname,rent -Wc,exportall -dynamic $cc_dll_def"
 probe_export_dynamic="-rdynamic -export-dynamic -Wl,-export-dynamic -Wl,-E -bexpall"
-probe_include_local="-iquote -I-"
+probe_include_local="'-ignore-source-dir -iquote' -iquote -I-"
 probe_ldlazy='-zlazyload -znolazyload -Wl,-zlazyload -Wl,-znolazyload'
 probe_ldlib="LD_LIBRARY_PATH LIBPATH LPATH"
 probe_ldmap="'-Wl,-M' '-Qoption ld -M' '-Wl,-m' '-m'"
@@ -217,7 +217,7 @@ do	eval o='$'$c
 	C='${c}'
 	for x in $cc_dir $ld_dir
 	do	cd $x
-		for p in "$C" "$C[!a-zA-Z]*" "*[!a-zA-Z]$C" "*[!a-zA-Z]$C[!a-zA-Z]*"
+		for p in "${C}" "${C}[!a-zA-Z]*" "*[!a-zA-Z]${C}" "*[!a-zA-Z]${C}[!a-zA-Z]*"
 		do	eval set x $p
 			case $# in
 			2)	if	$executable $2
@@ -1078,252 +1078,306 @@ main()
 	;;
 esac
 
-false && case $libpath in
-?*)	stdlib="$stdlib "'$('$libpath':/:/ /G)'
-esac
-case $dir in
-*/arch/$hosttype/lib/*)
-	notlib=`echo $dir | sed "s,/arch/$hosttype/lib/.*,/arch/$hosttype/lib,"`
-	;;
-*)	notlib=////
-	;;
-esac
-tstlib=
-implib=
-if	$cc -c hosted.$src
-then	for f in `(
-		eval set x $probe_verbose
-		while	:
-		do	shift
-			case $# in
-			0)	break ;;
-			esac
-			$cc $1 hosted.$obj
-		done
-		) 2>&1 | sed -e 's/[ 	:]/\\
-/g' -e 's/-L//g' -e 's/^P,//' -e "s/[\\"']//g" -e 's,^[\\\\/]*[\\\\/],/,' | sed -e '/^\$/d' -e '/^[-+]/d' -e '/^[^\\\\\\/]/d' -e '/[\\\\\\/]tmp[\\\\\\/]/d' -e 's/:\$//' -e 's,//*$,,'`
-	do	case " $tstlib $implib " in
-		*" $f "*)	continue ;;
+stdlib=`$cc -v doti.$src 2>&1 |
+	sed 's/  */\n/g' |
+	sed -e '/^-L/!d' -e 's/^-L//' |
+	while read dir
+	do	if	test -d "$dir"
+		then	(cd "$dir"; pwd)
+		fi
+	done`
+case $stdlib in
+?*)	keepstdlib=1
+	o=$stdlib
+	stdlib=
+	for dir in $o
+	do	case " $stdlib " in
+		*" $o "*) continue ;;
 		esac
-		case $f in
-		$notlib)	continue ;;
+		case $dir in
+		/usr/lib64)
+			i=/usr/local/lib64
+			a=/lib64
+			;;
+		/lib64) i=/usr/local/lib64
+			a=/usr/lib64
+			;;
+		/usr/lib)
+			i=/usr/local/lib
+			a=/lib
+			;;
+		lib)	i=/usr/local/lib
+			a=/usr/lib
+			;;
+		*)	i=
+			a=
+			;;
 		esac
-		if	test -d $f
-		then	tstlib="$tstlib $f"
-		elif	test -f $f
-		then	d=`echo $f | sed -e 's,[\\\\/]*[^\\\\/]*\$,,'`
-			case " $tstlib $implib " in
-			*" $d "*)	continue ;;
+		if	test "" != "$i" -a -d "$i"
+		then	case " $o " in
+			*" $i "*)
+				;;
+			*)	stdlib="$stdlib $i"
+				;;
 			esac
-			case $d in
-			*[\\/]usr[\\/]lib)
-				x=$d
-				d="`echo $d | sed -e 's,[\\\\/][\\\\/]*usr[\\\\/]lib\$,/lib,'`"
-				case " $tstlib $implib " in
-				*" $d "*)	;;
-				*)		implib="$implib $d" ;;
-				esac
-				implib="$implib $x"
+		fi
+		stdlib="$stdlib $dir"
+		if	test "" != "$a" -a -d "$a"
+		then	case " $o " in
+			*" $a "*)
 				;;
-			*[\\/]lib)
-				implib="$implib $d"
-				d="`echo $d | sed -e 's,[\\\\/][\\\\/]*lib\$,/usr/lib,'`"
-				case " $tstlib $implib " in
-				*" $d "*)	;;
-				*)		implib="$implib $d" ;;
-				esac
-				;;
-			*)	implib="$implib $d"
+			*)	stdlib="$stdlib $a"
 				;;
 			esac
 		fi
 	done
-fi
-tstlib="$tstlib $implib"
-if	$cc -Dtype=void -Dcall=exit -c tstlib.$src && mv tstlib.$obj tst.$obj
-then	case $plusplus in
-	'')	probe_lxx= ;;
+	;;
+*)	keepstdlib=0
+	case $dir in
+	*/arch/$hosttype/lib/*)
+		notlib=`echo $dir | sed "s,/arch/$hosttype/lib/.*,/arch/$hosttype/lib,"`
+		;;
+	*)	notlib=////
+		;;
 	esac
-	l=
-	for sym in $probe_l $probe_lxx
-	do	case $l in
-		"")	l=$sym; continue ;;
-		esac
-		rm -f tstlib.$exe
-		if	$cc -o tstlib.$exe tst.$obj -l$l
-		then	eval set x $probe_ldmap
+	tstlib=
+	implib=
+	if	$cc -c hosted.$src
+	then	for f in `(
+			eval set x $probe_verbose
 			while	:
 			do	shift
 				case $# in
 				0)	break ;;
 				esac
-				d=`$cc -Dtype=int -Dcall=$sym $static $1 tstlib.$src -l$l 2>&1 | sed -e '/[\\\\\\/].*[\\\\\\/]lib[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+][abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+]*\.[^\\\\\\/]*\$/!d' -e 's,^[^\\\\\/]*,,' -e 's,[\\\\\\/]lib[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+][abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+]*\.[^\\\\\\/]*\$,,' -e '/^[\\\\\\/]/!d' | sort -u`
-				case $d in
-				?*)	tstlib="$tstlib $d" ;;
-				esac
+				$cc $1 hosted.$obj
 			done
-		fi
+			) 2>&1 | sed -e 's/[ 	:]/\\
+	/g' -e 's/-L//g' -e 's/^P,//' -e "s/[\"']//g" -e 's,^[\\\\/]*[\\\\/],/,' | sed -e '/^\$/d' -e '/^[-+]/d' -e '/^[^\\\\\\/]/d' -e '/[\\\\\\/]tmp[\\\\\\/]/d' -e 's/:\$//' -e 's,//*$,,'`
+		do	case " $tstlib $implib " in
+			*" $f "*)	continue ;;
+			esac
+			case $f in
+			$notlib)	continue ;;
+			esac
+			if	test -d $f
+			then	tstlib="$tstlib $f"
+			elif	test -f $f
+			then	d=`echo $f | sed -e 's,[\\\\/]*[^\\\\/]*\$,,'`
+				case " $tstlib $implib " in
+				*" $d "*)	continue ;;
+				esac
+				case $d in
+				*[\\/]usr[\\/]lib)
+					x=$d
+					d="`echo $d | sed -e 's,[\\\\/][\\\\/]*usr[\\\\/]lib\$,/lib,'`"
+					case " $tstlib $implib " in
+					*" $d "*)	;;
+					*)		implib="$implib $d" ;;
+					esac
+					implib="$implib $x"
+					;;
+				*[\\/]lib)
+					implib="$implib $d"
+					d="`echo $d | sed -e 's,[\\\\/][\\\\/]*lib\$,/usr/lib,'`"
+					case " $tstlib $implib " in
+					*" $d "*)	;;
+					*)		implib="$implib $d" ;;
+					esac
+					;;
+				*)	implib="$implib $d"
+					;;
+				esac
+			fi
+		done
+	fi
+	tstlib="$tstlib $implib"
+	if	$cc -Dtype=void -Dcall=exit -c tstlib.$src && mv tstlib.$obj tst.$obj
+	then	case $plusplus in
+		'')	probe_lxx= ;;
+		esac
 		l=
-	done
-fi
-libstd=
-libset=
-stdlibroot="/ /usr/"
-for d in $tstlib
-do	case $d in
-	[\\/]lib|[\\/]usr[\\/]lib)
-		;;
-	*)	case " $stdlib " in
-		*\ $d\ *)
+		for sym in $probe_l $probe_lxx
+		do	case $l in
+			"")	l=$sym; continue ;;
+			esac
+			rm -f tstlib.$exe
+			if	$cc -o tstlib.$exe tst.$obj -l$l
+			then	eval set x $probe_ldmap
+				while	:
+				do	shift
+					case $# in
+					0)	break ;;
+					esac
+					d=`$cc -Dtype=int -Dcall=$sym $static $1 tstlib.$src -l$l 2>&1 | sed -e '/[\\\\\\/].*[\\\\\\/]lib[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+][abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+]*\.[^\\\\\\/]*\$/!d' -e 's,^[^\\\\\/]*,,' -e 's,[\\\\\\/]lib[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+][abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+]*\.[^\\\\\\/]*\$,,' -e '/^[\\\\\\/]/!d' | sort -u`
+					case $d in
+					?*)	tstlib="$tstlib $d" ;;
+					esac
+				done
+			fi
+			l=
+		done
+	fi
+	libstd=
+	libset=
+	stdlibroot="/ /usr/"
+	for d in $tstlib
+	do	case $d in
+		[\\/]lib|[\\/]usr[\\/]lib)
 			;;
-		*)	if	ls $d ${PREROOT+$PREROOT/../$d} > tmp.tmp && test -s tmp.tmp
-			then	for i in $probe_lib $obj
-				do	if	grep -i "\\.$i\$" tmp.tmp >/dev/null
-					then	case " $probe_lib_append " in
-						*\ $d\ *)
-							libstd="$libstd $d"
-							;;
-						*)	stdlib="$stdlib $d"
-							case $d in
-							/usr/lib|/usr/lib/*)
+		*)	case " $stdlib " in
+			*\ $d\ *)
+				;;
+			*)	if	ls $d ${PREROOT+$PREROOT/../$d} > tmp.tmp && test -s tmp.tmp
+				then	for i in $probe_lib $obj
+					do	if	grep -i "\\.$i\$" tmp.tmp >/dev/null
+						then	case " $probe_lib_append " in
+							*\ $d\ *)
+								libstd="$libstd $d"
 								;;
-							/usr/lib?*)
-								e=`echo $d | sed -e 's,/usr,,'`
-								g=`echo $d/libc.* $e/libc.*`
-								case "$e $g " in
-								*".* "*);;
-								*)	stdlib="$stdlib $e"
-									stdlibroot=
+							*)	stdlib="$stdlib $d"
+								case $d in
+								/usr/lib|/usr/lib/*)
+									;;
+								/usr/lib?*)
+									e=`echo $d | sed -e 's,/usr,,'`
+									g=`echo $d/libc.* $e/libc.*`
+									case "$e $g " in
+									*".* "*);;
+									*)	stdlib="$stdlib $e"
+										stdlibroot=
+										;;
+									esac
 									;;
 								esac
 								;;
 							esac
-							;;
-						esac
-						case $libset in
-						"")	case $i in
-							$obj)	;;
-							*)	libset=1
-								lib=$i
+							case $libset in
+							"")	case $i in
+								$obj)	;;
+								*)	libset=1
+									lib=$i
+									;;
+								esac
 								;;
 							esac
-							;;
-						esac
-						break
-					fi
-				done
-			fi
+							break
+						fi
+					done
+				fi
+				;;
+			esac
 			;;
 		esac
+	done
+	for d in `$ld --verbose 2>&1 | sed -e '/SEARCH_DIR/!d' -e 's/[ 	][ 	][ 	]*/ /g' -e 's/SEARCH_DIR(\([^ ]*\));/\1/g' -e 's, //[^ ]*,,' -e 's,",,g'`
+	do	if	test -d $d
+		then	case " $stdlib $libstd " in
+			*\ ${d}\ *)
+				;;
+			*)	libstd="$libstd $d"
+				;;
+			esac
+		fi
+	done
+	case $hosted in
+	"")	tstlib= ;;
+	*)	tstlib="$stdlibroot /usr/ccs/ /usr/local/" ;;
+	esac
+	case $stdlibroot in
+	?*)	d=
+		for f in $stdinclude
+		do	f=`echo $f | sed -e 's,[^\\\\/]*\$,,'`
+			d="$d $f"
+		done
+		tstlib="$d $tstlib"
 		;;
 	esac
-done
-for d in `$ld --verbose 2>&1 | sed -e '/SEARCH_DIR/!d' -e 's/[ 	][ 	][ 	]*/ /g' -e 's/SEARCH_DIR(\([^ ]*\));/\1/g' -e 's, //[^ ]*,,' -e 's,",,g'`
-do	if	test -d $d
-	then	case " $stdlib $libstd " in
-		*\ ${d}\ *)
-			;;
-		*)	libstd="$libstd $d"
-			;;
-		esac
-	fi
-done
-case $hosted in
-"")	tstlib= ;;
-*)	tstlib="$stdlibroot /usr/ccs/ /usr/local/" ;;
-esac
-case $stdlibroot in
-?*)	d=
-	for f in $stdinclude
-	do	f=`echo $f | sed -e 's,[^\\\\/]*\$,,'`
-		d="$d $f"
-	done
-	tstlib="$d $tstlib"
-	;;
-esac
-$cc -c doti.$src > all.tmp
-for f in $probe_libdir
-do	for d in $stdlib $libstd $tstlib
-	do	if	test -d ${d}${f}
-		then	ls ${d}${f} ${PREROOT:+$PREROOT/../${d}${f}} |
-			while read i
-			do	for j in ${d}${f}/${i} ${PREROOT:+$PREROOT/../${d}${f}/${i}}
-				do	if	test -f $j -a -r $j -a -s $j
-					then	echo $i
-						break
-					fi
-				done
-			done > tmp.tmp
-			if	test -s tmp.tmp
-			then	if	egrep -i "^${prefix_archive}[abcdefghijklmnopqrstuvwxyz0123456789_][abcdefghijklmnopqrstuvwxyz0123456789_]*\\.$lib\$" tmp.tmp >lib.tmp ||
-					egrep -i "\\.$obj\$" tmp.tmp >/dev/null ||
-					egrep -i "^${prefix_shared}[abcdefghijklmnopqrstuvwxyz0123456789_][abcdefghijklmnopqrstuvwxyz0123456789_]*\\$so(.[0-9]+)*\$" tmp.tmp >>lib.tmp
-				then	if	test -s lib.tmp
-					then	sed -e "s,.*/,," -e 's,^'${prefix_archive}'\(.*\)\.'$lib'$,\1,g' -e 's,^'${prefix_shared}'\(.*\)\'$so'[.0-9]*,\1,g' lib.tmp | sort -u > tmp.tmp
-						xs=`sort all.tmp all.tmp tmp.tmp | uniq -u`
-						case $xs in
-						'')	continue ;;
-						esac
-						ok=0
-						for x in $xs
-						do	case $x in
-							*_p)	continue ;; # linux gcc known to hang for -lc_p
-							esac
-							if	$cc -o doti.$exe doti.$obj -l$x 2>e
-							then	ok=1
-							else	if	test -s e && egrep -i ":.*[ 	](find|found|locate|search|-l$x)[ 	]" e > /dev/null
-								then	if	egrep -i ":.*[ 	](access|permission)[ 	]" e
-									then	: maybe
-									else	ok=0
-										break
-									fi
-								fi
-								case $Lflag in
-								1)	if	$cc -L${d}${f} -o doti.$exe doti.$obj -l$x
-									then	ok=0
-										break
-									fi
-									;;
-								esac
-							fi
-						done
-						case $ok in
-						0)	continue ;;
-						esac
-						sort -u all.tmp tmp.tmp > lib.tmp
-						mv lib.tmp all.tmp
-					fi
-					case " $stdlib $libstd " in
-					*" ${d}${f} "*)
-						;;
-					*)	if	test -d ${d}${f}/fsoft
-						then	stdlib="$stdlib ${d}${f}/"'$(FLOAT_OPTION)'
+	$cc -c doti.$src > all.tmp
+	for f in $probe_libdir
+	do	for d in $stdlib $libstd $tstlib
+		do	if	test -d ${d}${f}
+			then	ls ${d}${f} ${PREROOT:+$PREROOT/../${d}${f}} |
+				while read i
+				do	for j in ${d}${f}/${i} ${PREROOT:+$PREROOT/../${d}${f}/${i}}
+					do	if	test -f $j -a -r $j -a -s $j
+						then	echo $i
+							break
 						fi
-						stdlib="$stdlib ${d}${f}"
-						;;
-					esac
+					done
+				done > tmp.tmp
+				if	test -s tmp.tmp
+				then	if	egrep -i "^${prefix_archive}[abcdefghijklmnopqrstuvwxyz0123456789_][abcdefghijklmnopqrstuvwxyz0123456789_]*\\.$lib\$" tmp.tmp >lib.tmp ||
+						egrep -i "\\.$obj\$" tmp.tmp >/dev/null ||
+						egrep -i "^${prefix_shared}[abcdefghijklmnopqrstuvwxyz0123456789_][abcdefghijklmnopqrstuvwxyz0123456789_]*\\$so(.[0-9]+)*\$" tmp.tmp >>lib.tmp
+					then	if	test -s lib.tmp
+						then	sed -e "s,.*/,," -e 's,^'${prefix_archive}'\(.*\)\.'$lib'$,\1,g' -e 's,^'${prefix_shared}'\(.*\)\'$so'[.0-9]*,\1,g' lib.tmp | sort -u > tmp.tmp
+							xs=`sort all.tmp all.tmp tmp.tmp | uniq -u`
+							case $xs in
+							'')	continue ;;
+							esac
+							ok=0
+							for x in $xs
+							do	case $x in
+								*_p)	continue ;; # linux gcc known to hang for -lc_p
+								esac
+								if	$cc -o doti.$exe doti.$obj -l$x 2>e
+								then	ok=1
+								else	if	test -s e && egrep -i ":.*[ 	](find|found|locate|search|-l$x)[ 	]" e > /dev/null
+									then	if	egrep -i ":.*[ 	](access|permission)[ 	]" e
+										then	: maybe
+										else	ok=0
+											break
+										fi
+									fi
+									case $Lflag in
+									1)	if	$cc -L${d}${f} -o doti.$exe doti.$obj -l$x
+										then	ok=0
+											break
+										fi
+										;;
+									esac
+								fi
+							done
+							case $ok in
+							0)	continue ;;
+							esac
+							sort -u all.tmp tmp.tmp > lib.tmp
+							mv lib.tmp all.tmp
+						fi
+						case " $stdlib $libstd " in
+						*" ${d}${f} "*)
+							;;
+						*)	if	test -d ${d}${f}/fsoft
+							then	stdlib="$stdlib ${d}${f}/"'$(FLOAT_OPTION)'
+							fi
+							stdlib="$stdlib ${d}${f}"
+							;;
+						esac
+					fi
 				fi
 			fi
-		fi
+		done
 	done
-done
-stdlib="$stdlib $libstd"
-case $stdlib in
-*/shlib*)
-	dy=
-	st=
-	for i in $stdlib $libstd
-	do	case $i in
-		*/shlib)	dy="$dy $i" ;;
-		*)		st="$st $i" ;;
-		esac
-	done
-	for i in /var
-	do	if	test -d $i/shlib
-		then	dy="$dy $i/shlib"
-		fi
-	done
-	stdlib="$dy $st"
+	stdlib="$stdlib $libstd"
+	case $stdlib in
+	*/shlib*)
+		dy=
+		st=
+		for i in $stdlib $libstd
+		do	case $i in
+			*/shlib)	dy="$dy $i" ;;
+			*)		st="$st $i" ;;
+			esac
+		done
+		for i in /var
+		do	if	test -d $i/shlib
+			then	dy="$dy $i/shlib"
+			fi
+		done
+		stdlib="$dy $st"
+		;;
+	esac
 	;;
 esac
 
@@ -1424,7 +1478,7 @@ do	case $hosted in
 			for co in '' -Dtest_const
 			do	rm -f readonly.$exe
 				if	$cc -o readonly.$exe $co $1 readonly.$src && $executable readonly.$exe
-				then	if	( ulimit -c 0; ./readonly.$exe ) >/dev/null 2>&1
+				then	if	./readonly.$exe >/dev/null 2>&1
 					then	:
 					else	readonly=$1
 						break 3
@@ -1441,7 +1495,7 @@ do	case $hosted in
 					-e 's/^\([ 	]*[.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_$:]*[ 	]*\.*\)space[ 	][ 	]*3/\1byte 0,0,0/' \
 					-e 's/^\([ 	]*[.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_$:]*[ 	]*\.*\)space[ 	][ 	]*4/\1byte 0,0,0,0/' \
 					readonly.s > ro.s && $cc -o readonly.$exe ro.s && $executable readonly.$exe
-			then	if	( ulimit -c 0; ./readonly.$exe ) >/dev/null 2>&1
+			then	if	./readonly.$exe >/dev/null 2>&1
 				then	:
 				else	readonly='-S.data'
 					break
@@ -1455,7 +1509,7 @@ do	case $hosted in
 					-e 's/^\([ 	]*[.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_$:]*[ 	]*\.*\)space[ 	][ 	]*3/\1byte 0,0,0/' \
 					-e 's/^\([ 	]*[.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_$:]*[ 	]*\.*\)space[ 	][ 	]*4/\1byte 0,0,0,0/' \
 					readonly.s > ro.s && $cc -o readonly.$exe ro.s && $executable readonly.$exe
-			then	if	( ulimit -c 0; ./readonly.$exe ) >/dev/null 2>&1
+			then	if	./readonly.$exe >/dev/null 2>&1
 				then	:
 				else	readonly='-S.idat'
 					break
@@ -1463,7 +1517,7 @@ do	case $hosted in
 			fi
 			if	sed	-e 's/^\([ 	]*[.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_$:]*[ 	]*\.*\)data/\1rdata/' \
 					readonly.s > ro.s && $cc -o readonly.$exe ro.s && $executable readonly.$exe
-			then	if	( ulimit -c 0; ./readonly.$exe ) >/dev/null 2>&1
+			then	if	./readonly.$exe >/dev/null 2>&1
 				then	:
 				else	readonly='-S.rdata'
 					break
@@ -1801,10 +1855,48 @@ do	eval o='$'$i
 	esac
 done
 
+case $keepstdlib in
+1)	;;
+*)	#
+	# favor lib64 over lib
+	#
+	case $hosttype in
+	*64)	o=$stdlib
+		stdlib=
+		for i in $o
+		do	case " $stdlib " in
+			*" $i "*)
+				continue
+				;;
+			esac
+			case $i in
+			*64)	stdlib="$stdlib $i"
+				continue
+				;;
+			esac
+			case " $o " in
+			*" ${i}64 "*)
+				case " $stdlib " in
+				*" ${i}64 "*)
+					;;
+				*)	stdlib="$stdlib ${i}64"
+					;;
+				esac
+				;;
+			esac
+			stdlib="$stdlib $i"
+		done
+		;;
+	esac
+	;;
+esac
+
 #
 # set up for local override
 #
 
+CC_VERSION_STAMP=$version_stamp
+CC_VERSION_STRING=$version_string
 CC_CC=$cc
 CC_NATIVE=$ccnative
 CC_EXECTYPE=$exectype
@@ -1869,16 +1961,15 @@ CC_SUFFIX_OBJECT=.$obj
 CC_SUFFIX_SHARED=$so
 CC_SUFFIX_SOURCE=.$src
 CC_SUFFIX_STATIC=$sa
+CC_VERSION=$version_flags
 CC_WARN=$warn
 CC_ATTRIBUTES=$ATTRIBUTES
 
 exec >&3
 
-echo CC.CC = $CC_CC
-
 #
 # check for local override
-# all CC_* but CC_CC may be modified
+# all CC_* but { CC_CC CC_VERSION_STAMP CC_VERSION_STRING } may be modified
 # additional CC.* may be printed on stdout
 #
 
@@ -1890,6 +1981,10 @@ fi
 # the payoff
 #
 
+case $version_stamp in
+?*)	echo "# $version_stamp" ;;
+esac
+echo CC.CC = $cc
 echo CC.NATIVE = $CC_NATIVE
 echo CC.EXECTYPE = $CC_EXECTYPE
 echo CC.HOSTTYPE = $CC_HOSTTYPE
@@ -1978,6 +2073,8 @@ echo CC.SUFFIX.OBJECT = $CC_SUFFIX_OBJECT
 echo CC.SUFFIX.SHARED = $CC_SUFFIX_SHARED
 echo CC.SUFFIX.SOURCE = $CC_SUFFIX_SOURCE
 echo CC.SUFFIX.STATIC = $CC_SUFFIX_STATIC
+echo CC.VERSION = $CC_VERSION
+echo CC.VERSION.STRING = $version_string
 echo CC.WARN = $CC_WARN
 
 for i in $CC_ATTRIBUTES

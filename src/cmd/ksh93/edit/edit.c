@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
+*           Copyright (c) 1982-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -733,13 +733,13 @@ void	ed_setup(register Edit_t *ep, int fd, int reedit)
 	ep->e_eol = reedit;
 	if(ep->e_multiline)
 	{
-#ifdef _cmd_infocmp
+#ifdef _cmd_tput
 		char *term;
 		if(!ep->e_term)
 			ep->e_term = nv_search("TERM",sh.var_tree,0);
 		if(ep->e_term && (term=nv_getval(ep->e_term)) && strlen(term)<sizeof(ep->e_termname) && strcmp(term,ep->e_termname))
 		{
-			sh_trap("eval .sh.subscript=$(infocmp -1C 2>/dev/null | sed -e '/:up=/!d' -e 's/.*:up=//' -e 's/:\\\\*$//' -e \"s/[']/\\'/g\" -e \"s/.*/$'&'/\")",0);
+			sh_trap(".sh.subscript=$(tput cuu1 2>/dev/null)",0);
 			if(pp=nv_getval(SH_SUBSCRNOD))
 				strncpy(CURSOR_UP,pp,sizeof(CURSOR_UP)-1);
 			nv_unset(SH_SUBSCRNOD);
@@ -1064,7 +1064,9 @@ Edpos_t ed_curpos(Edit_t *ep,genchar *phys, int off, int cur, Edpos_t curpos)
 	register genchar *sp=phys;
 	register int c=1, col=ep->e_plen;
 	Edpos_t pos;
-	char p;
+#if SHOPT_MULTIBYTE
+	char p[16];
+#endif /* SHOPT_MULTIBYTE */
 	if(cur && off>=cur)
 	{
 		sp += cur; 
@@ -1079,7 +1081,7 @@ Edpos_t ed_curpos(Edit_t *ep,genchar *phys, int off, int cur, Edpos_t curpos)
 		if(c)
 			c = *sp++;
 #if SHOPT_MULTIBYTE
-		if(c && (mbconv(&p, (wchar_t)c))==1 && p=='\n')
+		if(c && (mbconv(p, (wchar_t)c))==1 && p[0]=='\n')
 #else
 		if(c=='\n')
 #endif /* SHOPT_MULTIBYTE */

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1985-2006 AT&T Knowledge Ventures            *
+*           Copyright (c) 1985-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -38,7 +38,7 @@ NoN(spawnveg)
 
 #else
 
-#if _lib_posix_spawn
+#if _lib_posix_spawn > 1	/* reports underlying exec() errors */
 
 #include <spawn.h>
 #include <error.h>
@@ -58,6 +58,8 @@ spawnveg(const char* path, char* const argv[], char* const envv[], pid_t pgid)
 		if (pgid <= 1)
 			pgid = 0;
 		if (err = posix_spawnattr_setpgroup(&attr, pgid))
+			goto bad;
+		if (err = posix_spawnattr_setflags(&attr, POSIX_SPAWN_SETPGROUP))
 			goto bad;
 	}
 	if (err = posix_spawn(&pid, path, NiL, &attr, argv, envv ? envv : environ))

@@ -997,7 +997,9 @@ tst	- -lm -DSTRTO=1 - -DSCAN=1 - -DDIV=1 - -DEXP=1 - -DADD=1 - -DMPY=1 note{ INF
 	main()
 	{
 	#if SCAN || STRTO
+	#undef	NAN
 	#define NAN	"NaN"
+	#undef	INF
 	#define INF	"INF"
 	{
 		float	f;

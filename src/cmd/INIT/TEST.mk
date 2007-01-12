@@ -1,7 +1,7 @@
 /*
  * regression test support
  *
- * @(#)TEST.mk (AT&T Labs Research) 2005-10-11
+ * @(#)TEST.mk (AT&T Labs Research) 2006-06-27
  *
  * test management is still in the design phase
  */
@@ -56,11 +56,13 @@
 		if "$(@:V)"
 			eval
 				test.$$(T) : $$(B) $(>:V:O>1)
+					set +x; (ulimit -c 0) >/dev/null 2>&1 && ulimit -c 0; set -x
 					$(@:V)
 			end
 		else
 			eval
 				test.$$(T) : $$(B)
+					set +x; (ulimit -c 0) >/dev/null 2>&1 && ulimit -c 0; set -x
 					$$(*) $(>:V:O>1)
 			end
 		end
@@ -106,10 +108,12 @@
 			if "$(@:V)"
 				eval
 				test.$$(T) : $$(P) $(>:V:O>1)
+					set +x; (ulimit -c 0) >/dev/null 2>&1 && ulimit -c 0; set -x
 					$(@:V)
 				end
 			else
 				test.$(T) : $(P)
+					set +x; (ulimit -c 0) >/dev/null 2>&1 && ulimit -c 0; set -x
 					$(*)
 			end
 		else

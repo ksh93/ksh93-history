@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#           Copyright (c) 1985-2006 AT&T Knowledge Ventures            #
+#           Copyright (c) 1985-2007 AT&T Knowledge Ventures            #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                      by AT&T Knowledge Ventures                      #
@@ -21,7 +21,7 @@
 ########################################################################
 : generate getconf and limits info
 #
-# @(#)conf.sh (AT&T Research) 2006-12-11
+# @(#)conf.sh (AT&T Research) 2007-01-01
 #
 # this script generates these files from the table file in the first arg
 # the remaining args are the C compiler name and flags
@@ -37,6 +37,9 @@
 case $-:$BASH_VERSION in
 *x*:[0123456789]*)	: bash set -x is broken :; set +ex ;;
 esac
+
+LC_ALL=C
+export LC_ALL
 
 command=conf
 

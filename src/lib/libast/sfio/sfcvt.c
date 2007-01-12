@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1985-2006 AT&T Knowledge Ventures            *
+*           Copyright (c) 1985-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -71,19 +71,18 @@ int		format;		/* conversion format		*/
 
 	*sign = *decpt = 0;
 
+	if(isnanl(dv))
+		return SF_NAN;
+#if _lib_isinf
+	if (n = isinf(dv))
+	{	if (n < 0)
+			*sign = 1;
+		return SF_INFINITE;
+	}
+#endif
 #if !_ast_fltmax_double
 	if(format&SFFMT_LDOUBLE)
 	{	Sfdouble_t	f = dv;
-
-		if(isnanl(f))
-			return SF_NAN;
-#if _lib_isinf
-		if (n = isinf(f))
-		{	if (n < 0)
-				*sign = 1;
-			return SF_INFINITE;
-		}
-#endif
 #if _c99_in_the_wild
 #if _lib_signbit
 		if (signbit(f))

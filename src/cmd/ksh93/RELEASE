@@ -1,4 +1,6 @@
-06-12-22  --- Release ksh93s  ---
+06-12-29  --- Release ksh93s  ---
+06-12-29  A bug in which the value of IFS could be changed after a command
+	  substitution has been fixed. 
 06-12-22  /dev/(tcp|udp|sctp)/HOST/SEVRICE now handles IPv6 addresses on
 	  systems that provide getaddrinfo(3).
 06-12-19  A -v option was added to read.  With this option the value of
@@ -27,6 +29,8 @@
 06-10-23  A bug in ${var:offset:len} in multibyte locales has been fixed.
 06-10-15  The remaining math functions from C99 were added for any system
 	  that supports them.
+06-10-13  The klockwork.com software detected a few coding errors that
+	  have been fixed.
 06-10-12  A bug when skipping over `...` with ${x:=`...`} when x is set
 	  has been fixed.
 06-10-11  A bug in process floating constants produced by the %a format

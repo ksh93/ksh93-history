@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
+*           Copyright (c) 1982-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -48,8 +48,24 @@
 #define TEST_RE		3
 #define SYNBAD		3	/* exit value for syntax errors */
 #define STACK_ARRAY	3	/* size of depth match stack growth */
-#undef	isblank
-#define isblank(c)	(c==' ' || c=='\t')
+
+#if _lib_iswblank < 0	/* set in lexstates.h to enable this code */
+
+int
+local_iswblank(wchar_t wc)
+{
+	static int      initialized;
+	static wctype_t wt;
+
+	if (!initialized)
+	{
+		initialized = 1;
+		wt = wctype("blank");
+	}
+	return(iswctype(wc, wt));
+}
+
+#endif
 
 /*
  * This structure allows for arbitrary depth nesting of (...), {...}, [...]

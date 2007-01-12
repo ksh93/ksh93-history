@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2005 AT&T Corp.                  *
+*           Copyright (c) 1985-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -204,9 +204,6 @@ struct _sffmt_s
 
 _BEGIN_EXTERNS_
 
-extern ssize_t		_Sfi;
-extern ssize_t		_Sfmaxr;
-
 /* standard in/out/err streams */
 
 #if _BLD_sfio && defined(__EXPORT__)
@@ -215,6 +212,9 @@ extern ssize_t		_Sfmaxr;
 #if !_BLD_sfio && defined(__IMPORT__)
 #define extern		extern __IMPORT__
 #endif
+
+extern ssize_t		_Sfi;
+extern ssize_t		_Sfmaxr;
 
 extern Sfio_t*		sfstdin;
 extern Sfio_t*		sfstdout;

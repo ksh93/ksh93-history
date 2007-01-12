@@ -256,6 +256,8 @@ tst	lib_posix_spawn unistd.h stdlib.h spawn.h -Dfork=______fork note{ posix_spaw
 			_exit(0);
 		if (posix_spawnattr_setpgroup(&attr, 0))
 			_exit(0);
+		if (posix_spawnattr_setflags(&attr, POSIX_SPAWN_SETPGROUP))
+			_exit(0);
 		/* first try an a.out and verify that SIGHUP is ignored */
 		cmd[0] = argv[0];
 		cmd[1] = "test";

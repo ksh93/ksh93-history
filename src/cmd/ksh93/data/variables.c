@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2005 AT&T Corp.                  *
+*           Copyright (c) 1982-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -25,6 +25,7 @@
 #include	<shell.h>
 #include	"shtable.h"
 #include	"name.h"
+#include	"defs.h"
 
 /*
  * This is the list of built-in shell variables and default values
@@ -41,7 +42,7 @@ const struct shtable2 shtab_variables[] =
 	"HOME",		0,				(char*)0,
 	"MAIL",		0,				(char*)0,
 	"REPLY",	0,				(char*)0,
-	"SHELL",	NV_NOFREE,			"/bin/sh",
+	"SHELL",	NV_NOFREE,			"/bin/" SH_STD,
 	"EDITOR",	0,				(char*)0,
 	"MAILCHECK",	NV_NOFREE|NV_INTEGER,		(char*)0,
 	"RANDOM",	NV_NOFREE|NV_INTEGER,		(char*)0,

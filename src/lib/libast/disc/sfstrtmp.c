@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2005 AT&T Corp.                  *
+*           Copyright (c) 1985-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -27,14 +27,14 @@
  * sfio tmp string buffer support
  */
 
+#include <sfio_t.h>
+#include <ast.h>
+
 #if __OBSOLETE__ >= 20070101 /* sfstr* macros now use sfsetbuf() */
 
 NoN(sfstrtmp)
 
 #else
-
-#include <sfio_t.h>
-#include <ast.h>
 
 #if defined(__EXPORT__)
 #define extern	__EXPORT__

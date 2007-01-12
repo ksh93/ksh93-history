@@ -9,18 +9,36 @@
 .ds CK \|]
 .ds ' \s+4\v@.3m@\'\v@-.3m@\s-4
 .ds ` \s+4\v@.3m@\`\v@-.3m@\s-4
-.if \nZ=0 .TH SH 1
-.if \nZ=1 .TH KSH 1 "User Environment Utilities" "RDS Standard"
-.if \nZ=2 .TH KSH93 1
+.if \nZ=0  \{\
+.TH SH 1
+.\}
+.if \nZ=1 \{\
+.TH KSH 1 "User Environment Utilities" "RDS Standard"
+.\}
+.if \nZ=2 \{\
+.TH KSH93 1
+.\}
 .SH NAME
-.if \nZ=0 sh, rsh, pfsh \- shell, the
-.if \nZ=1 ksh, rksh, pfksh \- KornShell, a
-.if \nZ=2 ksh93, rksh93, pfksh93 \- KornShell, a
+.if \nZ=0 \{\
+sh, rsh, pfsh \- shell, the
+.\}
+.if \nZ=1 \{\
+.\}
+ksh, rksh, pfksh \- KornShell, a
+.if \nZ=2 \{\
+ksh93, rksh93, pfksh93 \- KornShell, a
+.\}
 standard/restricted command and programming language
 .SH SYNOPSIS
-.if \nZ=0 .B sh
-.if \nZ=1 .B ksh
-.if \nZ=2 .B ksh93
+.if \nZ=0 \{\
+.B sh
+.if \nZ=1 \{\
+.\}
+.B ksh
+.\}
+.if \nZ=2 \{\
+.B ksh93
+.\}
 [
 .B \(+-abcefhikmnoprstuvxBCDP
 ] [
@@ -31,9 +49,15 @@ option ] .\|.\|. [
 .B \-
 ] [ arg .\|.\|. ]
 .br
-.if \nZ=0 .B rsh
-.if \nZ=1 .B rksh
-.if \nZ=1 .B rksh93
+.if \nZ=0 \{\
+.B rsh
+.\}
+.if \nZ=1 \{\
+.B rksh
+.\}
+.if \nZ=2 \{\
+.B rksh93
+.\}
 [
 .B \(+-abcefhikmnoprstuvxBCD
 ] [

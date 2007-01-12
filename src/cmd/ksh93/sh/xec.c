@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
+*           Copyright (c) 1982-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -2520,7 +2520,7 @@ static int run_subshell(const Shnode_t *t,pid_t grp)
 	pid_t pid;
 	char *arglist[2], *envlist[2], devfd[12], *cp;
 	Sfio_t *sp = sftmp(0);
-	envlist[0] = "_=ksh";
+	envlist[0] = "_=" SH_ID;
 	envlist[1] = 0;
 	arglist[0] = error_info.id?error_info.id:sh.shname;
 	if(*arglist[0]=='-')

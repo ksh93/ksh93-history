@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
+*           Copyright (c) 1982-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -626,7 +626,7 @@ int	b_builtin(int argc,char *argv[],void *extra)
 	{
 #ifdef _hdr_dlldefs
 #if (_AST_VERSION>=20040404)
-		if(!(library = dllplug("ksh",arg,NIL(char*),RTLD_LAZY,NIL(char*),0)))
+		if(!(library = dllplug(SH_ID,arg,NIL(char*),RTLD_LAZY,NIL(char*),0)))
 #else
 		if(!(library = dllfind(arg,NIL(char*),RTLD_LAZY,NIL(char*),0)))
 #endif
