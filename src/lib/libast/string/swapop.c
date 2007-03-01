@@ -41,13 +41,13 @@ swapop(const void* internal, const void* external, int size)
 {
 	register int	op;
 	register int	z;
-	char		tmp[sizeof(int_max)];
+	char		tmp[sizeof(intmax_t)];
 
 	if ((z = size) < 0)
 		z = -z;
 	if (z <= 1)
 		return 0;
-	if (z <= sizeof(int_max))
+	if (z <= sizeof(intmax_t))
 		for (op = 0; op < z; op++)
 			if (!memcmp(internal, swapmem(op, external, tmp, z), z))
 			{

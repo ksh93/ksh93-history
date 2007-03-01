@@ -75,7 +75,7 @@ char *nv_getv(Namval_t *np, register Namfun_t *nfp)
 Sfdouble_t nv_getn(Namval_t *np, register Namfun_t *nfp)
 {
 	register Namfun_t	*fp;
-	register Sfdouble_t d=0;
+	register Sfdouble_t	d=0;
 	char *str;
 	if((fp = nfp) != NIL(Namfun_t*) && !nv_local)
 		fp = nfp = nfp->next;
@@ -768,9 +768,9 @@ static void *num_clone(register Namval_t *np, void *val)
 		if(nv_isattr(np,NV_LONG))
 			size = sizeof(Sflong_t);
 		else if(nv_isattr(np,NV_SHORT))
-			size = sizeof(short);
+			size = sizeof(int16_t);
 		else
-			size = sizeof(long);
+			size = sizeof(int32_t);
 	}
 	if(!(nval = malloc(size)))
 		return(0);

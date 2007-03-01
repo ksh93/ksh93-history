@@ -60,12 +60,13 @@ static int setlinemode()
 {	char*			astsfio;
 	char*			endw;
 
-	static int		linemode = -1;
+	static int		modes = -1;
 	static const char	sf_line[] = "SF_LINE";
+	static const char	sf_wcwidth[] = "SF_WCWIDTH";
 
 #define ISSEPAR(c)	((c) == ',' || (c) == ' ' || (c) == '\t')
-	if (linemode < 0)
-	{	linemode = 0;
+	if (modes < 0)
+	{	modes = 0;
 		if(astsfio = getenv("_AST_SFIO_OPTIONS"))
 		{	for(; *astsfio != 0; astsfio = endw)
 			{	while(ISSEPAR(*astsfio) )
@@ -74,13 +75,18 @@ static int setlinemode()
 					;
 				if((endw-astsfio) == (sizeof(sf_line)-1) &&
 				   strncmp(astsfio,sf_line,endw-astsfio) == 0)
-				{	linemode = 1;
-					break;
+				{	if ((modes |= SF_LINE) == (SF_LINE|SF_WCWIDTH))
+						break;
+				}
+				else if((endw-astsfio) == (sizeof(sf_wcwidth)-1) &&
+				   strncmp(astsfio,sf_wcwidth,endw-astsfio) == 0)
+				{	if ((modes |= SF_WCWIDTH) == (SF_LINE|SF_WCWIDTH))
+						break;
 				}
 			}
 		}
 	}
-	return linemode;
+	return modes;
 }
 
 #if __STD_C
@@ -235,8 +241,8 @@ reg size_t	size;	/* buffer size, -1 for default size */
 #endif
 		}
 
-		if(init && setlinemode())
-			f->flags |= SF_LINE;
+		if(init)
+			f->flags |= setlinemode();
 
 		if(f->here >= 0)
 		{	f->extent = (Sfoff_t)st.st_size;
@@ -258,8 +264,8 @@ reg size_t	size;	/* buffer size, -1 for default size */
 					bufsize = SF_GRAIN;
 
 					/* set line mode for terminals */
-					if(!(f->flags&SF_LINE) && isatty(f->file))
-						f->flags |= SF_LINE;
+					if(!(f->flags&(SF_LINE|SF_WCWIDTH)) && isatty(f->file))
+						f->flags |= SF_LINE|SF_WCWIDTH;
 #if _sys_stat
 					else	/* special case /dev/null */
 					{	reg int	dev, ino;

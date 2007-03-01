@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1996-2006 AT&T Knowledge Ventures            *
+*           Copyright (c) 1996-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -19,7 +19,7 @@
 ***********************************************************************/
 #pragma prototyped
 
-#ifdef _ast_int8_t
+#if _typ_int64_t
 
 /*
  * Aaron D. Gifford's SHA {256,384,512} code transcribed into a -lsum method
@@ -88,9 +88,9 @@
 #undef	__USE_BSD
 #endif
 
-typedef unsigned _ast_int1_t  sha2_byte;	/* Exactly 1 byte */
-typedef unsigned _ast_int4_t sha2_word32;	/* Exactly 4 bytes */
-typedef unsigned _ast_int8_t sha2_word64;	/* Exactly 8 bytes */
+typedef  uint8_t sha2_byte;	/* Exactly 1 byte */
+typedef uint32_t sha2_word32;	/* Exactly 4 bytes */
+typedef uint64_t sha2_word64;	/* Exactly 8 bytes */
 
 #define assert(x)
 
@@ -1245,4 +1245,4 @@ sha384_data(Sum_t* p, Sumdata_t* data)
 	return 0;
 }
 
-#endif /* _ast_int8_t */
+#endif /* _typ_int64_t */

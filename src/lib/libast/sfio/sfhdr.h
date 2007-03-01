@@ -1001,6 +1001,15 @@ typedef struct _sfextern_s
 #define _Sffpow10	(_Sftable.sf_flt_pow10)
 #define _Sfdpow10	(_Sftable.sf_dbl_pow10)
 #define _Sflpow10	(_Sftable.sf_ldbl_pow10)
+typedef struct _sfieee_s	Sfieee_t;
+struct _sfieee_s
+{	float		fltnan;		/* float NAN			*/
+	float		fltinf;		/* float INF			*/
+	double		dblnan;		/* double NAN			*/
+	double		dblinf;		/* double INF			*/
+	Sfdouble_t	ldblnan;	/* Sfdouble_t NAN		*/
+	Sfdouble_t	ldblinf;	/* Sfdouble_t INF		*/
+};
 typedef struct _sftab_
 {	Sfdouble_t	sf_pos10[SF_MAXEXP10];	/* positive powers of 10	*/
 	Sfdouble_t	sf_neg10[SF_MAXEXP10];	/* negative powers of 10	*/

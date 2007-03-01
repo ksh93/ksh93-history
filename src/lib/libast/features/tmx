@@ -22,9 +22,9 @@ if ( _ast_int8_t ) {
 	#define TMX_MAXNSEC	709551614
 	#define TMX_RESOLUTION	1000000000
 
-	typedef unsigned _ast_int8_t Time_t;
-	typedef unsigned _ast_int8_t Tmxsec_t;
-	typedef unsigned _ast_int4_t Tmxnsec_t;
+	typedef uint64_t Time_t;
+	typedef uint64_t Tmxsec_t;
+	typedef uint32_t Tmxnsec_t;
 
 	#define tmxsec(t)	((Tmxsec_t)((t)/1000000000))
 	#define tmxnsec(t)	((Tmxnsec_t)((t)%1000000000))
@@ -39,12 +39,12 @@ elif ( _ast_flt8_t ) {
 	#define TMX_RESOLUTION	1000
 
 	typedef _ast_flt8_t Time_t;
-	typedef unsigned _ast_int4_t Tmxsec_t;
-	typedef unsigned _ast_int4_t Tmxnsec_t;
+	typedef uint32_t Tmxsec_t;
+	typedef uint32_t Tmxnsec_t;
 
 	#define tmxsec(t)	((Tmxsec_t)(t))
-	#define tmxnsec(t)	(((Tmxnsec_t)(((t)-((unsigned _ast_int4_t)(t))+0.0000005)*1000L))*1000000L)
-	#define tmxsns(s,n)	(((Time_t)(s))+((((unsigned _ast_int4_t)(n))/1000L)/1e6))
+	#define tmxnsec(t)	(((Tmxnsec_t)(((t)-((uint32_t)(t))+0.0000005)*1000L))*1000000L)
+	#define tmxsns(s,n)	(((Time_t)(s))+((((uint32_t)(n))/1000L)/1e6))
 }
 else {
 	#define TMX_MAXDATE	"2106-02-07+06:28:14 UTC"
@@ -53,9 +53,9 @@ else {
 	#define TMX_MAXNSEC	0L
 	#define TMX_RESOLUTION	1
 
-	typedef unsigned _ast_int4_t Time_t;
-	typedef unsigned _ast_int4_t Tmxsec_t;
-	typedef unsigned _ast_int4_t Tmxnsec_t;
+	typedef uint32_t Time_t;
+	typedef uint32_t Tmxsec_t;
+	typedef uint32_t Tmxnsec_t;
 
 	#define tmxsec(t)	((Tmxsec_t)(t))
 	#define tmxnsec(t)	(0)

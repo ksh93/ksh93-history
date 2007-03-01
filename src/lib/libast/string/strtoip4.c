@@ -43,17 +43,17 @@
  */
 
 int
-strtoip4(register const char* s, char** e, unsigned _ast_int4_t* paddr, unsigned char* pbits)
+strtoip4(register const char* s, char** e, uint32_t* paddr, unsigned char* pbits)
 {
-	register int			c;
-	register unsigned int		n;
-	register unsigned _ast_int4_t	addr;
-	register int			part;
-	register unsigned char		bits;
-	unsigned _ast_int4_t		z;
-	int				old;
-	int				r;
-	const char*			b;
+	register int		c;
+	register unsigned int	n;
+	register uint32_t	addr;
+	register int		part;
+	register unsigned char	bits;
+	uint32_t		z;
+	int			old;
+	int			r;
+	const char*		b;
 
 	r = -1;
 	while (isspace(*s))
@@ -136,7 +136,7 @@ strtoip4(register const char* s, char** e, unsigned _ast_int4_t* paddr, unsigned
 		else
 			bits = 24;
 		if (*pbits = bits)
-			addr &= ~((((unsigned _ast_int4_t)1)<<(32-bits))-1);
+			addr &= ~((((uint32_t)1)<<(32-bits))-1);
 		else
 			addr = 0;
 	}

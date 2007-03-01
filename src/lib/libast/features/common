@@ -1,5 +1,5 @@
 iff	AST_COMMON
-hdr	pthread,stdarg,stddef,types,unistd
+hdr	pthread,stdarg,stddef,stdint,inttypes,types,unistd
 sys	types
 typ	long.double,size_t,ssize_t
 
@@ -329,6 +329,57 @@ tst	- -DN=1 - -DN=0 output{
 	}
 }end
 
+typ int8_t stdint.h inttypes.h no{
+	#undef	_typ_int8_t
+	#define	_typ_int8_t	1
+	typedef _ast_int1_t int8_t;
+}end
+typ uint8_t stdint.h inttypes.h no{
+	#undef	_typ_uint8_t
+	#define	_typ_uint8_t	1
+	typedef unsigned _ast_int1_t uint8_t;
+}end
+typ int16_t stdint.h inttypes.h no{
+	#undef	_typ_int16_t
+	#define	_typ_int16_t	1
+	typedef _ast_int2_t int16_t;
+}end
+typ uint16_t stdint.h inttypes.h no{
+	#undef	_typ_uint16_t
+	#define	_typ_uint16_t	1
+	typedef unsigned _ast_int2_t uint16_t;
+}end
+typ int32_t stdint.h inttypes.h no{
+	#undef	_typ_int32_t
+	#define	_typ_int32_t	1
+	typedef _ast_int4_t int32_t;
+}end
+typ uint32_t stdint.h inttypes.h no{
+	#undef	_typ_uint32_t
+	#define	_typ_uint32_t	1
+	typedef unsigned _ast_int4_t uint32_t;
+}end
+typ int64_t stdint.h inttypes.h no{
+	#ifdef _ast_int8_t
+	#undef	_typ_int64_t
+	#define	_typ_int64_t	1
+	typedef _ast_int8_t int64_t;
+	#endif
+}end
+typ uint64_t stdint.h inttypes.h no{
+	#ifdef _ast_int8_t
+	#undef	_typ_uint64_t
+	#define	_typ_uint64_t	1
+	typedef unsigned _ast_int8_t uint64_t;
+	#endif
+}end
+typ intmax_t stdint.h inttypes.h no{
+	typedef _ast_intmax_t intmax_t;
+}end
+typ uintmax_t stdint.h inttypes.h no{
+	typedef unsigned _ast_intmax_t uintmax_t;
+}end
+
 tst	- -DTRY=1 - -DTRY=1 -Dvoid=char - -DTRY=2 - -DTRY=3 - -DTRY=4 output{
 	#if _STD_ && _hdr_stdarg
 	#include <stdarg.h>
@@ -427,39 +478,14 @@ tst	- -DTRY=1 - -DTRY=1 -Dvoid=char - -DTRY=2 - -DTRY=3 - -DTRY=4 output{
 	#endif
 	#endif
 	
-		r = 1;
-		printf("#undef	_ast_va_list\n");
-		printf("#ifdef	va_start\n");
-		printf("#define _ast_va_list va_list\n");
-		printf("#else\n");
-	#if TRY == 1 || TRY == 2
-		printf("#define _ast_va_list void*");
-	#else
-	#if TRY == 3
-		if (sizeof(va_list) == sizeof(long))
-			printf("#define _ast_va_list long");
-		else if (sizeof(va_list) == sizeof(short))
-			printf("#define _ast_va_list short");
-		else
-			printf("#define _ast_va_list int");
-	#else
-	#if defined(_M_ALPHA) && defined(_VA_LIST_DEFINED)
-		printf("typedef struct { char *a0; int offset; } _ast_va_list_t;\n");
-		printf("#define _ast_va_list _ast_va_list_t");
-	#else
+		printf("#ifndef	va_start\n");
 		printf("#if __STD_C\n");
 		printf("#include <stdarg.h>\n");
 		printf("#else\n");
 		printf("#include <varargs.h>\n");
 		printf("#endif\n");
-		printf("#define _ast_va_list va_list\n");
-		r = 0;
-	#endif
-	#endif
-	#endif
-		if (r)
-			printf("\t/* va_list that avoids #include */\n");
 		printf("#endif\n");
+
 		printf("#endif\n");
 		return 0;
 	}
@@ -472,6 +498,13 @@ cat{
 	#	endif
 	#	if _sys_types
 	#	include	<sys/types.h>
+	#	endif
+	#	if _hdr_stdint
+	#	include	<stdint.h>
+	#	else
+	#	if _hdr_inttypes
+	#	include	<inttypes.h>
+	#	endif
 	#	endif
 	#endif
 	#if !_typ_size_t

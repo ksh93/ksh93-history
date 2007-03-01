@@ -35,7 +35,7 @@ fgetpos(Sfio_t* f, fpos_t* pos)
 	return (pos->_sf_offset = sfseek(f, (Sfoff_t)0, SEEK_CUR)) >= 0 ? 0 : -1;
 }
 
-#ifdef _ast_int8_t
+#ifdef _typ_int64_t
 
 int
 fgetpos64(Sfio_t* f, fpos64_t* pos)

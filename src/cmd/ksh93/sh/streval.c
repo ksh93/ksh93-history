@@ -230,15 +230,15 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 				arith_error(node.value,ptr,ep->emode);
 			*++sp = num;
 			type = node.isfloat;
-			if(num > LDBL_ULONGLONG_MAX || num < LDBL_LONGLONG_MIN)
+			if(num > LDBL_ULLONG_MAX || num < LDBL_LLONG_MIN)
 				type = 1;
 			else
 			{
 				Sfdouble_t d=num;
-				if(num > LDBL_LONGLONG_MAX && num <= LDBL_ULONGLONG_MAX)
+				if(num > LDBL_LLONG_MAX && num <= LDBL_ULLONG_MAX)
 				{
 					type = 2;
-					d -= LDBL_LONGLONG_MAX;
+					d -= LDBL_LLONG_MAX;
 				}
 				if((Sflong_t)d!=d)
 					type = 1;

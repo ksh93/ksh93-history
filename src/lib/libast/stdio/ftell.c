@@ -35,14 +35,14 @@ ftell(Sfio_t* f)
 	return (long)sfseek(f, (Sfoff_t)0, SEEK_CUR);
 }
 
-#ifdef _ast_int8_t
+#if _typ_int64_t
 
-_ast_int8_t
+int64_t
 ftell64(Sfio_t* f)
 {
-	STDIO_INT(f, "ftell64", _ast_int8_t, (Sfio_t*), (f))
+	STDIO_INT(f, "ftell64", int64_t, (Sfio_t*), (f))
 
-	return (_ast_int8_t)sfseek(f, (Sfoff_t)0, SEEK_CUR);
+	return (int64_t)sfseek(f, (Sfoff_t)0, SEEK_CUR);
 }
 
 #endif

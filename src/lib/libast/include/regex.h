@@ -127,7 +127,7 @@ struct regex_s; typedef struct regex_s regex_t;
 struct regdisc_s; typedef struct regdisc_s regdisc_t;
 
 typedef int (*regclass_t)(int);
-typedef _ast_int4_t regflags_t;
+typedef int32_t regflags_t;
 typedef int regoff_t;
 typedef int (*regerror_t)(const regex_t*, regdisc_t*, int, ...);
 typedef void* (*regcomp_t)(const regex_t*, const char*, size_t, regdisc_t*);
@@ -182,7 +182,7 @@ struct regex_s
 	regsub_t*	re_sub;		/* regsubcomp() data		*/
 };
 
-#define reginit(disc)	(memset(disc,0,sizeof(*disc)),disc->re_version=REG_VERSION)
+#define reginit(disc)	(memset(disc,0,sizeof(*(disc))),(disc)->re_version=REG_VERSION)
 
 #if _BLD_ast && defined(__EXPORT__)
 #define extern		__EXPORT__

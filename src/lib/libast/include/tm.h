@@ -146,7 +146,7 @@ typedef struct Tm_s
 	int			tm_wday;
 	int			tm_yday;
 	int			tm_isdst;
-	unsigned _ast_int4_t	tm_nsec;
+	uint32_t		tm_nsec;
 	Tm_zone_t*		tm_zone;
 } Tm_t;
 

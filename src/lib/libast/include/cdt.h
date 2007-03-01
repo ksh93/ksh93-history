@@ -242,15 +242,15 @@ _END_EXTERNS_
 /* internal functions for translating among holder, object and key */
 #define _DT(dt)		((Dt_t*)(dt))
 #define _DTDSC(dc,ky,sz,lk,cmpf) \
-			(ky = dc->key, sz = dc->size, lk = dc->link, cmpf = dc->comparf)
+			(ky = (dc)->key, sz = (dc)->size, lk = (dc)->link, cmpf = (dc)->comparf)
 #define _DTLNK(o,lk)	((Dtlink_t*)((char*)(o) + lk) )
-#define _DTOBJ(e,lk)	(lk < 0 ? ((Dthold_t*)(e))->obj : (Void_t*)((char*)(e) - lk) )
-#define _DTKEY(o,ky,sz)	(Void_t*)(sz < 0 ? *((char**)((char*)(o)+ky)) : ((char*)(o)+ky))
+#define _DTOBJ(e,lk)	((lk) < 0 ? ((Dthold_t*)(e))->obj : (Void_t*)((char*)(e) - (lk)) )
+#define _DTKEY(o,ky,sz)	(Void_t*)((sz) < 0 ? *((char**)((char*)(o)+(ky))) : ((char*)(o)+(ky)))
 
 #define _DTCMP(dt,k1,k2,dc,cmpf,sz) \
-			(cmpf ? (*cmpf)(dt,k1,k2,dc) : \
-			 (sz <= 0 ? strcmp(k1,k2) : memcmp(k1,k2,sz)) )
-#define _DTHSH(dt,ky,dc,sz) (dc->hashf ? (*dc->hashf)(dt,ky,dc) : dtstrhash(0,ky,sz) )
+			((cmpf) ? (*cmpf)(dt,k1,k2,dc) : \
+			 ((sz) <= 0 ? strcmp(k1,k2) : memcmp(k1,k2,sz)) )
+#define _DTHSH(dt,ky,dc,sz) ((dc)->hashf ? (*(dc)->hashf)(dt,ky,dc) : dtstrhash(0,ky,sz) )
 
 /* special search function for tree structure only */
 #define _DTMTCH(dt,key,action) \

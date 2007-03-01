@@ -772,7 +772,7 @@ findread(register Find_t* fp)
 					return 0;
 				if (fp->decode.swap >= 0)
 				{
-					c = (_ast_int4_t)((w[0] << 24) | (w[1] << 16) | (w[2] << 8) | w[3]);
+					c = (int32_t)((w[0] << 24) | (w[1] << 16) | (w[2] << 8) | w[3]);
 					if (!fp->decode.swap)
 					{
 						/*
@@ -788,7 +788,7 @@ findread(register Find_t* fp)
 						m = c;
 						if (m < 0)
 							m = -m;
-						n = (_ast_int4_t)((w[3] << 24) | (w[2] << 16) | (w[1] << 8) | w[0]);
+						n = (int32_t)((w[3] << 24) | (w[2] << 16) | (w[1] << 8) | w[0]);
 						if (n < 0)
 							n = -n;
 						if (m < n)
@@ -796,12 +796,12 @@ findread(register Find_t* fp)
 						else
 						{
 							fp->decode.swap = -1;
-							c = (_ast_int4_t)((w[3] << 24) | (w[2] << 16) | (w[1] << 8) | w[0]);
+							c = (int32_t)((w[3] << 24) | (w[2] << 16) | (w[1] << 8) | w[0]);
 						}
 					}
 				}
 				else
-					c = (_ast_int4_t)((w[3] << 24) | (w[2] << 16) | (w[1] << 8) | w[0]);
+					c = (int32_t)((w[3] << 24) | (w[2] << 16) | (w[1] << 8) | w[0]);
 			}
 			fp->decode.count += c - FF_OFF;
 			for (p = fp->decode.path + fp->decode.count; (c = sfgetc(fp->fp)) > FF_ESC;)

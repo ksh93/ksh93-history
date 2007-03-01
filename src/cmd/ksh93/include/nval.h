@@ -46,6 +46,7 @@ typedef struct Nambfun Nambfun_t;
 typedef struct Namarray Namarr_t;
 typedef struct Nambltin Nambltin_t;
 typedef struct Namtype Namtype_t;
+
 /*
  * This defines the template for nodes that have their own assignment
  * and or lookup functions
@@ -188,6 +189,16 @@ struct Namval
 
 #define NV_PUBLIC	(~(NV_NOSCOPE|NV_ASSIGN|NV_IDENT|NV_VARNAME|NV_NOADD))
 
+/* numeric types */
+#define NV_INT16	(NV_SHORT|NV_INTEGER)
+#define NV_UINT16	(NV_UNSIGN|NV_SHORT|NV_INTEGER)
+#define NV_INT32	(NV_INTEGER)
+#define NV_UNT32	(NV_UNSIGN|NV_INTEGER)
+#define NV_INT64	(NV_LONG|NV_INTEGER)
+#define NV_UINT64	(NV_UNSIGN|NV_LONG|NV_INTEGER)
+#define NV_FLOAT	(NV_SHORT|NV_DOUBLE|NV_INTEGER)
+#define NV_LDOUBLE	(NV_LONG|NV_DOUBLE|NV_INTEGER)
+
 /* name-value pair macros */
 #define nv_isattr(np,f)		((np)->nvflag & (f))
 #define nv_onattr(n,f)		((n)->nvflag |= (f))
@@ -243,8 +254,8 @@ extern void 		nv_close(Namval_t*);
 extern void		*nv_context(Namval_t*);
 extern Namval_t		*nv_create(const char*, Dt_t*, int,Namfun_t*);
 extern Dt_t		*nv_dict(Namval_t*);
-extern Sfdouble_t 	nv_getn(Namval_t*, Namfun_t*);
-extern Sfdouble_t 	nv_getnum(Namval_t*);
+extern Sfdouble_t	nv_getn(Namval_t*, Namfun_t*);
+extern Sfdouble_t	nv_getnum(Namval_t*);
 extern char 		*nv_getv(Namval_t*, Namfun_t*);
 extern char 		*nv_getval(Namval_t*);
 extern Namfun_t		*nv_hasdisc(Namval_t*, const Namdisc_t*);

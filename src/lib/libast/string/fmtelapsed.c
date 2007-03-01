@@ -21,40 +21,41 @@
 ***********************************************************************/
 #pragma prototyped
 /*
- * return pointer to formatted elapsed time for t 1/n secs
+ * return pointer to formatted elapsed time for u 1/n secs
  * compatible with strelapsed()
- * return value length is at most 6
+ * return value length is at most 7
  */
 
 #include <ast.h>
 
 char*
-fmtelapsed(register unsigned long t, register int n)
+fmtelapsed(register unsigned long u, register int n)
 {
-	register unsigned long	s;
+	register unsigned long	t;
 	char*			buf;
 	int			z;
 
-	static int		amt[] = { 1, 60, 60, 24, 7, 4, 12, 20 };
-	static char		chr[] = "smhdwMYS";
-
-	if (t == 0L)
+	if (u == 0L)
 		return "0";
-	if (t == ~0L)
+	if (u == ~0L)
 		return "%";
-	buf = fmtbuf(z = 7);
-	s = t / n;
-	if (s < 60)
-		sfsprintf(buf, z, "%d.%02ds", s % 100, (t * 100 / n) % 100);
+	buf = fmtbuf(z = 8);
+	t = u / n;
+	if (t < 60)
+		sfsprintf(buf, z, "%lu.%02lus", t, (u * 100 / n) % 100);
+	else if (t < 60*60)
+		sfsprintf(buf, z, "%lum%02lus", t / 60, t - (t / 60) * 60);
+	else if (t < 24*60*60)
+		sfsprintf(buf, z, "%luh%02lum", t / (60*60), (t - (t / (60*60)) * (60*60)) / 60);
+	else if (t < 7*24*60*60)
+		sfsprintf(buf, z, "%lud%02luh", t / (24*60*60), (t - (t / (24*60*60)) * (24*60*60)) / (60*60));
+	else if (t < 31*24*60*60)
+		sfsprintf(buf, z, "%luw%02lud", t / (7*24*60*60), (t - (t / (7*24*60*60)) * (7*24*60*60)) / (24*60*60));
+	else if (t < 365*24*60*60)
+		sfsprintf(buf, z, "%luM%02lud", (t * 12) / (365*24*60*60), ((t * 12) - ((t * 12) / (365*24*60*60)) * (365*24*60*60)) / (12*24*60*60));
+	else if (t < (365UL*4UL+1UL)*24UL*60UL*60UL)
+		sfsprintf(buf, z, "%luY%02luM", t / (365*24*60*60), ((t - (t / (365*24*60*60)) * (365*24*60*60)) * 5) / (152 * 24 * 60 * 60));
 	else
-	{
-		for (n = 1; n < elementsof(amt) - 1; n++)
-		{
-			if ((t = s / amt[n]) < amt[n + 1])
-				break;
-			s = t;
-		}
-		sfsprintf(buf, z, "%d%c%02d%c", (s / amt[n]) % 100, chr[n], s % amt[n], chr[n - 1]);
-	}
+		sfsprintf(buf, z, "%luY%02luM", (t * 4) / ((365UL*4UL+1UL)*24UL*60UL*60UL), (((t * 4) - ((t * 4) / ((365UL*4UL+1UL)*24UL*60UL*60UL)) * ((365UL*4UL+1UL)*24UL*60UL*60UL)) * 5) / ((4 * 152 + 1) * 24 * 60 * 60));
 	return buf;
 }

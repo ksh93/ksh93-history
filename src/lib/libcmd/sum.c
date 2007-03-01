@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1985-2007 AT&T Knowledge Ventures            *
+*           Copyright (c) 1992-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -16,44 +16,20 @@
 *                                                                      *
 *                 Glenn Fowler <gsf@research.att.com>                  *
 *                  David Korn <dgk@research.att.com>                   *
-*                   Phong Vo <kpv@research.att.com>                    *
 *                                                                      *
 ***********************************************************************/
+#pragma prototyped
 /*
- * types by byte capacity
+ * Glenn Fowler
+ * AT&T Research
+ *
+ * sum -- implemented by cksum
  */
 
-#ifndef _INT_H
-#define _INT_H
+#include <cmd.h>
 
-#include <ast_common.h>
-
-#ifdef _ast_int1_t
-#define int_1		_ast_int1_t
-#endif
-#ifdef _ast_int2_t
-#define int_2		_ast_int2_t
-#endif
-#ifdef _ast_int4_t
-#define int_4		_ast_int4_t
-#endif
-#ifdef _ast_int8_t
-#define int_8		_ast_int8_t
-#endif
-
-#define int_max		_ast_intmax_t
-#define int_swap	_ast_intswap
-
-#ifdef _ast_flt4_t
-#define flt_4		_ast_flt4_t
-#endif
-#ifdef _ast_flt8_t
-#define flt_8		_ast_flt8_t
-#endif
-#ifdef _ast_flt16_t
-#define flt_16		_ast_flt16_t
-#endif
-
-#define flt_max		_ast_fltmax_t
-
-#endif
+int
+b_sum(int argc, register char** argv, void* context)
+{
+	return b_cksum(argc, argv, context);
+}

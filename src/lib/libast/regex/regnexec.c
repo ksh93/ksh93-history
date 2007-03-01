@@ -811,6 +811,7 @@ parse(Env_t* env, Rex_t* rex, Rex_t* cont, unsigned char* s)
 	unsigned char*	t;
 	unsigned char*	b;
 	unsigned char*	e;
+	char*		u;
 	regmatch_t*	o;
 	Trie_node_t*	x;
 	Rex_t*		q;
@@ -1734,8 +1735,9 @@ DEBUG_TEST(0x0200,(sfprintf(sfstdout,"AHA#%04d 0x%04x parse %s \"%-.*s\" `%-.*s'
 				return NONE;
 			return parsetrie(env, x, rex, cont, s);
 		case REX_EXEC:
-			e = 0;
-			r = (*env->disc->re_execf)(env->regex, rex->re.exec.data, rex->re.exec.text, rex->re.exec.size, (const char*)s, env->end - s, (char**)&e, env->disc);
+			u = 0;
+			r = (*env->disc->re_execf)(env->regex, rex->re.exec.data, rex->re.exec.text, rex->re.exec.size, (const char*)s, env->end - s, &u, env->disc);
+			e = (unsigned char*)u;
 			if (e >= s && e <= env->end)
 				s = e;
 			switch (r)

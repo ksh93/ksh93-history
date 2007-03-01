@@ -1,3 +1,22 @@
+07-03-11 tm/tmxscan.c,regex/regnexec.c: fix strict-alias transgressions
+07-02-27 comp/conf.sh: handle native getconf invalid numeric values
+07-02-21 comp/conf.sh,comp/conf.tab: handle SSIZE_MAX vs _POSIX_SSIZE_MAX
+07-02-20 sfio/sfvprintf.c: handle SF_WCWIDTH justification
+07-02-14 features/common: cover <stdint.h>, move to int_(bits)_t
+07-02-14 include/int.h: drop
+07-02-14 include/sfio.h: add SF_WCWIDTH
+07-02-12 comp/conf.sh: fix CONF_LIMIT bug that missed ULONG_MAX etc.
+07-02-12 comp/conf.tab: *LONGLONG* => *LLONG* to match posix
+07-02-12 features/float: *LONGLONG* => *LLONG* to match posix
+07-02-12 port/astconf.c: handle CONF_LIMITS_DEF with no deferral
+07-02-12 stdio/vasprintf.c: add trailing '\0' -- doh
+07-02-04 string/fmtelapsed.c: fix naive multi month/year logic
+07-02-02 misc/optget.c: add --??posix for getopts(1)/getopt(3)
+07-01-26 string/chresc.c: use mbchar()
+07-01-26 misc/optget.c: handle "o:-:" usage for old-style long options
+07-01-22 sfio/sfdisc.c,sfpool.c: handle push on streams with pending peek
+07-01-22 include/sfio.h: mv Sfieee_t to sfio/sfhdr.h
+07-01-17 tm/tmxfmt.c: fix terminating nil logic which clobbered size-1
 07-01-11 misc/stk.c: a 2 day marathon bug fix (can we release now dr ek?)
 07-01-05 comp/spawnveg.c: posix_spawnattr_setflags(POSIX_SPAWN_SETPGROUP)
 07-01-05 misc/error.c: fix multibyte vs. printable logic

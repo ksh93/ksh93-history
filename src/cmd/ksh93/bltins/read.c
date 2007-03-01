@@ -183,36 +183,11 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 	struct	checkpt		buff;
 	if(!(iop=shp->sftable[fd]) && !(iop=sh_iostream(fd)))
 		return(1);
-	if(flags>>D_FLAG)	/* delimiter not new-line or fixed size read */
-	{
-		if(flags&(N_FLAG|NN_FLAG))
-			size = ((unsigned)flags)>>D_FLAG;
-		else
-			delim = ((unsigned)flags)>>D_FLAG;
-		if(shp->fdstatus[fd]&IOTTY)
-			tty_raw(fd,1);
-	}
-	if(!(flags&(N_FLAG|NN_FLAG)))
-	{
-		/* set up state table based on IFS */
-		ifs = nv_getval(np=nv_scoped(IFSNOD));
-		if((flags&R_FLAG) && shp->ifstable['\\']==S_ESC)
-			shp->ifstable['\\'] = 0;
-		else if(!(flags&R_FLAG) && shp->ifstable['\\']==0)
-			shp->ifstable['\\'] = S_ESC;
-		shp->ifstable[delim] = S_NL;
-		if(delim!='\n')
-		{
-			shp->ifstable['\n'] = 0;
-			nv_putval(np, ifs, NV_RDONLY);
-		}
-		shp->ifstable[0] = S_EOF;
-	}
 	if(names && (name = *names))
 	{
 		if(val= strchr(name,'?'))
 			*val = 0;
-		np = nv_open(name,shp->var_tree,NV_NOASSIGN|NV_VARNAME);
+		np = nv_open(name,shp->var_tree,NV_NOASSIGN|NV_VARNAME|NV_ARRAY);
 		if((flags&V_FLAG) && shp->ed_context)
 			((struct edit*)shp->ed_context)->e_default = np;
 		if(flags&A_FLAG)
@@ -234,6 +209,32 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
                 	np = nv_open(nv_name(REPLYNOD),shp->var_tree,0);
 		else
 			np = REPLYNOD;
+	}
+	if(flags>>D_FLAG)	/* delimiter not new-line or fixed size read */
+	{
+		if(flags&(N_FLAG|NN_FLAG))
+			size = ((unsigned)flags)>>D_FLAG;
+		else
+			delim = ((unsigned)flags)>>D_FLAG;
+		if(shp->fdstatus[fd]&IOTTY)
+			tty_raw(fd,1);
+	}
+	if(!(flags&(N_FLAG|NN_FLAG)))
+	{
+		Namval_t *mp;
+		/* set up state table based on IFS */
+		ifs = nv_getval(mp=nv_scoped(IFSNOD));
+		if((flags&R_FLAG) && shp->ifstable['\\']==S_ESC)
+			shp->ifstable['\\'] = 0;
+		else if(!(flags&R_FLAG) && shp->ifstable['\\']==0)
+			shp->ifstable['\\'] = S_ESC;
+		shp->ifstable[delim] = S_NL;
+		if(delim!='\n')
+		{
+			shp->ifstable['\n'] = 0;
+			nv_putval(mp, ifs, NV_RDONLY);
+		}
+		shp->ifstable[0] = S_EOF;
 	}
 	sfclrerr(iop);
 	if(np->nvfun && np->nvfun->disc->readf)

@@ -68,9 +68,6 @@ struct _sfio_s;
 #include <ast_limits.h>
 #include <ast_botch.h>
 
-#undef	_ast_va_list
-#define _ast_va_list	va_list
-
 #ifdef	_SKIP_SFSTDIO_H
 #undef	_SKIP_SFSTDIO_H
 #else
@@ -209,8 +206,8 @@ typedef struct
 
 	struct
 	{
-	unsigned _ast_int4_t	serial;
-	unsigned _ast_int4_t	set;
+	uint32_t	serial;
+	uint32_t	set;
 	}		locale;
 
 	long		tmp_long;
@@ -231,7 +228,7 @@ typedef struct
 	int		(*mb_width)(wchar_t);
 	int		(*mb_conv)(char*, wchar_t);
 
-	unsigned _ast_int4_t	env_serial;
+	uint32_t	env_serial;
 
 	char		pad[944];
 

@@ -175,7 +175,7 @@ int	b_getopts(int argc,char *argv[],void *extra)
 	{
 		Sfdouble_t d;
 		d = opt_info.number;
-		nv_putval(np, (char*)&d, NV_INTEGER|NV_DOUBLE|NV_LONG|NV_RDONLY);
+		nv_putval(np, (char*)&d, NV_LDOUBLE|NV_RDONLY);
 	}
 	nv_close(np);
 	sh_popcontext(&buff);

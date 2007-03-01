@@ -121,6 +121,7 @@ int fcclose(void)
 	if(_Fcin.fcchar)
 		*_Fcin.fclast = _Fcin.fcchar;
 	_Fcin.fclast = 0;
+	_Fcin.fcleft = 0;
 	return(fcfill());
 }
 
@@ -147,4 +148,64 @@ extern void fcrestore(Fcin_t *fp)
 {
 	_Fcin = *fp;
 }
+
+struct Extra
+{
+	unsigned char	buff[2*MB_LEN_MAX];
+	unsigned char	*next;
+};
+
+int fcmbstate(const char *state, int *s, int *len)
+{
+	static struct Extra	extra;
+	register int		i, c, n;
+	if(_Fcin.fcleft)
+	{
+		if((c = mbsize(extra.next)) < 0)
+			c = 1;
+		if((_Fcin.fcleft -= c) <=0)
+		{
+			_Fcin.fcptr = (unsigned char*)fcfirst() - _Fcin.fcleft; 
+			_Fcin.fcleft = 0;
+		}
+		*len = c;
+		if(c==1)
+			*s = state[*extra.next++];
+		else if(c==0)
+			_Fcin.fcleft = 0;
+		else
+		{
+			c = mbchar(extra.next);
+			*s = state['a'];
+		}
+		return(c);
+	}
+	switch(*len = mbsize(_Fcin.fcptr))
+	{
+	    case -1:
+		if(_Fcin._fcfile && (n=(_Fcin.fclast-_Fcin.fcptr)) < MB_LEN_MAX)
+		{
+			memcmp(extra.buff, _Fcin.fcptr, n);
+			_Fcin.fcptr = _Fcin.fclast;
+			for(i=n; i < MB_LEN_MAX+n; i++)
+			{
+				if((extra.buff[i] = fcgetc(c))==0)
+					break;
+			}
+			_Fcin.fcleft = n;
+			extra.next = extra.buff;
+			return(fcmbstate(state,s,len));
+		}
+		*len = 1;
+		/* fall through */
+	    case 0:
+	    case 1:
+		*s = state[c=fcget()];
+		break;
+	    default:
+		c = mbchar(_Fcin.fcptr);
+		*s = state['a'];
+	}
+	return(c);
+} 
 

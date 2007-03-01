@@ -45,11 +45,11 @@ tmxmake(Time_t t)
 	time_t			now;
 	int			leapsec;
 	int			y;
-	unsigned _ast_int4_t	n;
-	_ast_int4_t		o;
+	uint32_t		n;
+	int32_t			o;
 #if TMX_FLOAT
 	Time_t			z;
-	unsigned _ast_int4_t	i;
+	uint32_t		i;
 #endif
 	Tm_t			tm;
 

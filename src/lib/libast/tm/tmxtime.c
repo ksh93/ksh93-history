@@ -47,7 +47,7 @@ tmxtime(register Tm_t* tm, int west)
 {
 	register Time_t		t;
 	register Tm_leap_t*	lp;
-	register _ast_int4_t	y;
+	register int32_t	y;
 	int			n;
 	int			sec;
 	time_t			now;

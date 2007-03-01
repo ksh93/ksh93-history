@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1985-2007 AT&T Knowledge Ventures            *
+*           Copyright (c) 1992-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -16,19 +16,20 @@
 *                                                                      *
 *                 Glenn Fowler <gsf@research.att.com>                  *
 *                  David Korn <dgk@research.att.com>                   *
-*                   Phong Vo <kpv@research.att.com>                    *
 *                                                                      *
 ***********************************************************************/
-#include	"sfhdr.h"
+#pragma prototyped
+/*
+ * Glenn Fowler
+ * AT&T Research
+ *
+ * md5sum -- implemented by cksum
+ */
 
-/* return IEEE constants struct */
+#include <cmd.h>
 
-#if __STD_C
-Sfieee_t* sfieee(void)
-#else
-Sfieee_t* sfieee()
-#endif
+int
+b_md5sum(int argc, register char** argv, void* context)
 {
-	SFCVINIT();	/* initialize conversion tables */
-	return _Sfieee;
+	return b_cksum(argc, argv, context);
 }

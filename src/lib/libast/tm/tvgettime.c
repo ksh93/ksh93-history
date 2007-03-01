@@ -51,7 +51,7 @@ tvgettime(Tv_t* tv)
 #else
 
 	static time_t			s;
-	static unsigned _ast_int4_t	n;
+	static uint32_t			n;
 
 	if ((tv->tv_sec = time(NiL)) != s)
 	{

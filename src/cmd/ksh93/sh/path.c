@@ -663,7 +663,7 @@ Pathcomp_t *path_absolute(register const char *name, Pathcomp_t *endpath)
 			pp = path_nextcomp(pp,name,0);
 		if(endpath)
 			return(endpath);
-		if(!isfun)
+		if(!isfun && !sh_isoption(SH_RESTRICTED))
 		{
 			if(nv_search(stakptr(PATH_OFFSET),sh.bltin_tree,0))
 				return(oldpp);
@@ -986,6 +986,24 @@ pid_t path_spawn(const char *opath,register char **argv, char **envp, Pathcomp_t
 		path = sp;
 	}
 #endif /* SHELLMAGIC */
+	if(sh_isoption(SH_RESTRICTED))
+	{
+		int fd;
+		if((fd = sh_open(opath,O_RDONLY,0)) >= 0)
+		{
+			char buff[PATH_MAX];
+			n = read(fd,buff,sizeof(buff));
+			close(fd);
+			if(n>2 && buff[0]=='#' && buff[1]=='!')
+			{
+				for(s=buff; n>0 && *s!='\n'; n--,s++)
+				{
+					if(*s=='/')
+						errormsg(SH_DICT,ERROR_exit(1),e_restricted,opath);
+				}
+			}
+		}
+	}
 	if(spawn && !sh_isoption(SH_PFSH))
 		pid = _spawnveg(opath, &argv[0],envp, spawn>>1);
 	else

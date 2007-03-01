@@ -975,6 +975,8 @@ int	sh_redirect(struct ionod *iop, int flag)
 			}
 			else if(iof&IORDW)
 			{
+				if(sh_isoption(SH_RESTRICTED))
+					errormsg(SH_DICT,ERROR_exit(1),e_restricted,fname);
 				io_op[2] = '>';
 				o_mode = O_RDWR|O_CREAT;
 				goto openit;
@@ -1145,7 +1147,7 @@ int	sh_redirect(struct ionod *iop, int flag)
 			{
 				if(np)
 				{
-					long v;
+					int32_t v;
 					fn = fd;
 					if(fd<10)
 					{
@@ -1156,9 +1158,9 @@ int	sh_redirect(struct ionod *iop, int flag)
 						fd = fn;
 					}
 					nv_unset(np);
-					nv_onattr(np,NV_INTEGER);
+					nv_onattr(np,NV_INT32);
 					v = fn;
-					nv_putval(np,(void*)&v, NV_INTEGER);
+					nv_putval(np,(char*)&v, NV_INT32);
 					sh_iocheckfd(fd);
 				}
 				else

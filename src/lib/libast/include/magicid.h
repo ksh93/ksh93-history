@@ -32,7 +32,7 @@
 
 #define MAGICID		0x00010203
 
-typedef unsigned _ast_int4_t Magicid_data_t;
+typedef uint32_t Magicid_data_t;
 
 typedef struct Magicid_s
 {

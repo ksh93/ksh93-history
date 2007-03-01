@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1996-2006 AT&T Knowledge Ventures            *
+*           Copyright (c) 1996-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -25,17 +25,16 @@
  * man this is sum library
  */
 
-static const char id[] = "\n@(#)$Id: sumlib (AT&T Research) 2005-02-14 $\0\n";
+static const char id[] = "\n@(#)$Id: sumlib (AT&T Research) 2007-03-11 $\0\n";
 
 #define _SUM_PRIVATE_	\
 			struct Method_s*	method;	\
-			unsigned _ast_intmax_t	total_count;	\
-			unsigned _ast_intmax_t	total_size;	\
-			unsigned _ast_intmax_t	size;
+			uintmax_t		total_count;	\
+			uintmax_t		total_size;	\
+			uintmax_t		size;
 
 #include <sum.h>
 #include <ctype.h>
-#include <int.h>
 #include <swap.h>
 #include <hashpart.h>
 
@@ -67,8 +66,8 @@ typedef struct Map_s
  */
 
 #define _INTEGRAL_PRIVATE_ \
-	unsigned _ast_int4_t	sum; \
-	unsigned _ast_int4_t	total_sum;
+	uint32_t	sum; \
+	uint32_t	total_sum;
 	
 typedef struct Integral_s
 {
@@ -118,10 +117,10 @@ short_done(Sum_t* p)
 static int
 long_print(Sum_t* p, Sfio_t* sp, register int flags)
 {
-	register Integral_t*		x = (Integral_t*)p;
-	register unsigned _ast_int4_t	c;
-	register unsigned _ast_intmax_t	z;
-	register size_t			n;
+	register Integral_t*	x = (Integral_t*)p;
+	register uint32_t	c;
+	register uintmax_t	z;
+	register size_t		n;
 
 	c = (flags & SUM_TOTAL) ? x->total_sum : x->sum;
 	sfprintf(sp, "%I*u", sizeof(c), c);

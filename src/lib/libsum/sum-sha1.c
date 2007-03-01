@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1996-2005 AT&T Corp.                  *
+*           Copyright (c) 1996-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -31,8 +31,8 @@
 #define sha1_match	"sha1|SHA1|sha-1|SHA-1"
 #define sha1_scale	0
 
-#define uint8		unsigned _ast_int1_t
-#define uint32		unsigned _ast_int4_t
+#define uint8		uint8_t
+#define uint32		uint32_t
 
 #define sha1_padding	md5_pad
 

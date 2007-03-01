@@ -97,12 +97,12 @@ cat <<!
 	extern int		swprintf(wchar_t*, size_t, const wchar_t*, ...);
 	extern int		swscanf(const wchar_t*, const wchar_t*, ...);
 	extern wint_t		ungetwc(wint_t, FILE*);
-	extern int		vfwprintf(FILE*, const wchar_t*, _ast_va_list);
-	extern int		vfwscanf(FILE*, const wchar_t*, _ast_va_list);
-	extern int		vwprintf(const wchar_t*, _ast_va_list);
-	extern int		vwscanf(const wchar_t*, _ast_va_list);
-	extern int		vswprintf(wchar_t*, size_t, const wchar_t*, _ast_va_list);
-	extern int		vswscanf(const wchar_t*, const wchar_t*, _ast_va_list);
+	extern int		vfwprintf(FILE*, const wchar_t*, va_list);
+	extern int		vfwscanf(FILE*, const wchar_t*, va_list);
+	extern int		vwprintf(const wchar_t*, va_list);
+	extern int		vwscanf(const wchar_t*, va_list);
+	extern int		vswprintf(wchar_t*, size_t, const wchar_t*, va_list);
+	extern int		vswscanf(const wchar_t*, const wchar_t*, va_list);
 	extern int		wprintf(const wchar_t*, ...);
 	extern int		wscanf(const wchar_t*, ...);
 

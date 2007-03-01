@@ -339,9 +339,11 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 {
 	register char *name;
 	char *last = 0;
-	int nvflags=(flag&(NV_ARRAY|NV_NOARRAY|NV_NOSCOPE|NV_VARNAME|NV_IDENT|NV_ASSIGN));
+	int nvflags=(flag&(NV_ARRAY|NV_NOARRAY|NV_VARNAME|NV_IDENT|NV_ASSIGN));
 	int r=0, ref=0;
 	Shell_t *shp =tp->sh;
+	if(!sh.prefix)
+		nvflags |= NV_NOSCOPE;
 	flag &= ~(NV_NOARRAY|NV_NOSCOPE|NV_VARNAME|NV_IDENT);
 	if(argv[1])
 	{
@@ -870,10 +872,10 @@ static int print_namval(Sfio_t *file,register Namval_t *np,register int flag, st
 		sfputc(file,flag);
 		if(flag != '\n')
 		{
-			if(nv_isref(np) && np->nvenv)
+			if(nv_isref(np) && nv_refsub(np))
 			{
 				sfputr(file,sh_fmtq(cp),-1);
-				sfprintf(file,"[%s]\n", sh_fmtq(np->nvenv));
+				sfprintf(file,"[%s]\n", sh_fmtq(nv_refsub(np)));
 			}
 			else
 				sfputr(file,sh_fmtq(cp),'\n');

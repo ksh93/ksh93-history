@@ -15,19 +15,24 @@ HOSTTYPE == "$(CC.HOSTTYPE)"
 
 cmd 1.2 :LIBRARY: RELEASE cmdinit.c \
 	cmd.h rev.h wc.h \
-	basename.c cat.c chgrp.c chmod.c chown.c cmp.c comm.c \
-	cp.c cut.c dirname.c date.c expr.c fds.c fmt.c fold.c \
-	getconf.c head.c id.c join.c ln.c logname.c mkdir.c \
-	mkfifo.c mv.c paste.c pathchk.c rev.c rm.c rmdir.c \
-	stty.c sync.c tail.c tee.c tty.c uname.c uniq.c wc.c \
-	revlib.c wclib.c \
+	basename.c cat.c chgrp.c chmod.c chown.c cksum.c cmp.c \
+	comm.c cp.c cut.c dirname.c date.c expr.c fds.c fmt.c \
+	fold.c getconf.c head.c id.c join.c ln.c logname.c md5sum.c \
+	mkdir.c mkfifo.c mv.c paste.c pathchk.c rev.c rm.c rmdir.c \
+	stty.c sum.c sync.c tail.c tee.c tty.c uname.c uniq.c wc.c \
+	revlib.c wclib.c sumlib.o \
 	-lfsg
+
+sumlib.o : +lsum
+	$(AR) x $(*:O=1) $(<)
 
 $(INCLUDEDIR) :INSTALLPROTO: cmd.h cmdext.h cmdlist.h
 
 "win32*" :NOOPTIMIZE: id.c
 
-cmdext.h : $(*$(*$(*cmd)):N=*.c)
+src = $(*$(*$(*cmd)):N=*.c)
+
+cmdext.h : (src) $$(--mam:+$$(src))
 	{
 	cat <<!
 	$("#")pragma prototyped
@@ -37,11 +42,11 @@ cmdext.h : $(*$(*$(*cmd)):N=*.c)
 	
 	!
 	$(SED) \
-		-e '/^b_[a-z_]*(/!d' \
+		-e '/^b_[a-z_][a-z_0-9]*(/!d' \
 		-e 's/^b_//' \
 		-e 's/(.*//' \
 		-e 's/.*/extern int	b_&(int, char**, void*);/' \
-		$(*) |
+		$($(~:O=1):T=F) |
 	$(SORT) -u
 	} > 1.$(tmp).h
 	if	$(CMP) $(CMPFLAGS) 1.$(tmp).h $(<)
@@ -49,7 +54,7 @@ cmdext.h : $(*$(*$(*cmd)):N=*.c)
 	else	$(MV) 1.$(tmp).h $(<)
 	fi
 
-cmdlist.h : $(*$(*$(*cmd)):N=*.c)
+cmdlist.h : (src)
 	{
 	cat <<!
 	$("#")pragma prototyped
@@ -59,11 +64,11 @@ cmdlist.h : $(*$(*$(*cmd)):N=*.c)
 	
 	!
 	$(SED) \
-		-e '/^b_[a-z_]*(/!d' \
+		-e '/^b_[a-z_][a-z_0-9]*(/!d' \
 		-e 's/^b_//' \
 		-e 's/(.*//' \
 		-e 's/.*/CMDLIST(&)/' \
-		$(*) |
+		$($(~):T=F) |
 	$(SORT) -u
 	} > 1.$(tmp).h
 	if	$(CMP) $(CMPFLAGS) 1.$(tmp).h $(<)

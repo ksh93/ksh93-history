@@ -87,7 +87,7 @@ cat <<!
 	#endif
 
 	#undef	__ino64_t
-	#define __ino64_t	_ast_int8_t
+	#define __ino64_t	int64_t
 
 	#include $_nxt_dirent	/* the native <dirent.h> */
 

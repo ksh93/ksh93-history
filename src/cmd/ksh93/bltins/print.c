@@ -523,8 +523,8 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 	char*		lastchar = "";
 	register int	neg = 0;
 	Sfdouble_t	d;
-	Sfdouble_t	longmin = LDBL_LONGLONG_MIN;
-	Sfdouble_t	longmax = LDBL_LONGLONG_MAX;
+	Sfdouble_t	longmin = LDBL_LLONG_MIN;
+	Sfdouble_t	longmax = LDBL_LLONG_MAX;
 	int		format = fe->fmt;
 	int		n;
 	int		fold = fe->base;
@@ -599,14 +599,14 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 			np = nv_open(argp,sh.var_tree,NV_VARNAME|NV_NOASSIGN|NV_NOARRAY);
 			nv_unset(np);
 			nv_onattr(np,NV_INTEGER);
-			if (np->nvalue.lp = new_of(long,0))
+			if (np->nvalue.lp = new_of(int32_t,0))
 				*np->nvalue.lp = 0;
 			nv_setsize(np,10);
-			if(sizeof(int)==sizeof(long))
+			if(sizeof(int)==sizeof(int32_t))
 				value->ip = (int*)np->nvalue.lp;
 			else
 			{
-				long sl = 1;
+				int32_t sl = 1;
 				value->ip = (int*)(((char*)np->nvalue.lp) + (*((char*)&sl) ? 0 : sizeof(int)));
 			}
 			nv_close(np);
@@ -645,7 +645,7 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 		case 'X':
 		case 'u':
 		case 'U':
-			longmax = LDBL_ULONGLONG_MAX;
+			longmax = LDBL_ULLONG_MAX;
 		case '.':
 			if(fe->size==2 && strchr("bcsqHPRQTZ",*fe->form))
 			{

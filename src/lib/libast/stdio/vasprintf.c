@@ -32,7 +32,7 @@ vasprintf(char** s, const char* fmt, va_list args)
 	if (f = sfstropen())
 	{
 		v = sfvprintf(f, fmt, args);
-		if (!(*s = strdup(sfstrbase(f))))
+		if (!(*s = strdup(sfstruse(f))))
 			v = -1;
 		sfstrclose(f);
 	}

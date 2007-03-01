@@ -30,10 +30,9 @@
 #include	"name.h"
 #include	"streval.h"
 #include	"variables.h"
-#include	"FEATURE/locale"
 
-#ifndef LONGLONG_MAX
-#define LONGLONG_MAX	LONG_MAX
+#ifndef LLONG_MAX
+#define LLONG_MAX	LONG_MAX
 #endif
 
 static Sfdouble_t	Zero, NaN, Inf;
@@ -41,14 +40,14 @@ static Namval_t Infnod =
 {
 	{ 0 },
 	"Inf",
-	NV_NOFREE|NV_INTEGER|NV_DOUBLE|NV_LONG,NV_RDONLY
+	NV_NOFREE|NV_LDOUBLE,NV_RDONLY
 };
 
 static Namval_t NaNnod =
 {
 	{ 0 },
 	"NaN",
-	NV_NOFREE|NV_INTEGER|NV_DOUBLE|NV_LONG,NV_RDONLY
+	NV_NOFREE|NV_LDOUBLE,NV_RDONLY
 };
 
 static Namval_t *scope(register Namval_t *np,register struct lval *lvalue,int assign)
@@ -76,7 +75,7 @@ static Namval_t *scope(register Namval_t *np,register struct lval *lvalue,int as
 		{
 			while(nv_isref(mp))
 			{
-				sub = mp->nvenv;
+				sub = nv_refsub(mp);
 				mp = nv_refnode(mp);
 			}
 			np = mp;
@@ -104,16 +103,18 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 	    {
 		register Namval_t *np = (Namval_t*)(lvalue->value);
 		np = scope(np,lvalue,1);
-		nv_putval(np, (char*)&n, NV_INTEGER|NV_DOUBLE|NV_LONG);
+		nv_putval(np, (char*)&n, NV_LDOUBLE);
 		r=nv_getnum(np);
 		break;
 	    }
 	    case LOOKUP:
 	    {
 		register int c = *str;
+		register char *xp=str;
 		lvalue->value = (char*)0;
 		if(c=='.')
-			c = str[1];
+			str++;
+		c = mbchar(str);
 		if(isaletter(c))
 		{
 			register Namval_t *np;
@@ -121,7 +122,8 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 			char *cp;
 			while(1)
 			{
-				while(c= *++str, isaname(c));
+				while(xp=str, c=mbchar(str), isaname(c));
+				str = xp;
 				if(c!='.')
 					break;
 				dot=1;
@@ -181,7 +183,11 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 						}
 					}
 					else
-						while(c= *++str, isaname(c));
+					{
+						str++;
+						while(xp=str, c=mbchar(str), isaname(c));
+						str = xp;
+					}
 				}
 				*str = 0;
 				if(strcmp(*ptr,"Inf")==0)
@@ -232,7 +238,7 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 		}
 		else
 		{
-			char	lastbase=0, *val = str, oerrno = errno;
+			char	lastbase=0, *val = xp, oerrno = errno;
 			errno = 0;
 			r = strtonll(val,&str, &lastbase,-1);
 			if(*str=='8' || *str=='9')
@@ -250,7 +256,7 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 				if(*val==0 || *val=='.' || *val=='x' || *val=='X')
 					val--;
 			}
-			if(r==LONGLONG_MAX && errno)
+			if(r==LLONG_MAX && errno)
 				c='e';
 			else
 				c = *str;
@@ -323,7 +329,11 @@ Sfdouble_t sh_strnum(register const char *str, char** ptr, int mode)
 	register Sfdouble_t d;
 	char base=0, *last;
 	if(*str==0)
+	{
+		if(ptr)
+			*ptr = (char*)str;
 		return(0);
+	}
 	errno = 0;
 	d = strtonll(str,&last,&base,-1);
 	if(*last || errno)

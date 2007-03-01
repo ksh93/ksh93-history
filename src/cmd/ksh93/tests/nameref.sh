@@ -204,6 +204,19 @@ function subref
 }
 [[ $(subref ps) == 1 ]] ||  err_exit 'local nameref cannot reference global variable child'
 
+function local
+{
+	typeset ps=(typeset -i a=3 b=4)
+	[[ $(subref ps) == 3 ]] ||  err_exit 'local nameref cannot reference caller compound variable'
+}
+local
+unset -f local
+function local
+{
+	qs=(integer  a=3; integer b=4)
+}
+local 2> /dev/null || err_exit 'function local has non-zero exit status'
+[[ ${qs.a} == 3 ]] || err_exit 'function cannot set compound global variable' 
 unset fun i
 foo=(x=hi)
 function fun

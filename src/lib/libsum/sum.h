@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1996-2006 AT&T Knowledge Ventures            *
+*           Copyright (c) 1996-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -39,9 +39,9 @@
 
 typedef struct Sumdata_s
 {
-	unsigned _ast_int4_t	size;
-	unsigned _ast_int4_t	num;
-	void*			buf;
+	uint32_t	size;
+	uint32_t	num;
+	void*		buf;
 } Sumdata_t;
 
 typedef struct Sum_s

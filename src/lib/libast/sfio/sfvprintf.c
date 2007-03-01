@@ -30,7 +30,6 @@
 **
 **	Written by Kiem-Phong Vo.
 */
-
 #define HIGHBITI	(~((~((uint)0)) >> 1))
 #define HIGHBITL	(~((~((Sfulong_t)0)) >> 1))
 
@@ -102,7 +101,7 @@ char*	form;		/* format to use	*/
 va_list	args;		/* arg list if !argf	*/
 #endif
 {
-	int		n, v, k, n_s, base, fmt, flags;
+	int		n, v, w, k, n_s, base, fmt, flags;
 	Sflong_t	lv;
 	char		*sp, *ssp, *endsp, *ep, *endep;
 	int		dot, width, precis, sign, decpt;
@@ -132,18 +131,22 @@ va_list	args;		/* arg list if !argf	*/
 	wchar_t*	wsp;
 	SFMBDCL(fmbs)			/* state of format string	*/
 	SFMBDCL(mbs)			/* state of some string		*/
+#ifdef mbwidth
+	char*		osp;
+	int		n_w, sf_wcwidth;
+#endif
 #endif
 
 	/* local io system */
-	int		w, n_output;
-#define SMputc(f,c)	{ if((w = SFFLSBUF(f,c)) >= 0 ) n_output += 1; \
+	int		o, n_output;
+#define SMputc(f,c)	{ if((o = SFFLSBUF(f,c)) >= 0 ) n_output += 1; \
 			  else		{ SFBUF(f); goto done; } \
 			}
-#define SMnputc(f,c,n)	{ if((w = SFNPUTC(f,c,n)) > 0 ) n_output += 1; \
-			  if(w != n)	{ SFBUF(f); goto done; } \
+#define SMnputc(f,c,n)	{ if((o = SFNPUTC(f,c,n)) > 0 ) n_output += 1; \
+			  if(o != n)	{ SFBUF(f); goto done; } \
 			}
-#define SMwrite(f,s,n)	{ if((w = SFWRITE(f,(Void_t*)s,n)) > 0 ) n_output += w; \
-			  if(w != n)	{ SFBUF(f); goto done; } \
+#define SMwrite(f,s,n)	{ if((o = SFWRITE(f,(Void_t*)s,n)) > 0 ) n_output += o; \
+			  if(o != n)	{ SFBUF(f); goto done; } \
 			}
 #if _sffmt_small /* these macros are made smaller at some performance cost */
 #define SFBUF(f)
@@ -186,6 +189,9 @@ va_list	args;		/* arg list if !argf	*/
 		f->endb = f->data+sizeof(data);
 	}
 	SFINIT(f);
+#if _has_multibyte && defined(mbwidth)
+	sf_wcwidth = f->flags & SF_WCWIDTH;
+#endif
 
 	tls[1] = NIL(char*);
 
@@ -294,10 +300,10 @@ loop_fmt :
 			}
 
 		case '-' :
-			flags = (flags & ~SFFMT_ZERO) | SFFMT_LEFT;
+			flags = (flags & ~(SFFMT_CENTER|SFFMT_ZERO)) | SFFMT_LEFT;
 			goto loop_flags;
 		case '0' :
-			if(!(flags&SFFMT_LEFT) )
+			if(!(flags&(SFFMT_LEFT|SFFMT_CENTER)) )
 				flags |= SFFMT_ZERO;
 			goto loop_flags;
 		case ' ' :
@@ -306,6 +312,9 @@ loop_fmt :
 			goto loop_flags;
 		case '+' :
 			flags = (flags & ~SFFMT_BLANK) | SFFMT_SIGN;
+			goto loop_flags;
+		case '=' :
+			flags = (flags & ~(SFFMT_LEFT|SFFMT_ZERO)) | SFFMT_CENTER;
 			goto loop_flags;
 		case '#' :
 			flags |= SFFMT_ALTER;
@@ -391,7 +400,7 @@ loop_fmt :
 			if(dot == 0)
 			{	if((width = v) < 0)
 				{	width = -width;
-					flags = (flags & ~SFFMT_ZERO) | SFFMT_LEFT;
+					flags = (flags & ~(SFFMT_CENTER|SFFMT_ZERO)) | SFFMT_LEFT;
 				}
 			}
 			else if(dot == 1)
@@ -674,10 +683,13 @@ loop_fmt :
 				ls = tls; tls[0] = sp;
 			}
 			for(sp = *ls;;)
-			{	/* set v to the number of bytes to output */
+			{	/* v: number of bytes  w: print width of those v bytes */
 #if _has_multibyte
 				if(flags & SFFMT_LONG)
 				{	v = 0;
+#ifdef mbwidth
+					w = 0;
+#endif
 					SFMBCLR(&mbs);
 					for(n = 0, wsp = (wchar_t*)sp;; ++wsp, ++n)
 					{	if((size >= 0 && n >= size) ||
@@ -685,28 +697,70 @@ loop_fmt :
 							break;
 						if((n_s = wcrtomb(buf, *wsp, &mbs)) <= 0)
 							break;
+#ifdef mbwidth
+						if(sf_wcwidth )
+						{	n_w = mbwidth(*wsp);
+							if(precis >= 0 && (w+n_w) > precis )
+								break;
+							w += n_w;
+						}
+						else
+#endif
 						if(precis >= 0 && (v+n_s) > precis )
 							break;
 						v += n_s;
 					}
+#ifdef mbwidth
+					if(!sf_wcwidth )
+						w = v;
+#endif
 				}
+#if defined(mbwide) && defined(mbchar) && defined(mbwidth)
+				else if (mbwide())
+				{	w = 0;
+					SFMBCLR(&mbs);
+					ssp = sp;
+					for(;;)
+					{	if((size >= 0 && w >= size) ||
+						   (size <  0 && *ssp == 0) )
+							break;
+						osp = ssp;
+						n = mbchar(osp);
+						n_w = sf_wcwidth ? mbwidth(n) : 1;
+						if(precis >= 0 && (w+n_w) > precis )
+							break;
+						w += n_w;
+						ssp = osp;
+					}
+					v = ssp - sp;
+				}
+#endif
 				else
 #endif
 				{	if((v = size) < 0)
 						for(v = 0; sp[v]; ++v)
 							if(v == precis)
 								break;
+					if(precis >= 0 && v > precis)
+						v = precis;
+					w = v;
 				}
 
-				if(precis >= 0 && v > precis)
-					v = precis;
-
-				if((n = width - v) > 0 && !(flags&SFFMT_LEFT) )
-					{ SFnputc(f, ' ', n); n = 0; }
+				if((n = width - w) > 0 && !(flags&SFFMT_LEFT) )
+				{	if(flags&SFFMT_CENTER)
+					{	n -= (k = n/2);
+						SFnputc(f, ' ', k);
+					}
+					else
+					{
+						SFnputc(f, ' ', n);
+						n = 0;
+					}
+				}
 #if _has_multibyte
 				if(flags & SFFMT_LONG)
 				{	SFMBCLR(&mbs);
-					for(wsp = (wchar_t*)sp; v > 0; ++wsp, v -= n_s)
+					for(wsp = (wchar_t*)sp; w > 0; ++wsp, --w)
 					{	if((n_s = wcrtomb(buf, *wsp, &mbs)) <= 0)
 							break;
 						sp = buf; SFwrite(f, sp, n_s);
@@ -763,6 +817,10 @@ loop_fmt :
 				{	SFMBCLR(&mbs);
 					if((n_s = wcrtomb(buf, *wsp++, &mbs)) <= 0)
 						break;
+#ifdef mbwidth
+					if(sf_wcwidth)
+						n_s = mbwidth(*(wsp - 1));
+#endif
 					n = width - precis*n_s; /* padding amount */
 				}
 				else
@@ -777,7 +835,15 @@ loop_fmt :
 				}
 
 				if(n > 0 && !(flags&SFFMT_LEFT) )
-					{ SFnputc(f,' ',n); n = 0; };
+				{	if(flags&SFFMT_CENTER)
+					{	n -= (k = n/2);
+						SFnputc(f, ' ', k);
+					}
+					else
+					{	SFnputc(f, ' ', n);
+						n = 0;
+					}
+				}
 
 				v = precis; /* need this because SFnputc may clear it */
 #if _has_multibyte
@@ -1249,7 +1315,7 @@ loop_fmt :
 
 			/* SFFMT_LEFT: right padding */
 			if((n = -v) > 0)
-				SFnputc(f,' ',n);
+				{ SFnputc(f,' ',n); }
 		}
 	}
 

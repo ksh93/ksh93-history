@@ -37,6 +37,7 @@ typedef struct _fcin
 	unsigned char	*fcptr;		/* pointer to next input char */
 	unsigned char	fcchar;		/* saved character */
 	void (*fcfun)(Sfio_t*,const char*,int);	/* advance function */
+	int		fcleft;		/* for multibyte boundary */
 	Sfoff_t		fcoff;		/* offset for last read */
 } Fcin_t;
 

@@ -44,7 +44,6 @@
 #include	"FEATURE/time"
 #include	"FEATURE/dynamic"
 #include	"lexstates.h"
-#include	"FEATURE/locale"
 #include	"version.h"
 
 #if SHOPT_MULTIBYTE
@@ -79,7 +78,7 @@ struct rand
 {
 	Namfun_t	hdr;
 	Shell_t		*sh;
-	long		rand_last;
+	int32_t		rand_last;
 };
 
 struct ifs
@@ -1269,7 +1268,7 @@ static Init_t *nv_init(Shell_t *shp)
 #endif /* _hdr_locale */
 	(PPIDNOD)->nvalue.lp = (&shp->ppid);
 	(TMOUTNOD)->nvalue.lp = (&shp->st.tmout);
-	(MCHKNOD)->nvalue.lp = (long*)(&sh_mailchk);
+	(MCHKNOD)->nvalue.lp = (&sh_mailchk);
 	(OPTINDNOD)->nvalue.lp = (&shp->st.optindex);
 	/* set up the seconds clock */
 	shp->alias_tree = inittree(shp,shtab_aliases);

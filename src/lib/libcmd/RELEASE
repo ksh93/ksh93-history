@@ -1,3 +1,13 @@
+07-03-11 tty.c: add sysV --line-number, -l
+07-02-26 Makefile: sumlib.o: direct extract from +lsum (vcodex someday)
+07-02-24 Makefile: tweak cmdext.h action for --mam bootstrap
+07-02-09 Makefile: { cmdext.h cmdlist.h } depend on *.c list!
+07-02-09 Makefile: +lsum to bring in static -lsum (no dynamic right now)
+07-02-07 cksum.c: move from src/cmd/std with ftwalk => fts
+07-02-07 getconf.c: handle /bin == /usr/bin in defer logic
+07-01-26 chmod.c: don't FTS_FOLLOW if !FTS_PHYSICAL
+07-01-23 cut.c: Cut_t variable dimension list[] must be last member
+07-01-22 uname.c: fix -h typo that clobbered astconf() state -- ouch
 07-01-02 fmt.c: fix buffer splice off by one bug -- what else
 06-11-23 cmd.h: because of proto cmdinit cannot be a function like macro
 06-11-21 cp.c: fix 06-10-31 const dot[] readonly assignment

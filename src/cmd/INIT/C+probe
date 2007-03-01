@@ -2,7 +2,7 @@
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)C probe (AT&T Research) 2007-01-01
+# @(#)C probe (AT&T Research) 2007-03-08
 #
 # probe [ -d ] c-compiler-path [ attributes ]
 #
@@ -158,6 +158,7 @@ done
 
 if	test -f "$dir/probe.ini"
 then	. "$dir/probe.ini"
+	IFS=$ifs
 fi
 
 mkdir suffix

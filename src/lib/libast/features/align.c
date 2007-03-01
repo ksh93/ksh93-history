@@ -39,8 +39,8 @@ union _u_
 	char*			u2;
 	double			u3;
 	char			u4[1024];
-	_ast_intmax_t		u5;
-	unsigned _ast_intmax_t	u6;
+	intmax_t		u5;
+	uintmax_t		u6;
 	_ast_fltmax_t		u7;
 	void*			u8;
 	char*			(*u9)();

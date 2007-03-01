@@ -58,7 +58,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2007-01-08 $
+@(#)$Id: package (AT&T Research) 2007-03-11 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -2421,7 +2421,10 @@ case $x in
 		//*)	d=/ ;;
 		*)	d= ;;
 		esac
-		k=0
+		case $1 in
+		home)	k=1 ;;
+		*)	k=0 ;;
+		esac
 		for i
 		do	case $i in
 			'')	continue ;;
@@ -6625,7 +6628,10 @@ write)	set '' $target
 			only=1
 			;;
 		tst)	qualifier="$qualifier tgz"
-			assign="$assign 'PACKAGEDIR=\$(PACKAGESRC)/tst'"
+			assign="$assign copyright=0 'PACKAGEDIR=\$(PACKAGESRC)/tst'"
+			;;
+		nocopyright)
+			assign="$assign copyright=0"
 			;;
 		*)	break
 			;;

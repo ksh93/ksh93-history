@@ -21,7 +21,7 @@
 ########################################################################
 : generate getconf and limits info
 #
-# @(#)conf.sh (AT&T Research) 2007-01-01
+# @(#)conf.sh (AT&T Research) 2007-03-06
 #
 # this script generates these files from the table file in the first arg
 # the remaining args are the C compiler name and flags
@@ -112,7 +112,7 @@ case $debug in
 '')	trap "code=\$?; rm -f $tmp.*; exit \$code" 0 1 2 ;;
 esac
 
-# determine the _ast_intmax_t printf format
+# determine the intmax_t printf format
 
 cat > $tmp.c <<!
 ${head}
@@ -127,8 +127,8 @@ main()
 }
 !
 if	$cc -o $tmp.exe $tmp.c >/dev/null 2>&1 && ./$tmp.exe
-then	FMT='%lld'
-else	FMT='%ld'
+then	LL='ll'
+else	LL='l'
 fi
 
 # set up the names and keys
@@ -472,7 +472,7 @@ do	flags=F
 		args=
 		headers=
 		case $name in
-		V[1-9]_*|V[1-9][0-9]_*)	underscore=VW ;;
+		V[123456789]_*|V[123456789][0123456789]_*)	underscore=VW ;;
 		esac
 		case $call in
 		CS|SI)	key=CS ;;
@@ -896,7 +896,10 @@ do	eval name=\"'$'CONF_name_$key\"
 		XX)	case $standard in
 			C)	standard=POSIX ;;
 			esac
-			flags=FU
+			case $flags in
+			*L*)	flags=lFU ;;
+			*)	flags=FU ;;
+			esac
 			;;
 		esac
 		;;
@@ -987,14 +990,24 @@ do	eval name=\"'$'CONF_name_$key\"
 	esac
 	conf_limit=0
 	case $flags in
-	*L*)	d=
-		eval x='$'CONF_const_${conf_name}
+	*[Ll]*)	d=
+		case ${conf_name} in
+		LONG_MAX|SSIZE_MAX)
+			x=
+			;;
+		*)	eval x='$'CONF_const_${conf_name}
+			;;
+		esac
 		case $x in
 		'')	for s in ${values}
 			do	case $s in
 				$sym)	eval x='$'CONF_const_${s}
 					case $x in
-					1)	x=$s
+					1)	eval a='$'CONF_const_${standard}_${s}
+						case $a in
+						$x)	x= ;;
+						*)	x=$s ;;
+						esac
 						break
 						;;
 					esac
@@ -1005,8 +1018,8 @@ do	eval name=\"'$'CONF_name_$key\"
 					;;
 				esac
 			done
-			case ${x:+1}:$flags:$conf_op:${script:+1} in
-			:*:-1:1|:*X*:*:*)
+			case ${x:+1}:$flags:$conf_op in
+			:*:-1|:*X*:*)
 				case $verbose in
 				1)	echo "$command: probe for ${conf_name} <limits.h> value" >&2 ;;
 				esac
@@ -1020,11 +1033,34 @@ do	eval name=\"'$'CONF_name_$key\"
 					fi
 					;;
 				esac
-				case ${x:+1}:${script:+1} in
-				:1)	case $script in
+				case ${x:+1} in
+				'')	case $script in
 					'#'*)	echo "$script" > $tmp.sh
 						chmod +x $tmp.sh
 						x=`./$tmp.sh 2>/dev/null`
+						;;
+					'')	case $conf_name in
+						U*LLONG*)	f="%${LL}u" ;;
+						*LLONG*)	f="%${LL}d" ;;
+						U*LONG*)	f="%lu" ;;
+						*LONG*)		f="%ld" ;;
+						U*)		f="%u" ;;
+						*)		f="%d" ;;
+						esac
+						cat > $tmp.c <<!
+${head}
+#include <stdio.h>
+#include <sys/types.h>
+#include <limits.h>
+#include <unistd.h>$systeminfo$headers
+${tail}
+int
+main()
+{
+	printf("$f\n", $conf_name);
+	return 0;
+}
+!
 						;;
 					*)	cat > $tmp.c <<!
 ${head}
@@ -1038,7 +1074,7 @@ ${script}
 					esac
 					case $args in
 					'')	set "" ;;
-					*)	eval set "" "$args"; shift ;;
+					*)	eval set '""' '"'$args'"'; shift ;;
 					esac
 					for a
 					do	case $script in
@@ -1070,6 +1106,10 @@ ${script}
 			case ${x:+1}:$flags:$conf_op in
 			1:*:-1|1:*X*:*)
 				conf_limit=$x
+				case $flags in
+				*L*)	;;
+				*)	conf_flags="${conf_flags}|CONF_LIMIT" ;;
+				esac
 				conf_flags="${conf_flags}|CONF_LIMIT_DEF"
 				case $string:$x in
 				1:*)	cat >> $tmp.l <<!
@@ -1204,8 +1244,30 @@ ${script}
 		;;
 	esac
 	case $string in
-	1)	conf_limit="{ 0, $conf_limit }" conf_minmax="{ 0, $conf_minmax }" ;;
-	*)	conf_limit="{ $conf_limit, 0 }" conf_minmax="{ $conf_minmax, 0 }" ;;
+	1)	conf_limit="{ 0, $conf_limit }" conf_minmax="{ 0, $conf_minmax }"
+		;;
+	*)	case $conf_limit in
+		0[xX]*|-*|+*|[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_]*)
+			;;
+		*[!0123456789abcdefABCDEF]*)
+			conf_limit=0
+			;;
+		*[!0123456789]*)
+			conf_limit=0x$conf_limit
+			;;
+		esac
+		case $conf_minmax in
+		0[xX]*|-*|+*|[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_]*)
+			;;
+		*[!0123456789abcdefABCDEF]*)
+			conf_minmax=0
+			;;
+		*[!0123456789]*)
+			conf_minmax=0x$conf_minmax
+			;;
+		esac
+		conf_limit="{ $conf_limit, 0 }" conf_minmax="{ $conf_minmax, 0 }"
+		;;
 	esac
 	echo "{ \"$conf_name\", $conf_limit, $conf_minmax, $conf_flags, $conf_standard, $conf_section, $conf_call, $conf_op },"
 	case $shell in
@@ -1295,11 +1357,11 @@ cat <<!
 
 struct Conf_s; typedef struct Conf_s Conf_t;
 
-typedef int (*Conf_f)(Conf_t*, _ast_intmax_t*, char**);
+typedef int (*Conf_f)(Conf_t*, intmax_t*, char**);
 
 typedef struct Value_s
 {
-	_ast_intmax_t	number;
+	intmax_t	number;
 	const char*	string;
 } Value_t;
 

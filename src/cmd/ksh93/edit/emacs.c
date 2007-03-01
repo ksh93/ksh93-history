@@ -63,6 +63,7 @@ One line screen editor for any program
 
 #include	<ast.h>
 #include	<ctype.h>
+#include	"FEATURE/cmds"
 #if KSHELL
 #   include	"defs.h"
 #endif	/* KSHELL */
@@ -989,6 +990,12 @@ static int escape(register Emacs_t* ep,register genchar *out,int count)
 			draw(ep,UPDATE);
 			return(-1);
 
+#ifdef _cmd_tput
+		case cntl('L'): /* clear screen */
+			sh_trap("tput clear", 0);
+			draw(ep,REFRESH);
+			return(-1);
+#endif
 		case '[':	/* feature not in book */
 			switch(i=ed_getchar(ep->ed,1))
 			{

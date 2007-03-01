@@ -127,7 +127,6 @@ int		n;	/* current position in pool	*/
 	else	/* shared pool of write-streams, data can be moved among streams */
 	{	if(SFMODE(head,1) != SF_WRITE && _sfmode(head,SF_WRITE,1) < 0)
 			goto done;
-		/**/ASSERT((f->mode&(SF_WRITE|SF_POOL)) == (SF_WRITE|SF_POOL) );
 		/**/ASSERT(f->next == f->data);
 
 		v = head->next - head->data;	/* pending data		*/

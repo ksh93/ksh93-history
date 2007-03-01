@@ -1,7 +1,7 @@
 /*
  * source and binary package support
  *
- * @(#)package.mk (AT&T Research) 2006-02-01
+ * @(#)package.mk (AT&T Research) 2007-03-11
  *
  * usage:
  *
@@ -56,7 +56,10 @@
  *		:LICENSE: type.class pattern override
  *
  *	notice=1
- *		include the conspcuous empty notice file
+ *		include the conspicuous empty notice file
+ *
+ *	copyright=0
+ *		do not prepend source file copyright notice
  *
  *	strip=0
  *		don't strip non-lcl binary package members
@@ -81,8 +84,9 @@ url = http://www.research.att.com/sw/download
 
 base =
 category = utils
-closure =
 checksum = md5
+closure =
+copyright = 1
 delta =
 format = tgz
 incremental =
@@ -1010,7 +1014,7 @@ vendor.cyg = gnu
 							echo ";;;$tmp/$m.mam;$i/Mamfile"
 						fi
 					fi
-					$(MAKE) --noexec $(-) $(=) recurse list.package.$(type) package.license.class=$(license:Q)
+					$(MAKE) --noexec $(-) $(=) recurse list.package.$(type) package.license.class=$(license:Q) $(copyright:N=1:??LICENSE=?)
 				fi
 			done
 			set -- $(package.dir:P=G)

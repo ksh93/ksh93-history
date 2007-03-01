@@ -52,7 +52,7 @@ static void put_time(Namval_t* np, const char* val, int flag, Namfun_t* nfp)
 	char *last;
 	if(val)
 	{
-		time_t t;
+		int32_t t;
 		if(flag&NV_INTEGER)
 		{
 			if(flag&NV_LONG)
@@ -61,9 +61,11 @@ static void put_time(Namval_t* np, const char* val, int flag, Namfun_t* nfp)
 				t = *(double*)val;
 		}
 		else
+		{
 			t = tmdate(val, &last, (time_t*)0);
-		if(*last)
-			errormsg(SH_DICT,ERROR_exit(1),"%s: invalid date/time string",val);
+			if(*last)
+				errormsg(SH_DICT,ERROR_exit(1),"%s: invalid date/time string",val);
+		}
 		nv_putv(np,(char*)&t,NV_INTEGER,nfp);
 	}
 	else
@@ -121,7 +123,7 @@ static void put_mode(Namval_t* np, const char* val, int flag, Namfun_t* nfp)
 {
 	if(val)
 	{
-		mode_t mode;
+		int32_t mode;
 		char *last;
 		if(flag&NV_INTEGER)
 		{
@@ -131,9 +133,11 @@ static void put_mode(Namval_t* np, const char* val, int flag, Namfun_t* nfp)
 				mode = *(double*)val;
 		}
 		else
+		{
 			mode = strperm(val, &last,0);
-		if(*last)
-			errormsg(SH_DICT,ERROR_exit(1),"%s: invalid mode string",val);
+			if(*last)
+				errormsg(SH_DICT,ERROR_exit(1),"%s: invalid mode string",val);
+		}
 		nv_putv(np,(char*)&mode,NV_INTEGER,nfp);
 	}
 	else

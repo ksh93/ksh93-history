@@ -102,8 +102,8 @@ int	b_cd(int argc, char *argv[],void *extra)
 #if _WINIX
 	if(*dir != '/' && (dir[1]!=':'))
 #else
-#endif /* _WINIX */
 	if(*dir != '/')
+#endif /* _WINIX */
 	{
 #ifdef PATH_BFPATH
 		if(!(cdpath = (Pathcomp_t*)shp->cdpathlist) && (dp=(CDPNOD)->nvalue.cp))

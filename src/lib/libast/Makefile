@@ -30,7 +30,7 @@ __OBSOLETE__ == $("6 months ago":@F=%(%Y0101)T)
 HEADERSRC = ast.h ast_dir.h ast_getopt.h ast_std.h \
 	ast_version.h ast_windows.h \
 	ccode.h cdt.h debug.h dt.h error.h find.h ftw.h ftwalk.h fts.h \
-	fs3d.h getopt.h glob.h hash.h hashkey.h hashpart.h int.h lc.h ls.h \
+	fs3d.h getopt.h glob.h hash.h hashkey.h hashpart.h lc.h ls.h \
 	magic.h mc.h mime.h mnt.h modecanon.h modex.h namval.h option.h \
 	proc.h re_comp.h recfmt.h regex.h regexp.h \
 	sfio.h sfio_s.h sfio_t.h sfdisc.h \
@@ -148,7 +148,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	sfclose.c sfclrlock.c sfdisc.c sfdlen.c sfexcept.c \
 	sfgetl.c sfgetu.c sfcvt.c sfecvt.c sffcvt.c \
 	sfextern.c sffilbuf.c sfflsbuf.c sfprints.c sfgetd.c \
-	sfgetr.c sfieee.c sfllen.c sfmode.c sfmove.c sfnew.c \
+	sfgetr.c sfllen.c sfmode.c sfmove.c sfnew.c \
 	sfpkrd.c sfnotify.c sfnputc.c sfopen.c sfpeek.c sfpoll.c \
 	sfpool.c sfpopen.c sfprintf.c sfputd.c sfputl.c sfputr.c \
 	sfputu.c sfrd.c sfread.c sfreserve.c sfscanf.c sfseek.c sfset.c \

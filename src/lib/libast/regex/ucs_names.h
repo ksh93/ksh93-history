@@ -31,8 +31,8 @@
 #define UCS_UC		1
 #define UCS_LC		2
 
-typedef unsigned _ast_int2_t Ucs_code_t;
-typedef unsigned _ast_int4_t Ucs_attr_t;
+typedef uint16_t Ucs_code_t;
+typedef uint32_t Ucs_attr_t;
 
 typedef struct Ucs_dat_s
 {

@@ -302,38 +302,6 @@ int sh_lex(void)
 #define sh_lex	lextoken
 #endif
 
-#if SHOPT_MULTIBYTE
-static int mb_stateskip(const char *state, int *c, int *len)
-{
-	int curChar, lexState;
-	lexState = 0;
-	do
-	{
-		switch(*len = mbsize(_Fcin.fcptr))
-		{
-		    case -1: /* bogus multiByte char - parse as bytes? */
-		    case 0: /* NULL byte */
-		    case 1:
-                                lexState = state[curChar=fcget()];
-                                break;
-		    default:
-			 /*
-			 * None of the state tables contain entries
-			 * for multibyte characters.  However, they
-			 * should be treated the same as any other
-			 * alpha character, so we'll use the state
-			 * which would normally be assigned to the
-			 * 'a' character.
-			 */
-			curChar = mbchar(_Fcin.fcptr);
-			lexState = state['a'];
-		}
-	}
-	while(lexState == 0);
-	*c = curChar;
-	return(lexState);
-}
-#endif /* SHOPT_MULTIBYTE */
 /*
  * Get the next word and put it on the top of the stak
  * A pointer to the current word is stored in shlex.arg
@@ -346,12 +314,10 @@ int sh_lex(void)
 	register int	n, c, mode=ST_BEGIN, wordflags=0;
 	register Lex_t *lp = (Lex_t*)shp->lex_context;
 	int		inlevel=lexd.level, assignment=0, ingrave=0;
-#if SHOPT_MULTIBYTE
-	int LEN;
-#else
-#	define LEN	1
-#endif /* SHOPT_MULTIBYTE */
 	Sfio_t *sp;
+#if SHOPT_MULTIBYTE
+	LEN=1;
+#endif /* SHOPT_MULTIBYTE */
 	if(lexd.paren)
 	{
 		lexd.paren = 0;
@@ -398,17 +364,7 @@ int sh_lex(void)
 	{
 		/* skip over characters in the current state */
 		state = sh_lexstates[mode];
-#if SHOPT_MULTIBYTE
-		LEN=1;
-		if(mbwide())
-		{
-			int curchar;
-			n = mb_stateskip(state, &curchar, &LEN);
-			c = curchar;
-		}
-		else
-#endif /* SHOPT_MULTIBYTE */
-		while((n = state[c=fcget()])==0);
+		while((n=STATE(state,c))==0);
 		switch(n)
 		{
 			case S_BREAK:
@@ -602,7 +558,11 @@ int sh_lex(void)
 					else if(c!='<' && c!='>')
 						n = 0;
 					else if(n==LPAREN)
+					{
 						c  |= SYMLPAR;
+						lex.reservok = 1;
+						lex.skipword = 0;
+					}
 					else if(n=='|')
 						c  |= SYMPIPE;
 					else if(c=='<' && n=='>')
@@ -1656,30 +1616,8 @@ static int here_copy(Lex_t *lp,register struct ionod *iop)
 	{
 		if(n!=S_NL)
 		{
-#if SHOPT_MULTIBYTE
-			if(mbwide())
-			{
-				do
-				{
-					switch(mbsize(_Fcin.fcptr))
-					{
-					    case -1:    /* bogus multiByte char - parse as bytes? */
-					    case 0:     /* NULL byte */
-					    case 1:
-						n = state[fcget()];
-						break;
-					    default:
-						/* treat as alpha */
-						mbchar(_Fcin.fcptr);
-						n = state['a'];
-					}
-				}
-				while(n == 0);
-			}
-			else
-#endif /* SHOPT_MULTIBYTE */
 			/* skip over regular characters */
-			while((n=state[fcget()])==0);
+			while((n=STATE(state,c))==0);
 		}
 		if(n==S_EOF || !(c=fcget()))
 		{

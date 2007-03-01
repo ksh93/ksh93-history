@@ -117,7 +117,7 @@ tmxfmt(char* buf, size_t len, const char* format, Time_t t)
 	flags = tm_info.flags;
 	sp = &stack[0];
 	cp = buf;
-	ep = buf + len - 1;
+	ep = buf + len;
 	delimiter = 0;
 	for (;;)
 	{
@@ -517,9 +517,8 @@ tmxfmt(char* buf, size_t len, const char* format, Time_t t)
 	index:
 		p = tm_info.format[n];
 	string:
-		while (*cp = *p++)
-			if (cp < ep)
-				cp++;
+		while (cp < ep && (*cp = *p++))
+			cp++;
 		continue;
 	push:
 		c = 0;
@@ -535,6 +534,8 @@ tmxfmt(char* buf, size_t len, const char* format, Time_t t)
 		continue;
 	}
 	tm_info.flags = flags;
+	if (cp >= ep)
+		cp = ep - 1;
 	*cp = 0;
 	return cp;
 }

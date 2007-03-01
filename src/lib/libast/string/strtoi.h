@@ -35,6 +35,7 @@
  *
  *	S2I_function	the function name
  *	S2I_number	the signed number type
+ *	S2I_unumber	the unsigned number type
  *	S2I_unsigned	1 for unsigned, 0 for signed
  *	S2I_multiplier	1 for optional multiplier suffix, 0 otherwise
  *	S2I_size	the second argument is the input string size
@@ -94,11 +95,10 @@
 #define QL		01
 #define QU		02
 
-#define S2I_utype	unsigned S2I_number
-#define S2I_umax	(~((S2I_utype)0))
+#define S2I_umax	(~((S2I_unumber)0))
 
 #if S2I_unsigned
-#define S2I_type	S2I_utype
+#define S2I_type	S2I_unumber
 #define S2I_min		0
 #define S2I_max		S2I_umax
 #else
@@ -113,10 +113,10 @@
 #define S2I_valid(s)	1
 #endif
 
-#define ADDOVER(n,c,s)	((S2I_umax-(n))<((S2I_utype)((c)+(s))))
-#define MPYOVER(n,c)	(((S2I_utype)(n))>(S2I_umax/(c)))
+#define ADDOVER(n,c,s)	((S2I_umax-(n))<((S2I_unumber)((c)+(s))))
+#define MPYOVER(n,c)	(((S2I_unumber)(n))>(S2I_umax/(c)))
 
-static const S2I_utype	mm[] =
+static const S2I_unumber	mm[] =
 {
 	0,
 	S2I_umax /  1,
@@ -224,15 +224,15 @@ S2I_function(a, e, base) const char* a; char** e; int base;
 #if S2I_size
 	register unsigned char*	z = s + size;
 #endif
-	register S2I_utype	n;
-	register S2I_utype	x;
+	register S2I_unumber	n;
+	register S2I_unumber	x;
 	register int		c;
 	register int		shift;
 	register unsigned char*	p;
 	register unsigned char*	cv;
 	unsigned char*		b;
 	unsigned char*		k;
-	S2I_utype		v;
+	S2I_unumber		v;
 #if S2I_multiplier
 	register int		base;
 #endif
@@ -546,7 +546,7 @@ S2I_function(a, e, base) const char* a; char** e; int base;
 					overflow = 1;
 				}
 				else
-					v = ((S2I_utype)1) << shift;
+					v = ((S2I_unumber)1) << shift;
 			}
 			if (v)
 			{

@@ -91,9 +91,9 @@ int main()
 	unsigned int		ui;
 	unsigned long		ul;
 	unsigned long		val;
-#ifdef _ast_int8_t
-	unsigned _ast_int8_t	ull;
-	unsigned _ast_int8_t	vll;
+#if _typ_uint64_t
+	uint64_t		ull;
+	uint64_t		vll;
 #endif
 
 	/*
@@ -123,7 +123,7 @@ int main()
 	ui = ~ui;
 	ul = 0;
 	ul = ~ul;
-#ifdef _ast_int8_t
+#if _typ_uint64_t
 	ull = 0;
 	ull = ~ull;
 #endif
@@ -260,52 +260,52 @@ int main()
 #endif
 	}
 
-#if defined(_ast_int8_t) && !_ast_intmax_long
+#if _typ_uint64_t && !_ast_intmax_long
 	if (ull == ul)
 	{
-#ifndef ULONGLONG_MAX
-		printf("#define ULONGLONG_MAX	ULONG_MAX\n");
+#ifndef ULLONG_MAX
+		printf("#define ULLONG_MAX	ULONG_MAX\n");
 #endif
 
-#ifndef LONGLONG_MIN
-		printf("#define LONGLONG_MIN	LONG_MIN\n");
+#ifndef LLONG_MIN
+		printf("#define LLONG_MIN	LONG_MIN\n");
 #endif
 
-#ifndef LONGLONG_MAX
-		printf("#define LONGLONG_MAX	LONG_MAX\n");
+#ifndef LLONG_MAX
+		printf("#define LLONG_MAX	LONG_MAX\n");
 #endif
 	}
 	else
 	{
-#ifndef ULONGLONG_MAX
+#ifndef ULLONG_MAX
 		vll = ull;
-		printf("#ifndef ULONGLONG_MAX\n");
+		printf("#ifndef ULLONG_MAX\n");
 		printf("#if defined(__STDC__) && _ast_LL\n");
-		printf("#define ULONGLONG_MAX	%lluULL\n", vll);
+		printf("#define ULLONG_MAX	%lluULL\n", vll);
 		printf("#else\n");
-		printf("#define ULONGLONG_MAX	%llu\n", vll);
+		printf("#define ULLONG_MAX	%llu\n", vll);
 		printf("#endif\n");
 		printf("#endif\n");
 #endif
 
-#ifndef LONGLONG_MIN
-		vll = (unsigned _ast_int8_t)(ull >> 1) + 1;
-		printf("#ifndef LONGLONG_MIN\n");
+#ifndef LLONG_MIN
+		vll = (uint64_t)(ull >> 1) + 1;
+		printf("#ifndef LLONG_MIN\n");
 		printf("#if defined(__STDC__) && _ast_LL\n");
-		printf("#define LONGLONG_MIN	(-%lluLL-1LL)\n", vll - 1);
+		printf("#define LLONG_MIN	(-%lluLL-1LL)\n", vll - 1);
 		printf("#else\n");
-		printf("#define LONGLONG_MIN	(-%llu-1)\n", vll - 1);
+		printf("#define LLONG_MIN	(-%llu-1)\n", vll - 1);
 		printf("#endif\n");
 		printf("#endif\n");
 #endif
 
-#ifndef LONGLONG_MAX
-		vll = (unsigned _ast_int8_t)(ull >> 1);
-		printf("#ifndef LONGLONG_MAX\n");
+#ifndef LLONG_MAX
+		vll = (uint64_t)(ull >> 1);
+		printf("#ifndef LLONG_MAX\n");
 		printf("#if defined(__STDC__) && _ast_LL\n");
-		printf("#define LONGLONG_MAX	%lluLL\n", vll);
+		printf("#define LLONG_MAX	%lluLL\n", vll);
 		printf("#else\n");
-		printf("#define LONGLONG_MAX	%llu\n", vll);
+		printf("#define LLONG_MAX	%llu\n", vll);
 		printf("#endif\n");
 		printf("#endif\n");
 #endif

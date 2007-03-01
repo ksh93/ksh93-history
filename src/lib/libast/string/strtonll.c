@@ -24,7 +24,8 @@
  */
 
 #define S2I_function	strtonll
-#define S2I_number	_ast_intmax_t
+#define S2I_number	intmax_t
+#define S2I_unumber	uintmax_t
 #define S2I_multiplier	1
 
 #include "strtoi.h"

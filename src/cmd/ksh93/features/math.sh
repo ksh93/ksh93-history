@@ -20,7 +20,7 @@
 : generate the ksh math builtin table
 : include math.tab
 
-# @(#)math.sh (AT&T Research) 2007-01-04
+# @(#)math.sh (AT&T Research) 2007-02-02
 
 command=$0
 iffeflags="-n -v -F ast_standards.h"
@@ -51,23 +51,19 @@ done
 
 eval `iffe $iffeflags -c "$cc" - typ long.double : lib $tests $iffehdrs $iffelibs 2>&$stderr`
 lib=
-mac=
 for name in $names
 do	eval x='$'_lib_${name}l y='$'_lib_${name}
 	case $x in
 	1)	lib="$lib,${name}l" ;;
-	'')	mac="$mac,${name}l" ;;
 	esac
 	case $y in
 	1)	case $x in
 		'')	lib="$lib,${name}" ;;
 		esac
 		;;
-	'')	mac="$mac,${name}" ;;
 	esac
 done
-eval `iffe $iffeflags -c "$cc" - dat,npt $lib $iffehdrs $iffelibs 2>&$stderr`
-eval `iffe $iffeflags -c "$cc" - mac $mac $iffehdrs 2>&$stderr`
+eval `iffe $iffeflags -c "$cc" - dat,npt,mac $lib $iffehdrs $iffelibs 2>&$stderr`
 
 cat <<!
 #pragma prototyped

@@ -27,6 +27,7 @@
 
 #define S2I_function	strtol
 #define S2I_number	long
+#define S2I_unumber	unsigned long
 
 #include "strtoi.h"
 

@@ -32,7 +32,7 @@
 
 #include <ast.h>
 
-typedef unsigned _ast_int4_t Recfmt_t;
+typedef uint32_t Recfmt_t;
 
 #define REC_delimited		0
 #define REC_fixed		1

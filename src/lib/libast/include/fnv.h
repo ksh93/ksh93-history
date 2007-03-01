@@ -38,14 +38,14 @@
 #define FNV_MULT	0x01000193L
 
 #define FNVINIT(h)	(h = FNV_INIT)
-#define FNVPART(h,c)	(h = h * FNV_MULT ^ (c))
+#define FNVPART(h,c)	(h = (h) * FNV_MULT ^ (c))
 #define FNVSUM(h,s,n)	do { \
 			register size_t _i_ = 0; \
 			while (_i_ < n) \
 				FNVPART(h, ((unsigned char*)s)[_i_++]); \
 			} while (0)
 
-#ifdef _ast_int8_t
+#if _typ_int64_t
 
 #ifdef _ast_LL
 
@@ -54,13 +54,13 @@
 
 #else
 
-#define FNV_INIT64	((_ast_int8_t)0xcbf29ce484222325)
-#define FNV_MULT64	((_ast_int8_t)0x00000100000001b3)
+#define FNV_INIT64	((int64_t)0xcbf29ce484222325)
+#define FNV_MULT64	((int64_t)0x00000100000001b3)
 
 #endif
 
 #define FNVINIT64(h)	(h = FNV_INIT64)
-#define FNVPART64(h,c)	(h = h * FNV_MULT64 ^ (c))
+#define FNVPART64(h,c)	(h = (h) * FNV_MULT64 ^ (c))
 #define FNVSUM64(h,s,n)	do { \
 			register int _i_ = 0; \
 			while (_i_ < n) \

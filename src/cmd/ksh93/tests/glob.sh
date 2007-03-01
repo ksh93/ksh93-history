@@ -25,7 +25,7 @@ function err_exit
 }
 alias err_exit='err_exit $LINENO'
 
-integer contrary=0 ignorant=0
+integer aware=0 contrary=0 ignorant=0
 
 function test_glob
 {
@@ -53,7 +53,7 @@ function test_glob
 	do	got="$got$sep<$arg>"
 		sep=" "
 	done
-	if	(( ignorant ))
+	if	(( ignorant && aware ))
 	then	if	[[ $del ]]
 		then	got="<$del> $got"
 		fi
@@ -98,6 +98,10 @@ set -- *
 case $* in
 'b B')	contrary=1 ;;
 b|B)	ignorant=1 ;;
+esac
+set -- $(/bin/sh -c 'echo [a-c]')
+case $* in
+B)	aware=1 ;;
 esac
 rm -rf *
 

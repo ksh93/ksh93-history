@@ -589,7 +589,7 @@ format(register Feature_t* fp, const char* path, const char* value, int flags, E
 		{
 			register char*	s;
 			register char*	e;
-			_ast_intmax_t	v;
+			intmax_t	v;
 
 			/*
 			 * _PC_PATH_ATTRIBUTES is a bitmap for 'a' to 'z'
@@ -864,7 +864,8 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, i
 	int			i;
 	int			olderrno;
 	int			drop;
-	_ast_intmax_t		v;
+	int			defined;
+	intmax_t		v;
 	char			buf[PATH_MAX];
 	char			flg[16];
 
@@ -938,6 +939,7 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, i
 			goto bad;
 	}
 	s = 0;
+	defined = 1;
 	switch (i = (p->op < 0 || (flags & CONF_MINMAX) && (p->flags & CONF_MINMAX_DEF)) ? 0 : p->call)
 	{
 	case CONF_confstr:
@@ -945,6 +947,7 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, i
 #if _lib_confstr
 		if (!(v = confstr(p->op, buf, sizeof(buf))))
 		{
+			defined = 0;
 			v = -1;
 			errno = EINVAL;
 		}
@@ -953,6 +956,8 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, i
 			buf[sizeof(buf) - 1] = 0;
 			s = (const char*)buf;
 		}
+		else
+			defined = 0;
 		break;
 #else
 		goto predef;
@@ -960,7 +965,8 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, i
 	case CONF_pathconf:
 		call = "pathconf";
 #if _lib_pathconf
-		v = pathconf(path, p->op);
+		if ((v = pathconf(path, p->op)) < 0)
+			defined = 0;
 		break;
 #else
 		goto predef;
@@ -968,7 +974,8 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, i
 	case CONF_sysconf:
 		call = "sysconf";
 #if _lib_sysconf
-		v = sysconf(p->op);
+		if ((v = sysconf(p->op)) < 0)
+			defined = 0;
 		break;
 #else
 		goto predef;
@@ -981,6 +988,8 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, i
 			buf[sizeof(buf) - 1] = 0;
 			s = (const char*)buf;
 		}
+		else
+			defined = 0;
 		break;
 #else
 		goto predef;
@@ -989,6 +998,7 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, i
 		call = "synthesis";
 		errno = EINVAL;
 		v = -1;
+		defined = 0;
 		break;
 	case 0:
 		call = 0;
@@ -1007,30 +1017,28 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, i
 				break;
 			}
 		}
-		if (!(listflags & ASTCONF_system))
+		if (flags & CONF_MINMAX)
 		{
-			if (flags & CONF_MINMAX)
+			if ((p->flags & CONF_MINMAX_DEF) && (!(listflags & ASTCONF_system) || !(p->flags & CONF_DEFER_MM)))
 			{
-				if (p->flags & CONF_MINMAX_DEF)
-				{
-					v = p->minmax.number;
-					s = p->minmax.string;
-					break;
-				}
-			}
-			else if (p->flags & CONF_LIMIT_DEF)
-			{
-				v = p->limit.number;
-				s = p->limit.string;
+				v = p->minmax.number;
+				s = p->minmax.string;
 				break;
 			}
+		}
+		else if ((p->flags & CONF_LIMIT_DEF) && (!(listflags & ASTCONF_system) || !(p->flags & CONF_DEFER_CALL)))
+		{
+			v = p->limit.number;
+			s = p->limit.string;
+			break;
 		}
 		flags &= ~(CONF_LIMIT_DEF|CONF_MINMAX_DEF);
 		v = -1;
 		errno = EINVAL;
+		defined = 0;
 		break;
 	}
-	if (v == -1)
+	if (!defined)
 	{
 		if (!errno)
 		{
@@ -1109,12 +1117,14 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, i
 		}
 		if (flags & CONF_ERROR)
 			sfprintf(sp, "error");
-		else if (v != -1)
+		else if (defined)
 		{
 			if (s)
 				sfprintf(sp, "%s", (listflags & ASTCONF_quote) ? fmtquote(s, "\"", "\"", strlen(s), FMT_SHELL) : s);
-			else
+			else if (v != -1)
 				sfprintf(sp, "%I*d", sizeof(v), v);
+			else
+				sfprintf(sp, "%I*u", sizeof(v), v);
 		}
 		sfprintf(sp, "\n");
 	}
@@ -1137,12 +1147,14 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, i
 			}
 			if (flags & CONF_ERROR)
 				sfprintf(sp, "error");
-			else if (v != -1)
+			else if (defined)
 			{
 				if (s)
 					sfprintf(sp, "%s", (listflags & ASTCONF_quote) ? fmtquote(s, "\"", "\"", strlen(s), FMT_SHELL) : s);
-				else
+				else if (v != -1)
 					sfprintf(sp, "%I*d", sizeof(v), v);
+				else
+					sfprintf(sp, "%I*u", sizeof(v), v);
 			}
 			else
 				sfprintf(sp, "undefined");
@@ -1157,16 +1169,9 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, i
 			if (p->section > 1)
 				sfprintf(sp, "%d", p->section);
 			sfprintf(sp, "_%s=", (listflags & ASTCONF_lower) ? fmtlower(p->name) : p->name);
-			if (p->flags & CONF_MINMAX_DEF)
-			{
-				if (v == -1 && (v = p->minmax.number) == -1 && ((p->flags & CONF_FEATURE) || !(p->flags & (CONF_LIMIT|CONF_MINMAX))))
-					flags &= ~CONF_MINMAX_DEF;
-				else
-					flags |= CONF_MINMAX_DEF;
-			}
 			if (v != -1)
 				sfprintf(sp, "%I*d", sizeof(v), v);
-			else if (flags & CONF_MINMAX_DEF)
+			else if (defined)
 				sfprintf(sp, "%I*u", sizeof(v), v);
 			else
 				sfprintf(sp, "undefined");

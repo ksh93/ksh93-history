@@ -69,9 +69,9 @@ struct sh_scoped
 	int		execbrk;
 	int		loopcnt;
 	int		firstline;
-	long		optindex;
-	long		optnum;
-	long		tmout;		/* value for TMOUT */ 
+	int32_t		optindex;
+	int32_t		optnum;
+	int32_t		tmout;		/* value for TMOUT */ 
 	short		optchar;
 	short		opterror;
 	int		ioset;
@@ -133,7 +133,7 @@ struct limits
 	pid_t		pid;		/* process id of shell */ \
 	pid_t		bckpid;		/* background process id */ \
 	pid_t		cpid; \
-	long		ppid;		/* parent process id of shell */ \
+	int32_t		ppid;		/* parent process id of shell */ \
 	int		topfd; \
 	int		sigmax;		/* maximum number of signals */ \
 	int		savesig; \
@@ -192,6 +192,7 @@ struct limits
 	void		*jmpbuffer; \
 	void		*mktype; \
 	Sfio_t		*strbuf; \
+	Dt_t		*last_root; \
 	char		ifstable[256]; \
 	Shopt_t		offoptions;
 
@@ -360,7 +361,7 @@ extern int 		sh_whence(char**,int);
 
 #define sh_sigcheck() do{if(sh.trapnote&SH_SIGSET)sh_exit(SH_EXITSIG);} while(0)
 
-extern time_t		sh_mailchk;
+extern int32_t		sh_mailchk;
 extern const char	e_dict[];
 
 /* sh_printopts() mode flags -- set --[no]option by default */

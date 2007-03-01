@@ -71,12 +71,12 @@ void	sh_fault(register int sig)
 	if(sig==SIGWINCH)
 	{
 		int rows=0, cols=0;
-		long v;
+		int32_t v;
 		astwinsize(2,&rows,&cols);
 		if(v = cols)
-			nv_putval(COLUMNS, (char*)&v, NV_INTEGER);
+			nv_putval(COLUMNS, (char*)&v, NV_INT32);
 		if(v = rows)
-			nv_putval(LINES, (char*)&v, NV_INTEGER);
+			nv_putval(LINES, (char*)&v, NV_INT32);
 	}
 #endif  /* SIGWINCH */
 	if(sh.savesig)

@@ -34,16 +34,16 @@
  * get int_n from b according to op
  */
 
-int_max
+intmax_t
 swapget(int op, const void* b, int n)
 {
 	register unsigned char*	p;
 	register unsigned char*	d;
-	int_max			v;
-	unsigned char		tmp[sizeof(int_max)];
+	intmax_t		v;
+	unsigned char		tmp[sizeof(intmax_t)];
 
-	if (n > sizeof(int_max))
-		n = sizeof(int_max);
+	if (n > sizeof(intmax_t))
+		n = sizeof(intmax_t);
 	if (op) swapmem(op, b, d = tmp, n);
 	else d = (unsigned char*)b;
 	p = d + n;

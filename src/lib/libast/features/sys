@@ -38,6 +38,7 @@ print	#endif
 header	stdlib.h
 header	stddef.h
 header	sys/types.h
+header	stdint.h
 header	string.h
 header	unistd.h
 header	limits.h

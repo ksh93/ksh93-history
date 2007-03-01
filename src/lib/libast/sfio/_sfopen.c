@@ -191,6 +191,10 @@ int*		uflagp;
 		sflags &= ~SF_MTSAFE;
 		uflag = 1;
 		continue;
+	case 'W' :
+		sflags |= SF_WCWIDTH;
+		uflag = 0;
+		continue;
 	default :
 		if(!(oflags&O_CREAT) )
 			oflags &= ~O_EXCL;

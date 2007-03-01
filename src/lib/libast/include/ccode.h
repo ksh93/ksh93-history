@@ -70,7 +70,7 @@ extern Ccmap_t*		ccmaplist(Ccmap_t*);
 
 #define CCCVT(x)		CCMAP(x,0)
 #define CCMAP(i,o)		((i)==(o)?(unsigned char*)0:_ccmap(i,o))
-#define CCMAPCHR(m,c)		((m)?m[c]:(c))
+#define CCMAPCHR(m,c)		((m)?(m)[c]:(c))
 #define CCMAPCPY(m,t,f,n)	((m)?_ccmapcpy(m,t,f,n):memcpy(t,f,n))
 #define CCMAPSTR(m,s,n)		((m)?_ccmapstr(m,s,n):(void*)(s))
 

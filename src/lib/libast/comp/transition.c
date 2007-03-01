@@ -63,7 +63,7 @@ _ast_strtoul(const char* a, char** b, int c)
 
 #ifndef strtoll
 #undef	STUB
-extern _ast_intmax_t
+extern intmax_t
 _ast_strtoll(const char* a, char** b, int c)
 {
 	return strtoll(a, b, c);
@@ -72,8 +72,8 @@ _ast_strtoll(const char* a, char** b, int c)
 
 #ifndef strtoull
 #undef	STUB
-extern unsigned
-_ast_intmax_t _ast_strtoull(const char* a, char** b, int c)
+extern uintmax_t
+_ast_strtoull(const char* a, char** b, int c)
 {
 	return strtoull(a, b, c);
 }

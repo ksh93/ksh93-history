@@ -31,7 +31,6 @@
 
 typedef struct _sfio_s		Sfio_t;
 typedef struct _sfdisc_s	Sfdisc_t;
-typedef struct _sfieee_s	Sfieee_t;
 
 #if defined(_AST_STD_H) || defined(_PACKAGE_ast) && defined(_SFIO_PRIVATE)
 #include	<ast_std.h>
@@ -40,9 +39,9 @@ typedef struct _sfieee_s	Sfieee_t;
 #endif /* _PACKAGE_ast */
 
 /* Sfoff_t should be large enough for largest file address */
-#define Sfoff_t		_ast_intmax_t
-#define Sflong_t	_ast_intmax_t
-#define Sfulong_t	unsigned _ast_intmax_t
+#define Sfoff_t		intmax_t
+#define Sflong_t	intmax_t
+#define Sfulong_t	uintmax_t
 #define Sfdouble_t	_ast_fltmax_t
 
 typedef ssize_t		(*Sfread_f)_ARG_((Sfio_t*, Void_t*, size_t, Sfdisc_t*));
@@ -59,16 +58,6 @@ struct _sfdisc_s
 	Sfdisc_t*	disc;		/* the continuing discipline	*/
 };
 
-/* IEEE constants structure */
-struct _sfieee_s
-{	float		fltnan;		/* float NAN			*/
-	float		fltinf;		/* float INF			*/
-	double		dblnan;		/* double NAN			*/
-	double		dblinf;		/* double INF			*/
-	Sfdouble_t	ldblnan;	/* Sfdouble_t NAN		*/
-	Sfdouble_t	ldblinf;	/* Sfdouble_t INF		*/
-};
-
 #include <sfio_s.h>
 
 /* formatting environment */
@@ -81,7 +70,7 @@ struct _sffmt_s
 	Sffmtevent_f	eventf;	/* process events			*/
 
 	char*		form;	/* format string to stack		*/
-	_ast_va_list	args;	/* corresponding arg list		*/
+	va_list	args;	/* corresponding arg list		*/
 
 	int		fmt;	/* format character			*/
 	ssize_t		size;	/* object size				*/
@@ -98,28 +87,29 @@ struct _sffmt_s
 	Void_t*		none;	/* unused for now			*/
 };
 #define sffmtversion(fe,type) \
-		(type ? ((fe)->version = SFIO_VERSION) : (fe)->version)
+		((type) ? ((fe)->version = SFIO_VERSION) : (fe)->version)
 
-#define SFFMT_SSHORT	00000010 /* 'hh' flag, char			*/
-#define SFFMT_TFLAG	00000020 /* 't' flag, ptrdiff_t			*/
-#define SFFMT_ZFLAG	00000040 /* 'z' flag, size_t			*/
+#define SFFMT_SSHORT	000000010 /* 'hh' flag, char			*/
+#define SFFMT_TFLAG	000000020 /* 't' flag, ptrdiff_t			*/
+#define SFFMT_ZFLAG	000000040 /* 'z' flag, size_t			*/
 
-#define SFFMT_LEFT	00000100 /* left-justification			*/
-#define SFFMT_SIGN	00000200 /* must have a sign			*/
-#define SFFMT_BLANK	00000400 /* if not signed, prepend a blank	*/
-#define SFFMT_ZERO	00001000 /* zero-padding on the left		*/
-#define SFFMT_ALTER	00002000 /* alternate formatting		*/
-#define SFFMT_THOUSAND	00004000 /* thousand grouping			*/
-#define SFFMT_SKIP	00010000 /* skip assignment in scanf()		*/
-#define SFFMT_SHORT	00020000 /* 'h' flag				*/
-#define SFFMT_LONG	00040000 /* 'l' flag				*/
-#define SFFMT_LLONG	00100000 /* 'll' flag				*/
-#define SFFMT_LDOUBLE	00200000 /* 'L' flag				*/
-#define SFFMT_VALUE	00400000 /* value is returned			*/
-#define SFFMT_ARGPOS	01000000 /* getting arg for $ patterns		*/
-#define SFFMT_IFLAG	02000000 /* 'I' flag				*/
-#define SFFMT_JFLAG	04000000 /* 'j' flag, intmax_t			*/
-#define SFFMT_SET	07777770 /* flags settable on calling extf	*/
+#define SFFMT_LEFT	000000100 /* left-justification			*/
+#define SFFMT_SIGN	000000200 /* must have a sign			*/
+#define SFFMT_BLANK	000000400 /* if not signed, prepend a blank	*/
+#define SFFMT_ZERO	000001000 /* zero-padding on the left		*/
+#define SFFMT_ALTER	000002000 /* alternate formatting		*/
+#define SFFMT_THOUSAND	000004000 /* thousand grouping			*/
+#define SFFMT_SKIP	000010000 /* skip assignment in scanf()		*/
+#define SFFMT_SHORT	000020000 /* 'h' flag				*/
+#define SFFMT_LONG	000040000 /* 'l' flag				*/
+#define SFFMT_LLONG	000100000 /* 'll' flag				*/
+#define SFFMT_LDOUBLE	000200000 /* 'L' flag				*/
+#define SFFMT_VALUE	000400000 /* value is returned			*/
+#define SFFMT_ARGPOS	001000000 /* getting arg for $ patterns		*/
+#define SFFMT_IFLAG	002000000 /* 'I' flag				*/
+#define SFFMT_JFLAG	004000000 /* 'j' flag, intmax_t			*/
+#define SFFMT_CENTER	010000000 /* '=' flag, center justification	*/
+#define SFFMT_SET	017777770 /* flags settable on calling extf	*/
 
 /* for sfmutex() call */
 #define SFMTX_LOCK	0	/* up mutex count			*/
@@ -156,9 +146,10 @@ struct _sffmt_s
 #define SF_MTSAFE	0010000	/* need thread safety			*/
 #define SF_WHOLE	0020000	/* preserve wholeness of sfwrite/sfputr */
 #define SF_IOINTR	0040000	/* return on interrupts			*/
+#define SF_WCWIDTH	0100000	/* wcwidth display stream		*/
 
-#define SF_FLAGS	0077177	/* PUBLIC FLAGS PASSABLE TO SFNEW()	*/
-#define SF_SETS		0077163	/* flags passable to sfset()		*/
+#define SF_FLAGS	0177177	/* PUBLIC FLAGS PASSABLE TO SFNEW()	*/
+#define SF_SETS		0177163	/* flags passable to sfset()		*/
 
 #ifndef _SF_NO_OBSOLETE
 #define SF_BUFCONST	0400000 /* unused flag - for compatibility only	*/
@@ -266,12 +257,12 @@ extern int		sfungetc _ARG_((Sfio_t*, int));
 extern int		sfprintf _ARG_((Sfio_t*, const char*, ...));
 extern char*		sfprints _ARG_((const char*, ...));
 extern ssize_t		sfsprintf _ARG_((char*, size_t, const char*, ...));
-extern ssize_t		sfvsprintf _ARG_((char*, size_t, const char*, _ast_va_list));
-extern int		sfvprintf _ARG_((Sfio_t*, const char*, _ast_va_list));
+extern ssize_t		sfvsprintf _ARG_((char*, size_t, const char*, va_list));
+extern int		sfvprintf _ARG_((Sfio_t*, const char*, va_list));
 extern int		sfscanf _ARG_((Sfio_t*, const char*, ...));
 extern int		sfsscanf _ARG_((const char*, const char*, ...));
-extern int		sfvsscanf _ARG_((const char*, const char*, _ast_va_list));
-extern int		sfvscanf _ARG_((Sfio_t*, const char*, _ast_va_list));
+extern int		sfvsscanf _ARG_((const char*, const char*, va_list));
+extern int		sfvscanf _ARG_((Sfio_t*, const char*, va_list));
 
 /* mutex locking for thread-safety */
 extern int		sfmutex _ARG_((Sfio_t*, int));
@@ -283,8 +274,6 @@ extern Sfoff_t		sfsk _ARG_((Sfio_t*, Sfoff_t, int, Sfdisc_t*));
 extern ssize_t		sfpkrd _ARG_((int, Void_t*, size_t, int, long, int));
 
 /* portable handling of primitive types */
-extern Sfieee_t*	sfieee _ARG_((void));
-
 extern int		sfdlen _ARG_((Sfdouble_t));
 extern int		sfllen _ARG_((Sflong_t));
 extern int		sfulen _ARG_((Sfulong_t));

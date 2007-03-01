@@ -43,5 +43,5 @@ Dtdisc_t	_Nvdisc =
 char *sh_lexstates[ST_NONE] = {0};
 
 struct jobs	job = {0};
-time_t		sh_mailchk = 600;
+int32_t		sh_mailchk = 600;
 

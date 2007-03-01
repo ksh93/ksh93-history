@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: getconf (AT&T Research) 2006-11-11 $\n]"
+"[-?\n@(#)$Id: getconf (AT&T Research) 2007-02-07 $\n]"
 USAGE_LICENSE
 "[+NAME?getconf - get configuration values]"
 "[+DESCRIPTION?\bgetconf\b displays the system configuration value for"
@@ -117,6 +117,7 @@ USAGE_LICENSE
 
 #include <cmd.h>
 #include <proc.h>
+#include <ls.h>
 
 typedef struct Path_s
 {
@@ -134,15 +135,22 @@ b_getconf(int argc, char** argv, void* context)
 	register char*		t;
 	char*			pattern;
 	char*			native;
+	char*			cmd;
 	Path_t*			e;
 	Path_t*			p;
 	int			flags;
 	int			n;
+	int			i;
+	int			m;
+	int			q;
 	char**			oargv;
-	char			cmd[PATH_MAX];
+	char			buf[PATH_MAX];
 	Path_t			std[64];
+	struct stat		st0;
+	struct stat		st1;
 
 	static const char	empty[] = "-";
+	static const Path_t	equiv[] = { { "/bin", 4 }, { "/usr/bin", 8 } };
 
 	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
 	oargv = argv;
@@ -268,19 +276,53 @@ b_getconf(int argc, char** argv, void* context)
  defer:
 
 	/*
+	 * defer to argv[0] if absolute and it exists
+	 */
+
+	if ((cmd = oargv[0]) && *cmd == '/' && !access(cmd, X_OK))
+		goto found;
+
+	/*
 	 * defer to the first getconf on $PATH that is also on the standard PATH
 	 */
 
 	e = std;
 	s = astconf("PATH", NiL, NiL); 
+	q = !stat(equiv[0].path, &st0) && !stat(equiv[1].path, &st1) && st0.st_ino == st1.st_ino && st0.st_dev == st1.st_dev;
+	m = 0;
 	do
 	{
 		for (t = s; *s && *s != ':'; s++);
 		if ((n = s - t) && *t == '/')
 		{
-			e->path = t;
-			e->len = n;
-			e++;
+			if (q)
+				for (i = 0; i < 2; i++)
+					if (n == equiv[i].len && !strncmp(t, equiv[i].path, n))
+					{
+						if (m & (i+1))
+							t = 0;
+						else
+						{
+							m |= (i+1);
+							if (!(m & (!i+1)))
+							{
+								m |= (!i+1);
+								e->path = t;
+								e->len = n;
+								e++;
+								if (e >= &std[elementsof(std)])
+									break;
+								t = equiv[!i].path;
+								n = equiv[!i].len;
+							}
+						}
+					}
+			if (t)
+			{
+				e->path = t;
+				e->len = n;
+				e++;
+			}
 		}
 		while (*s == ':')
 			s++;
@@ -303,9 +345,12 @@ b_getconf(int argc, char** argv, void* context)
 				for (p = std; p < e; p++)
 					if (p->len == n && !strncmp(t, p->path, n))
 					{
-						sfsprintf(cmd, sizeof(cmd), "%-*.*s/%s", n, n, t, error_info.id);
-						if (!access(cmd, X_OK))
+						sfsprintf(buf, sizeof(buf), "%-*.*s/%s", n, n, t, error_info.id);
+						if (!access(buf, X_OK))
+						{
+							cmd = buf;
 							goto found;
+						}
 					}
 			}
 			while (*s == ':')
@@ -318,9 +363,12 @@ b_getconf(int argc, char** argv, void* context)
 
 	for (p = std; p < e; p++)
 	{
-		sfsprintf(cmd, sizeof(cmd), "%-*.*s/%s", p->len, p->len, p->path, error_info.id);
-		if (!access(cmd, X_OK))
+		sfsprintf(buf, sizeof(buf), "%-*.*s/%s", p->len, p->len, p->path, error_info.id);
+		if (!access(buf, X_OK))
+		{
+			cmd = buf;
 			goto found;
+		}
 	}
 
 	/*

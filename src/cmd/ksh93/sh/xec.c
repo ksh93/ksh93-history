@@ -338,7 +338,7 @@ static void put_level(Namval_t* np,const char *val,int flags,Namfun_t *fp)
 {
 	Shscope_t	*sp;
 	struct Level *lp = (struct Level*)fp;
-	short level, oldlevel = (short)nv_getnum(np);
+	int16_t level, oldlevel = (int16_t)nv_getnum(np);
 	nv_putv(np,val,flags,fp);
 	level = nv_getnum(np);
 	if(level<0 || level > lp->maxlevel)
@@ -364,15 +364,15 @@ static const Namdisc_t level_disc = {  0, put_level };
  */
 int sh_debug(const char *trap, const char *name, const char *subscript, char *const argv[], int flags)
 {
-	struct sh_scoped savst;
-	Shscope_t	*sp, *topmost;
-	Namval_t	*np = SH_COMMANDNOD;
-	struct Level	lev;
-	char		*sav = stakptr(0);
-	int		n=4, offset=staktell();
-	const char	*cp = "+=( ";
-	Sfio_t		*iop = stkstd;
-	short		level;
+	struct sh_scoped	savst;
+	Shscope_t		*sp, *topmost;
+	Namval_t		*np = SH_COMMANDNOD;
+	struct Level		lev;
+	char			*sav = stakptr(0);
+	int			n=4, offset=staktell();
+	const char		*cp = "+=( ";
+	Sfio_t			*iop = stkstd;
+	int16_t			level;
 	if(name)
 	{
 		sfputr(iop,name,-1);
@@ -411,14 +411,14 @@ int sh_debug(const char *trap, const char *name, const char *subscript, char *co
 	lev.hdr.disc = &level_disc;
 	lev.maxlevel = --level;
 	nv_unset(SH_LEVELNOD);
-	nv_onattr(SH_LEVELNOD,NV_INTEGER|NV_SHORT|NV_NOFREE);
-	nv_putval(SH_LEVELNOD,(char*)&level,NV_INTEGER|NV_SHORT);
+	nv_onattr(SH_LEVELNOD,NV_INT16|NV_NOFREE);
+	nv_putval(SH_LEVELNOD,(char*)&level,NV_INT16);
 	nv_disc(SH_LEVELNOD,&lev.hdr,NV_FIRST);
 	savst = sh.st;
 	sh.st.trap[SH_DEBUGTRAP] = 0;
 	n = sh_trap(trap,0);
 	np->nvalue.cp = 0;
-	nv_putval(SH_LEVELNOD,(char*)&level,NV_INTEGER|NV_SHORT);
+	nv_putval(SH_LEVELNOD,(char*)&level,NV_INT16);
 	nv_disc(SH_LEVELNOD,&lev.hdr,NV_POP);
 	nv_unset(SH_LEVELNOD);
 	nv_putval(SH_PATHNAMENOD, sh.st.filename ,NV_NOFREE);
@@ -673,7 +673,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 							flgs |= NV_ARRAY;
 						else if(checkopt(com,'a'))
 							flgs |= NV_IARRAY;
-						if(sh.fn_depth || np==SYSLOCAL)
+						if((sh.fn_depth && !sh.prefix) || np==SYSLOCAL)
 							flgs |= NV_NOSCOPE;
 					}
 					else if(np)
@@ -839,7 +839,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 							if(item->strm)
 							{
 								sfclrlock(item->strm);
-								if(item->strm == sh.hist_ptr->histfp)
+								if(sh.hist_ptr && item->strm == sh.hist_ptr->histfp)
 									hist_close(sh.hist_ptr);
 								else
 									sfclose(item->strm);
@@ -2796,6 +2796,8 @@ static pid_t sh_ntfork(const Shnode_t *t,char *argv[],int *jobid,int flag)
 			path = shp->lastpath;
 #endif
 		}
+		else if(sh_isoption(SH_RESTRICTED))
+			errormsg(SH_DICT,ERROR_exit(1),e_restricted,path);
 		if(!path)
 		{
 			spawnpid = -1;

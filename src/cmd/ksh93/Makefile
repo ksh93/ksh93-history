@@ -16,8 +16,8 @@ SHOPT_ACCT ==  			/* accounting */
 SHOPT_ACCTFILE ==  		/* per user accounting info */
 SHOPT_BASH ==			/* bash compatibility code */
 SHOPT_BRACEPAT == 1		/* C-shell {...,...} expansions (, required) */
-SHOPT_CMDLIB_BLTIN == 0		/* all -lcmd commands builtin */
-SHOPT_CMDLIB_DIR ==		/* SHOPT_CMDLIB_BLTIN prefix SH_CMDLIB_DIR */
+SHOPT_CMDLIB_HDR ==		/* -lcmd builtin list: <cmdlist.h> */
+SHOPT_CMDLIB_DIR ==		/* SHOPT_CMDLIB_HDR prefix SH_CMDLIB_DIR + <cmdlist.h> */
 SHOPT_CRNL ==			/* accept <cr><nl> for <nl> */
 SHOPT_DYNAMIC == 1		/* dynamic loading for builtins */
 SHOPT_ECHOPRINT ==		/* make echo equivalent to print */
@@ -96,18 +96,18 @@ if  CC.HOSTTYPE == "sol([89]|[1-9][0-9]).*"
 	LDFLAGS  += $(CC.LD.LAZY) $(CC.LD.NORECORD)
 end
 
-if ! "$(-mam:N=static*)"
-	if CC.HOSTTYPE == "sol([789]|[1-9][0-9]).*"
-		LIBS_opt += +lsocket -lnsl
-	elif CC.HOSTTYPE != "sgi.mips*"
-		LIBS_opt += +lsocket +lnsl
-	end
+if "$(-mam:N=static*)"
+	LIBS_opt += -lsocket -lnsl
+elif CC.HOSTTYPE == "sol?([789]|[1-9][0-9]).*"
+	LIBS_opt += +lsocket -lnsl
+elif CC.HOSTTYPE != "sgi.mips*"
+	LIBS_opt += +lsocket +lnsl
 end
 if CC.HOSTTYPE == "linux.sparc"
 	/* the linux.sparc linker still has some problems */
 	LIBS_opt += -ldll
 end
-LIBS_opt += -lsecdb +lintl -ldl
+LIBS_opt += -lsecdb -ldl
 if CC.HOSTTYPE == "sol.*"
 	LIBS_opt += +lw
 end
@@ -222,8 +222,9 @@ test.shcomp : $(BINDIR)/$(SH) $(SH) shtests shcomp
 	mkdir $tmp
 	for i in *.sh
 	do	tst=$tmp/shcomp-${i%.sh}.ksh
-		shcomp $i > $tst
-		SHELL=$(*:O=1:P=A) $(*:O=1:P=A) $(*:O=3:B) $tst
+		if	$(*:O=4) $i > $tst
+		then	SHELL=$(*:O=1:P=A) $(*:O=1:P=A) $(*:O=3:B) $tst
+		fi
 		rm -f $tst
 	done
 	rm -rf $tmp

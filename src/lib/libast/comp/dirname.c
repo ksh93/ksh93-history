@@ -24,7 +24,7 @@
  * dirname(3) implementation
  */
 
-#include <ast_common.h>
+#include <ast_std.h>
 
 #if defined(__EXPORT__)
 #define extern	__EXPORT__

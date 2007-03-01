@@ -59,7 +59,7 @@ extern int	utime(const char*, const time_t*);
 #endif
 #endif
 
-#define NS(n)		(((unsigned _ast_int4_t)(n))<1000000000L?(n):0)
+#define NS(n)		(((uint32_t)(n))<1000000000L?(n):0)
 
 /*
  * touch path <atime,mtime,ctime>

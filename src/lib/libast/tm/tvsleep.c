@@ -94,7 +94,7 @@ tvsleep(register const Tv_t* tv, register Tv_t* rv)
 #else
 
 	unsigned int		s = tv->tv_sec;
-	unsigned _ast_int4_t	n = tv->tv_nsec;
+	uint32_t		n = tv->tv_nsec;
 
 #if _lib_usleep
 

@@ -48,6 +48,10 @@
 #   define STR_GROUP	0
 #endif
 
+#if !SHOPT_MULTIBYTE
+#define mbchar(p)       (*(unsigned char*)p++)
+#endif
+
 static int	_c_;
 typedef struct  _mac_
 {
@@ -407,6 +411,7 @@ static void copyto(register Mac_t *mp,int endch, int newquote)
 	int		oldquote = mp->quote;
 	int		ansi_c = 0;
 	int		paren = 0;
+	int		ere = 0;
 	int		brace = 0;
 	Sfio_t		*sp = mp->sp;
 	mp->sp = NIL(Sfio_t*);
@@ -502,7 +507,7 @@ static void copyto(register Mac_t *mp,int endch, int newquote)
 			{
 				/* preserve \digit for pattern matching */
 				/* also \alpha for extended patterns */
-				if(!mp->lit && !mp->quote && (n==S_DIG || (paren && sh_lexstates[ST_DOL][*(unsigned char*)cp]==S_ALP)))
+				if(!mp->lit && !mp->quote && (n==S_DIG || ((paren+ere) && sh_lexstates[ST_DOL][*(unsigned char*)cp]==S_ALP)))
 					break;
 				/* followed by file expansion */
 				if(!mp->lit && (n==S_ESC || (!mp->quote && 
@@ -637,7 +642,15 @@ static void copyto(register Mac_t *mp,int endch, int newquote)
 			{
 				mp->patfound = mp->pattern;
 				if((n=cp[-1])==LPAREN)
+				{
 					paren++;
+					if((cp-first)>1 && cp[-2]=='~')
+					{
+						char *p = cp;
+						while((c=mbchar(p)) && c!=RPAREN && c!='E');
+						ere = c=='E';
+					}
+				}
 				else if(n==RPAREN)
 					--paren;
 			}
@@ -919,7 +932,8 @@ retry1:
 	mp->zeros = 0;
 	idbuff[0] = 0;
 	idbuff[1] = 0;
-	switch(sh_lexstates[ST_DOL][c=fcget()])
+	c = fcget();
+	switch(c>0x7f?S_ALP:sh_lexstates[ST_DOL][c])
 	{
 	    case S_RBRA:
 		if(type<M_SIZE)
@@ -1020,7 +1034,7 @@ retry1:
 			np = 0;
 			do
 				stakputc(c);
-			while(((c=fcget()),isaname(c))||type && c=='.');
+			while(((c=fcget()),(c>0x7f||isaname(c)))||type && c=='.');
 			while(c==LBRACT && type)
 			{
 				sh.argaddr=0;

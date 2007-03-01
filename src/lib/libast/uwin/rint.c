@@ -19,8 +19,6 @@
 *                   Phong Vo <kpv@research.att.com>                    *
 *                                                                      *
 ***********************************************************************/
-#include	<math.h>
-
 #include "FEATURE/uwin"
 
 #if !_UWIN || _lib_ceil && _lib_floor && _lib_rint 
@@ -28,6 +26,8 @@
 void _STUB_rint(){} 
  
 #else
+
+#include <math.h>
 
 extern double rint(x)
 double x;

@@ -167,7 +167,7 @@ void sh_subfork(void)
 	}
 	else
 	{
-		short subshell;
+		int16_t subshell;
 		/* this is the child part of the fork */
 		/* setting subpid to 1 causes subshell to exit when reached */
 		sh_onstate(SH_FORKED);
@@ -175,7 +175,7 @@ void sh_subfork(void)
 		sh_offstate(SH_MONITOR);
 		subshell_data = 0;
 		subshell = sh.subshell = 0;
-		nv_putval(SH_SUBSHELLNOD, (char*)&subshell, NV_INTEGER|NV_SHORT);
+		nv_putval(SH_SUBSHELLNOD, (char*)&subshell, NV_INT16);
 		sp->subpid=0;
 	}
 }
@@ -230,7 +230,7 @@ static void nv_restore(struct subshell *sp)
 		lq = lp->next;
 		if(nv_isarray(mp))
 			 nv_putsub(mp,NIL(char*),ARRAY_SCAN);
-		nv_unset(mp);
+		_nv_unset(mp,NV_RDONLY);
 		nv_setsize(mp,nv_size(np));
 		if(!nv_isattr(np,NV_MINIMAL) || nv_isattr(np,NV_EXPORT))
 			mp->nvenv = np->nvenv;
@@ -296,7 +296,7 @@ static void table_unset(register Dt_t *root)
 	register Namval_t *np,*nq;
 	for(np=(Namval_t*)dtfirst(root);np;np=nq)
 	{
-		_nv_unset(np,1);
+		_nv_unset(np,NV_RDONLY);
 		nq = (Namval_t*)dtnext(root,np);
 		dtdelete(root,np);
 		free((void*)np);
@@ -329,7 +329,7 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 	register struct subshell *sp = &sub_data;
 	int jmpval,nsig;
 	int savecurenv = shp->curenv;
-	short subshell;
+	int16_t subshell;
 	char *savsig;
 	Sfio_t *iop=0;
 	struct checkpt buff;
@@ -347,7 +347,7 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 	savst = shp->st;
 	sh_pushcontext(&buff,SH_JMPSUB);
 	subshell = shp->subshell+1;
-	nv_putval(SH_SUBSHELLNOD, (char*)&subshell, NV_INTEGER|NV_SHORT);
+	nv_putval(SH_SUBSHELLNOD, (char*)&subshell, NV_INT16);
 	shp->subshell = subshell;
 	sp->prev = subshell_data;
 	subshell_data = sp;
@@ -482,7 +482,7 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 	if(shp->subshell)
 		shp->subshell--;
 	subshell = shp->subshell;
-	nv_putval(SH_SUBSHELLNOD, (char*)&subshell, NV_INTEGER|NV_SHORT);
+	nv_putval(SH_SUBSHELLNOD, (char*)&subshell, NV_INT16);
 #ifdef PATH_BFPATH
 	path_delete((Pathcomp_t*)shp->pathlist);
 	shp->pathlist = (void*)sp->pathlist;

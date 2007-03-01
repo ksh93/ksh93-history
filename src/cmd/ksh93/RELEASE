@@ -1,3 +1,29 @@
+07-03-08  --- Release ksh93s+  ---
+07-03-08  A bug in which an error in read (for example, an invalid variable
+	  name), could leave the terminal in raw mode has been fixed.
+07-03-06  A bug in which read could core dump when specified with an array
+	  variable with a subscript that is an arithmetic expression has
+	  been fixed.
+07-03-06  Several serious bugs with the restricted shell were reported and
+	  fixed.
+07-03-02  If a job is stopped, and subsequently restarted with a CONT
+	  signal and exits normally, ksh93 was incorrectly exiting with
+	  the exit status of the stop signal number.
+07-02-26  M-^L added to emacs mode to clear the screen.
+07-02-26  A bug in which setting a variable readonly in a subshell would
+	  cause an unset error when the subshell completed has been fixed. 
+07-02-19  The format with printf uses the new = flag to center the output.
+07-02-19  A bug in which ksh93 did not allow multibyte characters in
+	  identifier names has been fixed.
+07-02-19  A bug introduced in ksh93 that causes global compound variable
+	  definitions inside functions to exit with "no parent" has been fixed.
+07-02-19  A bug in which using compound commands in process redirection
+	  arguments would give syntax errors <(...) and >(...) has been fixed.
+07-01-29  A bug which caused the shell to core dump which can occur when a
+	  built-in exits without closing files that it opens has been fixed.
+07-01-26  A bug in which ~(E) in patterns containing \ that are not inside ()
+	  has been fixed.
+
 06-12-29  --- Release ksh93s  ---
 06-12-29  A bug in which the value of IFS could be changed after a command
 	  substitution has been fixed. 

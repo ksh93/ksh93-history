@@ -34,7 +34,7 @@
 #undef	fmtbasell
 
 char*
-fmtbasell(register _ast_intmax_t n, register int b, int p)
+fmtbasell(register intmax_t n, register int b, int p)
 {
 	char*	buf;
 	int	z;
@@ -52,5 +52,5 @@ fmtbasell(register _ast_intmax_t n, register int b, int p)
 char*
 fmtbase(long n, int b, int p)
 {
-	return fmtbasell((_ast_intmax_t)n, b, p);
+	return fmtbasell((intmax_t)n, b, p);
 }

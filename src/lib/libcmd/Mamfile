@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.2 2007-01-11
+info mam static 00000 1994-07-17 make (AT&T Research) 5.2 2007-02-14
 setv INSTALLROOT ../../..
 setv PACKAGE_ast_INCLUDE ${INSTALLROOT}/include/ast
 setv PACKAGE_ast_LIB ${INSTALLROOT}/lib
@@ -156,16 +156,9 @@ done chmod.c
 make chown.c
 prev cmd.h implicit
 done chown.c
-make cmp.c
-prev ${PACKAGE_ast_INCLUDE}/ls.h implicit
-prev cmd.h implicit
-done cmp.c
-make comm.c
-prev cmd.h implicit
-done comm.c
-make cp.c
-make ${PACKAGE_ast_INCLUDE}/tmx.h implicit
-make ${PACKAGE_ast_INCLUDE}/tv.h implicit
+make cksum.c
+make ${PACKAGE_ast_INCLUDE}/error.h implicit
+make ${PACKAGE_ast_INCLUDE}/option.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast.h implicit
 make ${PACKAGE_ast_INCLUDE}/vmalloc.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
@@ -183,6 +176,30 @@ prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_version.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast.h dontcare
+prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+done ${PACKAGE_ast_INCLUDE}/option.h dontcare
+prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
+prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+done ${PACKAGE_ast_INCLUDE}/error.h
+prev ${PACKAGE_ast_INCLUDE}/fts.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ls.h implicit
+make ${PACKAGE_ast_INCLUDE}/sum.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
+prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+done ${PACKAGE_ast_INCLUDE}/sum.h
+prev cmd.h implicit
+done cksum.c
+make cmp.c
+prev ${PACKAGE_ast_INCLUDE}/ls.h implicit
+prev cmd.h implicit
+done cmp.c
+make comm.c
+prev cmd.h implicit
+done comm.c
+make cp.c
+make ${PACKAGE_ast_INCLUDE}/tmx.h implicit
+make ${PACKAGE_ast_INCLUDE}/tv.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done ${PACKAGE_ast_INCLUDE}/tv.h dontcare
 make ${PACKAGE_ast_INCLUDE}/tm.h implicit
 make ${PACKAGE_ast_INCLUDE}/times.h implicit
@@ -250,6 +267,7 @@ make fold.c
 prev cmd.h implicit
 done fold.c
 make getconf.c
+prev ${PACKAGE_ast_INCLUDE}/ls.h implicit
 prev ${PACKAGE_ast_INCLUDE}/proc.h implicit
 prev cmd.h implicit
 done getconf.c
@@ -288,6 +306,9 @@ done ln.c
 make logname.c
 prev cmd.h implicit
 done logname.c
+make md5sum.c
+prev cmd.h implicit
+done md5sum.c
 make mkdir.c
 prev ${PACKAGE_ast_INCLUDE}/ls.h implicit
 prev cmd.h implicit
@@ -331,6 +352,9 @@ prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/ccode.h
 prev cmd.h implicit
 done stty.c
+make sum.c
+prev cmd.h implicit
+done sum.c
 make sync.c
 prev ${PACKAGE_ast_INCLUDE}/ls.h implicit
 prev cmd.h implicit
@@ -396,11 +420,11 @@ exec -  */
 exec -
 exec - !
 exec - sed \
-exec - 	-e '/^b_[a-z_]*(/!d' \
+exec - 	-e '/^b_[a-z_][a-z_0-9]*(/!d' \
 exec - 	-e 's/^b_//' \
 exec - 	-e 's/(.*//' \
 exec - 	-e 's/.*/extern int	b_&(int, char**, void*);/' \
-exec - 	cmdinit.c basename.c cat.c chgrp.c chmod.c chown.c cmp.c comm.c cp.c cut.c dirname.c date.c expr.c fds.c fmt.c fold.c getconf.c head.c id.c join.c ln.c logname.c mkdir.c mkfifo.c mv.c paste.c pathchk.c rev.c rm.c rmdir.c stty.c sync.c tail.c tee.c tty.c uname.c uniq.c wc.c revlib.c wclib.c |
+exec - 	cmdinit.c basename.c cat.c chgrp.c chmod.c chown.c cksum.c cmp.c comm.c cp.c cut.c dirname.c date.c expr.c fds.c fmt.c fold.c getconf.c head.c id.c join.c ln.c logname.c md5sum.c mkdir.c mkfifo.c mv.c paste.c pathchk.c rev.c rm.c rmdir.c stty.c sum.c sync.c tail.c tee.c tty.c uname.c uniq.c wc.c revlib.c wclib.c |
 exec - sort -u
 exec - } > 1.${COTEMP}.h
 exec - if	cmp 2>/dev/null -s 1.${COTEMP}.h cmdext.h
@@ -412,14 +436,7 @@ make ${PACKAGE_ast_INCLUDE}/stak.h implicit
 prev ${PACKAGE_ast_INCLUDE}/stk.h implicit
 prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/stak.h dontcare
-make ${PACKAGE_ast_INCLUDE}/error.h implicit
-make ${PACKAGE_ast_INCLUDE}/option.h implicit
-prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
-prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
-done ${PACKAGE_ast_INCLUDE}/option.h dontcare
-prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
-prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
-done ${PACKAGE_ast_INCLUDE}/error.h dontcare
+prev ${PACKAGE_ast_INCLUDE}/error.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done cmd.h
 done cmdinit.c
@@ -457,6 +474,12 @@ meta chown.o %.c>%.o chown.c chown
 prev chown.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_BLD_cmd -D_PACKAGE_ast -c chown.c
 done chown.o generated
+make cksum.o
+prev cksum.c
+meta cksum.o %.c>%.o cksum.c cksum
+prev cksum.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2007 AT&T Knowledge Ventures][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c cksum.c
+done cksum.o generated
 make cmp.o
 prev cmp.c
 meta cmp.o %.c>%.o cmp.c cmp
@@ -553,6 +576,12 @@ meta logname.o %.c>%.o logname.c logname
 prev logname.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_BLD_cmd -D_PACKAGE_ast -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2007 AT&T Knowledge Ventures][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c logname.c
 done logname.o generated
+make md5sum.o
+prev md5sum.c
+meta md5sum.o %.c>%.o md5sum.c md5sum
+prev md5sum.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_BLD_cmd -D_PACKAGE_ast -c md5sum.c
+done md5sum.o generated
 make mkdir.o
 prev mkdir.c
 meta mkdir.o %.c>%.o mkdir.c mkdir
@@ -607,6 +636,12 @@ meta stty.o %.c>%.o stty.c stty
 prev stty.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2007 AT&T Knowledge Ventures][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c stty.c
 done stty.o generated
+make sum.o
+prev sum.c
+meta sum.o %.c>%.o sum.c sum
+prev sum.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_BLD_cmd -D_PACKAGE_ast -c sum.c
+done sum.o generated
 make sync.o
 prev sync.c
 meta sync.o %.c>%.o sync.c sync
@@ -661,8 +696,12 @@ meta wclib.o %.c>%.o wclib.c wclib
 prev wclib.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_cmd -c wclib.c
 done wclib.o generated
-exec - ${AR} cr libcmd.a cmdinit.o basename.o cat.o chgrp.o chmod.o chown.o cmp.o comm.o cp.o cut.o dirname.o date.o expr.o fds.o fmt.o fold.o getconf.o head.o id.o join.o ln.o logname.o mkdir.o mkfifo.o mv.o paste.o pathchk.o rev.o rm.o rmdir.o
-exec - ${AR} cr libcmd.a stty.o sync.o tail.o tee.o tty.o uname.o uniq.o wc.o revlib.o wclib.o
+make sumlib.o
+bind -lsum
+exec - ${AR} x ${mam_libsum} sumlib.o
+done sumlib.o generated
+exec - ${AR} cr libcmd.a cmdinit.o basename.o cat.o chgrp.o chmod.o chown.o cksum.o cmp.o comm.o cp.o cut.o dirname.o date.o expr.o fds.o fmt.o fold.o getconf.o head.o id.o join.o ln.o logname.o md5sum.o mkdir.o mkfifo.o mv.o paste.o pathchk.o rev.o
+exec - ${AR} cr libcmd.a rm.o rmdir.o stty.o sum.o sync.o tail.o tee.o tty.o uname.o uniq.o wc.o revlib.o wclib.o sumlib.o
 exec - (ranlib libcmd.a) >/dev/null 2>&1 || true
 done libcmd.a generated
 done cmd virtual
@@ -712,46 +751,6 @@ exec - fi
 done ${PACKAGE_ast_INCLUDE}/cmdext.h generated
 make ${PACKAGE_ast_INCLUDE}/cmdlist.h
 make cmdlist.h
-prev cmdinit.c
-prev basename.c
-prev cat.c
-prev chgrp.c
-prev chmod.c
-prev chown.c
-prev cmp.c
-prev comm.c
-prev cp.c
-prev cut.c
-prev dirname.c
-prev date.c
-prev expr.c
-prev fds.c
-prev fmt.c
-prev fold.c
-prev getconf.c
-prev head.c
-prev id.c
-prev join.c
-prev ln.c
-prev logname.c
-prev mkdir.c
-prev mkfifo.c
-prev mv.c
-prev paste.c
-prev pathchk.c
-prev rev.c
-prev rm.c
-prev rmdir.c
-prev stty.c
-prev sync.c
-prev tail.c
-prev tee.c
-prev tty.c
-prev uname.c
-prev uniq.c
-prev wc.c
-prev revlib.c
-prev wclib.c
 exec - {
 exec - cat <<!
 exec - #pragma prototyped
@@ -761,11 +760,11 @@ exec -  */
 exec -
 exec - !
 exec - sed \
-exec - 	-e '/^b_[a-z_]*(/!d' \
+exec - 	-e '/^b_[a-z_][a-z_0-9]*(/!d' \
 exec - 	-e 's/^b_//' \
 exec - 	-e 's/(.*//' \
 exec - 	-e 's/.*/CMDLIST(&)/' \
-exec - 	cmdinit.c basename.c cat.c chgrp.c chmod.c chown.c cmp.c comm.c cp.c cut.c dirname.c date.c expr.c fds.c fmt.c fold.c getconf.c head.c id.c join.c ln.c logname.c mkdir.c mkfifo.c mv.c paste.c pathchk.c rev.c rm.c rmdir.c stty.c sync.c tail.c tee.c tty.c uname.c uniq.c wc.c revlib.c wclib.c |
+exec - 	cmdinit.c basename.c cat.c chgrp.c chmod.c chown.c cksum.c cmp.c comm.c cp.c cut.c dirname.c date.c expr.c fds.c fmt.c fold.c getconf.c head.c id.c join.c ln.c logname.c md5sum.c mkdir.c mkfifo.c mv.c paste.c pathchk.c rev.c rm.c rmdir.c stty.c sum.c sync.c tail.c tee.c tty.c uname.c uniq.c wc.c revlib.c wclib.c |
 exec - sort -u
 exec - } > 1.${COTEMP}.h
 exec - if	cmp 2>/dev/null -s 1.${COTEMP}.h cmdlist.h

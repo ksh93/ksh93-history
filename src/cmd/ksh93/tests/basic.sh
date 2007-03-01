@@ -288,6 +288,7 @@ foo
 [[ $( (trap 'print alarm' ALRM; sleep 4) & sleep 2; kill -ALRM $!) == alarm ]] || err_exit 'ALRM signal not working'
 [[ $($SHELL -c 'trap "" HUP; $SHELL -c "(sleep 2;kill -HUP $$)& sleep 4;print done"') != done ]] && err_exit 'ignored traps not being ignored'
 [[ $($SHELL -c 'o=foobar; for x in foo bar; do (o=save);print $o;done' 2> /dev/null ) == $'foobar\nfoobar' ]] || err_exit 'for loop optimization subshell bug'
+command exec 3> /dev/null
 if	[[ -d /dev/fd && -w /dev/fd/3 ]]
 then	[[ $($SHELL -c 'cat <(print foo)' 2> /dev/null) == foo ]] || err_exit 'process substitution not working'
 	[[ $($SHELL -c 'print $(cat <(print foo) )' 2> /dev/null) == foo ]] || err_exit 'process substitution in subshell not working'
@@ -309,6 +310,8 @@ then	[[ $($SHELL -c 'cat <(print foo)' 2> /dev/null) == foo ]] || err_exit 'proc
 	done
 	wait
 	cat /tmp/ksh'$$x 2>> /dev/null) == line1 ]] || err_exit '>() process substitution fails in for loop'
+	[[ $({ $SHELL -c 'cat <(for i in x y z; do print $i; done)';} 2> /dev/null) == $'x\ny\nz' ]] ||
+		err_exit 'process substitution of compound commands not working'
 fi
 [[ $($SHELL -r 'command -p :' 2>&1) == *restricted* ]]  || err_exit 'command -p not restricted'
 print cat >  /tmp/ksh$$x
@@ -318,7 +321,7 @@ chmod +x /tmp/ksh$$x
 [[ $($SHELL -c 'print -r -- ${X:=$(expr "a(0)" : '"'a*(\([^)]\))')}'" 2> /dev/null) == 0 ]] || err_exit '${x:=$(..."...")} failure'
 if	[[ -d /dev/fd  && -w /dev/fd/3 ]]
 then	[[ $(cat <(print hello) ) == hello ]] || err_exit "process substitution not working outside for or while loop"
-	[[ $(for i in 1;do cat <(print hello);done ) == hello ]] || err_exit "process substitution not working in for or while loop"
+	$SHELL -c '[[ $(for i in 1;do cat <(print hello);done ) == hello ]]' 2> /dev/null|| err_exit "process substitution not working in for or while loop"
 fi
 exec 3> /dev/null
 print 'print foo "$@"' > /tmp/ksh$$x
@@ -329,4 +332,5 @@ chmod +x /tmp/ksh$$x
 [[ $(/tmp/ksh$$x) == /tmp/ksh$$x ]] || err_exit  "\$0 is $0 instead of /tmp/ksh$$x"
 rm -f /tmp/ksh$$x
 exec 3<&-
+( typeset -r foo=bar) 2> /dev/null || err_exit 'readonly variables set in a subshell cannot unset'
 exit $((Errors))

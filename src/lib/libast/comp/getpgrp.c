@@ -21,7 +21,11 @@
 ***********************************************************************/
 #pragma prototyped
 
-#include <ast_common.h>
+#define getpgrp		______getpgrp
+
+#include <ast_std.h>
+
+#undef	getpgrp
 
 /*
  * bsd		int getpgrp(int);
@@ -29,8 +33,6 @@
  * posix	pid_t getpgrp(void);
  * user		SOL
  */
-
-#undef	getpgrp
 
 extern int	getpgrp(int);
 

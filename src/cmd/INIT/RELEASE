@@ -1,3 +1,7 @@
+07-03-11 package.sh: add nocopyright and tst => nocopyright
+07-03-11 package.mk: add copyright=0
+07-03-08 C+probe: restore IFS after probe.ini
+07-02-26 mamake.c: expand first of ${mam_lib*} for ${AR}
 07-01-05 package.sh: fix "admin write binary" logic
 07-01-01 iffe.sh: add "cmd" --verbose trace
 07-01-01 iffe.sh: sort => LC_ALL=C sort

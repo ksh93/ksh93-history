@@ -288,7 +288,6 @@ b_date(int argc, register char** argv, void* context)
 	int		network = 0;	/* don't set network time	*/
 	int		show = 0;	/* show date and don't set	*/
 
-	NoP(argc);
 	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
 	setlocale(LC_ALL, "");
 	tm_info.flags = TM_DATESTYLE;

@@ -37,7 +37,7 @@
 
 typedef struct
 {
-	_ast_int4_t	nsec;
+	int32_t		nsec;
 	int		year;
 	int		mon;
 	int		week;
@@ -456,17 +456,19 @@ tmxscan(const char* s, char** e, const char* format, char** f, Time_t t, long fl
 	char*		r;
 	Time_t		x;
 
+	static int	initialized;
 	static char**	datemask;
 
 	tmlocale();
 	if (!format || !*format)
 	{
-		if (!datemask)
+		if (!initialized)
 		{
 			register Sfio_t*	sp;
 			register int		n;
 			off_t			m;
 
+			initialized = 1;
 			if ((v = getenv("DATEMSK")) && *v && (sp = sfopen(NiL, v, "r")))
 			{
 				for (n = 1; sfgetr(sp, '\n', 0); n++);
@@ -495,10 +497,8 @@ tmxscan(const char* s, char** e, const char* format, char** f, Time_t t, long fl
 					}
 				}
 			}
-			if (!datemask)
-				datemask = (char**)&datemask;
 		}
-		if ((p = datemask) != (char**)&datemask)
+		if (p = datemask)
 			while (v = *p++)
 			{
 				x = scan(s, &q, v, &r, t, flags);

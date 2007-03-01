@@ -238,7 +238,7 @@ static Namfun_t *array_clone(Namval_t *np, Namval_t *mp, int flags, Namfun_t *fp
 		else if(nv_isattr(np,NV_INTEGER))
 		{
 			Sfdouble_t d= nv_getnum(np);
-			nv_putval(mp,(char*)&d,NV_LONG|NV_DOUBLE|NV_INTEGER);
+			nv_putval(mp,(char*)&d,NV_LDOUBLE);
 		}
 		else
 			nv_putval(mp,nv_getval(np),NV_RDONLY);

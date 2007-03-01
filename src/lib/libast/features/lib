@@ -560,7 +560,7 @@ std	strcoll note{ standard strcoll works }end execute{
 	}
 }end
 
-std	strtod note{ stuck with standard strtod }end nostatic{
+std	strtod stdlib.h note{ stuck with standard strtod }end nostatic{
 	_BEGIN_EXTERNS_
 	#if _STD_
 	double strtod(const char* s, char** e) { return 0.0; }
@@ -569,6 +569,17 @@ std	strtod note{ stuck with standard strtod }end nostatic{
 	#endif
 	_END_EXTERNS_
 	int main() { printf(""); return strtod("1",0) != 0; }
+}end
+
+std	strtold stdlib.h note{ stuck with standard strtold }end nostatic{
+	_BEGIN_EXTERNS_
+	#if _STD_
+	long double strtold(const char* s, char** e) { return 0.0; }
+	#else
+	long double strtold(s, e) char* s; char** e; { return 0.0; }
+	#endif
+	_END_EXTERNS_
+	int main() { printf(""); return strtold("1",0) != 0; }
 }end
 
 std	strtol note{ stuck with standard strtol }end nostatic{

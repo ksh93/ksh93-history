@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1996-2005 AT&T Corp.                  *
+*           Copyright (c) 1996-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -38,7 +38,7 @@
 #define crc_data	long_data
 #define crc_scale	0
 
-typedef unsigned _ast_int4_t Crcnum_t;
+typedef uint32_t Crcnum_t;
 
 typedef struct Crc_s
 {
@@ -162,11 +162,11 @@ crc_block(Sum_t* p, const void* s, size_t n)
 static int
 crc_done(Sum_t* p)
 {
-	register Crc_t*			sum = (Crc_t*)p;
-	register Crcnum_t		c;
-	register unsigned _ast_intmax_t	n;
-	int				i;
-	int				j;
+	register Crc_t*		sum = (Crc_t*)p;
+	register Crcnum_t	c;
+	register uintmax_t	n;
+	int			i;
+	int			j;
 
 	c = sum->sum;
 	if (sum->addsize)

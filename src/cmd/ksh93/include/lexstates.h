@@ -79,6 +79,8 @@
 #define ST_QNEST	10
 #define ST_NONE		11
 
+#include "FEATURE/locale"
+
 #if _hdr_wchar
 #   include <wchar.h>
 #   if _hdr_wctype
@@ -102,13 +104,19 @@
 #   define isblank(x)      ((x)==' '||(x)=='\t')
 #endif
 
+#undef LEN
 #if SHOPT_MULTIBYTE
+    static int NXT, LEN;
 #   define isaname(c)	((c)>0xff?isalpha(c): sh_lexstates[ST_NAME][(c)]==0)
 #   define isaletter(c)	((c)>0xff?isalpha(c): sh_lexstates[ST_DOL][(c)]==S_ALP && (c)!='.')
 #else
+#   undef mbwide
+#   define mbwide()	(0)
+#   define LEN		1
 #   define isaname(c)	(sh_lexstates[ST_NAME][c]==0)
 #   define isaletter(c)	(sh_lexstates[ST_DOL][c]==S_ALP && (c)!='.')
 #endif
+#define STATE(s,c)  	(mbwide()?(c=fcmbstate(s,&NXT,&LEN),NXT):s[c=fcget()])
 #define isadigit(c)	(sh_lexstates[ST_DOL][c]==S_DIG)
 #define isastchar(c)	((c)=='@' || (c)=='*')
 #define isexp(c)	(sh_lexstates[ST_MACRO][c]==S_PAT||(c)=='$'||(c)=='`')

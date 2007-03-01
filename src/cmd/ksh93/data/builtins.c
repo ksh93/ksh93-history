@@ -36,13 +36,11 @@
 #   define bltin(x)	0
 #endif
 
-#if SHOPT_CMDLIB_DIR
-#   undef  SHOPT_CMDLIB_BLTIN
-#   define SHOPT_CMDLIB_BLTIN	1
-#   define BDIR		SH_CMDLIB_DIR "/"
-#else
-#   define BDIR
+#if defined(SHOPT_CMDLIB_DIR) && !defined(SHOPT_CMDLIB_HDR)
+#	define SHOPT_CMDLIB_HDR	<cmdlist.h>
 #endif
+#define Q(f)		#f	/* libpp cpp workaround -- fixed 2005-04-11 */
+#define CMDLIST(f)	SH_CMDLIB_DIR "/" Q(f), NV_BLTIN|NV_NOFREE, bltin(f),
 
 /*
  * The order up through "[" is significant
@@ -100,7 +98,7 @@ const struct shtable3 shtab_builtins[] =
 	"jobs",		NV_BLTIN|BLT_ENV,		bltin(jobs),
 #endif	/* JOBS */
 	"false",	NV_BLTIN|BLT_ENV,		bltin(false),
-	"/bin/getconf",	NV_BLTIN|BLT_ENV,		bltin(getconf),
+SH_CMDLIB_DIR "/getconf",NV_BLTIN|BLT_ENV,		bltin(getconf),
 	"getopts",	NV_BLTIN|BLT_ENV,		bltin(getopts),
 	"print",	NV_BLTIN|BLT_ENV,		bltin(print),
 	"printf",	NV_BLTIN|NV_NOFREE,		bltin(printf),
@@ -120,25 +118,21 @@ const struct shtable3 shtab_builtins[] =
 	"wait",		NV_BLTIN|BLT_ENV|BLT_EXIT,	bltin(wait),
 	"type",		NV_BLTIN|BLT_ENV,		bltin(whence),
 	"whence",	NV_BLTIN|BLT_ENV,		bltin(whence),
-#if SHOPT_CMDLIB_BLTIN
-#define Q(f)		#f	/* libpp cpp workaround -- fixed 2005-04-11 */
-#define CMDLIST(f)	BDIR Q(f), NV_BLTIN|NV_NOFREE, bltin(f),
-#include <cmdlist.h>
-#undef	CMDLIST
-#undef	Q
+#ifdef SHOPT_CMDLIB_HDR
+#include SHOPT_CMDLIB_HDR
 #else
-	"/bin/basename",NV_BLTIN|NV_NOFREE,		bltin(basename),
-	"/bin/chmod",	NV_BLTIN|NV_NOFREE,		bltin(chmod),
-	"/bin/dirname",	NV_BLTIN|NV_NOFREE,		bltin(dirname),
-	"/bin/head",	NV_BLTIN|NV_NOFREE,		bltin(head),
-	"/bin/mkdir",	NV_BLTIN|NV_NOFREE,		bltin(mkdir),
-	"/bin/logname",	NV_BLTIN|NV_NOFREE,		bltin(logname),
-	"/bin/cat",	NV_BLTIN|NV_NOFREE,		bltin(cat),
-	"/bin/cmp",	NV_BLTIN|NV_NOFREE,		bltin(cmp),
-	"/bin/cut",	NV_BLTIN|NV_NOFREE,		bltin(cut),
-	"/bin/uname",	NV_BLTIN|NV_NOFREE,		bltin(uname),
-	"/bin/wc",	NV_BLTIN|NV_NOFREE,		bltin(wc),
-	"/bin/sync",	NV_BLTIN|NV_NOFREE,		bltin(sync),
+	CMDLIST(basename)
+	CMDLIST(chmod)
+	CMDLIST(dirname)
+	CMDLIST(head)
+	CMDLIST(mkdir)
+	CMDLIST(logname)
+	CMDLIST(cat)
+	CMDLIST(cmp)
+	CMDLIST(cut)
+	CMDLIST(uname)
+	CMDLIST(wc)
+	CMDLIST(sync)
 #endif
 	"",		0, 0 
 };
@@ -1170,6 +1164,9 @@ USAGE_LICENSE
 		"the collating element \aname\a.]"
 	"[+-?The escape sequence \b\\x{\b\ahex\a\b}\b expands to the "
 		"character corresponding to the hexidecimal value \ahex\a.]"
+	"[+-?The format modifier flag \b=\b can be used to center a field to "
+		"a specified width.  When the output is a terminal, the "
+		"character width is used rather than the number of bytes.]"
 	"[+-?Each of the integral format specifiers can have a third "
 		"modifier after width and precision that specifies the "
 		"base of the conversion from 2 to 64.  In this case the "

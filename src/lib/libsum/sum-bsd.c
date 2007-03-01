@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1996-2005 AT&T Corp.                  *
+*           Copyright (c) 1996-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -37,9 +37,9 @@
 static int
 bsd_block(register Sum_t* p, const void* s, size_t n)
 {
-	register unsigned _ast_int4_t	c = ((Integral_t*)p)->sum;
-	register unsigned char*		b = (unsigned char*)s;
-	register unsigned char*		e = b + n;
+	register uint32_t	c = ((Integral_t*)p)->sum;
+	register unsigned char*	b = (unsigned char*)s;
+	register unsigned char*	e = b + n;
 
 	while (b < e)
 		c = ((c >> 1) + *b++ + ((c & 01) ? 0x8000 : 0)) & 0xffff;

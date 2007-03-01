@@ -303,10 +303,10 @@ init(Tail_t* tp, Sfoff_t number, int delim, int flags)
  * convert number with validity diagnostics
  */
 
-static _ast_intmax_t
+static intmax_t
 num(register const char* s, char** e, int* f, int o)
 {
-	_ast_intmax_t	number;
+	intmax_t	number;
 	char*		t;
 	int		c;
 

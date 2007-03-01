@@ -28,7 +28,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: chmod (AT&T Research) 2006-06-25 $\n]"
+"[-?\n@(#)$Id: chmod (AT&T Research) 2007-07-26 $\n]"
 USAGE_LICENSE
 "[+NAME?chmod - change the access permissions of files]"
 "[+DESCRIPTION?\bchmod\b changes the permission of each file "
@@ -253,7 +253,8 @@ b_chmod(int argc, char** argv, void* context)
 		case FTS_SL:
 			if (chmodf == chmod)
 			{
-				fts_set(NiL, ent, FTS_FOLLOW);
+				if (!(flags & FTS_PHYSICAL) || (flags & FTS_META) && ent->fts_level == 1)
+					fts_set(NiL, ent, FTS_FOLLOW);
 				break;
 			}
 			/*FALLTHROUGH*/
@@ -266,7 +267,7 @@ b_chmod(int argc, char** argv, void* context)
 			if ((*chmodf)(ent->fts_accpath, mode) >= 0)
 			{
 				if (notify == 2 || notify == 1 && (mode&S_IPERM) != (ent->fts_statp->st_mode&S_IPERM))
-					sfprintf(sfstdout, "%s: mode changed to %0.4o (%s)\n", ent->fts_accpath, mode, fmtmode(mode, 1)+1);
+					sfprintf(sfstdout, "%s: mode changed to %0.4o (%s)\n", ent->fts_path, mode, fmtmode(mode, 1)+1);
 			}
 			else if (!force)
 				error(ERROR_system(0), "%s: cannot change mode", ent->fts_accpath);

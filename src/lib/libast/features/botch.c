@@ -32,7 +32,9 @@
 #include "FEATURE/lib"
 #include "FEATURE/types"
 
+#if _lib_getgroups
 extern int		getgroups(int, gid_t*);
+#endif
 
 int
 main()

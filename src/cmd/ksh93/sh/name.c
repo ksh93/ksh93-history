@@ -31,7 +31,6 @@
 #include	"path.h"
 #include	"lexstates.h"
 #include	"timeout.h"
-#include	"FEATURE/locale"
 #include	"FEATURE/externs"
 #include	"streval.h"
 
@@ -74,6 +73,10 @@ static void(*nullscan)(Namval_t*,void*);
 #if ( SFIO_VERSION  <= 20010201L )
 #   define _data        data
 #endif
+
+#if !SHOPT_MULTIBYTE
+#   define mbchar(p)       (*(unsigned char*)p++)
+#endif /* SHOPT_MULTIBYTE */
 
 /* ========	name value pair routines	======== */
 
@@ -414,7 +417,7 @@ static char *stack_extend(const char *cname, char *cp, int n)
 
 Namval_t *nv_create(const char *name, Dt_t *root, int flags, Namfun_t *dp)
 {
-	register char		*cp=(char*)name, *sp;
+	char			*cp=(char*)name, *sp, *xp;
 	register int		c;
 	register Namval_t	*np=0, *nq=0;
 	Namfun_t		*fp=0;
@@ -505,11 +508,13 @@ Namval_t *nv_create(const char *name, Dt_t *root, int flags, Namfun_t *dp)
 				}
 				while(nv_isref(np))
 				{
-					sub = np->nvenv;
-					sh.last_table = nv_table(np);
+					root = nv_reftree(np);
+					sh.last_table = nv_reftable(np);
+					sub = nv_refsub(np);
 					np = nv_refnode(np);
 					if(sub && c!='.')
 						nv_putsub(np,sub,0L);
+					flags |= NV_NOSCOPE;
 				}
 				if(sub && c==0)
 					return(np);
@@ -529,6 +534,7 @@ Namval_t *nv_create(const char *name, Dt_t *root, int flags, Namfun_t *dp)
 				}
 				flags |= NV_NOREF;
 			}
+			sh.last_root = root;
 			do
 			{
 				if(!np)
@@ -654,9 +660,10 @@ Namval_t *nv_create(const char *name, Dt_t *root, int flags, Namfun_t *dp)
 			break;
 		    default:
 			dp->last = cp;
-			if(!isaletter(c))
+			if((c = mbchar(cp)) && !isaletter(c))
 				return(np);
-			while(c= *(unsigned char*)(++cp),isaname(c));
+			while(xp=cp, c=mbchar(cp), isaname(c));
+			cp = xp;
 		}
 	}
 	return(np);
@@ -691,6 +698,7 @@ Namval_t *nv_open(const char *name, Dt_t *root, int flags)
 	sh.last_table = sh.namespace;
 	if(!root)
 		root = sh.var_tree;
+	sh.last_root = root;
 	if(root==sh_subfuntree(1))
 	{
 		flags |= NV_NOREF;
@@ -716,7 +724,7 @@ Namval_t *nv_open(const char *name, Dt_t *root, int flags)
 		{
 			while(nv_isref(np))
 			{
-				sh.last_table = nv_table(np);
+				sh.last_table = nv_reftable(np);
 				np = nv_refnode(np);
 			}
 		}
@@ -915,7 +923,7 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 		}
 		else
 		{
-			if(nv_isattr(np, NV_LONG) && sizeof(long)<sizeof(Sflong_t))
+			if(nv_isattr(np, NV_LONG) && sizeof(int32_t)<sizeof(Sflong_t))
 			{
 				Sflong_t ll=0,oll=0;
 				if(flags&NV_INTEGER)
@@ -934,18 +942,18 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 						if(flags&NV_LONG)
 							ll = *((Sfulong_t*)sp);
 						else if(flags&NV_SHORT)
-							ll = *((unsigned short*)sp);
+							ll = *((uint16_t*)sp);
 						else
-							ll = *((unsigned long*)sp);
+							ll = *((uint32_t*)sp);
 					}
 					else
 					{
 						if(flags&NV_LONG)
 							ll = *((Sflong_t*)sp);
 						else if(flags&NV_SHORT)
-							ll = *((short*)sp);
+							ll = *((uint16_t*)sp);
 						else
-							ll = *((long*)sp);
+							ll = *((uint32_t*)sp);
 					}
 				}
 				else if(sp)
@@ -958,7 +966,7 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 			}
 			else
 			{
-				long l=0,ol=0;
+				int32_t l=0,ol=0;
 				if(flags&NV_INTEGER)
 				{
 					if(flags&NV_DOUBLE)
@@ -970,49 +978,49 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 							ll = *((float*)sp);
 						else
 							ll = *((double*)sp);
-						l = (long)ll;
+						l = (int32_t)ll;
 					}
 					else if(nv_isattr(np,NV_UNSIGN))
 					{
 						if(flags&NV_LONG)
 							l = *((Sfulong_t*)sp);
 						else if(flags&NV_SHORT)
-							l = *((unsigned short*)sp);
+							l = *((uint16_t*)sp);
 						else
-							l = *(unsigned long*)sp;
+							l = *(uint32_t*)sp;
 					}
 					else
 					{
 						if(flags&NV_LONG)
 							l = *((Sflong_t*)sp);
 						else if(flags&NV_SHORT)
-							l = *((short*)sp);
+							l = *((int16_t*)sp);
 						else
-							l = *(long*)sp;
+							l = *(int32_t*)sp;
 					}
 				}
 				else if(sp)
 				{
 					Sfdouble_t ld = sh_arith(sp);
 					if(ld<0)
-						l = (long)ld;
+						l = (int32_t)ld;
 					else
-						l = (unsigned long)ld;
+						l = (uint32_t)ld;
 				}
 				if(nv_size(np) <= 1)
 					nv_setsize(np,10);
 				if(nv_isattr (np, NV_SHORT))
 				{
-					short s=0;
+					int16_t s=0;
 					if(flags&NV_APPEND)
 						s = up->s;
-					up->s = s+(short)l;
+					up->s = s+(int16_t)l;
 					nv_onattr(np,NV_NOFREE);
 				}
 				else
 				{
 					if(!up->lp)
-						up->lp = new_of(long,0);
+						up->lp = new_of(int32_t,0);
 					else if(flags&NV_APPEND)	
 						ol =  *(up->lp);
 					*(up->lp) = l+ol;
@@ -1039,7 +1047,7 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 			else if(flags&NV_LONG)
 				sfprintf(sh.strbuf,"%lld\0",*((Sflong_t*)sp));
 			else
-				sfprintf(sh.strbuf,"%ld\0",*((long*)sp));
+				sfprintf(sh.strbuf,"%ld\0",*((int32_t*)sp));
 			sp = sfstruse(sh.strbuf);
 		}
 		if(nv_isattr(np, NV_HOST)==NV_HOST && sp)
@@ -1496,8 +1504,8 @@ void	sh_envnolocal (register Namval_t *np, void *data)
 		if(nv_isref(np))
 		{
 			nv_offattr(np,NV_NOFREE|NV_REF);
+			free((void*)np->nvalue.nrp);
 			np->nvalue.cp = 0;
-			np->nvfun = 0;
 		}
 		if(!cp)
 			return;
@@ -1598,11 +1606,7 @@ done:
 	if(!nv_isarray(np) || !nv_arrayptr(np))
 	{
 		if(nv_isref(np))
-		{
-			if(np->nvenv)
-				free((void*)np->nvenv);
-			np->nvfun = 0;
-		}
+			free((void*)np->nvalue.nrp);
 		nv_setsize(np,0);
 		if(!nv_isattr(np,NV_MINIMAL) || nv_isattr(np,NV_EXPORT))
 		{
@@ -1781,8 +1785,8 @@ char *nv_getval(register Namval_t *np)
 		goto done;
 	if(nv_isref(np))
 	{
-		sh.last_table = nv_table(np);
-		return(nv_name(up->np));
+		sh.last_table = nv_reftable(np);
+		return(nv_name(nv_refnode(np)));
 	}
 	if(np->nvfun)
 	{
@@ -1829,9 +1833,9 @@ char *nv_getval(register Namval_t *np)
 	        	if(nv_isattr (np,NV_LONG))
 				ll = *(Sfulong_t*)up->llp;
 			else if(nv_isattr (np,NV_SHORT))
-				ll = (unsigned short)up->s;
+				ll = (uint16_t)up->s;
 			else
-				ll = *(unsigned long*)(up->lp);
+				ll = *(uint32_t*)(up->lp);
 		}
         	else if(nv_isattr (np,NV_LONG))
 			ll = *up->llp;
@@ -1911,9 +1915,9 @@ Sfdouble_t nv_getnum(register Namval_t *np)
 			if(nv_isattr(np, NV_LONG))
 				r = (Sflong_t)*((Sfulong_t*)up->llp);
 			else if(nv_isattr(np, NV_SHORT))
-				r = (Sflong_t)((unsigned short)up->s);
+				r = (Sflong_t)((uint16_t)up->s);
 			else
-				r = *((unsigned long*)up->lp);
+				r = *((uint32_t*)up->lp);
 		}
 		else
 		{
@@ -1950,7 +1954,7 @@ void nv_newattr (register Namval_t *np, unsigned newatts, int size)
 	int oldsize,oldatts;
 
 	/* check for restrictions */
-	if(sh_isoption(SH_RESTRICTED) && ((sp=nv_name(np))==nv_name(PATHNOD) || sp==nv_name(SHELLNOD) || sp==nv_name(ENVNOD) ))
+	if(sh_isoption(SH_RESTRICTED) && ((sp=nv_name(np))==nv_name(PATHNOD) || sp==nv_name(SHELLNOD) || sp==nv_name(ENVNOD) || sp==nv_name(FPATHNOD)))
 		errormsg(SH_DICT,ERROR_exit(1),e_restricted,nv_name(np));
 	/* handle attributes that do not change data separately */
 	n = np->nvflag;
@@ -2172,7 +2176,8 @@ void nv_setref(register Namval_t *np)
 	nr= nq = nv_open(cp, hp, NV_VARNAME|NV_NOREF);
 	while(nv_isref(nr))
 	{
-		sh.last_table = nv_table(nr);
+		sh.last_table = nv_reftable(nr);
+		hp = nv_reftree(nr);
 		nr = nv_refnode(nr);
 	}
 	if(nr==np) 
@@ -2192,10 +2197,12 @@ void nv_setref(register Namval_t *np)
 		ep = nv_getsub(nq);
 	}
 	nv_unset(np);
-	np->nvalue.np = nq;
+	np->nvalue.nrp = newof(0,struct Namref,1,0);
+	np->nvalue.nrp->np = nq;
+	np->nvalue.nrp->root = hp;
 	if(ep)
-		np->nvenv = strdup(ep);
-	np->nvfun = (Namfun_t*)sh.last_table;
+		np->nvalue.nrp->sub = strdup(ep);
+	np->nvalue.nrp->table = sh.last_table;
 	nv_onattr(np,NV_REF|NV_NOFREE);
 }
 
@@ -2256,12 +2263,13 @@ void nv_unscope(void)
  */
 void nv_unref(register Namval_t *np)
 {
-	Namval_t *nq = nv_refnode(np);
+	Namval_t *nq;
 	if(!nv_isref(np))
 		return;
+	nq = nv_refnode(np);
 	nv_offattr(np,NV_NOFREE|NV_REF);
-	np->nvalue.cp = strdup(nv_name(nq=nv_refnode(np)));
-	np->nvfun = 0;
+	free((void*)np->nvalue.nrp);
+	np->nvalue.cp = strdup(nv_name(nq));
 #if SHOPT_OPTIMIZE
 	{
 		Namfun_t *fp;

@@ -75,7 +75,6 @@ extern void 	sh_iorestore(int,int);
    __EXPORT__
 #endif
 extern Sfio_t 	*sh_iostream(int);
-struct ionod;
 extern int	sh_redirect(struct ionod*,int);
 extern void 	sh_iosave(int,int);
 extern void 	sh_iounsave(void);

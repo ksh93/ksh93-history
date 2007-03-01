@@ -35,22 +35,23 @@
 /* Nodes can have all kinds of values */
 union Value
 {
-	const char	*cp;
-	int		*ip;
-	char		c;
-	int		i;
-	unsigned	u;
-	long		*lp;
-	Sflong_t	*llp;	/* for long long arithmetic */
-	short		s;
-	double		*dp;	/* for floating point arithmetic */
-	Sfdouble_t	*ldp;	/* for long floating point arithmetic */
-	struct Namarray	*array;	/* for array node */
-	struct Namval	*np;	/* for Namval_t node */
-	union Value	*up;	/* for indirect node */
-	struct Ufunction *rp;	/* shell user defined functions */
-	struct Namfun	*funp;	/* discipline pointer */
-	int (*bfp)(int,char*[],void*);/* builtin entry point function pointer */
+	const char		*cp;
+	int			*ip;
+	char			c;
+	int			i;
+	unsigned int		u;
+	int32_t			*lp;
+	Sflong_t		*llp;	/* for long long arithmetic */
+	int16_t			s;
+	double			*dp;	/* for floating point arithmetic */
+	Sfdouble_t		*ldp;	/* for long floating point arithmetic */
+	struct Namarray		*array;	/* for array node */
+	struct Namval		*np;	/* for Namval_t node */
+	union Value		*up;	/* for indirect node */
+	struct Ufunction 	*rp;	/* shell user defined functions */
+	struct Namfun		*funp;	/* discipline pointer */
+	struct Namref		*nrp;	/* name reference */
+	int			(*bfp)(int,char*[],void*);/* builtin entry point function pointer */
 };
 
 #include	"nval.h"
@@ -74,6 +75,14 @@ union Value
 #define ARRAY_DELETE	2
 
 
+struct Namref
+{
+	Namval_t	*np;
+	Namval_t	*table;
+	Dt_t		*root;
+	char		*sub;
+};
+
 /* This describes a user shell function node */
 struct Ufunction
 {
@@ -83,6 +92,10 @@ struct Ufunction
 	Namval_t *nspace;		/* pointer to name space */
 	char	*fname;			/* file name where function defined */
 };
+
+#ifndef ARG_RAW
+    struct argnod;
+#endif /* !ARG_RAW */
 
 /* attributes of Namval_t items */
 
@@ -120,8 +133,11 @@ struct Ufunction
 
 #define nv_setattr(n,f)	((n)->nvflag = (f))
 #define nv_context(n)	((void*)(n)->nvfun)		/* for builtins */
-#define nv_table(n)	((Namval_t*)((n)->nvfun))	/* for references */
-#define nv_refnode(n)	((Namval_t*)((n)->nvalue.np))	/* for references */
+/* The following are for name references */
+#define nv_refnode(n)	((n)->nvalue.nrp->np)
+#define nv_reftree(n)	((n)->nvalue.nrp->root)
+#define nv_reftable(n)	((n)->nvalue.nrp->table)
+#define nv_refsub(n)	((n)->nvalue.nrp->sub)
 #if SHOPT_OO
 #   define nv_class(np)		(nv_isattr(np,NV_REF|NV_IMPORT)?0:(Namval_t*)((np)->nvenv))
 #endif /* SHOPT_OO */
@@ -141,7 +157,6 @@ struct Ufunction
 extern int		array_maxindex(Namval_t*);
 extern char 		*nv_endsubscript(Namval_t*, char*, int);
 extern Namfun_t 	*nv_cover(Namval_t*);
-struct argnod;		/* struct not declared yet */
 extern Namarr_t 	*nv_arrayptr(Namval_t*);
 extern int		nv_setnotify(Namval_t*,char **);
 extern int		nv_unsetnotify(Namval_t*,char **);

@@ -4337,6 +4337,10 @@ Restore last item removed from line. (Yank item back to the line.)
 Line feed and print current line.
 .PP
 .TP 10
+.BI M-^L
+Clear the screen.
+.PP
+.TP 10
 .BI ^@
 (Null character) Set mark.
 .PP
@@ -5202,6 +5206,19 @@ represents the pathname whose basename is the name of the built-in.
 The entry point function name is determined by prepending
 .B b_
 to the built-in name.
+The ISO C/C++ prototype is
+\f3b_\fP\f2mycommand\fP\f3(int\fP \f2argc\fP, \f3char *\fP\f2argv\fP\f3[]\fP, \f3void *\fP\f2context\fP\f3)\fP
+for the builtin command
+.I mycommand\^
+where
+.I argv\^
+is array an of
+.I argc\^
+elements and context is an optional pointer to a
+.B Shell_t
+structure as described in
+.BR <ast/shell.h> .
+.sp .5
 Special built-ins cannot be bound to a pathname or deleted.
 The
 .B \-d
@@ -6011,6 +6028,10 @@ flag when used with the
 specifier causes the output to be displayed in 1024 with one of the suffixes
 .B "Ki Mi Gi Ti Pi Ei"
 to indicate the unit.
+.LI
+The
+.B =
+flag has been added to center the output within the specified field width.
 .LE
 .TP
 \f3pwd\fP \*(OK \f3\-LP\fP \*(CK
@@ -6393,7 +6414,7 @@ mode.
 .B xtrace
 Same as
 .BR \-x .
-.TP 8
+.PP
 If no option name is supplied, then the current option settings are printed.
 .RE
 .TP 8

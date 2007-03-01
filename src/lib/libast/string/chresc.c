@@ -48,7 +48,7 @@ chresc(register const char* s, char** p)
 	char			buf[64];
 #endif
 
-	switch (c = *s++)
+	switch (c = mbchar(s))
 	{
 	case 0:
 		s--;

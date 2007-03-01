@@ -129,7 +129,7 @@ typedef struct edit
 	char	e_inmacro;	/* processing macro expansion */
 #if KSHELL
 	char	e_vi_insert[2];	/* for sh_keytrap */
-	long	e_col;		/* for sh_keytrap */
+	int32_t e_col;		/* for sh_keytrap */
 #else
 	char	e_prbuff[PRSIZE]; /* prompt buffer */
 #endif /* KSHELL */

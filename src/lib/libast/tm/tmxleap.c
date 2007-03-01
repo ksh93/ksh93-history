@@ -38,7 +38,7 @@ Time_t
 tmxleap(Time_t t)
 {
 	register Tm_leap_t*	lp;
-	unsigned _ast_int4_t	sec;
+	uint32_t		sec;
 
 	tmset(tm_info.zone);
 	if (tm_info.flags & TM_ADJUST)

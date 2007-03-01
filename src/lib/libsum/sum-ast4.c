@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1996-2005 AT&T Corp.                  *
+*           Copyright (c) 1996-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -33,10 +33,10 @@
 
 typedef struct Ast4_sum_s
 {
-	int_4		sum0;
-	int_4		sum1;
-	int_4		sum2;
-	int_4		sum3;
+	uint32_t	sum0;
+	uint32_t	sum1;
+	uint32_t	sum2;
+	uint32_t	sum3;
 } Ast4_sum_t;
 
 typedef struct Ast4_s

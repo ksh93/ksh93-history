@@ -271,7 +271,10 @@ int job_reap(register int sig)
 			continue;
 		}
 		else if (WIFCONTINUED(wstat) && wcontinued)
+		{
 			pw->p_flag &= ~(P_NOTIFY|P_SIGNALLED|P_STOPPED);
+			pw->p_exit = 0;
+		}
 		else
 #endif /* SIGTSTP */
 		{

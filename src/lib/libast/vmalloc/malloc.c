@@ -74,7 +74,7 @@ typedef struct ______mstats Mstats_t;
 #else
 #define F0(f,t0)		f()
 #define F1(f,t1,a1)		f(a1) t1 a1;
-#define F1(f,t1,a1,t2,a2)	f(a1, a2) t1 a1; t2 a2;
+#define F2(f,t1,a1,t2,a2)	f(a1, a2) t1 a1; t2 a2;
 #endif
 
 /*
@@ -215,14 +215,19 @@ char**	sp;
 }
 
 static int		_Vmflinit = 0;
+static Vmulong_t	_Vmdbstart = 0;
 static Vmulong_t	_Vmdbcheck = 0;
 static Vmulong_t	_Vmdbtime = 0;
 static int		_Vmpffd = -1;
 #define VMFLINIT() \
 	{ if(!_Vmflinit)	vmflinit(); \
-	  if(_Vmdbcheck && (++_Vmdbtime % _Vmdbcheck) == 0 && \
-	     Vmregion->meth.meth == VM_MTDEBUG) \
+	  if(_Vmdbcheck) \
+	  { if(_Vmdbtime < _Vmdbstart) _Vmdbtime += 1; \
+	    else if((_Vmdbtime += 1) < _Vmdbstart) _Vmdbtime = _Vmdbstart; \
+	    if(_Vmdbtime >= _Vmdbstart && (_Vmdbtime % _Vmdbcheck) == 0 && \
+	       Vmregion->meth.meth == VM_MTDEBUG) \
 		vmdbcheck(Vmregion); \
+	  } \
 	}
 
 #if __STD_C
@@ -355,17 +360,19 @@ static int vmflinit()
 					if((fd = atou(&env)) >= 0 )
 						vmdebug(fd);
 				}
-
-				if(*env < '0' || *env > '9')
+				else if(*env < '0' || *env > '9')
 					env += 1;
-				else if(env[0] == '0' &&
-					(env[1] == 'x' || env[1] == 'X') )
+				else if(env[0] == '0' && (env[1] == 'x' || env[1] == 'X') )
 				{	if((addr = atou(&env)) != 0)
 						vmdbwatch((Void_t*)addr);
 				}
 				else
 				{	_Vmdbcheck = atou(&env);
 					setcheck = 1;
+					if(*env == ',')
+					{	env += 1;
+						_Vmdbstart = atou(&env);
+					}
 				}
 			}
 			if(!setcheck)

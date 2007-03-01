@@ -38,6 +38,7 @@
 #endif
 
 #define S2I_function	strtoll
-#define S2I_number	_ast_intmax_t
+#define S2I_number	intmax_t
+#define S2I_unumber	uintmax_t
 
 #include "strtoi.h"

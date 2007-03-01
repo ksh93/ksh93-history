@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                     Copyright (c) 1994-2007 AT&T                     *
+*           Copyright (c) 1990-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                               by AT&T                                *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -25,7 +25,7 @@
  * coded for portability
  */
 
-static char id[] = "\n@(#)$Id: mamake (AT&T Research) 2005-03-19 $\0\n";
+static char id[] = "\n@(#)$Id: mamake (AT&T Research) 2007-02-26 $\0\n";
 
 #if _PACKAGE_ast
 
@@ -33,7 +33,7 @@ static char id[] = "\n@(#)$Id: mamake (AT&T Research) 2005-03-19 $\0\n";
 #include <error.h>
 
 static const char usage[] =
-"[-?\n@(#)$Id: mamake (AT&T Research) 2005-03-19 $\n]"
+"[-?\n@(#)$Id: mamake (AT&T Research) 2007-02-26 $\n]"
 USAGE_LICENSE
 "[+NAME?mamake - make abstract machine make]"
 "[+DESCRIPTION?\bmamake\b reads \amake abstract machine\a target and"
@@ -773,6 +773,7 @@ substitute(Buf_t* buf, register char* s)
 	register char*	q;
 	register int	c;
 	register int	n;
+	int		a = 0;
 
 	while (c = *s++)
 	{
@@ -793,6 +794,8 @@ substitute(Buf_t* buf, register char* s)
 				*s = c;
 				continue;
 			}
+			if (t[0] == 'A' && t[1] == 'R' && t[2] == 0)
+				a = 1;
 			*s = c;
 			if (c && c != '}')
 			{
@@ -854,7 +857,22 @@ substitute(Buf_t* buf, register char* s)
 			case '=':
 			case '}':
 				if (v)
-					substitute(buf, v);
+				{
+					if (a && t[0] == 'm' && t[1] == 'a' && t[2] == 'm' && t[3] == '_' && t[4] == 'l' && t[5] == 'i' && t[6] == 'b')
+					{
+						for (t = v; *t == ' '; t++);
+						for (; *t && *t != ' '; t++);
+						if (*t)
+							*t = 0;
+						else
+							t = 0;
+						substitute(buf, v);
+						if (t)
+							*t = ' ';
+					}
+					else
+						substitute(buf, v);
+				}
 				break;
 			}
 			if (*s)

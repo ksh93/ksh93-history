@@ -374,18 +374,26 @@ void nv_attribute(register Namval_t *np,Sfio_t *out,char *prefix,int noname)
 	}
 }
 
-static void outval(char *name, const char *vname, Sfio_t *outfile, int indent, int noscope)
+struct Walk
+{
+	Sfio_t	*out;
+	Dt_t	*root;
+	int	noscope;
+	int	indent;
+};
+
+static void outval(char *name, const char *vname, struct Walk *wp)
 {
 	register Namval_t *np, *nq;
         register Namfun_t *fp;
 	int isarray=0, associative=0, special=0;
-	if(!(np=nv_open(vname,sh.var_tree,NV_ARRAY|NV_VARNAME|NV_NOADD|NV_NOASSIGN|noscope)))
+	if(!(np=nv_open(vname,wp->root,NV_ARRAY|NV_VARNAME|NV_NOADD|NV_NOASSIGN|wp->noscope)))
 		return;
 	if(nv_isarray(np) && *name=='.')
 		special = 1;
 	if(!special && (fp=nv_hasdisc(np,&treedisc)))
 	{
-		if(!outfile)
+		if(!wp->out)
 		{
 			fp = nv_stack(np,fp);
 			if(fp = nv_stack(np,NIL(Namfun_t*)))
@@ -403,9 +411,9 @@ static void outval(char *name, const char *vname, Sfio_t *outfile, int indent, i
 		if(array_elem(nv_arrayptr(np))==0)
 			isarray=2;
 		else
-			nq = nv_putsub(np,NIL(char*),ARRAY_SCAN|(outfile?ARRAY_NOCHILD:0));
+			nq = nv_putsub(np,NIL(char*),ARRAY_SCAN|(wp->out?ARRAY_NOCHILD:0));
 	}
-	if(!outfile)
+	if(!wp->out)
 	{
 		_nv_unset(np,NV_RDONLY);
 		nv_close(np);
@@ -416,20 +424,20 @@ static void outval(char *name, const char *vname, Sfio_t *outfile, int indent, i
 	if(special)
 	{
 		associative = 1;
-		sfnputc(outfile,'\t',indent);
+		sfnputc(wp->out,'\t',wp->indent);
 	}
 	else
 	{
-		sfnputc(outfile,'\t',indent);
-		nv_attribute(np,outfile,"typeset",'=');
-		nv_outname(outfile,name,-1);
-		sfputc(outfile,(isarray==2?'\n':'='));
+		sfnputc(wp->out,'\t',wp->indent);
+		nv_attribute(np,wp->out,"typeset",'=');
+		nv_outname(wp->out,name,-1);
+		sfputc(wp->out,(isarray==2?'\n':'='));
 		if(isarray)
 		{
 			if(isarray==2)
 				return;
-			sfwrite(outfile,"(\n",2);
-			sfnputc(outfile,'\t',++indent);
+			sfwrite(wp->out,"(\n",2);
+			sfnputc(wp->out,'\t',++wp->indent);
 		}
 	}
 	while(1)
@@ -439,8 +447,8 @@ static void outval(char *name, const char *vname, Sfio_t *outfile, int indent, i
 		{
 			if(!(fmtq = nv_getsub(np)))
 				break;
-			sfprintf(outfile,"[%s]",sh_fmtq(fmtq));
-			sfputc(outfile,'=');
+			sfprintf(wp->out,"[%s]",sh_fmtq(fmtq));
+			sfputc(wp->out,'=');
 		}
 		if(!(fmtq = sh_fmtq(nv_getval(np))))
 			fmtq = "";
@@ -449,33 +457,34 @@ static void outval(char *name, const char *vname, Sfio_t *outfile, int indent, i
 			char *qp = strchr(fmtq,'\'');
 			if(!qp || qp>ep)
 			{
-				sfwrite(outfile,fmtq,ep-fmtq);
-				sfputc(outfile,'\\');
+				sfwrite(wp->out,fmtq,ep-fmtq);
+				sfputc(wp->out,'\\');
 				fmtq = ep;
 			}
 		}
 		if(*name=='[' && !isarray)
-			sfprintf(outfile,"(%s)\n",fmtq);
+			sfprintf(wp->out,"(%s)\n",fmtq);
 		else
-			sfputr(outfile,fmtq,'\n');
+			sfputr(wp->out,fmtq,'\n');
 		if(!nv_nextsub(np))
 			break;
-		sfnputc(outfile,'\t',indent);
+		sfnputc(wp->out,'\t',wp->indent);
 	}
 	if(isarray && !special)
 	{
-		sfnputc(outfile,'\t',--indent);
-		sfwrite(outfile,")\n",2);
+		sfnputc(wp->out,'\t',--wp->indent);
+		sfwrite(wp->out,")\n",2);
 	}
 }
 
 /*
  * format initialization list given a list of assignments <argp>
  */
-static char **genvalue(char **argv, register Sfio_t *outfile, const char *prefix, int n, int indent, int noscope)
+static char **genvalue(char **argv, const char *prefix, int n, struct Walk *wp)
 {
 	register char *cp,*nextcp,*arg;
 	register int m,r;
+	register Sfio_t *outfile = wp->out;
 	if(n==0)
 		m = strlen(prefix);
 	else if(cp=nextdot(prefix))
@@ -486,7 +495,7 @@ static char **genvalue(char **argv, register Sfio_t *outfile, const char *prefix
 	if(outfile)
 	{
 		sfwrite(outfile,"(\n",2);
-		indent++;
+		wp->indent++;
 	}
 	for(; arg= *argv; argv++)
 	{
@@ -505,11 +514,11 @@ static char **genvalue(char **argv, register Sfio_t *outfile, const char *prefix
 			{
 				if(outfile)
 				{
-					sfnputc(outfile,'\t',indent);
+					sfnputc(outfile,'\t',wp->indent);
 					nv_outname(outfile,cp,nextcp-cp);
 					sfputc(outfile,'=');
 				}
-				argv = genvalue(argv,outfile,cp,n+m+r ,indent,noscope);
+				argv = genvalue(argv,cp,n+m+r,wp);
 				if(outfile)
 					sfputc(outfile,'\n');
 				if(*argv)
@@ -518,25 +527,25 @@ static char **genvalue(char **argv, register Sfio_t *outfile, const char *prefix
 			}
 			else if(outfile && argv[1] && memcmp(arg,argv[1],r=strlen(arg))==0 && argv[1][r]=='[')
 			{
-				Namval_t *np = nv_open(arg,sh.var_tree,NV_VARNAME|NV_NOADD|NV_NOASSIGN|noscope);
+				Namval_t *np = nv_open(arg,wp->root,NV_VARNAME|NV_NOADD|NV_NOASSIGN|wp->noscope);
 				if(!np)
 					continue;
-				sfnputc(outfile,'\t',indent);
+				sfnputc(outfile,'\t',wp->indent);
 				nv_attribute(np,outfile,"typeset",1);
 				nv_close(np);
 				sfputr(outfile,arg+m+(n?n+1:0),'=');
-				argv = genvalue(++argv,outfile,cp,cp-arg ,indent,noscope);
+				argv = genvalue(++argv,cp,cp-arg ,wp);
 				sfputc(outfile,'\n');
 			}
 			else if(outfile && *cp=='[')
 			{
-				sfnputc(outfile,'\t',indent);
+				sfnputc(outfile,'\t',wp->indent);
 				sfputr(outfile,cp,'=');
-				argv = genvalue(++argv,outfile,cp,cp-arg ,indent,noscope);
+				argv = genvalue(++argv,cp,cp-arg ,wp);
 				sfputc(outfile,'\n');
 			}
 			else
-				outval(cp,arg,outfile,indent,noscope);
+				outval(cp,arg,wp);
 		}
 		else
 			break;
@@ -547,10 +556,10 @@ static char **genvalue(char **argv, register Sfio_t *outfile, const char *prefix
 		cp = (char*)prefix;
 		if(c=='.')
 			cp[m-1] = 0;
-		outval(".",prefix-n,outfile,indent,noscope);
+		outval(".",prefix-n,wp);
 		if(c=='.')
 			cp[m-1] = c;
-		sfnputc(outfile,'\t',indent-1);
+		sfnputc(outfile,'\t',wp->indent-1);
 		sfputc(outfile,')');
 	}
 	return(--argv);
@@ -562,6 +571,7 @@ static char **genvalue(char **argv, register Sfio_t *outfile, const char *prefix
 static char *walk_tree(register Namval_t *np, int dlete)
 {
 	static Sfio_t *out;
+	struct Walk walk;
 	Sfio_t *outfile;
 	int savtop = staktell();
 	char *savptr = stakfreeze(0);
@@ -605,7 +615,11 @@ static char *walk_tree(register Namval_t *np, int dlete)
 		outfile = out =  sfnew((Sfio_t*)0,(char*)0,-1,-1,SF_WRITE|SF_STRING);
 	else
 		sfseek(outfile,0L,SEEK_SET);
-	genvalue(argv,outfile,name,0,0,noscope);
+	walk.out = outfile;
+	walk.root = sh.last_root;
+	walk.indent = 0;
+	walk.noscope = noscope;
+	genvalue(argv,name,0,&walk);
 	stakset(savptr,savtop);
 	if(!outfile)
 		return((char*)0);

@@ -135,10 +135,9 @@ int sh_main(int ac, char *av[], void (*userinit)(int))
 	register char	*name;
 	register int	fdin;
 	register Sfio_t  *iop;
-	register int 	rshflag;	/* set for restricted shell */
 	register Shell_t *shp;
 	struct stat	statb;
-	int i;
+	int i, rshflag;		/* set for restricted shell */
 	char *command;
 #ifdef _lib_sigvec
 	/* This is to clear mask that my be left on by rlogin */
@@ -161,6 +160,8 @@ int sh_main(int ac, char *av[], void (*userinit)(int))
 	{
 		/* begin script execution here */
 		sh_reinit((char**)0);
+		if(rshflag)
+			sh_onoption(SH_RESTRICTED);
 	}
 	shp->fn_depth = shp->dot_depth = 0;
 	command = error_info.id;

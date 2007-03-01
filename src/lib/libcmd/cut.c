@@ -29,7 +29,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: cut (AT&T Research) 2006-07-17 $\n]"
+"[-?\n@(#)$Id: cut (AT&T Research) 2007-01-23 $\n]"
 USAGE_LICENSE
 "[+NAME?cut - cut out selected columns or fields of each line of a file]"
 "[+DESCRIPTION?\bcut\b bytes, characters, or character-delimited fields "
@@ -97,9 +97,9 @@ typedef struct Cut_s
 	int		ldelim;
 	int		seqno;
 	int		reclen;
-	int		list[2];
 	signed char	space[UCHAR_MAX];
 	Last_t		last;
+	int		list[2];	/* NOTE: must be last member */
 } Cut_t;
 
 #define HUGE		(1<<14)
