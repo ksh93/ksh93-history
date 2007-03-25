@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#           Copyright (c) 1982-2006 AT&T Knowledge Ventures            #
+#           Copyright (c) 1982-2007 AT&T Knowledge Ventures            #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                      by AT&T Knowledge Ventures                      #
@@ -36,6 +36,7 @@ function abspath
 #test for proper exit of shell
 Command=${0##*/}
 integer Errors=0
+builtin getconf
 ABSHELL=$(abspath)
 mkdir /tmp/ksh$$ || err_exit "mkdir /tmp/ksh$$ failed"
 cd /tmp/ksh$$ || err_exit "cd /tmp/ksh$$ failed"

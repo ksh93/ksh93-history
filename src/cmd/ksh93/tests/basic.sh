@@ -288,8 +288,8 @@ foo
 [[ $( (trap 'print alarm' ALRM; sleep 4) & sleep 2; kill -ALRM $!) == alarm ]] || err_exit 'ALRM signal not working'
 [[ $($SHELL -c 'trap "" HUP; $SHELL -c "(sleep 2;kill -HUP $$)& sleep 4;print done"') != done ]] && err_exit 'ignored traps not being ignored'
 [[ $($SHELL -c 'o=foobar; for x in foo bar; do (o=save);print $o;done' 2> /dev/null ) == $'foobar\nfoobar' ]] || err_exit 'for loop optimization subshell bug'
-command exec 3> /dev/null
-if	[[ -d /dev/fd && -w /dev/fd/3 ]]
+command exec 3<> /dev/null
+if	cat /dev/fd/3 >/dev/null 2>&1
 then	[[ $($SHELL -c 'cat <(print foo)' 2> /dev/null) == foo ]] || err_exit 'process substitution not working'
 	[[ $($SHELL -c 'print $(cat <(print foo) )' 2> /dev/null) == foo ]] || err_exit 'process substitution in subshell not working'
 	[[ $($SHELL -c  $'tee >(grep \'1$\' > /tmp/ksh'$$'x) > /dev/null <<-  \!!!

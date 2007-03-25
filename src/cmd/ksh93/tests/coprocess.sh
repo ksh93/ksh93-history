@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#           Copyright (c) 1982-2006 AT&T Knowledge Ventures            #
+#           Copyright (c) 1982-2007 AT&T Knowledge Ventures            #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                      by AT&T Knowledge Ventures                      #
@@ -119,7 +119,7 @@ done
 if	(( SECONDS > 8 ))
 then	err_exit 'read -p hanging'
 fi
-( sleep 3 |& sleep 1 && kill $!; sleep 3 |& sleep 1 && kill $! ) || 
+( sleep 3 |& sleep 1 && kill $!; sleep 1; sleep 3 |& sleep 1 && kill $! ) || 
 	err_exit "coprocess cleanup not working correctly"
 unset line
 (

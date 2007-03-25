@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.2 2007-02-14
+info mam static 00000 1994-07-17 make (AT&T Research) 5.2 2007-03-26
 setv INSTALLROOT ../../..
 setv PACKAGE_ast_INCLUDE ${INSTALLROOT}/include/ast
 setv PACKAGE_ast_LIB ${INSTALLROOT}/lib
@@ -400,9 +400,9 @@ prev rev.h implicit
 prev cmd.h implicit
 done revlib.c
 make wclib.c
+prev ${PACKAGE_ast_INCLUDE}/endian.h implicit
 make ${PACKAGE_ast_INCLUDE}/wchar.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast_wchar.h implicit
-prev ${PACKAGE_ast_INCLUDE}/endian.h implicit
 prev ${PACKAGE_ast_INCLUDE}/stdio.h implicit
 prev ${PACKAGE_ast_INCLUDE}/stdio.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast_common.h implicit

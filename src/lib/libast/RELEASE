@@ -1,3 +1,7 @@
+07-03-25 features/common: fix { ast_std.h ast_map.h stdint.h } logic
+07-03-21 error.h: move from error_info to (*_error_data_)
+07-03-21 option.h: move from opt_info to (*_opt_data_)
+07-03-19 regex/regdecomp.c: fix REX_ONECHAR escapes and add REX_KMP
 07-03-11 tm/tmxscan.c,regex/regnexec.c: fix strict-alias transgressions
 07-02-27 comp/conf.sh: handle native getconf invalid numeric values
 07-02-21 comp/conf.sh,comp/conf.tab: handle SSIZE_MAX vs _POSIX_SSIZE_MAX

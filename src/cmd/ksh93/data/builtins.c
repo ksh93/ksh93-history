@@ -21,6 +21,7 @@
 
 #include	<shell.h>
 #include	<signal.h>
+#include	"defs.h"
 #include	"shtable.h"
 #include	"ulimit.h"
 #include	"name.h"
@@ -36,11 +37,17 @@
 #   define bltin(x)	0
 #endif
 
+#ifndef SH_CMDLIB_DIR
+#	define SH_CMDLIB_DIR	"/opt/ast/bin"
+#endif
 #if defined(SHOPT_CMDLIB_DIR) && !defined(SHOPT_CMDLIB_HDR)
 #	define SHOPT_CMDLIB_HDR	<cmdlist.h>
 #endif
 #define Q(f)		#f	/* libpp cpp workaround -- fixed 2005-04-11 */
 #define CMDLIST(f)	SH_CMDLIB_DIR "/" Q(f), NV_BLTIN|NV_NOFREE, bltin(f),
+
+#undef	basename
+#undef	dirname
 
 /*
  * The order up through "[" is significant

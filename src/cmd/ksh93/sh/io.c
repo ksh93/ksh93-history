@@ -656,7 +656,7 @@ int sh_open(register const char *path, int flags, ...)
 		}
 #endif
 	}
-	if (fd > 0)
+	if (fd >= 0)
 	{
 		if((mode=sh_iocheckfd(fd))==IOCLOSE)
 			return(-1);

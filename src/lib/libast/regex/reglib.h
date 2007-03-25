@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2005 AT&T Corp.                  *
+*           Copyright (c) 1985-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -72,7 +72,7 @@ typedef struct regsubop_s
 #define RE_DUP_INF	(RE_DUP_MAX+1)	/* infinity, for *		*/
 #define BACK_REF_MAX	9
 
-#define REG_COMP	(REG_DELIMITED|REG_EXTENDED|REG_FIRST|REG_ICASE|REG_NOSUB|REG_NEWLINE|REG_SHELL|REG_AUGMENTED|REG_LEFT|REG_LITERAL|REG_MINIMAL|REG_NULL|REG_RIGHT|REG_LENIENT|REG_MUSTDELIM)
+#define REG_COMP	(REG_DELIMITED|REG_ESCAPE|REG_EXTENDED|REG_FIRST|REG_ICASE|REG_NOSUB|REG_NEWLINE|REG_SHELL|REG_AUGMENTED|REG_LEFT|REG_LITERAL|REG_MINIMAL|REG_NULL|REG_RIGHT|REG_LENIENT|REG_MUSTDELIM)
 #define REG_EXEC	(REG_ADVANCE|REG_INVERT|REG_NOTBOL|REG_NOTEOL|REG_STARTEND)
 
 #define REX_NULL		0	/* null string (internal)	*/

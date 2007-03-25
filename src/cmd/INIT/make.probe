@@ -2,7 +2,7 @@
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)make.probe (AT&T Research) 2006-12-22
+# @(#)make.probe (AT&T Research) 2007-03-23
 #
 # C probe for make
 #
@@ -695,6 +695,9 @@ case $cc_dll:$cc_pic:$so:$dynamic:$static in
 			case `strings xxx$dll | sed -e 's,.*[ |],,' | sort -u | egrep -i '^([._](dynamic|dynstr|dynsym))$'` in
 			[012])	continue ;;
 			esac
+			;;
+		*archive*not*stripped*)
+			$executable xxx$dll || continue
 			;;
 		*)	continue
 			;;

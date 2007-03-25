@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1992-2006 AT&T Knowledge Ventures            *
+*           Copyright (c) 1992-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -30,12 +30,17 @@
 #include <wc.h>
 #include <ctype.h>
 
-#if _hdr_wchar
+#if _hdr_wchar && _hdr_wctype
+
 #include <wchar.h>
-#endif
+#include <wctype.h>
+
+#else
 
 #ifndef iswspace
 #define iswspace(x)	isspace(x)
+#endif
+
 #endif
 
 #define endline(c)	(((signed char)-1)<0?(c)<0:(c)==((char)-1))

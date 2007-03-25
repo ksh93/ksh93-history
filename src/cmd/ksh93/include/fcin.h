@@ -55,6 +55,7 @@ extern int		fcfill(void);
 extern int		fcfopen(Sfio_t*);
 extern int		fcclose(void);
 void			fcnotify(void(*)(Sfio_t*,const char*,int));
+extern int		fcmbstate(const char*,int*,int*);
 
 extern Fcin_t		_Fcin;		/* used by macros */
 

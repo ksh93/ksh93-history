@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1985-2006 AT&T Knowledge Ventures            *
+*           Copyright (c) 1985-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -288,6 +288,7 @@ char*
 translate(const char* loc, const char* cmd, const char* cat, const char* msg)
 {
 	register char*	r;
+	char*		t;
 	int		p;
 	int		oerrno;
 	Catalog_t*	cp;
@@ -302,6 +303,8 @@ translate(const char* loc, const char* cmd, const char* cat, const char* msg)
 
 	if (!cmd && !cat)
 		goto done;
+	if (cmd && (t = strrchr(cmd, '/')))
+		cmd = (const char*)(t + 1);
 
 	/*
 	 * initialize the catalogs dictionary

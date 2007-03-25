@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2005 AT&T Corp.                  *
+*           Copyright (c) 1985-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -259,6 +259,24 @@ static Tm_zone_t	zone[] =
  0,	0,	0,	0,		     0
 };
 
-Tm_data_t tm_data = { format, lex, digit, days, sum, leap, zone };
+/*
+ * 2007-03-19 move tm_data from _tm_data_ to (*_tm_datap_)
+ *	      to allow future Tm_data_t growth
+ *            by 2009 _tm_data_ can be static
+ */
+
+#if _BLD_ast && defined(__EXPORT__)
+#define extern		extern __EXPORT__
+#endif
+
+extern Tm_data_t	_tm_data_;
+
+#undef	extern
+
+Tm_data_t _tm_data_ = { format, lex, digit, days, sum, leap, zone };
 
 __EXTERN__(Tm_data_t, _tm_data_);
+
+__EXTERN__(Tm_data_t*, _tm_datap_);
+
+Tm_data_t*		_tm_datap_ = &_tm_data_;

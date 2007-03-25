@@ -195,9 +195,14 @@ extern void	regfree(regex_t*);
 
 /* nonstandard hooks */
 
+#define _REG_cache	1	/* have regcache()			*/
+#define _REG_class	1	/* have regclass()			*/
 #define _REG_collate	1	/* have regcollate(), regclass()	*/
 #define _REG_comb	1	/* have regcomb()			*/
+#define _REG_decomp	1	/* have regdecomp()			*/
+#define _REG_dup	1	/* have regdup()			*/
 #define _REG_fatal	1	/* have regfatal(), regfatalpat()	*/
+#define _REG_ncomp	1	/* have regncomp()			*/
 #define _REG_nexec	1	/* have regnexec()			*/
 #define _REG_rexec	1	/* have regrexec(), regrecord()		*/
 #define _REG_stat	1	/* have regstat()			*/

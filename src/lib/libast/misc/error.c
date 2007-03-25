@@ -44,20 +44,38 @@
 #include <times.h>
 #include <regex.h>
 
+/*
+ * 2007-03-19 move error_info from _error_info_ to (*_error_infop_)
+ *	      to allow future Error_info_t growth
+ *            by 2009 _error_info_ can be static
+ */
+
+#if _BLD_ast && defined(__EXPORT__)
+#define extern		extern __EXPORT__
+#endif
+
+extern Error_info_t	_error_info_;
+
 Error_info_t	_error_info_ =
 {
 	2, exit, write,
 	0,0,0,0,0,0,0,0,
-	0,
-	0,
-	0,0,0,0,0,0,0,
-	0,0,0,0,0,0,0,
-	0,
+	0,			/* version			*/
+	0,			/* auxilliary			*/
+	0,0,0,0,0,0,0,		/* top of old context stack	*/
+	0,0,0,0,0,0,0,		/* old empty context		*/
+	0,			/* time				*/
 	translate,
-	0
+	0			/* catalog			*/
 };
 
+#undef	extern
+
 __EXTERN__(Error_info_t, _error_info_);
+
+__EXTERN__(Error_info_t*, _error_infop_);
+
+Error_info_t*	_error_infop_ = &_error_info_;
 
 /*
  * these should probably be in error_info
@@ -280,11 +298,13 @@ print(register Sfio_t* sp, register char* name, char* delim)
  * print error context FIFO stack
  */
 
+#define CONTEXT(f,p)	(((f)&ERROR_PUSH)?((Error_context_t*)&(p)->context->context):((Error_context_t*)(p)))
+
 static void
 context(register Sfio_t* sp, register Error_context_t* cp)
 {
 	if (cp->context)
-		context(sp, cp->context);
+		context(sp, CONTEXT(cp->flags, cp->context));
 	if (!(cp->flags & ERROR_SILENT))
 	{
 		if (cp->id)
@@ -431,7 +451,7 @@ errorv(const char* id, int level, va_list ap)
 			if (level && !(flags & ERROR_NOID))
 			{
 				if (error_info.context && level > 0)
-					context(stkstd, error_info.context);
+					context(stkstd, CONTEXT(error_info.flags, error_info.context));
 				if (file)
 					print(stkstd, file, (flags & ERROR_LIBRARY) ? " " : ": ");
 				if (flags & (ERROR_CATALOG|ERROR_LIBRARY))
@@ -459,8 +479,8 @@ errorv(const char* id, int level, va_list ap)
 #if !_PACKAGE_astsa
 		if (error_info.time)
 		{
-			if (error_info.time == 1 || (d = times(&us)) < error_info.time)
-				d = error_info.time = times(&us);
+			if ((d = times(&us)) < error_info.time || error_info.time == 1)
+				error_info.time = d;
 			sfprintf(stkstd, " %05lu.%05lu.%05lu ", d - error_info.time, (unsigned long)us.tms_utime, (unsigned long)us.tms_stime);
 		}
 #endif
@@ -593,4 +613,49 @@ errorv(const char* id, int level, va_list ap)
 	}
 	if (level >= ERROR_FATAL)
 		(*error_info.exit)(level - ERROR_FATAL + 1);
+}
+
+/*
+ * error_info context control
+ */
+
+#include <error.h>
+
+static Error_info_t*	freecontext;
+
+Error_info_t*
+errorctx(Error_info_t* p, int op, int flags)
+{
+	if (op & ERROR_POP)
+	{
+		if (!(_error_infop_ = p->context))
+			_error_infop_ = &_error_info_;
+		if (op & ERROR_FREE)
+		{
+			p->context = freecontext;
+			freecontext = p;
+		}
+		p = _error_infop_;
+	}
+	else
+	{
+		if (!p)
+		{
+			if (p = freecontext)
+				freecontext = freecontext->context;
+			else if (!(p = newof(0, Error_info_t, 1, 0)))
+				return 0;
+			*p = *_error_infop_;
+			p->errors = p->flags = p->line = p->warnings = 0;
+			p->catalog = p->file = 0;
+		}
+		if (op & ERROR_PUSH)
+		{
+			p->flags = flags;
+			p->context = _error_infop_;
+			_error_infop_ = p;
+		}
+		p->flags |= ERROR_PUSH;
+	}
+	return p;
 }

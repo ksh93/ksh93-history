@@ -222,6 +222,8 @@ main()
 	printf("#define regcomb		_ast_regcomb\n");
 	printf("#undef	regcomp\n");
 	printf("#define regcomp		_ast_regcomp\n");
+	printf("#undef	regdecomp\n");
+	printf("#define regdecomp	_ast_regdecomp\n");
 	printf("#undef	regdup\n");
 	printf("#define regdup		_ast_regdup\n");
 	printf("#undef	regerror\n");
@@ -501,7 +503,7 @@ main()
 #if _npt_strtoll && !_map_libc && !_std_strtol
 	printf("#ifndef _ISOC99_SOURCE\n");
 #endif
-	printf("extern intmax_t			strtoll(const char*, char**, int);\n");
+	printf("extern _ast_intmax_t		strtoll(const char*, char**, int);\n");
 #if _npt_strtoll && !_map_libc && !_std_strtol
 	printf("#endif\n");
 #endif
@@ -510,7 +512,7 @@ main()
 #if _npt_strtoull && !_map_libc && !_std_strtol
 	printf("#ifndef _ISOC99_SOURCE\n");
 #endif
-	printf("extern uintmax_t		strtoull(const char*, char**, int);\n");
+	printf("extern unsigned _ast_intmax_t	strtoull(const char*, char**, int);\n");
 #if _npt_strtoull && !_map_libc && !_std_strtoul
 	printf("#endif\n");
 #endif

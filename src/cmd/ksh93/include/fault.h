@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2005 AT&T Corp.                  *
+*           Copyright (c) 1982-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -94,7 +94,7 @@ struct checkpt
 	int		mode;
 	struct openlist	*olist;
 #if (ERROR_VERSION >= 20030214L)
-	struct Error_context_s err;
+	Error_context_t err;
 #else
 	struct errorcontext err;
 #endif
@@ -103,7 +103,7 @@ struct checkpt
 #define sh_pushcontext(bp,n)	( (bp)->mode=(n) , (bp)->olist=0,  \
 				  (bp)->topfd=sh.topfd, (bp)->prev=sh.jmplist, \
 				  (bp)->err = *ERROR_CONTEXT_BASE, \
-					sh.jmplist = (sigjmp_buf*)(bp) \
+					sh.jmplist = (sigjmp_buf*)(&(bp)->buff) \
 				)
 #define sh_popcontext(bp)	(sh.jmplist=(bp)->prev, errorpop(&((bp)->err)))
 

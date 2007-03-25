@@ -84,7 +84,6 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	error.c errorf.c errormsg.c errorx.c \
 	localeconv.c setlocale.c translate.c \
 	catopen.c iconv.c lc.c mc.c \
-	liberror.c libevent.c \
 	base64.c recfmt.c recstr.c reclen.c fmtrec.c \
 	fmtbase.c fmtbuf.c fmtclock.c fmtdev.c fmtelapsed.c fmterror.c \
 	fmtesc.c fmtfmt.c fmtfs.c fmtident.c fmtip4.c fmtls.c fmtmatch.c \

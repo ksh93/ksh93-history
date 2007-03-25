@@ -669,6 +669,14 @@ int sh_exec(register const Shnode_t *t, int flags)
 					{
 						if(checkopt(com,'n'))
 							flgs |= NV_NOREF;
+#if SHOPT_TYPEDEF
+						else if(checkopt(com,'T'))
+						{
+							sh.prefix = NV_CLASS;
+							flgs |= NV_TYPE;
+			
+						}
+#endif /* SHOPT_TYPEDEF */
 						if(checkopt(com,'A'))
 							flgs |= NV_ARRAY;
 						else if(checkopt(com,'a'))
@@ -928,10 +936,13 @@ int sh_exec(register const Shnode_t *t, int flags)
 					staklink(slp->slptr);
 					if(nq)
 					{
+						struct Namref	nr;
 						sh.last_table = last_table;
+						memset(&nr,0,sizeof(nr));
+						nr.np = nq;
 						nv_putval(SH_NAMENOD, nv_name(nq), NV_NOFREE);
 						memcpy(&node,L_ARGNOD,sizeof(node));
-						L_ARGNOD->nvalue.np = nq;
+						L_ARGNOD->nvalue.nrp = &nr;
 						L_ARGNOD->nvenv = 0;
 						L_ARGNOD->nvfun = (Namfun_t*)sh.last_table;
 						L_ARGNOD->nvflag = NV_REF|NV_NOFREE;
@@ -1395,7 +1406,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 					nv_putsub(np,NIL(char*),0L);
 				nv_putval(np,cp,0);
 				if(nameref)
-					nv_setref(np);
+					nv_setref(np,(Dt_t*)0,NV_VARNAME);
 				if(trap=sh.st.trap[SH_DEBUGTRAP])
 				{
 					av[0] = (t->tre.tretyp&COMSCAN)?"select":"for";
@@ -1767,7 +1778,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 			np = nv_open(fname,sh_subfuntree(1),NV_NOASSIGN|NV_NOARRAY|NV_VARNAME|NV_NOSCOPE);
 			if(npv)
 			{
-				cp = nv_setdisc(npv,cp+1,np,(Namfun_t*)npv);
+				if(!sh.mktype)
+					cp = nv_setdisc(npv,cp+1,np,(Namfun_t*)npv);
 				nv_close(npv);
 				if(!cp)
 					errormsg(SH_DICT,ERROR_exit(1),e_baddisc,fname);
@@ -2382,9 +2394,12 @@ int sh_fun(Namval_t *np, Namval_t *nq, char *argv[])
 		 * set ${.sh.name} and ${.sh.subscript}
 		 * set _ to reference for ${.sh.name}[$.sh.subscript]
 		 */
+		struct Namref	nr;
+		memset(&nr,0,sizeof(nr));
+		nr.np = nq;
 		nv_putval(SH_NAMENOD, nv_name(nq), NV_NOFREE);
 		memcpy(&node,L_ARGNOD,sizeof(node));
-		L_ARGNOD->nvalue.np = nq;
+		L_ARGNOD->nvalue.nrp = &nr;
 		L_ARGNOD->nvenv = 0;
 		L_ARGNOD->nvfun = (Namfun_t*)sh.last_table;
 		L_ARGNOD->nvflag = NV_REF|NV_NOFREE;

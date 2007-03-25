@@ -268,7 +268,7 @@ extern void 		nv_putv(Namval_t*,const char*,int,Namfun_t*);
 extern int		nv_scan(Dt_t*,void(*)(Namval_t*,void*),void*,int,int);
 extern Namval_t		*nv_scoped(Namval_t*);
 extern char 		*nv_setdisc(Namval_t*,const char*,Namval_t*,Namfun_t*);
-extern void		nv_setref(Namval_t*);
+extern void		nv_setref(Namval_t*, Dt_t*,int);
 extern int		nv_settype(Namval_t*, Namval_t*, int);
 extern void 		nv_setvec(Namval_t*,int,int,char*[]);
 extern void		nv_setvtree(Namval_t*);
@@ -278,6 +278,7 @@ extern void 		nv_unset(Namval_t*);
 extern Namval_t		*nv_search(const char *, Dt_t*, int);
 extern void		nv_unscope(void);
 extern char		*nv_name(Namval_t*);
+extern Namval_t		*nv_type(Namval_t*);
 extern const Namdisc_t	*nv_discfun(int);
 
 #ifdef _DLL

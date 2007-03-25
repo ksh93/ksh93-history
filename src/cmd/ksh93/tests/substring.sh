@@ -496,8 +496,8 @@ fi
 string='foo(d:\nt\box\something)bar'
 expected='d:\nt\box\something'
 [[ ${string/*\(+([!\)])\)*/\1} == "$expected" ]] || err_exit "substring expansion failed '${string/*\(+([!\)])\)*/\1}' returned -- '$expected' expected"
-if	$SHELL -c LC_ALL=en_US.UTF-8 2>/dev/null
-then	LC_ALL=en_US.UTF-8 $SHELL -c 'b1="€€€€w€€€€"; [[ ${b1:4:1} == w ]]' || err_exit 'Multibyte ${var:offset:len} not working correctly'
+if	[[ $($SHELL -c $'export LC_ALL=en_US.UTF-8; print -r "\342\202\254\342\202\254\342\202\254\342\202\254w\342\202\254\342\202\254\342\202\254\342\202\254" | wc -m' 2>/dev/null) == 10 ]]
+then	LC_ALL=en_US.UTF-8 $SHELL -c b1=$'"\342\202\254\342\202\254\342\202\254\342\202\254w\342\202\254\342\202\254\342\202\254\342\202\254"; [[ ${b1:4:1} == w ]]' || err_exit 'Multibyte ${var:offset:len} not working correctly'
 fi
 { $SHELL -c 'unset x;[[ ${SHELL:$x} == $SHELL ]]';} 2> /dev/null || err_exit '${var:$x} fails when x is not set' 
 { $SHELL -c 'x=;[[ ${SHELL:$x} == $SHELL ]]';} 2> /dev/null || err_exit '${var:$x} fails when x is null' 

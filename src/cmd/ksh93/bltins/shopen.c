@@ -17,15 +17,17 @@
 *                  David Korn <dgk@research.att.com>                   *
 *                                                                      *
 ***********************************************************************/
+#pragma prototyped
 
 static const char id[] = "\n@(#)$Id: open (AT&T Research) 1998-07-07 $\0\n";
 
-#include	<sys/stat.h>
-#include	<fcntl.h>
 #include	<shell.h>
 #include	<option.h>
 #include	<stk.h>
 #include	<tm.h>
+#ifndef SH_DICT
+#   define SH_DICT     "libshell"
+#endif
 
 /*
  * time formatting related 
@@ -242,6 +244,7 @@ static Namval_t *fieldcreate(Namval_t *np, const char *name, int flags, Namfun_t
 	if(!(nq=nodes[n]))
 	{
 		nodes[n] = nq = sh_newnode(fp,np);
+		nfp->last = "";
 	}
 	if(name[len]==0)
 		return(nq);
@@ -332,7 +335,7 @@ static char *walk_class(register Namval_t *np, int dlete, struct dcclass *dcp)
 	if(!outfile)
 		return((char*)0);
 	sfputc(out,0);
-	return((char*)out->data);
+	return((char*)out->_data);
 }
 
 static char *get_classval(Namval_t* np, Namfun_t* nfp)
@@ -363,7 +366,7 @@ static const Namdisc_t classdisc =
 	fieldcreate
 };
 
-static mkclass(Namval_t *np, Shclass_t *sp)
+static int mkclass(Namval_t *np, Shclass_t *sp)
 {
 	struct dcclass *tcp = newof(NULL,struct dcclass,1,sp->nelem*sizeof(Namval_t*)); 
 	if(!tcp)
@@ -381,27 +384,27 @@ static mkclass(Namval_t *np, Shclass_t *sp)
  */
 static struct stat *Sp;
 
-static Shfield_t filefield[] =
-{
-	{ "atime", NV_INTEGER|NV_RDONLY, offsetof(struct stat,st_atime), sizeof(Sp->st_atime), make_time},
-	{ "ctime", NV_INTEGER|NV_RDONLY, offsetof(struct stat,st_ctime), sizeof(Sp->st_ctime), make_time},
-	{ "dev",   NV_INTEGER|NV_RDONLY, offsetof(struct stat,st_dev),sizeof(Sp->st_dev)},
-	{ "fd",    NV_INTEGER|NV_RDONLY, sizeof(struct stat), 		sizeof(int)},
-	{ "gid",   NV_INTEGER|NV_RDONLY, offsetof(struct stat,st_gid), sizeof(Sp->st_gid)},
-	{ "ino",   NV_LONG|NV_INTEGER|NV_RDONLY, offsetof(struct stat,st_ino), sizeof(Sp->st_ino)},
-	{ "name",   NV_RDONLY, sizeof(struct stat)+sizeof(int), 	-1 },
-	{ "nlink", NV_INTEGER|NV_RDONLY, offsetof(struct stat,st_nlink), sizeof(Sp->st_nlink)},
-	{ "mode",  NV_INTEGER|NV_RDONLY, offsetof(struct stat,st_mode), sizeof(Sp->st_mode), make_mode},
-	{ "mtime", NV_INTEGER|NV_RDONLY, offsetof(struct stat,st_mtime), sizeof(Sp->st_mtime), make_time},
-	{ "size",  NV_LONG|NV_INTEGER|NV_RDONLY, offsetof(struct stat,st_size), sizeof(Sp->st_size)},
-	{ "uid",   NV_INTEGER|NV_RDONLY, offsetof(struct stat,st_uid), sizeof(Sp->st_uid)}
-};
-
 struct filedata
 {
 	struct stat	statb;
 	int		fd;
 	char		*name;
+};
+
+static Shfield_t filefield[] =
+{
+	{ "atime", NV_INTEGER|NV_RDONLY, offsetof(struct stat,st_atime), sizeof(Sp->st_atime), make_time},
+	{ "ctime", NV_INTEGER|NV_RDONLY, offsetof(struct stat,st_ctime), sizeof(Sp->st_ctime), make_time},
+	{ "dev",   NV_INTEGER|NV_RDONLY, offsetof(struct stat,st_dev),sizeof(Sp->st_dev)},
+	{ "fd",    NV_INTEGER|NV_RDONLY, offsetof(struct filedata,fd), 		sizeof(int)},
+	{ "gid",   NV_INTEGER|NV_RDONLY, offsetof(struct stat,st_gid), sizeof(Sp->st_gid)},
+	{ "ino",   NV_LONG|NV_INTEGER|NV_RDONLY, offsetof(struct stat,st_ino), sizeof(Sp->st_ino)},
+	{ "mode",  NV_INTEGER|NV_RDONLY, offsetof(struct stat,st_mode), sizeof(Sp->st_mode), make_mode},
+	{ "mtime", NV_INTEGER|NV_RDONLY, offsetof(struct stat,st_mtime), sizeof(Sp->st_mtime), make_time},
+	{ "name",   NV_RDONLY, offsetof(struct filedata,name), 	-1 },
+	{ "nlink", NV_INTEGER|NV_RDONLY, offsetof(struct stat,st_nlink), sizeof(Sp->st_nlink)},
+	{ "size",  NV_LONG|NV_INTEGER|NV_RDONLY, offsetof(struct stat,st_size), sizeof(Sp->st_size)},
+	{ "uid",   NV_INTEGER|NV_RDONLY, offsetof(struct stat,st_uid), sizeof(Sp->st_uid)}
 };
 
 static Shclass_t Fileclass =
@@ -414,7 +417,35 @@ static Shclass_t Fileclass =
 
 #define letterbit(bit)	(1<<((bit)-'a'))
 
-static const char sh_optopen[] = "abceirwm:[mode] var file";
+static const char sh_optopen[] =
+"[-?\n@(#)$Id: open (AT&T Labs Research) 2007-03-11 $\n]"
+"[-author?David Korn <dgk@research.att.com>]"
+"[-license?http://www.opensource.org/licenses/cpl1.0.txt]"
+"[+NAME? open - create a shell variable correspnding to a file]"
+"[+DESCRIPTION?\bopen\b creates the compound variable \avar\a correspinding "
+	"to the file given by the pathname \afile\a.  The elements of \avar\a "
+	"are the names of elements in the \astat\a structure with the \bst_\b "
+	"prefix removed.]"
+"[+?If the \b-r\b and/or \b-w\b mode is specified, then \afile\a is opened and "
+	"the variable \avar\a\b.fd\b is the file descriptor.]"
+"[a:append?Open for append.]"
+"[b:binary?Open in binary mode.]"
+"[c:create?Open for create.]"
+"[i:inherit?Open without the close-on-exec bit set.]"
+"[r:read?Open with read access.]"
+"[w:write?Open with write access.]"
+"[m:mode]:[mode:=rwrwrw?Open with access mode \amode\a.]"
+"[x:exclusive?Open exclusive.]"
+"\n"
+"\nvar file\n"
+"\n"
+"[+EXIT STATUS?]{"
+        "[+0?Success.]"
+        "[+>0?An error occurred.]"
+"}"
+"[+SEE ALSO?\bstat\b(2)]"
+;
+
 
 extern int b_open(int argc, char *argv[], void *extra)
 {
@@ -443,7 +474,7 @@ extern int b_open(int argc, char *argv[], void *extra)
 		oflag |= O_TEXT;
 #endif
 		break;
-	    case 'e':
+	    case 'x':
 		oflag |= O_EXCL;
 		break;
 	    case 'c':

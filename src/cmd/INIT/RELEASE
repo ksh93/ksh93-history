@@ -1,3 +1,5 @@
+07-03-23 make.probe: handle file(1) that returns 'archive' for .so
+07-03-22 mamprobe.sh: fix STDED probe for implementations that ignore EOF
 07-03-11 package.sh: add nocopyright and tst => nocopyright
 07-03-11 package.mk: add copyright=0
 07-03-08 C+probe: restore IFS after probe.ini

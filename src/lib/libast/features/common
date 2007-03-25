@@ -502,9 +502,9 @@ cat{
 	#	if _hdr_stdint
 	#	include	<stdint.h>
 	#	else
-	#	if _hdr_inttypes
-	#	include	<inttypes.h>
-	#	endif
+	#		if _hdr_inttypes
+	#		include	<inttypes.h>
+	#		endif
 	#	endif
 	#endif
 	#if !_typ_size_t

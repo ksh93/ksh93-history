@@ -6,6 +6,7 @@ SH = ksh		/* name of the shell program */
 VERSION = 1.1
 LICENSE = since=1982,author=dgk
 CATALOG = libshell
+ERROR_CONTEXT_T == Error_context_t /* workaround until switch from errorpush()/errorpop() => errorctx() */
 
 /*
  * set these variables to 1 to enable, 0 to disable, null to probe
@@ -76,7 +77,7 @@ DOCFILES = sh.memo builtins.mm README RELEASE PROMO.mm COMPATIBILITY \
 
 KSHELL == 1			/* this is ksh */
 
-SH_CMDLIB_DIR == "/opt/ast/bin"	/* SHOPT_CMDLIB_DIR dir prefix */
+SH_CMDLIB_DIR ==		/* SHOPT_CMDLIB_DIR dir prefix */
 SH_DICT ==			/* message catalog */
 DEBUG ==			/* debugging purposes only */
 
@@ -184,8 +185,9 @@ bash_pre_rc.c : bash_pre_rc.sh
 	echo ";" >> $(<)
 end
 
-:: math.tab syscall.s mamexec mamstate.c deparse.c shopen.c $(DOCFILES) \
-	bash.c bash_pre_rc.sh hexpand.c mkservice.c
+:: math.tab syscall.s mamexec mamstate.c deparse.c $(DOCFILES) \
+	bash.c bash_pre_rc.sh hexpand.c mkservice.c \
+	shopen.mk shopen.c
 
 :: shtests \
 	alias.sh append.sh arith.sh arrays.sh attributes.sh basic.sh \

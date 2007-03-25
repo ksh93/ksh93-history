@@ -34,7 +34,7 @@ opt=
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: mamprobe (AT&T Labs Research) 2004-04-04 $
+@(#)$Id: mamprobe (AT&T Labs Research) 2007-03-22 $
 ]
 [+NAME?mamprobe - generate MAM cc probe info]
 [+DESCRIPTION?\bmamprobe\b generates MAM (make abstract machine) \bcc\b(1)
@@ -219,7 +219,11 @@ echo 'setv _hosttype_ ${mam_cc_HOSTTYPE}'
 
 # STD* are standard commands/flags with possible execrate(1)
 
-if	( ed ) < /dev/null > /dev/null 2>&1
+if	(
+ed <<!
+q
+!
+) < /dev/null > /dev/null 2>&1
 then	STDED=ed
 else	STDED=ex
 fi

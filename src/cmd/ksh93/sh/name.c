@@ -2150,13 +2150,12 @@ static char *lastdot(register char *cp)
 }
 
 /*
- * Create a reference node from <np>
+ * Create a reference node from <np> to $np in dictionary <hp> 
  */
-void nv_setref(register Namval_t *np)
+void nv_setref(register Namval_t *np, Dt_t *hp, int flags)
 {
 	register Namval_t *nq, *nr;
 	register char *ep,*cp;
-	Dt_t *hp=sh.var_tree;
 	if(nv_isref(np))
 		return;
 	if(nv_isarray(np))
@@ -2165,15 +2164,9 @@ void nv_setref(register Namval_t *np)
 		errormsg(SH_DICT,ERROR_exit(1),e_noref,nv_name(np));
 	if((ep = lastdot(cp)) && nv_isattr(np,NV_MINIMAL))
 		errormsg(SH_DICT,ERROR_exit(1),e_badref,nv_name(np));
-	if(nv_isattr(np,NV_PARAM))
-	{
-		if(sh.st.prevst && !(hp=(Dt_t*)sh.st.prevst->save_tree))
-		{
-			if(!(hp=dtvnext(sh.var_tree)))
-				hp = sh.var_tree;
-		}
-	}
-	nr= nq = nv_open(cp, hp, NV_VARNAME|NV_NOREF);
+	if(!hp)
+		hp = sh.var_tree;
+	nr= nq = nv_open(cp, hp, flags|NV_NOREF);
 	while(nv_isref(nr))
 	{
 		sh.last_table = nv_reftable(nr);

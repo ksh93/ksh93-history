@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.2 2007-02-14
+info mam static 00000 1994-07-17 make (AT&T Research) 5.2 2007-03-26
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ar

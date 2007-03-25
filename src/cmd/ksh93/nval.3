@@ -87,7 +87,7 @@ const Namdisc_t	*nv_discfun(int \fIwhich\fP);
 int	nv_scan(Dt_t *\fIdict\fP, void(*\fIfn\fP)(Namval_t*,void*), void *\fIdata\fP, int \fImask\fP, int \fIflags\fP);
 Dt_t	nv_dict(Namval_t *\fInp\fP);
 void	nv_setvtree(Namval_t *\fInp\fP);
-void	nv_setref(Namval_t *\fInp\fP);
+void	nv_setref(Namval_t *\fInp\fP, Dt_t *\fIdp\fP, int \fIflags\fP);
 Namval_t	*nv_lastdict(void);
 .ft R
 .fi
@@ -601,7 +601,10 @@ when not in a scan.
 .PP
 The \f5nv_setref()\fP function makes the name-value pair \f5np\fP
 into a reference to the variable whose name is given by
-the value of \f5np\fP.
+the value of \f5np\fP.  The \f5nv_open()\fP open function is
+called with this name, the dictionary given by \f5dp\fP,
+and the \f5flags\fP argument.
+A \f5NULL\fP value causes the shell global variable dictionary to be searched.
 .PP
 The \f5nv_setvtree()\fP function makes the name-value pair \f5np\fP
 into a tree structured variable so that \f5nv_getval()\fP

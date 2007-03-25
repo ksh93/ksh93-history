@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
+*           Copyright (c) 1982-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -757,7 +757,7 @@ char **sh_argbuild(int *nargs, const struct comnod *comptr,int flag)
 #if _pipe_socketpair && !_socketpair_devfd
 #   define sh_pipe	arg_pipe
 /*
- * create a real pipe (not a socked) and print message on failure
+ * create a real pipe (not a socket) and print message on failure
  */
 static int	arg_pipe(register int pv[])
 {

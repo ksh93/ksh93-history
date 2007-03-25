@@ -324,9 +324,27 @@ static unsigned char	map[UCHAR_MAX];
 
 static Optstate_t	state;
 
-Opt_t			opt_info = { 0,0,0,0,0,0,0,{0},{0},0,0,0,{0},{0},&state };
+/*
+ * 2007-03-19 move opt_info from _opt_info_ to (*_opt_data_)
+ *	      to allow future Opt_t growth
+ *            by 2009 _opt_info_ can be static
+ */
+
+#if _BLD_ast && defined(__EXPORT__)
+#define extern		extern __EXPORT__
+#endif
+
+extern Opt_t	_opt_info_;
+
+Opt_t		_opt_info_ = { 0,0,0,0,0,0,0,{0},{0},0,0,0,{0},{0},&state };
+
+#undef	extern
 
 __EXTERN__(Opt_t, _opt_info_);
+
+__EXTERN__(Opt_t*, _opt_infop_);
+
+Opt_t*		_opt_infop_ = &_opt_info_;
 
 #if _BLD_DEBUG
 
@@ -813,8 +831,6 @@ init(register char* s, Optpass_t* p)
 		else
 			p->catalog = ID;
 	}
-	if (!error_info.catalog)
-		error_info.catalog = p->catalog;
 	s = p->oopts;
 	if (*s == ':')
 		s++;
@@ -3740,7 +3756,21 @@ optget(register char** argv, const char* oopts)
 	Optcache_t*	pcache;
 	Optpass_t*	pass;
 
-	opt_info.state = &state; /* not initialized in some dll's! */
+#if !_YOU_FIGURED_OUT_HOW_TO_GET_ALL_DLLS_TO_DO_THIS_
+	/*
+	 * these are not initialized by all dlls!
+	 */
+
+	extern Error_info_t	_error_info_;
+	extern Opt_t		_opt_info_;
+
+	if (!_error_infop_)
+		_error_infop_ = &_error_info_;
+	if (!_opt_infop_)
+		_opt_infop_ = &_opt_info_;
+	if (!opt_info.state)
+		opt_info.state = &state;
+#endif
 	if (!oopts)
 		return 0;
 	opt_info.state->pindex = opt_info.index;
@@ -3801,6 +3831,8 @@ optget(register char** argv, const char* oopts)
 	version = pass->version;
 	if (!(xp = opt_info.state->xp) || (catalog = pass->catalog) && !X(catalog))
 		catalog = 0;
+	else /* if (!error_info.catalog) */
+		error_info.catalog = catalog;
  again:
 	psp = 0;
 

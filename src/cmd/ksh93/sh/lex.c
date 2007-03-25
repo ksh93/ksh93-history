@@ -2003,7 +2003,7 @@ struct argnod *sh_endword(int mode)
 					}
 					*--dp = 0;
 #if ERROR_VERSION >= 20000317L
-					msg = ERROR_translate(0,0,error_info.id,ep);
+					msg = ERROR_translate(0,error_info.id,0,ep);
 #else
 #   if ERROR_VERSION >= 20000101L
 					msg = ERROR_translate(error_info.id,ep);

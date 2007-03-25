@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2005 AT&T Corp.                  *
+*           Copyright (c) 1985-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -33,16 +33,15 @@ errorx(const char* loc, const char* cmd, const char* cat, const char* msg)
 {
 	char*	s;
 
+	error_info.translate = translate; /* 2007-03-19 OLD_Error_info_t workaround */
 	if (ERROR_translating())
 	{
 		if (!loc)
 			loc = (const char*)locales[AST_LC_MESSAGES]->code;
 		if (!cat)
-		{
 			cat = (const char*)error_info.catalog;
-			if (!cmd)
-				cmd = (const char*)error_info.id;
-		}
+		if (!cmd)
+			cmd = (const char*)error_info.id;
 		if (s = (*error_info.translate)(loc, cmd, cat, msg))
 			return s;
 	}

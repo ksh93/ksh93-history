@@ -45,6 +45,7 @@
 struct tdata
 {
 	Shell_t 	*sh;
+	Namval_t	*tp;
 	Sfio_t  	*outfile;
 	char    	*prefix;
 	int     	aflag;
@@ -52,7 +53,6 @@ struct tdata
 	int     	scanmask;
 	Dt_t 		*scanroot;
 	char    	**argnam;
-	Namval_t	*tp;
 };
 
 
@@ -492,7 +492,15 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 			if(ref)
 			{
 				if(tp->aflag=='-')
-					nv_setref(np);
+				{
+					Dt_t *hp=0;
+					if(nv_isattr(np,NV_PARAM) && shp->st.prevst)
+					{
+						if(!(hp=(Dt_t*)shp->st.prevst->save_tree))
+							hp = dtvnext(shp->var_tree);
+					}
+					nv_setref(np,hp,NV_VARNAME);
+				}
 				else
 					nv_unref(np);
 			}
@@ -923,7 +931,7 @@ static void print_scan(Sfio_t *file, int flag, Dt_t *root, int option,struct tda
 	tp->outfile = file;
 	if(flag&NV_INTEGER)
 		tp->scanmask |= (NV_DOUBLE|NV_EXPNOTE);
-	namec = nv_scan(root,nullscan,(void*)0,tp->scanmask,flag);
+	namec = nv_scan(root,nullscan,(void*)tp,tp->scanmask,flag);
 	argv = tp->argnam  = (char**)stakalloc((namec+1)*sizeof(char*));
 	namec = nv_scan(root, pushname, (void*)tp, tp->scanmask, flag);
 	if(mbcoll())
