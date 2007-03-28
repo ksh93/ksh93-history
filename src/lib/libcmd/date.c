@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: date (AT&T Research) 2006-09-08 $\n]"
+"[-?\n@(#)$Id: date (AT&T Research) 2007-03-28 $\n]"
 USAGE_LICENSE
 "[+NAME?date - set/list/convert dates]"
 "[+DESCRIPTION?\bdate\b sets the current date and time (with appropriate"
@@ -169,6 +169,8 @@ USAGE_LICENSE
 "}"
 "[s:show?Show the date without setting the system time.]"
 "[u:utc|gmt|zulu?Output dates in \acoordinated universal time\a (UTC).]"
+"[U:unelapsed?Interpret each argument as \bfmtelapsed\b(3) elapsed"
+"	time and list the \bstrelapsed\b(3) 1/\ascale\a seconds.]#[scale]"
 "[z:list-zones?List the known time zone table and exit. The table columns"
 "	are: country code, standard zone name, savings time zone name,"
 "	minutes west of \bUTC\b, and savings time minutes offset. Blank"
@@ -268,6 +270,7 @@ b_date(int argc, register char** argv, void* context)
 	register char*	s;
 	register Fmt_t*	f;
 	char*		t;
+	unsigned long	u;
 	Time_t		now;
 	Time_t		ts;
 	Time_t		te;
@@ -287,6 +290,7 @@ b_date(int argc, register char** argv, void* context)
 	Tm_zone_t*	listzones = 0;	/* known time zone table	*/
 	int		network = 0;	/* don't set network time	*/
 	int		show = 0;	/* show date and don't set	*/
+	int		unelapsed = 0;	/* fmtelapsed() => strelapsed	*/
 
 	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
 	setlocale(LC_ALL, "");
@@ -341,6 +345,9 @@ b_date(int argc, register char** argv, void* context)
 		case 'u':
 			tm_info.flags |= TM_UTC;
 			continue;
+		case 'U':
+			unelapsed = (int)opt_info.num;
+			continue;
 		case 'z':
 			listzones = tm_data.zone;
 			continue;
@@ -387,6 +394,17 @@ b_date(int argc, register char** argv, void* context)
 				e += ts - te;
 		}
 		sfputr(sfstdout, fmtelapsed((unsigned long)tmxsec(e), 1), '\n');
+		show = 1;
+	}
+	else if (unelapsed)
+	{
+		while (s = *argv++)
+		{
+			u = strelapsed(s, &t, unelapsed);
+			if (*t)
+				error(3, "%s: invalid elapsed time", s);
+			sfprintf(sfstdout, "%lu\n", u);
+		}
 		show = 1;
 	}
 	else if (filetime)

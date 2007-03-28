@@ -1,3 +1,4 @@
+07-03-28 date.c: add --unelepsed=scale, -U: fmtelapsed() => strelapsed()
 07-03-25 wclib.h: iswspace() requires <wctype.h>!
 07-03-11 tty.c: add sysV --line-number, -l
 07-02-26 Makefile: sumlib.o: direct extract from +lsum (vcodex someday)

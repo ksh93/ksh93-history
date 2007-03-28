@@ -564,8 +564,8 @@ match(char* s, char* t, int version, const char* catalog)
 				w = skip(t, ':', '?', 0, 1, 0, 0, version);
 				w = sfprints("%-.*s", w - t, t);
 				x = T(error_info.id, catalog, w);
-				if (x != w)
-					break;
+				if (x == w)
+					continue;
 			}
 			x = T(NiL, ID, t);
 			if (x == t)

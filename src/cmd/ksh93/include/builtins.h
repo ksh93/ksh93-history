@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2005 AT&T Corp.                  *
+*           Copyright (c) 1982-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -38,8 +38,9 @@
 #define SYSTEST		(sh.bltin_cmds+10)
 #define SYSBRACKET	(sh.bltin_cmds+11)
 #define SYSLET		(sh.bltin_cmds+12)
+#define SYSEXPORT	(sh.bltin_cmds+13)
 #if SHOPT_BASH
-#   define SYSLOCAL	(sh.bltin_cmds+13)
+#   define SYSLOCAL	(sh.bltin_cmds+14)
 #else
 #   define SYSLOCAL	0
 #endif

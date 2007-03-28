@@ -2048,7 +2048,7 @@ static char *oldgetenv(const char *string)
 }
 
 /*
- * This version of getenv the hash storage to access environment values
+ * This version of getenv uses the hash storage to access environment values
  */
 char *getenv(const char *name)
 /*@
@@ -2060,6 +2060,8 @@ char *getenv(const char *name)
 		return(oldgetenv(name));
 	if((np = nv_search(name,sh.var_tree,0)) && nv_isattr(np,NV_EXPORT))
 		return(nv_getval(np));
+	if(name[0] == 'P' && name[1] == 'A' && name[2] == 'T' && name[3] == 'H' && name[4] == 0)
+		return(oldgetenv(name));
 	return(0);
 }
 #endif /* _NEXT_SOURCE */

@@ -684,6 +684,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 						if((sh.fn_depth && !sh.prefix) || np==SYSLOCAL)
 							flgs |= NV_NOSCOPE;
 					}
+					else if(np==SYSEXPORT)
+						flgs |= NV_EXPORT;
 					else if(np)
 						flgs = NV_IDENT|NV_ASSIGN;
 #if 0

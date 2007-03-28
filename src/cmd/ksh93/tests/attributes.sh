@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#           Copyright (c) 1982-2006 AT&T Knowledge Ventures            #
+#           Copyright (c) 1982-2007 AT&T Knowledge Ventures            #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                      by AT&T Knowledge Ventures                      #
@@ -202,4 +202,14 @@ else	err_exit 'typeset -usi cannot be used for unsigned short'
 fi
 [[ $($SHELL -c 'unset foo;typeset -Z2 foo; print ${foo:-3}' 2> /dev/null) == 3 ]]  || err_exit  '${foo:-3} not 3 when typeset -Z2 field undefined'
 [[ $($SHELL -c 'unset foo;typeset -Z2 foo; print ${foo:=3}' 2> /dev/null) == 03 ]]  || err_exit  '${foo:=-3} not 3 when typeset -Z2 foo undefined'
+unset foo bar
+unset -f fun
+function fun
+{
+	export foo=hello 
+	typeset -x  bar=world
+} 
+fun
+[[ $(export | grep foo) == 'foo=hello' ]] || err_exit 'export not working in functions'
+[[ $(export | grep bar) ]] && err_exit 'typeset -x not local'
 exit	$((Errors))

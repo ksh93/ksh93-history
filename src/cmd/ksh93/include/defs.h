@@ -361,7 +361,7 @@ extern int 		sh_whence(char**,int);
 #define	sh_onstate(x)	(sh.st.states |= sh_state(x))
 #define	sh_offstate(x)	(sh.st.states &= ~sh_state(x))
 #define	sh_getstate()	(sh.st.states)
-#define	sh_setstate(x)	(sh.st.states = x)
+#define	sh_setstate(x)	(sh.st.states = (x))
 
 #define sh_sigcheck() do{if(sh.trapnote&SH_SIGSET)sh_exit(SH_EXITSIG);} while(0)
 

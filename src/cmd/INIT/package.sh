@@ -45,6 +45,7 @@ admin_db=admin.db
 admin_env=admin.env
 admin_ditto="ditto --checksum --delete --update --verbose"
 admin_ditto_skip="OFFICIAL|core|old|*.core|*.tmp|.nfs*"
+admin_list='PACKAGE.$type.lst'
 admin_ping="ping -c 1 -w 5"
 
 default_url=default.url
@@ -58,7 +59,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2007-03-11 $
+@(#)$Id: package (AT&T Research) 2007-03-28 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -3945,13 +3946,10 @@ copyright()
 
 # run remote make on host
 
-remote() # host background
+remote() # host no-exec-background
 {
 	host=$1
-	case $2 in
-	'')	amp= ;;
-	*)	amp="&" ;;
-	esac
+	background=$2
 	eval name=\$${host}_name user=\$${host}_user snarf=\$${host}_snarf type=\$${host}_type rsh=\$${host}_rsh root=\$${host}_root keep=\$${host}_keep log=\$${host}_log
 	case $keep in
 	1*)	;;
@@ -3966,19 +3964,31 @@ remote() # host background
 		;;
 	esac
 	if	$admin_ping $name >/dev/null 2>&1 || $admin_ping $name >/dev/null 2>&1
-	then	cmd=". ./.profile && cd $root && { test -f lib/package/admin/$admin_env && . ./lib/package/admin/$admin_env || true ;} && touch lib/package/tgz/.package.tim && PATH=\${PWD:-\`pwd\`}/bin:\$PATH \${SHELL:-/bin/sh} -c 'package $admin_args PACKAGEROOT=\${PWD:-\`pwd\`} HOSTTYPE=$type VPATH='"
+	then	cmd=". ./.profile"
+		case $root in
+		.)	root=
+			;;
+		*)	cmd="$cmd && cd $root"
+			root=$root/
+			;;
+		esac
+		cmd="$cmd && { test -f lib/package/admin/$admin_env && . ./lib/package/admin/$admin_env || true ;} && PATH=\${PWD:-\`pwd\`}/bin:\$PATH \${SHELL:-/bin/sh} -c 'package $admin_args PACKAGEROOT=\${PWD:-\`pwd\`} HOSTTYPE=$type VPATH='"
 		case $admin_binary in
 		'')	snarf= ;;
 		esac
 		case $snarf in
-		'')	$exec $rsh $user$name "$cmd" $amp
+		'')	$exec $rsh $user$name "$cmd" $background
 			;;
 		*?)	rcp=`echo $rsh | sed 's/\(.\).*/\1/'`cp
-			cmd="$cmd && cd lib/package/tgz && tw -e 'type==REG&&name!=\"*[mt]\"&&mtime>\".package.tim\".mtime' > .package.lst"
-			$exec $rsh $user$name "$cmd" $amp
-			for f in `$rsh $user$name "cat $root/lib/package/tgz/.package.lst 2>/dev/null || echo TGZ"`
-			do	$exec $rcp $user$name:$root/lib/package/tgz/$f $PACKAGESRC/tgz
-			done
+			case $background in
+			?*)	$exec "{" ;;
+			esac
+			$exec $rsh $user$name "$cmd"
+			eval lst=$admin_list
+			$exec $rcp `$rsh $user$name "cat ${root}lib/package/tgz/$lst || echo ERROR" 2>/dev/null | sed "s,^,$user$name:,"` $PACKAGESRC/tgz
+			case $background in
+			?*)	$exec "} $background" ;;
+			esac
 			;;
 		esac
 	else	echo "$command: $name: down" >&2
@@ -4059,6 +4069,7 @@ admin)	while	test ! -f $admin_db
 				case $f in
 				*[!0123456789]*)	continue ;;
 				esac
+				;;
 			esac
 			rsh=rsh
 			case $host in
@@ -4178,17 +4189,12 @@ admin)	while	test ! -f $admin_db
 				log=$name
 				;;
 			esac
-			case $admin_binary in
-			1)	remote_hosts="$remote_hosts $host"
+			case $sync in
+			$host)	remote_hosts="$remote_hosts $host"
 				;;
-			*)	case $sync in
-				$host)	remote_hosts="$remote_hosts $host"
-					;;
-				?*)	eval ${sync}_share=\"\$${sync}_share $host\"
-					;;
-				'')	local_hosts="$local_hosts $host"
-					;;
-				esac
+			?*)	eval ${sync}_share=\"\$${sync}_share $host\"
+				;;
+			'')	local_hosts="$local_hosts $host"
 				;;
 			esac
 			eval ${host}_name='$'name ${host}_type='$'type ${host}_user='$'user ${host}_sync='$'sync ${host}_snarf='$'sync ${host}_rsh='$'rsh ${host}_root='$'root ${host}_keep='$'keep ${host}_log='$'log
@@ -4197,10 +4203,73 @@ admin)	while	test ! -f $admin_db
 	done
 	: "admin_binary :" $admin_binary
 	: "admin_args   :" $admin_args
-	: "admin_on     :" $admin_on
+	: "admin_on     :" "$admin_on"
 	: "local_hosts  :" $local_hosts
 	: "local_types  :" $local_types
 	: "remote_hosts :" $remote_hosts
+	: "sync_hosts   :" $sync_hosts
+	: "sync_share   :" $sync_share
+	case $admin_binary in
+	1)	admin_bin_types=
+		admin_bin_main=
+		for main in $local_hosts $remote_hosts
+		do	eval share=\$${main}_share keep=\$${main}_keep
+			case $keep in
+			0*)	continue ;;
+			esac
+			for host in $main $share
+			do	case " $admin_bin_hosts " in
+				*" $host "*)
+					continue
+					;;
+				esac
+				eval type=\$${host}_type
+				case " $admin_bin_types " in
+				*" $type "*)
+					continue
+					;;
+				esac
+				case " $types " in
+				"  ")	;;
+				*" $type "*)
+					;;
+				*)	continue
+					;;
+				esac
+				admin_bin_hosts="$admin_bin_hosts $host"
+				admin_bin_types="$admin_bin_types $type"
+				case " $admin_bin_hosts " in
+				*" $main "*)
+					;;
+				*)	case " $admin_bin_main " in
+					*" $main "*)
+						;;
+					*)	admin_bin_main="$admin_bin_main $main"
+						;;
+					esac
+					;;
+				esac
+			done
+		done
+		local=
+		remote=
+		for host in $admin_bin_main $admin_bin_hosts
+		do	case " $local_hosts " in
+			*" $host "*)
+				local="$local $host"
+				;;
+			*)	case " $remote_hosts " in
+				*" $host "*)
+					remote="$remote $host"
+					;;
+				esac
+				;;
+			esac
+		done
+		local_hosts=$local
+		remote_hosts=$remote
+		;;
+	esac
 	for host in $remote_hosts
 	do	eval type=\$${host}_type
 		case " $local_types " in
@@ -4241,21 +4310,27 @@ admin)	while	test ! -f $admin_db
 				;;
 			esac
 			;;
-		*)	case $admin_binary:$snarf in
-			1:)	continue ;;
-			esac
-			;;
 		esac
-		main=$host
 		eval log='$'${host}_log
+		main=
 		share_keep=
 		for i in $host $share
 		do	eval n='$'${i}_name t='$'${i}_type q='$'${i}_sync s='$'${i}_snarf l='$'${i}_log
-			case $admin_binary:$s:$q in
-			1::?*)	continue ;;
+			case $admin_binary in
+			1)	case $s:$q in
+				:?*)	continue ;;
+				esac
+				case " $admin_bin_hosts " in
+				*" $i "*)
+					;;
+				*)	continue
+					;;
+				esac
+				eval ${i}_snarf=${i}
+				;;
 			esac
-			case $i in
-			$host)	;;
+			case $main in
+			'')	main=$i ;;
 			*)	share_keep="$share_keep $i" ;;
 			esac
 			echo package "$admin_args" "[ $n $t ]"
@@ -4264,6 +4339,7 @@ admin)	while	test ! -f $admin_db
 			*)	$exec ": > $admin_log/$l" ;;
 			esac
 		done
+		host=$main
 		share=$share_keep
 		case $exec in
 		'')	{
@@ -4291,7 +4367,7 @@ admin)	while	test ! -f $admin_db
 						;;
 					1)	remote $1
 						;;
-					*)	remote $1 1 &
+					*)	remote $1 &
 						pids="$pids $!"
 						;;
 					esac
@@ -4328,7 +4404,7 @@ admin)	while	test ! -f $admin_db
 						;;
 					1)	remote $1
 						;;
-					*)	remote $1 1
+					*)	remote $1 "&"
 						pids=1
 						;;
 					esac
@@ -6614,18 +6690,23 @@ verify)	cd $PACKAGEROOT
 write)	set '' $target
 	shift
 	action=
+	list=
 	qualifier=
 	while	:
 	do	case $1 in
 		base|closure|delta|exp|lcl|pkg|rpm|tgz)
 			qualifier="$qualifier $1"
 			;;
-		binary|runtime|source)
-			action=$1
+		binary)	action=$1
+			type=$HOSTTYPE
+			eval list=$PACKAGESRC/tgz/$admin_list
 			;;
 		cyg)	qualifier="$qualifier $1"
 			assign="$assign closure=1"
 			only=1
+			;;
+		runtime|source)
+			action=$1
 			;;
 		tst)	qualifier="$qualifier tgz"
 			assign="$assign copyright=0 'PACKAGEDIR=\$(PACKAGESRC)/tst'"
@@ -6663,6 +6744,9 @@ write)	set '' $target
 	# all work under $PACKAGEBIN
 
 	$make cd $PACKAGEBIN
+	case $list in
+	?*)	$exec rm -f $list ;;
+	esac
 
 	# go for it
 

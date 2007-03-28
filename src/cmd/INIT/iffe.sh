@@ -30,7 +30,7 @@ case $-:$BASH_VERSION in
 esac
 
 command=iffe
-version=2007-01-01 # update in USAGE too #
+version=2007-03-28 # update in USAGE too #
 
 compile() # $cc ...
 {
@@ -602,7 +602,7 @@ set=
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: iffe (AT&T Research) 2007-01-01 $
+@(#)$Id: iffe (AT&T Research) 2007-03-28 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?iffe - C compilation environment feature probe]
@@ -3787,7 +3787,8 @@ static int ((*i)())=foo;int main(){return(i==0);}
 					?*)	continue ;;
 					esac
 					is mac $v
-					echo "$pre
+					echo "$tst
+$pre
 $inc
 #ifdef $v
 '$m:$v'

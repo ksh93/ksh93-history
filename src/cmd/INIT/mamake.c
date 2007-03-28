@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1990-2007 AT&T Knowledge Ventures            *
+*                     Copyright (c) 1994-2007 AT&T                     *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                      by AT&T Knowledge Ventures                      *
+*                               by AT&T                                *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -323,7 +323,7 @@ report(int level, char* text, char* item, unsigned long stamp)
 			fprintf(stderr, "%s: ", item);
 		fprintf(stderr, "%s", text);
 		if (stamp && state.debug <= -2)
-			fprintf(stderr, " %10u", stamp);
+			fprintf(stderr, " %10lu", stamp);
 		fprintf(stderr, "\n");
 		if (level > 2)
 			exit(level - 2);
@@ -566,7 +566,7 @@ search(register Dict_t* dict, char* name, void* value)
  */
 
 static int
-apply(Dict_t* dict, Dict_item_t* item, int (*func)(Dict_item_t*, void* handle), void* handle)
+apply(Dict_t* dict, Dict_item_t* item, int (*func)(Dict_item_t*, void*), void* handle)
 {
 	register Dict_item_t*	right;
 
@@ -586,7 +586,7 @@ apply(Dict_t* dict, Dict_item_t* item, int (*func)(Dict_item_t*, void* handle), 
  */
 
 static int
-walk(Dict_t* dict, int (*func)(Dict_item_t*, void* handle), void* handle)
+walk(Dict_t* dict, int (*func)(Dict_item_t*, void*), void* handle)
 {
 	return dict->root ? apply(dict, dict->root, func, handle) : 0;
 }
@@ -1407,12 +1407,6 @@ attributes(register Rule_t* r, register char* s)
 		}
 	}
 }
-
-typedef struct Req_s
-{
-	int		hit;
-	char*		req;
-} Req_t;
 
 /*
  * define ${mam_libX} for library reference lib

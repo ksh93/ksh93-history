@@ -67,6 +67,7 @@ const struct shtable3 shtab_builtins[] =
 	"test",		NV_BLTIN|BLT_ENV|NV_NOFREE,	bltin(test),
 	"[",		NV_BLTIN|BLT_ENV,		bltin(test),
 	"let",		NV_BLTIN|BLT_ENV,		bltin(let),
+	"export",	NV_BLTIN|BLT_SPC|BLT_DCL,	bltin(readonly),
 #if SHOPT_BASH
 	"local",	NV_BLTIN|BLT_ENV|BLT_SPC|BLT_DCL,bltin(typeset),
 #endif
@@ -77,7 +78,6 @@ const struct shtable3 shtab_builtins[] =
 	"alias",	NV_BLTIN|BLT_SPC|BLT_DCL,	bltin(alias),
 	"hash",		NV_BLTIN|BLT_SPC|BLT_DCL,	bltin(alias),
 	"exit",		NV_BLTIN|BLT_ENV|BLT_SPC,	bltin(return),
-	"export",	NV_BLTIN|BLT_SPC|BLT_DCL,	bltin(readonly),
 	"eval",		NV_BLTIN|BLT_ENV|BLT_SPC|BLT_EXIT,bltin(eval),
 	"fc",		NV_BLTIN|BLT_ENV|BLT_EXIT,	bltin(hist),
 	"hist",		NV_BLTIN|BLT_ENV|BLT_EXIT,	bltin(hist),
