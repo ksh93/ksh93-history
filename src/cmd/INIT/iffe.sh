@@ -30,7 +30,7 @@ case $-:$BASH_VERSION in
 esac
 
 command=iffe
-version=2007-03-28 # update in USAGE too #
+version=2007-04-04 # update in USAGE too #
 
 compile() # $cc ...
 {
@@ -602,7 +602,7 @@ set=
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: iffe (AT&T Research) 2007-03-28 $
+@(#)$Id: iffe (AT&T Research) 2007-04-04 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?iffe - C compilation environment feature probe]
@@ -2135,7 +2135,8 @@ $usr
 #ifndef $x
 (
 #endif
-int x;"
+int x;
+"
 			if	compile $cc -c $tmp.c <&$nullin >&$nullout
 			then	success -
 			else	failure -
@@ -2251,7 +2252,8 @@ extern $t	$x$v;
 					copy $tmp.c "$std
 $usr
 #include <$x>
-int x;"
+int x;
+"
 					if	compile $cc -c $tmp.c <&$nullin >&$nullout
 					then	success -
 						gothdr="$gothdr + $x"
@@ -3098,7 +3100,8 @@ $ext"
 $EXT
 $usr
 $inc
-$src"
+$src
+"
 					V=1
 					e=0
 					is tst "${note:-$run}"
@@ -3267,9 +3270,11 @@ int main(){char* i = (char*)&$statictest; return ((unsigned int)i)^0xaaaa;}
 						if	compile $cc -o $tmp.exe $tmp.c <&$nullin >&$nullout && $executable $tmp.exe
 						then	case $static in
 							.)	static=
-								echo "$tst
+								copy $tmp.c "
+$tst
 $ext
-int main(){printf("hello");return(0);}" > $tmp.c
+int main(){printf("hello");return(0);}
+"
 								rm -f $tmp.exe
 								if	compile $cc -c $tmp.c <&$nullin >&$nullout &&
 									compile $cc -o $tmp.exe $tmp.o <&$nullin >&$nullout 2>$tmp.e &&
@@ -3395,6 +3400,8 @@ int main(){char* i = (char*) _REF_ $v; return ((unsigned int)i)^0xaaaa;}"
 					esac
 					is dfn $v
 					echo "$pre
+$tst
+$ext
 $inc
 #ifdef $v
 <<\"#ifndef $v\">>
@@ -3502,6 +3509,8 @@ $inc
 						eval _$m=1
 						is $o $f
 						echo "$pre
+$tst
+$ext
 $inc
 #include <$f.h>" > $tmp.c
 						case $f in
@@ -3515,6 +3524,8 @@ $inc
 								;;
 							*/*/*)	k=`echo "$i" | sed 's,.*/\([^/]*/[^/]*\)$,../\1,'`
 								echo "$pre
+$tst
+$ext
 $inc
 #include <$k>" > $tmp.c
 								if	compile $cc -E $tmp.c <&$nullin >$tmp.i
@@ -3527,6 +3538,8 @@ $inc
 								fi
 								;;
 							*)	echo "$pre
+$tst
+$ext
 $inc
 #include <../include/$f.h>" > $tmp.c
 								if	compile $cc -E $tmp.c <&$nullin >&$nullout
@@ -3599,7 +3612,11 @@ $inc
 						*" + $x "*)
 							success +
 							;;
-						*)	echo "${allinc}#include <$x>" > $tmp.c
+						*)	echo "
+$tst
+$ext
+$allinc
+#include <$x>" > $tmp.c
 							is hdr $x
 							if	compile $cc -E $tmp.c <&$nullin >&$nullout
 							then	success
@@ -3648,6 +3665,8 @@ $inc
 					while	:
 					do	is $o $w
 						echo "$pre
+$tst
+$ext
 int f(){int $w = 1;return($w);}" > $tmp.c
 						if	compile $cc -c $tmp.c <&$nullin >&$nullout
 						then	failure
@@ -3787,7 +3806,9 @@ static int ((*i)())=foo;int main(){return(i==0);}
 					?*)	continue ;;
 					esac
 					is mac $v
-					echo "$tst
+					echo "
+$tst
+$ext
 $pre
 $inc
 #ifdef $v
@@ -3801,6 +3822,8 @@ $inc
 						case $i in
 						0|1)	;;
 						*)	echo "$pre
+$tst
+$ext
 $inc
 static $p i;
 int n = sizeof(i);" > $tmp.c
@@ -3821,6 +3844,8 @@ int n = sizeof(i);" > $tmp.c
 						esac
 						is mem $v "$p"
 						echo "$pre
+$tst
+$ext
 $inc
 static $p i;
 int n = sizeof(i.$v);" > $tmp.c
@@ -3832,6 +3857,8 @@ int n = sizeof(i.$v);" > $tmp.c
 						case $i in
 						0|1)	;;
 						*)	echo "$pre
+$tst
+$ext
 $inc
 static $p i;
 int n = sizeof(i);" > $tmp.c
@@ -3852,11 +3879,15 @@ int n = sizeof(i);" > $tmp.c
 						esac
 						is nos "$p"
 						echo "$pre
+$tst
+$ext
 $inc
 static $p i;
 int n = sizeof(i);" > $tmp.c
 						if	compile $cc -c $tmp.c <&$nullin >&$nullout
 						then	echo "$pre
+$tst
+$ext
 $inc
 static $p i;
 unsigned long f() { return (unsigned long)i; }" > $tmp.c
@@ -4021,9 +4052,9 @@ _END_EXTERNS_
 					case $a in
 					*.c)	rm -f $tmp.exe
 						{
-						echo "$std
-$tst
+						echo "$tst
 $ext
+$std
 $usr
 $inc"
 						cat $a
@@ -4115,6 +4146,8 @@ int main() {
 					*)	x=$test ;;
 					esac
 					echo "$pre
+$tst
+$ext
 $inc
 '=' $x '='" > $tmp.c
 					compile $cc -E $tmp.c <&$nullin \
@@ -4155,6 +4188,8 @@ nam &/g' \
 					case $p:$v in
 					long:*|*:*[_0123456789]int[_0123456789]*)
 						echo "$pre
+$tst
+$ext
 $inc
 static $x$v i;
 $x$v f() {
@@ -4167,6 +4202,8 @@ $x$v v; i = 1; v = i;"
 						echo "return v; }"
 						;;
 					*)	echo "$pre
+$tst
+$ext
 $inc
 struct xxx { $x$v mem; };
 static struct xxx v;

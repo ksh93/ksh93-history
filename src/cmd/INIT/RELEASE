@@ -1,3 +1,4 @@
+07-04-04 iffe.sh: prepend ${tst}${ext} to each .c probe
 07-03-28 package.sh: fix binary tgz architecture type duplication
 07-03-28 package.mk: add binary write PACKAGE.$HOSTTYPE.lst
 07-03-28 iffe.sh: add -F header to mac test

@@ -906,6 +906,8 @@ Shell_t *sh_init(register int argc,register char *argv[], void(*userinit)(int))
 		sh.lim.arg_max = ARG_MAX;
 	if(sh.lim.child_max <=0)
 		sh.lim.child_max = CHILD_MAX;
+	if(sh.lim.child_max >1000)
+		sh.lim.child_max = 1000;
 	if(sh.lim.open_max <0)
 		sh.lim.open_max = OPEN_MAX;
 	if(sh.lim.open_max > (SHRT_MAX-2))
