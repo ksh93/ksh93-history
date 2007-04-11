@@ -208,6 +208,7 @@ function fun
 {
 	export foo=hello 
 	typeset -x  bar=world
+	[[ $foo == hello ]] || err_exit 'export scoping problem in function'
 } 
 fun
 [[ $(export | grep foo) == 'foo=hello' ]] || err_exit 'export not working in functions'

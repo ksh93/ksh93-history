@@ -118,7 +118,11 @@ int    b_readonly(int argc,char *argv[],void *extra)
 	}
 #endif
 	else
+	{
 		flag = (NV_ASSIGN|NV_EXPORT|NV_IDENT);
+		if(!sh.prefix)
+			sh.prefix = "";
+	}
 	return(b_common(argv,flag,tdata.sh->var_tree, &tdata));
 }
 
@@ -344,6 +348,8 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 	Shell_t *shp =tp->sh;
 	if(!sh.prefix)
 		nvflags |= NV_NOSCOPE;
+	else if(*sh.prefix==0)
+		sh.prefix = 0;
 	flag &= ~(NV_NOARRAY|NV_NOSCOPE|NV_VARNAME|NV_IDENT);
 	if(argv[1])
 	{
@@ -698,6 +704,7 @@ int	b_builtin(int argc,char *argv[],void *extra)
 int    b_set(int argc,register char *argv[],void *extra)
 {
 	struct tdata tdata;
+	memset(&tdata,0,sizeof(tdata));
 	tdata.sh = (Shell_t*)extra;
 	tdata.prefix=0;
 	if(argv[1])

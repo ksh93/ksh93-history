@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
+*           Copyright (c) 1982-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -64,7 +64,7 @@ struct process
 	pid_t		p_fgrp;		/* process group when stopped */
 	short		p_job;		/* job number of process */
 	unsigned short	p_exit;		/* exit value or signal number */
-	unsigned char	p_flag;		/* flags - see below */
+	unsigned short	p_flag;		/* flags - see below */
 	int		p_env;		/* subshell environment number */
 #ifdef JOBS
 	off_t		p_name;		/* history file offset for command */

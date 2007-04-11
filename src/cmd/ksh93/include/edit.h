@@ -60,7 +60,7 @@
 
 #define TABSIZE	8
 #define PRSIZE	160
-#define MAXLINE	502		/* longest edit line permitted */
+#define MAXLINE	1024		/* longest edit line permitted */
 
 typedef struct _edit_pos
 {
@@ -154,7 +154,7 @@ typedef struct edit
 } Edit_t;
 
 #undef MAXWINDOW
-#define MAXWINDOW	160	/* maximum width window */
+#define MAXWINDOW	300	/* maximum width window */
 #define FAST	2
 #define SLOW	1
 #define ESC	cntl('[')

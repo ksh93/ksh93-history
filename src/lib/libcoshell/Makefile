@@ -4,6 +4,8 @@
 
 :PACKAGE: ast
 
+CCFLAGS = $(CC.OPTIMIZE) $(CC.PIC) /* pic allows archive to be pulled into other dlls */
+
 LICENSE = since=1990,author=gsf
 
 coshell 1.0 :LIBRARY: RELEASE coshell.3 coshell.h colib.h \

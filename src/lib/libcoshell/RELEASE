@@ -1,3 +1,4 @@
+07-04-09 Makefile: $(CC.PIC) to allow archive to be pulled into other dlls
 06-08-22 coshell.h: procrun => coprocrun, system => cosystem
 06-08-09 coshell.h: export CO_ENV_MSGFD for COSHELL=coshell
 06-08-02 coexec.c: Cojob_t.flags&CO_SERVICE for service requests

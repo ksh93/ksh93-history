@@ -59,19 +59,14 @@ struct jobsave
 	unsigned short	exitval;
 };
 
-static struct jobsave *job_savelist;
-
 /*
  * return next on link list of jobsave free list
  */
 static struct jobsave *jobsave_create(pid_t pid)
 {
-	register struct jobsave *jp = job_savelist;
-	if(jp)
-	{
-		job_savelist = jp->next;
+	struct jobsave *jp;
+	if(jp = newof(0,struct jobsave,1,0))
 		jp->pid = pid;
-	}
 	return(jp);
 }
 
@@ -111,6 +106,7 @@ struct back_save
 #define P_DONE		040
 #define P_COREDUMP	0100
 #define P_DISOWN	0200
+#define P_FG		0400
 
 static int		job_chksave(pid_t);
 static struct process	*job_bypid(pid_t);
@@ -371,12 +367,6 @@ static void job_waitsafe(int sig)
 void job_init(int lflag)
 {
 	register int i,ntry=0;
-	struct jobsave *jp;
-	/* create a jobsave freelist */
-	job_savelist = (struct jobsave*)malloc(sh.lim.child_max*sizeof(struct jobsave));
-	for(jp=job_savelist,i=1; i < sh.lim.child_max; i++, jp++)
-		jp->next = (jp+1);
-	jp->next = 0;
 	job.fd = JOBTTY;
 	signal(SIGCHLD,job_waitsafe);
 #   if defined(SIGCLD) && (SIGCLD!=SIGCHLD)
@@ -612,8 +602,9 @@ static void job_reset(register struct process *pw)
 	if(tcsetpgrp(job.fd,sh.pid) !=0)
 		return;
 #endif	/* SIGTSTP */
-	/* force the following tty_get() to do a tcgetattr() */
-	tty_set(-1, 0, NIL(struct termios*));
+	/* force the following tty_get() to do a tcgetattr() unless fg */
+	if(!(pw->p_flag&P_FG))
+		tty_set(-1, 0, NIL(struct termios*));
 	if(pw && (pw->p_flag&P_SIGNALLED) && pw->p_exit!=SIGHUP)
 	{
 		if(tty_get(job.fd,&pw->p_stty) == 0)
@@ -1000,8 +991,7 @@ void	job_clear(void)
 	for(jp=bck.list; jp;jp=jpnext)
 	{
 		jpnext = jp->next;
-		jp->next = job_savelist;
-		job_savelist = jp;
+		free((void*)jp);
 	}
 	bck.list = 0;
 	job.pwlist = NIL(struct process*);
@@ -1382,6 +1372,7 @@ int job_switch(register struct process *pw,int bgflag)
 			return(1);
 		}
 		job.waitall = 1;
+		pw->p_flag |= P_FG;
 		job_wait(pw->p_pid);
 		job.waitall = 0;
 	}
@@ -1603,8 +1594,7 @@ static int job_chksave(register pid_t pid)
 		else
 			bck.list = jp->next;
 		bck.count--;
-		jp->next = job_savelist; 
-		job_savelist = jp;
+		free((void*)jp);
 	}
 	return(r);
 }
@@ -1638,8 +1628,7 @@ void job_subrestore(void* ptr)
 	for(jp=bck.list,bck= *bp; jp; jp=jpnext)
 	{
 		jpnext = jp->next;
-		jp->next = job_savelist;
-		job_savelist = jp;
+		free((void*)jp);
 	}
 	free(ptr);
 	job_unlock();

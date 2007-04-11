@@ -269,6 +269,7 @@ int sh_main(int ac, char *av[], void (*userinit)(int))
 				if(strmatch(name,e_devfdNN))
 				{
 					char *cp;
+					int type;
 					fdin = (int)strtol(name+8, (char**)0, 10);
 					if(fstat(fdin,&statb)<0)
 						errormsg(SH_DICT,ERROR_system(1),e_open,error_info.id);
@@ -277,10 +278,9 @@ int sh_main(int ac, char *av[], void (*userinit)(int))
 					 * try to undo effect of solaris 2.5+
 					 * change for argv for setuid scripts
 					 */
-					cp = path_basename(*av);
-					if(sh_type(cp) && (!(name=nv_getval(L_ARGNOD)) || !sh_type(cp = path_basename(name))))
+					if(((type = sh_type(cp = av[0])) & SH_TYPE_SH) && (!(name = nv_getval(L_ARGNOD)) || !((type = sh_type(cp = name)) & SH_TYPE_SH)))
 					{
-						av[0] = cp;
+						av[0] = (type & SH_TYPE_LOGIN) ? cp : path_basename(cp);
 						/*  exec to change $0 for ps */
 						execv(pathshell(),av);
 						/* exec fails */

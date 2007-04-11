@@ -791,7 +791,11 @@ int sh_type(register const char *path)
 	register int		t = 0;
 	
 	if (s = (const char*)strrchr(path, '/'))
+	{
+		if (*path == '-')
+			t |= SH_TYPE_LOGIN;
 		s++;
+	}
 	else
 		s = path;
 	if (*s == '-')
@@ -906,8 +910,6 @@ Shell_t *sh_init(register int argc,register char *argv[], void(*userinit)(int))
 		sh.lim.arg_max = ARG_MAX;
 	if(sh.lim.child_max <=0)
 		sh.lim.child_max = CHILD_MAX;
-	if(sh.lim.child_max >1000)
-		sh.lim.child_max = 1000;
 	if(sh.lim.open_max <0)
 		sh.lim.open_max = OPEN_MAX;
 	if(sh.lim.open_max > (SHRT_MAX-2))
@@ -947,7 +949,7 @@ Shell_t *sh_init(register int argc,register char *argv[], void(*userinit)(int))
 			buff[n] = 0;
 			sh.shpath = strdup(buff);
 		}
-		else if((cp && (last=strrchr(cp,'/')) && sh_type(last+1)) || (argc>0 && (last=strrchr(cp= *argv,'/'))))
+		else if((cp && (sh_type(cp)&SH_TYPE_SH)) || (argc>0 && strchr(cp= *argv,'/')))
 		{
 			if(*cp=='/')
 				sh.shpath = strdup(cp);
@@ -1417,12 +1419,8 @@ static void env_init(Shell_t *shp)
 		nv_offattr(PWDNOD,NV_TAGGED);
 		path_pwd(0);
 	}
-	if(cp = nv_getval(SHELLNOD))
-	{
-		cp = path_basename(cp);
-		if(sh_type(cp)&SH_TYPE_RESTRICTED)
-			sh_onoption(SH_RESTRICTED); /* restricted shell */
-	}
+	if((cp = nv_getval(SHELLNOD)) && (sh_type(cp)&SH_TYPE_RESTRICTED))
+		sh_onoption(SH_RESTRICTED); /* restricted shell */
 	return;
 }
 
