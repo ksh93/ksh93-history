@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2005 AT&T Corp.                  *
+*           Copyright (c) 1985-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -56,7 +56,7 @@ tmzone(register const char* name, char** end, const char* type, int* dst)
 	static char		off[16];
 
 	tmset(tm_info.zone);
-	if ((*name == '+' || *name == '-') && (fixed.west = tmgoff(name, &e, 0)) && !*e)
+	if ((*name == '+' || *name == '-') && (fixed.west = tmgoff(name, &e, TM_LOCALZONE)) != TM_LOCALZONE && !*e)
 	{
 		fixed.standard = fixed.daylight = strncpy(off, name, sizeof(off) - 1);
 		if (end)

@@ -124,7 +124,7 @@ va_list	args;		/* arg list if !argf	*/
 	int		argp, argn;	/* arg position and number	*/
 
 #define SLACK		1024
-	char		buf[SF_MAXDIGITS+SLACK], tmp[SF_MAXDIGITS], data[SF_GRAIN];
+	char		buf[SF_MAXDIGITS+SLACK], tmp[SF_MAXDIGITS+1], data[SF_GRAIN];
 	int		decimal = 0, thousand = 0;
 
 #if _has_multibyte
@@ -1099,7 +1099,7 @@ loop_fmt :
 		case 'g': case 'G': /* these ultimately become %e or %f */
 		case 'a': case 'A':
 		case 'e': case 'E':
-		case 'f':
+		case 'f': case 'F':
 #if !_ast_fltmax_double
 			if(size == sizeof(Sfdouble_t) )
 			{	v = SFFMT_LDOUBLE;
@@ -1111,28 +1111,28 @@ loop_fmt :
 				dval = argv.d;
 			}
 
-			if(fmt == 'e' || fmt == 'E')
-			{	n = (precis = precis < 0 ? FPRECIS : precis)+1;
-				v |= SFFMT_EFORMAT;
-				ep = _sfcvt(dval,tmp,sizeof(tmp), min(n,SF_FDIGITS),
+			if(fmt == 'e' || fmt == 'E' && (v |= SFFMT_UPPER))
+			{	v |= SFFMT_EFORMAT;
+				n = (precis = precis < 0 ? FPRECIS : precis)+1;
+				ep = _sfcvt(dval,tmp+1,sizeof(tmp)-1, min(n,SF_FDIGITS),
 					    &decpt, &sign, &n_s, v);
 				goto e_format;
 			}
-			else if(fmt == 'f' || fmt == 'F')
+			else if(fmt == 'f' || fmt == 'F' && (v |= SFFMT_UPPER))
 			{	precis = precis < 0 ? FPRECIS : precis;
-				ep = _sfcvt(dval,tmp,sizeof(tmp), min(precis,SF_FDIGITS),
+				ep = _sfcvt(dval,tmp+1,sizeof(tmp)-1, min(precis,SF_FDIGITS),
 					    &decpt, &sign, &n_s, v);
 				goto f_format;
 			}
-			else if(fmt == 'a' || fmt == 'A')
-			{	if(precis < 0)
-				{	if(v == SFFMT_LDOUBLE)
+			else if(fmt == 'a' || fmt == 'A' && (v |= SFFMT_UPPER))
+			{	v |= SFFMT_AFORMAT;
+				if(precis < 0)
+				{	if(v & SFFMT_LDOUBLE)
 						precis = 2*(sizeof(Sfdouble_t) - 2);
 					else	precis = 2*(sizeof(double) - 2);
 				}
 				n = precis + 1;
-				v |= SFFMT_AFORMAT | (fmt == 'A' ? SFFMT_UPPER : 0);
-				ep = _sfcvt(dval,tmp,sizeof(tmp), min(n,SF_FDIGITS),
+				ep = _sfcvt(dval,tmp+1,sizeof(tmp)-1, min(n,SF_FDIGITS),
 					    &decpt, &sign, &n_s, v);
 
 				sp = endsp = buf+1;	/* reserve space for sign */
@@ -1144,8 +1144,10 @@ loop_fmt :
 			}
 			else /* 'g' or 'G' format */
 			{	precis = precis < 0 ? FPRECIS : precis == 0 ? 1 : precis;
+				if(fmt == 'G')
+					v |= SFFMT_UPPER;
 				v |= SFFMT_EFORMAT;
-				ep = _sfcvt(dval,tmp,sizeof(tmp), min(precis,SF_FDIGITS),
+				ep = _sfcvt(dval,tmp+1,sizeof(tmp)-1, min(precis,SF_FDIGITS),
 					    &decpt, &sign, &n_s, v);
 				if(dval == 0.)
 					decpt = 1;
@@ -1214,6 +1216,7 @@ loop_fmt :
 			if(isalpha(*ep))
 			{
 			infinite:
+				flags &= ~SFFMT_ZERO;
 				endsp = (sp = ep)+sfslen();
 				ep = endep;
 				precis = 0;

@@ -1903,7 +1903,20 @@ CC_AR=$ar
 CC_ARFLAGS=$arflags
 CC_DEBUG=$debug
 CC_DIALECT=$dialect
-CC_DLL=$cc_dll
+CC_PICBIG=$cc_PIC
+CC_PICSMALL=$cc_pic
+CC_PIC=$CC_PICBIG
+CC_DLL_ONLY=$cc_dll
+case $CC_DLL_ONLY in
+'')	CC_DLLBIG=
+	CC_DLLSMALL=
+	CC_DLL=
+	;;
+*)	CC_DLLBIG="$CC_DLL_ONLY $CC_PICBIG"
+	CC_DLLSMALL="$CC_DLL_ONLY $CC_PICSMALL"
+	CC_DLL="$CC_DLL_ONLY $CC_PICBIG"
+	;;
+esac
 CC_DLL_DIR=$dll_dir
 CC_DLL_LIBRARIES=$dll_libraries
 CC_DLL_VARIANTS=$dll_variants
@@ -1928,8 +1941,6 @@ CC_NM=$nm
 CC_NMEDIT=$nmedit
 CC_NMFLAGS=$nmflags
 CC_OPTIMIZE=$optimize
-CC_PIC=$cc_pic
-CC_PICBIG=$cc_PIC
 CC_READONLY=$readonly
 CC_REPOSITORY=$repository
 CC_REQUIRE=$require
@@ -1990,14 +2001,9 @@ echo CC.AR = $CC_AR
 echo CC.ARFLAGS = $CC_ARFLAGS
 echo CC.DEBUG = $CC_DEBUG
 echo CC.DIALECT = $CC_DIALECT
-case $CC_DLL in
-'')	echo CC.DLL =
-	echo CC.DLLBIG =
-	;;
-*)	echo CC.DLL = $CC_DLL $CC_PIC
-	echo CC.DLLBIG = $CC_DLL $CC_PICBIG
-	;;
-esac
+echo CC.DLLBIG = $CC_DLLBIG
+echo CC.DLLSMALL = $CC_DLLSMALL
+echo CC.DLL = $CC_DLL
 echo CC.DLL.DEF = $cc_dll_def
 echo CC.DLL.DIR = $CC_DLL_DIR
 echo CC.DLL.LIBRARIES = $CC_DLL_LIBRARIES
@@ -2038,8 +2044,9 @@ esac
 echo CC.NMEDIT ="$CC_NMEDIT"
 echo CC.NMFLAGS = $CC_NMFLAGS
 echo CC.OPTIMIZE = $CC_OPTIMIZE
-echo CC.PIC = $CC_PIC
 echo CC.PICBIG = $CC_PICBIG
+echo CC.PICSMALL = $CC_PICSMALL
+echo CC.PIC = $CC_PIC
 echo CC.READONLY = $CC_READONLY
 echo CC.REPOSITORY = $CC_REPOSITORY
 for f in $CC_REQUIRE

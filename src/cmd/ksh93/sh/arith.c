@@ -190,13 +190,13 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 					}
 				}
 				*str = 0;
-				if(strcmp(*ptr,"Inf")==0)
+				if(strcasecmp(*ptr,"Inf")==0)
 				{
 					Inf = 1.0/Zero;
 					Infnod.nvalue.ldp = &Inf;
 					np = &Infnod;
 				}
-				else if(strcmp(*ptr,"NaN")==0)
+				else if(strcasecmp(*ptr,"NaN")==0)
 				{
 					NaN = 0.0/Zero;
 					NaNnod.nvalue.ldp = &NaN;

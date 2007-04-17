@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#           Copyright (c) 1982-2006 AT&T Knowledge Ventures            #
+#           Copyright (c) 1982-2007 AT&T Knowledge Ventures            #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                      by AT&T Knowledge Ventures                      #
@@ -442,25 +442,25 @@ unset x
 [[ $x == "$((x))" ]] || err_exit  '$x !- $((x)) when x is pi'
 $SHELL -c  "[[  ${x//./} == {14,100}(\d) ]]" 2> /dev/null || err_exit 'pi has less than 14 significant places'
 if	(( Inf+1 == Inf ))
-then	[[ $(printf "%g\n" $((Inf))) == Inf ]] || err_exit 'printf "%g\n" $((Inf) fails'
-#	[[ $(printf "%g\n" $((Nan))) == Inf ]] || err_exit 'printf "%g\n" $((Nan) fails'
-	[[ $(printf "%g\n" Inf) == Inf ]] || err_exit 'printf "%g\n" Inf fails'
-	[[ $(printf "%g\n" NaN) == NaN ]] || err_exit 'printf "%g\n" NaN fails'
-	[[ $(print -- $((Inf))) == Inf ]] || err_exit 'print -- $((Inf)) fails'
+then	[[ $(printf "%g\n" $((Inf))) == inf ]] || err_exit 'printf "%g\n" $((Inf)) fails'
+#	[[ $(printf "%g\n" $((Nan))) == inf ]] || err_exit 'printf "%g\n" $((Nan)) fails'
+	[[ $(printf "%g\n" Inf) == inf ]] || err_exit 'printf "%g\n" Inf fails'
+	[[ $(printf "%g\n" NaN) == nan ]] || err_exit 'printf "%g\n" NaN fails'
+	[[ $(print -- $((Inf))) == inf ]] || err_exit 'print -- $((Inf)) fails'
 	(( 1.0/0.0 == Inf )) || err_exit '1.0/0.0 != Inf'
-	[[ $(print -- $((0.0/0.0))) == NaN ]] || err_exit '0.0/0.0 != NaN'
+	[[ $(print -- $((0.0/0.0))) == nan ]] || err_exit '0.0/0.0 != NaN'
 	(( Inf*Inf == Inf )) || err_exit 'Inf*Inf != Inf'
 	(( NaN != NaN )) || err_exit 'NaN == NaN'
 	(( -5*Inf == -Inf )) || err_exit '-5*Inf != -Inf'
-	[[ $(print -- $((sqrt(-1.0)))) == NaN ]]|| err_exit 'sqrt(-1.0) != NaN'
+	[[ $(print -- $((sqrt(-1.0)))) == nan ]]|| err_exit 'sqrt(-1.0) != NaN'
 	(( pow(1.0,Inf) == 1.0 )) || err_exit 'pow(1.0,Inf) != 1.0'
 	(( pow(Inf,0.0) == 1.0 )) || err_exit 'pow(Inf,0.0) != 1.0'
-	[[ $(print -- $((NaN/Inf))) == NaN ]] || err_exit 'NaN/Inf != NaN'
+	[[ $(print -- $((NaN/Inf))) == nan ]] || err_exit 'NaN/Inf != NaN'
 	(( 4.0/Inf == 0.0 )) || err_exit '4.0/Inf != 0.0'
 else	err_exit 'Inf and NaN not working'
 fi
 unset x y
 float x=14.555 y
 y=$(printf "%a" x)
-(( x == y )) || err_exit 'output of printf %a not self preserving'
+(( x == y )) || err_exit "output of printf %a not self preserving -- expected $x, got $y"
 exit $((Errors))

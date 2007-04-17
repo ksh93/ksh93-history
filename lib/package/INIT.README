@@ -92,7 +92,8 @@ All recorded changes follow.
 
 :::::::: INIT ::::::::
 
-07-04-11 make.probe: fix CC.PICBIG probe
+07-04-11 mamprobe.sh: handle $(CC.*) => ${mam_cc_*}, $(...) => ${...}
+07-04-11 make.probe: fix CC.PICBIG probe, default { CC.PIC CC.DLL } to BIG
 07-04-04 iffe.sh: prepend ${tst}${ext} to each .c probe
 07-03-28 package.sh: fix binary tgz architecture type duplication
 07-03-28 package.mk: add binary write PACKAGE.$HOSTTYPE.lst

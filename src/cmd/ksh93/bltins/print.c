@@ -561,12 +561,14 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 		case 'e':
 		case 'f':
 		case 'g':
-			value->f = 0.;
-			break;
 		case 'A':
 		case 'E':
+		case 'F':
 		case 'G':
-			value->ld = 0.;
+                        if(SFFMT_LDOUBLE)
+				value->ld = 0.;
+			else
+				value->d = 0.;
 			break;
 		case 'n':
 			value->ip = &pp->intvar;
@@ -693,8 +695,8 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 		case 'g':
 		case 'A':
 		case 'E':
+		case 'F':
 		case 'G':
-			fe->size = sizeof(value->d);
 			d = sh_strnum(*pp->nextarg,&lastchar,0);
                         if(SFFMT_LDOUBLE)
 			{
@@ -702,7 +704,10 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 				fe->size = sizeof(value->ld);
 			}
 			else
+			{
 				value->d = d;
+				fe->size = sizeof(value->d);
+			}
 			break;
 		case 'Q':
 			value->ll = (Sflong_t)strelapsed(*pp->nextarg,&lastchar,1);

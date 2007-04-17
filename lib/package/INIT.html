@@ -48,7 +48,8 @@ All recorded changes follow.
 <P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="INIT changes">INIT changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
-07-04-11 make.probe: fix CC.PICBIG probe
+07-04-11 mamprobe.sh: handle $(CC.*) =&gt; ${mam_cc_*}, $(...) =&gt; ${...}
+07-04-11 make.probe: fix CC.PICBIG probe, default { CC.PIC CC.DLL } to BIG
 07-04-04 iffe.sh: prepend ${tst}${ext} to each .c probe
 07-03-28 package.sh: fix binary tgz architecture type duplication
 07-03-28 package.mk: add binary write PACKAGE.$HOSTTYPE.lst
@@ -818,7 +819,7 @@ All recorded changes follow.
 <TR>
 <TD align=left></TD>
 <TD align=center></TD>
-<TD align=right>April 11, 2007</TD>
+<TD align=right>April 16, 2007</TD>
 </TR>
 </TABLE>
 <P>

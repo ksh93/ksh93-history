@@ -189,8 +189,9 @@ tmxdate(register const char* s, char** e, Time_t now)
 		{
 			if (*s == '.' || *s == '-' || *s == '+')
 			{
-				if (((set|state) & (YEAR|MONTH|HOUR|MINUTE|ZONE)) == (YEAR|MONTH|HOUR|MINUTE) && (zone = tmgoff(s, &t, 0)))
+				if (((set|state) & (YEAR|MONTH|HOUR|MINUTE|ZONE)) == (YEAR|MONTH|HOUR|MINUTE) && (i = tmgoff(s, &t, TM_LOCALZONE)) != TM_LOCALZONE)
 				{
+					zone = i;
 					state |= ZONE;
 					if (!*(s = t))
 						break;

@@ -26,11 +26,13 @@
 **	Written by Kiem-Phong Vo and Glenn Fowler (SFFMT_AFORMAT)
 */
 
-static char		*Inf = "Inf", *Zero = "0", *Nan = "NaN";
+static char		*lc_inf = "inf", *uc_inf = "INF";
+static char		*lc_nan = "nan", *uc_nan = "NAN";
+static char		*Zero = "0";
+#define SF_INF		((_Sfi = 3), strncpy(buf, (format & SFFMT_UPPER) ? uc_inf : lc_inf, size))
+#define SF_NAN		((_Sfi = 3), strncpy(buf, (format & SFFMT_UPPER) ? uc_nan : lc_nan, size))
+#define SF_ZERO		((_Sfi = 1), strncpy(buf, Zero, size))
 #define SF_INTPART	(SF_IDIGITS/2)
-#define SF_INFINITE	((_Sfi = 3), Inf)
-#define SF_ZERO		((_Sfi = 1), Zero)
-#define SF_NAN		((_Sfi = 3), Nan)
 
 #if ! _lib_isnan
 #if _lib_fpclassify
@@ -77,7 +79,7 @@ int		format;		/* conversion format		*/
 	if (n = isinf(dv))
 	{	if (n < 0)
 			*sign = 1;
-		return SF_INFINITE;
+		return SF_INF;
 	}
 #endif
 #if !_ast_fltmax_double
@@ -104,7 +106,7 @@ int		format;		/* conversion format		*/
 		switch (fpclassify(f))
 		{
 		case FP_INFINITE:
-			return SF_INFINITE;
+			return SF_INF;
 		case FP_NAN:
 			return SF_NAN;
 		case FP_ZERO:
@@ -120,7 +122,7 @@ int		format;		/* conversion format		*/
 		if(f < LDBL_MIN)
 			return SF_ZERO;
 		if(f > LDBL_MAX)
-			return SF_INFINITE;
+			return SF_INF;
 
 		if(format & SFFMT_AFORMAT)
 		{	Sfdouble_t	g;
@@ -161,7 +163,7 @@ int		format;		/* conversion format		*/
 				{
 					f *= _Sfneg10[v];
 					if((n += (1<<v)) >= SF_IDIGITS)
-						return SF_INFINITE;
+						return SF_INF;
 				}
 			} while(f >= (Sfdouble_t)SF_MAXLONG);
 		}
@@ -176,7 +178,7 @@ int		format;		/* conversion format		*/
 
 			n = b-sp;
 			if((*decpt += (int)n) >= SF_IDIGITS)
-				return SF_INFINITE;
+				return SF_INF;
 			b = sp;
 			sp = buf + SF_INTPART;
 		}
@@ -228,7 +230,7 @@ int		format;		/* conversion format		*/
 		if (n = isinf(f))
 		{	if (n < 0)
 				*sign = 1;
-			return SF_INFINITE;
+			return SF_INF;
 		}
 #endif
 #if _c99_in_the_wild
@@ -248,7 +250,7 @@ int		format;		/* conversion format		*/
 		switch (fpclassify(f))
 		{
 		case FP_INFINITE:
-			return SF_INFINITE;
+			return SF_INF;
 		case FP_NAN:
 			return SF_NAN;
 		case FP_ZERO:
@@ -264,7 +266,7 @@ int		format;		/* conversion format		*/
 		if(f < DBL_MIN)
 			return SF_ZERO;
 		if(f > DBL_MAX)
-			return SF_INFINITE;
+			return SF_INF;
 
 		if(format & SFFMT_AFORMAT)
 		{	double	g;
@@ -303,7 +305,7 @@ int		format;		/* conversion format		*/
 				else
 				{	f *= _Sfneg10[v];
 					if((n += (1<<v)) >= SF_IDIGITS)
-						return SF_INFINITE;
+						return SF_INF;
 				}
 			} while(f >= (double)SF_MAXLONG);
 		}
@@ -318,7 +320,7 @@ int		format;		/* conversion format		*/
 
 			n = b-sp;
 			if((*decpt += (int)n) >= SF_IDIGITS)
-				return SF_INFINITE;
+				return SF_INF;
 			b = sp;
 			sp = buf + SF_INTPART;
 		}
