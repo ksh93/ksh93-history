@@ -1190,6 +1190,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 			}
 			sh_popcontext(&buff);
 			sh_iorestore(buff.topfd,jmpval);
+			if(buff.olist)
+				free_list(buff.olist);
 			if(type&FPIN)
 			{
 				job.waitall = waitall;
@@ -2878,6 +2880,8 @@ static pid_t sh_ntfork(const Shnode_t *t,char *argv[],int *jobid,int flag)
 	else
 		exitset();
 	sh_popcontext(&buff);
+	if(buff.olist)
+		free_list(buff.olist);
 #ifdef SIGTSTP
 	if(jobwasset)
 	{

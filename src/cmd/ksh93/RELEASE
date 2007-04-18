@@ -1,4 +1,6 @@
-07-03-08  --- Release ksh93s+  ---
+07-04-18  --- Release ksh93s+  ---
+07-04-18  A small memory leak with each redirection of a non-builtin has
+	  been fixed.
 07-03-08  A bug in which set +o output command line options has been fixed.
 07-03-08  A bug in which an error in read (for example, an invalid variable
 	  name), could leave the terminal in raw mode has been fixed.
