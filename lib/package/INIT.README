@@ -92,6 +92,7 @@ All recorded changes follow.
 
 :::::::: INIT ::::::::
 
+07-04-20 mktest.sh: defer to systems without 'grep -q' -- sigh
 07-04-11 mamprobe.sh: handle $(CC.*) => ${mam_cc_*}, $(...) => ${...}
 07-04-11 make.probe: fix CC.PICBIG probe, default { CC.PIC CC.DLL } to BIG
 07-04-04 iffe.sh: prepend ${tst}${ext} to each .c probe

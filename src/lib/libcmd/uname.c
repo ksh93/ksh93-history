@@ -28,7 +28,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: uname (AT&T Research) 2007-01-22 $\n]"
+"[-?\n@(#)$Id: uname (AT&T Research) 2007-04-19 $\n]"
 USAGE_LICENSE
 "[+NAME?uname - identify the current system ]"
 "[+DESCRIPTION?By default \buname\b writes the operating system name to"
@@ -61,7 +61,9 @@ USAGE_LICENSE
 "[f:list?List all \bsysinfo\b(2) names and values, one per line.]"
 "[S:sethost?Set the hostname or nodename to \aname\a. No output is"
 "	written to standard output.]:[name]"
-
+"\n"
+"\n[ name ... ]\n"
+"\n"
 "[+SEE ALSO?\bhostname\b(1), \bgetconf\b(1), \buname\b(2),"
 "	\bsysconf\b(2), \bsysinfo\b(2)]"
 ;
@@ -367,7 +369,7 @@ b_uname(int argc, char** argv, void* context)
 			while (t < e && (n = *s++))
 				*t++ = islower(n) ? toupper(n) : n;
 			*t = 0;
-			sfprintf(sfstdout, "%s%c", *(t = astconf(buf, NiL, NiL)) ? t : "unknown", *argv ? ' ' : '\n');
+			sfprintf(sfstdout, "%s%c", *(t = astconf(buf, NiL, NiL)) ? t : *(t = astconf(buf+3, NiL, NiL)) ? t :  "unknown", *argv ? ' ' : '\n');
 		}
 	}
 	else

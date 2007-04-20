@@ -83,7 +83,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	magic.c mime.c mimetype.c signal.c systrace.c \
 	error.c errorf.c errormsg.c errorx.c \
 	localeconv.c setlocale.c translate.c \
-	catopen.c iconv.c lc.c mc.c \
+	catopen.c iconv.c lc.c lctab.c mc.c \
 	base64.c recfmt.c recstr.c reclen.c fmtrec.c \
 	fmtbase.c fmtbuf.c fmtclock.c fmtdev.c fmtelapsed.c fmterror.c \
 	fmtesc.c fmtfmt.c fmtfs.c fmtident.c fmtip4.c fmtls.c fmtmatch.c \
@@ -226,7 +226,7 @@ virtual		ast/stdio.h
  * NOTE: sun4 runtime link botches ro data so advertized sig_info is rw
  */
 
-:READONLY: conftab.c modedata.c /*sftable.c*/ \
+:READONLY: conftab.c lctab.c modedata.c /*sftable.c*/ \
 	/*sigdata.c*/ tmdata.c univdata.c
 
 :: atmain.C \
@@ -249,7 +249,7 @@ $(HEADERGEN) :COPY: FEATURE/$$(<:B:/$(ID)_//)
 lcgen : lcgen.c
 	$(CC.NATIVE|CC) -o $(<) $(*)
 
-lc.h lctab.h :JOINT: lcgen lc.tab
+lc.h lctab.c :JOINT: lcgen lc.tab
 	$(*:O=1:C,^[^/],./&,) $(tmp).1 $(tmp).2 < $(*:O=2) # :P=E: in 2006
 	$(PROTO) -p $(PROTOFLAGS) $(tmp).1 $(PROTOINSTALL) > $(tmp).3
 	$(RM) -f $(tmp).1

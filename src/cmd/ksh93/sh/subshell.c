@@ -209,6 +209,7 @@ Namval_t *sh_assignok(register Namval_t *np,int add)
 	subshell_data->svar = lp;
 	save = sh.subshell;
 	sh.subshell = 0;;
+	mp->nvname = np->nvname;
 	nv_clone(np,mp,NV_NOFREE);
 	sh.subshell = save;
 	return(np);
@@ -236,7 +237,7 @@ static void nv_restore(struct subshell *sp)
 			mp->nvenv = np->nvenv;
 		mp->nvfun = np->nvfun;
 		mp->nvflag = np->nvflag;
-		if((mp==nv_scoped(PATHNOD)) || (mp==nv_scoped(IFSNOD)))
+		if(nv_cover(mp))
 			nv_putval(mp, np->nvalue.cp,0);
 		else
 			mp->nvalue.cp = np->nvalue.cp;

@@ -1,3 +1,7 @@
+07-04-20 port/(lclang.h|lc.c|mc.c|lclib.h|lcgen.c): separate lctab.c
+07-04-20 comp/conf.sh: defer to systems without 'grep -q' -- sigh
+07-04-20 comp/conf.sh: probe for LL integer constant initializer suffix
+07-04-19 comp/conf.tab: fix SVID SI entries to probe SI_* (not _SI_*)
 07-04-13 tm/tmxdate.c,tm/tmzone.c: handle [-+]0000 UTC zone offset
 07-04-11 sfio/sfvprintf.c: add %F, propagate SFFMT_UPPER
 07-04-11 sfio/sfcvt.c: handle SFFMT_UPPER => nan/inf vs. NAN/INF

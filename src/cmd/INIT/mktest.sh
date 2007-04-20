@@ -31,7 +31,7 @@ case $(getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt) in
 0123)	ARGV0="-a $command"
 	USAGE=$'
 [-?
-@(#)$Id: mktest (AT&T Labs Research) 2006-08-27 $
+@(#)$Id: mktest (AT&T Labs Research) 2007-04-20 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?mktest - generate a regression test scripts]
@@ -559,7 +559,7 @@ case $STYLE in
 shell)	cat <<!
 } > $PREFIX${UNIT[0]}.tmp 2>&1 < /dev/null
 case \$ACCEPT in
-0)	if	grep -q '$' $PREFIX${UNIT[0]}.tmp
+0)	if	grep '$' $PREFIX${UNIT[0]}.tmp >/dev/null
 	then	mv $PREFIX${UNIT[0]}.tmp $PREFIX${UNIT[0]}.junk
 		sed 's/$//' < $PREFIX${UNIT[0]}.junk > $PREFIX${UNIT[0]}.tmp
 		rm -f $PREFIX${UNIT[0]}.junk
