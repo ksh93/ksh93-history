@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
+*           Copyright (c) 1982-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -50,8 +50,6 @@ const char sh_bash1[] =
 	"[P?Do not follow symbolic links, use physical directory structure "
 	"instead. Only available in bash compatibility mode.]";
 const char sh_bash2[] =
-"[l:login?Make the shell act as if it had been invoked as a login shell. "
-"Only available if invoked as \bbash\b.]"
 "[O]:?[shopt_option?\ashopt_option\a is one of the shell options accepted by "
 	"the \bshopt\b builtin. If \ashopt_option\a is present, \b-O\b sets "
 	"the value of that option; \b+O\b unsets it. If \ashopt_option\a is "
@@ -66,12 +64,9 @@ const char sh_bash2[] =
 "[03:profile?Read either the system-wide startup file or any of the "
 	"personal initialization files. On by default for interactive "
 	"shells. Only available if invoked as \bbash\b.]"
-"[04:rc?Read and execute the personal initialization file "
-	"\b$HOME/.bashrc\b. On by default for interactive shells. Only "
-	"available if invoked as \bbash\b.]"
-"[05:posix?If invoked as \bbash\b, turn on POSIX compatibility. \bBash\b in "
+"[04:posix?If invoked as \bbash\b, turn on POSIX compatibility. \bBash\b in "
 	"POSIX mode is not the same as \bksh\b.]"
-"[06:version?Print version number and exit.]";
+"[05:version?Print version number and exit.]";
 
 const char sh_optshopt[] =
 "+[-1c?\n@(#)$Id: shopt (AT&T Research) 2003-02-13 $\n]"
@@ -404,7 +399,7 @@ void bash_init(int mode)
 
 	/* set startup files */
 	n=0;
-	if(!sh_isoption(SH_NOPROFILE))
+	if(sh_isoption(SH_LOGIN_SHELL))
 	{
 		if(!sh_isoption(SH_POSIX))
 		{

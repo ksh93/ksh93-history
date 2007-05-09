@@ -619,8 +619,6 @@ errorv(const char* id, int level, va_list ap)
  * error_info context control
  */
 
-#include <error.h>
-
 static Error_info_t*	freecontext;
 
 Error_info_t*

@@ -685,6 +685,7 @@ Pathcomp_t *path_absolute(register const char *name, Pathcomp_t *endpath)
 					if(strcmp(cp,LIBCMD)==0 && (addr=(Fptr_t)dlllook((void*)0,stakptr(n))))
 					{
 						np = sh_addbuiltin(stakptr(PATH_OFFSET),addr,NiL);
+						nv_onattr(np,NV_BLTINOPT);
 						np->nvfun = (Namfun_t*)np->nvname;
 						return(oldpp);
 					}
@@ -699,6 +700,7 @@ Pathcomp_t *path_absolute(register const char *name, Pathcomp_t *endpath)
 				   (!(np = sh_addbuiltin(stakptr(PATH_OFFSET),NiL,NiL)) || np->nvalue.bfp!=addr) &&
 				   (np = sh_addbuiltin(stakptr(PATH_OFFSET),addr,NiL)))
 				{
+					nv_onattr(np,NV_BLTINOPT);
 					np->nvenv = oldpp->bltin_lib;
 					return(oldpp);
 				}

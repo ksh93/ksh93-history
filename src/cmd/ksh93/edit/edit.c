@@ -583,6 +583,7 @@ void ed_crlf(register Edit_t *ep)
 
 void	ed_setup(register Edit_t *ep, int fd, int reedit)
 {
+	Shell_t *shp = ep->sh;
 	register char *pp;
 	register char *last;
 	char *ppmax;
@@ -592,25 +593,28 @@ void	ed_setup(register Edit_t *ep, int fd, int reedit)
 	ep->e_fd = fd;
 	ep->e_multiline = sh_isoption(SH_MULTILINE)!=0;
 #ifdef SIGWINCH
-	if(!(sh.sigflag[SIGWINCH]&SH_SIGFAULT))
+	if(!(shp->sigflag[SIGWINCH]&SH_SIGFAULT))
 	{
 		signal(SIGWINCH,sh_fault);
-		sh.sigflag[SIGWINCH] |= SH_SIGFAULT;
+		shp->sigflag[SIGWINCH] |= SH_SIGFAULT;
 	}
+	pp = shp->st.trapcom[SIGWINCH];
+	shp->st.trapcom[SIGWINCH] = 0;
 	sh_fault(SIGWINCH);
+	shp->st.trapcom[SIGWINCH] = pp;
 #endif
 #if KSHELL
 	ep->e_stkptr = stakptr(0);
 	ep->e_stkoff = staktell();
-	if(!(last = sh.prompt))
+	if(!(last = shp->prompt))
 		last = "";
-	sh.prompt = 0;
+	shp->prompt = 0;
 #else
 	last = ep->e_prbuff;
 #endif /* KSHELL */
-	if(sh.hist_ptr)
+	if(shp->hist_ptr)
 	{
-		register History_t *hp = sh.hist_ptr;
+		register History_t *hp = shp->hist_ptr;
 		ep->e_hismax = hist_max(hp);
 		ep->e_hismin = hist_min(hp);
 	}
@@ -736,7 +740,7 @@ void	ed_setup(register Edit_t *ep, int fd, int reedit)
 #ifdef _cmd_tput
 		char *term;
 		if(!ep->e_term)
-			ep->e_term = nv_search("TERM",sh.var_tree,0);
+			ep->e_term = nv_search("TERM",shp->var_tree,0);
 		if(ep->e_term && (term=nv_getval(ep->e_term)) && strlen(term)<sizeof(ep->e_termname) && strcmp(term,ep->e_termname))
 		{
 			sh_trap(".sh.subscript=$(tput cuu1 2>/dev/null)",0);
@@ -774,8 +778,9 @@ int ed_read(void *context, int fd, char *buff, int size, int reedit)
 	register Edit_t *ep = (Edit_t*)context;
 	register int rv= -1;
 	register int delim = (ep->e_raw==RAWMODE?'\r':'\n');
+	Shell_t *shp = ep->sh;
 	int mode = -1;
-	int (*waitevent)(int,long,int) = sh.waitevent;
+	int (*waitevent)(int,long,int) = shp->waitevent;
 	if(ep->e_raw==ALTMODE)
 		mode = 1;
 	if(size < 0)
@@ -785,10 +790,10 @@ int ed_read(void *context, int fd, char *buff, int size, int reedit)
 	}
 	sh_onstate(SH_TTYWAIT);
 	errno = EINTR;
-	sh.waitevent = 0;
+	shp->waitevent = 0;
 	while(rv<0 && errno==EINTR)
 	{
-		if(sh.trapnote&(SH_SIGSET|SH_SIGTRAP))
+		if(shp->trapnote&(SH_SIGSET|SH_SIGTRAP))
 			goto done;
 		/* an interrupt that should be ignored */
 		errno = 0;
@@ -824,7 +829,7 @@ int ed_read(void *context, int fd, char *buff, int size, int reedit)
 			rv = read(fd,buff,size);
 			if(rv>=0 || errno!=EINTR)
 				break;
-			if(sh.trapnote&(SH_SIGSET|SH_SIGTRAP))
+			if(shp->trapnote&(SH_SIGSET|SH_SIGTRAP))
 				goto done;
 			/* an interrupt that should be ignored */
 			fixtime();
@@ -833,7 +838,7 @@ int ed_read(void *context, int fd, char *buff, int size, int reedit)
 	else if(rv>=0 && mode>0)
 		rv = read(fd,buff,rv>0?rv:1);
 done:
-	sh.waitevent = waitevent;
+	shp->waitevent = waitevent;
 	sh_offstate(SH_TTYWAIT);
 	return(rv);
 }
@@ -960,7 +965,7 @@ int ed_getchar(register Edit_t *ep,int mode)
 		/* check for possible key mapping */
 		if((c = ep->e_lbuf[--ep->e_lookahead]) < 0)
 		{
-			if(mode<=0 && sh.st.trap[SH_KEYTRAP])
+			if(mode<=0 && ep->sh->st.trap[SH_KEYTRAP])
 			{
 				n=1;
 				if((readin[0]= -c) == ESC)
@@ -1446,6 +1451,7 @@ static int keytrap(Edit_t *ep,char *inbuff,register int insize, int bufsize, int
 {
 	register char *cp;
 	int savexit;
+	Shell_t *shp = ep->sh;
 #if SHOPT_MULTIBYTE
 	char buff[MAXLINE];
 	ed_external(ep->e_inbuf,cp=buff);
@@ -1465,9 +1471,9 @@ static int keytrap(Edit_t *ep,char *inbuff,register int insize, int bufsize, int
 	nv_putval(ED_COLNOD,(char*)&ep->e_col,NV_NOFREE|NV_INTEGER);
 	nv_putval(ED_TXTNOD,(char*)cp,NV_NOFREE);
 	nv_putval(ED_MODENOD,ep->e_vi_insert,NV_NOFREE);
-	savexit = sh.savexit;
-	sh_trap(sh.st.trap[SH_KEYTRAP],0);
-	sh.savexit = savexit;
+	savexit = shp->savexit;
+	sh_trap(shp->st.trap[SH_KEYTRAP],0);
+	shp->savexit = savexit;
 	if((cp = nv_getval(ED_CHRNOD)) == inbuff)
 		nv_unset(ED_CHRNOD);
 	else

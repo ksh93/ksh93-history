@@ -99,6 +99,7 @@ extern char*		opthelp(const char*, const char*);
 extern char*		optusage(const char*);
 extern int		optstr(const char*, const char*);
 extern int		optesc(Sfio_t*, const char*, int);
+extern Opt_t*		optctx(Opt_t*, Opt_t*);
 
 #undef	extern
 

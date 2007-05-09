@@ -1089,6 +1089,12 @@ Shell_t *sh_init(register int argc,register char *argv[], void(*userinit)(int))
 	sh.login_files = login_files;
 	if(sh.userinit=userinit)
 		(*userinit)(0);
+	sh.bltindata.version = SH_VERSION;
+	sh.bltindata.shp = &sh;
+	sh.bltindata.shrun = sh_run;
+	sh.bltindata.shtrap = sh_trap;
+	sh.bltindata.shexit = sh_exit;
+	sh.bltindata.shbltin = sh_addbuiltin;
 	return(&sh);
 }
 

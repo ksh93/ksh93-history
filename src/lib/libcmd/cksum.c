@@ -560,7 +560,7 @@ b_cksum(int argc, register char** argv, void* context)
 		error(ERROR_system(1), "%s: not found", *argv);
 	else
 	{
-		while (!cmdquit() && (ent = fts_read(fts)))
+		while (!sh_checksig(context) && (ent = fts_read(fts)))
 			switch (ent->fts_info)
 			{
 			case FTS_SL:

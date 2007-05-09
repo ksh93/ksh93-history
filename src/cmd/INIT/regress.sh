@@ -23,7 +23,7 @@ command=regress
 case $(getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt) in
 0123)	USAGE=$'
 [-?
-@(#)$Id: regress (AT&T Research) 2006-10-11 $
+@(#)$Id: regress (AT&T Research) 2007-05-08 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?regress - run regression tests]
@@ -471,13 +471,12 @@ function UNIT # cmd arg ...
 	fi
 	COMMAND=$1
 	shift
-	typeset cmd=$(PATH=$SOURCE:$PATH:/usr/5bin:/bin:/usr/bin whence $COMMAND)
+	typeset cmd=$(whence $COMMAND)
 	if	[[ ! $cmd ]]
 	then	FATAL $COMMAND: not found
 	elif	[[ ! $cmd ]]
 	then	FATAL $cmd: not found
 	fi
-	COMMAND=$cmd
 	case $# in
 	0)	;;
 	*)	COMMAND="$COMMAND $*" ;;
@@ -831,13 +830,13 @@ function COMMAND # arg ...
 	then	(
 		PS4=''
 		set -x
-		print -r -- "${EXPORT[@]}" $COMMAND "$@"
+		print -r -- "${EXPORT[@]}" "PATH=$PATH" $COMMAND "$@"
 		) 2>&1 >/dev/null |
 		sed 's,^print -r -- ,,' >$TWD/COMMAND
 		chmod +x $TWD/COMMAND
 	fi
 	[[ $UMASK != $UMASK_ORIG ]] && umask $UMASK
-	eval "${EXPORT[@]}" '$'COMMAND '"$@"'
+	eval "${EXPORT[@]}" PATH='$PATH' '$'COMMAND '"$@"'
 	STATUS=$?
 	[[ $UMASK != $UMASK_ORIG ]] && umask $UMASK_ORIG
 	return $STATUS
@@ -1063,7 +1062,8 @@ case $# in
 esac
 export COLUMNS=80
 SOURCE=$PWD
-PATH=$SOURCE:${PATH#:}
+PATH=$SOURCE:${PATH#?(.):}
+PATH=${PATH%%:?(.)}:/usr/5bin:/bin:/usr/bin
 UNIT=$1
 shift
 if	[[ -f $UNIT && ! -x $UNIT ]]

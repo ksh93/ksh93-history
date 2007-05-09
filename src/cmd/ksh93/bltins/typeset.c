@@ -535,14 +535,15 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 	return(r);
 }
 
-typedef void (*Iptr_t)(int);
+typedef void (*Iptr_t)(int,void*);
 typedef int (*Fptr_t)(int, char*[], void*);
 
 #define GROWLIB	4
 
-static void**	liblist;
-static int	nlib;
-static int	maxlib;
+static void		**liblist;
+static unsigned short	*libattr;
+static int		nlib;
+static int		maxlib;
 
 /*
  * This allows external routines to load from the same library */
@@ -562,26 +563,38 @@ int sh_addlib(void* library)
 	register int	n;
 	register int	r;
 	Iptr_t		initfn;
+	Shbltin_t	*sp = &sh.bltindata;
 
+	sp->nosfio = 0;
 	for (n = r = 0; n < nlib; n++)
 	{
 		if (r)
+		{
 			liblist[n-1] = liblist[n];
+			libattr[n-1] = libattr[n];
+		}
 		else if (liblist[n] == library)
 			r++;
 	}
 	if (r)
 		nlib--;
 	else if ((initfn = (Iptr_t)dlllook(library, "lib_init")))
-		(*initfn)(0);
+		(*initfn)(0,sp);
 	if (nlib >= maxlib)
 	{
 		maxlib += GROWLIB;
 		if (liblist)
+		{
 			liblist = (void**)realloc((void*)liblist, (maxlib+1)*sizeof(void**));
+			libattr = (unsigned short*)realloc((void*)liblist, (maxlib+1)*sizeof(unsigned short*));
+		}
 		else
+		{
 			liblist = (void**)malloc((maxlib+1)*sizeof(void**));
+			libattr = (unsigned short*)malloc((maxlib+1)*sizeof(unsigned short*));
+		}
 	}
+	libattr[nlib] = NV_BLTINOPT|(sp->nosfio?BLT_NOSFIO:0);
 	liblist[nlib++] = library;
 	liblist[nlib] = 0;
 	return !r;
@@ -678,6 +691,8 @@ int	b_builtin(int argc,char *argv[],void *extra)
 				{
 					if(dlete || nv_isattr(np,BLT_SPC))
 						errmsg = "restricted name";
+					else
+						nv_onattr(np,libattr[n]);
 				}
 				break;
 			}
@@ -893,7 +908,11 @@ static int print_namval(Sfio_t *file,register Namval_t *np,register int flag, st
 				sfprintf(file,"[%s]\n", sh_fmtq(nv_refsub(np)));
 			}
 			else
+#if SHOPT_TYPEDEF
+				sfputr(file,nv_isvtree(np)?cp:sh_fmtq(cp),'\n');
+#else
 				sfputr(file,sh_fmtq(cp),'\n');
+#endif /* SHOPT_TYPEDEF */
 		}
 		return(1);
 	}
@@ -936,6 +955,10 @@ static void print_scan(Sfio_t *file, int flag, Dt_t *root, int option,struct tda
 	tp->scanmask = flag&~NV_NOSCOPE;
 	tp->scanroot = root;
 	tp->outfile = file;
+#if SHOPT_TYPEDEF
+	if(!tp->prefix && tp->tp)
+		tp->prefix = nv_name(tp->tp);
+#endif /* SHOPT_TYPEDEF */
 	if(flag&NV_INTEGER)
 		tp->scanmask |= (NV_DOUBLE|NV_EXPNOTE);
 	namec = nv_scan(root,nullscan,(void*)tp,tp->scanmask,flag);

@@ -28,11 +28,11 @@ DEBUG ==
 __OBSOLETE__ == $("6 months ago":@F=%(%Y0101)T)
 
 HEADERSRC = ast.h ast_dir.h ast_getopt.h ast_std.h \
-	ast_version.h ast_windows.h \
-	ccode.h cdt.h debug.h dt.h error.h find.h ftw.h ftwalk.h fts.h \
-	fs3d.h getopt.h glob.h hash.h hashkey.h hashpart.h lc.h ls.h \
-	magic.h mc.h mime.h mnt.h modecanon.h modex.h namval.h option.h \
-	proc.h re_comp.h recfmt.h regex.h regexp.h \
+	ast_namval.h ast_version.h ast_windows.h \
+	ccode.h cdt.h cmdarg.h debug.h dt.h error.h find.h ftw.h ftwalk.h \
+	fts.h fs3d.h getopt.h glob.h hash.h hashkey.h hashpart.h lc.h \
+	ls.h magic.h mc.h mime.h mnt.h modecanon.h modex.h namval.h \
+	option.h proc.h re_comp.h recfmt.h regex.h regexp.h \
 	sfio.h sfio_s.h sfio_t.h sfdisc.h \
 	stack.h stak.h stk.h swap.h tar.h times.h tm.h tok.h \
 	usage.h vdb.h vecargs.h vmalloc.h wait.h wordexp.h \
@@ -79,7 +79,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	pathnative.c pathposix.c pathtemp.c pathtmp.c pathstat.c \
 	pathgetlink.c pathsetlink.c pathbin.c pathshell.c pathcd.c \
 	fs3d.c ftwalk.c ftwflags.c fts.c setenviron.c \
-	optget.c optjoin.c optesc.c strsort.c struniq.c \
+	optget.c optjoin.c optesc.c optctx.c strsort.c struniq.c \
 	magic.c mime.c mimetype.c signal.c systrace.c \
 	error.c errorf.c errormsg.c errorx.c \
 	localeconv.c setlocale.c translate.c \
@@ -99,7 +99,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	tmxdate.c tmxfmt.c tmxgettime.c tmxleap.c tmxmake.c \
 	tmxscan.c tmxsettime.c tmxsleep.c tmxtime.c tmxtouch.c \
 	tvcmp.c tvgettime.c tvsettime.c tvsleep.c tvtouch.c \
-	vecargs.c vecfile.c vecfree.c vecload.c vecstring.c \
+	cmdarg.c vecargs.c vecfile.c vecfree.c vecload.c vecstring.c \
 	univlib.h univdata.c touch.c mnt.c \
 	memccpy.c memchr.c memcmp.c memcpy.c memdup.c memmove.c memset.c \
 	mkdir.c mkfifo.c mknod.c rmdir.c remove.c rename.c link.c unlink.c \
@@ -245,6 +245,8 @@ conflim.h conftab.h conftab.c :JOINT: conf conf.tab
 	$(*:O=1:P=A) $(IFFEFLAGS:V:N=-v) $(*:O>1) $(CC) $(CCFLAGS:VP:N!=-D_BLD_*|$\(*\)) /* 2007-07-01: $(CCFLAGS:VPX:N!=-D_BLD_*) */
 
 $(HEADERGEN) :COPY: FEATURE/$$(<:B:/$(ID)_//)
+
+ast_namval.h :COPY: namval.h
 
 lcgen : lcgen.c
 	$(CC.NATIVE|CC) -o $(<) $(*)

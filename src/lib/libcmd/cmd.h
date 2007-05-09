@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1992-2006 AT&T Knowledge Ventures            *
+*           Copyright (c) 1992-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -31,9 +31,9 @@
 #include <ast.h>
 #include <error.h>
 #include <stak.h>
+#include <shcmd.h>
 
 #define cmdinit			_cmd_init
-#define cmdquit()		0
 
 #if _BLD_cmd && defined(__EXPORT__)
 #define extern		__EXPORT__
@@ -53,7 +53,7 @@
 
 #include <dlldefs.h>
 
-typedef int (*Builtin_f)(int, char**, void*);
+typedef int (*Shbltin_f)(int, char**, void*);
 
 #else
 
@@ -97,7 +97,7 @@ main(int argc, char** argv)
 	register char*	s;
 	register char*	t;
 	void*		dll;
-	Builtin_f	fun;
+	Shbltin_f	fun;
 	char		buf[64];
 
 	if (s = strrchr(argv[0], '/'))
@@ -117,16 +117,16 @@ main(int argc, char** argv)
 	{
 		if (dll = dlopen(NiL, RTLD_LAZY))
 		{
-			if (fun = (Builtin_f)dlsym(dll, buf + 1))
+			if (fun = (Shbltin_f)dlsym(dll, buf + 1))
 				break;
-			if (fun = (Builtin_f)dlsym(dll, buf))
+			if (fun = (Shbltin_f)dlsym(dll, buf))
 				break;
 		}
 		if (dll = dllfind("cmd", NiL, RTLD_LAZY))
 		{
-			if (fun = (Builtin_f)dlsym(dll, buf + 1))
+			if (fun = (Shbltin_f)dlsym(dll, buf + 1))
 				break;
-			if (fun = (Builtin_f)dlsym(dll, buf))
+			if (fun = (Shbltin_f)dlsym(dll, buf))
 				break;
 		}
 		return 127;
@@ -139,26 +139,9 @@ main(int argc, char** argv)
 
 #else
 
+#define _CMD_CONTEXT_OK(p)	(((Shbltin_t*)(p))->version>=20070511&&((Shbltin_t*)(p))->version<20350101)
 #undef	cmdinit
-#define cmdinit(a,b,c,d,e)	do{if(_cmd_init(a,b,c,d,e))return -1;}while(0)
-
-#ifndef CMD_BUILTIN
-
-#undef	cmdquit
-#define cmdquit()		(_cmd_quit)
-
-#if _BLD_cmd && defined(__EXPORT__)
-#define extern			extern __EXPORT__
-#endif
-#if !_BLD_cmd && defined(__IMPORT__)
-#define extern			extern __IMPORT__
-#endif
-
-extern int	_cmd_quit;
-
-#undef	extern
-
-#endif
+#define cmdinit(a,b,c,d,e)	do{if((c)&&!_CMD_CONTEXT_OK(c))c=0;if(_cmd_init(a,b,c,d,e))return -1;}while(0)
 
 #if _BLD_cmd && defined(__EXPORT__)
 #define extern			extern __EXPORT__

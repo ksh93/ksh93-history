@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
+*           Copyright (c) 1982-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -25,7 +25,7 @@
 #include	"shtable.h"
 
 #if SHOPT_BASH
-#   define bashopt(a,b)	a,	b|SH_BASHOPT,
+#   define bashopt(a,b)		a,	b|SH_BASHOPT,
 #   define bashextra(a,b)	a,	b|SH_BASHEXTRA,
 #else
 #   define bashopt(a,b)
@@ -92,8 +92,15 @@ const Shtable_t shtab_options[] =
 	bashextra("physical",		SH_PHYSICAL)
 	bashextra("posix",		SH_POSIX)
 	"privileged",			SH_PRIVILEGED,
-#if SHOPT_PFSH
+#if SHOPT_BASH
+	"profile",			SH_LOGIN_SHELL|SH_COMMANDLINE,
+#   if SHOPT_PFSH
+	"pfsh",				SH_PFSH|SH_COMMANDLINE,
+#   endif
+#else
+#   if SHOPT_PFSH
 	"profile",			SH_PFSH|SH_COMMANDLINE,
+#   endif
 #endif
 	bashopt("progcomp",		SH_PROGCOMP)
 	bashopt("promptvars",		SH_PROMPTVARS)

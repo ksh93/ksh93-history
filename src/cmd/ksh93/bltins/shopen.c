@@ -447,11 +447,11 @@ static const char sh_optopen[] =
 ;
 
 
-extern int b_open(int argc, char *argv[], void *extra)
+extern int b_open(int argc, char *argv[], void *context)
 {
 	register Namval_t *np;
 	register int n,oflag=0;
-	Shell_t *shp = (Shell_t*)extra;
+	Shell_t *shp = ((Shbltin_t*)context)->shp;
 	struct filedata *fdp;
 	struct stat statb;
 	mode_t mode = 0666;

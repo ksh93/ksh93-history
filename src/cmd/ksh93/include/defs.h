@@ -34,6 +34,10 @@
 #include	<history.h>
 #include	"fault.h"
 #include	"argnod.h"
+#include	"name.h"
+#define _SH_PRIVATE
+#include	<shcmd.h>
+#undef _SH_PRIVATE
 
 #ifndef pointerof
 #define pointerof(x)		((void*)((char*)0+(x)))
@@ -52,6 +56,8 @@
  * note that the first few fields have to be the same as for
  * Shscoped_t in <shell.h>
  */
+
+
 struct sh_scoped
 {
 	struct sh_scoped *prevst;	/* pointer to previous state */
@@ -179,6 +185,7 @@ struct limits
 	struct checkpt	checkbase; \
 	Shinit_f	userinit; \
 	Shbltin_f	bltinfun; \
+	Shbltin_t	bltindata; \
 	Shwait_f	waitevent; \
 	char		*cur_line; \
 	char		*rcfile; \

@@ -121,7 +121,7 @@ USAGE_LICENSE
 
 typedef struct Path_s
 {
-	char*		path;
+	const char*	path;
 	int		len;
 } Path_t;
 
@@ -131,8 +131,8 @@ b_getconf(int argc, char** argv, void* context)
 	register char*		name;
 	register char*		path;
 	register char*		value;
-	register char*		s;
-	register char*		t;
+	register const char*	s;
+	register const char*	t;
 	char*			pattern;
 	char*			native;
 	char*			cmd;
@@ -387,7 +387,8 @@ b_getconf(int argc, char** argv, void* context)
 	 * don't blame us for crappy diagnostics
 	 */
 
-	if ((n = procrun(cmd, oargv)) >= EXIT_NOEXEC)
+	oargv[0] = cmd;
+	if ((n = sh_run(context, argc, oargv)) >= EXIT_NOEXEC)
 		error(ERROR_SYSTEM|2, "%s: exec error [%d]", cmd, n);
 	return n;
 }

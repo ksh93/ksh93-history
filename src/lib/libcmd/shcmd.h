@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1985-2007 AT&T Knowledge Ventures            *
+*           Copyright (c) 1992-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -16,34 +16,65 @@
 *                                                                      *
 *                 Glenn Fowler <gsf@research.att.com>                  *
 *                  David Korn <dgk@research.att.com>                   *
-*                   Phong Vo <kpv@research.att.com>                    *
 *                                                                      *
 ***********************************************************************/
 #pragma prototyped
+
 /*
- * Glenn Fowler
- * AT&T Research
- *
- * procopen() + procclose()
- * no env changes
- * no modifications
- * effective=real
- * parent ignores INT & QUIT
+ * ksh builtin command api
  */
 
-#include "proclib.h"
+#ifndef _SHCMD_H
+#define _SHCMD_H	1
 
-int
-procrun(const char* path, char** argv, int flags)
-{
-#if __OBSOLETE__ < 20090101
-	flags &= argv ? PROC_ARGMOD : PROC_CHECK;
+#ifndef SH_VERSION
+#   define Shell_t	void
 #endif
-	if (flags & PROC_CHECK)
-	{
-		char	buf[PATH_MAX];
+#ifndef NV_DEFAULT
+#   define Namval_t	void
+#endif
+#ifndef ERROR_NOTIFY
+#   define ERROR_NOTIFY	1
+#endif
 
-		return pathpath(buf, path, NiL, PATH_REGULAR|PATH_EXECUTE) ? 0 : -1;
-	}
-	return procclose(procopen(path, argv, NiL, NiL, flags|PROC_FOREGROUND|PROC_GID|PROC_UID));
-}
+typedef int (*Shbltin_f)(int, char**, void*);
+
+#undef Shbltin_t
+typedef struct Shbltin_s
+{
+	Shell_t		*shp;
+	void		*ptr;
+	int		version;
+	int		(*shrun)(int, char**);
+	int		(*shtrap)(const char*, int);
+	void		(*shexit)(int);
+	Namval_t	*(*shbltin)(const char*, Shbltin_f, void*);
+	unsigned char	notify;
+	unsigned char	sigset;
+	unsigned char	nosfio;
+	Namval_t	*bnode;
+	Namval_t	*vnode;
+	char		*data;
+	int		flags;
+} Shbltin_t;
+
+#if defined(SH_VERSION) ||  defined(_SH_PRIVATE)
+#   undef Shell_t
+#   undef Namval_t
+#else 
+#   define sh_run(c, ac, av)	((c)?(*((Shbltin_t*)(c))->shrun)(ac,av):-1)
+#   define sh_system(c,str)	((c)?(*((Shbltin_t*)(c))->shtrap)(str,0):system(str))
+#   define sh_exit(c,n)		((c)?(*((Shbltin_t*)(c))->shexit)(n):exit(n))
+#   define sh_checksig(c)	((c) && ((Shbltin_t*)(c))->sigset)
+#   if defined(SFIO_VERSION) || defined(_AST_H)
+#	define LIB_INIT(c)
+#   else
+#	define LIB_INIT(c)	((c) && (((Shbltin_t*)(c))->nosfio = 1))
+#   endif
+#   ifndef _CMD_H
+#	define cmdinit(ac,av,c,cat,flg)		do { if((ac)<=0) return(0); \
+	    (((Shbltin_t*)(c))->notify = ((flg)&ERROR_NOTIFY)?1:0);} while(0)
+#   endif
+#endif
+
+#endif

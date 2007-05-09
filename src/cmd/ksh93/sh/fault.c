@@ -59,9 +59,10 @@ static char	indone;
 */
 void	sh_fault(register int sig)
 {
-	register int 	flag=0;
-	register char	*trap;
-	register struct checkpt	*pp = (struct checkpt*)sh.jmplist;
+	register Shell_t	*shp = sh_getinterp();
+	register int 		flag=0;
+	register char		*trap;
+	register struct checkpt	*pp = (struct checkpt*)shp->jmplist;
 	int	action=0;
 	/* reset handler */
 	if(!(sig&SH_TRAP))
@@ -79,17 +80,17 @@ void	sh_fault(register int sig)
 			nv_putval(LINES, (char*)&v, NV_INT32);
 	}
 #endif  /* SIGWINCH */
-	if(sh.savesig)
+	if(shp->savesig)
 	{
 		/* critical region, save and process later */
-		sh.savesig = sig;
+		shp->savesig = sig;
 		return;
 	}
 
 	/* handle ignored signals */
-	if((trap=sh.st.trapcom[sig]) && *trap==0)
+	if((trap=shp->st.trapcom[sig]) && *trap==0)
 		return;
-	flag = sh.sigflag[sig]&~SH_SIGOFF;
+	flag = shp->sigflag[sig]&~SH_SIGOFF;
 	if(!trap)
 	{
 		if(flag&SH_SIGIGNORE)
@@ -97,14 +98,14 @@ void	sh_fault(register int sig)
 		if(flag&SH_SIGDONE)
 		{
 			void *ptr=0;
-			if((flag&SH_SIGINTERACTIVE) && sh_isstate(SH_INTERACTIVE) && !sh_isstate(SH_FORKED) && ! sh.subshell)
+			if((flag&SH_SIGINTERACTIVE) && sh_isstate(SH_INTERACTIVE) && !sh_isstate(SH_FORKED) && ! shp->subshell)
 			{
 				/* check for TERM signal between fork/exec */
 				if(sig==SIGTERM && job.in_critical)
-					sh.trapnote |= SH_SIGTERM;
+					shp->trapnote |= SH_SIGTERM;
 				return;
 			}
-			sh.lastsig = sig;
+			shp->lastsig = sig;
 			sigrelease(sig);
 			if(pp->mode < SH_JMPFUN)
 				pp->mode = SH_JMPFUN;
@@ -114,14 +115,14 @@ void	sh_fault(register int sig)
 			{
 				if(ptr)
 					free(ptr);
-				if(!sh.subshell)
+				if(!shp->subshell)
 					sh_done(sig);
 				sh_exit(SH_EXITSIG);
 			}
 			/* mark signal and continue */
-			sh.trapnote |= SH_SIGSET;
-			if(sig < sh.sigmax)
-				sh.sigflag[sig] |= SH_SIGSET;
+			shp->trapnote |= SH_SIGSET;
+			if(sig < shp->sigmax)
+				shp->sigflag[sig] |= SH_SIGSET;
 #if  defined(VMFL) && (VMALLOC_VERSION>=20031205L)
 			if(abortsig(sig))
 			{
@@ -137,7 +138,7 @@ void	sh_fault(register int sig)
 	}
 	errno = 0;
 	if(pp->mode==SH_JMPCMD)
-		sh.lastsig = sig;
+		shp->lastsig = sig;
 	if(trap)
 	{
 		/*
@@ -149,12 +150,12 @@ void	sh_fault(register int sig)
 	}
 	else
 	{
-		sh.lastsig = sig;
+		shp->lastsig = sig;
 		flag = SH_SIGSET;
 #ifdef SIGTSTP
 		if(sig==SIGTSTP)
 		{
-			sh.trapnote |= SH_SIGTSTP;
+			shp->trapnote |= SH_SIGTSTP;
 			if(pp->mode==SH_JMPCMD && sh_isstate(SH_STOPOK))
 			{
 				sigrelease(sig);
@@ -165,14 +166,20 @@ void	sh_fault(register int sig)
 #endif /* SIGTSTP */
 	}
 #ifdef ERROR_NOTIFY
-	if((error_info.flags&ERROR_NOTIFY) && sh.bltinfun)
-		action = (*sh.bltinfun)(-sig,(char**)0,(void*)0);
-#endif
+	/* This is obsolete */
+	if((error_info.flags&ERROR_NOTIFY) && shp->bltinfun)
+		action = (*shp->bltinfun)(-sig,(char**)0,(void*)0);
 	if(action>0)
 		return;
-	sh.trapnote |= flag;
-	if(sig < sh.sigmax)
-		sh.sigflag[sig] |= flag;
+#endif
+	if(shp->bltinfun && shp->bltindata.notify)
+	{
+		shp->bltindata.sigset = 1;
+		return;
+	}
+	shp->trapnote |= flag;
+	if(sig < shp->sigmax)
+		shp->sigflag[sig] |= flag;
 	if(pp->mode==SH_JMPCMD && sh_isstate(SH_STOPOK))
 	{
 		if(action<0)

@@ -119,6 +119,7 @@ struct Ufunction
 #define BLT_SPC		(NV_LJUST)		/* special built-ins */
 #define BLT_EXIT	(NV_RJUST)		/* exit value can be > 255 */
 #define BLT_DCL		(NV_TAGGED)		/* declaration command */
+#define BLT_NOSFIO	(NV_IMPORT)		/* doesn't use sfio */
 #define nv_isref(n)	(nv_isattr((n),NV_REF)==NV_REF)
 #define nv_istable(n)	(nv_isattr((n),NV_TABLE|NV_LJUST|NV_RJUST)==NV_TABLE)
 #define is_abuiltin(n)	(nv_isattr(n,NV_BLTIN)==NV_BLTIN)
@@ -138,9 +139,6 @@ struct Ufunction
 #define nv_reftree(n)	((n)->nvalue.nrp->root)
 #define nv_reftable(n)	((n)->nvalue.nrp->table)
 #define nv_refsub(n)	((n)->nvalue.nrp->sub)
-#if SHOPT_OO
-#   define nv_class(np)		(nv_isattr(np,NV_REF|NV_IMPORT)?0:(Namval_t*)((np)->nvenv))
-#endif /* SHOPT_OO */
 
 /* ... etc */
 
@@ -181,6 +179,7 @@ extern char		*nv_getbuf(size_t);
 extern Namval_t		*nv_mount(Namval_t*, const char *name, Dt_t*);
 extern Namval_t		*nv_arraychild(Namval_t*, Namval_t*, int);
 extern int		nv_compare(Dt_t*, Void_t*, Void_t*, Dtdisc_t*);
+extern int		nv_isvtree(Namval_t*);
 
 extern const Namdisc_t	RESTRICTED_disc;
 extern char		nv_local;

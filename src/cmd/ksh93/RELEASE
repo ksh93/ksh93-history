@@ -1,4 +1,11 @@
-07-04-18  --- Release ksh93s+  ---
+07-05-10  --- Release ksh93s+  ---
+07-05-10  A bug in which ksh -R file core dumped if no script was sepcifed
+	  has been fixed.  It now displays an error message.
+07-05-07  Added additional Solaris signals to signal table.
+07-04-30  A bug in which a pipeline with command substitution inside a
+	  function could cause a pipline that invokes this function to
+	  hang when the pipefail option is on has been fixed.
+07-04-30  Added -q to whence.
 07-04-18  A small memory leak with each redirection of a non-builtin has
 	  been fixed.
 07-03-08  A bug in which set +o output command line options has been fixed.

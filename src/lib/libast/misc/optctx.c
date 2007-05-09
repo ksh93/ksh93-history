@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1982-2007 AT&T Knowledge Ventures            *
+*           Copyright (c) 1985-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -14,52 +14,57 @@
 *                            AT&T Research                             *
 *                           Florham Park NJ                            *
 *                                                                      *
+*                 Glenn Fowler <gsf@research.att.com>                  *
 *                  David Korn <dgk@research.att.com>                   *
+*                   Phong Vo <kpv@research.att.com>                    *
 *                                                                      *
 ***********************************************************************/
 #pragma prototyped
-#ifndef _SHTABLE_H
-
 /*
- * David Korn
- * AT&T Labs
+ * Glenn Fowler
+ * AT&T Research
  *
- * Interface definitions read-only data tables for shell
+ * _opt_infop_ context control
  *
+ * allocate new context:
+ *	new_context = optctx(0, 0);
+ * free new context:
+ *	optctx(0, new_context);
+ * switch to new_context:
+ *	old_context = optctx(new_context, 0);
+ * switch to old_context and free new_context:
+ *	optctx(old_context, new_context);
  */
 
-#define _SHTABLE_H	1
+#include <optlib.h>
 
-typedef struct shtable1
+static Opt_t*	freecontext;
+
+Opt_t*
+optctx(Opt_t* p, Opt_t* o)
 {
-	const char	*sh_name;
-	const unsigned	sh_number;
-} Shtable_t;
-
-struct shtable2
-{
-	const char	*sh_name;
-	const unsigned	sh_number;
-	const char	*sh_value;
-};
-
-struct shtable3
-{
-	const char	*sh_name;
-	const unsigned	sh_number;
-	int		(*sh_value)(int, char*[], void*);
-};
-
-#define sh_lookup(name,value)	(sh_locate(name,(Shtable_t*)(value),sizeof(*(value)))->sh_number)
-extern const Shtable_t		shtab_testops[];
-extern const Shtable_t		shtab_options[];
-extern const Shtable_t		shtab_attributes[];
-extern const struct shtable2	shtab_variables[];
-extern const struct shtable2	shtab_aliases[];
-extern const struct shtable2	shtab_signals[];
-extern const struct shtable3	shtab_builtins[];
-extern const Shtable_t		shtab_reserved[];
-extern const Shtable_t		*sh_locate(const char*, const Shtable_t*, int);
-extern int			sh_lookopt(const char*, int*);
-
-#endif /* SH_TABLE_H */
+	if (o)
+	{
+		if (freecontext)
+			free(o);
+		else
+			freecontext = o;
+		if (!p)
+			return 0;
+	}
+	if (p)
+	{
+		o = _opt_infop_;
+		_opt_infop_ = p;
+	}
+	else
+	{
+		if (o = freecontext)
+			freecontext = 0;
+		else if (!(o = newof(0, Opt_t, 1, 0)))
+			return 0;
+		memset(o, 0, sizeof(Opt_t));
+		o->state = _opt_infop_->state;
+	}
+	return o;
+}

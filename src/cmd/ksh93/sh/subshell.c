@@ -330,6 +330,7 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 	register struct subshell *sp = &sub_data;
 	int jmpval,nsig;
 	int savecurenv = shp->curenv;
+	int savejobpgid = job.curpgid;
 	int16_t subshell;
 	char *savsig;
 	Sfio_t *iop=0;
@@ -345,6 +346,7 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 		subenv = 0;
 	}
 	shp->curenv = ++subenv;
+	job.curpgid = 0;
 	savst = shp->st;
 	sh_pushcontext(&buff,SH_JMPSUB);
 	subshell = shp->subshell+1;
@@ -490,6 +492,7 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 #endif
 	job_subrestore(sp->jobs);
 	shp->jobenv = savecurenv;
+	job.curpgid = savejobpgid;
 	shp->bckpid = sp->bckpid;
 	if(sp->shpwd)	/* restore environment if saved */
 	{

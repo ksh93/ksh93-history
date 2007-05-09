@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1985-2006 AT&T Knowledge Ventures            *
+*           Copyright (c) 1985-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -291,7 +291,7 @@ pathprobe(char* path, char* attr, const char* lang, const char* tool, const char
 		*ap++ = (char*)tool;
 		*ap++ = proc;
 		*ap = 0;
-		if (procrun(exe, arg))
+		if (procrun(exe, arg, 0))
 			return 0;
 		if (eaccess(path, R_OK))
 			return 0;

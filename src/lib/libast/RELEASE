@@ -1,6 +1,14 @@
+07-05-09 features/signal.c,features/siglist: use kill -l & strsignal()
+07-04-25 misc/optctx.c: add for opt_info switching
+07-04-24 misc/cmdarg.c,include/cmdarg.h: add CMD_CHECKED, CMD_SILENT
+07-04-24 misc/procopen.c,include/proc.h: add PROC_CHECK
+07-04-24 misc/procrun.c: add flags arg (current use PROC_ARGMOD)
+07-04-24 misc/cmdarg.c,include/cmdarg.h: move from src/cmd/tw
 07-04-20 port/(lclang.h|lc.c|mc.c|lclib.h|lcgen.c): separate lctab.c
 07-04-20 comp/conf.sh: defer to systems without 'grep -q' -- sigh
 07-04-20 comp/conf.sh: probe for LL integer constant initializer suffix
+07-04-20 include/syslog.h: <namval.h> => <ast_namval.h> for win32
+07-04-20 ast_namval.h: add as copy of include/namval.h for win32
 07-04-19 comp/conf.tab: fix SVID SI entries to probe SI_* (not _SI_*)
 07-04-13 tm/tmxdate.c,tm/tmzone.c: handle [-+]0000 UTC zone offset
 07-04-11 sfio/sfvprintf.c: add %F, propagate SFFMT_UPPER
@@ -9,6 +17,7 @@
 07-03-28 misc/optget.c: fix l10n --?-
 07-03-25 features/common: fix { ast_std.h ast_map.h stdint.h } logic
 07-03-21 error.h: move from error_info to (*_error_data_)
+07-03-21 misc/error.c: add errorctx() for error_info switching
 07-03-21 option.h: move from opt_info to (*_opt_data_)
 07-03-19 regex/regdecomp.c: fix REX_ONECHAR escapes and add REX_KMP
 07-03-11 tm/tmxscan.c,regex/regnexec.c: fix strict-alias transgressions

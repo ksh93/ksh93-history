@@ -140,7 +140,7 @@ int sh_main(int ac, char *av[], void (*userinit)(int))
 	int i, rshflag;		/* set for restricted shell */
 	char *command;
 #ifdef _lib_sigvec
-	/* This is to clear mask that my be left on by rlogin */
+	/* This is to clear mask that may be left on by rlogin */
 	clearsigmask(SIGALRM);
 	clearsigmask(SIGHUP);
 	clearsigmask(SIGCHLD);
@@ -210,7 +210,7 @@ int sh_main(int ac, char *av[], void (*userinit)(int))
 			sh_onoption(SH_MONITOR);
 		}
 		job_init(sh_isoption(SH_LOGIN_SHELL));
-		if(sh_isoption(SH_LOGIN_SHELL) && !sh_isoption(SH_NOPROFILE))
+		if(sh_isoption(SH_LOGIN_SHELL))
 		{
 			/*	system profile	*/
 			sh_source(shp, iop, e_sysprofile);

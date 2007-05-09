@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2005 AT&T Corp.                  *
+*           Copyright (c) 1982-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -55,6 +55,9 @@ const struct shtable2 shtab_signals[] =
 #ifdef SIGBUS
 	"BUS",		VAL(SIGBUS,SH_SIGDONE),		S("Bus error"),
 #endif /* SIGBUS */
+#ifdef SIGCANCEL
+	"CANCEL",	VAL(SIGCANCEL,SH_SIGIGNORE), 	S("Thread cancellation"),
+#endif /*SIGCANCEL */
 #ifdef SIGCHLD
 	"CHLD",		VAL(SIGCHLD,SH_SIGFAULT), 	S("Death of Child"),
 #   ifdef SIGCLD
@@ -71,6 +74,9 @@ const struct shtable2 shtab_signals[] =
 	"CONT",		VAL(SIGCONT,SH_SIGIGNORE),	S("Stopped process continued"),
 #endif	/* SIGCONT */
 	"DEBUG",	VAL(TRAP(SH_DEBUGTRAP),0),	"",
+#ifdef SIGDANGER
+	"DANGER",	VAL(SIGDANGER,0),	S("System crash soon"),
+#endif	/* SIGDANGER */
 #ifdef SIGDIL
 	"DIL",		VAL(SIGDIL,0),			S("DIL signal"),
 #endif	/* SIGDIL */
@@ -99,6 +105,12 @@ const struct shtable2 shtab_signals[] =
 #ifdef SIGIOT
 	"IOT",		VAL(SIGIOT,SH_SIGDONE),		S("Abort"),
 #endif	/* SIGIOT */
+#ifdef SIGJVM1
+	"JVM1",		VAL(SIGJVM1,SH_SIGIGNORE), 	S("Special signal used by Java Virtual Machine"),
+#endif /*SIGJVM1 */
+#ifdef SIGJVM2
+	"JVM2",		VAL(SIGJVM2,SH_SIGIGNORE), 	S("Special signal used by Java Virtual Machine"),
+#endif /*SIGJVM2 */
 	"KEYBD",	VAL(TRAP(SH_KEYTRAP),0),	"",
 #ifdef SIGKILL
 	"KILL",		VAL(SIGKILL,0),			S("Killed"),
@@ -144,7 +156,7 @@ const struct shtable2 shtab_signals[] =
 #define SIGRTMIN	_SIGRTMIN
 #endif 
 #endif
-#ifdef SIGRTMIN
+#if defined(SIGRTMIN) && SIGRTMIN > 0
 	"RTMIN",	VAL(SIGRTMIN,0),		S("Lowest priority realtime signal"),
 #endif	/* SIGRTMIN */
 #ifdef __SIGRTMAX
@@ -156,7 +168,7 @@ const struct shtable2 shtab_signals[] =
 #define SIGRTMAX	_SIGRTMAX
 #endif 
 #endif
-#ifdef SIGRTMAX
+#if defined(SIGRTMAX) && SIGRTMAX > 0
 	"RTMAX",	VAL(SIGRTMAX,0),		S("Highest priority realtime signal"),
 #endif	/* SIGRTMAX */
 #endif	/* SIGQUIT */
@@ -205,9 +217,6 @@ const struct shtable2 shtab_signals[] =
 #ifdef SIGMIGRATE
 	"MIGRATE",		VAL(SIGMIGRATE,0),	S("Migrate process"),
 #endif	/* SIGMIGRATE */
-#ifdef SIGDANGER
-	"DANGER",		VAL(SIGDANGER,0),	S("System crash soon"),
-#endif	/* SIGDANGER */
 #ifdef SIGSOUND
 	"SOUND",		VAL(SIGSOUND,0),	S("Sound completed"),
 #endif	/* SIGSOUND */
@@ -223,5 +232,8 @@ const struct shtable2 shtab_signals[] =
 #ifdef SIGXFSZ
 	"XFSZ",		VAL(SIGXFSZ,SH_SIGDONE|SH_SIGINTERACTIVE),	S("Exceeded file size limit"),
 #endif	/* SIGXFSZ */
+#ifdef SIGXRES
+	"XRES",		VAL(SIGXRES,SH_SIGDONE|SH_SIGINTERACTIVE),	S("Exceeded resource control"),
+#endif	/* SIGRES */
 	"",	0,	0
 };

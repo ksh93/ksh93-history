@@ -432,6 +432,8 @@ exec - then	rm -f 1.${COTEMP}.h
 exec - else	mv 1.${COTEMP}.h cmdext.h
 exec - fi
 done cmdext.h dontcare generated
+make shcmd.h implicit
+done shcmd.h dontcare
 make ${PACKAGE_ast_INCLUDE}/stak.h implicit
 prev ${PACKAGE_ast_INCLUDE}/stk.h implicit
 prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
@@ -778,6 +780,14 @@ exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${PACKAGE_ast_INCLUDE}/cmdlist.h
 exec - fi
 done ${PACKAGE_ast_INCLUDE}/cmdlist.h generated
+make ${PACKAGE_ast_INCLUDE}/shcmd.h
+prev shcmd.h
+exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1992,author=gsf+dgk'  shcmd.h  > 1.${COTEMP}.x
+exec - if	cmp 2>/dev/null -s ${PACKAGE_ast_INCLUDE}/shcmd.h 1.${COTEMP}.x
+exec - then	rm -f 1.${COTEMP}.x
+exec - else	mv 1.${COTEMP}.x ${PACKAGE_ast_INCLUDE}/shcmd.h
+exec - fi
+done ${PACKAGE_ast_INCLUDE}/shcmd.h generated
 done install virtual
 make test
 done test dontcare virtual

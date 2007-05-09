@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#           Copyright (c) 1982-2006 AT&T Knowledge Ventures            #
+#           Copyright (c) 1982-2007 AT&T Knowledge Ventures            #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                      by AT&T Knowledge Ventures                      #
@@ -310,4 +310,22 @@ set -o pipefail
 false | true | true    && err_exit 'pipe with first not failing with pipefail'
 true | false | true    && err_exit 'pipe middle not failing with pipefail'
 true | true | false    && err_exit 'pipe last not failing with pipefail'
+$SHELL -c '[[ $- == *c* ]]' || err_exit  'option c not in $-'
+trap 'rm -f /tmp/.profile' EXIT
+> /tmp/.profile
+for i in  i l r s D E a b e f h k n r t u v  x B C G H
+do	HOME=/tmp ENV= $SHELL -$i  2> /dev/null <<- ++EOF++ || err_exit "option $i not in \$-"
+	[[ \$- == *$i* ]]  ||   exit 1
+	++EOF++
+done
+letters=ilrabefhknuvxBCGE
+integer j=0
+for i in  interactive login restricted allexport notify errexit \
+	noglob  trackall keyword noexec nounset verbose xtrace braceexpand \
+	noclobber globstar rc
+do	HOME=/tmp ENV= $SHELL   -o $i  2> /dev/null <<- ++EOF++ || err_exit "option $i not equivalent to ${letters:j:1}"
+	[[ \$- == *${letters:j:1}* ]]  ||   exit 1
+	++EOF++
+	((j++))
+done
 exit $((Errors))

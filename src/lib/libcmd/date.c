@@ -206,7 +206,7 @@ typedef struct Fmt
  */
 
 static int
-settime(const char* cmd, Time_t now, int adjust, int network)
+settime(void* context, const char* cmd, Time_t now, int adjust, int network)
 {
 	char*		s;
 	char**		argv;
@@ -236,7 +236,7 @@ settime(const char* cmd, Time_t now, int adjust, int network)
 		}
 		*argv++ = buf;
 		*argv = 0;
-		if (!procrun(s, args))
+		if (!sh_run(context, argv - args, args))
 			return 0;
 	}
 	return -1;
@@ -473,7 +473,7 @@ b_date(int argc, register char** argv, void* context)
 			tmxfmt(buf, sizeof(buf), format, now);
 			sfprintf(sfstdout, "%s\n", buf);
 		}
-		else if (settime(cmd, now, increment, network))
+		else if (settime(context, cmd, now, increment, network))
 			error(ERROR_SYSTEM|3, "cannot set system time");
 	}
 	while (fmts != &fmt)

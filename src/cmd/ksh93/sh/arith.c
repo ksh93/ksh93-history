@@ -120,7 +120,6 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 		{
 			register Namval_t *np;
 			int dot=0;
-			char *cp;
 			while(1)
 			{
 				while(xp=str, c=mbchar(str), isaname(c));

@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2006 AT&T Corp.                  *
+*           Copyright (c) 1982-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -40,6 +40,7 @@
 #define A_FLAG	4
 #define F_FLAG	010
 #define X_FLAG	020
+#define Q_FLAG	040
 
 static int whence(Shell_t *,char**, int);
 
@@ -112,6 +113,9 @@ int	b_whence(int argc,char *argv[],void *extra)
 	    case 'p':
 		flags |= P_FLAG;
 		break;
+	    case 'q':
+		flags |= Q_FLAG;
+		break;
 	    case ':':
 		errormsg(SH_DICT,2, "%s", opt_info.arg);
 		break;
@@ -140,6 +144,8 @@ static int whence(Shell_t *shp,char **argv, register int flags)
 	Pathcomp_t *pp;
 #endif
 	int notrack = 1;
+	if(flags&Q_FLAG)
+		flags &= ~A_FLAG;
 	while(name= *argv++)
 	{
 		tofree=0;
@@ -151,6 +157,8 @@ static int whence(Shell_t *shp,char **argv, register int flags)
 #endif
 		if(flags&P_FLAG)
 			goto search;
+		if(flags&Q_FLAG)
+			goto bltins;
 		/* reserved words first */
 		if(sh_lookup(name,shtab_reserved))
 		{
@@ -179,6 +187,7 @@ static int whence(Shell_t *shp,char **argv, register int flags)
 			aflag++;
 		}
 		/* built-ins and functions next */
+	bltins:
 		root = (flags&F_FLAG)?shp->bltin_tree:shp->fun_tree;
 		if(np= nv_bfsearch(name, root, &nq, &notused))
 		{
@@ -194,6 +203,8 @@ static int whence(Shell_t *shp,char **argv, register int flags)
 				else
 					cp = sh_translate(is_function);
 			}
+			if(flags&Q_FLAG)
+				continue;
 			sfprintf(sfstdout,"%s%s\n",name,cp);
 			if(!aflag)
 				continue;
@@ -227,7 +238,9 @@ static int whence(Shell_t *shp,char **argv, register int flags)
 			cp = shp->lastpath;
 		shp->lastpath = 0;
 #endif
-		if(cp)
+		if(flags&Q_FLAG)
+			r |= !cp;
+		else if(cp)
 		{
 			if(flags&V_FLAG)
 			{

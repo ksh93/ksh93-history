@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
+*           Copyright (c) 1982-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -27,7 +27,7 @@
  *
  */
 
-#include	<cmd.h>
+#include	<ast.h>
 #include	<cdt.h>
 #ifdef _SH_PRIVATE
 #   include	"name.h"
@@ -35,7 +35,7 @@
 #   include	<nval.h>
 #endif /* _SH_PRIVATE */
 
-#define SH_VERSION	20060510
+#define SH_VERSION	20070511
 
 #undef NOT_USED
 #define NOT_USED(x)	(&x,1)
@@ -48,7 +48,6 @@ typedef struct
 Shopt_t;
 
 typedef void	(*Shinit_f)(int);
-typedef int     (*Shbltin_f)(int, char*[], void*);
 typedef int	(*Shwait_f)(int, long, int);
 
 union Shnode_u;
@@ -149,6 +148,8 @@ typedef struct sh_static
 #define SH_IOCOPROCESS	(-2)
 #define SH_IOHISTFILE	(-3)
 
+#include	<cmd.h>
+
 /* symbolic value for sh_fdnotify */
 #define SH_FDCLOSE	(-1)
 
@@ -170,6 +171,7 @@ extern int 		sh_fun(Namval_t*,Namval_t*, char*[]);
 extern int 		sh_funscope(int,char*[],int(*)(void*),void*,int);
 extern Sfio_t		*sh_iogetiop(int,int);
 extern int		sh_main(int, char*[], void(*)(int));
+extern int		sh_run(int, char*[]);
 extern void		sh_menu(Sfio_t*, int, char*[]);
 extern Namval_t		*sh_addbuiltin(const char*, int(*)(int, char*[],void*), void*);
 extern char		*sh_fmtq(const char*);

@@ -43,7 +43,7 @@
 #   define PFSHOPT
 #endif
 #if SHOPT_BASH
-#   define BASHOPT	"\375\374\373"
+#   define BASHOPT	"\374"
 #else
 #   define BASHOPT
 #endif
@@ -70,7 +70,7 @@ static const int flagval[]  =
 	SH_PFSH,
 #endif
 #if SHOPT_BASH
-	SH_NOPROFILE, SH_RC, SH_POSIX,
+	SH_POSIX,
 #endif
 	SH_DICTIONARY, SH_INTERACTIVE, SH_RESTRICTED, SH_CFLAG,
 	SH_ALLEXPORT, SH_NOTIFY, SH_ERREXIT, SH_NOGLOB, SH_TRACKALL,
@@ -159,7 +159,7 @@ int sh_argopts(int argc,register char *argv[])
 	while((n = optget(argv,setflag?sh_optset:sh_optksh)))
 	{
 		o=0;
-		f=*opt_info.option=='-';
+		f=*opt_info.option=='-' && (opt_info.num || opt_info.arg);
 		switch(n)
 		{
 	 	    case 'A':
@@ -204,28 +204,28 @@ int sh_argopts(int argc,register char *argv[])
 		    case -1:	/* --rcfile */
 			sh.rcfile = opt_info.arg;
 			continue;
-		    case -6:	/* --version */
+		    case -2:	/* --noediting */
+			if (!f)
+			{
+				off_option(&newflags,SH_VI);
+				off_option(&newflags,SH_EMACS);
+				off_option(&newflags,SH_GMACS);
+			}
+			continue;
+		    case -3:	/* --profile */
+			n = 'l';
+			goto skip;
+		    case -4:	/* --posix */
+			/* mask lower 8 bits to find char in optksh string */
+			n&=0xff;
+			goto skip;
+		    case -5:	/* --version */
 			sfputr(sfstdout, "ksh bash emulation, version ",-1);
 			np = nv_open("BASH_VERSION",sh.var_tree,0);
 			sfputr(sfstdout, nv_getval(np),-1);
 			np = nv_open("MACHTYPE",sh.var_tree,0);
 			sfprintf(sfstdout, " (%s)\n", nv_getval(np));
 			sh_exit(0);
-
-		    case -2:	/* --noediting */
-			off_option(&newflags,SH_VI);
-			off_option(&newflags,SH_EMACS);
-			off_option(&newflags,SH_GMACS);
-			continue;
-
-		    case -3:	/* --profile */
-			f = !f;
-			/*FALLTHROUGH*/
-		    case -4:	/* --rc */
-		    case -5:	/* --posix */
-			/* mask lower 8 bits to find char in optksh string */
-			n&=0xff;
-			goto skip;
 #endif
 	 	    case 'D':
 			on_option(&newflags,SH_NOEXEC);
@@ -336,6 +336,8 @@ int sh_argopts(int argc,register char *argv[])
 #if SHOPT_KIA
 	if(ap->kiafile)
 	{
+		if(!argv[0])
+			errormsg(SH_DICT,ERROR_usage(2),"-R requires scriptname");
 		if(!(shlex.kiafile=sfopen(NIL(Sfio_t*),ap->kiafile,"w+")))
 			errormsg(SH_DICT,ERROR_system(3),e_create,ap->kiafile);
 		if(!(shlex.kiatmp=sftmp(2*SF_BUFSIZE)))

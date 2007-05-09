@@ -680,14 +680,16 @@ static char*
 save(const char* s)
 {
 	Save_t*		p;
+	Dtdisc_t*	d;
 
-	static Dtdisc_t	disc;
 	static Dt_t*	dict;
 
 	if (!dict)
 	{
-		disc.key = offsetof(Save_t, text);
-		if (!(dict = dtopen(&disc, Dthash)))
+		if (!(d = newof(0, Dtdisc_t, 1, 0)))
+			return (char*)s;
+		d->key = offsetof(Save_t, text);
+		if (!(dict = dtopen(d, Dthash)))
 			return (char*)s;
 	}
 	if (!(p = (Save_t*)dtmatch(dict, s)))

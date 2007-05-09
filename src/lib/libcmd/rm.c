@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1992-2006 AT&T Knowledge Ventures            *
+*           Copyright (c) 1992-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -108,8 +108,6 @@ rm(State_t* state, register FTSENT* ent)
 	int		v;
 	struct stat	st;
 
-	if (cmdquit())
-		return -1;
 	if (ent->fts_info == FTS_NS || ent->fts_info == FTS_ERR || ent->fts_info == FTS_SLNONE)
 	{
 		if (!state->force)
@@ -403,7 +401,7 @@ b_rm(int argc, register char** argv, void* context)
 		set3d = 0;
 	if (fts = fts_open(argv, FTS_PHYSICAL, NiL))
 	{
-		while ((ent = fts_read(fts)) && !rm(&state, ent));
+		while (!sh_checksig(context) && (ent = fts_read(fts)) && !rm(&state, ent));
 		fts_close(fts);
 	}
 	else if (!state.force)

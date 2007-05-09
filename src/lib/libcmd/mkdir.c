@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1992-2006 AT&T Knowledge Ventures            *
+*           Copyright (c) 1992-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: mkdir (AT&T Research) 2006-08-27 $\n]"
+"[-?\n@(#)$Id: mkdir (AT&T Research) 2007-04-25 $\n]"
 USAGE_LICENSE
 "[+NAME?mkdir - make directories]"
 "[+DESCRIPTION?\bmkdir\b creates one or more directories.  By "
@@ -70,6 +70,7 @@ b_mkdir(int argc, char** argv, void* context)
 	register int	pflag = 0;
 	char*		name;
 	mode_t		dmode;
+	struct stat	st;
 
 	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
 	while (n = optget(argv, usage)) switch (n)
@@ -142,7 +143,19 @@ b_mkdir(int argc, char** argv, void* context)
 					error(ERROR_system(0), "%s:", name);
 					break;
 				}
-				*arg = n;
+				if (!(*arg = n) && (mode & (S_ISVTX|S_ISUID|S_ISGID)))
+				{
+					if (stat(name, &st))
+					{
+						error(ERROR_system(0), "%s: cannot stat", name);
+						break;
+					}
+					if ((st.st_mode & (S_ISVTX|S_ISUID|S_ISGID)) != (mode & (S_ISVTX|S_ISUID|S_ISGID)) && chmod(name, mode))
+					{
+						error(ERROR_system(0), "%s: cannot change mode from %s to %s", name, fmtperm(st.st_mode & (S_ISVTX|S_ISUID|S_ISGID)), fmtperm(mode));
+						break;
+					}
+				}
 			}
 		}
 	}

@@ -366,7 +366,7 @@ static void job_waitsafe(int sig)
  */
 void job_init(int lflag)
 {
-	register int i,ntry=0;
+	register int ntry=0;
 	job.fd = JOBTTY;
 	signal(SIGCHLD,job_waitsafe);
 #   if defined(SIGCLD) && (SIGCLD!=SIGCHLD)

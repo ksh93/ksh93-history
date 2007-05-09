@@ -1,3 +1,8 @@
+07-05-11 cmd.h: add _CMD_CONTEXT_OK() to verify >= 20070511 context
+07-05-09 fds.c: handle ipv6 sockets
+07-05-09 cmd.h: <shbltin.h> : cmdquit() => sh_checksig(context)
+07-04-25 mkdir.c: force (S_ISVTX|S_ISUID|S_ISGID) after mkdir(2)
+07-04-24 procrun.c: add -last intercept => sh_run() and whence -q
 07-04-19 uname.c: name operands first checked for CS_NAME, then NAME
 07-03-28 date.c: add --unelapsed=scale, -U: fmtelapsed() => strelapsed()
 07-03-25 wclib.h: iswspace() requires <wctype.h>!

@@ -329,7 +329,7 @@ b_uname(int argc, char** argv, void* context)
 			if (!streq(argv[0], s) && (!eaccess(s, X_OK) || !eaccess(s+=4, X_OK)))
 			{
 				argv[0] = s;
-				return procrun(s, argv);
+				return sh_run(context, argc, argv);
 			}
 			error(2, "%s", opt_info.arg);
 			break;

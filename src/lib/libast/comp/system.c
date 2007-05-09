@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1985-2006 AT&T Knowledge Ventures            *
+*           Copyright (c) 1985-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -51,5 +51,5 @@ system(const char* cmd)
 	sh[1] = "-c";
 	sh[2] = (char*)cmd;
 	sh[3] = 0;
-	return procrun(NiL, sh);
+	return procrun(NiL, sh, 0);
 }

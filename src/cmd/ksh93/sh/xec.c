@@ -172,13 +172,13 @@ static int p_comarg(register struct comnod *com)
 	if(com->comstate  && np)
 	{
 		/* call builtin to cleanup state */
-		Nambltin_t bdata; 
-		bdata.shp = &sh;
-		bdata.np = com->comnamq;
-		bdata.ptr =nv_context(np);
-		bdata.data = com->comstate;
-		bdata.flags = SH_END_OPTIM;
-		(*funptr(np))(0,(char**)0, &bdata);
+		Shbltin_t *bp = &sh.bltindata;
+		bp->bnode = np;
+		bp->vnode = com->comnamq;
+		bp->ptr =nv_context(np);
+		bp->data = com->comstate;
+		bp->flags = SH_END_OPTIM;
+		(*funptr(np))(0,(char**)0, bp);
 	}
 	com->comstate = 0;
 	if(com->comarg && !np)
@@ -544,7 +544,6 @@ static void free_list(struct openlist *olist)
 	}
 }
 
-
 int sh_exec(register const Shnode_t *t, int flags)
 {
 	sh_sigcheck();
@@ -560,7 +559,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 #endif
 		int		topfd = sh.topfd;
 		char 		*sav=stakptr(0);
-		char		*cp=0, **com=0;
+		char		*cp=0, **com=0, *comn;
 		int		argn;
 		int 		skipexitset = 0;
 		int		was_interactive = 0;
@@ -628,21 +627,25 @@ int sh_exec(register const Shnode_t *t, int flags)
 			argn -= command;
 			if(!command && np && is_abuiltin(np))
 				np = dtsearch(sh.fun_tree,np);
-			if(com0 && !np && !strchr(com0,'/'))
+			if(com0)
 			{
-				Dt_t *root = command?sh.bltin_tree:sh.fun_tree;
-				np = nv_bfsearch(com0, root, &nq, &cp); 
-#if SHOPT_NAMESPACE
-				if(sh.namespace && !nq && !cp)
+				if(!np && !strchr(com0,'/'))
 				{
-					int offset = staktell();
-					stakputs(nv_name(sh.namespace));
-					stakputc('.');
-					stakputs(com0);
-					stakseek(offset);
-					np = nv_bfsearch(stakptr(offset), root, &nq, &cp); 
-				}
+					Dt_t *root = command?sh.bltin_tree:sh.fun_tree;
+					np = nv_bfsearch(com0, root, &nq, &cp); 
+#if SHOPT_NAMESPACE
+					if(sh.namespace && !nq && !cp)
+					{
+						int offset = staktell();
+						stakputs(nv_name(sh.namespace));
+						stakputc('.');
+						stakputs(com0);
+						stakseek(offset);
+						np = nv_bfsearch(stakptr(offset), root, &nq, &cp); 
+					}
 #endif /* SHOPT_NAMESPACE */
+				}
+				comn = com[argn-1];
 			}
 			io = t->tre.treio;
 			if(sh.envlist = argp = t->com.comset)
@@ -751,7 +754,6 @@ int sh_exec(register const Shnode_t *t, int flags)
 				/* check for builtins */
 				if(np && is_abuiltin(np))
 				{
-					Nambltin_t bdata; 
 					void *context;
 					int scope=0, jmpval, save_prompt,share;
 					struct checkpt buff;
@@ -817,12 +819,17 @@ int sh_exec(register const Shnode_t *t, int flags)
 						sh.bltinfun = funptr(np);
 						if(nv_isattr(np,NV_BLTINOPT))
 						{
-							bdata.shp = &sh;
-							bdata.np = nq;
-							bdata.ptr = context;
-							bdata.data = t->com.comstate;
-							bdata.flags = (OPTIMIZE!=0);
-							context = (void*)&bdata;
+							Shbltin_t *bp = &sh.bltindata;
+							bp->bnode = np;
+							bp->vnode = nq;
+							bp->ptr = context;
+							bp->data = t->com.comstate;
+							bp->sigset = 0;
+							bp->notify = 0;
+							bp->flags = (OPTIMIZE!=0);
+							if(sh.subshell && nv_isattr(np,BLT_NOSFIO))
+								sh_subtmpfile();
+							context = (void*)bp;
 						}
 						if(execflg && !sh.subshell &&
 							!sh.st.trapcom[0] && !sh.st.trap[SH_ERRTRAP] && sh.fn_depth==0 && !nv_isattr(np,BLT_ENV))
@@ -837,7 +844,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 						if(error_info.flags&ERROR_INTERACTIVE)
 							tty_check(ERRIO);
 						if(nv_isattr(np,NV_BLTINOPT))
-							((Shnode_t*)t)->com.comstate = bdata.data;
+							((Shnode_t*)t)->com.comstate = sh.bltindata.data;
 						if(!nv_isattr(np,BLT_EXIT) && sh.exitval!=SH_RUNPROG)
 							sh.exitval &= SH_EXITMASK;
 					}
@@ -855,6 +862,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 									sfclose(item->strm);
 							}
 						}
+						if(sh.bltinfun && (error_info.flags&ERROR_NOTIFY))
+							(*sh.bltinfun)(-2,com,context);
 						/* failure on special built-ins fatal */
 						if(jmpval<=SH_JMPCMD  && (!nv_isattr(np,BLT_SPC) || command))
 							jmpval=0;
@@ -1332,7 +1341,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 			struct comnod	*tp;
 			char *cp, *trap, *nullptr = 0;
 			int nameref, refresh=1;
-			static char *av[5] = { "for", 0, "in" };
+			char *av[5];
 #if SHOPT_OPTIMIZE
 			int  jmpval = ((struct checkpt*)sh.jmplist)->mode;
 			struct checkpt buff;
@@ -1415,7 +1424,9 @@ int sh_exec(register const Shnode_t *t, int flags)
 				{
 					av[0] = (t->tre.tretyp&COMSCAN)?"select":"for";
 					av[1] = t->for_.fornam;
+					av[2] = "in";
 					av[3] = cp;
+					av[4] = 0;
 					sh_debug(trap,(char*)0,(char*)0,av,0);
 				}
 				sh_exec(t->for_.fortre,flag);
@@ -1537,12 +1548,15 @@ int sh_exec(register const Shnode_t *t, int flags)
 		    case TARITH: /* (( expression )) */
 		    {
 			register char *trap;
-			static char *arg[4]=  {"((", 0, "))"};
+			char *arg[4];
 			error_info.line = t->ar.arline-sh.st.firstline;
+			arg[0] = "((";
 			if(!(t->ar.arexpr->argflag&ARG_RAW))
 				arg[1] = sh_macpat(t->ar.arexpr,OPTIMIZE|ARG_ARITH);
 			else
 				arg[1] = t->ar.arexpr->argval;
+			arg[2] = "))";
+			arg[3] = 0;
 			if(trap=sh.st.trap[SH_DEBUGTRAP])
 				sh_debug(trap,(char*)0, (char*)0, arg, ARG_ARITH);
 			if(sh_isoption(SH_XTRACE))
@@ -1574,8 +1588,11 @@ int sh_exec(register const Shnode_t *t, int flags)
 			t= (Shnode_t*)(tt->sw.swlst);
 			if(trap=sh.st.trap[SH_DEBUGTRAP])
 			{
-				static char *av[4] = {"case", 0, "in" };
+				char *av[4];
+				av[0] = "case";
 				av[1] = r;
+				av[2] = "in";
+				av[3] = 0;
 				sh_debug(trap, (char*)0, (char*)0, av, 0);
 			}
 			while(t)
@@ -1924,15 +1941,15 @@ int sh_exec(register const Shnode_t *t, int flags)
 				sh_done(0);
 			if(sh.lastarg!= lastarg && sh.lastarg)
 				free(sh.lastarg);
-			if(strlen(com[argn-1]) < sizeof(lastarg))
+			if(strlen(comn) < sizeof(lastarg))
 			{
 				nv_onattr(L_ARGNOD,NV_NOFREE);
-				sh.lastarg = strcpy(lastarg,com[argn-1]);
+				sh.lastarg = strcpy(lastarg,comn);
 			}
 			else
 			{
 				nv_offattr(L_ARGNOD,NV_NOFREE);
-				sh.lastarg = strdup(com[argn-1]);
+				sh.lastarg = strdup(comn);
 			}
 		}
 		if(!skipexitset)
@@ -1954,6 +1971,34 @@ int sh_exec(register const Shnode_t *t, int flags)
 			sh_onstate(SH_ERREXIT);
 	}
 	return(sh.exitval);
+}
+
+int sh_run(int argn, char *argv[])
+{
+	register struct dolnod	*dp;
+	register struct comnod	*t = (struct comnod*)stakalloc(sizeof(struct comnod));
+	int			savtop = staktell();
+	char			*savptr = stakfreeze(0);
+	Opt_t			*op, *np = optctx(0, 0);
+	Shbltin_t		bltindata;
+	bltindata = sh.bltindata;
+	op = optctx(np, 0);
+	memset(t, 0, sizeof(struct comnod));
+	dp = (struct dolnod*)stakalloc((unsigned)sizeof(struct dolnod) + ARG_SPARE*sizeof(char*) + argn*sizeof(char*));
+	dp->dolnum = argn;
+	dp->dolbot = ARG_SPARE;
+	memcpy(dp->dolval+ARG_SPARE, argv, (argn+1)*sizeof(char*));
+	t->comarg = (struct argnod*)dp;
+	if(!strchr(argv[0],'/'))
+		t->comnamp = (void*)nv_bfsearch(argv[0],sh.fun_tree,(Namval_t**)&t->comnamq,(char**)0);
+	argn=sh_exec((Shnode_t*)t,sh_isstate(SH_ERREXIT));
+	optctx(op,np);
+	sh.bltindata = bltindata;
+	if(savptr!=stakptr(0))
+		stakset(savptr,savtop);
+	else
+		stakseek(savtop);
+	return(argn);
 }
 
 /*
@@ -2533,7 +2578,7 @@ static void print_fun(register Namval_t* np, void *data)
  */
 static int run_subshell(const Shnode_t *t,pid_t grp)
 {
-	static char prolog[] = "(print $(typeset +A);set; typeset -p; print .sh.dollar=$$;set +o)";
+	static const char prolog[] = "(print $(typeset +A);set; typeset -p; print .sh.dollar=$$;set +o)";
 	register int i, fd, trace = sh_isoption(SH_XTRACE);
 	int pin,pout;
 	pid_t pid;
@@ -2933,15 +2978,3 @@ static pid_t sh_ntfork(const Shnode_t *t,char *argv[],int *jobid,int flag)
 	}
 #   endif /* _lib_fork */
 #endif /* SHOPT_SPAWN */
-
-/*
- * override procrun() since it is used in libcmd
- */
-#include	<proc.h>
-int procrun(const char *path, char *argv[])
-{
-	if(sh.subshell)
-		sh_subtmpfile();
-	return(procclose(procopen(path, argv, NiL, NiL, PROC_FOREGROUND|PROC_GID
-|PROC_UID)));
-}

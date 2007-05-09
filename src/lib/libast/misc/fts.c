@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1985-2006 AT&T Knowledge Ventures            *
+*           Copyright (c) 1985-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -32,6 +32,7 @@
 #include <ast_dir.h>
 #include <error.h>
 #include <fs3d.h>
+#include <ls.h>
 
 struct Ftsent;
 
@@ -70,7 +71,7 @@ typedef int (*Stat_f)(const char*, struct stat*);
 	char*		home;			/* home/path buffer	*/ \
 	char*		endbase;		/* space to build paths */ \
 	char*		endbuf;			/* space to build paths */ \
-	char*		pad;
+	char*		pad[2];			/* $0.02 to splain this	*/
 
 /*
  * NOTE: <ftwalk.h> relies on status and statb being the first two elements
@@ -79,12 +80,12 @@ typedef int (*Stat_f)(const char*, struct stat*);
 #define _FTSENT_PRIVATE_ \
 	short		status;			/* internal status	*/ \
 	struct stat	statb;			/* fts_statp data	*/ \
+	FTS*		fts;			/* fts_open() handle	*/ \
 	int		nd;			/* popdir() count	*/ \
 	FTSENT*		left;			/* left child		*/ \
 	FTSENT*		right;			/* right child		*/ \
 	FTSENT*		pwd;			/* pwd parent		*/ \
 	FTSENT*		stack;			/* getlist() stack	*/ \
-	FTS*		fts;			/* for fts verification	*/ \
 	long		nlink;			/* FTS_D link count	*/ \
 	unsigned char	must;			/* must stat		*/ \
 	unsigned char	type;			/* DT_* type		*/ \
@@ -1454,6 +1455,22 @@ fts_flags(void)
 	if (streq(s, "physical"))
 		return FTS_PHYSICAL|FTS_SEEDOTDIR;
 	return FTS_META|FTS_PHYSICAL|FTS_SEEDOTDIR;
+}
+
+/*
+ * return 1 if ent is mounted on a local filesystem
+ */
+
+int
+fts_local(FTSENT* ent)
+{
+#ifdef ST_LOCAL
+	struct statvfs	fs;
+
+	return statvfs(ent->fts_path, &fs) || (fs.f_flag & ST_LOCAL);
+#else
+	return !strgrpmatch(fmtfs(ent->fts_statp), "([an]fs|samb)", NiL, 0, STR_LEFT|STR_ICASE);
+#endif
 }
 
 /*
