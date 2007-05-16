@@ -2281,21 +2281,27 @@ static void mac_error(Namval_t *np)
 
 /*
  * Given pattern/string, replace / with 0 and return pointer to string
- * \ characters are stripped from string.
+ * \ characters are stripped from string.  The \ are stripped in the
+ * replacement string unless followed by a digit or \.
  */ 
 static char *mac_getstring(char *pattern)
 {
-	register char *cp = pattern;
-	register int c;
+	register char	*cp=pattern, *rep=0, *dp;
+	register int	c;
 	while(c = *cp++)
 	{
-		if(c==ESCAPE)
-			cp++;
-		else if(c=='/')
+		if(c==ESCAPE && (!rep || (*cp && !isadigit(*cp) && *cp!=ESCAPE)))
+			c = *cp++;
+		else if(!rep && c=='/')
 		{
 			cp[-1] = 0;
-			return(cp);
+			rep = dp = cp;
+			continue;
 		}
+		if(rep)
+			*dp++ = c;
 	}
-	return(NIL(char*));
+	if(rep)
+		*dp = 0;
+	return(rep);
 }

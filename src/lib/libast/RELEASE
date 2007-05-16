@@ -1,3 +1,4 @@
+07-05-15 sfio/sfvprintf.c: %h? and SFFMT_SHORT => raw bytes
 07-05-09 features/signal.c,features/siglist: use kill -l & strsignal()
 07-04-25 misc/optctx.c: add for opt_info switching
 07-04-24 misc/cmdarg.c,include/cmdarg.h: add CMD_CHECKED, CMD_SILENT

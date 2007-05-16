@@ -330,6 +330,12 @@ print "#! $SHELL" > /tmp/ksh$$x
 print 'print  -- $0' >> /tmp/ksh$$x
 chmod +x /tmp/ksh$$x
 [[ $(/tmp/ksh$$x) == /tmp/ksh$$x ]] || err_exit  "\$0 is $0 instead of /tmp/ksh$$x"
+cat > /tmp/ksh$$x <<- \EOF
+	myfilter() { x=$(print ok | cat); print  -r -- $SECONDS;}
+	set -o pipefail
+	sleep 3 | myfilter
+EOF
+(( $($SHELL /tmp/ksh$$x) > 2.0 )) && err_exit 'command substitution causes pipefail option to hang'
 rm -f /tmp/ksh$$x
 exec 3<&-
 ( typeset -r foo=bar) 2> /dev/null || err_exit 'readonly variables set in a subshell cannot unset'

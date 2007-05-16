@@ -993,7 +993,7 @@ Namval_t *sh_addbuiltin(const char *path, int (*bltin)(int, char*[],void*),void 
 	register const char *name = path_basename(path);
 	char *cp;
 	register Namval_t *np, *nq=0;
-	int offset = staktell();
+	int attr=0, offset = staktell();
 	if(name==path && (nq=nv_bfsearch(name,sh.bltin_tree,(Namval_t**)0,&cp)))
 		path = name = stakptr(offset);
 	if(np = nv_search(path,sh.bltin_tree,0))
@@ -1019,7 +1019,10 @@ Namval_t *sh_addbuiltin(const char *path, int (*bltin)(int, char*[],void*),void 
 			if(nv_isattr(np,BLT_SPC))
 				return(np);
 			if(!bltin)
+			{
 				bltin = np->nvalue.bfp;
+				attr = nv_isattr(np,NV_BLTINOPT);
+			}
 			if(np->nvenv)
 				dtdelete(sh.bltin_tree,np);
 			if(extra == (void*)1)
@@ -1034,7 +1037,7 @@ Namval_t *sh_addbuiltin(const char *path, int (*bltin)(int, char*[],void*),void 
 		return(np);
 	np->nvenv = 0;
 	np->nvfun = 0;
-	nv_setattr(np,0);
+	nv_setattr(np,attr);
 	if(bltin)
 	{
 		np->nvalue.bfp = bltin;

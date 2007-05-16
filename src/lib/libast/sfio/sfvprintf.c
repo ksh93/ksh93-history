@@ -716,7 +716,7 @@ loop_fmt :
 #endif
 				}
 #if defined(mbwide) && defined(mbchar) && defined(mbwidth)
-				else if (mbwide())
+				else if (!(flags & SFFMT_SHORT) && mbwide())
 				{	w = 0;
 					SFMBCLR(&mbs);
 					ssp = sp;

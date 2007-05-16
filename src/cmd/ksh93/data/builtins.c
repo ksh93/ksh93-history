@@ -105,7 +105,6 @@ const struct shtable3 shtab_builtins[] =
 	"jobs",		NV_BLTIN|BLT_ENV,		bltin(jobs),
 #endif	/* JOBS */
 	"false",	NV_BLTIN|BLT_ENV,		bltin(false),
-SH_CMDLIB_DIR "/getconf",NV_BLTIN|BLT_ENV,		bltin(getconf),
 	"getopts",	NV_BLTIN|BLT_ENV,		bltin(getopts),
 	"print",	NV_BLTIN|BLT_ENV,		bltin(print),
 	"printf",	NV_BLTIN|NV_NOFREE,		bltin(printf),
@@ -131,6 +130,7 @@ SH_CMDLIB_DIR "/getconf",NV_BLTIN|BLT_ENV,		bltin(getconf),
 	CMDLIST(basename)
 	CMDLIST(chmod)
 	CMDLIST(dirname)
+	CMDLIST(getconf)
 	CMDLIST(head)
 	CMDLIST(mkdir)
 	CMDLIST(logname)

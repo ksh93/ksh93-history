@@ -751,6 +751,7 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 		break;
 	case 'B':
 		value->s = (char*)fmtbase64(value->s, &fe->size);
+		fe->flags |= SFFMT_SHORT;
 		break;
 	case 'H':
 		value->s = fmthtml(value->s);

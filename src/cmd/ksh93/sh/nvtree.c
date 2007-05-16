@@ -559,7 +559,7 @@ static char **genvalue(char **argv, const char *prefix, int n, struct Walk *wp)
 		outval(".",prefix-n,wp);
 		if(c=='.')
 			cp[m-1] = c;
-		sfnputc(outfile,'\t',wp->indent-1);
+		sfnputc(outfile,'\t',--wp->indent);
 		sfputc(outfile,')');
 	}
 	return(--argv);
@@ -590,7 +590,9 @@ static char *walk_tree(register Namval_t *np, int dlete)
 		stakputc('.');
 	}
 	name = stakfreeze(1);
+	sh.last_root = 0;
 	dir = nv_diropen(name);
+	walk.root = sh.last_root;
 	if(subscript)
 		name[strlen(name)-1] = 0;
 	while(cp = nv_dirnext(dir))
@@ -616,7 +618,6 @@ static char *walk_tree(register Namval_t *np, int dlete)
 	else
 		sfseek(outfile,0L,SEEK_SET);
 	walk.out = outfile;
-	walk.root = sh.last_root;
 	walk.indent = 0;
 	walk.noscope = noscope;
 	genvalue(argv,name,0,&walk);
@@ -625,6 +626,11 @@ static char *walk_tree(register Namval_t *np, int dlete)
 		return((char*)0);
 	sfputc(out,0);
 	return((char*)out->_data);
+}
+
+int nv_isvtree(Namval_t *np)
+{
+	return(np && nv_hasdisc(np,&treedisc));
 }
 
 /*

@@ -166,6 +166,10 @@ x=[123]def
 if	[[ "${x//\[(*)\]/\{\1\}}" != {123}def ]]
 then	err_exit 'closing brace escape not working'
 fi
+xx=%28text%29
+if	[[ ${xx//%28/abc\)} != 'abc)text%29' ]]
+then	 err_exit '${xx//%28/abc\)} not working'
+fi
 unset foo
 foo=one/two/three
 if	[[ ${foo//'/'/_} != one_two_three ]]

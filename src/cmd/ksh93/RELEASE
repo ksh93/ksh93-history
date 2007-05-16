@@ -1,6 +1,11 @@
-07-05-10  --- Release ksh93s+  ---
+07-05-15  --- Release ksh93s+  ---
+07-05-15  A bug in which the %B format of printf was affected  by the
+	  locale has been fixed.
+07-05-14  A bug in which \ was not removed in the replacement pattern with
+	  ${var/pattern/rep} when it was not followed by \ or a digit has
+	  been fixed.
 07-05-10  A bug in which ksh -R file core dumped if no script was sepcifed
-	  has been fixed.  It now displays an error message.
+	  has been fixed.  it not displays an error message.
 07-05-07  Added additional Solaris signals to signal table.
 07-04-30  A bug in which a pipeline with command substitution inside a
 	  function could cause a pipline that invokes this function to
