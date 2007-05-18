@@ -260,17 +260,14 @@ int job_reap(register int sig)
 				px->p_nxtjob = job.pwlist;
 				job.pwlist = px;
 			}
-			pw->p_exit = WSTOPSIG(wstat);
 			pw->p_flag |= (P_NOTIFY|P_SIGNALLED|P_STOPPED);
+			pw->p_exit = WSTOPSIG(wstat);
 			if(pw->p_pgrp && pw->p_pgrp==job.curpgid && sh_isstate(SH_STOPOK))
 				sh_fault(pw->p_exit); 
 			continue;
 		}
 		else if (WIFCONTINUED(wstat) && wcontinued)
-		{
 			pw->p_flag &= ~(P_NOTIFY|P_SIGNALLED|P_STOPPED);
-			pw->p_exit = 0;
-		}
 		else
 #endif /* SIGTSTP */
 		{
@@ -303,7 +300,8 @@ int job_reap(register int sig)
 			else
 			{
 				pw->p_flag |= (P_DONE|P_NOTIFY);
-				if(WEXITSTATUS(wstat) > pw->p_exit)
+				pw->p_exit =  pw->p_exitmin;
+				if(WEXITSTATUS(wstat) > pw->p_exitmin)
 					pw->p_exit = WEXITSTATUS(wstat);
 			}
 			if(pw->p_pgrp==0)
@@ -1058,8 +1056,8 @@ int job_post(pid_t pid, pid_t join)
 	pw->p_env = sh.curenv;
 	pw->p_pid = pid;
 	pw->p_flag = P_EXITSAVE;
-	pw->p_exit = sh.xargexit;
-	sh.xargexit = 0;
+	pw->p_exitmin = sh.xargexit;
+	pw->p_exit = 0;
 	if(sh_isstate(SH_MONITOR))
 	{
 		if(killpg(job.curpgid,0)<0 && errno==ESRCH)

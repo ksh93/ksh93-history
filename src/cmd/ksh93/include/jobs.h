@@ -64,6 +64,7 @@ struct process
 	pid_t		p_fgrp;		/* process group when stopped */
 	short		p_job;		/* job number of process */
 	unsigned short	p_exit;		/* exit value or signal number */
+	unsigned short	p_exitmin;	/* minimum exit value for xargs */
 	unsigned short	p_flag;		/* flags - see below */
 	int		p_env;		/* subshell environment number */
 #ifdef JOBS

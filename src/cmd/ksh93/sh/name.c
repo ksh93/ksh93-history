@@ -268,6 +268,15 @@ void nv_setlist(register struct argnod *arg,register int flags)
 				}
 				if(tp->tre.tretyp==TLST || !tp->com.comset || tp->com.comset->argval[0]!='[')
 				{
+					if(tp->tre.tretyp!=TLST && tp->com.comset && tp->com.comset->argval[0]==0 && tp->com.comset->argchn.ap)
+					{
+						if(prefix)
+							cp = stakcopy(nv_name(np));
+						sh.prefix = cp;
+						nv_setlist(tp->com.comset,flags);
+						sh.prefix = prefix;
+						continue;
+					}
 					if(*cp!='.' && *cp!='[' && strchr(cp,'['))
 					{
 						nv_close(np);

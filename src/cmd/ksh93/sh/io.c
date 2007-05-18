@@ -458,6 +458,8 @@ Sfio_t *sh_iostream(register int fd)
 	{
 		Sfdisc_t *dp;
 		sfset(iop,SF_MALLOC,1);
+		if(!(status&IOWRITE))
+			sfset(iop,SF_IOCHECK,1);
 		{
 			dp = newof(0,Sfdisc_t,1,0);
 			dp->exceptf = slowexcept;
@@ -1456,6 +1458,10 @@ static int slowexcept(register Sfio_t *iop,int type,void *data,Sfdisc_t *handle)
 			return(0);
 		n=1;
 	}
+	else
+		n = 0;
+	if(sh.bltinfun && sh.bltindata.sigset)
+		return(-1);
 	errno = 0;
 	if(sh.trapnote&SH_SIGSET)
 	{
