@@ -1,3 +1,4 @@
+07-05-21 tm/tmxfmt.c,tmxscan.c: %F => %L (TM_DEFAULT); %F => %Y-%m-%d
 07-05-15 sfio/sfvprintf.c: %h? and SFFMT_SHORT => raw bytes
 07-05-09 features/signal.c,features/siglist: use kill -l & strsignal()
 07-04-25 misc/optctx.c: add for opt_info switching

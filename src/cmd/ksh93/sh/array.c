@@ -37,8 +37,7 @@
 #define array_clrbit(cp, n)	(cp[(n)/CHAR_BIT] &= ~(1<<(((n)&(CHAR_BIT-1)))))
 #define array_isbit(cp, n)	(cp[(n)/CHAR_BIT] & 1<<(((n)&(CHAR_BIT-1))))
 #define NV_CHILD		NV_EXPORT
-
-static char Empty[] = "";
+#define Empty			((char*)(e_sptbnl+3))
 
 struct index_array
 {
@@ -81,10 +80,12 @@ static void array_setptr(register Namval_t *np, struct index_array *old, struct 
  *   but <= ARRAY_MAX) is returned.
  *
  */
-static int	arsize(register int maxi)
+static int	arsize(struct index_array *ap, register int maxi)
 {
-	register int i = roundof(maxi,ARRAY_INCR);
-	return (i>ARRAY_MAX?ARRAY_MAX:i);
+	if(ap && maxi < 2*ap->maxi)
+		maxi = 2*ap->maxi;
+	maxi = roundof(maxi,ARRAY_INCR);
+	return (maxi>ARRAY_MAX?ARRAY_MAX:maxi);
 }
 
 static struct index_array *array_grow(Namval_t*, struct index_array*,int);
@@ -323,6 +324,8 @@ static void array_putval(Namval_t *np, const char *string, int flags, Namfun_t *
 		Namfun_t *nfp;
 		if(nfp = nv_disc(np,(Namfun_t*)ap,NV_POP))
 			free((void*)nfp);
+		if(np->nvalue.cp==Empty)
+			np->nvalue.cp = 0;
 	}
 }
 
@@ -348,7 +351,7 @@ static struct index_array *array_grow(Namval_t *np, register struct index_array 
 {
 	register struct index_array *ap;
 	register int i=0;
-	register int newsize = arsize(maxi+1);
+	register int newsize = arsize(arp,maxi+1);
 	if (maxi >= ARRAY_MAX)
 		errormsg(SH_DICT,ERROR_exit(1),e_subscript, fmtbase((long)maxi,10,0));
 	ap = new_of(struct index_array,(newsize-1)*sizeof(union Value*)+newsize/CHAR_BIT);

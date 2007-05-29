@@ -360,7 +360,12 @@ void	sh_chktrap(void)
 		int	sav_trapnote = sh.trapnote;
 		sh.trapnote &= ~SH_SIGSET;
 		if(sh.st.trap[SH_ERRTRAP])
-			sh_trap(sh.st.trap[SH_ERRTRAP],0);
+		{
+			trap = sh.st.trap[SH_ERRTRAP];
+			sh.st.trap[SH_ERRTRAP] = 0;
+			sh_trap(trap,0);
+			sh.st.trap[SH_ERRTRAP] = trap;
+		}
 		sh.trapnote = sav_trapnote;
 		if(sh_isoption(SH_ERREXIT))
 		{

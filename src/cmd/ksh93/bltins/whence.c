@@ -112,6 +112,7 @@ int	b_whence(int argc,char *argv[],void *extra)
 		break;
 	    case 'p':
 		flags |= P_FLAG;
+		flags &= ~V_FLAG;
 		break;
 	    case 'q':
 		flags |= Q_FLAG;

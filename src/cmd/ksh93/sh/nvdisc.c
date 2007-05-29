@@ -1188,6 +1188,8 @@ Dt_t *nv_dict(Namval_t* np)
 			return(tp->dict);
 #if 0
 		np = nv_create(np,(const char*)0, NV_FIRST, (Namfun_t*)0);
+#else
+		break;
 #endif
 	}
 	return(sh.var_tree);
@@ -1239,12 +1241,18 @@ const Namdisc_t *nv_discfun(int which)
 	return(0);
 }
 
+Namval_t *nv_type(Namval_t *np)
+{
+	return(0);
+}
+
 /*
  * This function turns variable <np>  to the type <tp>
  */
 int nv_settype(Namval_t* np, Namval_t *tp, int flags)
 {
 	int isnull = nv_isnull(np);
+	int rdonly = nv_isattr(np,NV_RDONLY);
 	char *val=0;
 	if(isnull)
 		flags &= ~NV_APPEND;
@@ -1256,6 +1264,8 @@ int nv_settype(Namval_t* np, Namval_t *tp, int flags)
 	}
 	if(!nv_clone(tp,np,flags|NV_NOFREE))
 		return(0);
+	if(!rdonly)
+		nv_offattr(np,NV_RDONLY);
 	if(val)
 	{
 		nv_putval(np,val,NV_RDONLY);

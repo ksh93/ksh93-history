@@ -31,6 +31,8 @@
 #include	"name.h"
 #include	"argnod.h"
 
+#define Empty	((char*)(e_sptbnl+3))
+
 struct nvdir
 {
 	Dt_t		*root;
@@ -399,10 +401,12 @@ static void outval(char *name, const char *vname, struct Walk *wp)
 			if(fp = nv_stack(np,NIL(Namfun_t*)))
 				free((void*)fp);
 			np->nvfun = 0;
+			return;
 		}
-		return;
+		if(!np->nvalue.cp)
+			return;
 	}
-	if(nv_isnull(np))
+	if(nv_isnull(np) || np->nvalue.cp==Empty)
 		return;
 	if(special || nv_isarray(np))
 	{
@@ -423,7 +427,9 @@ static void outval(char *name, const char *vname, struct Walk *wp)
 		return;
 	if(special)
 	{
+#if 0
 		associative = 1;
+#endif
 		sfnputc(wp->out,'\t',wp->indent);
 	}
 	else
@@ -440,6 +446,9 @@ static void outval(char *name, const char *vname, struct Walk *wp)
 			sfnputc(wp->out,'\t',++wp->indent);
 		}
 	}
+	fp = np->nvfun;
+	if(*name=='.')
+		np->nvfun = 0;
 	while(1)
 	{
 		char *fmtq,*ep;
@@ -470,6 +479,8 @@ static void outval(char *name, const char *vname, struct Walk *wp)
 			break;
 		sfnputc(wp->out,'\t',wp->indent);
 	}
+	if(*name=='.')
+		np->nvfun = fp;
 	if(isarray && !special)
 	{
 		sfnputc(wp->out,'\t',--wp->indent);
@@ -533,7 +544,7 @@ static char **genvalue(char **argv, const char *prefix, int n, struct Walk *wp)
 				sfnputc(outfile,'\t',wp->indent);
 				nv_attribute(np,outfile,"typeset",1);
 				nv_close(np);
-				sfputr(outfile,arg+m+(n?n+1:0),'=');
+				sfputr(outfile,arg+m+(n?n:0),'=');
 				argv = genvalue(++argv,cp,cp-arg ,wp);
 				sfputc(outfile,'\n');
 			}
@@ -581,8 +592,9 @@ static char *walk_tree(register Namval_t *np, int dlete)
 	char *subscript=0;
 	void *dir;
 	int n=0, noscope=(dlete&NV_NOSCOPE);
+	Namarr_t *arp = nv_arrayptr(np);
 	stakputs(nv_name(np));
-	if(subscript = nv_getsub(np))
+	if(arp && !(arp->nelem&ARRAY_SCAN) && (subscript = nv_getsub(np)))
 	{
 		stakputc('[');
 		stakputs(subscript);
@@ -641,8 +653,10 @@ char *nv_getvtree(register Namval_t *np, Namfun_t *fp)
 	NOT_USED(fp);
 	if(nv_isattr(np,NV_BINARY) &&  nv_isattr(np,NV_RAW))
 		return(nv_getv(np,fp));
+#if 0
 	if(nv_isattr(np,NV_ARRAY) && nv_arraychild(np,(Namval_t*)0,0)==np)
 		return(nv_getv(np,fp));
+#endif
 	return(walk_tree(np,0));
 }
 

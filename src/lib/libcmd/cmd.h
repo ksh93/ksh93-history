@@ -141,7 +141,11 @@ main(int argc, char** argv)
 
 #define _CMD_CONTEXT_OK(p)	(((Shbltin_t*)(p))->version>=20070511&&((Shbltin_t*)(p))->version<20350101)
 #undef	cmdinit
+#ifdef _MSC_VER
+#define cmdinit(a,b,c,d,e)	do{if(_cmd_init(a,b,c,d,e))return -1;}while(0)
+#else
 #define cmdinit(a,b,c,d,e)	do{if((c)&&!_CMD_CONTEXT_OK(c))c=0;if(_cmd_init(a,b,c,d,e))return -1;}while(0)
+#endif
 
 #if _BLD_cmd && defined(__EXPORT__)
 #define extern			extern __EXPORT__

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
+*           Copyright (c) 1982-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -297,6 +297,9 @@ Shnode_t *sh_dolparen(void)
 		break;
 	    case LPAREN:
 		t = sh_cmd(RPAREN,SH_NL|SH_EMPTY);
+		break;
+	    case LBRACE:
+		t = sh_cmd(RBRACE,SH_NL|SH_EMPTY);
 		break;
 	}
 	shlex.comsub = 0;
@@ -801,7 +804,18 @@ static struct argnod *assign(register struct argnod *ap)
 			ap->argflag |= ARG_MESSAGE;
 			*settail = ap;
 			settail = &(ap->argnxt.ap);
-			n = skipnl(0);
+			while((n = skipnl(0))==0)
+			{
+				ap = (struct argnod*)stakseek(ARGVAL);
+				ap->argflag= ARG_ASSIGN;
+				sfprintf(stkstd,"[%d]=",index++);
+				stakputs(shlex.arg->argval);
+				ap = (struct argnod*)stakfreeze(1);
+				ap->argnxt.ap = 0;
+				ap->argflag = shlex.arg->argflag;
+				*settail = ap;
+				settail = &(ap->argnxt.ap);
+			}
 		}
 	}
 	else if(n)

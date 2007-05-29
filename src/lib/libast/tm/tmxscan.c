@@ -262,6 +262,9 @@ scan(register const char* s, char** e, const char* format, char** f, Time_t t, l
 					goto more;
 				}
 				continue;
+			case 'F':
+				p = "%Y-%m-%d";
+				break;
 			case 'H':
 			case 'k':
 				NUMBER(2, 0, 23);

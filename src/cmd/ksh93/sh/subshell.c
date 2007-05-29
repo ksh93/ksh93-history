@@ -367,7 +367,7 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 	if(!shp->pwd)
 		path_pwd(0);
 	sp->bckpid = shp->bckpid;
-	if(!comsub || !sh_isoption(SH_SUBSHARE))
+	if(!comsub || (comsub==1 && !sh_isoption(SH_SUBSHARE)))
 	{
 		sp->shpwd = shp->pwd;
 		sp->pwd = (shp->pwd?strdup(shp->pwd):0);

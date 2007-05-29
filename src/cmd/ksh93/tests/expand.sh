@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#           Copyright (c) 1982-2006 AT&T Knowledge Ventures            #
+#           Copyright (c) 1982-2007 AT&T Knowledge Ventures            #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                      by AT&T Knowledge Ventures                      #
@@ -37,6 +37,8 @@ set -- \
 	'f{d,e,f}g'				'fdg feg ffg' \
 	'{l,n,m}xyz'				'lxyz nxyz mxyz' \
 	'{abc\,def}'				'{abc,def}' \
+	'{"abc,def"}'				'{abc,def}' \
+	"{'abc,def'}"				'{abc,def}' \
 	'{abc}'					'{abc}' \
 	'\{a,b,c,d,e}'				'{a,b,c,d,e}' \
 	'{x,y,\{a,b,c}}'			'x} y} {a} b} c}' \

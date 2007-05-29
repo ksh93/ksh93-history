@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: sum (AT&T Research) 2007-02-07 $\n]"
+"[-?\n@(#)$Id: sum (AT&T Research) 2007-05-20 $\n]"
 USAGE_LICENSE
 "[+NAME?cksum,md5sum,sum - print file checksum and block count]"
 "[+DESCRIPTION?\bsum\b lists the checksum, and for most methods the block"
@@ -106,6 +106,7 @@ USAGE_LICENSE
 #include <cmd.h>
 #include <sum.h>
 #include <ls.h>
+#include <modex.h>
 #include <fts.h>
 #include <error.h>
 

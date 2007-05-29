@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: date (AT&T Research) 2007-03-28 $\n]"
+"[-?\n@(#)$Id: date (AT&T Research) 2007-05-21 $\n]"
 USAGE_LICENSE
 "[+NAME?date - set/list/convert dates]"
 "[+DESCRIPTION?\bdate\b sets the current date and time (with appropriate"
@@ -96,7 +96,7 @@ USAGE_LICENSE
 "		[+e?blank padded day of month number]"
 "		[+E?unpadded day of month number]"
 "		[+f?locale default override date format]"
-"		[+F?locale default date format]"
+"		[+F?%ISO 8601:2000 standard date format; equivalent to Y-%m-%d]"
 "		[+g?\bls\b(1) \b-l\b recent date with \ahh:mm\a]"
 "		[+G?\bls\b(1) \b-l\b distant date with \ayyyy\a]"
 "		[+h?abbreviated month name]"
@@ -108,6 +108,7 @@ USAGE_LICENSE
 "		[+k?\bdate\b(1) style date]"
 "		[+K?all numeric date; equivalent to \b%Y-%m-%d+%H:%M:%S\b]"
 "		[+l?\bls\b(1) \b-l\b date; equivalent to \b%Q/%g/%G/\b]"
+"		[+L?locale default date format]"
 "		[+m?month number]"
 "		[+M?minutes]"
 "		[+n?newline character]"

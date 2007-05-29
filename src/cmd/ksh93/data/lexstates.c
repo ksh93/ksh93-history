@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
+*           Copyright (c) 1982-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -360,7 +360,7 @@ static const char sh_lexstate9[256] =
 	0,	0,	0,	0,	0,	0,	0,	0,
 	0,	0,	0,	0,	0,	0,	0,	0,
 	0,	0,	S_QUOTE,0,	S_DOL,	0,	S_PAT,	S_LIT,
-	S_PAT,	S_PAT,	S_PAT,	0,	0,	0,	0,	S_SLASH,
+	S_PAT,	S_PAT,	S_PAT,	0,	S_COM,	0,	0,	S_SLASH,
 	0,	S_DIG,	S_DIG,	S_DIG,	S_DIG,	S_DIG,	S_DIG,	S_DIG,
 	S_DIG,	S_DIG,	S_COLON,0,	0,	S_EQ,	0,	S_PAT,
 	0,	0,	0,	0,	0,	0,	0,	0,

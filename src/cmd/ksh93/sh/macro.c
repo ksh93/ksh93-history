@@ -655,6 +655,17 @@ static void copyto(register Mac_t *mp,int endch, int newquote)
 					--paren;
 			}
 			goto pattern;
+		    case S_COM:
+			if(mp->pattern==4 && (mp->quote || mp->lit))
+			{
+				if(c)
+				{
+					stakwrite(first,c);
+					first = fcseek(c);
+				}
+				stakputc(ESCAPE);
+			}
+			break;
 		    case S_BRACE:
 			if(!(mp->quote || mp->lit))
 			{
@@ -1107,7 +1118,7 @@ retry1:
 		ap = np?nv_arrayptr(np):0;
 		if(type)
 		{
-			if(ap && isastchar(mode) && !(ap->nelem&ARRAY_SCAN))
+			if(ap && (isastchar(mode)||type==M_TREE)  && !(ap->nelem&ARRAY_SCAN))
 				nv_putsub(np,NIL(char*),ARRAY_SCAN);
 			if(!isbracechar(c))
 				goto nosub;
@@ -1119,7 +1130,7 @@ retry1:
 		if((type==M_VNAME||type==M_SUBNAME)  && sh.argaddr && strcmp(nv_name(np),id))
 			sh.argaddr = 0;
 		c = (type>M_BRACE && isastchar(mode));
-		if(np && (!c || !ap))
+		if(np && (type==M_TREE || !c || !ap))
 		{
 			if(type==M_VNAME)
 			{
@@ -1129,11 +1140,7 @@ retry1:
 #ifdef SHOPT_TYPEDEF
 			else if(type==M_TYPE)
 			{
-#if 0
 				Namval_t *nq = nv_type(np);
-#else
-				Namval_t *nq = 0;
-#endif
 				type = M_BRACE;
 				if(nq)
 					v = nv_name(nq);
@@ -1628,6 +1635,12 @@ retry2:
 		nv_close(np);
 	return(1);
 nosub:
+	if(type==M_BRACE && sh_lexstates[ST_NORM][c]==S_BREAK)
+	{
+		fcseek(-1);
+		comsubst(mp,2);
+		return(1);
+	}
 	if(type)
 		mac_error(np);
 	fcseek(-1);
@@ -1709,6 +1722,7 @@ static void comsubst(Mac_t *mp,int type)
 		sh.inlineno = error_info.line+sh.st.firstline;
 		t = (Shnode_t*)sh_parse(mp->shp, sp,SH_EOF|SH_NL);
 		sh.inlineno = c;
+		type = 1;
 	}
 #if KSHELL
 	if(t)
@@ -1741,7 +1755,7 @@ static void comsubst(Mac_t *mp,int type)
 			sp = sfnew(NIL(Sfio_t*),(char*)malloc(IOBSIZE+1),IOBSIZE,fd,SF_READ|SF_MALLOC);
 		}
 		else
-			sp = sh_subshell(t,sh_isstate(SH_ERREXIT),1);
+			sp = sh_subshell(t,sh_isstate(SH_ERREXIT),type);
 		fcrestore(&save);
 	}
 	else
@@ -2290,8 +2304,10 @@ static char *mac_getstring(char *pattern)
 	register int	c;
 	while(c = *cp++)
 	{
-		if(c==ESCAPE && (!rep || (*cp && !isadigit(*cp) && *cp!=ESCAPE)))
+		if(c==ESCAPE && (!rep || (*cp && strchr("&|()[]*?",*cp))))
+		{
 			c = *cp++;
+		}
 		else if(!rep && c=='/')
 		{
 			cp[-1] = 0;

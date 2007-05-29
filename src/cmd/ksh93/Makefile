@@ -104,7 +104,7 @@ elif CC.HOSTTYPE == "sol?([789]|[1-9][0-9]).*"
 elif CC.HOSTTYPE != "sgi.mips*"
 	LIBS_opt += +lsocket +lnsl
 end
-if CC.HOSTTYPE == "linux.sparc"
+if CC.HOSTTYPE == "linux.sparc*"
 	/* the linux.sparc linker still has some problems */
 	LIBS_opt += -ldll
 end
@@ -153,7 +153,7 @@ shell $(VERSION) :LIBRARY: shell.3 nval.3 alarm.c cd_pwd.c cflow.c deparse.c \
 	trestore.c waitevent.c xec.c env.c $(DATAFILES) $(FILES_opt) \
 	-lcmd -last -lm
 
-"sol*.i386" :NOOPTIMIZE: main.c
+"sol*.i386*" :NOOPTIMIZE: main.c
 "win32*" :NOOPTIMIZE: trestore.c
 
 if CC.HOSTTYPE == "win32*"

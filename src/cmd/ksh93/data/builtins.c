@@ -1802,7 +1802,7 @@ USAGE_LICENSE
 "[a?Displays all uses for each \aname\a rather than the first.]"
 "[f?Do not check for functions.]"
 "[p?Do not check to see if \aname\a is a reserved word, a built-in, "
-	"an alias, or a function.]"
+	"an alias, or a function.  This turns off the \b-v\b option.]"
 "[q?Quiet mode. Returns 0 if all arguments are built-ins, functions, or are "
 	"programs found on the path.]"
 "[v?For each name you specify, the shell displays a line that indicates "
