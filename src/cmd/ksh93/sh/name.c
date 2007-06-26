@@ -34,6 +34,7 @@
 #include	"FEATURE/externs"
 #include	"streval.h"
 
+#define Empty	((char*)(e_sptbnl+3))
 static char	*savesub = 0;
 
 #if !_lib_pathnative && _lib_uwin_path
@@ -1640,7 +1641,7 @@ void	_nv_unset(register Namval_t *np,int flags)
 		nv_local=0;
 	}
 	up = &np->nvalue;
-	if(up->cp)
+	if(up->cp && up->cp!=Empty)
 	{
 		if(!nv_isattr (np, NV_NOFREE))
 			free((void*)up->cp);

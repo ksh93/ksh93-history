@@ -1,4 +1,13 @@
-07-05-28  --- Release ksh93s+  ---
+07-06-25  --- Release ksh93s+  ---
+07-06-25  In vi insert mode, ksh no longer emits a backspace character
+	  before the carraige return when the newline is entered. 
+07-06-25  A bug in which pipefail would cause a command to return 0
+	  when the pipeline was the last command and the failure happened
+	  on a component other than the last has been fixed.
+07-06-25  A bug in the expansion of ${var/pattern/rep} when pattern or rep
+	  contained a left parenthesis in single quotes has been fixed.
+07-06-18  The braces for a subscripted variable with ${var[sub]} are now
+	  optional when inside [[...]], ((...)) or as a subscript.
 07-05-28  A bug in brace expansion in which single and double quotes did
           not treat the comma as a literal character has been fixed.
 07-05-24  The -p option of whence now disables -v.
@@ -9,11 +18,11 @@
 07-05-14  A bug in which \ was not removed in the replacement pattern with
 	  ${var/pattern/rep} when it was not followed by \ or a digit has
 	  been fixed.
-07-05-10  A bug in which ksh -R file core dumped if no script was sepcifed
+07-05-10  A bug in which ksh -R file core dumped if no script was specified
 	  has been fixed.  it not displays an error message.
 07-05-07  Added additional Solaris signals to signal table.
 07-04-30  A bug in which a pipeline with command substitution inside a
-	  function could cause a pipline that invokes this function to
+	  function could cause a pipeline that invokes this function to
 	  hang when the pipefail option is on has been fixed.
 07-04-30  Added -q to whence.
 07-04-18  A small memory leak with each redirection of a non-builtin has

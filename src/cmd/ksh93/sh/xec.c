@@ -1012,7 +1012,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 			int pipes[2];
 			no_fork = (execflg && !(type&(FAMP|FPOU)) &&
 				!sh.subshell && !sh.st.trapcom[0] && 
-				!sh.st.trap[SH_ERRTRAP] && sh.fn_depth==0);
+				!sh.st.trap[SH_ERRTRAP] && sh.fn_depth==0 &&
+				!(pipejob && sh_isoption(SH_PIPEFAIL)));
 			if(sh.subshell)
 				sh_subtmpfile();
 			if(sh_isstate(SH_PROFILE) || sh.dot_depth)

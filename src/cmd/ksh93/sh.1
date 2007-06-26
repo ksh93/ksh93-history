@@ -1107,8 +1107,10 @@ The braces are required when
 .I parameter\^
 is followed by a letter, digit, or underscore
 that is not to be interpreted as part of its name,
-when the variable name contains a \fB\s+2.\s-2\fP,
-or when a variable is subscripted.
+when the variable name contains a \fB\s+2.\s-2\fP.
+The braces are also required when a variable is subscripted
+unless it is part of an Arithmetic Expression
+or a Conditional Expression.
 If
 .I parameter\^
 is one or more digits then it is a positional parameter.
@@ -6375,7 +6377,7 @@ will be the value of the last non-zero command
 to fail or zero of no command has failed.
 .TP 8
 .B showme
-When enabled, simple commands or pipelines preceded by a a semicolon
+When enabled, simple commands or pipelines preceded by a semicolon
 .RB ( ; )
 will be displayed as if the
 .B xtrace
@@ -7085,6 +7087,11 @@ option
 does a path search for
 .I name\^
 even if name is an alias, a function, or a reserved word.
+The
+.B \-p
+option turns off the
+.B \-v
+option.
 The
 .B \-a
 option

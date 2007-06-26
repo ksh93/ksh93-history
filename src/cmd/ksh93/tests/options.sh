@@ -310,6 +310,7 @@ set -o pipefail
 false | true | true    && err_exit 'pipe with first not failing with pipefail'
 true | false | true    && err_exit 'pipe middle not failing with pipefail'
 true | true | false    && err_exit 'pipe last not failing with pipefail'
+$SHELL -c 'set -o pipefail; false | /bin/true;' && err_exit 'pipefail not returning failure with sh -c'
 $SHELL -c '[[ $- == *c* ]]' || err_exit  'option c not in $-'
 trap 'rm -f /tmp/.profile' EXIT
 > /tmp/.profile

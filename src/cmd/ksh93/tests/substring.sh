@@ -285,6 +285,10 @@ unset a b
 a='\[abc @(*) def\]'
 b='[abc 123 def]'
 [[ ${b//$a/\1} == 123 ]] || err_exit "\${var/pattern} not working with \[ in pattern"
+unset foo
+foo='(win32.i386) '
+[[ ${foo/'('/'(x11-'} == '(x11-win32.i386) ' ]] || err_exit "\${var/pattern} not working with ' in pattern" 
+$SHELL -c $'v=\'$(hello)\'; [[ ${v//\'$(\'/-I\'$(\'} == -I"$v" ]]' 2> /dev/null || err_exit "\${var/pattern} not working with \$( as pattern"
 unset X
 $SHELL -c '[[ ! ${X[@]:0:300} ]]' 2> /dev/null || err_exit '${X[@]:0:300} with X undefined fails'
 $SHELL -c '[[ ${@:0:300} == "$0" ]]' 2> /dev/null || err_exit '${@:0:300} with no arguments fails'

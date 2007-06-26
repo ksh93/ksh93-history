@@ -686,7 +686,7 @@ int sh_lex(void)
 				mode = ST_NORM;
 				continue;
 			case S_LIT:
-				if(oldmode()==ST_NONE)	/*  in ((...)) */
+				if(oldmode()==ST_NONE && !lexd.noarg)	/*  in ((...)) */
 				{
 					if((c=fcpeek(0))==LPAREN || c==RPAREN || c=='$' || c==LBRACE || c==RBRACE || c=='[' || c==']')
 					{
@@ -804,7 +804,7 @@ int sh_lex(void)
 				if(shlex.kiafile)
 					refvar(0);
 #endif /* SHOPT_KIA */
-				if(lexd.warn && c==LBRACT)
+				if(lexd.warn && c==LBRACT && !lex.intest && !lexd.arith && oldmode()!= ST_NESTED)
 					errormsg(SH_DICT,ERROR_warn(0),e_lexusebrace,shp->inlineno);
 				fcseek(-1);
 				mode = oldmode();
@@ -1153,6 +1153,11 @@ int sh_lex(void)
 			return(0);
 	}
 breakloop:
+	if(lexd.nocopy)
+	{
+		lexd.balance = 0;
+		return(0);
+	}
 	if(lexd.dolparen)
 	{
 		lexd.balance = 0;

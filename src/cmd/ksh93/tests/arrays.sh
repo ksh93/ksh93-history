@@ -378,4 +378,19 @@ set -- "${foo[@]:1}"
 unset bar
 : ${_foo[bar=4]}
 (( bar == 4 )) || err_exit 'subscript of unset variable not evaluated'
+unset foo bar
+foo[5]=4
+bar[4]=3
+bar[0]=foo
+foo[0]=bam
+foo[4]=5
+[[ ${bar[${foo[5]}]} == 3 ]] || err_exit  'array subscript cannot be an array instance'
+[[ $bar[4] == 3 ]] || err_exit '$bar[x] != ${bar[x]} inside [[ ]]'
+(( $bar[4] == 3  )) || err_exit '$bar[x] != ${bar[x]} inside (( ))'
+[[ $bar[$foo[5]] == 3 ]]  || err_exit '$bar[foo[x]] != ${bar[foo[x]]} inside [[ ]]'
+(( $bar[$foo[5]] == 3  )) || err_exit '$bar[foo[x]] != ${bar[foo[x]]} inside (( ))'
+x=$bar[4]
+[[ $x == 4 ]] && err_exit '$bar[4] should not be an array in an assignment'
+x=${bar[$foo[5]]}
+(( $x == 3 )) || err_exit '${bar[$foo[sub]]} not working'
 exit $((Errors))

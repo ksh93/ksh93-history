@@ -190,9 +190,9 @@ end
 	shopen.mk shopen.c
 
 :: shtests \
-	alias.sh append.sh arith.sh arrays.sh attributes.sh basic.sh \
-	bracket.sh builtins.sh case.sh comvar.sh coprocess.sh exit.sh \
-	expand.sh functions.sh glob.sh grep.sh heredoc.sh io.sh \
+	alias.sh append.sh arith.sh arrays.sh arrays2.sh attributes.sh \
+	basic.sh bracket.sh builtins.sh case.sh comvar.sh coprocess.sh \
+	exit.sh expand.sh functions.sh glob.sh grep.sh heredoc.sh io.sh \
 	nameref.sh options.sh path.sh quoting.sh quoting2.sh restricted.sh \
 	return.sh select.sh substring.sh tilde.sh variables.sh 
 

@@ -72,7 +72,6 @@ cat > script <<!
 #! $SHELL
 print hello
 !
-cp script /tmp/dgk
 check_restricted 'script;:' ||  err_exit 'script with #! pathname should not run in restricted mode'
 check_restricted 'script' ||  err_exit 'script with #! pathname should not run in restricted mode even if last command in script'
 exit $((Errors))

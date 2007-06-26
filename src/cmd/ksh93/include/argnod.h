@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
+*           Copyright (c) 1982-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -123,6 +123,7 @@ struct argnod
 #define ARG_OPTIMIZE	0x200	/* try to optimize */
 #define ARG_NOGLOB	0x400	/* no file name expansion */
 #define ARG_LET		0x800	/* processing let command arguments */
+#define ARG_ARRAYOK	0x1000	/* $x[sub] ==> ${x[sub]} */
 
 extern char 		**sh_argbuild(int*,const struct comnod*,int);
 extern struct dolnod	*sh_argcreate(char*[]);

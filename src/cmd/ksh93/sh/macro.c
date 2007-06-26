@@ -43,6 +43,7 @@
 #include	"national.h"
 #include	"streval.h"
 
+
 #undef STR_GROUP
 #ifndef STR_GROUP
 #   define STR_GROUP	0
@@ -71,6 +72,7 @@ typedef struct  _mac_
 	char		arith;		/* set for ((...)) */
 	char		let;		/* set when expanding let arguments */
 	char		zeros;		/* strip leading zeros when set */
+	char		arrayok;	/* $x[] ok for arrays */
 	void		*nvwalk;	/* for name space walking*/
 } Mac_t;
 
@@ -208,6 +210,7 @@ int sh_macexpand(register struct argnod *argp, struct argnod **arghead,int flag)
 	mp->split = !(flag&ARG_ASSIGN);
 	mp->assign = !mp->split;
 	mp->pattern = mp->split && !(flag&ARG_NOGLOB) && !sh_isoption(SH_NOGLOB);
+	mp->arrayok = mp->arith || (flag&ARG_ARRAYOK);
 	str = argp->argval;
 	fcsopen(str);
 	mp->fields = 0;
@@ -388,7 +391,7 @@ char *sh_macpat(register struct argnod *arg, int flags)
 		arg->argchn.ap=0;
 	if(!(sp=arg->argchn.cp))
 	{
-		sh_macexpand(arg,NIL(struct argnod**),flags);
+		sh_macexpand(arg,NIL(struct argnod**),flags|ARG_ARRAYOK);
 		sp = arg->argchn.cp;
 		if(!(flags&ARG_OPTIMIZE) || !(arg->argflag&ARG_MAKE))
 			arg->argchn.cp = 0;
@@ -891,13 +894,16 @@ static int subcopy(Mac_t *mp, int flag)
 	int xpattern = mp->pattern;
 	int loc = staktell();
 	int xarith = mp->arith;
+	int arrayok = mp->arrayok;
 	mp->split = 0;
 	mp->arith = 0;
 	mp->pattern = flag?4:0;
+	mp->arrayok=1;
 	copyto(mp,RBRACT,0);
 	mp->pattern = xpattern;
 	mp->split = split;
 	mp->arith = xarith;
+	mp->arrayok = arrayok;
 	return(loc);
 }
 
@@ -1046,7 +1052,7 @@ retry1:
 			do
 				stakputc(c);
 			while(((c=fcget()),(c>0x7f||isaname(c)))||type && c=='.');
-			while(c==LBRACT && type)
+			while(c==LBRACT && (type||mp->arrayok))
 			{
 				sh.argaddr=0;
 				if((c=fcget(),isastchar(c)) && fcpeek(0)==RBRACT)
