@@ -1,4 +1,4 @@
-07-06-25  --- Release ksh93s+  ---
+07-06-28  --- Release ksh93s+  ---
 07-06-25  In vi insert mode, ksh no longer emits a backspace character
 	  before the carraige return when the newline is entered. 
 07-06-25  A bug in which pipefail would cause a command to return 0

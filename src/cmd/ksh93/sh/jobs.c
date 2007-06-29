@@ -229,6 +229,7 @@ int job_reap(register int sig)
 			pw = &dummy;
 			pw->p_exit = 0;
 			pw->p_pgrp = 0;
+			pw->p_exitmin = 0;
 			if(job.toclear)
 				job_clear();
 			if(bck.count++ > sh.lim.child_max)
