@@ -501,10 +501,15 @@ Namval_t *nv_arraychild(Namval_t *np, Namval_t *nq, int c)
 {
 	register Namarr_t *ap = nv_arrayptr(np);
 	union Value *up;
+	if(!nq)
+		return(ap?array_find(np,ap, ARRAY_LOOKUP):0);
+	if(!ap)
+	{
+		nv_putsub(np, NIL(char*), ARRAY_FILL);
+		ap = nv_arrayptr(np);
+	}
 	if(!(up = array_getup(np,ap)))
 		return((Namval_t*)0);
-	if(!nq)
-		return(array_find(np,ap, ARRAY_LOOKUP));
 	np->nvalue.cp = up->cp;
 	ap->nelem |= ARRAY_NOCLONE;
 	nv_clone(np, nq, NV_NODISC);
@@ -540,11 +545,11 @@ int nv_nextsub(Namval_t *np)
 		return(0);
 	if(is_associative(ap))
 	{
-		struct assoc_array *aq;
-		if(aq=(*ap->header.fun)(np,NIL(char*),NV_ANEXT))
+		Namval_t	*nq;
+		if(nq=(Namval_t*)(*ap->header.fun)(np,NIL(char*),NV_ANEXT))
 		{
-			if(nv_isattr(aq->cur,NV_CHILD))
-				nv_putsub(aq->cur->nvalue.np,NIL(char*),ARRAY_UNDEF);
+			if(nv_isattr(nq,NV_CHILD))
+				nv_putsub(nq->nvalue.np,NIL(char*),ARRAY_UNDEF);
 			return(1);
 		}
 		ap->header.nelem &= ~(ARRAY_SCAN|ARRAY_NOCHILD);
@@ -799,7 +804,7 @@ void *nv_associative(register Namval_t *np,const char *sp,int mode)
 			{
 				if((ap->header.nelem&ARRAY_NOCHILD) && nv_isattr(ap->cur,NV_CHILD))
 					continue;
-				return((void*)ap);
+				return((void*)ap->cur);
 			}
 		}
 		return(NIL(void*));

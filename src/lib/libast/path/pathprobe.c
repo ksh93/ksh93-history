@@ -249,7 +249,7 @@ pathprobe(char* path, char* attr, const char* lang, const char* tool, const char
 											v -= r;
 											p = k + r;
 										}
-										if (*k == '\n')
+										if (*k == '\n' || *k == '\r')
 											break;
 										if (*k == n)
 											*k = ' ';

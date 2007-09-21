@@ -97,7 +97,7 @@ ast4_block(Sum_t* p, const void* s, size_t n)
 }
 
 static int
-ast4_print(Sum_t* p, Sfio_t* sp, int flags)
+ast4_print(Sum_t* p, Sfio_t* sp, int flags, size_t scale)
 {
 	register Ast4_sum_t*	a;
 

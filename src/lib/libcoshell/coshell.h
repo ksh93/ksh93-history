@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1990-2006 AT&T Knowledge Ventures            *
+*           Copyright (c) 1990-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -31,7 +31,7 @@
 #include <ast.h>
 
 #undef	procrun
-#define procrun(a,b)		coprocrun(a,b)
+#define procrun(a,b,c)		coprocrun(a,b,c)
 #undef	system
 #define system(a)		cosystem(a)
 
@@ -82,6 +82,7 @@ struct Cojob_s; typedef struct Cojob_s Cojob_t;
 #define CO_SERVICE	(1<<13)		/* service callouts		*/
 
 #define CO_APPEND	(1<<14)		/* append coexec() out/err	*/
+#define CO_SEPARATE	(1L<<15)	/* 1 shell+wait per coexec()	*/
 
 #define CO_USER		(1L<<16)	/* first user flag		*/
 
@@ -125,7 +126,7 @@ extern int		cojobs(Coshell_t*);
 extern int		copending(Coshell_t*);
 extern int		cozombie(Coshell_t*);
 
-extern int		coprocrun(const char*, char**);
+extern int		coprocrun(const char*, char**, int);
 extern int		cosystem(const char*);
 
 #endif

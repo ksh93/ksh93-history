@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1990-2006 AT&T Knowledge Ventures            *
+*           Copyright (c) 1990-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -39,6 +39,7 @@ static const Namval_t	options[] =
 	"devfd",	CO_DEVFD,
 	"ignore",	CO_IGNORE,
 	"silent",	CO_SILENT,
+	"separate",	CO_SEPARATE,
 	"service",	CO_SERVICE,
 	0,		0
 };
@@ -171,35 +172,49 @@ coopen(const char* path, int flags, const char* attributes)
 		errormsg(state.lib, ERROR_LIBRARY|2, "out of space");
 		return 0;
 	}
-	pex[0] = -1;
-	pex[1] = -1;
-	pio[0] = -1;
-	pio[1] = -1;
 	stropt(getenv(CO_ENV_OPTIONS), options, sizeof(*options), setopt, co);
 	if (attributes)
 		stropt(attributes, options, sizeof(*options), setopt, co);
-	co->flags |= CO_INIT | ((flags | CO_DEVFD) & ~co->mask);
-	if (pipe(pex) < 0 || pipe(pio) < 0)
+	co->flags |= ((flags | CO_DEVFD) & ~co->mask);
+	if (co->flags & CO_SEPARATE)
 	{
-		errormsg(state.lib, ERROR_LIBRARY|ERROR_SYSTEM|2, "cannot allocate pipes");
-		goto bad;
+		co->flags &= ~CO_SEPARATE;
+		co->mode |= CO_MODE_SEPARATE;
 	}
-	co->cmdfd = pio[1];
-	co->gsmfd = pex[1];
-	if (!(co->msgfp = sfnew(NiL, NiL, 256, pex[0], SF_READ)))
+	co->flags |= CO_INIT;
+	if (co->mode & CO_MODE_SEPARATE)
 	{
-		errormsg(state.lib, ERROR_LIBRARY|ERROR_SYSTEM|2, "cannot allocate message stream");
-		goto bad;
+		flags = 0;
+		proc = 0;
 	}
-	sfdcslow(co->msgfp);
-	sfsprintf(devfd, sizeof(devfd), "%d", co->gsmfd);
-	setenv(CO_ENV_MSGFD, devfd, 1);
-	ops[0] = PROC_FD_DUP(pio[0], 0, PROC_FD_PARENT);
-	ops[1] = PROC_FD_CLOSE(pio[1], PROC_FD_CHILD);
-	ops[2] = PROC_FD_CLOSE(pex[0], PROC_FD_CHILD);
-	ops[3] = 0;
-	sfsprintf(devfd, sizeof(devfd), "/dev/fd/%d", pio[0]);
-	flags = !access(devfd, F_OK);
+	else
+	{
+		pex[0] = -1;
+		pex[1] = -1;
+		pio[0] = -1;
+		pio[1] = -1;
+		if (pipe(pex) < 0 || pipe(pio) < 0)
+		{
+			errormsg(state.lib, ERROR_LIBRARY|ERROR_SYSTEM|2, "cannot allocate pipes");
+			goto bad;
+		}
+		co->cmdfd = pio[1];
+		co->gsmfd = pex[1];
+		if (!(co->msgfp = sfnew(NiL, NiL, 256, pex[0], SF_READ)))
+		{
+			errormsg(state.lib, ERROR_LIBRARY|ERROR_SYSTEM|2, "cannot allocate message stream");
+			goto bad;
+		}
+		sfdcslow(co->msgfp);
+		sfsprintf(devfd, sizeof(devfd), "%d", co->gsmfd);
+		setenv(CO_ENV_MSGFD, devfd, 1);
+		ops[0] = PROC_FD_DUP(pio[0], 0, PROC_FD_PARENT);
+		ops[1] = PROC_FD_CLOSE(pio[1], PROC_FD_CHILD);
+		ops[2] = PROC_FD_CLOSE(pex[0], PROC_FD_CHILD);
+		ops[3] = 0;
+		sfsprintf(devfd, sizeof(devfd), "/dev/fd/%d", pio[0]);
+		flags = !access(devfd, F_OK);
+	}
 	sh[0] = (char*)path;
 	sh[1] = getenv(CO_ENV_SHELL);
 	for (i = 0; i < elementsof(sh); i++)
@@ -212,14 +227,16 @@ coopen(const char* path, int flags, const char* attributes)
 				if (flags || (co->flags & CO_DEVFD) && strmatch(s, "*ksh*"))
 					av[n++] = devfd;
 				av[n] = 0;
-				proc = procopen(s, av, NiL, ops, PROC_DAEMON|PROC_IGNORE);
-				if (proc)
+				if ((co->mode & CO_MODE_SEPARATE) || (proc = procopen(s, av, NiL, ops, PROC_DAEMON|PROC_IGNORE)))
 				{
 					if (!state.sh)
 						state.sh = strdup(s);
 					free(s);
-					co->pid = proc->pid;
-					procfree(proc);
+					if (proc)
+					{
+						co->pid = proc->pid;
+						procfree(proc);
+					}
 					break;
 				}
 			}
@@ -230,94 +247,96 @@ coopen(const char* path, int flags, const char* attributes)
 		errormsg(state.lib, ERROR_LIBRARY|ERROR_SYSTEM|2, "cannot execute");
 		goto bad;
 	}
+	if (!(co->mode & CO_MODE_SEPARATE))
+	{
+		/*
+		 * send the shell identification sequence
+		 */
 
-	/*
-	 * send the shell identification sequence
-	 */
-
-	if (!(sp = sfstropen()))
-	{
-		errormsg(state.lib, ERROR_LIBRARY|2, "out of buffer space");
-		goto bad;
-	}
-	sfprintf(sp, "#%05d\n%s='", 0, CO_ENV_ATTRIBUTES);
-	if (t = getenv(CO_ENV_ATTRIBUTES))
-	{
-		coquote(sp, t, 0);
-		if (attributes)
-			sfprintf(sp, ",");
-	}
-	if (attributes)
-		coquote(sp, attributes, 0);
-	sfprintf(sp, "'\n");
-	sfprintf(sp, coident, pex[1]);
-	i = sfstrtell(sp);
-	sfstrseek(sp, 0, SEEK_SET);
-	sfprintf(sp, "#%05d\n", i - 7);
-	i = write(co->cmdfd, sfstrbase(sp), i) != i;
-	sfstrclose(sp);
-	if (i)
-	{
-		errormsg(state.lib, ERROR_LIBRARY|ERROR_SYSTEM|2, "cannot write initialization message");
-		goto nope;
-	}
-	state.current = co;
-	handler = signal(SIGALRM, hung);
-	i = alarm(30);
-	if (!(s = sfgetr(co->msgfp, '\n', 1)))
-	{
-		if (errno == EINTR)
-			errormsg(state.lib, ERROR_LIBRARY|ERROR_SYSTEM|2, "identification message read timeout");
-		goto nope;
-	}
-	alarm(i);
-	signal(SIGALRM, handler);
-	if (co->flags & CO_DEBUG)
-		errormsg(state.lib, 2, "shell identification \"%s\"", s);
-	switch (*s)
-	{
-	case 'o':
-		co->flags |= CO_OSH;
-		/*FALLTHROUGH*/
-	case 'b':
-		s = cobinit;
-		break;
-	case 'k':
-		co->flags |= CO_KSH;
-		s = cokinit;
-		break;
-	case 'i':	/* NOTE: 'i' is obsolete */
-	case 's':
-		co->flags |= CO_SERVER;
-		co->pid = 0;
-		for (;;)
+		if (!(sp = sfstropen()))
 		{
-			if (t = strchr(s, ','))
-				*t = 0;
-			if (streq(s, CO_OPT_ACK))
-				co->mode |= CO_MODE_ACK;
-			else if (streq(s, CO_OPT_INDIRECT))
-				co->mode |= CO_MODE_INDIRECT;
-			if (!(s = t))
-				break;
-			s++;
+			errormsg(state.lib, ERROR_LIBRARY|2, "out of buffer space");
+			goto bad;
 		}
-		if (!(co->mode & CO_MODE_INDIRECT))
-			wait(NiL);
-		break;
-	default:
-		goto nope;
-	}
-	if (s)
-	{
-		if (!(cj = coexec(co, s, 0, NiL, NiL, NiL)) || cowait(co, cj) != cj)
+		sfprintf(sp, "#%05d\n%s='", 0, CO_ENV_ATTRIBUTES);
+		if (t = getenv(CO_ENV_ATTRIBUTES))
 		{
-			errormsg(state.lib, ERROR_LIBRARY|ERROR_SYSTEM|2, "initialization message exec error");
+			coquote(sp, t, 0);
+			if (attributes)
+				sfprintf(sp, ",");
+		}
+		if (attributes)
+			coquote(sp, attributes, 0);
+		sfprintf(sp, "'\n");
+		sfprintf(sp, coident, pex[1]);
+		i = sfstrtell(sp);
+		sfstrseek(sp, 0, SEEK_SET);
+		sfprintf(sp, "#%05d\n", i - 7);
+		i = write(co->cmdfd, sfstrbase(sp), i) != i;
+		sfstrclose(sp);
+		if (i)
+		{
+			errormsg(state.lib, ERROR_LIBRARY|ERROR_SYSTEM|2, "cannot write initialization message");
 			goto nope;
 		}
-		co->total = 0;
-		co->user = 0;
-		co->sys = 0;
+		state.current = co;
+		handler = signal(SIGALRM, hung);
+		i = alarm(30);
+		if (!(s = sfgetr(co->msgfp, '\n', 1)))
+		{
+			if (errno == EINTR)
+				errormsg(state.lib, ERROR_LIBRARY|ERROR_SYSTEM|2, "identification message read timeout");
+			goto nope;
+		}
+		alarm(i);
+		signal(SIGALRM, handler);
+		if (co->flags & CO_DEBUG)
+			errormsg(state.lib, 2, "shell identification \"%s\"", s);
+		switch (*s)
+		{
+		case 'o':
+			co->flags |= CO_OSH;
+			/*FALLTHROUGH*/
+		case 'b':
+			s = cobinit;
+			break;
+		case 'k':
+			co->flags |= CO_KSH;
+			s = cokinit;
+			break;
+		case 'i':	/* NOTE: 'i' is obsolete */
+		case 's':
+			co->flags |= CO_SERVER;
+			co->pid = 0;
+			for (;;)
+			{
+				if (t = strchr(s, ','))
+					*t = 0;
+				if (streq(s, CO_OPT_ACK))
+					co->mode |= CO_MODE_ACK;
+				else if (streq(s, CO_OPT_INDIRECT))
+					co->mode |= CO_MODE_INDIRECT;
+				if (!(s = t))
+					break;
+				s++;
+			}
+			if (!(co->mode & CO_MODE_INDIRECT))
+				wait(NiL);
+			break;
+		default:
+			goto nope;
+		}
+		if (s)
+		{
+			if (!(cj = coexec(co, s, 0, NiL, NiL, NiL)) || cowait(co, cj) != cj)
+			{
+				errormsg(state.lib, ERROR_LIBRARY|ERROR_SYSTEM|2, "initialization message exec error");
+				goto nope;
+			}
+			co->total = 0;
+			co->user = 0;
+			co->sys = 0;
+		}
 	}
 	co->flags &= ~CO_INIT;
 #ifdef SIGCONT

@@ -25,7 +25,7 @@
  * man this is sum library
  */
 
-static const char id[] = "\n@(#)$Id: sumlib (AT&T Research) 2007-03-11 $\0\n";
+static const char id[] = "\n@(#)$Id: sumlib (AT&T Research) 2007-09-21 $\0\n";
 
 #define _SUM_PRIVATE_	\
 			struct Method_s*	method;	\
@@ -49,7 +49,7 @@ typedef struct Method_s
 	int		(*init)(Sum_t*);
 	int		(*block)(Sum_t*, const void*, size_t);
 	int		(*data)(Sum_t*, Sumdata_t*);
-	int		(*print)(Sum_t*, Sfio_t*, int);
+	int		(*print)(Sum_t*, Sfio_t*, int, size_t);
 	int		(*done)(Sum_t*);
 	int		scale;
 } Method_t;
@@ -115,7 +115,7 @@ short_done(Sum_t* p)
 }
 
 static int
-long_print(Sum_t* p, Sfio_t* sp, register int flags)
+long_print(Sum_t* p, Sfio_t* sp, register int flags, size_t scale)
 {
 	register Integral_t*	x = (Integral_t*)p;
 	register uint32_t	c;
@@ -127,7 +127,7 @@ long_print(Sum_t* p, Sfio_t* sp, register int flags)
 	if (flags & SUM_SIZE)
 	{
 		z = (flags & SUM_TOTAL) ? x->total_size : x->size;
-		if ((flags & SUM_SCALE) && (n = x->method->scale))
+		if ((flags & SUM_SCALE) && ((n = scale) || (n = x->method->scale)))
 			z = SCALE(z, n);
 		sfprintf(sp, " %I*u", sizeof(z), z);
 	}
@@ -171,9 +171,7 @@ static const Method_t	methods[] =
 	METHOD(crc),
 	METHOD(md5),
 	METHOD(prng),
-#ifdef sha1_description
 	METHOD(sha1),
-#endif
 #ifdef sha256_description
 	METHOD(sha256),
 #endif
@@ -285,9 +283,9 @@ sumdone(Sum_t* p)
  */
 
 int
-sumprint(Sum_t* p, Sfio_t* sp, int flags)
+sumprint(Sum_t* p, Sfio_t* sp, int flags, size_t scale)
 {
-	return (*p->method->print)(p, sp, flags);
+	return (*p->method->print)(p, sp, flags, scale);
 }
 
 /*

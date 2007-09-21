@@ -593,6 +593,9 @@ static char *walk_tree(register Namval_t *np, int dlete)
 	void *dir;
 	int n=0, noscope=(dlete&NV_NOSCOPE);
 	Namarr_t *arp = nv_arrayptr(np);
+	Dt_t	 *save_tree = sh.var_tree;
+	if(sh.last_root)
+		sh.var_tree = sh.last_root;
 	stakputs(nv_name(np));
 	if(arp && !(arp->nelem&ARRAY_SCAN) && (subscript = nv_getsub(np)))
 	{
@@ -634,6 +637,7 @@ static char *walk_tree(register Namval_t *np, int dlete)
 	walk.noscope = noscope;
 	genvalue(argv,name,0,&walk);
 	stakset(savptr,savtop);
+	sh.var_tree = save_tree;
 	if(!outfile)
 		return((char*)0);
 	sfputc(out,0);
@@ -653,7 +657,7 @@ char *nv_getvtree(register Namval_t *np, Namfun_t *fp)
 	NOT_USED(fp);
 	if(nv_isattr(np,NV_BINARY) &&  nv_isattr(np,NV_RAW))
 		return(nv_getv(np,fp));
-#if 0
+#if 1
 	if(nv_isattr(np,NV_ARRAY) && nv_arraychild(np,(Namval_t*)0,0)==np)
 		return(nv_getv(np,fp));
 #endif

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
+*           Copyright (c) 1982-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -256,6 +256,7 @@ void	sh_trim(register char *sp)
 			int len;
 			if(mbwide() && (len=mbsize(sp))>1)
 			{
+				memmove(dp, sp, len);
 				dp += len;
 				sp += len;
 				continue;

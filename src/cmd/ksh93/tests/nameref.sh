@@ -226,4 +226,26 @@ function fun
 }
 i=foo
 [[ $(fun $i) == hi ]] || err_exit 'nameref for compound variable with in function name of caller fails'
+unset -n foo bar
+typeset -A foo
+foo[x.y]=(x=3 y=4)
+nameref bar=foo[x.y]
+[[ ${bar.x} == 3 ]] || err_exit 'nameref to subscript containing . fails'
+$SHELL -c 'function bar { nameref x=foo[++];};typeset -A foo;bar' 2> /dev/null ||err_exit 'nameref of associative array tries to evaluate subscript'
+i=$($SHELL -c 'nameref foo=bar; bar[2]=(x=3 y=4); nameref x=foo[2].y;print -r -- $x' 2> /dev/null)
+[[ $i == 4 ]] || err_exit 'creating reference from subscripted variable whose name is a reference failed'
+[[ $($SHELL 2> /dev/null <<- '+++EOF'
+	function bar
+	{
+	 	nameref x=$1
+	 	print -r -- "$x"
+	}
+	function foo
+	{
+	 	typeset var=( foo=hello)
+	 	bar var
+	}
+	foo
++++EOF
+) ==  *foo=hello* ]] || err_exit 'unable to display compound variable from name reference of local variable'
 exit $((Errors))

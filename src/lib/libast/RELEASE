@@ -1,3 +1,11 @@
+07-09-18 misc/procopen.c: tighten up SIGCHLD logic between parent/child
+07-09-18 misc/signal.c: unblock SIG_DFL after setting handler, sig<0 => don't unblock
+07-09-13 misc/fs3d.c: no $LD_PRELOAD => no 3d and avoids invalid mount(2) call
+07-09-11 vmalloc: vmstat(0,0)==1 => region in use, drop VM_primary|VM_secondary
+07-09-05 misc/recstr.c: handle [lL] gobbled by strtol() -- ouch
+07-08-17 path/pathprobe.c: handle '\r' in VERSION string
+07-07-17 regex/regcache.c: regcache(0,n,0) extends cache to size n (no shrinking)
+07-07-16 tm/tmdata.c: add 2005-12-31, drop 1999-12-31 (where did that come from?)
 07-05-21 tm/tmxfmt.c,tmxscan.c: %F => %L (TM_DEFAULT); %F => %Y-%m-%d
 07-05-15 sfio/sfvprintf.c: %h? and SFFMT_SHORT => raw bytes
 07-05-09 features/signal.c,features/siglist: use kill -l & strsignal()

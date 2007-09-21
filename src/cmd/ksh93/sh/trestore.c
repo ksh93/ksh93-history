@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
+*           Copyright (c) 1982-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -187,7 +187,7 @@ static struct argnod *r_arg(void)
 		ap->argval[l] = 0;
 		ap->argchn.cp = 0;
 		ap->argflag = sfgetc(infile);
-		if(ap->argflag&ARG_MESSAGE)
+		if((ap->argflag&ARG_MESSAGE) && *ap->argval)
 		{
 			/* replace international messages */
 			ap = sh_endword(1);
@@ -203,7 +203,7 @@ static struct argnod *r_arg(void)
 		}
 		else
 			ap = (struct argnod*)stakfreeze(0);
-		if(*ap->argval==0 && (ap->argflag&~ARG_APPEND)==0)
+		if(*ap->argval==0 && (ap->argflag&~(ARG_APPEND|ARG_MESSAGE|ARG_QUOTED))==0)
 		{
 			struct fornod *fp = (struct fornod*)getnode(fornod);
 			fp->fortyp = sfgetu(infile);

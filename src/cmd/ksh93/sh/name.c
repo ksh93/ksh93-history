@@ -178,7 +178,7 @@ void nv_setlist(register struct argnod *arg,register int flags)
 	char		*trap=sh.st.trap[SH_DEBUGTRAP];
 	int		traceon = (sh_isoption(SH_XTRACE)!=0);
 	int		array = (flags&(NV_ARRAY|NV_IARRAY));
-	flags &= ~(NV_TYPE|NV_ARRAY);
+	flags &= ~(NV_TYPE|NV_ARRAY|NV_IARRAY);
 	if(sh_isoption(SH_ALLEXPORT))
 		flags |= NV_EXPORT;
 	if(sh.prefix)
@@ -323,7 +323,7 @@ void nv_setlist(register struct argnod *arg,register int flags)
 			cp++;
 #endif
 		np = nv_open(cp,sh.var_tree,flags);
-		if(!np->nvfun)
+		if(!np->nvfun && (flags&NV_NOREF))
 		{
 			if(sh.used_pos)
 				nv_onattr(np,NV_PARAM);
@@ -517,7 +517,7 @@ Namval_t *nv_create(const char *name, Dt_t *root, int flags, Namfun_t *dp)
 				char *sub=0;
 				if(c=='.') /* don't optimize */
 					sh.argaddr = 0;
-				else if(flags&NV_NOREF)
+				else if((flags&NV_NOREF) && (c!='[' || *cp!='.'))
 				{
 					if(c && !(flags&NV_NOADD))
 						nv_unref(np);
@@ -558,7 +558,7 @@ Namval_t *nv_create(const char *name, Dt_t *root, int flags, Namfun_t *dp)
 			{
 				if(!np)
 				{
-					if(*sp=='[' && *cp==0 && cp[-1]==']') 
+					if(!nq && *sp=='[' && *cp==0 && cp[-1]==']') 
 					{
 						/*
 						 * for backward compatibility
@@ -1204,7 +1204,7 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 		}
 		if(flags&NV_APPEND)
 			stakseek(offset);
-		if(tofree)
+		if(tofree && tofree!=Empty)
 			free((void*)tofree);
 	}
 	if(!was_local && ((flags&NV_EXPORT) || nv_isattr(np,NV_EXPORT)))
@@ -2172,27 +2172,19 @@ static void ltou(register char const *str1,register char *str2)
  */
 static char *lastdot(register char *cp)
 {
-	register char *dp=cp, *ep=0;
+	register char *ep=0;
 	register int c;
 	while(c= *cp++)
 	{
-		*dp++ = c;
 		if(c=='[')
-			ep = cp;
+			cp = nv_endsubscript((Namval_t*)0,ep=cp,0);
 		else if(c=='.')
 		{
 			if(*cp=='[')
-			{
-				ep = nv_endsubscript((Namval_t*)0,cp,0);
-				c = ep-cp;
-				memcpy(dp,cp,c);
-				dp = sh_checkid(dp+1,dp+c);
-				cp = ep;
-			}
+				cp = nv_endsubscript((Namval_t*)0,cp,0);
 			ep = 0;
 		}
 	}
-	*dp = 0;
 	return(ep);
 }
 

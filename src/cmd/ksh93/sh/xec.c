@@ -755,10 +755,11 @@ int sh_exec(register const Shnode_t *t, int flags)
 				if(np && is_abuiltin(np))
 				{
 					void *context;
-					int scope=0, jmpval, save_prompt,share;
+					int scope=0, jmpval, save_prompt,share=0;
 					struct checkpt buff;
 					unsigned long was_vi=0, was_emacs=0, was_gmacs=0;
 					struct stat statb;
+					memset(&statb, 0, sizeof(struct stat));
 					if(strchr(nv_name(np),'/'))
 					{
 						/*

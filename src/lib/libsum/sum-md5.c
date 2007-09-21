@@ -350,7 +350,7 @@ md5_done(Sum_t* p)
 }
 
 static int
-md5_print(Sum_t* p, Sfio_t* sp, register int flags)
+md5_print(Sum_t* p, Sfio_t* sp, register int flags, size_t scale)
 {
 	register Md5_t*		x = (Md5_t*)p;
 	register unsigned char*	d;

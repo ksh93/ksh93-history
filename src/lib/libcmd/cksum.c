@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: sum (AT&T Research) 2007-05-20 $\n]"
+"[-?\n@(#)$Id: sum (AT&T Research) 2007-09-21 $\n]"
 USAGE_LICENSE
 "[+NAME?cksum,md5sum,sum - print file checksum and block count]"
 "[+DESCRIPTION?\bsum\b lists the checksum, and for most methods the block"
@@ -50,6 +50,8 @@ USAGE_LICENSE
 "[a:all?List the checksum for all files. Use with \b--total\b to list both"
 "	individual and total checksums and block counts.]"
 "[b:binary?Read files in binary mode. This is the default.]"
+"[B:scale?Block count scale (bytes per block) override for methods that"
+"	include size in the output.  The default is method specific.]#[scale]"
 "[c:check?Each \afile\a is interpreted as the output from a previous \bsum\b."
 "	If \b--header\b or \b--permissions\b was specified in the previous"
 "	\bsum\b then the checksum method is automatically determined,"
@@ -74,7 +76,7 @@ USAGE_LICENSE
 "	specified then the mode, user and group for each path in \afile\a"
 "	are updated if necessary to match those in \afile\a. A warning is"
 "	printed on the standard error for each changed file.]"
-"[r:recursive?Recursively checksum the contents of directories.]"
+"[R:recursive?Recursively checksum the contents of directories.]"
 "[s:silent|status?No output for \b--check\b; 0 exit status means all sums"
 "	matched, non-0 means at least one sum failed to match. Ignored for"
 "	\b--permissions\b.]"
@@ -95,6 +97,8 @@ USAGE_LICENSE
 "	determined by \bgetconf PATH_RESOLVE\b.]"
 "[P:physical?Don't follow symbolic links when traversing directories. The"
 "	default is determined by \bgetconf PATH_RESOLVE\b.]"
+"[r:bsd?Equivalent to \b--method=bsd --scale=512\b for compatibility with"
+"	other \bsum\b(1) implementations.]"
 
 "\n"
 "\n[ file ... ]\n"
@@ -121,6 +125,7 @@ typedef struct State_s			/* program state		*/
 	int		permissions;	/* include mode,uer,group	*/
 	int		haveperm;	/* permissions in the input	*/
 	int		recursive;	/* recursively descend dirs	*/
+	size_t		scale;		/* scale override		*/
 	unsigned long	size;		/* combined size of all files	*/
 	int		silent;		/* silent check, 0 exit if ok	*/
 	int		(*sort)(FTSENT* const*, FTSENT* const*);
@@ -222,7 +227,7 @@ pr(State_t* state, Sfio_t* op, Sfio_t* ip, char* file, int perm, struct stat* st
 	sumdone(state->sum);
 	if (!state->total || state->all)
 	{
-		sumprint(state->sum, op, SUM_SIZE|SUM_SCALE);
+		sumprint(state->sum, op, SUM_SIZE|SUM_SCALE, state->scale);
 		if (perm >= 0)
 		{
 			if (perm)
@@ -436,6 +441,7 @@ b_cksum(int argc, register char** argv, void* context)
 	register int	flags;
 	register char*	s;
 	char*		file;
+	char*		method;
 	Sfio_t*		sp;
 	FTS*		fts;
 	FTSENT*		ent;
@@ -447,6 +453,7 @@ b_cksum(int argc, register char** argv, void* context)
 	setlocale(LC_ALL, "");
 	flags = fts_flags() | FTS_TOP | FTS_NOPOSTORDER | FTS_NOSEEDOTDIR;
 	state.warn = 1;
+	method = 0;
 	optinit(&optdisc, optinfo);
 	for (;;)
 	{
@@ -457,6 +464,9 @@ b_cksum(int argc, register char** argv, void* context)
 			continue;
 		case 'b':
 			state.text = 0;
+			continue;
+		case 'B':
+			state.scale = opt_info.num;
 			continue;
 		case 'c':
 			if (!(state.check = sfstropen()))
@@ -472,6 +482,10 @@ b_cksum(int argc, register char** argv, void* context)
 			state.permissions = 1;
 			continue;
 		case 'r':
+			method = "bsd";
+			state.scale = 512;
+			continue;
+		case 'R':
 			flags &= ~FTS_TOP;
 			state.recursive = 1;
 			state.sort = order;
@@ -486,8 +500,7 @@ b_cksum(int argc, register char** argv, void* context)
 			state.warn = opt_info.num;
 			continue;
 		case 'x':
-			if (!(state.sum = sumopen(opt_info.arg)))
-				error(3, "%s: unknown checksum method", opt_info.arg);
+			method = opt_info.arg;
 			continue;
 		case 'H':
 			flags |= FTS_META|FTS_PHYSICAL;
@@ -519,6 +532,8 @@ b_cksum(int argc, register char** argv, void* context)
 	 * check the method
 	 */
 
+	if (method && !(state.sum = sumopen(method)))
+		error(3, "%s: unknown checksum method", method);
 	if (!state.sum && !(state.sum = sumopen(error_info.id)) && !(state.sum = sumopen(astconf("UNIVERSE", NiL, NiL))))
 		state.sum = sumopen(NiL);
 
@@ -592,7 +607,7 @@ b_cksum(int argc, register char** argv, void* context)
 	}
 	if (state.total)
 	{
-		sumprint(state.sum, sfstdout, SUM_TOTAL|SUM_SIZE|SUM_SCALE);
+		sumprint(state.sum, sfstdout, SUM_TOTAL|SUM_SIZE|SUM_SCALE, state.scale);
 		sfputc(sfstdout, '\n');
 	}
 	sumclose(state.sum);

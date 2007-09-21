@@ -1829,8 +1829,10 @@ static void comsubst(Mac_t *mp,int type)
 			mac_copy(mp,&lastc,1);
 			lastc = 0;
 		}
+		if(c <= 0)
+			continue;
 		/* delay appending trailing new-lines */
-		while(str[--c]=='\n')
+		while(c-->=0 && str[c]=='\n')
 			newlines++;
 		if(++c < bufsize)
 			str[c] = 0;

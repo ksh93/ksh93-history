@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
+*           Copyright (c) 1982-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -68,7 +68,7 @@ static char *overlaid(register char *str,register const char *newstr,int nocase)
 static char *find_begin(char outbuff[], char *last, int endchar, int *type)
 {
 	register char	*cp=outbuff, *bp, *xp;
-	register int 	c,inquote = 0;
+	register int 	c,inquote = 0, inassign=0;
 	bp = outbuff;
 	*type = 0;
 	while(cp < last)
@@ -129,6 +129,13 @@ static char *find_begin(char outbuff[], char *last, int endchar, int *type)
 			break;
 		    case '=':
 			if(!inquote)
+			{
+				bp = cp;
+				inassign = 1;
+			}
+			break;
+		    case ':':
+			if(!inquote && inassign)
 				bp = cp;
 			break;
 		    case '~':
@@ -139,7 +146,10 @@ static char *find_begin(char outbuff[], char *last, int endchar, int *type)
 			if(c && c==endchar)
 				return(xp);
 			if(!inquote && ismeta(c))
+			{
 				bp = cp;
+				inassign = 0;
+			}
 			break;
 		}
 	}

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1990-2006 AT&T Knowledge Ventures            *
+*           Copyright (c) 1990-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -75,6 +75,7 @@ struct Coservice_s			/* service info			*/
 
 #define CO_MODE_ACK		(1<<0)	/* wait for coexec() ack	*/
 #define CO_MODE_INDIRECT	(1<<1)	/* indirect CO_SERVER		*/
+#define CO_MODE_SEPARATE	(1<<2)	/* 1 shell+wait per action	*/
 
 #define CO_INIT		(CO_USER>>1)	/* initial command		*/
 

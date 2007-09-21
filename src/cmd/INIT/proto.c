@@ -198,7 +198,7 @@ replace __PARAM__((const char* newfile, const char* oldfile, int preserve), (new
 #line 1 "../../lib/libpp/ppproto.c"
  
 #line 13
-static const char id[] = "\n@(#)$Id: proto (AT&T Research) 2006-06-28 $\000\n";
+static const char id[] = "\n@(#)$Id: proto (AT&T Research) 2007-09-21 $\000\n";
 
 #line 1 "../../lib/libpp/ppfsm.c"
  
@@ -1284,7 +1284,7 @@ extern __MANGLE__  long	strkey  __PROTO__((const char*));
 
 #line 20 "../../lib/libpp/ppproto.c"
 
-#line 40
+#line 41
 struct proto 
 {
 	int		brace;		 
@@ -1319,7 +1319,7 @@ struct proto
 };
 
   
-#line 162
+#line 163
 static char*
 number __PARAM__((register char* p, register long n), (p, n)) __OTORP__(register char* p; register long n;){
 	register long	d;
@@ -1335,7 +1335,7 @@ number __PARAM__((register char* p, register long n), (p, n)) __OTORP__(register
 static int		errors;
 
  
-#line 193
+#line 194
  
 
 
@@ -2483,9 +2483,9 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 		comment(&notice, &buf, ((char*)0), -1, 0);
 	return (*(( &buf)->nxt>=( &buf)->end?(( &buf)->nxt=( &buf)->end-1):( &buf)->nxt)=0,( &buf)->nxt-( &buf)->buf);
 }
-#line 305 "../../lib/libpp/ppproto.c"
+#line 306 "../../lib/libpp/ppproto.c"
  
-#line 317
+#line 318
 static char*
 linesync __PARAM__((register struct proto* proto, register char* p, register long n), (proto, p, n)) __OTORP__(register struct proto* proto; register char* p; register long n;){
 
@@ -2626,7 +2626,7 @@ init __PARAM__((struct proto* proto, char* op, int flags), (proto, op, flags)) _
 }
 
  
-#line 391
+#line 392
 static char*
 nns __PARAM__((register char* s), (s)) __OTORP__(register char* s;){
 	while (*s == ' ' || *s == '\t' || *s == '\n')
@@ -2635,7 +2635,7 @@ nns __PARAM__((register char* s), (s)) __OTORP__(register char* s;){
 }
 
  
-#line 408
+#line 409
 static int
 directive __PARAM__((register char* s, int dir), (s, dir)) __OTORP__(register char* s; int dir;){
 	switch (*(s = nns(s)))
@@ -4229,7 +4229,7 @@ pppclose __PARAM__((char* iob), (iob)) __OTORP__(char* iob;){
 }
 
  
-#line 2007
+#line 2008
 char*
 pppopen __PARAM__((char* file, int fd, char* notice, char* options, char* package, char* comment, int flags), (file, fd, notice, options, package, comment, flags)) __OTORP__(char* file; int fd; char* notice; char* options; char* package; char* comment; int flags;){
 	register struct proto*	proto;
@@ -4323,7 +4323,7 @@ pppopen __PARAM__((char* file, int fd, char* notice, char* options, char* packag
 	*(proto->ip + n) = 0;
 
  
-#line 2112
+#line 2113
 	if (!notice && !options || (comlen = astlicense(com, sizeof(com), ((char*)0), "type=check", proto->cc[0], proto->cc[1], proto->cc[2])) <= 0)
 		*com = 0;
 
@@ -4388,6 +4388,11 @@ pppopen __PARAM__((char* file, int fd, char* notice, char* options, char* packag
 							notice = options = 0;
 							break;
 						}
+					}
+					if (*s == *"Public Domain"&& !sstrncmp( s, "Public Domain", sizeof("Public Domain") - 1))
+					{
+						notice = options = 0;
+						break;
 					}
 					else if (*s++ == '\n')
 					{

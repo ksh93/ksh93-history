@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.2 2007-06-21
+info mam static 00000 1994-07-17 make (AT&T Research) 5.2 2007-09-07
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ar
@@ -1957,7 +1957,7 @@ prev misc/proclib.h implicit
 done misc/procrun.c
 meta procrun.o %.c>%.o misc/procrun.c procrun
 prev misc/procrun.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Imisc -Iinclude -Istd -D__OBSOLETE__=20060101 -D_PACKAGE_ast -c misc/procrun.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Imisc -Iinclude -Istd -D__OBSOLETE__=20070101 -D_PACKAGE_ast -c misc/procrun.c
 done procrun.o generated
 make procfree.o
 make misc/procfree.c
@@ -5304,7 +5304,7 @@ prev misc/univlib.h implicit
 done port/astconf.c
 meta astconf.o %.c>%.o port/astconf.c astconf
 prev port/astconf.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Imisc -Iinclude -Istd -D__OBSOLETE__=20060101 -DCONF_LIBSUFFIX=\""${mam_cc_SUFFIX_DYNAMIC-${mam_cc_SUFFIX_SHARED}}"\" -DCONF_LIBPREFIX=\""${mam_cc_PREFIX_DYNAMIC-${mam_cc_PREFIX_SHARED}}"\" -DHOSTTYPE=\""${mam_cc_HOSTTYPE}"\" -D_PACKAGE_ast -c port/astconf.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Imisc -Iinclude -Istd -D__OBSOLETE__=20070101 -DCONF_LIBSUFFIX=\""${mam_cc_SUFFIX_DYNAMIC-${mam_cc_SUFFIX_SHARED}}"\" -DCONF_LIBPREFIX=\""${mam_cc_PREFIX_DYNAMIC-${mam_cc_PREFIX_SHARED}}"\" -DHOSTTYPE=\""${mam_cc_HOSTTYPE}"\" -D_PACKAGE_ast -c port/astconf.c
 done astconf.o generated
 make astdynamic.o
 make port/astdynamic.c
@@ -5782,7 +5782,7 @@ prev include/sfio_t.h implicit
 done disc/sfstrtmp.c
 meta sfstrtmp.o %.c>%.o disc/sfstrtmp.c sfstrtmp
 prev disc/sfstrtmp.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D__OBSOLETE__=20060101 -D_PACKAGE_ast -c disc/sfstrtmp.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D__OBSOLETE__=20070101 -D_PACKAGE_ast -c disc/sfstrtmp.c
 done sfstrtmp.o generated
 make spawn.o
 make obsolete/spawn.c

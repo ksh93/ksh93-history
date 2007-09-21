@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1990-2006 AT&T Knowledge Ventures            *
+*           Copyright (c) 1990-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -30,7 +30,7 @@
 #include <proc.h>
 
 int
-coprocrun(const char* path, char** argv)
+coprocrun(const char* path, char** argv, int flags)
 {
 	register char*		s;
 	register char**		a;
@@ -38,7 +38,7 @@ coprocrun(const char* path, char** argv)
 	int			n;
 
 	if (!(a = argv))
-		return procclose(procopen(path, a, NiL, NiL, PROC_FOREGROUND|PROC_GID|PROC_UID));
+		return procclose(procopen(path, a, NiL, NiL, PROC_FOREGROUND|PROC_GID|PROC_UID|flags));
 	if (!(tmp = sfstropen()))
 		return -1;
 	sfputr(tmp, path ? path : "sh", -1);

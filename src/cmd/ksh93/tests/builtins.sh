@@ -128,6 +128,8 @@ x=$0
 if	[[ $(eval 'print $0') != $x ]]
 then	err_exit '$0 not correct for eval'
 fi
+$SHELL -c 'read x <<< hello' 2> /dev/null || err_exit 'syntax <<< not recognized'
+($SHELL -c 'read x[1] <<< hello') 2> /dev/null || err_exit 'read x[1] not working'
 unset x
 readonly x
 set -- $(readonly)
@@ -188,6 +190,7 @@ fi
  ]] || err_exit 'SIGTERM not recognized'
 [[ $($SHELL -c 'trap "print ok" sigterm; kill -s sigterm $$' 2> /dev/null) == ok
  ]] || err_exit 'SIGTERM not recognized'
+[[ $($SHELL -c '( trap "" TERM);kill $$;print bad' == bad) ]] 2> /dev/null && err_exit 'trap ignored in subshell causes it to be ignored by parent'
 ${SHELL} -c 'kill -1 -$$' 2> /dev/null
 [[ $(kill -l $?) == HUP ]] || err_exit 'kill -1 -pid not working' 
 ${SHELL} -c 'kill -1 -$$' 2> /dev/null

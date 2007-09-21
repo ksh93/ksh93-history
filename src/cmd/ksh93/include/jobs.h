@@ -106,8 +106,19 @@ extern struct jobs job;
 
 #ifdef JOBS
 
+#if !_std_malloc
+#include <vmalloc.h>
+#if VMALLOC_VERSION >= 20070911L
+#define vmbusy()	(vmstat(0,0)!=0)
+#endif
+#endif
+#ifndef vmbusy
+#define vmbusy()	0
+#endif
+
+
 #define job_lock()	(job.in_critical++)
-#define job_unlock()	do{if(!--job.in_critical&&job.savesig)job_reap(job.savesig);}while(0)
+#define job_unlock()	do{if(!--job.in_critical&&job.savesig&&!vmbusy())job_reap(job.savesig);}while(0)
 
 extern const char	e_jobusage[];
 extern const char	e_done[];

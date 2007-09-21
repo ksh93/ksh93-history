@@ -790,7 +790,7 @@ sha256_done(Sum_t* p)
 }
 
 static int
-sha256_print(Sum_t* p, Sfio_t* sp, register int flags)
+sha256_print(Sum_t* p, Sfio_t* sp, register int flags, size_t scale)
 {
 	register Sha256_t*	sha = (Sha256_t*)p;
 	register sha2_byte*	d;
@@ -1152,7 +1152,7 @@ sha512_done(Sum_t* p)
 }
 
 static int
-sha512_print(Sum_t* p, Sfio_t* sp, register int flags)
+sha512_print(Sum_t* p, Sfio_t* sp, register int flags, size_t scale)
 {
 	register Sha512_t*	sha = (Sha512_t*)p;
 	register sha2_byte*	d;
@@ -1221,7 +1221,7 @@ sha384_open(const Method_t* method, const char* name)
 }
 
 static int
-sha384_print(Sum_t* p, Sfio_t* sp, register int flags)
+sha384_print(Sum_t* p, Sfio_t* sp, register int flags, size_t scale)
 {
 	register Sha384_t*	sha = (Sha384_t*)p;
 	register sha2_byte*	d;

@@ -57,7 +57,7 @@ extern int	suminit(Sum_t*);
 extern int	sumblock(Sum_t*, const void*, size_t);
 extern int	sumdone(Sum_t*);
 extern int	sumdata(Sum_t*, Sumdata_t*);
-extern int	sumprint(Sum_t*, Sfio_t*, int);
+extern int	sumprint(Sum_t*, Sfio_t*, int, size_t);
 extern int	sumusage(Sfio_t*);
 extern int	sumclose(Sum_t*);
 

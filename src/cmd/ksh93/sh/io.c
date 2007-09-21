@@ -380,7 +380,7 @@ void sh_ioinit(void)
 {
 	register int n;
 	filemapsize = 8;
-	filemap = (struct fdsave*)malloc(8*sizeof(struct fdsave));
+	filemap = (struct fdsave*)malloc(filemapsize*sizeof(struct fdsave));
 #if SHOPT_FASTPIPE
 	n = sh.lim.open_max+2;
 #else
@@ -1276,10 +1276,25 @@ void sh_iosave(register int origfd, int oldtop)
 	/* make sure table is large enough */
 	if(sh.topfd >= filemapsize)
 	{
+		char 	*cp, *oldptr = (char*)filemap;
+		char 	*oldend = (char*)&filemap[filemapsize];
+		long	moved;
 		filemapsize += 8;
 		if(!(filemap = (struct fdsave*)realloc(filemap,filemapsize*sizeof(struct fdsave))))
 			errormsg(SH_DICT,ERROR_exit(4),e_nospace);
-			
+		if(moved = (char*)filemap - oldptr)
+		{
+#if SHOPT_FASTPIPE
+			for(savefd=sh.lim.open_max+2; --savefd>=0; )
+#else
+			for(savefd=sh.lim.open_max; --savefd>=0; )
+#endif /* SHOPT_FASTPIPE */
+			{
+				cp = (char*)sh.fdptrs[savefd];
+				if(cp >= oldptr && cp < oldend)
+					sh.fdptrs[savefd] = (int*)(oldptr+moved);
+			}
+		}
 	}
 #if SHOPT_DEVFD
 	if(origfd <0)

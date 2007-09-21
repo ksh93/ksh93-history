@@ -646,7 +646,7 @@ void	ed_setup(register Edit_t *ep, int fd, int reedit)
 				{
 					if(pp < ppmax)
 						*pp++ = c;
-					if(c=='\a')
+					if(c=='\a' || c==ESC || c=='\r')
 						break;
 					if(skip || (c>='0' && c<='9'))
 						continue;
@@ -655,6 +655,8 @@ void	ed_setup(register Edit_t *ep, int fd, int reedit)
 					else if(n>2 || (c!= '[' &&  c!= ']'))
 						break;
 				}
+				if(c==0 || c==ESC || c=='\r')
+					last--;
 				qlen += (n+1);
 				break;
 			}
@@ -1476,11 +1478,14 @@ static int keytrap(Edit_t *ep,char *inbuff,register int insize, int bufsize, int
 	shp->savexit = savexit;
 	if((cp = nv_getval(ED_CHRNOD)) == inbuff)
 		nv_unset(ED_CHRNOD);
-	else
+	else if(bufsize>0)
 	{
 		strncpy(inbuff,cp,bufsize);
+		inbuff[bufsize-1]='\0';
 		insize = strlen(inbuff);
 	}
+	else
+		insize = 0;
 	nv_unset(ED_TXTNOD);
 	return(insize);
 }

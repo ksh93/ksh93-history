@@ -30,7 +30,7 @@
 #include <wc.h>
 #include <ctype.h>
 
-#if _hdr_wchar && _hdr_wctype
+#if _hdr_wchar && _hdr_wctype && _lib_iswctype
 
 #include <wchar.h>
 #include <wctype.h>

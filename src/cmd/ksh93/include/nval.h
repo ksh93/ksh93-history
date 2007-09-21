@@ -213,6 +213,7 @@ struct Namval
 #define NV_ADELETE	5	/* delete current subscript */
 #define NV_AADD		6	/* add subscript if not found */
 #define NV_ACURRENT	7	/* return current subscript Namval_t* */
+#define NV_ASETSUB	8	/* set current subscript */
 
 /* The following are for nv_disc */
 #define NV_FIRST	1
@@ -249,6 +250,7 @@ extern Namval_t	*nv_opensub(Namval_t*);
 
 /* name-value pair function prototypes */
 extern int		nv_adddisc(Namval_t*, const char**, Namval_t**);
+extern Namarr_t		*nv_arrayptr(Namval_t*);
 extern int		nv_clone(Namval_t*, Namval_t*, int);
 extern void 		nv_close(Namval_t*);
 extern void		*nv_context(Namval_t*);

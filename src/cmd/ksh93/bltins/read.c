@@ -187,7 +187,7 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 	{
 		if(val= strchr(name,'?'))
 			*val = 0;
-		np = nv_open(name,shp->var_tree,NV_NOASSIGN|NV_VARNAME|NV_ARRAY);
+		np = nv_open(name,shp->var_tree,NV_NOASSIGN|NV_VARNAME);
 		if((flags&V_FLAG) && shp->ed_context)
 			((struct edit*)shp->ed_context)->e_default = np;
 		if(flags&A_FLAG)

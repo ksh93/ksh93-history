@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1990-2006 AT&T Knowledge Ventures            *
+*           Copyright (c) 1990-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                      by AT&T Knowledge Ventures                      *
@@ -26,6 +26,8 @@
  */
 
 #include "colib.h"
+
+#undef	procrun
 
 #include <proc.h>
 
@@ -142,10 +144,13 @@ coexec(register Coshell_t* co, const char* action, int flags, const char* out, c
 	register Coservice_t*	cs;
 	int			n;
 	int			i;
+	int			og;
+	int			cg;
 	char*			s;
 	char*			t;
 	char*			env;
 	char*			red;
+	char*			sh[4];
 
 	/*
 	 * get a free job slot
@@ -300,7 +305,19 @@ coexec(register Coshell_t* co, const char* action, int flags, const char* out, c
 		if (!(sp = sfstropen())) sp = tp;
 #endif
 		flags |= CO_IGNORE;
-		sfprintf(sp, "(\n%s%sset -%s%s\n",
+		if (co->mode & CO_MODE_SEPARATE)
+		{
+			flags &= ~CO_SERIALIZE;
+			og = '{';
+			cg = '}';
+		}
+		else
+		{
+			og = '(';
+			cg = ')';
+		}
+		sfprintf(sp, "%c\n%s%sset -%s%s\n",
+			og,
 			env,
 			n > CO_MAXEVAL ? "" : "eval '",
 			(flags & CO_IGNORE) ? "" : "e",
@@ -312,7 +329,7 @@ coexec(register Coshell_t* co, const char* action, int flags, const char* out, c
 			coquote(sp, action, 0);
 			sfprintf(sp, "\n'");
 		}
-		sfprintf(sp, "\n) </dev/null");
+		sfprintf(sp, "\n%c </dev/null", cg);
 		if (out)
 		{
 			if (*out == '/')
@@ -338,18 +355,21 @@ coexec(register Coshell_t* co, const char* action, int flags, const char* out, c
 			else if (cj->err = pathtemp(NiL, 64, NiL, "coe", NiL))
 				sfprintf(sp, " 2>%s", cj->err);
 		}
-		if (flags & CO_OSH)
-			sfprintf(sp, " && echo x %d 0 >&$%s || echo x %d $? >&$%s",
-				cj->id,
-				CO_ENV_MSGFD,
-				cj->id,
-				CO_ENV_MSGFD);
-		else
-			sfprintf(sp, " && echo x %d 0 `times` >&$%s || echo x %d $? `times` >&$%s",
-				cj->id,
-				CO_ENV_MSGFD,
-				cj->id,
-				CO_ENV_MSGFD);
+		if (!(co->mode & CO_MODE_SEPARATE))
+		{
+			if (flags & CO_OSH)
+				sfprintf(sp, " && echo x %d 0 >&$%s || echo x %d $? >&$%s",
+					cj->id,
+					CO_ENV_MSGFD,
+					cj->id,
+					CO_ENV_MSGFD);
+			else
+				sfprintf(sp, " && echo x %d 0 `times` >&$%s || echo x %d $? `times` >&$%s",
+					cj->id,
+					CO_ENV_MSGFD,
+					cj->id,
+					CO_ENV_MSGFD);
+		}
 #if !_lib_fork && defined(_map_spawnve)
 		if (sp != tp)
 		{
@@ -362,9 +382,10 @@ coexec(register Coshell_t* co, const char* action, int flags, const char* out, c
 			sp = tp;
 		}
 #endif
-		sfprintf(sp, " &\necho j %d $! >&$%s\n",
-			cj->id,
-			CO_ENV_MSGFD);
+		if (!(co->mode & CO_MODE_SEPARATE))
+			sfprintf(sp, " &\necho j %d $! >&$%s\n",
+				cj->id,
+				CO_ENV_MSGFD);
 	}
 	n = sfstrtell(sp);
 	if (!costash(sp))
@@ -374,28 +395,43 @@ coexec(register Coshell_t* co, const char* action, int flags, const char* out, c
 	s = sfstrseek(sp, 0, SEEK_SET);
 	if (flags & CO_DEBUG)
 		errormsg(state.lib, ERROR_LIBRARY|2, "job %d commands:\n\n%s\n", cj->id, s);
+	if (co->mode & CO_MODE_SEPARATE)
+	{
+		sh[0] = state.sh;
+		sh[1] = "-c";
+		sh[2] = s;
+		sh[3] = 0;
+		cj->status = procrun(state.sh, sh, 0);
+		sfstrclose(sp);
+		cj->pid = CO_PID_ZOMBIE;
+		cj->local = 0;
+		co->outstanding++;
+		co->total++;
+	}
+	else
+	{
+		/*
+		 * send it off
+		 */
 
-	/*
-	 * send it off
-	 */
+		while ((i = write(co->cmdfd, s, n)) > 0 && (n -= i) > 0)
+			s += i;
+		sfstrclose(sp);
+		if (n)
+			return 0;
 
-	while ((i = write(co->cmdfd, s, n)) > 0 && (n -= i) > 0)
-		s += i;
-	sfstrclose(sp);
-	if (n)
-		return 0;
+		/*
+		 * it's a job
+		 */
 
-	/*
-	 * it's a job
-	 */
-
-	cj->pid = 0;
-	cj->status = 0;
-	cj->local = 0;
-	co->outstanding++;
-	co->running++;
-	co->total++;
-	if (co->mode & CO_MODE_ACK)
-		cj = cowait(co, cj);
+		cj->pid = 0;
+		cj->status = 0;
+		cj->local = 0;
+		co->outstanding++;
+		co->running++;
+		co->total++;
+		if (co->mode & CO_MODE_ACK)
+			cj = cowait(co, cj);
+	}
 	return cj;
 }
