@@ -238,8 +238,8 @@ pathprobe(char* path, char* attr, const char* lang, const char* tool, const char
 								ops[1] = 0;
 								if (pp = procopen(proc, arg, NiL, ops, PROC_READ))
 								{
-									if ((v = x - e) > sizeof(ver))
-										v = sizeof(ver);
+									if ((v = x - e) >= sizeof(ver))
+										v = sizeof(ver) - 1;
 									for (k = p = ver;; k++)
 									{
 										if (k >= p)

@@ -275,7 +275,7 @@ coexec(register Coshell_t* co, const char* action, int flags, const char* out, c
 		}
 		else if (flags & CO_SERIALIZE)
 		{
-			if (out)
+			if (!out)
 				sfprintf(sp, " 2>&1");
 			else if (cj->err = pathtemp(NiL, 64, NiL, "coe", NiL))
 				sfprintf(sp, " 2>%s", cj->err);

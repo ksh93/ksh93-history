@@ -1,3 +1,5 @@
+07-09-25 sfio/sfgetr.c: no limit on string stream line size
+07-09-25 sfio/sfextern.c: increase _Sfmaxr to 256*1024
 07-09-18 misc/procopen.c: tighten up SIGCHLD logic between parent/child
 07-09-18 misc/signal.c: unblock SIG_DFL after setting handler, sig<0 => don't unblock
 07-09-13 misc/fs3d.c: no $LD_PRELOAD => no 3d and avoids invalid mount(2) call

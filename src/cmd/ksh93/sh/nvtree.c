@@ -494,7 +494,7 @@ static void outval(char *name, const char *vname, struct Walk *wp)
 static char **genvalue(char **argv, const char *prefix, int n, struct Walk *wp)
 {
 	register char *cp,*nextcp,*arg;
-	register int m,r;
+	register int m,r,l;
 	register Sfio_t *outfile = wp->out;
 	if(n==0)
 		m = strlen(prefix);
@@ -536,7 +536,7 @@ static char **genvalue(char **argv, const char *prefix, int n, struct Walk *wp)
 					continue;
 				break;
 			}
-			else if(outfile && argv[1] && memcmp(arg,argv[1],r=strlen(arg))==0 && argv[1][r]=='[')
+			else if(outfile && argv[1] && memcmp(arg,argv[1],l=strlen(arg))==0 && argv[1][l]=='[')
 			{
 				Namval_t *np = nv_open(arg,wp->root,NV_VARNAME|NV_NOADD|NV_NOASSIGN|wp->noscope);
 				if(!np)
@@ -544,7 +544,7 @@ static char **genvalue(char **argv, const char *prefix, int n, struct Walk *wp)
 				sfnputc(outfile,'\t',wp->indent);
 				nv_attribute(np,outfile,"typeset",1);
 				nv_close(np);
-				sfputr(outfile,arg+m+(n?n:0),'=');
+				sfputr(outfile,arg+m+r+(n?n:0),'=');
 				argv = genvalue(++argv,cp,cp-arg ,wp);
 				sfputc(outfile,'\n');
 			}

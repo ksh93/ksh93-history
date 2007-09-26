@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2005 AT&T Corp.                  *
+*           Copyright (c) 1985-2007 AT&T Knowledge Ventures            *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                      by AT&T Knowledge Ventures                      *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -60,8 +60,8 @@ Sfextern_t _Sfextern =
 };
 
 ssize_t	_Sfi = -1;		/* value for a few fast macro functions	*/
-#if INT_MAX == LONG_MAX
-ssize_t _Sfmaxr = 64*1024;	/* default maximum size for a record	*/
+#ifdef _ast_int8_t
+ssize_t _Sfmaxr = 256*1024;	/* default maximum size for a record	*/
 #else
 ssize_t _Sfmaxr = 16*1024;	/* default maximum size for a record	*/
 #endif

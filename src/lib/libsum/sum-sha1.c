@@ -318,7 +318,7 @@ sha1_done(Sum_t* p)
 }
 
 static int
-sha1_print(Sum_t* p, Sfio_t* sp, register int flags)
+sha1_print(Sum_t* p, Sfio_t* sp, register int flags, size_t scale)
 {
 	register Sha1_t*	sha = (Sha1_t*)p;
 	register unsigned char*	d;

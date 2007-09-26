@@ -197,5 +197,7 @@ stack=()
 typeset -a stack.items=([0]=foo [1]=bar)
 [[ ${stack.items[0]} == foo ]] || err_exit 'typeset -a variable not expanding correctly'
 $SHELL -c 'typeset -a info=( [1]=( passwd=( since=2005-07-20) ))'  || err_exit 'problem with embedded index array in compound variable'
+x=(foo=([1]=(y=([2]=(z=4)))))
+[[ $x == *'.y'=* ]] && err_exit 'expansion with bogus leading . in name'
 exit $((Errors))
 
