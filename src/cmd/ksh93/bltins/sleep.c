@@ -48,6 +48,7 @@ int	b_sleep(register int argc,char *argv[],void *extra)
 	register double d;
 	register Shell_t *shp = (Shell_t*)extra;
 	time_t tloc = 0;
+	char *last;
 	while((argc = optget(argv,sh_optsleep))) switch(argc)
 	{
 		case ':':
@@ -58,9 +59,9 @@ int	b_sleep(register int argc,char *argv[],void *extra)
 			break;
 	}
 	argv += opt_info.index;
-	if(error_info.errors || !(cp= *argv) || !(strmatch(cp,e_numeric)))
+	if(error_info.errors || !(cp= *argv) || ((d=strtod(cp, &last)),*last))
 		errormsg(SH_DICT,ERROR_usage(2),"%s",optusage((char*)0));
-	if((d=strtod(cp, (char**)0)) > .10)
+	if(d > .10)
 	{
 		sfsync(shp->outpool);
 		time(&tloc);

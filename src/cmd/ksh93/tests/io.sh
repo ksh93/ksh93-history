@@ -229,6 +229,18 @@ then	(( $(3<#) == 0 )) || err_exit "not at position 0"
 	[[ $REPLY == *WWWWW* ]] || err_exit '<# not working for pipes'
 else	err_exit "/tmp/seek$$: cannot open for reading"
 fi
+command exec 3<&- || 'cannot close 3'
+for ((i=0; i < 62; i++))
+do	printf "%.39c\n"  ${x:i:1}
+done >  /tmp/seek$$
+cp /tmp/seek$$ ~/junk4
+if	command exec {n}<> /tmp/seek$$
+then	{ command exec {n}<#((EOF)) ;} 2> /dev/null || err_exit '{n}<# not working'
+	if	$SHELL -c '{n}</dev/null' 2> /dev/null
+	then	(( $({n}<#) ==  40*62))  || err_exit '$({n}<#) not working'
+	else	err_exit 'not able to parse {n}</dev/null'
+	fi
+fi
 trap "" EXIT
 rm -f  /tmp/seek$$
 $SHELL -ic '

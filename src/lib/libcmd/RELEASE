@@ -1,3 +1,5 @@
+07-10-29 cksum.c: add SUM_LEGACY for -r
+07-10-12 cp.c: plug usage string memory leak by using per-builtin state
 07-09-21 cksum.c: add sumprint() default scale arg, --scale, --bsd for solaris
 07-09-10 chmod.c: add --show,-n
 07-07-27 wclib.c: bias <wchar.h> checks for modern unix

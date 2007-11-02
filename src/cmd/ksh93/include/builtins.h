@@ -131,7 +131,6 @@ extern const char	e_badsyntax[];
 extern const char	e_histopen[];
 extern const char	e_condition[];
 extern const char	e_badrange[];
-extern const char	e_numeric[];
 extern const char	e_trap[];
 extern const char	e_direct[];
 extern const char	e_defedit[];

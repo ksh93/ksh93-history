@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2005 AT&T Corp.                  *
+*          Copyright (c) 1985-2007 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -21,26 +21,42 @@
 ***********************************************************************/
 #pragma prototyped
 /*
- * legacy standard getopt interface
+ * standalone mini vmalloc interface
  */
 
-#ifdef	_AST_STD_I
-#undef	_AST_GETOPT_H
-#define _AST_GETOPT_H		-1
-#endif
-#ifndef _AST_GETOPT_H
-#define _AST_GETOPT_H		1
+#ifndef _VMALLOC_H
+#define _VMALLOC_H
 
-extern int	opterr;
-extern int	optind;
-extern int	optopt;
-extern char*	optarg;
+#define vmalloc(v,n)		_vm_resize(v,(void*)0,n)
+#define vmalign(v,n,a)		_vm_resize(v,(void*)0,n)
+#define vmclose(v)		_vm_close(v)
+#define vmfree(v,p)
+#define vmnewof(v,o,t,n,x)	(t*)_vm_resize(v,(void*)o,sizeof(t)*(n)+(x))
+#define vmopen(a,b,c)		_vm_open()
 
-#ifndef NULL	/* in case <stdlib.h> or <stdio.h> got here first */
+#define VM_CHUNK		(32*1024)
+#define VM_ALIGN		16
 
-extern int	getopt(int, char* const*, const char*);
-extern int	getsubopt(char**, char* const*, char**);
+typedef struct Vmchunk_s
+{
+	struct Vmchunk_s*	next;
+	char			align[VM_ALIGN - sizeof(struct Vmchunk_s*)];
+	char			data[VM_CHUNK - VM_ALIGN];
+} Vmchunk_t;
 
-#endif
+typedef struct Vmalloc_s
+{
+	Vmchunk_t		base;		
+	Vmchunk_t*		current;
+	char*			data;
+	long			size;
+	long			last;
+} Vmalloc_t;
+
+extern Vmalloc_t*		Vmregion;
+
+extern int			_vm_close(Vmalloc_t*);
+extern Vmalloc_t*		_vm_open(void);
+extern void*			_vm_resize(Vmalloc_t*, void*, unsigned long);
 
 #endif

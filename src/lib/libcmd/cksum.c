@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: sum (AT&T Research) 2007-09-21 $\n]"
+"[-?\n@(#)$Id: sum (AT&T Research) 2007-10-29 $\n]"
 USAGE_LICENSE
 "[+NAME?cksum,md5sum,sum - print file checksum and block count]"
 "[+DESCRIPTION?\bsum\b lists the checksum, and for most methods the block"
@@ -118,6 +118,7 @@ typedef struct State_s			/* program state		*/
 {
 	int		all;		/* list all items		*/
 	Sfio_t*		check;		/* check previous output	*/
+	int		flags;		/* sumprint() SUM_* flags	*/
 	gid_t		gid;		/* caller gid			*/
 	int		header;		/* list method on output	*/
 	int		list;		/* list file name too		*/
@@ -227,7 +228,7 @@ pr(State_t* state, Sfio_t* op, Sfio_t* ip, char* file, int perm, struct stat* st
 	sumdone(state->sum);
 	if (!state->total || state->all)
 	{
-		sumprint(state->sum, op, SUM_SIZE|SUM_SCALE, state->scale);
+		sumprint(state->sum, op, state->flags|SUM_SCALE, state->scale);
 		if (perm >= 0)
 		{
 			if (perm)
@@ -452,6 +453,7 @@ b_cksum(int argc, register char** argv, void* context)
 	memset(&state, 0, sizeof(state));
 	setlocale(LC_ALL, "");
 	flags = fts_flags() | FTS_TOP | FTS_NOPOSTORDER | FTS_NOSEEDOTDIR;
+	state.flags = SUM_SIZE;
 	state.warn = 1;
 	method = 0;
 	optinit(&optdisc, optinfo);
@@ -484,6 +486,7 @@ b_cksum(int argc, register char** argv, void* context)
 		case 'r':
 			method = "bsd";
 			state.scale = 512;
+			state.flags |= SUM_LEGACY;
 			continue;
 		case 'R':
 			flags &= ~FTS_TOP;
@@ -607,7 +610,7 @@ b_cksum(int argc, register char** argv, void* context)
 	}
 	if (state.total)
 	{
-		sumprint(state.sum, sfstdout, SUM_TOTAL|SUM_SIZE|SUM_SCALE, state.scale);
+		sumprint(state.sum, sfstdout, state.flags|SUM_TOTAL|SUM_SCALE, state.scale);
 		sfputc(sfstdout, '\n');
 	}
 	sumclose(state.sum);

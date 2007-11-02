@@ -24,23 +24,15 @@
  * Xopen 4.2 compatibility
  */
 
-#include <ast_lib.h>
+#include <ast.h>
 
 #undef	_lib_getsubopt	/* we can satisfy the api */
 
 #if _lib_getsubopt
 
-#include <ast.h>
-
 NoN(getsubopt)
 
 #else
-
-#define getsubopt	______getsubopt
-
-#include <ast.h>
-
-#undef	getsubopt
 
 #include <error.h>
 

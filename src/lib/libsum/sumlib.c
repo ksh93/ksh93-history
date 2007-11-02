@@ -25,7 +25,7 @@
  * man this is sum library
  */
 
-static const char id[] = "\n@(#)$Id: sumlib (AT&T Research) 2007-09-21 $\0\n";
+static const char id[] = "\n@(#)$Id: sumlib (AT&T Research) 2007-10-29 $\0\n";
 
 #define _SUM_PRIVATE_	\
 			struct Method_s*	method;	\
@@ -123,16 +123,16 @@ long_print(Sum_t* p, Sfio_t* sp, register int flags, size_t scale)
 	register size_t		n;
 
 	c = (flags & SUM_TOTAL) ? x->total_sum : x->sum;
-	sfprintf(sp, "%I*u", sizeof(c), c);
+	sfprintf(sp, "%.*I*u", (flags & SUM_LEGACY) ? 5 : 1, sizeof(c), c);
 	if (flags & SUM_SIZE)
 	{
 		z = (flags & SUM_TOTAL) ? x->total_size : x->size;
 		if ((flags & SUM_SCALE) && ((n = scale) || (n = x->method->scale)))
 			z = SCALE(z, n);
-		sfprintf(sp, " %I*u", sizeof(z), z);
+		sfprintf(sp, " %*I*u", (flags & SUM_LEGACY) ? 6 : 0, sizeof(z), z);
 	}
 	if (flags & SUM_TOTAL)
-		sfprintf(sp, " %I*u", sizeof(x->total_count), x->total_count);
+		sfprintf(sp, " %*I*u", (flags & SUM_LEGACY) ? 6 : 0, sizeof(x->total_count), x->total_count);
 	return 0;
 }
 

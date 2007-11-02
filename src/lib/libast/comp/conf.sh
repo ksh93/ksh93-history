@@ -1497,7 +1497,7 @@ struct Conf_s
 	const char	name[${name_max}];
 	Value_t		limit;
 	Value_t		minmax;
-	short		flags;
+	unsigned int	flags;
 	short		standard;
 	short		section;
 	short		call;

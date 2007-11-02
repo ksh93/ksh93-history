@@ -22,6 +22,7 @@
 #pragma prototyped
 
 #include <ast.h>
+#include <ast_getopt.h>
 
 #undef	_BLD_ast	/* enable ast imports since we're user static */
 

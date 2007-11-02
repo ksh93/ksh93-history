@@ -343,6 +343,8 @@ Sfdouble_t sh_strnum(register const char *str, char** ptr, int mode)
 		if(!ptr && *last && mode>0)
 			errormsg(SH_DICT,ERROR_exit(1),e_lexbadchar,*last,str);
 	}
+	else if (!d && *str=='-')
+		d = -0.0;
 	if(ptr)
 		*ptr = last;
 	return(d);

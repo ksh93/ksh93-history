@@ -319,6 +319,16 @@ extern int		_ast_getpgrp(void);
 
 #undef	_AST_STD_I
 
+#if _AST_GETOPT_H < 0
+#undef	_AST_GETOPT_H
+#include <ast_getopt.h>
+#endif
+
+#if _GETOPT_H < 0
+#undef	_GETOPT_H
+#include <getopt.h>
+#endif
+
 #if _REGEX_H < 0
 #undef	_REGEX_H
 #include <regex.h>

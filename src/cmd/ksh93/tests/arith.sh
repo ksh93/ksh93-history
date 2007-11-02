@@ -463,4 +463,9 @@ unset x y
 float x=14.555 y
 y=$(printf "%a" x)
 (( x == y )) || err_exit "output of printf %a not self preserving -- expected $x, got $y"
+unset x y r
+x=-0
+y=$(printf "%g %g %g %g %g %g\n" -0. -0 $((-0)) x $x $((x)))
+r="-0 -0 -0 -0 -0 -0"
+[[ $y == "$r" ]] || err_exit "-0 vs -0.0 inconsistency -- expected '$r', got '$y'"
 exit $((Errors))

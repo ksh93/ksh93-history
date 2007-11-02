@@ -881,13 +881,14 @@ int	sh_redirect(struct ionod *iop, int flag)
 				fname=sh_mactrim(fname,(!sh_isoption(SH_NOGLOB)&&sh_isoption(SH_INTERACTIVE))?2:0);
 		}
 		errno=0;
+		np = 0;
 		if(iop->iovname)
 		{
 			np = nv_open(iop->iovname,sh.var_tree,NV_NOASSIGN|NV_VARNAME);
 			if(nv_isattr(np,NV_RDONLY))
 				errormsg(SH_DICT,ERROR_exit(1),e_readonly, nv_name(np));
 			io_op[0] = '}';
-			if((iof&IOMOV) && *fname=='-')
+			if((iof&IOLSEEK) || ((iof&IOMOV) && *fname=='-'))
 				fn = nv_getnum(np);
 		}
 		if(iof&IOLSEEK)

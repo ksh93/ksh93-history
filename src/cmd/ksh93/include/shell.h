@@ -35,7 +35,7 @@
 #   include	<nval.h>
 #endif /* _SH_PRIVATE */
 
-#define SH_VERSION	20070511
+#define SH_VERSION	20071012
 
 #undef NOT_USED
 #define NOT_USED(x)	(&x,1)

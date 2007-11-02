@@ -27,6 +27,10 @@
  *	linux.sparc	sfdlen,sfputd		frexp,ldexp	
  */
 
+#if N >= 7
+#define _ISOC99_SOURCE	1
+#endif
+
 #include <math.h>
 
 int
@@ -58,5 +62,8 @@ main()
 #endif
 #if N == 6
 	return isnan(value);
+#endif
+#if N == 8
+	return signbit(value);
 #endif
 }

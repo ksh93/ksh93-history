@@ -1,7 +1,11 @@
-07-09-20  --- Release ksh93s+  ---
+07-10-29  --- Release ksh93s+  ---
+07-10-29  The sleep builtin was fixed so that all floating point constants
+	  are valid operands.
+07-10-10  A bug in which the locale was not being restored after
+          LANG=value command has been fixed.
 07-09-20  A bug in which a nameref to a compound variable that was local
 	  to the calling function would not expand correctly when displaying
-	  its value has been fixed.
+	  is value has been fixed.
 07-09-19  A bug which cause cause a core dump if .sh.edchar returned
 	  80 characters or more from a keyboard trap has been fixed.
 07-09-14  A bug in which could cause a core dump when more than 8 file

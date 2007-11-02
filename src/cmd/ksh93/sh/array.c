@@ -517,6 +517,8 @@ Namval_t *nv_arraychild(Namval_t *np, Namval_t *nq, int c)
 	ap->nelem &= ~ARRAY_NOCLONE;
 	if(ap->fun)
 	{
+		if(!(up->np = (Namval_t*)((*ap->fun)(np,NIL(char*),NV_ACURRENT))))
+			nv_putsub(np,"0",ARRAY_ADD);
 		up->np = (Namval_t*)((*ap->fun)(np,NIL(char*),NV_ACURRENT));
 		nv_onattr(up->np, NV_CHILD);
 		(up->np)->nvalue.np = nq;

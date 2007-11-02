@@ -1693,7 +1693,7 @@ static void comsubst(Mac_t *mp,int type)
 			stakset(savptr,savtop);
 			*mp = savemac;
 			if((Sflong_t)num==num)
-				sfprintf(sh.strbuf,"%lld",(Sflong_t)num);
+				sfprintf(sh.strbuf,"%Lg",num);
 			else
 				sfprintf(sh.strbuf,"%.*Lg",LDBL_DIG,num);
 			str = sfstruse(sh.strbuf);

@@ -1505,6 +1505,7 @@ fts_close(register FTS* fts)
 		x = f->fts_link;
 		free(f);
 	}
+	free(fts);
 	return 0;
 }
 

@@ -644,7 +644,7 @@ Namval_t *nv_create(const char *name, Dt_t *root, int flags, Namfun_t *dp)
 					if(nv_isarray(np) && (c=='[' || c=='.' || (flags&NV_ARRAY)))
 					{
 						*(sp=cp) = 0;
-						nq = nv_search(name,root,mode);
+						nq = nv_search(name,root,mode|((flags&NV_NOADD)?0:NV_ADD));
 						*sp = c;
 						if(nq && nv_isnull(nq))
 							nq = nv_arraychild(np,nq,c);
@@ -914,6 +914,8 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 	else if(!nv_isattr(np,NV_MINIMAL))
 		np->nvenv = 0;
 #endif /* SHOPT_BSH */
+	if(up->cp==Empty)
+		up->cp = 0;
 	if(nv_isattr (np, NV_INTEGER))
 	{
 		if(nv_isattr(np, NV_DOUBLE))
@@ -1580,9 +1582,26 @@ static void table_unset(register Dt_t *root, int flags, Dt_t *oroot)
 	{
 		if(nv_isref(np))
 			nv_unref(np);
+		if(nq=dtsearch(oroot,np))
+		{
+			if(nv_cover(nq))
+			{
+				int subshell = sh.subshell;
+				sh.subshell = 0;
+				if(nv_isattr(nq, NV_INTEGER))
+				{
+					Sfdouble_t d = nv_getnum(nq);
+					nv_putval(nq,(char*)&d,NV_LDOUBLE);
+				}
+				else
+					nv_putval(nq, nv_getval(nq), NV_RDONLY);
+				sh.subshell = subshell;
+				np->nvfun = 0;
+			}
+			if(nv_isattr(nq,NV_EXPORT))
+				sh_envput(sh.env,nq);
+		}
 		_nv_unset(np,flags);
-		if(oroot && (nq=nv_search(nv_name(np),oroot,0)) && nv_isattr(nq,NV_EXPORT))
-			sh_envput(sh.env,nq);
 		nq = (Namval_t*)dtnext(root,np);
 		dtdelete(root,np);
 		free((void*)np);
@@ -1946,7 +1965,7 @@ Sfdouble_t nv_getnum(register Namval_t *np)
      	if(nv_isattr (np, NV_INTEGER))
 	{
 		up= &np->nvalue;
-		if(!up->lp)
+		if(!up->lp || up->cp==Empty)
 			r = 0;
 		else if(nv_isattr(np, NV_DOUBLE))
 		{

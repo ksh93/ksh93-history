@@ -755,6 +755,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 				if(np && is_abuiltin(np))
 				{
 					void *context;
+					Shbltin_t *bp = 0;
 					int scope=0, jmpval, save_prompt,share=0;
 					struct checkpt buff;
 					unsigned long was_vi=0, was_emacs=0, was_gmacs=0;
@@ -820,10 +821,10 @@ int sh_exec(register const Shnode_t *t, int flags)
 						sh.bltinfun = funptr(np);
 						if(nv_isattr(np,NV_BLTINOPT))
 						{
-							Shbltin_t *bp = &sh.bltindata;
+							bp = &sh.bltindata;
 							bp->bnode = np;
 							bp->vnode = nq;
-							bp->ptr = context;
+							bp->ptr = nv_context(np);
 							bp->data = t->com.comstate;
 							bp->sigset = 0;
 							bp->notify = 0;
@@ -869,6 +870,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 						if(jmpval<=SH_JMPCMD  && (!nv_isattr(np,BLT_SPC) || command))
 							jmpval=0;
 					}
+					if(bp && bp->ptr!=nv_context(np))
+						np->nvfun = (Namfun_t*)bp->ptr;
 					if(!(nv_isattr(np,BLT_ENV)))
 					{
 						if(sh.pwd)

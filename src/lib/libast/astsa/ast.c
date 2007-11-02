@@ -19,13 +19,67 @@
 *                   Phong Vo <kpv@research.att.com>                    *
 *                                                                      *
 ***********************************************************************/
+#pragma prototyped
 /*
- * _PACKAGE_astsa <align.h>
+ * standalone mini ast+sfio implementation
  */
 
-#ifndef _ALIGN_H
-#define _ALIGN_H	1
+#include <ast.h>
 
-#define ALIGN_BOUND	32
+#define CHUNK		1024
 
-#endif
+_Ast_info_t		ast;
+
+int
+astwinsize(int fd, int* lines, int* columns)
+{
+	if (lines)
+		*lines = 24;
+	if (columns)
+		*columns = 80;
+	return 0;
+}
+
+char*
+sfgetr(Sfio_t* sp, int c, int z)
+{
+	register char*		s;
+	register char*		e;
+
+	static char*		buf;
+	static unsigned long	siz;
+
+	if (!buf)
+	{
+		siz = CHUNK;
+		if (!(buf = newof(0, char, siz, 0)))
+			return 0;
+	}
+	if (z < 0)
+		return *buf ? buf : (char*)0;
+	s = buf;
+	e = s + siz;
+	for (;;)
+	{
+		if (s >= e)
+		{
+			siz += CHUNK;
+			if (!(buf = newof(buf, char, siz, 0)))
+				return 0;
+			s = buf + (siz - CHUNK);
+			e = s + siz;
+		}
+		if ((c = sfgetc(sp)) == EOF)
+		{
+			*s = 0;
+			return 0;
+		}
+		if (c == '\n')
+		{
+			*s = z ? 0 : c;
+			break;
+		}
+		*s++ = c;
+	}
+	return buf;
+}

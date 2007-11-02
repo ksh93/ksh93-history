@@ -709,7 +709,7 @@ void	ed_setup(register Edit_t *ep, int fd, int reedit)
 	if(pp-ep->e_prompt > qlen)
 		ep->e_plen = pp - ep->e_prompt - qlen;
 	*pp = 0;
-	if((ep->e_wsize -= ep->e_plen) < 7)
+	if(!ep->e_multiline && (ep->e_wsize -= ep->e_plen) < 7)
 	{
 		register int shift = 7-ep->e_wsize;
 		ep->e_wsize = 7;
@@ -1082,7 +1082,14 @@ Edpos_t ed_curpos(Edit_t *ep,genchar *phys, int off, int cur, Edpos_t curpos)
 		col = pos.col;
 	}
 	else
+	{
 		pos.line = 0;
+		while(col > ep->e_winsz)
+		{
+			pos.line++;
+			col -= (ep->e_winsz+1);
+		}
+	}
 	while(off-->0)
 	{
 		if(c)
@@ -1129,20 +1136,22 @@ int ed_setcursor(register Edit_t *ep,genchar *physical,register int old,register
 		oldline = newpos.line;
 		if(ep->e_curpos.line > newpos.line)
 		{
-			int n;
+			int n,pline,plen=ep->e_plen;
 			for(;ep->e_curpos.line > newpos.line; ep->e_curpos.line--)
 				ed_putstring(ep,CURSOR_UP);
-			if(newpos.line==0 && (n=ep->e_plen- ep->e_curpos.col)>0)
+			pline = plen/(ep->e_winsz+1);
+			plen -= pline*(ep->e_winsz+1);
+			if((n=plen- ep->e_curpos.col)>0)
 			{
 				ep->e_curpos.col += n;
 				ed_putchar(ep,'\r');
-				if(!ep->e_crlf)
+				if(!ep->e_crlf && pline==0)
 					ed_putstring(ep,ep->e_prompt);
 				else
 				{
-					int m = ep->e_winsz+1-ep->e_plen;
+					int m = ep->e_winsz+1-plen;
 					ed_putchar(ep,'\n');
-					n = ep->e_plen;
+					n = plen;
 					if(m < ed_genlen(physical))
 					{
 						while(physical[m] && n-->0)
@@ -1168,10 +1177,11 @@ int ed_setcursor(register Edit_t *ep,genchar *physical,register int old,register
 		newpos.line=0;
 	if(delta<0)
 	{
+		int bs= newpos.line && ep->e_plen>ep->e_winsz;
 		/*** move to left ***/
 		delta = -delta;
 		/*** attempt to optimize cursor movement ***/
-		if(!ep->e_crlf || (2*delta <= ((old-first)+(newpos.line?0:ep->e_plen))) )
+		if(!ep->e_crlf || bs || (2*delta <= ((old-first)+(newpos.line?0:ep->e_plen))) )
 		{
 			for( ; delta; delta-- )
 				ed_putchar(ep,'\b');

@@ -161,7 +161,7 @@ done
 if	[[ $(print -f "%b" "\a\n\v\b\r\f\E\03\\oo") != $'\a\n\v\b\r\f\E\03\\oo' ]]
 then	err_exit 'print -f "%b" not working'
 fi
-if	[[ $(print -f "%P" "[^x].*b$") != '*[!x]*b' ]]
+if	[[ $(print -f "%P" "[^x].*b\$") != '*[!x]*b' ]]
 then	err_exit 'print -f "%P" not working'
 fi
 if	[[ $(abc: for i in foo bar;do print $i;break abc;done) != foo ]]
@@ -186,10 +186,8 @@ fi
 if	[[ $(trap -p HUP) != 'print HUP' ]]
 then	err_exit '$(trap -p HUP) not working'
 fi
-[[ $($SHELL -c 'trap "print ok" SIGTERM; kill -s SIGTERM $$' 2> /dev/null) == ok
- ]] || err_exit 'SIGTERM not recognized'
-[[ $($SHELL -c 'trap "print ok" sigterm; kill -s sigterm $$' 2> /dev/null) == ok
- ]] || err_exit 'SIGTERM not recognized'
+[[ $($SHELL -c 'trap "print ok" SIGTERM; kill -s SIGTERM $$' 2> /dev/null) == ok ]] || err_exit 'SIGTERM not recognized'
+[[ $($SHELL -c 'trap "print ok" sigterm; kill -s sigterm $$' 2> /dev/null) == ok ]] || err_exit 'SIGTERM not recognized'
 [[ $($SHELL -c '( trap "" TERM);kill $$;print bad' == bad) ]] 2> /dev/null && err_exit 'trap ignored in subshell causes it to be ignored by parent'
 ${SHELL} -c 'kill -1 -$$' 2> /dev/null
 [[ $(kill -l $?) == HUP ]] || err_exit 'kill -1 -pid not working' 
@@ -451,4 +449,5 @@ then	err_exit "read -t in pipe taking $total_t secs - $(( reps * delay )) minimu
 elif	(( total_t < reps * delay ))
 then	err_exit "read -t in pipe taking $total_t secs - $(( reps * delay )) minimum - too fast" 
 fi
+$SHELL -c 'sleep $(printf "%a" .95)' 2> /dev/null || err_exit "sleep doesn't except %a format constants"
 exit $((Errors))

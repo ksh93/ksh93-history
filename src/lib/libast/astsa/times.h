@@ -19,11 +19,4 @@
 *                   Phong Vo <kpv@research.att.com>                    *
 *                                                                      *
 ***********************************************************************/
-/*
- * _PACKAGE_astsa <times.h>
- */
-
-#ifndef _TIMES_H
-#define _TIMES_H	1
-
-#endif
+#include <sys/times.h>

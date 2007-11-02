@@ -69,6 +69,7 @@ static char *find_begin(char outbuff[], char *last, int endchar, int *type)
 {
 	register char	*cp=outbuff, *bp, *xp;
 	register int 	c,inquote = 0, inassign=0;
+	int		mode=*type;
 	bp = outbuff;
 	*type = 0;
 	while(cp < last)
@@ -94,7 +95,7 @@ static char *find_begin(char outbuff[], char *last, int endchar, int *type)
 			if(inquote == '\'')
 				break;
 			c = *(unsigned char*)cp;
-			if(isaletter(c) || c=='{')
+			if(mode!='*' && (isaletter(c) || c=='{'))
 			{
 				int dot = '.';
 				if(c=='{')
@@ -120,6 +121,7 @@ static char *find_begin(char outbuff[], char *last, int endchar, int *type)
 			}
 			else if(c=='(')
 			{
+				*type = mode;
 				xp = find_begin(cp,last,')',type);
 				if(*(cp=xp)!=')')
 					bp = xp;
@@ -217,6 +219,7 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 		register int c;
 		char *last = out;
 		c =  *(unsigned char*)out;
+		var = mode;
 		begin = out = find_begin(outbuff,last,0,&var);
 		/* addstar set to zero if * should not be added */
 		if(var=='$')
@@ -383,14 +386,9 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 				{
 					Namval_t *np;
 					/* add as tracked alias */
-#ifdef PATH_BFPATH
 					Pathcomp_t *pp;
 					if(*cp=='/' && (pp=path_dirfind(sh.pathlist,cp,'/')) && (np=nv_search(begin,sh.track_tree,NV_ADD)))
 						path_alias(np,pp);
-#else
-					if(*cp=='/' && (np=nv_search(begin,sh.track_tree,NV_ADD)))
-						path_alias(np,cp);
-#endif
 					out = strcopy(begin,cp);
 				}
 				/* add quotes if necessary */

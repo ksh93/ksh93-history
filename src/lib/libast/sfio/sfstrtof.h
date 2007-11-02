@@ -299,7 +299,7 @@ S2F_function(str, end) char* str; char** end;
 			}
 			PUT(s);
 			if (v == 0)
-				return v;
+				return negative ? -v : v;
 			if (fraction >= 0)
 				m -= 4 * (digits - fraction);
 			if (m < S2F_exp_2_min)
@@ -469,8 +469,9 @@ S2F_function(str, end) char* str; char** end;
 	 * and at most one divide overall
 	 */
 
+	v = 0;
 	if (!part)
-		return 0;
+		return negative ? -v : v;
 	else if ((m = parts[part-1].digits - digits) > 0)
 		digits += m;
 	else
@@ -480,7 +481,6 @@ S2F_function(str, end) char* str; char** end;
 	 * combine the parts
 	 */
 
-	v = 0;
 	while (part--)
 	{
 		p = parts[part].batch;

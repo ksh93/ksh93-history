@@ -60,6 +60,7 @@ static int
 rofs(const char* path)
 {
 	struct statvfs	vfs;
+	struct stat	st;
 
 	if (!statvfs(path, &vfs))
 	{
@@ -68,7 +69,7 @@ rofs(const char* path)
 			return 1;
 #endif
 #if defined(ST_NOSUID)
-		if (vfs.f_flag & ST_NOSUID)
+		if ((vfs.f_flag & ST_NOSUID) && (stat(path, &st) || st.st_uid != getuid() && st.st_uid != geteuid()))
 			return 1;
 #endif
 	}

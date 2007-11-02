@@ -120,6 +120,9 @@ reg Sfdisc_t*	disc;
 
 	SFMTXSTART(f, NIL(Sfdisc_t*));
 
+	if((Sfio_t*)disc == f) /* special case to get the top discipline */
+		SFMTXRETURN(f,f->disc);
+
 	if((f->flags&SF_READ) && f->proc && (f->mode&SF_WRITE) )
 	{	/* make sure in read mode to check for read-ahead data */
 		if(_sfmode(f,SF_READ,0) < 0)

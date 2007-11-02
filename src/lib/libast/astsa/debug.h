@@ -19,28 +19,9 @@
 *                   Phong Vo <kpv@research.att.com>                    *
 *                                                                      *
 ***********************************************************************/
-#pragma prototyped
-/*
- * legacy standard getopt interface
- */
+#ifndef _DEBUG_H
+#define _DEBUG_H	1
 
-#ifdef	_AST_STD_I
-#undef	_AST_GETOPT_H
-#define _AST_GETOPT_H		-1
-#endif
-#ifndef _AST_GETOPT_H
-#define _AST_GETOPT_H		1
-
-extern int	opterr;
-extern int	optind;
-extern int	optopt;
-extern char*	optarg;
-
-#ifndef NULL	/* in case <stdlib.h> or <stdio.h> got here first */
-
-extern int	getopt(int, char* const*, const char*);
-extern int	getsubopt(char**, char* const*, char**);
-
-#endif
+#define message(p)
 
 #endif

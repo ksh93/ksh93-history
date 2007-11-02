@@ -885,7 +885,7 @@ static Shnode_t	*item(int flag)
 	int savwdval = shlex.lasttok;
 	int savline = shlex.lastline;
 	int showme=0;
-	if(!(flag&SH_NOIO) && (tok=='<' || tok=='>'))
+	if(!(flag&SH_NOIO) && (tok=='<' || tok=='>' || shlex.token==IOVNAME))
 		io=inout(NIL(struct ionod*),1);
 	else
 		io=0;

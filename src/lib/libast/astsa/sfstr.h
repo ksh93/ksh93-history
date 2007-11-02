@@ -19,13 +19,42 @@
 *                   Phong Vo <kpv@research.att.com>                    *
 *                                                                      *
 ***********************************************************************/
-/*
- * _PACKAGE_astsa <sig.h>
- */
+#ifndef _SFSTR_H
+#define _SFSTR_H	1
 
-#ifndef _SIG_H
-#define _SIG_H		1
+#include <ast.h>
 
-#include <sys/signal.h>
+typedef struct Sfstr_s
+{
+	char*		beg;
+	char*		nxt;
+	char*		end;
+} Sfstr_t;
+
+#undef	sfclose
+#undef	sfprintf
+#undef	sfprints
+#undef	sfputc
+#undef	sfputr
+#undef	sfstrbase
+#undef	sfstropen
+#undef	sfstrseek
+#undef	sfstrset
+#undef	sfstrtell
+#undef	sfstruse
+#undef	sfwrite
+
+extern int	sfclose(Sfio_t*);
+extern int	sfprintf(Sfio_t*, const char*, ...);
+extern char*	sfprints(const char*, ...);
+extern int	sfputc(Sfio_t*, int);
+extern int	sfputr(Sfio_t*, const char*, int);
+extern char*	sfstrbase(Sfio_t*);
+extern Sfio_t*	sfstropen(void);
+extern char*	sfstrseek(Sfio_t*, int, int);
+extern char*	sfstrset(Sfio_t*, int);
+extern int	sfstrtell(Sfio_t*);
+extern char*	sfstruse(Sfio_t*);
+extern int	sfwrite(Sfio_t*, void*, int);
 
 #endif
