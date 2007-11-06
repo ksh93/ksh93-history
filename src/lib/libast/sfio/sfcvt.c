@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1985-2007 AT&T Knowledge Ventures            *
+*          Copyright (c) 1985-2007 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                      by AT&T Knowledge Ventures                      *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -54,6 +54,21 @@ static char		*Zero = "0";
 #if ! _lib_signbit && defined(signbit)
 #undef	_lib_signbit
 #define _lib_signbit	1
+#endif
+
+#if ! _lib_signbit
+#if ! _ast_fltmax_double
+static int neg0ld(Sfdouble_t f)
+{
+	Sfdouble_t	z = -0.0;
+	return !memcmp(&f, &z, sizeof(f));
+}
+#endif
+static int neg0d(double f)
+{
+	double		z = -0.0;
+	return !memcmp(&f, &z, sizeof(f));
+}
 #endif
 
 #if __STD_C
@@ -125,7 +140,7 @@ int		format;		/* conversion format		*/
 #  if _lib_signbit
 		if (signbit(f))
 #  else
-		if (f < 0.0)
+		if (f < 0.0 || f == 0.0 && neg0ld(f))
 #  endif
 		{	f = -f;
 			*sign = 1;
@@ -273,7 +288,7 @@ int		format;		/* conversion format		*/
 # if _lib_signbit
 		if (signbit(f))
 # else
-		if (f < 0.0)
+		if (f < 0.0 || f == 0.0 && neg0d(f))
 # endif
 		{	f = -f;
 			*sign = 1;

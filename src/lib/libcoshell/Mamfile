@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.2 2007-09-07
+info mam static 00000 1994-07-17 make (AT&T Research) 5.2 2007-10-18
 setv INSTALLROOT ../../..
 setv PACKAGE_ast_INCLUDE ${INSTALLROOT}/include/ast
 setv PACKAGE_ast_LIB ${INSTALLROOT}/lib
@@ -89,6 +89,12 @@ make ${INSTALLROOT}/include/prototyped.h implicit
 done ${INSTALLROOT}/include/prototyped.h dontcare
 done ${PACKAGE_ast_INCLUDE}/prototyped.h dontcare
 done ${PACKAGE_ast_INCLUDE}/regex.h dontcare
+make ${PACKAGE_ast_INCLUDE}/getopt.h implicit
+make ${PACKAGE_ast_INCLUDE}/ast_getopt.h implicit
+prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast_getopt.h dontcare
+prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+done ${PACKAGE_ast_INCLUDE}/getopt.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/ast_map.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast_botch.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_botch.h dontcare
@@ -98,14 +104,9 @@ make ${PACKAGE_ast_INCLUDE}/ast_fcntl.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast_fs.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_fs.h dontcare
 done ${PACKAGE_ast_INCLUDE}/ast_fcntl.h dontcare
-make ${PACKAGE_ast_INCLUDE}/ast_getopt.h implicit
-prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
-done ${PACKAGE_ast_INCLUDE}/ast_getopt.h dontcare
-make ${PACKAGE_ast_INCLUDE}/ast_sys.h implicit
-make ${PACKAGE_ast_INCLUDE}/getopt.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast_getopt.h implicit
-prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
-done ${PACKAGE_ast_INCLUDE}/getopt.h dontcare
+make ${PACKAGE_ast_INCLUDE}/ast_sys.h implicit
+prev ${PACKAGE_ast_INCLUDE}/getopt.h implicit
 prev ${PACKAGE_ast_INCLUDE}/endian.h implicit
 prev ${PACKAGE_ast_INCLUDE}/endian.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_sys.h dontcare
@@ -165,7 +166,7 @@ done colib.h
 done coopen.c
 meta coopen.o %.c>%.o coopen.c coopen
 prev coopen.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c coopen.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_coshell -c coopen.c
 done coopen.o generated
 make coclose.o
 make coclose.c
@@ -173,7 +174,7 @@ prev colib.h implicit
 done coclose.c
 meta coclose.o %.c>%.o coclose.c coclose
 prev coclose.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c coclose.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_coshell -c coclose.c
 done coclose.o generated
 make coinit.o
 make coinit.c
@@ -192,7 +193,7 @@ prev colib.h implicit
 done coinit.c
 meta coinit.o %.c>%.o coinit.c coinit
 prev coinit.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c coinit.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_coshell -c coinit.c
 done coinit.o generated
 make coexec.o
 make coexec.c
@@ -201,7 +202,7 @@ prev colib.h implicit
 done coexec.c
 meta coexec.o %.c>%.o coexec.c coexec
 prev coexec.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c coexec.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_coshell -c coexec.c
 done coexec.o generated
 make costash.o
 make costash.c
@@ -209,7 +210,7 @@ prev colib.h implicit
 done costash.c
 meta costash.o %.c>%.o costash.c costash
 prev costash.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c costash.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_coshell -c costash.c
 done costash.o generated
 make cowait.o
 make cowait.c
@@ -218,7 +219,7 @@ prev colib.h implicit
 done cowait.c
 meta cowait.o %.c>%.o cowait.c cowait
 prev cowait.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c cowait.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_coshell -c cowait.c
 done cowait.o generated
 make cokill.o
 make cokill.c
@@ -226,7 +227,7 @@ prev colib.h implicit
 done cokill.c
 meta cokill.o %.c>%.o cokill.c cokill
 prev cokill.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c cokill.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_coshell -c cokill.c
 done cokill.o generated
 make cosync.o
 make cosync.c
@@ -241,7 +242,7 @@ prev colib.h implicit
 done cosync.c
 meta cosync.o %.c>%.o cosync.c cosync
 prev cosync.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c cosync.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_coshell -c cosync.c
 done cosync.o generated
 make coquote.o
 make coquote.c
@@ -249,7 +250,7 @@ prev colib.h implicit
 done coquote.c
 meta coquote.o %.c>%.o coquote.c coquote
 prev coquote.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c coquote.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_coshell -c coquote.c
 done coquote.o generated
 make codata.o
 make codata.c
@@ -257,7 +258,7 @@ prev colib.h implicit
 done codata.c
 meta codata.o %.c>%.o codata.c codata
 prev codata.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c codata.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_coshell -c codata.c
 done codata.o generated
 make procrun.o
 make procrun.c
@@ -266,7 +267,7 @@ prev colib.h implicit
 done procrun.c
 meta procrun.o %.c>%.o procrun.c procrun
 prev procrun.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c procrun.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_coshell -c procrun.c
 done procrun.o generated
 make system.o
 make system.c
@@ -274,7 +275,7 @@ prev colib.h implicit
 done system.c
 meta system.o %.c>%.o system.c system
 prev system.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c system.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_coshell -c system.c
 done system.o generated
 exec - ${AR} cr libcoshell.a coopen.o coclose.o coinit.o coexec.o costash.o cowait.o cokill.o cosync.o coquote.o codata.o procrun.o system.o
 exec - (ranlib libcoshell.a) >/dev/null 2>&1 || true

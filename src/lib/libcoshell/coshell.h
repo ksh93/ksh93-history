@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1990-2007 AT&T Knowledge Ventures            *
+*          Copyright (c) 1990-2007 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                      by AT&T Knowledge Ventures                      *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -30,10 +30,14 @@
 
 #include <ast.h>
 
+#if !_BLD_coshell
+
 #undef	procrun
 #define procrun(a,b,c)		coprocrun(a,b,c)
 #undef	system
 #define system(a)		cosystem(a)
+
+#endif
 
 struct Coshell_s; typedef struct Coshell_s Coshell_t;
 struct Cojob_s; typedef struct Cojob_s Cojob_t;

@@ -1,10 +1,10 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#           Copyright (c) 1982-2006 AT&T Knowledge Ventures            #
+#          Copyright (c) 1982-2007 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
-#                      by AT&T Knowledge Ventures                      #
+#                    by AT&T Intellectual Property                     #
 #                                                                      #
 #                A copy of the License is available at                 #
 #            http://www.opensource.org/licenses/cpl1.0.txt             #
@@ -233,7 +233,6 @@ command exec 3<&- || 'cannot close 3'
 for ((i=0; i < 62; i++))
 do	printf "%.39c\n"  ${x:i:1}
 done >  /tmp/seek$$
-cp /tmp/seek$$ ~/junk4
 if	command exec {n}<> /tmp/seek$$
 then	{ command exec {n}<#((EOF)) ;} 2> /dev/null || err_exit '{n}<# not working'
 	if	$SHELL -c '{n}</dev/null' 2> /dev/null

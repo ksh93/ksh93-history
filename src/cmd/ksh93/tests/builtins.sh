@@ -1,10 +1,10 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#           Copyright (c) 1982-2007 AT&T Knowledge Ventures            #
+#          Copyright (c) 1982-2007 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
-#                      by AT&T Knowledge Ventures                      #
+#                    by AT&T Intellectual Property                     #
 #                                                                      #
 #                A copy of the License is available at                 #
 #            http://www.opensource.org/licenses/cpl1.0.txt             #
@@ -350,6 +350,34 @@ getopts 'n#num' opt  -n 3
 if	[[ $($SHELL -c $'printf \'%2$s %1$s\n\' world hello') != 'hello world' ]]
 then	err_exit 'printf %2$s %1$s not working'
 fi
+val=$(( 'C' ))
+set -- \
+	"'C"	$val	0	\
+	"'C'"	$val	0	\
+	'"C'	$val	0	\
+	'"C"'	$val	0	\
+	"'CX"	$val	1	\
+	"'CX'"	$val	1	\
+	"'C'X"	$val	1	\
+	'"CX'	$val	1	\
+	'"CX"'	$val	1	\
+	'"C"X'	$val	1
+while (( $# >= 3 ))
+do	arg=$1 val=$2 code=$3
+	shift 3
+	for fmt in '%d' '%g'
+	do	out=$(printf "$fmt" "$arg" 2>/dev/null)
+		err=$(printf "$fmt" "$arg" 2>&1 >/dev/null)
+		printf "$fmt" "$arg" >/dev/null 2>&1
+		ret=$?
+		[[ $out == $val ]] || err_exit "printf $fmt $arg failed -- got $out, expected $val"
+		if	(( $code ))
+		then	[[ $err ]] || err_exit "printf $fmt $arg failed -- error message expected"
+		else	[[ $err ]] && err_exit "$err: printf $fmt $arg failed -- error message not expected"
+		fi
+		(( $ret == $code )) || err_exit "printf $fmt $arg failed -- got exit code $ret, expected $code"
+	done
+done
 ((n=0))
 ((n++)); ARGC[$n]=1 ARGV[$n]=""
 ((n++)); ARGC[$n]=2 ARGV[$n]="-a"

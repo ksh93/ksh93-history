@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.2 2007-09-07
+info mam static 00000 1994-07-17 make (AT&T Research) 5.2 2007-10-18
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ar
@@ -1108,8 +1108,10 @@ make m4.c
 done m4.c
 make m5.c
 done m5.c
+make m6.c
+done m6.c
 exec - r='-'
-exec - for i in m.c m2.c m3.c m4.c m5.c
+exec - for i in m.c m2.c m3.c m4.c m5.c m6.c
 exec - do	if	${CC} -c $i > /dev/null
 exec - 	then	g=
 exec - 		for p in m -
@@ -1129,7 +1131,7 @@ exec - 		done
 exec - 	fi
 exec - done 2>/dev/null
 exec - echo " $r" > m.req
-exec - rm -f m.exe m m2 m3 m4 m5
+exec - rm -f m.exe m m2 m3 m4 m5 m6
 done m.req generated
 exec - test '' = 'm.req' || ${STDCMP} 2>/dev/null -s m.req ${INSTALLROOT}/lib/lib/m || { ${STDMV} ${INSTALLROOT}/lib/lib/m ${INSTALLROOT}/lib/lib/m.old 2>/dev/null || true; ${STDCP} m.req ${INSTALLROOT}/lib/lib/m  		    		    ;}
 done ${INSTALLROOT}/lib/lib/m generated

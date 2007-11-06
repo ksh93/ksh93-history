@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2007 AT&T Intellectual Property          *
+*                     Copyright (c) 1994-2007 AT&T                     *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                    by AT&T Intellectual Property                     *
+*                               by AT&T                                *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -15,20 +15,20 @@
 *                           Florham Park NJ                            *
 *                                                                      *
 *                 Glenn Fowler <gsf@research.att.com>                  *
-*                  David Korn <dgk@research.att.com>                   *
-*                   Phong Vo <kpv@research.att.com>                    *
 *                                                                      *
 ***********************************************************************/
-#ifndef _CCODE_H
-#define _CCODE_H	1
+/*
+ * -lm test #6
+ */
 
-#define CC_bel	'\a'
-#define CC_esc	'\033'
-#define CC_vt	'\v'
+#define _ISOC99_SOURCE	1
 
-#define CC_ASCII	0
-#define CC_NATIVE	CC_ASCII
+#include <math.h>
 
-#define ccmapc(c,f,t)	(c)
+int
+main()
+{
+	double	value = -0.0;
 
-#endif
+	return !signbit(value);
+}

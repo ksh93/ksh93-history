@@ -1,4 +1,9 @@
-07-10-29  --- Release ksh93s+  ---
+07-11-05  --- Release ksh93s+  ---
+07-11-05  A bug in which printf %d "'AB" did not diagnose unconverted characters
+	  has been fixed.
+07-11-05  printf %g "'A" support added for all floating point formats.
+07-11-01  A bug in which typeset -f fun did not display the function definition
+          when invoked in a subshell has been fixed.
 07-10-29  The sleep builtin was fixed so that all floating point constants
 	  are valid operands.
 07-10-10  A bug in which the locale was not being restored after
