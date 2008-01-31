@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1985-2007 AT&T Intellectual Property          #
+#          Copyright (c) 1985-2008 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -21,7 +21,7 @@
 ########################################################################
 : generate getconf and limits info
 #
-# @(#)conf.sh (AT&T Research) 2007-04-20
+# @(#)conf.sh (AT&T Research) 2008-01-31
 #
 # this script generates these files from the table file in the first arg
 # the remaining args are the C compiler name and flags
@@ -794,11 +794,11 @@ unsigned int conf[] = {
 			sed 's/$/,/' $1
 			echo "};"
 		} > $tmp.c
-		[[ -f $tmp.1.c ]] || cp $tmp.c $tmp.1.c
+		[ -f $tmp.1.c ] || cp $tmp.c $tmp.1.c
 		if	$cc -c $tmp.c > $tmp.e 2>&1
 		then	break
 		fi
-		[[ -f $tmp.1.e ]] || cp $tmp.e $tmp.1.e
+		[ -f $tmp.1.e ] || cp $tmp.e $tmp.1.e
 		snl='\
 '
 		sed "s/[^_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789][^_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789]*/${snl}/g" $tmp.e |
@@ -876,6 +876,7 @@ esac
 name_max=1
 export tmp name standard call cc
 
+exec > $tmp.t
 for key in $keys
 do	eval name=\"'$'CONF_name_$key\"
 	case $name in
@@ -1409,7 +1410,8 @@ ${script}
 		fi
 		;;
 	esac
-done > $tmp.t
+done
+exec > /dev/null
 case $debug in
 -d6)	exit ;;
 esac

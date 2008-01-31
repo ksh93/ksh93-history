@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1982-2007 AT&T Knowledge Ventures            *
+*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                      by AT&T Knowledge Ventures                      *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -230,6 +230,12 @@ int sh_argopts(int argc,register char *argv[])
 	 	    case 'D':
 			on_option(&newflags,SH_NOEXEC);
 			goto skip;
+		    case 'T':
+			if (opt_info.num)
+				sh.test |= opt_info.num;
+			else
+				sh.test = 0;
+		    	continue;
 		    case 's':
 			if(setflag)
 			{

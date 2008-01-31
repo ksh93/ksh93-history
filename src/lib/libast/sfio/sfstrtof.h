@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2007 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -369,7 +369,7 @@ S2F_function(str, end) char* str; char** end;
 		}
 		do c = GET(s); while (c && !isspace(c));
 		PUT(s);
-		return S2F_nan;
+		return negative ? -S2F_nan : S2F_nan;
 	}
 	else if (c < '1' || c > '9')
 	{

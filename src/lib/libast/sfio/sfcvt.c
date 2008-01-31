@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2007 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -97,10 +97,23 @@ int		format;		/* conversion format		*/
 	*sign = *decpt = 0;
 
 	if(isnanl(dv))
+	{	
+#if _lib_signbit
+		if (signbit(dv))
+#else
+		if (dv < 0)
+#endif
+			*sign = 1;
 		return SF_NAN;
+	}
 #if _lib_isinf
 	if (n = isinf(dv))
-	{	if (n < 0)
+	{	
+#if _lib_signbit
+		if (signbit(dv))
+#else
+		if (n < 0 || dv < 0)
+#endif
 			*sign = 1;
 		return SF_INF;
 	}

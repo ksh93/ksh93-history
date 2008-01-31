@@ -2315,7 +2315,7 @@ will match all files and zero or more directories
 and subdirectories.
 If followed by a
 .B /
-than only directories and subdirectories will match.
+then only directories and subdirectories will match.
 .TP
 .B ?
 Matches any single character.
@@ -2419,7 +2419,7 @@ compound patterns a \f3\-\fP can be inserted in front of the \f3(\fP
 to cause the shortest match to the specified \f2pattern-list\^\fP
 to be used.
 .PP
-When \f2pattern-list\^\fP is contained within parenthesis,
+When \f2pattern-list\^\fP is contained within parentheses,
 the backslash character \f3\e\fP is treated specially even
 when inside a character class.   All ANSI-C character escapes are
 recognized and match the specified character.  In addition
@@ -2513,9 +2513,9 @@ the \f2n\fP-th. sub-pattern,
 matches the same string as the sub-pattern itself.
 .PP
 Finally a pattern can contain sub-patterns of the form
-\f3\(ap(\fP\f2options\^\fP\f3:\fP\f2pattern-list\^\fP\f3)\fP.
+\f3\(ap(\fP\f2options\^\fP\f3:\fP\f2pattern-list\^\fP\f3)\fP,
 where either \f2options\^\fP or \f3:\fP\f2pattern-list\^\fP
-can be omitted.  Unlike, the other compound patterns,
+can be omitted.  Unlike the other compound patterns,
 these sub-patterns are not counted in the numbered sub-patterns.
 If \f2options\^\fP is present, it can consist of one or more
 of the following:
@@ -2747,7 +2747,7 @@ that apply to floating point quantities can be used.
 In addition, the operator
 .B **
 can be used for exponentiation.
-It has higher precedence than multiplication as is left associative.
+It has higher precedence than multiplication and is left associative.
 In addition, when the value of an arithmetic variable
 or sub-expression can be represented as a long integer,
 all C language integer arithmetic operations can be performed. 
@@ -3030,7 +3030,7 @@ True, if
 .I string\^
 does not match
 .IR pattern .
-With the
+When the
 .I string\^
 matches the
 .I pattern\^
@@ -3332,7 +3332,7 @@ If one of the above, other than
 and the
 .B >#
 and
-.B >#
+.B <#
 forms,
 is preceded by
 .BI { varname }
@@ -3346,7 +3346,7 @@ If
 or the any of the
 .B >#
 and
-.B >#
+.B <#
 forms
 is preceded by
 .BI { varname }
@@ -3536,7 +3536,7 @@ special built-in command used within a function
 defines local variables whose scope includes
 the current function.
 They can be passed to functions that they call in the
-variable assignment list the precedes the call or as arguments
+variable assignment list that precedes the call or as arguments
 passed as name references.
 Errors within functions return control to the caller.
 .PP
@@ -3625,7 +3625,7 @@ contains the name of the variable for which the discipline function is called,
 is the subscript of the variable, and
 .B .sh.value
 will contain the value being assigned inside the
-.B .set
+.B set
 discipline function.
 For the \f3set\fP discipline,
 changing
@@ -3831,7 +3831,7 @@ and a function of the given name is executed
 as described above.
 If not found, and the file
 .B .paths
-is found, and the this file contains a line of the form
+is found, and this file contains a line of the form
 .BI FPATH= path
 where
 .I path\^
@@ -4246,7 +4246,7 @@ Delete previous character.
 (User defined literal next character as defined
 by the
 .IR stty (1)
-command.
+command,
 or
 .B ^V
 if not defined.)
@@ -4473,7 +4473,7 @@ alias by the name
 .BI _\&_ letter
 and if an alias of this name is defined, its
 value will be inserted on the input queue.
-The can be used to program functions keys on many terminals.
+This can be used to program function keys on many terminals.
 .PP
 .TP 10
 .B M-.
@@ -5893,7 +5893,7 @@ other than
 .BR \-n .
 The
 .B \-e
-causes the above escape conventions to be applied
+causes the above escape conventions to be applied.
 This is the default behavior.
 It reverses the effect of an earlier
 .BR \-r .
@@ -5963,7 +5963,7 @@ format can be used instead of
 to cause characters in
 .I arg\^
 that are special in HTML and XML
-to be output to be output as their entity name.
+to be output as their entity name.
 .LI
 A
 .B %P
@@ -5980,7 +5980,7 @@ format can be used instead of
 .B %s
 to cause
 .I arg\^
-interpreted as a shell pattern
+to be interpreted as a shell pattern
 and to be printed as an extended regular expression.
 .LI
 A
@@ -6306,7 +6306,7 @@ All background jobs are run at a lower priority.
 This is the default mode.
 .TP 8
 .B bracexpand
-Sans as
+Same as
 .BR \-B .
 .TP 8
 .B emacs
@@ -6374,7 +6374,7 @@ Same as
 A pipeline will not complete until all components
 of the pipeline have completed, and the return value
 will be the value of the last non-zero command
-to fail or zero of no command has failed.
+to fail or zero if no command has failed.
 .TP 8
 .B showme
 When enabled, simple commands or pipelines preceded by a semicolon
@@ -6915,7 +6915,7 @@ If neither the
 .B H
 nor
 .B S
-options is specified, the limit applies to both.
+option is specified, the limit applies to both.
 The current resource limit is printed when 
 .I limit\^
 is omitted.
@@ -7080,7 +7080,7 @@ option
 produces a more verbose report.
 The
 .B \-f
-options skips the search for functions.
+option skips the search for functions.
 The
 .B \-p
 option
@@ -7130,7 +7130,7 @@ option is not present and
 .I arg\^
 and a file by the name of
 .I arg\^
-exits, then it reads and executes this script.
+exists, then it reads and executes this script.
 Otherwise, if the first 
 .I arg\^
 does not contain a
@@ -7458,3 +7458,4 @@ won't be executed until the foreground job terminates.
 It is a good idea to leave a space after the comma operator in
 arithmetic expressions to prevent the comma from being interpreted
 as the decimal point character in certain locales.
+

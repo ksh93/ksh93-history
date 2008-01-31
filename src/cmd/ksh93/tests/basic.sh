@@ -1,10 +1,10 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#           Copyright (c) 1982-2007 AT&T Knowledge Ventures            #
+#          Copyright (c) 1982-2008 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
-#                      by AT&T Knowledge Ventures                      #
+#                    by AT&T Intellectual Property                     #
 #                                                                      #
 #                A copy of the License is available at                 #
 #            http://www.opensource.org/licenses/cpl1.0.txt             #
@@ -28,6 +28,27 @@ alias err_exit='err_exit $LINENO'
 # test basic file operations like redirection, pipes, file expansion
 Command=${0##*/}
 integer Errors=0
+set -- \
+	go+r	0000	\
+	go-r	0044	\
+	ug=r	0330	\
+	go+w	0000	\
+	go-w	0022	\
+	ug=w	0550	\
+	go+x	0000	\
+	go-x	0011	\
+	ug=x	0660	\
+	go-rx	0055	\
+	uo-wx	0303	\
+	ug-rw	0660	\
+	o=	0007
+while	(( $# >= 2 ))
+do	umask 0
+	umask $1
+	g=$(umask)
+	[[ $g == $2 ]] || err_exit "umask 0; umask $1 failed -- expected $2, got $g"
+	shift 2
+done
 umask u=rwx,go=rx || err_exit "umask u=rws,go=rx failed"
 if	[[ $(umask -S) != u=rwx,g=rx,o=rx ]]
 then	err_exit 'umask -S incorrect'
@@ -285,7 +306,7 @@ foo()
 	(( $# == 2 )) || err_exit "$# jobs not reported -- 2 expected"
 }
 foo
-[[ $( (trap 'print alarm' ALRM; sleep 4) & sleep 2; kill -ALRM $!) == alarm ]] || err_exit 'ALRM signal not working'
+[[ $( (trap 'print alarm' ALRM; sleep 4) & sleep 2; kill -ALRM $!; sleep 2) == alarm ]] || err_exit 'ALRM signal not working'
 [[ $($SHELL -c 'trap "" HUP; $SHELL -c "(sleep 2;kill -HUP $$)& sleep 4;print done"') != done ]] && err_exit 'ignored traps not being ignored'
 [[ $($SHELL -c 'o=foobar; for x in foo bar; do (o=save);print $o;done' 2> /dev/null ) == $'foobar\nfoobar' ]] || err_exit 'for loop optimization subshell bug'
 command exec 3<> /dev/null

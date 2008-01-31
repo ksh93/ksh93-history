@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2007 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -113,7 +113,7 @@ static char *find_begin(char outbuff[], char *last, int endchar, int *type)
 					if((c= mbchar(cp)) , c!=dot && !isaname(c))
 						break;
 				}
-				if(cp>=last)
+				if(cp>=last && c!= '}')
 				{
 					*type='$';
 					return(++xp);
@@ -184,7 +184,7 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 		{
 			if(count> ep->e_nlist)
 				return(-1);
-			mode = '*';
+			mode = '?';
 			av[0] = ep->e_clist[count-1];
 			av[1] = 0;
 		}
@@ -247,6 +247,8 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 				out++;
 			}
 		}
+		if(mode=='?')
+			mode = '*';
 		if(var!='$' && mode=='\\' && out[-1]!='*')
 			addstar = '*';
 		if(*begin=='~' && !strchr(begin,'/'))

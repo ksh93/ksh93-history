@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1992-2006 AT&T Knowledge Ventures            *
+*          Copyright (c) 1992-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                      by AT&T Knowledge Ventures                      *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -26,7 +26,7 @@
  */
 
 static const char usage[] =
-"[-?@(#)$Id: stty (AT&T Research) 2006-10-31 $\n]"
+"[-?@(#)$Id: stty (AT&T Research) 2007-11-27 $\n]"
 USAGE_LICENSE
 "[+NAME?stty - set or get terminal modes]"
 "[+DESCRIPTION?\bstty\b sets certain terminal I/O modes for the device "
@@ -37,6 +37,7 @@ USAGE_LICENSE
 "[g:save?Writes the current settings to standard output in a form that can "
 	"be used as an argument to another \bstty\b command.  The \brows\b "
 	"and \bcolumns\b values are not included.]"
+"[t:terminal-group?Print the terminal group id of the device, -1 if unknown.]"
 "\n"
 "\n[mode ...]\n"
 "\n"
@@ -56,7 +57,6 @@ USAGE_LICENSE
 "}"
 "[+SEE ALSO?\btegetattr\b(2), \btcsetattr\b(2), \bioctl\b(2)]"
 ;
-
 
 #include	<cmd.h>
 #include	<ccode.h>
@@ -83,6 +83,7 @@ USAGE_LICENSE
 /* command options */
 #define A_FLAG	1
 #define G_FLAG	2
+#define T_FLAG	4
 
 /* termios fields */
 #define C_FLAG	1
@@ -877,6 +878,15 @@ static int infof(Opt_t* op, Sfio_t* sp, const char* s, Optdisc_t* dp)
 	return(1);
 }
 
+#ifndef _lib_tcgetpgrp
+#  ifdef TIOCGPGRP
+	   static int _i_;
+#	   define tcgetpgrp(a) (ioctl(a, TIOCGPGRP, &_i_)>=0?_i_:-1)	
+#  else
+#	   define tcgetpgrp(a) (-1)
+#  endif /* TIOCGPGRP */
+#endif /* _lib_tcgetpgrp */
+
 int
 b_stty(int argc, char** argv, void* context)
 {
@@ -897,6 +907,9 @@ b_stty(int argc, char** argv, void* context)
 	{
 		switch (n = optget(argv, usage))
 		{
+		case 't':
+			flags |= T_FLAG;
+			continue;
 		case 'a':
 		case 'g':
 			if (!opt_info.offset || !argv[opt_info.index][opt_info.offset])
@@ -926,9 +939,11 @@ b_stty(int argc, char** argv, void* context)
 		break;
 	}
 	argv += opt_info.index;
-	if (error_info.errors || (flags && *argv))
+	if (error_info.errors || (flags && *argv) || (flags&(flags-1)))
 		error(ERROR_usage(2), "%s", optusage(NiL));
-	if (*argv)
+	if (flags & T_FLAG)
+		sfprintf(sfstdout, "%d\n", tcgetpgrp(0));
+	else if (*argv)
 	{
 		if (!argv[1] && **argv == ':')
 			gin(*argv, &tty);

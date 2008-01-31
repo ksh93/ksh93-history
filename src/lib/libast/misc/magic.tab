@@ -1,5 +1,5 @@
 #
-# @(#)magic (AT&T Research) 2007-10-09
+# @(#)magic (AT&T Research) 2008-01-18
 #
 # magic number database for file(1) and magic(3)
 #
@@ -488,7 +488,7 @@ o{
 +18	short		59		toyota-me16
 +18	short		60		stm-st100
 +18	short		61		alc-tinyj
-+18	short		62		amd-x86, 64-bit
++18	short		62		x86-64
 +18	short		63		sony-dsp
 +18	short		66		siemens-fx66
 +18	short		67		stm-st9, 16-bit
@@ -618,7 +618,7 @@ o{
 +18	short		59		toyota-me16
 +18	short		60		stm-st100
 +18	short		61		alc-tinyj
-+18	short		62		amd-x86, 64-bit
++18	short		62		x86-64
 +18	short		63		sony-dsp
 +18	short		66		siemens-fx66
 +18	short		67		stm-st9, 16-bit

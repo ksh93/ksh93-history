@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#                     Copyright (c) 1994-2007 AT&T                     #
+#                     Copyright (c) 1994-2008 AT&T                     #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                               by AT&T                                #
@@ -30,7 +30,7 @@ case $-:$BASH_VERSION in
 esac
 
 command=iffe
-version=2007-04-04 # update in USAGE too #
+version=2008-01-31 # update in USAGE too #
 
 compile() # $cc ...
 {
@@ -47,7 +47,7 @@ compile() # $cc ...
 		esac
 	fi
 	case $_compile_status in
-	?|??|1[01]?|12[0-8])
+	?|??|1[01]?|12[0-8]|25?)
 		;;
 	*)	echo "$command: $@" >&$stderr
 		cat $tmp.err >&$stderr
@@ -521,6 +521,7 @@ libpaths="LD_LIBRARY_PATH LD_LIBRARYN32_PATH LD_LIBRARY64_PATH LIBPATH SHLIB_PAT
 	SHLIB_PATH_default=:/shlib:/usr/shlib:/lib:/usr/lib
 nl="
 "
+optimize=1
 occ=cc
 one=
 out=
@@ -602,7 +603,7 @@ set=
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: iffe (AT&T Research) 2007-04-04 $
+@(#)$Id: iffe (AT&T Research) 2008-01-31 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?iffe - C compilation environment feature probe]
@@ -651,6 +652,7 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 [I:include?Adds \b-I\b\adir\a to the C compiler flags.]:[dir]
 [L:library?Adds \b-L\b\adir\a to the C compiler flags.]:[dir]
 [n:name-value?Output \aname\a=\avalue\a assignments only.]
+[N!:optimize?\b--nooptimize\b disables compiler optimization options.]
 [o:output?Sets the output file name to \afile\a.]:[file]
 [O:stdio?Sets the standard io header to \ahdr\a.]:[hdr:=stdio.h]
 [e:package?Sets the \bproto\b(1) package name to \aname\a.]:[name]
@@ -952,6 +954,7 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 		I)	set="$set set include $OPTARG :" ;;
 		L)	set="$set set library $OPTARG :" ;;
 		n)	set="$set set namval $OPTARG :" ;;
+		N)	set="$set set nooptimize $OPTARG :" ;;
 		o)	set="$set set output $OPTARG :" ;;
 		e)	set="$set set package $OPTARG :" ;;
 		p)	set="$set set prototyped :" ;;
@@ -981,67 +984,64 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 		--a|--al|--all)
 			REM=a
 			;;
-		--cc=*)	REM=c`echo $1 | sed -e 's,[^=]*=,,'`
+		--cc=*)	REM=c`echo X$1 | sed 's,[^=]*=,,'`
 			;;
 		--co|--con|--conf|--confi|--config)
 			REM=C
 			;;
 		--cr=*|--cro=*|--cros=*|--cross=*)
-			REM=x`echo $1 | sed -e 's,[^=]*=,,'`
+			REM=x`echo X$1 | sed -e 's,[^=]*=,,'`
 			;;
 		--d=*|--de=*|--deb=*|--debu=*|--debug=*)
-			REM=d`echo $1 | sed -e 's,[^=]*=,,'`
+			REM=d`echo X$1 | sed 's,[^=]*=,,'`
 			;;
 		--def|--defi|--defin|--define)
 			REM=D
 			;;
 		--e=*|--ex=*|--exc=*|--excl=*|--exclu=*|--exclud=*|--exclude=*)
-			REM=X`echo $1 | sed -e 's,[^=]*=,,'`
+			REM=X`echo X$1 | sed 's,[^=]*=,,'`
 			;;
 		--e|--ex|--exp|--expl|--expli|--explic|--explici|--explicit)
 			REM=E
 			;;
 		--f=*|--fe=*|--fea=*|--feat=*|--featu=*|--featur=*|--feature=*|--features=*)
-			REM=F`echo $1 | sed -e 's,[^=]*=,,'`
+			REM=F`echo X$1 | sed 's,[^=]*=,,'`
 			;;
 		--inp=*|--inpu=*|--input=*)
-			REM=i`echo $1 | sed -e 's,[^=]*=,,'`
+			REM=i`echo X$1 | sed 's,[^=]*=,,'`
 			;;
 		--inc=*|--incl=*|--inclu=*|--includ=*|--include=*)
-			REM=I`echo $1 | sed -e 's,[^=]*=,,'`
+			REM=I`echo X$1 | sed 's,[^=]*=,,'`
 			;;
 		--l=*|--li=*|--lib=*|--libr=*|--libra=*|--librar=*|--library=*)
-			REM=L`echo $1 | sed -e 's,[^=]*=,,'`
+			REM=L`echo X$1 | sed 's,[^=]*=,,'`
 			;;
 		--n|--na|--nam|--name|--name-v|--name-va|--name-val|--name-valu|--name-value)
 			REM=n
 			;;
-		--noc|--noco|--nocom|--nocomm|--nocomme|--nocommen|--nocomment)
-			REM=n
-			;;
 		--o=*|--ou=*|--out=*|--outp=*|--outpu=*|--output=*)
-			REM=o`echo $1 | sed -e 's,[^=]*=,,'`
+			REM=o`echo X$1 | sed 's,[^=]*=,,'`
 			;;
 		--pa=*|--pac=*|--pack=*|--packa=*|--packag=*|--package=*)
-			REM=e`echo $1 | sed -e 's,[^=]*=,,'`
+			REM=e`echo X$1 | sed 's,[^=]*=,,'`
 			;;
 		--pro|--prot|--proto|--protot|--prototy|--prototyp|--prototype|--prototyped)
 			REM=p
 			;;
 		--pra=*|--prag=*|--pragma=*)
-			REM=P`echo $1 | sed -e 's,[^=]*=,,'`
+			REM=P`echo X$1 | sed 's,[^=]*=,,'`
 			;;
 		--r|--re|--reg|--regre|--regres|--regress)
 			REM=r
 			;;
 		--sh=*|--she=*|--shel=*|--shell=*)
-			REM=s`echo $1 | sed -e 's,[^=]*=,,'`
+			REM=s`echo X$1 | sed 's,[^=]*=,,'`
 			;;
 		--sta=*|--stat=*|--stati=*|--static=*)
-			REM=S`echo $1 | sed -e 's,[^=]*=,,'`
+			REM=S`echo X$1 | sed 's,[^=]*=,,'`
 			;;
 		--std=*|--stdi=*|--stdio=*)
-			REM=O`echo $1 | sed -e 's,[^=]*=,,'`
+			REM=O`echo X$1 | sed 's,[^=]*=,,'`
 			;;
 		--u|--un|--und|--unde|--undef)
 			REM=u
@@ -1052,7 +1052,7 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 		--*)	echo $command: $1: unknown option >&2
 			exit 2
 			;;
-		-*)	REM=`echo $1 | sed -e 's,-,,'`
+		-*)	REM=`echo X$1 | sed 's,X-,,'`
 			;;
 		*)	break
 			;;
@@ -1062,7 +1062,7 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 		do	case $REM in
 			'')	break ;;
 			esac
-			eval `echo $REM | sed -e "s,\(.\)\(.*\),OPT='\1' REM='\2',"`
+			eval `echo $REM | sed "s,\(.\)\(.*\),OPT='\1' REM='\2',"`
 			case $OPT in
 			[cdFiILoOePsSxX])
 				case $REM in
@@ -1091,6 +1091,7 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 			I)	set="$set set include $OPTARG :" ;;
 			L)	set="$set set library $OPTARG :" ;;
 			n)	set="$set set namval $OPTARG :" ;;
+			N)	set="$set set nooptimize $OPTARG :" ;;
 			o)	set="$set set output $OPTARG :" ;;
 			e)	set="$set set package $OPTARG :" ;;
 			p)	set="$set set prototyped :" ;;
@@ -1329,7 +1330,7 @@ do	case $in in
 		;;
 	run)	case $shell in
 		bsh)	case $2 in
-			*/*)	x=`echo $2 | sed -e 's,.*[\\\\/],,'` ;;
+			*/*)	x=`echo $2 | sed 's,.*[\\\\/],,'` ;;
 			*)	x=$2 ;;
 			esac
 			;;
@@ -1391,14 +1392,14 @@ do	case $in in
 			op=$1
 			case $op in
 			--*)	case $shell in
-				bsh)	op=`echo '' $op | sed 's/.*--//'` ;;
+				bsh)	op=`echo X$op | sed 's/X--//'` ;;
 				*)	op=${op#--} ;;
 				esac
 				;;
 			-*)	case $op in
 				-??*)	case $shell in
-					bsh)	arg=`echo '' $op | sed 's/-.//'`
-						op=`echo '' $op | sed 's/\\(-.\\).*/\\1/'`
+					bsh)	arg=`echo X$op | sed 's/X-.//'`
+						op=`echo X$op | sed 's/X\\(-.\\).*/\\1/'`
 						;;
 					*)	arg=${op#-?}
 						op=${op%$arg}
@@ -1413,11 +1414,12 @@ do	case $in in
 				d)	op=debug ;;
 				D)	op=define ;;
 				E)	op=explicit ;;
-				F)	op=tst ;;
+				F)	op=features ;;
 				i)	op=input ;;
 				I)	op=include ;;
 				L)	op=library ;;
 				n)	op=namval ;;
+				N)	op=nooptimize ;;
 				o)	op=output ;;
 				e)	op=package ;;
 				p)	op=prototyped ;;
@@ -1466,10 +1468,14 @@ do	case $in in
 				"")	case $x in
 					*=*)	case $shell in
 						bsh)	eval $x
-							export `echo $x | sed -e 's/=.*//'`
+							export `echo $x | sed 's/=.*//'`
 							;;
 						*)	export $x
 							;;
+						esac
+						;;
+					-O*)	case $optimize in
+						1)	occ=$x ;;
 						esac
 						;;
 					*)	occ=$x
@@ -1591,6 +1597,17 @@ do	case $in in
 		nodefine)
 			define=0
 			continue
+			;;
+		nooptimize)
+			optimize=0
+			case $occ in
+			*" -O"*)occ=`echo $occ | sed 's/ -O[^ ]*//g'`
+				cc=$occ
+				;;
+			esac
+			;;
+		optimize)
+			optimize=1
 			;;
 		out|output)
 			out=$arg
@@ -1964,7 +1981,7 @@ $lin
 					esac
 					;;
 				+l*)	case $shell in
-					bsh)	x=`echo '' $1 | sed 's/[^+]*+/-/'` ;;
+					bsh)	x=`echo X$1 | sed 's/X+/-/'` ;;
 					*)	eval 'x=-${1#+}' ;;
 					esac
 					case $group in
@@ -2521,7 +2538,7 @@ $*
 					y=
 					for x in $p
 					do	case $shell in
-						bsh)	c=`echo '' $x | sed 's, *-l,,'` ;;
+						bsh)	c=`echo X$x | sed 's,X-l,,'` ;;
 						*)	eval 'c=${x#-l}' ;;
 						esac
 						case $c in
@@ -2647,7 +2664,7 @@ $*
 							sys)	x=sys/$x ;;
 							esac
 							case $shell in
-							bsh)	eval `echo $x | sed -e 's,\\(.*\\)\.\\([^.]*\\),x=\\1 o=\\2,'`
+							bsh)	eval `echo $x | sed 's,\\(.*\\)\.\\([^.]*\\),x=\\1 o=\\2,'`
 								;;
 							*)	o=${x##*.}
 								x=${x%.${o}}
@@ -2658,7 +2675,7 @@ $*
 						esac
 						case $x in
 						*[\\/]*)case $shell in
-							bsh)	eval `echo $x | sed -e 's,\\(.*\\)[\\\\//]\\(.*\\),p=\\1 v=\\2,'`
+							bsh)	eval `echo $x | sed 's,\\(.*\\)[\\\\//]\\(.*\\),p=\\1 v=\\2,'`
 								;;
 							*)	eval 'p=${x%/*}'
 								eval 'v=${x##*/}'
@@ -2666,7 +2683,7 @@ $*
 							esac
 							;;
 						*.*)	case $shell in
-							bsh)	eval `echo $x | sed -e 's,\\(.*\\)\\.\\(.*\\),p=\\1 v=\\2,'`
+							bsh)	eval `echo $x | sed 's,\\(.*\\)\\.\\(.*\\),p=\\1 v=\\2,'`
 								;;
 							*)	eval 'p=${x%.*}'
 								eval 'v=${x##*.}'
@@ -2703,7 +2720,7 @@ $*
 						;;
 					mem)	case $p in
 						*.*)	case $shell in
-							bsh)	eval `echo $p | sed -e 's/\\([^.]*\\)\\.\\(.*\\)/p=\\1 m=\\2/'`
+							bsh)	eval `echo $p | sed 's/\\([^.]*\\)\\.\\(.*\\)/p=\\1 m=\\2/'`
 								;;
 							*)	eval 'm=${p#*.}'
 								eval 'p=${p%%.*}'
@@ -3012,7 +3029,7 @@ $*
 				for x in $lib $deflib
 				do	case $shell in
 					ksh)	eval 'c=${x#-l}' ;;
-					*)	c=`echo '' $x | sed 's, *-l,,'` ;;
+					*)	c=`echo X$x | sed 's,X-l,,'` ;;
 					esac
 					case $c in
 					*[!abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_]*)
@@ -4318,7 +4335,7 @@ struct xxx* f() { return &v; }"
 				esac
 				;;
 			+l*)	case $shell in
-				bsh)	x=`echo '' $1 | sed 's/[^+]*+/-/'` ;;
+				bsh)	x=`echo X$1 | sed 's/X+/-/'` ;;
 				*)	eval 'x=-${1#+}' ;;
 				esac
 				case $group in

@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1982-2007 AT&T Knowledge Ventures            *
+*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                      by AT&T Knowledge Ventures                      *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -56,7 +56,7 @@ int	b_getopts(int argc,char *argv[],void *extra)
 	register int flag, mode, r=0;
 	register Shell_t *shp = (Shell_t*)extra;
 	char value[2], key[2];
-	int jmpval;
+	int jmpval,extended;
 	struct checkpt buff, *pp;
         Optdisc_t disc;
         memset(&disc, 0, sizeof(disc));
@@ -98,6 +98,7 @@ int	b_getopts(int argc,char *argv[],void *extra)
 	opt_info.offset = shp->st.optchar;
 	if(mode= (*options==':'))
 		options++;
+	extended = *options=='\n' && *(options+1)=='[' || *options=='[' && *(options+1)=='-';
 	sh_pushcontext(&buff,1);
 	jmpval = sigsetjmp(buff.buff,0);
 	if(jmpval)
@@ -171,12 +172,14 @@ int	b_getopts(int argc,char *argv[],void *extra)
 		key[1] = 0;
 		nv_putval(np, key, NV_RDONLY);
 	}
-	else
+	else if(extended)
 	{
 		Sfdouble_t d;
 		d = opt_info.number;
 		nv_putval(np, (char*)&d, NV_LDOUBLE|NV_RDONLY);
 	}
+	else
+		nv_putval(np, opt_info.arg, NV_RDONLY);
 	nv_close(np);
 	sh_popcontext(&buff);
         opt_info.disc = 0;

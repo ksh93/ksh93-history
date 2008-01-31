@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2007 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -1392,8 +1392,7 @@ static int compare(register const char *a,register const char *b,register int n)
  * This version will use termios when possible, otherwise termio
  */
 
-
-tcgetattr(int fd, struct termios *tt)
+int tcgetattr(int fd, struct termios *tt)
 {
 	register Edit_t *ep = (Edit_t*)(sh_getinterp()->ed_context);
 	register int r,i;
@@ -1415,7 +1414,7 @@ tcgetattr(int fd, struct termios *tt)
 	return(r);
 }
 
-tcsetattr(int fd,int mode,struct termios *tt)
+int tcsetattr(int fd,int mode,struct termios *tt)
 {
 	register Edit_t *ep = (Edit_t*)(sh_getinterp()->ed_context);
 	register int r;

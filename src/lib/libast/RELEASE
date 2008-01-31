@@ -1,3 +1,11 @@
+08-01-31 comp/conf.sh,conf.tab: handle /bin/sh \ in read data, redir subshell
+08-01-18 misc/magic.tab: amd-x68, 64-bit => x86-64
+08-01-18 string/strnton.c,strntonll.c: add
+07-12-10 string/strelapsed.c: "0" is a valid elapsed time!
+07-12-02 sfio/sfreserve.c: preserve SF_SHARE sfrd() via sfreserve(f,0,0)
+07-11-21 comp/setlocale.c: add sjis_mbtowc() to work around [\~] translation
+07-11-15 features/signal.c: RT(1) .. RT(MAX-1) => RTMIN+1 .. RTMAX-1
+07-11-14 features/float: favor sscanf() due to gnu strto[l]d() nan bugs
 07-10-31 regex/regcomp.c: fix REX_COLL_CLASS node allocation size
 07-10-31 sfio/sfcvt.c: use signbit() if available
 07-10-31 features/isoc99: _ISOC99_SOURCE tests

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2007 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -476,8 +476,9 @@ static int pipe_exec(int pv[], Shnode_t *t, int errorflg)
 	struct checkpt buff;
 	register Shnode_t *tchild = t->fork.forktre;
 	Namval_t *np;
-	Sfio_t *iop;
-	int jmpval,r;
+	volatile Sfio_t *iop;
+	volatile int r;
+	int jmpval;
 	if((tchild->tre.tretyp&COMMSK)!=TCOM || !(np=(Namval_t*)(tchild->com.comnamp)))
 	{
 		sh_pipe(pv);
@@ -756,7 +757,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 				{
 					void *context;
 					Shbltin_t *bp = 0;
-					int scope=0, jmpval, save_prompt,share=0;
+					volatile int scope=0, share=0;
+					int jmpval, save_prompt;
 					struct checkpt buff;
 					unsigned long was_vi=0, was_emacs=0, was_gmacs=0;
 					struct stat statb;
@@ -917,7 +919,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 				/* check for functions */
 				if(!command && np && nv_isattr(np,NV_FUNCTION))
 				{
-					int indx,jmpval=0;
+					volatile int indx;
+					int jmpval=0;
 					struct checkpt buff;
 					Namval_t node;
 					register struct slnod *slp;
@@ -1075,7 +1078,19 @@ int sh_exec(register const Shnode_t *t, int flags)
 				{
 					if(sh.topfd > topfd)
 						sh_iorestore(topfd,0);
+					if(!sh_isoption(SH_MONITOR))
+					{
+						if(!(sh.sigflag[SIGINT]&(SH_SIGFAULT|SH_SIGOFF)))
+							sh_sigtrap(SIGINT);
+						sh.trapnote |= SH_SIGIGNORE;
+					}
 					job_wait(parent);
+					if(!sh_isoption(SH_MONITOR))
+					{
+						sh.trapnote &= ~SH_SIGIGNORE;
+						if(sh.exitval == (SH_EXITSIG|SIGINT))
+							sh_fault(SIGINT);
+					}
 				}
 				if(type&FAMP)
 				{
@@ -1465,7 +1480,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 
 		    case TWH: /* while and until */
 		    {
-			register int 	r=0;
+			volatile int 	r=0;
 			int first = OPTIMIZE_FLAG;
 			Shnode_t *tt = t->wh.whtre;
 #if SHOPT_FILESCAN
@@ -2270,7 +2285,7 @@ int sh_funscope(int argn, char *argv[],int(*fun)(void*),void *arg,int execflg)
 	struct argnod	*envlist=0;
 	Shopt_t		savopt;
 	int		jmpval;
-	int		r = 0;
+	volatile int	r = 0;
 	char 		*savstak;
 	struct funenv	*fp;
 	struct checkpt	buff;
@@ -2369,7 +2384,7 @@ int sh_funscope(int argn, char *argv[],int(*fun)(void*),void *arg,int execflg)
 	nv_getval(nv_scoped(IFSNOD));
 	if(nsig)
 		memcpy((char*)&sh.st.trapcom[0],savstak,nsig);
-	sh.trapnote=0;
+	sh.trapnote &= SH_SIGIGNORE;
 	if(nsig)
 		stakset(savstak,0);
 	sh.options = savopt;
@@ -2675,10 +2690,10 @@ static pid_t sh_ntfork(const Shnode_t *t,char *argv[],int *jobid,int flag)
 	static int	savejobid;
 	Shell_t *shp = sh_getinterp();
 	struct checkpt buff;
-	int otype=0, scope=0, jmpval;
-	int jobwasset=0, sigwasset=0;
+	int otype=0, jmpval;
+	volatile int jobwasset=0, scope=0, sigwasset=0;
 	char **arge, *path;
-	pid_t grp = 0;
+	volatile pid_t grp = 0;
 	Pathcomp_t *pp;
 	if(flag)
 	{

@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1982-2007 AT&T Knowledge Ventures            *
+*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                      by AT&T Knowledge Ventures                      *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -198,6 +198,8 @@ static void put_optindex(Namval_t* np,const char *val,int flags,Namfun_t *fp)
 	Shell_t *shp = ((struct shell*)fp)->sh;
 	shp->st.opterror = shp->st.optchar = 0;
 	nv_putv(np, val, flags, fp);
+	if(!val)
+		nv_disc(np,fp,NV_POP);
 }
 
 static Sfdouble_t nget_optindex(register Namval_t* np, Namfun_t *fp)
@@ -463,6 +465,7 @@ static void put_seconds(register Namval_t* np,const char *val,int flags,Namfun_t
 	if(!np->nvalue.dp)
 	{
 		nv_setsize(np,3);
+		nv_onattr(np,NV_INTEGER|NV_DOUBLE);
 		np->nvalue.dp = new_of(double,0);
 	}
 	nv_putv(np, val, flags, fp);
@@ -1114,6 +1117,7 @@ int sh_reinit(char *argv[])
 	dtclear(sh.fun_tree);
 	dtclose(sh.alias_tree);
 	sh.alias_tree = inittree(&sh,shtab_aliases);
+	sh.last_root = sh.var_tree;
 	sh.namespace = 0;
 	sh.inuse_bits = 0;
 	if(sh.userinit)

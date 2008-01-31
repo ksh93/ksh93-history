@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2007 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -176,6 +176,7 @@ void nv_setlist(register struct argnod *arg,register int flags)
 	register char	*cp;
 	register Namval_t *np;
 	char		*trap=sh.st.trap[SH_DEBUGTRAP];
+	char		*prefix = sh.prefix;
 	int		traceon = (sh_isoption(SH_XTRACE)!=0);
 	int		array = (flags&(NV_ARRAY|NV_IARRAY));
 	flags &= ~(NV_TYPE|NV_ARRAY|NV_IARRAY);
@@ -190,7 +191,11 @@ void nv_setlist(register struct argnod *arg,register int flags)
 	{
 		sh.used_pos = 0;
 		if(arg->argflag&ARG_MAC)
+		{
+			sh.prefix = 0;
 			cp = sh_mactrim(arg->argval,-1);
+			sh.prefix = prefix;
+		}
 		else
 		{
 			Namval_t *mp;
@@ -200,7 +205,6 @@ void nv_setlist(register struct argnod *arg,register int flags)
 				int flag = (NV_VARNAME|NV_ARRAY|NV_ASSIGN);
 				struct fornod *fp=(struct fornod*)arg->argchn.ap;
 				register Shnode_t *tp=fp->fortre;
-				char *prefix = sh.prefix;
 				flag |= (flags&NV_NOSCOPE);
 				if(arg->argflag&ARG_QUOTED)
 					cp = sh_mactrim(fp->fornam,-1);
@@ -246,7 +250,9 @@ void nv_setlist(register struct argnod *arg,register int flags)
 					char **argv = sh_argbuild(&argc,&tp->com,0);
 					if(!(arg->argflag&ARG_APPEND))
 					{
-						nv_unset(np);
+						Namarr_t *ap;
+						if(!nv_isarray(np) || ((ap=nv_arrayptr(np)) && (ap->nelem&ARRAY_MASK)))
+							nv_unset(np);
 					}
 					nv_setvec(np,(arg->argflag&ARG_APPEND),argc,argv);
 					if(traceon || trap)
@@ -293,17 +299,9 @@ void nv_setlist(register struct argnod *arg,register int flags)
 				}
 				else
 				{
-					if(sh_isoption(SH_BASH) || (array&NV_IARRAY))
-					{
-						if(!(arg->argflag&ARG_APPEND))
-							nv_unset(np);
-					}
-					else if((arg->argflag&ARG_APPEND) && (!nv_isarray(np) || (nv_aindex(np)>=0)))
-					{
+					if(!(arg->argflag&ARG_APPEND))
 						nv_unset(np);
-						nv_setarray(np,nv_associative);
-					}
-					else
+					if(!sh_isoption(SH_BASH) && !(array&NV_IARRAY) && !nv_isarray(np))
 						nv_setarray(np,nv_associative);
 				}
 				if(prefix)
@@ -628,7 +626,7 @@ Namval_t *nv_create(const char *name, Dt_t *root, int flags, Namfun_t *dp)
 						}
 					}
 					else if(c==0 && mode && (n=nv_aindex(np))>0)
-						nv_putsub(np,(char*)0,n|ARRAY_FILL);
+						nv_putsub(np,(char*)0,n);
 					else if(n==0 && (c==0 || (c=='[' && !nv_isarray(np))))
 					{
 						/* subscript must be 0*/
@@ -727,7 +725,7 @@ Namval_t *nv_open(const char *name, Dt_t *root, int flags)
 	if(!root)
 		root = sh.var_tree;
 	sh.last_root = root;
-	if(root==sh_subfuntree(1))
+	if(root==sh.fun_tree)
 	{
 		flags |= NV_NOREF;
 		msg = e_badfun;
@@ -1771,6 +1769,11 @@ void nv_optimize(Namval_t *np)
 	register struct optimize *op, *xp;
 	if(sh.argaddr)
 	{
+		if(sh.subshell)
+		{
+			sh.argaddr = 0;
+			return;
+		}
 		for(fp=np->nvfun; fp; fp = fp->next)
 		{
 			if(fp->disc->getnum || fp->disc->getval)

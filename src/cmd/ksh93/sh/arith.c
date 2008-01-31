@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2007 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -35,7 +35,7 @@
 #define LLONG_MAX	LONG_MAX
 #endif
 
-static Sfdouble_t	Zero, NaN, Inf;
+static Sfdouble_t	NaN, Inf;
 static Namval_t Infnod =
 {
 	{ 0 },
@@ -193,13 +193,13 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 				cp = (char*)*ptr;
 				if ((cp[0] == 'i' || cp[0] == 'I') && (cp[1] == 'n' || cp[1] == 'N') && (cp[2] == 'f' || cp[2] == 'F') && cp[3] == 0)
 				{
-					Inf = 1.0/Zero;
+					Inf = strtold("Inf", NiL);
 					Infnod.nvalue.ldp = &Inf;
 					np = &Infnod;
 				}
 				else if ((cp[0] == 'n' || cp[0] == 'N') && (cp[1] == 'a' || cp[1] == 'A') && (cp[2] == 'n' || cp[2] == 'N') && cp[3] == 0)
 				{
-					NaN = 0.0/Zero;
+					NaN = strtold("NaN", NiL);
 					NaNnod.nvalue.ldp = &NaN;
 					np = &NaNnod;
 				}
@@ -261,7 +261,7 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 				c='e';
 			else
 				c = *str;
-			if(c==GETDECIMAL(0) || c=='e' || c == 'E')
+			if(c==GETDECIMAL(0) || c=='e' || c == 'E' || lastbase == 16 && (c == 'p' || c == 'P'))
 			{
 				lvalue->isfloat=1;
 				r = strtold(val,&str);

@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1982-2007 AT&T Knowledge Ventures            *
+*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                      by AT&T Knowledge Ventures                      *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -93,6 +93,8 @@ void	sh_fault(register int sig)
 	flag = shp->sigflag[sig]&~SH_SIGOFF;
 	if(!trap)
 	{
+		if(sig==SIGINT && (shp->trapnote&SH_SIGIGNORE))
+			return;
 		if(flag&SH_SIGIGNORE)
 			return;
 		if(flag&SH_SIGDONE)
@@ -198,17 +200,22 @@ void sh_siginit(void)
 	register const struct shtable2	*tp = shtab_signals;
 	sig_begin();
 	/* find the largest signal number in the table */
+#ifdef SIGRTMIN
+	sh.sigruntime[SH_SIGRTMIN] = SIGRTMIN;
+#endif /* SIGRTMIN */
+#ifdef SIGRTMAX
+	sh.sigruntime[SH_SIGRTMAX] = SIGRTMAX;
+#endif /* SIGRTMAX */
 	while(*tp->sh_name)
 	{
-		if((sig=tp->sh_number&((1<<SH_SIGBITS)-1))>n && sig<SH_TRAP)
+		sig = tp->sh_number&((1<<SH_SIGBITS)-1);
+		if ((tp->sh_number>>SH_SIGBITS) & SH_SIGRUNTIME)
+			sig = sh.sigruntime[sig-1];
+		if(sig>n && sig<SH_TRAP)
 			n = sig;
 		tp++;
 	}
-#if defined(_SC_SIGRT_MAX) && defined(_SIGRTMAX)
-	if((sig=SIGRTMAX+1)>n && sig<SH_TRAP) 
-		n = sig;
-#endif
-	sh.sigmax = n;
+	sh.sigmax = n++;
 	sh.st.trapcom = (char**)calloc(n,sizeof(char*));
 	sh.sigflag = (unsigned char*)calloc(n,1);
 	sh.sigmsg = (char**)calloc(n,sizeof(char*));
@@ -218,14 +225,8 @@ void sh_siginit(void)
 		if((sig &= ((1<<SH_SIGBITS)-1)) > sh.sigmax)
 			continue;
 		sig--;
-#if defined(_SC_SIGRT_MIN) && defined(_SIGRTMIN)
-		if(sig==_SIGRTMIN)
-			sig = SIGRTMIN;
-#endif
-#if defined(_SC_SIGRT_MAX) && defined(_SIGRTMAX)
-		if(sig==_SIGRTMAX)
-			sig = SIGRTMAX;
-#endif
+		if(n&SH_SIGRUNTIME)
+			sig = sh.sigruntime[sig];
 		if(sig>=0)
 		{
 			sh.sigflag[sig] = n;
@@ -351,7 +352,7 @@ void	sh_chktrap(void)
 {
 	register int 	sig=sh.st.trapmax;
 	register char *trap;
-	if(!sh.trapnote)
+	if(!(sh.trapnote&~SH_SIGIGNORE))
 		sig=0;
 	sh.trapnote &= ~SH_SIGTRAP;
 	/* execute errexit trap first */

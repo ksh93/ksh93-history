@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2007 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -503,6 +503,28 @@ set_collate(Lc_category_t* cp)
 }
 
 /*
+ * workaround the interesting sjis that translates unshifted 7 bit ascii!
+ */
+
+#if _hdr_wchar && _typ_mbstate_t && _lib_mbrtowc
+
+#define mb_state_zero	((mbstate_t*)&ast.pad[sizeof(ast.pad)-2*sizeof(mbstate_t)])
+#define mb_state	((mbstate_t*)&ast.pad[sizeof(ast.pad)-sizeof(mbstate_t)])
+
+static int
+sjis_mbtowc(register wchar_t* p, register const char* s, size_t n)
+{
+	if (n && p && s && (*s == '\\' || *s == '~') && !memcmp(mb_state, mb_state_zero, sizeof(mbstate_t)))
+	{
+		*p = *s;
+		return 1;
+	}
+	return mbrtowc(p, s, n, mb_state);
+}
+
+#endif
+
+/*
  * called when LC_CTYPE initialized or changes
  */
 
@@ -530,6 +552,25 @@ set_ctype(Lc_category_t* cp)
 		if (!(ast.mb_width = wcwidth))
 			ast.mb_width = default_wcwidth;
 		ast.mb_conv = wctomb;
+#ifdef mb_state
+		{
+			/*
+			 * check for sjis that translates unshifted 7 bit ascii!
+			 */
+
+			char*	s;
+			char	buf[2];
+
+			mbinit();
+			buf[1] = 0;
+			*(s = buf) = '\\';
+			if (mbchar(s) != buf[0])
+			{
+				memcpy(mb_state, mb_state_zero, sizeof(mbstate_t));
+				ast.mb_towc = sjis_mbtowc;
+			}
+		}
+#endif
 	}
 	return 0;
 }

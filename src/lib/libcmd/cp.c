@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1992-2007 AT&T Intellectual Property          *
+*          Copyright (c) 1992-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -27,7 +27,7 @@
  */
 
 static const char usage_head[] =
-"[-?@(#)$Id: cp (AT&T Research) 2007-10-12 $\n]"
+"[-?@(#)$Id: cp (AT&T Research) 2007-12-13 $\n]"
 USAGE_LICENSE
 ;
 
@@ -152,7 +152,6 @@ typedef struct State_s			/* program state		*/
 	int		missmode;	/* default missing dir mode	*/
 	int		official;	/* move to next view		*/
 	int		op;		/* {CP,LN,MV}			*/
-	int		pathsiz;	/* state.path buffer size	*/
 	int		perm;		/* permissions to preserve	*/
 	int		postsiz;	/* state.path post index	*/
 	int		presiz;		/* state.path pre index		*/
@@ -163,9 +162,14 @@ typedef struct State_s			/* program state		*/
 	int		uid;		/* caller uid			*/
 	int		update;		/* replace only if newer	*/
 	int		verbose;	/* list each file before op	*/
+	int		wflags;		/* open() for write flags	*/
 
 	int		(*link)(const char*, const char*);	/* link	*/
 	int		(*stat)(const char*, struct stat*);	/* stat	*/
+
+#define INITSTATE	pathsiz		/* (re)init state before this	*/
+	int		pathsiz;	/* state.path buffer size	*/
+
 
 	char*		path;		/* to pathname buffer		*/
 	char*		opname;		/* state.op message string	*/
@@ -567,7 +571,7 @@ visit(State_t* state, register FTSENT* ent)
 				error(ERROR_SYSTEM|2, "%s: cannot read", ent->fts_path);
 				return 0;
 			}
-			else if ((wfd = open(state->path, O_WRONLY|O_CREAT|O_TRUNC|O_BINARY, ent->fts_statp->st_mode & state->perm)) < 0)
+			else if ((wfd = open(state->path, st.st_mode ? (state->wflags & ~O_EXCL) : state->wflags, ent->fts_statp->st_mode & state->perm)) < 0)
 			{
 				error(ERROR_SYSTEM|2, "%s: cannot write", state->path);
 				if (ent->fts_statp->st_size > 0)
@@ -671,10 +675,13 @@ b_cp(int argc, register char** argv, void* context)
 		if (sh)
 			sh->ptr = state;
 	}
+	else
+		memset(state, 0, offsetof(State_t, INITSTATE));
 	state->presiz = -1;
 	backup_type = 0;
 	state->flags = FTS_NOCHDIR|FTS_NOSEEDOTDIR;
 	state->uid = geteuid();
+	state->wflags = O_WRONLY|O_CREAT|O_TRUNC|O_BINARY;
 	if (!state->tmp && !(state->tmp = sfstropen()))
 		error(ERROR_SYSTEM|3, "out of space [tmp string]");
 	sfputr(state->tmp, usage_head, -1);
@@ -819,10 +826,14 @@ b_cp(int argc, register char** argv, void* context)
 		error(3, "out of space");
 	memcpy(v, argv, (argc + 1) * sizeof(char*));
 	argv = v;
-	if (!argc && !standard)
+	if (!standard)
 	{
-		argc++;
-		argv[1] = (char*)dot;
+		state->wflags |= O_EXCL;
+		if (!argc)
+		{
+			argc++;
+			argv[1] = (char*)dot;
+		}
 	}
 	if (state->backup)
 	{

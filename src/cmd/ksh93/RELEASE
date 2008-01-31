@@ -1,4 +1,63 @@
-07-11-05  --- Release ksh93s+  ---
+08-01-31  --- Release ksh93s+  ---
+08-01-31  A bug in which command substitution inside ((...)) could cause
+	  syntax errors or lead to core dumps has been fixed.
+08-01-17  A bug in which discipline functions could be deleted when invoked
+	  from a subshell has been fixed.
+08-01-17  A bug in which a command substitution consisting only of
+	  assignments was treated as a noop has been fixed.
+08-01-17  A bug in which discipline functions invoked from withing a
+	  compound assignment could fail has been fixed.
+08-01-16  Incomplete arithmetic assigments, for example ((x += )), now
+	  generate an error message.
+08-01-16  A bug in which a set discipline defined for a variable before
+	  an array assignment could cause a core dump has been fixed. 
+08-01-03  A bug in on some systems in which exit status 0 is incorrectly
+	  returned by a process that catches the SIGCONT signal is stopped 
+	  and then continued.
+07-12-13  A race condition in which a program that has been stopped and then
+	  continued could loose the exit status has been fixed.
+07-12-12  Code to check for file system out of space write errors for all
+	  writes has been added.
+07-12-11  A bug in the macro expander for multibyte characters in which
+	  part of the character contains a file pattern byte has been fixed. 
+07-12-06  A bug in the emacs edit mode when multiline was set that output
+	  a backspace before the newline to the screen has been fixed.
+07-12-04  A bug in which using <n>TAB after a variable name listing expansion
+	  in the edit modes would cause the $ to disappear has been fixed.
+07-11-28  A bug in which setting IFS to readonly could cause a subsequent
+	  command substitution to fail has been fixed.
+07-11-27  A work around for a gcc 4.* C99 "feature" that could cause a job
+	  control shell to go into an infinite loop by adding the volatile
+	  attribute to some auto vars in functions that call setjmp().
+07-11-27  A bug in which the shell could read ahead on a pipe causing the
+	  standard input to be incorrectly positioned has been fixed.
+07-11-27  A bug in which compound variable UTF-8 multibyte values were not
+	  expanded or traced properly has been fixed.
+07-11-21  A bug where an unbalanced '[' in a command argument was not treated
+	  properly has been fixed.
+07-11-15  A bug in which compatibility mode (no long option names) getopts(1)
+	  incorrectly set the value of OPTARG for flag options has been fixed.
+07-11-15  A bug in which "hash -- name" treated "--" as an invalid name operand
+	  has been fixed.
+07-11-15  typeset now handles "-t -- [-r] [--]" for s5r4 hash(1) compatibility.
+07-11-15  A bug in which the umask builtin mis-handled symbolic mode operands
+	  has been fixed.
+07-11-15  Bugs in which shell arithmetic and the printf builtin mis-handled the
+	  signs of { -NaN -Inf -0.0 } have been fixed.
+07-11-15  The full { SIGRTMIN SIGRTMIN+1 ... SIGRTMAX-1 SIGRTMAX } range
+	  of signals, determined at runtime, are now supported.
+07-11-15  A bug in which creating an index array with only subscript 0 created
+	  only a simple variable has been fixed.
+07-11-14  A bug in which appending to an indexed array using the form
+	  name+=([sub]=value) could cause the array to become an associative
+	  array has been fixed.
+07-11-14  A bug in which typeset without arguments could coredump if a
+	  variable is declared as in indexed array and  has no elements has
+	  been fixed.
+07-11-14  A bug in which creating a local SECONDS variable with typeset in
+	  a function could corrupt memory has been fixed.
+07-11-14  A bug which could cause a core dump when a script invoked by name
+	  from a function used compound variables has been fixed.
 07-11-05  A bug in which printf %d "'AB" did not diagnose unconverted characters
 	  has been fixed.
 07-11-05  printf %g "'A" support added for all floating point formats.

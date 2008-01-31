@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2007 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -1692,10 +1692,12 @@ static void comsubst(Mac_t *mp,int type)
 		out_offset:
 			stakset(savptr,savtop);
 			*mp = savemac;
-			if((Sflong_t)num==num)
-				sfprintf(sh.strbuf,"%Lg",num);
-			else
+			if((Sflong_t)num!=num)
 				sfprintf(sh.strbuf,"%.*Lg",LDBL_DIG,num);
+			else if(num)
+				sfprintf(sh.strbuf,"%lld",(Sflong_t)num);
+			else
+				sfprintf(sh.strbuf,"%Lg",num);
 			str = sfstruse(sh.strbuf);
 			mac_copy(mp,str,strlen(str));
 			sh.st.staklist = saveslp;
@@ -1735,7 +1737,7 @@ static void comsubst(Mac_t *mp,int type)
 	{
 		fcsave(&save);
 		sfclose(sp);
-		if(t->tre.tretyp==0 && !t->com.comarg)
+		if(t->tre.tretyp==0 && !t->com.comarg && !t->com.comset)
 		{
 			/* special case $(<file) and $(<#file) */
 			register int fd;
@@ -1777,7 +1779,7 @@ static void comsubst(Mac_t *mp,int type)
 #endif
 	*mp = savemac;
 	np = nv_scoped(IFSNOD);
-	nv_putval(np,mp->ifsp,0);
+	nv_putval(np,mp->ifsp,NV_RDONLY);
 	mp->ifsp = nv_getval(np);
 	stakset(savptr,savtop);
 	newlines = 0;
@@ -1866,7 +1868,7 @@ static void mac_copy(register Mac_t *mp,register const char *str, register int s
 {
 	register char		*state;
 	register const char	*cp=str;
-	register int		c,n,nopat;
+	register int		c,n,nopat,len;
 	nopat = (mp->quote||mp->assign==1||mp->arith);
 	if(mp->zeros)
 	{
@@ -1884,6 +1886,14 @@ static void mac_copy(register Mac_t *mp,register const char *str, register int s
 		/* insert \ before file expansion characters */
 		while(size-->0)
 		{
+#if SHOPT_MULTIBYTE
+			if(mbwide() && (len=mbsize(cp))>1)
+			{
+				cp += len;
+				size -= (len-1);
+				continue;
+			}
+#endif
 			c = state[n= *(unsigned char*)cp++];
 			if(nopat&&(c==S_PAT||c==S_ESC||c==S_BRACT||c==S_ENDCH) && mp->pattern!=3)
 				c=1;
@@ -1932,7 +1942,18 @@ static void mac_copy(register Mac_t *mp,register const char *str, register int s
 		}
 		while(size-->0)
 		{
-			if((n=state[c= *(unsigned char*)cp++])==S_ESC || n==S_EPAT)
+			n=state[c= *(unsigned char*)cp++];
+#if SHOPT_MULTIBYTE
+			if(mbwide() && n!=S_MBYTE && (len=mbsize(cp-1))>1)
+			{
+				stakwrite(cp-1, len);
+				len--;
+				cp += len;
+				size -= len;
+				continue;
+			}
+#endif
+			if(n==S_ESC || n==S_EPAT)
 			{
 				/* don't allow extended patterns in this case */
 				mp->patfound = mp->pattern;

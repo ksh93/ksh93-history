@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2007 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -123,7 +123,6 @@ extern const char	e_overlimit[];
 extern const char	e_eneedsarg[];
 extern const char	e_toodeep[];
 extern const char	e_badname[];
-extern const char	e_badwrite[];
 extern const char	e_badsyntax[];
 #ifdef _cmd_universe
     extern const char	e_nouniverse[];

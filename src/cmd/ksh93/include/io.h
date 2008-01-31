@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1982-2007 AT&T Knowledge Ventures            *
+*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                      by AT&T Knowledge Ventures                      *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -98,6 +98,7 @@ extern const char	e_open[];
 extern const char	e_notseek[];
 extern const char	e_noread[];
 extern const char	e_badseek[];
+extern const char	e_badwrite[];
 extern const char	e_badpattern[];
 extern const char	e_toomany[];
 extern const char	e_pipe[];

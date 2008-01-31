@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1982-2007 AT&T Knowledge Ventures            *
+*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                      by AT&T Knowledge Ventures                      *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -274,6 +274,8 @@ int job_reap(register int sig)
 #ifdef DEBUG
 			sfprintf(sfstderr,"ksh: job line %4d: reap pid=%d critical=%d unknown job pid=%d pw=%x\n",__LINE__,getpid(),job.in_critical,pid,pw);
 #endif /* DEBUG */
+			if (WIFCONTINUED(wstat) && wcontinued)
+				continue;
 			pw = &dummy;
 			pw->p_exit = 0;
 			pw->p_pgrp = 0;
@@ -328,9 +330,9 @@ int job_reap(register int sig)
 				sh.cpipe[1] = -1;
 				sh.coutpipe = -1;
 			}
+			pw->p_flag &= ~(P_STOPPED|P_SIGNALLED);
 			if (WIFSIGNALED(wstat))
 			{
-				pw->p_flag &= ~P_STOPPED;
 				pw->p_flag |= (P_DONE|P_NOTIFY|P_SIGNALLED);
 				if (WTERMCORE(wstat))
 					pw->p_flag |= P_COREDUMP;
@@ -1616,10 +1618,13 @@ static char *job_sigmsg(int sig)
 	if(sig<sh.sigmax && sh.sigmsg[sig])
 		return(sh.sigmsg[sig]);
 #if defined(SIGRTMIN) && defined(SIGRTMAX)
-	if(sig>=SIGRTMIN && sig<=SIGRTMAX)
+	if(sig>=sh.sigruntime[SH_SIGRTMIN] && sig<=sh.sigruntime[SIGRTMAX])
 	{
 		static char sigrt[20];
-		sfsprintf(sigrt,sizeof(sigrt),"SIGRTMIN+%d",sig-SIGRTMIN);
+		if(sig>sh.sigruntime[SH_SIGRTMIN]+(sh.sigruntime[SH_SIGRTMAX]-sig<=sh.sigruntime[SIGRTMIN])/2)
+			sfsprintf(sigrt,sizeof(sigrt),"SIGRTMAX-%d",sh.sigruntime[SH_SIGRTMAX]-sig);
+		else
+			sfsprintf(sigrt,sizeof(sigrt),"SIGRTMIN+%d",sig-sh.sigruntime[SH_SIGRTMIN]);
 		return(sigrt);
 	}
 #endif

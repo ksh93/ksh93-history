@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2007 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -1383,6 +1383,8 @@ USAGE_LICENSE
    "\fbash2\f"
 #endif
 "\fabc\f"
+"?"
+"[T?Enable implementation specific test code defined by mask.]#[mask]"
 "\n"
 "\n[arg ...]\n"
 "\n"

@@ -20,6 +20,7 @@ do	case $1 in
 	shift
 done
 export LANG LC_ALL PATH PWD SHELL
+ulimit -c 0
 PWD=`pwd`
 SHELL=${SHELL-ksh}
 case $0 in
@@ -43,21 +44,28 @@ fi
 for i in ${*-*.sh}
 do	echo test $i begins ${time:+"at $(date +%Y-%m-%d+%H:%M:%S)"}
 	t=$(grep -c err_exit $i)
-	if	(( $t ))
-	then	(( t = $t - 1 ))
-	fi
-	T=test
-	if	(( $t != 1 ))
-	then	T=${T}s
+	if	[[ $t ]]
+	then	if	(( $t ))
+		then	(( t = $t - 1 ))
+		fi
+		T=test
+		if	(( $t != 1 ))
+		then	T=${T}s
+		fi
+		E=error
+		$SHELL $i
+		e=$?
+		if	(( ! $e ))
+		then	echo test $i passed ${time:+"at $(date +%Y-%m-%d+%H:%M:%S)"} "[ $t $T 0 ${E}s ]"
+			continue
+		fi
+	else	e=1
+		t=0
+		T=tests
 	fi
 	E=error
-	if	$SHELL $i
-	then	echo test $i passed ${time:+"at $(date +%Y-%m-%d+%H:%M:%S)"} "[ $t $T 0 ${E}s ]"
-	else	e=$?
-		E=error
-		if	(( $e != 1 ))
-		then	E=${E}s
-		fi
-		echo test $i failed ${time:+"at $(date +%Y-%m-%d+%H:%M:%S)"} with exit code $e "[ $t $T $e $E ]"
+	if	(( $e != 1 ))
+	then	E=${E}s
 	fi
+	echo test $i failed ${time:+"at $(date +%Y-%m-%d+%H:%M:%S)"} with exit code $e "[ $t $T $e $E ]"
 done

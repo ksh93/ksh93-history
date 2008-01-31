@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2007 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2008 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -802,4 +802,16 @@ function f
 	done
 }
 f local global environment literal positional
+$SHELL -c '
+	print exit 0 > /tmp/script$$
+	chmod +x /tmp/script$$
+	unset var
+	var=( ident=1 )
+	function fun
+	{
+		PATH=/tmp script$$
+	}
+	fun
+' || err_exit "compound variable cleanup before script exec failed"
+rm -f /tmp/script$$
 exit $((Errors))

@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2007 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2008 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -259,4 +259,13 @@ trap 'rm -rf /tmp/io.sh$$*' EXIT
 $SHELL -c "{ > /tmp/io.sh$$.1 ; date;} >&- 2> /dev/null" > /tmp/io.sh$$.2
 [[ -s /tmp/io.sh$$.1 || -s /tmp/io.sh$$.2 ]] && err_exit 'commands with standard output closed produce output'
 $SHELL -c "$SHELL -c ': 3>&1' 1>&- 2>/dev/null" && err_exit 'closed standard output not passed to subshell'
+[[ $(cat  <<- \EOF | $SHELL
+	do_it_all()
+	{
+	 	dd 2>/dev/null  # not a ksh93 buildin
+	 	return $?
+	}
+	do_it_all ; exit $?
+	hello world
+EOF) == 'hello world' ]] || err_exit 'invalid readahead on stdin'
 exit $((Errors))

@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1985-2007 AT&T Knowledge Ventures            *
+*          Copyright (c) 1985-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                      by AT&T Knowledge Ventures                      *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -288,6 +288,7 @@ main()
 	register int	i;
 	register int	j;
 	register int	k;
+	int		m;
 	int		n;
 #if _lib_strsignal
 	char*		s;
@@ -336,7 +337,13 @@ main()
 			else if (j & RANGE_MAX)
 				printf("	\"RTMAX\",\n");
 			else
-				printf("	\"RT%d\",\n", j & RANGE_SIG);
+			{
+				m = j & RANGE_SIG;
+				if (m > n / 2)
+					printf("	\"RTMAX-%d\",\n", n - m);
+				else
+					printf("	\"RTMIN+%d\",\n", m);
+			}
 		}
 		else
 			printf("	\"%s\",\n", map[j].name);

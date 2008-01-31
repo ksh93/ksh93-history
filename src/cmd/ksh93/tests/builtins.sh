@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2007 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2008 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -393,6 +393,16 @@ do	set -- ${ARGV[$i]}
 	if	[[ $OPTIND != ${ARGC[$i]} ]]
 	then	err_exit "\$OPTIND after getopts loop incorrect -- got $OPTIND, expected ${ARGC[$i]}"
 	fi
+done
+options=ab:c
+optarg=foo
+set -- -a -b $optarg -c bar
+while	getopts $options opt
+do	case $opt in
+	a|c)	[[ $OPTARG ]] && err_exit "getopts $options \$OPTARG for flag $opt failed, expected \"\", got \"$OPTARG\"" ;;
+	b)	[[ $OPTARG == $optarg ]] || err_exit "getopts $options \$OPTARG failed -- \"$optarg\" expected, got \"$OPTARG\"" ;;
+	*)	err_exit "getopts $options failed -- got flag $opt" ;;
+	esac
 done
 unset a
 { read -N3 a; read -N1 b;}  <<!

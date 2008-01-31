@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2007 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -320,6 +320,8 @@ static void	assign(Namval_t *np,const char* val,int flags,Namfun_t *handle)
 		Namarr_t *ap;
 		block(bp,type);
 		nv_putv(np, val, flags, handle);
+		if(sh.subshell)
+			goto done;
 		if(nv_isarray(np) && (ap=nv_arrayptr(np)) && ap->nelem>0)
 			goto done;
 		for(n=0; n < sizeof(vp->disc)/sizeof(*vp->disc); n++)
@@ -980,7 +982,7 @@ done:
 }
 
 /*
- * add or replace built-in version of command commresponding to <path>
+ * add or replace built-in version of command corresponding to <path>
  * The <bltin> argument is a pointer to the built-in
  * if <extra>==1, the built-in will be deleted
  * Special builtins cannot be added or deleted return failure

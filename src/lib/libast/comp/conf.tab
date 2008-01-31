@@ -1,7 +1,7 @@
 #
 # posix { getconf limits } macro table
 #
-# @(#)conf.tab (AT&T Research) 2007-10-10
+# @(#)conf.tab (AT&T Research) 2008-01-31
 #
 # name standard section call flags [ header ... ] [ value ... ]
 #
@@ -463,7 +463,7 @@ SH				AST	CS 1 MU		sh{
 					esac
 					;;
 				esac
-				echo "\"$d/$s\""
+				echo '"'$d/$s'"'
 				exit
 			fi
 		done

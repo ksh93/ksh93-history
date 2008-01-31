@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1982-2007 AT&T Knowledge Ventures            *
+*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                      by AT&T Knowledge Ventures                      *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -287,7 +287,7 @@ Dt_t *sh_subfuntree(int create)
 		dtview(sp->sfun,sh.fun_tree);
 		sh.fun_tree = sp->sfun;
 	}
-	return(sp->sfun);
+	return(sh.fun_tree);
 }
 
 static void table_unset(register Dt_t *root)
@@ -478,10 +478,6 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 		job_wait(sp->subpid);
 	if(comsub && iop)
 		sfseek(iop,(off_t)0,SEEK_SET);
-	if(shp->subshell)
-		shp->subshell--;
-	subshell = shp->subshell;
-	nv_putval(SH_SUBSHELLNOD, (char*)&subshell, NV_INT16);
 	path_delete((Pathcomp_t*)shp->pathlist);
 	shp->pathlist = (void*)sp->pathlist;
 	job_subrestore(sp->jobs);
@@ -540,6 +536,10 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 		if(sp->mask!=shp->mask)
 			umask(shp->mask);
 	}
+	if(shp->subshell)
+		shp->subshell--;
+	subshell = shp->subshell;
+	nv_putval(SH_SUBSHELLNOD, (char*)&subshell, NV_INT16);
 	subshell_data = sp->prev;
 	sh_argfree(argsav,0);
 	shp->trapnote = 0;

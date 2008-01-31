@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#                     Copyright (c) 1994-2007 AT&T                     #
+#                     Copyright (c) 1994-2008 AT&T                     #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                               by AT&T                                #
@@ -29,7 +29,7 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	ARGV0="-a $command"
 	USAGE=$'
 [-?
-@(#)$Id: rt (AT&T Research) 2006-08-11 $
+@(#)$Id: rt (AT&T Research) 2007-11-27 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?rt - run "nmake test" and filter output]
@@ -65,8 +65,8 @@ function usage
 
 while	getopts $ARGV0 "$USAGE" OPT
 do	case $OPT in
-	f)	failed=$OPTARG ;;
-	h)	heading=$OPTARG ;;
+	f)	failed=1 ;;
+	h)	heading=0 ;;
 	v)	(( verbose=$OPTARG )) && flags="$flags REGRESSFLAGS=-v" ;;
 	esac
 done

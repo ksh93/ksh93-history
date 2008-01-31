@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2005 AT&T Corp.                  *
+*          Copyright (c) 1985-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -31,6 +31,9 @@
 #include <ast.h>
 #include <error.h>
 
+#if !defined(DEBUG) && _BLD_DEBUG
+#define DEBUG		_BLD_DEBUG
+#endif
 #if DEBUG || _BLD_DEBUG
 #define debug(x)	x
 #define message(x)	do if (error_info.trace < 0) { error x; } while (0)

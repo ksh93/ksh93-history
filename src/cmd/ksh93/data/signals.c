@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1982-2007 AT&T Knowledge Ventures            *
+*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                      by AT&T Knowledge Ventures                      *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -25,7 +25,7 @@
 #   define SIGCHLD	SIGCLD
 #endif
 
-#define VAL(sig,mode)	((sig+1)|(mode)<<SH_SIGBITS)
+#define VAL(sig,mode)	((sig+1)|((mode)<<SH_SIGBITS))
 #define TRAP(n)		(((n)|SH_TRAP)-1)
 
 #ifndef ERROR_dictionary
@@ -147,31 +147,13 @@ const struct shtable2 shtab_signals[] =
 #endif	/* SIGPWR */
 #ifdef SIGQUIT
 	"QUIT",		VAL(SIGQUIT,SH_SIGDONE|SH_SIGINTERACTIVE),	S("Quit"),
-#ifdef __SIGRTMIN
-#undef	SIGRTMIN
-#define SIGRTMIN	__SIGRTMIN
-#else
-#ifdef _SIGRTMIN
-#undef	SIGRTMIN
-#define SIGRTMIN	_SIGRTMIN
-#endif 
-#endif
-#if defined(SIGRTMIN) && SIGRTMIN > 0
-	"RTMIN",	VAL(SIGRTMIN,0),		S("Lowest priority realtime signal"),
-#endif	/* SIGRTMIN */
-#ifdef __SIGRTMAX
-#undef	SIGRTMAX
-#define SIGRTMAX	__SIGRTMAX
-#else
-#ifdef _SIGRTMAX
-#undef	SIGRTMAX
-#define SIGRTMAX	_SIGRTMAX
-#endif 
-#endif
-#if defined(SIGRTMAX) && SIGRTMAX > 0
-	"RTMAX",	VAL(SIGRTMAX,0),		S("Highest priority realtime signal"),
-#endif	/* SIGRTMAX */
 #endif	/* SIGQUIT */
+#ifdef SIGRTMIN
+	"RTMIN",	VAL(SH_SIGRTMIN,SH_SIGRUNTIME),	S("Lowest priority realtime signal"),
+#endif	/* SIGRTMIN */
+#ifdef SIGRTMAX
+	"RTMAX",	VAL(SH_SIGRTMAX,SH_SIGRUNTIME),	S("Highest priority realtime signal"),
+#endif	/* SIGRTMAX */
 	"SEGV",		VAL(SIGSEGV,0),			S("Memory fault"),
 #ifdef SIGSTOP
 	"STOP",		VAL(SIGSTOP,0),			S("Stopped (SIGSTOP)"),

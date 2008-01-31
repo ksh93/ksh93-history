@@ -106,7 +106,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	strdup.c strchr.c strrchr.c strstr.c \
 	strtod.c strtold.c \
 	strtol.c strtoll.c strtoul.c strtoull.c strton.c strtonll.c \
-	strntod.c strntold.c \
+	strntod.c strntold.c strnton.c strntonll.c \
 	strntol.c strntoll.c strntoul.c strntoull.c \
 	strcasecmp.c strncasecmp.c strerror.c \
 	mktemp.c tmpnam.c fsync.c \

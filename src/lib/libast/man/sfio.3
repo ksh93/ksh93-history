@@ -869,8 +869,9 @@ into the buffer.
 .Tp
 \f5n == 0\fP:
 If the argument \f5type\fP is \f50\fP,
-\f5sfreserve()\fP attempts to get \fIat least\fP \f51\fP byte into the buffer;
-otherwise, no attempt will be made to read data into the buffer.
+\f5sfreserve()\fP attempts to get \fIat least\fP \f51\fP byte into the buffer
+but does not consume it (as consistent with \f5n == 0\fP).
+If \f5type != 0\fP, no attempt will be made to read data into the buffer.
 For example, the call \f5sfreserve(f, 0, -1)\fP only returns the buffer status,
 i.e., size of existing buffered data and pointer to such data, if any.
 The call \f5sfreserve(f, 0, SF_LOCKR)\fP is similar but also locks the stream.

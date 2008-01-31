@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2007 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -748,14 +748,16 @@ char	*nv_getsub(Namval_t* np)
 int nv_aindex(register Namval_t* np)
 {
 	Namarr_t *ap = nv_arrayptr(np);
-	if(!ap || is_associative(ap))
+	if(!ap)
+		return(0);
+	else if(is_associative(ap))
 		return(-1);
 	return(((struct index_array*)(ap))->cur&ARRAY_MASK);
 }
 
 
 /*
- *  This is the default implementation for associate arrays
+ *  This is the default implementation for associative arrays
  */
 void *nv_associative(register Namval_t *np,const char *sp,int mode)
 {
@@ -847,12 +849,13 @@ void *nv_associative(register Namval_t *np,const char *sp,int mode)
 void nv_setvec(register Namval_t *np,int append,register int argc,register char *argv[])
 {
 	int arg0=0;
+int fill=0;
 	struct index_array *ap=0;
 	if(nv_isarray(np))
 	{
 		ap = (struct index_array*)nv_arrayptr(np);
 		if(ap && is_associative(ap))
-			errormsg(SH_DICT,ERROR_exit(1),"cannot append index array to associate array %s",nv_name(np));
+			errormsg(SH_DICT,ERROR_exit(1),"cannot append index array to associative array %s",nv_name(np));
 	}
 	if(append)
 	{
@@ -865,6 +868,8 @@ void nv_setvec(register Namval_t *np,int append,register int argc,register char 
 		else if(!nv_isnull(np))
 			arg0=1;
 	}
+	if(!ap && arg0==0)
+		nv_onattr(np,NV_ARRAY);
 	while(--argc >= 0)
 	{
 		if((argc+arg0)>0  || nv_isattr(np,NV_ARRAY))

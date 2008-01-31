@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#                     Copyright (c) 1994-2007 AT&T                     #
+#                     Copyright (c) 1994-2008 AT&T                     #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                               by AT&T                                #
@@ -27,6 +27,8 @@ esac
 
 command=package
 
+LC_ALL=C
+
 src="cmd contrib etc lib"
 use="/usr/common /exp /usr/local /usr/add-on /usr/addon /usr/tools /usr /opt"
 usr="/home"
@@ -34,7 +36,8 @@ lib="/usr/local/lib /usr/local/shlib"
 ccs="/usr/kvm /usr/ccs/bin"
 org="gnu GNU"
 makefiles="Mamfile Nmakefile nmakefile Makefile makefile"
-checksum_commands="md5sum md5"
+checksum=md5sum
+checksum_commands="$checksum md5"
 checksum_empty="d41d8cd98f00b204e9800998ecf8427e"
 
 package_use='=$HOSTTYPE=$PACKAGEROOT=$INSTALLROOT=$EXECROOT=$CC='
@@ -59,7 +62,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2007-11-05 $
+@(#)$Id: package (AT&T Research) 2008-01-31 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -837,7 +840,7 @@ ${bT}(5)${bD}Determine the list of package names you want from the download site
       use the ${Mpackage} command to do the actual download:${bX}
 		bin/package authorize \"${bI}NAME${eI}\" password \"${bI}PASSWORD${eI}\" \\
 			setup source \$URL ${bB}PACKAGE${eB} ...${eX}
-      This downloads the closure of latest source package(s); covered and
+      This downloads the closure of the latest source package(s); covered and
       up-to-date packages are not downloaded again unless ${bB}package force ...${eB}
       is specified. Package content is verified using ${bB}${checksum}${eB}. If the package
       root will contain only one architecture then you can install in ${bB}bin${eB} and
@@ -2659,6 +2662,7 @@ cat $INITROOT/$i.sh
 		case $abi in
 		'')	abi="'d=$INSTALLROOT v='" ;;
 		esac
+		p=0
 		eval "
 			for a in $abi
 			do	eval \$a
@@ -2672,9 +2676,7 @@ cat $INITROOT/$i.sh
 						*)	x=:\\\$x ;;
 						esac
 						LD_LIBRARY\${v}_PATH=\$d/lib\\\$x
-						$show LD_LIBRARY\${v}_PATH=\\\$LD_LIBRARY\${v}_PATH
-						$show export LD_LIBRARY\${v}_PATH
-						export LD_LIBRARY\${v}_PATH
+						p=1
 						;;
 					esac
 				\"
@@ -2682,23 +2684,28 @@ cat $INITROOT/$i.sh
 		"
 		case $LD_LIBRARY_PATH in
 		'')	;;
-		*)	a=0
-			for d in $lib
-			do	case :$LD_LIBRARY_PATH: in
+		*)	for d in $lib
+			do	case $HOSTTYPE in
+				*64)	if	test -d ${d}64
+					then	d=${d}64
+					fi
+					;;
+				esac
+				case :$LD_LIBRARY_PATH: in
 				*:$d:*)	;;
 				*)	if	test -d $d
 					then	LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$d
-						a=1
+						p=1
 					fi
 					;;
 				esac
 			done
-			case $a in
-			1)	$show LD_LIBRARY_PATH=$LD_LIBRARY_PATH
-				$show export LD_LIBRARY_PATH
-				export LD_LIBRARY_PATH
-				;;
-			esac
+			;;
+		esac
+		case $p in
+		1)	$show LD_LIBRARY_PATH=$LD_LIBRARY_PATH
+			$show export LD_LIBRARY_PATH
+			export LD_LIBRARY_PATH
 			;;
 		esac
 		case $LIBPATH: in
@@ -5799,6 +5806,8 @@ $r:" | sort` in
 		k=
 		for i in `ls $d$p[_.][0123456789][0123456789][0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789][_.]????$m* $z 2>/dev/null`
 		do	case $i in
+			*.md5)	continue
+				;;
 			$d${p}[_.][0123456789][0123456789][0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789][_.][0123456789][0123456789][0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789]$m*)
 				;;
 			$d${p}[_.][0123456789][0123456789][0123456789][0123456789]-[0123456789][0123456789]-[0123456789][0123456789]$m*)
@@ -6135,7 +6144,7 @@ test)	requirements source $package
 
 	# do the tests
 
-	eval capture \$MAKE \$makeflags \$noexec recurse test cc- \$target \$nmakesep \$package $assign
+	eval capture \$MAKE \$makeflags \$noexec recurse test \$target \$nmakesep \$package $assign
 	;;
 
 update)	# download the latest release.version for selected packages

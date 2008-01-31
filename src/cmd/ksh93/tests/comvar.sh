@@ -1,10 +1,10 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#           Copyright (c) 1982-2007 AT&T Knowledge Ventures            #
+#          Copyright (c) 1982-2008 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
-#                      by AT&T Knowledge Ventures                      #
+#                    by AT&T Intellectual Property                     #
 #                                                                      #
 #                A copy of the License is available at                 #
 #            http://www.opensource.org/licenses/cpl1.0.txt             #
@@ -199,5 +199,21 @@ typeset -a stack.items=([0]=foo [1]=bar)
 $SHELL -c 'typeset -a info=( [1]=( passwd=( since=2005-07-20) ))'  || err_exit 'problem with embedded index array in compound variable'
 x=(foo=([1]=(y=([2]=(z=4)))))
 [[ $x == *'.y'=* ]] && err_exit 'expansion with bogus leading . in name'
+unset z
+z=1
+function foo
+{
+	z=3
+	[[ ${a.z} == 3 ]] && err_exit "\${a.z} should not be 3"
+	print hi
+}
+a=( b=$(foo) )
+[[ ${a.z} == 3 ]] &&  err_exit 'a.z should not be set to 3'
+function a.b.get
+{
+	.sh.value=foo
+}
+{ b=( b1=${a.b} ) ;} 2> /dev/null
+[[ ${b.b1} == foo ]] || err_exit '${b.b1} should be foo'
 exit $((Errors))
 

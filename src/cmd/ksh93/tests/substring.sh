@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2007 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2008 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -173,9 +173,9 @@ fi
 xx='a:b'
 str='(){}[]*?|&^%$#@l'
 for ((i=0 ; i < ${#str}; i++))
-do      [[ $(eval print -r -- \${xx//:/\\${str:i:1}}) == "a${str:i:1}b" ]] || err_exit "substitution of \\${str:i:1}} failed"
-        [[ $(eval print -rn -- \${xx//:/\'${str:i:1}\'}) == "a${str:i:1}b" ]] || err_exit "substitution of '${str:i:1}' failed"
-        [[ $(eval print -r -- \${xx//:/\"${str:i:1}\"}) == "a${str:i:1}b" ]] || err_exit "substitution of \"${str:i:1}\" failed"
+do      [[ $(eval print -r -- \"\${xx//:/\\${str:i:1}}\") == "a${str:i:1}b" ]] || err_exit "substitution of \\${str:i:1}} failed"
+        [[ $(eval print -rn -- \"\${xx//:/\'${str:i:1}\'}\") == "a${str:i:1}b" ]] || err_exit "substitution of '${str:i:1}' failed"
+        [[ $(eval print -r -- \"\${xx//:/\"${str:i:1}\"}\") == "a${str:i:1}b" ]] || err_exit "substitution of \"${str:i:1}\" failed"
 done
 [[ ${xx//:/\\n} == 'a\nb' ]]  || err_exit "substituion of \\\\n failed"
 [[ ${xx//:/'\n'} == 'a\nb' ]] || err_exit "substituion of '\\n' failed"
@@ -520,5 +520,4 @@ then	LC_ALL=en_US.UTF-8 $SHELL -c b1=$'"\342\202\254\342\202\254\342\202\254\342
 fi
 { $SHELL -c 'unset x;[[ ${SHELL:$x} == $SHELL ]]';} 2> /dev/null || err_exit '${var:$x} fails when x is not set' 
 { $SHELL -c 'x=;[[ ${SHELL:$x} == $SHELL ]]';} 2> /dev/null || err_exit '${var:$x} fails when x is null' 
-$SHELL -c 'a=$(/ 2>&1 | sed -e "s,.*: *,," -e "s, *\[.*,,"); (LC_ALL=debug / 2>/dev/null); b=$(/ 2>&1 | sed -e "s,.*: *,," -e "s, *\[.*,,"); [[ "$a" == "$b" ]]' || err_exit 'locale not restored after subshell'
 exit $((Errors))

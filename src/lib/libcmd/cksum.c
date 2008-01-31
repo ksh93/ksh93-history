@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1992-2007 AT&T Intellectual Property          *
+*          Copyright (c) 1992-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: sum (AT&T Research) 2007-10-29 $\n]"
+"[-?\n@(#)$Id: sum (AT&T Research) 2007-11-27 $\n]"
 USAGE_LICENSE
 "[+NAME?cksum,md5sum,sum - print file checksum and block count]"
 "[+DESCRIPTION?\bsum\b lists the checksum, and for most methods the block"
@@ -77,7 +77,7 @@ USAGE_LICENSE
 "	are updated if necessary to match those in \afile\a. A warning is"
 "	printed on the standard error for each changed file.]"
 "[R:recursive?Recursively checksum the contents of directories.]"
-"[s:silent|status?No output for \b--check\b; 0 exit status means all sums"
+"[S:silent|status?No output for \b--check\b; 0 exit status means all sums"
 "	matched, non-0 means at least one sum failed to match. Ignored for"
 "	\b--permissions\b.]"
 "[t:total?List only the total checksum and block count of all files."
@@ -99,6 +99,8 @@ USAGE_LICENSE
 "	default is determined by \bgetconf PATH_RESOLVE\b.]"
 "[r:bsd?Equivalent to \b--method=bsd --scale=512\b for compatibility with"
 "	other \bsum\b(1) implementations.]"
+"[s:sysv?Equivalent to \b--method=sys5\b for compatibility with other"
+"	\bsum\b(1) implementations.]"
 
 "\n"
 "\n[ file ... ]\n"
@@ -440,7 +442,6 @@ int
 b_cksum(int argc, register char** argv, void* context)
 {
 	register int	flags;
-	register char*	s;
 	char*		file;
 	char*		method;
 	Sfio_t*		sp;
@@ -494,6 +495,9 @@ b_cksum(int argc, register char** argv, void* context)
 			state.sort = order;
 			continue;
 		case 's':
+			method = "sys5";
+			continue;
+		case 'S':
 			state.silent = opt_info.num;
 			continue;
 		case 't':

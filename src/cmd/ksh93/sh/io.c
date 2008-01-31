@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2007 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -314,6 +314,7 @@ static int  	subexcept(Sfio_t*, int, void*, Sfdisc_t*);
 static int  	eval_exceptf(Sfio_t*, int, void*, Sfdisc_t*);
 static int  	slowexcept(Sfio_t*, int, void*, Sfdisc_t*);
 static int	pipeexcept(Sfio_t*, int, void*, Sfdisc_t*);
+static int  	writeexcept(Sfio_t*, int, void*, Sfdisc_t*);
 static ssize_t	piperead(Sfio_t*, void*, size_t, Sfdisc_t*);
 static ssize_t	slowread(Sfio_t*, void*, size_t, Sfdisc_t*);
 static ssize_t	subread(Sfio_t*, void*, size_t, Sfdisc_t*);
@@ -325,6 +326,7 @@ static const Sfdisc_t eval_disc = { NULL, NULL, NULL, eval_exceptf, NULL};
 static Sfdisc_t tee_disc = {NULL,tee_write,NULL,NULL,NULL};
 static Sfio_t *subopen(Sfio_t*, off_t, long);
 static const Sfdisc_t sub_disc = { subread, 0, 0, subexcept, 0 };
+static const Sfdisc_t write_disc = { 0, 0, 0, writeexcept, 0 };
 
 struct subfile
 {
@@ -406,6 +408,8 @@ void sh_ioinit(void)
 	sfpool(sfstdout,sh.outpool,SF_WRITE);
 	sfpool(sfstderr,sh.outpool,SF_WRITE);
 	sfset(sfstdout,SF_LINE,0);
+	sfset(sfstderr,SF_LINE,0);
+	sfset(sfstdin,SF_SHARE|SF_PUBLIC,1);
 }
 
 /*
@@ -478,7 +482,12 @@ Sfio_t *sh_iostream(register int fd)
 		}
 	}
 	else
+	{
+		Sfdisc_t *dp = newof(0,Sfdisc_t,1,0);
+		dp->exceptf = writeexcept;
+		sfdisc(iop,dp);
 		sfpool(iop,sh.outpool,SF_WRITE);
+	}
 	sh.sftable[fd] = iop;
 	return(iop);
 }
@@ -584,6 +593,8 @@ int sh_close(register int fd)
 	return(r);
 }
 
+#ifdef O_SERVICE
+
 static int
 onintr(struct addrinfo* addr, void* handle)
 {
@@ -599,6 +610,8 @@ onintr(struct addrinfo* addr, void* handle)
 		sh_chktrap();
 	return 0;
 }
+
+#endif
 
 /*
  * Mimic open(2) with checks for pseudo /dev/ files.
@@ -1293,7 +1306,7 @@ void sh_iosave(register int origfd, int oldtop)
 			{
 				cp = (char*)sh.fdptrs[savefd];
 				if(cp >= oldptr && cp < oldend)
-					sh.fdptrs[savefd] = (int*)(oldptr+moved);
+					sh.fdptrs[savefd] = (int*)(cp+moved);
 			}
 		}
 	}
@@ -1433,6 +1446,17 @@ int sh_ioaccess(int fd,register int mode)
 			return(0);
 	}
 	return(-1);
+}
+
+static int writeexcept(Sfio_t *iop,int type, void *data, Sfdisc_t *handle)
+{
+	if(type==SF_DPOP || type==SF_FINAL)
+		free((void*)handle);
+	if(type!=SF_WRITE)
+		return(0);
+	if(errno==ENOSPC)
+		errormsg(SH_DICT,ERROR_system(1),e_badwrite,sffileno(iop));
+	return(0);
 }
 
 /*

@@ -25,9 +25,9 @@ Source Package Installation Instructions:
       use the package(1) command to do the actual download:
 		bin/package authorize "NAME" password "PASSWORD" \
 			setup source $URL PACKAGE ...
-      This downloads the closure of latest source package(s); covered and
+      This downloads the closure of the latest source package(s); covered and
       up-to-date packages are not downloaded again unless package force ...
-      is specified. Package content is verified using . If the package
+      is specified. Package content is verified using md5sum. If the package
       root will contain only one architecture then you can install in bin and
       lib instead of arch/HOSTTYPE/bin and arch/HOSTTYPE/lib by running this
       instead:
@@ -92,6 +92,15 @@ All recorded changes follow.
 
 :::::::: INIT ::::::::
 
+08-01-31 iffe.sh: tweak ancient /bin/sh workarounds
+08-01-28 make.probe: darwin ld export dynamic is -force_flat_namespace
+08-01-28 C+probe: handle sgi cc error message but exit 0 botch(es)
+08-01-23 package.sh: fix checksum doc typo
+08-01-09 C+probe: add __FUNCTION__ to the undef (don't check) list
+07-12-14 iffe.sh: add set nooptimize
+07-12-03 package.sh: add LC_ALL=C
+07-11-27 package.sh: fix overaggressive *.md5 cleanup
+07-11-20 iffe.sh: treat exit status >= 250 as normal error with no signal
 07-11-05 package.sh: fix write op error count pattern
 07-11-05 package.mk: fix $(~req) .ver binding
 07-08-11 probe.win32: add cl.exe setuid workaround, CC.VERSION[.STRING]

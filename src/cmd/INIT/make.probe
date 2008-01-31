@@ -2,7 +2,7 @@
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)make.probe (AT&T Research) 2007-04-11
+# @(#)make.probe (AT&T Research) 2008-01-28
 #
 # C probe for make
 #
@@ -15,7 +15,7 @@ probe_arflags="-xar"
 probe_ccs="strip size nm ld ar" # longest to shortest
 probe_debug="-g"
 probe_dll="'-G 0' -Wc,dll,exportall,longname,rent -Wc,exportall -dynamic $cc_dll_def"
-probe_export_dynamic="-rdynamic -export-dynamic -Wl,-export-dynamic -Wl,-E -bexpall"
+probe_export_dynamic="-rdynamic -export-dynamic -Wl,-export-dynamic -Wl,-E -bexpall -force_flat_namespace"
 probe_include_local="'-ignore-source-dir -iquote' -iquote -I-"
 probe_ldlazy='-zlazyload -znolazyload -Wl,-zlazyload -Wl,-znolazyload'
 probe_ldlib="LD_LIBRARY_PATH LIBPATH LPATH"

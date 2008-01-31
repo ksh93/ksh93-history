@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2007 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -665,7 +665,7 @@ Pathcomp_t *path_absolute(register const char *name, Pathcomp_t *endpath)
 			return(endpath);
 		if(!isfun && !sh_isoption(SH_RESTRICTED))
 		{
-			if(nv_search(stakptr(PATH_OFFSET),sh.bltin_tree,0))
+			if(*stakptr(PATH_OFFSET)=='/' && nv_search(stakptr(PATH_OFFSET),sh.bltin_tree,0))
 				return(oldpp);
 			if(oldpp->blib)
 			{
@@ -685,8 +685,8 @@ Pathcomp_t *path_absolute(register const char *name, Pathcomp_t *endpath)
 					if(strcmp(cp,LIBCMD)==0 && (addr=(Fptr_t)dlllook((void*)0,stakptr(n))))
 					{
 						np = sh_addbuiltin(stakptr(PATH_OFFSET),addr,NiL);
-						nv_onattr(np,NV_BLTINOPT);
-						return(oldpp);
+						if(np && nv_isattr(np,NV_BLTINOPT))
+							return(oldpp);
 					}
 #if (_AST_VERSION>=20040404)
 					if (oldpp->bltin_lib = dllplug(SH_ID, oldpp->blib, NiL, RTLD_LAZY, NiL, 0))

@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2007 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2008 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -308,7 +308,6 @@ if	[[ $x != 42#18 ]]
 then	err_exit 'display of unsigned integers in non-decimal bases wrong'
 fi
 $SHELL -c 'i=0;(( ofiles[i] != -1 && (ofiles[i] < mins || mins == -1) ));exit 0' 2> /dev/null || err_exit 'lexical error with arithemtic expression'
-rm -f core
 $SHELL -c '(( +1 == 1))' 2> /dev/null || err_exit 'unary + not working'
 typeset -E20 val=123.01234567890
 [[ $val == 123.0123456789 ]] || err_exit "rounding error val=$val"
@@ -442,20 +441,30 @@ unset x
 [[ $x == "$((x))" ]] || err_exit  '$x !- $((x)) when x is pi'
 $SHELL -c  "[[  ${x//./} == {14,100}(\d) ]]" 2> /dev/null || err_exit 'pi has less than 14 significant places'
 if	(( Inf+1 == Inf ))
-then	[[ $(printf "%g\n" $((Inf))) == inf ]] || err_exit 'printf "%g\n" $((Inf)) fails'
-#	[[ $(printf "%g\n" $((Nan))) == inf ]] || err_exit 'printf "%g\n" $((Nan)) fails'
-	[[ $(printf "%g\n" Inf) == inf ]] || err_exit 'printf "%g\n" Inf fails'
-	[[ $(printf "%g\n" NaN) == nan ]] || err_exit 'printf "%g\n" NaN fails'
-	[[ $(print -- $((Inf))) == inf ]] || err_exit 'print -- $((Inf)) fails'
+then	set \
+		Inf		inf	\
+		-Inf		-inf	\
+		Nan		nan	\
+		-Nan		-nan	\
+		1.0/0.0		inf
+	while	(( $# >= 2 ))
+	do	x=$(printf "%g\n" $(($1)))
+		[[ $x == $2 ]] || err_exit "printf '%g\\n' \$(($1)) failed -- got $x, expected $2"
+		x=$(printf "%g\n" $1)
+		[[ $x == $2 ]] || err_exit "printf '%g\\n' $1 failed -- got $x, expected $2"
+		x=$(printf -- $(($1)))
+		[[ $x == $2 ]] || err_exit "print -- \$(($1)) failed -- got $x, expected $2"
+		shift 2
+	done
 	(( 1.0/0.0 == Inf )) || err_exit '1.0/0.0 != Inf'
-	[[ $(print -- $((0.0/0.0))) == nan ]] || err_exit '0.0/0.0 != NaN'
+	[[ $(print -- $((0.0/0.0))) == ?(-)nan ]] || err_exit '0.0/0.0 != NaN'
 	(( Inf*Inf == Inf )) || err_exit 'Inf*Inf != Inf'
 	(( NaN != NaN )) || err_exit 'NaN == NaN'
 	(( -5*Inf == -Inf )) || err_exit '-5*Inf != -Inf'
-	[[ $(print -- $((sqrt(-1.0)))) == nan ]]|| err_exit 'sqrt(-1.0) != NaN'
+	[[ $(print -- $((sqrt(-1.0)))) == ?(-)nan ]]|| err_exit 'sqrt(-1.0) != NaN'
 	(( pow(1.0,Inf) == 1.0 )) || err_exit 'pow(1.0,Inf) != 1.0'
 	(( pow(Inf,0.0) == 1.0 )) || err_exit 'pow(Inf,0.0) != 1.0'
-	[[ $(print -- $((NaN/Inf))) == nan ]] || err_exit 'NaN/Inf != NaN'
+	[[ $(print -- $((NaN/Inf))) == ?(-)nan ]] || err_exit 'NaN/Inf != NaN'
 	(( 4.0/Inf == 0.0 )) || err_exit '4.0/Inf != 0.0'
 else	err_exit 'Inf and NaN not working'
 fi
@@ -468,4 +477,7 @@ x=-0
 y=$(printf "%g %g %g %g %g %g\n" -0. -0 $((-0)) x $x $((x)))
 r="-0 -0 -0 -0 -0 -0"
 [[ $y == "$r" ]] || err_exit "-0 vs -0.0 inconsistency -- expected '$r', got '$y'"
+$SHELL -c '(( x=));:' 2> /dev/null && err_exit '((x=)) should be an error'
+$SHELL -c '(( x+=));:' 2> /dev/null && err_exit '((x+=)) should be an error'
+$SHELL -c '(( x=+));:' 2> /dev/null && err_exit '((x=+)) should be an error'
 exit $((Errors))

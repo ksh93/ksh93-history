@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2007 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -169,11 +169,23 @@ int    b_alias(int argc,register char *argv[],void *extra)
 		argv += (opt_info.index-1);
 		if(flag&NV_TAGGED)
 		{
-			if(argv[1] && strcmp(argv[1],"-r")==0)
+			/* hacks to handle hash -r | -- */
+			if(argv[1] && argv[1][0]=='-')
 			{
-				/* hack to handle hash -r */
-				nv_putval(PATHNOD,nv_getval(PATHNOD),NV_RDONLY);
-				return(0);
+				if(argv[1][1]=='r' && argv[1][2]==0)
+				{
+					nv_putval(PATHNOD,nv_getval(PATHNOD),NV_RDONLY);
+					argv++;
+					if(!argv[1])
+						return(0);
+				}
+				if(argv[1][0]=='-')
+				{
+					if(argv[1][1]=='-' && argv[1][2]==0)
+						argv++;
+					else
+						errormsg(SH_DICT, ERROR_exit(1), e_option, argv[1]);
+				}
 			}
 			troot = tdata.sh->track_tree;
 		}
@@ -399,10 +411,10 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 					r++;
 				continue;
 			}
-			np = nv_open(name,troot,nvflags);
 			/* tracked alias */
 			if(troot==shp->track_tree && tp->aflag=='-')
 			{
+				np = nv_search(name,troot,NV_ADD);
 #ifdef PATH_BFPATH
 				path_alias(np,path_absolute(nv_name(np),NIL(Pathcomp_t*)));
 #else
@@ -411,6 +423,7 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 #endif
 				continue;
 			}
+			np = nv_open(name,troot,nvflags);
 			if(flag==NV_ASSIGN && !ref && tp->aflag!='-' && !strchr(name,'='))
 			{
 				if(troot!=shp->var_tree && (nv_isnull(np) || !print_namval(sfstdout,np,0,tp)))
@@ -778,7 +791,7 @@ static int b_unall(int argc, char **argv, register Dt_t *troot, Shell_t* shp)
 	while(r = optget(argv,name)) switch(r)
 	{
 		case 'f':
-			troot = sh_subfuntree(0);
+			troot = sh_subfuntree(1);
 			break;
 		case 'a':
 			all=1;
