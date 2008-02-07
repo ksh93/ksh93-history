@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.2 2007-10-18
+info mam static 00000 1994-07-17 make (AT&T Research) 5.3 2008-02-02
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ar
@@ -500,7 +500,7 @@ meta mamake.o %.c>%.o mamake.c mamake
 prev mamake.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2008 AT&T][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"\" -c mamake.c
 done mamake.o generated
-exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS}   -o mamake mamake.o
+exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS}  -o mamake mamake.o
 done mamake generated
 make proto
 make proto.o
@@ -510,7 +510,7 @@ meta proto.o %.c>%.o proto.c proto
 prev proto.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}   -c proto.c
 done proto.o generated
-exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS}   -o proto proto.o
+exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS}  -o proto proto.o
 done proto generated
 make ratz
 make ratz.o
@@ -535,7 +535,7 @@ meta ratz.o %.c>%.o ratz.c ratz
 prev ratz.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}   -c ratz.c
 done ratz.o generated
-exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS}   -o ratz ratz.o
+exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS}  -o ratz ratz.o
 done ratz generated
 make release
 make release.o
@@ -546,7 +546,7 @@ meta release.o %.c>%.o release.c release
 prev release.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2008 AT&T][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"\" -c release.c
 done release.o generated
-exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS}   -o release release.o
+exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS}  -o release release.o
 done release generated
 make mprobe
 make mprobe.sh

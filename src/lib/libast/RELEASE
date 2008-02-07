@@ -1,3 +1,4 @@
+08-02-02 string/strmatch.c: fix str="" pat="" sub values
 08-01-31 comp/conf.sh,conf.tab: handle /bin/sh \ in read data, redir subshell
 08-01-18 misc/magic.tab: amd-x68, 64-bit => x86-64
 08-01-18 string/strnton.c,strntonll.c: add

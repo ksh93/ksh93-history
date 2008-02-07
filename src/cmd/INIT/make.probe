@@ -2,7 +2,7 @@
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)make.probe (AT&T Research) 2008-01-28
+# @(#)make.probe (AT&T Research) 2008-02-02
 #
 # C probe for make
 #
@@ -150,6 +150,7 @@ ptrmkdir=
 readonly=
 repository=
 require=
+runpath=
 shared=
 shared_registry=
 shellmagic=
@@ -944,6 +945,26 @@ case $cc_dll:$cc_pic:$so:$dynamic:$static in
 			if	$cc -o sovmain.$exe -L. sovmain.$obj -lxxx
 			then	soversion=1
 			fi
+		fi
+		rm -f doti.$obj
+		std64=/lib64
+		lcl64=/usr/local/lib64
+		if	test -d $std64 -a -d $lcl64 && $cc -c doti.$src
+		then	for i in `cd $lcl64; ls *$so 2>/dev/null | sed 's/lib\([^.]*\).*/\1/'`
+			do	if	$cc -o runpath.$exe doti.$obj -l$i >/dev/null 2>&1
+				then	LD_LIBRARY_PATH= ./runpath.$exe >/dev/null 2>&1 && continue
+					if	LD_LIBRARY_PATH=$lcl64 ./runpath.$exe >/dev/null 2>&1
+					then	runpath=$lcl64
+						break
+					elif	LD_LIBRARY_PATH=$std64 ./runpath.$exe >/dev/null 2>&1
+					then	runpath=$std64
+						break
+					elif	LD_LIBRARY_PATH=$lcl64:$std64 ./runpath.$exe >/dev/null 2>&1
+					then	runpath=$lcl64:$std64
+						break
+					fi
+				fi
+			done
 		fi
 		;;
 	esac
@@ -1944,6 +1965,7 @@ CC_OPTIMIZE=$optimize
 CC_READONLY=$readonly
 CC_REPOSITORY=$repository
 CC_REQUIRE=$require
+CC_RUNPATH=$runpath
 CC_SHARED=$shared
 CC_SHARED_LD=$dld
 CC_SHARED_REGISTRY=$shared_registry
@@ -2052,6 +2074,7 @@ echo CC.REPOSITORY = $CC_REPOSITORY
 for f in $CC_REQUIRE
 do	echo CC.REQUIRE.$f =`cat req.$f`
 done
+echo CC.RUNPATH = $CC_RUNPATH
 echo CC.SHARED = $CC_SHARED
 echo CC.SHARED.LD = $CC_SHARED_LD
 echo CC.SHARED.REGISTRY = $CC_SHARED_REGISTRY
