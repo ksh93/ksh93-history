@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
+*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                      by AT&T Knowledge Ventures                      *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -90,6 +90,7 @@ static char *nextdir(glob_t *gp, char *dir)
 
 int path_expand(const char *pattern, struct argnod **arghead)
 {
+	Shell_t	*shp = &sh;
 	glob_t gdata;
 	register struct argnod *ap;
 	register glob_t *gp= &gdata;
@@ -117,8 +118,8 @@ int path_expand(const char *pattern, struct argnod **arghead)
 	if(sh_isstate(SH_COMPLETE))
 	{
 #if KSHELL
-		extra += scantree(sh.alias_tree,pattern,arghead); 
-		extra += scantree(sh.fun_tree,pattern,arghead); 
+		extra += scantree(shp->alias_tree,pattern,arghead); 
+		extra += scantree(shp->fun_tree,pattern,arghead); 
 #   if GLOB_VERSION >= 20010916L
 		gp->gl_nextdir = nextdir;
 #   endif
@@ -139,13 +140,13 @@ int path_expand(const char *pattern, struct argnod **arghead)
 		 * Generate shell patterns out of those here.
 		 */
 		if(sh_isstate(SH_FCOMPLETE))
-			cp=nv_getval(nv_scoped(FIGNORENOD));
+			cp=nv_getval(sh_scoped(shp,FIGNORENOD));
 		else
 		{
 			static Namval_t *GLOBIGNORENOD;
 			if(!GLOBIGNORENOD)
-				GLOBIGNORENOD = nv_open("GLOBIGNORE",sh.var_tree,0);
-			cp=nv_getval(nv_scoped(GLOBIGNORENOD));
+				GLOBIGNORENOD = nv_open("GLOBIGNORE",shp->var_tree,0);
+			cp=nv_getval(sh_scoped(shp,GLOBIGNORENOD));
 		}
 		if(cp)
 		{
@@ -182,10 +183,10 @@ int path_expand(const char *pattern, struct argnod **arghead)
 	}
 	else
 #endif
-	gp->gl_fignore = nv_getval(nv_scoped(FIGNORENOD));
+	gp->gl_fignore = nv_getval(sh_scoped(shp,FIGNORENOD));
 	if(suflen)
 		gp->gl_suffix = sufstr;
-	gp->gl_intr = &sh.trapnote; 
+	gp->gl_intr = &shp->trapnote; 
 	suflen = 0;
 	if(memcmp(pattern,"~(N",3)==0)
 		flags &= ~GLOB_NOCHECK;

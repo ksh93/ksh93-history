@@ -2,7 +2,7 @@
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)C probe (AT&T Research) 2008-01-28
+# @(#)C probe (AT&T Research) 2008-04-10
 #
 # probe [ -d ] c-compiler-path [ attributes ]
 #
@@ -16,7 +16,7 @@
 
 probe_binding="-dy -dn -Bdynamic -Bstatic '-Wl,-ashared -Wl,+s' -Wl,-aarchive -call_shared -non_shared -dynamic -static -bshared -bstatic '' -static"
 probe_env="CC_OPTIONS CCOPTS LD_OPTIONS LDOPTS LIBPATH LPATH"
-probe_include="stdio.h iostream.h complex.h ctype.h plot.h stdarg.h varargs.h ranlib.h hash.h sys/types.h stab.h"
+probe_include="stdio.h iostream.h complex.h ctype.h plot.h stdarg.h varargs.h ranlib.h hash.h sys/types.h stab.h cmath cstdio iostream string"
 probe_longlong="long 'long long'"
 probe_longlong_t="__int64_t _int64_t __int64 _int64 int64"
 probe_l="l yyreject m sin mopt sin"
@@ -26,7 +26,7 @@ probe_size="size"
 probe_src="cxx C cc c"
 probe_sa=".sa"
 probe_sd=".dll .lib .dll .x"
-probe_so=".so .sl .dylib"
+probe_so=".dylib .sl .so"
 probe_symprefix="_"
 probe_verbose="'-v -v' '-# -#' '-d -d' -dryrun '-V -V'"
 probe_version="--version -version -V -v"

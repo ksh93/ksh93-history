@@ -1,4 +1,4 @@
-: unix wrapper for mac os10 cc : 2006-09-11 :
+: unix wrapper for mac osx cc : 2008-05-11 :
 
 HOSTTYPE=darwin.generic
 
@@ -55,7 +55,7 @@ dll)	# what a compatibility mess -- surely they can get the apis to play nice
 			-ldylib1.o "$@" -lcc_dynamic -framework System >$tmp 2>&1
 		status=$?
 		;;
-	*)	MACOSX_DEPLOYMENT_TARGET=10.3 $CC -dynamiclib -undefined dynamic_lookup "$@" >$tmp 2>&1
+	*)	MACOSX_DEPLOYMENT_TARGET=10.3 $CC -Wl,-flat_namespace -dynamiclib -undefined dynamic_lookup "$@" >$tmp 2>&1
 		status=$?
 		;;
 	esac

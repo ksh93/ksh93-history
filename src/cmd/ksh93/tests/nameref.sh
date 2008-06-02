@@ -1,10 +1,10 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#           Copyright (c) 1982-2007 AT&T Knowledge Ventures            #
+#          Copyright (c) 1982-2008 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
-#                      by AT&T Knowledge Ventures                      #
+#                    by AT&T Intellectual Property                     #
 #                                                                      #
 #                A copy of the License is available at                 #
 #            http://www.opensource.org/licenses/cpl1.0.txt             #
@@ -231,6 +231,10 @@ typeset -A foo
 foo[x.y]=(x=3 y=4)
 nameref bar=foo[x.y]
 [[ ${bar.x} == 3 ]] || err_exit 'nameref to subscript containing . fails'
+[[ ${!bar} == 'foo[x.y]' ]] || err_exit '${!var} not correct for nameref to an array instance'
+typeset +n bar
+nameref bar=foo
+[[ ${!bar} == foo ]] || err_exit '${!var} not correct for nameref to array variable'
 $SHELL -c 'function bar { nameref x=foo[++];};typeset -A foo;bar' 2> /dev/null ||err_exit 'nameref of associative array tries to evaluate subscript'
 i=$($SHELL -c 'nameref foo=bar; bar[2]=(x=3 y=4); nameref x=foo[2].y;print -r -- $x' 2> /dev/null)
 [[ $i == 4 ]] || err_exit 'creating reference from subscripted variable whose name is a reference failed'
@@ -248,4 +252,17 @@ i=$($SHELL -c 'nameref foo=bar; bar[2]=(x=3 y=4); nameref x=foo[2].y;print -r --
 	foo
 +++EOF
 ) ==  *foo=hello* ]] || err_exit 'unable to display compound variable from name reference of local variable'
+#set -x
+for c in '=' '[' ']' '\' "'" '"' '<' '=' '('
+do	[[ $($SHELL 2> /dev/null <<- ++EOF++
+	x;i=\\$c;typeset -A a; a[\$i]=foo;typeset -n x=a[\$i]; print "\$x"
+	++EOF++
+) != foo ]] && err_exit 'nameref x=[$c] '"not working for c=$c"
+done
+unset -n foo x
+unset foo x
+typeset -A foo
+nameref x=foo[xyz]
+foo[xyz]=ok
+[[ $x == ok ]] || err_exit 'nameref to unset subscript not working'
 exit $((Errors))

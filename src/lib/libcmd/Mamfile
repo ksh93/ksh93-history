@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.3 2008-02-02
+info mam static 00000 1994-07-17 make (AT&T Research) 5.3 2008-04-28
 setv INSTALLROOT ../../..
 setv PACKAGE_ast_INCLUDE ${INSTALLROOT}/include/ast
 setv PACKAGE_ast_LIB ${INSTALLROOT}/lib
@@ -48,7 +48,7 @@ exec - {
 exec - case "" in
 exec - *?)	echo " " ;;
 exec - esac
-exec - for i in cmd fsg ast
+exec - for i in cmd fsg md ast
 exec - do	case $i in
 exec - 	"cmd"|cmd)
 exec - 		;;
@@ -335,6 +335,12 @@ make pathchk.c
 prev ${PACKAGE_ast_INCLUDE}/ls.h implicit
 prev cmd.h implicit
 done pathchk.c
+make pids.c
+prev ${PACKAGE_ast_INCLUDE}/sfdisc.h implicit
+make ${PACKAGE_ast_INCLUDE}/ast_tty.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast_tty.h
+prev cmd.h implicit
+done pids.c
 make rev.c
 make rev.h implicit
 done rev.h
@@ -350,8 +356,7 @@ make rmdir.c
 prev cmd.h implicit
 done rmdir.c
 make stty.c
-make ${PACKAGE_ast_INCLUDE}/ast_tty.h implicit
-done ${PACKAGE_ast_INCLUDE}/ast_tty.h
+prev ${PACKAGE_ast_INCLUDE}/ast_tty.h implicit
 make ${PACKAGE_ast_INCLUDE}/ccode.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast_ccode.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_ccode.h dontcare
@@ -432,7 +437,7 @@ exec - 	-e '/^b_[a-z_][a-z_0-9]*(/!d' \
 exec - 	-e 's/^b_//' \
 exec - 	-e 's/(.*//' \
 exec - 	-e 's/.*/extern int	b_&(int, char**, void*);/' \
-exec - 	cmdinit.c basename.c cat.c chgrp.c chmod.c chown.c cksum.c cmp.c comm.c cp.c cut.c dirname.c date.c expr.c fds.c fmt.c fold.c getconf.c head.c id.c join.c ln.c logname.c md5sum.c mkdir.c mkfifo.c mv.c paste.c pathchk.c rev.c rm.c rmdir.c stty.c sum.c sync.c tail.c tee.c tty.c uname.c uniq.c wc.c revlib.c wclib.c |
+exec - 	cmdinit.c basename.c cat.c chgrp.c chmod.c chown.c cksum.c cmp.c comm.c cp.c cut.c dirname.c date.c expr.c fds.c fmt.c fold.c getconf.c head.c id.c join.c ln.c logname.c md5sum.c mkdir.c mkfifo.c mv.c paste.c pathchk.c pids.c rev.c rm.c rmdir.c stty.c sum.c sync.c tail.c tee.c tty.c uname.c uniq.c wc.c revlib.c wclib.c |
 exec - sort -u
 exec - } > 1.${COTEMP}.h
 exec - if	cmp 2>/dev/null -s 1.${COTEMP}.h cmdext.h
@@ -622,6 +627,12 @@ meta pathchk.o %.c>%.o pathchk.c pathchk
 prev pathchk.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_BLD_cmd -D_PACKAGE_ast -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2008 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c pathchk.c
 done pathchk.o generated
+make pids.o
+prev pids.c
+meta pids.o %.c>%.o pids.c pids
+prev pids.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libcmd"\" -D_PACKAGE_ast -D_BLD_cmd -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1992-2008 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libcmd]"\" -c pids.c
+done pids.o generated
 make rev.o
 prev rev.c
 meta rev.o %.c>%.o rev.c rev
@@ -710,8 +721,8 @@ make sumlib.o
 bind -lsum
 exec - ${AR} x ${mam_libsum} sumlib.o
 done sumlib.o generated
-exec - ${AR} cr libcmd.a cmdinit.o basename.o cat.o chgrp.o chmod.o chown.o cksum.o cmp.o comm.o cp.o cut.o dirname.o date.o expr.o fds.o fmt.o fold.o getconf.o head.o id.o join.o ln.o logname.o md5sum.o mkdir.o mkfifo.o mv.o paste.o pathchk.o rev.o
-exec - ${AR} cr libcmd.a rm.o rmdir.o stty.o sum.o sync.o tail.o tee.o tty.o uname.o uniq.o wc.o revlib.o wclib.o sumlib.o
+exec - ${AR} cr libcmd.a cmdinit.o basename.o cat.o chgrp.o chmod.o chown.o cksum.o cmp.o comm.o cp.o cut.o dirname.o date.o expr.o fds.o fmt.o fold.o getconf.o head.o id.o join.o ln.o logname.o md5sum.o mkdir.o mkfifo.o mv.o paste.o pathchk.o pids.o
+exec - ${AR} cr libcmd.a rev.o rm.o rmdir.o stty.o sum.o sync.o tail.o tee.o tty.o uname.o uniq.o wc.o revlib.o wclib.o sumlib.o
 exec - (ranlib libcmd.a) >/dev/null 2>&1 || true
 done libcmd.a generated
 done cmd virtual
@@ -774,7 +785,7 @@ exec - 	-e '/^b_[a-z_][a-z_0-9]*(/!d' \
 exec - 	-e 's/^b_//' \
 exec - 	-e 's/(.*//' \
 exec - 	-e 's/.*/CMDLIST(&)/' \
-exec - 	cmdinit.c basename.c cat.c chgrp.c chmod.c chown.c cksum.c cmp.c comm.c cp.c cut.c dirname.c date.c expr.c fds.c fmt.c fold.c getconf.c head.c id.c join.c ln.c logname.c md5sum.c mkdir.c mkfifo.c mv.c paste.c pathchk.c rev.c rm.c rmdir.c stty.c sum.c sync.c tail.c tee.c tty.c uname.c uniq.c wc.c revlib.c wclib.c |
+exec - 	cmdinit.c basename.c cat.c chgrp.c chmod.c chown.c cksum.c cmp.c comm.c cp.c cut.c dirname.c date.c expr.c fds.c fmt.c fold.c getconf.c head.c id.c join.c ln.c logname.c md5sum.c mkdir.c mkfifo.c mv.c paste.c pathchk.c pids.c rev.c rm.c rmdir.c stty.c sum.c sync.c tail.c tee.c tty.c uname.c uniq.c wc.c revlib.c wclib.c |
 exec - sort -u
 exec - } > 1.${COTEMP}.h
 exec - if	cmp 2>/dev/null -s 1.${COTEMP}.h cmdlist.h

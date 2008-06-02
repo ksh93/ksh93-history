@@ -27,6 +27,14 @@ alias err_exit='err_exit $LINENO'
 
 integer Errors=0
 Command=${0##*/}
+
+tmp=/tmp/kshtf$$
+function cleanup
+{
+	rm -rf $tmp
+}
+mkdir $tmp || err_exit "mkdir $tmp failed"
+
 integer foo=33
 bar=bye
 # check for global variables and $0
@@ -81,11 +89,11 @@ function foobar
 {
 	(return 0)
 }
-> /tmp/shtests$$.1
+> $tmp/shtests$$.1
 {
 foobar
-if	[ -r /tmp/shtests$$.1 ]
-then	rm -r /tmp/shtests$$.1
+if	[ -r $tmp/shtests$$.1 ]
+then	rm -r $tmp/shtests$$.1
 else	err_exit 'return within subshell inside function error'
 fi
 }
@@ -111,7 +119,7 @@ function foo
 	x=2
 	(
 		x=3
-		cd /tmp
+		cd $tmp
 		print bar
 	)
 	if	[[ $x != 2 ]]
@@ -130,19 +138,19 @@ fun() /bin/echo hello
 if	[[ $(fun) != hello ]]
 then	err_exit one line functions not working
 fi
-trap 'rm -f /tmp/script$$ /tmp/data$$.[12]' EXIT
-cat > /tmp/script$$ <<-\!
+trap cleanup EXIT
+cat > $tmp/script$$ <<-\!
 	print -r -- "$1"
 !
-chmod +x /tmp/script$$
+chmod +x $tmp/script$$
 function passargs
 {
-	/tmp/script$$ "$@"
+	$tmp/script$$ "$@"
 }
 if	[[ $(passargs one) != one ]]
 then	err_exit 'passing args from functions to scripts not working'
 fi
-cat > /tmp/script$$ <<-\!
+cat > $tmp/script$$ <<-\!
 	trap 'exit 0' EXIT
 	function foo
 	{
@@ -150,17 +158,17 @@ cat > /tmp/script$$ <<-\!
 	}
 	foo
 !
-if	! /tmp/script$$
+if	! $tmp/script$$
 then	err_exit 'exit trap incorrectly triggered' 
 fi
-if	! $SHELL -c /tmp/script$$
+if	! $SHELL -c $tmp/script$$
 then	err_exit 'exit trap incorrectly triggered when invoked with -c' 
 fi
-$SHELL -c "trap 'rm /tmp/script$$' EXIT"
-if	[[ -f /tmp/script$$ ]]
+$SHELL -c "trap 'rm $tmp/script$$' EXIT"
+if	[[ -f $tmp/script$$ ]]
 then	err_exit 'exit trap not triggered when invoked with -c' 
 fi
-cat > /tmp/script$$ <<- \EOF
+cat > $tmp/script$$ <<- \EOF
 	foobar()
 	{
 		return
@@ -169,8 +177,8 @@ cat > /tmp/script$$ <<- \EOF
 	foobar
 	print -r -- "$1"
 EOF
-chmod +x /tmp/script$$
-if	[[ $( $SHELL /tmp/script$$ arg1 arg2) != arg2 ]]
+chmod +x $tmp/script$$
+if	[[ $( $SHELL $tmp/script$$ arg1 arg2) != arg2 ]]
 then	err_exit 'arguments not restored by posix functions'
 fi
 function foo
@@ -205,15 +213,15 @@ if	[[ $(foo) != 3 ]]
 then	err_exit 'variable assignment list not using parent scope'
 fi
 unset -f foo$$
-trap "rm -f /tmp/foo$$" EXIT INT
-cat > /tmp/foo$$ <<!
+#trap "rm -f $tmp/foo$$" EXIT INT
+cat > $tmp/foo$$ <<!
 function foo$$
 {
 	print foo
 }
 !
-chmod +x /tmp/foo$$
-FPATH=/tmp
+chmod +x $tmp/foo$$
+FPATH=$tmp
 autoload foo$$
 if	[[ $(foo$$ 2>/dev/null) != foo ]]
 then	err_exit 'autoload not working'
@@ -368,8 +376,8 @@ function closure
 	return $r
 }
 closure 0 || err_exit -u2 'for loop function optimization bug2'
-mkdir  /tmp/ksh$$ || err_exit "mkdir /tmp/ksh$$ failed"
-cd /tmp/ksh$$ || err_exit "cd /tmp/ksh$$ failed"
+mkdir  $tmp/ksh$$ || err_exit "mkdir $tmp/ksh$$ failed"
+cd $tmp/ksh$$ || err_exit "cd $tmp/ksh$$ failed"
 print 'false' > try
 chmod +x try
 cat > tst <<- EOF
@@ -384,9 +392,9 @@ EOF
 if	[[ $($SHELL < tst)  == error ]]
 then	err_exit 'ERR trap not cleared'
 fi
-FPATH=/tmp/ksh$$
-print ': This does nothing' > /tmp/ksh$$/foobar
-chmod +x /tmp/ksh$$/foobar
+FPATH=$tmp/ksh$$
+print ': This does nothing' > $tmp/ksh$$/foobar
+chmod +x $tmp/ksh$$/foobar
 unset -f  foobar
 { foobar;} 2> /dev/null
 if	[[ $? != 126 ]]
@@ -395,7 +403,7 @@ fi
 print 'set a b c' > dotscript 
 [[ $(PATH=$PATH: $SHELL -c '. dotscript;print $#') == 3 ]] || err_exit 'positional parameters not preserved with . script without arguments'
 cd ~- || err_exit "cd back failed"
-cd /; rm -r /tmp/ksh$$ || err_exit "rm -r /tmp/ksh$$ failed"
+cd /; rm -r $tmp/ksh$$ || err_exit "rm -r $tmp/ksh$$ failed"
 function errcheck
 {
 	trap 'print ERR; return 1' ERR
@@ -423,7 +431,7 @@ a()
 b() { : ;}
 [[ $(a) == a ]] || err_exit '.sh.fun not set correctly in a function'
 print $'a(){\ndate\n}'  | $SHELL 2> /dev/null || err_exit 'parser error in a(){;date;}'
-cat > /tmp/data$$.1 << '++EOF'
+cat > $tmp/data$$.1 << '++EOF'
      1  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
      2  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
      3  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -445,7 +453,7 @@ cat > /tmp/data$$.1 << '++EOF'
     19  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
     20  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 ++EOF
-cat > /tmp/script$$ << '++EOF'
+cat > $tmp/script$$ << '++EOF'
 # XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 # XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 # XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -711,11 +719,10 @@ f()
 {
 cat <<\M
 ++EOF
-cat /tmp/data$$.1 >> /tmp/script$$
-printf 'M\n}\n\nf\n\n' >> /tmp/script$$
-$SHELL -c /tmp/script$$  > /tmp/data$$.2
-cmp -s /tmp/data$$.[12] || err_exit 'error with long functions'
-rm -f /tmp/script$$ /tmp/data$$.[12]
+cat $tmp/data$$.1 >> $tmp/script$$
+printf 'M\n}\n\nf\n\n' >> $tmp/script$$
+$SHELL -c $tmp/script$$  > $tmp/data$$.2
+cmp -s $tmp/data$$.[12] || err_exit 'error with long functions'
 v=1
 function f
 {
@@ -770,6 +777,7 @@ x=$(
 	false
 )
 [[ $x == failed ]] && err_exit 'ERR trap executed multiple times'
+trap cleanup EXIT
 export environment
 typeset global
 function f
@@ -803,15 +811,58 @@ function f
 }
 f local global environment literal positional
 $SHELL -c '
-	print exit 0 > /tmp/script$$
-	chmod +x /tmp/script$$
+	print exit 0 > '$tmp'/script$$
+	chmod +x '$tmp'/script$$
 	unset var
 	var=( ident=1 )
 	function fun
 	{
-		PATH=/tmp script$$
+		PATH='$tmp' script$$
 	}
 	fun
 ' || err_exit "compound variable cleanup before script exec failed"
-rm -f /tmp/script$$
+( $SHELL << \++EOF++ 
+function main
+{
+ 	typeset key
+ 	typeset -A entry
+ 	entry[a]=( value=aaa )
+}
+main
+++EOF++
+) 2> /dev/null || err_exit 'function main fails'
+optind=$OPTIND
+sub()
+{
+        (
+                OPTIND=1
+                while getopts :abc OPTION "$@"
+                do      print OPTIND=$OPTIND
+                done
+        )
+}
+[[ $(sub -a) == OPTIND=2 ]] || err_exit 'OPTIND should be 2'
+[[ $(sub -a) == OPTIND=2 ]] || err_exit 'OPTIND should be 2 again'
+[[ $OPTIND == "$optind" ]] || err_exit 'OPTIND should be 1'
+
+function bar
+{
+	[[ -o nounset ]] && err_exit  'nounset option should not be inherited'
+}
+function foo
+{
+	set -o nounset
+	bar
+}
+set +o nounset
+foo
+function red
+{
+	integer -S d=0
+	printf 'red_one %d\n' d
+	(( d++ ))
+	return 0
+}
+[[ ${ red } != 'red_one 0' ]] && err_exit 'expected red_one 0'
+[[ ${ red } != 'red_one 1' ]] && err_exit 'expected red_one 1'
 exit $((Errors))

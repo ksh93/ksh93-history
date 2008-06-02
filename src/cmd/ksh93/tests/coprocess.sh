@@ -1,10 +1,10 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#           Copyright (c) 1982-2007 AT&T Knowledge Ventures            #
+#          Copyright (c) 1982-2008 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
-#                      by AT&T Knowledge Ventures                      #
+#                    by AT&T Intellectual Property                     #
 #                                                                      #
 #                A copy of the License is available at                 #
 #            http://www.opensource.org/licenses/cpl1.0.txt             #
@@ -154,7 +154,7 @@ fi
 ) && err_exit 'coprocess with subshell would hang'
 for sig in IOT ABRT
 do	if	( trap - $sig ) 2> /dev/null
-	then	if	[[ $(	
+	then	if	[[ $( { sig=$sig $SHELL  2> /dev/null <<- '++EOF++'
 				cat |&
 				pid=$!
 				trap "print TRAP" $sig
@@ -164,9 +164,12 @@ do	if	( trap - $sig ) 2> /dev/null
 					sleep 2
 					kill -$sig $$
 					kill $pid
+					sleep 2
+					kill  $$
 				) 2> /dev/null &
 				read -p
-			) != $'TRAP\nTRAP' ]]
+			++EOF++
+			} 2> /dev/null ) != $'TRAP\nTRAP' ]]
 		then	err_exit 'traps when reading from coprocess not working'
 		fi
 		break

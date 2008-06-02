@@ -1,0 +1,13 @@
+if	hdr gdbm-ndbm {
+	#include <gdbm-ndbm.h>
+	#define _use_ndbm	1
+}
+elif	hdr gdbm/ndbm {
+	#include <gdbm/ndbm.h>
+	#define _use_ndbm	1
+}
+elif	hdr ndbm {
+	#include <ndbm.h>
+	#define _use_ndbm	1
+}
+endif

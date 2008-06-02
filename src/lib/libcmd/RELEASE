@@ -1,3 +1,13 @@
+08-04-24 uniq.c: add optget() 'n' option for -1 => -f1
+08-04-24 getconf.c: clarify diffs between "name - value" and "name = value"
+08-04-01 cut.c: add write error check
+08-04-01 paste.c: fix --noserial stream vector access bug
+08-04-01 pids.c: add ls/ps style --format=format
+08-04-01 stty.c: fix off2 unitialized reference
+08-03-28 chgrp.c: add --before=file
+08-03-14 pids.c: add
+08-03-11 chgrp.c: fix -m to use uid:gid as lookup key
+08-02-11 Makefile: add -lmd possibly required by sumlib.o -- hack alert
 08-01-30 expr.c: fix <=0 type that broke substr * 1 * -- wow
 07-12-13 cp.c: fix builtin state reinitialization
 07-11-29 rev.c: honor multibyte locales

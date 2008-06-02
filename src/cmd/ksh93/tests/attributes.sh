@@ -123,6 +123,10 @@ typeset -Z2 m
 if	[[ $(/tmp/ksh$$) != 13 ]]
 then	err_exit 'attributes not cleared for script execution'
 fi
+print 'print VAR=$VAR' > /tmp/ksh$$
+typeset -L70 VAR=var
+/tmp/ksh$$ > /tmp/ksh$$.1
+[[ $(< /tmp/ksh$$.1) == VAR= ]] || err_exit 'typeset -L should not be inherited'
 typeset -Z  LAST=00
 unset -f foo
 function foo
@@ -141,7 +145,7 @@ if	(( ${#LAST} != 2 ))
 then	err_exit 'LAST!=2'
 fi
 [[ $(set | grep LAST) == LAST=02 ]] || err_exit "LAST not correct in set list"
-rm -rf /tmp/ksh$$
+rm -rf /tmp/ksh$$*
 set -a
 unset foo
 foo=bar
@@ -215,4 +219,12 @@ fun
 [[ $(export | grep foo) == 'foo=hello' ]] || err_exit 'export not working in functions'
 [[ $(export | grep bar) ]] && err_exit 'typeset -x not local'
 [[ $($SHELL -c 'typeset -r IFS=;print -r $(pwd)' 2> /dev/null) == "$(pwd)" ]] || err_exit 'readonly IFS causes command substitution to fail'
+fred[66]=88
+[[ $(typeset -pa) == *fred* ]] || err_exit 'typeset -pa not working'
+unset x y z
+typeset -LZ3 x=abcd y z=00abcd
+y=03
+[[ $y == "3  " ]] || err_exit '-LZ3 not working for value 03' 
+[[ $x == "abc" ]] || err_exit '-LZ3 not working for value abcd' 
+[[ $x == "abc" ]] || err_exit '-LZ3 not working for value 00abcd' 
 exit	$((Errors))

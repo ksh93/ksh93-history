@@ -53,6 +53,8 @@
 
 static char CURSOR_UP[20] = { ESC, '[', 'A', 0 };
 
+
+
 #if SHOPT_MULTIBYTE
 #   define is_cntrl(c)	((c<=STRIP) && iscntrl(c))
 #   define is_print(c)	((c&~STRIP) || isprint(c))
@@ -585,10 +587,10 @@ void	ed_setup(register Edit_t *ep, int fd, int reedit)
 {
 	Shell_t *shp = ep->sh;
 	register char *pp;
-	register char *last;
+	register char *last, *prev;
 	char *ppmax;
 	int myquote = 0, n;
-	register int qlen = 1;
+	register int qlen = 1, qwid;
 	char inquote = 0;
 	ep->e_fd = fd;
 	ep->e_multiline = sh_isoption(SH_MULTILINE)!=0;
@@ -602,6 +604,7 @@ void	ed_setup(register Edit_t *ep, int fd, int reedit)
 	shp->st.trapcom[SIGWINCH] = 0;
 	sh_fault(SIGWINCH);
 	shp->st.trapcom[SIGWINCH] = pp;
+	ep->sh->winch = 0;
 #endif
 #if KSHELL
 	ep->e_stkptr = stakptr(0);
@@ -635,7 +638,7 @@ void	ed_setup(register Edit_t *ep, int fd, int reedit)
 	*pp++ = '\r';
 	{
 		register int c;
-		while(c= *last++) switch(c)
+		while(prev = last, c = mbchar(last)) switch(c)
 		{
 			case ESC:
 			{
@@ -699,11 +702,16 @@ void	ed_setup(register Edit_t *ep, int fd, int reedit)
 				}
 				if(pp < ppmax)
 				{
-					qlen += inquote;
-					*pp++ = c;
-					if(!inquote && !is_print(c))
+					if(inquote)
+						qlen++;
+					else if(!is_print(c))
 						ep->e_crlf = 0;
+					if((qwid = last - prev) > 1)
+						qlen += qwid - mbwidth(c);
+					while(prev < last && pp < ppmax)
+						*pp++ = *prev++;
 				}
+				break;
 		}
 	}
 	if(pp-ep->e_prompt > qlen)
@@ -797,6 +805,22 @@ int ed_read(void *context, int fd, char *buff, int size, int reedit)
 	{
 		if(shp->trapnote&(SH_SIGSET|SH_SIGTRAP))
 			goto done;
+		if(ep->sh->winch)
+		{
+	                ep->sh->winch = 0;
+			ep->e_winsz = ed_window();
+			if(!ep->e_multiline && ep->e_wsize < MAXLINE)
+				ep->e_wsize = ep->e_winsz-2;
+			if(*ep->e_vi_insert)
+			{
+				buff[0] = ESC;
+				buff[1] = cntl('L');
+				buff[2] = 'a';
+				return(3);
+			}
+			buff[0] = cntl('L');
+			return(1);
+		}
 		/* an interrupt that should be ignored */
 		errno = 0;
 		if(!waitevent || (rv=(*waitevent)(fd,-1L,0))>=0)
@@ -959,8 +983,10 @@ int ed_getchar(register Edit_t *ep,int mode)
 		ed_flush(ep);
 		ep->e_inmacro = 0;
 		/* The while is necessary for reads of partial multbyte chars */
+		*ep->e_vi_insert = (mode==-2);
 		if((n=ed_read(ep,ep->e_fd,readin,-LOOKAHEAD,0)) > 0)
 			n = putstack(ep,readin,n,1);
+		*ep->e_vi_insert = 0;
 	}
 	if(ep->e_lookahead)
 	{
@@ -1118,18 +1144,36 @@ static void ed_putstring(register Edit_t *ep, const char *str)
 		ed_putchar(ep,c);
 }
 
+static void ed_nputchar(register Edit_t *ep, int n, int c)
+{
+	while(n-->0)
+		ed_putchar(ep,c);
+}
+
 int ed_setcursor(register Edit_t *ep,genchar *physical,register int old,register int new,int first)
 {
 	static int oldline;
 	register int delta;
+	int clear = 0;
 	Edpos_t newpos;
 
 	delta = new - old;
-	if( delta == 0 )
+	if(first < 0)
+	{
+		first = 0;
+		clear = 1;
+	}
+	if( delta == 0  &&  !clear)
 		return(new);
 	if(ep->e_multiline)
 	{
 		ep->e_curpos = ed_curpos(ep, physical, old,0,ep->e_curpos);
+		if(clear && old>=ep->e_peol && (clear=ep->e_winsz-ep->e_curpos.col)>0)
+		{
+			ed_nputchar(ep,clear,' ');
+			ed_nputchar(ep,clear,'\b');
+			return(new);
+		}
 		newpos =     ed_curpos(ep, physical, new,old,ep->e_curpos);
 		if(ep->e_curpos.col==0 && ep->e_curpos.line>0 && oldline<ep->e_curpos.line && delta<0)
 			ed_putstring(ep,"\r\n");
@@ -1140,7 +1184,10 @@ int ed_setcursor(register Edit_t *ep,genchar *physical,register int old,register
 			for(;ep->e_curpos.line > newpos.line; ep->e_curpos.line--)
 				ed_putstring(ep,CURSOR_UP);
 			pline = plen/(ep->e_winsz+1);
-			plen -= pline*(ep->e_winsz+1);
+			if(newpos.line <= pline)
+				plen -= pline*(ep->e_winsz+1);
+			else
+				plen = 0;
 			if((n=plen- ep->e_curpos.col)>0)
 			{
 				ep->e_curpos.col += n;
@@ -1157,16 +1204,15 @@ int ed_setcursor(register Edit_t *ep,genchar *physical,register int old,register
 						while(physical[m] && n-->0)
 							ed_putchar(ep,physical[m++]);
 					}
-					while(n-->0)
-						ed_putchar(ep,' ');
+					ed_nputchar(ep,n,' ');
 					ed_putstring(ep,CURSOR_UP);
 				}
 			}
 		}
 		else if(ep->e_curpos.line < newpos.line)
 		{
-			for(;ep->e_curpos.line < newpos.line;ep->e_curpos.line++)
-				ed_putchar(ep,'\n');
+			ed_nputchar(ep, newpos.line-ep->e_curpos.line,'\n');
+			ep->e_curpos.line = newpos.line;
 			ed_putchar(ep,'\r');
 			ep->e_curpos.col = 0;
 		}
@@ -1183,13 +1229,15 @@ int ed_setcursor(register Edit_t *ep,genchar *physical,register int old,register
 		/*** attempt to optimize cursor movement ***/
 		if(!ep->e_crlf || bs || (2*delta <= ((old-first)+(newpos.line?0:ep->e_plen))) )
 		{
-			for( ; delta; delta-- )
-				ed_putchar(ep,'\b');
+			ed_nputchar(ep,delta,'\b');
+			delta = 0;
 		}
 		else
 		{
 			if(newpos.line==0)
 				ed_putstring(ep,ep->e_prompt);
+			else
+				ed_putchar(ep,'\r');
 			old = first;
 			delta = new-first;
 		}
@@ -1261,6 +1309,7 @@ int ed_virt_to_phys(Edit_t *ep,genchar *virt,genchar *phys,int cur,int voff,int 
 			break;
 	}
 	*dp = 0;
+	ep->e_peol = dp-phys;
 	return(r);
 }
 

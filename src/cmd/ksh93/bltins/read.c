@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1982-2007 AT&T Knowledge Ventures            *
+*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                      by AT&T Knowledge Ventures                      *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -47,16 +47,53 @@
 #define V_FLAG	0x20	/* use default value */
 #define D_FLAG	8	/* must be number of bits for all flags */
 
+struct read_save
+{
+	int	argc;
+        char    **avin;
+        char    **argv;
+        int     fd;
+	int	flags;
+        long    timeout;
+};
+
 int	b_read(int argc,char *argv[], void *extra)
 {
 	Sfdouble_t sec;
 	register char *name;
-	register int r, flags=0, fd=0;
-	register Shell_t *shp = (Shell_t*)extra;
+	register int r=(argc+1)*sizeof(char*), flags=0, fd=0;
+	register Shell_t *shp = ((Shbltin_t*)extra)->shp;
 	long timeout = 1000*shp->st.tmout;
 	int save_prompt;
+	struct read_save *rp;
 	static char default_prompt[3] = {ESC,ESC};
-	NOT_USED(argc);
+	if(rp = (struct read_save*)(((Shbltin_t*)extra)->data))
+	{
+		if(argc==rp->argc && memcmp(argv,rp->avin,r)==0)
+		{
+			flags = rp->flags;
+			timeout = rp->timeout;
+			fd = rp->fd;
+			argv = rp->argv;
+			goto bypass;
+		}
+		free((void*)rp);
+		rp = 0;
+		((Shbltin_t*)extra)->data = 0;
+		if(argc==0)
+			return(0);
+	}
+#if 0
+	if(rp = newof(NIL(struct read_save*),struct read_save,1,r=(argc+1)*sizeof(char*)))
+#else
+	if(rp = newof(NIL(struct read_save*),struct read_save,1,r))
+#endif
+	{
+		rp->argc = argc;
+		rp->avin = (char**)(rp+1);
+		memcpy(rp->avin, argv, r);
+		((Shbltin_t*)extra)->data = (void*)rp;
+	}
 	while((r = optget(argv,sh_optread))) switch(r)
 	{
 	    case 'A':
@@ -112,7 +149,7 @@ int	b_read(int argc,char *argv[], void *extra)
 	if(error_info.errors)
 		errormsg(SH_DICT,ERROR_usage(2), "%s", optusage((char*)0));
 	if(!((r=shp->fdstatus[fd])&IOREAD)  || !(r&(IOSEEK|IONOSEEK)))
-		r = sh_iocheckfd(fd);
+		r = sh_iocheckfd(shp,fd);
 	if(fd<0 || !(r&IOREAD))
 		errormsg(SH_DICT,ERROR_system(1),e_file+4);
 	/* look for prompt */
@@ -126,6 +163,11 @@ int	b_read(int argc,char *argv[], void *extra)
 			sfwrite(sfstderr,shp->prompt,r-1);
 		}
 	}
+	rp->fd = fd;
+	rp->flags = flags;
+	rp->timeout = timeout;
+	rp->argv = argv;
+bypass:
 	shp->timeout = 0;
 	save_prompt = shp->nextprompt;
 	shp->nextprompt = 0;
@@ -166,14 +208,15 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 	register unsigned char	*cp;
 	register Namval_t	*np;
 	register char		*name, *val;
-	register Sfio_t	*iop;
+	register Sfio_t		*iop;
+	Namfun_t		*nfp;
 	char			*ifs;
 	unsigned char		*cpmax;
 	unsigned char		*del;
 	char			was_escape = 0;
 	char			use_stak = 0;
-	char			was_write = 0;
-	char			was_share = 1;
+	volatile char		was_write = 0;
+	volatile char		was_share = 1;
 	int			rel, wrd;
 	long			array_index = 0;
 	void			*timeslot=0;
@@ -181,7 +224,7 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 	int			jmpval=0;
 	int			size = 0;
 	struct	checkpt		buff;
-	if(!(iop=shp->sftable[fd]) && !(iop=sh_iostream(fd)))
+	if(!(iop=shp->sftable[fd]) && !(iop=sh_iostream(shp,fd)))
 		return(1);
 	if(names && (name = *names))
 	{
@@ -219,11 +262,15 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 		if(shp->fdstatus[fd]&IOTTY)
 			tty_raw(fd,1);
 	}
+#if 1
+	if(!nv_isattr(np,NV_BINARY) && !(flags&(N_FLAG|NN_FLAG)))
+#else
 	if(!(flags&(N_FLAG|NN_FLAG)))
+#endif
 	{
 		Namval_t *mp;
 		/* set up state table based on IFS */
-		ifs = nv_getval(mp=nv_scoped(IFSNOD));
+		ifs = nv_getval(mp=sh_scoped(shp,IFSNOD));
 		if((flags&R_FLAG) && shp->ifstable['\\']==S_ESC)
 			shp->ifstable['\\'] = 0;
 		else if(!(flags&R_FLAG) && shp->ifstable['\\']==0)
@@ -237,8 +284,18 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 		shp->ifstable[0] = S_EOF;
 	}
 	sfclrerr(iop);
-	if(np->nvfun && np->nvfun->disc->readf)
-		return((* np->nvfun->disc->readf)(np,iop,delim,np->nvfun));
+	for(nfp=np->nvfun; nfp; nfp = nfp->next)
+	{
+		if(nfp->disc && nfp->disc->readf)
+			return((* nfp->disc->readf)(np,iop,delim,nfp));
+	}
+#if  1
+	if(nv_isattr(np,NV_BINARY) && !(flags&(N_FLAG|NN_FLAG)))
+	{
+		flags |= NN_FLAG;
+		size = nv_size(np);
+	}
+#endif
 	was_write = (sfset(iop,SF_WRITE,0)&SF_WRITE)!=0;
 	if(fd==0)
 		was_share = (sfset(iop,SF_SHARE,1)&SF_SHARE)!=0;
@@ -292,10 +349,15 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 			timerdel(timeslot);
 		if(nv_isattr(np,NV_BINARY))
 		{
-			if(c<sizeof(buf))
-				var = memdup(var,c);
-			nv_putval(np,var, NV_RAW);
-			nv_setsize(np,c);
+			if(c==nv_size(np))
+				memcpy((char*)np->nvalue.cp,var,c);
+			else
+			{
+				if(c<sizeof(buf))
+					var = memdup(var,c);
+				nv_putval(np,var, NV_RAW);
+				nv_setsize(np,c);
+			}
 		}
 		else
 		{
@@ -313,7 +375,7 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 		timerdel(timeslot);
 	if((flags&S_FLAG) && !shp->hist_ptr)
 	{
-		sh_histinit();
+		sh_histinit((void*)shp);
 		if(!shp->hist_ptr)
 			flags &= ~S_FLAG;
 	}

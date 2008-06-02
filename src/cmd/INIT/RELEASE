@@ -1,3 +1,14 @@
+08-05-20 regress.sh: add --local to put *.tmp dir in local fs
+08-05-05 regerss.sh: add IF command ... ELIF command ... ELSE ... FI
+08-05-01 package.sh: package test => ulimit -c 0
+08-04-28 regress.sh: fix EXPORT quoting
+08-04-28 regress.sh: fix UNIT set check args too
+08-04-24 rt.sh: exit code > 256 => signal termination
+08-04-10 C+probe: change probe_so order to check .so last (macos ld workaround)
+08-04-01 package.sh: handle multiple admin HOSTTYPEs per HOST
+08-03-28 C+probe: add C++ #include <iostream> (no extension) dir probes
+08-03-17 regress.sh: fix trap on EXIT, add terminated note to final tally
+08-02-28 make.probe: fix probe_warn to include ld!
 08-02-02 make.probe: add CC.RUNPATH to match default -L order
 08-01-31 package.sh: check lib64 for LD_LIBRARY_PATH
 08-01-31 iffe.sh: tweak ancient /bin/sh workarounds

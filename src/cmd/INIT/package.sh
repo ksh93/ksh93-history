@@ -62,7 +62,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2008-01-31 $
+@(#)$Id: package (AT&T Research) 2008-05-01 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -4090,6 +4090,27 @@ admin)	while	test ! -f $admin_db
 				;;
 			esac
 			name=$host
+			eval x='$'${host}_index
+			eval ${host}_index=1
+			case $x in
+			1)	i=0
+				while	:
+				do	case $i in
+					$index)	h=''
+						break
+						;;
+					esac
+					i=`expr $i + 1`
+					eval h='$'${admin_host}${i}_name
+					case $h in
+					$host)	host=${admin_host}${i}
+						eval user='$'${host}_user root='$'${host}_rsh:$host:'$'${host}_root
+						break
+						;;
+					esac
+				done
+				;;
+			esac
 			case $root in
 			*:$name:*)root=`echo '' $root | sed 's,:.*,:,'` ;;
 			esac
@@ -4147,8 +4168,9 @@ admin)	while	test ! -f $admin_db
 					;;
 				*)	rsh=$1 sync=$2 root=$3
 					case $sync in
-					'')	;;
-					*)	case " $sync_hosts " in
+					${admin_host}*)
+						;;
+					?*)	case " $sync_hosts " in
 						*" $sync ${admin_host}"*)
 							set '' '' $sync_hosts
 							while	:
@@ -4175,9 +4197,6 @@ admin)	while	test ! -f $admin_db
 			*)	sync=
 				;;
 			esac
-			case $sync in
-			'')	local_types="$local_types $type" ;;
-			esac
 			case $name in
 			$admin_on)
 				keep=1
@@ -4195,6 +4214,9 @@ admin)	while	test ! -f $admin_db
 			*)	admin_out="$admin_out $name"
 				log=$name
 				;;
+			esac
+			case $sync in
+			'')	local_types="$local_types $type" ;;
 			esac
 			case $sync in
 			$host)	remote_hosts="$remote_hosts $host"
@@ -4318,11 +4340,15 @@ admin)	while	test ! -f $admin_db
 			esac
 			;;
 		esac
-		eval log='$'${host}_log
+		eval main_log='$'${host}_log
 		main=
 		share_keep=
 		for i in $host $share
-		do	eval n='$'${i}_name t='$'${i}_type q='$'${i}_sync s='$'${i}_snarf l='$'${i}_log
+		do	eval n='$'${i}_name t='$'${i}_type q='$'${i}_sync s='$'${i}_snarf l='$'${i}_log k='$'${i}_keep
+			case $main:$k in
+			:*)	;;
+			*:0)	continue ;;
+			esac
 			case $admin_binary in
 			1)	case $s:$q in
 				:?*)	continue ;;
@@ -4384,7 +4410,7 @@ admin)	while	test ! -f $admin_db
 				esac
 				;;
 			esac
-			} < /dev/null > $admin_log/$log 2>&1 &
+			} < /dev/null > $admin_log/$main_log 2>&1 &
 			pids="$pids $!"
 			;;
 		*)	echo "{"
@@ -4421,12 +4447,12 @@ admin)	while	test ! -f $admin_db
 				esac
 				;;
 			esac
-			echo "} < /dev/null > $admin_log/$log 2>&1 &"
+			echo "} < /dev/null > $admin_log/$main_log 2>&1 &"
 			;;
 		esac
 		eval name='$'${main}_name
 		hosts="$hosts $name"
-		logs="$logs $log"
+		logs="$logs $main_log"
 		for share in $share
 		do	eval keep=\$${share}_keep
 			case $keep in
@@ -6141,6 +6167,10 @@ test)	requirements source $package
 	# all work under $INSTALLROOT/src
 
 	$make cd $INSTALLROOT/src
+
+	# disable core dumps (could be disasterous over nfs)
+
+	(ulimit -c 0) > /dev/null 2>&1 && ulimit -c 0
 
 	# do the tests
 

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2007 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -135,6 +135,7 @@ typedef struct sh_static
 	int		exitval;	/* most recent exit value */
 	unsigned char	trapnote;	/* set when trap/signal is pending */
 	char		subshell;	/* set for virtual subshell */
+	char		shcomp;		/* set when runing shcomp */
 #ifdef _SH_PRIVATE
 	_SH_PRIVATE
 #endif /* _SH_PRIVATE */

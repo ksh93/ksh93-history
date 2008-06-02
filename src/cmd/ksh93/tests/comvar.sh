@@ -73,6 +73,7 @@ if	[[ ${!x.@} != foo.x ]]
 then	err_exit 'name references not expanded on prefix matching'
 fi
 unset x
+unset -n x
 (
 	x=()
 	x.foo.bar=7
@@ -191,6 +192,23 @@ point=(integer x=6 y=8)
 localvar
 	(( (point.x*point.x + point.y*point.y) == 100 )) || err_exit "global compound variable not preserved"
 [[ $($SHELL -c 'foo=();foo.[x]=(y z); print ${foo.x[@]}') == 'y z' ]] 2> /dev/null || err_exit 'foo=( [x]=(y z)  not working'
+function staticvar
+{
+	if	[[ $1 ]] 
+	then	print -r -- "$point"
+		return
+	fi
+        typeset -S point=(typeset -i x=3 y=4)
+        (( (point.x*point.x + point.y*point.y) == 25 )) || err_exit "local compound variable not working"
+	point.y=5
+	point.z=foobar
+}
+staticvar
+        (( (point.x*point.x + point.y*point.y) == 100 )) || err_exit "global compound variable not preserved"
+[[ $(staticvar x) == $'(\n\ttypeset -i x=3\n\ttypeset -i y=5\n\tz=foobar\n)' ]] || err_exit 'static variables in function not working'
+integer x=3
+( typeset -S x=+++)2> /dev/null  || err_exit "typeset -S doesn't unset first"
+
 unset z
 ( [[ ${z.foo.bar:-abc} == abc ]] 2> /dev/null) || err_exit ':- not working with compound variables'
 stack=()
@@ -215,5 +233,48 @@ function a.b.get
 }
 { b=( b1=${a.b} ) ;} 2> /dev/null
 [[ ${b.b1} == foo ]] || err_exit '${b.b1} should be foo'
-exit $((Errors))
+function dcl1
+{
+     eval 'a=1
+     function a.set
+     { print ${.sh.name}=${.sh.value}; }'
+}
+function dcl2
+{
+     eval 'b=(typeset x=0; typeset y=0 )
+     function b.x.set
+     { print ${.sh.name}=${.sh.value}; }'
+}
+dcl1
+[[ ${ a=123;} == 'a=123' ]] || err_exit 'should be a=123'
+dcl2
+[[ ${ b.x=456;} == 'b.x=456' ]] || err_exit 'should be b.x=456'
+eval 'b=(typeset x=0; typeset y=0 )
+function b.x.set
+{ print ${.sh.name}=${.sh.value}; }' > /dev/null
+[[ ${ b.x=789;} == 'b.x=789' ]] || err_exit 'should be b.x=789'
+unset a b
+function func
+{
+	typeset X
+	X=( bar=2 )
+}
 
+X=( foo=1 )
+func
+[[ $X == $'(\n\tfoo=1\n)' ]] || err_exit 'scoping problem with compound variables'
+unset foo
+typeset -A foo=([a]=aa;[b]=bb;[c]=cc)
+[[ ${foo[c]} == cc ]] || err_exit 'associative array assignment with; not working'
+[[ $({ $SHELL -c 'x=(); typeset -a x.foo; x.foo=bar; print -r -- "$x"' ;} 2> /dev/null) == $'(\n\ttypeset -a foo=bar\n)' ]] || err_exit 'indexed array in compound variable with only element 0 defined fails'
+unset foo
+foo=(typeset -a bar)
+[[ $foo  == *'typeset -a bar'* ]] || err_exit 'array attribute -a not preserved in compound variable'
+unset s
+typeset -A s=( [foo]=(y=2 z=3) [bar]=(y=4 z=5))
+[[ ${s[@]} == *z=*z=* ]] || err_exit 'missing elements in compound associative array'
+unset nodes
+typeset -A nodes
+nodes[0]+=( integer x=5)
+[[ ${nodes[0].x} == 5 ]] || err_exit '${nodes[0].x} should be 5'
+exit $((Errors))

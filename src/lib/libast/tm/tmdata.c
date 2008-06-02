@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1985-2007 AT&T Knowledge Ventures            *
+*          Copyright (c) 1985-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                      by AT&T Knowledge Ventures                      *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -229,6 +229,7 @@ static Tm_zone_t	zone[] =
  0,	"UCT",	0,	 ( 0 * 60),	     0,	/* UTC			*/
  0,	"UTC",	0,	 ( 0 * 60),	     0,	/* UTC			*/
  0,	"CUT",	0,	 ( 0 * 60),	     0,	/* UTC			*/
+ 0,	"Z",	0,	 ( 0 * 60),	     0,	/* UTC			*/
  "USA",	"HST",	0,	 (10 * 60),	     0,	/* Hawaii		*/
  0,	"YST",	"YDT",	 ( 9 * 60),	TM_DST,	/* Yukon		*/
  0,	"PST",	"PDT",	 ( 8 * 60),	TM_DST,	/* Pacific		*/

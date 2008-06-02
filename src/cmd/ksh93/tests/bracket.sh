@@ -1,10 +1,10 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#           Copyright (c) 1982-2007 AT&T Knowledge Ventures            #
+#          Copyright (c) 1982-2008 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
-#                      by AT&T Knowledge Ventures                      #
+#                    by AT&T Intellectual Property                     #
 #                                                                      #
 #                A copy of the License is available at                 #
 #            http://www.opensource.org/licenses/cpl1.0.txt             #
@@ -176,6 +176,8 @@ test -d .  -a '(' ! -f . ')' || err_exit 'test not working'
 if	[[ '!' != ! ]]
 then	err_exit 'quoting unary operator not working'
 fi
+test \( -n x \) -o \( -n y \) 2> /dev/null || err_exit 'test ( -n x ) -o ( -n y) not working'
+test \( -n x \) -o -n y 2> /dev/null || err_exit 'test ( -n x ) -o -n y not working'
 chmod 600 $file
 exec 4> $file
 print -u4 foobar
@@ -230,4 +232,9 @@ $SHELL -c '[[ abc =~ a(b)c ]]' 2> /dev/null || err_exit '[[ abc =~ a(b)c ]] fail
 $SHELL -xc '[[ abc =~  \babc\b ]]' 2> /dev/null || err_exit '[[ abc =~ \babc\b ]] fails'
 [[ abc == ~(E)\babc\b ]] || err_exit '\b not preserved for ere when not in ()'
 [[ abc == ~(iEi)\babc\b ]] || err_exit '\b not preserved for ~(iEi) when not in ()'
+
+e=$($SHELL -c '[ -z "" -a -z "" ]' 2>&1)
+[[ $e ]] && err_exit "[ ... ] compatibility check failed -- $e"
+i=hell
+[[ hell0 == $i[0] ]]  ||  err_exit 'pattern $i[0] interpreded as array ref'
 exit $((Errors))

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2007 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -26,7 +26,7 @@
  * extended to allow some features to be set per-process
  */
 
-static const char id[] = "\n@(#)$Id: getconf (AT&T Research) 2006-11-15 $\0\n";
+static const char id[] = "\n@(#)$Id: getconf (AT&T Research) 2008-04-24 $\0\n";
 
 #include "univlib.h"
 
@@ -78,6 +78,7 @@ static const char id[] = "\n@(#)$Id: getconf (AT&T Research) 2006-11-15 $\0\n";
 #define CONF_ERROR	(CONF_USER<<0)
 #define CONF_READONLY	(CONF_USER<<1)
 #define CONF_ALLOC	(CONF_USER<<2)
+#define CONF_GLOBAL	(CONF_USER<<3)
 
 #define INITIALIZE()	do{if(!state.data)synthesize(NiL,NiL,NiL);}while(0)
 
@@ -294,6 +295,10 @@ synthesize(register Feature_t* fp, const char* path, const char* value)
 	register char*		v;
 	register int		n;
 
+#if DEBUG || DEBUG_astconf
+	if (fp)
+		error(-2, "astconf synthesize name=%s path=%s value=%s fp=%p%s", fp->name, path, value, fp, state.synthesizing ? " SYNTHESIZING" : "");
+#endif
 	if (state.synthesizing)
 		return null;
 	if (!state.data)
@@ -461,6 +466,9 @@ initialize(register Feature_t* fp, const char* path, const char* command, const 
 	register char*	p;
 	register int	ok = 1;
 
+#if DEBUG || DEBUG_astconf
+	error(-2, "astconf initialize name=%s path=%s command=%s succeed=%s fail=%s fp=%p%s", fp->name, path, command, succeed, fail, fp, state.synthesizing ? " SYNTHESIZING" : "");
+#endif
 	switch (fp->op)
 	{
 	case OP_conformance:
@@ -485,6 +493,9 @@ initialize(register Feature_t* fp, const char* path, const char* command, const 
 			register char*	d = p;
 			Sfio_t*		tmp;
 
+#if DEBUG || DEBUG_astconf
+			error(-2, "astconf initialize name=%s ok=%d PATH=%s", fp->name, ok, p);
+#endif
 			if (tmp = sfstropen())
 			{
 				for (;;)
@@ -518,13 +529,13 @@ initialize(register Feature_t* fp, const char* path, const char* command, const 
 							r = 0;
 							if (fp->op == OP_universe)
 							{
-								if (strneq(p, "bin:", 4) || strneq(p, "usr/bin:", 8))
+								if (strneq(p, "bin:", 4) || streq(p, "bin") || strneq(p, "usr/bin:", 8) || streq(p, "usr/bin"))
 									break;
 							}
 						}
 						if (fp->op == OP_universe)
 						{
-							if (strneq(p, "5bin", 4))
+							if (strneq(p, "xpg", 3) || strneq(p, "5bin", 4))
 							{
 								ok = 1;
 								break;
@@ -562,6 +573,13 @@ format(register Feature_t* fp, const char* path, const char* value, unsigned int
 	register Feature_t*	sp;
 	register int		n;
 
+#if DEBUG || DEBUG_astconf
+	error(-2, "astconf format name=%s path=%s value=%s flags=%04x fp=%p%s", fp->name, path, value, flags, fp, state.synthesizing ? " SYNTHESIZING" : "");
+#endif
+	if (value)
+		fp->flags &= ~CONF_GLOBAL;
+	else if (fp->flags & CONF_GLOBAL)
+		return fp->value;
 	switch (fp->op)
 	{
 
@@ -647,7 +665,9 @@ format(register Feature_t* fp, const char* path, const char* value, unsigned int
 			n = 1;
 		strcpy(fp->value, univ_name[n - 1]);
 #else
-		if (!synthesize(fp, path, value))
+		if (value && streq(path, "="))
+			strcpy(fp->value, value);
+		else
 			initialize(fp, path, "echo", "att", "ucb");
 #endif
 #endif
@@ -658,6 +678,8 @@ format(register Feature_t* fp, const char* path, const char* value, unsigned int
 		break;
 
 	}
+	if (streq(path, "="))
+		fp->flags |= CONF_GLOBAL;
 	return fp->value;
 }
 
@@ -677,7 +699,7 @@ feature(const char* name, const char* path, const char* value, unsigned int flag
 		value = null;
 	for (fp = state.features; fp && !streq(fp->name, name); fp = fp->next);
 #if DEBUG || DEBUG_astconf
-	error(-2, "astconf feature name=%s path=%s value=%s flags=%04x fp=%p", name, path, value, flags, fp);
+	error(-2, "astconf feature name=%s path=%s value=%s flags=%04x fp=%p%s", name, path, value, flags, fp, state.synthesizing ? " SYNTHESIZING" : "");
 #endif
 	if (!fp)
 	{
@@ -739,7 +761,7 @@ lookup(register Lookup_t* look, const char* name, unsigned int flags)
 		name++;
  again:
 	for (p = prefix; p < &prefix[prefix_elements]; p++)
-		if (strneq(name, p->name, p->length) && ((c = name[p->length] == '_' || name[p->length] == '(') || (v = isdigit(name[p->length]) && name[p->length + 1] == '_')))
+		if (strneq(name, p->name, p->length) && ((c = name[p->length] == '_' || name[p->length] == '(' || name[p->length] == '#') || (v = isdigit(name[p->length]) && name[p->length + 1] == '_')))
 		{
 			if (p->call < 0)
 			{
@@ -753,14 +775,16 @@ lookup(register Lookup_t* look, const char* name, unsigned int flags)
 					break;
 				look->call = p->call;
 			}
-			if (name[p->length] == '(')
+			if (name[p->length] == '(' || name[p->length] == '#')
 			{
 				look->conf = &num;
 				strncpy((char*)num.name, name, sizeof(num.name));
 				num.call = p->call;
 				num.flags = *name == 'C' ? CONF_STRING : 0;
 				num.op = (short)strtol(name + p->length + 1, &e, 10);
-				if (*e++ != ')' || *e)
+				if (name[p->length] == '(' && *e == ')')
+					e++;
+				if (*e)
 					break;
 				return 1;
 			}
@@ -862,6 +886,7 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, i
 	char*			f;
 	const char*		s;
 	int			i;
+	int			n;
 	int			olderrno;
 	int			drop;
 	int			defined;
@@ -1002,6 +1027,25 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, i
 		break;
 	case 0:
 		call = 0;
+		if (p->standard == CONF_AST)
+		{
+			if (streq(look->name, "RELEASE") && (i = open("/proc/version", O_RDONLY)) >= 0)
+			{
+				n = read(i, buf, sizeof(buf) - 1);
+				close(i);
+				if (n > 0 && buf[n - 1] == '\n')
+					n--;
+				if (n > 0 && buf[n - 1] == '\r')
+					n--;
+				buf[n] = 0;
+				if (buf[0])
+				{
+					v = 0;
+					s = buf;
+					break;
+				}
+			}
+		}
 		if (p->flags & CONF_MINMAX_DEF)
 		{
 			if (!((p->flags & CONF_LIMIT_DEF)))

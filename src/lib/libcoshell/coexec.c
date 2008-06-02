@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1990-2007 AT&T Intellectual Property          *
+*          Copyright (c) 1990-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -28,6 +28,7 @@
 #include "colib.h"
 
 #include <proc.h>
+#include <ls.h>
 
 static Cojob_t*
 service(register Coshell_t* co, Coservice_t* cs, Cojob_t* cj, int flags, Sfio_t* sp)
@@ -149,6 +150,8 @@ coexec(register Coshell_t* co, const char* action, int flags, const char* out, c
 	char*			env;
 	char*			red;
 	char*			sh[4];
+	struct stat		sto;
+	struct stat		ste;
 
 	/*
 	 * get a free job slot
@@ -273,7 +276,7 @@ coexec(register Coshell_t* co, const char* action, int flags, const char* out, c
 		}
 		else if (flags & CO_SERIALIZE)
 		{
-			if (!out)
+			if (!out && !fstat(1, &sto) && !fstat(2, &ste) && sto.st_dev == ste.st_dev && sto.st_ino == ste.st_ino)
 				sfprintf(sp, " 2>&1");
 			else if (cj->err = pathtemp(NiL, 64, NiL, "coe", NiL))
 				sfprintf(sp, " 2>%s", cj->err);

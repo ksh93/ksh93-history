@@ -92,4 +92,6 @@ then	mkdir  /tmp/ksh$$ || err_exit "mkdir /tmp/ksh$$ failed"
 	done
 else	err_exit 'hash -r failed'
 fi
+( alias :pr=print) 2> /dev/null || err_exit 'alias beginning with : fails'
+( alias p:r=print) 2> /dev/null || err_exit 'alias with : in name fails'
 exit $((Errors))

@@ -46,7 +46,7 @@ int	b_trap(int argc,char *argv[],void *extra)
 {
 	register char *arg = argv[1];
 	register int sig, clear = 0, dflag = 0, pflag = 0;
-	register Shell_t *shp = (Shell_t*)extra;
+	register Shell_t *shp = ((Shbltin_t*)extra)->shp;
 	NOT_USED(argc);
 	while (sig = optget(argv, sh_opttrap)) switch (sig)
 	{
@@ -166,7 +166,7 @@ int	b_kill(int argc,char *argv[],void *extra)
 {
 	register char *signame;
 	register int sig=SIGTERM, flag=0, n;
-	register Shell_t *shp = (Shell_t*)extra;
+	register Shell_t *shp = ((Shbltin_t*)extra)->shp;
 	NOT_USED(argc);
 	while((n = optget(argv,sh_optkill))) switch(n)
 	{

@@ -26,7 +26,7 @@
  */
 
 static const char usage[] =
-"[-?@(#)$Id: stty (AT&T Research) 2007-11-27 $\n]"
+"[-?@(#)$Id: stty (AT&T Research) 2008-04-01 $\n]"
 USAGE_LICENSE
 "[+NAME?stty - set or get terminal modes]"
 "[+DESCRIPTION?\bstty\b sets certain terminal I/O modes for the device "
@@ -484,7 +484,7 @@ static void output(struct termios *sp, int flags)
 		{
 		    case BIT:
 		    case BITS:
-			off = 1;
+			off = off2 = 1;
 			switch(tp->field)
 			{
 			    case C_FLAG:

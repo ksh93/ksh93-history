@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                     Copyright (c) 1994-2008 AT&T                     *
+*          Copyright (c) 1990-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                               by AT&T                                *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -172,7 +172,7 @@ date(char* s, char** e)
 			return 0;
 		if (!(d = number(t, &s)))
 			return 0;
-		for (; *s; s++)
+		for (y = 1969; *s; s++)
 			if ((y = number(s, &t)) && (t - s) == 4)
 			{
 				if (y < 1969)

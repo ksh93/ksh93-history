@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1982-2007 AT&T Knowledge Ventures            *
+*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                      by AT&T Knowledge Ventures                      *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -224,8 +224,9 @@ static void hist_touch(void *handle)
  * cleaned up.
  * hist_open() returns 1, if history file is open
  */
-int  sh_histinit(void)
+int  sh_histinit(void *sh_context)
 {
+	Shell_t *shp = (Shell_t*)sh_context;
 	register int fd;
 	register History_t *hp;
 	register char *histname;
@@ -234,7 +235,7 @@ int  sh_histinit(void)
 	register char *cp;
 	register off_t hsize = 0;
 
-	if(sh.hist_ptr=hist_ptr)
+	if(shp->hist_ptr=hist_ptr)
 		return(1);
 	if(!(histname = nv_getval(HISTFILE)))
 	{
@@ -251,7 +252,7 @@ int  sh_histinit(void)
 	{
 		/* reuse history file if same name */
 		wasopen = 0;
-		sh.hist_ptr = hist_ptr = hp;
+		shp->hist_ptr = hist_ptr = hp;
 		if(strcmp(histname,hp->histname)==0)
 			return(1);
 		else
@@ -288,7 +289,7 @@ retry:
 	{
 #if KSHELL
 		/* don't allow root a history_file in /tmp */
-		if(sh.userid)
+		if(shp->userid)
 #endif	/* KSHELL */
 		{
 			if(!(fname = pathtmp(NIL(char*),0,0,NIL(int*))))
@@ -310,8 +311,8 @@ retry:
 		close(fd);
 		return(0);
 	}
-	sh.hist_ptr = hist_ptr = hp;
-	hp->histshell = (void*)&sh;
+	shp->hist_ptr = hist_ptr = hp;
+	hp->histshell = (void*)shp;
 	hp->histsize = maxlines;
 	hp->histmask = histmask;
 	hp->histfp= sfnew(NIL(Sfio_t*),hp->histbuff,HIST_BSIZE,fd,SF_READ|SF_WRITE|SF_APPENDWR|SF_SHARE);
@@ -491,7 +492,7 @@ static void hist_trim(History_t *hp, int n)
 		histinit = 1;
 		histmode =  statb.st_mode;
 	}
-	if(!sh_histinit())
+	if(!sh_histinit(hp->histshell))
 	{
 		/* use the old history file */
 		hist_ptr = hist_old;
@@ -746,7 +747,7 @@ void hist_flush(register History_t *hp)
 		if(sfsync(hp->histfp)<0)
 		{
 			hist_close(hp);
-			if(!sh_histinit())
+			if(!sh_histinit(hp->histshell))
 				sh_offoption(SH_HISTORY);
 		}
 		hp->histflush = 0;

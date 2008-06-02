@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2007 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -95,6 +95,7 @@ int main(int argc, char *argv[])
 		break;
 	}
 	shp = sh_init(argc,argv,(Shinit_f)0);
+	shp->shcomp = 1;
 	argv += opt_info.index;
 	argc -= opt_info.index;
 	if(error_info.errors || argc>2)

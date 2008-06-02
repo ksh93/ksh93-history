@@ -2,7 +2,7 @@
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)make.probe (AT&T Research) 2008-02-02
+# @(#)make.probe (AT&T Research) 2008-02-28
 #
 # C probe for make
 #
@@ -96,12 +96,14 @@ echo '#if defined(__STDC__) || defined(__cplusplus)
 extern type call(int);
 #endif
 int main() {call(0);return(0);}' > tstlib.$src
-echo 'int f(){return 0;}' > warn.$src
-echo 'int f(){}' > warn1.$src
-echo 'int f(){int i; return 0;}' > warn2.$src
-echo 'int f(){int i; return i;}' > warn3.$src
-echo 'int f(){return g();}' > warn4.$src
-warn_enum="1 2 3 4"
+echo 'int main(){return 0;}' > warn.$src
+echo 'int f(){return 0;}' > warn1.$src
+echo 'int f(){}' > warn2.$src
+echo 'int f(){int i; return 0;}' > warn3.$src
+echo 'int f(){int i; return i;}' > warn4.$src
+echo 'int f(){return g();}' > warn5.$src
+warn_enum="1 2 3 4 5"
+
 chmod -w *.$src
 
 arflags=
@@ -1456,7 +1458,7 @@ then	e=`wc -c < e`
 		fi
 	done
 
-	$cc -c warn.$src 2>e
+	$cc -c warn1.$src 2>e
 	o=`wc -c < e`
 	eval set x $probe_warn
 	while	:
@@ -1464,17 +1466,14 @@ then	e=`wc -c < e`
 		case $# in
 		0)	break ;;
 		esac
-		rm -f warn.$obj
-		$cc $1 -c warn.$src 2>e && test -f warn.$obj || continue
+		rm -f warn.$obj warn.$exe
+		$cc -o warn.$exe $1 warn.$src 2>e && test -f warn.$exe || continue
 		n=`wc -c < e`
-		if	test $n -gt $o
-		then	continue
-		fi
-		for n in $warn_enum
-		do	rm -f warn$n.$obj
-			$cc $1 -c warn$n.$src 2>e && test -f warn$n.$obj || continue
+		for i in $warn_enum
+		do	rm -f warn$i.$obj
+			$cc -c $1 warn$i.$src 2>e && test -f warn$i.$obj || continue
 			n=`wc -c < e`
-			if	test $n -gt $e
+			if	test $n -gt $o
 			then	warn=$1
 				break 2
 			fi

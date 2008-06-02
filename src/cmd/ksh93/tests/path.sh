@@ -1,10 +1,10 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#           Copyright (c) 1982-2006 AT&T Knowledge Ventures            #
+#          Copyright (c) 1982-2008 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
-#                      by AT&T Knowledge Ventures                      #
+#                    by AT&T Intellectual Property                     #
 #                                                                      #
 #                A copy of the License is available at                 #
 #            http://www.opensource.org/licenses/cpl1.0.txt             #
@@ -30,6 +30,40 @@ integer Errors=0
 mkdir /tmp/ksh$$
 cd /tmp/ksh$$
 trap "PATH=$PATH; cd /; rm -rf /tmp/ksh$$" EXIT
+mkdir dir1 dir2
+cat  > dir1/foobar << '+++'
+foobar() { print foobar1;}
+function dir1 { print dir1;}
++++
+cat  > dir2/foobar << '+++'
+foobar() { print foobar2;}
+function dir2 { print dir2;}
++++
+chmod +x dir[12]/foobar
+p=$PATH
+FPATH=$PWD/dir1
+PATH=$FPATH:$p
+[[ $( foobar) == foobar1 ]] || err_exit 'foobar should output foobar1'
+FPATH=$PWD/dir2
+PATH=$FPATH:$p
+[[ $(foobar) == foobar2 ]] || err_exit 'foobar should output foobar2'
+FPATH=$PWD/dir1
+PATH=$FPATH:$p
+[[ $(foobar) == foobar1 ]] || err_exit 'foobar should output foobar1 again'
+FPATH=$PWD/dir2
+PATH=$FPATH:$p
+[[ ${ foobar;} == foobar2 ]] || err_exit 'foobar should output foobar2 with ${}'
+[[ ${ dir2;} == dir2 ]] || err_exit 'should be dir2'
+[[ ${ dir1;} == dir1 ]] 2> /dev/null &&  err_exit 'should not be be dir1'
+FPATH=$PWD/dir1
+PATH=$FPATH:$p
+[[ ${ foobar;} == foobar1 ]] || err_exit 'foobar should output foobar1 with ${}'
+[[ ${ dir1;} == dir1 ]] || err_exit 'should be dir1'
+[[ ${ dir2;} == dir2 ]] 2> /dev/null &&  err_exit 'should not be be dir2'
+FPATH=$PWD/dir2
+PATH=$FPATH:$p
+[[ ${ foobar;} == foobar2 ]] || err_exit 'foobar should output foobar2 with ${} again'
+PATH=$p
 (PATH="/bin")
 [[ $($SHELL -c 'print -r -- "$PATH"') == "$PATH" ]] || err_exit 'export PATH lost in subshell'
 cat > bug1 <<- \EOF
@@ -183,4 +217,13 @@ status=$($SHELL -c $'trap \'print $?\' ERR;/a/b/c/d/e 2> /dev/null')
 [[ $status == 127 ]] || err_exit "not found command with ERR trap exit status $status -- expected 127"
 status=$($SHELL -c $'trap \'print $?\' ERR;/dev/null 2> /dev/null')
 [[ $status == 126 ]] || err_exit "non executable command ERR trap exit status $status -- expected 126"
+
+# universe via PATH
+
+builtin getconf
+getconf UNIVERSE - att # override sticky default 'UNIVERSE = foo'
+
+[[ $(PATH=/usr/ucb/bin:/usr/bin echo -n ucb) == 'ucb' ]] || err_exit "ucb universe echo ignores -n option"
+[[ $(PATH=/usr/xpg/bin:/usr/bin echo -n att) == '-n att' ]] || err_exit "att universe echo does not ignore -n option"
+
 exit $((Errors))

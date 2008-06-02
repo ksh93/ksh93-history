@@ -16,12 +16,12 @@ HOSTTYPE == "$(CC.HOSTTYPE)"
 cmd 1.2 :LIBRARY: RELEASE cmdinit.c \
 	cmd.h rev.h wc.h \
 	basename.c cat.c chgrp.c chmod.c chown.c cksum.c cmp.c \
-	comm.c cp.c cut.c dirname.c date.c expr.c fds.c fmt.c \
-	fold.c getconf.c head.c id.c join.c ln.c logname.c md5sum.c \
-	mkdir.c mkfifo.c mv.c paste.c pathchk.c rev.c rm.c rmdir.c \
+	comm.c cp.c cut.c dirname.c date.c expr.c fds.c fmt.c fold.c \
+	getconf.c head.c id.c join.c ln.c logname.c md5sum.c mkdir.c \
+	mkfifo.c mv.c paste.c pathchk.c pids.c rev.c rm.c rmdir.c \
 	stty.c sum.c sync.c tail.c tee.c tty.c uname.c uniq.c wc.c \
 	revlib.c wclib.c sumlib.o \
-	-lfsg
+	-lfsg -lmd
 
 sumlib.o : +lsum
 	$(AR) x $(*:O=1) $(<)

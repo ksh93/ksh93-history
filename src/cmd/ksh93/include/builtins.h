@@ -54,6 +54,7 @@
 extern int b_alias(int, char*[],void*);
 extern int b_break(int, char*[],void*);
 extern int b_dot_cmd(int, char*[],void*);
+extern int b_enum(int, char*[],void*);
 extern int b_exec(int, char*[],void*);
 extern int b_eval(int, char*[],void*);
 extern int b_return(int, char*[],void*);

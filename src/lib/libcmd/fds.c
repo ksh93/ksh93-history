@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1992-2007 AT&T Knowledge Ventures            *
+*          Copyright (c) 1992-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                      by AT&T Knowledge Ventures                      *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -29,7 +29,7 @@ USAGE_LICENSE
     "calling shell, otherwise it lists the file descriptors passed across "
     "\bexec\b(2).]"
 "[l:long?List file descriptor details.]"
-"[+SEE ALSO?\blogname\b(1), \bwho\b(1), \bgetgroups\b(2), \bgetsockname\b(2), \bgetsockopts\b(2), ]"
+"[+SEE ALSO?\blogname\b(1), \bwho\b(1), \bgetgroups\b(2), \bgetsockname\b(2), \bgetsockopts\b(2)]"
 ;
 
 #include <cmd.h>

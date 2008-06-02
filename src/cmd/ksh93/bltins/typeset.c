@@ -48,6 +48,8 @@ struct tdata
 	Namval_t	*tp;
 	Sfio_t  	*outfile;
 	char    	*prefix;
+	char    	*tname;
+	char		*help;
 	int     	aflag;
 	int     	argnum;
 	int     	scanmask;
@@ -59,7 +61,7 @@ struct tdata
 static int	print_namval(Sfio_t*, Namval_t*, int, struct tdata*);
 static void	print_attribute(Namval_t*,void*);
 static void	print_all(Sfio_t*, Dt_t*, struct tdata*);
-static void	print_scan(Sfio_t*, int, Dt_t*, int, struct tdata*t);
+static void	print_scan(Sfio_t*, int, Dt_t*, int, struct tdata*);
 static int	b_unall(int, char**, Dt_t*, Shell_t*);
 static int	b_common(char**, int, Dt_t*, struct tdata*);
 static void	pushname(Namval_t*,void*);
@@ -85,7 +87,7 @@ int    b_readonly(int argc,char *argv[],void *extra)
 	struct tdata tdata;
 	NOT_USED(argc);
 	memset((void*)&tdata,0,sizeof(tdata));
-	tdata.sh = (Shell_t*)extra;
+	tdata.sh = ((Shbltin_t*)extra)->shp;
 	tdata.aflag = '-';
 	while((flag = optget(argv,*command=='e'?sh_optexport:sh_optreadonly))) switch(flag)
 	{
@@ -120,8 +122,8 @@ int    b_readonly(int argc,char *argv[],void *extra)
 	else
 	{
 		flag = (NV_ASSIGN|NV_EXPORT|NV_IDENT);
-		if(!sh.prefix)
-			sh.prefix = "";
+		if(!tdata.sh->prefix)
+			tdata.sh->prefix = "";
 	}
 	return(b_common(argv,flag,tdata.sh->var_tree, &tdata));
 }
@@ -135,7 +137,7 @@ int    b_alias(int argc,register char *argv[],void *extra)
 	struct tdata tdata;
 	NOT_USED(argc);
 	memset((void*)&tdata,0,sizeof(tdata));
-	tdata.sh = (Shell_t*)extra;
+	tdata.sh = ((Shbltin_t*)extra)->shp;
 	troot = tdata.sh->alias_tree;
 	if(*argv[0]=='h')
 		flag = NV_TAGGED;
@@ -185,7 +187,7 @@ int    b_alias(int argc,register char *argv[],void *extra)
 						argv++;
 					else
 						errormsg(SH_DICT, ERROR_exit(1), e_option, argv[1]);
-				}
+		}
 			}
 			troot = tdata.sh->track_tree;
 		}
@@ -200,24 +202,34 @@ int    b_alias(int argc,register char *argv[],void *extra)
 #endif
 int    b_typeset(int argc,register char *argv[],void *extra)
 {
-	register int flag = NV_VARNAME|NV_ASSIGN;
-	register int n;
-	struct tdata tdata;
-	Namtype_t *ntp = (Namtype_t*)extra;
-	Dt_t *troot;
-	int isfloat=0, shortint=0;
+	register int	n, flag = NV_VARNAME|NV_ASSIGN;
+	struct tdata	tdata;
+	const char	*optstring = sh_opttypeset;
+	Namdecl_t 	*ntp = (Namdecl_t*)((Shbltin_t*)extra)->ptr;
+	Dt_t		*troot;
+	int		isfloat=0, shortint=0, sflag=0;
 	NOT_USED(argc);
 	memset((void*)&tdata,0,sizeof(tdata));
-	tdata.sh = ntp->shp;
-	tdata.tp = ntp->np;
+	tdata.sh = ((Shbltin_t*)extra)->shp;
+	if(ntp)
+	{
+		tdata.tp = ntp->tp;
+		opt_info.disc = (Optdisc_t*)ntp->optinfof;
+		optstring = ntp->optstring;
+	}
 	troot = tdata.sh->var_tree;
-	opt_info.disc = (Optdisc_t*)ntp->optinfof;
-	while((n = optget(argv,ntp->optstring)))
+	while((n = optget(argv,optstring)))
 	{
 		switch(n)
 		{
 			case 'a':
 				flag |= NV_IARRAY;
+				if(opt_info.arg && *opt_info.arg!='[')
+				{
+					opt_info.index--;
+					goto endargs;
+				}
+				tdata.tname = opt_info.arg;
 				break;
 			case 'A':
 				flag |= NV_ARRAY;
@@ -230,11 +242,20 @@ int    b_typeset(int argc,register char *argv[],void *extra)
 					break;
 				}
 			case 'F':
+			case 'X':
 				if(!opt_info.arg || (tdata.argnum = opt_info.num) <0)
 					tdata.argnum = 10;
 				isfloat = 1;
 				if(n=='E')
+				{
+					flag &= ~NV_HEXFLOAT;
 					flag |= NV_EXPNOTE;
+				}
+				else if(n=='X')
+				{
+					flag &= ~NV_EXPNOTE;
+					flag |= NV_HEXFLOAT;
+				}
 				break;
 			case 'b':
 				flag |= NV_BINARY;
@@ -250,24 +271,18 @@ int    b_typeset(int argc,register char *argv[],void *extra)
 				flag |= NV_TYPE;
 				tdata.prefix = opt_info.arg;
 				break;
-			case 'L':
+			case 'L': case 'Z': case 'R':
 				if(tdata.argnum==0)
 					tdata.argnum = (int)opt_info.num;
 				if(tdata.argnum < 0)
 					errormsg(SH_DICT,ERROR_exit(1), e_badfield, tdata.argnum);
-				flag &= ~NV_RJUST;
-				flag |= NV_LJUST;
-				break;
-			case 'Z':
-				flag |= NV_ZFILL;
-				/* FALL THRU*/
-			case 'R':
-				if(tdata.argnum==0)
-					tdata.argnum = (int)opt_info.num;
-				if(tdata.argnum < 0)
-					errormsg(SH_DICT,ERROR_exit(1), e_badfield, tdata.argnum);
-				flag &= ~NV_LJUST;
-				flag |= NV_RJUST;
+				if(n=='Z')
+					flag |= NV_ZFILL;
+				else
+				{
+					flag &= ~(NV_LJUST|NV_RJUST);
+					flag |= (n=='L'?NV_LJUST:NV_RJUST);
+				}
 				break;
 			case 'f':
 				flag &= ~(NV_VARNAME|NV_ASSIGN);
@@ -287,6 +302,14 @@ int    b_typeset(int argc,register char *argv[],void *extra)
 			case 'r':
 				flag |= NV_RDONLY;
 				break;
+#ifdef SHOPT_TYPEDEF
+			case 'S':
+				sflag=1;
+				break;
+			case 'h':
+				tdata.help = opt_info.arg;
+				break;
+#endif /*SHOPT_TYPEDEF*/
 			case 's':
 				shortint=1;
 				break;
@@ -311,6 +334,7 @@ int    b_typeset(int argc,register char *argv[],void *extra)
 		if(tdata.aflag==0)
 			tdata.aflag = *opt_info.option;
 	}
+endargs:
 	argv += opt_info.index;
 	opt_info.disc = 0;
 	/* handle argument of + and - specially */
@@ -318,6 +342,8 @@ int    b_typeset(int argc,register char *argv[],void *extra)
 		tdata.aflag = *argv[0];
 	else
 		argv--;
+	if((flag&NV_ZFILL) && !(flag&NV_LJUST))
+		flag |= NV_RJUST;
 	if((flag&NV_INTEGER) && (flag&(NV_LJUST|NV_RJUST|NV_ZFILL)))
 		error_info.errors++;
 	if((flag&NV_BINARY) && (flag&(NV_LJUST|NV_UTOL|NV_LTOU)))
@@ -327,27 +353,37 @@ int    b_typeset(int argc,register char *argv[],void *extra)
 	if(error_info.errors)
 		errormsg(SH_DICT,ERROR_usage(2),"%s", optusage(NIL(char*)));
 	if(isfloat)
-		flag |= NV_INTEGER|NV_DOUBLE;
+		flag |= NV_DOUBLE;
 	if(shortint)
 		flag |= NV_SHORT|NV_INTEGER;
+	if(sflag)
+	{
+		if(tdata.sh->mktype)
+			flag |= NV_REF|NV_TAGGED;
+		else
+			flag |= NV_STATIC|NV_IDENT;
+	}
 	if(tdata.sh->fn_depth)
 		flag |= NV_NOSCOPE;
 	if(flag&NV_TYPE)
 	{
-		int offset = staktell();
-		stakputs(NV_CLASS);
+		Stk_t *stkp = tdata.sh->stk;
+		int offset = stktell(stkp);
+		sfputr(stkp,NV_CLASS,-1);
 		if(NV_CLASS[sizeof(NV_CLASS)-2]!='.')
-			stakputc('.');
-		stakputs(tdata.prefix);
-		stakputc(0);
-		tdata.tp = nv_open(stakptr(offset),tdata.sh->var_tree,NV_VARNAME|NV_NOARRAY|NV_NOASSIGN);
-		stakseek(offset);
+			sfputc(stkp,'.');
+		sfputr(stkp,tdata.prefix,0);
+		tdata.tp = nv_open(stkptr(stkp,offset),tdata.sh->var_tree,NV_VARNAME|NV_NOARRAY|NV_NOASSIGN);
+		stkseek(stkp,offset);
 		if(!tdata.tp)
 			errormsg(SH_DICT,ERROR_exit(1),"%s: unknown type",tdata.prefix);
+		tdata.tp->nvenv = tdata.help;
 		flag &= ~NV_TYPE;
 	}
-	else if(tdata.aflag==0 && ntp->np)
+	else if(tdata.aflag==0 && ntp && ntp->tp)
 		tdata.aflag = '-';
+	if(!tdata.sh->mktype)
+		tdata.help = 0;
 	return(b_common(argv,flag,troot,&tdata));
 }
 
@@ -355,14 +391,14 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 {
 	register char *name;
 	char *last = 0;
-	int nvflags=(flag&(NV_ARRAY|NV_NOARRAY|NV_VARNAME|NV_IDENT|NV_ASSIGN));
+	int nvflags=(flag&(NV_ARRAY|NV_NOARRAY|NV_VARNAME|NV_IDENT|NV_ASSIGN|NV_STATIC));
 	int r=0, ref=0;
 	Shell_t *shp =tp->sh;
-	if(!sh.prefix)
+	if(!shp->prefix)
 		nvflags |= NV_NOSCOPE;
-	else if(*sh.prefix==0)
-		sh.prefix = 0;
-	flag &= ~(NV_NOARRAY|NV_NOSCOPE|NV_VARNAME|NV_IDENT);
+	else if(*shp->prefix==0)
+		shp->prefix = 0;
+	flag &= ~(NV_NOARRAY|NV_NOSCOPE|NV_VARNAME|NV_IDENT|NV_STATIC);
 	if(argv[1])
 	{
 		if(flag&NV_REF)
@@ -391,7 +427,7 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 						errormsg(SH_DICT,ERROR_exit(1),e_badfun,name);
 					np = nv_open(name,sh_subfuntree(1),NV_NOARRAY|NV_IDENT|NV_NOSCOPE);
 				}
-				else if((np=nv_search(name,troot,0)) && !is_afunction(np))
+				else  if((np=nv_search(name,troot,0)) && !is_afunction(np))
 					np = 0;
 				if(np && ((flag&NV_LTOU) || !nv_isnull(np) || nv_isattr(np,NV_LTOU)))
 				{
@@ -409,18 +445,22 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 				}
 				else
 					r++;
+				if(tp->help)
+				{
+					int offset = stktell(shp->stk);
+					sfputr(shp->stk,shp->prefix,'.');
+					sfputr(shp->stk,name,0);
+					if((np=nv_search(stkptr(shp->stk,offset),troot,0)) && np->nvalue.cp) 
+						np->nvalue.rp->help = tp->help;
+					stkseek(shp->stk,offset);
+				}
 				continue;
 			}
 			/* tracked alias */
 			if(troot==shp->track_tree && tp->aflag=='-')
 			{
 				np = nv_search(name,troot,NV_ADD);
-#ifdef PATH_BFPATH
 				path_alias(np,path_absolute(nv_name(np),NIL(Pathcomp_t*)));
-#else
-				nv_onattr(np,NV_NOALIAS);
-				path_alias(np,path_absolute(nv_name(np),NIL(char*)));
-#endif
 				continue;
 			}
 			np = nv_open(name,troot,nvflags);
@@ -433,21 +473,25 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 				}
 				continue;
 			}
-			if(tp->tp)
-			{
-				nv_settype(np,tp->tp,tp->aflag=='-'?0:NV_APPEND);
-				flag = (np->nvflag&NV_NOCHANGE);
-			}
+			if(troot==shp->var_tree && !shp->st.real_fun && (nvflags&NV_STATIC) && (!shp->envlist || !nv_onlist(shp->envlist,name)))
+				_nv_unset(np,0);
 			if(troot==shp->var_tree && (flag&NV_IARRAY))
 			{
 				flag &= ~NV_IARRAY;
-				if(nv_isnull(np))
+				if(tp->tname)
+					nv_atypeindex(np,tp->tname+1);
+				else if(nv_isnull(np))
 					nv_onattr(np,NV_ARRAY);
 				else
 					nv_putsub(np, (char*)0, 0);
 			}
 			if(troot==shp->var_tree && (nvflags&NV_ARRAY))
 				nv_setarray(np,nv_associative);
+			if(tp->tp)
+			{
+				nv_settype(np,tp->tp,tp->aflag=='-'?0:NV_APPEND);
+				flag = (np->nvflag&NV_NOCHANGE);
+			}
 			curflag = np->nvflag;
 			flag &= ~NV_ASSIGN;
 			if(last=strchr(name,'='))
@@ -472,10 +516,13 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 					else if(!(flag&NV_LJUST))
 						newflag &= ~NV_LJUST;
 				}
-				if (flag & NV_UTOL)
-					newflag &= ~NV_LTOU;
-				else if (flag & NV_LTOU)
-					newflag &= ~NV_UTOL;
+				if(!(flag&NV_INTEGER))
+				{
+					if (flag & NV_UTOL)
+						newflag &= ~NV_LTOU;
+					else if (flag & NV_LTOU)
+						newflag &= ~NV_UTOL;
+				}
 			}
 			else
 			{
@@ -492,6 +539,7 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 				else
 				{
 					char *oldname=0;
+					int len=strlen(name);
 					if(tp->argnum==1 && newflag==NV_INTEGER && nv_isattr(np,NV_INTEGER))
 						tp->argnum = 10;
 					/* use reference name for export */
@@ -500,10 +548,17 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 						oldname = np->nvname;
 						np->nvname = name;
 					}
+					if(np->nvfun && !nv_isarray(np) && name[len-1]=='.')
+						newflag |= NV_NODISC;
 					nv_newattr (np, newflag&~NV_ASSIGN,tp->argnum);
 					if(oldname)
 						np->nvname = oldname;
 				}
+			}
+			if(tp->help && !nv_isattr(np,NV_MINIMAL|NV_EXPORT))
+			{
+				np->nvenv = tp->help;
+				nv_onattr(np,NV_EXPORT);
 			}
 			if(last)
 				*last = '=';
@@ -518,7 +573,10 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 						if(!(hp=(Dt_t*)shp->st.prevst->save_tree))
 							hp = dtvnext(shp->var_tree);
 					}
-					nv_setref(np,hp,NV_VARNAME);
+					if(tp->sh->mktype)
+						nv_onattr(np,NV_REF|NV_FUNCT);
+					else
+						nv_setref(np,hp,NV_VARNAME);
 				}
 				else
 					nv_unref(np);
@@ -526,7 +584,7 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 			nv_close(np);
 		}
 	}
-	else if(!sh.envlist)
+	else if(!tp->sh->envlist)
 	{
 		if(tp->aflag)
 		{
@@ -536,7 +594,11 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 				tp->prefix = 0;
 			}
 			else if(troot==shp->var_tree)
+			{
 				flag |= (nvflags&NV_ARRAY);
+				if(flag&NV_IARRAY)
+					flag |= NV_ARRAY;
+			}
 			print_scan(sfstdout,flag,troot,tp->aflag=='+',tp);
 		}
 		else if(troot==shp->alias_tree)
@@ -607,7 +669,7 @@ int sh_addlib(void* library)
 			libattr = (unsigned short*)malloc((maxlib+1)*sizeof(unsigned short*));
 		}
 	}
-	libattr[nlib] = NV_BLTINOPT|(sp->nosfio?BLT_NOSFIO:0);
+	libattr[nlib] = (sp->nosfio?BLT_NOSFIO:0);
 	liblist[nlib++] = library;
 	liblist[nlib] = 0;
 	return !r;
@@ -625,10 +687,13 @@ int	b_builtin(int argc,char *argv[],void *extra)
 	long dlete=0;
 	struct tdata tdata;
 	Fptr_t addr;
+	Stk_t	*stkp;
 	void *library=0;
 	char *errmsg;
 	NOT_USED(argc);
-	tdata.sh = (Shell_t*)extra;
+	memset(&tdata,0,sizeof(tdata));
+	tdata.sh = ((Shbltin_t*)extra)->shp;
+	stkp = tdata.sh->stk;
 	while (n = optget(argv,sh_optbuiltin)) switch (n)
 	{
 	    case 's':
@@ -687,18 +752,18 @@ int	b_builtin(int argc,char *argv[],void *extra)
 		return(0);
 	}
 	r = 0;
-	flag = staktell();
+	flag = stktell(stkp);
 	while(arg = *argv)
 	{
 		name = path_basename(arg);
-		stakputs("b_");
-		stakputs(name);
+		sfwrite(stkp,"b_",2);
+		sfputr(stkp,name,0);
 		errmsg = 0;
 		addr = 0;
 		for(n=(nlib?nlib:dlete); --n>=0;)
 		{
 			/* (char*) added for some sgi-mips compilers */ 
-			if(dlete || (addr = (Fptr_t)dlllook(liblist[n],stakptr(flag))))
+			if(dlete || (addr = (Fptr_t)dlllook(liblist[n],stkptr(stkp,flag))))
 			{
 				if(np = sh_addbuiltin(arg, addr,pointerof(dlete)))
 				{
@@ -723,7 +788,7 @@ int	b_builtin(int argc,char *argv[],void *extra)
 			errormsg(SH_DICT,ERROR_exit(0),"%s: %s",*argv,errmsg);
 			r = 1;
 		}
-		stakseek(flag);
+		stkseek(stkp,flag);
 		argv++;
 	}
 	return(r);
@@ -733,11 +798,11 @@ int    b_set(int argc,register char *argv[],void *extra)
 {
 	struct tdata tdata;
 	memset(&tdata,0,sizeof(tdata));
-	tdata.sh = (Shell_t*)extra;
+	tdata.sh = ((Shbltin_t*)extra)->shp;
 	tdata.prefix=0;
 	if(argv[1])
 	{
-		if(sh_argopts(argc,argv) < 0)
+		if(sh_argopts(argc,argv,tdata.sh) < 0)
 			return(2);
 		if(sh_isoption(SH_VERBOSE))
 			sh_onstate(SH_VERBOSE);
@@ -763,13 +828,13 @@ int    b_set(int argc,register char *argv[],void *extra)
 
 int    b_unalias(int argc,register char *argv[],void *extra)
 {
-	Shell_t *shp = (Shell_t*)extra;
+	Shell_t *shp = ((Shbltin_t*)extra)->shp;
 	return(b_unall(argc,argv,shp->alias_tree,shp));
 }
 
 int    b_unset(int argc,register char *argv[],void *extra)
 {
-	Shell_t *shp = (Shell_t*)extra;
+	Shell_t *shp = ((Shbltin_t*)extra)->shp;
 	return(b_unall(argc,argv,shp->var_tree,shp));
 }
 
@@ -778,6 +843,7 @@ static int b_unall(int argc, char **argv, register Dt_t *troot, Shell_t* shp)
 	register Namval_t *np;
 	register const char *name;
 	register int r;
+	Dt_t	*dp;
 	int nflag=0,all=0,isfun;
 	NOT_USED(argc);
 	if(troot==shp->alias_tree)
@@ -822,7 +888,7 @@ static int b_unall(int argc, char **argv, register Dt_t *troot, Shell_t* shp)
 		dtclear(troot);
 	else while(name = *argv++)
 	{
-		if(np=nv_open(name,troot,NV_NOADD|nflag))
+		if(np=nv_open(name,troot,NV_NOADD|NV_NOFAIL|nflag))
 		{
 			if(is_abuiltin(np))
 			{
@@ -830,11 +896,22 @@ static int b_unall(int argc, char **argv, register Dt_t *troot, Shell_t* shp)
 				continue;
 			}
 			isfun = is_afunction(np);
-			if(shp->subshell && troot==shp->var_tree)
-				np=sh_assignok(np,0);
+			if(troot==shp->var_tree)
+			{
+				if(nv_isarray(np) && name[strlen(name)-1]==']' && !nv_getsub(np))
+				{
+					r=1;
+					continue;
+				}
+					
+				if(shp->subshell)
+					np=sh_assignok(np,0);
+			}
 			nv_unset(np);
 			nv_close(np);
-			if(isfun)
+			if(troot==shp->var_tree && shp->st.real_fun && (dp=shp->var_tree->walk) && dp==shp->st.real_fun->sdict)
+				dtdelete(dp,np);
+			else if(isfun)
 				dtdelete(troot,np);
 		}
 		else
@@ -853,7 +930,7 @@ static int print_namval(Sfio_t *file,register Namval_t *np,register int flag, st
 	sh_sigcheck();
 	if(flag)
 		flag = '\n';
-	if(nv_isattr(np,NV_NOPRINT)==NV_NOPRINT)
+	if(nv_isattr(np,NV_NOPRINT|NV_INTEGER)==NV_NOPRINT)
 	{
 		if(is_abuiltin(np))
 			sfputr(file,nv_name(np),'\n');
@@ -963,7 +1040,7 @@ static void print_scan(Sfio_t *file, int flag, Dt_t *root, int option,struct tda
 	register Namval_t *np;
 	register int namec;
 	Namval_t *onp = 0;
-	sh.last_table=0;
+	tp->sh->last_table=0;
 	flag &= ~NV_ASSIGN;
 	tp->scanmask = flag&~NV_NOSCOPE;
 	tp->scanroot = root;
@@ -975,8 +1052,8 @@ static void print_scan(Sfio_t *file, int flag, Dt_t *root, int option,struct tda
 	if(flag&NV_INTEGER)
 		tp->scanmask |= (NV_DOUBLE|NV_EXPNOTE);
 	namec = nv_scan(root,nullscan,(void*)tp,tp->scanmask,flag);
-	argv = tp->argnam  = (char**)stakalloc((namec+1)*sizeof(char*));
-	namec = nv_scan(root, pushname, (void*)tp, tp->scanmask, flag);
+	argv = tp->argnam  = (char**)stkalloc(tp->sh->stk,(namec+1)*sizeof(char*));
+	namec = nv_scan(root, pushname, (void*)tp, tp->scanmask, flag&~NV_IARRAY);
 	if(mbcoll())
 		strsort(argv,namec,strcoll);
 	while(namec--)
@@ -984,8 +1061,17 @@ static void print_scan(Sfio_t *file, int flag, Dt_t *root, int option,struct tda
 		if((np=nv_search(*argv++,root,0)) && np!=onp && (!nv_isnull(np) || np->nvfun || nv_isattr(np,~NV_NOFREE)))
 		{
 			onp = np;
-			if((flag&NV_ARRAY) && nv_aindex(np)>=0)
-				continue;
+			if(flag&NV_ARRAY)
+			{
+				if(nv_aindex(np)>=0)
+				{
+					if(!(flag&NV_IARRAY))
+						continue;
+				}
+				else if((flag&NV_IARRAY))
+					continue;
+				
+			}
 			if(!flag && nv_isattr(np,NV_ARRAY))
 			{
 				if(array_elem(nv_arrayptr(np))==0)

@@ -973,7 +973,7 @@ TEST 07 'diagnostics'
 #define _REGRESS	1
 #define _sys_types	1	/* #include <sys/types.h> ok */'
 		ERROR - $'iffe: t.iffe:1: missing endif'
-		EXIT 2
+		EXIT 1
 
 	EXEC	-r -s bsh - t.iffe
 
@@ -1680,7 +1680,7 @@ iffe: test: is ( bar_foo ) true ... yes'
 		INPUT t.iffe $'inc foo_lib.h'
 		OUTPUT -
 		ERROR - $'iffe: t.iffe:1: foo_lib.h: file not found'
-		EXIT 2
+		EXIT 1
 
 	EXEC	-r -v - t.iffe
 		INPUT t.iffe $'inc'

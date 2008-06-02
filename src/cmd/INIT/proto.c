@@ -198,7 +198,7 @@ replace __PARAM__((const char* newfile, const char* oldfile, int preserve), (new
 #line 1 "/home/gsf/src/lib/libpp/ppproto.c"
  
 #line 13
-static const char id[] = "\n@(#)$Id: proto (AT&T Research) 2007-09-21 $\000\n";
+static const char id[] = "\n@(#)$Id: proto (AT&T Research) 2008-05-11 $\000\n";
 
 #line 1 "/home/gsf/src/lib/libpp/ppfsm.c"
  
@@ -3758,7 +3758,11 @@ if !defined(va_start)\n\
 			break;
 		case '=':
 			if (last == '?') flags |= (1L<<3);
-			else if (paren == 0 && (flags & ((1L<<9)|(1L<<15)|(1L<<23))) == (1L<<15)) goto fsm_statement;
+			else if (paren == 0 && (flags & ((1L<<9)|(1L<<15)|(1L<<23))) == (1L<<15))
+			{
+				if (last == ')' && proto->brace && (group != 2 || call != 2)) flags |= (1L<<23);
+				else goto fsm_statement;
+			}
 			goto fsm_other;
 		case ',':
 
@@ -4229,7 +4233,7 @@ pppclose __PARAM__((char* iob), (iob)) __OTORP__(char* iob;){
 }
 
  
-#line 2008
+#line 2012
 char*
 pppopen __PARAM__((char* file, int fd, char* notice, char* options, char* package, char* comment, int flags), (file, fd, notice, options, package, comment, flags)) __OTORP__(char* file; int fd; char* notice; char* options; char* package; char* comment; int flags;){
 	register struct proto*	proto;
@@ -4323,7 +4327,7 @@ pppopen __PARAM__((char* file, int fd, char* notice, char* options, char* packag
 	*(proto->ip + n) = 0;
 
  
-#line 2113
+#line 2117
 	if (!notice && !options || (comlen = astlicense(com, sizeof(com), ((char*)0), "type=check", proto->cc[0], proto->cc[1], proto->cc[2])) <= 0)
 		*com = 0;
 

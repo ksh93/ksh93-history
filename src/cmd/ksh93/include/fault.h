@@ -33,6 +33,7 @@
 #include	"FEATURE/setjmp"
 #include	"FEATURE/sigfeatures"
 
+
 #ifndef SIGWINCH
 #   ifdef SIGWIND
 #	define SIGWINCH	SIGWIND
@@ -112,11 +113,11 @@ struct checkpt
 #define sh_popcontext(bp)	(sh.jmplist=(bp)->prev, errorpop(&((bp)->err)))
 
 extern void 	sh_fault(int);
-extern void 	sh_done(int);
+extern void 	sh_done(void*,int);
 extern void 	sh_chktrap(void);
 extern void 	sh_sigclear(int);
 extern void 	sh_sigdone(void);
-extern void	sh_siginit(void);
+extern void	sh_siginit(void*);
 extern void 	sh_sigtrap(int);
 extern void 	sh_sigreset(int);
 extern void 	sh_timetraps(void);

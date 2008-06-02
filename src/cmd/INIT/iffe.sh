@@ -603,7 +603,7 @@ set=
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: iffe (AT&T Research) 2008-01-31 $
+@(#)$Id: iffe (AT&T Research) 2008-03-14 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?iffe - C compilation environment feature probe]
@@ -1170,10 +1170,7 @@ case $debug in
 	fi
 	;;
 esac
-trap "
-	rm -f $core $tmp*.*
-	exit \$status
-" 0 1 2
+trap "rm -f $core $tmp*.*" EXIT
 if	(:>$tmp.c) 2>/dev/null
 then	rm -f $tmp.c
 else	echo "$command: cannot create tmp files in current dir" >&2

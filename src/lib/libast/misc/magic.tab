@@ -1,5 +1,5 @@
 #
-# @(#)magic (AT&T Research) 2008-01-18
+# @(#)magic (AT&T Research) 2008-03-25
 #
 # magic number database for file(1) and magic(3)
 #
@@ -295,7 +295,7 @@ n{
 +4	long		15		i860-big
 +4	long		16		i860
 +4	long		17		rs6000
-+4	long		18		powerPC
++4	long		18		powerpc
 +4	long		>=19		architecture=%ld
 +12	long		<=0		filetype=%ld
 {
@@ -460,6 +460,7 @@ o{
 +18	short		17		fujitsu500
 +18	short		18		sparc32+
 +18	short		20		powerpc
++18	short		21		powerpc-64
 +18	short		22		s390
 +18	short		23		cell-BE
 +18	short		36		nec-v800
@@ -491,23 +492,23 @@ o{
 +18	short		62		x86-64
 +18	short		63		sony-dsp
 +18	short		66		siemens-fx66
-+18	short		67		stm-st9, 16-bit
-+18	short		68		stm-st7, 8-bit
++18	short		67		stm-st9-16
++18	short		68		stm-st7-8
 +18	short		69		motorola-mc68hc16
 +18	short		70		motorola-mc68hc11
 +18	short		71		motorola-mc68hc08
 +18	short		72		motorola-mc68hc05
 +18	short		73		sgi-svx
-+18	short		74		stm-st19, 8-bit
++18	short		74		stm-st19-8
 +18	short		75		vax
 +18	short		76		axis, 32-bit
-+18	short		77		infineon-javelin, 32-bit
-+18	short		78		element-14-firepath, 64-bit
-+18	short		79		lsi-zsp, 16-bit
-+18	short		80		knuth-mmix, 64-bit
++18	short		77		infineon-javelin-32
++18	short		78		element-14-firepath-64
++18	short		79		lsi-zsp-16
++18	short		80		knuth-mmix-64
 +18	short		81		harvard-huany
 +18	short		82		sitera-prism
-+18	short		83		amtel-avr, 8-bit
++18	short		83		amtel-avr-8
 +18	short		84		fujitsu-fr30
 +18	short		85		mitsubishi-d10v
 +18	short		86		mitsubishi-d30v
@@ -516,6 +517,9 @@ o{
 +18	short		89		matsushita-mn10300
 +18	short		90		matsushita-mn10200
 +18	short		91		picojava
++18	short		92		openrisc-32
++18	short		93		arc-tangent-a5
++18	short		94		tensilica-xtensa
 +18	short		0x9026		alpha
 +18	short		0xa390		s390
 |18	short		*		machine=0x%04lX
@@ -591,7 +595,9 @@ o{
 +18	short		17		fujitsu500
 +18	short		18		sparc32+
 +18	short		20		powerpc
++18	short		21		powerpc-64
 +18	short		22		s390
++18	short		23		cell-BE
 +18	short		36		nec-v800
 +18	short		37		fujitsu-fr20
 +18	short		38		trw-rh32
@@ -621,23 +627,23 @@ o{
 +18	short		62		x86-64
 +18	short		63		sony-dsp
 +18	short		66		siemens-fx66
-+18	short		67		stm-st9, 16-bit
-+18	short		68		stm-st7, 8-bit
++18	short		67		stm-st9-16
++18	short		68		stm-st7-8
 +18	short		69		motorola-mc68hc16
 +18	short		70		motorola-mc68hc11
 +18	short		71		motorola-mc68hc08
 +18	short		72		motorola-mc68hc05
 +18	short		73		sgi-svx
-+18	short		74		stm-st19, 8-bit
++18	short		74		stm-st19-8
 +18	short		75		vax
-+18	short		76		axis, 32-bit
-+18	short		77		infineon-javelin, 32-bit
-+18	short		78		element-14-firepath, 64-bit
-+18	short		79		lsi-zsp, 16-bit
-+18	short		80		knuth-mmix, 64-bit
++18	short		76		axis-32
++18	short		77		infineon-javelin-32
++18	short		78		element-14-firepath-64
++18	short		79		lsi-zsp-16
++18	short		80		knuth-mmix-64
 +18	short		81		harvard-huany
 +18	short		82		sitera-prism
-+18	short		83		amtel-avr, 8-bit
++18	short		83		amtel-avr-8
 +18	short		84		fujitsu-fr30
 +18	short		85		mitsubishi-d10v
 +18	short		86		mitsubishi-d30v
@@ -646,6 +652,9 @@ o{
 +18	short		89		matsushita-mn10300
 +18	short		90		matsushita-mn10200
 +18	short		91		picojava
++18	short		92		openrisc-32
++18	short		93		arc-tangent-a5
++18	short		94		tensilica-xtensa
 +18	short		0x9026		alpha
 +18	short		0xa390		s390
 |18	short		*		machine=0x%04lX
@@ -1056,7 +1065,7 @@ o()
 +(@60H)		short	0x454e		os/2
 +(@60H)		short	0x4550		win32
 +(@60H+4)	short	0x014c		386
-+(@60H+4)	short	0x0150		power pc
++(@60H+4)	short	0x0150		powerpc
 +(@60H+4)	short	0x0162		mips
 +(@60H+4)	short	0x0166		mips, big endian?
 +(@60H+4)	short	0x0184		alpha

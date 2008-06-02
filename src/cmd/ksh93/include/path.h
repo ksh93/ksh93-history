@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1982-2006 AT&T Knowledge Ventures            *
+*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                      by AT&T Knowledge Ventures                      *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -90,7 +90,7 @@ extern Pathcomp_t 	*path_get(const char*);
 #undef extern
 extern char 		*path_pwd(int);
 extern Pathcomp_t	*path_nextcomp(Pathcomp_t*,const char*,Pathcomp_t*);
-extern int		path_search(const char*,Pathcomp_t*,int);
+extern int		path_search(const char*,Pathcomp_t**,int);
 extern char		*path_relative(const char*);
 extern int		path_complete(const char*, const char*,struct argnod**);
 #if SHOPT_BRACEPAT

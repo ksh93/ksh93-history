@@ -27,6 +27,10 @@ alias err_exit='err_exit $LINENO'
 
 Command=${0##*/}
 integer Errors=0
+unset ss
+[[ ${@ss} ]] && err_exit '${@ss} should be empty string when ss is unset'  
+[[ ${!ss} == ss ]] ||  err_exit '${!ss} should be ss when ss is unset'  
+[[ ${#ss} == 0 ]] ||  err_exit '${#ss} should be 0 when ss is unset'  
 # RANDOM
 if	(( RANDOM==RANDOM || $RANDOM==$RANDOM ))
 then	err_exit RANDOM variable not working
@@ -586,5 +590,16 @@ do	nameref r=$v
 	( r=C; r=$x; [[ $r == C ]] ) 2>/dev/null || print -u2 "$v=C; $v=$x failed -- expected 'C'"
 done
 PATH=$path
+[[ ${.sh.subshell} == 0 ]] || err_exit '${.sh.subshell} should be 0'
+(
+	[[ ${.sh.subshell} == 1 ]] || err_exit '${.sh.subshell} should be 1'
+	(
+		[[ ${.sh.subshell} == 2 ]] || err_exit '${.sh.subshell} should be 2'
+	)
+)
+
+set -- {1..32768}
+(( $# == 32768 )) || err_exit "\$# failed -- expected 32768, got $#"
+set --
 
 exit $((Errors))

@@ -1,10 +1,10 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#           Copyright (c) 1982-2007 AT&T Knowledge Ventures            #
+#          Copyright (c) 1982-2008 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
-#                      by AT&T Knowledge Ventures                      #
+#                    by AT&T Intellectual Property                     #
 #                                                                      #
 #                A copy of the License is available at                 #
 #            http://www.opensource.org/licenses/cpl1.0.txt             #
@@ -46,9 +46,9 @@ fi
 tmp=/tmp/ksh$$
 mkdir $tmp
 rc=$tmp/.kshrc
-print $'function env_hit\n{\n\tprint OK\n}' > $rc
+print $'PS1=""\nfunction env_hit\n{\n\tprint OK\n}' > $rc
 
-export ENV=$rc
+export ENV='${nosysrc}'$rc
 if	[[ -o privileged ]]
 then
 	[[ $(print env_hit | $SHELL 2>&1) == "OK" ]] &&
@@ -72,6 +72,8 @@ else
 		err_exit '--rc ignores $ENV file'
 	[[ $(print env_hit | $SHELL --norc 2>&1) == "OK" ]] &&
 		err_exit '--norc reads $ENV file'
+	[[ $(print env_hit | $SHELL -i 2>&1) == "OK" ]] ||
+		err_exit '-i ignores $ENV file'
 fi
 
 export ENV=
@@ -304,6 +306,30 @@ do	if	[[ -o ?$opt ]]
 	then	err_exit "[[ -o ?no$opt ]] should fail"
 	fi
 done
+
+[[ $(set +o) == $(set --state) ]] || err_exit "set --state different from set +o"
+set -- $(set --state)
+[[ $1 == set && $2 == --default ]] || err_exit "set --state failed -- expected 'set --default *', got '$1 $2 *'"
+shift
+restore=$*
+shift
+off=
+for opt
+do	case $opt in
+	--not*)	opt=${opt/--/--no} ;;
+	--no*)	opt=${opt/--no/--} ;;
+	--*)	opt=${opt/--/--no} ;;
+	esac
+	off="$off $opt"
+done
+set $off
+state=$(set --state)
+default=$(set --default --state)
+[[ $state == $default ]] || err_exit "set --state for default options failed: expected '$default', got '$state'"
+set $restore
+state=$(set --state)
+[[ $state == "set $restore" ]] || err_exit "set --state after restore failed: expected 'set $restore', got '$state'"
+
 false | true | true   || err_exit 'pipe not exiting exit value of last element'
 true | true | false   && err_exit 'pipe not exiting false'
 set -o pipefail
@@ -311,7 +337,12 @@ false | true | true    && err_exit 'pipe with first not failing with pipefail'
 true | false | true    && err_exit 'pipe middle not failing with pipefail'
 true | true | false    && err_exit 'pipe last not failing with pipefail'
 print hi | (sleep 1;/bin/cat) > /dev/null || err_exit 'pipeline fails with pipefail' 
-$SHELL -c 'set -o pipefail; false | /bin/true;' && err_exit 'pipefail not returning failure with sh -c'
+(
+	set -o pipefail
+	false | true
+	(( $? )) || err_exit 'pipe not failing in subshell with pipefail'
+) | wc >/dev/null
+$SHELL -c 'set -o pipefail; false | $(whence -p true);' && err_exit 'pipefail not returning failure with sh -c'
 $SHELL -c '[[ $- == *c* ]]' || err_exit  'option c not in $-'
 trap 'rm -f /tmp/.profile' EXIT
 > /tmp/.profile

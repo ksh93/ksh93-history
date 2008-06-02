@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2007 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -586,16 +586,19 @@ stats(register Cenv_t* env, register Rex_t* e)
 			}
 			break;
 		case REX_STRING:
-			cm = env->stats.m;
-			if ((env->stats.m += e->re.string.size) < cm)
-				return 1;
-			cn = env->stats.n;
-			if ((env->stats.n += e->re.string.size) < cn)
-				return 1;
-			if (!env->stats.x || env->stats.x->re.string.size < e->re.string.size)
+			if (!e->map)
 			{
-				env->stats.x = e;
-				env->stats.l = cm;
+				cm = env->stats.m;
+				if ((env->stats.m += e->re.string.size) < cm)
+					return 1;
+				cn = env->stats.n;
+				if ((env->stats.n += e->re.string.size) < cn)
+					return 1;
+				if (!env->stats.x || env->stats.x->re.string.size < e->re.string.size)
+				{
+					env->stats.x = e;
+					env->stats.l = cm;
+				}
 			}
 			break;
 		case REX_TRIE:
@@ -654,8 +657,11 @@ magic(register Cenv_t* env, register int c, int escaped)
 				}
 				if (sp == ep)
 				{
-					env->error = *sp ? REG_BADBR : REG_EBRACE;
-					goto bad;
+					if (env->type < SRE || *sp != ',')
+					{
+						env->error = *sp ? REG_BADBR : REG_EBRACE;
+						goto bad;
+					}
 				}
 				else if (n > RE_DUP_MAX)
 				{
@@ -1011,7 +1017,7 @@ token(register Cenv_t* env)
 static Celt_t*
 col(Celt_t* ce, int ic, unsigned char* bp, int bw, int bc, unsigned char* ep, int ew, int ec)
 {
-	register unsigned char*	s;
+	register char*		s;
 	register unsigned char*	k;
 	register unsigned char*	e;
 	register int		c;
@@ -1029,6 +1035,25 @@ col(Celt_t* ce, int ic, unsigned char* bp, int bw, int bc, unsigned char* ep, in
 			c = bc;
 			if (ic)
 			{
+				if (isupper(c))
+				{
+					c = tolower(c);
+					cc = -1;
+				}
+				else if (islower(c))
+				{
+					c = toupper(c);
+					cc = -1;
+				}
+			}
+			*k++ = c;
+		}
+		else if (bw < COLL_KEY_MAX)
+		{
+			s = (char*)bp;
+			if (ic)
+			{
+				c = mbchar(s);
 				if (iswupper(c))
 				{
 					c = towlower(c);
@@ -1040,30 +1065,13 @@ col(Celt_t* ce, int ic, unsigned char* bp, int bw, int bc, unsigned char* ep, in
 					cc = 1;
 				}
 			}
-			*k++ = c;
-		}
-		else if (bw < COLL_KEY_MAX)
-		{
-			s = bp;
-			e = s + bw;
-			while (s < e)
+			if (cc > 0)
 			{
-				c = *s++;
-				if (ic)
-				{
-					if (isupper(c))
-					{
-						c = tolower(c);
-						cc = 1;
-					}
-					else if (islower(c))
-					{
-						c = toupper(c);
-						cc = 1;
-					}
-				}
-				*k++ = c;
+				cc = -1;
+				k += wctomb((char*)k, c);
 			}
+			else
+				for (e = k + bw; k < e; *k++ = *s++);
 		}
 		*k = 0;
 		mbxfrm(ce->beg, key, COLL_KEY_MAX);
@@ -1083,6 +1091,25 @@ col(Celt_t* ce, int ic, unsigned char* bp, int bw, int bc, unsigned char* ep, in
 				c = ec;
 				if (ic)
 				{
+					if (isupper(c))
+					{
+						c = tolower(c);
+						cc = -1;
+					}
+					else if (islower(c))
+					{
+						c = toupper(c);
+						cc = -1;
+					}
+				}
+				*k++ = c;
+			}
+			else if (ew < COLL_KEY_MAX)
+			{
+				s = (char*)ep;
+				if (ic)
+				{
+					c = mbchar(s);
 					if (iswupper(c))
 					{
 						c = towlower(c);
@@ -1094,30 +1121,13 @@ col(Celt_t* ce, int ic, unsigned char* bp, int bw, int bc, unsigned char* ep, in
 						cc = 1;
 					}
 				}
-				*k++ = c;
-			}
-			else if (ew < COLL_KEY_MAX)
-			{
-				s = ep;
-				e = s + ew;
-				while (s < e)
+				if (cc > 0)
 				{
-					c = *s++;
-					if (ic)
-					{
-						if (isupper(c))
-						{
-							c = tolower(c);
-							cc = 1;
-						}
-						else if (islower(c))
-						{
-							c = toupper(c);
-							cc = 1;
-						}
-					}
-					*k++ = c;
+					cc = -1;
+					k += wctomb((char*)k, c);
 				}
+				else
+					for (e = k + ew; k < e; *k++ = *s++);
 			}
 			*k = 0;
 			mbxfrm(ce->end, key, COLL_KEY_MAX);
@@ -1393,11 +1403,13 @@ bra(Cenv_t* env)
 		Cchr_t*			xc;
 		Celt_t*			ce;
 		Cchr_t			key;
-		int			cw;
 		int			rw;
 		int			rc;
+		int			wc;
 		unsigned char*		rp;
 		unsigned char*		pp;
+		char*			wp;
+		char			cb[2][COLL_KEY_MAX+1];
 
 		static Dtdisc_t		disc;
 
@@ -1561,52 +1573,36 @@ bra(Cenv_t* env)
 							goto erange;
 						if (inrange == 1)
 							ce = col(ce, ic, rp, rw, rc, NiL, 0, 0);
+						pp = (unsigned char*)cb[inrange];
 						rp = env->cursor + 1;
-						if ((rw = regcollate((char*)env->cursor, (char**)&env->cursor, (char*)buf, sizeof(buf) - 1)) < 0)
+						if ((rw = regcollate((char*)env->cursor, (char**)&env->cursor, (char*)pp, COLL_KEY_MAX)) < 0)
 							goto ecollate;
+						wp = (char*)pp;
+						wc = mbchar(wp);
 						c = 0;
 						if (ic)
-							for (i = 0; i < rw; i += MBSIZE(buf+i))
-								if (isupper(buf[i]))
-								{
-									buf[i] = tolower(buf[i]);
-									c = 1;
-								}
-								else if (islower(buf[i]))
-									c = 1;
+						{
+							if (iswupper(wc))
+							{
+								wc = towlower(wc);
+								rw = wctomb((char*)pp, wc);
+								c = 'u';
+							}
+							else if (iswlower(wc))
+								c = 'l';
+						}
 						for (;;)
 						{
-							mbxfrm(key.key, buf, COLL_KEY_MAX);
-							if (!(cc = (Cchr_t*)dtsearch(dt, &key)))
-							{
-								if (!isalnum(buf[0]))
-								{
-									strcpy((char*)ce->beg, (char*)key.key);
-									ce->typ = COLL_char;
-									ce++;
-									break;
-								}
-								if (!(cc = (Cchr_t*)dtprev(dt, &key)))
-									goto ecollate;
-							}
-							xc = cc;
-							if (islower(buf[0]))
-							{
+							mbxfrm(key.key, (char*)pp, COLL_KEY_MAX);
+							if (!(cc = (Cchr_t*)dtsearch(dt, &key)) && !(cc = (Cchr_t*)dtprev(dt, &key)))
+								goto ecollate;
+							xc = (tc = (Cchr_t*)dtprev(dt, cc)) && !strcasecmp((char*)tc->nam, (char*)cc->nam) ? tc : cc;
+							if (c == 'l' || c == 'L' && !(c = 0))
 								ce->typ = COLL_range_lc;
-								if ((tc = (Cchr_t*)dtprev(dt, cc)) && !strcasecmp((char*)tc->nam, (char*)cc->nam))
-									xc = tc;
-							}
-							else if (isupper(buf[0]))
-							{
+							else if (c == 'u' || c == 'U' && !(c = 0))
 								ce->typ = COLL_range_uc;
-								if ((tc = (Cchr_t*)dtprev(dt, cc)) && !strcasecmp((char*)tc->nam, (char*)cc->nam))
-									xc = tc;
-							}
 							else
-							{
 								ce->typ = COLL_range;
-								xc = cc;
-							}
 							strcpy((char*)ce->beg, (char*)xc->key);
 							if (!(cc = (Cchr_t*)dtnext(dt, cc)))
 								goto ecollate;
@@ -1617,31 +1613,25 @@ bra(Cenv_t* env)
 							ce++;
 							if (!c)
 								break;
-							c = 0;
-							for (i = 0; i < rw; i++)
-								if (islower(buf[i]))
-									buf[i] = toupper(buf[i]);
+							if (c == 'u')
+							{
+								wc = towlower(wc);
+								c = 'L';
+							}
+							else
+							{
+								wc = towupper(wc);
+								c = 'U';
+							}
+							rw = wctomb((char*)pp, wc);
 						}
 						inrange = 0;
-						c = buf[0];
+						c = *pp;
 						continue;
 					case '.':
-						pp = env->cursor + 1;
-						if ((w = regcollate((char*)env->cursor, (char**)&env->cursor, (char*)buf, sizeof(buf) - 1)) < 0)
+						pp = (unsigned char*)cb[inrange];
+						if ((w = regcollate((char*)env->cursor, (char**)&env->cursor, (char*)pp, COLL_KEY_MAX)) < 0)
 							goto ecollate;
-						if (w > 1)
-						{
-							if (w > COLL_KEY_MAX)
-								goto ecollate;
-							if (ic)
-								for (i = 0; i < w; i += MBSIZE(buf+i))
-									if (isupper(buf[i]))
-										buf[i] = tolower(buf[i]);
-							cw = mbxfrm(ce->beg, buf, COLL_KEY_MAX);
-							buf[1] = 0;
-							if (mbxfrm(ce->beg, buf, COLL_KEY_MAX) < cw)
-								goto ecollate;
-						}
 						c = buf[0];
 						break;
 					default:
@@ -1741,8 +1731,8 @@ ccl(Cenv_t* env, int type)
 		ce = (Celt_t*)e->re.data;
 		e->re.collate.invert = 0;
 		e->re.collate.elements = ce;
-		ce->typ = COLL_call;
 		ce->fun = f;
+		ce->typ = COLL_call;
 		ce++;
 		ce->typ = COLL_end;
 	}
@@ -2040,9 +2030,10 @@ grp(Cenv_t* env, int parno)
 	case 'I':
 	case 'K':
 	case 'L':
-	case 'M':
-	case 'N':
-	case 'R':
+	case 'M':	/* glob(3) */
+	case 'N':	/* glob(3) */
+	case 'O':	/* glob(3) */
+	case 'R':	/* pcre */
 	case 'S':
 	case 'U':	/* pcre */
 	case 'X':	/* pcre */
@@ -2163,7 +2154,7 @@ grp(Cenv_t* env, int parno)
 			case 'N':
 				/* used by caller to disable glob(3) GLOB_NOCHECK */
 				break;
-			case 'R':
+			case 'O':
 				/* used by caller to disable glob(3) GLOB_STARSTAR */
 				break;
 			case 'S':
@@ -2536,22 +2527,22 @@ seq(Cenv_t* env)
 				n = 1;
 				*s++ = (env->flags & REG_ICASE) ? toupper(c) : c;
 			}
-			else if (c == C_ESC)
+			else if (c == C_ESC || (env->flags & REG_ICASE))
 			{
-				if ((n = wctomb(NiL, env->token.lex)) < 0)
-					continue;
-				if (!n)
+				c = (c == C_ESC) ? env->token.lex : mbchar(p);
+				if (env->flags & REG_ICASE)
+					c = towupper(c);
+				if ((&buf[sizeof(buf)] - s) < MB_CUR_MAX)
+					break;
+				if ((n = wctomb((char*)s, c)) < 0)
+					*s++ = c;
+				else if (n)
+					s += n;
+				else
 				{
 					n = 1;
 					*s++ = 0;
 				}
-				else if (s < &buf[sizeof(buf) - n])
-				{
-					wctomb((char*)s, c);
-					s += n;
-				}
-				else
-					break;
 			}
 			else
 			{
@@ -2591,10 +2582,10 @@ seq(Cenv_t* env)
 				}
 				else
 				{
-					if (!(e = node(env, REX_STRING, 0, 0, n)))
+					if (!(f = node(env, REX_STRING, 0, 0, n)))
 						return 0;
-					memcpy((char*)(e->re.string.base = (unsigned char*)e->re.data), (char*)p, n);
-					e->re.string.size = n;
+					memcpy((char*)(f->re.string.base = (unsigned char*)f->re.data), (char*)p, n);
+					f->re.string.size = n;
 				}
 				if (!(f = rep(env, f, 0, 0)) || !(f = cat(env, f, seq(env))))
 				{
@@ -2962,7 +2953,7 @@ special(Cenv_t* env, regex_t* p)
 			else
 				x = 0;
 		}
-		if ((x || t) && !env->map) /* HERE: figure out map */
+		if (x || t)
 		{
 			Bm_mask_t**	mask;
 			Bm_mask_t*	h;
@@ -3120,7 +3111,7 @@ special(Cenv_t* env, regex_t* p)
 			env->error = REG_ENULL;
 			return 1;
 		case REX_STRING:
-			if (env->flags & (REG_LEFT|REG_LITERAL|REG_RIGHT))
+			if ((env->flags & (REG_LEFT|REG_LITERAL|REG_RIGHT)) || e->map)
 				return 0;
 			s = e->re.string.base;
 			n = e->re.string.size;

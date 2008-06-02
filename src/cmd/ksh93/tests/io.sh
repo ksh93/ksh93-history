@@ -268,4 +268,13 @@ $SHELL -c "$SHELL -c ': 3>&1' 1>&- 2>/dev/null" && err_exit 'closed standard out
 	do_it_all ; exit $?
 	hello world
 EOF) == 'hello world' ]] || err_exit 'invalid readahead on stdin'
+$SHELL -c 'exec 3>; /dev/null'  2> /dev/null && err_exit '>; with exec should be an error'
+$SHELL -c ': 3>; /dev/null'  2> /dev/null || err_exit '>; not working with at all'
+print hello > /tmp/io.sh$$.1
+if	! $SHELL -c "false >; /tmp/io.sh$$.1"  2> /dev/null
+then	[[ $(</tmp/io.sh$$.1) == hello ]] || err_exit '>; not preserving file on failure'
+fi
+if	! $SHELL -c "sed -e 's/hello/hello world/' /tmp/io.sh$$.1" >; /tmp/io.sh$$.1  2> /dev/null
+then	[[ $(</tmp/io.sh$$.1) == 'hello world' ]] || err_exit '>; not updating file on success'
+fi
 exit $((Errors))

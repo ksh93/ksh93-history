@@ -1,4 +1,162 @@
-08-01-31  --- Release ksh93s+  ---
+08-06-02  --- Release ksh93t-  ---
+08-06-02  When defining a type, the typeset -r attribute causes this field
+	  to be required to be specified for each instance of the type and
+	  does not allow a default value.  Currently undocumented. 
+08-06-02  Several bugs in which compound variables were modified by
+	  subshells have been fixed.
+08-05-22  The ceil function has been added to the math functions.
+08-05-21  A bug in which a name reference defined in a function and passed
+	  as an argument to another function could cause an incorrect binding.
+08-05-21  A bug in freeing compound variables that are local to functions
+	  has been fixed.
+08-05-19  The array expansions ${array[sub1..sub2]} and ${!array[sub1..sub2]}
+	  to expand to the value (or subscripts) for array between sub1 and
+	  sub2 inclusive.  For associative arrays, the range is based on
+	  location in the POSIX locale.  The .. must be explicit and cannot
+	  result from an expansion.
+08-05-15  The trap on SIGCLD is no longer triggered by the completion of
+	  the foreground job as with ksh88.
+08-05-14  A bug in the implementation of the editing feature added on 
+	  07-09-19 in emacs mode has been fixed.
+08-05-12  A bug in processing the test built-in with parenthesis has been
+	  fixed.
+08-05-12  The unset built-in now returns non-zero when deleting an array
+	  subscript that is not set.
+08-05-08  Changing the value of HISTFILE or HISTSIZE will cause the old
+	  history file to be close and reopened with the new name or size.
+08-05-08  When FPATH is changed functions that were found via a path search
+	  will be searched for again.
+08-05-08  A parser bug in which reserved words and labels were recognized
+	  inside compound indexed array assignment after a new-line has
+	  been fixed.
+08-05-07  A bug in getopts when handling numerical option arguments has
+	  been fixed.
+08-05-07  The typeset -S option was added for variables outside type
+	  definitions to provide a storage class similar to C static
+	  inside a function defined with function name.  When outside
+	  type definitions and outside a function, the -S option cause
+	  the specified variable so be unset before the assignment and
+	  before the remaining attributes are supplied.
+08-05-07  A bug that affected the cursor movement in multiline mode when
+	  a character was deleted from near the beginning of the any
+	  line other than the first.
+08-05-01  In multiline edit mode, the refresh operation will now clear
+	  the remaining portion of the last line.
+08-05-01  A bug in computing prompt widths for the edit modes for prompts
+	  with multibyte characters has been fixed.
+08-05-01  A bug in the multiline edit mode which could cause the current
+	  line to be displayed incorrectly when moving backwards from third
+	  or higher line to the previous line has been fixed.
+08-05-01  A bug in which options set in functions declared with the function
+	  name syntax were carried across into functions invoked by these
+	  functions has been fixed.
+08-04-30  A bug which could cause a coprocess to hang when the read end
+	  is a builtin command has been fixed.
+08-04-30  The emacs and vi editors have been modified to handle window
+	  change commands as soon as they happen rather than waiting for
+	  the next command.
+08-04-28  A bug in which ${!x} did not expand to x when x was unset has been
+	  fixed.
+08-04-27  A bug in which the assignment x=(typeset -a foo=([0]=abc)) created
+	  x.foo as an associative array has been fixed.
+08-04-25  A bug in which $# did not report correctly when there were more
+	  than 32K positional parameters has been fixed.
+08-04-04  Choose the name _ as the sub-variable that holds type or instance
+	  specific data used by discipline functions.
+08-03-27  A bug in which the terminal group was not given back to the parent
+	  shell when the last part of a pipeline was handled by the parent shell
+	  and the other parts of the pipeline complete has been fixed. 
+	  The symtom was that the pipeline became uninterruptable.
+08-03-25  A bug in restricted mode introduced in ksh93s that caused scripts
+	  that did not use #! to executed in restriected mode has been fixed.
+08-03-25  A bug in which the pipefail option did not work for a pipeline
+	  within a pipeline has been fixed.
+08-03-24  A bug in which OPTIND was not set correctly in subshells has
+	  been fixed.
+08-03-24  A bug which could cause a memory exception when a compound variable
+	  containing an indexed array with only element 0 defined was expanded.
+08-03-20  A bug in which ${!var[sub].*} was treated as an error has been fixed.
+08-03-20  Associative array assignments of the form ([name]=value ...)
+	  now allow ; as well as space tab and new line to separate elements.
+08-03-18  A buffering problem in which standard error was sometimes
+	  not flushed before sleep has been fixed.
+08-03-17  A bug in which a signal sent to $$ while in a subshell would be
+	  sent to the subshell rather than the parent has been fixed.
+08-03-17  --default option added to set(1) to handle set +o POSIX semantics.
+	  set --state added as a long name alias for set +o.
+08-03-14  A bug in which using monitor mode from within a script could
+	  cause the terminal group to change has been fixed.
+08-03-10  The new ${...} command substitution will treat the trailing }
+	  as a reserved word even if it is not at the beginning of a command,
+	  for example, ${ date }.
+08-03-10  If the name of the ENV begins with /./ or ././ then the
+	  /etc/ksh.kshrc file will not be executed on systems that support
+	  this interactive initialization file.
+08-03-07  A bug in which ksh -i did not run the ENV file has been fixed.
+08-03-07  A bug in which ulimit did not always produce the same output as
+	  ulimit -fS has been fixed.
+08-03-04  A bug in multiline mode in emacs and vi mode which could cause the
+	  cursor to be on the wrong line when interrupt was hit has been fixed.
+08-03-03  The change made in ksh93s+ on 07-06-18 in which braces became
+	  optional for ${a[i]} inside  [[...]] was restored in the case
+	  where the argument can be a pattern.
+08-03-03  A bug in which creating a name reference to an associative array
+	  instance would fail when the subscript contained characters [ or
+	  ] has been fixed.
+08-02-29  The redirection operator >; has been added which for non-special
+	  files, generates the output in a temporary file and writes the
+	  specified file only of the command has completed successfully.
+08-02-15  A bug in ${var/pattern/string} for patterns of the form ?(*) and +(*)
+	  has bee fixed.
+08-02-07  A bug in which test \( ! -e \) produced an error has been fixed.
+08-02-14  The typeset -a option can now optionally be followed by the name
+	  of an enumerication type which allows subscripts to be enumerations.
+08-02-14  The enum builtin which creates enumeration types has been added.
+08-02-12  The backoff logic when there are no more processes has been fixed.
+08-02-07  The -X option has been added to typeset.  The -X option creates
+	  a double precision number that gets displayed using the C99 %a
+	  format.  It can be used along with -l for long double.
+08-01-31  The -T option to typeset has been added for creating typed
+	  variables.  Also the -h and -S options have been added to
+	  typeset that are only applicable when defining a type.
+08-01-31  The prefix expansion operator @ has been added.  ${@name}
+	  expandes to the type of name or yields the attributes.
+07-11-15  A bug in the macro expander for multibyte characters in which
+	  part of the character contains a file pattern byte has been fixed. 
+07-10-03  A bug in which : was not allowed as part of an alias name has been
+	  fixed.
+07-09-26  A bug in which appending a compound variable to a compound variable
+	  or to an index array didn't work has been fixed.
+07-09-19  In both emacs and vi edit mode, the escape sequence \E[A (usually
+	  cursor up, when the cursor is at the end of the line will fetch
+	  the most recent line starting with the current line.
+07-09-18  The value of ${!var} was correct when var was a reference to an
+	  array instance.
+07-09-18  The value of ${!var[sub]} was not expanding to var[sub] and this
+	  was fixed.  It also fixed ${name} where name is a name reference
+	  to var[sub].
+07-09-18  It is now legal to create a name reference without an initialization.
+	  It will be bound to a variable on the first assignment.
+07-08-30  A discipline function can be invoked as ${x.foo} and is equivalent
+	  to ${ x.foo;} and can be invoked as x.foo inside ((...)).
+07-07-09  A bug in which typeset -a did not list indexed arrays has been
+	  fixed.
+07-07-03  The command substitution ${ command;} has been added.  It behaves
+	  like $(command) except that command is executed in the current
+	  shell environment.  The ${ must be followed by a blank or an
+	  operator.
+
+08-04-17  --- Release ksh93s+  ---
+08-04-17  A bug in which umask was not being restored correctly after a
+          subshell has been fixed.
+08-04-15  A bug in which sending a STOP signal to a job control shell started
+	  from within a shell function caused cause the invoking shell to
+	  terminate has been fixed.
+08-04-11  A bug which caused $(exec > /dev/null) to go into an infinite loop
+	  has been fixed.
+08-03-27  A bug in which typeset -LZ was being treated as -RZ has been fixed.
+08-03-06  A bug with ksh -P on systems that support the the profile shell,
+          in which it would exit after running a non-builtin has been fixed.
 08-01-31  A bug in which command substitution inside ((...)) could cause
 	  syntax errors or lead to core dumps has been fixed.
 08-01-17  A bug in which discipline functions could be deleted when invoked

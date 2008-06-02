@@ -2,7 +2,8 @@
  * ksh makefile
  */
 
-SH = ksh		/* name of the shell program */
+SH := $(PWD:B:/[0-9]*$//:N=ksh*:-ksh)		/* name of the shell program */
+SHCOMP := shcomp$(SH:/.*sh//)
 VERSION = 1.1
 LICENSE = since=1982,author=dgk
 CATALOG = libshell
@@ -42,6 +43,7 @@ SHOPT_SPAWN ==			/* use spawnveg for fork/exec */
 SHOPT_SUID_EXEC == 1		/* allow (safe) suid/sgid shell scripts */
 SHOPT_SYSRC ==			/* attempt . /etc/ksh.kshrc if interactive */
 SHOPT_TIMEOUT ==		/* number of seconds for shell timeout */
+SHOPT_TYPEDEF == 1		/* enable typeset type definitions */
 SHOPT_VSH == 1			/* vi edit mode */
 
 if CC.HOSTTYPE == "linux.alpha"
@@ -74,7 +76,7 @@ end
 .SOURCE.h : include 
 
 /* documentation files */
-DOCFILES = sh.memo builtins.mm README RELEASE PROMO.mm COMPATIBILITY \
+DOCFILES = sh.memo builtins.mm README RELEASE TYPES PROMO.mm COMPATIBILITY \
 		DESIGN OBSOLETE RELEASE93 RELEASE88
 
 KSHELL == 1			/* this is ksh */
@@ -139,7 +141,7 @@ if SHOPT_X
 	LDFLAGS += -u _XtAppInitialize -L/usr/add-on/X11/lib
 end
 
-:ALL: $(SH) shcomp $(SHOPT_SUID_EXEC:+suid_exec) $(SHOPT_BASH:+bash)
+:ALL: $(SH) $(SHCOMP) $(SHOPT_SUID_EXEC:+suid_exec) $(SHOPT_BASH:+bash)
 
 $(SH) :: sh.1 pmain.c $(LIBS_req)
 
@@ -147,16 +149,16 @@ DATAFILES = limits.c msg.c strdata.c testops.c keywords.c options.c \
                  signals.c aliases.c builtins.c variables.c lexstates.c
 
 shell $(VERSION) :LIBRARY: shell.3 nval.3 alarm.c cd_pwd.c cflow.c deparse.c \
-	getopts.c hist.c misc.c print.c read.c sleep.c trap.c test.c \
-	typeset.c ulimit.c umask.c whence.c main.c nvdisc.c \
+	enum.c getopts.c hist.c misc.c print.c read.c sleep.c trap.c test.c \
+	typeset.c ulimit.c umask.c whence.c main.c nvdisc.c nvtype.c \
 	arith.c args.c array.c completion.c defs.c edit.c expand.c \
 	fault.c fcin.c history.c init.c io.c jobs.c lex.c macro.c name.c \
 	nvtree.c parse.c path.c string.c streval.c subshell.c tdump.c timers.c \
 	trestore.c waitevent.c xec.c env.c $(DATAFILES) $(FILES_opt) \
 	-lcmd -last -lm
 
-"sol*.i386*" :NOOPTIMIZE: main.c
-"win32*" :NOOPTIMIZE: trestore.c
+"sol*.i386*"	:NOOPTIMIZE: main.c
+"win32*"	:NOOPTIMIZE: trestore.c
 
 if CC.HOSTTYPE == "win32*"
 :DLL: $(CC.DEBUG)
@@ -172,7 +174,7 @@ LIBCMD = $(.LIB.NAME. cmd:T=F)
 
 suid_exec ::	CC.DLL= suid_exec.c +last
 
-shcomp	::	CC.DLL= SH_DICT='"libshell"' shcomp.c $(LIBS_req)
+$(SHCOMP) ::	CC.DLL= SH_DICT='"libshell"' shcomp.c $(LIBS_req)
 
 $(FUNDIR) :INSTALLDIR: mode=+x dirs popd pushd
 
@@ -188,15 +190,17 @@ bash_pre_rc.c : bash_pre_rc.sh
 end
 
 :: math.tab syscall.s mamexec mamstate.c $(DOCFILES) \
-	bash.c bash_pre_rc.sh hexpand.c mkservice.c
+	bash.c bash_pre_rc.sh hexpand.c mkservice.c \
+	shopen.mk shopen.c
 
 :: shtests \
 	alias.sh append.sh arith.sh arrays.sh arrays2.sh attributes.sh \
 	basic.sh bracket.sh builtins.sh case.sh comvar.sh coprocess.sh \
 	exit.sh expand.sh functions.sh glob.sh grep.sh heredoc.sh io.sh \
-	locale.sh nameref.sh options.sh path.sh quoting.sh quoting2.sh \
-	restricted.sh return.sh select.sh signal.sh substring.sh \
-	tilde.sh variables.sh 
+	nameref.sh options.sh path.sh quoting.sh quoting2.sh restricted.sh \
+	return.sh select.sh substring.sh tilde.sh variables.sh \
+	cubetype.sh enum.sh pointtype.sh recttype.sh timetype.sh statics.sh \
+	vartree1.sh vartree2.sh
 
 if "$(PWD:B:N=cc-*)"
 
@@ -204,33 +208,18 @@ test : .NULL
 
 else
 
-test : test.ksh - test.shcomp
+test : test.ksh
 
 test.ksh : $(BINDIR)/$(SH) $(SH) shtests
 	$(SILENT) $(CMP) $(CMPFLAGS) $(*:O=1) $(*:O=2) 2>/dev/null ||
 	echo "make install to run the tests on the latest $(SH)" >&2
 	cd $(*:O=3:P=L!:D)
-	SHELL=$(*:O=1:P=A) $(*:O=1:P=A) $(*:O=3:B)
+	SHELL=$(*:O=1:P=A) $(*:O=1:P=A) $(SHTESTSFLAGS) $(*:O=3:B)
 
 test.% : %.sh $(BINDIR)/$(SH) $(SH) shtests
 	$(SILENT) $(CMP) $(CMPFLAGS) $(*:O=2) $(*:O=3) 2>/dev/null ||
 	echo "make install to run the tests on the latest $(SH)" >&2
 	cd $(*:O=4:P=L!:D)
-	SHELL=$(*:O=2:P=A) $(*:O=2:P=A) $(*:O=4:B) $(*:O=1:P=A)
-
-test.shcomp : $(BINDIR)/$(SH) $(SH) shtests shcomp
-	$(SILENT) $(CMP) $(CMPFLAGS) $(*:O=1) $(*:O=2) 2>/dev/null ||
-	echo "make install to run the tests on the latest $(SH)" >&2
-	cd $(*:O=3:P=L!:D)
-	tmp=/tmp/ksh-$(tmp)
-	mkdir $tmp
-	for i in *.sh
-	do	tst=$tmp/shcomp-${i%.sh}.ksh
-		if	$(*:O=4) $i > $tst
-		then	SHELL=$(*:O=1:P=A) $(*:O=1:P=A) $(*:O=3:B) $tst
-		fi
-		rm -f $tst
-	done
-	rm -rf $tmp
+	SHELL=$(*:O=2:P=A) $(*:O=2:P=A) $(*:O=4:B) $(SHTESTSFLAGS) $(*:O=1:P=A)
 
 end

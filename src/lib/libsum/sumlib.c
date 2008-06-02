@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1996-2007 AT&T Intellectual Property          *
+*          Copyright (c) 1996-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -25,7 +25,7 @@
  * man this is sum library
  */
 
-static const char id[] = "\n@(#)$Id: sumlib (AT&T Research) 2007-10-29 $\0\n";
+static const char id[] = "\n@(#)$Id: sumlib (AT&T Research) 2008-05-01 $\0\n";
 
 #define _SUM_PRIVATE_	\
 			struct Method_s*	method;	\
@@ -147,14 +147,25 @@ long_data(Sum_t* p, Sumdata_t* data)
 	return 0;
 }
 
+#include "FEATURE/sum"
+
 #include "sum-att.c"
 #include "sum-ast4.c"
 #include "sum-bsd.c"
 #include "sum-crc.c"
-#include "sum-md5.c"
 #include "sum-prng.c"
+
+#if _LIB_md && _lib_MD5Init && _hdr_md5 && _lib_SHA2Init && _hdr_sha2
+
+#include "sum-lmd.c"
+
+#else
+
+#include "sum-md5.c"
 #include "sum-sha1.c"
 #include "sum-sha2.c"
+
+#endif
 
 /*
  * now the library interface
@@ -169,9 +180,16 @@ static const Method_t	methods[] =
 	METHOD(ast4),
 	METHOD(bsd),
 	METHOD(crc),
-	METHOD(md5),
 	METHOD(prng),
+#ifdef md4_description
+	METHOD(md4),
+#endif
+#ifdef md5_description
+	METHOD(md5),
+#endif
+#ifdef sha1_description
 	METHOD(sha1),
+#endif
 #ifdef sha256_description
 	METHOD(sha256),
 #endif

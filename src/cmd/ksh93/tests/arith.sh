@@ -327,7 +327,7 @@ do	let "x = $x+1"
 done
 (( x == n ))  || err_exit 'let with zero filled fields not working'
 (( y == n ))  || err_exit '((...)) with zero filled fields not working'
-typeset -LZ3 x=10
+typeset -RZ3 x=10
 [[ $(($x)) == 10 && $((1$x)) == 1010 ]] || err_exit 'zero filled fields not preserving leading zeros'
 unset y
 [[ $(let y=$x;print $y) == 10 && $(let y=1$x;print $y) == 1010 ]] || err_exit 'zero filled fields not preserving leading zeros with let'
@@ -356,7 +356,7 @@ typeset -i i=x
 (( ${x:0:1} == 0 )) || err_exit 'leading zero should not be stripped for x:a:b'
 c010=3
 (( c$x  == 3 )) || err_exit 'leading zero with variable should not be stripped'
-[[ $( ($SHELL -c '((++1))' 2>&1)2>/dev/null ) == *lvalue* ]] || err_exit "((--1)) not generating error message"
+[[ $( ($SHELL -c '((++1))' 2>&1)2>/dev/null ) == *lvalue* ]] || err_exit "((++1)) not generating error message"
 i=2
 (( "22" == 22 )) || err_exit "double quoted constants fail"
 (( "2$i" == 22 )) || err_exit "double quoted variables fail"

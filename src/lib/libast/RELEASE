@@ -1,3 +1,26 @@
+08-06-02 features/ndbm: add to tame dbmlib.iffe replication
+08-06-01 comp/resolvepath.c,realpath.c: fix resolvepath() return value type
+08-05-22 tm/tmxdate.c: fix a few ordinal/last/this/next bugs
+08-05-18 string/fmtre.c: fix omitted stack var initialization bug
+08-05-14 regex/regcomp.c,regcoll.c: fix UTF-8 collation sequence logic
+08-05-11 tm/tmxfmt.c: :NOOPTIMIZE:, otherwise %Q/../../ fails
+08-05-01 tm/tmxdate.c: mon 1..12 => mon[13] -- doh
+08-04-30 misc/glob.c,reegex/regcomp.c: ~(R) => ~(O) to avoid pcre clash
+08-04-24 port/astconf.c: 'name = value' does assignment without system init
+08-04-15 port/astconf.c: SC#N treated like 'SC(N)'
+08-04-14 misc/optget.c: clean up nroff output
+08-04-01 port/astconf.c: add RELEASE => /proc/version fallback
+08-03-30 misc/optget.c: [-n]... to enable -number & +number options
+08-03-06 misc/optget.c: ---* and +++* are now operands
+08-03-06 misc/errorx.c: fix old error_info.translate workaround
+08-02-05 regex/regcomp.c: allow REG_SHELL {,n}... => {0,n}...
+08-02-27 misc/stk.c: top element during allocation relocated to top 
+08-02-18 include/ip6.h,string/strtoip6.c,fmtip6.c: add ipv6 addr support
+08-02-14 regex/regsubexec.c: fix null match (tricky)
+08-02-14 regex/regsubcomp.c: fix SRE to match ksh
+08-02-11 comp/spawnveg.c: return proper errno on [v]fork() failure
+08-02-11 tm/tmxdate.c,tmdata.c: handle more ISO 8601:2000 forms
+08-02-02 regex/reglib.h: add REGMULTIREF to REG_COMP
 08-02-02 string/strmatch.c: fix str="" pat="" sub values
 08-01-31 comp/conf.sh,conf.tab: handle /bin/sh \ in read data, redir subshell
 08-01-18 misc/magic.tab: amd-x68, 64-bit => x86-64

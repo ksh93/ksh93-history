@@ -58,6 +58,13 @@ trap "cd /; rm -rf /tmp/ksh$$" EXIT
 pwd=$PWD
 [[ $SHELL != /* ]] && SHELL=$pwd/$SHELL
 cd /tmp/ksh$$ || err_exit "cd /tmp/ksh$$ failed"
+um=$(umask -S)
+( umask 0777; > foobar )
+rm -f foobar
+> foobar
+[[ -r foobar ]] || err_exit 'umask not being restored after subshell'
+umask "$um"
+rm -f foobar
 # optimizer bug test
 > foobar
 for i in 1 2
@@ -360,4 +367,40 @@ EOF
 rm -f /tmp/ksh$$x
 exec 3<&-
 ( typeset -r foo=bar) 2> /dev/null || err_exit 'readonly variables set in a subshell cannot unset'
+$SHELL -c 'x=${ print hello;}; [[ $x == hello ]]' 2> /dev/null || err_exit '${ command;} not supported'
+$SHELL 2> /dev/null <<- \EOF || err_exit 'multiline ${...} command substituion not supported'
+	x=${
+		print hello
+	}
+	[[ $x == hello ]]
+EOF
+$SHELL 2> /dev/null <<- \EOF || err_exit '${...} command substituion with side effects not supported '
+	y=bye
+	x=${
+		y=hello
+		print hello
+	}
+	[[ $y == $x ]]
+EOF
+$SHELL   2> /dev/null <<- \EOF || err_exit 'nested ${...} command substituion not supported'
+	x=${
+		print ${ print hello;} $(print world)
+	}
+	[[ $x == 'hello world' ]]
+EOF
+$SHELL   2> /dev/null <<- \EOF || err_exit 'terminating } is not a reserved word with ${ command }'
+	x=${	{ print -n } ; print -n hello ; }  ; print ' world' }
+	[[ $x == '}hello world' ]]
+EOF
+
+unset foo
+function foo
+{
+	print bar
+}
+[[ ${foo} == bar ]] || err_exit '${foo} is not command substitution when foo unset' 
+[[ ! ${foo[@]} ]] || err_exit '${foo[@]} is not empty when foo is unset' 
+[[ ! ${foo[3]} ]] || err_exit '${foo[3]} is not empty when foo is unset' 
+[[ $(print  "[${ print foo }]") == '[foo]' ]] || err_exit '${...} not working when } is followed by ]'
+[[ $(print  "${ print "[${ print foo }]" }") == '[foo]' ]] || err_exit 'nested ${...} not working when } is followed by ]'
 exit $((Errors))

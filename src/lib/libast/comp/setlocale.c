@@ -370,9 +370,11 @@ debug_strxfrm(register char* t, register const char* s, size_t n)
 	register const char*	q;
 	register const char*	r;
 	register char*		e;
+	char*			o;
 	register size_t		z;
 	register int		w;
 
+	o = t;
 	z = 0;
 	if (e = t)
 		e += n;
@@ -449,9 +451,11 @@ debug_strxfrm(register char* t, register const char* s, size_t n)
 		s++;
 		z += DX;
 	}
+	if (!t)
+		return z;
 	if (t < e)
 		*t = 0;
-	return z;
+	return t - o;
 }
 
 static int

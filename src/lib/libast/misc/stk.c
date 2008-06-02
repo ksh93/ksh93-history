@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1985-2007 AT&T Knowledge Ventures            *
+*          Copyright (c) 1985-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                      by AT&T Knowledge Ventures                      *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -439,6 +439,21 @@ char	*stkcopy(Sfio_t *stream, const char* str)
 {
 	register unsigned char *cp = (unsigned char*)str;
 	register int n;
+	register int off=stktell(stream);
+	char buff[40], *tp=buff;
+	if(off)
+	{
+		if(off > sizeof(buff))
+		{
+			if(!(tp = malloc(off)))
+			{
+				struct stk *sp = stream2stk(stream);
+				if(!sp->stkoverflow || !(tp = (*sp->stkoverflow)(off)))
+					return(0);
+			}
+		}
+		memcpy(tp, stream->_data, off);
+	}
 	while(*cp++);
 	n = roundof(cp-(unsigned char*)str,STK_ALIGN);
 	if(!init)
@@ -448,6 +463,13 @@ char	*stkcopy(Sfio_t *stream, const char* str)
 		return(0);
 	strcpy((char*)(cp=stream->_data),str);
 	stream->_data = stream->_next = cp+n;
+	if(off)
+	{
+		_stkseek(stream,off);
+		memcpy(stream->_data, tp, off);
+		if(tp!=buff)
+			free((void*)tp);
+	}
 	return((char*)cp);
 }
 

@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.3 2008-02-02
+info mam static 00000 1994-07-17 make (AT&T Research) 5.3 2008-04-28
 setv INSTALLROOT ../../..
 setv PACKAGE_ast_INCLUDE ${INSTALLROOT}/include/ast
 setv PACKAGE_ast_LIB ${INSTALLROOT}/lib
@@ -48,7 +48,7 @@ exec - {
 exec - case "" in
 exec - *?)	echo " " ;;
 exec - esac
-exec - for i in sum ast
+exec - for i in sum md ast
 exec - do	case $i in
 exec - 	"sum"|sum)
 exec - 		;;
@@ -79,9 +79,19 @@ prev ${PACKAGE_ast_INCLUDE}/endian.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_common.h dontcare
 done ${PACKAGE_ast_INCLUDE}/bytesex.h dontcare
 done ${PACKAGE_ast_INCLUDE}/endian.h dontcare
-done sum-sha2.c
+done sum-sha2.c dontcare
 make sum-sha1.c implicit
-done sum-sha1.c
+done sum-sha1.c dontcare
+make sum-md5.c implicit
+done sum-md5.c dontcare
+make sum-lmd.c implicit
+make sha2.h implicit
+done sha2.h dontcare virtual
+make sha1.h implicit
+done sha1.h dontcare virtual
+make md4.h implicit
+done md4.h dontcare virtual
+done sum-lmd.c dontcare
 make sum-prng.c implicit
 make ${PACKAGE_ast_INCLUDE}/fnv.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
@@ -91,8 +101,6 @@ done ${INSTALLROOT}/include/prototyped.h dontcare
 done ${PACKAGE_ast_INCLUDE}/prototyped.h dontcare
 done ${PACKAGE_ast_INCLUDE}/fnv.h
 done sum-prng.c
-make sum-md5.c implicit
-done sum-md5.c
 make sum-crc.c implicit
 done sum-crc.c
 make sum-bsd.c implicit
@@ -101,6 +109,14 @@ make sum-ast4.c implicit
 done sum-ast4.c
 make sum-att.c implicit
 done sum-att.c
+make FEATURE/sum implicit
+meta FEATURE/sum features/%>FEATURE/% features/sum sum
+make features/sum
+done features/sum
+prev sum.req
+bind -last
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libast}  : run features/sum
+done FEATURE/sum generated
 make ${PACKAGE_ast_INCLUDE}/hashpart.h implicit
 prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/hashpart.h

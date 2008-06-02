@@ -1,10 +1,10 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#           Copyright (c) 1982-2007 AT&T Knowledge Ventures            #
+#          Copyright (c) 1982-2008 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
-#                      by AT&T Knowledge Ventures                      #
+#                    by AT&T Intellectual Property                     #
 #                                                                      #
 #                A copy of the License is available at                 #
 #            http://www.opensource.org/licenses/cpl1.0.txt             #
@@ -63,15 +63,15 @@ chmod +x ./script
 ! check_restricted script ||  err_exit 'script without builtins should run in restricted mode'
 check_restricted ./script ||  err_exit 'script with / in name should not run in restricted mode'
 print '/bin/echo hello' > script
-check_restricted script ||  err_exit 'script with pathnames should not run in restricted mode'
+! check_restricted script ||  err_exit 'script with pathnames should run in restricted mode'
 print 'echo hello> file' > script
-check_restricted script ||  err_exit 'script with output redirection should not run in restricted mode'
+! check_restricted script ||  err_exit 'script with output redirection should run in restricted mode'
 print 'PATH=/bin' > script
-check_restricted script ||  err_exit 'script with PATH assignment should not run in restricted mode'
+! check_restricted script ||  err_exit 'script with PATH assignment should run in restricted mode'
 cat > script <<!
 #! $SHELL
 print hello
 !
-check_restricted 'script;:' ||  err_exit 'script with #! pathname should not run in restricted mode'
-check_restricted 'script' ||  err_exit 'script with #! pathname should not run in restricted mode even if last command in script'
+! check_restricted 'script;:' ||  err_exit 'script with #! pathname should run in restricted mode'
+! check_restricted 'script' ||  err_exit 'script with #! pathname should run in restricted mode even if last command in script'
 exit $((Errors))

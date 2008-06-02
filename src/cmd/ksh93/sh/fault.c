@@ -30,7 +30,7 @@
 #include	<fcin.h>
 #include	"io.h"
 #include	"history.h"
-#include	"shnodes.h"
+#include	"shlex.h"
 #include	"variables.h"
 #include	"jobs.h"
 #include	"path.h"
@@ -75,9 +75,10 @@ void	sh_fault(register int sig)
 		int32_t v;
 		astwinsize(2,&rows,&cols);
 		if(v = cols)
-			nv_putval(COLUMNS, (char*)&v, NV_INT32);
+			nv_putval(COLUMNS, (char*)&v, NV_INT32|NV_RDONLY);
 		if(v = rows)
-			nv_putval(LINES, (char*)&v, NV_INT32);
+			nv_putval(LINES, (char*)&v, NV_INT32|NV_RDONLY);
+		shp->winch++;
 	}
 #endif  /* SIGWINCH */
 	if(shp->savesig)
@@ -87,6 +88,13 @@ void	sh_fault(register int sig)
 		return;
 	}
 
+	if(shp->subshell && sig!=SIGINT && sig!=SIGQUIT && sig!=SIGWINCH)
+	{
+		shp->exitval = SH_EXITSIG|sig;
+		sh_subfork();
+		shp->exitval = 0;
+		return;
+	}
 	/* handle ignored signals */
 	if((trap=shp->st.trapcom[sig]) && *trap==0)
 		return;
@@ -118,7 +126,7 @@ void	sh_fault(register int sig)
 				if(ptr)
 					free(ptr);
 				if(!shp->subshell)
-					sh_done(sig);
+					sh_done(shp,sig);
 				sh_exit(SH_EXITSIG);
 			}
 			/* mark signal and continue */
@@ -194,44 +202,45 @@ void	sh_fault(register int sig)
 /*
  * initialize signal handling
  */
-void sh_siginit(void)
+void sh_siginit(void *ptr)
 {
+	Shell_t	*shp = (Shell_t*)ptr;
 	register int sig, n=SIGTERM+1;
 	register const struct shtable2	*tp = shtab_signals;
 	sig_begin();
 	/* find the largest signal number in the table */
 #ifdef SIGRTMIN
-	sh.sigruntime[SH_SIGRTMIN] = SIGRTMIN;
+	shp->sigruntime[SH_SIGRTMIN] = SIGRTMIN;
 #endif /* SIGRTMIN */
 #ifdef SIGRTMAX
-	sh.sigruntime[SH_SIGRTMAX] = SIGRTMAX;
+	shp->sigruntime[SH_SIGRTMAX] = SIGRTMAX;
 #endif /* SIGRTMAX */
 	while(*tp->sh_name)
 	{
 		sig = tp->sh_number&((1<<SH_SIGBITS)-1);
 		if ((tp->sh_number>>SH_SIGBITS) & SH_SIGRUNTIME)
-			sig = sh.sigruntime[sig-1];
+			sig = shp->sigruntime[sig-1];
 		if(sig>n && sig<SH_TRAP)
 			n = sig;
 		tp++;
 	}
-	sh.sigmax = n++;
-	sh.st.trapcom = (char**)calloc(n,sizeof(char*));
-	sh.sigflag = (unsigned char*)calloc(n,1);
-	sh.sigmsg = (char**)calloc(n,sizeof(char*));
+	shp->sigmax = n++;
+	shp->st.trapcom = (char**)calloc(n,sizeof(char*));
+	shp->sigflag = (unsigned char*)calloc(n,1);
+	shp->sigmsg = (char**)calloc(n,sizeof(char*));
 	for(tp=shtab_signals; sig=tp->sh_number; tp++)
 	{
 		n = (sig>>SH_SIGBITS);
-		if((sig &= ((1<<SH_SIGBITS)-1)) > sh.sigmax)
+		if((sig &= ((1<<SH_SIGBITS)-1)) > shp->sigmax)
 			continue;
 		sig--;
 		if(n&SH_SIGRUNTIME)
-			sig = sh.sigruntime[sig];
+			sig = shp->sigruntime[sig];
 		if(sig>=0)
 		{
-			sh.sigflag[sig] = n;
+			shp->sigflag[sig] = n;
 			if(*tp->sh_name)
-				sh.sigmsg[sig] = (char*)tp->sh_value;
+				shp->sigmsg[sig] = (char*)tp->sh_value;
 		}
 	}
 }
@@ -455,95 +464,105 @@ int sh_trap(const char *trap, int mode)
  */
 void sh_exit(register int xno)
 {
-	register struct checkpt	*pp = (struct checkpt*)sh.jmplist;
+	Shell_t	*shp = &sh;
+	register struct checkpt	*pp = (struct checkpt*)shp->jmplist;
 	register int		sig=0;
 	register Sfio_t*	pool;
-	sh.exitval=xno;
+	shp->exitval=xno;
 	if(xno==SH_EXITSIG)
-		sh.exitval |= (sig=sh.lastsig);
+		shp->exitval |= (sig=shp->lastsig);
 #ifdef SIGTSTP
-	if(sh.trapnote&SH_SIGTSTP)
+	if(shp->trapnote&SH_SIGTSTP)
 	{
 		/* ^Z detected by the shell */
-		sh.trapnote = 0;
-		sh.sigflag[SIGTSTP] = 0;
-		if(!sh.subshell && sh_isstate(SH_MONITOR) && !sh_isstate(SH_STOPOK))
+		shp->trapnote = 0;
+		shp->sigflag[SIGTSTP] = 0;
+		if(!shp->subshell && sh_isstate(SH_MONITOR) && !sh_isstate(SH_STOPOK))
 			return;
 		if(sh_isstate(SH_TIMING))
 			return;
 		/* Handles ^Z for shell builtins, subshells, and functs */
-		sh.lastsig = 0;
+		shp->lastsig = 0;
 		sh_onstate(SH_MONITOR);
 		sh_offstate(SH_STOPOK);
-		sh.trapnote = 0;
-		if(!sh.subshell && (sig=sh_fork(0,NIL(int*))))
+		shp->trapnote = 0;
+		if(!shp->subshell && (sig=sh_fork(0,NIL(int*))))
 		{
 			job.curpgid = 0;
 			job.parent = (pid_t)-1;
 			job_wait(sig);
 			job.parent = 0;
-			sh.sigflag[SIGTSTP] = 0;
+			shp->sigflag[SIGTSTP] = 0;
 			/* wait for child to stop */
-			sh.exitval = (SH_EXITSIG|SIGTSTP);
+			shp->exitval = (SH_EXITSIG|SIGTSTP);
 			/* return to prompt mode */
 			pp->mode = SH_JMPERREXIT;
 		}
 		else
 		{
-			if(sh.subshell)
+			if(shp->subshell)
 				sh_subfork();
 			/* child process, put to sleep */
 			sh_offstate(SH_STOPOK);
 			sh_offstate(SH_MONITOR);
-			sh.sigflag[SIGTSTP] = 0;
+			shp->sigflag[SIGTSTP] = 0;
 			/* stop child job */
 			killpg(job.curpgid,SIGTSTP);
 			/* child resumes */
 			job_clear();
-			sh.forked = 1;
-			sh.exitval = (xno&SH_EXITMASK);
+			shp->forked = 1;
+			shp->exitval = (xno&SH_EXITMASK);
 			return;
 		}
 	}
 #endif /* SIGTSTP */
 	/* unlock output pool */
 	sh_offstate(SH_NOTRACK);
-	if(!(pool=sfpool(NIL(Sfio_t*),sh.outpool,SF_WRITE)))
-		pool = sh.outpool; /* can't happen? */
+	if(!(pool=sfpool(NIL(Sfio_t*),shp->outpool,SF_WRITE)))
+		pool = shp->outpool; /* can't happen? */
 	sfclrlock(pool);
 #ifdef SIGPIPE
-	if(sh.lastsig==SIGPIPE)
+	if(shp->lastsig==SIGPIPE)
 		sfpurge(pool);
 #endif /* SIGPIPE */
 	sfclrlock(sfstdin);
 	if(!pp)
-		sh_done(sig);
-	sh.prefix = 0;
+		sh_done(shp,sig);
+	shp->prefix = 0;
 	if(pp->mode == SH_JMPSCRIPT && !pp->prev) 
-		sh_done(sig);
+		sh_done(shp,sig);
 	siglongjmp(pp->buff,pp->mode);
+}
+
+static void array_notify(Namval_t *np, void *data)
+{
+	Namarr_t	*ap = nv_arrayptr(np);
+	NOT_USED(data);
+	if(ap && ap->fun)
+		(*ap->fun)(np, 0, NV_AFREE);
 }
 
 /*
  * This is the exit routine for the shell
  */
 
-void sh_done(register int sig)
+void sh_done(void *ptr, register int sig)
 {
+	Shell_t	*shp = (Shell_t*)ptr;
 	register char *t;
-	register int savxit = sh.exitval;
-	sh.trapnote = 0;
+	register int savxit = shp->exitval;
+	shp->trapnote = 0;
 	indone=1;
 	if(sig==0)
-		sig = sh.lastsig;
-	if(sh.userinit)
-		(*sh.userinit)(-1);
-	if(t=sh.st.trapcom[0])
+		sig = shp->lastsig;
+	if(shp->userinit)
+		(*shp->userinit)(-1);
+	if(t=shp->st.trapcom[0])
 	{
-		sh.st.trapcom[0]=0; /*should free but not long */
-		sh.oldexit = savxit;
+		shp->st.trapcom[0]=0; /*should free but not long */
+		shp->oldexit = savxit;
 		sh_trap(t,0);
-		savxit = sh.exitval;
+		savxit = shp->exitval;
 	}
 	else
 	{
@@ -551,7 +570,8 @@ void sh_done(register int sig)
 		sh_offstate(SH_ERREXIT);
 		sh_chktrap();
 	}
-	sh_freeup();
+	nv_scan(shp->var_tree,array_notify,(void*)0,NV_ARRAY,NV_ARRAY);
+	sh_freeup(shp);
 #if SHOPT_ACCT
 	sh_accend();
 #endif	/* SHOPT_ACCT */
@@ -560,14 +580,14 @@ void sh_done(register int sig)
 		tty_cooked(-1);
 #endif
 #ifdef JOBS
-	if((sh_isoption(SH_INTERACTIVE) && sh.login_sh) || (!sh_isoption(SH_INTERACTIVE) && (sig==SIGHUP)))
+	if((sh_isoption(SH_INTERACTIVE) && shp->login_sh) || (!sh_isoption(SH_INTERACTIVE) && (sig==SIGHUP)))
 		job_walk(sfstderr,job_terminate,SIGHUP,NIL(char**));
 #endif	/* JOBS */
-	job_close();
-	if(nv_search("VMTRACE", sh.var_tree,0))
+	job_close(shp);
+	if(nv_search("VMTRACE", shp->var_tree,0))
 		strmatch((char*)0,(char*)0);
 	sfsync((Sfio_t*)sfstdin);
-	sfsync((Sfio_t*)sh.outpool);
+	sfsync((Sfio_t*)shp->outpool);
 	sfsync((Sfio_t*)sfstdout);
 	if(sig)
 	{
@@ -579,7 +599,7 @@ void sh_done(register int sig)
 	}
 #if SHOPT_KIA
 	if(sh_isoption(SH_NOEXEC))
-		kiaclose();
+		kiaclose((Lex_t*)shp->lex_context);
 #endif /* SHOPT_KIA */
 	exit(savxit&SH_EXITMASK);
 }

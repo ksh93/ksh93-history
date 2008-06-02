@@ -383,6 +383,7 @@ bar[4]=3
 bar[0]=foo
 foo[0]=bam
 foo[4]=5
+[[ ${!foo[2+2]} == 'foo[4]' ]] || err_exit '${!var[sub]} should be var[sub]'
 [[ ${bar[${foo[5]}]} == 3 ]] || err_exit  'array subscript cannot be an array instance'
 [[ $bar[4] == 3 ]] || err_exit '$bar[x] != ${bar[x]} inside [[ ]]'
 (( $bar[4] == 3  )) || err_exit '$bar[x] != ${bar[x]} inside (( ))'
@@ -433,4 +434,22 @@ typeset -A foo=([1]=(x=ok) [2]=(x=no))
 [[ $($SHELL -c 'typeset -a foo;typeset | grep "foo$"'  2> /dev/null) == *index* ]] || err_exit 'typeset fails for indexed array with no elements'
 xxxxx=(one)
 [[ $(typeset | grep xxxxx$) == *'indexed array'* ]] || err_exit 'array of one element not an indexed array'
+unset foo
+foo[1]=(x=3 y=4)
+{ [[ ${!foo[1].*} == 'foo[1].x foo[1].y' ]] ;} 2> /dev/null || err_exit '${!foo[sub].*} not expanding correctly'
+unset x
+x=( typeset -a foo=( [0]="a" [1]="b" [2]="c" ))
+[[  ${@x.foo} == 'typeset -a'* ]] || err_exit 'x.foo is not an indexed array'
+x=( typeset -A foo=( [0]="a" [1]="b" [2]="c" ))
+[[  ${@x.foo} == 'typeset -A'* ]] || err_exit 'x.foo is not an associative array'
+$SHELL -c $'x=(foo\n\tbar\nbam\n)' 2> /dev/null || err_exit 'compound array assignment with new-lines not working'
+$SHELL -c $'x=(foo\n\tbar:\nbam\n)' 2> /dev/null || err_exit 'compound array assignment with labels not working'
+$SHELL -c $'x=(foo\n\tdone\nbam\n)' 2> /dev/null || err_exit 'compound array assignment with reserved words not working'
+[[ $($SHELL -c 'typeset -A A; print $(( A[foo].bar ))' 2> /dev/null) == 0 ]] || err_exit 'unset variable not evaluating to 0'
+unset a
+typeset -A a
+a[a].z=1
+a[z].z=2
+unset a[a]
+[[ ${!a[@]} == z ]] || err_exit '"unset a[a]" unsets entire array'
 exit $((Errors))

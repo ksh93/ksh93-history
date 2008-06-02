@@ -43,9 +43,9 @@ if	[[ $var != : || $OPTARG != r ]]
 then	err_exit "'getopts :r:s var -r' not working"
 fi
 OPTIND=1
-getopts :d#u var -d 100
-if	[[ $var != d || $OPTARG != 100 ]]
-then	err_exit "'getopts :d#u var -d 100' not working var=$var"
+getopts :d#u OPT -d 16177
+if	[[ $OPT != d || $OPTARG != 16177 ]]
+then	err_exit "'getopts :d#u OPT=d OPTARG=16177' failed -- OPT=$OPT OPTARG=$OPTARG"
 fi
 OPTIND=1
 while getopts 'ab' option -a -b
@@ -488,4 +488,6 @@ elif	(( total_t < reps * delay ))
 then	err_exit "read -t in pipe taking $total_t secs - $(( reps * delay )) minimum - too fast" 
 fi
 $SHELL -c 'sleep $(printf "%a" .95)' 2> /dev/null || err_exit "sleep doesn't except %a format constants"
+$SHELL -c 'test \( ! -e \)' 2> /dev/null ; [[ $? == 1 ]] || err_exit 'test \( ! -e \) not working'
+[[ $(ulimit) == "$(ulimit -fS)" ]] || err_exit 'ulimit is not the same as ulimit -fS'
 exit $((Errors))
