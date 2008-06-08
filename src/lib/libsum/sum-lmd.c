@@ -42,7 +42,7 @@ typedef struct Lmd_s
 	_SUM_LMD_
 	struct
 	{
-	unsigned int	context;
+	uintmax_t	context;
 	}		context;
 } Lmd_t;
 

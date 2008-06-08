@@ -3774,9 +3774,20 @@ as those defined by the type definition as well as any
 standard discipline names.
 No additional sub-variables can be defined for any instance.
 .PP
+The
+.B \-r
+attribute for a sub-variable with a type causes the sub-variable
+to be a required sub-variable.
+Whenever an instance of a type is created, all required sub-variables
+must be specified.
+These sub-variables become readonly in each instance.
+.PP
 When
 .B unset
 is invoked on a sub-variable within a type,
+and the
+.B \-r
+attribute has not been specified for this field,
 the value is reset to the default value associative with
 the type.
 Invoking

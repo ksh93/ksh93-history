@@ -80,14 +80,14 @@ Sfdouble_t nv_getn(Namval_t *np, register Namfun_t *nfp)
 	nv_local=0;
 	for(; fp; fp=fp->next)
 	{
-		if(!fp->disc->getnum && !fp->disc->getval)
+		if(!fp->disc || (!fp->disc->getnum && !fp->disc->getval))
 			continue;
 		if(!fp->disc->getnum && nv_isattr(np,NV_INTEGER))
 			continue;
 		if(!nv_isattr(np,NV_NODISC) || fp==(Namfun_t*)nv_arrayptr(np))
 			break;
 	}
-	if(fp && fp->disc->getnum)
+	if(fp && fp->disc && fp->disc->getnum)
 		d = (*fp->disc->getnum)(np,fp);
 	else if(nv_isattr(np,NV_INTEGER))
 	{
@@ -96,7 +96,7 @@ Sfdouble_t nv_getn(Namval_t *np, register Namfun_t *nfp)
 	}
 	else
 	{
-		if(fp && fp->disc->getval)
+		if(fp && fp->disc && fp->disc->getval)
 			str = (*fp->disc->getval)(np,fp);
 		else
 			str = nv_getv(np,fp?fp:nfp);
@@ -128,8 +128,9 @@ void nv_putv(Namval_t *np, const char *value, int flags, register Namfun_t *nfp)
 		{
 			if(!value)
 			{
-				nv_disc(np,fp,NV_POP);
-				if(!fp->nofree)
+				if(fp->disc || !(fp->nofree&1))
+					nv_disc(np,fp,NV_POP);
+				if(!(fp->nofree&1))
 					free((void*)fp);
 			}
 			continue;
@@ -225,7 +226,7 @@ static void chktfree(register Namval_t *np, register struct vardisc *vp)
 	{
 		/* no disc left so pop */
 		Namfun_t *fp;
-		if((fp=nv_stack(np, NIL(Namfun_t*))) && !fp->nofree)
+		if((fp=nv_stack(np, NIL(Namfun_t*))) && !(fp->nofree&1))
 			free((void*)fp);
 	}
 }
@@ -338,7 +339,7 @@ static void	assign(Namval_t *np,const char* val,int flags,Namfun_t *handle)
 		}
 		unblock(bp,type);
 		nv_disc(np,handle,NV_POP);
-		if(!handle->nofree)
+		if(!(handle->nofree&1))
 			free(handle);
 	}
 done:
@@ -452,7 +453,7 @@ char *nv_setdisc(register Namval_t* np,register const char *event,Namval_t *acti
 		/* not the top level */
 		while(fp = fp->next)
 		{
-			if(fp->disc->setdisc)
+			if(fp->disc && fp->disc->setdisc)
 				return((*fp->disc->setdisc)(np,event,action,fp));
 		}
 		return(NIL(char*));
@@ -558,7 +559,7 @@ static void putdisc(Namval_t* np, const char* val, int flag, Namfun_t* fp)
 			}
 		}
 		nv_disc(np,fp,NV_POP);
-		if(!fp->nofree)
+		if(!(fp->nofree&1))
 			free((void*)fp);
 			
 	}
@@ -575,7 +576,7 @@ Namfun_t *nv_clone_disc(register Namfun_t *fp, int flags)
 	if(!(nfp=newof(NIL(Namfun_t*),Namfun_t,1,size-sizeof(Namfun_t))))
 		return(0);
 	memcpy(nfp,fp,size);
-	nfp->nofree = (flags&NV_RDONLY)?1:0;
+	nfp->nofree |= (flags&NV_RDONLY)?1:0;
 	return(nfp);
 }
 
@@ -592,7 +593,7 @@ int nv_adddisc(Namval_t *np, const char **names, Namval_t **funs)
 	if(!(vp = newof(NIL(Nambfun_t*),Nambfun_t,1,n*sizeof(Namval_t*))))
 		return(0);
 	vp->fun.dsize = sizeof(Nambfun_t)+n*sizeof(Namval_t*);
-	vp->fun.funs = 1;
+	vp->fun.nofree |= 2;
 	vp->num = n;
 	if(funs)
 		memcpy((void*)vp->bltins, (void*)funs,n*sizeof(Namval_t*));
@@ -621,6 +622,7 @@ Namfun_t *nv_disc(register Namval_t *np, register Namfun_t* fp, int mode)
 		return(0);
 	if(fp)
 	{
+		fp->subshell = sh.subshell;
 		if((lp=np->nvfun)==fp)
 		{
 			if(mode==NV_CLONE)
@@ -671,7 +673,7 @@ Namfun_t *nv_disc(register Namval_t *np, register Namfun_t* fp, int mode)
 			fp->next = 0;
 		else
 		{
-			if(fp->nofree && *lpp)
+			if((fp->nofree&1) && *lpp)
 				fp = nv_clone_disc(fp,0);
 			fp->next = *lpp;
 		}
@@ -717,7 +719,7 @@ static void put_notify(Namval_t* np,const char *val,int flags,Namfun_t *fp)
 	nv_stack(np,fp);
 	nv_stack(np,(Namfun_t*)0);
 	*pp->ptr = 0;
-	if(!fp->nofree)
+	if(!(fp->nofree&1))
 		free((void*)fp);
 }
 
@@ -732,7 +734,7 @@ int nv_unsetnotify(Namval_t *np, char **addr)
 		{
 			nv_stack(np,fp);
 			nv_stack(np,(Namfun_t*)0);
-			if(!fp->nofree)
+			if(!(fp->nofree&1))
 				free((void*)fp);
 			return(1);
 		}
@@ -807,7 +809,7 @@ void clone_all_disc( Namval_t *np, Namval_t *mp, int flags)
 	register Namfun_t *fp, **mfp = &mp->nvfun, *nfp;
 	for(fp=np->nvfun; fp;fp=fp->next)
 	{
-		if(fp->funs && (flags&NV_NODISC))
+		if((fp->nofree&2) && (flags&NV_NODISC))
 			nfp = 0;
 		if(fp->disc && fp->disc->clonef)
 			nfp = (*fp->disc->clonef)(np,mp,flags,fp);
@@ -837,7 +839,7 @@ int nv_clone(Namval_t *np, Namval_t *mp, int flags)
 	for(fp=mp->nvfun; fp; fp=fpnext)
 	{
 		fpnext = fp->next;
-		if(!fp->nofree)
+		if(!(fp->nofree&1))
 			free((void*)fp);
 	}
 	mp->nvfun = 0;
@@ -1192,7 +1194,7 @@ static void put_table(register Namval_t* np, const char* val, int flags, Namfun_
 		free((void*)mp);
 	}
 	dtclose(root);
-	if(!fp->nofree)
+	if(!(fp->nofree&1))
 		free((void*)fp);
 }
 
@@ -1296,7 +1298,7 @@ Namval_t *nv_mount(Namval_t *np, const char *name, Dt_t *dict)
 	tp->parent = pp;
 	tp->fun.disc = &table_disc;
 	nv_onattr(mp,NV_TABLE);
-	nv_disc(mp, &tp->fun, NV_LAST);
+	nv_disc(mp, &tp->fun, NV_FIRST);
 	return(mp);
 }
 

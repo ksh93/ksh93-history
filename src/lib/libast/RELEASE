@@ -1,3 +1,6 @@
+08-06-06 misc/optget.c: handle sub-component about details
+08-06-04 misc/optget.c: fix [-n?\n...\n] version parse
+08-06-04 include/debug.h,misc/debug.c: merge with kpvdebug.h
 08-06-02 features/ndbm: add to tame dbmlib.iffe replication
 08-06-01 comp/resolvepath.c,realpath.c: fix resolvepath() return value type
 08-05-22 tm/tmxdate.c: fix a few ordinal/last/this/next bugs

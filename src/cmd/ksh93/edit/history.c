@@ -486,7 +486,7 @@ static void hist_trim(History_t *hp, int n)
 		if(tmpname==name)
 			tmpname = 0;
 	}
-	hp = hist_ptr = 0;
+	hist_ptr = 0;
 	if(fstat(sffileno(hist_old->histfp),&statb)>=0)
 	{
 		histinit = 1;

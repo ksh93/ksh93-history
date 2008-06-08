@@ -117,7 +117,6 @@ struct limits
 	char		*lastpath;	/* last alsolute path found */ \
 	int		path_err;	/* last error on path search */ \
 	Dt_t		*track_tree;	/* for tracked aliases*/ \
-	Namval_t	*bltin_nodes;	/* pointer to built-in variables */ \
 	Dt_t		*var_base;	/* global level variables */ \
 	Namval_t	*namespace;	/* current active namespace*/ \
 	Namval_t	*last_table;	/* last table used in last nv_open  */ \
@@ -125,10 +124,12 @@ struct limits
 	long		timeout;	/* read timeout */ \
 	short		curenv;		/* current subshell number */ \
 	short		jobenv;		/* subshell number for jobs */ \
+	int		infd;		/* input file descriptor */ \
 	int		nextprompt;	/* next prompt is PS<nextprompt> */ \
+	int		bltin_nnodes;	/* number of bltins nodes */ \
+	Namval_t	*bltin_nodes;	/* pointer to built-in variables */ \
 	Namval_t	*bltin_cmds;	/* pointer to built-in commands */ \
 	Namval_t	*posix_fun;	/* points to last name() function */ \
-	int		infd;		/* input file descriptor */ \
 	char		*outbuff;	/* pointer to output buffer */ \
 	char		*errbuff;	/* pointer to stderr buffer */ \
 	char		*prompt;	/* pointer to prompt string */ \
@@ -213,7 +214,8 @@ struct limits
 	unsigned char	sigruntime[2]; \
 	unsigned long	test; \
 	Shopt_t		offoptions; \
-	Shopt_t		glob_options;
+	Shopt_t		glob_options; \
+	Namfun_t	nvfun;
 
 #include	<shell.h>
 
@@ -321,6 +323,7 @@ struct limits
 
 #define MATCH_MAX		64
 
+extern Shell_t		*nv_shell(Namval_t*);
 extern int		sh_addlib(void*);
 extern void		sh_applyopts(Shell_t*,Shopt_t);
 extern char 		**sh_argbuild(Shell_t*,int*,const struct comnod*,int);

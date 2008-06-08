@@ -1,3 +1,4 @@
+08-06-05 sum-lmd.c: align context to largest int
 08-05-01 sumlib.c: add some -lmd verification checks
 08-02-11 sum-lmd.c,features/sum: add wrapper for solaris -lmd
 07-10-29 sum.h,sumlib.c: add SUM_LEGACY for legacy output format

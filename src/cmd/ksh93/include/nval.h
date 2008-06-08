@@ -71,7 +71,7 @@ struct Namfun
 {
 	const Namdisc_t	*disc;
 	char		nofree;
-	char		funs;
+	unsigned char	subshell;
 	unsigned short	dsize;
 	Namfun_t	*next;
 	char		*last;

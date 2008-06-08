@@ -1060,7 +1060,7 @@ localize(Push_t* psp, char* s, char* e, int term, int n, char* catalog, int vers
  */
 
 static int
-label(register Sfio_t* sp, int sep, register char* s, int z, int level, int style, int f, Sfio_t* ip, int version, char* catalog)
+label(register Sfio_t* sp, int sep, register char* s, int about, int z, int level, int style, int f, Sfio_t* ip, int version, char* catalog)
 {
 	register int	c;
 	register char*	t;
@@ -1093,6 +1093,8 @@ label(register Sfio_t* sp, int sep, register char* s, int z, int level, int styl
 	sep = !sep || z < 0;
 	va = 0;
 	y = 0;
+	if (about)
+		sfputc(sp, '(');
 	if (version < 1)
 	{
 		a = 0;
@@ -1189,7 +1191,7 @@ label(register Sfio_t* sp, int sep, register char* s, int z, int level, int styl
 				if (va & OPT_optional)
 					sfputc(sp, '[');
 				sfputc(sp, '=');
-				label(sp, 0, y, -1, 0, style, FONT_ITALIC, ip, version, catalog);
+				label(sp, 0, y, 0, -1, 0, style, FONT_ITALIC, ip, version, catalog);
 				if (va & OPT_optional)
 					sfputc(sp, ']');
 				y = 0;
@@ -1347,6 +1349,8 @@ label(register Sfio_t* sp, int sep, register char* s, int z, int level, int styl
  restore:
 	if (f)
 		sfputr(sp, font(f, style, 0), -1);
+	if (about)
+		sfputc(sp, ')');
 	if (psp)
 		pop(psp);
 	return r;
@@ -1424,7 +1428,7 @@ args(register Sfio_t* sp, register char* p, register int n, int flags, int style
 		}
 	}
 	if (n)
-		label(sp, sep, p, n, 0, style, 0, ip, version, catalog);
+		label(sp, sep, p, 0, n, 0, style, 0, ip, version, catalog);
 }
 
 /*
@@ -1434,7 +1438,7 @@ args(register Sfio_t* sp, register char* p, register int n, int flags, int style
  */
 
 static int
-item(Sfio_t* sp, char* s, int level, int style, Sfio_t* ip, int version, char* catalog)
+item(Sfio_t* sp, char* s, int about, int level, int style, Sfio_t* ip, int version, char* catalog)
 {
 	register char*	t;
 	int		n;
@@ -1455,7 +1459,7 @@ item(Sfio_t* sp, char* s, int level, int style, Sfio_t* ip, int version, char* c
 			for (n = 0; n < level; n++)
 				sfputc(sp, '\t');
 		}
-		label(sp, 0, s + 1, -1, level, style, FONT_LITERAL, ip, version, catalog);
+		label(sp, 0, s + 1, about, -1, level, style, FONT_LITERAL, ip, version, catalog);
 		sfputc(sp, '\n');
 		if (style >= STYLE_nroff)
 			sfprintf(sp, ".DE");
@@ -1485,9 +1489,9 @@ item(Sfio_t* sp, char* s, int level, int style, Sfio_t* ip, int version, char* c
 						opt_info.state->flags |= OPT_proprietary;
 						break;
 					}
-			label(sp, 0, s, -1, level, 0, 0, ip, version, catalog);
+			label(sp, 0, s, about, -1, level, 0, 0, ip, version, catalog);
 			sfputr(sp, "\">", -1);
-			label(sp, 0, s, -1, level, style, level ? FONT_BOLD : 0, ip, version, catalog);
+			label(sp, 0, s, about, -1, level, style, level ? FONT_BOLD : 0, ip, version, catalog);
 			sfputr(sp, "</A>", -1);
 			if (!level)
 				sfputr(sp, "</H4>", -1);
@@ -1503,7 +1507,7 @@ item(Sfio_t* sp, char* s, int level, int style, Sfio_t* ip, int version, char* c
 				else if (style != STYLE_options && style != STYLE_match || *s == '-' || *s == '+')
 					sfputc(sp, '\t');
 			}
-			label(sp, 0, s, -1, level, style, FONT_BOLD, ip, version, catalog);
+			label(sp, 0, s, about, -1, level, style, FONT_BOLD, ip, version, catalog);
 		}
 	}
 	else
@@ -1537,6 +1541,7 @@ textout(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip
 	int		a;
 	int		f;
 	int		par;
+	int		about;
 	Push_t*		tsp;
 
 	int		ident = 0;
@@ -1544,6 +1549,7 @@ textout(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip
 	Push_t*		psp = 0;
 
  again:
+	about = 0;
 	if ((c = *p) == GO)
 	{
 		for (;;)
@@ -1557,7 +1563,7 @@ textout(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip
 			}
 			else if (*p != OG)
 			{
-				if (level <= 1 || *p != '[' || *(p + 1) != '-')
+				if (level <= 1 || *p != '[' || *(p + 1) != '-' || *(p + 2) == '?' || isalpha(*(p + 2)))
 					break;
 				p = skip(p, 0, 0, 0, 1, level, 0, version);
 			}
@@ -1583,15 +1589,16 @@ textout(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip
 		level++;
 	}
 	if (c == '-' && level > 1)
-		return skip(p, 0, 0, 0, 1, level, 1, version);
+		about = 1;
 	if (c == '+' || c == '-' && (bump = 3) || c != ' ' && level > 1)
 	{
 		p = skip(t = p + 1, '?', 0, 0, 1, level, 0, version);
-		if (c == '-' && (*t == '?' || isdigit(*t)))
+		if (c == '-' && (*t == '?' || isdigit(*t) || *p == '?' && *(p + 1) == '\n'))
 		{
 			if ((c = *p) != '?')
 				return skip(p, 0, 0, 0, 1, level, 1, version);
-			par = item(sp, C("version"), level, style, ip, version, ID);
+			e = C("version");
+			par = item(sp, e, about, level, style, ip, version, ID);
 			for (;;)
 			{
 				while (isspace(*(p + 1)))
@@ -1628,10 +1635,10 @@ textout(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip
 						*((t = e) + 1) = '|';
 				}
 			}
-			par = item(sp, t, level, style, ip, version, catalog);
+			par = item(sp, t, about, level, style, ip, version, catalog);
 			c = *p;
 		}
-		if (level)
+		if (!about && level)
 			par = 0;
 	}
 	else
@@ -2279,9 +2286,9 @@ opthelp(const char* oopts, const char* what)
 					p++;
 				else if (c != '[')
 				{
-					if (c == '{')
+					if (c == GO)
 						vl++;
-					else if (c == '}')
+					else if (c == OG)
 						vl--;
 					continue;
 				}
@@ -2559,7 +2566,7 @@ opthelp(const char* oopts, const char* what)
 					break;
 				continue;
 			}
-			if (*p == '}')
+			if (*p == OG)
 			{
 				p++;
 				continue;
@@ -2864,7 +2871,7 @@ opthelp(const char* oopts, const char* what)
 						if (!head)
 						{
 							head = 1;
-							item(sp_body, (flags & OPT_functions) ? C("FUNCTIONS") : C("OPTIONS"), 0, style, sp_info, version, ID);
+							item(sp_body, (flags & OPT_functions) ? C("FUNCTIONS") : C("OPTIONS"), 0, 0, style, sp_info, version, ID);
 						}
 						if (style >= STYLE_nroff)
 						{
@@ -2907,7 +2914,7 @@ opthelp(const char* oopts, const char* what)
 							else
 								sfputr(sp, "void", -1);
 							if (w)
-								label(sp_body, ' ', w, -1, 0, style, FONT_BOLD, sp_info, version, catalog);
+								label(sp_body, ' ', w, 0, -1, 0, style, FONT_BOLD, sp_info, version, catalog);
 						}
 						else
 						{
@@ -2919,10 +2926,10 @@ opthelp(const char* oopts, const char* what)
 							sfputc(sp_body, ' ');
 							if (w)
 							{
-								if (label(sp_body, 0, w, -1, 0, style, 0, sp_info, version, catalog))
+								if (label(sp_body, 0, w, 0, -1, 0, style, 0, sp_info, version, catalog))
 								{
 									sfputc(sp_body, '|');
-									label(sp_body, 0, w, -1, 0, style, 0, sp_info, version, native);
+									label(sp_body, 0, w, 0, -1, 0, style, 0, sp_info, version, native);
 								}
 							}
 							else
@@ -2944,7 +2951,7 @@ opthelp(const char* oopts, const char* what)
 									}
 							sfputc(sp_body, ' ');
 							if (y)
-								label(sp_body, 0, y, -1, 0, style, 0, sp_info, version, catalog);
+								label(sp_body, 0, y, 0, -1, 0, style, 0, sp_info, version, catalog);
 							else
 								sfputc(sp_body, '-');
 							if (v)
@@ -2990,10 +2997,10 @@ opthelp(const char* oopts, const char* what)
 								if (prefix > 1)
 									sfputc(sp_body, '-');
 							}
-							if (label(sp_body, 0, w, -1, 0, style, FONT_BOLD, sp_info, version, catalog))
+							if (label(sp_body, 0, w, 0, -1, 0, style, FONT_BOLD, sp_info, version, catalog))
 							{
 								sfputc(sp_body, '|');
-								label(sp_body, 0, w, -1, 0, style, FONT_BOLD, sp_info, version, native);
+								label(sp_body, 0, w, 0, -1, 0, style, FONT_BOLD, sp_info, version, native);
 							}
 						}
 						if (y)
@@ -3004,7 +3011,7 @@ opthelp(const char* oopts, const char* what)
 								sfputc(sp_body, ' ');
 							if (w)
 								sfputc(sp_body, prefix == 1 ? ' ' : '=');
-							label(sp_body, 0, y, -1, 0, style, FONT_ITALIC, sp_info, version, catalog);
+							label(sp_body, 0, y, 0, -1, 0, style, FONT_ITALIC, sp_info, version, catalog);
 							if (a & OPT_optional)
 								sfputc(sp_body, ']');
 						}
@@ -3093,7 +3100,7 @@ opthelp(const char* oopts, const char* what)
 			for (t = p; *t == '\t' || *t == '\n'; t++);
 			if (*t)
 			{
-				item(sp_body, C("IMPLEMENTATION"), 0, style, sp_info, version, ID);
+				item(sp_body, C("IMPLEMENTATION"), 0, 0, style, sp_info, version, ID);
 				sfputr(sp_body, p, -1);
 			}
 		}
@@ -3240,7 +3247,7 @@ opthelp(const char* oopts, const char* what)
 			sfclose(sp_head);
 			sp_head = 0;
 		}
-		item(sp, C("SYNOPSIS"), 0, style, sp_info, version, ID);
+		item(sp, C("SYNOPSIS"), 0, 0, style, sp_info, version, ID);
 	}
 	if (x)
 	{

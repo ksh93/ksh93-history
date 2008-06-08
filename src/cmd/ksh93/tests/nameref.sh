@@ -265,4 +265,17 @@ typeset -A foo
 nameref x=foo[xyz]
 foo[xyz]=ok
 [[ $x == ok ]] || err_exit 'nameref to unset subscript not working'
+function function2
+{
+	nameref v=$1
+	v.x=19 v.y=20
+}
+function function1
+{
+	typeset compound_var=()
+	function2 compound_var
+	printf "x=%d, y=%d\n" compound_var.x compound_var.y
+}
+x="$(function1)"
+[[ "$x" != 'x=19, y=20' ]] && err_exit "expected 'x=19, y=20', got '${x}'"
 exit $((Errors))

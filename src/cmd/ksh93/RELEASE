@@ -1,7 +1,9 @@
-08-06-02  --- Release ksh93t-  ---
+08-06-06  --- Release ksh93t-  ---
+08-06-06  A bug when processing `` command substitution with the character
+	  sequence \$' has been fixed.
 08-06-02  When defining a type, the typeset -r attribute causes this field
 	  to be required to be specified for each instance of the type and
-	  does not allow a default value.  Currently undocumented. 
+	  does not allow a default value.
 08-06-02  Several bugs in which compound variables were modified by
 	  subshells have been fixed.
 08-05-22  The ceil function has been added to the math functions.

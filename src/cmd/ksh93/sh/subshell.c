@@ -211,15 +211,17 @@ Namval_t *sh_assignok(register Namval_t *np,int add)
 		dp = sp->var;
 	if(np->nvenv && !nv_isattr(np,NV_MINIMAL|NV_EXPORT) && shp->last_root)
 		dp = shp->last_root;
-	if(nv_search((char*)np,dp,HASH_BUCKET)!=np)
-		return(np);
-	if(dp->walk)
-		dp = dp->walk;
+	if((mp=nv_search((char*)np,dp,HASH_BUCKET))!=np)
+	{
+		if(mp || !np->nvfun || np->nvfun->subshell>=sh.subshell) 
+			return(np);
+	}
 	if((ap=nv_arrayptr(np)) && (mp=nv_opensub(np)))
 	{
 		shp->last_root = ap->table;
 		sh_assignok(mp,add);
-		return(np);
+		if(!add || array_assoc(ap))
+			return(np);
 	}
 	for(lp=subshell_data->svar; lp; lp = lp->next)
 	{

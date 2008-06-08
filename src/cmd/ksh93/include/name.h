@@ -152,7 +152,7 @@ struct Ufunction
 #define nv_setsize(n,s)	((n)->nvsize = (s))
 #undef nv_size
 #define nv_size(np)	((np)->nvsize)
-#define nv_isnull(np)	(!(np)->nvalue.cp && !(np)->nvfun && !nv_isattr(np,NV_SHORT))
+#define nv_isnull(np)	(!(np)->nvalue.cp && !((np)->nvfun && (np)->nvfun->disc) && nv_isattr(np,NV_SHORT|NV_INTEGER)!=(NV_SHORT|NV_INTEGER))
 
 /* ...	for arrays */
 

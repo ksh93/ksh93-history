@@ -623,7 +623,7 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 			flags &= ~NV_NOSCOPE;
 	}
 	if(!dp->disc)
-		copy = dp->nofree;
+		copy = dp->nofree&1;
 	if(*cp=='.')
 		cp++;
 	while(1)
@@ -649,7 +649,7 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 			{
 				c = sp-name;
 				copy = cp-name;
-				dp->nofree = 1;
+				dp->nofree |= 1;
 				name = copystack((const char*)0, name,(const char*)0);
 				cp = (char*)name+copy;
 				sp = (char*)name+c;
@@ -688,6 +688,7 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 					{
 						root = shp->var_tree->walk;
 						flags |= NV_NOSCOPE;
+						noscope = 1;
 					}
 				}
 				if(rp && rp->sdict && (flags&NV_STATIC))
@@ -745,6 +746,7 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 					if(sub && c!='.')
 						nv_putsub(np,sub,0L);
 					flags |= NV_NOSCOPE;
+					noscope = 1;
 				}
 				if(nv_isref(np) && (c=='[' || c=='.' || !(flags&NV_ASSIGN)))
 					errormsg(SH_DICT,ERROR_exit(1),e_noref,nv_name(np));
@@ -756,7 +758,7 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 				{
 					c = (cp-sp);
 					copy = strlen(cp=nv_name(np));
-					dp->nofree = 1;
+					dp->nofree |= 1;
 					name = copystack(cp,sp,sub);
 					sp = (char*)name + copy;
 					cp = sp+c;
@@ -827,7 +829,7 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 						if(!copy)
 						{
 							copy = cp-name;
-							dp->nofree = 1;
+							dp->nofree |= 1;
 							name = copystack((const char*)0, name,(const char*)0);
 							cp = (char*)name+copy;
 							sp = cp-m;
@@ -992,7 +994,7 @@ Namval_t *nv_open(const char *name, Dt_t *root, int flags)
 			name = cp = copystack(np?nv_name(np):0,name,(const char*)0);
 			fname = strrchr(cp,'.');
 			*fname = 0;
-			fun.nofree = 1;
+			fun.nofree |= 1;
 			flags &=  ~NV_IDENT;
 			funroot = root;
 			root = shp->var_tree;
@@ -1017,7 +1019,7 @@ Namval_t *nv_open(const char *name, Dt_t *root, int flags)
 	else if(shp->prefix && (flags&NV_ASSIGN))
 	{
 		name = cp = copystack(shp->prefix,name,(const char*)0);
-		fun.nofree = 1;
+		fun.nofree |= 1;
 	}
 	c = *(unsigned char*)cp;
 	if(root==shp->alias_tree)
@@ -1119,7 +1121,7 @@ skip:
 			msg = e_noarray;
 		errormsg(SH_DICT,ERROR_exit(1),msg,name);
 	}
-	if(fun.nofree)
+	if(fun.nofree&1)
 		stakseek(offset);
 	return(np);
 }
@@ -1159,7 +1161,7 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 	sh.argaddr = 0;
 	if(sh.subshell && !nv_local)
 		np = sh_assignok(np,1);
-	if(np->nvfun && !(flags&NV_NODISC) && !nv_isattr(np,NV_REF))
+	if(np->nvfun && np->nvfun->disc && !(flags&NV_NODISC) && !nv_isattr(np,NV_REF))
 	{
 		/* This function contains disc */
 		if(!nv_local)
@@ -2145,7 +2147,7 @@ void nv_optimize(Namval_t *np)
 	{
 		for(fp=np->nvfun; fp; fp = fp->next)
 		{
-			if(fp->disc->getnum || fp->disc->getval)
+			if(fp->disc && (fp->disc->getnum || fp->disc->getval))
 			{
 				sh.argaddr = 0;
 				return;
@@ -2217,7 +2219,7 @@ char *nv_getval(register Namval_t *np)
 	if(!nv_local && sh.argaddr)
 		nv_optimize(np);
 #endif /* SHOPT_OPTIMIZE */
-	if(!np->nvfun && !nv_isattr(np,NV_ARRAY|NV_INTEGER|NV_FUNCT|NV_REF|NV_TABLE))
+	if((!np->nvfun || !np->nvfun->disc) && !nv_isattr(np,NV_ARRAY|NV_INTEGER|NV_FUNCT|NV_REF|NV_TABLE))
 		goto done;
 	if(nv_isref(np))
 	{
@@ -2226,7 +2228,7 @@ char *nv_getval(register Namval_t *np)
 		sh.last_table = nv_reftable(np);
 		return(nv_name(nv_refnode(np)));
 	}
-	if(np->nvfun)
+	if(np->nvfun && np->nvfun->disc)
 	{
 		if(!nv_local)
 		{
@@ -2341,7 +2343,7 @@ Sfdouble_t nv_getnum(register Namval_t *np)
 #endif /* SHOPT_OPTIMIZE */
 	if(nv_istable(np))
 		errormsg(SH_DICT,ERROR_exit(1),e_number,nv_name(np));
-     	if(np->nvfun)
+     	if(np->nvfun && np->nvfun->disc)
 	{
 		if(!nv_local)
 		{
@@ -2896,4 +2898,15 @@ int nv_setsize(register Namval_t *np, int size)
 	if(size>=0)
 		np->nvsize = size;
 	return(oldsize);
+}
+
+Shell_t	*nv_shell(Namval_t *np)
+{
+	Namfun_t *fp;
+	for(fp=np->nvfun;fp;fp=fp->next)
+	{
+		if(!fp->disc)
+			return((Shell_t*)fp->last);
+	}
+	return(0);
 }

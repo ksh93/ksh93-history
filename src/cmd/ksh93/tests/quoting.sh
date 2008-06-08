@@ -331,4 +331,7 @@ x=${x:-`id | sed 's/^[^(]*(\([^)]*\)).*/\1/'`}
 [[ $($SHELL -c 'print a[') == 'a[' ]] || err_exit "unbalanced '[' in command arg fails"
 $SHELL -c $'false && (( `wc -l /dev/null | nawk \'{print $1}\'` > 2 )) && true;:' 2> /dev/null ||  err_exit 'syntax error with ` in arithmetic expression'
 { $SHELL  -c '((  1`: "{ }"` ))' ;} 2> /dev/null || err_exit 'problem with ` inside (())'
+varname=foobarx
+x=`print '"\$'${varname}'"'`
+[[ $x == '"$foobarx"' ]] ||  err_exit $'\\$\' not handled correctly inside ``'
 exit $((Errors))

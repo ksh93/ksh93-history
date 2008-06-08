@@ -77,21 +77,13 @@ struct seconds
 struct rand
 {
 	Namfun_t	hdr;
-	Shell_t		*sh;
 	int32_t		rand_last;
 };
 
 struct ifs
 {
 	Namfun_t	hdr;
-	Shell_t		*sh;
 	Namval_t	*ifsnp;
-};
-
-struct shell
-{
-	Namfun_t	hdr;
-	Shell_t		*sh;
 };
 
 struct match
@@ -112,28 +104,28 @@ typedef struct _init_
 	Namfun_t	VPATH_init;
 #endif /* SHOPT_FS_3D */
 	struct ifs	IFS_init;
-	struct shell	PATH_init;
-	struct shell	FPATH_init;
-	struct shell	CDPATH_init;
-	struct shell	SHELL_init;
-	struct shell	ENV_init;
-	struct shell	VISUAL_init;
-	struct shell	EDITOR_init;
-	struct shell	HISTFILE_init;
-	struct shell	HISTSIZE_init;
-	struct shell	OPTINDEX_init;
+	Namfun_t	PATH_init;
+	Namfun_t	FPATH_init;
+	Namfun_t	CDPATH_init;
+	Namfun_t	SHELL_init;
+	Namfun_t	ENV_init;
+	Namfun_t	VISUAL_init;
+	Namfun_t	EDITOR_init;
+	Namfun_t	HISTFILE_init;
+	Namfun_t	HISTSIZE_init;
+	Namfun_t	OPTINDEX_init;
 	struct seconds	SECONDS_init;
 	struct rand	RAND_init;
-	struct shell	LINENO_init;
-	struct shell	L_ARG_init;
+	Namfun_t	LINENO_init;
+	Namfun_t	L_ARG_init;
 	struct match	SH_MATCH_init;
 #ifdef _hdr_locale
-	struct shell	LC_TYPE_init;
-	struct shell	LC_NUM_init;
-	struct shell	LC_COLL_init;
-	struct shell	LC_MSG_init;
-	struct shell	LC_ALL_init;
-	struct shell	LANG_init;
+	Namfun_t	LC_TYPE_init;
+	Namfun_t	LC_NUM_init;
+	Namfun_t	LC_COLL_init;
+	Namfun_t	LC_MSG_init;
+	Namfun_t	LC_ALL_init;
+	Namfun_t	LANG_init;
 #endif /* _hdr_locale */
 } Init_t;
 
@@ -173,7 +165,7 @@ static char *nospace(int unused)
 static void put_ed(register Namval_t* np,const char *val,int flags,Namfun_t *fp)
 {
 	register const char *cp, *name=nv_name(np);
-	Shell_t *shp = ((struct shell*)fp)->sh;
+	Shell_t *shp = nv_shell(np);
 	if(*name=='E' && nv_getval(sh_scoped(shp,VISINOD)))
 		goto done;
 	sh_offoption(SH_VI);
@@ -196,7 +188,7 @@ done:
 /* Trap for HISTFILE and HISTSIZE variables */
 static void put_history(register Namval_t* np,const char *val,int flags,Namfun_t *fp)
 {
-	Shell_t *shp = ((struct shell*)fp)->sh;
+	Shell_t *shp = nv_shell(np);
 	char	*old;
 	void 	*histopen = shp->hist_ptr;
 	if(val && histopen)
@@ -215,7 +207,7 @@ static void put_history(register Namval_t* np,const char *val,int flags,Namfun_t
 /* Trap for OPTINDEX */
 static void put_optindex(Namval_t* np,const char *val,int flags,Namfun_t *fp)
 {
-	Shell_t *shp = ((struct shell*)fp)->sh;
+	Shell_t *shp = nv_shell(np);
 	shp->st.opterror = shp->st.optchar = 0;
 	nv_putv(np, val, flags, fp);
 	if(!val)
@@ -229,8 +221,8 @@ static Sfdouble_t nget_optindex(register Namval_t* np, Namfun_t *fp)
 
 static Namfun_t *clone_optindex(Namval_t* np, Namval_t *mp, int flags, Namfun_t *fp)
 {
-	Namfun_t *dp = (Namfun_t*)malloc(sizeof(struct shell));
-	memcpy((void*)dp,(void*)fp,sizeof(struct shell));
+	Namfun_t *dp = (Namfun_t*)malloc(sizeof(Namfun_t));
+	memcpy((void*)dp,(void*)fp,sizeof(Namfun_t));
 	mp->nvalue.lp = np->nvalue.lp;
 	dp->nofree = 0;
 	return(dp);
@@ -240,8 +232,8 @@ static Namfun_t *clone_optindex(Namval_t* np, Namval_t *mp, int flags, Namfun_t 
 /* Trap for restricted variables FPATH, PATH, SHELL, ENV */
 static void put_restricted(register Namval_t* np,const char *val,int flags,Namfun_t *fp)
 {
-	Shell_t *shp = ((struct shell*)fp)->sh;
-	int		path_scoped = 0;
+	Shell_t *shp = nv_shell(np);
+	int	path_scoped = 0;
 	Pathcomp_t *pp;
 	char *name = nv_name(np);
 	if(!(flags&NV_RDONLY) && sh_isoption(SH_RESTRICTED))
@@ -285,7 +277,7 @@ path_dump((Pathcomp_t*)shp->pathlist);
 static void put_cdpath(register Namval_t* np,const char *val,int flags,Namfun_t *fp)
 {
 	Pathcomp_t *pp;
-	Shell_t *shp = ((struct shell*)fp)->sh;
+	Shell_t *shp = nv_shell(np);
 	nv_putv(np, val, flags, fp);
 	if(!shp->cdpathlist)
 		return;
@@ -317,7 +309,7 @@ static void put_cdpath(register Namval_t* np,const char *val,int flags,Namfun_t 
     /* Trap for LC_ALL, LC_TYPE, LC_MESSAGES, LC_COLLATE and LANG */
     static void put_lang(Namval_t* np,const char *val,int flags,Namfun_t *fp)
     {
-	Shell_t	*shp = ((struct shell*)fp)->sh;
+	Shell_t *shp = nv_shell(np);
 	int type;
 	char *lc_all = nv_getval(LCALLNOD);
 	char *name = nv_name(np);
@@ -420,7 +412,7 @@ static char* get_ifs(register Namval_t* np, Namfun_t *fp)
 	register struct ifs *ip = (struct ifs*)fp;
 	register char *cp, *value;
 	register int c,n;
-	register Shell_t *shp = ip->sh;
+	register Shell_t *shp = nv_shell(np);
 	value = nv_getv(np,fp);
 	if(np!=ip->ifsnp)
 	{
@@ -497,7 +489,7 @@ static void put_seconds(register Namval_t* np,const char *val,int flags,Namfun_t
 
 static char* get_seconds(register Namval_t* np, Namfun_t *fp)
 {
-	Shell_t *shp = ((struct seconds*)fp)->sh;
+	Shell_t *shp = nv_shell(np);
 	register int places = nv_size(np);
 	struct tms tp;
 	double d, offset = (np->nvalue.dp?*np->nvalue.dp:0);
@@ -579,7 +571,7 @@ static Sfdouble_t nget_lineno(Namval_t* np, Namfun_t *fp)
 static void put_lineno(Namval_t* np,const char *val,int flags,Namfun_t *fp)
 {
 	register long n;
-	Shell_t *shp = ((struct shell*)fp)->sh;
+	Shell_t *shp = nv_shell(np);
 	if(!val)
 	{
 		nv_stack(np, NIL(Namfun_t*));
@@ -601,14 +593,14 @@ static char* get_lineno(register Namval_t* np, Namfun_t *fp)
 
 static char* get_lastarg(Namval_t* np, Namfun_t *fp)
 {
-	Shell_t	*shp = ((struct shell*)fp)->sh;
+	Shell_t *shp = nv_shell(np);
 	NOT_USED(np);
 	return(shp->lastarg);
 }
 
 static void put_lastarg(Namval_t* np,const char *val,int flags,Namfun_t *fp)
 {
-	Shell_t	*shp = ((struct shell*)fp)->sh;
+	Shell_t *shp = nv_shell(np);
 	if(flags&NV_INTEGER)
 	{
 		sfprintf(shp->strbuf,"%.*g",12,*((double*)val));
@@ -736,15 +728,15 @@ static const Namdisc_t SH_MATCH_disc  = {  sizeof(struct match), 0, get_match };
 
 
 static const Namdisc_t IFS_disc		= {  sizeof(struct ifs), put_ifs, get_ifs };
-const Namdisc_t RESTRICTED_disc	= {  sizeof(struct shell), put_restricted };
-static const Namdisc_t CDPATH_disc	= {  sizeof(struct shell), put_cdpath }; 
-static const Namdisc_t EDITOR_disc	= {  sizeof(struct shell), put_ed };
-static const Namdisc_t HISTFILE_disc	= {  sizeof(struct shell), put_history };
-static const Namdisc_t OPTINDEX_disc	= {  sizeof(struct shell), put_optindex, 0, nget_optindex, 0, 0, clone_optindex };
+const Namdisc_t RESTRICTED_disc	= {  sizeof(Namfun_t), put_restricted };
+static const Namdisc_t CDPATH_disc	= {  sizeof(Namfun_t), put_cdpath }; 
+static const Namdisc_t EDITOR_disc	= {  sizeof(Namfun_t), put_ed };
+static const Namdisc_t HISTFILE_disc	= {  sizeof(Namfun_t), put_history };
+static const Namdisc_t OPTINDEX_disc	= {  sizeof(Namfun_t), put_optindex, 0, nget_optindex, 0, 0, clone_optindex };
 static const Namdisc_t SECONDS_disc	= {  sizeof(struct seconds), put_seconds, get_seconds, nget_seconds };
 static const Namdisc_t RAND_disc	= {  sizeof(struct rand), put_rand, get_rand, nget_rand };
-static const Namdisc_t LINENO_disc	= {  sizeof(struct shell), put_lineno, get_lineno, nget_lineno };
-static const Namdisc_t L_ARG_disc	= {  sizeof(struct shell), put_lastarg, get_lastarg };
+static const Namdisc_t LINENO_disc	= {  sizeof(Namfun_t), put_lineno, get_lineno, nget_lineno };
+static const Namdisc_t L_ARG_disc	= {  sizeof(Namfun_t), put_lastarg, get_lastarg };
 
 #if SHOPT_NAMESPACE
     static char* get_nspace(Namval_t* np, Namfun_t *fp)
@@ -758,7 +750,7 @@ static const Namdisc_t L_ARG_disc	= {  sizeof(struct shell), put_lastarg, get_la
 #endif /* SHOPT_NAMESPACE */
 
 #ifdef _hdr_locale
-    static const Namdisc_t LC_disc	= {  sizeof(struct shell), put_lang };
+    static const Namdisc_t LC_disc	= {  sizeof(Namfun_t), put_lang };
 #endif /* _hdr_locale */
 
 /*
@@ -1266,101 +1258,84 @@ static Init_t *nv_init(Shell_t *shp)
 	ip = newof(0,Init_t,1,0);
 	if(!ip)
 		return(0);
+	shp->nvfun.last = (char*)shp;
+	shp->nvfun.nofree = 1;
 	ip->sh = shp;
 	shp->var_base = shp->var_tree = inittree(shp,shtab_variables);
 	ip->IFS_init.hdr.disc = &IFS_disc;
 	ip->IFS_init.hdr.nofree = 1;
-	ip->IFS_init.sh = shp;
-	ip->PATH_init.hdr.disc = &RESTRICTED_disc;
-	ip->PATH_init.hdr.nofree = 1;
-	ip->PATH_init.sh = shp;
-	ip->FPATH_init.hdr.disc = &RESTRICTED_disc;
-	ip->FPATH_init.hdr.nofree = 1;
-	ip->FPATH_init.sh = shp;
-	ip->CDPATH_init.hdr.disc = &CDPATH_disc;
-	ip->CDPATH_init.hdr.nofree = 1;
-	ip->CDPATH_init.sh = shp;
-	ip->SHELL_init.hdr.disc = &RESTRICTED_disc;
-	ip->SHELL_init.sh = shp;
-	ip->SHELL_init.hdr.nofree = 1;
-	ip->ENV_init.hdr.disc = &RESTRICTED_disc;
-	ip->ENV_init.hdr.nofree = 1;
-	ip->ENV_init.sh = shp;
-	ip->VISUAL_init.hdr.disc = &EDITOR_disc;
-	ip->VISUAL_init.hdr.nofree = 1;
-	ip->VISUAL_init.sh = shp;
-	ip->EDITOR_init.hdr.disc = &EDITOR_disc;
-	ip->EDITOR_init.hdr.nofree = 1;
-	ip->EDITOR_init.sh = shp;
-	ip->HISTFILE_init.hdr.disc = &HISTFILE_disc;
-	ip->HISTFILE_init.hdr.nofree = 1;
-	ip->HISTFILE_init.sh = shp;
-	ip->HISTSIZE_init.hdr.disc = &HISTFILE_disc;
-	ip->HISTSIZE_init.hdr.nofree = 1;
-	ip->HISTSIZE_init.sh = shp;
-	ip->OPTINDEX_init.hdr.disc = &OPTINDEX_disc;
-	ip->OPTINDEX_init.hdr.nofree = 1;
-	ip->OPTINDEX_init.sh = shp;
+	ip->PATH_init.disc = &RESTRICTED_disc;
+	ip->PATH_init.nofree = 1;
+	ip->FPATH_init.disc = &RESTRICTED_disc;
+	ip->FPATH_init.nofree = 1;
+	ip->CDPATH_init.disc = &CDPATH_disc;
+	ip->CDPATH_init.nofree = 1;
+	ip->SHELL_init.disc = &RESTRICTED_disc;
+	ip->SHELL_init.nofree = 1;
+	ip->ENV_init.disc = &RESTRICTED_disc;
+	ip->ENV_init.nofree = 1;
+	ip->VISUAL_init.disc = &EDITOR_disc;
+	ip->VISUAL_init.nofree = 1;
+	ip->EDITOR_init.disc = &EDITOR_disc;
+	ip->EDITOR_init.nofree = 1;
+	ip->HISTFILE_init.disc = &HISTFILE_disc;
+	ip->HISTFILE_init.nofree = 1;
+	ip->HISTSIZE_init.disc = &HISTFILE_disc;
+	ip->HISTSIZE_init.nofree = 1;
+	ip->OPTINDEX_init.disc = &OPTINDEX_disc;
+	ip->OPTINDEX_init.nofree = 1;
 	ip->SECONDS_init.hdr.disc = &SECONDS_disc;
 	ip->SECONDS_init.hdr.nofree = 1;
-	ip->SECONDS_init.sh = shp;
 	ip->RAND_init.hdr.disc = &RAND_disc;
 	ip->RAND_init.hdr.nofree = 1;
 	ip->SH_MATCH_init.hdr.disc = &SH_MATCH_disc;
 	ip->SH_MATCH_init.hdr.nofree = 1;
-	ip->LINENO_init.hdr.disc = &LINENO_disc;
-	ip->LINENO_init.hdr.nofree = 1;
-	ip->LINENO_init.sh = shp;
-	ip->L_ARG_init.hdr.disc = &L_ARG_disc;
-	ip->L_ARG_init.sh = shp;
-	ip->L_ARG_init.hdr.nofree = 1;
+	ip->LINENO_init.disc = &LINENO_disc;
+	ip->LINENO_init.nofree = 1;
+	ip->L_ARG_init.disc = &L_ARG_disc;
+	ip->L_ARG_init.nofree = 1;
 #ifdef _hdr_locale
-	ip->LC_TYPE_init.hdr.disc = &LC_disc;
-	ip->LC_TYPE_init.hdr.nofree = 1;
-	ip->LC_NUM_init.hdr.disc = &LC_disc;
-	ip->LC_NUM_init.hdr.nofree = 1;
-	ip->LC_COLL_init.hdr.disc = &LC_disc;
-	ip->LC_COLL_init.hdr.nofree = 1;
-	ip->LC_MSG_init.hdr.disc = &LC_disc;
-	ip->LC_MSG_init.hdr.nofree = 1;
-	ip->LC_ALL_init.hdr.disc = &LC_disc;
-	ip->LC_ALL_init.hdr.nofree = 1;
-	ip->LANG_init.hdr.disc = &LC_disc;
-	ip->LANG_init.hdr.nofree = 1;
-	ip->LC_TYPE_init.sh = shp;
-	ip->LC_NUM_init.sh = shp;
-	ip->LC_COLL_init.sh = shp;
-	ip->LC_MSG_init.sh = shp;
-	ip->LANG_init.sh = shp;
+	ip->LC_TYPE_init.disc = &LC_disc;
+	ip->LC_TYPE_init.nofree = 1;
+	ip->LC_NUM_init.disc = &LC_disc;
+	ip->LC_NUM_init.nofree = 1;
+	ip->LC_COLL_init.disc = &LC_disc;
+	ip->LC_COLL_init.nofree = 1;
+	ip->LC_MSG_init.disc = &LC_disc;
+	ip->LC_MSG_init.nofree = 1;
+	ip->LC_ALL_init.disc = &LC_disc;
+	ip->LC_ALL_init.nofree = 1;
+	ip->LANG_init.disc = &LC_disc;
+	ip->LANG_init.nofree = 1;
 #endif /* _hdr_locale */
 	nv_stack(IFSNOD, &ip->IFS_init.hdr);
-	nv_stack(PATHNOD, &ip->PATH_init.hdr);
-	nv_stack(FPATHNOD, &ip->FPATH_init.hdr);
-	nv_stack(CDPNOD, &ip->CDPATH_init.hdr);
-	nv_stack(SHELLNOD, &ip->SHELL_init.hdr);
-	nv_stack(ENVNOD, &ip->ENV_init.hdr);
-	nv_stack(VISINOD, &ip->VISUAL_init.hdr);
-	nv_stack(EDITNOD, &ip->EDITOR_init.hdr);
-	nv_stack(HISTFILE, &ip->HISTFILE_init.hdr);
-	nv_stack(HISTSIZE, &ip->HISTSIZE_init.hdr);
-	nv_stack(OPTINDNOD, &ip->OPTINDEX_init.hdr);
+	nv_stack(PATHNOD, &ip->PATH_init);
+	nv_stack(FPATHNOD, &ip->FPATH_init);
+	nv_stack(CDPNOD, &ip->CDPATH_init);
+	nv_stack(SHELLNOD, &ip->SHELL_init);
+	nv_stack(ENVNOD, &ip->ENV_init);
+	nv_stack(VISINOD, &ip->VISUAL_init);
+	nv_stack(EDITNOD, &ip->EDITOR_init);
+	nv_stack(HISTFILE, &ip->HISTFILE_init);
+	nv_stack(HISTSIZE, &ip->HISTSIZE_init);
+	nv_stack(OPTINDNOD, &ip->OPTINDEX_init);
 	nv_stack(SECONDS, &ip->SECONDS_init.hdr);
-	nv_stack(L_ARGNOD, &ip->L_ARG_init.hdr);
+	nv_stack(L_ARGNOD, &ip->L_ARG_init);
 	nv_putval(SECONDS, (char*)&d, NV_DOUBLE);
 	nv_stack(RANDNOD, &ip->RAND_init.hdr);
 	d = (shp->pid&RANDMASK);
 	nv_putval(RANDNOD, (char*)&d, NV_DOUBLE);
-	nv_stack(LINENO, &ip->LINENO_init.hdr);
+	nv_stack(LINENO, &ip->LINENO_init);
 	nv_putsub(SH_MATCHNOD,(char*)0,10);
 	nv_onattr(SH_MATCHNOD,NV_RDONLY);
 	nv_stack(SH_MATCHNOD, &ip->SH_MATCH_init.hdr);
 #ifdef _hdr_locale
-	nv_stack(LCTYPENOD, &ip->LC_TYPE_init.hdr);
-	nv_stack(LCALLNOD, &ip->LC_ALL_init.hdr);
-	nv_stack(LCMSGNOD, &ip->LC_MSG_init.hdr);
-	nv_stack(LCCOLLNOD, &ip->LC_COLL_init.hdr);
-	nv_stack(LCNUMNOD, &ip->LC_NUM_init.hdr);
-	nv_stack(LANGNOD, &ip->LANG_init.hdr);
+	nv_stack(LCTYPENOD, &ip->LC_TYPE_init);
+	nv_stack(LCALLNOD, &ip->LC_ALL_init);
+	nv_stack(LCMSGNOD, &ip->LC_MSG_init);
+	nv_stack(LCCOLLNOD, &ip->LC_COLL_init);
+	nv_stack(LCNUMNOD, &ip->LC_NUM_init);
+	nv_stack(LANGNOD, &ip->LANG_init);
 #endif /* _hdr_locale */
 	(PPIDNOD)->nvalue.lp = (&shp->ppid);
 	(TMOUTNOD)->nvalue.lp = (&shp->st.tmout);
@@ -1399,7 +1374,10 @@ static Dt_t *inittree(Shell_t *shp,const struct shtable2 *name_vals)
 		n++;
 	np = (Namval_t*)calloc(n,sizeof(Namval_t));
 	if(!shp->bltin_nodes)
+	{
 		shp->bltin_nodes = np;
+		shp->bltin_nnodes = n;
+	}
 	else if(name_vals==(const struct shtable2*)shtab_builtins)
 		shp->bltin_cmds = np;
 	base_treep = treep = dtopen(&_Nvdisc,Dtoset);
@@ -1416,7 +1394,11 @@ static Dt_t *inittree(Shell_t *shp,const struct shtable2 *name_vals)
 		if(name_vals==(const struct shtable2*)shtab_builtins)
 			np->nvalue.bfp = ((struct shtable3*)tp)->sh_value;
 		else
+		{
+			if(name_vals == shtab_variables)
+				np->nvfun = &sh.nvfun;
 			np->nvalue.cp = (char*)tp->sh_value;
+		}
 		nv_setattr(np,tp->sh_number);
 		if(nv_istable(np))
 			nv_mount(np,(const char*)0,dict=dtopen(&_Nvdisc,Dtoset));

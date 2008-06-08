@@ -537,7 +537,7 @@ static void put_type(Namval_t* np, const char* val, int flag, Namfun_t* fp)
 				_nv_unset(nq,flag|NV_TYPE|nv_isattr(nq,NV_RDONLY));
 		}
 		nv_disc(np,fp,NV_POP);
-		if(!fp->nofree)
+		if(!(fp->nofree&1))
 			free((void*)fp);
 	}
 }
@@ -556,7 +556,7 @@ static Namfun_t *clone_inttype(Namval_t* np, Namval_t *mp, int flags, Namfun_t *
 {
 	Namfun_t	*pp=  (Namfun_t*)malloc(fp->dsize);
 	memcpy((void*)pp, (void*)fp, fp->dsize);
-	fp->nofree = 0;
+	fp->nofree &= ~1;
 	if(nv_isattr(mp,NV_NOFREE) && mp->nvalue.cp)
 		memcpy((void*)mp->nvalue.cp,np->nvalue.cp, fp->dsize-sizeof(*fp));
 	else
@@ -1065,7 +1065,7 @@ else sfprintf(sfstderr,"tp==NULL\n");
 			if(nq->nvfun)
 			{
 				for(fp=nq->nvfun; fp; fp = fp->next)
-					fp->nofree = 1;
+					fp->nofree |= 1;
 			}
 			nq->nvalue.cp = np->nvalue.cp;
 			if(dsize)
@@ -1140,7 +1140,7 @@ Namval_t *nv_mkinttype(char *name, size_t size, int sign, const char *help, Namd
 	offset = size + sizeof(Namdisc_t);
 	fp = newof(NiL, Namfun_t, 1, offset);
 	fp->type = mp;
-	fp->nofree = 1;
+	fp->nofree |= 1;
 	fp->dsize = sizeof(Namfun_t)+size;
 	dp = (Namdisc_t*)(fp+1);
 	if(ep)
@@ -1410,7 +1410,7 @@ static void put_stat(Namval_t* np, const char* val, int flag, Namfun_t* nfp)
 	}
 	nv_putv(np,val,flag,nfp);
 	nv_disc(np,nfp,NV_POP);
-	if(!nfp->nofree)
+	if(!(nfp->nofree&1))
 		free((void*)nfp);
 }
 

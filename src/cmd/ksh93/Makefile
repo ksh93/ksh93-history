@@ -198,7 +198,7 @@ end
 	basic.sh bracket.sh builtins.sh case.sh comvar.sh coprocess.sh \
 	exit.sh expand.sh functions.sh glob.sh grep.sh heredoc.sh io.sh \
 	nameref.sh options.sh path.sh quoting.sh quoting2.sh restricted.sh \
-	return.sh select.sh substring.sh tilde.sh variables.sh \
+	return.sh select.sh subshell.sh substring.sh tilde.sh variables.sh \
 	cubetype.sh enum.sh pointtype.sh recttype.sh timetype.sh statics.sh \
 	vartree1.sh vartree2.sh
 

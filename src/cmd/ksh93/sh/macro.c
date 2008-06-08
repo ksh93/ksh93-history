@@ -1863,7 +1863,7 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 			{
 				fcgetc(c);
 				if(!(isescchar(sh_lexstates[ST_QUOTE][c]) ||
-				  (c=='"' && mp->quote)) || (c=='$' && fcpeek(0)=='\''))
+				  (c=='"' && mp->quote)))
 					sfputc(stkp,ESCAPE);
 			}
 			sfputc(stkp,c);

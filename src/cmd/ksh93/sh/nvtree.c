@@ -644,7 +644,7 @@ static char **genvalue(char **argv, const char *prefix, int n, struct Walk *wp)
 					Namval_t *np,*tp;
 					*nextcp = 0;
 					np=nv_open(arg,wp->root,NV_VARNAME|NV_NOADD|NV_NOASSIGN|NV_NOFAIL|wp->noscope);
-					if(!np)
+					if(!np || (nv_isarray(np) && (!(tp=nv_opensub(np)) || !nv_isvtree(tp))))
 					{
 						*nextcp = '.';
 						continue;
@@ -822,10 +822,8 @@ static void put_tree(register Namval_t *np, const char *val, int flags,Namfun_t 
 {
 	struct Namarray *ap;
 	int nleft = 0;
-#if 0
-	if(!val && nv_isattr(np,NV_NOFREE))
+	if(!val && !fp->next && nv_isattr(np,NV_NOFREE))
 		return;
-#endif
 	if(!nv_isattr(np,(NV_INTEGER|NV_BINARY)))
 		walk_tree(np,(flags&NV_NOSCOPE)|1);
 	nv_putv(np, val, flags,fp);

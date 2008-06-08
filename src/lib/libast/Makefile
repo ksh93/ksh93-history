@@ -101,7 +101,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	tmxscan.c tmxsettime.c tmxsleep.c tmxtime.c tmxtouch.c \
 	tvcmp.c tvgettime.c tvsettime.c tvsleep.c tvtouch.c \
 	cmdarg.c vecargs.c vecfile.c vecfree.c vecload.c vecstring.c \
-	univlib.h univdata.c touch.c mnt.c \
+	univlib.h univdata.c touch.c mnt.c debug.c \
 	memccpy.c memchr.c memcmp.c memcpy.c memdup.c memmove.c memset.c \
 	mkdir.c mkfifo.c mknod.c rmdir.c remove.c rename.c link.c unlink.c \
 	strdup.c strchr.c strrchr.c strstr.c \
