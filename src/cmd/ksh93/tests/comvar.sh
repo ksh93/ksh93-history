@@ -277,4 +277,32 @@ unset nodes
 typeset -A nodes
 nodes[0]+=( integer x=5)
 [[ ${nodes[0].x} == 5 ]] || err_exit '${nodes[0].x} should be 5'
+unset foo
+typeset -C foo
+foo.bar=abc
+[[ $foo = $'(\n\tbar=abc\n)' ]] || err_exit 'typeset -C not working for foo'
+typeset -C foo=(bar=def)
+[[ $foo = $'(\n\tbar=def\n)' ]] || err_exit 'typeset -C not working when initialized'
+foo=(
+	hello=ok
+	yes=( bam=2 yes=4)
+	typeset -A array=([one]=one [two]=2)
+	last=me
+)
+eval foo2="$foo"
+foo2.hello=notok foo2.yes.yex=no foo2.extra=yes.
+typeset -C bar bam 
+{
+	read -Cu3 bar
+	read -Cu3 bam
+	read -ru3
+} 3<<- ++++
+	"$foo"
+	"$foo2"
+	last line
+++++
+[[ $? == 0 ]] || err_exit ' read -C failed'
+[[ $bar == "$foo" ]] || err_exit '$foo != $bar'
+[[ $bam == "$foo2" ]] || err_exit '$foo2 != $bmr'
+[[ $REPLY == 'last line' ]] || err_exit "\$REPLY=$REPLY should be 'last line"
 exit $((Errors))

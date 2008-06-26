@@ -403,4 +403,6 @@ function foo
 [[ ! ${foo[3]} ]] || err_exit '${foo[3]} is not empty when foo is unset' 
 [[ $(print  "[${ print foo }]") == '[foo]' ]] || err_exit '${...} not working when } is followed by ]'
 [[ $(print  "${ print "[${ print foo }]" }") == '[foo]' ]] || err_exit 'nested ${...} not working when } is followed by ]'
+unset foo
+foo=$(false) > /dev/null && err_exit 'failed command substitution with redirection not returning false'
 exit $((Errors))

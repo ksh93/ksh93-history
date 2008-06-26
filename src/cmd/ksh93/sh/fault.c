@@ -318,7 +318,7 @@ void	sh_sigreset(register int mode)
 			sh.sigflag[sig] = flag;
 		}
 	}
-	for(sig=SH_DEBUGTRAP;sig>=0;sig--)
+	for(sig=SH_DEBUGTRAP-1;sig>=0;sig--)
 	{
 		if(trap=sh.st.trap[sig])
 		{
@@ -556,7 +556,7 @@ void sh_done(void *ptr, register int sig)
 	if(sig==0)
 		sig = shp->lastsig;
 	if(shp->userinit)
-		(*shp->userinit)(-1);
+		(*shp->userinit)(shp, -1);
 	if(t=shp->st.trapcom[0])
 	{
 		shp->st.trapcom[0]=0; /*should free but not long */

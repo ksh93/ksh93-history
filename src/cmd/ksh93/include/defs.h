@@ -161,6 +161,7 @@ struct limits
 	char		used_pos;	/* used postional parameter */\
 	char		universe; \
 	char		winch; \
+	char		indebug; 	/* set when in debug trap */ \
 	unsigned char	lastsig;	/* last signal received */ \
 	char		*readscript;	/* set before reading a script */ \
 	int		*inpipe;	/* input pipe pointer */ \
@@ -322,6 +323,8 @@ struct limits
 #endif
 
 #define MATCH_MAX		64
+
+#define SH_READEVAL		0x4000	/* for sh_eval */
 
 extern Shell_t		*nv_shell(Namval_t*);
 extern int		sh_addlib(void*);

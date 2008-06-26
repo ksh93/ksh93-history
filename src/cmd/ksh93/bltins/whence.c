@@ -195,7 +195,12 @@ static int whence(Shell_t *shp,char **argv, register int flags)
 				if(nv_isnull(np))
 					cp = sh_translate(is_ufunction);
 				else if(is_abuiltin(np))
-					cp = sh_translate(is_builtin);
+				{
+					if(nv_isattr(np,BLT_SPC))
+						cp = sh_translate(is_spcbuiltin);
+					else
+						cp = sh_translate(is_builtin);
+				}
 				else
 					cp = sh_translate(is_function);
 			}

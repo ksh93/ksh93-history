@@ -43,11 +43,10 @@
 #define PFX		19
 
 int
-strtoip6(register const char* s, char** e, Ip6addr_t* addr, unsigned char* bits)
+strtoip6(register const char* s, char** e, unsigned char* addr, unsigned char* bits)
 {
-	unsigned char*		o = *addr;
-	register unsigned char*	b = o;
-	register unsigned char*	x = b + sizeof(*addr);
+	register unsigned char*	b = addr;
+	register unsigned char*	x = b + IP6ADDR;
 	register unsigned char*	z;
 	register int		c;
 	register uint32_t	a;
@@ -82,71 +81,24 @@ strtoip6(register const char* s, char** e, Ip6addr_t* addr, unsigned char* bits)
 		s++;
 	z = 0;
 	a = 0;
-	for (;;)
-	{
-		switch (c = lex[*((unsigned char*)s++)])
+	if (*s)
+		for (;;)
 		{
-		case END:
-		case PFX:
-			if ((x - b) < 2)
-				break;
-			*b++ = a>>8;
-			*b++ = a;
-			break;
-		case COL:
-			if ((x - b) < 2)
-				break;
-			*b++ = a>>8;
-			*b++ = a;
-			a = 0;
-			if (*s == ':')
+			switch (c = lex[*((unsigned char*)s++)])
 			{
-				if (z)
-				{
-					s--;
+			case END:
+			case PFX:
+				if ((x - b) < 2)
 					break;
-				}
-				z = b;
-				if ((c = lex[*((unsigned char*)++s)]) >= 16)
-				{
-					s++;
-					break;
-				}
-			}
-			continue;
-		case DOT:
-			if (b >= x)
-			{
-				s--;
+				*b++ = a>>8;
+				*b++ = a;
 				break;
-			}
-			*b++ = ((a >> 8) & 0xf) * 100 + ((a >> 4) & 0xf) * 10 + (a & 0xf);
-			a = 0;
-			for (;;)
-			{
-				switch (c = lex[*((unsigned char*)s++)])
-				{
-				case COL:
-				case END:
-				case PFX:
-					if (b < x)
-						*b++ = a;
-					a = 0;
+			case COL:
+				if ((x - b) < 2)
 					break;
-				case DOT:
-					if (b >= x)
-						break;
-					*b++ = a;
-					a = 0;
-					continue;
-				default:
-					a = (a * 10) + c;
-					continue;
-				}
-				break;
-			}
-			if (c == COL)
-			{
+				*b++ = a>>8;
+				*b++ = a;
+				a = 0;
 				if (*s == ':')
 				{
 					if (z)
@@ -161,33 +113,86 @@ strtoip6(register const char* s, char** e, Ip6addr_t* addr, unsigned char* bits)
 						break;
 					}
 				}
-				if ((b - o) == 6 && o[0] == 0x20 && o[1] == 0x02)
-					continue;
+				continue;
+			case DOT:
+				if (b >= x)
+				{
+					s--;
+					break;
+				}
+				*b++ = ((a >> 8) & 0xf) * 100 + ((a >> 4) & 0xf) * 10 + (a & 0xf);
+				a = 0;
+				for (;;)
+				{
+					switch (c = lex[*((unsigned char*)s++)])
+					{
+					case COL:
+					case END:
+					case PFX:
+						if (b < x)
+							*b++ = a;
+						a = 0;
+						break;
+					case DOT:
+						if (b >= x)
+							break;
+						*b++ = a;
+						a = 0;
+						continue;
+					default:
+						a = (a * 10) + c;
+						continue;
+					}
+					break;
+				}
+				if (c == COL)
+				{
+					if (*s == ':')
+					{
+						if (z)
+						{
+							s--;
+							break;
+						}
+						z = b;
+						if ((c = lex[*((unsigned char*)++s)]) >= 16)
+						{
+							s++;
+							break;
+						}
+					}
+					if ((b - addr) == 6 && addr[0] == 0x20 && addr[1] == 0x02)
+						continue;
+				}
+				break;
+			default:
+				a = (a << 4) | c;
+				continue;
 			}
 			break;
-		default:
-			a = (a << 4) | c;
-			continue;
 		}
-		break;
-	}
-	if (z)
-	{
-		while (b > z)
-			*--x = *--b;
-		while (x > z)
-			*--x = 0;
-	}
+	if (b == addr)
+		c = END + 1;
 	else
-		while (b < x)
-			*b++ = 0;
-	if (bits)
 	{
-		a = 0;
-		if (c == PFX)
-			while ((c = lex[*((unsigned char*)s++)]) < 10)
-				a = a * 10 + c;
-		*bits = a;
+		if (z)
+		{
+			while (b > z)
+				*--x = *--b;
+			while (x > z)
+				*--x = 0;
+		}
+		else
+			while (b < x)
+				*b++ = 0;
+		if (bits)
+		{
+			a = 0;
+			if (c == PFX)
+				while ((c = lex[*((unsigned char*)s++)]) < 10)
+					a = a * 10 + c;
+			*bits = a;
+		}
 	}
 	if (e)
 		*e = (char*)(s - 1);

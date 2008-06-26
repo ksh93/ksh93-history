@@ -1,3 +1,7 @@
+08-06-24 package.sh: fix $INSTALLROOT/bin/cc intercept time stamp file typo
+08-06-20 TEST.mk: make the localyunit before *.rt => *.tst -- doh
+08-06-20 mktest.sh: prepend $PWD onto PATH for local units -- doh^2
+08-06-11 regress.sh: fix bug that skipped the last test
 08-05-20 regress.sh: add --local to put *.tmp dir in local fs
 08-05-05 regerss.sh: add IF command ... ELIF command ... ELSE ... FI
 08-05-01 package.sh: package test => ulimit -c 0

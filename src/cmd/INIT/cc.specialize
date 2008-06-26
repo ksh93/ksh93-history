@@ -20,7 +20,7 @@ case " $* " in
 			;;
 		-O)	set '' "$@" $CCSPECIALZE
 			;;
-		*)	set '' "$@" $a
+		*)	set '' "$@" "$a"
 			;;
 		esac
 		shift

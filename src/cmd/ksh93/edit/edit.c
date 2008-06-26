@@ -1237,7 +1237,10 @@ int ed_setcursor(register Edit_t *ep,genchar *physical,register int old,register
 			if(newpos.line==0)
 				ed_putstring(ep,ep->e_prompt);
 			else
+			{
+				first = 1+(newpos.line*ep->e_winsz - ep->e_plen);
 				ed_putchar(ep,'\r');
+			}
 			old = first;
 			delta = new-first;
 		}

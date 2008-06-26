@@ -158,6 +158,30 @@ static unsigned long writedefs(Lex_t *lexp,struct argnod *arglist, int line, int
 }
 #endif /* SHOPT_KIA */
 
+static void typeset_order(const char *str,int line)
+{
+	register int		c,n=0;
+	unsigned const char	*cp=(unsigned char*)str;
+	static unsigned char	*table;
+	if(*cp!='+' && *cp!='-')
+		return;
+	if(!table)
+	{
+		table = calloc(1,256);
+		for(cp=(unsigned char*)"bflmnprstuxACHS";c = *cp; cp++)
+			table[c] = 1;
+		for(cp=(unsigned char*)"aiEFLRXhTZ";c = *cp; cp++)
+			table[c] = 2;
+		for(c='0'; c <='9'; c++)
+			table[c] = 3;
+	}
+	for(cp=(unsigned char*)str; c= *cp++; n=table[c])
+	{
+		if(table[c] < n)
+			errormsg(SH_DICT,ERROR_warn(0),e_lextypeset,line,str);
+	}
+}
+
 /*
  * add type definitions when compiling with -n
  */
@@ -169,7 +193,11 @@ static void check_typedef(struct comnod *tp)
 		struct argnod *ap = tp->comarg;
 		while(ap = ap->argnxt.ap)
 		{
-			if((ap->argflag&ARG_RAW) && memcmp(ap->argval,"-T",2)==0)
+			if(!(ap->argflag&ARG_RAW) || memcmp(ap->argval,"--",2))
+				break;
+			if(sh_isoption(SH_NOEXEC))
+				typeset_order(ap->argval,tp->comline);
+			if(memcmp(ap->argval,"-T",2)==0)
 			{
 				if(ap->argval[2])
 					cp = ap->argval+2;
@@ -184,8 +212,10 @@ static void check_typedef(struct comnod *tp)
 	{
 		struct dolnod *dp = (struct dolnod*)tp->comarg;
 		char **argv = dp->dolval + dp->dolbot+1;
-		while(cp= *argv++)
+		while((cp= *argv++) && memcmp(cp,"--",2))
 		{
+			if(sh_isoption(SH_NOEXEC))
+				typeset_order(cp,tp->comline);
 			if(memcmp(cp,"-T",2)==0)
 			{
 				if(cp[2])
@@ -878,7 +908,7 @@ static struct argnod *assign(Lex_t *lexp, register struct argnod *ap)
 	}
 	else if(n && n!=FUNCTSYM)
 		sh_syntax(lexp);
-	else if(n!=FUNCTSYM && !(lexp->arg->argflag&ARG_ASSIGN) && !((np=nv_search(lexp->arg->argval,lexp->sh->fun_tree,0)) && nv_isattr(np,BLT_DCL)))
+	else if(n!=FUNCTSYM && !(lexp->arg->argflag&ARG_ASSIGN) && !((np=nv_search(lexp->arg->argval,lexp->sh->fun_tree,0)) && (nv_isattr(np,BLT_DCL)|| np==SYSDOT)))
 		array=SH_ARRAY;
 	while(1)
 	{
@@ -900,7 +930,7 @@ static struct argnod *assign(Lex_t *lexp, register struct argnod *ap)
 			if(array ||  n!=FUNCTSYM)
 				sh_syntax(lexp);
 		}
-		if((n!=FUNCTSYM) && !(lexp->arg->argflag&ARG_ASSIGN) && !((np=nv_search(lexp->arg->argval,lexp->sh->fun_tree,0)) && nv_isattr(np,BLT_DCL)))
+		if((n!=FUNCTSYM) && !(lexp->arg->argflag&ARG_ASSIGN) && !((np=nv_search(lexp->arg->argval,lexp->sh->fun_tree,0)) && (nv_isattr(np,BLT_DCL)||np==SYSDOT)))
 		{
 			struct argnod *arg = lexp->arg;
 			if(n!=0)

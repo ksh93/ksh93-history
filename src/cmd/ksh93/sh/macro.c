@@ -202,7 +202,7 @@ int sh_macexpand(Shell_t* shp, register struct argnod *argp, struct argnod **arg
 		mp->ifs = *mp->ifsp;
 	else
 		mp->ifs = ' ';
-	if(flag&ARG_OPTIMIZE)
+	if((flag&ARG_OPTIMIZE) && !shp->indebug)
 		shp->argaddr = (char**)&argp->argchn.ap;
 	else
 		shp->argaddr = 0;
@@ -526,9 +526,15 @@ static void copyto(register Mac_t *mp,int endch, int newquote)
 					(n==S_PAT||n==S_ENDCH||n==S_SLASH||n==S_BRACT||*cp=='-'))))
 				{
 					cp += (n!=S_EOF);
+					if(ere && n==S_ESC && *cp =='\\' && cp[1]=='$')
+					{
+						/* convert \\\$ into \$' */
+						sfwrite(stkp,first,c+1);
+						cp = first = fcseek(c+3);
+					}
 					break;
 				}
-				if(mp->lit || (mp->quote && !isqescchar(n) && n!=S_ENDCH))
+				if(!(ere && *cp=='$') && (mp->lit || (mp->quote && !isqescchar(n) && n!=S_ENDCH)))
 				{
 					/* add \ for file expansion */
 					sfwrite(stkp,first,c+1);

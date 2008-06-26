@@ -19,7 +19,7 @@
 ***********************************************************************/
 #pragma prototyped
 /*
- * read [-Aprs] [-d delim] [-u filenum] [-t timeout] [-n n] [-N n] [name...]
+ * read [-ACprs] [-d delim] [-u filenum] [-t timeout] [-n n] [-N n] [name...]
  *
  *   David Korn
  *   AT&T Labs
@@ -45,6 +45,7 @@
 #define N_FLAG	8	/* fixed size read at most */
 #define NN_FLAG	0x10	/* fixed size read exact */
 #define V_FLAG	0x20	/* use default value */
+#define	C_FLAG	0x40	/* read into compound variable */
 #define D_FLAG	8	/* must be number of bits for all flags */
 
 struct read_save
@@ -98,6 +99,9 @@ int	b_read(int argc,char *argv[], void *extra)
 	{
 	    case 'A':
 		flags |= A_FLAG;
+		break;
+	    case 'C':
+		flags |= C_FLAG;
 		break;
 	    case 't':
 		sec = sh_strnum(opt_info.arg, (char**)0,1);
@@ -240,6 +244,12 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 			nv_unset(np);
 			nv_putsub(np,NIL(char*),0L);
 		}
+		else if(flags&C_FLAG)
+		{
+			delim = -1;
+			nv_unset(np);
+			nv_setvtree(np);
+		}
 		else
 			name = *++names;
 		if(val)
@@ -287,7 +297,10 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 	for(nfp=np->nvfun; nfp; nfp = nfp->next)
 	{
 		if(nfp->disc && nfp->disc->readf)
-			return((* nfp->disc->readf)(np,iop,delim,nfp));
+		{
+			if((c=(*nfp->disc->readf)(np,iop,delim,nfp))>=0)
+				return(c);
+		}
 	}
 #if  1
 	if(nv_isattr(np,NV_BINARY) && !(flags&(N_FLAG|NN_FLAG)))

@@ -28,13 +28,13 @@
 #include	<fcin.h>
 #include	<ls.h>
 #include	<nval.h>
-#include	<dlldefs.h>
 #include	"variables.h"
 #include	"path.h"
 #include	"io.h"
 #include	"jobs.h"
 #include	"history.h"
 #include	"test.h"
+#include	"FEATURE/dynamic"
 #include	"FEATURE/externs"
 #if SHOPT_PFSH 
 #   ifdef _hdr_exec_attr
@@ -314,8 +314,10 @@ void  path_delete(Pathcomp_t *first)
 			if(pp->bltin_lib || (pp->flags&PATH_STD_DIR))
 			{
 				nv_scan(sh_bltin_tree(),free_bltin,pp,0,0);
+#if SHOPT_DYNAMIC
 				if(pp->bltin_lib)
 					dlclose(pp->bltin_lib);
+#endif /* SHOPT_DYNAMIC */
 			}
 			free((void*)pp);
 			if(old)
@@ -349,7 +351,7 @@ static char *path_lib(Pathcomp_t *pp, char *path)
 		char save[8];
 		for( ;pp; pp=pp->next)
 		{
-			if(pp->ino==statb.st_ino && pp->dev==statb.st_dev)
+			if(pp->ino==statb.st_ino && pp->dev==statb.st_dev && pp->mtime==statb.st_mtime)
 				return(pp->lib);
 		}
 		pcomp.len = 0;
@@ -703,6 +705,7 @@ Pathcomp_t *path_absolute(register const char *name, Pathcomp_t *pp)
 		{
 			if(*stakptr(PATH_OFFSET)=='/' && nv_search(stakptr(PATH_OFFSET),sh.bltin_tree,0))
 				return(oldpp);
+#if SHOPT_DYNAMIC
 			if(oldpp->blib)
 			{
 				typedef int (*Fptr_t)(int, char*[], void*);
@@ -738,6 +741,7 @@ Pathcomp_t *path_absolute(register const char *name, Pathcomp_t *pp)
 					return(oldpp);
 				}
 			}
+#endif /* SHOPT_DYNAMIC */
 		}
 		f = canexecute(stakptr(PATH_OFFSET),isfun);
 		if(isfun && f>=0)
@@ -1335,6 +1339,7 @@ static Pathcomp_t *path_addcomp(Pathcomp_t *first, Pathcomp_t *old,const char *n
 	{
 		statb.st_ino = old->ino;
 		statb.st_dev = old->dev;
+		statb.st_mtime = old->mtime;
 		if(old->ino==0 && old->dev==0)
 			flag |= PATH_SKIP;
 	}
@@ -1352,12 +1357,13 @@ static Pathcomp_t *path_addcomp(Pathcomp_t *first, Pathcomp_t *old,const char *n
 			statb.st_dev = 0;
 		}
 		statb.st_ino = 0;
+		statb.st_mtime = 0;
 	}
 	if(*name=='/' && onstdpath(name))
 		flag |= PATH_STD_DIR;
 	for(pp=first, oldpp=0; pp; oldpp=pp, pp=pp->next)
 	{
-		if(pp->ino==statb.st_ino && pp->dev==statb.st_dev)
+		if(pp->ino==statb.st_ino && pp->dev==statb.st_dev && pp->mtime==statb.st_mtime)
 		{
 			/* if both absolute paths, eliminate second */
 			pp->flags |= flag;
@@ -1374,6 +1380,7 @@ static Pathcomp_t *path_addcomp(Pathcomp_t *first, Pathcomp_t *old,const char *n
 	pp->len = len;
 	pp->dev = statb.st_dev;
 	pp->ino = statb.st_ino;
+	pp->mtime = statb.st_mtime;
 	if(oldpp)
 		oldpp->next = pp;
 	else
@@ -1585,6 +1592,7 @@ void path_newdir(Pathcomp_t *first)
 		}
 		pp->dev = statb.st_dev;
 		pp->ino = statb.st_ino;
+		pp->mtime = statb.st_mtime;
 		for(pq=first;pq!=pp;pq=pq->next)
 		{
 			if(pp->ino==pq->ino && pp->dev==pq->dev)

@@ -1,7 +1,7 @@
 /*
  * regression test support
  *
- * @(#)TEST.mk (AT&T Labs Research) 2006-06-27
+ * @(#)TEST.mk (AT&T Labs Research) 2008-06-20
  *
  * test management is still in the design phase
  */
@@ -85,8 +85,8 @@
 					end
 				end
 				test : - test.$(B)
-				test.$(B) : $(B).tst $(T)
-					$(REGRESS) $(REGRESSFLAGS) $(*)
+				test.$(B) : $(T) - $(B).tst
+					$(REGRESS) $(REGRESSFLAGS) $(*:N=*.tst) $(*:N!=*.tst)
 				:SAVE: $(B).tst
 			end
 		end

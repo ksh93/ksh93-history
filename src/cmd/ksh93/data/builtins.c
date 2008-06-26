@@ -65,13 +65,13 @@ const struct shtable3 shtab_builtins[] =
 	"[",		NV_BLTIN|BLT_ENV,		bltin(test),
 	"let",		NV_BLTIN|BLT_ENV,		bltin(let),
 	"export",	NV_BLTIN|BLT_ENV|BLT_SPC|BLT_DCL,bltin(readonly),
+	".",		NV_BLTIN|BLT_ENV|BLT_SPC,	bltin(dot_cmd),
 #if SHOPT_BASH
 	"local",	NV_BLTIN|BLT_ENV|BLT_SPC|BLT_DCL,bltin(typeset),
 #endif
 #if _bin_newgrp || _usr_bin_newgrp
 	"newgrp",	NV_BLTIN|BLT_ENV|BLT_SPC,	Bltin(login),
 #endif	/* _bin_newgrp || _usr_bin_newgrp */
-	".",		NV_BLTIN|BLT_ENV|BLT_SPC,	bltin(dot_cmd),
 	"alias",	NV_BLTIN|BLT_SPC|BLT_DCL,	bltin(alias),
 	"hash",		NV_BLTIN|BLT_SPC|BLT_DCL,	bltin(alias),
 	"enum",		NV_BLTIN|BLT_ENV|BLT_SPC|BLT_DCL,bltin(enum),
@@ -1251,6 +1251,7 @@ USAGE_LICENSE
 	"is a terminal or pipe.]"
 "[A?Unset \avar\a and then create an indexed array containing each field in "
 	"the line starting at index 0.]"
+"[C?Unset \avar\a and read  \avar\a as a compound variable.]"
 "[d]:[delim?Read until delimiter \adelim\a instead of to the end of line.]"
 "[p?Read from the current co-process instead of standard input.  An end of "
 	"file causes \bread\b to disconnect the co-process so that another "
@@ -1277,7 +1278,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optreadonly[] =
-"[-1c?\n@(#)$Id: readonly (AT&T Research) 1999-07-07 $\n]"
+"[-1c?\n@(#)$Id: readonly (AT&T Research) 2008-06-16 $\n]"
 USAGE_LICENSE
 "[+NAME?readonly - set readonly attribute on variables]"
 "[+DESCRIPTION?\breadonly\b sets the readonly attribute on each of "
@@ -1285,6 +1286,9 @@ USAGE_LICENSE
 	"values from being changed.  If \b=\b\avalue\a is specified, "
 	"the variable \aname\a is set to \avalue\a before the variable "
 	"is made readonly.]"
+"[+?Within a type definition, if the value is not specified, then a "
+	"value must be specified when creating each instance of the type "
+        "and the value is readonly for each instance.]"
 "[+?If no \aname\as are specified then the names and values of all "
 	"readonly variables are written to standard output.]" 
 "[+?\breadonly\b is built-in to the shell as a declaration command so that "
@@ -1544,7 +1548,7 @@ USAGE_LICENSE
 ;
 
 const char sh_opttypeset[] =
-"+[-1c?\n@(#)$Id: typeset (AT&T Research) 2008-02-14 $\n]"
+"+[-1c?\n@(#)$Id: typeset (AT&T Research) 2008-06-09 $\n]"
 USAGE_LICENSE
 "[+NAME?\f?\f - declare or display variables with attributes]"
 "[+DESCRIPTION?Without the \b-f\b option, \b\f?\f\b sets, unsets, "
@@ -1600,8 +1604,7 @@ USAGE_LICENSE
 "[p?Causes the output to be in a format that can be used as input to the "
 	"shell to recreate the attributes for variables.]"
 "[r?Enables readonly.  Once enabled it cannot be disabled.  See "
-	"\breadonly\b(1).  Within a type definition, this variable must be "
-	"specified when creating each instance.]"
+	"\breadonly\b(1).]"
 "[s?Used with \b-i\b to restrict integer size to short.]"
 "[t?When used with \b-f\b, enables tracing for each of the specified "
 	"functions.  Otherwise, \b-t\b is a user defined attribute and "
@@ -1615,6 +1618,8 @@ USAGE_LICENSE
 "[A?Associative array.  Each \aname\a will converted to an associate "
 	"array.  If a variable already exists, the current value will "
 	"become index \b0\b.]"
+"[C?Compound variable.  Each \aname\a will be a compound variable.  If "
+	"the variable already exists, it will first be unset.]"
 "[E]#?[n:=10?Floating point number represented in scientific notation. "
 	"\an\a specifies the number of significant figures when the "
 	"value is expanded.]"

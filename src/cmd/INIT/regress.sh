@@ -23,7 +23,7 @@ command=regress
 case $(getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt) in
 0123)	USAGE=$'
 [-?
-@(#)$Id: regress (AT&T Research) 2008-05-21 $
+@(#)$Id: regress (AT&T Research) 2008-06-11 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?regress - run regression tests]
@@ -1209,7 +1209,7 @@ PMP=$(/bin/pwd)/$UNIT.tmp
 UMASK_ORIG=$(umask)
 UMASK=$UMASK_ORIG
 ARGV=("$@")
-trap 'code=$?; (( code )) || RUN; CLEANUP $code' EXIT
+trap 'code=$?; CLEANUP $code' EXIT
 if	[[ ! $TEST_select ]]
 then	TEST_select="[0123456789]*"
 fi
@@ -1243,4 +1243,5 @@ alias FI='LINE=$LINENO; FLUSH; FI'
 # do the tests
 
 . $REGRESS
+RUN
 GROUP=FINI

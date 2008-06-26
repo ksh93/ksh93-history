@@ -75,6 +75,7 @@ const struct shtable2 shtab_variables[] =
 	"LC_MESSAGES",	0,				(char*)0,
 	"LC_NUMERIC",	0,				(char*)0,
 	"FIGNORE",	0,				(char*)0,
+	"KSH_VERSION",	0,				(char*)0,
 	".sh",		NV_TABLE|NV_RDONLY|NV_NOFREE|NV_NOPRINT,(char*)0,
 	".sh.edchar",	0,				(char*)0,
 	".sh.edcol",	0,				(char*)0,
@@ -91,6 +92,7 @@ const struct shtable2 shtab_variables[] =
 	".sh.fun",	0,				(char*)0,
 	".sh.subshell",	NV_INTEGER|NV_SHORT|NV_NOFREE,	(char*)0,
 	".sh.level",	0,				(char*)0,
+	".sh.lineno",	NV_INTEGER|NV_RDONLY,		(char*)0,
 #if SHOPT_FS_3D
 	"VPATH",	0,				(char*)0,
 #endif /* SHOPT_FS_3D */

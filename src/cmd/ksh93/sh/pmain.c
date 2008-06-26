@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2007 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -43,5 +43,5 @@ int main(int argc, char *argv[])
 	(void)memcntl(NULL, 0, MC_HAT_ADVISE, (caddr_t)&mha, 0, 0);
 #endif
 	sh_waitnotify((Shnote_f)0);
-	return(sh_main(argc, argv, 0));
+	return(sh_main(argc, argv, (Shinit_f)0));
 }

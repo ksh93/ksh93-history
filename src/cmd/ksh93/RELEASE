@@ -1,4 +1,38 @@
-08-06-06  --- Release ksh93t-  ---
+08-06-24  --- Release ksh93t  ---
+08-06-24  KSH_VERSION added as a name reference to .sh.version.
+08-06-20  type now outputs 'special builtin' for special builtins.
+08-06-19  A couple of bugs in multi-dimensional arrays have been fxied.
+08-06-19  A bug in which a syntax error in a dot script could generated
+	  a syntax error in the next subsequent command has been fixed.
+08-06-17  Reduced the maximum function call depth to 2048 to avoid exceptions
+	  on some architectures.
+08-06-16  A bug in which printf "%B" could generate an exception when the
+	  specified variable was not set has been fixed.
+08-06-16  When typeset -p is followed by variable names, it now displays
+	  the attributes names and values for the specific names.
+08-06-14  A bug that could effect the drawing of the screen from multiline
+	  emacs or gmacs mode when walking up the history file has been fixed.
+08-06-13  A bug in which a compound variable defined in a subshell could
+	  have side effects into the parent shell has been fixed.
+08-06-13  A number of bugs related to using .sh.level to set the stack from
+	  for DEBUG traps have been fixed.
+08-06-13  The .sh.lineno variable has been added.  When .sh.level is changed
+	  inside a DEBUG trap, the .sh.lineno contains the calling line number
+	  for the specified stack frame.
+08-06-13  The .sh.level variable has been documented and now works.
+08-06-11  The -C option has been added to read for reading compound command
+	  definitions from a file.
+08-06-11  The . command is now permitted inside a compound command definition.
+	  The dot script can contain declaration commands and dot commands.
+08-06-09  Add -C option to typeset so that typeset -C foo, is equivalent
+	  to foo=().
+08-06-09  Added -n warning message for typeset option orderings that are valid
+	  with ksh88 but not valid with ksh93, for example Lx5.
+08-06-09  A bug in which the return value for an assignment command containing
+	  a command substitution with that failed was zero when the assignment
+	  contained redirections has been fixed.
+08-06-09  A bug in the quoting of $ inside a ERE pattern ~(E)(pattern)
+	  has been fixed.
 08-06-06  A bug when processing `` command substitution with the character
 	  sequence \$' has been fixed.
 08-06-02  When defining a type, the typeset -r attribute causes this field

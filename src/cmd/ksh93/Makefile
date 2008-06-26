@@ -112,7 +112,7 @@ if CC.HOSTTYPE == "linux.sparc*"
 	/* the linux.sparc linker still has some problems */
 	LIBS_opt += -ldll
 end
-LIBS_opt += -lsecdb -ldl
+LIBS_opt += -lsecdb
 if CC.HOSTTYPE == "sol.*"
 	LIBS_opt += +lw
 end

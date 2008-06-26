@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#                     Copyright (c) 1994-2007 AT&T                     #
+#                     Copyright (c) 1994-2008 AT&T                     #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                               by AT&T                                #
@@ -31,7 +31,7 @@ case $(getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt) in
 0123)	ARGV0="-a $command"
 	USAGE=$'
 [-?
-@(#)$Id: mktest (AT&T Labs Research) 2007-04-20 $
+@(#)$Id: mktest (AT&T Labs Research) 2008-06-20 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?mktest - generate a regression test scripts]
@@ -141,6 +141,7 @@ fi
 WORK=${UNIT[0]}.tmp
 rm -rf $WORK
 mkdir $WORK || exit
+export PATH=$PWD:$PATH
 
 function LINE
 {

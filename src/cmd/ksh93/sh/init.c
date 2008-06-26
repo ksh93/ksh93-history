@@ -189,7 +189,6 @@ done:
 static void put_history(register Namval_t* np,const char *val,int flags,Namfun_t *fp)
 {
 	Shell_t *shp = nv_shell(np);
-	char	*old;
 	void 	*histopen = shp->hist_ptr;
 	if(val && histopen)
 	{
@@ -200,8 +199,13 @@ static void put_history(register Namval_t* np,const char *val,int flags,Namfun_t
 		hist_close(shp->hist_ptr);
 	}
 	nv_putv(np, val, flags, fp);
-	if(val && histopen)
-		sh_histinit(shp);
+	if(histopen)
+	{
+		if(val)
+			sh_histinit(shp);
+		else
+			hist_close(histopen);
+	}
 }
 
 /* Trap for OPTINDEX */
@@ -916,7 +920,7 @@ static const Namdisc_t modedisc =
 /*
  * initialize the shell
  */
-Shell_t *sh_init(register int argc,register char *argv[], void(*userinit)(int))
+Shell_t *sh_init(register int argc,register char *argv[], Shinit_f userinit)
 {
 	Shell_t	*shp = &sh;
 	register int n;
@@ -1053,7 +1057,7 @@ Shell_t *sh_init(register int argc,register char *argv[], void(*userinit)(int))
 		        shp->userinit = userinit = bash_init;
 			sh_onoption(SH_BASH);
 			sh_onstate(SH_PREINIT);
-			(*userinit)(0);
+			(*userinit)(shp, 0);
 			sh_offstate(SH_PREINIT);
 		}
 #endif
@@ -1153,6 +1157,11 @@ Shell_t *sh_init(register int argc,register char *argv[], void(*userinit)(int))
 	shp->bltindata.shtrap = sh_trap;
 	shp->bltindata.shexit = sh_exit;
 	shp->bltindata.shbltin = sh_addbuiltin;
+#if _AST_VERSION >= 20080617L
+	shp->bltindata.shgetenv = getenv;
+	shp->bltindata.shsetenv = setenviron;
+	astintercept(&shp->bltindata,1);
+#endif
 #if 0
 #define NV_MKINTTYPE(x,y,z)	nv_mkinttype(#x,sizeof(x),(x)-1<0,(y),(Namdisc_t*)z); 
 	NV_MKINTTYPE(pid_t,"process id",0);
@@ -1170,7 +1179,7 @@ Shell_t *sh_init(register int argc,register char *argv[], void(*userinit)(int))
 	nv_mkstat();
 #endif
 	if(shp->userinit=userinit)
-		(*userinit)(0);
+		(*userinit)(shp, 0);
 	return(shp);
 }
 
@@ -1193,7 +1202,7 @@ int sh_reinit(char *argv[])
 	shp->namespace = 0;
 	shp->inuse_bits = 0;
 	if(shp->userinit)
-		(*shp->userinit)(1);
+		(*shp->userinit)(shp, 1);
 	if(shp->heredocs)
 	{
 		sfclose(shp->heredocs);
@@ -1356,6 +1365,12 @@ static Init_t *nv_init(Shell_t *shp)
 #endif /* SHOPT_NAMESPACE */
 	np = nv_mount(DOTSHNOD, "type", dtopen(&_Nvdisc,Dtoset));
 	nv_adddisc(DOTSHNOD, shdiscnames, (Namval_t**)0);
+	SH_LINENO->nvalue.ip = &shp->st.lineno;
+	VERSIONNOD->nvalue.nrp = newof(0,struct Namref,1,0);
+        VERSIONNOD->nvalue.nrp->np = SH_VERSIONNOD;
+        VERSIONNOD->nvalue.nrp->root = nv_dict(DOTSHNOD);
+        VERSIONNOD->nvalue.nrp->table = DOTSHNOD;
+	nv_onattr(VERSIONNOD,NV_RDONLY|NV_REF);
 	return(ip);
 }
 
@@ -1381,6 +1396,7 @@ static Dt_t *inittree(Shell_t *shp,const struct shtable2 *name_vals)
 	else if(name_vals==(const struct shtable2*)shtab_builtins)
 		shp->bltin_cmds = np;
 	base_treep = treep = dtopen(&_Nvdisc,Dtoset);
+	treep->user = (void*)shp;
 	for(tp=name_vals;*tp->sh_name;tp++,np++)
 	{
 		if((np->nvname = strrchr(tp->sh_name,'.')) && np->nvname!=((char*)tp->sh_name))

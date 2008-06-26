@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2007 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -107,16 +107,24 @@ struct lconv
 #define extern		__EXPORT__
 #endif
 
+#undef	getenv
+#define getenv		_ast_getenv
+
 #undef	localeconv
 #define localeconv	_ast_localeconv
 
 #undef	setlocale
 #define setlocale	_ast_setlocale
 
+#undef	setenviron
+#define setenviron	_ast_setenviron
+
 #undef	strerror
 #define strerror	_ast_strerror
 
+extern char*		getenv(const char*);
 extern struct lconv*	localeconv(void);
+extern char*		setenviron(const char*);
 extern char*		setlocale(int, const char*);
 extern char*		strerror(int);
 

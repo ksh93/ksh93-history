@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.3 2008-04-28
+info mam static 00000 1994-07-17 make (AT&T Research) 5.3 2008-06-22
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ar
@@ -1230,9 +1230,9 @@ done ${INSTALLROOT}/lib/lib/dbm generated
 done install virtual
 make test
 make test.iffe
+prev iffe
 make iffe.tst
 done iffe.tst
-prev iffe
 exec - regress  iffe.tst iffe
 done test.iffe virtual
 done test dontcare virtual

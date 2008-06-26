@@ -477,7 +477,7 @@ static void *fmtbase64(char *string, ssize_t *sz)
 	ssize_t			size,n;
 	Namval_t		*np = nv_open(string, NiL, NV_VARNAME|NV_NOASSIGN|NV_NOADD);
 	static union types_t	number;
-	if(!np)
+	if(!np || nv_isnull(np))
 #if 1
 		return(0);
 #else
@@ -534,7 +534,6 @@ static void *fmtbase64(char *string, ssize_t *sz)
 #if 1
 	{
 		Namfun_t *fp;
-		for(fp=np->nvfun; fp && !fp->disc && !fp->disc->writef;fp=fp->next);
 		for(fp=np->nvfun; fp;fp=fp->next)
 		{
 			if(fp->disc && fp->disc->writef)
@@ -554,7 +553,8 @@ static void *fmtbase64(char *string, ssize_t *sz)
 	}
 	else
 	{
-		cp = nv_getval(np);
+		if(!(cp = nv_getval(np)))
+			return(0);
 		size = strlen(cp);
 		return(sfwrite(iop,cp,size));
 	}

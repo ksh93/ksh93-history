@@ -112,6 +112,7 @@ struct Ufunction
 /* This following are for use with nodes which are not name-values */
 #define NV_TYPE		0x1000000
 #define NV_STATIC	0x2000000
+#define NV_COMVAR	0x4000000
 #define NV_FUNCTION	(NV_RJUST|NV_FUNCT)	/* value is shell function */
 #define NV_FPOSIX	NV_LJUST		/* posix function semantics */
 #define NV_FTMP		NV_ZFILL		/* function source in tmpfile */
@@ -201,6 +202,7 @@ extern const char	e_subscript[];
 extern const char	e_nullset[];
 extern const char	e_notset[];
 extern const char	e_noparent[];
+extern const char	e_notelem[];
 extern const char	e_readonly[];
 extern const char	e_badfield[];
 extern const char	e_restricted[];
@@ -217,5 +219,7 @@ extern const char	e_envmarker[];
 extern const char	e_badlocale[];
 extern const char	e_loop[];
 extern const char	e_redef[];
+extern const char	e_required[];
 extern const char	e_badappend[];
+extern const char	e_unknowntype[];
 #endif /* _NV_PRIVATE */

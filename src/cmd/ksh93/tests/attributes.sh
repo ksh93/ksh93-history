@@ -227,4 +227,45 @@ y=03
 [[ $y == "3  " ]] || err_exit '-LZ3 not working for value 03' 
 [[ $x == "abc" ]] || err_exit '-LZ3 not working for value abcd' 
 [[ $x == "abc" ]] || err_exit '-LZ3 not working for value 00abcd' 
+unset x z
+set +a
+[[ $(typeset -p z) ]] && err_exit "typeset -p for z undefined failed"
+unset z
+x='typeset -i z=45'
+eval "$x"
+[[ $(typeset -p z) == "$x" ]] || err_exit "typeset -p for '$x' failed"
+[[ $(typeset +p z) == "${x%=*}" ]] || err_exit "typeset +p for '$x' failed"
+unset z
+x='typeset -a z=(a b c)'
+eval "$x"
+[[ $(typeset -p z) == "$x" ]] || err_exit "typeset -p for '$x' failed"
+[[ $(typeset +p z) == "${x%=*}" ]] || err_exit "typeset +p for '$x' failed"
+unset z
+x='typeset -C z=(
+	foo=bar
+	xxx=bam
+)'
+eval "$x"
+[[ $(typeset -p z) == "$x" ]] || err_exit "typeset -p for '$x' failed"
+[[ $(typeset +p z) == "${x%%=*}" ]] || err_exit "typeset +p for '$x' failed"
+unset z
+x='typeset -A z=([bar]=bam [xyz]=bar)'
+eval "$x"
+[[ $(typeset -p z) == "$x" ]] || err_exit "typeset -p for '$x' failed"
+[[ $(typeset +p z) == "${x%%=*}" ]] || err_exit "typeset +p for '$x' failed"
+unset z
+foo=abc
+x='typeset -n z=foo'
+eval "$x"
+[[ $(typeset -p z) == "$x" ]] || err_exit "typeset -p for '$x' failed"
+[[ $(typeset +p z) == "${x%%=*}" ]] || err_exit "typeset +p for '$x' failed"
+typeset +n z
+unset foo z
+typeset -T Pt_t=(
+	float x=1 y=2
+)
+Pt_t z
+[[ $(typeset -p z) == "Pt_t z=$z" ]] || err_exit "typeset -p for type failed"
+[[ $(typeset +p z) == "Pt_t z" ]] || err_exit "typeset +p for type failed"
+unset z
 exit	$((Errors))

@@ -47,7 +47,9 @@ typedef struct
 }
 Shopt_t;
 
-typedef void	(*Shinit_f)(int);
+typedef struct Shell_s Shell_t;
+
+typedef void	(*Shinit_f)(Shell_t*, int);
 typedef int	(*Shwait_f)(int, long, int);
 
 union Shnode_u;
@@ -123,7 +125,7 @@ typedef struct sh_scope
  * Saves the state of the shell
  */
 
-typedef struct sh_static
+struct Shell_s
 {
 	Shopt_t		options;	/* set -o options */
 	Dt_t		*var_tree;	/* for shell variables */
@@ -139,7 +141,7 @@ typedef struct sh_static
 #ifdef _SH_PRIVATE
 	_SH_PRIVATE
 #endif /* _SH_PRIVATE */
-} Shell_t;
+};
 
 /* flags for sh_parse */
 #define SH_NL		1	/* Treat new-lines as ; */
@@ -171,7 +173,7 @@ extern int 		sh_trap(const char*,int);
 extern int 		sh_fun(Namval_t*,Namval_t*, char*[]);
 extern int 		sh_funscope(int,char*[],int(*)(void*),void*,int);
 extern Sfio_t		*sh_iogetiop(int,int);
-extern int		sh_main(int, char*[], void(*)(int));
+extern int		sh_main(int, char*[], Shinit_f);
 extern int		sh_run(int, char*[]);
 extern void		sh_menu(Sfio_t*, int, char*[]);
 extern Namval_t		*sh_addbuiltin(const char*, int(*)(int, char*[],void*), void*);

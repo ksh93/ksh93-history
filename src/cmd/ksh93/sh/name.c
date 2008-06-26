@@ -448,7 +448,7 @@ void nv_setlist(register struct argnod *arg,register int flags)
 				else
 				{
 					if(!(arg->argflag&ARG_APPEND))
-						nv_unset(np);
+						_nv_unset(np,NV_EXPORT);
 					if(!sh_isoption(SH_BASH) && !(array&NV_IARRAY) && !nv_isarray(np))
 						nv_setarray(np,nv_associative);
 				}

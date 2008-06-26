@@ -490,4 +490,10 @@ fi
 $SHELL -c 'sleep $(printf "%a" .95)' 2> /dev/null || err_exit "sleep doesn't except %a format constants"
 $SHELL -c 'test \( ! -e \)' 2> /dev/null ; [[ $? == 1 ]] || err_exit 'test \( ! -e \) not working'
 [[ $(ulimit) == "$(ulimit -fS)" ]] || err_exit 'ulimit is not the same as ulimit -fS'
+tmpfile=${TMP-/tmp}/ksh$$.2
+trap 'rm -f /tmp/ksh$$ "$tmpfile"' EXIT
+print $'\nprint -r -- "${.sh.file} ${LINENO} ${.sh.lineno}"' > $tmpfile
+[[ $( . "$tmpfile") == "$tmpfile 2 1" ]] || err_exit 'dot command not working'
+print -r -- "'xxx" > $tmpfile
+[[ $($SHELL -c ". $tmpfile"$'\n print ok' 2> /dev/null) == ok ]] || err_exit 'syntax error in dot command affects next command'
 exit $((Errors))

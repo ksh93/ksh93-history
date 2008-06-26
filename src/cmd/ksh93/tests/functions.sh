@@ -865,4 +865,48 @@ function red
 }
 [[ ${ red } != 'red_one 0' ]] && err_exit 'expected red_one 0'
 [[ ${ red } != 'red_one 1' ]] && err_exit 'expected red_one 1'
+xyz=$0
+function traceback
+{
+	integer .level=.sh.level
+	while((--.level>=0))
+	do
+		((.sh.level = .level))
+		[[ $xyz == "$0" ]] || err_exit "\$xyz=$xyz does not match $0 on level ${.level}"
+		[[ ${.sh.lineno} == "$1" ]] || err_exit "\${.sh.lineno}=${.sh.lineno} does not match $1 on level ${.level}"
+	done
+}
+
+function foo
+{
+	typeset xyz=foo
+	set -- $((LINENO+1))
+	bar $LINENO "$1"
+}
+
+function bar
+{
+    	typeset xyz=bar
+	set -- $((LINENO+2))
+	trap 'traceback $LINENO' DEBUG
+	: $LINENO "$1"
+}
+
+set -- $((LINENO+1))
+foo $LINENO
+function .sh.fun.set
+{
+	print -r -- "${.sh.value}"
+}
+function abc
+{
+	:
+}
+def()
+{
+	:
+}
+[[ $(abc) == abc ]] || err_exit '.sh.fun.set not capturing function name'
+[[ $(def) == def ]] || err_exit '.sh.fun.set not capturing name()'
+unset -f .sh.fun.set
 exit $((Errors))

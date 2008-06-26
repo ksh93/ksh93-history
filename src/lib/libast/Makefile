@@ -33,7 +33,7 @@ HEADERSRC = ast.h ast_dir.h ast_getopt.h ast_std.h \
 	fts.h fs3d.h getopt.h glob.h hash.h hashkey.h hashpart.h ip6.h \
 	lc.h ls.h magic.h mc.h mime.h mnt.h modecanon.h modex.h namval.h \
 	option.h proc.h re_comp.h recfmt.h regex.h regexp.h \
-	sfio.h sfio_s.h sfio_t.h sfdisc.h \
+	sfio.h sfio_s.h sfio_t.h sfdisc.h shcmd.h \
 	stack.h stak.h stk.h swap.h tar.h times.h tm.h tok.h \
 	usage.h vdb.h vecargs.h vmalloc.h wait.h wordexp.h \
 	bytesex.h endian.h fnmatch.h magicid.h fnv.h \
@@ -78,7 +78,8 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	pathexists.c pathfind.c pathkey.c pathprobe.c pathrepl.c \
 	pathnative.c pathposix.c pathtemp.c pathtmp.c pathstat.c \
 	pathgetlink.c pathsetlink.c pathbin.c pathshell.c pathcd.c \
-	fs3d.c ftwalk.c ftwflags.c fts.c setenviron.c \
+	fs3d.c ftwalk.c ftwflags.c fts.c \
+	astintercept.c getenv.c setenviron.c \
 	optget.c optjoin.c optesc.c optctx.c strsort.c struniq.c \
 	magic.c mime.c mimetype.c signal.c systrace.c \
 	error.c errorf.c errormsg.c errorx.c \
@@ -216,7 +217,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 .AST.INIT : .MAKE
 	CCFLAGS += -D_BLD_ast
 
-parameter	(_BLD_ast) (_AST_VERSION) ast_version.h
+parameter	(_BLD_ast) (_AST_VERSION)
 virtual		ast/stdio.h
 
 		:NOOPTIMIZE: spawnveg.c

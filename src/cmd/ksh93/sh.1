@@ -680,6 +680,10 @@ Other declaration commands such as
 and
 other declaration commands can be used in place of
 .BR typeset .
+.TP
+\f3\|.\fP \f2filename\^\fP
+Include the assignment commands contained in
+.IR filename .
 .PD
 .RE
 .P
@@ -1580,6 +1584,15 @@ The pathname of the file than contains the current command.
 .B .sh.fun
 The name of the current function that is being executed.
 .TP
+.B .sh.level
+Set to the current function depth.  This can be changed
+inside a DEBUG trap and will set the context to the specified
+level.
+.TP
+.B .sh.lineno
+Set during a DEBUG trap to the line number for the caller of
+each function.
+.TP
 .B .sh.match
 An indexed array which stores the most recent match and sub-pattern
 matches after conditional pattern matches that match and after
@@ -1621,6 +1634,11 @@ discipline function is invoked.
 .TP
 .B .sh.version
 Set to a value that identifies the version of this shell.
+.TP
+.B
+.SM KSH_VERSION
+A name reference to
+.BR .sh.version .
 .TP
 .B
 .SM LINENO
@@ -3774,9 +3792,10 @@ as those defined by the type definition as well as any
 standard discipline names.
 No additional sub-variables can be defined for any instance.
 .PP
-The
+When defining a type,
+if the value of a sub-variable is not set and the
 .B \-r
-attribute for a sub-variable with a type causes the sub-variable
+attribute is specified, it causes the sub-variable
 to be a required sub-variable.
 Whenever an instance of a type is created, all required sub-variables
 must be specified.
@@ -6251,7 +6270,7 @@ or
 on the command line
 determines which method is used.
 .TP
-\f3read\fP \*(OK \f3\-Aprsv\^\fP \*(CK \*(OK \f3\-d\fP \f2delim\^\fP\*(CK \*(OK \f3\-n\fP \f2n\^\fP\*(CK \*(OK \*(OK \f3\-N\fP \f2n\^\fP\*(CK \*(OK \*(OK \f3\-t\fP \f2timeout\^\fP\*(CK \*(OK \f3\-u\fP \f2unit\^\fP\*(CK \*(OK \f2vname\f3?\f2prompt\^\f1 \*(CK \*(OK \f2vname\^\fP .\|.\|. \*(CK
+\f3read\fP \*(OK \f3\-ACprsv\^\fP \*(CK \*(OK \f3\-d\fP \f2delim\^\fP\*(CK \*(OK \f3\-n\fP \f2n\^\fP\*(CK \*(OK \*(OK \f3\-N\fP \f2n\^\fP\*(CK \*(OK \*(OK \f3\-t\fP \f2timeout\^\fP\*(CK \*(OK \f3\-u\fP \f2unit\^\fP\*(CK \*(OK \f2vname\f3?\f2prompt\^\f1 \*(CK \*(OK \f2vname\^\fP .\|.\|. \*(CK
 The shell input mechanism.
 One line is read and
 is broken up into fields using the characters in
@@ -6316,6 +6335,12 @@ option causes the variable
 to be unset and each field that is read to be stored in
 successive elements of the indexed array
 .IR vname.
+The
+.B \-C
+option causes the variable
+.I vname\^
+to be read as a compound variable.  Blanks will be ignored when
+finding the beginning open parenthesis.
 The
 .B \-p
 option causes the input line
@@ -6384,6 +6409,8 @@ are marked
 readonly and these
 names cannot be changed
 by subsequent assignment.
+When defining a type, if the value of a readonly sub-variable is not defined
+the value is required when creating each instance.
 .TP
 \(dg \f3return\fP \*(OK \f2n\^\fP \*(CK
 Causes a shell
@@ -6842,7 +6869,7 @@ Does nothing, and exits 0. Used with
 .B while
 for infinite loops.
 .TP
-\(dg\(dg \f3typeset\fP \*(OK \f3\(+-AHSflbnprtux\^\fP \*(CK \*(OK \f3\(+-EFLRXZi\*(OK\f2n\^\fP\*(CK \*(CK  \*(OK \f3\-T \f2tname\fP=(\f2assign_list\fP) \*(CK \*(OK \f3\-h \f2str\fP \*(CK \*(OK \f3\-a\fP \*(OK\f2type\fP\*(CK \*(CK \*(OK \f2vname\^\fP\*(OK\f3=\fP\f2value\^\fP \*(CK \^ \*(CK .\|.\|.
+\(dg\(dg \f3typeset\fP \*(OK \f3\(+-ACHSflbnprtux\^\fP \*(CK \*(OK \f3\(+-EFLRXZi\*(OK\f2n\^\fP\*(CK \*(CK  \*(OK \f3\-T \f2tname\fP=(\f2assign_list\fP) \*(CK \*(OK \f3\-h \f2str\fP \*(CK \*(OK \f3\-a\fP \*(OK\f2type\fP\*(CK \*(CK \*(OK \f2vname\^\fP\*(OK\f3=\fP\f2value\^\fP \*(CK \^ \*(CK .\|.\|.
 Sets attributes and values for shell variables and functions.
 When invoked inside a function defined with the
 .B function
@@ -6863,6 +6890,11 @@ Declares
 to be an associative array.
 Subscripts are strings rather than arithmetic
 expressions.
+.TP
+.B \-C
+unsets each
+.I vname\^
+causes each to be a compound variable.
 .TP
 .B \-a
 Declares
@@ -7065,6 +7097,15 @@ defined by the value of variable
 .IR vname .
 This is usually used to reference a variable inside
 a function whose name has been passed as an argument.
+.TP
+.B \-p
+The name, attributes and values for the give
+.IR vname s
+are written on standard output in a form that can be
+used as shell input.
+If
+.B +p
+is specified, then the values are not displayed.
 .TP
 .B \-r
 The given

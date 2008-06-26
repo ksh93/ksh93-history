@@ -1563,7 +1563,7 @@ textout(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip
 			}
 			else if (*p != OG)
 			{
-				if (level <= 1 || *p != '[' || *(p + 1) != '-' || *(p + 2) == '?' || isalpha(*(p + 2)))
+				if (level <= 1 || *p != '[' || *(p + 1) != '-' || style == STYLE_man && *(p + 2) == '?' || isalpha(*(p + 2)))
 					break;
 				p = skip(p, 0, 0, 0, 1, level, 0, version);
 			}
@@ -1589,7 +1589,29 @@ textout(Sfio_t* sp, register char* p, int style, int level, int bump, Sfio_t* ip
 		level++;
 	}
 	if (c == '-' && level > 1)
-		about = 1;
+	{
+		if (style == STYLE_man)
+		{
+			about = 1;
+			if (*(p + 1) == '-')
+				p++;
+		}
+		else
+			for (;;)
+			{
+				p = skip(p, 0, 0, 0, 1, level, 0, version);
+				while (*(p = next(p + 1, version)) == '\n');
+				if (*p == '[')
+				{
+					if ((c = *++p) != '-')
+						break;
+				}
+				else if (*p == GO)
+					goto again;
+				else if (*p == OG)
+					return p + 1;
+			}
+	}
 	if (c == '+' || c == '-' && (bump = 3) || c != ' ' && level > 1)
 	{
 		p = skip(t = p + 1, '?', 0, 0, 1, level, 0, version);

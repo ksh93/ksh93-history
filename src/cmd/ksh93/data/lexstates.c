@@ -409,3 +409,4 @@ const char e_lexfuture[]	= "line %d: \\ in front of %c reserved for future use";
 const char e_lexlongquote[]	= "line %d: %c quote may be missing";
 const char e_lexzerobyte[]	= "zero byte";
 const char e_lexemptyfor[]	= "line %d: empty for list";
+const char e_lextypeset[]	= "line %d: %s invalid typeset option order";

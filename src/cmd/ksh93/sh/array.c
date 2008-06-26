@@ -224,11 +224,11 @@ static Namval_t *array_find(Namval_t *np,Namarr_t *arp, int flag)
 		mp = (Namval_t*)((*arp->fun)(np,NIL(char*),NV_ACURRENT));
 		if(!mp)
 			up = (union Value*)&mp;
-		else if(nv_isattr(mp,NV_CHILD))
+		else if(nv_isarray(mp))
 		{
-			if(wasundef && nv_isarray(mp->nvalue.np))
-				nv_putsub(mp->nvalue.np,NIL(char*),ARRAY_UNDEF);
-			return(mp->nvalue.np);
+			if(wasundef)
+				nv_putsub(mp,NIL(char*),ARRAY_UNDEF);
+			return(mp);
 		}
 		else
 		{
@@ -633,6 +633,8 @@ static struct index_array *array_grow(Namval_t *np, register struct index_array 
 		ap->header.hdr.dsize = sizeof(*ap) + i;
 		i = 0;
 		ap->header.fun = 0;
+		if(np->nvalue.cp==Empty)
+			np->nvalue.cp=0;
 		if(nv_hasdisc(np,&array_disc) || nv_isvtree(np))
 		{
 			ap->header.table = dtopen(&_Nvdisc,Dtoset);
@@ -871,10 +873,10 @@ int nv_nextsub(Namval_t *np)
 			ap->cur = dot;
 			if(array_isbit(aq->bits, dot,ARRAY_CHILD))
 			{
-				
-				if(aq->header.nelem&ARRAY_NOCHILD)
+				Namval_t *mp = aq->val[dot].np;			
+				if((aq->header.nelem&ARRAY_NOCHILD) && nv_isvtree(mp))
 					continue;
-				nv_putsub(aq->val[dot].np,NIL(char*),ARRAY_UNDEF);
+				nv_putsub(mp,NIL(char*),ARRAY_UNDEF);
 			}
 			return(1);
 		}

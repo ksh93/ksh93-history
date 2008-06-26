@@ -80,7 +80,6 @@ function check
 }
 
 check a
-exit
 
 unset a
 typeset -A a

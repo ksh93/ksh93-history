@@ -76,15 +76,15 @@ dec(char* s, char* p, int n)
  */
 
 char*
-fmtip6(Ip6addr_t* addr, int bits)
+fmtip6(unsigned char* addr, int bits)
 {
-	register unsigned char*	a = *addr;
-	register int		n = sizeof(*addr);
+	register unsigned char*	a = addr;
+	register int		n = IP6ADDR;
 	register int		i;
 	register int		z;
 	register int		k;
 	register int		m;
-	unsigned char		r[sizeof(*addr)];
+	unsigned char		r[IP6ADDR];
 	char*			b;
 	char*			s;
 

@@ -44,7 +44,7 @@
 #define PATH_STD_DIR		0100	/* directory is on  $(getconf PATH) */
 
 #define PATH_OFFSET	2		/* path offset for path_join */
-#define MAXDEPTH	(sizeof(char*)==2?64:4096) /* maximum recursion depth*/
+#define MAXDEPTH	(sizeof(char*)==2?64:2048) /* maximum recursion depth*/
 
 /*
  * path component structure for path searching
@@ -55,6 +55,7 @@ typedef struct pathcomp
 	int		refcount;
 	dev_t		dev;
 	ino_t		ino;
+	time_t		mtime;
 	char		*name;
 	char		*lib;
 	char		*blib;
@@ -115,6 +116,7 @@ extern const char e_crondir[];
 #endif /* SHOPT_SUID_EXEC */
 extern const char is_alias[];
 extern const char is_builtin[];
+extern const char is_spcbuiltin[];
 extern const char is_builtver[];
 extern const char is_reserved[];
 extern const char is_talias[];

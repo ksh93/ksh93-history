@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1985-2007 AT&T Knowledge Ventures            *
+*          Copyright (c) 1985-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                      by AT&T Knowledge Ventures                      *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -450,7 +450,7 @@ tmxfmt(char* buf, size_t len, const char* format, Time_t t)
 			continue;
 		case 'z':	/* time zone west offset */
 			if ((ep - cp) >= 16)
-				cp = tmpoff(cp, ep - cp, "", (flags & TM_UTC) ? 0 : tm_info.zone->west, 24 * 60);
+				cp = tmpoff(cp, ep - cp, "", (flags & TM_UTC) ? 0 : tm_info.zone->west - (tp->tm_isdst ? 60 : 0), 24 * 60);
 			continue;
 		case 'Z':	/* time zone */
 			p = (flags & TM_UTC) ? tm_info.format[TM_UT] : tp->tm_isdst && tm_info.zone->daylight ? tm_info.zone->daylight : tm_info.zone->standard;

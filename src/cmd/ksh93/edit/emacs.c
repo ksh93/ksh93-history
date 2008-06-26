@@ -208,7 +208,6 @@ int ed_emacsread(void *context, int fd,char *buff,int scend, int reedit)
 	out = (genchar*)buff;
 #if SHOPT_MULTIBYTE
 	out = (genchar*)roundof((char*)out-(char*)0,sizeof(genchar));
-	ed_internal(buff,out);
 #endif /* SHOPT_MULTIBYTE */
 	if(!kstack)
 	{
@@ -657,6 +656,8 @@ update:
 			location.hist_command = hline;	/* save current position */
 			location.hist_line = hloff;
 #endif
+			cur = 0;
+			draw(ep,UPDATE);
 			hist_copy((char*)out,MAXLINE, hline,hloff);
 #if SHOPT_MULTIBYTE
 			ed_internal((char*)(out),out);

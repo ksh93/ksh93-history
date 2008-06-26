@@ -229,7 +229,7 @@ int    b_dot_cmd(register int n,char *argv[],void* extra)
 	script = *argv;
 	if(error_info.errors || !script)
 		errormsg(SH_DICT,ERROR_usage(2),"%s",optusage((char*)0));
-	if(shp->dot_depth++ > DOTMAX)
+	if(shp->dot_depth+1 > DOTMAX)
 		errormsg(SH_DICT,ERROR_exit(1),e_toodeep,script);
 	shp->st.lineno = error_info.line;
 	if(!(np=shp->posix_fun))
@@ -261,7 +261,10 @@ int    b_dot_cmd(register int n,char *argv[],void* extra)
 	}
 	*prevscope = shp->st;
 	if(filename)
+	{
 		shp->st.filename = filename;
+		shp->st.lineno = 1;
+	}
 	shp->st.prevst = prevscope;
 	shp->st.self = &savst;
 	shp->topscope = (Shscope_t*)shp->st.self;
@@ -277,6 +280,7 @@ int    b_dot_cmd(register int n,char *argv[],void* extra)
 	jmpval = sigsetjmp(buff.buff,0);
 	if(jmpval == 0)
 	{
+		shp->dot_depth++;
 		if(np)
 			sh_exec((Shnode_t*)(nv_funtree(np)),sh_isstate(SH_ERREXIT));
 		else

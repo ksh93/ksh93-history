@@ -85,4 +85,9 @@ eval val="$x"
 	[[ ${x.foo} == good ]] ||  err_exit 'x.foo should be good'
 )
 [[ $x == "$val" ]] || err_exit 'compound variable changes after unset leaves'
+unset l
+(
+	l=( a=1 b="BE" )
+)
+[[ ${l+foo} != foo ]] || err_exit 'l should be unset'
 exit $Errors

@@ -396,6 +396,8 @@ static Namfun_t *clone_type(Namval_t* np, Namval_t *mp, int flags, Namfun_t *fp)
 			stakseek(offset);
 			if(nr)
 			{
+				if(nv_isattr(nq,NV_RDONLY) && (nq->nvalue.cp || nv_isattr(nq,NV_INTEGER)))
+					errormsg(SH_DICT,ERROR_exit(1),e_readonly, nq->nvname);
 				if((size = datasize(nr,(size_t*)0)) && size==datasize(nq,(size_t*)0))
 					memcpy((char*)nq->nvalue.cp,nr->nvalue.cp,size);
 				else if(ap=nv_arrayptr(nr))
@@ -440,8 +442,8 @@ static Namfun_t *clone_type(Namval_t* np, Namval_t *mp, int flags, Namfun_t *fp)
 					free((void*)nr);
 				}
 			}
-			else if(nv_isattr(nq,NV_RDONLY))
-				errormsg(SH_DICT,ERROR_exit(1),"%s: is a required element of %s",nq->nvname,nv_name(mp));
+			else if(nv_isattr(nq,NV_RDONLY) && !nq->nvalue.cp && !nv_isattr(nq,NV_INTEGER))
+				errormsg(SH_DICT,ERROR_exit(1),e_required,nq->nvname,nv_name(mp));
 		}
 	}
 	if(nv_isattr(mp,NV_BINARY))
@@ -500,7 +502,7 @@ found:
 			if((memcmp(name,dp->names[i],n)==0) && dp->names[i][n]==0)
 				return(nq);
 		}
-		errormsg(SH_DICT,ERROR_exit(1),"%.*s: is not an element of %s",n,name,nv_name(np));
+		errormsg(SH_DICT,ERROR_exit(1),e_notelem,n,name,nv_name(np));
 	}
 	return(nq);
 }
@@ -1309,7 +1311,7 @@ Namval_t *nv_mkstruct(const char *name, int rsize, Fields_t *fields)
 			tp = nv_open(stakptr(offset), sh.var_tree, NV_VARNAME|NV_NOADD|NV_NOFAIL);
 			stakseek(r);
 			if(!tp)
-				errormsg(SH_DICT,ERROR_exit(1),"%s: unknown type",fp->type);
+				errormsg(SH_DICT,ERROR_exit(1),e_unknowntype,fp->type);
 			if(dp = (Namtype_t*)nv_hasdisc(tp,&type_disc))
 			{
 				nnodes += dp->numnodes;

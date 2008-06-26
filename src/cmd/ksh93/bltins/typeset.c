@@ -40,7 +40,7 @@
 #include	"history.h"
 #include	"builtins.h"
 #include	"variables.h"
-#include	<dlldefs.h>
+#include	"FEATURE/dynamic"
 
 struct tdata
 {
@@ -50,7 +50,8 @@ struct tdata
 	char    	*prefix;
 	char    	*tname;
 	char		*help;
-	int     	aflag;
+	short     	aflag;
+	short     	pflag;
 	int     	argnum;
 	int     	scanmask;
 	Dt_t 		*scanroot;
@@ -234,6 +235,9 @@ int    b_typeset(int argc,register char *argv[],void *extra)
 			case 'A':
 				flag |= NV_ARRAY;
 				break;
+			case 'C':
+				flag |= NV_COMVAR;
+				break;
 			case 'E':
 				/* The following is for ksh88 compatibility */
 				if(opt_info.offset && !strchr(argv[opt_info.index],'E'))
@@ -298,7 +302,8 @@ int    b_typeset(int argc,register char *argv[],void *extra)
 				break;
 			case 'p':
 				tdata.prefix = argv[0];
-				continue;
+				tdata.pflag = 1;
+				break;
 			case 'r':
 				flag |= NV_RDONLY;
 				break;
@@ -392,13 +397,13 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 	register char *name;
 	char *last = 0;
 	int nvflags=(flag&(NV_ARRAY|NV_NOARRAY|NV_VARNAME|NV_IDENT|NV_ASSIGN|NV_STATIC));
-	int r=0, ref=0;
+	int r=0, ref=0, comvar=(flag&NV_COMVAR),iarray=(flag&NV_IARRAY);
 	Shell_t *shp =tp->sh;
 	if(!shp->prefix)
 		nvflags |= NV_NOSCOPE;
 	else if(*shp->prefix==0)
 		shp->prefix = 0;
-	flag &= ~(NV_NOARRAY|NV_NOSCOPE|NV_VARNAME|NV_IDENT|NV_STATIC);
+	flag &= ~(NV_NOARRAY|NV_NOSCOPE|NV_VARNAME|NV_IDENT|NV_STATIC|NV_COMVAR|NV_IARRAY);
 	if(argv[1])
 	{
 		if(flag&NV_REF)
@@ -408,6 +413,8 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 			if(tp->aflag!='-')
 				nvflags |= NV_NOREF;
 		}
+		if(tp->pflag)
+			nvflags |= NV_NOREF;
 		while(name = *++argv)
 		{
 			register unsigned newflag;
@@ -464,6 +471,39 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 				continue;
 			}
 			np = nv_open(name,troot,nvflags);
+			if(tp->pflag)
+			{
+				int c = '\n';
+				nv_attribute(np,sfstdout,tp->prefix,1);
+				if(nv_isnull(np))
+					continue;
+				sfputr(sfstdout,nv_name(np),tp->aflag=='+'?'\n':'=');
+				if(tp->aflag=='+')
+					continue;
+				if(nv_isarray(np) && nv_arrayptr(np))
+				{
+					iarray = 1 + (nv_aindex(np)<0);
+					c = ' ';
+					sfputc(sfstdout,'(');
+					nv_putsub(np,NIL(char*),ARRAY_SCAN);
+				}
+				do
+				{
+					if(iarray==2)
+						sfprintf(sfstdout,"[%s]=",sh_fmtq(nv_getsub(np)));
+					if(!(name = nv_getval(np)))
+						name = Empty;
+					if(iarray && !nv_nextsub(np))
+						c = ')';
+					if(!nv_isvtree(np))
+						name = sh_fmtq(name);
+					sfputr(sfstdout,name,c);
+				}
+				while(c==' ');
+				if(iarray)
+					sfputc(sfstdout,'\n');
+				continue;
+			}
 			if(flag==NV_ASSIGN && !ref && tp->aflag!='-' && !strchr(name,'='))
 			{
 				if(troot!=shp->var_tree && (nv_isnull(np) || !print_namval(sfstdout,np,0,tp)))
@@ -471,13 +511,19 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 					sfprintf(sfstderr,sh_translate(e_noalias),name);
 					r++;
 				}
-				continue;
+				if(!comvar && !iarray)
+					continue;
 			}
-			if(troot==shp->var_tree && !shp->st.real_fun && (nvflags&NV_STATIC) && (!shp->envlist || !nv_onlist(shp->envlist,name)))
+			if(troot==shp->var_tree && ((tp->tp && !nv_isarray(np)) || !shp->st.real_fun && (nvflags&NV_STATIC)) && !strchr(name,'=') && !(shp->envlist  && nv_onlist(shp->envlist,name)))
 				_nv_unset(np,0);
-			if(troot==shp->var_tree && (flag&NV_IARRAY))
+			if((troot==shp->var_tree) && comvar)
 			{
-				flag &= ~NV_IARRAY;
+				if(!nv_isnull(np) && !nv_isvtree(np))
+					nv_unset(np);
+				nv_setvtree(np);
+			}
+			if((troot==shp->var_tree) && iarray)
+			{
 				if(tp->tname)
 					nv_atypeindex(np,tp->tname+1);
 				else if(nv_isnull(np))
@@ -586,6 +632,8 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 	}
 	else if(!tp->sh->envlist)
 	{
+		if(tp->pflag)
+			tp->aflag = 0;
 		if(tp->aflag)
 		{
 			if(troot==shp->fun_tree)
@@ -633,6 +681,7 @@ void **sh_getliblist(void)
  * always move to head of search list
  * return: 0: already loaded 1: first load
  */
+#if SHOPT_DYNAMIC
 int sh_addlib(void* library)
 {
 	register int	n;
@@ -674,6 +723,12 @@ int sh_addlib(void* library)
 	liblist[nlib] = 0;
 	return !r;
 }
+#else
+int sh_addlib(void* library)
+{
+	return 0;
+}
+#endif /* SHOPT_DYNAMIC */
 
 /*
  * add change or list built-ins
@@ -729,16 +784,13 @@ int	b_builtin(int argc,char *argv[],void *extra)
 		if(tdata.sh->subshell)
 			sh_subfork();
 	}
+#if SHOPT_DYNAMIC
 	if(arg)
 	{
-#ifdef _hdr_dlldefs
 #if (_AST_VERSION>=20040404)
 		if(!(library = dllplug(SH_ID,arg,NIL(char*),RTLD_LAZY,NIL(char*),0)))
 #else
 		if(!(library = dllfind(arg,NIL(char*),RTLD_LAZY,NIL(char*),0)))
-#endif
-#else
-		if(!(library = dlopen(arg,DL_MODE)))
 #endif
 		{
 			errormsg(SH_DICT,ERROR_exit(0),"%s: %s",arg,dlerror());
@@ -746,7 +798,9 @@ int	b_builtin(int argc,char *argv[],void *extra)
 		}
 		sh_addlib(library);
 	}
-	else if(*argv==0 && !dlete)
+	else
+#endif /* SHOPT_DYNAMIC */
+	if(*argv==0 && !dlete)
 	{
 		print_scan(sfstdout, flag, tdata.sh->bltin_tree, 1, &tdata);
 		return(0);
@@ -763,7 +817,11 @@ int	b_builtin(int argc,char *argv[],void *extra)
 		for(n=(nlib?nlib:dlete); --n>=0;)
 		{
 			/* (char*) added for some sgi-mips compilers */ 
+#if SHOPT_DYNAMIC
 			if(dlete || (addr = (Fptr_t)dlllook(liblist[n],stkptr(stkp,flag))))
+#else
+			if(dlete)
+#endif /* SHOPT_DYNAMIC */
 			{
 				if(np = sh_addbuiltin(arg, addr,pointerof(dlete)))
 				{

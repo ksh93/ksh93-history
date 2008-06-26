@@ -1,3 +1,7 @@
+08-06-24 tm/tmxfmt.c: fix %z to handle tm_isdst -- doh
+08-06-24 misc/astintercept.c,misc/getenv.c: split from misc/setenviron.c
+08-06-17 misc/setenviron.c: add { astintercept() getenv() }
+08-06-09 tm/tmlocale.c: use _DATE_FMT if defined for TM_DEFAULT
 08-06-06 misc/optget.c: handle sub-component about details
 08-06-04 misc/optget.c: fix [-n?\n...\n] version parse
 08-06-04 include/debug.h,misc/debug.c: merge with kpvdebug.h

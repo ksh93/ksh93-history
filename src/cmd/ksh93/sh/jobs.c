@@ -205,7 +205,6 @@ int job_reap(register int sig)
 	register struct process *pw;
 	struct process *px;
 	register int flags;
-	struct process dummy;
 	struct jobsave *jp;
 	struct back_save *bp;
 	int notify=0, nochild=0, oerrno, wstat;
@@ -284,7 +283,7 @@ int job_reap(register int sig)
 			pw->p_exitmin = 0;
 			if(job.toclear)
 				job_clear();
-			if(bck.count++ > sh.lim.child_max)
+			if(++bck.count > sh.lim.child_max)
 				job_chksave(0);
 			if(jp = jobsave_create(pid))
 			{
@@ -1639,10 +1638,10 @@ static char *job_sigmsg(int sig)
 	if(sig<sh.sigmax && sh.sigmsg[sig])
 		return(sh.sigmsg[sig]);
 #if defined(SIGRTMIN) && defined(SIGRTMAX)
-	if(sig>=sh.sigruntime[SH_SIGRTMIN] && sig<=sh.sigruntime[SIGRTMAX])
+	if(sig>=sh.sigruntime[SH_SIGRTMIN] && sig<=sh.sigruntime[SH_SIGRTMAX])
 	{
 		static char sigrt[20];
-		if(sig>sh.sigruntime[SH_SIGRTMIN]+(sh.sigruntime[SH_SIGRTMAX]-sig<=sh.sigruntime[SIGRTMIN])/2)
+		if(sig>sh.sigruntime[SH_SIGRTMIN]+(sh.sigruntime[SH_SIGRTMAX]-sig<=sh.sigruntime[SH_SIGRTMIN])/2)
 			sfsprintf(sigrt,sizeof(sigrt),"SIGRTMAX-%d",sh.sigruntime[SH_SIGRTMAX]-sig);
 		else
 			sfsprintf(sigrt,sizeof(sigrt),"SIGRTMIN+%d",sig-sh.sigruntime[SH_SIGRTMIN]);

@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.3 2008-04-28
+info mam static 00000 1994-07-17 make (AT&T Research) 5.3 2008-06-22
 setv INSTALLROOT ../../..
 setv PACKAGE_ast_INCLUDE ${INSTALLROOT}/include/ast
 setv PACKAGE_ast_LIB ${INSTALLROOT}/lib
@@ -53,7 +53,7 @@ exec - {
 exec - case "" in
 exec - *?)	echo " " ;;
 exec - esac
-exec - for i in shell dll cmd ast m jobs i socket nsl secdb dl
+exec - for i in shell dll cmd ast m jobs i socket nsl secdb
 exec - do	case $i in
 exec - 	"shell"|shell)
 exec - 		;;
@@ -76,7 +76,6 @@ bind -ldll
 bind -lcmd
 bind -last
 bind -lm dontcare
-bind -ldl dontcare
 make +ljobs
 done +ljobs dontcare virtual
 make +li
@@ -86,7 +85,7 @@ done ${mam_libsocket} dontcare virtual
 bind -lnsl dontcare
 make ${mam_libsecdb}
 done ${mam_libsecdb} dontcare virtual
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libdl} ${mam_libnsl}  : run features/externs
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libnsl}  : run features/externs
 done FEATURE/externs generated
 make include/shell.h implicit
 make ${PACKAGE_ast_INCLUDE}/cmd.h implicit
@@ -209,7 +208,7 @@ prev +ljobs
 prev +li
 prev ${mam_libsocket}
 prev ${mam_libsecdb}
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libdl} ${mam_libnsl}  : run features/time
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libnsl}  : run features/time
 make ${PACKAGE_ast_INCLUDE}/times.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast_time.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_time.h dontcare
@@ -228,11 +227,12 @@ prev +ljobs
 prev +li
 prev ${mam_libsocket}
 prev ${mam_libsecdb}
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libdl} ${mam_libnsl}  : run features/dynamic
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libnsl}  : run features/dynamic
 make ${PACKAGE_ast_INCLUDE}/fs3d.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast_fs.h implicit
 prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/fs3d.h dontcare
+prev ${PACKAGE_ast_INCLUDE}/dlldefs.h implicit
 done FEATURE/dynamic dontcare generated
 make FEATURE/options implicit
 meta FEATURE/options features/%>FEATURE/% features/options options
@@ -243,7 +243,7 @@ prev +ljobs
 prev +li
 prev ${mam_libsocket}
 prev ${mam_libsecdb}
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libdl} ${mam_libnsl}  : run features/options
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libnsl}  : run features/options
 done FEATURE/options dontcare generated
 prev ${PACKAGE_ast_INCLUDE}/option.h implicit
 done include/builtins.h
@@ -268,7 +268,7 @@ prev +ljobs
 prev +li
 prev ${mam_libsocket}
 prev ${mam_libsecdb}
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libdl} ${mam_libnsl}  : run features/sigfeatures
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libnsl}  : run features/sigfeatures
 done FEATURE/sigfeatures dontcare generated
 make FEATURE/setjmp implicit
 meta FEATURE/setjmp features/%>FEATURE/% features/setjmp setjmp
@@ -279,7 +279,7 @@ prev +ljobs
 prev +li
 prev ${mam_libsocket}
 prev ${mam_libsecdb}
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libdl} ${mam_libnsl}  : run features/setjmp
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libnsl}  : run features/setjmp
 done FEATURE/setjmp dontcare generated
 prev ${PACKAGE_ast_INCLUDE}/sfio.h implicit
 prev ${PACKAGE_ast_INCLUDE}/error.h implicit
@@ -298,7 +298,7 @@ done include/defs.h
 done bltins/alarm.c
 meta alarm.o %.c>%.o bltins/alarm.c alarm
 prev bltins/alarm.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_shell -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DERROR_CONTEXT_T=Error_context_t -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -c bltins/alarm.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_shell -DSHOPT_DYNAMIC -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DERROR_CONTEXT_T=Error_context_t -DSHOPT_HISTEXPAND -DSHOPT_ESH -c bltins/alarm.c
 done alarm.o generated
 make cd_pwd.o
 make bltins/cd_pwd.c
@@ -320,7 +320,7 @@ prev +ljobs
 prev +li
 prev ${mam_libsocket}
 prev ${mam_libsecdb}
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libdl} ${mam_libnsl}  : def acct
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libnsl}  : def acct
 done FEATURE/acct dontcare generated
 prev include/nval.h implicit
 prev FEATURE/options implicit
@@ -336,7 +336,7 @@ prev include/defs.h implicit
 done bltins/cd_pwd.c
 meta cd_pwd.o %.c>%.o bltins/cd_pwd.c cd_pwd
 prev bltins/cd_pwd.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DERROR_CONTEXT_T=Error_context_t -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -c bltins/cd_pwd.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_DYNAMIC -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DERROR_CONTEXT_T=Error_context_t -DSHOPT_HISTEXPAND -DSHOPT_ESH -c bltins/cd_pwd.c
 done cd_pwd.o generated
 make cflow.o
 make bltins/cflow.c
@@ -351,7 +351,7 @@ prev include/defs.h implicit
 done bltins/cflow.c
 meta cflow.o %.c>%.o bltins/cflow.c cflow
 prev bltins/cflow.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -DERROR_CONTEXT_T=Error_context_t -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -c bltins/cflow.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_DYNAMIC -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -DERROR_CONTEXT_T=Error_context_t -DSHOPT_HISTEXPAND -DSHOPT_ESH -c bltins/cflow.c
 done cflow.o generated
 make deparse.o
 make sh/deparse.c
@@ -384,7 +384,7 @@ prev include/defs.h implicit
 done bltins/getopts.c
 meta getopts.o %.c>%.o bltins/getopts.c getopts
 prev bltins/getopts.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -DERROR_CONTEXT_T=Error_context_t -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -c bltins/getopts.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_DYNAMIC -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -DERROR_CONTEXT_T=Error_context_t -DSHOPT_HISTEXPAND -DSHOPT_ESH -c bltins/getopts.c
 done getopts.o generated
 make hist.o
 make bltins/hist.c
@@ -401,7 +401,7 @@ prev +ljobs
 prev +li
 prev ${mam_libsocket}
 prev ${mam_libsecdb}
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libdl} ${mam_libnsl}  : run features/ttys
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libnsl}  : run features/ttys
 done FEATURE/ttys dontcare generated
 done include/terminal.h dontcare
 prev FEATURE/setjmp implicit
@@ -415,7 +415,7 @@ prev +ljobs
 prev +li
 prev ${mam_libsocket}
 prev ${mam_libsecdb}
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libdl} ${mam_libnsl}  : run features/locale
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libnsl}  : run features/locale
 done FEATURE/locale dontcare generated
 prev FEATURE/options implicit
 done include/edit.h dontcare
@@ -434,7 +434,7 @@ prev include/defs.h implicit
 done bltins/hist.c
 meta hist.o %.c>%.o bltins/hist.c hist
 prev bltins/hist.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_HISTEXPAND -DSHOPT_MULTIBYTE -DKSHELL -DSHOPT_ESH -DSHOPT_VSH -D_PACKAGE_ast -DSHOPT_PFSH -D_BLD_shell -DERROR_CONTEXT_T=Error_context_t -DSHOPT_DYNAMIC -c bltins/hist.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_HISTEXPAND -DSHOPT_MULTIBYTE -DKSHELL -DSHOPT_ESH -DSHOPT_VSH -D_PACKAGE_ast -DSHOPT_PFSH -D_BLD_shell -DSHOPT_DYNAMIC -DERROR_CONTEXT_T=Error_context_t -c bltins/hist.c
 done hist.o generated
 make misc.o
 make bltins/misc.c
@@ -456,7 +456,7 @@ prev include/defs.h implicit
 done bltins/misc.c
 meta misc.o %.c>%.o bltins/misc.c misc
 prev bltins/misc.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_PFSH -D_BLD_shell -DSHOPT_ESH -DKSHELL -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DERROR_CONTEXT_T=Error_context_t -c bltins/misc.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_PFSH -D_BLD_shell -DSHOPT_DYNAMIC -DSHOPT_ESH -DKSHELL -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_HISTEXPAND -DERROR_CONTEXT_T=Error_context_t -c bltins/misc.c
 done misc.o generated
 make print.o
 make bltins/print.c
@@ -494,7 +494,7 @@ prev include/defs.h implicit
 done bltins/print.c
 meta print.o %.c>%.o bltins/print.c print
 prev bltins/print.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_MULTIBYTE -D_PACKAGE_ast -D_BLD_shell -DSHOPT_PFSH -DSHOPT_ESH -DKSHELL -DERROR_CONTEXT_T=Error_context_t -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -c bltins/print.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_MULTIBYTE -D_PACKAGE_ast -D_BLD_shell -DSHOPT_DYNAMIC -DSHOPT_PFSH -DSHOPT_ESH -DKSHELL -DERROR_CONTEXT_T=Error_context_t -DSHOPT_HISTEXPAND -c bltins/print.c
 done print.o generated
 make read.o
 make bltins/read.c
@@ -540,7 +540,7 @@ prev +ljobs
 prev +li
 prev ${mam_libsocket}
 prev ${mam_libsecdb}
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libdl} ${mam_libnsl}  : run features/poll
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libnsl}  : run features/poll
 done FEATURE/poll generated
 prev FEATURE/time implicit
 prev include/builtins.h implicit
@@ -549,7 +549,7 @@ prev include/defs.h implicit
 done bltins/sleep.c
 meta sleep.o %.c>%.o bltins/sleep.c sleep
 prev bltins/sleep.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_shell -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DERROR_CONTEXT_T=Error_context_t -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -c bltins/sleep.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_shell -DSHOPT_DYNAMIC -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DERROR_CONTEXT_T=Error_context_t -DSHOPT_HISTEXPAND -DSHOPT_ESH -c bltins/sleep.c
 done sleep.o generated
 make trap.o
 make bltins/trap.c
@@ -559,7 +559,7 @@ prev include/defs.h implicit
 done bltins/trap.c
 meta trap.o %.c>%.o bltins/trap.c trap
 prev bltins/trap.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DERROR_CONTEXT_T=Error_context_t -DSHOPT_ESH -c bltins/trap.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_DYNAMIC -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_HISTEXPAND -DERROR_CONTEXT_T=Error_context_t -DSHOPT_ESH -c bltins/trap.c
 done trap.o generated
 make test.o
 make bltins/test.c
@@ -576,11 +576,11 @@ prev include/defs.h implicit
 done bltins/test.c
 meta test.o %.c>%.o bltins/test.c test
 prev bltins/test.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_shell -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DKSHELL -DERROR_CONTEXT_T=Error_context_t -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -c bltins/test.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_shell -DSHOPT_DYNAMIC -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DKSHELL -DERROR_CONTEXT_T=Error_context_t -DSHOPT_HISTEXPAND -DSHOPT_ESH -c bltins/test.c
 done test.o generated
 make typeset.o
 make bltins/typeset.c
-prev ${PACKAGE_ast_INCLUDE}/dlldefs.h implicit
+prev FEATURE/dynamic implicit
 prev include/variables.h implicit
 prev include/builtins.h implicit
 prev include/history.h implicit
@@ -605,7 +605,7 @@ prev +ljobs
 prev +li
 prev ${mam_libsocket}
 prev ${mam_libsecdb}
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libdl} ${mam_libnsl}  : run features/rlimits
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libnsl}  : run features/rlimits
 done FEATURE/rlimits dontcare generated
 prev FEATURE/time implicit
 done include/ulimit.h
@@ -618,7 +618,7 @@ prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done bltins/ulimit.c
 meta ulimit.o %.c>%.o bltins/ulimit.c ulimit
 prev bltins/ulimit.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_shell -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DSHOPT_DYNAMIC -DERROR_CONTEXT_T=Error_context_t -c bltins/ulimit.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_shell -DSHOPT_DYNAMIC -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DERROR_CONTEXT_T=Error_context_t -c bltins/ulimit.c
 done ulimit.o generated
 make umask.o
 make bltins/umask.c
@@ -631,7 +631,7 @@ prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done bltins/umask.c
 meta umask.o %.c>%.o bltins/umask.c umask
 prev bltins/umask.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_DYNAMIC -DERROR_CONTEXT_T=Error_context_t -c bltins/umask.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_DYNAMIC -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -DERROR_CONTEXT_T=Error_context_t -c bltins/umask.c
 done umask.o generated
 make whence.o
 make bltins/whence.c
@@ -651,7 +651,7 @@ prev include/defs.h implicit
 done bltins/whence.c
 meta whence.o %.c>%.o bltins/whence.c whence
 prev bltins/whence.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_KIA -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DERROR_CONTEXT_T=Error_context_t -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -c bltins/whence.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_DYNAMIC -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_KIA -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DERROR_CONTEXT_T=Error_context_t -DSHOPT_HISTEXPAND -DSHOPT_ESH -c bltins/whence.c
 done whence.o generated
 make main.o
 make sh/main.c
@@ -671,7 +671,7 @@ prev +ljobs
 prev +li
 prev ${mam_libsocket}
 prev ${mam_libsecdb}
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libdl} ${mam_libnsl}  : def execargs
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libnsl}  : def execargs
 done FEATURE/execargs generated
 make FEATURE/pstat implicit
 meta FEATURE/pstat >FEATURE/%  pstat
@@ -680,7 +680,7 @@ prev +ljobs
 prev +li
 prev ${mam_libsocket}
 prev ${mam_libsecdb}
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libdl} ${mam_libnsl}  : def pstat
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libnsl}  : def pstat
 done FEATURE/pstat generated
 prev FEATURE/time implicit
 make include/timeout.h implicit
@@ -702,7 +702,7 @@ prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done sh/main.c
 meta main.o %.c>%.o sh/main.c main
 prev sh/main.c
-exec - ${CC} ${mam_cc_FLAGS} ${-debug-symbols?1?${mam_cc_DEBUG} -D_BLD_DEBUG?${CCFLAGS.FORCE}?} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_BRACEPAT -D_PACKAGE_ast -DSHOPT_ESH -D_BLD_shell -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DKSHELL -DSHOPT_SUID_EXEC -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DERROR_CONTEXT_T=Error_context_t -c sh/main.c
+exec - ${CC} ${mam_cc_FLAGS} ${-debug-symbols?1?${mam_cc_DEBUG} -D_BLD_DEBUG?${CCFLAGS.FORCE}?} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_BRACEPAT -D_PACKAGE_ast -DSHOPT_ESH -D_BLD_shell -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DKSHELL -DSHOPT_SUID_EXEC -DSHOPT_DYNAMIC -DSHOPT_HISTEXPAND -DERROR_CONTEXT_T=Error_context_t -c sh/main.c
 done main.o generated
 make nvdisc.o
 make sh/nvdisc.c
@@ -713,7 +713,7 @@ prev include/defs.h implicit
 done sh/nvdisc.c
 meta nvdisc.o %.c>%.o sh/nvdisc.c nvdisc
 prev sh/nvdisc.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_NAMESPACE -DSHOPT_TYPEDEF -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -D_BLD_shell -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DERROR_CONTEXT_T=Error_context_t -DSHOPT_ESH -c sh/nvdisc.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_NAMESPACE -DSHOPT_TYPEDEF -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -D_BLD_shell -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DSHOPT_DYNAMIC -DSHOPT_HISTEXPAND -DERROR_CONTEXT_T=Error_context_t -DSHOPT_ESH -c sh/nvdisc.c
 done nvdisc.o generated
 make nvtype.o
 make sh/nvtype.c
@@ -733,7 +733,7 @@ prev include/defs.h implicit
 done sh/arith.c
 meta arith.o %.c>%.o sh/arith.c arith
 prev sh/arith.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -D_BLD_shell -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DERROR_CONTEXT_T=Error_context_t -DSHOPT_ESH -c sh/arith.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_DYNAMIC -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -D_BLD_shell -DSHOPT_HISTEXPAND -DERROR_CONTEXT_T=Error_context_t -DSHOPT_ESH -c sh/arith.c
 done arith.o generated
 make args.o
 make sh/args.c
@@ -748,7 +748,7 @@ prev include/defs.h implicit
 done sh/args.c
 meta args.o %.c>%.o sh/args.c args
 prev sh/args.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_OPTIMIZE -DSHOPT_RAWONLY -DSHOPT_HISTEXPAND -DSHOPT_PFSH -D_BLD_shell -DKSHELL -D_PACKAGE_ast -DSHOPT_KIA -DSHOPT_MULTIBYTE -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_DYNAMIC -DERROR_CONTEXT_T=Error_context_t -c sh/args.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_OPTIMIZE -DSHOPT_RAWONLY -DSHOPT_HISTEXPAND -DSHOPT_PFSH -D_BLD_shell -DKSHELL -D_PACKAGE_ast -DSHOPT_KIA -DSHOPT_MULTIBYTE -DSHOPT_ESH -DSHOPT_VSH -DSHOPT_DYNAMIC -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DERROR_CONTEXT_T=Error_context_t -c sh/args.c
 done args.o generated
 make array.o
 make sh/array.c
@@ -804,7 +804,7 @@ prev +ljobs
 prev +li
 prev ${mam_libsocket}
 prev ${mam_libsecdb}
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libdl} ${mam_libnsl}  : run features/cmds
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libnsl}  : run features/cmds
 done FEATURE/cmds generated
 prev FEATURE/time implicit
 prev FEATURE/options implicit
@@ -842,7 +842,7 @@ prev include/defs.h implicit
 done sh/expand.c
 meta expand.o %.c>%.o sh/expand.c expand
 prev sh/expand.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_BRACEPAT -DSHOPT_SUID_EXEC -D_BLD_shell -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DKSHELL -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DERROR_CONTEXT_T=Error_context_t -DSHOPT_ESH -c sh/expand.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_BRACEPAT -DSHOPT_SUID_EXEC -D_BLD_shell -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DKSHELL -DSHOPT_DYNAMIC -DSHOPT_HISTEXPAND -DERROR_CONTEXT_T=Error_context_t -DSHOPT_ESH -c sh/expand.c
 done expand.o generated
 make fault.o
 make sh/fault.c
@@ -858,7 +858,7 @@ prev include/defs.h implicit
 done sh/fault.c
 meta fault.o %.c>%.o sh/fault.c fault
 prev sh/fault.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_KIA -DSHOPT_ESH -DSHOPT_VSH -D_PACKAGE_ast -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -D_BLD_shell -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DKSHELL -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DERROR_CONTEXT_T=Error_context_t -c sh/fault.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_KIA -DSHOPT_ESH -DSHOPT_VSH -D_PACKAGE_ast -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -D_BLD_shell -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DSHOPT_DYNAMIC -DKSHELL -DSHOPT_HISTEXPAND -DERROR_CONTEXT_T=Error_context_t -c sh/fault.c
 done fault.o generated
 make fcin.o
 make sh/fcin.c
@@ -888,7 +888,7 @@ prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done edit/history.c
 meta history.o %.c>%.o edit/history.c history
 prev edit/history.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_VSH -DSHOPT_ESH -DSHOPT_MULTIBYTE -DSHOPT_AUDITFILE=\""/etc/ksh_audit"\" -D_PACKAGE_ast -D_BLD_shell -DKSHELL -DSHOPT_PFSH -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DERROR_CONTEXT_T=Error_context_t -c edit/history.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_VSH -DSHOPT_ESH -DSHOPT_MULTIBYTE -DSHOPT_AUDITFILE=\""/etc/ksh_audit"\" -D_PACKAGE_ast -D_BLD_shell -DKSHELL -DSHOPT_DYNAMIC -DSHOPT_PFSH -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_HISTEXPAND -DERROR_CONTEXT_T=Error_context_t -c edit/history.c
 done history.o generated
 make init.o
 make sh/init.c
@@ -912,7 +912,7 @@ prev include/defs.h implicit
 done sh/init.c
 meta init.o %.c>%.o sh/init.c init
 prev sh/init.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_PFSH -DSHOPT_NAMESPACE -DSHOPT_MULTIBYTE -D_PACKAGE_ast -D_BLD_shell -DSHOPT_KIA -DKSHELL -DSHOPT_HISTEXPAND -DSHOPT_ESH -DSHOPT_VSH -DERROR_CONTEXT_T=Error_context_t -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_DYNAMIC -c sh/init.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_PFSH -DSHOPT_NAMESPACE -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_DYNAMIC -D_BLD_shell -DSHOPT_KIA -DKSHELL -DSHOPT_HISTEXPAND -DSHOPT_ESH -DSHOPT_VSH -DERROR_CONTEXT_T=Error_context_t -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -c sh/init.c
 done init.o generated
 make io.o
 make sh/io.c
@@ -935,7 +935,7 @@ prev include/defs.h implicit
 done sh/io.c
 meta io.o %.c>%.o sh/io.c io
 prev sh/io.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_RAWONLY -DSHOPT_VSH -DSHOPT_ESH -DSHOPT_HISTEXPAND -DSHOPT_MULTIBYTE -DKSHELL -D_PACKAGE_ast -DSHOPT_PFSH -D_BLD_shell -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_DYNAMIC -DERROR_CONTEXT_T=Error_context_t -c sh/io.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_RAWONLY -DSHOPT_VSH -DSHOPT_ESH -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_MULTIBYTE -DKSHELL -D_PACKAGE_ast -DSHOPT_PFSH -D_BLD_shell -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DERROR_CONTEXT_T=Error_context_t -c sh/io.c
 done io.o generated
 make jobs.o
 make sh/jobs.c
@@ -988,7 +988,7 @@ prev include/defs.h implicit
 done sh/macro.c
 meta macro.o %.c>%.o sh/macro.c macro
 prev sh/macro.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_BRACEPAT -DKSHELL -DSHOPT_OPTIMIZE -DSHOPT_TYPEDEF -DSHOPT_FILESCAN -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_SUID_EXEC -D_BLD_shell -DSHOPT_PFSH -DSHOPT_KIA -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DERROR_CONTEXT_T=Error_context_t -DSHOPT_ESH -c sh/macro.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_BRACEPAT -DKSHELL -DSHOPT_OPTIMIZE -DSHOPT_TYPEDEF -DSHOPT_FILESCAN -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_SUID_EXEC -D_BLD_shell -DSHOPT_PFSH -DSHOPT_KIA -DSHOPT_DYNAMIC -DSHOPT_HISTEXPAND -DERROR_CONTEXT_T=Error_context_t -DSHOPT_ESH -c sh/macro.c
 done macro.o generated
 make name.o
 make sh/name.c
@@ -1004,17 +1004,18 @@ prev include/defs.h implicit
 done sh/name.c
 meta name.o %.c>%.o sh/name.c name
 prev sh/name.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_OPTIMIZE -D_BLD_shell -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_TYPEDEF -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DERROR_CONTEXT_T=Error_context_t -DSHOPT_ESH -c sh/name.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_OPTIMIZE -D_BLD_shell -DSHOPT_DYNAMIC -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_TYPEDEF -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_HISTEXPAND -DERROR_CONTEXT_T=Error_context_t -DSHOPT_ESH -c sh/name.c
 done name.o generated
 make nvtree.o
 make sh/nvtree.c
+prev include/lexstates.h implicit
 prev include/argnod.h implicit
 prev include/name.h implicit
 prev include/defs.h implicit
 done sh/nvtree.c
 meta nvtree.o %.c>%.o sh/nvtree.c nvtree
 prev sh/nvtree.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_shell -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DERROR_CONTEXT_T=Error_context_t -DSHOPT_ESH -DSHOPT_MULTIBYTE -DSHOPT_PFSH -c sh/nvtree.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_MULTIBYTE -D_PACKAGE_ast -D_BLD_shell -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DERROR_CONTEXT_T=Error_context_t -DSHOPT_ESH -DSHOPT_PFSH -c sh/nvtree.c
 done nvtree.o generated
 make parse.o
 make sh/parse.c
@@ -1030,7 +1031,7 @@ prev include/defs.h implicit
 done sh/parse.c
 meta parse.o %.c>%.o sh/parse.c parse
 prev sh/parse.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_NAMESPACE -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -D_BLD_shell -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DSHOPT_KIA -DSHOPT_ESH -DERROR_CONTEXT_T=Error_context_t -DSHOPT_DYNAMIC -DSHOPT_HISTEXPAND -DKSHELL -c sh/parse.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_NAMESPACE -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -D_BLD_shell -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DSHOPT_KIA -DSHOPT_DYNAMIC -DSHOPT_ESH -DERROR_CONTEXT_T=Error_context_t -DSHOPT_HISTEXPAND -DKSHELL -c sh/parse.c
 done parse.o generated
 make path.o
 make sh/path.c
@@ -1040,13 +1041,13 @@ done ${PACKAGE_ast_INCLUDE}/ast_vfork.h dontcare
 make exec_attr.h implicit
 done exec_attr.h dontcare virtual
 prev FEATURE/externs implicit
+prev FEATURE/dynamic implicit
 prev include/test.h implicit
 prev include/history.h implicit
 prev include/jobs.h implicit
 prev include/io.h implicit
 prev include/path.h implicit
 prev include/variables.h implicit
-prev ${PACKAGE_ast_INCLUDE}/dlldefs.h implicit
 prev include/nval.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ls.h implicit
 prev include/fcin.h implicit
@@ -1054,7 +1055,7 @@ prev include/defs.h implicit
 done sh/path.c
 meta path.o %.c>%.o sh/path.c path
 prev sh/path.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -DSHOPT_SUID_EXEC -DSHOPT_PFSH -DSHOPT_MULTIBYTE -DSHOPT_ESH -D_BLD_shell -DKSHELL -DSHOPT_BRACEPAT -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DERROR_CONTEXT_T=Error_context_t -c sh/path.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -DSHOPT_SUID_EXEC -DSHOPT_DYNAMIC -DSHOPT_PFSH -DSHOPT_MULTIBYTE -DSHOPT_ESH -D_BLD_shell -DKSHELL -DSHOPT_BRACEPAT -DSHOPT_HISTEXPAND -DERROR_CONTEXT_T=Error_context_t -c sh/path.c
 done path.o generated
 make string.o
 make sh/string.c
@@ -1096,7 +1097,7 @@ prev include/defs.h implicit
 done sh/subshell.c
 meta subshell.o %.c>%.o sh/subshell.c subshell
 prev sh/subshell.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -D_BLD_shell -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DSHOPT_KIA -DERROR_CONTEXT_T=Error_context_t -DKSHELL -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DSHOPT_ESH -c sh/subshell.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -D_BLD_shell -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DSHOPT_DYNAMIC -DSHOPT_KIA -DERROR_CONTEXT_T=Error_context_t -DKSHELL -DSHOPT_HISTEXPAND -DSHOPT_ESH -c sh/subshell.c
 done subshell.o generated
 make tdump.o
 make sh/tdump.c
@@ -1165,7 +1166,7 @@ prev include/defs.h implicit
 done sh/xec.c
 meta xec.o %.c>%.o sh/xec.c xec
 prev sh/xec.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_FILESCAN -DSHOPT_TYPEDEF -DSHOPT_NAMESPACE -DSHOPT_OPTIMIZE -D_PACKAGE_ast -D_BLD_shell -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DKSHELL -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DERROR_CONTEXT_T=Error_context_t -DSHOPT_ESH -c sh/xec.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_FILESCAN -DSHOPT_TYPEDEF -DSHOPT_NAMESPACE -DSHOPT_OPTIMIZE -D_PACKAGE_ast -D_BLD_shell -DSHOPT_DYNAMIC -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DKSHELL -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_HISTEXPAND -DERROR_CONTEXT_T=Error_context_t -DSHOPT_ESH -c sh/xec.c
 done xec.o generated
 make env.o
 make sh/env.c
@@ -1201,7 +1202,7 @@ prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done data/msg.c
 meta msg.o %.c>%.o data/msg.c msg
 prev data/msg.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_SUID_EXEC -DSHOPT_HISTEXPAND -DSHOPT_MULTIBYTE -DKSHELL -DSHOPT_ESH -DSHOPT_VSH -D_PACKAGE_ast -DSHOPT_PFSH -D_BLD_shell -DSHOPT_KIA -DSHOPT_BRACEPAT -DSHOPT_DYNAMIC -DERROR_CONTEXT_T=Error_context_t  -c data/msg.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_SUID_EXEC -DSHOPT_HISTEXPAND -DSHOPT_MULTIBYTE -DKSHELL -DSHOPT_ESH -DSHOPT_VSH -D_PACKAGE_ast -DSHOPT_PFSH -D_BLD_shell -DSHOPT_DYNAMIC -DSHOPT_KIA -DSHOPT_BRACEPAT -DERROR_CONTEXT_T=Error_context_t  -c data/msg.c
 done msg.o generated
 make strdata.o
 make data/strdata.c
@@ -1216,7 +1217,7 @@ prev +ljobs
 prev +li
 prev ${mam_libsocket}
 prev ${mam_libsecdb}
-exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libdl} ${mam_libnsl}  : run features/math.sh data/math.tab
+exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -I${PACKAGE_ast_INCLUDE} -I${INSTALLROOT}/include ${mam_libdll} ${mam_libcmd} ${mam_libast} ${mam_libm} ${mam_libnsl}  : run features/math.sh data/math.tab
 make ${PACKAGE_ast_INCLUDE}/ast_standards.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_standards.h dontcare
 done FEATURE/math generated
@@ -1280,7 +1281,7 @@ prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done data/aliases.c
 meta aliases.o %.c>%.o data/aliases.c aliases
 prev data/aliases.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_PFSH  -c data/aliases.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -D_PACKAGE_ast -DSHOPT_DYNAMIC -DSHOPT_MULTIBYTE -DSHOPT_PFSH  -c data/aliases.c
 done aliases.o generated
 make builtins.o
 make data/builtins.c
@@ -1296,7 +1297,7 @@ prev include/shell.h implicit
 done data/builtins.c
 meta builtins.o %.c>%.o data/builtins.c builtins
 prev data/builtins.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_TYPEDEF -DSHOPT_KIA -DSHOPT_PFSH -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2008 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libshell]"\" -DSHOPT_BRACEPAT -DSHOPT_HISTEXPAND -D_PACKAGE_ast -DSHOPT_MULTIBYTE -D_BLD_shell -DKSHELL -DSHOPT_DYNAMIC -DERROR_CONTEXT_T=Error_context_t -DSHOPT_ESH  -c data/builtins.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_TYPEDEF -DSHOPT_KIA -DSHOPT_PFSH -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2008 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libshell]"\" -DSHOPT_BRACEPAT -DSHOPT_HISTEXPAND -D_PACKAGE_ast -DSHOPT_MULTIBYTE -D_BLD_shell -DSHOPT_DYNAMIC -DKSHELL -DERROR_CONTEXT_T=Error_context_t -DSHOPT_ESH  -c data/builtins.c
 done builtins.o generated
 make variables.o
 make data/variables.c
@@ -1370,7 +1371,7 @@ prev +ljobs
 prev +li
 prev ${mam_libsocket}
 prev ${mam_libsecdb}
-exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -o ksh pmain.o ${mam_libshell} ${mam_libnsl} ${mam_libdl} ${mam_libast}
+exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -o ksh pmain.o ${mam_libshell} ${mam_libnsl} ${mam_libast}
 done ksh generated
 make shcomp
 make shcomp.o
@@ -1394,7 +1395,7 @@ prev ${mam_libsocket}
 prev ${mam_libsecdb}
 setv CC.DLL -UCC.DLL
 setv SH_DICT -DSH_DICT="\"libshell\""
-exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -o shcomp shcomp.o ${mam_libshell} ${mam_libnsl} ${mam_libdl} ${mam_libast}
+exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -o shcomp shcomp.o ${mam_libshell} ${mam_libnsl} ${mam_libast}
 done shcomp generated
 make suid_exec
 make suid_exec.o
@@ -1417,7 +1418,7 @@ prev +li
 prev ${mam_libsocket}
 prev ${mam_libsecdb}
 setv CC.DLL -UCC.DLL
-exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -o suid_exec suid_exec.o ${mam_libast} ${mam_libnsl} ${mam_libdl} ${mam_libast}
+exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -o suid_exec suid_exec.o ${mam_libast} ${mam_libnsl} ${mam_libast}
 done suid_exec generated
 make shell
 prev libshell.a archive

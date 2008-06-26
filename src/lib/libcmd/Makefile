@@ -26,7 +26,7 @@ cmd 1.2 :LIBRARY: RELEASE cmdinit.c \
 sumlib.o : +lsum
 	$(AR) x $(*:O=1) $(<)
 
-$(INCLUDEDIR) :INSTALLPROTO: cmd.h cmdext.h cmdlist.h shcmd.h
+$(INCLUDEDIR) :INSTALLPROTO: cmd.h cmdext.h cmdlist.h
 
 "win32*" :NOOPTIMIZE: id.c
 

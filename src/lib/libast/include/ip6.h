@@ -24,15 +24,17 @@
 #if !_IP6_H
 #define _IP6_H		1
 
-typedef unsigned char Ip6addr_t[16];
+#define IP6ADDR		16
+#define IP6BITS		IP6ADDR
+#define IP6PREFIX	(IP6ADDR+1)
 
-typedef struct Ip6prefix_s
-{
-	Ip6addr_t	addr;
-	unsigned char	bits;
-} Ip6prefix_t;
+#if _BLD_ast && defined(__EXPORT__)
+#define extern		__EXPORT__
+#endif
 
-extern int	strtoip6(const char*, char**, Ip6addr_t*, unsigned char*);
-extern char*	fmtip6(Ip6addr_t*, int);
+extern char*	fmtip6(unsigned char*, int);
+extern int	strtoip6(const char*, char**, unsigned char*, unsigned char*);
+
+#undef		extern
 
 #endif

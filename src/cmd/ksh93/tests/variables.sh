@@ -27,6 +27,7 @@ alias err_exit='err_exit $LINENO'
 
 Command=${0##*/}
 integer Errors=0
+[[ ${.sh.version} == "$KSH_VERSION" ]] || err_exit '.sh.version != KSH_VERSION'
 unset ss
 [[ ${@ss} ]] && err_exit '${@ss} should be empty string when ss is unset'  
 [[ ${!ss} == ss ]] ||  err_exit '${!ss} should be ss when ss is unset'  

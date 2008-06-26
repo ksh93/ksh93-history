@@ -412,6 +412,8 @@ char *nv_setdisc(register Namval_t* np,register const char *event,Namval_t *acti
 	register struct vardisc *vp = (struct vardisc*)np->nvfun;
 	register int type;
 	char *empty = "";
+	if(vp && !vp->fun.disc)
+		vp = 0;
 	if(np == (Namval_t*)fp)
 	{
 		register const char *name;
@@ -439,7 +441,7 @@ char *nv_setdisc(register Namval_t* np,register const char *event,Namval_t *acti
 		{
 			for(fp=(Namfun_t*)vp; fp; fp=fp->next)
 			{
-				if(fp->disc->setdisc)
+				if(fp->disc && fp->disc->setdisc)
 					return((*fp->disc->setdisc)(np,event,action,fp));
 			}
 		}
@@ -540,7 +542,7 @@ static char *setdisc(register Namval_t* np,register const char *event,Namval_t *
 static void putdisc(Namval_t* np, const char* val, int flag, Namfun_t* fp)
 {
 	nv_putv(np,val,flag,fp);
-	if(!val)
+	if(!val && !(flag&NV_NOFREE))
 	{
 		register Nambfun_t *vp = (Nambfun_t*)fp;
 		register int i;
@@ -635,14 +637,14 @@ Namfun_t *nv_disc(register Namval_t *np, register Namfun_t* fp, int mode)
 			np->nvfun = lp->next;
 			if(mode==NV_POP)
 				return(fp);
-			if(mode==NV_LAST && lp->next==0)
+			if(mode==NV_LAST && (lp->next==0 || lp->next->disc==0))
 				return(fp);
 		}
 		/* see if <fp> is on the list already */
 		lpp = &np->nvfun;
 		if(lp)
 		{
-			while(lp->next)
+			while(lp->next && lp->next->disc)
 			{
 				if(lp->next==fp)
 				{

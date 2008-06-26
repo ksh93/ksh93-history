@@ -130,7 +130,7 @@ int sh_source(Shell_t *shp, Sfio_t *iop, const char *file)
 #define REMOTE(m)	!(m)
 #endif
 
-int sh_main(int ac, char *av[], void (*userinit)(int))
+int sh_main(int ac, char *av[], Shinit_f userinit)
 {
 	register char	*name;
 	register int	fdin;

@@ -91,8 +91,6 @@ int
 b_pids(int argc, char** argv, void* context)
 {
 	char*			format = 0;
-	long			tid;
-	int			fd;
 
 	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
 	for (;;)

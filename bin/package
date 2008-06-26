@@ -44,7 +44,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2008-05-01 $
+@(#)$Id: package (AT&T Research) 2008-06-24 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -2778,6 +2778,8 @@ cat $INITROOT/$i.sh
 	0)	executable "$SHELL" || SHELL=
 		case $SHELL in
 		?*)	case `$SHELL -c 'echo $KSH_VERSION' 2>&1` in
+			Version*????-??-??)
+				;;
 			?*)	: any output here means $SHELL is not reliable for scripting
 				SHELL=
 				;;
@@ -2792,7 +2794,8 @@ cat $INITROOT/$i.sh
 			for i in ksh sh bash
 			do	if	onpath $i
 				then	case `$_onpath_ -c 'echo $KSH_VERSION' 2>&1` in
-					'')	SHELL=$_onpath_
+					Version*????-??-??|'')
+						SHELL=$_onpath_
 						break
 						;;
 					esac
@@ -5091,8 +5094,8 @@ make|view)
 		b=$INSTALLROOT/bin/$c
 		t=$INSTALLROOT/lib/package/gen/$c.tim
 		intercept=0
-		for t in $h
-		do	s=$INITROOT/$c.$t
+		for a in $h
+		do	s=$INITROOT/$c.$a
 			test -x "$s" || continue
 			if	cmp -s "$s" "$b" >/dev/null 2>&1
 			then	intercept=1
@@ -6150,7 +6153,7 @@ test)	requirements source $package
 
 	$make cd $INSTALLROOT/src
 
-	# disable core dumps (could be disaterous over nfs)
+	# disable core dumps (could be disasterous over nfs)
 
 	(ulimit -c 0) > /dev/null 2>&1 && ulimit -c 0
 
