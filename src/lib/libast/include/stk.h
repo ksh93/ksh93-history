@@ -71,6 +71,7 @@ extern char*		stkcopy(Stk_t*,const char*);
 extern char*		stkset(Stk_t*, char*, unsigned);
 extern char*		_stkseek(Stk_t*, unsigned);
 extern char*		stkfreeze(Stk_t*, unsigned);
+extern int		stkon(Stk_t*, char *);
 
 #undef	extern
 

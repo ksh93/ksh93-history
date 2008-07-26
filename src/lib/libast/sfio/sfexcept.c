@@ -38,8 +38,9 @@ Sfdisc_t*	disc;	/* discipline in use */
 	reg int		ev, local, lock;
 	reg ssize_t	size;
 	reg uchar*	data;
+	SFMTXDECL(f);
 
-	SFMTXSTART(f,-1);
+	SFMTXENTER(f,-1);
 
 	GETLOCAL(f,local);
 	lock = f->mode&SF_LOCK;

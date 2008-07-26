@@ -219,7 +219,7 @@ struct Namval
 #define NV_CLONE	4
 
 /* The following are operations for nv_putsub() */
-#define ARRAY_BITS	24
+#define ARRAY_BITS	22
 #define ARRAY_ADD	(1L<<ARRAY_BITS)	/* add subscript if not found */
 #define	ARRAY_SCAN	(2L<<ARRAY_BITS)	/* For ${array[@]} */
 #define ARRAY_UNDEF	(4L<<ARRAY_BITS)	/* For ${array} */
@@ -253,6 +253,7 @@ extern int		nv_clone(Namval_t*, Namval_t*, int);
 extern void 		nv_close(Namval_t*);
 extern void		*nv_context(Namval_t*);
 extern Namval_t		*nv_create(const char*, Dt_t*, int,Namfun_t*);
+extern void		nv_delete(Namval_t*, Dt_t*, int);
 extern Dt_t		*nv_dict(Namval_t*);
 extern Sfdouble_t	nv_getn(Namval_t*, Namfun_t*);
 extern Sfdouble_t	nv_getnum(Namval_t*);
@@ -260,6 +261,7 @@ extern char 		*nv_getv(Namval_t*, Namfun_t*);
 extern char 		*nv_getval(Namval_t*);
 extern Namfun_t		*nv_hasdisc(Namval_t*, const Namdisc_t*);
 extern int		nv_isnull(Namval_t*);
+extern Namfun_t		*nv_isvtree(Namval_t*);
 extern Namval_t		*nv_lastdict(void);
 extern Namval_t		*nv_mkinttype(char*, size_t, int, const char*, Namdisc_t*);
 extern void 		nv_newattr(Namval_t*,unsigned,int);
@@ -274,7 +276,8 @@ extern void 		nv_setvec(Namval_t*,int,int,char*[]);
 extern void		nv_setvtree(Namval_t*);
 extern int 		nv_setsize(Namval_t*,int);
 extern Namfun_t		*nv_disc(Namval_t*,Namfun_t*,int);
-extern void 		nv_unset(Namval_t*);
+extern void 		nv_unset(Namval_t*);	 /*obsolete */
+extern void 		_nv_unset(Namval_t*,int);
 extern Namval_t		*nv_search(const char *, Dt_t*, int);
 extern char		*nv_name(Namval_t*);
 extern Namval_t		*nv_type(Namval_t*);
@@ -285,6 +288,7 @@ extern const Namdisc_t	*nv_discfun(int);
 #   undef extern
 #endif /* _DLL */
 
+#define nv_unset(np)		_nv_unset(np,0)
 #define nv_size(np)		nv_setsize((np),-1)
 #define nv_stack(np,nf)		nv_disc(np,nf,0)
 
@@ -296,7 +300,7 @@ extern const Namdisc_t	*nv_discfun(int);
 #   define nv_istype(np)	nv_isattr(np)
 #   define nv_newtype(np)	nv_newattr(np)
 #   define nv_namset(np,a,b)	nv_open(np,a,b)
-#   define nv_free(np)		nv_unset(np)
+#   define nv_free(np)		nv_unset(np,0)
 #   define nv_settype(np,a,b,c)	nv_setdisc(np,a,b,c)
 #   define nv_search(np,a,b)	nv_open(np,a,((b)?0:NV_NOADD))
 #   define settype	setdisc

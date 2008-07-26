@@ -27,11 +27,11 @@
 */
 
 #if __STD_C
-static int _sfdup(reg int fd, reg int newfd)
+static int _sfdup(int fd, int newfd)
 #else
 static int _sfdup(fd,newfd)
-reg int	fd;
-reg int	newfd;
+int	fd;
+int	newfd;
 #endif
 {
 	reg int	dupfd;
@@ -56,16 +56,17 @@ reg int	newfd;
 }
 
 #if __STD_C
-int sfsetfd(reg Sfio_t* f, reg int newfd)
+int sfsetfd(Sfio_t* f, int newfd)
 #else
 int sfsetfd(f,newfd)
-reg Sfio_t	*f;
-reg int		newfd;
+Sfio_t	*f;
+int	newfd;
 #endif
 {
 	reg int		oldfd;
+	SFMTXDECL(f);
 
-	SFMTXSTART(f, -1);
+	SFMTXENTER(f, -1);
 
 	if(f->flags&SF_STRING)
 		SFMTXRETURN(f, -1);
@@ -127,7 +128,7 @@ reg int		newfd;
 
 	/* notify changes */
 	if(_Sfnotify)
-		(*_Sfnotify)(f,SF_SETFD,newfd);
+		(*_Sfnotify)(f, SF_SETFD, (void*)((long)newfd));
 
 	f->file = newfd;
 

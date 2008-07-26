@@ -246,6 +246,9 @@ x='typeset -C z=(
 	xxx=bam
 )'
 eval "$x"
+x=${x//$'\t'}
+x=${x//$'(\n'/'('}
+x=${x//$'\n'/';'}
 [[ $(typeset -p z) == "$x" ]] || err_exit "typeset -p for '$x' failed"
 [[ $(typeset +p z) == "${x%%=*}" ]] || err_exit "typeset +p for '$x' failed"
 unset z
@@ -265,7 +268,10 @@ typeset -T Pt_t=(
 	float x=1 y=2
 )
 Pt_t z
-[[ $(typeset -p z) == "Pt_t z=$z" ]] || err_exit "typeset -p for type failed"
+x=${z//$'\t'}
+x=${x//$'(\n'/'('}
+x=${x//$'\n'/';'}
+[[ $(typeset -p z) == "Pt_t z=$x" ]] || err_exit "typeset -p for type failed"
 [[ $(typeset +p z) == "Pt_t z" ]] || err_exit "typeset +p for type failed"
 unset z
 exit	$((Errors))

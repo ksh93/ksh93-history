@@ -191,7 +191,6 @@ struct limits
 	void		*cdpathlist; \
 	char		**argaddr; \
 	void		*optlist; \
-	int		optcount ; \
 	struct sh_scoped global; \
 	struct checkpt	checkbase; \
 	Shinit_f	userinit; \
@@ -209,6 +208,7 @@ struct limits
 	void		*jmpbuffer; \
 	void		*mktype; \
 	Sfio_t		*strbuf; \
+	Sfio_t		*strbuf2; \
 	Dt_t		*last_root; \
 	Dt_t		*fpathdict; \
 	char		ifstable[256]; \
@@ -216,6 +216,8 @@ struct limits
 	unsigned long	test; \
 	Shopt_t		offoptions; \
 	Shopt_t		glob_options; \
+	Namval_t	*typeinit; \
+	int		*stats; \
 	Namfun_t	nvfun;
 
 #include	<shell.h>
@@ -410,5 +412,28 @@ extern const char	e_dict[];
 #define PRINT_NO_HEADER	0x04	/* omit listing header		*/
 #define PRINT_SHOPT	0x08	/* shopt -s|-u			*/
 #define PRINT_TABLE	0x10	/* table of all options		*/
+
+#ifdef SHOPT_STATS
+    /* performance statistics */
+#   define	STAT_ARGHITS	0
+#   define	STAT_ARGEXPAND	1
+#   define	STAT_COMSUB	2
+#   define	STAT_FORKS	3
+#   define	STAT_FUNCT	4
+#   define	STAT_GLOBS	5
+#   define	STAT_READS	6
+#   define	STAT_NVHITS	7
+#   define	STAT_NVOPEN	8
+#   define	STAT_PATHS	9
+#   define	STAT_SVFUNCT	10
+#   define	STAT_SCMDS	11
+#   define	STAT_SPAWN	12
+#   define	STAT_SUBSHELL	13
+    extern const Shtable_t shtab_stats[];
+#   define sh_stats(x)	(sh.stats[(x)]++)
+#else
+#   define sh_stats(x)
+#endif /* SHOPT_STATS */
+
 
 #endif

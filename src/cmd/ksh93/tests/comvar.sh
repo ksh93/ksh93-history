@@ -280,9 +280,9 @@ nodes[0]+=( integer x=5)
 unset foo
 typeset -C foo
 foo.bar=abc
-[[ $foo = $'(\n\tbar=abc\n)' ]] || err_exit 'typeset -C not working for foo'
+[[ $foo == $'(\n\tbar=abc\n)' ]] || err_exit 'typeset -C not working for foo'
 typeset -C foo=(bar=def)
-[[ $foo = $'(\n\tbar=def\n)' ]] || err_exit 'typeset -C not working when initialized'
+[[ $foo == $'(\n\tbar=def\n)' ]] || err_exit 'typeset -C not working when initialized'
 foo=(
 	hello=ok
 	yes=( bam=2 yes=4)
@@ -305,4 +305,16 @@ typeset -C bar bam
 [[ $bar == "$foo" ]] || err_exit '$foo != $bar'
 [[ $bam == "$foo2" ]] || err_exit '$foo2 != $bmr'
 [[ $REPLY == 'last line' ]] || err_exit "\$REPLY=$REPLY should be 'last line"
+typeset x=( typeset -a foo=( [1][3]=hello [9][2]="world" ) )
+eval y="(typeset -a foo=$(printf "%B\n" x.foo) )"
+[[ $x == "$y" ]] || err_exit '$x.foo != $y.foo with %B'
+eval y="(typeset -a foo=$(printf "%#B\n" x.foo) )"
+[[ $x == "$y" ]] || err_exit '$x.foo != $y.foo with %#B'
+eval y="$(printf "%B\n" x)"
+[[ $x == "$y" ]] || err_exit '$x != $y with %B'
+eval y="$(printf "%#B\n" x)"
+[[ $x == "$y" ]] || err_exit '$x != $y with %#B'
+y=$(set | grep ^x=) 2> /dev/null
+eval "${y/#x/y}"
+[[ $x == "$y" ]] || err_exit '$x != $y with set | grep'
 exit $((Errors))

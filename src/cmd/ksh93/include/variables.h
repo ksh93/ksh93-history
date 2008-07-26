@@ -86,21 +86,22 @@
 #define SH_SUBSHELLNOD	(sh.bltin_nodes+56)
 #define SH_LEVELNOD	(sh.bltin_nodes+57)
 #define SH_LINENO	(sh.bltin_nodes+58)
+#define SH_STATS	(sh.bltin_nodes+59)
 #if SHOPT_FS_3D
-#   define VPATHNOD	(sh.bltin_nodes+59)
+#   define VPATHNOD	(sh.bltin_nodes+60)
 #   define NFS_3D	1
 #else
 #   define NFS_3D	0
 #endif /* SHOPT_FS_3D */
 #if SHOPT_VPIX
-#   define DOSPATHNOD	(sh.bltin_nodes+59+NFS_3D)
-#   define VPIXNOD	(sh.bltin_nodes+60+NFS_3D)
+#   define DOSPATHNOD	(sh.bltin_nodes+60+NFS_3D)
+#   define VPIXNOD	(sh.bltin_nodes+61+NFS_3D)
 #   define NVPIX	(NFS_3D+2)
 #else
 #   define NVPIX	NFS_3D
 #endif /* SHOPT_VPIX */
 #ifdef apollo
-#   define SYSTYPENOD	(sh.bltin_nodes+59+NVPIX)
+#   define SYSTYPENOD	(sh.bltin_nodes+60+NVPIX)
 #endif /* apollo */
 
 #endif /* SH_VALNOD */

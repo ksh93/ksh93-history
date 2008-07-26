@@ -64,11 +64,12 @@ Void_t*	data;	/* associated data	*/
 {
 	reg Sfdisc_t	*disc, *next, *d;
 	reg int		local, rv;
+	SFMTXDECL(f);
 
 	if(!f)
 		return _sfraiseall(type,data);
 
-	SFMTXSTART(f, -1);
+	SFMTXENTER(f, -1);
 
 	GETLOCAL(f,local);
 	if(!SFKILLED(f) &&

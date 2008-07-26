@@ -41,8 +41,9 @@ reg int	n;	/* see above */
 {
 	reg ssize_t	r;
 	reg int		first, local, rcrv, rc, justseek;
+	SFMTXDECL(f);
 
-	SFMTXSTART(f,-1);
+	SFMTXENTER(f,-1);
 
 	GETLOCAL(f,local);
 

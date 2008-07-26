@@ -27,7 +27,7 @@
 **	Written by Kiem-Phong Vo.
 */
 #if __STD_C
-int sfnotify(void (*notify)(Sfio_t*, int, int))
+int sfnotify(void(*notify)(Sfio_t*, int, void*))
 #else
 int sfnotify(notify)
 void	(*notify)();

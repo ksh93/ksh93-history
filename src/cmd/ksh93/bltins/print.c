@@ -70,7 +70,7 @@ static int		extend(Sfio_t*,void*, Sffmt_t*);
 static const char   	preformat[] = "";
 static char		*genformat(char*);
 static int		fmtvecho(const char*, struct printf*);
-static ssize_t		fmtbase64(Sfio_t*, char*);
+static ssize_t		fmtbase64(Sfio_t*, char*, int);
 
 struct print
 {
@@ -326,7 +326,7 @@ skip2:
 	else if(vflag)
 	{
 		while(*argv)
-			fmtbase64(outfile,*argv++);
+			fmtbase64(outfile,*argv++,0);
 	}
 	else
 	{
@@ -467,22 +467,22 @@ static char *fmthtml(const char *string)
 }
 
 #if 1
-static ssize_t fmtbase64(Sfio_t *iop, char *string)
+static ssize_t fmtbase64(Sfio_t *iop, char *string, int alt)
 #else
-static void *fmtbase64(char *string, ssize_t *sz)
+static void *fmtbase64(char *string, ssize_t *sz, int alt)
 #endif
 {
 	char			*cp;
 	Sfdouble_t		d;
-	ssize_t			size,n;
+	ssize_t			size;
 	Namval_t		*np = nv_open(string, NiL, NV_VARNAME|NV_NOASSIGN|NV_NOADD);
 	static union types_t	number;
 	if(!np || nv_isnull(np))
-#if 1
+	{
+		if(sh_isoption(SH_NOUNSET))
+			errormsg(SH_DICT,ERROR_exit(1),e_notset,string);
 		return(0);
-#else
-		return("");
-#endif
+	}
 	if(nv_isattr(np,NV_INTEGER))
 	{
 		d = nv_getnum(np);
@@ -551,8 +551,16 @@ static void *fmtbase64(char *string, ssize_t *sz)
 			return(n?n:size);
 		}
 	}
+	else if(nv_isarray(np) && nv_arrayptr(np))
+	{
+		nv_outnode(np,iop,(alt?-1:0),0);
+		sfputc(iop,')');
+		return(sftell(iop));
+	}
 	else
 	{
+		if(alt && nv_isvtree(np))
+			nv_onattr(np,NV_EXPORT);
 		if(!(cp = nv_getval(np)))
 			return(0);
 		size = strlen(cp);
@@ -863,8 +871,10 @@ static int extend(Sfio_t* sp, void* v, Sffmt_t* fe)
 		}
 		break;
 	case 'B':
-		fe->size = fmtbase64(sh.strbuf,value->s);
-		value->s = sfstruse(sh.strbuf);
+		if(!sh.strbuf2)
+			sh.strbuf2 = sfstropen();
+		fe->size = fmtbase64(sh.strbuf2,value->s, fe->flags&SFFMT_ALTER);
+		value->s = sfstruse(sh.strbuf2);
 		fe->flags |= SFFMT_SHORT;
 		break;
 	case 'H':

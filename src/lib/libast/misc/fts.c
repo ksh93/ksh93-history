@@ -1511,18 +1511,37 @@ fts_close(register FTS* fts)
 
 /*
  * register function to be called for each fts_read() entry
+ * context==0 => unregister notifyf
  */
 
 int
 fts_notify(Notify_f notifyf, void* context)
 {
 	register Notify_t*	np;
+	register Notify_t*	pp;
 
-	if (!(np = newof(0, Notify_t, 1, 0)))
+	if (context)
+	{
+		if (!(np = newof(0, Notify_t, 1, 0)))
+			return -1;
+		np->notifyf = notifyf;
+		np->context = context;
+		np->next = notify;
+		notify = np;
+	}
+	else
+	{
+		for (np = notify, pp = 0; np; pp = np, np = np->next)
+			if (np->notifyf == notifyf)
+			{
+				if (pp)
+					pp->next = np->next;
+				else
+					notify = np->next;
+				free(np);
+				return 0;
+			}
 		return -1;
-	np->notifyf = notifyf;
-	np->context = context;
-	np->next = notify;
-	notify = np;
+	}
 	return 0;
 }

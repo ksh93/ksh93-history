@@ -23,7 +23,7 @@
 
 #include "stdhdr.h"
 
-ssize_t
+size_t
 fread(void* p, size_t s, size_t n, Sfio_t* f)
 {
 	ssize_t	v;

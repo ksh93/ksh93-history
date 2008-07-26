@@ -2058,6 +2058,7 @@ opthelp(const char* oopts, const char* what)
 	int			z;
 	int			style;
 	int			head;
+	int			margin;
 	int			mode;
 	int			mutex;
 	int			prefix;
@@ -3310,12 +3311,15 @@ opthelp(const char* oopts, const char* what)
 		goto nospace;
 	name = error_info.id ? error_info.id : "command";
 	m = strlen(name) + 1;
+#if 0
 	if (!opt_info.state->width)
+#endif
 	{
 		astwinsize(1, NiL, &opt_info.state->width);
 		if (opt_info.state->width < 20)
 			opt_info.state->width = OPT_WIDTH;
 	}
+	margin = style == STYLE_api ? (8 * 1024) : (opt_info.state->width - 1);
 	if (!(opt_info.state->flags & OPT_preformat))
 	{
 		if (style >= STYLE_man || matched < 0)
@@ -3335,7 +3339,7 @@ opthelp(const char* oopts, const char* what)
 		}
 		else
 			co = 0;
-		if ((rm = opt_info.state->width - ts - 1) < OPT_MARGIN)
+		if ((rm = margin - ts) < OPT_MARGIN)
 			rm = OPT_MARGIN;
 		ip = indent;
 		ip->stop = (ip+1)->stop = style >= STYLE_html ? 0 : 2;
@@ -3353,7 +3357,7 @@ opthelp(const char* oopts, const char* what)
 				tp = 0;
 				sfputc(mp, '\n');
 				co = 0;
-				rm = opt_info.state->width - 1;
+				rm = margin;
 				ts = ip->stop;
 				if (*p == '\n')
 				{
@@ -3418,7 +3422,7 @@ opthelp(const char* oopts, const char* what)
 						{
 							sfputc(mp, '\n');
 							co = 0;
-							rm = opt_info.state->width - 1;
+							rm = margin;
 							ts = ip->stop;
 						}
 					}
@@ -3565,7 +3569,7 @@ opthelp(const char* oopts, const char* what)
 						sfputc(mp, '\n');
 						for (co = 0; co < ts; co++)
 							sfputc(mp, ' ');
-						rm = opt_info.state->width - 1;
+						rm = margin;
 					}
 				}
 				else

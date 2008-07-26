@@ -321,7 +321,7 @@ static ssize_t	subread(Sfio_t*, void*, size_t, Sfdisc_t*);
 static ssize_t	tee_write(Sfio_t*,const void*,size_t,Sfdisc_t*);
 static int	io_prompt(Sfio_t*,int);
 static int	io_heredoc(Shell_t*,register struct ionod*, const char*, int);
-static void	sftrack(Sfio_t*,int,int);
+static void	sftrack(Sfio_t*,int,void*);
 static const Sfdisc_t eval_disc = { NULL, NULL, NULL, eval_exceptf, NULL};
 static Sfdisc_t tee_disc = {NULL,tee_write,NULL,NULL,NULL};
 static Sfio_t *subopen(Shell_t *,Sfio_t*, off_t, long);
@@ -1837,12 +1837,13 @@ static int pipeexcept(Sfio_t* iop, int mode, void *data, Sfdisc_t* handle)
 /*
  * keep track of each stream that is opened and closed
  */
-static void	sftrack(Sfio_t* sp,int flag, int newfd)
+static void	sftrack(Sfio_t* sp, int flag, void* data)
 {
 	Shell_t *shp = &sh;
 	register int fd = sffileno(sp);
 	register struct checkpt *pp;
 	register int mode;
+	int newfd = integralof(data);
 	if(flag==SF_SETFD || flag==SF_CLOSING)
 	{
 		if(newfd<0)

@@ -58,20 +58,21 @@ static void _sfwrsync()
 }
 
 #if __STD_C
-ssize_t sfrd(reg Sfio_t* f, reg Void_t* buf, reg size_t n, Sfdisc_t* disc)
+ssize_t sfrd(Sfio_t* f, Void_t* buf, size_t n, Sfdisc_t* disc)
 #else
 ssize_t sfrd(f,buf,n,disc)
-reg Sfio_t*	f;
-reg Void_t*	buf;
-reg size_t	n;
+Sfio_t*		f;
+Void_t*		buf;
+size_t		n;
 Sfdisc_t*	disc;
 #endif
 {
 	Sfoff_t		r;
 	reg Sfdisc_t*	dc;
 	reg int		local, rcrv, dosync, oerrno;
+	SFMTXDECL(f);
 
-	SFMTXSTART(f,-1);
+	SFMTXENTER(f,-1);
 
 	GETLOCAL(f,local);
 	if((rcrv = f->mode & (SF_RC|SF_RV)) )

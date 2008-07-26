@@ -19,7 +19,7 @@
 *                   Phong Vo <kpv@research.att.com>                    *
 *                                                                      *
 ***********************************************************************/
-#if _PACKAGE_ast && __STDC__
+#if __STDC__
 #include	"FEATURE/isoc99"
 #endif
 #include	"sfhdr.h"

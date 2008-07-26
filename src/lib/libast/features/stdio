@@ -117,7 +117,7 @@ cat{
 	extern int	fpurge(FILE*);
 	extern int	fputc(int, FILE*);
 	extern int	fputs(const char*, FILE*);
-	extern ssize_t	fread(void*, size_t, size_t, FILE*);
+	extern size_t	fread(void*, size_t, size_t, FILE*);
 	extern FILE*	freopen(const char*, const char*, FILE*);
 	extern int	fscanf(FILE*, const char*, ...);
 	extern int	fseek(FILE*, long, int);
@@ -125,7 +125,7 @@ cat{
 	extern int	fsetpos(FILE*, const fpos_t*);
 	extern long	ftell(FILE*);
 	extern off_t	ftello(FILE*);
-	extern ssize_t	fwrite(const void*, size_t, size_t, FILE*);
+	extern size_t	fwrite(const void*, size_t, size_t, FILE*);
 	extern int	getc(FILE*);
 	extern int	getchar(void);
 	extern char*	gets(char*);
@@ -390,7 +390,7 @@ cat{
 	extern int	fpurge(FILE*);
 	extern int	fputc(int, FILE*);
 	extern int	fputs(const char*, FILE*);
-	extern ssize_t	fread(void*, size_t, size_t, FILE*);
+	extern size_t	fread(void*, size_t, size_t, FILE*);
 	extern FILE*	freopen(const char*, const char*, FILE*);
 	extern int	fscanf(FILE*, const char*, ...);
 	extern int	fseek(FILE*, long, int);
@@ -398,7 +398,7 @@ cat{
 	extern int	fsetpos(FILE*, const fpos_t*);
 	extern long	ftell(FILE*);
 	extern off_t	ftello(FILE*);
-	extern ssize_t	fwrite(const void*, size_t, size_t, FILE*);
+	extern size_t	fwrite(const void*, size_t, size_t, FILE*);
 	extern int	getc(FILE*);
 	extern int	getchar(void);
 	extern char*	gets(char*);

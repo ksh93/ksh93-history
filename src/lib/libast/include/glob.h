@@ -68,8 +68,8 @@ struct _glob_
 	void*		(*gl_diropen)(glob_t*, const char*);
 	char*		(*gl_dirnext)(glob_t*, void*);
 	void		(*gl_dirclose)(glob_t*, void*);
-	int		(*gl_type)(glob_t*, const char*);
-	int		(*gl_attr)(glob_t*, const char*);
+	int		(*gl_type)(glob_t*, const char*, int);
+	int		(*gl_attr)(glob_t*, const char*, int);
 
 	/* gnu extensions -- but how do you synthesize dirent and stat? */
 

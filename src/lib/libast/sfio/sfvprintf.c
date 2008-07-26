@@ -171,9 +171,11 @@ va_list	args;		/* arg list if !argf	*/
 			}
 #endif /* _sffmt_small */
 
+	SFMTXDECL(f);
+
 	SFCVINIT();	/* initialize conversion tables */
 
-	SFMTXSTART(f,-1);
+	SFMTXENTER(f,-1);
 
 	if(!form)
 		SFMTXRETURN(f, -1);

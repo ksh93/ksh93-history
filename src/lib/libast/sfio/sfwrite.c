@@ -27,19 +27,20 @@
 */
 
 #if __STD_C
-ssize_t sfwrite(reg Sfio_t* f, const Void_t* buf, reg size_t n)
+ssize_t sfwrite(Sfio_t* f, const Void_t* buf, size_t n)
 #else
 ssize_t sfwrite(f,buf,n)
-reg Sfio_t*	f;	/* write to this stream. 	*/
+Sfio_t*		f;	/* write to this stream. 	*/
 Void_t*		buf;	/* buffer to be written.	*/
-reg size_t	n;	/* number of bytes. 		*/
+size_t		n;	/* number of bytes. 		*/
 #endif
 {
 	reg uchar	*s, *begs, *next;
 	reg ssize_t	w;
 	reg int		local;
+	SFMTXDECL(f);
 
-	SFMTXSTART(f, (ssize_t)(-1));
+	SFMTXENTER(f, (ssize_t)(-1));
 
 	GETLOCAL(f,local);
 

@@ -1195,7 +1195,12 @@ int sh_reinit(char *argv[])
 {
 	Shell_t	*shp = &sh;
 	Shopt_t opt;
-	dtclear(shp->fun_tree);
+	Namval_t *np,*npnext;
+	for(np=dtfirst(shp->fun_tree);np;np=npnext)
+	{
+		npnext = (Namval_t*)dtnext(shp->fun_tree,np);
+		nv_delete(np,shp->fun_tree,NV_NOFREE);
+	}
 	dtclose(shp->alias_tree);
 	shp->alias_tree = inittree(shp,shtab_aliases);
 	shp->last_root = shp->var_tree;
@@ -1255,6 +1260,109 @@ Namfun_t *nv_cover(register Namval_t *np)
 }
 
 static const char *shdiscnames[] = { "tilde", 0};
+
+#ifdef SHOPT_STATS
+struct Stats
+{
+	Namfun_t	hdr;
+	Shell_t		*sh;
+	char		*nodes;
+	int		numnodes;
+	int		current;
+};
+
+static Namval_t *next_stat(register Namval_t* np, Dt_t *root,Namfun_t *fp)
+{
+	struct Stats *sp = (struct Stats*)fp;
+	if(!root)
+		sp->current = 0;
+	else if(++sp->current>=sp->numnodes)
+		return(0);
+	return(nv_namptr(sp->nodes,sp->current));
+}
+
+static Namval_t *create_stat(Namval_t *np,const char *name,int flag,Namfun_t *fp)
+{
+	struct Stats		*sp = (struct Stats*)fp;
+	register const char	*cp=name;
+	register int		i=0,n;
+	Namval_t		*nq=0;
+	Shell_t			*shp = sp->sh;
+	if(!name)
+		return(SH_STATS);
+	while((i=*cp++) && i != '=' && i != '+' && i!='[');
+	n = (cp-1) -name;
+	for(i=0; i < sp->numnodes; i++)
+	{
+		nq = nv_namptr(sp->nodes,i);
+		if((n==0||memcmp(name,nq->nvname,n)==0) && nq->nvname[n]==0)
+			goto found;
+	}
+	nq = 0;
+found:
+	if(nq)
+	{
+		fp->last = (char*)&name[n];
+		shp->last_table = SH_STATS;
+	}
+	else
+		errormsg(SH_DICT,ERROR_exit(1),e_notelem,n,name,nv_name(np));
+	return(nq);
+}
+
+static const Namdisc_t stat_disc =
+{
+	0, 0, 0, 0, 0,
+	create_stat,
+	0, 0,
+	next_stat
+};
+
+static char *name_stat(Namval_t *np, Namfun_t *fp)
+{
+	Shell_t	*shp = sh_getinterp();
+	sfprintf(shp->strbuf,".sh.stats.%s",np->nvname);
+	return(sfstruse(shp->strbuf));
+}
+
+static const Namdisc_t	stat_child_disc =
+{
+	0,0,0,0,0,0,0,
+	name_stat
+};
+
+static Namfun_t	 stat_child_fun =
+{
+	&stat_child_disc, 1, 0, sizeof(Namfun_t)
+};
+
+static void stat_init(Shell_t *shp)
+{
+	int		i,nstat = STAT_SUBSHELL+1;
+	struct Stats	*sp = newof(0,struct Stats,1,nstat*NV_MINSZ);
+	Namval_t	*np;
+	sp->numnodes = nstat;
+	sp->nodes = (char*)(sp+1);
+	shp->stats = (int*)calloc(sizeof(int*),nstat);
+	sp->sh = shp;
+	for(i=0; i < nstat; i++)
+	{
+		np = nv_namptr(sp->nodes,i);
+		np->nvfun = &stat_child_fun;
+		np->nvname = (char*)shtab_stats[i].sh_name;
+		nv_onattr(np,NV_RDONLY|NV_MINIMAL|NV_NOFREE|NV_INTEGER);
+		nv_setsize(np,10);
+		np->nvalue.ip = &shp->stats[i];
+	}
+	sp->hdr.dsize = sizeof(struct Stats) + nstat*(sizeof(int)+NV_MINSZ);
+	sp->hdr.disc = &stat_disc;
+	nv_stack(SH_STATS,&sp->hdr);
+	sp->hdr.nofree = 1;
+	nv_setvtree(SH_STATS);
+}
+#else
+#   define stat_init(x)
+#endif /* SHOPT_STATS */
 
 /*
  * Initialize the shell name and alias table
@@ -1371,6 +1479,7 @@ static Init_t *nv_init(Shell_t *shp)
         VERSIONNOD->nvalue.nrp->root = nv_dict(DOTSHNOD);
         VERSIONNOD->nvalue.nrp->table = DOTSHNOD;
 	nv_onattr(VERSIONNOD,NV_RDONLY|NV_REF);
+	stat_init(shp);
 	return(ip);
 }
 

@@ -120,7 +120,7 @@ int	flags;	/* type of file stream */
 	f->endb = f->endr = f->endw = f->next = f->data;
 
 	if(_Sfnotify)
-		(*_Sfnotify)(f,SF_NEW,f->file);
+		(*_Sfnotify)(f, SF_NEW, (void*)((long)f->file));
 
 	if(f->flags&SF_STRING)
 		(void)_sfmode(f,f->mode&SF_RDWR,0);

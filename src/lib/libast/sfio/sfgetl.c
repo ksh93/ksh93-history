@@ -27,17 +27,18 @@
 */
 
 #if __STD_C
-Sflong_t sfgetl(reg Sfio_t* f)
+Sflong_t sfgetl(Sfio_t* f)
 #else
 Sflong_t sfgetl(f)
-reg Sfio_t*	f;
+Sfio_t*	f;
 #endif
 {
 	Sflong_t	v;
-	reg uchar	*s, *ends, c;
-	reg int		p;
+	uchar		*s, *ends, c;
+	int		p;
+	SFMTXDECL(f);
 
-	SFMTXSTART(f,(Sflong_t)(-1));
+	SFMTXENTER(f,(Sflong_t)(-1));
 
 	if(f->mode != SF_READ && _sfmode(f,SF_READ,0) < 0)
 		SFMTXRETURN(f, (Sflong_t)(-1));

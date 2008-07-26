@@ -365,7 +365,7 @@ endargs:
 	{
 		if(tdata.sh->mktype)
 			flag |= NV_REF|NV_TAGGED;
-		else
+		else if(!tdata.sh->typeinit)
 			flag |= NV_STATIC|NV_IDENT;
 	}
 	if(tdata.sh->fn_depth)
@@ -390,6 +390,31 @@ endargs:
 	if(!tdata.sh->mktype)
 		tdata.help = 0;
 	return(b_common(argv,flag,troot,&tdata));
+}
+
+static void print_value(Sfio_t *iop, Namval_t *np, struct tdata *tp)
+{
+	char	 *name;
+	if(nv_isnull(np))
+		return;
+	sfputr(iop,nv_name(np),tp->aflag=='+'?'\n':'=');
+	if(tp->aflag=='+')
+		return;
+	if(nv_isarray(np) && nv_arrayptr(np))
+	{
+		nv_outnode(np,iop,-1,0);
+		sfwrite(iop,")\n",2);
+	}
+	else
+	{
+		if(nv_isvtree(np))
+			nv_onattr(np,NV_EXPORT);
+		if(!(name = nv_getval(np)))
+			name = Empty;
+		if(!nv_isvtree(np))
+			name = sh_fmtq(name);
+		sfputr(iop,name,'\n');
+	}
 }
 
 static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *tp)
@@ -473,35 +498,8 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 			np = nv_open(name,troot,nvflags);
 			if(tp->pflag)
 			{
-				int c = '\n';
 				nv_attribute(np,sfstdout,tp->prefix,1);
-				if(nv_isnull(np))
-					continue;
-				sfputr(sfstdout,nv_name(np),tp->aflag=='+'?'\n':'=');
-				if(tp->aflag=='+')
-					continue;
-				if(nv_isarray(np) && nv_arrayptr(np))
-				{
-					iarray = 1 + (nv_aindex(np)<0);
-					c = ' ';
-					sfputc(sfstdout,'(');
-					nv_putsub(np,NIL(char*),ARRAY_SCAN);
-				}
-				do
-				{
-					if(iarray==2)
-						sfprintf(sfstdout,"[%s]=",sh_fmtq(nv_getsub(np)));
-					if(!(name = nv_getval(np)))
-						name = Empty;
-					if(iarray && !nv_nextsub(np))
-						c = ')';
-					if(!nv_isvtree(np))
-						name = sh_fmtq(name);
-					sfputr(sfstdout,name,c);
-				}
-				while(c==' ');
-				if(iarray)
-					sfputc(sfstdout,'\n');
+				print_value(sfstdout,np,tp);
 				continue;
 			}
 			if(flag==NV_ASSIGN && !ref && tp->aflag!='-' && !strchr(name,'='))
@@ -516,23 +514,33 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 			}
 			if(troot==shp->var_tree && ((tp->tp && !nv_isarray(np)) || !shp->st.real_fun && (nvflags&NV_STATIC)) && !strchr(name,'=') && !(shp->envlist  && nv_onlist(shp->envlist,name)))
 				_nv_unset(np,0);
-			if((troot==shp->var_tree) && comvar)
+			if(troot==shp->var_tree)
 			{
-				if(!nv_isnull(np) && !nv_isvtree(np))
-					nv_unset(np);
-				nv_setvtree(np);
+				if(iarray)
+				{
+					if(tp->tname)
+						nv_atypeindex(np,tp->tname+1);
+					else if(nv_isnull(np))
+						nv_onattr(np,NV_ARRAY|(comvar?NV_NOFREE:0));
+					else
+						nv_putsub(np, (char*)0, 0);
+				}
+				else if(nvflags&NV_ARRAY)
+				{
+					if(comvar)
+					{
+						_nv_unset(np,NV_RDONLY);
+						nv_onattr(np,NV_NOFREE);
+					}
+					nv_setarray(np,nv_associative);
+				}
+				else if(comvar)
+				{
+					if(!nv_isnull(np) && !nv_isvtree(np))
+						nv_unset(np);
+					nv_setvtree(np);
+				}
 			}
-			if((troot==shp->var_tree) && iarray)
-			{
-				if(tp->tname)
-					nv_atypeindex(np,tp->tname+1);
-				else if(nv_isnull(np))
-					nv_onattr(np,NV_ARRAY);
-				else
-					nv_putsub(np, (char*)0, 0);
-			}
-			if(troot==shp->var_tree && (nvflags&NV_ARRAY))
-				nv_setarray(np,nv_associative);
 			if(tp->tp)
 			{
 				nv_settype(np,tp->tp,tp->aflag=='-'?0:NV_APPEND);
@@ -968,9 +976,9 @@ static int b_unall(int argc, char **argv, register Dt_t *troot, Shell_t* shp)
 			nv_unset(np);
 			nv_close(np);
 			if(troot==shp->var_tree && shp->st.real_fun && (dp=shp->var_tree->walk) && dp==shp->st.real_fun->sdict)
-				dtdelete(dp,np);
+				nv_delete(np,dp,NV_NOFREE);
 			else if(isfun)
-				dtdelete(troot,np);
+				nv_delete(np,troot,NV_NOFREE);
 		}
 		else
 			r = 1;
@@ -1038,15 +1046,18 @@ static int print_namval(Sfio_t *file,register Namval_t *np,register int flag, st
 		}
 		return(nv_size(np)+1);
 	}
+	if(nv_arrayptr(np))
+	{
+		print_value(file,np,tp);
+		return(0);
+	}
+	if(nv_isvtree(np))
+		nv_onattr(np,NV_EXPORT);
 	if(cp=nv_getval(np))
 	{
 		sfputr(file,nv_name(np),-1);
 		if(!flag)
-		{
 			flag = '=';
-		        if(nv_arrayptr(np))
-				sfprintf(file,"[%s]", sh_fmtq(nv_getsub(np)));
-		}
 		sfputc(file,flag);
 		if(flag != '\n')
 		{
@@ -1130,19 +1141,7 @@ static void print_scan(Sfio_t *file, int flag, Dt_t *root, int option,struct tda
 					continue;
 				
 			}
-			if(!flag && nv_isattr(np,NV_ARRAY))
-			{
-				if(array_elem(nv_arrayptr(np))==0)
-					continue;
-				nv_putsub(np,NIL(char*),ARRAY_SCAN);
-				do
-				{
-					print_namval(file,np,option,tp);
-				}
-				while(!option && nv_nextsub(np));
-			}
-			else
-				print_namval(file,np,option,tp);
+			print_namval(file,np,option,tp);
 		}
 	}
 }

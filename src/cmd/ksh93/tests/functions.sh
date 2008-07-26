@@ -909,4 +909,52 @@ def()
 [[ $(abc) == abc ]] || err_exit '.sh.fun.set not capturing function name'
 [[ $(def) == def ]] || err_exit '.sh.fun.set not capturing name()'
 unset -f .sh.fun.set
+
+# tests for debug functions
+basefile=${.sh.file}
+integer baseline
+cleanup
+trap 'rm $tmp' EXIT
+tmp=${TMPDIR:-/tmp}/ksh$$.1 
+cat > $tmp << \+++
+	: line 1
+
+	: line 3
++++
+# Print one line in a call stack
+function _Dbg_print_frame
+{
+	typeset -i pos=$1
+	typeset fn=$2
+	typeset filename="$3"
+	typeset -i line=$4
+	typeset  arg=$5
+	shift 5
+	if	((pos==0))
+	then	[[ $filename == "$basefile" ]] || err_exit "filename for level 0 is $filename not $basename"
+		[[ $arg == DEBUG  ]] && ((baseline++))
+		[[ $line == "$baseline" ]] || err_exit "line number for level 0 is $line not $baseline"
+	elif	((pos==1))
+	then	[[ $filename == "$tmp" ]] ||  err_exit "filename for level 1 is $filename not $tmp"
+		[[ $* == 'foo bar' ]] || err_exit "args are '$*', not 'foo bar'"
+		[[ $line == $arg ]] || err_exit "line number for level 1 is $line not $arg"
+	else	err_exit "level should be 0 or 1 but is $pos"
+	fi
+}
+
+function _Dbg_debug_trap_handler
+{
+
+	integer .level=.sh.level .max=.sh.level-1
+	while((--.level>=0))
+	do
+		((.sh.level = .level))
+      		_Dbg_print_frame  "${.level}" "$0" "${.sh.file}" "${.sh.lineno}" "${.sh.command##* }" "$@"
+	done
+}
+
+((baseline=LINENO+2))
+trap '_Dbg_debug_trap_handler' DEBUG
+.  $tmp  foo bar
+trap '' DEBUG
 exit $((Errors))

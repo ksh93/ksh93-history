@@ -63,6 +63,7 @@ struct jobsave
 
 static struct jobsave *job_savelist;
 static int njob_savelist;
+static struct process *pwfg;
 
 static void init_savelist(void)
 {
@@ -207,10 +208,15 @@ int job_reap(register int sig)
 	register int flags;
 	struct jobsave *jp;
 	struct back_save *bp;
-	int notify=0, nochild=0, oerrno, wstat;
+	int nochild=0, oerrno, wstat;
 	Waitevent_f waitevent = sh.waitevent;
 	static int wcontinued = WCONTINUED;
-	if(vmbusy()) { write(2,"vmbusy\n",7); abort(); }
+	if (vmbusy())
+	{
+		write(2, "ksh: vmbusy -- should not happen\n", 12);
+		if (getenv("_AST_KSH_VMBUSY_ABORT"))
+		abort();
+	}
 #ifdef DEBUG
 	if(sfprintf(sfstderr,"ksh: job line %4d: reap pid=%d critical=%d signal=%d\n",__LINE__,getpid(),job.in_critical,sig) <=0)
 		write(2,"waitsafe\n",9);
@@ -305,7 +311,6 @@ int job_reap(register int sig)
 			px=job_byjid(pw->p_job);
 		if(WIFSTOPPED(wstat))
 		{
-			notify=1;
 			if(px)
 			{
 				/* move to top of job list */
@@ -324,8 +329,6 @@ int job_reap(register int sig)
 		else
 #endif /* SIGTSTP */
 		{
-			if(job.pwlist && pw->p_job != job.pwlist->p_job)
-				notify=1;
 			/* check for coprocess completion */
 			if(pid==sh.cpid)
 			{
@@ -382,6 +385,11 @@ int job_reap(register int sig)
 			if(!px)
 				tcsetpgrp(JOBTTY,job.mypid);
 		}
+		if(!sh.intrap && sh.st.trapcom[SIGCHLD] && pid>0 && (pwfg!=job_bypid(pid)))
+		{
+			sh.sigflag[SIGCHLD] |= SH_SIGTRAP;
+			sh.trapnote |= SH_SIGTRAP;
+		}
 	}
 	if(errno==ECHILD)
 	{
@@ -389,11 +397,6 @@ int job_reap(register int sig)
 		nochild = 1;
 	}
 	sh.waitevent = waitevent;
-	if(!sh.intrap && sh.st.trapcom[SIGCHLD] && notify)
-	{
-		sh.sigflag[SIGCHLD] |= SH_SIGTRAP;
-		sh.trapnote |= SH_SIGTRAP;
-	}
 	if(sh_isoption(SH_NOTIFY) && sh_isstate(SH_TTYWAIT))
 	{
 		outfile = sfstderr;
@@ -1260,6 +1263,7 @@ int	job_wait(register pid_t pid)
 		if(pw->p_pgrp && job.parent!= (pid_t)-1)
 			job_set(job_byjid(jobid));
 	}
+	pwfg = pw;
 #ifdef DEBUG
 	sfprintf(sfstderr,"ksh: job line %4d: wait pid=%d critical=%d job=%d pid=%d\n",__LINE__,getpid(),job.in_critical,jobid,pid);
 	if(pw)
@@ -1364,6 +1368,7 @@ int	job_wait(register pid_t pid)
 		if((intr && sh.trapnote) || (pid==1 && !intr))
 			break;
 	}
+	pwfg = 0;
 	job_unlock();
 	if(pid==1)
 		return(nochild);

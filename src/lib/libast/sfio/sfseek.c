@@ -59,8 +59,9 @@ int	type;	/* 0: from org, 1: from here, 2: from end */
 {
 	Sfoff_t	r, s;
 	int	mode, local, hardseek, mustsync;
+	SFMTXDECL(f);
 
-	SFMTXSTART(f, (Sfoff_t)(-1));
+	SFMTXENTER(f, (Sfoff_t)(-1));
 
 	GETLOCAL(f,local);
 

@@ -32,6 +32,13 @@ mkdir /tmp/ksh$$ || err_exit "mkdir /tmp/ksh$$ failed"
 trap 'cd /; rm -rf /tmp/ksh$$' EXIT
 cd /tmp/ksh$$ || err_exit "cd /tmp/ksh$$ failed"
 
+[[ $( trap 'print -n got_child' SIGCHLD
+	sleep 2 &
+	for	((i=0; i < 4; i++))
+	do 	sleep .9
+		print -n $i
+	done) == 01got_child23 ]] || err_exit 'SIGCHLD not working'
+
 # begin standalone SIGINT test generation
 
 cat > tst <<'!'

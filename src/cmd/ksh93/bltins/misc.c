@@ -231,7 +231,6 @@ int    b_dot_cmd(register int n,char *argv[],void* extra)
 		errormsg(SH_DICT,ERROR_usage(2),"%s",optusage((char*)0));
 	if(shp->dot_depth+1 > DOTMAX)
 		errormsg(SH_DICT,ERROR_exit(1),e_toodeep,script);
-	shp->st.lineno = error_info.line;
 	if(!(np=shp->posix_fun))
 	{
 		/* check for KornShell style function first */
@@ -260,6 +259,8 @@ int    b_dot_cmd(register int n,char *argv[],void* extra)
 		}
 	}
 	*prevscope = shp->st;
+	shp->st.lineno = np?((struct functnod*)nv_funtree(np))->functline:1;
+	shp->st.var_local = shp->st.save_tree = shp->var_tree;
 	if(filename)
 	{
 		shp->st.filename = filename;

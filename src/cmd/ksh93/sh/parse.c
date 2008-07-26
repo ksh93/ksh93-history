@@ -909,7 +909,22 @@ static struct argnod *assign(Lex_t *lexp, register struct argnod *ap)
 	else if(n && n!=FUNCTSYM)
 		sh_syntax(lexp);
 	else if(n!=FUNCTSYM && !(lexp->arg->argflag&ARG_ASSIGN) && !((np=nv_search(lexp->arg->argval,lexp->sh->fun_tree,0)) && (nv_isattr(np,BLT_DCL)|| np==SYSDOT)))
+	{
 		array=SH_ARRAY;
+		if(fcgetc(n)==LPAREN)
+		{
+			int c;
+			if(fcgetc(c)==RPAREN)
+			{
+				lexp->token =  SYMRES;
+				array = 0;
+			}
+			else
+				fcseek(-2);
+		}
+		else if(n>0)
+			fcseek(-1);
+	}
 	while(1)
 	{
 		if((n=lexp->token)==RPAREN)

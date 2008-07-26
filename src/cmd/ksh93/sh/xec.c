@@ -347,10 +347,12 @@ static void put_level(Namval_t* np,const char *val,int flags,Namfun_t *fp)
 	struct Level *lp = (struct Level*)fp;
 	int16_t level, oldlevel = (int16_t)nv_getnum(np);
 	nv_putv(np,val,flags,fp);
+	if(!val)
+		return;
 	level = nv_getnum(np);
 	if(level<0 || level > lp->maxlevel)
 	{
-		nv_putv(np, (char*)&oldlevel, flags, fp);
+		nv_putv(np, (char*)&oldlevel, NV_INT16, fp);
 		/* perhaps this should be an error */
 		return;
 	}
@@ -362,10 +364,9 @@ static void put_level(Namval_t* np,const char *val,int flags,Namfun_t *fp)
 		error_info.id = sp->cmdname;
 		
 	}
-	nv_putval(SH_PATHNAMENOD, sh.st.filename ,NV_NOFREE);
 }
 
-static const Namdisc_t level_disc = {  0, put_level };
+static const Namdisc_t level_disc = {  sizeof(struct Level), put_level };
 
 static struct Level *init_level(int level)
 {
@@ -427,7 +428,7 @@ int sh_debug(Shell_t *shp, const char *trap, const char *name, const char *subsc
 	np->nvalue.cp = stkfreeze(stkp,1);
 	/* now setup .sh.level variable */
 	shp->st.lineno = error_info.line;
-	level  = shp->fn_depth;
+	level  = shp->fn_depth+shp->dot_depth;
 	if(!SH_LEVELNOD->nvfun || !SH_LEVELNOD->nvfun->disc || nv_isattr(SH_LEVELNOD,NV_INT16|NV_NOFREE)!=(NV_INT16|NV_NOFREE))
 		lp = init_level(level);
 	else
@@ -671,6 +672,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 			Namval_t	*np, *nq, *last_table;
 			struct ionod	*io;
 			int		command=0, flgs=NV_ASSIGN;
+			sh_stats(STAT_SCMDS);
 			error_info.line = t->com.comline-shp->st.firstline;
 			com = sh_argbuild(shp,&argn,&(t->com),OPTIMIZE);
 			echeck = 1;
@@ -754,6 +756,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 					if(np==SYSTYPESET ||  (np && np->nvalue.bfp==SYSTYPESET->nvalue.bfp))
 #endif
 					{
+						if(np!=SYSTYPESET)
+							shp->typeinit = np;
 						if(checkopt(com,'C'))
 							flgs |= NV_COMVAR;
 						if(checkopt(com,'S'))
@@ -782,6 +786,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 						flgs |= NV_TAGGED;
 #endif
 					nv_setlist(argp,flgs);
+					if(np==shp->typeinit)
+						shp->typeinit = 0;
 					shp->envlist = argp;
 					argp = NULL;
 				}
@@ -1805,13 +1811,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 					format = e_timeformat;
 			}
 			else
-			{
 				format = strchr(format+1,'\n')+1;
-#if 0
-				if(shp->optcount)
-					sfprintf(sfstderr,"%d optimizations\n",shp->optcount);
-#endif
-			}
 			tm[1] = after.tms_utime - before.tms_utime;
 			tm[1] += after.tms_cutime - before.tms_cutime;
 			tm[2] = after.tms_stime - before.tms_stime;
@@ -2333,7 +2333,6 @@ pid_t _sh_fork(register pid_t parent,int flags,int *jobid)
 	sh_offoption(SH_LOGIN_SHELL);
 	sh_onstate(SH_FORKED);
 	sh_onstate(SH_NOLOG);
-	shp->fn_depth = 0;
 #if SHOPT_ACCT
 	sh_accsusp();
 #endif	/* SHOPT_ACCT */
@@ -2373,6 +2372,7 @@ pid_t sh_fork(int flags, int *jobid)
 	job_fork(-1);
 	sh.savesig = -1;
 	while(_sh_fork(parent=fork(),flags,jobid) < 0);
+	sh_stats(STAT_FORKS);
 	sig = sh.savesig;
 	sh.savesig = 0;
 	if(sig>0)
@@ -2500,6 +2500,8 @@ int sh_funscope(int argn, char *argv[],int(*fun)(void*),void *arg,int execflg)
 	sh_unscope(shp);
 	shp->namespace = nspace;
 	shp->var_tree = (Dt_t*)prevscope->save_tree;
+	if(shp->topscope != (Shscope_t*)shp->st.self)
+		sh_setscope(shp->topscope);
 	sh_argreset(shp,argsav,saveargfor);
 	trap = shp->st.trapcom[0];
 	shp->st.trapcom[0] = 0;
@@ -2536,8 +2538,11 @@ static void sh_funct(Shell_t *shp,Namval_t *np,int argn, char *argv[],struct arg
 	char *fname = nv_getval(SH_FUNNAMENOD);
 	struct Level	*lp =(struct Level*)(SH_LEVELNOD->nvfun);
 	int		level;
+	sh_stats(STAT_FUNCT);
 	if(!lp->hdr.disc)
 		lp = init_level(0);
+	if((struct sh_scoped*)shp->topscope != shp->st.self)
+		sh_setscope(shp->topscope);
 	level = lp->maxlevel = shp->dot_depth + shp->fn_depth+1;
 	SH_LEVELNOD->nvalue.s = lp->maxlevel;
 	shp->st.lineno = error_info.line;
@@ -2564,13 +2569,13 @@ static void sh_funct(Shell_t *shp,Namval_t *np,int argn, char *argv[],struct arg
 	}
 	if(level-- != nv_getnum(SH_LEVELNOD))
 	{
-		Shscope_t *sp = sh_getscope(level,SEEK_SET);
+		Shscope_t *sp = sh_getscope(0,SEEK_END);
 		sh_setscope(sp);
 	}
 	lp->maxlevel = level;
 	SH_LEVELNOD->nvalue.s = lp->maxlevel;
 	nv_putval(SH_FUNNAMENOD,fname,NV_NOFREE);
-	nv_putval(SH_PATHNAMENOD, shp->st.filename ,0);
+	nv_putval(SH_PATHNAMENOD, shp->st.filename ,NV_NOFREE);
 }
 
 /*

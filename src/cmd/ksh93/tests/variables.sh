@@ -472,7 +472,7 @@ TIMEFORMAT='this is a test'
 : ${.sh.version}
 [[ $(whence rm) == *.sh.* ]] && err_exit '.sh. prefixed to tracked alias name'
 : ${.sh.version}
-[[ $(cd /bin;env | grep PWD) == *.sh.* ]] && err_exit '.sh. prefixed to PWD'
+[[ $(cd /bin;env | grep PWD=) == *.sh.* ]] && err_exit '.sh. prefixed to PWD'
 # unset discipline bug fix
 dave=dave
 function dave.unset

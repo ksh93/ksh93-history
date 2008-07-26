@@ -78,7 +78,8 @@ typedef struct edit
 	int	e_lnext;
 	int	e_fchar;
 	int	e_plen;		/* length of prompt string */
-	int	e_crlf;		/* zero if cannot return to beginning of line */
+	char	e_crlf;		/* zero if cannot return to beginning of line */
+	char	e_nocrnl;	/* don't put a new-line with ^L */
 	int	e_llimit;	/* line length limit */
 	int	e_hline;	/* current history line number */
 	int	e_hloff;	/* line number offset for command */

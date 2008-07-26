@@ -91,6 +91,7 @@ static int array_unscope(Namval_t *np,Namarr_t *ap)
 		(*ap->fun)(np, NIL(char*), NV_AFREE);
 	if((fp = nv_disc(np,(Namfun_t*)ap,NV_POP)) && !(fp->nofree&1))
 		free((void*)fp);
+	nv_delete(np,(Dt_t*)0,0);
 	return(1);
 }
 
@@ -476,10 +477,7 @@ static void array_putval(Namval_t *np, const char *string, int flags, Namfun_t *
 				array_clrbit(aq->bits,aq->cur,ARRAY_CHILD);
 				aq->val[aq->cur].cp = 0;
 				if(!nv_isattr(mp,NV_NOFREE))
-				{
-					dtdelete(ap->table,(void*)mp);
-					free((void*)mp);
-				}
+					nv_delete(mp,ap->table,0);
 				goto skip;
 			}
 			nv_putval(mp, string, flags);
@@ -508,8 +506,7 @@ static void array_putval(Namval_t *np, const char *string, int flags, Namfun_t *
 					{
 						array_clrbit(aq->bits,aq->cur,ARRAY_CHILD);
 						aq->val[aq->cur].cp = 0;
-						dtdelete(ap->table,(void*)mp);
-						free((void*)mp);
+						nv_delete(mp,ap->table,0);
 					}
 					if(!array_covered(np,(struct index_array*)ap))
 						ap->nelem--;
@@ -633,6 +630,11 @@ static struct index_array *array_grow(Namval_t *np, register struct index_array 
 		ap->header.hdr.dsize = sizeof(*ap) + i;
 		i = 0;
 		ap->header.fun = 0;
+		if(nv_isnull(np) && nv_isattr(np,NV_NOFREE))
+		{
+			i = ARRAY_TREE;
+			nv_offattr(np,NV_NOFREE);
+		}
 		if(np->nvalue.cp==Empty)
 			np->nvalue.cp=0;
 		if(nv_hasdisc(np,&array_disc) || nv_isvtree(np))
@@ -760,6 +762,7 @@ Namarr_t *nv_setarray(Namval_t *np, void *(*fun)(Namval_t*,const char*,int))
 	register Namarr_t *ap;
 	char		*value=0;
 	Namfun_t	*fp;
+	int		nelem = 0;
 	if(fun && (ap = nv_arrayptr(np)))
 	{
 		/*
@@ -770,12 +773,17 @@ Namarr_t *nv_setarray(Namval_t *np, void *(*fun)(Namval_t*,const char*,int))
 			ap = nv_changearray(np, fun);
 		return(ap);
 	}
+	if(nv_isnull(np) && nv_isattr(np,NV_NOFREE))
+	{
+		nelem = ARRAY_TREE;
+		nv_offattr(np,NV_NOFREE);
+	}
 	if(!(fp=nv_isvtree(np)))
 		value = nv_getval(np);
 	if(fun && !ap && (ap = (Namarr_t*)((*fun)(np, NIL(char*), NV_AINIT))))
 	{
 		/* check for preexisting initialization and save */
-		ap->nelem = 0;
+		ap->nelem = nelem;
 		ap->fun = fun;
 		nv_onattr(np,NV_ARRAY);
 		if(fp || value)
@@ -1149,8 +1157,7 @@ void *nv_associative(register Namval_t *np,const char *sp,int mode)
 			if(!ap->header.scope || (Dt_t*)ap->header.scope==ap->header.table || !nv_search(ap->cur->nvname,(Dt_t*)ap->header.scope,0))
 				ap->header.nelem--;
 			_nv_unset(ap->cur,NV_RDONLY);
-			dtdelete(ap->header.table,(void*)ap->cur);
-			free((void*)ap->cur);
+			nv_delete(ap->cur,ap->header.table,0);
 			ap->cur = 0;
 		}
 		return((void*)ap);
@@ -1231,7 +1238,11 @@ void *nv_associative(register Namval_t *np,const char *sp,int mode)
 				if(!ap->header.scope || !nv_search(sp,dtvnext(ap->header.table),0))
 					ap->header.nelem++;
 				if(nv_isnull(mp))
+				{
+					if(ap->header.nelem&ARRAY_TREE)
+						nv_setvtree(mp);
 					mp->nvalue.cp = Empty;
+				}
 			}
 			else if(ap->header.nelem&ARRAY_SCAN)
 			{

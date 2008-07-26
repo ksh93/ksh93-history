@@ -99,6 +99,7 @@ int path_expand(const char *pattern, struct argnod **arghead)
 	register int off;
 	register char *sp, *cp, *cp2;
 #endif
+	sh_stats(STAT_GLOBS);
 	memset(gp,0,sizeof(gdata));
 	flags = GLOB_AUGMENTED|GLOB_NOCHECK|GLOB_NOSORT|GLOB_STACK|GLOB_LIST|GLOB_DISC;
 	if(sh_isoption(SH_MARKDIRS))

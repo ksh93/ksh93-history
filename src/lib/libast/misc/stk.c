@@ -318,6 +318,18 @@ int stkclose(Sfio_t* stream)
 }
 
 /*
+ * returns 1 if <loc> is on this stack
+ */
+int stkon(register Sfio_t * stream, register char* loc)
+{
+	register struct stk *sp = stream2stk(stream); 
+	register struct frame *fp;
+	for(fp=(struct frame*)sp->stkbase; fp; fp=(struct frame*)fp->prev)
+		if(loc>=((char*)(fp+1)) && loc< fp->end)
+			return(1);
+	return(0);
+}
+/*
  * reset the bottom of the current stack back to <loc>
  * if <loc> is not in this stack, then the stack is reset to the beginning
  * otherwise, the top of the stack is set to stkbot+<offset>

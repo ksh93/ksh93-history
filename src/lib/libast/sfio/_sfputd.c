@@ -40,8 +40,9 @@ Sfdouble_t	v;
 	int		exp;
 	uchar		c[N_ARRAY];
 	Sfdouble_t	x;
+	SFMTXDECL(f);
 
-	SFMTXSTART(f,-1);
+	SFMTXENTER(f,-1);
 
 	if(f->mode != SF_WRITE && _sfmode(f,SF_WRITE,0) < 0)
 		SFMTXRETURN(f, -1);

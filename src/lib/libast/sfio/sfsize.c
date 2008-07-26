@@ -26,17 +26,18 @@
 **	Written by Kiem-Phong Vo.
 */
 #if __STD_C
-Sfoff_t sfsize(reg Sfio_t* f)
+Sfoff_t sfsize(Sfio_t* f)
 #else
 Sfoff_t sfsize(f)
-reg Sfio_t*	f;
+Sfio_t*	f;
 #endif
 {
 	Sfdisc_t*	disc;
 	reg int		mode;
 	Sfoff_t		s;
+	SFMTXDECL(f);
 
-	SFMTXSTART(f, (Sfoff_t)(-1));
+	SFMTXENTER(f, (Sfoff_t)(-1));
 
 	if((mode = f->mode&SF_RDWR) != (int)f->mode && _sfmode(f,mode,0) < 0)
 		SFMTXRETURN(f, (Sfoff_t)(-1));

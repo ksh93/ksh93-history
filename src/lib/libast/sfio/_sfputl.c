@@ -27,10 +27,10 @@
 */
 
 #if __STD_C
-int _sfputl(reg Sfio_t* f, Sflong_t v)
+int _sfputl(Sfio_t* f, Sflong_t v)
 #else
 int _sfputl(f,v)
-reg Sfio_t*	f;	/* write a portable long to this stream */
+Sfio_t*		f;	/* write a portable long to this stream */
 Sflong_t	v;	/* the value to be written */
 #endif
 {
@@ -38,8 +38,9 @@ Sflong_t	v;	/* the value to be written */
 	reg uchar	*s, *ps;
 	reg ssize_t	n, p;
 	uchar		c[N_ARRAY];
+	SFMTXDECL(f);
 
-	SFMTXSTART(f,-1);
+	SFMTXENTER(f,-1);
 	if(f->mode != SF_WRITE && _sfmode(f,SF_WRITE,0) < 0)
 		SFMTXRETURN(f, -1);
 	SFLOCK(f,0);

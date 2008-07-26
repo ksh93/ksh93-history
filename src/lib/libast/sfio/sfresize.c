@@ -33,7 +33,9 @@ Sfio_t*		f;
 Sfoff_t		size;
 #endif
 {
-	SFMTXSTART(f, -1);
+	SFMTXDECL(f);
+
+	SFMTXENTER(f, -1);
 
 	if(size < 0 || f->extent < 0 ||
 	   (f->mode != SF_WRITE && _sfmode(f,SF_WRITE,0) < 0) )

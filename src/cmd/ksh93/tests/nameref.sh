@@ -278,4 +278,23 @@ function function1
 }
 x="$(function1)"
 [[ "$x" != 'x=19, y=20' ]] && err_exit "expected 'x=19, y=20', got '${x}'"
+typeset +n bar
+unset foo bar
+[[ $(function a
+{
+	for i in  foo bar
+	do	typeset -n v=$i
+		print $v
+	done | cat
+}
+foo=1 bar=2;a) == $'1\n2' ]] 2> /dev/null || err_exit 'nameref in pipeline broken'
+function a
+{
+	typeset -n v=vars.data._1
+	print "${v.a} ${v.b}"
+}
+vars=(data=())
+vars.data._1.a=a.1
+vars.data._1.b=b.1
+[[ $(a) == 'a.1 b.1' ]] || err_exit 'nameref choosing wrong scope -- '
 exit $((Errors))

@@ -452,4 +452,10 @@ a[a].z=1
 a[z].z=2
 unset a[a]
 [[ ${!a[@]} == z ]] || err_exit '"unset a[a]" unsets entire array'
+unset a
+a=([x]=1 [y]=2 [z]=(foo=3 bar=4))
+eval "b=$(printf "%B\n" a)"
+eval "c=$(printf "%#B\n" a)"
+[[ ${a[*]} == "${b[*]}" ]] || err_exit 'printf %B not preserving values for arrays'
+[[ ${a[*]} == "${c[*]}" ]] || err_exit 'printf %#B not preserving values for arrays'
 exit $((Errors))

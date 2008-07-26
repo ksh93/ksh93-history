@@ -27,7 +27,7 @@ alias err_exit='err_exit $LINENO'
 
 Command=${0##*/}
 integer Errors=0
-integer n=10
+integer n=2
 
 typeset -T Box_t=(
 	float -h 'height in inches' x=2
@@ -78,6 +78,7 @@ unset bb.items
 [[ ${#bb.items[@]} == 2 ]] || err_exit 'bb.items should have 2 items'
 [[ $b == "$bb" ]] || err_exit '$b != $bb'
 b.count=0
+false
 unset b bb
 done
 
@@ -108,7 +109,7 @@ Box_t b=(name=box2)
 (( b.len == 5 ))  || err_exit 'b.len is not 5 for box2'
 (( b.count == 1 ))  || err_exit 'b.count is not 1'
 Cube_t c=(name=cube1)
-[[ $c == $'(\n\ttypeset -l -E x=8\n\ttypeset -l -E y=5\n\tcomvar=(\n\t\ttypeset top=8\n\t\ttypeset bottom=9\n\t)\n\ttypeset -S -l -i count=1\n\ttypeset -a items=(\n\t\tfoo\n\t\tbar\n\t)\n\ttypeset -A colors=(\n\t\t[floor]=red\n\t\t[wall]=blue\n\t)\n\tname=cube1\n\ttypeset -L 6 status=INIT\n\ttypeset -l -E z=1\n)' ]] || err_exit '$c not correct'
+[[ $c == $'(\n\ttypeset -l -E x=8\n\ttypeset -l -E y=5\n\tcomvar=(\n\t\ttop=8\n\t\tbottom=9\n\t)\n\ttypeset -S -l -i count=1\n\ttypeset -a items=(\n\t\tfoo\n\t\tbar\n\t)\n\ttypeset -A colors=(\n\t\t[floor]=red\n\t\t[wall]=blue\n\t)\n\tname=cube1\n\ttypeset -L 6 status=INIT\n\ttypeset -l -E z=1\n)' ]] || err_exit '$c not correct'
 [[ ${c.x} == 8 ]] || err_exit '${c.x} != 8'
 [[ ${c.depth} == 1 ]] || err_exit '${c.depth} != 1'
 [[ ${c.name} == cube1 ]] ||  err_exit '${c.name} != cube1 '
@@ -120,7 +121,12 @@ Cube_t c=(name=cube1)
 c.count=0
 Cube_t d=c 
 [[ $d == "$c" ]] || err_exit '$d != $c'
-unset b c d
+eval "Cube_t zzz=$c"
+[[ $zzz == "$c" ]] || err_exit '$zzz != $c'
+xxx=$(typeset -p c)
+eval "${xxx/c=/ccc=}"
+[[ $ccc == "$c" ]] || err_exit '$ccc != $c'
+unset b c d zzz xxx ccc
 done
 for ((i=0; i < n; i++))
 do

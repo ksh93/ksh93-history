@@ -70,7 +70,8 @@ testfunc '(function l { float -S x=0.5 ;  (( x+=.5 )) ;   $1 && print "$x" ; } ;
 
 
 # array variable
-[[ "$(
+expected="helloan elementan elementan element"
+got=$(
 	function ar
 	{
 		typeset -a -S s=( "hello" )
@@ -80,7 +81,8 @@ testfunc '(function l { float -S x=0.5 ;  (( x+=.5 )) ;   $1 && print "$x" ; } ;
 		$1 && { printf '%s' "${s[@]}" ; printf '\n' ; }
 	}
 	ar false ; ar false ; ar true
-)" != "helloan elementan elementan element" ]] && err_exit "static array var failed"
+)
+[[ $got != $expected ]] && err_exit "static array var failed -- got '$got', expected '$expected'"
 
 
 # Test visibilty of "global" vs. "static" variables. if we have a "static" variable in a

@@ -131,6 +131,7 @@ static pid_t _spawnveg(const char *path, char* const argv[], char* const envp[],
 	job_lock();
 	while(1)
 	{
+		sh_stats(STAT_SPAWN);
 		pid = spawnveg(path,argv,envp,pgid);
 		if(pid>=0 || errno!=EAGAIN)
 			break;
@@ -293,7 +294,7 @@ static void free_bltin(Namval_t *np,void *data)
 		return;
 	}
 	if((void*)np->nvenv==pp->bltin_lib)
-		dtdelete(sh_bltin_tree(),np);
+		nv_delete(np,sh_bltin_tree(),NV_NOFREE);
 }
 
 /*
@@ -583,7 +584,7 @@ static void funload(Shell_t *shp,int fno, const char *name)
 		do
 		{
 			if((np = dtsearch(shp->fun_tree,rp->np)) && is_afunction(np))
-				dtdelete(shp->fun_tree,np);
+				nv_delete(np,shp->fun_tree,NV_NOFREE);
 			dtinsert(shp->fun_tree,rp->np);
 		}
 		while((rp=dtnext(shp->fpathdict,rp)) && strcmp(pname,rp->fname)==0);
@@ -743,6 +744,7 @@ Pathcomp_t *path_absolute(register const char *name, Pathcomp_t *pp)
 			}
 #endif /* SHOPT_DYNAMIC */
 		}
+		sh_stats(STAT_PATHS);
 		f = canexecute(stakptr(PATH_OFFSET),isfun);
 		if(isfun && f>=0)
 		{
@@ -1632,7 +1634,7 @@ Pathcomp_t *path_unsetfpath(Pathcomp_t *first)
 		for(rp=(struct Ufunction*)dtfirst(shp->fpathdict);rp;rp=rpnext)
 		{
 			rpnext = (struct Ufunction*)dtnext(shp->fpathdict,rp);
-			dtdelete(shp->fun_tree,rp->np);
+			nv_delete(rp->np,shp->fun_tree,NV_NOFREE);
 		}
 	}
 	while(pp)

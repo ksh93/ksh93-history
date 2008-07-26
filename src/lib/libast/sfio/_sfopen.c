@@ -35,15 +35,16 @@ extern
 #undef  extern
 
 #if __STD_C
-Sfio_t* _sfopen(reg Sfio_t* f, const char* file, const char* mode)
+Sfio_t* _sfopen(Sfio_t* f, const char* file, const char* mode)
 #else
 Sfio_t* _sfopen(f,file,mode)
-reg Sfio_t*	f;		/* old stream structure */
+Sfio_t*		f;		/* old stream structure */
 char*		file;		/* file/string to be opened */
-reg char*	mode;		/* mode of the stream */
+char*		mode;		/* mode of the stream */
 #endif
 {
 	int	fd, oldfd, oflags, sflags;
+	SFMTXDECL(f);
 
 	/* get the control flags */
 	if((sflags = _sftype(mode,&oflags,NIL(int*))) == 0)
@@ -51,7 +52,7 @@ reg char*	mode;		/* mode of the stream */
 
 	/* changing the control flags */
 	if(f && !file && !((f->flags|sflags)&SF_STRING) )
-	{	SFMTXSTART(f, NIL(Sfio_t*));
+	{	SFMTXENTER(f, NIL(Sfio_t*));
 
 		if(f->mode&SF_INIT ) /* stream uninitialized, ok to set flags */
 		{	f->flags |= (sflags & (SF_FLAGS & ~SF_RDWR));

@@ -595,8 +595,10 @@ update:
 			}
 			continue;
 		case cntl('L'):
-			ed_crlf(ep->ed);
+			if(!ep->ed->e_nocrnl)
+				ed_crlf(ep->ed);
 			draw(ep,REFRESH);
+			ep->ed->e_nocrnl = 0;
 			continue;
 		case cntl('[') :
 		do_escape:
@@ -1409,7 +1411,7 @@ static void draw(register Emacs_t *ep,Draw_t option)
 		}
 #endif /* SHOPT_MULTIBYTE */
 	}
-	if(ep->ed->e_multiline && option == REFRESH)
+	if(ep->ed->e_multiline && option == REFRESH && ep->ed->e_nocrnl==0)
 		ed_setcursor(ep->ed, ep->screen, ep->cursor-ep->screen, ep->ed->e_peol, -1);
 
 	

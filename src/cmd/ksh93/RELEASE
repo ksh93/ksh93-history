@@ -1,5 +1,27 @@
-08-06-24  --- Release ksh93t  ---
-08-06-24  KSH_VERSION added as a name reference to .sh.version.
+08-07-25  --- Release ksh93t  ---
+08-07-18  A bug in which a nameref caused a local variable to be created
+	  rather than binding to an existing variable in the global scope
+	  has been fixed.
+08-07-17  A bug which occured when a nameref was created from within a
+	  function that was  part of a pipeline has been fixed.
+08-07-14  The compile option SHOPT_STATS was added. With this option the
+	  compound variable .sh.stats keeps usage statistics that could help
+	  with performance tuning.
+08-07-10  The output of set now always uses a single line for each variable.
+	  For array variables, the complete set of values is now displayed.
+08-07-09  The typeset -C option can be used with arrays to indicate that
+	  each element should default to a compound variable.
+08-07-08  The %B format now outputs compound variables and arrays.  The
+	  alternate flag # can be used to cause output into a single line.
+08-07-03  When the window change signal, WINCH, is received, the current
+	  edit line is redrawn in place. 
+08-07-01  A bug in the handling of shared variables when inside an embedded
+	  type has been fixed.
+08-06-29  A bug in multiline edit mode which occured when the prompt length
+	  was three characters or less has been fixed.
+08-06-23  A bug in which the SIGCLD was not be triggered when background
+	  jobs completed has been fixed.
+08-06-23  KSH_VERSION added as a name reference to .sh.version.
 08-06-20  type now outputs 'special builtin' for special builtins.
 08-06-19  A couple of bugs in multi-dimensional arrays have been fxied.
 08-06-19  A bug in which a syntax error in a dot script could generated

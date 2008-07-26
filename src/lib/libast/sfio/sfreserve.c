@@ -27,10 +27,10 @@
 */
 
 #if __STD_C
-Void_t* sfreserve(reg Sfio_t* f, ssize_t size, int type)
+Void_t* sfreserve(Sfio_t* f, ssize_t size, int type)
 #else
 Void_t* sfreserve(f,size,type)
-reg Sfio_t*	f;	/* file to peek */
+Sfio_t*		f;	/* file to peek */
 ssize_t		size;	/* size of peek */
 int		type;	/* LOCKR: lock stream, LASTR: last record */
 #endif
@@ -39,8 +39,9 @@ int		type;	/* LOCKR: lock stream, LASTR: last record */
 	reg Sfrsrv_t*	rsrv;
 	reg Void_t*	data;
 	reg int		mode, local;
+	SFMTXDECL(f);
 
-	SFMTXSTART(f,NIL(Void_t*));
+	SFMTXENTER(f,NIL(Void_t*));
 
 	sz = size < 0 ? -size : size;
 

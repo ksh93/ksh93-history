@@ -88,11 +88,12 @@ reg Sfio_t*	f;	/* stream to be synchronized */
 {
 	int	local, rv, mode, lock;
 	Sfio_t*	origf;
+	SFMTXDECL(f);
 
 	if(!(origf = f) )
 		return _sfall();
 
-	SFMTXSTART(origf,-1);
+	SFMTXENTER(origf,-1);
 
 	GETLOCAL(origf,local);
 

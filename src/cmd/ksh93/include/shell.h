@@ -156,6 +156,8 @@ struct Shell_s
 /* symbolic value for sh_fdnotify */
 #define SH_FDCLOSE	(-1)
 
+#undef getenv			/* -lshell provides its own */
+
 #if defined(__EXPORT__) && defined(_DLL)
 #   ifdef _BLD_shell
 #	define extern __EXPORT__

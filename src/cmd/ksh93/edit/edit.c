@@ -760,7 +760,7 @@ void	ed_setup(register Edit_t *ep, int fd, int reedit)
 			strcpy(ep->e_termname,term);
 		}
 #endif
-		ep->e_wsize = MAXLINE - (ep->e_plen-2);
+		ep->e_wsize = MAXLINE - (ep->e_plen+1);
 	}
 	if(ep->e_default && (pp = nv_getval(ep->e_default)))
 	{
@@ -772,6 +772,19 @@ void	ed_setup(register Edit_t *ep, int fd, int reedit)
 			ep->e_lbuf[n] = *pp++;
 		ep->e_default = 0;
 	}
+}
+
+static void ed_putstring(register Edit_t *ep, const char *str)
+{
+	register int c;
+	while(c = *str++)
+		ed_putchar(ep,c);
+}
+
+static void ed_nputchar(register Edit_t *ep, int n, int c)
+{
+	while(n-->0)
+		ed_putchar(ep,c);
 }
 
 /*
@@ -807,10 +820,36 @@ int ed_read(void *context, int fd, char *buff, int size, int reedit)
 			goto done;
 		if(ep->sh->winch)
 		{
+			Edpos_t	lastpos;
+			int	n, rows, newsize;
+			/* move cursor to start of first line */
+			ed_putchar(ep,'\r');
+			ed_flush(ep);
+			astwinsize(2,&rows,&newsize);
+			n = (ep->e_plen+ep->e_cur)/++ep->e_winsz;
+			while(n--)
+				ed_putstring(ep,CURSOR_UP);
+			if(ep->e_multiline && newsize>ep->e_winsz && (lastpos.line=(ep->e_plen+ep->e_peol)/ep->e_winsz))
+			{
+				/* clear the current command line */
+				n = lastpos.line;
+				while(lastpos.line--)
+				{
+					ed_nputchar(ep,ep->e_winsz,' ');
+					ed_putchar(ep,'\n');
+				}
+				ed_nputchar(ep,ep->e_winsz,' ');
+				while(n--)
+					ed_putstring(ep,CURSOR_UP);
+			}
 	                ep->sh->winch = 0;
-			ep->e_winsz = ed_window();
+			ed_flush(ep);
+			sh_delay(.05);
+			astwinsize(2,&rows,&newsize);
+			ep->e_winsz = newsize-1;
 			if(!ep->e_multiline && ep->e_wsize < MAXLINE)
 				ep->e_wsize = ep->e_winsz-2;
+			ep->e_nocrnl=1;
 			if(*ep->e_vi_insert)
 			{
 				buff[0] = ESC;
@@ -1135,19 +1174,6 @@ Edpos_t ed_curpos(Edit_t *ep,genchar *phys, int off, int cur, Edpos_t curpos)
 	}
 	pos.col = col;
 	return(pos);
-}
-
-static void ed_putstring(register Edit_t *ep, const char *str)
-{
-	register int c;
-	while(c = *str++)
-		ed_putchar(ep,c);
-}
-
-static void ed_nputchar(register Edit_t *ep, int n, int c)
-{
-	while(n-->0)
-		ed_putchar(ep,c);
 }
 
 int ed_setcursor(register Edit_t *ep,genchar *physical,register int old,register int new,int first)

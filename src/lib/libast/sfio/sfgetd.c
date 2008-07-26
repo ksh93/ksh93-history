@@ -36,8 +36,9 @@ Sfio_t*	f;
 	reg uchar	*s, *ends, c;
 	reg int		p, sign, exp;
 	Sfdouble_t	v;
+	SFMTXDECL(f);
 
-	SFMTXSTART(f,-1.);
+	SFMTXENTER(f,-1.);
 
 	if((sign = sfgetc(f)) < 0 || (exp = (int)sfgetu(f)) < 0)
 		SFMTXRETURN(f, -1.);

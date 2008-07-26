@@ -129,6 +129,7 @@ typedef int		ssize_t;
 #define VM_check	0x0001	/* enable detailed checks		*/
 #define VM_abort	0x0002	/* abort() on assertion failure		*/
 #define VM_region	0x0004	/* enable region segment checks		*/
+#define VM_mmap		0x0010	/* favor mmap allocation		*/
 #define VM_init		0x8000	/* VMCHECK env var checked		*/
 
 #if _UWIN

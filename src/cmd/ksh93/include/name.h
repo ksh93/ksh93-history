@@ -69,6 +69,7 @@ union Value
 #define ARRAY_NOCHILD   (32L<<ARRAY_BITS)	/* skip compound arrays */
 #define ARRAY_SETSUB	(64L<<ARRAY_BITS)	/* set subscript */
 #define ARRAY_NOSCOPE	(128L<<ARRAY_BITS)	/* top level scope only */
+#define ARRAY_TREE	(256L<<ARRAY_BITS)	/* arrays of compound vars */
 #define NV_ASETSUB	8			/* set subscript */
 
 /* These flags are used as options to array_get() */
@@ -192,7 +193,7 @@ extern char		*nv_getbuf(size_t);
 extern Namval_t		*nv_mount(Namval_t*, const char *name, Dt_t*);
 extern Namval_t		*nv_arraychild(Namval_t*, Namval_t*, int);
 extern int		nv_compare(Dt_t*, Void_t*, Void_t*, Dtdisc_t*);
-extern Namfun_t		*nv_isvtree(Namval_t*);
+extern void		nv_outnode(Namval_t*,Sfio_t*, int, int);
 
 extern const Namdisc_t	RESTRICTED_disc;
 extern char		nv_local;

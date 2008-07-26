@@ -40,6 +40,7 @@ SHOPT_RAWONLY == 1		/* make viraw the only vi mode */
 SHOPT_REMOTE ==			/* enable --rc if running as a remote shell */
 SHOPT_SEVENBIT ==		/* strip the eigth bit from characters */
 SHOPT_SPAWN ==			/* use spawnveg for fork/exec */
+SHOPT_STATS ==	1		/* add .sh.stats variable */
 SHOPT_SUID_EXEC == 1		/* allow (safe) suid/sgid shell scripts */
 SHOPT_SYSRC ==			/* attempt . /etc/ksh.kshrc if interactive */
 SHOPT_TIMEOUT ==		/* number of seconds for shell timeout */

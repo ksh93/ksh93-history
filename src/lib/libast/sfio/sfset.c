@@ -27,17 +27,18 @@
 */
 
 #if __STD_C
-int sfset(reg Sfio_t* f, reg int flags, reg int set)
+int sfset(Sfio_t* f, int flags, int set)
 #else
 int sfset(f,flags,set)
-reg Sfio_t*	f;
-reg int		flags;
-reg int		set;
+Sfio_t*		f;
+int		flags;
+int		set;
 #endif
 {
 	reg int	oflags;
+	SFMTXDECL(f);
 
-	SFMTXSTART(f,0);
+	SFMTXENTER(f,0);
 
 	if(flags == 0 && set == 0)
 		SFMTXRETURN(f, (f->flags&SF_FLAGS));

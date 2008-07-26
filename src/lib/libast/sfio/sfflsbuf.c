@@ -28,20 +28,21 @@
 */
 
 #if __STD_C
-int _sfflsbuf(reg Sfio_t* f, reg int c)
+int _sfflsbuf(Sfio_t* f, int c)
 #else
 int _sfflsbuf(f,c)
-reg Sfio_t*	f;	/* write out the buffered content of this stream */
-reg int		c;	/* if c>=0, c is also written out */ 
+Sfio_t*	f;	/* write out the buffered content of this stream */
+int	c;	/* if c>=0, c is also written out */ 
 #endif
 {
-	reg ssize_t	n, w;
-	reg uchar*	data;
+	ssize_t		n, w;
+	uchar*		data;
 	uchar		outc;
-	reg int		local, isall;
+	int		local, isall;
 	int		inpc = c;
+	SFMTXDECL(f);
 
-	SFMTXSTART(f,-1);
+	SFMTXENTER(f,-1);
 
 	GETLOCAL(f,local);
 

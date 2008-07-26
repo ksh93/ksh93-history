@@ -230,6 +230,7 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 	struct	checkpt		buff;
 	if(!(iop=shp->sftable[fd]) && !(iop=sh_iostream(shp,fd)))
 		return(1);
+	sh_stats(STAT_READS);
 	if(names && (name = *names))
 	{
 		if(val= strchr(name,'?'))

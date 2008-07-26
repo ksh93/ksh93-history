@@ -27,15 +27,16 @@
 */
 
 #if __STD_C
-int sfpurge(reg Sfio_t* f)
+int sfpurge(Sfio_t* f)
 #else
 int sfpurge(f)
-reg Sfio_t*	f;
+Sfio_t*	f;
 #endif
 {
 	reg int	mode;
+	SFMTXDECL(f);
 
-	SFMTXSTART(f,-1);
+	SFMTXENTER(f,-1);
 
 	if((mode = f->mode&SF_RDWR) != (int)f->mode && _sfmode(f,mode|SF_SYNCED,0) < 0)
 		SFMTXRETURN(f, -1);

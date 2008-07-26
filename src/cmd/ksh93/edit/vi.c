@@ -800,7 +800,7 @@ static int cntlmode(Vi_t *vp)
 		case cntl('L'):		/** Redraw line **/
 			/*** print the prompt and ***/
 			/* force a total refresh */
-			if(vp->nonewline==0)
+			if(vp->nonewline==0 && !vp->ed->e_nocrnl)
 				putchar('\n');
 			vp->nonewline = 0;
 			pr_string(vp,Prompt);
@@ -1947,8 +1947,9 @@ static void refresh(register Vi_t* vp, int mode)
 		vp->long_line = vp->long_char;
 	}
 
-	if(vp->ed->e_multiline &&  vp->ofirst_wind==INVALID)
+	if(vp->ed->e_multiline &&  vp->ofirst_wind==INVALID && !vp->ed->e_nocrnl)
 		ed_setcursor(vp->ed, physical, last_phys+1, last_phys+1, -1);
+	vp->ed->e_nocrnl = 0;
 	vp->ocur_phys = ncur_phys;
 	vp->ocur_virt = cur_virt;
 	vp->ofirst_wind = first_w;

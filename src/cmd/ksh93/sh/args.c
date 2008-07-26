@@ -839,11 +839,12 @@ static int arg_expand(Shell_t *shp,register struct argnod *argp, struct argnod *
 	{
 #if SHOPT_OPTIMIZE
 		struct argnod *ap;
+		sh_stats(STAT_ARGEXPAND);
 		if(flag&ARG_OPTIMIZE)
 			argp->argchn.ap=0;
 		if(ap=argp->argchn.ap)
 		{
-			shp->optcount++;
+			sh_stats(STAT_ARGHITS);
 			count = 1;
 			ap->argchn.ap = *argchain;
 			ap->argflag |= ARG_RAW;

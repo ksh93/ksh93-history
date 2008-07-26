@@ -247,7 +247,7 @@ Namval_t *sh_assignok(register Namval_t *np,int add)
 			mpnext = dtnext(root,mp);
 			if(memcmp(name,mp->nvname,len) || mp->nvname[len]!='.')
 				break;
-			dtdelete(walk,mp);
+			nv_delete(mp,walk,NV_NOFREE);
 			*((Namval_t**)mp) = lp->child;
 			lp->child = mp;
 			
@@ -260,7 +260,7 @@ Namval_t *sh_assignok(register Namval_t *np,int add)
 	save = shp->subshell;
 	shp->subshell = 0;
 	mp->nvname = np->nvname;
-	nv_clone(np,mp,(add?NV_NOFREE|NV_ARRAY:NV_MOVE));
+	nv_clone(np,mp,(add?(nv_isnull(np)?0:NV_NOFREE)|NV_ARRAY:NV_MOVE));
 	shp->subshell = save;
 	return(np);
 }
@@ -363,8 +363,7 @@ static void table_unset(register Dt_t *root)
 	{
 		_nv_unset(np,NV_RDONLY);
 		nq = (Namval_t*)dtnext(root,np);
-		dtdelete(root,np);
-		free((void*)np);
+		nv_delete(np,root,0);
 	}
 }
 
@@ -431,11 +430,14 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 	if(!shp->pwd)
 		path_pwd(0);
 	sp->bckpid = shp->bckpid;
+	if(comsub)
+		sh_stats(STAT_COMSUB);
 	if(!comsub || (comsub==1 && !sh_isoption(SH_SUBSHARE)))
 	{
 		sp->shpwd = shp->pwd;
 		sp->pwd = (shp->pwd?strdup(shp->pwd):0);
 		sp->mask = shp->mask;
+		sh_stats(STAT_SUBSHELL);
 		/* save trap table */
 		shp->st.otrapcom = 0;
 		if((nsig=shp->st.trapmax*sizeof(char*))>0 || shp->st.trapcom[0])

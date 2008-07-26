@@ -678,6 +678,12 @@ reg size_t	size;	/* desired block size		*/
 				case 'C':
 					n = VM_check;
 					continue;
+#if _mem_mmap_anon || _mem_mmap_zero
+				case 'm':
+				case 'M':
+					n = VM_mmap;
+#endif
+					continue;
 				case 'r':
 				case 'R':
 					n = VM_region;
@@ -1313,6 +1319,7 @@ Vmdisc_t*	disc;	/* discipline structure			*/
 	{
 
 #if _mem_sbrk	/* try using sbrk() and brk() */
+		if(!(_Vmassert & VM_mmap))
 		{
 			addr = (Vmuchar_t*)sbrk(0); /* old break value */
 			if(addr && addr != (Vmuchar_t*)BRK_FAILED )
@@ -1387,7 +1394,7 @@ Vmdisc_t*	disc;	/* discipline structure			*/
 	}
 #endif /*_done_sbrkmem*/
 
-#if !_done_sbrkmem /* use native malloc/free as a last resource */
+#if !_done_sbrkmem /* use native malloc/free as a last resort */
 	/**/ASSERT(_std_malloc); /* _std_malloc should be well-defined */
 	NOTUSED(vm);
 	NOTUSED(disc);

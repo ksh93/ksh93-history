@@ -394,6 +394,7 @@ char *sh_macpat(Shell_t *shp,register struct argnod *arg, int flags)
 	register char *sp = arg->argval;
 	if((arg->argflag&ARG_RAW))
 		return(sp);
+	sh_stats(STAT_ARGEXPAND);
 	if(flags&ARG_OPTIMIZE)
 		arg->argchn.ap=0;
 	if(!(sp=arg->argchn.cp))
@@ -405,7 +406,7 @@ char *sh_macpat(Shell_t *shp,register struct argnod *arg, int flags)
 		arg->argflag &= ~ARG_MAKE;
 	}
 	else
-		shp->optcount++;
+		sh_stats(STAT_ARGHITS);
 	return(sp);
 }
 
