@@ -31,7 +31,7 @@
 #include <ip6.h>
 
 /*
- * convert string to ipv6 local byte order ip address
+ * convert string to ipv6 network byte order ip address
  * with optional prefix bits
  * pointer to first unused char placed in *e, even on error
  * return 0:ok <0:error

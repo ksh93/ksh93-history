@@ -287,7 +287,7 @@ void nv_setlist(register struct argnod *arg,register int flags)
 {
 	Shell_t		*shp = &sh;
 	register char	*cp;
-	register Namval_t *np;
+	register Namval_t *np, *mp;
 	char		*trap=shp->st.trap[SH_DEBUGTRAP];
 	char		*prefix = shp->prefix;
 	int		traceon = (sh_isoption(SH_XTRACE)!=0);
@@ -317,15 +317,16 @@ void nv_setlist(register struct argnod *arg,register int flags)
 	for(;arg; arg=arg->argnxt.ap)
 	{
 		shp->used_pos = 0;
+		mp = 0;
 		if(arg->argflag&ARG_MAC)
 		{
 			shp->prefix = 0;
 			cp = sh_mactrim(shp,arg->argval,(flags&NV_NOREF)?-3:-1);
+			mp = (Namval_t*)shp->prefix;
 			shp->prefix = prefix;
 		}
 		else
 		{
-			Namval_t *mp;
 			stakseek(0);
 			if(*arg->argval==0 && arg->argchn.ap && !(arg->argflag&~(ARG_APPEND|ARG_QUOTED|ARG_MESSAGE)))
 			{
@@ -502,8 +503,15 @@ void nv_setlist(register struct argnod *arg,register int flags)
 #endif /* SHOPT_TYPEDEF */
 			}
 			cp = arg->argval;
+			mp = 0;
 		}
 		np = nv_open(cp,shp->var_tree,flags);
+		if(mp)
+		{
+			_nv_unset(np,0);
+			nv_setvtree(np);
+			nv_clone(mp,np,NV_COMVAR);
+		}
 		if(!np->nvfun && (flags&NV_NOREF))
 		{
 			if(shp->used_pos)
@@ -2008,8 +2016,8 @@ void	nv_close(Namval_t *np)
 
 static void table_unset(Shell_t *shp, register Dt_t *root, int flags, Dt_t *oroot)
 {
-	register Namval_t *np,*nq;
-	for(np=(Namval_t*)dtfirst(root);np;np=nq)
+	register Namval_t *np,*nq, *npnext;
+	for(np=(Namval_t*)dtfirst(root);np;np=npnext)
 	{
 		if(nv_isref(np))
 			nv_unref(np);
@@ -2034,14 +2042,18 @@ static void table_unset(Shell_t *shp, register Dt_t *root, int flags, Dt_t *oroo
 				sh_envput(shp->env,nq);
 #endif
 		}
-		nq = (Namval_t*)dtnext(root,np);
+		npnext = (Namval_t*)dtnext(root,np);
 		shp->last_root = root;
 		if(nv_isvtree(np))
 		{
 			int len = strlen(np->nvname);
-			while(nq && memcmp(np->nvname,nq->nvname,len)==0 && nq->nvname[len]=='.')
+			while((nq=npnext) && memcmp(np->nvname,nq->nvname,len)==0 && nq->nvname[len]=='.')
 
-				nq = (Namval_t*)dtnext(root,nq);
+			{
+				npnext = (Namval_t*)dtnext(root,nq);
+				_nv_unset(nq,flags);
+				nv_delete(nq,root,0);
+			}
 		}
 		_nv_unset(np,flags);
 		nv_delete(np,root,0);
@@ -2245,6 +2257,11 @@ void nv_optimize(Namval_t *np)
 	register struct optimize *op, *xp;
 	if(sh.argaddr)
 	{
+		if(np==SH_LINENO)
+		{
+			sh.argaddr = 0;
+			return;
+		}
 		for(fp=np->nvfun; fp; fp = fp->next)
 		{
 			if(fp->disc && (fp->disc->getnum || fp->disc->getval))

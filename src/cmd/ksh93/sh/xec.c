@@ -1370,6 +1370,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 			int	savepipe = pipejob;
 			int	showme = t->tre.tretyp&FSHOWME;
 			pid_t	savepgid = job.curpgid;
+			job.curpgid = 0;
 			if(shp->subshell)
 				sh_subtmpfile();
 			shp->inpipe = pvo;

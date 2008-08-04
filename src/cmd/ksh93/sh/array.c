@@ -68,6 +68,7 @@ static Namarr_t *array_scope(Namval_t *np, Namarr_t *ap, int flags)
         if(!(aq=newof(NIL(Namarr_t*),Namarr_t,1,size-sizeof(Namarr_t))))
                 return(0);
         memcpy(aq,ap,size);
+	aq->hdr.nofree &= ~1;
         aq->hdr.nofree |= (flags&NV_RDONLY)?1:0;
 	if(is_associative(aq))
 	{
@@ -343,17 +344,23 @@ static Namfun_t *array_clone(Namval_t *np, Namval_t *mp, int flags, Namfun_t *fp
 		return(&ap->hdr);
 	}
 	ap = (Namarr_t*)nv_clone_disc(fp,0);
+	if(flags&NV_COMVAR)
+	{
+		ap->scope = 0;
+		ap->nelem = 0;
+	}
 	if(ap->table)
 	{
 		ap->table = dtopen(&_Nvdisc,Dtoset);
-		if(ap->scope)
+		if(ap->scope && !(flags&NV_COMVAR))
 		{
 			ap->scope = ap->table;
 			dtview(ap->table, otable->view);
 		}
 	}
 	mp->nvfun = (Namfun_t*)ap;
-	mp->nvflag = np->nvflag;
+	mp->nvflag &= NV_MINIMAL;
+	mp->nvflag |= (np->nvflag&~(NV_MINIMAL|NV_NOFREE));
 	if(!(nelem&(ARRAY_SCAN|ARRAY_UNDEF)) && (sub=nv_getsub(np)))
 		sub = strdup(sub);
 	ar = (struct index_array*)ap;
@@ -363,7 +370,7 @@ static Namfun_t *array_clone(Namval_t *np, Namval_t *mp, int flags, Namfun_t *fp
 		if(!(flags&NV_ARRAY))
 			memset(ar->val,0,array_elem(ap)*sizeof(ar->val[0]));
 	}
-	if(!nv_putsub(np,NIL(char*),ARRAY_SCAN|ARRAY_NOSCOPE))
+	if(!nv_putsub(np,NIL(char*),ARRAY_SCAN|((flags&NV_COMVAR)?0:ARRAY_NOSCOPE)))
 	{
 		if(ap->fun)
 			(*ap->fun)(np,(char*)np,0);

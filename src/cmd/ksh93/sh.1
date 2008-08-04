@@ -23,8 +23,8 @@
 sh, rsh, pfsh \- shell, the
 .\}
 .if \nZ=1 \{\
-.\}
 ksh, rksh, pfksh \- KornShell, a
+.\}
 .if \nZ=2 \{\
 ksh93, rksh93, pfksh93 \- KornShell, a
 .\}
@@ -32,8 +32,8 @@ standard/restricted command and programming language
 .SH SYNOPSIS
 .if \nZ=0 \{\
 .B sh
-.if \nZ=1 \{\
 .\}
+.if \nZ=1 \{\
 .B ksh
 .\}
 .if \nZ=2 \{\
@@ -686,7 +686,7 @@ Include the assignment commands contained in
 .IR filename .
 .PD
 .RE
-.P
+.PP
 In addition, a \f3+=\fP can be used in place of the \f3=\fP
 to signify adding to or appending to the previous value.
 When \f3+=\fP is applied to an arithmetic type, \f2word\^\fP
@@ -695,6 +695,11 @@ When applied to a string variable, the value defined by \f2word\^\fP
 is appended to the value.  For compound assignments, the previous
 value is not unset and the new values are appended to the
 current ones provided that the types are compatible.
+.PP
+The right hand side of a variable assignment undergoes all the expansion
+list below except word splitting, brace expansion, and file name generation.
+When the right hand side is a parameter substition of a compound variable,
+the left hand side will become a compound variable with the same value.
 .SS Comments.
 .PD 0
 A word beginning with
@@ -1000,11 +1005,16 @@ between a
 and a
 .BR ] .
 To assign values to an indexed array, use
+\f2vname\fP\f3=(\fP\f2value\fP .\|.\|.\f3)\fP or
 \f3set \-A\fP \f2vname\fP  \f2value\fP .\|.\|. .
 The value of all
 subscripts must be in the
 range of
 0 through 4,194,303.
+Indexed arrays can be declared with the
+.B \-a
+option to
+.BR typeset.
 Indexed arrays need not be declared.
 Any reference to a variable
 with a valid subscript is

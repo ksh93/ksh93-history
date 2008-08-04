@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                     Copyright (c) 1994-2007 AT&T                     *
+*                     Copyright (c) 1994-2008 AT&T                     *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                               by AT&T                                *
@@ -18,15 +18,20 @@
 *                                                                      *
 ***********************************************************************/
 /*
- * -lm test #5
+ * small test for sleepycat dbm compatibility
  */
 
-#include <math.h>
+#define DB_DBM_HSEARCH		1
+
+#if DB_DBM_HSEARCH
+#include <db.h>
+#endif
 
 int
 main()
 {
-	long double	value = 0;
+	DBM*	dbm = 0;
 
-	return isnanl(value);
+	dbm_close(dbm);
+	return 0;
 }

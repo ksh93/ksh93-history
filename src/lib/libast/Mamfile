@@ -6875,6 +6875,7 @@ make features/ndbm
 done features/ndbm
 prev ast.req
 exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/ndbm
+prev std/stdio.h implicit
 done FEATURE/ndbm generated
 exec - cmp 2>/dev/null -s FEATURE/ndbm ast_ndbm.h || { rm -f ast_ndbm.h; silent test -d . || mkdir .; ${STDCP} FEATURE/ndbm ast_ndbm.h; }
 done ast_ndbm.h generated

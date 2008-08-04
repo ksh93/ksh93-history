@@ -1,3 +1,4 @@
+08-08-05 features/ndbm: favor sleepycat ndbm compatibility
 08-07-21 include/glob.h,misc/glob.c: GLOB_STARSTAR only forces lstat on chdir
 08-07-17 sfio: sync with kpv
 08-07-17 misc/optget.c: call astwinsize() each time terminal width required

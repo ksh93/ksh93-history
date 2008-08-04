@@ -2,7 +2,7 @@
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)make.probe (AT&T Research) 2008-02-28
+# @(#)make.probe (AT&T Research) 2008-08-04
 #
 # C probe for make
 #
@@ -1150,6 +1150,26 @@ case $stdlib in
 			esac
 		fi
 	done
+	case $hosted in
+	1)	case " $stdlib " in
+		*" /usr/lib "*)
+			;;
+		*)	case " $stdlib " in
+			*" /usr/local/lib "*)
+				;;
+			*)	stdlib="$stdlib /usr/local/lib"
+				;;
+			esac
+			stdlib="$stdlib /usr/lib"
+			;;
+		esac
+		case " $stdlib " in
+		*" /lib "*)
+			;;
+		*)	stdlib="$stdlib /lib"
+			;;
+		esac
+	esac
 	;;
 *)	keepstdlib=0
 	case $dir in
@@ -1484,7 +1504,7 @@ fi
 
 while	:
 do	case $hosted in
-	?*)	rm -f readonly.$exe
+	1)	rm -f readonly.$exe
 		eval set x '""' $probe_readonly
 		while	:
 		do	shift
@@ -1657,7 +1677,7 @@ sgi.mips4)	dll_variants='sgi.mips2:o32:-mips2 sgi.mips3:n32:-mips3' ;;
 esac
 
 case $hosted in
-'')	ccnative=`echo $cc | sed -e 's,.*/,,'`
+"")	ccnative=`echo $cc | sed -e 's,.*/,,'`
 	ccs=$ccnative
 	for c in cc gcc
 	do	case " $ccs " in

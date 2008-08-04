@@ -123,6 +123,8 @@ Cube_t d=c
 [[ $d == "$c" ]] || err_exit '$d != $c'
 eval "Cube_t zzz=$c"
 [[ $zzz == "$c" ]] || err_exit '$zzz != $c'
+Cube_t zzz=$c
+[[ $zzz == "$c" ]] || err_exit '$zzz != $c without eval'
 xxx=$(typeset -p c)
 eval "${xxx/c=/ccc=}"
 [[ $ccc == "$c" ]] || err_exit '$ccc != $c'

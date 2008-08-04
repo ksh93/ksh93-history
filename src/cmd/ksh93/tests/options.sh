@@ -343,6 +343,15 @@ print hi | (sleep 1;/bin/cat) > /dev/null || err_exit 'pipeline fails with pipef
 	(( $? )) || err_exit 'pipe not failing in subshell with pipefail'
 ) | wc >/dev/null
 $SHELL -c 'set -o pipefail; false | $(whence -p true);' && err_exit 'pipefail not returning failure with sh -c'
+[[ $( set -o pipefail
+	pipe() { date | cat > /dev/null ;}
+	print $'1\n2' |
+	while	read i 
+	do 	if	pipe /tmp
+		then	{ print enter $i; sleep 2; print leave $i; } &
+		fi
+	done
+	wait) == $'enter 1\nenter 2'* ]] || err_exit  '& job delayed by pipefail'
 $SHELL -c '[[ $- == *c* ]]' || err_exit  'option c not in $-'
 trap 'rm -f /tmp/.profile' EXIT
 > /tmp/.profile

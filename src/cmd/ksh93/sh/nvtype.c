@@ -1191,6 +1191,8 @@ int nv_settype(Namval_t* np, Namval_t *tp, int flags)
 	Namarr_t	*ap=0;
 #if SHOPT_TYPEDEF
 	Namval_t	*tq;
+	if(nv_type(np)==tp)
+		return(0);
 	if(nv_isarray(np) && (tq=nv_type(np)))
 	{
 		if(tp==tq)

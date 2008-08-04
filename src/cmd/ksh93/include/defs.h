@@ -120,6 +120,7 @@ struct limits
 	Dt_t		*var_base;	/* global level variables */ \
 	Namval_t	*namespace;	/* current active namespace*/ \
 	Namval_t	*last_table;	/* last table used in last nv_open  */ \
+	Namval_t	*prev_table;	/* previous table used in nv_open  */ \
 	Sfio_t		*outpool;	/* ouput stream pool */ \
 	long		timeout;	/* read timeout */ \
 	short		curenv;		/* current subshell number */ \
@@ -210,6 +211,7 @@ struct limits
 	Sfio_t		*strbuf; \
 	Sfio_t		*strbuf2; \
 	Dt_t		*last_root; \
+	Dt_t		*prev_root; \
 	Dt_t		*fpathdict; \
 	char		ifstable[256]; \
 	unsigned char	sigruntime[2]; \

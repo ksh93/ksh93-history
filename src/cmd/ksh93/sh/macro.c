@@ -1002,6 +1002,9 @@ static int varsub(Mac_t *mp)
 	char		idbuff[3], *id = idbuff, *pattern=0, *repstr, *arrmax=0;
 	int		addsub=0,oldpat=mp->pattern,idnum=0,flag=0,d;
 	Stk_t		*stkp = mp->shp->stk;
+	int		assign=mp->assign?stktell(stkp):0;
+	if(assign && *stkptr(stkp,assign-1)!='=')
+		assign = 0;
 retry1:
 	mp->zeros = 0;
 	idbuff[0] = 0;
@@ -1238,11 +1241,44 @@ retry1:
 		}
 		else
 			fcseek(-1);
+		if(type<=1 && np && nv_isvtree(np) && (assign || (mp->pattern==1 && !mp->split)))
+		{
+			int peek=1,cc=fcget();
+			if(type && cc=='}')
+			{
+				cc = fcget();
+				peek = 2;
+			}
+			if(mp->quote && cc=='"')
+			{
+				cc = fcget();
+				peek++;
+			}
+			fcseek(-peek);
+			if(cc==0)
+			{
+				if(assign)
+				{
+					*stakptr(assign) = 0;
+					mp->shp->prefix = (char*)np;
+					mp->shp->prev_table = mp->shp->last_table;
+					mp->shp->prev_root = mp->shp->last_root;
+					if(type)
+						fcseek(1);
+					stkseek(stkp,assign);
+					return(1);
+				}
+				mp->assign = 1;
+			}
+		}
 		if((type==M_VNAME||type==M_SUBNAME)  && mp->shp->argaddr && strcmp(nv_name(np),id))
 			mp->shp->argaddr = 0;
 		c = (type>M_BRACE && isastchar(mode));
 		if(np && (type==M_TREE || !c || !ap))
 		{
+			char *savptr;
+			c = *((unsigned char*)stkptr(stkp,offset-1));
+			savptr = stkfreeze(stkp,0);
 			if(type==M_VNAME || (type==M_SUBNAME && ap))
 			{
 				type = M_BRACE;
@@ -1280,9 +1316,13 @@ retry1:
 			{
 				v = nv_getval(np);
 				/* special case --- ignore leading zeros */  
-				if( (mp->arith||mp->let) && (np->nvfun || nv_isattr(np,(NV_LJUST|NV_RJUST|NV_ZFILL))) && (offset==0 || !isalnum(*((unsigned char*)stkptr(stkp,offset-1)))))
+				if( (mp->arith||mp->let) && (np->nvfun || nv_isattr(np,(NV_LJUST|NV_RJUST|NV_ZFILL))) && (offset==0 || !isalnum(c)))
 					mp->zeros = 1;
 			}
+			if(savptr==stakptr(0))
+				stkseek(stkp,offset);
+			else
+				stkset(stkp,savptr,offset);
 		}
 		else
 		{

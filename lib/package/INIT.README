@@ -92,6 +92,8 @@ All recorded changes follow.
 
 :::::::: INIT ::::::::
 
+08-08-05 dbm.req: favor sleepycat ndbm compatibility
+08-08-04 C+probe: fix stdlib initialization logic
 08-06-24 package.sh: fix $INSTALLROOT/bin/cc intercept time stamp file typo
 08-06-20 TEST.mk: make the localyunit before *.rt => *.tst -- doh
 08-06-20 mktest.sh: prepend $PWD onto PATH for local units -- doh^2

@@ -578,6 +578,8 @@ Namfun_t *nv_clone_disc(register Namfun_t *fp, int flags)
 	if(!(nfp=newof(NIL(Namfun_t*),Namfun_t,1,size-sizeof(Namfun_t))))
 		return(0);
 	memcpy(nfp,fp,size);
+	if(flags&NV_COMVAR)
+		nfp->nofree &= ~1;
 	nfp->nofree |= (flags&NV_RDONLY)?1:0;
 	return(nfp);
 }
@@ -811,6 +813,8 @@ void clone_all_disc( Namval_t *np, Namval_t *mp, int flags)
 	register Namfun_t *fp, **mfp = &mp->nvfun, *nfp;
 	for(fp=np->nvfun; fp;fp=fp->next)
 	{
+		if(!fp->next && (flags&NV_COMVAR) && fp->disc && fp->disc->namef)
+			return;
 		if((fp->nofree&2) && (flags&NV_NODISC))
 			nfp = 0;
 		if(fp->disc && fp->disc->clonef)
@@ -831,6 +835,7 @@ void clone_all_disc( Namval_t *np, Namval_t *mp, int flags)
  * NV_MOVE - move <np> to <mp>
  * NV_NOFREE - mark the new node as nofree
  * NV_NODISC - discplines with funs non-zero will not be copied
+ * NV_COMVAR - cloning a compound variable
  */
 int nv_clone(Namval_t *np, Namval_t *mp, int flags)
 {
@@ -841,10 +846,12 @@ int nv_clone(Namval_t *np, Namval_t *mp, int flags)
 	for(fp=mp->nvfun; fp; fp=fpnext)
 	{
 		fpnext = fp->next;
+		if(!fpnext && (flags&NV_COMVAR) && fp->disc && fp->disc->namef)
+			break;
 		if(!(fp->nofree&1))
 			free((void*)fp);
 	}
-	mp->nvfun = 0;
+	mp->nvfun = fp;
 	if(fp=np->nvfun)
 	{
 		if(nv_isattr(mp,NV_EXPORT|NV_MINIMAL) == (NV_EXPORT|NV_MINIMAL))
@@ -854,9 +861,9 @@ int nv_clone(Namval_t *np, Namval_t *mp, int flags)
 		}
 		if(!nv_isattr(np,NV_MINIMAL) && np->nvenv && !(nv_isattr(mp,NV_MINIMAL)))
 			mp->nvenv = np->nvenv;
-	        mp->nvflag = np->nvflag&~NV_ARRAY;
+		mp->nvflag &= NV_MINIMAL;
+	        mp->nvflag |= np->nvflag&~(NV_ARRAY|NV_MINIMAL|NV_NOFREE);
 		flag = mp->nvflag;
-		mp->nvfun = 0;
 		if(flags&NV_MOVE)
 		{
 			mp->nvfun = fp;
@@ -869,10 +876,21 @@ int nv_clone(Namval_t *np, Namval_t *mp, int flags)
 skip:
 	if(mp->nvsize == size)
 	        nv_setsize(mp,nv_size(np));
-	if(mp->nvalue.cp==val && !nv_isattr(np,NV_INTEGER))
-	        mp->nvalue.cp = np->nvalue.cp;
 	if(mp->nvflag == flag)
-	        mp->nvflag = (np->nvflag&~NV_MINIMAL)|(mp->nvflag&NV_MINIMAL);
+	        mp->nvflag = (np->nvflag&~(NV_MINIMAL))|(mp->nvflag&NV_MINIMAL);
+	if(mp->nvalue.cp==val && !nv_isattr(np,NV_INTEGER))
+	{
+		if(np->nvalue.cp && (flags&NV_COMVAR) && !(flags&(NV_NOFREE|NV_MOVE)))
+		{
+			if(size)
+				mp->nvalue.cp = (char*)memdup(np->nvalue.cp,size);
+			else
+			        mp->nvalue.cp = strdup(np->nvalue.cp);
+			nv_offattr(mp,NV_NOFREE);
+		}
+		else if(!(mp->nvalue.cp = np->nvalue.cp))
+			nv_offattr(mp,NV_NOFREE);
+	}
 	if(flags&NV_MOVE)
 	{
 		np->nvfun = 0;

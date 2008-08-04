@@ -2,7 +2,7 @@
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)C probe (AT&T Research) 2008-04-10
+# @(#)C probe (AT&T Research) 2008-08-04
 #
 # probe [ -d ] c-compiler-path [ attributes ]
 #
@@ -845,13 +845,5 @@ for f in $x
 do	case " $stdinclude $usrinclude " in
 	*" $f "*)	;;
 	*)		stdinclude="$stdinclude $f" ;;
-	esac
-done
-x=$stdlib
-stdlib=
-for f in $x
-do	case " $stdlib " in
-	*" $f "*)	;;
-	*)		stdlib="$stdlib $f" ;;
 	esac
 done

@@ -957,4 +957,16 @@ function _Dbg_debug_trap_handler
 trap '_Dbg_debug_trap_handler' DEBUG
 .  $tmp  foo bar
 trap '' DEBUG
+             
+caller() {
+  integer .level=.sh.level .max=.sh.level-1
+  while((--.level>=0))
+  do
+      ((.sh.level = .level))
+      print -r -- "${.sh.lineno}"
+  done
+}
+bar() { caller;}
+set -- $(bar)
+[[ $1 == $2 ]] && err_exit ".sh.inline optimization bug"
 exit $((Errors))

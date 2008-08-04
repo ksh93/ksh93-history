@@ -285,4 +285,4 @@ socket :MAPLIB: socket.c nsl.c
  * at least the -l* buck stops here
  */
 
-dbm gdbm_compat - gdbm - ndbm - dbm :MAPLIB: gdbm.c gdbm2.c
+dbm db - gdbm_compat - gdbm - ndbm - dbm :MAPLIB: db.c gdbm.c gdbm2.c

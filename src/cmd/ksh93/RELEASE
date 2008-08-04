@@ -1,4 +1,14 @@
-08-07-25  --- Release ksh93t  ---
+08-08-01  --- Release ksh93t  ---
+08-08-01  A bug with the pipefail option in which a nested pipeline could
+	  cause an asynchronous command to block has been fixed.
+08-08-01  A for loop optimizer bug that treates .sh.lineno as an invariant
+	  has been fixed.
+08-07-30  A bug in which expanding compound variable that had a get discipline
+	  from with a here document could cause a syntax error has been fixed.
+08-07-29  When the right hand side of an assignment is of the form, $name
+	  or ${name}, and name is a compound variable or a type defined by
+	  a compound variable, the assignment causes the left hand side to
+	  be a copy of the right hand side equivalent to eval "left=$name".
 08-07-18  A bug in which a nameref caused a local variable to be created
 	  rather than binding to an existing variable in the global scope
 	  has been fixed.
