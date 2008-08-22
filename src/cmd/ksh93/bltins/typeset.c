@@ -264,6 +264,9 @@ int    b_typeset(int argc,register char *argv[],void *extra)
 			case 'b':
 				flag |= NV_BINARY;
 				break;
+			case 'm':
+				flag |= NV_MOVE;
+				break;
 			case 'n':
 				flag &= ~NV_VARNAME;
 				flag |= (NV_REF|NV_IDENT);
@@ -353,6 +356,10 @@ endargs:
 		error_info.errors++;
 	if((flag&NV_BINARY) && (flag&(NV_LJUST|NV_UTOL|NV_LTOU)))
 		error_info.errors++;
+	if((flag&NV_MOVE) && (flag&~(NV_MOVE|NV_VARNAME|NV_ASSIGN)))
+		error_info.errors++;
+	if((flag&NV_REF) && (flag&~(NV_REF|NV_IDENT|NV_ASSIGN)))
+		error_info.errors++;
 	if(troot==tdata.sh->fun_tree && ((isfloat || flag&~(NV_FUNCT|NV_TAGGED|NV_EXPORT|NV_LTOU))))
 		error_info.errors++;
 	if(error_info.errors)
@@ -421,7 +428,7 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 {
 	register char *name;
 	char *last = 0;
-	int nvflags=(flag&(NV_ARRAY|NV_NOARRAY|NV_VARNAME|NV_IDENT|NV_ASSIGN|NV_STATIC));
+	int nvflags=(flag&(NV_ARRAY|NV_NOARRAY|NV_VARNAME|NV_IDENT|NV_ASSIGN|NV_STATIC|NV_MOVE));
 	int r=0, ref=0, comvar=(flag&NV_COMVAR),iarray=(flag&NV_IARRAY);
 	Shell_t *shp =tp->sh;
 	if(!shp->prefix)
@@ -540,6 +547,18 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 						nv_unset(np);
 					nv_setvtree(np);
 				}
+			}
+			if(flag&NV_MOVE)
+			{
+				Dt_t *hp=0;
+				if(nv_isattr(np,NV_PARAM) && shp->st.prevst)
+				{
+					if(!(hp=(Dt_t*)shp->st.prevst->save_tree))
+						hp = dtvnext(shp->var_tree);
+				}
+				nv_rename(np, hp, flag);
+				nv_close(np);
+				continue;
 			}
 			if(tp->tp)
 			{

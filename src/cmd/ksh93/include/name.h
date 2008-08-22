@@ -96,6 +96,7 @@ struct Ufunction
 	char		*fname;		/* file name where function defined */
 	char		*help;		/* help string */
 	Dt_t		*sdict;		/* dictionary for statics */
+	Dt_t		*fdict;		/* dictionary node belongs to */
 	Namval_t	*np;		/* function node pointer */
 };
 
@@ -194,6 +195,7 @@ extern Namval_t		*nv_mount(Namval_t*, const char *name, Dt_t*);
 extern Namval_t		*nv_arraychild(Namval_t*, Namval_t*, int);
 extern int		nv_compare(Dt_t*, Void_t*, Void_t*, Dtdisc_t*);
 extern void		nv_outnode(Namval_t*,Sfio_t*, int, int);
+extern int		nv_subsaved(Namval_t*);
 
 extern const Namdisc_t	RESTRICTED_disc;
 extern char		nv_local;

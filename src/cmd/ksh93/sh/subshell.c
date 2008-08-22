@@ -187,6 +187,21 @@ void sh_subfork(void)
 	}
 }
 
+int nv_subsaved(register Namval_t *np)
+{
+	register struct subshell	*sp;
+	register struct Link		*lp;
+	for(sp = (struct subshell*)subshell_data; sp; sp=sp->prev)
+	{
+		for(lp=sp->svar; lp; lp = lp->next)
+		{
+			if(lp->node==np)
+				return(1);
+		}
+	}
+	return(0);
+}
+
 /*
  * This routine will make a copy of the given node in the
  * layer created by the most recent subshell_fork if the
@@ -356,14 +371,22 @@ Dt_t *sh_subfuntree(int create)
 	return(sh.fun_tree);
 }
 
-static void table_unset(register Dt_t *root)
+static void table_unset(register Dt_t *root,int fun)
 {
 	register Namval_t *np,*nq;
+	int flag;
 	for(np=(Namval_t*)dtfirst(root);np;np=nq)
 	{
-		_nv_unset(np,NV_RDONLY);
 		nq = (Namval_t*)dtnext(root,np);
-		nv_delete(np,root,0);
+		flag=0;
+		if(fun && np->nvalue.rp->fname && *np->nvalue.rp->fname=='/')
+		{
+			np->nvalue.rp->fdict = 0;
+			flag = NV_NOFREE;
+		}
+		else
+			_nv_unset(np,NV_RDONLY);
+		nv_delete(np,root,flag);
 	}
 }
 
@@ -567,13 +590,13 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 		if(sp->salias)
 		{
 			shp->alias_tree = dtview(sp->salias,0);
-			table_unset(sp->salias);
+			table_unset(sp->salias,0);
 			dtclose(sp->salias);
 		}
 		if(sp->sfun)
 		{
 			shp->fun_tree = dtview(sp->sfun,0);
-			table_unset(sp->sfun);
+			table_unset(sp->sfun,1);
 			dtclose(sp->sfun);
 		}
 		n = shp->st.trapmax-savst.trapmax;

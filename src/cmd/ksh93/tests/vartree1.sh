@@ -194,7 +194,6 @@ function main
 	# Compare trees
 	if [[ "${mytree_global}" != "${mytree_local}" ]] ; then
 		err_exit "Compound trees 'mytree_local' and 'mytree_global' not identical"
-		diff -u <( printf "%s\n" "${mytree_global}" ) <( printf "%s\n" "${mytree_local}" )
 	fi
 	
 	unset 'mytree_global.l1[urw].l2[itc zapfdingbats].l3[medium].entries[abcd].filenames[0]' ||
@@ -208,8 +207,8 @@ function main
 	# Compare trees (after "unset")
 	if [[ "${mytree_global}" != "${mytree_local}" ]] ; then
 		err_exit "Compound trees 'mytree_local' and 'mytree_global' not identical after unset"
-		diff -u <( printf "%s\n" "${mytree_global}" ) <( printf "%s\n" "${mytree_local}" )
 	fi	
 }
 
 main
+exit $((Errors))

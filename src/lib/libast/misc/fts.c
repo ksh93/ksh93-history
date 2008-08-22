@@ -516,9 +516,13 @@ info(FTS* fts, register FTSENT* f, const char* path, struct stat* sp, int flags)
 		{
 			f->fts_parent->nlink--;
 #ifdef D_TYPE
-			f->must = 0;
 			if ((f->nlink = sp->st_nlink) < 2)
+			{
+				f->must = 2;
 				f->nlink = 2;
+			}
+			else
+				f->must = 0;
 #else
 			if ((f->nlink = sp->st_nlink) >= 2)
 				f->must = 1;

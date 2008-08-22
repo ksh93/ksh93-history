@@ -22,8 +22,9 @@
 command=mktest
 stdin=8
 stdout=9
-STYLE=regress
 PREFIX=test
+STYLE=regress
+WIDTH=80
 
 eval "exec $stdout>&1"
 
@@ -31,7 +32,7 @@ case $(getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt) in
 0123)	ARGV0="-a $command"
 	USAGE=$'
 [-?
-@(#)$Id: mktest (AT&T Labs Research) 2008-06-20 $
+@(#)$Id: mktest (AT&T Labs Research) 2008-08-08 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?mktest - generate a regression test scripts]
@@ -46,6 +47,8 @@ case $(getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt) in
         [+regress?\bregress\b(1) command input.]
         [+shell?Standalone test shell script.]
     }
+[w:width?Set the output format width to approximately
+    \awidth\a.]:[width:='$WIDTH$']
 
 unit.rt [ unit [ arg ... ] ]
 
@@ -94,7 +97,6 @@ esac
 
 typeset ARG SCRIPT UNIT TEMP=${TMPDIR:-/tmp}/$command.$$.tmp WORK
 typeset IO INPUT OUTPUT ERROR KEEP
-typeset SINGLE= WIDTH=80 quote='%${SINGLE}..${WIDTH}q'
 typeset -A DATA RESET REMOVE FORMAT
 integer KEEP_UNIT=0 SCRIPT_UNIT=0 TEST=0 CODE=0 EXIT=0 ACCEPT=0 code
 
@@ -109,6 +111,8 @@ do	case $OPT in
 			;;
 		esac
 		;;
+	w)	WIDTH=$OPTARG
+		;;
 	*)	OPTIND=0
 		getopts $ARGV0 "$USAGE" OPT '-?'
 		exit 2
@@ -116,6 +120,8 @@ do	case $OPT in
 	esac
 done
 shift $OPTIND-1
+
+typeset SINGLE= quote='%${SINGLE}..${WIDTH}q'
 
 if	[[ $1 == - ]]
 then	shift

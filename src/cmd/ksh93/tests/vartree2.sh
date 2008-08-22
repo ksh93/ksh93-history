@@ -277,17 +277,14 @@ function main
 	#### Compare treess
 	if [[ "${mytree_global1}" != "${mytree_local1}" ]] ; then
 		err_exit "Compound trees 'mytree_global1' and 'mytree_local1' not identical"
-		diff -u <( printf "%s\n" "${mytree_global1}" ) <( printf "%s\n" "${mytree_local1}" )
 	fi
 
 	if [[ "${mytree_global1}" != "${mytree_global2}" ]] ; then
 		err_exit "Compound trees 'mytree_global1' and 'mytree_global2' not identical"
-		diff -u <( printf "%s\n" "${mytree_global1}" ) <( printf "%s\n" "${mytree_global2}" )
 	fi
 
 	if [[ "${mytree_local1}" != "${mytree_local2}" ]] ; then
 		err_exit "Compound trees 'mytree_local1' and 'mytree_local2' not identical"
-		diff -u <( printf "%s\n" "${mytree_local1}" ) <( printf "%s\n" "${mytree_local2}" )
 	fi
 
 
@@ -330,8 +327,8 @@ function main
 	# Compare trees (after "unset")
 	if [[ "${mytree_global1}" != "${mytree_local1}" ]] ; then
 		err_exit "Compound trees 'mytree_local1' and 'mytree_global1' not identical after unset"
-		diff -u <( printf "%s\n" "${mytree_global1}" ) <( printf "%s\n" "${mytree_local1}" )
 	fi	
 }
 
 main
+exit $((Errors))

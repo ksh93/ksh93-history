@@ -208,6 +208,7 @@ int	action;	/* >0: peeking, if rc>=0, get action records,
 			 * work around macos 10.4 recv(MSG_PEEK) bug that consumes pipe() data
 			 */
 
+			struct stat	st;
 			static int	recv_peek_ok;
 			if (!recv_peek_ok)
 			{
@@ -219,7 +220,7 @@ int	action;	/* >0: peeking, if rc>=0, get action records,
 				close(fds[0]);
 				close(fds[1]);
 			}
-			if (recv_peek_ok < 0)
+			if (recv_peek_ok < 0 && !fstat(fd, &st) && !S_ISSOCK(st.st_mode))
 			{
 				r = -1;
 				t &= ~SOCKET_PEEK;

@@ -1164,7 +1164,7 @@ extern int		_sfpclose _ARG_((Sfio_t*));
 extern int		_sfexcept _ARG_((Sfio_t*, int, ssize_t, Sfdisc_t*));
 extern Sfrsrv_t*	_sfrsrv _ARG_((Sfio_t*, ssize_t));
 extern int		_sfsetpool _ARG_((Sfio_t*));
-extern char*		_sfcvt _ARG_((Sfdouble_t,char*,size_t,int,int*,int*,int*,int));
+extern char*		_sfcvt _ARG_((Void_t*,char*,size_t,int,int*,int*,int*,int));
 extern char**		_sfgetpath _ARG_((char*));
 
 #if _BLD_sfio && defined(__EXPORT__)

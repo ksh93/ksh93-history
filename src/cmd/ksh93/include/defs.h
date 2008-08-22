@@ -173,6 +173,7 @@ struct limits
 	struct argnod	*envlist; \
 	struct dolnod	*arglist; \
 	int		fn_depth; \
+	int		fn_reset; \
 	int		dot_depth; \
 	int		hist_depth; \
 	int		xargmin; \

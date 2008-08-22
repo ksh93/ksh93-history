@@ -584,8 +584,13 @@ static void funload(Shell_t *shp,int fno, const char *name)
 		do
 		{
 			if((np = dtsearch(shp->fun_tree,rp->np)) && is_afunction(np))
+			{
+				if(np->nvalue.rp)
+					np->nvalue.rp->fdict = 0;
 				nv_delete(np,shp->fun_tree,NV_NOFREE);
+			}
 			dtinsert(shp->fun_tree,rp->np);
+			rp->fdict = shp->fun_tree;
 		}
 		while((rp=dtnext(shp->fpathdict,rp)) && strcmp(pname,rp->fname)==0);
 		return;
@@ -1634,7 +1639,9 @@ Pathcomp_t *path_unsetfpath(Pathcomp_t *first)
 		for(rp=(struct Ufunction*)dtfirst(shp->fpathdict);rp;rp=rpnext)
 		{
 			rpnext = (struct Ufunction*)dtnext(shp->fpathdict,rp);
-			nv_delete(rp->np,shp->fun_tree,NV_NOFREE);
+			if(rp->fdict)
+				nv_delete(rp->np,rp->fdict,NV_NOFREE);
+			rp->fdict = 0;
 		}
 	}
 	while(pp)

@@ -810,15 +810,18 @@ static void *num_clone(register Namval_t *np, void *val)
 
 void clone_all_disc( Namval_t *np, Namval_t *mp, int flags)
 {
-	register Namfun_t *fp, **mfp = &mp->nvfun, *nfp;
-	for(fp=np->nvfun; fp;fp=fp->next)
+	register Namfun_t *fp, **mfp = &mp->nvfun, *nfp, *fpnext;
+	for(fp=np->nvfun; fp;fp=fpnext)
 	{
-		if(!fp->next && (flags&NV_COMVAR) && fp->disc && fp->disc->namef)
+		fpnext = fp->next;
+		if(!fpnext && (flags&NV_COMVAR) && fp->disc && fp->disc->namef)
 			return;
 		if((fp->nofree&2) && (flags&NV_NODISC))
 			nfp = 0;
 		if(fp->disc && fp->disc->clonef)
 			nfp = (*fp->disc->clonef)(np,mp,flags,fp);
+		else	if(flags&NV_MOVE)
+			nfp = fp;
 		else
 			nfp = nv_clone_disc(fp,flags);
 		if(!nfp)
@@ -859,28 +862,22 @@ int nv_clone(Namval_t *np, Namval_t *mp, int flags)
 			mp->nvenv = 0;
 			nv_offattr(mp,NV_MINIMAL);
 		}
-		if(!nv_isattr(np,NV_MINIMAL) && np->nvenv && !(nv_isattr(mp,NV_MINIMAL)))
+		if(!(flags&NV_COMVAR) && !nv_isattr(np,NV_MINIMAL) && np->nvenv && !(nv_isattr(mp,NV_MINIMAL)))
 			mp->nvenv = np->nvenv;
 		mp->nvflag &= NV_MINIMAL;
 	        mp->nvflag |= np->nvflag&~(NV_ARRAY|NV_MINIMAL|NV_NOFREE);
 		flag = mp->nvflag;
-		if(flags&NV_MOVE)
-		{
-			mp->nvfun = fp;
-			goto skip;
-		}
 		clone_all_disc(np, mp, flags);
 	}
 	if(flags&NV_APPEND)
 		return(1);
-skip:
 	if(mp->nvsize == size)
 	        nv_setsize(mp,nv_size(np));
 	if(mp->nvflag == flag)
 	        mp->nvflag = (np->nvflag&~(NV_MINIMAL))|(mp->nvflag&NV_MINIMAL);
 	if(mp->nvalue.cp==val && !nv_isattr(np,NV_INTEGER))
 	{
-		if(np->nvalue.cp && (flags&NV_COMVAR) && !(flags&(NV_NOFREE|NV_MOVE)))
+		if(np->nvalue.cp && np->nvalue.cp!=Empty && (flags&NV_COMVAR) && !(flags&NV_MOVE))
 		{
 			if(size)
 				mp->nvalue.cp = (char*)memdup(np->nvalue.cp,size);
@@ -893,11 +890,13 @@ skip:
 	}
 	if(flags&NV_MOVE)
 	{
+		if(nv_isattr(np,NV_INTEGER))
+			mp->nvalue.ip = np->nvalue.ip;
 		np->nvfun = 0;
 		np->nvalue.cp = 0;
 		if(!nv_isattr(np,NV_MINIMAL) || nv_isattr(mp,NV_EXPORT))
 		        np->nvenv = 0;
-		np->nvflag = 0;
+		np->nvflag &= NV_MINIMAL;
 	        nv_setsize(np,0);
 		return(1);
 	}

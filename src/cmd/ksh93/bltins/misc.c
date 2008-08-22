@@ -216,6 +216,7 @@ int    b_dot_cmd(register int n,char *argv[],void* extra)
 	struct dolnod   *argsave=0, *saveargfor;
 	struct checkpt buff;
 	Sfio_t *iop=0;
+	short level;
 	while (n = optget(argv,sh_optdot)) switch (n)
 	{
 	    case ':':
@@ -266,6 +267,8 @@ int    b_dot_cmd(register int n,char *argv[],void* extra)
 		shp->st.filename = filename;
 		shp->st.lineno = 1;
 	}
+	level  = shp->fn_depth+shp->dot_depth+1;
+	nv_putval(SH_LEVELNOD,(char*)&level,NV_INT16);
 	shp->st.prevst = prevscope;
 	shp->st.self = &savst;
 	shp->topscope = (Shscope_t*)shp->st.self;

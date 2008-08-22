@@ -79,10 +79,16 @@ static int	(*fdnotify)(int,int);
 #      define htonl(x)	(x)
 #   endif
 #   if _pipe_socketpair
+#      ifndef SHUT_RD
+#         define SHUT_RD         0
+#      endif
+#      ifndef SHUT_WR
+#         define SHUT_WR         1
+#      endif
 #      if _socketpair_shutdown_mode
-#         define pipe(v) ((socketpair(AF_UNIX,SOCK_STREAM,0,v)<0||shutdown((v)[0],1)<0||fchmod((v)[0],S_IRUSR)<0||shutdown((v)[1],0)<0||fchmod((v)[1],S_IWUSR)<0)?(-1):0)
+#         define pipe(v) ((socketpair(AF_UNIX,SOCK_STREAM,0,v)<0||shutdown((v)[1],SHUT_RD)<0||fchmod((v)[1],S_IWUSR)<0||shutdown((v)[0],SHUT_WR)<0||fchmod((v)[0],S_IRUSR)<0)?(-1):0)
 #      else
-#         define pipe(v) ((socketpair(AF_UNIX,SOCK_STREAM,0,v)<0||shutdown((v)[0],1)<0||shutdown((v)[1],0)<0)?(-1):0)
+#         define pipe(v) ((socketpair(AF_UNIX,SOCK_STREAM,0,v)<0||shutdown((v)[1],SHUT_RD)<0||shutdown((v)[0],SHUT_WR)<0)?(-1):0)
 #      endif
 #   endif
 
@@ -587,6 +593,8 @@ int sh_close(register int fd)
 	return(r);
 }
 
+#ifdef O_SERVICE
+
 static int
 onintr(struct addrinfo* addr, void* handle)
 {
@@ -602,6 +610,8 @@ onintr(struct addrinfo* addr, void* handle)
 		sh_chktrap();
 	return 0;
 }
+
+#endif
 
 /*
  * Mimic open(2) with checks for pseudo /dev/ files.

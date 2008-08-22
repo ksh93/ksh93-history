@@ -709,7 +709,6 @@ char **sh_argbuild(Shell_t *shp,int *nargs, const struct comnod *comptr,int flag
 		{
 			register struct dolnod *ap = (struct dolnod*)ac->comarg;
 			*nargs = ap->dolnum;
-			((struct comnod*)ac)->comtyp |= COMFIXED;
 			return(ap->dolval+ap->dolbot);
 		}
 		shp->lastpath = 0;
@@ -738,7 +737,6 @@ char **sh_argbuild(Shell_t *shp,int *nargs, const struct comnod *comptr,int flag
 		register char	**comargn;
 		register int	argn;
 		register char	**comargm;
-		int		argfixed = COMFIXED;
 		argn = *nargs;
 		/* allow room to prepend args */
 		argn += 1;
@@ -757,8 +755,6 @@ char **sh_argbuild(Shell_t *shp,int *nargs, const struct comnod *comptr,int flag
 			struct argnod *nextarg = argp->argchn.ap;
 			argp->argchn.ap = 0;
 			*--comargn = argp->argval;
-			if(!(argp->argflag&ARG_RAW) || (argp->argflag&ARG_EXP))
-				argfixed = 0;
 			if(!(argp->argflag&ARG_RAW))
 				sh_trim(*comargn);
 			if(!(argp=nextarg) || (argp->argflag&ARG_MAKE))
@@ -768,7 +764,6 @@ char **sh_argbuild(Shell_t *shp,int *nargs, const struct comnod *comptr,int flag
 				comargm = comargn;
 			}
 		}
-		((struct comnod*)comptr)->comtyp |= argfixed;
 		return(comargn);
 	}
 }

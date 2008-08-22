@@ -1,3 +1,9 @@
+08-08-20 misc/fts.c: fix st_nlink stat() optimization logic
+08-08-19 sfio/sfpkrd.c: workaround macosx recv(PEEK) data consumption on non-socket
+08-08-19 strn?tol?d: handle long double with smaller exponent range than double
+08-08-18 sfio/sfcvt.c: eliminate excessive multiplies and integral overprecision
+08-08-11 tm/tmxfmt.c: handle %10N and %010N
+08-08-06 include/shcmd.h: add 'int invariant;' for builtin invarinat arg count
 08-08-05 features/ndbm: favor sleepycat ndbm compatibility
 08-07-21 include/glob.h,misc/glob.c: GLOB_STARSTAR only forces lstat on chdir
 08-07-17 sfio: sync with kpv

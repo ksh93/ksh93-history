@@ -79,4 +79,34 @@ done
 typeset -T Frame_t=( typeset file lineno )
 Frame_t frame
 [[ $(typeset -p frame) == 'Frame_t frame=(typeset file;typeset lineno;)' ]] || err_exit  'empty fields in type not displayed'
+x=( typeset -a arr=([2]=abc [4]=(x=1 y=def));zz=abc)
+y=$x
+[[  "$x" == "$y" ]] || print -u2 'y is not equal to x'
+Type_t z=(y=(xa=bb xq=cc))
+typeset -A arr=([foo]=one [bar]=2)
+typeset -A brr=([foo]=one [bar]=2)
+[[ "${arr[@]}" == "${brr[@]}" ]] || err_exit 'arr is not brr'
+for ((i=0; i < 1; i++))
+do	typeset -m zzz=x
+	[[ $zzz == "$y" ]] || err_exit 'zzz is not equal to y' 
+	typeset -m x=zzz
+	[[ $x == "$y" ]] || err_exit 'x is not equal to y' 
+	Type_t t=(y=(xa=bb xq=cc))
+	typeset -m r=t
+	[[ $r == "$z" ]] || err_exit 'r is not equal to z'
+	typeset -m t=r
+	[[ $t == "$z" ]] || err_exit 't is not equal to z'
+	typeset -m crr=arr
+	[[ "${crr[@]}" == "${brr[@]}" ]] || err_exit 'crr is not brr'
+	typeset -m arr=crr
+	[[ "${arr[@]}" == "${brr[@]}" ]] || err_exit 'brr is not arr'
+done
+unset x y zzz
+trap 'rm -f /tmp/kshtype$$' EXIT
+cat > /tmp/kshtype$$ <<- \+++
+	typeset -T Pt_t=(float x=1. y=0.)
+	Pt_t p=(y=2)
+	print -r -- ${p.y}
++++
+[[ $(. /tmp/kshtype$$) == 2 ]] 2> /dev/null || err_exit 'typedefs in dot script not working'
 exit $Errors

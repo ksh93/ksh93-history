@@ -46,8 +46,17 @@ number(register char* s, register char* e, register long n, register int p, int 
 {
 	char*	b;
 
-	if (w && w > p)
-		p = w;
+	if (w)
+	{
+		if (p > 0 && (pad == 0 || pad == '0'))
+			while (w > p)
+			{
+				p++;
+				n *= 10;
+			}
+		else if (w > p)
+			p = w;
+	}
 	switch (pad)
 	{
 	case '-':

@@ -180,12 +180,16 @@ static int p_comarg(register struct comnod *com)
 	{
 		/* call builtin to cleanup state */
 		Shbltin_t *bp = &sh.bltindata;
+		void  *save_ptr = bp->ptr;
+		void  *save_data = bp->data;
 		bp->bnode = np;
 		bp->vnode = com->comnamq;
 		bp->ptr = nv_context(np);
 		bp->data = com->comstate;
 		bp->flags = SH_END_OPTIM;
 		(*funptr(np))(0,(char**)0, bp);
+		bp->ptr = save_ptr;
+		bp->data = save_data;
 	}
 	com->comstate = 0;
 	if(com->comarg && !np)
@@ -463,6 +467,12 @@ int sh_eval(register Sfio_t *iop, int mode)
 	static Sfio_t *io_save;
 	volatile int traceon=0, lineno=0;
 	io_save = iop; /* preserve correct value across longjmp */
+#define SH_TOPFUN	0x8000	/* this is a temporary tksh hack */
+	if (mode & SH_TOPFUN)
+	{
+		mode ^= SH_TOPFUN;
+		shp->fn_reset = 1;
+	}
 	sh_pushcontext(&buff,SH_JMPEVAL);
 	buff.olist = pp->olist;
 	jmpval = sigsetjmp(buff.buff,0);
@@ -498,6 +508,7 @@ int sh_eval(register Sfio_t *iop, int mode)
 		sfclose(io_save);
 	sh_freeup(shp);
 	shp->st.staklist = saveslp;
+	shp->fn_reset = 0;
 	if(jmpval>SH_JMPEVAL)
 		siglongjmp(*shp->jmplist,jmpval);
 	return(shp->exitval);
@@ -672,6 +683,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 			Namval_t	*np, *nq, *last_table;
 			struct ionod	*io;
 			int		command=0, flgs=NV_ASSIGN;
+			shp->bltindata.invariant = type>>(COMBITS+2);
+			type &= (COMMSK|COMSCAN);
 			sh_stats(STAT_SCMDS);
 			error_info.line = t->com.comline-shp->st.firstline;
 			com = sh_argbuild(shp,&argn,&(t->com),OPTIMIZE);
@@ -853,12 +866,14 @@ int sh_exec(register const Shnode_t *t, int flags)
 				{
 					volatile int scope=0, share=0;
 					volatile void *save_ptr;
+					volatile void *save_data;
 					int jmpval, save_prompt;
 					struct checkpt buff;
 					unsigned long was_vi=0, was_emacs=0, was_gmacs=0;
 					struct stat statb;
 					bp = &shp->bltindata;
 					save_ptr = bp->ptr;
+					save_data = bp->data;
 					memset(&statb, 0, sizeof(struct stat));
 					if(strchr(nv_name(np),'/'))
 					{
@@ -944,6 +959,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 						if(error_info.flags&ERROR_INTERACTIVE)
 							tty_check(ERRIO);
 						((Shnode_t*)t)->com.comstate = shp->bltindata.data;
+						bp->data = (void*)save_data;
 						if(!nv_isattr(np,BLT_EXIT) && shp->exitval!=SH_RUNPROG)
 							shp->exitval &= SH_EXITMASK;
 					}
@@ -1002,6 +1018,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 					if(scope)
 						sh_unscope(shp);
 					bp->ptr = (void*)save_ptr;
+					bp->data = (void*)save_data;
 					/* don't restore for subshell exec */
 					if((shp->topfd>topfd) && !(shp->subshell && np==SYSEXEC))
 						sh_iorestore(shp,topfd,jmpval);
@@ -1949,6 +1966,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 				np->nvalue.rp->lineno = t->funct.functline;
 				np->nvalue.rp->nspace = shp->namespace;
 				np->nvalue.rp->fname = 0;
+				np->nvalue.rp->fdict = shp->fun_tree;
 				fp = (struct functnod*)(slp+1);
 				if(fp->functtyp==(TFUN|FAMP))
 					np->nvalue.rp->fname = fp->functnam;
@@ -1960,7 +1978,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 					rp->np = np;
 					if(!shp->fpathdict)
 						shp->fpathdict = dtopen(&_Rpdisc,Dtbag);
-					if(shp->fpathdict);
+					if(shp->fpathdict)
 						dtinsert(shp->fpathdict,rp);
 				}
 			}
@@ -2334,6 +2352,8 @@ pid_t _sh_fork(register pid_t parent,int flags,int *jobid)
 	sh_offoption(SH_LOGIN_SHELL);
 	sh_onstate(SH_FORKED);
 	sh_onstate(SH_NOLOG);
+	if (shp->fn_reset)
+		shp->fn_depth = shp->fn_reset = 0;
 #if SHOPT_ACCT
 	sh_accsusp();
 #endif	/* SHOPT_ACCT */

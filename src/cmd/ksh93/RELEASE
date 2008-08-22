@@ -1,4 +1,13 @@
-08-08-01  --- Release ksh93t  ---
+08-08-19  --- Release ksh93t  ---
+08-08-19  The ALRM signal no longer cause the sleep builtin to terminate.
+08-08-13  When used in an arithmetic expression, the .sh.version variable  
+	  now produces a number that will be increasing for each release.
+08-08-11  A bug in which type instanciation with a compound assignment in
+	  a dot script in which the type is defined has been fixed. 
+08-08-07  The -m option has been added to typeset to move or rename a
+	  variable.  Not documented yet.
+08-08-06  A bug in read when used in a loop when a prompt was specified
+	  when reading from a terminal has been fixed.
 08-08-01  A bug with the pipefail option in which a nested pipeline could
 	  cause an asynchronous command to block has been fixed.
 08-08-01  A for loop optimizer bug that treates .sh.lineno as an invariant

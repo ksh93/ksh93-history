@@ -346,6 +346,12 @@ static Namfun_t *clone_type(Namval_t* np, Namval_t *mp, int flags, Namfun_t *fp)
 	Namval_t		*last_table = sh.last_table;
 	struct Namref		*nrp = 0;
 	Namarr_t		*ap;
+	if(flags&NV_MOVE)
+	{
+		pp->np = mp;
+		pp->childfun.ptype = pp;
+		return(fp);
+	}
 	if(flags&NV_TYPE)
 		return(nv_clone_disc(fp,flags));
 	if(size==0 && (!fp->disc || (size=fp->disc->dsize)==0)) 

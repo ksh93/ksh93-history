@@ -335,6 +335,20 @@ static Namfun_t *array_clone(Namval_t *np, Namval_t *mp, int flags, Namfun_t *fp
 	int			nelem, skipped=0;
 	Dt_t			*otable=ap->table;
 	struct index_array	*aq = (struct index_array*)ap, *ar;
+	Shell_t			*shp = sh_getinterp();
+	if(flags&NV_MOVE)
+	{
+		if((flags&NV_COMVAR) && nv_putsub(np,NIL(char*),ARRAY_SCAN))
+		{
+			do
+			{
+				if(nq=nv_opensub(np))
+					nq->nvenv = (void*)mp;
+			}
+			while(nv_nextsub(np));
+		}
+		return(fp);
+	}
 	nelem = ap->nelem;
 	if(nelem&ARRAY_NOCLONE)
 		return(0);
@@ -348,6 +362,8 @@ static Namfun_t *array_clone(Namval_t *np, Namval_t *mp, int flags, Namfun_t *fp
 	{
 		ap->scope = 0;
 		ap->nelem = 0;
+		sh.prev_table = sh.last_table;
+		sh.prev_root = sh.last_root;
 	}
 	if(ap->table)
 	{
@@ -365,11 +381,7 @@ static Namfun_t *array_clone(Namval_t *np, Namval_t *mp, int flags, Namfun_t *fp
 		sub = strdup(sub);
 	ar = (struct index_array*)ap;
 	if(!is_associative(ap))
-	{
 		ar->bits = (unsigned char*)&ar->val[ar->maxi];
-		if(!(flags&NV_ARRAY))
-			memset(ar->val,0,array_elem(ap)*sizeof(ar->val[0]));
-	}
 	if(!nv_putsub(np,NIL(char*),ARRAY_SCAN|((flags&NV_COMVAR)?0:ARRAY_NOSCOPE)))
 	{
 		if(ap->fun)
@@ -384,20 +396,12 @@ static Namfun_t *array_clone(Namval_t *np, Namval_t *mp, int flags, Namfun_t *fp
 		mq = 0;
 		if(nq=nv_opensub(np))
 			mq = nv_search(name,ap->table,NV_ADD);
-		if(nq && nv_isattr(nq,NV_CHILD))
+		if(nq && (flags&NV_COMVAR) && nv_isvtree(nq))
 		{
-			union Value	*up;
-			up = array_getup(mp,ap,0);
-			up->np = mq;
-			if(nv_isvtree(nq))
-			{
-				mq->nvalue.cp = nq->nvalue.cp;
-				mq->nvflag = nq->nvflag;
-				mq->nvsize = nq->nvsize;
-				mq->nvfun = nq->nvfun;
-				nv_onattr(nq,NV_NOFREE);
-			}
-			mq->nvenv = (void*)mp;
+			mq->nvalue.cp = 0;
+			if(!is_associative(ap))
+				ar->val[ar->cur].np = mq;
+			nv_clone(nq,mq,flags);
 		}
 		else if(flags&NV_ARRAY)
 		{
@@ -412,10 +416,16 @@ static Namfun_t *array_clone(Namval_t *np, Namval_t *mp, int flags, Namfun_t *fp
 		else if(nv_isattr(np,NV_INTEGER))
 		{
 			Sfdouble_t d= nv_getnum(np);
+			if(!is_associative(ap))
+				ar->val[ar->cur].cp = 0;
 			nv_putval(mp,(char*)&d,NV_LDOUBLE);
 		}
 		else
+		{
+			if(!is_associative(ap))
+				ar->val[ar->cur].cp = 0;
 			nv_putval(mp,nv_getval(np),NV_RDONLY);
+		}
 		aq->header.nelem |= ARRAY_NOSCOPE;
 	}
 	while(nv_nextsub(np));

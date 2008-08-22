@@ -82,9 +82,16 @@ static Namval_t *create_tree(Namval_t *np,const char *name,int flag,Namfun_t *dp
 }
 
 static Namfun_t *clone_tree(Namval_t *np, Namval_t *mp, int flags, Namfun_t *fp){
-	Namfun_t	*dp = nv_clone_disc(fp,flags);
+	Namfun_t	*dp;
+	if ((flags&NV_MOVE) && nv_type(np))
+		return(fp);
+	dp = nv_clone_disc(fp,flags);
 	if((flags&NV_COMVAR) && !(flags&NV_RAW))
+	{
 		walk_tree(np,mp,flags);
+		if((flags&NV_MOVE) && !(fp->nofree&1))
+			free((void*)fp);
+	}
 	return(dp);
 }
 
@@ -873,18 +880,26 @@ static char *walk_tree(register Namval_t *np, Namval_t *xp, int flags)
 			continue;
 		if(xp)
 		{
-			Dt_t		*dp;
+			Dt_t		*dp = shp->var_tree;
 			Namval_t	*nq, *mq;
 			if(strlen(cp)<=len)
 				continue;
 			nq = nv_open(cp,walk.root,NV_VARNAME|NV_NOADD|NV_NOASSIGN|NV_NOFAIL);
+			if(!nq && (flags&NV_MOVE))
+				nq = nv_search(cp,walk.root,NV_NOADD);
 			stakseek(0);
 			stakputs(xpname);
 			stakputs(cp+len);
 			stakputc(0);
+			shp->var_tree = save_tree;
 			mq = nv_open(stakptr(0),save_tree,NV_VARNAME|NV_NOASSIGN|NV_NOFAIL);
-			if(nq)
+			shp->var_tree = dp;
+			if(nq && mq)
+			{
 				nv_clone(nq,mq,flags|NV_RAW);
+				if(flags&NV_MOVE)
+					nv_delete(nq,walk.root,0);
+			}
 			continue;
 		}
 		stakseek(ARGVAL);

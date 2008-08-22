@@ -50,50 +50,35 @@
 
 struct read_save
 {
-	int	argc;
-        char    **avin;
-        char    **argv;
-        int     fd;
+        char	**argv;
+	char	*prompt;
+        short	fd;
+        short	plen;
 	int	flags;
-        long    timeout;
+        long	timeout;
 };
 
 int	b_read(int argc,char *argv[], void *extra)
 {
 	Sfdouble_t sec;
 	register char *name;
-	register int r=(argc+1)*sizeof(char*), flags=0, fd=0;
+	register int r, flags=0, fd=0;
 	register Shell_t *shp = ((Shbltin_t*)extra)->shp;
 	long timeout = 1000*shp->st.tmout;
-	int save_prompt;
+	int save_prompt, fixargs=((Shbltin_t*)extra)->invariant;
 	struct read_save *rp;
 	static char default_prompt[3] = {ESC,ESC};
+	if(argc==0)
+		return(0);
 	if(rp = (struct read_save*)(((Shbltin_t*)extra)->data))
 	{
-		if(argc==rp->argc && memcmp(argv,rp->avin,r)==0)
-		{
-			flags = rp->flags;
-			timeout = rp->timeout;
-			fd = rp->fd;
-			argv = rp->argv;
-			goto bypass;
-		}
-		free((void*)rp);
-		rp = 0;
-		((Shbltin_t*)extra)->data = 0;
-		if(argc==0)
-			return(0);
-	}
-#if 0
-	if(rp = newof(NIL(struct read_save*),struct read_save,1,r=(argc+1)*sizeof(char*)))
-#else
-	if(rp = newof(NIL(struct read_save*),struct read_save,1,r))
-#endif
-	{
-		rp->argc = argc;
-		rp->avin = (char**)(rp+1);
-		memcpy(rp->avin, argv, r);
-		((Shbltin_t*)extra)->data = (void*)rp;
+		flags = rp->flags;
+		timeout = rp->timeout;
+		fd = rp->fd;
+		argv = rp->argv;
+		name = rp->prompt;
+		r = rp->plen;
+		goto bypass;
 	}
 	while((r = optget(argv,sh_optread))) switch(r)
 	{
@@ -159,19 +144,25 @@ int	b_read(int argc,char *argv[], void *extra)
 	/* look for prompt */
 	shp->prompt = default_prompt;
 	if((name = *argv) && (name=strchr(name,'?')) && (r&IOTTY))
+		r = strlen(name++);
+	else
+		r = 0;
+	if(argc==fixargs && (rp=newof(NIL(struct read_save*),struct read_save,1,0)))
 	{
-		r = strlen(++name)+1;
-		if(shp->prompt=(char*)sfreserve(sfstderr,r,SF_LOCKR))
-		{
-			memcpy(shp->prompt,name,r);
-			sfwrite(sfstderr,shp->prompt,r-1);
-		}
+		((Shbltin_t*)extra)->data = (void*)rp;
+		rp->fd = fd;
+		rp->flags = flags;
+		rp->timeout = timeout;
+		rp->argv = argv;
+		rp->prompt = name;
+		rp->plen = r;
 	}
-	rp->fd = fd;
-	rp->flags = flags;
-	rp->timeout = timeout;
-	rp->argv = argv;
 bypass:
+	if(r && (shp->prompt=(char*)sfreserve(sfstderr,r,SF_LOCKR)))
+	{
+		memcpy(shp->prompt,name,r);
+		sfwrite(sfstderr,shp->prompt,r-1);
+	}
 	shp->timeout = 0;
 	save_prompt = shp->nextprompt;
 	shp->nextprompt = 0;

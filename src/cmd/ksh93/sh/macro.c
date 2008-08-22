@@ -2394,6 +2394,7 @@ static void tilde_expand2(Shell_t *shp, register int offset)
 	{
 		beenhere = 1;
 		sh_addbuiltin(shtilde,sh_btilde,0);
+		nv_onattr(np,NV_EXPORT);
 	}
 	av[0] = ".sh.tilde";
 	av[1] = &ptr[offset];

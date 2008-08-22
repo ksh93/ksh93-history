@@ -31,11 +31,12 @@ null=''
 if	[[ ! -z $null ]]
 then	err_exit "-z: null string should be of zero length"
 fi
-file=/tmp/regress$$
+file=/tmp/regresso$$
+newer_file=/tmp/regressn$$
 if	[[ -z $file ]]
 then	err_exit "-z: $file string should not be of zero length"
 fi
-trap "rm -f $file" EXIT
+trap "rm -f $file $newer_file" EXIT
 rm -f $file
 if	[[ -a $file ]]
 then	err_exit "-a: $file shouldn't exist"
@@ -111,11 +112,12 @@ if	[[ ! -w /dev/fd/2 ]]
 then	err_exit "/dev/fd/2 not open for writing"
 fi
 sleep 1
-if	[[ ! . -ot $file ]]
-then	err_exit ". should be older than $file"
+> $newer_file
+if	[[ ! $file -ot $newer_file ]]
+then	err_exit "$file should be older than $newer_file"
 fi
-if	[[ /bin -nt $file ]]
-then	err_exit "$file should be newer than /bin"
+if	[[ $file -nt $newer_file ]]
+then	err_exit "$newer_file should be newer than $file"
 fi
 if	[[ $file != /tmp/* ]]
 then	err_exit "$file should match /tmp/*"

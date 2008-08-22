@@ -201,7 +201,7 @@ end
 	nameref.sh options.sh path.sh quoting.sh quoting2.sh restricted.sh \
 	return.sh select.sh subshell.sh substring.sh tilde.sh variables.sh \
 	cubetype.sh enum.sh pointtype.sh recttype.sh timetype.sh statics.sh \
-	types.sh vartree1.sh vartree2.sh
+	sigchld.sh types.sh vartree1.sh vartree2.sh
 
 if "$(PWD:B:N=cc-*)"
 

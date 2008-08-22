@@ -59,6 +59,7 @@ typedef struct Shbltin_s
 	int		flags;
 	char		*(*shgetenv)(const char*);
 	char		*(*shsetenv)(const char*);
+	int		invariant;
 } Shbltin_t;
 
 #if defined(SH_VERSION) ||  defined(_SH_PRIVATE)

@@ -23,7 +23,6 @@
  *
  *   David Korn
  *   AT&T Labs
- *   research!dgk
  *
  */
 
@@ -49,6 +48,8 @@ int	b_sleep(register int argc,char *argv[],void *extra)
 	register Shell_t *shp = ((Shbltin_t*)extra)->shp;
 	time_t tloc = 0;
 	char *last;
+	if(!(shp->sigflag[SIGALRM]&(SH_SIGFAULT|SH_SIGOFF)))
+		sh_sigtrap(SIGALRM);
 	while((argc = optget(argv,sh_optsleep))) switch(argc)
 	{
 		case ':':

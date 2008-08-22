@@ -34,6 +34,7 @@
 #include	"variables.h"
 #include	"jobs.h"
 #include	"path.h"
+#include	"builtins.h"
 
 #define abortsig(sig)	(sig==SIGABRT || sig==SIGBUS || sig==SIGILL || sig==SIGSEGV)
 
@@ -87,7 +88,16 @@ void	sh_fault(register int sig)
 		shp->savesig = sig;
 		return;
 	}
-
+	trap = shp->st.trapcom[sig];
+	if(sig==SIGALRM && shp->bltinfun==b_sleep)
+	{
+		if(trap && *trap)
+		{
+			shp->trapnote |= SH_SIGTRAP;
+			shp->sigflag[sig] |= SH_SIGTRAP;
+		}
+		return;
+	}
 	if(shp->subshell && sig!=SIGINT && sig!=SIGQUIT && sig!=SIGWINCH)
 	{
 		shp->exitval = SH_EXITSIG|sig;
@@ -96,7 +106,7 @@ void	sh_fault(register int sig)
 		return;
 	}
 	/* handle ignored signals */
-	if((trap=shp->st.trapcom[sig]) && *trap==0)
+	if(trap && *trap==0)
 		return;
 	flag = shp->sigflag[sig]&~SH_SIGOFF;
 	if(!trap)

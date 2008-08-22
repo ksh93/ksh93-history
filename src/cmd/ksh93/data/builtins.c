@@ -1548,7 +1548,7 @@ USAGE_LICENSE
 ;
 
 const char sh_opttypeset[] =
-"+[-1c?\n@(#)$Id: typeset (AT&T Research) 2008-06-09 $\n]"
+"+[-1c?\n@(#)$Id: typeset (AT&T Research) 2008-08-04 $\n]"
 USAGE_LICENSE
 "[+NAME?\f?\f - declare or display variables with attributes]"
 "[+DESCRIPTION?Without the \b-f\b option, \b\f?\f\b sets, unsets, "
@@ -1599,8 +1599,12 @@ USAGE_LICENSE
 	"from 2 to 64.]"
 "[l?Convert uppercase character to lowercase.  Unsets \b-u\b attribute.  When "
 	"used with \b-i\b, \b-E\b, or \b-F\b indicates long variant.]"
+"[m?Move.  The value is the name of a variable whose value will be "
+	"moved to \aname\a.  The orignal variable will be unset.  Cannot be "
+	"used with any other options.]"
 "[n?Name reference.  The value is the name of a variable that \aname\a "
-	"references.  \aname\a cannot contain a \b.\b.]"
+	"references.  \aname\a cannot contain a \b.\b.  Cannot be use with "
+	"any other options.]"
 "[p?Causes the output to be in a format that can be used as input to the "
 	"shell to recreate the attributes for variables.]"
 "[r?Enables readonly.  Once enabled it cannot be disabled.  See "
