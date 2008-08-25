@@ -1,4 +1,9 @@
-08-08-19  --- Release ksh93t  ---
+08-08-25  --- Release ksh93t  ---
+08-08-25  For an indexed array, a negative subscript now refers to offsets
+	  from the end so that -1 refers to the last element.
+08-08-24  An alignment error for shorts on 64 bit architectures has be fixed.
+08-08-22  If oldvar is a compound variable, typeset -C newvar=oldvar creates 
+	  newvar as a copy of oldvar.
 08-08-19  The ALRM signal no longer cause the sleep builtin to terminate.
 08-08-13  When used in an arithmetic expression, the .sh.version variable  
 	  now produces a number that will be increasing for each release.
@@ -10,7 +15,7 @@
 	  when reading from a terminal has been fixed.
 08-08-01  A bug with the pipefail option in which a nested pipeline could
 	  cause an asynchronous command to block has been fixed.
-08-08-01  A for loop optimizer bug that treates .sh.lineno as an invariant
+08-08-01  A for loop optimizer bug that treats .sh.lineno as an invariant
 	  has been fixed.
 08-07-30  A bug in which expanding compound variable that had a get discipline
 	  from with a here document could cause a syntax error has been fixed.
@@ -21,7 +26,7 @@
 08-07-18  A bug in which a nameref caused a local variable to be created
 	  rather than binding to an existing variable in the global scope
 	  has been fixed.
-08-07-17  A bug which occured when a nameref was created from within a
+08-07-17  A bug which occurred when a nameref was created from within a
 	  function that was  part of a pipeline has been fixed.
 08-07-14  The compile option SHOPT_STATS was added. With this option the
 	  compound variable .sh.stats keeps usage statistics that could help
@@ -36,7 +41,7 @@
 	  edit line is redrawn in place. 
 08-07-01  A bug in the handling of shared variables when inside an embedded
 	  type has been fixed.
-08-06-29  A bug in multiline edit mode which occured when the prompt length
+08-06-29  A bug in multiline edit mode which occurred when the prompt length
 	  was three characters or less has been fixed.
 08-06-23  A bug in which the SIGCLD was not be triggered when background
 	  jobs completed has been fixed.
@@ -143,9 +148,9 @@
 08-03-27  A bug in which the terminal group was not given back to the parent
 	  shell when the last part of a pipeline was handled by the parent shell
 	  and the other parts of the pipeline complete has been fixed. 
-	  The symtom was that the pipeline became uninterruptable.
+	  The symptom was that the pipeline became uninterruptable.
 08-03-25  A bug in restricted mode introduced in ksh93s that caused scripts
-	  that did not use #! to executed in restriected mode has been fixed.
+	  that did not use #! to executed in restricted mode has been fixed.
 08-03-25  A bug in which the pipefail option did not work for a pipeline
 	  within a pipeline has been fixed.
 08-03-24  A bug in which OPTIND was not set correctly in subshells has
@@ -187,7 +192,7 @@
 	  has bee fixed.
 08-02-07  A bug in which test \( ! -e \) produced an error has been fixed.
 08-02-14  The typeset -a option can now optionally be followed by the name
-	  of an enumerication type which allows subscripts to be enumerations.
+	  of an enumeration type which allows subscripts to be enumerations.
 08-02-14  The enum builtin which creates enumeration types has been added.
 08-02-12  The backoff logic when there are no more processes has been fixed.
 08-02-07  The -X option has been added to typeset.  The -X option creates
@@ -197,7 +202,7 @@
 	  variables.  Also the -h and -S options have been added to
 	  typeset that are only applicable when defining a type.
 08-01-31  The prefix expansion operator @ has been added.  ${@name}
-	  expandes to the type of name or yields the attributes.
+	  expands to the type of name or yields the attributes.
 07-11-15  A bug in the macro expander for multibyte characters in which
 	  part of the character contains a file pattern byte has been fixed. 
 07-10-03  A bug in which : was not allowed as part of an alias name has been
@@ -242,7 +247,7 @@
 	  assignments was treated as a noop has been fixed.
 08-01-17  A bug in which discipline functions invoked from withing a
 	  compound assignment could fail has been fixed.
-08-01-16  Incomplete arithmetic assigments, for example ((x += )), now
+08-01-16  Incomplete arithmetic assignments, for example ((x += )), now
 	  generate an error message.
 08-01-16  A bug in which a set discipline defined for a variable before
 	  an array assignment could cause a core dump has been fixed. 
@@ -315,7 +320,7 @@
 	  any word, each : will be considered a path delimiter.
 07-09-06  A bug in which subprocess cleanup could corrupt the malloc() heap
           has been fixed.
-07-08-26  A bug in which a name reference to an associatve array instance
+07-08-26  A bug in which a name reference to an associative array instance
 	  could cause the subscript to be evaluated as an arithmetic expression
 	  has been fixed.
 07-08-22  A bug in which the value of an array instance was of a compound
@@ -336,7 +341,7 @@
 	  an exit status of 127 when pipefail was enabled has been fixed.
 07-07-09  The SHOPT_AUDIT compile option has been added for keyboard logging.
 07-06-25  In vi insert mode, ksh no longer emits a backspace character
-	  before the carraige return when the newline is entered. 
+	  before the carriage return when the newline is entered. 
 07-06-25  A bug in which pipefail would cause a command to return 0
 	  when the pipeline was the last command and the failure happened
 	  on a component other than the last has been fixed.
@@ -981,7 +986,7 @@
 
 02-06-17  --- Release ksh93n-  ---
 02-06-17  A bug in which user defined macros could cause a core dump in
-	  with MULTIBYE mode has been fixed.
+	  with MULTIBYTE mode has been fixed.
 02-06-17  A bug in which printf format specifiers of the form %2$s were causing
 	  a core dump has been fixed.
 02-06-17  A bug in which setting stty to noecho mode did not prevent the
@@ -1688,7 +1693,7 @@
 	  positioned for the last command of a script has been fixed.
 95-04-31  A bug in the edit modes which allowed walking back in
 	  the history file for more than HISTSIZE commands has
-	  beed fixed.
+	  been fixed.
 95-04-31  A bug which could cause a core dump if variable TMPDIR was
 	  changed between two command substitutions has been fixed.
 95-04-31. A bug which prevented a trap on EXIT from being cleared

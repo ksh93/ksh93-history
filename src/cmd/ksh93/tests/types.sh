@@ -41,18 +41,18 @@ for ((i=0; i < 10; i++))
 do
 	Type_t r s
 	[[ $r == "$s" ]] || err_exit 'r is not equal to s'
-	x=${r.x}
+	typeset -C x=r.x
 	y=(xa=bb xq=cc)
 	y2=xyz
 	z2=xyz
-	z="$y"
+	typeset -C z=y
 	[[ $y == "$z" ]] || err_exit 'y is not equal to z'
-	s.y=${z}
+	typeset -C s.y=z
 	[[ $y == "${s.y}" ]] || err_exit 'y is not equal to s.y'
 	.sh.q=$y
-	www="${.sh.q}"
+	typeset -C www=.sh.q
 	[[ $www == "$z" ]] ||  err_exit 'www is not equal to z'
-	s.x=${r.x}
+	typeset -C s.x=r.x
 	[[ ${s.x} == "${r.x}" ]] ||  err_exit 's.x is not equal to r.x'
 
 	function foo
@@ -64,10 +64,10 @@ do
 	}
 	foo  r.y y  
 	[[ $y == "${r.y}" ]] || err_exit 'y is not equal to r.y'
-	y=$z
+	typeset -C y=z
 	foo y r.y
 	[[ $y == "${r.y}" ]] || err_exit 'y is not equal to r.y again'
-	y=$z
+	typeset -C y=z
 	(
 		q=${z}
 		[[ $q == "$z" ]] ||  err_exit 'q is not equal to z'
@@ -80,7 +80,7 @@ typeset -T Frame_t=( typeset file lineno )
 Frame_t frame
 [[ $(typeset -p frame) == 'Frame_t frame=(typeset file;typeset lineno;)' ]] || err_exit  'empty fields in type not displayed'
 x=( typeset -a arr=([2]=abc [4]=(x=1 y=def));zz=abc)
-y=$x
+typeset -C y=x
 [[  "$x" == "$y" ]] || print -u2 'y is not equal to x'
 Type_t z=(y=(xa=bb xq=cc))
 typeset -A arr=([foo]=one [bar]=2)

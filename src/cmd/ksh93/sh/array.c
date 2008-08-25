@@ -939,6 +939,8 @@ Namval_t *nv_putsub(Namval_t *np,register char *sp,register long mode)
 			else
 				size = (int)sh_arith((char*)sp);
 		}
+		if(size <0 && ap)
+			size += array_maxindex(np);
 		if(size >= ARRAY_MAX || (size < 0))
 		{
 			errormsg(SH_DICT,ERROR_exit(1),e_subscript, nv_name(np));

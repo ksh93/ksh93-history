@@ -541,22 +541,12 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 					}
 					nv_setarray(np,nv_associative);
 				}
-				else if(comvar)
-				{
-					if(!nv_isnull(np) && !nv_isvtree(np))
-						nv_unset(np);
+				else if(comvar && !nv_rename(np,flag|NV_COMVAR))
 					nv_setvtree(np);
-				}
 			}
 			if(flag&NV_MOVE)
 			{
-				Dt_t *hp=0;
-				if(nv_isattr(np,NV_PARAM) && shp->st.prevst)
-				{
-					if(!(hp=(Dt_t*)shp->st.prevst->save_tree))
-						hp = dtvnext(shp->var_tree);
-				}
-				nv_rename(np, hp, flag);
+				nv_rename(np, flag);
 				nv_close(np);
 				continue;
 			}

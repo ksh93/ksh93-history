@@ -321,7 +321,7 @@ void nv_setlist(register struct argnod *arg,register int flags)
 		if(arg->argflag&ARG_MAC)
 		{
 			shp->prefix = 0;
-			cp = sh_mactrim(shp,arg->argval,(flags&NV_NOREF)?-3:-1);
+			cp = sh_mactrim(shp,arg->argval,(flags&(NV_NOREF|NV_COMVAR))?-3:-1);
 			mp = (Namval_t*)shp->prefix;
 			shp->prefix = prefix;
 		}
@@ -1503,10 +1503,20 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 				else
 					sfprintf(sh.strbuf,"%.*g",DBL_DIG,*((double*)sp));
 			}
-			else if(flags&NV_LONG)
-				sfprintf(sh.strbuf,"%lld\0",*((Sflong_t*)sp));
+			else if(flags&NV_UNSIGN)
+			{
+				if(flags&NV_LONG)
+					sfprintf(sh.strbuf,"%I*lu",sizeof(Sfulong_t),*((Sfulong_t*)sp));
+				else
+					sfprintf(sh.strbuf,"%lu",(unsigned long)((flags&NV_SHORT)?*((uint16_t*)sp):*((uint32_t*)sp)));
+			}
 			else
-				sfprintf(sh.strbuf,"%ld\0",*((int32_t*)sp));
+			{
+				if(flags&NV_LONG)
+					sfprintf(sh.strbuf,"%I*ld",sizeof(Sflong_t),*((Sflong_t*)sp));
+				else
+					sfprintf(sh.strbuf,"%ld",(long)((flags&NV_SHORT)?*((int16_t*)sp):*((int32_t*)sp)));
+			}
 			sp = sfstruse(sh.strbuf);
 		}
 		if(nv_isattr(np, NV_HOST|NV_INTEGER)==NV_HOST && sp)
@@ -2769,7 +2779,7 @@ static char *lastdot(register char *cp, int eq)
 	return(eq?0:ep);
 }
 
-void nv_rename(register Namval_t *np, Dt_t *hp, int flags)
+int nv_rename(register Namval_t *np, int flags)
 {
 	Shell_t			*shp = &sh;
 	register Namval_t	*mp,*nr=0;
@@ -2777,8 +2787,18 @@ void nv_rename(register Namval_t *np, Dt_t *hp, int flags)
 	int			index;
 	Namval_t		*last_table = shp->last_table;
 	Dt_t			*last_root = shp->last_root;
+	Dt_t			*hp = 0;
+	if(nv_isattr(np,NV_PARAM) && shp->st.prevst)
+	{
+		if(!(hp=(Dt_t*)shp->st.prevst->save_tree))
+			hp = dtvnext(shp->var_tree);
+	}
 	if(!(cp=nv_getval(np)))
-		errormsg(SH_DICT,ERROR_exit(1),e_varname,"");
+	{
+		if(flags&NV_MOVE)
+			errormsg(SH_DICT,ERROR_exit(1),e_varname,"");
+		return(0);
+	}
 	if(!hp)
 		hp = shp->var_tree;
 	if(!(nr = nv_open(cp, hp, flags|NV_ARRAY|NV_NOREF|NV_NOSCOPE|NV_NOADD|NV_NOFAIL)))
@@ -2786,7 +2806,13 @@ void nv_rename(register Namval_t *np, Dt_t *hp, int flags)
 	else if(shp->last_root)
 		hp = shp->last_root;
 	if(!nr)
-		nr= nv_open(cp, hp, flags|NV_NOREF);
+		nr= nv_open(cp, hp, flags|NV_NOREF|((flags&NV_MOVE)?0:NV_NOFAIL));
+	if(!nr)
+	{
+		if(!nv_isvtree(np))
+			_nv_unset(np,0);
+		return(0);
+	}
 	if(nv_isarray(np))
 	{
 		if(!(mp=nv_opensub(np)) && (index=nv_aindex(np))>=0 && nv_isvtree(nr))
@@ -2807,8 +2833,10 @@ void nv_rename(register Namval_t *np, Dt_t *hp, int flags)
 	shp->prev_root = shp->last_root;
 	shp->last_table = last_table;
 	shp->last_root = last_root;
-	nv_clone(nr,np,NV_MOVE|NV_COMVAR);
-	nv_delete(nr,(Dt_t*)0,NV_NOFREE);
+	nv_clone(nr,np,(flags&NV_MOVE)|NV_COMVAR);
+	if(flags&NV_MOVE)
+		nv_delete(nr,(Dt_t*)0,NV_NOFREE);
+	return(1);
 }
 
 /*

@@ -1221,8 +1221,8 @@ retry1:
 					dolmax =1;
 					if(array_assoc(ap))
 						arrmax = strdup(v);
-					else
-						dolmax = (int)sh_arith(v);
+					else if((dolmax = (int)sh_arith(v))<0)
+						dolmax += array_maxindex(np);
 					if(type==M_SUBNAME)
 						bysub = 1;
 				}

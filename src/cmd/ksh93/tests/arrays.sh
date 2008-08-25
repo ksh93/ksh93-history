@@ -458,4 +458,10 @@ eval "b=$(printf "%B\n" a)"
 eval "c=$(printf "%#B\n" a)"
 [[ ${a[*]} == "${b[*]}" ]] || err_exit 'printf %B not preserving values for arrays'
 [[ ${a[*]} == "${c[*]}" ]] || err_exit 'printf %#B not preserving values for arrays'
+unset a
+a=(zero one two three four)
+a[6]=six
+[[ ${a[-1]} == six ]] || err_exit 'a[-1] should be six'
+[[ ${a[-3]} == four ]] || err_exit 'a[-3] should be four'
+[[ ${a[-3..-1]} == 'four six' ]] || err_exit "a[-3,-1] should be 'four six'"
 exit $((Errors))

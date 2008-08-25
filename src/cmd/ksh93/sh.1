@@ -296,13 +296,13 @@ of the first
 of a
 .I list\^
 that is a simple command not beginning
-with a redirection, and not occuring within a
+with a redirection, and not occurring within a
 .BR while ,
 .BR until ,
 or
 .B if
 .IR list ,
-can be prededed by a semicolon.
+can be preceded by a semicolon.
 This semicolon
 is ignored unless the
 .B showme
@@ -698,7 +698,7 @@ current ones provided that the types are compatible.
 .PP
 The right hand side of a variable assignment undergoes all the expansion
 list below except word splitting, brace expansion, and file name generation.
-When the right hand side is a parameter substition of a compound variable,
+When the right hand side is a parameter substitution of a compound variable,
 the left hand side will become a compound variable with the same value.
 .SS Comments.
 .PD 0
@@ -1007,10 +1007,12 @@ and a
 To assign values to an indexed array, use
 \f2vname\fP\f3=(\fP\f2value\fP .\|.\|.\f3)\fP or
 \f3set \-A\fP \f2vname\fP  \f2value\fP .\|.\|. .
-The value of all
+The value of all non-negative
 subscripts must be in the
 range of
 0 through 4,194,303.
+A negative subscript is treated as an offset from the maximum
+current index +1 so that -1 refers to the last element.
 Indexed arrays can be declared with the
 .B \-a
 option to
@@ -1807,7 +1809,7 @@ Unlike
 .SM
 .BR PATH ,
 the current directory must be represented
-explictily by
+explicitly by
 .B .
 rather than by adjacent
 .B :
@@ -2111,7 +2113,7 @@ The CPU percentage, computed as (U + S) / R.
 .PD
 .RE
 .IP
-The braces denote optional portions.
+The brackets denote optional portions.
 The optional \fIp\fP is a digit specifying the \fIprecision\fP,
 the number of fractional digits after a decimal point.
 A value of 0 causes no decimal point or fraction to be output.
@@ -2861,7 +2863,7 @@ can be used within an arithmetic expression:
 .if t .RS
 .B
 .if n abs acos acosh asin asinh atan atan2 atanh cbrt copysign cos cosh erf erfc exp exp2 expm1 fabs fdim finite floor fma fmax fmod hypot ilogb int isinf isnan lgamma log log2 logb nearbyint nextafter nexttoward pow remainder rint round sin sinh sqrt tan tanh tgamma trunc
-.if t abs   acos   acosh   asin   asinh   atan   atan2   atanh   cbrt   copysign   cos   cosh   erf  erfc   exp   exp2   expm1   fabs   fdim   finite   floor  fma   fmax   fmod   hypot   ilogb   int   isinf   isnan   lgamma   log   log2   logb   nearbyint   nextafter   nextroward  pow   rint   round   sin   sinh   sqrt   tan   tanh   tgamma   trunc
+.if t abs   acos   acosh   asin   asinh   atan   atan2   atanh   cbrt   copysign   cos   cosh   erf  erfc   exp   exp2   expm1   fabs   fdim   finite   floor  fma   fmax   fmod   hypot   ilogb   int   isinf   isnan   lgamma   log   log2   logb   nearbyint   nextafter   nexttoward  pow   rint   round   sin   sinh   sqrt   tan   tanh   tgamma   trunc
 .if t .RE
 .PP
 An internal representation of a
@@ -3364,7 +3366,7 @@ then leading spaces and tabs will be stripped off the first
 line of the document and up to an equivalent indentation will
 be stripped from the remaining lines and from
 .IR word .
-A tab stop is assumend to occur at every 8 columns for the
+A tab stop is assumed to occur at every 8 columns for the
 purposes of determining the indentation.
 .TP
 \f3<<<\fP\f2word\fP
@@ -4985,7 +4987,7 @@ If cursor is at the end of the line it is equivalent to
 with
 .I string^\
 set to the contents of the current line.
-Otherwise, it is quivalent to
+Otherwise, it is equivalent to
 .BR k .
 .TP 10
 [\f2count\fP]\f3j\fP
@@ -6237,7 +6239,7 @@ format can be followed by a
 and the output base.
 In this case, the 
 .B #
-flag character caues
+flag character causes
 .IB base #
 to be prepended.
 .LI
@@ -6902,9 +6904,14 @@ Subscripts are strings rather than arithmetic
 expressions.
 .TP
 .B \-C
-unsets each
+causes each
 .I vname\^
-causes each to be a compound variable.
+to be a compound variable.
+.I value\^
+names a compound variable it is copied into
+.IR vname .
+Otherwise, it unsets each
+.IR vname .
 .TP
 .B \-a
 Declares
