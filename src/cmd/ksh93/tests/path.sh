@@ -30,6 +30,9 @@ integer Errors=0
 mkdir /tmp/ksh$$
 cd /tmp/ksh$$
 trap "PATH=$PATH; cd /; rm -rf /tmp/ksh$$" EXIT
+type /xxxxxx > out1 2> out2
+[[ -s out1 ]] && err_exit 'type should not write on stdout for not found case'
+[[ -s out2 ]] || err_exit 'type should write on stderr for not found case'
 mkdir dir1 dir2
 cat  > dir1/foobar << '+++'
 foobar() { print foobar1;}

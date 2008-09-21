@@ -40,8 +40,9 @@
 #define SYSLET		(sh.bltin_cmds+12)
 #define SYSEXPORT	(sh.bltin_cmds+13)
 #define SYSDOT		(sh.bltin_cmds+14)
+#define SYSRETURN	(sh.bltin_cmds+15)
 #if SHOPT_BASH
-#   define SYSLOCAL	(sh.bltin_cmds+15)
+#   define SYSLOCAL	(sh.bltin_cmds+16)
 #else
 #   define SYSLOCAL	0
 #endif

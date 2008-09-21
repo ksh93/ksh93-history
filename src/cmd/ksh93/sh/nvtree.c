@@ -601,7 +601,7 @@ static void outval(char *name, const char *vname, struct Walk *wp)
 {
 	register Namval_t *np, *nq;
         register Namfun_t *fp;
-	int isarray=0, associative=0, special=0,mode=0;
+	int isarray=0, special=0,mode=0;
 	if(*name!='.' || vname[strlen(vname)-1]==']')
 		mode = NV_ARRAY;
 	if(!(np=nv_open(vname,wp->root,mode|NV_VARNAME|NV_NOADD|NV_NOASSIGN|NV_NOFAIL|wp->noscope)))
@@ -645,7 +645,6 @@ static void outval(char *name, const char *vname, struct Walk *wp)
 	if(special || (nv_isarray(np) && nv_arrayptr(np)))
 	{
 		isarray=1;
-		associative= nv_aindex(np)<0;
 		if(array_elem(nv_arrayptr(np))==0)
 			isarray=2;
 		else
@@ -662,7 +661,12 @@ static void outval(char *name, const char *vname, struct Walk *wp)
 		return;
 	}
 	if(isarray==1 && !nq)
+	{
+		sfputc(wp->out,'(');
+		if(wp->indent>=0)
+			sfputc(wp->out,'\n');
 		return;
+	}
 	if(isarray==0 && nv_isarray(np) && nv_isnull(np))  /* empty array */
 		isarray = 2;
 	special |= wp->nofollow;
@@ -761,7 +765,10 @@ static char **genvalue(char **argv, const char *prefix, int n, struct Walk *wp)
 					*nextcp = '.';
 				}
 				else
+				{
+					outval(cp,arg,wp);
 					continue;
+				}
 				argv = genvalue(argv,cp,n+m+r,wp);
 				if(wp->indent>=0)
 					sfputc(outfile,'\n');
@@ -979,7 +986,24 @@ static void put_tree(register Namval_t *np, const char *val, int flags,Namfun_t 
 	if(!val && !fp->next && nv_isattr(np,NV_NOFREE))
 		return;
 	if(!nv_isattr(np,(NV_INTEGER|NV_BINARY)))
+	{
+		Shell_t		*shp = sh_getinterp();
+		Namval_t	*last_table = shp->last_table;
+		Dt_t		*last_root = shp->last_root;
+		Namval_t 	*mp = val?nv_open(val,shp->var_tree,NV_VARNAME|NV_NOADD|NV_NOASSIGN|NV_NOFAIL):0;
+		if(mp && nv_isvtree(mp))
+		{
+			shp->prev_table = shp->last_table;
+			shp->prev_root = shp->last_root;
+			shp->last_table = last_table;
+			shp->last_root = last_root;
+			if(!(flags&NV_APPEND))
+				walk_tree(np,(Namval_t*)0,(flags&NV_NOSCOPE)|1);
+			nv_clone(mp,np,NV_COMVAR);
+			return;
+		}
 		walk_tree(np,(Namval_t*)0,(flags&NV_NOSCOPE)|1);
+	}
 	nv_putv(np, val, flags,fp);
 	if(val && nv_isattr(np,(NV_INTEGER|NV_BINARY)))
 		return;

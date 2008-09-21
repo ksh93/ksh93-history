@@ -1,3 +1,4 @@
+08-09-08 stty.c: #ifdef guard TAB[012] -- freebsd: damn the posix, full speed ahead
 08-06-17 shcmd.h: move to libast
 08-04-24 uniq.c: add optget() 'n' option for -1 => -f1
 08-04-24 getconf.c: clarify diffs between "name - value" and "name = value"

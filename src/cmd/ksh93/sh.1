@@ -698,8 +698,9 @@ current ones provided that the types are compatible.
 .PP
 The right hand side of a variable assignment undergoes all the expansion
 list below except word splitting, brace expansion, and file name generation.
-When the right hand side is a parameter substitution of a compound variable,
-the left hand side will become a compound variable with the same value.
+When the left hand side is an assignment is a compound variable and
+the right hand is the name of a compound variable, the coumpound variable
+on the right will be copied or appended to the compound variable on the left.
 .SS Comments.
 .PD 0
 A word beginning with
@@ -1519,6 +1520,9 @@ This parameter is also used to hold the name of the matching
 .B
 .SM MAIL
 file when checking for mail.
+While defining a compound variable or a type,
+.B _
+is initialized as a reference to the compound variable or type.
 When a discipline function is invoked,
 .B _
 is initialized as a reference to the variable associated with
@@ -1710,6 +1714,16 @@ seconds since shell invocation is returned.
 If this variable is
 assigned a value, then the value returned upon reference will
 be the value that was assigned plus the number of seconds since the assignment.
+.TP
+.SM
+.B SHLVL
+An integer variable the is incremented each time the shell
+is invoked and is exported.
+If 
+.SM
+.B SHLVL
+is not in the environment when the shell is invoked, it is set
+to 1.
 .PD
 .RE
 .PP
@@ -3767,6 +3781,11 @@ is set with a compound variable assignment that defines the type.
 Function definitions can appear inside the compound variable
 assignment and these become discipline functions for this type and
 can be invoked or redefined by each instance of the type.
+The function name
+.B create
+is treated specially.  It is invoked for each instance of
+the type that is created but is not inherited and cannot be
+redefined for each instance.
 .PP
 When a type is defined a special built-in command of that name
 is added.  These built-ins are declaration commands and follow the
@@ -6825,6 +6844,13 @@ will contain the contents of the current command line
 when 
 .I action\^
 is running.
+If the exit status of the trap is
+.B 2
+the command will not be executed.
+If the exit status of the trap is
+.B 255
+and inside a function or a dot script,
+the function or dot script will return.
 If
 .I sig\^
 is

@@ -278,7 +278,7 @@ int sh_main(int ac, char *av[], Shinit_f userinit)
 					int type;
 					fdin = (int)strtol(name+8, (char**)0, 10);
 					if(fstat(fdin,&statb)<0)
-						errormsg(SH_DICT,ERROR_system(1),e_open,error_info.id);
+						errormsg(SH_DICT,ERROR_system(1),e_open,name);
 #if !_WINIX
 					/*
 					 * try to undo effect of solaris 2.5+

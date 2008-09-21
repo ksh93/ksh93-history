@@ -260,13 +260,6 @@ fi
 if	[[ ${var//+(\S)/Q} != 'Q Q' ]]
 then	err_exit '${var//+(\S)/Q} not workding'
 fi
-if	[[ "$(LC_ALL=debug $SHELL <<- \+EOF+
-		x=a<2bc><3xyz>g
-		print ${#x}
-		+EOF+)" != 4
-	]]
-then	err_exit '${#x} not working with multibyte locales'
-fi
 foo='foo+bar+'
 [[ $(print -r -- ${foo//+/'|'}) != 'foo|bar|' ]] && err_exit "\${foobar//+/'|'}"
 [[ $(print -r -- ${foo//+/"|"}) != 'foo|bar|' ]] && err_exit '${foobar//+/"|"}'
@@ -563,7 +556,7 @@ while	(( $# >= 3 ))
 do	i=$1
 	eval o=\${i/$2/\\\(\\\1\\\)}
 	if	[[ "$o" != "$3" ]]
-	then	err_exit "i='$1'; \${i/$2/\\(\\1\\)} failed -- got '$o', expected '$3'"
+	then	err_exit "i='$1'; \${i/$2/\\(\\1\\)} failed -- expected '$3', got '$o'"
 	fi
 	shift 3
 done

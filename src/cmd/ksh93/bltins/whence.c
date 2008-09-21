@@ -275,10 +275,7 @@ static int whence(Shell_t *shp,char **argv, register int flags)
 			{
 				r |= 1;
 				if(flags&V_FLAG)
-				{
-					sfprintf(sfstdout,sh_translate(e_found),sh_fmtq(name));
-					sfputc(sfstdout,'\n');
-				}
+					 errormsg(SH_DICT,ERROR_exit(0),e_found,sh_fmtq(name));
 			}
 		} while(pp);
 	}

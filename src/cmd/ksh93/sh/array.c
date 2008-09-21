@@ -703,17 +703,19 @@ int nv_atypeindex(Namval_t *np, const char *tname)
 	if(tp)
 	{
 		struct index_array *ap = (struct index_array*)nv_arrayptr(np);
+		if(!nv_hasdisc(tp,&ENUM_disc))
+			errormsg(SH_DICT,ERROR_exit(1),e_notenum,tp->nvname);
 		if(!ap)
 			ap = array_grow(np,ap,1);
 		ap->xp = calloc(NV_MINSZ,1);
 		np = nv_namptr(ap->xp,0);
 		np->nvname = tp->nvname;
-		nv_clone(tp,np,NV_NOFREE);
 		nv_onattr(np,NV_MINIMAL);
+		nv_clone(tp,np,NV_NOFREE);
 		nv_offattr(np,NV_RDONLY);
 		return(1);
 	}
-	errormsg(SH_DICT,ERROR_exit(1),"unknown type name for index: %.*s", n,tname);
+	errormsg(SH_DICT,ERROR_exit(1),e_unknowntype, n,tname);
 	return(0);
 }
 
@@ -1019,13 +1021,12 @@ Namval_t *nv_putsub(Namval_t *np,register char *sp,register long mode)
 	ap->header.nelem |= (mode&(ARRAY_SCAN|ARRAY_NOCHILD|ARRAY_UNDEF|ARRAY_NOSCOPE));
 	if(sp)
 	{
-		union Value *up;
 		if(mode&ARRAY_SETSUB)
 		{
 			(*ap->header.fun)(np, sp, NV_ASETSUB);
 			return(np);
 		}
-		up = (union Value*)(*ap->header.fun)(np, sp, (mode&ARRAY_ADD)?NV_AADD:0);
+		(*ap->header.fun)(np, sp, (mode&ARRAY_ADD)?NV_AADD:0);
 		if(!(mode&(ARRAY_SCAN|ARRAY_ADD)) && !(*ap->header.fun)(np,NIL(char*),NV_ACURRENT))
 			np = 0;
 	}

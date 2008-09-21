@@ -1460,6 +1460,8 @@ DEBUG_TEST(0x0200,(sfprintf(sfstdout,"AHA#%04d 0x%04x parse %s=>%s `%-.*s'\n", _
 			bitset(rex->re.neg_catch.index, s - rex->re.neg_catch.beg);
 			return NONE;
 		case REX_NEST:
+			if (s >= env->end)
+				return NONE;
 			do
 			{
 				if ((c = *s++) == rex->re.nest.primary)

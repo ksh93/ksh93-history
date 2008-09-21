@@ -314,9 +314,15 @@ static const Tty_t Ttable[] =
 #endif
 #ifdef TABDLY
 { "tabs",	TABS,	O_FLAG,	IG,	TABDLY, TAB3, C("Preserve (expand to spaces) tabs") },
+#ifdef TAB0
 { "tab0",	BITS,	O_FLAG,	IG|SS,	TABDLY, TAB0  },
+#endif
+#ifdef TAB1
 { "tab1",	BITS,	O_FLAG,	US,	TABDLY, TAB1  },
+#endif
+#ifdef TAB2
 { "tab2",	BITS,	O_FLAG,	US,	TABDLY, TAB2  },
+#endif
 { "tab3",	BITS,	O_FLAG,	US,	TABDLY, TAB3  },
 #endif
 #ifdef BSDLY

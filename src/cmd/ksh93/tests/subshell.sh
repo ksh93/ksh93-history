@@ -28,7 +28,6 @@ alias err_exit='err_exit $LINENO'
 Command=${0##*/}
 integer Errors=0
 
-
 z=()
 z.foo=( [one]=hello [two]=(x=3 y=4) [three]=hi)
 z.bar[0]=hello
@@ -90,4 +89,71 @@ unset l
 	l=( a=1 b="BE" )
 )
 [[ ${l+foo} != foo ]] || err_exit 'l should be unset'
+
+tmp=/tmp/kshsubsh$$
+trap "rm -f $tmp" EXIT
+integer BS=1024 nb=64 bs no
+for bs in $BS 1
+do	(
+		$SHELL -c '
+			{
+				sleep 2
+				kill -KILL $$
+			} &
+			set -- $($SHELL -c "printf %.$(('$BS'*'$nb'))c x | dd bs='$bs'")
+			print ${#1}
+			kill $!
+		'
+	) > $tmp 2>/dev/null
+	no=$(<$tmp)
+	(( no == (BS * nb) )) || err_exit "shell hangs on command substitution output size >= $BS*$nb with write size $bs -- expected $((BS*nb)), got ${no:-0}"
+done
+
+# exercise command substitutuion trailing newline logic w.r.t. pipe vs. tmp file io
+
+set -- \
+	'post-line print'								\
+	'$TEST_unset; ($TEST_fork; print 1); print'					\
+	1										\
+	'pre-line print'								\
+	'$TEST_unset; ($TEST_fork; print); print 1'					\
+	$'\n1'										\
+	'multiple pre-line print'							\
+	'$TEST_unset; ($TEST_fork; print); print; ($TEST_fork; print 1); print'		\
+	$'\n\n1'									\
+	'multiple post-line print'							\
+	'$TEST_unset; ($TEST_fork; print 1); print; ($TEST_fork; print); print'		\
+	1										\
+	'intermediate print'								\
+	'$TEST_unset; ($TEST_fork; print 1); print; ($TEST_fork; print 2); print'	\
+	$'1\n\n2'									\
+	'simple variable'								\
+	'$TEST_unset; ($TEST_fork; l=2; print "$l"); print $l'				\
+	2										\
+	'compound variable'								\
+	'$TEST_unset; ($TEST_fork; l=(a=2 b="BE"); print "$l"); print $l'		\
+	$'(\n\ta=2\n\tb=BE\n)'								\
+
+export TEST_fork TEST_unset
+
+while	(( $# >= 3 ))
+do	txt=$1
+	cmd=$2
+	exp=$3
+	shift 3
+	for TEST_unset in '' 'unset var'
+	do	for TEST_fork in '' 'ulimit -c 0'
+		do	for TEST_shell in "eval" "$SHELL -c"
+			do	if	! got=$($TEST_shell "$cmd")
+				then	err_exit "${TEST_shell/*-c/\$SHELL -c} ${TEST_unset:+unset }${TEST_fork:+fork }$txt print failed"
+				elif	[[ "$got" != "$exp" ]]
+				then	EXP=$(printf %q "$exp")
+					GOT=$(printf %q "$got")
+					err_exit "${TEST_shell/*-c/\$SHELL -c} ${TEST_unset:+unset }${TEST_fork:+fork }$txt command substitution failed -- expected $EXP, got $GOT"
+				fi
+			done
+		done
+	done
+done
+
 exit $Errors

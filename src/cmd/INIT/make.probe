@@ -2,7 +2,7 @@
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)make.probe (AT&T Research) 2008-08-04
+# @(#)make.probe (AT&T Research) 2008-09-10
 #
 # C probe for make
 #
@@ -38,6 +38,7 @@ probe_shared_nostart="-nostartfiles"
 probe_shared_registry='"-update_registry $probe_shared_registry_file"'
 probe_shared_registry_file='registry.ld'
 probe_shared_registry_path="\$(LIBDIR)/$probe_shared_registry_file"
+probe_no_protect="-fno-stack-protector -GS-"
 probe_strict="'-ansi -pedantic' '-ansi -strict' -strict -ansi"
 probe_stripflags="'-f -s' -f -s"
 probe_unresolved="'-expect_unresolved \"*\"'"
@@ -141,6 +142,7 @@ libpp=
 makeoptions=
 nmedit=
 nmflags=
+no_protect=
 optimize=
 plusplus=
 prefix_archive=lib
@@ -1450,6 +1452,19 @@ then	e=`wc -c < e`
 		esac
 	done
 
+	eval set x $probe_no_protect
+	while	:
+	do	shift
+		case $# in
+		0)	break ;;
+		esac
+		rm -f warn.$obj
+		$cc $1 -c warn.$src 2>e && test -f warn.$obj || continue
+		case `wc -c < e` in
+		$e)	no_protect=$1; break ;;
+		esac
+	done
+
 	eval set x $probe_optimize
 	while	:
 	do	shift
@@ -1980,6 +1995,7 @@ CC_MAKE_OPTIONS=$makeoptions
 CC_NM=$nm
 CC_NMEDIT=$nmedit
 CC_NMFLAGS=$nmflags
+CC_NOPROTECT=$no_protect
 CC_OPTIMIZE=$optimize
 CC_READONLY=$readonly
 CC_REPOSITORY=$repository
@@ -2084,6 +2100,7 @@ case $CC_NMEDIT in
 esac
 echo CC.NMEDIT ="$CC_NMEDIT"
 echo CC.NMFLAGS = $CC_NMFLAGS
+echo CC.NOPROTECT = $CC_NOPROTECT
 echo CC.OPTIMIZE = $CC_OPTIMIZE
 echo CC.PICBIG = $CC_PICBIG
 echo CC.PICSMALL = $CC_PICSMALL

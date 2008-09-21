@@ -222,4 +222,8 @@ printf $'w=world;cat   <<# !!!\n\thello\n\t\t$w\n!!!' > $f
 	EOF
 ++++
 ) == 1234 ]]  2> /dev/null || err_exit 'here document with get discipline failed'
+[[ $($SHELL -c 'g(){ print ok;}; cat <<- EOF
+	${ g;}
+	EOF
+	' 2> /dev/null) == ok ]] || err_exit '${ command;} not working in heredoc'
 exit $((Errors))

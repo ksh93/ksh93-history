@@ -214,7 +214,7 @@ expected[xtd]="3-intr 2-intr 1-intr 1-0000"
 tst $SHELL > tst.got
 
 while	read ops out
-do	[[ $out == ${expected[$ops]} ]] || err_exit "interrupt $ops test failed -- got '$out', expected '${expected[$ops]}'"
+do	[[ $out == ${expected[$ops]} ]] || err_exit "interrupt $ops test failed -- expected '${expected[$ops]}', got '$out'"
 done < tst.got
 
 float s=$SECONDS

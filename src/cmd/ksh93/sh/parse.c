@@ -871,6 +871,7 @@ static struct argnod *assign(Lex_t *lexp, register struct argnod *ap)
 	ap->argflag &= ARG_QUOTED;
 	ap->argflag |= array;
 	lexp->assignok = SH_ASSIGN;
+	lexp->aliasok = 1;
 	array=0;
 	if((n=skipnl(lexp,0))==RPAREN || n==LPAREN)
 	{

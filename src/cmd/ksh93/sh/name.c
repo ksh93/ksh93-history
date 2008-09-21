@@ -206,7 +206,7 @@ Namval_t *nv_addnode(Namval_t* np, int remove)
 	register struct sh_type	*sp = (struct sh_type*)sh.mktype;
 	register int		i;
 	register char		*name=0;
-	if(sp->numnodes==0 && !nv_isnull(np))
+	if(sp->numnodes==0 && !nv_isnull(np) && sh.last_table)
 	{
 		/* could be an redefine */
 		Dt_t *root = nv_dict(sh.last_table);
@@ -231,7 +231,7 @@ Namval_t *nv_addnode(Namval_t* np, int remove)
 			Dt_t *root = nv_dict(sh.last_table);
 			nv_delete(sp->nodes[0],root,NV_NOFREE);
 			dtinsert(root,sp->rp);
-			errormsg(SH_DICT,ERROR_exit(1),e_redef,sp->nodes[0]);
+			errormsg(SH_DICT,ERROR_exit(1),e_redef,sp->nodes[0]->nvname);
 		}
 	}
 	for(i=0; i < sp->numnodes; i++)
@@ -293,6 +293,8 @@ void nv_setlist(register struct argnod *arg,register int flags)
 	int		traceon = (sh_isoption(SH_XTRACE)!=0);
 	int		array = (flags&(NV_ARRAY|NV_IARRAY));
 	Namarr_t	*ap;
+	Namval_t	node;
+	struct Namref	nr;
 #if SHOPT_TYPEDEF
 	int		maketype = flags&NV_TYPE;
 	struct sh_type	shtp;
@@ -317,12 +319,10 @@ void nv_setlist(register struct argnod *arg,register int flags)
 	for(;arg; arg=arg->argnxt.ap)
 	{
 		shp->used_pos = 0;
-		mp = 0;
 		if(arg->argflag&ARG_MAC)
 		{
 			shp->prefix = 0;
-			cp = sh_mactrim(shp,arg->argval,(flags&(NV_NOREF|NV_COMVAR))?-3:-1);
-			mp = (Namval_t*)shp->prefix;
+			cp = sh_mactrim(shp,arg->argval,(flags&NV_NOREF)?-3:-1);
 			shp->prefix = prefix;
 		}
 		else
@@ -360,7 +360,11 @@ void nv_setlist(register struct argnod *arg,register int flags)
 				}
 				np = nv_open(cp,shp->var_tree,flag);
 				if((flags&NV_STATIC) && !nv_isnull(np))
+#if SHOPT_TYPEDEF
+					goto check_type;
+#else
 					continue;
+#endif /* SHOPT_TYPEDEF */
 				if(array)
 				{
 					if(!(arg->argflag&ARG_APPEND))
@@ -487,7 +491,23 @@ void nv_setlist(register struct argnod *arg,register int flags)
 				else
 					shp->prefix = cp;
 				shp->last_table = 0;
+				memset(&nr,0,sizeof(nr));
+				memcpy(&node,L_ARGNOD,sizeof(node));
+				L_ARGNOD->nvalue.nrp = &nr;
+				nr.np = np;
+				nr.root = shp->last_root;
+				nr.table = shp->last_table;
+				L_ARGNOD->nvflag = NV_REF|NV_NOFREE;
+				L_ARGNOD->nvfun = 0;
 				sh_exec(tp,sh_isstate(SH_ERREXIT));
+#if SHOPT_TYPEDEF
+				if(!maketype)
+#endif
+				{
+					L_ARGNOD->nvalue.nrp = node.nvalue.nrp;
+					L_ARGNOD->nvflag = node.nvflag;
+					L_ARGNOD->nvfun = node.nvfun;
+				}
 				shp->prefix = prefix;
 				if(nv_isarray(np) && (mp=nv_opensub(np)))
 					np = mp;
@@ -510,12 +530,6 @@ void nv_setlist(register struct argnod *arg,register int flags)
 			mp = 0;
 		}
 		np = nv_open(cp,shp->var_tree,flags);
-		if(mp)
-		{
-			_nv_unset(np,0);
-			nv_setvtree(np);
-			nv_clone(mp,np,NV_COMVAR);
-		}
 		if(!np->nvfun && (flags&NV_NOREF))
 		{
 			if(shp->used_pos)
@@ -568,6 +582,12 @@ void nv_setlist(register struct argnod *arg,register int flags)
 			shp->mktype = shtp.previous;
 			maketype = 0;
 			shp->prefix = 0;
+			if(nr.np == np)
+			{
+				L_ARGNOD->nvalue.nrp = node.nvalue.nrp;
+				L_ARGNOD->nvflag = node.nvflag;
+				L_ARGNOD->nvfun = node.nvfun;
+			}
 		}
 #endif /* SHOPT_TYPEDEF */
 	}
@@ -1003,9 +1023,9 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 /*
  * delete the node <np> from the dictionary <root> and clear from the cache
  * if <root> is NULL, only the cache is cleared
- * if nofree is 0, the node is freed
+ * if flags does not contain NV_NOFREE, the node is freed
  */
-void nv_delete(Namval_t* np, Dt_t *root, int nofree)
+void nv_delete(Namval_t* np, Dt_t *root, int flags)
 {
 #if NVCACHE
 	register int		c;
@@ -1020,7 +1040,7 @@ void nv_delete(Namval_t* np, Dt_t *root, int nofree)
 	{
 		if(dtdelete(root,np))
 		{
-			if(!nofree && !nv_subsaved(np))
+			if(!(flags&NV_NOFREE) && ((flags&NV_FUNCTION) || !nv_subsaved(np)))
 				free((void*)np);
 		}
 #if 0
@@ -2782,9 +2802,9 @@ static char *lastdot(register char *cp, int eq)
 int nv_rename(register Namval_t *np, int flags)
 {
 	Shell_t			*shp = &sh;
-	register Namval_t	*mp,*nr=0;
+	register Namval_t	*mp=0,*nr=0;
 	register char		*cp;
-	int			index;
+	int			index= -1;
 	Namval_t		*last_table = shp->last_table;
 	Dt_t			*last_root = shp->last_root;
 	Dt_t			*hp = 0;
@@ -2799,6 +2819,10 @@ int nv_rename(register Namval_t *np, int flags)
 			errormsg(SH_DICT,ERROR_exit(1),e_varname,"");
 		return(0);
 	}
+	if(lastdot(cp,0) && nv_isattr(np,NV_MINIMAL))
+		errormsg(SH_DICT,ERROR_exit(1),e_varname,nv_name(np));
+	if(nv_isarray(np) && !(mp=nv_opensub(np)))
+		index=nv_aindex(np);
 	if(!hp)
 		hp = shp->var_tree;
 	if(!(nr = nv_open(cp, hp, flags|NV_ARRAY|NV_NOREF|NV_NOSCOPE|NV_NOADD|NV_NOFAIL)))
@@ -2813,22 +2837,30 @@ int nv_rename(register Namval_t *np, int flags)
 			_nv_unset(np,0);
 		return(0);
 	}
-	if(nv_isarray(np))
+	if(!mp && index>=0 && nv_isvtree(nr))
 	{
-		if(!(mp=nv_opensub(np)) && (index=nv_aindex(np))>=0 && nv_isvtree(nr))
-		{
-			sfprintf(shp->strbuf,"%s[%d]%c",nv_name(np),index,0);
-			/* create a virtual node */
-			mp = nv_open(sfstruse(shp->strbuf),shp->var_tree,NV_VARNAME|NV_ADD|NV_ARRAY);
-			if(!mp)
-				mp = np;
-		}
-		_nv_unset(mp,0);
-		mp->nvenv = (void*)np;
-		np =  mp;
+		sfprintf(shp->strbuf,"%s[%d]%c",nv_name(np),index,0);
+		/* create a virtual node */
+		if(mp = nv_open(sfstruse(shp->strbuf),shp->var_tree,NV_VARNAME|NV_ADD|NV_ARRAY))
+			mp->nvenv = (void*)np;
 	}
-	else
-		_nv_unset(np,0);
+	if(mp)
+		np = mp;
+	if(nr==np)
+	{
+		if(index<0)
+			return(0);
+		if(cp = nv_getval(np))
+			cp = strdup(cp);
+	}
+	_nv_unset(np,0);
+	if(nr==np)
+	{
+		nv_putsub(np,(char*)0, index);
+		nv_putval(np,cp,0);
+		free((void*)cp);
+		return(1);
+	}
 	shp->prev_table = shp->last_table;
 	shp->prev_root = shp->last_root;
 	shp->last_table = last_table;
@@ -2951,6 +2983,7 @@ Shscope_t *sh_setscope(Shscope_t *scope)
 	sh.st = *((struct sh_scoped*)scope);
 	sh.var_tree = scope->var_tree;
 	SH_PATHNAMENOD->nvalue.cp = sh.st.filename;
+	SH_FUNNAMENOD->nvalue.cp = sh.st.funname;
 	return(old);
 }
 

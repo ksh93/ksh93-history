@@ -220,7 +220,10 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 parameter	(_BLD_ast) (_AST_VERSION)
 virtual		ast/stdio.h
 
+		:NOPROTECT: sfprintf.c sfvprintf.c sfscanf.c sfvscanf.c
+
 		:NOOPTIMIZE: spawnveg.c
+"ibm.risc"	:NOOPTIMIZE: regcomp.c
 "sol*.*"	:NOOPTIMIZE: sfrd.c sfvprintf.c tmxfmt.c
 "win32*"	:NOOPTIMIZE: fastfind.c mc.c
 

@@ -219,7 +219,6 @@ static void lex_advance(Sfio_t *iop, const char *buff, register int size, void *
  */
 static int lexfill(Lex_t *lp)
 {
-	Shell_t *shp = lp->sh;
 	register int c;
 	Lex_t savelex;
 	struct argnod *ap;

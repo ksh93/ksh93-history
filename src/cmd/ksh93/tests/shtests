@@ -77,8 +77,8 @@ fi
 typeset -A tests
 for i in ${*-*.sh}
 do	t=$(grep -c err_exit $i)
-	if	(( $t ))
-	then	(( t = $t - 1 ))
+	if	(( $t > 2 ))
+	then	(( t = $t - 2 ))
 	fi
 	tests[$i]=$t
 	T=test

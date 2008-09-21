@@ -26,36 +26,40 @@ function err_exit
 
 alias err_exit='err_exit $LINENO'
 
-integer Errors=0
+float DELAY=${1:-0.5}
+integer FOREGROUND=10 BACKGROUND=2 Errors=0
 
-s="$($SHELL -c '
-set -o errexit
-integer i
+s=$($SHELL -c '
+integer i foreground=0 background=0
+float delay='$DELAY' d=0 s=0
 
-trap "print got_child" CHLD
+set --errexit
 
-sleep 2.0 &
-sleep 4.0 &
-for ((i=0 ; i < 10 ; i++)) ; do
-      print $i
-      sleep .5
-      
-      # external, non-background command for which a SIGCHLD should
-      # _not_ be fired
-      $SHELL -c : > /dev/null
+trap "(( background++ ))" CHLD
+
+(( d = delay ))
+for ((i = 0; i < '$BACKGROUND'; i++))
+do	sleep $d &
+	(( d *= 4 ))
+	(( s += d ))
 done
-print "loop finished"
+for ((i = 0; i < '$FOREGROUND'; i++))
+do	(( foreground++ ))
+	sleep $delay
+	(( s -= delay ))
+	$SHELL -c : > /dev/null # foreground does not generate SIGCHLD
+done
+if	(( (s += delay) < 1 ))
+then	(( s = 1 ))
+fi
+sleep $s
 wait
-print "done"
-' 2>&1 )" || err_exit "test loop failed."
+print foreground=$foreground background=$background
+') || err_exit "test loop failed"
 
-[[ "$s" == ~(Er)$'9\nloop finished\ndone' ]] || err_exit "Expected '9\nloop fi
-nished\ndone' at the end of the output, got ${s}."
-[[ "$s" == ~(El)$'0\n1\n2' ]] || err_exit "Expected '0\n1\n2' as at the beginnin
-g of the output, got ${s}."
+eval $s
 
-integer count
-(( count=$(fgrep "got_child" <<< "$s" | wc -l) )) || err_exit "counting failed."
-(( count == 2 )) || err_exit "Expected count==2, got count==${count}."
+(( foreground == FOREGROUND )) || err_exit "expected $FOREGROUND foreground -- got $foreground (DELAY=$DELAY)"
+(( background == BACKGROUND )) || err_exit "expected $BACKGROUND background -- got $background (DELAY=$DELAY)"
 
 exit $((Errors))

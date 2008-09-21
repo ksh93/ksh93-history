@@ -116,6 +116,7 @@ typedef struct sh_scope
 	char		**argv;
 	char		*cmdname;
 	char		*filename;
+	char		*funname;
 	int		lineno;
 	Dt_t		*var_tree;
 	struct sh_scope	*self;

@@ -127,8 +127,12 @@ int b_test(int argc, char *argv[],void *extra)
 	cp = argv[1];
 	if(c_eq(cp,'(') && argc<=6 && c_eq(argv[argc-1],')'))
 	{
-		cp =  (++argv)[1];
-		argc -= 2;
+		/* special case  ( binop ) to conform with standard */
+		if(!(argc==4  && (not=sh_lookup(cp=argv[2],shtab_testops))))
+		{
+			cp =  (++argv)[1];
+			argc -= 2;
+		}
 	}
 	not = c_eq(cp,'!');
 	/* posix portion for test */

@@ -392,7 +392,6 @@ int sh_debug(Shell_t *shp, const char *trap, const char *name, const char *subsc
 	Stk_t			*stkp=shp->stk;
 	struct sh_scoped	savst;
 	Namval_t		*np = SH_COMMANDNOD;
-	struct Level		*lp=0;
 	char			*sav = stkptr(stkp,0);
 	int			n=4, offset=stktell(stkp);
 	const char		*cp = "+=( ";
@@ -434,7 +433,7 @@ int sh_debug(Shell_t *shp, const char *trap, const char *name, const char *subsc
 	shp->st.lineno = error_info.line;
 	level  = shp->fn_depth+shp->dot_depth;
 	if(!SH_LEVELNOD->nvfun || !SH_LEVELNOD->nvfun->disc || nv_isattr(SH_LEVELNOD,NV_INT16|NV_NOFREE)!=(NV_INT16|NV_NOFREE))
-		lp = init_level(level);
+		init_level(level);
 	else
 		nv_putval(SH_LEVELNOD,(char*)&level,NV_INT16);
 	savst = shp->st;
@@ -444,7 +443,8 @@ int sh_debug(Shell_t *shp, const char *trap, const char *name, const char *subsc
 	shp->indebug = 0;
 	if(shp->st.cmdname)
 		error_info.id = shp->st.cmdname;
-	nv_putval(SH_PATHNAMENOD, shp->st.filename ,NV_NOFREE);
+	nv_putval(SH_PATHNAMENOD,shp->st.filename,NV_NOFREE);
+	nv_putval(SH_FUNNAMENOD,shp->st.funname,NV_NOFREE);
 	shp->st = savst;
 	if(sav != stkptr(stkp,0))
 		stkset(stkp,sav,0);
@@ -610,9 +610,9 @@ static int set_instance(Namval_t *nq, Namval_t *node, struct Namref *nr)
 	L_ARGNOD->nvalue.nrp = nr;
 	L_ARGNOD->nvflag = NV_REF|NV_NOFREE;
 	L_ARGNOD->nvfun = 0;
-	if(ap=nv_arrayptr(nq))
+	if((ap=nv_arrayptr(nq)) && (cp = nv_getsub(nq)) && (cp = strdup(cp)))
 	{
-		nv_putval(SH_SUBSCRNOD,nr->sub=strdup(nv_getsub(nq)),NV_NOFREE);
+		nv_putval(SH_SUBSCRNOD,nr->sub=cp,NV_NOFREE);
 		return(ap->nelem&ARRAY_SCAN);
 	}
 	return(0);
@@ -741,6 +741,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 				comn = com[argn-1];
 			}
 			io = t->tre.treio;
+			shp->exitval = 0;
 			if(shp->envlist = argp = t->com.comset)
 			{
 				if(argn==0 || (np && nv_isattr(np,BLT_SPC)))
@@ -837,7 +838,20 @@ int sh_exec(register const Shnode_t *t, int flags)
 					break;
 				}
 				if(trap=shp->st.trap[SH_DEBUGTRAP])
-					sh_debug(shp,trap,(char*)0, (char*)0, com, ARG_RAW);
+				{
+					int n = sh_debug(shp,trap,(char*)0,(char*)0, com, ARG_RAW);
+					if(n==255 && shp->fn_depth+shp->dot_depth)
+					{
+						np = SYSRETURN;
+						argn = 1;
+						com[0] = np->nvname;
+						com[1] = 0;
+						io = 0;
+						argp = 0;
+					}
+					else if(n==2)
+						break;
+				}
 				if(io)
 					sfsync(shp->outpool);
 				shp->lastpath = 0;
@@ -1173,7 +1187,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 					sh_close(shp->inpipe[0]);
 				if(type&(FCOOP|FAMP))
 					shp->bckpid = parent;
-				if(!(type&(FAMP|FPOU)))
+				if(!(type&(FAMP|FPOU)) && !(execflg && shp->subshell))
 				{
 					if(shp->topfd > topfd)
 						sh_iorestore(shp,topfd,0);
@@ -2498,8 +2512,9 @@ int sh_funscope(int argn, char *argv[],int(*fun)(void*),void *arg,int execflg)
 	if(!fun)
 	{
 		shp->st.filename = fp->node->nvalue.rp->fname;
-		nv_putval(SH_PATHNAMENOD, shp->st.filename ,NV_NOFREE);
-		nv_putval(SH_FUNNAMENOD,nv_name(fp->node),NV_NOFREE);
+		shp->st.funname = nv_name(fp->node);
+		nv_putval(SH_PATHNAMENOD,shp->st.filename,NV_NOFREE);
+		nv_putval(SH_FUNNAMENOD,shp->st.funname,NV_NOFREE);
 	}
 	if(jmpval == 0)
 	{
@@ -2574,6 +2589,7 @@ static void sh_funct(Shell_t *shp,Namval_t *np,int argn, char *argv[],struct arg
 		shp->posix_fun = np;
 		save = argv[-1];
 		argv[-1] = 0;
+		shp->st.funname = nv_name(np);
 		nv_putval(SH_FUNNAMENOD, nv_name(np),NV_NOFREE);
 		opt_info.index = opt_info.offset = 0;
 		error_info.errors = 0;
@@ -2595,8 +2611,12 @@ static void sh_funct(Shell_t *shp,Namval_t *np,int argn, char *argv[],struct arg
 	}
 	lp->maxlevel = level;
 	SH_LEVELNOD->nvalue.s = lp->maxlevel;
+#if 0
+	nv_putval(SH_FUNNAMENOD,shp->st.funname,NV_NOFREE);
+#else
 	nv_putval(SH_FUNNAMENOD,fname,NV_NOFREE);
-	nv_putval(SH_PATHNAMENOD, shp->st.filename ,NV_NOFREE);
+#endif
+	nv_putval(SH_PATHNAMENOD,shp->st.filename,NV_NOFREE);
 }
 
 /*
@@ -2612,12 +2632,14 @@ int sh_fun(Namval_t *np, Namval_t *nq, char *argv[])
 	Namval_t node;
 	struct Namref	nr;
 	long		mode;
+	char		*prefix = shp->prefix;
 	int n=0;
 	char *av[2];
 	Fcin_t save;
 	fcsave(&save);
 	if((offset=staktell())>0)
 		base=stakfreeze(0);
+	shp->prefix = 0;
 	if(!argv)
 	{
 		argv = av;
@@ -2657,6 +2679,7 @@ int sh_fun(Namval_t *np, Namval_t *nq, char *argv[])
 	fcrestore(&save);
 	if(offset>0)
 		stakset(base,offset);
+	shp->prefix = prefix;
 	return(sh.exitval);
 }
 

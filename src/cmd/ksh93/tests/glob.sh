@@ -63,7 +63,7 @@ function test_glob
 		fi
 	fi
 	if	[[ $got != "$expected" ]]
-	then	'err_exit' $lineno "glob: got '$got' expected '$expected'"
+	then	'err_exit' $lineno "glob -- expected '$expected', got '$got'"
 	fi
 }
 alias test_glob='test_glob $LINENO'
@@ -79,7 +79,7 @@ function test_case
 		esac
 	"
 	if	[[ $got != "$expected" ]]
-	then	'err_exit' $lineno "case $subject in $pattern) got '$got' expected '$expected'"
+	then	'err_exit' $lineno "case $subject in $pattern) -- expected '$expected', got '$got'"
 	fi
 }
 alias test_case='test_case $LINENO'

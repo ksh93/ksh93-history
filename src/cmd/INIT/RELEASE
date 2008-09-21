@@ -1,3 +1,6 @@
+08-09-20 regress.sh: add --pipefail for SET pipe-input ...
+08-09-17 Makefile: add gdbm1.c for <gdbm-ndbm.h>
+08-09-10 make.probe: add CC.NOPROTECT
 08-08-08 mktest.sh: add --width=width
 08-08-05 dbm.req: favor sleepycat ndbm compatibility
 08-08-04 C+probe: fix stdlib initialization logic

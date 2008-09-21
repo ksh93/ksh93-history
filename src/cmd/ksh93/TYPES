@@ -41,6 +41,7 @@ of 1 and the variable y has an initial value of 0.  The new -h option argument,
 is used for documentations purposes as described later and is ignored outside
 of a type definition.
 
+
 The variable count has the new -S attribute which means that it is shared
 between all instances of the type.  The -S option to typeset is ignored
 outside of a type definition.  Note the variable named _ that is used inside
@@ -50,6 +51,10 @@ could also have been defined with function len and function set, but
 since there are no local variables, the len() and set() form are more
 efficient since they don't need to set up a context for local variables
 and for saving and restoring traps.
+
+If the discipline function named create is defined it will be
+invoked when creating each instance for that type. A function named
+create cannot be defined by any instance.
 
 When a type is defined, a declaration built-in command by this name
 is added to ksh.  As with other shell builtins, you can get the man page
@@ -98,8 +103,8 @@ via the new command substitution method.
 The type of any variable can be obtained from the new prefix
 operator @.  Thus, ${@p1} will output Pt_t.
 
-By default, each instance inherits all the discipline functions
-defined by the type definition.  However, each instance can create
+By default, each instance inherits all the discipline functions defined
+by the type definition other than create.  However, each instance can define
 a function by the same name that will override this definition.
 However, only discipline functions with the same name as those defined
 by the type or the standard get, set, append, and unset disciplines

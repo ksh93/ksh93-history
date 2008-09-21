@@ -276,6 +276,7 @@ int job_reap(register int sig)
 		flags |= WNOHANG;
 		job.waitsafe++;
 		jp = 0;
+		lastpid = pid;
 		if(!(pw=job_bypid(pid)))
 		{
 #ifdef DEBUG
@@ -337,6 +338,9 @@ int job_reap(register int sig)
 				sh.cpipe[1] = -1;
 				sh.coutpipe = -1;
 			}
+			else if(sh.subshell)
+				sh_subjobcheck(pid);
+
 			pw->p_flag &= ~(P_STOPPED|P_SIGNALLED);
 			if (WIFSIGNALED(wstat))
 			{
@@ -1270,6 +1274,12 @@ int	job_wait(register pid_t pid)
 		sfprintf(sfstderr,"ksh: job line %4d: wait pid=%d critical=%d flags=%o\n",__LINE__,getpid(),job.in_critical,pw->p_flag);
 #endif /* DEBUG*/
 	errno = 0;
+	if(sh.coutpipe>=0 && sh.cpid==lastpid)
+	{
+		sh_close(sh.coutpipe);
+		sh_close(sh.cpipe[1]);
+		sh.cpipe[1] = sh.coutpipe = -1;
+	}
 	while(1)
 	{
 		if(job.waitsafe)

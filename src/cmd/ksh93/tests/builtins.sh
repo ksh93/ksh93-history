@@ -370,12 +370,12 @@ do	arg=$1 val=$2 code=$3
 		err=$(printf "$fmt" "$arg" 2>&1 >/dev/null)
 		printf "$fmt" "$arg" >/dev/null 2>&1
 		ret=$?
-		[[ $out == $val ]] || err_exit "printf $fmt $arg failed -- got $out, expected $val"
+		[[ $out == $val ]] || err_exit "printf $fmt $arg failed -- expected $val, got $out"
 		if	(( $code ))
-		then	[[ $err ]] || err_exit "printf $fmt $arg failed -- error message expected"
-		else	[[ $err ]] && err_exit "$err: printf $fmt $arg failed -- error message not expected"
+		then	[[ $err ]] || err_exit "printf $fmt $arg failed, error message expected"
+		else	[[ $err ]] && err_exit "$err: printf $fmt $arg failed, error message not expected -- got '$err'"
 		fi
-		(( $ret == $code )) || err_exit "printf $fmt $arg failed -- got exit code $ret, expected $code"
+		(( $ret == $code )) || err_exit "printf $fmt $arg failed -- expected exit code $code, got $ret"
 	done
 done
 ((n=0))
@@ -391,7 +391,7 @@ do	set -- ${ARGV[$i]}
 	do	:
 	done
 	if	[[ $OPTIND != ${ARGC[$i]} ]]
-	then	err_exit "\$OPTIND after getopts loop incorrect -- got $OPTIND, expected ${ARGC[$i]}"
+	then	err_exit "\$OPTIND after getopts loop incorrect -- expected ${ARGC[$i]}, got $OPTIND"
 	fi
 done
 options=ab:c
@@ -502,5 +502,6 @@ $SHELL -c '( sleep 1; kill -ALRM $$ ) & sleep 3' 2> /dev/null
 exitval=$?
 exec 2>&3-
 [[ $exitval == 0 ]] || err_exit "sleep doesn't exit 0 with ALRM interupt"
-((  (SECONDS-sec) > 2.5 )) || err_exit 'ALRM signal causes sleep to terminate prematurely'
+(( sec = SECONDS - sec ))
+(( sec > 2.5 )) || err_exit "ALRM signal causes sleep to terminate prematurely -- expected 3 sec, got $sec"
 exit $((Errors))

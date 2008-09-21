@@ -106,7 +106,7 @@
 
 int	_Hist = 0;
 static void	hist_marker(char*,long);
-static void	hist_trim(History_t*, int);
+static History_t* hist_trim(History_t*, int);
 static int	hist_nearend(History_t*,Sfio_t*, off_t);
 static int	hist_check(int);
 static int	hist_clean(int);
@@ -365,7 +365,7 @@ retry:
 		sfprintf(sfstderr,"%d: hist_trim hsize=%d\n",getpid(),hsize);
 		sfsync(sfstderr);
 #endif /* DEBUG */
-		hist_trim(hp,(int)hp->histind-maxlines);
+		hp = hist_trim(hp,(int)hp->histind-maxlines);
 	}
 	sfdisc(hp->histfp,&hp->histdisc);
 #if KSHELL
@@ -455,7 +455,7 @@ static int hist_clean(int fd)
  * Copy the last <n> commands to a new file and make this the history file
  */
 
-static void hist_trim(History_t *hp, int n)
+static History_t* hist_trim(History_t *hp, int n)
 {
 	register char *cp;
 	register int incmd=1, c=0;
@@ -495,8 +495,7 @@ static void hist_trim(History_t *hp, int n)
 	if(!sh_histinit(hp->histshell))
 	{
 		/* use the old history file */
-		hist_ptr = hist_old;
-		return;
+		return hist_ptr = hist_old;
 	}
 	hist_new = hist_ptr;
 	hist_ptr = hist_old;
@@ -538,8 +537,7 @@ static void hist_trim(History_t *hp, int n)
 		hist_new->histcnt += c;
 		sfwrite(hist_new->histfp,buff,c);
 	}
-	hist_ptr = hist_new;
-	hist_cancel(hist_ptr);
+	hist_cancel(hist_new);
 	sfclose(hist_old->histfp);
 	if(tmpname)
 	{
@@ -547,6 +545,7 @@ static void hist_trim(History_t *hp, int n)
 		free(tmpname);
 	}
 	free((char*)hist_old);
+	return hist_ptr = hist_new;
 }
 
 /*

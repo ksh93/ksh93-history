@@ -196,8 +196,10 @@ extern Namval_t		*nv_arraychild(Namval_t*, Namval_t*, int);
 extern int		nv_compare(Dt_t*, Void_t*, Void_t*, Dtdisc_t*);
 extern void		nv_outnode(Namval_t*,Sfio_t*, int, int);
 extern int		nv_subsaved(Namval_t*);
+extern void		nv_typename(Namval_t*, Sfio_t*);
 
 extern const Namdisc_t	RESTRICTED_disc;
+extern const Namdisc_t	ENUM_disc;
 extern char		nv_local;
 extern Dtdisc_t		_Nvdisc;
 extern const char	*nv_discnames[];
@@ -213,6 +215,7 @@ extern const char	e_ident[];
 extern const char	e_varname[];
 extern const char	e_noalias[];
 extern const char	e_noarray[];
+extern const char	e_notenum[];
 extern const char	e_aliname[];
 extern const char	e_badexport[];
 extern const char	e_badref[];

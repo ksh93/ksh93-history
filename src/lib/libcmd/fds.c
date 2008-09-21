@@ -21,7 +21,7 @@
 #pragma prototyped
 
 static const char usage[] =
-"[-?\n@(#)$Id: fds (AT&T Research) 2007-05-09 $\n]"
+"[-?\n@(#)$Id: fds (AT&T Research) 2008-08-26 $\n]"
 USAGE_LICENSE
 "[+NAME?fds - list open file descriptor status]"
 "[+DESCRIPTION?\bfds\b lists the status for each open file descriptor. "
@@ -66,7 +66,7 @@ typedef struct NV_s
 static const NV_t	family[] =
 {
 #ifdef AF_LOCAL
-	"pipe",	AF_LOCAL,
+	"pipe",		AF_LOCAL,
 #endif
 #ifdef AF_UNIX
 	"pipe",		AF_UNIX,
@@ -327,7 +327,7 @@ b_fds(int argc, char** argv, void* context)
 				e = (b = (unsigned char*)&addr) + addrlen;
 				while (b < e && a < &fam[sizeof(fam)-1])
 					a += sfsprintf(a, &fam[sizeof(fam)] - a - 1, ".%d", *b++);
-				a = fam + 1;
+				a = a == fam ? "0" : fam + 1;
 			}
 			if (port)
 				sfprintf(sfstdout, "%02d %s%s %s /dev/%s/%s/%d\n", i, m, x, fmtmode(st.st_mode, 0), s, a, port);

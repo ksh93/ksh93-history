@@ -1024,6 +1024,7 @@ Shell_t *sh_init(register int argc,register char *argv[], Shinit_f userinit)
 			shp->login_sh = 2;
 	}
 	env_init(shp);
+	*SHLVL->nvalue.ip +=1;
 #if SHOPT_SPAWN
 	{
 		/*
@@ -1277,6 +1278,7 @@ int sh_reinit(char *argv[])
 	sh_offstate(SH_FORKED);
 	shp->fn_depth = shp->dot_depth = 0;
 	sh_sigreset(0);
+	*SHLVL->nvalue.ip +=1;
 	return(1);
 }
 
@@ -1404,6 +1406,7 @@ static void stat_init(Shell_t *shp)
  */
 static Init_t *nv_init(Shell_t *shp)
 {
+	static int shlvl=0;
 	Namval_t *np;
 	register Init_t *ip;
 	double d=0;
@@ -1414,6 +1417,7 @@ static Init_t *nv_init(Shell_t *shp)
 	shp->nvfun.nofree = 1;
 	ip->sh = shp;
 	shp->var_base = shp->var_tree = inittree(shp,shtab_variables);
+	SHLVL->nvalue.ip = &shlvl;
 	ip->IFS_init.hdr.disc = &IFS_disc;
 	ip->IFS_init.hdr.nofree = 1;
 	ip->PATH_init.disc = &RESTRICTED_disc;

@@ -1,13 +1,50 @@
-08-08-25  --- Release ksh93t  ---
+08-09-21  --- Release ksh93t  ---
+08-09-21  A bug that retained trailing command substitution newlines in
+	  cases where the command caused the shell to fork has been fixed.
+08-09-19  type, whence -v, and command -v were fixed to comply with POSIX
+	  by writing 'not found' diagnostics to the standard error.
+08-09-18  test and [...] were fixed to comply with POSIX in the case
+	  of test '(' binop ')' where binop is a valid binary test operator.
+08-09-17  The exit status for the command `false` is now 0 as required by
+	  the standard since command subsitution of command args should not
+	  affect the exit status.
+08-09-16  If a method discipline named create is specified when defining a
+	  type, this function will be called when an instance is created.
+08-09-15  The variable _ is now set as a reference to the compound variable
+	  when defining a compound variable or a type.
+08-09-10  The shell now prints an error message when the type name specified
+	  for an indexed array subscript is not an enumeration type.
+08-09-10  A bug in which a subshell that spawned a background process could
+	  loose output that was produced after the foreground completed
+	  has been fixed.
+08-09-10  A timing bug on some systems that could cause coprocesses started by a
+	  subshell to not clean up and prevent other coprocesses has been fixed.
+08-09-09  The typeset -m option is now able to rename array elements from
+	  the same array.
+08-09-09  The exit status of 2 from the DEBUG trap causes the next command
+	  to be skipped.  An exit value of 255 from a DEBUG trap called from
+	  a function causes the function to return. 
+08-09-08  A bug in which a coprocess created in a subshell that did not
+	  complete when the subshell terminated could prevent a coprocess
+	  from being created in the parent shell has been fixed.
+08-09-05  An assignment of the form name1=name2 where name1 and name2
+	  are both compound variables causes name1 to get a copy of name2.
+	  name1+=name2 causes name2 sub-variables to be appended to name1.
+08-09-05  A bug in which unsetting a compound variable did not unset all
+	  the sub-variables has been fixed.
+08-09-01  A bug in the subshell cleanup code that could cause SIGSEGV has
+	  been fixed.
+06-08-26  The SHLV variable which is an environment variable used by bash
+          and zsh that gets incremented when the shell starts.
 08-08-25  For an indexed array, a negative subscript now refers to offsets
 	  from the end so that -1 refers to the last element.
-08-08-24  An alignment error for shorts on 64 bit architectures has be fixed.
+08-08-24  An alignment error for shorts on 64 bit architectures has been fixed.
 08-08-22  If oldvar is a compound variable, typeset -C newvar=oldvar creates 
 	  newvar as a copy of oldvar.
 08-08-19  The ALRM signal no longer cause the sleep builtin to terminate.
 08-08-13  When used in an arithmetic expression, the .sh.version variable  
 	  now produces a number that will be increasing for each release.
-08-08-11  A bug in which type instanciation with a compound assignment in
+08-08-11  A bug in which type instantiation with a compound assignment in
 	  a dot script in which the type is defined has been fixed. 
 08-08-07  The -m option has been added to typeset to move or rename a
 	  variable.  Not documented yet.
@@ -19,10 +56,6 @@
 	  has been fixed.
 08-07-30  A bug in which expanding compound variable that had a get discipline
 	  from with a here document could cause a syntax error has been fixed.
-08-07-29  When the right hand side of an assignment is of the form, $name
-	  or ${name}, and name is a compound variable or a type defined by
-	  a compound variable, the assignment causes the left hand side to
-	  be a copy of the right hand side equivalent to eval "left=$name".
 08-07-18  A bug in which a nameref caused a local variable to be created
 	  rather than binding to an existing variable in the global scope
 	  has been fixed.

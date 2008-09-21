@@ -134,7 +134,7 @@ va_list	args;		/* arg list if !argf	*/
 	SFMBDCL(mbs)			/* state of some string		*/
 #ifdef mbwidth
 	char*		osp;
-	int		n_w, sf_wcwidth;
+	int		n_w, wc;
 #endif
 #endif
 
@@ -192,9 +192,6 @@ va_list	args;		/* arg list if !argf	*/
 		f->endb = f->data+sizeof(data);
 	}
 	SFINIT(f);
-#if _has_multibyte && defined(mbwidth)
-	sf_wcwidth = f->flags & SF_WCWIDTH;
-#endif
 
 	tls[1] = NIL(char*);
 
@@ -665,8 +662,11 @@ loop_fmt :
 			continue;
 
 		case 'S':
-			flags = (flags & ~SFFMT_TYPES) | SFFMT_LONG;
+			flags = (flags & ~(SFFMT_TYPES|SFFMT_LDOUBLE)) | SFFMT_LONG;
 		case 's':
+#if _has_multibyte && defined(mbwidth)
+			wc = (flags & SFFMT_LDOUBLE) && mbwide();
+#endif
 			if(base >= 0)	/* list of strings */
 			{	if(!(ls = argv.sp) || !ls[0])
 					continue;
@@ -701,7 +701,7 @@ loop_fmt :
 						if((n_s = wcrtomb(buf, *wsp, &mbs)) <= 0)
 							break;
 #ifdef mbwidth
-						if(sf_wcwidth )
+						if(wc)
 						{	n_w = mbwidth(*wsp);
 							if(precis >= 0 && (w+n_w) > precis )
 								break;
@@ -714,12 +714,12 @@ loop_fmt :
 						v += n_s;
 					}
 #ifdef mbwidth
-					if(!sf_wcwidth )
+					if(!wc)
 						w = v;
 #endif
 				}
-#if defined(mbwide) && defined(mbchar) && defined(mbwidth)
-				else if (!(flags & SFFMT_SHORT) && mbwide())
+#if _has_multibyte && defined(mbwidth)
+				else if (wc)
 				{	w = 0;
 					SFMBCLR(&mbs);
 					ssp = sp;
@@ -729,7 +729,7 @@ loop_fmt :
 							break;
 						osp = ssp;
 						n = mbchar(osp);
-						n_w = sf_wcwidth ? mbwidth(n) : 1;
+						n_w = mbwidth(n);
 						if(precis >= 0 && (w+n_w) > precis )
 							break;
 						w += n_w;
@@ -782,8 +782,11 @@ loop_fmt :
 			continue;
 
 		case 'C':
-			flags = (flags & ~SFFMT_TYPES) | SFFMT_LONG;
+			flags = (flags & ~(SFFMT_TYPES|SFFMT_LDOUBLE)) | SFFMT_LONG;
 		case 'c':
+#if _has_multibyte && defined(mbwidth)
+			wc = (flags & SFFMT_LDOUBLE) && mbwide();
+#endif
 			if(precis <= 0) /* # of times to repeat a character */
 				precis = 1;
 #if _has_multibyte
@@ -821,7 +824,7 @@ loop_fmt :
 					if((n_s = wcrtomb(buf, *wsp++, &mbs)) <= 0)
 						break;
 #ifdef mbwidth
-					if(sf_wcwidth)
+					if(wc)
 						n_s = mbwidth(*(wsp - 1));
 #endif
 					n = width - precis*n_s; /* padding amount */
@@ -954,6 +957,9 @@ loop_fmt :
 #if _PACKAGE_ast
 				if(scale)
 				{	sp = fmtscale(lv, scale);
+#if _has_multibyte && defined(mbwidth)
+					wc = 0;
+#endif
 					goto str_cvt;
 				}
 #endif
@@ -1011,6 +1017,9 @@ loop_fmt :
 #if _PACKAGE_ast
 				if(scale)
 				{	sp = fmtscale(v, scale);
+#if _has_multibyte && defined(mbwidth)
+					wc = 0;
+#endif
 					goto str_cvt;
 				}
 #endif

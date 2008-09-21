@@ -350,7 +350,16 @@ void sh_machere(Shell_t *shp,Sfio_t *infile, Sfio_t *outfile, char *string)
 				int	offset2;
 				sfputc(stkp,c);
 				if(n==S_LBRA)
+				{
+					c = fcget();
+					fcseek(-1);
+					if(sh_lexstates[ST_NORM][c]==S_BREAK)
+					{
+						comsubst(mp,(Shnode_t*)0,2);
+						break;
+					}
 					sh_lexskip(lp,RBRACE,1,ST_BRACE);
+				}
 				else if(n==S_ALP)
 				{
 					while(fcgetc(c),isaname(c))
@@ -1002,9 +1011,6 @@ static int varsub(Mac_t *mp)
 	char		idbuff[3], *id = idbuff, *pattern=0, *repstr, *arrmax=0;
 	int		addsub=0,oldpat=mp->pattern,idnum=0,flag=0,d;
 	Stk_t		*stkp = mp->shp->stk;
-	int		assign=mp->assign?stktell(stkp):0;
-	if(assign && *stkptr(stkp,assign-1)!='=')
-		assign = 0;
 retry1:
 	mp->zeros = 0;
 	idbuff[0] = 0;
@@ -1241,7 +1247,7 @@ retry1:
 		}
 		else
 			fcseek(-1);
-		if(type<=1 && np && nv_isvtree(np) && (assign || (mp->pattern==1 && !mp->split)))
+		if(type<=1 && np && nv_isvtree(np) && mp->pattern==1 && !mp->split)
 		{
 			int peek=1,cc=fcget();
 			if(type && cc=='}')
@@ -1256,20 +1262,7 @@ retry1:
 			}
 			fcseek(-peek);
 			if(cc==0)
-			{
-				if(assign)
-				{
-					*stakptr(assign) = 0;
-					mp->shp->prefix = (char*)np;
-					mp->shp->prev_table = mp->shp->last_table;
-					mp->shp->prev_root = mp->shp->last_root;
-					if(type)
-						fcseek(1);
-					stkseek(stkp,assign);
-					return(1);
-				}
 				mp->assign = 1;
-			}
 		}
 		if((type==M_VNAME||type==M_SUBNAME)  && mp->shp->argaddr && strcmp(nv_name(np),id))
 			mp->shp->argaddr = 0;
@@ -1292,18 +1285,10 @@ retry1:
 				Namval_t *nq = nv_type(np);
 				type = M_BRACE;
 				if(nq)
-				{
-					char *cp = nv_name(nq);
-					if(v=strrchr(cp,'.'))
-						v++;
-					else
-						v = cp;
-				}
+					nv_typename(nq,mp->shp->strbuf);
 				else
-				{
 					nv_attribute(np,mp->shp->strbuf,"typeset",1);
-					v = sfstruse(mp->shp->strbuf);
-				}
+				v = sfstruse(mp->shp->strbuf);
 			}
 #endif /* SHOPT_TYPEDEF */
 #if  SHOPT_FILESCAN
@@ -1868,7 +1853,8 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 	char			lastc, *savptr = stkfreeze(stkp,0);
 	int			was_history = sh_isstate(SH_HISTORY);
 	int			was_verbose = sh_isstate(SH_VERBOSE);
-	int			newlines,bufsize;
+	int			was_interactive = sh_isstate(SH_INTERACTIVE);
+	int			newlines,bufsize,nextnewlines;
 	Namval_t		*np;
 	mp->shp->argaddr = 0;
 	savemac = *mp;
@@ -1985,6 +1971,7 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 	bufsize = sfvalue(sp);
 	/* read command substitution output and put on stack or here-doc */
 	sfpool(sp, NIL(Sfio_t*), SF_WRITE);
+	sh_offstate(SH_INTERACTIVE);
 	while((str=(char*)sfreserve(sp,SF_UNBOUND,0)) && (c = sfvalue(sp))>0)
 	{
 #if SHOPT_CRNL
@@ -2009,10 +1996,16 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 		}
 		if(c)
 			*dp++ = *str++;
-		*dp = 0;
 		str = buff;
 		c = dp-str;
 #endif /* SHOPT_CRNL */
+		/* delay appending trailing new-lines */
+		for(nextnewlines=0; c-->0 && str[c]=='\n'; nextnewlines++);
+		if(c < 0)
+		{
+			newlines += nextnewlines;
+			continue;
+		}
 		if(newlines >0)
 		{
 			if(mp->sp)
@@ -2021,18 +2014,13 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 				endfield(mp,0);
 			else	while(newlines--)
 					sfputc(stkp,'\n');
-			newlines = 0;
 		}
 		else if(lastc)
 		{
 			mac_copy(mp,&lastc,1);
 			lastc = 0;
 		}
-		if(c <= 0)
-			continue;
-		/* delay appending trailing new-lines */
-		while(c-->=0 && str[c]=='\n')
-			newlines++;
+		newlines = nextnewlines;
 		if(++c < bufsize)
 			str[c] = 0;
 		else
@@ -2043,6 +2031,10 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 		}
 		mac_copy(mp,str,c);
 	}
+	if(was_interactive)
+		sh_onstate(SH_INTERACTIVE);
+	if(mp->shp->spid)
+		job_wait(mp->shp->spid);
 	if(--newlines>0 && mp->shp->ifstable['\n']==S_DELIM)
 	{
 		if(mp->sp)

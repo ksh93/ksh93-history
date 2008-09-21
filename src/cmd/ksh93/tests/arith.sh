@@ -449,11 +449,11 @@ then	set \
 		1.0/0.0		inf
 	while	(( $# >= 2 ))
 	do	x=$(printf "%g\n" $(($1)))
-		[[ $x == $2 ]] || err_exit "printf '%g\\n' \$(($1)) failed -- got $x, expected $2"
+		[[ $x == $2 ]] || err_exit "printf '%g\\n' \$(($1)) failed -- expected $2, got $x"
 		x=$(printf "%g\n" $1)
-		[[ $x == $2 ]] || err_exit "printf '%g\\n' $1 failed -- got $x, expected $2"
+		[[ $x == $2 ]] || err_exit "printf '%g\\n' $1 failed -- expected $2, got $x"
 		x=$(printf -- $(($1)))
-		[[ $x == $2 ]] || err_exit "print -- \$(($1)) failed -- got $x, expected $2"
+		[[ $x == $2 ]] || err_exit "print -- \$(($1)) failed -- expected $2, got $x"
 		shift 2
 	done
 	(( 1.0/0.0 == Inf )) || err_exit '1.0/0.0 != Inf'
@@ -468,10 +468,12 @@ then	set \
 	(( 4.0/Inf == 0.0 )) || err_exit '4.0/Inf != 0.0'
 else	err_exit 'Inf and NaN not working'
 fi
-unset x y
-float x=14.555 y
+unset x y n r
+n=14.555
+float x=$n y
 y=$(printf "%a" x)
-(( x == y )) || err_exit "output of printf %a not self preserving -- expected $x, got $y"
+r=$y
+[[ $r == $n ]] || err_exit "output of printf %a not self preserving -- expected $x, got $y"
 unset x y r
 x=-0
 y=$(printf "%g %g %g %g %g %g\n" -0. -0 $((-0)) x $x $((x)))

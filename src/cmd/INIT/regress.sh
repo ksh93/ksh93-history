@@ -23,7 +23,7 @@ command=regress
 case $(getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt) in
 0123)	USAGE=$'
 [-?
-@(#)$Id: regress (AT&T Research) 2008-06-11 $
+@(#)$Id: regress (AT&T Research) 2008-09-20 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?regress - run regression tests]
@@ -439,6 +439,7 @@ function RUN # [ op ]
 					then	print -nu2 "$LABEL"
 					fi
 					cat <$TWD/INPUT | COMMAND "${ARGS[@]}" >$TWD/OUTPUT 2>$TWD/ERROR
+					STATUS=$?
 					RESULTS 'pipe input'
 				fi
 				if	[[ $TEST_pipe_output ]]
@@ -446,6 +447,7 @@ function RUN # [ op ]
 					then	print -nu2 "$LABEL"
 					fi
 					COMMAND "${ARGS[@]}" <$TWD/INPUT 2>$TWD/ERROR | cat >$TWD/OUTPUT
+					STATUS=$?
 					RESULTS 'pipe output'
 				fi
 				if	[[ $TEST_pipe_io ]]
@@ -453,6 +455,7 @@ function RUN # [ op ]
 					then	print -nu2 "$LABEL"
 					fi
 					cat <$TWD/INPUT | COMMAND "${ARGS[@]}" 2>$TWD/ERROR | cat >$TWD/OUTPUT
+					STATUS=$?
 					RESULTS 'pipe io'
 				fi
 			fi
@@ -1225,6 +1228,7 @@ fi
 if	[[ $TEST_keep ]] && (ulimit -c 0) >/dev/null 2>&1
 then	ulimit -c 0
 fi
+set --pipefail
 
 # some last minute shenanigans
 

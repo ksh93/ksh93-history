@@ -313,7 +313,7 @@ foo()
 	(( $# == 2 )) || err_exit "$# jobs not reported -- 2 expected"
 }
 foo
-[[ $( (trap 'print alarm' ALRM; sleep 4) & sleep 2; kill -ALRM $!; sleep 2) == alarm ]] || err_exit 'ALRM signal not working'
+[[ $( (trap 'print alarm' ALRM; sleep 4) & sleep 2; kill -ALRM $!; sleep 2; wait) == alarm ]] || err_exit 'ALRM signal not working'
 [[ $($SHELL -c 'trap "" HUP; $SHELL -c "(sleep 2;kill -HUP $$)& sleep 4;print done"') != done ]] && err_exit 'ignored traps not being ignored'
 [[ $($SHELL -c 'o=foobar; for x in foo bar; do (o=save);print $o;done' 2> /dev/null ) == $'foobar\nfoobar' ]] || err_exit 'for loop optimization subshell bug'
 command exec 3<> /dev/null
@@ -347,6 +347,7 @@ chmod +x /tmp/ksh$$x
 [[ $($SHELL -c "print foo | /tmp/ksh$$x ;:" 2> /dev/null ) == foo ]] || err_exit 'piping into script fails'
 [[ $($SHELL -c 'X=1;print -r -- ${X:=$(expr "a(0)" : '"'a*(\([^)]\))')}'" 2> /dev/null) == 1 ]] || err_exit 'x=1;${x:=$(..."...")} failure'
 [[ $($SHELL -c 'print -r -- ${X:=$(expr "a(0)" : '"'a*(\([^)]\))')}'" 2> /dev/null) == 0 ]] || err_exit '${x:=$(..."...")} failure'
+exec 3<&-
 if	[[ -d /dev/fd  && -w /dev/fd/3 ]]
 then	[[ $(cat <(print hello) ) == hello ]] || err_exit "process substitution not working outside for or while loop"
 	$SHELL -c '[[ $(for i in 1;do cat <(print hello);done ) == hello ]]' 2> /dev/null|| err_exit "process substitution not working in for or while loop"
@@ -368,13 +369,13 @@ rm -f /tmp/ksh$$x
 exec 3<&-
 ( typeset -r foo=bar) 2> /dev/null || err_exit 'readonly variables set in a subshell cannot unset'
 $SHELL -c 'x=${ print hello;}; [[ $x == hello ]]' 2> /dev/null || err_exit '${ command;} not supported'
-$SHELL 2> /dev/null <<- \EOF || err_exit 'multiline ${...} command substituion not supported'
+$SHELL 2> /dev/null <<- \EOF || err_exit 'multiline ${...} command substitution not supported'
 	x=${
 		print hello
 	}
 	[[ $x == hello ]]
 EOF
-$SHELL 2> /dev/null <<- \EOF || err_exit '${...} command substituion with side effects not supported '
+$SHELL 2> /dev/null <<- \EOF || err_exit '${...} command substitution with side effects not supported '
 	y=bye
 	x=${
 		y=hello
@@ -382,7 +383,7 @@ $SHELL 2> /dev/null <<- \EOF || err_exit '${...} command substituion with side e
 	}
 	[[ $y == $x ]]
 EOF
-$SHELL   2> /dev/null <<- \EOF || err_exit 'nested ${...} command substituion not supported'
+$SHELL   2> /dev/null <<- \EOF || err_exit 'nested ${...} command substitution not supported'
 	x=${
 		print ${ print hello;} $(print world)
 	}
@@ -405,4 +406,10 @@ function foo
 [[ $(print  "${ print "[${ print foo }]" }") == '[foo]' ]] || err_exit 'nested ${...} not working when } is followed by ]'
 unset foo
 foo=$(false) > /dev/null && err_exit 'failed command substitution with redirection not returning false'
+expected=foreback
+got=$(print -n fore;(sleep 2;print back)&)
+[[ $got == $expected ]]  || err_exit "command substitution background process output error -- got '$got', expected '$expected'"
+x=$(false) && err_exit 'x=$(false) should fail'
+$(false) || err_exit 'x=$(false) should not fail fail'
+$(false) > /dev/null  || err_exit 'x=$(false) > /dev/null should not fail fail'
 exit $((Errors))

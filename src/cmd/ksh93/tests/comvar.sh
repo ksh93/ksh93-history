@@ -317,4 +317,94 @@ eval y="$(printf "%#B\n" x)"
 y=$(set | grep ^x=) 2> /dev/null
 eval "${y/#x/y}"
 [[ $x == "$y" ]] || err_exit '$x != $y with set | grep'
+unset x y z
+x=( float x=0 y=1; z=([foo]=abc [bar]=def))
+typeset -C y=x
+[[ $x == "$y" ]] || err_exit '$x != $y with typeset -C'
+unset y
+y=()
+y=x
+[[ $x == "$y" ]] || err_exit '$x != $y when x=y and x and y are -C '
+function foobar
+{
+	typeset -C z
+	z=x
+	[[ $x == "$z" ]] || err_exit '$x != $z when x=z and x and z are -C '
+	y=z
+}
+[[ $x == "$y" ]] || err_exit '$x != $y when x=y -C copied in a function '
+z=(foo=abc)
+y+=z
+[[ $y == *foo=abc* ]] || err_exit 'z not appended to y'
+unset y.foo
+[[ $x == "$y" ]] || err_exit '$x != $y when y.foo deleted'
+unset x y
+x=( foo=(z=abc d=ghi) bar=abc; typeset -A r=([x]=3  [y]=4))
+unset x
+x=()
+[[ $x == $'(\n)' ]] || err_exit 'unset compound variable is not empty'
+
+unset z
+z=()
+z.foo=( [one]=hello [two]=(x=3 y=4) [three]=hi)
+z.bar[0]=hello
+z.bar[2]=world
+z.bar[1]=(x=4 y=5)
+exp='(
+	typeset -a bar=(
+		[0]=hello
+		[2]=world
+		[1]=(
+			x=4
+			y=5
+		)
+	)
+	typeset -A foo=(
+		[one]=hello
+		[three]=hi
+		[two]=(
+			x=3
+			y=4
+		)
+	)
+)'
+got=$z
+[[ $got == "$exp" ]] || {
+	exp=$(printf %q "$exp")
+	got=$(printf %q "$got")
+	err_exit "compound indexed array pretty print failed -- expected $exp, got $got"
+}
+
+typeset -A record
+record[a]=(
+	typeset -a x=(
+		[1]=(
+			X=1
+		)
+	)
+)
+exp=$'(\n\ttypeset -a x=(\n\t\t[1]=(\n\t\t\tX=1\n\t\t)\n\t)\n)'
+got=${record[a]}
+[[ $got == "$exp" ]] || {
+	exp=$(printf %q "$exp")
+	got=$(printf %q "$got")
+	err_exit "compound indexed array pretty print failed -- expected $exp, got $got"
+}
+
+unset r
+r=(
+	typeset -a x=(
+		[1]=(
+			X=1
+		)
+	)
+)
+exp=$'(\n\ttypeset -a x=(\n\t\t[1]=(\n\t\t\tX=1\n\t\t)\n\t)\n)'
+got=$r
+[[ $got == "$exp" ]] || {
+	exp=$(printf %q "$exp")
+	got=$(printf %q "$got")
+	err_exit "compound indexed array pretty print failed -- expected $exp, got $got"
+}
+
 exit $((Errors))

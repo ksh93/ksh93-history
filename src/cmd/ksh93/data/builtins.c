@@ -66,6 +66,7 @@ const struct shtable3 shtab_builtins[] =
 	"let",		NV_BLTIN|BLT_ENV,		bltin(let),
 	"export",	NV_BLTIN|BLT_ENV|BLT_SPC|BLT_DCL,bltin(readonly),
 	".",		NV_BLTIN|BLT_ENV|BLT_SPC,	bltin(dot_cmd),
+	"return",	NV_BLTIN|BLT_ENV|BLT_SPC,	bltin(return),
 #if SHOPT_BASH
 	"local",	NV_BLTIN|BLT_ENV|BLT_SPC|BLT_DCL,bltin(typeset),
 #endif
@@ -75,12 +76,11 @@ const struct shtable3 shtab_builtins[] =
 	"alias",	NV_BLTIN|BLT_SPC|BLT_DCL,	bltin(alias),
 	"hash",		NV_BLTIN|BLT_SPC|BLT_DCL,	bltin(alias),
 	"enum",		NV_BLTIN|BLT_ENV|BLT_SPC|BLT_DCL,bltin(enum),
-	"exit",		NV_BLTIN|BLT_ENV|BLT_SPC,	bltin(return),
 	"eval",		NV_BLTIN|BLT_ENV|BLT_SPC|BLT_EXIT,bltin(eval),
+	"exit",		NV_BLTIN|BLT_ENV|BLT_SPC,	bltin(return),
 	"fc",		NV_BLTIN|BLT_ENV|BLT_EXIT,	bltin(hist),
 	"hist",		NV_BLTIN|BLT_ENV|BLT_EXIT,	bltin(hist),
 	"readonly",	NV_BLTIN|BLT_ENV|BLT_SPC|BLT_DCL,bltin(readonly),
-	"return",	NV_BLTIN|BLT_ENV|BLT_SPC,	bltin(return),
 	"shift",	NV_BLTIN|BLT_ENV|BLT_SPC,	bltin(shift),
 	"trap",		NV_BLTIN|BLT_ENV|BLT_SPC,	bltin(trap),
 	"unalias",	NV_BLTIN|BLT_ENV|BLT_SPC,	bltin(unalias),
@@ -157,7 +157,7 @@ const char sh_set[] =
 "}"
 "[f?Pathname expansion is disabled.]"
 "[h?Obsolete.  Causes each command whose name has the syntax of an "
-	"alias to become a tracked aliase when it is first encountered.]"
+	"alias to become a tracked alias when it is first encountered.]"
 "[k?This is obsolete.  All arguments of the form \aname\a\b=\b\avalue\a "
 	"are removed and placed in the variable assignment list for "
 	"the command.  Ordinarily, variable assignments must precede "
@@ -912,7 +912,7 @@ USAGE_LICENSE
 ;
 
 const char sh_opthist[]	= 
-"[-1c?@(#)$Id: hist (AT&T Research) 2000-04-02 $\n]"
+"[-1cn?@(#)$Id: hist (AT&T Research) 2000-04-02 $\n]"
 USAGE_LICENSE
 "[+NAME?\f?\f - process command history list]"
 "[+DESCRIPTION?\b\f?\f\b lists, edits, or re-executes, commands  "
@@ -1828,7 +1828,7 @@ USAGE_LICENSE
 	"on the complete search order that the shell uses.  If \aname\a "  
 	"is not found, then no output is produced.]"
 "[+?If \b-v\b is specified, the output will also contain information "
-	"that indicates how the given \aname\a would be interpretted by "
+	"that indicates how the given \aname\a would be interpreted by "
 	"the shell in the current execution environment.]" 
 "[a?Displays all uses for each \aname\a rather than the first.]"
 "[f?Do not check for functions.]"
@@ -1845,7 +1845,6 @@ USAGE_LICENSE
 	"[+?Function]"
 	"[+?Tracked alias]"
 	"[+?Program]"
-	"[+?Not found]"
 "}"
 "\n"
 "\nname  ...\n"

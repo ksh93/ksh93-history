@@ -171,7 +171,7 @@ static Sfdouble_t get_nenum(register Namval_t* np, Namfun_t *fp)
 	return(nv_getn(np,fp));
 }
 
-static const Namdisc_t Enum_disc        = {  0, put_enum, get_enum, get_nenum, 0,0,clone_enum };
+const Namdisc_t ENUM_disc        = {  0, put_enum, get_enum, get_nenum, 0,0,clone_enum };
 
 #ifdef STANDALONE
 static int enum_create(int argc, char** argv, void* context)
@@ -250,7 +250,7 @@ int b_enum(int argc, char** argv, void* context)
 		}
 		while(nv_nextsub(np));
 		ep->hdr.dsize = sizeof(struct Enum)+sz;
-		ep->hdr.disc = &Enum_disc;
+		ep->hdr.disc = &ENUM_disc;
 		ep->hdr.type = tp;
 		nv_onattr(tp, NV_RDONLY);
 		nv_disc(tp, &ep->hdr,NV_FIRST);

@@ -95,6 +95,7 @@ const struct shtable2 shtab_variables[] =
 	".sh.level",	0,				(char*)0,
 	".sh.lineno",	NV_INTEGER|NV_RDONLY,		(char*)0,
 	".sh.stats",	NV_RDONLY,			(char*)0,
+	"SHLVL",	NV_INTEGER|NV_NOFREE|NV_EXPORT,	(char*)0,
 #if SHOPT_FS_3D
 	"VPATH",	0,				(char*)0,
 #endif /* SHOPT_FS_3D */

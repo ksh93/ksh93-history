@@ -102,8 +102,8 @@ fi
 # check for attributes across subshells
 typeset -i x=3
 y=1/0
-if	( typeset x=y) 2> /dev/null
-then	print -u2 "attributes not passed to subshells"
+if	( typeset x=y ) 2> /dev/null
+then	err_exit "attributes not passed to subshells"
 fi
 unset x
 function x.set
@@ -575,20 +575,20 @@ for v in EDITOR VISUAL OPTIND CDPATH FPATH PATH ENV LINENO RANDOM SECONDS _
 do	nameref r=$v
 	unset $v
 	if	( $SHELL -c "unset $v; : \$$v" ) 2>/dev/null
-	then	[[ $r ]] && print -u2 "unset $v failed -- expected '', got '$r'"
+	then	[[ $r ]] && err_exit "unset $v failed -- expected '', got '$r'"
 		r=$x
-		[[ $r == $x ]] || print -u2 "$v=$x failed -- expected '$x', got '$r'"
-	else	print -u2 "unset $v; : \$$v failed"
+		[[ $r == $x ]] || err_exit "$v=$x failed -- expected '$x', got '$r'"
+	else	err_exit "unset $v; : \$$v failed"
 	fi
 done
 for v in LC_ALL LC_CTYPE LC_MESSAGES LC_COLLATE LC_NUMERIC
 do	nameref r=$v
 	unset $v
-	[[ $r ]] && print -u2 "unset $v failed -- expected '', got '$r'"
+	[[ $r ]] && err_exit "unset $v failed -- expected '', got '$r'"
 	d=$($SHELL -c "$v=$x" 2>&1)
-	[[ $d ]] || print -u2 "$v=$x failed -- expected locale diagnostic"
-	( r=$x; [[ ! $r ]] ) 2>/dev/null || print -u2 "$v=$x failed -- expected ''"
-	( r=C; r=$x; [[ $r == C ]] ) 2>/dev/null || print -u2 "$v=C; $v=$x failed -- expected 'C'"
+	[[ $d ]] || err_exit "$v=$x failed -- expected locale diagnostic"
+	( r=$x; [[ ! $r ]] ) 2>/dev/null || err_exit "$v=$x failed -- expected ''"
+	( r=C; r=$x; [[ $r == C ]] ) 2>/dev/null || err_exit "$v=C; $v=$x failed -- expected 'C'"
 done
 PATH=$path
 [[ ${.sh.subshell} == 0 ]] || err_exit '${.sh.subshell} should be 0'

@@ -101,7 +101,14 @@ do	typeset -m zzz=x
 	typeset -m arr=crr
 	[[ "${arr[@]}" == "${brr[@]}" ]] || err_exit 'brr is not arr'
 done
+typeset -m brr[foo]=brr[bar]
+[[ ${brr[foo]} == 2 ]] || err_exit 'move an associative array element fails'
+[[ ${brr[bar]} ]] && err_exit 'brr[bar] should be unset after move'
 unset x y zzz
+x=(a b c)
+typeset -m x[1]=x[2]
+[[ ${x[1]} == c ]] || err_exit 'move an indexed array element fails'
+[[ ${x[2]} ]] && err_exit 'x[2] should be unset after move'
 trap 'rm -f /tmp/kshtype$$' EXIT
 cat > /tmp/kshtype$$ <<- \+++
 	typeset -T Pt_t=(float x=1. y=0.)
@@ -109,4 +116,27 @@ cat > /tmp/kshtype$$ <<- \+++
 	print -r -- ${p.y}
 +++
 [[ $(. /tmp/kshtype$$) == 2 ]] 2> /dev/null || err_exit 'typedefs in dot script not working'
+typeset -T X_t=(
+	typeset x=foo  y=bar
+	typeset s=${_.x}
+	create()
+	{
+		_.y=bam
+	}
+)
+X_t x
+[[ ${x.x} == foo ]] || err_exit 'x.x should be foo'
+[[ ${x.y} == bam ]] || err_exit 'x.y should be bam'
+[[ ${x.s} == ${x.x} ]] || err_exit 'x.s should be x.x'
+typeset -T Y_t=( X_t r )
+Y_t z
+[[ ${z.r.x} == foo ]] || err_exit 'z.r.x should be foo'
+[[ ${z.r.y} == bam ]] || err_exit 'z.r.y should be bam'
+[[ ${z.r.s} == ${z.r.x} ]] || err_exit 'z.r.s should be z.r.x'
+
+unset xx yy
+typeset -T xx=(typeset yy=zz)
+xx=yy
+{ typeset -T xx=(typeset yy=zz) ;} 2>/dev/null && err_exit 'type redefinition should fail'
+
 exit $Errors

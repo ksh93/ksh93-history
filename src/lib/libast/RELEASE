@@ -1,3 +1,7 @@
+08-09-10 misc/magic.c: handle old vcodex() indices
+08-09-10 sfio/sfvprintf.c: drop SF_WCWIDTH, use %Lc or %Ls instead
+08-09-05 Makefile: ibm.risc joins the :NOOPTIMIZE: crowd
+08-09-04 regex/regnexec.c: fix nested delimiter match beyond end of subject
 08-08-20 misc/fts.c: fix st_nlink stat() optimization logic
 08-08-19 sfio/sfpkrd.c: workaround macosx recv(PEEK) data consumption on non-socket
 08-08-19 strn?tol?d: handle long double with smaller exponent range than double

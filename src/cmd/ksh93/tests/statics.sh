@@ -82,7 +82,7 @@ got=$(
 	}
 	ar false ; ar false ; ar true
 )
-[[ $got != $expected ]] && err_exit "static array var failed -- got '$got', expected '$expected'"
+[[ $got != $expected ]] && err_exit "static array var failed -- expected '$expected', got '$got'"
 
 
 # Test visibilty of "global" vs. "static" variables. if we have a "static" variable in a
