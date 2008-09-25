@@ -1086,6 +1086,7 @@ int job_post(pid_t pid, pid_t join)
 {
 	register struct process *pw;
 	register History_t *hp = sh.hist_ptr;
+	int val;
 	sh.jobenv = sh.curenv;
 	if(njob_savelist < NJOB_SAVELIST)
 		init_savelist();
@@ -1153,10 +1154,9 @@ int job_post(pid_t pid, pid_t join)
 	else
 		pw->p_name = -1;
 #endif /* JOBS */
-	if(pid==lastpid)
+	if ((val = job_chksave(pid)) >= 0)
 	{
-		int val =  job_chksave(pid);
-		pw->p_exit = val>0?val:0;
+		pw->p_exit = val;
 		if(pw->p_exit==SH_STOPSIG)
 		{
 			pw->p_flag |= (P_SIGNALLED|P_STOPPED);

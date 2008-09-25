@@ -44,7 +44,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2008-06-24 $
+@(#)$Id: package (AT&T Research) 2008-09-24 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -256,7 +256,9 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
             output is also captured in
             \b$INSTALLROOT/lib/package/gen/test.out\b. In general a package
             must be made before it can be tested. Components tested with
-            the \bregress\b(1) command require \bksh93\b.]
+            the \bregress\b(1) command require \bksh93\b. If \bonly\b is
+	    also specified then only the listed package components are
+	    tested, otherwise the closure of the components is tested.]
         [+update\b [ beta ]] [ binary ]] [ source ]] [\aarchitecture\a ... ]] [ \aurl\a ]] [ \apackage\a ... ]]?Download
             the latest release of the selected and required packages from \aurl\a
             (e.g., \bhttp://www.research.att.com/sw/download\b) into the directory
@@ -1054,7 +1056,10 @@ ${bT}(5)${bD}Read all unread package archive(s):${bX}
 		Run the regression tests for PACKAGE. If the standard output
 		is a terminal then the output is also captured in
 		\$INSTALLROOT/lib/package/gen/test.out. In general a package
-		must be made before it can be tested.
+		must be made before it can be tested. Components tested with
+		the \bregress\b(1) command require \bksh93\b. If only is
+		also specified then only the listed package components are
+		tested, otherwise the closure of the components is tested.
 	update [ beta ] [ binary ] [ source ] [ ARCHITECTURE ... ] [ URL ] [ PACKAGE ... ]
 		Download the latest release of the selected and required
 		packages from URL (e.g.,
@@ -3527,8 +3532,7 @@ components() # [ package ]
 			*)		_components_="$_components_ $p" ;;
 			esac
 			;;
-		*)	
-			if	view - src lib/package/$p.pkg
+		*)	if	view - src lib/package/$p.pkg
 			then	p=$_view_
 				op=::
 				exec < $p
@@ -4016,16 +4020,31 @@ admin)	while	test ! -f $admin_db
 		view file src lib/package/admin/$admin_db || exit 1
 		admin_db=$_view_
 	done
+	admin_components=
 	case $admin_action in
 	list)	cat $admin_db
 		exit
+		;;
+	test)	set $admin_args
+		while	:
+		do	case $# in
+			1)	break ;;
+			esac
+			shift
+			case $1 in
+			*=*)	;;
+			*)	admin_components=-$1
+				break
+				;;
+			esac
+		done
 		;;
 	esac
 	: all work done in $PACKAGESRC/admin
 	cd $PACKAGESRC/admin || exit
 	checksrc
 	packages=
-	admin_log=$admin_action.log
+	admin_log=${admin_action}${admin_components}.log
 	exec < $admin_db || exit
 	test -d $admin_log || $exec mkdir $admin_log || exit
 	case $admin_on in
@@ -4047,6 +4066,9 @@ admin)	while	test ! -f $admin_db
 		;;
 	*)	admin_binary=
 		;;
+	esac
+	case $only in
+	1)	admin_args="only $admin_args" ;;
 	esac
 	trap 'kill $pids >/dev/null 2>&1' 1 2 3 15
 	index=0
@@ -6141,6 +6163,10 @@ results)set '' $target
 test)	requirements source $package
 	components $package
 	package=$_components_
+	case $only in
+	0)	only= ;;
+	1)	only=--recurse=only ;;
+	esac
 
 	# must have nmake
 
@@ -6159,7 +6185,7 @@ test)	requirements source $package
 
 	# do the tests
 
-	eval capture \$MAKE \$makeflags \$noexec recurse test \$target \$nmakesep \$package $assign
+	eval capture \$MAKE \$makeflags \$noexec \$only recurse test \$target \$nmakesep \$package $assign
 	;;
 
 update)	# download the latest release.version for selected packages

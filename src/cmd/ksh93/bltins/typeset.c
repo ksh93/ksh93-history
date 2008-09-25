@@ -649,8 +649,6 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 	}
 	else if(!tp->sh->envlist)
 	{
-		if(tp->pflag)
-			tp->aflag = 0;
 		if(tp->aflag)
 		{
 			if(troot==shp->fun_tree)
@@ -1012,7 +1010,12 @@ static int print_namval(Sfio_t *file,register Namval_t *np,register int flag, st
 		return(0);
 	}
 	if(tp->prefix)
-		sfputr(file,tp->prefix,' ');
+	{
+		if(*tp->prefix=='t')
+			nv_attribute(np,tp->outfile,tp->prefix,tp->aflag);
+		else
+			sfputr(file,tp->prefix,' ');
+	}
 	if(is_afunction(np))
 	{
 		Sfio_t *iop=0;
@@ -1030,7 +1033,7 @@ static int print_namval(Sfio_t *file,register Namval_t *np,register int flag, st
 			flag = '\n';
 		if(flag)
 		{
-			if(np->nvalue.ip && np->nvalue.rp->hoffset>=0)
+			if(tp->pflag && np->nvalue.ip && np->nvalue.rp->hoffset>=0)
 				sfprintf(file," #line %d %s\n",np->nvalue.rp->lineno,fname?sh_fmtq(fname):"");
 			else
 				sfputc(file, '\n');

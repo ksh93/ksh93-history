@@ -1513,7 +1513,7 @@ static Init_t *nv_init(Shell_t *shp)
 	nv_putval(np,".sh.global",NV_RDONLY|NV_NOFREE);
 	nv_stack(np, &NSPACE_init);
 #endif /* SHOPT_NAMESPACE */
-	np = nv_mount(DOTSHNOD, "type", dtopen(&_Nvdisc,Dtoset));
+	np = nv_mount(DOTSHNOD, "type", shp->typedict=dtopen(&_Nvdisc,Dtoset));
 	nv_adddisc(DOTSHNOD, shdiscnames, (Namval_t**)0);
 	SH_LINENO->nvalue.ip = &shp->st.lineno;
 	VERSIONNOD->nvalue.nrp = newof(0,struct Namref,1,0);

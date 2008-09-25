@@ -741,7 +741,6 @@ int sh_exec(register const Shnode_t *t, int flags)
 				comn = com[argn-1];
 			}
 			io = t->tre.treio;
-			shp->exitval = 0;
 			if(shp->envlist = argp = t->com.comset)
 			{
 				if(argn==0 || (np && nv_isattr(np,BLT_SPC)))
@@ -1187,7 +1186,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 					sh_close(shp->inpipe[0]);
 				if(type&(FCOOP|FAMP))
 					shp->bckpid = parent;
-				if(!(type&(FAMP|FPOU)) && !(execflg && shp->subshell))
+				else if(!(type&(FAMP|FPOU)))
 				{
 					if(shp->topfd > topfd)
 						sh_iorestore(shp,topfd,0);
@@ -1197,7 +1196,13 @@ int sh_exec(register const Shnode_t *t, int flags)
 							sh_sigtrap(SIGINT);
 						shp->trapnote |= SH_SIGIGNORE;
 					}
-					job_wait(parent);
+					if(execflg && shp->subshell)
+					{
+						shp->spid = parent;
+						job.pwlist->p_env--;
+					}
+					else
+						job_wait(parent);
 					if(!sh_isoption(SH_MONITOR))
 					{
 						shp->trapnote &= ~SH_SIGIGNORE;
@@ -1314,10 +1319,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 			int jmpval, waitall;
 			struct checkpt buff;
 			if(shp->subshell)
-			{
-				flags &= ~sh_state(SH_NOFORK);
 				execflg = 0;
-			}
 			sh_pushcontext(&buff,SH_JMPIO);
 			if(type&FPIN)
 			{
@@ -1915,15 +1917,12 @@ int sh_exec(register const Shnode_t *t, int flags)
 				}
 				else
 				{
-					sfwrite(stkp,fname,cp-fname);
+					sfwrite(stkp,fname,cp++-fname);
 					sfputc(stkp,0);
 					npv = nv_open(stkptr(stkp,offset),shp->var_tree,NV_NOASSIGN|NV_NOARRAY|NV_VARNAME);
 				}
 				offset = stktell(stkp);
-				sfputr(stkp,nv_name(npv),-1);
-				if(*cp!='.')
-					sfputc(stkp,'.');
-				sfputr(stkp,cp,0);
+				sfprintf(stkp,"%s.%s%c",nv_name(npv),cp,0);
 				fname = stkptr(stkp,offset);
 			}
 			else if((np=nv_search(fname,shp->bltin_tree,0)) && nv_isattr(np,BLT_SPC))
@@ -1941,9 +1940,19 @@ int sh_exec(register const Shnode_t *t, int flags)
 			np = nv_open(fname,sh_subfuntree(1),NV_NOASSIGN|NV_NOARRAY|NV_VARNAME|NV_NOSCOPE);
 			if(npv)
 			{
+				Namval_t *tp = npv;
 				if(!shp->mktype)
-					cp = nv_setdisc(npv,cp+1,np,(Namfun_t*)npv);
-				nv_close(npv);
+				{
+					if(shp->typeinit)
+					{
+						if(tp=nv_open(shp->typeinit->nvname,shp->typedict,NV_IDENT|NV_NOFAIL))
+							nv_close(npv);
+						else
+							tp = npv;
+					}
+					cp = nv_setdisc(tp,cp,np,(Namfun_t*)tp);
+				}
+				nv_close(tp);
 				if(!cp)
 					errormsg(SH_DICT,ERROR_exit(1),e_baddisc,fname);
 			}

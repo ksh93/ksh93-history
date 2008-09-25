@@ -89,6 +89,8 @@ make sha2.h implicit
 done sha2.h dontcare virtual
 make sha1.h implicit
 done sha1.h dontcare virtual
+make md5.h implicit
+done md5.h dontcare virtual
 make md4.h implicit
 done md4.h dontcare virtual
 done sum-lmd.c dontcare

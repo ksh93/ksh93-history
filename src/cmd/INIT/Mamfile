@@ -491,8 +491,6 @@ make mamake.o
 make mamake.c
 make shlib-compat.h implicit
 done shlib-compat.h dontcare virtual
-make bp-sym.h implicit
-done bp-sym.h dontcare virtual
 make ast.h implicit
 done ast.h dontcare virtual
 done mamake.c

@@ -96,10 +96,6 @@ done ast_map.h dontcare generated
 done ast_common.h dontcare generated
 done std/bytesex.h dontcare
 done std/endian.h dontcare
-make comp/getopt.h implicit
-make include/ast_getopt.h implicit
-done include/ast_getopt.h dontcare
-done comp/getopt.h dontcare
 done FEATURE/param generated
 prev ast_map.h
 make ast_limits.h
@@ -155,6 +151,10 @@ make conftab.c
 done conftab.c generated
 done joint.conflim.h virtual
 prev FEATURE/param implicit
+make comp/getopt.h implicit
+make include/ast_getopt.h implicit
+done include/ast_getopt.h dontcare
+done comp/getopt.h dontcare
 prev FEATURE/common implicit
 prev FEATURE/lib implicit
 prev FEATURE/standards implicit
@@ -391,7 +391,7 @@ done include/modecanon.h
 prev FEATURE/param implicit
 done features/mode.c
 prev ast.req
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd  ${LDFLAGS} '   run features/mode.c
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -Istd  ${LDFLAGS} '   run features/mode.c
 done FEATURE/mode generated
 exec - cmp 2>/dev/null -s FEATURE/mode ast_mode.h || { rm -f ast_mode.h; silent test -d . || mkdir .; ${STDCP} FEATURE/mode ast_mode.h; }
 done ast_mode.h dontcare generated

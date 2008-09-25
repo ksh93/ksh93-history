@@ -239,4 +239,5 @@ e=$($SHELL -c '[ -z "" -a -z "" ]' 2>&1)
 [[ $e ]] && err_exit "[ ... ] compatibility check failed -- $e"
 i=hell
 [[ hell0 == $i[0] ]]  ||  err_exit 'pattern $i[0] interpreded as array ref'
+test '(' = ')' && err_exit '"test ( = )" should not be true'
 exit $((Errors))

@@ -1,13 +1,16 @@
-08-09-21  --- Release ksh93t  ---
+08-09-24  --- Release ksh93t  ---
+08-09-24  $(...) has been fixed to properly set the exit status in $?.
+08-09-23  $(<...) with IFS=$'\n\n' has been fixed to retain all but the last
+	  of multiple trailing newlines.
+08-09-23  The -p option to typeset when used with other attributes, restricts
+	  the output to variables with the specified attributes.
+08-09-22  A bug that sometimes lost the exit status of a job has been fixed.
 08-09-21  A bug that retained trailing command substitution newlines in
 	  cases where the command caused the shell to fork has been fixed.
 08-09-19  type, whence -v, and command -v were fixed to comply with POSIX
 	  by writing 'not found' diagnostics to the standard error.
 08-09-18  test and [...] were fixed to comply with POSIX in the case
 	  of test '(' binop ')' where binop is a valid binary test operator.
-08-09-17  The exit status for the command `false` is now 0 as required by
-	  the standard since command subsitution of command args should not
-	  affect the exit status.
 08-09-16  If a method discipline named create is specified when defining a
 	  type, this function will be called when an instance is created.
 08-09-15  The variable _ is now set as a reference to the compound variable
@@ -34,7 +37,7 @@
 	  the sub-variables has been fixed.
 08-09-01  A bug in the subshell cleanup code that could cause SIGSEGV has
 	  been fixed.
-06-08-26  The SHLV variable which is an environment variable used by bash
+06-08-26  The SHLVL variable which is an environment variable used by bash
           and zsh that gets incremented when the shell starts.
 08-08-25  For an indexed array, a negative subscript now refers to offsets
 	  from the end so that -1 refers to the last element.

@@ -138,5 +138,52 @@ unset xx yy
 typeset -T xx=(typeset yy=zz)
 xx=yy
 { typeset -T xx=(typeset yy=zz) ;} 2>/dev/null && err_exit 'type redefinition should fail'
-
+$SHELL 2> /dev/null <<- +++ || err_exit 'typedef with only f(){} fails'
+	typeset -T X_t=(
+		f()
+		{
+			print ok
+		}
+	)
++++
+$SHELL 2> /dev/null <<- +++ || err_exit 'unable to redefine f discipline function'
+	typeset -T X_t=(
+		x=1
+		f()
+		{
+			print ok
+		}
+	)
+	X_t z=(
+		function f
+		{
+			print override f
+		}
+	)
++++
+$SHELL 2> /dev/null <<- +++ && err_exit 'invalid discipline name should be an error'
+	typeset -T X_t=(
+		x=1
+		f()
+		{
+			print ok
+		}
+	)
+	X_t z=(
+		function g
+		{
+			print override f
+		}
+	)
++++
+# compound variables containing type variables
+Type_t r
+var=(
+	typeset x=foobar
+	Type_t	r
+	integer z=5
+)
+[[ ${var.r} == "$r" ]] || err_exit 'var.r != r'
+(( var.z == 5)) || err_exit 'var.z !=5'
+[[ "$var" == *x=foobar* ]] || err_exit '$var does not contain x=foobar'
 exit $Errors

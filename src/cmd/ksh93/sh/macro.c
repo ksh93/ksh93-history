@@ -1944,6 +1944,7 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 				goto out_offset;
 			}
 			sp = sfnew(NIL(Sfio_t*),(char*)malloc(IOBSIZE+1),IOBSIZE,fd,SF_READ|SF_MALLOC);
+			type = 3;
 		}
 		else
 			sp = sh_subshell(t,sh_isstate(SH_ERREXIT),type);
@@ -2012,8 +2013,8 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 				sfnputc(mp->sp,'\n',newlines);
 			else if(!mp->quote && mp->split && mp->shp->ifstable['\n'])
 				endfield(mp,0);
-			else	while(newlines--)
-					sfputc(stkp,'\n');
+			else
+				sfnputc(stkp,'\n',newlines);
 		}
 		else if(lastc)
 		{
@@ -2039,10 +2040,11 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 	{
 		if(mp->sp)
 			sfnputc(mp->sp,'\n',newlines);
-		else if(!mp->quote && mp->split && mp->shp->ifstable['\n'])
-			endfield(mp,0);
-		else	while(newlines--)
-				sfputc(stkp,'\n');
+		else if(!mp->quote && mp->split)
+			while(newlines--)
+				endfield(mp,1);
+		else
+			sfnputc(stkp,'\n',newlines);
 	}
 	if(lastc)
 		mac_copy(mp,&lastc,1);

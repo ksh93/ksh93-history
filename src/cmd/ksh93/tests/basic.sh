@@ -408,8 +408,12 @@ unset foo
 foo=$(false) > /dev/null && err_exit 'failed command substitution with redirection not returning false'
 expected=foreback
 got=$(print -n fore;(sleep 2;print back)&)
-[[ $got == $expected ]]  || err_exit "command substitution background process output error -- got '$got', expected '$expected'"
-x=$(false) && err_exit 'x=$(false) should fail'
-$(false) || err_exit 'x=$(false) should not fail fail'
-$(false) > /dev/null  || err_exit 'x=$(false) > /dev/null should not fail fail'
+[[ $got == $expected ]] || err_exit "command substitution background process output error -- got '$got', expected '$expected'"
+
+for false in false $(whence -p false)
+do	x=$($false) && err_exit "x=\$($false) should fail"
+	$($false) && err_exit "\$($false) should fail"
+	$($false) > /dev/null && err_exit "\$($false) > /dev/null should fail"
+done
+
 exit $((Errors))

@@ -177,10 +177,10 @@ do	if	( trap - $sig ) 2> /dev/null
 					kill $pid
 					sleep 2
 					kill  $$
-				) 2> /dev/null &
+				) &
 				read -p
 			++EOF++
-			} 2> /dev/null ) != $'TRAP\nTRAP' ]]
+			} ) != $'TRAP\nTRAP' ]] 2> /dev/null
 		then	err_exit 'traps when reading from coprocess not working'
 		fi
 		break

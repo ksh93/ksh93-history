@@ -426,7 +426,9 @@ void nv_setlist(register struct argnod *arg,register int flags)
 					continue;
 #endif /* SHOPT_TYPEDEF */
 				}
-				if(tp->tre.tretyp==TLST || tp->tre.tretyp==TFUN || !tp->com.comset || tp->com.comset->argval[0]!='[')
+				if((tp->tre.tretyp&COMMSK)==TFUN)
+					goto skip;
+				if(tp->tre.tretyp==TLST || !tp->com.comset || tp->com.comset->argval[0]!='[')
 				{
 					if(tp->tre.tretyp!=TLST && !tp->com.comnamp && tp->com.comset && tp->com.comset->argval[0]==0 && tp->com.comset->argchn.ap)
 					{
@@ -480,6 +482,7 @@ void nv_setlist(register struct argnod *arg,register int flags)
 					if(!sh_isoption(SH_BASH) && !(array&NV_IARRAY) && !nv_isarray(np))
 						nv_setarray(np,nv_associative);
 				}
+			skip:
 				if(sub>0)
 				{
 					sfprintf(stkstd,"%s[%d]",prefix?nv_name(np):cp,sub);

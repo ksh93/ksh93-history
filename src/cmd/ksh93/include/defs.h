@@ -216,6 +216,7 @@ struct limits
 	Dt_t		*last_root; \
 	Dt_t		*prev_root; \
 	Dt_t		*fpathdict; \
+	Dt_t		*typedict; \
 	char		ifstable[256]; \
 	unsigned char	sigruntime[2]; \
 	unsigned long	test; \

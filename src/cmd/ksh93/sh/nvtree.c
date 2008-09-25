@@ -313,8 +313,6 @@ char *nv_dirnext(void *dir)
 		if(!(save=dp->prev))
 			break;
 		*dp = *save;
-		if(np==0)
-			dp->hp = 0;
 		free((void*)save);
 	}
 	return(0);

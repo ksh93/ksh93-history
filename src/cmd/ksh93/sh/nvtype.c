@@ -776,6 +776,8 @@ void nv_addtype(Namval_t *np, const char *optstr, Optdisc_t *op, size_t optsz)
 		name++;
 	else
 		name = np->nvname; 
+	if((bp=nv_search(name,shp->fun_tree,NV_NOSCOPE)) && !bp->nvalue.ip)
+		nv_delete(bp,shp->fun_tree,0);
 	bp = sh_addbuiltin(name, mp->nvalue.bfp, (void*)cp); 
 	nv_onattr(bp,nv_isattr(mp,NV_PUBLIC));
 	nv_onattr(np, NV_RDONLY);

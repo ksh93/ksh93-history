@@ -2,7 +2,7 @@
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)make.probe (AT&T Research) 2008-09-10
+# @(#)make.probe (AT&T Research) 2008-09-22
 #
 # C probe for make
 #
@@ -694,7 +694,7 @@ case $cc_dll:$cc_pic:$so:$dynamic:$static in
 			[012])	continue ;;
 			esac
 			;;
-		*archive*not*stripped*)
+		*archive*not*stripped*|*data*dynamic*not*stripped*)
 			$executable xxx$dll || continue
 			;;
 		*)	continue

@@ -34,8 +34,8 @@ setv SILENT
 setv TAR tar
 setv YACC yacc
 setv YACCFLAGS -d
-make ${INSTALLROOT}/lib/package/ast.lic
-done ${INSTALLROOT}/lib/package/ast.lic
+make ${PACKAGEROOT}/lib/package/ast.lic
+done ${PACKAGEROOT}/lib/package/ast.lic
 make install
 make coshell
 make libcoshell.a archive
@@ -164,7 +164,7 @@ done coshell.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done colib.h
 done coopen.c
-meta coopen.o %.c>%.o ${PACKAGEROOT}/src/lib/libcoshell/coopen.c coopen
+meta coopen.o %.c>%.o coopen.c coopen
 prev coopen.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_coshell -c coopen.c
 done coopen.o generated
@@ -172,7 +172,7 @@ make coclose.o
 make coclose.c
 prev colib.h implicit
 done coclose.c
-meta coclose.o %.c>%.o ${PACKAGEROOT}/src/lib/libcoshell/coclose.c coclose
+meta coclose.o %.c>%.o coclose.c coclose
 prev coclose.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_coshell -c coclose.c
 done coclose.o generated
@@ -191,7 +191,7 @@ prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/fs3d.h
 prev colib.h implicit
 done coinit.c
-meta coinit.o %.c>%.o ${PACKAGEROOT}/src/lib/libcoshell/coinit.c coinit
+meta coinit.o %.c>%.o coinit.c coinit
 prev coinit.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_coshell -c coinit.c
 done coinit.o generated
@@ -201,7 +201,7 @@ prev ${PACKAGE_ast_INCLUDE}/ls.h implicit
 prev ${PACKAGE_ast_INCLUDE}/proc.h implicit
 prev colib.h implicit
 done coexec.c
-meta coexec.o %.c>%.o ${PACKAGEROOT}/src/lib/libcoshell/coexec.c coexec
+meta coexec.o %.c>%.o coexec.c coexec
 prev coexec.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_coshell -c coexec.c
 done coexec.o generated
@@ -209,7 +209,7 @@ make costash.o
 make costash.c
 prev colib.h implicit
 done costash.c
-meta costash.o %.c>%.o ${PACKAGEROOT}/src/lib/libcoshell/costash.c costash
+meta costash.o %.c>%.o costash.c costash
 prev costash.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_coshell -c costash.c
 done costash.o generated
@@ -218,7 +218,7 @@ make cowait.c
 prev ${PACKAGE_ast_INCLUDE}/endian.h implicit
 prev colib.h implicit
 done cowait.c
-meta cowait.o %.c>%.o ${PACKAGEROOT}/src/lib/libcoshell/cowait.c cowait
+meta cowait.o %.c>%.o cowait.c cowait
 prev cowait.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_coshell -c cowait.c
 done cowait.o generated
@@ -226,7 +226,7 @@ make cokill.o
 make cokill.c
 prev colib.h implicit
 done cokill.c
-meta cokill.o %.c>%.o ${PACKAGEROOT}/src/lib/libcoshell/cokill.c cokill
+meta cokill.o %.c>%.o cokill.c cokill
 prev cokill.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_coshell -c cokill.c
 done cokill.o generated
@@ -241,7 +241,7 @@ done FEATURE/nfsd generated
 prev ${PACKAGE_ast_INCLUDE}/ls.h implicit
 prev colib.h implicit
 done cosync.c
-meta cosync.o %.c>%.o ${PACKAGEROOT}/src/lib/libcoshell/cosync.c cosync
+meta cosync.o %.c>%.o cosync.c cosync
 prev cosync.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_coshell -c cosync.c
 done cosync.o generated
@@ -249,7 +249,7 @@ make coquote.o
 make coquote.c
 prev colib.h implicit
 done coquote.c
-meta coquote.o %.c>%.o ${PACKAGEROOT}/src/lib/libcoshell/coquote.c coquote
+meta coquote.o %.c>%.o coquote.c coquote
 prev coquote.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_coshell -c coquote.c
 done coquote.o generated
@@ -257,7 +257,7 @@ make codata.o
 make codata.c
 prev colib.h implicit
 done codata.c
-meta codata.o %.c>%.o ${PACKAGEROOT}/src/lib/libcoshell/codata.c codata
+meta codata.o %.c>%.o codata.c codata
 prev codata.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_coshell -c codata.c
 done codata.o generated
@@ -266,7 +266,7 @@ make procrun.c
 prev ${PACKAGE_ast_INCLUDE}/proc.h implicit
 prev colib.h implicit
 done procrun.c
-meta procrun.o %.c>%.o ${PACKAGEROOT}/src/lib/libcoshell/procrun.c procrun
+meta procrun.o %.c>%.o procrun.c procrun
 prev procrun.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_coshell -c procrun.c
 done procrun.o generated
@@ -274,7 +274,7 @@ make system.o
 make system.c
 prev colib.h implicit
 done system.c
-meta system.o %.c>%.o ${PACKAGEROOT}/src/lib/libcoshell/system.c system
+meta system.o %.c>%.o system.c system
 prev system.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_coshell -c system.c
 done system.o generated
@@ -286,7 +286,7 @@ prev libcoshell.a archive
 make ignore
 make ignore.sh
 done ignore.sh
-meta ignore %.sh>% ${PACKAGEROOT}/src/lib/libcoshell/ignore.sh ignore
+meta ignore %.sh>% ignore.sh ignore
 prev ignore.sh
 exec - case static,port:$OPTIND:$RANDOM in
 exec - ?*:*:*|*::*|*:*:$RANDOM)
@@ -323,7 +323,7 @@ done ignore generated
 make silent
 make silent.sh
 done silent.sh
-meta silent %.sh>% ${PACKAGEROOT}/src/lib/libcoshell/silent.sh silent
+meta silent %.sh>% silent.sh silent
 prev silent.sh
 exec - case static,port:$OPTIND:$RANDOM in
 exec - ?*:*:*|*::*|*:*:$RANDOM)
