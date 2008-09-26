@@ -317,6 +317,7 @@ static void nv_restore(struct subshell *sp)
 			dtinsert(lp->dict,mp);
 		}
 		free((void*)lp);
+		sp->svar = lq;
 	}
 	sp->shpwd=save;
 }

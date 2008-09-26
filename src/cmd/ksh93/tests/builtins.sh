@@ -496,12 +496,14 @@ print $'\nprint -r -- "${.sh.file} ${LINENO} ${.sh.lineno}"' > $tmpfile
 [[ $( . "$tmpfile") == "$tmpfile 2 1" ]] || err_exit 'dot command not working'
 print -r -- "'xxx" > $tmpfile
 [[ $($SHELL -c ". $tmpfile"$'\n print ok' 2> /dev/null) == ok ]] || err_exit 'syntax error in dot command affects next command'
-float sec=$SECONDS
+
+float sec=$SECONDS del=4
 exec 3>&2 2>/dev/null
-$SHELL -c '( sleep 1; kill -ALRM $$ ) & sleep 3' 2> /dev/null
+$SHELL -c "( sleep 1; kill -ALRM \$\$ ) & sleep $del" 2> /dev/null
 exitval=$?
-exec 2>&3-
-[[ $exitval == 0 ]] || err_exit "sleep doesn't exit 0 with ALRM interupt"
 (( sec = SECONDS - sec ))
-(( sec > 2.5 )) || err_exit "ALRM signal causes sleep to terminate prematurely -- expected 3 sec, got $sec"
+exec 2>&3-
+(( exitval )) && err_exit "sleep doesn't exit 0 with ALRM interupt"
+(( sec > (del - 1) )) || err_exit "ALRM signal causes sleep to terminate prematurely -- expected 3 sec, got $sec"
+
 exit $((Errors))

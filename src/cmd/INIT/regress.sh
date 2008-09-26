@@ -23,7 +23,7 @@ command=regress
 case $(getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt) in
 0123)	USAGE=$'
 [-?
-@(#)$Id: regress (AT&T Research) 2008-09-20 $
+@(#)$Id: regress (AT&T Research) 2008-09-26 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?regress - run regression tests]
@@ -438,7 +438,7 @@ function RUN # [ op ]
 				then	if	[[ ! $TEST_quiet ]]
 					then	print -nu2 "$LABEL"
 					fi
-					cat <$TWD/INPUT | COMMAND "${ARGS[@]}" >$TWD/OUTPUT 2>$TWD/ERROR
+					(trap '' PIPE; cat <$TWD/INPUT 2>/dev/null; exit 0) | COMMAND "${ARGS[@]}" >$TWD/OUTPUT 2>$TWD/ERROR
 					STATUS=$?
 					RESULTS 'pipe input'
 				fi
@@ -454,7 +454,7 @@ function RUN # [ op ]
 				then	if	[[ ! $TEST_quiet ]]
 					then	print -nu2 "$LABEL"
 					fi
-					cat <$TWD/INPUT | COMMAND "${ARGS[@]}" 2>$TWD/ERROR | cat >$TWD/OUTPUT
+					(trap '' PIPE; cat <$TWD/INPUT 2>/dev/null; exit 0) | COMMAND "${ARGS[@]}" 2>$TWD/ERROR | cat >$TWD/OUTPUT
 					STATUS=$?
 					RESULTS 'pipe io'
 				fi
@@ -1208,7 +1208,7 @@ then	PREFIX=${REGRESS%/*}
 	fi
 fi
 TWD=$PWD/$UNIT.tmp
-PMP=$(/bin/pwd)/$UNIT.tmp
+PMP=$(pwd -P)/$UNIT.tmp
 UMASK_ORIG=$(umask)
 UMASK=$UMASK_ORIG
 ARGV=("$@")

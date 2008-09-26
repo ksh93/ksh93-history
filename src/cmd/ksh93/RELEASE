@@ -1,4 +1,5 @@
-08-09-24  --- Release ksh93t  ---
+08-09-26  --- Release ksh93t  ---
+08-09-26  A core dump in the subshell environment restore has been fixed.
 08-09-24  $(...) has been fixed to properly set the exit status in $?.
 08-09-23  $(<...) with IFS=$'\n\n' has been fixed to retain all but the last
 	  of multiple trailing newlines.

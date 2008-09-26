@@ -92,8 +92,9 @@ All recorded changes follow.
 
 :::::::: INIT ::::::::
 
-09-09-24 package.sh: package only test foo => make --recurse=only recurse tests foo
-09-09-20 make.probe: handle another /usr/bin/file shared lib description
+08-09-26 regress.sh: ignore SIGPIPE for SET pipe-input
+08-09-24 package.sh: package only test foo => make --recurse=only recurse tests foo
+08-09-20 make.probe: handle another /usr/bin/file shared lib description
 08-09-20 regress.sh: add --pipefail for SET pipe-input ...
 08-09-17 Makefile: add gdbm1.c for <gdbm-ndbm.h>
 08-09-10 make.probe: add CC.NOPROTECT
