@@ -91,7 +91,10 @@ do	t=$(grep -c err_exit $i)
 		if	$SHELL $i
 		then	echo test $i passed ${time:+"at $(date +%Y-%m-%d+%H:%M:%S)"} "[ $t $T 0 ${E}s ]"
 		else	e=$?
-			E=error
+			if	(( e > 256 ))
+			then	e=1
+				E=signal
+			fi
 			if	(( $e != 1 ))
 			then	E=${E}s
 			fi
@@ -106,7 +109,6 @@ then	for i in ${*-*.sh}
 		if	(( $t != 1 ))
 		then	T=${T}s
 		fi
-		E=error
 		o=${i##*/}
 		o=shcomp-${o%.sh}.ksh
 		echo test $o begins ${time:+"at $(date +%Y-%m-%d+%H:%M:%S)"}
@@ -115,6 +117,10 @@ then	for i in ${*-*.sh}
 		then	if	$SHELL $tmp/$o
 			then	echo test $o passed ${time:+"at $(date +%Y-%m-%d+%H:%M:%S)"} "[ $t $T 0 ${E}s ]"
 			else	e=$?
+				if	(( e > 256 ))
+				then	e=1
+					E=signal
+				fi
 				if	(( $e != 1 ))
 				then	E=${E}s
 				fi

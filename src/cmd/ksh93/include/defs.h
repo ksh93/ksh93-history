@@ -181,6 +181,7 @@ struct limits
 	int		xargmin; \
 	int		xargmax; \
 	int		xargexit; \
+	int		nenv; \
 	mode_t		mask; \
 	long		nforks; \
 	Env_t		*env; \

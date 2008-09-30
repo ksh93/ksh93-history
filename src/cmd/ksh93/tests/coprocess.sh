@@ -148,6 +148,7 @@ r=
 	integer i
 	for ((i = 1; i <= N; i++))
 	do	print $i |&
+		sleep 0.01
 		r=$r$(cat <&p)
 		wait $!
 	done
@@ -157,6 +158,7 @@ r=
 
 (
 	/bin/cat |&
+	sleep 0.01
 	exec 6>&p
 	print -u6 ok
 	exec 6>&-

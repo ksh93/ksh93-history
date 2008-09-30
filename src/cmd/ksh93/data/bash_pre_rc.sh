@@ -252,3 +252,4 @@ function cd
 typeset BASH=$0
 ! shopt -qo posix && HISTFILE=~/.bash_history
 HOSTNAME=$(hostname)
+nameref BASH_SUBSHELL=.sh.subshell

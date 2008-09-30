@@ -27,6 +27,7 @@ alias err_exit='err_exit $LINENO'
 
 Command=${0##*/}
 integer Errors=0
+
 [[ ${.sh.version} == "$KSH_VERSION" ]] || err_exit '.sh.version != KSH_VERSION'
 unset ss
 [[ ${@ss} ]] && err_exit '${@ss} should be empty string when ss is unset'  
@@ -481,9 +482,26 @@ function dave.unset
 }
 unset dave
 [[ $(typeset +f) == *dave.* ]] && err_exit 'unset discipline not removed'
-print 'print ${VAR}' >  /tmp/script$$
-VAR=foo /tmp/script$$ > /tmp/out$$
-[[ $(</tmp/out$$) == foo ]] || err_exit 'environment variables not passed to scripts'
+
+print 'print ${VAR}' > /tmp/script$$
+unset VAR
+VAR=new /tmp/script$$ > /tmp/out$$
+got=$(</tmp/out$$)
+[[ $got == new ]] || err_exit "previously unset environment variable not passed to script, expected 'new', got '$got'"
+[[ ! $VAR ]] || err_exit "previously unset environment variable set after script, expected '', got '$VAR'"
+unset VAR
+VAR=old
+VAR=new /tmp/script$$ > /tmp/out$$
+got=$(</tmp/out$$)
+[[ $got == new ]] || err_exit "environment variable covering local variable not passed to script, expected 'new', got '$got'"
+[[ $VAR == old ]] || err_exit "previously set local variable changed after script, expected 'old', got '$VAR'"
+unset VAR
+export VAR=old
+VAR=new /tmp/script$$ > /tmp/out$$
+got=$(</tmp/out$$)
+[[ $got == new ]] || err_exit "environment variable covering environment variable not passed to script, expected 'new', got '$got'"
+[[ $VAR == old ]] || err_exit "previously set environment variable changed after script, expected 'old', got '$VAR'"
+
 (
 	unset dave
 	function  dave.append

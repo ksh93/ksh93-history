@@ -1909,18 +1909,22 @@ char **sh_envgen(void)
 	register int namec;
 	register char *cp;
 	struct adata data;
-	data.sh = &sh;
+	Shell_t	*shp = sh_getinterp();
+	data.sh = shp;
 	data.tp = 0;
 	/* L_ARGNOD gets generated automatically as full path name of command */
 	nv_offattr(L_ARGNOD,NV_EXPORT);
 	data.attsize = 6;
-	namec = nv_scan(sh.var_tree,nullscan,(void*)0,NV_EXPORT,NV_EXPORT);
+	namec = nv_scan(shp->var_tree,nullscan,(void*)0,NV_EXPORT,NV_EXPORT);
+	namec += shp->nenv;
 	er = (char**)stakalloc((namec+4)*sizeof(char*));
-	data.argnam = (er+=2);
-	nv_scan(sh.var_tree, pushnam,&data,NV_EXPORT, NV_EXPORT);
+	data.argnam = (er+=2) + shp->nenv;
+	if(shp->nenv)
+		memcpy((void*)er,environ,shp->nenv*sizeof(char*));
+	nv_scan(shp->var_tree, pushnam,&data,NV_EXPORT, NV_EXPORT);
 	*data.argnam = (char*)stakalloc(data.attsize);
 	cp = data.attval = strcopy(*data.argnam,e_envmarker);
-	nv_scan(sh.var_tree, attstore,&data,0,(NV_RDONLY|NV_UTOL|NV_LTOU|NV_RJUST|NV_LJUST|NV_ZFILL|NV_INTEGER));
+	nv_scan(shp->var_tree, attstore,&data,0,(NV_RDONLY|NV_UTOL|NV_LTOU|NV_RJUST|NV_LJUST|NV_ZFILL|NV_INTEGER));
 	*data.attval = 0;
 	if(cp!=data.attval)
 		data.argnam++;

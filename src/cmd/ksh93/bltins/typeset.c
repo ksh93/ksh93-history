@@ -375,7 +375,7 @@ endargs:
 		else if(!tdata.sh->typeinit)
 			flag |= NV_STATIC|NV_IDENT;
 	}
-	if(tdata.sh->fn_depth)
+	if(tdata.sh->fn_depth && !tdata.pflag)
 		flag |= NV_NOSCOPE;
 	if(flag&NV_TYPE)
 	{
@@ -432,7 +432,10 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 	int r=0, ref=0, comvar=(flag&NV_COMVAR),iarray=(flag&NV_IARRAY);
 	Shell_t *shp =tp->sh;
 	if(!shp->prefix)
-		nvflags |= NV_NOSCOPE;
+	{
+		if(!tp->pflag)
+			nvflags |= NV_NOSCOPE;
+	}
 	else if(*shp->prefix==0)
 		shp->prefix = 0;
 	flag &= ~(NV_NOARRAY|NV_NOSCOPE|NV_VARNAME|NV_IDENT|NV_STATIC|NV_COMVAR|NV_IARRAY);

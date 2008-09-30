@@ -926,7 +926,7 @@ int nv_nextsub(Namval_t *np)
  */
 Namval_t *nv_putsub(Namval_t *np,register char *sp,register long mode)
 {
-	register struct index_array *aq=0,*ap = (struct index_array*)nv_arrayptr(np);
+	register struct index_array *ap = (struct index_array*)nv_arrayptr(np);
 	register int size = (mode&ARRAY_MASK);
 	if(!ap || !ap->header.fun)
 	{
@@ -975,9 +975,7 @@ Namval_t *nv_putsub(Namval_t *np,register char *sp,register long mode)
 		}
 #endif
 		ap->cur = size;
-		if(!(ap->header.nelem&ARRAY_NOSCOPE))
-			aq = (struct index_array*)ap->header.scope;
-		if((mode&ARRAY_SCAN) && !ap->val[size].cp && (!aq || !aq->val[size].cp) && !nv_nextsub(np))
+		if((mode&ARRAY_SCAN) && (ap->cur--,!nv_nextsub(np)))
 			np = 0;
 		if(mode&ARRAY_FILL)
 		{

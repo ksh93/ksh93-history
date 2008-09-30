@@ -111,15 +111,20 @@ static const Namdisc_t treedisc =
 static char *nextdot(const char *str)
 {
 	register char *cp;
+	register int c;
 	if(*str=='.')
 		str++;
-	if(*str =='[')
+	for(cp=(char*)str;c= *cp; cp++)
 	{
-		cp = nv_endsubscript((Namval_t*)0,(char*)str,0);
-		return(*cp=='.'?cp:0);
+		if(c=='[')
+		{
+			cp = nv_endsubscript((Namval_t*)0,(char*)cp,0);
+			return(*cp=='.'?cp:0);
+		}
+		if(c=='.')
+			return(cp);
 	}
-	else
-		return(strchr(str,'.'));
+	return(0);
 }
 
 static  Namfun_t *nextdisc(Namval_t *np)
@@ -550,7 +555,7 @@ void nv_outnode(Namval_t *np, Sfio_t* out, int indent, int special)
 			nv_onattr(mp,NV_EXPORT);
 		ep = nv_getval(mp?mp:np);
 		xp = 0;
-		if(nv_isattr(np,NV_INTEGER|NV_LJUST)==NV_LJUST)
+		if(!ap && nv_isattr(np,NV_INTEGER|NV_LJUST)==NV_LJUST)
 		{
 			xp = ep+nv_size(np);
 			while(--xp>ep && *xp==' ');
@@ -619,7 +624,7 @@ static void outval(char *name, const char *vname, struct Walk *wp)
 		if(nv_isarray(np))
 			return;
 	}
-	if(!special && fp)
+	if(!special && fp && !nv_isarray(np))
 	{
 		Namfun_t *xp;
 		if(!wp->out)

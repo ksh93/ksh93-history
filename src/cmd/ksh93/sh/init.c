@@ -336,7 +336,7 @@ static void put_cdpath(register Namval_t* np,const char *val,int flags,Namfun_t 
 		type= -1;
 	if(sh_isstate(SH_INIT) && type>=0 && type!=LC_ALL && lc_all && *lc_all)
 		type= -1;
-	if(type>=0)
+	if(type>=0 || type==LC_ALL)
 	{
 		if(!setlocale(type,val?val:""))
 		{
@@ -1609,6 +1609,11 @@ static void env_init(Shell_t *shp)
 				nv_onattr(np,NV_IMPORT);
 				np->nvenv = cp;
 				nv_close(np);
+			}
+			else  /* swap with fron */
+			{
+				ep[-1] = environ[shp->nenv];
+				environ[shp->nenv++] = cp;
 			}
 		}
 		while(cp=next)

@@ -1031,9 +1031,11 @@ Namval_t *nv_mktype(Namval_t **nodes, int numnodes)
 			 * If field is a type, mark the type by setting
 			 * strsize<0.  This changes create_type()
 			 */
+			if(nv_isarray(np))
+				errormsg(SH_DICT,ERROR_exit(1),"%s: A type definition cannot contain an array of a type in this release", mp->nvname);
 			clone_all_disc(np,nq,NV_RDONLY);
 			if(fp=nv_hasdisc(nq,&chtype_disc))
-			nv_disc(nq, &pp->childfun.fun, NV_LAST);
+				nv_disc(nq, &pp->childfun.fun, NV_LAST);
 			if(tp = (Namtype_t*)nv_hasdisc(nq, &type_disc))
 				tp->strsize = -tp->strsize;
 else sfprintf(sfstderr,"tp==NULL\n");
@@ -1091,6 +1093,12 @@ else sfprintf(sfstderr,"tp==NULL\n");
 			j = nv_isattr(np,NV_NOFREE);
 			nq->nvfun = np->nvfun;
 			np->nvfun = 0;
+			if(nv_isarray(nq) && !nq->nvfun)
+			{
+				nv_putsub(nq, (char*)0, ARRAY_FILL);
+				((Namarr_t*)nq->nvfun)->nelem--;
+				
+			}
 			nv_disc(nq, &pp->childfun.fun, NV_LAST);
 			if(nq->nvfun)
 			{

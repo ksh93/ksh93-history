@@ -92,35 +92,32 @@ unset l
 
 tmp=/tmp/kshsubsh$$
 trap "rm -f $tmp" EXIT
-integer BS=1024 nb=64 bs no
+integer BS=1024 nb=64 ss=60 bs no
 for bs in $BS 1
-do	(
-		$SHELL -c '
-			{
-				sleep 2
-				kill -KILL $$
-			} &
-			set -- $(printf %.'$(($BS*$nb))'c x | dd bs='$bs')
-			print ${#1}
-			kill $!
-		'
-	) > $tmp 2>/dev/null
+do	$SHELL -c '
+		{
+			sleep '$ss'
+			kill -KILL $$
+		} &
+		set -- $(printf %.'$(($BS*$nb))'c x | dd bs='$bs')
+		print ${#1}
+		kill $!
+	' > $tmp 2>/dev/null
 	no=$(<$tmp)
 	(( no == (BS * nb) )) || err_exit "shell hangs on command substitution output size >= $BS*$nb with write size $bs -- expected $((BS*nb)), got ${no:-0}"
 done
 # this time with redirection on the trailing command
 for bs in $BS 1
-do	(
-		$SHELL -c '
-			{
-				sleep 2
-				kill -KILL $$
-			} &
-			set -- $(printf %.'$(($BS*$nb))'c x | dd bs='$bs' 2>/dev/null)
-			print ${#1}
-			kill $!
-		'
-	) > $tmp 2>/dev/null
+do	$SHELL -c '
+		{
+			sleep 2
+			sleep '$ss'
+			kill -KILL $$
+		} &
+		set -- $(printf %.'$(($BS*$nb))'c x | dd bs='$bs' 2>/dev/null)
+		print ${#1}
+		kill $!
+	' > $tmp 2>/dev/null
 	no=$(<$tmp)
 	(( no == (BS * nb) )) || err_exit "shell hangs on command substitution output size >= $BS*$nb with write size $bs and trailing redirection -- expected $((BS*nb)), got ${no:-0}"
 done

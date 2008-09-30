@@ -407,4 +407,20 @@ got=$r
 	err_exit "compound indexed array pretty print failed -- expected $exp, got $got"
 }
 
+# array of compund variables
+typeset -C data=(
+        typeset -a samples
+)
+data.samples+=(
+	type1="greeting1"
+	timestamp1="now1"
+	command1="grrrr1"
+)
+data.samples+=(
+	type2="greeting2"
+	timestamp2="now2"
+	command2="grrrr2"
+)
+
+[[ $data == %(()) ]] || err_exit "unbalanced parenthesis with compound variable containing array of compound variables" 
 exit $((Errors))

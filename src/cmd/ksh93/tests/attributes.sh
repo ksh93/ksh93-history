@@ -274,4 +274,10 @@ x=${x//$'\n'/';'}
 [[ $(typeset -p z) == "Pt_t z=$x" ]] || err_exit "typeset -p for type failed"
 [[ $(typeset +p z) == "Pt_t z" ]] || err_exit "typeset +p for type failed"
 unset z
+function foo
+{
+	typeset -p bar
+}
+bar=xxx
+[[ $(foo) == bar=xxx ]] || err_exit 'typeset -p not working inside a function'
 exit	$((Errors))
