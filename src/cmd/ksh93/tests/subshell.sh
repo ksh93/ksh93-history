@@ -169,4 +169,22 @@ do	txt=$1
 	done
 done
 
+r=$( ($SHELL -c '
+	{
+		sleep 32
+		kill -KILL $$
+	} &
+	for v in $(set | sed "s/=.*//")
+	do	command unset $v
+	done
+	typeset -Z5 I
+	for ((I = 0; I < 1024; I++))
+	do	eval A$I=1234567890
+	done
+	a=$(set 2>&1)
+	print ok
+	kill -KILL $!
+') 2>/dev/null)
+[[ $r == ok ]] || err_exit "large subshell command substitution hangs"
+
 exit $Errors

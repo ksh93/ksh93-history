@@ -657,7 +657,7 @@ static struct index_array *array_grow(Namval_t *np, register struct index_array 
 		if(nv_hasdisc(np,&array_disc) || nv_isvtree(np))
 		{
 			ap->header.table = dtopen(&_Nvdisc,Dtoset);
-			mp = nv_search("0", ap->header.table, NV_ADD);
+			mp = nv_search("0", ap->header.table, 0);
 
 			if(mp && nv_isnull(mp))
 			{
@@ -667,8 +667,8 @@ static struct index_array *array_grow(Namval_t *np, register struct index_array 
 				for(fp=np->nvfun; fp && !fp->disc->readf; fp=fp->next);
 				if(fp)
 					(*fp->disc->readf)(mp,(Sfio_t*)0,0,fp);
+				i++;
 			}
-			i++;
 		}
 		else if((ap->val[0].cp=np->nvalue.cp))
 			i++;
@@ -829,6 +829,7 @@ Namval_t *nv_arraychild(Namval_t *np, Namval_t *nq, int c)
 	Namfun_t		*fp;
 	register Namarr_t	*ap = nv_arrayptr(np);
 	union Value		*up;
+	Namval_t		*tp;
 	if(!nq)
 		return(ap?array_find(np,ap, ARRAY_LOOKUP):0);
 	if(!ap)
@@ -839,11 +840,14 @@ Namval_t *nv_arraychild(Namval_t *np, Namval_t *nq, int c)
 	if(!(up = array_getup(np,ap,0)))
 		return((Namval_t*)0);
 	np->nvalue.cp = up->cp;
-	if(c || nv_type(np))
+	if((tp=nv_type(np)) || c)
 	{
 		ap->nelem |= ARRAY_NOCLONE;
 		nq->nvenv = (char*)np;
-		nv_clone(np, nq, NV_NODISC);
+		if(c=='t')
+			nv_clone(tp,nq, 0);
+		else
+			nv_clone(np, nq, NV_NODISC);
 		nv_offattr(nq,NV_ARRAY);
 		ap->nelem &= ~ARRAY_NOCLONE;
 	}

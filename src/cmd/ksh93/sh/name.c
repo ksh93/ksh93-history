@@ -984,6 +984,7 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 						return(np);
 					nv_putsub(np,NIL(char*),ARRAY_UNDEF);
 				}
+			again:
 				if(c=='.' && (fp=np->nvfun))
 				{
 					for(; fp; fp=fp->next)
@@ -998,11 +999,16 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 							add = NV_ADD;
 							break;
 						}
-						else if((np=nq) && (c = *(sp=cp=dp->last=fp->last))==0)
+						else if(np=nq)
 						{
-							if(nv_isarray(np) && sp[-1]!=']')
-								nv_putsub(np,NIL(char*),ARRAY_UNDEF);
-							return(np);
+							if((c = *(sp=cp=dp->last=fp->last))=='.')
+								goto again;
+							else if(c==0)
+							{
+								if(nv_isarray(np) && sp[-1]!=']')
+									nv_putsub(np,NIL(char*),ARRAY_UNDEF);
+								return(np);
+							}
 						}
 					}
 				}

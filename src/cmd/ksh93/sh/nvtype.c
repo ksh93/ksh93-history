@@ -495,6 +495,35 @@ static Namval_t *create_type(Namval_t *np,const char *name,int flag,Namfun_t *fp
 		{
 			while(nv_isref(nq))
 				nq = nq->nvalue.nrp->np;
+			if(name[n]=='[' && nv_type(nq))
+			{
+				char		*sub;
+				Namval_t	*nr;
+				int m = (flag&NV_NOADD)?0:NV_ADD;
+				m |= (flag&NV_ASSIGN);
+				cp = nv_endsubscript(nq,(char*)cp-1,m);
+				if(!(sub = nv_getsub(nq)) || strcmp(sub,"0")==0)
+				{
+					name = memcpy((char*)cp-n,name,n);
+					while((n=*cp++) && n != '=' && n != '+' && n!='[');
+					n = (cp-1) -name;
+					continue;
+				}
+				if(!(nr = nv_opensub(nq)))
+				{
+					Namarr_t *ap = nv_arrayptr(nq);
+					if(ap && !ap->table)
+						ap->table = dtopen(&_Nvdisc,Dtoset);
+					if(ap && ap->table && (nr=nv_search(sub,ap->table,m)))
+						nr->nvenv = (char*)nq;
+					if(nq && nv_isnull(nr))
+					{
+						nr = nv_arraychild(nq,nr,'t');
+					}
+				}
+				nq = nr;
+				n = cp -name;
+			}
 			goto found;
 		}
 	}
@@ -862,7 +891,7 @@ Namval_t *nv_mktype(Namval_t **nodes, int numnodes)
 				size += n;
 			}
 			else
-				size += n + dp->numnodes*strlen(&np->nvname[m]);
+				size += n + dp->numnodes*(strlen(&np->nvname[m])+1);
 			n = strlen(np->nvname);
 			while((i+1) < numnodes && (cp=nodes[i+1]->nvname) && memcmp(cp,np->nvname,n)==0 && cp[n]=='.')
 				i++;
@@ -1031,9 +1060,13 @@ Namval_t *nv_mktype(Namval_t **nodes, int numnodes)
 			 * If field is a type, mark the type by setting
 			 * strsize<0.  This changes create_type()
 			 */
+#if 1
 			if(nv_isarray(np))
 				errormsg(SH_DICT,ERROR_exit(1),"%s: A type definition cannot contain an array of a type in this release", mp->nvname);
 			clone_all_disc(np,nq,NV_RDONLY);
+#else
+			clone_all_disc(nv_type(np),nq,NV_RDONLY);
+#endif
 			if(fp=nv_hasdisc(nq,&chtype_disc))
 				nv_disc(nq, &pp->childfun.fun, NV_LAST);
 			if(tp = (Namtype_t*)nv_hasdisc(nq, &type_disc))

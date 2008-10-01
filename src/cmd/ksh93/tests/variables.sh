@@ -586,6 +586,18 @@ function a.set
 [[ $(a=1) == a=1 ]] || err_exit 'set discipline not working in subshell assignment'
 [[ $(a=1 :) == a=1 ]] || err_exit 'set discipline not working in subshell command'
 
+[[ ${.sh.subshell} == 0 ]] || err_exit '${.sh.subshell} should be 0'
+(
+	[[ ${.sh.subshell} == 1 ]] || err_exit '${.sh.subshell} should be 1'
+	(
+		[[ ${.sh.subshell} == 2 ]] || err_exit '${.sh.subshell} should be 2'
+	)
+)
+
+set -- {1..32768}
+(( $# == 32768 )) || err_exit "\$# failed -- expected 32768, got $#"
+set --
+
 unset r v x
 path=$PATH
 x=foo
@@ -609,16 +621,5 @@ do	nameref r=$v
 	( r=C; r=$x; [[ $r == C ]] ) 2>/dev/null || err_exit "$v=C; $v=$x failed -- expected 'C'"
 done
 PATH=$path
-[[ ${.sh.subshell} == 0 ]] || err_exit '${.sh.subshell} should be 0'
-(
-	[[ ${.sh.subshell} == 1 ]] || err_exit '${.sh.subshell} should be 1'
-	(
-		[[ ${.sh.subshell} == 2 ]] || err_exit '${.sh.subshell} should be 2'
-	)
-)
-
-set -- {1..32768}
-(( $# == 32768 )) || err_exit "\$# failed -- expected 32768, got $#"
-set --
 
 exit $((Errors))

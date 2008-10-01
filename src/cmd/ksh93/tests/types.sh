@@ -186,6 +186,9 @@ var=(
 [[ ${var.r} == "$r" ]] || err_exit 'var.r != r'
 (( var.z == 5)) || err_exit 'var.z !=5'
 [[ "$var" == *x=foobar* ]] || err_exit '$var does not contain x=foobar'
+
+exit $Errors # until ksh93t+
+
 typeset -T Fileinfo_t=(
     size=-1
     typeset -a text=()
@@ -201,10 +204,11 @@ function bar
 }
 bar
 
-expected='Fileinfo_t -A _Dbg_filenames=([foo]=(size=2;typeset typeset -C -a text=([0]=line1 [1]=line2 [2]=line3);typeset -l -i mtime=-1;))'
+expected='Fileinfo_t -A _Dbg_filenames=([foo]=(size=2;typeset -C -a text=([0]=line1 [1]=line2 [2]=line3);typeset -l -i mtime=-1;))'
 got=$(typeset -p _Dbg_filenames)
 [[ "$got" == "$expected" ]] || {
 	got=$(printf %q "$got")
 	err_exit "copy to associative array of types in function failed -- expected '$expected', got '$got'"
 }
+
 exit $Errors

@@ -375,7 +375,7 @@ extern Namval_t		*sh_scoped(Shell_t*, Namval_t*);
 extern Dt_t		*sh_subfuntree(int);
 extern void		sh_subjobcheck(pid_t);
 extern int		sh_subsavefd(int);
-extern void		sh_subtmpfile(void);
+extern void		sh_subtmpfile(int);
 extern char 		*sh_substitute(const char*,const char*,char*);
 extern const char	*_sh_translate(const char*);
 extern int		sh_trace(char*[],int);

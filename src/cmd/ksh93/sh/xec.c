@@ -957,7 +957,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 						bp->notify = 0;
 						bp->flags = (OPTIMIZE!=0);
 						if(shp->subshell && nv_isattr(np,BLT_NOSFIO))
-							sh_subtmpfile();
+							sh_subtmpfile(0);
 						if(execflg && !shp->subshell &&
 							!shp->st.trapcom[0] && !shp->st.trap[SH_ERRTRAP] && shp->fn_depth==0 && !nv_isattr(np,BLT_ENV))
 						{
@@ -1134,7 +1134,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 				!shp->st.trap[SH_ERRTRAP] && shp->fn_depth==0 &&
 				!(pipejob && sh_isoption(SH_PIPEFAIL)));
 			if(shp->subshell)
-				sh_subtmpfile();
+				sh_subtmpfile(1);
 			if(sh_isstate(SH_PROFILE) || shp->dot_depth)
 			{
 				/* disable foreground job monitor */
@@ -1405,7 +1405,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 			pid_t	savepgid = job.curpgid;
 			job.curpgid = 0;
 			if(shp->subshell)
-				sh_subtmpfile();
+				sh_subtmpfile(1);
 			shp->inpipe = pvo;
 			shp->outpipe = pvn;
 			pvo[1] = -1;

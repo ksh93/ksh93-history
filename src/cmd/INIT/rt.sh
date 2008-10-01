@@ -29,7 +29,7 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	ARGV0="-a $command"
 	USAGE=$'
 [-?
-@(#)$Id: rt (AT&T Research) 2008-04-24 $
+@(#)$Id: rt (AT&T Research) 2008-09-30 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?rt - run "nmake test" and filter output]
@@ -242,6 +242,20 @@ do	set '' $line
 					errors=$4
 					if	(( errors > 256 ))
 					then	(( signals++ ))
+					fi
+					break
+					;;
+				esac
+				shift
+			done
+			;;
+		*' [ '*test*signal*' ]')
+			while	:
+			do	case $1 in
+				'[')	tests=$2
+					signals=$4
+					if	(( signals ))
+					then	(( errors++ ))
 					fi
 					break
 					;;

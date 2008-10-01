@@ -94,9 +94,9 @@ static struct subshell
 static int subenv;
 
 /*
- * This routine will turn the sftmp() file into a pipe
+ * This routine will turn the sftmp() file into a real /tmp file or pipe
  */
-void	sh_subtmpfile(void)
+void	sh_subtmpfile(int pflag)
 {
 	Shell_t *shp = &sh;
 	int fds[2];
@@ -115,6 +115,24 @@ void	sh_subtmpfile(void)
 		}
 		else if(errno!=EBADF)
 			errormsg(SH_DICT,ERROR_system(1),e_toomany);
+		if(!pflag)
+		{
+			sfdisc(sfstdout,SF_POPDISC);
+			if((fd=sffileno(sfstdout))>=0)
+			{
+				sh.fdstatus[fd] = IOREAD|IOWRITE;
+				sfsync(sfstdout);
+				if(fd==1)
+					fcntl(1,F_SETFD,0);
+				else
+				{
+					sfsetfd(sfstdout,1);
+					sh.fdstatus[1] = sh.fdstatus[fd];
+					sh.fdstatus[fd] = IOCLOSE;
+				}
+				goto skip;
+			}
+		}
 		sh_pipe(fds);
 		sp->pipefd = fds[0];
 		sh_fcntl(sp->pipefd,F_SETFD,FD_CLOEXEC);
@@ -128,6 +146,7 @@ void	sh_subtmpfile(void)
 		if((sh_fcntl(fds[1],F_DUPFD, 1)) != 1)
 			errormsg(SH_DICT,ERROR_system(1),e_file+4);
 		sh_close(fds[1]);
+	skip:
 		sh_iostream(shp,1);
 		sfset(sfstdout,SF_SHARE|SF_PUBLIC,1);
 		sfpool(sfstdout,shp->outpool,SF_WRITE);
@@ -149,7 +168,7 @@ void sh_subfork(void)
 	pid_t pid;
 	/* see whether inside $(...) */
 	if(sp->pipe)
-		sh_subtmpfile();
+		sh_subtmpfile(1);
 	shp->curenv = 0;
 	if(pid = sh_fork(0,NIL(int*)))
 	{

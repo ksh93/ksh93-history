@@ -446,7 +446,7 @@ void nv_attribute(register Namval_t *np,Sfio_t *out,char *prefix,int noname)
 					if(ap && (ap->nelem&ARRAY_TREE))
 					{
 						if(prefix && *prefix)
-							sfprintf(out,"%s -C ",prefix);
+							sfwrite(out,"-C ",3);
 					}
 					if(ap && !array_assoc(ap) && (xp=(char**)(ap+1)) && *xp)
 						ip = nv_namptr(*xp,0)->nvname;

@@ -1,3 +1,4 @@
+08-09-30 rt.sh: fix ksh93 regression test signal count
 08-09-26 regress.sh: ignore SIGPIPE for SET pipe-input
 08-09-24 package.sh: package only test foo => make --recurse=only recurse tests foo
 08-09-20 make.probe: handle another /usr/bin/file shared lib description

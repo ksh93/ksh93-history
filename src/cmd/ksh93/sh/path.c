@@ -993,7 +993,7 @@ pid_t path_spawn(const char *opath,register char **argv, char **envp, Pathcomp_t
 		}
 		v = stakfreeze(1);
 		r = 1;
-		xp = envp + 2;
+		xp = envp + 1;
 		while (s = *xp++)
 		{
 			if (strneq(s, v, n) && s[n] == '=')

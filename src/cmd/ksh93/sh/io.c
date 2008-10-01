@@ -992,7 +992,7 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 					}
 					if(shp->subshell && dupfd==1)
 					{
-						sh_subtmpfile();
+						sh_subtmpfile(0);
 						dupfd = sffileno(sfstdout);
 					}
 					else if(shp->sftable[dupfd])
