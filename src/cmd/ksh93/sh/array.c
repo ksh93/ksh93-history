@@ -981,7 +981,7 @@ Namval_t *nv_putsub(Namval_t *np,register char *sp,register long mode)
 		ap->cur = size;
 		if((mode&ARRAY_SCAN) && (ap->cur--,!nv_nextsub(np)))
 			np = 0;
-		if(mode&ARRAY_FILL)
+		if(mode&(ARRAY_FILL|ARRAY_ADD))
 		{
 			if(!(mode&ARRAY_ADD))
 			{
@@ -1241,7 +1241,7 @@ void *nv_associative(register Namval_t *np,const char *sp,int mode)
 			ap->cur = 0;
 			if(sp==(char*)np)
 				return(0);
-			type = nv_isattr(np,NV_PUBLIC&~(NV_ARRAY|NV_CHILD));
+			type = nv_isattr(np,NV_PUBLIC&~(NV_ARRAY|NV_CHILD|NV_MINIMAL));
 			if(mode)
 				mode = NV_ADD|HASH_NOSCOPE;
 			else if(ap->header.nelem&ARRAY_NOSCOPE)
@@ -1253,6 +1253,7 @@ void *nv_associative(register Namval_t *np,const char *sp,int mode)
 			if((mp || (mp=nv_search(sp,ap->header.table,mode))) && nv_isnull(mp) && (mode&NV_ADD))
 			{
 				nv_onattr(mp,type);
+				mp->nvenv = (char*)np;
 				if((mode&NV_ADD) && nv_type(np)) 
 					nv_arraychild(np,mp,0);
 				if(sh.subshell)

@@ -482,4 +482,5 @@ r="-0 -0 -0 -0 -0 -0"
 $SHELL -c '(( x=));:' 2> /dev/null && err_exit '((x=)) should be an error'
 $SHELL -c '(( x+=));:' 2> /dev/null && err_exit '((x+=)) should be an error'
 $SHELL -c '(( x=+));:' 2> /dev/null && err_exit '((x=+)) should be an error'
+$SHELL -c 'x=();x.arr[0]=(z=3); ((x.arr[0].z=2))' 2> /dev/null || err_exit '(((x.arr[0].z=2)) should not be an error'
 exit $((Errors))

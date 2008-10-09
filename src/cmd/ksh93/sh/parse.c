@@ -840,7 +840,7 @@ static Shnode_t *funct(Lex_t *lexp)
 /*
  * Compound assignment
  */
-static struct argnod *assign(Lex_t *lexp, register struct argnod *ap)
+static struct argnod *assign(Lex_t *lexp, register struct argnod *ap, int tdef)
 {
 	register int n;
 	register Shnode_t *t, **tp;
@@ -889,7 +889,7 @@ static struct argnod *assign(Lex_t *lexp, register struct argnod *ap)
 			sfprintf(stkp,"[%d]=",index++);
 			ap = (struct argnod*)stkfreeze(stkp,1);
 			ap->argnxt.ap = 0;
-			ap = assign(lexp,ap);
+			ap = assign(lexp,ap,0);
 			ap->argflag |= ARG_MESSAGE;
 			*settail = ap;
 			settail = &(ap->argnxt.ap);
@@ -925,6 +925,8 @@ static struct argnod *assign(Lex_t *lexp, register struct argnod *ap)
 		}
 		else if(n>0)
 			fcseek(-1);
+		if(array && tdef)
+			sh_syntax(lexp);
 	}
 	while(1)
 	{
@@ -1355,8 +1357,11 @@ static Shnode_t *simple(Lex_t *lexp,int flag, struct ionod *io)
 			if(argp->argflag&ARG_ASSIGN)
 			{
 				int intypeset = lexp->intypeset;
+				int tdef = 0;
 				lexp->intypeset = 0;
-				argp = assign(lexp,argp);
+				if(t->comnamp==SYSTYPESET && t->comarg->argnxt.ap && strcmp(t->comarg->argnxt.ap->argval,"-T")==0)
+					tdef = 1;
+				argp = assign(lexp,argp,tdef);
 				lexp->intypeset = intypeset;
 				if(associative)
 					lexp->assignok |= SH_ASSIGN;

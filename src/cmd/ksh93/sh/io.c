@@ -418,6 +418,22 @@ void sh_ioinit(Shell_t *shp)
 }
 
 /*
+ *  Handle output stream exceptions
+ */
+static int outexcept(register Sfio_t *iop,int type,void *data,Sfdisc_t *handle)
+{
+	NOT_USED(handle);
+	if(type==SF_DPOP || type==SF_FINAL)
+		free((void*)handle);
+	else if(type==SF_WRITE && ((ssize_t)data)<0 && errno!=EINTR && sffileno(iop)!=2)
+	{
+		errormsg(SH_DICT,ERROR_system(1),e_badwrite,sffileno(iop));
+		return(-1);
+	}
+	return(0);
+}
+
+/*
  * create or initialize a stream corresponding to descriptor <fd>
  * a buffer with room for a sentinal is allocated for a read stream.
  * A discipline is inserted when read stream is a tty or a pipe
@@ -430,6 +446,7 @@ Sfio_t *sh_iostream(Shell_t *shp, register int fd)
 	register int status = sh_iocheckfd(shp,fd);
 	register int flags = SF_WRITE;
 	char *bp;
+	Sfdisc_t *dp;
 #if SHOPT_FASTPIPE
 	if(fd>=shp->lim.open_max)
 		return(shp->sftable[fd]);
@@ -463,31 +480,31 @@ Sfio_t *sh_iostream(Shell_t *shp, register int fd)
 		sfsetbuf(iop, bp, IOBSIZE);
 	else if(!(iop=sfnew((fd<=2?iop:0),bp,IOBSIZE,fd,flags)))
 		return(NIL(Sfio_t*));
+	dp = newof(0,Sfdisc_t,1,0);
 	if(status&IOREAD)
 	{
-		Sfdisc_t *dp;
 		sfset(iop,SF_MALLOC,1);
 		if(!(status&IOWRITE))
 			sfset(iop,SF_IOCHECK,1);
+		dp->exceptf = slowexcept;
+		if(status&IOTTY)
+			dp->readf = slowread;
+		else if(status&IONOSEEK)
 		{
-			dp = newof(0,Sfdisc_t,1,0);
-			dp->exceptf = slowexcept;
-			if(status&IOTTY)
-				dp->readf = slowread;
-			else if(status&IONOSEEK)
-			{
-				dp->readf = piperead;
-				sfset(iop, SF_IOINTR,1);
-			}
-			else
-				dp->readf = 0;
-			dp->seekf = 0;
-			dp->writef = 0;
-			sfdisc(iop,dp);
+			dp->readf = piperead;
+			sfset(iop, SF_IOINTR,1);
 		}
+		else
+			dp->readf = 0;
+		dp->seekf = 0;
+		dp->writef = 0;
 	}
 	else
+	{
+		dp->exceptf = outexcept;
 		sfpool(iop,shp->outpool,SF_WRITE);
+	}
+	sfdisc(iop,dp);
 	shp->sftable[fd] = iop;
 	return(iop);
 }
@@ -908,7 +925,7 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 	{
 		iof=iop->iofile;
 		fn = (iof&IOUFD);
-		if(fn==1 && flag==2 && shp->subshell)
+		if(fn==1 && shp->subshell && (flag==2 || (sfset(sfstdout,0,0)&SF_STRING)))
 			sh_subfork();
 		io_op[0] = '0'+(iof&IOUFD);
 		if(iof&IOPUT)

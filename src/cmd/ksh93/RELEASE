@@ -1,4 +1,17 @@
-08-10-01  --- Release ksh93t  ---
+08-10-09  --- Release ksh93t  ---
+08-10-09  ${.sh.version} now contains a catenation of the following (after
+	  'Version') denoting compile time features:
+		A	SHOPT_AUDIT
+		B	SHOPT_BASH
+		L	SHOPT_ACCT
+		M	SHOPT_MULTIBYTE
+08-10-09  A bug that caused subshell command substitution with redirection
+	  to hang has been fixed.
+08-10-08  Output errors, other than to stderr, now result in a diagnostic.
+08-10-08  ksh93 now supports types that contain arrays of other types as
+	  members.  Earlier versions core dumped in this case.
+08-10-05  A bug which caused the shell to emit a syntax error for an arithmetic
+	  statement of the form (( var.name[sub] = value)) has been fixed.
 08-10-01  A bug that caused subshell command substitution to hang has
 	  been fixed.
 08-09-29  When the -p export option of typeset is used with other options,

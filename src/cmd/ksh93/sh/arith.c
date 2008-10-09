@@ -139,6 +139,11 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 			{
 				while(xp=str, c=mbchar(str), isaname(c));
 				str = xp;
+				if(c=='[' && dot==NV_NOADD)
+				{
+					str = nv_endsubscript((Namval_t*)0,str,0);
+					c = *str;
+				}
 				if(c!='.')
 					break;
 				dot=NV_NOADD;

@@ -331,7 +331,9 @@ skip2:
 	else
 	{
 		/* echo style print */
-		if(sh_echolist(outfile,rflag,argv) && !nflag)
+		if(nflag && !argv[0])
+			sfsync((Sfio_t*)0);
+		else if(sh_echolist(outfile,rflag,argv) && !nflag)
 			sfputc(outfile,'\n');
 	}
 	if(sflag)

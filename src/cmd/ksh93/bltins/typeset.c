@@ -505,7 +505,7 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 				path_alias(np,path_absolute(nv_name(np),NIL(Pathcomp_t*)));
 				continue;
 			}
-			np = nv_open(name,troot,nvflags);
+			np = nv_open(name,troot,nvflags|NV_ARRAY);
 			if(tp->pflag)
 			{
 				nv_attribute(np,sfstdout,tp->prefix,1);

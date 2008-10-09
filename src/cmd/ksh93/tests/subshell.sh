@@ -19,14 +19,13 @@
 ########################################################################
 function err_exit
 {
-	print -u2 -n "\t"
-	print -u2 -r ${Command}[$1]: "${@:2}"
+	print -u$Error_fd -n "\t"
+	print -u$Error_fd -r ${Command}[$1]: "${@:2}"
 	(( Errors+=1 ))
 }
 alias err_exit='err_exit $LINENO'
-
 Command=${0##*/}
-integer Errors=0
+integer Errors=0 Error_fd=2
 
 z=()
 z.foo=( [one]=hello [two]=(x=3 y=4) [three]=hi)
@@ -81,7 +80,7 @@ eval val="$x"
 	unset x.foo
 	[[ ${x.foo.qqq} ]] && err_exit 'x.foo.qqq should be unset'
 	x.foo=good
-	[[ ${x.foo} == good ]] ||  err_exit 'x.foo should be good'
+	[[ ${x.foo} == good ]] || err_exit 'x.foo should be good'
 )
 [[ $x == "$val" ]] || err_exit 'compound variable changes after unset leaves'
 unset l
@@ -89,6 +88,14 @@ unset l
 	l=( a=1 b="BE" )
 )
 [[ ${l+foo} != foo ]] || err_exit 'l should be unset'
+
+Error_fd=9
+eval "exec $Error_fd>&2 2>/dev/null"
+
+TEST_notfound=notfound
+while	whence $TEST_notfound >/dev/null 2>&1
+do	TEST_notfound=notfound-$RANDOM
+done
 
 tmp=/tmp/kshsubsh$$
 trap "rm -f $tmp" EXIT
@@ -186,5 +193,31 @@ r=$( ($SHELL -c '
 	kill -KILL $!
 ') 2>/dev/null)
 [[ $r == ok ]] || err_exit "large subshell command substitution hangs"
+
+for TEST_command in '' $TEST_notfound
+do	for TEST_exec in '' 'exec'
+	do	for TEST_fork in '' 'ulimit -c 0;'
+		do	for TEST_redirect in '' '>/dev/null'
+			do	for TEST_substitute in '' ': $'
+				do
+
+	TEST_test="$TEST_substitute($TEST_fork $TEST_exec $TEST_command $TEST_redirect)"
+	[[ $TEST_test == '('*([[:space:]])')' ]] && continue
+	r=$($SHELL -c '
+		{
+			sleep 2
+			kill -KILL $$
+		} &
+		'"$TEST_test"'
+		kill $!
+		print ok
+		')
+	[[ $r == ok ]] || err_exit "shell hangs on $TEST_test"
+
+				done
+			done
+		done
+	done
+done
 
 exit $Errors

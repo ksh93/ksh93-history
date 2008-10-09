@@ -145,7 +145,7 @@ void *nv_diropen(Namval_t *np,const char *name)
 	char *next,*last;
 	int c,len=strlen(name);
 	struct nvdir *save, *dp = new_of(struct nvdir,len);
-	Namval_t *nq,fake;
+	Namval_t *nq=0,fake;
 	Namfun_t *nfp=0;
 	if(!dp)
 		return(0);
@@ -165,7 +165,6 @@ void *nv_diropen(Namval_t *np,const char *name)
 			break;
 		if(!(next=nextdot(last)))
 			break;
-		
 		*next = 0;
 		np = nv_open(name, dp->root, NV_NOFAIL);
 		*next = '.';
@@ -182,10 +181,18 @@ void *nv_diropen(Namval_t *np,const char *name)
 	if(*name)
 	{
 		fake.nvname = (char*)name;
-		c = strlen(name);
-		dp->hp = (Namval_t*)dtprev(dp->root,&fake);
-		if(!(dp->hp && memcmp(name,dp->hp->nvname,c)==0 && (dp->hp->nvname[c]==0 || dp->hp->nvname[c]=='.')))
-			dp->hp = (Namval_t*)dtnext(dp->root,dp->hp);
+		if(dp->hp = (Namval_t*)dtprev(dp->root,&fake))
+		{
+			char *cp = nv_name(dp->hp);
+			c = strlen(cp);
+			if(memcmp(name,cp,c) || name[c]!='[')
+				dp->hp = (Namval_t*)dtnext(dp->root,dp->hp);
+			else
+			{
+				np = dp->hp;
+				last = 0;
+			}
+		}
 	}
 	else
 		dp->hp = (Namval_t*)dtfirst(dp->root);
@@ -201,7 +208,15 @@ void *nv_diropen(Namval_t *np,const char *name)
 		if(!np)
 		{
 			if(nfp && nfp->disc && nfp->disc->createf)
+			{
 				np =  (*nfp->disc->createf)(nq,last,0,nfp);
+				if(*nfp->last == '[')
+				{
+					nv_endsubscript(np,nfp->last,NV_NOADD);
+					if(nq = nv_opensub(np))
+						np = nq;
+				}
+			}
 			else
 				np = nv_search(last,dp->root,0);
 		}
@@ -218,7 +233,7 @@ void *nv_diropen(Namval_t *np,const char *name)
 			if(nv_istable(np))
 				dp->root = nv_dict(np);
 			else
-				dp->root = (Dt_t*)dp;
+				dp->root = (Dt_t*)np;
 			if(nfp)
 			{
 				dp->nextnode = nfp->disc->nextf;
@@ -257,24 +272,39 @@ char *nv_dirnext(void *dir)
 	register Namval_t *np, *last_table;
 	register char *cp;
 	Namfun_t *nfp;
+	Namval_t *nq;
 	while(1)
 	{
 		while(np=dp->hp)
 		{
+#if 0
 			char *sptr;
+#endif
+			if(nv_isarray(np))
+				nv_putsub(np,(char*)0, ARRAY_UNDEF);
 			dp->hp = nextnode(dp);
 			if(nv_isnull(np) && !nv_isarray(np))
 				continue;
 			last_table = sh.last_table;
+#if 0
 			if(dp->table && dp->otable && !nv_isattr(dp->table,NV_MINIMAL))
 			{
 				sptr = dp->table->nvenv;
 				dp->table->nvenv = (char*)dp->otable;
 			}
+#endif
 			sh.last_table = dp->table;
 			cp = nv_name(np);
+#if 0
 			if(dp->table && dp->otable && !nv_isattr(dp->table,NV_MINIMAL))
 				dp->table->nvenv = sptr;
+#endif
+			if(dp->nextnode && !dp->hp && (nq = (Namval_t*)dp->table))
+			{
+				Namarr_t  *ap = nv_arrayptr(nq);
+				if(ap && (ap->nelem&ARRAY_SCAN) && nv_nextsub(nq))
+					dp->hp = (*dp->nextnode)(np,(Dt_t*)0,dp->fun);
+			}
 			sh.last_table = last_table;
 			if(!dp->len || memcmp(cp,dp->data,dp->len)==0)
 			{
@@ -286,7 +316,7 @@ char *nv_dirnext(void *dir)
 					if(nv_istable(np))
 						root = nv_dict(np);
 					else
-						root = (Dt_t*)dp;
+						root = (Dt_t*)np;
 					/* check for recursive walk */
 					for(save=dp; save;  save=save->prev) 
 					{
@@ -294,7 +324,7 @@ char *nv_dirnext(void *dir)
 							break;
 					}
 					if(save)
-						continue;
+						return(cp);
 					if(!(save = new_of(struct nvdir,0)))
 						return(0);
 					*save = *dp;
@@ -303,6 +333,11 @@ char *nv_dirnext(void *dir)
 					dp->len = 0;
 					if(nfp && np->nvfun)
 					{
+#if 0
+				                Namarr_t *ap = nv_arrayptr(np);
+				                if(ap && (ap->nelem&ARRAY_UNDEF))
+				                        nv_putsub(np,(char*)0,ARRAY_SCAN);
+#endif
 						dp->nextnode = nfp->disc->nextf;
 						dp->otable = dp->table;
 						dp->table = np;
@@ -507,7 +542,7 @@ void nv_outnode(Namval_t *np, Sfio_t* out, int indent, int special)
 	char		*fmtq,*ep,*xp;
 	Namval_t	*mp;
 	Namarr_t	*ap = nv_arrayptr(np);
-	int		c,more,associative = 0;
+	int		tabs=0,c,more,associative = 0;
 	if(ap)
 	{
 		if(!(ap->nelem&ARRAY_SCAN))
@@ -516,7 +551,7 @@ void nv_outnode(Namval_t *np, Sfio_t* out, int indent, int special)
 		if(indent>=0)
 		{
 			sfputc(out,'\n');
-			sfnputc(out,'\t',++indent);
+			tabs=1;
 		}
 		if(!(associative =(array_assoc(ap)!=0)))
 		{
@@ -534,6 +569,9 @@ void nv_outnode(Namval_t *np, Sfio_t* out, int indent, int special)
 			mp = nv_opensub(np);
 			continue;
 		}
+		if(tabs)
+			sfnputc(out,'\t',++indent);
+		tabs=0;
 		if(associative||special)
 		{
 			if(!(fmtq = nv_getsub(np)))
@@ -754,7 +792,7 @@ static char **genvalue(char **argv, const char *prefix, int n, struct Walk *wp)
 					}
 					if(wp->indent>=0)
 						sfnputc(outfile,'\t',wp->indent);
-					if(tp = nv_type(np))
+					if(*cp!='[' && (tp = nv_type(np)))
 					{
 						char *sp;
 						if(sp = strrchr(tp->nvname,'.'))

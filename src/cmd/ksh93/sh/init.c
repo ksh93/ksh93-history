@@ -47,11 +47,31 @@
 #include	"lexstates.h"
 #include	"version.h"
 
+char e_version[]	= "\n@(#)$Id: Version "
+#if SHOPT_AUDIT
+#define ATTRS		1
+			"A"
+#endif
+#if SHOPT_BASH
+#define ATTRS		1
+			"B"
+#endif
+#if SHOPT_ACCT
+#define ATTRS		1
+			"L"
+#endif
 #if SHOPT_MULTIBYTE
-    char e_version[]	= "\n@(#)$Id: Version M "SH_RELEASE" $\0\n";
-#else
-    char e_version[]	= "\n@(#)$Id: Version "SH_RELEASE" $\0\n";
-#endif /* SHOPT_MULTIBYTE */
+#define ATTRS		1
+			"M"
+#endif
+#if SHOPT_PFSH && _hdr_exec_attr
+#define ATTRS		1
+			"P"
+#endif
+#if ATTRS
+			" "
+#endif
+			SH_RELEASE " $\0\n";
 
 #if SHOPT_BASH
     extern void bash_init(Shell_t*,int);

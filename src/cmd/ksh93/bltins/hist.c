@@ -150,7 +150,6 @@ int	b_hist(int argc,char *argv[], void *extra)
 			errormsg(SH_DICT,ERROR_exit(1),e_found,argv[1]);
 		argv++;
 	}
-	error(-1, "AHA#%d edit=%s flag=%d range[0]=%d range[1]=%d", __LINE__, edit, flag, range[0], range[1]);
 	if(flag <0)
 	{
 		/* set default starting range */
@@ -176,7 +175,6 @@ int	b_hist(int argc,char *argv[], void *extra)
 	/* check for valid ranges */
 	if(range[1]<index2 || range[0]>=flag)
 		errormsg(SH_DICT,ERROR_exit(1),e_badrange,range[0],range[1]);
-	error(-1, "AHA#%d edit=%s flag=%d range[0]=%d range[1]=%d", __LINE__, edit, flag, range[0], range[1]);
 	if(edit && *edit=='-' && range[0]!=range[1])
 		errormsg(SH_DICT,ERROR_exit(1),e_eneedsarg);
 	/* now list commands from range[rflag] to range[1-rflag] */

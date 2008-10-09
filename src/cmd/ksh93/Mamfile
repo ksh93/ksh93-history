@@ -914,7 +914,7 @@ prev include/defs.h implicit
 done sh/init.c
 meta init.o %.c>%.o sh/init.c init
 prev sh/init.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_STATS -DSHOPT_PFSH -DSHOPT_NAMESPACE -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_DYNAMIC -D_BLD_shell -DSHOPT_KIA -DKSHELL -DSHOPT_HISTEXPAND -DSHOPT_ESH -DSHOPT_VSH -DERROR_CONTEXT_T=Error_context_t -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -c sh/init.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_STATS -DSHOPT_NAMESPACE -DSHOPT_PFSH -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_DYNAMIC -D_BLD_shell -DSHOPT_KIA -DKSHELL -DSHOPT_HISTEXPAND -DSHOPT_ESH -DSHOPT_VSH -DERROR_CONTEXT_T=Error_context_t -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -c sh/init.c
 done init.o generated
 make io.o
 make sh/io.c

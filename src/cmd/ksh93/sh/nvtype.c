@@ -207,12 +207,17 @@ static size_t datasize(Namval_t *np, size_t *offset)
 static char *name_chtype(Namval_t *np, Namfun_t *fp)
 {
 	Namchld_t	*pp = (Namchld_t*)fp;
-	char		*cp;
+	char		*cp, *sub;
 	Namval_t	*tp = sh.last_table;
+	Namval_t	*nq = pp->ptype->np;
+	Namarr_t	*ap;
 	if(nv_isattr(np,NV_REF|NV_TAGGED)==(NV_REF|NV_TAGGED))
 		sh.last_table = 0;
-	cp = nv_name(pp->ptype->np);
-	sfprintf(sh.strbuf,"%s.%s",cp,np->nvname);
+	cp = nv_name(nq);
+	if((ap = nv_arrayptr(nq)) && !(ap->nelem&ARRAY_UNDEF) && (sub= nv_getsub(nq)))
+		sfprintf(sh.strbuf,"%s[%s].%s",cp,sub,np->nvname);
+	else
+		sfprintf(sh.strbuf,"%s.%s",cp,np->nvname);
 	sh.last_table = tp;
 	return(sfstruse(sh.strbuf));
 }
@@ -302,7 +307,10 @@ static int fixnode(Namtype_t *dp, Namtype_t *pp, int i, struct Namref *nrp,int f
 			if(nv_isarray(nq))
 				nq->nvalue.cp = 0;
 			nq->nvfun = 0;
-			clone_all_disc(np,nq,flag);
+			if(nv_isarray(nq) && nv_type(np))
+				clone_all_disc(np,nq,flag&~NV_TYPE);
+			else
+				clone_all_disc(np,nq,flag);
 			if(fp)
 				nv_disc(np, fp, NV_LAST);
 		}
@@ -495,35 +503,6 @@ static Namval_t *create_type(Namval_t *np,const char *name,int flag,Namfun_t *fp
 		{
 			while(nv_isref(nq))
 				nq = nq->nvalue.nrp->np;
-			if(name[n]=='[' && nv_type(nq))
-			{
-				char		*sub;
-				Namval_t	*nr;
-				int m = (flag&NV_NOADD)?0:NV_ADD;
-				m |= (flag&NV_ASSIGN);
-				cp = nv_endsubscript(nq,(char*)cp-1,m);
-				if(!(sub = nv_getsub(nq)) || strcmp(sub,"0")==0)
-				{
-					name = memcpy((char*)cp-n,name,n);
-					while((n=*cp++) && n != '=' && n != '+' && n!='[');
-					n = (cp-1) -name;
-					continue;
-				}
-				if(!(nr = nv_opensub(nq)))
-				{
-					Namarr_t *ap = nv_arrayptr(nq);
-					if(ap && !ap->table)
-						ap->table = dtopen(&_Nvdisc,Dtoset);
-					if(ap && ap->table && (nr=nv_search(sub,ap->table,m)))
-						nr->nvenv = (char*)nq;
-					if(nq && nv_isnull(nr))
-					{
-						nr = nv_arraychild(nq,nr,'t');
-					}
-				}
-				nq = nr;
-				n = cp -name;
-			}
 			goto found;
 		}
 	}
@@ -587,7 +566,12 @@ static Namval_t *next_type(register Namval_t* np, Dt_t *root,Namfun_t *fp)
 {
 	Namtype_t	*dp = (Namtype_t*)fp;
 	if(!root)
+	{
+		Namarr_t	*ap = nv_arrayptr(np);
+		if(ap && (ap->nelem&ARRAY_UNDEF))
+			nv_putsub(np,(char*)0,ARRAY_SCAN);
 		dp->current = 0;
+	}
 	else if(++dp->current>=dp->numnodes)
 		return(0);
 	return(nv_namptr(dp->nodes,dp->current));
@@ -875,7 +859,7 @@ Namval_t *nv_mktype(Namval_t **nodes, int numnodes)
 		if(name && memcmp(&name[m],&np->nvname[m],n)==0 && np->nvname[m+n]=='.')
 			offset -= sizeof(char*);
 		dsize = datasize(np,&offset);
-		if(dp = (Namtype_t*)nv_hasdisc(np, &type_disc))
+		if(!nv_isarray(np) && (dp=(Namtype_t*)nv_hasdisc(np, &type_disc)))
 		{
 			nnodes += dp->numnodes;
 			if((n=dp->strsize)<0)
@@ -1060,13 +1044,13 @@ Namval_t *nv_mktype(Namval_t **nodes, int numnodes)
 			 * If field is a type, mark the type by setting
 			 * strsize<0.  This changes create_type()
 			 */
-#if 1
-			if(nv_isarray(np))
-				errormsg(SH_DICT,ERROR_exit(1),"%s: A type definition cannot contain an array of a type in this release", mp->nvname);
 			clone_all_disc(np,nq,NV_RDONLY);
-#else
-			clone_all_disc(nv_type(np),nq,NV_RDONLY);
-#endif
+			if(nv_isarray(np))
+			{
+				nv_disc(nq, &pp->childfun.fun, NV_LAST);
+				k++;
+				goto skip;
+			}
 			if(fp=nv_hasdisc(nq,&chtype_disc))
 				nv_disc(nq, &pp->childfun.fun, NV_LAST);
 			if(tp = (Namtype_t*)nv_hasdisc(nq, &type_disc))
@@ -1290,6 +1274,7 @@ int nv_settype(Namval_t* np, Namval_t *tp, int flags)
 	int		rdonly = nv_isattr(np,NV_RDONLY);
 	char		*val=0;
 	Namarr_t	*ap=0;
+	int		nelem=0;
 #if SHOPT_TYPEDEF
 	Namval_t	*tq;
 	if(nv_type(np)==tp)
@@ -1317,6 +1302,7 @@ int nv_settype(Namval_t* np, Namval_t *tp, int flags)
 		{
 			nv_putsub(np,"0",ARRAY_FILL);
 			ap = nv_arrayptr(np);
+			nelem = 1;
 		
 		}
 	}
@@ -1348,6 +1334,13 @@ int nv_settype(Namval_t* np, Namval_t *tp, int flags)
 		nv_disc(np, &ap->hdr, NV_FIRST);
 		ap->hdr.nofree = nofree;
 		nv_onattr(np,NV_ARRAY);
+		if(nelem)
+		{
+			ap->nelem++;
+			nv_putsub(np,"0",0);
+			_nv_unset(np,NV_RDONLY);
+			ap->nelem--;
+		}
 	}
 	type_init(np);
 	if(!rdonly)

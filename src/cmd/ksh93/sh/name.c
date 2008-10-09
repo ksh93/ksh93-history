@@ -358,7 +358,7 @@ void nv_setlist(register struct argnod *arg,register int flags)
 						nv_close(np);
 					}
 				}
-				np = nv_open(cp,shp->var_tree,flag);
+				np = nv_open(cp,shp->var_tree,flag|NV_ASSIGN);
 				if((flags&NV_STATIC) && !nv_isnull(np))
 #if SHOPT_TYPEDEF
 					goto check_type;
@@ -876,11 +876,13 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 						}
 						if((n&NV_ADD)&&(flags&NV_ARRAY))
 							n |= ARRAY_FILL;
+						if(flags&NV_ASSIGN)
+							n |= NV_ADD;
 						cp = nv_endsubscript(np,sp,n|(flags&NV_ASSIGN));
 					}
 					else
 						cp = sp;
-					if((c = *cp)=='.' || (c=='[' && nv_isarray(np)) || (n&ARRAY_FILL))
+					if((c = *cp)=='.' || (c=='[' && nv_isarray(np)) || (n&ARRAY_FILL) || (flags&NV_ARRAY))
 
 					{
 						int m = cp-sp;
@@ -984,7 +986,6 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 						return(np);
 					nv_putsub(np,NIL(char*),ARRAY_UNDEF);
 				}
-			again:
 				if(c=='.' && (fp=np->nvfun))
 				{
 					for(; fp; fp=fp->next)
@@ -1001,9 +1002,7 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 						}
 						else if(np=nq)
 						{
-							if((c = *(sp=cp=dp->last=fp->last))=='.')
-								goto again;
-							else if(c==0)
+							if((c = *(sp=cp=dp->last=fp->last))==0)
 							{
 								if(nv_isarray(np) && sp[-1]!=']')
 									nv_putsub(np,NIL(char*),ARRAY_UNDEF);

@@ -1097,6 +1097,8 @@ void	ed_putchar(register Edit_t *ep,register int c)
 	char buf[8];
 	register char *dp = ep->e_outptr;
 	register int i,size=1;
+	if(!dp)
+		return;
 	buf[0] = c;
 #if SHOPT_MULTIBYTE
 	/* check for place holder */

@@ -1238,7 +1238,7 @@ static void exscript(Shell_t *shp,register char *path,register char *argv[],char
 	SHACCT = getenv("SHACCT");
     }
     /*
-    * suspend accounting unitl turned on by sh_accbegin()
+    * suspend accounting until turned on by sh_accbegin()
     */
     void sh_accsusp(void)
     {

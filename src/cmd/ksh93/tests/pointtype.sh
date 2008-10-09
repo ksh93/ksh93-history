@@ -91,4 +91,55 @@ typeset -T Pt_t=(
 Pt_t p
 [[ ${p.y} == 6 ]] || err_exit '${p.y} != 6'
 (( p.len == 7 )) || err_exit '((p.len !=7))'
+
+z=()
+Pt_t -a z.p
+z.p[1]=(y=2)
+z.p[2]=(y=5)
+z.p[3]=(x=6 y=4)
+eval y="$z"
+[[ $y == "$z" ]] || err_exit 'expansion of indexed array of types is incorrect'
+eval "$(typeset -p y)"
+[[ $y == "$z" ]] || err_exit 'typeset -p z for indexed array of types is incorrect'
+unset z y
+z=()
+Pt_t -A z.p
+z.p[1]=(y=2)
+z.p[2]=(y=5)
+z.p[3]=(x=6 y=4)
+eval y="$z"
+[[ $y == "$z" ]] || err_exit 'expansion of associative array of types is incorrect'
+eval "$(typeset -p y)"
+[[ $y == "$z" ]] || err_exit 'typeset -p z for associative of types is incorrect'
+unset z y
+
+typeset -T A_t=(
+        Pt_t  -a  b
+)
+typeset -T B_t=(
+        Pt_t  -A  b
+)
+A_t r
+r.b[1]=(y=2)
+r.b[2]=(y=5)
+eval s="$r"
+[[ $r == "$s" ]] || err_exit 'expansion of type containing index array of types is incorrect'
+eval "$(typeset -p s)"
+[[ $y == "$z" ]] || err_exit 'typeset -p z for type containing index of types is incorrect'
+unset r s
+B_t r
+r.b[1]=(y=2)
+r.b[2]=(y=5)
+eval s="$r"
+[[ $r == "$s" ]] || err_exit 'expansion of type containing index array of types is incorrect'
+eval "$(typeset -p s)"
+[[ $y == "$z" ]] || err_exit 'typeset -p z for type containing index of types is incorrect'
+unset r s
+exit
+
+
+
+typeset -C z=(Pt_t -A p=( [1]=(typeset -l -E x=1;typeset -l -E y=2;)[2]=(typeset -l -E x=1;typeset -l -E y=5;)[3]=(typeset -l -E x=6;typeset -l -E y=4;));)
+
+print z="$z"
 exit $Errors
