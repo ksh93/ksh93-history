@@ -27,6 +27,9 @@ alias err_exit='err_exit $LINENO'
 
 Command=${0##*/}
 integer Errors=0
+
+unset HISTFILE
+
 if	[[ $( ${SHELL-ksh} -s hello<<-\!
 		print $1
 		!

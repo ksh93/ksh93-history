@@ -626,7 +626,7 @@ static struct index_array *array_grow(Namval_t *np, register struct index_array 
 		errormsg(SH_DICT,ERROR_exit(1),e_subscript, fmtbase((long)maxi,10,0));
 	i = (newsize-1)*sizeof(union Value*)+newsize;
 	ap = new_of(struct index_array,i);
-	memset((void*)ap,0,sizeof(*ap));
+	memset((void*)ap,0,sizeof(*ap)+i);
 	ap->maxi = newsize;
 	ap->cur = maxi;
 	ap->bits =  (unsigned char*)&ap->val[newsize];

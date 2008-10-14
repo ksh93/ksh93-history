@@ -1229,7 +1229,7 @@ prev ${PACKAGE_ast_INCLUDE}/ast_standards.h implicit
 done data/strdata.c
 meta strdata.o %.c>%.o data/strdata.c strdata
 prev data/strdata.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_PFSH  -c data/strdata.c
+exec - ${CC} ${mam_cc_FLAGS} ${-debug-symbols?1?${mam_cc_DEBUG} -D_BLD_DEBUG?${CCFLAGS.FORCE}?} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_PFSH  -c data/strdata.c
 done strdata.o generated
 make testops.o
 make data/testops.c

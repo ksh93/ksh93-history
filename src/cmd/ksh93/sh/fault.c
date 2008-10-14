@@ -545,7 +545,8 @@ void sh_exit(register int xno)
 #endif /* SHOPT_TYPEDEF*/
 	if(pp->mode == SH_JMPSCRIPT && !pp->prev) 
 		sh_done(shp,sig);
-	siglongjmp(pp->buff,pp->mode);
+	if(pp->mode)
+		siglongjmp(pp->buff,pp->mode);
 }
 
 static void array_notify(Namval_t *np, void *data)

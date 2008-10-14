@@ -27,7 +27,9 @@ alias err_exit='err_exit $LINENO'
 
 Command=${0##*/}
 integer Errors=0
-# cut here
+
+unset HISTFILE
+
 function fun
 {
 	while  command exec 3>&1 
@@ -277,4 +279,94 @@ fi
 if	! $SHELL -c "sed -e 's/hello/hello world/' /tmp/io.sh$$.1" >; /tmp/io.sh$$.1  2> /dev/null
 then	[[ $(</tmp/io.sh$$.1) == 'hello world' ]] || err_exit '>; not updating file on success'
 fi
+
+unset y
+read -n1 y <<!
+abc
+!
+if      [[ $y != a ]]
+then    err_exit  'read -n1 not working'
+fi
+unset a
+{ read -N3 a; read -N1 b;}  <<!
+abcdefg
+!
+[[ $a == abc ]] || err_exit 'read -N3 here-document not working'
+[[ $b == d ]] || err_exit 'read -N1 here-document not working'
+read -n3 a <<!
+abcdefg
+!
+[[ $a == abc ]] || err_exit 'read -n3 here-document not working'
+(print -n a;sleep 1; print -n bcde) | { read -N3 a; read -N1 b;}
+[[ $a == abc ]] || err_exit 'read -N3 from pipe not working'
+[[ $b == d ]] || err_exit 'read -N1 from pipe not working'
+(print -n a;sleep 1; print -n bcde) |read -n3 a
+[[ $a == a ]] || err_exit 'read -n3 from pipe not working'
+rm -f /tmp/fifo$$
+if	mkfifo /tmp/fifo$$ 2> /dev/null
+then	(print -n a; sleep 1;print -n bcde)  > /tmp/fifo$$ &
+	{
+	read -u5 -n3  -t2 a  || err_exit 'read -n3 from fifo timedout'
+	read -u5 -n1 -t2 b || err_exit 'read -n1 from fifo timedout'
+	} 5< /tmp/fifo$$
+	[[ $a == a ]] || err_exit 'read -n3 from fifo not working'
+	rm -f /tmp/fifo$$
+	mkfifo /tmp/fifo$$ 2> /dev/null
+	(print -n a; sleep 1;print -n bcde)  > /tmp/fifo$$ &
+	{
+	read -u5 -N3 -t2 a || err_exit 'read -N3 from fifo timed out'
+	read -u5 -N1 -t2 b || err_exit 'read -N1 from fifo timedout'
+	} 5< /tmp/fifo$$
+	[[ $a == abc ]] || err_exit 'read -N3 from fifo not working'
+	[[ $b == d ]] || err_exit 'read -N1 from fifo not working'
+fi
+rm -f /tmp/fifo$$
+
+if	$SHELL -c "export LC_ALL=en_US.UTF-8; c=$'\342\202\254'; [[ \${#c} == 1 ]]" 2>/dev/null
+then	lc_utf8=en_US.UTF-8
+else	lc_utf8=''
+fi
+
+typeset -a e o=(-n2 -N2)
+integer i
+set -- \
+	'a'	'bcd'	'a bcd'	'ab cd' \
+	'ab'	'cd'	'ab cd'	'ab cd' \
+	'abc'	'd'	'ab cd'	'ab cd' \
+	'abcd'	''	'ab cd'	'ab cd'
+while	(( $# >= 3 ))
+do	a=$1
+	b=$2
+	e[0]=$3
+	e[1]=$4
+	shift 4
+	for ((i = 0; i < 2; i++))
+	do	for lc_all in C $lc_utf8
+		do	g=$(LC_ALL=$lc_all $SHELL -c "{ print -n '$a'; sleep 0.2; print -n '$b'; sleep 0.2; } | { read ${o[i]} a; print -n \$a; read a; print -n \ \$a; }")
+			[[ $g == "${e[i]}" ]] || err_exit "LC_ALL=$lc_all read ${o[i]} from pipe '$a $b' failed -- expected '${e[i]}', got '$g'"
+		done
+	done
+done
+
+if	[[ $lc_utf8 ]]
+then	export LC_ALL=en_US.UTF-8
+	typeset -a c=( '' 'A' $'\303\274' $'\342\202\254' )
+	integer i w
+	typeset o
+	if	(( ${#c[2]} == 1 && ${#c[3]} == 1 ))
+	then	for i in 1 2 3
+		do	for o in n N
+			do	for w in 1 2 3
+				do	print -nr "${c[w]}" | read -${o}${i} g
+					if	[[ $o == N ]] && (( i > 1 ))
+					then	e=''
+					else	e=${c[w]}
+					fi
+					[[ $g == "$e" ]] || err_exit "read -${o}${i} failed for '${c[w]}' -- expected '$e', got '$g'"
+				done
+			done
+		done
+	fi
+fi
+
 exit $((Errors))

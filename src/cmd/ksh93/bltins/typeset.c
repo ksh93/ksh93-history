@@ -652,6 +652,8 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 	}
 	else if(!tp->sh->envlist)
 	{
+		if(shp->prefix)
+			errormsg(SH_DICT,2, "%s: compound assignment requires sub-variable name",shp->prefix);
 		if(tp->aflag)
 		{
 			if(troot==shp->fun_tree)

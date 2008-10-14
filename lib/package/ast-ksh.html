@@ -193,16 +193,46 @@ All recorded changes follow.
 <P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="ksh93 changes">ksh93 changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
-08-09-21  --- Release ksh93t  ---
+08-10-10  --- Release ksh93t  ---
+08-10-10  read -n and -N fixed to count characters in multibyte locales.
+08-10-10  A bug that mishandled _.array&#0091;&#0093; type references has been fixed.
+08-10-09  ${.sh.version} now contains a catenation of the following (after
+	  'Version') denoting compile time features:
+		A	SHOPT_AUDIT
+		B	SHOPT_BASH
+		L	SHOPT_ACCT
+		M	SHOPT_MULTIBYTE
+08-10-09  A bug that caused subshell command substitution with redirection
+	  to hang has been fixed.
+08-10-08  Output errors, other than to stderr, now result in a diagnostic.
+08-10-08  ksh93 now supports types that contain arrays of other types as
+	  members.  Earlier versions core dumped in this case.
+08-10-05  A bug which caused the shell to emit a syntax error for an arithmetic
+	  statement of the form (( var.name&#0091;sub&#0093; = value)) has been fixed.
+08-10-01  A bug that caused subshell command substitution to hang has
+	  been fixed.
+08-09-29  When the -p export option of typeset is used with other options,
+	  only those variables matching the specified options are displayed.
+08-09-29  When the shell reads the environment and finds variables that are
+	  not valid shell assignments, it now passes these on to subsequent
+	  commands rather than deleting them.
+08-09-29  A bug in the display of compound variables containing an indexed
+	  array of compound variables has been fixed.
+08-09-29  A bug in the display of compound variables containing an associative
+	  array with a subscript containing a . in the name has been fixed.
+08-09-26  A core dump in the subshell environment restore has been fixed.
+08-09-24  $(...) has been fixed to properly set the exit status in $?.
+08-09-23  $(&lt;...) with IFS=$'n' has been fixed to retain all but the last
+	  of multiple trailing newlines.
+08-09-23  The -p option to typeset when used with other attributes, restricts
+	  the output to variables with the specified attributes.
+08-09-22  A bug that sometimes lost the exit status of a job has been fixed.
 08-09-21  A bug that retained trailing command substitution newlines in
 	  cases where the command caused the shell to fork has been fixed.
 08-09-19  type, whence -v, and command -v were fixed to comply with POSIX
 	  by writing 'not found' diagnostics to the standard error.
 08-09-18  test and &#0091;...&#0093; were fixed to comply with POSIX in the case
 	  of test '(' binop ')' where binop is a valid binary test operator.
-08-09-17  The exit status for the command `false` is now 0 as required by
-	  the standard since command subsitution of command args should not
-	  affect the exit status.
 08-09-16  If a method discipline named create is specified when defining a
 	  type, this function will be called when an instance is created.
 08-09-15  The variable _ is now set as a reference to the compound variable
@@ -229,7 +259,7 @@ All recorded changes follow.
 	  the sub-variables has been fixed.
 08-09-01  A bug in the subshell cleanup code that could cause SIGSEGV has
 	  been fixed.
-06-08-26  The SHLV variable which is an environment variable used by bash
+06-08-26  The SHLVL variable which is an environment variable used by bash
           and zsh that gets incremented when the shell starts.
 08-08-25  For an indexed array, a negative subscript now refers to offsets
 	  from the end so that -1 refers to the last element.
@@ -3900,7 +3930,7 @@ All recorded changes follow.
 <TR>
 <TD align=left></TD>
 <TD align=center></TD>
-<TD align=right>September 21, 2008</TD>
+<TD align=right>October 14, 2008</TD>
 </TR>
 </TABLE>
 <P>

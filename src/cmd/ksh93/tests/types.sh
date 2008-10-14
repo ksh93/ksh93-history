@@ -51,9 +51,9 @@ do
 	[[ $y == "${s.y}" ]] || err_exit 'y is not equal to s.y'
 	.sh.q=$y
 	typeset -C www=.sh.q
-	[[ $www == "$z" ]] ||  err_exit 'www is not equal to z'
+	[[ $www == "$z" ]] || err_exit 'www is not equal to z'
 	typeset -C s.x=r.x
-	[[ ${s.x} == "${r.x}" ]] ||  err_exit 's.x is not equal to r.x'
+	[[ ${s.x} == "${r.x}" ]] || err_exit 's.x is not equal to r.x'
 
 	function foo
 	{
@@ -62,7 +62,7 @@ do
 		y=$x
 		[[ $x == "$y" ]] || err_exit "x is not equal to y with ${!x}"
 	}
-	foo  r.y y  
+	foo r.y y
 	[[ $y == "${r.y}" ]] || err_exit 'y is not equal to r.y'
 	typeset -C y=z
 	foo y r.y
@@ -70,27 +70,27 @@ do
 	typeset -C y=z
 	(
 		q=${z}
-		[[ $q == "$z" ]] ||  err_exit 'q is not equal to z'
+		[[ $q == "$z" ]] || err_exit 'q is not equal to z'
 		z=abc
 	)
 	[[ $z == "$y" ]] || err_exit 'value of z not preserved after subshell'
-	unset z y r s x  z2 y2 www .sh.q
+	unset z y r s x z2 y2 www .sh.q
 done
 typeset -T Frame_t=( typeset file lineno )
 Frame_t frame
-[[ $(typeset -p frame) == 'Frame_t frame=(typeset file;typeset lineno;)' ]] || err_exit  'empty fields in type not displayed'
+[[ $(typeset -p frame) == 'Frame_t frame=(typeset file;typeset lineno;)' ]] || err_exit 'empty fields in type not displayed'
 x=( typeset -a arr=([2]=abc [4]=(x=1 y=def));zz=abc)
 typeset -C y=x
-[[  "$x" == "$y" ]] || print -u2 'y is not equal to x'
+[[ "$x" == "$y" ]] || print -u2 'y is not equal to x'
 Type_t z=(y=(xa=bb xq=cc))
 typeset -A arr=([foo]=one [bar]=2)
 typeset -A brr=([foo]=one [bar]=2)
 [[ "${arr[@]}" == "${brr[@]}" ]] || err_exit 'arr is not brr'
 for ((i=0; i < 1; i++))
 do	typeset -m zzz=x
-	[[ $zzz == "$y" ]] || err_exit 'zzz is not equal to y' 
+	[[ $zzz == "$y" ]] || err_exit 'zzz is not equal to y'
 	typeset -m x=zzz
-	[[ $x == "$y" ]] || err_exit 'x is not equal to y' 
+	[[ $x == "$y" ]] || err_exit 'x is not equal to y'
 	Type_t t=(y=(xa=bb xq=cc))
 	typeset -m r=t
 	[[ $r == "$z" ]] || err_exit 'r is not equal to z'
@@ -115,9 +115,11 @@ cat > /tmp/kshtype$$ <<- \+++
 	Pt_t p=(y=2)
 	print -r -- ${p.y}
 +++
-[[ $(. /tmp/kshtype$$) == 2 ]] 2> /dev/null || err_exit 'typedefs in dot script not working'
+expected=2
+got=$(. /tmp/kshtype$$) 2>/dev/null
+[[ "$got" == "$expected" ]] || err_exit "typedefs in dot script failed -- expected '$expected', got '$got'"
 typeset -T X_t=(
-	typeset x=foo  y=bar
+	typeset x=foo y=bar
 	typeset s=${_.x}
 	create()
 	{
@@ -187,12 +189,51 @@ var=(
 (( var.z == 5)) || err_exit 'var.z !=5'
 [[ "$var" == *x=foobar* ]] || err_exit '$var does not contain x=foobar'
 
-exit $Errors # until ksh93t+
+typeset -T A_t=(
+	typeset x=aha
+	typeset b=${_.x}
+)
+unset x
+A_t x
+expected=aha
+got=${x.b}
+[[ "$got" == "$expected" ]] || err_exit "type '_' reference failed -- expected '$expected', got '$got'"
+
+typeset -T Tst_t=(
+	 function f
+	 {
+	 	A_t a
+	 	print ${ _.g ${a.x}; }
+	 }
+	 function g
+	 {
+	 	print foo
+	 }
+)
+Tst_t tst
+expected=foo
+got=${ tst.f;}
+[[ "$got" == "$expected" ]] || err_exit "_.g where g is a function in type discipline method failed -- expected '$expected', got '$got'"
+
+typeset -T B_t=(
+	integer -a arr
+	function f
+	{
+		(( _.arr[0] = 0 ))
+		(( _.arr[1] = 1 ))
+		print ${_.arr[*]}
+	}
+)
+unset x
+B_t x
+expected='0 1'
+got=${ x.f;}
+[[ "$got" == "$expected" ]] || err_exit "array assignment of subscripts in type discipline arithmetic failed -- expected '$expected', got '$got'"
 
 typeset -T Fileinfo_t=(
-    size=-1
-    typeset -a text=()
-    integer mtime=-1
+	size=-1
+	typeset -a text=()
+	integer mtime=-1
 )
 Fileinfo_t -A _Dbg_filenames
 Fileinfo_t finfo

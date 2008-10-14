@@ -198,6 +198,7 @@ typedef struct Sha1_s
 {
 	_SUM_LMD_
 	SHA1_CTX	context;
+	unsigned char	pad[1024];	/* XXX: who's bug is it? */
 } Sha1_t;
 
 static Sum_t*

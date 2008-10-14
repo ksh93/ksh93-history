@@ -1,4 +1,6 @@
-08-10-09  --- Release ksh93t  ---
+08-10-10  --- Release ksh93t  ---
+08-10-10  read -n and -N fixed to count characters in multibyte locales.
+08-10-10  A bug that mishandled _.array[] type references has been fixed.
 08-10-09  ${.sh.version} now contains a catenation of the following (after
 	  'Version') denoting compile time features:
 		A	SHOPT_AUDIT

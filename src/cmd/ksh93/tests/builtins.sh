@@ -298,12 +298,6 @@ print $'line1\nline2' | behead
 if	[[ $left != line2 ]]
 then	err_exit  "read reading ahead on a pipe"
 fi
-read -n1 y <<!
-abc
-!
-if      [[ $y != a ]]
-then    err_exit  'read -n1 not working'
-fi
 print -n $'{ read -r line;print $line;}\nhello' > /tmp/ksh$$
 chmod 755 /tmp/ksh$$
 trap 'rm -rf /tmp/ksh$$' EXIT
@@ -404,40 +398,6 @@ do	case $opt in
 	*)	err_exit "getopts $options failed -- got flag $opt" ;;
 	esac
 done
-unset a
-{ read -N3 a; read -N1 b;}  <<!
-abcdefg
-!
-[[ $a == abc ]] || err_exit 'read -N3 here-document not working'
-[[ $b == d ]] || err_exit 'read -N1 here-document not working'
-read -n3 a <<!
-abcdefg
-!
-[[ $a == abc ]] || err_exit 'read -n3 here-document not working'
-(print -n a;sleep 1; print -n bcde) | { read -N3 a; read -N1 b;}
-[[ $a == abc ]] || err_exit 'read -N3 from pipe not working'
-[[ $b == d ]] || err_exit 'read -N1 from pipe not working'
-(print -n a;sleep 1; print -n bcde) |read -n3 a
-[[ $a == a ]] || err_exit 'read -n3 from pipe not working'
-rm -f /tmp/fifo$$
-if	mkfifo /tmp/fifo$$ 2> /dev/null
-then	(print -n a; sleep 1;print -n bcde)  > /tmp/fifo$$ &
-	{
-	read -u5 -n3  -t2 a  || err_exit 'read -n3 from fifo timedout'
-	read -u5 -n1 -t2 b || err_exit 'read -n1 from fifo timedout'
-	} 5< /tmp/fifo$$
-	[[ $a == a ]] || err_exit 'read -n3 from fifo not working'
-	rm -f /tmp/fifo$$
-	mkfifo /tmp/fifo$$ 2> /dev/null
-	(print -n a; sleep 1;print -n bcde)  > /tmp/fifo$$ &
-	{
-	read -u5 -N3 -t2 a || err_exit 'read -N3 from fifo timed out'
-	read -u5 -N1 -t2 b || err_exit 'read -N1 from fifo timedout'
-	} 5< /tmp/fifo$$
-	[[ $a == abc ]] || err_exit 'read -N3 from fifo not working'
-	[[ $b == d ]] || err_exit 'read -N1 from fifo not working'
-fi
-rm -f /tmp/fifo$$
 function longline
 {
 	integer i

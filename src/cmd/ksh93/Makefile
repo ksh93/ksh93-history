@@ -159,7 +159,7 @@ shell $(VERSION) :LIBRARY: shell.3 nval.3 alarm.c cd_pwd.c cflow.c deparse.c \
 	-lcmd -last -lm
 
 "sol*.i386*"	:NOOPTIMIZE: main.c
-"win32*"	:NOOPTIMIZE: trestore.c
+"win32*"	:NOOPTIMIZE: strdata.c trestore.c
 
 if CC.HOSTTYPE == "win32*"
 :DLL: $(CC.DEBUG)

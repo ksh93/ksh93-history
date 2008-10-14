@@ -422,12 +422,23 @@ void sh_ioinit(Shell_t *shp)
  */
 static int outexcept(register Sfio_t *iop,int type,void *data,Sfdisc_t *handle)
 {
+	static int	active = 0;
+
 	NOT_USED(handle);
 	if(type==SF_DPOP || type==SF_FINAL)
 		free((void*)handle);
 	else if(type==SF_WRITE && ((ssize_t)data)<0 && errno!=EINTR && sffileno(iop)!=2)
 	{
-		errormsg(SH_DICT,ERROR_system(1),e_badwrite,sffileno(iop));
+		if(!active)
+		{
+			int mode = ((struct checkpt*)sh.jmplist)->mode;
+			((struct checkpt*)sh.jmplist)->mode = 0;
+			active = 1;
+			errormsg(SH_DICT,ERROR_system(1),e_badwrite,sffileno(iop));
+			active = 0;
+			((struct checkpt*)sh.jmplist)->mode = mode;
+			sh_exit(1);
+		}
 		return(-1);
 	}
 	return(0);

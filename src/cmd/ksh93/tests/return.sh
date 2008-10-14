@@ -26,9 +26,11 @@ function err_exit
 	let Errors+=1
 }
 alias err_exit='err_exit $LINENO'
-
 Command=${0##*/}
 integer Errors=0
+
+unset HISTFILE
+
 foo=NOVAL bar=NOVAL
 file=/tmp/shtest$$
 trap "rm -f $file" EXIT INT

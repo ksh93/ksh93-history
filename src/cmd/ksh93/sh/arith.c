@@ -65,20 +65,21 @@ static Namval_t *scope(Shell_t *shp,register Namval_t *np,register struct lval *
 	register Namval_t *mp;
 	int	flags = HASH_NOSCOPE|HASH_SCOPE|HASH_BUCKET;
 	Dt_t	*sdict = (shp->st.real_fun? shp->st.real_fun->sdict:0);
+	assign = assign?NV_ASSIGN:NV_NOASSIGN;
 	if(cp>=lvalue->expr &&  cp < lvalue->expr+lvalue->elen)
 	{
 		int offset;
 		/* do binding to node now */
 		int c = cp[flag];
 		cp[flag] = 0;
-		if((!(np = nv_open(cp,shp->var_tree,NV_NOASSIGN|NV_VARNAME|NV_NOADD|NV_NOFAIL)) || nv_isnull(np)) && sh_macfun(shp,cp, offset = staktell()))
+		if((!(np = nv_open(cp,shp->var_tree,assign|NV_VARNAME|NV_NOADD|NV_NOFAIL)) || nv_isnull(np)) && sh_macfun(shp,cp, offset = staktell()))
 		{
 			Fun = sh_arith(sub=stakptr(offset));
 			FunNode.nvalue.ldp = &Fun;
 			cp[flag] = c;
 			return(&FunNode);
 		}
-		np = nv_open(cp,shp->var_tree,NV_NOASSIGN|NV_VARNAME);
+		np = nv_open(cp,shp->var_tree,assign|NV_VARNAME);
 		cp[flag] = c;
 		if(cp[flag+1]=='[')
 			flag++;

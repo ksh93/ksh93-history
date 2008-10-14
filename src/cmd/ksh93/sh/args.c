@@ -764,6 +764,7 @@ char **sh_argbuild(Shell_t *shp,int *nargs, const struct comnod *comptr,int flag
 				comargm = comargn;
 			}
 		}
+		shp->last_table = 0;
 		return(comargn);
 	}
 }
