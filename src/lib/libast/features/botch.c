@@ -30,7 +30,7 @@
 #include <sys/types.h>
 
 #include "FEATURE/lib"
-#include "FEATURE/types"
+#include "FEATURE/sys"
 
 #if _lib_getgroups
 extern int		getgroups(int, gid_t*);

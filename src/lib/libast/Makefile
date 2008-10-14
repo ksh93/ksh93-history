@@ -43,7 +43,7 @@ HEADERGEN = align.h preroot.h sig.h tmx.h tv.h \
 	$(ID)_botch.h $(ID)_ccode.h $(ID)_fcntl.h $(ID)_float.h $(ID)_fs.h \
 	$(ID)_lib.h $(ID)_map.h $(ID)_mmap.h $(ID)_mode.h $(ID)_ndbm.h \
 	$(ID)_param.h $(ID)_sys.h $(ID)_time.h $(ID)_time.h $(ID)_tty.h \
-	$(ID)_types.h $(ID)_vfork.h $(ID)_wait.h $(ID)_limits.h $(ID)_standards.h \
+	$(ID)_vfork.h $(ID)_wait.h $(ID)_limits.h $(ID)_standards.h \
 	$(HEADERSTD:/^/$(ID)_/)
 
 HEADEREXP = $(ID)_common.h

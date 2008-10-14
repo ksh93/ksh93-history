@@ -82,24 +82,6 @@ struct print
 
 static char* 	nullarg[] = { 0, 0 };
 
-/*
- * Need to handle write failures to avoid locking output pool
- */
-static int outexceptf(Sfio_t* iop, int mode, void* data, Sfdisc_t* dp)
-{
-	if(mode==SF_DPOP || mode==SF_FINAL)
-		free((void*)dp);
-	else if(mode==SF_WRITE && (errno!= EINTR || sh.trapnote))
-	{
-		int save = errno;
-		sfpurge(iop);
-		sfpool(iop,NIL(Sfio_t*),SF_WRITE);
-		errno = save;
-		errormsg(SH_DICT,ERROR_system(1),e_badwrite,sffileno(iop));
-	}
-	return(0);
-}
-
 #if !SHOPT_ECHOPRINT
    int    B_echo(int argc, char *argv[],void *extra)
    {
@@ -282,20 +264,11 @@ skip2:
 	}
 	if(!(outfile=shp->sftable[fd]))
 	{
-		Sfdisc_t *dp;
 		sh_onstate(SH_NOTRACK);
 		n = SF_WRITE|((n&IOREAD)?SF_READ:0);
 		shp->sftable[fd] = outfile = sfnew(NIL(Sfio_t*),shp->outbuff,IOBSIZE,fd,n);
 		sh_offstate(SH_NOTRACK);
 		sfpool(outfile,shp->outpool,SF_WRITE);
-		if(dp = new_of(Sfdisc_t,0))
-		{
-			dp->exceptf = outexceptf;
-			dp->seekf = 0;
-			dp->writef = 0;
-			dp->readf = 0;
-			sfdisc(outfile,dp);
-		}
 	}
 	/* turn off share to guarantee atomic writes for printf */
 	n = sfset(outfile,SF_SHARE|SF_PUBLIC,0);

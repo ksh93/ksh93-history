@@ -427,13 +427,17 @@ static int outexcept(register Sfio_t *iop,int type,void *data,Sfdisc_t *handle)
 	NOT_USED(handle);
 	if(type==SF_DPOP || type==SF_FINAL)
 		free((void*)handle);
-	else if(type==SF_WRITE && ((ssize_t)data)<0 && errno!=EINTR && sffileno(iop)!=2)
+	else if(type==SF_WRITE && (*(ssize_t*)data)<0 && errno!=EINTR && errno!= EPIPE && sffileno(iop)!=2)
 	{
 		if(!active)
 		{
 			int mode = ((struct checkpt*)sh.jmplist)->mode;
-			((struct checkpt*)sh.jmplist)->mode = 0;
+			int save = errno;
 			active = 1;
+			((struct checkpt*)sh.jmplist)->mode = 0;
+			sfpurge(iop);
+			sfpool(iop,NIL(Sfio_t*),SF_WRITE);
+			errno = save;
 			errormsg(SH_DICT,ERROR_system(1),e_badwrite,sffileno(iop));
 			active = 0;
 			((struct checkpt*)sh.jmplist)->mode = mode;
@@ -1182,9 +1186,11 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 					if((off = file_offset(shp,fn,fname))<0)
 						goto fail;
 					if(sp)
-						r=sfseek(sp, off, SEEK_SET);
+						off=sfseek(sp, off, SEEK_SET);
 					else
-						r=lseek(fn, off, SEEK_SET);
+						off=lseek(fn, off, SEEK_SET);
+					if(off<0)
+						r = -1;
 				}
 				else
 				{

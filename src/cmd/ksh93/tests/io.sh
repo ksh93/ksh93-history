@@ -229,6 +229,7 @@ then	(( $(3<#) == 0 )) || err_exit "not at position 0"
 	read -u3 && err_exit "not found pattern not positioning at eof"
 	cat /tmp/seek$$ | read -r <# *WWW*
 	[[ $REPLY == *WWWWW* ]] || err_exit '<# not working for pipes'
+	{ < /tmp/seek$$ <# ((2358336120)) ;} 2> /dev/null || err_exit 'long seek not working'
 else	err_exit "/tmp/seek$$: cannot open for reading"
 fi
 command exec 3<&- || 'cannot close 3'

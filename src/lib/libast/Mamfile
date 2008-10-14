@@ -181,13 +181,17 @@ make ast_botch.h implicit
 make FEATURE/botch
 meta FEATURE/botch features/%.c>FEATURE/% features/botch.c botch
 make features/botch.c
-make FEATURE/types implicit
-meta FEATURE/types >FEATURE/%  types
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   def types
-done FEATURE/types generated
+make FEATURE/sys implicit
+meta FEATURE/sys features/%>FEATURE/% features/sys sys
+make features/sys
+done features/sys
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/sys
+prev std/endian.h implicit
+prev std/endian.h implicit
+done FEATURE/sys generated
 prev FEATURE/lib implicit
 done features/botch.c
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Istd  ${LDFLAGS} '   run features/botch.c
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd  ${LDFLAGS} '   run features/botch.c
 done FEATURE/botch generated
 exec - cmp 2>/dev/null -s FEATURE/botch ast_botch.h || { rm -f ast_botch.h; silent test -d . || mkdir .; ${STDCP} FEATURE/botch ast_botch.h; }
 done ast_botch.h dontcare generated
@@ -221,14 +225,7 @@ prev ast_fs.h implicit
 done ast_fcntl.h dontcare generated
 prev include/ast_getopt.h implicit
 make ast_sys.h implicit
-make FEATURE/sys
-meta FEATURE/sys features/%>FEATURE/% features/sys sys
-make features/sys
-done features/sys
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/sys
-prev std/endian.h implicit
-prev std/endian.h implicit
-done FEATURE/sys generated
+prev FEATURE/sys
 exec - cmp 2>/dev/null -s FEATURE/sys ast_sys.h || { rm -f ast_sys.h; silent test -d . || mkdir .; ${STDCP} FEATURE/sys ast_sys.h; }
 done ast_sys.h dontcare generated
 make ast_lib.h implicit
@@ -6917,17 +6914,6 @@ exec - then	rm -f 1.${COTEMP}.x
 exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_tty.h
 exec - fi
 done ${INSTALLROOT}/include/ast/ast_tty.h generated
-make ${INSTALLROOT}/include/ast/ast_types.h
-make ast_types.h
-prev FEATURE/types
-exec - cmp 2>/dev/null -s FEATURE/types ast_types.h || { rm -f ast_types.h; silent test -d . || mkdir .; ${STDCP} FEATURE/types ast_types.h; }
-done ast_types.h generated
-exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_types.h  > 1.${COTEMP}.x
-exec - if	cmp 2>/dev/null -s ${INSTALLROOT}/include/ast/ast_types.h 1.${COTEMP}.x
-exec - then	rm -f 1.${COTEMP}.x
-exec - else	mv 1.${COTEMP}.x ${INSTALLROOT}/include/ast/ast_types.h
-exec - fi
-done ${INSTALLROOT}/include/ast/ast_types.h generated
 make ${INSTALLROOT}/include/ast/ast_vfork.h
 prev ast_vfork.h
 exec - proto -p -s -l ${PACKAGEROOT}/lib/package/ast.lic '-o since=1985,author=gsf+dgk+kpv'  ast_vfork.h  > 1.${COTEMP}.x
