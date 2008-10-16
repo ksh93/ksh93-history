@@ -2,7 +2,7 @@
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)make.probe (AT&T Research) 2008-09-22
+# @(#)make.probe (AT&T Research) 2008-10-16
 #
 # C probe for make
 #
@@ -38,7 +38,7 @@ probe_shared_nostart="-nostartfiles"
 probe_shared_registry='"-update_registry $probe_shared_registry_file"'
 probe_shared_registry_file='registry.ld'
 probe_shared_registry_path="\$(LIBDIR)/$probe_shared_registry_file"
-probe_no_protect="-fno-stack-protector -GS-"
+probe_no_protect="'-fno-stack-protector -fno-stack-protector-all' -GS-"
 probe_strict="'-ansi -pedantic' '-ansi -strict' -strict -ansi"
 probe_stripflags="'-f -s' -f -s"
 probe_unresolved="'-expect_unresolved \"*\"'"

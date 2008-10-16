@@ -2905,20 +2905,14 @@ void nv_setref(register Namval_t *np, Dt_t *hp, int flags)
 		errormsg(SH_DICT,ERROR_exit(1),e_badref,nv_name(np));
 	if(!hp)
 		hp = shp->var_tree;
-	if(!(nr = nq = nv_open(cp, hp, flags|NV_NOREF|NV_NOSCOPE|NV_NOADD|NV_NOFAIL)))
+	if(!(nr = nq = nv_open(cp, hp, flags|NV_NOSCOPE|NV_NOADD|NV_NOFAIL)))
 		hp = shp->var_base;
 	else if(shp->last_root)
 		hp = shp->last_root;
 	if(nq && ep && nv_isarray(nq) && !nv_getsub(nq))
 		nv_endsubscript(nq,ep-1,NV_ADD);
 	if(!nr)
-		nr= nq = nv_open(cp, hp, flags|NV_NOREF);
-	while(nv_isref(nr))
-	{
-		shp->last_table = nv_reftable(nr);
-		hp = nv_reftree(nr);
-		nr = nv_refnode(nr);
-	}
+		nr= nq = nv_open(cp, hp, flags);
 	if(nr==np) 
 	{
 		if(shp->namespace && nv_dict(shp->namespace)==hp)

@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1992-2007 AT&T Knowledge Ventures            *
+*          Copyright (c) 1992-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                      by AT&T Knowledge Ventures                      *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: rm (AT&T Research) 2006-11-21 $\n]"
+"[-?\n@(#)$Id: rm (AT&T Research) 2008-10-15 $\n]"
 USAGE_LICENSE
 "[+NAME?rm - remove files]"
 "[+DESCRIPTION?\brm\b removes the named \afile\a arguments. By default it"
@@ -211,6 +211,8 @@ rm(State_t* state, register FTSENT* ent)
 				if ((ent->fts_info == FTS_DC || state->directory) ? remove(path) : rmdir(path))
 					switch (errno)
 					{
+					case ENOENT:
+						break;
 					case EEXIST:
 #if defined(ENOTEMPTY) && (ENOTEMPTY) != (EEXIST)
 					case ENOTEMPTY:
@@ -314,10 +316,17 @@ rm(State_t* state, register FTSENT* ent)
 		if (remove(path))
 		{
 			nonempty(ent);
-			if (!state->force || state->interactive)
-				error(ERROR_SYSTEM|2, "%s: not removed", ent->fts_path);
-			else
-				error_info.errors++;
+			switch (errno)
+			{
+			case ENOENT:
+				break;
+			default:
+				if (!state->force || state->interactive)
+					error(ERROR_SYSTEM|2, "%s: not removed", ent->fts_path);
+				else
+					error_info.errors++;
+				break;
+			}
 		}
 		break;
 	}

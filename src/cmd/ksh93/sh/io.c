@@ -427,24 +427,35 @@ static int outexcept(register Sfio_t *iop,int type,void *data,Sfdisc_t *handle)
 	NOT_USED(handle);
 	if(type==SF_DPOP || type==SF_FINAL)
 		free((void*)handle);
-	else if(type==SF_WRITE && (*(ssize_t*)data)<0 && errno!=EINTR && errno!= EPIPE && sffileno(iop)!=2)
-	{
-		if(!active)
+	else if(type==SF_WRITE && (*(ssize_t*)data)<0 && sffileno(iop)!=2)
+		switch (errno)
 		{
-			int mode = ((struct checkpt*)sh.jmplist)->mode;
-			int save = errno;
-			active = 1;
-			((struct checkpt*)sh.jmplist)->mode = 0;
-			sfpurge(iop);
-			sfpool(iop,NIL(Sfio_t*),SF_WRITE);
-			errno = save;
-			errormsg(SH_DICT,ERROR_system(1),e_badwrite,sffileno(iop));
-			active = 0;
-			((struct checkpt*)sh.jmplist)->mode = mode;
-			sh_exit(1);
+		case EINTR:
+		case EPIPE:
+#ifdef ECONNRESET
+		case ECONNRESET:
+#endif
+#ifdef ESHUTDOWN
+		case ESHUTDOWN:
+#endif
+			break;
+		default:
+			if(!active)
+			{
+				int mode = ((struct checkpt*)sh.jmplist)->mode;
+				int save = errno;
+				active = 1;
+				((struct checkpt*)sh.jmplist)->mode = 0;
+				sfpurge(iop);
+				sfpool(iop,NIL(Sfio_t*),SF_WRITE);
+				errno = save;
+				errormsg(SH_DICT,ERROR_system(1),e_badwrite,sffileno(iop));
+				active = 0;
+				((struct checkpt*)sh.jmplist)->mode = mode;
+				sh_exit(1);
+			}
+			return(-1);
 		}
-		return(-1);
-	}
 	return(0);
 }
 

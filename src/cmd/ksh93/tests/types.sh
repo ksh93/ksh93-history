@@ -252,4 +252,17 @@ got=$(typeset -p _Dbg_filenames)
 	err_exit "copy to associative array of types in function failed -- expected '$expected', got '$got'"
 }
 
+$SHELL > /dev/null  <<- '+++++' || err_exit 'passing _ as nameref arg not working'
+	function f1
+	{
+	 	typeset -n v=$1
+	 	print -r -- "$v"
+	}
+	typeset -T A_t=(
+ 		typeset blah=xxx
+	 	function f { f1 _ ;}
+	)
+	A_t a
+	[[ ${ a.f ./t1;} == "$a" ]] 
++++++
 exit $Errors
