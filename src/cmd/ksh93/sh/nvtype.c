@@ -238,7 +238,7 @@ static void put_chtype(Namval_t* np, const char* val, int flag, Namfun_t* fp)
 			np->nvalue.cp = pp->ptype->data + (mp->nvalue.cp-pp->ptype->data);
 			memcpy((char*)np->nvalue.cp,mp->nvalue.cp,dsize);
 		}
-		else if(mp->nvalue.cp)
+		else if(!nv_isarray(mp) && mp->nvalue.cp)
 		{
 			np->nvalue.cp = mp->nvalue.cp;
 			nv_onattr(np,NV_NOFREE);

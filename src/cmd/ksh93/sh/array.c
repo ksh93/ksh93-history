@@ -548,8 +548,13 @@ static void array_putval(Namval_t *np, const char *string, int flags, Namfun_t *
 		if(nv_isarray(np))
 			np->nvalue.up = up;
 		nv_putv(np,string,flags,&ap->hdr);
-		if(string && !is_associative(ap))
-			array_clrbit(aq->bits,aq->cur,ARRAY_NOFREE);
+		if(!is_associative(ap))
+		{
+			if(string)
+				array_clrbit(aq->bits,aq->cur,ARRAY_NOFREE);
+			else if(mp==np)
+				aq->val[aq->cur].cp = 0;
+		}
 #if SHOPT_TYPEDEF
 		if(string && ap->hdr.type && nv_isvtree(np))
 			nv_arraysettype(np,ap->hdr.type,nv_getsub(np),0);

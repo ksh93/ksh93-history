@@ -1,4 +1,5 @@
-08-10-10  --- Release ksh93t  ---
+08-10-18  --- Release ksh93t  ---
+08-10-18  A bug in array scoping that could dump core has been fixed.
 08-10-10  read -n and -N fixed to count characters in multibyte locales.
 08-10-10  A bug that mishandled _.array[] type references has been fixed.
 08-10-09  ${.sh.version} now contains a catenation of the following (after

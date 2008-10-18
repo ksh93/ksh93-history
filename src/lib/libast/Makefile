@@ -216,8 +216,10 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 .MAKEINIT : .AST.INIT
 .AST.INIT : .MAKE
 	CCFLAGS += -D_BLD_ast
+	ast_version.h : -IGNORE
+	(_AST_VERSION) : -PARAMETER
 
-parameter	(_BLD_ast) (_AST_VERSION)
+parameter	(_BLD_ast)
 virtual		ast/stdio.h
 
 		:NOPROTECT: sfprintf.c sfvprintf.c sfscanf.c sfvscanf.c
@@ -228,7 +230,7 @@ virtual		ast/stdio.h
 "win32*"	:NOOPTIMIZE: fastfind.c mc.c
 
 /*
- * NOTE: sun4 runtime link botches ro data so advertized sig_info is rw
+ * NOTE: sun4 runtime link botches ro data so advertised sig_info is rw
  */
 
 :READONLY: conftab.c lctab.c modedata.c /*sftable.c*/ \
