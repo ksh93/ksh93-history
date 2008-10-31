@@ -78,6 +78,13 @@ char e_version[]	= "\n@(#)$Id: Version "
 #endif
 
 #define RANDMASK	0x7fff
+
+#ifndef ARG_MAX
+#   define ARG_MAX	(1*1024*1024)
+#endif
+#ifndef CHILD_MAX
+#   define CHILD_MAX	(1*1024)
+#endif
 #ifndef CLK_TCK
 #   define CLK_TCK	60
 #endif /* CLK_TCK */

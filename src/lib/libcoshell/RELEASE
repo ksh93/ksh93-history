@@ -1,3 +1,4 @@
+08-10-28 coopen.c: close write side of parent msgfd -- doh
 08-04-28 coexec.c: check for fd 1,2 equivalence before CO_SERIALIZE 2>&1
 07-10-29 coshell.h,coexec.c: fix procrun()/system() intercept logic
 07-08-15 add CO_SEPARATE,CO_MODE_SEPARATE for separate shell+wait per action

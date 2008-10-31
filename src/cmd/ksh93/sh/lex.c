@@ -480,7 +480,8 @@ int sh_lex(Lex_t* lp)
 				/* implicit RPAREN for =~ test operator */
 				if(inlevel+1==lp->lexd.level)
 				{
-					fcseek(-1);
+					if(lp->lex.intest)
+						fcseek(-1);
 					c = RPAREN;
 					goto do_pop;
 				}
@@ -654,7 +655,11 @@ int sh_lex(Lex_t* lp)
 					continue;
 				fcgetc(n);
 				if(n>0)
+				{
+					if(c=='~' && n==LPAREN && lp->lex.incase)
+						lp->lex.incase = TEST_RE;
 					fcseek(-1);
+				}
 				if(n==LPAREN)
 					goto epat;
 				wordflags = ARG_MAC;
@@ -997,6 +1002,11 @@ int sh_lex(Lex_t* lp)
 			do_pop:
 				if(lp->lexd.level <= inlevel)
 					break;
+				if(lp->lexd.level==inlevel+1 && lp->lex.incase>=TEST_RE && !lp->lex.intest)
+				{
+					fcseek(-1);
+					goto breakloop;
+				}
 				n = endchar(lp);
 				if(c==RBRACT  && !(n==RBRACT || n==RPAREN))
 					continue;

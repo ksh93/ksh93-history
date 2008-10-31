@@ -1161,12 +1161,7 @@ else sfprintf(sfstderr,"tp==NULL\n");
 		nv_onattr(mp,NV_NOFREE|NV_BINARY|NV_RAW);
 	}
 	else if(!mp->nvalue.cp)
-	{
-		fp = mp->nvfun;
-		mp->nvfun = 0;
-		nv_putval(mp, "",0);
-		mp->nvfun = fp;
-	}
+		mp->nvalue.cp = Empty;
 	nv_disc(mp, &pp->fun, NV_LAST);
 	if(nd>0)
 	{

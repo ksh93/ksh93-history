@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1990-2007 AT&T Knowledge Ventures            *
+*          Copyright (c) 1990-2008 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                      by AT&T Knowledge Ventures                      *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -157,7 +157,7 @@ coopen(const char* path, int flags, const char* attributes)
 	Sig_handler_t		handler;
 	int			pio[2];
 	int			pex[2];
-	long			ops[4];
+	long			ops[5];
 	char			devfd[16];
 	char*			av[8];
 
@@ -211,7 +211,8 @@ coopen(const char* path, int flags, const char* attributes)
 		ops[0] = PROC_FD_DUP(pio[0], 0, PROC_FD_PARENT);
 		ops[1] = PROC_FD_CLOSE(pio[1], PROC_FD_CHILD);
 		ops[2] = PROC_FD_CLOSE(pex[0], PROC_FD_CHILD);
-		ops[3] = 0;
+		ops[3] = PROC_FD_CLOSE(pex[1], PROC_FD_PARENT);
+		ops[4] = 0;
 		sfsprintf(devfd, sizeof(devfd), "/dev/fd/%d", pio[0]);
 		flags = !access(devfd, F_OK);
 	}

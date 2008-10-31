@@ -240,4 +240,6 @@ e=$($SHELL -c '[ -z "" -a -z "" ]' 2>&1)
 i=hell
 [[ hell0 == $i[0] ]]  ||  err_exit 'pattern $i[0] interpreded as array ref'
 test '(' = ')' && err_exit '"test ( = )" should not be true'
+[[ $($SHELL -c 'case  F in ~(Eilr)[a-z0-9#]) print ok;;esac' 2> /dev/null) == ok ]] || err_exit '~(Eilr) not working in case command'
+[[ $($SHELL -c "case  Q in ~(Fi)q |  \$'\E') print ok;;esac" 2> /dev/null) == ok ]] || err_exit '~(Fi)q | \E  not working in case command'
 exit $((Errors))

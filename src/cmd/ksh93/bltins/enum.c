@@ -63,6 +63,13 @@ USAGE_LICENSE
 "[A?Associative array.  Each \aname\a will converted to an associate "
         "array of type \b\f?\f\b.  If a variable already exists, the current "
         "value will become subscript \b0\b.]"
+"[h]:[string?Used within a type definition to provide a help string  "
+        "for variable \aname\a.  Otherwise, it is ignored.]"
+"[S?Used with a type definition to indicate that the variable is shared by "
+        "each instance of the type.  When used inside a function defined "
+        "with the \bfunction\b reserved word, the specified variables "
+        "will have function static scope.  Otherwise, the variable is "
+        "unset prior to processing the assignment list.]"
 #if 0
 "[p?Causes the output to be in a form of \b\f?\f\b commands that can be "
         "used as input to the shell to recreate the current type of "

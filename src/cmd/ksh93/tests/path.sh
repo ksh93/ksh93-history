@@ -24,9 +24,9 @@ function err_exit
 	let Errors+=1
 }
 alias err_exit='err_exit $LINENO'
-
 Command=${0##*/}
 integer Errors=0
+
 mkdir /tmp/ksh$$
 cd /tmp/ksh$$
 trap "PATH=$PATH; cd /; rm -rf /tmp/ksh$$" EXIT
@@ -228,5 +228,37 @@ getconf UNIVERSE - att # override sticky default 'UNIVERSE = foo'
 
 [[ $(PATH=/usr/ucb/bin:/usr/bin echo -n ucb) == 'ucb' ]] || err_exit "ucb universe echo ignores -n option"
 [[ $(PATH=/usr/xpg/bin:/usr/bin echo -n att) == '-n att' ]] || err_exit "att universe echo does not ignore -n option"
+
+PATH=$path
+
+scr=/tmp/ksh$$/foo
+exp=126
+
+: > $scr
+chmod a=x $scr
+{ got=$($scr; print $?); } 2>/dev/null
+[[ "$got" == "$exp" ]] || err_exit "unreadable empty script should fail -- expected $exp, got $got"
+{ got=$(command $scr; print $?); } 2>/dev/null
+[[ "$got" == "$exp" ]] || err_exit "command of unreadable empty script should fail -- expected $exp, got $got"
+[[ "$(:; $scr; print $?)" == "$exp" ]] 2>/dev/null || err_exit "unreadable empty script in [[ ... ]] should fail -- expected $exp"
+[[ "$(:; command $scr; print $?)" == "$exp" ]] 2>/dev/null || err_exit "command unreadable empty script in [[ ... ]] should fail -- expected $exp"
+got=$($SHELL -c "$scr; print \$?" 2>/dev/null)
+[[ "$got" == "$exp" ]] || err_exit "\$SHELL -c of unreadable empty script should fail -- expected $exp, got" $got
+got=$($SHELL -c "command $scr; print \$?" 2>/dev/null)
+[[ "$got" == "$exp" ]] || err_exit "\$SHELL -c of command of unreadable empty script should fail -- expected $exp, got" $got
+
+rm -f $scr
+print : > $scr
+chmod a=x $scr
+{ got=$($scr; print $?); } 2>/dev/null
+[[ "$got" == "$exp" ]] || err_exit "unreadable non-empty script should fail -- expected $exp, got $got"
+{ got=$(command $scr; print $?); } 2>/dev/null
+[[ "$got" == "$exp" ]] || err_exit "command of unreadable non-empty script should fail -- expected $exp, got $got"
+[[ "$(:; $scr; print $?)" == "$exp" ]] 2>/dev/null || err_exit "unreadable non-empty script in [[ ... ]] should fail -- expected $exp"
+[[ "$(:; command $scr; print $?)" == "$exp" ]] 2>/dev/null || err_exit "command unreadable non-empty script in [[ ... ]] should fail -- expected $exp"
+got=$($SHELL -c "$scr; print \$?" 2>/dev/null)
+[[ "$got" == "$exp" ]] || err_exit "\$SHELL -c of unreadable non-empty script should fail -- expected $exp, got" $got
+got=$($SHELL -c "command $scr; print \$?" 2>/dev/null)
+[[ "$got" == "$exp" ]] || err_exit "\$SHELL -c of command of unreadable non-empty script should fail -- expected $exp, got" $got
 
 exit $((Errors))

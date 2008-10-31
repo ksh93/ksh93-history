@@ -529,8 +529,14 @@ initialize(register Feature_t* fp, const char* path, const char* command, const 
 							r = 0;
 							if (fp->op == OP_universe)
 							{
-								if (strneq(p, "bin:", 4) || streq(p, "bin") || strneq(p, "usr/bin:", 8) || streq(p, "usr/bin"))
-									break;
+								if (p[0] == 'u' && p[1] == 's' && p[2] == 'r' && p[3] == '/')
+									for (p += 4; *p == '/'; p++);
+								if (p[0] == 'b' && p[1] == 'i' && p[2] == 'n')
+								{
+									for (p += 3; *p == '/'; p++);
+									if (!*p || *p == ':')
+										break;
+								}
 							}
 						}
 						if (fp->op == OP_universe)

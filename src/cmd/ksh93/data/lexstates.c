@@ -361,7 +361,7 @@ static const char sh_lexstate9[256] =
 	0,	0,	0,	0,	0,	0,	0,	0,
 	0,	0,	S_QUOTE,0,	S_DOL,	0,	S_PAT,	S_LIT,
 	S_PAT,	S_PAT,	S_PAT,	0,	S_COM,	0,	S_DOT,	S_SLASH,
-	0,	S_DIG,	S_DIG,	S_DIG,	S_DIG,	S_DIG,	S_DIG,	S_DIG,
+	S_DIG,	S_DIG,	S_DIG,	S_DIG,	S_DIG,	S_DIG,	S_DIG,	S_DIG,
 	S_DIG,	S_DIG,	S_COLON,0,	0,	S_EQ,	0,	S_PAT,
 	0,	0,	0,	0,	0,	0,	0,	0,
 	0,	0,	0,	0,	0,	0,	0,	0,

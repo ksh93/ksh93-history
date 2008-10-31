@@ -610,6 +610,7 @@ static int set_instance(Namval_t *nq, Namval_t *node, struct Namref *nr)
 	L_ARGNOD->nvalue.nrp = nr;
 	L_ARGNOD->nvflag = NV_REF|NV_NOFREE;
 	L_ARGNOD->nvfun = 0;
+	L_ARGNOD->nvenv = 0;
 	if((ap=nv_arrayptr(nq)) && (cp = nv_getsub(nq)) && (cp = strdup(cp)))
 	{
 		nv_putval(SH_SUBSCRNOD,nr->sub=cp,NV_NOFREE);

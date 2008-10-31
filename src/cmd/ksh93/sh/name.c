@@ -388,7 +388,9 @@ void nv_setlist(register struct argnod *arg,register int flags)
 				if(tp->tre.tretyp!=TLST && tp->com.comarg && !tp->com.comset && !((mp=tp->com.comnamp) && nv_isattr(mp,BLT_DCL)))
 				{
 					int argc;
+					Dt_t	*last_root = shp->last_root;
 					char **argv = sh_argbuild(shp,&argc,&tp->com,0);
+					shp->last_root = last_root;
 #if SHOPT_TYPEDEF
 					if(shp->mktype && shp->dot_depth==0 && np==((struct sh_type*)shp->mktype)->nodes[0])
 					{

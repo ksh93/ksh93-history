@@ -1076,6 +1076,7 @@ retry:
 					return(pid);
 			}
 			while(_sh_fork(pid,0,(int*)0) < 0);
+			((struct checkpt*)shp->jmplist)->mode = SH_JMPEXIT;
 #else
 			return(-1);
 #endif
@@ -1193,14 +1194,15 @@ static void exscript(Shell_t *shp,register char *path,register char *argv[],char
 		 *  The following code is just for compatibility
 		 */
 		if((n=open(path,O_RDONLY,0)) < 0)
-			errormsg(SH_DICT,ERROR_system(1),e_open,path);
+			errormsg(SH_DICT,ERROR_system(ERROR_NOEXEC),e_exec,path);
 		if(savet)
 			*argv++ = savet;
 	openok:
 		shp->infd = n;
 	}
 #else
-	shp->infd = sh_chkopen(path);
+	if((shp->infd = sh_open(path,O_RDONLY,0)) < 0)
+		errormsg(SH_DICT,ERROR_system(ERROR_NOEXEC),e_exec,path);
 #endif
 	shp->infd = sh_iomovefd(shp->infd);
 #if SHOPT_ACCT

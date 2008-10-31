@@ -1,3 +1,4 @@
+08-10-24 port/astconf.c: handle multiple/trailing '/' in universe initialization
 08-09-10 misc/magic.c: handle old vcodex() indices
 08-09-10 sfio/sfvprintf.c: drop SF_WCWIDTH, use %Lc or %Ls instead
 08-09-05 Makefile: ibm.risc joins the :NOOPTIMIZE: crowd

@@ -1,4 +1,8 @@
-08-10-18  --- Release ksh93t  ---
+08-10-31  --- Release ksh93t  ---
+08-10-31  Variable scoping/initialization bugs that could dump core were fixed.
+08-10-24  The lexer now accepts all RE characters for patterns prefixed
+	  with a ksh ~(...) option expression.
+08-10-24  For ${var/pat/sub} \0 in sub expands to the text matched by pat.
 08-10-18  A bug in array scoping that could dump core has been fixed.
 08-10-10  read -n and -N fixed to count characters in multibyte locales.
 08-10-10  A bug that mishandled _.array[] type references has been fixed.

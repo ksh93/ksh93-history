@@ -977,4 +977,5 @@ caller() {
 bar() { caller;}
 set -- $(bar)
 [[ $1 == $2 ]] && err_exit ".sh.inline optimization bug"
+( $SHELL  -c ' function foo { typeset x=$1;print $1;};z=();z=($(foo bar)) ') 2> /dev/null ||  err_exit 'using a function to set an array in a command sub  fails'
 exit $((Errors))
