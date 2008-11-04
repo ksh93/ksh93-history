@@ -1487,7 +1487,7 @@ static int comsub(register Lex_t *lp, int endtok)
 				fcseek(-1);
 			if(c==RBRACE && lp->lex.incase)
 				lp->lex.incase=0;
-			switch(sh_lex(lp))
+			switch(c=sh_lex(lp))
 			{
 			    case LBRACE:
 				if(endtok==LBRACE && !lp->lex.incase)
@@ -1497,6 +1497,7 @@ static int comsub(register Lex_t *lp, int endtok)
 				}
 				break;
 			    case RBRACE:
+			    rbrace:
 				if(endtok==LBRACE && --count<=0)
 					goto done;
 				lp->comsub = (count==1);
@@ -1527,6 +1528,13 @@ static int comsub(register Lex_t *lp, int endtok)
 				lp->lex.reservok = 0;
 				messages |= lp->lexd.message;
 				break;
+			    case ';':
+				fcgetc(c);
+				if(c==RBRACE && endtok==LBRACE)
+					goto rbrace;
+				if(c>0)
+					fcseek(-1);
+				/* fall through*/
 			    default:
 				lp->lex.reservok = 1;
 			}

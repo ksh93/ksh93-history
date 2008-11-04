@@ -1178,8 +1178,6 @@ bra(Cenv_t* env)
 	if (!(e = node(env, REX_CLASS, 1, 1, sizeof(Set_t))))
 		return 0;
 	collate = complicated = elements = 0;
-	first = env->cursor;
-	start = first + MBSIZE(first);
 	if (*env->cursor == '^' || env->type >= SRE && *env->cursor == '!')
 	{
 		env->cursor++;
@@ -1187,6 +1185,8 @@ bra(Cenv_t* env)
 	}
 	else
 		neg = 0;
+	first = env->cursor;
+	start = first + MBSIZE(first);
 	if (*env->cursor == 0 || *(env->cursor + 1) == 0 || *env->cursor == env->terminator || *(env->cursor + 1) == env->terminator || (env->flags & REG_ESCAPE) && (*env->cursor == env->delimiter || *env->cursor != '\\' && *(env->cursor + 1) == env->delimiter))
 		goto error;
 	begin = env->cursor + MBSIZE(env->cursor);

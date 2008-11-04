@@ -193,7 +193,12 @@ All recorded changes follow.
 <P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="ksh93 changes">ksh93 changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
-08-10-10  --- Release ksh93t  ---
+08-10-31  --- Release ksh93t  ---
+08-10-31  Variable scoping/initialization bugs that could dump core were fixed.
+08-10-24  The lexer now accepts all RE characters for patterns prefixed
+	  with a ksh ~(...) option expression.
+08-10-24  For ${var/pat/sub} &nbsp; in sub expands to the text matched by pat.
+08-10-18  A bug in array scoping that could dump core has been fixed.
 08-10-10  read -n and -N fixed to count characters in multibyte locales.
 08-10-10  A bug that mishandled _.array&#0091;&#0093; type references has been fixed.
 08-10-09  ${.sh.version} now contains a catenation of the following (after
@@ -2084,6 +2089,9 @@ All recorded changes follow.
 <P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="libast changes">libast changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
+08-11-04 regex/regcomp.c: fix locale &#0091;!-...&#0093; and &#0091;^-...&#0093; re-initialization
+08-11-04 stdio: add flockfile.c ftrylockfile.c funlockfile.c
+08-10-24 port/astconf.c: handle multiple/trailing '/' in universe initialization
 08-09-10 misc/magic.c: handle old vcodex() indices
 08-09-10 sfio/sfvprintf.c: drop SF_WCWIDTH, use %Lc or %Ls instead
 08-09-05 Makefile: ibm.risc joins the :NOOPTIMIZE: crowd
@@ -3606,6 +3614,7 @@ All recorded changes follow.
 <P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="libcmd changes">libcmd changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
+08-10-15 rm.c: handle 'rm -f x x' =&gt; exit 0
 08-09-08 stty.c: #ifdef guard TAB&#0091;012&#0093; -- freebsd: damn the posix, full speed ahead
 08-06-17 shcmd.h: move to libast
 08-04-24 uniq.c: add optget() 'n' option for -1 =&gt; -f1
@@ -3930,7 +3939,7 @@ All recorded changes follow.
 <TR>
 <TD align=left></TD>
 <TD align=center></TD>
-<TD align=right>October 14, 2008</TD>
+<TD align=right>November 04, 2008</TD>
 </TR>
 </TABLE>
 <P>

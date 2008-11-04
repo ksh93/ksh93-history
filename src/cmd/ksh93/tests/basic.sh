@@ -397,6 +397,13 @@ $SHELL   2> /dev/null <<- \EOF || err_exit 'terminating } is not a reserved word
 	x=${	{ print -n } ; print -n hello ; }  ; print ' world' }
 	[[ $x == '}hello world' ]]
 EOF
+$SHELL   2> /dev/null <<- \EOF || err_exit '${ command;}xxx not working'
+	f()
+	{
+		print foo
+	}
+	[[ ${ f;}bar == foobar ]]
+EOF
 
 unset foo
 function foo

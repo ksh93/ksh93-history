@@ -167,6 +167,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	fgetc.c fgetpos.c fgets.c fileno.c fopen.c fprintf.c \
 	fpurge.c fputc.c fputs.c fread.c freopen.c fscanf.c \
 	fseek.c fseeko.c fsetpos.c ftell.c ftello.c fwrite.c \
+	flockfile.c ftrylockfile.c funlockfile.c \
 	getc.c getchar.c getw.c pclose.c popen.c printf.c \
 	putc.c putchar.c puts.c putw.c rewind.c scanf.c \
 	setbuf.c setbuffer.c setlinebuf.c setvbuf.c \

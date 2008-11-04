@@ -4777,6 +4777,30 @@ meta fwrite.o %.c>%.o stdio/fwrite.c fwrite
 prev stdio/fwrite.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/fwrite.c
 done fwrite.o generated
+make flockfile.o
+make stdio/flockfile.c
+prev stdio/stdhdr.h implicit
+done stdio/flockfile.c
+meta flockfile.o %.c>%.o stdio/flockfile.c flockfile
+prev stdio/flockfile.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/flockfile.c
+done flockfile.o generated
+make ftrylockfile.o
+make stdio/ftrylockfile.c
+prev stdio/stdhdr.h implicit
+done stdio/ftrylockfile.c
+meta ftrylockfile.o %.c>%.o stdio/ftrylockfile.c ftrylockfile
+prev stdio/ftrylockfile.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/ftrylockfile.c
+done ftrylockfile.o generated
+make funlockfile.o
+make stdio/funlockfile.c
+prev stdio/stdhdr.h implicit
+done stdio/funlockfile.c
+meta funlockfile.o %.c>%.o stdio/funlockfile.c funlockfile
+prev stdio/funlockfile.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Isfio -Istdio -Iinclude -Istd -I${INSTALLROOT}/include -D_PACKAGE_ast -c stdio/funlockfile.c
+done funlockfile.o generated
 make getc.o
 make stdio/getc.c
 prev stdio/stdhdr.h implicit
@@ -5870,8 +5894,8 @@ exec - ${AR} cr libast.a streval.o strexpr.o strmatch.o strcopy.o modei.o modex.
 exec - ${AR} cr libast.a strperm.o struid.o strgid.o strtoip4.o strtoip6.o stack.o stk.o swapget.o swapmem.o swapop.o swapput.o sigdata.o sigcrit.o sigunblock.o procopen.o procclose.o procrun.o procfree.o tmdate.o tmequiv.o tmfix.o tmfmt.o tmform.o tmgoff.o tminit.o tmleap.o tmlex.o tmlocale.o tmmake.o tmpoff.o tmscan.o tmsleep.o tmtime.o tmtype.o tmweek.o tmword.o tmzone.o tmxdate.o tmxfmt.o tmxgettime.o tmxleap.o tmxmake.o tmxscan.o tmxsettime.o tmxsleep.o tmxtime.o tmxtouch.o tvcmp.o tvgettime.o tvsettime.o tvsleep.o tvtouch.o cmdarg.o vecargs.o vecfile.o vecfree.o vecload.o vecstring.o univdata.o touch.o mnt.o debug.o memccpy.o memchr.o memcmp.o memcpy.o memdup.o memmove.o memset.o mkdir.o mkfifo.o mknod.o rmdir.o remove.o rename.o link.o unlink.o strdup.o strchr.o strrchr.o strstr.o strtod.o strtold.o strtol.o strtoll.o strtoul.o strtoull.o strton.o strtonll.o strntod.o strntold.o strnton.o strntonll.o strntol.o strntoll.o strntoul.o strntoull.o strcasecmp.o strncasecmp.o strerror.o mktemp.o
 exec - ${AR} cr libast.a tmpnam.o fsync.o execlp.o execve.o execvp.o execvpe.o spawnveg.o vfork.o killpg.o hsearch.o tsearch.o getlogin.o putenv.o setenv.o unsetenv.o lstat.o statvfs.o eaccess.o gross.o omitted.o readlink.o symlink.o getpgrp.o setpgid.o setsid.o waitpid.o creat64.o fcntl.o open.o atexit.o getdents.o getwd.o dup2.o errno.o getpreroot.o ispreroot.o realopen.o setpreroot.o getgroups.o mount.o system.o iblocks.o modedata.o tmdata.o memfatal.o sfkeyprintf.o sfdcdio.o sfdcdos.o sfdcfilter.o sfdcseekable.o sfdcslow.o sfdcsubstr.o sfdctee.o sfdcunion.o sfdcmore.o sfdcprefix.o wc.o basename.o closelog.o dirname.o fmtmsglib.o fnmatch.o ftw.o getdate.o getsubopt.o glob.o nftw.o openlog.o re_comp.o resolvepath.o realpath.o regcmp.o regexp.o setlogmask.o strftime.o strptime.o swab.o syslog.o tempnam.o wordexp.o mktime.o regalloc.o regclass.o regcoll.o regcomp.o regcache.o regdecomp.o regerror.o regexec.o regfatal.o reginit.o regnexec.o regsubcomp.o regsubexec.o regsub.o regrecord.o regrexec.o regstat.o dtclose.o dtdisc.o dtextract.o
 exec - ${AR} cr libast.a dtflatten.o dthash.o dtlist.o dtmethod.o dtnew.o dtopen.o dtrenew.o dtrestore.o dtsize.o dtstat.o dtstrhash.o dttree.o dttreeset.o dtview.o dtwalk.o sfclose.o sfclrlock.o sfdisc.o sfdlen.o sfexcept.o sfgetl.o sfgetu.o sfcvt.o sfecvt.o sffcvt.o sfextern.o sffilbuf.o sfflsbuf.o sfprints.o sfgetd.o sfgetr.o sfllen.o sfmode.o sfmove.o sfnew.o sfpkrd.o sfnotify.o sfnputc.o sfopen.o sfpeek.o sfpoll.o sfpool.o sfpopen.o sfprintf.o sfputd.o sfputl.o sfputr.o sfputu.o sfrd.o sfread.o sfreserve.o sfscanf.o sfseek.o sfset.o sfsetbuf.o sfsetfd.o sfsize.o sfsk.o sfstack.o sfstrtod.o sfsync.o sfswap.o sftable.o sftell.o sftmp.o sfungetc.o sfvprintf.o sfvscanf.o sfwr.o sfwrite.o sfpurge.o sfraise.o sfgetm.o sfmutex.o sfputm.o sfresize.o _sfclrerr.o _sfeof.o _sferror.o _sffileno.o _sfopen.o _sfstacked.o _sfvalue.o _sfgetc.o _sfgetl.o _sfgetl2.o _sfgetu.o _sfgetu2.o _sfdlen.o _sfllen.o _sfslen.o _sfulen.o _sfputc.o _sfputd.o _sfputl.o _sfputm.o _sfputu.o clearerr.o fclose.o fdopen.o feof.o
-exec - ${AR} cr libast.a ferror.o fflush.o fgetc.o fgetpos.o fgets.o fileno.o fopen.o fprintf.o fpurge.o fputc.o fputs.o fread.o freopen.o fscanf.o fseek.o fseeko.o fsetpos.o ftell.o ftello.o fwrite.o getc.o getchar.o getw.o pclose.o popen.o printf.o putc.o putchar.o puts.o putw.o rewind.o scanf.o setbuf.o setbuffer.o setlinebuf.o setvbuf.o snprintf.o sprintf.o sscanf.o asprintf.o vasprintf.o tmpfile.o ungetc.o vfprintf.o vfscanf.o vprintf.o vscanf.o vsnprintf.o vsprintf.o vsscanf.o _doprnt.o _doscan.o _filbuf.o _flsbuf.o _stdfun.o _stdopen.o _stdprintf.o _stdscanf.o _stdsprnt.o _stdvbuf.o _stdvsnprnt.o _stdvsprnt.o _stdvsscn.o fgetwc.o fwprintf.o putwchar.o vfwscanf.o wprintf.o fgetws.o fwscanf.o swprintf.o vswprintf.o wscanf.o fputwc.o getwc.o swscanf.o vswscanf.o fputws.o getwchar.o ungetwc.o vwprintf.o fwide.o putwc.o vfwprintf.o vwscanf.o stdio_c99.o stdio_gnu.o frexp.o frexpl.o astcopy.o astconf.o astdynamic.o astlicense.o astquery.o astwinsize.o conftab.o aststatic.o getopt.o getoptl.o vmbest.o vmclear.o
-exec - ${AR} cr libast.a vmclose.o vmdcheap.o vmdebug.o vmdisc.o vmexit.o vmlast.o vmopen.o vmpool.o vmprivate.o vmprofile.o vmregion.o vmsegment.o vmset.o vmstat.o vmstrdup.o vmtrace.o vmwalk.o vmmopen.o malloc.o vmgetmem.o a64l.o acosh.o asinh.o atanh.o cbrt.o crypt.o erf.o err.o exp.o exp__E.o expm1.o gamma.o getpass.o lgamma.o log.o log1p.o log__L.o rand48.o random.o rcmd.o rint.o support.o sfstrtmp.o spawn.o
+exec - ${AR} cr libast.a ferror.o fflush.o fgetc.o fgetpos.o fgets.o fileno.o fopen.o fprintf.o fpurge.o fputc.o fputs.o fread.o freopen.o fscanf.o fseek.o fseeko.o fsetpos.o ftell.o ftello.o fwrite.o flockfile.o ftrylockfile.o funlockfile.o getc.o getchar.o getw.o pclose.o popen.o printf.o putc.o putchar.o puts.o putw.o rewind.o scanf.o setbuf.o setbuffer.o setlinebuf.o setvbuf.o snprintf.o sprintf.o sscanf.o asprintf.o vasprintf.o tmpfile.o ungetc.o vfprintf.o vfscanf.o vprintf.o vscanf.o vsnprintf.o vsprintf.o vsscanf.o _doprnt.o _doscan.o _filbuf.o _flsbuf.o _stdfun.o _stdopen.o _stdprintf.o _stdscanf.o _stdsprnt.o _stdvbuf.o _stdvsnprnt.o _stdvsprnt.o _stdvsscn.o fgetwc.o fwprintf.o putwchar.o vfwscanf.o wprintf.o fgetws.o fwscanf.o swprintf.o vswprintf.o wscanf.o fputwc.o getwc.o swscanf.o vswscanf.o fputws.o getwchar.o ungetwc.o vwprintf.o fwide.o putwc.o vfwprintf.o vwscanf.o stdio_c99.o stdio_gnu.o frexp.o frexpl.o astcopy.o astconf.o astdynamic.o astlicense.o astquery.o astwinsize.o conftab.o aststatic.o getopt.o
+exec - ${AR} cr libast.a getoptl.o vmbest.o vmclear.o vmclose.o vmdcheap.o vmdebug.o vmdisc.o vmexit.o vmlast.o vmopen.o vmpool.o vmprivate.o vmprofile.o vmregion.o vmsegment.o vmset.o vmstat.o vmstrdup.o vmtrace.o vmwalk.o vmmopen.o malloc.o vmgetmem.o a64l.o acosh.o asinh.o atanh.o cbrt.o crypt.o erf.o err.o exp.o exp__E.o expm1.o gamma.o getpass.o lgamma.o log.o log1p.o log__L.o rand48.o random.o rcmd.o rint.o support.o sfstrtmp.o spawn.o
 exec - (ranlib libast.a) >/dev/null 2>&1 || true
 done libast.a generated
 done ast virtual

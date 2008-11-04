@@ -59,12 +59,16 @@ tt[3]=2pm
 [[ ${tt[1]} == *+00:00 ]] || err_exit 'tt[1] is not today'
 [[ ${tt[2]} == *+00:00 ]] || err_exit 'tt[2] is not tomorrow'
 [[ ${tt[3]} == *+14:00 ]] || err_exit 'tt[0] is not 2pm'
+unset tt
+Time_t tt=('2008-08-11+00:00:00,yesterday' '2008-08-11+00:00:00,today' '2008-08-11+00:00:00,tomorrow')
+tt[3]=9am
+tt[4]=5pm
 (( (tt[1] - tt[0] ) == 24*3600 )) || err_exit  'today-yesterday not one day'
 (( (tt[2] - tt[1] ) == 24*3600 )) || err_exit  'tomorrow-today not one day'
-(( (tt[3] - tt[1] ) == 14*3600 )) || err_exit  '2pm is not 14 hours'
+(( (tt[4] - tt[3] ) == 8*3600 )) || err_exit  '9am .. 5pm is not 8 hours'
 unset tt
-Time_t tt=([yesterday]=yesterday [today]=today [tomorrow]=tomorrow)
-tt[2pm]=2pm
+Time_t tt=([yesterday]='2008-08-11+00:00:00,yesterday' [today]='2008-08-11+00:00:00,today' [tomorrow]='2008-08-11+00:00:00,tomorrow')
+tt[2pm]='2008-08-11+00:00:00,2pm'
 [[ ${tt[yesterday]} == *+00:00 ]] || err_exit 'tt[yesterday] is not yesterday'
 [[ ${tt[today]} == *+00:00 ]] || err_exit 'tt[today] is not today'
 [[ ${tt[tomorrow]} == *+00:00 ]] || err_exit 'tt[tomorrow] is not tomorrow'
