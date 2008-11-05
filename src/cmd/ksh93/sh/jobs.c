@@ -1224,6 +1224,8 @@ int	job_wait(register pid_t pid)
 	job_lock();
 	if(pid > 1)
 	{
+		if(pid==sh.spid)
+			sh.spid = 0;
 		if(!(pw=job_bypid(pid)))
 		{
 			/* check to see whether job status has been saved */
