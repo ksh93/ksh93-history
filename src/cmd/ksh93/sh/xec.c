@@ -644,9 +644,12 @@ int sh_exec(register const Shnode_t *t, int flags)
 		register char	*com0 = 0;
 		int 		errorflg = (type&sh_state(SH_ERREXIT))|OPTIMIZE;
 		int 		execflg = (type&sh_state(SH_NOFORK));
+		int 		execflg2 = (type&sh_state(SH_FORKED));
 		int 		mainloop = (type&sh_state(SH_INTERACTIVE));
 #if SHOPT_AMP || SHOPT_SPAWN
 		int		ntflag = (type&sh_state(SH_NTFORK));
+#else
+		int		ntflag = 0;
 #endif
 		int		topfd = shp->topfd;
 		char 		*sav=stkptr(stkp,0);
@@ -1127,13 +1130,12 @@ int sh_exec(register const Shnode_t *t, int flags)
 			register pid_t parent;
 			int no_fork,jobid;
 			int pipes[2];
-			no_fork = (execflg && !(type&(FAMP|FPOU)) &&
-#if SHOPT_AMP || SHOPT_SPAWN
-				!ntflag &&
-#endif
+			no_fork = !ntflag && !(type&(FAMP|FPOU)) &&
+			    (execflg2 || (execflg && 
 				!shp->subshell && !shp->st.trapcom[0] && 
 				!shp->st.trap[SH_ERRTRAP] && shp->fn_depth==0 &&
-				!(pipejob && sh_isoption(SH_PIPEFAIL)));
+				!(pipejob && sh_isoption(SH_PIPEFAIL))
+			    ));
 			if(shp->subshell)
 				sh_subtmpfile(1);
 			if(sh_isstate(SH_PROFILE) || shp->dot_depth)
@@ -1294,7 +1296,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 					 */
 					if(!no_fork && !(type&FPOU))
 						job_clear();
-					sh_exec(t->fork.forktre,flags|sh_state(SH_NOFORK));
+					sh_exec(t->fork.forktre,flags|sh_state(SH_NOFORK)|sh_state(SH_FORKED));
 				}
 				else if(com0)
 				{

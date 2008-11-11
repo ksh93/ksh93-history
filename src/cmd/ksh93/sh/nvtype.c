@@ -394,7 +394,7 @@ static Namfun_t *clone_type(Namval_t* np, Namval_t *mp, int flags, Namfun_t *fp)
 			nrp++;
 			nq = nq->nvalue.nrp->np;
 		}
-		if(nq->nvalue.cp || nv_isarray(nq) || nv_isattr(nq,NV_RDONLY))
+		if(nq->nvalue.cp || !nv_isvtree(nq) || nv_isattr(nq,NV_RDONLY))
 		{
 			/* see if default value has been overwritten */
 			if(!mp->nvname)
@@ -1139,6 +1139,8 @@ else sfprintf(sfstderr,"tp==NULL\n");
 				if(!j)
 					free((void*)np->nvalue.cp);
 			}
+			if(!nq->nvalue.cp && nq->nvfun== &pp->childfun.fun)
+				nq->nvalue.cp = Empty;
 			np->nvalue.cp = 0;
 #if 0
 			offset += dsize;

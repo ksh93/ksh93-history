@@ -242,4 +242,45 @@ i=hell
 test '(' = ')' && err_exit '"test ( = )" should not be true'
 [[ $($SHELL -c 'case  F in ~(Eilr)[a-z0-9#]) print ok;;esac' 2> /dev/null) == ok ]] || err_exit '~(Eilr) not working in case command'
 [[ $($SHELL -c "case  Q in ~(Fi)q |  \$'\E') print ok;;esac" 2> /dev/null) == ok ]] || err_exit '~(Fi)q | \E  not working in case command'
+
+for l in C en_US.ISO8859-15
+do	export LC_COLLATE=$l
+	set -- \
+		'A'   0 1 1   0 1 1      1 0 0   1 0 0   \
+		'Z'   0 1 1   0 1 1      1 0 0   1 0 0   \
+		'/'   0 0 0   0 0 0      1 1 1   1 1 1   \
+		'.'   0 0 0   0 0 0      1 1 1   1 1 1   \
+		'_'   0 0 0   0 0 0      1 1 1   1 1 1   \
+		'-'   1 1 1   1 1 1      0 0 0   0 0 0   \
+		'%'   0 0 0   0 0 0      1 1 1   1 1 1   \
+		'@'   0 0 0   0 0 0      1 1 1   1 1 1   \
+		'!'   0 0 0   0 0 0      1 1 1   1 1 1   \
+		'^'   0 0 0   0 0 0      1 1 1   1 1 1   \
+		# retain this line #
+	while	(( $# >= 13 ))
+	do	c=$1
+		shift
+		for p in \
+			'[![.-.]]' \
+			'[![.-.][:upper:]]' \
+			'[![.-.]A-Z]' \
+			'[!-]' \
+			'[!-[:upper:]]' \
+			'[!-A-Z]' \
+			'[[.-.]]' \
+			'[[.-.][:upper:]]' \
+			'[[.-.]A-Z]' \
+			'[-]' \
+			'[-[:upper:]]' \
+			'[-A-Z]' \
+			# retain this line #
+		do	e=$1
+			shift
+			[[ $c == $p ]]
+			g=$?
+			[[ $g == $e ]] || err_exit "[[ '$c' == $p ]] for LC_COLLATE=$l failed -- expected $e, got $g"
+		done
+	done
+done
+
 exit $((Errors))

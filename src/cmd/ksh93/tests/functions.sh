@@ -978,4 +978,35 @@ bar() { caller;}
 set -- $(bar)
 [[ $1 == $2 ]] && err_exit ".sh.inline optimization bug"
 ( $SHELL  -c ' function foo { typeset x=$1;print $1;};z=();z=($(foo bar)) ') 2> /dev/null ||  err_exit 'using a function to set an array in a command sub  fails'
+rm "$tmp"
+
+[[ $( $SHELL  << \+++
+f()
+{
+	if	(($1>1))
+	then	x=$(f $(($1-1))) || exit 1
+	fi
+	return 0
+}
+f 257  && print ok
++++
+) == ok ]] || err_exit 'Cannot handle comsub depth > 256 in function'
+
+
+tmp1=${TMPDIR:-/tmp}/ksh$$.1 
+tmp2=${TMPDIR:-/tmp}/ksh$$.2 
+trap 'rm "$tmp1" "$tmp2"' EXIT
+cat > $tmp1 << +++
+#! $SHELL
+print \$\$
++++
+chmod +x $tmp1
+function foo
+{
+	typeset pid
+	$tmp1 > $tmp2 & pid=$!
+	wait $!
+	[[ $(< $tmp2) == $pid ]] || err_exit 'wrong pid for & job in function'
+}
+foo
 exit $((Errors))

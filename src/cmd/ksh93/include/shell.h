@@ -137,8 +137,8 @@ struct Shell_s
 	int		inlineno;	/* line number of current input file */
 	int		exitval;	/* most recent exit value */
 	unsigned char	trapnote;	/* set when trap/signal is pending */
-	char		subshell;	/* set for virtual subshell */
 	char		shcomp;		/* set when runing shcomp */
+	short		subshell;	/* set for virtual subshell */
 #ifdef _SH_PRIVATE
 	_SH_PRIVATE
 #endif /* _SH_PRIVATE */

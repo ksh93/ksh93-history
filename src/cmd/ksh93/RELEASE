@@ -1,3 +1,16 @@
+08-11-11  --- Release ksh93t+  ---
+08-11-11  A bug in which a field that was unset in a type definition and later
+	  set for an instance could appear twice when displaying the variable
+	  has been fixed.
+08-11-11  A bug in which running a simple command & inside a function would
+	  not return the correct process id has been fixed.
+08=11-10  A bug in which the exit status of a command could be lost if the pid
+	  was that of the most recent command substitution that had completed
+	  has been fixed.
+08-11-10  The maximum depth for subshells has been increased from 256 to 65536.
+08-11-06  A bug which could cause a core dump when the _ reference variable was
+          used as an embedded type with a compound assignment has been fixed.
+
 08-10-31  --- Release ksh93t  ---
 08-10-31  Variable scoping/initialization bugs that could dump core were fixed.
 08-10-24  The lexer now accepts all RE characters for patterns prefixed

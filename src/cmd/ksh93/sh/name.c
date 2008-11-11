@@ -496,17 +496,25 @@ void nv_setlist(register struct argnod *arg,register int flags)
 				else
 					shp->prefix = cp;
 				shp->last_table = 0;
-				memset(&nr,0,sizeof(nr));
-				memcpy(&node,L_ARGNOD,sizeof(node));
-				L_ARGNOD->nvalue.nrp = &nr;
-				nr.np = np;
-				nr.root = shp->last_root;
-				nr.table = shp->last_table;
-				L_ARGNOD->nvflag = NV_REF|NV_NOFREE;
-				L_ARGNOD->nvfun = 0;
+				if(shp->prefix)
+				{
+					if(*shp->prefix=='_' && shp->prefix[1]=='.' && nv_isref(L_ARGNOD))
+					{
+						sfprintf(stkstd,"%s%s",nv_name(L_ARGNOD->nvalue.nrp->np),shp->prefix+1);
+						shp->prefix = stkfreeze(stkstd,1);
+					}
+					memset(&nr,0,sizeof(nr));
+					memcpy(&node,L_ARGNOD,sizeof(node));
+					L_ARGNOD->nvalue.nrp = &nr;
+					nr.np = np;
+					nr.root = shp->last_root;
+					nr.table = shp->last_table;
+					L_ARGNOD->nvflag = NV_REF|NV_NOFREE;
+					L_ARGNOD->nvfun = 0;
+				}
 				sh_exec(tp,sh_isstate(SH_ERREXIT));
 #if SHOPT_TYPEDEF
-				if(!maketype)
+				if(shp->prefix)
 #endif
 				{
 					L_ARGNOD->nvalue.nrp = node.nvalue.nrp;

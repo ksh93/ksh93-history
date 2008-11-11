@@ -417,7 +417,7 @@ void nv_attribute(register Namval_t *np,Sfio_t *out,char *prefix,int noname)
 		{
 			if(nv_isvtree(np))
 				sfprintf(out,"%s -C ",prefix);
-			else if(!np->nvalue.cp && nv_isattr(np,~NV_NOFREE)==NV_MINIMAL && strcmp(np->nvname,"_"))
+			else if((!np->nvalue.cp||np->nvalue.cp==Empty) && nv_isattr(np,~NV_NOFREE)==NV_MINIMAL && strcmp(np->nvname,"_"))
 				sfputr(out,prefix,' ');
 		}
 		return;
@@ -592,6 +592,8 @@ void nv_outnode(Namval_t *np, Sfio_t* out, int indent, int special)
 		if(mp && nv_isvtree(mp))
 			nv_onattr(mp,NV_EXPORT);
 		ep = nv_getval(mp?mp:np);
+		if(ep==Empty)
+			ep = 0;
 		xp = 0;
 		if(!ap && nv_isattr(np,NV_INTEGER|NV_LJUST)==NV_LJUST)
 		{
@@ -681,7 +683,7 @@ static void outval(char *name, const char *vname, struct Walk *wp)
 		if(!xp)
 			return;
 	}
-	if((nv_isnull(np) || np->nvalue.cp==Empty) && !nv_isarray(np))
+	if(nv_isnull(np) && !nv_isarray(np))
 		return;
 	if(special || (nv_isarray(np) && nv_arrayptr(np)))
 	{
@@ -718,7 +720,7 @@ static void outval(char *name, const char *vname, struct Walk *wp)
 		if(*name!='.')
 			nv_attribute(np,wp->out,"typeset",'=');
 		nv_outname(wp->out,name,-1);
-		if(np->nvalue.cp || nv_isattr(np,~(NV_MINIMAL|NV_NOFREE)) || nv_isvtree(np))  
+		if((np->nvalue.cp && np->nvalue.cp!=Empty) || nv_isattr(np,~(NV_MINIMAL|NV_NOFREE)) || nv_isvtree(np))  
 			sfputc(wp->out,(isarray==2?'\n':'='));
 		if(isarray==2)
 			return;

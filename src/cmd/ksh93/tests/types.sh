@@ -265,4 +265,31 @@ $SHELL > /dev/null  <<- '+++++' || err_exit 'passing _ as nameref arg not workin
 	A_t a
 	[[ ${ a.f ./t1;} == "$a" ]] 
 +++++
+expected='A_t b.a=(name=one;)'
+[[ $( $SHELL << \+++
+	typeset -T A_t=(
+	     typeset name=aha
+	)
+	typeset -T B_t=(
+	 	typeset     arr
+	 	A_t         a
+	 	f()
+	 	{
+	 		_.a=(name=one)
+	 		typeset -p _.a
+	 	}
+	)
+	B_t b
+	b.f
++++
+) ==  "$expected" ]] 2> /dev/null || err_exit  '_.a=(name=one) not expanding correctly'
+expected='A_t x=(name=xxx;)'
+[[ $( $SHELL << \+++
+	typeset -T A_t=(
+		typeset name
+	)
+	A_t x=(name="xxx")
+	typeset -p x
++++
+) ==  "$expected" ]] || err_exit  'empty field in definition does not expand correctly'
 exit $Errors
