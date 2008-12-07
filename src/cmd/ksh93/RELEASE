@@ -1,4 +1,30 @@
-08-11-11  --- Release ksh93t+  ---
+08-12-07  --- Release ksh93t+  ---
+08-12-07  A bug in typeset -m which occured when the target node was an
+	  associative array element has been fixed.
+08-12-07  A timing bug on some systems (for example darwin), that could
+	  cause the last process of a pipeline entered interactively to fail
+	  with an "Exec format error" has been fixed.
+08-12-04  SHOPT_BGX enables background job extensions. Noted by "J" in
+	  the version string when enabled. (1) JOBMAX=n limits the number
+	  of concurrent & jobs to n; the n+1 & job will block until a
+	  running background job completes. (2) SIGCHLD traps are queued
+	  so that each completing background job gets its own trap; $! is
+	  set to the job pid and $? is set to the job exit status at the
+	  beginning of the trap. (3) sleep -s added to sleep until the time
+	  expires or until a signal is delivered.
+08-12-04  The sign of floating point zero is preserved across arithmetic
+	  function calls.
+08-12-04  A bug that caused print(1) to produce garbled stdout/stderr
+	  output has been fixed.
+08-12-04  A bug in which printf "%d\n" "'<euro>'" did not output the
+          numerical value of the EURO symbol, 8354, has been fixed.
+08-11-24  /dev/fd* and /dev/std* redirections are first attempted with
+	  open() to preserve seek semantics; failing that the corresponding
+	  file descriptors are dup()'d.
+08-11-20  A bug which could cause a core dump if a function compiled with
+	  shcomp was found has been fixed.
+08-11-20  A bug in which jobs were not cleared from the jobs table for
+	  interactive shells when the pipefail option is on has been fixed.
 08-11-11  A bug in which a field that was unset in a type definition and later
 	  set for an instance could appear twice when displaying the variable
 	  has been fixed.

@@ -108,7 +108,7 @@ All recorded changes follow.
 08-06-20 mktest.sh: prepend $PWD onto PATH for local units -- doh^2
 08-06-11 regress.sh: fix bug that skipped the last test
 08-05-20 regress.sh: add --local to put *.tmp dir in local fs
-08-05-05 regerss.sh: add IF command ... ELIF command ... ELSE ... FI
+08-05-05 regress.sh: add IF command ... ELIF command ... ELSE ... FI
 08-05-01 package.sh: package test => ulimit -c 0
 08-04-28 regress.sh: fix EXPORT quoting
 08-04-28 regress.sh: fix UNIT set check args too

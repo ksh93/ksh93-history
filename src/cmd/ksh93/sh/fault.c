@@ -396,7 +396,13 @@ void	sh_chktrap(void)
 	}
 	if(sh.sigflag[SIGALRM]&SH_SIGALRM)
 		sh_timetraps();
+#ifdef SHOPT_BGX
+	if((sh.sigflag[SIGCHLD]&SH_SIGTRAP) && sh.st.trapcom[SIGCHLD])
+		job_chldtrap(&sh,sh.st.trapcom[SIGCHLD],1);
+	while(--sig>=0 && sig!=SIGCHLD)
+#else
 	while(--sig>=0)
+#endif /* SHOPT_BGX */
 	{
 		if(sh.sigflag[sig]&SH_SIGTRAP)
 		{

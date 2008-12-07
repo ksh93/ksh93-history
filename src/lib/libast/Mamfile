@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.3 2008-10-28
+info mam static 00000 1994-07-17 make (AT&T Research) 5.3 2008-12-08
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ar
@@ -1145,6 +1145,8 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Imisc -Iinclude -Istd -D_PAC
 done astintercept.o generated
 make getenv.o
 make misc/getenv.c
+make windows.h implicit
+done windows.h dontcare virtual
 prev misc/intercepts.h implicit
 done misc/getenv.c
 meta getenv.o %.c>%.o misc/getenv.c getenv
@@ -1345,8 +1347,7 @@ done localeconv.o generated
 make setlocale.o
 make comp/setlocale.c
 make include/ast_windows.h implicit
-make windows.h implicit
-done windows.h dontcare virtual
+prev windows.h implicit
 done include/ast_windows.h dontcare
 prev include/namval.h implicit
 make include/mc.h implicit

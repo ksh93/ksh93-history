@@ -104,6 +104,7 @@ tmxfmt(char* buf, size_t len, const char* format, Time_t t)
 	int		c;
 	int		i;
 	int		flags;
+	int		alt;
 	int		pad;
 	int		delimiter;
 	int		width;
@@ -146,6 +147,7 @@ tmxfmt(char* buf, size_t len, const char* format, Time_t t)
 				*cp++ = c;
 			continue;
 		}
+		alt = 0;
 		pad = 0;
 		width = 0;
 		prec = 0;
@@ -162,6 +164,7 @@ tmxfmt(char* buf, size_t len, const char* format, Time_t t)
 			case 'O':
 				if (!isalpha(*format))
 					break;
+				alt = c;
 				continue;
 			case '0':
 				if (!parts)
@@ -297,7 +300,18 @@ tmxfmt(char* buf, size_t len, const char* format, Time_t t)
 			p = tm_info.format[TM_DATE_1];
 			goto push;
 		case 'K':
-			p = "%Y-%m-%d+%H:%M:%S";
+			switch (alt)
+			{
+			case 'E':
+				p = (pad == '_') ? "%Y-%m-%d %H:%M:%S.%N %z" : "%Y-%m-%d+%H:%M:%S.%N%z";
+				break;
+			case 'O':
+				p = (pad == '_') ? "%Y-%m-%d %H:%M:%S.%N" : "%Y-%m-%d+%H:%M:%S.%N";
+				break;
+			default:
+				p = (pad == '_') ? "%Y-%m-%d %H:%M:%S" : "%Y-%m-%d+%H:%M:%S";
+				break;
+			}
 			goto push;
 		case 'l':	/* `ls -l' date */
 			if (t)

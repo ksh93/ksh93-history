@@ -59,8 +59,9 @@ fi
 set -o noclobber
 exec 3<> file1
 read -u3 line
-if	[[ $line != foo ]]
-then	err_exit '<> not working right with read'
+exp=foo
+if	[[ $line != $exp ]]
+then	err_exit "read on <> fd failed -- expected '$exp', got '$line'"
 fi
 if	( 4> file1 ) 2> /dev/null
 then	err_exit 'noclobber not causing exclusive open'
@@ -68,9 +69,12 @@ fi
 set +o noclobber
 if	command exec 4< /dev/fd/3
 then	read -u4 line
-	if	[[ $line != bar ]]
-	then	'4< /dev/fd/3 not working correctly'
-	fi
+	exp=foo
+	case $line in
+	foo)	;;
+	bar)	err_exit "'4< /dev/fd/3' uses dup(2) instead of open(2) -- expected '$exp', got '$line'" ;;
+	*)	err_exit "'4< /dev/fd/3' failed -- expected '$exp', got '$line'" ;;
+	esac
 fi
 cat > close0 <<\!
 exec 0<&-
@@ -165,7 +169,8 @@ x=$(
 		print -n 4 > /dev/fd/2
 	}  2>&1
 )
-[[ $x == "1234" ]] || err_exit "/dev/fd/NN redirection fails to dup"
+exp=4
+[[ $x == $exp ]] || err_exit "/dev/fd/NN uses dup(2) instead of open(2) -- expected '$exp', got '$x'"
 # 2004-12-20 redirction loss bug fix
 cat > /tmp/io$$.1 <<- \++EOF++  
 	function a
@@ -197,27 +202,27 @@ then	(( $(3<#) == 0 )) || err_exit "not at position 0"
 	(( $(3<# ((EOF))) == 40*62 )) || err_exit "not at end-of-file"
 	command exec 3<# ((40*8)) || err_exit "absolute seek fails"	
 	read -u3
-	[[ $REPLY == +(i) ]] || err_exit "expecting iiii..."
+	[[ $REPLY == +(i) ]] || err_exit "expected iiii..., got $REPLY"
 	[[ $(3<#) == $(3<# ((CUR)) ) ]] || err_exit '$(3<#)!=$(3<#((CUR)))'
 	command exec 3<# ((CUR+80))
 	read -u3
-	[[ $REPLY == {39}(l) ]] || err_exit "expecting lll..."
+	[[ $REPLY == {39}(l) ]] || err_exit "expected lll..., got $REPLY"
 	command exec 3<# ((EOF-80))
 	read -u3
-	[[ $REPLY == +(9) ]] || err_exit "expecting 999...; got $REPLY"
+	[[ $REPLY == +(9) ]] || err_exit "expected 999..., got $REPLY"
 	command exec 3># ((80))
 	print -u3 -f "%.39c\n"  @
 	command exec 3># ((80))
 	read -u3
-	[[ $REPLY == +(@) ]] || err_exit "expecting @@@..."
+	[[ $REPLY == +(@) ]] || err_exit "expected @@@..., got $REPLY"
 	read -u3
-	[[ $REPLY == +(d) ]] || err_exit "expecting ddd..."
+	[[ $REPLY == +(d) ]] || err_exit "expected ddd..., got $REPLY"
 	command exec 3># ((EOF))
 	print -u3 -f "%.39c\n"  ^
 	(( $(3<# ((CUR-0))) == 40*63 )) || err_exit "not at extended end-of-file"
 	command exec 3<# ((40*62)) 
 	read -u3
-	[[ $REPLY == +(^) ]] || err_exit "expecting ddd..."
+	[[ $REPLY == +(^) ]] || err_exit "expected ddd..., got $REPLY"
 	command exec 3<# ((0))
 	command exec 3<# *jjjj*
 	read -u3
@@ -369,5 +374,17 @@ then	export LC_ALL=en_US.UTF-8
 		done
 	fi
 fi
+
+exec 3<&2
+file=/tmp/kshfile$$
+trap 'rm -f "$file"' EXIT
+redirect 5>$file 2>&5
+print -u5 -f 'This is a test\n'
+print -u2 OK
+exec 2<&3
+exp=$'This is a test\nOK'
+got=$(< $file)
+[[ $got == $exp ]] || err_exit "output garbled when stderr is duped -- expected $(printf %q "$exp"), got $(printf %q "$got")"
+rm -f "$file"
 
 exit $((Errors))

@@ -334,6 +334,7 @@ struct limits
 #define MATCH_MAX		64
 
 #define SH_READEVAL		0x4000	/* for sh_eval */
+#define SH_FUNEVAL		0x10000	/* for sh_eval for function load */
 
 extern Shell_t		*nv_shell(Namval_t*);
 extern int		sh_addlib(void*);

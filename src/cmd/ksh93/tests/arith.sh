@@ -483,4 +483,16 @@ $SHELL -c '(( x=));:' 2> /dev/null && err_exit '((x=)) should be an error'
 $SHELL -c '(( x+=));:' 2> /dev/null && err_exit '((x+=)) should be an error'
 $SHELL -c '(( x=+));:' 2> /dev/null && err_exit '((x=+)) should be an error'
 $SHELL -c 'x=();x.arr[0]=(z=3); ((x.arr[0].z=2))' 2> /dev/null || err_exit '(((x.arr[0].z=2)) should not be an error'
+
+float t
+typeset a b r
+v="-0.0 0.0 +0.0 -1.0 1.0 +1.0"
+for a in $v
+do	for b in $v
+	do	(( r = copysign(a,b) ))
+		(( t = copysign(a,b) ))
+		[[ $r == $t ]] || err_exit $(printf "float t=copysign(%3.1f,%3.1f) => %3.1f -- expected %3.1f\n" a b t r)
+	done
+done
+
 exit $((Errors))

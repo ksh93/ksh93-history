@@ -26,6 +26,8 @@
 
 #include        "defs.h"
 
+#include	<ctype.h>
+
 static const char sh_opttype[] =
 "[-1c?\n@(#)$Id: type (AT&T Labs Research) 2008-07-01 $\n]"
 USAGE_LICENSE

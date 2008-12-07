@@ -293,7 +293,7 @@ void	*sh_parse(Shell_t *shp, Sfio_t *iop, int flag)
 	Fcin_t	sav_input;
 	struct argnod *sav_arg = lexp->arg;
 	int	sav_prompt = shp->nextprompt;
-	if(shp->binscript && sffileno(iop)==shp->infd)
+	if(shp->binscript && (sffileno(iop)==shp->infd || (flag&SH_FUNEVAL)))
 		return((void*)sh_trestore(shp,iop));
 	fcsave(&sav_input);
 	shp->st.staklist = 0;
@@ -323,12 +323,13 @@ void	*sh_parse(Shell_t *shp, Sfio_t *iop, int flag)
 			lexp->arg = sav_arg;
 			if(version > 3)
 				errormsg(SH_DICT,ERROR_exit(1),e_lexversion);
-			if(sffileno(iop)==shp->infd)
+			if(sffileno(iop)==shp->infd || (flag&SH_FUNEVAL))
 				shp->binscript = 1;
 			sfgetc(iop);
 			return((void*)sh_trestore(shp,iop));
 		}
 	}
+	flag &= ~SH_FUNEVAL;
 	if((flag&SH_NL) && (shp->inlineno=error_info.line+shp->st.firstline)==0)
 		shp->inlineno=1;
 #if KSHELL

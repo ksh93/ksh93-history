@@ -38,6 +38,8 @@
 #define dig3(s,n)	((n)=((*(s)++)-'0')*100,(n)+=((*(s)++)-'0')*10,(n)+=(*(s)++)-'0')
 #define dig4(s,n)	((n)=((*(s)++)-'0')*1000,(n)+=((*(s)++)-'0')*100,(n)+=((*(s)++)-'0')*10,(n)+=(*(s)++)-'0')
 
+#undef	BREAK
+
 #define BREAK		(1<<0)
 #define CCYYMMDDHHMMSS	(1<<1)
 #define CRON		(1<<2)

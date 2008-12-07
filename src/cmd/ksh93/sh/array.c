@@ -1252,7 +1252,7 @@ void *nv_associative(register Namval_t *np,const char *sp,int mode)
 			else if(ap->header.nelem&ARRAY_NOSCOPE)
 				mode = HASH_NOSCOPE;
 			if(*sp==0 && (mode&NV_ADD))
-				sfprintf(sfstderr,"adding empty subscript\n"); 
+				errormsg(SH_DICT,ERROR_warn(0),"adding empty subscript"); 
 			if(sh.subshell && (mp=nv_search(sp,ap->header.table,0)) && nv_isnull(mp))
 				ap->cur = mp;
 			if((mp || (mp=nv_search(sp,ap->header.table,mode))) && nv_isnull(mp) && (mode&NV_ADD))

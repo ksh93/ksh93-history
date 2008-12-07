@@ -260,6 +260,12 @@ static int sig_number(const char *string)
 		{
 			sig = 1;
 			o += 3;
+			if(isdigit(*stakptr(o)))
+			{
+				n = strtol(stakptr(o),&last,10);
+				if(!*last)
+					return(n);
+			}
 		}
 		tp = sh_locate(stakptr(o),(const Shtable_t*)shtab_signals,sizeof(*shtab_signals));
 		n = tp->sh_number;
@@ -405,7 +411,7 @@ static void sig_list(register Shell_t *shp,register int flag)
 	else
 	{
 		/* print all the signal names */
-		for(sig=2; sig <= shp->sigmax; sig++)
+		for(sig=1; sig <= shp->sigmax; sig++)
 		{
 			if(!(sname=(char*)names[sig+1]))
 				sname = sig_name(sig,name,1);

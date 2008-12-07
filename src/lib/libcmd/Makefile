@@ -30,9 +30,9 @@ $(INCLUDEDIR) :INSTALLPROTO: cmd.h cmdext.h cmdlist.h
 
 "win32*" :NOOPTIMIZE: id.c
 
-src = $(*$(*$(*cmd)):N=*.c)
+src = $(*$(*$(*cmd)):N=*.c:T=F)
 
-cmdext.h : (src) $$(--mam:+$$(src))
+cmdext.h : (src) $$(-mam:+$$(src))
 	{
 	cat <<!
 	$("#")pragma prototyped
@@ -46,7 +46,7 @@ cmdext.h : (src) $$(--mam:+$$(src))
 		-e 's/^b_//' \
 		-e 's/(.*//' \
 		-e 's/.*/extern int	b_&(int, char**, void*);/' \
-		$($(~:O=1):T=F) |
+		$($(~:O=1)) |
 	$(SORT) -u
 	} > 1.$(tmp).h
 	if	$(CMP) $(CMPFLAGS) 1.$(tmp).h $(<)

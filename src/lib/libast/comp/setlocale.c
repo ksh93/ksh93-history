@@ -759,6 +759,7 @@ composite(register const char* s, int initialize)
 	register int		j;
 	register int		k;
 	int			n;
+	int			m;
 	const char*		w;
 	Lc_t*			p;
 	int			cat[AST_LC_COUNT];
@@ -802,10 +803,10 @@ composite(register const char* s, int initialize)
 			}
 			else if (*s++ == ';')
 			{
-				if ((n = s - w - 1) >= sizeof(buf))
-					n = sizeof(buf) - 1;
-				memcpy(buf, w, n);
-				buf[n] = 0;
+				if ((m = s - w - 1) >= sizeof(buf))
+					m = sizeof(buf) - 1;
+				memcpy(buf, w, m);
+				buf[m] = 0;
 				p = lcmake(buf);
 				break;
 			}
@@ -824,7 +825,7 @@ composite(register const char* s, int initialize)
 			else if (!lc_categories[cat[i]].prev)
 				lc_categories[cat[i]].prev = p;
 	}
-	while (s[0] == '/' && s[1] && n < AST_LC_COUNT)
+	while (s[0] == '/' && s[1] && n < (AST_LC_COUNT - 1))
 	{
 		n++;
 		for (w = ++s; *s && *s != '/'; s++);

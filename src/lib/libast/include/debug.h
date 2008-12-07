@@ -51,9 +51,10 @@
 #define DEBUG_PRINT(fd,s,v)	do {char _b[1024];write(fd,_b,sfsprintf(_b,sizeof(_b),s,v));} while(0)
 #define DEBUG_WRITE(fd,d,n)	write((fd),(d),(n))
 #define DEBUG_TEMP(temp)	(temp) /* debugging stuff that should be removed */
-#define DEBUG_RETURN(x)		(debug_fatal(__FILE__, __LINE__), (x))
-#define DEBUG_BREAK		(debug_fatal(__FILE__, __LINE__))
+#define DEBUG_BREAK		do { debug_fatal(__FILE__, __LINE__); break; } while(0)
+#define DEBUG_CONTINUE		do { debug_fatal(__FILE__, __LINE__); continue; } while(0)
 #define DEBUG_GOTO(label)	do { debug_fatal(__FILE__, __LINE__); goto label; } while(0)
+#define DEBUG_RETURN(x)		do { debug_fatal(__FILE__, __LINE__); return(x); } while(0)
 
 #else
 
@@ -70,11 +71,25 @@
 #define DEBUG_SET(n,v)
 #define DEBUG_PRINT(fd,s,v)
 #define DEBUG_WRITE(fd,d,n)
-#define DEBUG_KPV(x)
-#define DEBUG_RETURN(x)		return(x)
+#define DEBUG_TEMP(x)
 #define DEBUG_BREAK		break
+#define DEBUG_CONTINUE		continue
 #define DEBUG_GOTO(label)	goto label
+#define DEBUG_RETURN(x)		return(x)
 
+#endif
+
+#ifndef BREAK
+#define BREAK			DEBUG_BREAK
+#endif
+#ifndef CONTINUE
+#define CONTINUE		DEBUG_CONTINUE
+#endif
+#ifndef GOTO
+#define GOTO(label)		DEBUG_GOTO(label)
+#endif
+#ifndef RETURN
+#define RETURN(x)		DEBUG_RETURN(x)
 #endif
 
 #if _BLD_ast && defined(__EXPORT__)

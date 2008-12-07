@@ -107,8 +107,17 @@ struct lconv
 #define extern		__EXPORT__
 #endif
 
+#if !_UWIN /* for ast54 compatibility */
+
 #undef	getenv
 #define getenv		_ast_getenv
+
+#undef	setenviron
+#define setenviron	_ast_setenviron
+
+extern char*		getenv(const char*);
+
+#endif
 
 #undef	localeconv
 #define localeconv	_ast_localeconv
@@ -116,13 +125,9 @@ struct lconv
 #undef	setlocale
 #define setlocale	_ast_setlocale
 
-#undef	setenviron
-#define setenviron	_ast_setenviron
-
 #undef	strerror
 #define strerror	_ast_strerror
 
-extern char*		getenv(const char*);
 extern struct lconv*	localeconv(void);
 extern char*		setenviron(const char*);
 extern char*		setlocale(int, const char*);

@@ -1395,7 +1395,7 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 					up->ldp = new_of(Sfdouble_t,0);
 				else if(flags&NV_APPEND)
 					old = *(up->ldp);
-				*(up->ldp) = ld+old;
+				*(up->ldp) = old?ld+old:ld;
 			}
 			else
 			{
@@ -1415,7 +1415,7 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 					up->dp = new_of(double,0);
 				else if(flags&NV_APPEND)
 					od = *(up->dp);
-				*(up->dp) = d+od;
+				*(up->dp) = od?d+od:d;
 			}
 		}
 		else
@@ -2830,6 +2830,7 @@ int nv_rename(register Namval_t *np, int flags)
 	Namval_t		*last_table = shp->last_table;
 	Dt_t			*last_root = shp->last_root;
 	Dt_t			*hp = 0;
+	char			*nvenv = 0;
 	if(nv_isattr(np,NV_PARAM) && shp->st.prevst)
 	{
 		if(!(hp=(Dt_t*)shp->st.prevst->save_tree))
@@ -2867,7 +2868,10 @@ int nv_rename(register Namval_t *np, int flags)
 			mp->nvenv = (void*)np;
 	}
 	if(mp)
+	{
+		nvenv = (char*)np;
 		np = mp;
+	}
 	if(nr==np)
 	{
 		if(index<0)
@@ -2876,6 +2880,8 @@ int nv_rename(register Namval_t *np, int flags)
 			cp = strdup(cp);
 	}
 	_nv_unset(np,0);
+	if(!nv_isattr(np,NV_MINIMAL))
+		np->nvenv = nvenv;
 	if(nr==np)
 	{
 		nv_putsub(np,(char*)0, index);

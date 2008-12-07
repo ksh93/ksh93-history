@@ -223,4 +223,28 @@ float s=$SECONDS
 ((s = SECONDS))
 [[ $($SHELL -c 'trap "print SIGUSR1 ; exit 0" USR1; (trap "exit" USR1 ; exec kill -USR1 $$ & sleep 5); print done') == SIGUSR1 ]] || err_exit 'subshell catching signal does not send signal to parent' 
 (( SECONDS-s < 4 )) && err_exit 'parent completes early'
+
+unset n s t
+for s in $(kill -l)
+do	if	! n=$(kill -l $s 2>/dev/null)
+	then	err_exit "'kill -l $s' failed"
+		continue
+	fi
+	if	! t=$(kill -l $n 2>/dev/null)
+	then	err_exit "'kill -l $n' failed"
+		continue
+	fi
+	if	[[ $s == ?(SIG)$t ]]
+	then	continue
+	fi
+	if	! m=$(kill -l $t 2>/dev/null)
+	then	err_exit "'kill -l $t' failed"
+		continue
+	fi
+	if	[[ $m == $n ]]
+	then	continue
+	fi
+	err_exit "'kill -l $s' => $n, 'kill -l $n' => $t, kill -l $t => $m -- expected $n"
+done
+
 exit $((Errors))

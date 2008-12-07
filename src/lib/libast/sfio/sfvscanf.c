@@ -122,7 +122,7 @@ int	flag;
 
 /* structure to match characters in a character class */
 typedef struct _accept_s
-{	char	ok[SF_MAXCHAR];
+{	char	ok[SF_MAXCHAR+1];
 	int	yes;
 	char	*form, *endf;
 #if _has_multibyte

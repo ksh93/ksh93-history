@@ -1323,8 +1323,12 @@ Vmdisc_t*	disc;	/* discipline structure			*/
 		{
 			addr = (Vmuchar_t*)sbrk(0); /* old break value */
 			if(addr && addr != (Vmuchar_t*)BRK_FAILED )
+			{
+				if((addr+nsize) < addr)
+					return NIL(Void_t*);
 				if(brk(addr+nsize) == 0 ) 
 					return addr;
+			}
 		}
 #endif /* _mem_sbrk */
 

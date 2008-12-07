@@ -50,6 +50,7 @@ const char e_histopen[]		= "history file cannot open";
 const char e_option[]		= "%s: bad option(s)";
 const char e_toomany[]		= "open file limit exceeded";
 const char e_argtype[]		= "invalid argument of type %c";
+const char e_oneoperand[]	= "one operand expected";
 const char e_formspec[]		= "%c: unknown format specifier";
 const char e_badregexp[]	= "%s: invalid regular expression";
 const char e_number[]		= "%s: bad number";

@@ -601,7 +601,7 @@ static void funload(Shell_t *shp,int fno, const char *name)
 	shp->st.filename = pname;
 	shp->funload = 1;
 	error_info.line = 0;
-	sh_eval(sfnew(NIL(Sfio_t*),buff,IOBSIZE,fno,SF_READ),0);
+	sh_eval(sfnew(NIL(Sfio_t*),buff,IOBSIZE,fno,SF_READ),SH_FUNEVAL);
 	shp->readscript = 0;
 	free((void*)shp->st.filename);
 	shp->funload = oldload;

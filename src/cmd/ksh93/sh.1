@@ -6038,7 +6038,7 @@ Equivalent to
 .BI "exec /bin/newgrp" " arg\^"
 \&.\|.\|.\^.
 .TP
-\f3print\fP \*(OK \f3\-Renprs\^\fP \*(CK \*(OK \f3\-u\fP \f2unit\^\fP\*(CK \*(OK \f3\-f\fP \f2format\^\fP \*(CK \*(OK \f2arg\^\fP .\|.\|. \*(CK
+\f3print\fP \*(OK \f3\-CRenprsv\^\fP \*(CK \*(OK \f3\-u\fP \f2unit\^\fP\*(CK \*(OK \f3\-f\fP \f2format\^\fP \*(CK \*(OK \f2arg\^\fP .\|.\|. \*(CK
 With no options or with option
 .B \-
 or
@@ -6060,9 +6060,11 @@ In this case, any
 options are ignored.
 Otherwise,
 unless the
-.B \-R
-or
+.BR \-C ,
+.BR \-R ,
 .BR \-r ,
+or
+.B \-v
 are specified, the following
 escape conventions will be applied:
 .RS
@@ -6133,6 +6135,24 @@ of the process spawned with
 .B \(bv&
 instead of standard output.
 The
+.B \-v
+option treats each
+.I arg\^
+as a variable name and writes the value in
+the
+.B printf
+.B %B
+format.
+The
+.B \-C
+option treats each
+.I arg\^
+as a variable name and writes the value in
+the
+.B printf
+.B %#B
+format.
+The
 .B \-s
 option causes the
 arguments to be written onto the history file
@@ -6180,7 +6200,10 @@ A
 option causes each of the arguments to be treated
 as variable names and the binary value of variable
 will be printed. 
-This is most useful for variables whose attribute
+The alternate flag
+.B #
+causes a compound variable to be output on a single line.
+This is most useful for compound variables and variables whose attribute
 is
 .BR \-b .
 .LI

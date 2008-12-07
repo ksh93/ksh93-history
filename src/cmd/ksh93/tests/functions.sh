@@ -28,11 +28,12 @@ alias err_exit='err_exit $LINENO'
 integer Errors=0
 Command=${0##*/}
 
-tmp=/tmp/kshtf$$
+tmp=/tmp/kshtd$$
 function cleanup
 {
 	rm -rf $tmp
 }
+trap cleanup EXIT
 mkdir $tmp || err_exit "mkdir $tmp failed"
 
 integer foo=33
@@ -213,7 +214,6 @@ if	[[ $(foo) != 3 ]]
 then	err_exit 'variable assignment list not using parent scope'
 fi
 unset -f foo$$
-#trap "rm -f $tmp/foo$$" EXIT INT
 cat > $tmp/foo$$ <<!
 function foo$$
 {
@@ -921,10 +921,7 @@ unset -f .sh.fun.set
 # tests for debug functions
 basefile=${.sh.file}
 integer baseline
-cleanup
-trap 'rm $tmp' EXIT
-tmp=${TMPDIR:-/tmp}/ksh$$.1 
-cat > $tmp << \+++
+cat > $tmp/debug << \+++
 	: line 1
 
 	: line 3
@@ -943,7 +940,7 @@ function _Dbg_print_frame
 		[[ $arg == DEBUG  ]] && ((baseline++))
 		[[ $line == "$baseline" ]] || err_exit "line number for level 0 is $line not $baseline"
 	elif	((pos==1))
-	then	[[ $filename == "$tmp" ]] ||  err_exit "filename for level 1 is $filename not $tmp"
+	then	[[ $filename == "$tmp/debug" ]] ||  err_exit "filename for level 1 is $filename not $tmp/debug"
 		[[ $* == 'foo bar' ]] || err_exit "args are '$*', not 'foo bar'"
 		[[ $line == $arg ]] || err_exit "line number for level 1 is $line not $arg"
 	else	err_exit "level should be 0 or 1 but is $pos"
@@ -963,7 +960,7 @@ function _Dbg_debug_trap_handler
 
 ((baseline=LINENO+2))
 trap '_Dbg_debug_trap_handler' DEBUG
-.  $tmp  foo bar
+.  $tmp/debug foo bar
 trap '' DEBUG
              
 caller() {
@@ -978,7 +975,6 @@ bar() { caller;}
 set -- $(bar)
 [[ $1 == $2 ]] && err_exit ".sh.inline optimization bug"
 ( $SHELL  -c ' function foo { typeset x=$1;print $1;};z=();z=($(foo bar)) ') 2> /dev/null ||  err_exit 'using a function to set an array in a command sub  fails'
-rm "$tmp"
 
 [[ $( $SHELL  << \+++
 f()
@@ -993,9 +989,8 @@ f 257  && print ok
 ) == ok ]] || err_exit 'Cannot handle comsub depth > 256 in function'
 
 
-tmp1=${TMPDIR:-/tmp}/ksh$$.1 
-tmp2=${TMPDIR:-/tmp}/ksh$$.2 
-trap 'rm "$tmp1" "$tmp2"' EXIT
+tmp1=$tmp/job.1
+tmp2=$tmp/job.2
 cat > $tmp1 << +++
 #! $SHELL
 print \$\$
@@ -1009,4 +1004,26 @@ function foo
 	[[ $(< $tmp2) == $pid ]] || err_exit 'wrong pid for & job in function'
 }
 foo
+# make sure compiled functions work
+[[ $(tmp=$tmp $SHELL <<- \++++
+	shcomp=${SHELL%/*}/shcomp
+	cat > $tmp/functions <<- \EOF
+	 	function bar
+	 	{
+	 		print foo
+	 	}
+	 	function foobar
+	 	{
+	 		bar
+	 	}
+	EOF
+	$shcomp $tmp/functions > $tmp/foobar
+	rm -f "$tmp/functions"
+	chmod +x $tmp/foobar
+	rm $tmp/!(foobar)
+	FPATH=$tmp
+	PATH=$FPATH:$PATH
+	foobar
+++++
+) == foo ]] > /dev/null  || err_exit 'functions compiled with shcomp not working'
 exit $((Errors))

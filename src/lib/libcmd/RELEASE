@@ -1,3 +1,4 @@
+08-12-07 date.c: add %[_][EO]K for [space pad] [full|long] iso docs
 08-11-10 stty.c: check for -t grouping so -tostop != -t -ostop
 08-10-15 rm.c: handle 'rm -f x x' => exit 0
 08-09-08 stty.c: #ifdef guard TAB[012] -- freebsd: damn the posix, full speed ahead

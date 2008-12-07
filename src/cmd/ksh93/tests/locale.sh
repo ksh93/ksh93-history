@@ -99,6 +99,10 @@ then	LC_ALL=$lc_all
 		print -- \$txt
 	" 2>&1)
 	[[ "$u" == "$x" ]] || err_exit LC_ALL=$lc_all multibyte value/trace format failed
+
+	x=$'00fc\n20ac'
+	u=$(LC_ALL=$lc_all $SHELL -c $'printf "%04x\n" \$\'\"\303\274\"\' \$\'\"\xE2\x82\xAC\"\'')
+	[[ $u == $x ]] || err_exit LC_ALL=$lc_all multibyte %04x printf format failed
 fi
 
 exit $Errors

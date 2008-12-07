@@ -19,6 +19,7 @@ SHOPT_ACCTFILE ==  		/* per user accounting info */
 SHOPT_AUDIT ==
 SHOPT_AUDITFILE == "/etc/ksh_audit"  		/* auditing file */
 SHOPT_BASH ==			/* bash compatibility code */
+SHOPT_BGX == 1			/* one SIGCHLD trap per completed job */
 SHOPT_BRACEPAT == 1		/* C-shell {...,...} expansions (, required) */
 SHOPT_CMDLIB_HDR ==		/* -lcmd builtin list: <cmdlist.h> */
 SHOPT_CMDLIB_DIR ==		/* SHOPT_CMDLIB_HDR prefix SH_CMDLIB_DIR + <cmdlist.h> */
@@ -200,8 +201,8 @@ end
 	exit.sh expand.sh functions.sh glob.sh grep.sh heredoc.sh io.sh \
 	nameref.sh options.sh path.sh quoting.sh quoting2.sh restricted.sh \
 	return.sh select.sh subshell.sh substring.sh tilde.sh variables.sh \
-	cubetype.sh enum.sh pointtype.sh recttype.sh timetype.sh statics.sh \
-	sigchld.sh types.sh vartree1.sh vartree2.sh
+	cubetype.sh enum.sh pointtype.sh recttype.sh timetype.sh treemove.sh \
+	statics.sh sigchld.sh types.sh vartree1.sh vartree2.sh
 
 if "$(PWD:B:N=cc-*)"
 

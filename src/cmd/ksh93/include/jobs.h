@@ -84,6 +84,9 @@ struct jobs
 	unsigned int	in_critical;	/* >0 => in critical region */
 	int		savesig;	/* active signal */
 	int		numpost;	/* number of posted jobs */
+#ifdef SHOPT_BGX
+	int		numbjob;	/* number of background jobs */
+#endif /* SHOPT_BGX */
 	short		fd;		/* tty descriptor number */
 #ifdef JOBS
 	int		suspend;	/* suspend character */
@@ -153,6 +156,9 @@ extern int	job_wait(pid_t);
 extern int	job_post(pid_t,pid_t);
 extern void	*job_subsave(void);
 extern void	job_subrestore(void*);
+#ifdef SHOPT_BGX
+extern void	job_chldtrap(Shell_t*, const char*,int);
+#endif /* SHOPT_BGX */
 #ifdef JOBS
 	extern void	job_init(Shell_t*,int);
 	extern int	job_close(Shell_t*);

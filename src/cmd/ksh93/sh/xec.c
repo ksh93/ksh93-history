@@ -466,7 +466,9 @@ int sh_eval(register Sfio_t *iop, int mode)
 	struct checkpt buff;
 	static Sfio_t *io_save;
 	volatile int traceon=0, lineno=0;
+	int binscript=shp->binscript;
 	io_save = iop; /* preserve correct value across longjmp */
+	shp->binscript = 0;
 #define SH_TOPFUN	0x8000	/* this is a temporary tksh hack */
 	if (mode & SH_TOPFUN)
 	{
@@ -476,7 +478,7 @@ int sh_eval(register Sfio_t *iop, int mode)
 	sh_pushcontext(&buff,SH_JMPEVAL);
 	buff.olist = pp->olist;
 	jmpval = sigsetjmp(buff.buff,0);
-	if(jmpval==0)
+	while(jmpval==0)
 	{
 		if(mode&SH_READEVAL)
 		{
@@ -484,22 +486,28 @@ int sh_eval(register Sfio_t *iop, int mode)
 			if(traceon=sh_isoption(SH_XTRACE))
 				sh_offoption(SH_XTRACE);
 		}
-		t = (Shnode_t*)sh_parse(shp,iop,(mode&SH_READEVAL)?0:SH_NL);
-		if(mode&SH_READEVAL)
-			mode &= SH_READEVAL;
-		else
-			sfclose(iop);
-		io_save = 0;
+		t = (Shnode_t*)sh_parse(shp,iop,(mode&(SH_READEVAL|SH_FUNEVAL))?mode&SH_FUNEVAL:SH_NL);
+		if(!(mode&SH_FUNEVAL) || !sfreserve(iop,0,0))
+		{
+			if(!(mode&SH_READEVAL))
+				sfclose(iop);
+			io_save = 0;
+			mode &= ~SH_FUNEVAL;
+		}
+		mode &= ~SH_READEVAL;
 		if(!sh_isoption(SH_VERBOSE))
 			sh_offstate(SH_VERBOSE);
-		if(mode && shp->hist_ptr)
+		if((mode&~SH_FUNEVAL) && shp->hist_ptr)
 		{
 			hist_flush(shp->hist_ptr);
 			mode = sh_state(SH_INTERACTIVE);
 		}
-		sh_exec(t,sh_isstate(SH_ERREXIT)|mode);
+		sh_exec(t,sh_isstate(SH_ERREXIT)|(mode&~SH_FUNEVAL));
+		if(!(mode&SH_FUNEVAL))
+			break;
 	}
 	sh_popcontext(&buff);
+	shp->binscript = binscript;
 	if(traceon)
 		sh_onoption(SH_XTRACE);
 	if(lineno)
@@ -662,6 +670,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 		int		echeck = 0;
 		if(flags&sh_state(SH_INTERACTIVE))
 		{
+			if(pipejob==2)
+				job_unlock();
 			pipejob = 0;
 			job.curpgid = 0;
 			flags &= ~sh_state(SH_INTERACTIVE);
@@ -877,6 +887,11 @@ int sh_exec(register const Shnode_t *t, int flags)
 						else
 							np = 0;
 					}
+				}
+				if(np && pipejob==2)
+				{
+					job_unlock();
+					pipejob = 1;
 				}
 				/* check for builtins */
 				if(np && is_abuiltin(np))
@@ -1152,6 +1167,18 @@ int sh_exec(register const Shnode_t *t, int flags)
 				job.parent=parent=0;
 			else
 			{
+#ifdef SHOPT_BGX
+				int maxjob;
+				if(((type&(FAMP|FINT)) == (FAMP|FINT)) && (maxjob=nv_getnum(JOBMAXNOD))>0)
+				{
+					while(job.numbjob >= maxjob)
+					{
+						job_lock();
+						job_reap(0);
+						job_unlock();
+					}
+				}
+#endif /* SHOPT_BGX */
 				if(type&FCOOP)
 					coproc_init(shp,pipes);
 				nv_getval(RANDNOD);
@@ -1185,6 +1212,11 @@ int sh_exec(register const Shnode_t *t, int flags)
 			 * It may or may not wait for the child
 			 */
 			{
+				if(pipejob==2)
+				{
+					pipejob = 1;
+					job_unlock();
+				}
 				if(type&FPCL)
 					sh_close(shp->inpipe[0]);
 				if(type&(FCOOP|FAMP))
@@ -1416,6 +1448,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 				job.waitall = 1;
 			else
 				job.waitall |= !pipejob && sh_isstate(SH_MONITOR);
+			job_lock();
 			do
 			{
 #if SHOPT_FASTPIPE
@@ -1439,6 +1472,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 			while(!type && t->tre.tretyp==TFIL);
 			shp->inpipe = pvn;
 			shp->outpipe = 0;
+			pipejob = 2;
 			if(type == 0)
 			{
 				/*
@@ -1451,6 +1485,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 			else
 				/* execution failure, close pipe */
 				sh_pclose(pvn);
+			if(pipejob==2)
+				job_unlock();
 			pipejob = savepipe;
 #ifdef SIGTSTP
 			if(!pipejob && sh_isstate(SH_MONITOR))
@@ -2333,7 +2369,15 @@ pid_t _sh_fork(register pid_t parent,int flags,int *jobid)
 			job.curpgid = parent;
 		if(flags&FCOOP)
 			shp->cpid = parent;
+#ifdef SHOPT_BGX
+		if(!postid && (flags&(FAMP|FINT)) == (FAMP|FINT))
+			postid = 1;
 		myjob = job_post(parent,postid);
+		if(postid==1)
+			postid = 0;
+#else
+		myjob = job_post(parent,postid);
+#endif /* SHOPT_BGX */
 		if(flags&FAMP)
 			job.curpgid = curpgid;
 		if(jobid)

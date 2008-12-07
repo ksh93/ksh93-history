@@ -77,6 +77,7 @@ const struct shtable2 shtab_variables[] =
 	"LC_NUMERIC",	0,				(char*)0,
 	"FIGNORE",	0,				(char*)0,
 	"KSH_VERSION",	0,				(char*)0,
+	"JOBMAX",	NV_NOFREE|NV_INTEGER,		(char*)0,
 	".sh",		NV_TABLE|NV_RDONLY|NV_NOFREE|NV_NOPRINT,(char*)0,
 	".sh.edchar",	0,				(char*)0,
 	".sh.edcol",	0,				(char*)0,

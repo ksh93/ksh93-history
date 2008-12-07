@@ -1060,7 +1060,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optprint[] =
-"[-1c?\n@(#)$Id: print (AT&T Research) 1999-04-07 $\n]"
+"[-1c?\n@(#)$Id: print (AT&T Research) 2008-11-26 $\n]"
 USAGE_LICENSE
 "[+NAME?print - write arguments to standard output]"
 "[+DESCRIPTION?By default, \bprint\b writes each \astring\a operand to "
@@ -1101,6 +1101,8 @@ USAGE_LICENSE
 	"standard output.]"
 "[u]:[fd:=1?Write to file descriptor number \afd\a instead of standard output.]"
 "[v?Treat each \astring\a as a variable name and write the value in \b%B\b "
+	"format.  Cannot be used with \b-f\b.]"
+"[C?Treat each \astring\a as a variable name and write the value in \b%#B\b "
 	"format.  Cannot be used with \b-f\b.]"
 "\n"
 "\n[string ...]\n"
@@ -1475,7 +1477,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optsleep[] =
-"[-1c?\n@(#)$Id: sleep (AT&T Research) 1999-04-07 $\n]"
+"[-1c?\n@(#)$Id: sleep (AT&T Research) 2008-12-03 $\n]"
 USAGE_LICENSE
 "[+NAME?sleep - suspend execution for an interval]"
 "[+DESCRIPTION?\bsleep\b suspends execution for at least the time specified "
@@ -1483,6 +1485,8 @@ USAGE_LICENSE
 	"\aseconds\a can be specified as a floating point number but the "
 	"actual granularity depends on the underlying system, normally "
 	"around 1 millisecond.]"
+"[s?Sleep until a signal is received or timeout is received.  If \aseconds\a "
+	"is omitted or 0, no timeout will be used.]"
 "\n"
 "\nseconds\n"
 "\n"
