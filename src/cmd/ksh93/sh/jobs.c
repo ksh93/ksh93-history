@@ -1713,7 +1713,7 @@ static char *job_sigmsg(int sig)
 	if ( sig == SIGAPOLLO )
 		return( apollo_error() );
 #endif /* apollo */
-	if(sig<sh.sigmax && sh.sigmsg[sig])
+	if(sig<=sh.sigmax && sh.sigmsg[sig])
 		return(sh.sigmsg[sig]);
 #if defined(SIGRTMIN) && defined(SIGRTMAX)
 	if(sig>=sh.sigruntime[SH_SIGRTMIN] && sig<=sh.sigruntime[SH_SIGRTMAX])

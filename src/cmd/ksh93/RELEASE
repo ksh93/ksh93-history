@@ -1,4 +1,6 @@
-08-12-07  --- Release ksh93t+  ---
+08-12-09  --- Release ksh93t+  ---
+08-12-09  Command completion was changed to use \ to quote special characters
+	  instead of quoting the argument in single quotes.
 08-12-07  A bug in typeset -m which occured when the target node was an
 	  associative array element has been fixed.
 08-12-07  A timing bug on some systems (for example darwin), that could

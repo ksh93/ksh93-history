@@ -67,8 +67,10 @@ if	( 4> file1 ) 2> /dev/null
 then	err_exit 'noclobber not causing exclusive open'
 fi
 set +o noclobber
+exec 3<> file1
 if	command exec 4< /dev/fd/3
-then	read -u4 line
+then	read -u3 line
+	read -u4 line
 	exp=foo
 	case $line in
 	foo)	;;
@@ -171,7 +173,7 @@ x=$(
 )
 exp=4
 [[ $x == $exp ]] || err_exit "/dev/fd/NN uses dup(2) instead of open(2) -- expected '$exp', got '$x'"
-# 2004-12-20 redirction loss bug fix
+# 2004-12-20 redirection loss bug fix
 cat > /tmp/io$$.1 <<- \++EOF++  
 	function a
 	{

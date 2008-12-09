@@ -141,7 +141,7 @@ void	sh_fault(register int sig)
 			}
 			/* mark signal and continue */
 			shp->trapnote |= SH_SIGSET;
-			if(sig < shp->sigmax)
+			if(sig <= shp->sigmax)
 				shp->sigflag[sig] |= SH_SIGSET;
 #if  defined(VMFL) && (VMALLOC_VERSION>=20031205L)
 			if(abortsig(sig))
@@ -198,7 +198,7 @@ void	sh_fault(register int sig)
 		return;
 	}
 	shp->trapnote |= flag;
-	if(sig < shp->sigmax)
+	if(sig <= shp->sigmax)
 		shp->sigflag[sig] |= flag;
 	if(pp->mode==SH_JMPCMD && sh_isstate(SH_STOPOK))
 	{
@@ -215,23 +215,27 @@ void	sh_fault(register int sig)
 void sh_siginit(void *ptr)
 {
 	Shell_t	*shp = (Shell_t*)ptr;
-	register int sig, n=SIGTERM+1;
+	register int sig, srm, n=SIGTERM;
 	register const struct shtable2	*tp = shtab_signals;
 	sig_begin();
 	/* find the largest signal number in the table */
-#ifdef SIGRTMIN
-	shp->sigruntime[SH_SIGRTMIN] = SIGRTMIN;
-#endif /* SIGRTMIN */
-#ifdef SIGRTMAX
-	shp->sigruntime[SH_SIGRTMAX] = SIGRTMAX;
-#endif /* SIGRTMAX */
+#if defined(SIGRTMIN) && defined(SIGRTMAX)
+	if ((srm = SIGRTMIN) > 0 && (sig = SIGRTMAX) > srm && sig < SH_TRAP)
+	{
+		shp->sigruntime[SH_SIGRTMIN] = srm;
+		shp->sigruntime[SH_SIGRTMAX] = sig;
+	}
+#endif /* SIGRTMIN && SIGRTMAX */
 	while(*tp->sh_name)
 	{
-		sig = tp->sh_number&((1<<SH_SIGBITS)-1);
-		if ((tp->sh_number>>SH_SIGBITS) & SH_SIGRUNTIME)
-			sig = shp->sigruntime[sig-1];
-		if(sig>n && sig<SH_TRAP)
-			n = sig;
+		sig = (tp->sh_number&((1<<SH_SIGBITS)-1));
+		if (!(sig-- & SH_TRAP))
+		{
+			if ((tp->sh_number>>SH_SIGBITS) & SH_SIGRUNTIME)
+				sig = shp->sigruntime[sig];
+			if(sig>n && sig<SH_TRAP)
+				n = sig;
+		}
 		tp++;
 	}
 	shp->sigmax = n++;
@@ -241,7 +245,7 @@ void sh_siginit(void *ptr)
 	for(tp=shtab_signals; sig=tp->sh_number; tp++)
 	{
 		n = (sig>>SH_SIGBITS);
-		if((sig &= ((1<<SH_SIGBITS)-1)) > shp->sigmax)
+		if((sig &= ((1<<SH_SIGBITS)-1)) > (shp->sigmax+1))
 			continue;
 		sig--;
 		if(n&SH_SIGRUNTIME)
@@ -291,7 +295,7 @@ void	sh_sigdone(void)
 {
 	register int 	flag, sig = sh.sigmax;
 	sh.sigflag[0] |= SH_SIGFAULT;
-	while(--sig>0)
+	for(sig=sh.sigmax; sig>0; sig--)
 	{
 		flag = sh.sigflag[sig];
 		if((flag&(SH_SIGDONE|SH_SIGIGNORE|SH_SIGINTERACTIVE)) && !(flag&(SH_SIGFAULT|SH_SIGOFF)))

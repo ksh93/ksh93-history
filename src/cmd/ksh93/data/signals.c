@@ -36,7 +36,7 @@
 /*
  * This is a table that gives numbers and default settings to each signal.
  * The signal numbers go in the low bits and the attributes go in the high bits.
- * The names nust be ASCII sorted lo-hi.
+ * The names must be ASCII sorted lo-hi.
  */
 
 const struct shtable2 shtab_signals[] =
@@ -49,6 +49,9 @@ const struct shtable2 shtab_signals[] =
 #endif /*SIGAIO */
 #ifdef SIGALRM
 	"ALRM",		VAL(SIGALRM,SH_SIGDONE),			S("Alarm call"),
+#endif /* SIGALRM */
+#ifdef SIGALRM1
+	"ALRM1",	VAL(SIGALRM1,SH_SIGDONE),			S("Scheduling - reserved"),
 #endif /* SIGALRM */
 #ifdef SIGAPOLLO
 	"APOLLO",	VAL(SIGAPOLLO,0),				S("SIGAPOLLO"),
@@ -74,6 +77,9 @@ const struct shtable2 shtab_signals[] =
 #ifdef SIGCONT
 	"CONT",		VAL(SIGCONT,SH_SIGIGNORE),			S("Stopped process continued"),
 #endif	/* SIGCONT */
+#ifdef SIGCPUFAIL
+	"CPUFAIL",	VAL(SIGCPUFAIL,0),				S("Predictive processor deconfiguration"),
+#endif	/* SIGRETRACT */
 	"DEBUG",	VAL(TRAP(SH_DEBUGTRAP),0),			"",
 #ifdef SIGDANGER
 	"DANGER",	VAL(SIGDANGER,0),				S("System crash soon"),
@@ -93,6 +99,9 @@ const struct shtable2 shtab_signals[] =
 #ifdef SIGFREEZE
 	"FREEZE",	VAL(SIGFREEZE,SH_SIGIGNORE),			S("Special signal used by CPR"),
 #endif	/* SIGFREEZE */
+#ifdef SIGGRANT
+	"GRANT",	VAL(SIGGRANT,0),				S("Grant monitor mode"),
+#endif /* SIGGRANT */
 	"HUP",		VAL(SIGHUP,SH_SIGDONE),				S("Hangup"),
 	"ILL",		VAL(SIGILL,SH_SIGDONE),				S("Illegal instruction"),
 #ifdef JOBS
@@ -128,6 +137,9 @@ const struct shtable2 shtab_signals[] =
 #ifdef SIGMIGRATE
 	"MIGRATE",	VAL(SIGMIGRATE,0),				S("Migrate process"),
 #endif	/* SIGMIGRATE */
+#ifdef SIGMSG
+	"MSG",		VAL(SIGMSG,0),					S("Ring buffer input data"),
+#endif	/* SIGMSG */
 #ifdef SIGPHONE
 	"PHONE",	VAL(SIGPHONE,0),				S("Phone interrupt"),
 #endif	/* SIGPHONE */
@@ -144,6 +156,9 @@ const struct shtable2 shtab_signals[] =
 #ifdef SIGPROF
 	"PROF",		VAL(SIGPROF,SH_SIGDONE), 			S("Profiling time alarm"),
 #endif	/* SIGPROF */
+#ifdef SIGPRE
+	"PRE",		VAL(SIGPRE,SH_SIGDONE), 			S("Programming exception"),
+#endif	/* SIGPRE */
 #ifdef SIGPWR
 #   if SIGPWR>0
 	"PWR",		VAL(SIGPWR,SH_SIGIGNORE),			S("Power fail"),
@@ -152,12 +167,18 @@ const struct shtable2 shtab_signals[] =
 #ifdef SIGQUIT
 	"QUIT",		VAL(SIGQUIT,SH_SIGDONE|SH_SIGINTERACTIVE),	S("Quit"),
 #endif	/* SIGQUIT */
+#ifdef SIGRETRACT
+	"RETRACT",	VAL(SIGRETRACT,0),				S("Relinquish monitor mode"),
+#endif	/* SIGRETRACT */
 #ifdef SIGRTMIN
 	"RTMIN",	VAL(SH_SIGRTMIN,SH_SIGRUNTIME),			S("Lowest priority realtime signal"),
 #endif	/* SIGRTMIN */
 #ifdef SIGRTMAX
 	"RTMAX",	VAL(SH_SIGRTMAX,SH_SIGRUNTIME),			S("Highest priority realtime signal"),
 #endif	/* SIGRTMAX */
+#ifdef SIGSAK
+	"SAK",		VAL(SIGSAK,0),					S("Secure attention key"),
+#endif	/* SIGSAK */
 	"SEGV",		VAL(SIGSEGV,0),					S("Memory fault"),
 #ifdef SIGSOUND
 	"SOUND",	VAL(SIGSOUND,0),				S("Sound completed"),
@@ -200,6 +221,9 @@ const struct shtable2 shtab_signals[] =
 #ifdef SIGUSR2
 	"USR2",		VAL(SIGUSR2,SH_SIGDONE),	 		S("User signal 2"),
 #endif	/* SIGUSR2 */
+#ifdef SIGVIRT
+	"VIRT",		VAL(SIGVIRT,0),					S("Virtual timer alarm"),
+#endif	/* SIGVIRT */
 #ifdef SIGVTALRM
 	"VTALRM",	VAL(SIGVTALRM,SH_SIGDONE),			S("Virtual time alarm"),
 #endif	/* SIGVTALRM */

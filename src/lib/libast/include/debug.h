@@ -51,8 +51,8 @@
 #define DEBUG_PRINT(fd,s,v)	do {char _b[1024];write(fd,_b,sfsprintf(_b,sizeof(_b),s,v));} while(0)
 #define DEBUG_WRITE(fd,d,n)	write((fd),(d),(n))
 #define DEBUG_TEMP(temp)	(temp) /* debugging stuff that should be removed */
-#define DEBUG_BREAK		do { debug_fatal(__FILE__, __LINE__); break; } while(0)
-#define DEBUG_CONTINUE		do { debug_fatal(__FILE__, __LINE__); continue; } while(0)
+#define DEBUG_BREAK		break
+#define DEBUG_CONTINUE		continue
 #define DEBUG_GOTO(label)	do { debug_fatal(__FILE__, __LINE__); goto label; } while(0)
 #define DEBUG_RETURN(x)		do { debug_fatal(__FILE__, __LINE__); return(x); } while(0)
 

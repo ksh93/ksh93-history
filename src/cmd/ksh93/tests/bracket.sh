@@ -244,7 +244,8 @@ test '(' = ')' && err_exit '"test ( = )" should not be true'
 [[ $($SHELL -c "case  Q in ~(Fi)q |  \$'\E') print ok;;esac" 2> /dev/null) == ok ]] || err_exit '~(Fi)q | \E  not working in case command'
 
 for l in C en_US.ISO8859-15
-do	export LC_COLLATE=$l
+do	[[ $($SHELL -c "LC_COLLATE=$l" 2>&1) ]] && continue
+	export LC_COLLATE=$l
 	set -- \
 		'A'   0 1 1   0 1 1      1 0 0   1 0 0   \
 		'Z'   0 1 1   0 1 1      1 0 0   1 0 0   \

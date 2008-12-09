@@ -40,7 +40,7 @@ __STDPP__directive pragma pp:nohide getenv
 
 Intercepts_t	intercepts = { 0 };
 
-#if _UWIN
+#if _UWIN && !defined(getenv)
 
 #include <windows.h>
 
@@ -81,14 +81,14 @@ default_getenv(const char* name)
  * get name from the environment
  */
 
-#if defined(__EXPORT__)
+#if defined(__EXPORT__) && defined(getenv)
 #define extern	__EXPORT__
 #endif
 
 extern char*
 getenv(const char* name)
 {
-#if _UWIN /* for ast54 compatibility */
+#if _UWIN && !defined(getenv) /* for ast54 compatibility */
 	HANDLE		dll;
 
 	static char*	(*posix_getenv)(const char*);
@@ -106,19 +106,3 @@ getenv(const char* name)
 	return intercepts.intercept_getenv ? (*intercepts.intercept_getenv)(name) : getenv(name);
 #endif
 }
-
-#if _UWIN /* ast54 workaround -- drop in 2010 */
-
-extern char*
-_ast_getenv(const char* name)
-{
-	return getenv(name);
-}
-
-extern char*
-_ast_setenviron(const char* name)
-{
-	return setenviron(name);
-}
-
-#endif
