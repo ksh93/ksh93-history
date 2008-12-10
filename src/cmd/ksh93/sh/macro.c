@@ -38,6 +38,7 @@
 #include	"variables.h"
 #include	"shlex.h"
 #include	"io.h"
+#include	"jobs.h"
 #include	"shnodes.h"
 #include	"path.h"
 #include	"national.h"

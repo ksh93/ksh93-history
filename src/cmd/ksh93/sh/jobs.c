@@ -30,7 +30,6 @@
  */
 
 #include	"defs.h"
-#include	<ctype.h>
 #include	<wait.h>
 #include	"io.h"
 #include	"jobs.h"
@@ -239,7 +238,6 @@ int job_reap(register int sig)
 	struct process *px;
 	register int flags;
 	struct jobsave *jp;
-	struct back_save *bp;
 	int nochild=0, oerrno, wstat;
 	Waitevent_f waitevent = sh.waitevent;
 	static int wcontinued = WCONTINUED;

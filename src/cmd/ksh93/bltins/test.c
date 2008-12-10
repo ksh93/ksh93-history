@@ -29,7 +29,6 @@
 
 
 #include	"defs.h"
-#include	<ctype.h>
 #include	<error.h>
 #include	<ls.h>
 #include	"io.h"
@@ -267,8 +266,11 @@ static int e3(struct test *tp)
 		goto skip;
 	if(c2_eq(arg,'-','t'))
 	{
-		if(cp && isdigit(*cp))
-			 return(*(cp+1)?0:tty_check(*cp-'0'));
+		if(cp)
+		{
+			op = strtol(cp,&binop, 10);
+			return(*binop?0:tty_check(op));
+		}
 		else
 		{
 		/* test -t with no arguments */
@@ -415,9 +417,11 @@ int test_unop(register int op,register const char *arg)
 		op = sh_lookopt(arg,&f);
 		return(op && (f==(sh_isoption(op)!=0)));
 	    case 't':
-		if(isdigit(*arg) && arg[1]==0)
-			 return(tty_check(*arg-'0'));
-		return(0);
+	    {
+		char *last;
+		op = strtol(arg,&last, 10);
+		return(*last?0:tty_check(op));
+	    }
 	    default:
 	    {
 		static char a[3] = "-?";

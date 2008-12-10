@@ -61,6 +61,8 @@ struct slnod 	/* struct for link list of stacks */
 	struct slnod	*slnext;
 	struct slnod	*slchild;
 	Stak_t		*slptr;
+	/* slpad aligns struct functnod = struct slnod + 1 on some architectures */
+	struct slnod	*slpad;	
 };
 
 /*

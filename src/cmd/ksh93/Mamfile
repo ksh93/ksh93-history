@@ -254,6 +254,7 @@ prev include/shell.h implicit
 make include/env.h implicit
 done include/env.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/shcmd.h implicit
+prev ${PACKAGE_ast_INCLUDE}/endian.h implicit
 prev include/name.h implicit
 make include/argnod.h implicit
 prev ${PACKAGE_ast_INCLUDE}/stak.h implicit
@@ -302,7 +303,6 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -
 done alarm.o generated
 make cd_pwd.o
 make bltins/cd_pwd.c
-prev ${PACKAGE_ast_INCLUDE}/endian.h implicit
 make ${PACKAGE_ast_INCLUDE}/ls.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast_mode.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_mode.h dontcare
@@ -981,6 +981,7 @@ prev include/streval.h implicit
 prev include/national.h implicit
 prev include/path.h implicit
 prev include/shnodes.h implicit
+prev include/jobs.h implicit
 prev include/io.h implicit
 prev include/shlex.h implicit
 prev include/variables.h implicit
@@ -990,7 +991,7 @@ prev include/defs.h implicit
 done sh/macro.c
 meta macro.o %.c>%.o sh/macro.c macro
 prev sh/macro.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_BRACEPAT -DKSHELL -DSHOPT_OPTIMIZE -DSHOPT_TYPEDEF -DSHOPT_FILESCAN -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_SUID_EXEC -D_BLD_shell -DSHOPT_PFSH -DSHOPT_KIA -DSHOPT_DYNAMIC -DSHOPT_STATS -DSHOPT_HISTEXPAND -DERROR_CONTEXT_T=Error_context_t -DSHOPT_ESH -c sh/macro.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_BRACEPAT -DKSHELL -DSHOPT_OPTIMIZE -DSHOPT_TYPEDEF -DSHOPT_FILESCAN -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_SUID_EXEC -D_BLD_shell -DSHOPT_PFSH -DSHOPT_BGX -DSHOPT_KIA -DSHOPT_DYNAMIC -DSHOPT_STATS -DSHOPT_HISTEXPAND -DERROR_CONTEXT_T=Error_context_t -DSHOPT_ESH -c sh/macro.c
 done macro.o generated
 make name.o
 make sh/name.c

@@ -32,8 +32,8 @@
 #include	"defs.h"
 #else
 #include	<shell.h>
-#endif
 #include	<ctype.h>
+#endif
 #include	<fcin.h>
 #include	<error.h>
 #include	"shlex.h"

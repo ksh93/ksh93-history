@@ -26,7 +26,6 @@
 #define putenv	___putenv
 
 #include	"defs.h"
-#include	<ctype.h>
 #include	"variables.h"
 #include	"path.h"
 #include	"lexstates.h"

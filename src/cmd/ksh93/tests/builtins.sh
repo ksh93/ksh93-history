@@ -296,7 +296,14 @@ behead()
 }
 print $'line1\nline2' | behead
 if	[[ $left != line2 ]]
-then	err_exit  "read reading ahead on a pipe"
+then	err_exit "read reading ahead on a pipe"
+fi
+read -n1 y <<!
+abc
+!
+exp=a
+if      [[ $y != $exp ]]
+then    err_exit "read -n1 failed -- expected '$exp', got '$y'"
 fi
 print -n $'{ read -r line;print $line;}\nhello' > /tmp/ksh$$
 chmod 755 /tmp/ksh$$
@@ -364,7 +371,7 @@ do	arg=$1 val=$2 code=$3
 		err=$(printf "$fmt" "$arg" 2>&1 >/dev/null)
 		printf "$fmt" "$arg" >/dev/null 2>&1
 		ret=$?
-		[[ $out == $val ]] || err_exit "printf $fmt $arg failed -- expected $val, got $out"
+		[[ $out == $val ]] || err_exit "printf $fmt $arg failed -- expected '$val', got '$out'"
 		if	(( $code ))
 		then	[[ $err ]] || err_exit "printf $fmt $arg failed, error message expected"
 		else	[[ $err ]] && err_exit "$err: printf $fmt $arg failed, error message not expected -- got '$err'"
@@ -398,6 +405,50 @@ do	case $opt in
 	*)	err_exit "getopts $options failed -- got flag $opt" ;;
 	esac
 done
+
+unset a
+{ read -N3 a; read -N1 b;}  <<!
+abcdefg
+!
+exp=abc
+[[ $a == $exp ]] || err_exit "read -N3 here-document failed -- expected '$exp', got '$a'"
+exp=d
+[[ $b == $exp ]] || err_exit "read -N1 here-document failed -- expected '$exp', got '$b'"
+read -n3 a <<!
+abcdefg
+!
+exp=abc
+[[ $a == $exp ]] || err_exit "read -n3 here-document failed -- expected '$exp', got '$a'"
+(print -n a;sleep 1; print -n bcde) | { read -N3 a; read -N1 b;}
+[[ $a == $exp ]] || err_exit "read -N3 from pipe failed -- expected '$exp', got '$a'"
+exp=d
+[[ $b == $exp ]] || err_exit "read -N1 from pipe failed -- expected '$exp', got '$b'"
+(print -n a;sleep 1; print -n bcde) | read -n3 a
+exp=a
+[[ $a == $exp ]] || err_exit "read -n3 from pipe failed -- expected '$exp', got '$a'"
+rm -f /tmp/fifo$$
+if	mkfifo /tmp/fifo$$ 2> /dev/null
+then	(print -n a; sleep 1;print -n bcde)  > /tmp/fifo$$ &
+	{
+	read -u5 -n3 -t2 a || err_exit 'read -n3 from fifo timedout'
+	read -u5 -n1 -t2 b || err_exit 'read -n1 from fifo timedout'
+	} 5< /tmp/fifo$$
+	exp=a
+	[[ $a == $exp ]] || err_exit "read -n3 from fifo failed -- expected '$exp', got '$a'"
+	rm -f /tmp/fifo$$
+	mkfifo /tmp/fifo$$ 2> /dev/null
+	(print -n a; sleep 1;print -n bcde) > /tmp/fifo$$ &
+	{
+	read -u5 -N3 -t2 a || err_exit 'read -N3 from fifo timed out'
+	read -u5 -N1 -t2 b || err_exit 'read -N1 from fifo timedout'
+	} 5< /tmp/fifo$$
+	exp=abc
+	[[ $a == $exp ]] || err_exit "read -N3 from fifo failed -- expected '$exp', got '$a'"
+	exp=d
+	[[ $b == $exp ]] || err_exit "read -N1 from fifo failed -- expected '$exp', got '$b'"
+fi
+rm -f /tmp/fifo$$
+
 function longline
 {
 	integer i

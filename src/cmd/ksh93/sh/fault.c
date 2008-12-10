@@ -215,17 +215,18 @@ void	sh_fault(register int sig)
 void sh_siginit(void *ptr)
 {
 	Shell_t	*shp = (Shell_t*)ptr;
-	register int sig, srm, n=SIGTERM;
+	register int sig, n;
 	register const struct shtable2	*tp = shtab_signals;
 	sig_begin();
 	/* find the largest signal number in the table */
 #if defined(SIGRTMIN) && defined(SIGRTMAX)
-	if ((srm = SIGRTMIN) > 0 && (sig = SIGRTMAX) > srm && sig < SH_TRAP)
+	if ((n = SIGRTMIN) > 0 && (sig = SIGRTMAX) > n && sig < SH_TRAP)
 	{
-		shp->sigruntime[SH_SIGRTMIN] = srm;
+		shp->sigruntime[SH_SIGRTMIN] = n;
 		shp->sigruntime[SH_SIGRTMAX] = sig;
 	}
 #endif /* SIGRTMIN && SIGRTMAX */
+	n = SIGTERM;
 	while(*tp->sh_name)
 	{
 		sig = (tp->sh_number&((1<<SH_SIGBITS)-1));

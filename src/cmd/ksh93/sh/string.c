@@ -27,7 +27,6 @@
 #include	<ast_wchar.h>
 #include	"defs.h"
 #include	<stak.h>
-#include	<ctype.h>
 #include	<ccode.h>
 #include	"shtable.h"
 #include	"lexstates.h"

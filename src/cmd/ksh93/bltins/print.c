@@ -36,7 +36,6 @@
 #include	"builtins.h"
 #include	"streval.h"
 #include	<tmx.h>
-#include	<ctype.h>
 #include	<ccode.h>
 
 union types_t

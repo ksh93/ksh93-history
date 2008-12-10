@@ -283,5 +283,8 @@ do	[[ $($SHELL -c "LC_COLLATE=$l" 2>&1) ]] && continue
 		done
 	done
 done
-
+integer n
+if	{ command exec {n}< /dev/tty; } 2>/dev/null
+then	[[ -t  $n ]] || err_exit "[[ -t  n ]] fails when n > 9"
+fi
 exit $((Errors))

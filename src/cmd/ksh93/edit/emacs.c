@@ -62,10 +62,11 @@ One line screen editor for any program
  */
 
 #include	<ast.h>
-#include	<ctype.h>
 #include	"FEATURE/cmds"
 #if KSHELL
 #   include	"defs.h"
+#else
+#   include	<ctype.h>
 #endif	/* KSHELL */
 #include	"io.h"
 

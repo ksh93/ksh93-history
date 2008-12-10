@@ -22,7 +22,6 @@
 #include	<stak.h>
 #include	<ls.h>
 #include	<error.h>
-#include	<ctype.h>
 #include	"variables.h"
 #include	"io.h"
 #include	"name.h"

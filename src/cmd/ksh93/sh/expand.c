@@ -32,6 +32,7 @@
 #   include	"test.h"
 #else
 #   include	<ast.h>
+#   include	<ctype.h>
 #   include	<setjmp.h>
 #endif /* KSHELL */
 #include	<glob.h>

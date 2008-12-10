@@ -30,7 +30,6 @@
 #include	<ast.h>
 #include	<errno.h>
 #include	<ccode.h>
-#include	<ctype.h>
 #include	"FEATURE/options"
 #include	"FEATURE/time"
 #include	"FEATURE/cmds"
@@ -43,6 +42,7 @@
 #   include	"defs.h"
 #   include	"variables.h"
 #else
+#   include	<ctype.h>
     extern char ed_errbuf[];
     char e_version[] = "\n@(#)$Id: Editlib version 1993-12-28 r $\0\n";
 #endif	/* KSHELL */

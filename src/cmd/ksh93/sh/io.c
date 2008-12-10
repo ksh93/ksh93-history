@@ -31,7 +31,6 @@
 #include	<fcin.h>
 #include	<ls.h>
 #include	<stdarg.h>
-#include	<ctype.h>
 #include	<regex.h>
 #include	"variables.h"
 #include	"path.h"

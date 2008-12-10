@@ -74,7 +74,6 @@
 #include	<sfio.h>
 #include	"FEATURE/time"
 #include	<error.h>
-#include	<ctype.h>
 #include	<ls.h>
 #if KSHELL
 #   include	"defs.h"
@@ -82,6 +81,8 @@
 #   include	"path.h"
 #   include	"builtins.h"
 #   include	"io.h"
+#else
+#   include	<ctype.h>
 #endif	/* KSHELL */
 #include	"history.h"
 

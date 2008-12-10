@@ -28,7 +28,6 @@
 
 #include	<ast.h>
 #include	<error.h>
-#include	<ctype.h>
 #include	"defs.h"
 #include	"variables.h"
 #include	"lexstates.h"
@@ -375,7 +374,6 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 					{
 						int	x;
 						int	z;
-						int	y = cur - up;
 
 						mbinit();
 						*cur = 0;

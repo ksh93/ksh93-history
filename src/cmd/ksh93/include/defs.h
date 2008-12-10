@@ -37,6 +37,7 @@
 #include	"fault.h"
 #include	"argnod.h"
 #include	"name.h"
+#include	<ctype.h>
 #define _SH_PRIVATE
 #include	<shcmd.h>
 #undef _SH_PRIVATE

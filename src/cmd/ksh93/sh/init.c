@@ -29,7 +29,6 @@
 
 #include        "defs.h"
 #include        <stak.h>
-#include        <ctype.h>
 #include        <ccode.h>
 #include        <pwd.h>
 #include        <tmx.h>
@@ -1062,7 +1061,7 @@ Shell_t *sh_init(register int argc,register char *argv[], Shinit_f userinit)
 		 * try to find the pathname for this interpreter
 		 * try using environment variable _ or argv[0]
 		 */
-		char *last, *cp=nv_getval(L_ARGNOD);
+		char *cp=nv_getval(L_ARGNOD);
 		char buff[PATH_MAX+1];
 		shp->shpath = 0;
 		sfprintf(shp->strbuf,"/proc/%d/exe",getpid());

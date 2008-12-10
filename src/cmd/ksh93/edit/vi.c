@@ -34,8 +34,8 @@
 #else
 #   include	<ast.h>
 #   include	"FEATURE/options"
+#   include	<ctype.h>
 #endif	/* KSHELL */
-#include	<ctype.h>
 #include	"io.h"
 
 #include	"history.h"

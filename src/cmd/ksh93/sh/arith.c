@@ -25,7 +25,6 @@
  */
 
 #include	"defs.h"
-#include	<ctype.h>
 #include	"lexstates.h"
 #include	"name.h"
 #include	"streval.h"

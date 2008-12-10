@@ -175,9 +175,11 @@ b_fds(int argc, char** argv, void* context)
 	int			type;
 	int			port;
 	int			prot;
-	char			nam[256];
 	char			num[64];
 	char			fam[64];
+#ifdef INET6_ADDRSTRLEN
+	char			nam[256];
+#endif
 #endif
 
 	cmdinit(argc, argv, context, ERROR_CATALOG, 0);

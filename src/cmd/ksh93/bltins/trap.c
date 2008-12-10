@@ -30,7 +30,6 @@
  */
 
 #include	"defs.h"
-#include	<ctype.h>
 #include	"jobs.h"
 #include	"builtins.h"
 
