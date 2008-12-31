@@ -359,7 +359,7 @@ $SHELL -c '[[ $- == *c* ]]' || err_exit  'option c not in $-'
 trap 'rm -f /tmp/.profile' EXIT
 > /tmp/.profile
 for i in  i l r s D E a b e f h k n r t u v  x B C G H
-do	HOME=/tmp ENV= $SHELL -$i  2> /dev/null <<- ++EOF++ || err_exit "option $i not in \$-"
+do	HOME=/tmp ENV= $SHELL -$i  >/dev/null 2>&1 <<- ++EOF++ || err_exit "option $i not in \$-"
 	[[ \$- == *$i* ]]  ||   exit 1
 	++EOF++
 done
@@ -368,7 +368,7 @@ integer j=0
 for i in  interactive login restricted allexport notify errexit \
 	noglob  trackall keyword noexec nounset verbose xtrace braceexpand \
 	noclobber globstar rc
-do	HOME=/tmp ENV= $SHELL   -o $i  2> /dev/null <<- ++EOF++ || err_exit "option $i not equivalent to ${letters:j:1}"
+do	HOME=/tmp ENV= $SHELL -o $i >/dev/null 2>&1 <<- ++EOF++ || err_exit "option $i not equivalent to ${letters:j:1}"
 	[[ \$- == *${letters:j:1}* ]]  ||   exit 1
 	++EOF++
 	((j++))

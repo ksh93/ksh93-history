@@ -297,4 +297,11 @@ vars=(data=())
 vars.data._1.a=a.1
 vars.data._1.b=b.1
 [[ $(a) == 'a.1 b.1' ]] || err_exit 'nameref choosing wrong scope -- '
+typeset +n bam zip foo
+unset bam zip foo
+typeset -A foo
+foo[2]=bar
+typeset -n bam=foo[2]
+typeset -n zip=bam
+[[ $zip == bar ]] || err_exit 'nameref to another nameref to array element fails'
 exit $((Errors))

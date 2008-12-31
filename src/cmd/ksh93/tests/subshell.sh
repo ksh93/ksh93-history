@@ -219,5 +219,29 @@ do	for TEST_exec in '' 'exec'
 		done
 	done
 done
-
+script=$tmp
+cat > $script <<- \EOF
+	(sleep 3 ; kill -0 $$ && kill $$) 2> /dev/null&
+	builtin cat
+	IFS=$'\n\n'
+	case $1 in
+	1)
+	 	x=$(for((i=0; i < 6000; i++))
+	 	do	print 1234567890
+	 	done | cat);;
+	2)
+	 	x=${ for((i=0; i < 6000; i++))
+	 	do	print 1234567890
+	 	done | cat;};;
+	3)
+	 	z=${ for((i=0; i < 6000; i++))
+	 	do	print -n 1234567890x
+	 	done | read x;};;
+	esac
+	print ${#x}
+EOF
+chmod +x "$script"
+[[ $( $script 1) == 65999 ]] 2> /dev/null || err_exit '$() of pipeline hangs'
+[[ $( $script 2) == 65999 ]] 2>> /dev/null || err_exit '${} sub of pipeline hangs'
+[[ $( $script 3) == 66000 ]] 2>> /dev/null || err_exit '${} pipe into read not working'
 exit $Errors

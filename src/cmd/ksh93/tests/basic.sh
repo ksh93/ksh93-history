@@ -427,4 +427,12 @@ do	x=$($false) && err_exit "x=\$($false) should fail"
 	$($false) > /dev/null && err_exit "\$($false) > /dev/null should fail"
 done
 [[ $(env 'x-a=y'  $SHELL -c 'env | grep x-a') == *x-a=y* ]] || err_exit 'invalid environment variables not preserved'
+float s=SECONDS
+set -o pipefail
+sleep=$(whence -p sleep)
+for ((i=0; i < 30; i++))
+do	print hello
+	sleep .1
+done |  $sleep 1 
+(( (SECONDS-s) < 2 )) || err_exit 'early termination not causing broken pipe'
 exit $((Errors))

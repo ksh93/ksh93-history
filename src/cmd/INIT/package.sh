@@ -62,7 +62,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2008-09-24 $
+@(#)$Id: package (AT&T Research) 2008-12-26 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -1713,8 +1713,8 @@ int main()
 		_hostinfo_="$_hostinfo_ $rating"
 		;;
 	type|canon)
-		case $canon in
-		'')	case $cc in
+		case $CROSS:$canon in
+		0:)	case $cc in
 			cc)	case $KEEP_HOSTTYPE:$HOSTTYPE in
 				0:?*)	if	test -d $PACKAGEROOT/arch/$HOSTTYPE
 					then	KEEP_HOSTTYPE=1
@@ -2585,7 +2585,7 @@ cat $INITROOT/$i.sh
 				fi
 				exit 2
 			}
-			if ./pkg$$.exe >/dev/null
+			if ./pkg$$.exe >/dev/null 2>&1
 			then	code=0
 			else	code=1
 			fi
@@ -2598,14 +2598,6 @@ cat $INITROOT/$i.sh
 		fi
 		case $code in
 		1)	CROSS=1
-			hostinfo type
-			case $HOSTTYPE in
-			$_hostinfo_)
-				echo "$command: $CC: seems to be a cross-compiler" >&2
-				echo "$command: set HOSTTYPE to something other than the native $HOSTTYPE" >&2
-				exit 1
-				;;
-			esac
 			;;
 		2)	case $warn in
 			'')	exit 1 ;;
@@ -2780,6 +2772,24 @@ cat $INITROOT/$i.sh
 				break
 			fi
 		done
+		case $HOSTTYPE in
+		$EXECTYPE)
+			OCC=$CC
+			CC=cc
+			hostinfo type
+			EXECTYPE=$_hostinfo_
+			case $HOSTTYPE in
+			$EXECTYPE)
+				echo "$command: $CC: seems to be a cross-compiler" >&2
+				echo "$command: set HOSTTYPE to something other than the native $EXECTYPE" >&2
+				exit 1
+				;;
+			esac
+			;;
+		esac
+		$show EXECTYPE=$EXECTYPE
+		$show export EXECTYPE
+		export EXECTYPE
 		;;
 	esac
 	$show EXECROOT=$EXECROOT
@@ -3769,13 +3779,13 @@ get() # host path [ file size ]
 				cat <&8 > get.tmp
 				got=`sed -e 1q get.tmp`
 				case $got in
-				*" 200 "*)
+				*" "200" "*)
 					got=`sed -e '1,/^.$/d' -e '/^[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWYZ]/!d' get.tmp`
 					: > get.err
 					code=0
 					break
 					;;
-				*" 302 "*)
+				*" "30[123]" "*)
 					got=`sed -e '/^Location: /!d' -e 's,^Location: \(.*\)://\([^/]*\)\(/.*\),prot='\''\1'\'' host='\''\2'\'' path='\''\3'\'',' get.tmp`
 					case $got in
 					'')	rm get.tmp

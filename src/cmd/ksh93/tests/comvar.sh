@@ -423,4 +423,6 @@ data.samples+=(
 )
 
 [[ $data == %(()) ]] || err_exit "unbalanced parenthesis with compound variable containing array of compound variables" 
+typeset -C  -A hello=( [foo]=bar)
+[[ $(typeset -p hello) == 'typeset -C -A hello=([foo]=bar)' ]] || err_exit 'typeset -A -C with intial assignment not working'
 exit $((Errors))

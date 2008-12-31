@@ -389,6 +389,8 @@ endargs:
 		stkseek(stkp,offset);
 		if(!tdata.tp)
 			errormsg(SH_DICT,ERROR_exit(1),"%s: unknown type",tdata.prefix);
+		else if(nv_isnull(tdata.tp))
+			nv_newtype(tdata.tp);
 		tdata.tp->nvenv = tdata.help;
 		flag &= ~NV_TYPE;
 	}
@@ -402,10 +404,15 @@ endargs:
 static void print_value(Sfio_t *iop, Namval_t *np, struct tdata *tp)
 {
 	char	 *name;
+	int	aflag=tp->aflag;
 	if(nv_isnull(np))
-		return;
-	sfputr(iop,nv_name(np),tp->aflag=='+'?'\n':'=');
-	if(tp->aflag=='+')
+	{
+		if(!np->nvflag)
+			return;
+		aflag = '+';
+	}
+	sfputr(iop,nv_name(np),aflag=='+'?'\n':'=');
+	if(aflag=='+')
 		return;
 	if(nv_isarray(np) && nv_arrayptr(np))
 	{
@@ -539,8 +546,14 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 				{
 					if(comvar)
 					{
-						_nv_unset(np,NV_RDONLY);
-						nv_onattr(np,NV_NOFREE);
+						Namarr_t *ap=nv_arrayptr(np);
+						if(ap)
+							ap->nelem |= ARRAY_TREE;
+						else
+						{
+							_nv_unset(np,NV_RDONLY);
+							nv_onattr(np,NV_NOFREE);
+						}
 					}
 					nv_setarray(np,nv_associative);
 				}

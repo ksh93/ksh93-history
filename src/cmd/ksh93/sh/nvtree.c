@@ -478,7 +478,7 @@ void nv_attribute(register Namval_t *np,Sfio_t *out,char *prefix,int noname)
 					}
 					else if(tp->sh_name[1]=='A')
 						continue;
-					if(ap && (ap->nelem&ARRAY_TREE))
+					if((ap && (ap->nelem&ARRAY_TREE)) || (!ap && nv_isattr(np,NV_NOFREE)))
 					{
 						if(prefix && *prefix)
 							sfwrite(out,"-C ",3);

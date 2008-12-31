@@ -1236,6 +1236,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 						shp->spid = parent;
 						job.pwlist->p_env--;
 					}
+					else if(shp->pipepid)
+						shp->pipepid = parent;
 					else
 						job_wait(parent);
 					if(!sh_isoption(SH_MONITOR))
@@ -1361,7 +1363,10 @@ int sh_exec(register const Shnode_t *t, int flags)
 				was_interactive = sh_isstate(SH_INTERACTIVE);
 				sh_offstate(SH_INTERACTIVE);
 				if(!execflg)
+				{
 					sh_iosave(shp,0,shp->topfd,(char*)0);
+					shp->pipepid = 1;
+				}
 				sh_iorenumber(shp,shp->inpipe[0],0);
 				/*
 				 * if read end of pipe is a simple command
@@ -1395,7 +1400,14 @@ int sh_exec(register const Shnode_t *t, int flags)
 				if(!(type&SH_EXITSIG))
 				{
 					/* wait for remainder of pipline */
-					job_wait(waitall?pid:0);
+					if(shp->pipepid>1)
+					{
+						job_wait(shp->pipepid);
+						type = shp->exitval;
+					}
+					else
+						job_wait(waitall?pid:0);
+					shp->pipepid = 0;
 					if(type || !sh_isoption(SH_PIPEFAIL))
 						shp->exitval = type;
 				}
@@ -1440,7 +1452,12 @@ int sh_exec(register const Shnode_t *t, int flags)
 			pid_t	savepgid = job.curpgid;
 			job.curpgid = 0;
 			if(shp->subshell)
-				sh_subtmpfile(1);
+			{
+				if(shp->subshare)
+					sh_subtmpfile(0);
+				else
+					sh_subfork();
+			}
 			shp->inpipe = pvo;
 			shp->outpipe = pvn;
 			pvo[1] = -1;

@@ -2089,7 +2089,11 @@ static void table_unset(Shell_t *shp, register Dt_t *root, int flags, Dt_t *oroo
 	for(np=(Namval_t*)dtfirst(root);np;np=npnext)
 	{
 		if(nv_isref(np))
-			nv_unref(np);
+		{
+			free((void*)np->nvalue.nrp);
+			np->nvalue.cp = 0;
+			np->nvflag = 0;
+		}
 		if(nq=dtsearch(oroot,np))
 		{
 			if(nv_cover(nq))
@@ -2906,6 +2910,7 @@ void nv_setref(register Namval_t *np, Dt_t *hp, int flags)
 	Shell_t		*shp = &sh;
 	register Namval_t *nq, *nr=0;
 	register char *ep,*cp;
+	Namarr_t *ap;
 	if(nv_isref(np))
 		return;
 	if(nv_isarray(np))
@@ -2936,6 +2941,8 @@ void nv_setref(register Namval_t *np, Dt_t *hp, int flags)
 		if(!(hp=dtvnext(hp)) || (nq=nv_search((char*)np,hp,NV_ADD|HASH_BUCKET))==np)
 			errormsg(SH_DICT,ERROR_exit(1),e_selfref,nv_name(np));
 	}
+	if(nq && !ep && (ap=nv_arrayptr(nq)) && !(ap->nelem&(ARRAY_UNDEF|ARRAY_SCAN)))
+		ep =  nv_getsub(nq);
 	if(ep)
 	{
 		/* cause subscript evaluation and return result */

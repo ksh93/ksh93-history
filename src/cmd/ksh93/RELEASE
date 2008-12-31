@@ -1,4 +1,17 @@
-08-12-10  --- Release ksh93t+  ---
+08-12-24  --- Release ksh93t+  ---
+08-12-24  A bug in which killing the last element of a pipe did not cause
+	  a write to the pipe to generate a SIGPIPE has been fixed.
+08-12-19  A bug which could cause command substitution to hang when the
+	  last element of a pipeline in a command substitution was a built-in
+	  and the output was more that PIPE_BUFF.
+08-12-18  A bug which occurs when a here documented marker embedded in a
+	  command substitution occurs on a buffer boundary has been fixed.
+08-12-17  A bug in the output of typeset -p for variables that had attributes
+	  but did not have a value has been fixed.
+08-12-16  A bug in which a name reference to a name reference variable that
+	  references an array element has been fixed.
+08-12-16  A bug in which a variable given both the -A and -C attribute along
+	  with an initial assignment didn't work correctly has been fixed.
 08-12-10  The [[ -t fd ]] test was fixed to handle fd>9.
 08-12-10  A bug where function stack misalignment could cause a bus error
 	  has been fixed.

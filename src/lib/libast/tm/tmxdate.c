@@ -58,8 +58,9 @@
 #define SECOND		(1<<15)
 #define THIS		(1L<<16)
 #define WDAY		(1L<<17)
-#define YEAR		(1L<<18)
-#define ZONE		(1L<<19)
+#define WORK		(1L<<18)
+#define YEAR		(1L<<19)
+#define ZONE		(1L<<20)
 
 /*
  * parse cron range into set
@@ -132,6 +133,7 @@ tmxdate(register const char* s, char** e, Time_t now)
 	Time_t		fix;
 	char*		t;
 	char*		u;
+	const char*	o;
 	const char*	x;
 	char*		last;
 	char*		type;
@@ -155,7 +157,7 @@ tmxdate(register const char* s, char** e, Time_t now)
 	 * check DATEMSK first
 	 */
 
-	debug((error(-1, "AHA tmxdate 2008-05-22")));
+	debug((error(-1, "AHA tmxdate 2008-12-30")));
 	fix = tmxscan(s, &last, NiL, &t, now, 0);
 	if (t && !*last)
 	{
@@ -163,6 +165,7 @@ tmxdate(register const char* s, char** e, Time_t now)
 			*e = last;
 		return fix;
 	}
+	o = s;
 
  reset:
 
@@ -615,6 +618,8 @@ tmxdate(register const char* s, char** e, Time_t now)
 							}
 							else
 								dig4(s, m);
+							if (m < 1969 || m >= 3000)
+								break;
 							m -= 1900;
 						}
 						else if (i == 10)
@@ -848,6 +853,18 @@ tmxdate(register const char* s, char** e, Time_t now)
 					set &= ~(EXACT|LAST|NEXT|THIS);
 					set |= state & (EXACT|LAST|NEXT|THIS|FINAL);
 					continue;
+				case TM_WORK:
+					message((-1, "AHA#%d WORK", __LINE__));
+					state |= WORK;
+					set |= DAY;
+					if (state & LAST)
+					{
+						state &= ~LAST;
+						set &= ~LAST;
+						state |= FINAL;
+						set |= FINAL;
+					}
+					goto clear_hour;
 				case TM_ORDINAL:
 					j += TM_ORDINALS - TM_ORDINAL;
 					message((-1, "AHA#%d j=%d", __LINE__, j));
@@ -942,7 +959,7 @@ tmxdate(register const char* s, char** e, Time_t now)
 					while (isspace(*s))
 						s++;
 					message((-1, "AHA#%d disambiguate LAST s='%s'", __LINE__, s));
-					if ((k = tmlex(s, &t, tm_info.format + TM_NEXT, TM_EXACT - TM_NEXT, NiL, 0)) >= 0)
+					if ((k = tmlex(s, &t, tm_info.format + TM_NEXT, TM_EXACT - TM_NEXT, NiL, 0)) >= 0 || (k = tmlex(s, &t, tm_info.format + TM_PARTS + 3, 1, NiL, 0)) >= 0)
 					{
 						s = t;
 						if (state & LAST)
@@ -994,8 +1011,14 @@ tmxdate(register const char* s, char** e, Time_t now)
 						set |= MINUTE;
 						goto clear_min;
 					case TM_PARTS+3:
-						tm->tm_mday += m;
-						if (!(set & FINAL))
+						message((-1, "AHA#%d DAY m=%d n=%d%s", __LINE__, m, n, (state & LAST) ? " LAST" : ""));
+						if ((state & (LAST|NEXT|THIS)) == LAST)
+							tm->tm_mday = tm_data.days[tm->tm_mon] + (tm->tm_mon == 1 && tmisleapyear(tm->tm_year));
+						else if (state & ORDINAL)
+							tm->tm_mday = m + 1;
+						else
+							tm->tm_mday += m;
+						if (!(set & (FINAL|WORK)))
 							set |= HOUR;
 						goto clear_hour;
 					case TM_PARTS+4:
@@ -1057,7 +1080,7 @@ tmxdate(register const char* s, char** e, Time_t now)
 						j -= 7;
 					message((-1, "AHA#%d day=%d mday=%d f=%d m=%d j=%d state=%s%s%s%s|", __LINE__, day, tm->tm_mday, f, m, j, (state & EXACT) ? "|EXACT" : "", (state & LAST) ? "|LAST" : "", (state & THIS) ? "|THIS" : "", (state & NEXT) ? "|NEXT" : ""));
 					set |= DAY;
-					if (set & FINAL)
+					if (set & (FINAL|WORK))
 						goto clear_hour;
 					else if (state & (LAST|NEXT|THIS))
 					{
@@ -1153,7 +1176,7 @@ tmxdate(register const char* s, char** e, Time_t now)
 		}
 		else if (*s == '/')
 		{
-			if (!(state & (YEAR|MONTH)) && n >= 1900 && n < 3000 && (i = strtol(s + 1, &t, 10)) > 0 && i <= 12)
+			if (!(state & (YEAR|MONTH)) && n >= 1969 && n < 3000 && (i = strtol(s + 1, &t, 10)) > 0 && i <= 12)
 			{
 				state |= YEAR;
 				tm->tm_year = n - 1900;
@@ -1218,7 +1241,7 @@ tmxdate(register const char* s, char** e, Time_t now)
 			break;
 		if (w == 4)
 		{
-			if ((state & YEAR) || n < 1900 || n >= 3000)
+			if ((state & YEAR) || n < 1969 || n >= 3000)
 				break;
 			state |= YEAR;
 			tm->tm_year = n - 1900;
@@ -1290,7 +1313,7 @@ tmxdate(register const char* s, char** e, Time_t now)
  done:
 	if (day >= 0 && !(state & (MDAY|WDAY)))
 	{
-		message((-1, "AHA#%d day=%d dir=%d%s", __LINE__, day, dir, (state & FINAL) ? " FINAL" : ""));
+		message((-1, "AHA#%d day=%d dir=%d%s", __LINE__, day, dir, (state & FINAL) ? " FINAL" : "", (state & WORK) ? " WORK" : ""));
 		m = dir;
 		if (state & MONTH)
 			tm->tm_mday = 1;
@@ -1306,7 +1329,25 @@ tmxdate(register const char* s, char** e, Time_t now)
 	}
 	else if (day < 0 && (state & FINAL) && (set & DAY))
 		tm->tm_mday = tm_data.days[tm->tm_mon] + (tm->tm_mon == 1 && tmisleapyear(tm->tm_year));
+	if (state & WORK)
+	{
+		tm->tm_mday = (set & FINAL) ? (tm_data.days[tm->tm_mon] + (tm->tm_mon == 1 && tmisleapyear(tm->tm_year))) : 1;
+		tmfix(tm);
+		message((-1, "AHA#%d WORK mday=%d wday=%d", __LINE__, tm->tm_mday, tm->tm_wday));
+		if (tm->tm_wday == 0 && (j = 1) || tm->tm_wday == 6 && (j = 2))
+		{
+			if ((tm->tm_mday + j) > (tm_data.days[tm->tm_mon] + (tm->tm_mon == 1 && tmisleapyear(tm->tm_year))))
+				j -= 3;
+			tm->tm_mday += j;
+		}
+	}
+	now = tmxtime(tm, zone);
+	if (tm->tm_year <= 70 && tmxsec(now) > 31536000)
+	{
+		now = 0;
+		last = (char*)o;
+	}
 	if (e)
 		*e = last;
-	return tmxtime(tm, zone);
+	return now;
 }

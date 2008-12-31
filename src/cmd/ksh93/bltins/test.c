@@ -302,7 +302,7 @@ skip:
 		cp = nxtarg(tp,0);
 	if(!op)
 		errormsg(SH_DICT,ERROR_exit(2),e_badop,binop);
-	if(op==TEST_AND | op==TEST_OR)
+	if(op==TEST_AND || op==TEST_OR)
 		tp->ap--;
 	return(test_binop(op,arg,cp));
 }

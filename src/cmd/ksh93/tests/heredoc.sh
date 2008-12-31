@@ -226,4 +226,21 @@ printf $'w=world;cat   <<# !!!\n\thello\n\t\t$w\n!!!' > $f
 	${ g;}
 	EOF
 	' 2> /dev/null) == ok ]] || err_exit '${ command;} not working in heredoc'
+script=$f
+trap 'rm -f $script' EXIT
+{
+for ((i=0; i < 406; i++))
+do	print ': 23456789012345678'
+done
+print : 123456789123
+cat <<- \EOF
+eval "$(
+	{ cat                                 ; } <<MARKER
+	  print  hello 
+	MARKER
+)"
+EOF
+} > $script
+chmod +x $script
+[[ $($SHELL $script) == hello ]] 2> /dev/null || err_exit 'heredoc embeded in command substitution fails at buffer boundary'
 exit $((Errors))

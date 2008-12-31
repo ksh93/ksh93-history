@@ -280,4 +280,7 @@ function foo
 }
 bar=xxx
 [[ $(foo) == bar=xxx ]] || err_exit 'typeset -p not working inside a function'
+unset foo
+typeset -L5 foo
+[[ $(typeset -p foo) == 'typeset -L 5 foo' ]] || err_exit 'typeset -p not working for variables with attributes but without a value'
 exit	$((Errors))

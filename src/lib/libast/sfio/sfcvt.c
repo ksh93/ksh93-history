@@ -114,7 +114,8 @@ int		format;		/* conversion format		*/
 {
 	reg char		*sp;
 	reg long		n, v;
-	reg char		*ep, *b, *endsp;
+	reg char		*ep, *b, *endsp, *t;
+	int			x;
 	_ast_flt_unsigned_max_t	m;
 
 	static char		lx[] = "0123456789abcdef";
@@ -193,7 +194,6 @@ int		format;		/* conversion format		*/
 
 		if(format & SFFMT_AFORMAT)
 		{	Sfdouble_t	g;
-			int		x;
 			b = sp = buf;
 			ep = (format & SFFMT_UPPER) ? ux : lx;
 			if(n_digit <= 0 || n_digit >= (size - 9))
@@ -210,9 +210,7 @@ int		format;		/* conversion format		*/
 				while ((x -= 4) >= 0)
 				{	*sp++ = ep[(m >> x) & 0xf];
 					if (sp >= endsp)
-					{	ep = sp + 1;
-						goto done;
-					}
+						goto around;
 				}
 				f -= m;
 				f = ldexpl(f, 8 * sizeof(m));
@@ -369,13 +367,12 @@ int		format;		/* conversion format		*/
 			return SF_INF;
 
 		if(format & SFFMT_AFORMAT)
-		{	double	g;
-			int	x;
+		{	double		g;
 			b = sp = buf;
 			ep = (format & SFFMT_UPPER) ? ux : lx;
 			if(n_digit <= 0 || n_digit >= (size - 9))
 				n_digit = size - 9;
-			endsp = sp + n_digit;
+			endsp = sp + n_digit + 1;
 
 			g = frexp(f, &x);
 			*decpt = x;
@@ -387,9 +384,7 @@ int		format;		/* conversion format		*/
 				while ((x -= 4) >= 0)
 				{	*sp++ = ep[(m >> x) & 0xf];
 					if (sp >= endsp)
-					{	ep = sp + 1;
-						goto done;
-					}
+						goto around;
 				}
 				f -= m;
 				f = ldexp(f, 8 * sizeof(m));
@@ -503,9 +498,35 @@ int		format;		/* conversion format		*/
 		}
 	}
 
-done:
+ done:
 	*--ep = '\0';
 	if(len)
 		*len = ep-b;
 	return b;
+ around:
+	if (((m >> x) & 0xf) >= 8)
+	{	t = sp - 1;
+		for (;;)
+		{	if (--t <= b)
+			{	(*decpt)++;
+				break;
+			}
+			switch (*t)
+			{
+			case 'f':
+			case 'F':
+				*t = '0';
+				continue;
+			case '9':
+				*t = ep[10];
+				break;
+			default:
+				(*t)++;
+				break;
+			}
+			break;
+		}
+	}
+	ep = sp + 1;
+	goto done;
 }

@@ -28,7 +28,7 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	ARGV0="-a $command"
 	USAGE=$'
 [-?
-@(#)$Id: hurl (AT&T Research) 2006-01-30 $
+@(#)$Id: hurl (AT&T Research) 2008-12-15 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?hurl - copy http url data]
@@ -128,7 +128,7 @@ User-Agent: $agent${AUTHORIZE}
 					case $head in
 					Location:)
 						case $code in
-						301|302)url=$data
+						30[123])url=$data
 							continue 2
 							;;
 						esac

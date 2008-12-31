@@ -796,7 +796,7 @@ void nv_addtype(Namval_t *np, const char *optstr, Optdisc_t *op, size_t optsz)
 	nv_onattr(np, NV_RDONLY);
 }
 
-static void addtype(Namval_t *mp)
+void nv_newtype(Namval_t *mp)
 {
 	struct	{
 		    Optdisc_t	opt;
@@ -1172,7 +1172,7 @@ else sfprintf(sfstderr,"tp==NULL\n");
 	}
 	if(mnodes!=nodes)
 		free((void*)mnodes);
-	addtype(mp);
+	nv_newtype(mp);
 	return(mp);
 }
 
@@ -1209,7 +1209,7 @@ Namval_t *nv_mkinttype(char *name, size_t size, int sign, const char *help, Namd
 	if(!sign)
 		nv_onattr(mp,NV_UNSIGN);
 	nv_disc(mp, fp, NV_LAST);
-	addtype(mp);
+	nv_newtype(mp);
 	return(mp);
 }
 
@@ -1494,7 +1494,7 @@ Namval_t *nv_mkstruct(const char *name, int rsize, Fields_t *fields)
 	nv_setsize(mp,rsize);
 	nv_disc(mp, &pp->fun, NV_LAST);
 	mp->nvalue.cp = pp->data;
-	addtype(mp);
+	nv_newtype(mp);
 	return(mp);
 }
 

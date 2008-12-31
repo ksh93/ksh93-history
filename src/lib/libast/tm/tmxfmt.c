@@ -407,10 +407,7 @@ tmxfmt(char* buf, size_t len, const char* format, Time_t t)
 			goto push;
 		case 's':	/* seconds[.nanoseconds] since the epoch */
 		case '#':
-			if (t)
-				now = t;
-			else
-				now = tmxgettime();
+			now = t;
 			f = fmt;
 			*f++ = '%';
 			if (pad == '0')

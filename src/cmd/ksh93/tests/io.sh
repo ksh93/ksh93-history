@@ -49,7 +49,7 @@ exec 3> /dev/null
 [[ $(fun) == good ]] || err_exit 'file 3 closed before subshell completes'
 exec 3>&-
 mkdir /tmp/ksh$$ || err_exit "mkdir /tmp/ksh$$ failed"
-trap 'rm -rf /tmp/ksh$$' EXIT
+trap 'cd /; rm -rf /tmp/ksh$$' EXIT
 cd /tmp/ksh$$ || err_exit "cd /tmp/ksh$$ failed"
 print foo > file1
 print bar >> file1
@@ -67,17 +67,56 @@ if	( 4> file1 ) 2> /dev/null
 then	err_exit 'noclobber not causing exclusive open'
 fi
 set +o noclobber
+
+set \
+	/proc/self/fd	open	\
+	/proc/$$/fd	open
+fdfs=/dev/fd
+semantics=dup
+while	(( $# >= 2 ))
+do	if	[[ -e $1 ]]
+	then	fdfs=$1
+		semantics=$2
+		break
+	fi
+	shift 2
+done
+
 exec 3<> file1
-if	command exec 4< /dev/fd/3
+if	command exec 4< $fdfs/3
 then	read -u3 line
 	read -u4 line
 	exp=foo
 	case $line in
-	foo)	;;
-	bar)	err_exit "'4< /dev/fd/3' uses dup(2) instead of open(2) -- expected '$exp', got '$line'" ;;
-	*)	err_exit "'4< /dev/fd/3' failed -- expected '$exp', got '$line'" ;;
+	foo)	got=open ;;
+	bar)	got=dup ;;
+	*)	got=error ;;
 	esac
+	if	[[ $semantics != $got ]]
+	then	err_exit "'4< $fdfs/3' uses $got(2) instead of $semantics(2) -- expected '$exp', got '$line'"
+	fi
 fi
+
+# 2004-11-25 ancient /dev/fd/N redirection bug fix
+x=$(
+	{
+		print -n 1
+		print -n 2 > $fdfs/2
+		print -n 3
+		print -n 4 > $fdfs/2
+	}  2>&1
+)
+case $x in
+1234)	got=dup ;;
+4)	got=open ;;
+*)	got=error ;;
+esac
+case $semantics in
+dup)	exp=1234 ;;
+*)	exp=4 ;;
+esac
+[[ $x == $exp ]] || err_exit "$fdfs/N uses $got(2) instead of $semantics(2) -- expected '$exp', got '$x'"
+
 cat > close0 <<\!
 exec 0<&-
 echo $(./close1)
@@ -162,17 +201,6 @@ cat > /tmp/io$$.1 <<- \++EOF++
 chmod +x /tmp/io$$.1
 [[ $($SHELL  /tmp/io$$.1) == ok ]]  || err_exit "parent i/o causes child script to fail"
 rm -rf /tmp/io$$.[12]
-# 2004-11-25 ancient /dev/fd/NN redirection bug fix
-x=$(
-	{
-		print -n 1
-		print -n 2 > /dev/fd/2
-		print -n 3
-		print -n 4 > /dev/fd/2
-	}  2>&1
-)
-exp=4
-[[ $x == $exp ]] || err_exit "/dev/fd/NN uses dup(2) instead of open(2) -- expected '$exp', got '$x'"
 # 2004-12-20 redirection loss bug fix
 cat > /tmp/io$$.1 <<- \++EOF++  
 	function a

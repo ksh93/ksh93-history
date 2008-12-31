@@ -1,3 +1,8 @@
+08-12-30 tm/tmxdate.c,include/tm.h: add TM_WORK { "workday" "working" "work" }
+08-12-28 sfio/sfcvt.c: fix 'a' format rounding
+08-12-21 tm/tmdata.c: add 2008-12-31+23:59:60-0000 leap second event
+08-12-19 tm/tmxdate.c: check for dates near the epoch rolling back to the future
+08-12-19 tm/tmxfmt.c: change %s for now==0 to be the epoch
 08-12-07 include/ast_std.h,misc/getenv.c: no _ast_getenv for uwin ast54 compatibility
 08-12-07 tm/tmxfmt.c: add %[_][EO]K for [space pad] [full|long] iso
 08-12-07 sfio/sfvscanf.c: fix ok[] short by one allocation

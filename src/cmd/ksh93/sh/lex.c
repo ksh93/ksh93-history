@@ -100,6 +100,7 @@ struct lexdata
 	int		lex_max;
 	int		*lex_match;
 	int		lex_state;
+	int		docextra;
 #if SHOPT_KIA
 	off_t		kiaoff;
 #endif
@@ -196,6 +197,12 @@ static void lex_advance(Sfio_t *iop, const char *buff, register int size, void *
 #endif
 	if(lp->lexd.nocopy)
 		return;
+	if(lp->lexd.dolparen && lp->lexd.docword)
+	{
+		int n = size - (lp->lexd.docend-(char*)buff);
+		sfwrite(shp->strbuf,lp->lexd.docend,n);
+		lp->lexd.docextra  += n;
+	}
 	if(lp->lexd.first)
 	{
 		size -= (lp->lexd.first-(char*)buff);
@@ -222,12 +229,13 @@ static int lexfill(Lex_t *lp)
 	register int c;
 	Lex_t savelex;
 	struct argnod *ap;
-	int aok;
+	int aok,docextra;
 	savelex = *lp;
 	ap = lp->arg;
 	c = fcfill();
 	if(ap)
 		lp->arg = ap;
+	docextra = lp->lexd.docextra;
 	lp->lex = savelex.lex;
 	lp->lexd = savelex.lexd;
 	if(fcfile() ||  c)
@@ -237,6 +245,11 @@ static int lexfill(Lex_t *lp)
 	memcpy(lp, &savelex, offsetof(Lex_t,lexd));
 	lp->arg = ap;
 	lp->aliasok = aok;
+	if(lp->lexd.docword && docextra)
+	{
+		lp->lexd.docextra = docextra;
+		lp->lexd.docend = fcseek(0)-1;
+	}
 	return(c);
 }
 
@@ -1522,6 +1535,7 @@ static int comsub(register Lex_t *lp, int endtok)
 					fcseek(-1);
 				break;
 			    case IODOCSYM:
+				lp->lexd.docextra = 0;
 				sh_lex(lp);
 				break;
 			    case 0:
@@ -1564,9 +1578,14 @@ static void nested_here(register Lex_t *lp)
 	if(offset=stktell(stkp))
 		base = stkfreeze(stkp,0);
 	n = fcseek(0)-lp->lexd.docend;
-	iop = newof(0,struct ionod,1,n+ARGVAL);
+	iop = newof(0,struct ionod,1,lp->lexd.docextra+n+ARGVAL);
 	iop->iolst = lp->heredoc;
 	stkseek(stkp,ARGVAL);
+	if(lp->lexd.docextra)
+	{
+		sfseek(lp->sh->strbuf,(Sfoff_t)0, SEEK_SET);
+		sfmove(lp->sh->strbuf,stkp,lp->lexd.docextra,-1);
+	}
 	sfwrite(stkp,lp->lexd.docend,n);
 	lp->arg = sh_endword(lp->sh,0);
 	iop->ioname = (char*)(iop+1);
