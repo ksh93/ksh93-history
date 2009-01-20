@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -2150,7 +2150,7 @@ opthelp(const char* oopts, const char* what)
 	}
 	else
 		return T(NiL, ID, "[* call optget() before opthelp() *]");
-	if (style < STYLE_usage)
+	if (style <= STYLE_usage)
 	{
 		if (!(sp_text = sfstropen()) || !(sp_info = sfstropen()))
 			goto nospace;
@@ -2212,10 +2212,18 @@ opthelp(const char* oopts, const char* what)
 				sfputc(mp, '\n');
 			else
 				xl = 1;
-			while (c = *p++)
+			psp = 0;
+			for (;;)
 			{
-				switch (c)
+				switch (c = *p++)
 				{
+				case 0:
+					if (!(tsp = psp))
+						goto style_usage;
+					p = psp->ob;
+					psp = psp->next;
+					free(tsp);
+					continue;
 				case '\a':
 					c = 'a';
 					break;
@@ -2223,8 +2231,15 @@ opthelp(const char* oopts, const char* what)
 					c = 'b';
 					break;
 				case '\f':
-					c = 'f';
-					break;
+					psp = info(psp, p, NiL, sp_info);
+					if (psp->nb)
+						p = psp->nb;
+					else
+					{
+						p = psp->ob;
+						psp = psp->next;
+					}
+					continue;
 				case '\n':
 					c = 'n';
 					break;
@@ -2253,6 +2268,7 @@ opthelp(const char* oopts, const char* what)
 				sfputc(mp, '\\');
 				sfputc(mp, c);
 			}
+		style_usage:
 			continue;
 		case STYLE_keys:
 			a = 0;

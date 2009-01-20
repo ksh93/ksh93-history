@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#                     Copyright (c) 1994-2008 AT&T                     #
+#                     Copyright (c) 1994-2009 AT&T                     #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                               by AT&T                                #
@@ -32,7 +32,7 @@ case $(getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt) in
 0123)	ARGV0="-a $command"
 	USAGE=$'
 [-?
-@(#)$Id: mktest (AT&T Labs Research) 2008-08-08 $
+@(#)$Id: mktest (AT&T Labs Research) 2009-01-03 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?mktest - generate a regression test scripts]
@@ -77,6 +77,14 @@ unit.rt [ unit [ arg ... ] ]
             optional arguments.]
         [+TEST [ \anumber\a ]] [ \adescription\a ... ]]?Define a new
             test group with optional \anumber\a and \adescripion\a.]
+        [+TWD [ \adir\a ... ]]?Set the temporary test dir to \adir\a.
+            The default is \aunit\a\b.tmp\b, where \aunit\a is the test
+            input file sans directory and suffix. If \adir\a matches \b/*\b
+            then it is the directory name; if \adir\a is non-null then the
+            prefix \b${TMPDIR:-/tmp}\b is added; otherwise if \adir\a is
+            omitted then
+            \b${TMPDIR:-/tmp}/tst-\b\aunit\a-$$-$RANDOM.\b\aunit\a is
+            used.]
         [+UMASK [ \amask\a ]]?Run subsequent tests with \bumask\b(1)
             \amask\a. If \amask\a is omitted then the original \bumask\b is
             used.]
@@ -235,6 +243,19 @@ function TEST
 	UMASK=$UMASK_ORIG
 	UMASK_DONE=$UMASK
 	CODE=0
+}
+
+function TWD
+{
+	case $STYLE in
+	regress)LINE
+		print -u$stdout -r -f $'TWD'
+		for ARG in "$@"
+		do	print -u$stdout -r -f " $QUOTE" -- "$ARG"
+		done
+		print -u$stdout
+		;;
+	esac
 }
 
 function RUN

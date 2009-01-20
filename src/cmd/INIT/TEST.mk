@@ -1,7 +1,7 @@
 /*
  * regression test support
  *
- * @(#)TEST.mk (AT&T Labs Research) 2008-06-20
+ * @(#)TEST.mk (AT&T Labs Research) 2009-01-08
  *
  * test management is still in the design phase
  */
@@ -9,16 +9,18 @@
 /*
  * three forms for :TEST:
  *
- *	:TEST: [--] xxx yyy ...
+ *	:TEST: xxx yyy ...
  *
  *		$(REGRESS) $(REGRESSFLAGS) xxx.tst xxx
  *		$(REGRESS) $(REGRESSFLAGS) yyy.tst yyy
  *
- *		-- disables .c .sh search
- *
  *	:TEST: xxx.tst yyy ...
  *
  *		$(REGRESS) $(REGRESSFLAGS) xxx.tst yyy ...
+ *
+ *	:TEST: xxx.c [ :: test-prereq ... :: ] [ args [ : args ... ] ]
+ *
+ *	:TEST: xxx.sh [ :: test-prereq ... :: ] [ args [ : args ... ] ]
  *
  *	xxx :TEST: prereq ...
  *		[ action ]
@@ -59,11 +61,39 @@
 					set +x; (ulimit -c 0) >/dev/null 2>&1 && ulimit -c 0; set -x
 					$(@:V)
 			end
+		elif "$(>:V:O>1)"
+			local I A V X S R=0
+			for A $(>:V:O>1)
+				if A == "::"
+					let R = !R
+				elif A == ":"
+					let I = I + 1
+					test.$(T).$(I) := $(V:V)
+					V =
+					X := $(X:V)$(S)$$(*) $$(test.$(T).$(I):T=*)
+					S = $("\n")
+				elif R
+					test.$(A) : .VIRTUAL .FORCE
+					test.$(T) : test.$(A)
+				else
+					V += $(A:V)
+				end
+			end
+			if V
+				let I = I + 1
+				test.$(T).$(I) := $(V:V)
+				X := $(X:V)$(S)$$(*) $$(test.$(T).$(I):T=*)
+			end
+			eval
+				test.$$(T) : $$(B)
+					set +x; (ulimit -c 0) >/dev/null 2>&1 && ulimit -c 0; set -x
+					$(X:V)
+			end
 		else
 			eval
 				test.$$(T) : $$(B)
 					set +x; (ulimit -c 0) >/dev/null 2>&1 && ulimit -c 0; set -x
-					$$(*) $(>:V:O>1)
+					$$(*)
 			end
 		end
 	elif ! "$(<:V)"
@@ -146,7 +176,7 @@ MKTESTFLAGS = --style=regress
  * otherwise the script is accepted if it exists
  *
  * this avoids the case where a fresh build with no state
- * would regenerate the test script and encode current
+ * would regenerate the test script and capture current
  * behavior instead of expected behavior
  */
 

@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2008 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2009 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -304,4 +304,10 @@ foo[2]=bar
 typeset -n bam=foo[2]
 typeset -n zip=bam
 [[ $zip == bar ]] || err_exit 'nameref to another nameref to array element fails'
+[[ -R zip ]] || err_exit '[[ -R zip ]] should detect that zip is a reference'
+[[ -R bam ]] || err_exit '[[ -R bam ]] should detect that bam is a reference'
+[[ -R zip ]] || err_exit '[[ -v zip ]] should detect that zip is set'
+[[ -v bam ]] || err_exit '[[ -v bam ]] should detect that bam is set'
+[[ -R 123 ]] && err_exit '[[ -R 123 ]] should detect that 123 is not a reference'
+[[ -v 123 ]] && err_exit '[[ -v 123 ]] should detect that 123 is not set'
 exit $((Errors))

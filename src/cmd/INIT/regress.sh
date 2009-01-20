@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#                     Copyright (c) 1994-2008 AT&T                     #
+#                     Copyright (c) 1994-2009 AT&T                     #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                               by AT&T                                #
@@ -23,7 +23,7 @@ command=regress
 case $(getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt) in
 0123)	USAGE=$'
 [-?
-@(#)$Id: regress (AT&T Research) 2008-09-26 $
+@(#)$Id: regress (AT&T Research) 2009-01-03 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?regress - run regression tests]
@@ -512,6 +512,7 @@ function UNIT # cmd arg ...
 		case $1 in
 		"")	set -- "$cmd" ;;
 		[-+]*)	set -- "$cmd" "${ARGV[@]}" ;;
+		*)	cmd=$1 ;;
 		esac
 	fi
 	UNIT=
@@ -532,7 +533,7 @@ function UNIT # cmd arg ...
 function TWD # [ dir ]
 {
 	case $1 in
-	'')	TWD=${TMPDIR:-/tmp}/tst-${TWD%.*}-$$-$RANDOM ;;
+	'')	TWD=${TWD##*/}; TWD=${TMPDIR:-/tmp}/tst-${TWD%.*}-$$-$RANDOM ;;
 	/*)	TWD=$1 ;;
 	*)	TWD=${TMPDIR:-/tmp}/$1 ;;
 	esac

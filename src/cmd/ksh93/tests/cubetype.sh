@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2008 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2009 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -149,6 +149,7 @@ for ((i=0; i < n; i++))
 do
 Cube_t cc
 cc[2]=(x=2 y=3 name=two colors+=([table]=white) items+=(pencil) z=6)
+[[ ${cc[0].x} == 8 ]] || err_exit 'cc[0].x !=8'
 [[ ${cc[2].y} == 3 ]] || err_exit '${cc[2].y} != 3'
 (( cc[2].y == 3 )) || err_exit '(( cc[2].y != 3))'
 [[ ${cc[2].colors[table]} == white ]] || err_exit '${cc[2].colors[table]} != white'

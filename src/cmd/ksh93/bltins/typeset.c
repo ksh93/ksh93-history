@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -935,7 +935,8 @@ static int b_unall(int argc, char **argv, register Dt_t *troot, Shell_t* shp)
 	register const char *name;
 	register int r;
 	Dt_t	*dp;
-	int nflag=0,all=0,isfun;
+	int nflag=0,all=0,isfun,jmpval;
+	struct checkpt buff;
 	NOT_USED(argc);
 	if(troot==shp->alias_tree)
 	{
@@ -976,13 +977,28 @@ static int b_unall(int argc, char **argv, register Dt_t *troot, Shell_t* shp)
 	else
 		nflag = NV_NOSCOPE;
 	if(all)
-		dtclear(troot);
-	else while(name = *argv++)
 	{
-		if(np=nv_open(name,troot,NV_NOADD|NV_NOFAIL|nflag))
+		dtclear(troot);
+		return(r);
+	}
+	sh_pushcontext(&buff,1);
+	while(name = *argv++)
+	{
+		jmpval = sigsetjmp(buff.buff,0);
+		np = 0;
+		if(jmpval==0)
+			np=nv_open(name,troot,NV_NOADD|nflag);
+		else
 		{
-			if(is_abuiltin(np))
+			r = 1;
+			continue;
+		}
+		if(np)
+		{
+			if(is_abuiltin(np) || nv_isattr(np,NV_RDONLY))
 			{
+				if(nv_isattr(np,NV_RDONLY))
+					errormsg(SH_DICT,ERROR_warn(0),e_readonly, nv_name(np));
 				r = 1;
 				continue;
 			}
@@ -998,16 +1014,16 @@ static int b_unall(int argc, char **argv, register Dt_t *troot, Shell_t* shp)
 				if(shp->subshell)
 					np=sh_assignok(np,0);
 			}
-			nv_unset(np);
+			if(!nv_isnull(np))
+				nv_unset(np);
 			nv_close(np);
 			if(troot==shp->var_tree && shp->st.real_fun && (dp=shp->var_tree->walk) && dp==shp->st.real_fun->sdict)
 				nv_delete(np,dp,NV_NOFREE);
 			else if(isfun)
 				nv_delete(np,troot,NV_NOFREE);
 		}
-		else
-			r = 1;
 	}
+	sh_popcontext(&buff);
 	return(r);
 }
 

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -98,7 +98,7 @@ void	sh_fault(register int sig)
 		}
 		return;
 	}
-	if(shp->subshell && sig!=SIGINT && sig!=SIGQUIT && sig!=SIGWINCH)
+	if(shp->subshell && sig!=SIGINT && sig!=SIGQUIT && sig!=SIGWINCH && sig!=SIGCONT)
 	{
 		shp->exitval = SH_EXITSIG|sig;
 		sh_subfork();
@@ -589,6 +589,8 @@ void sh_done(void *ptr, register int sig)
 		shp->oldexit = savxit;
 		sh_trap(t,0);
 		savxit = shp->exitval;
+		if((savxit&SH_EXITMASK)!=sig)
+			sig = 0;
 	}
 	else
 	{

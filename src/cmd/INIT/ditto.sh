@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#                     Copyright (c) 1994-2007 AT&T                     #
+#                     Copyright (c) 1994-2009 AT&T                     #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                               by AT&T                                #
@@ -210,7 +210,7 @@ do
 		then
 			if [[ $text != +([[:digit:]]) ]]
 			then	
-				print -u2 $COMMAND: source: $text
+				print -u2 $COMMAND: source: "'$text'"
 				src_path=
 				continue
 			fi

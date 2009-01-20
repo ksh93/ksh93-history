@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -389,7 +389,10 @@ getlist(register FTSENT** top, register FTSENT** bot, register FTSENT* root)
 					break;
 				}
 				if (!(root = stack))
+				{
+					(*bot)->fts_link = 0;
 					return;
+				}
 				stack = stack->stack;
 			}
 		}
@@ -565,27 +568,27 @@ info(FTS* fts, register FTSENT* f, const char* path, struct stat* sp, int flags)
 
 /*
  * get top list of elements to process
+ * ordering delayed until first fts_read()
+ * to give caller a chance to set fts->handle
  */
 
 static FTSENT*
 toplist(FTS* fts, register char* const* pathnames)
 {
 	register char*		path;
-	register struct stat*	sb;
 	register FTSENT*	f;
-	register FTSENT*	root;
+	register FTSENT*	top;
+	register FTSENT*	bot;
 	int			physical;
 	int			metaphysical;
 	char*			s;
-	FTSENT*			top;
-	FTSENT*			bot;
 	struct stat		st;
 
 	if (fts->flags & FTS_NOSEEDOTDIR)
 		fts->flags &= ~FTS_SEEDOTDIR;
 	physical = (fts->flags & FTS_PHYSICAL);
 	metaphysical = (fts->flags & (FTS_META|FTS_PHYSICAL)) == (FTS_META|FTS_PHYSICAL);
-	top = bot = root = 0;
+	top = bot = 0;
 	while (path = *pathnames++)
 	{
 		/*
@@ -625,14 +628,13 @@ toplist(FTS* fts, register char* const* pathnames)
 			*s = 0;
 			f->fts_namelen = s - path;
 		}
-		sb = f->fts_statp;
 		if (!*path)
 		{
 			errno = ENOENT;
 			f->fts_info = FTS_NS;
 		}
 		else
-			info(fts, f, path, sb, fts->flags);
+			info(fts, f, path, f->fts_statp, fts->flags);
 #ifdef S_ISLNK
 
 		/*
@@ -642,13 +644,11 @@ toplist(FTS* fts, register char* const* pathnames)
 
 		if (metaphysical && f->fts_info == FTS_SL && stat(path, &st) >= 0)
 		{
-			*sb = st;
-			info(fts, f, NiL, sb, 0);
+			*f->fts_statp = st;
+			info(fts, f, NiL, f->fts_statp, 0);
 		}
 #endif
-		if (fts->comparf)
-			root = search(f, root, fts->comparf, 1);
-		else if (bot)
+		if (bot)
 		{
 			bot->fts_link = f;
 			bot = f;
@@ -656,9 +656,26 @@ toplist(FTS* fts, register char* const* pathnames)
 		else
 			top = bot = f;
 	}
-	if (fts->comparf)
-		getlist(&top, &bot, root);
 	return top;
+}
+
+/*
+ * order fts->todo if fts->comparf != 0
+ */
+
+static void
+order(FTS* fts)
+{
+	register FTSENT*	f;
+	register FTSENT*	root;
+	FTSENT*			top;
+	FTSENT*			bot;
+
+	top = bot = root = 0;
+	for (f = fts->todo; f; f = f->fts_link)
+		root = search(f, root, fts->comparf, 1);
+	getlist(&top, &bot, root);
+	fts->todo = top;
 }
 
 /*
@@ -821,6 +838,8 @@ fts_read(register FTS* fts)
 
 	case 0:
 
+		if (!fts->state && fts->comparf)
+			order(fts);
 		if (!(f = fts->todo))
 			return 0;
 		/*FALLTHROUGH*/
@@ -1429,6 +1448,8 @@ fts_children(register FTS* fts, int flags)
 
 	case 0:
 
+		if (fts->comparf)
+			order(fts);
 		fts->state = FTS_top_return;
 		return fts->todo;
 

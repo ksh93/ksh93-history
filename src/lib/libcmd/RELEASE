@@ -1,3 +1,5 @@
+09-01-05 cmp.c: fix EOF diagnostic to conform to posix
+09-01-03 mkfifo.c: fix --mode=mode logic
 08-12-07 date.c: add %[_][EO]K for [space pad] [full|long] iso docs
 08-11-10 stty.c: check for -t grouping so -tostop != -t -ostop
 08-10-15 rm.c: handle 'rm -f x x' => exit 0

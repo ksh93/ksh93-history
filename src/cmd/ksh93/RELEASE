@@ -1,4 +1,31 @@
-08-12-24  --- Release ksh93t+  ---
+09-01-20  --- Release ksh93t+  ---
+09-01-20  A bug in which the exit status specified in an exit trap was
+	  not used when a process terminated with a signal has been fixed.
+09-01-19  A bug in which a signal whose default action is to terminate
+	  a process could be ingored when the process is running a sub-shell
+	  has been fixed.
+09-01-19  A bug in which sending SIGWINCH to a process that reads from a pipe
+	  could cause a memory fault has been fixed.
+09-01-16  The -R unary operator was added to [[...]] and test to check whether
+	  a variable is a  name reference.
+09-01-16  The -v unary operator was added to [[...]] and test to check whether
+	  a variable is set.
+09-01-14  The unset built-in was modified to return 0 exit status when
+	  unsetting a variable that was unset to conform with the POSIX
+	  standard.
+09-01-14  The unset built-in was modified to continue to unset variables
+	  after encountering a variable that it could not unset to
+	  conform to the POSIX standard.
+09-01-14  The paramter expansion ${x+value} no longer expands the value of
+	  the variable x when determining whether x is set or not.
+09-01-13  A bug in which background jobs and pipelines that were not waited
+	  for could, in rare instantes, cause the shell to go into an infinite
+	  loop or fail has been fixed.
+09-01-06  A bug in indexed arrays of compound variables in which referencing
+	  non-existant sub-variable in an arithmetic expression could cause
+	  the sub-variable to be created has been fixed.
+09-01-05  A bug in which the \ character did not escape extened regular
+	  expression pattern characters has been fixed.
 08-12-24  A bug in which killing the last element of a pipe did not cause
 	  a write to the pipe to generate a SIGPIPE has been fixed.
 08-12-19  A bug which could cause command substitution to hang when the

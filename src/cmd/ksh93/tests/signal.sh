@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2008 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2009 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -246,5 +246,39 @@ do	if	! n=$(kill -l $s 2>/dev/null)
 	fi
 	err_exit "'kill -l $s' => $n, 'kill -l $n' => $t, kill -l $t => $m -- expected $n"
 done
+yes=$(whence -p yes)
+[[ $yes ]] && for i in TERM VTALRM PIPE 
+do { $SHELL <<- EOF
+		foo() { return 0; }
+		trap foo EXIT
+		sleep 2 && { kill -$i \$\$; sleep 1;kill -KILL \$\$;}  & 
+		$yes | while read yes; do
+		        (/bin/date; sleep .1)
+		done > /dev/null
+	EOF
+    } 2>> /dev/null
+    [[ $(kill -l $?)  == $i ]] || err_exit "failed expecting termination by $i signal, required KILL"
+done
+
+tmp=foo$$
+SECONDS=0
+$SHELL 2> /dev/null -c 'sleep 2 && kill $$ & trap "print done;exit 3" EXIT; (sleep 5);print finished' > $tmp
+(( $?==3)) || err_exit "wrong exit status expecting 3 got $?"
+x=$(cat "$tmp")
+[[ $x == done ]] || err_exit "wrong result - execting done got $x"
+(( SECONDS > 3.5 )) && err_exit "took $SECONDS seconds, expecting around 2"
+
+SECONDS=0
+{ $SHELL 2> /dev/null -c 'sleep 2 && kill $$ & trap "print done;exit" EXIT; (sleep 5);print finished' > $tmp ;} 2> /dev/null
+[[ $(kill -l $?) == TERM ]] || err_exit "wrong exit status expecting TERM got $(kill -l $?)"
+x=$(cat "$tmp")
+[[ $x == done ]] || err_exit "wrong result - execting done got $x"
+(( SECONDS > 3.5 )) && err_exit "took $SECONDS seconds, expecting around 2"
+
+SECONDS=0
+x=$($SHELL 2> /dev/null -c 'sleep 2 && kill $$ & trap "print done;exit 3" EXIT; (sleep 5);print finished')
+(( $?==3)) || err_exit "wrong exit status expecting 3 got $?"
+[[ $x == done ]] || err_exit "wrong result - execting done got $x"
+(( SECONDS < 4 )) && err_exit "took $SECONDS seconds, expecting around 5"
 
 exit $((Errors))

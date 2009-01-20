@@ -1,5 +1,5 @@
 :
-# @(#)probe.win32 (AT&T Research) 2007-08-11
+# @(#)probe.win32 (AT&T Research) 2009-01-20
 #
 # win32 specific make C probe initialization
 # wrapped cc's are easy on uwin
@@ -259,8 +259,15 @@ CC.VERSION =
 CC.VERSION.STRING =
 !
 		fi
-		cat <<!
+		if	[[ ${version[MINGW]} || ${version[MS]} ]]
+		then	cat <<!
+CC.WARN = -Wall
+!
+		else	cat <<!
 CC.WARN =
+!
+		fi
+		cat <<!
 CC.PREROOT =
 CC.UNIVERSE = att
 !

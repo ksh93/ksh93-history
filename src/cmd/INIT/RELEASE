@@ -1,3 +1,7 @@
+09-01-20 hurl.sh: add --size=bytes option
+09-01-08 TEST.mk: add test.* prereqs, multiple arg lists with :T=*: binding
+09-01-03 regress.sh: fix UNIT to allow command line override
+09-01-03 mktest.sh: handle TWD
 08-12-24 package.sh: fix cross-compile HOSTTYPE logic
 08-12-15 package.sh,hurl.sh: handle http codes { 301 302 303 }
 08-10-16 make.probe '-fno-stack-protector -fno-stack-protector-all' to cop out!!

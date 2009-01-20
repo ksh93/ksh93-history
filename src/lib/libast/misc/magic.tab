@@ -1,5 +1,5 @@
 #
-# @(#)magic (AT&T Research) 2008-03-25
+# @(#)magic (AT&T Research) 2009-01-09
 #
 # magic number database for file(1) and magic(3)
 #
@@ -1364,6 +1364,12 @@ v()
 0	string		\357\273\277		utf-8 encoded text	application/x-iconv
 0	string		\376\377		utf-16 encoded text	application/x-iconv
 0	string		\377\376		utf-16 encoded text, little-endian	application/x-iconv
+
+32769	string		CD001	ISO 9660 CD-ROM filesystem image			data/x-filesystem
++32808	string		*	, '%s'
++34816	string		\000CD001\001EL\ TORITO\ SPECIFICATION	, bootable
+37633	string		CD001	ISO 9660 CD-ROM filesystem image, raw 2352 byte sectors	data/x-filesystem
+32776	string		CDROM	High Sierra CD-ROM filesystem image			data/x-filesystem
 
 #
 # front compression data

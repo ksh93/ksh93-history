@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -530,8 +530,13 @@ static void copyto(register Mac_t *mp,int endch, int newquote)
 			{
 				/* preserve \digit for pattern matching */
 				/* also \alpha for extended patterns */
-				if(!mp->lit && !mp->quote && (n==S_DIG || ((paren+ere) && sh_lexstates[ST_DOL][*(unsigned char*)cp]==S_ALP)))
-					break;
+				if(!mp->lit && !mp->quote)
+				{
+					if((n==S_DIG || ((paren+ere) && sh_lexstates[ST_DOL][*(unsigned char*)cp]==S_ALP)))
+						break;
+					if(ere && mp->pattern==1 && strchr(".[()*+?{|^$&!",*cp))
+						break;
+				}
 				/* followed by file expansion */
 				if(!mp->lit && (n==S_ESC || (!mp->quote && 
 					(n==S_PAT||n==S_ENDCH||n==S_SLASH||n==S_BRACT||*cp=='-'))))
@@ -679,7 +684,7 @@ static void copyto(register Mac_t *mp,int endch, int newquote)
 					{
 						char *p = cp;
 						while((c=mbchar(p)) && c!=RPAREN && c!='E');
-						ere = c=='E';
+						ere = (c=='E'||c=='A');
 					}
 				}
 				else if(n==RPAREN)
@@ -1300,7 +1305,10 @@ retry1:
 				v = nv_getvtree(np,(Namfun_t*)0);
 			else
 			{
-				v = nv_getval(np);
+				if(type && fcpeek(0)=='+')
+					v = nv_isnull(np)?0:"x";
+				else
+					v = nv_getval(np);
 				/* special case --- ignore leading zeros */  
 				if( (mp->arith||mp->let) && (np->nvfun || nv_isattr(np,(NV_LJUST|NV_RJUST|NV_ZFILL))) && (offset==0 || !isalnum(c)))
 					mp->zeros = 1;

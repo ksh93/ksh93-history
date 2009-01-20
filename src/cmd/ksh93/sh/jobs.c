@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -76,24 +76,6 @@ static void init_savelist(void)
 	}
 }
 
-/*
- * return next on link list of jobsave free list
- */
-static struct jobsave *jobsave_create(pid_t pid)
-{
-	register struct jobsave *jp = job_savelist;
-	if(jp)
-	{
-		njob_savelist--;
-		job_savelist = jp->next;
-	}
-	else
-		jp = newof(0,struct jobsave,1,0);
-	if(jp)
-		jp->pid = pid;
-	return(jp);
-}
-
 struct back_save
 {
 	int		count;
@@ -152,7 +134,6 @@ static char		by_number;
 static Sfio_t		*outfile;
 static pid_t		lastpid;
 static struct back_save	bck;
-
 
 #ifdef JOBS
     static void			job_set(struct process*);
@@ -228,6 +209,32 @@ void job_chldtrap(Shell_t *shp, const char *trap, int unpost)
 #endif /* SHOPT_BGX */
 
 /*
+ * return next on link list of jobsave free list
+ */
+static struct jobsave *jobsave_create(pid_t pid)
+{
+	register struct jobsave *jp = job_savelist;
+	job_chksave(pid);
+	if(++bck.count > sh.lim.child_max)
+		job_chksave(0);
+	if(jp)
+	{
+		njob_savelist--;
+		job_savelist = jp->next;
+	}
+	else
+		jp = newof(0,struct jobsave,1,0);
+	if(jp)
+	{
+		jp->pid = pid;
+		jp->next = bck.list;
+		bck.list = jp;
+		jp->exitval = 0;
+	}
+	return(jp);
+}
+
+/*
  * Reap one job
  * When called with sig==0, it does a blocking wait
  */
@@ -299,14 +306,7 @@ int job_reap(register int sig)
 			pw->p_exitmin = 0;
 			if(job.toclear)
 				job_clear();
-			if(++bck.count > sh.lim.child_max)
-				job_chksave(0);
-			if(jp = jobsave_create(pid))
-			{
-				jp->next = bck.list;
-				bck.list = jp;
-				jp->exitval = 0;
-			}
+			jp = jobsave_create(pid);
 			pw->p_flag = 0;
 			lastpid = pw->p_pid = pid;
 			px = 0;
@@ -1176,7 +1176,8 @@ int job_post(pid_t pid, pid_t join)
 	job.pwlist = pw;
 	pw->p_env = sh.curenv;
 	pw->p_pid = pid;
-	pw->p_flag = P_EXITSAVE;
+	if(!sh.outpipe)
+		pw->p_flag = P_EXITSAVE;
 	pw->p_exitmin = sh.xargexit;
 	pw->p_exit = 0;
 	if(sh_isstate(SH_MONITOR))
@@ -1608,12 +1609,8 @@ static struct process *job_unpost(register struct process *pwtop,int notify)
 		{
 			struct jobsave *jp;
 			/* save status for future wait */
-			if(bck.count++ > sh.lim.child_max)
-				job_chksave(0);
 			if(jp = jobsave_create(pw->p_pid))
 			{
-				jp->next = bck.list;
-				bck.list = jp;
 				jp->exitval = pw->p_exit;
 				if(pw->p_flag&P_SIGNALLED)
 					jp->exitval |= SH_EXITSIG;
@@ -1746,19 +1743,6 @@ static int job_chksave(register pid_t pid)
 			break;
 		jpold = jp;
 		jp = jp->next;
-	}
-	if(jp && (jp==jpold || count<0))
-	{
-		Sfio_t *log = sfopen((Sfio_t*)0,"/tmp/kshlog","a");
-		if(log)
-		{
-			fchmod(sffileno(log),S_IRUSR|S_IRGRP|S_IROTH|S_IWUSR|S_IWGRP|S_IWOTH);
-			sfprintf(log,"chksave loop jp==jpold=%d jpold=%p jp->pid=%d pid=%d count=%d\n",jp==jpold,jpold,jp->pid,pid,bck.count);
-			sfclose(log);
-			sfsync(log);
-			errormsg(SH_DICT,ERROR_warn(0),"job list infinite loop -- this should not happen"); 
-			abort();
-		}
 	}
 	if(jp)
 	{

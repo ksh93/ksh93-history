@@ -77,6 +77,10 @@ static const char usage[] =
 
 #endif
 
+#ifndef O_BINARY
+#define O_BINARY	0
+#endif
+
 #if _PACKAGE_ast
 
 #define setmode(d,m)
@@ -94,7 +98,17 @@ static const char usage[] =
 #include <fcntl.h>
 #include <windows.h>
 
-#define mkdir(a,b)	mkdir(a)
+#define access		_access
+#define chmod		_chmod
+#define close		_close
+#define dup		_dup
+#define lseek		_lseek
+#define open		_open
+#define read		_read
+#define setmode		_setmode
+#define unlink		_unlink
+
+#define mkdir(a,b)	_mkdir(a)
 
 #else
 

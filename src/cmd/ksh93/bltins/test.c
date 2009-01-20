@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -421,6 +421,26 @@ int test_unop(register int op,register const char *arg)
 		char *last;
 		op = strtol(arg,&last, 10);
 		return(*last?0:tty_check(op));
+	    }
+	    case 'v':
+	    case 'R':
+	    {
+		Namval_t *np;
+		int isref;
+		if(!(np = nv_open(arg,sh.var_tree,NV_VARNAME|NV_NOFAIL|NV_NOADD|NV_NOREF)))
+			return(0);
+		isref = nv_isref(np);
+		if(op=='R')
+			return(isref);
+		if(isref)
+		{
+			if(np->nvalue.cp)
+				np = nv_refnode(np);
+			else
+				return(0);
+			
+		}
+		return(!nv_isnull(np));
 	    }
 	    default:
 	    {

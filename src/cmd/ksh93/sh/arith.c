@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -78,7 +78,10 @@ static Namval_t *scope(Shell_t *shp,register Namval_t *np,register struct lval *
 			cp[flag] = c;
 			return(&FunNode);
 		}
-		np = nv_open(cp,shp->var_tree,assign|NV_VARNAME);
+		if(!np && assign)
+			np = nv_open(cp,shp->var_tree,assign|NV_VARNAME);
+		if(!np)
+			return(0);
 		cp[flag] = c;
 		if(cp[flag+1]=='[')
 			flag++;
@@ -316,9 +319,19 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 		if(sh_isoption(SH_NOEXEC))
 			return(0);
 		np = scope(shp,np,lvalue,0);
+		if(!np)
+		{
+			if(sh_isoption(SH_NOUNSET))
+			{
+				*ptr = lvalue->value;
+				goto skip;
+			}
+			return(0);
+		}
 		if(((lvalue->emode&2) || lvalue->level>1 || sh_isoption(SH_NOUNSET)) && nv_isnull(np) && !nv_isattr(np,NV_INTEGER))
 		{
 			*ptr = nv_name(np);
+		skip:
 			lvalue->value = (char*)ERROR_dictionary(e_notset);
 			lvalue->emode |= 010;
 			return(0);

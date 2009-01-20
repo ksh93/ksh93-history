@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1985-2006 AT&T Knowledge Ventures            *
+*          Copyright (c) 1985-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                      by AT&T Knowledge Ventures                      *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -36,10 +36,12 @@ void _STUB_stdfun(){}
 
 #if _lib___iob_func
 #define IOB		((char*)__iob_func())
+#elif _lib___p__iob
+#define IOB		((char*)__p__iob())
 #elif _dat__iob
 #define IOB		((char*)_iob)
 #else
-#define IOB		((char*)__p__iob())
+#define IOB		((char*)_p__iob())
 #endif
 
 #define IOBMAX		(512*32)

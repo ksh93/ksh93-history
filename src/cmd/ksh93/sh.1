@@ -1916,6 +1916,12 @@ then two adjacent
 characters delimit a null field.
 .TP
 .B
+.SM JOBMAX
+This variable defines the maximum number running background jobs
+that can run at a time.  When this limit is reached, the
+shell will wait for a job to complete before staring a new job.
+.TP
+.B
 .SM LANG
 This variable determines the locale category for any
 category not specifically selected with a variable
@@ -2856,8 +2862,8 @@ can be used within an arithmetic expression:
 .PP
 .if t .RS
 .B
-.if n abs acos acosh asin asinh atan atan2 atanh cbrt copysign cos cosh erf erfc exp exp2 expm1 fabs fdim finite floor fma fmax fmod hypot ilogb int isinf isnan lgamma log log2 logb nearbyint nextafter nexttoward pow remainder rint round sin sinh sqrt tan tanh tgamma trunc
-.if t abs   acos   acosh   asin   asinh   atan   atan2   atanh   cbrt   copysign   cos   cosh   erf  erfc   exp   exp2   expm1   fabs   fdim   finite   floor  fma   fmax   fmod   hypot   ilogb   int   isinf   isnan   lgamma   log   log2   logb   nearbyint   nextafter   nexttoward  pow   rint   round   sin   sinh   sqrt   tan   tanh   tgamma   trunc
+.if n abs acos acosh asin asinh atan atan2 atanh cbrt copysign cos cosh erf erfc exp exp2 expm1 fabs fdim finite floor fma fmax fmod hypot ilogb int isinf isnan j0 j1 jn lgamma log log2 logb nearbyint nextafter nexttoward pow remainder rint round sin sinh sqrt tan tanh tgamma trunc y0 y1 yn
+.if t abs   acos   acosh   asin   asinh   atan   atan2   atanh   cbrt   copysign   cos   cosh   erf  erfc   exp   exp2   expm1   fabs   fdim   finite   floor  fma   fmax   fmod   j0      j1      jn      hypot   ilogb   int   isinf   isnan   lgamma   log   log2   logb   nearbyint   nextafter   nexttoward  pow   rint   round   sin   sinh   sqrt   tan   tanh   tgamma   trunc   y0      y1      yn
 .if t .RE
 .PP
 An internal representation of a

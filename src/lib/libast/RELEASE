@@ -1,3 +1,11 @@
+09-01-14 misc/fts_open.c: delay top list reorder until first fts_read()
+09-01-14 include/ls.h: LS_W_INUMBER => 9 to accomodate large st_ino
+09-01-14 misc/optget.c: expand STYLE_usage input text
+09-01-09 features/uwin,stdio/_stdfun.c: iffe for _p__iob and __p__iob
+09-01-09 misc/magic.tab: add ISO filesystem image entries
+09-01-07 string/strtoi.c: strtol() etc. do not consume [lLuU] suffix -- thanks jkf
+09-01-07 sfio/sfstrtof.h: strtod() etc. do not consume [fFlL] suffix -- thanks jkf
+09-01-05 string/strlcat.c: fix logic to match docs (not that easy)
 08-12-30 tm/tmxdate.c,include/tm.h: add TM_WORK { "workday" "working" "work" }
 08-12-28 sfio/sfcvt.c: fix 'a' format rounding
 08-12-21 tm/tmdata.c: add 2008-12-31+23:59:60-0000 leap second event

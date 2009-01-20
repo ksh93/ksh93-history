@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -609,8 +609,6 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 		shp->exitval = 0;
 		if(comsub)
 			shp->spid = sp->subpid;
-		else
-			job_wait(sp->subpid);
 	}
 	if(comsub && iop && sp->pipefd<0)
 		sfseek(iop,(off_t)0,SEEK_SET);
@@ -683,6 +681,11 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 	shp->subshare = sp->subshare;
 	if(shp->subshell)
 		SH_SUBSHELLNOD->nvalue.s = --shp->subshell;
+	subshell = shp->subshell;
+	subshell_data = sp->prev;
+	sh_argfree(shp,argsav,0);
+	if(shp->topfd != buff.topfd)
+		sh_iorestore(shp,buff.topfd|IOSUBSHELL,jmpval);
 	if(sp->sig)
 	{
 		if(sp->prev)
@@ -693,12 +696,10 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 			sh_chktrap();
 		}
 	}
-	subshell = shp->subshell;
-	subshell_data = sp->prev;
-	sh_argfree(shp,argsav,0);
+	sh_sigcheck();
 	shp->trapnote = 0;
-	if(shp->topfd != buff.topfd)
-		sh_iorestore(shp,buff.topfd|IOSUBSHELL,jmpval);
+	if(sp->subpid && !comsub)
+		job_wait(sp->subpid);
 	if(shp->exitval > SH_EXITSIG)
 	{
 		int sig = shp->exitval&SH_EXITMASK;
