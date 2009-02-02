@@ -1157,6 +1157,7 @@ int job_post(pid_t pid, pid_t join)
 		freelist = pw->p_nxtjob;
 	else
 		pw = new_of(struct process,0);
+	pw->p_flag = 0;
 	job.numpost++;
 	if(join && job.pwlist)
 	{
@@ -1176,7 +1177,7 @@ int job_post(pid_t pid, pid_t join)
 	job.pwlist = pw;
 	pw->p_env = sh.curenv;
 	pw->p_pid = pid;
-	if(!sh.outpipe)
+	if(!sh.outpipe || sh_isoption(SH_PIPEFAIL))
 		pw->p_flag = P_EXITSAVE;
 	pw->p_exitmin = sh.xargexit;
 	pw->p_exit = 0;

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -672,7 +672,19 @@ format(register Feature_t* fp, const char* path, const char* value, unsigned int
 		strcpy(fp->value, univ_name[n - 1]);
 #else
 		if (value && streq(path, "="))
-			strcpy(fp->value, value);
+		{
+			if (!(fp->flags & CONF_ALLOC))
+				fp->value = 0;
+			n = strlen(value);
+			if (!(fp->value = newof(fp->value, char, n, 1)))
+				fp->value = null;
+			else
+			{
+				fp->flags |= CONF_ALLOC;
+				memcpy(fp->value, value, n);
+				fp->value[n] = 0;
+			}
+		}
 		else
 			initialize(fp, path, "echo", "att", "ucb");
 #endif

@@ -189,6 +189,18 @@ static union Value *array_getup(Namval_t *np, Namarr_t *arp, int update)
 	return(up);
 }
 
+int nv_arrayisset(Namval_t *np, Namarr_t *arp)
+{
+	register struct index_array *ap = (struct index_array*)arp;
+	union Value *up;
+	if(is_associative(ap))
+		return((np = nv_opensub(np)) && !nv_isnull(np));
+	if(ap->cur >= ap->maxi)
+		return(0);
+	up = &(ap->val[ap->cur]);
+	return(up->cp && up->cp!=Empty);
+}
+
 /*
  * Get the Value pointer for an array.
  * Delete space as necessary if flag is ARRAY_DELETE

@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2008 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2009 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -314,6 +314,20 @@ then	[[ $(</tmp/io.sh$$.1) == hello ]] || err_exit '>; not preserving file on fa
 fi
 if	! $SHELL -c "sed -e 's/hello/hello world/' /tmp/io.sh$$.1" >; /tmp/io.sh$$.1  2> /dev/null
 then	[[ $(</tmp/io.sh$$.1) == 'hello world' ]] || err_exit '>; not updating file on success'
+fi
+
+$SHELL -c 'exec 3<>; /dev/null'  2> /dev/null && err_exit '<>; with exec should be an error'
+$SHELL -c ': 3<>; /dev/null'  2> /dev/null || err_exit '<>; not working with at all'
+print $'hello\nworld' > /tmp/io.sh$$.1
+if      ! $SHELL -c "false <>; /tmp/io.sh$$.1"  2> /dev/null
+then    [[ $(</tmp/io.sh$$.1) == $'hello\nworld' ]] || err_exit '<>; not preserving file on failure'
+fi
+if	! $SHELL -c "head -1 /tmp/io.sh$$.1" <>; /tmp/io.sh$$.1  2> /dev/null
+then	[[ $(</tmp/io.sh$$.1) == hello ]] || err_exit '<>; not truncating file on success of head'
+fi
+print $'hello\nworld' > /tmp/io.sh$$.1
+if	! $SHELL -c head  < /tmp/io.sh$$.1 <#((6)) <>; /tmp/io.sh$$.1  2> /dev/null
+then	[[ $(</tmp/io.sh$$.1) == world ]] || err_exit '<>; not truncating file on success of behead'
 fi
 
 unset y

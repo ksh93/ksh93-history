@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2008 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2009 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -428,8 +428,13 @@ do	x=$($false) && err_exit "x=\$($false) should fail"
 done
 [[ $(env 'x-a=y'  $SHELL -c 'env | grep x-a') == *x-a=y* ]] || err_exit 'invalid environment variables not preserved'
 float s=SECONDS
-set -o pipefail
 sleep=$(whence -p sleep)
+for i in 1 2
+do      print $i
+done | while read sec; do ( $sleep $sec; $sleep $sec) done
+(( (SECONDS-s)  < 4)) && err_exit '"command | while read...done" finishing too fast'
+s=SECONDS
+set -o pipefail
 for ((i=0; i < 30; i++))
 do	print hello
 	sleep .1

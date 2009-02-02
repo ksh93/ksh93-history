@@ -55,7 +55,8 @@ cat > tst <<'!'
 #
 #     d call next script directly, otherwise via $SHELL -c
 #     t trap, echo, and kill self on SIGINT, otherwise x or SIGINT default if no x
-#     x trap, echo on SIGINT, and exit 0, otherwise SIGINT default
+#     x trap, echo on SIGINT, and tst-3 exit 0, tst-2 exit, otherwise SIGINT default
+#     z trap, echo on SIGINT, and tst-3 exit 0, tst-2 exit 0, otherwise SIGINT default
 #
 # Usage: tst [-v] [-options] shell-to-test ...
 
@@ -71,7 +72,7 @@ set -o monitor
 function gen
 {
 	typeset o t x d
-	for x in - x
+	for x in - x z
 	do	case $x in
 		[$1])	for t in - t
 			do	case $t in
@@ -153,6 +154,11 @@ sleep 2
 !
 cat > tst-2 <<'!'
 case $1 in
+*z*)	trap '
+		echo 2-intr
+		exit 0
+	' INT
+	;;
 *x*)	trap '
 		echo 2-intr
 		exit
@@ -176,7 +182,7 @@ printf '2-%04d\n' $status
 !
 cat > tst-3 <<'!'
 case $1 in
-*x*)	trap '
+*[xz]*)	trap '
 		sleep 2
 		echo 3-intr
 		exit 0
@@ -206,10 +212,14 @@ expected[---]="3-intr"
 expected[--d]="3-intr"
 expected[-t-]="3-intr 2-intr 1-intr 1-0258"
 expected[-td]="3-intr 2-intr 1-intr 1-0258"
-expected[x--]="3-intr 2-intr 1-0000"
-expected[x-d]="3-intr 2-intr 1-0000"
-expected[xt-]="3-intr 2-intr 1-intr 1-0000"
-expected[xtd]="3-intr 2-intr 1-intr 1-0000"
+expected[x--]="3-intr 2-intr"
+expected[x-d]="3-intr 2-intr"
+expected[xt-]="3-intr 2-intr 1-intr 1-0258"
+expected[xtd]="3-intr 2-intr 1-intr 1-0258"
+expected[z--]="3-intr 2-intr 1-0000"
+expected[z-d]="3-intr 2-intr 1-0000"
+expected[zt-]="3-intr 2-intr 1-intr 1-0000"
+expected[ztd]="3-intr 2-intr 1-intr 1-0000"
 
 tst $SHELL > tst.got
 

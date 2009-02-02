@@ -1,3 +1,9 @@
+09-02-02 misc/opthdr.h,optget.c: fix flags mixup, handle old '-' as option
+09-02-02 sfio/sfprints.c: fix sfvaprints() return value to not count trailing '\0'
+09-02-02 misc/cmdarg.c: handle !defined(ARG_MAX)
+09-02-02 port/astconf.c: fix UNIVERSE overwrite of null[] value!
+09-01-31 features/sys: drop header sys/localedef.h
+09-01-28 include/fs3d.h,misc/fs3d.c: mount() => fs3d_mount() for diff std prototypes
 09-01-14 misc/fts_open.c: delay top list reorder until first fts_read()
 09-01-14 include/ls.h: LS_W_INUMBER => 9 to accomodate large st_ino
 09-01-14 misc/optget.c: expand STYLE_usage input text

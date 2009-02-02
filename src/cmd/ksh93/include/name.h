@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -166,6 +166,7 @@ extern int		array_maxindex(Namval_t*);
 extern char 		*nv_endsubscript(Namval_t*, char*, int);
 extern Namfun_t 	*nv_cover(Namval_t*);
 extern Namarr_t 	*nv_arrayptr(Namval_t*);
+extern int		nv_arrayisset(Namval_t*, Namarr_t*);
 extern int		nv_arraysettype(Namval_t*, Namval_t*,const char*,int);
 extern int		nv_aimax(Namval_t*);
 extern int		nv_atypeindex(Namval_t*, const char*);
@@ -197,6 +198,7 @@ extern int		nv_compare(Dt_t*, Void_t*, Void_t*, Dtdisc_t*);
 extern void		nv_outnode(Namval_t*,Sfio_t*, int, int);
 extern int		nv_subsaved(Namval_t*);
 extern void		nv_typename(Namval_t*, Sfio_t*);
+extern void		nv_newtype(Namval_t*);
 
 extern const Namdisc_t	RESTRICTED_disc;
 extern const Namdisc_t	ENUM_disc;
@@ -228,4 +230,5 @@ extern const char	e_redef[];
 extern const char	e_required[];
 extern const char	e_badappend[];
 extern const char	e_unknowntype[];
+extern const char	e_globalref[];
 #endif /* _NV_PRIVATE */

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -677,6 +677,7 @@ USAGE_LICENSE
     "\aflags\a with optional \anumber\a values may be specified to control "
     "option parsing. "
     "The flags are:]{"
+      "[++?Arguments beginning with + are considered options.]"
       "[+c?Cache this \aoptstring\a for multiple passes. Used to optimize "
 	"builtins that may be called many times within the same process.]"
       "[+i?Ignore this \aoptstring\a when generating help. Used when "
@@ -737,9 +738,7 @@ USAGE_LICENSE
   "[+8.?A group of the form [-\aname\a?\atext\a]] specifies entries "
     "for the \bIMPLEMENTATION\b section.]"
 "}"
-"[+?If the leading character of \aoptstring\a is +, then arguments "
-  "beginning with + will also be considered options.]"
-"[+?A leading : character or a : following a leading + in \aoptstring\a "
+"[+?A leading : character in \aoptstring\a "
   "affects the way errors are handled.  If an option character or longname "
   "argument not specified in \aoptstring\a is encountered when processing "
   "options, the shell variable whose name is \aname\a will be set to the ? "
@@ -750,6 +749,8 @@ USAGE_LICENSE
   "Without the leading :, \aname\a will be set to the ? character, \bOPTARG\b "
   "will be unset, and an error message will be written to standard error "
   "when errors are encountered.]"
+"[+?A leading + character or a + following a leading : in \aoptstring\a "
+  "specifies that arguments beginning with + will also be considered options.]"
 "[+?The end of options occurs when:]{"
 	"[+1.?The special argument \b--\b is encountered.]"
 	"[+2.?An argument that does not begin with a \b-\b is encountered.]"
@@ -1115,7 +1116,7 @@ USAGE_LICENSE
 ;
 
 const char sh_optprintf[] =
-"[-1c?\n@(#)$Id: printf (AT&T Research) 2006-10-26 $\n]"
+"[-1c?\n@(#)$Id: printf (AT&T Research) 2009-02-02 $\n]"
 USAGE_LICENSE
 "[+NAME?printf - write formatted output]"
 "[+DESCRIPTION?\bprintf\b writes each \astring\a operand to "
@@ -1163,7 +1164,7 @@ USAGE_LICENSE
 	"in the underlying code set of the character following the "
 	"\b\"\b or \b'\b.  Otherwise, \astring\a is treated like a shell "
 	"arithmetic expression and evaluated.]"
-"[+?If a \astring\a operand cannot be completed converted into a value "
+"[+?If a \astring\a operand cannot be completely converted into a value "
 	"appropriate for that format specifier, an error will occur, "
 	"but remaining \astring\a operands will continue to be processed.]"
 "[+?In addition to the format specifier extensions, the following "
@@ -1176,8 +1177,10 @@ USAGE_LICENSE
 	"[+-?The escape sequence \b\\x{\b\ahex\a\b}\b expands to the "
 		"character corresponding to the hexidecimal value \ahex\a.]"
 	"[+-?The format modifier flag \b=\b can be used to center a field to "
-		"a specified width.  When the output is a terminal, the "
-		"character width is used rather than the number of bytes.]"
+		"a specified width.]"
+	"[+-?The format modifier flag \bL\b can be used with the \bc\b and "
+		"\bs\b formats to treat precision as character width instead "
+		"of byte count.]"
 	"[+-?Each of the integral format specifiers can have a third "
 		"modifier after width and precision that specifies the "
 		"base of the conversion from 2 to 64.  In this case the "

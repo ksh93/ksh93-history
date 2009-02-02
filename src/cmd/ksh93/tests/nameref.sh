@@ -310,4 +310,18 @@ typeset -n zip=bam
 [[ -v bam ]] || err_exit '[[ -v bam ]] should detect that bam is set'
 [[ -R 123 ]] && err_exit '[[ -R 123 ]] should detect that 123 is not a reference'
 [[ -v 123 ]] && err_exit '[[ -v 123 ]] should detect that 123 is not set'
+
+unset ref x
+typeset -n ref
+x=3
+function foobar
+{
+	typeset xxx=3
+	ref=xxx
+	return 0
+}
+foobar 2> /dev/null && err_exit 'invalid reference should cause foobar to fail'
+[[ -v ref ]] && err_exit '$ref should be unset'
+ref=x
+[[ $ref == 3 ]] || err_exit "\$ref is $ref, it should be 3"
 exit $((Errors))

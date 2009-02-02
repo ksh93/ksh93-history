@@ -426,6 +426,7 @@ int test_unop(register int op,register const char *arg)
 	    case 'R':
 	    {
 		Namval_t *np;
+		Namarr_t *ap;
 		int isref;
 		if(!(np = nv_open(arg,sh.var_tree,NV_VARNAME|NV_NOFAIL|NV_NOADD|NV_NOREF)))
 			return(0);
@@ -440,6 +441,8 @@ int test_unop(register int op,register const char *arg)
 				return(0);
 			
 		}
+		if(ap = nv_arrayptr(np))
+			return(nv_arrayisset(np,ap));
 		return(!nv_isnull(np));
 	    }
 	    default:

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1992-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1992-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -26,7 +26,7 @@
  */
 
 static const char usage[] =
-"[-n?\n@(#)$Id: uniq (AT&T Research) 2008-04-24 $\n]"
+"[-n?\n@(#)$Id: uniq (AT&T Research) 2009-02-02 $\n]"
 USAGE_LICENSE
 "[+NAME?uniq - Report or filter out repeated lines in a file]"
 "[+DESCRIPTION?\buniq\b reads an input, comparing adjacent lines, and "
@@ -49,13 +49,15 @@ USAGE_LICENSE
     "}"
 "[f:skip-fields]#[fields?\afields\a is the number of fields to skip over "
     "before checking for uniqueness. A field is the minimal string matching "
-    "the BRE \b[[:blank:]]]]*[^[:blank:]]]]*\b.]"
+    "the BRE \b[[:blank:]]]]*[^[:blank:]]]]*\b. -\anumber\a is equivalent to "
+    "\b--skip-fields\b=\anumber\a.]"
 "[i:ignore-case?Ignore case in comparisons.]"
 "[s:skip-chars]#[chars?\achars\a is the number of characters to skip over "
 	"before checking for uniqueness.  If specified along with \b-f\b, "
 	"the first \achars\a after the first \afields\a are ignored.  If "
 	"the \achars\a specifies more characters than are on the line, "
-	"an empty string will be used for comparison.]"
+	"an empty string will be used for comparison. +\anumber\a is "
+	"equivalent to \b--skip-chars\b=\anumber\a.]"
 "[u:unique?Output unique lines.]"
 "[w:check-chars]#[chars?\achars\a is the number of characters to compare " 
 	"after skipping any specified fields and characters.]"

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -1519,6 +1519,8 @@ static struct ionod	*inout(Lex_t *lexp,struct ionod *lastio,int flag)
 			iof |= (IODOC|IORAW);
 		else if(token==IOMOV0SYM)
 			iof |= IOMOV;
+		else if(token==IORDWRSYMT)
+			iof |= IORDW|IOREWRITE;
 		else if(token==IORDWRSYM)
 			iof |= IORDW;
 		else if((token&SYMSHARP) == SYMSHARP)

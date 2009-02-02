@@ -50,13 +50,13 @@
 #define OPT_ignorecase	0x004		/* arg match ignores case	*/
 #define OPT_invert	0x008		/* flag inverts long sense	*/
 #define OPT_listof	0x010		/* arg is ' ' or ',' list	*/
-#define OPT_minus	0x021		/* '-' is an option flag	*/
-#define OPT_number	0x040		/* arg is strtonll() number	*/
-#define OPT_oneof	0x080		/* arg may be set once		*/
-#define OPT_optional	0x100		/* arg is optional		*/
-#define OPT_string	0x200		/* arg is string		*/
+#define OPT_number	0x020		/* arg is strtonll() number	*/
+#define OPT_oneof	0x040		/* arg may be set once		*/
+#define OPT_optional	0x080		/* arg is optional		*/
+#define OPT_string	0x100		/* arg is string		*/
 
 #define OPT_preformat	0001		/* output preformat string	*/
+#define OPT_proprietary	0002		/* proprietary docs		*/
 
 #define OPT_TYPE	(OPT_flag|OPT_number|OPT_string)
 
@@ -902,6 +902,7 @@ init(register char* s, Optpass_t* p)
 		s += n;
 	}
 	p->opts = s;
+	message((-1, "version=%d prefix=%d section=%d flags=%04x catalog=%s", p->version, p->prefix, p->section, p->flags, p->catalog));
 	return 0;
 }
 
@@ -3778,7 +3779,7 @@ opterror(register char* p, int version, char* catalog, int err)
  *			`Usage: command '
  *	':'		error: opt_info.arg points to message sans `command: '
  *
- * '-' '+' '?' ':' '#' '[' ']' ' '
+ * ':'  '#'  ' '  '['  ']'
  *			invalid option chars
  *
  * -- terminates option list and returns 0
@@ -4031,6 +4032,7 @@ optget(register char** argv, const char* oopts)
 				return 0;
 			if (c == '+')
 				opt_info.arg = 0;
+			message((-2, "c='%c' n=%d", c, n));
 			if (n == 2)
 			{
 				x = 0;
@@ -4275,7 +4277,7 @@ optget(register char** argv, const char* oopts)
 				}
 				continue;
 			}
-			message((-20, "optget: opt %s w %s num %ld", show(s), w, num));
+			message((-20, "optget: opt %s  c %c  w %s  num %ld", show(s), c, w, num));
 			if (*s == c && !w)
 				break;
 			else if (*s == '[')
@@ -4679,6 +4681,7 @@ optget(register char** argv, const char* oopts)
 				if (*s == GO)
 					s = skip(s + 1, 0, 0, 0, 0, 1, 1, version);
 			}
+			message((-21, "optget: opt %s", show(s)));
 		}
 		if (w && x)
 		{

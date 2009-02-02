@@ -1,8 +1,31 @@
-09-01-20  --- Release ksh93t+  ---
+09-02-02  --- Release ksh93t+  ---
+09-02-02  A bug in restricted mode in which the value of ENV could be
+	  changed from within a function has been fixed.
+09-02-02  A bug in which an erroneous message indicating that a process
+	  terminated with a coredump has been fixed.
+09-02-02  The exit status when exit was called without an argument from
+	  a signal handler was incorrect and has been fixed.
+09-02-02  A bug in which a function autoloaded in a subshell could cause
+	  a core dump when the subshell completed has been fixed.
+09-02-02  A bug in which 2>&1 inside a command substitution wasn't working
+	  correctly has been fixed.
+09-02-02  A bug in the call stack of arithmetic function with 2 args
+	  returning int has been fixed.
+09-01-30  A bug in which 'eval print \$0' inside a function was giving the
+	  wrong value for $0 has been fixed.
+09-01-28  A bug in which a command substitution could return an exit status
+	  of 127 when the pipefail option is enabled has been fixed.
+09-01-26  ksh93 now generates an error message if you attempt to create
+	  a global name reference to a local variable.
+09-01-26  The [[ -v var ]] operator was modified to test for array elements.
+09-01-23  The redirection operator <>; was added.  It is similar to <>
+	  except that if the command it is applied to succeeds, the file
+	  is truncated to the offset at the command completion.
+09-01-23  The default file descriptor for <> was changed to 1.
 09-01-20  A bug in which the exit status specified in an exit trap was
 	  not used when a process terminated with a signal has been fixed.
 09-01-19  A bug in which a signal whose default action is to terminate
-	  a process could be ingored when the process is running a sub-shell
+	  a process could be ignored when the process is running a sub-shell
 	  has been fixed.
 09-01-19  A bug in which sending SIGWINCH to a process that reads from a pipe
 	  could cause a memory fault has been fixed.
@@ -16,15 +39,15 @@
 09-01-14  The unset built-in was modified to continue to unset variables
 	  after encountering a variable that it could not unset to
 	  conform to the POSIX standard.
-09-01-14  The paramter expansion ${x+value} no longer expands the value of
+09-01-14  The parameter expansion ${x+value} no longer expands the value of
 	  the variable x when determining whether x is set or not.
 09-01-13  A bug in which background jobs and pipelines that were not waited
-	  for could, in rare instantes, cause the shell to go into an infinite
+	  for could, in rare instances, cause the shell to go into an infinite
 	  loop or fail has been fixed.
 09-01-06  A bug in indexed arrays of compound variables in which referencing
-	  non-existant sub-variable in an arithmetic expression could cause
+	  non-existent sub-variable in an arithmetic expression could cause
 	  the sub-variable to be created has been fixed.
-09-01-05  A bug in which the \ character did not escape extened regular
+09-01-05  A bug in which the \ character did not escape extended regular
 	  expression pattern characters has been fixed.
 08-12-24  A bug in which killing the last element of a pipe did not cause
 	  a write to the pipe to generate a SIGPIPE has been fixed.
@@ -44,7 +67,7 @@
 	  has been fixed.
 08-12-09  Command completion was changed to use \ to quote special characters
 	  instead of quoting the argument in single quotes.
-08-12-07  A bug in typeset -m which occured when the target node was an
+08-12-07  A bug in typeset -m which occurred when the target node was an
 	  associative array element has been fixed.
 08-12-07  A timing bug on some systems (for example darwin), that could
 	  cause the last process of a pipeline entered interactively to fail
@@ -90,7 +113,7 @@
 08-10-18  A bug in array scoping that could dump core has been fixed.
 08-10-10  read -n and -N fixed to count characters in multibyte locales.
 08-10-10  A bug that mishandled _.array[] type references has been fixed.
-08-10-09  ${.sh.version} now contains a catenation of the following (after
+08-10-09  ${.sh.version} now contains a concatenation of the following (after
 	  'Version') denoting compile time features:
 		A	SHOPT_AUDIT
 		B	SHOPT_BASH
@@ -199,7 +222,7 @@
 	  jobs completed has been fixed.
 08-06-23  KSH_VERSION added as a name reference to .sh.version.
 08-06-20  type now outputs 'special builtin' for special builtins.
-08-06-19  A couple of bugs in multi-dimensional arrays have been fxied.
+08-06-19  A couple of bugs in multi-dimensional arrays have been fixed.
 08-06-19  A bug in which a syntax error in a dot script could generated
 	  a syntax error in the next subsequent command has been fixed.
 08-06-17  Reduced the maximum function call depth to 2048 to avoid exceptions
@@ -949,7 +972,7 @@
 	  used inside ${...} has been fixed.
 03-07-15  An error in which expanding an indexed array inside a compound
 	  variable could cause a core dump has been fixed.
-03-07-15  A bug in which under on rare occassions a job completion interrupt
+03-07-15  A bug in which on rare occasions a job completion interrupt
 	  could cause to core dump has been fixed.
 03-06-26  A bug in which process substitution embedded within command
 	  substitution would generate a syntax error has been fixed.

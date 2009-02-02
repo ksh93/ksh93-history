@@ -699,7 +699,7 @@ current ones provided that the types are compatible.
 The right hand side of a variable assignment undergoes all the expansion
 list below except word splitting, brace expansion, and file name generation.
 When the left hand side is an assignment is a compound variable and
-the right hand is the name of a compound variable, the coumpound variable
+the right hand is the name of a compound variable, the compound variable
 on the right will be copied or appended to the compound variable on the left.
 .SS Comments.
 .PD 0
@@ -1179,7 +1179,7 @@ elements between
 .I sub1\^
 and
 .I sub2\^
-inclusive (or all elments for
+inclusive (or all elements for
 .B \(**
 and
 .BR @ )
@@ -3311,6 +3311,16 @@ except that it overrides the
 .B noclobber
 option.
 .TP
+.BI >; word
+Write output to a temporary file.  If the command completes
+successfully rename it to
+.IR word  ,
+otherwise, delete the temporary file.
+.BI >; word
+cannot be used with the
+.IR exec (2).
+built-in.
+.TP
 .BI >> word
 Use file
 .I word\^
@@ -3322,7 +3332,18 @@ otherwise, the file is created.
 Open file
 .I word\^
 for reading and writing
-as standard input.
+as standard output.
+.TP
+.BI <>; word
+The same as 
+.BI <> word
+except that if the command completes successfully,
+.I word\^
+is truncated to the offset at command completion.
+.BI <>; word
+cannot be used with the
+.IR exec (2).
+built-in.
 .TP
 \f3<<\fP\*(OK\f3\-\fP\*(CK\f2word\fP
 The shell input is read up to a line that is the same as

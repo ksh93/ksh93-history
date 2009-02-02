@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1992-2007 AT&T Knowledge Ventures            *
+*          Copyright (c) 1992-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                      by AT&T Knowledge Ventures                      *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -104,7 +104,7 @@ __STDPP__directive pragma pp:nohide getdomainname gethostid gethostname sethostn
 extern int	getdomainname(char*, size_t);
 #endif
 #if _lib_gethostid
-extern int	gethostid(void);
+extern long	gethostid(void);
 #endif
 #if _lib_gethostname
 extern int	gethostname(char*, size_t);

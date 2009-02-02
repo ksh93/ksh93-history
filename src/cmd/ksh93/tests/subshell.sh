@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2008 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2009 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -244,4 +244,7 @@ chmod +x "$script"
 [[ $( $script 1) == 65999 ]] 2> /dev/null || err_exit '$() of pipeline hangs'
 [[ $( $script 2) == 65999 ]] 2>> /dev/null || err_exit '${} sub of pipeline hangs'
 [[ $( $script 3) == 66000 ]] 2>> /dev/null || err_exit '${} pipe into read not working'
+cat=$(whence -p cat)
+[[ ${ print foo|$cat;} == foo ]] || err_exit '${ print foo|/bin/cat;} not working'
+$SHELL -c '( autoload xxxxx);print -n' ||  err_exit 'autoloaded functions in subshells can cause failure'
 exit $Errors

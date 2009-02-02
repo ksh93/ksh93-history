@@ -440,7 +440,7 @@ static void copyto(register Mac_t *mp,int endch, int newquote)
 	mp->sp = NIL(Sfio_t*);
 	mp->quote = newquote;
 	first = cp = fcseek(0);
-	if(!mp->quote && *cp=='~')
+	if(!mp->quote && *cp=='~' && cp[1]!=LPAREN)
 		tilde = stktell(stkp);
 	/* handle // operator specially */
 	if(mp->pattern==2 && *cp=='/')
@@ -1022,7 +1022,7 @@ retry1:
 	idbuff[0] = 0;
 	idbuff[1] = 0;
 	c = fcget();
-	switch(c>0x7f?S_ALP:sh_lexstates[ST_DOL][c])
+	switch(isascii(c)?sh_lexstates[ST_DOL][c]:S_ALP)
 	{
 	    case S_RBRA:
 		if(type<M_SIZE)
@@ -1123,7 +1123,7 @@ retry1:
 			np = 0;
 			do
 				sfputc(stkp,c);
-			while(((c=fcget()),(c>0x7f||isaname(c)))||type && c=='.');
+			while(((c=fcget()),(!isascii(c)||isaname(c)))||type && c=='.');
 			while(c==LBRACT && (type||mp->arrayok))
 			{
 				mp->shp->argaddr=0;
@@ -1306,7 +1306,12 @@ retry1:
 			else
 			{
 				if(type && fcpeek(0)=='+')
-					v = nv_isnull(np)?0:"x";
+				{
+					if(ap)
+						v = nv_arrayisset(np,ap)?(char*)"x":0;
+					else
+						v = nv_isnull(np)?0:(char*)"x";
+				}
 				else
 					v = nv_getval(np);
 				/* special case --- ignore leading zeros */  
@@ -2506,10 +2511,10 @@ static char *special(Shell_t *shp,register int c)
 	    case '?':
 		return(ltos(shp->savexit));
 	    case 0:
-		if(sh_isstate(SH_PROFILE) || !error_info.id || ((np=nv_search(error_info.id,shp->bltin_tree,0)) && nv_isattr(np,BLT_SPC)))
+		if(sh_isstate(SH_PROFILE) || shp->fn_depth==0 || !shp->st.cmdname)
 			return(shp->shname);
 		else
-			return(error_info.id);
+			return(shp->st.cmdname);
 	}
 	return(NIL(char*));
 }

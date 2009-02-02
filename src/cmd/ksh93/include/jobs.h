@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -119,9 +119,17 @@ extern struct jobs job;
 #define vmbusy()	0
 #endif
 
-
 #define job_lock()	(job.in_critical++)
-#define job_unlock()	do{if(!--job.in_critical&&job.savesig&&!vmbusy())job_reap(job.savesig);}while(0)
+#define job_unlock()	\
+	do { \
+		int	sig; \
+		if (!--job.in_critical && (sig = job.savesig)) \
+		{ \
+			if (!job.in_critical++ && !vmbusy()) \
+				job_reap(sig); \
+			job.in_critical--; \
+		} \
+	} while(0)
 
 extern const char	e_jobusage[];
 extern const char	e_done[];

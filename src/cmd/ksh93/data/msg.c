@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -100,6 +100,7 @@ const char e_noarray[]		= "%s: cannot be an array";
 const char e_badappend[]	= "%s: invalid append to associative array";
 const char e_noref[]		= "%s: no reference name";
 const char e_selfref[]		= "%s: invalid self reference";
+const char e_globalref[]	= "%s: global reference cannot refer to local variable";
 const char e_noalias[]		= "%s: alias not found\n";
 const char e_format[]		= "%s: bad format";
 const char e_redef[]		= "%s: type cannot be redefined";

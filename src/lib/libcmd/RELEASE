@@ -1,3 +1,10 @@
+09-02-14 tail.c: fix VSC failures
+09-02-14 join.c: fix VSC failure
+09-02-02 uniq.c: document -number == -fnumber, +number == -snumber
+09-02-02 tail.c: fix usage[] for negative offsets, add sun -b
+09-02-02 mktemp.c: add
+09-02-02 features/utsname: UWIN _UNAME_os_DEFAULT => UWIN
+09-01-31 dirname.c: add experimental { -f -r -x } for pathpath(3)
 09-01-05 cmp.c: fix EOF diagnostic to conform to posix
 09-01-03 mkfifo.c: fix --mode=mode logic
 08-12-07 date.c: add %[_][EO]K for [space pad] [full|long] iso docs

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -569,7 +569,20 @@ int sh_lex(Lex_t* lp)
 					else if(n=='|')
 						c  |= SYMPIPE;
 					else if(c=='<' && n=='>')
+					{
+						lp->digits = 1;
 						c = IORDWRSYM;
+						fcgetc(n);
+						if(fcgetc(n)==';')
+						{
+							lp->token = c = IORDWRSYMT;
+							if(lp->inexec)
+								sh_syntax(lp);
+						}
+						else if(n>0)
+							fcseek(-1);
+						n= 0;
+					}
 					else if(n=='#' && (c=='<'||c=='>'))
 						c |= SYMSHARP;
 					else if(n==';' && c=='>')
@@ -1891,6 +1904,7 @@ done:
  */
 static char	*fmttoken(Lex_t *lp, register int sym, char *tok)
 {
+	int n=1;
 	if(sym < 0)
 		return((char*)sh_translate(e_lexzerobyte));
 	if(sym==0)
@@ -1910,7 +1924,7 @@ static char	*fmttoken(Lex_t *lp, register int sym, char *tok)
 		return((char*)sh_translate(e_newline));
 	tok[0] = sym;
 	if(sym&SYMREP)
-		tok[1] = sym;
+		tok[n++] = sym;
 	else
 	{
 		switch(sym&SYMMASK)
@@ -1931,14 +1945,16 @@ static char	*fmttoken(Lex_t *lp, register int sym, char *tok)
 				sym = '#';
 				break;
 			case SYMSEMI:
+				if(tok[0]=='<')
+					tok[n++] = '>';
 				sym = ';';
 				break;
 			default:
 				sym = 0;
 		}
-		tok[1] = sym;
+		tok[n++] = sym;
 	}
-	tok[2] = 0;
+	tok[n] = 0;
 	return(tok);
 }
 

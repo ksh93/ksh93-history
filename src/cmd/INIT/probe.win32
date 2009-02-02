@@ -1,5 +1,5 @@
 :
-# @(#)probe.win32 (AT&T Research) 2009-01-20
+# @(#)probe.win32 (AT&T Research) 2009-02-02
 #
 # win32 specific make C probe initialization
 # wrapped cc's are easy on uwin
@@ -111,7 +111,9 @@ fi
 
 stdinclude=
 for inc in $include
-do	if	[[ ${inc%/*} -ef /platformsdk ]]
+do	if	[[ ${inc%/*} -ef /msdev/platformsdk ]]
+	then	inc=/msdev/platformsdk/${inc##*/}
+	elif	[[ ${inc%/*} -ef /platformsdk ]]
 	then	inc=/platformsdk/${inc##*/}
 	fi
 	for dup in $stdinclude

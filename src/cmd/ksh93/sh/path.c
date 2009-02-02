@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -717,6 +717,7 @@ Pathcomp_t *path_absolute(register const char *name, Pathcomp_t *pp)
 				typedef int (*Fptr_t)(int, char*[], void*);
 				Fptr_t addr;
 				int n = staktell();
+				int libcmd;
 				char *cp;
 				stakputs("b_");
 				stakputs(name);
@@ -727,7 +728,7 @@ Pathcomp_t *path_absolute(register const char *name, Pathcomp_t *pp)
 						cp++;
 					else
 						cp = oldpp->blib;
-					if(strcmp(cp,LIBCMD)==0 && (addr=(Fptr_t)dlllook((void*)0,stakptr(n))))
+					if((libcmd = !strcmp(cp,LIBCMD)) && (addr=(Fptr_t)dlllook((void*)0,stakptr(n))))
 					{
 						if((np = sh_addbuiltin(stakptr(PATH_OFFSET),addr,NiL)) && nv_isattr(np,NV_BLTINOPT))
 							return(oldpp);
@@ -737,7 +738,21 @@ Pathcomp_t *path_absolute(register const char *name, Pathcomp_t *pp)
 #else
 					if (oldpp->bltin_lib = dllfind(oldpp->blib, NiL, RTLD_LAZY, NiL, 0))
 #endif
-						sh_addlib(oldpp->bltin_lib);
+					{
+						/*
+						 * this detects the 2007-05-11 builtin context change and also
+						 * the 2008-03-30 opt_info.num change that hit libcmd::b_head
+						 */
+
+						if (libcmd && !dlllook(oldpp->bltin_lib, "b_pids"))
+						{
+							dlclose(oldpp->bltin_lib);
+							oldpp->bltin_lib = 0;
+							oldpp->blib = 0;
+						}
+						else
+							sh_addlib(oldpp->bltin_lib);
+					}
 				}
 				if((addr=(Fptr_t)dlllook(oldpp->bltin_lib,stakptr(n))) &&
 				   (!(np = sh_addbuiltin(stakptr(PATH_OFFSET),NiL,NiL)) || np->nvalue.bfp!=addr) &&

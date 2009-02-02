@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1982-2007 AT&T Knowledge Ventures            *
+*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                      by AT&T Knowledge Ventures                      *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -151,13 +151,14 @@ typedef struct _arith_
 #define A_JMPZ  	44
 #define A_JMPNZ		45
 #define A_JMP		46
-#define A_CALL0		47
-#define A_CALL1		48
-#define A_CALL2		49
-#define A_CALL3		50
-#define A_DOT		51
-#define A_LIT		52
-#define A_NOTNOT        53
+#define A_CALL1F	47
+#define A_CALL2F	48
+#define A_CALL3F	49
+#define A_CALL1I	50
+#define A_CALL2I	51
+#define A_DOT		52
+#define A_LIT		53
+#define A_NOTNOT        54
 
 
 /* define error messages */

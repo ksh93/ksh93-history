@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -1231,7 +1231,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 							sh_sigtrap(SIGINT);
 						shp->trapnote |= SH_SIGIGNORE;
 					}
-					if(execflg && shp->subshell)
+					if(execflg && shp->subshell && !shp->subshare)
 					{
 						shp->spid = parent;
 						job.pwlist->p_env--;
@@ -1365,7 +1365,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 				if(!execflg)
 				{
 					sh_iosave(shp,0,shp->topfd,(char*)0);
-					shp->pipepid = 1;
+					if((t->fork.forktre->tre.tretyp&COMMSK)==TCOM)
+						shp->pipepid = 1;
 				}
 				sh_iorenumber(shp,shp->inpipe[0],0);
 				/*
@@ -1407,10 +1408,10 @@ int sh_exec(register const Shnode_t *t, int flags)
 					}
 					else
 						job_wait(waitall?pid:0);
-					shp->pipepid = 0;
 					if(type || !sh_isoption(SH_PIPEFAIL))
 						shp->exitval = type;
 				}
+				shp->pipepid = 0;
 				shp->st.ioset = 0;
 			}
 			if(jmpval>SH_JMPIO)

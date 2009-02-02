@@ -1,3 +1,6 @@
+09-02-02 package.sh: delay $INSTALLROOT/bin/.paths generation until mamprobe runs
+09-01-30 cc.mvs.390: c89 balks at [ ()] in -Dname="..."!
+09-01-27 package.sh: add isascii() to use ratz instead of tar
 09-01-20 hurl.sh: add --size=bytes option
 09-01-08 TEST.mk: add test.* prereqs, multiple arg lists with :T=*: binding
 09-01-03 regress.sh: fix UNIT to allow command line override

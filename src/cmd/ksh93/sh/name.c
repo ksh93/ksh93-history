@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -1276,7 +1276,11 @@ skip:
 				nv_offattr(np,NV_REF);
 			nv_putval(np, cp, c);
 			if(isref)
+			{
+				if(nv_search((char*)np,shp->var_base,HASH_BUCKET))
+					shp->last_root = shp->var_base;
 				nv_setref(np,(Dt_t*)0,NV_VARNAME);
+			}
 			savesub = sub;
 			shp->prefix = prefix;
 		}
@@ -2046,6 +2050,8 @@ void	sh_envnolocal (register Namval_t *np, void *data)
 {
 	char *cp=0;
 	NOT_USED(data);
+	if(np==VERSIONNOD && nv_isref(np))
+		return;
 	if(nv_isattr(np,NV_EXPORT) && nv_isarray(np))
 	{
 		nv_putsub(np,NIL(char*),0);
@@ -2054,7 +2060,7 @@ void	sh_envnolocal (register Namval_t *np, void *data)
 	}
 	if(nv_isattr(np,NV_EXPORT|NV_NOFREE))
 	{
-		if(nv_isref(np))
+		if(nv_isref(np) && np!=VERSIONNOD)
 		{
 			nv_offattr(np,NV_NOFREE|NV_REF);
 			free((void*)np->nvalue.nrp);
@@ -2210,6 +2216,11 @@ void	_nv_unset(register Namval_t *np,int flags)
 		}
 		/* called from disc, assign the actual value */
 		nv_local=0;
+	}
+	if(nv_isattr(np,NV_INT16P) == NV_INT16)
+	{
+		np->nvalue.cp = nv_isarray(np)?Empty:0;
+		goto done;
 	}
 	if(nv_isarray(np) && np->nvalue.cp!=Empty && np->nvfun)
 		up = np->nvalue.up;
@@ -2909,8 +2920,9 @@ void nv_setref(register Namval_t *np, Dt_t *hp, int flags)
 {
 	Shell_t		*shp = &sh;
 	register Namval_t *nq, *nr=0;
-	register char *ep,*cp;
-	Namarr_t *ap;
+	register char	*ep,*cp;
+	Dt_t		*root = shp->last_root;
+	Namarr_t	*ap;
 	if(nv_isref(np))
 		return;
 	if(nv_isarray(np))
@@ -2933,6 +2945,12 @@ void nv_setref(register Namval_t *np, Dt_t *hp, int flags)
 		nv_endsubscript(nq,ep-1,NV_ADD);
 	if(!nr)
 		nr= nq = nv_open(cp, hp, flags);
+	if(shp->last_root == shp->var_tree && root!=shp->var_tree)
+	{
+		_nv_unset(np,NV_RDONLY);
+		nv_onattr(np,NV_REF);
+		errormsg(SH_DICT,ERROR_exit(1),e_globalref,nv_name(np));
+	}
 	if(nr==np) 
 	{
 		if(shp->namespace && nv_dict(shp->namespace)==hp)
@@ -3037,8 +3055,10 @@ void nv_unref(register Namval_t *np)
 	Namval_t *nq;
 	if(!nv_isref(np))
 		return;
-	nq = nv_refnode(np);
 	nv_offattr(np,NV_NOFREE|NV_REF);
+	if(!np->nvalue.nrp)
+		return;
+	nq = nv_refnode(np);
 	free((void*)np->nvalue.nrp);
 	np->nvalue.cp = strdup(nv_name(nq));
 #if SHOPT_OPTIMIZE

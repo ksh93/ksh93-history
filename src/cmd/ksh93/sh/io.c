@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -716,7 +716,16 @@ int sh_open(register const char *path, int flags, ...)
 	}
 	if (fd >= 0)
 	{
-		int nfd = open(path,flags);
+		int nfd;
+		if (flags & O_CREAT)
+		{
+			struct stat st;
+			if (stat(path,&st) < 0)
+				return(-1);
+			nfd = open(path,flags,st.st_mode);
+		}
+		else
+			nfd = open(path,flags);
 		if(nfd>=0)
 		{
 			fd = nfd;
@@ -942,7 +951,7 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 	const char *message = e_open;
 	int o_mode;		/* mode flag for open */
 	static char io_op[7];	/* used for -x trace info */
-	int clexec=0, fn, traceon;
+	int trunc=0, clexec=0, fn, traceon;
 	int r, indx = shp->topfd, perm= -1;
 	char *tname=0, *after="", *trace = shp->st.trap[SH_DEBUGTRAP];
 	Namval_t *np=0;
@@ -1086,6 +1095,8 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 					errormsg(SH_DICT,ERROR_exit(1),e_restricted,fname);
 				io_op[2] = '>';
 				o_mode = O_RDWR|O_CREAT;
+				if(iof&IOREWRITE)
+					trunc = io_op[2] = ';';
 				goto openit;
 			}
 			else if(!(iof&IOPUT))
@@ -1248,7 +1259,7 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 							sh_close(fn);
 						}
 					}
-					sh_iosave(shp,fn,indx,tname?fname:0);
+					sh_iosave(shp,fn,indx,tname?fname:(trunc?Empty:0));
 				}
 				else if(sh_subsavefd(fn))
 					sh_iosave(shp,fn,indx|IOSUBSHELL,tname?fname:0);
@@ -1495,7 +1506,9 @@ void	sh_iorestore(Shell_t *shp, int last, int jmpval)
 			continue;
 		}
 		origfd = filemap[fd].orig_fd;
-		if(filemap[fd].tname)
+		if(filemap[fd].tname == Empty && shp->exitval==0)
+			ftruncate(origfd,lseek(origfd,0,SEEK_CUR));
+		else if(filemap[fd].tname)
 			io_usename(filemap[fd].tname,(int*)0,shp->exitval?2:1);
 		sh_close(origfd);
 		if ((savefd = filemap[fd].save_fd) >= 0)
@@ -1641,7 +1654,10 @@ static ssize_t piperead(Sfio_t *iop,void *buff,register size_t size,Sfdisc_t *ha
 	int fd = sffileno(iop);
 	NOT_USED(handle);
 	if(job.waitsafe && job.savesig)
-		job_reap(job.savesig);
+	{
+		job_lock();
+		job_unlock();
+	}
 	if(sh.trapnote)
 	{
 		errno = EINTR;
@@ -1945,14 +1961,7 @@ static void	sftrack(Sfio_t* sp, int flag, void* data)
 			if(mode&SF_READ)
 				flag |= IOREAD;
 			shp->fdstatus[fd] = flag;
-#if 0
-			if(flag==IOWRITE)
-				sfpool(sp,shp->outpool,SF_WRITE);
-			else
-#else
-			if(flag!=IOWRITE)
-#endif
-				sh_iostream(shp,fd);
+			sh_iostream(shp,fd);
 		}
 		if((pp=(struct checkpt*)shp->jmplist) && pp->mode==SH_JMPCMD)
 		{

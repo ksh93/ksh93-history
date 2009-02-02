@@ -413,7 +413,10 @@ void	sh_chktrap(void)
 		{
 			sh.sigflag[sig] &= ~SH_SIGTRAP;
 			if(trap=sh.st.trapcom[sig])
+			{
+				sh.oldexit = SH_EXITSIG|sig;
 				sh_trap(trap,0);
+			}
 		}
 	}
 }
@@ -579,8 +582,8 @@ void sh_done(void *ptr, register int sig)
 	register int savxit = shp->exitval;
 	shp->trapnote = 0;
 	indone=1;
-	if(sig==0)
-		sig = shp->lastsig;
+	if(sig)
+		savxit = SH_EXITSIG|sig;
 	if(shp->userinit)
 		(*shp->userinit)(shp, -1);
 	if(t=shp->st.trapcom[0])
@@ -589,8 +592,6 @@ void sh_done(void *ptr, register int sig)
 		shp->oldexit = savxit;
 		sh_trap(t,0);
 		savxit = shp->exitval;
-		if((savxit&SH_EXITMASK)!=sig)
-			sig = 0;
 	}
 	else
 	{
@@ -617,6 +618,8 @@ void sh_done(void *ptr, register int sig)
 	sfsync((Sfio_t*)sfstdin);
 	sfsync((Sfio_t*)shp->outpool);
 	sfsync((Sfio_t*)sfstdout);
+	if(savxit&SH_EXITSIG)
+		sig = savxit&SH_EXITMASK;
 	if(sig)
 	{
 		/* generate fault termination code */

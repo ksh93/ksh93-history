@@ -102,17 +102,18 @@ void	sh_subtmpfile(int pflag)
 	Shell_t *shp = &sh;
 	int fds[2];
 	Sfoff_t off;
+	register struct checkpt	*pp = (struct checkpt*)shp->jmplist;
+	register struct subshell *sp = subshell_data->pipe;
 	if(sfset(sfstdout,0,0)&SF_STRING)
 	{
 		register int fd;
-		register struct checkpt	*pp = (struct checkpt*)shp->jmplist;
-		register struct subshell *sp = subshell_data->pipe;
 		/* save file descriptor 1 if open */
 		if((sp->tmpfd = fd = fcntl(1,F_DUPFD,10)) >= 0)
 		{
 			fcntl(fd,F_SETFD,FD_CLOEXEC);
 			shp->fdstatus[fd] = shp->fdstatus[1]|IOCLEX;
 			close(1);
+			shp->fdstatus[1] = IOCLOSE;
 		}
 		else if(errno!=EBADF)
 			errormsg(SH_DICT,ERROR_system(1),e_toomany);
@@ -121,19 +122,22 @@ void	sh_subtmpfile(int pflag)
 			sfdisc(sfstdout,SF_POPDISC);
 			if((fd=sffileno(sfstdout))>=0)
 			{
-				sh.fdstatus[fd] = IOREAD|IOWRITE;
+				shp->fdstatus[fd] = IOREAD|IOWRITE;
 				sfsync(sfstdout);
 				if(fd==1)
 					fcntl(1,F_SETFD,0);
 				else
 				{
 					sfsetfd(sfstdout,1);
-					sh.fdstatus[1] = sh.fdstatus[fd];
-					sh.fdstatus[fd] = IOCLOSE;
+					shp->fdstatus[1] = shp->fdstatus[fd];
+					shp->fdstatus[fd] = IOCLOSE;
 				}
 				goto skip;
 			}
 		}
+	}
+	if(sp && (shp->fdstatus[1]==IOCLOSE || (!shp->subshare && !(shp->fdstatus[1]&IONOSEEK))))
+	{
 		sh_pipe(fds);
 		sp->pipefd = fds[0];
 		sh_fcntl(sp->pipefd,F_SETFD,FD_CLOEXEC);
@@ -386,7 +390,7 @@ static void table_unset(register Dt_t *root,int fun)
 	{
 		nq = (Namval_t*)dtnext(root,np);
 		flag=0;
-		if(fun && np->nvalue.rp->fname && *np->nvalue.rp->fname=='/')
+		if(fun && np->nvalue.rp && np->nvalue.rp->fname && *np->nvalue.rp->fname=='/')
 		{
 			np->nvalue.rp->fdict = 0;
 			flag = NV_NOFREE;
