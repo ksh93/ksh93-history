@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2008 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2009 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -46,11 +46,11 @@ function ping # id
 cat |&
 print -p "hello"
 read -p line
-[[ $line == hello ]] || err_exit 'coprocessing fails' 
+[[ $line == hello ]] || err_exit 'coprocessing fails'
 exec 5>&p 6<&p
 print -u5 'hello again' || err_exit 'write on u5 fails'
 read -u6 line
-[[ $line == 'hello again' ]] || err_exit 'coprocess after moving fds fails' 
+[[ $line == 'hello again' ]] || err_exit 'coprocess after moving fds fails'
 exec 5<&- 6<&-
 wait $!
 
@@ -123,7 +123,7 @@ then	err_exit "read -p hanging (SECONDS=$SECONDS count=$count)"
 fi
 wait $!
 
-( sleep 3 |& sleep 1 && kill $!; sleep 1; sleep 3 |& sleep 1 && kill $! ) || 
+( sleep 3 |& sleep 1 && kill $!; sleep 1; sleep 3 |& sleep 1 && kill $! ) ||
 	err_exit "coprocess cleanup not working correctly"
 { : |& } 2>/dev/null ||
 	err_exit "subshell coprocess lingers in parent"
@@ -163,7 +163,7 @@ r=
 	print -u6 ok
 	exec 6>&-
 	sleep 1
-	kill $! 2> /dev/null 
+	kill $! 2> /dev/null
 ) && err_exit 'coprocess with subshell would hang'
 for sig in IOT ABRT
 do	if	( trap - $sig ) 2> /dev/null
@@ -206,7 +206,7 @@ trap - TERM
 trap 'sleep_pid=; kill $pid; err_exit "coprocess 2 hung"' TERM
 { sleep 5; kill $$; } &
 sleep_pid=$!
-cat |& 
+cat |&
 pid=$!
 print foo >&p 2> /dev/null || err_exit 'first write of foo to coprocess failed'
 print foo >&p 2> /dev/null || err_exit 'second write of foo to coprocess failed'
@@ -218,7 +218,7 @@ trap - TERM
 trap 'sleep_pid=; kill $pid; err_exit "coprocess 3 hung"' TERM
 { sleep 5; kill $$; } &
 sleep_pid=$!
-cat |& 
+cat |&
 pid=$!
 print -p foo
 print -p bar

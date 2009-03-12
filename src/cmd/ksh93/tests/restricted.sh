@@ -28,7 +28,7 @@ alias err_exit='err_exit $LINENO'
 # test restricted shell
 Command=${0##*/}
 integer Errors=0
-mkdir  /tmp/ksh$$ || err_exit "mkdir /tmp/ksh$$ failed" 
+mkdir  /tmp/ksh$$ || err_exit "mkdir /tmp/ksh$$ failed"
 trap "cd /; rm -rf /tmp/ksh$$" EXIT
 pwd=$PWD
 case $SHELL in
@@ -40,14 +40,14 @@ function check_restricted
 {
 	rm -f out
 	rksh -c "$@" 2> out > /dev/null
-	grep restricted out  > /dev/null 2>&1 
+	grep restricted out  > /dev/null 2>&1
 }
 
 [[ $SHELL != /* ]] && SHELL=$pwd/$SHELL
 cd /tmp/ksh$$ || err_exit "cd /tmp/ksh$$ failed"
 ln -s $SHELL rksh
 PATH=$PWD:$PATH
-rksh -c  '[[ -o restricted ]]' || err_exit 'restricted option not set' 
+rksh -c  '[[ -o restricted ]]' || err_exit 'restricted option not set'
 [[ $(rksh -c 'print hello') == hello ]] || err_exit 'unable to run print'
 check_restricted /bin/echo || err_exit '/bin/echo not resticted'
 check_restricted ./echo || err_exit './echo not resticted'
@@ -74,7 +74,7 @@ print hello
 !
 ! check_restricted 'script;:' ||  err_exit 'script with #! pathname should run in restricted mode'
 ! check_restricted 'script' ||  err_exit 'script with #! pathname should run in restricted mode even if last command in script'
-for i in PATH ENV FPATH 
+for i in PATH ENV FPATH
 do	check_restricted  "function foo { typeset $i=foobar;};foo" || err_exit "$i can be changed in function by using typeset"
 done
 exit $((Errors))

@@ -1359,6 +1359,7 @@ retry1:
 			mac_error(np);
 		if(type==M_NAMESCAN || type==M_NAMECOUNT)
 		{
+			mp->shp->last_root = mp->shp->var_tree;
 			id = prefix(mp->shp,id);
 			stkseek(stkp,offset);
 			if(type==M_NAMECOUNT)

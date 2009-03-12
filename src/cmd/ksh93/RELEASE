@@ -1,4 +1,12 @@
-09-02-02  --- Release ksh93t+  ---
+09-03-10  --- Release ksh93t+  ---
+09-03-10  If a variable that was left or right justified or zero-filled was
+	  changed with a typeset statement that was left or right justified
+	  or zero-filled, then the original justification no longer affects
+	  the result.
+09-03-10  A bug in the handling of traps when the last command in a script
+	  is a subshell grouping command has been fixed.
+09-03-03  A bug in which an expansion of the form ${!prefix@} could generate
+	  an exception after the return from a function has been fixed.
 09-02-02  A bug in restricted mode in which the value of ENV could be
 	  changed from within a function has been fixed.
 09-02-02  A bug in which an erroneous message indicating that a process

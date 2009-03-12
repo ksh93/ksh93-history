@@ -43,6 +43,7 @@
 #include	"builtins.h"
 #include	"FEATURE/time"
 #include	"FEATURE/dynamic"
+#include	"FEATURE/externs"
 #include	"lexstates.h"
 #include	"version.h"
 
@@ -1064,12 +1065,17 @@ Shell_t *sh_init(register int argc,register char *argv[], Shinit_f userinit)
 		char *cp=nv_getval(L_ARGNOD);
 		char buff[PATH_MAX+1];
 		shp->shpath = 0;
+#if _AST_VERSION >= 20090202L
+		if((n = pathprog(NiL, buff, sizeof(buff))) > 0 && n <= sizeof(buff))
+			shp->shpath = strdup(buff);
+#else
 		sfprintf(shp->strbuf,"/proc/%d/exe",getpid());
 		if((n=readlink(sfstruse(shp->strbuf),buff,sizeof(buff)-1))>0)
 		{
 			buff[n] = 0;
 			shp->shpath = strdup(buff);
 		}
+#endif
 		else if((cp && (sh_type(cp)&SH_TYPE_SH)) || (argc>0 && strchr(cp= *argv,'/')))
 		{
 			if(*cp=='/')

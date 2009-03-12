@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -115,6 +115,28 @@ range(register char* s, char** e, char* set, int lo, int hi)
 }
 
 /*
+ * normalize <p,q> to power of 10 u
+ */
+
+static unsigned long
+tenize(unsigned long p, unsigned long q, unsigned long u)
+{
+	while (q > u)
+	{
+		q /= 10;
+		p /= 10;
+	}
+	while (q < u)
+	{
+		q *= 10;
+		p *= 10;
+	}
+	return p;
+}
+
+#define P_INIT(n)	w = n; p = q = 0; u = (char*)s + 1
+
+/*
  * parse date expression in s and return Time_t value
  *
  * if non-null, e points to the first invalid sequence in s
@@ -148,16 +170,17 @@ tmxdate(register const char* s, char** e, Time_t now)
 	int		k;
 	int		l;
 	long		m;
-	long		p;
-	long		q;
+	unsigned long	p;
+	unsigned long	q;
 	Tm_zone_t*	zp;
+	Tm_t		ts;
 	char		skip[UCHAR_MAX + 1];
 
 	/*
 	 * check DATEMSK first
 	 */
 
-	debug((error(-1, "AHA tmxdate 2008-12-30")));
+	debug((error(-1, "AHA tmxdate 2009-03-06")));
 	fix = tmxscan(s, &last, NiL, &t, now, 0);
 	if (t && !*last)
 	{
@@ -173,8 +196,8 @@ tmxdate(register const char* s, char** e, Time_t now)
 	 * use now for defaults
 	 */
 
-	tm = tmxmake(now);
-	tm_info.date = tm_info.zone;
+	tm = tmxtm(&ts, now, NiL);
+	tm_info.date = tm->tm_zone;
 	day = -1;
 	dst = TM_DST;
 	set = state = 0;
@@ -188,6 +211,7 @@ tmxdate(register const char* s, char** e, Time_t now)
 	 * get <weekday year month day hour minutes seconds ?[ds]t [ap]m>
 	 */
 
+ again:
 	for (;;)
 	{
 		state &= (state & HOLD) ? ~(HOLD) : ~(EXACT|LAST|NEXT|THIS);
@@ -238,6 +262,229 @@ tmxdate(register const char* s, char** e, Time_t now)
 				goto reset;
 			}
 			break;
+		}
+		if ((*s == 'P' || *s == 'p') && (!isalpha(*(s + 1)) || (*(s + 1) == 'T' || *(s + 1) == 't') && !isalpha(*(s + 2))))
+		{
+			Tm_t	otm;
+
+			/*
+			 * iso duration
+			 */
+
+			otm = *tm;
+			t = (char*)s + 1;
+			m = 0;
+			P_INIT('Y');
+			do
+			{
+				c = *++s;
+			duration_next:
+				switch (c)
+				{
+				case 0:
+					m++;
+					if ((char*)s > u)
+					{
+						s--;
+						c = '_';
+						goto duration_next;
+					}
+					break;
+				case 'T':
+				case 't':
+					m++;
+					if ((char*)s > u)
+					{
+						s++;
+						c = 'D';
+						goto duration_next;
+					}
+					continue;
+				case 'Y':
+				case 'y':
+					m = 0;
+					if (q)
+						tm->tm_sec += (365L*24L*60L*60L) * p / q;
+					else
+						tm->tm_year += p;
+					P_INIT('M');
+					continue;
+				case 'm':
+					if (!m)
+						m = 1;
+					/*FALLTHROUGH*/
+				case 'M':
+					switch (*(s + 1))
+					{
+					case 'I':
+					case 'i':
+						s++;
+						m = 1;
+						w = 'S';
+						break;
+					case 'O':
+					case 'o':
+						s++;
+						m = 0;
+						w = 'H';
+						break;
+					case 'S':
+					case 's':
+						s++;
+						m = 2;
+						w = 's';
+						break;
+					}
+					switch (m)
+					{
+					case 0:
+						m = 1;
+						if (q)
+							tm->tm_sec += (3042L*24L*60L*60L) * p / q / 100L;
+						else
+							tm->tm_mon += p;
+						break;
+					case 1:
+						m = 2;
+						if (q)
+							tm->tm_sec += (60L) * p / q;
+						else
+							tm->tm_min += p;
+						break;
+					default:
+						if (q)
+							tm->tm_nsec += tenize(p, q, 1000UL);
+						else
+							tm->tm_nsec += p * 1000000L;
+						break;
+					}
+					P_INIT(w);
+					continue;
+				case 'W':
+				case 'w':
+					m = 0;
+					if (q)
+						tm->tm_sec += (7L*24L*60L*60L) * p / q;
+					else
+						tm->tm_mday += 7 * p;
+					P_INIT('D');
+					continue;
+				case 'D':
+				case 'd':
+					m = 0;
+					if (q)
+						tm->tm_sec += (24L*60L*60L) * p / q;
+					else
+						tm->tm_mday += p;
+					P_INIT('H');
+					continue;
+				case 'H':
+				case 'h':
+					m = 1;
+					if (q)
+						tm->tm_sec += (60L*60L) * p / q;
+					else
+						tm->tm_hour += p;
+					P_INIT('m');
+					continue;
+				case 'S':
+				case 's':
+					m = 2;
+					/*FALLTHROUGH*/
+				case ' ':
+				case '_':
+				case '\n':
+				case '\r':
+				case '\t':
+				case '\v':
+					if (q)
+						tm->tm_nsec += tenize(p, q, 1000000000UL);
+					else
+						tm->tm_sec += p;
+					P_INIT('U');
+					continue;
+				case 'U':
+				case 'u':
+					switch (*(s + 1))
+					{
+					case 'S':
+					case 's':
+						s++;
+						break;
+					}
+					m = 0;
+					if (q)
+						tm->tm_nsec += tenize(p, q, 1000000UL);
+					else
+						tm->tm_nsec += p * 1000L;
+					P_INIT('N');
+					continue;
+				case 'N':
+				case 'n':
+					switch (*(s + 1))
+					{
+					case 'S':
+					case 's':
+						s++;
+						break;
+					}
+					m = 0;
+					if (q)
+						tm->tm_nsec += tenize(p, q, 1000000000UL);
+					else
+						tm->tm_nsec += p;
+					P_INIT('Y');
+					continue;
+				case '.':
+					if (q)
+					{
+						s = (const char*)t;
+						*tm = otm;
+						goto again;
+					}
+					q = 1;
+					continue;
+				case '-':
+					c = 'M';
+					u = (char*)s++;
+					while (*++u && *u != ':')
+						if (*u == '-')
+						{
+							c = 'Y';
+							break;
+						}
+					goto duration_next;
+				case ':':
+					c = 'm';
+					u = (char*)s++;
+					while (*++u)
+						if (*u == ':')
+						{
+							c = 'H';
+							break;
+						}
+					goto duration_next;
+				case '0':
+				case '1':
+				case '2':
+				case '3':
+				case '4':
+				case '5':
+				case '6':
+				case '7':
+				case '8':
+				case '9':
+					q *= 10;
+					p = p * 10 + (c - '0');
+					continue;
+				default:
+					s = (const char*)t;
+					*tm = otm;
+					goto again;
+				}
+				break;
+			} while (c);
+			continue;
 		}
 		f = -1;
 		if (*s == '+')
@@ -374,7 +621,7 @@ tmxdate(register const char* s, char** e, Time_t now)
 				if (flags & (MONTH|MDAY|WDAY))
 				{
 					fix = tmxtime(tm, zone);
-					tm = tmxmake(fix);
+					tm = tmxtm(tm, fix, tm->tm_zone);
 					i = tm->tm_mon + 1;
 					j = tm->tm_mday;
 					k = tm->tm_wday;
@@ -392,7 +639,7 @@ tmxdate(register const char* s, char** e, Time_t now)
 							tt = tmxtime(tm, zone);
 							if (tt < fix)
 								goto done;
-							tm = tmxmake(tt);
+							tm = tmxtm(tm, tt, tm->tm_zone);
 							i = tm->tm_mon + 1;
 							j = tm->tm_mday;
 							k = tm->tm_wday;
@@ -413,7 +660,7 @@ tmxdate(register const char* s, char** e, Time_t now)
 							{
 								tm->tm_mon = i - 1;
 								tm->tm_mday = j;
-								tm = tmxmake(tmxtime(tm, zone));
+								tm = tmxtm(tm, tmxtime(tm, zone), tm->tm_zone);
 								i = tm->tm_mon + 1;
 								j = tm->tm_mday;
 								k = tm->tm_wday;
@@ -1022,7 +1269,7 @@ tmxdate(register const char* s, char** e, Time_t now)
 							set |= HOUR;
 						goto clear_hour;
 					case TM_PARTS+4:
-						tm = tmxmake(tmxtime(tm, zone));
+						tm = tmxtm(tm, tmxtime(tm, zone), tm->tm_zone);
 						tm->tm_mday += 7 * m - tm->tm_wday + 1;
 						set |= DAY;
 						goto clear_hour;
@@ -1055,7 +1302,7 @@ tmxdate(register const char* s, char** e, Time_t now)
 					}
 					if (m >= 0 && (state & ORDINAL))
 						tm->tm_mday = 1;
-					tm = tmxmake(tmxtime(tm, zone));
+					tm = tmxtm(tm, tmxtime(tm, zone), tm->tm_zone);
 					day = j -= TM_DAY;
 					dir = m;
 					message((-1, "AHA#%d j=%d m=%d", __LINE__, j, m));
@@ -1144,8 +1391,8 @@ tmxdate(register const char* s, char** e, Time_t now)
 						goto done;
 					if (!(state & ZONE))
 					{
-						dst = tm_info.zone->dst;
-						zone = tm_info.zone->west;
+						dst = tm->tm_zone->dst;
+						zone = tm->tm_zone->west;
 					}
 					zone += tmgoff(s, &t, dst);
 					s = t;
@@ -1159,6 +1406,10 @@ tmxdate(register const char* s, char** e, Time_t now)
 			if (!(state & ZONE) && (zp = tmzone(s, &t, type, &dst)))
 			{
 				s = t;
+				#if 0
+				tm = tmxtm(tm, tmxtime(tm, zone), zp);
+				tm->tm_isdst = dst != 0;
+				#endif
 				zone = zp->west + dst;
 				tm_info.date = zp;
 				state |= ZONE;
@@ -1319,7 +1570,7 @@ tmxdate(register const char* s, char** e, Time_t now)
 			tm->tm_mday = 1;
 		else if (m < 0)
 			m++;
-		tm = tmxmake(tmxtime(tm, zone));
+		tm = tmxtm(tm, tmxtime(tm, zone), tm->tm_zone);
 		j = day - tm->tm_wday;
 		if (j < 0)
 			j += 7;

@@ -211,7 +211,7 @@ done
 	[[ aaaa == {2,5}(a) ]] || err_exit 'aaaa != {2,4}(a)'
 	[[ abcdcdabcd == {3,6}(ab|cd) ]] || err_exit 'abcdcdabcd == {3,4}(ab|cd)'
 	[[ abcdcdabcde == {5}(ab|cd)e ]] || err_exit 'abcdcdabcd == {5}(ab|cd)e'
-) || err_exit 'Errors with {..}(...) patterns'
+) || err_exit 'errors with {..}(...) patterns'
 [[ D290.2003.02.16.temp == D290.+(2003.02.16).temp* ]] || err_exit 'pattern match bug with +(...)'
 rm -rf $file
 {

@@ -1082,6 +1082,7 @@ void nv_delete(Namval_t* np, Dt_t *root, int flags)
  * If <flags> & NV_NOREF then don't follow reference
  * If <flags> & NV_NOFAIL then don't generate an error message on failure
  * If <flags> & NV_STATIC then unset before an assignment
+ * If <flags> & NV_UNJUST then unset attributes before assignment
  * SH_INIT is only set while initializing the environment
  */
 Namval_t *nv_open(const char *name, Dt_t *root, int flags)
@@ -1274,6 +1275,11 @@ skip:
 			c = msg==e_aliname? 0: (append | (flags&NV_EXPORT)); 
 			if(isref)
 				nv_offattr(np,NV_REF);
+			if(!append && (flags&NV_UNJUST))
+			{
+				nv_offattr(np,NV_LJUST|NV_RJUST|NV_ZFILL);
+				np->nvsize = 0;
+			}
 			nv_putval(np, cp, c);
 			if(isref)
 			{

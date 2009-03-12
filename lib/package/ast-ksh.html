@@ -193,6 +193,121 @@ All recorded changes follow.
 <P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="ksh93 changes">ksh93 changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
+09-03-10  --- Release ksh93t+  ---
+09-03-10  If a variable that was left or right justified or zero-filled was
+	  changed with a typeset statement that was left or right justified
+	  or zero-filled, then the original justification no longer affects
+	  the result.
+09-03-10  A bug in the handling of traps when the last command in a script
+	  is a subshell grouping command has been fixed.
+09-03-03  A bug in which an expansion of the form ${!prefix@} could generate
+	  an exception after the return from a function has been fixed.
+09-02-02  A bug in restricted mode in which the value of ENV could be
+	  changed from within a function has been fixed.
+09-02-02  A bug in which an erroneous message indicating that a process
+	  terminated with a coredump has been fixed.
+09-02-02  The exit status when exit was called without an argument from
+	  a signal handler was incorrect and has been fixed.
+09-02-02  A bug in which a function autoloaded in a subshell could cause
+	  a core dump when the subshell completed has been fixed.
+09-02-02  A bug in which 2&gt;&amp;1 inside a command substitution wasn't working
+	  correctly has been fixed.
+09-02-02  A bug in the call stack of arithmetic function with 2 args
+	  returning int has been fixed.
+09-01-30  A bug in which 'eval print \$0' inside a function was giving the
+	  wrong value for $0 has been fixed.
+09-01-28  A bug in which a command substitution could return an exit status
+	  of 127 when the pipefail option is enabled has been fixed.
+09-01-26  ksh93 now generates an error message if you attempt to create
+	  a global name reference to a local variable.
+09-01-26  The &#0091;&#0091; -v var &#0093;&#0093; operator was modified to test for array elements.
+09-01-23  The redirection operator &lt;&gt;; was added.  It is similar to &lt;&gt;
+	  except that if the command it is applied to succeeds, the file
+	  is truncated to the offset at the command completion.
+09-01-23  The default file descriptor for &lt;&gt; was changed to 1.
+09-01-20  A bug in which the exit status specified in an exit trap was
+	  not used when a process terminated with a signal has been fixed.
+09-01-19  A bug in which a signal whose default action is to terminate
+	  a process could be ignored when the process is running a sub-shell
+	  has been fixed.
+09-01-19  A bug in which sending SIGWINCH to a process that reads from a pipe
+	  could cause a memory fault has been fixed.
+09-01-16  The -R unary operator was added to &#0091;&#0091;...&#0093;&#0093; and test to check whether
+	  a variable is a  name reference.
+09-01-16  The -v unary operator was added to &#0091;&#0091;...&#0093;&#0093; and test to check whether
+	  a variable is set.
+09-01-14  The unset built-in was modified to return 0 exit status when
+	  unsetting a variable that was unset to conform with the POSIX
+	  standard.
+09-01-14  The unset built-in was modified to continue to unset variables
+	  after encountering a variable that it could not unset to
+	  conform to the POSIX standard.
+09-01-14  The parameter expansion ${x+value} no longer expands the value of
+	  the variable x when determining whether x is set or not.
+09-01-13  A bug in which background jobs and pipelines that were not waited
+	  for could, in rare instances, cause the shell to go into an infinite
+	  loop or fail has been fixed.
+09-01-06  A bug in indexed arrays of compound variables in which referencing
+	  non-existent sub-variable in an arithmetic expression could cause
+	  the sub-variable to be created has been fixed.
+09-01-05  A bug in which the &nbsp;character did not escape extended regular
+	  expression pattern characters has been fixed.
+08-12-24  A bug in which killing the last element of a pipe did not cause
+	  a write to the pipe to generate a SIGPIPE has been fixed.
+08-12-19  A bug which could cause command substitution to hang when the
+	  last element of a pipeline in a command substitution was a built-in
+	  and the output was more that PIPE_BUFF.
+08-12-18  A bug which occurs when a here documented marker embedded in a
+	  command substitution occurs on a buffer boundary has been fixed.
+08-12-17  A bug in the output of typeset -p for variables that had attributes
+	  but did not have a value has been fixed.
+08-12-16  A bug in which a name reference to a name reference variable that
+	  references an array element has been fixed.
+08-12-16  A bug in which a variable given both the -A and -C attribute along
+	  with an initial assignment didn't work correctly has been fixed.
+08-12-10  The &#0091;&#0091; -t fd &#0093;&#0093; test was fixed to handle fd&gt;9.
+08-12-10  A bug where function stack misalignment could cause a bus error
+	  has been fixed.
+08-12-09  Command completion was changed to use &nbsp;to quote special characters
+	  instead of quoting the argument in single quotes.
+08-12-07  A bug in typeset -m which occurred when the target node was an
+	  associative array element has been fixed.
+08-12-07  A timing bug on some systems (for example darwin), that could
+	  cause the last process of a pipeline entered interactively to fail
+	  with an "Exec format error" has been fixed.
+08-12-04  SHOPT_BGX enables background job extensions. Noted by "J" in
+	  the version string when enabled. (1) JOBMAX=n limits the number
+	  of concurrent &amp; jobs to n; the n+1 &amp; job will block until a
+	  running background job completes. (2) SIGCHLD traps are queued
+	  so that each completing background job gets its own trap; $! is
+	  set to the job pid and $? is set to the job exit status at the
+	  beginning of the trap. (3) sleep -s added to sleep until the time
+	  expires or until a signal is delivered.
+08-12-04  The sign of floating point zero is preserved across arithmetic
+	  function calls.
+08-12-04  A bug that caused print(1) to produce garbled stdout/stderr
+	  output has been fixed.
+08-12-04  A bug in which printf "%d "'&lt;euro&gt;'" did not output the
+          numerical value of the EURO symbol, 8354, has been fixed.
+08-11-24  /dev/fd* and /dev/std* redirections are first attempted with
+	  open() to preserve seek semantics; failing that the corresponding
+	  file descriptors are dup()'d.
+08-11-20  A bug which could cause a core dump if a function compiled with
+	  shcomp was found has been fixed.
+08-11-20  A bug in which jobs were not cleared from the jobs table for
+	  interactive shells when the pipefail option is on has been fixed.
+08-11-11  A bug in which a field that was unset in a type definition and later
+	  set for an instance could appear twice when displaying the variable
+	  has been fixed.
+08-11-11  A bug in which running a simple command &amp; inside a function would
+	  not return the correct process id has been fixed.
+08=11-10  A bug in which the exit status of a command could be lost if the pid
+	  was that of the most recent command substitution that had completed
+	  has been fixed.
+08-11-10  The maximum depth for subshells has been increased from 256 to 65536.
+08-11-06  A bug which could cause a core dump when the _ reference variable was
+          used as an embedded type with a compound assignment has been fixed.
+
 08-10-31  --- Release ksh93t  ---
 08-10-31  Variable scoping/initialization bugs that could dump core were fixed.
 08-10-24  The lexer now accepts all RE characters for patterns prefixed
@@ -201,7 +316,7 @@ All recorded changes follow.
 08-10-18  A bug in array scoping that could dump core has been fixed.
 08-10-10  read -n and -N fixed to count characters in multibyte locales.
 08-10-10  A bug that mishandled _.array&#0091;&#0093; type references has been fixed.
-08-10-09  ${.sh.version} now contains a catenation of the following (after
+08-10-09  ${.sh.version} now contains a concatenation of the following (after
 	  'Version') denoting compile time features:
 		A	SHOPT_AUDIT
 		B	SHOPT_BASH
@@ -310,7 +425,7 @@ All recorded changes follow.
 	  jobs completed has been fixed.
 08-06-23  KSH_VERSION added as a name reference to .sh.version.
 08-06-20  type now outputs 'special builtin' for special builtins.
-08-06-19  A couple of bugs in multi-dimensional arrays have been fxied.
+08-06-19  A couple of bugs in multi-dimensional arrays have been fixed.
 08-06-19  A bug in which a syntax error in a dot script could generated
 	  a syntax error in the next subsequent command has been fixed.
 08-06-17  Reduced the maximum function call depth to 2048 to avoid exceptions
@@ -1060,7 +1175,7 @@ All recorded changes follow.
 	  used inside ${...} has been fixed.
 03-07-15  An error in which expanding an indexed array inside a compound
 	  variable could cause a core dump has been fixed.
-03-07-15  A bug in which under on rare occassions a job completion interrupt
+03-07-15  A bug in which on rare occasions a job completion interrupt
 	  could cause to core dump has been fixed.
 03-06-26  A bug in which process substitution embedded within command
 	  substitution would generate a syntax error has been fixed.
@@ -2089,6 +2204,36 @@ All recorded changes follow.
 <P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="libast changes">libast changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
+09-03-04 tm/tmxmake.c: add tmxtm() with zone override
+09-03-03 tm/tmxfmt.c: add %(...)&lt;c&gt;, specifically %(...)z for output zone
+09-02-22 tm/tmxdate.c: add iso P... durations
+09-02-02 path/pathprog.c: add
+09-02-02 misc/opthdr.h,optget.c: fix flags mixup, handle old '-' as option
+09-02-02 sfio/sfprints.c: fix sfvaprints() return value to not count trailing '&nbsp;'
+09-02-02 misc/cmdarg.c: handle !defined(ARG_MAX)
+09-02-02 port/astconf.c: fix UNIVERSE overwrite of null&#0091;&#0093; value!
+09-01-31 features/sys: drop header sys/localedef.h
+09-01-28 include/fs3d.h,misc/fs3d.c: mount() =&gt; fs3d_mount() for diff std prototypes
+09-01-14 misc/fts_open.c: delay top list reorder until first fts_read()
+09-01-14 include/ls.h: LS_W_INUMBER =&gt; 9 to accomodate large st_ino
+09-01-14 misc/optget.c: expand STYLE_usage input text
+09-01-09 features/uwin,stdio/_stdfun.c: iffe for _p__iob and __p__iob
+09-01-09 misc/magic.tab: add ISO filesystem image entries
+09-01-07 string/strtoi.c: strtol() etc. do not consume &#0091;lLuU&#0093; suffix -- thanks jkf
+09-01-07 sfio/sfstrtof.h: strtod() etc. do not consume &#0091;fFlL&#0093; suffix -- thanks jkf
+09-01-05 string/strlcat.c: fix logic to match docs (not that easy)
+08-12-30 tm/tmxdate.c,include/tm.h: add TM_WORK { "workday" "working" "work" }
+08-12-28 sfio/sfcvt.c: fix 'a' format rounding
+08-12-21 tm/tmdata.c: add 2008-12-31+23:59:60-0000 leap second event
+08-12-19 tm/tmxdate.c: check for dates near the epoch rolling back to the future
+08-12-19 tm/tmxfmt.c: change %s for now==0 to be the epoch
+08-12-07 include/ast_std.h,misc/getenv.c: no _ast_getenv for uwin ast54 compatibility
+08-12-07 tm/tmxfmt.c: add %&#0091;_&#0093;&#0091;EO&#0093;K for &#0091;space pad&#0093; &#0091;full|long&#0093; iso
+08-12-07 sfio/sfvscanf.c: fix ok&#0091;&#0093; short by one allocation
+08-12-07 comp/setlocale.c: fix off by one composite initialition loop test
+08-12-07 path/pathkey.c: fix off by one loop test
+08-12-04 vmalloc/vmbest.c: catch sbrk() wraparound
+08-12-04 comp/spawnveg.c: clean up attrs on failure too
 08-11-04 regex/regcomp.c: fix locale &#0091;!-...&#0093; and &#0091;^-...&#0093; re-initialization
 08-11-04 stdio: add flockfile.c ftrylockfile.c funlockfile.c
 08-10-24 port/astconf.c: handle multiple/trailing '/' in universe initialization
@@ -3614,6 +3759,19 @@ All recorded changes follow.
 <P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="libcmd changes">libcmd changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
+09-03-03 tee.c: clean up sfio disciplines on error
+09-03-03 cat.c: fix -v|-e|-n|-B interaction bugs
+09-02-14 tail.c: fix VSC failures
+09-02-14 join.c: fix VSC failure
+09-02-02 uniq.c: document -number == -fnumber, +number == -snumber
+09-02-02 tail.c: fix usage&#0091;&#0093; for negative offsets, add sun -b
+09-02-02 mktemp.c: add
+09-02-02 features/utsname: UWIN _UNAME_os_DEFAULT =&gt; UWIN
+09-01-31 dirname.c: add experimental { -f -r -x } for pathpath(3)
+09-01-05 cmp.c: fix EOF diagnostic to conform to posix
+09-01-03 mkfifo.c: fix --mode=mode logic
+08-12-07 date.c: add %&#0091;_&#0093;&#0091;EO&#0093;K for &#0091;space pad&#0093; &#0091;full|long&#0093; iso docs
+08-11-10 stty.c: check for -t grouping so -tostop != -t -ostop
 08-10-15 rm.c: handle 'rm -f x x' =&gt; exit 0
 08-09-08 stty.c: #ifdef guard TAB&#0091;012&#0093; -- freebsd: damn the posix, full speed ahead
 08-06-17 shcmd.h: move to libast
@@ -3939,7 +4097,7 @@ All recorded changes follow.
 <TR>
 <TD align=left></TD>
 <TD align=center></TD>
-<TD align=right>November 04, 2008</TD>
+<TD align=right>March 12, 2009</TD>
 </TR>
 </TABLE>
 <P>

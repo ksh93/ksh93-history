@@ -70,7 +70,7 @@ false
 	[[ ${z.bar[1]} == yes ]] || err_exit 'index array assignment to compound variable in subshell not working'
 )
 [[ $z == "$val" ]] || err_exit 'compound variable changes after associative array assignment'
-	
+
 x=(
 	foo=( qqq=abc rrr=def)
 	bar=( zzz=no rst=fed)

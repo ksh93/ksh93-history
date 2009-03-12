@@ -1,3 +1,5 @@
+09-03-03 tee.c: clean up sfio disciplines on error
+09-03-03 cat.c: fix -v|-e|-n|-B interaction bugs
 09-02-14 tail.c: fix VSC failures
 09-02-14 join.c: fix VSC failure
 09-02-02 uniq.c: document -number == -fnumber, +number == -snumber

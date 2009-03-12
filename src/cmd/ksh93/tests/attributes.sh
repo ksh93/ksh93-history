@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2008 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2009 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -115,7 +115,7 @@ fi
 sz=(typeset -E y=2.2)
 string="$(print $sz)"
 if [[ "${sz}" == *'typeset -E -F'* ]]
-then 	err_exit 'print of exponential shows both -E and -F attributes'  
+then 	err_exit 'print of exponential shows both -E and -F attributes'
 fi
 print 'typeset -i m=48/4+1;print -- $m' > /tmp/ksh$$
 chmod +x /tmp/ksh$$
@@ -195,7 +195,7 @@ hello worldhello worldhello world
 !
 [[ $v1 == "$b1" ]] || err_exit "v1=$v1 should be $b1"
 [[ $v2 == "$x" ]] || err_exit "v1=$v2 should be $x"
-[[ $(env - '!=1' $SHELL -c 'echo ok' 2>/dev/null) == ok ]] || err_exit 'malformed environment terminates shell'
+[[ $(env '!=1' $SHELL -c 'echo ok' 2>/dev/null) == ok ]] || err_exit 'malformed environment terminates shell'
 unset var
 typeset -b var
 printf '12%Z34' | read -r -N 5 var
@@ -211,10 +211,10 @@ unset foo bar
 unset -f fun
 function fun
 {
-	export foo=hello 
+	export foo=hello
 	typeset -x  bar=world
 	[[ $foo == hello ]] || err_exit 'export scoping problem in function'
-} 
+}
 fun
 [[ $(export | grep foo) == 'foo=hello' ]] || err_exit 'export not working in functions'
 [[ $(export | grep bar) ]] && err_exit 'typeset -x not local'
@@ -224,9 +224,9 @@ fred[66]=88
 unset x y z
 typeset -LZ3 x=abcd y z=00abcd
 y=03
-[[ $y == "3  " ]] || err_exit '-LZ3 not working for value 03' 
-[[ $x == "abc" ]] || err_exit '-LZ3 not working for value abcd' 
-[[ $x == "abc" ]] || err_exit '-LZ3 not working for value 00abcd' 
+[[ $y == "3  " ]] || err_exit '-LZ3 not working for value 03'
+[[ $x == "abc" ]] || err_exit '-LZ3 not working for value abcd'
+[[ $x == "abc" ]] || err_exit '-LZ3 not working for value 00abcd'
 unset x z
 set +a
 [[ $(typeset -p z) ]] && err_exit "typeset -p for z undefined failed"
@@ -283,4 +283,16 @@ bar=xxx
 unset foo
 typeset -L5 foo
 [[ $(typeset -p foo) == 'typeset -L 5 foo' ]] || err_exit 'typeset -p not working for variables with attributes but without a value'
+{ $SHELL  <<- EOF
+	typeset -L3 foo=aaa
+	typeset -L6 foo=bbbbbb
+	[[ \$foo == bbbbbb ]]
+EOF
+}  || err_exit 'typeset -L should not preserve old attributes'
+{ $SHELL <<- EOF
+	typeset -R3 foo=aaa
+	typeset -R6 foo=bbbbbb
+	[[ \$foo == bbbbbb ]]
+EOF
+} 2> /dev/null || err_exit 'typeset -R should not preserve old attributes'
 exit	$((Errors))

@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2008 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2009 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -135,7 +135,7 @@ if [[ $? == 0 ]]
 then	err_exit 'floating point allowed with % operator'
 fi
 x=.125
-if	[[ $(( 4 * x/2 )) != 0.25 ]] 
+if	[[ $(( 4 * x/2 )) != 0.25 ]]
 then	err_exit '(( 4 * x/2 )) is not 0.25, with x=.125'
 fi
 if	[[ $(( pow(2,3) )) != 8 ]]
@@ -190,7 +190,7 @@ then	err_exit "&= not working"
 fi
 function newscope
 {
-	float x=1.5 
+	float x=1.5
 	(( x += 1 ))
 	print -r -- $x
 }
@@ -342,7 +342,7 @@ for ((i=0; i < 4; i++))
 do	(( ipx = ip % 256 ))
 	(( ip /= 256 ))
 	(( ipx != hex[3-i] )) && err_exit "hex digit $((3-i)) not correct"
-done	
+done
 unset x
 x=010
 (( x == 8 )) || err_exit 'leading zeros not treated as octal arithmetic'
@@ -434,7 +434,7 @@ for expr in '1/(1.0/2)' '1/(1/2.0)'
 do	[[ $( ( $SHELL -c "( print -r -- \$(($expr)) )" ) 2>/dev/null ) == 2 ]] || err_exit "invalid value for: $expr"
 done
 [[ $((5||0)) == 1 ]] || err_exit '$((5||0))'" == $((5||0)) should be 1"
-$SHELL -c 'integer x=3 y=2; (( (y += x += 2) == 7  && x==5))' 2> /dev/null || err_exit '((y += x += 2)) not working' 
+$SHELL -c 'integer x=3 y=2; (( (y += x += 2) == 7  && x==5))' 2> /dev/null || err_exit '((y += x += 2)) not working'
 $SHELL -c 'b=0; [[ $((b?a=1:b=9)) == 9 ]]' 2> /dev/null || err_exit 'b?a=1:b=9 not working'
 unset x
 (( x = 4*atan(1.0) ))

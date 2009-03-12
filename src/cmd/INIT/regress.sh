@@ -23,7 +23,7 @@ command=regress
 case $(getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt) in
 0123)	USAGE=$'
 [-?
-@(#)$Id: regress (AT&T Research) 2009-01-03 $
+@(#)$Id: regress (AT&T Research) 2009-03-03 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?regress - run regression tests]
@@ -498,6 +498,7 @@ function DO # cmd ...
 
 function UNIT # cmd arg ...
 {
+	(( UNIT_READONLY )) && return
 	typeset cmd=$1
 	case $cmd in
 	-)	shift
@@ -1125,7 +1126,7 @@ function FI
 
 # main
 
-integer ERRORS=0 EXPORTS=0 TESTS=0 SUBTESTS=0 LINE=0 TESTLINE=0 ITEM=0 LASTITEM=0 COND=0 COUNT
+integer ERRORS=0 EXPORTS=0 TESTS=0 SUBTESTS=0 LINE=0 TESTLINE=0 ITEM=0 LASTITEM=0 COND=0 UNIT_READONLY=0 COUNT
 typeset ARGS COMMAND COPY DIAGNOSTICS ERROR EXEC FLUSHED=0 GROUP=INIT
 typeset IGNORE INPUT KEEP OUTPUT TEST SOURCE MOVE NOTE UMASK UMASK_ORIG
 typeset ARGS_ORIG COMMAND_ORIG TITLE UNIT ARGV PREFIX OFFSET IGNORESPACE
@@ -1213,6 +1214,10 @@ PMP=$(pwd -P)/$UNIT.tmp
 UMASK_ORIG=$(umask)
 UMASK=$UMASK_ORIG
 ARGV=("$@")
+if	[[ ${ARGV[0]} && ${ARGV[0]} != [-+]* ]]
+then	UNIT "${ARGV[@]}"
+	UNIT_READONLY=1
+fi
 trap 'code=$?; CLEANUP $code' EXIT
 if	[[ ! $TEST_select ]]
 then	TEST_select="[0123456789]*"

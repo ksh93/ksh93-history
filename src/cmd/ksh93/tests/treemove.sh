@@ -77,8 +77,8 @@ function f2
 f1 tree1
 f2 tree2
 
-[[ "${tree1.subtree["a_node"].one}" == "hello" ]] || err_exit "Expected tree1.subtree[\"a_node\"].one == 'hello', got ${tree1.subtree["a_node"].one}"
-[[ "${tree1.subtree["a_node"].two}" == "world" ]] || err_exit "Expected tree1.subtree[\"a_node\"].two == 'world', got ${tree1.subtree["a_node"].two}"
+[[ "${tree1.subtree["a_node"].one}" == "hello" ]] || err_exit "expected tree1.subtree[\"a_node\"].one == 'hello', got ${tree1.subtree["a_node"].one}"
+[[ "${tree1.subtree["a_node"].two}" == "world" ]] || err_exit "expected tree1.subtree[\"a_node\"].two == 'world', got ${tree1.subtree["a_node"].two}"
 [[ "${tree1}" == "${tree2}" ]] || err_exit "tree1 and tree2 differ:$'\n'"
 
 # tests done

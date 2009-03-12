@@ -32,7 +32,7 @@ case $(getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt) in
 0123)	ARGV0="-a $command"
 	USAGE=$'
 [-?
-@(#)$Id: mktest (AT&T Labs Research) 2009-01-03 $
+@(#)$Id: mktest (AT&T Labs Research) 2009-03-03 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?mktest - generate a regression test scripts]
@@ -261,7 +261,6 @@ function TWD
 function RUN
 {
 	typeset i n p op unit sep output=1 error=1 exitcode=1
-	integer z
 	op=$1
 	shift
 	while	:
@@ -295,11 +294,12 @@ function RUN
 		done
 		print -u$stdout
 		[[ ${DATA[-]} || /dev/fd/0 -ef /dev/fd/$stdin ]] || cat > $TEMP.in
-		IO=$(<$TEMP.in)
-		(( z = $(wc -c < $TEMP.in) ))
-		if	(( z && z == ${#IO} ))
-		then	n=-n
-		else	n=
+		IO=$(cat $TEMP.in; print :)
+		if	[[ $IO == ?*$'\n:' ]]
+		then	IO=${IO%??}
+			n=
+		else	IO=${IO%?}
+			n=-n
 		fi
 		{
 			[[ $UMASK != $UMASK_ORIG ]] && umask $UMASK
@@ -336,11 +336,12 @@ function RUN
 				-)	p=$TEMP.in ;;
 				*)	p=$WORK/$i ;;
 				esac
-				IO=$(<$p)
-				(( z = $(wc -c < $p) ))
-				if	(( z && z == ${#IO} ))
-				then	n=-n
-				else	n=
+				IO=$(cat $p; print :)
+				if	[[ $IO == ?*$'\n:' ]]
+				then	IO=${IO%??}
+					n=
+				else	IO=${IO%?}
+					n=-n
 				fi
 				print -u$stdout -n -r -- $'\t\tINPUT' $n
 				print -u$stdout -r -f " $QUOTE" -- "$i"
@@ -349,11 +350,12 @@ function RUN
 			print -u$stdout
 			unset DATA[$i]
 		done
-		IO=$(<$TEMP.out)
-		(( z = $(wc -c < $TEMP.out) ))
-		if	(( z && z == ${#IO} ))
-		then	n=-n
-		else	n=
+		IO=$(cat $TEMP.out; print :)
+		if	[[ $IO == ?*$'\n:' ]]
+		then	IO=${IO%??}
+			n=
+		else	IO=${IO%?}
+			n=-n
 		fi
 		if	[[ $IO != "$OUTPUT" ]]
 		then	OUTPUT=$IO
@@ -369,12 +371,13 @@ function RUN
 				print -u$stdout
 			fi
 		fi
-		IO=$(<$TEMP.err)
+		IO=$(cat $TEMP.err; print :)
 		IO=${IO//$command\[*([0-9])\]:\ .\[*([0-9])\]:\ @(EXEC|PROG)\[*([0-9])\]:\ /}
-		(( z = $(wc -c < $TEMP.err) ))
-		if	(( z && z == ${#IO} ))
-		then	n=-n
-		else	n=
+		if	[[ $IO == ?*$'\n:' ]]
+		then	IO=${IO%??}
+			n=
+		else	IO=${IO%?}
+			n=-n
 		fi
 		if	[[ $IO != "$ERROR" ]]
 		then	ERROR=$IO

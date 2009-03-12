@@ -896,6 +896,7 @@ make sh/init.c
 make include/version.h implicit
 done include/version.h
 prev include/lexstates.h implicit
+prev FEATURE/externs implicit
 prev FEATURE/dynamic implicit
 prev FEATURE/time implicit
 prev include/builtins.h implicit

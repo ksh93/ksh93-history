@@ -228,10 +228,10 @@ do	[[ $out == ${expected[$ops]} ]] || err_exit "interrupt $ops test failed -- ex
 done < tst.got
 
 float s=$SECONDS
-[[ $($SHELL -c 'trap "print SIGUSR1 ; exit 0" USR1; (trap "" USR1 ; exec kill -USR1 $$ & sleep 5); print done') == SIGUSR1 ]] || err_exit 'subshell ignoring signal does not send signal to parent' 
+[[ $($SHELL -c 'trap "print SIGUSR1 ; exit 0" USR1; (trap "" USR1 ; exec kill -USR1 $$ & sleep 5); print done') == SIGUSR1 ]] || err_exit 'subshell ignoring signal does not send signal to parent'
 (( (SECONDS-s) < 4 )) && err_exit 'parent does not wait for child to complete before handling signal'
 ((s = SECONDS))
-[[ $($SHELL -c 'trap "print SIGUSR1 ; exit 0" USR1; (trap "exit" USR1 ; exec kill -USR1 $$ & sleep 5); print done') == SIGUSR1 ]] || err_exit 'subshell catching signal does not send signal to parent' 
+[[ $($SHELL -c 'trap "print SIGUSR1 ; exit 0" USR1; (trap "exit" USR1 ; exec kill -USR1 $$ & sleep 5); print done') == SIGUSR1 ]] || err_exit 'subshell catching signal does not send signal to parent'
 (( SECONDS-s < 4 )) && err_exit 'parent completes early'
 
 unset n s t
@@ -257,11 +257,11 @@ do	if	! n=$(kill -l $s 2>/dev/null)
 	err_exit "'kill -l $s' => $n, 'kill -l $n' => $t, kill -l $t => $m -- expected $n"
 done
 yes=$(whence -p yes)
-[[ $yes ]] && for i in TERM VTALRM PIPE 
+[[ $yes ]] && for i in TERM VTALRM PIPE
 do { $SHELL <<- EOF
 		foo() { return 0; }
 		trap foo EXIT
-		sleep 2 && { kill -$i \$\$; sleep 1;kill -KILL \$\$;}  & 
+		sleep 2 && { kill -$i \$\$; sleep 1;kill -KILL \$\$;}  &
 		$yes | while read yes; do
 		        (/bin/date; sleep .1)
 		done > /dev/null

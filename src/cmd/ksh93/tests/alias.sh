@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2008 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2009 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -66,7 +66,7 @@ alias !!=print
 if	[[ $(!! hello 2>/dev/null) != hello ]]
 then	err_exit 'alias for !!=print not working'
 fi
-alias foo=echo 
+alias foo=echo
 if	[[ $(print  "$(foo bar)" ) != bar  ]]
 then	err_exit 'alias in command substitution not working'
 fi
@@ -81,7 +81,7 @@ then	[[ ! $(alias -t | grep rm= ) ]] && err_exit 'tracked alias not set'
 	[[ $(alias -t | grep rm= ) ]] && err_exit 'tracked alias not cleared'
 fi
 if	hash -r 2>/dev/null && [[ ! $(hash) ]]
-then	mkdir  /tmp/ksh$$ || err_exit "mkdir /tmp/ksh$$ failed" 
+then	mkdir  /tmp/ksh$$ || err_exit "mkdir /tmp/ksh$$ failed"
 	trap "cd /; rm -rf /tmp/ksh$$" EXIT
 	PATH=/tmp/ksh$$:/bin:/usr/bin
 	for i in foo -foo --

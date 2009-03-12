@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2008 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2009 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -160,14 +160,14 @@ cat > $tmp/script$$ <<-\!
 	foo
 !
 if	! $tmp/script$$
-then	err_exit 'exit trap incorrectly triggered' 
+then	err_exit 'exit trap incorrectly triggered'
 fi
 if	! $SHELL -c $tmp/script$$
-then	err_exit 'exit trap incorrectly triggered when invoked with -c' 
+then	err_exit 'exit trap incorrectly triggered when invoked with -c'
 fi
 $SHELL -c "trap 'rm $tmp/script$$' EXIT"
 if	[[ -f $tmp/script$$ ]]
-then	err_exit 'exit trap not triggered when invoked with -c' 
+then	err_exit 'exit trap not triggered when invoked with -c'
 fi
 cat > $tmp/script$$ <<- \EOF
 	foobar()
@@ -233,14 +233,14 @@ function foobar
 	return 0
 }
 ( foobar ) 2> /dev/null || err_exit "cannot unset readonly variable in function"
-if	$SHELL -n 2> /dev/null <<-! 
+if	$SHELL -n 2> /dev/null <<-!
 	abc()
 	!
 then	err_exit 'abc() without a function body is not a syntax error'
 fi
 function winpath
 {
-	usage='q pathname ...' 
+	usage='q pathname ...'
 	typeset var format=s
 	while   getopts  "$usage" var
 	do      case $var in
@@ -296,7 +296,7 @@ then	err_exit 'set -e not inherited for posix functions'
 fi
 trap - ERR
 
-function myexport 
+function myexport
 {
 	nameref var=$1
 	if	(( $# > 1 ))
@@ -309,7 +309,6 @@ function myexport
 	typeset val
 	val=$(export | grep "^$1=")
 	print ${val#"$1="}
-	
 }
 export dgk=base
 val=$(myexport dgk fun)
@@ -408,7 +407,7 @@ unset -f  foobar
 if	[[ $? != 126 ]]
 then	err_exit 'function file without function definition processes wrong error'
 fi
-print 'set a b c' > dotscript 
+print 'set a b c' > dotscript
 [[ $(PATH=$PATH: $SHELL -c '. dotscript;print $#') == 3 ]] || err_exit 'positional parameters not preserved with . script without arguments'
 cd ~- || err_exit "cd back failed"
 cd /; rm -r $tmp/ksh$$ || err_exit "rm -r $tmp/ksh$$ failed"
@@ -776,7 +775,7 @@ x=$(
 	integer count=0
 	function err_f
 	{
-		if	((count++==3))  
+		if	((count++==3))
 		then	print failed
 		else	false
 		fi
@@ -829,7 +828,7 @@ $SHELL -c '
 	}
 	fun
 ' || err_exit "compound variable cleanup before script exec failed"
-( $SHELL << \++EOF++ 
+( $SHELL << \++EOF++
 function main
 {
  	typeset key
@@ -962,7 +961,7 @@ function _Dbg_debug_trap_handler
 trap '_Dbg_debug_trap_handler' DEBUG
 .  $tmp/debug foo bar
 trap '' DEBUG
-             
+
 caller() {
   integer .level=.sh.level .max=.sh.level-1
   while((--.level>=0))
@@ -986,7 +985,7 @@ f()
 }
 f 257  && print ok
 +++
-) == ok ]] || err_exit 'Cannot handle comsub depth > 256 in function'
+) == ok ]] || err_exit 'cannot handle comsub depth > 256 in function'
 
 
 tmp1=$tmp/job.1

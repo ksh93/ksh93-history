@@ -1,3 +1,6 @@
+09-03-10 TEST.mk: add .SOURCE:tests if tests is a dir
+09-03-03 regress.sh: allow command line unit to override UNIT
+09-03-03 mktest.sh: handle IO == $'\n'
 09-02-02 package.sh: delay $INSTALLROOT/bin/.paths generation until mamprobe runs
 09-01-30 cc.mvs.390: c89 balks at [ ()] in -Dname="..."!
 09-01-27 package.sh: add isascii() to use ratz instead of tar

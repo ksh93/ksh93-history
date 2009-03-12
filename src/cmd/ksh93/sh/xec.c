@@ -791,6 +791,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 							flgs |= NV_STATIC;
 						if(checkopt(com,'n'))
 							flgs |= NV_NOREF;
+						else if(checkopt(com,'L') || checkopt(com,'R') || checkopt(com,'Z'))
+							flgs |= NV_UNJUST;
 #if SHOPT_TYPEDEF
 						else if(argn>=3 && checkopt(com,'T'))
 						{
@@ -1037,7 +1039,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 					}
 					sh_popcontext(&buff);
 					errorpop(&buff.err);
-					error_info.flags &= ~ERROR_SILENT;
+					error_info.flags &= ~(ERROR_SILENT|ERROR_NOTIFY);
 					shp->bltinfun = 0;
 					if(buff.olist)
 						free_list(buff.olist);
@@ -1424,13 +1426,29 @@ int sh_exec(register const Shnode_t *t, int flags)
 			flags &= ~OPTIMIZE_FLAG;
 			if(!shp->subshell && !shp->st.trapcom[0] && !shp->st.trap[SH_ERRTRAP] && (flags&sh_state(SH_NOFORK)))
 			{
-				int jmpval;
+				char *savsig;
+				int nsig,jmpval;
 				struct checkpt buff;
+				shp->st.otrapcom = 0;
+				if((nsig=shp->st.trapmax*sizeof(char*))>0 || shp->st.trapcom[0])
+				{
+					nsig += sizeof(char*);
+					memcpy(savsig=malloc(nsig),(char*)&shp->st.trapcom[0],nsig);
+					shp->st.otrapcom = (char**)savsig;
+				}
+				sh_sigreset(0);
 				sh_pushcontext(&buff,SH_JMPEXIT);
 				jmpval = sigsetjmp(buff.buff,0);
 				if(jmpval==0)
 					sh_exec(t->par.partre,flags);
 				sh_popcontext(&buff);
+				sh_sigreset(1);
+				if(nsig)
+				{
+					memcpy((char*)&shp->st.trapcom[0],savsig,nsig);
+					free((void*)savsig);
+				}
+
 				if(jmpval > SH_JMPEXIT)
 					siglongjmp(*shp->jmplist,jmpval);
 				sh_done(shp,0);
@@ -2522,6 +2540,7 @@ int sh_funscope(int argn, char *argv[],int(*fun)(void*),void *arg,int execflg)
 	struct funenv		*fp;
 	struct checkpt		buff;
 	Namval_t		*nspace = shp->namespace;
+	Dt_t			*last_root = shp->last_root;
 	if(shp->fn_depth==0)
 		shp->glob_options =  shp->options;
 	else
@@ -2627,6 +2646,7 @@ int sh_funscope(int argn, char *argv[],int(*fun)(void*),void *arg,int execflg)
 	if(nsig)
 		stakset(savstak,0);
 	shp->options = shp->glob_options;
+	shp->last_root = last_root;
 	if(trap)
 	{
 		sh_trap(trap,0);

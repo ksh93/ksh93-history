@@ -31,6 +31,9 @@
 ":TEST:" : .MAKE .OPERATOR
 	local B G P S T
 	test : .INSERT .TESTINIT
+	if "$("tests":T=FD)"
+		.SOURCE : tests
+	end
 	P := $(>:O=1)
 	if "$(P:N=*.tst)" && ! "$(@:V)"
 		B := $(P:B)

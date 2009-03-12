@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -291,6 +291,7 @@ extern size_t		pathnative(const char*, char*, size_t);
 extern char*		pathpath(char*, const char*, const char*, int);
 extern size_t		pathposix(const char*, char*, size_t);
 extern char*		pathprobe(char*, char*, const char*, const char*, const char*, int);
+extern size_t		pathprog(const char*, char*, size_t);
 extern char*		pathrepl(char*, const char*, const char*);
 extern int		pathsetlink(const char*, const char*);
 extern char*		pathshell(void);

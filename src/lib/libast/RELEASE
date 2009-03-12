@@ -1,3 +1,7 @@
+09-03-04 tm/tmxmake.c: add tmxtm() with zone override
+09-03-03 tm/tmxfmt.c: add %(...)<c>, specifically %(...)z for output zone
+09-02-22 tm/tmxdate.c: add iso P... durations
+09-02-02 path/pathprog.c: add
 09-02-02 misc/opthdr.h,optget.c: fix flags mixup, handle old '-' as option
 09-02-02 sfio/sfprints.c: fix sfvaprints() return value to not count trailing '\0'
 09-02-02 misc/cmdarg.c: handle !defined(ARG_MAX)

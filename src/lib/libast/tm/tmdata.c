@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -245,10 +245,10 @@ static Tm_zone_t	zone[] =
  "CAN",	"AST",	"ADT",	 ( 4 * 60),	TM_DST,	/* Atlantic		*/
  0,	"NST",	0,	 ( 3 * 60 + 30),     0,	/* Newfoundland		*/
  "GBR",	"",	"BST",	 ( 0 * 60),	TM_DST,	/* British Summer	*/
- "EUR",	"WET",	0,	 ( 0 * 60),	TM_DST,	/* Western Eurpoean	*/
- 0,	"CET",	0,	-( 1 * 60),	TM_DST,	/* Central European	*/
- 0,	"MET",	0,	-( 1 * 60),	TM_DST,	/* Middle European	*/
- 0,	"EET",	0,	-( 2 * 60),	TM_DST,	/* Eastern Eurpoean	*/
+ "EUR",	"WET",	"WEST",	 ( 0 * 60),	TM_DST,	/* Western Eurpoean	*/
+ 0,	"CET",	"CEST",	-( 1 * 60),	TM_DST,	/* Central European	*/
+ 0,	"MET",	"MEST",	-( 1 * 60),	TM_DST,	/* Middle European	*/
+ 0,	"EET",	"EEST",	-( 2 * 60),	TM_DST,	/* Eastern Eurpoean	*/
  "ISR",	"IST",	"IDT",  -( 3 * 60),	TM_DST,	/* Israel		*/
  "IND",	"IST",	0,  	-( 5 * 60 + 30 ),    0,	/* India		*/
  "CHN",	"HKT",	0,	-( 8 * 60),	     0,	/* Hong Kong		*/

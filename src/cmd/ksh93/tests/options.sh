@@ -332,9 +332,32 @@ set $restore
 state=$(set --state)
 [[ $state == "set $restore" ]] || err_exit "set --state after restore failed: expected 'set $restore', got '$state'"
 
-false | true | true   || err_exit 'pipe not exiting exit value of last element'
-true | true | false   && err_exit 'pipe not exiting false'
-set -o pipefail
+typeset -a pipeline
+pipeline=(
+	( nopipefail=0 pipefail=1 command='false|true|true' )
+	( nopipefail=0 pipefail=1 command='true|false|true' )
+	( nopipefail=1 pipefail=1 command='true|true|false' )
+	( nopipefail=1 pipefail=1 command='false|false|false' )
+	( nopipefail=0 pipefail=0 command='true|true|true' )
+	( nopipefail=0 pipefail=0 command='print hi|(sleep 1;/bin/cat)>/dev/null' )
+)
+set --nopipefail
+for ((i = 0; i < ${#pipeline[@]}; i++ ))
+do	eval ${pipeline[i].command}
+	status=$?
+	expected=${pipeline[i].nopipefail}
+	[[ $status == $expected ]] ||
+	err_exit "pipeline '${pipeline[i].command}' exit status $status -- expected $expected"
+done
+set --pipefail
+for ((i = 0; i < ${#pipeline[@]}; i++ ))
+do	eval ${pipeline[i].command}
+	status=$?
+	expected=${pipeline[i].pipefail}
+	[[ $status == $expected ]] ||
+	err_exit "pipeline '${pipeline[i].command}' exit status $status -- expected $expected"
+done
+
 echo=$(whence -p echo)
 for ((i=0; i < 20; i++))
 do	if	! x=$(true | $echo 123)
@@ -342,10 +365,6 @@ do	if	! x=$(true | $echo 123)
 		break
 	fi
 done
-false | true | true    && err_exit 'pipe with first not failing with pipefail'
-true | false | true    && err_exit 'pipe middle not failing with pipefail'
-true | true | false    && err_exit 'pipe last not failing with pipefail'
-print hi | (sleep 1;/bin/cat) > /dev/null || err_exit 'pipeline fails with pipefail' 
 (
 	set -o pipefail
 	false | true
@@ -355,7 +374,7 @@ $SHELL -c 'set -o pipefail; false | $(whence -p true);' && err_exit 'pipefail no
 [[ $( set -o pipefail
 	pipe() { date | cat > /dev/null ;}
 	print $'1\n2' |
-	while	read i 
+	while	read i
 	do 	if	pipe /tmp
 		then	{ print enter $i; sleep 2; print leave $i; } &
 		fi

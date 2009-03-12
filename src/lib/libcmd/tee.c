@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1992-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1992-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: tee (AT&T Research) 2007-11-11 $\n]"
+"[-?\n@(#)$Id: tee (AT&T Research) 2009-03-03 $\n]"
 USAGE_LICENSE
 "[+NAME?tee - duplicate standard input]"
 "[+DESCRIPTION?\btee\b copies standard input to standard output "
@@ -82,11 +82,11 @@ static ssize_t tee_write(Sfio_t* fp, const void* buf, size_t n, Sfdisc_t* handle
 		while (bp < ep)
 		{
 			if ((r = write(fd, bp, ep - bp)) <= 0)
-				return(-1);
+				return -1;
 			bp += r;
 		}
 	} while ((fd = *hp++) >= 0);
-	return(n);
+	return n;
 }
 
 int
@@ -102,30 +102,34 @@ b_tee(int argc, register char** argv, void* context)
 
 	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
 	line = -1;
-	while (n = optget(argv, usage)) switch (n)
+	for (;;)
 	{
-	case 'a':
-		oflag &= ~O_TRUNC;
-		oflag |= O_APPEND;
-		break;
-	case 'i':
-		signal(SIGINT, SIG_IGN);
-		break;
-	case 'l':
-		line = sfset(sfstdout, 0, 0) & SF_LINE;
-		if ((line == 0) == (opt_info.num == 0))
-			line = -1;
-		else
-			sfset(sfstdout, SF_LINE, !!opt_info.num);
-		break;
-	case ':':
-		error(2, "%s", opt_info.arg);
-		break;
-	case '?':
-		error(ERROR_usage(2), "%s", opt_info.arg);
+		switch (optget(argv, usage))
+		{
+		case 'a':
+			oflag &= ~O_TRUNC;
+			oflag |= O_APPEND;
+			continue;
+		case 'i':
+			signal(SIGINT, SIG_IGN);
+			continue;
+		case 'l':
+			line = sfset(sfstdout, 0, 0) & SF_LINE;
+			if ((line == 0) == (opt_info.num == 0))
+				line = -1;
+			else
+				sfset(sfstdout, SF_LINE, !!opt_info.num);
+			continue;
+		case ':':
+			error(2, "%s", opt_info.arg);
+			break;
+		case '?':
+			error(ERROR_usage(2), "%s", opt_info.arg);
+			break;
+		}
 		break;
 	}
-	if(error_info.errors)
+	if (error_info.errors)
 		error(ERROR_usage(2), "%s", optusage(NiL));
 	argv += opt_info.index;
 	argc -= opt_info.index;
@@ -139,28 +143,34 @@ b_tee(int argc, register char** argv, void* context)
 #endif
 	if (argc > 0)
 	{
-		if (!(tp = (Tee_t*)stakalloc(sizeof(Tee_t) + argc * sizeof(int))))
-			error(ERROR_exit(1), "no space");
-		memset(&tee_disc, 0, sizeof(tee_disc));
-		tee_disc.writef = tee_write;
-		tp->disc = tee_disc;
-		hp = tp->fd;
-		while (cp = *argv++)
+		if (tp = (Tee_t*)stakalloc(sizeof(Tee_t) + argc * sizeof(int)))
 		{
-			if ((*hp = open(cp, oflag, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH)) < 0)
-				error(ERROR_system(0), "%s: cannot create", cp);
-			else hp++;
+			memset(&tee_disc, 0, sizeof(tee_disc));
+			tee_disc.writef = tee_write;
+			tp->disc = tee_disc;
+			hp = tp->fd;
+			while (cp = *argv++)
+			{
+				if ((*hp = open(cp, oflag, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH)) < 0)
+					error(ERROR_system(0), "%s: cannot create", cp);
+				else
+					hp++;
+			}
+			if (hp == tp->fd)
+				tp = 0;
+			else
+			{
+				*hp = -1;
+				sfdisc(sfstdout, &tp->disc);
+			}
 		}
-		if (hp == tp->fd)
-			tp = 0;
 		else
-		{
-			*hp = -1;
-			sfdisc(sfstdout, &tp->disc);
-		}
+			error(ERROR_exit(0), "out of space");
 	}
-	if (sfmove(sfstdin, sfstdout, SF_UNBOUND, -1) < 0 || !sfeof(sfstdin) || sfsync(sfstdout))
-		error(ERROR_system(1), "cannot copy");
+	if ((sfmove(sfstdin, sfstdout, SF_UNBOUND, -1) < 0 || !sfeof(sfstdin)) && errno != EPIPE)
+		error(ERROR_system(0), "read error");
+	if (sfsync(sfstdout))
+		error(ERROR_system(0), "write error");
 
 	/*
 	 * close files and free resources
@@ -171,8 +181,8 @@ b_tee(int argc, register char** argv, void* context)
 		sfdisc(sfstdout, NiL);
 		if (line >= 0)
 			sfset(sfstdout, SF_LINE, line);
-		for(hp = tp->fd; (n = *hp) >= 0; hp++)
+		for (hp = tp->fd; (n = *hp) >= 0; hp++)
 			close(n);
 	}
-	return(error_info.errors);
+	return error_info.errors;
 }

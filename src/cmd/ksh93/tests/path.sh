@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2008 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2009 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -91,7 +91,7 @@ cat > bug1 <<- \EOF
 	typeset PATH=/usr/bin
 	typeset -x PATH=''
 	}
-	
+
 	PATH=/usr/bin
 	: $(PATH=/usr/bin getconf PATH)
 	typeset -ft lock_unlock
@@ -121,7 +121,7 @@ var=$(whence date)
 dir=$(basename "$var")
 for i in 1 2 3 4 5 6 7 8 9 0
 do	if	! whence notfound$i 2> /dev/null
-	then	cmd=notfound$i		
+	then	cmd=notfound$i
 		break
 	fi
 done
@@ -132,7 +132,7 @@ chmod +x "$cmd"
 > foo
 chmod 755 foo
 for PATH in $path :$path $path: .:$path $path: $path:. $PWD::$path $PWD:.:$path $path:$PWD $path:.:$PWD
-do	
+do
 #	print path=$PATH $(whence date)
 #	print path=$PATH $(whence "$cmd")
 		date

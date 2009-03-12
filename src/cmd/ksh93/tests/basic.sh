@@ -53,7 +53,7 @@ umask u=rwx,go=rx || err_exit "umask u=rws,go=rx failed"
 if	[[ $(umask -S) != u=rwx,g=rx,o=rx ]]
 then	err_exit 'umask -S incorrect'
 fi
-mkdir  /tmp/ksh$$ || err_exit "mkdir /tmp/ksh$$ failed" 
+mkdir  /tmp/ksh$$ || err_exit "mkdir /tmp/ksh$$ failed"
 trap "cd /; rm -rf /tmp/ksh$$" EXIT
 pwd=$PWD
 [[ $SHELL != /* ]] && SHELL=$pwd/$SHELL
@@ -100,7 +100,7 @@ set -- dat*
 if	(( $# != 5 ))
 then	err_exit "dat* matches only $# files"
 fi
-if	(command > foo\\abc) 2> /dev/null 
+if	(command > foo\\abc) 2> /dev/null
 then	set -- foo*
 	if	[[ $1 != 'foo\abc' ]]
 	then	err_exit 'foo* does not match foo\abc'
@@ -142,7 +142,7 @@ foobar
 !
 ) | cat > /tmp/foobar$$ &
 wait $!
-foobar=$( < /tmp/foobar$$) 
+foobar=$( < /tmp/foobar$$)
 if	[[ $foobar != foobar ]]
 then	err_exit "$foobar is not foobar"
 fi
@@ -152,7 +152,7 @@ fi
 	print bam
 } > /tmp/foobar$$
 if	[[ $( < /tmp/foobar$$) != $'foo\nbar\nbam' ]]
-then	err_exit "Output file pointer not shared correctly."
+then	err_exit "output file pointer not shared correctly"
 fi
 cat > /tmp/foobar$$ <<\!
 	print foo
@@ -161,13 +161,13 @@ cat > /tmp/foobar$$ <<\!
 !
 chmod +x /tmp/foobar$$
 if	[[ $(/tmp/foobar$$) != $'foo\nbar\nbam' ]]
-then	err_exit "Script not working."
+then	err_exit "script not working"
 fi
 if	[[ $(/tmp/foobar$$ | /bin/cat) != $'foo\nbar\nbam' ]]
-then	err_exit "Script | cat not working."
+then	err_exit "script | cat not working"
 fi
 if	[[ $( /tmp/foobar$$) != $'foo\nbar\nbam' ]]
-then	err_exit "Output file pointer not shared correctly."
+then	err_exit "output file pointer not shared correctly"
 fi
 rm -f /tmp/foobar$$
 x=$( (print foo) ; (print bar) )
@@ -203,17 +203,17 @@ if	[[ $(/tmp/ksh$$x) != /tmp/ksh$$x ]]
 then	err_exit '$0 not correct for . script'
 fi
 rm -r /tmp/ksh$$ /tmp/ksh$$x
-mkdir  /tmp/ksh$$ || err_exit "mkdir /tmp/ksh$$ failed" 
+mkdir  /tmp/ksh$$ || err_exit "mkdir /tmp/ksh$$ failed"
 cd /tmp/ksh$$ || err_exit "cd /tmp/ksh$$ failed"
-print ./b > ./a; print ./c > b; print ./d > c; print ./e > d; print "echo \"hello there\"" > e 
+print ./b > ./a; print ./c > b; print ./d > c; print ./e > d; print "echo \"hello there\"" > e
 chmod 755 a b c d e
 x=$(./a)
 if	[[ $x != "hello there" ]]
-then	err_exit "nested scripts failed" 
+then	err_exit "nested scripts failed"
 fi
 x=$( (./a) | cat)
 if	[[ $x != "hello there" ]]
-then	err_exit "scripts in subshells fail" 
+then	err_exit "scripts in subshells fail"
 fi
 cd ~- || err_exit "cd back failed"
 rm -r /tmp/ksh$$ || err_exit "rm -r /tmp/ksh$$ failed"
@@ -305,7 +305,7 @@ wait # not running --pipefail which would interfere with subsequent tests
 sleep 20 &
 pids=$!
 if	[[ $(jobs -p) != $! ]]
-then	err_exit 'jobs -p not reporting a background job' 
+then	err_exit 'jobs -p not reporting a background job'
 fi
 sleep 20 &
 pids="$pids $!"
@@ -410,9 +410,9 @@ function foo
 {
 	print bar
 }
-[[ ${foo} == bar ]] || err_exit '${foo} is not command substitution when foo unset' 
-[[ ! ${foo[@]} ]] || err_exit '${foo[@]} is not empty when foo is unset' 
-[[ ! ${foo[3]} ]] || err_exit '${foo[3]} is not empty when foo is unset' 
+[[ ${foo} == bar ]] || err_exit '${foo} is not command substitution when foo unset'
+[[ ! ${foo[@]} ]] || err_exit '${foo[@]} is not empty when foo is unset'
+[[ ! ${foo[3]} ]] || err_exit '${foo[3]} is not empty when foo is unset'
 [[ $(print  "[${ print foo }]") == '[foo]' ]] || err_exit '${...} not working when } is followed by ]'
 [[ $(print  "${ print "[${ print foo }]" }") == '[foo]' ]] || err_exit 'nested ${...} not working when } is followed by ]'
 unset foo
@@ -438,6 +438,6 @@ set -o pipefail
 for ((i=0; i < 30; i++))
 do	print hello
 	sleep .1
-done |  $sleep 1 
+done |  $sleep 1
 (( (SECONDS-s) < 2 )) || err_exit 'early termination not causing broken pipe'
 exit $((Errors))

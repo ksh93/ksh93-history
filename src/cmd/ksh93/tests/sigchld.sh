@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2008 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2009 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -86,21 +86,21 @@ then
 
 	got=$($SHELL -c '
 		typeset -A proc
-	
+
 		trap "
 			print \${proc[\$!].name} \${proc[\$!].status} \$?
 			unset proc[\$!]
 		" CHLD
-	
+
 		{ sleep 3; print a; exit 1; } &
 		proc[$!]=( name=a status=1 )
-	
+
 		{ sleep 2; print b; exit 2; } &
 		proc[$!]=( name=b status=2 )
-	
+
 		{ sleep 1; print c; exit 3; } &
 		proc[$!]=( name=c status=3 )
-	
+
 		while	(( ${#proc[@]} ))
 		do	sleep -s
 		done

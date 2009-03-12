@@ -32,8 +32,8 @@ unset HISTFILE
 
 function fun
 {
-	while  command exec 3>&1 
-	do	break  
+	while  command exec 3>&1
+	do	break
 	done 2>   /dev/null
 	print -u3 good
 }
@@ -182,13 +182,13 @@ line 2
 line 3
 !) == $'line 1\nline 2\nline 3' ]] || err_exit 'read error with subshells'
 # 2004-05-11 bug fix
-cat > /tmp/io$$.1 <<- \++EOF++  
+cat > /tmp/io$$.1 <<- \++EOF++
 	script=/tmp/io$$.2
 	trap 'rm -f $script' EXIT
 	exec 9> $script
 	for ((i=3; i<9; i++))
 	do	eval "while read -u$i; do : ;done $i</dev/null"
-		print -u9 "exec $i< /dev/null" 
+		print -u9 "exec $i< /dev/null"
 	done
 	for ((i=0; i < 60; i++))
 	do	print -u9 -f "%.80c\n"  ' '
@@ -202,7 +202,7 @@ chmod +x /tmp/io$$.1
 [[ $($SHELL  /tmp/io$$.1) == ok ]]  || err_exit "parent i/o causes child script to fail"
 rm -rf /tmp/io$$.[12]
 # 2004-12-20 redirection loss bug fix
-cat > /tmp/io$$.1 <<- \++EOF++  
+cat > /tmp/io$$.1 <<- \++EOF++
 	function a
 	{
 		trap 'print ok' EXIT
@@ -212,10 +212,10 @@ cat > /tmp/io$$.1 <<- \++EOF++
 ++EOF++
 chmod +x /tmp/io$$.1
 [[ $(/tmp/io$$.1) == ok ]] || err_exit "trap on EXIT loses last command redirection"
-print > /dev/null {n}> /tmp/io$$.1 
+print > /dev/null {n}> /tmp/io$$.1
 [[ ! -s /tmp/io$$.1 ]] && newio=1
 rm -rf /tmp/io$$.1
-if	[[ $newio && $(print hello | while read -u$n; do print $REPLY; done {n}<&0) != hello ]] 
+if	[[ $newio && $(print hello | while read -u$n; do print $REPLY; done {n}<&0) != hello ]]
 then	err_exit "{n}<&0 not working with for loop"
 fi
 [[ $({ read -r;read -u3 3<&0; print -- "$REPLY" ;} <<!
@@ -230,7 +230,7 @@ done >  /tmp/seek$$
 if	command exec 3<> /tmp/seek$$
 then	(( $(3<#) == 0 )) || err_exit "not at position 0"
 	(( $(3<# ((EOF))) == 40*62 )) || err_exit "not at end-of-file"
-	command exec 3<# ((40*8)) || err_exit "absolute seek fails"	
+	command exec 3<# ((40*8)) || err_exit "absolute seek fails"
 	read -u3
 	[[ $REPLY == +(i) ]] || err_exit "expected iiii..., got $REPLY"
 	[[ $(3<#) == $(3<# ((CUR)) ) ]] || err_exit '$(3<#)!=$(3<#((CUR)))'
@@ -250,7 +250,7 @@ then	(( $(3<#) == 0 )) || err_exit "not at position 0"
 	command exec 3># ((EOF))
 	print -u3 -f "%.39c\n"  ^
 	(( $(3<# ((CUR-0))) == 40*63 )) || err_exit "not at extended end-of-file"
-	command exec 3<# ((40*62)) 
+	command exec 3<# ((40*62))
 	read -u3
 	[[ $REPLY == +(^) ]] || err_exit "expected ddd..., got $REPLY"
 	command exec 3<# ((0))
@@ -429,6 +429,9 @@ exec 2<&3
 exp=$'This is a test\nOK'
 got=$(< $file)
 [[ $got == $exp ]] || err_exit "output garbled when stderr is duped -- expected $(printf %q "$exp"), got $(printf %q "$got")"
+print 'hello world' > $file
+1<>; $file  1># ((5))
+(( $(wc -c < $file) == 5 )) || err_exit "$file was not truncate to 5 bytes"
 rm -f "$file"
 
 exit $((Errors))

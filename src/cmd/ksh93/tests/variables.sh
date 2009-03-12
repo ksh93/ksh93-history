@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2008 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2009 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -30,9 +30,9 @@ integer Errors=0
 
 [[ ${.sh.version} == "$KSH_VERSION" ]] || err_exit '.sh.version != KSH_VERSION'
 unset ss
-[[ ${@ss} ]] && err_exit '${@ss} should be empty string when ss is unset'  
-[[ ${!ss} == ss ]] ||  err_exit '${!ss} should be ss when ss is unset'  
-[[ ${#ss} == 0 ]] ||  err_exit '${#ss} should be 0 when ss is unset'  
+[[ ${@ss} ]] && err_exit '${@ss} should be empty string when ss is unset'
+[[ ${!ss} == ss ]] ||  err_exit '${!ss} should be ss when ss is unset'
+[[ ${#ss} == 0 ]] ||  err_exit '${#ss} should be 0 when ss is unset'
 # RANDOM
 if	(( RANDOM==RANDOM || $RANDOM==$RANDOM ))
 then	err_exit RANDOM variable not working
@@ -90,7 +90,7 @@ LINENO=save+10
 IFS=:
 x=a::b::c
 if	[[ $x != a::b::c ]]
-then	err_exit "Word splitting on constants"
+then	err_exit "word splitting on constants"
 fi
 set -- $x
 if	[[ $# != 5 ]]
@@ -171,7 +171,7 @@ unset -n foo
 foo=junk
 function foo.get
 {
-	.sh.value=stuff 
+	.sh.value=stuff
 	unset -f foo.get
 }
 if	[[ $foo != stuff ]]
@@ -411,15 +411,15 @@ done
 unset IFS
 
 if	[[ $( (print ${12345:?}) 2>&1) != *12345* ]]
-then	err_exit 'Incorrect error message with ${12345?}'
+then	err_exit 'incorrect error message with ${12345?}'
 fi
 unset foobar
 if	[[ $( (print ${foobar:?}) 2>&1) != *foobar* ]]
-then	err_exit 'Incorrect error message with ${foobar?}'
+then	err_exit 'incorrect error message with ${foobar?}'
 fi
 unset bar
 if	[[ $( (print ${bar:?bam}) 2>&1) != *bar*bam* ]]
-then	err_exit 'Incorrect error message with ${foobar?}'
+then	err_exit 'incorrect error message with ${foobar?}'
 fi
 { $SHELL -c '
 function foo
@@ -427,10 +427,10 @@ function foo
 	typeset SECONDS=0
 	sleep 1.5
 	print $SECONDS
-	
+
 }
 x=$(foo)
-(( x >1 && x < 2 )) 
+(( x >1 && x < 2 ))
 '
 } 2> /dev/null   || err_exit 'SECONDS not working in function'
 trap 'rm -f /tmp/script$$ /tmp/out$$' EXIT
@@ -511,7 +511,7 @@ got=$(</tmp/out$$)
 	}
 	dave=foo; dave+=bar
 	[[ $dave == barfoo ]] || exit 2
-) 2> /dev/null  
+) 2> /dev/null
 case $? in
 0)	 ;;
 1)	 err_exit 'append discipline not implemented';;
@@ -522,8 +522,8 @@ esac
 	function .sh.foobar.get
 	{
 		.sh.value=world
-	} 
-} 2> /dev/null || err_exit "Can't add get discipline to .sh.foobar"
+	}
+} 2> /dev/null || err_exit "cannot add get discipline to .sh.foobar"
 [[ ${.sh.foobar} == world ]]  || err_exit 'get discipline for .sh.foobar not working'
 x='a|b'
 IFS='|'
@@ -557,12 +557,12 @@ function foo.set
 		;;
 	esac
 }
-foo[barrier_hit]=no 
+foo[barrier_hit]=no
 foo[bar]=1
 (( foo[bar] == 1 )) || err_exit 'foo[bar] should be 1'
 [[ ${foo[barrier_hit]} == no ]] || err_exit 'foo[barrier_hit] should be no'
 [[ ${foo[barrier_not_hit]} == yes ]] || err_exit 'foo[barrier_not_hit] should be yes'
-foo[barrier_hit]=no 
+foo[barrier_hit]=no
 foo[bar]=2
 (( foo[bar] == 5 )) || err_exit 'foo[bar] should be 5'
 [[ ${foo[barrier_hit]} == yes ]] || err_exit 'foo[barrier_hit] should be yes'

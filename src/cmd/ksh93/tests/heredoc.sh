@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2008 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2009 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -143,7 +143,7 @@ abc
 EOF) != $'#abc\nabc' ]]
 then	err_exit 'comments not preserved in here-documents'
 fi
-cat  > "$f" <<- '!!!!' 
+cat  > "$f" <<- '!!!!'
 	builtin cat
 	: << EOF
 	$PWD
@@ -173,7 +173,7 @@ chmod 755 "$f"
 if	[[ $($SHELL  "$f") != abc ]]
 then	err_exit	'here document descritor was closed'
 fi
-cat  > "$f" <<- '!!!!' 
+cat  > "$f" <<- '!!!!'
 	exec 0<&-
 	foobar()
 	{
@@ -207,9 +207,9 @@ if	[[ $($SHELL  "$f") != foobar ]]
 then	err_exit	'here document with stdin closed failed'
 fi
 printf $'cat   <<# \\!!!\n\thello\n\t\tworld\n!!!' > $f
-[[ $($SHELL "$f") == $'hello\n\tworld' ]] || err_exit "<<# not working for quoted here documents" 
+[[ $($SHELL "$f") == $'hello\n\tworld' ]] || err_exit "<<# not working for quoted here documents"
 printf $'w=world;cat   <<# !!!\n\thello\n\t\t$w\n!!!' > $f
-[[ $($SHELL "$f") == $'hello\n\tworld' ]] || err_exit "<<# not working for non-quoted here documents" 
+[[ $($SHELL "$f") == $'hello\n\tworld' ]] || err_exit "<<# not working for non-quoted here documents"
 [[ $( $SHELL  <<- \++++
 	S=( typeset a )
 	function S.a.get
@@ -236,7 +236,7 @@ print : 123456789123
 cat <<- \EOF
 eval "$(
 	{ cat                                 ; } <<MARKER
-	  print  hello 
+	  print  hello
 	MARKER
 )"
 EOF

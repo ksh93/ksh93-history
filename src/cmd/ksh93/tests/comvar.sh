@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2008 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2009 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -85,7 +85,7 @@ foo=(integer x=3)
 if	[[ ${foo} != *x=3* ]]
 then	err_exit "compound variable with integer subvariable not working"
 fi
-$SHELL -c $'x=(foo=bar)\n[[ x == x ]]' 2> /dev/null || 
+$SHELL -c $'x=(foo=bar)\n[[ x == x ]]' 2> /dev/null ||
 	err_exit '[[ ... ]] not working after compound assignment'
 unset foo
 [[ ${!foo.@} ]] && err_exit 'unset compound variable leaves subvariables'
@@ -194,7 +194,7 @@ localvar
 [[ $($SHELL -c 'foo=();foo.[x]=(y z); print ${foo.x[@]}') == 'y z' ]] 2> /dev/null || err_exit 'foo=( [x]=(y z)  not working'
 function staticvar
 {
-	if	[[ $1 ]] 
+	if	[[ $1 ]]
 	then	print -r -- "$point"
 		return
 	fi
@@ -291,7 +291,7 @@ foo=(
 )
 eval foo2="$foo"
 foo2.hello=notok foo2.yes.yex=no foo2.extra=yes.
-typeset -C bar bam 
+typeset -C bar bam
 {
 	read -Cu3 bar
 	read -Cu3 bam
@@ -422,7 +422,9 @@ data.samples+=(
 	command2="grrrr2"
 )
 
-[[ $data == %(()) ]] || err_exit "unbalanced parenthesis with compound variable containing array of compound variables" 
+[[ $data == %(()) ]] || err_exit "unbalanced parenthesis with compound variable containing array of compound variables"
 typeset -C  -A hello=( [foo]=bar)
 [[ $(typeset -p hello) == 'typeset -C -A hello=([foo]=bar)' ]] || err_exit 'typeset -A -C with intial assignment not working'
+# this caused a core dump before ksh93t+
+[[ $($SHELL -c 'foo=(x=3 y=4);function bar { typeset z=4;: $z;};bar;print ${!foo.@}') == 'foo.x foo.y' ]] 2> /dev/null || err_exit '${!foo.@} after function not working'
 exit $((Errors))

@@ -78,6 +78,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	pathexists.c pathfind.c pathkey.c pathprobe.c pathrepl.c \
 	pathnative.c pathposix.c pathtemp.c pathtmp.c pathstat.c \
 	pathgetlink.c pathsetlink.c pathbin.c pathshell.c pathcd.c \
+	pathprog.c \
 	fs3d.c ftwalk.c ftwflags.c fts.c \
 	astintercept.c getenv.c setenviron.c \
 	optget.c optjoin.c optesc.c optctx.c strsort.c struniq.c \

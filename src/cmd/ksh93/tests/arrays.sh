@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2008 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2009 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -268,7 +268,7 @@ fi
 	export foo
 	typeset -i foo
 	[[ $($SHELL -c "print $foo") == 143 ]]'
-) 2> /dev/null || 
+) 2> /dev/null ||
 		err_exit 'exporting associative array not exporting 0-th element'
 unset foo
 typeset -A foo
@@ -283,7 +283,7 @@ for i in one three four five
 do	: ${foo[$i]}
 done
 if	[[ ${!foo[@]} != two ]]
-then	err_exit 'Error in subscript names'
+then	err_exit 'error in subscript names'
 fi
 unset x
 x=( 1 2 3)
@@ -406,7 +406,7 @@ x=${bar[$foo[5]]}
 	test_array[3]=4
 	print "val=${test_array[3]}"
 ++EOF+++
-) == val=4 ]] 2> /dev/null || err_exit 'after reading array[j] and assign array[j] fails' 
+) == val=4 ]] 2> /dev/null || err_exit 'after reading array[j] and assign array[j] fails'
 [[ $($SHELL <<- \+++EOF+++
 	pastebin=( typeset -a form)
 	pastebin.form+=( name="name"   data="clueless" )

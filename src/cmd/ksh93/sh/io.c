@@ -716,13 +716,12 @@ int sh_open(register const char *path, int flags, ...)
 	}
 	if (fd >= 0)
 	{
-		int nfd;
+		int nfd= -1;
 		if (flags & O_CREAT)
 		{
 			struct stat st;
-			if (stat(path,&st) < 0)
-				return(-1);
-			nfd = open(path,flags,st.st_mode);
+			if (stat(path,&st) >=0)
+				nfd = open(path,flags,st.st_mode);
 		}
 		else
 			nfd = open(path,flags);
@@ -1211,7 +1210,10 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 					if((off = file_offset(shp,fn,fname))<0)
 						goto fail;
 					if(sp)
+					{
 						off=sfseek(sp, off, SEEK_SET);
+						sfsync(sp);
+					}
 					else
 						off=lseek(fn, off, SEEK_SET);
 					if(off<0)

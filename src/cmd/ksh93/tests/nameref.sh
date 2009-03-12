@@ -80,7 +80,7 @@ nameref x=.foo.bar
 if	[[ ${!x} != .foo.bar ]]
 then	err_exit "${!x} not working"
 fi
-typeset +n x $(typeset +n) 
+typeset +n x $(typeset +n)
 unset x
 nameref x=.foo.bar
 function x.set
@@ -113,7 +113,7 @@ y=$( $file)
 if	[[ $y != '' ]]
 then	err_exit "reference variable not cleared"
 fi
-{ 
+{
 	command nameref xx=yy
 	command nameref yy=xx
 } 2> /dev/null && err_exit "self reference not detected"
@@ -127,7 +127,7 @@ then	err_exit 'nameref of positional paramters outside of function not working'
 fi
 unset foo bar
 bar=123
-function foobar 
+function foobar
 {
 	typeset -n foo=bar
 	typeset -n foo=bar
@@ -216,7 +216,7 @@ function local
 	qs=(integer  a=3; integer b=4)
 }
 local 2> /dev/null || err_exit 'function local has non-zero exit status'
-[[ ${qs.a} == 3 ]] || err_exit 'function cannot set compound global variable' 
+[[ ${qs.a} == 3 ]] || err_exit 'function cannot set compound global variable'
 unset fun i
 foo=(x=hi)
 function fun

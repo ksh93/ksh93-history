@@ -171,7 +171,7 @@ if	[[ $(command -v if)	!= if ]]
 then	err_exit	'command -v not working'
 fi
 read -r var <<\!
-	
+
 !
 if	[[ $var != "" ]]
 then	err_exit "read -r of blank line not working"
@@ -190,11 +190,11 @@ fi
 [[ $($SHELL -c 'trap "print ok" sigterm; kill -s sigterm $$' 2> /dev/null) == ok ]] || err_exit 'SIGTERM not recognized'
 [[ $($SHELL -c '( trap "" TERM);kill $$;print bad' == bad) ]] 2> /dev/null && err_exit 'trap ignored in subshell causes it to be ignored by parent'
 ${SHELL} -c 'kill -1 -$$' 2> /dev/null
-[[ $(kill -l $?) == HUP ]] || err_exit 'kill -1 -pid not working' 
+[[ $(kill -l $?) == HUP ]] || err_exit 'kill -1 -pid not working'
 ${SHELL} -c 'kill -1 -$$' 2> /dev/null
-[[ $(kill -l $?) == HUP ]] || err_exit 'kill -n1 -pid not working' 
+[[ $(kill -l $?) == HUP ]] || err_exit 'kill -n1 -pid not working'
 ${SHELL} -c 'kill -s HUP -$$' 2> /dev/null
-[[ $(kill -l $?) == HUP ]] || err_exit 'kill -HUP -pid not working' 
+[[ $(kill -l $?) == HUP ]] || err_exit 'kill -HUP -pid not working'
 n=123
 typeset -A base
 base[o]=8#
@@ -489,14 +489,14 @@ getconf UNIVERSE - ucb
 typeset -F3 start_x=SECONDS total_t delay=0.02
 typeset reps=50 leeway=5
 #sleep $(( 2 * leeway * reps * delay )) |
-#for (( i=0 ; i < reps ; i++ )) 
+#for (( i=0 ; i < reps ; i++ ))
 #do	read -N1 -t $delay
 #done
 #(( total_t = SECONDS - start_x ))
 #if	(( total_t > leeway * reps * delay ))
-#then	err_exit "read -t in pipe taking $total_t secs - $(( reps * delay )) minimum - too long" 
+#then	err_exit "read -t in pipe taking $total_t secs - $(( reps * delay )) minimum - too long"
 #elif	(( total_t < reps * delay ))
-#then	err_exit "read -t in pipe taking $total_t secs - $(( reps * delay )) minimum - too fast" 
+#then	err_exit "read -t in pipe taking $total_t secs - $(( reps * delay )) minimum - too fast"
 #fi
 #$SHELL -c 'sleep $(printf "%a" .95)' 2> /dev/null || err_exit "sleep doesn't except %a format constants"
 #$SHELL -c 'test \( ! -e \)' 2> /dev/null ; [[ $? == 1 ]] || err_exit 'test \( ! -e \) not working'
@@ -519,11 +519,12 @@ print -r -- "'xxx" > $tmpfile
 typeset -r z=3
 y=5
 for i in 123 z  %x a.b.c
-do	( unset $i)  2>/dev/null && err_exit "unset $i should fail" 
+do	( unset $i)  2>/dev/null && err_exit "unset $i should fail"
 done
 a=()
 for i in y y  y[8] t[abc] y.d a.b  a
-do	unset $i ||  print -u2  "err_exit unset $i should not fail" 
+do	unset $i ||  print -u2  "err_exit unset $i should not fail"
 done
 [[ $($SHELL -c 'y=3; unset 123 y;print $?$y') == 1 ]] 2> /dev/null ||  err_exit 'y is not getting unset with unset 123 y'
+[[ $($SHELL -c 'trap foo INT; (trap;(trap) )') == 'trap -- foo INT' ]] || err_exit 'traps not getting reset when subshell is last process'
 exit $((Errors))
