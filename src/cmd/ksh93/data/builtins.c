@@ -139,6 +139,9 @@ const struct shtable3 shtab_builtins[] =
 	CMDLIST(wc)
 	CMDLIST(sync)
 #endif
+#if SHOPT_REGRESS
+	"__regress__",		NV_BLTIN|BLT_ENV,	bltin(__regress__),
+#endif
 	"",		0, 0 
 };
 
@@ -1393,10 +1396,16 @@ USAGE_LICENSE
 	"in \afile\a that can be used a separate shell script browser.  The "
 	"-R option requires a script to be specified as the first operand.]"
 #endif /* SHOPT_KIA */
+#if SHOPT_REGRESS
+"[I:regress]:[intercept?Enable the regression test \aintercept\a. Must be "
+	"the first command line option(s).]"
+#endif
 #if SHOPT_BASH
    "\fbash2\f"
 #endif
 "\fabc\f"
+"?"
+"[T?Enable implementation specific test code defined by mask.]#[mask]"
 "\n"
 "\n[arg ...]\n"
 "\n"
@@ -1480,25 +1489,37 @@ USAGE_LICENSE
 ;
 
 const char sh_optsleep[] =
-"[-1c?\n@(#)$Id: sleep (AT&T Research) 2008-12-03 $\n]"
+"[-1c?\n@(#)$Id: sleep (AT&T Research) 2009-03-12 $\n]"
 USAGE_LICENSE
 "[+NAME?sleep - suspend execution for an interval]"
 "[+DESCRIPTION?\bsleep\b suspends execution for at least the time specified "
-	"by \aseconds\a or until a \bSIGALRM\b signal is received.  "
-	"\aseconds\a can be specified as a floating point number but the "
-	"actual granularity depends on the underlying system, normally "
-	"around 1 millisecond.]"
-"[s?Sleep until a signal is received or timeout is received.  If \aseconds\a "
-	"is omitted or 0, no timeout will be used.]"
+	"by \aduration\a or until a \bSIGALRM\b signal is received. "
+	"\aduration\a may be one of the following:]"
+"{"
+	"[+integer?The number of seconds to sleep.]"
+	"[+floating point?The number of seconds to sleep. The actual "
+		"granularity depends on the underlying system, normally "
+		"around 1 millisecond.]"
+	"[+P\an\a\bY\b\an\a\bM\b\an\a\bDT\b\an\a\bH\b\an\a\bM\b\an\a\bS?An ISO 8601 duration "
+		"where at least one of the duration parts must be specified.]"
+	"[+P\an\a\bW?An ISO 8601 duration specifying \an\a weeks.]"
+	"[+p\an\a\bY\b\an\a\bM\b\an\a\bDT\b\an\a\bH\b\an\a\bm\b\an\a\bS?A case insensitive "
+		"ISO 8601 duration except that \bM\b specifies months, \bm\b before \bs\b or \bS\b "
+		"specifies minutes and after specifies milliseconds, \bu\b or \bU\b specifies "
+		"microseconds, and \bn\b specifies nanoseconds.]"
+	"[+date/time?Sleep until the \bdate\b(1) compatible date/time.]"
+"}"
+"[s?Sleep until a signal or a timeout is received. If \aduration\a is omitted "
+	"or 0 then no timeout will be used.]"
 "\n"
-"\nseconds\n"
+"\n[ duration ]\n"
 "\n"
 "[+EXIT STATUS?]{"
-	"[+0?The execution was successfully suspended for at least \atime\a "
-	"seconds, or a \bSIGALRM\b signal was received.]"
+	"[+0?The execution was successfully suspended for at least \aduration\a "
+	"or a \bSIGALRM\b signal was received.]"
 	"[+>0?An error occurred.]"
 "}"
-"[+SEE ALSO?\btime\b(1), \bwait\b(1)]"
+"[+SEE ALSO?\bdate\b(1), \btime\b(1), \bwait\b(1)]"
 ;
 
 const char sh_opttrap[] =

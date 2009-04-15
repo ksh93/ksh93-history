@@ -25,6 +25,12 @@ function err_exit
 }
 alias err_exit='err_exit $LINENO'
 
+Command=${0##*/}
+integer Errors=0
+
+tmp=$(mktemp -dt) || { err_exit mktemp -dt failed; exit 1; }
+trap "cd /; rm -rf $tmp" EXIT
+
 function home # id
 {
 	typeset IFS=: pwd=/etc/passwd
@@ -36,8 +42,6 @@ function home # id
 	fi
 }
 
-Command=${0##*/}
-integer Errors=0
 OLDPWD=/bin
 if	[[ ~ != $HOME ]]
 then	err_exit '~' not $HOME
@@ -83,10 +87,9 @@ then	err_exit x=~:~ not $HOME:$HOME
 fi
 HOME=/
 [[ ~ == / ]] || err_exit '~ should be /'
-trap 'rm -rf /tmp/kshtilde$$' EXIT
 [[ ~/foo == /foo ]] || err_exit '~/foo should be /foo when ~==/'
-print $'print ~+\n[[ $1 ]] && $0' > /tmp/kshtilde$$
-chmod +x /tmp/kshtilde$$
+print $'print ~+\n[[ $1 ]] && $0' > $tmp/tilde
+chmod +x $tmp/tilde
 nl=$'\n'
-[[ $(/tmp/kshtilde$$ foo) == "$PWD$nl$PWD" ]] 2> /dev/null  || err_exit 'tilde fails inside a script run by name'
+[[ $($tmp/tilde foo) == "$PWD$nl$PWD" ]] 2> /dev/null  || err_exit 'tilde fails inside a script run by name'
 exit $((Errors))

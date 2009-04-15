@@ -27,6 +27,10 @@ alias err_exit='err_exit $LINENO'
 
 Command=${0##*/}
 integer Errors=0
+
+tmp=$(mktemp -dt) || { err_exit mktemp -dt failed; exit 1; }
+trap "cd /; rm -rf $tmp" EXIT
+
 r=readonly u=Uppercase l=Lowercase i=22 i8=10 L=abc L5=def uL5=abcdef xi=20
 x=export t=tagged H=hostname LZ5=026 RZ5=026 Z5=123 lR5=ABcdef R5=def n=l
 for option in u l i i8 L L5 LZ5 RZ5 Z5 r x H t R5 uL5 lR5 xi n
@@ -117,16 +121,16 @@ string="$(print $sz)"
 if [[ "${sz}" == *'typeset -E -F'* ]]
 then 	err_exit 'print of exponential shows both -E and -F attributes'
 fi
-print 'typeset -i m=48/4+1;print -- $m' > /tmp/ksh$$
-chmod +x /tmp/ksh$$
+print 'typeset -i m=48/4+1;print -- $m' > $tmp/script
+chmod +x $tmp/script
 typeset -Z2 m
-if	[[ $(/tmp/ksh$$) != 13 ]]
+if	[[ $($tmp/script) != 13 ]]
 then	err_exit 'attributes not cleared for script execution'
 fi
-print 'print VAR=$VAR' > /tmp/ksh$$
+print 'print VAR=$VAR' > $tmp/script
 typeset -L70 VAR=var
-/tmp/ksh$$ > /tmp/ksh$$.1
-[[ $(< /tmp/ksh$$.1) == VAR= ]] || err_exit 'typeset -L should not be inherited'
+$tmp/script > $tmp/script.1
+[[ $(< $tmp/script.1) == VAR= ]] || err_exit 'typeset -L should not be inherited'
 typeset -Z  LAST=00
 unset -f foo
 function foo
@@ -145,7 +149,6 @@ if	(( ${#LAST} != 2 ))
 then	err_exit 'LAST!=2'
 fi
 [[ $(set | grep LAST) == LAST=02 ]] || err_exit "LAST not correct in set list"
-rm -rf /tmp/ksh$$*
 set -a
 unset foo
 foo=bar

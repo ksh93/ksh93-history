@@ -28,6 +28,9 @@ alias err_exit='err_exit $LINENO'
 Command=${0##*/}
 integer Errors=0
 
+tmp=$(mktemp -dt) || { err_exit mktemp -dt failed; exit 1; }
+trap "cd /; rm -rf $tmp" EXIT
+
 unset HISTFILE
 
 function fun
@@ -37,20 +40,17 @@ function fun
 	done 2>   /dev/null
 	print -u3 good
 }
-print 'read -r a;print -r -u$1 -- "$a"' >  /tmp/mycat$$
-chmod 755 /tmp/mycat$$
+print 'read -r a;print -r -u$1 -- "$a"' > $tmp/mycat
+chmod 755 $tmp/mycat
 for ((i=3; i < 10; i++))
 do
-	eval "a=\$(print foo | /tmp/mycat$$" $i $i'>&1 > /dev/null |cat)' 2> /dev/null
+	eval "a=\$(print foo | $tmp/mycat" $i $i'>&1 > /dev/null |cat)' 2> /dev/null
 	[[ $a == foo ]] || err_exit "bad file descriptor $i in comsub script"
 done
-rm -f /tmp/mycat$$
 exec 3> /dev/null
 [[ $(fun) == good ]] || err_exit 'file 3 closed before subshell completes'
 exec 3>&-
-mkdir /tmp/ksh$$ || err_exit "mkdir /tmp/ksh$$ failed"
-trap 'cd /; rm -rf /tmp/ksh$$' EXIT
-cd /tmp/ksh$$ || err_exit "cd /tmp/ksh$$ failed"
+cd $tmp || { err_exit "cd $tmp failed"; exit ; }
 print foo > file1
 print bar >> file1
 if	[[ $(<file1) != $'foo\nbar' ]]
@@ -136,15 +136,15 @@ cat > close0 <<\!
 !
 ./close0 2> /dev/null || err_exit "multiple exec 4< /dev/null can fail"
 $SHELL -c '
-	trap "rm -f in$$ out$$" EXIT
+	trap "rm -f in out" EXIT
 	for ((i = 0; i < 1000; i++))
 	do	print -r -- "This is a test"
-	done > in$$
-	> out$$
-	exec 1<> out$$
+	done > in
+	> out
+	exec 1<> out
 	builtin cat
-	print -r -- "$(cat in$$)"
-	cmp -s in$$ out$$'  2> /dev/null
+	print -r -- "$(<in)"
+	cmp -s in out'  2> /dev/null
 [[ $? == 0 ]] || err_exit 'builtin cat truncates files'
 cat >| script <<-\!
 print hello
@@ -167,7 +167,7 @@ read line
 if	[[ $line != foo ]]
 then	err_exit 'file descriptor not restored after exec in subshell'
 fi
-exec 3>&- 4>&-; cd /; rm -r /tmp/ksh$$ || err_exit "rm -r /tmp/ksh$$ failed"
+exec 3>&- 4>&-
 [[ $( {
 	read -r line;print -r -- "$line"
 	(
@@ -182,27 +182,26 @@ line 2
 line 3
 !) == $'line 1\nline 2\nline 3' ]] || err_exit 'read error with subshells'
 # 2004-05-11 bug fix
-cat > /tmp/io$$.1 <<- \++EOF++
-	script=/tmp/io$$.2
-	trap 'rm -f $script' EXIT
-	exec 9> $script
+cat > $tmp/1 <<- ++EOF++
+	script=$tmp/2
+	trap "rm -f \$script" EXIT
+	exec 9> \$script
 	for ((i=3; i<9; i++))
-	do	eval "while read -u$i; do : ;done $i</dev/null"
-		print -u9 "exec $i< /dev/null"
+	do	eval "while read -u\$i; do : ;done \$i</dev/null"
+		print -u9 "exec \$i< /dev/null"
 	done
 	for ((i=0; i < 60; i++))
 	do	print -u9 -f "%.80c\n"  ' '
 	done
 	print -u9 'print ok'
 	exec 9<&-
-	chmod +x $script
-	$script
+	chmod +x \$script
+	\$script
 ++EOF++
-chmod +x /tmp/io$$.1
-[[ $($SHELL  /tmp/io$$.1) == ok ]]  || err_exit "parent i/o causes child script to fail"
-rm -rf /tmp/io$$.[12]
+chmod +x $tmp/1
+[[ $($SHELL  $tmp/1) == ok ]]  || err_exit "parent i/o causes child script to fail"
 # 2004-12-20 redirection loss bug fix
-cat > /tmp/io$$.1 <<- \++EOF++
+cat > $tmp/1 <<- \++EOF++
 	function a
 	{
 		trap 'print ok' EXIT
@@ -210,11 +209,10 @@ cat > /tmp/io$$.1 <<- \++EOF++
 	}
 	a
 ++EOF++
-chmod +x /tmp/io$$.1
-[[ $(/tmp/io$$.1) == ok ]] || err_exit "trap on EXIT loses last command redirection"
-print > /dev/null {n}> /tmp/io$$.1
-[[ ! -s /tmp/io$$.1 ]] && newio=1
-rm -rf /tmp/io$$.1
+chmod +x $tmp/1
+[[ $($tmp/1) == ok ]] || err_exit "trap on EXIT loses last command redirection"
+print > /dev/null {n}> $tmp/1
+[[ ! -s $tmp/1 ]] && newio=1
 if	[[ $newio && $(print hello | while read -u$n; do print $REPLY; done {n}<&0) != hello ]]
 then	err_exit "{n}<&0 not working with for loop"
 fi
@@ -222,12 +220,11 @@ fi
 hello
 world
 !) == world ]] || err_exit 'I/O not synchronized with <&'
-trap 'rm -f /tmp/seek$$; exit $((Errors+1))' EXIT
 x="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNSPQRSTUVWXYZ1234567890"
 for ((i=0; i < 62; i++))
 do	printf "%.39c\n"  ${x:i:1}
-done >  /tmp/seek$$
-if	command exec 3<> /tmp/seek$$
+done >  $tmp/seek
+if	command exec 3<> $tmp/seek
 then	(( $(3<#) == 0 )) || err_exit "not at position 0"
 	(( $(3<# ((EOF))) == 40*62 )) || err_exit "not at end-of-file"
 	command exec 3<# ((40*8)) || err_exit "absolute seek fails"
@@ -262,24 +259,22 @@ then	(( $(3<#) == 0 )) || err_exit "not at position 0"
 	[[  $REPLY == {39}(l) ]] || err_exit "<## pattern failed to position"
 	command exec 3<# *abc*
 	read -u3 && err_exit "not found pattern not positioning at eof"
-	cat /tmp/seek$$ | read -r <# *WWW*
+	cat $tmp/seek | read -r <# *WWW*
 	[[ $REPLY == *WWWWW* ]] || err_exit '<# not working for pipes'
-	{ < /tmp/seek$$ <# ((2358336120)) ;} 2> /dev/null || err_exit 'long seek not working'
-else	err_exit "/tmp/seek$$: cannot open for reading"
+	{ < $tmp/seek <# ((2358336120)) ;} 2> /dev/null || err_exit 'long seek not working'
+else	err_exit "$tmp/seek: cannot open for reading"
 fi
 command exec 3<&- || 'cannot close 3'
 for ((i=0; i < 62; i++))
 do	printf "%.39c\n"  ${x:i:1}
-done >  /tmp/seek$$
-if	command exec {n}<> /tmp/seek$$
+done >  $tmp/seek
+if	command exec {n}<> $tmp/seek
 then	{ command exec {n}<#((EOF)) ;} 2> /dev/null || err_exit '{n}<# not working'
 	if	$SHELL -c '{n}</dev/null' 2> /dev/null
 	then	(( $({n}<#) ==  40*62))  || err_exit '$({n}<#) not working'
 	else	err_exit 'not able to parse {n}</dev/null'
 	fi
 fi
-trap "" EXIT
-rm -f  /tmp/seek$$
 $SHELL -ic '
 {
     print -u2  || exit 2
@@ -293,9 +288,8 @@ $SHELL -ic '
 }  3> /dev/null 4> /dev/null 5> /dev/null 6> /dev/null 7> /dev/null 8> /dev/null 9> /dev/null' > /dev/null 2>&1
 exitval=$?
 (( exitval ))  && err_exit  "print to unit $exitval failed"
-trap 'rm -rf /tmp/io.sh$$*' EXIT
-$SHELL -c "{ > /tmp/io.sh$$.1 ; date;} >&- 2> /dev/null" > /tmp/io.sh$$.2
-[[ -s /tmp/io.sh$$.1 || -s /tmp/io.sh$$.2 ]] && err_exit 'commands with standard output closed produce output'
+$SHELL -c "{ > $tmp/1 ; date;} >&- 2> /dev/null" > $tmp/2
+[[ -s $tmp/1 || -s $tmp/2 ]] && err_exit 'commands with standard output closed produce output'
 $SHELL -c "$SHELL -c ': 3>&1' 1>&- 2>/dev/null" && err_exit 'closed standard output not passed to subshell'
 [[ $(cat  <<- \EOF | $SHELL
 	do_it_all()
@@ -308,26 +302,26 @@ $SHELL -c "$SHELL -c ': 3>&1' 1>&- 2>/dev/null" && err_exit 'closed standard out
 EOF) == 'hello world' ]] || err_exit 'invalid readahead on stdin'
 $SHELL -c 'exec 3>; /dev/null'  2> /dev/null && err_exit '>; with exec should be an error'
 $SHELL -c ': 3>; /dev/null'  2> /dev/null || err_exit '>; not working with at all'
-print hello > /tmp/io.sh$$.1
-if	! $SHELL -c "false >; /tmp/io.sh$$.1"  2> /dev/null
-then	[[ $(</tmp/io.sh$$.1) == hello ]] || err_exit '>; not preserving file on failure'
+print hello > $tmp/1
+if	! $SHELL -c "false >; $tmp/1"  2> /dev/null
+then	[[ $(<$tmp/1) == hello ]] || err_exit '>; not preserving file on failure'
 fi
-if	! $SHELL -c "sed -e 's/hello/hello world/' /tmp/io.sh$$.1" >; /tmp/io.sh$$.1  2> /dev/null
-then	[[ $(</tmp/io.sh$$.1) == 'hello world' ]] || err_exit '>; not updating file on success'
+if	! $SHELL -c "sed -e 's/hello/hello world/' $tmp/1" >; $tmp/1  2> /dev/null
+then	[[ $(<$tmp/1) == 'hello world' ]] || err_exit '>; not updating file on success'
 fi
 
 $SHELL -c 'exec 3<>; /dev/null'  2> /dev/null && err_exit '<>; with exec should be an error'
 $SHELL -c ': 3<>; /dev/null'  2> /dev/null || err_exit '<>; not working with at all'
-print $'hello\nworld' > /tmp/io.sh$$.1
-if      ! $SHELL -c "false <>; /tmp/io.sh$$.1"  2> /dev/null
-then    [[ $(</tmp/io.sh$$.1) == $'hello\nworld' ]] || err_exit '<>; not preserving file on failure'
+print $'hello\nworld' > $tmp/1
+if      ! $SHELL -c "false <>; $tmp/1"  2> /dev/null
+then    [[ $(<$tmp/1) == $'hello\nworld' ]] || err_exit '<>; not preserving file on failure'
 fi
-if	! $SHELL -c "head -1 /tmp/io.sh$$.1" <>; /tmp/io.sh$$.1  2> /dev/null
-then	[[ $(</tmp/io.sh$$.1) == hello ]] || err_exit '<>; not truncating file on success of head'
+if	! $SHELL -c "head -1 $tmp/1" <>; $tmp/1  2> /dev/null
+then	[[ $(<$tmp/1) == hello ]] || err_exit '<>; not truncating file on success of head'
 fi
-print $'hello\nworld' > /tmp/io.sh$$.1
-if	! $SHELL -c head  < /tmp/io.sh$$.1 <#((6)) <>; /tmp/io.sh$$.1  2> /dev/null
-then	[[ $(</tmp/io.sh$$.1) == world ]] || err_exit '<>; not truncating file on success of behead'
+print $'hello\nworld' > $tmp/1
+if	! $SHELL -c head  < $tmp/1 <#((6)) <>; $tmp/1  2> /dev/null
+then	[[ $(<$tmp/1) == world ]] || err_exit '<>; not truncating file on success of behead'
 fi
 
 unset y
@@ -352,25 +346,43 @@ abcdefg
 [[ $b == d ]] || err_exit 'read -N1 from pipe not working'
 (print -n a;sleep 1; print -n bcde) |read -n3 a
 [[ $a == a ]] || err_exit 'read -n3 from pipe not working'
-rm -f /tmp/fifo$$
-if	mkfifo /tmp/fifo$$ 2> /dev/null
-then	(print -n a; sleep 1;print -n bcde)  > /tmp/fifo$$ &
+if	mkfifo $tmp/fifo 2> /dev/null
+then	(print -n a; sleep 1;print -n bcde)  > $tmp/fifo &
 	{
 	read -u5 -n3  -t2 a  || err_exit 'read -n3 from fifo timedout'
 	read -u5 -n1 -t2 b || err_exit 'read -n1 from fifo timedout'
-	} 5< /tmp/fifo$$
+	} 5< $tmp/fifo
 	[[ $a == a ]] || err_exit 'read -n3 from fifo not working'
-	rm -f /tmp/fifo$$
-	mkfifo /tmp/fifo$$ 2> /dev/null
-	(print -n a; sleep 1;print -n bcde)  > /tmp/fifo$$ &
+	rm -f $tmp/fifo
+	mkfifo $tmp/fifo 2> /dev/null
+	(print -n a; sleep 1;print -n bcde)  > $tmp/fifo &
 	{
 	read -u5 -N3 -t2 a || err_exit 'read -N3 from fifo timed out'
 	read -u5 -N1 -t2 b || err_exit 'read -N1 from fifo timedout'
-	} 5< /tmp/fifo$$
+	} 5< $tmp/fifo
 	[[ $a == abc ]] || err_exit 'read -N3 from fifo not working'
 	[[ $b == d ]] || err_exit 'read -N1 from fifo not working'
 fi
-rm -f /tmp/fifo$$
+(
+	print -n 'prompt1: '
+	sleep .1
+	print line2
+	sleep .1
+	print -n 'prompt2: '
+	sleep .1
+) | {
+	read -t2 -n 1000 line1
+	read -t2 -n 1000 line2
+	read -t2 -n 1000 line3
+	read -t2 -n 1000 line4
+}
+[[ $? == 0 ]]		 	&& err_exit 'should have time out'
+[[ $line1 == 'prompt1: ' ]] 	|| err_exit "line1 should be 'prompt1: '"
+[[ $line2 == line2 ]]		|| err_exit "line2 should be line2"
+[[ $line3 == 'prompt2: ' ]]	|| err_exit "line3 should be 'prompt2: '"
+[[ ! $line4 ]]			|| err_exit "line4 should be empty"
+exit
+
 
 if	$SHELL -c "export LC_ALL=en_US.UTF-8; c=$'\342\202\254'; [[ \${#c} == 1 ]]" 2>/dev/null
 then	lc_utf8=en_US.UTF-8
@@ -420,8 +432,7 @@ then	export LC_ALL=en_US.UTF-8
 fi
 
 exec 3<&2
-file=/tmp/kshfile$$
-trap 'rm -f "$file"' EXIT
+file=$tmp/file
 redirect 5>$file 2>&5
 print -u5 -f 'This is a test\n'
 print -u2 OK
@@ -432,6 +443,5 @@ got=$(< $file)
 print 'hello world' > $file
 1<>; $file  1># ((5))
 (( $(wc -c < $file) == 5 )) || err_exit "$file was not truncate to 5 bytes"
-rm -f "$file"
 
 exit $((Errors))

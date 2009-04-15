@@ -24,12 +24,14 @@ function err_exit
 	let Errors+=1
 }
 alias err_exit='err_exit $LINENO'
+
 Command=${0##*/}
 integer Errors=0
 
-mkdir /tmp/ksh$$
-cd /tmp/ksh$$
-trap "PATH=$PATH; cd /; rm -rf /tmp/ksh$$" EXIT
+tmp=$(mktemp -dt) || { err_exit mktemp -dt failed; exit 1; }
+trap "cd /; rm -rf $tmp" EXIT
+
+cd $tmp || exit
 type /xxxxxx > out1 2> out2
 [[ -s out1 ]] && err_exit 'type should not write on stdout for not found case'
 [[ -s out2 ]] || err_exit 'type should write on stderr for not found case'
@@ -69,22 +71,21 @@ PATH=$FPATH:$p
 PATH=$p
 (PATH="/bin")
 [[ $($SHELL -c 'print -r -- "$PATH"') == "$PATH" ]] || err_exit 'export PATH lost in subshell'
-cat > bug1 <<- \EOF
-	print print ok > /tmp/ok$$
-	/bin/chmod 755 /tmp/ok$$
-	trap 'cd /; rm -f /tmp/ok$$' EXIT
+cat > bug1 <<- EOF
+	print print ok > $tmp/ok
+	/bin/chmod 755 $tmp/ok
 	function a
 	{
-	        typeset -x PATH=/tmp
-	        ok$$
+	        typeset -x PATH=$tmp
+	        ok
 	}
-	path=$PATH
+	path=\$PATH
 	unset PATH
 	a
-	PATH=$path
+	PATH=\$path
 }
 EOF
-[[ $($SHELL ./bug1  2> /dev/null) == ok ]]  || err_exit "PATH in function not working"
+[[ $($SHELL ./bug1 2>/dev/null) == ok ]]  || err_exit "PATH in function not working"
 cat > bug1 <<- \EOF
 	function lock_unlock
 	{
@@ -98,8 +99,8 @@ cat > bug1 <<- \EOF
 	lock_unlock
 EOF
 ($SHELL ./bug1)  2> /dev/null || err_exit "path_delete bug"
-mkdir tdir$$
-if	$SHELL tdir$$ > /dev/null 2>&1
+mkdir tdir
+if	$SHELL tdir > /dev/null 2>&1
 then	err_exit 'not an error to run ksh on a directory'
 fi
 
@@ -166,8 +167,8 @@ fi
 [[ $(whence "$PWD/foo") != "$PWD/foo" ]] && err_exit 'whence $PWD/foo not working'
 [[ $(whence ./xxxxx) ]] && err_exit 'whence ./xxxx not working'
 PATH=$d:
-cp "$rm" kshrm$$
-if	[[ $(whence kshrm$$) != $PWD/kshrm$$  ]]
+cp "$rm" kshrm
+if	[[ $(whence kshrm) != $PWD/kshrm  ]]
 then	err_exit 'trailing : in pathname not working'
 fi
 cp "$rm" rm
@@ -196,7 +197,7 @@ then	PATH=
 	then	err_exit 'unsetting path  not working'
 	fi
 fi
-PATH=/dev:/tmp/ksh$$
+PATH=/dev:$tmp
 x=$(whence rm)
 typeset foo=$(PATH=/xyz:/abc :)
 y=$(whence rm)
@@ -231,7 +232,7 @@ getconf UNIVERSE - att # override sticky default 'UNIVERSE = foo'
 
 PATH=$path
 
-scr=/tmp/ksh$$/foo
+scr=$tmp/script
 exp=126
 
 : > $scr

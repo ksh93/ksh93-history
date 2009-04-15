@@ -284,7 +284,7 @@ static int sig_number(const char *string)
 			if(n < SH_TRAP)
 				n--;
 		}
-		if(n<0 && (name=stakptr(o)) && *name++=='R' && *name++=='T')
+		if(n<0 && sh.sigruntime[1] && (name=stakptr(o)) && *name++=='R' && *name++=='T')
 		{
 			if(name[0]=='M' && name[1]=='I' && name[2]=='N' && name[3]=='+')
 			{
@@ -367,11 +367,11 @@ static void sig_list(register Shell_t *shp,register int flag)
 		for(sig=SH_DEBUGTRAP; sig>=0; sig--)
 			traps[sig] = 0;
 	}
-	while(*tp->sh_name)
+	for(; *tp->sh_name; tp++)
 	{
 		sig = tp->sh_number&((1<<SH_SIGBITS)-1);
-		if ((tp->sh_number>>SH_SIGBITS) & SH_SIGRUNTIME)
-			sig = sh.sigruntime[sig-1]+1;
+		if (((tp->sh_number>>SH_SIGBITS) & SH_SIGRUNTIME) && (sig = sh.sigruntime[sig-1]+1) == 1)
+			continue;
 		if(sig==flag)
 		{
 			sfprintf(sfstdout,"%s\n",tp->sh_name);
@@ -381,7 +381,6 @@ static void sig_list(register Shell_t *shp,register int flag)
 			traps[sig&~SH_TRAP] = (char*)tp->sh_name;
 		else if(sig-- && sig < elementsof(names))
 			names[sig] = (char*)tp->sh_name;
-		tp++;
 	}
 	if(flag > 0)
 		sfputr(sfstdout, sig_name(flag-1,name,0), '\n');

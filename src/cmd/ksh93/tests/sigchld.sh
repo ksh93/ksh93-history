@@ -59,8 +59,8 @@ print foreground=$foreground background=$background
 
 eval $s
 
-(( foreground == FOREGROUND )) || err_exit "expected $FOREGROUND foreground -- got $foreground (DELAY=$DELAY)"
-(( background == BACKGROUND )) || err_exit "expected $BACKGROUND background -- got $background (DELAY=$DELAY)"
+(( foreground == FOREGROUND )) || err_exit "expected '$FOREGROUND foreground' -- got '$foreground' (DELAY=$DELAY)"
+(( background == BACKGROUND )) || err_exit "expected '$BACKGROUND background' -- got '$background' (DELAY=$DELAY)"
 
 set --noerrexit
 

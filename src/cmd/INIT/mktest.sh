@@ -32,7 +32,7 @@ case $(getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt) in
 0123)	ARGV0="-a $command"
 	USAGE=$'
 [-?
-@(#)$Id: mktest (AT&T Labs Research) 2009-03-03 $
+@(#)$Id: mktest (AT&T Labs Research) 2009-03-31 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?mktest - generate a regression test scripts]
@@ -66,7 +66,8 @@ unit.rt [ unit [ arg ... ] ]
             input of the first EXEC in a TEST group is an empty regular
             file.]
         [+EXPORT \aname\a=\avalue\a ...?Export list for subsequent
-            commands in the TEST group.]
+            commands in the TEST group or for all TEST groups if before
+	    the first TEST group.]
         [+IGNORESPACE [ 0 | 1 ]
             ?Ignore space differences when comparing expected output.]
         [+KEEP \apattern\a ...?File match patterns of files to retain
@@ -205,9 +206,7 @@ function TEST
 		case $STYLE in
 		shell)	print -u$stdout -r -- unset ${!RESET[@]} ;;
 		esac
-		for i in ${!RESET[@]}
-		do	unset RESET[$i]
-		done
+		unset RESET
 	fi
 	if	(( ${#REMOVE[@]} ))
 	then	rm -f -- "${!REMOVE[@]}"
@@ -502,7 +501,7 @@ function EXPORT
 		v=${x#*=}
 		export "$x"
 		print -u$stdout -r -f " %s=$QUOTE" "$n" "$v"
-		RESET[$n]=1
+		(( TEST )) && RESET[$n]=1
 	done
 	print -u$stdout
 }

@@ -3,7 +3,7 @@
 
 timesensitive='*@(options|sigchld|subshell).sh'
 
-unset DISPLAY ENV FIGNORE
+unset DISPLAY ENV FIGNORE HISTFILE
 LANG=C
 LC_ALL=C
 compile=1
@@ -69,9 +69,8 @@ fi
 if	[[ $compile ]]
 then	SHCOMP=${SHCOMP:-shcomp}
 	if	whence $SHCOMP > /dev/null
-	then	tmp=/tmp/ksh-$$
-		trap 'rm -rf $tmp' EXIT
-		mkdir $tmp || exit
+	then	tmp=$(mktemp -dt) || { echo mktemp -dt failed >&2; exit 1; }
+		trap "cd /; rm -rf $tmp" EXIT
 	elif	[[ $compile != 1 ]]
 	then	echo $0: --compile: $SHCOMP not found >&2
 		exit 1

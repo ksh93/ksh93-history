@@ -1,7 +1,7 @@
 /*
  * regression test support
  *
- * @(#)TEST.mk (AT&T Labs Research) 2009-01-08
+ * @(#)TEST.mk (AT&T Labs Research) 2009-03-19
  *
  * test management is still in the design phase
  */
@@ -11,8 +11,8 @@
  *
  *	:TEST: xxx yyy ...
  *
- *		$(REGRESS) $(REGRESSFLAGS) xxx.tst xxx
- *		$(REGRESS) $(REGRESSFLAGS) yyy.tst yyy
+ *		$(REGRESS) $(REGRESSFLAGS) xxx.tst
+ *		$(REGRESS) $(REGRESSFLAGS) yyy.tst
  *
  *	:TEST: xxx.tst yyy ...
  *
@@ -107,7 +107,7 @@
 			else
 				if ! G
 					T =
-				elif ! ( T = "$(B:A=.TARGET)" )
+				elif ! ( T = "$(B:A=.COMMAND)" ) && ! "$(B:A=.TARGET)"
 					for S .c .sh
 						if "$(B:B:S=$(S):T=F)"
 							:INSTALLDIR: $(B)
@@ -151,7 +151,7 @@
 			end
 		else
 			test : - test.$(<)
-			test.$(<) : $(<).tst $(<)
+			test.$(<) : $(<).tst $(<:A=.COMMAND)
 				$(REGRESS) $(REGRESSFLAGS) $(*)
 		end
 	end

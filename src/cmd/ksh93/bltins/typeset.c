@@ -485,7 +485,7 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 						print_namval(sfstdout,np,tp->aflag=='+',tp);
 						continue;
 					}
-					if(shp->subshell)
+					if(shp->subshell && !shp->subshare)
 						sh_subfork();
 					if(tp->aflag=='-')
 						nv_onattr(np,flag|NV_FUNCTION);
@@ -782,6 +782,8 @@ int	b_builtin(int argc,char *argv[],void *extra)
 	memset(&tdata,0,sizeof(tdata));
 	tdata.sh = ((Shbltin_t*)extra)->shp;
 	stkp = tdata.sh->stk;
+	if(!tdata.sh->pathlist)
+		path_absolute(argv[0],NIL(Pathcomp_t*));
 	while (n = optget(argv,sh_optbuiltin)) switch (n)
 	{
 	    case 's':
@@ -814,7 +816,7 @@ int	b_builtin(int argc,char *argv[],void *extra)
 			errormsg(SH_DICT,ERROR_exit(1),e_restricted,argv[-opt_info.index]);
 		if(sh_isoption(SH_PFSH))
 			errormsg(SH_DICT,ERROR_exit(1),e_pfsh,argv[-opt_info.index]);
-		if(tdata.sh->subshell)
+		if(tdata.sh->subshell && !tdata.sh->subshare)
 			sh_subfork();
 	}
 #if SHOPT_DYNAMIC

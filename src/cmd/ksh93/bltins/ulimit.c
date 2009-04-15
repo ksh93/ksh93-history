@@ -29,7 +29,7 @@
 #include	<ast.h>
 #include	<sfio.h>
 #include	<error.h>
-#include	<shell.h>
+#include	"defs.h"
 #include	"builtins.h"
 #include	"name.h"
 #include	"ulimit.h"
@@ -132,7 +132,7 @@ int	b_ulimit(int argc,char *argv[],void *extra)
 		unit = shtab_units[tp->type];
 		if(limit)
 		{
-			if(shp->subshell)
+			if(shp->subshell && !shp->subshare)
 				sh_subfork();
 			if(strcmp(limit,e_unlimited)==0)
 				i = INFINITY;

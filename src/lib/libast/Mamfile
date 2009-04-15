@@ -811,6 +811,38 @@ meta strtape.o %.c>%.o string/strtape.c strtape
 prev string/strtape.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c string/strtape.c
 done strtape.o generated
+make strpcmp.o
+make string/strpcmp.c
+prev include/ast.h implicit
+done string/strpcmp.c
+meta strpcmp.o %.c>%.o string/strpcmp.c strpcmp
+prev string/strpcmp.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c string/strpcmp.c
+done strpcmp.o generated
+make strnpcmp.o
+make string/strnpcmp.c
+prev include/ast.h implicit
+done string/strnpcmp.c
+meta strnpcmp.o %.c>%.o string/strnpcmp.c strnpcmp
+prev string/strnpcmp.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c string/strnpcmp.c
+done strnpcmp.o generated
+make strvcmp.o
+make string/strvcmp.c
+prev include/ast.h implicit
+done string/strvcmp.c
+meta strvcmp.o %.c>%.o string/strvcmp.c strvcmp
+prev string/strvcmp.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c string/strvcmp.c
+done strvcmp.o generated
+make strnvcmp.o
+make string/strnvcmp.c
+prev include/ast.h implicit
+done string/strnvcmp.c
+meta strnvcmp.o %.c>%.o string/strnvcmp.c strnvcmp
+prev string/strnvcmp.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c string/strnvcmp.c
+done strnvcmp.o generated
 make tok.o
 make string/tok.c
 make include/tok.h implicit
@@ -1498,6 +1530,7 @@ prev ast_time.h implicit
 prev include/ast.h implicit
 make sfio/vthread.h implicit
 prev windows.h implicit
+prev std/endian.h implicit
 prev ast_common.h implicit
 done sfio/vthread.h dontcare
 make include/sfio_t.h implicit
@@ -2045,7 +2078,7 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_as
 done tmequiv.o generated
 make tmfix.o
 make tm/tmfix.c
-prev include/tm.h implicit
+prev tmx.h implicit
 prev include/ast.h implicit
 done tm/tmfix.c
 meta tmfix.o %.c>%.o tm/tmfix.c tmfix
@@ -3571,7 +3604,7 @@ done strftime.o generated
 make strptime.o
 make comp/strptime.c
 prev ast_map.h implicit
-prev include/tm.h implicit
+prev tmx.h implicit
 prev include/ast.h implicit
 done comp/strptime.c
 meta strptime.o %.c>%.o comp/strptime.c strptime
@@ -5907,12 +5940,12 @@ prev obsolete/spawn.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_ast -c obsolete/spawn.c
 done spawn.o generated
 exec - ${AR} cr libast.a state.o transition.o opendir.o readdir.o rewinddir.o seekdir.o telldir.o getcwd.o fastfind.o hashalloc.o hashdump.o hashfree.o hashlast.o hashlook.o hashscan.o hashsize.o hashview.o hashwalk.o memhash.o memsum.o strhash.o strkey.o strsum.o stracmp.o strnacmp.o ccmap.o ccmapid.o ccnative.o chresc.o chrtoi.o
-exec - ${AR} cr libast.a streval.o strexpr.o strmatch.o strcopy.o modei.o modex.o strmode.o strlcat.o strlcpy.o strlook.o strncopy.o strsearch.o strpsearch.o stresc.o stropt.o strtape.o tok.o tokline.o tokscan.o pathaccess.o pathcat.o pathcanon.o pathcheck.o pathpath.o pathexists.o pathfind.o pathkey.o pathprobe.o pathrepl.o pathnative.o pathposix.o pathtemp.o pathtmp.o pathstat.o pathgetlink.o pathsetlink.o pathbin.o pathshell.o pathcd.o pathprog.o fs3d.o ftwalk.o ftwflags.o fts.o astintercept.o getenv.o setenviron.o optget.o optjoin.o optesc.o optctx.o strsort.o struniq.o magic.o mime.o mimetype.o signal.o systrace.o error.o errorf.o errormsg.o errorx.o localeconv.o setlocale.o translate.o catopen.o iconv.o lc.o lctab.o mc.o base64.o recfmt.o recstr.o reclen.o fmtrec.o fmtbase.o fmtbuf.o fmtclock.o fmtdev.o fmtelapsed.o fmterror.o fmtesc.o fmtfmt.o fmtfs.o fmtident.o fmtip4.o fmtip6.o fmtls.o fmtmatch.o fmtmode.o fmtnum.o fmtperm.o fmtre.o fmttime.o fmtuid.o fmtgid.o fmtsignal.o fmtscale.o fmttmx.o fmttv.o fmtversion.o
-exec - ${AR} cr libast.a strelapsed.o strperm.o struid.o strgid.o strtoip4.o strtoip6.o stack.o stk.o swapget.o swapmem.o swapop.o swapput.o sigdata.o sigcrit.o sigunblock.o procopen.o procclose.o procrun.o procfree.o tmdate.o tmequiv.o tmfix.o tmfmt.o tmform.o tmgoff.o tminit.o tmleap.o tmlex.o tmlocale.o tmmake.o tmpoff.o tmscan.o tmsleep.o tmtime.o tmtype.o tmweek.o tmword.o tmzone.o tmxdate.o tmxfmt.o tmxgettime.o tmxleap.o tmxmake.o tmxscan.o tmxsettime.o tmxsleep.o tmxtime.o tmxtouch.o tvcmp.o tvgettime.o tvsettime.o tvsleep.o tvtouch.o cmdarg.o vecargs.o vecfile.o vecfree.o vecload.o vecstring.o univdata.o touch.o mnt.o debug.o memccpy.o memchr.o memcmp.o memcpy.o memdup.o memmove.o memset.o mkdir.o mkfifo.o mknod.o rmdir.o remove.o rename.o link.o unlink.o strdup.o strchr.o strrchr.o strstr.o strtod.o strtold.o strtol.o strtoll.o strtoul.o strtoull.o strton.o strtonll.o strntod.o strntold.o strnton.o strntonll.o strntol.o strntoll.o strntoul.o strntoull.o strcasecmp.o strncasecmp.o strerror.o
-exec - ${AR} cr libast.a mktemp.o tmpnam.o fsync.o execlp.o execve.o execvp.o execvpe.o spawnveg.o vfork.o killpg.o hsearch.o tsearch.o getlogin.o putenv.o setenv.o unsetenv.o lstat.o statvfs.o eaccess.o gross.o omitted.o readlink.o symlink.o getpgrp.o setpgid.o setsid.o waitpid.o creat64.o fcntl.o open.o atexit.o getdents.o getwd.o dup2.o errno.o getpreroot.o ispreroot.o realopen.o setpreroot.o getgroups.o mount.o system.o iblocks.o modedata.o tmdata.o memfatal.o sfkeyprintf.o sfdcdio.o sfdcdos.o sfdcfilter.o sfdcseekable.o sfdcslow.o sfdcsubstr.o sfdctee.o sfdcunion.o sfdcmore.o sfdcprefix.o wc.o basename.o closelog.o dirname.o fmtmsglib.o fnmatch.o ftw.o getdate.o getsubopt.o glob.o nftw.o openlog.o re_comp.o resolvepath.o realpath.o regcmp.o regexp.o setlogmask.o strftime.o strptime.o swab.o syslog.o tempnam.o wordexp.o mktime.o regalloc.o regclass.o regcoll.o regcomp.o regcache.o regdecomp.o regerror.o regexec.o regfatal.o reginit.o regnexec.o regsubcomp.o regsubexec.o regsub.o regrecord.o regrexec.o regstat.o dtclose.o dtdisc.o
-exec - ${AR} cr libast.a dtextract.o dtflatten.o dthash.o dtlist.o dtmethod.o dtnew.o dtopen.o dtrenew.o dtrestore.o dtsize.o dtstat.o dtstrhash.o dttree.o dttreeset.o dtview.o dtwalk.o sfclose.o sfclrlock.o sfdisc.o sfdlen.o sfexcept.o sfgetl.o sfgetu.o sfcvt.o sfecvt.o sffcvt.o sfextern.o sffilbuf.o sfflsbuf.o sfprints.o sfgetd.o sfgetr.o sfllen.o sfmode.o sfmove.o sfnew.o sfpkrd.o sfnotify.o sfnputc.o sfopen.o sfpeek.o sfpoll.o sfpool.o sfpopen.o sfprintf.o sfputd.o sfputl.o sfputr.o sfputu.o sfrd.o sfread.o sfreserve.o sfscanf.o sfseek.o sfset.o sfsetbuf.o sfsetfd.o sfsize.o sfsk.o sfstack.o sfstrtod.o sfsync.o sfswap.o sftable.o sftell.o sftmp.o sfungetc.o sfvprintf.o sfvscanf.o sfwr.o sfwrite.o sfpurge.o sfraise.o sfgetm.o sfmutex.o sfputm.o sfresize.o _sfclrerr.o _sfeof.o _sferror.o _sffileno.o _sfopen.o _sfstacked.o _sfvalue.o _sfgetc.o _sfgetl.o _sfgetl2.o _sfgetu.o _sfgetu2.o _sfdlen.o _sfllen.o _sfslen.o _sfulen.o _sfputc.o _sfputd.o _sfputl.o _sfputm.o _sfputu.o clearerr.o fclose.o fdopen.o
-exec - ${AR} cr libast.a feof.o ferror.o fflush.o fgetc.o fgetpos.o fgets.o fileno.o fopen.o fprintf.o fpurge.o fputc.o fputs.o fread.o freopen.o fscanf.o fseek.o fseeko.o fsetpos.o ftell.o ftello.o fwrite.o flockfile.o ftrylockfile.o funlockfile.o getc.o getchar.o getw.o pclose.o popen.o printf.o putc.o putchar.o puts.o putw.o rewind.o scanf.o setbuf.o setbuffer.o setlinebuf.o setvbuf.o snprintf.o sprintf.o sscanf.o asprintf.o vasprintf.o tmpfile.o ungetc.o vfprintf.o vfscanf.o vprintf.o vscanf.o vsnprintf.o vsprintf.o vsscanf.o _doprnt.o _doscan.o _filbuf.o _flsbuf.o _stdfun.o _stdopen.o _stdprintf.o _stdscanf.o _stdsprnt.o _stdvbuf.o _stdvsnprnt.o _stdvsprnt.o _stdvsscn.o fgetwc.o fwprintf.o putwchar.o vfwscanf.o wprintf.o fgetws.o fwscanf.o swprintf.o vswprintf.o wscanf.o fputwc.o getwc.o swscanf.o vswscanf.o fputws.o getwchar.o ungetwc.o vwprintf.o fwide.o putwc.o vfwprintf.o vwscanf.o stdio_c99.o stdio_gnu.o frexp.o frexpl.o astcopy.o astconf.o astdynamic.o astlicense.o astquery.o astwinsize.o conftab.o aststatic.o
-exec - ${AR} cr libast.a getopt.o getoptl.o vmbest.o vmclear.o vmclose.o vmdcheap.o vmdebug.o vmdisc.o vmexit.o vmlast.o vmopen.o vmpool.o vmprivate.o vmprofile.o vmregion.o vmsegment.o vmset.o vmstat.o vmstrdup.o vmtrace.o vmwalk.o vmmopen.o malloc.o vmgetmem.o a64l.o acosh.o asinh.o atanh.o cbrt.o crypt.o erf.o err.o exp.o exp__E.o expm1.o gamma.o getpass.o lgamma.o log.o log1p.o log__L.o rand48.o random.o rcmd.o rint.o support.o sfstrtmp.o spawn.o
+exec - ${AR} cr libast.a streval.o strexpr.o strmatch.o strcopy.o modei.o modex.o strmode.o strlcat.o strlcpy.o strlook.o strncopy.o strsearch.o strpsearch.o stresc.o stropt.o strtape.o strpcmp.o strnpcmp.o strvcmp.o strnvcmp.o tok.o tokline.o tokscan.o pathaccess.o pathcat.o pathcanon.o pathcheck.o pathpath.o pathexists.o pathfind.o pathkey.o pathprobe.o pathrepl.o pathnative.o pathposix.o pathtemp.o pathtmp.o pathstat.o pathgetlink.o pathsetlink.o pathbin.o pathshell.o pathcd.o pathprog.o fs3d.o ftwalk.o ftwflags.o fts.o astintercept.o getenv.o setenviron.o optget.o optjoin.o optesc.o optctx.o strsort.o struniq.o magic.o mime.o mimetype.o signal.o systrace.o error.o errorf.o errormsg.o errorx.o localeconv.o setlocale.o translate.o catopen.o iconv.o lc.o lctab.o mc.o base64.o recfmt.o recstr.o reclen.o fmtrec.o fmtbase.o fmtbuf.o fmtclock.o fmtdev.o fmtelapsed.o fmterror.o fmtesc.o fmtfmt.o fmtfs.o fmtident.o fmtip4.o fmtip6.o fmtls.o fmtmatch.o fmtmode.o fmtnum.o fmtperm.o fmtre.o fmttime.o fmtuid.o fmtgid.o fmtsignal.o
+exec - ${AR} cr libast.a fmtscale.o fmttmx.o fmttv.o fmtversion.o strelapsed.o strperm.o struid.o strgid.o strtoip4.o strtoip6.o stack.o stk.o swapget.o swapmem.o swapop.o swapput.o sigdata.o sigcrit.o sigunblock.o procopen.o procclose.o procrun.o procfree.o tmdate.o tmequiv.o tmfix.o tmfmt.o tmform.o tmgoff.o tminit.o tmleap.o tmlex.o tmlocale.o tmmake.o tmpoff.o tmscan.o tmsleep.o tmtime.o tmtype.o tmweek.o tmword.o tmzone.o tmxdate.o tmxfmt.o tmxgettime.o tmxleap.o tmxmake.o tmxscan.o tmxsettime.o tmxsleep.o tmxtime.o tmxtouch.o tvcmp.o tvgettime.o tvsettime.o tvsleep.o tvtouch.o cmdarg.o vecargs.o vecfile.o vecfree.o vecload.o vecstring.o univdata.o touch.o mnt.o debug.o memccpy.o memchr.o memcmp.o memcpy.o memdup.o memmove.o memset.o mkdir.o mkfifo.o mknod.o rmdir.o remove.o rename.o link.o unlink.o strdup.o strchr.o strrchr.o strstr.o strtod.o strtold.o strtol.o strtoll.o strtoul.o strtoull.o strton.o strtonll.o strntod.o strntold.o strnton.o strntonll.o strntol.o strntoll.o strntoul.o
+exec - ${AR} cr libast.a strntoull.o strcasecmp.o strncasecmp.o strerror.o mktemp.o tmpnam.o fsync.o execlp.o execve.o execvp.o execvpe.o spawnveg.o vfork.o killpg.o hsearch.o tsearch.o getlogin.o putenv.o setenv.o unsetenv.o lstat.o statvfs.o eaccess.o gross.o omitted.o readlink.o symlink.o getpgrp.o setpgid.o setsid.o waitpid.o creat64.o fcntl.o open.o atexit.o getdents.o getwd.o dup2.o errno.o getpreroot.o ispreroot.o realopen.o setpreroot.o getgroups.o mount.o system.o iblocks.o modedata.o tmdata.o memfatal.o sfkeyprintf.o sfdcdio.o sfdcdos.o sfdcfilter.o sfdcseekable.o sfdcslow.o sfdcsubstr.o sfdctee.o sfdcunion.o sfdcmore.o sfdcprefix.o wc.o basename.o closelog.o dirname.o fmtmsglib.o fnmatch.o ftw.o getdate.o getsubopt.o glob.o nftw.o openlog.o re_comp.o resolvepath.o realpath.o regcmp.o regexp.o setlogmask.o strftime.o strptime.o swab.o syslog.o tempnam.o wordexp.o mktime.o regalloc.o regclass.o regcoll.o regcomp.o regcache.o regdecomp.o regerror.o regexec.o regfatal.o reginit.o regnexec.o regsubcomp.o regsubexec.o regsub.o regrecord.o
+exec - ${AR} cr libast.a regrexec.o regstat.o dtclose.o dtdisc.o dtextract.o dtflatten.o dthash.o dtlist.o dtmethod.o dtnew.o dtopen.o dtrenew.o dtrestore.o dtsize.o dtstat.o dtstrhash.o dttree.o dttreeset.o dtview.o dtwalk.o sfclose.o sfclrlock.o sfdisc.o sfdlen.o sfexcept.o sfgetl.o sfgetu.o sfcvt.o sfecvt.o sffcvt.o sfextern.o sffilbuf.o sfflsbuf.o sfprints.o sfgetd.o sfgetr.o sfllen.o sfmode.o sfmove.o sfnew.o sfpkrd.o sfnotify.o sfnputc.o sfopen.o sfpeek.o sfpoll.o sfpool.o sfpopen.o sfprintf.o sfputd.o sfputl.o sfputr.o sfputu.o sfrd.o sfread.o sfreserve.o sfscanf.o sfseek.o sfset.o sfsetbuf.o sfsetfd.o sfsize.o sfsk.o sfstack.o sfstrtod.o sfsync.o sfswap.o sftable.o sftell.o sftmp.o sfungetc.o sfvprintf.o sfvscanf.o sfwr.o sfwrite.o sfpurge.o sfraise.o sfgetm.o sfmutex.o sfputm.o sfresize.o _sfclrerr.o _sfeof.o _sferror.o _sffileno.o _sfopen.o _sfstacked.o _sfvalue.o _sfgetc.o _sfgetl.o _sfgetl2.o _sfgetu.o _sfgetu2.o _sfdlen.o _sfllen.o _sfslen.o _sfulen.o _sfputc.o _sfputd.o _sfputl.o _sfputm.o
+exec - ${AR} cr libast.a _sfputu.o clearerr.o fclose.o fdopen.o feof.o ferror.o fflush.o fgetc.o fgetpos.o fgets.o fileno.o fopen.o fprintf.o fpurge.o fputc.o fputs.o fread.o freopen.o fscanf.o fseek.o fseeko.o fsetpos.o ftell.o ftello.o fwrite.o flockfile.o ftrylockfile.o funlockfile.o getc.o getchar.o getw.o pclose.o popen.o printf.o putc.o putchar.o puts.o putw.o rewind.o scanf.o setbuf.o setbuffer.o setlinebuf.o setvbuf.o snprintf.o sprintf.o sscanf.o asprintf.o vasprintf.o tmpfile.o ungetc.o vfprintf.o vfscanf.o vprintf.o vscanf.o vsnprintf.o vsprintf.o vsscanf.o _doprnt.o _doscan.o _filbuf.o _flsbuf.o _stdfun.o _stdopen.o _stdprintf.o _stdscanf.o _stdsprnt.o _stdvbuf.o _stdvsnprnt.o _stdvsprnt.o _stdvsscn.o fgetwc.o fwprintf.o putwchar.o vfwscanf.o wprintf.o fgetws.o fwscanf.o swprintf.o vswprintf.o wscanf.o fputwc.o getwc.o swscanf.o vswscanf.o fputws.o getwchar.o ungetwc.o vwprintf.o fwide.o putwc.o vfwprintf.o vwscanf.o stdio_c99.o stdio_gnu.o frexp.o frexpl.o astcopy.o astconf.o astdynamic.o astlicense.o
+exec - ${AR} cr libast.a astquery.o astwinsize.o conftab.o aststatic.o getopt.o getoptl.o vmbest.o vmclear.o vmclose.o vmdcheap.o vmdebug.o vmdisc.o vmexit.o vmlast.o vmopen.o vmpool.o vmprivate.o vmprofile.o vmregion.o vmsegment.o vmset.o vmstat.o vmstrdup.o vmtrace.o vmwalk.o vmmopen.o malloc.o vmgetmem.o a64l.o acosh.o asinh.o atanh.o cbrt.o crypt.o erf.o err.o exp.o exp__E.o expm1.o gamma.o getpass.o lgamma.o log.o log1p.o log__L.o rand48.o random.o rcmd.o rint.o support.o sfstrtmp.o spawn.o
 exec - (ranlib libast.a) >/dev/null 2>&1 || true
 done libast.a generated
 done ast virtual
@@ -6059,6 +6092,11 @@ make man/re.3
 done man/re.3
 exec - test '' = 'man/re.3' || ${STDCMP} 2>/dev/null -s man/re.3 ${INSTALLROOT}/man/man3/re.3 || { ${STDMV} ${INSTALLROOT}/man/man3/re.3 ${INSTALLROOT}/man/man3/re.3.old 2>/dev/null || true; ${STDCP} man/re.3 ${INSTALLROOT}/man/man3/re.3  		    		    ;}
 done ${INSTALLROOT}/man/man3/re.3 generated
+make ${INSTALLROOT}/man/man3/regex.3
+make man/regex.3
+done man/regex.3
+exec - test '' = 'man/regex.3' || ${STDCMP} 2>/dev/null -s man/regex.3 ${INSTALLROOT}/man/man3/regex.3 || { ${STDMV} ${INSTALLROOT}/man/man3/regex.3 ${INSTALLROOT}/man/man3/regex.3.old 2>/dev/null || true; ${STDCP} man/regex.3 ${INSTALLROOT}/man/man3/regex.3  		    		    ;}
+done ${INSTALLROOT}/man/man3/regex.3 generated
 make ${INSTALLROOT}/man/man3/setenviron.3
 make man/setenviron.3
 done man/setenviron.3

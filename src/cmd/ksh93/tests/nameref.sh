@@ -27,6 +27,10 @@ alias err_exit='err_exit $LINENO'
 
 Command=${0##*/}
 integer Errors=0
+
+tmp=$(mktemp -dt) || { err_exit mktemp -dt failed; exit 1; }
+trap "cd /; rm -rf $tmp" EXIT
+
 function checkref
 {
 	nameref foo=$1 bar=$2
@@ -96,7 +100,7 @@ fi
 if	[[ $(typeset -n) != x=.foo.bar ]]
 then	err_exit "typeset +n doesn't list values of reference variables"
 fi
-file=/tmp/shtest$$
+file=$tmp/test
 typeset +n foo bar 2> /dev/null
 unset foo bar
 export bar=foo
@@ -104,7 +108,6 @@ nameref foo=bar
 if	[[ $foo != foo ]]
 then	err_exit "value of nameref foo !=  $foo"
 fi
-trap "rm -f $file" EXIT INT
 cat > $file <<\!
 print -r -- $foo
 !
@@ -324,4 +327,22 @@ foobar 2> /dev/null && err_exit 'invalid reference should cause foobar to fail'
 [[ -v ref ]] && err_exit '$ref should be unset'
 ref=x
 [[ $ref == 3 ]] || err_exit "\$ref is $ref, it should be 3"
+function foobar
+{
+        typeset fvar=()
+        typeset -n ref=fvar.foo
+        ref=ok
+        print -r $ref
+}
+[[ $(foobar) ==  ok ]] 2> /dev/null  || err_exit 'nameref in function not creating variable in proper scope'
+function foobar
+{
+        nameref doc=docs
+        nameref bar=doc.num
+	[[ $bar == 2 ]] || err_exit 'nameref scoping error'
+}
+
+docs=(num=2)
+foobar
+
 exit $((Errors))

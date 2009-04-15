@@ -47,7 +47,7 @@ const struct shtable2 shtab_variables[] =
 	"EDITOR",	0,				(char*)0,
 	"MAILCHECK",	NV_NOFREE|NV_INTEGER,		(char*)0,
 	"RANDOM",	NV_NOFREE|NV_INTEGER,		(char*)0,
-	"ENV",		NV_NOFREE,			"$HOME/.kshrc",
+	"ENV",		NV_NOFREE,			(char*)0,
 	"HISTFILE",	0,				(char*)0,
 	"HISTSIZE",	0,				(char*)0,
 	"HISTEDIT",	NV_NOFREE,			(char*)0,

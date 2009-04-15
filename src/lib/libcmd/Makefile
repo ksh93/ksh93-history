@@ -8,6 +8,10 @@ LICENSE = since=1992,author=gsf+dgk
 
 CCFLAGS = $(CC.OPTIMIZE) $(CC.DLL)
 
+/* 2009-04-15 ld.so experiment -- may become a default for all plugins */
+CC.DLL.ORIGIN = $(CC.LD.ORIGIN:C,/.*,,)
+LDFLAGS = $(CC.DLL.ORIGIN)
+
 CP = $(STDCP|"cp")
 CHMOD = $(STDCHMOD|"chmod")
 

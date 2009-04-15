@@ -38,6 +38,7 @@ SHOPT_OPTIMIZE == 1		/* optimize loop invariants */
 SHOPT_PFSH == 1			/* solaris exec_attr(4) profile execution */
 SHOPT_P_SUID ==			/* real uid's that require -p for set[ug]id */
 SHOPT_RAWONLY == 1		/* make viraw the only vi mode */
+SHOPT_REGRESS ==		/* enable __regress__ builtin and instrumented intercepts for testing */
 SHOPT_REMOTE ==			/* enable --rc if running as a remote shell */
 SHOPT_SEVENBIT ==		/* strip the eigth bit from characters */
 SHOPT_SPAWN ==			/* use spawnveg for fork/exec */
@@ -153,7 +154,7 @@ DATAFILES = limits.c msg.c strdata.c testops.c keywords.c options.c \
 shell $(VERSION) :LIBRARY: shell.3 nval.3 alarm.c cd_pwd.c cflow.c deparse.c \
 	enum.c getopts.c hist.c misc.c print.c read.c sleep.c trap.c test.c \
 	typeset.c ulimit.c umask.c whence.c main.c nvdisc.c nvtype.c \
-	arith.c args.c array.c completion.c defs.c edit.c expand.c \
+	arith.c args.c array.c completion.c defs.c edit.c expand.c regress.c \
 	fault.c fcin.c history.c init.c io.c jobs.c lex.c macro.c name.c \
 	nvtree.c parse.c path.c string.c streval.c subshell.c tdump.c timers.c \
 	trestore.c waitevent.c xec.c env.c $(DATAFILES) $(FILES_opt) \
@@ -196,13 +197,17 @@ end
 	shopen.mk shopen.c
 
 :: shtests \
-	alias.sh append.sh arith.sh arrays.sh arrays2.sh attributes.sh \
-	basic.sh bracket.sh builtins.sh case.sh comvar.sh coprocess.sh \
-	exit.sh expand.sh functions.sh glob.sh grep.sh heredoc.sh io.sh \
-	nameref.sh options.sh path.sh quoting.sh quoting2.sh restricted.sh \
-	return.sh select.sh subshell.sh substring.sh tilde.sh variables.sh \
-	cubetype.sh enum.sh pointtype.sh recttype.sh timetype.sh treemove.sh \
-	statics.sh sigchld.sh types.sh vartree1.sh vartree2.sh
+	alias.sh append.sh arith.sh arrays.sh arrays2.sh \
+	attributes.sh basic.sh bracket.sh builtins.sh case.sh \
+	comvar.sh coprocess.sh cubetype.sh enum.sh exit.sh \
+	expand.sh functions.sh glob.sh grep.sh heredoc.sh io.sh \
+	locale.sh nameref.sh options.sh path.sh pointtype.sh \
+	quoting.sh quoting2.sh recttype.sh restricted.sh return.sh \
+	select.sh shtests sigchld.sh signal.sh statics.sh \
+	subshell.sh substring.sh tilde.sh timetype.sh treemove.sh \
+	types.sh variables.sh vartree1.sh vartree2.sh
+
+:: ksh-regress.rt ksh-regress.tst
 
 if "$(PWD:B:N=cc-*)"
 

@@ -114,10 +114,14 @@ int sh_source(Shell_t *shp, Sfio_t *iop, const char *file)
 	int	fd;
 
 	if (!file || !*file || (fd = path_open(file, PATHCOMP)) < 0)
+	{
+		REGRESS(source, "sh_source", ("%s:ENOENT", file));
 		return 0;
+	}
 	oid = error_info.id;
 	nid = error_info.id = strdup(file);
 	shp->st.filename = path_fullname(stakptr(PATH_OFFSET));
+	REGRESS(source, "sh_source", ("%s", file));
 	exfile(shp, iop, fd);
 	error_info.id = oid;
 	free(nid);

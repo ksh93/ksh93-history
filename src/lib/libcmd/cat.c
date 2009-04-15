@@ -31,7 +31,7 @@
 #include <fcntl.h>
 
 static const char usage[] =
-"[-?\n@(#)$Id: cat (AT&T Research) 2009-03-03 $\n]"
+"[-?\n@(#)$Id: cat (AT&T Research) 2009-03-31 $\n]"
 USAGE_LICENSE
 "[+NAME?cat - concatenate files]"
 "[+DESCRIPTION?\bcat\b copies each \afile\a in sequence to the standard"
@@ -411,53 +411,54 @@ b_cat(int argc, char** argv, void* context)
 	mode = "r";
 	for (;;)
 	{
+		n = 0;
 		switch (optget(argv, usage))
 		{
 		case 'A':
-			flags |= T_FLAG|E_FLAG|V_FLAG;
-			continue;
+			n = T_FLAG|E_FLAG|V_FLAG;
+			break;
 		case 'B':
-			flags |= S_FLAG;
-			continue;
+			n = S_FLAG;
+			break;
 		case 'b':
-			flags |= B_FLAG;
-			continue;
+			n = B_FLAG;
+			break;
 		case 'd':
-			mode = "rt";
+			mode = opt_info.num ? "rt" : "r";
 			continue;
 		case 'D':
-			flags |= d_FLAG;
-			continue;
+			n = d_FLAG;
+			break;
 		case 'E':
-			flags |= E_FLAG;
-			continue;
+			n = E_FLAG;
+			break;
 		case 'e':
-			flags |= E_FLAG|V_FLAG;
-			continue;
+			n = E_FLAG|V_FLAG;
+			break;
 		case 'n':
-			flags |= N_FLAG;
-			continue;
+			n = N_FLAG;
+			break;
 		case 'R':
-			reserve = regress;
+			reserve = opt_info.num ? regress : sfreserve;
 			continue;
 		case 's':
-			flags |= att ? F_FLAG : S_FLAG;
-			continue;
+			n = att ? F_FLAG : S_FLAG;
+			break;
 		case 'S':
-			flags |= F_FLAG;
-			continue;
+			n = F_FLAG;
+			break;
 		case 'T':
-			flags |= T_FLAG;
-			continue;
+			n = T_FLAG;
+			break;
 		case 't':
-			flags |= T_FLAG|V_FLAG;
-			continue;
+			n = T_FLAG|V_FLAG;
+			break;
 		case 'u':
-			flags |= U_FLAG;
-			continue;
+			n = U_FLAG;
+			break;
 		case 'v':
-			flags |= V_FLAG;
-			continue;
+			n = V_FLAG;
+			break;
 		case ':':
 			error(2, "%s", opt_info.arg);
 			break;
@@ -465,7 +466,12 @@ b_cat(int argc, char** argv, void* context)
 			error(ERROR_usage(2), "%s", opt_info.arg);
 			break;
 		}
-		break;
+		if (!n)
+			break;
+		if (opt_info.num)
+			flags |= n;
+		else
+			flags &= ~n;
 	}
 	argv += opt_info.index;
 	if (error_info.errors)

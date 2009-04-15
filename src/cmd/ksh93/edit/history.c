@@ -1072,14 +1072,7 @@ char *hist_word(char *string,int size,int word)
 	register int flag = 0;
 	History_t *hp = hist_ptr;
 	if(!hp)
-#if KSHELL
-	{
-		strncpy(string,((Shell_t*)hp->histshell)->lastarg,size);
-		return(string);
-	}
-#else
 		return(NIL(char*));
-#endif /* KSHELL */
 	hist_copy(string,size,(int)hp->histind-1,-1);
 	for(;c = *cp;cp++)
 	{

@@ -92,6 +92,7 @@ extern const char	e_create[];
 extern const char	e_tmpcreate[];
 extern const char	e_exists[];
 extern const char	e_file[];
+extern const char	e_redirect[];
 extern const char	e_formspec[];
 extern const char	e_badregexp[];
 extern const char	e_open[];

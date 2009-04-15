@@ -101,6 +101,7 @@ tmxtm(register Tm_t* tm, Time_t t, Tm_zone_t* zone)
 	x -= n * 365 + n / 4 - n / 100 + (n + (1900 - 1600)) / 400 - (1970 - 1901) * 365 - (1970 - 1901) / 4;
 	tm->tm_mon = 0;
 	tm->tm_mday = x + 1;
+	tm->tm_nsec = tmxnsec(t);
 	tmfix(tm);
 	n += 1900;
 	tm->tm_isdst = 0;
@@ -122,7 +123,6 @@ tmxtm(register Tm_t* tm, Time_t t, Tm_zone_t* zone)
 			tmfix(tm);
 		}
 	}
-	tm->tm_nsec = tmxnsec(t);
 	return tm;
 }
 

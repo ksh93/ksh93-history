@@ -25,9 +25,13 @@ function err_exit
 }
 alias err_exit='err_exit $LINENO'
 
-# test shell builtin commands
 Command=${0##*/}
 integer Errors=0
+
+tmp=$(mktemp -dt) || { err_exit mktemp -dt failed; exit 1; }
+trap "cd /; rm -rf $tmp" EXIT
+
+# test shell builtin commands
 builtin getconf
 : ${foo=bar} || err_exit ": failed"
 [[ $foo = bar ]] || err_exit ": side effects failed"
@@ -176,16 +180,17 @@ read -r var <<\!
 if	[[ $var != "" ]]
 then	err_exit "read -r of blank line not working"
 fi
-mkdir -p /tmp/ksh$$/a/b/c 2>/dev/null || err_exit  "mkdir -p failed"
-$SHELL -c "cd /tmp/ksh$$/a/b; cd c" 2>/dev/null || err_exit "initial script relative cd fails"
-rm -r /tmp/ksh$$ || err_exit "rm -r /tmp/ksh$$ failed"
+mkdir -p $tmp/a/b/c 2>/dev/null || err_exit  "mkdir -p failed"
+$SHELL -c "cd $tmp/a/b; cd c" 2>/dev/null || err_exit "initial script relative cd fails"
+
 trap 'print HUP' HUP
-if	[[ $(trap) != "trap -- 'print HUP' HUP" ]]
-then	err_exit '$(trap) not working'
-fi
-if	[[ $(trap -p HUP) != 'print HUP' ]]
-then	err_exit '$(trap -p HUP) not working'
-fi
+exp=$'trap -- \'print HUP\' HUP\ntrap -- \'cd /; rm -rf '$tmp$'\' EXIT'
+got=$(trap)
+[[ $got == $exp ]] || err_exit "\$(trap) failed -- expected \"$exp\", got \"$got\""
+exp='print HUP'
+got=$(trap -p HUP)
+[[ $got == $exp ]] || err_exit "\$(trap -p HUP) failed -- expected \"$exp\", got \"$got\""
+
 [[ $($SHELL -c 'trap "print ok" SIGTERM; kill -s SIGTERM $$' 2> /dev/null) == ok ]] || err_exit 'SIGTERM not recognized'
 [[ $($SHELL -c 'trap "print ok" sigterm; kill -s sigterm $$' 2> /dev/null) == ok ]] || err_exit 'SIGTERM not recognized'
 [[ $($SHELL -c '( trap "" TERM);kill $$;print bad' == bad) ]] 2> /dev/null && err_exit 'trap ignored in subshell causes it to be ignored by parent'
@@ -266,23 +271,23 @@ OPTIND=1
 if	[[ $(getopts  $'[+?X\ffoobar\fX]' v --man 2>&1) != *'Xhello world'X* ]]
 then	err_exit '\f...\f not working in getopts usage strings'
 fi
-if	[[	$(printf '%H\n' $'<>"& \'\tabc') != '&lt;&gt;&quot;&amp;&nbsp;&apos;&#9;abc' ]]
+if	[[ $(printf '%H\n' $'<>"& \'\tabc') != '&lt;&gt;&quot;&amp;&nbsp;&apos;&#9;abc' ]]
 then	err_exit 'printf %H not working'
 fi
-if	[[	$(printf '%R %R %R %R\n' 'a.b' '*.c' '^'  '!(*.*)') != '^a\.b$ \.c$ ^\^$ ^(.*\..*)!$' ]]
+if	[[ $(printf '%R %R %R %R\n' 'a.b' '*.c' '^'  '!(*.*)') != '^a\.b$ \.c$ ^\^$ ^(.*\..*)!$' ]]
 then	err_exit 'printf %R not working'
 fi
 if	[[ $(printf '%..:c\n' abc) != a:b:c ]]
-then	err_exit	"printf '%..:c' not working"
+then	err_exit "printf '%..:c' not working"
 fi
 if	[[ $(printf '%..*c\n' : abc) != a:b:c ]]
-then	err_exit	"printf '%..*c' not working"
+then	err_exit "printf '%..*c' not working"
 fi
 if	[[ $(printf '%..:s\n' abc def ) != abc:def ]]
-then	err_exit	"printf '%..:s' not working"
+then	err_exit "printf '%..:s' not working"
 fi
 if	[[ $(printf '%..*s\n' : abc def) != abc:def ]]
-then	err_exit	"printf '%..*s' not working"
+then	err_exit "printf '%..*s' not working"
 fi
 [[ $(printf '%q\n') == '' ]] || err_exit 'printf "%q" with missing arguments'
 # we won't get hit by the one second boundary twice, right?
@@ -305,10 +310,9 @@ exp=a
 if      [[ $y != $exp ]]
 then    err_exit "read -n1 failed -- expected '$exp', got '$y'"
 fi
-print -n $'{ read -r line;print $line;}\nhello' > /tmp/ksh$$
-chmod 755 /tmp/ksh$$
-trap 'rm -rf /tmp/ksh$$' EXIT
-if	[[ $($SHELL < /tmp/ksh$$) != hello ]]
+print -n $'{ read -r line;print $line;}\nhello' > $tmp/script
+chmod 755 $tmp/script
+if	[[ $($SHELL < $tmp/script) != hello ]]
 then	err_exit 'read of incomplete line not working correctly'
 fi
 set -f
@@ -328,19 +332,13 @@ wait $pid1
 (( $? == 1 )) || err_exit "wait not saving exit value"
 wait $pid2
 (( $? == 127 )) || err_exit "subshell job known to parent"
-set --noglob
-ifs=$IFS
-IFS=,
-set -- $(getconf LIBPATH)
-IFS=$ifs
 env=
-for v
-do	IFS=:
-	set -- $v
-	IFS=$ifs
-	eval [[ \$$2 ]] && env="$env $2=\"\$$2\""
+v=$(getconf LIBPATH)
+for v in ${v//,/ }
+do	v=${v#*:}
+	v=${v%%:*}
+	eval [[ \$$v ]] && env="$env $v=\"\$$v\""
 done
-set --glob
 if	[[ $(foo=bar; eval foo=\$foo $env exec -c \$SHELL -c \'print \$foo\') != bar ]]
 then	err_exit '"name=value exec -c ..." not working'
 fi
@@ -426,28 +424,28 @@ exp=abc
 #(print -n a;sleep 1; print -n bcde) | read -n3 a
 #exp=a
 #[[ $a == $exp ]] || err_exit "read -n3 from pipe failed -- expected '$exp', got '$a'"
-#rm -f /tmp/fifo$$
-#if	mkfifo /tmp/fifo$$ 2> /dev/null
-#then	(print -n a; sleep 1;print -n bcde)  > /tmp/fifo$$ &
+#rm -f $tmp/fifo
+#if	mkfifo $tmp/fifo 2> /dev/null
+#then	(print -n a; sleep 1;print -n bcde)  > $tmp/fifo &
 #	{
 #	read -u5 -n3 -t2 a || err_exit 'read -n3 from fifo timedout'
 #	read -u5 -n1 -t2 b || err_exit 'read -n1 from fifo timedout'
-#	} 5< /tmp/fifo$$
+#	} 5< $tmp/fifo
 #	exp=a
-	[[ $a == $exp ]] || err_exit "read -n3 from fifo failed -- expected '$exp', got '$a'"
-#	rm -f /tmp/fifo$$
-#	mkfifo /tmp/fifo$$ 2> /dev/null
-#	(print -n a; sleep 1;print -n bcde) > /tmp/fifo$$ &
+#	[[ $a == $exp ]] || err_exit "read -n3 from fifo failed -- expected '$exp', got '$a'"
+#	rm -f $tmp/fifo
+#	mkfifo $tmp/fifo 2> /dev/null
+#	(print -n a; sleep 1;print -n bcde) > $tmp/fifo &
 #	{
 #	read -u5 -N3 -t2 a || err_exit 'read -N3 from fifo timed out'
 #	read -u5 -N1 -t2 b || err_exit 'read -N1 from fifo timedout'
-#	} 5< /tmp/fifo$$
+#	} 5< $tmp/fifo
 #	exp=abc
 #	[[ $a == $exp ]] || err_exit "read -N3 from fifo failed -- expected '$exp', got '$a'"
 #	exp=d
 #	[[ $b == $exp ]] || err_exit "read -N1 from fifo failed -- expected '$exp', got '$b'"
 #fi
-rm -f /tmp/fifo$$
+#rm -f $tmp/fifo
 
 function longline
 {
@@ -501,8 +499,7 @@ typeset reps=50 leeway=5
 #$SHELL -c 'sleep $(printf "%a" .95)' 2> /dev/null || err_exit "sleep doesn't except %a format constants"
 #$SHELL -c 'test \( ! -e \)' 2> /dev/null ; [[ $? == 1 ]] || err_exit 'test \( ! -e \) not working'
 [[ $(ulimit) == "$(ulimit -fS)" ]] || err_exit 'ulimit is not the same as ulimit -fS'
-tmpfile=${TMP-/tmp}/ksh$$.2
-trap 'rm -f /tmp/ksh$$ "$tmpfile"' EXIT
+tmpfile=$tmp/file.2
 print $'\nprint -r -- "${.sh.file} ${LINENO} ${.sh.lineno}"' > $tmpfile
 [[ $( . "$tmpfile") == "$tmpfile 2 1" ]] || err_exit 'dot command not working'
 print -r -- "'xxx" > $tmpfile

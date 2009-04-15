@@ -3685,7 +3685,7 @@ opterror(register char* p, int version, char* catalog, int err)
 	register int		c;
 
 	if (opt_info.num != LONG_MIN)
-		opt_info.num = opt_info.number = 0;
+		opt_info.num = (long)(opt_info.number = 0);
 	if (!p || !(mp = opt_info.state->mp) && !(mp = opt_info.state->mp = sfstropen()))
 		goto nospace;
 	s = *p == '-' ? p : opt_info.name;
@@ -4135,7 +4135,7 @@ optget(register char** argv, const char* oopts)
 					 */
 
 					if (opt_info.num != LONG_MIN)
-						opt_info.num = opt_info.number = !(k & OPT_cache_invert);
+						opt_info.num = (long)(opt_info.number = !(k & OPT_cache_invert));
 					if (!(k & (OPT_cache_string|OPT_cache_numeric)))
 						return c;
 					if (*(opt_info.arg = &argv[opt_info.index++][opt_info.offset]))
@@ -4744,7 +4744,7 @@ optget(register char** argv, const char* oopts)
 	 */
 
 	if (opt_info.num != LONG_MIN)
-		opt_info.num = opt_info.number = num;
+		opt_info.num = (long)(opt_info.number = num);
 	if ((n = *++s == '#') || *s == ':' || w && !nov && v && (optnumber(v, &e, NiL), n = !*e))
 	{
 		if (w)
@@ -4756,7 +4756,7 @@ optget(register char** argv, const char* oopts)
 					pop(psp);
 					return opterror("!", version, catalog, 0);
 				}
-				opt_info.num = opt_info.number = 0;
+				opt_info.num = (long)(opt_info.number = 0);
 			}
 			else
 			{
@@ -4787,7 +4787,7 @@ optget(register char** argv, const char* oopts)
 								else
 								{
 									opt_info.arg = 0;
-									opt_info.num = opt_info.number = 0;
+									opt_info.num = (long)(opt_info.number = 0);
 								}
 								break;
 							}
@@ -5007,7 +5007,7 @@ optget(register char** argv, const char* oopts)
 						}
 					}
 				} while (*(s = skip(s, 0, 0, 0, 1, 0, 1, version)) == '[');
-				if (!(opt_info.num = opt_info.number = x))
+				if (!(opt_info.num = (long)(opt_info.number = x)))
 				{
 					pop(psp);
 					return opterror("*", version, catalog, 0);
@@ -5022,7 +5022,7 @@ optget(register char** argv, const char* oopts)
 	}
 	else
 	{
-		opt_info.num = opt_info.number = num;
+		opt_info.num = (long)(opt_info.number = num);
 		if (!w && !argv[opt_info.index][opt_info.offset])
 		{
 			opt_info.offset = 0;
@@ -5167,7 +5167,7 @@ optstr(const char* str, const char* opts)
 				e = opt_info.name;
 				while (e < &opt_info.name[sizeof(opt_info.name)-1] && (*e++ = *s++));
 				opt_info.arg = 0;
-				opt_info.num = opt_info.number = 0;
+				opt_info.num = (long)(opt_info.number = 0);
 				opt_info.option[0] = ':';
 				opt_info.option[1] = 0;
 				return '#';

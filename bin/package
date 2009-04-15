@@ -46,7 +46,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2009-02-02 $
+@(#)$Id: package (AT&T Research) 2009-04-15 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -1577,7 +1577,7 @@ int main()
 }
 !
 			for o in -lpthread ''
-			do	if	$CC $o -O -o $tmp.exe $tmp.c $o >/dev/null 2>&1
+			do	if	$CC $o -O -o $tmp.exe $tmp.c $o >/dev/null 2>&1 ||
 					gcc $o -O -o $tmp.exe $tmp.c $o >/dev/null 2>&1
 				then	./$tmp.exe
 					break
@@ -4524,7 +4524,7 @@ admin)	while	test ! -f $admin_db
 					case $admin_action in
 					make|view)
 						M=`grep -c ']: \*\*\*.* code ' $admin_log/$2` ;;
-					test)	T=`grep -ci 'fail' $admin_log/$2` ;;
+					test)	T=`grep -ci 'fail[es]' $admin_log/$2` ;;
 					*)	W=`grep '^[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz]*:.' $admin_log/$2 | egrep -cv 'start at|done  at|output captured|warning:|: package not found|whence: command not found'` ;;
 					esac
 					case $1 in
@@ -6143,7 +6143,7 @@ results)set '' $target
 				case $filter in
 				cat)	$exec cat $j
 					;;
-				errors)	$exec egrep -i '\*\*\*|FAIL|^TEST.* [123456789][0123456789]* error|core.*dump' $j | sed -e '/^TEST.\//s,/[^ ]*/,,'
+				errors)	$exec egrep -i '\*\*\*|FAIL[ES]|^TEST.* [123456789][0123456789]* error|core.*dump' $j | sed -e '/^TEST.\//s,/[^ ]*/,,'
 					;;
 				rt)	$exec rt - $j
 					;;

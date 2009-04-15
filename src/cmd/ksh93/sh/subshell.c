@@ -116,8 +116,12 @@ void	sh_subtmpfile(int pflag)
 			shp->fdstatus[1] = IOCLOSE;
 		}
 		else if(errno!=EBADF)
+		{
+			((struct checkpt*)shp->jmplist)->mode = SH_JMPERREXIT;
+			shp->toomany = 1;
 			errormsg(SH_DICT,ERROR_system(1),e_toomany);
-		if(!pflag)
+		}
+		if(shp->subshare || !pflag)
 		{
 			sfdisc(sfstdout,SF_POPDISC);
 			if((fd=sffileno(sfstdout))>=0)
@@ -149,7 +153,7 @@ void	sh_subtmpfile(int pflag)
 		}
 		sfclose(sfstdout);
 		if((sh_fcntl(fds[1],F_DUPFD, 1)) != 1)
-			errormsg(SH_DICT,ERROR_system(1),e_file+4);
+			errormsg(SH_DICT,ERROR_system(1),e_redirect);
 		sh_close(fds[1]);
 	skip:
 		sh_iostream(shp,1);
@@ -171,6 +175,9 @@ void sh_subfork(void)
 	Shell_t	*shp = sp->shp;
 	int	curenv = shp->curenv;
 	pid_t pid;
+	char *trap = shp->st.trapcom[0];
+	if(trap)
+		trap = strdup(trap);
 	/* see whether inside $(...) */
 	if(sp->pipe)
 		sh_subtmpfile(1);
@@ -181,6 +188,8 @@ void sh_subfork(void)
 		/* this is the parent part of the fork */
 		if(sp->subpid==0)
 			sp->subpid = pid;
+		if(trap)
+			free((void*)trap);
 		siglongjmp(*shp->jmplist,SH_JMPSUB);
 	}
 	else
@@ -194,6 +203,7 @@ void sh_subfork(void)
 		shp->subshell = 0;
 		SH_SUBSHELLNOD->nvalue.s = 0;
 		sp->subpid=0;
+		shp->st.trapcom[0] = trap;
 	}
 }
 
@@ -441,7 +451,7 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 	Shell_t *shp = &sh;
 	struct subshell sub_data;
 	register struct subshell *sp = &sub_data;
-	int jmpval,nsig=0;
+	int jmpval,nsig=0,duped=0;
 	int savecurenv = shp->curenv;
 	int savejobpgid = job.curpgid;
 	int16_t subshell;
@@ -588,7 +598,11 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 			{
 				int fd=sfsetfd(iop,3);
 				if(fd<0)
+				{
+					shp->toomany = 1;
+					((struct checkpt*)shp->jmplist)->mode = SH_JMPERREXIT;
 					errormsg(SH_DICT,ERROR_system(1),e_toomany);
+				}
 				shp->sftable[fd] = iop;
 				fcntl(fd,F_SETFD,FD_CLOEXEC);
 				shp->fdstatus[fd] = (shp->fdstatus[1]|IOCLEX);
@@ -601,7 +615,8 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 		if(sp->tmpfd>=0)
 		{
 			close(1);
-			fcntl(sp->tmpfd,F_DUPFD,1);
+			if (fcntl(sp->tmpfd,F_DUPFD,1) != 1)
+				duped++;
 			sh_close(sp->tmpfd);
 		}
 		shp->fdstatus[1] = sp->fdstatus;
@@ -710,5 +725,13 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 		if(sig==SIGINT || sig== SIGQUIT)
 			sh_fault(sig);
 	}
+	if(duped)
+	{
+		((struct checkpt*)shp->jmplist)->mode = SH_JMPERREXIT;
+		shp->toomany = 1;
+		errormsg(SH_DICT,ERROR_system(1),e_redirect);
+	}
+	if(jmpval && shp->toomany)
+		siglongjmp(*shp->jmplist,jmpval);
 	return(iop);
 }

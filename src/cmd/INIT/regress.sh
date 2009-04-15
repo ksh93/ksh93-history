@@ -23,7 +23,7 @@ command=regress
 case $(getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt) in
 0123)	USAGE=$'
 [-?
-@(#)$Id: regress (AT&T Research) 2009-03-03 $
+@(#)$Id: regress (AT&T Research) 2009-03-31 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?regress - run regression tests]
@@ -170,7 +170,11 @@ unit [ command [ arg ... ] ]
         [+UNIT \acommand\a [ \aarg\a ... ]]?Define the command and
             optional default arguments to be tested. \bUNIT\b explicitly
             overrides the default command name derived from the test script
-            file name.]
+            file name. A \acommand\a operand with optional arguments
+	    overrides the \bUNIT\b \acommand\a and arguments, with the
+	    exception that if the \bUNIT\b \acommand\a is \b-\b or \b+\b the
+	    \bUNIT\b arguments are appended to the operand or default
+	    unit command and arguments.]
         [+VIEW \avar\a [ \afile\a ]]?\avar\a is set to the full
             pathname of \avar\a [ \afile\a ]] in the current \b$VPATH\b
             view if defined.]
@@ -498,16 +502,19 @@ function DO # cmd ...
 
 function UNIT # cmd arg ...
 {
-	(( UNIT_READONLY )) && return
 	typeset cmd=$1
 	case $cmd in
-	-)	shift
-		#BUG# ARGV=("${ARGV[@]}" "$@")
-		set -- "${ARGV[@]}" "$@"
-		ARGV=("$@")
+	[-+])	shift
+		if	(( UNIT_READONLY ))
+		then	COMMAND="$COMMAND $*"
+		else	#BUG# ARGV=("${ARGV[@]}" "$@")
+			set -- "${ARGV[@]}" "$@"
+			ARGV=("$@")
+		fi
 		return
 		;;
 	esac
+	(( UNIT_READONLY )) && return
 	if	[[ $UNIT ]] && (( $# <= 1 ))
 	then	set -- "${ARGV[@]}"
 		case $1 in
@@ -597,15 +604,22 @@ function CD
 function EXPORT
 {
 	typeset x n v
-	RUN
-	if	[[ $GROUP != $TEST_select ]] || (( COND_SKIP[COND] ))
-	then	return
+	if	[[ $GROUP == INIT ]]
+	then	for x
+		do	n=${x%%=*}
+			v=${x#*=}
+			ENVIRON[ENVIRONS++]=$n="'$v'"
+		done
+	else	RUN
+		if	[[ $GROUP != $TEST_select ]] || (( COND_SKIP[COND] ))
+		then	return
+		fi
+		for x
+		do	n=${x%%=*}
+			v=${x#*=}
+			EXPORT[EXPORTS++]=$n="'$v'"
+		done
 	fi
-	for x
-	do	n=${x%%=*}
-		v=${x#*=}
-		EXPORT[EXPORTS++]=$n="'$v'"
-	done
 }
 
 function FLUSH
@@ -871,7 +885,7 @@ function INFO # info description
 function COMMAND # arg ...
 {
 	((TESTS++))
-	case " ${EXPORT[*]}" in
+	case " ${ENVIRON[*]} ${EXPORT[*]}" in
 	*' 'LC_ALL=*)
 		;;
 	*' 'LC_+([A-Z])=*)
@@ -882,13 +896,13 @@ function COMMAND # arg ...
 	then	(
 		PS4=''
 		set -x
-		print -r -- "${EXPORT[@]}" "PATH=$PATH" $COMMAND "$@"
+		print -r -- "${ENVIRON[@]}" "${EXPORT[@]}" "PATH=$PATH" $COMMAND "$@"
 		) 2>&1 >/dev/null |
 		sed -e 's,^print -r -- ,,' -e 's,$, "$@",' >$TWD/COMMAND
 		chmod +x $TWD/COMMAND
 	fi
 	[[ $UMASK != $UMASK_ORIG ]] && umask $UMASK
-	eval "${EXPORT[@]}" PATH='$PATH' '$'COMMAND '"$@"'
+	eval "${ENVIRON[@]}" "${EXPORT[@]}" PATH='$PATH' '$'COMMAND '"$@"'
 	STATUS=$?
 	[[ $UMASK != $UMASK_ORIG ]] && umask $UMASK_ORIG
 	return $STATUS
@@ -1126,16 +1140,17 @@ function FI
 
 # main
 
-integer ERRORS=0 EXPORTS=0 TESTS=0 SUBTESTS=0 LINE=0 TESTLINE=0 ITEM=0 LASTITEM=0 COND=0 UNIT_READONLY=0 COUNT
+integer ERRORS=0 ENVIRONS=0 EXPORTS=0 TESTS=0 SUBTESTS=0 LINE=0 TESTLINE=0
+integer ITEM=0 LASTITEM=0 COND=0 UNIT_READONLY=0 COUNT
 typeset ARGS COMMAND COPY DIAGNOSTICS ERROR EXEC FLUSHED=0 GROUP=INIT
 typeset IGNORE INPUT KEEP OUTPUT TEST SOURCE MOVE NOTE UMASK UMASK_ORIG
 typeset ARGS_ORIG COMMAND_ORIG TITLE UNIT ARGV PREFIX OFFSET IGNORESPACE
-typeset COMPARE
+typeset COMPARE MAIN
 typeset TEST_file TEST_keep TEST_pipe_input TEST_pipe_io TEST_pipe_output TEST_local
 typeset TEST_quiet TEST_regular=1 TEST_rmflags='-rf --' TEST_rmu TEST_select
 
-typeset -A EXPORT SAME VIEWS PIPE READONLY
-typeset -a COND_LINE COND_SKIP COND_KEPT
+typeset -A SAME VIEWS PIPE READONLY
+typeset -a COND_LINE COND_SKIP COND_KEPT ENVIRON EXPORT
 typeset -Z LAST=00
 
 unset FIGNORE
@@ -1190,6 +1205,7 @@ else	REGRESS=${UNIT%.tst}
 fi
 UNIT=${UNIT##*/}
 UNIT=${UNIT%.tst}
+MAIN=$UNIT
 if	[[ $VPATH ]]
 then	set -A VIEWS ${VPATH//:/' '}
 	OFFSET=${SOURCE#${VIEWS[0]}}

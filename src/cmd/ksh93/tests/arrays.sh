@@ -25,6 +25,12 @@ function err_exit
 }
 alias err_exit='err_exit $LINENO'
 
+Command=${0##*/}
+integer Errors=0
+
+tmp=$(mktemp -dt) || { err_exit mktemp -dt failed; exit 1; }
+trap "cd /; rm -rf $tmp" EXIT
+
 function fun
 {
 	integer i
@@ -34,8 +40,6 @@ function fun
 	done
 }
 
-Command=${0##*/}
-integer Errors=0
 set -A x zero one two three four 'five six'
 if	[[ $x != zero ]]
 then	err_exit '$x is not element 0'
@@ -329,24 +333,23 @@ bam[foo]=value
 [[ $bam == value ]] && err_exit 'unset associative array element error'
 : only first element of an array can be exported
 unset bam
-trap 'rm -f /tmp/sharr$$' EXIT
-print 'print ${var[0]} ${var[1]}' > /tmp/sharr$$
-chmod +x /tmp/sharr$$
-[[ $($SHELL -c "var=(foo bar);export var;/tmp/sharr$$") == foo ]] || err_exit 'export array not exporting just first element'
+print 'print ${var[0]} ${var[1]}' > $tmp/script
+chmod +x $tmp/script
+[[ $($SHELL -c "var=(foo bar);export var;$tmp/script") == foo ]] || err_exit 'export array not exporting just first element'
 unset foo
 set -o allexport
 foo=one
 foo[1]=two
 foo[0]=three
 [[ $foo == three ]] || err_exit 'export all not working with arrays'
-cat > /tmp/sharr$$ <<- \!
+cat > $tmp/script <<- \!
 	typeset -A foo
 	print foo${foo[abc]}
 !
 # 04-05-24 bug fix
 unset foo
-[[ $($SHELL -c "typeset -A foo;/tmp/sharr$$")  == foo ]] 2> /dev/null || err_exit 'empty associative arrays not being cleared correctly before scripts'
-[[ $($SHELL -c "typeset -A foo;foo[abc]=abc;/tmp/sharr$$") == foo ]] 2> /dev/null || err_exit 'associative arrays not being cleared correctly before scripts'
+[[ $($SHELL -c "typeset -A foo;$tmp/script")  == foo ]] 2> /dev/null || err_exit 'empty associative arrays not being cleared correctly before scripts'
+[[ $($SHELL -c "typeset -A foo;foo[abc]=abc;$tmp/script") == foo ]] 2> /dev/null || err_exit 'associative arrays not being cleared correctly before scripts'
 unset foo
 foo=(one two)
 [[ ${foo[@]:1} == two ]] || err_exit '${foo[@]:1} == two'

@@ -28,7 +28,7 @@
  */
 
 #include <ast.h>
-#include <tm.h>
+#include <tmx.h>
 
 #define DAYS(p)	(tm_data.days[(p)->tm_mon]+((p)->tm_mon==1&&LEAP(p)))
 #define LEAP(p)	(tmisleapyear((p)->tm_year))
@@ -65,6 +65,16 @@ tmfix(register Tm_t* tm)
 	 * adjust from shortest to longest units
 	 */
 
+	if ((n = tm->tm_nsec) < 0)
+	{
+		tm->tm_sec -= (TMX_RESOLUTION - n) / TMX_RESOLUTION;
+		tm->tm_nsec = TMX_RESOLUTION - (-n) % TMX_RESOLUTION;
+	}
+	else if (n >= TMX_RESOLUTION)
+	{
+		tm->tm_sec += n / TMX_RESOLUTION;
+		tm->tm_nsec %= TMX_RESOLUTION;
+	}
 	if ((n = tm->tm_sec) < 0)
 	{
 		tm->tm_min -= (60 - n) / 60;

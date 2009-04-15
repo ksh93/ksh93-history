@@ -603,7 +603,7 @@ int sh_lex(Lex_t* lp)
 					}
 					else
 					{
-						if((n=fcpeek(0))!=RPAREN && n!=LPAREN && lp->lexd.warn)
+						if(lp->lexd.warn && (n=fcpeek(0))!=RPAREN && n!=' ' && n!='\t')
 							errormsg(SH_DICT,ERROR_warn(0),e_lexspace,shp->inlineno,c,n);
 					}
 				}

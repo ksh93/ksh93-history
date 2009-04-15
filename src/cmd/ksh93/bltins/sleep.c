@@ -31,6 +31,7 @@
 #undef	sleep
 #include	<error.h>
 #include	<errno.h>
+#include	<tmx.h>
 #include	"builtins.h"
 #include	"FEATURE/time"
 #include	"FEATURE/poll"
@@ -66,10 +67,27 @@ int	b_sleep(register int argc,char *argv[],void *extra)
 	argv += opt_info.index;
 	if(cp = *argv)
 	{
-		d = strtod(cp, (char**)&last);
+		d = strtod(cp, &last);
 		if(*last)
-			errormsg(SH_DICT,ERROR_exit(1),e_number,cp);
-		else if(argv[1])
+		{
+			Time_t now,ns;
+			char* pp;
+			now = TMX_NOW;
+			if(*cp == 'P' || *cp == 'p')
+				ns = tmxdate(cp, &last, now);
+			else
+			{
+				if(pp = sfprints("exact %s", cp))
+					ns = tmxdate(pp, &last, now);
+				if(*last && (pp = sfprints("p%s", cp)))
+					ns = tmxdate(pp, &last, now);
+			}
+			if(*last)
+				errormsg(SH_DICT,ERROR_exit(1),e_number,*argv);
+			d = ns - now;
+			d /= TMX_RESOLUTION;
+		}
+		if(argv[1])
 			errormsg(SH_DICT,ERROR_exit(1),e_oneoperand);
 	}
 	else if(!sflag)

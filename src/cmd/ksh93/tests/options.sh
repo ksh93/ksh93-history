@@ -27,6 +27,12 @@ alias err_exit='err_exit $LINENO'
 
 Command=${0##*/}
 integer Errors=0
+
+unset HISTFILE
+
+tmp=$(mktemp -dt) || { err_exit mktemp -dt failed; exit 1; }
+trap "cd /; rm -rf $tmp" EXIT
+
 if	[[ $( ${SHELL-ksh} -s hello<<-\!
 		print $1
 		!
@@ -43,11 +49,8 @@ then	err_exit 'sh -e not workuing'
 fi
 [[ $($SHELL -D -c 'print hi; print $"hello"') == '"hello"' ]] || err_exit 'ksh -D not working'
 
-tmp=/tmp/ksh$$
-mkdir $tmp
 rc=$tmp/.kshrc
 print $'PS1=""\nfunction env_hit\n{\n\tprint OK\n}' > $rc
-
 export ENV='${nosysrc}'$rc
 if	[[ -o privileged ]]
 then
@@ -128,11 +131,10 @@ else
 		err_exit '--norc reads $HOME/.kshrc file'
 fi
 
-rm -rf $tmp
+rm -rf $tmp/.kshrc
 
 if	command set -G 2> /dev/null
-then	mkdir /tmp/ksh$$
-	cd /tmp/ksh$$
+then	cd $tmp
 	mkdir bar foo
 	> bar.c  > bam.c
 	> bar/foo.c > bar/bam.c
@@ -154,11 +156,9 @@ then	mkdir /tmp/ksh$$
 	[[ $* == $expected ]] ||
 		err_exit "-G **/bam.c failed -- expected '$expected', got '$*'"
 	cd ~-
-	rm -rf /tmp/ksh$$
 fi
 
-mkdir /tmp/ksh$$
-cd /tmp/ksh$$
+cd $tmp
 t="<$$>.profile.<$$>"
 echo "echo '$t'" > .profile
 cp $SHELL ./-ksh
@@ -197,7 +197,7 @@ else
 		err_exit './-ksh -p does not ignore .profile'
 fi
 cd ~-
-rm -rf /tmp/ksh$$
+rm -rf $tmp/.profile
 
 
 # { exec interactive login_shell restricted xtrace } in the following test
@@ -347,16 +347,24 @@ do	eval ${pipeline[i].command}
 	status=$?
 	expected=${pipeline[i].nopipefail}
 	[[ $status == $expected ]] ||
-	err_exit "pipeline '${pipeline[i].command}' exit status $status -- expected $expected"
+	err_exit "--nopipefail '${pipeline[i].command}' exit status $status -- expected $expected"
 done
+ftt=0
 set --pipefail
 for ((i = 0; i < ${#pipeline[@]}; i++ ))
 do	eval ${pipeline[i].command}
 	status=$?
 	expected=${pipeline[i].pipefail}
-	[[ $status == $expected ]] ||
-	err_exit "pipeline '${pipeline[i].command}' exit status $status -- expected $expected"
+	if	[[ $status != $expected ]]
+	then	err_exit "--pipefail '${pipeline[i].command}' exit status $status -- expected $expected"
+		(( i == 0 )) && ftt=1
+	fi
 done
+if	(( ! ftt ))
+then	exp=10
+	got=$(for((n=1;n<exp;n++))do $SHELL --pipefail -c '(sleep 0.1;false)|true|true' && break; done; print $n)
+	[[ $got == $exp ]] || err_exit "--pipefail -c '(sleep 0.1;false)|true|true' fails with exit status 0 (after $got/$exp iterations)"
+fi
 
 echo=$(whence -p echo)
 for ((i=0; i < 20; i++))
@@ -371,20 +379,23 @@ done
 	(( $? )) || err_exit 'pipe not failing in subshell with pipefail'
 ) | wc >/dev/null
 $SHELL -c 'set -o pipefail; false | $(whence -p true);' && err_exit 'pipefail not returning failure with sh -c'
-[[ $( set -o pipefail
+exp='1212 or 1221'
+got=$(
+	set --pipefail
 	pipe() { date | cat > /dev/null ;}
 	print $'1\n2' |
 	while	read i
-	do 	if	pipe /tmp
-		then	{ print enter $i; sleep 2; print leave $i; } &
+	do 	if	pipe $tmp
+		then	{ print -n $i; sleep 2; print -n $i; } &
 		fi
 	done
-	wait) == $'enter 1\nenter 2'* ]] || err_exit  '& job delayed by pipefail'
+	wait
+)
+[[ $got == @(1212|1221) ]] || err_exit "& job delayed by --pipefail, expected '$exp', got '$got'"
 $SHELL -c '[[ $- == *c* ]]' || err_exit  'option c not in $-'
-trap 'rm -f /tmp/.profile' EXIT
-> /tmp/.profile
-for i in  i l r s D E a b e f h k n r t u v  x B C G H
-do	HOME=/tmp ENV= $SHELL -$i  2> /dev/null <<- ++EOF++ || err_exit "option $i not in \$-"
+> $tmp/.profile
+for i in  i l r s D E a b e f h k n t u v x B C G H
+do	HOME=$tmp ENV= $SHELL -$i  >/dev/null 2>&1 <<- ++EOF++ || err_exit "option $i not in \$-"
 	[[ \$- == *$i* ]]  ||   exit 1
 	++EOF++
 done
@@ -393,9 +404,10 @@ integer j=0
 for i in  interactive login restricted allexport notify errexit \
 	noglob  trackall keyword noexec nounset verbose xtrace braceexpand \
 	noclobber globstar rc
-do	HOME=/tmp ENV= $SHELL   -o $i  2> /dev/null <<- ++EOF++ || err_exit "option $i not equivalent to ${letters:j:1}"
+do	HOME=$tmp ENV= $SHELL -o $i >/dev/null 2>&1 <<- ++EOF++ || err_exit "option $i not equivalent to ${letters:j:1}"
 	[[ \$- == *${letters:j:1}* ]]  ||   exit 1
 	++EOF++
 	((j++))
 done
+
 exit $((Errors))

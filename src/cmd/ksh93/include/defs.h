@@ -169,6 +169,7 @@ struct limits
 	char		indebug; 	/* set when in debug trap */ \
 	unsigned char	lastsig;	/* last signal received */ \
 	char		subshare;	/* set when in ${..} comsub */ \
+	char		toomany;	/* set when out of fd's */ \
 	char		*readscript;	/* set before reading a script */ \
 	int		*inpipe;	/* input pipe pointer */ \
 	int		*outpipe;	/* output pipe pointer */ \
@@ -228,10 +229,12 @@ struct limits
 	Shopt_t		glob_options; \
 	Namval_t	*typeinit; \
 	int		*stats; \
-	Namfun_t	nvfun;
+	Namfun_t	nvfun; \
+	struct Regress_s*regress;
 
 #include	<shell.h>
 
+#include	"regress.h"
 
 /* error exits from various parts of shell */
 #define	NIL(type)	((type)0)

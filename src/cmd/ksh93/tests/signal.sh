@@ -28,9 +28,10 @@ alias err_exit='err_exit $LINENO'
 Command=${0##*/}
 integer Errors=0
 
-mkdir /tmp/ksh$$ || err_exit "mkdir /tmp/ksh$$ failed"
-trap 'cd /; rm -rf /tmp/ksh$$' EXIT
-cd /tmp/ksh$$ || err_exit "cd /tmp/ksh$$ failed"
+tmp=$(mktemp -dt) || { err_exit mktemp -dt failed; exit 1; }
+trap "cd /; rm -rf $tmp" EXIT
+
+cd $tmp || err_exit "cd $tmp failed"
 
 [[ $( trap 'print -n got_child' SIGCHLD
 	sleep 2 &
@@ -257,31 +258,31 @@ do	if	! n=$(kill -l $s 2>/dev/null)
 	err_exit "'kill -l $s' => $n, 'kill -l $n' => $t, kill -l $t => $m -- expected $n"
 done
 yes=$(whence -p yes)
-[[ $yes ]] && for i in TERM VTALRM PIPE
+[[ $yes ]] && for exp in TERM VTALRM PIPE
 do { $SHELL <<- EOF
 		foo() { return 0; }
 		trap foo EXIT
-		sleep 2 && { kill -$i \$\$; sleep 1;kill -KILL \$\$;}  &
+		{ sleep 2; kill -$exp \$\$; sleep 1; kill -0 \$\$ && kill -KILL \$\$; } &
 		$yes | while read yes; do
 		        (/bin/date; sleep .1)
 		done > /dev/null
 	EOF
     } 2>> /dev/null
-    [[ $(kill -l $?)  == $i ]] || err_exit "failed expecting termination by $i signal, required KILL"
+    got=$(kill -l $?)
+    [[ $exp == $got ]] || err_exit "kill -$exp \$\$ failed, required termination by signal '$got'"
 done
 
-tmp=foo$$
 SECONDS=0
-$SHELL 2> /dev/null -c 'sleep 2 && kill $$ & trap "print done;exit 3" EXIT; (sleep 5);print finished' > $tmp
+$SHELL 2> /dev/null -c 'sleep 2 && kill $$ & trap "print done;exit 3" EXIT; (sleep 5);print finished' > $tmp/sig
 (( $?==3)) || err_exit "wrong exit status expecting 3 got $?"
-x=$(cat "$tmp")
+x=$(<$tmp/sig)
 [[ $x == done ]] || err_exit "wrong result - execting done got $x"
 (( SECONDS > 3.5 )) && err_exit "took $SECONDS seconds, expecting around 2"
 
 SECONDS=0
-{ $SHELL 2> /dev/null -c 'sleep 2 && kill $$ & trap "print done;exit" EXIT; (sleep 5);print finished' > $tmp ;} 2> /dev/null
+{ $SHELL 2> /dev/null -c 'sleep 2 && kill $$ & trap "print done;exit" EXIT; (sleep 5);print finished' > $tmp/sig ;} 2> /dev/null
 [[ $(kill -l $?) == TERM ]] || err_exit "wrong exit status expecting TERM got $(kill -l $?)"
-x=$(cat "$tmp")
+x=$(<$tmp/sig)
 [[ $x == done ]] || err_exit "wrong result - execting done got $x"
 (( SECONDS > 3.5 )) && err_exit "took $SECONDS seconds, expecting around 2"
 

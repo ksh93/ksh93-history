@@ -92,6 +92,12 @@ All recorded changes follow.
 
 :::::::: INIT ::::::::
 
+09-04-15 iffe.sh: add implicit "ini" op to initialize io for subsequent ops
+09-03-31 regress.sh: EXPORT before test => global ENVIRON[]
+09-03-26 package.sh: test fail pattern is 'fail[es]'
+09-03-26 UNIT - ... appends (options) to command line
+09-03-19 TEST.mk: x.tst => x only if x is command target
+09-03-15 regress.sh: add ${MAIN} for base name of main unit
 09-03-10 TEST.mk: add .SOURCE:tests if tests is a dir
 09-03-03 regress.sh: allow command line unit to override UNIT
 09-03-03 mktest.sh: handle IO == $'\n'

@@ -27,17 +27,19 @@ alias err_exit='err_exit $LINENO'
 
 Command=${0##*/}
 integer Errors=0
+
+tmp=$(mktemp -dt) || { err_exit mktemp -dt failed; exit 1; }
+trap "cd /; rm -rf $tmp" EXIT
+
 null=''
 if	[[ ! -z $null ]]
 then	err_exit "-z: null string should be of zero length"
 fi
-file=/tmp/regresso$$
-newer_file=/tmp/regressn$$
+file=$tmp/original
+newer_file=$tmp/newer
 if	[[ -z $file ]]
 then	err_exit "-z: $file string should not be of zero length"
 fi
-trap "rm -f $file $newer_file" EXIT
-rm -f $file
 if	[[ -a $file ]]
 then	err_exit "-a: $file shouldn't exist"
 fi
@@ -119,11 +121,11 @@ fi
 if	[[ $file -nt $newer_file ]]
 then	err_exit "$newer_file should be newer than $file"
 fi
-if	[[ $file != /tmp/* ]]
-then	err_exit "$file should match /tmp/*"
+if	[[ $file != $tmp/* ]]
+then	err_exit "$file should match $tmp/*"
 fi
-if	[[ $file = '/tmp/*' ]]
-then	err_exit "$file should not equal /tmp/*"
+if	[[ $file = $tmp'/*' ]]
+then	err_exit "$file should not equal $tmp'/*'"
 fi
 [[ ! ( ! -z $null && ! -z x) ]]	|| err_exit "negation and grouping"
 [[ -z '' || -z '' || -z '' ]]	|| err_exit "three ors not working"
@@ -215,13 +217,13 @@ done
 [[ D290.2003.02.16.temp == D290.+(2003.02.16).temp* ]] || err_exit 'pattern match bug with +(...)'
 rm -rf $file
 {
-[[ -N $file ]] && err_exit 'test -N /tmp/*: st_mtime>st_atime after creat'
+[[ -N $file ]] && err_exit 'test -N $tmp/*: st_mtime>st_atime after creat'
 sleep 2
 print 'hello world'
-[[ -N $file ]] || err_exit 'test -N /tmp/*: st_mtime<=st_atime after write'
+[[ -N $file ]] || err_exit 'test -N $tmp/*: st_mtime<=st_atime after write'
 sleep 2
 read
-[[ -N $file ]] && err_exit 'test -N /tmp/*: st_mtime>st_atime after read'
+[[ -N $file ]] && err_exit 'test -N $tmp/*: st_mtime>st_atime after read'
 } > $file < $file
 if	rm -rf "$file" && ln -s / "$file"
 then	[[ -L "$file" ]] || err_exit '-L not working'

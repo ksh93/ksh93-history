@@ -2482,7 +2482,6 @@ static char *sh_tilde(Shell_t *shp,register const char *string)
  */
 static char *special(Shell_t *shp,register int c)
 {
-	register Namval_t *np;
 	if(c!='$')
 		shp->argaddr = 0;
 	switch(c)

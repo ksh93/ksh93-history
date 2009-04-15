@@ -941,15 +941,16 @@ pid_t path_spawn(const char *opath,register char **argv, char **envp, Pathcomp_t
 	char **xp=0, *xval, *libenv = (libpath?libpath->lib:0); 
 	Namval_t*	np;
 	char		*s, *v;
-	int		r, n;
+	int		r, n, pidsize;
 	pid_t		pid= -1;
 	/* leave room for inserting _= pathname in environment */
 	envp--;
 #if _lib_readlink
 	/* save original pathname */
 	stakseek(PATH_OFFSET);
+	pidsize = sfprintf(stkstd,"*%d*",spawn?getpid():getppid());
 	stakputs(opath);
-	opath = stakfreeze(1)+PATH_OFFSET;
+	opath = stakfreeze(1)+PATH_OFFSET+pidsize;
 	np=nv_search(argv[0],shp->track_tree,0);
 	while(libpath && !libpath->lib)
 		libpath=libpath->next;
@@ -1027,7 +1028,7 @@ pid_t path_spawn(const char *opath,register char **argv, char **envp, Pathcomp_t
 	}
 	if(!opath)
 		opath = stakptr(PATH_OFFSET);
-	envp[0] =  (char*)opath-PATH_OFFSET;
+	envp[0] =  (char*)opath-(PATH_OFFSET+pidsize);
 	envp[0][0] =  '_';
 	envp[0][1] =  '=';
 	sfsync(sfstderr);

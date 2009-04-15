@@ -547,7 +547,11 @@ static void io_preserve(Shell_t* shp, register Sfio_t *sp, register int f2)
 	if(f2==shp->infd)
 		shp->infd = fd;
 	if(fd<0)
+	{
+		shp->toomany = 1;
+		((struct checkpt*)shp->jmplist)->mode = SH_JMPERREXIT;
 		errormsg(SH_DICT,ERROR_system(1),e_toomany);
+	}
 	if(shp->fdptrs[fd]=shp->fdptrs[f2])
 	{
 		if(f2==job.fd)
@@ -740,9 +744,20 @@ int sh_open(register const char *path, int flags, ...)
 		if((fd=dup(fd))<0)
 			return(-1);
 	}
-	else while((fd = open(path, flags, mode)) < 0)
-		if(errno!=EINTR || sh.trapnote)
-			return(-1);
+	else
+	{
+#if SHOPT_REGRESS
+		char	buf[PATH_MAX];
+		if(strncmp(path,"/etc/",5)==0)
+		{
+			sfsprintf(buf, sizeof(buf), "%s%s", sh_regress_etc(path, __LINE__, __FILE__), path+4);
+			path = buf;
+		}
+#endif
+		while((fd = open(path, flags, mode)) < 0)
+			if(errno!=EINTR || sh.trapnote)
+				return(-1);
+ 	}
  ok:
 	flags &= O_ACCMODE;
 	if(flags==O_WRONLY)
@@ -962,7 +977,7 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 	{
 		iof=iop->iofile;
 		fn = (iof&IOUFD);
-		if(fn==1 && shp->subshell && (flag==2 || (sfset(sfstdout,0,0)&SF_STRING)))
+		if(fn==1 && shp->subshell && !shp->subshare && (flag==2 || (sfset(sfstdout,0,0)&SF_STRING)))
 			sh_subfork();
 		io_op[0] = '0'+(iof&IOUFD);
 		if(iof&IOPUT)
@@ -1044,7 +1059,7 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 						message = e_file;
 						goto fail;
 					}
-					if(shp->subshell && dupfd==1)
+					if(shp->subshell && dupfd==1 && (sfset(sfstdout,0,0)&SF_STRING))
 					{
 						sh_subtmpfile(0);
 						dupfd = sffileno(sfstdout);
@@ -1438,7 +1453,11 @@ void sh_iosave(Shell_t *shp, register int origfd, int oldtop, char *name)
 #endif /* SHOPT_DEVFD */
 	{
 		if((savefd = sh_fcntl(origfd, F_DUPFD, 10)) < 0 && errno!=EBADF)
+		{
+			shp->toomany=1;
+			((struct checkpt*)shp->jmplist)->mode = SH_JMPERREXIT;
 			errormsg(SH_DICT,ERROR_system(1),e_toomany);
+		}
 	}
 	filemap[shp->topfd].tname = name;
 	filemap[shp->topfd].subshell = flag;

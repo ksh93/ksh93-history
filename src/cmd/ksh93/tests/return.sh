@@ -26,14 +26,17 @@ function err_exit
 	let Errors+=1
 }
 alias err_exit='err_exit $LINENO'
+
 Command=${0##*/}
 integer Errors=0
+
+tmp=$(mktemp -dt) || { err_exit mktemp -dt failed; exit 1; }
+trap "cd /; rm -rf $tmp" EXIT
 
 unset HISTFILE
 
 foo=NOVAL bar=NOVAL
-file=/tmp/shtest$$
-trap "rm -f $file" EXIT INT
+file=$tmp/test
 function foo
 {
 	typeset foo=NOEXIT

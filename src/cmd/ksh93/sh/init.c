@@ -72,6 +72,10 @@ char e_version[]	= "\n@(#)$Id: Version "
 #define ATTRS		1
 			"P"
 #endif
+#if SHOPT_REGRESS
+#define ATTRS		1
+			"R"
+#endif
 #if ATTRS
 			" "
 #endif
@@ -631,8 +635,11 @@ static char* get_lineno(register Namval_t* np, Namfun_t *fp)
 
 static char* get_lastarg(Namval_t* np, Namfun_t *fp)
 {
-	Shell_t *shp = nv_shell(np);
-	NOT_USED(np);
+	Shell_t	*shp = nv_shell(np);
+	char	*cp;
+	int	pid;
+        if(sh_isstate(SH_INIT) && (cp=shp->lastarg) && *cp=='*' && (pid=strtol(cp+1,&cp,10)) && *cp=='*')
+		nv_putval(np,(pid==getppid()?cp+1:0),0);
 	return(shp->lastarg);
 }
 
@@ -644,14 +651,15 @@ static void put_lastarg(Namval_t* np,const char *val,int flags,Namfun_t *fp)
 		sfprintf(shp->strbuf,"%.*g",12,*((double*)val));
 		val = sfstruse(shp->strbuf);
 	}
+	if(val)
+		val = strdup(val);
 	if(shp->lastarg && !nv_isattr(np,NV_NOFREE))
 		free((void*)shp->lastarg);
 	else
 		nv_offattr(np,NV_NOFREE);
-	if(val)
-		shp->lastarg = strdup(val);
-	else
-		shp->lastarg = 0;
+	shp->lastarg = (char*)val;
+	nv_offattr(np,NV_EXPORT);
+	np->nvenv = 0;
 }
 
 static int hasgetdisc(register Namfun_t *fp)
@@ -1005,6 +1013,41 @@ Shell_t *sh_init(register int argc,register char *argv[], Shinit_f userinit)
 #if ERROR_VERSION >= 20000102L
 	error_info.catalog = e_dict;
 #endif
+#if SHOPT_REGRESS
+	{
+		Opt_t*	nopt;
+		Opt_t*	oopt;
+		char*	a;
+		char**	av = argv;
+		char*	regress[3];
+
+		sh_regress_init(shp);
+		regress[0] = "__regress__";
+		regress[2] = 0;
+		/* NOTE: only shp is used by __regress__ at this point */
+		shp->bltindata.shp = shp;
+		while ((a = *++av) && a[0] == '-' && (a[1] == 'I' || a[1] == '-' && a[2] == 'r'))
+		{
+			if (a[1] == 'I')
+			{
+				if (a[2])
+					regress[1] = a + 2;
+				else if (!(regress[1] = *++av))
+					break;
+			}
+			else if (strncmp(a+2, "regress", 7))
+				break;
+			else if (a[9] == '=')
+				regress[1] = a + 10;
+			else if (!(regress[1] = *++av))
+				break;
+			nopt = optctx(0, 0);
+			oopt = optctx(nopt, 0);
+			b___regress__(2, regress, &shp->bltindata);
+			optctx(oopt, nopt);
+		}
+	}
+#endif
 	shp->cpipe[0] = -1;
 	shp->coutpipe = -1;
 	shp->userid=getuid();
@@ -1055,6 +1098,11 @@ Shell_t *sh_init(register int argc,register char *argv[], Shinit_f userinit)
 			shp->login_sh = 2;
 	}
 	env_init(shp);
+	if(!ENVNOD->nvalue.cp)
+	{
+		sfprintf(shp->strbuf,"%s/.kshrc",nv_getval(HOME));
+		nv_putval(ENVNOD,sfstruse(shp->strbuf),NV_RDONLY);
+	}
 	*SHLVL->nvalue.ip +=1;
 #if SHOPT_SPAWN
 	{
@@ -1177,17 +1225,16 @@ Shell_t *sh_init(register int argc,register char *argv[], Shinit_f userinit)
 	/* set[ug]id scripts require the -p flag */
 	if(shp->userid!=shp->euserid || shp->groupid!=shp->egroupid)
 	{
-#if SHOPT_P_SUID
+#ifdef SHOPT_P_SUID
 		/* require sh -p to run setuid and/or setgid */
-		if(!sh_isoption(SH_PRIVILEGED) && shp->euserid < SHOPT_P_SUID)
+		if(!sh_isoption(SH_PRIVILEGED) && shp->userid >= SHOPT_P_SUID)
 		{
 			setuid(shp->euserid=shp->userid);
 			setgid(shp->egroupid=shp->groupid);
 		}
 		else
-#else
-			sh_onoption(SH_PRIVILEGED);
 #endif /* SHOPT_P_SUID */
+			sh_onoption(SH_PRIVILEGED);
 #ifdef SHELLMAGIC
 		/* careful of #! setuid scripts with name beginning with - */
 		if(shp->login_sh && argv[1] && strcmp(argv[0],argv[1])==0)

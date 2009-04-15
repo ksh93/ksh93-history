@@ -28,6 +28,9 @@ alias err_exit='err_exit $LINENO'
 Command=${0##*/}
 integer Errors=0
 
+tmp=$(mktemp -dt) || { err_exit mktemp -dt failed; exit 1; }
+trap "cd /; rm -rf $tmp" EXIT
+
 [[ ${.sh.version} == "$KSH_VERSION" ]] || err_exit '.sh.version != KSH_VERSION'
 unset ss
 [[ ${@ss} ]] && err_exit '${@ss} should be empty string when ss is unset'
@@ -209,22 +212,19 @@ done
 kill $!
 unset x
 CDPATH=/
-x=$(cd tmp)
-if	[[ $x != /tmp ]]
+x=$(cd ${tmp#/})
+if	[[ $x != $tmp ]]
 then	err_exit 'CDPATH does not display new directory'
 fi
-mkdir /tmp/ksh$$
 CDPATH=/:
-x=$(cd /tmp;cd ksh$$)
+x=$(cd ${tmp%/*}; cd ${tmp##*/})
 if	[[ $x ]]
 then	err_exit 'CDPATH displays new directory when not used'
 fi
-x=$(cd tmp/ksh$$)
-if	[[ $x != /tmp/ksh$$ ]]
-then	err_exit "CDPATH tmp/ksh$$ does not display new directory"
+x=$(cd ${tmp#/})
+if	[[ $x != $tmp ]]
+then	err_exit "CDPATH ${tmp#/} does not display new directory"
 fi
-cd /
-rm -rf /tmp/ksh$$
 TMOUT=100
 (TMOUT=20)
 if	(( TMOUT !=100 ))
@@ -433,8 +433,7 @@ x=$(foo)
 (( x >1 && x < 2 ))
 '
 } 2> /dev/null   || err_exit 'SECONDS not working in function'
-trap 'rm -f /tmp/script$$ /tmp/out$$' EXIT
-cat > /tmp/script$$ <<-\!
+cat > $tmp/script <<-\!
 	posixfun()
 	{
 		unset x
@@ -451,12 +450,12 @@ cat > /tmp/script$$ <<-\!
 	else	print -r -- "${.sh.file}"
 	fi
 !
-chmod +x /tmp/script$$
-. /tmp/script$$  1
-[[ $file == /tmp/script$$ ]] || err_exit ".sh.file not working for dot scripts"
-[[ $($SHELL /tmp/script$$) == /tmp/script$$ ]] || err_exit ".sh.file not working for scripts"
-[[ $(posixfun .sh.file) == /tmp/script$$ ]] || err_exit ".sh.file not working for posix functions"
-[[ $(fun .sh.file) == /tmp/script$$ ]] || err_exit ".sh.file not working for functions"
+chmod +x $tmp/script
+. $tmp/script  1
+[[ $file == $tmp/script ]] || err_exit ".sh.file not working for dot scripts"
+[[ $($SHELL $tmp/script) == $tmp/script ]] || err_exit ".sh.file not working for scripts"
+[[ $(posixfun .sh.file) == $tmp/script ]] || err_exit ".sh.file not working for posix functions"
+[[ $(fun .sh.file) == $tmp/script ]] || err_exit ".sh.file not working for functions"
 [[ $(posixfun .sh.fun) == posixfun ]] || err_exit ".sh.fun not working for posix functions"
 [[ $(fun .sh.fun) == fun ]] || err_exit ".sh.fun not working for functions"
 [[ $(posixfun .sh.subshell) == 1 ]] || err_exit ".sh.subshell not working for posix functions"
@@ -483,22 +482,22 @@ function dave.unset
 unset dave
 [[ $(typeset +f) == *dave.* ]] && err_exit 'unset discipline not removed'
 
-print 'print ${VAR}' > /tmp/script$$
+print 'print ${VAR}' > $tmp/script
 unset VAR
-VAR=new /tmp/script$$ > /tmp/out$$
-got=$(</tmp/out$$)
+VAR=new $tmp/script > $tmp/out
+got=$(<$tmp/out)
 [[ $got == new ]] || err_exit "previously unset environment variable not passed to script, expected 'new', got '$got'"
 [[ ! $VAR ]] || err_exit "previously unset environment variable set after script, expected '', got '$VAR'"
 unset VAR
 VAR=old
-VAR=new /tmp/script$$ > /tmp/out$$
-got=$(</tmp/out$$)
+VAR=new $tmp/script > $tmp/out
+got=$(<$tmp/out)
 [[ $got == new ]] || err_exit "environment variable covering local variable not passed to script, expected 'new', got '$got'"
 [[ $VAR == old ]] || err_exit "previously set local variable changed after script, expected 'old', got '$VAR'"
 unset VAR
 export VAR=old
-VAR=new /tmp/script$$ > /tmp/out$$
-got=$(</tmp/out$$)
+VAR=new $tmp/script > $tmp/out
+got=$(<$tmp/out)
 [[ $got == new ]] || err_exit "environment variable covering environment variable not passed to script, expected 'new', got '$got'"
 [[ $VAR == old ]] || err_exit "previously set environment variable changed after script, expected 'old', got '$VAR'"
 

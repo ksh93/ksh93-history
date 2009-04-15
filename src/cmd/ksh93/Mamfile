@@ -250,6 +250,8 @@ done include/builtins.h
 prev ${PACKAGE_ast_INCLUDE}/stak.h implicit
 prev ${PACKAGE_ast_INCLUDE}/error.h implicit
 make include/defs.h implicit
+make include/regress.h implicit
+done include/regress.h dontcare
 prev include/shell.h implicit
 make include/env.h implicit
 done include/env.h dontcare
@@ -544,6 +546,7 @@ exec - iffe -v -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '  ref ${mam_cc
 done FEATURE/poll generated
 prev FEATURE/time implicit
 prev include/builtins.h implicit
+prev ${PACKAGE_ast_INCLUDE}/tmx.h implicit
 prev ${PACKAGE_ast_INCLUDE}/error.h implicit
 prev include/defs.h implicit
 done bltins/sleep.c
@@ -611,14 +614,14 @@ prev FEATURE/time implicit
 done include/ulimit.h
 prev include/name.h implicit
 prev include/builtins.h implicit
-prev include/shell.h implicit
+prev include/defs.h implicit
 prev ${PACKAGE_ast_INCLUDE}/error.h implicit
 prev ${PACKAGE_ast_INCLUDE}/sfio.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done bltins/ulimit.c
 meta ulimit.o %.c>%.o bltins/ulimit.c ulimit
 prev bltins/ulimit.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_shell -DSHOPT_DYNAMIC -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DERROR_CONTEXT_T=Error_context_t -c bltins/ulimit.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_shell -DSHOPT_DYNAMIC -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DSHOPT_STATS -DSHOPT_HISTEXPAND -DERROR_CONTEXT_T=Error_context_t -DSHOPT_ESH -c bltins/ulimit.c
 done ulimit.o generated
 make umask.o
 make bltins/umask.c
@@ -844,6 +847,19 @@ meta expand.o %.c>%.o sh/expand.c expand
 prev sh/expand.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_BRACEPAT -DSHOPT_SUID_EXEC -D_BLD_shell -D_PACKAGE_ast -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DKSHELL -DSHOPT_DYNAMIC -DSHOPT_STATS -DSHOPT_HISTEXPAND -DERROR_CONTEXT_T=Error_context_t -DSHOPT_ESH -c sh/expand.c
 done expand.o generated
+make regress.o
+make bltins/regress.c
+prev ${PACKAGE_ast_INCLUDE}/tmx.h implicit
+prev include/builtins.h implicit
+prev include/io.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ls.h implicit
+prev ${PACKAGE_ast_INCLUDE}/error.h implicit
+prev include/defs.h implicit
+done bltins/regress.c
+meta regress.o %.c>%.o bltins/regress.c regress
+prev bltins/regress.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2009 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libshell]"\" -D_PACKAGE_ast -D_BLD_shell -DSHOPT_DYNAMIC -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DKSHELL -DERROR_CONTEXT_T=Error_context_t -DSHOPT_STATS -DSHOPT_HISTEXPAND -DSHOPT_ESH -c bltins/regress.c
+done regress.o generated
 make fault.o
 make sh/fault.c
 prev ${PACKAGE_ast_INCLUDE}/vmalloc.h implicit
@@ -1367,8 +1383,8 @@ meta hexpand.o %.c>%.o edit/hexpand.c hexpand
 prev edit/hexpand.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_HISTEXPAND -DSHOPT_MULTIBYTE -DKSHELL -DSHOPT_ESH -DSHOPT_VSH -D_PACKAGE_ast -DSHOPT_PFSH -DSHOPT_STATS -DSHOPT_DYNAMIC -D_BLD_shell -DERROR_CONTEXT_T=Error_context_t -c edit/hexpand.c
 done hexpand.o generated
-exec - ${AR} cr libshell.a alarm.o cd_pwd.o cflow.o deparse.o enum.o getopts.o hist.o misc.o print.o read.o sleep.o trap.o test.o typeset.o ulimit.o umask.o whence.o main.o nvdisc.o nvtype.o arith.o args.o array.o completion.o defs.o edit.o expand.o fault.o fcin.o history.o
-exec - ${AR} cr libshell.a init.o io.o jobs.o lex.o macro.o name.o nvtree.o parse.o path.o string.o streval.o subshell.o tdump.o timers.o trestore.o waitevent.o xec.o env.o limits.o msg.o strdata.o testops.o keywords.o options.o signals.o aliases.o builtins.o variables.o lexstates.o emacs.o vi.o hexpand.o
+exec - ${AR} cr libshell.a alarm.o cd_pwd.o cflow.o deparse.o enum.o getopts.o hist.o misc.o print.o read.o sleep.o trap.o test.o typeset.o ulimit.o umask.o whence.o main.o nvdisc.o nvtype.o arith.o args.o array.o completion.o defs.o edit.o expand.o regress.o fault.o fcin.o
+exec - ${AR} cr libshell.a history.o init.o io.o jobs.o lex.o macro.o name.o nvtree.o parse.o path.o string.o streval.o subshell.o tdump.o timers.o trestore.o waitevent.o xec.o env.o limits.o msg.o strdata.o testops.o keywords.o options.o signals.o aliases.o builtins.o variables.o lexstates.o emacs.o vi.o hexpand.o
 exec - (ranlib libshell.a) >/dev/null 2>&1 || true
 done libshell.a generated
 bind -lshell

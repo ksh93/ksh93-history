@@ -208,7 +208,9 @@ int ed_emacsread(void *context, int fd,char *buff,int scend, int reedit)
 	ed_setup(ep->ed,fd,reedit);
 	out = (genchar*)buff;
 #if SHOPT_MULTIBYTE
-	out = (genchar*)roundof((char*)out-(char*)0,sizeof(genchar));
+	out = (genchar*)roundof(buff-(char*)0,sizeof(genchar));
+	if(reedit)
+		ed_internal(buff,out);
 #endif /* SHOPT_MULTIBYTE */
 	if(!kstack)
 	{
@@ -908,13 +910,11 @@ static int escape(register Emacs_t* ep,register genchar *out,int count)
 			char buf[MAXLINE];
 			char *ptr;
 			ptr = hist_word(buf,MAXLINE,(count?count:-1));
-#if !KSHELL
 			if(ptr==0)
 			{
 				beep();
 				break;
 			}
-#endif	/* KSHELL */
 			if ((eol - cur) >= sizeof(name))
 			{
 				beep();

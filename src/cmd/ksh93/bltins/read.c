@@ -336,15 +336,17 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 				c = (flags&NN_FLAG) ? -size : -1;
 				cp = sfreserve(iop,c,SF_LOCKR);
 				f = 1;
-				if((m = sfvalue(iop)) > 0)
+				if(cp)
+					m = sfvalue(iop);
+				else
 				{
-					if(!cp)
-					{
-						m = (cp = sfreserve(iop,size,0)) ? sfvalue(iop) : 0;
-						f = 0;
-					}
-					if(m>0 && (flags&N_FLAG) && !binary && (v=memchr(cp,'\n',m)))
-						m = v-(char*)cp;
+					m = (cp = sfreserve(iop,size,0)) ? sfvalue(iop) : 0;
+					f = 0;
+				}
+				if(m>0 && (flags&N_FLAG) && !binary && (v=memchr(cp,'\n',m)))
+				{
+					*v++ = 0;
+					m = v-(char*)cp;
 				}
 				if((c=m)>size)
 					c = size;

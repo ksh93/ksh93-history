@@ -19,7 +19,7 @@ setv F77 f77
 setv HOSTCC ${CC}
 setv IGNORE
 setv LD ld
-setv LDFLAGS
+setv LDFLAGS ""
 setv LEX lex
 setv LEXFLAGS
 setv LPR lpr

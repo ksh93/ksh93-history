@@ -158,6 +158,16 @@ meta dlfcn.o %.c>%.o dlfcn.c dlfcn
 prev dlfcn.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_BLD_dll -D_PACKAGE_ast -c dlfcn.c
 done dlfcn.o generated
+make dllopen.o
+make dllopen.c
+prev ${PACKAGE_ast_INCLUDE}/error.h implicit
+prev dlldefs.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
+done dllopen.c
+meta dllopen.o %.c>%.o dllopen.c dllopen
+prev dllopen.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_dll -c dllopen.c
+done dllopen.o generated
 make dllfind.o
 make dllfind.c
 prev ${PACKAGE_ast_INCLUDE}/error.h implicit
@@ -224,7 +234,7 @@ meta dllscan.o %.c>%.o dllscan.c dllscan
 prev dllscan.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_BLD_dll -D_PACKAGE_ast -c dllscan.c
 done dllscan.o generated
-exec - ${AR} cr libdll.a dlfcn.o dllfind.o dllplug.o dllnext.o dlllook.o dllscan.o
+exec - ${AR} cr libdll.a dlfcn.o dllopen.o dllfind.o dllplug.o dllnext.o dlllook.o dllscan.o
 exec - (ranlib libdll.a) >/dev/null 2>&1 || true
 done libdll.a generated
 done dll virtual

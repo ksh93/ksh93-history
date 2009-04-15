@@ -264,8 +264,13 @@ int sh_argopts(int argc,register char *argv[], void *context)
 				ap->kiafile = opt_info.arg;
 				n = 'n';
 			}
-			/* FALL THRU */
+			/*FALLTHROUGH*/
 #endif /* SHOPT_KIA */
+#if SHOPT_REGRESS
+			goto skip;
+		    case 'I':
+			continue;
+#endif /* SHOPT_REGRESS */
 		    skip:
 		    default:
 			if(cp=strchr(optksh,n))
@@ -384,9 +389,9 @@ void sh_applyopts(Shell_t* shp,Shopt_t newflags)
 		off_option(&newflags,SH_NOEXEC);
 	if(is_option(&newflags,SH_PRIVILEGED))
 		on_option(&newflags,SH_NOUSRPROFILE);
-	if(is_option(&newflags,SH_PRIVILEGED) != sh_isoption(SH_PRIVILEGED))
+	if(!sh_isstate(SH_INIT) && is_option(&newflags,SH_PRIVILEGED) != sh_isoption(SH_PRIVILEGED) || sh_isstate(SH_INIT) && is_option(&((Arg_t*)shp->arg_context)->sh->offoptions,SH_PRIVILEGED) && shp->userid!=shp->euserid)
 	{
-		if(sh_isoption(SH_PRIVILEGED))
+		if(!is_option(&newflags,SH_PRIVILEGED))
 		{
 			setuid(shp->userid);
 			setgid(shp->groupid);

@@ -27,9 +27,12 @@ alias err_exit='err_exit $LINENO'
 
 Command=${0##*/}
 integer Errors=0
-f=/tmp/here1$$
-g=/tmp/here2$$
-trap "rm -f $f $g" EXIT
+
+tmp=$(mktemp -dt) || { err_exit mktemp -dt failed; exit 1; }
+trap "cd /; rm -rf $tmp" EXIT
+
+f=$tmp/here1
+g=$tmp/here2
 cat > $f <<!
 hello world
 !
@@ -227,7 +230,6 @@ printf $'w=world;cat   <<# !!!\n\thello\n\t\t$w\n!!!' > $f
 	EOF
 	' 2> /dev/null) == ok ]] || err_exit '${ command;} not working in heredoc'
 script=$f
-trap 'rm -f $script' EXIT
 {
 for ((i=0; i < 406; i++))
 do	print ': 23456789012345678'

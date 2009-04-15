@@ -587,7 +587,7 @@ tmxfmt(char* buf, size_t len, const char* format, Time_t t)
 				{
 					flags |= n;
 					tm_info.flags |= n;
-					tm = tmxtm(tm, t, tm->tm_zone);
+					tm = tmxtm(tm, t, (flags & TM_UTC) ? &tm_data.zone[2] : tm->tm_zone);
 					if (!i)
 						tm_info.flags &= ~n;
 				}
@@ -596,7 +596,7 @@ tmxfmt(char* buf, size_t len, const char* format, Time_t t)
 			{
 				flags &= ~n;
 				tm_info.flags &= ~n;
-				tm = tmxtm(tm, t, tm->tm_zone);
+				tm = tmxtm(tm, t, (flags & TM_UTC) ? &tm_data.zone[2] : tm->tm_zone);
 				if (!i)
 					tm_info.flags |= n;
 			}

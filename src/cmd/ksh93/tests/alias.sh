@@ -27,6 +27,10 @@ alias err_exit='err_exit $LINENO'
 
 Command=${0##*/}
 integer Errors=0
+
+tmp=$(mktemp -dt) || { err_exit mktemp -dt failed; exit 1; }
+trap "cd /; rm -rf $tmp" EXIT
+
 alias foo='print hello'
 if	[[ $(foo) != hello ]]
 then	err_exit 'foo, where foo is alias for "print hello" failed'
@@ -81,14 +85,12 @@ then	[[ ! $(alias -t | grep rm= ) ]] && err_exit 'tracked alias not set'
 	[[ $(alias -t | grep rm= ) ]] && err_exit 'tracked alias not cleared'
 fi
 if	hash -r 2>/dev/null && [[ ! $(hash) ]]
-then	mkdir  /tmp/ksh$$ || err_exit "mkdir /tmp/ksh$$ failed"
-	trap "cd /; rm -rf /tmp/ksh$$" EXIT
-	PATH=/tmp/ksh$$:/bin:/usr/bin
+then	PATH=$tmp:/bin:/usr/bin
 	for i in foo -foo --
-	do	print ':' > /tmp/ksh$$/$i
-		chmod +x /tmp/ksh$$/$i
+	do	print ':' > $tmp/$i
+		chmod +x $tmp/$i
 		hash -r -- $i 2>/dev/null || err_exit "hash -r -- $i failed"
-		[[ $(hash) == $i=/tmp/ksh$$/$i ]] || err_exit "hash -r -- $i failed, expected $i=/tmp/ksh$$/$i, got $(hash)"
+		[[ $(hash) == $i=$tmp/$i ]] || err_exit "hash -r -- $i failed, expected $i=$tmp/$i, got $(hash)"
 	done
 else	err_exit 'hash -r failed'
 fi

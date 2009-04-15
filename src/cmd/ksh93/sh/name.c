@@ -783,7 +783,10 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 				if(top)
 				{
 					if(nq==np)
+					{
 						flags &= ~NV_NOSCOPE;
+						root = shp->var_base;
+					}
 					else if(nq)
 					{
 						if(nv_isnull(np) && c!='.' && (np->nvfun=nv_cover(nq)))
@@ -2828,11 +2831,20 @@ static char *lastdot(register char *cp, int eq)
 	while(c= *cp++)
 	{
 		if(c=='[')
-			cp = nv_endsubscript((Namval_t*)0,ep=cp,0);
+		{
+			if(*cp==']')
+				cp++;
+			else
+				cp = nv_endsubscript((Namval_t*)0,ep=cp,0);
+		}
 		else if(c=='.')
 		{
 			if(*cp=='[')
-				cp = nv_endsubscript((Namval_t*)0,cp,0);
+			{
+				cp = nv_endsubscript((Namval_t*)0,ep=cp,0);
+				if((ep=sh_checkid(ep+1,cp)) < cp)
+					cp=strcpy(ep,cp);
+			}
 			ep = 0;
 		}
 		else if(eq && c == '=')
@@ -2944,13 +2956,16 @@ void nv_setref(register Namval_t *np, Dt_t *hp, int flags)
 	if(!hp)
 		hp = shp->var_tree;
 	if(!(nr = nq = nv_open(cp, hp, flags|NV_NOSCOPE|NV_NOADD|NV_NOFAIL)))
-		hp = shp->var_base;
+		hp = shp->last_root==shp->var_tree?shp->var_tree:shp->var_base;
 	else if(shp->last_root)
 		hp = shp->last_root;
 	if(nq && ep && nv_isarray(nq) && !nv_getsub(nq))
 		nv_endsubscript(nq,ep-1,NV_ADD);
 	if(!nr)
+	{
 		nr= nq = nv_open(cp, hp, flags);
+		hp = shp->last_root;
+	}
 	if(shp->last_root == shp->var_tree && root!=shp->var_tree)
 	{
 		_nv_unset(np,NV_RDONLY);

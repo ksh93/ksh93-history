@@ -27,6 +27,10 @@ alias err_exit='err_exit $LINENO'
 
 Command=${0##*/}
 integer Errors=0
+
+tmp=$(mktemp -dt) || { err_exit mktemp -dt failed; exit 1; }
+trap "cd /; rm -rf $tmp" EXIT
+
 integer n=2
 
 typeset -T Type_t=(
@@ -109,14 +113,13 @@ x=(a b c)
 typeset -m x[1]=x[2]
 [[ ${x[1]} == c ]] || err_exit 'move an indexed array element fails'
 [[ ${x[2]} ]] && err_exit 'x[2] should be unset after move'
-trap 'rm -f /tmp/kshtype$$' EXIT
-cat > /tmp/kshtype$$ <<- \+++
+cat > $tmp/types <<- \+++
 	typeset -T Pt_t=(float x=1. y=0.)
 	Pt_t p=(y=2)
 	print -r -- ${p.y}
 +++
 expected=2
-got=$(. /tmp/kshtype$$) 2>/dev/null
+got=$(. $tmp/types) 2>/dev/null
 [[ "$got" == "$expected" ]] || err_exit "typedefs in dot script failed -- expected '$expected', got '$got'"
 typeset -T X_t=(
 	typeset x=foo y=bar

@@ -28,7 +28,7 @@
  */
 
 static const char usage[] =
-"+[-?\n@(#)$Id: tail (AT&T Research) 2009-02-02 $\n]"
+"+[-?\n@(#)$Id: tail (AT&T Research) 2009-03-15 $\n]"
 USAGE_LICENSE
 "[+NAME?tail - output trailing portion of one or more files ]"
 "[+DESCRIPTION?\btail\b copies one or more input files to standard output "
@@ -605,14 +605,13 @@ b_tail(int argc, char** argv, void* context)
 			return error_info.errors != 0;
 		pp->next = 0;
 		hp = 0;
-		for (;;)
+		while (fp = files)
 		{
 			if (sfsync(sfstdout))
 				error(ERROR_system(1), "write error");
 			sleep(1);
 			n = 0;
 			pp = 0;
-			fp = files;
 			while (fp)
 			{
 				if (fstat(sffileno(fp->sp), &st))

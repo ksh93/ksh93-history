@@ -30,7 +30,7 @@ case $-:$BASH_VERSION in
 esac
 
 command=iffe
-version=2008-01-31 # update in USAGE too #
+version=2009-04-15 # update in USAGE too #
 
 compile() # $cc ...
 {
@@ -603,7 +603,7 @@ set=
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: iffe (AT&T Research) 2008-03-14 $
+@(#)$Id: iffe (AT&T Research) 2009-04-15 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?iffe - C compilation environment feature probe]
@@ -1212,6 +1212,7 @@ file=
 hdrtest=
 ifelse=NONE
 ifstack=
+init=1
 line=0
 nan=
 prototyped=
@@ -1239,6 +1240,13 @@ do	case $in in
 		else	set x
 		fi
 		shift
+		case $init in
+		1)	case $1 in
+			iff)	;;
+			'')	set ini ;;
+			esac
+			init=0
+		esac
 		;;
 	esac
 	case $# in
@@ -2111,7 +2119,7 @@ $lin
 
 	case $arg in
 	'')	case $op in
-		iff)	arg=-
+		iff|ini)arg=-
 			;;
 		comment)cat <<!
 /* $* */
@@ -2838,7 +2846,7 @@ $*
 							if	cmp -s $tmp.c $tmp.t
 							then	rm -f $tmp.h
 								case $verbose in
-								1) echo "$command: $x: unchanged" >&$stderr ;;
+								1)	echo "$command: $x: unchanged" >&$stderr ;;
 								esac
 							else	case $x in
 								${dir}[\\/]$cur)	test -d $dir || mkdir $dir || exit 1 ;;
@@ -2912,7 +2920,7 @@ $*
 							esac
 							case $o in
 							iff)	case $M in
-								""|*-*)	iff=  ;;
+								""|*-*)	 ;;
 								*)	iff=${m}_H ;;
 								esac
 								;;
@@ -2929,7 +2937,11 @@ $*
 										;;
 									esac
 									;;
-								*)	iff=_REGRESS
+								*)	case $x in
+									*-*)	;;
+									*)	iff=_REGRESS
+										;;
+									esac
 									;;
 								esac
 								;;
@@ -3672,6 +3684,7 @@ $allinc
 					esac
 					;;
 				iff)	;;
+				ini)	;;
 				key)	case $p in
 					?*)	continue ;;
 					esac

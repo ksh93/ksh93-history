@@ -1,4 +1,26 @@
-09-03-10  --- Release ksh93t+  ---
+09-04-22  --- Release ksh93t+  ---
+09-04-15  A bug that caused ${...;} to hang for large files has ben fixed.
+09-04-08  A change was made in the -n option which printed out an incorrect
+	  warning with <>.
+09-04-07  The emacs edit command M-_ and M_. and the vi command _ was fixed
+	  to handle the case there there is no history file.
+09-04-05  A bug in handling new-lines with read -n has been fixed.
+09-04-05  The ENV variable defaults the the file named by $HOME/.kshrc rather
+	  then to the string $HOME/.kshrc.
+09-03-31  A bug in which a nested command substitution with redirections could
+	  leave a file descriptor open has been fixed.
+09-03-24  ksh now only uses the value of the _ variable on startup if it can
+	  verify that it was set by the invoking process rather than being
+	  inherited by some other ancestor.
+09-03-24  When ksh is invoked without -p and ruid!=euid, and the shell is
+	  compiled without SHOPT_P_UID or ruid<SHOPT_P_UID, the shell now
+	  enables the -p option.  The previous version instead set the
+	  euid to the ruid as it does for set +p.
+09-03-24  When SHOPT_P_UID is defined at compile time and the shell is started
+	  without -p and ruid!=euid and ruid>=SHOPT_P_UID then euid is set
+	  to ruid. A bug that did the wrong test (ruid<SHOPT_P_UID) was fixed.
+09-03-17  The sleep(1) builtin now accept and ISO 8601 PnYnMnDTnHnMnS
+	  duration or date(1) compatible date/time operand.
 09-03-10  If a variable that was left or right justified or zero-filled was
 	  changed with a typeset statement that was left or right justified
 	  or zero-filled, then the original justification no longer affects

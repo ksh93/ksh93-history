@@ -41,7 +41,6 @@ static size_t
 prog(const char* command, char* path, size_t size)
 {
 	ssize_t		n;
-	ssize_t		m;
 #if _WINIX || _lib_getexecname
 	char*		s;
 #endif
@@ -107,8 +106,6 @@ size_t
 pathprog(const char* command, char* path, size_t size)
 {
 	ssize_t		n;
-	ssize_t		m;
-	const char*	s;
 	char		buf[PATH_MAX];
 
 	if ((n = prog(command, path, size)) > 0 && n <= size && *path != '/')

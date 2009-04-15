@@ -1148,9 +1148,9 @@ int sh_exec(register const Shnode_t *t, int flags)
 			int no_fork,jobid;
 			int pipes[2];
 			no_fork = !ntflag && !(type&(FAMP|FPOU)) &&
-			    (execflg2 || (execflg && 
-				!shp->subshell && !shp->st.trapcom[0] && 
-				!shp->st.trap[SH_ERRTRAP] && shp->fn_depth==0 &&
+			    !shp->st.trapcom[0] && !shp->st.trap[SH_ERRTRAP] &&
+				(execflg2 || (execflg && 
+				!shp->subshell && shp->fn_depth==0 &&
 				!(pipejob && sh_isoption(SH_PIPEFAIL))
 			    ));
 			if(shp->subshell)
@@ -1442,13 +1442,6 @@ int sh_exec(register const Shnode_t *t, int flags)
 				if(jmpval==0)
 					sh_exec(t->par.partre,flags);
 				sh_popcontext(&buff);
-				sh_sigreset(1);
-				if(nsig)
-				{
-					memcpy((char*)&shp->st.trapcom[0],savsig,nsig);
-					free((void*)savsig);
-				}
-
 				if(jmpval > SH_JMPEXIT)
 					siglongjmp(*shp->jmplist,jmpval);
 				sh_done(shp,0);
@@ -2667,7 +2660,8 @@ static void sh_funct(Shell_t *shp,Namval_t *np,int argn, char *argv[],struct arg
 	struct funenv fun;
 	char *fname = nv_getval(SH_FUNNAMENOD);
 	struct Level	*lp =(struct Level*)(SH_LEVELNOD->nvfun);
-	int		level;
+	int		level, pipepid=shp->pipepid;
+	shp->pipepid = 0;
 	sh_stats(STAT_FUNCT);
 	if(!lp->hdr.disc)
 		lp = init_level(0);
@@ -2711,6 +2705,7 @@ static void sh_funct(Shell_t *shp,Namval_t *np,int argn, char *argv[],struct arg
 	nv_putval(SH_FUNNAMENOD,fname,NV_NOFREE);
 #endif
 	nv_putval(SH_PATHNAMENOD,shp->st.filename,NV_NOFREE);
+	shp->pipepid = pipepid;
 }
 
 /*

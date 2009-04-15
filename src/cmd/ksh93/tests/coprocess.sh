@@ -29,6 +29,9 @@ alias err_exit='err_exit $LINENO'
 Command=${0##*/}
 integer Errors=0
 
+tmp=$(mktemp -dt) || { err_exit mktemp -dt failed; exit 1; }
+trap "cd /; rm -rf $tmp" EXIT
+
 if	[[ -d /cygdrive ]]
 then	err_exit cygwin detected - coprocess tests disabled - enable at the risk of wedging your system
 	exit $((Errors))
@@ -87,8 +90,7 @@ do	(( count-- ))
 done
 kill $(jobs -p) 2>/dev/null
 
-file=/tmp/regress$$
-trap "rm -f $file" EXIT
+file=$tmp/regress
 cat > $file  <<\!
 /bin/cat |&
 !
@@ -178,7 +180,7 @@ do	if	( trap - $sig ) 2> /dev/null
 					kill -$sig $$
 					kill $pid
 					sleep 2
-					kill  $$
+					kill $$
 				) &
 				read -p
 			++EOF++
@@ -230,5 +232,13 @@ kill $pid
 wait $pid 2> /dev/null
 trap - TERM
 [[ $sleep_pid ]] && kill $sleep_pid
+
+exp=ksh
+got=$(print -r $'#00315
+COATTRIBUTES=\'label=make \'
+# @(#)$Id: libcoshell (AT&T Research) 2008-04-28 $
+_COSHELL_msgfd=5
+{ { (eval \'function fun { trap \":\" 0; return 1; }; trap \"exit 0\" 0; fun; exit 1\') && PATH= print -u$_COSHELL_msgfd ksh; } || { times && echo bsh >&$_COSHELL_msgfd; } || { echo osh >&$_COSHELL_msgfd; }; } >/dev/null 2>&1' | $SHELL 5>&1)
+[[ $got == $exp ]] || err_exit "coshell(3) identification sequence failed -- expected '$exp', got '$got'"
 
 exit $((Errors))

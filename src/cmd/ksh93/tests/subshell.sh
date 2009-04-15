@@ -24,8 +24,14 @@ function err_exit
 	(( Errors+=1 ))
 }
 alias err_exit='err_exit $LINENO'
+
 Command=${0##*/}
 integer Errors=0 Error_fd=2
+
+tmp=$(mktemp -dt) || { err_exit mktemp -dt failed; exit 1; }
+trap "cd /; rm -rf $tmp" EXIT
+
+bincat=$(PATH=$(getconf PATH) whence -p cat)
 
 z=()
 z.foo=( [one]=hello [two]=(x=3 y=4) [three]=hi)
@@ -97,8 +103,6 @@ while	whence $TEST_notfound >/dev/null 2>&1
 do	TEST_notfound=notfound-$RANDOM
 done
 
-tmp=/tmp/kshsubsh$$
-trap "rm -f $tmp" EXIT
 integer BS=1024 nb=64 ss=60 bs no
 for bs in $BS 1
 do	$SHELL -c '
@@ -109,8 +113,8 @@ do	$SHELL -c '
 		set -- $(printf %.'$(($BS*$nb))'c x | dd bs='$bs')
 		print ${#1}
 		kill $!
-	' > $tmp 2>/dev/null
-	no=$(<$tmp)
+	' > $tmp/sub 2>/dev/null
+	no=$(<$tmp/sub)
 	(( no == (BS * nb) )) || err_exit "shell hangs on command substitution output size >= $BS*$nb with write size $bs -- expected $((BS*nb)), got ${no:-0}"
 done
 # this time with redirection on the trailing command
@@ -124,8 +128,8 @@ do	$SHELL -c '
 		set -- $(printf %.'$(($BS*$nb))'c x | dd bs='$bs' 2>/dev/null)
 		print ${#1}
 		kill $!
-	' > $tmp 2>/dev/null
-	no=$(<$tmp)
+	' > $tmp/sub 2>/dev/null
+	no=$(<$tmp/sub)
 	(( no == (BS * nb) )) || err_exit "shell hangs on command substitution output size >= $BS*$nb with write size $bs and trailing redirection -- expected $((BS*nb)), got ${no:-0}"
 done
 
@@ -219,32 +223,171 @@ do	for TEST_exec in '' 'exec'
 		done
 	done
 done
-script=$tmp
-cat > $script <<- \EOF
-	(sleep 3 ; kill -0 $$ && kill $$) 2> /dev/null&
-	builtin cat
-	IFS=$'\n\n'
-	case $1 in
-	1)
-	 	x=$(for((i=0; i < 6000; i++))
-	 	do	print 1234567890
-	 	done | cat);;
-	2)
-	 	x=${ for((i=0; i < 6000; i++))
-	 	do	print 1234567890
-	 	done | cat;};;
-	3)
-	 	z=${ for((i=0; i < 6000; i++))
-	 	do	print -n 1234567890x
-	 	done | read x;};;
-	esac
-	print ${#x}
-EOF
-chmod +x "$script"
-[[ $( $script 1) == 65999 ]] 2> /dev/null || err_exit '$() of pipeline hangs'
-[[ $( $script 2) == 65999 ]] 2>> /dev/null || err_exit '${} sub of pipeline hangs'
-[[ $( $script 3) == 66000 ]] 2>> /dev/null || err_exit '${} pipe into read not working'
-cat=$(whence -p cat)
-[[ ${ print foo|$cat;} == foo ]] || err_exit '${ print foo|/bin/cat;} not working'
+
+cat=$bincat
+[[ ${ print foo|$cat;} == foo ]] || err_exit "\${ print foo|$cat;} not working"
 $SHELL -c '( autoload xxxxx);print -n' ||  err_exit 'autoloaded functions in subshells can cause failure'
+foo=$($SHELL  <<- ++EOF++
+	(trap 'print bar' EXIT;print -n foo)
+	++EOF++
+)
+[[ $foo == foobar ]] || err_exit 'trap on exit when last commands is subshell is not triggered'
+
+err=$(
+	$SHELL  2>&1  <<- \EOF
+	        date=$(whence -p date)
+	        function foo
+	        {
+	                x=$( $date > /dev/null 2>&1 ;:)
+	        }
+		integer max=$(ulimit --nofile)
+		(( max= max<70?max=64:max-6))
+		integer dup
+		# consume almost all fds to push the test to the fd limit #
+		for ((i=20; i < max; i++))
+		do	exec {i}>&1
+		done
+	        for ((i=0; i < 20; i++))
+	        do      y=$(foo)
+	        done
+	EOF
+) || {
+	err=${err%%$'\n'*}
+	err=${err#*:}
+	err=${err##[[:space:]]}
+	err_exit "nested command substitution with redirections failed -- $err"
+}
+
+exp=0
+$SHELL -c $'
+	function foobar
+	{
+		print "hello world"
+	}
+	[[ $(getopts \'[+?X\ffoobar\fX]\' v --man 2>&1) == *"Xhello worldX"* ]]
+	exit '$exp$'
+'
+got=$?
+[[ $got == $exp ]] || err_exit "getopts --man runtime callout with nonzero exit terminates shell -- expected '$exp', got '$got'"
+exp=ok
+got=$($SHELL -c $'
+	function foobar
+	{
+		print "hello world"
+	}
+	[[ $(getopts \'[+?X\ffoobar\fX]\' v --man 2>&1) == *"Xhello worldX"* ]]
+	print '$exp$'
+')
+[[ $got == $exp ]] || err_exit "getopts --man runtime callout with nonzero exit terminates shell -- expected '$exp', got '$got'"
+
+# command substitution variations #
+set -- \
+	'$('			')'		\
+	'${ '			'; }'		\
+	'$(ulimit -c 0; '	')'		\
+	'$( ('			') )'		\
+	'${ ('			'); }'		\
+	'`'			'`'		\
+	'`('			')`'		\
+	'`ulimit -c 0; '	'`'		\
+	# end of table #
+exp=ok
+testcase[1]='
+	if	%sexpr "NOMATCH" : ".*Z" >/dev/null%s
+	then	print error
+	else	print ok
+	fi
+	exit %s
+'
+testcase[2]='
+	function bar
+	{
+		pipeout=%1$sprintf Ok | tr O o%2$s
+		print $pipeout
+		return 0
+	}
+	foo=%1$sbar%2$s || foo="exit status $?"
+	print $foo
+	exit %3$s
+'
+while	(( $# >= 2 ))
+do	for ((TEST=1; TEST<=${#testcase[@]}; TEST++))
+	do	body=${testcase[TEST]}
+		for code in 0 2
+		do	got=${ printf "$body" "$1" "$2" "$code" | $SHELL 2>&1 }
+			status=$?
+			if	(( status != code ))
+			then	err_exit "test $TEST '$1...$2 exit $code' failed -- exit status $status, expected $code"
+			elif	[[ $got != $exp ]]
+			then	err_exit "test $TEST '$1...$2 exit $code' failed -- got '$got', expected '$exp'"
+			fi
+		done
+	done
+	shift 2
+done
+
+# this set of tests loop on all combinations of
+#	{ BEG CAT ADD TST } X { file-sizes }
+# where the file size starts at 1Ki and doubles up to and including 1Mi
+#
+# the tests and timeouts are done in async subshells to prevent
+# the test harness from hanging
+
+BEG=(  '$( '  '${ '  )
+END=(  ' )'   '; }'  )
+CAT=(  cat  $bincat  )
+ADD=(  ""  "builtin cat; "  "builtin -d cat $bincat; "  ": > /dev/null; "  )
+TST=(
+	'$cat < $tmp/lin'
+	'cat $tmp/lin | $cat'
+	'read v < $tmp/buf; print $v'
+	'cat $tmp/buf | read v; print $v'
+)
+
+# prime the two data files to 512 bytes each
+# $tmp/lin has newlines every 16 bytes and $tmp/buf has no newlines
+
+buf=$'1234567890abcdef'
+lin=$'\n1234567890abcde'
+for ((i=0; i<5; i++))
+do	buf=$buf$buf
+	lin=$lin$lin
+done
+print -n "$buf" > $tmp/buf
+print -n "$lin" > $tmp/lin
+
+for ((exp=1024; exp<=1024*1024; exp*=2))
+do	cat $tmp/buf $tmp/buf > $tmp/tmp
+	mv $tmp/tmp $tmp/buf
+	cat $tmp/lin $tmp/lin > $tmp/tmp
+	mv $tmp/tmp $tmp/lin
+	for ((S=0; S<${#BEG[@]}; S++))
+	do	for ((C=0; C<${#CAT[@]}; C++))
+		do	cat=${CAT[C]}
+			for ((A=0; A<${#ADD[@]}; A++))
+			do	for ((T=0; T<${#TST[@]}; T++))
+				do	if	[[ ! ${ERR[S][C][A][T]} ]]
+					then	eval "{ x=${BEG[S]}${ADD[A]}${TST[T]}${END[S]}; print \${#x}; } >\$tmp/out &"
+						m=$!
+						{ sleep 4; kill -9 $m; } &
+						k=$!
+						wait $m
+						kill -9 $k
+						wait $k
+						got=$(<$tmp/out)
+						if	[[ $got != $exp ]]
+						then	# on failure disable similar tests on larger files sizes #
+							ERR[S][C][A][T]=1
+							# read has per-variable size limitations imposed by sfio #
+							if	(( got < 8*1024 )) || [[ ${TST[T]} != *read* ]]
+							then	err_exit "${BEG[S]}${ADD[A]}${TST[T]}${END[S]} failed on file size $(printf $'%#i' $exp) -- expected '$exp', got '$got'"
+							fi
+						fi
+					fi
+				done
+			done
+		done
+	done
+done
+
 exit $Errors

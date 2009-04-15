@@ -28,13 +28,8 @@ alias err_exit='err_exit $LINENO'
 integer Errors=0
 Command=${0##*/}
 
-tmp=/tmp/kshtd$$
-function cleanup
-{
-	rm -rf $tmp
-}
-trap cleanup EXIT
-mkdir $tmp || err_exit "mkdir $tmp failed"
+tmp=$(mktemp -dt) || { err_exit mktemp -dt failed; exit 1; }
+trap "cd /; rm -rf $tmp" EXIT
 
 integer foo=33
 bar=bye
@@ -90,11 +85,11 @@ function foobar
 {
 	(return 0)
 }
-> $tmp/shtests$$.1
+> $tmp/test1
 {
 foobar
-if	[ -r $tmp/shtests$$.1 ]
-then	rm -r $tmp/shtests$$.1
+if	[ -r $tmp/test1 ]
+then	rm -r $tmp/test1
 else	err_exit 'return within subshell inside function error'
 fi
 }
@@ -139,37 +134,36 @@ fun() /bin/echo hello
 if	[[ $(fun) != hello ]]
 then	err_exit one line functions not working
 fi
-trap cleanup EXIT
-cat > $tmp/script$$ <<-\!
+cat > $tmp/script <<-\!
 	print -r -- "$1"
 !
-chmod +x $tmp/script$$
+chmod +x $tmp/script
 function passargs
 {
-	$tmp/script$$ "$@"
+	$tmp/script "$@"
 }
 if	[[ $(passargs one) != one ]]
 then	err_exit 'passing args from functions to scripts not working'
 fi
-cat > $tmp/script$$ <<-\!
+cat > $tmp/script <<-\!
 	trap 'exit 0' EXIT
 	function foo
 	{
-		/tmp > /dev/null  2>&1
+		/tmp > /dev/null 2>&1
 	}
 	foo
 !
-if	! $tmp/script$$
+if	! $tmp/script
 then	err_exit 'exit trap incorrectly triggered'
 fi
-if	! $SHELL -c $tmp/script$$
+if	! $SHELL -c $tmp/script
 then	err_exit 'exit trap incorrectly triggered when invoked with -c'
 fi
-$SHELL -c "trap 'rm $tmp/script$$' EXIT"
-if	[[ -f $tmp/script$$ ]]
+$SHELL -c "trap 'rm $tmp/script' EXIT"
+if	[[ -f $tmp/script ]]
 then	err_exit 'exit trap not triggered when invoked with -c'
 fi
-cat > $tmp/script$$ <<- \EOF
+cat > $tmp/script <<- \EOF
 	foobar()
 	{
 		return
@@ -178,8 +172,8 @@ cat > $tmp/script$$ <<- \EOF
 	foobar
 	print -r -- "$1"
 EOF
-chmod +x $tmp/script$$
-if	[[ $( $SHELL $tmp/script$$ arg1 arg2) != arg2 ]]
+chmod +x $tmp/script
+if	[[ $( $SHELL $tmp/script arg1 arg2) != arg2 ]]
 then	err_exit 'arguments not restored by posix functions'
 fi
 function foo
@@ -213,17 +207,17 @@ x=1
 if	[[ $(foo) != 3 ]]
 then	err_exit 'variable assignment list not using parent scope'
 fi
-unset -f foo$$
-cat > $tmp/foo$$ <<!
-function foo$$
+unset -f foobar
+cat > $tmp/foobar <<!
+function foobar
 {
 	print foo
 }
 !
-chmod +x $tmp/foo$$
+chmod +x $tmp/foobar
 FPATH=$tmp
-autoload foo$$
-if	[[ $(foo$$ 2>/dev/null) != foo ]]
+autoload foobar
+if	[[ $(foobar 2>/dev/null) != foo ]]
 then	err_exit 'autoload not working'
 fi
 unset -f foobar
@@ -383,8 +377,9 @@ function closure
 	return $r
 }
 closure 0 || err_exit -u2 'for loop function optimization bug2'
-mkdir  $tmp/ksh$$ || err_exit "mkdir $tmp/ksh$$ failed"
-cd $tmp/ksh$$ || err_exit "cd $tmp/ksh$$ failed"
+dir=$tmp/dir
+mkdir $dir
+cd $dir || { err_exit "cd $dir failed"; exit 1; }
 print 'false' > try
 chmod +x try
 cat > tst <<- EOF
@@ -399,18 +394,19 @@ EOF
 if	[[ $($SHELL < tst)  == error ]]
 then	err_exit 'ERR trap not cleared'
 fi
-FPATH=$tmp/ksh$$
-print ': This does nothing' > $tmp/ksh$$/foobar
-chmod +x $tmp/ksh$$/foobar
-unset -f  foobar
-{ foobar;} 2> /dev/null
-if	[[ $? != 126 ]]
-then	err_exit 'function file without function definition processes wrong error'
+FPATH=$dir
+print ': This does nothing' > foobar
+chmod +x foobar
+unset -f foobar
+{ foobar; } 2>/dev/null
+got=$?
+exp=126
+if	[[ $got != $exp ]]
+then	err_exit "function file without function definition processes wrong error -- expected '$exp', got '$got'"
 fi
 print 'set a b c' > dotscript
 [[ $(PATH=$PATH: $SHELL -c '. dotscript;print $#') == 3 ]] || err_exit 'positional parameters not preserved with . script without arguments'
 cd ~- || err_exit "cd back failed"
-cd /; rm -r $tmp/ksh$$ || err_exit "rm -r $tmp/ksh$$ failed"
 function errcheck
 {
 	trap 'print ERR; return 1' ERR
@@ -438,7 +434,7 @@ a()
 b() { : ;}
 [[ $(a) == a ]] || err_exit '.sh.fun not set correctly in a function'
 print $'a(){\ndate\n}'  | $SHELL 2> /dev/null || err_exit 'parser error in a(){;date;}'
-cat > $tmp/data$$.1 << '++EOF'
+cat > $tmp/data1 << '++EOF'
      1  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
      2  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
      3  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -460,7 +456,7 @@ cat > $tmp/data$$.1 << '++EOF'
     19  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
     20  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 ++EOF
-cat > $tmp/script$$ << '++EOF'
+cat > $tmp/script << '++EOF'
 # XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 # XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 # XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -726,10 +722,10 @@ f()
 {
 cat <<\M
 ++EOF
-cat $tmp/data$$.1 >> $tmp/script$$
-printf 'M\n}\n\nf\n\n' >> $tmp/script$$
-$SHELL -c $tmp/script$$  > $tmp/data$$.2
-cmp -s $tmp/data$$.[12] || err_exit 'error with long functions'
+cat $tmp/data1 >> $tmp/script
+printf 'M\n}\n\nf\n\n' >> $tmp/script
+$SHELL -c $tmp/script  > $tmp/data2
+cmp -s $tmp/data[12] || err_exit 'error with long functions'
 v=1
 function f
 {
@@ -784,7 +780,6 @@ x=$(
 	false
 )
 [[ $x == failed ]] && err_exit 'ERR trap executed multiple times'
-trap cleanup EXIT
 export environment
 typeset global
 function f
@@ -818,13 +813,13 @@ function f
 }
 f local global environment literal positional
 $SHELL -c '
-	print exit 0 > '$tmp'/script$$
-	chmod +x '$tmp'/script$$
+	print exit 0 > '$tmp'/script
+	chmod +x '$tmp'/script
 	unset var
 	var=( ident=1 )
 	function fun
 	{
-		PATH='$tmp' script$$
+		PATH='$tmp' script
 	}
 	fun
 ' || err_exit "compound variable cleanup before script exec failed"
@@ -975,7 +970,12 @@ set -- $(bar)
 [[ $1 == $2 ]] && err_exit ".sh.inline optimization bug"
 ( $SHELL  -c ' function foo { typeset x=$1;print $1;};z=();z=($(foo bar)) ') 2> /dev/null ||  err_exit 'using a function to set an array in a command sub  fails'
 
-[[ $( $SHELL  << \+++
+[[ $(
+s=$(ulimit -s)
+if	(( s < 16384 ))
+then	ulimit -s 16384 2>/dev/null
+fi
+$SHELL  << \+++
 f()
 {
 	if	(($1>1))
@@ -1005,7 +1005,6 @@ function foo
 foo
 # make sure compiled functions work
 [[ $(tmp=$tmp $SHELL <<- \++++
-	shcomp=${SHELL%/*}/shcomp
 	cat > $tmp/functions <<- \EOF
 	 	function bar
 	 	{
@@ -1016,10 +1015,10 @@ foo
 	 		bar
 	 	}
 	EOF
-	$shcomp $tmp/functions > $tmp/foobar
+	${SHCOMP:-${SHELL%/*}/shcomp} $tmp/functions > $tmp/foobar
 	rm -f "$tmp/functions"
 	chmod +x $tmp/foobar
-	rm $tmp/!(foobar)
+	rm $tmp/!(dir|foobar)
 	FPATH=$tmp
 	PATH=$FPATH:$PATH
 	foobar

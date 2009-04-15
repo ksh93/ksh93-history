@@ -1,3 +1,5 @@
+09-03-31 cat.c: handle --no* options
+09-03-15 tail.c: fix --timeout termination logic
 09-03-03 tee.c: clean up sfio disciplines on error
 09-03-03 cat.c: fix -v|-e|-n|-B interaction bugs
 09-02-14 tail.c: fix VSC failures

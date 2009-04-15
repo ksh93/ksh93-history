@@ -1409,9 +1409,11 @@ int	job_wait(register pid_t pid)
 				}
 				if(job.waitall)
 				{
-					if(!sh_isoption(SH_PIPEFAIL))
-						job_unpost(pw,1);
-					break;
+					px = job_unpost(pw,1);
+					if(!px || !sh_isoption(SH_PIPEFAIL))
+						break;
+					pw = px;
+					continue;
 				}
 				else if(!(px=job_unpost(pw,1)))
 					break;

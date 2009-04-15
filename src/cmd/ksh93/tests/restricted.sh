@@ -25,11 +25,13 @@ function err_exit
 }
 alias err_exit='err_exit $LINENO'
 
-# test restricted shell
 Command=${0##*/}
 integer Errors=0
-mkdir  /tmp/ksh$$ || err_exit "mkdir /tmp/ksh$$ failed"
-trap "cd /; rm -rf /tmp/ksh$$" EXIT
+
+tmp=$(mktemp -dt) || { err_exit mktemp -dt failed; exit 1; }
+trap "cd /; rm -rf $tmp" EXIT
+
+# test restricted shell
 pwd=$PWD
 case $SHELL in
 /*)	;;
@@ -44,7 +46,7 @@ function check_restricted
 }
 
 [[ $SHELL != /* ]] && SHELL=$pwd/$SHELL
-cd /tmp/ksh$$ || err_exit "cd /tmp/ksh$$ failed"
+cd $tmp || err_exit "cd $tmp failed"
 ln -s $SHELL rksh
 PATH=$PWD:$PATH
 rksh -c  '[[ -o restricted ]]' || err_exit 'restricted option not set'
