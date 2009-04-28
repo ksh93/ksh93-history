@@ -228,11 +228,12 @@ static void put_history(register Namval_t* np,const char *val,int flags,Namfun_t
 {
 	Shell_t *shp = nv_shell(np);
 	void 	*histopen = shp->hist_ptr;
+	char	*cp;
 	if(val && histopen)
 	{
-		if(np==HISTFILE && strcmp(val,nv_getval(HISTFILE))==0) 
+		if(np==HISTFILE && (cp=nv_getval(np)) && strcmp(val,cp)==0) 
 			return;
-		if(np==HISTSIZE &&  sh_arith(val)==nv_getnum(HISTSIZE))
+		if(np==HISTSIZE && sh_arith(val)==nv_getnum(HISTSIZE))
 			return;
 		hist_close(shp->hist_ptr);
 	}
@@ -991,6 +992,7 @@ Shell_t *sh_init(register int argc,register char *argv[], Shinit_f userinit)
 	register int n;
 	int type;
 	static char *login_files[3];
+	memfatal();
 	n = strlen(e_version);
 	if(e_version[n-1]=='$' && e_version[n-2]==' ')
 		e_version[n-2]=0;

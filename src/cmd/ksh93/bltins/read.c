@@ -198,7 +198,7 @@ static void timedout(void *handle)
 
 int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeout)
 {
-	register int		c;
+	register ssize_t	c;
 	register unsigned char	*cp;
 	register Namval_t	*np;
 	register char		*name, *val;
@@ -216,7 +216,7 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 	void			*timeslot=0;
 	int			delim = '\n';
 	int			jmpval=0;
-	int			size = 0;
+	ssize_t			size = 0;
 	int			binary;
 	struct	checkpt		buff;
 	if(!(iop=shp->sftable[fd]) && !(iop=sh_iostream(shp,fd)))
@@ -310,7 +310,7 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 	}
 	if(flags&(N_FLAG|NN_FLAG))
 	{
-		char buf[64],*var=buf,*cur,*end,*up,*v;
+		char buf[256],*var=buf,*cur,*end,*up,*v;
 		/* reserved buffer */
 		if((c=size)>=sizeof(buf))
 		{
@@ -330,7 +330,8 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 		}
 		else
 		{
-			int	f,m;
+			ssize_t	m;
+			int	f;
 			for (;;)
 			{
 				c = (flags&NN_FLAG) ? -size : -1;
@@ -354,18 +355,18 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 				{
 					if(c > (end-cur))
 					{
-						int	cx = cur - var, ux = up - var;
+						ssize_t	cx = cur - var, ux = up - var;
+						m = (end - var) + (c - (end - cur));
 						if (var == buf)
 						{
-							m = (end - var) + (c - (end - cur));
 							v = (char*)malloc(m+1);
-							memcpy(v, var, cur - var);
+							var = memcpy(v, var, cur - var);
 						}
 						else
-							v = newof(var, char, m, 1);
-						end = v + m;
-						cur = v + cx;
-						up = v + ux;
+							var = newof(var, char, m, 1);
+						end = var + m;
+						cur = var + cx;
+						up = var + ux;
 					}
 					memcpy((void*)cur,cp,c);
 					if(f)

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -1113,8 +1113,10 @@ else sfprintf(sfstderr,"tp==NULL\n");
 			if(nv_isarray(nq) && !nq->nvfun)
 			{
 				nv_putsub(nq, (char*)0, ARRAY_FILL);
-				((Namarr_t*)nq->nvfun)->nelem--;
-				
+				if(nv_isattr(nq,NV_INTEGER))
+					nv_putval(nq, "0",0);
+				else
+					((Namarr_t*)nq->nvfun)->nelem--;
 			}
 			nv_disc(nq, &pp->childfun.fun, NV_LAST);
 			if(nq->nvfun)

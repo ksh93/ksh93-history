@@ -29,6 +29,7 @@ Command=${0##*/}
 integer Errors=0
 
 unset HISTFILE
+export ENV=
 
 tmp=$(mktemp -dt) || { err_exit mktemp -dt failed; exit 1; }
 trap "cd /; rm -rf $tmp" EXIT
@@ -36,7 +37,7 @@ trap "cd /; rm -rf $tmp" EXIT
 if	[[ $( ${SHELL-ksh} -s hello<<-\!
 		print $1
 		!
-	    ) != hello ]]
+	 ) != hello ]]
 then	err_exit "${SHELL-ksh} -s not working"
 fi
 x=$(
@@ -45,13 +46,13 @@ x=$(
 	print good
 )
 if	[[ $x != good ]]
-then	err_exit 'sh -e not workuing'
+then	err_exit 'sh -e not working'
 fi
 [[ $($SHELL -D -c 'print hi; print $"hello"') == '"hello"' ]] || err_exit 'ksh -D not working'
 
 rc=$tmp/.kshrc
 print $'PS1=""\nfunction env_hit\n{\n\tprint OK\n}' > $rc
-export ENV='${nosysrc}'$rc
+export ENV=/.$rc
 if	[[ -o privileged ]]
 then
 	[[ $(print env_hit | $SHELL 2>&1) == "OK" ]] &&
@@ -136,7 +137,7 @@ rm -rf $tmp/.kshrc
 if	command set -G 2> /dev/null
 then	cd $tmp
 	mkdir bar foo
-	> bar.c  > bam.c
+	> bar.c > bam.c
 	> bar/foo.c > bar/bam.c
 	> foo/bam.c
 	set -- **.c
@@ -172,7 +173,7 @@ then
 		err_exit 'privileged --login-shell reads .profile'
 	[[ $(HOME=$PWD $SHELL --login_shell </dev/null 2>&1) == *$t* ]] &&
 		err_exit 'privileged --login_shell reads .profile'
-	[[ $(HOME=$PWD exec -a -ksh $SHELL </dev/null 2>&1) == *$t* ]]  &&
+	[[ $(HOME=$PWD exec -a -ksh $SHELL </dev/null 2>&1) == *$t* ]] &&
 		err_exit 'privileged exec -a -ksh ksh reads .profile'
 	[[ $(HOME=$PWD ./-ksh -i </dev/null 2>&1) == *$t* ]] &&
 		err_exit 'privileged ./-ksh reads .profile'
@@ -187,9 +188,9 @@ else
 		err_exit '--login-shell ignores .profile'
 	[[ $(HOME=$PWD $SHELL --login_shell </dev/null 2>&1) == *$t* ]] ||
 		err_exit '--login_shell ignores .profile'
-	[[ $(HOME=$PWD exec -a -ksh $SHELL </dev/null 2>/dev/null) == *$t* ]]  ||
+	[[ $(HOME=$PWD exec -a -ksh $SHELL </dev/null 2>/dev/null) == *$t* ]] ||
 		err_exit 'exec -a -ksh ksh 2>/dev/null ignores .profile'
-	[[ $(HOME=$PWD exec -a -ksh $SHELL </dev/null 2>&1) == *$t* ]]  ||
+	[[ $(HOME=$PWD exec -a -ksh $SHELL </dev/null 2>&1) == *$t* ]] ||
 		err_exit 'exec -a -ksh ksh 2>&1 ignores .profile'
 	[[ $(HOME=$PWD ./-ksh -i </dev/null 2>&1) == *$t* ]] ||
 		err_exit './-ksh ignores .profile'
@@ -198,7 +199,6 @@ else
 fi
 cd ~-
 rm -rf $tmp/.profile
-
 
 # { exec interactive login_shell restricted xtrace } in the following test
 
@@ -391,23 +391,70 @@ got=$(
 	done
 	wait
 )
-[[ $got == @(1212|1221) ]] || err_exit "& job delayed by --pipefail, expected '$exp', got '$got'"
-$SHELL -c '[[ $- == *c* ]]' || err_exit  'option c not in $-'
+[[ $got == @((12|21)(12|21)) ]] || err_exit "& job delayed by --pipefail, expected '$exp', got '$got'"
+$SHELL -c '[[ $- == *c* ]]' || err_exit 'option c not in $-'
 > $tmp/.profile
-for i in  i l r s D E a b e f h k n t u v x B C G H
-do	HOME=$tmp ENV= $SHELL -$i  >/dev/null 2>&1 <<- ++EOF++ || err_exit "option $i not in \$-"
-	[[ \$- == *$i* ]]  ||   exit 1
+for i in i l r s D E a b e f h k n t u v x B C G H
+do	HOME=$tmp ENV= $SHELL -$i >/dev/null 2>&1 <<- ++EOF++ || err_exit "option $i not in \$-"
+	[[ \$- == *$i* ]] || exit 1
 	++EOF++
 done
 letters=ilrabefhknuvxBCGE
 integer j=0
-for i in  interactive login restricted allexport notify errexit \
-	noglob  trackall keyword noexec nounset verbose xtrace braceexpand \
+for i in interactive login restricted allexport notify errexit \
+	noglob trackall keyword noexec nounset verbose xtrace braceexpand \
 	noclobber globstar rc
 do	HOME=$tmp ENV= $SHELL -o $i >/dev/null 2>&1 <<- ++EOF++ || err_exit "option $i not equivalent to ${letters:j:1}"
-	[[ \$- == *${letters:j:1}* ]]  ||   exit 1
+	[[ \$- == *${letters:j:1}* ]] || exit 1
 	++EOF++
 	((j++))
+done
+
+export ENV=
+histfile=$tmp/history
+exp=$(HISTFILE=$histfile $SHELL -c $'function foo\n{\ncat\n}\ntype foo')
+for var in HISTSIZE HISTFILE
+do	got=$( ( HISTFILE=$histfile $SHELL -ic $'unset '$var$'\nfunction foo\n{\ncat\n}\ntype foo\nexit' ) 2>&1 )
+	got=${got##*': '} 
+	[[ $got == "$exp" ]] || err_exit "function definition inside (...) with $var unset fails -- got '$got', expected '$exp'"
+	got=$( { HISTFILE=$histfile $SHELL -ic $'unset '$var$'\nfunction foo\n{\ncat\n}\ntype foo\nexit' ;} 2>&1 )
+	got=${got##*': '} 
+	[[ $got == "$exp" ]] || err_exit "function definition inside {...;} with $var unset fails -- got '$got', expected '$exp'"
+done
+env - $SHELL -ic "HISTFILE=$histfile" 2>/dev/null || err_exit "setting HISTFILE when not in environment fails"
+
+# the next tests loop on all combinations of
+#	{ SUB PAR CMD ADD }
+
+SUB=(
+	( BEG='$( '	END=' )'	)
+	( BEG='${ '	END='; }'	)
+)
+PAR=(
+	( BEG='( '	END=' )'	)
+	( BEG='{ '	END='; }'	)
+)
+CMD=(	command-segv	script-segv	)
+ADD=(	''		'; :'		)
+
+cd $tmp
+print $'#!'$SHELL$'\nkill -SEGV $$' > command-segv
+print $'kill -SEGV $$' > script-segv
+chmod +x command-segv script-segv
+export PATH=.:$PATH
+exp='Memory fault'
+for ((S=0; S<${#SUB[@]}; S++))
+do	for ((P=0; P<${#PAR[@]}; P++))
+	do	for ((C=0; C<${#CMD[@]}; C++))
+		do	for ((A=0; A<${#ADD[@]}; A++))
+			do	cmd="${SUB[S].BEG}${PAR[P].BEG}${CMD[C]}${PAR[P].END} 2>&1${ADD[A]}${SUB[S].END}"
+				eval got="$cmd"
+				got=${got##*': '}
+				got=${got%%'('*}
+				[[ $got == "$exp" ]] || err_exit "$cmd failed -- got '$got', expected '$exp'"
+			done
+		done
+	done
 done
 
 exit $((Errors))

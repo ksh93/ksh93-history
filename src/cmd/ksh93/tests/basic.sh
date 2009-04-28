@@ -321,7 +321,6 @@ kill $pids
 command exec 3<> /dev/null
 if	cat /dev/fd/3 >/dev/null 2>&1
 then	[[ $($SHELL -c 'cat <(print foo)' 2> /dev/null) == foo ]] || err_exit 'process substitution not working'
-	[[ $($SHELL -c 'print $(cat <(print foo) )' 2> /dev/null) == foo ]] || err_exit 'process substitution in subshell not working'
 	[[ $($SHELL -c  $'tee >(grep \'1$\' > '$tmp/scriptx$') > /dev/null <<-  \!!!
 	line0
 	line1
@@ -418,7 +417,8 @@ expected=foreback
 got=$(print -n fore;(sleep 2;print back)&)
 [[ $got == $expected ]] || err_exit "command substitution background process output error -- got '$got', expected '$expected'"
 
-for false in false $(whence -p false)
+binfalse=$(whence -p false)
+for false in false $binfalse
 do	x=$($false) && err_exit "x=\$($false) should fail"
 	$($false) && err_exit "\$($false) should fail"
 	$($false) > /dev/null && err_exit "\$($false) > /dev/null should fail"
@@ -438,14 +438,14 @@ do	print hello
 done |  $sleep 1
 (( (SECONDS-s) < 2 )) || err_exit 'early termination not causing broken pipe'
 [[ $({ trap 'print trap' 0; print -n | $(whence -p cat); } & wait $!) == trap ]] || err_exit 'trap on exit not getting triggered'
-var=$({ trap 'print trap' ERR; print -n | $(whence -p false); } & wait $!)
+var=$({ trap 'print trap' ERR; print -n | $binfalse; } & wait $!)
 [[ $var == trap ]] || err_exit 'trap on ERR not getting triggered'
 
 exp=
 got=$(
 	function fun
 	{
-		/bin/false && echo FAILED
+		$binfalse && echo FAILED
 	}
 	: works if this line deleted : |
 	fun
@@ -454,14 +454,14 @@ got=$(
 [[ $got == $exp ]] || err_exit "pipe to function with conditional fails -- expected '$exp', got '$got'"
 got=$(
 	: works if this line deleted : |
-	{ /bin/false && echo FAILED; }
+	{ $binfalse && echo FAILED; }
 	: works if this line deleted :
 )
 [[ $got == $exp ]] || err_exit "pipe to { ... } with conditional fails -- expected '$exp', got '$got'"
 
 got=$(
 	: works if this line deleted : |
-	( /bin/false && echo FAILED )
+	( $binfalse && echo FAILED )
 	: works if this line deleted :
 )
 [[ $got == $exp ]] || err_exit "pipe to ( ... ) with conditional fails -- expected '$exp', got '$got'"

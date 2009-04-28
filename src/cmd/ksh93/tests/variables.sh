@@ -60,17 +60,19 @@ fi
 #fi
 # PWD
 if	[[ !  $PWD -ef . ]]
-then	err_exit PWD variable not working
+then	err_exit PWD variable failed, not equivalent to .
 fi
 # PPID
-if	[[ $($SHELL -c 'print $PPID')  != $$ ]]
-then	err_exit PPID variable not working
+exp=$$
+got=${ $SHELL -c 'print $PPID'; }
+if	[[ ${ $SHELL -c 'print $PPID'; } != $$ ]]
+then	err_exit "PPID variable failed -- expected '$exp', got '$got'"
 fi
 # OLDPWD
 old=$PWD
 cd /
 if	[[ $OLDPWD != $old ]]
-then	err_exit OLDPWD variable not working
+then	err_exit "OLDPWD variable failed -- expected '$old', got '$OLDPWD'"
 fi
 cd $old || err_exit cd failed
 # REPLY

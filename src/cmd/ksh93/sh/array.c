@@ -691,7 +691,7 @@ static struct index_array *array_grow(Namval_t *np, register struct index_array 
 		}
 		else if((ap->val[0].cp=np->nvalue.cp))
 			i++;
-		else if(nv_isattr(np,NV_INTEGER))
+		else if(nv_isattr(np,NV_INTEGER) && !nv_isnull(np))
 		{
 			Sfdouble_t d= nv_getnum(np);
 			i++;

@@ -1,4 +1,5 @@
 09-04-22  --- Release ksh93t+  ---
+09-04-22  Default alias compound='typeset -C' added.
 09-04-15  A bug that caused ${...;} to hang for large files has ben fixed.
 09-04-08  A change was made in the -n option which printed out an incorrect
 	  warning with <>.

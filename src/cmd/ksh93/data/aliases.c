@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2006 AT&T Corp.                  *
+*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -36,6 +36,7 @@ const struct shtable2 shtab_aliases[] =
 #endif /* SHOPT_FS_3D */
 	"autoload",	NV_NOFREE,	"typeset -fu",
 	"command",	NV_NOFREE,	"command ",
+	"compound",	NV_NOFREE,	"typeset -C",
 	"fc",		NV_NOFREE,	"hist",
 	"float",	NV_NOFREE,	"typeset -lE",
 	"functions",	NV_NOFREE,	"typeset -f",

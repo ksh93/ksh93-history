@@ -805,6 +805,7 @@ static int arg_expand(Shell_t *shp,register struct argnod *argp, struct argnod *
 		/* argument of the form (cmd) */
 		register struct argnod *ap;
 		int monitor, fd, pv[2];
+		int subshell = shp->subshell;
 		ap = (struct argnod*)stkseek(shp->stk,ARGVAL);
 		ap->argflag |= ARG_MAKE;
 		ap->argflag &= ~ARG_RAW;
@@ -819,6 +820,7 @@ static int arg_expand(Shell_t *shp,register struct argnod *argp, struct argnod *
 		shp->inpipe = shp->outpipe = 0;
 		if(monitor = (sh_isstate(SH_MONITOR)!=0))
 			sh_offstate(SH_MONITOR);
+		shp->subshell = 0;
 		if(fd)
 		{
 			shp->inpipe = pv;
@@ -829,6 +831,7 @@ static int arg_expand(Shell_t *shp,register struct argnod *argp, struct argnod *
 			shp->outpipe = pv;
 			sh_exec((Shnode_t*)argp->argchn.ap,(int)sh_isstate(SH_ERREXIT));
 		}
+		shp->subshell = subshell;
 		if(monitor)
 			sh_onstate(SH_MONITOR);
 		close(pv[1-fd]);

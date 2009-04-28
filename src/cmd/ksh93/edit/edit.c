@@ -857,7 +857,8 @@ int ed_read(void *context, int fd, char *buff, int size, int reedit)
 				buff[2] = 'a';
 				return(3);
 			}
-			buff[0] = cntl('L');
+			if(sh_isoption(SH_EMACS) || sh_isoption(SH_VI))
+				buff[0] = cntl('L');
 			return(1);
 		}
 		/* an interrupt that should be ignored */

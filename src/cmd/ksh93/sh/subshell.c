@@ -142,6 +142,8 @@ void	sh_subtmpfile(int pflag)
 	}
 	if(sp && (shp->fdstatus[1]==IOCLOSE || (!shp->subshare && !(shp->fdstatus[1]&IONOSEEK))))
 	{
+		struct stat statb,statx;
+		int fd;
 		sh_pipe(fds);
 		sp->pipefd = fds[0];
 		sh_fcntl(sp->pipefd,F_SETFD,FD_CLOEXEC);
@@ -151,10 +153,22 @@ void	sh_subtmpfile(int pflag)
 			write(fds[1],sfsetbuf(sfstdout,(Void_t*)sfstdout,0),(size_t)off);
 			sfpurge(sfstdout);
 		}
+		if((sfset(sfstdout,0,0)&SF_STRING) || fstat(1,&statb)<0)
+			statb.st_ino = 0;
 		sfclose(sfstdout);
 		if((sh_fcntl(fds[1],F_DUPFD, 1)) != 1)
 			errormsg(SH_DICT,ERROR_system(1),e_redirect);
 		sh_close(fds[1]);
+		if(statb.st_ino) for(fd=0; fd < 10; fd++)
+		{
+			if(fd==1 || ((shp->fdstatus[fd]&(IONOSEEK|IOSEEK|IOWRITE))!=(IOSEEK|IOWRITE)) || fstat(fd,&statx)<0)
+				continue;
+			if(statb.st_ino==statx.st_ino && statb.st_dev==statx.st_dev)
+			{
+				sh_close(fd);
+				fcntl(1,F_DUPFD, fd);
+			}
+		}
 	skip:
 		sh_iostream(shp,1);
 		sfset(sfstdout,SF_SHARE|SF_PUBLIC,1);
@@ -163,6 +177,7 @@ void	sh_subtmpfile(int pflag)
 			pp->olist->strm = 0;
 	}
 }
+
 
 /*
  * This routine creates a temp file if necessary and creates a subshell.
@@ -568,6 +583,7 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 		subshell_data = sp->prev;
 		if(jmpval==SH_JMPSCRIPT)
 			siglongjmp(*shp->jmplist,jmpval);
+		shp->exitval &= SH_EXITMASK;
 		sh_done(shp,0);
 	}
 	if(comsub)

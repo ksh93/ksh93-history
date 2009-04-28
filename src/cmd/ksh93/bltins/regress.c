@@ -65,7 +65,7 @@ USAGE_LICENSE
     "\aoption\a is one of the options below, \aintercept\a is the name of "
     "the specific intercept for \aoption\a, and \ainfo\a is \aoption\a "
     "specific information. Unless noted otherwise, one regression test trace "
-    "line is produced each time and enabled intercept is called.]"
+    "line is produced each time an enabled intercept is called.]"
 "[101:egid?The intercept effective gid is set to \aoriginal-egid\a. The "
     "effective gid of the underlying system process is not affected. The "
     "trace line info is either \begid==rgid\b or \begid!=rgid\b. The "

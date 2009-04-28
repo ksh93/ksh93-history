@@ -1154,7 +1154,12 @@ int sh_exec(register const Shnode_t *t, int flags)
 				!(pipejob && sh_isoption(SH_PIPEFAIL))
 			    ));
 			if(shp->subshell)
-				sh_subtmpfile(1);
+			{
+				if(shp->subshare || (type&FAMP))
+					sh_subtmpfile(1);
+				else
+					sh_subfork();
+			}
 			if(sh_isstate(SH_PROFILE) || shp->dot_depth)
 			{
 				/* disable foreground job monitor */

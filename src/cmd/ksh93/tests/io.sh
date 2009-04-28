@@ -381,8 +381,6 @@ fi
 [[ $line2 == line2 ]]		|| err_exit "line2 should be line2"
 [[ $line3 == 'prompt2: ' ]]	|| err_exit "line3 should be 'prompt2: '"
 [[ ! $line4 ]]			|| err_exit "line4 should be empty"
-exit
-
 
 if	$SHELL -c "export LC_ALL=en_US.UTF-8; c=$'\342\202\254'; [[ \${#c} == 1 ]]" 2>/dev/null
 then	lc_utf8=en_US.UTF-8
@@ -443,5 +441,20 @@ got=$(< $file)
 print 'hello world' > $file
 1<>; $file  1># ((5))
 (( $(wc -c < $file) == 5 )) || err_exit "$file was not truncate to 5 bytes"
+
+$SHELL -c "PS4=':2:'
+	exec 1> $tmp/21.out 2> $tmp/22.out
+	set -x
+	printf ':1:A:'
+	print \$(:)
+	print :1:Z:" 1> $tmp/11.out 2> $tmp/12.out
+[[ -s $tmp/11.out ]] && err_exit "standard output leaked past redirection"
+[[ -s $tmp/12.out ]] && err_exit "standard error leaked past redirection"
+exp=$':1:A:\n:1:Z:'
+got=$(<$tmp/21.out)
+[[ $exp == "$got" ]] || err_exit "standard output garbled -- expected $(printf %q "$exp"), got $(printf %q "$got")"
+exp=$':2:printf :1:A:\n:2::\n:2:print\n:2:print :1:Z:'
+got=$(<$tmp/22.out)
+[[ $exp == "$got" ]] || err_exit "standard error garbled -- expected $(printf %q "$exp"), got $(printf %q "$got")"
 
 exit $((Errors))

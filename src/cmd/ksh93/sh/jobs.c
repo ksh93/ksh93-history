@@ -1209,6 +1209,11 @@ int job_post(pid_t pid, pid_t join)
 			pw->p_flag |= (P_SIGNALLED|P_STOPPED);
 			pw->p_exit = 0;
 		}
+		else if(pw->p_exit >= SH_EXITSIG)
+		{
+			pw->p_flag |= P_DONE|P_SIGNALLED;
+			pw->p_exit &= SH_EXITMASK;
+		}
 		else
 			pw->p_flag |= (P_DONE|P_NOTIFY);
 	}
@@ -1407,15 +1412,8 @@ int	job_wait(register pid_t pid)
 							px->p_flag &= ~P_EXITSAVE;
 					}
 				}
-				if(job.waitall)
-				{
-					px = job_unpost(pw,1);
-					if(!px || !sh_isoption(SH_PIPEFAIL))
-						break;
-					pw = px;
-					continue;
-				}
-				else if(!(px=job_unpost(pw,1)))
+				px = job_unpost(pw,1);
+				if(!px || !sh_isoption(SH_PIPEFAIL))
 					break;
 				pw = px;
 				continue;

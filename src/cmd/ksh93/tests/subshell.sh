@@ -224,8 +224,6 @@ do	for TEST_exec in '' 'exec'
 	done
 done
 
-cat=$bincat
-[[ ${ print foo|$cat;} == foo ]] || err_exit "\${ print foo|$cat;} not working"
 $SHELL -c '( autoload xxxxx);print -n' ||  err_exit 'autoloaded functions in subshells can cause failure'
 foo=$($SHELL  <<- ++EOF++
 	(trap 'print bar' EXIT;print -n foo)
@@ -240,10 +238,9 @@ err=$(
 	        {
 	                x=$( $date > /dev/null 2>&1 ;:)
 	        }
-		integer max=$(ulimit --nofile)
-		(( max= max<70?max=64:max-6))
-		integer dup
 		# consume almost all fds to push the test to the fd limit #
+		integer max=$(ulimit --nofile)
+		(( max -= 6 ))
 		for ((i=20; i < max; i++))
 		do	exec {i}>&1
 		done
@@ -326,26 +323,38 @@ do	for ((TEST=1; TEST<=${#testcase[@]}; TEST++))
 	shift 2
 done
 
-# this set of tests loop on all combinations of
-#	{ BEG CAT ADD TST } X { file-sizes }
+# the next tests loop on all combinations of
+#	{ SUB CAT INS TST APP } X { file-sizes }
 # where the file size starts at 1Ki and doubles up to and including 1Mi
 #
 # the tests and timeouts are done in async subshells to prevent
 # the test harness from hanging
 
-BEG=(  '$( '  '${ '  )
-END=(  ' )'   '; }'  )
-CAT=(  cat  $bincat  )
-ADD=(  ""  "builtin cat; "  "builtin -d cat $bincat; "  ": > /dev/null; "  )
-TST=(
-	'$cat < $tmp/lin'
-	'cat $tmp/lin | $cat'
-	'read v < $tmp/buf; print $v'
-	'cat $tmp/buf | read v; print $v'
+SUB=(
+	( BEG='$( '	END=' )'	)
+	( BEG='${ '	END='; }'	)
 )
+CAT=(  cat  $bincat  )
+INS=(  ""  "builtin cat; "  "builtin -d cat $bincat; "  ": > /dev/null; "  )
+APP=(  ""  "; :"  )
+TST=(
+	( CMD='print foo | $cat'			EXP=3		)
+	( CMD='$cat < $tmp/lin'						)
+	( CMD='cat $tmp/lin | $cat'					)
+	( CMD='read v < $tmp/buf; print $v'		LIM=4*1024	)
+	( CMD='cat $tmp/buf | read v; print $v'		LIM=4*1024	)
+)
+
+command exec 3<> /dev/null
+if	cat /dev/fd/3 >/dev/null 2>&1
+then	T=${#TST[@]}
+	TST[T].CMD='$cat <(print foo)'
+	TST[T].EXP=3
+fi
 
 # prime the two data files to 512 bytes each
 # $tmp/lin has newlines every 16 bytes and $tmp/buf has no newlines
+# the outer loop doubles the file size at top
 
 buf=$'1234567890abcdef'
 lin=$'\n1234567890abcde'
@@ -356,34 +365,52 @@ done
 print -n "$buf" > $tmp/buf
 print -n "$lin" > $tmp/lin
 
-for ((exp=1024; exp<=1024*1024; exp*=2))
+unset SKIP
+for ((n=1024; n<=1024*1024; n*=2))
 do	cat $tmp/buf $tmp/buf > $tmp/tmp
 	mv $tmp/tmp $tmp/buf
 	cat $tmp/lin $tmp/lin > $tmp/tmp
 	mv $tmp/tmp $tmp/lin
-	for ((S=0; S<${#BEG[@]}; S++))
+	for ((S=0; S<${#SUB[@]}; S++))
 	do	for ((C=0; C<${#CAT[@]}; C++))
 		do	cat=${CAT[C]}
-			for ((A=0; A<${#ADD[@]}; A++))
-			do	for ((T=0; T<${#TST[@]}; T++))
-				do	if	[[ ! ${ERR[S][C][A][T]} ]]
-					then	eval "{ x=${BEG[S]}${ADD[A]}${TST[T]}${END[S]}; print \${#x}; } >\$tmp/out &"
-						m=$!
-						{ sleep 4; kill -9 $m; } &
-						k=$!
-						wait $m
-						kill -9 $k
-						wait $k
-						got=$(<$tmp/out)
-						if	[[ $got != $exp ]]
-						then	# on failure disable similar tests on larger files sizes #
-							ERR[S][C][A][T]=1
-							# read has per-variable size limitations imposed by sfio #
-							if	(( got < 8*1024 )) || [[ ${TST[T]} != *read* ]]
-							then	err_exit "${BEG[S]}${ADD[A]}${TST[T]}${END[S]} failed on file size $(printf $'%#i' $exp) -- expected '$exp', got '$got'"
-							fi
-						fi
-					fi
+			for ((I=0; I<${#INS[@]}; I++))
+			do	for ((A=0; A<${#APP[@]}; A++))
+				do	for ((T=0; T<${#TST[@]}; T++))
+					do	#undent...#
+
+	if	[[ ! ${SKIP[S][C][I][A][T]} ]]
+	then	eval "{ x=${SUB[S].BEG}${INS[I]}${TST[T].CMD}${APP[A]}${SUB[S].END}; print \${#x}; } >\$tmp/out &"
+		m=$!
+		{ sleep 4; kill -9 $m; } &
+		k=$!
+		wait $m
+		h=$?
+		kill -9 $k
+		wait $k
+		got=$(<$tmp/out)
+		if	[[ ! $got ]] && (( h ))
+		then	got=HUNG
+		fi
+		if	[[ ${TST[T].EXP} ]]
+		then	exp=${TST[T].EXP}
+		else	exp=$n
+		fi
+		if	[[ $got != $exp ]]
+		then	# on failure skip similar tests on larger files sizes #
+			SKIP[S][C][I][A][T]=1
+			siz=$(printf $'%#i' $exp)
+			cmd=${TST[T].CMD//\$cat/$cat}
+			cmd=${cmd//\$tmp\/buf/$siz.buf}
+			cmd=${cmd//\$tmp\/lin/$siz.lin}
+			err_exit "'x=${SUB[S].BEG}${INS[I]}${cmd}${APP[A]}${SUB[S].END} && print \${#x}' failed -- expected '$exp', got '$got'"
+		elif	[[ ${TST[T].EXP} ]] || (( TST[T].LIM >= n ))
+		then	SKIP[S][C][I][A][T]=1
+		fi
+	fi
+
+						#...indent#
+					done
 				done
 			done
 		done

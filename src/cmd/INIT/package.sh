@@ -64,7 +64,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2009-04-15 $
+@(#)$Id: package (AT&T Research) 2009-04-28 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -4116,10 +4116,10 @@ admin)	while	test ! -f $admin_db
 	esac
 	trap 'kill $pids >/dev/null 2>&1' 1 2 3 15
 	index=0
-	while	read type host root date time make test write junk
+	while	read type host root date time make test write comment
 	do	case $type in
 		''|'#'*);;
-		*=*)	eval "$type $host $root $date $time $make $test $write $junk"
+		*=*)	eval "$type $host $root $date $time $make $test $write $comment"
 			;;
 		*)	case $admin_action in
 			make|test|write)
@@ -4591,8 +4591,18 @@ admin)	while	test ! -f $admin_db
 					?)	W="  $W" ;;
 					'')	W="  0" ;;
 					esac
-					echo "$1$t1	$2$t2	$3$t3	$D	$E	$M $T $W"
-					echo "$1$t1	$2$t2	$3$t3	$D	$E	$M $T $W" >&9
+					A=$1$t1
+					H=$2$t2
+					R=$3$t3
+					case $# in
+					[0-8])	C=
+						;;
+					*)	shift 8
+						C=" $*"
+						;;
+					esac
+					echo "$A	$H	$R	$D	$E	$M $T $W$C"
+					echo "$A	$H	$R	$D	$E	$M $T $W$C" >&9
 					continue
 					;;
 				esac
