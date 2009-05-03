@@ -818,7 +818,7 @@ int ed_read(void *context, int fd, char *buff, int size, int reedit)
 	{
 		if(shp->trapnote&(SH_SIGSET|SH_SIGTRAP))
 			goto done;
-		if(ep->sh->winch && sh_isstate(SH_INTERACTIVE))
+		if(ep->sh->winch && sh_isstate(SH_INTERACTIVE) && (sh_isoption(SH_VI) || sh_isoption(SH_EMACS)))
 		{
 			Edpos_t	lastpos;
 			int	n, rows, newsize;
@@ -861,6 +861,8 @@ int ed_read(void *context, int fd, char *buff, int size, int reedit)
 				buff[0] = cntl('L');
 			return(1);
 		}
+		else
+			ep->sh->winch = 0;
 		/* an interrupt that should be ignored */
 		errno = 0;
 		if(!waitevent || (rv=(*waitevent)(fd,-1L,0))>=0)

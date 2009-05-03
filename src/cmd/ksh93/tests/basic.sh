@@ -423,7 +423,9 @@ do	x=$($false) && err_exit "x=\$($false) should fail"
 	$($false) && err_exit "\$($false) should fail"
 	$($false) > /dev/null && err_exit "\$($false) > /dev/null should fail"
 done
-[[ $(env 'x-a=y'  $SHELL -c 'env | grep x-a') == *x-a=y* ]] || err_exit 'invalid environment variables not preserved'
+if	env x-a=y >/dev/null 2>&1
+then	[[ $(env 'x-a=y'  $SHELL -c 'env | grep x-a') == *x-a=y* ]] || err_exit 'invalid environment variables not preserved'
+fi
 float s=SECONDS
 sleep=$(whence -p sleep)
 for i in 1 2

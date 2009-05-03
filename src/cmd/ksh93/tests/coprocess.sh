@@ -102,15 +102,24 @@ exec 5<&- 6>&-
 kill $(jobs -p) 2>/dev/null
 
 ${SHELL-ksh} |&
-print -p  $'print hello | cat\nprint Done'
+cop=$!
+exp=Done
+print -p $'print hello | cat\nprint '$exp
 read -t 5 -p
 read -t 5 -p
-if	[[ $REPLY != Done ]]
-then	err_exit "${SHELL-ksh} coprocess not working"
+got=$REPLY
+if	[[ $got != $exp ]]
+then	err_exit "${SHELL-ksh} coprocess io failed -- got '$got', expected '$exp'"
 fi
 exec 5<&p 6>&p
 exec 5<&- 6>&-
-wait $!
+{ sleep 4; kill $cop; } 2>/dev/null &
+spy=$!
+if	wait $cop 2>/dev/null
+then	kill $spy 2>/dev/null
+else	err_exit "coprocess hung after 'exec 5<&p 6>&p; exec 5<&- 6>&-'"
+fi
+wait
 
 {
 echo line1 | grep 'line2'

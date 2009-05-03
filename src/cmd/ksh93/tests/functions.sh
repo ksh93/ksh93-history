@@ -28,6 +28,8 @@ alias err_exit='err_exit $LINENO'
 integer Errors=0
 Command=${0##*/}
 
+ulimit -c 0
+
 tmp=$(mktemp -dt) || { err_exit mktemp -dt failed; exit 1; }
 trap "cd /; rm -rf $tmp" EXIT
 
@@ -970,12 +972,13 @@ set -- $(bar)
 [[ $1 == $2 ]] && err_exit ".sh.inline optimization bug"
 ( $SHELL  -c ' function foo { typeset x=$1;print $1;};z=();z=($(foo bar)) ') 2> /dev/null ||  err_exit 'using a function to set an array in a command sub  fails'
 
-[[ $(
+{
+got=$(
 s=$(ulimit -s)
-if	(( s < 16384 ))
+if	[[ $s == +([[:digit:]]) ]] && (( s < 16384 ))
 then	ulimit -s 16384 2>/dev/null
 fi
-$SHELL  << \+++
+$SHELL << \+++
 f()
 {
 	if	(($1>1))
@@ -983,10 +986,11 @@ f()
 	fi
 	return 0
 }
-f 257  && print ok
+f 257 && print ok
 +++
-) == ok ]] || err_exit 'cannot handle comsub depth > 256 in function'
-
+)
+} 2>/dev/null
+[[ $got == ok ]] || err_exit 'cannot handle comsub depth > 256 in function'
 
 tmp1=$tmp/job.1
 tmp2=$tmp/job.2

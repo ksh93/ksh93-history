@@ -73,7 +73,7 @@ do	h=$(home $u)
 	if	[[ $h != . ]]
 	then	[[ ~$u -ef $h ]] || err_exit "~$u not $h"
 		x=~$u
-		[[ $x -ef $h ]] || "x=~$u not $h"
+		[[ $x -ef $h ]] || x="~$u not $h"
 		break
 	fi
 done

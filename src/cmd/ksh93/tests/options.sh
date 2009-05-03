@@ -29,7 +29,9 @@ Command=${0##*/}
 integer Errors=0
 
 unset HISTFILE
-export ENV=
+export LC_ALL=C ENV=
+
+ulimit -c 0
 
 tmp=$(mktemp -dt) || { err_exit mktemp -dt failed; exit 1; }
 trap "cd /; rm -rf $tmp" EXIT
@@ -421,7 +423,7 @@ do	got=$( ( HISTFILE=$histfile $SHELL -ic $'unset '$var$'\nfunction foo\n{\ncat\
 	got=${got##*': '} 
 	[[ $got == "$exp" ]] || err_exit "function definition inside {...;} with $var unset fails -- got '$got', expected '$exp'"
 done
-env - $SHELL -ic "HISTFILE=$histfile" 2>/dev/null || err_exit "setting HISTFILE when not in environment fails"
+( unset HISTFILE; $SHELL -ic "HISTFILE=$histfile" 2>/dev/null ) || err_exit "setting HISTFILE when not in environment fails"
 
 # the next tests loop on all combinations of
 #	{ SUB PAR CMD ADD }
@@ -434,15 +436,15 @@ PAR=(
 	( BEG='( '	END=' )'	)
 	( BEG='{ '	END='; }'	)
 )
-CMD=(	command-segv	script-segv	)
+CMD=(	command-kill	script-kill	)
 ADD=(	''		'; :'		)
 
 cd $tmp
-print $'#!'$SHELL$'\nkill -SEGV $$' > command-segv
-print $'kill -SEGV $$' > script-segv
-chmod +x command-segv script-segv
+print $'#!'$SHELL$'\nkill -KILL $$' > command-kill
+print $'kill -KILL $$' > script-kill
+chmod +x command-kill script-kill
 export PATH=.:$PATH
-exp='Memory fault'
+exp='Killed'
 for ((S=0; S<${#SUB[@]}; S++))
 do	for ((P=0; P<${#PAR[@]}; P++))
 	do	for ((C=0; C<${#CMD[@]}; C++))

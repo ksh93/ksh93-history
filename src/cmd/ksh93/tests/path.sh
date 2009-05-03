@@ -213,11 +213,11 @@ PATH=$PWD:.:${x%/ls}
 [[ $(whence ls) == "$x" ]] || err_exit 'PATH search bug when :$PWD:. in path'
 cd   "${x%/ls}"
 [[ $(whence ls) == /* ]] || err_exit 'whence not generating absolute pathname'
-status=$($SHELL -c $'trap \'print $?\' EXIT;/a/b/c/d/e 2> /dev/null')
+status=$($SHELL -c $'trap \'print $?\' EXIT;/xxx/a/b/c/d/e 2> /dev/null')
 [[ $status == 127 ]] || err_exit "not found command exit status $status -- expected 127"
 status=$($SHELL -c $'trap \'print $?\' EXIT;/dev/null 2> /dev/null')
 [[ $status == 126 ]] || err_exit "non executable command exit status $status -- expected 126"
-status=$($SHELL -c $'trap \'print $?\' ERR;/a/b/c/d/e 2> /dev/null')
+status=$($SHELL -c $'trap \'print $?\' ERR;/xxx/a/b/c/d/e 2> /dev/null')
 [[ $status == 127 ]] || err_exit "not found command with ERR trap exit status $status -- expected 127"
 status=$($SHELL -c $'trap \'print $?\' ERR;/dev/null 2> /dev/null')
 [[ $status == 126 ]] || err_exit "non executable command ERR trap exit status $status -- expected 126"

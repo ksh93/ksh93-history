@@ -394,7 +394,7 @@ PAXFILTER = ;*.[ch];$(PROTO) $(PROTOFLAGS) -c "" -p
 ast_sa.h : .DONTCARE
 
 astsa.tgz : $$("astsa/astsa.manifest":T=F:T=I:/[[:space:]][[:space:]]*/ /G:C,^,astsa/,)
-	$(PAX) $(PAXFLAGS) -wvf $(<) -x $(<:/.*\.//) -s ',.*/,,' -A $(PAXFILTER:@Q) $(*)
+	$(PAX) $(PAXFLAGS) -wf $(<) -x $(<:/.*\.//) -s ',.*/,,' -A $(PAXFILTER:@Q) $(*)
 
 /* libmini.a is a bootstrap dll for uwin cc -D_BLD_ast that exports part of ast */
 

@@ -68,54 +68,45 @@ then	err_exit 'noclobber not causing exclusive open'
 fi
 set +o noclobber
 
-set \
-	/proc/self/fd	open	\
-	/proc/$$/fd	open
-fdfs=/dev/fd
-semantics=dup
-while	(( $# >= 2 ))
-do	if	[[ -e $1 ]]
-	then	fdfs=$1
-		semantics=$2
-		break
-	fi
-	shift 2
+FDFS=(
+	( dir=/proc/self/fd	semantics='open'	)
+	( dir=/proc/$$/fd	semantics='open'	)
+	( dir=/dev/fd		semantics='open|dup'	)
+	( dir=/dev/fd		semantics='dup'	)
+)
+for ((fdfs=0; fdfs<${#FDFS[@]}-1; fdfs++))
+do	[[ -e ${FDFS[fdfs].dir} ]] && { command : > ${FDFS[fdfs].dir}/1; } 2>/dev/null && break
 done
 
 exec 3<> file1
-if	command exec 4< $fdfs/3
-then	read -u3 line
-	read -u4 line
-	exp=foo
-	case $line in
-	foo)	got=open ;;
-	bar)	got=dup ;;
-	*)	got=error ;;
+if	command exec 4< ${FDFS[fdfs].dir}/3
+then	read -u3 got
+	read -u4 got
+	exp='foo|bar'
+	case $got in
+	foo)	semantics='open' ;;
+	bar)	semantics='dup' ;;
+	*)	semantics='failed' ;;
 	esac
-	if	[[ $semantics != $got ]]
-	then	err_exit "'4< $fdfs/3' uses $got(2) instead of $semantics(2) -- expected '$exp', got '$line'"
-	fi
+	[[ $semantics == @(${FDFS[fdfs].semantics}) ]] || err_exit "'4< ${FDFS[fdfs].dir}/3' $semantics semantics instead of ${FDFS[fdfs].semantics} -- expected '$exp', got '$got'"
 fi
 
 # 2004-11-25 ancient /dev/fd/N redirection bug fix
-x=$(
+got=$(
 	{
 		print -n 1
-		print -n 2 > $fdfs/2
+		print -n 2 > ${FDFS[fdfs].dir}/2
 		print -n 3
-		print -n 4 > $fdfs/2
+		print -n 4 > ${FDFS[fdfs].dir}/2
 	}  2>&1
 )
-case $x in
-1234)	got=dup ;;
-4)	got=open ;;
-*)	got=error ;;
+exp='1234|4'
+case $got in
+1234)	semantics='dup' ;;
+4)	semantics='open' ;;
+*)	semantics='failed' ;;
 esac
-case $semantics in
-dup)	exp=1234 ;;
-*)	exp=4 ;;
-esac
-[[ $x == $exp ]] || err_exit "$fdfs/N uses $got(2) instead of $semantics(2) -- expected '$exp', got '$x'"
+[[ $semantics == @(${FDFS[fdfs].semantics}) ]] || err_exit "${FDFS[fdfs].dir}/N $semantics semantics instead of ${FDFS[fdfs].semantics} -- expected '$exp', got '$got'"
 
 cat > close0 <<\!
 exec 0<&-

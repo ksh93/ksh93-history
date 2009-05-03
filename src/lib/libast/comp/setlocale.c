@@ -114,7 +114,11 @@ native_locale(const char* locale, char* buf, size_t siz)
 					break;
 				}
 			if (!ctry)
+			{
+				if (!lang)
+					return 0;
 				ctry = SUBLANG_DEFAULT;
+			}
 		}
 		lcid = MAKELCID(MAKELANGID(lang, ctry), SORT_DEFAULT);
 	}
@@ -141,14 +145,15 @@ native_setlocale(int category, const char* locale)
 	char*		sys;
 	char		buf[256];
 
+	if (!(usr = native_locale(locale, buf, sizeof(buf))))
+		return 0;
+
 	/*
 	 * win32 doesn't have LC_MESSAGES
 	 */
 
 	if (category == LC_MESSAGES)
 		return (char*)locale;
-	if (!(usr = native_locale(locale, buf, sizeof(buf))))
-		return 0;
 	sys = uwin_setlocale(category, usr);
 	if (ast.locale.set & AST_LC_debug)
 		sfprintf(sfstderr, "locale uwin %17s %-24s %-24s\n", lc_categories[lcindex(category, 0)].name, usr, sys);

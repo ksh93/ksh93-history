@@ -30,7 +30,7 @@ case $-:$BASH_VERSION in
 esac
 
 command=iffe
-version=2009-04-15 # update in USAGE too #
+version=2009-05-01 # update in USAGE too #
 
 compile() # $cc ...
 {
@@ -603,7 +603,7 @@ set=
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: iffe (AT&T Research) 2009-04-15 $
+@(#)$Id: iffe (AT&T Research) 2009-05-01 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?iffe - C compilation environment feature probe]
@@ -1212,6 +1212,7 @@ file=
 hdrtest=
 ifelse=NONE
 ifstack=
+ini=
 init=1
 line=0
 nan=
@@ -1226,26 +1227,39 @@ do	case $in in
 			;;
 		esac
 		;;
-	*)	if	read lin
-		then	case $shell in
-			ksh)	let line=line+1 ;;
-			*)	line=`expr $line + 1` ;;
-			esac
-			$posix_noglob
-			set x $lin
+	*)	case $ini in
+		'')	if	read lin
+			then	case $shell in
+				ksh)	let line=line+1 ;;
+				*)	line=`expr $line + 1` ;;
+				esac
+				$posix_noglob
+				set x $lin
+				$posix_glob
+				case $# in
+				1)	continue ;;
+				esac
+			else	set x
+			fi
+			;;
+		*)	$posix_noglob
+			set x $ini
 			$posix_glob
-			case $# in
-			1)	continue ;;
-			esac
-		else	set x
-		fi
+			ini=
+			;;
+		esac
 		shift
 		case $init in
 		1)	case $1 in
-			iff)	;;
-			'')	set ini ;;
+			iff)	init=0
+				;;
+			print|ref|set)
+				;;
+			*)	init=0
+				ini=$*
+				set ini
+				;;
 			esac
-			init=0
 		esac
 		;;
 	esac

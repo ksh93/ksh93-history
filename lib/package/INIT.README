@@ -92,6 +92,7 @@ All recorded changes follow.
 
 :::::::: INIT ::::::::
 
+09-05-01 iffe.sh: fix output initialization *again*
 09-04-28 package.sh: handle admin.db contact field $9
 09-04-15 iffe.sh: add implicit "ini" op to initialize io for subsequent ops
 09-03-31 regress.sh: EXPORT before test => global ENVIRON[]
