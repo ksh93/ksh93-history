@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.3 2009-01-09
+info mam static 00000 1994-07-17 make (AT&T Research) 5.3 2009-05-05
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ar
@@ -6047,6 +6047,11 @@ make man/int.3
 done man/int.3
 exec - test '' = 'man/int.3' || ${STDCMP} 2>/dev/null -s man/int.3 ${INSTALLROOT}/man/man3/int.3 || { ${STDMV} ${INSTALLROOT}/man/man3/int.3 ${INSTALLROOT}/man/man3/int.3.old 2>/dev/null || true; ${STDCP} man/int.3 ${INSTALLROOT}/man/man3/int.3  		    		    ;}
 done ${INSTALLROOT}/man/man3/int.3 generated
+make ${INSTALLROOT}/man/man3/ip6.3
+make man/ip6.3
+done man/ip6.3
+exec - test '' = 'man/ip6.3' || ${STDCMP} 2>/dev/null -s man/ip6.3 ${INSTALLROOT}/man/man3/ip6.3 || { ${STDMV} ${INSTALLROOT}/man/man3/ip6.3 ${INSTALLROOT}/man/man3/ip6.3.old 2>/dev/null || true; ${STDCP} man/ip6.3 ${INSTALLROOT}/man/man3/ip6.3  		    		    ;}
+done ${INSTALLROOT}/man/man3/ip6.3 generated
 make ${INSTALLROOT}/man/man3/magic.3
 make man/magic.3
 done man/magic.3

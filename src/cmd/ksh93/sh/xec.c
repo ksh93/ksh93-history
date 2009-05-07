@@ -1147,12 +1147,6 @@ int sh_exec(register const Shnode_t *t, int flags)
 			register pid_t parent;
 			int no_fork,jobid;
 			int pipes[2];
-			no_fork = !ntflag && !(type&(FAMP|FPOU)) &&
-			    !shp->st.trapcom[0] && !shp->st.trap[SH_ERRTRAP] &&
-				(execflg2 || (execflg && 
-				!shp->subshell && shp->fn_depth==0 &&
-				!(pipejob && sh_isoption(SH_PIPEFAIL))
-			    ));
 			if(shp->subshell)
 			{
 				if(shp->subshare || (type&FAMP))
@@ -1160,6 +1154,12 @@ int sh_exec(register const Shnode_t *t, int flags)
 				else
 					sh_subfork();
 			}
+			no_fork = !ntflag && !(type&(FAMP|FPOU)) &&
+			    !shp->st.trapcom[0] && !shp->st.trap[SH_ERRTRAP] &&
+				(execflg2 || (execflg && 
+				!shp->subshell && shp->fn_depth==0 &&
+				!(pipejob && sh_isoption(SH_PIPEFAIL))
+			    ));
 			if(sh_isstate(SH_PROFILE) || shp->dot_depth)
 			{
 				/* disable foreground job monitor */
@@ -1360,7 +1360,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 		     * save and restore io-streams
 		     */
 			pid_t	pid;
-			int jmpval, waitall;
+			int 	jmpval, waitall;
+			int 	simple = (t->fork.forktre->tre.tretyp&COMMSK)==TCOM;
 			struct checkpt buff;
 			if(shp->subshell)
 				execflg = 0;
@@ -1372,7 +1373,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 				if(!execflg)
 				{
 					sh_iosave(shp,0,shp->topfd,(char*)0);
-					if((t->fork.forktre->tre.tretyp&COMMSK)==TCOM)
+					if(simple)
 						shp->pipepid = 1;
 				}
 				sh_iorenumber(shp,shp->inpipe[0],0);
@@ -1380,7 +1381,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 				 * if read end of pipe is a simple command
 				 * treat as non-sharable to improve performance
 				 */
-				if((t->fork.forktre->tre.tretyp&COMMSK)==TCOM)
+				if(simple)
 					sfset(sfstdin,SF_PUBLIC|SF_SHARE,0);
 				waitall = job.waitall;
 				job.waitall = 0;
@@ -1393,7 +1394,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 			{
 				sh_redirect(shp,t->fork.forkio,execflg);
 				(t->fork.forktre)->tre.tretyp |= t->tre.tretyp&FSHOWME;
-				sh_exec(t->fork.forktre,flags);
+				sh_exec(t->fork.forktre,flags&~simple);
 			}
 			else
 				sfsync(shp->outpool);

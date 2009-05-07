@@ -21,14 +21,16 @@
 #pragma prototyped
 
 static const char usage[] =
-"[-?\n@(#)$Id: mktemp (AT&T Research) 2009-02-02 $\n]"
+"[-?\n@(#)$Id: mktemp (AT&T Research) 2009-05-01 $\n]"
 USAGE_LICENSE
 "[+NAME?mktemp - make temporary file or directory]"
 "[+DESCRIPTION?\bmktemp\b creates a temporary file with optional base "
     "name prefix \aprefix\a. If \aprefix\a is omitted then \btmp_\b is used "
-    "and \b--tmp\b is implied. A temporary file will have mode \brw-------\b "
-    "and a temporary directory will have mode \brwx------\b, subject to "
-    "\bumask\b(1). Generated paths have these attributes:]"
+    "and \b--tmp\b is implied. If \aprefix\a contains a directory prefix "
+    "then that directory overrides any of the directories described below. A "
+    "temporary file will have mode \brw-------\b and a temporary directory "
+    "will have mode \brwx------\b, subject to \bumask\b(1). Generated paths "
+    "have these attributes:]"
     "{"
         "[+*?Lower case to avoid clashes on case ignorant filesystems.]"
         "[+*?Pseudo-random part to deter denial of service attacks.]"
@@ -42,9 +44,13 @@ USAGE_LICENSE
 "[m:mode]:[mode?Set the mode of the created temporary to \amode\a. "
     "\amode\a is symbolic or octal mode as in \bchmod\b(1). Relative modes "
     "assume an initial mode of \bu=rwx\b.]"
+"[p:default?Use \adirectory\a if the \bTMPDIR\b environment variable is "
+    "not defined. Implies \b--tmp\b.]:[directory]"
 "[q:quiet?Suppress file and directory error diagnostics.]"
 "[t:tmp|temporary-directory?Create a path rooted in a temporary "
     "directory.]"
+"[u:undo|unsafe|unwise?Remove the file/directory before exiting. Who "
+    "would want to do that.]"
 "\n"
 "\n[ prefix ]\n"
 "\n"
@@ -60,7 +66,9 @@ b_mktemp(int argc, char** argv, void* context)
 	mode_t		mode = 0;
 	mode_t		mask;
 	int		fd;
+	int		i;
 	int		quiet = 0;
+	int		undo = 0;
 	int*		fdp = &fd;
 	char*		dir = "";
 	char*		pfx;
@@ -82,11 +90,20 @@ b_mktemp(int argc, char** argv, void* context)
 			if (*opt_info.arg)
 				error(ERROR_exit(0), "%s: invalid mode", pfx);
 			continue;
+		case 'p':
+			if ((t = getenv("TMPDIR")) && *t)
+				dir = 0;
+			else
+				dir = opt_info.arg;
+			continue;
 		case 'q':
 			quiet = 1;
 			continue;
 		case 't':
 			dir = 0;
+			continue;
+		case 'u':
+			undo = 1;
 			continue;
 		case ':':
 			error(2, "%s", opt_info.arg);
@@ -107,14 +124,16 @@ b_mktemp(int argc, char** argv, void* context)
 	if (!pfx)
 	{
 		pfx = "tmp_";
-		dir = 0;
+		if (dir && !*dir)
+			dir = 0;
 	}
-	if (*pfx == '/')
+	if (t = strrchr(pfx, '/'))
 	{
-		t = pfx;
-		pfx = strrchr(pfx, '/') + 1;
-		dir = fmtbuf(pfx - t);
-		strcpy(dir, t);
+		i = ++t - pfx;
+		dir = fmtbuf(i);
+		memcpy(dir, pfx, i);
+		dir[i] = 0;
+		pfx = t;
 	}
 	for (;;)
 	{
@@ -131,6 +150,13 @@ b_mktemp(int argc, char** argv, void* context)
 			if (fdp)
 				close(*fdp);
 			sfputr(sfstdout, path, '\n');
+			if (undo)
+			{
+				if (fdp)
+					remove(path);
+				else
+					rmdir(path);
+			}
 			break;
 		}
 	}

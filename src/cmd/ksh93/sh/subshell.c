@@ -527,7 +527,6 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 		sp->cpid = shp->cpid;
 		sp->coutpipe = shp->coutpipe;
 		sp->cpipe = shp->cpipe[1];
-		shp->coutpipe = shp->cpipe[1] = -1;
 		shp->cpid = 0;
 		sh_sigreset(0);
 	}
@@ -704,7 +703,7 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 			free((void*)sp->pwd);
 		if(sp->mask!=shp->mask)
 			umask(shp->mask=sp->mask);
-		if(shp->coutpipe>=0)
+		if(shp->coutpipe!=sp->coutpipe)
 		{
 			sh_close(shp->coutpipe);
 			sh_close(shp->cpipe[1]);

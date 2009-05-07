@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.3 2009-01-09
+info mam static 00000 1994-07-17 make (AT&T Research) 5.3 2009-05-05
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ar
@@ -1239,4 +1239,16 @@ make iffe.tst
 done iffe.tst
 exec - regress  iffe.tst iffe
 done test.iffe virtual
+make test.mamake
+prev mamake
+make mamake.tst
+meta mamake.tst %.rt>%.tst mamake.rt mamake
+make mamake.rt
+done mamake.rt
+exec - if	[[ "1" || "mamake.rt" -nt "mamake.tst" ]]
+exec - then	mktest --style=regress mamake.rt > mamake.tst
+exec - fi
+done mamake.tst generated
+exec - regress  mamake.tst mamake
+done test.mamake virtual
 done test dontcare virtual

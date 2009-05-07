@@ -37,7 +37,7 @@ $(PACKAGEROOT)/lib/package :INSTALLDIR: package.mk CONVERT.mk
 $(LIBDIR)/make :INSTALLDIR: package.mk PROBE.mk TEST.mk WWW.mk \
 	MSGFUN.mk MSGKEY.mk MAPLIB.mk
 
-:TEST: iffe
+:TEST: iffe mamake
 
 cc ld ldd :PACKAGE_INIT: mamake.c proto.c ratz.c release.c
 

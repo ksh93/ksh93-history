@@ -250,4 +250,64 @@ _COSHELL_msgfd=5
 { { (eval \'function fun { trap \":\" 0; return 1; }; trap \"exit 0\" 0; fun; exit 1\') && PATH= print -u$_COSHELL_msgfd ksh; } || { times && echo bsh >&$_COSHELL_msgfd; } || { echo osh >&$_COSHELL_msgfd; }; } >/dev/null 2>&1' | $SHELL 5>&1)
 [[ $got == $exp ]] || err_exit "coshell(3) identification sequence failed -- expected '$exp', got '$got'"
 
+function cop
+{
+	read
+	print ok
+}
+
+exp=ok
+
+cop |&
+pid=$!
+if	print -p yo 2>/dev/null
+then	read -p got
+else	got='no coprocess'
+fi
+[[ $got == $exp ]] || err_exit "main coprocess main query failed -- expected $exp, got '$got'"
+kill $pid 2>/dev/null
+wait
+
+cop |&
+pid=$!
+(
+if	print -p yo 2>/dev/null
+then	read -p got
+else	got='no coprocess'
+fi
+[[ $got == $exp ]] || err_exit "main coprocess subshell query failed -- expected $exp, got '$got'"
+)
+kill $pid 2>/dev/null
+wait
+
+exp='no coprocess'
+
+(
+cop |&
+print $! > $tmp/pid
+)
+pid=$(<$tmp/pid)
+if	print -p yo 2>/dev/null
+then	read -p got
+else	got=$exp
+fi
+[[ $got == $exp ]] || err_exit "subshell coprocess main query failed -- expected $exp, got '$got'"
+kill $pid 2>/dev/null
+wait
+
+(
+cop |&
+print $! > $tmp/pid
+)
+pid=$(<$tmp/pid)
+(
+if	print -p yo 2>/dev/null
+then	read -p got
+else	got=$exp
+fi
+[[ $got == $exp ]] || err_exit "subshell coprocess subshell query failed -- expected $exp, got '$got'"
+kill $pid 2>/dev/null
+wait
+)
+
 exit $((Errors))

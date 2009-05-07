@@ -64,7 +64,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2009-04-28 $
+@(#)$Id: package (AT&T Research) 2009-05-05 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -2674,6 +2674,7 @@ cat $INITROOT/$i.sh
 						*)	x=:\\\$x ;;
 						esac
 						LD_LIBRARY\${v}_PATH=\$d/lib\\\$x
+						export LD_LIBRARY\${v}_PATH
 						p=1
 						;;
 					esac
@@ -4141,6 +4142,7 @@ admin)	while	test ! -f $admin_db
 				;;
 			esac
 			name=$host
+			host=`echo $name | sed 's,[^abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789],__,g'`
 			eval x='$'${host}_index
 			eval ${host}_index=1
 			case $x in

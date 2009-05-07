@@ -54,7 +54,7 @@ HEADERSTD = dirent.h iconv.h nl_types.h stdio.h wchar.h
 
 $(ID) 5.4 :LIBRARY: README RELEASE \
 	LIBAST.3 ast.3 astsa.3 cdt.3 chr.3 compat.3 error.3 find.3 fmt.3 \
-	fmtls.3 fs3d.3 ftwalk.3 getcwd.3 hash.3 iblocks.3 int.3 \
+	fmtls.3 fs3d.3 ftwalk.3 getcwd.3 hash.3 iblocks.3 int.3 ip6.3 \
 	magic.3 mem.3 mime.3 modecanon.3 optget.3 path.3 preroot.3 \
 	proc.3 re.3 regex.3 setenviron.3 sfdisc.3 sfio.3 sig.3 spawnveg.3 \
 	stak.3 stk.3 strcopy.3 strdup.3 strelapsed.3 strerror.3 stresc.3 \
