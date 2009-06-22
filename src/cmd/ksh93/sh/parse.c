@@ -1225,6 +1225,20 @@ done:
 	return(t);
 }
 
+static struct argnod *process_sub(Lex_t *lexp,int tok)
+{
+	struct argnod *argp;
+	Shnode_t *t;
+	int mode = (tok==OPROCSYM);
+	t = sh_cmd(lexp,RPAREN,SH_NL);
+	argp = (struct argnod*)stkalloc(lexp->sh->stk,sizeof(struct argnod));
+	*argp->argval = 0;
+	argp->argchn.ap = (struct argnod*)makeparent(lexp,mode?TFORK|FPIN|FAMP|FPCL:TFORK|FPOU,t);
+	argp->argflag =  (ARG_EXP|mode);
+	return(argp);
+}
+
+
 /*
  * This is for a simple command, for list, or compound assignment
  */
@@ -1279,7 +1293,7 @@ static Shnode_t *simple(Lex_t *lexp,int flag, struct ionod *io)
 				if(assignment==1)
 				{
 					last = strchr(argp->argval,'=');
-					if((cp=strchr(argp->argval,'[')) && (cp < last))
+					if(last && (last[-1]==']'|| (last[-1]=='+' && last[-2]==']')) && (cp=strchr(argp->argval,'[')) && (cp < last))
 						last = cp;
 					stkseek(stkp,ARGVAL);
 					sfwrite(stkp,argp->argval,last-argp->argval);
@@ -1339,17 +1353,11 @@ static Shnode_t *simple(Lex_t *lexp,int flag, struct ionod *io)
 #if SHOPT_DEVFD
 		if((tok==IPROCSYM || tok==OPROCSYM))
 		{
-			Shnode_t *t;
-			int mode = (tok==OPROCSYM);
-			t = sh_cmd(lexp,RPAREN,SH_NL);
-			argp = (struct argnod*)stkalloc(stkp,sizeof(struct argnod));
-			*argp->argval = 0;
+			argp = process_sub(lexp,tok);
 			argmax = 0;
 			argno = -1;
 			*argtail = argp;
 			argtail = &(argp->argnxt.ap);
-			argp->argchn.ap = (struct argnod*)makeparent(lexp,mode?TFORK|FPIN|FAMP|FPCL:TFORK|FPOU,t);
-			argp->argflag =  (ARG_EXP|mode);
 			goto retry;
 		}
 #endif	/* SHOPT_DEVFD */
@@ -1573,10 +1581,18 @@ static struct ionod	*inout(Lex_t *lexp,struct ionod *lastio,int flag)
 		}
 		else if(token==EXPRSYM && (iof&IOLSEEK))
 			iof |= IOARITH;
+		else if(((token==IPROCSYM && !(iof&IOPUT)) || (token==OPROCSYM && (iof&IOPUT))) && !(iof&(IOLSEEK|IOREWRITE|IOMOV|IODOC)))
+		{
+			lexp->arg = process_sub(lexp,token);
+			iof |= IOPROCSUB;
+		}
 		else
 			sh_syntax(lexp);
 	}
-	iop->ioname=lexp->arg->argval;
+	if( (iof&IOPROCSUB) && !(iof&IOLSEEK))
+		iop->ioname= (char*)lexp->arg->argchn.ap;
+	else
+		iop->ioname=lexp->arg->argval;
 	iop->iovname = iovname;
 	if(iof&IODOC)
 	{

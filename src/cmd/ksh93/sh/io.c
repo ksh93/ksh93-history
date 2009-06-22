@@ -969,6 +969,7 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 	int r, indx = shp->topfd, perm= -1;
 	char *tname=0, *after="", *trace = shp->st.trap[SH_DEBUGTRAP];
 	Namval_t *np=0;
+	int isstring = shp->subshell?(sfset(sfstdout,0,0)&SF_STRING):0;
 	if(flag==2)
 		clexec = 1;
 	if(iop)
@@ -977,7 +978,7 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 	{
 		iof=iop->iofile;
 		fn = (iof&IOUFD);
-		if(fn==1 && shp->subshell && !shp->subshare && (flag==2 || (sfset(sfstdout,0,0)&SF_STRING)))
+		if(fn==1 && shp->subshell && !shp->subshare && (flag==2 || isstring))
 			sh_subfork();
 		io_op[0] = '0'+(iof&IOUFD);
 		if(iof&IOPUT)
@@ -1003,6 +1004,16 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 				ap->argflag = ARG_MAC;
 				strcpy(ap->argval,iop->ioname);
 				fname=sh_macpat(shp,ap,(iof&IOARITH)?ARG_ARITH:ARG_EXP);
+			}
+			else if(iof&IOPROCSUB)
+			{
+				struct argnod *ap = (struct argnod*)stakalloc(ARGVAL+strlen(iop->ioname));
+				memset(ap, 0, ARGVAL);
+				if(iof&IOPUT)
+					ap->argflag = ARG_RAW;
+				ap->argchn.ap = (struct argnod*)fname; 
+				ap = sh_argprocsub(shp,ap);
+				fname = ap->argval;
 			}
 			else
 				fname=sh_mactrim(shp,fname,(!sh_isoption(SH_NOGLOB)&&sh_isoption(SH_INTERACTIVE))?2:0);

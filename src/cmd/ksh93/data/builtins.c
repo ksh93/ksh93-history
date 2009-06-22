@@ -1668,8 +1668,8 @@ USAGE_LICENSE
 "[R]#?[n?Right justify.  If \an\a is given it represents the field width.  If "
 	"the \b-Z\b attribute is also specified, then zeros will "
 	"be used as the fill character.  Otherwise, spaces are used.]"
-"[X]#?[n:=10?Floating point number represented in hexadecimal notation. "
-	"\an\a specifies the number of significant figures when the "
+"[X]#?[n:=2*sizeof(long long)?Floating point number represented in hexadecimal "
+	"notation.  \an\a specifies the number of significant figures when the "
 	"value is expanded.]"
 
 #ifdef SHOPT_TYPEDEF

@@ -1073,6 +1073,7 @@ static int escape(register Emacs_t* ep,register genchar *out,int count)
 		beep();
 		return(-1);
 	}
+	return(-1);
 }
 
 

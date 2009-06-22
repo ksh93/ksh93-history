@@ -1,3 +1,10 @@
+09-06-19 cmd.h,cmdinit.c: add ERROR_CALLBACK for ERROR_NOTIFY main() callback
+09-06-19 mktemp.c: --unsafe now checks and prints path but does create
+09-06-19 tee.c: add ERROR_CALLBACK for tee_cleanup() sfio discipline pop
+09-06-18 rm.c: handle interrupts during interactive query
+09-06-18 cp.c: handle interrupts during interactive query
+09-05-25 tail.c: fix old style option logic to handle --invalid-long-option
+09-05-24 tail.c: -r == +1r
 09-05-01 mktemp.c: handle foo/prefix, add -p dir and -u
 09-03-31 cat.c: handle --no* options
 09-03-15 tail.c: fix --timeout termination logic

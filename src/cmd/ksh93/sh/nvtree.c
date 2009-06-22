@@ -193,6 +193,8 @@ void *nv_diropen(Namval_t *np,const char *name)
 				last = 0;
 			}
 		}
+		else
+			dp->hp = (Namval_t*)dtfirst(dp->root);
 	}
 	else
 		dp->hp = (Namval_t*)dtfirst(dp->root);
@@ -283,7 +285,7 @@ char *nv_dirnext(void *dir)
 			if(nv_isarray(np))
 				nv_putsub(np,(char*)0, ARRAY_UNDEF);
 			dp->hp = nextnode(dp);
-			if(nv_isnull(np) && !nv_isarray(np))
+			if(nv_isnull(np) && !nv_isarray(np) && !nv_isattr(np,NV_INTEGER))
 				continue;
 			last_table = sh.last_table;
 #if 0
@@ -683,7 +685,7 @@ static void outval(char *name, const char *vname, struct Walk *wp)
 		if(!xp)
 			return;
 	}
-	if(nv_isnull(np) && !nv_isarray(np))
+	if(nv_isnull(np) && !nv_isarray(np) && !nv_isattr(np,NV_INTEGER))
 		return;
 	if(special || (nv_isarray(np) && nv_arrayptr(np)))
 	{

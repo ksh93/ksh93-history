@@ -153,6 +153,7 @@ reg Void_t*	data;
 
 	CLRLOCK(vd, local);
 	ANNOUNCE(local, vm, VM_FREE, data, vm->disc);
+
 	CLRINUSE(vd, inuse);
 	return 0;
 }

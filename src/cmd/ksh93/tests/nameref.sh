@@ -345,4 +345,11 @@ function foobar
 docs=(num=2)
 foobar
 
+typeset +n x y
+unset x y
+typeset -A x
+x[a]=(b=c)  
+typeset -n y=x[a]
+[[ ${!y.@} == 'x[a].b' ]] || err_exit 'reference to array element not expanded with ${!y.@}'
+
 exit $((Errors))

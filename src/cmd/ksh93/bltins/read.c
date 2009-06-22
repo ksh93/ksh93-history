@@ -224,9 +224,12 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 	sh_stats(STAT_READS);
 	if(names && (name = *names))
 	{
+		Namval_t *mp;
 		if(val= strchr(name,'?'))
 			*val = 0;
-		np = nv_open(name,shp->var_tree,NV_NOASSIGN|NV_VARNAME|NV_ARRAY);
+		np = nv_open(name,shp->var_tree,NV_NOASSIGN|NV_VARNAME);
+		if(np && nv_isarray(np) && (mp=nv_opensub(np)))
+			np = mp;
 		if((flags&V_FLAG) && shp->ed_context)
 			((struct edit*)shp->ed_context)->e_default = np;
 		if(flags&A_FLAG)
@@ -403,16 +406,19 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 		}
 		if(timeslot)
 			timerdel(timeslot);
-		if(binary)
+		if(binary && !((size=nv_size(np)) && nv_isarray(np) && c!=size))
 		{
-			if(c==nv_size(np))
+			if((c==size) && np->nvalue.cp && !nv_isarray(np))
 				memcpy((char*)np->nvalue.cp,var,c);
 			else
 			{
+				Namval_t *mp;
 				if(var==buf)
 					var = memdup(var,c);
 				nv_putval(np,var,NV_RAW);
 				nv_setsize(np,c);
+				if(!nv_isattr(np,NV_IMPORT|NV_EXPORT)  && (mp=(Namval_t*)np->nvenv))
+					nv_setsize(mp,c);
 			}
 		}
 		else

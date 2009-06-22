@@ -28,7 +28,7 @@
  */
 
 static const char usage[] =
-"+[-?\n@(#)$Id: tail (AT&T Research) 2009-03-15 $\n]"
+"+[-?\n@(#)$Id: tail (AT&T Research) 2009-05-25 $\n]"
 USAGE_LICENSE
 "[+NAME?tail - output trailing portion of one or more files ]"
 "[+DESCRIPTION?\btail\b copies one or more input files to standard output "
@@ -498,7 +498,11 @@ b_tail(int argc, char** argv, void* context)
 			continue;
 		case ':':
 			/* handle old style arguments */
-			r = argv[opt_info.index];
+			if (!(r = argv[opt_info.index]) || !opt_info.offset)
+			{
+				error(2, "%s", opt_info.arg);
+				break;
+			}
 			s = r + opt_info.offset - 1;
 			if (i = *(s - 1) == '-' || *(s - 1) == '+')
 				s--;
@@ -563,8 +567,8 @@ b_tail(int argc, char** argv, void* context)
 	{
 		if (delim < 0)
 			error(2, "--reverse requires line mode");
-		else if (!(flags & COUNT))
-			number = 0;
+		if (!(flags & COUNT))
+			number = -1;
 		flags &= ~FOLLOW;
 	}
 	if ((flags & (FOLLOW|TIMEOUT)) == TIMEOUT)

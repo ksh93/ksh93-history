@@ -427,4 +427,93 @@ typeset -C  -A hello=( [foo]=bar)
 [[ $(typeset -p hello) == 'typeset -C -A hello=([foo]=bar)' ]] || err_exit 'typeset -A -C with intial assignment not working'
 # this caused a core dump before ksh93t+
 [[ $($SHELL -c 'foo=(x=3 y=4);function bar { typeset z=4;: $z;};bar;print ${!foo.@}') == 'foo.x foo.y' ]] 2> /dev/null || err_exit '${!foo.@} after function not working'
+
+function foo
+{
+	typeset tmp
+	read -C tmp
+	read -C tmp
+}
+foo 2> /dev/null <<-  \EOF ||  err_exit 'deleting compound variable in function failed'
+	(
+		typeset -A myarray3=(
+			[a]=( foo=bar)
+			[b]=( foo=bar)
+			[c d]=( foo=bar)
+			[e]=( foo=bar)
+			[f]=( foo=bar)
+			[g]=( foo=bar)
+			[h]=( foo=bar)
+			[i]=( foo=bar)
+			[j]=( foo=bar)
+		)
+	)
+	hello
+EOF
+
+typeset -C -a mica01
+mica01[4]=( a_string="foo bar" )
+typeset -C more_content=(
+	some_stuff="hello"
+)
+mica01[4]+=more_content
+expected=$'typeset -C -a mica01=([4]=(a_string=\'foo bar\';some_stuff=hello;))'
+[[ $(typeset -p mica01) == "$expected" ]] || err_exit 'appened to indexed array compound variable not working'
+
+unset x
+compound x=( integer x ; )
+[[ ! -v x.x ]] && err_exit 'x.x should be set'
+expected=$'(\n\ttypeset -l -i x=0\n)'
+[[ $(print -v x) == "$expected" ]] || err_exit "'print -v x' should be $expected"
+
+typeset -C -A hello19=(
+	[19]=(
+		one="xone 19"
+		two="xtwo 19"
+	)
+	[23]=(
+		one="xone 23"
+		two="xtwo 23"
+	)
+)
+expected="typeset -C -A hello19=([19]=(one='xone 19';two='xtwo 19';) [23]=(one='xone 23';two='xtwo 23';))"
+[[ $(typeset -p hello19) == "$expected" ]] || print -u2 'typeset -p hello19 incorrect'
+expected=$'(\n\tone=\'xone 19\'\n\ttwo=\'xtwo 19\'\n) (\n\tone=\'xone 23\'\n\ttwo=\'xtwo 23\'\n)'
+[[ ${hello19[@]} == "$expected" ]] || print -u2 '${hello19[@]} incorrect'
+
+typeset -C -A foo1=( abc="alphabet" ) foo2=( abc="alphabet" )
+function add_one
+{
+	nameref left_op=$1
+	typeset -C info
+	info.hello="world"
+	nameref x=info
+	left_op+=x
+}
+nameref node1="foo1[1234]"
+add_one "node1"
+add_one "foo2[1234]"
+[[ "${foo1[1234]}" == "${foo2[1234]}" ]] || err_exit "test failed\n$(diff -u <( print -r -- "${foo1[1234]}") <(print -r -- "${foo2[1234]}"))."
+
+typeset -C tree
+function f1
+{
+        nameref tr=$1
+        typeset -A tr.subtree
+        typeset -C node
+        node.one="hello"
+        node.two="world"
+        
+        # move local note into the array
+        typeset -m tr.subtree["a_node"]=node
+}
+f1 tree
+expected=$'(\n\ttypeset -A subtree=(\n\t\t[a_node]=(\n\t\t\tone=hello\n\t\t\ttwo=world\n\t\t)\n\t)\n)'
+[[ $tree == "$expected" ]] ||  err_exit 'move of compound local variable to global variable not working'
+
+typeset -C -A array
+float array[12].amount=2.9 
+expected='typeset -C -A array=([12]=(typeset -l -E amount=2.9;))'
+[[ $(typeset -p array) == "$expected" ]] || err_exit 'typeset with compound  variable with compound variable array not working'
+
 exit $((Errors))

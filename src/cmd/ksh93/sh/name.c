@@ -87,6 +87,7 @@ struct adata
 	struct Cache_entry
 	{
 		Dt_t		*root;
+		Dt_t		*last_root;
 		char		*name;
 		Namval_t	*np;
 		Namval_t	*last_table;
@@ -877,8 +878,13 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 				{
 					char *sub=0;
 					int n = 0;
+					mode &= ~HASH_NOSCOPE;
 					if(c=='[')
 					{
+#if 0
+						Namarr_t *ap = nv_arrayptr(np);
+						int scan = ap?(ap->nelem&ARRAY_SCAN):0;
+#endif
 						n = mode|nv_isarray(np);
 						if(!mode && (flags&NV_ARRAY) && ((c=sp[1])=='*' || c=='@') && sp[2]==']')
 						{
@@ -891,6 +897,10 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 						if(flags&NV_ASSIGN)
 							n |= NV_ADD;
 						cp = nv_endsubscript(np,sp,n|(flags&NV_ASSIGN));
+#if 0
+						if(scan)
+							nv_putsub(np,NIL(char*),ARRAY_SCAN);
+#endif
 					}
 					else
 						cp = sp;
@@ -1186,6 +1196,7 @@ Namval_t *nv_open(const char *name, Dt_t *root, int flags)
 			if(nv_isarray(np))
 				 nv_putsub(np,NIL(char*),ARRAY_UNDEF);
 			shp->last_table = xp->last_table;
+			shp->last_root = xp->last_root;
 			goto nocache;
 		}
 	}
@@ -1220,6 +1231,7 @@ Namval_t *nv_open(const char *name, Dt_t *root, int flags)
 		xp->root = root;
 		xp->np = np;
 		xp->last_table = shp->last_table;
+		xp->last_root = shp->last_root;
 		xp->flags = (flags&(NV_ARRAY|NV_NOSCOPE));
 		nvcache.index = (nvcache.index+1)&(NVCACHE-1);
 	}

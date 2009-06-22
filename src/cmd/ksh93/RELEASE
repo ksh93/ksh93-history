@@ -1,4 +1,48 @@
-09-05-01  --- Release ksh93t+  ---
+09-06-22  --- Release ksh93t+  ---
+09-06-22  The default width for typeset -X has been changed so that there
+	  should be no loss of precision when converting to a string.
+09-06-19  A bug in the printing of array elements for binary variables with
+	  printf %B has been fixed.
+09-06-19  A bug which caused a core dump with trap DEBUG set with an array
+	  assignment with no elements has been fixed.
+09-06-19  A bug with read with typeset -b -Z<num> has been fixed.
+09-06-19  Two bugs related to read -b for array variables has been fixed.
+09-06-19  A bug with typeset for compound variables containing arrays of
+	  compound variables has been fixed.
+09-06-18  A bug in appending a compound variable to a an indexed array of
+	  compound variables has been fixed.
+09-06-18  A bug which occurs when appending a compound variable to an indexed
+	  array element has been fixed.
+09-06-18  Setting VISUAL to a value other than one ending in vi or emacs will
+	  no longer unset the edit mode.
+09-06-17  A bug in typeset -m when moving a local compound variable to a
+	  global compound variable via a name reference has been fixed.
+09-06-17  A bug in appending to nodes of an array of compound variables when
+	  addressing them via nameref has been fixed.
+09-06-17  A bug in typeset -p var, when var is an array of compound variables
+	  in which the output only contained on array element has been fixed.
+09-06-17  The prefix expansion ${!y.@} now works when y is a name
+	  reference to an element of an array.
+09-06-16  Traps on signals that are ignored when the shell is invoked
+	  no longer display.  Previously they were ignored as required but
+	  would be listed with trap -p.
+09-06-12  A bug in vi edit mode in which hitting the up arrow key at the
+	  end of a line longer than 40 characters which caused a core dump
+	  has been fixed. 
+09-06-11  A bug in which "eval non-builtin &" would create two processes,
+	  one for the & and another for non-builtin has been fixed.
+09-06-08  When var is an identifier and is unset, ${var} no longer tries to
+	  run command substitution on the command var.
+09-06-08  Process substitution arguments of the form <(command) can now be
+	  used following the < redirection operator to redirect from command.
+09-05-13  A bug in which redirections of the form 2>&1 1>&5 inside command
+	  substitution could cause the command substitution to hang has been
+	  fixed.
+09-05-12  To conform with POSIX, the -u option only checks for unset variables
+	  and subscript elements rather than checking for all parameters.
+09-05-12  A bug which could cause a core dump when a variable whose name
+	  begins with a . was referenced as part of a name reference inside
+	  a function has been fixed.
 09-05-01  A bug that caused a core dump when SIGWINCH was received and
 	  both vi and emacs mode were off has been fixed.
 09-04-22  Default alias compound='typeset -C' added.

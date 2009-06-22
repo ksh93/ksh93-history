@@ -186,7 +186,6 @@ void	sh_fault(register int sig)
 #endif /* SIGTSTP */
 	}
 #ifdef ERROR_NOTIFY
-	/* This is obsolete */
 	if((error_info.flags&ERROR_NOTIFY) && shp->bltinfun)
 		action = (*shp->bltinfun)(-sig,(char**)0,(void*)0);
 	if(action>0)
@@ -479,7 +478,7 @@ int sh_trap(const char *trap, int mode)
 	if(was_verbose)
 		sh_onstate(SH_VERBOSE);
 	exitset();
-	if(jmpval>SH_JMPTRAP)
+	if(jmpval>SH_JMPTRAP && (((struct checkpt*)shp->jmpbuffer)->prev || ((struct checkpt*)shp->jmpbuffer)->mode==SH_JMPSCRIPT))
 		siglongjmp(*shp->jmplist,jmpval);
 	return(shp->exitval);
 }

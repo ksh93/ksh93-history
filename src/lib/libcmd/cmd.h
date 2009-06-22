@@ -35,6 +35,8 @@
 
 #define cmdinit			_cmd_init
 
+#define ERROR_CALLBACK		ERROR_SET
+
 #if _BLD_cmd && defined(__EXPORT__)
 #define extern		__EXPORT__
 #endif
@@ -86,7 +88,7 @@ cmdinit(int argc, register char** argv, void* context, const char* catalog, int 
 		error_info.catalog = (char*)catalog;
 	opt_info.index = 0;
 	if (context)
-		error_info.flags |= flags;
+		error_info.flags |= flags & ~(ERROR_CALLBACK|ERROR_NOTIFY);
 	return 0;
 }
 

@@ -27,7 +27,7 @@ void _STUB_vmprivate(){}
 
 #include	"vmhdr.h"
 
-static char*	Version = "\n@(#)$Id: Vmalloc (AT&T Research) 2007-09-11 $\0\n";
+static char*	Version = "\n@(#)$Id: Vmalloc (AT&T Research) 2009-06-19 $\0\n";
 
 #if _sys_stat
 #include	<sys/stat.h>

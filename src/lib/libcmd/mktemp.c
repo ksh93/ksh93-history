@@ -21,7 +21,7 @@
 #pragma prototyped
 
 static const char usage[] =
-"[-?\n@(#)$Id: mktemp (AT&T Research) 2009-05-01 $\n]"
+"[-?\n@(#)$Id: mktemp (AT&T Research) 2009-06-19 $\n]"
 USAGE_LICENSE
 "[+NAME?mktemp - make temporary file or directory]"
 "[+DESCRIPTION?\bmktemp\b creates a temporary file with optional base "
@@ -49,8 +49,8 @@ USAGE_LICENSE
 "[q:quiet?Suppress file and directory error diagnostics.]"
 "[t:tmp|temporary-directory?Create a path rooted in a temporary "
     "directory.]"
-"[u:undo|unsafe|unwise?Remove the file/directory before exiting. Who "
-    "would want to do that.]"
+"[u:unsafe|dry-run?Check for file/directory existence but do not create. "
+    "Who would want to do that.]"
 "\n"
 "\n[ prefix ]\n"
 "\n"
@@ -68,14 +68,14 @@ b_mktemp(int argc, char** argv, void* context)
 	int		fd;
 	int		i;
 	int		quiet = 0;
-	int		undo = 0;
+	int		unsafe = 0;
 	int*		fdp = &fd;
 	char*		dir = "";
 	char*		pfx;
 	char*		t;
 	char		path[PATH_MAX];
 
-	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
+	cmdinit(argc, argv, context, ERROR_CATALOG, ERROR_NOTIFY);
 	for (;;)
 	{
 		switch (optget(argv, usage))
@@ -103,7 +103,8 @@ b_mktemp(int argc, char** argv, void* context)
 			dir = 0;
 			continue;
 		case 'u':
-			undo = 1;
+			unsafe = 1;
+			fdp = 0;
 			continue;
 		case ':':
 			error(2, "%s", opt_info.arg);
@@ -145,18 +146,16 @@ b_mktemp(int argc, char** argv, void* context)
 				error(ERROR_SYSTEM|2, "cannot create temporary path");
 			break;
 		}
-		if (fdp || !mkdir(path, mode))
+		if (fdp || unsafe || !mkdir(path, mode))
 		{
 			if (fdp)
 				close(*fdp);
 			sfputr(sfstdout, path, '\n');
-			if (undo)
-			{
-				if (fdp)
-					remove(path);
-				else
-					rmdir(path);
-			}
+			break;
+		}
+		if (sh_checksig(context))
+		{
+			error_info.errors++;
 			break;
 		}
 	}

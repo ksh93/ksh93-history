@@ -499,4 +499,9 @@ do	for b in $v
 	done
 done
 
+typeset -l y y_ascii
+(( y=sin(90) )) 
+y_ascii=$y 
+(( y == y_ascii )) || err_exit "no match,\n\t$(printf "%a\n" y)\n!=\n\t$(printf "%a\n" y_ascii)"
+
 exit $((Errors))

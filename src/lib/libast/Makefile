@@ -100,7 +100,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	tmdate.c tmequiv.c tmfix.c tmfmt.c tmform.c tmgoff.c tminit.c \
 	tmleap.c tmlex.c tmlocale.c tmmake.c tmpoff.c tmscan.c \
 	tmsleep.c tmtime.c tmtype.c tmweek.c tmword.c tmzone.c \
-	tmxdate.c tmxfmt.c tmxgettime.c tmxleap.c tmxmake.c \
+	tmxdate.c tmxduration.c tmxfmt.c tmxgettime.c tmxleap.c tmxmake.c \
 	tmxscan.c tmxsettime.c tmxsleep.c tmxtime.c tmxtouch.c \
 	tvcmp.c tvgettime.c tvsettime.c tvsleep.c tvtouch.c \
 	cmdarg.c vecargs.c vecfile.c vecfree.c vecload.c vecstring.c \
@@ -187,7 +187,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	fputws.c getwchar.c ungetwc.c vwprintf.c \
 	fwide.c putwc.c vfwprintf.c vwscanf.c \
 	/* stdio extensions */ \
-	stdio_c99.c stdio_gnu.c \
+	stdio_c99.c fcloseall.c fmemopen.c getdelim.c getline.c \
 	/* math */ \
 	frexp.c frexpl.c \
 	/* ast */ \

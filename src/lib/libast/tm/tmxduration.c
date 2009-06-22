@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1992-2007 AT&T Knowledge Ventures            *
+*          Copyright (c) 1985-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                      by AT&T Knowledge Ventures                      *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -16,60 +16,65 @@
 *                                                                      *
 *                 Glenn Fowler <gsf@research.att.com>                  *
 *                  David Korn <dgk@research.att.com>                   *
+*                   Phong Vo <kpv@research.att.com>                    *
 *                                                                      *
 ***********************************************************************/
 #pragma prototyped
+
+#include <tmx.h>
+
 /*
- * command initialization
+ * parse duration expression in s and return Time_t value
+ * if non-null, e points to the first unused char in s
+ * returns 0 with *e==s on error
  */
 
-#include <shcmd.h>
-#include <cmd.h>
-
-int
-_cmd_init(int argc, char** argv, void* context, const char* catalog, int flags)
+Time_t
+tmxduration(const char* s, char** e)
 {
-	register char*	cp;
+	double		d;
+	Time_t		ns;
+	Time_t		ts;
+	Time_t		now;
+	char*		last;
+	char*		t;
+	char*		x;
+	Sfio_t*		f;
+	int		i;
 
-	if (argc <= 0)
-		return -1;
-	if (context)
-	{
-		if (flags & ERROR_CALLBACK)
-		{
-			flags &= ~ERROR_CALLBACK;
-			flags |= ERROR_NOTIFY;
-		}
-		else if (flags & ERROR_NOTIFY)
-		{
-			((Shbltin_t*)(context))->notify = 1;
-			flags &= ~ERROR_NOTIFY;
-		}
-		error_info.flags |= flags;
-	}
-	if (cp = strrchr(argv[0], '/'))
-		cp++;
+	now = TMX_NOW;
+	while (isspace(*s))
+		s++;
+	if (*s == 'P' || *s == 'p')
+		ns = tmxdate(s, &last, now) - now;
 	else
-		cp = argv[0];
-	error_info.id = cp;
-	if (!error_info.catalog)
-		error_info.catalog = catalog;
-	opt_info.index = 0;
-	return 0;
+	{
+		ns = strtod(s, &last) * TMX_RESOLUTION;
+		if (*last && (f = sfstropen()))
+		{
+			sfprintf(f, "exact %s", s);
+			t = sfstruse(f);
+			ts = tmxdate(t, &x, now);
+			if ((i = x - t - 6) > (last - s))
+			{
+				last = (char*)s + i;
+				ns = ts - now;
+			}
+			else
+			{
+				sfprintf(f, "p%s", s);
+				t = sfstruse(f);
+				ts = tmxdate(t, &x, now);
+				if ((i = x - t - 1) > (last - s))
+				{
+					last = (char*)s + i;
+					ns = ts - now;
+				}
+			}
+			sfstrclose(f);
+		}
+	}
+	if (e)
+		*e = last;
+	return ns;
 }
-
-#if __OBSOLETE__ < 20080101
-
-#if defined(__EXPORT__)
-#define extern	__EXPORT__
-#endif
-
-#undef	cmdinit
-
-extern void
-cmdinit(char** argv, void* context, const char* catalog, int flags)
-{
-	_cmd_init(0, argv, context, catalog, flags);
-}
-
-#endif

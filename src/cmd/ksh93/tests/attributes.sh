@@ -300,4 +300,25 @@ EOF
 	[[ \$foo == bbbbbb ]]
 EOF
 } 2> /dev/null || err_exit 'typeset -R should not preserve old attributes'
+
+expected='YWJjZGVmZ2hpag=='
+unset foo
+typeset -b -Z10 foo
+read foo <<< 'abcdefghijklmnop'
+[[ $foo == "$expected" ]] || err_exit 'read foo, where foo is "typeset -b -Z10" not working'
+unset foo
+typeset -b -Z10 foo
+read -N10 foo <<< 'abcdefghijklmnop'
+[[ $foo == "$expected" ]] || err_exit 'read -N10 foo, where foo is "typeset -b -Z10" not working'
+unset foo
+typeset  -b -A foo
+read -N10 foo[4] <<< 'abcdefghijklmnop'
+[[ ${foo[4]} == "$expected" ]] || err_exit 'read -N10 foo, where foo is "typeset  -b -A" foo not working'
+unset foo
+typeset  -b -a foo
+read -N10 foo[4] <<< 'abcdefghijklmnop'
+[[ ${foo[4]} == "$expected" ]] || err_exit 'read -N10 foo, where foo is "typeset  -b -a" foo not working'
+[[ $(printf %B foo[4]) == abcdefghij ]] || err_exit 'printf %B for binary associative array element not working'
+[[ $(printf %B foo[4]) == abcdefghij ]] || err_exit 'printf %B for binary indexed array element not working'
+unset foo
 exit	$((Errors))

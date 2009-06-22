@@ -203,22 +203,27 @@ static char *nospace(int unused)
 static void put_ed(register Namval_t* np,const char *val,int flags,Namfun_t *fp)
 {
 	register const char *cp, *name=nv_name(np);
+	register int	newopt=0;
 	Shell_t *shp = nv_shell(np);
 	if(*name=='E' && nv_getval(sh_scoped(shp,VISINOD)))
 		goto done;
-	sh_offoption(SH_VI);
-	sh_offoption(SH_EMACS);
-	sh_offoption(SH_GMACS);
 	if(!(cp=val) && (*name=='E' || !(cp=nv_getval(sh_scoped(shp,EDITNOD)))))
 		goto done;
 	/* turn on vi or emacs option if editor name is either*/
 	cp = path_basename(cp);
 	if(strmatch(cp,"*[Vv][Ii]*"))
-		sh_onoption(SH_VI);
+		newopt=SH_VI;
 	else if(strmatch(cp,"*gmacs*"))
-		sh_onoption(SH_GMACS);
+		newopt=SH_GMACS;
 	else if(strmatch(cp,"*macs*"))
-		sh_onoption(SH_EMACS);
+		newopt=SH_EMACS;
+	if(newopt)
+	{
+		sh_offoption(SH_VI);
+		sh_offoption(SH_EMACS);
+		sh_offoption(SH_GMACS);
+		sh_onoption(newopt);
+	}
 done:
 	nv_putv(np, val, flags, fp);
 }
@@ -514,7 +519,9 @@ static void put_seconds(register Namval_t* np,const char *val,int flags,Namfun_t
 	struct tms tp;
 	if(!val)
 	{
-		nv_stack(np, NIL(Namfun_t*));
+		fp = nv_stack(np, NIL(Namfun_t*));
+		if(fp && !fp->nofree)
+			free((void*)fp);
 		nv_unset(np);
 		return;
 	}
@@ -561,7 +568,9 @@ static void put_rand(register Namval_t* np,const char *val,int flags,Namfun_t *f
 	register long n;
 	if(!val)
 	{
-		nv_stack(np, NIL(Namfun_t*));
+		fp = nv_stack(np, NIL(Namfun_t*));
+		if(fp && !fp->nofree)
+			free((void*)fp);
 		nv_unset(np);
 		return;
 	}
@@ -617,7 +626,9 @@ static void put_lineno(Namval_t* np,const char *val,int flags,Namfun_t *fp)
 	Shell_t *shp = nv_shell(np);
 	if(!val)
 	{
-		nv_stack(np, NIL(Namfun_t*));
+		fp = nv_stack(np, NIL(Namfun_t*));
+		if(fp && !fp->nofree)
+			free((void*)fp);
 		nv_unset(np);
 		return;
 	}

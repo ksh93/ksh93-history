@@ -292,4 +292,8 @@ x=$($SHELL 2> /dev/null -c 'sleep 2 && kill $$ & trap "print done;exit 3" EXIT; 
 [[ $x == done ]] || err_exit "wrong result - execting done got $x"
 (( SECONDS < 4 )) && err_exit "took $SECONDS seconds, expecting around 5"
 
+trap '' SIGBUS
+[[ $($SHELL -c 'trap date SIGBUS;trap -p SIGBUS') ]] && err_exit 'SIGBUS should not have a trap'
+trap -- - SIGBUS
+
 exit $((Errors))

@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1992-2007 AT&T Knowledge Ventures            *
+*          Copyright (c) 1985-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                      by AT&T Knowledge Ventures                      *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -16,60 +16,42 @@
 *                                                                      *
 *                 Glenn Fowler <gsf@research.att.com>                  *
 *                  David Korn <dgk@research.att.com>                   *
+*                   Phong Vo <kpv@research.att.com>                    *
 *                                                                      *
 ***********************************************************************/
 #pragma prototyped
-/*
- * command initialization
- */
 
-#include <shcmd.h>
-#include <cmd.h>
+#include "stdhdr.h"
+
+#define MAXLOOP		3
 
 int
-_cmd_init(int argc, char** argv, void* context, const char* catalog, int flags)
+fcloseall(void)
 {
-	register char*	cp;
+	Sfpool_t*	p;
+	Sfpool_t*	next;
+	int		n;
+	int		nclose;
+	int		count;
+	int		loop;
 
-	if (argc <= 0)
-		return -1;
-	if (context)
-	{
-		if (flags & ERROR_CALLBACK)
-		{
-			flags &= ~ERROR_CALLBACK;
-			flags |= ERROR_NOTIFY;
+	STDIO_VOID(f, "fcloseall", void, (void), ())
+
+	for(loop = 0; loop < MAXLOOP; ++loop)
+	{	nclose = count = 0;
+		for(p = &_Sfpool; p; p = next)
+		{	/* find the next legitimate pool */
+			for(next = p->next; next; next = next->next)
+				if(next->n_sf > 0)
+					break;
+			for(n = 0; n < ((p == &_Sfpool) ? p->n_sf : 1); ++n)
+			{	count += 1;
+				if(sfclose(p->sf[n]) >= 0)
+					nclose += 1;
+			}
 		}
-		else if (flags & ERROR_NOTIFY)
-		{
-			((Shbltin_t*)(context))->notify = 1;
-			flags &= ~ERROR_NOTIFY;
-		}
-		error_info.flags |= flags;
+		if(nclose == count)
+			break;
 	}
-	if (cp = strrchr(argv[0], '/'))
-		cp++;
-	else
-		cp = argv[0];
-	error_info.id = cp;
-	if (!error_info.catalog)
-		error_info.catalog = catalog;
-	opt_info.index = 0;
-	return 0;
+	return 0; /* always return 0 per GNU */
 }
-
-#if __OBSOLETE__ < 20080101
-
-#if defined(__EXPORT__)
-#define extern	__EXPORT__
-#endif
-
-#undef	cmdinit
-
-extern void
-cmdinit(char** argv, void* context, const char* catalog, int flags)
-{
-	_cmd_init(0, argv, context, catalog, flags);
-}
-
-#endif

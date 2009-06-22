@@ -1,3 +1,10 @@
+09-06-19 vmalloc: sync with kpv
+09-06-19 include/shcmd.h: add sh_context(p) cast
+09-06-11 misc/magic.tab: differentiate pc 386 32/64 bit dll/exe/obj
+09-06-06 port/astconf.c: fix look->name null pointer reference
+09-06-05 port/astconf.c: fix 'UNIVERSE = value' synthesize logic
+09-05-25 tm/tmxduration.c: add
+09-05-08 comp/syslog.c: add _UWIN /var/log/syslog preference
 09-05-01 comp/setlocale.c: fix _UWIN intercepts to return NiL on unknown locales
 09-04-27 sfio/sfpool.c: fix bug that did not return pool on delete
 09-04-22 include/regex.h,regex/regcomp.c: add REG_REGEXP <regexp.h> compatibility

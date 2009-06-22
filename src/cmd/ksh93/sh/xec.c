@@ -414,7 +414,7 @@ int sh_debug(Shell_t *shp, const char *trap, const char *name, const char *subsc
 			n -= 2;
 		sfwrite(iop,cp,n);
 	}
-	if(!(flags&ARG_RAW))
+	if(*argv && !(flags&ARG_RAW))
 		out_string(iop, *argv++,' ', 0);
 	n = (flags&ARG_ARITH);
 	while(cp = *argv++)
@@ -502,7 +502,7 @@ int sh_eval(register Sfio_t *iop, int mode)
 			hist_flush(shp->hist_ptr);
 			mode = sh_state(SH_INTERACTIVE);
 		}
-		sh_exec(t,sh_isstate(SH_ERREXIT)|(mode&~SH_FUNEVAL));
+		sh_exec(t,sh_isstate(SH_ERREXIT)|sh_isstate(SH_NOFORK)|(mode&~SH_FUNEVAL));
 		if(!(mode&SH_FUNEVAL))
 			break;
 	}
@@ -902,6 +902,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 					volatile void *save_ptr;
 					volatile void *save_data;
 					int jmpval, save_prompt;
+					int was_nofork = execflg?sh_isstate(SH_NOFORK):0;
 					struct checkpt buff;
 					unsigned long was_vi=0, was_emacs=0, was_gmacs=0;
 					struct stat statb;
@@ -922,6 +923,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 						sh_offoption(SH_EMACS);
 						sh_offoption(SH_GMACS);
 					}
+					if(execflg)
+						sh_onstate(SH_NOFORK);
 					sh_pushcontext(&buff,SH_JMPCMD);
 					jmpval = sigsetjmp(buff.buff,1);
 					if(jmpval == 0)
@@ -1019,6 +1022,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 					}
 					if(bp && bp->ptr!= nv_context(np))
 						np->nvfun = (Namfun_t*)bp->ptr;
+					if(execflg && !was_nofork)
+						sh_offstate(SH_NOFORK);
 					if(!(nv_isattr(np,BLT_ENV)))
 					{
 						if(bp->nosfio && shp->pwd)

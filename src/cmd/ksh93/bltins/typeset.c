@@ -248,7 +248,7 @@ int    b_typeset(int argc,register char *argv[],void *extra)
 			case 'F':
 			case 'X':
 				if(!opt_info.arg || (tdata.argnum = opt_info.num) <0)
-					tdata.argnum = 10;
+					tdata.argnum = (n=='X'?2*sizeof(Sfdouble_t):10);
 				isfloat = 1;
 				if(n=='E')
 				{

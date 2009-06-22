@@ -253,8 +253,7 @@ struct limits
 
 /* states */
 /* low numbered states are same as options */
-#define SH_NOFORK	0	/* set when fork not necessary, not a state */
-#define SH_COMPLETE	0	/* set for command completion */
+#define SH_NOFORK	0	/* set when fork not necessary */
 #define	SH_FORKED	7	/* set when process has been forked */
 #define	SH_PROFILE	8	/* set when processing profiles */
 #define SH_NOALIAS	9	/* do not expand non-exported aliases */
@@ -267,6 +266,7 @@ struct limits
 #define SH_TTYWAIT	16	/* waiting for keyboard input */ 
 #define	SH_FCOMPLETE	17	/* set for filename completion */
 #define	SH_PREINIT	18	/* set with SH_INIT before parsing options */
+#define SH_COMPLETE	19	/* set for command completion */
 
 #define SH_BASH			41
 #define SH_BRACEEXPAND		42
@@ -349,6 +349,7 @@ extern char 		**sh_argbuild(Shell_t*,int*,const struct comnod*,int);
 extern struct dolnod	*sh_argfree(Shell_t *, struct dolnod*,int);
 extern struct dolnod	*sh_argnew(Shell_t*,char*[],struct dolnod**);
 extern void 		*sh_argopen(Shell_t*);
+extern struct argnod	*sh_argprocsub(Shell_t*,struct argnod*);
 extern void 		sh_argreset(Shell_t*,struct dolnod*,struct dolnod*);
 extern Namval_t		*sh_assignok(Namval_t*,int);
 extern struct dolnod	*sh_arguse(Shell_t*);

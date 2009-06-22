@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1992-2007 AT&T Knowledge Ventures            *
+*                  Copyright (c) 1985-2005 AT&T Corp.                  *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                      by AT&T Knowledge Ventures                      *
+*                            by AT&T Corp.                             *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -16,60 +16,17 @@
 *                                                                      *
 *                 Glenn Fowler <gsf@research.att.com>                  *
 *                  David Korn <dgk@research.att.com>                   *
+*                   Phong Vo <kpv@research.att.com>                    *
 *                                                                      *
 ***********************************************************************/
 #pragma prototyped
-/*
- * command initialization
- */
 
-#include <shcmd.h>
-#include <cmd.h>
+#include "stdhdr.h"
 
-int
-_cmd_init(int argc, char** argv, void* context, const char* catalog, int flags)
+Sfio_t*
+fmemopen(void* buf, size_t size, const char* mode)
 {
-	register char*	cp;
+	STDIO_PTR(f, "fmemopen", Sfio_t*, (void*, size_t, const char*), (buf, size, mode))
 
-	if (argc <= 0)
-		return -1;
-	if (context)
-	{
-		if (flags & ERROR_CALLBACK)
-		{
-			flags &= ~ERROR_CALLBACK;
-			flags |= ERROR_NOTIFY;
-		}
-		else if (flags & ERROR_NOTIFY)
-		{
-			((Shbltin_t*)(context))->notify = 1;
-			flags &= ~ERROR_NOTIFY;
-		}
-		error_info.flags |= flags;
-	}
-	if (cp = strrchr(argv[0], '/'))
-		cp++;
-	else
-		cp = argv[0];
-	error_info.id = cp;
-	if (!error_info.catalog)
-		error_info.catalog = catalog;
-	opt_info.index = 0;
-	return 0;
+	return sfnew(NiL, buf, size, -1, SF_STRING|_sftype(mode, NiL, NiL));
 }
-
-#if __OBSOLETE__ < 20080101
-
-#if defined(__EXPORT__)
-#define extern	__EXPORT__
-#endif
-
-#undef	cmdinit
-
-extern void
-cmdinit(char** argv, void* context, const char* catalog, int flags)
-{
-	_cmd_init(0, argv, context, catalog, flags);
-}
-
-#endif

@@ -295,4 +295,12 @@ expected='A_t x=(name=xxx;)'
 	typeset -p x
 +++
 ) ==  "$expected" ]] || err_exit  'empty field in definition does not expand correctly'
+
+typeset -T Foo_t=(
+	integer x=3
+	integer y=4
+	len() { print -r -- $(( sqrt(_.x**2 + _.y**2))) ;}
+)
+Foo_t foo
+[[ ${foo.len} == 5 ]] || err_exit "discipline function len not working"
 exit $Errors

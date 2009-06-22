@@ -346,7 +346,7 @@ static void nv_restore(struct subshell *sp)
 		mp->nvfun = np->nvfun;
 		mp->nvflag = np->nvflag;
 		if(nv_cover(mp))
-			nv_putval(mp, np->nvalue.cp,0);
+			nv_putval(mp, nv_getval(np),0);
 		else
 			mp->nvalue.cp = np->nvalue.cp;
 		np->nvfun = 0;

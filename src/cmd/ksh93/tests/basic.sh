@@ -402,11 +402,6 @@ $SHELL   2> /dev/null <<- \EOF || err_exit '${ command;}xxx not working'
 EOF
 
 unset foo
-function foo
-{
-	print bar
-}
-[[ ${foo} == bar ]] || err_exit '${foo} is not command substitution when foo unset'
 [[ ! ${foo[@]} ]] || err_exit '${foo[@]} is not empty when foo is unset'
 [[ ! ${foo[3]} ]] || err_exit '${foo[3]} is not empty when foo is unset'
 [[ $(print  "[${ print foo }]") == '[foo]' ]] || err_exit '${...} not working when } is followed by ]'
@@ -467,5 +462,7 @@ got=$(
 	: works if this line deleted :
 )
 [[ $got == $exp ]] || err_exit "pipe to ( ... ) with conditional fails -- expected '$exp', got '$got'"
+
+( $SHELL -c 'trap : DEBUG; x=( $foo); exit 0') 2> /dev/null  || err_exit 'trap DEBUG fails'
 
 exit $((Errors))

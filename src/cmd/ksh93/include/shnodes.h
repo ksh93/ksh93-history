@@ -186,6 +186,7 @@ struct arithnod
 #define IOARITH		0x40000	/* arithmetic seek <# ((expr))  */
 #define IOREWRITE	0x80000	/* arithmetic seek <# ((expr))  */
 #define IOCOPY		IOCLOB	/* copy skipped lines onto standard output */
+#define IOPROCSUB	IOARITH	/* process substitution redirection */
 
 union Shnode_u
 {

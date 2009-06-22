@@ -66,18 +66,19 @@ typedef struct Shbltin_s
 #   undef Shell_t
 #   undef Namval_t
 #else 
-#   define sh_run(c, ac, av)	((c)?(*((Shbltin_t*)(c))->shrun)(ac,av):-1)
-#   define sh_system(c,str)	((c)?(*((Shbltin_t*)(c))->shtrap)(str,0):system(str))
-#   define sh_exit(c,n)		((c)?(*((Shbltin_t*)(c))->shexit)(n):exit(n))
-#   define sh_checksig(c)	((c) && ((Shbltin_t*)(c))->sigset)
+#   define sh_context(c)	((Shbltin_t*)(c))
+#   define sh_run(c, ac, av)	((c)?(*sh_context(c)->shrun)(ac,av):-1)
+#   define sh_system(c,str)	((c)?(*sh_context(c)->shtrap)(str,0):system(str))
+#   define sh_exit(c,n)		((c)?(*sh_context(c)->shexit)(n):exit(n))
+#   define sh_checksig(c)	((c) && sh_context(c)->sigset)
 #   if defined(SFIO_VERSION) || defined(_AST_H)
 #	define LIB_INIT(c)
 #   else
-#	define LIB_INIT(c)	((c) && (((Shbltin_t*)(c))->nosfio = 1))
+#	define LIB_INIT(c)	((c) && (sh_context(c)->nosfio = 1))
 #   endif
 #   ifndef _CMD_H
 #	define cmdinit(ac,av,c,cat,flg)		do { if((ac)<=0) return(0); \
-	    (((Shbltin_t*)(c))->notify = ((flg)&ERROR_NOTIFY)?1:0);} while(0)
+	    (sh_context(c)->notify = ((flg)&ERROR_NOTIFY)?1:0);} while(0)
 #   endif
 #endif
 

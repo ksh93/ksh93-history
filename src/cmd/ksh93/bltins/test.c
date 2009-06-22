@@ -443,7 +443,7 @@ int test_unop(register int op,register const char *arg)
 		}
 		if(ap = nv_arrayptr(np))
 			return(nv_arrayisset(np,ap));
-		return(!nv_isnull(np));
+		return(!nv_isnull(np) || nv_isattr(np,NV_INTEGER));
 	    }
 	    default:
 	    {

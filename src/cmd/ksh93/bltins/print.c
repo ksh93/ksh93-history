@@ -527,7 +527,14 @@ static void *fmtbase64(char *string, ssize_t *sz, int alt)
 		else
 		{
 			int n = nv_size(np);
-			cp = (char*)np->nvalue.cp;
+			if(nv_isarray(np))
+			{
+				nv_onattr(np,NV_RAW);
+				cp = nv_getval(np);
+				nv_offattr(np,NV_RAW);
+			}
+			else
+				cp = (char*)np->nvalue.cp;
 			if((size = n)==0)
 				size = strlen(cp);
 			size = sfwrite(iop, cp, size);

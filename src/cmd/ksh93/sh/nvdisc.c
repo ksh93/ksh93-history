@@ -901,7 +901,10 @@ int nv_clone(Namval_t *np, Namval_t *mp, int flags)
 		return(1);
 	}
 	if(nv_isattr(np,NV_INTEGER) && mp->nvalue.ip!=np->nvalue.ip)
+	{
 		mp->nvalue.ip = (int*)num_clone(np,(void*)np->nvalue.ip);
+		nv_offattr(mp,NV_NOFREE);
+	}
 	else if(flags&NV_NOFREE)
 	        nv_onattr(np,NV_NOFREE);
 	return(1);
@@ -972,7 +975,7 @@ Namval_t *nv_search(const char *name, Dt_t *root, int mode)
 	}
 	else
 	{
-		if(*name=='.' && root==sh.var_tree)
+		if(*name=='.' && root==sh.var_tree && !dp)
 			root = sh.var_base;
 		np = dtmatch(root,(void*)name);
 	}

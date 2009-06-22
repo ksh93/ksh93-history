@@ -43,6 +43,9 @@ Syslog_state_t		log = { LOG_USER, -1, 0, ~0 };
 
 static const Namval_t	attempt[] =
 {
+#if _UWIN
+	"/var/log/syslog",		0,
+#endif
 	"/dev/log",			0,
 	"var/log/syslog",		0,
 	"lib/syslog/log",		0,

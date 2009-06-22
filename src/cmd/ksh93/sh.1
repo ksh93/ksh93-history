@@ -947,6 +947,14 @@ is a UNIX
 so programs that expect to
 .IR lseek (2)
 on the file will not work.
+.PP
+Process substitution of the form
+\f3<(\fP\f2list\^\fP\f3)\fP
+can also be used with the
+.B <
+redirection operator which causes the output of
+.I list\^
+to be standard input or the input for whatever file descriptor is specified.
 .SS Parameter Expansion.
 A
 .I parameter\^
@@ -5801,7 +5809,7 @@ The pathname
 is used for each of the parameters that requires
 .IR pathname .
 .TP
-\f3getopts\fP \*(OK \f3\ -a\fP \f2name\^\fP \*(CK \f2optstring vname\^\fP \*(OK \f2arg\^\fP .\|.\|. \*(CK
+\f3getopts\fP \*(OK \f3\ \-a\fP \f2name\^\fP \*(CK \f2optstring vname\^\fP \*(OK \f2arg\^\fP .\|.\|. \*(CK
 Checks
 .I arg
 for legal options.
@@ -6213,8 +6221,10 @@ format specifications, the
 .B format\^
 string is reused to format remaining arguments.
 The following extensions can also be used:
-.BL
-.LI
+.RS
+.PD 0
+.TP
+.B %b
 A
 .B %b
 format can be used instead of
@@ -6223,7 +6233,8 @@ to cause escape sequences in the corresponding
 .I arg\^
 to be expanded as described in
 .BR print.
-.LI
+.TP
+.B %B
 A
 .B %B
 option causes each of the arguments to be treated
@@ -6235,7 +6246,8 @@ causes a compound variable to be output on a single line.
 This is most useful for compound variables and variables whose attribute
 is
 .BR \-b .
-.LI
+.TP
+.B %H
 A
 .B %H
 format can be used instead of
@@ -6244,7 +6256,8 @@ to cause characters in
 .I arg\^
 that are special in HTML and XML
 to be output as their entity name.
-.LI
+.TP
+.B %P
 A
 .B %P
 format can be used instead of
@@ -6253,7 +6266,8 @@ to cause
 .I arg\^
 to be interpreted as an extended regular
 expression and be printed as a shell pattern.
-.LI
+.TP
+.B %R
 A
 .B %R
 format can be used instead of
@@ -6262,14 +6276,16 @@ to cause
 .I arg\^
 to be interpreted as a shell pattern
 and to be printed as an extended regular expression.
-.LI
+.TP
+.B %q
 A
 .B %q
 format can be used instead of
 .B %s
 to cause the resulting string to be quoted in a manner than can
 be reinput to the shell.
-.LI
+.TP
+.BI %( date-format )T
 A
 .BI %( date-format )T
 format can be use to treat an argument as a date/time string
@@ -6278,11 +6294,13 @@ and to format the date/time according to the
 as defined for the
 .BR date (1)
 command.
-.LI
+.TP
+.B %Z
 A
 .B %Z
 format will output a byte whose value is 0.
-.LI
+.TP
+.B %d
 The precision field of the
 .B %d
 format can be followed by a
@@ -6293,7 +6311,8 @@ In this case, the
 flag character causes
 .IB base #
 to be prepended.
-.LI
+.TP
+.B #
 The
 .B #
 flag when used with the
@@ -6302,7 +6321,6 @@ specifier without an output base,
 causes the output to be displayed in thousands units with one of the suffixes
 .B "k M G T P E"
 to indicate the unit.
-.LI
 The
 .B #
 flag when used with the
@@ -6310,11 +6328,14 @@ flag when used with the
 specifier causes the output to be displayed in 1024 with one of the suffixes
 .B "Ki Mi Gi Ti Pi Ei"
 to indicate the unit.
-.LI
+.TP
+.B =
 The
 .B =
 flag has been added to center the output within the specified field width.
-.LE
+.PD
+.PP
+.RE
 .TP
 \f3pwd\fP \*(OK \f3\-LP\fP \*(CK
 Outputs the value of the current working

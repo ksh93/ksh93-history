@@ -183,13 +183,13 @@ fi
 mkdir -p $tmp/a/b/c 2>/dev/null || err_exit  "mkdir -p failed"
 $SHELL -c "cd $tmp/a/b; cd c" 2>/dev/null || err_exit "initial script relative cd fails"
 
-trap 'print HUP' HUP
-exp=$'trap -- \'print HUP\' HUP\ntrap -- \'cd /; rm -rf '$tmp$'\' EXIT'
+trap 'print TERM' TERM
+exp=$'trap -- \'print TERM\' TERM\ntrap -- \'cd /; rm -rf '$tmp$'\' EXIT'
 got=$(trap)
 [[ $got == $exp ]] || err_exit "\$(trap) failed -- expected \"$exp\", got \"$got\""
-exp='print HUP'
-got=$(trap -p HUP)
-[[ $got == $exp ]] || err_exit "\$(trap -p HUP) failed -- expected \"$exp\", got \"$got\""
+exp='print TERM'
+got=$(trap -p TERM)
+[[ $got == $exp ]] || err_exit "\$(trap -p TERM) failed -- expected \"$exp\", got \"$got\""
 
 [[ $($SHELL -c 'trap "print ok" SIGTERM; kill -s SIGTERM $$' 2> /dev/null) == ok ]] || err_exit 'SIGTERM not recognized'
 [[ $($SHELL -c 'trap "print ok" sigterm; kill -s sigterm $$' 2> /dev/null) == ok ]] || err_exit 'SIGTERM not recognized'
@@ -523,5 +523,6 @@ for i in y y  y[8] t[abc] y.d a.b  a
 do	unset $i ||  print -u2  "err_exit unset $i should not fail"
 done
 [[ $($SHELL -c 'y=3; unset 123 y;print $?$y') == 1 ]] 2> /dev/null ||  err_exit 'y is not getting unset with unset 123 y'
-[[ $($SHELL -c 'trap foo INT; (trap;(trap) )') == 'trap -- foo INT' ]] || err_exit 'traps not getting reset when subshell is last process'
+[[ $($SHELL -c 'trap foo TERM; (trap;(trap) )') == 'trap -- foo TERM' ]] || err_exit 'traps not getting reset when subshell is last process'
+
 exit $((Errors))

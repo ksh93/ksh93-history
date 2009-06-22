@@ -65,6 +65,10 @@ typedef struct regsubop_s
 #include <ctype.h>
 #include <errno.h>
 
+#if _BLD_DEBUG && !defined(_AST_REGEX_DEBUG)
+#define _AST_REGEX_DEBUG	1
+#endif
+
 #define MBSIZE(p)	((ast.tmp_int=mbsize(p))>0?ast.tmp_int:1)
 
 #undef	RE_DUP_MAX			/* posix puts this in limits.h!	*/

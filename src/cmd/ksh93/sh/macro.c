@@ -440,7 +440,7 @@ static void copyto(register Mac_t *mp,int endch, int newquote)
 	mp->sp = NIL(Sfio_t*);
 	mp->quote = newquote;
 	first = cp = fcseek(0);
-	if(!mp->quote && *cp=='~' && cp[1]!=LPAREN)
+	if(!mp->quote && *cp=='~')
 		tilde = stktell(stkp);
 	/* handle // operator specially */
 	if(mp->pattern==2 && *cp=='/')
@@ -898,7 +898,7 @@ static char *getdolarg(Shell_t *shp, int n, int *size)
 static char *prefix(Shell_t *shp, char *id)
 {
 	Namval_t *np;
-	register char *cp = strchr(id,'.');
+	register char *sub=0, *cp = strchr(id,'.');
 	if(cp)
 	{
 		*cp = 0;
@@ -911,11 +911,23 @@ static char *prefix(Shell_t *shp, char *id)
 			int n;
 			char *sp;
 			shp->argaddr = 0;
-			while(nv_isref(np))
+			while(nv_isref(np) && np->nvalue.cp)
+			{
+				sub = nv_refsub(np);
 				np = nv_refnode(np);
-			id = (char*)malloc(strlen(cp)+1+(n=strlen(sp=nv_name(np)))+1);
-			strcpy(&id[n],cp);
+				if(sub)
+					nv_putsub(np,sub,0L);
+			}
+			id = (char*)malloc(strlen(cp)+1+(n=strlen(sp=nv_name(np)))+ (sub?strlen(sub)+3:1));
 			memcpy(id,sp,n);
+			if(sub)
+			{
+				id[n++] = '[';
+				strcpy(&id[n],sub);
+				n+= strlen(sub)+1;
+				id[n-1] = ']';
+			}
+			strcpy(&id[n],cp);
 			return(id);
 		}
 	}
@@ -967,7 +979,7 @@ int sh_macfun(Shell_t *shp, const char *name, int offset)
 		tp = (Shnode_t*)&node;
 		tp->com.comarg = (struct argnod*)dp;
 		tp->com.comline = shp->inlineno;
-		dp->dolnum = 2;
+		dp->dolnum = 1;
 		dp->dolval[0] = strdup(name);
 		stkseek(shp->stk,offset);
 		comsubst((Mac_t*)shp->mac_context,tp,2);
@@ -1015,7 +1027,7 @@ static int varsub(Mac_t *mp)
 	Namarr_t	*ap=0;
 	int		dolmax=0, vsize= -1, offset= -1, nulflg, replen=0, bysub=0;
 	char		idbuff[3], *id = idbuff, *pattern=0, *repstr, *arrmax=0;
-	int		addsub=0,oldpat=mp->pattern,idnum=0,flag=0,d;
+	int		var=1,addsub=0,oldpat=mp->pattern,idnum=0,flag=0,d;
 	Stk_t		*stkp = mp->shp->stk;
 retry1:
 	mp->zeros = 0;
@@ -1059,6 +1071,7 @@ retry1:
 		}
 		/* FALL THRU */
 	    case S_SPC2:
+		var = 0;
 		*id = c;
 		v = special(mp->shp,c);
 		if(isastchar(c))
@@ -1087,6 +1100,7 @@ retry1:
 		comsubst(mp,(Shnode_t*)0,1);
 		return(1);
 	    case S_DIG:
+		var = 0;
 		c -= '0';
 		mp->shp->argaddr = 0;
 		if(type)
@@ -1210,10 +1224,14 @@ retry1:
 		}
 		else
 #endif  /* SHOPT_FILESCAN */
-		if(mp->shp->argaddr)
-			flag &= ~NV_NOADD;
-		np = nv_open(id,mp->shp->var_tree,flag|NV_NOFAIL);
-		if((!np || nv_isnull(np)) && type==M_BRACE && c==RBRACE && !(flag&NV_ARRAY))
+		{
+			if(mp->shp->argaddr)
+				flag &= ~NV_NOADD;
+			np = nv_open(id,mp->shp->var_tree,flag|NV_NOFAIL);
+		}
+		if(isastchar(mode))
+			var = 0;
+		if((!np || nv_isnull(np)) && type==M_BRACE && c==RBRACE && !(flag&NV_ARRAY) && strchr(id,'.'))
 		{
 			if(sh_macfun(mp->shp,id,offset))
 			{
@@ -1818,7 +1836,7 @@ retry2:
 			mac_error(np);
 		}
 	}
-	else if(sh_isoption(SH_NOUNSET) && (!np  || nv_isnull(np) || (nv_isarray(np) && !np->nvalue.cp)))
+	else if(var && sh_isoption(SH_NOUNSET) && (!np  || nv_isnull(np) || (nv_isarray(np) && !np->nvalue.cp)))
 	{
 		if(np)
 		{

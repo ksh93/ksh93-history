@@ -794,6 +794,42 @@ static int	arg_pipe(register int pv[])
 }
 #endif
 
+struct argnod *sh_argprocsub(Shell_t *shp,struct argnod *argp)
+{
+	/* argument of the form <(cmd) or >(cmd) */
+	register struct argnod *ap;
+	int monitor, fd, pv[2];
+	int subshell = shp->subshell;
+	ap = (struct argnod*)stkseek(shp->stk,ARGVAL);
+	ap->argflag |= ARG_MAKE;
+	ap->argflag &= ~ARG_RAW;
+	sfwrite(shp->stk,e_devfdNN,8);
+	sh_pipe(pv);
+	fd = argp->argflag&ARG_RAW;
+	sfputr(shp->stk,fmtbase((long)pv[fd],10,0),0);
+	ap = (struct argnod*)stkfreeze(shp->stk,0);
+	shp->inpipe = shp->outpipe = 0;
+	if(monitor = (sh_isstate(SH_MONITOR)!=0))
+		sh_offstate(SH_MONITOR);
+	shp->subshell = 0;
+	if(fd)
+	{
+		shp->inpipe = pv;
+		sh_exec((Shnode_t*)argp->argchn.ap,(int)sh_isstate(SH_ERREXIT));
+	}
+	else
+	{
+		shp->outpipe = pv;
+		sh_exec((Shnode_t*)argp->argchn.ap,(int)sh_isstate(SH_ERREXIT));
+	}
+	shp->subshell = subshell;
+	if(monitor)
+		sh_onstate(SH_MONITOR);
+	close(pv[1-fd]);
+	sh_iosave(shp,-pv[fd], shp->topfd, (char*)0);
+	return(ap);
+}
+
 /* Argument expansion */
 static int arg_expand(Shell_t *shp,register struct argnod *argp, struct argnod **argchain,int flag)
 {
@@ -802,40 +838,11 @@ static int arg_expand(Shell_t *shp,register struct argnod *argp, struct argnod *
 #if SHOPT_DEVFD
 	if(*argp->argval==0 && (argp->argflag&ARG_EXP))
 	{
-		/* argument of the form (cmd) */
-		register struct argnod *ap;
-		int monitor, fd, pv[2];
-		int subshell = shp->subshell;
-		ap = (struct argnod*)stkseek(shp->stk,ARGVAL);
-		ap->argflag |= ARG_MAKE;
-		ap->argflag &= ~ARG_RAW;
+		struct argnod *ap;
+		ap = sh_argprocsub(shp,argp);
 		ap->argchn.ap = *argchain;
 		*argchain = ap;
 		count++;
-		sfwrite(shp->stk,e_devfdNN,8);
-		sh_pipe(pv);
-		fd = argp->argflag&ARG_RAW;
-		sfputr(shp->stk,fmtbase((long)pv[fd],10,0),0);
-		ap = (struct argnod*)stkfreeze(shp->stk,0);
-		shp->inpipe = shp->outpipe = 0;
-		if(monitor = (sh_isstate(SH_MONITOR)!=0))
-			sh_offstate(SH_MONITOR);
-		shp->subshell = 0;
-		if(fd)
-		{
-			shp->inpipe = pv;
-			sh_exec((Shnode_t*)argp->argchn.ap,(int)sh_isstate(SH_ERREXIT));
-		}
-		else
-		{
-			shp->outpipe = pv;
-			sh_exec((Shnode_t*)argp->argchn.ap,(int)sh_isstate(SH_ERREXIT));
-		}
-		shp->subshell = subshell;
-		if(monitor)
-			sh_onstate(SH_MONITOR);
-		close(pv[1-fd]);
-		sh_iosave(shp,-pv[fd], shp->topfd, (char*)0);
 	}
 	else
 #endif	/* SHOPT_DEVFD */

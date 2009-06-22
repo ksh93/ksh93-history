@@ -499,7 +499,7 @@ static void array_putval(Namval_t *np, const char *string, int flags, Namfun_t *
 		scan = ap->nelem&ARRAY_SCAN;
 		if(mp && mp!=np)
 		{
-			if(!is_associative(ap) && string && !nv_type(np) && nv_isvtree(mp))
+			if(!is_associative(ap) && string && !(flags&NV_APPEND) && !nv_type(np) && nv_isvtree(mp))
 			{
 				if(!nv_isattr(np,NV_NOFREE))
 					_nv_unset(mp,flags&NV_RDONLY);
@@ -1294,7 +1294,9 @@ void *nv_associative(register Namval_t *np,const char *sp,int mode)
 				ap->nextpos = (Namval_t*)dtnext(ap->header.table,mp);
 			}
 			np = mp;
-			if(ap->pos != np && !(ap->header.nelem&ARRAY_SCAN))
+			if(ap->pos && ap->pos==np)
+				ap->header.nelem |= ARRAY_SCAN;
+			else if(!(ap->header.nelem&ARRAY_SCAN))
 				ap->pos = 0;
 			ap->cur = np;
 		}

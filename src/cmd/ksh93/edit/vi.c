@@ -1570,9 +1570,10 @@ static int mvcursor(register Vi_t* vp,register int motion)
 			if(cur_virt>=0  && cur_virt<(SEARCHSIZE-2) && cur_virt == last_virt)
 			{
 				virtual[last_virt + 1] = '\0';
-				gencpy(&((genchar*)lsearch)[1], virtual);
 #if SHOPT_MULTIBYTE
-				ed_external(&((genchar*)lsearch)[1],lsearch+1);
+				ed_external(virtual,lsearch+1);
+#else
+				strcpy(lsearch+1,virtual);
 #endif /* SHOPT_MULTIBYTE */
 				*lsearch = '^';
 				vp->direction = -2;

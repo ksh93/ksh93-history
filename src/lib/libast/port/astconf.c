@@ -26,7 +26,7 @@
  * extended to allow some features to be set per-process
  */
 
-static const char id[] = "\n@(#)$Id: getconf (AT&T Research) 2008-04-24 $\0\n";
+static const char id[] = "\n@(#)$Id: getconf (AT&T Research) 2009-06-06 $\0\n";
 
 #include "univlib.h"
 
@@ -39,6 +39,10 @@ static const char id[] = "\n@(#)$Id: getconf (AT&T Research) 2008-04-24 $\0\n";
 
 #include "conftab.h"
 #include "FEATURE/libpath"
+
+#ifndef DEBUG_astconf
+#define DEBUG_astconf		0
+#endif
 
 #ifndef _pth_getconf
 #undef	ASTCONF_system
@@ -293,9 +297,10 @@ synthesize(register Feature_t* fp, const char* path, const char* value)
 	register char*		s;
 	register char*		d;
 	register char*		v;
+	register char*		p;
 	register int		n;
 
-#if DEBUG || DEBUG_astconf
+#if DEBUG_astconf
 	if (fp)
 		error(-2, "astconf synthesize name=%s path=%s value=%s fp=%p%s", fp->name, path, value, fp, state.synthesizing ? " SYNTHESIZING" : "");
 #endif
@@ -376,11 +381,11 @@ synthesize(register Feature_t* fp, const char* path, const char* value)
 				value = (const char*)d;
 				goto ok;
 			}
-			for (s = d + n + 1; *s && !isspace(*s); s++);
+			for (s = p = d + n + 1; *s && !isspace(*s); s++);
 			for (; isspace(*s); s++);
 			for (v = s; *s && !isspace(*s); s++);
 			n = s - v;
-			if (strneq(v, value, n))
+			if ((!path || *path == *p && strlen(path) == (v - p - 1) && !memcmp(path, p, v - p - 1)) && strneq(v, value, n))
 				goto ok;
 			for (; isspace(*s); s++);
 			if (*s)
@@ -433,6 +438,9 @@ synthesize(register Feature_t* fp, const char* path, const char* value)
 	for (s = (char*)path; *d = *s++; d++);
 	*d++ = ' ';
 	for (s = (char*)value; *d = *s++; d++);
+#if DEBUG_astconf
+	error(-3, "astconf synthesize %s", state.data - state.prefix);
+#endif
 	setenviron(state.data - state.prefix);
 	if (state.notify)
 		(*state.notify)(NiL, NiL, state.data - state.prefix);
@@ -466,7 +474,7 @@ initialize(register Feature_t* fp, const char* path, const char* command, const 
 	register char*	p;
 	register int	ok = 1;
 
-#if DEBUG || DEBUG_astconf
+#if DEBUG_astconf
 	error(-2, "astconf initialize name=%s path=%s command=%s succeed=%s fail=%s fp=%p%s", fp->name, path, command, succeed, fail, fp, state.synthesizing ? " SYNTHESIZING" : "");
 #endif
 	switch (fp->op)
@@ -493,7 +501,7 @@ initialize(register Feature_t* fp, const char* path, const char* command, const 
 			register char*	d = p;
 			Sfio_t*		tmp;
 
-#if DEBUG || DEBUG_astconf
+#if DEBUG_astconf
 			error(-2, "astconf initialize name=%s ok=%d PATH=%s", fp->name, ok, p);
 #endif
 			if (tmp = sfstropen())
@@ -579,7 +587,7 @@ format(register Feature_t* fp, const char* path, const char* value, unsigned int
 	register Feature_t*	sp;
 	register int		n;
 
-#if DEBUG || DEBUG_astconf
+#if DEBUG_astconf
 	error(-2, "astconf format name=%s path=%s value=%s flags=%04x fp=%p%s", fp->name, path, value, flags, fp, state.synthesizing ? " SYNTHESIZING" : "");
 #endif
 	if (value)
@@ -673,17 +681,22 @@ format(register Feature_t* fp, const char* path, const char* value, unsigned int
 #else
 		if (value && streq(path, "="))
 		{
-			if (!(fp->flags & CONF_ALLOC))
-				fp->value = 0;
-			n = strlen(value);
-			if (!(fp->value = newof(fp->value, char, n, 1)))
-				fp->value = null;
-			else
+			if (state.synthesizing)
 			{
-				fp->flags |= CONF_ALLOC;
-				memcpy(fp->value, value, n);
-				fp->value[n] = 0;
+				if (!(fp->flags & CONF_ALLOC))
+					fp->value = 0;
+				n = strlen(value);
+				if (!(fp->value = newof(fp->value, char, n, 1)))
+					fp->value = null;
+				else
+				{
+					fp->flags |= CONF_ALLOC;
+					memcpy(fp->value, value, n);
+					fp->value[n] = 0;
+				}
 			}
+			else
+				synthesize(fp, path, value);
 		}
 		else
 			initialize(fp, path, "echo", "att", "ucb");
@@ -716,7 +729,7 @@ feature(const char* name, const char* path, const char* value, unsigned int flag
 	if (value && (streq(value, "-") || streq(value, "0")))
 		value = null;
 	for (fp = state.features; fp && !streq(fp->name, name); fp = fp->next);
-#if DEBUG || DEBUG_astconf
+#if DEBUG_astconf
 	error(-2, "astconf feature name=%s path=%s value=%s flags=%04x fp=%p%s", name, path, value, flags, fp, state.synthesizing ? " SYNTHESIZING" : "");
 #endif
 	if (!fp)
@@ -819,14 +832,14 @@ lookup(register Lookup_t* look, const char* name, unsigned int flags)
 		look->section = 1;
 #endif
 	look->name = name;
-#if DEBUG || DEBUG_astconf
+#if DEBUG_astconf
 	error(-2, "astconf normal name=%s standard=%d section=%d call=%d flags=%04x elements=%d", look->name, look->standard, look->section, look->call, flags, conf_elements);
 #endif
 	c = *((unsigned char*)name);
 	while (lo <= hi)
 	{
 		mid = lo + (hi - lo) / 2;
-#if DEBUG || DEBUG_astconf
+#if DEBUG_astconf
 		error(-3, "astconf lookup name=%s mid=%s", name, mid->name);
 #endif
 		if (!(v = c - *((unsigned char*)mid->name)) && !(v = strcmp(name, mid->name)))
@@ -861,7 +874,7 @@ lookup(register Lookup_t* look, const char* name, unsigned int flags)
 	if (look->call < 0 && look->standard >= 0 && (look->section <= 1 || (mid->flags & CONF_MINMAX)))
 		look->flags |= CONF_MINMAX;
 	look->conf = mid;
-#if DEBUG || DEBUG_astconf
+#if DEBUG_astconf
 	error(-2, "astconf lookup name=%s standard=%d:%d section=%d:%d call=%d:%d", look->name, look->standard, mid->standard, look->section, mid->section, look->call, mid->call);
 #endif
 	return 1;
@@ -916,9 +929,9 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, i
 		flags |= CONF_PREFIXED;
 	olderrno = errno;
 	errno = 0;
-#if DEBUG || DEBUG_astconf
-	error(-1, "astconf name=%s:%s standard=%d section=%d call=%s op=%d flags=|%s%s%s%s%s:|%s%s%s%s%s%s%s%s%s%s"
-		, name , p->name, p->standard, p->section, prefix[p->call + CONF_call].name, p->op
+#if DEBUG_astconf
+	error(-1, "astconf name=%s:%s:%s standard=%d section=%d call=%s op=%d flags=|%s%s%s%s%s:|%s%s%s%s%s%s%s%s%s%s"
+		, name, look->name, p->name, p->standard, p->section, prefix[p->call + CONF_call].name, p->op
 		, (flags & CONF_FEATURE) ? "FEATURE|" : ""
 		, (flags & CONF_LIMIT) ? "LIMIT|" : ""
 		, (flags & CONF_MINMAX) ? "MINMAX|" : ""
@@ -1047,7 +1060,7 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, i
 		call = 0;
 		if (p->standard == CONF_AST)
 		{
-			if (streq(look->name, "RELEASE") && (i = open("/proc/version", O_RDONLY)) >= 0)
+			if (streq(p->name, "RELEASE") && (i = open("/proc/version", O_RDONLY)) >= 0)
 			{
 				n = read(i, buf, sizeof(buf) - 1);
 				close(i);
@@ -1073,7 +1086,7 @@ print(Sfio_t* sp, register Lookup_t* look, const char* name, const char* path, i
 	predef:
 		if (look->standard == CONF_AST)
 		{
-			if (streq(look->name, "VERSION"))
+			if (streq(p->name, "VERSION"))
 			{
 				v = _AST_VERSION;
 				break;
@@ -1265,7 +1278,7 @@ nativeconf(Proc_t** pp, const char* operand)
 	char*		cmd[3];
 	long		ops[2];
 
-#if DEBUG || DEBUG_astconf
+#if DEBUG_astconf
 	error(-2, "astconf defer %s %s", _pth_getconf, operand);
 #endif
 	cmd[0] = (char*)state.id;

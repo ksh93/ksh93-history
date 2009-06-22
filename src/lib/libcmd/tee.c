@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: tee (AT&T Research) 2009-03-03 $\n]"
+"[-?\n@(#)$Id: tee (AT&T Research) 2009-06-19 $\n]"
 USAGE_LICENSE
 "[+NAME?tee - duplicate standard input]"
 "[+DESCRIPTION?\btee\b copies standard input to standard output "
@@ -60,6 +60,7 @@ USAGE_LICENSE
 typedef struct Tee_s
 {
 	Sfdisc_t	disc;
+	int		line;
 	int		fd[1];
 } Tee_t;
 
@@ -67,7 +68,8 @@ typedef struct Tee_s
  * This discipline writes to each file in the list given in handle
  */
 
-static ssize_t tee_write(Sfio_t* fp, const void* buf, size_t n, Sfdisc_t* handle)
+static ssize_t
+tee_write(Sfio_t* fp, const void* buf, size_t n, Sfdisc_t* handle)
 {
 	register const char*	bp;
 	register const char*	ep;
@@ -89,6 +91,22 @@ static ssize_t tee_write(Sfio_t* fp, const void* buf, size_t n, Sfdisc_t* handle
 	return n;
 }
 
+static void
+tee_cleanup(register Tee_t* tp)
+{
+	register int*	hp;
+	register int	n;
+
+	if (tp)
+	{
+		sfdisc(sfstdout, NiL);
+		if (tp->line >= 0)
+			sfset(sfstdout, SF_LINE, tp->line);
+		for (hp = tp->fd; (n = *hp) >= 0; hp++)
+			close(n);
+	}
+}
+
 int
 b_tee(int argc, register char** argv, void* context)
 {
@@ -100,7 +118,16 @@ b_tee(int argc, register char** argv, void* context)
 	int			line;
 	Sfdisc_t		tee_disc;
 
-	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
+	if (argc <= 0)
+	{
+		if (context && (tp = (Tee_t*)sh_context(context)->data))
+		{
+			sh_context(context)->data = 0;
+			tee_cleanup(tp);
+		}
+		return 0;
+	}
+	cmdinit(argc, argv, context, ERROR_CATALOG, ERROR_CALLBACK);
 	line = -1;
 	for (;;)
 	{
@@ -145,9 +172,11 @@ b_tee(int argc, register char** argv, void* context)
 	{
 		if (tp = (Tee_t*)stakalloc(sizeof(Tee_t) + argc * sizeof(int)))
 		{
-			memset(&tee_disc, 0, sizeof(tee_disc));
-			tee_disc.writef = tee_write;
-			tp->disc = tee_disc;
+			memset(&tp->disc, 0, sizeof(tp->disc));
+			tp->disc.writef = tee_write;
+			if (context)
+				sh_context(context)->data = (void*)tp;
+			tp->line = line;
 			hp = tp->fd;
 			while (cp = *argv++)
 			{
@@ -171,18 +200,6 @@ b_tee(int argc, register char** argv, void* context)
 		error(ERROR_system(0), "read error");
 	if (sfsync(sfstdout))
 		error(ERROR_system(0), "write error");
-
-	/*
-	 * close files and free resources
-	 */
-
-	if (tp)
-	{
-		sfdisc(sfstdout, NiL);
-		if (line >= 0)
-			sfset(sfstdout, SF_LINE, line);
-		for (hp = tp->fd; (n = *hp) >= 0; hp++)
-			close(n);
-	}
+	tee_cleanup(tp);
 	return error_info.errors;
 }

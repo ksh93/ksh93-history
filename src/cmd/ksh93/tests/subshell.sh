@@ -417,4 +417,26 @@ do	cat $tmp/buf $tmp/buf > $tmp/tmp
 	done
 done
 
+# specifics -- there's more?
+
+{
+	cmd='{ exec 5>/dev/null; print "$(eval ls -d . 2>&1 1>&5)"; } >$tmp/out &'
+	eval $cmd
+	m=$!
+	{ sleep 4; kill -9 $m; } &
+	k=$!
+	wait $m
+	h=$?
+	kill -9 $k
+	wait $k
+	got=$(<$tmp/out)
+} 2>/dev/null
+exp=''
+if	[[ ! $got ]] && (( h ))
+then	got=HUNG
+fi
+if	[[ $got != $exp ]]
+then	err_exit "eval '$cmd' failed -- expected '$exp', got '$got'"
+fi
+
 exit $Errors

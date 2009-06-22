@@ -27,7 +27,7 @@ int
 fflush(Sfio_t* f)
 {
 	if (!f)
-		return sfsync(NiL);
+		return fcloseall();
 
 	STDIO_INT(f, "fflush", int, (Sfio_t*), (f))
 
