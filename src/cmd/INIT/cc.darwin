@@ -1,4 +1,4 @@
-: unix wrapper for mac osx cc : 2008-05-11 :
+: unix wrapper for mac osx cc : 2009-06-24 :
 
 HOSTTYPE=darwin.generic
 
@@ -49,6 +49,7 @@ cc)	$CC -DCLK_TCK=100 "$@"
 	;;
 dll)	# what a compatibility mess -- surely they can get the apis to play nice
 	tmp=/tmp/cc.$$.err
+	trap "rm -f $tmp" EXIT
 	case `MACOSX_DEPLOYMENT_TARGET=10.3 ld -undefined dynamic_lookup 2>&1` in
 	*undefined*dynamic_lookup*)
 		ld -m -flat_namespace -undefined suppress -dylib -dynamic \
@@ -64,6 +65,7 @@ dll)	# what a compatibility mess -- surely they can get the apis to play nice
 	exit $status
 	;;
 ld)	tmp=/tmp/cc.$$.err
+	trap "rm -f $tmp" EXIT
 	$CC -Wl,-m -DCLK_TCK=100 "$@" >$tmp 2>&1
 	status=$?
 	egrep -v ' (warning .*multiple definitions of|definition of|as lazy binding|not from earlier dynamic) ' $tmp >&2

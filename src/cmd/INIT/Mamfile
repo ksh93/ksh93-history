@@ -816,7 +816,7 @@ make ${INSTALLROOT}/bin/.paths
 exec - if	test ! -e ${INSTALLROOT}/bin/.paths -o -w ${INSTALLROOT}/bin/.paths
 exec - then	nl="
 exec - "
-exec - 	o=`cat ${INSTALLROOT}/bin/.paths 2>/dev/null`
+exec - 	o=`cat ${INSTALLROOT}/bin/.paths 2>/dev/null` || :
 exec - 	v=
 exec - 	n=
 exec - 	case $nl$o in

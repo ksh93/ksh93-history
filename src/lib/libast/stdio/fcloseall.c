@@ -35,7 +35,7 @@ fcloseall(void)
 	int		count;
 	int		loop;
 
-	STDIO_VOID(f, "fcloseall", void, (void), ())
+	STDIO_INT(0, "fcloseall", int, (void), ())
 
 	for(loop = 0; loop < MAXLOOP; ++loop)
 	{	nclose = count = 0;

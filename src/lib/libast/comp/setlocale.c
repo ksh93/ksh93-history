@@ -648,7 +648,13 @@ Lc_category_t		lc_categories[] =
 { "LC_PAPER",         LC_PAPER,         AST_LC_PAPER,         0               },
 };
 
-static const Namval_t	options[] =
+typedef struct Unamval_s
+{
+	char*		name;
+	unsigned int	value;
+} Unamval_t;
+
+static const Unamval_t	options[] =
 {
 	"debug",		AST_LC_debug,
 	"find",			AST_LC_find,
@@ -667,9 +673,9 @@ setopt(void* a, const void* p, int n, const char* v)
 	if (p)
 	{
 		if (n)
-			ast.locale.set |= ((Namval_t*)p)->value;
+			ast.locale.set |= ((Unamval_t*)p)->value;
 		else
-			ast.locale.set &= ~((Namval_t*)p)->value;
+			ast.locale.set &= ~((Unamval_t*)p)->value;
 	}
 	return 0;
 }

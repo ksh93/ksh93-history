@@ -22,6 +22,7 @@
 #pragma prototyped
 
 #include <tmx.h>
+#include <ctype.h>
 
 /*
  * parse duration expression in s and return Time_t value

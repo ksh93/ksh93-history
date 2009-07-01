@@ -52,7 +52,6 @@ USAGE_LICENSE
 "[+SEE ALSO?\bcat\b(1), \bsignal\b(3)]"
 ;
 
-
 #include <cmd.h>
 #include <ls.h>
 #include <sig.h>

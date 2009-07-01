@@ -225,16 +225,18 @@ static Feature_t	dynamic[] =
 		OP_path_attributes
 	},
 	{
+#define DYNAMIC_PATH_RESOLVE	8
 		&dynamic[9],
 		"PATH_RESOLVE",
 		&null[0],
-		"metaphysical",
+		"physical",
 		12,
 		CONF_AST,
 		0,
 		OP_path_resolve
 	},
 	{
+#define DYNAMIC_UNIVERSE	9
 		0,
 		"UNIVERSE",
 		&null[0],
@@ -492,7 +494,7 @@ initialize(register Feature_t* fp, const char* path, const char* command, const 
 		ok = fs3d(FS3D_TEST);
 		break;
 	case OP_universe:
-		ok = streq(_UNIV_DEFAULT, "att");
+		ok = streq(_UNIV_DEFAULT, dynamic[DYNAMIC_UNIVERSE].strict);
 		/*FALLTHROUGH...*/
 	default:
 		if (p = getenv("PATH"))
@@ -645,13 +647,13 @@ format(register Feature_t* fp, const char* path, const char* value, unsigned int
 
 	case OP_path_resolve:
 		if (!synthesize(fp, path, value))
-			initialize(fp, path, NiL, "logical", "metaphysical");
+			initialize(fp, path, NiL, "logical", dynamic[DYNAMIC_PATH_RESOLVE].strict);
 		break;
 
 	case OP_universe:
 #if _lib_universe
 		if (getuniverse(fp->value) < 0)
-			strcpy(fp->value, "att");
+			strcpy(fp->value, dynamic[DYNAMIC_UNIVERSE].strict);
 		if (value)
 			setuniverse(value);
 #else
@@ -699,7 +701,7 @@ format(register Feature_t* fp, const char* path, const char* value, unsigned int
 				synthesize(fp, path, value);
 		}
 		else
-			initialize(fp, path, "echo", "att", "ucb");
+			initialize(fp, path, "echo", dynamic[DYNAMIC_UNIVERSE].strict, "ucb");
 #endif
 #endif
 		break;

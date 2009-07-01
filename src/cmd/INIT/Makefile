@@ -82,7 +82,7 @@ $(BINDIR)/.paths :INSTALL: (CC.DIALECT)
 	if	test ! -e $(<) -o -w $(<)
 	then	nl="
 "
-		o=`cat $(<) 2>/dev/null`
+		o=`cat $(<) 2>/dev/null` || :
 		v=
 		n=
 		case $nl$o in

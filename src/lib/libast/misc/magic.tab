@@ -1,5 +1,5 @@
 #
-# @(#)magic (AT&T Research) 2009-01-09
+# @(#)magic (AT&T Research) 2009-06-11
 #
 # magic number database for file(1) and magic(3)
 #
@@ -861,7 +861,11 @@ o{
 16	short		>0
 &22	short		>0		, version %ld
 }
++0	short		!=0x8664	, 32 bit
++0	short		0x8664		, 64 bit
 }
+0	short		0x8664		pc 386
+o()
 0	short		0524		pc 386
 o()
 0	short		0604		pc alpha
@@ -1069,11 +1073,14 @@ o()
 +(@60H+4)	short	0x0162		mips
 +(@60H+4)	short	0x0166		mips, big endian?
 +(@60H+4)	short	0x0184		alpha
++(@60H+4)	short	0x8664		386
 |(@60H+4)	short	*		machine=0x%04lX
 }
 +(@60H+22)	short	&0x2002==0x0002	executable			x-system/exe
 +(@60H+22)	short	&0x2000		shared library			x-system/dll
-+(@60H+22)	short	&0x0100==0	, 16 bit
++(@60H+22)	short	&0x0120==0	, 16 bit
++(@60H+22)	short	&0x0120==0x0100	, 32 bit
++(@60H+22)	short	&0x0120==0x0020	, 64 bit
 +(@60H+92)	short	0		, unknown subsystem
 +(@60H+92)	short	1		, native
 +(@60H+92)	short	2		, windows gui
@@ -1284,6 +1291,19 @@ v()
 v()
 
 0	string		begin 0		uuencoded data			application/x-uuencode
+0	string		\x89PNG		PNG image data			image/png
+&4	belong		0x0d0a1a0a
++16	belong		x		, %ld x
++20	belong		x		%ld
++24	byte		x		, %d-bit
++25	byte		0		, grayscale
++25	byte		2		, color RGB
++25	byte		3		, colormap
++25	byte		4		, gray+alpha
++25	byte		6		, color RGBA
+#+26	byte		0		, deflate/32K
++28	byte		0		, non-interlaced
++28	byte		1		, interlaced
 0	string		\377\330\377	JPEG image			image/jpeg
 0	string		GIF		GIF image			image/gif
 +3	string		*		, version %-.3s

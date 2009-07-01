@@ -21,6 +21,10 @@
 ***********************************************************************/
 #pragma prototyped
 
+#ifndef _USE_GNU
+#define _USE_GNU
+#endif
+
 #include "stdhdr.h"
 
 ssize_t
