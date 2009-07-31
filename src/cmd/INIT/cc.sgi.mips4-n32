@@ -2,7 +2,7 @@
 
 HOSTTYPE=sgi.mips4-n32
 
-case $* in
+case $1 in
 -dumpmachine) echo $HOSTTYPE; exit ;;
 esac
 

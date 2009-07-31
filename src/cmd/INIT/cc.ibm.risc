@@ -1,9 +1,15 @@
-: cc wrapper for aix risc xlc : 2008-01-09 :
+: cc wrapper for aix risc xlc : 2009-07-31 :
 
 HOSTTYPE=ibm.risc
 
-case $* in
--dumpmachine) echo $HOSTTYPE; exit ;;
+case $1 in
+-dumpmachine)
+	case " $* " in
+	*" -q64 "*)	HOSTTYPE=$HOSTTYPE-64 ;;
+	esac
+	echo $HOSTTYPE
+	exit
+	;;
 esac
 
 cc=/usr/vac/bin/xlc
@@ -14,8 +20,9 @@ case " $@ " in
 	shift
 	;;
 esac
-if	test -d /usr/vac/bin/c99
-then	case " $* " in
+if	test -x /usr/vac/bin/c99
+then	# the xlc optimizer vintage that supports c99 is flawed and causes the ast build to fail #
+	case " $* " in
 	*" -O "*)
 		set '' "$@" ''
 		shift
@@ -31,7 +38,7 @@ then	case " $* " in
 		done
 		;;
 	esac
-	$cc "$@"
+	$cc -qhalt=e -qsuppress=1506-224:1506-507 "$@"
 	code=$?
 else	PATH=/bin:$PATH LIBPATH=/usr/lib:/lib $cc -brtl -blibpath:/usr/lib:/lib -qhalt=e -qsuppress=1506-224:1506-507 "$@"
 	code=$?

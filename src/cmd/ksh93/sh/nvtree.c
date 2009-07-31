@@ -1035,7 +1035,7 @@ static void put_tree(register Namval_t *np, const char *val, int flags,Namfun_t 
 		Shell_t		*shp = sh_getinterp();
 		Namval_t	*last_table = shp->last_table;
 		Dt_t		*last_root = shp->last_root;
-		Namval_t 	*mp = val?nv_open(val,shp->var_tree,NV_VARNAME|NV_NOADD|NV_NOASSIGN|NV_NOFAIL):0;
+		Namval_t 	*mp = val?nv_open(val,shp->var_tree,NV_VARNAME|NV_NOADD|NV_NOASSIGN|NV_ARRAY|NV_NOFAIL):0;
 		if(mp && nv_isvtree(mp))
 		{
 			shp->prev_table = shp->last_table;

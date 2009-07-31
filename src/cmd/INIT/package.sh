@@ -64,7 +64,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2009-06-24 $
+@(#)$Id: package (AT&T Research) 2009-07-31 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -1733,7 +1733,12 @@ int main()
 			;;
 		esac
 		case $cc in
-		/*)	a=`$cc -dumpmachine 2>/dev/null`
+		/*)	a=`$cc -dumpmachine $CCFLAGS 2>/dev/null`
+			case $a in
+			'')	case $CCFLAGS in
+				'')	a=`$cc -dumpmachine 2>/dev/null` ;;
+				esac
+			esac
 			case $a in
 			''|*' '*|*/*:*)
 				;;
@@ -1760,7 +1765,12 @@ int main()
 			'')	case $cc in
 				/*|cc)	;;
 				*)	if	executable $i/$cc
-					then	a=`$i/$cc -dumpmachine 2>/dev/null`
+					then	a=`$i/$cc -dumpmachine $CCFLAGS 2>/dev/null`
+						case $a in
+						'')	case $CCFLAGS in
+							'')	a=`$cc -dumpmachine 2>/dev/null` ;;
+							esac
+						esac
 						case $a in
 						''|*' '*|*/*:*)
 							;;

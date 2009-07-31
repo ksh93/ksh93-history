@@ -92,6 +92,7 @@ All recorded changes follow.
 
 :::::::: INIT ::::::::
 
+09-07-31 package.sh,cc.*: fix -dumpmachine to handle 32/64/* bit options
 09-06-24 package.sh: fix admin.db output formatting
 09-05-05 package.sh: export dll hackery environment vars
 09-05-05 package.sh: handle non-identifier hostnames

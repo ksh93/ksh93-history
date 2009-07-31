@@ -1,4 +1,6 @@
-09-06-30 port/astconf.c: strict PATH_RESOLVE is "physical" (not "metaphysical")
+09-07-29 astlicense.c: fix first name=value logic error
+09-07-22 string/fmtip6.c: don't drop trailing 0 in 44::1:0:0
+09-06-30 port/astconf.c: standard PATH_RESOLVE is "physical" (not "metaphysical")
 09-06-19 vmalloc: sync with kpv
 09-06-19 include/shcmd.h: add sh_context(p) cast
 09-06-11 misc/magic.tab: differentiate pc 386 32/64 bit dll/exe/obj

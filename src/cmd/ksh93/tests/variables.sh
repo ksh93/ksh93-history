@@ -577,8 +577,10 @@ function x.set
 }
 x[0]=0 x[1]=1 x[2]=2 x[3]=3
 [[ ${x[@]} == '12 8 5 3' ]] || err_exit 'set discipline for indexed array not working correctly'
+float seconds
 ((SECONDS=3*4))
-(( SECONDS < 12 || SECONDS > 12.1 )) &&  err_exit "SECONDS is $SECONDS and should be close to 12"
+seconds=SECONDS
+(( seconds < 12 || seconds > 12.1 )) &&  err_exit "SECONDS is $seconds and should be close to 12"
 unset a
 function a.set
 {

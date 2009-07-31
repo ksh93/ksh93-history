@@ -26,7 +26,7 @@
  * extended to allow some features to be set per-process
  */
 
-static const char id[] = "\n@(#)$Id: getconf (AT&T Research) 2009-06-06 $\0\n";
+static const char id[] = "\n@(#)$Id: getconf (AT&T Research) 2009-07-02 $\0\n";
 
 #include "univlib.h"
 
@@ -68,23 +68,14 @@ static const char id[] = "\n@(#)$Id: getconf (AT&T Research) 2009-06-06 $\0\n";
 # undef	_lib_sysinfo
 #endif
 
-#define OP_conformance		1
-#define OP_fs_3d		2
-#define OP_getconf		3
-#define OP_hosttype		4
-#define OP_libpath		5
-#define OP_libprefix		6
-#define OP_libsuffix		7
-#define OP_path_attributes	8
-#define OP_path_resolve		9
-#define OP_universe		10
-
 #define CONF_ERROR	(CONF_USER<<0)
 #define CONF_READONLY	(CONF_USER<<1)
 #define CONF_ALLOC	(CONF_USER<<2)
 #define CONF_GLOBAL	(CONF_USER<<3)
 
+#define DEFAULT(o)	((state.std||!dynamic[o].ast)?dynamic[o].std:dynamic[o].ast)
 #define INITIALIZE()	do{if(!state.data)synthesize(NiL,NiL,NiL);}while(0)
+#define STANDARD(v)	(streq(v,"standard")||streq(v,"strict")||streq(v,"posix")||streq(v,"xopen"))
 
 #define MAXVAL		256
 
@@ -105,7 +96,8 @@ typedef struct Feature_s
 	struct Feature_s*next;
 	const char*	name;
 	char*		value;
-	char*		strict;
+	char*		std;
+	char*		ast;
 	short		length;
 	short		standard;
 	unsigned int	flags;
@@ -124,28 +116,33 @@ typedef struct
 
 static Feature_t	dynamic[] =
 {
+#define OP_conformance	0
 	{
-		&dynamic[1],
+		&dynamic[OP_conformance+1],
 		"CONFORMANCE",
 		"ast",
 		"standard",
+		"ast",
 		11,
 		CONF_AST,
 		0,
 		OP_conformance
 	},
+#define OP_fs_3d	1
 	{
-		&dynamic[2],
+		&dynamic[OP_fs_3d+1],
 		"FS_3D",
 		&null[0],
 		"0",
+		0,
 		5,
 		CONF_AST,
 		0,
 		OP_fs_3d
 	},
+#define OP_getconf	2
 	{
-		&dynamic[3],
+		&dynamic[OP_getconf+1],
 		"GETCONF",
 #ifdef _pth_getconf
 		_pth_getconf,
@@ -153,23 +150,27 @@ static Feature_t	dynamic[] =
 		&null[0],
 #endif
 		0,
+		0,
 		7,
 		CONF_AST,
 		CONF_READONLY,
 		OP_getconf
 	},
+#define OP_hosttype	3
 	{
-		&dynamic[4],
+		&dynamic[OP_hosttype+1],
 		"HOSTTYPE",
 		HOSTTYPE,
+		0,
 		0,
 		8,
 		CONF_AST,
 		CONF_READONLY,
 		OP_hosttype
 	},
+#define OP_libpath	4
 	{
-		&dynamic[5],
+		&dynamic[OP_libpath+1],
 		"LIBPATH",
 #ifdef CONF_LIBPATH
 		CONF_LIBPATH,
@@ -177,13 +178,15 @@ static Feature_t	dynamic[] =
 		&null[0],
 #endif
 		0,
+		0,
 		7,
 		CONF_AST,
 		0,
 		OP_libpath
 	},
+#define OP_libprefix	5
 	{
-		&dynamic[6],
+		&dynamic[OP_libprefix+1],
 		"LIBPREFIX",
 #ifdef CONF_LIBPREFIX
 		CONF_LIBPREFIX,
@@ -191,13 +194,15 @@ static Feature_t	dynamic[] =
 		"lib",
 #endif
 		0,
+		0,
 		9,
 		CONF_AST,
 		0,
 		OP_libprefix
 	},
+#define OP_libsuffix	6
 	{
-		&dynamic[7],
+		&dynamic[OP_libsuffix+1],
 		"LIBSUFFIX",
 #ifdef CONF_LIBSUFFIX
 		CONF_LIBSUFFIX,
@@ -205,13 +210,15 @@ static Feature_t	dynamic[] =
 		".so",
 #endif
 		0,
+		0,
 		9,
 		CONF_AST,
 		0,
 		OP_libsuffix
 	},
+#define OP_path_attributes	7
 	{
-		&dynamic[8],
+		&dynamic[OP_path_attributes+1],
 		"PATH_ATTRIBUTES",
 #if _WINIX
 		"c",
@@ -219,28 +226,31 @@ static Feature_t	dynamic[] =
 		&null[0],
 #endif
 		&null[0],
+		0,
 		15,
 		CONF_AST,
 		CONF_READONLY,
 		OP_path_attributes
 	},
+#define OP_path_resolve	8
 	{
-#define DYNAMIC_PATH_RESOLVE	8
-		&dynamic[9],
+		&dynamic[OP_path_resolve+1],
 		"PATH_RESOLVE",
 		&null[0],
 		"physical",
+		"metaphysical",
 		12,
 		CONF_AST,
 		0,
 		OP_path_resolve
 	},
+#define OP_universe	9
 	{
-#define DYNAMIC_UNIVERSE	9
 		0,
 		"UNIVERSE",
 		&null[0],
 		"att",
+		0,
 		8,
 		CONF_AST,
 		0,
@@ -258,6 +268,8 @@ typedef struct
 	const char*	name;
 	Feature_t*	features;
 
+	int		std;
+
 	/* default initialization from here down */
 
 	int		prefix;
@@ -272,7 +284,7 @@ typedef struct
 
 } State_t;
 
-static State_t	state = { "getconf", "_AST_FEATURES", dynamic };
+static State_t	state = { "getconf", "_AST_FEATURES", dynamic, -1 };
 
 static char*	feature(const char*, const char*, const char*, unsigned int, Error_f);
 
@@ -494,7 +506,7 @@ initialize(register Feature_t* fp, const char* path, const char* command, const 
 		ok = fs3d(FS3D_TEST);
 		break;
 	case OP_universe:
-		ok = streq(_UNIV_DEFAULT, dynamic[DYNAMIC_UNIVERSE].strict);
+		ok = streq(_UNIV_DEFAULT, DEFAULT(OP_universe));
 		/*FALLTHROUGH...*/
 	default:
 		if (p = getenv("PATH"))
@@ -576,6 +588,9 @@ initialize(register Feature_t* fp, const char* path, const char* command, const 
 		}
 		break;
 	}
+#if DEBUG_astconf
+	error(-1, "AHA#%d state.std=%d %s [%s] std=%s ast=%s value=%s ok=%d", __LINE__,  state.std, fp->name, ok ? succeed : fail, fp->std, fp->ast, fp->value, ok);
+#endif
 	synthesize(fp, path, ok ? succeed : fail);
 }
 
@@ -600,15 +615,27 @@ format(register Feature_t* fp, const char* path, const char* value, unsigned int
 	{
 
 	case OP_conformance:
-		if (value && (streq(value, "strict") || streq(value, "posix") || streq(value, "xopen")))
-			value = fp->strict;
-		n = streq(fp->value, fp->strict);
+		if (value && STANDARD(value))
+			value = fp->std;
+		n = state.std = streq(fp->value, fp->std);
+#if DEBUG_astconf
+		error(-1, "AHA#%d state.std=%d %s [%s] std=%s ast=%s value=%s", __LINE__,  state.std, fp->name, value, fp->std, fp->ast, fp->value);
+#endif
 		if (!synthesize(fp, path, value))
-			initialize(fp, path, NiL, fp->strict, fp->value);
-		if (!n && streq(fp->value, fp->strict))
+			initialize(fp, path, NiL, fp->std, fp->value);
+#if DEBUG_astconf
+		error(-1, "AHA#%d state.std=%d %s [%s] std=%s ast=%s value=%s", __LINE__,  state.std, fp->name, value, fp->std, fp->ast, fp->value);
+#endif
+		if (!n && STANDARD(fp->value))
+		{
+			state.std = 1;
 			for (sp = state.features; sp; sp = sp->next)
-				if (sp->strict && sp->op && sp->op != OP_conformance)
-					astconf(sp->name, path, sp->strict);
+				if (sp->std && sp->op && sp->op != OP_conformance)
+					astconf(sp->name, path, sp->std);
+		}
+#if DEBUG_astconf
+		error(-1, "AHA#%d state.std=%d %s [%s] std=%s ast=%s value=%s", __LINE__,  state.std, fp->name, value, fp->std, fp->ast, fp->value);
+#endif
 		break;
 
 	case OP_fs_3d:
@@ -647,13 +674,13 @@ format(register Feature_t* fp, const char* path, const char* value, unsigned int
 
 	case OP_path_resolve:
 		if (!synthesize(fp, path, value))
-			initialize(fp, path, NiL, "logical", dynamic[DYNAMIC_PATH_RESOLVE].strict);
+			initialize(fp, path, NiL, "logical", DEFAULT(OP_path_resolve));
 		break;
 
 	case OP_universe:
 #if _lib_universe
 		if (getuniverse(fp->value) < 0)
-			strcpy(fp->value, dynamic[DYNAMIC_UNIVERSE].strict);
+			strcpy(fp->value, DEFAULT(OP_universe));
 		if (value)
 			setuniverse(value);
 #else
@@ -701,7 +728,7 @@ format(register Feature_t* fp, const char* path, const char* value, unsigned int
 				synthesize(fp, path, value);
 		}
 		else
-			initialize(fp, path, "echo", dynamic[DYNAMIC_UNIVERSE].strict, "ucb");
+			initialize(fp, path, "echo", DEFAULT(OP_universe), "ucb");
 #endif
 #endif
 		break;
@@ -747,9 +774,11 @@ feature(const char* name, const char* path, const char* value, unsigned int flag
 				(*conferror)(&state, &state, 2, "%s: out of space", name);
 			return 0;
 		}
+		fp->op = -1;
 		fp->name = (const char*)fp + sizeof(Feature_t);
 		strcpy((char*)fp->name, name);
 		fp->length = n;
+		fp->std = &null[0];
 		fp->next = state.features;
 		state.features = fp;
 	}

@@ -4,6 +4,7 @@
 .\"
 .\" @(#)sh.1 (dgk@research.att.com) 12/28/93
 .\"
+.xx labels=5
 .nr Z 1 \" set to 1 when command name is ksh, 2 for ksh93
 .ds OK [\|
 .ds CK \|]
@@ -20,15 +21,14 @@
 .\}
 .SH NAME
 .if \nZ=0 \{\
-sh, rsh, pfsh \- shell, the
+sh, rsh, pfsh \- shell, the standard/restricted command and programming language
 .\}
 .if \nZ=1 \{\
-ksh, rksh, pfksh \- KornShell, a
+ksh, rksh, pfksh \- KornShell, a standard/restricted command and programming language
 .\}
 .if \nZ=2 \{\
-ksh93, rksh93, pfksh93 \- KornShell, a
+ksh93, rksh93, pfksh93 \- KornShell, a standard/restricted command and programming language
 .\}
-standard/restricted command and programming language
 .SH SYNOPSIS
 .if \nZ=0 \{\
 .B sh

@@ -1,3 +1,5 @@
+09-07-23 pathchk.c: add -P,--path and -a,--all
+09-07-02 chgrp.c,chmod.c,cksum.c: fts_flags() default only if not --recursive
 09-06-19 cmd.h,cmdinit.c: add ERROR_CALLBACK for ERROR_NOTIFY main() callback
 09-06-19 mktemp.c: --unsafe now checks and prints path but does create
 09-06-19 tee.c: add ERROR_CALLBACK for tee_cleanup() sfio discipline pop

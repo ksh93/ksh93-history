@@ -36,7 +36,7 @@ cd $tmp || err_exit "cd $tmp failed"
 [[ $( trap 'print -n got_child' SIGCHLD
 	sleep 2 &
 	for	((i=0; i < 4; i++))
-	do 	sleep .9
+	do 	sleep .75
 		print -n $i
 	done) == 01got_child23 ]] || err_exit 'SIGCHLD not working'
 

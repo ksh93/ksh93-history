@@ -1,4 +1,4 @@
-09-06-30  --- Release ksh93t+  ---
+09-07-01  --- Release ksh93t+  ---
 09-06-22  The default width for typeset -X has been changed so that there
 	  should be no loss of precision when converting to a string.
 09-06-19  A bug in the printing of array elements for binary variables with

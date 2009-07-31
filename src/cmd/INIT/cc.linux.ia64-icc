@@ -2,7 +2,7 @@
 
 HOSTTYPE=linux.ia64-icc
 
-case $* in
+case $1 in
 -dumpmachine) echo $HOSTTYPE; exit ;;
 esac
 

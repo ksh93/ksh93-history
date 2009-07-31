@@ -1091,9 +1091,15 @@ char *nv_endsubscript(Namval_t *np, register char *cp, int mode)
 	}
 	if(mode && np)
 	{
+		Namarr_t *ap = nv_arrayptr(np);
+		int scan = 0;
+		if(ap)
+			scan = ap->nelem&ARRAY_SCAN;
 		if((mode&NV_ASSIGN) && (cp[1]=='=' || cp[1]=='+'))
 			mode |= NV_ADD;
 		nv_putsub(np, sp, ((mode&NV_ADD)?ARRAY_ADD:0)|(cp[1]&&(mode&NV_ADD)?ARRAY_FILL:mode&ARRAY_FILL));
+		if(scan)
+			ap->nelem |= scan;
 	}
 	if(quoted)
 		stakseek(count);
