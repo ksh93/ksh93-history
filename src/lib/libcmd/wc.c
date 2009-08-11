@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1992-2006 AT&T Knowledge Ventures            *
+*          Copyright (c) 1992-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                      by AT&T Knowledge Ventures                      *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: wc (AT&T Research) 2006-08-25 $\n]"
+"[-?\n@(#)$Id: wc (AT&T Research) 2000-08-11 $\n]"
 USAGE_LICENSE
 "[+NAME?wc - print the number of bytes, words, and lines in files]"
 "[+DESCRIPTION?\bwc\b reads one or more input files and, by default, "
@@ -93,7 +93,16 @@ b_wc(int argc,register char **argv, void* context)
 	Sfoff_t		tlines=0, twords=0, tchars=0;
 	struct stat	statb;
 
-	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
+	if (argc <= 0)
+	{
+		if (context && (cp = (char*)sh_context(context)->data))
+		{
+			sh_context(context)->data = 0;
+			setlocale(LC_CTYPE, cp);
+		}
+		return 0;
+	}
+	cmdinit(argc, argv, context, ERROR_CATALOG, ERROR_CALLBACK);
 	while (n = optget(argv,usage)) switch (n)
 	{
 	case 'c':
@@ -133,7 +142,9 @@ b_wc(int argc,register char **argv, void* context)
 		if(!mbwide())
 		{
 			mode &= ~WC_MBYTE;
-			setlocale(LC_CTYPE, "C");
+			cp = setlocale(LC_CTYPE, "C");
+			if (context)
+				sh_context(context)->data = cp;
 		}
 	}
 	if(!(mode&(WC_WORDS|WC_CHARS|WC_LINES|WC_MBYTE|WC_LONGEST)))
@@ -181,6 +192,10 @@ b_wc(int argc,register char **argv, void* context)
 		wp->words = twords;
 		printout(wp,"total",mode);
 	}
+	if (context && (cp = (char*)sh_context(context)->data))
+	{
+		sh_context(context)->data = 0;
+		setlocale(LC_CTYPE, cp);
+	}
 	return(error_info.errors<ERRORMAX?error_info.errors:ERRORMAX);
 }
-

@@ -1718,7 +1718,7 @@ int main()
 		case $CROSS:$canon in
 		0:)	case $cc in
 			cc)	case $KEEP_HOSTTYPE:$HOSTTYPE in
-				0:?*)	if	test -d $PACKAGEROOT/arch/$HOSTTYPE
+				0:?*)	if	test -d ${PACKAGEROOT:-.}/arch/$HOSTTYPE
 					then	KEEP_HOSTTYPE=1
 					fi
 					;;
@@ -1736,8 +1736,9 @@ int main()
 		/*)	a=`$cc -dumpmachine $CCFLAGS 2>/dev/null`
 			case $a in
 			'')	case $CCFLAGS in
-				'')	a=`$cc -dumpmachine 2>/dev/null` ;;
+				?*)	a=`$cc -dumpmachine 2>/dev/null` ;;
 				esac
+				;;
 			esac
 			case $a in
 			''|*' '*|*/*:*)
@@ -1768,8 +1769,9 @@ int main()
 					then	a=`$i/$cc -dumpmachine $CCFLAGS 2>/dev/null`
 						case $a in
 						'')	case $CCFLAGS in
-							'')	a=`$cc -dumpmachine 2>/dev/null` ;;
+							?*)	a=`$cc -dumpmachine 2>/dev/null` ;;
 							esac
+							;;
 						esac
 						case $a in
 						''|*' '*|*/*:*)
@@ -2515,7 +2517,7 @@ case $x in
 			exit 1
 		}
 		case $KEEP_HOSTTYPE:$hosttype in
-		0:?*)	if	test -d $PACKAGEROOT/arch/$hosttype
+		0:?*)	if	test -d ${PACKAGEROOT:-.}/arch/$hosttype
 			then	KEEP_HOSTTYPE=1
 				HOSTTYPE=$hosttype
 			else	echo "$command: $hosttype: package root not found" >&2

@@ -28,7 +28,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: join (AT&T Research) 2006-10-31 $\n]"
+"[-?\n@(#)$Id: join (AT&T Research) 2009-08-01 $\n]"
 USAGE_LICENSE
 "[+NAME?join - relational database operator]"
 "[+DESCRIPTION?\bjoin\b performs an \aequality join\a on the files \afile1\a "
@@ -351,7 +351,7 @@ outfield(Join_t* jp, int index, register int n, int last)
 		cp = 0;
 	if ((n=jp->delim)<=0)
 	{
-		if (fp->spaces)
+		if (cp && fp->spaces)
 		{
 			/*eliminate leading spaces */
 			while (jp->state[*(unsigned char*)cp++]==S_SPACE);

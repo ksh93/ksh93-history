@@ -77,7 +77,7 @@ Vmsearch_f	searchf;	/* tree search function		*/
 #endif
 
 	if(vd->incr <= 0) /* this is just _Vmheap on the first call */
-		vd->incr = _Vmpagesize;
+		vd->incr = VMHEAPINCR;
 
 	/* Get slightly more for administrative data */
 	s = size + sizeof(Seg_t) + sizeof(Block_t) + sizeof(Head_t) + 2*ALIGN;

@@ -1235,6 +1235,8 @@ static void exscript(Shell_t *shp,register char *path,register char *argv[],char
 		(HISTCUR)->nvalue.lp = 0;
 	}
 	sh_offstate(SH_FORKED);
+	if(shp->sigflag[SIGCHLD]==SH_SIGOFF)
+		shp->sigflag[SIGCHLD] = SH_SIGFAULT;
 	siglongjmp(*shp->jmplist,SH_JMPSCRIPT);
 }
 

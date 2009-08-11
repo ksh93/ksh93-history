@@ -2,7 +2,7 @@
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)make.probe (AT&T Research) 2008-10-16
+# @(#)make.probe (AT&T Research) 2009-07-31
 #
 # C probe for make
 #
@@ -11,6 +11,7 @@
 
 cc_dll_def=-D_BLD_DLL
 
+probe_ar_arflags="-Xany"
 probe_arflags="-xar"
 probe_ccs="strip size nm ld ar" # longest to shortest
 probe_debug="-g"
@@ -107,6 +108,7 @@ warn_enum="1 2 3 4 5"
 
 chmod -w *.$src
 
+ar_arflags=
 arflags=
 cc_dll=
 cc_pic=
@@ -977,7 +979,19 @@ esac
 
 rm -f shared.$obj
 if	$cc -c shared.$src
-then	eval set x $probe_arflags
+then	eval set x $probe_ar_arflags
+	while	:
+	do	shift
+		case $# in
+		0)	break ;;
+		esac
+		rm -f libxxx.$lib
+		if	$ar $1 r libxxx.$lib shared.$obj && $ar t libxxx.$lib 2>&1 | grep shared.$obj >/dev/null
+		then	ar_arflags=$1
+			break
+		fi
+	done
+	eval set x $probe_arflags
 	while	:
 	do	shift
 		case $# in
@@ -1955,6 +1969,7 @@ CC_HOSTTYPE=$hosttype
 CC_ALTPP_FLAGS=$ppopt
 CC_ALTPP_ENV=$ppenv
 CC_AR=$ar
+CC_AR_ARFLAGS=$ar_arflags
 CC_ARFLAGS=$arflags
 CC_DEBUG=$debug
 CC_DIALECT=$dialect
@@ -2055,6 +2070,7 @@ echo CC.HOSTTYPE = $CC_HOSTTYPE
 echo CC.ALTPP.FLAGS = $CC_ALTPP_FLAGS
 echo CC.ALTPP.ENV = $CC_ALTPP_ENV
 echo CC.AR = $CC_AR
+echo CC.AR.ARFLAGS = $CC_AR_ARFLAGS
 echo CC.ARFLAGS = $CC_ARFLAGS
 echo CC.DEBUG = $CC_DEBUG
 echo CC.DIALECT = $CC_DIALECT

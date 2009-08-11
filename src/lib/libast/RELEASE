@@ -1,3 +1,6 @@
+09-08-11 comp/setlocale.c: treat "en"/"en_US" AST_LC_MESSAGES as "C"/"POSIX"
+09-08-10 vmalloc/vmhdr.h: add user-defined _AST_PAGESIZE and computed VMHEAPINCR
+09-08-09 comp/conf.tab: add NPROCESSORS_MAX
 09-07-29 astlicense.c: fix first name=value logic error
 09-07-22 string/fmtip6.c: don't drop trailing 0 in 44::1:0:0
 09-06-30 port/astconf.c: standard PATH_RESOLVE is "physical" (not "metaphysical")

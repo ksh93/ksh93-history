@@ -1,5 +1,5 @@
 #
-# @(#)magic (AT&T Research) 2009-06-11
+# @(#)magic (AT&T Research) 2009-08-11
 #
 # magic number database for file(1) and magic(3)
 #
@@ -1063,6 +1063,7 @@ o()
 &2	match		[0-9][0-9][0-9][0-9][0-9]	sccs		application/x-sccs
 
 0		short	0x5a4d
+o{
 &24		short	0x0040
 {
 +(@60H)		short	0x454c		os/2 linear
@@ -1087,22 +1088,14 @@ o()
 +(@60H+92)	short	5		, os2
 +(@60H+92)	short	7		, posix
 +(@60H+92)	short	>7		, subsystem %d
-
-0	short		0x5a4d		dos executable, EXE		x-system/exe
-o{
-+24	short		0x40		, extended
-+54	byte		1		, os/2
-+54	byte		2		, windows
-+(@60H)	short		0x3357		, win386 linear
-+(@60H)	short		0x584c		, os/2 32 linear
-+(@60H)	short		0x454c		, windows VxD linear
-+(@60H)	short		0x4550		, win32 portable
-+50	string		PKWARE		, self extracting zip
-+36	string		LHA's		, self extracting lha
-+233	string		PKSFX2		, self extracting zip
++50		string	PKWARE		, self extracting zip
++36		string	LHA's		, self extracting lha
++233		string	PKSFX2		, self extracting zip
 }
-0	short		0x5a4c		dos executable, EXE		x-system/exe
+
+0		short	0x5a4c
 o()
+
 0	string		PMCC		windows GRP			application/dos-grp
 369	string		MICROSOFT	windows PIF			application/dos-pif
 0	long		0xffffffff	dos device driver		application/dos-drv

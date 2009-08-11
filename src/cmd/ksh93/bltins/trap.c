@@ -149,13 +149,11 @@ int	b_trap(int argc,char *argv[],void *extra)
 			{
 				if(sig >= shp->st.trapmax)
 					shp->st.trapmax = sig+1;
-				if(arg=shp->st.trapcom[sig])
-					free(arg);
+				arg = shp->st.trapcom[sig];
 				sh_sigtrap(sig);
-				if(shp->sigflag[sig]&SH_SIGOFF)
-					shp->st.trapcom[sig] = "";
-				else
-					shp->st.trapcom[sig] = strdup(action);
+				shp->st.trapcom[sig] = (shp->sigflag[sig]&SH_SIGOFF) ? Empty : strdup(action);
+				if(arg && arg != Empty)
+					free(arg);
 			}
 		}
 	}

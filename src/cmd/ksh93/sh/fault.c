@@ -325,7 +325,8 @@ void	sh_sigreset(register int mode)
 			}
 			else if(sig && mode>1)
 			{
-				signal(sig,SIG_IGN);
+				if(sig!=SIGCHLD)
+					signal(sig,SIG_IGN);
 				flag &= ~SH_SIGFAULT;
 				flag |= SH_SIGOFF;
 			}

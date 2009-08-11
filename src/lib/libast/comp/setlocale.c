@@ -762,7 +762,7 @@ single(int category, Lc_t* lc)
 			locales[category] = lc_categories[category].prev;
 			return 0;
 		}
-		if (lc->flags & LC_default)
+		if ((lc->flags & LC_default) || category == AST_LC_MESSAGES && lc->name[0] == 'e' && lc->name[1] == 'n' && (lc->name[2] == 0 || lc->name[2] == '_' && lc->name[3] == 'U'))
 			ast.locale.set &= ~(1<<category);
 		else
 			ast.locale.set |= (1<<category);

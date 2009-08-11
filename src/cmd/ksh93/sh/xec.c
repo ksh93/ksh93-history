@@ -992,7 +992,14 @@ int sh_exec(register const Shnode_t *t, int flags)
 									sh_close(fd);
 						}
 						if(argn)
+						{
+							if(error_info.errors)
+							{
+								sfprintf(sfstderr, "AHA: %s: error_info.errors=%d not 0 on startup\n", error_info.id, error_info.errors);
+								error_info.errors = 0;
+							}
 							shp->exitval = (*shp->bltinfun)(argn,com,(void*)bp);
+						}
 						if(error_info.flags&ERROR_INTERACTIVE)
 							tty_check(ERRIO);
 						((Shnode_t*)t)->com.comstate = shp->bltindata.data;

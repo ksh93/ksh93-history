@@ -26,17 +26,17 @@
  */
 
 static const char usage[] =
-"[-n?\n@(#)$Id: uniq (AT&T Research) 2009-02-02 $\n]"
+"[-n?\n@(#)$Id: uniq (AT&T Research) 2009-08-10 $\n]"
 USAGE_LICENSE
 "[+NAME?uniq - Report or filter out repeated lines in a file]"
-"[+DESCRIPTION?\buniq\b reads an input, comparing adjacent lines, and "
-	"writing one copy of each input line on the output.  The second "
+"[+DESCRIPTION?\buniq\b reads the input, compares adjacent lines, and "
+	"writes one copy of each input line on the output.  The second "
 	"and succeeding copies of the repeated adjacent lines are not "
 	"written.]"
 "[+?If the output file, \aoutfile\a, is not specified, \buniq\b writes "
 	"to standard output.  If no \ainfile\a is given, or if the \ainfile\a "
-	"is \b-\b, \buniq\b reads from standard input with  the start of "
-	"the file is defined as the current offset.]"
+	"is \b-\b, \buniq\b reads from standard input with the start of "
+	"the file defined as the current offset.]"
 "[c:count?Output the number of times each line occurred  along with "
 	"the line.]"
 "[d:repeated|duplicates?Output the first of each duplicate line.]"
@@ -147,11 +147,25 @@ static int uniq(Sfio_t *fdin, Sfio_t *fdout, int fields, int chars, int width, i
 				{
 					if(cwidth)
 					{
-						outp[CWIDTH] = ' ';
-						if(count<MAXCNT)
+						if(count<9)
 						{
-							sfsprintf(outp,cwidth,"%*d",CWIDTH,count+1);
-							outp[CWIDTH] = ' ';
+							f = 0;
+							while(f < CWIDTH-1)
+								outp[f++] = ' ';
+							outp[f++] = '0' + count + 1;
+							outp[f] = ' ';
+						}
+						else if(count<MAXCNT)
+						{
+							count++;
+							f = CWIDTH;
+							outp[f--] = ' ';
+							do
+							{
+								outp[f--] = '0' + (count % 10);
+							} while (count /= 10);
+							while (f >= 0)
+								outp[f--] = ' ';
 						}
 						else
 						{
