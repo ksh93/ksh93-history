@@ -51,6 +51,8 @@ USAGE_LICENSE
 "[m|C:multibyte-chars?List the character counts.]"
 "[q:quiet?Suppress invalid multibyte character warnings.]"
 "[L:longest-line|max-line-length?List the longest line length.]"
+"[N!:utf8?For \bUTF-8\b locales \b--noutf8\b disables \bUTF-8\b "
+    "optimzations and relies on the native \bmbtowc\b(3).]"
 "\n"
 "\n[file ...]\n"
 "\n"
@@ -70,15 +72,15 @@ USAGE_LICENSE
 
 static void printout(register Wc_t *wp, register char *name,register int mode)
 {
-	if(mode&WC_LINES)
+	if (mode&WC_LINES)
 		sfprintf(sfstdout," %7I*d",sizeof(wp->lines),wp->lines);
-	if(mode&WC_WORDS)
+	if (mode&WC_WORDS)
 		sfprintf(sfstdout," %7I*d",sizeof(wp->words),wp->words);
-	if(mode&WC_CHARS)
+	if (mode&WC_CHARS)
 		sfprintf(sfstdout," %7I*d",sizeof(wp->chars),wp->chars);
-	if(mode&WC_LONGEST)
+	if (mode&WC_LONGEST)
 		sfprintf(sfstdout," %7I*d",sizeof(wp->chars),wp->longest);
-	if(name)
+	if (name)
 		sfprintf(sfstdout," %s",name);
 	sfputc(sfstdout,'\n');
 }
@@ -93,83 +95,73 @@ b_wc(int argc,register char **argv, void* context)
 	Sfoff_t		tlines=0, twords=0, tchars=0;
 	struct stat	statb;
 
-	if (argc <= 0)
+	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
+	for (;;)
 	{
-		if (context && (cp = (char*)sh_context(context)->data))
+		switch (optget(argv, usage))
 		{
-			sh_context(context)->data = 0;
-			setlocale(LC_CTYPE, cp);
+		case 'c':
+			mode |= WC_CHARS;
+			continue;
+		case 'l':
+			mode |= WC_LINES;
+			continue;
+		case 'L':
+			mode |= WC_LONGEST;
+			continue;
+		case 'N':
+			if (!opt_info.num)
+				mode |= WC_NOUTF8;
+			continue;
+		case 'm':
+		case 'C':
+			mode |= WC_MBYTE;
+			continue;
+		case 'q':
+			mode |= WC_QUIET;
+			continue;
+		case 'w':
+			mode |= WC_WORDS;
+			continue;
+		case ':':
+			error(2, "%s", opt_info.arg);
+			break;
+		case '?':
+			error(ERROR_usage(2), "%s", opt_info.arg);
+			break;
 		}
-		return 0;
-	}
-	cmdinit(argc, argv, context, ERROR_CATALOG, ERROR_CALLBACK);
-	while (n = optget(argv,usage)) switch (n)
-	{
-	case 'c':
-		mode |= WC_CHARS;
-		break;
-	case 'l':
-		mode |= WC_LINES;
-		break;
-	case 'L':
-		mode |= WC_LONGEST;
-		break;
-	case 'm':
-	case 'C':
-		mode |= WC_MBYTE;
-		break;
-	case 'q':
-		mode |= WC_QUIET;
-		break;
-	case 'w':
-		mode |= WC_WORDS;
-		break;
-	case ':':
-		error(2, "%s", opt_info.arg);
-		break;
-	case '?':
-		error(ERROR_usage(2), "%s", opt_info.arg);
 		break;
 	}
 	argv += opt_info.index;
 	if (error_info.errors)
 		error(ERROR_usage(2), "%s", optusage(NiL));
-	if(mode&WC_MBYTE)
+	if (mode&WC_MBYTE)
 	{
-		if(mode&WC_CHARS)
+		if (mode&WC_CHARS)
 			error(2, "-c and -C are mutually exclusive");
-		mode |= WC_CHARS;
-		if(!mbwide())
-		{
+		if (!mbwide())
 			mode &= ~WC_MBYTE;
-			cp = setlocale(LC_CTYPE, "C");
-			if (context)
-				sh_context(context)->data = cp;
-		}
+		mode |= WC_CHARS;
 	}
-	if(!(mode&(WC_WORDS|WC_CHARS|WC_LINES|WC_MBYTE|WC_LONGEST)))
+	if (!(mode&(WC_WORDS|WC_CHARS|WC_LINES|WC_MBYTE|WC_LONGEST)))
 		mode |= (WC_WORDS|WC_CHARS|WC_LINES);
-	if(!(wp = wc_init(mode)))
+	if (!(wp = wc_init(mode)))
 		error(3,"internal error");
-	if(!(mode&WC_WORDS))
-	{
-		memzero(wp->space, (1<<CHAR_BIT));
-		wp->space['\n'] = -1;
-	}
-	if(cp = *argv)
+	if (cp = *argv)
 		argv++;
+	n = 0;
 	do
 	{
-		if(!cp || streq(cp,"-"))
+		if (!cp || streq(cp,"-"))
 			fp = sfstdin;
-		else if(!(fp = sfopen(NiL,cp,"r")))
+		else if (!(fp = sfopen(NiL,cp,"r")))
 		{
 			error(ERROR_system(0),"%s: cannot open",cp);
 			continue;
 		}
-		if(cp)
+		if (cp)
 			n++;
-		if(!(mode&(WC_WORDS|WC_LINES|WC_MBYTE|WC_LONGEST)) && fstat(sffileno(fp),&statb)>=0
+		if (!(mode&(WC_WORDS|WC_LINES|WC_MBYTE|WC_LONGEST)) && fstat(sffileno(fp),&statb)>=0
 			 && S_ISREG(statb.st_mode))
 		{
 			wp->chars = statb.st_size - lseek(sffileno(fp),0L,1);
@@ -177,25 +169,19 @@ b_wc(int argc,register char **argv, void* context)
 		}
 		else
 			wc_count(wp, fp, cp);
-		if(fp!=sfstdin)
+		if (fp!=sfstdin)
 			sfclose(fp);
 		tchars += wp->chars;
 		twords += wp->words;
 		tlines += wp->lines;
 		printout(wp,cp,mode);
-	}
-	while(cp= *argv++);
-	if(n>1)
+	} while (cp= *argv++);
+	if (n > 1)
 	{
 		wp->lines = tlines;
 		wp->chars = tchars;
 		wp->words = twords;
 		printout(wp,"total",mode);
 	}
-	if (context && (cp = (char*)sh_context(context)->data))
-	{
-		sh_context(context)->data = 0;
-		setlocale(LC_CTYPE, cp);
-	}
-	return(error_info.errors<ERRORMAX?error_info.errors:ERRORMAX);
+	return error_info.errors<ERRORMAX?error_info.errors:ERRORMAX;
 }

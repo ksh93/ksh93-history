@@ -69,6 +69,10 @@ extern int		mblen(const char*, size_t);
 #define AST_LC_CANONICAL	LC_abbreviated
 #endif
 
+#ifndef AST_LC_test
+#define AST_LC_test		(1L<<27)
+#endif
+
 #if _UWIN
 
 #include <ast_windows.h>
@@ -533,6 +537,92 @@ sjis_mbtowc(register wchar_t* p, register const char* s, size_t n)
 
 #endif
 
+#define utf8_wctomb	wctomb
+
+static const uint32_t		utf8mask[] =
+{
+	0x00000000,
+	0x00000000,
+	0xffffff80,
+	0xfffff800,
+	0xffff0000,
+	0xffe00000,
+	0xfc000000,
+};
+
+static const signed char	utf8tab[256] =
+{
+	0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+	2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+	3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+	4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6,-1,-1,
+};
+
+int
+utf8_mbtowc(wchar_t* wp, const char* str, size_t n)
+{
+	register unsigned char*	sp = (unsigned char*)str;
+	register int		m;
+	register int		i;
+	register int		c;
+	register wchar_t	w = 0;
+
+	if (!sp || !n)
+		return 0;
+	if (m = utf8tab[*sp])
+	{
+		if (m < 0 || m > n)
+			return -1;
+		if (wp)
+		{
+			if (m == 1)
+			{
+				*wp = *sp;
+				return 1;
+			}
+			w = *sp & ((1<<(8-m))-1);
+			for (i = m - 1; i > 0; i--)
+			{
+				c = *++sp;
+				if ((c&0xc0) != 0x80)
+					goto invalid;
+				w = (w<<6) | (c&0x3f);
+			}
+			if (!(utf8mask[m] & w) || w >= 0xd800 && (w <= 0xdfff || w >= 0xfffe && w <= 0xffff))
+				goto invalid;
+			*wp = w;
+		}
+		return m;
+	}
+	if (!*sp)
+		return 0;
+ invalid:
+#ifdef EILSEQ
+	errno = EILSEQ;
+#endif
+	return -1;
+}
+
+int
+utf8_mblen(const char* str, size_t n)
+{
+	wchar_t		w;
+
+	return utf8_mbtowc(&w, str, n);
+}
+
 /*
  * called when LC_CTYPE initialized or changes
  */
@@ -555,6 +645,15 @@ set_ctype(Lc_category_t* cp)
 		ast.mb_towc = 0;
 		ast.mb_width = default_wcwidth;
 		ast.mb_conv = 0;
+	}
+	else if ((locales[cp->internal]->flags & LC_utf8) && !(ast.locale.set & AST_LC_test))
+	{
+		ast.mb_cur_max = 6;
+		ast.mb_len = utf8_mblen;
+		ast.mb_towc = utf8_mbtowc;
+		if (!(ast.mb_width = wcwidth))
+			ast.mb_width = default_wcwidth;
+		ast.mb_conv = utf8_wctomb;
 	}
 	else
 	{
@@ -659,6 +758,7 @@ static const Unamval_t	options[] =
 	"debug",		AST_LC_debug,
 	"find",			AST_LC_find,
 	"setlocale",		AST_LC_setlocale,
+	"test",			AST_LC_test,
 	"translate",		AST_LC_translate,
 	0,			0
 };

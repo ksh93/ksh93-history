@@ -573,13 +573,14 @@ Namfun_t *nv_clone_disc(register Namfun_t *fp, int flags)
 {
 	register Namfun_t	*nfp;
 	register int		size;
+	if(!fp->disc && !fp->next && (fp->nofree&1))
+		return(fp);
 	if(!(size=fp->dsize) && (!fp->disc || !(size=fp->disc->dsize)))
 		size = sizeof(Namfun_t);
 	if(!(nfp=newof(NIL(Namfun_t*),Namfun_t,1,size-sizeof(Namfun_t))))
 		return(0);
 	memcpy(nfp,fp,size);
-	if(flags&NV_COMVAR)
-		nfp->nofree &= ~1;
+	nfp->nofree &= ~1;
 	nfp->nofree |= (flags&NV_RDONLY)?1:0;
 	return(nfp);
 }

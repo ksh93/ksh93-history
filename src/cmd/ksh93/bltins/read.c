@@ -67,9 +67,14 @@ int	b_read(int argc,char *argv[], void *extra)
 	int save_prompt, fixargs=((Shbltin_t*)extra)->invariant;
 	struct read_save *rp;
 	static char default_prompt[3] = {ESC,ESC};
+	rp = (struct read_save*)(((Shbltin_t*)extra)->data);
 	if(argc==0)
+	{
+		if(rp)
+			free((void*)rp);
 		return(0);
-	if(rp = (struct read_save*)(((Shbltin_t*)extra)->data))
+	}
+	if(rp)
 	{
 		flags = rp->flags;
 		timeout = rp->timeout;

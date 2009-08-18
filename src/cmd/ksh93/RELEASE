@@ -1,4 +1,14 @@
-09-07-01  --- Release ksh93t+  ---
+09-08-18  --- Release ksh93t+  ---
+09-08-18  A bug in which a discipline function for a type applied to an
+	  array instance when invoked in a function ignored the subscript
+	  has been fixed.
+09-08-18  A scoping error with variables in arithmetic expression with
+	  type variables when reference with a name reference has been fixed.
+09-08-10  Several memory leaks were fixed primarily related to subshells.
+09-08-06  A bug in which setting the trap on CHLD to ignore could cause
+	  a script to hang has been fixed. 
+09-07-08  A bug in the processing of name reference assignments when it
+	  contained pattern expansions with quoting has been fixed.
 09-06-22  The default width for typeset -X has been changed so that there
 	  should be no loss of precision when converting to a string.
 09-06-19  A bug in the printing of array elements for binary variables with

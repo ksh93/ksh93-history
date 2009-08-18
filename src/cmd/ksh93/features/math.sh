@@ -20,7 +20,7 @@
 : generate the ksh math builtin table
 : include math.tab
 
-# @(#)math.sh (AT&T Research) 2009-02-02
+# @(#)math.sh (AT&T Research) 2009-08-18
 
 command=$0
 iffeflags="-n -v"
@@ -113,7 +113,23 @@ do	eval x='$'_lib_${name}l y='$'_lib_${name} r='$'TYPE_${name} a='$'ARGS_${name}
 		t=double
 		local=$_typ_long_double
 		;;
-	*)	continue
+	*)	case $aka in
+		*=*)	f=${aka%%=*}
+			v=${aka#*=}
+			eval x='$'_lib_${f}l y='$'_lib_${f}
+			case $x:$y in
+			1:*)	f=${f}l
+				;;
+			*:1)	;;
+			*)	continue
+				;;
+			esac
+			L=local_$name r=int R=1
+			echo "#ifdef $v${nl}static $r $L(Sfdouble_t x) { return $f(x) == $v; }${nl}#endif"
+			tab="$tab$nl#ifdef $v$nl$ht\"\\0${R}${a}${name}\",$ht(Math_f)${L},${nl}#endif"
+			;;
+		esac
+		continue
 		;;
 	esac
 	eval n='$'_npt_$f m='$'_mac_$f d='$'_dat_$f

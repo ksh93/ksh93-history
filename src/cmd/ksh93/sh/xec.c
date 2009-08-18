@@ -352,7 +352,12 @@ static void put_level(Namval_t* np,const char *val,int flags,Namfun_t *fp)
 	int16_t level, oldlevel = (int16_t)nv_getnum(np);
 	nv_putv(np,val,flags,fp);
 	if(!val)
+	{
+		fp = nv_stack(np, NIL(Namfun_t*));
+		if(fp && !fp->nofree)
+			free((void*)fp);
 		return;
+	}
 	level = nv_getnum(np);
 	if(level<0 || level > lp->maxlevel)
 	{
@@ -605,12 +610,14 @@ static void free_list(struct openlist *olist)
  */
 static int set_instance(Namval_t *nq, Namval_t *node, struct Namref *nr)
 {
-	char		*cp = nv_name(nq);
+	char		*sp=0,*cp = nv_name(nq);
 	Namarr_t	*ap;
 	memset(nr,0,sizeof(*nr));
 	nr->np = nq;
 	nr->root = sh.var_tree;
 	nr->table = sh.last_table;
+	if((ap=nv_arrayptr(nq)) && (sp = nv_getsub(nq)))
+		sp = strdup(sp);
 	if(sh.var_tree!=sh.var_base && !nv_open(cp,nr->root,NV_VARNAME|NV_NOREF|NV_NOSCOPE|NV_NOADD|NV_NOFAIL))
 		nr->root = sh.var_base;
 	nv_putval(SH_NAMENOD, cp, NV_NOFREE);
@@ -619,9 +626,9 @@ static int set_instance(Namval_t *nq, Namval_t *node, struct Namref *nr)
 	L_ARGNOD->nvflag = NV_REF|NV_NOFREE;
 	L_ARGNOD->nvfun = 0;
 	L_ARGNOD->nvenv = 0;
-	if((ap=nv_arrayptr(nq)) && (cp = nv_getsub(nq)) && (cp = strdup(cp)))
+	if(sp)
 	{
-		nv_putval(SH_SUBSCRNOD,nr->sub=cp,NV_NOFREE);
+		nv_putval(SH_SUBSCRNOD,nr->sub=sp,NV_NOFREE);
 		return(ap->nelem&ARRAY_SCAN);
 	}
 	return(0);
@@ -992,14 +999,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 									sh_close(fd);
 						}
 						if(argn)
-						{
-							if(error_info.errors)
-							{
-								sfprintf(sfstderr, "AHA: %s: error_info.errors=%d not 0 on startup\n", error_info.id, error_info.errors);
-								error_info.errors = 0;
-							}
 							shp->exitval = (*shp->bltinfun)(argn,com,(void*)bp);
-						}
 						if(error_info.flags&ERROR_INTERACTIVE)
 							tty_check(ERRIO);
 						((Shnode_t*)t)->com.comstate = shp->bltindata.data;

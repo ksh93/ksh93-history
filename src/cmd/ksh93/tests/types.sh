@@ -303,4 +303,46 @@ typeset -T Foo_t=(
 )
 Foo_t foo
 [[ ${foo.len} == 5 ]] || err_exit "discipline function len not working"
+
+typeset -T benchmark_t=(
+	integer num_iterations
+)
+function do_benchmarks
+{
+	nameref tst=b
+	integer num_iterations
+	(( num_iterations= int(tst.num_iterations * 1.0) ))
+	printf "%d\n" num_iterations
+}
+benchmark_t b=(num_iterations=5)
+[[  $(do_benchmarks) == 5 ]] || err_exit 'scoping of nameref of type variables in arithmetic expressions not working'
+
+function cat_content
+{
+	cat <<- EOF
+	(
+		foo_t -a foolist=(
+			( val=3 )
+			( val=4 )
+			( val=5 )
+		)
+	)
+	EOF
+	return 0
+}
+typeset -T foo_t=(
+	integer val=-1
+	function print
+	{
+		print -- ${_.val}
+	}
+)
+function do_something
+{
+	nameref li=$1 # "li" may be an index or associative array
+	li[2].print
+}
+cat_content | read -C x
+[[ $(do_something x.foolist) == 5  ]] || err_exit 'subscripts not honored for arrays of type with disciplines'
+
 exit $Errors

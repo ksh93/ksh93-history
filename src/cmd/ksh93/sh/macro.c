@@ -1465,6 +1465,7 @@ retry1:
 				int quoted = mp->quoted;
 				int arith = mp->arith;
 				int zeros = mp->zeros;
+				int assign = mp->assign;
 				if(newops)
 				{
 					type = fcget();
@@ -1479,6 +1480,7 @@ retry1:
 					mp->pattern = 1+(c=='/');
 					mp->split = 0;
 					mp->quoted = 0;
+					mp->assign &= ~1;
 					mp->arith = mp->zeros = 0;
 					newquote = 0;
 				}
@@ -1492,6 +1494,7 @@ retry1:
 				mp->quoted = quoted;
 				mp->arith = arith;
 				mp->zeros = zeros;
+				mp->assign = assign;
 				/* add null byte */
 				sfputc(stkp,0);
 				stkseek(stkp,stktell(stkp)-1);

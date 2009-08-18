@@ -28,7 +28,7 @@
  */
 
 static const char usage[] =
-"+[-?\n@(#)$Id: tail (AT&T Research) 2009-05-25 $\n]"
+"+[-?\n@(#)$Id: tail (AT&T Research) 2009-08-15 $\n]"
 USAGE_LICENSE
 "[+NAME?tail - output trailing portion of one or more files ]"
 "[+DESCRIPTION?\btail\b copies one or more input files to standard output "
@@ -139,7 +139,10 @@ struct Tail_s
 	unsigned long	expire;
 	long		dev;
 	long		ino;
+	int		fifo;
 };
+
+static const char	header_fmt[] = "\n==> %s <==\n";
 
 /*
  * if file is seekable, position file to tail location and return offset
@@ -250,9 +253,10 @@ pipetail(Sfio_t* infile, Sfio_t* outfile, Sfoff_t number, int delim)
  */
 
 static int
-init(Tail_t* tp, Sfoff_t number, int delim, int flags)
+init(Tail_t* tp, Sfoff_t number, int delim, int flags, const char** format)
 {
 	Sfoff_t		offset;
+	Sfio_t*		op;
 	struct stat	st;
 
 	if (tp->sp)
@@ -289,14 +293,34 @@ init(Tail_t* tp, Sfoff_t number, int delim, int flags)
 			else
 				offset = 0;
 		}
+		else if ((offset = tailpos(tp->sp, number, delim)) >= 0)
+			sfseek(tp->sp, offset, SEEK_SET);
+		else if (fstat(sffileno(tp->sp), &st))
+		{
+			error(ERROR_system(0), "%s: cannot stat", tp->name);
+			goto bad;
+		}
+		else if (!FIFO(st.st_mode))
+		{
+			error(ERROR_SYSTEM|2, "%s: cannot position file to tail", tp->name);
+			goto bad;
+		}
 		else
 		{
-			if ((offset = tailpos(tp->sp, number, delim)) < 0)
+			tp->fifo = 1;
+			if (flags & (HEADERS|VERBOSE))
 			{
-				error(ERROR_SYSTEM|2, "%s: cannot position file to tail", tp->name);
-				goto bad;
+				sfprintf(sfstdout, *format, tp->name);
+				*format = header_fmt;
 			}
-			sfseek(tp->sp, offset, SEEK_SET);
+			op = (flags & REVERSE) ? sftmp(4*SF_BUFSIZE) : sfstdout;
+			pipetail(tp->sp ? tp->sp : sfstdin, op, number, delim);
+			if (flags & REVERSE)
+			{
+				sfseek(op, (Sfoff_t)0, SEEK_SET);
+				rev_line(op, sfstdout, (Sfoff_t)0);
+				sfclose(op);
+			}
 		}
 	}
 	tp->last = offset;
@@ -376,8 +400,6 @@ num(register const char* s, char** e, int* f, int o)
 int
 b_tail(int argc, char** argv, void* context)
 {
-	static const char	header_fmt[] = "\n==> %s <==\n";
-
 	register Sfio_t*	ip;
 	register int		n;
 	register int		i;
@@ -394,7 +416,7 @@ b_tail(int argc, char** argv, void* context)
 	unsigned long		timeout = 0;
 	struct stat		st;
 	const char*		format = header_fmt+1;
-	size_t			z;
+	ssize_t			z;
 	Sfio_t*			op;
 	register Tail_t*	fp;
 	register Tail_t*	pp;
@@ -594,7 +616,7 @@ b_tail(int argc, char** argv, void* context)
 		{
 			fp->name = s;
 			fp->sp = 0;
-			if (!init(fp, number, delim, flags))
+			if (!init(fp, number, delim, flags, &format))
 			{
 				fp->expire = timeout ? (NOW + timeout + 1) : 0;
 				if (files)
@@ -620,15 +642,17 @@ b_tail(int argc, char** argv, void* context)
 			{
 				if (fstat(sffileno(fp->sp), &st))
 					error(ERROR_system(0), "%s: cannot stat", fp->name);
-				else if (st.st_size > fp->last)
+				else if (st.st_size > fp->last || fp->fifo)
 				{
 					n = 1;
 					if (timeout)
 						fp->expire = NOW + timeout;
-					z = st.st_size - fp->last;
+					z = fp->fifo ? SF_UNBOUND : st.st_size - fp->last;
 					i = 0;
 					if ((s = sfreserve(fp->sp, z, SF_LOCKR)) || (z = sfvalue(fp->sp)) && (s = sfreserve(fp->sp, z, SF_LOCKR)) && (i = 1))
 					{
+						if (fp->fifo)
+							z = sfvalue(fp->sp);
 						r = 0;
 						for (e = (t = s) + z; t < e; t++)
 							if (*t == '\n')
@@ -660,7 +684,7 @@ b_tail(int argc, char** argv, void* context)
 						i = 3;
 						while (--i && stat(fp->name, &st))
 							sleep(1);
-						if (i && (fp->dev != st.st_dev || fp->ino != st.st_ino) && !init(fp, 0, 0, flags))
+						if (i && (fp->dev != st.st_dev || fp->ino != st.st_ino) && !init(fp, 0, 0, flags, &format))
 						{
 							if (!(flags & SILENT))
 								error(ERROR_warn(0), "%s: log file change", fp->name);
@@ -702,8 +726,10 @@ b_tail(int argc, char** argv, void* context)
 				continue;
 			}
 			if (flags & (HEADERS|VERBOSE))
+			{
 				sfprintf(sfstdout, format, file);
-			format = header_fmt;
+				format = header_fmt;
+			}
 			if (number < 0 || !number && (flags & POSITIVE))
 			{
 				sfset(ip, SF_SHARE, 1);

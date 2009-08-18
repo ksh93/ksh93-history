@@ -445,10 +445,18 @@ static void put_cdpath(register Namval_t* np,const char *val,int flags,Namfun_t 
 static void put_ifs(register Namval_t* np,const char *val,int flags,Namfun_t *fp)
 {
 	register struct ifs *ip = (struct ifs*)fp;
+	Shell_t		*shp;
 	ip->ifsnp = 0;
+	if(!val)
+	{
+		fp = nv_stack(np, NIL(Namfun_t*));
+		if(fp && !fp->nofree)
+			free((void*)fp);
+	}
 	if(val != np->nvalue.cp)
 		nv_putv(np, val, flags, fp);
-	
+	if(!val && !(flags&NV_CLONE) && (fp=np->nvfun) && !fp->disc && (shp=(Shell_t*)(fp->last)))
+		nv_stack(np,&((Init_t*)shp->init_context)->IFS_init.hdr);
 }
 
 /*
@@ -522,7 +530,7 @@ static void put_seconds(register Namval_t* np,const char *val,int flags,Namfun_t
 		fp = nv_stack(np, NIL(Namfun_t*));
 		if(fp && !fp->nofree)
 			free((void*)fp);
-		nv_unset(np);
+		nv_putv(np, val, flags, fp);
 		return;
 	}
 	if(!np->nvalue.dp)

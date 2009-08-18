@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1985-2007 AT&T Knowledge Ventures            *
+*          Copyright (c) 1985-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                      by AT&T Knowledge Ventures                      *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -703,6 +703,8 @@ lcmake(const char* name)
 	lc->language = lp ? lp : &lc_languages[0];
 	lc->territory = tp ? tp : &lc_territories[0];
 	lc->charset = cp ? cp : &lc_charsets[0];  
+	if (!strcmp(lc->charset->code, "utf8"))
+		lc->flags |= LC_utf8;
 	lc->attributes = al;
 	for (i = 0; i < elementsof(lc->info); i++)
 		lc->info[i].lc = lc;

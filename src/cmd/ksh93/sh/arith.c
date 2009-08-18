@@ -64,6 +64,7 @@ static Namval_t *scope(Shell_t *shp,register Namval_t *np,register struct lval *
 	register Namval_t *mp;
 	int	flags = HASH_NOSCOPE|HASH_SCOPE|HASH_BUCKET;
 	Dt_t	*sdict = (shp->st.real_fun? shp->st.real_fun->sdict:0);
+	Dt_t	*root = shp->var_tree;
 	assign = assign?NV_ASSIGN:NV_NOASSIGN;
 	if(cp>=lvalue->expr &&  cp < lvalue->expr+lvalue->elen)
 	{
@@ -82,6 +83,7 @@ static Namval_t *scope(Shell_t *shp,register Namval_t *np,register struct lval *
 			np = nv_open(cp,shp->var_tree,assign|NV_VARNAME);
 		if(!np)
 			return(0);
+		root = shp->last_root;
 		cp[flag] = c;
 		if(cp[flag+1]=='[')
 			flag++;
@@ -89,7 +91,7 @@ static Namval_t *scope(Shell_t *shp,register Namval_t *np,register struct lval *
 			flag = 0;
 		cp = (char*)np;
 	}
-	if((lvalue->emode&ARITH_COMP) && dtvnext(shp->var_tree) && ((mp=nv_search(cp,shp->var_tree,flags))||(sdict && (mp=nv_search(cp,sdict,flags)))))
+	if((lvalue->emode&ARITH_COMP) && dtvnext(root) && ((mp=nv_search(cp,root,flags))||(sdict && (mp=nv_search(cp,sdict,flags)))))
 	{
 		while(nv_isref(mp))
 		{

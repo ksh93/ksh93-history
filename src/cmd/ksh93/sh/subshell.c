@@ -254,7 +254,7 @@ Namval_t *sh_assignok(register Namval_t *np,int add)
 	Namarr_t		*ap;
 	int			save;
 	/* don't bother with this */
-	if(!sp->shpwd || (nv_isnull(np) && !add))
+	if(!sp->shpwd || (nv_isnull(np) && !add) || np==SH_LEVELNOD)
 		return(np);
 	/* don't bother to save if in newer scope */
 	if(!(rp=shp->st.real_fun)  || !(dp=rp->sdict))
@@ -334,7 +334,7 @@ static void nv_restore(struct subshell *sp)
 			continue;
 		if(nv_isarray(mp))
 			 nv_putsub(mp,NIL(char*),ARRAY_SCAN);
-		_nv_unset(mp,NV_RDONLY);
+		_nv_unset(mp,NV_RDONLY|NV_CLONE);
 		if(nv_isarray(np))
 		{
 			nv_clone(np,mp,NV_MOVE);
@@ -346,7 +346,11 @@ static void nv_restore(struct subshell *sp)
 		mp->nvfun = np->nvfun;
 		mp->nvflag = np->nvflag;
 		if(nv_cover(mp))
-			nv_putval(mp, nv_getval(np),0);
+		{
+			nv_putval(mp, nv_getval(np),np->nvflag|NV_NOFREE);
+			if(!nv_isattr(np,NV_NOFREE))
+				nv_offattr(mp,NV_NOFREE);
+		}
 		else
 			mp->nvalue.cp = np->nvalue.cp;
 		np->nvfun = 0;
