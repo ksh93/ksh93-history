@@ -345,4 +345,17 @@ function do_something
 cat_content | read -C x
 [[ $(do_something x.foolist) == 5  ]] || err_exit 'subscripts not honored for arrays of type with disciplines'
 
+typeset -T benchcmd_t=(
+	float x=1
+	float y=2
+)
+unset x
+compound x=(
+	float o
+	benchcmd_t -a m
+	integer h
+)
+expected=$'(\n\ttypeset -l -i h=0\n\tbenchcmd_t -a m\n\ttypeset -l -E o=0\n)'
+[[ $x == "$expected" ]] || err_exit 'compound variable with array of types with no elements not working'
+
 exit $Errors

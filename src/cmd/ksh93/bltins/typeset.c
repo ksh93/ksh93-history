@@ -557,7 +557,7 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 					}
 					nv_setarray(np,nv_associative);
 				}
-				else if(comvar && !nv_rename(np,flag|NV_COMVAR))
+				else if(comvar && !nv_isvtree(np) && !nv_rename(np,flag|NV_COMVAR))
 					nv_setvtree(np);
 			}
 			if(flag&NV_MOVE)

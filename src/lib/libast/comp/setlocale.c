@@ -581,9 +581,9 @@ utf8_mbtowc(wchar_t* wp, const char* str, size_t n)
 
 	if (!sp || !n)
 		return 0;
-	if (m = utf8tab[*sp])
+	if ((m = utf8tab[*sp]) > 0)
 	{
-		if (m < 0 || m > n)
+		if (m > n)
 			return -1;
 		if (wp)
 		{
@@ -612,6 +612,7 @@ utf8_mbtowc(wchar_t* wp, const char* str, size_t n)
 #ifdef EILSEQ
 	errno = EILSEQ;
 #endif
+	ast.mb_sync = (const char*)sp - str;
 	return -1;
 }
 
@@ -630,6 +631,7 @@ utf8_mblen(const char* str, size_t n)
 static int
 set_ctype(Lc_category_t* cp)
 {
+	ast.mb_sync = 0;
 	if (locales[cp->internal]->flags & LC_debug)
 	{
 		ast.mb_cur_max = DEBUG_MB_CUR_MAX;

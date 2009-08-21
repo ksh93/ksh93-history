@@ -23,7 +23,7 @@ command=regress
 case $(getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt) in
 0123)	USAGE=$'
 [-?
-@(#)$Id: regress (AT&T Research) 2009-03-31 $
+@(#)$Id: regress (AT&T Research) 2009-08-20 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?regress - run regression tests]
@@ -53,9 +53,9 @@ case $(getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt) in
 [t:test?Run only tests matching \apattern\a. Tests are numbered and
     consist of at least two digits (0 filled if necessary.) Tests matching
     \b+(0)\b are always run.]:[pattern]
+[x:trace?Enable debug tracing.]
 [v:verbose?List differences between actual (<) and expected (>) output,
     errors and exit codes. Also disable long output line truncation.]
-[D:debug?Enable debug tracing.]
 
 unit [ command [ arg ... ] ]
 
@@ -71,6 +71,7 @@ unit [ command [ arg ... ] ]
             \bTALLY\b, and exit with status \astatus\a.]
         [+COMMAND \aarg\a ...?Runs the current command under test with
             \aarg\a ... appended to the default args.]
+        [+CONTINUE?The background job must be running.]
         [+COPY \afrom to\a?Copy file \afrom\a to \ato\a. \afrom\a may
             be a regular file or \bINPUT\b, \bOUTPUT\b or \bERROR\b. Post
             test comparisons are still done for \afrom\a.]
@@ -96,17 +97,20 @@ unit [ command [ arg ... ] ]
             in the group.]
         [+EXIT \astatus\a?The command exit status is expected to match
             the pattern \astatus\a.]
+        [+EXITED?The background job must have exited.]
         [+EXPORT [-]] \aname\a=\avalue\a ...?Export environment
             variables for one test.]
         [+FATAL \amessage\a ...?\amessage\a is printed on the standard
             error and \bregress\b exits with status \b1\b.]
+        [+FIFO \bINPUT|OUTPUT|ERROR\b [ \b-n\b ]] \afile\a | - \adata\a ...?
+	    The \bIO\B file is a fifo.]
         [+IF \acommand\a [\anote\a]]?If the \bsh\b(1) \acommand\a exits
             0 then tests until the next \bELIF\b, \bELSE\b or \bFI\b are
             enabled. Otherwise those tests are skipped. \bIF\b ... \bFI\b
             may be nested, but must not cross \bTEST\b boundaries. \anote\a
-	    is listed on the standard error if the correspoding test block
-	    is enabled; \bIF\b, \bELIF\b, \bELSE\b may nave a \anote\a
-	    operand.]
+            is listed on the standard error if the correspoding test block
+            is enabled; \bIF\b, \bELIF\b, \bELSE\b may nave a \anote\a
+            operand.]
         [+IGNORE \afile\a ...?\afile\a is ignored for subsequent result
             comparisons. \afile\a may be \bOUTPUT\b or \bERROR\b.]
         [+IGNORESPACE?Ignore space differences when comparing expected
@@ -123,12 +127,17 @@ unit [ command [ arg ... ] ]
             \adata\a. \bINPUT -n\b does not append a newline to \adata\a.]
         [+INTRO?Called by \bregress\b to introduce all \bTEST\b
             groups.]
-        [+IO \bINPUT|OUTPUT|ERROR\b [ \b-n\b ]] \afile\a | - \adata\a ...?
+        [+IO [ \bFIFO\b | \bPIPE\b ]] \bINPUT|OUTPUT|ERROR\b [ \b-n\b ]] \afile\a | - \adata\a ...?
             Internal support for the \bINPUT\b, \bOUTPUT\b and \bERROR\b
             functions.]
+        [+JOB \aop\a [ ... ]]?Like \bEXEC\b except the command is run
+            as a background job for the duration of the group or until it
+            is killed via \bKILL\b.]
         [+KEEP \apattern\a ...?The temporary directory is cleared for
             each test. Files matching \apattern\a are retained between
             tests.]
+        [+KILL [ \asignal\a ]]?Kill the background job with \asignal\a
+        [ \bSIGKILL\b ]].]
         [+MOVE \afrom to\a?Rename file \afrom\a to \ato\a. \afrom\a may
             be a regular file or \bINPUT\b, \bOUTPUT\b or \bERROR\b. Post
             test comparisons are ignored for \afrom\a.]
@@ -138,6 +147,8 @@ unit [ command [ arg ... ] ]
             output is expected to match either the contents of \afile\a or
             the line \adata\a. \bOUTPUT -n\b does not append a newline to
             \adata\a.]
+        [+PIPE \bINPUT|OUTPUT|ERROR\b [ \b-n\b ]] \afile\a | - \adata\a ...?
+	    The \bIO\B file is a pipe.]
         [+PROG \acommand\a [ \aarg\a ... ]]?\acommand\a is run with
             optional arguments.]
         [+REMOVE \afile\a ...?\afile\a ... are removed after the
@@ -171,10 +182,10 @@ unit [ command [ arg ... ] ]
             optional default arguments to be tested. \bUNIT\b explicitly
             overrides the default command name derived from the test script
             file name. A \acommand\a operand with optional arguments
-	    overrides the \bUNIT\b \acommand\a and arguments, with the
-	    exception that if the \bUNIT\b \acommand\a is \b-\b or \b+\b the
-	    \bUNIT\b arguments are appended to the operand or default
-	    unit command and arguments.]
+            overrides the \bUNIT\b \acommand\a and arguments, with the
+            exception that if the \bUNIT\b \acommand\a is \b-\b or \b+\b
+            the \bUNIT\b arguments are appended to the operand or default
+            unit command and arguments.]
         [+VIEW \avar\a [ \afile\a ]]?\avar\a is set to the full
             pathname of \avar\a [ \afile\a ]] in the current \b$VPATH\b
             view if defined.]
@@ -231,8 +242,9 @@ function INITIALIZE # void
 	INPUT=""
 	MOVE=""
 	OUTPUT=""
-	EMPTY PIPE
+	EMPTY FILE
 	EMPTY SAME
+	EMPTY TYPE
 }
 
 function INTRO
@@ -308,6 +320,16 @@ function UNWIND
 	then	(( COND = 0 ))
 		FATAL "line $LINE: no matching FI for IF on line ${COND_LINE[COND+1]}"
 	fi
+	if	[[ $JOBPID ]]
+	then	if	[[ $JOBPID != 0 ]]
+		then	kill -KILL $JOBPID 2>/dev/null
+			wait
+		fi
+		JOBPID=
+	fi
+	JOBSTATUS=
+	JOBOP=
+	wait
 }
 
 function CLEANUP # status
@@ -333,8 +355,9 @@ function CLEANUP # status
 
 function RUN # [ op ]
 {
-	typeset i
+	typeset i r=1
 	[[ $UMASK != $UMASK_ORIG ]] && umask $UMASK_ORIG
+#print -u2 AHA#$LINENO $0 GROUP=$GROUP ITEM=$ITEM FLUSHED=$FLUSHED JOBOP=$JOBOP
 	case $GROUP in
 	INIT)	RM "$TWD"
 		if	[[ $TEST_local ]]
@@ -365,11 +388,11 @@ function RUN # [ op ]
 	FINI)	;;
 	$TEST_select)
 		if	[[ $ITEM == $FLUSHED ]]
-		then	return
+		then	return 0
 		fi
 		FLUSHED=$ITEM
 		if	(( COND_SKIP[COND] ))
-		then	return
+		then	return 1
 		fi
 		((COUNT++))
 		if	(( $ITEM <= $LASTITEM ))
@@ -403,7 +426,13 @@ function RUN # [ op ]
 		for i in $INIT
 		do	$i $TEST INIT
 		done
-		if	[[ $BODY ]]
+#print -u2 AHA#$LINENO $0 GROUP=$GROUP ITEM=$ITEM JOBOP=$JOBOP JOBPID=$JOBPID JOBSTATUS=$JOBSTATUS
+		if	[[ $JOBPID != 0 && ( $JOBPID || $JOBSTATUS ) ]]
+		then	if	[[ ! $TEST_quiet ]]
+			then	print -nu2 "$LABEL"
+			fi
+			RESULTS
+		elif	[[ $BODY ]]
 		then	SHOW=$NOTE
 			if	[[ ! $TEST_quiet ]]
 			then	print -r -u2 "	$SHOW"
@@ -412,37 +441,40 @@ function RUN # [ op ]
 			do	$i $TEST BODY
 			done
 		else	SHOW=
-			if	[[ ${PIPE[INPUT]} ]]
-			then	if	[[ ${PIPE[OUTPUT]} ]]
+			if	[[ ${TYPE[INPUT]} == PIPE ]]
+			then	if	[[ ${TYPE[OUTPUT]} == PIPE ]]
 				then	if	[[ ! $TEST_quiet ]]
 					then	print -nu2 "$LABEL"
 					fi
-					cat <$TWD/INPUT | COMMAND "${ARGS[@]}" 2>$TWD/ERROR | cat >$TWD/OUTPUT
+					cat <$TWD/INPUT | COMMAND "${ARGS[@]}" | cat >$TWD/OUTPUT
 					RESULTS 'pipe input'
 				else	if	[[ ! $TEST_quiet ]]
 					then	print -nu2 "$LABEL"
 					fi
-					cat <$TWD/INPUT | COMMAND "${ARGS[@]}" >$TWD/OUTPUT 2>$TWD/ERROR
+					cat <$TWD/INPUT | COMMAND "${ARGS[@]}" >$TWD/OUTPUT
 					RESULTS 'pipe io'
 				fi
-			elif	[[ ${PIPE[OUTPUT]} ]]
+			elif	[[ ${TYPE[OUTPUT]} == PIPE ]]
 			then	if	[[ ! $TEST_quiet ]]
 				then	print -nu2 "$LABEL"
 				fi
-				COMMAND "${ARGS[@]}" <$TWD/INPUT 2>$TWD/ERROR | cat >$TWD/OUTPUT
+				COMMAND "${ARGS[@]}" <$TWD/INPUT | cat >$TWD/OUTPUT
 				RESULTS 'pipe output'
 			else	if	[[ $TEST_regular ]]
 				then	if	[[ ! $TEST_quiet ]]
 					then	print -nu2 "$LABEL"
 					fi
-					COMMAND "${ARGS[@]}" <$TWD/INPUT >$TWD/OUTPUT 2>$TWD/ERROR
+					if	[[ ${TYPE[INPUT]} == FIFO ]]
+					then	COMMAND "${ARGS[@]}" >$TWD/OUTPUT
+					else	COMMAND "${ARGS[@]}" <$TWD/INPUT >$TWD/OUTPUT
+					fi
 					RESULTS
 				fi
 				if	[[ $TEST_pipe_input ]]
 				then	if	[[ ! $TEST_quiet ]]
 					then	print -nu2 "$LABEL"
 					fi
-					(trap '' PIPE; cat <$TWD/INPUT 2>/dev/null; exit 0) | COMMAND "${ARGS[@]}" >$TWD/OUTPUT 2>$TWD/ERROR
+					(trap '' PIPE; cat <$TWD/INPUT 2>/dev/null; exit 0) | COMMAND "${ARGS[@]}" >$TWD/OUTPUT
 					STATUS=$?
 					RESULTS 'pipe input'
 				fi
@@ -450,7 +482,7 @@ function RUN # [ op ]
 				then	if	[[ ! $TEST_quiet ]]
 					then	print -nu2 "$LABEL"
 					fi
-					COMMAND "${ARGS[@]}" <$TWD/INPUT 2>$TWD/ERROR | cat >$TWD/OUTPUT
+					COMMAND "${ARGS[@]}" <$TWD/INPUT | cat >$TWD/OUTPUT
 					STATUS=$?
 					RESULTS 'pipe output'
 				fi
@@ -458,7 +490,7 @@ function RUN # [ op ]
 				then	if	[[ ! $TEST_quiet ]]
 					then	print -nu2 "$LABEL"
 					fi
-					(trap '' PIPE; cat <$TWD/INPUT 2>/dev/null; exit 0) | COMMAND "${ARGS[@]}" 2>$TWD/ERROR | cat >$TWD/OUTPUT
+					(trap '' PIPE; cat <$TWD/INPUT 2>/dev/null; exit 0) | COMMAND "${ARGS[@]}" | cat >$TWD/OUTPUT
 					STATUS=$?
 					RESULTS 'pipe io'
 				fi
@@ -483,6 +515,7 @@ function RUN # [ op ]
 		do	$i $TEST DONE $STATUS
 		done
 		COMPARE=""
+		r=0
 		;;
 	esac
 	if	[[ $COMMAND_ORIG ]]
@@ -490,6 +523,7 @@ function RUN # [ op ]
 		COMMAND_ORIG=
 		ARGS=(${ARGS_ORIG[@]})
 	fi
+	return $r
 }
 
 function DO # cmd ...
@@ -589,8 +623,41 @@ function EXEC # arg ...
 	0)	set -- "${ARGS[@]}" ;;
 	esac
 	ITEM=$LINE
-	NOTE="$(print -r -f '%q ' -- $COMMAND_ORIG "$@")"
+	NOTE="$(print -r -f '%q ' -- $COMMAND_ORIG "$@")${JOBPID:+&}"
 	ARGS=("$@")
+}
+
+function JOB # arg ...
+{
+	JOBPID=0
+	EXEC "$@"
+}
+
+function CONTINUE
+{
+	RUN || return
+	JOBOP=CONTINUE
+	ITEM=$LINE
+	NOTE="$(print -r -f '%q ' -- $JOBOP)"
+#print -u2 AHA#$LINENO JOBOP=$JOBOP ITEM=$ITEM NOTE=$NOTE
+}
+
+function EXITED
+{
+	RUN || return
+	JOBOP=EXITED
+	ITEM=$LINE
+	NOTE="$(print -r -f '%q ' -- $JOBOP)"
+#print -u2 AHA#$LINENO JOBOP=$JOBOP ITEM=$ITEM NOTE=$NOTE
+}
+
+function KILL # [ signal ]
+{
+	RUN || return
+	JOBOP=$2
+	[[ $JOBOP ]] || JOBOP=KILL
+	ITEM=$LINE
+	NOTE="$(print -r -f '%q ' -- $JOBOP)"
 }
 
 function CD
@@ -654,25 +721,28 @@ function NOTE # description
 
 function IO # [ PIPE ] INPUT|OUTPUT|ERROR [-f*|-n] file|- data ...
 {
-	typeset op i v f file pipe x
+	typeset op i v f file type x
 	if	[[ $GROUP != $TEST_select ]] || (( COND_SKIP[COND] ))
 	then	return
 	fi
 	[[ $UMASK != $UMASK_ORIG ]] && umask $UMASK_ORIG
-	if	[[ $1 == PIPE ]]
-	then	pipe=1
-		shift
-	fi
+	while	:
+	do	case $1 in
+		FIFO|PIPE)	type=$1; shift ;;
+		*)		break ;;
+		esac
+	done
 	op=$1
 	shift
-	PIPE[$op]=$pipe
+	[[ $type ]] && TYPE[$op]=$type
 	file=$TWD/$op
-	case $1 in
-	-x)	x=1; shift ;;
-	esac
-	case $1 in
-	-f*|-n)	f=$1; shift ;;
-	esac
+	while	:
+	do	case $1 in
+		-x)	x=1; shift ;;
+		-f*|-n)	f=$1; shift ;;
+		*)	break ;;
+		esac
+	done
 	case $# in
 	0)	;;
 	*)	case $1 in
@@ -701,6 +771,7 @@ function IO # [ PIPE ] INPUT|OUTPUT|ERROR [-f*|-n] file|- data ...
 		IGNORE=$v
 		;;
 	esac
+	FILE[$op]=$file
 	case $op in
 	OUTPUT|ERROR)
 		file=$file.ex
@@ -711,17 +782,40 @@ function IO # [ PIPE ] INPUT|OUTPUT|ERROR [-f*|-n] file|- data ...
 	esac
 	#unset SAME[$op]
 	SAME[$op]=
-	RM $TWD/$file.sav
+	if	[[ $file == /* ]]
+	then	RM $file.sav
+	else	RM $TWD/$file.sav
+	fi
 	if	[[ $file == */* ]]
 	then	mkdir -p ${file%/*}
 	fi
 	if	[[ $file != */ ]]
-	then	case $#:$f in
-		0:)	: > $file ;;
-		*:-f)	printf -- "$@" > $file ;;
-		*:-f*)	printf -- "${f#-f}""$@" > $file ;;
-		*)	print $f -r -- "$@" > $file ;;
-		esac
+	then	if	[[ $type == FIFO ]]
+		then	rm -f $file
+			mkfifo $file
+		fi
+		if	[[ ${TYPE[$op]} != FIFO ]]
+		then	if	[[ $JOBOP ]]
+			then	case $#:$f in
+				0:)	;;
+				*:-f)	printf -- "$@" ;;
+				*:-f*)	printf -- "${f#-f}""$@" ;;
+				*)	print $f -r -- "$@" ;;
+				esac >> $file
+			else	case $#:$f in
+				0:)	;;
+				*:-f)	printf -- "$@" ;;
+				*:-f*)	printf -- "${f#-f}""$@" ;;
+				*)	print $f -r -- "$@" ;;
+				esac > $file
+			fi
+		elif	[[ $#:$f != 0: ]]
+		then	case $#:$f in
+			*:-f)	printf -- "$@" ;;
+			*:-f*)	printf -- "${f#-f}""$@" ;;
+			*)	print $f -r -- "$@" ;;
+			esac >> $file &
+		fi
 		if	[[ $x ]]
 		then	chmod +x $file
 		fi
@@ -884,6 +978,7 @@ function INFO # info description
 
 function COMMAND # arg ...
 {
+	typeset input
 	((TESTS++))
 	case " ${ENVIRON[*]} ${EXPORT[*]}" in
 	*' 'LC_ALL=*)
@@ -902,8 +997,19 @@ function COMMAND # arg ...
 		chmod +x $TWD/COMMAND
 	fi
 	[[ $UMASK != $UMASK_ORIG ]] && umask $UMASK
-	eval "${ENVIRON[@]}" "${EXPORT[@]}" PATH='$PATH' '$'COMMAND '"$@"'
+	if	[[ ${TYPE[INPUT]} == FIFO && ${FILE[INPUT]} == */INPUT ]]
+	then	input="< ${FILE[INPUT]}"
+	fi
+	if	[[ $TEST_trace ]]
+	then	set +x
+		eval print -u2 "$PS4" "${ENVIRON[@]}" "${EXPORT[@]}" PATH='$PATH' '$'COMMAND '"$@"' '$input' '"2>$TWD/ERROR"' '"${JOBPID:+&}"'
+	fi
+	eval "${ENVIRON[@]}" "${EXPORT[@]}" PATH='$PATH' '$'COMMAND '"$@"' $input "2>$TWD/ERROR" "${JOBPID:+&}"
 	STATUS=$?
+	[[ $TEST_trace ]] && set -x
+	if	[[ $JOBPID ]]
+	then	JOBPID=$!
+	fi
 	[[ $UMASK != $UMASK_ORIG ]] && umask $UMASK_ORIG
 	return $STATUS
 }
@@ -914,6 +1020,7 @@ function RESULTS # pipe*
 	if	[[ $1 ]]
 	then	io="$1 "
 	fi
+	[[ $JOBOP || $JOBPID || $JOBSTATUS ]] && sleep 1
 	for i in $COMPARE $TWD/OUTPUT $TWD/ERROR
 	do	case " $IGNORE $ignore $MOVE " in
 		*" $i "*)	continue ;;
@@ -945,6 +1052,33 @@ function RESULTS # pipe*
 			fi
 		fi
 	done
+	if	[[ $JOBOP ]]
+	then	if	[[ $JOBPID ]] && ! kill -0 $JOBPID 2>/dev/null
+		then	wait $JOBPID
+			JOBSTATUS=$?
+			JOBPID=
+		fi
+#print -u2 AHA#$LINENO JOBOP=$JOBOP JOBPID=$JOBPID JOBSTATUS=$JOBSTATUS
+		case $JOBOP in
+		CONTINUE)
+			if	[[ ! $JOBPID ]]
+			then	failed=$failed${failed:+,}EXITED
+			fi
+			;;
+		EXITED) if	[[ $JOBPID ]]
+			then	failed=$failed${failed:+,}RUNNING
+			fi
+			;;
+		*)	if	[[ ! $JOBPID ]]
+			then	failed=$failed${failed:+,}EXITED
+			fi
+			if	! kill -$JOBOP $JOBPID 2>/dev/null
+			then	failed=$failed${failed:+,}KILL-$JOBOP
+			fi
+			;;
+		esac
+		JOBOP=
+	fi
 	if	[[ ! $failed && $STATUS != $EXIT ]]
 	then	failed="exit code $EXIT expected -- got $STATUS"
 	fi
@@ -1077,6 +1211,11 @@ function PIPE # INPUT|OUTPUT|ERROR file|- data ...
 	IO $0 "$@"
 }
 
+function FIFO # INPUT|OUTPUT|ERROR file|- data ...
+{
+	IO $0 "$@"
+}
+
 function IF # command(s) [note]
 {
 	[[ $GROUP == $TEST_select ]] || return
@@ -1145,11 +1284,11 @@ integer ITEM=0 LASTITEM=0 COND=0 UNIT_READONLY=0 COUNT
 typeset ARGS COMMAND COPY DIAGNOSTICS ERROR EXEC FLUSHED=0 GROUP=INIT
 typeset IGNORE INPUT KEEP OUTPUT TEST SOURCE MOVE NOTE UMASK UMASK_ORIG
 typeset ARGS_ORIG COMMAND_ORIG TITLE UNIT ARGV PREFIX OFFSET IGNORESPACE
-typeset COMPARE MAIN
+typeset COMPARE MAIN JOBPID='' JOBSTATUS=''
 typeset TEST_file TEST_keep TEST_pipe_input TEST_pipe_io TEST_pipe_output TEST_local
 typeset TEST_quiet TEST_regular=1 TEST_rmflags='-rf --' TEST_rmu TEST_select
 
-typeset -A SAME VIEWS PIPE READONLY
+typeset -A SAME VIEWS FILE TYPE READONLY
 typeset -a COND_LINE COND_SKIP COND_KEPT ENVIRON EXPORT
 typeset -Z LAST=00
 
@@ -1178,9 +1317,9 @@ do	case $OPT in
 		else	TEST_select="${OPTARG//,/\|}"
 		fi
 		;;
-	v)	SET - verbose=$OPTARG
+	x)	SET - trace=$OPTARG
 		;;
-	D)	SET - trace=$OPTARG
+	v)	SET - verbose=$OPTARG
 		;;
 	*)	GROUP=FINI
 		exit 2
@@ -1240,7 +1379,8 @@ then	TEST_select="[0123456789]*"
 fi
 TEST_select="@($TEST_select|+(0))"
 if	[[ $TEST_trace ]]
-then	PS4='+$LINENO+ '
+then	export PS4=':$LINENO: '
+	typeset -ft $(typeset +f)
 	set -x
 fi
 if	[[ $TEST_verbose ]]
@@ -1255,10 +1395,14 @@ set --pipefail
 # some last minute shenanigans
 
 alias BODY='BODY=BODY; function BODY'
+alias CONTINUE='LINE=$LINENO; CONTINUE'
 alias DO='(( $ITEM != $FLUSHED )) && RUN DO; DO &&'
 alias DONE='DONE=DONE; function DONE'
 alias EXEC='LINE=$LINENO; EXEC'
+alias EXITED='LINE=$LINENO; EXITED'
 alias INIT='INIT=INIT; function INIT'
+alias JOB='LINE=$LINENO; JOB'
+alias KILL='LINE=$LINENO; KILL'
 alias PROG='LINE=$LINENO; FLUSH; PROG'
 alias TEST='TESTLINE=$LINENO; TEST'
 alias IF='LINE=$LINENO; FLUSH; IF'

@@ -2,7 +2,7 @@
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)make.probe (AT&T Research) 2009-07-31
+# @(#)make.probe (AT&T Research) 2009-08-20
 #
 # C probe for make
 #
@@ -33,13 +33,14 @@ probe_libdir="shlib lib"
 probe_nmflags="'' -p -B"
 probe_optimize="-O"
 probe_pic="-Kpic -KPIC -fpic -fPIC -pic -PIC +z +Z"
+probe_no_protect="'-fno-stack-protector -fno-stack-protector-all' -GS-"
 probe_readonly="-R -Krodata -xMerge -Wa,-r"
 probe_shared="'' -G -b -c -shared -Wl,dll"
+probe_shared_name="-Wl,-soname= -h"
 probe_shared_nostart="-nostartfiles"
 probe_shared_registry='"-update_registry $probe_shared_registry_file"'
 probe_shared_registry_file='registry.ld'
 probe_shared_registry_path="\$(LIBDIR)/$probe_shared_registry_file"
-probe_no_protect="'-fno-stack-protector -fno-stack-protector-all' -GS-"
 probe_strict="'-ansi -pedantic' '-ansi -strict' -strict -ansi"
 probe_stripflags="'-f -s' -f -s"
 probe_unresolved="'-expect_unresolved \"*\"'"
@@ -158,6 +159,7 @@ repository=
 require=
 runpath=
 shared=
+shared_name=
 shared_registry=
 shellmagic=
 soversion=
@@ -1034,6 +1036,23 @@ case $shared in
 		fi
 		;;
 	esac
+	;;
+esac
+case $shared in
+?*)	if	$cc -c $cc_dll $cc_pic shared.$src
+	then	eval set x $probe_shared_name
+		while	:
+		do	shift
+			case $# in
+			0)	break ;;
+			esac
+			rm -f xxx$dll
+			if	$dld $shared ${1}libfoo.1.2 -o xxx$dll shared.$obj 2>e && test -r xxx$dll
+			then	shared_name=$1
+				break
+			fi
+		done
+	fi
 	;;
 esac
 case " $cc_dll " in
@@ -2018,6 +2037,7 @@ CC_REQUIRE=$require
 CC_RUNPATH=$runpath
 CC_SHARED=$shared
 CC_SHARED_LD=$dld
+CC_SHARED_NAME=$shared_name
 CC_SHARED_REGISTRY=$shared_registry
 CC_SHARED_REGISTRY_PATH=$probe_shared_registry_path
 CC_SHELLMAGIC=$shellmagic
@@ -2129,6 +2149,7 @@ done
 echo CC.RUNPATH = $CC_RUNPATH
 echo CC.SHARED = $CC_SHARED
 echo CC.SHARED.LD = $CC_SHARED_LD
+echo CC.SHARED.NAME = $CC_SHARED_NAME
 echo CC.SHARED.REGISTRY = $CC_SHARED_REGISTRY
 echo CC.SHARED.REGISTRY.PATH = $CC_SHARED_REGISTRY_PATH
 echo CC.SHELLMAGIC = $CC_SHELLMAGIC

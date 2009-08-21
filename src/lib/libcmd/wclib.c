@@ -47,6 +47,7 @@
 #define	WC_SP		0x08
 #define	WC_NL		0x10
 #define	WC_MB		0x20
+#define	WC_ERR		0x40
 
 #define eol(c)		((c)&WC_NL)
 #define mbc(c)		((c)&WC_MB)
@@ -74,6 +75,7 @@ Wc_t* wc_init(int mode)
 		wp->type[n] = (w && isspace(n)) ? WC_SP : 0;
 	wp->type['\n'] = WC_SP|WC_NL;
 	if ((mode & (WC_MBYTE|WC_WORDS)) && wp->mb > 0)
+	{
 		for (n = 0; n < 64; n++)
 		{
 			wp->type[0x80+n] |= WC_MB;
@@ -88,6 +90,11 @@ Wc_t* wc_init(int mode)
 			else if (n<62)
 				wp->type[0xc0+n] |= WC_MB+5;
 		}
+		wp->type[0xc0] = WC_MB|WC_ERR;
+		wp->type[0xc1] = WC_MB|WC_ERR;
+		wp->type[0xfe] = WC_MB|WC_ERR;
+		wp->type[0xff] = WC_MB|WC_ERR;
+	}
 	wp->mode = mode;
 	return wp;
 }
@@ -193,7 +200,11 @@ int wc_count(Wc_t *wp, Sfio_t *fd, const char* file)
 						o = 0;
 					cp = side + o;
 					if (!(buff = (unsigned char*)sfreserve(fd, SF_UNBOUND, 0)) || (n = sfvalue(fd)) <= 0)
+					{
+						if ((nchars - longest) > wp->longest)
+							wp->longest = nchars - longest;
 						break;
+					}
 					if ((c = sizeof(side) - o) > n)
 						c = n;
 					if (c)
@@ -219,12 +230,11 @@ int wc_count(Wc_t *wp, Sfio_t *fd, const char* file)
 			}
 			else
 				cp += n ? n : 1;
-			nchars++;
 			if (x == '\n')
 			{
 				if ((nchars - longest) > wp->longest)
 					wp->longest = nchars - longest;
-				longest = nchars;
+				longest = nchars + 1;
 				nlines++;
 				lasttype = 1;
 			}
@@ -235,6 +245,7 @@ int wc_count(Wc_t *wp, Sfio_t *fd, const char* file)
 				lasttype = 0;
 				nwords++;
 			}
+			nchars++;
 		}
 	}
 	else if (!wp->mb && !(wp->mode & WC_LONGEST) || wp->mb > 0 && !(wp->mode & (WC_MBYTE|WC_WORDS|WC_LONGEST)))
@@ -326,8 +337,9 @@ int wc_count(Wc_t *wp, Sfio_t *fd, const char* file)
 		int		xspace;
 		int		wasspace = 1;
 		unsigned char*	start;
-		unsigned char*	dp = 0;
 
+		lastchar = 0;
+		start = (endbuff = side) + 1;
 		xspace = iswspace(0xa0) || iswspace(0x85);
 		while ((cp = buff = (unsigned char*)sfreserve(fd, SF_UNBOUND, 0)) && (c = sfvalue(fd)) > 0)
 		{
@@ -341,11 +353,12 @@ int wc_count(Wc_t *wp, Sfio_t *fd, const char* file)
 				if((c = type[*cp]) && !lasttype)
 					nwords++;
 				lasttype = c;
+				endbuff = start;
 				continue;
 			}
 			lastchar = cp[--c];
-			cp[c] = '\n';
 			endbuff = cp+c;
+			cp[c] = '\n';
 			if(mbc(lasttype))
 			{
 				c = lasttype;
@@ -369,7 +382,7 @@ int wc_count(Wc_t *wp, Sfio_t *fd, const char* file)
 						if(wp->mode&WC_LONGEST)
 						{
 							if((cp-start)-adjust > longest)
-								longest = (cp-start)-adjust;
+								longest = (cp-start)-adjust-1;
 							start = cp;
 						}
 						nlines++;
@@ -383,6 +396,8 @@ int wc_count(Wc_t *wp, Sfio_t *fd, const char* file)
 				mbyte:
 					do
 					{
+						if(c&WC_ERR)
+							goto err;
 						if(skip && (c&7))
 							break;
 						if(!skip)
@@ -394,7 +409,6 @@ int wc_count(Wc_t *wp, Sfio_t *fd, const char* file)
 							}
 							skip = (c&7);
 							adjust += skip;
-							dp = cp;
 							state = 0;
 							if(skip==2 && (cp[-1]&0xc)==0 && (state=(cp[-1]&0x3)))
 								oldc = *cp;
@@ -426,14 +440,23 @@ int wc_count(Wc_t *wp, Sfio_t *fd, const char* file)
 					{
 						if(eol(c) && (cp > endbuff))
 							goto eob;
+				err:
 						skip = 0;
 						state = 0;
 						if(eline!=nlines && !(wp->mode & WC_QUIET))
 							eline = invalid(file, nlines);
-						if(dp)
-							cp = dp;
+						while(mbc(c) && ((c|WC_ERR) || (c&7)==0)) 
+							c=type[*cp++];
+						if(eol(c) && (cp > endbuff))
+						{
+							c = WC_MB|WC_ERR;
+							goto eob;
+						}
+						if(mbc(c))
+							goto mbyte;
+						else if(c&WC_SP)
+							goto spaces;
 					}
-					dp = 0;
 					if(spc(c))
 					{
 						nwords++;
@@ -447,7 +470,6 @@ int wc_count(Wc_t *wp, Sfio_t *fd, const char* file)
 				nwords++;
 			}
 		eob:
-			dp = 0;
 			lineoff = cp-start;
 			if((cp -= 2) >= buff)
 				c = type[*cp];
@@ -458,8 +480,8 @@ int wc_count(Wc_t *wp, Sfio_t *fd, const char* file)
 			if(!c && !lasttype)
 				nwords--;
 		}
-		if ((wp->mode&WC_LONGEST) && ((endbuff + 1 - start) - adjust) > longest)
-			longest = (endbuff + 1 - start) - adjust;
+		if ((wp->mode&WC_LONGEST) && ((endbuff + 1 - start) - adjust - (lastchar == '\n')) > longest)
+			longest = (endbuff + 1 - start) - adjust - (lastchar == '\n');
 		wp->longest = longest;
 		if (eol(lasttype))
 			nlines++;
@@ -472,3 +494,4 @@ int wc_count(Wc_t *wp, Sfio_t *fd, const char* file)
 	wp->lines = nlines;
 	return 0;
 }
+

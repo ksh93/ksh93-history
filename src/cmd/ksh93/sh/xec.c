@@ -2552,6 +2552,7 @@ int sh_funscope(int argn, char *argv[],int(*fun)(void*),void *arg,int execflg)
 	struct checkpt		buff;
 	Namval_t		*nspace = shp->namespace;
 	Dt_t			*last_root = shp->last_root;
+	Shopt_t			options = shp->options;
 	if(shp->fn_depth==0)
 		shp->glob_options =  shp->options;
 	else
@@ -2656,7 +2657,7 @@ int sh_funscope(int argn, char *argv[],int(*fun)(void*),void *arg,int execflg)
 	shp->trapnote=0;
 	if(nsig)
 		stakset(savstak,0);
-	shp->options = shp->glob_options;
+	shp->options = options;
 	shp->last_root = last_root;
 	if(trap)
 	{

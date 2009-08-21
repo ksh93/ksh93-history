@@ -259,6 +259,7 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 			node.value = (char*)dp;
 			node.flag = c;
 			num = (*ep->fun)(&ptr,&node,ASSIGN,num);
+			c=0;
 			break;
 		    case A_PUSHF:
 			cp = roundptr(ep,cp,Math_f);
@@ -601,7 +602,10 @@ again:
 				vp->staksize--;
 			}
 			if(!expr(vp,c))
+			{
+				stakseek(-1);
 				return(0);
+			}
 			lvalue.value = 0;
 			break;
 

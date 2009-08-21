@@ -198,7 +198,7 @@
 00-10-31 mkdir: handle races by checking EEXIST
 00-09-20 cp: copy argv to stack before modifying in place
 00-05-18 add setlocale(LC_ALL,"")
-00-04-30 join: drop wierd opt_info.argv reference
+00-04-30 join: drop weird opt_info.argv reference
 00-03-17 expr: add == operator -- duh
 	 cp,ln,mv: delay pathcanon() on destination to verify `cp a b/.'
 	 getconf: use astgetconf for proper message control

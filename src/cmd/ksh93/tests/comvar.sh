@@ -516,4 +516,26 @@ float array[12].amount=2.9
 expected='typeset -C -A array=([12]=(typeset -l -E amount=2.9;))'
 [[ $(typeset -p array) == "$expected" ]] || err_exit 'typeset with compound  variable with compound variable array not working'
 
+typeset -T foo_t=(
+        function diff
+        {
+		print 1.0
+                return 0
+        }
+)
+foo_t sw
+compound output=(
+        integer one=1
+        float mydiff=sw.diff
+        float end=.314
+)
+[[ $output == *end=* ]] ||  err_exit "The field 'name' end is missing"
+
+compound cpv1=( integer f=2 ) 
+compound x=(
+	integer a=1
+	compound b=cpv1 
+) 
+[[ $x == *f=2* ]] ||  err_exit "The field b containg 'f=2' is missing"
+
 exit $((Errors))

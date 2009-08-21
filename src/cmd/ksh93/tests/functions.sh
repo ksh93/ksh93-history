@@ -382,6 +382,23 @@ closure 0 || err_exit -u2 'for loop function optimization bug2'
 dir=$tmp/dir
 mkdir $dir
 cd $dir || { err_exit "cd $dir failed"; exit 1; }
+
+(
+	function a {
+		print a
+	}
+	function b {
+		print 1
+		a
+		print 2
+	} > /dev/null
+	typeset -ft a b
+	PS4=X
+	b 
+) > file 2>&1
+[[ $(<file) == *'Xprint 2'* ]] ||  err_exit 'function trace disabled by function call'
+rm -f file
+
 print 'false' > try
 chmod +x try
 cat > tst <<- EOF

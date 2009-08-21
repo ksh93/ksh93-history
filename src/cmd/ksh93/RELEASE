@@ -1,4 +1,14 @@
-09-08-18  --- Release ksh93t+  ---
+09-08-21  --- Release ksh93t+  ---
+09-08-21  A bug in the handling of the comma operator in arithmetic expressions
+	  that could cause a core dump on some systems has been fixed.
+09-08-20  A bug in which a compound variable containing an array of a type
+	  that doesn't have any elements now expands correctly.
+09-08-19  A bug which disabled function tracing inside a function after
+	  a call to another function has been fixed.
+09-08-19  A bug in which initializing a compound variable instance to another
+	  compound variable by name has been fixed.
+09-08-18  A bug in which compound variable instances could be lost after
+	  an instance that invoked a type method discipline has been fixed.
 09-08-18  A bug in which a discipline function for a type applied to an
 	  array instance when invoked in a function ignored the subscript
 	  has been fixed.

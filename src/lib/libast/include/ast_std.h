@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -242,8 +242,9 @@ typedef struct
 	int		(*mb_conv)(char*, wchar_t);
 
 	uint32_t	env_serial;
+	uint32_t	mb_sync;
 
-	char		pad[944];
+	char		pad[940];
 
 } _Ast_info_t;
 

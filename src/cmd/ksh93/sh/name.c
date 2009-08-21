@@ -2647,6 +2647,7 @@ void nv_newattr (register Namval_t *np, unsigned newatts, int size)
 	Namarr_t *ap = 0;
 	int oldsize,oldatts;
 	Namfun_t *fp= (newatts&NV_NODISC)?np->nvfun:0;
+	char *prefix = sh.prefix;
 	newatts &= ~NV_NODISC;
 
 	/* check for restrictions */
@@ -2727,6 +2728,7 @@ void nv_newattr (register Namval_t *np, unsigned newatts, int size)
 		np->nvfun = fp;
 	if(ap)
 		ap->nelem--;
+	sh.prefix = prefix;
 	return;
 }
 
@@ -2874,7 +2876,7 @@ int nv_rename(register Namval_t *np, int flags)
 	Namval_t		*last_table = shp->last_table;
 	Dt_t			*last_root = shp->last_root;
 	Dt_t			*hp = 0;
-	char			*nvenv = 0;
+	char			*prefix=shp->prefix,*nvenv = 0;
 	if(nv_isattr(np,NV_PARAM) && shp->st.prevst)
 	{
 		if(!(hp=(Dt_t*)shp->st.prevst->save_tree))
@@ -2890,6 +2892,7 @@ int nv_rename(register Namval_t *np, int flags)
 		errormsg(SH_DICT,ERROR_exit(1),e_varname,nv_name(np));
 	if(nv_isarray(np) && !(mp=nv_opensub(np)))
 		index=nv_aindex(np);
+	shp->prefix = 0;
 	if(!hp)
 		hp = shp->var_tree;
 	if(!(nr = nv_open(cp, hp, flags|NV_ARRAY|NV_NOREF|NV_NOSCOPE|NV_NOADD|NV_NOFAIL)))
@@ -2898,6 +2901,7 @@ int nv_rename(register Namval_t *np, int flags)
 		hp = shp->last_root;
 	if(!nr)
 		nr= nv_open(cp, hp, flags|NV_NOREF|((flags&NV_MOVE)?0:NV_NOFAIL));
+	shp->prefix = prefix;
 	if(!nr)
 	{
 		if(!nv_isvtree(np))

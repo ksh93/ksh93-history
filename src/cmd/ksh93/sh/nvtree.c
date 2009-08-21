@@ -823,15 +823,24 @@ static char **genvalue(char **argv, const char *prefix, int n, struct Walk *wp)
 			}
 			else if(outfile && !wp->nofollow && argv[1] && memcmp(arg,argv[1],l=strlen(arg))==0 && argv[1][l]=='[')
 			{
+				int	k=1;
+				Namarr_t *ap=0;
 				Namval_t *np = nv_open(arg,wp->root,NV_VARNAME|NV_NOADD|NV_NOASSIGN|wp->noscope);
 				if(!np)
 					continue;
-				wp->array = nv_isarray(np);
+				if((wp->array = nv_isarray(np)) && (ap=nv_arrayptr(np)))
+					k = array_elem(ap);
+					
 				if(wp->indent>0)
 					sfnputc(outfile,'\t',wp->indent);
 				nv_attribute(np,outfile,"typeset",1);
 				nv_close(np);
-				sfputr(outfile,arg+m+r+(n?n:0),'=');
+				sfputr(outfile,arg+m+r+(n?n:0),(k?'=':'\n'));
+				if(!k)
+				{
+					wp->array=0;
+					continue;
+				}
 				wp->nofollow=1;
 				argv = genvalue(argv,cp,cp-arg ,wp);
 				sfputc(outfile,wp->indent<0?';':'\n');
