@@ -690,6 +690,7 @@ make include/timeout.h implicit
 done include/timeout.h
 prev include/history.h implicit
 prev include/shnodes.h implicit
+prev include/shlex.h implicit
 prev include/jobs.h implicit
 prev include/io.h implicit
 prev include/path.h implicit
@@ -705,7 +706,7 @@ prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done sh/main.c
 meta main.o %.c>%.o sh/main.c main
 prev sh/main.c
-exec - ${CC} ${mam_cc_FLAGS} ${-debug-symbols?1?${mam_cc_DEBUG} -D_BLD_DEBUG?${CCFLAGS.FORCE}?} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_BRACEPAT -D_PACKAGE_ast -DSHOPT_ESH -D_BLD_shell -DSHOPT_BGX -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DKSHELL -DSHOPT_SUID_EXEC -DSHOPT_DYNAMIC -DSHOPT_STATS -DSHOPT_HISTEXPAND -DERROR_CONTEXT_T=Error_context_t -c sh/main.c
+exec - ${CC} ${mam_cc_FLAGS} ${-debug-symbols?1?${mam_cc_DEBUG} -D_BLD_DEBUG?${CCFLAGS.FORCE}?} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_BRACEPAT -D_PACKAGE_ast -DSHOPT_ESH -D_BLD_shell -DSHOPT_KIA -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DSHOPT_BGX -DKSHELL -DSHOPT_SUID_EXEC -DSHOPT_DYNAMIC -DSHOPT_STATS -DSHOPT_HISTEXPAND -DERROR_CONTEXT_T=Error_context_t -c sh/main.c
 done main.o generated
 make nvdisc.o
 make sh/nvdisc.c

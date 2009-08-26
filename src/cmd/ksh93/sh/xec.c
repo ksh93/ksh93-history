@@ -2624,7 +2624,10 @@ int sh_funscope(int argn, char *argv[],int(*fun)(void*),void *arg,int execflg)
 	if(jmpval == 0)
 	{
 		if(shp->fn_depth++ > MAXDEPTH)
+		{
+			shp->toomany = 1;
 			siglongjmp(*shp->jmplist,SH_JMPERRFN);
+		}
 		else if(fun)
 			r= (*fun)(arg);
 		else

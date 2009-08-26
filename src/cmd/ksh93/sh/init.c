@@ -1383,6 +1383,7 @@ int sh_reinit(char *argv[])
 	shp->fn_depth = shp->dot_depth = 0;
 	sh_sigreset(0);
 	*SHLVL->nvalue.ip +=1;
+	shp->st.filename = strdup(shp->lastarg);
 	return(1);
 }
 

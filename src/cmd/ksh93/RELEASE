@@ -1,4 +1,12 @@
-09-08-21  --- Release ksh93t+  ---
+09-08-26  --- Release ksh93t+  ---
+09-08-26  The .sh.file variable was not being set for a script that was run
+	  by name and didn't start with #! and this has been fixed.
+09-08-25  A bug in which a function called to deeply from command substitution
+	  did not display an error message has been fixed.
+09-08-24  When processing profiles, ksh93 now violates the POSIX standard and
+	  treats &> as a redirection operator similar to bash.
+09-08-23  A bug in the handling of the trap on SIGPIPE that could lead to am
+	  memory fault has been fixed.
 09-08-21  A bug in the handling of the comma operator in arithmetic expressions
 	  that could cause a core dump on some systems has been fixed.
 09-08-20  A bug in which a compound variable containing an array of a type

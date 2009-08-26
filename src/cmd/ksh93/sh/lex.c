@@ -546,14 +546,17 @@ int sh_lex(Lex_t* lp)
 						return(lp->token=c);
 					else if(c=='&')
 					{
-#if SHOPT_BASH
-						if(!sh_isoption(SH_POSIX) && n=='>')
+						if(!sh_isoption(SH_POSIX) && n=='>' && (sh_isoption(SH_BASH) || sh_isstate(SH_PROFILE)))
 						{
+							if(!sh_isoption(SH_BASH) && !lp->nonstandard)
+							{
+								lp->nonstandard = 1;
+								errormsg(SH_DICT,ERROR_warn(0),e_lexnonstandard,shp->inlineno);
+							}
 							lp->digits = -1;
 							c = '>';
 						}
 						else
-#endif
 							n = 0;
 					}
 					else if(n=='&')

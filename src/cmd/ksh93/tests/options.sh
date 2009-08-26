@@ -52,8 +52,28 @@ then	err_exit 'sh -e not working'
 fi
 [[ $($SHELL -D -c 'print hi; print $"hello"') == '"hello"' ]] || err_exit 'ksh -D not working'
 
+env=$tmp/.env
+print $'(print -u1 aha) &>/dev/null\n(print -u2 aha) &>/dev/null' > $env
 rc=$tmp/.kshrc
 print $'PS1=""\nfunction env_hit\n{\n\tprint OK\n}' > $rc
+
+export ENV=/.$env
+if	[[ ! -o privileged ]]
+then
+	got=$($SHELL -E -c : 2>/dev/null)
+	if	[[ $g ]]
+	then
+		got=$(printf %q "$got")
+		err_exit "\$ENV file &>/dev/null does not redirect stdout -- expected '', got $got"
+	fi
+	got=$($SHELL -E -c : 2>&1 >/dev/null)
+	if	[[ $got != *nonstandard* || $got == *$'\n'* ]]
+	then
+		got=$(printf %q "$got")
+		err_exit "\$ENV file &>/dev/null does not redirect stderr -- expected one diagnostic line, got $got"
+	fi
+fi
+
 export ENV=/.$rc
 if	[[ -o privileged ]]
 then

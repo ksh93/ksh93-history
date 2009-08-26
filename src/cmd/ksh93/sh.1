@@ -6954,6 +6954,18 @@ The
 command
 with no arguments prints a list
 of commands associated with each signal number.
+.PP
+An
+.B exit
+or
+.B return
+without an argument in a trap action will
+preserve the exit status of the command that invoked the trap.
+.TP
+\f3true\fP
+Does nothing, and exits 0. Used with
+.B while
+for infinite loops.
 .TP
 \f3true\fP
 Does nothing, and exits 0. Used with

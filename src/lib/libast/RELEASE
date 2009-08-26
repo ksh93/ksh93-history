@@ -1,3 +1,4 @@
+09-08-24 sfio/sfreserve.c: fix SF_UNBOUND logic with pushed streams
 09-08-18 include/ast_std.h,ast.h: add ast.mb_sync to sync mbchar() after error
 09-08-17 comp/setlocale.c: add AST_LC_utf8 and { utf8_mbtowc() utf8_mblen() }
 09-08-11 comp/setlocale.c: treat "en"/"en_US" AST_LC_MESSAGES as "C"/"POSIX"

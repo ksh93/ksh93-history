@@ -2073,6 +2073,8 @@ void	sh_envnolocal (register Namval_t *np, void *data)
 	NOT_USED(data);
 	if(np==VERSIONNOD && nv_isref(np))
 		return;
+	if(np==L_ARGNOD)
+		return;
 	if(nv_isattr(np,NV_EXPORT) && nv_isarray(np))
 	{
 		nv_putsub(np,NIL(char*),0);

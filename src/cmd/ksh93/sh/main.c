@@ -37,6 +37,7 @@
 #include	"path.h"
 #include	"io.h"
 #include	"jobs.h"
+#include	"shlex.h"
 #include	"shnodes.h"
 #include	"history.h"
 #include	"timeout.h"
@@ -181,6 +182,7 @@ int sh_main(int ac, char *av[], Shinit_f userinit)
 	if((beenhere++)==0)
 	{
 		sh_onstate(SH_PROFILE);
+		((Lex_t*)shp->lex_context)->nonstandard = 0;
 		if(shp->ppid==1)
 			shp->login_sh++;
 		if(shp->login_sh >= 2)

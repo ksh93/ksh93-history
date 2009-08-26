@@ -405,7 +405,7 @@ void sh_ioinit(Shell_t *shp)
 	sh_iostream(shp,0);
 	/* all write steams are in the same pool and share outbuff */
 	shp->outpool = sfopen(NIL(Sfio_t*),NIL(char*),"sw");  /* pool identifier */
-	shp->outbuff = (char*)malloc(IOBSIZE);
+	shp->outbuff = (char*)malloc(IOBSIZE+4);
 	shp->errbuff = (char*)malloc(IOBSIZE/4);
 	sfsetbuf(sfstderr,shp->errbuff,IOBSIZE/4);
 	sfsetbuf(sfstdout,shp->outbuff,IOBSIZE);

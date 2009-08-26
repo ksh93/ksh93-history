@@ -414,9 +414,12 @@ void	sh_chktrap(void)
 			sh.sigflag[sig] &= ~SH_SIGTRAP;
 			if(trap=sh.st.trapcom[sig])
 			{
-				sh.oldexit = SH_EXITSIG|sig;
-				sh_trap(trap,0);
-			}
+				Sfio_t *fp;
+				if(sig==SIGPIPE && (fp=sfpool((Sfio_t*)0,sh.outpool,SF_WRITE)) && sferror(fp))
+					sfclose(fp);
+ 				sh.oldexit = SH_EXITSIG|sig;
+ 				sh_trap(trap,0);
+ 			}
 		}
 	}
 }

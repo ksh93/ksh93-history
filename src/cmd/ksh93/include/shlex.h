@@ -41,6 +41,7 @@ typedef struct  _shlex_
 	int		lastline;	/* last line number */
 	int		lasttok;	/* previous token number */
 	int		digits;		/* numerical value with word token */
+	int		nonstandard;	/* nonstandard construct in profile */
 	char		aliasok;	/* on when alias is legal */
 	char		assignok;	/* on when name=value is legal */
 	char		inexec;		/* on when processing exec */

@@ -1511,9 +1511,7 @@ static struct ionod	*inout(Lex_t *lexp,struct ionod *lastio,int flag)
 	register struct ionod	*iop;
 	Stk_t			*stkp = lexp->sh->stk;
 	char *iovname=0;
-#if SHOPT_BASH
 	register int		errout=0;
-#endif
 	if(token==IOVNAME)
 	{
 		iovname=lexp->arg->argval+1;
@@ -1543,13 +1541,11 @@ static struct ionod	*inout(Lex_t *lexp,struct ionod *lastio,int flag)
 		break;
 
 	    case '>':
-#if SHOPT_BASH
 		if(iof<0)
 		{
 			errout = 1;
 			iof = 1;
 		}
-#endif
 		iof |= IOPUT;
 		if(token==IOAPPSYM)
 			iof |= IOAPP;
@@ -1641,18 +1637,17 @@ static struct ionod	*inout(Lex_t *lexp,struct ionod *lastio,int flag)
 	{
 		struct ionod *ioq=iop;
 		sh_lex(lexp);
-#if SHOPT_BASH
 		if(errout)
 		{
 			/* redirect standard output to standard error */
 			ioq = (struct ionod*)stkalloc(stkp,sizeof(struct ionod));
+			memset(ioq,0,sizeof(*ioq));
 			ioq->ioname = "1";
 			ioq->iolst = 0;
 			ioq->iodelim = 0;
 			ioq->iofile = IORAW|IOPUT|IOMOV|2;
 			iop->ionxt=ioq;
 		}
-#endif
 		ioq->ionxt=inout(lexp,lastio,flag);
 	}
 	else

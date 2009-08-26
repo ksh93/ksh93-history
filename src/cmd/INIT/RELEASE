@@ -1,3 +1,4 @@
+09-08-24 package.sh: fix isascii() bug that failed on od(1) trailing space
 09-08-20 make.probe: add CC.SHARED.NAME
 09-08-20 regress.sh: add { JOB CONTINUE EXITED KILL FIFO }
 09-08-11 package.sh: filter lines containing : for package results

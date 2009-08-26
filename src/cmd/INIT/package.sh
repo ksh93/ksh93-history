@@ -64,7 +64,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2009-08-11 $
+@(#)$Id: package (AT&T Research) 2009-08-24 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -4058,7 +4058,7 @@ __isascii__=
 isascii()
 {
 	case $__isascii__ in
-	'')	case `echo A | od -o | sed -e '/[ 	]/!d' -e 's/.*[ 	]//'` in
+	'')	case `echo A | od -o | sed -e 's/[ 	]*$//' -e '/[ 	]/!d' -e 's/.*[ 	]//'` in
 		005101|040412)	__isascii__=0 ;;
 		*)		__isascii__=1 ;;
 		esac
