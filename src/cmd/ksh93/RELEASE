@@ -1,4 +1,22 @@
-09-08-26  --- Release ksh93t+  ---
+09-09-09  --- Release ksh93t+  ---
+09-09-09  A bug in the processing of line joining in here documents which
+	  occurred when a buffer began with <escape><new-line> has been fixed.
+09-09-09  A leading ; with commands in a brace group or parenthesis group
+	  no longer causes an error.  It now is used for the "showme" option.
+09-09-09  A bug in which a subshell containing a background process could
+	  block until the background process completed has been fixed.
+09-09-04  A bug in handing ${var[sub]}, where var is a nameref has been fixed.
+09-09-03  A bug which caused an index array to have the wrong number of elements
+	  when it was converted from a compound variable by adding an another
+	  element has been fixed.
+09-09-03  Specifying export for a compound variable now generates an error.
+09-09-02  $"..." localizations strings are no longer recognized inside `...`.
+09-09-01  A bug in the for loop optimizer in the handling of type static
+	  variables has been fixed.
+09-09-01  An error message is not displayed when * and @ are used as subscripts.
+09-09-01  Several bugs in the processing for types that included an associative
+	  array of another type has been fixed.
+09-09-01  A bug in the tracing of [[ a < b ]] and [[ a > b ]] has been fixed.
 09-08-26  The .sh.file variable was not being set for a script that was run
 	  by name and didn't start with #! and this has been fixed.
 09-08-25  A bug in which a function called to deeply from command substitution

@@ -334,4 +334,9 @@ $SHELL -c $'false && (( `wc -l /dev/null | nawk \'{print $1}\'` > 2 )) && true;:
 varname=foobarx
 x=`print '"\$'${varname}'"'`
 [[ $x == '"$foobarx"' ]] ||  err_exit $'\\$\' not handled correctly inside ``'
+
+copy1=5 copynum=1
+foo="`eval echo "$"{copy$copynum"-0}"`"
+[[ $foo == "$copy1" ]] || err_exit '$"..." not being ignored inside ``'
+
 exit $((Errors))

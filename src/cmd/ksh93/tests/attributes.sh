@@ -321,4 +321,7 @@ read -N10 foo[4] <<< 'abcdefghijklmnop'
 [[ $(printf %B foo[4]) == abcdefghij ]] || err_exit 'printf %B for binary associative array element not working'
 [[ $(printf %B foo[4]) == abcdefghij ]] || err_exit 'printf %B for binary indexed array element not working'
 unset foo
+
+$SHELL 2> /dev/null -c 'export foo=(bar=3)' && err_exit 'compound variables cannot be exported'
+
 exit	$((Errors))

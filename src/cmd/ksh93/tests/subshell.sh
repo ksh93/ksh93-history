@@ -439,4 +439,15 @@ if	[[ $got != $exp ]]
 then	err_exit "eval '$cmd' failed -- expected '$exp', got '$got'"
 fi
 
+float t1=$SECONDS
+sleep=$(whence -p sleep)
+if	[[ $sleep ]]
+then
+	$SHELL -c "( $sleep 5 </dev/null >/dev/null 2>&1 & );exit 0" | cat 
+	(( (SECONDS-t1) > 4 )) && err_exit '/bin/sleep& in subshell hanging'
+	((t1=SECONDS))
+fi
+$SHELL -c '( sleep 5 </dev/null >/dev/null 2>&1 & );exit 0' | cat 
+(( (SECONDS-t1) > 4 )) && err_exit 'sleep& in subshell hanging'
+
 exit $Errors

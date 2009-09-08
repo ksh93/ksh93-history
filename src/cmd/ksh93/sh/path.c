@@ -652,10 +652,17 @@ int	path_search(register const char *name,Pathcomp_t **oldpp, int flag)
 		path_init(shp);
 	if(flag)
 	{
+		if((np=nv_search(name,shp->track_tree,0)) && !nv_isattr(np,NV_NOALIAS) && (pp=(Pathcomp_t*)np->nvalue.cp))
+		{
+			stakseek(PATH_OFFSET);
+			path_nextcomp(pp,name,pp);
+			stakputc(0);
+			return(0);
+		}
 		pp = path_absolute(name,oldpp?*oldpp:NIL(Pathcomp_t*));
 		if(oldpp)
 			*oldpp = pp;
-		if(!pp && (np=nv_search(name,sh.fun_tree,HASH_NOSCOPE))&&np->nvalue.ip)
+		if(!pp && (np=nv_search(name,shp->fun_tree,HASH_NOSCOPE))&&np->nvalue.ip)
 			return(1);
 		if(!pp)
 			*stakptr(PATH_OFFSET) = 0;
@@ -896,7 +903,7 @@ void	path_exec(register const char *arg0,register char *argv[],struct argnod *lo
 	Pathcomp_t *libpath, *pp=0;
 	Shell_t *shp = &sh;
 	int slash=0;
-	nv_setlist(local,NV_EXPORT|NV_IDENT|NV_ASSIGN);
+	nv_setlist(local,NV_EXPORT|NV_IDENT|NV_ASSIGN,0);
 	envp = sh_envgen();
 	if(strchr(arg0,'/'))
 	{

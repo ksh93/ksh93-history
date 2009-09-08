@@ -245,4 +245,11 @@ EOF
 } > $script
 chmod +x $script
 [[ $($SHELL $script) == hello ]] 2> /dev/null || err_exit 'heredoc embeded in command substitution fails at buffer boundary'
+
+got=$( cat << EOF
+\
+abc
+EOF)
+[[ $got == abc ]] || err_exit 'line continuation at start of buffer not working'
+
 exit $((Errors))

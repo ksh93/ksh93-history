@@ -766,6 +766,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 			{
 				if(argn==0 || (np && nv_isattr(np,BLT_SPC)))
 				{
+					Namval_t *tp=0;
 					if(argn)
 					{
 						if(checkopt(com,'A'))
@@ -791,14 +792,17 @@ int sh_exec(register const Shnode_t *t, int flags)
 #endif
 					{
 						if(np!=SYSTYPESET)
+						{
 							shp->typeinit = np;
+							tp = nv_type(np);
+						}
 						if(checkopt(com,'C'))
 							flgs |= NV_COMVAR;
 						if(checkopt(com,'S'))
 							flgs |= NV_STATIC;
 						if(checkopt(com,'n'))
 							flgs |= NV_NOREF;
-						else if(checkopt(com,'L') || checkopt(com,'R') || checkopt(com,'Z'))
+						else if(!shp->typeinit && (checkopt(com,'L') || checkopt(com,'R') || checkopt(com,'Z')))
 							flgs |= NV_UNJUST;
 #if SHOPT_TYPEDEF
 						else if(argn>=3 && checkopt(com,'T'))
@@ -821,7 +825,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 					if(OPTIMIZE)
 						flgs |= NV_TAGGED;
 #endif
-					nv_setlist(argp,flgs);
+					nv_setlist(argp,flgs,tp);
 					if(np==shp->typeinit)
 						shp->typeinit = 0;
 					shp->envlist = argp;
@@ -1161,7 +1165,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 			int pipes[2];
 			if(shp->subshell)
 			{
-				if(shp->subshare || (type&FAMP))
+				if(shp->subshare)
 					sh_subtmpfile(1);
 				else
 					sh_subfork();
@@ -1731,7 +1735,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 				shp->offsets[0] = -1;
 				shp->offsets[1] = 0;
 				if(tt->com.comset)
-					nv_setlist(tt->com.comset,NV_IDENT|NV_ASSIGN);
+					nv_setlist(tt->com.comset,NV_IDENT|NV_ASSIGN,0);
 			}
 #endif /*SHOPT_FILESCAN */
 			shp->st.loopcnt++;
@@ -2476,7 +2480,8 @@ pid_t _sh_fork(register pid_t parent,int flags,int *jobid)
 #endif	/* SHOPT_ACCT */
 	/* Reset remaining signals to parent */
 	/* except for those `lost' by trap   */
-	sh_sigreset(2);
+	if(!(flags&FSHOWME))
+		sh_sigreset(2);
 	shp->subshell = 0;
 	if((flags&FAMP) && shp->coutpipe>1)
 		sh_close(shp->coutpipe);
@@ -3232,7 +3237,7 @@ static pid_t sh_ntfork(Shell_t *shp,const Shnode_t *t,char *argv[],int *jobid,in
 	{
 		sh_unscope(shp);
 		if(jmpval==SH_JMPSCRIPT)
-			nv_setlist(t->com.comset,NV_EXPORT|NV_IDENT|NV_ASSIGN);
+			nv_setlist(t->com.comset,NV_EXPORT|NV_IDENT|NV_ASSIGN,0);
 	}
 	if(t->com.comio)
 		sh_iorestore(shp,buff.topfd,jmpval);

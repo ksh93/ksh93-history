@@ -1178,13 +1178,13 @@ static Shnode_t	*item(Lex_t *lexp,int flag)
 	    case LBRACE:
 		comsub = lexp->comsub;
 		lexp->comsub = 0;
-		t = sh_cmd(lexp,RBRACE,SH_NL);
+		t = sh_cmd(lexp,RBRACE,SH_NL|SH_SEMI);
 		lexp->comsub = comsub;
 		break;
 
 	    case LPAREN:
 		t = getnode(parnod);
-		t->par.partre=sh_cmd(lexp,RPAREN,SH_NL);
+		t->par.partre=sh_cmd(lexp,RPAREN,SH_NL|SH_SEMI);
 		t->par.partyp=TPAR;
 		break;
 

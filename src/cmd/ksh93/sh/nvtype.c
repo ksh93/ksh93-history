@@ -248,6 +248,13 @@ static void put_chtype(Namval_t* np, const char* val, int flag, Namfun_t* fp)
 	}
 }
 
+static Namfun_t *clone_chtype(Namval_t* np, Namval_t *mp, int flags, Namfun_t *fp)
+{
+	if(flags&NV_NODISC)
+		return(0);
+	return(nv_clone_disc(fp,flags));
+}
+
 static const Namdisc_t chtype_disc =
 {
 	sizeof(Namchld_t),
@@ -256,7 +263,7 @@ static const Namdisc_t chtype_disc =
 	0,
 	0,
 	0,
-	0,
+	clone_chtype,
 	name_chtype
 };
 
@@ -1234,6 +1241,11 @@ void nv_typename(Namval_t *tp, Sfio_t *out)
 Namval_t *nv_type(Namval_t *np)
 {
 	Namfun_t  *fp;
+	if(nv_isattr(np,NV_BLTIN|BLT_DCL)==(NV_BLTIN|BLT_DCL))
+	{
+		Namdecl_t *ntp = (Namdecl_t*)nv_context(np);
+		return(ntp?ntp->tp:0);
+	}
 	for(fp=np->nvfun; fp; fp=fp->next)
 	{
 		if(fp->type)
@@ -1330,6 +1342,7 @@ int nv_settype(Namval_t* np, Namval_t *tp, int flags)
 		np->nvalue.up = 0;
 		nofree = ap->hdr.nofree;
 		ap->hdr.nofree = 0;
+		ap->hdr.type = tp;
 		nv_disc(np, &ap->hdr, NV_FIRST);
 		ap->hdr.nofree = nofree;
 		nv_onattr(np,NV_ARRAY);

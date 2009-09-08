@@ -678,14 +678,12 @@ static struct index_array *array_grow(Namval_t *np, register struct index_array 
 			mp = nv_search("0", ap->header.table,NV_ADD);
 			if(mp && nv_isnull(mp))
 			{
-#if 0
 				Namfun_t *fp;
 				ap->val[0].np = mp;
 				array_setbit(ap->bits,0,ARRAY_CHILD);
 				for(fp=np->nvfun; fp && !fp->disc->readf; fp=fp->next);
-				if(fp)
+				if(fp && fp->disc && fp->disc->readf)
 					(*fp->disc->readf)(mp,(Sfio_t*)0,0,fp);
-#endif
 				i++;
 			}
 		}

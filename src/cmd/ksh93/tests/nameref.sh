@@ -352,4 +352,14 @@ x[a]=(b=c)
 typeset -n y=x[a]
 [[ ${!y.@} == 'x[a].b' ]] || err_exit 'reference to array element not expanded with ${!y.@}'
 
+typeset +n v
+v=()
+k=a.b.c/d
+command typeset -n n=v.${k//['./']/_} 2> /dev/null || err_exit 'patterns with quotes not handled correctly with name reference assignment'
+
+typeset _n sp
+nameref sp=addrsp
+sp[14]=( size=1 )
+[[ -v sp[19] ]]  && err_exit '[[ -v sp[19] ]] where sp is a nameref should not be set'
+
 exit $((Errors))

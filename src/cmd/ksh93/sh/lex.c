@@ -791,7 +791,7 @@ int sh_lex(Lex_t* lp)
 						lp->lastline = shp->inlineno;
 						pushlevel(lp,c,mode);
 					}
-					ingrave = (c=='`');
+					ingrave ^= (c=='`');
 					mode = ST_QUOTE;
 					continue;
 				}
@@ -1014,7 +1014,7 @@ int sh_lex(Lex_t* lp)
 				{
 					if(lp->lexd.warn && c!='/' && sh_lexstates[ST_NORM][c]!=S_BREAK && (c!='"' || mode==ST_QUOTE))
 						errormsg(SH_DICT,ERROR_warn(0),e_lexslash,shp->inlineno);
-					else if(c=='"' && mode!=ST_QUOTE)
+					else if(c=='"' && mode!=ST_QUOTE && !ingrave)
 						wordflags |= ARG_MESSAGE;
 					fcseek(-1);
 				}
@@ -1140,6 +1140,16 @@ int sh_lex(Lex_t* lp)
 					(oldmode(lp)==ST_NONE) ||
 					(mode==ST_NAME && (lp->assignok||lp->lexd.level)))
 				{
+					if(mode==ST_NAME)
+					{
+						fcgetc(n);
+						if(n>0)
+						{
+							if(n==']')
+								errormsg(SH_DICT,ERROR_exit(SYNBAD),e_lexsyntax1, shp->inlineno, "[]", "empty subscript");
+							fcseek(-1);
+						}
+					}
 					pushlevel(lp,RBRACT,mode);
 					wordflags |= ARG_QUOTED;
 					mode = ST_NESTED;
@@ -1874,9 +1884,9 @@ static int here_copy(Lex_t *lp,register struct ionod *iop)
 			{
 				/* new-line joining */
 				lp->sh->inlineno++;
-				if(!lp->lexd.dolparen && (n=(fcseek(0)-bufp)-n)>0)
+				if(!lp->lexd.dolparen && (n=(fcseek(0)-bufp)-n)>=0)
 				{
-					if((n=sfwrite(sp,bufp,n))>0)
+					if(n && (n=sfwrite(sp,bufp,n))>0)
 						iop->iosize += n;
 					bufp = fcseek(0)+1;
 				}

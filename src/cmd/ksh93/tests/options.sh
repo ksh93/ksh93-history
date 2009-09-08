@@ -479,4 +479,7 @@ do	for ((P=0; P<${#PAR[@]}; P++))
 	done
 done
 
+$SHELL 2> /dev/null -c '{; true ;}' || err_exit 'leading ; causes syntax error in brace group'
+$SHELL 2> /dev/null -c '(; true ;)' || err_exit 'leading ; causes syntax error in parenthesis group'
+
 exit $((Errors))

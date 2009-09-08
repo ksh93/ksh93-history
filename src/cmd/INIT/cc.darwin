@@ -61,7 +61,6 @@ dll)	# what a compatibility mess -- surely they can get the apis to play nice
 		;;
 	esac
 	egrep -v ' (warning .*multiple definitions|definition) of ' $tmp >&2
-	rm -f $tmp
 	exit $status
 	;;
 ld)	tmp=/tmp/cc.$$.err
@@ -69,7 +68,6 @@ ld)	tmp=/tmp/cc.$$.err
 	$CC -Wl,-m -DCLK_TCK=100 "$@" >$tmp 2>&1
 	status=$?
 	egrep -v ' (warning .*multiple definitions of|definition of|as lazy binding|not from earlier dynamic) ' $tmp >&2
-	rm -f $tmp
 	exit $status
 	;;
 esac

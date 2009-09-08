@@ -197,7 +197,7 @@ void sh_subfork(void)
 	if(sp->pipe)
 		sh_subtmpfile(1);
 	shp->curenv = 0;
-	if(pid = sh_fork(0,NIL(int*)))
+	if(pid = sh_fork(FSHOWME,NIL(int*)))
 	{
 		shp->curenv = curenv;
 		/* this is the parent part of the fork */

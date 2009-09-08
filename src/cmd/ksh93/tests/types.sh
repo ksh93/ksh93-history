@@ -358,4 +358,22 @@ compound x=(
 expected=$'(\n\ttypeset -l -i h=0\n\tbenchcmd_t -a m\n\ttypeset -l -E o=0\n)'
 [[ $x == "$expected" ]] || err_exit 'compound variable with array of types with no elements not working'
 
+expected=$'Std_file_t db.file[/etc/profile]=(action=preserve;typeset -A sum=([8242e663d6f7bb4c5427a0e58e2925f3]=1);)'
+{
+  got=$($SHELL <<- \EOF 
+	MAGIC='stdinstall (at&t research) 2009-08-25'
+	typeset -T Std_file_t=(
+		typeset action
+		typeset -A sum
+	)
+	typeset -T Std_t=(
+		typeset magic=$MAGIC
+		Std_file_t -A file
+	)
+	Std_t db=(magic='stdinstall (at&t research) 2009-08-25';Std_file_t -A file=( [/./home/gsf/.env.sh]=(action=preserve;typeset -A sum=([9b67ab407d01a52b3e73e3945b9a3ee0]=1);)[/etc/profile]=(action=preserve;typeset -A sum=([8242e663d6f7bb4c5427a0e58e2925f3]=1);)[/home/gsf/.profile]=(action=preserve;typeset -A sum=([3ce23137335219672bf2865d003a098e]=1);));)
+	typeset -p db.file[/etc/profile]
+	EOF)
+} 2> /dev/null
+[[ $got == "$expected" ]] ||  err_exit 'types with arrays of types as members fails'
+
 exit $Errors

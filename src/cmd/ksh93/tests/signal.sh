@@ -33,20 +33,28 @@ trap "cd /; rm -rf $tmp" EXIT
 
 cd $tmp || err_exit "cd $tmp failed"
 
-set -o pipefail
-{
-	ulimit -c 2048
-	$SHELL 2> out2 <<- \EOF
-		g=false
-		trap 'print -u2 PIPED; $g && exit 0;g=true' PIPE
-		while :
-		do 	print hello
-		done
-	EOF
-} | head > /dev/null
-(( $? == 0)) ||   err_exit "SIGPIPE with wrong error code $?"
-[[ $(<out2) == $'PIPED\nPIPED' ]] || err_exit 'SIGPIPE output on standard error is not correct'
-set +p pipefail
+(
+	set --pipefail
+	{
+		$SHELL 2> out2 <<- \EOF
+			g=false
+			trap 'print -u2 PIPED; $g && exit 0;g=true' PIPE
+			while :
+			do 	print hello
+			done
+		EOF
+	} | head > /dev/null
+	(( $? == 0)) ||   err_exit "SIGPIPE with wrong error code $?"
+	[[ $(<out2) == $'PIPED\nPIPED' ]] || err_exit 'SIGPIPE output on standard error is not correct'
+) &
+cop=$!
+{ sleep 4; kill $cop; } 2>/dev/null &
+spy=$!
+if	wait $cop 2>/dev/null
+then	kill $spy 2>/dev/null
+else	err_exit "pipe with --pipefail PIPE trap hangs"
+fi
+wait
 rm -f out2
 
 [[ $( trap 'print -n got_child' SIGCHLD

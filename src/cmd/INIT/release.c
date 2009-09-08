@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1990-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1990-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -44,7 +44,8 @@ USAGE_LICENSE
 "	can be patented?, how about 1+1=2?.) The date tag lines are followed by"
 "	\areadme\a text in reverse chronological order (newer entries at the"
 "	top of the file.) If no selection options are spcified then all"
-"	changes are listed.]"
+"	changes are listed. If no \afile\a operands are specified then the"
+"	standard input is read.]"
 "[+?The entries for each \afile\a are annotated with the file directory name.]"
 "[f:from?Entries older than \adate\a are omitted.]:[date]"
 "[r:release?List all changes that include the first \acount\a release marks."
@@ -57,7 +58,7 @@ USAGE_LICENSE
 "[V?Print the program version and exit.]"
 
 "\n"
-"\nfile ...\n"
+"\n[ file ... ]\n"
 "\n"
 
 "[+SEE ALSO?\bpackage\b(1)]"

@@ -467,4 +467,10 @@ a[6]=six
 [[ ${a[-1]} == six ]] || err_exit 'a[-1] should be six'
 [[ ${a[-3]} == four ]] || err_exit 'a[-3] should be four'
 [[ ${a[-3..-1]} == 'four six' ]] || err_exit "a[-3,-1] should be 'four six'"
+
+FILTER=(typeset scope)
+FILTER[0].scope=include
+FILTER[1].scope=exclude
+[[ ${#FILTER[@]} == 2 ]] ||  err_exit "FILTER array should have two elements not ${#FILTER[@]}"
+
 exit $((Errors))
