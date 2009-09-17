@@ -1,4 +1,8 @@
-09-09-09  --- Release ksh93t+  ---
+09-09-17  --- Release ksh93t+  ---
+09-09-17  A bug in which unsetting SVLVL could cause a script invoked by
+	  name without #! to core dump has been fixed.
+09-09-16  A bug in which a pipeline in a here-document could hang when the
+	  pipefail option was on has been fixed. 
 09-09-09  A bug in the processing of line joining in here documents which
 	  occurred when a buffer began with <escape><new-line> has been fixed.
 09-09-09  A leading ; with commands in a brace group or parenthesis group

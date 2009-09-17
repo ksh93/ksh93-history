@@ -157,7 +157,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	sfputu.c sfrd.c sfread.c sfreserve.c sfscanf.c sfseek.c sfset.c \
 	sfsetbuf.c sfsetfd.c sfsize.c sfsk.c sfstack.c sfstrtod.c sfsync.c \
 	sfswap.c sftable.c sftell.c sftmp.c sfungetc.c sfvprintf.c \
-	sfvscanf.c sfwr.c sfwrite.c sfpurge.c sfraise.c \
+	sfvscanf.c sfwr.c sfwrite.c sfpurge.c sfraise.c sfwalk.c \
 	sfgetm.c sfmutex.c sfputm.c sfresize.c \
 	_sfclrerr.c _sfeof.c _sferror.c _sffileno.c \
 	_sfopen.c _sfstacked.c _sfvalue.c \

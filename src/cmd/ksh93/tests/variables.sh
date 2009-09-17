@@ -625,4 +625,10 @@ do	nameref r=$v
 done
 PATH=$path
 
+print print -n zzz > zzz
+chmod +x zzz
+exp='aaazzz'
+got=$($SHELL -c 'unset SHLVL; print -n aaa; ./zzz' 2>&1) >/dev/null 2>&1
+[[ $got == "$exp" ]] || err_exit "unset SHLVL causes script failure -- expected '$exp', got '$got'"
+
 exit $((Errors))

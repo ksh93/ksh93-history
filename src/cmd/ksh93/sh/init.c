@@ -170,6 +170,7 @@ static int		nbltins;
 static void		env_init(Shell_t*);
 static Init_t		*nv_init(Shell_t*);
 static Dt_t		*inittree(Shell_t*,const struct shtable2*);
+static int		shlvl;
 
 #ifdef _WINIX
 #   define EXE	"?(.exe)"
@@ -1382,6 +1383,12 @@ int sh_reinit(char *argv[])
 	sh_offstate(SH_FORKED);
 	shp->fn_depth = shp->dot_depth = 0;
 	sh_sigreset(0);
+	if(!(SHLVL->nvalue.ip))
+	{
+		shlvl = 0;
+		SHLVL->nvalue.ip = &shlvl;
+		nv_onattr(SHLVL,NV_INTEGER|NV_EXPORT|NV_NOFREE);
+	}
 	*SHLVL->nvalue.ip +=1;
 	shp->st.filename = strdup(shp->lastarg);
 	return(1);
@@ -1511,7 +1518,6 @@ static void stat_init(Shell_t *shp)
  */
 static Init_t *nv_init(Shell_t *shp)
 {
-	static int shlvl=0;
 	Namval_t *np;
 	register Init_t *ip;
 	double d=0;

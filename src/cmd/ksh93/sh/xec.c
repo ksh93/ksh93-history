@@ -1386,12 +1386,8 @@ int sh_exec(register const Shnode_t *t, int flags)
 			{
 				was_interactive = sh_isstate(SH_INTERACTIVE);
 				sh_offstate(SH_INTERACTIVE);
-				if(!execflg)
-				{
-					sh_iosave(shp,0,shp->topfd,(char*)0);
-					if(simple)
-						shp->pipepid = 1;
-				}
+				sh_iosave(shp,0,shp->topfd,(char*)0);
+				shp->pipepid = simple;
 				sh_iorenumber(shp,shp->inpipe[0],0);
 				/*
 				 * if read end of pipe is a simple command
@@ -1437,6 +1433,11 @@ int sh_exec(register const Shnode_t *t, int flags)
 				}
 				shp->pipepid = 0;
 				shp->st.ioset = 0;
+				if(simple && was_errexit)
+				{
+					echeck = 1;
+					sh_onstate(SH_ERREXIT);
+				}
 			}
 			if(jmpval>SH_JMPIO)
 				siglongjmp(*shp->jmplist,jmpval);

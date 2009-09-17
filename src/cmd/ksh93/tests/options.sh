@@ -482,4 +482,18 @@ done
 $SHELL 2> /dev/null -c '{; true ;}' || err_exit 'leading ; causes syntax error in brace group'
 $SHELL 2> /dev/null -c '(; true ;)' || err_exit 'leading ; causes syntax error in parenthesis group'
 
+print 'for ((i = 0; i < ${1:-10000}; i++ )); do printf "%.*c\n" 15 x; done' > pipefail
+chmod +x pipefail
+$SHELL --pipefail -c './pipefail 10000 | sed 1q' >/dev/null 2>&1 &
+tst=$!
+{ sleep 4; kill $tst; } 2>/dev/null &
+spy=$!
+wait $tst 2>/dev/null
+status=$?
+if	[[ $status == 0 || $(kill -l $status) == PIPE ]]
+then    kill $spy 2>/dev/null
+else    err_exit "pipefail pipeline bypasses SIGPIPE and hangs"
+fi
+wait
+
 exit $((Errors))
