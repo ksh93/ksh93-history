@@ -1,3 +1,7 @@
+09-10-05 _sfopen.c: add but ignore 'F' flags for stdio compatibility
+09-09-28 fts.h,ftwalk.h,fts.c: promote { namelen pathlen level } to (s)size_t
+09-09-28 locales: add AST_LC_LANG for $LANG
+09-09-28 setlocale.c: fix logic for dynamic { LANG LC_ALL LC_* } changes
 09-09-17 include/sfio.h,sfio/sfwalk.c: add sfwalk()
 09-09-09 sfio/sfputr.c: add SIGPIPE hang fix
 09-08-24 sfio/sfreserve.c: fix SF_UNBOUND logic with pushed streams

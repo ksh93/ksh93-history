@@ -570,7 +570,7 @@ static const signed char	utf8tab[256] =
 	4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6,-1,-1,
 };
 
-int
+static int
 utf8_mbtowc(wchar_t* wp, const char* str, size_t n)
 {
 	register unsigned char*	sp = (unsigned char*)str;
@@ -616,7 +616,7 @@ utf8_mbtowc(wchar_t* wp, const char* str, size_t n)
 	return -1;
 }
 
-int
+static int
 utf8_mblen(const char* str, size_t n)
 {
 	wchar_t		w;
@@ -749,6 +749,9 @@ Lc_category_t		lc_categories[] =
 { "LC_PAPER",         LC_PAPER,         AST_LC_PAPER,         0               },
 };
 
+static Lc_t*		lang;
+static Lc_t*		lc_all;
+
 typedef struct Unamval_s
 {
 	char*		name;
@@ -816,7 +819,7 @@ single(int category, Lc_t* lc)
 	const char*	sys;
 	int		i;
 
-	if (!lc && !(lc = lc_categories[category].prev))
+	if (!lc && !(lc = lc_all) && !(lc = lc_categories[category].prev) && !(lc = lang))
 		lc = lcmake(NiL);
 	if (locales[category] != lc)
 	{
@@ -982,6 +985,12 @@ composite(register const char* s, int initialize)
 
 /*
  * setlocale() intercept
+ *
+ * locale:
+ *	0	query
+ *	""	initialize from environment
+ *	"-"	unset
+ *	*	set
  */
 
 char*
@@ -1008,7 +1017,7 @@ _ast_setlocale(int category, const char* locale)
 		 */
 
 	compose:
-		if (category != AST_LC_ALL)
+		if (category != AST_LC_ALL && category != AST_LC_LANG)
 			return (char*)locales[category]->name;
 		if (!sp && !(sp = sfstropen()))
 			return 0;
@@ -1043,9 +1052,12 @@ _ast_setlocale(int category, const char* locale)
 		return sfstruse(sp);
 	}
 	if (!ast.locale.serial++)
+	{
 		stropt(getenv("LC_OPTIONS"), options, sizeof(*options), setopt, NiL);
+		initialized = 0;
+	}
 	if (*locale)
-		p = lcmake(locale);
+		p = streq(locale, "-") ? (Lc_t*)0 : lcmake(locale);
 	else if (!initialized)
 	{
 		char*	u;
@@ -1057,63 +1069,75 @@ _ast_setlocale(int category, const char* locale)
 		 */
 
 		u = 0;
-		if (!(a = getenv("LC_ALL")) || !*a)
+		if ((s = getenv("LANG")) && *s)
 		{
-			for (i = 1; i < AST_LC_COUNT; i++)
-				if ((s = getenv(lc_categories[i].name)) && *s)
-				{
-					if (streq(s, local) && (u || (u = native_locale(locale, tmp, sizeof(tmp)))))
-						s = u;
-					lc_categories[i].prev = lcmake(s);
-				}
-			a = getenv("LANG");
+			if (streq(s, local) && (u || (u = native_locale(locale, tmp, sizeof(tmp)))))
+				s = u;
+			lang = lcmake(s);
 		}
-		if (a)
+		else
+			lang = 0;
+		if ((s = getenv("LC_ALL")) && *s)
 		{
-			if (streq(a, local) && (u || (u = native_locale(locale, tmp, sizeof(tmp)))))
-				a = u;
-			if (composite(a, 1))
-				a = 0;
+			if (streq(s, local) && (u || (u = native_locale(locale, tmp, sizeof(tmp)))))
+				s = u;
+			lc_all = lcmake(s);
 		}
-		p = 0;
+		else
+			lc_all = 0;
 		for (i = 1; i < AST_LC_COUNT; i++)
-		{
-			if (!lc_categories[i].prev)
+			if ((s = getenv(lc_categories[i].name)) && *s)
 			{
-				if (!p && !(p = lcmake(a)))
-					break;
-				lc_categories[i].prev = p;
+				if (streq(s, local) && (u || (u = native_locale(locale, tmp, sizeof(tmp)))))
+					s = u;
+				lc_categories[i].prev = lcmake(s);
 			}
-			if (!single(i, lc_categories[i].prev))
+			else
+				lc_categories[i].prev = 0;
+		for (i = 1; i < AST_LC_COUNT; i++)
+			if (!single(i, lc_all ? lc_all : lc_categories[i].prev))
 			{
 				while (i--)
 					single(i, NiL);
 				return 0;
 			}
-		}
 		if (ast.locale.set & AST_LC_debug)
 			for (i = 1; i < AST_LC_COUNT; i++)
-				sfprintf(sfstderr, "locale env  %17s %s\n", lc_categories[i].name, locales[i]->name);
+				sfprintf(sfstderr, "locale env  %17s %16s %16s\n", lc_categories[i].name, locales[i]->name, lc_categories[i].prev ? lc_categories[i].prev->name : (char*)0);
 		initialized = 1;
 		goto compose;
 	}
-	else if (!(p = lc_categories[category].prev))
+	else if (category == AST_LC_LANG || !(p = lc_categories[category].prev))
 		p = lcmake("C");
-	if (category != AST_LC_ALL)
-		return single(category, p);
-	else if (!(i = composite(locale, 0)))
+	if (category == AST_LC_LANG)
 	{
-		if (!p)
-			return 0;
+		if (lang != p)
+		{
+			lang = p;
+			if (!lc_all)
+				for (i = 1; i < AST_LC_COUNT; i++)
+					if (!single(i, lc_categories[i].prev))
+					{
+						while (i--)
+							single(i, NiL);
+						return 0;
+					}
+		}
+	}
+	else if (category != AST_LC_ALL)
+		return single(category, p);
+	else if ((i = composite(locale, 0)) < 0)
+		return 0;
+	else if (lc_all != p)
+	{
+		lc_all = p;
 		for (i = 1; i < AST_LC_COUNT; i++)
-			if (!single(i, p))
+			if (!single(i, lc_all ? lc_all : lc_categories[i].prev))
 			{
 				while (i--)
 					single(i, NiL);
 				return 0;
 			}
 	}
-	else if (i < 0)
-		return 0;
 	goto compose;
 }

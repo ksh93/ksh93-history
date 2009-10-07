@@ -1,7 +1,7 @@
 : -O to CCSPECIALIZE cc wrapper : 2005-07-17 :
 
-case $1 in
--dumpmachine) echo $HOSTTYPE; exit ;;
+case " $* " in
+*" -dumpmachine "*) echo $HOSTTYPE; exit ;;
 esac
 
 cc=cc

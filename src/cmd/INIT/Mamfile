@@ -1,8 +1,8 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.3 2009-05-05
+info mam static 00000 1994-07-17 make (AT&T Research) 5.4 2009-10-09
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
-setv AR ar
-setv ARFLAGS cr
+setv AR ${mam_cc_AR} ${mam_cc_AR_ARFLAGS}
+setv ARFLAGS -cr
 setv AS as
 setv ASFLAGS
 setv CC cc

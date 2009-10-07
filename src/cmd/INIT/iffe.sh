@@ -30,7 +30,7 @@ case $-:$BASH_VERSION in
 esac
 
 command=iffe
-version=2009-05-01 # update in USAGE too #
+version=2009-10-06 # update in USAGE too #
 
 compile() # $cc ...
 {
@@ -56,6 +56,34 @@ compile() # $cc ...
 		;;
 	esac
 	return $_compile_status
+}
+
+is_hdr() # [ - ] [ file.c ] hdr
+{
+	case $1 in
+	-)	_is_hdr_flag=-; shift ;;
+	*)	_is_hdr_flag= ;;
+	esac
+	case $1 in
+	*.c)	_is_hdr_file=$1; shift ;;
+	*)	_is_hdr_file=$tmp.c ;;
+	esac
+	is hdr $1
+	compile $cc -c $_is_hdr_file <&$nullin >&$nullout 2>$tmp.e
+	_is_hdr_status=$?
+	case $_is_hdr_status in
+	0)	if	test -s $tmp.e
+		then	case `grep '#.*error' $tmp.e` in
+			?*)	_is_hdr_status=1 ;;
+			esac
+		fi
+		;;
+	esac
+	case $_is_hdr_status in
+	0)	success $_is_hdr_flag ;;
+	*)	failure $_is_hdr_flag ;;
+	esac
+	return $_is_hdr_status
 }
 
 pkg() # package
@@ -603,7 +631,7 @@ set=
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: iffe (AT&T Research) 2009-05-01 $
+@(#)$Id: iffe (AT&T Research) 2009-10-06 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?iffe - C compilation environment feature probe]
@@ -2284,15 +2312,13 @@ extern $t	$x$v;
 						;;
 					esac
 					;;
-				*)	is hdr $x
-					copy $tmp.c "$std
+				*)	copy $tmp.c "$std
 $usr
 #include <$x>
 int x;
 "
-					if	compile $cc -c $tmp.c <&$nullin >&$nullout
-					then	success -
-						gothdr="$gothdr + $x"
+					if	is_hdr - $x
+					then	gothdr="$gothdr + $x"
 						case $op in
 						reference)
 							;;
@@ -2302,8 +2328,7 @@ int x;
 							;;
 						esac
 						usr="$usr${nl}#include <$x>"
-					else	failure -
-						gothdr="$gothdr - $x"
+					else	gothdr="$gothdr - $x"
 					fi
 					;;
 				esac
@@ -2368,10 +2393,8 @@ $*
 				esac
 				x=sys/$x.h
 				echo "${allinc}#include <$x>" > $tmp.c
-				is hdr $x
-				if	compile $cc -E $tmp.c <&$nullin >&$nullout
-				then	success
-					gothdr="$gothdr + $x"
+				if	is_hdr $x
+				then	gothdr="$gothdr + $x"
 					case $explicit in
 					0)	can="$can$cansep#define $c	1	/* #include <$x> ok */"
 						nan="$nan$cansep$c=1"
@@ -2380,8 +2403,7 @@ $*
 					esac
 					eval $c=1
 					allinc="${allinc}#include <$x>$nl"
-				else	failure
-					gothdr="$gothdr - $x"
+				else	gothdr="$gothdr - $x"
 					case $explicit$all$config$undef in
 					0?1?|0??1)
 						can="$can$cansep#undef	$c		/* #include <$x> not ok */"
@@ -2458,10 +2480,8 @@ $*
 							;;
 						esac
 						echo "${allinc}#include <$x>" > $tmp.c
-						is hdr $x
-						if	compile $cc -E $tmp.c <&$nullin >&$nullout
-						then	success
-							gothdr="$gothdr + $x"
+						if	is_hdr $x
+						then	gothdr="$gothdr + $x"
 							case $dis in
 							0)	can="$can$cansep#define $c	1	/* #include <$x> ok */"
 								nan="$nan$cansep$c=1"
@@ -2469,8 +2489,7 @@ $*
 								;;
 							esac
 							eval $c=1
-						else	failure
-							gothdr="$gothdr - $x"
+						else	gothdr="$gothdr - $x"
 							case $dis$all$config$undef in
 							0?1?|0??1)
 								can="$can$cansep#undef	$c		/* #include <$x> not ok */"
@@ -3657,10 +3676,8 @@ $tst
 $ext
 $allinc
 #include <$x>" > $tmp.c
-							is hdr $x
-							if	compile $cc -E $tmp.c <&$nullin >&$nullout
-							then	success
-								gothdr="$gothdr + $x"
+							if	is_hdr $x
+							then	gothdr="$gothdr + $x"
 								case $M in
 								*-*)	;;
 								*)	case " $puthdr " in
@@ -3677,8 +3694,7 @@ $allinc
 									eval $m=1
 									;;
 								esac
-							else	failure
-								gothdr="$gothdr - $x"
+							else	gothdr="$gothdr - $x"
 								case $M in
 								*-*)	;;
 								*)	case $define$all$config$undef in
@@ -3986,13 +4002,10 @@ _END_EXTERNS_
 							;;
 						*" + $i "*)
 							;;
-						*)	is hdr $x
-							echo "$x" > $tmp.c
-							if	compile $cc -E $tmp.c <&$nullin >&$nullout
-							then	success
-								gothdr="$gothdr + $x"
-							else	failure -
-								gothdr="$gothdr - $x"
+						*)	echo "$x" > $tmp.c
+							if	is_hdr $x
+							then	gothdr="$gothdr + $x"
+							else	gothdr="$gothdr - $x"
 								continue
 							fi
 							;;

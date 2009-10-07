@@ -1559,7 +1559,7 @@ If \fIbase\fP is larger than \f536\fP, the set of digits is:
 .Ss "BUFFERING, SYNCHRONIZATION"
 .PP
 .Ss "  Void_t* sfsetbuf(Sfio_t* f, Void_t* buf, size_t size)"
-This function changed the buffering scheme for the stream \f5f\fP.
+This function changes the buffering scheme for the stream \f5f\fP.
 The stream will be synchronized before any buffer modification.
 If a new buffer is successfully set and the old buffer has not been freed,
 \f5sfsetbuf()\fP returns the old buffer. Otherwise, it returns \f5NULL\fP.

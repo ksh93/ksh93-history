@@ -1,4 +1,9 @@
-09-09-17  --- Release ksh93t+  ---
+09-10-07  --- Release ksh93t+  ---
+09-10-07  $PATH processing has been changed to delay dir stat() and .paths
+	  lookup until the directory is needed in the path search.
+09-09-28  Call the ast setlocale() intercept on unset too.
+09-09-24  A bug in which LANG=foo; LC_ALL=foo; unset LC_ALL; did not revert
+	  LC_CTYPE etc. to the LANG value has been fixed.
 09-09-17  A bug in which unsetting SVLVL could cause a script invoked by
 	  name without #! to core dump has been fixed.
 09-09-16  A bug in which a pipeline in a here-document could hang when the

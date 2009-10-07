@@ -47,6 +47,10 @@ All recorded changes follow.
 <P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="INIT changes">INIT changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
+09-10-06 iffe.sh: handle cc -E #error with 0 exit status (sgi)
+09-10-06 package.sh: stub in ar intercept checks -- not used yet
+09-10-06 ar.ibm.risc: add ar intercept because some aix require -Xfoo first!!
+09-09-24 regress.sh: fix UMASK logic to create test support files before umask
 09-08-28 release.c: change docs to mention stdin if no file operands
 09-08-24 package.sh: fix isascii() bug that failed on od(1) trailing space
 09-08-20 make.probe: add CC.SHARED.NAME
@@ -894,7 +898,7 @@ All recorded changes follow.
 <TR>
 <TD align=left></TD>
 <TD align=center></TD>
-<TD align=right>September 17, 2009</TD>
+<TD align=right>October 07, 2009</TD>
 </TR>
 </TABLE>
 <P>

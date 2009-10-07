@@ -23,7 +23,7 @@ command=regress
 case $(getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt) in
 0123)	USAGE=$'
 [-?
-@(#)$Id: regress (AT&T Research) 2009-08-20 $
+@(#)$Id: regress (AT&T Research) 2009-09-24 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?regress - run regression tests]
@@ -996,7 +996,10 @@ function COMMAND # arg ...
 		sed -e 's,^print -r -- ,,' -e 's,$, "$@",' >$TWD/COMMAND
 		chmod +x $TWD/COMMAND
 	fi
-	[[ $UMASK != $UMASK_ORIG ]] && umask $UMASK
+	if	[[ $UMASK != $UMASK_ORIG ]]
+	then	: >$TWD/ERROR
+		umask $UMASK
+	fi
 	if	[[ ${TYPE[INPUT]} == FIFO && ${FILE[INPUT]} == */INPUT ]]
 	then	input="< ${FILE[INPUT]}"
 	fi

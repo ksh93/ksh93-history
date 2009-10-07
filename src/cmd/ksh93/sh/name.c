@@ -2001,7 +2001,7 @@ static int scanfilter(Dt_t *dict, void *arg, void *data)
 	register struct adata *tp = (struct adata*)sp->scandata;
 	NOT_USED(dict);
 #if SHOPT_TYPEDEF
-	if(tp && tp->tp && nv_type(np)!=tp->tp)
+	if(tp && !is_abuiltin(np) && tp && tp->tp && nv_type(np)!=tp->tp)
 		return(0);
 #endif /*SHOPT_TYPEDEF */
 	if(sp->scanmask?(k&sp->scanmask)==sp->scanflags:(!sp->scanflags || (k&sp->scanflags)))
@@ -2146,6 +2146,8 @@ static void table_unset(Shell_t *shp, register Dt_t *root, int flags, Dt_t *oroo
 					Sfdouble_t d = nv_getnum(nq);
 					nv_putval(nq,(char*)&d,NV_LDOUBLE);
 				}
+				else if(shp->test&4)
+					nv_putval(nq, strdup(nv_getval(nq)), NV_RDONLY);
 				else
 					nv_putval(nq, nv_getval(nq), NV_RDONLY);
 				shp->subshell = subshell;

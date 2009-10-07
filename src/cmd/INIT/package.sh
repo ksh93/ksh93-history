@@ -64,7 +64,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2009-08-24 $
+@(#)$Id: package (AT&T Research) 2009-10-06 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -5119,7 +5119,7 @@ make|view)
 		$exec cp $PACKAGEROOT/$i $INSTALLROOT/$i
 	done
 
-	# check $CC and { cc ld ldd } intercepts
+	# check $CC and { ar cc ld ldd } intercepts
 
 	h=$HOSTTYPE
 	case $HOSTTYPE in
@@ -5215,6 +5215,24 @@ make|view)
 			;;
 		esac
 	done
+# following code stubbed out just in case ar.ibm.risc is needed
+#	c=ar
+#	b=$INSTALLROOT/bin/$c
+#	for t in $h
+#	do	s=$INITROOT/$c.$t
+#		test -x "$s" || continue
+#		onpath $c ||
+#		case `ls -t "$b" "$s" 2>/dev/null` in
+#		$b*)	;;
+#		$s*)	x=`$s -tv /foo/bar.a 2>&1 | egrep -i 'option|usage'`
+#			case $x in
+#			'')	$exec cp "$s" "$b"
+#				note update $b
+#				;;
+#			esac
+#			;;
+#		esac
+#	done
 	case $cc in
 	/*)	;;
 	*)	echo "$command: $CC: not found -- set CC=C-compiler" >&2

@@ -286,7 +286,7 @@ yes=$(whence -p yes)
 do { $SHELL <<- EOF
 		foo() { return 0; }
 		trap foo EXIT
-		{ sleep 2; kill -$exp \$\$; sleep 1; kill -0 \$\$ && kill -KILL \$\$; } &
+		{ sleep 2; kill -$exp \$\$; sleep 3; kill -0 \$\$ && kill -KILL \$\$; } &
 		$yes | while read yes; do
 		        (/bin/date; sleep .1)
 		done > /dev/null

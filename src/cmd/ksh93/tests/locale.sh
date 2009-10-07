@@ -28,6 +28,9 @@ alias err_exit='err_exit $LINENO'
 Command=${0##*/}
 integer Errors=0
 
+tmp=$(mktemp -dt) || { err_exit mktemp -dt failed; exit 1; }
+trap "cd /; rm -rf $tmp" EXIT
+
 # LC_ALL=debug is an ast specific debug/test locale
 
 if	[[ "$(LC_ALL=debug $SHELL <<- \+EOF+
@@ -104,5 +107,35 @@ then	LC_ALL=$lc_all
 	u=$(LC_ALL=$lc_all $SHELL -c $'printf "%04x\n" \$\'\"\303\274\"\' \$\'\"\xE2\x82\xAC\"\'')
 	[[ $u == $x ]] || err_exit LC_ALL=$lc_all multibyte %04x printf format failed
 fi
+
+exp="6 2 6"
+#$SHELL -c 'export LANG=en_US.UTF-8; printf "\u[20ac]\u[20ac]" >two_euro_chars.txt'
+printf $'\342\202\254\342\202\254' >two_euro_chars.txt
+set -- $($SHELL -c '
+	unset LC_CTYPE
+	export LANG=en_US.UTF-8
+	export LC_ALL=C
+	command wc -C < two_euro_chars.txt
+	unset LC_ALL
+	command wc -C < two_euro_chars.txt
+	export LC_ALL=C
+	command wc -C < two_euro_chars.txt
+')
+got=$*
+[[ $got == $exp ]] || print "command wc LC_ALL default failed -- expected '$exp', got '$got'"
+set -- $($SHELL -c '
+	if	builtin -f cmd wc 2>/dev/null
+	then	unset LC_CTYPE
+		export LANG=en_US.UTF-8
+		export LC_ALL=C
+		wc -C < two_euro_chars.txt
+		unset LC_ALL
+		wc -C < two_euro_chars.txt
+		export LC_ALL=C
+		wc -C < two_euro_chars.txt
+	fi
+')
+got=$*
+[[ $got == $exp ]] || print "builtin wc LC_ALL default failed -- expected '$exp', got '$got'"
 
 exit $Errors

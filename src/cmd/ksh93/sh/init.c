@@ -355,13 +355,17 @@ static void put_cdpath(register Namval_t* np,const char *val,int flags,Namfun_t 
     }
 #endif
 
-    /* Trap for LC_ALL, LC_TYPE, LC_MESSAGES, LC_COLLATE and LANG */
+    /* Trap for LC_ALL, LC_CTYPE, LC_MESSAGES, LC_COLLATE and LANG */
     static void put_lang(Namval_t* np,const char *val,int flags,Namfun_t *fp)
     {
 	Shell_t *shp = nv_shell(np);
 	int type;
 	char *lc_all = nv_getval(LCALLNOD);
 	char *name = nv_name(np);
+	if((shp->test&1) && !val && !nv_getval(np))
+		return;
+	if(shp->test&2)
+		nv_putv(np, val, flags, fp);
 	if(name==(LCALLNOD)->nvname)
 		type = LC_ALL;
 	else if(name==(LCTYPENOD)->nvname)
@@ -372,22 +376,30 @@ static void put_cdpath(register Namval_t* np,const char *val,int flags,Namfun_t 
 		type = LC_COLLATE;
 	else if(name==(LCNUMNOD)->nvname)
 		type = LC_NUMERIC;
-	else if(name==(LANGNOD)->nvname && (!lc_all || *lc_all==0))
-		type = LC_ALL;
+#ifdef LC_LANG
+	else if(name==(LANGNOD)->nvname)
+		type = LC_LANG;
+#else
+#define LC_LANG		LC_ALL
+	else if(name==(LANGNOD)->nvname && (!lc_all || !*lc_all))
+		type = LC_LANG;
+#endif
 	else
 		type= -1;
 	if(sh_isstate(SH_INIT) && type>=0 && type!=LC_ALL && lc_all && *lc_all)
 		type= -1;
-	if(type>=0 || type==LC_ALL)
+	if(type>=0 || type==LC_ALL || type==LC_LANG)
 	{
-		if(!setlocale(type,val?val:""))
+		if(!setlocale(type,val?val:"-") && val)
 		{
 			if(!sh_isstate(SH_INIT) || shp->login_sh==0)
 				errormsg(SH_DICT,0,e_badlocale,val);
 			return;
 		}
 	}
-	if(CC_NATIVE==CC_ASCII && (type==LC_ALL || type==LC_CTYPE))
+	if(!(shp->test&2))
+		nv_putv(np, val, flags, fp);
+	if(CC_NATIVE==CC_ASCII && (type==LC_ALL || type==LC_LANG || type==LC_CTYPE))
 	{
 		if(sh_lexstates[ST_BEGIN]!=sh_lexrstates[ST_BEGIN])
 			free((void*)sh_lexstates[ST_BEGIN]);
@@ -438,7 +450,6 @@ static void put_cdpath(register Namval_t* np,const char *val,int flags,Namfun_t 
 	if(type==LC_ALL || type==LC_MESSAGES)
 		error_info.translate = msg_translate;
 #endif
-	nv_putv(np, val, flags, fp);
     }
 #endif /* _hdr_locale */
 

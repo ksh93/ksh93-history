@@ -800,7 +800,7 @@ b_join(int argc, char** argv, void* context)
 	if (jp->buffered)
 	{
 		sfsetbuf(jp->file[0].iop, jp->file[0].iop, SF_UNBOUND);
-		sfsetbuf(jp->file[1].iop, jp->file[0].iop, SF_UNBOUND);
+		sfsetbuf(jp->file[1].iop, jp->file[1].iop, SF_UNBOUND);
 	}
 	jp->state['\n'] = S_NL;
 	jp->outfile = sfstdout;

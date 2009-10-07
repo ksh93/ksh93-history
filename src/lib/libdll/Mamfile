@@ -1,10 +1,10 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.3 2009-05-05
+info mam static 00000 1994-07-17 make (AT&T Research) 5.4 2009-10-09
 setv INSTALLROOT ../../..
 setv PACKAGE_ast_INCLUDE ${INSTALLROOT}/include/ast
 setv PACKAGE_ast_LIB ${INSTALLROOT}/lib
 setv PACKAGEROOT ../../../../..
-setv AR ar
-setv ARFLAGS cr
+setv AR ${mam_cc_AR} ${mam_cc_AR_ARFLAGS}
+setv ARFLAGS -cr
 setv AS as
 setv ASFLAGS
 setv CC cc
@@ -234,7 +234,7 @@ meta dllscan.o %.c>%.o dllscan.c dllscan
 prev dllscan.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_BLD_dll -D_PACKAGE_ast -c dllscan.c
 done dllscan.o generated
-exec - ${AR} cr libdll.a dlfcn.o dllopen.o dllfind.o dllplug.o dllnext.o dlllook.o dllscan.o
+exec - ${AR} -cr libdll.a dlfcn.o dllopen.o dllfind.o dllplug.o dllnext.o dlllook.o dllscan.o
 exec - (ranlib libdll.a) >/dev/null 2>&1 || true
 done libdll.a generated
 done dll virtual

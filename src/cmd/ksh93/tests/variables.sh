@@ -614,14 +614,18 @@ do	nameref r=$v
 	else	err_exit "unset $v; : \$$v failed"
 	fi
 done
+
+x=x
 for v in LC_ALL LC_CTYPE LC_MESSAGES LC_COLLATE LC_NUMERIC
 do	nameref r=$v
 	unset $v
 	[[ $r ]] && err_exit "unset $v failed -- expected '', got '$r'"
 	d=$($SHELL -c "$v=$x" 2>&1)
 	[[ $d ]] || err_exit "$v=$x failed -- expected locale diagnostic"
-	( r=$x; [[ ! $r ]] ) 2>/dev/null || err_exit "$v=$x failed -- expected ''"
-	( r=C; r=$x; [[ $r == C ]] ) 2>/dev/null || err_exit "$v=C; $v=$x failed -- expected 'C'"
+	{ g=$( r=$x; print -- $r ); } 2>/dev/null
+	[[ $g == '' ]] || err_exit "$v=$x failed -- expected '', got '$g'"
+	{ g=$( r=C; r=$x; print -- $r ); } 2>/dev/null
+	[[ $g == 'C' ]] || err_exit "$v=C; $v=$x failed -- expected 'C', got '$g'"
 done
 PATH=$path
 

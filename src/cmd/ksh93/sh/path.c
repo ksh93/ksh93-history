@@ -380,6 +380,44 @@ void path_dump(register Pathcomp_t *pp)
 #endif
 
 /*
+ * check for duplicate directories on PATH
+ */
+static void path_checkdup(register Pathcomp_t *pp)
+{
+	register char		*name = pp->name;
+	register Pathcomp_t	*oldpp,*first;
+	register int		flag=0;
+	struct stat 		statb;
+	if(stat(name,&statb)<0 || !S_ISDIR(statb.st_mode))
+	{
+		pp->flags |= PATH_SKIP;
+		pp->dev = *name=='/';
+		return;
+	}
+	pp->mtime = statb.st_mtime;
+	pp->ino = statb.st_ino;
+	pp->dev = statb.st_dev;
+	if(*name=='/' && onstdpath(name))
+		flag = PATH_STD_DIR;
+	for(oldpp=first=path_get(""); oldpp && oldpp!=pp; oldpp=oldpp->next)
+	{
+		if(pp->ino==oldpp->ino && pp->dev==oldpp->dev && pp->mtime==oldpp->mtime)
+		{
+			flag |= PATH_SKIP;
+			break;
+		}
+	}
+	pp->flags |= flag;
+	if(((pp->flags&(PATH_PATH|PATH_SKIP))==PATH_PATH))
+	{
+		int offset = staktell();
+		stakputs(name);
+		path_chkpaths(first,0,pp,offset);
+		stakseek(offset);
+	}
+}
+
+/*
  * write the next path to search on the current stack
  * if last is given, all paths that come before <last> are skipped
  * the next pathcomp is returned.
@@ -393,6 +431,8 @@ Pathcomp_t *path_nextcomp(register Pathcomp_t *pp, const char *name, Pathcomp_t 
 	{
 		for(;pp && pp!=last;pp=pp->next)
 		{
+			if(!pp->dev && !pp->ino)
+				path_checkdup(pp);
 			if(pp->flags&PATH_SKIP)
 				continue;
 			if(!last || *pp->name!='/')
@@ -692,11 +732,9 @@ int	path_search(register const char *name,Pathcomp_t **oldpp, int flag)
 	return(0);
 }
 
-
 /*
  * do a path search and find the full pathname of file name
  */
-
 Pathcomp_t *path_absolute(register const char *name, Pathcomp_t *pp)
 {
 	register int	f,isfun;
@@ -713,7 +751,11 @@ Pathcomp_t *path_absolute(register const char *name, Pathcomp_t *pp)
 		sh_sigcheck();
 		isfun = (pp->flags&PATH_FPATH);
 		if(oldpp=pp)
+		{
 			pp = path_nextcomp(pp,name,0);
+			while((oldpp->flags&PATH_SKIP) && oldpp->next)
+				oldpp = oldpp->next;
+		}
 		if(!isfun && !sh_isoption(SH_RESTRICTED))
 		{
 			if(*stakptr(PATH_OFFSET)=='/' && nv_search(stakptr(PATH_OFFSET),sh.bltin_tree,0))
@@ -1347,7 +1389,6 @@ static void exscript(Shell_t *shp,register char *path,register char *argv[],char
 static Pathcomp_t *path_addcomp(Pathcomp_t *first, Pathcomp_t *old,const char *name, int flag)
 {
 	register Pathcomp_t *pp, *oldpp;
-	struct stat statb;
 	int len, offset=staktell();
 	if(!(flag&PATH_BFPATH))
 	{
@@ -1369,65 +1410,26 @@ static Pathcomp_t *path_addcomp(Pathcomp_t *first, Pathcomp_t *old,const char *n
 			return(first);
 		}
 	}
-	if(old && (old=path_dirfind(old,name,0)))
-	{
-		statb.st_ino = old->ino;
-		statb.st_dev = old->dev;
-		statb.st_mtime = old->mtime;
-		if(old->ino==0 && old->dev==0)
-			flag |= PATH_SKIP;
-	}
-	else if(stat(name,&statb)<0 || !S_ISDIR(statb.st_mode))
-	{
-		if(*name=='/')
-		{
-			if(strcmp(name,SH_CMDLIB_DIR))
-				return(first);
-			statb.st_dev = 1;
-		}
-		else
-		{
-			flag |= PATH_SKIP;
-			statb.st_dev = 0;
-		}
-		statb.st_ino = 0;
-		statb.st_mtime = 0;
-	}
-	if(*name=='/' && onstdpath(name))
-		flag |= PATH_STD_DIR;
-	for(pp=first, oldpp=0; pp; oldpp=pp, pp=pp->next)
-	{
-		if(pp->ino==statb.st_ino && pp->dev==statb.st_dev && pp->mtime==statb.st_mtime)
-		{
-			/* if both absolute paths, eliminate second */
-			pp->flags |= flag;
-			if(*name=='/' && *pp->name=='/')
-				return(first);
-			/* keep the path but mark it as skip */
-			flag |= PATH_SKIP;
-		}
-	}
+	for(pp=first, oldpp=0; pp; oldpp=pp, pp=pp->next);
 	pp = newof((Pathcomp_t*)0,Pathcomp_t,1,len+1);
 	pp->refcount = 1;
 	memcpy((char*)(pp+1),name,len+1);
 	pp->name = (char*)(pp+1);
 	pp->len = len;
-	pp->dev = statb.st_dev;
-	pp->ino = statb.st_ino;
-	pp->mtime = statb.st_mtime;
 	if(oldpp)
 		oldpp->next = pp;
 	else
 		first = pp;
 	pp->flags = flag;
-	if(pp->ino==0 && pp->dev==1)
+	if(strcmp(name,SH_CMDLIB_DIR)==0)
 	{
+		pp->dev = 1;
 		pp->flags |= PATH_BUILTIN_LIB;
 		pp->blib = malloc(4);
 		strcpy(pp->blib,LIBCMD);
 		return(first);
 	}
-	if((flag&(PATH_PATH|PATH_SKIP))==PATH_PATH)
+	if(old && ((flag&(PATH_PATH|PATH_SKIP))==PATH_PATH))
 		path_chkpaths(first,old,pp,offset);
 	return(first);
 }

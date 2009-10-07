@@ -2,8 +2,8 @@
 
 HOSTTYPE=mvs.390
 
-case $1 in
--dumpmachine) echo $HOSTTYPE; exit ;;
+case " $* " in
+*" -dumpmachine "*) echo $HOSTTYPE; exit ;;
 esac
 
 ar=ar

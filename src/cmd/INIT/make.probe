@@ -2,7 +2,7 @@
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)make.probe (AT&T Research) 2009-08-20
+# @(#)make.probe (AT&T Research) 2009-09-22
 #
 # C probe for make
 #
@@ -988,7 +988,7 @@ then	eval set x $probe_ar_arflags
 		0)	break ;;
 		esac
 		rm -f libxxx.$lib
-		if	$ar $1 r libxxx.$lib shared.$obj && $ar t libxxx.$lib 2>&1 | grep shared.$obj >/dev/null
+		if	$ar $1 r libxxx.$lib shared.$obj && $ar $1 t libxxx.$lib 2>&1 | grep shared.$obj >/dev/null
 		then	ar_arflags=$1
 			break
 		fi

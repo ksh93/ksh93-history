@@ -125,6 +125,7 @@ lcindex(int category, int min)
 	case LC_COLLATE:	return AST_LC_COLLATE;
 	case LC_CTYPE:		return AST_LC_CTYPE;
 	case LC_IDENTIFICATION:	return AST_LC_IDENTIFICATION;
+	case LC_LANG:		return AST_LC_LANG;
 	case LC_MEASUREMENT:	return AST_LC_MEASUREMENT;
 	case LC_MESSAGES:	return AST_LC_MESSAGES;
 	case LC_MONETARY:	return AST_LC_MONETARY;
