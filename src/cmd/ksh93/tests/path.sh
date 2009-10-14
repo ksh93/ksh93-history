@@ -156,16 +156,57 @@ fi
 status=$?
 [[ $status == 126 ]] || err_exit "exit status of non-executable is $status -- 126 expected"
 builtin -d rm 2> /dev/null
+chmod=$(whence chmod)
 rm=$(whence rm)
 d=$(dirname "$rm")
+
+chmod=$(whence chmod)
+
+for cmd in date foo
+do	exp="$cmd found"
+	print print $exp > $cmd
+	$chmod +x $cmd
+	got=$($SHELL -c "unset FPATH; PATH=/dev/null; $cmd" 2>&1)
+	[[ $got == $exp ]] && err_exit "$cmd as last command should not find ./$cmd with PATH=/dev/null"
+	got=$($SHELL -c "unset FPATH; PATH=/dev/null; $cmd" 2>&1)
+	[[ $got == $exp ]] && err_exit "$cmd should not find ./$cmd with PATH=/dev/null"
+	exp=$PWD/./$cmd
+	got=$(unset FPATH; PATH=/dev/null; whence ./$cmd)
+	[[ $got == $exp ]] || err_exit "whence $cmd should find ./$cmd with PATH=/dev/null"
+	exp=$PWD/$cmd
+	got=$(unset FPATH; PATH=/dev/null; whence $PWD/$cmd)
+	[[ $got == $exp ]] || err_exit "whence \$PWD/$cmd should find ./$cmd with PATH=/dev/null"
+done
+
+exp=''
+got=$($SHELL -c "unset FPATH; PATH=/dev/null; whence ./notfound" 2>&1)
+[[ $got == $exp ]] || err_exit "whence ./$cmd failed -- expected '$exp', got '$got'"
+got=$($SHELL -c "unset FPATH; PATH=/dev/null; whence $PWD/notfound" 2>&1)
+[[ $got == $exp ]] || err_exit "whence \$PWD/$cmd failed -- expected '$exp', got '$got'"
+
 unset FPATH
 PATH=/dev/null
-if	date > /dev/null 2>&1
-then	err_exit 'programs in . should not be found'
-fi
-[[ $(whence ./foo) != "$PWD/"./foo ]] && err_exit 'whence ./foo not working'
-[[ $(whence "$PWD/foo") != "$PWD/foo" ]] && err_exit 'whence $PWD/foo not working'
-[[ $(whence ./xxxxx) ]] && err_exit 'whence ./xxxx not working'
+for cmd in date foo
+do	exp="$cmd found"
+	print print $exp > $cmd
+	$chmod +x $cmd
+	got=$($cmd 2>&1)
+	[[ $got == $exp ]] && err_exit "$cmd as last command should not find ./$cmd with PATH=/dev/null"
+	got=$($cmd 2>&1; :)
+	[[ $got == $exp ]] && err_exit "$cmd should not find ./$cmd with PATH=/dev/null"
+	exp=$PWD/./$cmd
+	got=$(whence ./$cmd)
+	[[ $got == $exp ]] || err_exit "whence ./$cmd should find ./$cmd with PATH=/dev/null"
+	exp=$PWD/$cmd
+	got=$(whence $PWD/$cmd)
+	[[ $got == $exp ]] || err_exit "whence \$PWD/$cmd should find ./$cmd with PATH=/dev/null"
+done
+exp=''
+got=$(whence ./notfound)
+[[ $got == $exp ]] || err_exit "whence ./$cmd failed -- expected '$exp', got '$got'"
+got=$(whence $PWD/notfound)
+[[ $got == $exp ]] || err_exit "whence \$PWD/$cmd failed -- expected '$exp', got '$got'"
+
 PATH=$d:
 cp "$rm" kshrm
 if	[[ $(whence kshrm) != $PWD/kshrm  ]]

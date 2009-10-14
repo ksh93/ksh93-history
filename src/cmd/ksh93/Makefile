@@ -230,3 +230,11 @@ test.% : %.sh $(BINDIR)/$(SH) $(SH) shtests
 	SHELL=$(*:O=2:P=A) $(*:O=2:P=A) $(*:O=4:B) $(SHTESTSFLAGS) $(*:O=1:P=A)
 
 end
+
+if SH != ksh
+
+_BLD_shell == 1
+
+.INSTALL : .CLEAR $(*.INSTALL:N=*$(SH:/.*sh//)*:N!=*@($(CC.SUFFIX.ARCHIVE)|$(CC.SUFFIX.SHARED)))
+
+end

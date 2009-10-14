@@ -104,10 +104,7 @@ static Namval_t *scope(Shell_t *shp,register Namval_t *np,register struct lval *
 	{
 		if(!sub)
 			sub = (char*)&lvalue->expr[flag];
-		if(((ap=nv_arrayptr(np)) && array_assoc(ap)) || (lvalue->emode&ARITH_COMP))
-			nv_endsubscript(np,sub,NV_ADD|NV_SUBQUOTE);
-		else
-			nv_putsub(np, NIL(char*),flag);
+		nv_endsubscript(np,sub,NV_ADD|NV_SUBQUOTE);
 	}
 	return(np);
 }
@@ -243,28 +240,18 @@ static Sfdouble_t arith(const char **ptr, struct lval *lvalue, int type, Sfdoubl
 			if(!np && lvalue->value)
 				break;
 			lvalue->value = (char*)np;
-			if((lvalue->emode&ARITH_COMP) || (nv_isarray(np) && nv_aindex(np)<0))
-			{
-				/* bind subscript later */
-				lvalue->flag = 0;
-				if(c=='[')
-				{
-					lvalue->flag = (str-lvalue->expr);
-					do
-						str = nv_endsubscript(np,str,0);
-					while((c= *str)=='[');
-				}
-				break;
-			}
-			if(c=='[')
-			{
-				do
-					str = nv_endsubscript(np,str,NV_ADD|NV_SUBQUOTE);
-				while((c=*str)=='[');
-			}
+			/* bind subscript later */
 			if(nv_isattr(np,NV_DOUBLE)==NV_DOUBLE)
 				lvalue->isfloat=1;
-			lvalue->flag = nv_aindex(np);
+			lvalue->flag = 0;
+			if(c=='[')
+			{
+				lvalue->flag = (str-lvalue->expr);
+				do
+					str = nv_endsubscript(np,str,0);
+				while((c= *str)=='[');
+				break;
+			}
 		}
 		else
 		{

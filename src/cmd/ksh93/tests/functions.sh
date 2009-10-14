@@ -1045,4 +1045,27 @@ foo
 	foobar
 ++++
 ) == foo ]] > /dev/null  || err_exit 'functions compiled with shcomp not working'
+# test for functions in shell having side effects.
+unset -f foo foobar bar
+cd "$tmp"
+FPATH=$PWD
+PATH=$FPATH:$PATH
+cat > foo <<- \EOF
+	function bar
+	{
+		print foobar
+	}
+	function foo
+	{
+		bar
+	}
+EOF
+chmod +x foo
+: $(foo)
+[[ $(typeset +f) == *foo* ]] &&  err_exit 'function in subshell leaving side effect of function foo'
+unset -f foo bar
+:  $(foo)
+[[ $(typeset +f) == *foo* ]] && err_exit 'function in subshell leaving side effects of function foo after reload'
+[[ $(typeset +f) == *bar* ]] && err_exit 'function in subshell leaving side effects of function bar after reload'
+
 exit $((Errors))

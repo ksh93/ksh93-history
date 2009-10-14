@@ -1,5 +1,11 @@
-09-10-07  --- Release ksh93t+  ---
-09-10-07  $PATH processing has been changed to delay dir stat() and .paths
+09-10-12  --- Release ksh93t+  ---
+09-10-12  A bug in which a function loaded in a subshell could leave side
+	  effects in the parent shell has been fixed.
+09-10-12  A bug in converting a printf %d operand to a number when the operand
+	  contains multiple subscripts for the same variable has been fixed.
+09-10-09  A bug in the handling of the escape character \ in directory prefixes
+	  in command completion has been fixed.
+09-10-09  $PATH processing has been changed to delay dir stat() and .paths
 	  lookup until the directory is needed in the path search.
 09-09-28  Call the ast setlocale() intercept on unset too.
 09-09-24  A bug in which LANG=foo; LC_ALL=foo; unset LC_ALL; did not revert

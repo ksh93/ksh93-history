@@ -109,32 +109,32 @@ then	LC_ALL=$lc_all
 fi
 
 exp="6 2 6"
-#$SHELL -c 'export LANG=en_US.UTF-8; printf "\u[20ac]\u[20ac]" >two_euro_chars.txt'
-printf $'\342\202\254\342\202\254' >two_euro_chars.txt
-set -- $($SHELL -c '
+#$SHELL -c 'export LANG=en_US.UTF-8; printf "\u[20ac]\u[20ac]" > $tmp/two_euro_chars.txt'
+printf $'\342\202\254\342\202\254' > $tmp/two_euro_chars.txt
+set -- $($SHELL -c "
 	unset LC_CTYPE
 	export LANG=en_US.UTF-8
 	export LC_ALL=C
-	command wc -C < two_euro_chars.txt
+	command wc -C <  $tmp/two_euro_chars.txt
 	unset LC_ALL
-	command wc -C < two_euro_chars.txt
+	command wc -C <  $tmp/two_euro_chars.txt
 	export LC_ALL=C
-	command wc -C < two_euro_chars.txt
-')
+	command wc -C <  $tmp/two_euro_chars.txt
+")
 got=$*
 [[ $got == $exp ]] || print "command wc LC_ALL default failed -- expected '$exp', got '$got'"
-set -- $($SHELL -c '
+set -- $($SHELL -c "
 	if	builtin -f cmd wc 2>/dev/null
 	then	unset LC_CTYPE
 		export LANG=en_US.UTF-8
 		export LC_ALL=C
-		wc -C < two_euro_chars.txt
+		wc -C <  $tmp/two_euro_chars.txt
 		unset LC_ALL
-		wc -C < two_euro_chars.txt
+		wc -C <  $tmp/two_euro_chars.txt
 		export LC_ALL=C
-		wc -C < two_euro_chars.txt
+		wc -C <  $tmp/two_euro_chars.txt
 	fi
-')
+")
 got=$*
 [[ $got == $exp ]] || print "builtin wc LC_ALL default failed -- expected '$exp', got '$got'"
 

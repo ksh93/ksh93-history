@@ -57,6 +57,7 @@ static int		canexecute(char*,int);
 static void		funload(Shell_t*,int,const char*);
 static void		exscript(Shell_t*,char*, char*[], char**);
 static int		path_chkpaths(Pathcomp_t*,Pathcomp_t*,Pathcomp_t*,int);
+static void		path_checkdup(register Pathcomp_t*);
 
 static const char	*std_path;
 
@@ -352,6 +353,7 @@ static char *path_lib(Pathcomp_t *pp, char *path)
 		char save[8];
 		for( ;pp; pp=pp->next)
 		{
+			path_checkdup(pp);
 			if(pp->ino==statb.st_ino && pp->dev==statb.st_dev && pp->mtime==statb.st_mtime)
 				return(pp->lib);
 		}
@@ -399,7 +401,8 @@ static void path_checkdup(register Pathcomp_t *pp)
 	pp->dev = statb.st_dev;
 	if(*name=='/' && onstdpath(name))
 		flag = PATH_STD_DIR;
-	for(oldpp=first=path_get(""); oldpp && oldpp!=pp; oldpp=oldpp->next)
+	first = (pp->flags&PATH_CDPATH)?pp->shp->cdpathlist:path_get("");
+	for(oldpp=first; oldpp && oldpp!=pp; oldpp=oldpp->next)
 	{
 		if(pp->ino==oldpp->ino && pp->dev==oldpp->dev && pp->mtime==oldpp->mtime)
 		{
@@ -424,13 +427,16 @@ static void path_checkdup(register Pathcomp_t *pp)
  */
 Pathcomp_t *path_nextcomp(register Pathcomp_t *pp, const char *name, Pathcomp_t *last)
 {
+	Pathcomp_t	*ppnext;
 	stakseek(PATH_OFFSET);
 	if(*name=='/')
 		pp = 0;
 	else
 	{
-		for(;pp && pp!=last;pp=pp->next)
+		for(;pp && pp!=last;pp=ppnext)
 		{
+			if(ppnext=pp->next)
+				ppnext->shp = pp->shp;
 			if(!pp->dev && !pp->ino)
 				path_checkdup(pp);
 			if(pp->flags&PATH_SKIP)
@@ -563,6 +569,13 @@ static int	path_opentype(const char *name, register Pathcomp_t *pp, int fun)
 	if(fd>=0 && (fd = sh_iomovefd(fd)) > 0)
 	{
 		fcntl(fd,F_SETFD,FD_CLOEXEC);
+		if(!shp)
+		{
+			shp = sh_getinterp();
+#if _UWIN
+			close(0x10001); /* this results in a /var/log/uwin message with "0x10001" for debugging */
+#endif
+		}
 		shp->fdstatus[fd] |= IOCLEX;
 	}
 	return(fd);
@@ -621,16 +634,17 @@ static void funload(Shell_t *shp,int fno, const char *name)
 	pname = path_fullname(stakptr(PATH_OFFSET));
 	if(shp->fpathdict && (rp = dtmatch(shp->fpathdict,(void*)pname)))
 	{
+		Dt_t	*funtree = sh_subfuntree(1);
 		do
 		{
-			if((np = dtsearch(shp->fun_tree,rp->np)) && is_afunction(np))
+			if((np = dtsearch(funtree,rp->np)) && is_afunction(np))
 			{
 				if(np->nvalue.rp)
 					np->nvalue.rp->fdict = 0;
-				nv_delete(np,shp->fun_tree,NV_NOFREE);
+				nv_delete(np,funtree,NV_NOFREE);
 			}
-			dtinsert(shp->fun_tree,rp->np);
-			rp->fdict = shp->fun_tree;
+			dtinsert(funtree,rp->np);
+			rp->fdict = funtree;
 		}
 		while((rp=dtnext(shp->fpathdict,rp)) && strcmp(pname,rp->fname)==0);
 		return;
@@ -753,9 +767,16 @@ Pathcomp_t *path_absolute(register const char *name, Pathcomp_t *pp)
 		if(oldpp=pp)
 		{
 			pp = path_nextcomp(pp,name,0);
-			while((oldpp->flags&PATH_SKIP) && oldpp->next)
-				oldpp = oldpp->next;
+			while(oldpp->flags&PATH_SKIP)
+			{
+				if(!(oldpp=oldpp->next))
+				{
+					shp->path_err = ENOENT;
+					return(0);
+				}
+			}
 		}
+			
 		if(!isfun && !sh_isoption(SH_RESTRICTED))
 		{
 			if(*stakptr(PATH_OFFSET)=='/' && nv_search(stakptr(PATH_OFFSET),sh.bltin_tree,0))
@@ -817,7 +838,8 @@ Pathcomp_t *path_absolute(register const char *name, Pathcomp_t *pp)
 		f = canexecute(stakptr(PATH_OFFSET),isfun);
 		if(isfun && f>=0)
 		{
-			nv_onattr(nv_open(name,shp->fun_tree,NV_NOARRAY|NV_IDENT|NV_NOSCOPE),NV_LTOU|NV_FUNCTION);
+			nv_onattr(nv_open(name,sh_subfuntree(1),NV_NOARRAY|NV_IDENT|NV_NOSCOPE),NV_LTOU|NV_FUNCTION);
+			funload(shp,f,name);
 			close(f);
 			f = -1;
 			return(0);
@@ -960,6 +982,8 @@ void	path_exec(register const char *arg0,register char *argv[],struct argnod *lo
 	sfsync(NIL(Sfio_t*));
 	timerdel(NIL(void*));
 	/* find first path that has a library component */
+	while(pp && (pp->flags&PATH_SKIP))
+		pp = pp->next;
 	if(pp || slash) do
 	{
 		sh_sigcheck();

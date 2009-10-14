@@ -524,4 +524,9 @@ y_ascii=$y
 	done
 EOF) 2> /dev/null ||  err_exit 'error with comma expression'
 
+N=(89551 89557)
+i=0 j=1
+[[ $(printf "%d" N[j]-N[i]) == 6 ]] || err_exit 'printf %d N[i]-N[j] failed'
+[[ $((N[j]-N[i])) == 6 ]] || err_exit  '$((N[j]-N[i])) incorrect'
+
 exit $((Errors))

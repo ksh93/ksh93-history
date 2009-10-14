@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -426,11 +426,11 @@ int ed_expand(Edit_t *ep, char outbuff[],int *cur,int *eol,int mode, int count)
 					*out = ' ';
 				*++out = 0;
 			}
-			else if(out[-1]=='/' && (cp=fmtx(begin))!=begin)
+			else if((cp=fmtx(begin))!=begin)
 			{
 				out = strcopy(begin,cp);
 				if(out[-1] =='"' || out[-1]=='\'')
-					  *--out = 0;;
+					  *--out = 0;
 			}
 			if(*begin==0)
 				ed_ringbell();
