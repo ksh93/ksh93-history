@@ -37,13 +37,6 @@ setv YACCFLAGS -d
 make ${PACKAGEROOT}/lib/package/ast.lic
 done ${PACKAGEROOT}/lib/package/ast.lic
 make install
-make ${INSTALLROOT}/bin
-exec - if	silent test ! -d ${INSTALLROOT}/bin
-exec - then	mkdir -p ${INSTALLROOT}/bin
-exec - fi
-done ${INSTALLROOT}/bin generated
-make ${INSTALLROOT}/bin/ksh
-prev ${INSTALLROOT}/bin
 make ksh
 make pmain.o
 make sh/pmain.c
@@ -1402,6 +1395,65 @@ prev ${mam_libsocket}
 prev ${mam_libsecdb}
 exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -o ksh pmain.o ${mam_libshell} ${mam_libnsl} ${mam_libast}
 done ksh generated
+make shcomp
+make shcomp.o
+make sh/shcomp.c
+prev include/shnodes.h implicit
+prev include/defs.h implicit
+prev include/shell.h implicit
+done sh/shcomp.c
+meta shcomp.o %.c>%.o sh/shcomp.c shcomp
+prev sh/shcomp.c
+setv CC.DLL -UCC.DLL
+setv SH_DICT -DSH_DICT="\"libshell\""
+setv _BLD_shell -U_BLD_shell
+setv _BLD_DLL -U_BLD_DLL
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_BRACEPAT -DSH_DICT=\""libshell"\" -D_PACKAGE_ast -DSHOPT_STATS -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DERROR_CONTEXT_T=Error_context_t -DSHOPT_ESH -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2009 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libshell]"\" -c sh/shcomp.c
+done shcomp.o generated
+prev libshell.a archive
+prev +ljobs
+prev +li
+prev ${mam_libsocket}
+prev ${mam_libsecdb}
+setv CC.DLL -UCC.DLL
+setv SH_DICT -DSH_DICT="\"libshell\""
+exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -o shcomp shcomp.o ${mam_libshell} ${mam_libnsl} ${mam_libast}
+done shcomp generated
+make suid_exec
+make suid_exec.o
+make sh/suid_exec.c
+prev include/version.h implicit
+prev ${PACKAGE_ast_INCLUDE}/error.h implicit
+prev ${PACKAGE_ast_INCLUDE}/sig.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ls.h implicit
+prev FEATURE/externs implicit
+prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
+done sh/suid_exec.c
+meta suid_exec.o %.c>%.o sh/suid_exec.c suid_exec
+prev sh/suid_exec.c
+setv CC.DLL -UCC.DLL
+setv _BLD_shell -U_BLD_shell
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DERROR_CONTEXT_T=Error_context_t -D_PACKAGE_ast -c sh/suid_exec.c
+done suid_exec.o generated
+prev +ljobs
+prev +li
+prev ${mam_libsocket}
+prev ${mam_libsecdb}
+setv CC.DLL -UCC.DLL
+exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -o suid_exec suid_exec.o ${mam_libast} ${mam_libnsl} ${mam_libast}
+done suid_exec generated
+make shell
+prev libshell.a archive
+done shell virtual
+prev libshell.a archive
+make ${INSTALLROOT}/bin
+exec - if	silent test ! -d ${INSTALLROOT}/bin
+exec - then	mkdir -p ${INSTALLROOT}/bin
+exec - fi
+done ${INSTALLROOT}/bin generated
+make ${INSTALLROOT}/bin/ksh
+prev ${INSTALLROOT}/bin
+prev ksh
 exec - test '' = 'ksh' || ${STDCMP} 2>/dev/null -s ksh ${INSTALLROOT}/bin/ksh || { ${STDMV} ${INSTALLROOT}/bin/ksh ${INSTALLROOT}/bin/ksh.old 2>/dev/null || true; ${STDCP} ksh ${INSTALLROOT}/bin/ksh  		    		    ;}
 done ${INSTALLROOT}/bin/ksh generated
 make ${INSTALLROOT}/man/man1
@@ -1420,6 +1472,12 @@ exec - if	silent test ! -d ${INSTALLROOT}/lib
 exec - then	mkdir -p ${INSTALLROOT}/lib
 exec - fi
 done ${INSTALLROOT}/lib generated
+make ${INSTALLROOT}/lib/libshell.a archive
+prev ${INSTALLROOT}/lib
+prev libshell.a archive
+exec - test '' = 'libshell.a' || ${STDCMP} 2>/dev/null -s libshell.a ${INSTALLROOT}/lib/libshell.a || { ${STDMV} ${INSTALLROOT}/lib/libshell.a ${INSTALLROOT}/lib/libshell.a.old 2>/dev/null || true; ${STDCP} libshell.a ${INSTALLROOT}/lib/libshell.a  		    		    ;}
+exec - (ranlib ${INSTALLROOT}/lib/libshell.a) >/dev/null 2>&1 || true
+done ${INSTALLROOT}/lib/libshell.a generated
 make ${INSTALLROOT}/man/man3
 exec - if	silent test ! -d ${INSTALLROOT}/man/man3
 exec - then	mkdir -p ${INSTALLROOT}/man/man3
@@ -1477,56 +1535,11 @@ exec - else	mv 1.${COTEMP}.x ${PACKAGE_ast_INCLUDE}/history.h
 exec - fi
 done ${PACKAGE_ast_INCLUDE}/history.h generated
 make ${INSTALLROOT}/bin/suid_exec
-make suid_exec
-make suid_exec.o
-make sh/suid_exec.c
-prev include/version.h implicit
-prev ${PACKAGE_ast_INCLUDE}/error.h implicit
-prev ${PACKAGE_ast_INCLUDE}/sig.h implicit
-prev ${PACKAGE_ast_INCLUDE}/ls.h implicit
-prev FEATURE/externs implicit
-prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
-done sh/suid_exec.c
-meta suid_exec.o %.c>%.o sh/suid_exec.c suid_exec
-prev sh/suid_exec.c
-setv CC.DLL -UCC.DLL
-setv _BLD_shell -U_BLD_shell
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DERROR_CONTEXT_T=Error_context_t -D_PACKAGE_ast -c sh/suid_exec.c
-done suid_exec.o generated
-prev +ljobs
-prev +li
-prev ${mam_libsocket}
-prev ${mam_libsecdb}
-setv CC.DLL -UCC.DLL
-exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -o suid_exec suid_exec.o ${mam_libast} ${mam_libnsl} ${mam_libast}
-done suid_exec generated
+prev suid_exec
 exec - test '' = 'suid_exec' || ${STDCMP} 2>/dev/null -s suid_exec ${INSTALLROOT}/bin/suid_exec || { ${STDMV} ${INSTALLROOT}/bin/suid_exec ${INSTALLROOT}/bin/suid_exec.old 2>/dev/null || true; ${STDCP} suid_exec ${INSTALLROOT}/bin/suid_exec  		    		    ;}
 done ${INSTALLROOT}/bin/suid_exec generated
 make ${INSTALLROOT}/bin/shcomp
-make shcomp
-make shcomp.o
-make sh/shcomp.c
-prev include/shnodes.h implicit
-prev include/defs.h implicit
-prev include/shell.h implicit
-done sh/shcomp.c
-meta shcomp.o %.c>%.o sh/shcomp.c shcomp
-prev sh/shcomp.c
-setv CC.DLL -UCC.DLL
-setv SH_DICT -DSH_DICT="\"libshell\""
-setv _BLD_shell -U_BLD_shell
-setv _BLD_DLL -U_BLD_DLL
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_BRACEPAT -DSH_DICT=\""libshell"\" -D_PACKAGE_ast -DSHOPT_STATS -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DERROR_CONTEXT_T=Error_context_t -DSHOPT_ESH -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2009 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libshell]"\" -c sh/shcomp.c
-done shcomp.o generated
-prev libshell.a archive
-prev +ljobs
-prev +li
-prev ${mam_libsocket}
-prev ${mam_libsecdb}
-setv CC.DLL -UCC.DLL
-setv SH_DICT -DSH_DICT="\"libshell\""
-exec - ${CC} ${CCLDFLAGS} ${mam_cc_FLAGS} ${CCFLAGS} ${LDFLAGS} ${mam_cc_L+-L.} ${mam_cc_L+-L${INSTALLROOT}/lib} -o shcomp shcomp.o ${mam_libshell} ${mam_libnsl} ${mam_libast}
-done shcomp generated
+prev shcomp
 exec - test '' = 'shcomp' || ${STDCMP} 2>/dev/null -s shcomp ${INSTALLROOT}/bin/shcomp || { ${STDMV} ${INSTALLROOT}/bin/shcomp ${INSTALLROOT}/bin/shcomp.old 2>/dev/null || true; ${STDCP} shcomp ${INSTALLROOT}/bin/shcomp  		    		    ;}
 done ${INSTALLROOT}/bin/shcomp generated
 make ${INSTALLROOT}/fun

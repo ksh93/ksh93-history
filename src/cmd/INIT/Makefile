@@ -80,7 +80,7 @@ $(BINDIR)/mkdir :INSTALL: mkdir.sh
  */
 
 $(BINDIR)/.paths :INSTALL: (CC.DIALECT)
-	if	test ! -e $(<) -o -w $(<)
+	if	test ! -f $(<) -o -w $(<)
 	then	nl="
 "
 		o=`cat $(<) 2>/dev/null` || :

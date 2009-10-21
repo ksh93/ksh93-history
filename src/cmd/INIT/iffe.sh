@@ -30,7 +30,7 @@ case $-:$BASH_VERSION in
 esac
 
 command=iffe
-version=2009-10-06 # update in USAGE too #
+version=2009-10-21 # update in USAGE too #
 
 compile() # $cc ...
 {
@@ -631,7 +631,7 @@ set=
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: iffe (AT&T Research) 2009-10-06 $
+@(#)$Id: iffe (AT&T Research) 2009-10-21 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?iffe - C compilation environment feature probe]
@@ -4048,7 +4048,7 @@ _END_EXTERNS_
 							t=${nl}${tab}
 							b="fnd()${nl}{${t}for ${x} in"
 							;;
-						'}')	b="${b}${t}do${tab}if test -e ${v}/\${1}${t}${tab}${tab}then${tab}f=${v}/\${1}${t}${tab}${tab}${tab}return${t}${tab}${tab}fi"
+						'}')	b="${b}${t}do${tab}if $exists ${v}/\${1}${t}${tab}${tab}then${tab}f=${v}/\${1}${t}${tab}${tab}${tab}return${t}${tab}${tab}fi"
 							e="${t}done${e}"
 							eval "${b}${e}"
 							fnd $a
@@ -4064,7 +4064,7 @@ _END_EXTERNS_
 							t="${t}${tab}${tab}"
 							;;
 						*)	case $e in
-							'')	if	test -e ${i}/${a}
+							'')	if	$exists ${i}/${a}
 								then	f=${i}/${a}
 									break
 								fi

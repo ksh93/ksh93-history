@@ -324,4 +324,31 @@ unset foo
 
 $SHELL 2> /dev/null -c 'export foo=(bar=3)' && err_exit 'compound variables cannot be exported'
 
+# check env var changes against a builtin that uses the env var
+
+SEC=1234252800
+ETZ=EST5EDT
+EDT=03
+PTZ=PST8PDT
+PDT=00
+
+CMD="date -f%H \\#$SEC"
+
+export TZ=$ETZ
+
+set -- \
+	"$EDT $PDT $EDT"	""		"TZ=$PTZ"	"" \
+	"$EDT $PDT $EDT"	""		"TZ=$PTZ"	"TZ=$ETZ" \
+	"$EDT $PDT $EDT"	"TZ=$ETZ"	"TZ=$PTZ"	"TZ=$ETZ" \
+	"$PDT $EDT $PDT"	"TZ=$PTZ"	""		"TZ=$PTZ" \
+	"$PDT $EDT $PDT"	"TZ=$PTZ"	"TZ=$ETZ"	"TZ=$PTZ" \
+	"$EDT $PDT $EDT"	"foo=bar"	"TZ=$PTZ"	"TZ=$ETZ" \
+
+while	(( $# >= 4 ))
+do	exp=$1
+	got=$(print $($SHELL -c "builtin date; $2 $CMD; $3 $CMD; $4 $CMD"))
+	[[ $got == $exp ]] || err_exit "[ '$2'  '$3'  '$4' ] env sequence failed -- expected '$exp', got '$got'"
+	shift 4
+done
+
 exit	$((Errors))

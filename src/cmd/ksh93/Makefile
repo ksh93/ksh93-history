@@ -231,7 +231,7 @@ test.% : %.sh $(BINDIR)/$(SH) $(SH) shtests
 
 end
 
-if SH != ksh
+if SH != "ksh"
 
 _BLD_shell == 1
 

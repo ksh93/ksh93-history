@@ -813,7 +813,7 @@ exec - 	fi
 exec - fi
 done ${INSTALLROOT}/bin/mkdir generated
 make ${INSTALLROOT}/bin/.paths
-exec - if	test ! -e ${INSTALLROOT}/bin/.paths -o -w ${INSTALLROOT}/bin/.paths
+exec - if	test ! -f ${INSTALLROOT}/bin/.paths -o -w ${INSTALLROOT}/bin/.paths
 exec - then	nl="
 exec - "
 exec - 	o=`cat ${INSTALLROOT}/bin/.paths 2>/dev/null` || :

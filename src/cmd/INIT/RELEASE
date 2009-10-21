@@ -1,3 +1,4 @@
+09-10-21 iffe.sh,Makefile: test -e is not in ksh88!
 09-10-06 iffe.sh: handle cc -E #error with 0 exit status (sgi)
 09-10-06 package.sh: stub in ar intercept checks -- not used yet
 09-10-06 ar.ibm.risc: add ar intercept because some aix require -Xfoo first!!

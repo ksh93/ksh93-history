@@ -115,27 +115,27 @@ set -- $($SHELL -c "
 	unset LC_CTYPE
 	export LANG=en_US.UTF-8
 	export LC_ALL=C
-	command wc -C <  $tmp/two_euro_chars.txt
+	command wc -C < $tmp/two_euro_chars.txt
 	unset LC_ALL
-	command wc -C <  $tmp/two_euro_chars.txt
+	command wc -C < $tmp/two_euro_chars.txt
 	export LC_ALL=C
-	command wc -C <  $tmp/two_euro_chars.txt
+	command wc -C < $tmp/two_euro_chars.txt
 ")
 got=$*
-[[ $got == $exp ]] || print "command wc LC_ALL default failed -- expected '$exp', got '$got'"
+[[ $got == $exp ]] || err_exit "command wc LC_ALL default failed -- expected '$exp', got '$got'"
 set -- $($SHELL -c "
 	if	builtin -f cmd wc 2>/dev/null
 	then	unset LC_CTYPE
 		export LANG=en_US.UTF-8
 		export LC_ALL=C
-		wc -C <  $tmp/two_euro_chars.txt
+		wc -C < $tmp/two_euro_chars.txt
 		unset LC_ALL
-		wc -C <  $tmp/two_euro_chars.txt
+		wc -C < $tmp/two_euro_chars.txt
 		export LC_ALL=C
-		wc -C <  $tmp/two_euro_chars.txt
+		wc -C < $tmp/two_euro_chars.txt
 	fi
 ")
 got=$*
-[[ $got == $exp ]] || print "builtin wc LC_ALL default failed -- expected '$exp', got '$got'"
+[[ $got == $exp ]] || err_exit "builtin wc LC_ALL default failed -- expected '$exp', got '$got'"
 
 exit $Errors

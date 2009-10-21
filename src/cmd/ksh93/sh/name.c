@@ -53,8 +53,8 @@ pathnative(const char* path, char* buf, size_t siz)
 
 static void	attstore(Namval_t*,void*);
 #ifndef _ENV_H
-static void	pushnam(Namval_t*,void*);
-static char	*staknam(Namval_t*, char*);
+    static void	pushnam(Namval_t*,void*);
+    static char	*staknam(Namval_t*, char*);
 #endif
 static void	ltou(char*);
 static void	utol(char*);
@@ -1357,9 +1357,7 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 	register char *cp;
 	register int size = 0;
 	register int dot;
-#ifdef _ENV_H
 	int	was_local = nv_local;
-#endif
 	union Value u;
 	if(!(flags&NV_RDONLY) && nv_isattr (np, NV_RDONLY))
 		errormsg(SH_DICT,ERROR_exit(1),e_readonly, nv_name(np));
@@ -1376,10 +1374,8 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 		{
 			nv_local=1;
 			nv_putv(np,sp,flags,np->nvfun);
-#ifdef _ENV_H
 			if(sp && ((flags&NV_EXPORT) || nv_isattr(np,NV_EXPORT)))
 				sh_envput(sh.env,np);
-#endif
 			return;
 		}
 		/* called from disc, assign the actual value */
@@ -1729,10 +1725,8 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 		if(tofree && tofree!=Empty)
 			free((void*)tofree);
 	}
-#ifdef _ENV_H
 	if(!was_local && ((flags&NV_EXPORT) || nv_isattr(np,NV_EXPORT)))
 		sh_envput(sh.env,np);
-#endif
 	return;
 }
 
@@ -2001,7 +1995,7 @@ static int scanfilter(Dt_t *dict, void *arg, void *data)
 	register struct adata *tp = (struct adata*)sp->scandata;
 	NOT_USED(dict);
 #if SHOPT_TYPEDEF
-	if(tp && !is_abuiltin(np) && tp && tp->tp && nv_type(np)!=tp->tp)
+	if(!is_abuiltin(np) && tp && tp->tp && nv_type(np)!=tp->tp)
 		return(0);
 #endif /*SHOPT_TYPEDEF */
 	if(sp->scanmask?(k&sp->scanmask)==sp->scanflags:(!sp->scanflags || (k&sp->scanflags)))
@@ -2153,10 +2147,8 @@ static void table_unset(Shell_t *shp, register Dt_t *root, int flags, Dt_t *oroo
 				shp->subshell = subshell;
 				np->nvfun = 0;
 			}
-#ifdef _ENV_H
 			if(nv_isattr(nq,NV_EXPORT))
 				sh_envput(shp->env,nq);
-#endif
 		}
 		npnext = (Namval_t*)dtnext(root,np);
 		shp->last_root = root;
@@ -2673,7 +2665,6 @@ void nv_newattr (register Namval_t *np, unsigned newatts, int size)
 	n = np->nvflag;
 	if(newatts&NV_EXPORT)
 		nv_offattr(np,NV_IMPORT);
-#ifdef _ENV_H
 	if(((n^newatts)&NV_EXPORT))
 	{
 		/* record changes to the environment */
@@ -2682,7 +2673,6 @@ void nv_newattr (register Namval_t *np, unsigned newatts, int size)
 		else
 			sh_envput(sh.env,np);
 	}
-#endif
 	oldsize = nv_size(np);
 	if((size==oldsize|| (n&NV_INTEGER)) && ((n^newatts)&~NV_NOCHANGE)==0)
 	{

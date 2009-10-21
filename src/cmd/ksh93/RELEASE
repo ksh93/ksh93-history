@@ -1,4 +1,6 @@
-09-10-12  --- Release ksh93t+  ---
+09-10-16  --- Release ksh93t+  ---
+09-10-16  A bug where notification to libast that the environment has changed
+          has been fixed.
 09-10-12  A bug in which a function loaded in a subshell could leave side
 	  effects in the parent shell has been fixed.
 09-10-12  A bug in converting a printf %d operand to a number when the operand
