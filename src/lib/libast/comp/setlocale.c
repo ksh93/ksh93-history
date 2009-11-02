@@ -814,12 +814,18 @@ default_setlocale(int category, const char* locale)
  */
 
 static char*
-single(int category, Lc_t* lc)
+single(int category, Lc_t* lc, unsigned int flags)
 {
 	const char*	sys;
 	int		i;
 
-	if (!lc && !(lc = lc_all) && !(lc = lc_categories[category].prev) && !(lc = lang))
+	if (lc)
+	{
+		lc_categories[category].flags |= flags;
+		if (flags & LC_user)
+			lc_categories[category].prev = lc;
+	}
+	else if ((!(lc_categories[category].flags & LC_user) || !(lc = lc_categories[category].prev)) && !(lc = lc_all) && !(lc = lc_categories[category].prev) && !(lc = lang))
 		lc = lcmake(NiL);
 	if (locales[category] != lc)
 	{
@@ -840,7 +846,7 @@ single(int category, Lc_t* lc)
 			 !streq(lc->code, lc->language->code))
 				sys = setlocale(lc_categories[category].external, lc->language->code);
 		if (ast.locale.set & (AST_LC_debug|AST_LC_setlocale))
-			sfprintf(sfstderr, "locale set  %17s %-24s %-24s\n", lc_categories[category].name, lc->name, sys);
+			sfprintf(sfstderr, "locale set  %17s %16s %16s\n", lc_categories[category].name, lc->name, sys);
 		if (!sys)
 		{
 			/*
@@ -919,7 +925,7 @@ composite(register const char* s, int initialize)
 		if (!*s)
 		{
 			for (i = 0; i < k; i++)
-				single(stk[i], NiL);
+				single(stk[i], NiL, 0);
 			return -1;
 		}
 		w = ++s;
@@ -943,10 +949,10 @@ composite(register const char* s, int initialize)
 		for (i = 0; i < j; i++)
 			if (!initialize)
 			{
-				if (!single(cat[i], p))
+				if (!single(cat[i], p, 0))
 				{
 					for (i = 0; i < k; i++)
-						single(stk[i], NiL);
+						single(stk[i], NiL, 0);
 					return -1;
 				}
 				stk[k++] = cat[i];
@@ -970,10 +976,10 @@ composite(register const char* s, int initialize)
 		}
 		if (!initialize)
 		{
-			if (!single(n, p))
+			if (!single(n, p, 0))
 			{
 				for (i = 1; i < n; i++)
-					single(i, NiL);
+					single(i, NiL, 0);
 				return -1;
 			}
 		}
@@ -1056,6 +1062,8 @@ _ast_setlocale(int category, const char* locale)
 		stropt(getenv("LC_OPTIONS"), options, sizeof(*options), setopt, NiL);
 		initialized = 0;
 	}
+	if (ast.locale.set & (AST_LC_debug|AST_LC_setlocale))
+		sfprintf(sfstderr, "locale user %17s %16s %16s\n", category == AST_LC_LANG ? "LANG" : lc_categories[category].name, locale && !*locale ? "''" : locale, initialized ? "1" : "0");
 	if (*locale)
 		p = streq(locale, "-") ? (Lc_t*)0 : lcmake(locale);
 	else if (!initialized)
@@ -1086,7 +1094,9 @@ _ast_setlocale(int category, const char* locale)
 		else
 			lc_all = 0;
 		for (i = 1; i < AST_LC_COUNT; i++)
-			if ((s = getenv(lc_categories[i].name)) && *s)
+			if (lc_categories[i].flags & LC_user)
+				/* explicitly set by setlocale() */;
+			else if ((s = getenv(lc_categories[i].name)) && *s)
 			{
 				if (streq(s, local) && (u || (u = native_locale(locale, tmp, sizeof(tmp)))))
 					s = u;
@@ -1095,10 +1105,10 @@ _ast_setlocale(int category, const char* locale)
 			else
 				lc_categories[i].prev = 0;
 		for (i = 1; i < AST_LC_COUNT; i++)
-			if (!single(i, lc_all ? lc_all : lc_categories[i].prev))
+			if (!single(i, lc_all && !(lc_categories[i].flags & LC_user) ? lc_all : lc_categories[i].prev, 0))
 			{
 				while (i--)
-					single(i, NiL);
+					single(i, NiL, 0);
 				return 0;
 			}
 		if (ast.locale.set & AST_LC_debug)
@@ -1116,26 +1126,26 @@ _ast_setlocale(int category, const char* locale)
 			lang = p;
 			if (!lc_all)
 				for (i = 1; i < AST_LC_COUNT; i++)
-					if (!single(i, lc_categories[i].prev))
+					if (!single(i, lc_categories[i].prev, 0))
 					{
 						while (i--)
-							single(i, NiL);
+							single(i, NiL, 0);
 						return 0;
 					}
 		}
 	}
 	else if (category != AST_LC_ALL)
-		return single(category, p);
+		return single(category, p, LC_user);
 	else if ((i = composite(locale, 0)) < 0)
 		return 0;
 	else if (lc_all != p)
 	{
 		lc_all = p;
 		for (i = 1; i < AST_LC_COUNT; i++)
-			if (!single(i, lc_all ? lc_all : lc_categories[i].prev))
+			if (!single(i, lc_all && !(lc_categories[i].flags & LC_user) ? lc_all : lc_categories[i].prev, 0))
 			{
 				while (i--)
-					single(i, NiL);
+					single(i, NiL, 0);
 				return 0;
 			}
 	}

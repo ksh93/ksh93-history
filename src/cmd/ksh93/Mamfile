@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.4 2009-10-09
+info mam static 00000 1994-07-17 make (AT&T Research) 5.4 2009-10-28
 setv INSTALLROOT ../../..
 setv PACKAGE_ast_INCLUDE ${INSTALLROOT}/include/ast
 setv PACKAGE_ast_LIB ${INSTALLROOT}/lib
@@ -1095,6 +1095,7 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -
 done string.o generated
 make streval.o
 make sh/streval.c
+prev include/defs.h implicit
 prev FEATURE/externs implicit
 prev ${PACKAGE_ast_INCLUDE}/stak.h implicit
 prev ${PACKAGE_ast_INCLUDE}/error.h implicit
@@ -1102,7 +1103,7 @@ prev include/streval.h implicit
 done sh/streval.c
 meta streval.o %.c>%.o sh/streval.c streval
 prev sh/streval.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -D_PACKAGE_ast -DERROR_CONTEXT_T=Error_context_t -c sh/streval.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -D_BLD_shell -DSHOPT_STATS -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -D_PACKAGE_ast -DERROR_CONTEXT_T=Error_context_t -DSHOPT_ESH -DSHOPT_MULTIBYTE -DSHOPT_PFSH -c sh/streval.c
 done streval.o generated
 make subshell.o
 make sh/subshell.c

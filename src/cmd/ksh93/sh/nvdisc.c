@@ -494,6 +494,8 @@ char *nv_setdisc(register Namval_t* np,register const char *event,Namval_t *acti
 		memset(dp,0,sizeof(*dp));
 		dp->dsize = sizeof(struct vardisc);
 		dp->putval = assign;
+		if(nv_isarray(np) && !nv_arrayptr(np))
+			nv_putsub(np,(char*)0, 1);
 		nv_stack(np, (Namfun_t*)vp);
 	}
 	if(action==np)

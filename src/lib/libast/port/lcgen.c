@@ -677,6 +677,7 @@ char**		argv;
 	fprintf(hf, "\tint\t\t\tinternal;\n");
 	fprintf(hf, "\tLc_category_set_f\tsetf;\n");
 	fprintf(hf, "\tLc_t*\t\t\tprev;\n");
+	fprintf(hf, "\tunsigned int\t\tflags;\n");
 	fprintf(hf, "} Lc_category_t;\n");
 	fprintf(hf, "\n");
 	fprintf(hf, "#if _BLD_ast && defined(__EXPORT__)\n");

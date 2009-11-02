@@ -1,3 +1,5 @@
+09-10-28 include/error.h: fix ERROR_translate() arg parens
+09-10-26 port/lcgen.c,comp/setlocale.c: handle LANG init after LC_* already defined
 09-10-05 _sfopen.c: add but ignore 'F' flags for stdio compatibility
 09-09-28 fts.h,ftwalk.h,fts.c: promote { namelen pathlen level } to (s)size_t
 09-09-28 locales: add AST_LC_LANG for $LANG

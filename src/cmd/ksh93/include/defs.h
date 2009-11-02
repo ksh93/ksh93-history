@@ -170,6 +170,8 @@ struct limits
 	unsigned char	lastsig;	/* last signal received */ \
 	char		subshare;	/* set when in ${..} comsub */ \
 	char		toomany;	/* set when out of fd's */ \
+	char		instance;	/* in set_instance */ \
+	char		decomma;	/* decimal_point=',' */ \
 	char		*readscript;	/* set before reading a script */ \
 	int		*inpipe;	/* input pipe pointer */ \
 	int		*outpipe;	/* output pipe pointer */ \

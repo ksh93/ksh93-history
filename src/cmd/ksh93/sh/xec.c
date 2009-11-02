@@ -608,7 +608,7 @@ static void free_list(struct openlist *olist)
  * set ${.sh.name} and ${.sh.subscript}
  * set _ to reference for ${.sh.name}[$.sh.subscript]
  */
-static int set_instance(Namval_t *nq, Namval_t *node, struct Namref *nr)
+static int set_instance(Shell_t *shp,Namval_t *nq, Namval_t *node, struct Namref *nr)
 {
 	char		*sp=0,*cp = nv_name(nq);
 	Namarr_t	*ap;
@@ -616,8 +616,10 @@ static int set_instance(Namval_t *nq, Namval_t *node, struct Namref *nr)
 	nr->np = nq;
 	nr->root = sh.var_tree;
 	nr->table = sh.last_table;
+	shp->instance = 1;
 	if((ap=nv_arrayptr(nq)) && (sp = nv_getsub(nq)))
 		sp = strdup(sp);
+	shp->instance = 0;
 	if(sh.var_tree!=sh.var_base && !nv_open(cp,nr->root,NV_VARNAME|NV_NOREF|NV_NOSCOPE|NV_NOADD|NV_NOFAIL))
 		nr->root = sh.var_base;
 	nv_putval(SH_NAMENOD, cp, NV_NOFREE);
@@ -1121,7 +1123,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 					if(nq)
 					{
 						shp->last_table = last_table;
-						mode = set_instance(nq,&node,&nr);
+						mode = set_instance(shp,nq,&node,&nr);
 					}
 					if(io)
 					{
@@ -1333,8 +1335,10 @@ int sh_exec(register const Shnode_t *t, int flags)
 				sh_redirect(shp,t->tre.treio,1);
 				if(shp->topfd > topfd)
 				{
+					job_lock();
 					while((parent = vfork()) < 0)
 						_sh_fork(parent, 0, (int*)0);
+					job_fork(parent);
 					if(parent)
 					{
 						job_clear();
@@ -2766,7 +2770,7 @@ int sh_fun(Namval_t *np, Namval_t *nq, char *argv[])
 	while(argv[n])
 		n++;
 	if(nq)
-		mode = set_instance(nq,&node, &nr);
+		mode = set_instance(shp,nq,&node, &nr);
 	if(is_abuiltin(np))
 	{
 		int jmpval;

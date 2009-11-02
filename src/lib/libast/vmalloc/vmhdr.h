@@ -71,6 +71,10 @@
 #define _npt_sbrk		1
 #endif
 
+#ifndef integralof
+#define integralof(x)		(((char*)(x))-((char*)0))
+#endif
+
 #endif /*_PACKAGE_ast*/
 
 #include	"FEATURE/vmalloc"

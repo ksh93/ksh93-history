@@ -2770,11 +2770,9 @@ char *getenv(const char *name)
 @*/ 
 {
 	register Namval_t *np;
-	if(!sh.var_tree)
-		return(oldgetenv(name));
-	if((np = nv_search(name,sh.var_tree,0)) && nv_isattr(np,NV_EXPORT))
+	if(sh.var_tree && (np = nv_search(name,sh.var_tree,0)) && nv_isattr(np,NV_EXPORT))
 		return(nv_getval(np));
-	if(name[0] == 'P' && name[1] == 'A' && name[2] == 'T' && name[3] == 'H' && name[4] == 0)
+	if(sh_isstate(SH_INIT) || name[0] == 'P' && name[1] == 'A' && name[2] == 'T' && name[3] == 'H' && name[4] == 0)
 		return(oldgetenv(name));
 	return(0);
 }

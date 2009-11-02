@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.4 2009-10-09
+info mam static 00000 1994-07-17 make (AT&T Research) 5.4 2009-10-28
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ${mam_cc_AR} ${mam_cc_AR_ARFLAGS}
@@ -926,18 +926,12 @@ exec - then	mkdir -p ${INSTALLROOT}/lib/probe/C/make
 exec - fi
 done ${INSTALLROOT}/lib/probe/C/make generated
 prev ${INSTALLROOT}/lib/probe/C/make
-make C+make+probe.lcl
-done C+make+probe.lcl dontcare virtual
-exec - test '' = '' || ${STDCMP} 2>/dev/null -s  ${INSTALLROOT}/lib/probe/C/make/probe.lcl || { ${STDMV} ${INSTALLROOT}/lib/probe/C/make/probe.lcl ${INSTALLROOT}/lib/probe/C/make/probe.lcl.old 2>/dev/null || true; ${STDCP}  ${INSTALLROOT}/lib/probe/C/make/probe.lcl  		    		    ;}
 make ${INSTALLROOT}/lib/probe/C/pp
 exec - if	silent test ! -d ${INSTALLROOT}/lib/probe/C/pp
 exec - then	mkdir -p ${INSTALLROOT}/lib/probe/C/pp
 exec - fi
 done ${INSTALLROOT}/lib/probe/C/pp generated
 prev ${INSTALLROOT}/lib/probe/C/pp
-make C+pp+probe.lcl
-done C+pp+probe.lcl dontcare virtual
-exec - test '' = '' || ${STDCMP} 2>/dev/null -s  ${INSTALLROOT}/lib/probe/C/pp/probe.lcl || { ${STDMV} ${INSTALLROOT}/lib/probe/C/pp/probe.lcl ${INSTALLROOT}/lib/probe/C/pp/probe.lcl.old 2>/dev/null || true; ${STDCP}  ${INSTALLROOT}/lib/probe/C/pp/probe.lcl  		    		    ;}
 make ${INSTALLROOT}/lib/probe/C/mam
 exec - if	silent test ! -d ${INSTALLROOT}/lib/probe/C/mam
 exec - then	mkdir -p ${INSTALLROOT}/lib/probe/C/mam

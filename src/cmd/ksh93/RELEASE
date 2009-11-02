@@ -1,4 +1,11 @@
-09-10-16  --- Release ksh93t+  ---
+09-11-02  --- Release ksh93t+  ---
+09-11-02  ``,2'' is now a valid numeric constant for locales with
+	  decimal_point=','.
+09-11-02  A bug where "return" in .profile did not restore the shell state
+	  has been fixed.
+09-10-31  A bug that corrupted saved exit status when pids wrapped around has
+	  been fixed.
+09-10-26  A bug in { LANG LC_ALL LC_category } ordering has been fixed in -last.
 09-10-16  A bug where notification to libast that the environment has changed
           has been fixed.
 09-10-12  A bug in which a function loaded in a subshell could leave side

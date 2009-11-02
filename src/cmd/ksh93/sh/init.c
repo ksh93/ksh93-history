@@ -390,12 +390,14 @@ static void put_cdpath(register Namval_t* np,const char *val,int flags,Namfun_t 
 		type= -1;
 	if(type>=0 || type==LC_ALL || type==LC_LANG)
 	{
+		struct lconv*	lc;
 		if(!setlocale(type,val?val:"-") && val)
 		{
 			if(!sh_isstate(SH_INIT) || shp->login_sh==0)
 				errormsg(SH_DICT,0,e_badlocale,val);
 			return;
 		}
+		shp->decomma = (lc=localeconv()) && lc->decimal_point && *lc->decimal_point==',';
 	}
 	if(!(shp->test&2))
 		nv_putv(np, val, flags, fp);
@@ -1022,6 +1024,7 @@ Shell_t *sh_init(register int argc,register char *argv[], Shinit_f userinit)
 	Shell_t	*shp = &sh;
 	register int n;
 	int type;
+	long v;
 	static char *login_files[3];
 	memfatal();
 	n = strlen(e_version);
@@ -1107,6 +1110,8 @@ Shell_t *sh_init(register int argc,register char *argv[], Shinit_f userinit)
 		shp->lim.arg_max = ARG_MAX;
 	if(shp->lim.child_max <=0)
 		shp->lim.child_max = CHILD_MAX;
+	if((v = getconf("PID_MAX")) > 0 && shp->lim.child_max > v)
+		shp->lim.child_max = v;
 	if(shp->lim.open_max <0)
 		shp->lim.open_max = OPEN_MAX;
 	if(shp->lim.open_max > (SHRT_MAX-2))

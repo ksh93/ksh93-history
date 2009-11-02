@@ -6,7 +6,7 @@
 
 LICENSE = since=1992,author=gsf+dgk
 
-CCFLAGS = $(CC.OPTIMIZE) $(CC.DLL)
+CCFLAGS = $(CC.SUFFIX.DEBUG:+$(CC.DEBUG)) $(CC.OPTIMIZE) $(CC.DLL)
 
 /* 2009-04-15 ld.so experiment -- may become a default for all plugins */
 CC.DLL.ORIGIN = $(CC.LD.ORIGIN:C,/.*,,)

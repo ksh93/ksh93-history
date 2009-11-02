@@ -324,6 +324,9 @@ unset foo
 
 $SHELL 2> /dev/null -c 'export foo=(bar=3)' && err_exit 'compound variables cannot be exported'
 
+$SHELL -c 'builtin date' >/dev/null 2>&1 &&
+{
+
 # check env var changes against a builtin that uses the env var
 
 SEC=1234252800
@@ -350,5 +353,7 @@ do	exp=$1
 	[[ $got == $exp ]] || err_exit "[ '$2'  '$3'  '$4' ] env sequence failed -- expected '$exp', got '$got'"
 	shift 4
 done
+
+}
 
 exit	$((Errors))

@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.4 2009-10-09
+info mam static 00000 1994-07-17 make (AT&T Research) 5.4 2009-10-28
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ${mam_cc_AR} ${mam_cc_AR_ARFLAGS}
@@ -6,7 +6,7 @@ setv ARFLAGS -cr
 setv AS as
 setv ASFLAGS
 setv CC cc
-setv mam_cc_FLAGS ${mam_cc_DLL} -D_BLD_ast
+setv mam_cc_FLAGS  ${mam_cc_DLL} -D_BLD_ast
 setv CCFLAGS ${-debug-symbols?1?${mam_cc_DEBUG} -D_BLD_DEBUG?${mam_cc_OPTIMIZE}?}
 setv CCLDFLAGS  ${-strip-symbols?1?${mam_cc_LD_STRIP}??}
 setv COTEMP $$

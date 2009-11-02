@@ -1255,7 +1255,12 @@ void *nv_associative(register Namval_t *np,const char *sp,int mode)
 		return((void*)ap->cur);
 	    case NV_ANAME:
 		if(ap->cur)
+		{
+			Shell_t *shp = sh_getinterp();
+			if(!shp->instance && nv_isnull(ap->cur))
+				return(NIL(void*));
 			return((void*)ap->cur->nvname);
+		}
 		return(NIL(void*));
 	    default:
 		if(sp)
@@ -1297,6 +1302,8 @@ void *nv_associative(register Namval_t *np,const char *sp,int mode)
 				ap->pos = mp = (Namval_t*)dtprev(ap->header.table,&fake);
 				ap->nextpos = (Namval_t*)dtnext(ap->header.table,mp);
 			}
+			else if(!mp && *sp && mode==0)
+				mp = nv_search(sp,ap->header.table,NV_ADD);
 			np = mp;
 			if(ap->pos && ap->pos==np)
 				ap->header.nelem |= ARRAY_SCAN;

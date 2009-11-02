@@ -34,6 +34,7 @@
 #include	<error.h>
 #include	<stak.h>
 #include	"FEATURE/externs"
+#include	"defs.h"	/* for sh.decomma */
 
 #ifndef ERROR_dictionary
 #   define ERROR_dictionary(s)	(s)
@@ -430,15 +431,21 @@ static int gettok(register struct vars *vp)
 		    case A_EOF:
 			vp->nextchr--;
 			break;
-			/*FALL THRU*/
-		    case A_DIG: case A_REG: case A_DOT: case A_LIT:
-			if(op==A_DOT)
+		    case A_COMMA:
+			if(sh.decomma && (c=peekchr(vp))>='0' && c<='9')
 			{
-				if((c=peekchr(vp))>='0' && c<='9')
-					op = A_DIG;
-				else
-					op = A_REG;
+				op = A_DIG;
+		    		goto keep;
 			}
+			break;
+		    case A_DOT:
+			if((c=peekchr(vp))>='0' && c<='9')
+				op = A_DIG;
+			else
+				op = A_REG;
+			/*FALL THRU*/
+		    case A_DIG: case A_REG: case A_LIT:
+		    keep:
 			ungetchr(vp);
 			break;
 		    case A_QUEST:
@@ -483,7 +490,7 @@ static int expr(register struct vars *vp,register int precedence)
 	int		invalid,wasop=0;
 	struct lval	lvalue,assignop;
 	const char	*pos;
-	Sfdouble_t		d;
+	Sfdouble_t	d;
 
 	lvalue.value = 0;
 	lvalue.fun = 0;

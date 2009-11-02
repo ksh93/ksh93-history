@@ -1837,6 +1837,7 @@ void job_fork(pid_t parent)
 		job.in_critical = 0;
 		break;
 	default:
+		job_chksave(parent);
 		job_unlock();
 		break;
 	}

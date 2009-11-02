@@ -139,7 +139,10 @@ static pid_t _spawnveg(const char *path, char* const argv[], char* const envp[],
 		_sh_fork(pid, 0, (int*)0);
 	}
 	job.waitsafe = waitsafe;
-	job_unlock();
+	if(pid>0)
+		job_fork(pid);
+	else
+		job_unlock();
 	return(pid);
 }
 /*

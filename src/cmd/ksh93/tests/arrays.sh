@@ -378,8 +378,12 @@ foo=bar
 set -- "${foo[@]:1}"
 (( $# == 0 )) || err_exit '${foo[@]:1} should not have any values'
 unset bar
+exp=4
 : ${_foo[bar=4]}
-(( bar == 4 )) || err_exit 'subscript of unset variable not evaluated'
+(( bar == 4 )) || err_exit "subscript of unset variable not evaluated -- expected '4', got '$got'"
+unset bar
+: ${_foo[bar=$exp]}
+(( bar == $exp )) || err_exit "subscript of unset variable not evaluated -- expected '$exp', got '$got'"
 unset foo bar
 foo[5]=4
 bar[4]=3
