@@ -294,7 +294,6 @@ b_date(int argc, register char** argv, void* context)
 	int		unelapsed = 0;	/* fmtelapsed() => strelapsed	*/
 
 	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
-	setlocale(LC_ALL, "");
 	tm_info.flags = TM_DATESTYLE;
 	fmts = &fmt;
 	fmt.format = "";

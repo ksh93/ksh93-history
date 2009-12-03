@@ -1294,7 +1294,7 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 			}
 			if(fd<0)
 			{
-				if(sh_inuse(fn) || fn==shp->infd)
+				if(sh_inuse(fn) || (fn && fn==shp->infd))
 				{
 					if(fn>9 || !(shp->inuse_bits&(1<<fn)))
 						io_preserve(shp,shp->sftable[fn],fn);

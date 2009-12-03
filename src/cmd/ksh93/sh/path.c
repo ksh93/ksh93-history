@@ -39,8 +39,6 @@
 #if SHOPT_PFSH 
 #   ifdef _hdr_exec_attr
 #	include	<exec_attr.h>
-#   else
-#	undef SHOPT_PFSH
 #   endif
 #   if     _lib_vfork
 #	include     <ast_vfork.h>
@@ -1500,7 +1498,7 @@ static int path_chkpaths(Pathcomp_t *first, Pathcomp_t* old,Pathcomp_t *pp, int 
 			}
 			*cp = 0;
 			m = ep ? (ep-sp) : 0;
-			if(!m || m==6 && memcmp((void*)sp,(void*)"FPATH=",6)==0)
+			if(m==0 || m==6 && memcmp((void*)sp,(void*)"FPATH=",6)==0)
 			{
 				if(first)
 				{
@@ -1512,8 +1510,13 @@ static int path_chkpaths(Pathcomp_t *first, Pathcomp_t* old,Pathcomp_t *pp, int 
 			}
 			else if(m==12 && memcmp((void*)sp,(void*)"BUILTIN_LIB=",12)==0)
 			{
-				if(!(pp->flags & PATH_BUILTIN_LIB))
+				if(!(pp->flags & PATH_BUILTIN_LIB) || strchr(ep,'-'))
 				{
+					if ((pp->flags & (PATH_BUILTIN_LIB|PATH_STD_DIR)) == PATH_BUILTIN_LIB)
+					{
+						free(pp->blib);
+						pp->blib = 0;
+					}
 					pp->flags |= PATH_BUILTIN_LIB;
 					if (*ep == '.' && !*(ep + 1))
 						pp->flags |= PATH_STD_DIR;

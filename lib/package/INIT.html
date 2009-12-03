@@ -47,6 +47,9 @@ All recorded changes follow.
 <P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="INIT changes">INIT changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
+09-11-30 mktest.sh: change RESET to STATE.RESET to make it global
+09-11-14 make.probe: use gcc { -print-multi-directory -print-search-dirs }
+09-11-11 package.sh: re-order and combine cc checks
 09-10-27 C+probe,make.probe,probe.win32: add CC.SUFFIX.DEBUG
 09-10-21 iffe.sh,Makefile: test -e is not in ksh88!
 09-10-06 iffe.sh: handle cc -E #error with 0 exit status (sgi)
@@ -326,7 +329,7 @@ All recorded changes follow.
 	 package.mk: add mamfile=0 to inhibit Mamfile generation
 	 iffe.sh: config name_DECLARED =&gt; HAVE_name_DECL
 	 iffe.sh: fix mac to handle default value
-04-04-11 iffe.sh: normalize sed &#0091;\\\\/&#0093; quoting
+04-04-11 iffe.sh: normalize sed &#0091;\/&#0093; quoting
 04-04-04 package.mk: only checksum generated tarballs
 	 mamprobe.sh: add STDCHMOD
 04-04-01 C+probe: set export LANG=C for uniform error messages
@@ -489,7 +492,7 @@ All recorded changes follow.
 02-10-18 probe.win32: update for mingw
 	 make.probe: add bash workaround to SHELLMAGIC test
 	 package.sh: work around yet another cygwin hassle
-02-10-17 iffe.sh: short circuit id check for *&#0091;-+/\\&#0093;*
+02-10-17 iffe.sh: short circuit id check for *&#0091;-+/#0093;*
 02-10-08 regress.sh: unset FIGNORE to avoid rm . errors
 	 package.sh: unset FIGNORE to avoid rm . errors
 	 package.sh: $CC must at least compile and executable hello world
@@ -874,7 +877,7 @@ All recorded changes follow.
 96-02-29 use: package root must have bin and lib subdir
 	 mm2html: add
 	 C.probe: probe_members += -whole-archive for gcc
-	 iffe: add + fix the blasted `...'...\\...'...`
+	 iffe: add + fix the blasted `...'.....'...`
 96-01-31 use: add pkg dir
 	 hostinfo: add tandem
 96-01-01 hostinfo: windows_nt|windows&#0091;0-9&#0093;&#0091;0-9&#0093; -&gt; win32
@@ -900,7 +903,7 @@ All recorded changes follow.
 <TR>
 <TD align=left></TD>
 <TD align=center></TD>
-<TD align=right>November 03, 2009</TD>
+<TD align=right>December 02, 2009</TD>
 </TR>
 </TABLE>
 <P>

@@ -1068,4 +1068,14 @@ unset -f foo bar
 [[ $(typeset +f) == *foo* ]] && err_exit 'function in subshell leaving side effects of function foo after reload'
 [[ $(typeset +f) == *bar* ]] && err_exit 'function in subshell leaving side effects of function bar after reload'
 
+unset -f foo
+typeset -A bar
+function foo
+{
+	typeset -i bar[$1].x
+	bar[$1].x=5
+}
+foo sub
+[[ ${!bar[@]} == sub ]] || err_exit 'scoping problem with compound array variables'
+
 exit $((Errors))

@@ -2,7 +2,7 @@
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)make.probe (AT&T Research) 2009-10-27
+# @(#)make.probe (AT&T Research) 2009-11-14
 #
 # C probe for make
 #
@@ -1146,14 +1146,28 @@ main()
 	;;
 esac
 
-stdlib=`$cc -v doti.$src 2>&1 |
-	sed 's/  */\n/g' |
-	sed -e '/^-L/!d' -e 's/^-L//' |
-	while read dir
-	do	if	test -d "$dir"
-		then	(cd "$dir"; pwd)
+stdlib=
+a=`$cc -print-multi-directory 2>/dev/null`
+case $a in
+.)	;;
+*)	for d in `$cc -print-search-dirs 2>/dev/null | sed -e '/^libraries:/!d' -e 's/.*=//' | tr : '\n' | grep /lib/`
+	do	if	[ -d ${d}${a} ]
+		then	stdlib="$stdlib ${d}${a}"
 		fi
-	done`
+	done
+	;;
+esac
+case $stdlib in
+'')	stdlib=`$cc -v doti.$src 2>&1 |
+		sed 's/  */\n/g' |
+		sed -e '/^-L/!d' -e 's/^-L//' |
+		while read dir
+		do	if	test -d "$dir"
+			then	(cd "$dir"; pwd)
+			fi
+		done`
+	;;
+esac
 case $stdlib in
 ?*)	keepstdlib=1
 	o=$stdlib

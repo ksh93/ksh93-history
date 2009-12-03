@@ -64,7 +64,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2009-10-26 $
+@(#)$Id: package (AT&T Research) 2009-11-11 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -2328,6 +2328,33 @@ note() # message ...
 	echo $command: "$@" >&2
 }
 
+# cc checks
+#
+#	CC: compiler base name name
+#	cc: full path, empty if not found
+
+checkcc()
+{
+	cc=
+	if	onpath $CC
+	then	cc=$_onpath_
+	else	case $CC in
+		cc)	if	onpath gcc
+			then	CC=gcc
+				cc=$_onpath_
+			fi
+			;;
+		esac
+	fi
+	case $cc in
+	'')	case $action in
+		make|test)	note "$CC: not found"; exit 1 ;;
+		*)		note "warning: $CC: not found" ;;
+		esac
+		;;
+	esac
+}
+
 # some actions have their own PACKAGEROOT or kick out early
 
 case $action in
@@ -2386,6 +2413,7 @@ case $x in
 	SUM=$EXECROOT/bin/sum
 	TEE=$EXECROOT/bin/tee
 	INITROOT=$PACKAGEROOT/src/cmd/INIT
+	checkcc
 	;;
 *)	hosttype=
 	case $KEEP_PACKAGEROOT in
@@ -2578,46 +2606,40 @@ cat $INITROOT/$i.sh
 		fi
 		;;
 	esac
+	path=$PATH
+	PATH=$INSTALLROOT/bin:$PATH
+	checkcc
+	case $cc in
+	?*)	if	test -f $INITROOT/hello.c
+		then	
+			# check if $CC is a cross compiler
 
-	# check if $CC is a cross compiler
-
-	if	test -f $INITROOT/hello.c
-	then	case $action in
-		make|test)	warn='' ;;
-		*)		warn='warning: ' ;;
-		esac
-		if	onpath $CC
-		then	(
-			cd /tmp || exit 3
-			cp $INITROOT/hello.c pkg$$.c || exit 3
-			$CC -o pkg$$.exe pkg$$.c > pkg$$.e 2>&1 || {
-				if $CC -Dnew=old -o pkg$$.exe pkg$$.c > /dev/null 2>&1
-				then	echo "$command: ${warn}$CC: must be a C compiler (not C++)" >&2
-				else	cat pkg$$.e
-					echo "$command: ${warn}$CC: failed to compile and link $INITROOT/hello.c -- is it a C compiler?" >&2
+			(
+				cd /tmp || exit 3
+				cp $INITROOT/hello.c pkg$$.c || exit 3
+				$CC -o pkg$$.exe pkg$$.c > pkg$$.e 2>&1 || {
+					if $CC -Dnew=old -o pkg$$.exe pkg$$.c > /dev/null 2>&1
+					then	echo "$command: ${warn}$CC: must be a C compiler (not C++)" >&2
+					else	cat pkg$$.e
+						echo "$command: ${warn}$CC: failed to compile and link $INITROOT/hello.c -- is it a C compiler?" >&2
+					fi
+					exit 2
+				}
+				if ./pkg$$.exe >/dev/null 2>&1
+				then	code=0
+				else	code=1
 				fi
-				exit 2
-			}
-			if ./pkg$$.exe >/dev/null 2>&1
-			then	code=0
-			else	code=1
-			fi
-			rm -f pkg$$.*
-			exit $code
+				rm -f pkg$$.*
+				exit $code
 			)
 			code=$?
-		else	echo "$command: ${warn}$CC: not found" >&2
-			code=2
-		fi
-		case $code in
-		1)	CROSS=1
-			;;
-		2)	case $warn in
-			'')	exit 1 ;;
+			case $code in
+			1)	CROSS=1 ;;
 			esac
-			;;
-		esac
-	fi
+		fi
+		;;
+	esac
+	PATH=$path
 	EXECTYPE=$HOSTTYPE
 	EXECROOT=$INSTALLROOT
 	case $CROSS in
@@ -3212,8 +3234,10 @@ checkaout()	# cmd ...
 			done
 			return 0
 		}
-		if	onpath $CC
-		then	_PACKAGE_cc=1
+		case $cc in
+		'')	_PACKAGE_cc=0
+			;;
+		*)	_PACKAGE_cc=1
 			test -f $INITROOT/hello.c -a -f $INITROOT/p.c || {
 				echo "$command: $INITROOT: INIT package source not found" >&2
 				exit 1
@@ -3262,15 +3286,15 @@ checkaout()	# cmd ...
 			for i in arch arch/$HOSTTYPE arch/$HOSTTYPE/bin
 			do	test -d $PACKAGEROOT/$i || $exec mkdir $PACKAGEROOT/$i || exit
 			done
-		else	_PACKAGE_cc=0
-		fi
+			;;
+		esac
 		;;
 	esac
 	case $_PACKAGE_cc in
-	'')	if	onpath $CC
-		then	_PACKAGE_cc=1
-		else	_PACKAGE_cc=0
-		fi
+	'')	case $cc in
+		'')	_PACKAGE_cc=0 ;;
+		*)	_PACKAGE_cc=1 ;;
+		esac
 		;;
 	esac
 	for i
@@ -5135,10 +5159,6 @@ make|view)
 		h="$h $t"
 		;;
 	esac
-	if	onpath $CC
-	then	cc=$_onpath_
-	else	cc=$CC
-	fi
 	case $CC in
 	cc)	c=cc
 		b=$INSTALLROOT/bin/$c
@@ -5178,13 +5198,6 @@ make|view)
 				;;
 			esac
 		done
-		case $cc in
-		cc)	if	onpath gcc
-			then	CC=gcc
-				cc=$_onpath_
-			fi
-			;;
-		esac
 		case $intercept in
 		1)	c=ld
 			b=$INSTALLROOT/bin/$c

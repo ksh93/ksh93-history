@@ -437,9 +437,11 @@ int sh_trap(const char *trap, int mode)
 	int	was_verbose = sh_isstate(SH_VERBOSE);
 	int	staktop = staktell();
 	char	*savptr = stakfreeze(0);
+	char	ifstable[256];
 	struct	checkpt buff;
 	Fcin_t	savefc;
 	fcsave(&savefc);
+	memcpy(ifstable,shp->ifstable,sizeof(ifstable));
 	sh_offstate(SH_HISTORY);
 	sh_offstate(SH_VERBOSE);
 	shp->intrap++;
@@ -477,6 +479,7 @@ int sh_trap(const char *trap, int mode)
 		shp->exitval=savxit;
 	stakset(savptr,staktop);
 	fcrestore(&savefc);
+	memcpy(shp->ifstable,ifstable,sizeof(ifstable));
 	if(was_history)
 		sh_onstate(SH_HISTORY);
 	if(was_verbose)

@@ -406,7 +406,6 @@ b_cat(int argc, char** argv, void* context)
 	char			states[UCHAR_MAX+1];
 
 	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
-	setlocale(LC_ALL, "");
 	att = !strcmp(astconf("UNIVERSE", NiL, NiL), "att");
 	mode = "r";
 	for (;;)

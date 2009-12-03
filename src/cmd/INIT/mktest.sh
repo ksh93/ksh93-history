@@ -32,7 +32,7 @@ case $(getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt) in
 0123)	ARGV0="-a $command"
 	USAGE=$'
 [-?
-@(#)$Id: mktest (AT&T Labs Research) 2009-03-31 $
+@(#)$Id: mktest (AT&T Labs Research) 2009-11-30 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?mktest - generate a regression test scripts]
@@ -60,6 +60,8 @@ unit.rt [ unit [ arg ... ] ]
             \bprint\b(1) \aoptions\a or that is a copy of the DATA command
             standard input. Set \afile\a to \b-\b to name the standard
             input.]
+        [+DIAGNOSTICS?Diagnostic messages of unspecified format are
+	    expected.]
         [+EXEC [ \aarg\a ... ]]?Run the command under test with
             optional arguments. If the standard input is not specified then
             the standard input of the previous EXEC is used. The standard
@@ -105,9 +107,10 @@ unit.rt [ unit [ arg ... ] ]
 esac
 
 typeset ARG SCRIPT UNIT TEMP=${TMPDIR:-/tmp}/$command.$$.tmp WORK
-typeset IO INPUT OUTPUT ERROR KEEP
-typeset -A DATA RESET REMOVE FORMAT
-integer KEEP_UNIT=0 SCRIPT_UNIT=0 TEST=0 CODE=0 EXIT=0 ACCEPT=0 code
+typeset IO INPUT INPUT_N OUTPUT OUTPUT_N ERROR ERROR_N KEEP
+typeset -C STATE
+typeset -A DATA STATE.RESET REMOVE FORMAT
+integer KEEP_UNIT=0 SCRIPT_UNIT=0 TEST=0 CODE=0 EXIT=0 ACCEPT=0 DIAGNOSTICS=0 code
 
 while	getopts $ARGV0 "$USAGE" OPT
 do	case $OPT in
@@ -201,12 +204,13 @@ function TEST
 {
 	typeset i
 	typeset -A REM
-	if	(( ${#RESET[@]} ))
-	then	unset ${!RESET[@]}
+	if	(( ${#STATE.RESET[@]} ))
+	then	unset ${!STATE.RESET[@]}
 		case $STYLE in
-		shell)	print -u$stdout -r -- unset ${!RESET[@]} ;;
+		shell)	print -u$stdout -r -- unset ${!STATE.RESET[@]} ;;
 		esac
-		unset RESET
+		unset STATE.RESET
+		typeset -A STATE.RESET
 	fi
 	if	(( ${#REMOVE[@]} ))
 	then	rm -f -- "${!REMOVE[@]}"
@@ -237,8 +241,11 @@ function TEST
 	esac
 	: > $TEMP.INPUT > $TEMP.in
 	INPUT=
+	INPUT_N=
 	OUTPUT=
+	OUTPUT_N=
 	ERROR=
+	ERROR_N=
 	UMASK=$UMASK_ORIG
 	UMASK_DONE=$UMASK
 	CODE=0
@@ -288,7 +295,7 @@ function RUN
 			sep=$'\t'
 		fi
 		for ARG in "$@"
-		do	print -u$stdout -r -f "$sep$QUOTE" -- "$ARG"
+		do	LC_CTYPE=C print -u$stdout -r -f "$sep$QUOTE" -- "$ARG"
 			sep=$' '
 		done
 		print -u$stdout
@@ -312,15 +319,16 @@ function RUN
 			cd ..
 			[[ $UMASK != $UMASK_ORIG ]] && umask $UMASK_ORIG
 		} < $TEMP.in > $TEMP.out 2> $TEMP.err
-		if	[[ $IO != "$INPUT" ]]
+		if	[[ $IO != "$INPUT" || $n != "$INPUT_N" ]]
 		then	INPUT=$IO
+			INPUT_N=$n
 			if	[[ ${FORMAT[-]} ]]
 			then	print -u$stdout -n -r -- $'\t\tINPUT'
 				print -u$stdout -r -f " $QUOTE" -- "${FORMAT[-]}"
 				print -u$stdout -r -f " $QUOTE" -- -
 				unset FORMAT[-]
 			else	print -u$stdout -n -r -- $'\t\tINPUT' $n -
-				[[ $IO ]] && print -u$stdout -r -f " $QUOTE" -- "$IO"
+				[[ $IO ]] && LC_CTYPE=C print -u$stdout -r -f " $QUOTE" -- "$IO"
 			fi
 			print -u$stdout
 			unset DATA[-]
@@ -344,7 +352,7 @@ function RUN
 				fi
 				print -u$stdout -n -r -- $'\t\tINPUT' $n
 				print -u$stdout -r -f " $QUOTE" -- "$i"
-				[[ $IO ]] && print -u$stdout -r -f " $QUOTE" -- "$IO"
+				[[ $IO ]] && LC_CTYPE=C print -u$stdout -r -f " $QUOTE" -- "$IO"
 			fi
 			print -u$stdout
 			unset DATA[$i]
@@ -356,8 +364,9 @@ function RUN
 		else	IO=${IO%?}
 			n=-n
 		fi
-		if	[[ $IO != "$OUTPUT" ]]
+		if	[[ $IO != "$OUTPUT" || $n != "$OUTPUT_N" ]]
 		then	OUTPUT=$IO
+			OUTPUT_N=$n
 			if	[[ $output ]]
 			then	if	[[ ! -s $TEMP.out ]]
 				then	print -u$stdout -n -r -- $'\t\tOUTPUT' -
@@ -365,7 +374,7 @@ function RUN
 				then	OUTPUT=not-$OUTPUT
 					print -u$stdout -n -r -- $'\t\tSAME OUTPUT INPUT'
 				else	print -u$stdout -n -r -- $'\t\tOUTPUT' $n -
-					[[ $IO ]] && print -u$stdout -r -f " $QUOTE" -- "$IO"
+					[[ $IO ]] && LC_CTYPE=C print -u$stdout -r -f " $QUOTE" -- "$IO"
 				fi
 				print -u$stdout
 			fi
@@ -378,23 +387,28 @@ function RUN
 		else	IO=${IO%?}
 			n=-n
 		fi
-		if	[[ $IO != "$ERROR" ]]
+		if	[[ $IO != "$ERROR" || $n != "$ERROR_N" ]]
 		then	ERROR=$IO
+			ERROR_N=$n
 			if	[[ $error ]]
 			then	print -u$stdout -n -r -- $'\t\tERROR' $n -
-				[[ $IO ]] && print -u$stdout -r -f " $QUOTE" -- "$IO"
+				[[ $IO ]] && LC_CTYPE=C print -u$stdout -r -f " $QUOTE" -- "$IO"
 				print -u$stdout
 			fi
 		fi
 		case $output:$error in
 		:)	OUTPUT=
+			OUTPUT_N=
 			ERROR=
+			ERROR_N=
 			print -u$stdout -r -- $'\t\tIGNORE OUTPUT ERROR'
 			;;
 		:1)	OUTPUT=
+			OUTPUT_N=
 			print -u$stdout -r -- $'\t\tIGNORE OUTPUT'
 			;;
 		1:)	ERROR=
+			ERROR_N=
 			print -u$stdout -r -- $'\t\tIGNORE ERROR'
 			;;
 		esac
@@ -488,6 +502,15 @@ function KEEP
 	done
 }
 
+function DIAGNOSTICS
+{
+	LINE
+	case $STYLE in
+	regress)	print -u$stdout -r $'DIAGNOSTICS' ;;
+	shell)		DIAGNOSTICS=1 ;;
+	esac
+}
+
 function EXPORT
 {
 	typeset x n v
@@ -501,7 +524,7 @@ function EXPORT
 		v=${x#*=}
 		export "$x"
 		print -u$stdout -r -f " %s=$QUOTE" "$n" "$v"
-		(( TEST )) && RESET[$n]=1
+		(( TEST )) && STATE.RESET["$n"]=1
 	done
 	print -u$stdout
 }

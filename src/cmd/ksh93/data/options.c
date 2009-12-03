@@ -19,8 +19,7 @@
 ***********************************************************************/
 #pragma prototyped
 
-#include	<defs.h>
-#include	"FEATURE/options"
+#include	"defs.h"
 #include	"name.h"
 #include	"shtable.h"
 

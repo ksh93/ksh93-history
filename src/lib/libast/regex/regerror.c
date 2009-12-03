@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -25,7 +25,7 @@
  * posix regex error message handler
  */
 
-static const char id[] = "\n@(#)$Id: regex (AT&T Research) 2008-05-11 $\0\n";
+static const char id[] = "\n@(#)$Id: regex (AT&T Research) 2009-11-11 $\0\n";
 
 #include "reglib.h"
 

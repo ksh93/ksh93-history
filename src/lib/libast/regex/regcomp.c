@@ -1199,10 +1199,10 @@ bra(Cenv_t* env)
 	inrange = 0;
 	for (;;)
 	{
-		if (!(c = *env->cursor) || c == env->terminator || (env->flags & REG_ESCAPE) && c == env->delimiter)
+		if (!(c = *env->cursor) || c == env->terminator || c == env->delimiter && (env->flags & REG_ESCAPE))
 			goto error;
 		env->cursor += (w = MBSIZE(env->cursor));
-		if (c == '\\')
+		if (c == '\\' && ((env->flags & REG_CLASS_ESCAPE) || env->type >= SRE && env->parnest || *env->cursor == env->delimiter && (env->flags & REG_ESCAPE)))
 		{
 			if (*env->cursor)
 			{
@@ -1465,7 +1465,7 @@ bra(Cenv_t* env)
 					goto error;
 				pp = env->cursor;
 				env->cursor += (w = MBSIZE(env->cursor));
-				if (c == '\\')
+				if (c == '\\' && ((env->flags & REG_CLASS_ESCAPE) || env->type >= SRE && env->parnest || *env->cursor == env->delimiter && (env->flags & REG_ESCAPE)))
 				{
 					if (*env->cursor)
 					{
@@ -2048,6 +2048,7 @@ grp(Cenv_t* env, int parno)
 	case 'M':	/* glob(3) */
 	case 'N':	/* glob(3) */
 	case 'O':	/* glob(3) */
+	case 'P':
 	case 'R':	/* pcre */
 	case 'S':
 	case 'U':	/* pcre */
@@ -2138,28 +2139,28 @@ grp(Cenv_t* env, int parno)
 					env->flags &= ~REG_COMMENT;
 				break;
 			case 'A':
-				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_LITERAL|REG_SHELL|REG_LEFT|REG_RIGHT);
+				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_LITERAL|REG_SHELL|REG_LEFT|REG_RIGHT|REG_CLASS_ESCAPE);
 				env->flags |= REG_AUGMENTED|REG_EXTENDED;
 				typ = ARE;
 				break;
 			case 'B':
 			case 'G':
-				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_LITERAL|REG_SHELL|REG_LEFT|REG_RIGHT);
+				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_LITERAL|REG_SHELL|REG_LEFT|REG_RIGHT|REG_CLASS_ESCAPE);
 				typ = BRE;
 				break;
 			case 'E':
-				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_LITERAL|REG_SHELL|REG_LEFT|REG_RIGHT);
+				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_LITERAL|REG_SHELL|REG_LEFT|REG_RIGHT|REG_CLASS_ESCAPE);
 				env->flags |= REG_EXTENDED;
 				typ = ERE;
 				break;
 			case 'F':
 			case 'L':
-				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_LITERAL|REG_SHELL|REG_LEFT|REG_RIGHT);
+				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_LITERAL|REG_SHELL|REG_LEFT|REG_RIGHT|REG_CLASS_ESCAPE);
 				env->flags |= REG_LITERAL;
 				typ = ERE;
 				break;
 			case 'K':
-				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_LITERAL|REG_SHELL|REG_LEFT|REG_RIGHT);
+				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_LITERAL|REG_SHELL|REG_LEFT|REG_RIGHT|REG_CLASS_ESCAPE);
 				env->flags |= REG_AUGMENTED|REG_SHELL|REG_LEFT|REG_RIGHT;
 				typ = KRE;
 				break;
@@ -2172,8 +2173,13 @@ grp(Cenv_t* env, int parno)
 			case 'O':
 				/* used by caller to disable glob(3) GLOB_STARSTAR */
 				break;
+			case 'P':
+				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_LITERAL|REG_SHELL|REG_LEFT|REG_RIGHT|REG_CLASS_ESCAPE);
+				env->flags |= REG_EXTENDED|REG_CLASS_ESCAPE;
+				typ = ERE;
+				break;
 			case 'S':
-				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_LITERAL|REG_SHELL|REG_LEFT|REG_RIGHT);
+				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_LITERAL|REG_SHELL|REG_LEFT|REG_RIGHT|REG_CLASS_ESCAPE);
 				env->flags |= REG_SHELL|REG_LEFT|REG_RIGHT;
 				typ = SRE;
 				break;

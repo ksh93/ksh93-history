@@ -92,6 +92,9 @@ All recorded changes follow.
 
 :::::::: INIT ::::::::
 
+09-11-30 mktest.sh: change RESET to STATE.RESET to make it global
+09-11-14 make.probe: use gcc { -print-multi-directory -print-search-dirs }
+09-11-11 package.sh: re-order and combine cc checks
 09-10-27 C+probe,make.probe,probe.win32: add CC.SUFFIX.DEBUG
 09-10-21 iffe.sh,Makefile: test -e is not in ksh88!
 09-10-06 iffe.sh: handle cc -E #error with 0 exit status (sgi)

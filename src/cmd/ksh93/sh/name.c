@@ -753,7 +753,7 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 					if(shp->var_tree->walk == shp->var_base)
 					{
 						nq = np;
-						if(flags&NV_NOSCOPE)
+						if((flags&NV_NOSCOPE) && *cp!='.')
 						{
 							if(mode==0)
 								root = shp->var_base;

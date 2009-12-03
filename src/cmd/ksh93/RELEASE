@@ -1,4 +1,23 @@
-09-11-02  --- Release ksh93t+  ---
+09-11-30  --- Release ksh93t+  ---
+09-11-30  A bug in which a trap could be inherited by the first element of
+	  a pipeline when the command had more than 63 arguments that did
+	  not contain any macro expansions has been fixed.
+09-11-19  When read from a terminal was called from with a while or foo loop,
+	  and an edit mode was on, a backspace or erase no longer will
+	  overwrite the prompt.
+09-11-17  Change .paths parse to handle BUILTIN_LIB=foo BUILTIN_LIB=foo-1.2.
+09-11-17  Inside a function, typeset foo.bar will bind foo to global variable
+	  foo if local variable foo does not exist, instead of creating a 
+	  local variable.
+09-11-17  "read -n1" from the terminal has been fixed to read exactly one character.
+09-11-11  Job control now works for subshell commands, (...).
+09-11-11  If set -e is on for an interractive shell errors in special builtins
+	  now cause the shell to exit.
+09-11-11  A bug in which an interrupt handler processed during the read builtin
+	  when IFS did not contain a new line has been fixed.
+09-11-09  A bug in which a variable that has been unset in a subshell and then
+	  exported from that subshell does not show up in the environment
+	  has been fixed.
 09-11-02  ``,2'' is now a valid numeric constant for locales with
 	  decimal_point=','.
 09-11-02  A bug where "return" in .profile did not restore the shell state

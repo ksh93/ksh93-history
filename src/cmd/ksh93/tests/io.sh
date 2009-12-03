@@ -367,7 +367,7 @@ fi
 	read -t2 -n 1000 line3
 	read -t2 -n 1000 line4
 }
-[[ $? == 0 ]]		 	&& err_exit 'should have time out'
+[[ $? == 0 ]]		 	&& err_exit 'should have timed out'
 [[ $line1 == 'prompt1: ' ]] 	|| err_exit "line1 should be 'prompt1: '"
 [[ $line2 == line2 ]]		|| err_exit "line2 should be line2"
 [[ $line3 == 'prompt2: ' ]]	|| err_exit "line3 should be 'prompt2: '"

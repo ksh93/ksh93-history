@@ -247,8 +247,8 @@ int		exact;
 				less = _Vmpagesize;
 			less = (size/less)*less;
 			less = (less/vd->incr)*vd->incr;
-			if(less > 0 && size > less && (size-less) < sizeof(Block_t) )
-				less = less <= vd->incr ? 0 : less - vd->incr;
+			if(less > 0 && size > (size_t)less && (size-(size_t)less) < sizeof(Block_t) )
+				less = (size_t)less <= vd->incr ? 0 : (size_t)less - vd->incr;
 		}
 
 		if(less <= 0 ||

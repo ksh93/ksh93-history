@@ -110,4 +110,9 @@ then
 
 fi
 
+{
+got=$( ( sleep 1;print $'\n') | $SHELL -c 'function handler { : ;}
+	trap handler CHLD; sleep .3 & IFS= read; print good')
+} 2> /dev/null
+[[ $got == good ]] || err_exit 'SIGCLD handler effects read behavior'
 exit $((Errors))

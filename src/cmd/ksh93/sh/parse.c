@@ -1413,7 +1413,7 @@ static Shnode_t *simple(Lex_t *lexp,int flag, struct ionod *io)
 	*argtail = 0;
 	if(argno>0)
 		argmax = argno;
-	t->comtyp = TCOM | (argmax<<(COMBITS+2));
+	t->comtyp = TCOM;
 #if SHOPT_KIA
 	if(lexp->kiafile && !(flag&SH_NOIO))
 	{

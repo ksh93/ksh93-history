@@ -65,10 +65,11 @@
 #define REG_MULTIREF	0x00100000	/* multiple digit backrefs	*/
 #define REG_MUSTDELIM	0x08000000	/* all delimiters required	*/
 #define REG_DELIMITED	0x10000000	/* pattern[0] is delimiter	*/
-#define REG_SHELL_GROUP	0x20000000	/* (|&) inside [@|&](...) only	*/
+#define REG_CLASS_ESCAPE 0x80000000	/* \ escapes in [...]		*/
 
 #define REG_SHELL_DOT	0x00200000	/* explicit leading . match	*/
 #define REG_SHELL_ESCAPED 0x00400000	/* \ not special		*/
+#define REG_SHELL_GROUP	0x20000000	/* (|&) inside [@|&](...) only	*/
 #define REG_SHELL_PATH	0x00800000	/* explicit / match		*/
 
 #define REG_REGEXP	0x40000000	/* <regexp.h> compatibility	*/
@@ -129,7 +130,7 @@ struct regex_s; typedef struct regex_s regex_t;
 struct regdisc_s; typedef struct regdisc_s regdisc_t;
 
 typedef int (*regclass_t)(int);
-typedef int32_t regflags_t;
+typedef uint32_t regflags_t;
 typedef int regoff_t;
 typedef int (*regerror_t)(const regex_t*, regdisc_t*, int, ...);
 typedef void* (*regcomp_t)(const regex_t*, const char*, size_t, regdisc_t*);

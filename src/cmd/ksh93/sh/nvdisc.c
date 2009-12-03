@@ -909,6 +909,8 @@ int nv_clone(Namval_t *np, Namval_t *mp, int flags)
 	        nv_setsize(mp,nv_size(np));
 	if(mp->nvflag == flag)
 	        mp->nvflag = (np->nvflag&~(NV_MINIMAL))|(mp->nvflag&NV_MINIMAL);
+		if(nv_isattr(np,NV_EXPORT))
+			mp->nvflag |= (np->nvflag&NV_MINIMAL);
 	if(mp->nvalue.cp==val && !nv_isattr(np,NV_INTEGER))
 	{
 		if(np->nvalue.cp && np->nvalue.cp!=Empty && (flags&NV_COMVAR) && !(flags&NV_MOVE))
@@ -929,8 +931,13 @@ int nv_clone(Namval_t *np, Namval_t *mp, int flags)
 		np->nvfun = 0;
 		np->nvalue.cp = 0;
 		if(!nv_isattr(np,NV_MINIMAL) || nv_isattr(mp,NV_EXPORT))
+		{
+			mp->nvenv = np->nvenv;
 		        np->nvenv = 0;
-		np->nvflag &= NV_MINIMAL;
+			np->nvflag = 0;
+		}
+		else
+			np->nvflag &= NV_MINIMAL;
 	        nv_setsize(np,0);
 		return(1);
 	}

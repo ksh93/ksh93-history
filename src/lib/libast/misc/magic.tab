@@ -1,5 +1,5 @@
 #
-# @(#)magic (AT&T Research) 2009-08-11
+# @(#)magic (AT&T Research) 2009-11-21
 #
 # magic number database for file(1) and magic(3)
 #
@@ -1320,6 +1320,18 @@ v()
 0	short		000732		sgi imagelib image		image/x-imagelib
 +6	short		*		, %d
 +8	short		*		x %d
+
+0	string		gimp xcf	gimp XCF image			image/x-gimp
++9	string		file		, version 0
+{
+9	string		v		, version
+&10	string		*		%s
+}
++14	belong		x		, %lu x
++18	belong		x		%lu
++22     belong          0               , rgb color
++22     belong          1               , greyscale
++22     belong          2               , indexed color
 
 0	string		MOVI		sgi movie			video/x-sgi
 
