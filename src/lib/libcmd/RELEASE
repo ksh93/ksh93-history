@@ -1,6 +1,8 @@
+09-12-04 cmd.h: fix CMD_DYNAMIC logic
+09-12-04 cut.c: handle -d mb
+09-12-03 mkdir.c: add --verbose
 09-11-30 cat.c,date.c,cksum.c: drop setlocale() call already done by optget()
 09-11-30 join.c: handle -t mb
-09-11-30 TODO cut.c: handle -d mb
 09-11-28 wclib.c: { -w -L } mb independent of -m
 09-11-28 paste.c: handle -d mb
 09-11-28 uniq.c: handle -s mb

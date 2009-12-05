@@ -74,6 +74,12 @@ make ast_map.h implicit
 make FEATURE/map
 meta FEATURE/map features/%.c>FEATURE/% features/map.c map
 make features/map.c
+make FEATURE/eaccess implicit
+meta FEATURE/eaccess features/%>FEATURE/% features/eaccess eaccess
+make features/eaccess
+done features/eaccess
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/eaccess
+done FEATURE/eaccess generated
 make FEATURE/vmalloc implicit
 meta FEATURE/vmalloc features/%>FEATURE/% features/vmalloc vmalloc
 make features/vmalloc
@@ -86,6 +92,12 @@ done features/mmap
 exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/mmap
 done FEATURE/mmap dontcare generated
 done FEATURE/vmalloc generated
+make FEATURE/options implicit
+meta FEATURE/options features/%>FEATURE/% features/options options
+make features/options
+done features/options
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/options
+done FEATURE/options generated
 prev FEATURE/mmap implicit
 prev FEATURE/lib implicit
 done features/map.c
@@ -3018,13 +3030,7 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iinclude -Istd -D_PACKAGE_as
 done statvfs.o generated
 make eaccess.o
 make comp/eaccess.c
-make FEATURE/eaccess implicit
-meta FEATURE/eaccess features/%>FEATURE/% features/eaccess eaccess
-make features/eaccess
-done features/eaccess
-prev ast.req
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/eaccess
-done FEATURE/eaccess generated
+prev FEATURE/eaccess implicit
 prev include/ls.h implicit
 prev include/ast.h implicit
 done comp/eaccess.c

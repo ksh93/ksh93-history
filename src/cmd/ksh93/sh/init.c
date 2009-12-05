@@ -1748,7 +1748,7 @@ static void env_init(Shell_t *shp)
 			if(next = strchr(++cp,'='))
 				*next = 0;
 			np = nv_search(cp+2,shp->var_tree,NV_ADD);
-			if(nv_isattr(np,NV_IMPORT|NV_EXPORT))
+			if(np!=SHLVL && nv_isattr(np,NV_IMPORT|NV_EXPORT))
 			{
 				int flag = *(unsigned char*)cp-' ';
 				int size = *(unsigned char*)(cp+1)-' ';
@@ -1779,6 +1779,8 @@ static void env_init(Shell_t *shp)
 				}
 				nv_newattr(np,flag|NV_IMPORT|NV_EXPORT,size);
 			}
+			else
+				cp += 2;
 		}
 	}
 #ifdef _ENV_H

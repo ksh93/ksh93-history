@@ -1,4 +1,8 @@
-09-11-30  --- Release ksh93t+  ---
+09-12-03  --- Release ksh93t+  ---
+09-12-03  A bug in which SHLVL exported with some attributes could cause
+	  the shell to abort at startup has been fixed.
+09-12-02  A bug with pipefail in which the shell could hang waiting for the
+	  writer to complete before the last reader command has been fixed.
 09-11-30  A bug in which a trap could be inherited by the first element of
 	  a pipeline when the command had more than 63 arguments that did
 	  not contain any macro expansions has been fixed.

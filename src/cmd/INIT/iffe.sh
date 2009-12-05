@@ -30,7 +30,7 @@ case $-:$BASH_VERSION in
 esac
 
 command=iffe
-version=2009-10-21 # update in USAGE too #
+version=2009-12-04 # update in USAGE too #
 
 compile() # $cc ...
 {
@@ -156,6 +156,7 @@ is() # op name
 			npt)	mm="a symbol that needs a prototype" ;;
 			num)	mm="a numeric constant or enum" ;;
 			nxt)	mm="an include path for the native header" ;;
+			opt)	mm="set in \$PACKAGE_OPTIONS" ;;
 			pth)	mm="a file" ;;
 			run)	yy="capture output of" mm= ;;
 			siz)	mm="a type with known size" ;;
@@ -631,7 +632,7 @@ set=
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: iffe (AT&T Research) 2009-10-21 $
+@(#)$Id: iffe (AT&T Research) 2009-12-04 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?iffe - C compilation environment feature probe]
@@ -878,6 +879,8 @@ case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 		\bHAVE_\b\aNAME\a\b_NEXT\b.]
 	[+one \aheader\a ...?Generates a \b#include\b statement for the first
 		header found in the \aheader\a list.]
+	[+opt \aname\a?Defines \b_opt_\b\aname\a if \aname\a is a space-separated
+		token in the global environment variable \bPACKAGE_OPTIONS\b.]
 	[+pth \afile\a [ \adir\a ... | { \ag1\a - ... - \agn\a } | < \apkg\a [\aver\a ...]] > ]]?Defines
 		\b_pth_\b\afile\a, with embedded \b/\b chars translated to
 		\b_\b, to the path of the first instance of \afile\a in the
@@ -4031,6 +4034,14 @@ _END_EXTERNS_
 						echo "$x"
 						break
 					done
+					;;
+				opt)	M=$m
+					is opt $a
+					case " $PACKAGE_OPTIONS " in
+					*" $a "*)	c=0 ;;
+					*)		c=1 ;;
+					esac
+					report $c 1 "$a is set in \$PACKAGE_OPTIONS" "$a is not set in \$PACKAGE_OPTIONS"
 					;;
 				out|output)
 					;;

@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: cut (AT&T Research) 2009-11-30 $\n]"
+"[-?\n@(#)$Id: cut (AT&T Research) 2009-12-04 $\n]"
 USAGE_LICENSE
 "[+NAME?cut - cut out selected columns or fields of each line of a file]"
 "[+DESCRIPTION?\bcut\b bytes, characters, or character-delimited fields "
@@ -122,7 +122,11 @@ typedef struct Cut_s
 static int
 mycomp(register const void* a, register const void* b)
 {
-	return *((int*)a) - *((int*)b);
+	if (*((int*)a) < *((int*)b))
+		return -1;
+	if (*((int*)a) > *((int*)b))
+		return 1;
+	return 0;
 }
 
 static Cut_t*
@@ -169,7 +173,7 @@ cutinit(int mode, char* str, Delim_t* wdelim, Delim_t* ldelim, size_t reclen)
 			if(range)
 			{
 				--range;
-				if((n = (n==0?HUGE:n-range)) < 0)
+				if((n = (n ? (n-range) : (HUGE-1))) < 0)
 					error(ERROR_exit(1),"invalid range for c/f option");
 				*lp++ = range;
 				*lp++ = n;

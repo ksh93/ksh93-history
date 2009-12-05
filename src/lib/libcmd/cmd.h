@@ -57,8 +57,6 @@
 
 #include <dlldefs.h>
 
-typedef int (*Shbltin_f)(int, char**, void*);
-
 #else
 
 extern int CMD_STANDALONE(int, char**, void*);
@@ -126,7 +124,7 @@ main(int argc, char** argv)
 			if (fun = (Shbltin_f)dlsym(dll, buf))
 				break;
 		}
-		if (dll = dllfind("cmd", NiL, RTLD_LAZY))
+		if (dll = dllplug(NiL, "cmd", NiL, RTLD_LAZY, NiL, 0))
 		{
 			if (fun = (Shbltin_f)dlsym(dll, buf + 1))
 				break;

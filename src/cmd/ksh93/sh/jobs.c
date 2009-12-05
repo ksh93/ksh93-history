@@ -1177,7 +1177,7 @@ int job_post(pid_t pid, pid_t join)
 	job.pwlist = pw;
 	pw->p_env = sh.curenv;
 	pw->p_pid = pid;
-	if(!sh.outpipe || sh_isoption(SH_PIPEFAIL))
+	if(!sh.outpipe || (sh_isoption(SH_PIPEFAIL) && job.waitall))
 		pw->p_flag = P_EXITSAVE;
 	pw->p_exitmin = sh.xargexit;
 	pw->p_exit = 0;
@@ -1413,7 +1413,7 @@ int	job_wait(register pid_t pid)
 					}
 				}
 				px = job_unpost(pw,1);
-				if(!px || !sh_isoption(SH_PIPEFAIL))
+				if(!px || !sh_isoption(SH_PIPEFAIL) || !job.waitall)
 					break;
 				pw = px;
 				continue;

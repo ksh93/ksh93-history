@@ -58,7 +58,7 @@ if CC.HOSTTYPE == "*.s390-64"
 	CC.DLL = $(CC.DLLBIG)
 end
 
-if SHOPT_DYNAMIC && ( "$(CC.DIALECT:N=EXPORT=DLL)" || "$(PACKAGE_OPTIMIZE:N=space)" )
+if SHOPT_DYNAMIC && ( "$(CC.DIALECT:N=EXPORT=DLL)" || "$(PACKAGE_OPTIONS:N=optimize-space)" )
 	CCFLAGS += $$(CC.DLL) $$(CC.SUFFIX.DEBUG:+$$(CC.DEBUG))
 	LIBS_req = -lshell
 else
