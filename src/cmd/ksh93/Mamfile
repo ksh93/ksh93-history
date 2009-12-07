@@ -294,6 +294,7 @@ prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done include/history.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/cdt.h implicit
 prev FEATURE/options implicit
+prev FEATURE/externs implicit
 prev ${PACKAGE_ast_INCLUDE}/error.h implicit
 prev ${PACKAGE_ast_INCLUDE}/sfio.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast.h implicit

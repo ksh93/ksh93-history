@@ -477,6 +477,6 @@ set +o pipefail
 (( (SECONDS-start) > 2 )) &&  err_exit "pipefail causing /bin/true to wait for other end of pipe"
 
 
-{ env - A__z=C+SHLVL $SHELL -c : ;} 2> /dev/null || err_exit "SHLVL with wrong attribute fails"
+{ env A__z=C+SHLVL $SHELL -c : ;} 2> /dev/null || err_exit "SHLVL with wrong attribute fails"
 
 exit $((Errors))

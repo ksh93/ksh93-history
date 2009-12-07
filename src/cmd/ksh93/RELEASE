@@ -1,4 +1,6 @@
-09-12-03  --- Release ksh93t+  ---
+09-12-04  --- Release ksh93t+  ---
+09-12-04  A bug in which in some cases a trap in a function executed in
+	  a subshell could trigger twice has been fixed.
 09-12-03  A bug in which SHLVL exported with some attributes could cause
 	  the shell to abort at startup has been fixed.
 09-12-02  A bug with pipefail in which the shell could hang waiting for the

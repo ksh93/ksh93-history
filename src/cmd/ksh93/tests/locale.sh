@@ -188,7 +188,7 @@ do	exp=$1
 					then	T=${V[$a]}${V[$b]}${V[$c]}
 						if	[[ ! ${H[$T]} ]]
 						then	H[$T]=1
-							got=$(env - $SHELL -c "${T}print \$(( $exp ))" 2>&1)
+							got=$(unset LC_ALL LC_NUMERIC LANG; $SHELL -c "${T}print \$(( $exp ))" 2>&1)
 							[[ $got == $exp ]] || err_exit "${T} sequence failed -- expected '$exp', got '$got'"
 						fi
 					fi

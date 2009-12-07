@@ -2672,6 +2672,8 @@ int sh_funscope(int argn, char *argv[],int(*fun)(void*),void *arg,int execflg)
 		stakset(savstak,0);
 	shp->options = options;
 	shp->last_root = last_root;
+	if(jmpval == SH_JMPSUB)
+		siglongjmp(*shp->jmplist,jmpval);
 	if(trap)
 	{
 		sh_trap(trap,0);

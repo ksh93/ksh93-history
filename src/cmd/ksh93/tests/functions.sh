@@ -1078,4 +1078,19 @@ function foo
 foo sub
 [[ ${!bar[@]} == sub ]] || err_exit 'scoping problem with compound array variables'
 
+function A
+{
+        trap "> /dev/null;print TRAP A" EXIT
+	# (( stderr )) && print >&2
+}
+
+function B
+{
+        trap "> /dev/null;print TRAP B" EXIT
+        A
+}
+            
+x=$(B)      
+[[ $x == $'TRAP A\nTRAP B' ]] || err_exit "trap from funtions in subshells fails got" $x
+
 exit $((Errors))
