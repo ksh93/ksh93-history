@@ -230,7 +230,6 @@ static int pathchk(char* path, int mode)
 int
 b_pathchk(int argc, char** argv, void* context)
 {
-	register int	n;
 	register int	mode = 0;
 	register char*	s;
 

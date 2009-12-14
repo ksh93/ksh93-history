@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1990-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1990-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -91,8 +91,9 @@ stop(int sig)
  */
 
 static int
-setopt(register void* co, register const void* p, int n, const char* v)
+setopt(void* handle, register const void* p, int n, const char* v)
 {
+	Coshell_t*	co = (Coshell_t*)handle;
 	Coservice_t*	cs;
 	char*		s;
 	char**		a;
@@ -102,8 +103,8 @@ setopt(register void* co, register const void* p, int n, const char* v)
 	{
 		if (n)
 		{
-			((Coshell_t*)co)->flags |= ((Namval_t*)p)->value;
-			if (((Namval_t*)p)->value == CO_SERVICE && v && (cs = newof(0, Coservice_t, 1, 2 * strlen(v))))
+			co->flags |= ((Namval_t*)p)->value;
+			if (((Namval_t*)p)->value == CO_SERVICE && v && (cs = vmnewof(co->vm, 0, Coservice_t, 1, 2 * strlen(v))))
 			{
 				a = cs->argv;
 				*a++ = s = cs->path = cs->name = (char*)(cs + 1);
@@ -133,12 +134,12 @@ setopt(register void* co, register const void* p, int n, const char* v)
 				if (cs->db)
 					*a++ = cs->db;
 				*a = 0;
-				cs->next = ((Coshell_t*)co)->service;
-				((Coshell_t*)co)->service = cs;
+				cs->next = co->service;
+				co->service = cs;
 			}
 		}
 		else
-			((Coshell_t*)co)->mask |= ((Namval_t*)p)->value;
+			co->mask |= ((Namval_t*)p)->value;
 	}
 	return 0;
 }
@@ -153,6 +154,7 @@ coopen(const char* path, int flags, const char* attributes)
 	int			n;
 	Proc_t*			proc;
 	Cojob_t*		cj;
+	Vmalloc_t*		vm;
 	Sfio_t*			sp;
 	Sig_handler_t		handler;
 	int			pio[2];
@@ -167,11 +169,14 @@ coopen(const char* path, int flags, const char* attributes)
 		state.type = "";
 	if ((flags & CO_ANY) && (co = state.coshells))
 		return co;
-	if (!(co = newof(0, Coshell_t, 1, 0)))
+	if (!(vm = vmopen(Vmdcheap, Vmbest, 0)) || !(co = vmnewof(vm, 0, Coshell_t, 1, 0)))
 	{
+		if (vm)
+			vmclose(vm);
 		errormsg(state.lib, ERROR_LIBRARY|2, "out of space");
 		return 0;
 	}
+	co->vm = vm;
 	stropt(getenv(CO_ENV_OPTIONS), options, sizeof(*options), setopt, co);
 	if (attributes)
 		stropt(attributes, options, sizeof(*options), setopt, co);

@@ -33,7 +33,6 @@
 Time_t
 tmxduration(const char* s, char** e)
 {
-	double		d;
 	Time_t		ns;
 	Time_t		ts;
 	Time_t		now;

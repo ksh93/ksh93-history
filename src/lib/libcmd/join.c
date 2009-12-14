@@ -28,7 +28,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: join (AT&T Research) 2009-11-30 $\n]"
+"[-?\n@(#)$Id: join (AT&T Research) 2009-12-10 $\n]"
 USAGE_LICENSE
 "[+NAME?join - relational database operator]"
 "[+DESCRIPTION?\bjoin\b performs an \aequality join\a on the files \afile1\a "
@@ -92,6 +92,21 @@ USAGE_LICENSE
 
 #include <cmd.h>
 #include <sfdisc.h>
+
+#if _hdr_wchar && _hdr_wctype && _lib_iswctype
+
+#include <wchar.h>
+#include <wctype.h>
+
+#else
+
+#include <ctype.h>
+
+#ifndef iswspace
+#define iswspace(x)	isspace(x)
+#endif
+
+#endif
 
 #define C_FILE1		001
 #define C_FILE2		002
@@ -286,7 +301,6 @@ getrec(Join_t* jp, int index, int discard)
 	register char*		cp;
 	register int		n;
 	char*			tp;
-	int			delimlen = 1;
 
 	if (sh_checksig(jp->context))
 		return 0;

@@ -857,7 +857,7 @@ Namval_t *nv_create(const char *name,  Dt_t *root, int flags, Namfun_t *dp)
 				
 			}
 			shp->last_root = root;
-			if(cp[1]=='.')
+			if(*cp && cp[1]=='.')
 				cp++;
 			if(c=='.' && (cp[1]==0 ||  cp[1]=='=' || cp[1]=='+'))
 			{
@@ -1914,11 +1914,8 @@ static void pushnam(Namval_t *np, void *data)
 	register struct adata *ap = (struct adata*)data;
 	ap->sh = &sh;
 	ap->tp = 0;
-	if(nv_isattr(np,NV_IMPORT))
-	{
-		if(np->nvenv)
-			*ap->argnam++ = np->nvenv;
-	}
+	if(nv_isattr(np,NV_IMPORT) && np->nvenv)
+		*ap->argnam++ = np->nvenv;
 	else if(value=nv_getval(np))
 		*ap->argnam++ = staknam(np,value);
 	if(nv_isattr(np,NV_RDONLY|NV_UTOL|NV_LTOU|NV_RJUST|NV_LJUST|NV_ZFILL|NV_INTEGER))
@@ -2739,7 +2736,6 @@ void nv_newattr (register Namval_t *np, unsigned newatts, int size)
 	return;
 }
 
-#ifndef _NEXT_SOURCE
 static char *oldgetenv(const char *string)
 {
 	register char c0,c1;
@@ -2764,7 +2760,7 @@ static char *oldgetenv(const char *string)
 /*
  * This version of getenv uses the hash storage to access environment values
  */
-char *getenv(const char *name)
+char *sh_getenv(const char *name)
 /*@
 	assume name!=0;
 @*/ 
@@ -2775,6 +2771,17 @@ char *getenv(const char *name)
 	if(sh_isstate(SH_INIT) || name[0] == 'P' && name[1] == 'A' && name[2] == 'T' && name[3] == 'H' && name[4] == 0)
 		return(oldgetenv(name));
 	return(0);
+}
+
+#ifndef _NEXT_SOURCE
+/*
+ * Some dynamic linkers will make this file see the libc getenv(),
+ * so sh_getenv() is used for the astintercept() callback.  Plain
+ * getenv() is provided for static links.
+ */
+char *getenv(const char *name)
+{
+	return sh_getenv(name);
 }
 #endif /* _NEXT_SOURCE */
 
@@ -2794,11 +2801,10 @@ int putenv(const char *name)
 	return(0);
 }
 
-
 /*
- * Override libast setenv()
+ * Override libast setenviron().
  */
-char* setenviron(const char *name)
+char* sh_setenviron(const char *name)
 {
 	register Namval_t *np;
 	if(name)
@@ -2809,6 +2815,14 @@ char* setenviron(const char *name)
 		nv_unset(np);
 	}
 	return("");
+}
+
+/*
+ * Same linker dance as with getenv() above.
+ */
+char* setenviron(const char *name)
+{
+	return sh_setenviron(name);
 }
 
 /*

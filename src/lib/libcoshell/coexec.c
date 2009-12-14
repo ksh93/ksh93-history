@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1990-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1990-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -162,7 +162,7 @@ coexec(register Coshell_t* co, const char* action, int flags, const char* out, c
 			break;
 	if (cj)
 		cj->service = 0;
-	else if (!(cj = newof(0, Cojob_t, 1, 0)))
+	else if (!(cj = vmnewof(co->vm, 0, Cojob_t, 1, 0)))
 		return 0;
 	else
 	{
@@ -197,7 +197,7 @@ coexec(register Coshell_t* co, const char* action, int flags, const char* out, c
 	 * package the action
 	 */
 
-	if (!(env = coinit(co->flags)))
+	if (!(env = coinitialize(co, co->flags)))
 		return 0;
 	if (!(sp = sfstropen()))
 		return 0;

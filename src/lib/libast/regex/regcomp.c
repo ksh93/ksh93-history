@@ -85,6 +85,7 @@ typedef struct Stats_s
 	unsigned short	a;	/* number of alternations		*/
 	unsigned short	b;	/* number of backrefs			*/
 	unsigned short	c;	/* number of closures			*/
+	unsigned short	e;	/* $					*/
 	unsigned short	i;	/* number of negations			*/
 	unsigned short	p;	/* number of named subexpressions	*/
 	unsigned short	s;	/* number of simple closures		*/
@@ -460,6 +461,9 @@ stats(register Cenv_t* env, register Rex_t* e)
 				nn = env->stats.n;
 			if ((env->stats.n += cn) < nn)
 				return 1;
+			break;
+		case REX_END:
+			env->stats.e = 1;
 			break;
 		case REX_GROUP:
 			if (e->re.group.number && ++env->stats.p <= 0 || !e->re.group.number && ++env->stats.u <= 0)
@@ -995,9 +999,9 @@ token(register Cenv_t* env)
 	}
 	else if (c == '^')
 	{
-		if (env->type == BRE && (env->cursor == env->pattern || posixkludge))
+		if (env->type == BRE && (env->cursor == env->pattern || posixkludge == 1))
 		{
-			env->posixkludge = 1;
+			env->posixkludge = 2;
 			return T_CFLX;
 		}
 	}
@@ -1069,7 +1073,7 @@ col(Celt_t* ce, int ic, unsigned char* bp, int bw, int bc, unsigned char* ep, in
 			if (cc > 0)
 			{
 				cc = -1;
-				k += wctomb((char*)k, c);
+				k += mbconv((char*)k, c);
 			}
 			else
 				for (e = k + bw; k < e; *k++ = *s++);
@@ -1125,7 +1129,7 @@ col(Celt_t* ce, int ic, unsigned char* bp, int bw, int bc, unsigned char* ep, in
 				if (cc > 0)
 				{
 					cc = -1;
-					k += wctomb((char*)k, c);
+					k += mbconv((char*)k, c);
 				}
 				else
 					for (e = k + ew; k < e; *k++ = *s++);
@@ -1380,18 +1384,24 @@ bra(Cenv_t* env)
 			complicated++;
 		if (inrange == 2)
 		{
-			if (last > c)
+			if (last <= c)
 			{
-				if (env->type < SRE && !(env->flags & REG_LENIENT))
-					goto erange;
-				setadd(e->re.charclass, last);
-				setadd(e->re.charclass, c);
-			}
-			else
 				for (i = last; i <= c; i++)
 					setadd(e->re.charclass, i);
-			inrange = env->type >= SRE || (env->flags & REG_LENIENT);
-			elements += 2;
+				inrange = env->type >= SRE || (env->flags & REG_LENIENT);
+				elements += 2;
+			}
+			else if (env->type >= SRE)
+			{
+				setadd(e->re.charclass, last);
+				setadd(e->re.charclass, c);
+				elements += 2;
+				inrange = 1;
+			}
+			else if (!(env->flags & REG_LENIENT))
+				goto erange;
+			else
+				inrange = 0;
 		}
 		else if (inrange == 1)
 		{
@@ -1497,7 +1507,7 @@ bra(Cenv_t* env)
 								if (env->token.len > 1 || w >= 0 && w < T_META)
 								{
 									c = w;
-									w = wctomb(mbc, c);
+									w = mbconv(mbc, c);
 									pp = (unsigned char*)mbc;
 									env->cursor += env->token.len;
 								}
@@ -1597,7 +1607,7 @@ bra(Cenv_t* env)
 							if (iswupper(wc))
 							{
 								wc = towlower(wc);
-								rw = wctomb((char*)pp, wc);
+								rw = mbconv((char*)pp, wc);
 								c = 'u';
 							}
 							else if (iswlower(wc))
@@ -1635,7 +1645,7 @@ bra(Cenv_t* env)
 								wc = towupper(wc);
 								c = 'U';
 							}
-							rw = wctomb((char*)pp, wc);
+							rw = mbconv((char*)pp, wc);
 						}
 						inrange = 0;
 						c = *pp;
@@ -2555,7 +2565,7 @@ seq(Cenv_t* env)
 					c = towupper(c);
 				if ((&buf[sizeof(buf)] - s) < MB_CUR_MAX)
 					break;
-				if ((n = wctomb((char*)s, c)) < 0)
+				if ((n = mbconv((char*)s, c)) < 0)
 					*s++ = c;
 				else if (n)
 					s += n;
@@ -3010,7 +3020,7 @@ special(Cenv_t* env, regex_t* p)
 			a->re.bm.back = (y == e || y == e->re.group.expr.rex) ? (m - n) : -1;
 			a->re.bm.left = l - 1;
 			a->re.bm.right = env->stats.m - l - n;
-			a->re.bm.complete = (y != e && (e->type != REX_GROUP || y != e->re.group.expr.rex) || e->next || ((a->re.bm.left + a->re.bm.right) >= 0)) ? 0 : n;
+			a->re.bm.complete = (env->stats.e || y != e && (e->type != REX_GROUP || y != e->re.group.expr.rex) || e->next || ((a->re.bm.left + a->re.bm.right) >= 0)) ? 0 : n;
 			h = (Bm_mask_t*)&a->re.bm.mask[n];
 			a->re.bm.skip = (size_t*)(h + n * (UCHAR_MAX + 1));
 			a->re.bm.fail = &a->re.bm.skip[UCHAR_MAX + 1];
@@ -3400,6 +3410,7 @@ regcomb(regex_t* p, regex_t* q)
 	Rex_t*	e = p->env->rex;
 	Rex_t*	f = q->env->rex;
 	Rex_t*	g;
+	Rex_t*	h;
 	Cenv_t	env;
 
 	if (!e || !f)
@@ -3434,13 +3445,15 @@ regcomb(regex_t* p, regex_t* q)
 		drop(env.disc, f);
 		f = q->env->rex;
 	}
-	if (e->next && e->next->type == REX_END && f->next && f->next->type == REX_END)
+	for (g = e; g->next; g = g->next);
+	for (h = f; h->next; h = h->next);
+	if (g->next && g->next->type == REX_END && h->next && h->next->type == REX_END)
 	{
 		p->env->flags |= REG_RIGHT;
-		drop(env.disc, e->next);
-		e->next = 0;
-		drop(env.disc, f->next);
-		f->next = 0;
+		drop(env.disc, g->next);
+		g->next = 0;
+		drop(env.disc, h->next);
+		h->next = 0;
 	}
 	if (!(g = trie(&env, f, e)))
 		return fatal(p->env->disc, REG_BADPAT, NiL);

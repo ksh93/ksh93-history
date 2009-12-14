@@ -1,4 +1,9 @@
-09-12-04  --- Release ksh93t+  ---
+09-12-11  --- Release ksh93t+  ---
+09-12-11  A bug where the subscript of an unset variable was not evaluated has
+	  been fixed.
+09-12-09  A bug where shcomp dumped core on certain syntax errors has been fixed.
+09-12-07  A bug where a parent shell environment var reset in a subshell removed
+	  the value in subsequent children of the parent shell has been fixed.
 09-12-04  A bug in which in some cases a trap in a function executed in
 	  a subshell could trigger twice has been fixed.
 09-12-03  A bug in which SHLVL exported with some attributes could cause

@@ -450,4 +450,9 @@ fi
 $SHELL -c '( sleep 5 </dev/null >/dev/null 2>&1 & );exit 0' | cat 
 (( (SECONDS-t1) > 4 )) && err_exit 'sleep& in subshell hanging'
 
+exp=HOME=$HOME
+( HOME=/bin/sh )
+got=$(env | grep ^HOME=)
+[[ $got == "$exp" ]] ||  err_exit "( HOME=/bin/sh ) cleanup failed -- expected '$exp', got '$got'"
+
 exit $Errors

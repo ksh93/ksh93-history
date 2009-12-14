@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1990-2007 AT&T Knowledge Ventures            *
+*          Copyright (c) 1990-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                      by AT&T Knowledge Ventures                      *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -29,6 +29,8 @@
 #define _COLIB_H
 
 #include <ast.h>
+#include <dt.h>
+#include <vmalloc.h>
 
 #define _CO_JOB_PRIVATE_		/* Cojob_t private additions	*/ \
 	Cojob_t*	next;		/* next in list			*/ \
@@ -39,9 +41,20 @@
 					/* end of private additions	*/
 
 #define _CO_SHELL_PRIVATE_		/* Coshell_t private additions	*/ \
+	Vmalloc_t*	vm;		/* Coshell_t vm			*/ \
 	Coshell_t*	next;		/* next in list			*/ \
 	Cojob_t*	jobs;		/* job list			*/ \
 	Coservice_t*	service;	/* service 			*/ \
+	Dt_t*		export;		/* coexport() dictionary	*/ \
+	Dtdisc_t*	exdisc;		/* coexport() discipline	*/ \
+	struct Coinit_s			/* initialization script state	*/ \
+	{								   \
+	char*		script;		/* initialization script	*/ \
+	dev_t		pwd_dev;	/* previous pwd dev		*/ \
+	ino_t		pwd_ino;	/* previous pwd inode number	*/ \
+	int		mask;		/* previous umask		*/ \
+	int		sync;		/* sync script			*/ \
+	}		init;						   \
 	int		cmdfd;		/* command pipe fd		*/ \
 	int		gsmfd;		/* msgfp child write side	*/ \
 	int		mask;		/* CO_* flags to clear		*/ \
@@ -51,6 +64,13 @@
 	int		pid;		/* pid				*/ \
 	int		slots;		/* number of job slots		*/ \
 					/* end of private additions	*/
+
+typedef struct Coexport_s
+{
+	Dtlink_t	link;
+	char*		value;
+	char		name[1];
+} Coexport_t;
 
 struct Coservice_s;
 typedef struct Coservice_s Coservice_t;
@@ -91,6 +111,7 @@ typedef struct Costate_s		/* global coshell state		*/
 	const char*	lib;		/* library id			*/
 	Coshell_t*	coshells;	/* list of all coshells		*/
 	Coshell_t*	current;	/* current coshell		*/
+	Coshell_t*	generic;	/* generic coshell for coinit()	*/
 	char*		pwd;		/* pwd				*/
 	char*		sh;		/* sh from first coopen()	*/
 	char*		type;		/* CO_ENV_TYPE value		*/
@@ -100,7 +121,7 @@ typedef struct Costate_s		/* global coshell state		*/
 extern char 		coident[];	/* coshell ident script		*/
 extern char 		cobinit[];	/* bsh initialition script	*/
 extern char 		cokinit[];	/* ksh initialition script	*/
-extern char* 		coexport[];	/* default export var list	*/
+extern char* 		co_export[];	/* default export var list	*/
 
 extern Costate_t	state;		/* global coshell info		*/
 
@@ -109,5 +130,6 @@ extern int		errno;
 #endif
 
 extern char*		costash(Sfio_t*);
+extern char*		coinitialize(Coshell_t*, int);
 
 #endif

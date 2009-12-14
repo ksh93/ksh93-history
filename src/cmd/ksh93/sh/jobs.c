@@ -569,9 +569,15 @@ void job_init(Shell_t *shp, int lflag)
 #ifdef SIGTSTP
 	/* make sure that we are a process group leader */
 	setpgid(0,shp->pid);
-#   if defined(SA_NOCLDWAIT) && defined(_lib_sigflag)
+#   if defined(SA_NOCLDSTOP) || defined(SA_NOCLDWAIT)
+#   	if !defined(SA_NOCLDSTOP)
+#	    define SA_NOCLDSTOP	0
+#   	endif
+#   	if !defined(SA_NOCLDWAIT)
+#	    define SA_NOCLDWAIT	0
+#   	endif
 	sigflag(SIGCHLD, SA_NOCLDSTOP|SA_NOCLDWAIT, 0);
-#   endif /* SA_NOCLDWAIT */
+#   endif /* SA_NOCLDSTOP || SA_NOCLDWAIT */
 	signal(SIGTTIN,SIG_IGN);
 	signal(SIGTTOU,SIG_IGN);
 	/* The shell now handles ^Z */

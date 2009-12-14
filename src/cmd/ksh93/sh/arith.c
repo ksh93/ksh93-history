@@ -58,7 +58,6 @@ static Namval_t FunNode =
 
 static Namval_t *scope(Shell_t *shp,register Namval_t *np,register struct lval *lvalue,int assign)
 {
-	register Namarr_t *ap;
 	register int flag = lvalue->flag;
 	register char *sub=0, *cp=(char*)np;
 	register Namval_t *mp;

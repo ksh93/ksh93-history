@@ -1,3 +1,4 @@
+09-12-10 join.c: <wctype.h> for iswspace()!
 09-12-04 cmd.h: fix CMD_DYNAMIC logic
 09-12-04 cut.c: handle -d mb
 09-12-03 mkdir.c: add --verbose

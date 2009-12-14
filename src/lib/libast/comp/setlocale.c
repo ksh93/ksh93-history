@@ -1006,7 +1006,6 @@ _ast_setlocale(int category, const char* locale)
 	register int		i;
 	register int		j;
 	int			k;
-	char*			a;
 	Lc_t*			p;
 	int			cat[AST_LC_COUNT];
 

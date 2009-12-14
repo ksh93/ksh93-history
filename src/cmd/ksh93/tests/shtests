@@ -79,7 +79,11 @@ then	SHCOMP=${SHCOMP:-shcomp}
 fi
 typeset -A tests
 for i in ${*-*.sh}
-do	t=$(grep -c err_exit $i)
+do	if	[[ ! -r $i ]]
+	then	echo $0: $i: not found >&2
+		continue
+	fi
+	t=$(grep -c err_exit $i)
 	if	(( $t > 2 ))
 	then	(( t = $t - 2 ))
 	fi
@@ -113,7 +117,10 @@ do	t=$(grep -c err_exit $i)
 done
 if	[[ $compile ]]
 then	for i in ${*-*.sh}
-	do	t=${tests[$i]}
+	do	if	[[ ! -r $i ]]
+		then	continue
+		fi
+		t=${tests[$i]}
 		T=test
 		if	(( $t != 1 ))
 		then	T=${T}s

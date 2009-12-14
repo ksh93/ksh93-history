@@ -58,6 +58,9 @@
 #   define env_delete(e,p)	env_change()
 #endif
 
+extern char*	sh_getenv(const char*);
+extern char*	sh_setenviron(const char*);
+
 /*
  * note that the first few fields have to be the same as for
  * Shscoped_t in <shell.h>

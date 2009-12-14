@@ -1306,8 +1306,8 @@ Shell_t *sh_init(register int argc,register char *argv[], Shinit_f userinit)
 	shp->bltindata.shexit = sh_exit;
 	shp->bltindata.shbltin = sh_addbuiltin;
 #if _AST_VERSION >= 20080617L
-	shp->bltindata.shgetenv = getenv;
-	shp->bltindata.shsetenv = setenviron;
+	shp->bltindata.shgetenv = sh_getenv;
+	shp->bltindata.shsetenv = sh_setenviron;
 	astintercept(&shp->bltindata,1);
 #endif
 #if 0

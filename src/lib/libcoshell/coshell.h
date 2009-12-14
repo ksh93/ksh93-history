@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1990-2007 AT&T Intellectual Property          *
+*          Copyright (c) 1990-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -120,6 +120,7 @@ struct Coshell_s			/* coshell connection info	*/
 extern int		coclose(Coshell_t*);
 extern Cojob_t*		coexec(Coshell_t*, const char*, int, const char*, const char*, const char*);
 extern char*		coinit(int);
+extern int		coexport(Coshell_t*, const char*, const char*);
 extern int		cokill(Coshell_t*, Cojob_t*, int);
 extern Coshell_t*	coopen(const char*, int, const char*);
 extern void		coquote(Sfio_t*, const char*, int);

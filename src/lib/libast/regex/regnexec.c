@@ -628,7 +628,7 @@ collic(register Celt_t* ce, char* key, register char* nxt, int c, int x)
 			c = towlower(c);
 		else
 			return 0;
-		x = wctomb(key, c);
+		x = mbconv(key, c);
 		key[x] = 0;
 		return collelt(ce, key, c, 0);
 	}

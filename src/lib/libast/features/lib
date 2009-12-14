@@ -41,6 +41,7 @@ lib	lseek64,lstat64 -D_LARGEFILE64_SOURCE
 lib	open64,readdir64,stat64,statvfs64,truncate64 -D_LARGEFILE64_SOURCE
 
 lib,npt	strtod,strtold,strtol,strtoll,strtoul,strtoull stdlib.h
+lib,npt	sigflag signal.h
 
 mem	direct.d_reclen sys/types.h sys/dir.h
 mem	dirent.d_fileno,dirent.d_ino,dirent.d_namlen,dirent.d_off,dirent.d_reclen,dirent.d_type sys/types.h dirent.h

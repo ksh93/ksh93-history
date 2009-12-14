@@ -83,7 +83,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	fs3d.c ftwalk.c ftwflags.c fts.c \
 	astintercept.c getenv.c setenviron.c \
 	optget.c optjoin.c optesc.c optctx.c strsort.c struniq.c \
-	magic.c mime.c mimetype.c signal.c systrace.c \
+	magic.c mime.c mimetype.c signal.c sigflag.c systrace.c \
 	error.c errorf.c errormsg.c errorx.c \
 	localeconv.c setlocale.c translate.c \
 	catopen.c iconv.c lc.c lctab.c mc.c \

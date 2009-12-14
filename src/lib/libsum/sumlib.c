@@ -274,7 +274,6 @@ Sum_t*
 sumopen(register const char* name)
 {
 	register int	n;
-	char		pat[256];
 
 	if (!name || !name[0] || name[0] == '-' && !name[1])
 		name = "default";

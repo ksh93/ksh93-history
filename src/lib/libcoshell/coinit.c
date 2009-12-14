@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1990-2006 AT&T Knowledge Ventures            *
+*          Copyright (c) 1990-2009 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                      by AT&T Knowledge Ventures                      *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -33,28 +33,45 @@
 /*
  * add n to the export list
  * old!=0 formats in old style
+ * coex!=0 for CO_ENV_EXPORT
  * if n prefixed by % then coquote conversion enabled
  */
 
 static void
-putexport(Sfio_t* sp, char* n, int old)
+putexport(Coshell_t* co, Sfio_t* sp, char* n, int old, int coex, int flags)
 {
-	int	cvt;
-	char*	v;
+	int		cvt;
+	char*		v;
+	Coexport_t*	ex;
 
 	if (cvt = *n == '%')
 		n++;
-	if (old)
-		cvt = 0;
-	if ((v = getenv(n)) && *v)
+	if (!co->export || !dtmatch(co->export, n))
 	{
-		if (!old)
-			sfprintf(sp, "\\\n");
-		sfprintf(sp, " %s='", n);
-		coquote(sp, v, cvt);
-		sfputc(sp, '\'');
 		if (old)
-			sfprintf(sp, "\nexport %s\n", n);
+			cvt = 0;
+		if ((v = getenv(n)) && *v || coex && ((flags & CO_EXPORT) || co->export && dtsize(co->export) > 0))
+		{
+			if (!old)
+				sfprintf(sp, "\\\n");
+			sfprintf(sp, " %s='", n);
+			if (coex && (flags & CO_EXPORT))
+				v = "(*)";
+			if (v)
+				coquote(sp, v, cvt);
+			if (coex && !(flags & CO_EXPORT))
+			{
+				v = v ? ":" : "";
+				for (ex = (Coexport_t*)dtfirst(co->export); ex; ex = (Coexport_t*)dtnext(co->export, ex))
+				{
+					sfprintf(sp, "%s%s", v, ex->name);
+					v = ":";
+				}
+			}
+			sfputc(sp, '\'');
+			if (old)
+				sfprintf(sp, "\nexport %s\n", n);
+		}
 	}
 }
 
@@ -63,7 +80,7 @@ putexport(Sfio_t* sp, char* n, int old)
  */
 
 char*
-coinit(int flags)
+coinitialize(Coshell_t* co, int flags)
 {
 	register char*	s;
 	int		n;
@@ -72,17 +89,13 @@ coinit(int flags)
 	int		sync;
 	char*		t;
 	long		p;
+	Coexport_t*	ex;
 	Sfio_t*		sp;
 	Sfio_t*		tp;
 	struct stat	st;
 
-	static char*	init;
-	static int	mask;
-
-	static dev_t	pwd_dev;
-	static ino_t	pwd_ino;
-
-	sync = 0;
+	sync = co->init.sync;
+	co->init.sync = 0;
 
 	/*
 	 * pwd
@@ -90,10 +103,10 @@ coinit(int flags)
 
 	if (stat(".", &st))
 		return 0;
-	if (!state.pwd || st.st_ino != pwd_ino || st.st_dev != pwd_dev)
+	if (!state.pwd || st.st_ino != co->init.pwd_ino || st.st_dev != co->init.pwd_dev)
 	{
-		pwd_dev = st.st_dev;
-		pwd_ino = st.st_ino;
+		co->init.pwd_dev = st.st_dev;
+		co->init.pwd_ino = st.st_ino;
 		if (state.pwd)
 			free(state.pwd);
 		if (!(state.pwd = getcwd(NiL, 0)))
@@ -115,17 +128,17 @@ coinit(int flags)
 	 * umask
 	 */
 
-	umask(n = umask(mask));
-	if (mask != n)
+	umask(n = umask(co->init.mask));
+	if (co->init.mask != n)
 	{
-		mask = n;
+		co->init.mask = n;
 		if (!(flags & CO_INIT))
 			sync = 1;
 	}
-	if (!init || sync)
+	if (!co->init.script || sync)
 	{
 		/*
-		 * coexport[] vars
+		 * co_export[] vars
 		 */
 
 		if (!(sp = sfstropen()))
@@ -140,9 +153,9 @@ coinit(int flags)
 				s = "(*)";
 			else
 			{
-				for (n = 0; s = coexport[n]; n++)
-					putexport(sp, s, old);
-				s = getenv(coexport[0]);
+				for (n = 0; s = co_export[n]; n++)
+					putexport(co, sp, s, old, !n, flags);
+				s = getenv(co_export[0]);
 			}
 			if (s)
 			{
@@ -162,7 +175,7 @@ coinit(int flags)
 							m = t - e;
 							if (!strneq(e, "PATH=", 5) && !strneq(e, "_=", 2))
 							{
-								for (n = 0; xs = coexport[n]; n++)
+								for (n = 0; xs = co_export[n]; n++)
 								{
 									es = e;
 									while (*xs && *es == *xs)
@@ -196,18 +209,31 @@ coinit(int flags)
 					{
 						if (t = strchr(s, ':'))
 							*t = 0;
-						putexport(sp, s, old);
+						putexport(co, sp, s, old, 0, 0);
 						if (!(s = t))
 							break;
 						*s++ = ':';
 					}
 			}
+			if (co->export)
+				for (ex = (Coexport_t*)dtfirst(co->export); ex; ex = (Coexport_t*)dtnext(co->export, ex))
+				{
+					if (!old)
+						sfprintf(sp, "\\\n");
+					sfprintf(sp, " %s='", ex->name);
+					coquote(sp, ex->value, 0);
+					sfputc(sp, '\'');
+					if (old)
+						sfprintf(sp, "\nexport %s\n", ex->name);
+				}
 		}
 
 		/*
 		 * PATH
 		 */
 
+		if (!old)
+			sfprintf(sp, "\\\n");
 		sfprintf(sp, " PATH='");
 		n = PATH_MAX;
 		if (!(t = sfstrrsrv(sp, n)))
@@ -318,7 +344,7 @@ coinit(int flags)
 				sfstrseek(sp, p, SEEK_SET);
 			else
 				sfprintf(sp, " 2>/dev/null || :\n");
-			sfprintf(sp, "umask 0%o\ncd '%s'\n", mask, state.pwd);
+			sfprintf(sp, "umask 0%o\ncd '%s'\n", co->init.mask, state.pwd);
 		}
 	done:
 		if (!(flags & CO_SERVER))
@@ -329,14 +355,43 @@ coinit(int flags)
 		}
 		sfputc(sp, 0);
 		n = sfstrtell(sp);
-		if (init)
-			free(init);
-		if (!(init = newof(0, char, n, 1)))
-			goto bad;
-		memcpy(init, sfstrbase(sp), n);
+		if (co->vm)
+		{
+			if (co->init.script)
+				vmfree(co->vm, co->init.script);
+			if (!(co->init.script = vmnewof(co->vm, 0, char, n, 1)))
+				goto bad;
+		}
+		else
+		{
+			if (co->init.script)
+				free(co->init.script);
+			if (!(co->init.script = newof(0, char, n, 1)))
+				goto bad;
+		}
+		memcpy(co->init.script, sfstrbase(sp), n);
 		sfstrclose(sp);
 	}
-	else if (!init && (init = newof(0, char, 1, 0)))
-		*init = 0;
-	return init;
+	else if (!co->init.script)
+	{
+		if (co->init.script = co->vm ? vmnewof(co->vm, 0, char, 1, 0) : newof(0, char, 1, 0))
+			*co->init.script = 0;
+	}
+	return co->init.script;
+}
+
+/*
+ * return generic job initialization commands
+ */
+
+char*
+coinit(int flags)
+{
+	if (!state.generic)
+	{
+		if (!(state.generic = newof(0, Coshell_t, 1, 0)))
+			return 0;
+		state.generic->init.sync = 1;
+	}
+	return coinitialize(state.generic, flags);
 }

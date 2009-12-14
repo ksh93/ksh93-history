@@ -797,6 +797,8 @@ static Shnode_t *funct(Lex_t *lexp)
 		}
 		t->funct.functtre = item(lexp,SH_NOIO);
 	}
+	else if(shp->shcomp)
+		exit(1);
 	sh_popcontext(&buff);
 	loop_level = saveloop;
 	label_last = savelabel;

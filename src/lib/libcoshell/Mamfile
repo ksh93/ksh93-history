@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.4 2009-10-28
+info mam static 00000 1994-07-17 make (AT&T Research) 5.4 2009-12-09
 setv INSTALLROOT ../../..
 setv PACKAGE_ast_INCLUDE ${INSTALLROOT}/include/ast
 setv PACKAGE_ast_LIB ${INSTALLROOT}/lib
@@ -161,6 +161,15 @@ done ${PACKAGE_ast_INCLUDE}/error.h dontcare
 make coshell.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done coshell.h dontcare
+prev ${PACKAGE_ast_INCLUDE}/vmalloc.h implicit
+make ${PACKAGE_ast_INCLUDE}/dt.h implicit
+prev ${PACKAGE_ast_INCLUDE}/vmalloc.h implicit
+make ${PACKAGE_ast_INCLUDE}/cdt.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast_std.h implicit
+done ${PACKAGE_ast_INCLUDE}/cdt.h dontcare
+prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+done ${PACKAGE_ast_INCLUDE}/dt.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done colib.h
 done coopen.c
@@ -261,6 +270,14 @@ meta codata.o %.c>%.o codata.c codata
 prev codata.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_coshell -c codata.c
 done codata.o generated
+make coexport.o
+make coexport.c
+prev colib.h implicit
+done coexport.c
+meta coexport.o %.c>%.o coexport.c coexport
+prev coexport.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_coshell -c coexport.c
+done coexport.o generated
 make procrun.o
 make procrun.c
 prev ${PACKAGE_ast_INCLUDE}/proc.h implicit
@@ -278,7 +295,7 @@ meta system.o %.c>%.o system.c system
 prev system.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -D_BLD_coshell -c system.c
 done system.o generated
-exec - ${AR} -cr libcoshell.a coopen.o coclose.o coinit.o coexec.o costash.o cowait.o cokill.o cosync.o coquote.o codata.o procrun.o system.o
+exec - ${AR} -cr libcoshell.a coopen.o coclose.o coinit.o coexec.o costash.o cowait.o cokill.o cosync.o coquote.o codata.o coexport.o procrun.o system.o
 exec - (ranlib libcoshell.a) >/dev/null 2>&1 || true
 done libcoshell.a generated
 done coshell virtual
