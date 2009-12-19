@@ -872,7 +872,8 @@ init(register char* s, Optpass_t* p)
 		sfputc(opt_info.state->cp, '[');
 		sfputc(opt_info.state->cp, '-');
 		sfputc(opt_info.state->cp, ']');
-		while (c = *s++)
+		c = *s++;
+		while (c)
 		{
 			sfputc(opt_info.state->cp, '[');
 			sfputc(opt_info.state->cp, c);
@@ -885,17 +886,14 @@ init(register char* s, Optpass_t* p)
 				{
 					while ((c = *s++) && c != ')')
 						sfputc(opt_info.state->cp, c);
-					if (!c || *s != '(')
+					if (!c || (c = *s++) != '(')
 						break;
 					sfputc(opt_info.state->cp, '|');
-					s++;
 				}
 			}
 			sfputc(opt_info.state->cp, ']');
 			if (a)
 				sfputr(opt_info.state->cp, ":[string]", -1);
-			if (!c)
-				break;
 		}
 		if (!(p->oopts = s = sfstruse(opt_info.state->cp)))
 			return -1;

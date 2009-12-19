@@ -115,4 +115,25 @@ got=$( ( sleep 1;print $'\n') | $SHELL -c 'function handler { : ;}
 	trap handler CHLD; sleep .3 & IFS= read; print good')
 } 2> /dev/null
 [[ $got == good ]] || err_exit 'SIGCLD handler effects read behavior'
+
+set -- $(
+	(
+	$SHELL -xc $'
+		trap \'wait $!; print $! $?\' CHLD
+		{ sleep 0.1; exit 9; } &
+		print $!
+		sleep 0.5
+	'
+	) 2>/dev/null; print $?
+)
+if	(( $# != 4 ))
+then	err_exit "CHLD trap failed -- expected 4 args, got $#"
+elif	(( $4 != 0 ))
+then	err_exit "CHLD trap failed -- exit code $4"
+elif	(( $1 != $2 ))
+then	err_exit "child pid mismatch -- got '$1' != '$2'"
+elif	(( $3 != 9 ))
+then	err_exit "child status mismatch -- expected '9', got '$3'"
+fi
+
 exit $((Errors))

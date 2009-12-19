@@ -647,4 +647,10 @@ do	exp="$cmd ok"
 	[[ $got == "$exp" ]] || err_exit "cd with CDPATH after PATH change failed -- expected '$exp', got '$got'"
 done
 
+v=LC_CTYPE
+unset $v
+[[ -v $v ]] && err_exit "unset $v; [[ -v $v ]] failed"
+eval $v=C
+[[ -v $v ]] || err_exit "$v=C; [[ -v $v ]] failed"
+
 exit $((Errors))

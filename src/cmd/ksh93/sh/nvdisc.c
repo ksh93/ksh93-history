@@ -1377,3 +1377,14 @@ const Namdisc_t *nv_discfun(int which)
 	return(0);
 }
 
+int nv_hasget(Namval_t *np)
+{
+	register Namfun_t	*fp;
+	for(fp=np->nvfun; fp; fp=fp->next)
+	{
+		if(!fp->disc || (!fp->disc->getnum && !fp->disc->getval))
+			continue;
+		return(1);
+	}
+	return(0);
+}

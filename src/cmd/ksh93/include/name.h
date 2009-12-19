@@ -156,7 +156,8 @@ struct Ufunction
 #define nv_setsize(n,s)	((n)->nvsize = (s))
 #undef nv_size
 #define nv_size(np)	((np)->nvsize)
-#define nv_isnull(np)	(!(np)->nvalue.cp && !((np)->nvfun && (np)->nvfun->disc) && nv_isattr(np,NV_SHORT|NV_INTEGER)!=(NV_SHORT|NV_INTEGER))
+#define _nv_hasget(np)  ((np)->nvfun && (np)->nvfun->disc && nv_hasget(np))
+#define nv_isnull(np)	(!(np)->nvalue.cp && (nv_isattr(np,NV_SHORT|NV_INTEGER)!=(NV_SHORT|NV_INTEGER)) && !_nv_hasget(np))
 
 /* ...	for arrays */
 
@@ -179,6 +180,7 @@ extern void 		nv_optimize(Namval_t*);
 extern void		nv_outname(Sfio_t*,char*, int);
 extern void 		nv_unref(Namval_t*);
 extern void		_nv_unset(Namval_t*,int);
+extern int		nv_hasget(Namval_t*);
 extern int		nv_clone(Namval_t*, Namval_t*, int);
 void			clone_all_disc(Namval_t*, Namval_t*, int);
 extern Namfun_t		*nv_clone_disc(Namfun_t*, int);

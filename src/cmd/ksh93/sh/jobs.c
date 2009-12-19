@@ -199,10 +199,10 @@ void job_chldtrap(Shell_t *shp, const char *trap, int unpost)
 		if(pw->p_flag&P_SIGNALLED)
 			shp->savexit |= SH_EXITSIG;
 		sh_trap(trap,0);
+		if(pw->p_pid==bckpid && unpost)
+			job_unpost(pw,0);
 		shp->savexit = oldexit;
 		shp->bckpid = bckpid;
-		if(unpost)
-			job_unpost(pw,0);
 	}
 	job_unlock();
 }
@@ -1629,6 +1629,7 @@ static struct process *job_unpost(register struct process *pwtop,int notify)
 		pw->p_nxtjob = freelist;
 		freelist = pw;
 	}
+	pwtop->p_pid = 0;
 #ifdef DEBUG
 	sfprintf(sfstderr,"ksh: job line %4d: free pid=%d critical=%d job=%d\n",__LINE__,getpid(),job.in_critical,pwtop->p_job);
 	sfsync(sfstderr);

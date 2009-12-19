@@ -1,3 +1,4 @@
+09-12-17 misc/optget.c: handle mixed solaris usage="x:f:(in)yo:(out)"
 09-12-11 regex/regcomp.c: posix semantics for [z-a]
 09-12-11 regex/regcomp.c: fix BRE/ERE ^^ logic
 09-12-11 regex/regcomp.c: fix regcomb() for REG_LEFT|REG_RIGHT

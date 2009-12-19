@@ -1,4 +1,10 @@
-09-12-11  --- Release ksh93t+  ---
+09-12-18  --- Release ksh93t+  ---
+09-12-18  A bug with the SHOPT_BGX option set which disabled traps for signals
+	  < SIGCHLD when a trap for a signal > SIGCHLD was set has been fixed.
+09-12-18  A bug where [[ -v var ]] was incorrect for some variables (including
+	  LC_* vars) has been fixed.
+09-12-15  A bug that produced a syntax error when a multibyte character
+	  straddled a buffer boundary has been fixed.
 09-12-11  A bug where the subscript of an unset variable was not evaluated has
 	  been fixed.
 09-12-09  A bug where shcomp dumped core on certain syntax errors has been fixed.
@@ -77,7 +83,7 @@
 	  did not display an error message has been fixed.
 09-08-24  When processing profiles, ksh93 now violates the POSIX standard and
 	  treats &> as a redirection operator similar to bash.
-09-08-23  A bug in the handling of the trap on SIGPIPE that could lead to am
+09-08-23  A bug in the handling of the trap on SIGPIPE that could lead to a
 	  memory fault has been fixed.
 09-08-21  A bug in the handling of the comma operator in arithmetic expressions
 	  that could cause a core dump on some systems has been fixed.
