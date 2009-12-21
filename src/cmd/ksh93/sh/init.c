@@ -360,12 +360,8 @@ static void put_cdpath(register Namval_t* np,const char *val,int flags,Namfun_t 
     {
 	Shell_t *shp = nv_shell(np);
 	int type;
-	char *lc_all = nv_getval(LCALLNOD);
+	char *cp;
 	char *name = nv_name(np);
-	if((shp->test&1) && !val && !nv_getval(np))
-		return;
-	if(shp->test&2)
-		nv_putv(np, val, flags, fp);
 	if(name==(LCALLNOD)->nvname)
 		type = LC_ALL;
 	else if(name==(LCTYPENOD)->nvname)
@@ -381,17 +377,17 @@ static void put_cdpath(register Namval_t* np,const char *val,int flags,Namfun_t 
 		type = LC_LANG;
 #else
 #define LC_LANG		LC_ALL
-	else if(name==(LANGNOD)->nvname && (!lc_all || !*lc_all))
+	else if(name==(LANGNOD)->nvname && (!(cp=nv_getval(LCALLNOD)) || !*cp))
 		type = LC_LANG;
 #endif
 	else
 		type= -1;
-	if(sh_isstate(SH_INIT) && type>=0 && type!=LC_ALL && lc_all && *lc_all)
-		type= -1;
-	if(type>=0 || type==LC_ALL || type==LC_LANG)
+	if(!sh_isstate(SH_INIT) && (type>=0 || type==LC_ALL || type==LC_LANG))
 	{
 		struct lconv*	lc;
-		if(!setlocale(type,val?val:"-") && val)
+		char		tmp[1024];
+		sfsprintf(tmp, sizeof(tmp), "?%s", val ? val : "");
+		if(!setlocale(type,tmp) && val)
 		{
 			if(!sh_isstate(SH_INIT) || shp->login_sh==0)
 				errormsg(SH_DICT,0,e_badlocale,val);
@@ -399,9 +395,8 @@ static void put_cdpath(register Namval_t* np,const char *val,int flags,Namfun_t 
 		}
 		shp->decomma = (lc=localeconv()) && lc->decimal_point && *lc->decimal_point==',';
 	}
-	if(!(shp->test&2))
-		nv_putv(np, val, flags, fp);
-	if(CC_NATIVE==CC_ASCII && (type==LC_ALL || type==LC_LANG || type==LC_CTYPE))
+	nv_putv(np, val, flags, fp);
+	if(CC_NATIVE!=CC_ASCII && (type==LC_ALL || type==LC_LANG || type==LC_CTYPE))
 	{
 		if(sh_lexstates[ST_BEGIN]!=sh_lexrstates[ST_BEGIN])
 			free((void*)sh_lexstates[ST_BEGIN]);
@@ -1737,7 +1732,7 @@ static void env_init(Shell_t *shp)
 				np->nvenv = cp;
 				nv_close(np);
 			}
-			else  /* swap with fron */
+			else  /* swap with front */
 			{
 				ep[-1] = environ[shp->nenv];
 				environ[shp->nenv++] = cp;

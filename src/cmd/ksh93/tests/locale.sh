@@ -32,6 +32,8 @@ tmp=$(mktemp -dt) || { err_exit mktemp -dt failed; exit 1; }
 trap "cd /; rm -rf $tmp" EXIT
 cd $tmp || exit
 
+unset LANG LC_ALL LC_CTYPE LC_NUMERIC
+
 # LC_ALL=debug is an ast specific debug/test locale
 
 if	[[ "$(LC_ALL=debug $SHELL <<- \+EOF+
@@ -42,7 +44,6 @@ if	[[ "$(LC_ALL=debug $SHELL <<- \+EOF+
 then	err_exit '${#x} not working with multibyte locales'
 fi
 
-export LC_ALL=C
 a=$($SHELL -c '/' 2>&1 | sed -e "s,.*: *,," -e "s, *\[.*,,")
 b=$($SHELL -c '(LC_ALL=debug / 2>/dev/null); /' 2>&1 | sed -e "s,.*: *,," -e "s, *\[.*,,")
 [[ "$b" == "$a" ]] || err_exit "locale not restored after subshell -- expected '$a', got '$b'"
@@ -181,23 +182,26 @@ LC_ALL=$utf_8 $SHELL <ko.dat 2>/dev/null || err_exit "script with multibyte char
 locale=$utf_8
 [[ ! $locale || $locale == e[ns]* ]] && locale=debug
 
-#	exp		LC_ALL		LC_NUMERIC		LANG
+#	exp	LC_ALL		LC_NUMERIC	LANG
 set -- \
-	2.5		''		C			$locale		\
-	2.5		$locale		C			''		\
-	2,5		''		$locale			C		\
-	2,5		C		$locale			''		\
+	2,5	$locale		C		''		\
+	2.5	C		$locale		''		\
+	2,5	$locale		''		C		\
+	2,5	''		$locale		C		\
+	2.5	C		''		$locale		\
+	2.5	''		C		$locale		\
 
 unset a b c
+unset LC_ALL LC_NUMERIC LANG
 integer a b c
 while	(( $# >= 4 ))
 do	exp=$1
 	unset H V
 	typeset -A H
 	typeset -a V
-	[[ $2 ]] && V[0]="LC_ALL=$2;"
-	[[ $3 ]] && V[1]="LC_NUMERIC=$3;"
-	[[ $4 ]] && V[2]="LANG=$4;"
+	[[ $2 ]] && V[0]="export LC_ALL=$2;"
+	[[ $3 ]] && V[1]="export LC_NUMERIC=$3;"
+	[[ $4 ]] && V[2]="export LANG=$4;"
 	for ((a = 0; a < 3; a++))
 	do	for ((b = 0; b < 3; b++))
 		do	if	(( b != a ))
@@ -206,7 +210,7 @@ do	exp=$1
 					then	T=${V[$a]}${V[$b]}${V[$c]}
 						if	[[ ! ${H[$T]} ]]
 						then	H[$T]=1
-							got=$(unset LC_ALL LC_NUMERIC LANG; $SHELL -c "${T}print \$(( $exp ))" 2>&1)
+							got=$($SHELL -c "${T}print \$(( $exp ))" 2>&1)
 							[[ $got == $exp ]] || err_exit "${T} sequence failed -- expected '$exp', got '$got'"
 						fi
 					fi
@@ -215,6 +219,17 @@ do	exp=$1
 		done
 	done
 	shift 4
+done
+
+# special builtin error message localization
+
+exp=2
+for cmd in \
+	'cd _not_found_; export LC_ALL=debug; cd _not_found_' \
+	'cd _not_found_; LC_ALL=debug cd _not_found_' \
+
+do	got=$($SHELL -c "$cmd" 2>&1 | sort -u | wc -l)
+	(( ${got:-0} == $exp )) || err_exit "'$cmd' sequence failed -- error message not localized"
 done
 
 exit $Errors
