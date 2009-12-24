@@ -1,4 +1,5 @@
-09-12-21 setlocale.c: locale name "?" prefix defers to LC_ALL (for sh)
+09-12-24 comp/setlocale.c: fix setlocale(LC_ALL,"") when already initialized
+09-12-21 comp/setlocale.c: locale name "?" prefix defers to LC_ALL (for sh)
 09-12-17 misc/optget.c: handle mixed solaris usage="x:f:(in)yo:(out)"
 09-12-11 regex/regcomp.c: posix semantics for [z-a]
 09-12-11 regex/regcomp.c: fix BRE/ERE ^^ logic

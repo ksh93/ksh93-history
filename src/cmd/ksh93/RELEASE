@@ -1,5 +1,5 @@
-09-12-21  --- Release ksh93t+  ---
-09-12-21  ast setlocale() reworked to differentiate env var changes from user
+09-12-24  --- Release ksh93t+  ---
+09-12-24  ast setlocale() reworked to differentiate env var changes from user
 	  override.
 09-12-18  A bug with the SHOPT_BGX option set which disabled traps for signals
 	  < SIGCHLD when a trap for a signal > SIGCHLD was set has been fixed.

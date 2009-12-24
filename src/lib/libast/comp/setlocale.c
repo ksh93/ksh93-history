@@ -1074,7 +1074,7 @@ _ast_setlocale(int category, const char* locale)
 		initialized = 0;
 	}
 	if (ast.locale.set & (AST_LC_debug|AST_LC_setlocale))
-		sfprintf(sfstderr, "locale user %17s %16s %16s\n", category == AST_LC_LANG ? "LANG" : lc_categories[category].name, locale && !*locale ? "''" : locale, initialized ? "1" : "0");
+		sfprintf(sfstderr, "locale user %17s %16s %16s\n", category == AST_LC_LANG ? "LANG" : lc_categories[category].name, locale && !*locale ? "''" : locale, initialized ? "initialized" : "not-initialized");
 	if (*locale == '?')
 	{
 		f = LC_setenv;
@@ -1085,55 +1085,58 @@ _ast_setlocale(int category, const char* locale)
 		f = LC_setlocale;
 		p = lcmake(locale);
 	}
-	else if (category == AST_LC_ALL && !initialized)
+	else if (category == AST_LC_ALL)
 	{
-		char*	u;
-		char	tmp[256];
-
-		/*
-		 * initialize from the environment
-		 * precedence determined by X/Open
-		 */
-
-		u = 0;
-		if ((s = getenv("LANG")) && *s)
+		if (!initialized)
 		{
-			if (streq(s, local) && (u || (u = native_locale(locale, tmp, sizeof(tmp)))))
-				s = u;
-			lang = lcmake(s);
-		}
-		else
-			lang = 0;
-		if ((s = getenv("LC_ALL")) && *s)
-		{
-			if (streq(s, local) && (u || (u = native_locale(locale, tmp, sizeof(tmp)))))
-				s = u;
-			lc_all = lcmake(s);
-		}
-		else
-			lc_all = 0;
-		for (i = 1; i < AST_LC_COUNT; i++)
-			if (lc_categories[i].flags & LC_setlocale)
-				/* explicitly set by setlocale() */;
-			else if ((s = getenv(lc_categories[i].name)) && *s)
+			char*	u;
+			char	tmp[256];
+
+			/*
+			 * initialize from the environment
+			 * precedence determined by X/Open
+			 */
+
+			u = 0;
+			if ((s = getenv("LANG")) && *s)
 			{
 				if (streq(s, local) && (u || (u = native_locale(locale, tmp, sizeof(tmp)))))
 					s = u;
-				lc_categories[i].prev = lcmake(s);
+				lang = lcmake(s);
 			}
 			else
-				lc_categories[i].prev = 0;
-		for (i = 1; i < AST_LC_COUNT; i++)
-			if (!single(i, lc_all && !(lc_categories[i].flags & LC_setlocale) ? lc_all : lc_categories[i].prev, 0))
+				lang = 0;
+			if ((s = getenv("LC_ALL")) && *s)
 			{
-				while (i--)
-					single(i, NiL, 0);
-				return 0;
+				if (streq(s, local) && (u || (u = native_locale(locale, tmp, sizeof(tmp)))))
+					s = u;
+				lc_all = lcmake(s);
 			}
-		if (ast.locale.set & AST_LC_debug)
+			else
+				lc_all = 0;
 			for (i = 1; i < AST_LC_COUNT; i++)
-				sfprintf(sfstderr, "locale env  %17s %16s %16s\n", lc_categories[i].name, locales[i]->name, lc_categories[i].prev ? lc_categories[i].prev->name : (char*)0);
-		initialized = 1;
+				if (lc_categories[i].flags & LC_setlocale)
+					/* explicitly set by setlocale() */;
+				else if ((s = getenv(lc_categories[i].name)) && *s)
+				{
+					if (streq(s, local) && (u || (u = native_locale(locale, tmp, sizeof(tmp)))))
+						s = u;
+					lc_categories[i].prev = lcmake(s);
+				}
+				else
+					lc_categories[i].prev = 0;
+			for (i = 1; i < AST_LC_COUNT; i++)
+				if (!single(i, lc_all && !(lc_categories[i].flags & LC_setlocale) ? lc_all : lc_categories[i].prev, 0))
+				{
+					while (i--)
+						single(i, NiL, 0);
+					return 0;
+				}
+			if (ast.locale.set & AST_LC_debug)
+				for (i = 1; i < AST_LC_COUNT; i++)
+					sfprintf(sfstderr, "locale env  %17s %16s %16s\n", lc_categories[i].name, locales[i]->name, lc_categories[i].prev ? lc_categories[i].prev->name : (char*)0);
+			initialized = 1;
+		}
 		goto compose;
 	}
 	else if (category == AST_LC_LANG || !(p = lc_categories[category].prev))
