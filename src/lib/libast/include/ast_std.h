@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2009 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -156,6 +156,8 @@ extern char*		strerror(int);
 #define AST_LC_COUNT		14
 #define AST_LC_LANG		255
 
+#define AST_LC_internal		1
+#define AST_LC_setenv		(1L<<27)
 #define AST_LC_find		(1L<<28)
 #define AST_LC_debug		(1L<<29)
 #define AST_LC_setlocale	(1L<<30)

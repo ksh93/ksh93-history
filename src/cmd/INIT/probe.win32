@@ -1,5 +1,5 @@
 :
-# @(#)probe.win32 (AT&T Research) 2009-10-27
+# @(#)probe.win32 (AT&T Research) 2010-01-01
 #
 # win32 specific make C probe initialization
 # wrapped cc's are easy on uwin
@@ -253,7 +253,11 @@ CC.SUFFIX.SOURCE = .c
 CC.SUFFIX.STATIC =
 !
 		if	[[ $v ]]
-		then	cat <<!
+		then	case $v in
+			*\"*)	v=$(print -r -- | sed -e 's,",\\",g' -e 's,^ ,,' -e 's,.*,"&",') ;;
+			*\'*)	v=\"$v\" ;;
+			esac
+			cat <<!
 CC.VERSION = -v
 CC.VERSION.STRING = $v
 !

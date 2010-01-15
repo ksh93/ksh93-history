@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.4 2009-12-09
+info mam static 00000 1994-07-17 make (AT&T Research) 5.5 2010-01-01
 setv INSTALLROOT ../../..
 setv PACKAGE_ast_INCLUDE ${INSTALLROOT}/include/ast
 setv PACKAGE_ast_LIB ${INSTALLROOT}/lib
@@ -213,13 +213,10 @@ make dllscan.c
 prev dlldefs.h implicit
 prev ${PACKAGE_ast_INCLUDE}/vmalloc.h implicit
 make ${PACKAGE_ast_INCLUDE}/fts.h implicit
-make ${PACKAGE_ast_INCLUDE}/ls.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast_mode.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_mode.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/ast_fs.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast_std.h implicit
-prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
-done ${PACKAGE_ast_INCLUDE}/ls.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/fts.h
 prev ${PACKAGE_ast_INCLUDE}/error.h implicit

@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#                     Copyright (c) 1994-2009 AT&T                     #
+#                     Copyright (c) 1994-2010 AT&T                     #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                               by AT&T                                #
@@ -64,7 +64,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2009-11-11 $
+@(#)$Id: package (AT&T Research) 2010-01-01 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -2609,6 +2609,7 @@ cat $INITROOT/$i.sh
 	path=$PATH
 	PATH=$INSTALLROOT/bin:$PATH
 	checkcc
+	PATH=$path
 	case $cc in
 	?*)	if	test -f $INITROOT/hello.c
 		then	
@@ -2639,7 +2640,6 @@ cat $INITROOT/$i.sh
 		fi
 		;;
 	esac
-	PATH=$path
 	EXECTYPE=$HOSTTYPE
 	EXECROOT=$INSTALLROOT
 	case $CROSS in

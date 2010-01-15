@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -1274,7 +1274,7 @@ void *nv_associative(register Namval_t *np,const char *sp,int mode)
 				mode = NV_ADD|HASH_NOSCOPE;
 			else if(ap->header.nelem&ARRAY_NOSCOPE)
 				mode = HASH_NOSCOPE;
-			if(*sp==0 && (mode&NV_ADD))
+			if(*sp==0 && sh_isoption(SH_XTRACE) && (mode&NV_ADD))
 				errormsg(SH_DICT,ERROR_warn(0),"adding empty subscript"); 
 			if(sh.subshell && (mp=nv_search(sp,ap->header.table,0)) && nv_isnull(mp))
 				ap->cur = mp;

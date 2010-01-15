@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -385,9 +385,15 @@ static void put_cdpath(register Namval_t* np,const char *val,int flags,Namfun_t 
 	if(!sh_isstate(SH_INIT) && (type>=0 || type==LC_ALL || type==LC_LANG))
 	{
 		struct lconv*	lc;
-		char		tmp[1024];
-		sfsprintf(tmp, sizeof(tmp), "?%s", val ? val : "");
-		if(!setlocale(type,tmp) && val)
+		char*		r;
+#ifdef AST_LC_setenv
+		ast.locale.set |= AST_LC_setenv;
+#endif
+		r = setlocale(type,val?val:"");
+#ifdef AST_LC_setenv
+		ast.locale.set ^= AST_LC_setenv;
+#endif
+		if(!r && val)
 		{
 			if(!sh_isstate(SH_INIT) || shp->login_sh==0)
 				errormsg(SH_DICT,0,e_badlocale,val);

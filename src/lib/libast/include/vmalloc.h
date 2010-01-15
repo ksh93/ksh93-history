@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1985-2007 AT&T Knowledge Ventures            *
+*          Copyright (c) 1985-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                      by AT&T Knowledge Ventures                      *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -27,7 +27,7 @@
 **	Written by Kiem-Phong Vo, kpv@research.att.com, 01/16/94.
 */
 
-#define VMALLOC_VERSION	20070911L
+#define VMALLOC_VERSION	20100101L
 
 #if _PACKAGE_ast
 #include	<ast_std.h>
@@ -39,6 +39,7 @@ typedef struct _vmalloc_s	Vmalloc_t;
 typedef struct _vmstat_s	Vmstat_t;
 typedef struct _vmdisc_s	Vmdisc_t;
 typedef struct _vmethod_s	Vmethod_t;
+typedef struct _vmdata_s	Vmdata_t;
 typedef Void_t*	(*Vmemory_f)_ARG_((Vmalloc_t*, Void_t*, size_t, size_t, Vmdisc_t*));
 typedef int	(*Vmexcept_f)_ARG_((Vmalloc_t*, int, Void_t*, Vmdisc_t*));
 
@@ -75,6 +76,9 @@ struct _vmalloc_s
 	char*		file;		/* file name			*/
 	int		line;		/* line number			*/
 	Void_t*		func;		/* calling function		*/
+	Vmdisc_t*	disc;		/* discipline to get space	*/
+	Vmdata_t*	data;		/* the real region data		*/
+	Vmalloc_t*	next;		/* linked list of regions	*/
 #ifdef _VM_PRIVATE_
 	_VM_PRIVATE_
 #endif
@@ -311,5 +315,6 @@ _END_EXTERNS_
 					(VM_RSMOVE) )
 #define vmnewof(v,p,t,n,x)	(t*)vmresize((v), (p), sizeof(t)*(n)+(x), \
 					(VM_RSMOVE|VM_RSCOPY|VM_RSZERO) )
+#define vmdata(vm)		((Void_t*)(_VM_(vm)->data))
 
 #endif /* _VMALLOC_H */

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -144,6 +144,7 @@ int sh_main(int ac, char *av[], Shinit_f userinit)
 	struct stat	statb;
 	int i, rshflag;		/* set for restricted shell */
 	char *command;
+	sh_onstate(SH_INIT);	/* for the getenv() intercept */
 #ifdef _lib_sigvec
 	/* This is to clear mask that may be left on by rlogin */
 	clearsigmask(SIGALRM);

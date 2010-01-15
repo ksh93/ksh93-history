@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2009 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2010 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -454,5 +454,10 @@ exp=HOME=$HOME
 ( HOME=/bin/sh )
 got=$(env | grep ^HOME=)
 [[ $got == "$exp" ]] ||  err_exit "( HOME=/bin/sh ) cleanup failed -- expected '$exp', got '$got'"
+
+cmd='echo $((case x in x)echo ok;esac);:)'
+exp=ok
+got=$($SHELL -c "$cmd" 2>&1)
+[[ $got == "$exp" ]] ||  err_exit "'$cmd' failed -- expected '$exp', got '$got'"
 
 exit $Errors

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -1676,7 +1676,7 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 			}
 			else
 #endif
-			if(size==0 && nv_isattr(np,NV_LJUST|NV_RJUST|NV_ZFILL))
+			if(size==0 && nv_isattr(np,NV_HOST)!=NV_HOST &&nv_isattr(np,NV_LJUST|NV_RJUST|NV_ZFILL))
 				nv_setsize(np,size=dot);
 			else if(size > dot)
 				dot = size;
@@ -2713,7 +2713,7 @@ void nv_newattr (register Namval_t *np, unsigned newatts, int size)
 			}
 			else
 				nv_unset(np);
-			if(size==0 && (newatts&(NV_LJUST|NV_RJUST|NV_ZFILL)))
+			if(size==0 && (newatts&NV_HOST)!=NV_HOST && (newatts&(NV_LJUST|NV_RJUST|NV_ZFILL)))
 				size = n;
 		}
 		else

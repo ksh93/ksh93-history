@@ -1,4 +1,4 @@
-USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2009 AT&T][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
+USAGE_LICENSE="[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2010 AT&T][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"
 # package - source and binary package control
 # this script is written to make it through all sh variants
 # Glenn Fowler <gsf@research.att.com>
@@ -46,7 +46,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2009-11-11 $
+@(#)$Id: package (AT&T Research) 2010-01-01 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -2591,6 +2591,7 @@ cat $INITROOT/$i.sh
 	path=$PATH
 	PATH=$INSTALLROOT/bin:$PATH
 	checkcc
+	PATH=$path
 	case $cc in
 	?*)	if	test -f $INITROOT/hello.c
 		then	
@@ -2621,7 +2622,6 @@ cat $INITROOT/$i.sh
 		fi
 		;;
 	esac
-	PATH=$path
 	EXECTYPE=$HOSTTYPE
 	EXECROOT=$INSTALLROOT
 	case $CROSS in

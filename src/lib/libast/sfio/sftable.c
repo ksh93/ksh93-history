@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2005 AT&T Corp.                  *
+*          Copyright (c) 1985-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -340,6 +340,8 @@ int		type;	/* >0: scanf, =0: printf, -1: internal	*/
 	}
 
 	/* get value for positions */
+	if(ft)
+		memcpy(&savft, ft, sizeof(*ft));
 	for(n = 0; n <= maxp; ++n)
 	{	if(fp[n].ft.fmt == 0) /* gap: pretend it's a 'd' pattern */
 		{	fp[n].ft.fmt = 'd';

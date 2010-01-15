@@ -2,7 +2,7 @@
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)make.probe (AT&T Research) 2009-11-14
+# @(#)make.probe (AT&T Research) 2010-01-01
 #
 # C probe for make
 #
@@ -2203,7 +2203,14 @@ echo CC.SUFFIX.SHARED = $CC_SUFFIX_SHARED
 echo CC.SUFFIX.SOURCE = $CC_SUFFIX_SOURCE
 echo CC.SUFFIX.STATIC = $CC_SUFFIX_STATIC
 echo CC.VERSION = $CC_VERSION
-echo CC.VERSION.STRING = $version_string
+case $CC_VERSION_STRING in
+*\"*)	i=`echo " $CC_VERSION_STRING" | sed -e 's,",\\\\",g' -e 's,^ ,,' -e 's,.*,"&",'` ;;
+*\'*)	i=\"$CC_VERSION_STRING\" ;;
+*)	i=$CC_VERSION_STRING ;;
+esac
+cat <<!
+CC.VERSION.STRING = $i
+!
 echo CC.WARN = $CC_WARN
 
 for i in $CC_ATTRIBUTES

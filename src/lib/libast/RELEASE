@@ -1,5 +1,9 @@
+10-01-01 vmalloc: VMALLOC_OPTIONS env var for all runtime options
+10-01-01 include: change some <ast.h> refs to less intrusive <ast_*.h>
+10-01-01 setlocale.c,translate.c,fmterror.c: AST_LC_internal retains prev state
+10-01-01 comp/setlocale.c: AST_LC_setenv defers to LC_ALL (for sh)
+10-01-01 ast_std.h: add { AST_LC_internal AST_LC_setenv }
 09-12-24 comp/setlocale.c: fix setlocale(LC_ALL,"") when already initialized
-09-12-21 comp/setlocale.c: locale name "?" prefix defers to LC_ALL (for sh)
 09-12-17 misc/optget.c: handle mixed solaris usage="x:f:(in)yo:(out)"
 09-12-11 regex/regcomp.c: posix semantics for [z-a]
 09-12-11 regex/regcomp.c: fix BRE/ERE ^^ logic

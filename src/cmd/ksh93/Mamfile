@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.4 2009-12-09
+info mam static 00000 1994-07-17 make (AT&T Research) 5.5 2010-01-01
 setv INSTALLROOT ../../..
 setv PACKAGE_ast_INCLUDE ${INSTALLROOT}/include/ast
 setv PACKAGE_ast_LIB ${INSTALLROOT}/lib
@@ -375,7 +375,7 @@ prev include/shell.h implicit
 done bltins/enum.c
 meta enum.o %.c>%.o bltins/enum.c enum
 prev bltins/enum.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -Iinclude -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libshell"\" -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2009 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libshell]"\" -DSHOPT_DYNAMIC -D_BLD_shell -D_PACKAGE_ast -DERROR_CONTEXT_T=Error_context_t -c bltins/enum.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -Iinclude -I${PACKAGE_ast_INCLUDE} -DERROR_CATALOG=\""libshell"\" -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libshell]"\" -DSHOPT_DYNAMIC -D_BLD_shell -D_PACKAGE_ast -DERROR_CONTEXT_T=Error_context_t -c bltins/enum.c
 done enum.o generated
 make getopts.o
 make bltins/getopts.c
@@ -466,7 +466,7 @@ make bltins/print.c
 make ${PACKAGE_ast_INCLUDE}/ccode.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast_ccode.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast_ccode.h dontcare
-prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
 prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/ccode.h
 make ${PACKAGE_ast_INCLUDE}/tmx.h implicit
@@ -662,7 +662,9 @@ make sh/main.c
 make execargs.h implicit
 done execargs.h dontcare virtual
 make ${PACKAGE_ast_INCLUDE}/fts.h implicit
-prev ${PACKAGE_ast_INCLUDE}/ls.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast_mode.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast_fs.h implicit
+prev ${PACKAGE_ast_INCLUDE}/ast_std.h implicit
 prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/fts.h dontcare
 make nc.h implicit
@@ -726,7 +728,7 @@ prev include/defs.h implicit
 done sh/nvtype.c
 meta nvtype.o %.c>%.o sh/nvtype.c nvtype
 prev sh/nvtype.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_TYPEDEF -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2009 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libshell]"\" -DSHOPT_STATS -DSHOPT_PFSH -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -D_BLD_shell -D_PACKAGE_ast -DERROR_CONTEXT_T=Error_context_t -DSHOPT_ESH -DSHOPT_MULTIBYTE -c sh/nvtype.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_TYPEDEF -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libshell]"\" -DSHOPT_STATS -DSHOPT_PFSH -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -D_BLD_shell -D_PACKAGE_ast -DERROR_CONTEXT_T=Error_context_t -DSHOPT_ESH -DSHOPT_MULTIBYTE -c sh/nvtype.c
 done nvtype.o generated
 make arith.o
 make sh/arith.c
@@ -860,7 +862,7 @@ prev include/defs.h implicit
 done bltins/regress.c
 meta regress.o %.c>%.o bltins/regress.c regress
 prev bltins/regress.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2009 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libshell]"\" -D_PACKAGE_ast -D_BLD_shell -DSHOPT_DYNAMIC -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DKSHELL -DERROR_CONTEXT_T=Error_context_t -DSHOPT_STATS -DSHOPT_HISTEXPAND -DSHOPT_ESH -c bltins/regress.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libshell]"\" -D_PACKAGE_ast -D_BLD_shell -DSHOPT_DYNAMIC -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DKSHELL -DERROR_CONTEXT_T=Error_context_t -DSHOPT_STATS -DSHOPT_HISTEXPAND -DSHOPT_ESH -c bltins/regress.c
 done regress.o generated
 make fault.o
 make sh/fault.c
@@ -1124,11 +1126,11 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -
 done subshell.o generated
 make tdump.o
 make sh/tdump.c
+prev ${PACKAGE_ast_INCLUDE}/ccode.h implicit
 prev include/io.h implicit
 prev include/path.h implicit
 prev include/shnodes.h implicit
 prev include/defs.h implicit
-prev ${PACKAGE_ast_INCLUDE}/ccode.h implicit
 done sh/tdump.c
 meta tdump.o %.c>%.o sh/tdump.c tdump
 prev sh/tdump.c
@@ -1150,11 +1152,11 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -
 done timers.o generated
 make trestore.o
 make sh/trestore.c
+prev ${PACKAGE_ast_INCLUDE}/ccode.h implicit
 prev include/io.h implicit
 prev include/path.h implicit
 prev include/shnodes.h implicit
 prev include/defs.h implicit
-prev ${PACKAGE_ast_INCLUDE}/ccode.h implicit
 done sh/trestore.c
 meta trestore.o %.c>%.o sh/trestore.c trestore
 prev sh/trestore.c
@@ -1260,7 +1262,7 @@ prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done data/testops.c
 meta testops.o %.c>%.o data/testops.c testops
 prev data/testops.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2009 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libshell]"\" -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH  -c data/testops.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libshell]"\" -DSHOPT_MULTIBYTE -D_PACKAGE_ast -DSHOPT_PFSH  -c data/testops.c
 done testops.o generated
 make keywords.o
 make data/keywords.c
@@ -1319,7 +1321,7 @@ prev include/shell.h implicit
 done data/builtins.c
 meta builtins.o %.c>%.o data/builtins.c builtins
 prev data/builtins.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_TYPEDEF -DSHOPT_KIA -DSHOPT_PFSH -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2009 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libshell]"\" -DSHOPT_BRACEPAT -DSHOPT_HISTEXPAND -D_PACKAGE_ast -DSHOPT_BGX -DSHOPT_MULTIBYTE -D_BLD_shell -DSHOPT_DYNAMIC -DKSHELL -DSHOPT_STATS -DERROR_CONTEXT_T=Error_context_t -DSHOPT_ESH  -c data/builtins.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_TYPEDEF -DSHOPT_KIA -DSHOPT_PFSH -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libshell]"\" -DSHOPT_BRACEPAT -DSHOPT_HISTEXPAND -D_PACKAGE_ast -DSHOPT_BGX -DSHOPT_MULTIBYTE -D_BLD_shell -DSHOPT_DYNAMIC -DKSHELL -DSHOPT_STATS -DERROR_CONTEXT_T=Error_context_t -DSHOPT_ESH  -c data/builtins.c
 done builtins.o generated
 make variables.o
 make data/variables.c
@@ -1409,7 +1411,7 @@ setv CC.DLL -UCC.DLL
 setv SH_DICT -DSH_DICT="\"libshell\""
 setv _BLD_shell -U_BLD_shell
 setv _BLD_DLL -U_BLD_DLL
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_BRACEPAT -DSH_DICT=\""libshell"\" -D_PACKAGE_ast -DSHOPT_STATS -DSHOPT_PFSH -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DERROR_CONTEXT_T=Error_context_t -DSHOPT_ESH -DSHOPT_MULTIBYTE -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2009 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libshell]"\" -c sh/shcomp.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_BRACEPAT -DSH_DICT=\""libshell"\" -D_PACKAGE_ast -DSHOPT_STATS -DSHOPT_PFSH -DSHOPT_HISTEXPAND -DSHOPT_DYNAMIC -DERROR_CONTEXT_T=Error_context_t -DSHOPT_ESH -DSHOPT_MULTIBYTE -DUSAGE_LICENSE=\""[-author?David Korn <dgk@research.att.com>][-copyright?Copyright (c) 1982-2010 AT&T Intellectual Property][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?libshell]"\" -c sh/shcomp.c
 done shcomp.o generated
 prev libshell.a archive
 prev +ljobs

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -163,6 +163,8 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 	node.emode = ep->emode;
 	node.expr = ep->expr;
 	node.elen = ep->elen;
+	node.value = 0;
+	node.nosub = 0;
 	if(level++ >=MAXLEVEL)
 	{
 		arith_error(e_recursive,ep->expr,ep->emode);
@@ -196,17 +198,21 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 			type=0;
 			break;
 		    case A_PLUSPLUS:
+			node.nosub = 1;
 			(*ep->fun)(&ptr,&node,ASSIGN,num+1);
 			break;
 		    case A_MINUSMINUS:
+			node.nosub = 1;
 			(*ep->fun)(&ptr,&node,ASSIGN,num-1);
 			break;
 		    case A_INCR:
 			num = num+1;
+			node.nosub = 1;
 			num = (*ep->fun)(&ptr,&node,ASSIGN,num);
 			break;
 		    case A_DECR:
 			num = num-1;
+			node.nosub = 1;
 			num = (*ep->fun)(&ptr,&node,ASSIGN,num);
 			break;
 		    case A_SWAP:
@@ -259,6 +265,7 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 			cp += sizeof(short);
 			node.value = (char*)dp;
 			node.flag = c;
+			node.nosub = 1;
 			num = (*ep->fun)(&ptr,&node,ASSIGN,num);
 			c=0;
 			break;
@@ -610,7 +617,7 @@ again:
 			}
 			if(!expr(vp,c))
 			{
-				stakseek(-1);
+				stakseek(staktell()-1);
 				return(0);
 			}
 			lvalue.value = 0;

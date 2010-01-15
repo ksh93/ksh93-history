@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2009 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2010 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -235,6 +235,7 @@ done
 # setocale(LC_ALL,"") after setlocale() initialization
 
 locale=$utf_8
+
 if	[[ $locale ]]
 then	printf 'f1\357\274\240f2\n' > input1
 	printf 't2\357\274\240f1\n' > input2
@@ -246,6 +247,30 @@ join -j1 1 -j2 2 -o 1.1 -t \$(cat delim) input1 input2 > out" > script
 	exp="f1"
 	got="$(<out)"
 	[[ $got == "$exp" ]] || err_exit "LC_ALL test script failed -- expected '$exp', got '$got'"
+fi
+
+if	[[ $locale && $locale != en* ]]
+then	dir=_not_found_
+	exp=121
+	for lc in LANG LC_MESSAGES LC_ALL
+	do	for cmd in "($lc=$locale;cd $dir)" "$lc=$locale;cd $dir;unset $lc" "function tst { typeset $lc=$locale;cd $dir; }; tst"
+		do	tst="$lc=C;cd $dir;$cmd;cd $dir;:"
+			$SHELL -c "unset LANG \${!LC_*}; $SHELL -c '$tst'" > out 2>&1 ||
+			err_exit "'$tst' failed -- exit status $?"
+			integer id=0
+			unset msg
+			typeset -A msg
+			got=
+			while	read -r line
+			do	line=${line##*:}
+				if	[[ ! ${msg[$line]} ]]
+				then	msg[$line]=$((++id))
+				fi
+				got+=${msg[$line]}
+			done < out
+			[[ $got == $exp ]] || err_exit "'$tst' failed -- expected '$exp', got '$got'"
+		done
+	done
 fi
 
 exit $Errors

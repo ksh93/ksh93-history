@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2009 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -27,7 +27,7 @@ void _STUB_vmprivate(){}
 
 #include	"vmhdr.h"
 
-static char*	Version = "\n@(#)$Id: Vmalloc (AT&T Research) 2009-06-19 $\0\n";
+static char*	Version = "\n@(#)$Id: Vmalloc (AT&T Research) 2010-01-01 $\0\n";
 
 #if _sys_stat
 #include	<sys/stat.h>
@@ -67,13 +67,7 @@ Vmsearch_f	searchf;	/* tree search function		*/
 
 #if DEBUG /* trace all allocation calls through the heap */
 	if(!_Vmtrace && vm == Vmheap && (vd->mode&VM_TRUST) )
-	{	char	*env;
-		int	fd;
-		vd->mode = (vd->mode&~VM_TRUST)|VM_TRACE;
-		if((fd = vmtrace(-1)) >= 0 ||
-		   ((env = getenv("VMTRACE")) && (fd = creat(env, CREAT_MODE)) >= 0 ) )
-			vmtrace(fd);
-	}
+		VMOPTIONS();
 #endif
 
 	if(vd->incr <= 0) /* this is just _Vmheap on the first call */
@@ -171,7 +165,7 @@ Vmsearch_f	searchf;	/* tree search function		*/
 			addr += ALIGN-s;
 
 		seg = (Seg_t*)addr;
-		seg->vm = vm;
+		seg->vmdt = vd;
 		seg->addr = (Void_t*)(addr - (s ? ALIGN-s : 0));
 		seg->extent = size;
 		seg->baddr = addr + size - (s ? 2*ALIGN : 0);

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -183,9 +183,11 @@ void job_chldtrap(Shell_t *shp, const char *trap, int unpost)
 {
 	register struct process *pw,*pwnext;
 	pid_t bckpid;
-	int oldexit;
+	int oldexit,trapnote;
 	job_lock();
 	shp->sigflag[SIGCHLD] &= ~SH_SIGTRAP;
+	trapnote = shp->trapnote;
+	shp->trapnote = 0;
 	for(pw=job.pwlist;pw;pw=pwnext)
 	{
 		pwnext = pw->p_nxtjob;
@@ -204,6 +206,7 @@ void job_chldtrap(Shell_t *shp, const char *trap, int unpost)
 		shp->savexit = oldexit;
 		shp->bckpid = bckpid;
 	}
+	shp->trapnote = trapnote;
 	job_unlock();
 }
 #endif /* SHOPT_BGX */
@@ -285,7 +288,7 @@ int job_reap(register int sig)
 		if (pid<0 && errno==EINVAL && (flags&WCONTINUED))
 			pid = waitpid((pid_t)-1,&wstat,flags&=~WCONTINUED);
 		sh_sigcheck();
-		if(sig && pid<0 && errno==EINTR)
+		if(pid<0 && errno==EINTR && (sig||job.savesig))
 			continue;
 		if(pid<=0)
 			break;

@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2009 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2010 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -26,7 +26,7 @@ function err_exit
 
 alias err_exit='err_exit $LINENO'
 
-float DELAY=${1:-0.5}
+float DELAY=${1:-0.2}
 integer FOREGROUND=10 BACKGROUND=2 Errors=0
 
 s=$($SHELL -c '
