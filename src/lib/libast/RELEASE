@@ -1,3 +1,4 @@
+10-01-19 astlicense.c: add epl
 10-01-01 vmalloc: VMALLOC_OPTIONS env var for all runtime options
 10-01-01 include: change some <ast.h> refs to less intrusive <ast_*.h>
 10-01-01 setlocale.c,translate.c,fmterror.c: AST_LC_internal retains prev state

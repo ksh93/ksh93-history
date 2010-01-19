@@ -1447,7 +1447,7 @@ memcopy __PARAM__((register char* s, register char* t, int n), (s, t, n)) __OTOR
 
 
  
-#line 78
+#line 79
 typedef struct Buffer_s
 {
 	char*		buf;
@@ -1506,20 +1506,21 @@ static const Item_t	key[] =
 static const Item_t	lic[] =
 {
 	{ "none",sizeof( "none")-1, 0},
-	{ "inline",sizeof( "inline")-1, 11},
+	{ "inline",sizeof( "inline")-1, 12},
 	{ "test",sizeof( "test")-1, 2},
 	{ "verbose",sizeof( "verbose")-1, 3},
 	{ "usage",sizeof( "usage")-1, 4},
 	{ "open",sizeof( "open")-1, 5},
 	{ "cpl",sizeof( "cpl")-1, 5},
+	{ "epl",sizeof( "epl")-1, 5},
 	{ "bsd",sizeof( "bsd")-1, 5},
 	{ "zlib",sizeof( "zlib")-1, 5},
 	{ "mit",sizeof( "mit")-1, 5},
-	{ "gpl",sizeof( "gpl")-1, 10},
-	{ "special",sizeof( "special")-1, 11},
-	{ "nonexclusive",sizeof( "nonexclusive")-1, 11},
-	{ "noncommercial",sizeof( "noncommercial")-1, 11},
-	{ "proprietary",sizeof( "proprietary")-1, 14},
+	{ "gpl",sizeof( "gpl")-1, 11},
+	{ "special",sizeof( "special")-1, 12},
+	{ "nonexclusive",sizeof( "nonexclusive")-1, 12},
+	{ "noncommercial",sizeof( "noncommercial")-1, 12},
+	{ "proprietary",sizeof( "proprietary")-1, 15},
 	{0}
 };
 
@@ -1564,7 +1565,7 @@ copy __PARAM__((register Buffer_t* b, register char* s, int n), (b, s, n)) __OTO
 }
 
  
-#line 205
+#line 207
 static void
 comment __PARAM__((Notice_t* notice, register Buffer_t* b, register char* s, register int n, int u), (notice, b, s, n, u)) __OTORP__(Notice_t* notice; register Buffer_t* b; register char* s; register int n; int u;){
 	register int	i;
@@ -1621,6 +1622,7 @@ expand __PARAM__((Notice_t* notice, register Buffer_t* b, const Item_t* item), (
 	register char*	x;
 	register char*	z;
 	register int	c;
+	int		m;
 
 	if (t = item->data)
 	{
@@ -1630,16 +1632,28 @@ expand __PARAM__((Notice_t* notice, register Buffer_t* b, const Item_t* item), (
 		{
 			if (*t == '$' && t < (e + 2) && *(t + 1) == '{')
 			{
+				m = 0;
 				x = t += 2;
 				while (t < e && (c = *t++) != '}')
 					if (c == '.')
 						x = t;
+					else if (c == '/')
+					{
+						m = 1;
+						break;
+					}
 				if ((c = lookup(key, x, t - x - 1)) >= 0 && (x = notice->item[c].data))
 				{
 					z = x + notice->item[c].size;
 					while (x < z)
-						((( b)->nxt<( b)->end)?(*( b)->nxt++=( *x++)):(( *x++),(-1)));
+					{
+						c = *x++;
+						if (!m || c >= '0' && c <= '9')
+							((( b)->nxt<( b)->end)?(*( b)->nxt++=( c)):(( c),(-1)));
+					}
 				}
+				if (m)
+					while (t < e && *t++ != '}');
 			}
 			else if (q > 0 && *t == '\\' && (*(t + 1) == q || *(t + 1) == '\\'))
 				t++;
@@ -1943,7 +1957,7 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 							h = -1;
 							break;
 						case -1:
-							c = 11;
+							c = 12;
  
 						default:
 							notice.type = c;
@@ -1992,7 +2006,7 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 	if (notice.type != 4)
 	{
 		if (!notice.type)
-			notice.type = 11;
+			notice.type = 12;
 		comment(&notice, &buf, ((char*)0), 1, 0);
 		comment(&notice, &buf, ((char*)0), 0, 0);
 		if (notice.item[11].data)
@@ -2006,15 +2020,18 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 		{
 			copyright(&notice, &tmp);
 			comment(&notice, &buf, (( &tmp)->buf), (( &tmp)->siz=( &tmp)->nxt-( &tmp)->buf,( &tmp)->nxt=( &tmp)->buf,( &tmp)->siz), 0);
-			if (notice.type >= 11)
+			if (notice.type >= 12)
 				comment( &notice, &buf, "All Rights Reserved",sizeof( "All Rights Reserved")-1, 0);
 		}
-		if (notice.type == 6)
+		if (notice.type == 6 || notice.type == 7)
 		{
 			copy(&tmp, notice.item[11].data ? "and": "This software", -1);
 			copy(&tmp, " is licensed under the", -1);
 			comment(&notice, &buf, (( &tmp)->buf), (( &tmp)->siz=( &tmp)->nxt-( &tmp)->buf,( &tmp)->nxt=( &tmp)->buf,( &tmp)->siz), 0);
-			copy(&tmp, "Common Public License", -1);
+			if (notice.type == 7)
+				copy(&tmp, "Eclipse Public License", -1);
+			else
+				copy(&tmp, "Common Public License", -1);
 			if (notice.item[18].data)
 			{
 				copy(&tmp, ", Version ", -1);
@@ -2056,6 +2073,8 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 					comment(&notice, &buf, (( &tmp)->buf), (( &tmp)->siz=( &tmp)->nxt-( &tmp)->buf,( &tmp)->nxt=( &tmp)->buf,( &tmp)->siz), 0);
 				}
 			}
+			else if (notice.type == 7)
+				comment( &notice, &buf, "http://www.eclipse.org/org/documents/epl-v10.html",sizeof( "http://www.eclipse.org/org/documents/epl-v10.html")-1, 0);
 			else
 				comment( &notice, &buf, "http://www.opensource.org/licenses/cpl",sizeof( "http://www.opensource.org/licenses/cpl")-1, 0);
 			comment(&notice, &buf, ((char*)0), 0, 0);
@@ -2121,7 +2140,7 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 			comment(&notice, &buf, (( &tmp)->buf), (( &tmp)->siz=( &tmp)->nxt-( &tmp)->buf,( &tmp)->nxt=( &tmp)->buf,( &tmp)->siz), 0);
 			comment(&notice, &buf, ((char*)0), 0, 0);
 		}
-		else if (notice.type == 10)
+		else if (notice.type == 11)
 		{
 			comment(&notice, &buf, ((char*)0), 0, 0);
 			comment( &notice, &buf, "This is free software; you can redistribute it and/or",sizeof( "This is free software; you can redistribute it and/or")-1, 0);
@@ -2142,7 +2161,7 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 			comment( &notice, &buf, "http://www.gnu.org/copyleft/gpl.html",sizeof( "http://www.gnu.org/copyleft/gpl.html")-1, 0);
 			comment(&notice, &buf, ((char*)0), 0, 0);
 		}
-		else if (notice.type == 7)
+		else if (notice.type == 8)
 		{
 			comment(&notice, &buf, ((char*)0), 0, 0);
 			comment( &notice, &buf, "Redistribution and use in source and binary forms, with or",sizeof( "Redistribution and use in source and binary forms, with or")-1, -1);
@@ -2184,7 +2203,7 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 			comment( &notice, &buf, "POSSIBILITY OF SUCH DAMAGE.",sizeof( "POSSIBILITY OF SUCH DAMAGE.")-1, -1);
 			comment(&notice, &buf, ((char*)0), 0, 0);
 		}
-		else if (notice.type == 8)
+		else if (notice.type == 9)
 		{
 			comment(&notice, &buf, ((char*)0), 0, 0);
 			comment( &notice, &buf, "This software is provided 'as-is', without any express or implied",sizeof( "This software is provided 'as-is', without any express or implied")-1, -1);
@@ -2209,7 +2228,7 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 			comment( &notice, &buf, "    distribution.",sizeof( "    distribution.")-1, -1);
 			comment(&notice, &buf, ((char*)0), 0, 0);
 		}
-		else if (notice.type == 9)
+		else if (notice.type == 10)
 		{
 			comment(&notice, &buf, ((char*)0), 0, 0);
 			comment( &notice, &buf, "Permission is hereby granted, free of charge, to any person",sizeof( "Permission is hereby granted, free of charge, to any person")-1, 0);
@@ -2237,7 +2256,7 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 		}
 		else
 		{
-			if (notice.type == 14)
+			if (notice.type == 15)
 			{
 				if (notice.item[i = 12].data || notice.item[i = 4].data || notice.item[i = 2].data)
 				{
@@ -2292,17 +2311,17 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 				}
 				comment(&notice, &buf, ((char*)0), 0, 0);
 			}
-			else if (notice.type == 12)
+			else if (notice.type == 13)
 			{
 				comment( &notice, &buf, "For nonexclusive individual use",sizeof( "For nonexclusive individual use")-1, 1);
 				comment(&notice, &buf, ((char*)0), 0, 0);
 			}
-			else if (notice.type == 13)
+			else if (notice.type == 14)
 			{
 				comment( &notice, &buf, "For noncommercial use",sizeof( "For noncommercial use")-1, 1);
 				comment(&notice, &buf, ((char*)0), 0, 0);
 			}
-			if (notice.type >= 14 && !notice.item[16].data)
+			if (notice.type >= 15 && !notice.item[16].data)
 			{
 				comment( &notice, &buf, "Unpublished & Not for Publication",sizeof( "Unpublished & Not for Publication")-1, 0);
 				comment(&notice, &buf, ((char*)0), 0, 0);
@@ -2347,7 +2366,7 @@ astlicense __PARAM__((char* p, int size, char* file, char* options, int cc1, int
 				}
 				comment(&notice, &buf, ((char*)0), 0, 0);
 			}
-			else if (notice.type == 14)
+			else if (notice.type == 15)
 			{
 				comment( &notice, &buf, "The copyright notice above does not evidence any",sizeof( "The copyright notice above does not evidence any")-1, 0);
 				comment( &notice, &buf, "actual or intended publication of such source code",sizeof( "actual or intended publication of such source code")-1, 0);

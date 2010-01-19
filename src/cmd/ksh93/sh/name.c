@@ -1635,7 +1635,7 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 		}
 		if(nv_isattr(np,NV_BINARY) && !(flags&NV_RAW))
 			tofree = 0;
-		if(nv_isattr(np,NV_LJUST|NV_RJUST))
+		if(nv_isattr(np,NV_LJUST|NV_RJUST)!=(NV_LJUST|NV_RJUST))
 			tofree = 0;
        	 	if (sp)
 		{
@@ -1680,7 +1680,7 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 				nv_setsize(np,size=dot);
 			else if(size > dot)
 				dot = size;
-			else if(nv_isattr(np,NV_LJUST) && dot>size)
+			else if(nv_isattr(np,NV_LJUST|NV_RJUST)==NV_LJUST && dot>size)
 				dot = size;
 			if(size==0 || tofree || !(cp=(char*)up->cp))
 			{
@@ -1705,9 +1705,9 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 			cp[dot] = c;
 			if(nv_isattr(np, NV_RJUST) && nv_isattr(np, NV_ZFILL))
 				rightjust(cp,size,'0');
-			else if(nv_isattr(np, NV_RJUST))
+			else if(nv_isattr(np, NV_LJUST|NV_RJUST)==NV_RJUST)
 				rightjust(cp,size,' ');
-			else if(nv_isattr(np, NV_LJUST))
+			else if(nv_isattr(np, NV_LJUST|NV_RJUST)==NV_LJUST)
 			{
 				register char *dp;
 				dp = strlen (cp) + cp;

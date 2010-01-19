@@ -1,4 +1,7 @@
-10-01-15  --- Release ksh93t+  ---
+10-01-19  --- Release ksh93t+  ---
+10-01-19  A workaround for a double-free of a trap in both a subshell and its
+	  parent has been added.
+10-01-18  A bug in type handling of typeset -H has been fixed.
 10-01-15  The "adding empty subscript" warning now only emitted with -x set.
 10-01-13  A bug in the evaluation of arithmetic expression in which the
 	  subscript was evaluated twice for $((foo[x++]++)) has been fixed.
