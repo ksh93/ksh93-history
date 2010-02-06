@@ -46,6 +46,12 @@ static int	N_reclaim;	/* # of bestreclaim calls		*/
 #define	VM_TRUST	0
 #endif /*DEBUG*/
 
+#if _BLD_posix
+#define logmsg(d,a ...)	logsrc(d,__FILE__,__LINE__,a)
+
+extern int	logsrc(int, const char*, int, const char*, ...);
+#endif /*_BLD_posix*/
+
 #define COMPACT		8	/* factor to decide when to compact	*/
 
 /* Check to see if a block is in the free tree */
@@ -421,6 +427,13 @@ int		c;
 
 			if(ISPFREE(size))	/* backward merge */
 			{	fp = LAST(fp);
+#if _BLD_posix
+				if (fp < (Block_t*)0x00120000)
+				{
+					logmsg(0, "bestreclaim fp=%p", fp);
+					ASSERT(!fp);
+				}
+#endif
 				s = SIZE(fp); /**/ASSERT(!(s&BITS));
 				REMOVE(vd,fp,INDEX(s),t,bestsearch);
 				size = (size&~BITS) + s + sizeof(Head_t);
@@ -429,6 +442,13 @@ int		c;
 
 			for(;;)	/* forward merge */
 			{	np = (Block_t*)((Vmuchar_t*)fp+size+sizeof(Head_t));
+#if _BLD_posix
+				if (np < (Block_t*)0x00120000)
+				{
+					logmsg(0, "bestreclaim np=%p", np);
+					ASSERT(!np);
+				}
+#endif
 				s = SIZE(np);	/**/ASSERT(s > 0);
 				if(!ISBUSY(s))
 				{	/**/ASSERT((s&BITS) == 0);

@@ -545,6 +545,13 @@ x=0
 (( x==2)) || err_exit '((a[x+=2]++)) should result in x==2'
 (( a[2]==1))  || err_exit 'a[0] not 1'
 
+unset a i
+typeset -a a
+i=1
+(( a[i]=1 ))
+(( a[0] == 0 )) || err_exit 'a[0] not 0'
+(( a[1] == 1 )) || err_exit 'a[1] not 1'
+
 unset a
 typeset -i a
 for ((i=0;i<1000;i++))

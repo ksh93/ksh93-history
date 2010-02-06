@@ -2,6 +2,8 @@ ast-ksh :PACKAGE: ksh93 libast libcmd libsum libdll
 
 :COVERS: ksh
 
+:LICENSE: *.open
+
 :CATEGORY: shells
 
 :INDEX: ksh and support libraries

@@ -160,6 +160,7 @@ typedef struct _arith_
 #define A_DOT		52
 #define A_LIT		53
 #define A_NOTNOT        54
+#define A_ASSIGNOP	55
 
 
 /* define error messages */

@@ -1,3 +1,12 @@
+10-02-02 string/base64.c: fix corner case output buffer overflow
+10-02-02 features/fs: sys/mnttab.h requires stdio.h on some systems!!
+10-02-01 misc/optget.c: uppercase --html heading -- doh
+10-01-29 misc/optget.c: [+NAME?...] overrides error_info.id for >= STYLE_man
+10-01-25 vmalloc/vmprivate.c: fix seg ptr initialization bug (24 years old!!)
+10-01-20 misc/optget.c: handle nested {...} rendering
+10-01-20 misc/state.c: add ast.version for runtime api version
+10-01-20 port/astconf.c: "_AST_VERSION" now returns ast.version
+10-01-20 include/ast_std.h: add ast.version for runtime api version
 10-01-19 astlicense.c: add epl
 10-01-01 vmalloc: VMALLOC_OPTIONS env var for all runtime options
 10-01-01 include: change some <ast.h> refs to less intrusive <ast_*.h>
@@ -92,7 +101,7 @@
 08-08-19 strn?tol?d: handle long double with smaller exponent range than double
 08-08-18 sfio/sfcvt.c: eliminate excessive multiplies and integral overprecision
 08-08-11 tm/tmxfmt.c: handle %10N and %010N
-08-08-06 include/shcmd.h: add 'int invariant;' for builtin invarinat arg count
+08-08-06 include/shcmd.h: add 'int invariant;' for builtin invariant arg count
 08-08-05 features/ndbm: favor sleepycat ndbm compatibility
 08-07-21 include/glob.h,misc/glob.c: GLOB_STARSTAR only forces lstat on chdir
 08-07-17 sfio: sync with kpv

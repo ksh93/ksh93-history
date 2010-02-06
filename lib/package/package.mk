@@ -1,7 +1,7 @@
 /*
  * source and binary package support
  *
- * @(#)package.mk (AT&T Research) 2007-11-05
+ * @(#)package.mk (AT&T Research) 2010-02-02
  *
  * usage:
  *
@@ -1350,11 +1350,11 @@ binary : .binary.init .binary.gen .binary.$$(style)
 			*.gz)	gzip < $exe > $(binary) ;;
 			*)	cp $exe $(binary) ;;
 			esac
-			echo $(binary) >> $(binary:D:B=PACKAGE:S=.$(CC.HOSTTYPE).lst)
 			$(SUM) -x $(checksum) < $(binary) > $(binary:D:B:S=.$(checksum))
-			echo $(binary:D:B:S=.$(checksum)) >> $(binary:D:B=PACKAGE:S=.$(CC.HOSTTYPE).lst)
 			echo local > $(binary:D:B=$(name):S=.$(CC.HOSTTYPE).tim)
 		fi
+		echo $(binary) >> $(binary:D:B=PACKAGE:S=.$(CC.HOSTTYPE).lst)
+		echo $(binary:D:B:S=.$(checksum)) >> $(binary:D:B=PACKAGE:S=.$(CC.HOSTTYPE).lst)
 	fi
 
 runtime : .runtime.init .runtime.gen .runtime.$$(style)

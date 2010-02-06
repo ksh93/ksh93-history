@@ -29,17 +29,6 @@ void _STUB_vmprivate(){}
 
 static char*	Version = "\n@(#)$Id: Vmalloc (AT&T Research) 2010-01-01 $\0\n";
 
-#if _sys_stat
-#include	<sys/stat.h>
-#endif
-#include	<fcntl.h>
-
-#ifdef S_IRUSR
-#define CREAT_MODE	(S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH)
-#else
-#define CREAT_MODE	0644
-#endif
-
 /*	Private code used in the vmalloc library
 **
 **	Written by Kiem-Phong Vo, kpv@research.att.com, 01/16/94.
@@ -129,11 +118,12 @@ Vmsearch_f	searchf;	/* tree search function		*/
 
 	if(seg)
 	{	/* extending current segment */
-		bp = BLOCK(seg->baddr);	/**/ ASSERT((SIZE(bp)&~BITS) == 0);
-					/**/ ASSERT(SEG(bp) == seg);
+		bp = BLOCK(seg->baddr);
 
 		if(vd->mode&(VM_MTBEST|VM_MTDEBUG|VM_MTPROFILE) )
-		{	if(!ISPFREE(SIZE(bp)) )
+		{	/**/ ASSERT((SIZE(bp)&~BITS) == 0);
+			/**/ ASSERT(SEG(bp) == seg);
+			if(!ISPFREE(SIZE(bp)) )
 				SIZE(bp) = size - sizeof(Head_t);
 			else
 			{	/**/ ASSERT(searchf);
@@ -150,7 +140,10 @@ Vmsearch_f	searchf;	/* tree search function		*/
 				seg->free = NIL(Block_t*);
 				SIZE(bp) += size;
 			}
-			else	SIZE(bp) = size - sizeof(Head_t);
+			else
+			{	SEG(bp) = seg;
+				SIZE(bp) = size - sizeof(Head_t);
+			}
 		}
 
 		seg->size += size;

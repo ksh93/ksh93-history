@@ -64,7 +64,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2010-01-01 $
+@(#)$Id: package (AT&T Research) 2010-02-02 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -4047,7 +4047,14 @@ remote() # host no-exec-background
 			esac
 			$exec $rsh $user$name "$cmd"
 			eval lst=$admin_list
-			$exec $rcp `$rsh $user$name "cat ${root}lib/package/tgz/$lst || echo ERROR" 2>/dev/null | sed "s,^,$user$name:,"` $PACKAGESRC/tgz
+			case $admin_pkgs in
+			'')	filter=cat ;;
+			*)	filter="egrep lib/package/tgz/($admin_pkgs)\\." ;;
+			esac
+			if	$exec $rcp $user$name:${root}lib/package/tgz/$lst $PACKAGESRC/tgz
+			then	$exec $rcp `$filter $PACKAGESRC/tgz/$lst | sed "s,^,$user$name:,"` $PACKAGESRC/tgz
+			else	echo "$command: $user$name:${root}lib/package/tgz/$lst: not found" >&2
+			fi
 			case $background in
 			?*)	$exec "} $background" ;;
 			esac
@@ -4319,8 +4326,22 @@ admin)	while	test ! -f $admin_db
 			;;
 		esac
 	done
+	p=
+	for i in $admin_args
+	do	p="$i $p"
+	done
+	admin_pkgs=
+	for i in $p
+	do	if	view - src "lib/package/$i.pkg"
+		then	case $admin_pkgs in
+			'')	admin_pkgs="$i" ;;
+			*)	admin_pkgs="$admin_pkgs|$i" ;;
+			esac
+		fi
+	done
 	: "admin_binary :" $admin_binary
 	: "admin_args   :" $admin_args
+	: "admin_pkgs   :" $admin_pkgs
 	: "admin_on     :" "$admin_on"
 	: "local_hosts  :" $local_hosts
 	: "local_types  :" $local_types
@@ -4448,7 +4469,6 @@ admin)	while	test ! -f $admin_db
 				*)	continue
 					;;
 				esac
-				eval ${i}_snarf=${i}
 				;;
 			esac
 			case $main in
@@ -6917,7 +6937,7 @@ write)	set '' $target
 
 	for package
 	do	if	view - all $package.pkg || view - all lib/package/$package.pkg
-		then	eval capture \$MAKE \$makeflags \$noexec -f \$package.pkg \$qualifier \$action $assign
+		then	eval capture \$MAKE \$makeflags -X ignore \$noexec -f \$package.pkg \$qualifier \$action $assign
 		else	echo "$command: $package: not a package" >&2
 		fi
 	done

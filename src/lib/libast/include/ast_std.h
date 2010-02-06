@@ -249,8 +249,9 @@ typedef struct
 
 	uint32_t	env_serial;
 	uint32_t	mb_sync;
+	uint32_t	version;
 
-	char		pad[940];
+	char		pad[936];
 
 } _Ast_info_t;
 

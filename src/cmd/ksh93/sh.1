@@ -7768,37 +7768,29 @@ then the line number is also printed in square brackets
 .RB ( "[]" )
 after the command or function name.
 .SH FILES
-/etc/profile
+.TP
+.B /etc/profile
 The system wide initialization file, executed for login shells.
-.RE
 .if \nZ=2 \{.br
-/etc/ksh.kshrc
-.RS
+.TP
+.B /etc/ksh.kshrc
 The system wide startup file, executed for interactive shells.
-.RE\}
-.br
-\s-1$HOME\s+1/\f3.\fPprofile
-.RS
+\}
+.TP
+.B \s-1$HOME\s+1/\f3.\fPprofile
 The personal initialization file, executed for login shells after /etc/profile.
-.RE
-.br
+.TP
 \s-1$HOME\s+1/\f3.\fP.kshrc
-.RS
 Default personal initialization file, executed for interactive shells when
 .SM
 .B ENV
 is not set.
-.RE
-.br
-/etc/suid_profile
-.RS
+.TP
+.B /etc/suid_profile
 Alternative initialization file, executed when instead of personal initialization file when the real and effective user or group id do not match.
-.RE
-.br
-/dev/null
-.RS
+.TP
+.B /dev/null
 NULL device
-.RE
 .SH SEE ALSO
 cat(1),
 cd(1),

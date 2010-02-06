@@ -255,6 +255,8 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 			*++tp = type;
 			c = 0;
 			break;
+		    case A_ASSIGNOP:
+			node.nosub = 1;
 		    case A_STORE:
 			cp = roundptr(ep,cp,Sfdouble_t*);
 			dp = *((Sfdouble_t**)cp);
@@ -265,7 +267,6 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 			cp += sizeof(short);
 			node.value = (char*)dp;
 			node.flag = c;
-			node.nosub = 1;
 			num = (*ep->fun)(&ptr,&node,ASSIGN,num);
 			c=0;
 			break;
@@ -798,7 +799,7 @@ again:
 				vp->stakmaxsize = vp->staksize;
 			if(assignop.flag<0)
 				assignop.flag = 0;
-			stakputc(A_STORE);
+			stakputc(c&1?A_ASSIGNOP:A_STORE);
 			stakpush(vp,assignop.value,char*);
 			stakpush(vp,assignop.flag,short);
 		}

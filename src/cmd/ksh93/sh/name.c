@@ -2545,8 +2545,10 @@ done:
 	if(up->cp && nv_isattr(np,NV_BINARY) && !nv_isattr(np,NV_RAW))
 	{
 		char *cp;
+		char *ep;
 		int size= nv_size(np), insize=(4*size)/3+size/45+8;
-		base64encode(up->cp, size, (void**)0, cp=getbuf(insize), insize, (void**)0); 
+		base64encode(up->cp, size, (void**)0, cp=getbuf(insize), insize, (void**)&ep); 
+		*ep = 0;
 		return(cp);
 	}
 #endif

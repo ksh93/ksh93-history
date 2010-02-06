@@ -1,3 +1,6 @@
+10-01-26 tail.c: -f sleep(1) only if no progress from last round of checks
+10-01-20 fts_fix.[ch]: use <fts_fix.h> instead of <fts.h> (see fts_fix.c)
+10-01-20 cp.c: free(state) if called from old shell
 09-12-10 join.c: <wctype.h> for iswspace()!
 09-12-04 cmd.h: fix CMD_DYNAMIC logic
 09-12-04 cut.c: handle -d mb

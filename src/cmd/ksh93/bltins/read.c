@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -429,7 +429,7 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 			{
 				Namval_t *mp;
 				if(var==buf)
-					var = memdup(var,c);
+					var = memdup(var,c+1);
 				nv_putval(np,var,NV_RAW);
 				nv_setsize(np,c);
 				if(!nv_isattr(np,NV_IMPORT|NV_EXPORT)  && (mp=(Namval_t*)np->nvenv))
