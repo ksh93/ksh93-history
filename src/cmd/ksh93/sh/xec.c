@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -1174,6 +1174,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 			}
 			no_fork = !ntflag && !(type&(FAMP|FPOU)) &&
 			    !shp->st.trapcom[0] && !shp->st.trap[SH_ERRTRAP] &&
+				((struct checkpt*)shp->jmplist)->mode!=SH_JMPEVAL &&
 				(execflg2 || (execflg && 
 				!shp->subshell && shp->fn_depth==0 &&
 				!(pipejob && sh_isoption(SH_PIPEFAIL))

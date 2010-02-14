@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -431,6 +431,12 @@ char *nv_setdisc(register Namval_t* np,register const char *event,Namval_t *acti
 	register struct vardisc *vp = (struct vardisc*)np->nvfun;
 	register int type;
 	char *empty = "";
+	while(vp)
+	{
+		if(vp->fun.disc && (vp->fun.disc->setdisc || vp->fun.disc->putval == assign))
+			break;
+		vp = (struct vardisc*)vp->fun.next;
+	}
 	if(vp && !vp->fun.disc)
 		vp = 0;
 	if(np == (Namval_t*)fp)

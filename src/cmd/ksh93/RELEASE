@@ -1,4 +1,9 @@
-10-02-02  --- Release ksh93t+  ---
+10-02-14  --- Release ksh93t+  ---
+10-02-14  Fix sh_getenv() initialization to cooperate with the 3d fs.
+10-02-12  A bug in which the get discipline function was not invoked for
+	  associative array subscripts for unset array elements has been fixed.
+10-02-12  A bug which could occur if the last line of a script was an eval
+	  that executed multiple commands has been fixed.
 10-02-02  A buffer overflow in read and another in binary type base64
 	  encoding were fixed.
 10-01-20  A bug in the evaluation of arithmetic expression in which the

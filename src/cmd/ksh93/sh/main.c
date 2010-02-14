@@ -144,7 +144,6 @@ int sh_main(int ac, char *av[], Shinit_f userinit)
 	struct stat	statb;
 	int i, rshflag;		/* set for restricted shell */
 	char *command;
-	sh_onstate(SH_INIT);	/* for the getenv() intercept */
 #ifdef _lib_sigvec
 	/* This is to clear mask that may be left on by rlogin */
 	clearsigmask(SIGALRM);

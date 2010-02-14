@@ -286,8 +286,9 @@ static Namval_t *array_find(Namval_t *np,Namarr_t *arp, int flag)
 	np->nvalue.cp = up->cp;
 	if(!up->cp)
 	{
+			char *xp = nv_setdisc(np,"get",np,(Namfun_t*)np);
 		if(flag!=ARRAY_ASSIGN)
-			return(0);
+			return(xp && xp!=(char*)np?np:0);
 		if(!array_covered(np,ap))
 			ap->header.nelem++;
 	}

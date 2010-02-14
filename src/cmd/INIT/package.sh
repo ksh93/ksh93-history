@@ -64,7 +64,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2010-02-02 $
+@(#)$Id: package (AT&T Research) 2010-02-11 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -4599,7 +4599,7 @@ admin)	while	test ! -f $admin_db
 					M=$6 T=$7 W=$8
 					case $admin_action in
 					make|view)
-						M=`grep -c ']: \*\*\*.* code ' $admin_log/$2` ;;
+						M=`grep -c ']:.* \*\*\*.* code ' $admin_log/$2` ;;
 					test)	T=`grep -ci 'fail[es]' $admin_log/$2` ;;
 					*)	W=`grep '^[abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyz]*:.' $admin_log/$2 | egrep -cv 'start at|done  at|output captured|warning:|: package not found|whence: command not found'` ;;
 					esac

@@ -460,4 +460,13 @@ exp=ok
 got=$($SHELL -c "$cmd" 2>&1)
 [[ $got == "$exp" ]] ||  err_exit "'$cmd' failed -- expected '$exp', got '$got'"
 
+cmd='eval "for i in 1 2; do eval /bin/echo x; done"'
+exp=$'x\nx'
+got=$($SHELL -c "$cmd")
+if	[[ $got != "$exp" ]]
+then	EXP=$(printf %q "$exp")
+	GOT=$(printf %q "$got")
+	err_exit "'$cmd' failed -- expected $EXP, got $GOT"
+fi
+
 exit $Errors

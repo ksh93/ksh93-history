@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2009 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2010 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -476,5 +476,24 @@ FILTER=(typeset scope)
 FILTER[0].scope=include
 FILTER[1].scope=exclude
 [[ ${#FILTER[@]} == 2 ]] ||  err_exit "FILTER array should have two elements not ${#FILTER[@]}"
+
+unset x
+function x.get
+{
+	print sub=${.sh.subscript}
+}
+x[2]=
+z=$(: ${x[1]} )
+[[ $z == sub=1 ]] || err_exit 'get function not invoked for index array'
+
+unset x
+typeset -A x
+function x.get
+{
+	print sub=${.sh.subscript}
+}
+x[2]=
+z=$(: ${x[1]} )
+[[ $z == sub=1 ]] || err_exit 'get function not invoked for associative array'
 
 exit $((Errors))
