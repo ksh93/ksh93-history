@@ -1358,7 +1358,7 @@ Vmdisc_t*	disc;	/* discipline structure			*/
 		if(addr && addr != (Vmuchar_t*)MAP_FAILED)
 		{	if(okaddr(addr,nsize) >= 0)
 				return addr;
-			(void)munmap(addr, nsize); /* release reserved address */
+			(void)munmap((char*)addr, nsize); /* release reserved address */
 		}
 #endif /* _mem_mmap_anon */
 
@@ -1385,7 +1385,7 @@ Vmdisc_t*	disc;	/* discipline structure			*/
 			{	mmdc->offset += nsize;
 				return addr;
 			}
-			(void)munmap(addr, nsize); /* release reserved address */
+			(void)munmap((char*)addr, nsize); /* release reserved address */
 		}
 #endif /* _mem_mmap_zero */
 

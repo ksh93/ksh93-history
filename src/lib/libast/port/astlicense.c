@@ -474,6 +474,7 @@ astlicense(char* p, int size, char* file, char* options, int cc1, int cc2, int c
 			h = lookup(key, x, n);
 			if (c == ']')
 				c = *++s;
+			quote = 0;
 			if (c == '=' || first)
 			{
 				if (c == '=')
@@ -527,7 +528,6 @@ astlicense(char* p, int size, char* file, char* options, int cc1, int cc2, int c
 						}
 						continue;
 					}
-					quote = 0;
 					v = s;
 					while ((c = *s) && (q == '"' && (c == '\\' && (*(s + 1) == '"' || *(s + 1) == '\\') && s++ && (quote = q)) || q && c != q || !q && c != ' ' && c != '\t' && c != '\n' && c != '\r' && c != ',' && c != ';'))
 					{

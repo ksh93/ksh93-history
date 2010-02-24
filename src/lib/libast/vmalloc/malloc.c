@@ -923,6 +923,8 @@ void _vmoptions()
 		{
 			switch (*s++)
 			{
+			case 0:
+				break;
 			case 'a':
 				p = " abort";
 				COPY(t, v, p);
@@ -947,19 +949,19 @@ void _vmoptions()
 				break;
 			}
 		}
-		if (s = getenv("VMETHOD"))
+		if ((s = getenv("VMETHOD")) && *s)
 		{
 			p = " method=";
 			COPY(t, v, p);
 			COPY(t, v, s);
 		}
-		if (s = getenv("VMPROFILE"))
+		if ((s = getenv("VMPROFILE")) && *s)
 		{
 			p = " profile=";
 			COPY(t, v, p);
 			COPY(t, v, s);
 		}
-		if (s = getenv("VMTRACE"))
+		if ((s = getenv("VMTRACE")) && *s)
 		{
 			p = " trace=";
 			COPY(t, v, p);

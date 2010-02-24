@@ -1,3 +1,5 @@
+10-02-24 comp/getopt.h: fix ast_std.h interactions
+10-02-24 vmalloc/malloc.c: empty { VMALLOC_OPTION VMDEBUG ... } => no debug!
 10-02-02 string/base64.c: fix corner case output buffer overflow
 10-02-02 features/fs: sys/mnttab.h requires stdio.h on some systems!!
 10-02-01 misc/optget.c: uppercase --html heading -- doh
