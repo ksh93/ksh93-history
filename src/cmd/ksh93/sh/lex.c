@@ -273,6 +273,7 @@ Lex_t *sh_lexopen(Lex_t *lp, Shell_t *sp, int mode)
 	{
 		lp->lexd.noarg = lp->lexd.level= lp->lexd.dolparen = lp->lexd.balance = 0;
 		lp->lexd.nocopy = lp->lexd.docword = lp->lexd.nest = lp->lexd.paren = 0;
+		lp->lexd.lex_state = lp->lexd.lastc=0;
 	}
 	lp->comsub = 0;
 	return(lp);
