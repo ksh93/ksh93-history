@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">
 <HTML>
 <HEAD>
-<META name="generator" content="mm2html (AT&T Research) 2007-12-11">
+<META name="generator" content="mm2html (AT&T Research) 2010-02-02">
 <META name="description" content="ast-ksh package">
 <META name="keywords" content="software, package">
 <TITLE> ast-ksh package </TITLE>
@@ -10,7 +10,6 @@
 <BODY bgcolor=white link=slateblue vlink=teal >
 <TABLE border=0 align=center width=96%>
 <TBODY><TR><TD valign=top align=left>
-<!--INDEX--><!--/INDEX-->
 <P>
 <P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="ast-ksh package">ast-ksh package</A></H3></FONT></FONT></CENTER>
 The AT&amp;T Software Technology ast-ksh package from AT&amp;T Research
@@ -174,13 +173,13 @@ Language," book is available from Prentice Hall.
 <P>
 <P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="release change log">release change log</A></H3></FONT></FONT></CENTER>
 <!--LABELS-->
-<B><FONT font face="verdana,arial,helvetica,geneva,sans-serif">
-<TABLE border=0 bordercolor=white cellpadding=0 cellspacing=0 width=90% align=center><TR>
-<TD align=left><A href="#ksh93 changes">ksh93</A></TD>
-<TD align=left><A href="#libast changes">libast</A></TD>
-<TD align=left><A href="#libcmd changes">libcmd</A></TD>
-<TD align=left><A href="#libsum changes">libsum</A></TD>
-<TD align=left><A href="#libdll changes">libdll</A></TD>
+<B><FONT size=-1 face="verdana,arial,helvetica,geneva,sans-serif">
+<TABLE align=center cellpadding=2 border=4 bgcolor=lightgrey width=90%><TR>
+<TD align=center valign=center><A href="#ksh93 changes">ksh93</A></TD>
+<TD align=center valign=center><A href="#libast changes">libast</A></TD>
+<TD align=center valign=center><A href="#libcmd changes">libcmd</A></TD>
+<TD align=center valign=center><A href="#libsum changes">libsum</A></TD>
+<TD align=center valign=center><A href="#libdll changes">libdll</A></TD>
 </TR></TABLE>
 </FONT></B>
 <!--/LABELS-->
@@ -193,11 +192,185 @@ All recorded changes follow.
 <P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="ksh93 changes">ksh93 changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
-09-05-01  --- Release ksh93t+  ---
+10-03-05  --- Release ksh93t+  ---
+10-03-05  A varibale unset memory leak has been fixed and tests/leaks.sh
+	  has been added to verify the fix.
+10-03-04  Documentation, comment, and disgnostic spelling typos corrected.
+10-02-14  Fix sh_getenv() initialization to cooperate with the 3d fs.
+10-02-12  A bug in which the get discipline function was not invoked for
+	  associative array subscripts for unset array elements has been fixed.
+10-02-12  A bug which could occur if the last line of a script was an eval
+	  that executed multiple commands has been fixed.
+10-02-02  A buffer overflow in read and another in binary type base64
+	  encoding were fixed.
+10-01-20  A bug in the evaluation of arithmetic expression in which the
+	  subscript was evaluated twice for $((foo&#0091;x++&#0093;++)) has been fixed.
+10-01-19  A workaround for a double-free of a trap in both a subshell and its
+	  parent has been added.
+10-01-18  A bug in type handling of typeset -H has been fixed.
+10-01-15  The "adding empty subscript" warning now only emitted with -x set.
+10-01-01  A bug in the parser in which '$((case i in i):;esac);:))' was not
+	  parsed correctly was fixed.
+10-01-01  A bug in the parser in which '$(( 2 , 3.6 ))' dumped core for locales
+	  with radix char , and thousands separator . has been fixed.
+09-12-28  A bug in the handling of SIGCLD on systems that generated SIGCLD
+	  while blocked waiting for process to complete has been fixed.
+09-12-24  ast setlocale() reworked to differentiate env var changes from user
+	  override.
+09-12-18  A bug with the SHOPT_BGX option set which disabled traps for signals
+	  &lt; SIGCHLD when a trap for a signal &gt; SIGCHLD was set has been fixed.
+09-12-18  A bug where &#0091;&#0091; -v var &#0093;&#0093; was incorrect for some variables (including
+	  LC_* vars) has been fixed.
+09-12-15  A bug that produced a syntax error when a multibyte character
+	  straddled a buffer boundary has been fixed.
+09-12-11  A bug where the subscript of an unset variable was not evaluated has
+	  been fixed.
+09-12-09  A bug where shcomp dumped core on certain syntax errors has been fixed.
+09-12-07  A bug where a parent shell environment var reset in a subshell removed
+	  the value in subsequent children of the parent shell has been fixed.
+09-12-04  A bug in which in some cases a trap in a function executed in
+	  a subshell could trigger twice has been fixed.
+09-12-03  A bug in which SHLVL exported with some attributes could cause
+	  the shell to abort at startup has been fixed.
+09-12-02  A bug with pipefail in which the shell could hang waiting for the
+	  writer to complete before the last reader command has been fixed.
+09-11-30  A bug in which a trap could be inherited by the first element of
+	  a pipeline when the command had more than 63 arguments that did
+	  not contain any macro expansions has been fixed.
+09-11-19  When read from a terminal was called from with a while or foo loop,
+	  and an edit mode was on, a backspace or erase no longer will
+	  overwrite the prompt.
+09-11-17  Change .paths parse to handle BUILTIN_LIB=foo BUILTIN_LIB=foo-1.2.
+09-11-17  Inside a function, typeset foo.bar will bind foo to global variable
+	  foo if local variable foo does not exist, instead of creating a 
+	  local variable.
+09-11-17  "read -n1" from the terminal has been fixed to read exactly one character.
+09-11-11  Job control now works for subshell commands, (...).
+09-11-11  If set -e is on for an interactive shell errors in special builtins
+	  now cause the shell to exit.
+09-11-11  A bug in which an interrupt handler processed during the read builtin
+	  when IFS did not contain a new line has been fixed.
+09-11-09  A bug in which a variable that has been unset in a subshell and then
+	  exported from that subshell does not show up in the environment
+	  has been fixed.
+09-11-02  ``,2'' is now a valid numeric constant for locales with
+	  decimal_point=','.
+09-11-02  A bug where "return" in .profile did not restore the shell state
+	  has been fixed.
+09-10-31  A bug that corrupted saved exit status when pids wrapped around has
+	  been fixed.
+09-10-26  A bug in { LANG LC_ALL LC_category } ordering has been fixed in -last.
+09-10-16  A bug where notification to libast that the environment has changed
+          has been fixed.
+09-10-12  A bug in which a function loaded in a subshell could leave side
+	  effects in the parent shell has been fixed.
+09-10-12  A bug in converting a printf %d operand to a number when the operand
+	  contains multiple subscripts for the same variable has been fixed.
+09-10-09  A bug in the handling of the escape character &nbsp;in directory prefixes
+	  in command completion has been fixed.
+09-10-09  $PATH processing has been changed to delay dir stat() and .paths
+	  lookup until the directory is needed in the path search.
+09-09-28  Call the ast setlocale() intercept on unset too.
+09-09-24  A bug in which LANG=foo; LC_ALL=foo; unset LC_ALL; did not revert
+	  LC_CTYPE etc. to the LANG value has been fixed.
+09-09-17  A bug in which unsetting SVLVL could cause a script invoked by
+	  name without #! to core dump has been fixed.
+09-09-16  A bug in which a pipeline in a here-document could hang when the
+	  pipefail option was on has been fixed. 
+09-09-09  A bug in the processing of line joining in here documents which
+	  occurred when a buffer began with &lt;escape&gt;&lt;new-line&gt; has been fixed.
+09-09-09  A leading ; with commands in a brace group or parenthesis group
+	  no longer causes an error.  It now is used for the "showme" option.
+09-09-09  A bug in which a subshell containing a background process could
+	  block until the background process completed has been fixed.
+09-09-04  A bug in handing ${var&#0091;sub&#0093;}, where var is a nameref has been fixed.
+09-09-03  A bug which caused an index array to have the wrong number of elements
+	  when it was converted from a compound variable by adding an another
+	  element has been fixed.
+09-09-03  Specifying export for a compound variable now generates an error.
+09-09-02  $"..." localizations strings are no longer recognized inside `...`.
+09-09-01  A bug in the for loop optimizer in the handling of type static
+	  variables has been fixed.
+09-09-01  An error message is not displayed when * and @ are used as subscripts.
+09-09-01  Several bugs in the processing for types that included an associative
+	  array of another type has been fixed.
+09-09-01  A bug in the tracing of &#0091;&#0091; a &lt; b &#0093;&#0093; and &#0091;&#0091; a &gt; b &#0093;&#0093; has been fixed.
+09-08-26  The .sh.file variable was not being set for a script that was run
+	  by name and didn't start with #! and this has been fixed.
+09-08-25  A bug in which a function called to deeply from command substitution
+	  did not display an error message has been fixed.
+09-08-24  When processing profiles, ksh93 now violates the POSIX standard and
+	  treats &amp;&gt; as a redirection operator similar to bash.
+09-08-23  A bug in the handling of the trap on SIGPIPE that could lead to a
+	  memory fault has been fixed.
+09-08-21  A bug in the handling of the comma operator in arithmetic expressions
+	  that could cause a core dump on some systems has been fixed.
+09-08-20  A bug in which a compound variable containing an array of a type
+	  that doesn't have any elements now expands correctly.
+09-08-19  A bug which disabled function tracing inside a function after
+	  a call to another function has been fixed.
+09-08-19  A bug in which initializing a compound variable instance to another
+	  compound variable by name has been fixed.
+09-08-18  A bug in which compound variable instances could be lost after
+	  an instance that invoked a type method discipline has been fixed.
+09-08-18  A bug in which a discipline function for a type applied to an
+	  array instance when invoked in a function ignored the subscript
+	  has been fixed.
+09-08-18  A scoping error with variables in arithmetic expression with
+	  type variables when reference with a name reference has been fixed.
+09-08-10  Several memory leaks were fixed primarily related to subshells.
+09-08-06  A bug in which setting the trap on CHLD to ignore could cause
+	  a script to hang has been fixed. 
+09-07-08  A bug in the processing of name reference assignments when it
+	  contained pattern expansions with quoting has been fixed.
+09-06-22  The default width for typeset -X has been changed so that there
+	  should be no loss of precision when converting to a string.
+09-06-19  A bug in the printing of array elements for binary variables with
+	  printf %B has been fixed.
+09-06-19  A bug which caused a core dump with trap DEBUG set with an array
+	  assignment with no elements has been fixed.
+09-06-19  A bug with read with typeset -b -Z&lt;num&gt; has been fixed.
+09-06-19  Two bugs related to read -b for array variables has been fixed.
+09-06-19  A bug with typeset for compound variables containing arrays of
+	  compound variables has been fixed.
+09-06-18  A bug in appending a compound variable to a an indexed array of
+	  compound variables has been fixed.
+09-06-18  A bug which occurs when appending a compound variable to an indexed
+	  array element has been fixed.
+09-06-18  Setting VISUAL to a value other than one ending in vi or emacs will
+	  no longer unset the edit mode.
+09-06-17  A bug in typeset -m when moving a local compound variable to a
+	  global compound variable via a name reference has been fixed.
+09-06-17  A bug in appending to nodes of an array of compound variables when
+	  addressing them via nameref has been fixed.
+09-06-17  A bug in typeset -p var, when var is an array of compound variables
+	  in which the output only contained on array element has been fixed.
+09-06-17  The prefix expansion ${!y.@} now works when y is a name
+	  reference to an element of an array.
+09-06-16  Traps on signals that are ignored when the shell is invoked
+	  no longer display.  Previously they were ignored as required but
+	  would be listed with trap -p.
+09-06-12  A bug in vi edit mode in which hitting the up arrow key at the
+	  end of a line longer than 40 characters which caused a core dump
+	  has been fixed. 
+09-06-11  A bug in which "eval non-builtin &amp;" would create two processes,
+	  one for the &amp; and another for non-builtin has been fixed.
+09-06-08  When var is an identifier and is unset, ${var} no longer tries to
+	  run command substitution on the command var.
+09-06-08  Process substitution arguments of the form &lt;(command) can now be
+	  used following the &lt; redirection operator to redirect from command.
+09-05-13  A bug in which redirections of the form 2&gt;&amp;1 1&gt;&amp;5 inside command
+	  substitution could cause the command substitution to hang has been
+	  fixed.
+09-05-12  To conform with POSIX, the -u option only checks for unset variables
+	  and subscript elements rather than checking for all parameters.
+09-05-12  A bug which could cause a core dump when a variable whose name
+	  begins with a . was referenced as part of a name reference inside
+	  a function has been fixed.
 09-05-01  A bug that caused a core dump when SIGWINCH was received and
 	  both vi and emacs mode were off has been fixed.
 09-04-22  Default alias compound='typeset -C' added.
-09-04-15  A bug that caused ${...;} to hang for large files has ben fixed.
+09-04-15  A bug that caused ${...;} to hang for large files has been fixed.
 09-04-08  A change was made in the -n option which printed out an incorrect
 	  warning with &lt;&gt;.
 09-04-07  The emacs edit command M-_ and M_. and the vi command _ was fixed
@@ -2042,7 +2215,7 @@ All recorded changes follow.
 95-04-31  The expansion of "$@" was incorrect when $1 was the null
 	  string.
 95-04-31  A bug which could incorrectly report a syntax error in
-	  a backquoted expression when a $ was preceded by \\
+	  a backquoted expression when a $ was preceded by 
 	  has been fixed.
 95-04-31  A bug which prevented the shell from exiting after
 	  reporting an error when failing to open a script
@@ -2229,6 +2402,70 @@ All recorded changes follow.
 <P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="libast changes">libast changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
+10-03-08 features/tvlib: fix utimensat probe to include all macros/structs
+10-03-07 features/lib: change stream_peek to test pipes only
+10-03-07 string/strelapsed.c: fix next char return overrun
+10-03-06 tm/tvtouch.c: use runtime fallback if utimensat() fails with ENOSYS
+10-03-05 path/pathtemp.c: add pfx /seed for regression testing
+10-03-04 vmalloc/vmwalk.c: add user supplied handle arg
+10-03-04 path/pathtemp.c: properly handle mktemp()-style *+(X) templates
+10-03-03 include/ast_getopt.h: remove NULL guard - _AST_GETOPT_H now handles it
+10-02-24 comp/getopt.h: fix ast_std.h interactions
+10-02-24 vmalloc/malloc.c: empty { VMALLOC_OPTION VMDEBUG ... } =&gt; no debug!
+10-02-02 string/base64.c: fix corner case output buffer overflow
+10-02-02 features/fs: sys/mnttab.h requires stdio.h on some systems!!
+10-02-01 misc/optget.c: uppercase --html heading -- doh
+10-01-29 misc/optget.c: &#0091;+NAME?...&#0093; overrides error_info.id for &gt;= STYLE_man
+10-01-25 vmalloc/vmprivate.c: fix seg ptr initialization bug (24 years old!!)
+10-01-20 misc/optget.c: handle nested {...} rendering
+10-01-20 misc/state.c: add ast.version for runtime api version
+10-01-20 port/astconf.c: "_AST_VERSION" now returns ast.version
+10-01-20 include/ast_std.h: add ast.version for runtime api version
+10-01-19 astlicense.c: add epl
+10-01-01 vmalloc: VMALLOC_OPTIONS env var for all runtime options
+10-01-01 include: change some &lt;ast.h&gt; refs to less intrusive &lt;ast_*.h&gt;
+10-01-01 setlocale.c,translate.c,fmterror.c: AST_LC_internal retains prev state
+10-01-01 comp/setlocale.c: AST_LC_setenv defers to LC_ALL (for sh)
+10-01-01 ast_std.h: add { AST_LC_internal AST_LC_setenv }
+09-12-24 comp/setlocale.c: fix setlocale(LC_ALL,"") when already initialized
+09-12-17 misc/optget.c: handle mixed solaris usage="x:f:(in)yo:(out)"
+09-12-11 regex/regcomp.c: posix semantics for &#0091;z-a&#0093;
+09-12-11 regex/regcomp.c: fix BRE/ERE ^^ logic
+09-12-11 regex/regcomp.c: fix regcomb() for REG_LEFT|REG_RIGHT
+09-12-11 regex/regcomp.c: bm complete=0 if REX_END
+09-12-11 comp/sigflag.c: add with npt check in features/sig.sh
+09-12-11 tm/tminit.c: fix _tzset_environ logic
+09-12-09 tm/tmlocale.c: include "ast_nl_types.h" to pull nl_langinfo in!
+09-12-04 features/options: add "opt map-libc" check
+09-12-03 tm/tmxdate.c: fix 'next month final day' for dec -&gt; jan
+09-11-21 misc/magic.tab: add gimp XCF
+09-11-20 vmalloc/vmtrace.c: add pid to assertion disgnostics
+09-11-11 regex.h,regcomp.c: add REG_CLASS_ESCAPE, &nbsp;inside &#0091;...&#0093; literal by default
+09-11-03 regex/regcache.c: change to variable length pattern strings
+09-10-28 include/error.h: fix ERROR_translate() arg parens
+09-10-26 port/lcgen.c,comp/setlocale.c: handle LANG init after LC_* already defined
+09-10-05 _sfopen.c: add but ignore 'F' flags for stdio compatibility
+09-09-28 fts.h,ftwalk.h,fts.c: promote { namelen pathlen level } to (s)size_t
+09-09-28 locales: add AST_LC_LANG for $LANG
+09-09-28 setlocale.c: fix logic for dynamic { LANG LC_ALL LC_* } changes
+09-09-17 include/sfio.h,sfio/sfwalk.c: add sfwalk()
+09-09-09 sfio/sfputr.c: add SIGPIPE hang fix
+09-08-24 sfio/sfreserve.c: fix SF_UNBOUND logic with pushed streams
+09-08-18 include/ast_std.h,ast.h: add ast.mb_sync to sync mbchar() after error
+09-08-17 comp/setlocale.c: add AST_LC_utf8 and { utf8_mbtowc() utf8_mblen() }
+09-08-11 comp/setlocale.c: treat "en"/"en_US" AST_LC_MESSAGES as "C"/"POSIX"
+09-08-10 vmalloc/vmhdr.h: add user-defined _AST_PAGESIZE and computed VMHEAPINCR
+09-08-09 comp/conf.tab: add NPROCESSORS_MAX
+09-07-29 astlicense.c: fix first name=value logic error
+09-07-22 string/fmtip6.c: don't drop trailing 0 in 44::1:0:0
+09-06-30 port/astconf.c: standard PATH_RESOLVE is "physical" (not "metaphysical")
+09-06-19 vmalloc: sync with kpv
+09-06-19 include/shcmd.h: add sh_context(p) cast
+09-06-11 misc/magic.tab: differentiate pc 386 32/64 bit dll/exe/obj
+09-06-06 port/astconf.c: fix look-&gt;name null pointer reference
+09-06-05 port/astconf.c: fix 'UNIVERSE = value' synthesize logic
+09-05-25 tm/tmxduration.c: add
+09-05-08 comp/syslog.c: add _UWIN /var/log/syslog preference
 09-05-01 comp/setlocale.c: fix _UWIN intercepts to return NiL on unknown locales
 09-04-27 sfio/sfpool.c: fix bug that did not return pool on delete
 09-04-22 include/regex.h,regex/regcomp.c: add REG_REGEXP &lt;regexp.h&gt; compatibility
@@ -2278,7 +2515,7 @@ All recorded changes follow.
 08-08-19 strn?tol?d: handle long double with smaller exponent range than double
 08-08-18 sfio/sfcvt.c: eliminate excessive multiplies and integral overprecision
 08-08-11 tm/tmxfmt.c: handle %10N and %010N
-08-08-06 include/shcmd.h: add 'int invariant;' for builtin invarinat arg count
+08-08-06 include/shcmd.h: add 'int invariant;' for builtin invariant arg count
 08-08-05 features/ndbm: favor sleepycat ndbm compatibility
 08-07-21 include/glob.h,misc/glob.c: GLOB_STARSTAR only forces lstat on chdir
 08-07-17 sfio: sync with kpv
@@ -2522,7 +2759,7 @@ All recorded changes follow.
 	 magic.tab: ammend bsd db magic
 05-05-23 regex: REX_NEST (?%&#0091;D.&#0093;&#0091;E.&#0093;&#0091;L.&#0093;&#0091;Q.&#0093;&#0091;oc&#0093;...)
 05-05-21 regex: state.fold&#0091;&#0093; is now locale specific -- doh
-05-05-19 regex: add REX_NEST (?%\\()&lt;&gt;&#0091;&#0093;""...) %(...) nested match
+05-05-19 regex: add REX_NEST (?%lt;&gt;&#0091;&#0093;""...) %(...) nested match
 05-05-15 recfmt.h: add recstr() reclen() fmtrec()
 05-05-13 optget.c: allow boolean options to take numeric values
 05-05-12 recfmt.c: add to recfmt.h, adjust Recfmt_t encodings
@@ -3781,7 +4018,7 @@ All recorded changes follow.
 95-01-01 add this RELEASE file
 	 fix strperm() to properly handle "644 file"
 	 fix tokline() to return last '&nbsp;' terminated line in string
-	 fix tokscan() to properly handle \\n splice
+	 fix tokscan() to properly handle  splice
 	 add fmtesc() to complement stresc()
 	 add LS_NUMBER to fmtls()
 	 drop spurious optusage() ' '
@@ -3791,6 +4028,38 @@ All recorded changes follow.
 <P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="libcmd changes">libcmd changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
+10-03-07 tail.c: sfsync(sfstdout) after all -f done, fix -f partial line
+10-03-05 mktemp.c: add --regress=seed for testing
+10-03-05 vmstate.c: add
+10-01-26 tail.c: -f sleep(1) only if no progress from last round of checks
+10-01-20 fts_fix.&#0091;ch&#0093;: use &lt;fts_fix.h&gt; instead of &lt;fts.h&gt; (see fts_fix.c)
+10-01-20 cp.c: free(state) if called from old shell
+09-12-10 join.c: &lt;wctype.h&gt; for iswspace()!
+09-12-04 cmd.h: fix CMD_DYNAMIC logic
+09-12-04 cut.c: handle -d mb
+09-12-03 mkdir.c: add --verbose
+09-11-30 cat.c,date.c,cksum.c: drop setlocale() call already done by optget()
+09-11-30 join.c: handle -t mb
+09-11-28 wclib.c: { -w -L } mb independent of -m
+09-11-28 paste.c: handle -d mb
+09-11-28 uniq.c: handle -s mb
+09-11-28 cksum.c: FTS_SEEDOTDIR by default
+09-09-09 fds.c: add --unit=fd
+09-08-25 tail.c: initialize Tail_t.fifo=0 !!
+09-08-15 tail.c: fix fifo logic
+09-08-11 wc.c: add setlocale(LC_CTYPE,"C") cleanup, add utf8 optimzations
+09-08-10 uniq.c: replace -c 1..9999 sfsprintf() with inline conversion
+09-08-01 join.c: fix empty field null pointer deref
+09-07-23 pathchk.c: add -P,--path and -a,--all
+09-07-02 chgrp.c,chmod.c,cksum.c: fts_flags() default only if not --recursive
+09-06-19 cmd.h,cmdinit.c: add ERROR_CALLBACK for ERROR_NOTIFY main() callback
+09-06-19 mktemp.c: --unsafe now checks and prints path but does create
+09-06-19 tee.c: add ERROR_CALLBACK for tee_cleanup() sfio discipline pop
+09-06-18 rm.c: handle interrupts during interactive query
+09-06-18 cp.c: handle interrupts during interactive query
+09-05-25 tail.c: fix old style option logic to handle --invalid-long-option
+09-05-24 tail.c: -r == +1r
+09-05-01 mktemp.c: handle foo/prefix, add -p dir and -u
 09-03-31 cat.c: handle --no* options
 09-03-15 tail.c: fix --timeout termination logic
 09-03-03 tee.c: clean up sfio disciplines on error
@@ -3977,7 +4246,7 @@ All recorded changes follow.
 00-10-31 mkdir: handle races by checking EEXIST
 00-09-20 cp: copy argv to stack before modifying in place
 00-05-18 add setlocale(LC_ALL,"")
-00-04-30 join: drop wierd opt_info.argv reference
+00-04-30 join: drop weird opt_info.argv reference
 00-03-17 expr: add == operator -- duh
 	 cp,ln,mv: delay pathcanon() on destination to verify `cp a b/.'
 	 getconf: use astgetconf for proper message control
@@ -4063,6 +4332,7 @@ All recorded changes follow.
 <P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="libsum changes">libsum changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
+09-09-28 sumlib.c: use simple (faster) method name match function
 08-06-05 sum-lmd.c: align context to largest int
 08-05-01 sumlib.c: add some -lmd verification checks
 08-02-11 sum-lmd.c,features/sum: add wrapper for solaris -lmd
@@ -4083,6 +4353,7 @@ All recorded changes follow.
 <P><HR><CENTER><FONT color=red><FONT face=courier><H3><A name="libdll changes">libdll changes</A></H3></FONT></FONT></CENTER>
 <PRE>
 
+09-11-17 dllscan.c: handle name&#0091;-.&#0093;version in dlsopen()
 09-04-15 dllopen.c: add, use dllopen() internally to wrap dlopen()
 08-05-12 dllscan.c: LIBSUFFIX==.dylib =&gt; default plugin version match 0.0
 06-10-11 dllscan.c: check sfstruse() return values -- doh
@@ -4132,7 +4403,7 @@ All recorded changes follow.
 <TR>
 <TD align=left></TD>
 <TD align=center></TD>
-<TD align=right>May 03, 2009</TD>
+<TD align=right>March 09, 2010</TD>
 </TR>
 </TABLE>
 <P>

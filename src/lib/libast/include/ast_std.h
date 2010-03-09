@@ -333,7 +333,7 @@ extern int		_ast_getpgrp(void);
 
 /*
  * and finally, standard interfaces hijacked by ast
- * _ATS_STD_I delays headers that require <ast_map.h>
+ * _AST_STD_I delays headers that require <ast_map.h>
  */
 
 #include <ast_map.h>
