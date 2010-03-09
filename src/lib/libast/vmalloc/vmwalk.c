@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1985-2005 AT&T Corp.                  *
+*          Copyright (c) 1985-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -33,11 +33,12 @@ void _STUB_vmwalk(){}
 */
 
 #if __STD_C
-int vmwalk(Vmalloc_t* vm, int(*segf)(Vmalloc_t*, Void_t*, size_t, Vmdisc_t*) )
+int vmwalk(Vmalloc_t* vm, int(*segf)(Vmalloc_t*, Void_t*, size_t, Vmdisc_t*, Void_t*), Void_t* handle )
 #else
-int vmwalk(vm, segf)
+int vmwalk(vm, segf, handle)
 Vmalloc_t*	vm;
 int(*		segf)(/* Vmalloc_t*, Void_t*, size_t, Vmdisc_t* */);
+Void_t*		handle;
 #endif
 {	
 	reg Seg_t*	seg;
@@ -50,7 +51,7 @@ int(*		segf)(/* Vmalloc_t*, Void_t*, size_t, Vmdisc_t* */);
 
 			SETLOCK(vm->data,0);
 			for(seg = vm->data->seg; seg; seg = seg->next)
-			{	rv = (*segf)(vm, seg->addr, seg->extent, vm->disc);
+			{	rv = (*segf)(vm, seg->addr, seg->extent, vm->disc, handle);
 				if(rv < 0)
 					return rv;
 			}
@@ -63,7 +64,7 @@ int(*		segf)(/* Vmalloc_t*, Void_t*, size_t, Vmdisc_t* */);
 
 		SETLOCK(vm->data,0);
 		for(seg = vm->data->seg; seg; seg = seg->next)
-		{	rv = (*segf)(vm, seg->addr, seg->extent, vm->disc);
+		{	rv = (*segf)(vm, seg->addr, seg->extent, vm->disc, handle);
 			if(rv < 0)
 				return rv;
 		}

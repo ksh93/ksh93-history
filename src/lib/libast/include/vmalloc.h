@@ -176,7 +176,8 @@ extern int		vmtrbusy _ARG_((Vmalloc_t*));
 extern int		vmstat _ARG_((Vmalloc_t*, Vmstat_t*));
 
 extern int		vmwalk _ARG_((Vmalloc_t*,
-					int(*)(Vmalloc_t*,Void_t*,size_t,Vmdisc_t*)));
+					int(*)(Vmalloc_t*,Void_t*,size_t,Vmdisc_t*,Void_t*),
+					Void_t*));
 extern char*		vmstrdup _ARG_((Vmalloc_t*, const char*));
 
 #if !defined(_BLD_vmalloc) && !defined(_AST_STD_H) && \

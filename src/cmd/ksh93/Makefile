@@ -201,11 +201,12 @@ end
 	attributes.sh basic.sh bracket.sh builtins.sh case.sh \
 	comvar.sh coprocess.sh cubetype.sh enum.sh exit.sh \
 	expand.sh functions.sh glob.sh grep.sh heredoc.sh io.sh \
-	locale.sh nameref.sh options.sh path.sh pointtype.sh \
-	quoting.sh quoting2.sh recttype.sh restricted.sh return.sh \
-	select.sh shtests sigchld.sh signal.sh statics.sh \
-	subshell.sh substring.sh tilde.sh timetype.sh treemove.sh \
-	types.sh variables.sh vartree1.sh vartree2.sh
+	leaks.sh locale.sh nameref.sh options.sh path.sh \
+	pointtype.sh quoting.sh quoting2.sh recttype.sh \
+	restricted.sh return.sh select.sh shtests sigchld.sh \
+	signal.sh statics.sh subshell.sh substring.sh tilde.sh \
+	timetype.sh treemove.sh types.sh variables.sh \
+	vartree1.sh vartree2.sh
 
 :: ksh-regress.rt ksh-regress.tst
 

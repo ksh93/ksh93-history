@@ -28,7 +28,7 @@
  */
 
 static const char usage[] =
-"+[-?\n@(#)$Id: tail (AT&T Research) 2010-01-26 $\n]"
+"+[-?\n@(#)$Id: tail (AT&T Research) 2010-03-07 $\n]"
 USAGE_LICENSE
 "[+NAME?tail - output trailing portion of one or more files ]"
 "[+DESCRIPTION?\btail\b copies one or more input files to standard output "
@@ -515,7 +515,7 @@ b_tail(int argc, char** argv, void* context)
 			flags |= TIMEOUT;
 			timeout = strelapsed(opt_info.arg, &s, 1);
 			if (*s)
-				error(ERROR_exit(1), "%s: invalid elapsed time", opt_info.arg);
+				error(ERROR_exit(1), "%s: invalid elapsed time [%s]", opt_info.arg, s);
 			continue;
 		case 'v':
 			flags |= VERBOSE;
@@ -636,8 +636,6 @@ b_tail(int argc, char** argv, void* context)
 		n = 1;
 		while (fp = files)
 		{
-			if (sfsync(sfstdout))
-				error(ERROR_system(1), "write error");
 			if (n)
 				n = 0;
 			else
@@ -673,7 +671,7 @@ b_tail(int argc, char** argv, void* context)
 						}
 						else
 							w = 0;
-						sfread(fp->sp, s, z);
+						sfread(fp->sp, s, w);
 					}
 					goto next;
 				}
@@ -701,14 +699,16 @@ b_tail(int argc, char** argv, void* context)
 					sfclose(fp->sp);
 				if (pp)
 					pp = pp->next = fp->next;
-				else if (!(files = files->next))
-					return error_info.errors != 0;
+				else
+					files = files->next;
 				fp = fp->next;
 				continue;
 			next:
 				pp = fp;
 				fp = fp->next;
 			}
+			if (sfsync(sfstdout))
+				error(ERROR_system(1), "write error");
 		}
 	}
 	else

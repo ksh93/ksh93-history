@@ -1,3 +1,6 @@
+10-03-07 tail.c: sfsync(sfstdout) after all -f done, fix -f partial line
+10-03-05 mktemp.c: add --regress=seed for testing
+10-03-05 vmstate.c: add
 10-01-26 tail.c: -f sleep(1) only if no progress from last round of checks
 10-01-20 fts_fix.[ch]: use <fts_fix.h> instead of <fts.h> (see fts_fix.c)
 10-01-20 cp.c: free(state) if called from old shell

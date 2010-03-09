@@ -44,7 +44,7 @@ vmalloc \- virtual memory allocation
 .nf
 .MW "Vmalloc_t* vmregion(Void_t* addr);"
 .MW "Void_t* vmsegment(Vmalloc_t* region, Void_t* addr);"
-.MW "int vmwalk(Vmalloc_t* region, int(*walkf)(Vmalloc_t*, Void_t*, size_t, Vmdisc_t*);"
+.MW "int vmwalk(Vmalloc_t* region, int(*walkf)(Vmalloc_t*, Void_t*, size_t, size_t, Vmdisc_t*, Void_t*), Void_t* handle);"
 .MW "long vmaddr(Vmalloc_t* region, Void_t* addr);"
 .MW "long vmsize(Vmalloc_t* region, Void_t* addr);"
 .MW "int vmstat(Vmalloc_t* vm, Vmstat_t* statb);"
@@ -426,9 +426,10 @@ It returns the address of a found segment or \f5NULL\fP if none found.
 .I vmwalk
 walks all segments in \fIregion\fP or if \fIregion\fP is \f5NULL\fP,
 all segments in all regions.
-At each segment, \fI(*walkf)(vm,addr,size,disc)\fP
+At each segment, \fI(*walkf)(vm,addr,size,segno,disc,handle)\fP
 is called where \fIvm\fP is the region, \fIaddr\fP is the segment,
-\fIsize\fP is the size of the segment, and \fIdisc\fP is the region's discipline.
+\fIsize\fP is the size of the segment, \fIsegno\fP is the segment ordinal counting from 0,
+\fIdisc\fP is the region's discipline, and \fIhandle\fP is the user supplied \fIvmwalk\fP handle.
 If \fIwalkf\fP returns a negative value, the walk stops and returns the same value.
 On success, \fIvmwalk\fP returns 0; otherwise, it returns \-1.
 .PP

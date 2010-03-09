@@ -1635,7 +1635,7 @@ void nv_putval(register Namval_t *np, const char *string, int flags)
 		}
 		if(nv_isattr(np,NV_BINARY) && !(flags&NV_RAW))
 			tofree = 0;
-		if(nv_isattr(np,NV_LJUST|NV_RJUST)!=(NV_LJUST|NV_RJUST))
+		if(nv_isattr(np,NV_LJUST|NV_RJUST) && nv_isattr(np,NV_LJUST|NV_RJUST)!=(NV_LJUST|NV_RJUST))
 			tofree = 0;
        	 	if (sp)
 		{

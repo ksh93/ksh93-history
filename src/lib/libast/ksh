@@ -1,0 +1,65 @@
+From olga.kryzhanovska@gmail.com Thu Mar  4 09:47:19 2010
+Return-Path: <olga.kryzhanovska@gmail.com>
+Received: from mail-brown.research.att.com (mail-brown.research.att.com [135.207.30.105])  by unixmail.research.att.com (8.13.7+Sun/8.13.7) with ESMTP id o24ElJ9a020652  for <gsf@unixmail.research.att.com>; Thu, 4 Mar 2010 09:47:19 -0500 (EST)
+Received: by mail-brown.research.att.com (Postfix, from userid 612)  id 735858E5D43; Thu,  4 Mar 2010 09:47:09 -0500 (EST)
+X-Spam-Checker-Version: SpamAssassin 3.2.5 (2008-06-10) on  mail-brown.research.att.com
+X-Spam-Level: *
+X-Spam-Status: No, score=1.4 required=4.5 tests=AWL,BAYES_00,  CHARSET_FARAWAY_HEADER,SPF_NEUTRAL autolearn=no version=3.2.5
+Received: from mail-red.research.att.com (mail-red.research.att.com [192.20.225.110])  by mail-brown.research.att.com (Postfix) with ESMTP id B3F3D8E5D60  for <gsf@unixmail.research.att.com>; Thu,  4 Mar 2010 09:47:08 -0500 (EST)
+Received: by mail-red.research.att.com (Postfix)  id 59FA355424E; Thu,  4 Mar 2010 09:47:12 -0500 (EST)
+Delivered-To: gsf@research.att.com
+Received: from mail-fx0-f220.google.com (mail-fx0-f220.google.com [209.85.220.220])  by mail-red.research.att.com (Postfix) with ESMTP id 220F255424D  for <gsf@research.att.com>; Thu,  4 Mar 2010 09:47:11 -0500 (EST)
+Received: by fxm20 with SMTP id 20so2725516fxm.12         for <gsf@research.att.com>; Thu, 04 Mar 2010 06:47:11 -0800 (PST)
+Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;         d=gmail.com; s=gamma;         h=domainkey-signature:mime-version:received:in-reply-to:references          :date:message-id:subject:from:to:cc:content-type;         bh=6sAAEg0Ah3Brtr/2a27UUfOM+ZQ7s9Sj+6E4rpUdzh4=;         b=H9Eluy97ea+2G6227C0OT0VbB69S2Iv5A4+pSb4zLH1+/KF08Zwd3w/GPUx6gbtkaC          jmFuc/ei2oTzPHLaf0eSl6s5TWAxkCOiUhgZtXKXpdUaHlNpzXXORpood5Dy7z78kQyv          68HMFRWwO5+zLv0gF5hF0zKashiCVxFWdAjRM=
+Domainkey-Signature: a=rsa-sha1; c=nofws;         d=gmail.com; s=gamma;         h=mime-version:in-reply-to:references:date:message-id:subject:from:to          :cc:content-type;         b=vm9JKkDendrYCODyQu31Ivv2RQ9TUqUp7PWlpHrUNXdAtBusyLmzxP6PQqPyXCL3Zt          +XaVTQl1K64XX2pZCKU8HOg0NczhLZnYDo12xHRvVN9c3XT22ttQQzVqUJqs2URBfchW          2bQIcNjeQj69Mi3xbiC3m8PTvrYbzkjV2v3n0=
+Mime-Version: 1.0
+Received: by 10.223.5.92 with SMTP id 28mr10309254fau.26.1267714031177; Thu,   04 Mar 2010 06:47:11 -0800 (PST)
+In-Reply-To: <201003041407.o24E7WC2016902@dm-holland-01.uk.sun.com>
+References: <1649443.1267709581889.JavaMail.sbladm@swsblss3-new>   <e21eff1d1003040603v1ceab5a9tbb98345983c873f8@mail.gmail.com>   <201003041407.o24E7WC2016902@dm-holland-01.uk.sun.com>
+Date: Thu, 4 Mar 2010 15:47:10 +0100
+Message-Id: <e21eff1d1003040647u67574a59xacff8b4b764546ee@mail.gmail.com>
+Subject: Re: [ksh93-integration-discuss] [busybox-dev] CR 6861633 Updated, P3   shell/korn93 RFE: Update /usr/bin/mktemp to AT&T AST "mktemp"
+From: =?KOI8-R?B?z8zYx8Egy9LZ1sHOz9fTy8HR?= <olga.kryzhanovska@gmail.com>
+To: "Korn Shell 93 integration/migration project discussion" <ksh93-integration-discuss@opensolaris.org>,         Glenn Fowler <gsf@research.att.com>
+Cc: Busybox development <busybox-dev@opensolaris.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Length: 951
+Status: R
+
+On Thu, Mar 4, 2010 at 3:07 PM,  <Casper.Dik@sun.com> wrote:
+>
+>>Can anyone from Sun please tell us why Bug 6932124 is locked? I cannot
+>>look it up via bugs.opensolaris.org
+>
+> I just filed it; I'm not sure why it would locked.
+>
+> This bug is this:
+>
+> $ mktemp log.2010-03-04.XXXXXX
+> log_2sie.t0f
+
+mktemp tries to fit its name into a 8.3 DOS naming.
+
+Glenn, is it feasible to call pathconf(NAME_MAX) and enable the 8.3
+naming only if the file system does not support long file names?
+
+> Which is not correct.
+>
+> The Solaris mktemp binary returns:
+>
+> log.2010-03-04.liaalG
+>
+> which is what I expected.
+
+OK.
+
+
+Olga
+-- 
+      ,   _                                    _   ,
+     { \/`o;====-    Olga Kryzhanovska   -====;o`\/ }
+.----'-/`-/     olga.kryzhanovska@gmail.com   \-`\-'----.
+ `'-..-| /     Solaris/BSD//C/C++ programmer   \ |-..-'`
+      /\/\                                     /\/\
+      `--`                                      `--`
+

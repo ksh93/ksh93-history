@@ -1,4 +1,7 @@
-10-02-14  --- Release ksh93t+  ---
+10-03-05  --- Release ksh93t+  ---
+10-03-05  A varibale unset memory leak has been fixed and tests/leaks.sh
+	  has been added to verify the fix.
+10-03-04  Documentation, comment, and disgnostic spelling typos corrected.
 10-02-14  Fix sh_getenv() initialization to cooperate with the 3d fs.
 10-02-12  A bug in which the get discipline function was not invoked for
 	  associative array subscripts for unset array elements has been fixed.

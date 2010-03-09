@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2009 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -117,7 +117,7 @@
 #define REG_BADBR	10		/* invalid {...} digits		*/
 #define REG_ERANGE	11		/* invalid [...] range endpoint	*/
 #define REG_ESPACE	12		/* out of space			*/
-#define REG_BADRPT	13		/* unary op not preceeded by re	*/
+#define REG_BADRPT	13		/* unary op not preceded by re	*/
 #define REG_ENULL	14		/* empty subexpr in pattern	*/
 #define REG_ECOUNT	15		/* re component count overflow	*/
 #define REG_BADESC	16		/* invalid \char escape		*/

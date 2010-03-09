@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.5 2010-02-24
+info mam static 00000 1994-07-17 make (AT&T Research) 5.5 2010-03-09
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ${mam_cc_AR} ${mam_cc_AR_ARFLAGS}
@@ -124,8 +124,8 @@ prev comp/conf.sh
 exec - case static,port:$OPTIND:$RANDOM in
 exec - ?*:*:*|*::*|*:*:$RANDOM)
 exec - 	;;
-exec - *)	if	ENV= x= $SHELL -nc ': ${list[level]}  !(pattern)' 2>/dev/null
-exec - 	then	ENV= $SHELL -n comp/conf.sh
+exec - *)	if	ENV= LC_ALL=C x= $SHELL -nc ': ${list[level]}  !(pattern)' 2>/dev/null
+exec - 	then	ENV= LC_ALL=C $SHELL -n comp/conf.sh
 exec - 	fi
 exec - 	;;
 exec - esac
@@ -1058,6 +1058,18 @@ make include/tm.h implicit
 prev include/times.h implicit
 prev include/ast.h implicit
 done include/tm.h
+make tv.h implicit
+make FEATURE/tv
+meta FEATURE/tv features/%>FEATURE/% features/tv tv
+make features/tv
+done features/tv
+prev ast.req
+exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/tv
+prev include/ast.h implicit
+done FEATURE/tv generated
+exec - cmp 2>/dev/null -s FEATURE/tv tv.h || { rm -f tv.h; silent test -d . || mkdir .; ${STDCP} FEATURE/tv tv.h; }
+prev include/ast.h implicit
+done tv.h generated
 prev include/ls.h implicit
 prev include/ast.h implicit
 done path/pathtemp.c
@@ -1821,18 +1833,7 @@ exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Icomp -Iport -Iinclude -Istd -I${IN
 done fmtscale.o generated
 make fmttmx.o
 make string/fmttmx.c
-make tv.h implicit
-make FEATURE/tv
-meta FEATURE/tv features/%>FEATURE/% features/tv tv
-make features/tv
-done features/tv
-prev ast.req
-exec - iffe -v -X ast -X std -c '${CC} ${mam_cc_FLAGS} ${CCFLAGS}   ${LDFLAGS} '   run features/tv
-prev include/ast.h implicit
-done FEATURE/tv generated
-exec - cmp 2>/dev/null -s FEATURE/tv tv.h || { rm -f tv.h; silent test -d . || mkdir .; ${STDCP} FEATURE/tv tv.h; }
-prev include/ast.h implicit
-done tv.h generated
+prev tv.h implicit
 make tmx.h implicit
 make FEATURE/tmx
 meta FEATURE/tmx features/%>FEATURE/% features/tmx tmx
