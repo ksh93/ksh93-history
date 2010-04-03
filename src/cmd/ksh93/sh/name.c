@@ -538,7 +538,11 @@ void nv_setlist(register struct argnod *arg,register int flags, Namval_t *typ)
 
 				}
 				if(!nv_isarray(np) && !typ && (tp->com.comarg || !tp->com.comset || tp->com.comset->argval[0]!='['))
+				{
 					nv_setvtree(np);
+					if(tp->com.comarg || tp->com.comset)
+						np->nvfun->dsize = 0;
+				}
 #if SHOPT_TYPEDEF
 				goto check_type;
 #else

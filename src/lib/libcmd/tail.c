@@ -28,7 +28,7 @@
  */
 
 static const char usage[] =
-"+[-?\n@(#)$Id: tail (AT&T Research) 2010-03-07 $\n]"
+"+[-?\n@(#)$Id: tail (AT&T Research) 2010-03-23 $\n]"
 USAGE_LICENSE
 "[+NAME?tail - output trailing portion of one or more files ]"
 "[+DESCRIPTION?\btail\b copies one or more input files to standard output "
@@ -647,16 +647,14 @@ b_tail(int argc, char** argv, void* context)
 					error(ERROR_system(0), "%s: cannot stat", fp->name);
 				else if (fp->fifo || fp->end < st.st_size)
 				{
-					fp->end = st.st_size;
 					n = 1;
 					if (timeout)
 						fp->expire = NOW + timeout;
-					z = fp->fifo ? SF_UNBOUND : fp->end - fp->cur;
+					z = fp->fifo ? SF_UNBOUND : st.st_size - fp->cur;
 					i = 0;
 					if ((s = sfreserve(fp->sp, z, SF_LOCKR)) || (z = sfvalue(fp->sp)) && (s = sfreserve(fp->sp, z, SF_LOCKR)) && (i = 1))
 					{
-						if (fp->fifo)
-							z = sfvalue(fp->sp);
+						z = sfvalue(fp->sp);
 						for (r = s + z; r > s && *(r - 1) != '\n'; r--);
 						if ((w = r - s) || i && (w = z))
 						{
@@ -672,6 +670,7 @@ b_tail(int argc, char** argv, void* context)
 						else
 							w = 0;
 						sfread(fp->sp, s, w);
+						fp->end += w;
 					}
 					goto next;
 				}

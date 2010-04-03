@@ -923,9 +923,10 @@ int nv_nextsub(Namval_t *np)
 			if(array_isbit(aq->bits, dot,ARRAY_CHILD))
 			{
 				Namval_t *mp = aq->val[dot].np;			
-				if((aq->header.nelem&ARRAY_NOCHILD) && nv_isvtree(mp))
+				if((aq->header.nelem&ARRAY_NOCHILD) && nv_isvtree(mp) && !mp->nvfun->dsize)
 					continue;
-				nv_putsub(mp,NIL(char*),ARRAY_UNDEF);
+				if(nv_isarray(mp))
+					nv_putsub(mp,NIL(char*),ARRAY_UNDEF);
 			}
 			return(1);
 		}
