@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: mkdir (AT&T Research) 2009-12-03 $\n]"
+"[-?\n@(#)$Id: mkdir (AT&T Research) 2010-04-08 $\n]"
 USAGE_LICENSE
 "[+NAME?mkdir - make directories]"
 "[+DESCRIPTION?\bmkdir\b creates one or more directories.  By "
@@ -64,14 +64,15 @@ USAGE_LICENSE
 int
 b_mkdir(int argc, char** argv, void* context)
 {
-	register char*	arg;
+	register char*	path;
 	register int	n;
 	register mode_t	mode = DIRMODE;
 	register mode_t	mask = 0;
 	register int	mflag = 0;
 	register int	pflag = 0;
 	register int	vflag = 0;
-	char*		name;
+	int		made;
+	char*		part;
 	mode_t		dmode;
 	struct stat	st;
 
@@ -80,13 +81,11 @@ b_mkdir(int argc, char** argv, void* context)
 	{
 		switch (optget(argv, usage))
 		{
-		case 0:
-			break;
 		case 'm':
 			mflag = 1;
-			mode = strperm(arg = opt_info.arg, &opt_info.arg, mode);
-			if (*opt_info.arg)
-				error(ERROR_exit(0), "%s: invalid mode", arg);
+			mode = strperm(opt_info.arg, &part, mode);
+			if (*part)
+				error(ERROR_exit(0), "%s: invalid mode", opt_info.arg);
 			continue;
 		case 'p':
 			pflag = 1;
@@ -96,10 +95,10 @@ b_mkdir(int argc, char** argv, void* context)
 			continue;
 		case ':':
 			error(2, "%s", opt_info.arg);
-			continue;
+			break;
 		case '?':
 			error(ERROR_usage(2), "%s", opt_info.arg);
-			continue;
+			break;
 		}
 		break;
 	}
@@ -120,60 +119,69 @@ b_mkdir(int argc, char** argv, void* context)
 		umask(mask);
 		mask = 0;
 	}
-	while (arg = *argv++)
+	while (path = *argv++)
 	{
-		if (mkdir(arg, mode) < 0)
+		if (!mkdir(path, mode))
 		{
-			if (!pflag || !(errno == ENOENT || errno == EEXIST || errno == ENOTDIR))
-			{
-				error(ERROR_system(0), "%s:", arg);
-				continue;
-			}
-			if (errno == EEXIST)
-				continue;
-
+			if (vflag)
+				error(0, "%s: directory created", path);
+			made = 1;
+		}
+		else if (!pflag || !(errno == ENOENT || errno == EEXIST || errno == ENOTDIR))
+		{
+			error(ERROR_system(0), "%s:", path);
+			continue;
+		}
+		else if (errno == EEXIST)
+			continue;
+		else
+		{
 			/*
 			 * -p option, preserve intermediates
 			 * first eliminate trailing /'s
 			 */
 
-			n = strlen(arg);
-			while (n > 0 && arg[--n] == '/');
-			arg[n + 1] = 0;
-			for (name = arg, n = *arg; n;)
+			made = 0;
+			n = strlen(path);
+			while (n > 0 && path[--n] == '/');
+			path[n + 1] = 0;
+			for (part = path, n = *part; n;)
 			{
 				/* skip over slashes */
-				while (*arg == '/')
-					arg++;
+				while (*part == '/')
+					part++;
 				/* skip to next component */
-				while ((n = *arg) && n != '/')
-					arg++;
-				*arg = 0;
-				if (mkdir(name, n ? dmode : mode) < 0 && errno != EEXIST && access(name, F_OK) < 0)
+				while ((n = *part) && n != '/')
+					part++;
+				*part = 0;
+				if (mkdir(path, n ? dmode : mode) < 0 && errno != EEXIST && access(path, F_OK) < 0)
 				{
-					*arg = n;
-					error(ERROR_system(0), "%s:", name);
+					error(ERROR_system(0), "%s: cannot create intermediate directory", path);
+					*part = n;
 					break;
 				}
 				if (vflag)
-					error(0, "%s: directory created", name);
-				if (!(*arg = n) && (mode & (S_ISVTX|S_ISUID|S_ISGID)))
+					error(0, "%s: directory created", path);
+				if (!(*part = n))
 				{
-					if (stat(name, &st))
-					{
-						error(ERROR_system(0), "%s: cannot stat", name);
-						break;
-					}
-					if ((st.st_mode & (S_ISVTX|S_ISUID|S_ISGID)) != (mode & (S_ISVTX|S_ISUID|S_ISGID)) && chmod(name, mode))
-					{
-						error(ERROR_system(0), "%s: cannot change mode from %s to %s", name, fmtperm(st.st_mode & (S_ISVTX|S_ISUID|S_ISGID)), fmtperm(mode));
-						break;
-					}
+					made = 1;
+					break;
 				}
 			}
 		}
-		else if (vflag)
-			error(0, "%s: directory created", arg);
+		if (made && (mode & (S_ISVTX|S_ISUID|S_ISGID)))
+		{
+			if (stat(path, &st))
+			{
+				error(ERROR_system(0), "%s: cannot stat", path);
+				break;
+			}
+			if ((st.st_mode & (S_ISVTX|S_ISUID|S_ISGID)) != (mode & (S_ISVTX|S_ISUID|S_ISGID)) && chmod(path, mode))
+			{
+				error(ERROR_system(0), "%s: cannot change mode from %s to %s", path, fmtperm(st.st_mode & (S_ISVTX|S_ISUID|S_ISGID)), fmtperm(mode));
+				break;
+			}
+		}
 	}
 	if (mask)
 		umask(mask);

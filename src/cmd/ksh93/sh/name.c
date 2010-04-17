@@ -2655,6 +2655,7 @@ void nv_newattr (register Namval_t *np, unsigned newatts, int size)
 	register char *sp;
 	register char *cp = 0;
 	register unsigned int n;
+	Namval_t *mp = 0;
 	Namarr_t *ap = 0;
 	int oldsize,oldatts;
 	Namfun_t *fp= (newatts&NV_NODISC)?np->nvfun:0;
@@ -2706,7 +2707,6 @@ void nv_newattr (register Namval_t *np, unsigned newatts, int size)
 			strcpy(cp, sp);
 			if(ap)
 			{
-				Namval_t *mp;
 				ap->nelem &= ~ARRAY_SCAN;
 				if(mp=nv_opensub(np))
 				{
@@ -2727,6 +2727,12 @@ void nv_newattr (register Namval_t *np, unsigned newatts, int size)
 		nv_setsize(np,size);
 		np->nvflag &= NV_ARRAY;
 		np->nvflag |= newatts;
+		if(mp)
+		{
+			nv_setsize(mp,size);
+			mp->nvflag = (newatts&~NV_ARRAY);
+			mp = 0;
+		}
 		if (cp)
 		{
 			nv_putval (np, cp, NV_RDONLY);
