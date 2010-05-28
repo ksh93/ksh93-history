@@ -792,7 +792,11 @@ fts_open(char* const* pathnames, int flags, int (*comparf)(FTSENT* const*, FTSEN
 	}
 	else
 		fts->todo = toplist(fts, pathnames);
+#if _HUH_1997_01_07
 	if (!fts->todo || fts->todo->fts_info == FTS_NS && !fts->todo->fts_link)
+#else
+	if (!fts->todo)
+#endif
 	{
 		fts_close(fts);
 		return 0;
@@ -1491,6 +1495,7 @@ fts_flags(void)
 	register char*	s;
 	
 	s = astconf("PATH_RESOLVE", NiL, NiL);
+	error(-1, "AHA fts_flags() PATH_RESOLVE=%s", s);
 	if (streq(s, "logical"))
 		return FTS_LOGICAL;
 	if (streq(s, "physical"))

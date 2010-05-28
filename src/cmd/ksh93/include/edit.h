@@ -71,6 +71,7 @@ typedef struct _edit_pos
 typedef struct edit
 {
 	sigjmp_buf e_env;
+	int	e_intr;
 	int	e_kill;
 	int	e_erase;
 	int	e_werase;

@@ -60,19 +60,23 @@ b_tty(int argc, char *argv[], void* context)
 	register char *tty;
 
 	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
-	while (n = optget(argv, usage)) switch (n)
+	for (;;)
 	{
-	case 'l':
-		lflag++;
-		break;
-	case 's':
-		sflag++;
-		break;
-	case ':':
-		error(2, "%s", opt_info.arg);
-		break;
-	case '?':
-		error(ERROR_usage(2), "%s", opt_info.arg);
+		switch (optget(argv, usage))
+		{
+		case 'l':
+			lflag++;
+			continue;
+		case 's':
+			sflag++;
+			continue;
+		case ':':
+			error(2, "%s", opt_info.arg);
+			break;
+		case '?':
+			error(ERROR_usage(2), "%s", opt_info.arg);
+			break;
+		}
 		break;
 	}
 	if(error_info.errors)

@@ -87,10 +87,8 @@ mcfind(char* path, const char* locale, const char* catalog, int category, int nl
 		return path;
 	}
 	i = 0;
-#if !_lib_catopen
 	if ((p = getenv("NLSPATH")) && *p)
 		paths[i++] = p;
-#endif
 	paths[i++] = "share/lib/locale/%l/%C/%N";
 	paths[i++] = "share/locale/%l/%C/%N";
 	paths[i++] = "lib/locale/%l/%C/%N";

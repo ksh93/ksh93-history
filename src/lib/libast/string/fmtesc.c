@@ -30,6 +30,9 @@
 #include <ast.h>
 #include <ccode.h>
 #include <ctype.h>
+#if _hdr_wctype
+#include <wctype.h>
+#endif
 
 /*
  * quote string as of length n with qb...qe
@@ -47,6 +50,7 @@ fmtquote(const char* as, const char* qb, const char* qe, size_t n, int flags)
 	register unsigned char*	e = s + n;
 	register char*		b;
 	register int		c;
+	register int		m;
 	register int		escaped;
 	register int		spaced;
 	register int		doublequote;
@@ -84,9 +88,15 @@ fmtquote(const char* as, const char* qb, const char* qe, size_t n, int flags)
 	escaped = spaced = !!(flags & FMT_ALWAYS);
 	while (s < e)
 	{
-		if ((c = mbsize(s)) > 1)
+		if ((m = mbsize(s)) > 1 && (s + m) <= e)
 		{
-			while (c-- && s < e)
+#if _hdr_wchar
+			c = mbchar(s);
+			if (!spaced && !escaped && (iswspace(c) || iswcntrl(c)))
+				spaced = 1;
+			s -= m;
+#endif
+			while (m--)
 				*b++ = *s++;
 		}
 		else

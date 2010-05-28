@@ -61,14 +61,14 @@
 
 #define MC_MESSAGE_SET(s)	mcindex(s,NiL,NiL,NiL)
 
-typedef struct
+typedef struct Mcset_s
 {
 	char**		msg;
 	int		num;
 	int		gen;
 } Mcset_t;
 
-typedef struct
+typedef struct Mc_s
 {
 	Mcset_t*	set;
 	int		num;

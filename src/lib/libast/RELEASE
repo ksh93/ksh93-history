@@ -1,3 +1,28 @@
+10-05-25 include/sfhdr.h: adjust SF_NMAP according to _ptr_bits
+10-05-25 include/shcmd.h: add sh_builtin() macro for lib_init() table initialization
+10-05-21 misc/optget.c: --html \bfoo::bar([[:digit:]][[:upper:]]*) => foo-bar.html
+10-05-15 include/proc.h,misc/procopen.c: add PROC_ORPHAN
+10-05-09 misc/optget.c: add --???MAN[section] --???SECTION
+10-05-07 sfio,stdio: fix all snprintf() variants to handle buf==0 and/or n==0
+10-05-04 string/fmtesc.c: add mb iswsoace() and iswcntrl() quoting checks
+10-05-03 fix LC_MESSAGES catalog lookup bugs, check for $set==3, accept $set==1
+10-04-30 string/chresc.c: add chrexp() for FMT_EXP_*
+10-04-30 string/stresc.c: add strexp() for FMT_EXP_*
+10-04-30 string/chresc.c: fix \uXXXXY bug that consumed Y
+10-04-22 misc/optget.c: check for html entities in <A name="...">
+10-04-22 misc/getcwd.c: add features/syscall check for SYSGETCWD() { linux solaris }
+10-04-22 string/stresc.c: wide chars absent locale guidance default to UTF-8
+10-04-12 port/mnt.c: favor bsd getfsstat() over getmntinfo()
+10-04-11 string/strtoi.h: k (1000) and ki (1024) now differentiated
+10-04-10 misc/recstr.c: fix 'd[delimiter]' parse
+10-04-08 include/vmalloc.h,vmalloc/vmstat.c: add Vmstat_t.mode region mode bits
+10-04-05 misc/fts.c: drop 1997-01-07 fts_open()=0 is one file and stat() fails
+10-04-05 misc/optget.c,optlib.h: add Optpass_t.release for --nroff .TH
+10-04-02 misc/optget.c: fix $'[-n?\n...]' --version bug
+10-04-02 regex/regcomp.c: ~(X) => REG_EXTENDED|REG_AUGMENTED, ~(PU) instead of ~(U)
+10-03-24 misc/procopen.c: add PROC_FD_CTTY(fd)
+10-03-24 path/pathtemp.c: fix pointer => int casts
+10-03-15 regex/regcache.c: fix 1 byte buffer overflow (didn't count trailing \0)
 10-03-08 features/tvlib: fix utimensat probe to include all macros/structs
 10-03-07 features/lib: change stream_peek to test pipes only
 10-03-07 string/strelapsed.c: fix next char return overrun

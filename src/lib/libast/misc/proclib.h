@@ -33,6 +33,7 @@
 #include <ast.h>
 #include <errno.h>
 #include <sig.h>
+#include <wait.h>
 
 #if _lib_sigprocmask
 typedef sigset_t Sig_mask_t;

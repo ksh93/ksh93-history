@@ -30,6 +30,8 @@
 
 #include <ctype.h>
 
+#undef	setlocale	/* this file deals with the system locale */
+
 static Lc_numeric_t	default_numeric = { '.', -1 };
 
 static Lc_t		default_lc =
@@ -261,6 +263,8 @@ canonical(const Lc_language_t* lp, const Lc_territory_t* tp, const Lc_charset_t*
 	register char*		s;
 	register char*		e;
 	register const char*	t;
+	char*			p;
+	char*			r;
 
 	if (!(flags & (LC_abbreviated|LC_default|LC_local|LC_qualified|LC_verbose)))
 		flags |= LC_abbreviated;
@@ -295,10 +299,15 @@ canonical(const Lc_language_t* lp, const Lc_territory_t* tp, const Lc_charset_t*
 	}
 	if (s < e)
 	{
-		if (tp && tp != &lc_territories[0] && (!(flags & (LC_abbreviated|LC_default)) || !lp || !streq(lp->code, tp->code)))
+		if (tp && tp != &lc_territories[0])
 		{
+			r = 0;
 			if (lp)
+			{
+				if ((flags & (LC_abbreviated|LC_default)) && streq(lp->code, tp->code))
+					r = s;
 				*s++ = '_';
+			}
 			if (flags & LC_verbose)
 			{
 				u = 1;
@@ -317,6 +326,22 @@ canonical(const Lc_language_t* lp, const Lc_territory_t* tp, const Lc_charset_t*
 			}
 			else
 				for (t = tp->code; s < e && (*s = toupper(*t++)); s++);
+			if (r)
+			{
+				*s = 0;
+				if ((p = setlocale(LC_MESSAGES, 0)) && (p = strdup(p)))
+				{
+					*r = 0;
+					if (!setlocale(LC_MESSAGES, buf))
+					{
+						*r = '_';
+						if (!setlocale(LC_MESSAGES, buf))
+							*r = 0;
+					}
+					setlocale(LC_MESSAGES, p);
+					free(p);
+				}
+			}
 		}
 		if (lp && (!(flags & (LC_abbreviated|LC_default)) || cp != lp->charset) && s < e)
 		{

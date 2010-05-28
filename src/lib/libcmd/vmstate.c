@@ -20,10 +20,10 @@
 ***********************************************************************/
 #pragma prototyped
 
-#define FORMAT		"region=%(region)p size=%(size)d segments=%(segments)d busy=(%(busy_size)d,%(busy_blocks)d,%(busy_max)d) free=(%(free_size)d,%(free_blocks)d,%(free_max)d)"
+#define FORMAT		"region=%(region)p method=%(method)s flags=%(flags)s size=%(size)d segments=%(segments)d busy=(%(busy_size)d,%(busy_blocks)d,%(busy_max)d) free=(%(free_size)d,%(free_blocks)d,%(free_max)d)"
 
 static const char usage[] =
-"[-?\n@(#)$Id: vmstate (AT&T Research) 2010-03-05 $\n]"
+"[-?\n@(#)$Id: vmstate (AT&T Research) 2010-04-08 $\n]"
 USAGE_LICENSE
 "[+NAME?vmstate - list the calling process vmalloc region state]"
 "[+DESCRIPTION?When invoked as a shell builtin, \bvmstate\b lists the "
@@ -34,6 +34,8 @@ USAGE_LICENSE
     "%[-+]][\awidth\a[.\aprecis\a[.\abase\a]]]]]](\aid\a)\achar\a. The "
     "supported \aid\as are:]:[format:=" FORMAT "]"
     "{"
+	"[+method?The vmalloc method name.]"
+	"[+flags?The vmalloc method flags.]"
         "[+size?The total region size.]"
         "[+segments?The number of segments in the region.]"
         "[+busy_size?The total busy block size.]"
@@ -81,6 +83,22 @@ key(void* handle, Sffmt_t* fp, const char* arg, char** ps, Sflong_t* pn)
 		*pn = state->vs.n_busy;
 	else if (streq(s, "busy_max"))
 		*pn = state->vs.m_busy;
+	else if (streq(s, "flags"))
+	{
+		*ps = s = fmtbuf(32);
+		if (state->vs.mode & VM_TRUST)
+			s = strcopy(s, "TRUST|");
+		if (state->vs.mode & VM_TRACE)
+			s = strcopy(s, "TRACE|");
+		if (state->vs.mode & VM_DBCHECK)
+			s = strcopy(s, "DBCHECK|");
+		if (state->vs.mode & VM_DBABORT)
+			s = strcopy(s, "DBABORT|");
+		if (s > *ps)
+			*(s - 1) = 0;
+		else
+			strcpy(s, "0");
+	}
 	else if (streq(s, "free_size"))
 		*pn = state->vs.s_free;
 	else if (streq(s, "free_blocks"))
@@ -89,6 +107,21 @@ key(void* handle, Sffmt_t* fp, const char* arg, char** ps, Sflong_t* pn)
 		*pn = state->vs.m_free;
 	else if (streq(s, "format"))
 		*ps = (char*)state->format;
+	else if (streq(s, "method"))
+	{
+		if (state->vs.mode & VM_MTBEST)
+			*ps = "best";
+		else if (state->vs.mode & VM_MTPOOL)
+			*ps = "pool";
+		else if (state->vs.mode & VM_MTLAST)
+			*ps = "last";
+		else if (state->vs.mode & VM_MTDEBUG)
+			*ps = "debug";
+		else if (state->vs.mode & VM_MTPROFILE)
+			*ps = "profile";
+		else
+			*ps = "UNKNOWN";
+	}
 	else
 	{
 		error(2, "%s: unknown format identifier", s);
@@ -129,10 +162,10 @@ b_vmstate(int argc, char** argv, void* context)
 			continue;
 		case '?':
 			error(ERROR_USAGE|4, "%s", opt_info.arg);
-			continue;
+			break;
 		case ':':
 			error(2, "%s", opt_info.arg);
-			continue;
+			break;
 		}
 		break;
 	}

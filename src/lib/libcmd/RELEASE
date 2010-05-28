@@ -1,3 +1,11 @@
+10-05-09 tail.c: fix -0f bug that inially listed the entire file
+10-05-06 basename.c: add { -a,--all -s,--suffux=suffix } from BSD
+10-04-12 cat.c: fix -v bug that dumped core and make consistent with cmp --print-chars
+10-04-11 cmp.c: add --print-bytes, --count=n, --differences=n
+10-04-08 vmstate.c: add { method flags } vars for Vmstat_t.mode
+10-04-08 mkdir.c: fix check for { S_ISUID S_ISGID S_ISVTX } after successful mkdir(2)
+10-04-01 stty.c: add --fd=fd option
+10-03-23 tail.c: fix -f large initial offset bug that didn't copy all data
 10-03-07 tail.c: sfsync(sfstdout) after all -f done, fix -f partial line
 10-03-05 mktemp.c: add --regress=seed for testing
 10-03-05 vmstate.c: add

@@ -412,7 +412,10 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 			break;
 		}
 		if(c&T_BINARY)
+		{
 			sp--,tp--;
+			type  |= (*tp!=0);
+		}
 		*sp = num;
 		*tp = type;
 	}
@@ -654,7 +657,7 @@ again:
 				nargs &= 7;
 				if(vp->infun != nargs)
 					ERROR(vp,e_argcount);
-				if(vp->staksize+=nargs>=vp->stakmaxsize)
+				if((vp->staksize+=nargs)>=vp->stakmaxsize)
 					vp->stakmaxsize = vp->staksize+nargs;
 				stakputc(A_CALL1F+nargs+x);
 				vp->staksize -= nargs;

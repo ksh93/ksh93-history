@@ -469,4 +469,11 @@ then	EXP=$(printf %q "$exp")
 	err_exit "'$cmd' failed -- expected $EXP, got $GOT"
 fi
 
+(
+$SHELL -c 'sleep 5 & pid=$!; { x=$( ( seq 60000 ) );kill -9 $pid;}&;wait $pid'
+) 2> /dev/null
+(( $? )) ||  err_exit 'nested command substitution with large output hangs'
+
+(.sh.foo=foobar)
+[[ ${.sh.foo} == foobar ]] && err_exit '.sh subvariables in subshells remain set'
 exit $Errors

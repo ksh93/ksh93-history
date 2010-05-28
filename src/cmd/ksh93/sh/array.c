@@ -80,6 +80,7 @@ static Namarr_t *array_scope(Namval_t *np, Namarr_t *ap, int flags)
 	aq->scope = (void*)ap;
 	ar = (struct index_array*)aq;
 	memset(ar->val, 0, ar->maxi*sizeof(char*));
+	ar->bits =  (unsigned char*)&ar->val[ar->maxi];
 	return(aq);
 }
 
@@ -926,7 +927,7 @@ int nv_nextsub(Namval_t *np)
 				if((aq->header.nelem&ARRAY_NOCHILD) && nv_isvtree(mp) && !mp->nvfun->dsize)
 					continue;
 				if(nv_isarray(mp))
-					nv_putsub(mp,NIL(char*),ARRAY_UNDEF);
+					nv_putsub(mp,NIL(char*),ARRAY_SCAN);
 			}
 			return(1);
 		}
@@ -1305,7 +1306,7 @@ void *nv_associative(register Namval_t *np,const char *sp,int mode)
 				ap->nextpos = (Namval_t*)dtnext(ap->header.table,mp);
 			}
 			else if(!mp && *sp && mode==0)
-				mp = nv_search(sp,ap->header.table,NV_ADD);
+				mp = nv_search(sp,ap->header.table,NV_ADD|HASH_NOSCOPE);
 			np = mp;
 			if(ap->pos && ap->pos==np)
 				ap->header.nelem |= ARRAY_SCAN;

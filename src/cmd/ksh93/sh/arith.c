@@ -96,7 +96,8 @@ static Namval_t *scope(Shell_t *shp,register Namval_t *np,register struct lval *
 	{
 		while(nv_isref(mp))
 		{
-			sub = nv_refsub(mp);
+			if(sub = nv_refsub(mp))
+				nosub = 1;
 			mp = nv_refnode(mp);
 		}
 		np = mp;

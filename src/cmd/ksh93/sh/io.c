@@ -77,7 +77,7 @@ static int	(*fdnotify)(int,int);
 #   if !defined(htonl) && !_lib_htonl
 #      define htonl(x)	(x)
 #   endif
-#   if _pipe_socketpair
+#   if _pipe_socketpair && !_stream_peek
 #      ifndef SHUT_RD
 #         define SHUT_RD         0
 #      endif
@@ -1041,7 +1041,7 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 				io_op[3] = '#';
 			goto traceit;
 		}
-		if(*fname)
+		if(*fname || (iof&(IODOC|IOSTRG))==(IODOC|IOSTRG))
 		{
 			if(iof&IODOC)
 			{
@@ -1352,6 +1352,7 @@ static int io_heredoc(Shell_t *shp,register struct ionod *iop, const char *name,
 {
 	register Sfio_t	*infile = 0, *outfile;
 	register int		fd;
+	Sfoff_t			off;
 	if(!(iop->iofile&IOSTRG) && (!shp->heredocs || iop->iosize==0))
 		return(sh_open(e_devnull,O_RDONLY));
 	/* create an unnamed temporary file */
@@ -1365,6 +1366,7 @@ static int io_heredoc(Shell_t *shp,register struct ionod *iop, const char *name,
 	}
 	else
 	{
+		off = sftell(shp->heredocs);
 		infile = subopen(shp,shp->heredocs,iop->iooffset,iop->iosize);
 		if(traceon)
 		{
@@ -1389,6 +1391,7 @@ static int io_heredoc(Shell_t *shp,register struct ionod *iop, const char *name,
 		}
 	}
 	/* close stream outfile, but save file descriptor */
+	sfseek(shp->heredocs,off,SEEK_SET);
 	fd = sffileno(outfile);
 	sfsetfd(outfile,-1);
 	sfclose(outfile);

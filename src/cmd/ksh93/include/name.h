@@ -221,6 +221,7 @@ extern const char	e_varname[];
 extern const char	e_noalias[];
 extern const char	e_noarray[];
 extern const char	e_notenum[];
+extern const char	e_nounattr[];
 extern const char	e_aliname[];
 extern const char	e_badexport[];
 extern const char	e_badref[];

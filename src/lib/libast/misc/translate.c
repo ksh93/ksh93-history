@@ -129,17 +129,27 @@ sfprintf(sfstderr, "AHA#%d:%s set %d seq %d msg `%s'\n", __LINE__, __FILE__, set
 static nl_catd
 find(const char* locale, const char* catalog)
 {
+	char*		o;
+	nl_catd		d;
 	char		path[PATH_MAX];
-#if DEBUG_trace
-	const char*	ocatalog = catalog;
-#endif
 
-	if (mcfind(path, locale, catalog, LC_MESSAGES, 0))
-		catalog = (const char*)path;
-#if DEBUG_trace
-sfprintf(sfstderr, "AHA#%d:%s %s %s %s\n", __LINE__, __FILE__, locale, ocatalog, catalog);
-#endif
-	return catopen(catalog, NL_CAT_LOCALE);
+	if (!mcfind(path, locale, catalog, LC_MESSAGES, 0) || (d = catopen(path, NL_CAT_LOCALE)) == NOCAT)
+	{
+		if (locale == (const char*)lc_categories[AST_LC_MESSAGES].prev)
+			o = 0;
+		else if (o = setlocale(LC_MESSAGES, NiL))
+		{
+			ast.locale.set |= AST_LC_internal;
+			setlocale(LC_MESSAGES, locale);
+		}
+		d = catopen(catalog, NL_CAT_LOCALE);
+		if (o)
+		{
+			setlocale(LC_MESSAGES, o);
+			ast.locale.set &= ~AST_LC_internal;
+		}
+	}
+	return d;
 }
 
 /*
@@ -153,7 +163,10 @@ init(register char* s)
 	register char*		u;
 	register int		n;
 	register int		m;
+	register int		set;
 	nl_catd			d;
+
+	static const int	sets[] = { AST_MESSAGE_SET, 1 };
 
 	/*
 	 * insert into the catalog dictionary
@@ -173,20 +186,17 @@ init(register char* s)
 	 * locate the default locale catalog
 	 */
 
-	ast.locale.set |= AST_LC_internal;
-	u = setlocale(LC_MESSAGES, NiL);
-	setlocale(LC_MESSAGES, "C");
 	if ((d = find("C", s)) != NOCAT)
 	{
 		/*
 		 * load the default locale messages
-		 * this assumes one mesage set for ast (AST_MESSAGE_SET)
+		 * this assumes one mesage set for ast (AST_MESSAGE_SET or fallback to 1)
 		 * different packages can share the same message catalog
 		 * name by using different message set numbers
 		 * see <mc.h> mcindex()
 		 *
 		 * this method requires a scan of each catalog, and the
-		 * catalogs do not advertize the max message number, so
+		 * catalogs do not advertise the max message number, so
 		 * we assume there are no messages after a gap of GAP
 		 * missing messages
 		 */
@@ -197,7 +207,7 @@ init(register char* s)
 			for (;;)
 			{
 				n++;
-				if ((s = catgets(d, AST_MESSAGE_SET, n, state.null)) != state.null && entry(cp->messages, AST_MESSAGE_SET, n, s))
+				if (((s = catgets(d, set = AST_MESSAGE_SET, n, state.null)) && *s || (s = catgets(d, set = 1, n, state.null)) && *s) && entry(cp->messages, set, n, s))
 					m = n;
 				else if ((n - m) > GAP)
 					break;
@@ -210,8 +220,6 @@ init(register char* s)
 		}
 		catclose(d);
 	}
-	setlocale(LC_MESSAGES, u);
-	ast.locale.set &= ~AST_LC_internal;
 	return cp;
 }
 

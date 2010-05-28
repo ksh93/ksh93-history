@@ -459,6 +459,7 @@ static void *fmtbase64(char *string, ssize_t *sz, int alt)
 	Sfdouble_t		d;
 	ssize_t			size;
 	Namval_t		*np = nv_open(string, NiL, NV_VARNAME|NV_NOASSIGN|NV_NOADD);
+	Namarr_t		*ap;
 	static union types_t	number;
 	if(!np || nv_isnull(np))
 	{
@@ -541,7 +542,7 @@ static void *fmtbase64(char *string, ssize_t *sz, int alt)
 			return(n?n:size);
 		}
 	}
-	else if(nv_isarray(np) && nv_arrayptr(np))
+	else if(nv_isarray(np) && (ap=nv_arrayptr(np)) && (ap->nelem&(ARRAY_UNDEF|ARRAY_SCAN)))
 	{
 		nv_outnode(np,iop,(alt?-1:0),0);
 		sfputc(iop,')');

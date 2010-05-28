@@ -444,7 +444,10 @@ int sh_lex(Lex_t* lp)
 				{
 					while(fcgetc(c)>0 && c!='\n');
 					if(c<=0 || lp->heredoc)
+					{
+						shp->inlineno++;
 						break;
+					}
 					while(shp->inlineno++,fcpeek(0)=='\n')
 						fcseek(1);
 					while(state[c=fcpeek(0)]==0)

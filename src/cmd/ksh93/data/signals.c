@@ -210,7 +210,7 @@ const struct shtable2 shtab_signals[] =
 	"TTIN",		VAL(SIGTTIN,0),					S("Stopped (SIGTTIN)"),
 #endif	/* SIGTTIN */
 #ifdef SIGTTOU
-	"TTOU",		VAL(SIGTTOU,0),					S("Stopped(SIGTTOU)"),
+	"TTOU",		VAL(SIGTTOU,0),					S("Stopped (SIGTTOU)"),
 #endif	/* SIGTTOU */
 #ifdef SIGURG
 	"URG",		VAL(SIGURG,SH_SIGIGNORE),			S("Socket interrupt"),

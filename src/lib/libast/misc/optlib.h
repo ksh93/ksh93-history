@@ -33,20 +33,22 @@
 #include <ast.h>
 #include <cdt.h>
 
-#define OPT_cache		0x01
-#define OPT_functions		0x02
-#define OPT_ignore		0x04
-#define OPT_long		0x08
-#define OPT_numeric		0x10
-#define OPT_old			0x20
-#define OPT_minus		0x40
-#define OPT_plus		0x80
+#define OPT_append		0x001
+#define OPT_cache		0x002
+#define OPT_functions		0x004
+#define OPT_ignore		0x008
+#define OPT_long		0x010
+#define OPT_minus		0x020
+#define OPT_module		0x040
+#define OPT_numeric		0x080
+#define OPT_old			0x100
+#define OPT_plus		0x200
 
-#define OPT_cache_flag		0x01
-#define OPT_cache_invert	0x02
-#define OPT_cache_numeric	0x04
-#define OPT_cache_optional	0x08
-#define OPT_cache_string	0x10
+#define OPT_cache_flag		0x001
+#define OPT_cache_invert	0x002
+#define OPT_cache_numeric	0x004
+#define OPT_cache_optional	0x008
+#define OPT_cache_string	0x010
 
 #define OPT_CACHE		128
 #define OPT_FLAGS		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
@@ -59,10 +61,11 @@ typedef struct Optpass_s
 	char*			oopts;
 	char*			id;
 	char*			catalog;
+	char*			release;
+	char			section[4];
 	unsigned char		version;
 	unsigned char		prefix;
-	unsigned char		flags;
-	unsigned char		section;
+	unsigned short		flags;
 } Optpass_t;
 
 typedef struct Optcache_s

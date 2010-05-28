@@ -588,7 +588,7 @@ b_cut(int argc, char** argv, void* context)
 	wdelim.len = ldelim.len = 1;
 	for (;;)
 	{
-		switch (n = optget(argv, usage))
+		switch (optget(argv, usage))
 		{
 		case 0:
 			break;
@@ -600,7 +600,7 @@ b_cut(int argc, char** argv, void* context)
 				continue;
 			}
 			cp = opt_info.arg;
-			if(n=='b')
+			if(opt_info.option[1]=='b')
 				mode |= C_BYTES;
 			else
 				mode |= C_CHARS;

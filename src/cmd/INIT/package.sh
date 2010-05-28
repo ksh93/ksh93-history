@@ -64,7 +64,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2010-02-14 $
+@(#)$Id: package (AT&T Research) 2010-04-22 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -687,11 +687,12 @@ ${bT}(4)${bD}If the ${bB}bin/package${eB} script does not exist then run:${bX}
 ${bT}(5)${bD}Determine the list of package names you want from the download site, then
       use the ${Mpackage} command to do the actual download:${bX}
 		bin/package authorize \"${bI}NAME${eI}\" password \"${bI}PASSWORD${eI}\" \\
-			setup binary \$URL ${bB}PACKAGE${eB} ...${eX}
-      This downloads the closure of the latest binary package(s); covered and
-      up-to-date packages are not downloaded again unless ${bB}package force ...${eB}
-      is specified. Package content is verified using ${bB}${checksum}${eB}. If the package
-      root will contain only one architecture then you can install in ${bB}bin${eB} and
+			setup binary \$URL ${bI}PACKAGE${eI} ...${eX}
+      (Refer to the ${bB}AUTHORIZATION${eB} paragraph on the main download page for
+      ${bI}NAME${eI}/${bI}PASSWORD${eI} details.)  This downloads the closure of the latest
+      binary package(s); covered and up-to-date packages are not downloaded again unless
+      ${bB}package force ...${eB} is specified. Package content is verified using ${bB}${checksum}${eB}.
+      If the package root will contain only one architecture then you can install in ${bB}bin${eB} and
       ${bB}lib${eB} instead of ${bB}arch/${eB}${bI}HOSTTYPE${eI}${bB}/bin${eB} and ${bB}arch/${eB}${bI}HOSTTYPE${eI}${bB}/lib${eB} by running this
       instead:${bX}
 		bin/package authorize \"${bI}NAME${eI}\" password \"${bI}PASSWORD${eI}\" \\
@@ -844,10 +845,11 @@ ${bT}(5)${bD}Determine the list of package names you want from the download site
       use the ${Mpackage} command to do the actual download:${bX}
 		bin/package authorize \"${bI}NAME${eI}\" password \"${bI}PASSWORD${eI}\" \\
 			setup source \$URL ${bB}PACKAGE${eB} ...${eX}
-      This downloads the closure of the latest source package(s); covered and
-      up-to-date packages are not downloaded again unless ${bB}package force ...${eB}
-      is specified. Package content is verified using ${bB}${checksum}${eB}. If the package
-      root will contain only one architecture then you can install in ${bB}bin${eB} and
+      (Refer to the ${bB}AUTHORIZATION${eB} paragraph on the main download page for
+      ${bI}NAME${eI}/${bI}PASSWORD${eI} details.)  This downloads the closure of the latest
+      source package(s); covered and up-to-date packages are not downloaded again unless
+      ${bB}package force ...${eB} is specified. Package content is verified using ${bB}${checksum}${eB}.
+      If the package root will contain only one architecture then you can install in ${bB}bin${eB} and
       ${bB}lib${eB} instead of ${bB}arch/${eB}${bI}HOSTTYPE${eI}${bB}/bin${eB} and ${bB}arch/${eB}${bI}HOSTTYPE${eI}${bB}/lib${eB} by running this
       instead:${bX}
 		bin/package authorize \"${bI}NAME${eI}\" password \"${bI}PASSWORD${eI}\" \\

@@ -184,19 +184,23 @@ b_paste(int argc,register char *argv[], void* context)
 
 	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
 	delim = 0;
-	while (n = optget(argv, usage)) switch (n)
+	for (;;)
 	{
-	    case 'd':
-		delim = opt_info.arg;
-		break;
-	    case 's':
-		sflag++;
-		break;
-	    case ':':
-		error(2, "%s", opt_info.arg);
-		break;
-	    case '?':
-		error(ERROR_usage(2), "%s", opt_info.arg);
+		switch (optget(argv, usage))
+		{
+		case 'd':
+			delim = opt_info.arg;
+			continue;
+		case 's':
+			sflag++;
+			continue;
+		case ':':
+			error(2, "%s", opt_info.arg);
+			break;
+		case '?':
+			error(ERROR_usage(2), "%s", opt_info.arg);
+			break;
+		}
 		break;
 	}
 	argv += opt_info.index;

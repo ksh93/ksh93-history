@@ -310,4 +310,38 @@ kill $pid 2>/dev/null
 wait
 )
 
+function mypipe
+{
+	read; read
+	print -r -- "$REPLY"
+}
+
+mypipe |&
+print -p "hello"
+z="$( /bin/true $(/bin/true) )"
+{ print -p "world";} 2> /dev/null
+read -p
+[[ $REPLY == world ]] ||  err_exit "expected 'world' got '$REPLY'"
+kill $pid 2>/dev/null
+wait
+
+
+function cop
+{
+        read
+        print ok
+}
+exp=ok
+cop |&
+pid=$!
+(
+if      print -p yo 2>/dev/null
+then    read -p got
+else    got='no coprocess'
+fi
+[[ $got == $exp ]] || err_exit "main coprocess subshell query failed -- expected $exp, got '$got'"
+)
+kill $pid 2>/dev/null
+wait
+
 exit $((Errors))

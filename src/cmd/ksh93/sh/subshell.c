@@ -90,6 +90,7 @@ static struct subshell
 	int		cpipe;
 	int		nofork;
 	char		subshare;
+	char		comsub;
 } *subshell_data;
 
 static int subenv;
@@ -140,7 +141,7 @@ void	sh_subtmpfile(int pflag)
 			}
 		}
 	}
-	if(sp && (shp->fdstatus[1]==IOCLOSE || (!shp->subshare && !(shp->fdstatus[1]&IONOSEEK))))
+	if(sp && (shp->fdstatus[1]==IOCLOSE || (pflag && !shp->subshare && !(shp->fdstatus[1]&IONOSEEK))))
 	{
 		struct stat statb,statx;
 		int fd;
@@ -195,7 +196,7 @@ void sh_subfork(void)
 		trap = strdup(trap);
 	/* see whether inside $(...) */
 	if(sp->pipe)
-		sh_subtmpfile(1);
+		sh_subtmpfile(shp->comsub==1);
 	shp->curenv = 0;
 	if(pid = sh_fork(FSHOWME,NIL(int*)))
 	{
@@ -248,25 +249,17 @@ Namval_t *sh_assignok(register Namval_t *np,int add)
 	register Namval_t	*mp;
 	register struct Link	*lp;
 	register struct subshell *sp = (struct subshell*)subshell_data;
-	struct Ufunction	*rp;
 	Shell_t			*shp = sp->shp;
-	Dt_t			*dp;
+	Dt_t			*dp= shp->var_tree;
 	Namval_t		*mpnext;
 	Namarr_t		*ap;
 	int			save;
 	/* don't bother with this */
-	if(!sp->shpwd || (nv_isnull(np) && !add) || np==SH_LEVELNOD)
+	if(!sp->shpwd || np==SH_LEVELNOD || np==L_ARGNOD || np==SH_SUBSCRNOD || np==SH_NAMENOD)
 		return(np);
 	/* don't bother to save if in newer scope */
-	if(!(rp=shp->st.real_fun)  || !(dp=rp->sdict))
-		dp = sp->var;
-	if(np->nvenv && !nv_isattr(np,NV_MINIMAL|NV_EXPORT) && shp->last_root)
-		dp = shp->last_root;
-	if((mp=nv_search((char*)np,dp,HASH_BUCKET))!=np)
-	{
-		if(mp || !np->nvfun || np->nvfun->subshell>=sh.subshell) 
-			return(np);
-	}
+	if(sp->var!=shp->var_tree && shp->last_root==shp->var_tree)
+		return(np);
 	if((ap=nv_arrayptr(np)) && (mp=nv_opensub(np)))
 	{
 		shp->last_root = ap->table;
@@ -274,7 +267,7 @@ Namval_t *sh_assignok(register Namval_t *np,int add)
 		if(!add || array_assoc(ap))
 			return(np);
 	}
-	for(lp=subshell_data->svar; lp; lp = lp->next)
+	for(lp=sp->svar; lp;lp = lp->next)
 	{
 		if(lp->node==np)
 			return(np);
@@ -311,6 +304,8 @@ Namval_t *sh_assignok(register Namval_t *np,int add)
 	save = shp->subshell;
 	shp->subshell = 0;
 	mp->nvname = np->nvname;
+	if(nv_isattr(np,NV_NOFREE))
+		nv_onattr(mp,NV_IDENT);
 	nv_clone(np,mp,(add?(nv_isnull(np)?0:NV_NOFREE)|NV_ARRAY:NV_MOVE));
 	shp->subshell = save;
 	return(np);
@@ -325,6 +320,7 @@ static void nv_restore(struct subshell *sp)
 	register Namval_t *mp, *np;
 	const char *save = sp->shpwd;
 	Namval_t	*mpnext;
+	int		flags;
 	sp->shpwd = 0;	/* make sure sh_assignok doesn't save with nv_unset() */
 	for(lp=sp->svar; lp; lp=lq)
 	{
@@ -333,6 +329,9 @@ static void nv_restore(struct subshell *sp)
 		mp = lp->node;
 		if(!mp->nvname)
 			continue;
+		flags = 0;
+		if(nv_isattr(mp,NV_MINIMAL) && !nv_isattr(np,NV_EXPORT))
+			flags |= NV_MINIMAL;
 		if(nv_isarray(mp))
 			 nv_putsub(mp,NIL(char*),ARRAY_SCAN);
 		_nv_unset(mp,NV_RDONLY|NV_CLONE);
@@ -342,10 +341,15 @@ static void nv_restore(struct subshell *sp)
 			goto skip;
 		}
 		nv_setsize(mp,nv_size(np));
-		if(!nv_isattr(np,NV_MINIMAL) || nv_isattr(np,NV_EXPORT))
+		if(!(flags&NV_MINIMAL))
 			mp->nvenv = np->nvenv;
 		mp->nvfun = np->nvfun;
-		mp->nvflag = np->nvflag;
+		if(nv_isattr(np,NV_IDENT))
+		{
+			nv_offattr(np,NV_IDENT);
+			flags |= NV_NOFREE;
+		}
+		mp->nvflag = np->nvflag|(flags&NV_MINIMAL);
 		if(nv_cover(mp))
 		{
 			nv_putval(mp, nv_getval(np),np->nvflag|NV_NOFREE);
@@ -364,6 +368,7 @@ static void nv_restore(struct subshell *sp)
 		}
 		else if(nv_isattr(np,NV_EXPORT))
 			env_delete(sh.env,nv_name(mp));
+		nv_onattr(mp,flags);
 	skip:
 		for(mp=lp->child; mp; mp=mpnext)
 		{
@@ -480,6 +485,11 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 	struct checkpt buff;
 	struct sh_scoped savst;
 	struct dolnod   *argsav=0;
+	if(comsub && shp->comsub==1)
+	{
+		shp->subnest = 1;
+		siglongjmp(*shp->jmplist,SH_JMPSUB);
+	}
 	memset((char*)sp, 0, sizeof(*sp));
 	sfsync(shp->outpool);
 	argsav = sh_arguse(shp);
@@ -489,7 +499,6 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 		subenv = 0;
 	}
 	shp->curenv = ++subenv;
-	job.curpgid = 0;
 	savst = shp->st;
 	sh_pushcontext(&buff,SH_JMPSUB);
 	subshell = shp->subshell+1;
@@ -512,8 +521,13 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 	sp->bckpid = shp->bckpid;
 	if(comsub)
 		sh_stats(STAT_COMSUB);
+	else
+		job.curpgid = 0;
 	sp->subshare = shp->subshare;
+	sp->comsub = shp->comsub;
 	shp->subshare = comsub==2 ||  (comsub==1 && sh_isoption(SH_SUBSHARE));
+	if(comsub)
+		shp->comsub = comsub;
 	if(!comsub || !shp->subshare)
 	{
 		sp->shpwd = shp->pwd;
@@ -646,7 +660,7 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 		if(shp->exitval > SH_EXITSIG)
 			sp->sig = (shp->exitval&SH_EXITMASK);
 		shp->exitval = 0;
-		if(comsub)
+		if(comsub==1)
 			shp->spid = sp->subpid;
 	}
 	if(comsub && iop && sp->pipefd<0)
@@ -718,6 +732,7 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 		shp->coutpipe = sp->coutpipe;
 	}
 	shp->subshare = sp->subshare;
+	shp->comsub = sp->comsub;
 	if(shp->subshell)
 		SH_SUBSHELLNOD->nvalue.s = --shp->subshell;
 	subshell = shp->subshell;
@@ -737,7 +752,7 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 	}
 	sh_sigcheck();
 	shp->trapnote = 0;
-	if(sp->subpid && !comsub)
+	if(sp->subpid && comsub!=1)
 		job_wait(sp->subpid);
 	if(shp->exitval > SH_EXITSIG)
 	{
@@ -753,5 +768,11 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 	}
 	if(jmpval && shp->toomany)
 		siglongjmp(*shp->jmplist,jmpval);
+	if(shp->subnest && iop)
+	{
+		sfclose(iop);
+		iop = 0;
+		shp->subnest = 0;
+	}
 	return(iop);
 }

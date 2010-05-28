@@ -1,3 +1,6 @@
+10-04-22 package.sh: update "html binary|source" NAME/PASSWORD info
+10-04-15 iffe.sh: don't forget candidate headers for hdr|sys!
+10-04-11 WWW.mk: disable man page metarule -- now done by admin-man(1)
 10-02-14 package.sh: $CC verification needs $INSTALLROOT/bin in PATH
 10-02-11 package.sh: fix package admin make report error count
 10-02-02 package.sh: fix write binary bug that did scp on local fs

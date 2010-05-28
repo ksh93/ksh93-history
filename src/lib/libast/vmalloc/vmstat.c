@@ -63,6 +63,7 @@ Vmstat_t*	st;
 	st->s_busy = st->s_free = st->m_busy = st->m_free = 0;
 	st->n_seg = 0;
 	st->extent = 0;
+	st->mode = vd->mode;
 
 	if(vd->mode&VM_MTLAST)
 		st->n_busy = 0;

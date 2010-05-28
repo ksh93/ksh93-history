@@ -538,4 +538,32 @@ compound x=(
 ) 
 [[ $x == *f=2* ]] ||  err_exit "The field b containg 'f=2' is missing"
 
+unset x
+compound x=(
+        compound -a nodes=(
+                 [4]=( )
+        )
+) 
+expected='typeset -C x=(typeset -C -a nodes=([4]=());)'
+[[ $(typeset -p x) == "$expected" ]] || err_exit 'typeset -p with nested compound index array not working'
+
+unset v
+compound v=(
+	integer -A ar=(
+		[aa]=4 [bb]=9
+	) 
+) 
+expected='typeset -C v=(typeset -A -l -i ar=([aa]=4 [bb]=9);)'
+[[ $(typeset -p v) == "$expected" ]] || err_exit 'attributes for associative arrays embedded in compound variables not working'
+
+unset x
+compound -a x
+x[1]=( a=1 b=2 )
+[[ $(print -v x[1]) == "${x[1]}" ]] || err_exit  'print -v x[1] not working for index array of compound variables'
+
+unset x
+z='typeset -a x=(hello (x=12;y=5;) world)'
+{ eval "$z" ;} 2> /dev/null
+[[ $(typeset -p x) == "$z" ]] || err_exit "compound assignment '$z' not working"
+
 exit $((Errors))

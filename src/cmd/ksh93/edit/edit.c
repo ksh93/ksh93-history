@@ -335,9 +335,9 @@ int tty_raw(register int fd, int echomode)
 	nttyparm.c_iflag |= (BRKINT|IGNPAR);
 #   endif	/* u370 */
 	if(echo)
-		nttyparm.c_lflag &= ~ICANON;
+		nttyparm.c_lflag &= ~(ICANON|ISIG);
 	else
-		nttyparm.c_lflag &= ~(ICANON|ECHO|ECHOK);
+		nttyparm.c_lflag &= ~(ICANON|ISIG|ECHO|ECHOK);
 	nttyparm.c_cc[VTIME] = 0;
 	nttyparm.c_cc[VMIN] = 1;
 #   ifdef VREPRINT
@@ -367,6 +367,7 @@ int tty_raw(register int fd, int echomode)
 #   else
 	ep->e_lnext = cntl('V');
 #   endif /* VLNEXT */
+	ep->e_intr = ttyparm.c_cc[VINTR];
 	ep->e_eof = ttyparm.c_cc[VEOF];
 	ep->e_erase = ttyparm.c_cc[VERASE];
 	ep->e_kill = ttyparm.c_cc[VKILL];
@@ -1035,6 +1036,11 @@ int ed_getchar(register Edit_t *ep,int mode)
 		/* check for possible key mapping */
 		if((c = ep->e_lbuf[--ep->e_lookahead]) < 0)
 		{
+			if(mode<=0 && -c == ep->e_intr)
+			{
+				sh_fault(SIGINT);
+				siglongjmp(ep->e_env, UINTR);
+			}
 			if(mode<=0 && ep->sh->st.trap[SH_KEYTRAP])
 			{
 				n=1;

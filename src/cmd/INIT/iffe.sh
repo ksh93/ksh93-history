@@ -30,7 +30,7 @@ case $-:$BASH_VERSION in
 esac
 
 command=iffe
-version=2009-12-04 # update in USAGE too #
+version=2010-04-15 # update in USAGE too #
 
 compile() # $cc ...
 {
@@ -632,7 +632,7 @@ set=
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: iffe (AT&T Research) 2009-12-04 $
+@(#)$Id: iffe (AT&T Research) 2010-04-15 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?iffe - C compilation environment feature probe]
@@ -3678,6 +3678,7 @@ $inc
 $tst
 $ext
 $allinc
+$inc
 #include <$x>" > $tmp.c
 							if	is_hdr $x
 							then	gothdr="$gothdr + $x"

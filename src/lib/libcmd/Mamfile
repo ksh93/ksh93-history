@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.5 2010-03-09
+info mam static 00000 1994-07-17 make (AT&T Research) 5.5 2010-04-15
 setv INSTALLROOT ../../..
 setv PACKAGE_ast_INCLUDE ${INSTALLROOT}/include/ast
 setv PACKAGE_ast_LIB ${INSTALLROOT}/lib
@@ -205,6 +205,12 @@ done ${PACKAGE_ast_INCLUDE}/sum.h
 prev cmd.h implicit
 done cksum.c
 make cmp.c
+make ${PACKAGE_ast_INCLUDE}/ccode.h implicit
+make ${PACKAGE_ast_INCLUDE}/ast_ccode.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast_ccode.h dontcare
+prev ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
+prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+done ${PACKAGE_ast_INCLUDE}/ccode.h
 prev ${PACKAGE_ast_INCLUDE}/ls.h implicit
 prev cmd.h implicit
 done cmp.c
@@ -376,12 +382,7 @@ prev cmd.h implicit
 done rmdir.c
 make stty.c
 prev ${PACKAGE_ast_INCLUDE}/ast_tty.h implicit
-make ${PACKAGE_ast_INCLUDE}/ccode.h implicit
-make ${PACKAGE_ast_INCLUDE}/ast_ccode.h implicit
-done ${PACKAGE_ast_INCLUDE}/ast_ccode.h dontcare
-prev ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
-prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
-done ${PACKAGE_ast_INCLUDE}/ccode.h
+prev ${PACKAGE_ast_INCLUDE}/ccode.h implicit
 prev cmd.h implicit
 done stty.c
 make sum.c

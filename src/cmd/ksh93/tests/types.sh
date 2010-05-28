@@ -248,7 +248,7 @@ function bar
 }
 bar
 
-expected='Fileinfo_t -A _Dbg_filenames=([foo]=(size=2;typeset -C -a text=([0]=line1 [1]=line2 [2]=line3);typeset -l -i mtime=-1;))'
+expected='Fileinfo_t -A _Dbg_filenames=([foo]=(size=3;typeset -C -a text=(line1 line2 line3);typeset -l -i mtime=-1;))'
 got=$(typeset -p _Dbg_filenames)
 [[ "$got" == "$expected" ]] || {
 	got=$(printf %q "$got")
@@ -376,4 +376,66 @@ expected=$'Std_file_t db.file[/etc/profile]=(action=preserve;typeset -A sum=([82
 } 2> /dev/null
 [[ $got == "$expected" ]] ||  err_exit 'types with arrays of types as members fails'
 
+typeset -T x_t=(
+	integer dummy 
+	function set
+	{
+		[[ ${.sh.name} == v ]] || err_exit  "name=${.sh.name} should be v"
+		[[ ${.sh.subscript} == 4 ]] || err_exit "subscript=${.sh.subscript} should be 4"
+		[[ ${.sh.value} == hello ]] || err_exit  "value=${.sh.value} should be hello"
+	} 
+)
+x_t -a v 
+v[4]="hello"
+
+typeset -T oset=(
+    typeset -A s
+)
+oset foo bar
+: ${foo.s[a]:=foobar}
+: ${bar.s[d]:=foobar}
+[[ ${bar.s[a]} == foobar ]] && err_exit '${var:=val} for types assigns to type instead of type instance'
+
+typeset -T olist=(
+    typeset -a l
+)
+olist foo
+foo.l[1]=x
+[[  ${!foo.l[*]} == *0* ]] && '0-th elment of foo.l should not be set'
+
+typeset -T oset2=( typeset -A foo )
+oset2 bar
+: ${bar.foo[a]}
+bar.foo[a]=b
+[[ ${#bar.foo[*]} == 1 ]] || err_exit "bar.foo should have 1 element not  ${#bar.foo[*]}"
+[[ ${bar.foo[*]} == b ]] || err_exit "bar.foo[*] should be 'b'  not  ${bar.foo[*]}"
+[[ ${bar.foo[a]} == b ]] || err_exit "bar.foo[a] should be 'b'  not  ${bar.foo[*]}"
+
+{ x=$( $SHELL 2> /dev/null << \++EOF++
+    typeset -T ab_t=(
+        integer a=1 b=2
+        function increment
+        {
+                (( _.a++, _.b++ ))
+        }
+    )
+    function ar_n
+    {
+        nameref sn=$2
+        sn.increment
+        $1 && printf "a=%d, b=%d\n" sn.a sn.b
+    }
+    function ar
+    {
+        ab_t -S -a s
+        [[ -v s[5] ]] || s[5]=( )
+        ar_n $1 s[5]
+    }
+    x=$(ar false ; ar false ; ar true ; printf ";")
+    y=$(ar false ; ar false ; ar true ; printf ";")
+    print -r -- "\"$x\"" ==  "\"$y\""
+++EOF++
+) ;} 2> /dev/null
+[[ $x == *a=4*b=5* ]] || err_exit 'static types in a function not working'
+{ eval "[[ $x ]]";} 2> /dev/null || err_exit 'arrays of types leaving side effects in subshells'
 exit $Errors

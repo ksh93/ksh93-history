@@ -689,8 +689,12 @@ e_badsubscript,*cp);
 					if((cp-first)>1 && cp[-2]=='~')
 					{
 						char *p = cp;
-						while((c=mbchar(p)) && c!=RPAREN && c!='E');
-						ere = (c=='E'||c=='A');
+						while((c=mbchar(p)) && c!=RPAREN)
+							if(c=='A'||c=='E'||c=='K'||c=='P'||c=='X')
+							{
+								ere = 1;
+								break;
+							}
 					}
 				}
 				else if(n==RPAREN)
@@ -1221,7 +1225,11 @@ retry1:
 		}
 		flag |= NV_NOASSIGN|NV_VARNAME|NV_NOADD;
 		if(c=='=' || c=='?' || (c==':' && ((d=fcpeek(0))=='=' || d=='?')))
+		{
+			if(c=='=' || (c==':' && d=='='))
+				flag |= NV_ASSIGN;
 			flag &= ~NV_NOADD;
+		}
 #if  SHOPT_FILESCAN
 		if(mp->shp->cur_line && *id=='R' && strcmp(id,"REPLY")==0)
 		{
@@ -1346,7 +1354,7 @@ retry1:
 				else
 					v = nv_getval(np);
 				/* special case --- ignore leading zeros */  
-				if( (mp->arith||mp->let) && (np->nvfun || nv_isattr(np,(NV_LJUST|NV_RJUST|NV_ZFILL))) && (offset==0 || !isalnum(c)))
+				if( (mp->arith||mp->let) && (np->nvfun || nv_isattr(np,(NV_LJUST|NV_RJUST|NV_ZFILL))) && !nv_isattr(np,NV_INTEGER) && (offset==0 || !isalnum(c)))
 					mp->zeros = 1;
 			}
 			if(savptr==stakptr(0))
@@ -1884,6 +1892,24 @@ nosub:
 	return(0);
 }
 
+static Sfio_t *runcomsub(Shell_t *shp, Shnode_t *t)
+{
+	Sfio_t	*iop;
+	int	fd,pv[2];
+	Shnode_t *tt = (Shnode_t*)stakalloc(sizeof(struct forknod));
+	memset(tt,0,sizeof(struct forknod));
+	tt->fork.forktre = t;
+	tt->fork.forktyp = TFORK|FPOU|FCOMSUB;
+	sh_pipe(pv);
+	shp->inpipe = 0;
+	shp->outpipe = pv;
+	sh_exec(tt, sh_isstate(SH_ERREXIT));
+	fd = pv[0];
+	sh_close(pv[1]);
+	iop = sfnew(NULL,NULL,SF_UNBOUND,fd,SF_READ);
+	return(iop);
+}
+
 /*
  * This routine handles command substitution
  * <type> is 0 for older `...` version
@@ -1996,7 +2022,11 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 			type = 3;
 		}
 		else
-			sp = sh_subshell(t,sh_isstate(SH_ERREXIT),type);
+		{
+			if(!(sp = sh_subshell(t,sh_isstate(SH_ERREXIT),type)))
+				sp = runcomsub(mp->shp,t);
+			mp->shp->comsub = 0;
+		}
 		fcrestore(&save);
 	}
 	else
@@ -2022,7 +2052,7 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 	/* read command substitution output and put on stack or here-doc */
 	sfpool(sp, NIL(Sfio_t*), SF_WRITE);
 	sh_offstate(SH_INTERACTIVE);
-	while((str=(char*)sfreserve(sp,SF_UNBOUND,0)) && (c = sfvalue(sp))>0)
+	while((str=(char*)sfreserve(sp,SF_UNBOUND,0)) && (c=bufsize=sfvalue(sp))>0)
 	{
 #if SHOPT_CRNL
 		/* eliminate <cr> */
@@ -2448,7 +2478,7 @@ static void tilde_expand2(Shell_t *shp, register int offset)
 	if(np)
 		sh_fun(np, (Namval_t*)0, av);
 	else
-		sh_btilde(2, av, &sh);
+		sh_btilde(2, av, &shp->bltindata);
 	sfstdout = save;
 	stkset(shp->stk,ptr, offset);
 	sfseek(iop,(Sfoff_t)0,SEEK_SET);

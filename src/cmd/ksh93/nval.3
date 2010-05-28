@@ -193,9 +193,9 @@ name-value pair that contains
 the last dictionary searched on the previous \f5nv_open()\fP.
 .PP
 Name-value pairs can also be allocated without belonging to
-a dictionary.  They will typically be looked by a a \fIcreate\fP
+a dictionary.  They will typically be looked up by a \fIcreate\fP
 discipline associated with a parent node.  In this case the
-node size will by \f5NV_MINSZ\fP and \fIn\fP nodes can be allocated
+node size will be \f5NV_MINSZ\fP and \fIn\fP nodes can be allocated
 vial \f5calloc(5NV_MINSZ,\fIn\fP)\fP(3).
 The \f5nv_namptr\fP function can be used on the pointer returned by
 \f5calloc\fP along with the element number to return the
@@ -450,7 +450,7 @@ the current \fIflags\fP argument.
 The \f5createf()\fP discipline function
 must return the created name-value pair, otherwise the default action
 will be taken.
-If the name-value pair that is returned  is the same as the
+If the name-value pair that is returned is the same as the
 one given, then the the behavior will be the same as if
 an invalid name had been given to \f5nv_open()\fP.
 The \f5nv_create()\fP function may be called within

@@ -83,8 +83,6 @@ b_mktemp(int argc, char** argv, void* context)
 	{
 		switch (optget(argv, usage))
 		{
-		case 0:
-			break;
 		case 'd':
 			fdp = 0;
 			continue;
@@ -115,10 +113,10 @@ b_mktemp(int argc, char** argv, void* context)
 			continue;
 		case ':':
 			error(2, "%s", opt_info.arg);
-			continue;
+			break;
 		case '?':
 			error(ERROR_usage(2), "%s", opt_info.arg);
-			continue;
+			break;
 		}
 		break;
 	}

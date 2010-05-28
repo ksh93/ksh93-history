@@ -697,7 +697,7 @@ value is not unset and the new values are appended to the
 current ones provided that the types are compatible.
 .PP
 The right hand side of a variable assignment undergoes all the expansion
-list below except word splitting, brace expansion, and file name generation.
+listed below except word splitting, brace expansion, and file name generation.
 When the left hand side is an assignment is a compound variable and
 the right hand is the name of a compound variable, the compound variable
 on the right will be copied or appended to the compound variable on the left.
@@ -7787,7 +7787,8 @@ Default personal initialization file, executed for interactive shells when
 is not set.
 .TP
 .B /etc/suid_profile
-Alternative initialization file, executed when instead of personal initialization file when the real and effective user or group id do not match.
+Alternative initialization file, executed instead of the personal initialization
+file when the real and effective user or group id do not match.
 .TP
 .B /dev/null
 NULL device
@@ -7874,4 +7875,3 @@ won't be executed until the foreground job terminates.
 It is a good idea to leave a space after the comma operator in
 arithmetic expressions to prevent the comma from being interpreted
 as the decimal point character in certain locales.
-

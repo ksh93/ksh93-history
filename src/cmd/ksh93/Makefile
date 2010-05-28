@@ -201,7 +201,7 @@ end
 	attributes.sh basic.sh bracket.sh builtins.sh case.sh \
 	comvar.sh coprocess.sh cubetype.sh enum.sh exit.sh \
 	expand.sh functions.sh glob.sh grep.sh heredoc.sh io.sh \
-	leaks.sh locale.sh nameref.sh options.sh path.sh \
+	leaks.sh locale.sh math.sh nameref.sh options.sh path.sh \
 	pointtype.sh quoting.sh quoting2.sh recttype.sh \
 	restricted.sh return.sh select.sh shtests sigchld.sh \
 	signal.sh statics.sh subshell.sh substring.sh tilde.sh \

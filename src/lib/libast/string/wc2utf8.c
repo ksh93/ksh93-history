@@ -19,32 +19,55 @@
 *                   Phong Vo <kpv@research.att.com>                    *
 *                                                                      *
 ***********************************************************************/
-#pragma prototyped
-
-#include "lclib.h"
-
 /*
- * low level for ERROR_translate()
- * this fills in NiL arg defaults and calls error_info.translate
+ * Glenn Fowler
+ * AT&T Research
+ *
+ * convert wide character to utf8 in s
+ * s must have room for at least 6 bytes
+ * number of chars in placed in s returned
+ * thanks Tom Duff
  */
 
-char*
-errorx(const char* loc, const char* cmd, const char* cat, const char* msg)
-{
-	char*	s;
+#include <ast.h>
 
-	if (!error_info.translate)
-		error_info.translate = translate; /* 2007-03-19 OLD_Error_info_t workaround */
-	if (ERROR_translating())
-	{
-		if (!loc)
-			loc = (const char*)locales[AST_LC_MESSAGES]->code;
-		if (!cmd)
-			cmd = (const char*)error_info.id;
-		if (!cat)
-			cat = (const char*)error_info.catalog;
-		if (s = (*error_info.translate)(loc, cmd, cat, msg))
-			return s;
-	}
-	return (char*)msg;
+typedef struct Utf8_s
+{
+	uint32_t	range;
+	unsigned short	prefix;
+	unsigned short	shift;
+} Utf8_t;
+
+static const Utf8_t	ops[] =
+{
+	{ 0x00000080, 0x00,  0 },
+	{ 0x00000800, 0xc0,  6 },
+	{ 0x00010000, 0xe0, 12 },
+	{ 0x00200000, 0xf0, 18 },
+	{ 0x04000000, 0xf8, 24 },
+	{ 0x80000000, 0xfc, 30 }
+};
+
+int
+wc2utf8(register char* s, register uint32_t w)
+{
+	register int	i;
+	char*		b;
+
+	for (i = 0; i < elementsof(ops); i++)
+		if (w < ops[i].range)
+		{
+			b = s;
+			*s++ = ops[i].prefix | (w >> ops[i].shift);
+			switch (ops[i].shift)
+			{
+			case 30:	*s++ = 0x80 | ((w >> 24) & 0x3f);
+			case 24:	*s++ = 0x80 | ((w >> 18) & 0x3f);
+			case 18:	*s++ = 0x80 | ((w >> 12) & 0x3f);
+			case 12:	*s++ = 0x80 | ((w >>  6) & 0x3f);
+			case  6:	*s++ = 0x80 | (w & 0x3f);
+			}
+			return s - b;
+		}
+	return 0;
 }

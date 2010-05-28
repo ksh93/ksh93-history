@@ -391,6 +391,7 @@ const char e_lexslash[]		= "line %d: $ not preceded by \\";
 const char e_lexsyntax1[]	= "syntax error at line %d: `%s' %s";
 const char e_lexsyntax2[]	= "syntax error: `%s' %s";
 const char e_lexsyntax3[]	= "syntax error at line %d: duplicate label %s";
+const char e_lexwarnvar[]	= "line %d: variable expansion requires unnecessary string to number conversion";
 const char e_lexlabignore[]	= "line %d: label %s ignored";
 const char e_lexlabunknown[]	= "line %d: %s unknown label";
 const char e_lexobsolete1[]	= "line %d: `...` obsolete, use $(...)";

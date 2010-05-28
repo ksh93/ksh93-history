@@ -38,6 +38,7 @@
 #define FPCL		(0100<<COMBITS)		/* close the pipe */
 #define FCOOP		(0200<<COMBITS)		/* cooperating process */
 #define FSHOWME		(0400<<COMBITS)		/* set for showme commands  */
+#define FCOMSUB		(01000<<COMBITS)	/* for command substitution */
 #define FPOSIX		(02<<COMBITS)		/* posix semantics function */
 #define FLINENO		(04<<COMBITS)		/* for/case has line number */
 #define FOPTGET		(010<<COMBITS)		/* function calls getopts */

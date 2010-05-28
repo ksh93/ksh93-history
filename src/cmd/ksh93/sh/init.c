@@ -1143,6 +1143,7 @@ Shell_t *sh_init(register int argc,register char *argv[], Shinit_f userinit)
 		nv_putval(ENVNOD,sfstruse(shp->strbuf),NV_RDONLY);
 	}
 	*SHLVL->nvalue.ip +=1;
+	nv_offattr(SHLVL,NV_IMPORT);
 #if SHOPT_SPAWN
 	{
 		/*
@@ -1407,6 +1408,7 @@ int sh_reinit(char *argv[])
 		nv_onattr(SHLVL,NV_INTEGER|NV_EXPORT|NV_NOFREE);
 	}
 	*SHLVL->nvalue.ip +=1;
+	nv_offattr(SHLVL,NV_IMPORT);
 	shp->st.filename = strdup(shp->lastarg);
 	return(1);
 }

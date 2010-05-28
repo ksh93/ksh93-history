@@ -53,7 +53,7 @@ recstr(register const char* s, char** e)
 	{
 	case 'd':
 	case 'D':
-		if (!*s)
+		if (!*++s)
 			n = '\n';
 		else
 		{

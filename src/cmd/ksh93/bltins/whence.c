@@ -234,7 +234,10 @@ static int whence(Shell_t *shp,char **argv, register int flags)
 				}
 			}
 			if(flags&Q_FLAG)
+			{
+				pp = 0;
 				r |= !cp;
+			}
 			else if(cp)
 			{
 				if(flags&V_FLAG)

@@ -401,6 +401,8 @@ static Namfun_t *clone_type(Namval_t* np, Namval_t *mp, int flags, Namfun_t *fp)
 			nrp++;
 			nq = nq->nvalue.nrp->np;
 		}
+		if(flags==(NV_NOFREE|NV_ARRAY))
+			continue;
 		if(nq->nvalue.cp || !nv_isvtree(nq) || nv_isattr(nq,NV_RDONLY))
 		{
 			/* see if default value has been overwritten */
@@ -1123,7 +1125,7 @@ else sfprintf(sfstderr,"tp==NULL\n");
 				if(nv_isattr(nq,NV_INTEGER))
 					nv_putval(nq, "0",0);
 				else
-					((Namarr_t*)nq->nvfun)->nelem--;
+					_nv_unset(nq, NV_RDONLY);
 			}
 			nv_disc(nq, &pp->childfun.fun, NV_LAST);
 			if(nq->nvfun)
@@ -1286,7 +1288,8 @@ int nv_settype(Namval_t* np, Namval_t *tp, int flags)
 	int		rdonly = nv_isattr(np,NV_RDONLY);
 	char		*val=0;
 	Namarr_t	*ap=0;
-	int		nelem=0;
+	Shell_t		*shp = sh_getinterp();
+	int		nelem=0,subshell=shp->subshell;
 #if SHOPT_TYPEDEF
 	Namval_t	*tq;
 	if(nv_type(np)==tp)
@@ -1312,6 +1315,11 @@ int nv_settype(Namval_t* np, Namval_t *tp, int flags)
 		flags &= ~NV_APPEND;
 		if(!ap)
 		{
+			if(subshell)
+			{
+				sh_assignok(np,1);
+				shp->subshell = 0;
+			}
 			nv_putsub(np,"0",ARRAY_FILL);
 			ap = nv_arrayptr(np);
 			nelem = 1;
@@ -1338,7 +1346,7 @@ int nv_settype(Namval_t* np, Namval_t *tp, int flags)
 		nv_disc(np,&ap->hdr,NV_POP);
 		np->nvalue.up = 0;
 		nv_clone(tp,np,flags|NV_NOFREE);
-		if(np->nvalue.cp && !nv_isattr(np,NV_NOFREE))
+		if(np->nvalue.cp && np->nvalue.cp!=Empty && !nv_isattr(np,NV_NOFREE))
 			free((void*)np->nvalue.cp);
 		np->nvalue.up = 0;
 		nofree = ap->hdr.nofree;
@@ -1353,6 +1361,7 @@ int nv_settype(Namval_t* np, Namval_t *tp, int flags)
 			nv_putsub(np,"0",0);
 			_nv_unset(np,NV_RDONLY);
 			ap->nelem--;
+			shp->subshell = subshell;
 		}
 	}
 	type_init(np);

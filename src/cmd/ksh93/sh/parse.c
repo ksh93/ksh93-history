@@ -286,7 +286,7 @@ static Shnode_t *getanode(Lex_t *lp, struct argnod *ap)
 	else
 	{
 		if(sh_isoption(SH_NOEXEC) && (ap->argflag&ARG_MAC) && paramsub(ap->argval))
-			errormsg(SH_DICT,ERROR_warn(0),"%d: parameter substitution requires unnecessary string to number conversion",lp->sh->inlineno-(lp->token=='\n'));
+			errormsg(SH_DICT,ERROR_warn(0),e_lexwarnvar,lp->sh->inlineno);
 		t->ar.arcomp = 0;
 	}
 	return(t);
@@ -881,7 +881,7 @@ static struct argnod *assign(Lex_t *lexp, register struct argnod *ap, int tdef)
 	register Shnode_t *t, **tp;
 	register struct comnod *ac;
 	Stk_t	*stkp = lexp->sh->stk;
-	int array=0;
+	int array=0, index=0;
 	Namval_t *np;
 	n = strlen(ap->argval)-1;
 	if(ap->argval[n]!='=')
@@ -910,35 +910,43 @@ static struct argnod *assign(Lex_t *lexp, register struct argnod *ap, int tdef)
 	array=0;
 	if((n=skipnl(lexp,0))==RPAREN || n==LPAREN)
 	{
-		int index= 0;
-		struct argnod **settail;
+		struct argnod *ar,*aq,**settail;
 		ac = (struct comnod*)getnode(comnod);
-		settail= &ac->comset;
 		memset((void*)ac,0,sizeof(*ac));
+	comarray:
+		settail= &ac->comset;
 		ac->comline = sh_getlineno(lexp);
 		while(n==LPAREN)
 		{
-			struct argnod *ap;
-			ap = (struct argnod*)stkseek(stkp,ARGVAL);
-			ap->argflag= ARG_ASSIGN;
+			ar = (struct argnod*)stkseek(stkp,ARGVAL);
+			ar->argflag= ARG_ASSIGN;
 			sfprintf(stkp,"[%d]=",index++);
-			ap = (struct argnod*)stkfreeze(stkp,1);
-			ap->argnxt.ap = 0;
-			ap = assign(lexp,ap,0);
-			ap->argflag |= ARG_MESSAGE;
-			*settail = ap;
-			settail = &(ap->argnxt.ap);
+			if(aq=ac->comarg)
+			{
+				ac->comarg = aq->argnxt.ap;
+				sfprintf(stkp,"%s",aq->argval);
+				ar->argflag |= aq->argflag;
+			}
+			ar = (struct argnod*)stkfreeze(stkp,1);
+			ar->argnxt.ap = 0;
+			if(!aq)
+				ar = assign(lexp,ar,0);
+			ar->argflag |= ARG_MESSAGE;
+			*settail = ar;
+			settail = &(ar->argnxt.ap);
+			if(aq)
+				continue;
 			while((n = skipnl(lexp,0))==0)
 			{
-				ap = (struct argnod*)stkseek(stkp,ARGVAL);
-				ap->argflag= ARG_ASSIGN;
+				ar = (struct argnod*)stkseek(stkp,ARGVAL);
+				ar->argflag= ARG_ASSIGN;
 				sfprintf(stkp,"[%d]=",index++);
 				stakputs(lexp->arg->argval);
-				ap = (struct argnod*)stkfreeze(stkp,1);
-				ap->argnxt.ap = 0;
-				ap->argflag = lexp->arg->argflag;
-				*settail = ap;
-				settail = &(ap->argnxt.ap);
+				ar = (struct argnod*)stkfreeze(stkp,1);
+				ar->argnxt.ap = 0;
+				ar->argflag = lexp->arg->argflag;
+				*settail = ar;
+				settail = &(ar->argnxt.ap);
 			}
 		}
 	}
@@ -974,7 +982,11 @@ static struct argnod *assign(Lex_t *lexp, register struct argnod *ap, int tdef)
 		if((n=lexp->token)==RPAREN)
 			break;
 		if(n!=NL && n!=';')
+		{
+			if(array && n==LPAREN)
+				goto comarray;
 			sh_syntax(lexp);
+		}
 		lexp->assignok = SH_ASSIGN;
 		if((n=skipnl(lexp,0)) || array)
 		{
@@ -1413,7 +1425,7 @@ static Shnode_t *simple(Lex_t *lexp,int flag, struct ionod *io)
 			else if(argno==1 && !t->comset)
 			{
 				/* SVR2 style function */
-				if(sh_lex(lexp) == RPAREN)
+				if(!(flag&SH_ARRAY) && sh_lex(lexp) == RPAREN)
 				{
 					lexp->arg = argp;
 					return(funct(lexp));
@@ -1514,7 +1526,7 @@ static Shnode_t *simple(Lex_t *lexp,int flag, struct ionod *io)
 			errormsg(SH_DICT,ERROR_warn(0),e_lexobsolete5,lexp->sh->inlineno-(lexp->token=='\n'),argp->argval);
 	}
 	/* expand argument list if possible */
-	if(argno>0)
+	if(argno>0 && !(flag&SH_ARRAY))
 		t->comarg = qscan(t,argno);
 	else if(t->comarg)
 		t->comtyp |= COMSCAN;

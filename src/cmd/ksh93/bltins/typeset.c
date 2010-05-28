@@ -221,6 +221,8 @@ int    b_typeset(int argc,register char *argv[],void *extra)
 	troot = tdata.sh->var_tree;
 	while((n = optget(argv,optstring)))
 	{
+		if(tdata.aflag==0)
+			tdata.aflag = *opt_info.option;
 		switch(n)
 		{
 			case 'a':
@@ -339,8 +341,6 @@ int    b_typeset(int argc,register char *argv[],void *extra)
 				opt_info.disc = 0;
 				return(2);
 		}
-		if(tdata.aflag==0)
-			tdata.aflag = *opt_info.option;
 	}
 endargs:
 	argv += opt_info.index;
@@ -367,7 +367,10 @@ endargs:
 	if(isfloat)
 		flag |= NV_DOUBLE;
 	if(shortint)
+	{
+		flag &= ~NV_LONG;
 		flag |= NV_SHORT|NV_INTEGER;
+	}
 	if(sflag)
 	{
 		if(tdata.sh->mktype)
@@ -398,6 +401,8 @@ endargs:
 		tdata.aflag = '-';
 	if(!tdata.sh->mktype)
 		tdata.help = 0;
+	if(tdata.aflag=='+' && (flag&(NV_ARRAY|NV_IARRAY|NV_COMVAR)))
+		errormsg(SH_DICT,ERROR_exit(1),e_nounattr);
 	return(b_common(argv,flag,troot,&tdata));
 }
 
@@ -513,6 +518,8 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 				continue;
 			}
 			np = nv_open(name,troot,nvflags|NV_ARRAY);
+			if(nv_isnull(np) && nv_isattr(np,NV_NOFREE))
+				nv_offattr(np,NV_NOFREE);
 			if(tp->pflag)
 			{
 				nv_attribute(np,sfstdout,tp->prefix,1);
@@ -529,7 +536,7 @@ static int     b_common(char **argv,register int flag,Dt_t *troot,struct tdata *
 				if(!comvar && !iarray)
 					continue;
 			}
-			if(troot==shp->var_tree && ((tp->tp && !nv_isarray(np)) || !shp->st.real_fun && (nvflags&NV_STATIC)) && !strchr(name,'=') && !(shp->envlist  && nv_onlist(shp->envlist,name)))
+			if(shp->last_root==shp->var_tree && ((tp->tp && !nv_isarray(np)) || !shp->st.real_fun && (nvflags&NV_STATIC)) && !strchr(name,'=') && !(shp->envlist  && nv_onlist(shp->envlist,name)))
 				_nv_unset(np,0);
 			if(troot==shp->var_tree)
 			{
@@ -1031,6 +1038,8 @@ static int b_unall(int argc, char **argv, register Dt_t *troot, Shell_t* shp)
 			else if(isfun)
 				nv_delete(np,troot,NV_NOFREE);
 		}
+		else if(troot==shp->alias_tree)
+			r = 1;
 	}
 	sh_popcontext(&buff);
 	return(r);

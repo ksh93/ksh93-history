@@ -96,4 +96,6 @@ else	err_exit 'hash -r failed'
 fi
 ( alias :pr=print) 2> /dev/null || err_exit 'alias beginning with : fails'
 ( alias p:r=print) 2> /dev/null || err_exit 'alias with : in name fails'
+
+unalias no_such_alias &&  err_exit 'unalias should return non-zero for unknown alias'
 exit $((Errors))

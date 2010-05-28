@@ -73,11 +73,41 @@ static int onstdpath(const char *name)
 	return(0);
 }
 
+#if SHOPT_PFSH 
+int path_xattr(Shell_t *shp, const char *path, char *rpath)
+{
+	char  resolvedpath[PATH_MAX + 1];
+	if (shp->user && *shp->user)
+	{
+		execattr_t *pf;
+		if(!rpath)
+			rpath = resolvedpath;
+		if (!realpath(path, resolvedpath))
+			return -1;
+		if(pf=getexecuser(shp->user, KV_COMMAND, resolvedpath, GET_ONE))
+		{
+			if (!pf->attr || pf->attr->length == 0)
+			{
+				free_execattr(pf);
+				return(0);
+			}
+			free_execattr(pf);
+			return(1);
+		}
+		else
+		{
+			errno = ENOENT;
+			return(-1);
+		}
+	}
+}
+#endif /* SHOPT_PFSH */
+
 static pid_t path_pfexecve(const char *path, char *argv[],char *const envp[],int spawn)
 {
 #if SHOPT_PFSH 
-	pid_t	pid;
 	char  resolvedpath[PATH_MAX + 1];
+	pid_t	pid;
 	if(spawn)
 	{
 		while((pid = vfork()) < 0)
@@ -89,30 +119,11 @@ static pid_t path_pfexecve(const char *path, char *argv[],char *const envp[],int
 		return(execve(path, argv, envp));
 	/* Solaris implements realpath(3C) using the resolvepath(2) */
 	/* system call so we can save us to call access(2) first */
-	if (!realpath(path, resolvedpath))
-		return -1;
 
 	/* we can exec the command directly instead of via pfexec(1) if */
 	/* there is a matching entry without attributes in exec_attr(4) */
-	if (sh.user && *sh.user)
-	{
-		execattr_t *pf;
-		if(pf=getexecuser(sh.user, KV_COMMAND, resolvedpath, GET_ONE))
-		{
-			if (!pf->attr || pf->attr->length == 0)
-			{
-				int r = execve(path, argv, envp);
-				free_execattr(pf);
-				return r;
-			}
-			free_execattr(pf);
-		}
-		else
-		{
-			errno = ENOENT;
-			return -1;
-		}
-	}
+	if(!path_xattr(&sh,path,resolvedpath))
+		return(execve(path, argv, envp));
 	--argv;
 	argv[0] = argv[1];
 	argv[1] = resolvedpath;
@@ -707,10 +718,12 @@ int	path_search(register const char *name,Pathcomp_t **oldpp, int flag)
 		path_init(shp);
 	if(flag)
 	{
-		if((np=nv_search(name,shp->track_tree,0)) && !nv_isattr(np,NV_NOALIAS) && (pp=(Pathcomp_t*)np->nvalue.cp))
+		if(!(flag&1) && (np=nv_search(name,shp->track_tree,0)) && !nv_isattr(np,NV_NOALIAS) && (pp=(Pathcomp_t*)np->nvalue.cp))
 		{
 			stakseek(PATH_OFFSET);
 			path_nextcomp(pp,name,pp);
+			if(oldpp)
+				*oldpp = pp;
 			stakputc(0);
 			return(0);
 		}
@@ -1437,6 +1450,7 @@ static Pathcomp_t *path_addcomp(Pathcomp_t *first, Pathcomp_t *old,const char *n
 	}
 	for(pp=first, oldpp=0; pp; oldpp=pp, pp=pp->next);
 	pp = newof((Pathcomp_t*)0,Pathcomp_t,1,len+1);
+	pp->shp = sh_getinterp();
 	pp->refcount = 1;
 	memcpy((char*)(pp+1),name,len+1);
 	pp->name = (char*)(pp+1);

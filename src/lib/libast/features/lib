@@ -319,7 +319,7 @@ tst	lib_spawn_mode unistd.h stdlib.h note{ first spawn arg is mode and it works 
 	}
 }end
 
-tst	stream_peek note{ ioctl(I_PEEK) works }end execute{
+tst	stream_peek note{ ioctl(I_PEEK) works on pipe() }end execute{
 	#include <sys/types.h>
 	#include <unistd.h>
 	#include <stropts.h>
@@ -339,7 +339,7 @@ tst	stream_peek note{ ioctl(I_PEEK) works }end execute{
 	}
 }end
 
-tst	socket_peek note{ recv(MSG_PEEK) works }end execute{
+tst	socket_peek note{ recv(MSG_PEEK) works on socketpair() }end execute{
 	#include <unistd.h>
 	#include <sys/types.h>
 	#include <sys/socket.h>

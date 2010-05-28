@@ -2148,6 +2148,10 @@ grp(Cenv_t* env, int parno)
 				else
 					env->flags &= ~REG_COMMENT;
 				break;
+			case 'X':
+				if (typ >= 0)
+					break; /* PCRE_EXTRA */
+				/*FALLTHROUGH*/
 			case 'A':
 				env->flags &= ~(REG_AUGMENTED|REG_EXTENDED|REG_LITERAL|REG_SHELL|REG_LEFT|REG_RIGHT|REG_CLASS_ESCAPE);
 				env->flags |= REG_AUGMENTED|REG_EXTENDED;
@@ -2194,12 +2198,13 @@ grp(Cenv_t* env, int parno)
 				typ = SRE;
 				break;
 			case 'U': /* PCRE_UNGREEDY */
-				if (i)
-					env->flags |= REG_MINIMAL;
-				else
-					env->flags &= ~REG_MINIMAL;
-				break;
-			case 'X': /* PCRE_EXTRA */
+				if (typ >= 0)
+				{
+					if (i)
+						env->flags |= REG_MINIMAL;
+					else
+						env->flags &= ~REG_MINIMAL;
+				}
 				break;
 			default:
 				env->error = REG_BADRPT;

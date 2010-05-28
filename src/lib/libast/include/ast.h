@@ -167,6 +167,16 @@ typedef struct
 #define FMT_PARAM	0x10		/* disable FMT_SHELL ${$( quote	*/
 
 /*
+ * chrexp() flags
+ */
+
+#define FMT_EXP_CHAR	0x020		/* expand single byte chars	*/
+#define FMT_EXP_LINE	0x040		/* expand \n and \r		*/
+#define FMT_EXP_WIDE	0x080		/* expand \u \U \x wide chars	*/
+#define FMT_EXP_NOCR	0x100		/* skip \r			*/
+#define FMT_EXP_NONL	0x200		/* skip \n			*/
+
+/*
  * multibyte macros
  */
 
@@ -245,6 +255,7 @@ extern void		astwinsize(int, int*, int*);
 extern ssize_t		base64encode(const void*, size_t, void**, void*, size_t, void**);
 extern ssize_t		base64decode(const void*, size_t, void**, void*, size_t, void**);
 extern int		chresc(const char*, char**);
+extern int		chrexp(const char*, char**, int*, int);
 extern int		chrtoi(const char*);
 extern int		eaccess(const char*, int);
 extern char*		fmtbase(long, int, int);
@@ -302,6 +313,7 @@ extern int		stracmp(const char*, const char*);
 extern char*		strcopy(char*, const char*);
 extern unsigned long	strelapsed(const char*, char**, int);
 extern int		stresc(char*);
+extern int		strexp(char*, int);
 extern long		streval(const char*, char**, long(*)(const char*, char**));
 extern long		strexpr(const char*, char**, long(*)(const char*, char**, void*), void*);
 extern int		strgid(const char*);
@@ -337,6 +349,7 @@ extern intmax_t		strtonll(const char*, char**, char*, int);
 extern int		struid(const char*);
 extern int		struniq(char**, int);
 extern int		strvcmp(const char*, const char*);
+extern int		wc2utf8(char*, uint32_t);
 
 #undef			extern
 

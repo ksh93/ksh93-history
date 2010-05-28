@@ -25,10 +25,11 @@ Source Package Installation Instructions:
       use the package(1) command to do the actual download:
 		bin/package authorize "NAME" password "PASSWORD" \
 			setup source $URL PACKAGE ...
-      This downloads the closure of the latest source package(s); covered and
-      up-to-date packages are not downloaded again unless package force ...
-      is specified. Package content is verified using md5sum. If the package
-      root will contain only one architecture then you can install in bin and
+      (Refer to the AUTHORIZATION paragraph on the main download page for
+      NAME/PASSWORD details.)  This downloads the closure of the latest
+      source package(s); covered and up-to-date packages are not downloaded again unless
+      package force ... is specified. Package content is verified using md5sum.
+      If the package root will contain only one architecture then you can install in bin and
       lib instead of arch/HOSTTYPE/bin and arch/HOSTTYPE/lib by running this
       instead:
 		bin/package authorize "NAME" password "PASSWORD" \
@@ -92,6 +93,9 @@ All recorded changes follow.
 
 :::::::: INIT ::::::::
 
+10-04-22 package.sh: update "html binary|source" NAME/PASSWORD info
+10-04-15 iffe.sh: don't forget candidate headers for hdr|sys!
+10-04-11 WWW.mk: disable man page metarule -- now done by admin-man(1)
 10-02-14 package.sh: $CC verification needs $INSTALLROOT/bin in PATH
 10-02-11 package.sh: fix package admin make report error count
 10-02-02 package.sh: fix write binary bug that did scp on local fs

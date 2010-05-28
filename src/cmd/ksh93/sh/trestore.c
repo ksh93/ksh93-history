@@ -152,9 +152,9 @@ static Shnode_t *r_tree(Shell_t *shp)
 				fp->functnam = stkcopy(shp->stk,shp->st.filename);
 			t->funct.functtre = r_tree(shp); 
 			t->funct.functstak = slp;
+			t->funct.functargs = (struct comnod*)r_tree(shp);
 			slp->slptr =  stakinstall(savstak,0);
 			slp->slchild = shp->st.staklist;
-			t->funct.functargs = (struct comnod*)r_tree(shp);
 			break;
 		}
 		case TTST:

@@ -131,7 +131,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	sfdcdio.c sfdcdos.c sfdcfilter.c sfdcseekable.c \
 	sfdcslow.c sfdcsubstr.c sfdctee.c sfdcunion.c \
 	sfdcmore.c sfdcprefix.c \
-	wc.c \
+	wc.c wc2utf8.c \
 	/* standards */ \
 	basename.c closelog.c dirname.c fmtmsglib.c fnmatch.c ftw.c \
 	getdate.c getsubopt.c glob.c nftw.c openlog.c re_comp.c \

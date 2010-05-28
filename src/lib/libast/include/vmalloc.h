@@ -52,6 +52,7 @@ struct _vmstat_s
 	size_t	m_free;			/* largest free piece		*/
 	int	n_seg;			/* number of segments		*/
 	size_t	extent;			/* total size of region		*/
+	int	mode;			/* region mode bits		*/
 };
 
 struct _vmdisc_s

@@ -1,5 +1,5 @@
 .fp 5 CW
-.TH SHELL 3 "28 Feb 2003"
+.TH SHELL 3 "28 Feb 2003" AST
 .PP
 .SH NAME
 .PP
@@ -106,7 +106,7 @@ at run time using the \f5builtin\fP(1) command.
 In this case the shell will look for a function named \f5lib_init\fP
 in your library and, if found, will execute this function with
 two arguments.  The first
-argument will be an \f5int\P with value \f50\fP when the library is loaded.
+argument will be an \f5int\fP with value \f50\fP when the library is loaded.
 The second argument will contain a pointer to a structure of type
 \f5Shbltin_t\fP.
 In addition, for each argument named on the \f5builtin\fP
@@ -163,7 +163,7 @@ three arguments.  The first two arguments give the
 number of arguments and the argument list
 and uses the same conventions as the \f5main()\fP function
 of a program.  The third argument is a pointer to a structure
-of type \f5Shbltin_t\fP.  This structure contains \f5shp\P which is a pointer
+of type \f5Shbltin_t\fP.  This structure contains \f5shp\fP which is a pointer
 to the shell interpreter, and \f5ptr\fP which is a pointer that
 can be associated with each built-in.
 The \f5sh_addbuiltin()\fP function is used to add, replace or delete
@@ -419,4 +419,3 @@ tksh(1)
 .PP
 .SH AUTHOR
 David G. Korn (dgk@research.att.com).
-

@@ -1026,6 +1026,10 @@ Namval_t *nv_search(const char *name, Dt_t *root, int mode)
 			root = sh.var_base;
 		np = dtmatch(root,(void*)name);
 	}
+#if SHOPT_COSHELL
+	if(sh.inpool)
+		mode |= HASH_NOSCOPE;
+#endif /* SHOPT_COSHELL */
 	if(!np && (mode&NV_ADD))
 	{
 		if(sh.namespace && !(mode&HASH_NOSCOPE) && root==sh.var_tree)
@@ -1099,7 +1103,7 @@ Namval_t *nv_bfsearch(const char *name, Dt_t *root, Namval_t **var, char **last)
 		*last = cp;
 	c = *cp;
 	*cp = 0;
-	nq=nv_open(stakptr(offset),0,NV_VARNAME|NV_ARRAY|NV_NOASSIGN|NV_NOADD|NV_NOFAIL);
+	nq=nv_open(stakptr(offset),0,NV_VARNAME|NV_NOASSIGN|NV_NOADD|NV_NOFAIL);
 	*cp = c;
 	if(!nq)
 	{

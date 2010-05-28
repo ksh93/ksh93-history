@@ -1341,7 +1341,7 @@ int	job_wait(register pid_t pid)
 		sfprintf(sfstderr,"ksh: job line %4d: wait pid=%d critical=%d flags=%o\n",__LINE__,getpid(),job.in_critical,pw->p_flag);
 #endif /* DEBUG*/
 	errno = 0;
-	if(sh.coutpipe>=0 && lastpid && sh.cpid==lastpid)
+	if(sh.coutpipe>=0 && sh.cpid==lastpid)
 	{
 		sh_close(sh.coutpipe);
 		sh_close(sh.cpipe[1]);

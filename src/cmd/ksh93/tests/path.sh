@@ -303,4 +303,27 @@ got=$($SHELL -c "$scr; print \$?" 2>/dev/null)
 got=$($SHELL -c "command $scr; print \$?" 2>/dev/null)
 [[ "$got" == "$exp" ]] || err_exit "\$SHELL -c of command of unreadable non-empty script should fail -- expected $exp, got" $got
 
+# whence -a bug fix
+cd "$tmp"
+ifs=$IFS
+IFS=$'\n'
+PATH=$PATH:
+> ls
+chmod +x ls
+ok=
+for i in $(whence -a ls)
+do	if	[[ $i == *"$PWD/ls" ]]
+	then	ok=1
+		break;
+	fi
+done
+[[ $ok ]] || err_exit 'whence -a not finding all executables'
+rm -f ls
+PATH=${PATH%:}
+
+# whence -q bug fix
+$SHELL -c 'whence -q cat' & pid=$!
+sleep 3
+kill $! 2> /dev/null && err_exit 'whence -q appears to be hung'
+
 exit $((Errors))

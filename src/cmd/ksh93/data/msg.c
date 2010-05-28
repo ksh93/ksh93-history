@@ -101,6 +101,7 @@ const char e_badsubscript[]	= "%c: invalid subscript in assignment";
 const char e_noarray[]		= "%s: cannot be an array";
 const char e_badappend[]	= "%s: invalid append to associative array";
 const char e_noref[]		= "%s: no reference name";
+const char e_nounattr[]		= "cannot unset attribute C or A or a";
 const char e_selfref[]		= "%s: invalid self reference";
 const char e_globalref[]	= "%s: global reference cannot refer to local variable";
 const char e_noalias[]		= "%s: alias not found\n";

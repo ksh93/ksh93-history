@@ -362,4 +362,70 @@ nameref sp=addrsp
 sp[14]=( size=1 )
 [[ -v sp[19] ]]  && err_exit '[[ -v sp[19] ]] where sp is a nameref should not be set'
 
+function fun2
+{
+	nameref var=$1
+	var.foo=bar
+}
+
+function fun1
+{
+	compound -S container
+	fun2 container
+	[[ $container == *foo=bar* ]] || err_exit 'name references to static compound variables in parent scope not working'
+}
+fun1
+
+function fun2
+{
+	nameref var=$1
+	var.foo=bar
+}
+
+typeset -T container_t=(
+	typeset foo
+)
+
+function fun1
+{
+	container_t -S container
+	fun2 container 
+	[[ $container == *foo=bar* ]] || err_exit 'name references to static type variables in parent scope not working'
+}
+fun1
+
+function fun2
+{
+	nameref var=$1
+	nameref node=var.foo
+	node=bar
+}
+function fun3
+{
+       fun2 container #2> /dev/null
+}
+compound container
+fun3
+[[ $container == *foo=bar* ]] || err_exit 'name reference to a name reference variable in a function not working'
+
+typeset -A x=( [a]=1 ) 
+nameref c=x[h]
+[[ -v x[h] ]] && err_exit 'creating reference to non-existant associative array element causes element to get added'
+
+unset a
+function x
+{
+	nameref a=a
+	(( $# > 0 )) && typeset -A a
+	a[a b]=${1-99}  # this was cauing a syntax on the second call
+}
+x 7
+x 2> /dev/null
+[[ ${a[a b]} == 99 ]] || err_exit 'nameref not handling subscript correctly'
+
+nameref sizes=baz
+typeset -A -i sizes
+sizes[bar]=1
+[[ ${sizes[*]} == 1 ]] || err_exit 'adding -Ai attribute to name referenced variable not working'
+
 exit $((Errors))

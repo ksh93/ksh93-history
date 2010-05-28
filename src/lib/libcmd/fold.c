@@ -186,8 +186,6 @@ b_fold(int argc, char *argv[], void* context)
 	{
 		switch (optget(argv, usage))
 		{
-		case 0:
-			break;
 		case 'b':
 			cols['\r'] = cols['\b'] = 0;
 			cols['\t'] = cols[' '];

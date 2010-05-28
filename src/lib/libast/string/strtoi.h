@@ -75,9 +75,12 @@
  *	multiplier:	.		pseudo-float if m>1
  *			[bB]		block (512)
  *			[cC]		char (1)
- *			[gG]		giga (1024*1024*1024)
- *			[kK]		kilo (1024)
- *			[mM]		mega (1024*1024)
+ *			[gG]		giga (1000*1000*1000)
+ *			[gG]i		gibi (1024*1024*1024)
+ *			[kK]		kilo (1000)
+ *			[kK]i		kibi (1024)
+ *			[mM]		mega (1000*1000)
+ *			[mM]i		mibi (1024*1024)
  */
 
 #include <ast.h>
@@ -476,11 +479,13 @@ S2I_function(a, e, base) const char* a; char** e; int base;
 			s--;
 		else
 		{
+			x = 1;
 			switch (c)
 			{
 			case 'b':
 			case 'B':
 				shift = 9;
+				x = 0;
 				break;
 			case 'k':
 			case 'K':
@@ -533,13 +538,34 @@ S2I_function(a, e, base) const char* a; char** e; int base;
 				if (S2I_valid(s))
 					switch (*s)
 					{
-					case 'b':
-					case 'B':
 					case 'i':
 					case 'I':
 						s++;
+						x = 0;
 						break;
 					}
+				if (S2I_valid(s))
+					switch (*s)
+					{
+					case 'b':
+					case 'B':
+						s++;
+						break;
+					}
+				if (x)
+				{
+					v = 1;
+					for (shift /= 10; shift; shift--)
+					{
+						if (v >= (S2I_max/1000))
+						{
+							v = 0;
+							overflow = 1;
+						}
+						v *= 1000;
+					}
+				}
+				else
 #if S2I_unsigned
 				if (shift >= (sizeof(S2I_type) * CHAR_BIT))
 #else

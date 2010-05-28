@@ -42,6 +42,11 @@ function test_reset
 }
 
 n=1000
+
+# one round to get to steady state -- sensitive to -x
+test_reset $n
+a=0$(vmstate --format='+%(size)u')
+
 test_reset $n
 a=0$(vmstate --format='+%(size)u')
 test_reset $n

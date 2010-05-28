@@ -254,53 +254,57 @@ b_uniq(int argc, char** argv, void* context)
 	Compare_f compare = (Compare_f)memcmp;
 
 	cmdinit(argc, argv, context, ERROR_CATALOG, 0);
-	while (n = optget(argv, usage)) switch (n)
+	for (;;)
 	{
-	    case 'c':
-		mode |= C_FLAG;
-		break;
-	    case 'd':
-		mode |= D_FLAG;
-		break;
-	    case 'D':
-		mode |= D_FLAG;
-		switch ((int)opt_info.num)
+		switch (optget(argv, usage))
 		{
-		case 'p':
-			sep = 1;
-			break;
+		case 'c':
+			mode |= C_FLAG;
+			continue;
+		case 'd':
+			mode |= D_FLAG;
+			continue;
+		case 'D':
+			mode |= D_FLAG;
+			switch ((int)opt_info.num)
+			{
+			case 'p':
+				sep = 1;
+				break;
+			case 's':
+				sep = 0;
+				break;
+			default:
+				sep = -1;
+				break;
+			}
+			all = &sep;
+			continue;
+		case 'i':
+			compare = (Compare_f)strncasecmp;
+			continue;
+		case 'u':
+			mode |= U_FLAG;
+			continue;
+		case 'f':
+			if(*opt_info.option=='-')
+				fields = opt_info.num;
+			else
+				chars = opt_info.num;
+			continue;
 		case 's':
-			sep = 0;
+			chars = opt_info.num;
+			continue;
+		case 'w':
+			width = opt_info.num;
+			continue;
+		case ':':
+			error(2, "%s", opt_info.arg);
 			break;
-		default:
-			sep = -1;
+		case '?':
+			error(ERROR_usage(2), "%s", opt_info.arg);
 			break;
 		}
-		all = &sep;
-		break;
-	    case 'i':
-		compare = (Compare_f)strncasecmp;
-		break;
-	    case 'u':
-		mode |= U_FLAG;
-		break;
-	    case 'f':
-		if(*opt_info.option=='-')
-			fields = opt_info.num;
-		else
-			chars = opt_info.num;
-		break;
-	    case 's':
-		chars = opt_info.num;
-		break;
-	    case 'w':
-		width = opt_info.num;
-		break;
-	    case ':':
-		error(2, "%s", opt_info.arg);
-		break;
-	    case '?':
-		error(ERROR_usage(2), "%s", opt_info.arg);
 		break;
 	}
 	argv += opt_info.index;

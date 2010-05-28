@@ -136,4 +136,14 @@ elif	(( $3 != 9 ))
 then	err_exit "child status mismatch -- expected '9', got '$3'"
 fi
 
+trap '' CHLD
+integer d
+for ((d=0; d < 2000; d++))
+do      if      print foo | grep bar
+        then    break 
+        fi
+done
+(( d==2000 )) ||  err_exit "trap '' CHLD  causes side effects d=$d"
+trap - CHLD
+
 exit $((Errors))

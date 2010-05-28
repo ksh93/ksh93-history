@@ -382,10 +382,10 @@ b_rm(int argc, register char** argv, void* context)
 			continue;
 		case '?':
 			error(ERROR_USAGE|4, "%s", opt_info.arg);
-			continue;
+			break;
 		case ':':
 			error(2, "%s", opt_info.arg);
-			continue;
+			break;
 		}
 		break;
 	}

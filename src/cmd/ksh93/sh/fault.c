@@ -614,7 +614,7 @@ void sh_done(void *ptr, register int sig)
 	sh_accend();
 #endif	/* SHOPT_ACCT */
 #if SHOPT_VSH || SHOPT_ESH
-	if(sh_isoption(SH_EMACS)||sh_isoption(SH_VI)||sh_isoption(SH_GMACS))
+	if(mbwide()||sh_isoption(SH_EMACS)||sh_isoption(SH_VI)||sh_isoption(SH_GMACS))
 		tty_cooked(-1);
 #endif
 #ifdef JOBS

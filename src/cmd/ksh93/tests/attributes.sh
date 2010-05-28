@@ -360,4 +360,15 @@ unset v
 typeset -H v=/dev/null
 [[ $v == *nul* ]] || err_exit 'typeset -H for /dev/null not working'
 
+unset x
+(typeset +C x) 2> /dev/null && err_exit 'typeset +C should be an error' 
+(typeset +A x) 2> /dev/null && err_exit 'typeset +A should be an error' 
+(typeset +a x) 2> /dev/null && err_exit 'typeset +a should be an error' 
+
+unset x
+{
+x=$($SHELL -c 'integer -s x=5;print -r -- $x')
+} 2> /dev/null
+[[ $x == 5 ]] || err_exit 'integer -s not working'
+
 exit	$((Errors))

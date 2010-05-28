@@ -223,6 +223,7 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 	int			jmpval=0;
 	ssize_t			size = 0;
 	int			binary;
+	int			oflags=NV_NOASSIGN|NV_VARNAME;
 	struct	checkpt		buff;
 	if(!(iop=shp->sftable[fd]) && !(iop=sh_iostream(shp,fd)))
 		return(1);
@@ -232,7 +233,9 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 		Namval_t *mp;
 		if(val= strchr(name,'?'))
 			*val = 0;
-		np = nv_open(name,shp->var_tree,NV_NOASSIGN|NV_VARNAME);
+		if(flags&C_FLAG)
+			oflags |= NV_ARRAY;
+		np = nv_open(name,shp->var_tree,oflags);
 		if(np && nv_isarray(np) && (mp=nv_opensub(np)))
 			np = mp;
 		if((flags&V_FLAG) && shp->ed_context)
@@ -246,9 +249,12 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 		}
 		else if(flags&C_FLAG)
 		{
+			char *sp =  np->nvenv;
 			delim = -1;
 			nv_unset(np);
 			nv_setvtree(np);
+			if(!nv_isattr(np,NV_MINIMAL))
+				np->nvenv = sp;
 		}
 		else
 			name = *++names;
@@ -282,7 +288,8 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 			shp->ifstable['\\'] = 0;
 		else if(!(flags&R_FLAG) && shp->ifstable['\\']==0)
 			shp->ifstable['\\'] = S_ESC;
-		shp->ifstable[delim] = S_NL;
+		if(delim>0)
+			shp->ifstable[delim] = S_NL;
 		if(delim!='\n')
 		{
 			shp->ifstable['\n'] = 0;

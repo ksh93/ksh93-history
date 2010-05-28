@@ -656,4 +656,8 @@ eval $v=C
 cmd='set --nounset; unset foo; : ${!foo*}'
 $SHELL -c "$cmd" 2>/dev/null || err_exit "'$cmd' exit status $?, expected 0"
 
+SHLVL=1
+level=$($SHELL -c $'$SHELL -c \'print -r "$SHLVL"\'')
+[[ $level  == 3 ]]  || err_exit "SHLVL should be 3 not $level"
+
 exit $((Errors))

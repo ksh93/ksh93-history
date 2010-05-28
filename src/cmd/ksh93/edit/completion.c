@@ -40,11 +40,12 @@ static char *fmtx(const char *string)
 	register const char	*cp = string;
 	register int	 	n,c;
 	unsigned char 		*state = (unsigned char*)sh_lexstates[2]; 
-	int offset;
+	int offset = staktell();
+	if(*cp=='#')
+		stakputc('\\');
 	while((c=mbchar(cp)),(c>UCHAR_MAX)||(n=state[c])==0);
-	if(n==S_EOF)
+	if(n==S_EOF && *string!='#')
 		return((char*)string);
-	offset = staktell();
 	stakwrite(string,--cp-string);
 	while(c=mbchar(cp))
 	{

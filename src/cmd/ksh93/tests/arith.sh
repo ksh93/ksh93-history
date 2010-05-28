@@ -559,4 +559,27 @@ do ((a[RANDOM%2]++))
 done
 (( (a[0]+a[1])==1000)) || err_exit '(a[0]+a[1])!=1000'
 
+(( 4.**3/10 == 6.4 )) || err_exit '4.**3/10!=6.4'
+(( (.5+3)/7 == .5 )) || err_exit '(.5+3)/7!==.5'
+
+unset z
+integer -a z=( [1]=90 )
+function x
+{
+	nameref nz=$1
+	float x y
+	float x=$((log10(nz))) y=$((log10($nz)))
+	(( abs(x-y) < 1e-10 )) || err_exit '$nz and nz differs in arithmetic expression when nz is reference to array instance'
+} 
+x z[1]
+
+unset x
+float x
+x=$( ($SHELL -c 'print -- $(( asinh(acosh(atanh(sin(cos(tan(atan(acos(asin(tanh(cosh(sinh(asinh(acosh(atanh(sin(cos(tan(atan(acos(asin(tanh(cosh(sinh(.5)))))))))))))))))))))))) )) ';:) 2> /dev/null)
+(( abs(x-.5) < 1.e-10 )) || err_exit 'bug in composit function evaluation'
+
+unset x
+typeset -X x=16
+{ (( $x == 16 )) ;} 2> /dev/null || err_exit 'expansions of hexfloat not working in arithmetic expansions'
+
 exit $((Errors))

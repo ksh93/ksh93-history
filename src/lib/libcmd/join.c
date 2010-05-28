@@ -840,8 +840,6 @@ b_join(int argc, char** argv, void* context)
 	{
 		switch (n = optget(argv, usage))
 		{
-		case 0:
-			break;
  		case 'j':
 			/*
 			 * check for obsolete "-j1 field" and "-j2 field"

@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.5 2010-03-09
+info mam static 00000 1994-07-17 make (AT&T Research) 5.5 2010-04-15
 setv INSTALLROOT ../../..
 setv PACKAGE_ast_INCLUDE ${INSTALLROOT}/include/ast
 setv PACKAGE_ast_LIB ${INSTALLROOT}/lib
@@ -1191,7 +1191,7 @@ prev include/defs.h implicit
 done sh/xec.c
 meta xec.o %.c>%.o sh/xec.c xec
 prev sh/xec.c
-exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_FILESCAN -DSHOPT_BGX -DSHOPT_TYPEDEF -DSHOPT_NAMESPACE -DSHOPT_OPTIMIZE -D_PACKAGE_ast -D_BLD_shell -DSHOPT_DYNAMIC -DSHOPT_MULTIBYTE -DSHOPT_PFSH -DKSHELL -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_STATS -DSHOPT_HISTEXPAND -DERROR_CONTEXT_T=Error_context_t -DSHOPT_ESH -c sh/xec.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -Iinclude -I${PACKAGE_ast_INCLUDE} -DSHOPT_FILESCAN -DSHOPT_BGX -DSHOPT_TYPEDEF -DSHOPT_NAMESPACE -DSHOPT_PFSH -DSHOPT_OPTIMIZE -D_PACKAGE_ast -D_BLD_shell -DSHOPT_DYNAMIC -DSHOPT_MULTIBYTE -DKSHELL -DSHOPT_SUID_EXEC -DSHOPT_BRACEPAT -DSHOPT_STATS -DSHOPT_HISTEXPAND -DERROR_CONTEXT_T=Error_context_t -DSHOPT_ESH -c sh/xec.c
 done xec.o generated
 make env.o
 make sh/env.c

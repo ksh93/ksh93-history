@@ -120,4 +120,18 @@ unset a b c d
 [[ ${b-set} ]] || err_exit "b is set after unset"
 [[ ${c-set} ]] || err_exit "c is set after unset"
 [[ ${d-set} ]] || err_exit "c is set after unset"
+
+$SHELL 2> /dev/null <<\+++ ||  err_exit 'input of 3 dimensional array not working'
+typeset x=(
+	( (g G) (h H) (i I) )
+	( (d D) (e E) (f F) )
+	( (a A) (b B) (c C) )
+)
+[[ ${x[0][0][0]} == g ]] || err_exit '${x[0][0][0]} == G'
+[[ ${x[1][1][0]} == e ]] || err_exit '${x[1][1][0]} == e'
+[[ ${x[1][1][1]} == E ]] || err_exit '${x[2][2][1]} == C'
+[[ ${x[0][2][1]} == I ]] || err_exit '${x[0][2][1]} == I'
++++
+
+
 exit $((Errors))

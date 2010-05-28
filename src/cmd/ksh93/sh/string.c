@@ -677,8 +677,8 @@ char *sh_checkid(char *str, char *last)
 	register unsigned char *cp = (unsigned char*)str;
 	register unsigned char *v = cp;
 	register int c;
-	if(c= *cp++,isaletter(c))
-		while(c= *cp++,isaname(c));
+	if(c=mbchar(cp),isaletter(c))
+		while(c=mbchar(cp),isaname(c));
 	if(c==']' && (!last || ((char*)cp==last)))
 	{
 		/* eliminate [ and ] */

@@ -28,7 +28,7 @@
  */
 
 static const char usage[] =
-"+[-?\n@(#)$Id: tail (AT&T Research) 2010-03-23 $\n]"
+"+[-?\n@(#)$Id: tail (AT&T Research) 2010-05-09 $\n]"
 USAGE_LICENSE
 "[+NAME?tail - output trailing portion of one or more files ]"
 "[+DESCRIPTION?\btail\b copies one or more input files to standard output "
@@ -267,8 +267,6 @@ init(Tail_t* tp, Sfoff_t number, int delim, int flags, const char** format)
 		if (tp->sp == sfstdin)
 			tp->sp = 0;
 	}
-	else if (!number)
-		offset = 0;
 	else
 		offset = 1;
 	if (!tp->name || streq(tp->name, "-"))

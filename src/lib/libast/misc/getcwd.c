@@ -35,6 +35,48 @@ NoN(getcwd)
 
 #else
 
+#include "FEATURE/syscall"
+
+#if defined(SYSGETCWD)
+
+#include <error.h>
+
+#define ERROR(e)	{ errno = e; return 0; }
+
+char*
+getcwd(char* buf, size_t len)
+{
+	size_t		n;
+	size_t		r;
+	int		oerrno;
+
+	if (buf)
+		return SYSGETCWD(buf, len) < 0 ? 0 : buf;
+	oerrno = errno;
+	n = PATH_MAX;
+	for (;;)
+	{
+		if (!(buf = newof(buf, char, n, 0)))
+			ERROR(ENOMEM);
+		if (SYSGETCWD(buf, n) >= 0)
+		{
+			if ((r = strlen(buf) + len + 1) != n && !(buf = newof(buf, char, r, 0)))
+				ERROR(ENOMEM);
+			break;
+		}
+		if (errno != ERANGE)
+		{
+			free(buf);
+			return 0;
+		}
+		n += PATH_MAX / 4;
+	}
+	errno = oerrno;
+	return buf;
+}
+
+#else
+
 #include <ast_dir.h>
 #include <error.h>
 #include <fs3d.h>
@@ -286,5 +328,7 @@ getcwd(char* buf, size_t len)
 	if (dirp) closedir(dirp);
 	return 0;
 }
+
+#endif
 
 #endif

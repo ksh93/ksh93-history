@@ -31,7 +31,7 @@
 #include <fcntl.h>
 
 static const char usage[] =
-"[-?\n@(#)$Id: cat (AT&T Research) 2009-03-31 $\n]"
+"[-?\n@(#)$Id: cat (AT&T Research) 2010-04-11 $\n]"
 USAGE_LICENSE
 "[+NAME?cat - concatenate files]"
 "[+DESCRIPTION?\bcat\b copies each \afile\a in sequence to the standard"
@@ -47,15 +47,15 @@ USAGE_LICENSE
 "[s?Equivalent to \b-S\b for \aatt\a universe and \b-B\b otherwise.]"
 "[t?Equivalent to \b-vT\b.]"
 "[u:unbuffer?The output is not delayed by buffering.]"
-"[v:show-nonprinting?Causes non-printing characters (whith the exception of"
-"	tabs, new-lines, and form-feeds) to be output as printable charater"
-"	sequences. ASCII control characters are printed as \b^\b\an\a,"
-"	where \an\a is the corresponding ASCII character in the range"
-"	octal 100-137. The DEL character (octal 0177) is copied"
-"	as \b^?\b. Other non-printable characters are copied as \bM-\b\ax\a"
-"	where \ax\a is the ASCII character specified by the low-order seven"
-"	bits.  Multibyte characters in the current locale are treated as"
-"	printable characters.]"
+"[v:show-nonprinting|print-chars?Print characters as follows: space and "
+    "printable characters as themselves; control characters as \b^\b "
+    "followed by a letter of the alphabet; and characters with the high bit "
+    "set as the lower 7 bit character prefixed by \bM^\b for 7 bit "
+    "non-printable characters and \bM-\b for all other characters. If the 7 "
+    "bit character encoding is not ASCII then the characters are converted "
+    "to ASCII to determine \ahigh bit set\a, and if set it is cleared and "
+    "converted back to the native encoding. Multibyte characters in the "
+    "current locale are treated as printable characters.]"
 "[A:show-all?Equivalent to \b-vET\b.]"
 "[B:squeeze-blank?Multiple adjacent new-line characters are replace by one"
 "	new-line.]"
@@ -138,11 +138,10 @@ vcat(register char* states, Sfio_t* ip, Sfio_t* op, Reserve_f reserve, int flags
 	int			any;
 	int			header;
 
-	unsigned char		meta[4];
+	unsigned char		meta[3];
 	unsigned char		tmp[32];
 
 	meta[0] = 'M';
-	meta[1] = '-';
 	last = -1;
 	*(cp = buf = end = tmp) = 0;
 	any = 0;
@@ -252,21 +251,21 @@ vcat(register char* states, Sfio_t* ip, Sfio_t* op, Reserve_f reserve, int flags
 		switch (n)
 		{
 		case T_ERROR:
-			if (cp != end)
+			if (cp < end)
 			{
 				n = T_CONTROL;
 				goto flush;
 			}
 			return -1;
 		case T_EOF:
-			if (cp != end)
+			if (cp < end)
 			{
 				n = T_CONTROL;
 				goto flush;
 			}
 			return 0;
 		case T_ENDBUF:
-			if (cp != end)
+			if (cp < end)
 			{
 				n = T_CONTROL;
 				goto flush;
@@ -274,13 +273,13 @@ vcat(register char* states, Sfio_t* ip, Sfio_t* op, Reserve_f reserve, int flags
 			c = last;
 			if (!(nxt = (unsigned char*)(*reserve)(ip, SF_UNBOUND, 0)))
 			{
-				*(cp = end = tmp) = 0;
-				states[0] = sfvalue(ip) ? T_ERROR : T_EOF;
+				*(cp = end = tmp + sizeof(tmp) - 1) = 0;
+				states[0] = (m = sfvalue(ip)) ? T_ERROR : T_EOF;
 				last = -1;
 			}
 			else if ((m = sfvalue(ip)) <= 0)
 			{
-				*(cp = end = tmp) = 0;
+				*(cp = end = tmp + sizeof(tmp) - 1) = 0;
 				states[0] = m ? T_ERROR : T_EOF;
 				last = -1;
 			}
@@ -318,15 +317,16 @@ vcat(register char* states, Sfio_t* ip, Sfio_t* op, Reserve_f reserve, int flags
 			} while (states[c = *++cp] == T_CONTROL);
 			break;
 		case T_CNTL8BIT:
-			meta[2] = '^';
+			meta[1] = '^';
 			do
 			{
 				n = c & ~0200;
-				meta[3] = printof(n);
-				sfwrite(op, (char*)meta, 4);
+				meta[2] = printof(n);
+				sfwrite(op, (char*)meta, 3);
 			} while (states[c = *++cp] == T_CNTL8BIT && raw);
 			break;
 		case T_EIGHTBIT:
+			meta[1] = '-';
 			do
 			{
 				meta[2] = c & ~0200;
@@ -346,7 +346,7 @@ vcat(register char* states, Sfio_t* ip, Sfio_t* op, Reserve_f reserve, int flags
 			{
 				if ((n = states[*++cp]) == T_ENDBUF)
 				{
-					if (cp != end || last != '\n')
+					if (cp < end || last != '\n')
 						break;
 					if (!(nxt = (unsigned char*)(*reserve)(ip, SF_UNBOUND, 0)))
 					{

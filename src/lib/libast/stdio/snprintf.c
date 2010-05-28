@@ -30,7 +30,7 @@ snprintf(char* s, int n, const char* fmt, ...)
 	int	v;
 
 	va_start(args, fmt);
-	v = s ? sfvsprintf(s, n, fmt, args) : -1;
+	v = sfvsprintf(s, n, fmt, args);
 	va_end(args);
 	return v;
 }

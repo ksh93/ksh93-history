@@ -172,6 +172,8 @@ struct limits
 	char		winch; \
 	char		indebug; 	/* set when in debug trap */ \
 	unsigned char	lastsig;	/* last signal received */ \
+	char		subnest;	/* set when $() contains () */ \
+	char		comsub;		/* set when in $()comsub */ \
 	char		subshare;	/* set when in ${..} comsub */ \
 	char		toomany;	/* set when out of fd's */ \
 	char		instance;	/* in set_instance */ \

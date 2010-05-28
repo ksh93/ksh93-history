@@ -252,4 +252,45 @@ abc
 EOF)
 [[ $got == abc ]] || err_exit 'line continuation at start of buffer not working'
 
+tmpfile1=$tmp/file1
+tmpfile2=$tmp/file2
+function gendata
+{
+	typeset -RZ3 i
+	for ((i=0; i < 500; i++))
+	do	print -r -- "=====================This is line $i============="
+	done
+}
+
+cat > $tmpfile1 <<- +++
+	function foobar
+	{
+		cat << XXX
+		$(gendata)
+		XXX
+	}
+	cat > $tmpfile2 <<- EOF
+	\$(foobar)
+	$(gendata)
+EOF
++++
+chmod +x $tmpfile1
+$SHELL $tmpfile1
+set -- $(wc < $tmpfile2)
+(( $1 == 1000 )) || err_exit "heredoc $1 lines, should be 1000 lines"
+(( $2 == 4000 )) || err_exit "heredoc $2 words, should be 4000 words"
+
+# comment with here document looses line number count
+integer line=$((LINENO+5))
+function tst
+{
+	[[ $1 == $2 ]] || echo expected $1, got $2
+}
+tst $line $LINENO <<"!" # this comment affects LINENO #
+1
+!
+(( (line+=3) == LINENO )) ||  err_exit "line number=$LINENO should be $line"
+
+[[ $($SHELL -c 'wc -c <<< ""' 2> /dev/null) == *1 ]] || err_exit '<<< with empty string not working'
+
 exit $((Errors))

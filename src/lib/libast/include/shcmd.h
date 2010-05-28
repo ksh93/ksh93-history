@@ -71,6 +71,7 @@ typedef struct Shbltin_s
 #   define sh_system(c,str)	((c)?(*sh_context(c)->shtrap)(str,0):system(str))
 #   define sh_exit(c,n)		((c)?(*sh_context(c)->shexit)(n):exit(n))
 #   define sh_checksig(c)	((c) && sh_context(c)->sigset)
+#   define sh_builtin(c,n,f,p)	((c)?(*sh_context(c)->shbltin)(n,(Shbltin_f)(f),(void*)(p)):0)
 #   if defined(SFIO_VERSION) || defined(_AST_H)
 #	define LIB_INIT(c)
 #   else
