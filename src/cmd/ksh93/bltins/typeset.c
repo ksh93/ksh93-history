@@ -836,6 +836,13 @@ int	b_builtin(int argc,char *argv[],void *extra)
 #if SHOPT_DYNAMIC
 	if(arg)
 	{
+#ifdef SH_PLUGIN_VERSION
+		if(!(library = dllplugin(SH_ID,arg,NIL(char*),SH_PLUGIN_VERSION,RTLD_LAZY,NIL(char*),0)))
+		{
+			errormsg(SH_DICT,ERROR_exit(0),"%s: %s",arg,dllerror(0));
+			return(1);
+		}
+#else
 #if (_AST_VERSION>=20040404)
 		if(!(library = dllplug(SH_ID,arg,NIL(char*),RTLD_LAZY,NIL(char*),0)))
 #else
@@ -845,6 +852,7 @@ int	b_builtin(int argc,char *argv[],void *extra)
 			errormsg(SH_DICT,ERROR_exit(0),"%s: %s",arg,dlerror());
 			return(1);
 		}
+#endif
 		sh_addlib(library);
 	}
 	else

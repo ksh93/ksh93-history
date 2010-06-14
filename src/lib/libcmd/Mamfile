@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.5 2010-04-15
+info mam static 00000 1994-07-17 make (AT&T Research) 5.5 2010-06-01
 setv INSTALLROOT ../../..
 setv PACKAGE_ast_INCLUDE ${INSTALLROOT}/include/ast
 setv PACKAGE_ast_LIB ${INSTALLROOT}/lib
@@ -168,6 +168,8 @@ make cksum.c
 make ${PACKAGE_ast_INCLUDE}/error.h implicit
 make ${PACKAGE_ast_INCLUDE}/option.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast.h implicit
+make ${PACKAGE_ast_INCLUDE}/ast_api.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast_api.h dontcare
 make ${PACKAGE_ast_INCLUDE}/vmalloc.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast_std.h implicit
@@ -179,9 +181,6 @@ prev ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast_std.h implicit
 done ${PACKAGE_ast_INCLUDE}/sfio.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/ast_std.h implicit
-make ${PACKAGE_ast_INCLUDE}/ast_version.h implicit
-prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
-done ${PACKAGE_ast_INCLUDE}/ast_version.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
@@ -449,6 +448,9 @@ make fts_fix.c
 prev fts_fix.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast.h implicit
 done fts_fix.c
+make lib.c
+prev cmd.h implicit
+done lib.c
 exec - {
 exec - cat <<!
 exec - #pragma prototyped
@@ -462,7 +464,7 @@ exec - 	-e '/^b_[a-z_][a-z_0-9]*(/!d' \
 exec - 	-e 's/^b_//' \
 exec - 	-e 's/(.*//' \
 exec - 	-e 's/.*/extern int	b_&(int, char**, void*);/' \
-exec - 	cmdinit.c basename.c cat.c chgrp.c chmod.c chown.c cksum.c cmp.c comm.c cp.c cut.c dirname.c date.c expr.c fds.c fmt.c fold.c getconf.c head.c id.c join.c ln.c logname.c md5sum.c mkdir.c mkfifo.c mktemp.c mv.c paste.c pathchk.c pids.c rev.c rm.c rmdir.c stty.c sum.c sync.c tail.c tee.c tty.c uname.c uniq.c vmstate.c wc.c revlib.c wclib.c fts_fix.c |
+exec - 	cmdinit.c basename.c cat.c chgrp.c chmod.c chown.c cksum.c cmp.c comm.c cp.c cut.c dirname.c date.c expr.c fds.c fmt.c fold.c getconf.c head.c id.c join.c ln.c logname.c md5sum.c mkdir.c mkfifo.c mktemp.c mv.c paste.c pathchk.c pids.c rev.c rm.c rmdir.c stty.c sum.c sync.c tail.c tee.c tty.c uname.c uniq.c vmstate.c wc.c revlib.c wclib.c fts_fix.c lib.c |
 exec - sort -u
 exec - } > 1.${COTEMP}.h
 exec - if	cmp 2>/dev/null -s 1.${COTEMP}.h cmdext.h
@@ -763,8 +765,14 @@ meta fts_fix.o %.c>%.o fts_fix.c fts_fix
 prev fts_fix.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c fts_fix.c
 done fts_fix.o generated
+make lib.o
+prev lib.c
+meta lib.o %.c>%.o lib.c lib
+prev lib.c
+exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_BLD_cmd -D_PACKAGE_ast -c lib.c
+done lib.o generated
 exec - ${AR} -cr libcmd.a cmdinit.o basename.o cat.o chgrp.o chmod.o chown.o cksum.o cmp.o comm.o cp.o cut.o dirname.o date.o expr.o fds.o fmt.o fold.o getconf.o head.o id.o join.o ln.o logname.o md5sum.o mkdir.o mkfifo.o mktemp.o mv.o paste.o pathchk.o
-exec - ${AR} -cr libcmd.a pids.o rev.o rm.o rmdir.o stty.o sum.o sync.o tail.o tee.o tty.o uname.o uniq.o vmstate.o wc.o revlib.o wclib.o sumlib.o fts_fix.o
+exec - ${AR} -cr libcmd.a pids.o rev.o rm.o rmdir.o stty.o sum.o sync.o tail.o tee.o tty.o uname.o uniq.o vmstate.o wc.o revlib.o wclib.o sumlib.o fts_fix.o lib.o
 exec - (ranlib libcmd.a) >/dev/null 2>&1 || true
 done libcmd.a generated
 done cmd virtual
@@ -827,7 +835,7 @@ exec - 	-e '/^b_[a-z_][a-z_0-9]*(/!d' \
 exec - 	-e 's/^b_//' \
 exec - 	-e 's/(.*//' \
 exec - 	-e 's/.*/CMDLIST(&)/' \
-exec - 	cmdinit.c basename.c cat.c chgrp.c chmod.c chown.c cksum.c cmp.c comm.c cp.c cut.c dirname.c date.c expr.c fds.c fmt.c fold.c getconf.c head.c id.c join.c ln.c logname.c md5sum.c mkdir.c mkfifo.c mktemp.c mv.c paste.c pathchk.c pids.c rev.c rm.c rmdir.c stty.c sum.c sync.c tail.c tee.c tty.c uname.c uniq.c vmstate.c wc.c revlib.c wclib.c fts_fix.c |
+exec - 	cmdinit.c basename.c cat.c chgrp.c chmod.c chown.c cksum.c cmp.c comm.c cp.c cut.c dirname.c date.c expr.c fds.c fmt.c fold.c getconf.c head.c id.c join.c ln.c logname.c md5sum.c mkdir.c mkfifo.c mktemp.c mv.c paste.c pathchk.c pids.c rev.c rm.c rmdir.c stty.c sum.c sync.c tail.c tee.c tty.c uname.c uniq.c vmstate.c wc.c revlib.c wclib.c fts_fix.c lib.c |
 exec - sort -u
 exec - } > 1.${COTEMP}.h
 exec - if	cmp 2>/dev/null -s 1.${COTEMP}.h cmdlist.h

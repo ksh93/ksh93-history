@@ -157,6 +157,7 @@ extern char*		strerror(int);
 #define AST_LC_LANG		255
 
 #define AST_LC_internal		1
+#define AST_LC_test		(1L<<26)
 #define AST_LC_setenv		(1L<<27)
 #define AST_LC_find		(1L<<28)
 #define AST_LC_debug		(1L<<29)

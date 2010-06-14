@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1990-2009 AT&T Intellectual Property          *
+*          Copyright (c) 1990-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -38,6 +38,7 @@ static const Namval_t	options[] =
 	"debug",	CO_DEBUG,
 	"devfd",	CO_DEVFD,
 	"ignore",	CO_IGNORE,
+	"orphan",	CO_ORPHAN,
 	"silent",	CO_SILENT,
 	"separate",	CO_SEPARATE,
 	"service",	CO_SERVICE,
@@ -157,11 +158,12 @@ coopen(const char* path, int flags, const char* attributes)
 	Vmalloc_t*		vm;
 	Sfio_t*			sp;
 	Sig_handler_t		handler;
-	int			pio[2];
-	int			pex[2];
+	int			pio[4];
 	long			ops[5];
 	char			devfd[16];
+	char			evbuf[sizeof(CO_ENV_MSGFD) + 8];
 	char*			av[8];
+	char*			ev[2];
 
 	static char*	sh[] = { 0, 0, "ksh", "sh", "/bin/sh" };
 
@@ -177,6 +179,7 @@ coopen(const char* path, int flags, const char* attributes)
 		return 0;
 	}
 	co->vm = vm;
+	co->index = ++state.index;
 	stropt(getenv(CO_ENV_OPTIONS), options, sizeof(*options), setopt, co);
 	if (attributes)
 		stropt(attributes, options, sizeof(*options), setopt, co);
@@ -194,29 +197,32 @@ coopen(const char* path, int flags, const char* attributes)
 	}
 	else
 	{
-		pex[0] = -1;
-		pex[1] = -1;
-		pio[0] = -1;
-		pio[1] = -1;
-		if (pipe(pex) < 0 || pipe(pio) < 0)
+		for (i = 0; i < elementsof(pio); i++)
+			pio[i] = -1;
+		if (pipe(&pio[0]) < 0 || pipe(&pio[2]) < 0)
 		{
 			errormsg(state.lib, ERROR_LIBRARY|ERROR_SYSTEM|2, "cannot allocate pipes");
 			goto bad;
 		}
+		if (flags & CO_SHELL)
+			for (i = 0; i < elementsof(pio); i++)
+				if (pio[i] < 10 && (n = fcntl(pio[i], F_DUPFD, 10)) >= 0)
+				{
+					close(pio[i]);
+					pio[i] = n;
+				}
 		co->cmdfd = pio[1];
-		co->gsmfd = pex[1];
-		if (!(co->msgfp = sfnew(NiL, NiL, 256, pex[0], SF_READ)))
+		co->gsmfd = pio[3];
+		if (!(co->msgfp = sfnew(NiL, NiL, 256, pio[2], SF_READ)))
 		{
 			errormsg(state.lib, ERROR_LIBRARY|ERROR_SYSTEM|2, "cannot allocate message stream");
 			goto bad;
 		}
 		sfdcslow(co->msgfp);
-		sfsprintf(devfd, sizeof(devfd), "%d", co->gsmfd);
-		setenv(CO_ENV_MSGFD, devfd, 1);
 		ops[0] = PROC_FD_DUP(pio[0], 0, PROC_FD_PARENT);
 		ops[1] = PROC_FD_CLOSE(pio[1], PROC_FD_CHILD);
-		ops[2] = PROC_FD_CLOSE(pex[0], PROC_FD_CHILD);
-		ops[3] = PROC_FD_CLOSE(pex[1], PROC_FD_PARENT);
+		ops[2] = PROC_FD_CLOSE(pio[2], PROC_FD_CHILD);
+		ops[3] = PROC_FD_CLOSE(pio[3], PROC_FD_PARENT);
 		ops[4] = 0;
 		sfsprintf(devfd, sizeof(devfd), "/dev/fd/%d", pio[0]);
 		flags = !access(devfd, F_OK);
@@ -233,7 +239,10 @@ coopen(const char* path, int flags, const char* attributes)
 				if (flags || (co->flags & CO_DEVFD) && strmatch(s, "*ksh*"))
 					av[n++] = devfd;
 				av[n] = 0;
-				if ((co->mode & CO_MODE_SEPARATE) || (proc = procopen(s, av, NiL, ops, PROC_DAEMON|PROC_IGNORE)))
+				sfsprintf(evbuf, sizeof(evbuf), "%s=%d", CO_ENV_MSGFD, co->gsmfd);
+				ev[0] = evbuf;
+				ev[1] = 0;
+				if ((co->mode & CO_MODE_SEPARATE) || (proc = procopen(s, av, ev, ops, (co->flags & (CO_SHELL|CO_ORPHAN)) ? (PROC_ORPHAN|PROC_DAEMON|PROC_IGNORE) : (PROC_DAEMON|PROC_IGNORE))))
 				{
 					if (!state.sh)
 						state.sh = strdup(s);
@@ -274,7 +283,7 @@ coopen(const char* path, int flags, const char* attributes)
 		if (attributes)
 			coquote(sp, attributes, 0);
 		sfprintf(sp, "'\n");
-		sfprintf(sp, coident, pex[1]);
+		sfprintf(sp, coident, pio[3]);
 		i = sfstrtell(sp);
 		sfstrseek(sp, 0, SEEK_SET);
 		sfprintf(sp, "#%05d\n", i - 7);
@@ -297,7 +306,7 @@ coopen(const char* path, int flags, const char* attributes)
 		alarm(i);
 		signal(SIGALRM, handler);
 		if (co->flags & CO_DEBUG)
-			errormsg(state.lib, 2, "shell identification \"%s\"", s);
+			errormsg(state.lib, 2, "coshell %d shell path %s identification \"%s\"", co->index, state.sh, s);
 		switch (*s)
 		{
 		case 'o':
@@ -334,7 +343,7 @@ coopen(const char* path, int flags, const char* attributes)
 		}
 		if (s)
 		{
-			if (!(cj = coexec(co, s, 0, NiL, NiL, NiL)) || cowait(co, cj) != cj)
+			if (!(cj = coexec(co, s, 0, NiL, NiL, NiL)) || cowait(co, cj, -1) != cj)
 			{
 				errormsg(state.lib, ERROR_LIBRARY|ERROR_SYSTEM|2, "initialization message exec error");
 				goto nope;
@@ -345,36 +354,42 @@ coopen(const char* path, int flags, const char* attributes)
 		}
 	}
 	co->flags &= ~CO_INIT;
-#ifdef SIGCONT
-#ifdef SIGTSTP
-	signal(SIGTSTP, stop);
-#endif
-#ifdef SIGTTIN
-	signal(SIGTTIN, stop);
-#endif
-#ifdef SIGTTOU
-	signal(SIGTTOU, stop);
-#endif
-#endif
+	fcntl(pio[1], F_SETFD, FD_CLOEXEC);
+	fcntl(pio[2], F_SETFD, FD_CLOEXEC);
 	co->next = state.coshells;
 	state.coshells = co;
-	if (!state.init)
+	if (!(co->flags & CO_SHELL))
 	{
-		state.init = 1;
-		atexit(clean);
+#ifdef SIGCONT
+#ifdef SIGTSTP
+		signal(SIGTSTP, stop);
+#endif
+#ifdef SIGTTIN
+		signal(SIGTTIN, stop);
+#endif
+#ifdef SIGTTOU
+		signal(SIGTTOU, stop);
+#endif
+#endif
+		if (!state.init)
+		{
+			state.init = 1;
+			atexit(clean);
+		}
 	}
 	return co;
  bad:
-	i = errno;
-	close(pio[0]);
-	close(pio[1]);
+	n = errno;
 	if (co->msgfp)
+	{
 		sfclose(co->msgfp);
-	else
-		close(pex[0]);
-	close(pex[1]);
+		pio[2] = -1;
+	}
+	for (i = 0; i < elementsof(pio); i++)
+		if (pio[i] >= 0)
+			close(pio[i]);
 	coclose(co);
-	errno = i;
+	errno = n;
 	return 0;
  nope:
 	i = errno;
@@ -382,5 +397,15 @@ coopen(const char* path, int flags, const char* attributes)
 		error(2, "export %s={ksh,sh,%s}", CO_ENV_SHELL, CO_ID);
 	coclose(co);
 	errno = i;
+	return 0;
+}
+
+/*
+ * set coshell attributes
+ */
+
+int
+coattr(Coshell_t* co, const char* attributes)
+{
 	return 0;
 }

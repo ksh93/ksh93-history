@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: rm (AT&T Research) 2009-06-18 $\n]"
+"[-?\n@(#)$Id: rm (AT&T Research) 2010-06-14 $\n]"
 USAGE_LICENSE
 "[+NAME?rm - remove files]"
 "[+DESCRIPTION?\brm\b removes the named \afile\a arguments. By default it"
@@ -122,6 +122,8 @@ rm(State_t* state, register FTSENT* ent)
 	case FTS_DNX:
 		if (state->unconditional)
 		{
+			if (!beenhere(ent))
+				break;
 			if (!chmod(ent->fts_name, (ent->fts_statp->st_mode & S_IPERM)|S_IRWXU))
 			{
 				fts_set(NiL, ent, FTS_AGAIN);
@@ -156,7 +158,7 @@ rm(State_t* state, register FTSENT* ent)
 		}
 		if (!beenhere(ent))
 		{
-			if (state->unconditional && (ent->fts_statp->st_mode ^ S_IRWXU))
+			if (state->unconditional && (ent->fts_statp->st_mode & S_IRWXU) != S_IRWXU)
 				chmod(path, (ent->fts_statp->st_mode & S_IPERM)|S_IRWXU);
 			if (ent->fts_level > 0)
 			{

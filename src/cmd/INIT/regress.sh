@@ -23,7 +23,7 @@ command=regress
 case $(getopts '[-][123:xyz]' opt --xyz 2>/dev/null; echo 0$opt) in
 0123)	USAGE=$'
 [-?
-@(#)$Id: regress (AT&T Research) 2009-09-24 $
+@(#)$Id: regress (AT&T Research) 2010-06-12 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?regress - run regression tests]
@@ -75,10 +75,12 @@ unit [ command [ arg ... ] ]
         [+COPY \afrom to\a?Copy file \afrom\a to \ato\a. \afrom\a may
             be a regular file or \bINPUT\b, \bOUTPUT\b or \bERROR\b. Post
             test comparisons are still done for \afrom\a.]
-        [+DIAGNOSTICS [ \b1\b | \"\" ]]?No argument or an argument of
-            \b1\b declares that diagnostics are to expected for the
-            remainder of the current \bTEST\b; \"\" reverts to the default
-            state that diagnostics are not expected.]
+        [+DIAGNOSTICS [ \b1\b | \b0\b | \apattern\a ]]?No argument or an
+	    argument of \b1\b declares that diagnostics are to expected for
+	    the remainder of the current \bTEST\b; \b0\b reverts to the default
+            state that diagnostics are not expected; otherwise the argument
+	    is a \bksh\b(1) pattern that must match the non-empty contents
+	    of the standard error.]
         [+DO \astatement\a?Defines additional statements to be executed
             for the current test. \astatement\a may be a { ... } group.]
         [+EMPTY \bINPUT|OUTPUT|ERROR|SAME?The corresponding file is
@@ -948,10 +950,19 @@ function KEEP # pattern ...
 	done
 }
 
-function DIAGNOSTICS # [ 1 | "" ]
+function DIAGNOSTICS # [ 1 | 0 ]
 {
-	DIAGNOSTICS=${1:-1}
-	EXIT='*'
+	case $#:$1 in
+	0:|1:1)	DIAGNOSTICS=1
+		EXIT='*'
+		;;
+	1:|1:0)	DIAGNOSTICS=""
+		EXIT=0
+		;;
+	*)	DIAGNOSTICS=$1
+		EXIT='*'
+		;;
+	esac
 }
 
 function IGNORESPACE
@@ -1040,9 +1051,13 @@ function RESULTS # pipe*
 			done
 			j=$k.$s
 		fi
-		if	[[ $DIAGNOSTICS && $i == */ERROR ]]
-		then	if	[[ $STATUS == 0 && ! -s $TWD/ERROR ]]
+		if	[[ "$DIAGNOSTICS" && $i == */ERROR ]]
+		then	if	[[ $STATUS == 0 && ! -s $TWD/ERROR || $DIAGNOSTICS != 1 && $(<$i) != $DIAGNOSTICS ]]
 			then	failed=$failed${failed:+,}DIAGNOSTICS
+				if	[[ $TEST_verbose && $DIAGNOSTICS != 1 ]]
+				then	print -u2 "	===" "diagnostic pattern '$DIAGNOSTICS' did not match" ${i#$TWD/} "==="
+					cat $i >&2
+				fi
 			fi
 			continue
 		fi

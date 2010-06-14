@@ -297,27 +297,53 @@ do { $SHELL <<- EOF
 done
 
 SECONDS=0
-$SHELL 2> /dev/null -c 'sleep 2 && kill $$ & trap "print done;exit 3" EXIT; (sleep 5);print finished' > $tmp/sig
-(( $?==3)) || err_exit "wrong exit status expecting 3 got $?"
+$SHELL 2> /dev/null -c 'sleep 2 && kill $$ & trap "print done; exit 3" EXIT; (sleep 5); print finished' > $tmp/sig
+e=$?
+[[ $e == 3 ]] || err_exit "exit status failed -- expected 3, got $e"
 x=$(<$tmp/sig)
-[[ $x == done ]] || err_exit "wrong result - execting done got $x"
-(( SECONDS > 3.5 )) && err_exit "took $SECONDS seconds, expecting around 2"
+[[ $x == done ]] || err_exit "output failed -- expected 'done', got '$x'"
+(( SECONDS > 3.5 )) && err_exit "took $SECONDS seconds, expected around 2"
 
 SECONDS=0
-{ $SHELL 2> /dev/null -c 'sleep 2 && kill $$ & trap "print done;exit" EXIT; (sleep 5);print finished' > $tmp/sig ;} 2> /dev/null
-[[ $(kill -l $?) == TERM ]] || err_exit "wrong exit status expecting TERM got $(kill -l $?)"
+$SHELL 2> /dev/null -c 'sleep 2 && kill $$ & trap "print done; exit 3" EXIT; sleep 5; print finished' > $tmp/sig
+e=$?
+[[ $e == 3 ]] || err_exit "exit status failed -- expected 3, got $e"
 x=$(<$tmp/sig)
-[[ $x == done ]] || err_exit "wrong result - execting done got $x"
-(( SECONDS > 3.5 )) && err_exit "took $SECONDS seconds, expecting around 2"
+[[ $x == done ]] || err_exit "output failed -- expected 'done', got '$x'"
+(( SECONDS > 3.5 )) && err_exit "took $SECONDS seconds, expected around 2"
 
 SECONDS=0
-x=$($SHELL 2> /dev/null -c 'sleep 2 && kill $$ & trap "print done;exit 3" EXIT; (sleep 5);print finished')
-(( $?==3)) || err_exit "wrong exit status expecting 3 got $?"
-[[ $x == done ]] || err_exit "wrong result - execting done got $x"
-(( SECONDS < 4 )) && err_exit "took $SECONDS seconds, expecting around 5"
+{ $SHELL 2> /dev/null -c 'sleep 2 && kill $$ & trap "print done; exit 3" EXIT; (sleep 5); print finished' > $tmp/sig ;} 2> /dev/null
+e=$?
+[[ $e == 3 ]] || err_exit "exit status failed -- expected 3, got $e"
+x=$(<$tmp/sig)
+[[ $x == done ]] || err_exit "output failed -- expected 'done', got '$x'"
+(( SECONDS > 3.5 )) && err_exit "took $SECONDS seconds, expected around 2"
+
+SECONDS=0
+{ $SHELL 2> /dev/null -c 'sleep 2 && kill $$ & trap "print done; exit 3" EXIT; sleep 5; print finished' > $tmp/sig ;} 2> /dev/null
+e=$?
+[[ $e == 3 ]] || err_exit "exit status failed -- expected 3, got $e"
+x=$(<$tmp/sig)
+[[ $x == done ]] || err_exit "output failed -- expected 'done', got '$x'"
+(( SECONDS > 3.5 )) && err_exit "took $SECONDS seconds, expected around 2"
+
+SECONDS=0
+x=$($SHELL 2> /dev/null -c 'sleep 2 && kill $$ & trap "print done; exit 3" EXIT; (sleep 5); print finished')
+e=$?
+[[ $e == 3 ]] || err_exit "exit status failed -- expected 3, got $e"
+[[ $x == done ]] || err_exit "output failed -- expected 'done', got '$x'"
+(( SECONDS > 3.5 )) && err_exit "took $SECONDS seconds, expected around 2"
+
+SECONDS=0
+x=$($SHELL 2> /dev/null -c 'sleep 2 && kill $$ & trap "print done; exit 3" EXIT; sleep 5; print finished')
+e=$?
+[[ $e == 3 ]] || err_exit "exit status failed -- expected 3, got $e"
+[[ $x == done ]] || err_exit "output failed -- expected 'done', got '$x'"
+(( SECONDS > 3.5 )) && err_exit "took $SECONDS seconds, expected around 2"
 
 trap '' SIGBUS
-[[ $($SHELL -c 'trap date SIGBUS;trap -p SIGBUS') ]] && err_exit 'SIGBUS should not have a trap'
+[[ $($SHELL -c 'trap date SIGBUS; trap -p SIGBUS') ]] && err_exit 'SIGBUS should not have a trap'
 trap -- - SIGBUS
 
 exit $((Errors))

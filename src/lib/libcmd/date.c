@@ -27,7 +27,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: date (AT&T Research) 2009-03-03 $\n]"
+"[-?\n@(#)$Id: date (AT&T Research) 2010-05-28 $\n]"
 USAGE_LICENSE
 "[+NAME?date - set/list/convert dates]"
 "[+DESCRIPTION?\bdate\b sets the current date and time (with appropriate"
@@ -89,12 +89,12 @@ USAGE_LICENSE
 "		[+a?abbreviated weekday name]"
 "		[+A?full weekday name]"
 "		[+b?abbreviated month name]"
+"		[+B?full month name]"
 "		[+c?\bctime\b(3) style date without the trailing newline]"
 "		[+C?2-digit century]"
 "		[+d?day of month number]"
 "		[+D?date as \amm/dd/yy\a]"
 "		[+e?blank padded day of month number]"
-"		[+E?unpadded day of month number]"
 "		[+f?locale default override date format]"
 "		[+F?%ISO 8601:2000 standard date format; equivalent to Y-%m-%d]"
 "		[+g?\bls\b(1) \b-l\b recent date with \ahh:mm\a]"
@@ -312,7 +312,7 @@ b_date(int argc, register char** argv, void* context)
 			show = 1;
 			continue;
 		case 'e':
-			format = "%#";
+			format = "%s";
 			continue;
 		case 'E':
 			elapsed = 1;

@@ -1,4 +1,7 @@
-10-05-24  --- Release ksh93t+  ---
+10-06-10  --- Release ksh93t+  ---
+10-06-10  The next release this directory will be renamed ksh93t and will
+	  install as ksh93t and ksh93u will become the default ksh.
+10-05-27  Rewrote the subshell code to avoid using pipes in many cases.
 10-05-24  Fixed a bug which cause an exception when both -s and -s were
 	  specified with typeset -i.
 10-05-21  Inputting of three dimensional indexed arrays with ( ( (...)...)...) 

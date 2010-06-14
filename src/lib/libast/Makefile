@@ -28,7 +28,7 @@ DEBUG ==
 __OBSOLETE__ == $("6 months ago":@F=%(%Y0101)T)
 
 HEADERSRC = ast.h ast_dir.h ast_getopt.h ast_std.h \
-	ast_namval.h ast_version.h ast_windows.h \
+	ast_namval.h ast_windows.h \
 	ccode.h cdt.h cmdarg.h debug.h dt.h error.h find.h ftw.h ftwalk.h \
 	fts.h fs3d.h getopt.h glob.h hash.h hashkey.h hashpart.h ip6.h \
 	lc.h ls.h magic.h mc.h mime.h mnt.h modecanon.h modex.h namval.h \
@@ -40,8 +40,8 @@ HEADERSRC = ast.h ast_dir.h ast_getopt.h ast_std.h \
 	$(HEADERSTD)
 
 HEADERGEN = align.h preroot.h sig.h tmx.h tv.h \
-	$(ID)_botch.h $(ID)_ccode.h $(ID)_fcntl.h $(ID)_float.h $(ID)_fs.h \
-	$(ID)_lib.h $(ID)_map.h $(ID)_mmap.h $(ID)_mode.h $(ID)_ndbm.h \
+	$(ID)_api.h $(ID)_botch.h $(ID)_ccode.h $(ID)_fcntl.h $(ID)_float.h \
+	$(ID)_fs.h $(ID)_lib.h $(ID)_map.h $(ID)_mmap.h $(ID)_mode.h $(ID)_ndbm.h \
 	$(ID)_param.h $(ID)_sys.h $(ID)_time.h $(ID)_time.h $(ID)_tty.h \
 	$(ID)_vfork.h $(ID)_wait.h $(ID)_limits.h $(ID)_standards.h \
 	$(HEADERSTD:/^/$(ID)_/)
@@ -81,7 +81,7 @@ $(ID) 5.4 :LIBRARY: README RELEASE \
 	pathgetlink.c pathsetlink.c pathbin.c pathshell.c pathcd.c \
 	pathprog.c \
 	fs3d.c ftwalk.c ftwflags.c fts.c \
-	astintercept.c getenv.c setenviron.c \
+	astintercept.c conformance.c getenv.c setenviron.c \
 	optget.c optjoin.c optesc.c optctx.c strsort.c struniq.c \
 	magic.c mime.c mimetype.c signal.c sigflag.c systrace.c \
 	error.c errorf.c errormsg.c errorx.c \

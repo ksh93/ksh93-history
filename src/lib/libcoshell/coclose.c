@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1990-2009 AT&T Intellectual Property          *
+*          Copyright (c) 1990-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -70,7 +70,7 @@ shut(register Coshell_t* co)
 	else
 		status = 0;
 	if (co->flags & CO_DEBUG)
-		errormsg(state.lib, 2, "jobs %d user %s sys %s", co->total, fmtelapsed(co->user, CO_QUANT), fmtelapsed(co->sys, CO_QUANT));
+		errormsg(state.lib, 2, "coshell %d jobs %d user %s sys %s", co->index, co->total, fmtelapsed(co->user, CO_QUANT), fmtelapsed(co->sys, CO_QUANT));
 	for (sv = co->service; sv; sv = sv->next)
 	{
 		if (sv->fd > 0)

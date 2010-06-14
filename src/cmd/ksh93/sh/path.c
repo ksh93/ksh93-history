@@ -817,6 +817,10 @@ Pathcomp_t *path_absolute(register const char *name, Pathcomp_t *pp)
 						if((np = sh_addbuiltin(stakptr(PATH_OFFSET),addr,NiL)) && nv_isattr(np,NV_BLTINOPT))
 							return(oldpp);
 					}
+#ifdef SH_PLUGIN_VERSION
+					if (oldpp->bltin_lib = dllplugin(SH_ID, oldpp->blib, NiL, SH_PLUGIN_VERSION, RTLD_LAZY, NiL, 0))
+						sh_addlib(oldpp->bltin_lib);
+#else
 #if (_AST_VERSION>=20040404)
 					if (oldpp->bltin_lib = dllplug(SH_ID, oldpp->blib, NiL, RTLD_LAZY, NiL, 0))
 #else
@@ -837,6 +841,7 @@ Pathcomp_t *path_absolute(register const char *name, Pathcomp_t *pp)
 						else
 							sh_addlib(oldpp->bltin_lib);
 					}
+#endif
 				}
 				if((addr=(Fptr_t)dlllook(oldpp->bltin_lib,stakptr(n))) &&
 				   (!(np = sh_addbuiltin(stakptr(PATH_OFFSET),NiL,NiL)) || np->nvalue.bfp!=addr) &&

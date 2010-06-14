@@ -1311,8 +1311,6 @@ int	job_wait(register pid_t pid)
 	job_lock();
 	if(pid > 1)
 	{
-		if(pid==sh.spid)
-			sh.spid = 0;
 		if(!(pw=job_bypid(pid)))
 		{
 			/* check to see whether job status has been saved */
@@ -1341,7 +1339,7 @@ int	job_wait(register pid_t pid)
 		sfprintf(sfstderr,"ksh: job line %4d: wait pid=%d critical=%d flags=%o\n",__LINE__,getpid(),job.in_critical,pw->p_flag);
 #endif /* DEBUG*/
 	errno = 0;
-	if(sh.coutpipe>=0 && sh.cpid==lastpid)
+	if(sh.coutpipe>=0 && lastpid && sh.cpid==lastpid)
 	{
 		sh_close(sh.coutpipe);
 		sh_close(sh.cpipe[1]);
@@ -1615,7 +1613,7 @@ static struct process *job_unpost(register struct process *pwtop,int notify)
 	for(pw=pwtop; pw; pw=pw->p_nxtproc)
 	{
 		/* save the exit status for background jobs */
-		if((pw->p_flag&P_EXITSAVE) ||  pw->p_pid==sh.spid)
+		if(pw->p_flag&P_EXITSAVE)
 		{
 			struct jobsave *jp;
 			/* save status for future wait */
@@ -1798,14 +1796,7 @@ void job_subrestore(void* ptr)
 	for(jp=bck.list; jp; jp=jpnext)
 	{
 		jpnext = jp->next;
-		if(jp->pid==sh.spid)
-		{
-			jp->next = bp->list;
-			bp->list = jp;
-			bp->count++;
-		}
-		else
-			job_chksave(jp->pid);
+		job_chksave(jp->pid);
 	}
 	for(pw=job.pwlist; pw; pw=pwnext)
 	{

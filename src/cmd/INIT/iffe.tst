@@ -1849,3 +1849,139 @@ header stdio.h'
 #endif'
 		ERROR - $'iffe: test: is sys/types.h a header ... yes
 iffe: test: is stdio.h a header ... yes'
+
+TEST 18 'api + ver'
+	EXEC	-r -v - t.iffe
+		INPUT t.iffe $'iff api
+ver foo 20100606
+ver bar 19840919
+
+api foo 19991231 dis dat tother
+api foo 20100601 dat
+api foo 20100606 dis
+api bar 19991231 moe larry shemp
+api bar 20020202 curly
+api bar 20030303 shemp
+api bar 20040404 joe_b
+api bar 20050505 joe_d
+'
+		OUTPUT - $'/* : : generated from t.iffe by iffe version 1995-03-19 : : */
+#ifndef _api_H
+#define _api_H	1
+#define _sys_types	1	/* #include <sys/types.h> ok */
+
+#define FOO_VERSION	20100606
+#define BAR_VERSION	19840919
+
+#if !defined(_API_foo) && defined(_API_DEFAULT)
+#define _API_foo	_API_DEFAULT
+#endif
+
+#if ( _BLD_foo || !_API_foo || _API_foo >= 20100601 )
+#if defined(dat)
+#undef  dat
+#define dat	_foo_dat_20100601
+#else
+#define dat	dat_20100601
+#endif
+#elif _API_foo >= 19991231
+#if defined(dat)
+#undef  dat
+#define dat	_foo_dat_19991231
+#else
+#define dat	dat_19991231
+#endif
+#endif
+
+#if ( _BLD_foo || !_API_foo || _API_foo >= 20100606 )
+#if defined(dis)
+#undef  dis
+#define dis	_foo_dis_20100606
+#else
+#define dis	dis_20100606
+#endif
+#elif _API_foo >= 19991231
+#if defined(dis)
+#undef  dis
+#define dis	_foo_dis_19991231
+#else
+#define dis	dis_19991231
+#endif
+#endif
+
+#if ( _BLD_foo || !_API_foo || _API_foo >= 19991231 )
+#if defined(tother)
+#undef  tother
+#define tother	_foo_tother_19991231
+#else
+#define tother	tother_19991231
+#endif
+#endif
+
+#if !defined(_API_bar) && defined(_API_DEFAULT)
+#define _API_bar	_API_DEFAULT
+#endif
+
+#if ( _BLD_bar || !_API_bar || _API_bar >= 20020202 )
+#if defined(curly)
+#undef  curly
+#define curly	_bar_curly_20020202
+#else
+#define curly	curly_20020202
+#endif
+#endif
+
+#if ( _BLD_bar || !_API_bar || _API_bar >= 20040404 )
+#if defined(joe_b)
+#undef  joe_b
+#define joe_b	_bar_joe_b_20040404
+#else
+#define joe_b	joe_b_20040404
+#endif
+#endif
+
+#if ( _BLD_bar || !_API_bar || _API_bar >= 20050505 )
+#if defined(joe_d)
+#undef  joe_d
+#define joe_d	_bar_joe_d_20050505
+#else
+#define joe_d	joe_d_20050505
+#endif
+#endif
+
+#if ( _BLD_bar || !_API_bar || _API_bar >= 19991231 )
+#if defined(larry)
+#undef  larry
+#define larry	_bar_larry_19991231
+#else
+#define larry	larry_19991231
+#endif
+#endif
+
+#if ( _BLD_bar || !_API_bar || _API_bar >= 19991231 )
+#if defined(moe)
+#undef  moe
+#define moe	_bar_moe_19991231
+#else
+#define moe	moe_19991231
+#endif
+#endif
+
+#if ( _BLD_bar || !_API_bar || _API_bar >= 20030303 )
+#if defined(shemp)
+#undef  shemp
+#define shemp	_bar_shemp_20030303
+#else
+#define shemp	shemp_20030303
+#endif
+#elif _API_bar >= 19991231
+#if defined(shemp)
+#undef  shemp
+#define shemp	_bar_shemp_19991231
+#else
+#define shemp	shemp_19991231
+#endif
+#endif
+
+#endif'
+		ERROR - $'iffe: test: is sys/types.h a header ... yes'

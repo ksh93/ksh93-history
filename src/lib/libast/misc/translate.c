@@ -133,7 +133,7 @@ find(const char* locale, const char* catalog)
 	nl_catd		d;
 	char		path[PATH_MAX];
 
-	if (!mcfind(path, locale, catalog, LC_MESSAGES, 0) || (d = catopen(path, NL_CAT_LOCALE)) == NOCAT)
+	if (!mcfind(locale, catalog, LC_MESSAGES, 0, path, sizeof(path)) || (d = catopen(path, NL_CAT_LOCALE)) == NOCAT)
 	{
 		if (locale == (const char*)lc_categories[AST_LC_MESSAGES].prev)
 			o = 0;

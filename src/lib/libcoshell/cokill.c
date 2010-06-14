@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*           Copyright (c) 1990-2006 AT&T Knowledge Ventures            *
+*          Copyright (c) 1990-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                      by AT&T Knowledge Ventures                      *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -40,6 +40,8 @@ cokilljob(register Coshell_t* co, register Cojob_t* cj, int sig)
 {
 	int	n;
 
+	if (co->flags & CO_DEBUG)
+		errormsg(state.lib, 2, "coshell %d kill co=%d cj=%d sig=%d", co->index, co->pid, cj->pid, sig);
 	if (cj->pid < 0)
 		return 0;
 	if (cj->pid == 0)
@@ -92,8 +94,25 @@ cokillshell(register Coshell_t* co, register Cojob_t* cj, int sig)
 int
 cokill(register Coshell_t* co, register Cojob_t* cj, int sig)
 {
+	int	any;
 	int	n;
 
+	if (cj)
+	{
+		if (!co)
+			co = cj->coshell;
+		else if (co != cj->coshell)
+			return -1;
+		any = 0;
+	}
+	else if (co)
+		any = 0;
+	else if (!(co = state.coshells))
+		return -1;
+	else
+		any = 1;
+	if (co->flags & CO_DEBUG)
+		errormsg(state.lib, 2, "coshell %d kill co=%d cj=%d sig=%d", co->index, co ? co->pid : 0, cj ? cj->pid : 0, sig);
 	switch (sig)
 	{
 	case SIGINT:
@@ -105,10 +124,11 @@ cokill(register Coshell_t* co, register Cojob_t* cj, int sig)
 		break;
 #endif
 	}
-	if (co)
-		return cokillshell(co, cj, sig);
 	n = 0;
-	for (co = state.coshells; co; co = co->next)
-		n |= cokillshell(co, NiL, sig);
+	do
+	{
+		cowait(co, (Cojob_t*)co, 0);
+		n |= cokillshell(co, cj, sig);
+	} while (any && (co = co->next));
 	return n;
 }

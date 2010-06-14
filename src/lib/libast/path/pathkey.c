@@ -32,13 +32,25 @@
  *	ATTRIBUTES	list of attribute names
  */
 
+#define _AST_API_H	1
+
 #include <ast.h>
 #include <ctype.h>
 #include <fs3d.h>
 #include <preroot.h>
 
 char*
-pathkey(char* key, char* attr, const char* lang, const char* tool, const char* apath)
+pathkey(char* key, char* attr, const char* lang, const char* tool, const char* path)
+{
+	return pathkey_20100601(lang, tool, path, key, 16, attr, PATH_MAX);
+}
+
+#undef	_AST_API_H
+
+#include <ast_api.h>
+
+char*
+pathkey_20100601(const char* lang, const char* tool, const char* apath, char* key, size_t keysize, char* attr, size_t attrsize)
 {
 	register char*		path = (char*)apath;
 	register char*		s;
@@ -83,7 +95,7 @@ pathkey(char* key, char* attr, const char* lang, const char* tool, const char* a
 				flags = 0;
 			else
 			{
-				strcpy(tmp, path);
+				strlcpy(tmp, path, sizeof(tmp));
 				*(flags = tmp + (flags - path)) = 0;
 				path = tmp;
 			}

@@ -64,7 +64,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2010-04-22 $
+@(#)$Id: package (AT&T Research) 2010-06-09 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -1394,11 +1394,11 @@ onpath() # command
 	return 1
 }
 
-# true if no nmake or nmake too old
+# true if no nmake or nmake not from AT&T or nmake too old
 
 nonmake() # nmake
 {
-	_nonmake_version=`( $1 -n -f - 'print $(MAKEVERSION:@/.* //:/-//G)' . ) </dev/null 2>/dev/null || echo 19840919`
+	_nonmake_version=`( $1 -n -f - 'print $(MAKEVERSION:@/.*AT&T.* //:/-//G:@/.* .*/19960101/)' . ) </dev/null 2>/dev/null || echo 19840919`
 	if	test $_nonmake_version -lt 20001031
 	then	return 0
 	fi

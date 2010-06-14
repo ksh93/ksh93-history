@@ -69,9 +69,17 @@ extern int		mblen(const char*, size_t);
 #define AST_LC_CANONICAL	LC_abbreviated
 #endif
 
-#ifndef AST_LC_test
-#define AST_LC_test		(1L<<27)
-#endif
+static void
+header(void)
+{
+	static int	done = 0;
+
+	if (!done)
+	{
+		done = 1;
+		sfprintf(sfstderr, "locale      %17s %16s %16s %16s %s\n", "CATEGORY", "AST", "SYSTEM", "PREVIOUS", "ATTRIBUTES");
+	}
+}
 
 #if _UWIN
 
@@ -624,6 +632,12 @@ utf8_mblen(const char* str, size_t n)
 	return utf8_mbtowc(&w, str, n);
 }
 
+static int
+utf8_wcwidth(wchar_t c)
+{
+	return 1;
+}
+
 /*
  * called when LC_CTYPE initialized or changes
  */
@@ -632,6 +646,10 @@ static int
 set_ctype(Lc_category_t* cp)
 {
 	ast.mb_sync = 0;
+#if AHA
+	if ((ast.locale.set & (AST_LC_debug|AST_LC_setlocale)) && !(ast.locale.set & AST_LC_internal))
+		sfprintf(sfstderr, "locale setf %17s %16s\n", cp->name, locales[cp->internal]->name);
+#endif
 	if (locales[cp->internal]->flags & LC_debug)
 	{
 		ast.mb_cur_max = DEBUG_MB_CUR_MAX;
@@ -640,6 +658,15 @@ set_ctype(Lc_category_t* cp)
 		ast.mb_width = debug_wcwidth;
 		ast.mb_conv = debug_wctomb;
 	}
+	else if ((locales[cp->internal]->flags & LC_utf8) && !(ast.locale.set & AST_LC_test))
+	{
+		ast.mb_cur_max = 6;
+		ast.mb_len = utf8_mblen;
+		ast.mb_towc = utf8_mbtowc;
+		if ((locales[cp->internal]->flags & LC_local) || !(ast.mb_width = wcwidth))
+			ast.mb_width = utf8_wcwidth;
+		ast.mb_conv = utf8_wctomb;
+	}
 	else if ((locales[cp->internal]->flags & LC_default) || (ast.mb_cur_max = MB_CUR_MAX) <= 1 || !(ast.mb_len = mblen) || !(ast.mb_towc = mbtowc))
 	{
 		ast.mb_cur_max = 1;
@@ -647,15 +674,6 @@ set_ctype(Lc_category_t* cp)
 		ast.mb_towc = 0;
 		ast.mb_width = default_wcwidth;
 		ast.mb_conv = 0;
-	}
-	else if ((locales[cp->internal]->flags & LC_utf8) && !(ast.locale.set & AST_LC_test))
-	{
-		ast.mb_cur_max = 6;
-		ast.mb_len = utf8_mblen;
-		ast.mb_towc = utf8_mbtowc;
-		if (!(ast.mb_width = wcwidth))
-			ast.mb_width = default_wcwidth;
-		ast.mb_conv = utf8_wctomb;
 	}
 	else
 	{
@@ -697,10 +715,18 @@ set_numeric(Lc_category_t* cp)
 	Lc_numeric_t*		dp;
 
 	static Lc_numeric_t	default_numeric = { '.', -1 };
+	static Lc_numeric_t	euro_numeric = { ',', '.' };
 
+#if AHA
+	if ((ast.locale.set & (AST_LC_debug|AST_LC_setlocale)) && !(ast.locale.set & AST_LC_internal))
+		sfprintf(sfstderr, "locale setf %17s %16s\n", cp->name, locales[cp->internal]->name);
+
+#endif
 	if (!LCINFO(category)->data)
 	{
-		if ((lp = localeconv()) && (dp = newof(0, Lc_numeric_t, 1, 0)))
+		if ((locales[cp->internal]->flags & LC_local) && locales[cp->internal]->territory != &lc_territories[0])
+			dp = &euro_numeric;
+		else if ((lp = localeconv()) && (dp = newof(0, Lc_numeric_t, 1, 0)))
 		{
 			dp->decimal = lp->decimal_point && *lp->decimal_point ? *(unsigned char*)lp->decimal_point : '.';
 			dp->thousand = lp->thousands_sep && *lp->thousands_sep ? *(unsigned char*)lp->thousands_sep : -1;
@@ -804,12 +830,20 @@ single(int category, Lc_t* lc, unsigned int flags)
 	const char*	sys;
 	int		i;
 
+#if AHA
+	if ((ast.locale.set & (AST_LC_debug|AST_LC_setlocale)) && !(ast.locale.set & AST_LC_internal))
+		sfprintf(sfstderr, "locale single %16s %16s flags %04x\n", lc_categories[category].name, lc ? lc->name : 0, flags);
+#endif
 	if (flags & (LC_setenv|LC_setlocale))
 	{
 		if (!(ast.locale.set & AST_LC_internal))
 			lc_categories[category].prev = lc;
 		if ((flags & LC_setenv) && lc_all && locales[category])
+		{
+			if (lc_categories[category].setf)
+				(*lc_categories[category].setf)(&lc_categories[category]);
 			return (char*)locales[category]->name;
+		}
 	}
 	if (!lc && (!(lc_categories[category].flags & LC_setlocale) || !(lc = lc_categories[category].prev)) && !(lc = lc_all) && !(lc = lc_categories[category].prev) && !(lc = lang))
 		lc = lcmake(NiL);
@@ -844,7 +878,7 @@ single(int category, Lc_t* lc, unsigned int flags)
 			{
 				char	path[PATH_MAX];
 
-				if (mcfind(path, lc->code, NiL, LC_MESSAGES, 0))
+				if (mcfind(lc->code, NiL, LC_MESSAGES, 0, path, sizeof(path)))
 					lc->flags |= LC_local;
 				lc->flags |= LC_checked;
 			}
@@ -870,34 +904,26 @@ single(int category, Lc_t* lc, unsigned int flags)
 		lc_categories[category].flags |= flags;
 	}
 	else
+	{
+		if (lc_categories[category].setf)
+			(*lc_categories[category].setf)(&lc_categories[category]);
 		return (char*)lc->name;
+	}
 	if ((ast.locale.set & (AST_LC_debug|AST_LC_setlocale)) && !(ast.locale.set & AST_LC_internal))
 	{
-		static int	header;
-
-		if (!header)
-		{
-			header = 1;
-			sfprintf(sfstderr, "locale set  %17s %16s %16s %16s %s\n", "CATEGORY", "AST", "SYSTEM", "PREVIOUS", "ATTRIBUTES");
-		}
+		header();
 		sfprintf(sfstderr, "locale set  %17s %16s %16s %16s", lc_categories[category].name, lc->name, sys, lc_categories[category].prev ? lc_categories[category].prev->name : NiL);
-		if (lc_categories[category].flags & LC_local)
-			sfprintf(sfstderr, " local");
-		if (lc_categories[category].flags & LC_setlocale)
-			sfprintf(sfstderr, " setlocale");
-		if (lc_categories[category].flags & LC_setenv)
-			sfprintf(sfstderr, " setenv");
 		if (category == AST_LC_CTYPE)
 			sfprintf(sfstderr, " MB_CUR_MAX=%d%s%s%s%s"
 				, ast.mb_cur_max
-				, ast.mb_len == debug_mblen ? " debug_mblen" : ast.mb_len == mblen ? " mblen" : ""
-				, ast.mb_towc == debug_mbtowc ? " debug_mbtowc" : ast.mb_towc == mbtowc ? " mbtowc"
+				, ast.mb_len == debug_mblen ? " debug_mblen" : ast.mb_len == utf8_mblen ? " utf8_mblen" : ast.mb_len == mblen ? " mblen" : ""
+				, ast.mb_towc == debug_mbtowc ? " debug_mbtowc" : ast.mb_towc == utf8_mbtowc ? " utf8_mbtowc" : ast.mb_towc == mbtowc ? " mbtowc"
 #ifdef mb_state
 					: ast.mb_towc == sjis_mbtowc ? " sjis_mbtowc"
 #endif
 					: ""
-				, ast.mb_width == debug_wcwidth ? " debug_wcwidth" : ast.mb_width == wcwidth ? " wcwidth" : ast.mb_width == default_wcwidth ? " default_wcwidth" : ""
-				, ast.mb_conv == debug_wctomb ? " debug_wctomb" : ast.mb_conv == wctomb ? " wctomb" : ""
+				, ast.mb_width == debug_wcwidth ? " debug_wcwidth" : ast.mb_width == utf8_wcwidth ? " utf8_wcwidth" : ast.mb_width == wcwidth ? " wcwidth" : ast.mb_width == default_wcwidth ? " default_wcwidth" : ""
+				, ast.mb_conv == debug_wctomb ? " debug_wctomb" : ast.mb_conv == utf8_wctomb ? " utf8_wctomb" : ast.mb_conv == wctomb ? " wctomb" : ""
 			);
 		else if (category == AST_LC_NUMERIC)
 		{
@@ -905,6 +931,14 @@ single(int category, Lc_t* lc, unsigned int flags)
 
 			sfprintf(sfstderr, " decimal='%c' thousands='%c'", dp->decimal, dp->thousand >= 0 ? dp->thousand : 'X');
 		}
+		if ((locales[category]->flags | lc_categories[category].flags) & LC_default)
+			sfprintf(sfstderr, " default");
+		if ((locales[category]->flags | lc_categories[category].flags) & LC_local)
+			sfprintf(sfstderr, " local");
+		if ((locales[category]->flags | lc_categories[category].flags) & LC_setlocale)
+			sfprintf(sfstderr, " setlocale");
+		if ((locales[category]->flags | lc_categories[category].flags) & LC_setenv)
+			sfprintf(sfstderr, " setenv");
 		sfprintf(sfstderr, "\n");
 	}
 	return (char*)lc->name;
@@ -1093,7 +1127,10 @@ _ast_setlocale(int category, const char* locale)
 		initialized = 0;
 	}
 	if ((ast.locale.set & (AST_LC_debug|AST_LC_setlocale)) && !(ast.locale.set & AST_LC_internal))
-		sfprintf(sfstderr, "locale user %17s %16s  %s%s\n", category == AST_LC_LANG ? "LANG" : lc_categories[category].name, locale && !*locale ? "''" : locale, initialized ? "" : "[initial]", (ast.locale.set & AST_LC_setenv) ? "[setenv]" : "");
+	{
+		header();
+		sfprintf(sfstderr, "locale user %17s %16s %16s %16s%s%s\n", category == AST_LC_LANG ? "LANG" : lc_categories[category].name, locale && !*locale ? "''" : locale, "", "", initialized ? "" : " initial", (ast.locale.set & AST_LC_setenv) ? " setenv" : "");
+	}
 	if (ast.locale.set & AST_LC_setenv)
 	{
 		f = LC_setenv;

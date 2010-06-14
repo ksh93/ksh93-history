@@ -1892,24 +1892,6 @@ nosub:
 	return(0);
 }
 
-static Sfio_t *runcomsub(Shell_t *shp, Shnode_t *t)
-{
-	Sfio_t	*iop;
-	int	fd,pv[2];
-	Shnode_t *tt = (Shnode_t*)stakalloc(sizeof(struct forknod));
-	memset(tt,0,sizeof(struct forknod));
-	tt->fork.forktre = t;
-	tt->fork.forktyp = TFORK|FPOU|FCOMSUB;
-	sh_pipe(pv);
-	shp->inpipe = 0;
-	shp->outpipe = pv;
-	sh_exec(tt, sh_isstate(SH_ERREXIT));
-	fd = pv[0];
-	sh_close(pv[1]);
-	iop = sfnew(NULL,NULL,SF_UNBOUND,fd,SF_READ);
-	return(iop);
-}
-
 /*
  * This routine handles command substitution
  * <type> is 0 for older `...` version
@@ -2022,11 +2004,7 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 			type = 3;
 		}
 		else
-		{
-			if(!(sp = sh_subshell(t,sh_isstate(SH_ERREXIT),type)))
-				sp = runcomsub(mp->shp,t);
-			mp->shp->comsub = 0;
-		}
+			sp = sh_subshell(t,sh_isstate(SH_ERREXIT),type);
 		fcrestore(&save);
 	}
 	else
@@ -2113,8 +2091,6 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 	}
 	if(was_interactive)
 		sh_onstate(SH_INTERACTIVE);
-	if(mp->shp->spid)
-		job_wait(mp->shp->spid);
 	if(--newlines>0 && mp->shp->ifstable['\n']==S_DELIM)
 	{
 		if(mp->sp)

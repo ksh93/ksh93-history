@@ -169,6 +169,8 @@ tst	- output{
 		printf("#define DLL_INFO_PREVER	0x0001	/* pre-suffix style version */\n");
 		printf("#define DLL_INFO_DOTVER	0x0002	/* post-suffix style version */\n");
 		printf("\n");
+		printf("typedef unsigned long (*Dll_plugin_version_f)(void);\n");
+		printf("\n");
 		printf("typedef struct Dllinfo_s\n");
 		printf("{\n");
 		printf("	char**	sibling;	/* sibling dirs on $PATH */\n");
@@ -210,11 +212,14 @@ tst	- output{
 		printf("#endif\n");
 		printf("\n");
 		printf("extern Dllinfo_t*	dllinfo(void);\n");
+		printf("extern void*		dllplugin(const char*, const char*, const char*, unsigned long, int, char*, size_t);\n");
 		printf("extern void*		dllplug(const char*, const char*, const char*, int, char*, size_t);\n");
 		printf("extern void*		dllfind(const char*, const char*, int, char*, size_t);\n");
 		printf("extern void*		dllopen(const char*, int);\n");
 		printf("extern void*		dllnext(int);\n");
 		printf("extern void*		dlllook(void*, const char*);\n");
+		printf("extern int		dllcheck(void*, const char*, unsigned long);\n");
+		printf("extern char*		dllerror(int);\n");
 	#if _hdr_rld_interface
 		if (i >= 0)
 		{

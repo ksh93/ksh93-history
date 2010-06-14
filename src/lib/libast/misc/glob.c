@@ -736,7 +736,10 @@ glob(const char* pattern, int flags, int (*errfn)(const char*, int), register gl
 	pat = strcopy(ap->gl_begin, pattern + optlen);
 	if (suflen)
 		pat = strcopy(pat, gp->gl_suffix);
-	gp->gl_pat = optlen ? strncpy(gp->gl_opt = pat + 1, pattern, optlen) : (char*)0;
+	if (optlen)
+		strlcpy(gp->gl_pat = gp->gl_opt = pat + 1, pattern, optlen);
+	else
+		gp->gl_pat = 0;
 	suflen = 0;
 	if (!(flags & GLOB_LIST))
 		gp->gl_match = 0;

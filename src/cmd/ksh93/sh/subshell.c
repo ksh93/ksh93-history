@@ -89,88 +89,65 @@ static struct subshell
 	int		coutpipe;
 	int		cpipe;
 	int		nofork;
+	int		subdup;
 	char		subshare;
 	char		comsub;
 } *subshell_data;
 
 static int subenv;
 
+
 /*
  * This routine will turn the sftmp() file into a real /tmp file or pipe
+ * if the /tmp file create fails
  */
-void	sh_subtmpfile(int pflag)
+void	sh_subtmpfile(Shell_t *shp)
 {
-	Shell_t *shp = &sh;
-	int fds[2];
-	Sfoff_t off;
-	register struct checkpt	*pp = (struct checkpt*)shp->jmplist;
-	register struct subshell *sp = subshell_data->pipe;
 	if(sfset(sfstdout,0,0)&SF_STRING)
 	{
 		register int fd;
+		register struct checkpt	*pp = (struct checkpt*)shp->jmplist;
+		register struct subshell *sp = subshell_data->pipe;
 		/* save file descriptor 1 if open */
 		if((sp->tmpfd = fd = fcntl(1,F_DUPFD,10)) >= 0)
 		{
 			fcntl(fd,F_SETFD,FD_CLOEXEC);
 			shp->fdstatus[fd] = shp->fdstatus[1]|IOCLEX;
 			close(1);
-			shp->fdstatus[1] = IOCLOSE;
 		}
 		else if(errno!=EBADF)
-		{
-			((struct checkpt*)shp->jmplist)->mode = SH_JMPERREXIT;
-			shp->toomany = 1;
 			errormsg(SH_DICT,ERROR_system(1),e_toomany);
-		}
-		if(shp->subshare || !pflag)
+		/* popping a discipline forces a /tmp file create */
+		sfdisc(sfstdout,SF_POPDISC);
+		if((fd=sffileno(sfstdout))<0)
 		{
-			sfdisc(sfstdout,SF_POPDISC);
-			if((fd=sffileno(sfstdout))>=0)
+			/* unable to create the /tmp file so use a pipe */
+			int fds[2];
+			Sfoff_t off;
+			sh_pipe(fds);
+			sp->pipefd = fds[0];
+			sh_fcntl(sp->pipefd,F_SETFD,FD_CLOEXEC);
+			/* write the data to the pipe */
+			if(off = sftell(sfstdout))
+				write(fds[1],sfsetbuf(sfstdout,(Void_t*)sfstdout,0),(size_t)off);
+			sfclose(sfstdout);
+			if((sh_fcntl(fds[1],F_DUPFD, 1)) != 1)
+				errormsg(SH_DICT,ERROR_system(1),e_file+4);
+			sh_close(fds[1]);
+		}
+		else
+		{
+			shp->fdstatus[fd] = IOREAD|IOWRITE;
+			sfsync(sfstdout);
+			if(fd==1)
+				fcntl(1,F_SETFD,0);
+			else
 			{
-				shp->fdstatus[fd] = IOREAD|IOWRITE;
-				sfsync(sfstdout);
-				if(fd==1)
-					fcntl(1,F_SETFD,0);
-				else
-				{
-					sfsetfd(sfstdout,1);
-					shp->fdstatus[1] = shp->fdstatus[fd];
-					shp->fdstatus[fd] = IOCLOSE;
-				}
-				goto skip;
+				sfsetfd(sfstdout,1);
+				shp->fdstatus[1] = shp->fdstatus[fd];
+				shp->fdstatus[fd] = IOCLOSE;
 			}
 		}
-	}
-	if(sp && (shp->fdstatus[1]==IOCLOSE || (pflag && !shp->subshare && !(shp->fdstatus[1]&IONOSEEK))))
-	{
-		struct stat statb,statx;
-		int fd;
-		sh_pipe(fds);
-		sp->pipefd = fds[0];
-		sh_fcntl(sp->pipefd,F_SETFD,FD_CLOEXEC);
-		/* write the data to the pipe */
-		if(off = sftell(sfstdout))
-		{
-			write(fds[1],sfsetbuf(sfstdout,(Void_t*)sfstdout,0),(size_t)off);
-			sfpurge(sfstdout);
-		}
-		if((sfset(sfstdout,0,0)&SF_STRING) || fstat(1,&statb)<0)
-			statb.st_ino = 0;
-		sfclose(sfstdout);
-		if((sh_fcntl(fds[1],F_DUPFD, 1)) != 1)
-			errormsg(SH_DICT,ERROR_system(1),e_redirect);
-		sh_close(fds[1]);
-		if(statb.st_ino) for(fd=0; fd < 10; fd++)
-		{
-			if(fd==1 || ((shp->fdstatus[fd]&(IONOSEEK|IOSEEK|IOWRITE))!=(IOSEEK|IOWRITE)) || fstat(fd,&statx)<0)
-				continue;
-			if(statb.st_ino==statx.st_ino && statb.st_dev==statx.st_dev)
-			{
-				sh_close(fd);
-				fcntl(1,F_DUPFD, fd);
-			}
-		}
-	skip:
 		sh_iostream(shp,1);
 		sfset(sfstdout,SF_SHARE|SF_PUBLIC,1);
 		sfpool(sfstdout,shp->outpool,SF_WRITE);
@@ -178,7 +155,6 @@ void	sh_subtmpfile(int pflag)
 			pp->olist->strm = 0;
 	}
 }
-
 
 /*
  * This routine creates a temp file if necessary and creates a subshell.
@@ -196,7 +172,7 @@ void sh_subfork(void)
 		trap = strdup(trap);
 	/* see whether inside $(...) */
 	if(sp->pipe)
-		sh_subtmpfile(shp->comsub==1);
+		sh_subtmpfile(shp);
 	shp->curenv = 0;
 	if(pid = sh_fork(FSHOWME,NIL(int*)))
 	{
@@ -218,6 +194,7 @@ void sh_subfork(void)
 		sh_offstate(SH_MONITOR);
 		subshell_data = 0;
 		shp->subshell = 0;
+		shp->comsub = 0;
 		SH_SUBSHELLNOD->nvalue.s = 0;
 		sp->subpid=0;
 		shp->st.trapcom[0] = trap;
@@ -485,11 +462,6 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 	struct checkpt buff;
 	struct sh_scoped savst;
 	struct dolnod   *argsav=0;
-	if(comsub && shp->comsub==1)
-	{
-		shp->subnest = 1;
-		siglongjmp(*shp->jmplist,SH_JMPSUB);
-	}
 	memset((char*)sp, 0, sizeof(*sp));
 	sfsync(shp->outpool);
 	argsav = sh_arguse(shp);
@@ -512,6 +484,7 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 	sp->var = shp->var_tree;
 	sp->options = shp->options;
 	sp->jobs = job_subsave();
+	sp->subdup = shp->subdup;
 	/* make sure initialization has occurred */ 
 	if(!shp->pathlist)
 		path_get(".");
@@ -555,7 +528,6 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 		if(comsub)
 		{
 			/* disable job control */
-			shp->spid = 0;
 			sp->jobcontrol = job.jobcontrol;
 			sp->monitor = (sh_isstate(SH_MONITOR)!=0);
 			job.jobcontrol=0;
@@ -655,16 +627,6 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 		}
 		shp->fdstatus[1] = sp->fdstatus;
 	}
-	if(sp->subpid)
-	{
-		if(shp->exitval > SH_EXITSIG)
-			sp->sig = (shp->exitval&SH_EXITMASK);
-		shp->exitval = 0;
-		if(comsub==1)
-			shp->spid = sp->subpid;
-	}
-	if(comsub && iop && sp->pipefd<0)
-		sfseek(iop,(off_t)0,SEEK_SET);
 	path_delete((Pathcomp_t*)shp->pathlist);
 	shp->pathlist = (void*)sp->pathlist;
 	job_subrestore(sp->jobs);
@@ -733,6 +695,7 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 	}
 	shp->subshare = sp->subshare;
 	shp->comsub = sp->comsub;
+	shp->subdup = sp->subdup;
 	if(shp->subshell)
 		SH_SUBSHELLNOD->nvalue.s = --shp->subshell;
 	subshell = shp->subshell;
@@ -752,8 +715,10 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 	}
 	sh_sigcheck();
 	shp->trapnote = 0;
-	if(sp->subpid && comsub!=1)
+	if(sp->subpid)
 		job_wait(sp->subpid);
+	if(comsub && iop && sp->pipefd<0)
+		 sfseek(iop,(off_t)0,SEEK_SET);
 	if(shp->exitval > SH_EXITSIG)
 	{
 		int sig = shp->exitval&SH_EXITMASK;
@@ -766,13 +731,9 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 		shp->toomany = 1;
 		errormsg(SH_DICT,ERROR_system(1),e_redirect);
 	}
+	if(jmpval==SH_JMPSUB && shp->lastsig)
+		sh_fault(shp->lastsig);
 	if(jmpval && shp->toomany)
 		siglongjmp(*shp->jmplist,jmpval);
-	if(shp->subnest && iop)
-	{
-		sfclose(iop);
-		iop = 0;
-		shp->subnest = 0;
-	}
 	return(iop);
 }

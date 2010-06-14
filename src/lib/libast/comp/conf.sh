@@ -21,7 +21,7 @@
 ########################################################################
 : generate getconf and limits info
 #
-# @(#)conf.sh (AT&T Research) 2008-01-31
+# @(#)conf.sh (AT&T Research) 2010-06-14
 #
 # this script generates these files from the table file in the first arg
 # the remaining args are the C compiler name and flags
@@ -1224,6 +1224,9 @@ printf("#endif\n");
 				case $flags in
 				*M*)	conf_flags="${conf_flags}|CONF_MINMAX_DEF" ;;
 				esac
+				case $conf_minmax in
+				[-+0123456789]*)	x= ;;
+				esac
 				break
 				;;
 			esac
@@ -1286,7 +1289,13 @@ ${script}
 			case $x in
 			?*)	conf_minmax=$x
 				case $flags in
-				*M*)	conf_flags="${conf_flags}|CONF_MINMAX_DEF" ;;
+				*M*)	case "|$conf_flags|" in
+					*'|CONF_MINMAX_DEF|'*)
+						;;
+					*)	conf_flags="${conf_flags}|CONF_MINMAX_DEF"
+						;;
+					esac
+					;;
 				esac
 				;;
 			esac

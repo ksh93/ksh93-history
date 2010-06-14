@@ -92,5 +92,5 @@ localeconv(void)
 struct lconv*
 _ast_localeconv(void)
 {
-	return ((locales[AST_LC_MONETARY]->flags | locales[AST_LC_NUMERIC]->flags) & LC_debug) ? &debug_lconv : localeconv();
+	return ((locales[AST_LC_MONETARY]->flags | locales[AST_LC_NUMERIC]->flags) & LC_debug) || (locales[AST_LC_NUMERIC]->flags & (LC_default|LC_local)) == LC_local ? &debug_lconv : localeconv();
 }

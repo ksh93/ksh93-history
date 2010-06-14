@@ -1,3 +1,12 @@
+10-06-01 features/api, ast_api.h: formalized forwards/backwards api compatibility
+10-06-01 _AST_API=20100601: add size_t args for all path*() output buffers
+10-06-01 comp/setlocale.c: handle C.UTF-8 test locale
+10-06-01 include/mc.h: add size_t to mcfind() for result buffer (internal api)
+10-06-01 use strlcpy() instead of strncpy()
+10-05-28 include/ast_version.h: add AST_PLUGIN_VERSION for dllplugin()
+10-05-28 include/shcmd.h: add SH_PLUGIN_VERSION for dllplugin()
+10-05-28 misc/conformance.c: add conformance(3)
+10-05-28 misc/optget.c: add [(id1|id2)...] conformance("id1|id2",0) conditionals
 10-05-25 include/sfhdr.h: adjust SF_NMAP according to _ptr_bits
 10-05-25 include/shcmd.h: add sh_builtin() macro for lib_init() table initialization
 10-05-21 misc/optget.c: --html \bfoo::bar([[:digit:]][[:upper:]]*) => foo-bar.html

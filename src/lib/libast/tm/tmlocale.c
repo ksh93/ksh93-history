@@ -558,7 +558,7 @@ load(Lc_info_t* li)
 	tm_info.format = tm_data.format;
 	if (!(tm_info.deformat = state.format))
 		tm_info.deformat = tm_info.format[TM_DEFAULT];
-	if (mcfind(path, NiL, NiL, LC_TIME, 0) && (sp = sfopen(NiL, path, "r")))
+	if (mcfind(NiL, NiL, LC_TIME, 0, path, sizeof(path)) && (sp = sfopen(NiL, path, "r")))
 	{
 		n = sfsize(sp);
 		tp = 0;

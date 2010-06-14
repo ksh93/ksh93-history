@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1990-2009 AT&T Intellectual Property          *
+*          Copyright (c) 1990-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -62,6 +62,7 @@
 	int		svc_outstanding;/* outstanding service intercepts */ \
 	int		svc_running;	/* running service intercepts	*/ \
 	int		pid;		/* pid				*/ \
+	int		index;		/* coshell index		*/ \
 	int		slots;		/* number of job slots		*/ \
 					/* end of private additions	*/
 
@@ -116,6 +117,7 @@ typedef struct Costate_s		/* global coshell state		*/
 	char*		sh;		/* sh from first coopen()	*/
 	char*		type;		/* CO_ENV_TYPE value		*/
 	int		init;		/* 0 if first coopen()		*/
+	int		index;		/* last coshell index		*/
 } Costate_t;
 
 extern char 		coident[];	/* coshell ident script		*/

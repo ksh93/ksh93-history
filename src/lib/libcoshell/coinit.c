@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1990-2009 AT&T Intellectual Property          *
+*          Copyright (c) 1990-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -245,7 +245,7 @@ coinitialize(Coshell_t* co, int flags)
 			return 0;
 		}
 		t += n / 2;
-		if (!(flags & CO_CROSS) && !pathpath(t, "ignore", NiL, PATH_ABSOLUTE|PATH_REGULAR|PATH_EXECUTE) && pathpath(t, "bin/ignore", "", PATH_ABSOLUTE|PATH_REGULAR|PATH_EXECUTE))
+		if (!(flags & CO_CROSS) && !pathpath("ignore", NiL, PATH_ABSOLUTE|PATH_REGULAR|PATH_EXECUTE, t, n / 2) && pathpath("bin/ignore", "", PATH_ABSOLUTE|PATH_REGULAR|PATH_EXECUTE, t, n / 2))
 		{
 			*strrchr(t, '/') = 0;
 			sfputc(sp, ':');

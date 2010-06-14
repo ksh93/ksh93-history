@@ -69,7 +69,7 @@ regerror(int code, const regex_t* p, char* buf, size_t size)
 		s = (const char*)"unknown error";
 	if (size)
 	{
-		strncpy(buf, s, size);
+		strlcpy(buf, s, size);
 		buf[size - 1] = 0;
 	}
 	else

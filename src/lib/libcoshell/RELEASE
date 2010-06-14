@@ -1,3 +1,11 @@
+10-06-01 sync with ast api 20100601
+10-05-19 cokill.c: do cowait(co,co,0) to drain pending messages
+10-05-15 coshell.h,coopen.c: add CO_ORPHAN for PROC_ORPHAN
+10-05-11 coopen.c: add PROC_ORPHAN for CO_SHELL
+10-05-10 coopen.c: no atexit() for CO_SHELL
+10-04-15 first ksh93u local job pool tests work (service daemon tbd)
+10-04-14 cowait.c: add 3rd cowait() arg timeout; 0 Coshell_t* operates on all open coshells
+10-04-10 coshell.h: add CO_SHELL for shell using coshell!
 09-12-09 coexport.c: add runtime CO_ENV_EXPORT hook that avoids changing environ
 08-10-28 coopen.c: close write side of parent msgfd -- doh
 08-04-28 coexec.c: check for fd 1,2 equivalence before CO_SERIALIZE 2>&1

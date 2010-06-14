@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1990-2009 AT&T Intellectual Property          *
+*          Copyright (c) 1990-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -28,7 +28,7 @@
 #include "colib.h"
 
 char	coident[] =
-"# @(#)$Id: libcoshell (AT&T Research) 2009-12-08 $\n"
+"# @(#)$Id: libcoshell (AT&T Research) 2010-05-19 $\n"
 CO_ENV_MSGFD "=%d\n"
 "{ { (eval 'function fun { trap \":\" 0; return 1; }; trap \"exit 0\" 0; fun; exit 1') && PATH= print -u$"
 CO_ENV_MSGFD " ksh; } || { times && echo bsh >&$" CO_ENV_MSGFD

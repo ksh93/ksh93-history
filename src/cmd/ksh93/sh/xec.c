@@ -80,6 +80,63 @@ struct funenv
 /* ========	command execution	========*/
 
 /*
+ * The following two functions allow command substituion for non-builtins
+ * to use a pipe and to wait for the pipe to close before restoring to a
+ * temp file.
+ */
+static int	subpipe[3] = {-1};
+static int	subdup;
+static void iousepipe(Shell_t *shp)
+{
+	int i;
+	fcntl(subpipe[0],F_SETFD,FD_CLOEXEC);
+	subpipe[2] = fcntl(1,F_DUPFD,10);
+	shp->fdstatus[subpipe[2]] = shp->fdstatus[1];
+	close(1);
+	fcntl(subpipe[1],F_DUPFD,1);
+	shp->fdstatus[1] = shp->fdstatus[subpipe[1]];
+	sh_close(subpipe[1]);
+	if(subdup=shp->subdup) for(i=0; i < 10; i++)
+	{
+		if(subdup&(1<<i))
+		{
+			sh_close(i);
+			fcntl(1,F_DUPFD,i);
+			shp->fdstatus[i] = shp->fdstatus[1];
+		}
+	}
+}
+
+static void iounpipe(Shell_t *shp)
+{
+	int n;
+	char buff[SF_BUFSIZE];
+	close(1);
+	fcntl(subpipe[2], F_DUPFD, 1);
+	shp->fdstatus[1] = shp->fdstatus[subpipe[2]];
+	if(subdup) for(n=0; n < 10; n++)
+	{
+		if(subdup&(1<<n))
+		{
+			sh_close(n);
+			fcntl(1, F_DUPFD, n);
+			shp->fdstatus[n] = shp->fdstatus[1];
+		}
+	}
+	shp->subdup = 0;
+	sh_close(subpipe[2]);
+	while((n = read(subpipe[0],buff,sizeof(buff)))!=0)
+	{
+		if(n>0)
+			sfwrite(sfstdout,buff,n);
+		else if(errno!=EINTR)
+			break;
+	}
+	sh_close(subpipe[0]);
+	subpipe[0] = -1;
+}
+
+/*
  * print time <t> in h:m:s format with precision <p>
  */
 static void     l_time(Sfio_t *outfile,register clock_t t,int p)
@@ -1017,7 +1074,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 						bp->notify = 0;
 						bp->flags = (OPTIMIZE!=0);
 						if(shp->subshell && nv_isattr(np,BLT_NOSFIO))
-							sh_subtmpfile(0);
+							sh_subtmpfile(shp);
 						if(execflg && !shp->subshell &&
 							!shp->st.trapcom[0] && !shp->st.trap[SH_ERRTRAP] && shp->fn_depth==0 && !nv_isattr(np,BLT_ENV))
 						{
@@ -1190,9 +1247,11 @@ int sh_exec(register const Shnode_t *t, int flags)
 			int pipes[2];
 			if(shp->subshell)
 			{
-				if(shp->subshare || shp->comsub==2)
-					sh_subtmpfile(0);
-				else
+				sh_subtmpfile(shp);
+				subpipe[0] = -1;
+				if(shp->comsub==1 && !(shp->fdstatus[1]&IONOSEEK) && sh_pipe(subpipe)>=0)
+					iousepipe(shp);
+				if((type&(FAMP|TFORK))==(FAMP|TFORK))
 					sh_subfork();
 			}
 			no_fork = !ntflag && !(type&(FAMP|FPOU)) &&
@@ -1238,7 +1297,11 @@ int sh_exec(register const Shnode_t *t, int flags)
 				else
 					parent = sh_fork(type,&jobid);
 				if(parent<0)
+				{
+					if(shp->comsub==1 && subpipe[0]>=0)
+						iounpipe(shp);
 					break;
+				}
 #else
 #if SHOPT_SPAWN
 #   ifdef _lib_fork
@@ -1251,7 +1314,11 @@ int sh_exec(register const Shnode_t *t, int flags)
 					break;
 #   endif /* _lib_fork */
 				if(parent<0)
+				{
+					if(shp->comsub==1 && subpipe[0]>=0)
+						iounpipe(shp);
 					break;
+				}
 #else
 				parent = sh_fork(type,&jobid);
 #endif /* SHOPT_SPAWN */
@@ -1271,8 +1338,6 @@ int sh_exec(register const Shnode_t *t, int flags)
 					sh_close(shp->inpipe[0]);
 				if(type&(FCOOP|FAMP))
 					shp->bckpid = parent;
-				else if(type&FCOMSUB)
-					shp->spid = parent;
 				else if(!(type&(FAMP|FPOU)))
 				{
 					if(shp->topfd > topfd)
@@ -1283,12 +1348,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 							sh_sigtrap(SIGINT);
 						shp->trapnote |= SH_SIGIGNORE;
 					}
-					if(execflg && shp->subshell && !shp->subshare)
-					{
-						shp->spid = parent;
-						job.pwlist->p_env--;
-					}
-					else if(shp->pipepid)
+					if(shp->pipepid)
 						shp->pipepid = parent;
 					else
 						job_wait(parent);
@@ -1410,11 +1470,6 @@ int sh_exec(register const Shnode_t *t, int flags)
 			int 	jmpval, waitall;
 			int 	simple = (t->fork.forktre->tre.tretyp&COMMSK)==TCOM;
 			struct checkpt buff;
-			if(shp->comsub  && (t->fork.forktre)->tre.tretyp==TPAR)
-			{
-				shp->subnest = 1;
-				siglongjmp(*shp->jmplist,SH_JMPSUB);
-			}
 			if(shp->subshell)
 				execflg = 0;
 			sh_pushcontext(&buff,SH_JMPIO);
@@ -1507,10 +1562,11 @@ int sh_exec(register const Shnode_t *t, int flags)
 					shp->exitval -= 128;
 				sh_done(shp,0);
 			}
-			else if(shp->comsub==1)
+			else if((t->par.partre->tre.tretyp&(FAMP|TFORK))==(FAMP|TFORK))
 			{
-				shp->subnest = 1;
-				siglongjmp(*shp->jmplist,SH_JMPSUB);
+				pid_t   bckpid = shp->bckpid;
+				sh_exec(t->par.partre,flags);
+				shp->bckpid = bckpid;
 			}
 			else
 				sh_subshell(t->par.partre,flags,0);
@@ -1530,12 +1586,7 @@ int sh_exec(register const Shnode_t *t, int flags)
 			pid_t	savepgid = job.curpgid;
 			job.curpgid = 0;
 			if(shp->subshell)
-			{
-				if(shp->subshare || shp->comsub==2)
-					sh_subtmpfile(0);
-				else
-					sh_subfork();
-			}
+				sh_subtmpfile(shp);
 			shp->inpipe = pvo;
 			shp->outpipe = pvn;
 			pvo[1] = -1;
@@ -1930,8 +1981,6 @@ int sh_exec(register const Shnode_t *t, int flags)
 			if(type!=TTIME)
 			{
 				sh_exec(t->par.partre,OPTIMIZE);
-				if(type&FCOMSUB)
-					sh_done(shp,0);
 				shp->exitval = !shp->exitval;
 				break;
 			}
@@ -2492,6 +2541,8 @@ pid_t _sh_fork(register pid_t parent,int flags,int *jobid)
 			job.curpgid = curpgid;
 		if(jobid)
 			*jobid = myjob;
+		if(shp->comsub==1 && subpipe[0]>=0)
+			iounpipe(shp);
 		return(parent);
 	}
 #if !_std_malloc
@@ -2543,7 +2594,6 @@ pid_t _sh_fork(register pid_t parent,int flags,int *jobid)
 		sh_sigreset(2);
 	shp->subshell = 0;
 	shp->comsub = 0;
-	shp->spid = 0;
 	if((flags&FAMP) && shp->coutpipe>1)
 		sh_close(shp->coutpipe);
 	sig = shp->savesig;

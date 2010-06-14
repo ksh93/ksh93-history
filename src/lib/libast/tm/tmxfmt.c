@@ -268,14 +268,11 @@ tmxfmt(char* buf, size_t len, const char* format, Time_t t)
 		case 'D':	/* date */
 			p = tm_info.format[TM_DATE];
 			goto push;
-		case 'E':       /* OBSOLETE no pad day of month */
-			cp = number(cp, ep, (long)tm->tm_mday, 0, width, pad);
-			continue;
 		case 'e':       /* blank padded day of month */
 			cp = number(cp, ep, (long)tm->tm_mday, -2, width, pad);
 			continue;
-		case 'f':	/* TM_DEFAULT override */
-			p = tm_info.deformat;
+		case 'f':	/* (AST) OBSOLETE use %Qf */
+			p = "%Qf";
 			goto push;
 		case 'F':	/* ISO 8601:2000 standard date format */
 			p = "%Y-%m-%d";
@@ -305,24 +302,24 @@ tmxfmt(char* buf, size_t len, const char* format, Time_t t)
 		case 'H':	/* hour (0 - 23) */
 			cp = number(cp, ep, (long)tm->tm_hour, 2, width, pad);
 			continue;
-		case 'i':	/* international `date(1)' date */
-			p = tm_info.format[TM_INTERNATIONAL];
+		case 'i':	/* (AST) OBSOLETE use %QI */
+			p = "%QI";
 			goto push;
 		case 'I':	/* hour (0 - 12) */
 			if ((n = tm->tm_hour) > 12) n -= 12;
 			else if (n == 0) n = 12;
 			cp = number(cp, ep, (long)n, 2, width, pad);
 			continue;
-		case 'J':	/* Julian date (0 offset) */
-			cp = number(cp, ep, (long)tm->tm_yday, 3, width, pad);
-			continue;
 		case 'j':	/* Julian date (1 offset) */
 			cp = number(cp, ep, (long)(tm->tm_yday + 1), 3, width, pad);
 			continue;
-		case 'k':	/* `date(1)' date */
-			p = tm_info.format[TM_DATE_1];
+		case 'J':	/* Julian date (0 offset) */
+			cp = number(cp, ep, (long)tm->tm_yday, 3, width, pad);
+			continue;
+		case 'k':	/* (AST) OBSOLETE use %QD */
+			p = "%QD";
 			goto push;
-		case 'K':
+		case 'K':	/* (AST) largest to smallest */
 			switch (alt)
 			{
 			case 'E':
@@ -336,21 +333,11 @@ tmxfmt(char* buf, size_t len, const char* format, Time_t t)
 				break;
 			}
 			goto push;
-		case 'l':	/* `ls -l' date */
-			if (t)
-			{
-				now = tmxgettime();
-				if (warped(t, now))
-				{
-					p = tm_info.format[TM_DISTANT];
-					goto push;
-				}
-			}
-			p = tm_info.format[TM_RECENT];
+		case 'l':	/* (AST) OBSOLETE use %QL */
+			p = "%QL";
 			goto push;
-		case 'L':	/* TM_DEFAULT */
-		case 'O':	/* OBSOLETE */
-			p = tm_info.format[TM_DEFAULT];
+		case 'L':	/* (AST) OBSOLETE use %Ql */
+			p = "%Ql";
 			goto push;
 		case 'm':	/* month number */
 			cp = number(cp, ep, (long)(tm->tm_mon + 1), 2, width, pad);
@@ -362,30 +349,25 @@ tmxfmt(char* buf, size_t len, const char* format, Time_t t)
 			if (cp < ep)
 				*cp++ = '\n';
 			continue;
-		case 'N':	/* nanosecond part */
+		case 'N':	/* (AST|GNU) nanosecond part */
 			cp = number(cp, ep, (long)tm->tm_nsec, 9, width, pad);
 			continue;
-		case 'o':	/* set options */
-			if (arg)
-				goto options;
-			/*OBSOLETE*/
-			p = tm_info.deformat;
-			goto push;
+#if 0
+		case 'o':	/* (UNUSED) */
+			continue;
+#endif
 		case 'p':	/* meridian */
 			n = TM_MERIDIAN + (tm->tm_hour >= 12);
 			goto index;
-		case 'q':	/* time zone type (nation code) */
-			if (!(flags & TM_UTC))
-			{
-				if ((zp = tm->tm_zone) != tm_info.local)
-					for (; zp >= tm_data.zone; zp--)
-						if (p = zp->type)
-							goto string;
-				else if (p = zp->type)
-					goto string;
-			}
+		case 'P':	/* (AST|GNU) lower case meridian */
+			p = tm_info.format[TM_MERIDIAN + (tm->tm_hour >= 12)];
+			while (cp < ep && (n = *p++))
+				*cp++ = isupper(n) ? tolower(n) : n;
 			continue;
-		case 'Q':	/* %Q<alpha> or %Q<delim>recent<delim>distant<delim> */
+		case 'q':	/* (AST) OBSOLETE use %Qz */
+			p = "%Qz";
+			goto push;
+		case 'Q':	/* (AST) %Q<alpha> or %Q<delim>recent<delim>distant<delim> */
 			if (c = *format)
 			{
 				format++;
@@ -396,9 +378,107 @@ tmxfmt(char* buf, size_t len, const char* format, Time_t t)
 					case 'd':	/* `ls -l' distant date */
 						p = tm_info.format[TM_DISTANT];
 						goto push;
+					case 'D':	/* `date(1)' date */
+						p = tm_info.format[TM_DATE_1];
+						goto push;
+					case 'f':	/* TM_DEFAULT override */
+						p = tm_info.deformat;
+						goto push;
+					case 'I':	/* international `date(1)' date */
+						p = tm_info.format[TM_INTERNATIONAL];
+						goto push;
+					case 'l':	/* TM_DEFAULT */
+						p = tm_info.format[TM_DEFAULT];
+						goto push;
+					case 'L':	/* `ls -l' date */
+						if (t)
+						{
+							now = tmxgettime();
+							if (warped(t, now))
+							{
+								p = tm_info.format[TM_DISTANT];
+								goto push;
+							}
+						}
+						p = tm_info.format[TM_RECENT];
+						goto push;
+					case 'o':	/* set options ( %([+-]flag...)o ) */
+						if (arg)
+						{
+							c = '+';
+							i = 0;
+							for (;;)
+							{
+								switch (*arg++)
+								{
+								case 0:
+									n = 0;
+									break;
+								case '=':
+									i = !i;
+									continue;
+								case '+':
+								case '-':
+								case '!':
+									c = *(arg - 1);
+									continue;
+								case 'l':
+									n = TM_LEAP;
+									break;
+								case 'n':
+								case 's':
+									n = TM_SUBSECOND;
+									break;
+								case 'u':
+									n = TM_UTC;
+									break;
+								default:
+									continue;
+								}
+								if (!n)
+									break;
+					
+								/*
+								 * right, the global state stinks
+								 * but we respect its locale-like status
+								 */
+					
+								if (c == '+')
+								{
+									if (!(flags & n))
+									{
+										flags |= n;
+										tm_info.flags |= n;
+										tm = tmxtm(tm, t, (flags & TM_UTC) ? &tm_data.zone[2] : tm->tm_zone);
+										if (!i)
+											tm_info.flags &= ~n;
+									}
+								}
+								else if (flags & n)
+								{
+									flags &= ~n;
+									tm_info.flags &= ~n;
+									tm = tmxtm(tm, t, (flags & TM_UTC) ? &tm_data.zone[2] : tm->tm_zone);
+									if (!i)
+										tm_info.flags |= n;
+								}
+							}
+						}
+						break;
 					case 'r':	/* `ls -l' recent date */
 						p = tm_info.format[TM_RECENT];
 						goto push;
+					case 'z':	/* time zone nation code */
+						if (!(flags & TM_UTC))
+						{
+							if ((zp = tm->tm_zone) != tm_info.local)
+								for (; zp >= tm_data.zone; zp--)
+									if (p = zp->type)
+										goto string;
+							else if (p = zp->type)
+								goto string;
+						}
+						break;
 					default:
 						format--;
 						break;
@@ -434,7 +514,7 @@ tmxfmt(char* buf, size_t len, const char* format, Time_t t)
 		case 'R':
 			p = "%H:%M";
 			goto push;
-		case 's':	/* seconds[.nanoseconds] since the epoch */
+		case 's':	/* (DEFACTO) seconds[.nanoseconds] since the epoch */
 		case '#':
 			now = t;
 			f = fmt;
@@ -476,6 +556,10 @@ tmxfmt(char* buf, size_t len, const char* format, Time_t t)
 		case 'U':	/* week number, Sunday as first day */
 			cp = number(cp, ep, (long)tmweek(tm, 0, -1, -1), 2, width, pad);
 			continue;
+#if 0
+		case 'v':	/* (UNUSED) */
+			continue;
+#endif
 		case 'V':	/* ISO week number */
 			cp = number(cp, ep, (long)tmweek(tm, 2, -1, -1), 2, width, pad);
 			continue;
@@ -516,11 +600,7 @@ tmxfmt(char* buf, size_t len, const char* format, Time_t t)
 			}
 			p = (flags & TM_UTC) ? tm_info.format[TM_UT] : tm->tm_isdst && tm->tm_zone->daylight ? tm->tm_zone->daylight : tm->tm_zone->standard;
 			goto string;
-		case '+':	/* old %+flag */
-		case '!':	/* old %!flag */
-			format--;
-			/*FALLTHROUGH*/
-		case '=':	/* old %=[=][+-]flag */
+		case '=':	/* (AST) OBSOLETE use %([+-]flag...)Qo (old %=[=][+-]flag) */
 			for (arg = argbuf; *format == '=' || *format == '-' || *format == '+' || *format == '!'; format++)
 				if (arg < &argbuf[sizeof(argbuf) - 2])
 					*arg++ = *format;

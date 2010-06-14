@@ -58,7 +58,7 @@ tmzone(register const char* name, char** end, const char* type, int* dst)
 	tmset(tm_info.zone);
 	if ((*name == '+' || *name == '-') && (fixed.west = tmgoff(name, &e, TM_LOCALZONE)) != TM_LOCALZONE && !*e)
 	{
-		fixed.standard = fixed.daylight = strncpy(off, name, sizeof(off) - 1);
+		strlcpy(fixed.standard = fixed.daylight = off, name, sizeof(off));
 		if (end)
 			*end = e;
 		if (dst)

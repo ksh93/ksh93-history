@@ -23,9 +23,7 @@
  * AT&T Research
  */
 
-#include <ast.h>
-#include <dlldefs.h>
-#include <error.h>
+#include "dlllib.h"
 
 /*
  * find and load lib plugin/module library name with optional version ver and dlopen() flags
@@ -35,14 +33,15 @@
  */
 
 extern void*
-dllplug(const char* lib, const char* name, const char* ver, int flags, char* path, size_t size)
+dllplugin(const char* lib, const char* name, const char* ver, unsigned long rel, int flags, char* path, size_t size)
 {
 	void*		dll;
+	int		err;
 	int		hit;
 	Dllscan_t*	dls;
 	Dllent_t*	dle;
 
-	hit = 0;
+	err = hit = 0;
 	for (;;)
 	{
 		if (dls = dllsopen(lib, name, ver))
@@ -52,22 +51,47 @@ dllplug(const char* lib, const char* name, const char* ver, int flags, char* pat
 				hit = 1;
 				if (dll = dllopen(dle->path, flags|RTLD_GLOBAL|RTLD_PARENT))
 				{
+					if (!dllcheck(dll, dle->path, rel))
+					{
+						err = state.error;
+						dlclose(dll);
+						dll = 0;
+						continue;
+					}
 					if (path && size)
-						strncopy(path, dle->path, size);
+						strlcpy(path, dle->path, size);
 					break;
 				}
 				else
-					errorf("dll", NiL, 1, "%s: dlopen failed: %s", dle->path, dlerror());
+					errorf("dll", NiL, 1, "%s: dlopen failed: %s", dle->path, dllerror(1));
 			}
 			dllsclose(dls);
 		}
 		if (hit)
+		{
+			if (!dll)
+				state.error = err;
 			return dll;
+		}
 		if (!lib)
 			break;
 		lib = 0;
 	}
-	if ((dll = dllopen(name, flags)) && dll && path && size)
-		strncopy(path, name, size);
+	if (dll = dllopen(name, flags))
+	{
+		if (!dllcheck(dll, dle->path, rel))
+		{
+			dlclose(dll);
+			dll = 0;
+		}
+		else if (path && size)
+			strlcpy(path, name, size);
+	}
 	return dll;
+}
+
+extern void*
+dllplug(const char* lib, const char* name, const char* ver, int flags, char* path, size_t size)
+{
+	return dllplugin(lib, name, ver, 0, flags, path, size);
 }

@@ -29,7 +29,7 @@
  */
 
 static const char usage[] =
-"[-?\n@(#)$Id: paste (AT&T Research) 2009-11-28 $\n]"
+"[-?\n@(#)$Id: paste (AT&T Research) 2010-06-12 $\n]"
 USAGE_LICENSE
 "[+NAME?paste - merge lines of files]"
 "[+DESCRIPTION?\bpaste\b concatenates the corresponding lines of a "
@@ -212,6 +212,8 @@ b_paste(int argc,register char *argv[], void* context)
 		delim[0] = '\t';
 		delim[1] = 0;
 	}
+	if (!(delim = strdup(delim)))
+		error(ERROR_system(1), "out of space");
 	dlen = dsiz = stresc(delim);
 	mp = 0;
 	if (mbwide())
@@ -227,7 +229,10 @@ b_paste(int argc,register char *argv[], void* context)
 		if(dlen < dsiz)
 		{
 			if (!(mp = newof(0, Delim_t, dlen, 0)))
+			{
+				free(delim);
 				error(ERROR_system(1), "out of space");
+			}
 			cp = delim;
 			dlen = 0;
 			while (cp < ep)
@@ -278,5 +283,6 @@ b_paste(int argc,register char *argv[], void* context)
 	}
 	if (mp)
 		free(mp);
+	free(delim);
 	return(error_info.errors);
 }

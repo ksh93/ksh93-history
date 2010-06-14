@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1990-2009 AT&T Intellectual Property          *
+*          Copyright (c) 1990-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -67,31 +67,34 @@ struct Cojob_s; typedef struct Cojob_s Cojob_t;
 
 #define CO_QUANT	100		/* time quanta per sec		*/
 
-#define CO_ANY		(1<<0)		/* return any open coshell	*/
-#define CO_DEBUG	(1<<1)		/* library debug trace		*/
-#define CO_EXPORT	(1<<2)		/* export everything		*/
-#define CO_IGNORE	(1<<3)		/* ignore command errors	*/
-#define CO_LOCAL	(1<<4)		/* local affinity		*/
-#define CO_NONBLOCK	(1<<5)		/* don't block coexec if Q full	*/
-#define CO_SILENT	(1<<6)		/* don't trace commands		*/
+#define CO_ANY		0x000001	/* return any open coshell	*/
+#define CO_DEBUG	0x000002	/* library debug trace		*/
+#define CO_EXPORT	0x000004	/* export everything		*/
+#define CO_IGNORE	0x000008	/* ignore command errors	*/
+#define CO_LOCAL	0x000010	/* local affinity		*/
+#define CO_NONBLOCK	0x000020	/* don't block coexec if Q full	*/
+#define CO_SHELL	0x000040	/* shell using coshell!		*/
+#define CO_SILENT	0x000080	/* don't trace commands		*/
 
-#define CO_KSH		(1<<7)		/* coshell is ksh (readonly)	*/
-#define CO_SERVER	(1<<8)		/* coshell is server (readonly)	*/
-#define CO_OSH		(1<<9)		/* coshell is OLD (readonly)	*/
+#define CO_KSH		0x000100	/* coshell is ksh (readonly)	*/
+#define CO_SERVER	0x000200	/* coshell is server (readonly)	*/
+#define CO_OSH		0x000400	/* coshell is OLD (readonly)	*/
 
-#define CO_CROSS	(1<<10)		/* don't prepend local dirs	*/
-#define CO_DEVFD	(1<<11)		/* coshell handles /dev/fd/#	*/
+#define CO_CROSS	0x000800	/* don't prepend local dirs	*/
+#define CO_DEVFD	0x001000	/* coshell handles /dev/fd/#	*/
 
-#define CO_SERIALIZE	(1<<12)		/* serialize stdout and stderr	*/
-#define CO_SERVICE	(1<<13)		/* service callouts		*/
+#define CO_SERIALIZE	0x002000	/* serialize stdout and stderr	*/
+#define CO_SERVICE	0x004000	/* service callouts		*/
 
-#define CO_APPEND	(1<<14)		/* append coexec() out/err	*/
-#define CO_SEPARATE	(1L<<15)	/* 1 shell+wait per coexec()	*/
+#define CO_APPEND	0x008000	/* append coexec() out/err	*/
+#define CO_SEPARATE	0x010000	/* 1 shell+wait per coexec()	*/
+#define CO_ORPHAN	0x020000	/* PROC_ORPHAN			*/
 
-#define CO_USER		(1L<<16)	/* first user flag		*/
+#define CO_USER		0x100000	/* first user flag		*/
 
 struct Cojob_s				/* coshell job info		*/
 {
+	Coshell_t*	coshell;	/* running in this coshell	*/
 	int		id;		/* job id			*/
 	int		status;		/* exit status			*/
 	int		flags;		/* CO_* flags			*/
@@ -105,6 +108,7 @@ struct Cojob_s				/* coshell job info		*/
 
 struct Coshell_s			/* coshell connection info	*/
 {
+	void*		data;		/* user data, initially 0	*/
 	int		flags;		/* flags			*/
 	int		outstanding;	/* number of outstanding jobs	*/
 	int		running;	/* number of running jobs	*/
@@ -125,11 +129,13 @@ extern int		cokill(Coshell_t*, Cojob_t*, int);
 extern Coshell_t*	coopen(const char*, int, const char*);
 extern void		coquote(Sfio_t*, const char*, int);
 extern int		cosync(Coshell_t*, const char*, int, int);
-extern Cojob_t*		cowait(Coshell_t*, Cojob_t*);
+extern Cojob_t*		cowait(Coshell_t*, Cojob_t*, int);
 
 extern int		cojobs(Coshell_t*);
 extern int		copending(Coshell_t*);
 extern int		cozombie(Coshell_t*);
+
+extern int		coattr(Coshell_t*, const char*);
 
 extern int		coprocrun(const char*, char**, int);
 extern int		cosystem(const char*);

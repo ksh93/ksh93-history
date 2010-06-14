@@ -1072,7 +1072,9 @@ int	sh_redirect(Shell_t *shp,struct ionod *iop, int flag)
 					}
 					if(shp->subshell && dupfd==1 && (sfset(sfstdout,0,0)&SF_STRING))
 					{
-						sh_subtmpfile(0);
+						if(sfset(sfstdout,0,0)&SF_STRING)
+							sh_subtmpfile(shp);
+						shp->subdup |= 1<< fn;
 						dupfd = sffileno(sfstdout);
 					}
 					else if(shp->sftable[dupfd])

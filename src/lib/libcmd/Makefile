@@ -25,7 +25,7 @@ cmd 1.2 :LIBRARY: RELEASE cmdinit.c \
 	mkfifo.c mktemp.c mv.c paste.c pathchk.c pids.c rev.c rm.c \
 	rmdir.c stty.c sum.c sync.c tail.c tee.c tty.c uname.c uniq.c \
 	vmstate.c wc.c revlib.c wclib.c sumlib.o \
-	fts_fix.c \
+	fts_fix.c lib.c \
 	-lfsg -lmd
 
 sumlib.o : +lsum

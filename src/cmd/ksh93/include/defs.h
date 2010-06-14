@@ -153,7 +153,6 @@ struct limits
 	pid_t		pid;		/* process id of shell */ \
 	pid_t		bckpid;		/* background process id */ \
 	pid_t		cpid; \
-	pid_t		spid; 		/* subshell process id */ \
 	pid_t		pipepid; \
 	int32_t		ppid;		/* parent process id of shell */ \
 	int		topfd; \
@@ -172,13 +171,13 @@ struct limits
 	char		winch; \
 	char		indebug; 	/* set when in debug trap */ \
 	unsigned char	lastsig;	/* last signal received */ \
-	char		subnest;	/* set when $() contains () */ \
 	char		comsub;		/* set when in $()comsub */ \
 	char		subshare;	/* set when in ${..} comsub */ \
 	char		toomany;	/* set when out of fd's */ \
 	char		instance;	/* in set_instance */ \
 	char		decomma;	/* decimal_point=',' */ \
 	char		*readscript;	/* set before reading a script */ \
+	int		subdup;		/* bitmask for dups of 1 */ \
 	int		*inpipe;	/* input pipe pointer */ \
 	int		*outpipe;	/* output pipe pointer */ \
 	int		cpipe[2]; \
@@ -395,7 +394,7 @@ extern Namval_t		*sh_scoped(Shell_t*, Namval_t*);
 extern Dt_t		*sh_subfuntree(int);
 extern void		sh_subjobcheck(pid_t);
 extern int		sh_subsavefd(int);
-extern void		sh_subtmpfile(int);
+extern void		sh_subtmpfile(Shell_t*);
 extern char 		*sh_substitute(const char*,const char*,char*);
 extern const char	*_sh_translate(const char*);
 extern int		sh_trace(char*[],int);

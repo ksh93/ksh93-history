@@ -23,9 +23,7 @@
  * at&t research
  */
 
-#include <ast.h>
-#include <dlldefs.h>
-#include <error.h>
+#include "dlllib.h"
 
 #if 0
 
@@ -70,6 +68,7 @@ dllopen(const char* name, int mode)
 	}
 	path = sfprints("%-.*s%s%c%s=%-.*s%s%s", len, dir, base, 0, info->env, len, dir, olibpath ? ":" : "", olibpath ? olibpath : "");
 	environ[0] = path + strlen(path) + 1;
+	state.error = 0;
 	dll = dlopen(path, mode);
 	if (environ == nenv)
 		environ = 0;
@@ -87,6 +86,7 @@ dllopen(const char* name, int mode)
 void*
 dllopen(const char* name, int mode)
 {
+	state.error = 0;
 	return dlopen(name, mode);
 }
 

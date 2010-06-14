@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1990-2009 AT&T Intellectual Property          *
+*          Copyright (c) 1990-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -35,6 +35,8 @@ service(register Coshell_t* co, Coservice_t* cs, Cojob_t* cj, int flags, Sfio_t*
 {
 	Proc_t*		proc;
 	size_t		n;
+	int		i;
+	int		j;
 	int		fds[2];
 	long		ops[4];
 	char*		s;
@@ -53,6 +55,13 @@ service(register Coshell_t* co, Coservice_t* cs, Cojob_t* cj, int flags, Sfio_t*
 		errormsg(state.lib, ERROR_LIBRARY|ERROR_SYSTEM|2, "%s: cannot allocate service pipe", cs->name);
 		return 0;
 	}
+	if (co->flags & CO_SHELL)
+		for (i = 0; i < elementsof(fds); i++)
+			if (fds[i] < 10 && (j = fcntl(fds[i], F_DUPFD, 10)) >= 0)
+			{
+				close(fds[i]);
+				fds[i] = j;
+			}
 	cs->fd = fds[1];
 	ops[0] = PROC_FD_DUP(fds[0], 0, PROC_FD_PARENT);
 	ops[1] = PROC_FD_CLOSE(fds[1], PROC_FD_CHILD);
@@ -65,6 +74,7 @@ service(register Coshell_t* co, Coservice_t* cs, Cojob_t* cj, int flags, Sfio_t*
 		close(fds[1]);	
 		return 0;
 	}
+	fcntl(cs->fd, F_SETFD, FD_CLOEXEC);
 	cs->pid = proc->pid;
 	procfree(proc);
 	sfprintf(sp, "id=%d info\n", cj->id);
@@ -79,7 +89,7 @@ service(register Coshell_t* co, Coservice_t* cs, Cojob_t* cj, int flags, Sfio_t*
 	cj->service = cs;
 	co->svc_outstanding++;
 	co->svc_running++;
-	if (!cowait(co, cj))
+	if (!cowait(co, cj, -1))
 		goto bad;
 	return cj;
  bad:
@@ -166,6 +176,7 @@ coexec(register Coshell_t* co, const char* action, int flags, const char* out, c
 		return 0;
 	else
 	{
+		cj->coshell = co;
 		cj->pid = CO_PID_FREE;
 		cj->id = ++co->slots;
 		cj->next = co->jobs;
@@ -432,7 +443,7 @@ coexec(register Coshell_t* co, const char* action, int flags, const char* out, c
 		co->running++;
 		co->total++;
 		if (co->mode & CO_MODE_ACK)
-			cj = cowait(co, cj);
+			cj = cowait(co, cj, -1);
 	}
 	return cj;
 }

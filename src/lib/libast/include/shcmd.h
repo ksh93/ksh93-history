@@ -28,6 +28,14 @@
 #ifndef _SHCMD_H
 #define _SHCMD_H	1
 
+#define SH_PLUGIN_VERSION	AST_PLUGIN_VERSION(20100528L)
+
+#if __STDC__
+#define SHLIB(m)	unsigned long	plugin_version(void) { return SH_PLUGIN_VERSION; }
+#else
+#define SHLIB(m)	unsigned long	plugin_version() { return SH_PLUGIN_VERSION; }
+#endif
+
 #ifndef SH_VERSION
 #   define Shell_t	void
 #endif

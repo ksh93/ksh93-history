@@ -73,7 +73,7 @@ else
 	LIBS_req = +lshell
 end
 
-:PACKAGE: ast$(libtype) --clobber=!($(SH))
+:PACKAGE: ast$(libtype):20100309 --clobber=!($(SH))
 
 .SOURCE : edit sh bltins data tests fun
 .SOURCE.h : include 
