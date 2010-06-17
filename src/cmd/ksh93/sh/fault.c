@@ -568,8 +568,6 @@ void sh_exit(register int xno)
 #endif /* SHOPT_TYPEDEF*/
 	if(pp->mode == SH_JMPSCRIPT && !pp->prev) 
 		sh_done(shp,sig);
-	if(shp->subshell && pp->mode==1)
-		pp->mode = SH_JMPSUB;
 	if(pp->mode)
 		siglongjmp(pp->buff,pp->mode);
 }
