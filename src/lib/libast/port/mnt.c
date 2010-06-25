@@ -702,7 +702,7 @@ mntread(void* handle)
 
 			static char	typ[32];
 
-			set(&mp->hdr, mp->mnt->mnt_fsname, mp->mnt->mnt_dir, stat(mp->mnt->mnt_dir, &st) ? FS_default : strlcpy(typ, fmtfs(&st), sizeof(typ)), OPTIONS(mp->mnt));
+			set(&mp->hdr, mp->mnt->mnt_fsname, mp->mnt->mnt_dir, stat(mp->mnt->mnt_dir, &st) ? FS_default : strncpy(typ, fmtfs(&st), sizeof(typ) - 1), OPTIONS(mp->mnt));
 #else
 			set(&mp->hdr, mp->mnt->mnt_fsname, mp->mnt->mnt_dir, mp->mnt->mnt_type, OPTIONS(mp->mnt));
 #endif

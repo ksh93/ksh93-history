@@ -54,7 +54,7 @@
  */
 
 char*
-mcfind(const char* locale, const char* catalog, int category, int nls, char* path, size_t size)
+mcfind(char* path, const char* locale, const char* catalog, int category, int nls)
 {
 	register int		c;
 	register char*		s;
@@ -83,7 +83,7 @@ mcfind(const char* locale, const char* catalog, int category, int nls, char* pat
 		errno = oerrno;
 		if (i)
 			return 0;
-		strlcpy(path, catalog, size);
+		strncpy(path, catalog, PATH_MAX-1);
 		return path;
 	}
 	i = 0;
@@ -184,10 +184,10 @@ mcfind(const char* locale, const char* catalog, int category, int nls, char* pat
 			else if (!catalog)
 				continue;
 			else
-				strlcpy(file, catalog, elementsof(file));
+				strncpy(file, catalog, elementsof(file));
 			if (ast.locale.set & AST_LC_find)
 				sfprintf(sfstderr, "locale find %s\n", file);
-			if (s = pathpath(file, "", (!catalog && category == AST_LC_MESSAGES) ? PATH_READ : (PATH_REGULAR|PATH_READ|PATH_ABSOLUTE), path, size))
+			if (s = pathpath(path, file, "", (!catalog && category == AST_LC_MESSAGES) ? PATH_READ : (PATH_REGULAR|PATH_READ|PATH_ABSOLUTE)))
 			{
 				if (ast.locale.set & (AST_LC_find|AST_LC_setlocale))
 					sfprintf(sfstderr, "locale path %s\n", s);

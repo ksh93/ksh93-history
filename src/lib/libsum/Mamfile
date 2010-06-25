@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.5 2010-06-01
+info mam static 00000 1994-07-17 make (AT&T Research) 5.5 2010-04-15
 setv INSTALLROOT ../../..
 setv PACKAGE_ast_INCLUDE ${INSTALLROOT}/include/ast
 setv PACKAGE_ast_LIB ${INSTALLROOT}/lib
@@ -34,8 +34,8 @@ setv SILENT
 setv TAR tar
 setv YACC yacc
 setv YACCFLAGS -d
-make ${PACKAGEROOT}/lib/package/ast.lic
-done ${PACKAGEROOT}/lib/package/ast.lic
+make ${INSTALLROOT}/lib/package/ast.lic
+done ${INSTALLROOT}/lib/package/ast.lic
 make install
 make sum
 make libsum.a archive
@@ -89,8 +89,6 @@ make sha2.h implicit
 done sha2.h dontcare virtual
 make sha1.h implicit
 done sha1.h dontcare virtual
-make md5.h implicit
-done md5.h dontcare virtual
 make md4.h implicit
 done md4.h dontcare virtual
 done sum-lmd.c dontcare
@@ -112,7 +110,7 @@ done sum-ast4.c
 make sum-att.c implicit
 done sum-att.c
 make FEATURE/sum implicit
-meta FEATURE/sum features/%>FEATURE/% features/sum sum
+meta FEATURE/sum features/%>FEATURE/% ${PACKAGEROOT}/src/lib/libsum/features/sum sum
 make features/sum
 done features/sum
 prev sum.req
@@ -129,8 +127,6 @@ done ${PACKAGE_ast_INCLUDE}/swap.h
 prev ${PACKAGE_ast_INCLUDE}/endian.h implicit
 make sum.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast.h implicit
-make ${PACKAGE_ast_INCLUDE}/ast_api.h implicit
-done ${PACKAGE_ast_INCLUDE}/ast_api.h dontcare
 make ${PACKAGE_ast_INCLUDE}/vmalloc.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
 make ${PACKAGE_ast_INCLUDE}/ast_std.h implicit
@@ -172,11 +168,14 @@ prev ${PACKAGE_ast_INCLUDE}/ast_common.h implicit
 prev ${PACKAGE_ast_INCLUDE}/ast_std.h implicit
 done ${PACKAGE_ast_INCLUDE}/sfio.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/ast_std.h implicit
+make ${PACKAGE_ast_INCLUDE}/ast_version.h implicit
+prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
+done ${PACKAGE_ast_INCLUDE}/ast_version.h dontcare
 prev ${PACKAGE_ast_INCLUDE}/prototyped.h implicit
 done ${PACKAGE_ast_INCLUDE}/ast.h dontcare
 done sum.h
 done sumlib.c
-meta sumlib.o %.c>%.o sumlib.c sumlib
+meta sumlib.o %.c>%.o ${PACKAGEROOT}/src/lib/libsum/sumlib.c sumlib
 prev sumlib.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS} -I. -I${PACKAGE_ast_INCLUDE} -D_PACKAGE_ast -c sumlib.c
 done sumlib.o generated

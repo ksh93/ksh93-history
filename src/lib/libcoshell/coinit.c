@@ -245,7 +245,7 @@ coinitialize(Coshell_t* co, int flags)
 			return 0;
 		}
 		t += n / 2;
-		if (!(flags & CO_CROSS) && !pathpath("ignore", NiL, PATH_ABSOLUTE|PATH_REGULAR|PATH_EXECUTE, t, n / 2) && pathpath("bin/ignore", "", PATH_ABSOLUTE|PATH_REGULAR|PATH_EXECUTE, t, n / 2))
+		if (!(flags & CO_CROSS) && !pathpath(t, "ignore", NiL, PATH_ABSOLUTE|PATH_REGULAR|PATH_EXECUTE) && pathpath(t, "bin/ignore", "", PATH_ABSOLUTE|PATH_REGULAR|PATH_EXECUTE))
 		{
 			*strrchr(t, '/') = 0;
 			sfputc(sp, ':');

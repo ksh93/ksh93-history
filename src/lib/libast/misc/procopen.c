@@ -441,7 +441,7 @@ procopen(const char* cmd, char** argv, char** envv, long* modv, int flags)
 #if !_pipe_rw && !_lib_socketpair
 	poi[0] = poi[1] = -1;
 #endif
-	if (cmd && (!*cmd || !pathpath(cmd, NiL, PATH_REGULAR|PATH_EXECUTE, path, sizeof(path))))
+	if (cmd && (!*cmd || !pathpath(path, cmd, NiL, PATH_REGULAR|PATH_EXECUTE)))
 		goto bad;
 	switch (flags & (PROC_READ|PROC_WRITE))
 	{

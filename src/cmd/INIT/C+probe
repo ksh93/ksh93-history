@@ -2,7 +2,7 @@
 # Glenn Fowler
 # AT&T Research
 #
-# @(#)C probe (AT&T Research) 2009-10-27
+# @(#)C probe (AT&T Research) 2010-06-22
 #
 # probe [ -d ] c-compiler-path [ attributes ]
 #
@@ -30,7 +30,7 @@ probe_sdb=".pdb"
 probe_so=".dylib .sl .so"
 probe_symprefix="_"
 probe_verbose="'-v -v' '-# -#' '-d -d' -dryrun '-V -V'"
-probe_version="--version -version -V -v"
+probe_version="--version -V -version -v"
 
 #
 # the following are set by the preamble for the tool specific probe
@@ -387,17 +387,36 @@ eval set x $probe_version
 shift
 for o in "$@"
 do	if	$cc $o > version.out 2>&1
-	then	version_flags=$o
-		version_string=`sed -e 1q -e 's/;/ /g' version.out`
+	then	version_string=`sed -e '/ is /d' -e 's/;/ /g' version.out | sed -e 1q`
 		case $version_string in
-		*[Ee][Rr][Rr][Oo][Rr]*|*[Ff][Aa][Tt][Aa][Ll]*)
+		''|*[Ee][Rr][Rr][Oo][Rr]*|*[Ff][Aa][Tt][Aa][Ll]*|*[Ww][Aa][Rr][Nn][Ii][Nn][Gg]*|*[Oo][Pp][Tt][Ii][Oo][Nn]*)
 			;;
-		*)	version_stamp=";VERSION;$o;$version_string;PATH;$cc"
+		*)	version_flags=$o
+			version_stamp=";VERSION;$o;$version_string;PATH;$cc"
 			break
 			;;
 		esac
 	fi
 done
+case $version_stamp in
+'')	eval set x $probe_version
+	shift
+	echo 'int main() { return 0; }' > version.i
+	for o in "$@"
+	do	if	$cc -c $o version.i > version.out 2>&1
+		then	version_string=`sed -e '/ is /d' -e 's/;/ /g' version.out | sed -e 1q`
+			case $version_string in
+			''|*[Ee][Rr][Rr][Oo][Rr]*|*[Ff][Aa][Tt][Aa][Ll]*|*[Ww][Aa][Rr][Nn][Ii][Nn][Gg]*|*[Oo][Pp][Tt][Ii][Oo][Nn]*)
+				;;
+			*)	version_flags=$o
+				version_stamp=";VERSION;$o;$version_string;PATH;$cc"
+				break
+				;;
+			esac
+		fi
+	done
+	;;
+esac
 
 echo 'int main(){return 0;}' > hosted.$src
 $cc -o hosted.$exe hosted.$src && ./hosted.$exe && hosted=1

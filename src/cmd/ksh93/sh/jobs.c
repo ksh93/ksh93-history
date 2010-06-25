@@ -322,7 +322,9 @@ int job_reap(register int sig)
 #ifdef SIGTSTP
 		else
 			px=job_byjid(pw->p_job);
-		if(WIFSTOPPED(wstat))
+		if (WIFCONTINUED(wstat) && wcontinued)
+			pw->p_flag &= ~(P_NOTIFY|P_SIGNALLED|P_STOPPED);
+		else if(WIFSTOPPED(wstat))
 		{
 			if(px)
 			{
@@ -337,8 +339,6 @@ int job_reap(register int sig)
 				sh_fault(pw->p_exit); 
 			continue;
 		}
-		else if (WIFCONTINUED(wstat) && wcontinued)
-			pw->p_flag &= ~(P_NOTIFY|P_SIGNALLED|P_STOPPED);
 		else
 #endif /* SIGTSTP */
 		{

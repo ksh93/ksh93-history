@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -31,7 +31,7 @@
 #include <ip6.h>
 
 /*
- * convert string to ipv6 network byte order ip address
+ * convert string to ipv6 local byte order ip address
  * with optional prefix bits
  * pointer to first unused char placed in *e, even on error
  * return 0:ok <0:error

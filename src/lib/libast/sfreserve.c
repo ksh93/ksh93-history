@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1985-2009 AT&T Intellectual Property          *
+*          Copyright (c) 1985-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -110,9 +110,12 @@ int		type;	/* LOCKR: lock stream, LASTR: last record */
 		if(size == 0 || (f->mode&SF_WRITE))
 			iosz = -1;
 		else if(size < 0 && n == 0 && f->push) /* maybe stack-pop */
-		{	if((iosz = f->push->endb - f->push->next) == 0)
+		{	
+#if 0
+			if((iosz = f->push->endb - f->push->next) == 0)
 				iosz = f->push->size;
 			if(iosz < sz)
+#endif
 				iosz = sz; /* so only get what is asked for */
 		}
 		else

@@ -41,22 +41,10 @@
  * 0 returned if the info does not exist and cannot be generated
  */
 
-#define _AST_API_H	1
-
 #include <ast.h>
 #include <error.h>
 #include <ls.h>
 #include <proc.h>
-
-char*
-pathprobe(char* path, char* attr, const char* lang, const char* tool, const char* proc, int op)
-{
-	return pathprobe_20100601(lang, tool, proc, op, path, PATH_MAX, attr, PATH_MAX);
-}
-
-#undef	_AST_API_H
-
-#include <ast_api.h>
 
 #ifndef PROBE
 #define PROBE		"probe"
@@ -95,7 +83,7 @@ rofs(const char* path)
 #endif
 
 char*
-pathprobe_20100601(const char* lang, const char* tool, const char* aproc, int op, char* path, size_t pathsize, char* attr, size_t attrsize)
+pathprobe(char* path, char* attr, const char* lang, const char* tool, const char* aproc, int op)
 {
 	char*		proc = (char*)aproc;
 	register char*	p;
@@ -133,7 +121,7 @@ pathprobe_20100601(const char* lang, const char* tool, const char* aproc, int op
 			strncopy(buf, proc, p - proc + 1);
 			proc = buf;
 		}
-		if (!(proc = pathpath(proc, NiL, PATH_ABSOLUTE|PATH_REGULAR|PATH_EXECUTE, cmd, sizeof(cmd))))
+		if (!(proc = pathpath(cmd, proc, NiL, PATH_ABSOLUTE|PATH_REGULAR|PATH_EXECUTE)))
 			proc = (char*)aproc;
 		else if (p)
 		{
@@ -142,23 +130,20 @@ pathprobe_20100601(const char* lang, const char* tool, const char* aproc, int op
 		}
 	}
 	if (!path)
-	{
 		path = buf;
-		pathsize = sizeof(buf);
-	}
 	probe = PROBE;
 	x = lib + sizeof(lib) - 1;
 	k = lib + sfsprintf(lib, x - lib, "lib/%s/", probe);
 	p = k + sfsprintf(k, x - k, "%s/%s/", lang, tool);
-	pathkey(lang, tool, proc, key, sizeof(key), attr, attrsize);
+	pathkey(key, attr, lang, tool, proc);
 	if (op >= -2)
 	{
 		strncopy(p, key, x - p);
-		if (pathpath(lib, "", PATH_ABSOLUTE, path, pathsize) && !stat(path, &st) && (st.st_mode & S_IWUSR))
+		if (pathpath(path, lib, "", PATH_ABSOLUTE) && !stat(path, &st) && (st.st_mode & S_IWUSR))
 			return path == buf ? strdup(path) : path;
 	}
 	e = strncopy(p, probe, x - p);
-	if (!pathpath(lib, "", PATH_ABSOLUTE|PATH_EXECUTE, path, pathsize) || stat(path, &ps))
+	if (!pathpath(path, lib, "", PATH_ABSOLUTE|PATH_EXECUTE) || stat(path, &ps))
 		return 0;
 	for (;;)
 	{
@@ -190,12 +175,12 @@ pathprobe_20100601(const char* lang, const char* tool, const char* aproc, int op
 		{
 			if (!(dir = dirs))
 				return 0;
-			dirs = pathcat(dir, ':', "..", exe, path, pathsize);
-			pathcanon(path, pathsize, 0);
+			dirs = pathcat(path, dir, ':', "..", exe);
+			pathcanon(path, 0);
 			if (*path == '/' && pathexists(path, PATH_REGULAR|PATH_EXECUTE))
 			{
-				pathcat(dir, ':', "..", lib, path, pathsize);
-				pathcanon(path, pathsize, 0);
+				pathcat(path, dir, ':', "..", lib);
+				pathcanon(path, 0);
 				if (*path == '/' && pathexists(path, PATH_REGULAR|PATH_EXECUTE) && !stat(path, &ps))
 					break;
 			}

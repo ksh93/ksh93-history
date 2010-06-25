@@ -840,7 +840,7 @@ lookup(register Lookup_t* look, const char* name, unsigned int flags)
 			if (name[p->length] == '(' || name[p->length] == '#')
 			{
 				look->conf = &num;
-				strlcpy((char*)num.name, name, sizeof(num.name));
+				strncpy((char*)num.name, name, sizeof(num.name));
 				num.call = p->call;
 				num.flags = *name == 'C' ? CONF_STRING : 0;
 				num.op = (short)strtol(name + p->length + 1, &e, 10);

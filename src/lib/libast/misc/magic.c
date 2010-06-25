@@ -2232,13 +2232,13 @@ magicload(register Magic_t* mp, const char* file, unsigned long flags)
 		{
 			if (list)
 			{
-				if (!(t = pathpath(s, "", PATH_REGULAR|PATH_READ, mp->fbuf, sizeof(mp->fbuf))) && !strchr(s, '/'))
+				if (!(t = pathpath(mp->fbuf, s, "", PATH_REGULAR|PATH_READ)) && !strchr(s, '/'))
 				{
 					strcpy(mp->fbuf, s);
 					sfprintf(mp->tmp, "%s/%s", MAGIC_DIR, mp->fbuf);
 					if (!(s = sfstruse(mp->tmp)))
 						goto nospace;
-					if (!(t = pathpath(s, "", PATH_REGULAR|PATH_READ, mp->fbuf, sizeof(mp->fbuf))))
+					if (!(t = pathpath(mp->fbuf, s, "", PATH_REGULAR|PATH_READ)))
 						goto next;
 				}
 				if (!(fp = sfopen(NiL, t, "r")))

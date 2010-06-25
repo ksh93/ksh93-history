@@ -48,7 +48,7 @@ execvpe(const char* name, char* const argv[], char* const envv[])
 	register const char*	path = name;
 	char			buffer[PATH_MAX];
 
-	if (*path != '/' && !(path = pathpath(name, NULL, PATH_REGULAR|PATH_EXECUTE, buffer, sizeof(buffer))))
+	if (*path != '/' && !(path = pathpath(buffer, name, NULL, PATH_REGULAR|PATH_EXECUTE)))
 		path = name;
 	execve(path, argv, envv);
 	if (errno == ENOEXEC)

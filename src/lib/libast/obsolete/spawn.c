@@ -88,7 +88,7 @@ spawnvpe(const char* name, char* const argv[], char* const envv[])
 	char			buffer[PATH_MAX];
 
 	if (*path != '/')
-		path = pathpath(name, NULL, PATH_REGULAR|PATH_EXECUTE, buffer, sizeof(buffer));
+		path = pathpath(buffer, name, NULL, PATH_REGULAR|PATH_EXECUTE);
 	if ((pid = spawnve(path, argv, envv)) >= 0)
 		return pid;
 	if (errno == ENOEXEC)

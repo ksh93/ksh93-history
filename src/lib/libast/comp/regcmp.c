@@ -203,7 +203,7 @@ regex(const char* handle, const char* subject, ...)
 		{
 			i--;
 			k = match[i].rm_eo - match[i].rm_so;
-			strlcpy(sub[n], subject + match[i].rm_so, k);
+			strncpy(sub[n], subject + match[i].rm_so, k);
 			*(sub[n] + k) = 0;
 		}
 	__loc1 = (char*)subject + match[0].rm_so;

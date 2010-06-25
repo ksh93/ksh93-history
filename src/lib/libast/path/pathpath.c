@@ -33,22 +33,10 @@
  * if path==0 then the space is malloc'd
  */
 
-#define _AST_API_H	1
-
 #include <ast.h>
 
 char*
-pathpath(char* path, const char* p, const char* a, int mode)
-{
-	return pathpath_20100601(p, a, mode, path, PATH_MAX);
-}
-
-#undef	_AST_API_H
-
-#include <ast_api.h>
-
-char*
-pathpath_20100601(const char* p, const char* a, int mode, register char* path, size_t size)
+pathpath(register char* path, const char* p, const char* a, int mode)
 {
 	register char*	s;
 	char*		x;
@@ -65,7 +53,7 @@ pathpath_20100601(const char* p, const char* a, int mode, register char* path, s
 		cmd = a ? strdup(a) : (char*)0;
 		return 0;
 	}
-	if (strlen(p) < size)
+	if (strlen(p) < PATH_MAX)
 	{
 		strcpy(path, p);
 		if (pathexists(path, mode))
@@ -107,7 +95,7 @@ pathpath_20100601(const char* p, const char* a, int mode, register char* path, s
 					strcpy(s + 1, "bin");
 					if (pathexists(path, PATH_EXECUTE))
 					{
-						if (s = pathaccess(path, p, a, mode, path, size))
+						if (s = pathaccess(path, path, p, a, mode))
 							return path == buf ? strdup(s) : s;
 						goto normal;
 					}
@@ -117,7 +105,7 @@ pathpath_20100601(const char* p, const char* a, int mode, register char* path, s
 		}
 	}
 	x = !a && strchr(p, '/') ? "" : pathbin();
-	if (!(s = pathaccess(x, p, a, mode, path, size)) && !*x && (x = getenv("FPATH")))
-		s = pathaccess(x, p, a, mode, path, size);
+	if (!(s = pathaccess(path, x, p, a, mode)) && !*x && (x = getenv("FPATH")))
+		s = pathaccess(path, x, p, a, mode);
 	return (s && path == buf) ? strdup(s) : s;
 }

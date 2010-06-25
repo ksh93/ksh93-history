@@ -21,50 +21,77 @@
 ***********************************************************************/
 #pragma prototyped
 /*
- * resolvepath implementation
+ * Glenn Fowler
+ * AT&T Bell Laboratories
+ *
+ * generate unistd.h definitions for posix conf function
  */
 
-#define resolvepath	______resolvepath
-
-#include <ast.h>
-#include <error.h>
-
-#undef	resolvepath
-
-#undef	_def_map_ast
-#include <ast_map.h>
-
-#if defined(__EXPORT__)
-#define extern	__EXPORT__
-#endif
-
-extern int
-resolvepath(const char* file, char* path, size_t size)
-{
-	register char*	s;
-	register int	n;
-	register int	r;
-
-	r = *file != '/';
-	n = strlen(file) + r + 1;
-	if (n >= size)
-	{
-#ifdef ENAMETOOLONG
-		errno = ENAMETOOLONG;
+#if defined(__STDPP__directive) && defined(__STDPP__hide)
+__STDPP__directive pragma pp:hide getpagesize getdtablesize
 #else
-		errno = ENOMEM;
+#define getpagesize	______getpagesize
+#define getdtablesize	______getdtablesize
 #endif
-		return 0;
-	}
-	if (!r)
-		s = path;
-	else if (!getcwd(path, size - n))
-		return 0;
-	else
-	{
-		s = path + strlen(path);
-		*s++ = '/';
-	}
-	strcpy(s, file);
-	return pathcanon(path, PATH_PHYSICAL|PATH_DOTDOT|PATH_EXISTS) ? strlen(path) : -1;
+
+/*
+ * we'd like as many symbols as possible defined
+ * the standards push the vendors the other way
+ * but don't provide guard that lets everything through
+ * so each vendor adds their own guard
+ * many now include something like <standards.h> to
+ * get it straight in one place -- <sys/types.h> should
+ * kick that in
+ */
+
+#include "FEATURE/standards"
+#include "FEATURE/lib"
+
+#ifdef __sun
+#define _timespec	timespec
+#endif
+
+#include <sys/types.h>
+
+#undef	_SGIAPI
+#define _SGIAPI		1
+
+#if _hdr_limits
+#include <limits.h>
+#endif
+
+#undef	_SGIAPI
+#define _SGIAPI		0
+
+#include "FEATURE/lib"
+#include "FEATURE/common"
+
+#if _hdr_unistd
+#include <unistd.h>
+#endif
+
+#include "FEATURE/param"
+
+#if defined(__STDPP__directive) && defined(__STDPP__hide)
+__STDPP__directive pragma pp:nohide getpagesize getdtablesize
+#else
+#undef	getpagesize
+#undef	getdtablesize   
+#endif
+
+#include "conflib.h"
+
+int main()
+{
+#include "confuni.h"
+#if _dll_data_intercept
+	printf("\n#if _dll_data_intercept && ( _DLL_BLD || _BLD_DLL )\n");
+	printf("#undef	environ\n");
+	printf("#define environ (*_ast_dll._dll_environ)\n");
+	printf("struct _astdll { char*** _dll_environ; };\n");
+	printf("extern struct _astdll _ast_dll;\n");
+	printf("extern struct _astdll* _ast_getdll(void);\n");
+	printf("#endif\n");
+#endif
+	return 0;
 }

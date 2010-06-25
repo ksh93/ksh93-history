@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                     Copyright (c) 1994-2010 AT&T                     *
+*          Copyright (c) 1985-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                               by AT&T                                *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -15,15 +15,26 @@
 *                           Florham Park NJ                            *
 *                                                                      *
 *                 Glenn Fowler <gsf@research.att.com>                  *
+*                  David Korn <dgk@research.att.com>                   *
+*                   Phong Vo <kpv@research.att.com>                    *
 *                                                                      *
 ***********************************************************************/
-#ifndef iconv
-#include <iconv.h>
-#endif
+#pragma prototyped
+/*
+ * Glenn Fowler
+ * AT&T Bell Laboratories
+ *
+ * OBSOLETE: use errormsg()
+ */
 
-int
-main()
+#include <error.h>
+
+void
+liberror(const char* lib, int level, ...)
 {
-	iconv(0, 0, 0, 0, 0);
-	return 0;
+	va_list	ap;
+
+	va_start(ap, level);
+	errorv(lib, level, ap);
+	va_end(ap);
 }

@@ -907,7 +907,7 @@ b_cp(int argc, register char** argv, void* context)
 			s = 0;
 	}
 	if (file != (char*)dot)
-		pathcanon(file, 0, 0);
+		pathcanon(file, 0);
 	if (!(state->directory = !stat(file, &st) && S_ISDIR(st.st_mode)) && argc > 1)
 		error(ERROR_USAGE|4, "%s", optusage(NiL));
 	if (s && !state->directory)

@@ -605,7 +605,7 @@ toplist(FTS* fts, register char* const* pathnames)
 			break;
 		path = f->fts_name;
 		if (!physical)
-			f->fts_namelen = (fts->flags & FTS_SEEDOTDIR) ? strlen(path) : (pathcanon(path, strlen(path) + 1, 0) - path);
+			f->fts_namelen = (fts->flags & FTS_SEEDOTDIR) ? strlen(path) : (pathcanon(path, 0) - path);
 		else if (*path != '.')
 		{
 			f->fts_namelen = strlen(path);

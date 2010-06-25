@@ -32,22 +32,10 @@
  * path returned in path buffer
  */
 
-#define _AST_API_H	1
-
 #include <ast.h>
 
 char*
-pathaccess(char* path, const char* dirs, const char* a, const char* b, int mode)
-{
-	return pathaccess_20100601(dirs, a, b, mode, path, PATH_MAX);
-}
-
-#undef	_AST_API_H
-
-#include <ast_api.h>
-
-char*
-pathaccess_20100601(register const char* dirs, const char* a, const char* b, register int mode, register char* path, size_t size)
+pathaccess(register char* path, register const char* dirs, const char* a, const char* b, register int mode)
 {
 	int		sib = a && a[0] == '.' && a[1] == '.' && a[2] == 0;
 	int		sep = ':';
@@ -55,8 +43,8 @@ pathaccess_20100601(register const char* dirs, const char* a, const char* b, reg
 
 	do
 	{
-		dirs = pathcat(dirs, sep, a, b, path, size);
-		pathcanon(path, size, 0);
+		dirs = pathcat(path, dirs, sep, a, b);
+		pathcanon(path, 0);
 		if ((!sib || *path == '/') && pathexists(path, mode))
 		{
 			if (*path == '/' || !(mode & PATH_ABSOLUTE))

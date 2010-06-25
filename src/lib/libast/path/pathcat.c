@@ -27,72 +27,28 @@
  * single dir support for pathaccess()
  */
 
-#define _AST_API_H	1
-
 #include <ast.h>
 
-/*
- * building 3d flirts with the dark side
- */
-
-#if _BLD_3d
-
-#undef	pathcat
-#define pathcat_20100601	_3d_pathcat
-
-#else
-
 char*
-pathcat(char* path, const char* dirs, int sep, const char* a, const char* b)
-{
-	return pathcat_20100601(dirs, sep, a, b, path, PATH_MAX);
-}
-
-#endif
-
-#undef	_AST_API
-
-#include <ast_api.h>
-
-char*
-pathcat_20100601(register const char* dirs, int sep, const char* a, register const char* b, char* path, size_t size)
+pathcat(char* path, register const char* dirs, int sep, const char* a, register const char* b)
 {
 	register char*	s;
-	register char*	e;
 
 	s = path;
-	e = path + size;
 	while (*dirs && *dirs != sep)
-	{
-		if (s >= e)
-			return 0;
 		*s++ = *dirs++;
-	}
 	if (s != path)
-	{
-		if (s >= e)
-			return 0;
 		*s++ = '/';
-	}
 	if (a)
 	{
 		while (*s = *a++)
-			if (++s >= e)
-				return 0;
+			s++;
 		if (b)
-		{
-			if (s >= e)
-				return 0;
 			*s++ = '/';
-		}
 	}
 	else if (!b)
 		b = ".";
 	if (b)
-		do
-		{
-			if (s >= e)
-				return 0;
-		} while (*s++ = *b++);
+		while (*s++ = *b++);
 	return *dirs ? (char*)++dirs : 0;
 }

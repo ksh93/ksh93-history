@@ -30,7 +30,7 @@ case $-:$BASH_VERSION in
 esac
 
 command=iffe
-version=2010-06-06 # update in USAGE too #
+version=2010-06-18 # update in USAGE too #
 
 compile() # $cc ...
 {
@@ -634,7 +634,7 @@ set=
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: iffe (AT&T Research) 2010-06-06 $
+@(#)$Id: iffe (AT&T Research) 2010-06-18 $
 ]
 '$USAGE_LICENSE$'
 [+NAME?iffe - C compilation environment feature probe]
@@ -2206,9 +2206,16 @@ $lin
 					case $1 in
 					:)	break ;;
 					esac
+					eval syms='$'api_sym_${a}
+					case $syms in
+					'')	sep='' ;;
+					*)	sep=$nl ;;
+					esac
 					for r in $rel
-					do	eval api_sym_${a}='"${'api_sym_${a}'}$nl${1}:${r}"'
+					do	syms=$syms$sep${1}:${r}
+						sep=$nl
 					done
+					eval api_sym_${a}='$'syms
 					shift
 				done
 				;;

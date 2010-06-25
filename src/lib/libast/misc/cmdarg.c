@@ -123,7 +123,7 @@ cmdopen(char** argv, int argmax, int size, const char* argpat, int flags)
 	}
 	else if (!(flags & CMD_CHECKED))
 	{
-		if (!pathpath(argv[0], NiL, PATH_REGULAR|PATH_EXECUTE, s, n + m))
+		if (!pathpath(s, argv[0], NiL, PATH_REGULAR|PATH_EXECUTE))
 		{
 			if (!(flags & CMD_SILENT))
 			{
