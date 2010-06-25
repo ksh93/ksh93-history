@@ -956,6 +956,7 @@ Namval_t *nv_putsub(Namval_t *np,register char *sp,register long mode)
 	{
 		if(sp)
 		{
+			Shell_t	*shp = sh_getinterp();
 			if(ap && ap->xp && !strmatch(sp,"+([0-9])"))
 			{
 				Namval_t *mp = nv_namptr(ap->xp,0);
@@ -963,7 +964,7 @@ Namval_t *nv_putsub(Namval_t *np,register char *sp,register long mode)
 				size = nv_getnum(mp);
 			}
 			else
-				size = (int)sh_arith((char*)sp);
+				size = (int)sh_arith(shp,(char*)sp);
 		}
 		if(size <0 && ap)
 			size += array_maxindex(np);
@@ -1236,7 +1237,7 @@ void *nv_associative(register Namval_t *np,const char *sp,int mode)
 		for(;ap->cur=ap->pos; ap->pos=ap->nextpos)
 		{
 			ap->nextpos = (Namval_t*)dtnext(ap->header.table,ap->pos);
-			if(ap->cur->nvalue.cp)
+			if(!nv_isnull(ap->cur))
 			{
 				if((ap->header.nelem&ARRAY_NOCHILD) && nv_isattr(ap->cur,NV_CHILD))
 					continue;

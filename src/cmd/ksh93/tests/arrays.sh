@@ -498,4 +498,19 @@ x[2]=
 z=$(: ${x[1]} )
 [[ $z == sub=1 ]] || err_exit 'get function not invoked for associative array'
 
+unset y
+i=1
+a=(11 22)
+typeset -m y=a[i]
+[[ $y == 22 ]] || err_exit 'typeset -m for index array not working'
+[[ ${a[i]} || ${a[0]} != 11 ]] && err_exit 'typeset -m for index array not deleting element'
+
+unset y
+a=([0]=11 [1]=22)
+typeset -m y=a[$i]
+[[ $y == 22 ]] || err_exit 'typeset -m for associative array not working'
+[[ ${a[$i]} || ${a[0]} != 11 ]] && err_exit 'typeset -m for associative array not deleting element'
+
+unset x
+
 exit $((Errors))

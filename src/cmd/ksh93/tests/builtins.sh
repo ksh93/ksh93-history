@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2009 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2010 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -524,5 +524,11 @@ do	unset $i ||  print -u2  "err_exit unset $i should not fail"
 done
 [[ $($SHELL -c 'y=3; unset 123 y;print $?$y') == 1 ]] 2> /dev/null ||  err_exit 'y is not getting unset with unset 123 y'
 [[ $($SHELL -c 'trap foo TERM; (trap;(trap) )') == 'trap -- foo TERM' ]] || err_exit 'traps not getting reset when subshell is last process'
+
+n=$(printf "%b" 'a\0b\0c' | wc -c)
+(( n == 5 )) || err_exit '\0 not working with %b format with printf'
+
+t=$(ulimit -t)
+[[ $($SHELL -c 'ulimit -v 15000; ulimit -t') == "$t" ]] || err_exit 'ulimit -v changes ulimit -t'
 
 exit $((Errors))

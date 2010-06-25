@@ -38,6 +38,7 @@
 #define FPCL		(0100<<COMBITS)		/* close the pipe */
 #define FCOOP		(0200<<COMBITS)		/* cooperating process */
 #define FSHOWME		(0400<<COMBITS)		/* set for showme commands  */
+#define FALTPIPE	(02000<<COMBITS)	/* alternate pipes &| */
 #define FPOSIX		(02<<COMBITS)		/* posix semantics function */
 #define FLINENO		(04<<COMBITS)		/* for/case has line number */
 #define FOPTGET		(010<<COMBITS)		/* function calls getopts */
@@ -210,7 +211,7 @@ union Shnode_u
 
 extern void			sh_freeup(Shell_t*);
 extern void			sh_funstaks(struct slnod*,int);
-extern Sfio_t 			*sh_subshell(Shnode_t*, int, int);
+extern Sfio_t 			*sh_subshell(Shell_t*,Shnode_t*, int, int);
 #if defined(__EXPORT__) && defined(_BLD_DLL) && defined(_BLD_shell) 
    __EXPORT__
 #endif

@@ -28,6 +28,7 @@
 /* The following only is needed for const */
 #include	<ast.h>
 #include	<math.h>
+#include	"defs.h"
 #if _AST_VERSION >= 20030127L
 #   include	<ast_float.h>
 #endif
@@ -69,9 +70,11 @@
 
 struct lval
 {
+	Shell_t		*shp;
 	char		*value;
 	Sfdouble_t	(*fun)(Sfdouble_t,...);
 	const char	*expr;
+	const  void	*ptr;
 	short		flag;
 	char		isfloat;
 	char		nargs;
@@ -79,6 +82,7 @@ struct lval
 	short		level;
 	short		elen;
 	char		nosub;
+	char		eflag;
 };
 
 struct mathtab
@@ -89,6 +93,7 @@ struct mathtab
 
 typedef struct _arith_
 {
+	Shell_t		*shp;
 	unsigned char	*code;
 	const char	*expr;
 	Sfdouble_t	(*fun)(const char**,struct lval*,int,Sfdouble_t);
@@ -161,6 +166,7 @@ typedef struct _arith_
 #define A_LIT		53
 #define A_NOTNOT        54
 #define A_ASSIGNOP	55
+#define A_ENUM		56
 
 
 /* define error messages */
@@ -192,7 +198,7 @@ extern const struct 		mathtab shtab_math[];
 #define VALUE	2
 #define MESSAGE	3
 
-extern Sfdouble_t strval(const char*,char**,Sfdouble_t(*)(const char**,struct lval*,int,Sfdouble_t),int);
-extern Arith_t *arith_compile(const char*,char**,Sfdouble_t(*)(const char**,struct lval*,int,Sfdouble_t),int);
+extern Sfdouble_t strval(Shell_t*,const char*,char**,Sfdouble_t(*)(const char**,struct lval*,int,Sfdouble_t),int);
+extern Arith_t *arith_compile(Shell_t *,const char*,char**,Sfdouble_t(*)(const char**,struct lval*,int,Sfdouble_t),int);
 extern Sfdouble_t arith_exec(Arith_t*);
 #endif /* !SEQPOINT */

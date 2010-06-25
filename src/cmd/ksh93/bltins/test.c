@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -152,12 +152,12 @@ int b_test(int argc, char *argv[],void *extra)
 				if(argc==5)
 					break;
 				if(not && cp[0]=='-' && cp[2]==0)
-					return(test_unop(cp[1],argv[3])!=0);
+					return(test_unop(tdata.sh,cp[1],argv[3])!=0);
 				else if(argv[1][0]=='-' && argv[1][2]==0)
-					return(!test_unop(argv[1][1],cp));
+					return(!test_unop(tdata.sh,argv[1][1],cp));
 				errormsg(SH_DICT,ERROR_exit(2),e_badop,cp);
 			}
-			return(test_binop(op,argv[1],argv[3])^(argc!=5));
+			return(test_binop(tdata.sh,op,argv[1],argv[3])^(argc!=5));
 		}
 		case 3:
 			if(not)
@@ -177,7 +177,7 @@ int b_test(int argc, char *argv[],void *extra)
 				}
 				break;
 			}
-			return(!test_unop(cp[1],argv[2]));
+			return(!test_unop(tdata.sh,cp[1],argv[2]));
 		case 2:
 			return(*cp==0);
 	}
@@ -289,7 +289,7 @@ static int e3(struct test *tp)
 			errormsg(SH_DICT,ERROR_exit(2),e_argument);
 		}
 		if(strchr(test_opchars,op))
-			return(test_unop(op,cp));
+			return(test_unop(tp->sh,op,cp));
 	}
 	if(!cp)
 	{
@@ -304,10 +304,10 @@ skip:
 		errormsg(SH_DICT,ERROR_exit(2),e_badop,binop);
 	if(op==TEST_AND || op==TEST_OR)
 		tp->ap--;
-	return(test_binop(op,arg,cp));
+	return(test_binop(tp->sh,op,arg,cp));
 }
 
-int test_unop(register int op,register const char *arg)
+int test_unop(Shell_t *shp,register int op,register const char *arg)
 {
 	struct stat statb;
 	int f;
@@ -428,7 +428,7 @@ int test_unop(register int op,register const char *arg)
 		Namval_t *np;
 		Namarr_t *ap;
 		int isref;
-		if(!(np = nv_open(arg,sh.var_tree,NV_VARNAME|NV_NOFAIL|NV_NOADD|NV_NOREF)))
+		if(!(np = nv_open(arg,shp->var_tree,NV_VARNAME|NV_NOFAIL|NV_NOADD|NV_NOREF)))
 			return(0);
 		isref = nv_isref(np);
 		if(op=='R')
@@ -456,7 +456,7 @@ int test_unop(register int op,register const char *arg)
 	}
 }
 
-int test_binop(register int op,const char *left,const char *right)
+int test_binop(Shell_t *shp,register int op,const char *left,const char *right)
 {
 	register double lnum,rnum;
 	if(op&TEST_ARITH)
@@ -465,8 +465,8 @@ int test_binop(register int op,const char *left,const char *right)
 			left++;
 		while(*right=='0')
 			right++;
-		lnum = sh_arith(left);
-		rnum = sh_arith(right);
+		lnum = sh_arith(shp,left);
+		rnum = sh_arith(shp,right);
 	}
 	switch(op)
 	{

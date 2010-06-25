@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -78,7 +78,7 @@ const struct shtable2 shtab_variables[] =
 	"FIGNORE",	0,				(char*)0,
 	"KSH_VERSION",	0,				(char*)0,
 	"JOBMAX",	NV_NOFREE|NV_INTEGER,		(char*)0,
-	".sh",		NV_TABLE|NV_RDONLY|NV_NOFREE|NV_NOPRINT,(char*)0,
+	".sh",		NV_TABLE|NV_NOFREE|NV_NOPRINT,	(char*)0,
 	".sh.edchar",	0,				(char*)0,
 	".sh.edcol",	0,				(char*)0,
 	".sh.edtext",	0,				(char*)0,
@@ -94,8 +94,10 @@ const struct shtable2 shtab_variables[] =
 	".sh.fun",	0,				(char*)0,
 	".sh.subshell",	NV_INTEGER|NV_SHORT|NV_NOFREE,	(char*)0,
 	".sh.level",	0,				(char*)0,
-	".sh.lineno",	NV_INTEGER|NV_RDONLY,		(char*)0,
-	".sh.stats",	NV_RDONLY,			(char*)0,
+	".sh.lineno",	NV_INTEGER,			(char*)0,
+	".sh.stats",	0,				(char*)0,
+	".sh.math",	0,				(char*)0,
+	".sh.pool",	0,				(char*)0,
 	"SHLVL",	NV_INTEGER|NV_NOFREE|NV_EXPORT,	(char*)0,
 #if SHOPT_FS_3D
 	"VPATH",	0,				(char*)0,

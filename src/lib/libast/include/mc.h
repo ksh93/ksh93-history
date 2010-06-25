@@ -83,7 +83,7 @@ typedef struct Mc_s
 #define extern		__EXPORT__
 #endif
 
-extern char*		mcfind(char*, const char*, const char*, int, int);
+extern char*		mcfind(const char*, const char*, int, int, char*, size_t);
 extern Mc_t*		mcopen(Sfio_t*);
 extern char*		mcget(Mc_t*, int, int, const char*);
 extern int		mcput(Mc_t*, int, int, const char*);

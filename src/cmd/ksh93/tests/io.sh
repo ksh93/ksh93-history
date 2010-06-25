@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2009 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2010 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -373,8 +373,8 @@ fi
 [[ $line3 == 'prompt2: ' ]]	|| err_exit "line3 should be 'prompt2: '"
 [[ ! $line4 ]]			|| err_exit "line4 should be empty"
 
-if	$SHELL -c "export LC_ALL=en_US.UTF-8; c=$'\342\202\254'; [[ \${#c} == 1 ]]" 2>/dev/null
-then	lc_utf8=en_US.UTF-8
+if	$SHELL -c "export LC_ALL=C.UTF-8; c=$'\342\202\254'; [[ \${#c} == 1 ]]" 2>/dev/null
+then	lc_utf8=C.UTF-8
 else	lc_utf8=''
 fi
 

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -778,6 +778,9 @@ USAGE_LICENSE
 "[+?When the end of options is encountered, \bgetopts\b exits with a "
   "non-zero return value and the variable \bOPTIND\b is set to the "
   "index of the first non-option argument.]"
+"[+?The obsolete long option forms \aflag\a(\along-name\a) and "
+  "\aflag\a:(\along-name\a) for options that take arguments is supported "
+  "for backwards compatibility.]"
 "a:[name?Use \aname\a instead of the command name in usage messages.]"
 "\n"
 "\nopstring name [args...]\n"
@@ -893,6 +896,7 @@ USAGE_LICENSE
 "[+?Each \ajob\a can be specified as one of the following:]{"
 	"[+\anumber\a?\anumber\a refers to a process id.]"
 	"[+-\anumber\a?\anumber\a refers to a process group id.]"
+	"[+\aname\a?refers to all jobs in the background pool \aname\a.]"
 	"[+%\anumber\a?\anumber\a refer to a job number.]"
 	"[+%\astring\a?Refers to a job whose name begins with \astring\a.]"
 	"[+%??\astring\a?Refers to a job whose name contains \astring\a.]"
@@ -994,6 +998,7 @@ USAGE_LICENSE
 "[+?A \ajob\a can be specified as one of the following:]{"
 	"[+\anumber\a?\anumber\a refers to a process id.]"
 	"[+-\anumber\a?\anumber\a refers to a process group id.]"
+	"[+\aname\a?refers to all jobs in the background pool \aname\a.]"
 	"[+%\anumber\a?\anumber\a refer to a job number.]"
 	"[+%\astring\a?Refers to a job whose name begins with \astring\a.]"
 	"[+%??\astring\a?Refers to a job whose name contains \astring\a.]"
@@ -1682,7 +1687,7 @@ USAGE_LICENSE
 	"will have function static scope.  Otherwise, the variable is "
 	"unset prior to processing the assignment list.]"
 #endif
-"[T]:[tname?\atname\a is the name of a type name given to each \aname\a.]"
+"[T]:?[tname?\atname\a is the name of a type name given to each \aname\a.]"
 "[Z]#?[n?Zero fill.  If \an\a is given it represents the field width.]"
 "\n"
 "\n[name[=value]...]\n"
@@ -1818,6 +1823,7 @@ USAGE_LICENSE
 "[+?Each \ajob\a can be specified as one of the following:]{"
 	"[+\anumber\a?\anumber\a refers to a process id.]"
 	"[+-\anumber\a?\anumber\a refers to a process group id.]"
+	"[+\aname\a?refers to all jobs in the background pool \aname\a.]"
 	"[+%\anumber\a?\anumber\a refer to a job number.]"
 	"[+%\astring\a?Refers to a job whose name begins with \astring\a.]"
 	"[+%??\astring\a?Refers to a job whose name contains \astring\a.]"

@@ -68,6 +68,19 @@ typedef struct _edit_pos
 	unsigned short col;
 } Edpos_t;
 
+#if SHOPT_EDPREDICT
+typedef struct Histmatch
+{
+	struct Histmatch	*next;
+	int			index;
+	short			len;
+	short			count;
+	char			data[1];
+} Histmatch_t;
+#endif /* SHOPT_EDPREDICT */
+
+
+
 typedef struct edit
 {
 	sigjmp_buf e_env;
@@ -153,6 +166,15 @@ typedef struct edit
 	Namval_t *e_default;	/* variable containing default value */
 	Namval_t *e_term;	/* TERM variable */
 	char 	e_termname[80];	/* terminal name */
+#if SHOPT_EDPREDICT
+	Histmatch_t	**hlist;
+	Histmatch_t	*hfirst;
+	unsigned short	nhlist;
+	unsigned short	hoff;
+	unsigned short	hmax;
+	char		*hpat;
+	char		*hstak;
+#endif /* SHOPT_EDPREDICT */
 } Edit_t;
 
 #undef MAXWINDOW
@@ -221,6 +243,10 @@ extern int	ed_setcursor(Edit_t*, genchar*, int, int, int);
 	extern int ed_genlen(const genchar*);
 	extern int ed_setwidth(const char*);
 #  endif /* SHOPT_MULTIBYTE */
+#if SHOPT_EDPREDICT
+   extern int	ed_histgen(Edit_t*, const char*);
+   extern void	ed_histlist(Edit_t*, int);
+#endif /* SHOPT_EDPREDICT */
 
 extern const char	e_runvi[];
 #if !KSHELL

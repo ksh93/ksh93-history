@@ -114,14 +114,14 @@ int sh_source(Shell_t *shp, Sfio_t *iop, const char *file)
 	char*	nid;
 	int	fd;
 
-	if (!file || !*file || (fd = path_open(file, PATHCOMP)) < 0)
+	if (!file || !*file || (fd = path_open(shp,file, PATHCOMP)) < 0)
 	{
 		REGRESS(source, "sh_source", ("%s:ENOENT", file));
 		return 0;
 	}
 	oid = error_info.id;
 	nid = error_info.id = strdup(file);
-	shp->st.filename = path_fullname(stakptr(PATH_OFFSET));
+	shp->st.filename = path_fullname(shp,stakptr(PATH_OFFSET));
 	REGRESS(source, "sh_source", ("%s", file));
 	exfile(shp, iop, fd);
 	error_info.id = oid;
@@ -174,7 +174,7 @@ int sh_main(int ac, char *av[], Shinit_f userinit)
 	shp->ppid = getppid();
 	if(nv_isnull(PS4NOD))
 		nv_putval(PS4NOD,e_traceprompt,NV_RDONLY);
-	path_pwd(1);
+	path_pwd(shp,1);
 	iop = (Sfio_t*)0;
 #if SHOPT_BRACEPAT
 	sh_onoption(SH_BRACEEXPAND);
@@ -226,7 +226,7 @@ int sh_main(int ac, char *av[], Shinit_f userinit)
 			}
 		}
 		/* make sure PWD is set up correctly */
-		path_pwd(1);
+		path_pwd(shp,1);
 		if(!sh_isoption(SH_NOEXEC))
 		{
 			if(!sh_isoption(SH_NOUSRPROFILE) && !sh_isoption(SH_PRIVILEGED) && sh_isoption(SH_RC))
@@ -316,20 +316,20 @@ int sh_main(int ac, char *av[], Shinit_f userinit)
 						fdin = -1;
 					}
 					else
-						shp->st.filename = path_fullname(name);
+						shp->st.filename = path_fullname(shp,name);
 					sp = 0;
 					if(fdin < 0 && !strchr(name,'/'))
 					{
 #ifdef PATH_BFPATH
-						if(path_absolute(name,NIL(Pathcomp_t*)))
+						if(path_absolute(shp,name,NIL(Pathcomp_t*)))
 							sp = stakptr(PATH_OFFSET);
 #else
-							sp = path_absolute(name,NIL(char*));
+							sp = path_absolute(shp,name,NIL(char*));
 #endif
 						if(sp)
 						{
 							if((fdin=sh_open(sp,O_RDONLY,0))>=0)
-								shp->st.filename = path_fullname(sp);
+								shp->st.filename = path_fullname(shp,sp);
 						}
 					}
 					if(fdin<0)
@@ -387,7 +387,7 @@ static void	exfile(register Shell_t *shp, register Sfio_t *iop,register int fno)
 	int maxtry=IOMAXTRY, tdone=0, execflags;
 	int states,jmpval;
 	struct checkpt buff;
-	sh_pushcontext(&buff,SH_JMPERREXIT);
+	sh_pushcontext(shp,&buff,SH_JMPERREXIT);
 	/* open input stream */
 	nv_putval(SH_PATHNAMENOD, shp->st.filename ,NV_NOFREE);
 	if(!iop)
@@ -414,7 +414,7 @@ static void	exfile(register Shell_t *shp, register Sfio_t *iop,register int fno)
 	if(sh_isstate(SH_INTERACTIVE))
 	{
 		if(nv_isnull(PS1NOD))
-			nv_putval(PS1NOD,(shp->euserid?e_stdprompt:e_supprompt),NV_RDONLY);
+			nv_putval(PS1NOD,(sh.euserid?e_stdprompt:e_supprompt),NV_RDONLY);
 		sh_sigdone();
 		if(sh_histinit((void*)shp))
 			sh_onoption(SH_HISTORY);
@@ -609,7 +609,7 @@ static void	exfile(register Shell_t *shp, register Sfio_t *iop,register int fno)
 		}
 	}
 done:
-	sh_popcontext(&buff);
+	sh_popcontext(shp,&buff);
 	if(sh_isstate(SH_INTERACTIVE))
 	{
 		sfputc(sfstderr,'\n');
@@ -662,7 +662,7 @@ static void chkmail(Shell_t *shp, char *files)
 				if(!arglist && S_ISDIR(statb.st_mode)) 
 				{
 					/* generate list of directory entries */
-					path_complete(cp,"/*",&arglist);
+					path_complete(shp,cp,"/*",&arglist);
 				}
 				else
 				{

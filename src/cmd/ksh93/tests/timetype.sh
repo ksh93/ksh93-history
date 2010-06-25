@@ -1,7 +1,7 @@
 ########################################################################
 #                                                                      #
 #               This software is part of the ast package               #
-#          Copyright (c) 1982-2008 AT&T Intellectual Property          #
+#          Copyright (c) 1982-2010 AT&T Intellectual Property          #
 #                      and is licensed under the                       #
 #                  Common Public License, Version 1.0                  #
 #                    by AT&T Intellectual Property                     #
@@ -58,7 +58,7 @@ tt[3]=2pm
 [[ ${tt[0]} == *+00:00 ]] || err_exit 'tt[0] is not yesterday'
 [[ ${tt[1]} == *+00:00 ]] || err_exit 'tt[1] is not today'
 [[ ${tt[2]} == *+00:00 ]] || err_exit 'tt[2] is not tomorrow'
-[[ ${tt[3]} == *+14:00 ]] || err_exit 'tt[0] is not 2pm'
+[[ ${tt[3]} == *+14:00 ]] || err_exit 'tt[3] is not 2pm'
 unset tt
 Time_t tt=('2008-08-11+00:00:00,yesterday' '2008-08-11+00:00:00,today' '2008-08-11+00:00:00,tomorrow')
 tt[3]=9am

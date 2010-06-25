@@ -105,6 +105,7 @@ struct limits
 	int		open_max;	/* maximum number of file descriptors */
 	int		clk_tck;	/* number of ticks per second */
 	int		child_max;	/* maxumum number of children */
+	int		pid_max;	/* maxumum pid number */
 	int		ngroups_max;	/* maximum number of process groups */
 	unsigned char	posix_version;	/* posix version number */
 	unsigned char	posix_jobcontrol;/* non-zero for job control systems */
@@ -132,7 +133,8 @@ struct limits
 	short		curenv;		/* current subshell number */ \
 	short		jobenv;		/* subshell number for jobs */ \
 	int		infd;		/* input file descriptor */ \
-	int		nextprompt;	/* next prompt is PS<nextprompt> */ \
+	short		nextprompt;	/* next prompt is PS<nextprompt> */ \
+	short		poolfiles; \
 	int		bltin_nnodes;	/* number of bltins nodes */ \
 	Namval_t	*bltin_nodes;	/* pointer to built-in variables */ \
 	Namval_t	*bltin_cmds;	/* pointer to built-in commands */ \
@@ -153,6 +155,7 @@ struct limits
 	pid_t		pid;		/* process id of shell */ \
 	pid_t		bckpid;		/* background process id */ \
 	pid_t		cpid; \
+	pid_t		spid; 		/* subshell process id */ \
 	pid_t		pipepid; \
 	int32_t		ppid;		/* parent process id of shell */ \
 	int		topfd; \
@@ -171,7 +174,7 @@ struct limits
 	char		winch; \
 	char		indebug; 	/* set when in debug trap */ \
 	unsigned char	lastsig;	/* last signal received */ \
-	char		comsub;		/* set when in $()comsub */ \
+	char		comsub;		/* set when in $() comsub */ \
 	char		subshare;	/* set when in ${..} comsub */ \
 	char		toomany;	/* set when out of fd's */ \
 	char		instance;	/* in set_instance */ \
@@ -229,6 +232,7 @@ struct limits
 	Dt_t		*prev_root; \
 	Dt_t		*fpathdict; \
 	Dt_t		*typedict; \
+	Dt_t		*inpool; \
 	char		ifstable[256]; \
 	unsigned char	sigruntime[2]; \
 	unsigned long	test; \
@@ -237,6 +241,8 @@ struct limits
 	Namval_t	*typeinit; \
 	int		*stats; \
 	Namfun_t	nvfun; \
+	char		*mathnodes; \
+	void		*coshell; \
 	struct Regress_s*regress;
 
 #include	<shell.h>
@@ -354,7 +360,7 @@ struct limits
 #define SH_FUNEVAL		0x10000	/* for sh_eval for function load */
 
 extern Shell_t		*nv_shell(Namval_t*);
-extern int		sh_addlib(void*);
+extern int		sh_addlib(Shell_t*,void*);
 extern void		sh_applyopts(Shell_t*,Shopt_t);
 extern char 		**sh_argbuild(Shell_t*,int*,const struct comnod*,int);
 extern struct dolnod	*sh_argfree(Shell_t *, struct dolnod*,int);
@@ -365,24 +371,28 @@ extern void 		sh_argreset(Shell_t*,struct dolnod*,struct dolnod*);
 extern Namval_t		*sh_assignok(Namval_t*,int);
 extern struct dolnod	*sh_arguse(Shell_t*);
 extern char		*sh_checkid(char*,char*);
+extern void		sh_chktrap(Shell_t*);
+extern void		sh_deparse(Sfio_t*,const Shnode_t*,int);
 extern int		sh_debug(Shell_t *shp,const char*,const char*,const char*,char *const[],int);
-extern int 		sh_echolist(Sfio_t*, int, char**);
+extern int 		sh_echolist(Shell_t*,Sfio_t*, int, char**);
 extern struct argnod	*sh_endword(Shell_t*,int);
 extern char 		**sh_envgen(void);
 #if SHOPT_ENV
 extern void 		sh_envput(Env_t*, Namval_t*);
 #endif
 extern void 		sh_envnolocal(Namval_t*,void*);
-extern Sfdouble_t	sh_arith(const char*);
-extern void		*sh_arithcomp(char*);
-extern pid_t 		sh_fork(int,int*);
-extern pid_t		_sh_fork(pid_t, int ,int*);
+extern Sfdouble_t	sh_arith(Shell_t*,const char*);
+extern void		*sh_arithcomp(Shell_t *,char*);
+extern pid_t 		sh_fork(Shell_t*,int,int*);
+extern pid_t		_sh_fork(Shell_t*,pid_t, int ,int*);
 extern char 		*sh_mactrim(Shell_t*,char*,int);
 extern int 		sh_macexpand(Shell_t*,struct argnod*,struct argnod**,int);
 extern int		sh_macfun(Shell_t*,const char*,int);
 extern void 		sh_machere(Shell_t*,Sfio_t*, Sfio_t*, char*);
 extern void 		*sh_macopen(Shell_t*);
 extern char 		*sh_macpat(Shell_t*,struct argnod*,int);
+extern Sfdouble_t	sh_mathfun(Shell_t*, void*, int, Sfdouble_t*);
+extern int		sh_outtype(Shell_t*, Sfio_t*);
 extern char 		*sh_mactry(Shell_t*,char*);
 extern void		sh_printopts(Shopt_t,int,Shopt_t*);
 extern int 		sh_readline(Shell_t*,char**,int,int,long);
@@ -396,13 +406,19 @@ extern void		sh_subjobcheck(pid_t);
 extern int		sh_subsavefd(int);
 extern void		sh_subtmpfile(Shell_t*);
 extern char 		*sh_substitute(const char*,const char*,char*);
+extern void		sh_timetraps(Shell_t*);
 extern const char	*_sh_translate(const char*);
-extern int		sh_trace(char*[],int);
+extern int		sh_trace(Shell_t*,char*[],int);
 extern void		sh_trim(char*);
 extern int		sh_type(const char*);
 extern void             sh_unscope(Shell_t*);
 extern void		sh_utol(const char*, char*);
 extern int 		sh_whence(char**,int);
+#if SHOPT_COSHELL
+   extern int		sh_coaddfile(Shell_t*,char*);
+   extern int		sh_copipe(Shell_t*, int[]);
+   extern int		sh_coaccept(Shell_t*,int[],int);
+#endif /* SHOPT_COSHELL */
 
 #ifndef ERROR_dictionary
 #   define ERROR_dictionary(s)	(s)
@@ -427,7 +443,7 @@ extern int 		sh_whence(char**,int);
 #define	sh_getstate()	(sh.st.states)
 #define	sh_setstate(x)	(sh.st.states = (x))
 
-#define sh_sigcheck() do{if(sh.trapnote&SH_SIGSET)sh_exit(SH_EXITSIG);} while(0)
+#define sh_sigcheck(shp) do{if(shp->trapnote&SH_SIGSET)sh_exit(SH_EXITSIG);} while(0)
 
 extern int32_t		sh_mailchk;
 extern const char	e_dict[];

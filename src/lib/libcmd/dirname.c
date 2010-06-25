@@ -131,7 +131,7 @@ b_dirname(int argc,register char *argv[], void* context)
 		error(ERROR_usage(2),"%s", optusage(NiL));
 	if(!mode)
 		l_dirname(sfstdout,argv[0]);
-	else if(pathpath(argv[0], "", buf, mode))
+	else if(pathpath(argv[0], "", mode, buf, sizeof(buf)))
 		sfputr(sfstdout, buf, '\n');
 	else
 		error(1|ERROR_WARNING, "%s: relative path not found", argv[0]);

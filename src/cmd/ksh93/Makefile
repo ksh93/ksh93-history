@@ -3,11 +3,12 @@
  */
 
 SH := $(PWD:B:/[0-9]*$//:N=ksh*:-ksh)		/* name of the shell program */
-SHCOMP := shcomp$(SH:/.*sh//)
 VERSION = 1.1
 LICENSE = since=1982,author=dgk
 CATALOG = libshell
 ERROR_CONTEXT_T == Error_context_t /* workaround until switch from errorpush()/errorpop() => errorctx() */
+RELEASE := $(SH:/.*sh//)
+SHCOMP := shcomp$(RELEASE)
 
 /*
  * set these variables to 1 to enable, 0 to disable, null to probe
@@ -23,9 +24,11 @@ SHOPT_BGX == 1			/* one SIGCHLD trap per completed job */
 SHOPT_BRACEPAT == 1		/* C-shell {...,...} expansions (, required) */
 SHOPT_CMDLIB_HDR ==		/* -lcmd builtin list: <cmdlist.h> */
 SHOPT_CMDLIB_DIR ==		/* SHOPT_CMDLIB_HDR prefix SH_CMDLIB_DIR + <cmdlist.h> */
+SHOPT_COSHELL == 1		/* build with connection to coshell */
 SHOPT_CRNL ==			/* accept <cr><nl> for <nl> */
 SHOPT_DYNAMIC == 1		/* dynamic loading for builtins */
 SHOPT_ECHOPRINT ==		/* make echo equivalent to print */
+SHOPT_EDPREDICT == 1		/* predictive editing  */
 SHOPT_ESH == 1			/* emacs/gmacs edit mode */
 SHOPT_FILESCAN == 1		/* fast file scan */
 SHOPT_FS_3D == 			/* 3d file system */
@@ -60,7 +63,7 @@ end
 
 if SHOPT_DYNAMIC && ( "$(CC.DIALECT:N=EXPORT=DLL)" || "$(PACKAGE_OPTIONS:N=optimize-space)" )
 	CCFLAGS += $$(CC.DLL) $$(CC.SUFFIX.DEBUG:+$$(CC.DEBUG))
-	LIBS_req = -lshell
+	LIBS_req = -lshell$(RELEASE)
 else
 	if VARIANT
 		SHOPT_DYNAMIC = 1
@@ -70,7 +73,7 @@ else
 	if SHOPT_DYNAMIC
 		CCLDFLAGS += $$(CC.EXPORT.DYNAMIC)
 	end
-	LIBS_req = +lshell
+	LIBS_req = +lshell$(RELEASE)
 end
 
 :PACKAGE: ast$(libtype):20100309 --clobber=!($(SH))
@@ -144,21 +147,21 @@ if SHOPT_X
 	LDFLAGS += -u _XtAppInitialize -L/usr/add-on/X11/lib
 end
 
-:ALL: $(SH) $(SHCOMP) $(SHOPT_SUID_EXEC:+suid_exec) $(SHOPT_BASH:+bash)
+:ALL: $(SH) $(SHCOMP) $(SHOPT_SUID_EXEC:+suid_exec) $(SHOPT_BASH:+bash$(RELEASE))
 
 $(SH) :: sh.1 pmain.c $(LIBS_req)
 
 DATAFILES = limits.c msg.c strdata.c testops.c keywords.c options.c \
                  signals.c aliases.c builtins.c variables.c lexstates.c
 
-shell $(VERSION) :LIBRARY: shell.3 nval.3 alarm.c cd_pwd.c cflow.c deparse.c \
+shell$(RELEASE) $(VERSION) :LIBRARY: shell.3 nval.3 alarm.c cd_pwd.c cflow.c deparse.c \
 	enum.c getopts.c hist.c misc.c print.c read.c sleep.c trap.c test.c \
 	typeset.c ulimit.c umask.c whence.c main.c nvdisc.c nvtype.c \
 	arith.c args.c array.c completion.c defs.c edit.c expand.c regress.c \
 	fault.c fcin.c history.c init.c io.c jobs.c lex.c macro.c name.c \
 	nvtree.c parse.c path.c string.c streval.c subshell.c tdump.c timers.c \
 	trestore.c waitevent.c xec.c env.c $(DATAFILES) $(FILES_opt) \
-	-lcmd -last -lm
+	$(SHOPT_COSHELL:+-lcoshell) -lcmd -last -lm
 
 "sol*.i386*"	:NOOPTIMIZE: main.c
 "win32*"	:NOOPTIMIZE: strdata.c trestore.c
@@ -175,7 +178,9 @@ $(INCLUDEDIR) :INSTALLPROTO: nval.h shell.h history.h
 
 LIBCMD = $(.LIB.NAME. cmd:T=F)
 
+if SHOPT_SUID_EXEC && ! "$(RELEASE)"
 suid_exec ::	CC.DLL= suid_exec.c +last
+end
 
 $(SHCOMP) ::	CC.DLL= SH_DICT='"libshell"' shcomp.c $(LIBS_req)
 
@@ -184,12 +189,14 @@ $(FUNDIR) :INSTALLDIR: mode=+x dirs popd pushd
 shcomp.o : _BLD_DLL= $(CC.HOSTTYPE:N=cygwin.*:??_BLD_shell=?)
 
 if SHOPT_BASH
-bash :LINK: $(SH)
+
+bash$(RELEASE) :LINK: $(SH)
 
 bash_pre_rc.c : bash_pre_rc.sh
 	echo "const char bash_pre_rc[] = " > $(<)
 	sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' -e 's/'"'"'/\\'"'"'/g' -e 's/^[[:space:]]*\(.*\)$/\"\1\\n\"/' $(*) >> $(<)
 	echo ";" >> $(<)
+
 end
 
 :: math.tab syscall.s mamexec mamstate.c $(DOCFILES) \
@@ -202,7 +209,7 @@ end
 	comvar.sh coprocess.sh cubetype.sh enum.sh exit.sh \
 	expand.sh functions.sh glob.sh grep.sh heredoc.sh io.sh \
 	leaks.sh locale.sh math.sh nameref.sh options.sh path.sh \
-	pointtype.sh quoting.sh quoting2.sh recttype.sh \
+	pointtype.sh pty.sh quoting.sh quoting2.sh recttype.sh \
 	restricted.sh return.sh select.sh shtests sigchld.sh \
 	signal.sh statics.sh subshell.sh substring.sh tilde.sh \
 	timetype.sh treemove.sh types.sh variables.sh \
@@ -224,7 +231,7 @@ test.ksh : $(BINDIR)/$(SH) $(SH) shtests
 	cd $(*:O=3:P=L!:D)
 	SHELL=$(*:O=1:P=A) $(*:O=1:P=A) $(SHTESTSFLAGS) $(*:O=3:B)
 
-test.% : %.sh $(BINDIR)/$(SH) $(SH) shtests
+test.% : %.sh COSHELL_OPTIONS=separate $(BINDIR)/$(SH) $(SH) shtests
 	$(SILENT) $(CMP) $(CMPFLAGS) $(*:O=2) $(*:O=3) 2>/dev/null ||
 	echo "make install to run the tests on the latest $(SH)" >&2
 	cd $(*:O=4:P=L!:D)
@@ -232,10 +239,10 @@ test.% : %.sh $(BINDIR)/$(SH) $(SH) shtests
 
 end
 
-if SH != "ksh"
+if "$(RELEASE)"
 
 _BLD_shell == 1
 
-.INSTALL : .CLEAR $(*.INSTALL:N=*$(SH:/.*sh//)*:N!=*@($(CC.SUFFIX.ARCHIVE)|$(CC.SUFFIX.SHARED)))
+.INSTALL : .CLEAR $(*.INSTALL:N=*$(RELEASE)*:N!=*@($(CC.SUFFIX.ARCHIVE)|$(CC.SUFFIX.SHARED)))
 
 end

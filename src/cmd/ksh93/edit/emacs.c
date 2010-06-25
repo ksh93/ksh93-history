@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -611,6 +611,18 @@ update:
 			search(ep,out,count);
 			goto drawline;
 		case cntl('P') :
+#if SHOPT_EDPREDICT
+			if(ep->ed->hlist)
+			{
+				if(ep->ed->hoff == 0)
+				{
+					beep();
+					continue;
+				}
+				ep->ed->hoff--;
+				goto hupdate;
+			}
+#endif /* SHOPT_EDPREDICT */
                         if (count <= hloff)
                                 hloff -= count;
                         else
@@ -639,6 +651,21 @@ update:
 			c = '\n';
 			goto process;
 		case cntl('N') :
+#if SHOPT_EDPREDICT
+			if(ep->ed->hlist)
+			{
+				if(ep->ed->hoff >= ep->ed->hmax)
+				{
+					beep();
+					continue;
+				}
+				ep->ed->hoff++;
+			 hupdate:
+				ed_histlist(ep->ed,*ep->ed->hlist!=0);
+				draw(ep,REFRESH);
+				continue;
+			}
+#endif /* SHOPT_EDPREDICT */
 #ifdef ESH_NFIRST
 			hline = location.hist_command;	/* start at saved position */
 			hloff = location.hist_line;
@@ -933,8 +960,33 @@ static int escape(register Emacs_t* ep,register genchar *out,int count)
 		}
 #if KSHELL
 
+#if SHOPT_EDPREDICT
+		case '\n':  case '\t':
+			if(!ep->ed->hlist)
+			{
+				beep();
+				break;
+			}
+			if(ch=='\n')
+				ed_ungetchar(ep->ed,'\n');
+#endif /* SHOPT_EDPREDICT */
 		/* file name expansion */
 		case cntl('[') :	/* filename completion */
+#if SHOPT_EDPREDICT
+			if(ep->ed->hlist)
+			{
+				value += ep->ed->hoff;
+				if(value > ep->ed->nhlist)
+					beep();
+				else
+				{
+					value = histlines - ep->ed->hlist[value-1]->index;
+					ed_histlist(ep->ed,0);
+					ed_ungetchar(ep->ed,cntl('P'));
+					return(value);
+				}
+			}
+#endif /* SHOPT_EDPREDICT */
 			i = '\\';
 		case '*':		/* filename expansion */
 		case '=':	/* escape = - list all matching file names */
@@ -1012,7 +1064,11 @@ static int escape(register Emacs_t* ep,register genchar *out,int count)
 			switch(i=ed_getchar(ep->ed,1))
 			{
 			    case 'A':
+#if SHOPT_EDPREDICT
+				if(!ep->ed->hlist && cur>0 && eol==cur && (cur<(SEARCHSIZE-2) || ep->prevdirection == -2))
+#else
 				if(cur>0 && eol==cur && (cur<(SEARCHSIZE-2) || ep->prevdirection == -2))
+#endif /* SHOPT_EDPREDICT */
 				{
 					if(ep->lastdraw==APPEND && ep->prevdirection != -2)
 					{
@@ -1337,6 +1393,34 @@ static void draw(register Emacs_t *ep,Draw_t option)
 	
 
 	i = *(logcursor-1);	/* last character inserted */
+#if SHOPT_EDPREDICT
+	if(option==FINAL)
+	{
+		if(ep->ed->hlist)
+			ed_histlist(ep->ed,0);
+	}
+	else if(option!=REFRESH && drawbuff[0]=='#' && cur>1 && drawbuff[cur-1]!='*')
+	{
+		int		n;
+		drawbuff[cur+1]=0;
+#   if SHOPT_MULTIBYTE
+		ed_external(drawbuff,(char*)drawbuff);
+#   endif /*SHOPT_MULTIBYTE */
+		n = ed_histgen(ep->ed,(char*)drawbuff);
+#   if SHOPT_MULTIBYTE
+		ed_internal((char*)drawbuff,drawbuff);
+#   endif /*SHOPT_MULTIBYTE */
+		if(ep->ed->hlist)
+		{
+			ed_histlist(ep->ed,n);
+			putstring(ep,Prompt);
+			ed_setcursor(ep->ed,ep->screen,0,ep->cursor-ep->screen, 0);
+		}
+		else
+			ed_ringbell();
+
+		}
+#endif /* SHOPT_EDPREDICT */
 	
 	if ((option == APPEND)&&(ep->scvalid)&&(*logcursor == '\0')&&
 	    print(i)&&((ep->cursor-ep->screen)<(w_size-1)))

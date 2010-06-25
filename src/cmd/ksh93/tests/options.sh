@@ -469,7 +469,7 @@ for ((S=0; S<${#SUB[@]}; S++))
 do	for ((P=0; P<${#PAR[@]}; P++))
 	do	for ((C=0; C<${#CMD[@]}; C++))
 		do	for ((A=0; A<${#ADD[@]}; A++))
-			do	cmd="${SUB[S].BEG}${PAR[P].BEG}${CMD[C]};:${PAR[P].END} 2>&1${ADD[A]}${SUB[S].END}"
+			do	cmd="${SUB[S].BEG}${PAR[P].BEG}${CMD[C]}${PAR[P].END} 2>&1${ADD[A]}${SUB[S].END}"
 				eval got="$cmd"
 				got=${got##*': '}
 				got=${got%%'('*}
@@ -495,5 +495,7 @@ then    kill $spy 2>/dev/null
 else    err_exit "pipefail pipeline bypasses SIGPIPE and hangs"
 fi
 wait
+
+[[ $($SHELL -uc '[[ "${d1.u[z asd].revents}" ]]' 2>&1) == *'d1.u[z asd].revents'* ]] || err_exit 'name of unset parameter not in error message'
 
 exit $((Errors))

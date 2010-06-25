@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -150,7 +150,7 @@ int    B_login(int argc,char *argv[],void *extra)
 		pp->mode = SH_JMPEXIT;
 		sh_sigreset(2);
 		sh_freeup(shp);
-		path_exec(pname,argv,NIL(struct argnod*));
+		path_exec(shp,pname,argv,NIL(struct argnod*));
 		sh_done(shp,0);
         }
 	return(1);
@@ -160,8 +160,8 @@ int    b_let(int argc,char *argv[],void *extra)
 {
 	register int r;
 	register char *arg;
+	Shell_t *shp = ((Shbltin_t*)extra)->shp;
 	NOT_USED(argc);
-	NOT_USED(extra);
 	while (r = optget(argv,sh_optlet)) switch (r)
 	{
 	    case ':':
@@ -175,7 +175,7 @@ int    b_let(int argc,char *argv[],void *extra)
 	if(error_info.errors || !*argv)
 		errormsg(SH_DICT,ERROR_usage(2),"%s",optusage((char*)0));
 	while(arg= *argv++)
-		r = !sh_arith(arg);
+		r = !sh_arith(shp,arg);
 	return(r);
 }
 
@@ -240,7 +240,7 @@ int    b_dot_cmd(register int n,char *argv[],void* extra)
 		{
 			if(!np->nvalue.ip)
 			{
-				path_search(script,NIL(Pathcomp_t**),0);
+				path_search(shp,script,NIL(Pathcomp_t**),0);
 				if(np->nvalue.ip)
 				{
 					if(nv_isattr(np,NV_FPOSIX))
@@ -254,9 +254,9 @@ int    b_dot_cmd(register int n,char *argv[],void* extra)
 			np = 0;
 		if(!np)
 		{
-			if((fd=path_open(script,path_get(script))) < 0)
+			if((fd=path_open(shp,script,path_get(shp,script))) < 0)
 				errormsg(SH_DICT,ERROR_system(1),e_open,script);
-			filename = path_fullname(stkptr(shp->stk,PATH_OFFSET));
+			filename = path_fullname(shp,stkptr(shp->stk,PATH_OFFSET));
 		}
 	}
 	*prevscope = shp->st;
@@ -280,7 +280,7 @@ int    b_dot_cmd(register int n,char *argv[],void* extra)
 	shp->posix_fun = 0;
 	if(np || argv[1])
 		argsave = sh_argnew(shp,argv,&saveargfor);
-	sh_pushcontext(&buff,SH_JMPDOT);
+	sh_pushcontext(shp,&buff,SH_JMPDOT);
 	jmpval = sigsetjmp(buff.buff,0);
 	if(jmpval == 0)
 	{
@@ -294,7 +294,7 @@ int    b_dot_cmd(register int n,char *argv[],void* extra)
 			sh_eval(iop,0);
 		}
 	}
-	sh_popcontext(&buff);
+	sh_popcontext(shp,&buff);
 	if(!np)
 		free((void*)shp->st.filename);
 	shp->dot_depth--;
@@ -356,7 +356,7 @@ int    b_shift(register int n, register char *argv[], void *extra)
 	if(error_info.errors)
 		errormsg(SH_DICT,ERROR_usage(2),"%s",optusage((char*)0));
 	argv += opt_info.index;
-	n = ((arg= *argv)?(int)sh_arith(arg):1);
+	n = ((arg= *argv)?(int)sh_arith(shp,arg):1);
 	if(n<0 || shp->st.dolc<n)
 		errormsg(SH_DICT,ERROR_exit(1),e_number,arg);
 	else
@@ -531,7 +531,7 @@ int	b_universe(int argc, char *argv[],void *extra)
 	}
 	if(error_info.errors)
 		errormsg(SH_DICT,ERROR_usage(2),"%s",optusage((char*)0));
-	if(!shp->lim.fs3d)
+	if(!sh.lim.fs3d)
 		goto failed;
 	argv += opt_info.index;
 	argc -= opt_info.index;
@@ -570,7 +570,7 @@ int	b_universe(int argc, char *argv[],void *extra)
 			errormsg(SH_DICT,ERROR_usage(2),"%s",optusage((char*)0));
 		/*FALLTHROUGH*/
 	     case 2:
-		if(!shp->lim.fs3d)
+		if(!sh.lim.fs3d)
 			goto failed;
 		if(shp->subshell && !shp->subshare)
 			sh_subfork();

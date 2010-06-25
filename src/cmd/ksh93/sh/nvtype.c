@@ -25,6 +25,7 @@
  */
 
 #include        "defs.h"
+#include        "variables.h"
 
 static const char sh_opttype[] =
 "[-1c?\n@(#)$Id: type (AT&T Labs Research) 2008-07-01 $\n]"
@@ -1557,4 +1558,64 @@ void nv_mkstat(void)
 	nv_disc(tp,fp,NV_FIRST);
 	nv_putval(tp,"/dev/null",0);
 	nv_onattr(tp,NV_RDONLY);
+}
+
+int	sh_outtype(Shell_t *shp,Sfio_t *out)
+{
+	Namval_t	node,*mp,*tp;
+	Dt_t		*dp;
+	char		*cp,*sp,nvtype[sizeof(NV_CLASS)];
+	Sfio_t		*iop=0;
+	strcpy(nvtype,NV_CLASS);
+	if(!(mp = nv_open(nvtype, shp->var_base,NV_NOADD|NV_VARNAME)))
+		return(0);
+	memcpy(&node,L_ARGNOD,sizeof(node));
+	L_ARGNOD->nvfun = 0;
+	L_ARGNOD->nvalue.cp = 0;
+	dp  = 	nv_dict(mp);
+	for(tp = (Namval_t*)dtfirst(dp); tp; tp = (Namval_t*)dtnext(dp,tp))
+		sfprintf(out,"typeset -T %s\n",tp->nvname);
+	for(tp = (Namval_t*)dtfirst(dp); tp; tp = (Namval_t*)dtnext(dp,tp))
+	{
+		nv_settype(L_ARGNOD,tp,0);
+		sfprintf(out,"typeset -T %s=",tp->nvname);
+		shp->last_table = 0;
+		cp = nv_getval(L_ARGNOD);
+		sfprintf(out,"%.*s",strlen(cp)-1,cp);
+		_nv_unset(L_ARGNOD,NV_RDONLY);
+		for(sp=0; sp=nv_setdisc(tp,(char*)0,(Namval_t*)sp,(Namfun_t*)tp);)
+		{
+			mp = (Namval_t*)nv_setdisc(tp,sp,tp,(Namfun_t*)tp);
+			if(!mp || mp==tp)
+				continue;
+			if(cp=strrchr(mp->nvname,'.'))
+				cp++;
+			else
+				cp = mp->nvname;
+			if(nv_isattr(mp,NV_FPOSIX))
+				sfprintf(out,"\t%s()",cp);
+			else
+				sfprintf(out,"\tfunction %s",cp);
+			cp = 0;
+			if(mp->nvalue.ip && mp->nvalue.rp->hoffset>=0)
+			{
+				if(nv_isattr(mp,NV_FTMP))
+					iop = shp->heredocs;
+				else if(cp=mp->nvalue.rp->fname)
+					iop = sfopen(iop,cp,"r");
+				else if(shp->hist_ptr)
+					iop = (shp->hist_ptr)->histfp;
+				if(iop && sfseek(iop,(Sfoff_t)mp->nvalue.rp->hoffset,SEEK_SET)>=0)
+					sfmove(iop,out, nv_size(mp), -1);
+				else
+					sfputc(iop,'\n');
+				if(cp)
+					sfclose(iop);
+				iop = 0;
+			}
+		}
+		sfwrite(out,")\n",2);
+	}
+	memcpy(L_ARGNOD,&node,sizeof(node));
+	return(0);
 }

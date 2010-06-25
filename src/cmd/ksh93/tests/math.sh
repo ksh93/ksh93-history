@@ -76,7 +76,6 @@ function test_arithmetric_expression_accesss_array_element_through_nameref
 	typeset mode
 	typeset cmd
 
-	$SHELL -c '(( round(0) ))' 2>/dev/null || return 0
 	for (( i=0 ; i < ${#tests[@]} ; i++ )) ; do
 		# fixme: This list should include "typeset -lX" and "typeset -X" but ast-ksh.2010-03-09 fails like this:
 		# 'typeset -X -a z ;  z[1][3]=90 ; function x { nameref nz=$1 ; print " $(( nz ))==$(( $nz ))" ; } ; x z[1][3]'
@@ -188,7 +187,6 @@ function test_has_iszero
 		'float n=-1. ; (( iszero(n+1.) )) && print "OK"'
 	)
 	
-	$SHELL -c '(( iszero(0) ))' 2>/dev/null || return 0
 	for (( i=0 ; i < ${#tests[@]} ; i++ )) ; do
 		str="$( ${SHELL} -o errexit -c "${tests[i]}" 2>&1 )" || err_exit "test $i: returned non-zero exit code $?"
 		[[ "${str}" == 'OK' ]] || err_exit "test $i: expected 'OK', got '${str}'"

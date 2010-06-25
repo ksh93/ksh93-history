@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -63,8 +63,6 @@
     struct ionod;
 #endif /* !ARG_RAW */
 
-#define sh_inuse(f2)	(sh.fdptrs[f2])
-
 extern int	sh_iocheckfd(Shell_t*,int);
 extern void 	sh_ioinit(Shell_t*);
 extern int 	sh_iomovefd(int);
@@ -77,6 +75,8 @@ extern void 	sh_iorestore(Shell_t*,int,int);
 extern Sfio_t 	*sh_iostream(Shell_t*,int);
 extern int	sh_redirect(Shell_t*,struct ionod*,int);
 extern void 	sh_iosave(Shell_t *, int,int,char*);
+extern int 	sh_iovalidfd(Shell_t*, int);
+extern int 	sh_inuse(Shell_t*, int);
 extern void 	sh_iounsave(Shell_t*);
 extern int	sh_chkopen(const char*);
 extern int	sh_ioaccess(int,int);

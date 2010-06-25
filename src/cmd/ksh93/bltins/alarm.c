@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -123,17 +123,17 @@ static void	trap_timeout(void* handle)
 	tp->flags |= L_FLAG;
 	tp->sh->sigflag[SIGALRM] |= SH_SIGALRM;
 	if(sh_isstate(SH_TTYWAIT))
-		sh_timetraps();
+		sh_timetraps(tp->sh);
 }
 
-void	sh_timetraps(void)
+void	sh_timetraps(Shell_t *shp)
 {
 	register struct tevent *tp, *tpnext;
 	register struct tevent *tptop;
 	while(1)
 	{
-		sh.sigflag[SIGALRM] &= ~SH_SIGALRM;
-		tptop= (struct tevent*)sh.st.timetrap;
+		shp->sigflag[SIGALRM] &= ~SH_SIGALRM;
+		tptop= (struct tevent*)shp->st.timetrap;
 		for(tp=tptop;tp;tp=tpnext)
 		{
 			tpnext = tp->next;
@@ -150,7 +150,7 @@ void	sh_timetraps(void)
 				}
 			}
 		}
-		if(!(sh.sigflag[SIGALRM]&SH_SIGALRM))
+		if(!(shp->sigflag[SIGALRM]&SH_SIGALRM))
 			break;
 	}
 }

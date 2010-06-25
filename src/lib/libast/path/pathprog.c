@@ -106,14 +106,8 @@ size_t
 pathprog(const char* command, char* path, size_t size)
 {
 	ssize_t		n;
-	char		buf[PATH_MAX];
 
 	if ((n = prog(command, path, size)) > 0 && n <= size && *path != '/')
-	{
-		if (!pathpath(buf, path, NiL, PATH_REGULAR|PATH_EXECUTE))
-			n = 0;
-		else if ((n = strlen(buf) + 1) <= size)
-			memcpy(path, buf, n);
-	}
+		n = pathpath(path, NiL, PATH_REGULAR|PATH_EXECUTE, path, size) ? strlen(path) : 0;
 	return n;
 }

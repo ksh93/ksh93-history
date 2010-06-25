@@ -282,7 +282,7 @@ static Shnode_t *getanode(Lex_t *lp, struct argnod *ap)
 	t->ar.arline = sh_getlineno(lp);
 	t->ar.arexpr = ap;
 	if(ap->argflag&ARG_RAW)
-		t->ar.arcomp = sh_arithcomp(ap->argval);
+		t->ar.arcomp = sh_arithcomp(lp->sh,ap->argval);
 	else
 	{
 		if(sh_isoption(SH_NOEXEC) && (ap->argflag&ARG_MAC) && paramsub(ap->argval))
@@ -557,11 +557,19 @@ static Shnode_t	*term(Lex_t *lexp,register int flag)
 			t->par.partyp |= COMSCAN;
 		t->par.partre = term(lexp,0);
 	}
+#if SHOPT_COSHELL
+	else if((t=item(lexp,SH_NL|SH_EMPTY|(flag&SH_SEMI))) && (lexp->token=='|' || lexp->token==PIPESYM2))
+#else
 	else if((t=item(lexp,SH_NL|SH_EMPTY|(flag&SH_SEMI))) && lexp->token=='|')
+#endif /* SHOPT_COSHELL */
 	{
 		register Shnode_t	*tt;
 		int showme = t->tre.tretyp&FSHOWME;
 		t = makeparent(lexp,TFORK|FPOU,t);
+#if SHOPT_COSHELL
+		if(lexp->token==PIPESYM2)
+			t->tre.tretyp |= FALTPIPE;
+#endif /* SHOPT_COSHELL */
 		if(tt=term(lexp,SH_NL))
 		{
 			switch(tt->tre.tretyp&COMMSK)
@@ -725,7 +733,7 @@ static Shnode_t *funct(Lex_t *lexp)
 #if SHOPT_KIA
 	unsigned long current = lexp->current;
 #endif /* SHOPT_KIA */
-	int jmpval, saveloop=loop_level;
+	int nargs=0,size=0,jmpval, saveloop=loop_level;
 	struct argnod *savelabel = label_last;
 	struct  checkpt buff;
 	int save_optget = opt_get;
@@ -788,13 +796,38 @@ static Shnode_t *funct(Lex_t *lexp)
 	else
 	{
 		if(lexp->token==0)
-			t->funct.functargs = (struct comnod*)simple(lexp,SH_NOIO|SH_FUNDEF,NIL(struct ionod*));
+		{
+			struct comnod	*ac;
+			char		*cp, **argv, **argv0;
+			int		c;
+			t->funct.functargs = ac = (struct comnod*)simple(lexp,SH_NOIO|SH_FUNDEF,NIL(struct ionod*));
+			if(ac->comset || (ac->comtyp&COMSCAN))
+				errormsg(SH_DICT,ERROR_exit(3),e_lexsyntax4,lexp->sh->inlineno);
+			argv0 = argv = ((struct dolnod*)ac->comarg)->dolval+ARG_SPARE;
+			while(cp= *argv++)
+			{
+				size += strlen(cp)+1;
+				if((c = mbchar(cp)) && isaletter(c))
+		                        while(c=mbchar(cp), isaname(c));
+			}
+			if(c)
+				errormsg(SH_DICT,ERROR_exit(3),e_lexsyntax4,lexp->sh->inlineno);
+			nargs = argv-argv0;
+			size += sizeof(struct dolnod)+(nargs+ARG_SPARE)*sizeof(char*);
+			if(shp->shcomp && memcmp(".sh.math.",t->funct.functnam,9)==0)
+			{
+				Namval_t *np= nv_open(t->funct.functnam,shp->fun_tree,NV_ADD|NV_VARNAME);
+				np->nvalue.rp = new_of(struct Ufunction,shp->funload?sizeof(Dtlink_t):0);
+				memset((void*)np->nvalue.rp,0,sizeof(struct Ufunction));
+				np->nvalue.rp->argc = ((struct dolnod*)ac->comarg)->dolnum;
+			}
+		}
 		while(lexp->token==NL)
 			lexp->token = sh_lex(lexp);
 	}
 	if((flag && lexp->token!=LBRACE) || lexp->token==EOFSYM)
 		sh_syntax(lexp);
-	sh_pushcontext(&buff,1);
+	sh_pushcontext(shp,&buff,1);
 	jmpval = sigsetjmp(buff.buff,0);
 	if(jmpval == 0)
 	{
@@ -818,6 +851,20 @@ static Shnode_t *funct(Lex_t *lexp)
 			fp->functnam = stakcopy(shp->st.filename);
 		loop_level = 0;
 		label_last = label_list;
+		if(size)
+		{
+			struct dolnod *dp = (struct dolnod*)stakalloc(size);
+			char *cp, *sp, **argv, **old = ((struct dolnod*)t->funct.functargs->comarg)->dolval+1;
+			argv = ((char**)(dp->dolval))+1;
+			dp->dolnum = ((struct dolnod*)t->funct.functargs->comarg)->dolnum;
+			t->funct.functargs->comarg = (struct argnod*)dp;
+			for(cp=(char*)&argv[nargs]; sp= *old++; cp++)
+			{
+				*argv++ = cp;
+				cp = strcopy(cp,sp);
+			}
+			*argv = 0;
+		}
 		if(!flag && lexp->token==0)
 		{
 			/* copy current word token to current stak frame */
@@ -831,7 +878,7 @@ static Shnode_t *funct(Lex_t *lexp)
 	}
 	else if(shp->shcomp)
 		exit(1);
-	sh_popcontext(&buff);
+	sh_popcontext(shp,&buff);
 	loop_level = saveloop;
 	label_last = savelabel;
 	/* restore the old stack */
@@ -969,7 +1016,18 @@ static struct argnod *assign(Lex_t *lexp, register struct argnod *ap, int tdef)
 		else if(n>0)
 			fcseek(-1);
 		if(array && tdef)
-			sh_syntax(lexp);
+		{
+			struct argnod *arg = lexp->arg;
+			n = lexp->token;
+			if(path_search(lexp->sh,lexp->arg->argval,NIL(Pathcomp_t**),1) && (np=nv_search(lexp->arg->argval,lexp->sh->fun_tree,0)) && nv_isattr(np,BLT_DCL))
+			{
+				lexp->token = n;
+				lexp->arg = arg;
+				array = 0;
+			}
+			else
+				sh_syntax(lexp);
+		}
 	}
 	while(1)
 	{
@@ -1234,6 +1292,24 @@ static Shnode_t	*item(Lex_t *lexp,int flag)
 		t->par.partyp=TPAR;
 		break;
 
+#if SHOPT_COSHELL
+	    case '&':
+		if(tok=sh_lex(lexp))
+		{
+			if(tok!=NL)
+				sh_syntax(lexp);
+			t = getnode(comnod);
+			memset(t,0,sizeof(struct comnod));
+			t->com.comline = sh_getlineno(lexp);
+		}
+		else
+			t = (Shnode_t*)simple(lexp,SH_NOIO,NIL(struct ionod*));
+		t->com.comtyp |= FAMP;
+		if(lexp->token=='&' || lexp->token=='|')
+			sh_syntax(lexp);
+		return(t);
+		break;
+#endif /* SHOPT_COSHELL */
 	    default:
 		if(io==0)
 			return(0);
@@ -1250,7 +1326,7 @@ static Shnode_t	*item(Lex_t *lexp,int flag)
 	    /* simple command */
 	    case 0:
 		t = (Shnode_t*)simple(lexp,flag,io);
-		if(t->com.comarg && lexp->intypeset && (lexp->sh->shcomp || sh_isoption(SH_NOEXEC) || sh.dot_depth))
+		if(t->com.comarg && lexp->intypeset)
 			check_typedef(&t->com);
 		lexp->intypeset = 0;
 		lexp->inexec = 0;
@@ -1297,7 +1373,7 @@ static Shnode_t *simple(Lex_t *lexp,int flag, struct ionod *io)
 	struct argnod	**argtail;
 	struct argnod	**settail;
 	int	cmdarg=0;
-	int	argno = 0, argmax=0;
+	int	argno = 0;
 	int	assignment = 0;
 	int	key_on = (!(flag&SH_NOIO) && sh_isoption(SH_KEYWORD));
 	int	associative=0;
@@ -1358,11 +1434,7 @@ static Shnode_t *simple(Lex_t *lexp,int flag, struct ionod *io)
 		else
 		{
 			if(!(argp->argflag&ARG_RAW))
-			{
-				if(argno>0)
-					argmax = argno;
 				argno = -1;
-			}
 			if(argno>=0 && argno++==cmdarg && !(flag&SH_ARRAY) && *argp->argval!='/')
 			{
 				/* check for builtin command */
@@ -1400,7 +1472,6 @@ static Shnode_t *simple(Lex_t *lexp,int flag, struct ionod *io)
 		if((tok==IPROCSYM || tok==OPROCSYM))
 		{
 			argp = process_sub(lexp,tok);
-			argmax = 0;
 			argno = -1;
 			*argtail = argp;
 			argtail = &(argp->argnxt.ap);
@@ -1457,8 +1528,6 @@ static Shnode_t *simple(Lex_t *lexp,int flag, struct ionod *io)
 		}
 	}
 	*argtail = 0;
-	if(argno>0)
-		argmax = argno;
 	t->comtyp = TCOM;
 #if SHOPT_KIA
 	if(lexp->kiafile && !(flag&SH_NOIO))

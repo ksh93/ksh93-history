@@ -65,6 +65,7 @@ static int level;
 
 struct vars				/* vars stacked per invocation */
 {
+	Shell_t		*shp;
 	const char	*expr;		/* current expression */	
 	const char	*nextchr;	/* next char in current expression */	
 	const char	*errchr; 	/* next char after error	*/
@@ -156,15 +157,20 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 	register unsigned char *cp = ep->code;
 	register int c,type=0;
 	register char *tp;
-	Sfdouble_t small_stack[SMALL_STACK+1];
+	Sfdouble_t small_stack[SMALL_STACK+1],arg[9];
 	const char *ptr = "";
+	char	*lastval=0;
 	Math_f fun;
 	struct lval node;
+	Shell_t	*shp = ep->shp;
+	node.shp = shp;
 	node.emode = ep->emode;
 	node.expr = ep->expr;
 	node.elen = ep->elen;
 	node.value = 0;
 	node.nosub = 0;
+	node.ptr = 0;
+	node.eflag = 0;
 	if(level++ >=MAXLEVEL)
 	{
 		arith_error(e_recursive,ep->expr,ep->emode);
@@ -230,8 +236,9 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 			cp += sizeof(Sfdouble_t*);
 			c = *(short*)cp;
 			cp += sizeof(short);
-			node.value = (char*)dp;
-			node.flag = c;
+			lastval = node.value = (char*)dp;
+			if(node.flag = c)
+				lastval = 0;
 			node.isfloat=0;
 			node.level = level;
 			num = (*ep->fun)(&ptr,&node,VALUE,num);
@@ -255,6 +262,9 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 			*++tp = type;
 			c = 0;
 			break;
+		    case A_ENUM:
+			node.eflag = 1;
+			continue;
 		    case A_ASSIGNOP:
 			node.nosub = 1;
 		    case A_STORE:
@@ -267,7 +277,25 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 			cp += sizeof(short);
 			node.value = (char*)dp;
 			node.flag = c;
+			if(lastval)
+				node.eflag = 1;
+			node.ptr = 0;
 			num = (*ep->fun)(&ptr,&node,ASSIGN,num);
+			if(lastval && node.ptr) 
+			{
+				Sfdouble_t r; 
+				node.flag = 0;
+				node.value = lastval;
+				r =  (*ep->fun)(&ptr,&node,VALUE,num);
+				if(r!=num)
+				{
+					node.flag=c;
+					node.value = (char*)dp;
+					num = (*ep->fun)(&ptr,&node,ASSIGN,r);
+				}
+
+			}
+			lastval = 0;
 			c=0;
 			break;
 		    case A_PUSHF:
@@ -383,7 +411,15 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 		    case A_CALL1F:
 			sp--,tp--;
 			fun = *((Math_f*)(ep->code+(int)(*sp)));
-			type = 0;
+			type = *tp;
+			if(c&T_BINARY)
+			{
+				c &= ~T_BINARY;
+				arg[0] = num;
+				arg[1] = 0;
+				num = sh_mathfun(shp,(void*)fun,1,arg);
+				break;
+			}
 			num = (*((Math_1f_f)fun))(num);
 			break;
 		    case A_CALL1I:
@@ -395,7 +431,16 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 		    case A_CALL2F:
 			sp-=2,tp-=2;
 			fun = *((Math_f*)(ep->code+(int)(*sp)));
-			type = 0;
+			type = *tp;
+			if(c&T_BINARY)
+			{
+				c &= ~T_BINARY;
+				arg[0] = sp[1];
+				arg[1] = num;
+				arg[2] = 0;
+				num = sh_mathfun(shp,(void*)fun,2,arg);
+				break;
+			}
 			num = (*((Math_2f_f)fun))(sp[1],num);
 			break;
 		    case A_CALL2I:
@@ -407,12 +452,25 @@ Sfdouble_t	arith_exec(Arith_t *ep)
 		    case A_CALL3F:
 			sp-=3,tp-=3;
 			fun = *((Math_f*)(ep->code+(int)(*sp)));
-			type = 0;
+			type = *tp;
+			if(c&T_BINARY)
+			{
+				c &= ~T_BINARY;
+				arg[0] = sp[1];
+				arg[1] = sp[2];
+				arg[2] = num;
+				arg[3] = 0;
+				num = sh_mathfun(shp,(void*)fun,3,arg);
+				break;
+			}
 			num = (*((Math_3f_f)fun))(sp[1],sp[2],num);
 			break;
 		}
+		if(c)
+			lastval = 0;
 		if(c&T_BINARY)
 		{
+			node.ptr = 0;
 			sp--,tp--;
 			type  |= (*tp!=0);
 		}
@@ -443,7 +501,7 @@ static int gettok(register struct vars *vp)
 			vp->nextchr--;
 			break;
 		    case A_COMMA:
-			if(sh.decomma && (c=peekchr(vp))>='0' && c<='9')
+			if(vp->shp->decomma && (c=peekchr(vp))>='0' && c<='9')
 			{
 				op = A_DIG;
 		    		goto keep;
@@ -505,6 +563,7 @@ static int expr(register struct vars *vp,register int precedence)
 
 	lvalue.value = 0;
 	lvalue.fun = 0;
+	lvalue.shp =  vp->shp;
 again:
 	op = gettok(vp);
 	c = 2*MAXPREC+1;
@@ -576,6 +635,8 @@ again:
 		{
 			if(vp->staksize++>=vp->stakmaxsize)
 				vp->stakmaxsize = vp->staksize;
+			if(op==A_EQ || op==A_NEQ)
+				stakputc(A_ENUM);
 			stakputc(A_PUSHV);
 			stakpush(vp,lvalue.value,char*);
 			if(lvalue.flag<0)
@@ -630,8 +691,11 @@ again:
 		case A_LPAR:
 		{
 			int	infun = vp->infun;
+			int	userfun=0;
 			Sfdouble_t (*fun)(Sfdouble_t,...);
 			int nargs = lvalue.nargs;
+			if(nargs<0)
+				nargs = -nargs;
 			fun = lvalue.fun;
 			lvalue.fun = 0;
 			if(fun)
@@ -639,6 +703,8 @@ again:
 				if(vp->staksize++>=vp->stakmaxsize)
 					vp->stakmaxsize = vp->staksize;
 				vp->infun=1;
+				if((int)lvalue.nargs<0)
+					userfun = T_BINARY;
 				stakputc(A_PUSHF);
 				stakpush(vp,fun,Math_f);
 				stakputc(1);
@@ -659,7 +725,7 @@ again:
 					ERROR(vp,e_argcount);
 				if((vp->staksize+=nargs)>=vp->stakmaxsize)
 					vp->stakmaxsize = vp->staksize+nargs;
-				stakputc(A_CALL1F+nargs+x);
+				stakputc(A_CALL1F+userfun+nargs+x);
 				vp->staksize -= nargs;
 			}
 			vp->infun = infun;
@@ -812,13 +878,13 @@ again:
 	return(1);
 }
 
-Arith_t *arith_compile(const char *string,char **last,Sfdouble_t(*fun)(const char**,struct lval*,int,Sfdouble_t),int emode)
+Arith_t *arith_compile(Shell_t *shp,const char *string,char **last,Sfdouble_t(*fun)(const char**,struct lval*,int,Sfdouble_t),int emode)
 {
 	struct vars cur;
 	register Arith_t *ep;
 	int offset;
 	memset((void*)&cur,0,sizeof(cur));
-	cur.emode = emode;
+	cur.shp = shp;
      	cur.expr = cur.nextchr = string;
 	cur.convert = fun;
 	cur.emode = emode;
@@ -835,6 +901,7 @@ Arith_t *arith_compile(const char *string,char **last,Sfdouble_t(*fun)(const cha
 	stakputc(0);
 	offset = staktell();
 	ep = (Arith_t*)stakfreeze(0);
+	ep->shp = shp;
 	ep->expr = string;
 	ep->elen = strlen(string);
 	ep->code = (unsigned char*)(ep+1);
@@ -860,7 +927,7 @@ Arith_t *arith_compile(const char *string,char **last,Sfdouble_t(*fun)(const cha
  * NOTE: (*convert)() may call strval()
  */
 
-Sfdouble_t strval(const char *s,char **end,Sfdouble_t(*conv)(const char**,struct lval*,int,Sfdouble_t),int emode)
+Sfdouble_t strval(Shell_t *shp,const char *s,char **end,Sfdouble_t(*conv)(const char**,struct lval*,int,Sfdouble_t),int emode)
 {
 	Arith_t *ep;
 	Sfdouble_t d;
@@ -868,7 +935,7 @@ Sfdouble_t strval(const char *s,char **end,Sfdouble_t(*conv)(const char**,struct
 	int offset;
 	if(offset=staktell())
 		sp = stakfreeze(1);
-	ep = arith_compile(s,end,conv,emode);
+	ep = arith_compile(shp,s,end,conv,emode);
 	ep->emode = emode;
 	d = arith_exec(ep);
 	stakset(sp?sp:(char*)ep,offset);

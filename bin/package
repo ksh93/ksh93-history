@@ -30,7 +30,8 @@ CROSS=0
 
 admin_db=admin.db
 admin_env=admin.env
-admin_ditto="ditto --checksum --delete --update --verbose"
+admin_ditto="ditto --checksum --delete --verbose"
+admin_ditto_update=--update
 admin_ditto_skip="OFFICIAL|core|old|*.core|*.tmp|.nfs*"
 admin_list='PACKAGE.$type.lst'
 admin_ping="ping -c 1 -w 5"
@@ -46,7 +47,7 @@ all_types='*.*|sun4'		# all but sun4 match *.*
 case `(getopts '[-][123:xyz]' opt --xyz; echo 0$opt) 2>/dev/null` in
 0123)	USAGE=$'
 [-?
-@(#)$Id: package (AT&T Research) 2010-06-22 $
+@(#)$Id: package (AT&T Research) 2010-06-25 $
 ]'$USAGE_LICENSE$'
 [+NAME?package - source and binary package control]
 [+DESCRIPTION?The \bpackage\b command controls source and binary
@@ -4467,18 +4468,22 @@ admin)	while	test ! -f $admin_db
 		done
 		host=$main
 		share=$share_keep
+		case $force in
+		0)	admin_ditto_update=--update ;;
+		*)	admin_ditto_update= ;;
+		esac
 		case $exec in
 		'')	{
 			case $admin_binary:$sync in
 			:?*)	eval syncname='$'${sync}_name
-				test -x $PACKAGEROOT/bin/package && $admin_ditto --remote=$rsh --expr="name=='package'" $PACKAGEROOT/bin $user$syncname:$root/bin
-				test -d $PACKAGESRC && $admin_ditto --remote=$rsh --expr="if(level>1)status=SKIP;name=='*.(pkg|lic)'" $PACKAGESRC $user$syncname:$root/lib/package
+				test -x $PACKAGEROOT/bin/package && $admin_ditto $admin_ditto_update --remote=$rsh --expr="name=='package'" $PACKAGEROOT/bin $user$syncname:$root/bin
+				test -d $PACKAGESRC && $admin_ditto $admin_ditto_update --remote=$rsh --expr="if(level>1)status=SKIP;name=='*.(pkg|lic)'" $PACKAGESRC $user$syncname:$root/lib/package
 				for dir in $package_src
 				do	case $MAKESKIP in
 					'')	expr="--expr=if(name=='$admin_ditto_skip')status=SKIP" ;;
 					*)	expr="--expr=if(name=='$admin_ditto_skip'||level==1&&name=='$MAKESKIP')status=SKIP" ;;
 					esac
-					test -d $PACKAGEROOT/src/$dir && $admin_ditto --remote=$rsh "$expr" $PACKAGEROOT/src/$dir $user$syncname:$root/src/$dir
+					test -d $PACKAGEROOT/src/$dir && $admin_ditto $admin_ditto_update --remote=$rsh "$expr" $PACKAGEROOT/src/$dir $user$syncname:$root/src/$dir
 				done
 				;;
 			esac
@@ -4509,13 +4514,13 @@ admin)	while	test ! -f $admin_db
 		*)	echo "{"
 			case $admin_binary:$sync in
 			:?*)	eval syncname='$'${sync}_name
-				test -d $PACKAGESRC && echo $admin_ditto --remote=$rsh --expr="if(level>1)status=SKIP;name=='*.(pkg|lic)'" $PACKAGESRC $user$syncname:$root/lib/package
+				test -d $PACKAGESRC && echo $admin_ditto $admin_ditto_update --remote=$rsh --expr="if(level>1)status=SKIP;name=='*.(pkg|lic)'" $PACKAGESRC $user$syncname:$root/lib/package
 				for dir in $package_src
 				do	case $MAKESKIP in
 					'')	expr="--expr=if(name=='$admin_ditto_skip')status=SKIP" ;;
 					*)	expr="--expr=if(name=='$admin_ditto_skip'||level==1&&name=='$MAKESKIP')status=SKIP" ;;
 					esac
-					test -d $PACKAGEROOT/src/$dir && echo $admin_ditto --remote=$rsh "$expr" $PACKAGEROOT/src/$dir $user$syncname:$root/src/$dir
+					test -d $PACKAGEROOT/src/$dir && echo $admin_ditto $admin_ditto_update --remote=$rsh "$expr" $PACKAGEROOT/src/$dir $user$syncname:$root/src/$dir
 				done
 				;;
 			esac

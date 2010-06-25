@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -34,6 +34,20 @@
 #endif /* !SIGINT */
 #include	"FEATURE/options"
 
+#if SHOPT_COSHELL
+#   include	<coshell.h>
+    struct cosh
+    {
+	struct cosh	*next;
+	Coshell_t	*coshell;
+	Cojob_t		*cojob;
+	char		*name;
+	short		id;
+    };
+
+    extern pid_t sh_copid(struct cosh*);
+#endif /* SHOPT_COSHELL */
+
 #undef JOBS
 #if defined(SIGCLD) && !defined(SIGCHLD)
 #   define SIGCHLD	SIGCLD
@@ -59,6 +73,9 @@ struct process
 {
 	struct process *p_nxtjob;	/* next job structure */
 	struct process *p_nxtproc;	/* next process in current job */
+#if SHOPT_COSHELL
+	Cojob_t		*p_cojob;	/* coshell job */
+#endif /* SHOPT_COSHELL */
 	pid_t		p_pid;		/* process id */
 	pid_t		p_pgrp;		/* process group */
 	pid_t		p_fgrp;		/* process group when stopped */
@@ -97,6 +114,9 @@ struct jobs
 	char		waitall;	/* wait for all jobs in pipe */
 	char		toclear;	/* job table needs clearing */
 	unsigned char	*freejobs;	/* free jobs numbers */
+#if SHOPT_COSHELL
+	struct cosh	*colist;	/* coshell job list */
+#endif /* SHOPT_COSHELL */
 };
 
 /* flags for joblist */

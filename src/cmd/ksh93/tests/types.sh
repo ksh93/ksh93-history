@@ -438,4 +438,70 @@ bar.foo[a]=b
 ) ;} 2> /dev/null
 [[ $x == *a=4*b=5* ]] || err_exit 'static types in a function not working'
 { eval "[[ $x ]]";} 2> /dev/null || err_exit 'arrays of types leaving side effects in subshells'
+
+typeset -T y_t=(
+	typeset dummy
+	function print_b
+	{
+		print "B"
+	}
+)
+y_t a b=(
+	function print_b
+	{
+		print "1"
+	}
+)
+[[ $(a.print_b) == B ]] || err_exit 'default discipline not working'
+[[ $(b.print_b) == 1 ]] || err_exit 'discipline override not working'
+
+$SHELL 2> /dev/null -c 'true || { typeset -T Type_t=(typeset name=foo);
+	Type_t z=(name=bar) ;}' || err_exit 'unable to parse type command until typeset -T executes'
+
+cd "$tmp"
+FPATH=$PWD
+PATH=$PWD:$PATH
+cat > A_t <<-  \EOF
+	typeset -T A_t=(
+		B_t b
+	)
+EOF
+cat > B_t <<-  \EOF
+	typeset -T B_t=(
+		integer n=5
+	)
+EOF
+
+unset n
+if	n=$(FPATH=$PWD PATH=$PWD:$PATH $SHELL 2> /dev/null -c 'A_t a; print ${a.b.n}') 
+then	(( n==5 )) || err_exit 'dynamic loading of types gives wrong result'
+else	err_exit 'unable to load types dynamically'
+fi
+
+# check that typeset -T reproduces a type.
+if	$SHELL  > /dev/null 2>&1  -c 'typeset -T'
+then	$SHELL > junk1 <<- \+++EOF
+		typeset -T foo_t=(
+			integer x=3 y=4
+			float z=1.2
+			len()
+			{
+				((.sh.value=sqrt(_.x**2 + _.y**2) ))
+			}
+			function count
+			{
+				print z=$z
+			}
+		)
+		typeset -T
+		print 'typeset -T'
+	+++EOF
+	$SHELL -c '. ./junk1;print "typeset -T"' > junk2
+	diff junk[12] > /dev/null || err_exit 'typeset -T not idempotent'
+	$SHELL -c '. ./junk1;print "typeset +f"' > junk2
+	[[ -s junk2 ]] || err_exit 'non-discipline-method functions found'
+else
+	err_exit 'typeset -T not supported'
+fi
+
 exit $Errors

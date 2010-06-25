@@ -125,7 +125,7 @@ int	b_read(int argc,char *argv[], void *extra)
 		break;
 	    case 'u':
 		fd = (int)opt_info.num;
-		if(sh_inuse(fd))
+		if(sh_inuse(shp,fd))
 			fd = -1;
 		break;
 	    case 'v':
@@ -252,9 +252,9 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 			char *sp =  np->nvenv;
 			delim = -1;
 			nv_unset(np);
-			nv_setvtree(np);
 			if(!nv_isattr(np,NV_MINIMAL))
 				np->nvenv = sp;
+			nv_setvtree(np);
 		}
 		else
 			name = *++names;
@@ -316,7 +316,7 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 		was_share = (sfset(iop,SF_SHARE,1)&SF_SHARE)!=0;
 	if(timeout || (shp->fdstatus[fd]&(IOTTY|IONOSEEK)))
 	{
-		sh_pushcontext(&buff,1);
+		sh_pushcontext(shp,&buff,1);
 		jmpval = sigsetjmp(buff.buff,0);
 		if(jmpval)
 			goto done;
@@ -694,7 +694,7 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 			if(sh_isoption(SH_ALLEXPORT)&&!strchr(nv_name(np),'.') && !nv_isattr(np,NV_EXPORT))
 			{
 				nv_onattr(np,NV_EXPORT);
-				sh_envput(sh.env,np);
+				sh_envput(shp->env,np);
 			}
 			if(name)
 			{
@@ -719,7 +719,7 @@ int sh_readline(register Shell_t *shp,char **names, int fd, int flags,long timeo
 	}
 done:
 	if(timeout || (shp->fdstatus[fd]&(IOTTY|IONOSEEK)))
-		sh_popcontext(&buff);
+		sh_popcontext(shp,&buff);
 	if(was_write)
 		sfset(iop,SF_WRITE,1);
 	if(!was_share)

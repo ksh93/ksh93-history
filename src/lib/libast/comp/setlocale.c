@@ -878,7 +878,7 @@ single(int category, Lc_t* lc, unsigned int flags)
 			{
 				char	path[PATH_MAX];
 
-				if (mcfind(path, lc->code, NiL, LC_MESSAGES, 0))
+				if (mcfind(lc->code, NiL, LC_MESSAGES, 0, path, sizeof(path)))
 					lc->flags |= LC_local;
 				lc->flags |= LC_checked;
 			}

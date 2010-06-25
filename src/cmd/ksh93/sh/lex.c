@@ -560,6 +560,8 @@ int sh_lex(Lex_t* lp)
 							lp->digits = -1;
 							c = '>';
 						}
+						else if(n=='|')
+							c |= SYMPIPE;
 						else
 							n = 0;
 					}

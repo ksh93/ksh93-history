@@ -4,7 +4,6 @@
 .\"
 .\" @(#)sh.1 (dgk@research.att.com) 12/28/93
 .\"
-.xx labels=5
 .nr Z 1 \" set to 1 when command name is ksh, 2 for ksh93
 .ds OK [\|
 .ds CK \|]
@@ -592,6 +591,29 @@ as if the \f2varname\^\fP\f3()\fP syntax were used to define it.
 (See
 .I Functions\^
 below.)
+.TP
+\f3namespace\fP \f2identifier\^\fP \f3{\fP \f2list\^\fP \f3;}\fP
+.br
+Defines or uses the name space
+.I identifier^
+and runs the commands in
+.I list^
+in this name space.
+(See
+.I Name Spaces\^
+below.)
+.TP
+\f3&\fP \*(OK \f2name\^\fP \*(OK \f2arg...\^\fP \*(CK  \*(CK
+Causes subsequent
+.I list\^
+commands terminated by
+.B &
+to be placed in the background job pool
+.IR name .
+If
+.I name\^
+is omitted a default unnamed pool is used.
+Commands in a named background pool may be executed remotely.
 .TP
 \f3time\fP \*(OK \f2pipeline\^\fP \*(CK
 .br
@@ -1640,6 +1662,13 @@ variable
 becomes unset when the variable that has expanded
 is assigned a new value.
 .TP
+.B .sh.math
+Used for defining arithmetic functions
+(see
+.I "Arithmetic evaluation"
+below).
+and stores the list of user defined arithmetic functions.
+.TP
 .B .sh.name
 Set to the name of the variable at the time that a
 discipline function is invoked.
@@ -1657,6 +1686,14 @@ Set to the value of the variable at the time that the
 or
 .B append
 discipline function is invoked.
+When a user defined arithmetic function is invoked, the value
+of
+.B .sh.value
+is saved and
+.B .sh.value
+is set to long double precission floating point.
+.B .sh.value
+is restored when the function returns.
 .TP
 .B .sh.version
 Set to a value that identifies the version of this shell.
@@ -2474,9 +2511,8 @@ and
 character classes can be specified with the syntax
 \f3[:\fP\f2class\fP\f3:]\fP
 where class is one of the following classes defined in the ANSI-C standard:
-(Note that \f3word\fP is equivalent to \f3alnum\fP plus the character \f3_\fP).
-.PP
-.if t .RS
+(Note that \f3word\fP is equivalent to \f3alnum\fP plus the character \f3_\fP.)
+.br
 .B
 .if n alnum alpha blank cntrl digit graph lower print punct space upper word xdigit
 .if t alnum   alpha   blank   cntrl   digit   graph   lower   print   punct   space   upper   word    xdigit
@@ -2490,16 +2526,14 @@ an equivalence class can be specified with the syntax
 which matches all characters with the same primary
 collation weight (as defined by the current locale) as
 the character \f2c\fP.
-.br
 Within
 .B \*(OK\^
 and
 .BR \*(CK\^ ,
 \f3[.\fP\f2symbol\fP\f3.]\fP
 matches the collating symbol \f2symbol\fP.
-.if t .RE
-.PD
 .RE
+.PD
 A
 .I pattern-list
 is a list of one or more patterns separated from each other
@@ -2648,6 +2682,7 @@ Finally a pattern can contain sub-patterns of the form
 where either \f2options\^\fP or \f3:\fP\f2pattern-list\^\fP
 can be omitted.  Unlike the other compound patterns,
 these sub-patterns are not counted in the numbered sub-patterns.
+\f3:\fP\f2pattern-list\^\fP must be omitted for the upper-case options below.
 If \f2options\^\fP is present, it can consist of one or more
 of the following:
 .PD 0
@@ -2684,6 +2719,12 @@ This is the default.
 This is ignored.  However, when it is the first letter and is
 used with file name generation, and no matches occur,
 the file pattern expands to the empty string.
+.TP
+.B X
+The remainder of the pattern uses augmented regular expression syntax
+like the
+.IR xgrep (1)
+command.
 .TP
 .B i
 Treat the match as case insensitive.
@@ -2872,9 +2913,28 @@ can be used within an arithmetic expression:
 .PP
 .if t .RS
 .B
-.if n abs acos acosh asin asinh atan atan2 atanh cbrt copysign cos cosh erf erfc exp exp2 expm1 fabs fdim finite floor fma fmax fmod hypot ilogb int isinf isnan j0 j1 jn lgamma log log2 logb nearbyint nextafter nexttoward pow remainder rint round sin sinh sqrt tan tanh tgamma trunc y0 y1 yn
+.if n abs acos acosh asin asinh atan atan2 atanh cbrt copysign cos cosh erf erfc exp exp2 expm1 fabs fdim finite floor fma fmax fmin fmod hypot ilogb int isinf isnan j0 j1 jn lgamma log log2 logb nearbyint nextafter nexttoward pow remainder rint round sin sinh sqrt tan tanh tgamma trunc y0 y1 yn
 .if t abs   acos   acosh   asin   asinh   atan   atan2   atanh   cbrt   copysign   cos   cosh   erf  erfc   exp   exp2   expm1   fabs   fdim   finite   floor  fma   fmax   fmod   j0      j1      jn      hypot   ilogb   int   isinf   isnan   lgamma   log   log2   logb   nearbyint   nextafter   nexttoward  pow   rint   round   sin   sinh   sqrt   tan   tanh   tgamma   trunc   y0      y1      yn
 .if t .RE
+In addition, arithmetic functions can be define as shell functions with a
+variant of the
+.B function
+.I name\^
+syntax,
+.TP
+.PD 0
+\f3function .sh.math.\fP\f2name ident\^\fP ... \f3{\fP \f2list\^\fP \f3;}\fP
+.PD
+where
+.I name\^
+is the function name used in the arithmetic expression and each identifier,
+.I ident\^
+is a name reference to the long double precission floating point argument.
+The value of
+.B .sh.value
+when the function returns is the value of this function.
+User defined functions can take up to 3 arguments and override C math library
+functions.
 .PP
 An internal representation of a
 .I variable\^
@@ -3779,6 +3839,46 @@ when \f2name\^\fP is the name of a discipline, and there is
 no variable of this name, is equivalent to the command substitution
 \f3${ \fP\f2var\^\fP\f3.\fP\f2name\^\fP\f3;}\fP.
 
+.SS Name Spaces.
+Commands and functions that are executed as part of the
+.I list\^
+of a
+.B namespace
+command that modify variables or create new ones, create
+a new variable whose
+name is the name of the name space
+as given by
+.I identifier\^
+preceded by \fB\s+2.\s-2\fP.
+When a variable whose name is
+.I name\^
+is referenced, it is
+first searched for
+using \fB\s+2.\s-2\fP\f2identifier\fP\fB\s+2.\s-2\fP\f2name\fP.
+Similarly, a function defined by a command in the
+.B namespace
+.I list\^
+is created using the name space name  preceded by a \fB\s+2.\s-2\fP.
+.PP
+When  the
+.I list\^
+of a
+.B namespace
+command contains a 
+.B namespace
+command, the names of variable and functions that are created consist
+of the variable or function name preceded by the list of
+.IR identifier\^ s 
+each preceded by \fB\s+2.\s-2\fP.
+.PP
+Outside of a name space, a variable or function created inside a
+names space can be referenced by preceding it with the name space name. 
+.PP
+By default, variables staring with
+\fB\s+2.\s-2sh\fP are in the
+.B sh
+name space.
+
 .SS Type Variables.
 Typed variables provide a way to create data structure and objects.
 A type can be defined either by a shared library, by the
@@ -3871,7 +3971,13 @@ that apply to the new type.
 If the new type name is the same is that of the base type,
 the type will be replaced and the original type will
 no longer be accessible.
-
+.PP
+The
+.B typeset
+command with the
+.B \-T 
+and no option argument or operands will write all the type definitions to
+standard output in a form that that can be read in to create all they types.
 .SS Jobs.
 .PP
 If the
@@ -3921,6 +4027,11 @@ If you set this
 tty option, then background jobs will stop when they try to produce
 output like they do when they try to read input.
 .PP
+A job pool is a collection of jobs started with
+.I list\^
+.B &
+associated with a name.
+.PP
 There are several ways to refer to jobs in the shell.
 A job can be referred to by the process id of any process of the job
 or by one of the following:
@@ -3946,7 +4057,14 @@ Equivalent to
 .TP
 .BI %\-
 Previous job.
+.TP
+.IR name .
+Refers to all jobs in the job pool give by
+.IR name .
 .PD
+In addition, unless noted otherwise, wherever a job can be specified,
+the name of a background job pool can be used to represet all the
+jobs in that pool.
 .PP
 The shell learns immediately whenever a process changes state.
 It normally informs you whenever a job becomes blocked so that
@@ -6267,6 +6385,15 @@ to cause
 to be interpreted as an extended regular
 expression and be printed as a shell pattern.
 .TP
+The format modifier
+.B L
+can be used with the
+.B %c
+and
+.B %s
+formats to treat 
+precision as character width instead of byte count.
+.TP
 .B %R
 A
 .B %R
@@ -6972,7 +7099,7 @@ Does nothing, and exits 0. Used with
 .B while
 for infinite loops.
 .TP
-\(dg\(dg \f3typeset\fP \*(OK \f3\(+-ACHSflbnprtux\^\fP \*(CK \*(OK \f3\(+-EFLRXZi\*(OK\f2n\^\fP\*(CK \*(CK  \*(OK \f3\-T \f2tname\fP=(\f2assign_list\fP) \*(CK \*(OK \f3\-h \f2str\fP \*(CK \*(OK \f3\-a\fP \*(OK\f2type\fP\*(CK \*(CK \*(OK \f2vname\^\fP\*(OK\f3=\fP\f2value\^\fP \*(CK \^ \*(CK .\|.\|.
+\(dg\(dg \f3typeset\fP \*(OK \f3\(+-ACHSflbnprtux\^\fP \*(CK \*(OK \f3\(+-EFLRXZi\*(OK\f2n\^\fP\*(CK \*(CK  \*(OK \f3\-T  \*(OK \f2tname\fP=(\f2assign_list\fP) \*(CK \*(CK \*(OK \f3\-h \f2str\fP \*(CK \*(OK \f3\-a\fP \*(OK\f2type\fP\*(CK \*(CK \*(OK \f2vname\^\fP\*(OK\f3=\fP\f2value\^\fP \*(CK \^ \*(CK .\|.\|.
 Sets attributes and values for shell variables and functions.
 When invoked inside a function defined with the
 .B function
@@ -7086,10 +7213,12 @@ scope.
 Otherwise, the variable is unset prior to processing the assignment list.
 .TP
 .B \-T
-Creates a type named by \fItname\^\fP using the compound
+If followed by \fItname\^\fP, it
+creates a type named by \fItname\^\fP using the compound
 assignment
 .I assign_list\^
 to \f2tname\fP.
+Otherwise, it writes all the type definitions to standard output.
 .TP
 .B \-X
 Declares

@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -89,7 +89,7 @@
 #if !KSHELL
 #   define new_of(type,x)	((type*)malloc((unsigned)sizeof(type)+(x)))
 #   define NIL(type)		((type)0)
-#   define path_relative(x)	(x)
+#   define path_relative(s,x)	(s,x)
 #   ifdef __STDC__
 #	define nv_getval(s)	getenv(#s)
 #   else
@@ -196,9 +196,9 @@ static int sh_checkaudit(History_t *hp, const char *name, char *logbuf, size_t l
 		id1 = id2 = strtol(cp,&last,10);
 		if(*last=='-')
 			id1 = strtol(last+1,&last,10);
-		if(shp->euserid >=id1 && shp->euserid <= id2)
+		if(sh.euserid >=id1 && sh.euserid <= id2)
 			r |= 1;
-		if(shp->userid >=id1 && shp->userid <= id2)
+		if(sh.userid >=id1 && sh.userid <= id2)
 			r |= 2;
 		cp = last;
 	}
@@ -261,7 +261,7 @@ int  sh_histinit(void *sh_context)
 	}
 #endif
 retry:
-	cp = path_relative(histname);
+	cp = path_relative(shp,histname);
 	if(!histinit)
 		histmode = S_IRUSR|S_IWUSR;
 	if((fd=open(cp,O_BINARY|O_APPEND|O_RDWR|O_CREAT,histmode))>=0)
@@ -290,7 +290,7 @@ retry:
 	{
 #if KSHELL
 		/* don't allow root a history_file in /tmp */
-		if(shp->userid)
+		if(sh.userid)
 #endif	/* KSHELL */
 		{
 			if(!(fname = pathtmp(NIL(char*),0,0,NIL(int*))))
@@ -802,7 +802,7 @@ static int hist_write(Sfio_t *iop,const void *buff,register int insize,Sfdisc_t*
 	{
 		Shell_t *shp = (Shell_t*)hp->histshell;
 		time_t	t=time((time_t*)0);
-		sfprintf(hp->auditfp,"%u;%u;%s;%*s%c",sh_isoption(SH_PRIVILEGED)?shp->euserid:shp->userid,t,hp->tty,size,buff,0);
+		sfprintf(hp->auditfp,"%u;%u;%s;%*s%c",sh_isoption(SH_PRIVILEGED)?sh.euserid:sh.userid,t,hp->tty,size,buff,0);
 		sfsync(hp->auditfp);
 	}
 #endif	/* SHOPT_AUDIT */

@@ -74,6 +74,7 @@ Sfdouble_t nv_getn(Namval_t *np, register Namfun_t *nfp)
 {
 	register Namfun_t	*fp;
 	register Sfdouble_t	d=0;
+	Shell_t			*shp = sh_getinterp();
 	char *str;
 	if((fp = nfp) != NIL(Namfun_t*) && !nv_local)
 		fp = nfp = nfp->next;
@@ -104,7 +105,7 @@ Sfdouble_t nv_getn(Namval_t *np, register Namfun_t *nfp)
 		{
 			while(*str=='0')
 				str++;
-			d = sh_arith(str);
+			d = sh_arith(shp,str);
 		}
 	}
 	return(d);
@@ -248,7 +249,7 @@ static void	assign(Namval_t *np,const char* val,int flags,Namfun_t *handle)
 	if(val && (tp=nv_type(np)) && (nr=nv_open(val,sh.var_tree,NV_VARNAME|NV_ARRAY|NV_NOADD|NV_NOFAIL)) && tp==nv_type(nr)) 
 	{
 		char *sub = nv_getsub(np);
-		nv_unset(np);
+		_nv_unset(np,0);
 		if(sub)
 		{
 			nv_putsub(np, sub, ARRAY_ADD);
@@ -270,7 +271,7 @@ static void	assign(Namval_t *np,const char* val,int flags,Namfun_t *handle)
 		if(!nv_isnull(SH_VALNOD))
 		{
 			nv_onattr(SH_VALNOD,NV_NOFREE);
-			nv_unset(SH_VALNOD);
+			_nv_unset(SH_VALNOD,0);
 		}
 		if(flags&NV_INTEGER)
 			nv_onattr(SH_VALNOD,(flags&(NV_LONG|NV_DOUBLE|NV_EXPNOTE|NV_HEXFLOAT|NV_SHORT)));
@@ -310,7 +311,7 @@ static void	assign(Namval_t *np,const char* val,int flags,Namfun_t *handle)
 			cp = nv_getval(SH_VALNOD);
 		if(cp)
 			nv_putv(np,cp,flags|NV_RDONLY,handle);
-		nv_unset(SH_VALNOD);
+		_nv_unset(SH_VALNOD,0);
 		/* restore everything but the nvlink field */
 		memcpy(&SH_VALNOD->nvname,  &node.nvname, sizeof(node)-sizeof(node.nvlink));
 	}
@@ -325,6 +326,7 @@ static void	assign(Namval_t *np,const char* val,int flags,Namfun_t *handle)
 		int n;
 		Namarr_t *ap;
 		block(bp,type);
+		nv_disc(np,handle,NV_POP);
 		nv_putv(np, val, flags, handle);
 		if(sh.subshell)
 			goto done;
@@ -334,12 +336,11 @@ static void	assign(Namval_t *np,const char* val,int flags,Namfun_t *handle)
 		{
 			if((nq=vp->disc[n]) && !nv_isattr(nq,NV_NOFREE))
 			{
-				nv_unset(nq);
+				_nv_unset(nq,0);
 				dtdelete(root,nq);
 			}
 		}
 		unblock(bp,type);
-		nv_disc(np,handle,NV_POP);
 		if(!(handle->nofree&1))
 			free(handle);
 	}
@@ -366,7 +367,7 @@ static char*	lookup(Namval_t *np, int type, Sfdouble_t *dp,Namfun_t *handle)
 		if(!nv_isnull(SH_VALNOD))
 		{
 			nv_onattr(SH_VALNOD,NV_NOFREE);
-			nv_unset(SH_VALNOD);
+			_nv_unset(SH_VALNOD,0);
 		}
 		if(type==LOOKUPN)
 		{
@@ -1058,6 +1059,7 @@ Namval_t *nv_search(const char *name, Dt_t *root, int mode)
  */ 
 Namval_t *nv_bfsearch(const char *name, Dt_t *root, Namval_t **var, char **last)
 {
+	Shell_t		*shp = sh_getinterp();
 	int		c,offset = staktell();
 	register char	*sp, *cp=0;
 	Namval_t	*np, *nq;
@@ -1118,6 +1120,8 @@ Namval_t *nv_bfsearch(const char *name, Dt_t *root, Namval_t **var, char **last)
 	*var = nq;
 	if(c=='[')
 		nv_endsubscript(nq, cp,NV_NOADD);
+	if(nq==shp->namespace)
+		return(nv_search(name,root,0));
 	return((Namval_t*)nv_setdisc(nq,dname,nq,(Namfun_t*)nq));
 done:
 	stakseek(offset);
@@ -1324,10 +1328,11 @@ Namval_t *nv_parent(Namval_t *np)
 
 Dt_t *nv_dict(Namval_t* np)
 {
+	Shell_t 	*shp=sh_getinterp();
 	struct table *tp = (struct table*)nv_hasdisc(np,&table_disc);
 	if(tp)
 		return(tp->dict);
-	np = sh.last_table;
+	np = shp->last_table;
 	while(np)
 	{
 		if(tp = (struct table*)nv_hasdisc(np,&table_disc))
@@ -1338,7 +1343,12 @@ Dt_t *nv_dict(Namval_t* np)
 		break;
 #endif
 	}
-	return(sh.var_tree);
+	return(shp->var_tree);
+}
+
+int nv_istable(Namval_t *np)
+{
+	return(nv_hasdisc(np,&table_disc)!=0);
 }
 
 /*
@@ -1347,10 +1357,10 @@ Dt_t *nv_dict(Namval_t* np)
 Namval_t *nv_mount(Namval_t *np, const char *name, Dt_t *dict)
 {
 	Namval_t *mp, *pp=0;
-	struct table *tp = newof((struct table*)0, struct table,1,0);
+	struct table *tp;
 	if(name)
 	{
-		if(nv_istable(np))
+		if(nv_hasdisc(np,&table_disc))
 			pp = np;
 		else
 			pp = nv_lastdict();
@@ -1364,13 +1374,13 @@ Namval_t *nv_mount(Namval_t *np, const char *name, Dt_t *dict)
 	}
 	else
 		mp = np;
+	nv_offattr(mp,NV_TABLE);
 	if(!nv_isnull(mp))
-		nv_unset(mp);
+		_nv_unset(mp,NV_RDONLY);
 	tp->shp = sh_getinterp();
 	tp->dict = dict;
 	tp->parent = pp;
 	tp->fun.disc = &table_disc;
-	nv_onattr(mp,NV_TABLE);
 	nv_disc(mp, &tp->fun, NV_FIRST);
 	return(mp);
 }

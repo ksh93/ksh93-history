@@ -1,5 +1,6 @@
 10-06-14 rm.c: fix -rfu logic
 10-06-12 paste.c: repeat after me: do not modify argv[i]
+10-06-01 sync with ast api 20100601
 10-05-09 tail.c: fix -0f bug that inially listed the entire file
 10-05-06 basename.c: add { -a,--all -s,--suffux=suffix } from BSD
 10-04-12 cat.c: fix -v bug that dumped core and make consistent with cmp --print-chars

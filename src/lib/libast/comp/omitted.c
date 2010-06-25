@@ -109,7 +109,7 @@ execrate(const char* path, char* buf, int size, int physical)
 	if (suffix(path))
 		return 0;
 	oerrno = errno;
-	if (physical || strlen(path) >= size || !(s = pathcanon(strcpy(buf, path), PATH_PHYSICAL|PATH_DOTDOT|PATH_EXISTS)))
+	if (physical || strlen(path) >= size || !(s = pathcanon(strcpy(buf, path), size, PATH_PHYSICAL|PATH_DOTDOT|PATH_EXISTS)))
 		snprintf(buf, size, "%s.exe", path);
 	else if (!suffix(buf) && ((buf + size) - s) >= 4)
 		strcpy(s, ".exe");
@@ -463,7 +463,7 @@ runve(int mode, const char* path, char* const* argv, char* const* envv)
 				s += 5;
 				do
 				{
-					s = pathcat(tmp, s, ':', NiL, "");
+					s = pathcat(s, ':', NiL, "", tmp, sizeof(tmp));
 					if (streq(tmp, "/usr/bin/") || streq(tmp, "/bin/"))
 					{
 						n = 0;

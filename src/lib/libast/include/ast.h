@@ -30,8 +30,6 @@
 #ifndef _AST_H
 #define _AST_H
 
-#include <ast_version.h>
-
 #ifndef _AST_STD_H
 #include <ast_std.h>
 #endif
@@ -260,9 +258,8 @@ extern int		chrexp(const char*, char**, int*, int);
 extern int		chrtoi(const char*);
 extern char*		conformance(const char*, size_t);
 extern int		eaccess(const char*, int);
-extern char*		fmtbase(long, int, int);
-extern char*		fmtbasell(intmax_t, int, int);
-#define fmtbase(a,b,c)	fmtbasell((intmax_t)(a),b,c) /* until 2003-09-01 */
+extern char*		fmtbase(intmax_t, int, int);
+#define fmtbasell(a,b,c) fmtbase(a,b,c) /* until 2014-01-01 */
 extern char*		fmtbuf(size_t);
 extern char*		fmtclock(Sfulong_t);
 extern char*		fmtelapsed(unsigned long, int);
@@ -273,6 +270,7 @@ extern char*		fmtident(const char*);
 extern char*		fmtip4(uint32_t, int);
 extern char*		fmtfmt(const char*);
 extern char*		fmtgid(int);
+extern char*		fmtint(intmax_t, int);
 extern char*		fmtmatch(const char*);
 extern char*		fmtmode(int, int);
 extern char*		fmtnesq(const char*, const char*, size_t);
@@ -290,9 +288,12 @@ extern void		memfatal(void);
 extern unsigned int	memhash(const void*, int);
 extern unsigned long	memsum(const void*, int, unsigned long);
 extern char*		pathaccess(char*, const char*, const char*, const char*, int);
+extern char*		pathaccess_20100601(const char*, const char*, const char*, int, char*, size_t);
 extern char*		pathbin(void);
 extern char*		pathcanon(char*, int);
+extern char*		pathcanon_20100601(char*, size_t, int);
 extern char*		pathcat(char*, const char*, int, const char*, const char*);
+extern char*		pathcat_20100601(const char*, int, const char*, const char*, char*, size_t);
 extern int		pathcd(const char*, const char*);
 extern int		pathcheck(const char*, const char*, Pathcheck_t*);
 extern int		pathexists(char*, int);
@@ -300,12 +301,16 @@ extern char*		pathfind(const char*, const char*, const char*, char*, size_t);
 extern int		pathgetlink(const char*, char*, int);
 extern int		pathinclude(const char*);
 extern char*		pathkey(char*, char*, const char*, const char*, const char*);
+extern char*		pathkey_20100601(const char*, const char*, const char*, char*, size_t, char*, size_t);
 extern size_t		pathnative(const char*, char*, size_t);
 extern char*		pathpath(char*, const char*, const char*, int);
+extern char*		pathpath_20100601(const char*, const char*, int, char*, size_t);
 extern size_t		pathposix(const char*, char*, size_t);
 extern char*		pathprobe(char*, char*, const char*, const char*, const char*, int);
+extern char*		pathprobe_20100601(const char*, const char*, const char*, int, char*, size_t, char*, size_t);
 extern size_t		pathprog(const char*, char*, size_t);
 extern char*		pathrepl(char*, const char*, const char*);
+extern char*		pathrepl_20100601(char*, size_t, const char*, const char*);
 extern int		pathsetlink(const char*, const char*);
 extern char*		pathshell(void);
 extern char*		pathtemp(char*, size_t, const char*, const char*, int*);
@@ -380,5 +385,9 @@ extern char**		environ;
 #include <vmalloc.h>
 
 #endif
+
+#include <ast_api.h>
+
+#define AST_PLUGIN_VERSION(v)	((v)>AST_VERSION?(v):AST_VERSION)
 
 #endif

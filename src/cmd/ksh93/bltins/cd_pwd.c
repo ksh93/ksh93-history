@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -46,7 +46,7 @@ static void rehash(register Namval_t *np,void *data)
 	Pathcomp_t *pp = (Pathcomp_t*)np->nvalue.cp;
 	NOT_USED(data);
 	if(pp && *pp->name!='/')
-		nv_unset(np);
+		_nv_unset(np,0);
 }
 
 int	b_cd(int argc, char *argv[],void *extra)
@@ -100,14 +100,14 @@ int	b_cd(int argc, char *argv[],void *extra)
 	{
 		if(!(cdpath = (Pathcomp_t*)shp->cdpathlist) && (dp=(CDPNOD)->nvalue.cp))
 		{
-			if(cdpath=path_addpath((Pathcomp_t*)0,dp,PATH_CDPATH))
+			if(cdpath=path_addpath(shp,(Pathcomp_t*)0,dp,PATH_CDPATH))
 			{
 				shp->cdpathlist = (void*)cdpath;
 				cdpath->shp = shp;
 			}
 		}
 		if(!oldpwd)
-			oldpwd = path_pwd(1);
+			oldpwd = path_pwd(shp,1);
 	}
 	if(*dir=='.')
 	{
@@ -121,7 +121,7 @@ int	b_cd(int argc, char *argv[],void *extra)
 	do
 	{
 		dp = cdpath?cdpath->name:"";
-		cdpath = path_nextcomp(cdpath,dir,0);
+		cdpath = path_nextcomp(shp,cdpath,dir,0);
 #if _WINIX
                 if(*stakptr(PATH_OFFSET+1)==':' && isalpha(*stakptr(PATH_OFFSET)))
 		{
@@ -157,13 +157,13 @@ int	b_cd(int argc, char *argv[],void *extra)
 					continue;
 #endif /* SHOPT_FS_3D */
 		}
-		if((rval=chdir(path_relative(stakptr(PATH_OFFSET)))) >= 0)
+		if((rval=chdir(path_relative(shp,stakptr(PATH_OFFSET)))) >= 0)
 			goto success;
 		if(errno!=ENOENT && saverrno==0)
 			saverrno=errno;
 	}
 	while(cdpath);
-	if(rval<0 && *dir=='/' && *(path_relative(stakptr(PATH_OFFSET)))!='/')
+	if(rval<0 && *dir=='/' && *(path_relative(shp,stakptr(PATH_OFFSET)))!='/')
 		rval = chdir(dir);
 	/* use absolute chdir() if relative chdir() fails */
 	if(rval<0)
@@ -201,8 +201,8 @@ success:
 	nv_onattr(pwdnod,NV_NOFREE|NV_EXPORT);
 	shp->pwd = pwdnod->nvalue.cp;
 	nv_scan(shp->track_tree,rehash,(void*)0,NV_TAGGED,NV_TAGGED);
-	path_newdir(shp->pathlist);
-	path_newdir(shp->cdpathlist);
+	path_newdir(shp,shp->pathlist);
+	path_newdir(shp,shp->cdpathlist);
 	return(0);
 }
 
@@ -233,12 +233,12 @@ int	b_pwd(int argc, char *argv[],void *extra)
 	}
 	if(error_info.errors)
 		errormsg(SH_DICT,ERROR_usage(2),"%s",optusage((char*)0));
-	if(*(cp = path_pwd(0)) != '/')
+	if(*(cp = path_pwd(shp,0)) != '/')
 		errormsg(SH_DICT,ERROR_system(1), e_pwd);
 	if(flag)
 	{
 #if SHOPT_FS_3D
-		if(shp->lim.fs3d && (flag = mount(e_dot,NIL(char*),FS3D_GET|FS3D_VIEW,0))>=0)
+		if(sh.lim.fs3d && (flag = mount(e_dot,NIL(char*),FS3D_GET|FS3D_VIEW,0))>=0)
 		{
 			cp = (char*)stakseek(++flag+PATH_MAX);
 			mount(e_dot,cp,FS3D_GET|FS3D_VIEW|FS3D_SIZE(flag),0);

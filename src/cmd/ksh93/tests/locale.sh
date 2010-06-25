@@ -32,18 +32,6 @@ tmp=$(mktemp -dt) || { err_exit mktemp -dt failed; exit 1; }
 trap "cd /; rm -rf $tmp" EXIT
 cd $tmp || exit
 
-unset LANG LC_ALL LC_CTYPE LC_NUMERIC
-
-# LC_ALL=debug is an ast specific debug/test locale
-
-if	[[ "$(LC_ALL=debug $SHELL <<- \+EOF+
-		x=a<1z>b<2yx>c
-		print ${#x}
-		+EOF+)" != 5
-	]]
-then	err_exit '${#x} not working with multibyte locales'
-fi
-
 a=$($SHELL -c '/' 2>&1 | sed -e "s,.*: *,," -e "s, *\[.*,,")
 b=$($SHELL -c '(LC_ALL=debug / 2>/dev/null); /' 2>&1 | sed -e "s,.*: *,," -e "s, *\[.*,,")
 [[ "$b" == "$a" ]] || err_exit "locale not restored after subshell -- expected '$a', got '$b'"
@@ -69,34 +57,20 @@ do	export LC_ALL=$locale
 	done
 done
 
-# find a supported UTF-8 locale
+# this locale is supported by ast on all platforms
+# DE for { decimal_point="," thousands_sep="." }
+# however wctype is not supported but that's ok for these tests
 
-punt=
-for utf_8 in $(PATH=/bin:/usr/bin locale -a 2>/dev/null | egrep '^(de|en|es|fr)_.*?(\.UTF-8)') de_DE fr_FR es_ES en_US ''
-do	[[ $utf_8 ]] || break
-	while	:
-	do	[[ $utf_8 == *.UTF-8 ]] || utf_8=${utf_8%.*}.UTF-8
-		if	[[ ! $($SHELL -c "LC_ALL=$utf_8" 2>&1) ]]
-		then	[[ $utf_8 == @(de|fr)* ]] && break 2
-			[[ $punt ]] || punt=$utf_8
-		fi
-		[[ $utf_8 == *_* ]] || break
-		utf_8=${utf_8%_*}
-	done
-done
-[[ $utf_8 ]] || utf_8=$punt
-
-[[ $utf_8 ]] &&
-{
+locale=C_DE.UTF-8
 
 export LC_ALL=C
 
 # test multibyte value/trace format -- $'\303\274' is UTF-8 u-umlaut
 
 c=$(LC_ALL=C $SHELL -c "printf $':%2s:\n' $'\303\274'")
-u=$(LC_ALL=$utf_8 $SHELL -c "printf $':%2s:\n' $'\303\274'" 2>/dev/null)
+u=$(LC_ALL=$locale $SHELL -c "printf $':%2s:\n' $'\303\274'" 2>/dev/null)
 if	[[ "$c" != "$u" ]]
-then	LC_ALL=$utf_8
+then	LC_ALL=$locale
 	x=$'+2+ typeset item.text\
 +3+ item.text=\303\274\
 +4+ print -- \303\274\
@@ -109,7 +83,7 @@ then	LC_ALL=$utf_8
 +2+ txt.text=\303\274\
 +8+ print -- \'(\' text=$\'\\303\\274\' \')\'\
 ( text=\303\274 )'
-	u=$(LC_ALL=$utf_8 PS4='+$LINENO+ ' $SHELL -x -c "
+	u=$(LC_ALL=$locale PS4='+$LINENO+ ' $SHELL -x -c "
 		item=(typeset text)
 		item.text=$'\303\274'
 		print -- \"\${item.text}\"
@@ -118,23 +92,23 @@ then	LC_ALL=$utf_8
 		eval \"txt=\${arr[0]}\"
 		print -- \$txt
 	" 2>&1)
-	[[ "$u" == "$x" ]] || err_exit LC_ALL=$utf_8 multibyte value/trace format failed
+	[[ "$u" == "$x" ]] || err_exit LC_ALL=$locale multibyte value/trace format failed
 
 	x=$'00fc\n20ac'
-	u=$(LC_ALL=$utf_8 $SHELL -c $'printf "%04x\n" \$\'\"\303\274\"\' \$\'\"\xE2\x82\xAC\"\'')
-	[[ $u == $x ]] || err_exit LC_ALL=$utf_8 multibyte %04x printf format failed
+	u=$(LC_ALL=$locale $SHELL -c $'printf "%04x\n" \$\'\"\303\274\"\' \$\'\"\xE2\x82\xAC\"\'')
+	[[ $u == $x ]] || err_exit LC_ALL=$locale multibyte %04x printf format failed
 fi
 
-if	(( $($SHELL -c $'export LC_ALL='$utf_8$'; print -r "\342\202\254\342\202\254\342\202\254\342\202\254w\342\202\254\342\202\254\342\202\254\342\202\254" | wc -m' 2>/dev/null) == 10 ))
-then	LC_ALL=$utf_8 $SHELL -c b1=$'"\342\202\254\342\202\254\342\202\254\342\202\254w\342\202\254\342\202\254\342\202\254\342\202\254"; [[ ${b1:4:1} == w ]]' || err_exit 'multibyte ${var:offset:len} not working correctly'
+if	(( $($SHELL -c $'export LC_ALL='$locale$'; print -r "\342\202\254\342\202\254\342\202\254\342\202\254w\342\202\254\342\202\254\342\202\254\342\202\254" | wc -m' 2>/dev/null) == 10 ))
+then	LC_ALL=$locale $SHELL -c b1=$'"\342\202\254\342\202\254\342\202\254\342\202\254w\342\202\254\342\202\254\342\202\254\342\202\254"; [[ ${b1:4:1} == w ]]' || err_exit 'multibyte ${var:offset:len} not working correctly'
 fi
 
-#$SHELL -c 'export LANG='$utf_8'; printf "\u[20ac]\u[20ac]" > $tmp/two_euro_chars.txt'
+#$SHELL -c 'export LANG='$locale'; printf "\u[20ac]\u[20ac]" > $tmp/two_euro_chars.txt'
 printf $'\342\202\254\342\202\254' > $tmp/two_euro_chars.txt
 exp="6 2 6"
 set -- $($SHELL -c "
 	unset LC_CTYPE
-	export LANG=$utf_8
+	export LANG=$locale
 	export LC_ALL=C
 	command wc -C < $tmp/two_euro_chars.txt
 	unset LC_ALL
@@ -147,7 +121,7 @@ got=$*
 set -- $($SHELL -c "
 	if	builtin -f cmd wc 2>/dev/null
 	then	unset LC_CTYPE
-		export LANG=$utf_8
+		export LANG=$locale
 		export LC_ALL=C
 		wc -C < $tmp/two_euro_chars.txt
 		unset LC_ALL
@@ -173,14 +147,7 @@ got=$*
 	done
 } > ko.dat
 
-LC_ALL=$utf_8 $SHELL <ko.dat 2>/dev/null || err_exit "script with multibyte char straddling buffer boundary fails"
-
-}
-
-# the ast debug locale has { decimal_point="," thousands_sep="." }
-
-locale=$utf_8
-[[ ! $locale || $locale == e[ns]* ]] && locale=debug
+LC_ALL=$locale $SHELL < ko.dat 2> /dev/null || err_exit "script with multibyte char straddling buffer boundary fails"
 
 #	exp	LC_ALL		LC_NUMERIC	LANG
 set -- \
@@ -221,56 +188,61 @@ do	exp=$1
 	shift 4
 done
 
-# special builtin error message localization
+# setocale(LC_ALL,"") after setlocale() initialization
 
+printf 'f1\357\274\240f2\n' > input1
+printf 't2\357\274\240f1\n' > input2
+printf '\357\274\240\n' > delim
+print "export LC_ALL=$locale
+join -j1 1 -j2 2 -o 1.1 -t \$(cat delim) input1 input2 > out" > script
+$SHELL -c 'unset LANG ${!LC_*}; $SHELL ./script' ||
+err_exit "join test script failed -- exit code $?"
+exp="f1"
+got="$(<out)"
+[[ $got == "$exp" ]] || err_exit "LC_ALL test script failed -- expected '$exp', got '$got'"
+
+# this locale is supported by ast on all platforms
+# mainly used to debug multibyte and message translation code
+# however wctype is not supported but that's ok for these tests
+
+locale=debug
+
+if	[[ "$(LC_ALL=$locale $SHELL <<- \+EOF+
+		x=a<1z>b<2yx>c
+		print ${#x}
+		+EOF+)" != 5
+	]]
+then	err_exit '${#x} not working with multibyte locales'
+fi
+
+dir=_not_found_
 exp=2
 for cmd in \
-	'cd _not_found_; export LC_ALL=debug; cd _not_found_' \
-	'cd _not_found_; LC_ALL=debug cd _not_found_' \
+	"cd $dir; export LC_ALL=debug; cd $dir" \
+	"cd $dir; LC_ALL=debug cd $dir" \
 
 do	got=$($SHELL -c "$cmd" 2>&1 | sort -u | wc -l)
 	(( ${got:-0} == $exp )) || err_exit "'$cmd' sequence failed -- error message not localized"
 done
-
-# setocale(LC_ALL,"") after setlocale() initialization
-
-locale=$utf_8
-
-if	[[ $locale ]]
-then	printf 'f1\357\274\240f2\n' > input1
-	printf 't2\357\274\240f1\n' > input2
-	printf '\357\274\240\n' > delim
-	print "export LC_ALL=$locale
-join -j1 1 -j2 2 -o 1.1 -t \$(cat delim) input1 input2 > out" > script
-	$SHELL -c 'unset LANG ${!LC_*}; $SHELL ./script' ||
-	err_exit "join test script failed -- exit code $?"
-	exp="f1"
-	got="$(<out)"
-	[[ $got == "$exp" ]] || err_exit "LC_ALL test script failed -- expected '$exp', got '$got'"
-fi
-
-if	[[ $locale && $locale != en* ]]
-then	dir=_not_found_
-	exp=121
-	for lc in LANG LC_MESSAGES LC_ALL
-	do	for cmd in "($lc=$locale;cd $dir)" "$lc=$locale;cd $dir;unset $lc" "function tst { typeset $lc=$locale;cd $dir; }; tst"
-		do	tst="$lc=C;cd $dir;$cmd;cd $dir;:"
-			$SHELL -c "unset LANG \${!LC_*}; $SHELL -c '$tst'" > out 2>&1 ||
-			err_exit "'$tst' failed -- exit status $?"
-			integer id=0
-			unset msg
-			typeset -A msg
-			got=
-			while	read -r line
-			do	line=${line##*:}
-				if	[[ ! ${msg[$line]} ]]
-				then	msg[$line]=$((++id))
-				fi
-				got+=${msg[$line]}
-			done < out
-			[[ $got == $exp ]] || err_exit "'$tst' failed -- expected '$exp', got '$got'"
-		done
+exp=121
+for lc in LANG LC_MESSAGES LC_ALL
+do	for cmd in "($lc=$locale;cd $dir)" "$lc=$locale;cd $dir;unset $lc" "function tst { typeset $lc=$locale;cd $dir; }; tst"
+	do	tst="$lc=C;cd $dir;$cmd;cd $dir;:"
+		$SHELL -c "unset LANG \${!LC_*}; $SHELL -c '$tst'" > out 2>&1 ||
+		err_exit "'$tst' failed -- exit status $?"
+		integer id=0
+		unset msg
+		typeset -A msg
+		got=
+		while	read -r line
+		do	line=${line##*:}
+			if	[[ ! ${msg[$line]} ]]
+			then	msg[$line]=$((++id))
+			fi
+			got+=${msg[$line]}
+		done < out
+		[[ $got == $exp ]] || err_exit "'$tst' failed -- expected '$exp', got '$got'"
 	done
-fi
+done
 
 exit $Errors

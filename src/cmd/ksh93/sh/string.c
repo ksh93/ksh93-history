@@ -306,20 +306,13 @@ char	*sh_fmtq(const char *string)
 	if(!cp)
 		return((char*)0);
 	offset = staktell();
-#if SHOPT_MULTIBYTE
 	state = ((c= mbchar(cp))==0);
-#else
-	state = ((c= *(unsigned char*)cp++)==0);
-#endif
 	if(isaletter(c))
 	{
-#if SHOPT_MULTIBYTE
 		while((c=mbchar(cp)),isaname(c));
-#else
-		while((c = *(unsigned char*)cp++),isaname(c));
-#endif
 		if(c==0)
 			return((char*)string);
+#if 0
 		if(c=='=')
 		{
 			if(*cp==0)
@@ -327,20 +320,13 @@ char	*sh_fmtq(const char *string)
 			c = cp - string;
 			stakwrite(string,c);
 			string = cp;
-#if SHOPT_MULTIBYTE
 			c = mbchar(cp);
-#else
-			c = *(unsigned char*)cp++;
-#endif
 		}
+#endif
 	}
 	if(c==0 || c=='#' || c=='~')
 		state = 1;
-#if SHOPT_MULTIBYTE
 	for(;c;c= mbchar(cp))
-#else
-	for(;c; c= *(unsigned char*)cp++)
-#endif
 	{
 #if SHOPT_MULTIBYTE
 		if(c=='\'' || !iswprint(c))
@@ -348,7 +334,11 @@ char	*sh_fmtq(const char *string)
 		if(c=='\'' || !isprint(c))
 #endif /* SHOPT_MULTIBYTE */
 			state = 2;
+#if 1
+		 else if(c==']' || c=='=' || (c!=':' && c<=0xff && (c=sh_lexstates[ST_NORM][c]) && c!=S_EPAT))
+#else
 		else if(c==']' || (c!=':' && c<=0xff && (c=sh_lexstates[ST_NORM][c]) && c!=S_EPAT))
+#endif
 			state |=1;
 	}
 	if(state<2)

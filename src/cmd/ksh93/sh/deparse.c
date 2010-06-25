@@ -1,10 +1,10 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*                  Copyright (c) 1982-2006 AT&T Corp.                  *
+*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
-*                            by AT&T Corp.                             *
+*                    by AT&T Intellectual Property                     *
 *                                                                      *
 *                A copy of the License is available at                 *
 *            http://www.opensource.org/licenses/cpl1.0.txt             *
@@ -214,6 +214,15 @@ static void p_tree(register const Shnode_t *t,register int tflags)
 				}
 			}
 			p_tree(t->lst.lstlef,NEED_BRACE|NO_NEWLINE|(tflags&NO_BRACKET));
+			if(tflags&FALTPIPE)
+			{
+				Shnode_t *tt = t->lst.lstrit;
+				if(tt->tre.tretyp!=TFIL || !(tt->lst.lstlef->tre.tretyp&FALTPIPE))
+				{
+					sfputc(outfile,'\n');
+					return;
+				}
+			}
 			sfputr(outfile,cp,here_doc?'\n':' ');
 			if(here_doc)
 			{
@@ -498,6 +507,8 @@ static void p_redirect(register const struct ionod *iop)
 static void p_comarg(register const struct comnod *com)
 {
 	register int flag = end_line;
+	if(com->comtyp&FAMP)
+		sfwrite(outfile,"& ",2);
 	if(com->comarg || com->comio)
 		flag = ' ';
 	if(com->comset)

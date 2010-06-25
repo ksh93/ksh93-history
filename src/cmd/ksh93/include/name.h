@@ -91,6 +91,8 @@ struct Ufunction
 {
 	int		*ptree;		/* address of parse tree */
 	int		lineno;		/* line number of function start */
+	short		argc;		/* number of references */
+	char		**argv;		/* reference argument list */
 	off_t		hoffset;	/* offset into source or history file */
 	Namval_t	*nspace;	/* pointer to name space */
 	char		*fname;		/* file name where function defined */
@@ -132,7 +134,6 @@ struct Ufunction
 #define BLT_NOSFIO	(NV_IMPORT)		/* doesn't use sfio */
 #define NV_OPTGET	(NV_BINARY)		/* function calls getopts */
 #define nv_isref(n)	(nv_isattr((n),NV_REF|NV_TAGGED|NV_FUNCT)==NV_REF)
-#define nv_istable(n)	(nv_isattr((n),NV_TABLE|NV_LJUST|NV_RJUST|NV_INTEGER)==NV_TABLE)
 #define is_abuiltin(n)	(nv_isattr(n,NV_BLTIN|NV_INTEGER)==NV_BLTIN)
 #define is_afunction(n)	(nv_isattr(n,NV_FUNCTION|NV_REF)==NV_FUNCTION)
 #define	nv_funtree(n)	((n)->nvalue.rp->ptree)
@@ -202,6 +203,7 @@ extern void		nv_outnode(Namval_t*,Sfio_t*, int, int);
 extern int		nv_subsaved(Namval_t*);
 extern void		nv_typename(Namval_t*, Sfio_t*);
 extern void		nv_newtype(Namval_t*);
+extern int		nv_istable(Namval_t*);
 
 extern const Namdisc_t	RESTRICTED_disc;
 extern const Namdisc_t	ENUM_disc;

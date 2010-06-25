@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -321,7 +321,7 @@ int sh_argopts(int argc,register char *argv[], void *context)
 		trace = 0;
 	}
 	if(trace)
-		sh_trace(argv,1);
+		sh_trace(shp,argv,1);
 	argc -= opt_info.index;
 	argv += opt_info.index;
 	if(action==PRINT)
@@ -389,21 +389,21 @@ void sh_applyopts(Shell_t* shp,Shopt_t newflags)
 		off_option(&newflags,SH_NOEXEC);
 	if(is_option(&newflags,SH_PRIVILEGED))
 		on_option(&newflags,SH_NOUSRPROFILE);
-	if(!sh_isstate(SH_INIT) && is_option(&newflags,SH_PRIVILEGED) != sh_isoption(SH_PRIVILEGED) || sh_isstate(SH_INIT) && is_option(&((Arg_t*)shp->arg_context)->sh->offoptions,SH_PRIVILEGED) && shp->userid!=shp->euserid)
+	if(!sh_isstate(SH_INIT) && is_option(&newflags,SH_PRIVILEGED) != sh_isoption(SH_PRIVILEGED) || sh_isstate(SH_INIT) && is_option(&((Arg_t*)shp->arg_context)->sh->offoptions,SH_PRIVILEGED) && sh.userid!=sh.euserid)
 	{
 		if(!is_option(&newflags,SH_PRIVILEGED))
 		{
-			setuid(shp->userid);
-			setgid(shp->groupid);
-			if(shp->euserid==0)
+			setuid(sh.userid);
+			setgid(sh.groupid);
+			if(sh.euserid==0)
 			{
-				shp->euserid = shp->userid;
-				shp->egroupid = shp->groupid;
+				sh.euserid = sh.userid;
+				sh.egroupid = sh.groupid;
 			}
 		}
-		else if((shp->userid!=shp->euserid && setuid(shp->euserid)<0) ||
-			(shp->groupid!=shp->egroupid && setgid(shp->egroupid)<0) ||
-			(shp->userid==shp->euserid && shp->groupid==shp->egroupid))
+		else if((sh.userid!=sh.euserid && setuid(sh.euserid)<0) ||
+			(sh.groupid!=sh.egroupid && setgid(sh.egroupid)<0) ||
+			(sh.userid==sh.euserid && sh.groupid==sh.egroupid))
 				off_option(&newflags,SH_PRIVILEGED);
 	}
 #if SHOPT_BASH

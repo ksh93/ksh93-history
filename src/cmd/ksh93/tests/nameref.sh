@@ -258,10 +258,17 @@ i=$($SHELL -c 'nameref foo=bar; bar[2]=(x=3 y=4); nameref x=foo[2].y;print -r --
 #set -x
 for c in '=' '[' ']' '\' "'" '"' '<' '=' '('
 do	[[ $($SHELL 2> /dev/null <<- ++EOF++
-	x;i=\\$c;typeset -A a; a[\$i]=foo;typeset -n x=a[\$i]; print "\$x"
+	i=\\$c;typeset -A a; a[\$i]=foo;typeset -n x=a[\$i]; print "\$x"
 	++EOF++
-) != foo ]] && err_exit 'nameref x=[$c] '"not working for c=$c"
+) != foo ]] && err_exit 'nameref x=a[$c] '"not working for c=$c"
 done
+for c in '=' '[' ']' '\' "'" '"' '<' '=' '('
+do      [[ $($SHELL 2> /dev/null <<- ++EOF++
+	i=\\$c;typeset -A a; a[\$i]=foo;b=a[\$i];typeset -n x=\$b; print "\$x"
+	++EOF++
+) != foo ]] && err_exit 'nameref x=$b with b=a[$c] '"not working for c=$c"
+done
+
 unset -n foo x
 unset foo x
 typeset -A foo
@@ -428,4 +435,6 @@ typeset -A -i sizes
 sizes[bar]=1
 [[ ${sizes[*]} == 1 ]] || err_exit 'adding -Ai attribute to name referenced variable not working'
 
+$SHELL 2> /dev/null -c 'nameref foo=bar; typeset -A foo; (( (x=foo[a])==0 ))' || err_exit 'references inside arithmetic expressions not working'
+:
 exit $((Errors))

@@ -129,11 +129,11 @@ char *sh_mactry(Shell_t *shp,register char *string)
 		int		jmp_val;
 		int		savexit = shp->savexit;
 		struct checkpt	buff;
-		sh_pushcontext(&buff,SH_JMPSUB);
+		sh_pushcontext(shp,&buff,SH_JMPSUB);
 		jmp_val = sigsetjmp(buff.buff,0);
 		if(jmp_val == 0)
 			string = sh_mactrim(shp,string,0);
-		sh_popcontext(&buff);
+		sh_popcontext(shp,&buff);
 		shp->savexit = savexit;
 		return(string);
 	}
@@ -176,7 +176,7 @@ char *sh_mactrim(Shell_t *shp, char *str, register int mode)
 	{
 		/* expand only if unique */
 		struct argnod *arglist=0;
-		if((mode=path_expand(str,&arglist))==1)
+		if((mode=path_expand(shp,str,&arglist))==1)
 			str = arglist->argval;
 		else if(mode>1)
 			errormsg(SH_DICT,ERROR_exit(1),e_ambiguous,str);
@@ -1090,7 +1090,7 @@ retry1:
 #if  SHOPT_FILESCAN
 			if(mp->shp->cur_line)
 			{
-				v = getdolarg(&sh,1,(int*)0);
+				v = getdolarg(mp->shp,1,(int*)0);
 				dolmax = MAX_ARGN;
 			}
 			else
@@ -1127,7 +1127,7 @@ retry1:
 		else if(mp->shp->cur_line)
 		{
 			mp->shp->used_pos = 1;
-			v = getdolarg(&sh,c,&vsize);
+			v = getdolarg(mp->shp,c,&vsize);
 		}
 #endif  /* SHOPT_FILESCAN */
 		else if(c <= mp->shp->st.dolc)
@@ -1272,14 +1272,14 @@ retry1:
 					dolmax =1;
 					if(array_assoc(ap))
 						arrmax = strdup(v);
-					else if((dolmax = (int)sh_arith(v))<0)
+					else if((dolmax = (int)sh_arith(mp->shp,v))<0)
 						dolmax += array_maxindex(np);
 					if(type==M_SUBNAME)
 						bysub = 1;
 				}
 				else
 				{
-					if((int)sh_arith(v))
+					if((int)sh_arith(mp->shp,v))
 						np = 0;
 				}
 			}
@@ -1438,7 +1438,7 @@ retry1:
 #if  SHOPT_FILESCAN
 				if(mp->shp->cur_line)
 				{
-					getdolarg(&sh,MAX_ARGN,(int*)0);
+					getdolarg(mp->shp,MAX_ARGN,(int*)0);
 					c = mp->shp->offsets[0];
 				}
 				else
@@ -1548,7 +1548,7 @@ retry1:
 #if  SHOPT_FILESCAN
 				else if(mp->shp->cur_line)
 				{
-					v = getdolarg(&sh,dolg=type,&vsize);
+					v = getdolarg(mp->shp,dolg=type,&vsize);
 					if(!v)
 						dolmax = type;
 				}
@@ -1773,7 +1773,7 @@ retry2:
 				{
 					if(dolmax==MAX_ARGN && isastchar(mode))
 						break;
-					if(!(v=getdolarg(&sh,dolg,&vsize)))
+					if(!(v=getdolarg(mp->shp,dolg,&vsize)))
 					{
 						dolmax = dolg;
 						break;
@@ -1873,6 +1873,11 @@ retry2:
 				id = nv_name(np);
 			nv_close(np);
 		}
+		else if(stkptr(stkp,0)==id)
+		{
+			stkseek(stkp,strlen(id));
+			id = stkfreeze(stkp,1);
+		}
 		errormsg(SH_DICT,ERROR_exit(1),e_notset,id);
 	}
 	if(np)
@@ -1928,7 +1933,7 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 			if((t->ar.arexpr->argflag&ARG_RAW))
 				num = arith_exec(t->ar.arcomp);
 			else
-				num = sh_arith(sh_mactrim(mp->shp,t->ar.arexpr->argval,3));
+				num = sh_arith(mp->shp,sh_mactrim(mp->shp,t->ar.arexpr->argval,3));
 		out_offset:
 			stkset(stkp,savptr,savtop);
 			*mp = savemac;
@@ -1984,14 +1989,14 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 			int r;
 			struct checkpt buff;
 			struct ionod *ip=0;
-			sh_pushcontext(&buff,SH_JMPIO);
+			sh_pushcontext(mp->shp,&buff,SH_JMPIO);
 			if((ip=t->tre.treio) && 
 				((ip->iofile&IOLSEEK) || !(ip->iofile&IOUFD)) &&
 				(r=sigsetjmp(buff.buff,0))==0)
 				fd = sh_redirect(mp->shp,ip,3);
 			else
 				fd = sh_chkopen(e_devnull);
-			sh_popcontext(&buff);
+			sh_popcontext(mp->shp,&buff);
 			if(r==0 && ip && (ip->iofile&IOLSEEK))
 			{
 				if(sp=mp->shp->sftable[fd])
@@ -2004,7 +2009,7 @@ static void comsubst(Mac_t *mp,register Shnode_t* t, int type)
 			type = 3;
 		}
 		else
-			sp = sh_subshell(t,sh_isstate(SH_ERREXIT),type);
+			sp = sh_subshell(mp->shp,t,sh_isstate(SH_ERREXIT),type);
 		fcrestore(&save);
 	}
 	else
@@ -2116,7 +2121,8 @@ static void mac_copy(register Mac_t *mp,register const char *str, register int s
 	register const char	*cp=str;
 	register int		c,n,nopat,len;
 	Stk_t			*stkp=mp->shp->stk;
-	nopat = (mp->quote||mp->assign==1||mp->arith);
+	int			oldpat = mp->pattern;
+	nopat = (mp->quote||(mp->assign==1)||mp->arith);
 	if(mp->zeros)
 	{
 		/* prevent leading 0's from becomming octal constants */
@@ -2127,7 +2133,7 @@ static void mac_copy(register Mac_t *mp,register const char *str, register int s
 	}
 	if(mp->sp)
 		sfwrite(mp->sp,str,size);
-	else if(mp->pattern>=2 || (mp->pattern && nopat))
+	else if(mp->pattern>=2 || (mp->pattern && nopat) || mp->assign==3)
 	{
 		state = sh_lexstates[ST_MACRO];
 		/* insert \ before file expansion characters */
@@ -2142,10 +2148,32 @@ static void mac_copy(register Mac_t *mp,register const char *str, register int s
 			}
 #endif
 			c = state[n= *(unsigned char*)cp++];
+			if(mp->assign==3 && mp->pattern!=4)
+			{
+				if(c==S_BRACT)
+				{
+					nopat = 0;
+					mp->pattern = 4;
+				}
+				continue;
+			}
 			if(nopat&&(c==S_PAT||c==S_ESC||c==S_BRACT||c==S_ENDCH) && mp->pattern!=3)
 				c=1;
 			else if(mp->pattern==4 && (c==S_ESC||c==S_BRACT||c==S_ENDCH || isastchar(n)))
-				c=1;
+			{
+				if(c==S_ENDCH && oldpat!=4)
+				{
+					if(*cp==0 || *cp=='.' || *cp=='[')
+					{
+						mp->pattern = oldpat;
+						c=0;
+					}
+					else
+						c=1;
+				}
+				else
+					c=1;
+			}
 			else if(mp->pattern==2 && c==S_SLASH)
 				c=1;
 			else if(mp->pattern==3 && c==S_ESC && (state[*(unsigned char*)cp]==S_DIG||(*cp==ESCAPE)))
@@ -2295,9 +2323,9 @@ static void endfield(register Mac_t *mp,int split)
 		{
 			mp->shp->argaddr = 0;
 #if SHOPT_BRACEPAT
-			count = path_generate(argp,mp->arghead);
+			count = path_generate(mp->shp,argp,mp->arghead);
 #else
-			count = path_expand(argp->argval,mp->arghead);
+			count = path_expand(mp->shp,argp->argval,mp->arghead);
 #endif /* SHOPT_BRACEPAT */
 			if(count)
 				mp->fields += count;

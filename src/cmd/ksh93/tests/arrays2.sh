@@ -133,5 +133,10 @@ typeset x=(
 [[ ${x[0][2][1]} == I ]] || err_exit '${x[0][2][1]} == I'
 +++
 
+typeset -a -is x=( [0]=(1 2 3) [1]=(4 5 6) [2]=(7 8 9) )
+[[ ${x[1][1]} == 5 ]] || err_exit 'changing two dimensional indexed array to short integer failed'
+unset x
+typeset -A -is x=( [0]=(1 2 3) [1]=(4 5 6) [2]=(7 8 9) )
+[[ ${x[1][2]} == 6 ]] || err_exit 'changing two dimensional associative array to short integer failed'
 
 exit $((Errors))

@@ -148,7 +148,11 @@ const char is_ufunction[]	= " is an undefined function";
     const char e_jobsrunning[]	= "You have running jobs";
     const char e_no_job[]	= "no such job";
     const char e_no_proc[]	= "no such process";
-    const char e_jobusage[]	= "%s: Arguments must be %%job or process ids";
+#   if SHOPT_COSHELL
+        const char e_jobusage[]	= "%s: Arguments must be %%job, process ids, or job pool names";
+#   else
+        const char e_jobusage[]	= "%s: Arguments must be %%job or process ids";
+#   endif /* SHOPT_COSHELL */
 #endif /* JOBS */
 const char e_coredump[]		= "(coredump)";
 const char e_alphanum[]		= "[_[:alpha:]]*([_[:alnum:]])";
@@ -197,3 +201,4 @@ const char e_dot[]		= ".";
 const char e_envmarker[]	= "A__z";
 const char e_timeformat[]	= "\nreal\t%2lR\nuser\t%2lU\nsys\t%2lS";
 const char e_dict[]		= "libshell";
+const char e_funload[]		= "function, built-in or type definition for %s not found in %s";

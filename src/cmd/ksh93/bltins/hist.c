@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -204,7 +204,7 @@ int	b_hist(int argc,char *argv[], void *extra)
 			sfputc(outfile,'\t');
 		hist_list(shp->hist_ptr,outfile,hist_tell(shp->hist_ptr,range[flag]),0,arg);
 		if(lflag)
-			sh_sigcheck();
+			sh_sigcheck(shp);
 		if(range[flag] == range[1-flag])
 			break;
 		range[flag] += incr;

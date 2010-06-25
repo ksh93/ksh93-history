@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2009 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -107,12 +107,12 @@ int	b_sleep(register int argc,char *argv[],void *extra)
 		sh_delay(d);
 		if(sflag || tloc==0 || errno!=EINTR || shp->lastsig)
 			break;
-		sh_sigcheck();
+		sh_sigcheck(shp);
 		if(tloc < (now=time(NIL(time_t*))))
 			break;
 		d = (double)(tloc-now);
 		if(shp->sigflag[SIGALRM]&SH_SIGTRAP)
-			sh_timetraps();
+			sh_timetraps(shp);
 	}
 	return(0);
 }
@@ -125,7 +125,7 @@ static void completed(void * handle)
 
 unsigned int sleep(unsigned int sec)
 {
-	Shell_t	*shp = &sh;
+	Shell_t	*shp = sh_getinterp();
 	pid_t newpid, curpid=getpid();
 	void *tp;
 	char expired = 0;
@@ -136,7 +136,7 @@ unsigned int sleep(unsigned int sec)
 		if(!shp->waitevent || (*shp->waitevent)(-1,-1L,0)==0)
 			pause();
 		if(shp->sigflag[SIGALRM]&SH_SIGTRAP)
-			sh_timetraps();
+			sh_timetraps(shp);
 		if((newpid=getpid()) != curpid)
 		{
 			curpid = newpid;
@@ -152,7 +152,7 @@ unsigned int sleep(unsigned int sec)
 	while(!expired && shp->lastsig==0);
 	if(!expired)
 		timerdel(tp);
-	sh_sigcheck();
+	sh_sigcheck(shp);
 	return(0);
 }
 
@@ -163,7 +163,7 @@ unsigned int sleep(unsigned int sec)
 void	sh_delay(double t)
 {
 	register int n = (int)t;
-	Shell_t	*shp = &sh;
+	Shell_t	*shp = sh_getinterp();
 #ifdef _lib_poll
 	struct pollfd fd;
 	if(t<=0)
@@ -215,7 +215,7 @@ void	sh_delay(double t)
 			clock_t begin = times(&tt);
 			if(begin==0)
 				return;
-			t *= shp->lim.clk_tck;
+			t *= sh.lim.clk_tck;
 			n += (t+.5);
 			while((times(&tt)-begin) < n);
 		}

@@ -1,8 +1,55 @@
-10-06-21  --- Release ksh93t+  ---
-10-06-21  The next release this directory will be renamed ksh93t and will
-	  install as ksh93t and ksh93u will become the default ksh.
-10-05-27  Rewrote the subshell code to avoid using pipes in many cases.
-10-05-24  Fixed a bug which cause an exception when both -s and -s were
+10-06-25  --- Release ksh93u-  ---
+10-06-25  A bug in which a large here document containing command substitutions
+	  of a dynamically loaded function that contained a here document
+	  could get truncated has been fixed.
+10-06-24  If after executing a script found in FPATH, if a function, builtin,
+	  or type name corresponding to that script is not defined, the shell
+	  now outputs an error message and returns value 126.
+10-06-23  Floating point functions that happened to return integer values
+	  were being treated as if the function returned integers so that
+	  integer division could be used instead of floating point division.
+10-06-22  Fixed a bug in earlier ksh93u in which an arithmetic assignment to a
+	  variable in the global scope would instead create a local variable if
+	  the variable had an attribute but did not have a value.
+10-06-18  Modified trap handling so that if the same signal is received when
+	  executing the handler, it is deferred until the handler completes.
+10-06-16  Fixed a bug in which ulimit -v was setting the the cpu limit
+	  on Linux.
+10-06-14 +The command 'typeset -T' now generates the list of type definitions
+	  in a format that can be used as input to the shell.
+10-06-09  Put in patch from Solaris for output quoting with %q.
+10-06-09 +Made changes to the NAMESPACE compile option so that it now seems
+	  to work.  With this option, namespace <name> { command;} will
+	  run command in the namespace .name so that all variables and
+	  functions created by command are accessable outside the name
+	  space via .name.var and .name.fun.  Variables and functions that
+	  are not in the namespace are not modifed when runnning command.
+10-06-07  Change most internal interfaces to take Sh_t* argument.
+10-06-03 +Types can be loaded on first reference by putting defintions in
+	  PFPATH.
+10-06-03 +The shell is now able to parse commands which use type statements
+	  before the typeset -T command to define the type executes.
+10-06-03  A bug in the quoting for name reference declarations which did
+	  not properly handle [ and ] in subscripts for associative arrays.
+10-06-02  A bug in which a discipline function defined by a type instance to
+	  override the default was not being registered has been fixed.
+10-06-02  A bug in which read -C of an associative array of compound variables
+	  was not working has been fixed.
+10-06-02  A bug in which the error message for an unset parameter with set -u
+	  did not contain the name of the variable has been fixed.
+10-06-01  A bug in typeset -m for moving an indexed array instance to a variable
+	  has been fixed.
+10-06-01  A bug in which caused memory to be freed twice when unset was called
+	  for an indexed array that had get or set disciplines has been fixed.
+10-06-01  A bug in which the %b format of printf was not preserving NUL bytes
+	  with \0 has been fixed.
+10-06-01  A bug in the handling of name references to array variables in
+	  arithmetic expressions has been fixed.
+10-05-28  Fixed bugs in changing attributes for two dimensional arrays.
+10-05-28  Eliminated a few unreferenced variables and a reference to
+	  uninitialized memroy.
+10-05-27  Rewrote the subshell code to avoid using pipes an many cases.
+10-05-24  Fixed a bug which cause an exception when both -l and -s were
 	  specified with typeset -i.
 10-05-21  Inputting of three dimensional indexed arrays with ( ( (...)...)...) 
           was not working and has been fixed.
@@ -10,6 +57,13 @@
 	  reference could cause the value to display incorrectly has been fixed.
 10-05-21  A bug in which using $var inside ((...)) did not work when var was
 	  a hex float variable.
+10-05-20 +The compile option SHOPT_EDPREDICT has been added.  When this option
+	  is on, as you type a line beginning with a # the following characters
+	  are treated as a shell pattern and cause matching lines from the
+	  history file to be displayed as a numbered list as you type.
+	  You can scroll up and down this list or you can use <ESC>nTAB
+	  to make this the current line (n defaults to 1 of ommitted) or
+	  <ESC>n<cr> to execute.
 10-05-20  A bug which caused an exception when multiple levels of composite
 	  functions in arithemtic expressions has been fixed.
 10-05-19  <<< with an empty string no longer gives an error.
@@ -34,6 +88,7 @@
 	  scope were not found has been fixed.
 10-04-30  Do not use socketpair() on systems that implement ioctl(I_PEEK)
 	  on pipes.
+10-04-29 +When the current job pool is set, coprocess are run in a job pool.
 10-04-28  A type defined with a member foo that is an associative array without
 	  elements followed by an expansion ${bar.foo[a]} and an assignment
 	  bar.foo[a]=b, no longer indicates that ${#bar.foo[@]} has 0 members.
@@ -49,6 +104,9 @@
 10-04-23  A bug in which ${t.var:=value}, where t is an instance of a type
 	  variable, could assign value to the type variable rather than to
 	  the type instance has been fixed.
+10-04-23 +Added &| which can be used in place of | to have portions of a
+	  pipeline executed in the pool.
+10-04-22 +The .sh.pool variable was added for use with job pools.
 10-04-22  A bug in which a nested command substitution could hang if it
 	  generated too much data has been fixed.
 10-04-20  A bug which corrupted one byte of memory when read was called with
@@ -59,10 +117,16 @@
 	  an associative array has been fixed.
 10-04-15  A bug which caused scripts containing user defined math functions to
 	  fail to compile with shcomp has been fixed.
+10-04-15 +Job pools have been added with the SHOPT_COSHELL compilation option.
+	  A job pool allows a collection of background jobs to run either locally 
+	  or remotetly and to be managed as a unit.  The command '& name ...'
+	  creates or uses a named job pool for subsequent background jobs.
+	  kill, wait, and jobs allow the pool name as operands.
 10-04-14  A bug in which a coprocess connection could terminate prematurely
 	  when running a nested subshell has been fixed.
-10-04-07  On Darwin on Mac/OS a bug has been fixed which generated an
-	  inappropriate error message when continuing a background job.
+10-04-12 +Enumeration constants can be used in arithmetic expressions with the
+	  ==, != and = operators when the left hand side is an enum variable
+	  and the right hand side is an enumeration constant.
 10-04-07  A bug in which setting the trap on CHLD to ignore could cause
 	  an incorrect exit status has been fixed.
 10-04-06  A bug in which LINENO was not incremented for a here-document when
@@ -81,6 +145,12 @@
 	  an exception has been fixed.
 10-03-30  A bug in the display of a compound variable containing an indexed
 	  array of compound variables has been fixed.
+10-03-24 +Arithmetic functions can be defined using the shell function syntax,
+	  'function .sh.math.name x y z{...}' , where name is the function name
+	  invoked within ((...)) and x y z are long double arguments passed
+	  as name references.  y and z are used for functions with two and
+	  three arguments respectively.  The value of the function is the value
+	  of the long double .sh.value variable when the function returns.
 10-03-24  A bug in which integer division was mistakenly used when the
 	  numerator was a binary operator with the first operand floating
 	  point and the second integer, e.g. (.1**3)/3, has been fixed.
@@ -103,12 +173,18 @@
 	  been fixed.
 10-03-16  A bug in the handling of process groups in monitor mode for
 	  command substitutions has been fixed.
+10-03-15  Fixed a bug in which read -u[fd] could cause the shell to core
+	  dump when fd was greater than open_max.
+10-03-15 +Modified the shell I/O so that the shell will not fail if the
+	  ulimit for open_max is increased as part of the script.
 10-03-12  A bug in which a here-document containing command substitutions
 	  that contained here-documents did not process correctly has been
 	  fixed.
 10-03-12  A bug in which the terminal is not restored to cannonical mode
 	  after read times out when in a multibyte locale with no edit mode
 	  enabled has been fixed.
+
+10-03-05  --- Release ksh93t+  ---
 10-03-05  A varibale unset memory leak has been fixed and tests/leaks.sh
 	  has been added to verify the fix.
 10-03-04  Documentation, comment, and disgnostic spelling typos corrected.

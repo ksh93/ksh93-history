@@ -562,6 +562,33 @@ done
 (( 4.**3/10 == 6.4 )) || err_exit '4.**3/10!=6.4'
 (( (.5+3)/7 == .5 )) || err_exit '(.5+3)/7!==.5'
 
+function .sh.math.mysin x
+{
+        ((.sh.value = x - x**3/6. + x**5/120.-x**7/5040. + x**9/362880.))
+}
+
+(( abs(sin(.5)-mysin(.5)) < 1e-6 )) || err_exit 'mysin() not close to sin()'
+
+function .sh.math.max x y z
+{
+	.sh.value=x
+	(( y > x )) && .sh.value=y
+	(( z > .sh.value )) && .sh.value=z
+}
+(( max(max(3,8,5),7,5)==8)) || err_exit 'max(max(3,8,5),7,5)!=8'
+(( max(max(3,8,5),7,9)==9)) || err_exit 'max(max(3,8,9),7,5)!=9'
+(( max(6,max(3,9,5),7)==9 )) || err_exit 'max(6,max(3,8,5),7)!=9'
+(( max(6,7, max(3,8,5))==8 )) || err_exit 'max(6,7,max(3,8,5))!=8'
+
+enum color_t=(red green blue yellow)
+color_t shirt pants=blue
+(( pants == blue )) || err_exit 'pants should be blue'
+(( shirt == red )) || err_exit 'pants should be red'
+(( shirt != green )) || err_exit 'shirt should not be green'
+(( pants != shirt )) || err_exit 'pants should be the same as shirt'
+(( pants = yellow ))
+(( pants == yellow )) || err_exit 'pants should be yellow'
+
 unset z
 integer -a z=( [1]=90 )
 function x
@@ -581,5 +608,16 @@ x=$( ($SHELL -c 'print -- $(( asinh(acosh(atanh(sin(cos(tan(atan(acos(asin(tanh(
 unset x
 typeset -X x=16
 { (( $x == 16 )) ;} 2> /dev/null || err_exit 'expansions of hexfloat not working in arithmetic expansions'
+
+unset foo
+function foobar
+{
+	(( foo = 8))
+}
+typeset -i foo
+foobar
+(( foo == 8 )) || err_exit  'arithmetic assignment binding to the wrong scope'
+
+(( tgamma(4)/12 )) || err_exit 'floating point attribute for functions not preserved'  
 
 exit $((Errors))

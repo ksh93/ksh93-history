@@ -39,6 +39,7 @@
 #define abortsig(sig)	(sig==SIGABRT || sig==SIGBUS || sig==SIGILL || sig==SIGSEGV)
 
 static char	indone;
+static int	cursig = -1;
 
 #if !_std_malloc
 #   include	<vmalloc.h>
@@ -373,55 +374,56 @@ void	sh_sigclear(register int sig)
  * check for traps
  */
 
-void	sh_chktrap(void)
+void	sh_chktrap(Shell_t* shp)
 {
-	register int 	sig=sh.st.trapmax;
+	register int 	sig=shp->st.trapmax;
 	register char *trap;
-	if(!(sh.trapnote&~SH_SIGIGNORE))
+	if(!(shp->trapnote&~SH_SIGIGNORE))
 		sig=0;
-	sh.trapnote &= ~SH_SIGTRAP;
+	shp->trapnote &= ~SH_SIGTRAP;
 	/* execute errexit trap first */
-	if(sh_isstate(SH_ERREXIT) && sh.exitval)
+	if(sh_isstate(SH_ERREXIT) && shp->exitval)
 	{
-		int	sav_trapnote = sh.trapnote;
-		sh.trapnote &= ~SH_SIGSET;
-		if(sh.st.trap[SH_ERRTRAP])
+		int	sav_trapnote = shp->trapnote;
+		shp->trapnote &= ~SH_SIGSET;
+		if(shp->st.trap[SH_ERRTRAP])
 		{
-			trap = sh.st.trap[SH_ERRTRAP];
-			sh.st.trap[SH_ERRTRAP] = 0;
+			trap = shp->st.trap[SH_ERRTRAP];
+			shp->st.trap[SH_ERRTRAP] = 0;
 			sh_trap(trap,0);
-			sh.st.trap[SH_ERRTRAP] = trap;
+			shp->st.trap[SH_ERRTRAP] = trap;
 		}
-		sh.trapnote = sav_trapnote;
+		shp->trapnote = sav_trapnote;
 		if(sh_isoption(SH_ERREXIT))
 		{
-			struct checkpt	*pp = (struct checkpt*)sh.jmplist;
+			struct checkpt	*pp = (struct checkpt*)shp->jmplist;
 			pp->mode = SH_JMPEXIT;
-			sh_exit(sh.exitval);
+			sh_exit(shp->exitval);
 		}
 	}
-	if(sh.sigflag[SIGALRM]&SH_SIGALRM)
-		sh_timetraps();
+	if(shp->sigflag[SIGALRM]&SH_SIGALRM)
+		sh_timetraps(shp);
 #ifdef SHOPT_BGX
-	if((sh.sigflag[SIGCHLD]&SH_SIGTRAP) && sh.st.trapcom[SIGCHLD])
-		job_chldtrap(&sh,sh.st.trapcom[SIGCHLD],1);
+	if((shp->sigflag[SIGCHLD]&SH_SIGTRAP) && shp->st.trapcom[SIGCHLD])
+		job_chldtrap(shp,shp->st.trapcom[SIGCHLD],1);
 #endif /* SHOPT_BGX */
 	while(--sig>=0)
 	{
+		if(sig==cursig)
+			continue;
 #ifdef SHOPT_BGX
 		if(sig==SIGCHLD)
 			continue;
 #endif /* SHOPT_BGX */
-		if(sh.sigflag[sig]&SH_SIGTRAP)
+		if(shp->sigflag[sig]&SH_SIGTRAP)
 		{
-			sh.sigflag[sig] &= ~SH_SIGTRAP;
-			if(trap=sh.st.trapcom[sig])
+			shp->sigflag[sig] &= ~SH_SIGTRAP;
+			if(trap=shp->st.trapcom[sig])
 			{
-				Sfio_t *fp;
-				if(sig==SIGPIPE && (fp=sfpool((Sfio_t*)0,sh.outpool,SF_WRITE)) && sferror(fp))
-					sfclose(fp);
- 				sh.oldexit = SH_EXITSIG|sig;
+ 				shp->oldexit = SH_EXITSIG|sig;
+				cursig = sig;
  				sh_trap(trap,0);
+				cursig = -1;
  			}
 		}
 	}
@@ -448,7 +450,7 @@ int sh_trap(const char *trap, int mode)
 	sh_offstate(SH_HISTORY);
 	sh_offstate(SH_VERBOSE);
 	shp->intrap++;
-	sh_pushcontext(&buff,SH_JMPTRAP);
+	sh_pushcontext(shp,&buff,SH_JMPTRAP);
 	jmpval = sigsetjmp(buff.buff,0);
 	if(jmpval == 0)
 	{
@@ -475,7 +477,7 @@ int sh_trap(const char *trap, int mode)
 			jmpval=SH_JMPTRAP;
 		}
 	}
-	sh_popcontext(&buff);
+	sh_popcontext(shp,&buff);
 	shp->intrap--;
 	sfsync(shp->outpool);
 	if(!shp->indebug && jmpval!=SH_JMPEXIT && jmpval!=SH_JMPFUN)
@@ -498,13 +500,15 @@ int sh_trap(const char *trap, int mode)
  */
 void sh_exit(register int xno)
 {
-	Shell_t	*shp = &sh;
+	Shell_t *shp = sh_getinterp();
 	register struct checkpt	*pp = (struct checkpt*)shp->jmplist;
 	register int		sig=0;
 	register Sfio_t*	pool;
 	shp->exitval=xno;
 	if(xno==SH_EXITSIG)
 		shp->exitval |= (sig=shp->lastsig);
+	if(pp && pp->mode>1)
+		cursig = -1;
 #ifdef SIGTSTP
 	if(shp->trapnote&SH_SIGTSTP)
 	{
@@ -520,7 +524,7 @@ void sh_exit(register int xno)
 		sh_onstate(SH_MONITOR);
 		sh_offstate(SH_STOPOK);
 		shp->trapnote = 0;
-		if(!shp->subshell && (sig=sh_fork(0,NIL(int*))))
+		if(!shp->subshell && (sig=sh_fork(shp,0,NIL(int*))))
 		{
 			job.curpgid = 0;
 			job.parent = (pid_t)-1;
@@ -606,7 +610,7 @@ void sh_done(void *ptr, register int sig)
 	{
 		/* avoid recursive call for set -e */
 		sh_offstate(SH_ERREXIT);
-		sh_chktrap();
+		sh_chktrap(shp);
 	}
 	nv_scan(shp->var_tree,array_notify,(void*)0,NV_ARRAY,NV_ARRAY);
 	sh_freeup(shp);

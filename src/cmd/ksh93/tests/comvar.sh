@@ -566,4 +566,13 @@ z='typeset -a x=(hello (x=12;y=5;) world)'
 { eval "$z" ;} 2> /dev/null
 [[ $(typeset -p x) == "$z" ]] || err_exit "compound assignment '$z' not working"
 
+expected='typeset -C -A l=([4]=(typeset -a ar=(1 2 3);b=1;))'
+typeset -A -C l
+printf "( typeset -a ar=( 1\n2\n3\n) b=1 )\n" | read -C l[4] 
+[[ $(typeset -p l) == "$expected" ]] ||  err_exit 'read -C for associative array of compound variables not working'
+
+unset x
+compound x=( z="a=b c")
+[[ $(typeset -p x) == $'typeset -C x=(z=\'a=b c\';)' ]] || err_exit "incorrect output x -- $(typeset -p x)"
+
 exit $((Errors))

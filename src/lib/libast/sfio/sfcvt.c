@@ -32,9 +32,9 @@
 static char		*lc_inf = "inf", *uc_inf = "INF";
 static char		*lc_nan = "nan", *uc_nan = "NAN";
 static char		*Zero = "0";
-#define SF_INF		((_Sfi = 3), strncpy(buf, (format & SFFMT_UPPER) ? uc_inf : lc_inf, size))
-#define SF_NAN		((_Sfi = 3), strncpy(buf, (format & SFFMT_UPPER) ? uc_nan : lc_nan, size))
-#define SF_ZERO		((_Sfi = 1), strncpy(buf, Zero, size))
+#define SF_INF		((_Sfi = 3), strlcpy(buf, (format & SFFMT_UPPER) ? uc_inf : lc_inf, size), buf)
+#define SF_NAN		((_Sfi = 3), strlcpy(buf, (format & SFFMT_UPPER) ? uc_nan : lc_nan, size), buf)
+#define SF_ZERO		((_Sfi = 1), strlcpy(buf, Zero, size), buf)
 #define SF_INTPART	(SF_IDIGITS/2)
 
 #if ! _lib_isnan

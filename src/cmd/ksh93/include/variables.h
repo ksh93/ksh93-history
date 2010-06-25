@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -88,22 +88,24 @@
 #define SH_LEVELNOD	(sh.bltin_nodes+58)
 #define SH_LINENO	(sh.bltin_nodes+59)
 #define SH_STATS	(sh.bltin_nodes+60)
-#define SHLVL		(sh.bltin_nodes+61)
+#define SH_MATHNOD	(sh.bltin_nodes+61)
+#define SH_JOBPOOL	(sh.bltin_nodes+62)
+#define SHLVL		(sh.bltin_nodes+63)
 #if SHOPT_FS_3D
-#   define VPATHNOD	(sh.bltin_nodes+62)
+#   define VPATHNOD	(sh.bltin_nodes+64)
 #   define NFS_3D	1
 #else
 #   define NFS_3D	0
 #endif /* SHOPT_FS_3D */
 #if SHOPT_VPIX
-#   define DOSPATHNOD	(sh.bltin_nodes+62+NFS_3D)
-#   define VPIXNOD	(sh.bltin_nodes+63+NFS_3D)
+#   define DOSPATHNOD	(sh.bltin_nodes+64+NFS_3D)
+#   define VPIXNOD	(sh.bltin_nodes+65+NFS_3D)
 #   define NVPIX	(NFS_3D+2)
 #else
 #   define NVPIX	NFS_3D
 #endif /* SHOPT_VPIX */
 #ifdef apollo
-#   define SYSTYPENOD	(sh.bltin_nodes+62+NVPIX)
+#   define SYSTYPENOD	(sh.bltin_nodes+63+NVPIX)
 #endif /* apollo */
 
 #endif /* SH_VALNOD */

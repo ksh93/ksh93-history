@@ -156,6 +156,7 @@ void	sh_subtmpfile(Shell_t *shp)
 	}
 }
 
+
 /*
  * This routine creates a temp file if necessary and creates a subshell.
  * The parent routine longjmps back to sh_subshell()
@@ -174,7 +175,7 @@ void sh_subfork(void)
 	if(sp->pipe)
 		sh_subtmpfile(shp);
 	shp->curenv = 0;
-	if(pid = sh_fork(FSHOWME,NIL(int*)))
+	if(pid = sh_fork(shp,FSHOWME,NIL(int*)))
 	{
 		shp->curenv = curenv;
 		/* this is the parent part of the fork */
@@ -344,7 +345,7 @@ static void nv_restore(struct subshell *sp)
 				astconf(NiL, NiL, NiL);
 		}
 		else if(nv_isattr(np,NV_EXPORT))
-			env_delete(sh.env,nv_name(mp));
+			env_delete(sp->shp->env,nv_name(mp));
 		nv_onattr(mp,flags);
 	skip:
 		for(mp=lp->child; mp; mp=mpnext)
@@ -448,9 +449,8 @@ void sh_subjobcheck(pid_t pid)
  * output of command <t>.  Otherwise, NULL will be returned.
  */
 
-Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
+Sfio_t *sh_subshell(Shell_t *shp,Shnode_t *t, int flags, int comsub)
 {
-	Shell_t *shp = &sh;
 	struct subshell sub_data;
 	register struct subshell *sp = &sub_data;
 	int jmpval,nsig=0,duped=0;
@@ -472,7 +472,7 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 	}
 	shp->curenv = ++subenv;
 	savst = shp->st;
-	sh_pushcontext(&buff,SH_JMPSUB);
+	sh_pushcontext(shp,&buff,SH_JMPSUB);
 	subshell = shp->subshell+1;
 	SH_SUBSHELLNOD->nvalue.s = subshell;
 	shp->subshell = subshell;
@@ -487,10 +487,10 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 	sp->subdup = shp->subdup;
 	/* make sure initialization has occurred */ 
 	if(!shp->pathlist)
-		path_get(".");
+		path_get(shp,".");
 	sp->pathlist = path_dup((Pathcomp_t*)shp->pathlist);
 	if(!shp->pwd)
-		path_pwd(0);
+		path_pwd(shp,0);
 	sp->bckpid = shp->bckpid;
 	if(comsub)
 		sh_stats(STAT_COMSUB);
@@ -528,6 +528,7 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 		if(comsub)
 		{
 			/* disable job control */
+			shp->spid = 0;
 			sp->jobcontrol = job.jobcontrol;
 			sp->monitor = (sh_isstate(SH_MONITOR)!=0);
 			job.jobcontrol=0;
@@ -567,7 +568,7 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 		sh_trap(trap,0);
 		free(trap);
 	}
-	sh_popcontext(&buff);
+	sh_popcontext(shp,&buff);
 	if(shp->subshell==0)	/* must be child process */
 	{
 		subshell_data = sp->prev;
@@ -669,7 +670,7 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 			if(shp->pwd)
 			{
 				chdir(shp->pwd=sp->pwd);
-				path_newdir(shp->pathlist);
+				path_newdir(shp,shp->pathlist);
 			}
 			if(nv_isattr(pwdnod,NV_NOFREE))
 				pwdnod->nvalue.cp = (const char*)sp->pwd;
@@ -710,15 +711,15 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 		else
 		{
 			sh_fault(sp->sig);
-			sh_chktrap();
+			sh_chktrap(shp);
 		}
 	}
-	sh_sigcheck();
+	sh_sigcheck(shp);
 	shp->trapnote = 0;
 	if(sp->subpid)
 		job_wait(sp->subpid);
 	if(comsub && iop && sp->pipefd<0)
-		 sfseek(iop,(off_t)0,SEEK_SET);
+		sfseek(iop,(off_t)0,SEEK_SET);
 	if(shp->exitval > SH_EXITSIG)
 	{
 		int sig = shp->exitval&SH_EXITMASK;
@@ -732,7 +733,9 @@ Sfio_t *sh_subshell(Shnode_t *t, int flags, int comsub)
 		errormsg(SH_DICT,ERROR_system(1),e_redirect);
 	}
 	if(jmpval==SH_JMPSUB && shp->lastsig)
+	{
 		sh_fault(shp->lastsig);
+	}
 	if(jmpval && shp->toomany)
 		siglongjmp(*shp->jmplist,jmpval);
 	return(iop);

@@ -1,4 +1,4 @@
-info mam static 00000 1994-07-17 make (AT&T Research) 5.5 2010-04-15
+info mam static 00000 1994-07-17 make (AT&T Research) 5.5 2010-06-01
 setv INSTALLROOT ../../..
 setv PACKAGEROOT ../../../../..
 setv AR ${mam_cc_AR} ${mam_cc_AR_ARFLAGS}
@@ -38,7 +38,7 @@ make install
 make hurl
 make hurl.sh
 done hurl.sh
-meta hurl %.sh>% ${PACKAGEROOT}/src/cmd/INIT/hurl.sh hurl
+meta hurl %.sh>% hurl.sh hurl
 prev hurl.sh
 setv LICENSE -DLICENSE="since=2003,author=gsf"
 exec - case static,port:$OPTIND:$RANDOM in
@@ -76,7 +76,7 @@ done hurl generated
 make iffe
 make iffe.sh
 done iffe.sh
-meta iffe %.sh>% ${PACKAGEROOT}/src/cmd/INIT/iffe.sh iffe
+meta iffe %.sh>% iffe.sh iffe
 prev iffe.sh
 setv LICENSE -DLICENSE="since=1994,author=gsf+kpv"
 exec - case static,port:$OPTIND:$RANDOM in
@@ -114,7 +114,7 @@ done iffe generated
 make mktest
 make mktest.sh
 done mktest.sh
-meta mktest %.sh>% ${PACKAGEROOT}/src/cmd/INIT/mktest.sh mktest
+meta mktest %.sh>% mktest.sh mktest
 prev mktest.sh
 setv LICENSE -DLICENSE="since=2005,author=gsf"
 exec - case static,port:$OPTIND:$RANDOM in
@@ -152,7 +152,7 @@ done mktest generated
 make package
 make package.sh
 done package.sh
-meta package %.sh>% ${PACKAGEROOT}/src/cmd/INIT/package.sh package
+meta package %.sh>% package.sh package
 prev package.sh
 exec - case static,port:$OPTIND:$RANDOM in
 exec - ?*:*:*|*::*|*:*:$RANDOM)
@@ -189,7 +189,7 @@ done package generated
 make regress
 make regress.sh
 done regress.sh
-meta regress %.sh>% ${PACKAGEROOT}/src/cmd/INIT/regress.sh regress
+meta regress %.sh>% regress.sh regress
 prev regress.sh
 setv LICENSE -DLICENSE="since=1995,author=gsf"
 exec - case static,port:$OPTIND:$RANDOM in
@@ -227,7 +227,7 @@ done regress generated
 make rt
 make rt.sh
 done rt.sh
-meta rt %.sh>% ${PACKAGEROOT}/src/cmd/INIT/rt.sh rt
+meta rt %.sh>% rt.sh rt
 prev rt.sh
 setv LICENSE -DLICENSE="since=2005,author=gsf"
 exec - case static,port:$OPTIND:$RANDOM in
@@ -265,7 +265,7 @@ done rt generated
 make crossexec
 make crossexec.sh
 done crossexec.sh
-meta crossexec %.sh>% ${PACKAGEROOT}/src/cmd/INIT/crossexec.sh crossexec
+meta crossexec %.sh>% crossexec.sh crossexec
 prev crossexec.sh
 exec - case static,port:$OPTIND:$RANDOM in
 exec - ?*:*:*|*::*|*:*:$RANDOM)
@@ -302,7 +302,7 @@ done crossexec generated
 make ditto
 make ditto.sh
 done ditto.sh
-meta ditto %.sh>% ${PACKAGEROOT}/src/cmd/INIT/ditto.sh ditto
+meta ditto %.sh>% ditto.sh ditto
 prev ditto.sh
 setv LICENSE -DLICENSE="since=2001,author=gsf+ek"
 exec - case static,port:$OPTIND:$RANDOM in
@@ -340,7 +340,7 @@ done ditto generated
 make execrate
 make execrate.sh
 done execrate.sh
-meta execrate %.sh>% ${PACKAGEROOT}/src/cmd/INIT/execrate.sh execrate
+meta execrate %.sh>% execrate.sh execrate
 prev execrate.sh
 setv LICENSE -DLICENSE="since=2002,author=gsf"
 exec - case static,port:$OPTIND:$RANDOM in
@@ -378,7 +378,7 @@ done execrate generated
 make filter
 make filter.sh
 done filter.sh
-meta filter %.sh>% ${PACKAGEROOT}/src/cmd/INIT/filter.sh filter
+meta filter %.sh>% filter.sh filter
 prev filter.sh
 exec - case static,port:$OPTIND:$RANDOM in
 exec - ?*:*:*|*::*|*:*:$RANDOM)
@@ -415,7 +415,7 @@ done filter generated
 make ignore
 make ignore.sh
 done ignore.sh
-meta ignore %.sh>% ${PACKAGEROOT}/src/cmd/INIT/ignore.sh ignore
+meta ignore %.sh>% ignore.sh ignore
 prev ignore.sh
 exec - case static,port:$OPTIND:$RANDOM in
 exec - ?*:*:*|*::*|*:*:$RANDOM)
@@ -452,7 +452,7 @@ done ignore generated
 make silent
 make silent.sh
 done silent.sh
-meta silent %.sh>% ${PACKAGEROOT}/src/cmd/INIT/silent.sh silent
+meta silent %.sh>% silent.sh silent
 prev silent.sh
 exec - case static,port:$OPTIND:$RANDOM in
 exec - ?*:*:*|*::*|*:*:$RANDOM)
@@ -491,12 +491,10 @@ make mamake.o
 make mamake.c
 make shlib-compat.h implicit
 done shlib-compat.h dontcare virtual
-make bp-sym.h implicit
-done bp-sym.h dontcare virtual
 make ast.h implicit
 done ast.h dontcare virtual
 done mamake.c
-meta mamake.o %.c>%.o ${PACKAGEROOT}/src/cmd/INIT/mamake.c mamake
+meta mamake.o %.c>%.o mamake.c mamake
 prev mamake.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2010 AT&T][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"\" -c mamake.c
 done mamake.o generated
@@ -531,7 +529,7 @@ make direct.h implicit
 done direct.h dontcare virtual
 prev ast.h implicit
 done ratz.c
-meta ratz.o %.c>%.o ${PACKAGEROOT}/src/cmd/INIT/ratz.c ratz
+meta ratz.o %.c>%.o ratz.c ratz
 prev ratz.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}   -c ratz.c
 done ratz.o generated
@@ -542,7 +540,7 @@ make release.o
 make release.c
 prev ast.h implicit
 done release.c
-meta release.o %.c>%.o ${PACKAGEROOT}/src/cmd/INIT/release.c release
+meta release.o %.c>%.o release.c release
 prev release.c
 exec - ${CC} ${mam_cc_FLAGS} ${CCFLAGS}  -DUSAGE_LICENSE=\""[-author?Glenn Fowler <gsf@research.att.com>][-copyright?Copyright (c) 1994-2010 AT&T][-license?http://www.opensource.org/licenses/cpl1.0.txt][--catalog?INIT]"\" -c release.c
 done release.o generated
@@ -551,7 +549,7 @@ done release generated
 make mprobe
 make mprobe.sh
 done mprobe.sh
-meta mprobe %.sh>% ${PACKAGEROOT}/src/cmd/INIT/mprobe.sh mprobe
+meta mprobe %.sh>% mprobe.sh mprobe
 prev mprobe.sh
 exec - case static,port:$OPTIND:$RANDOM in
 exec - ?*:*:*|*::*|*:*:$RANDOM)
@@ -673,7 +671,7 @@ exec - test '' = 'ignore' || ${STDCMP} 2>/dev/null -s ignore ${PACKAGEROOT}/bin/
 done ${PACKAGEROOT}/bin/ignore generated
 make ${PACKAGEROOT}/bin/mamprobe
 make mamprobe
-meta mamprobe %.sh>% ${PACKAGEROOT}/src/cmd/INIT/mamprobe.sh mamprobe
+meta mamprobe %.sh>% mamprobe.sh mamprobe
 make mamprobe.sh
 done mamprobe.sh
 exec - case static,port:$OPTIND:$RANDOM in
@@ -1238,7 +1236,7 @@ done test.iffe virtual
 make test.mamake
 prev mamake
 make mamake.tst
-meta mamake.tst %.rt>%.tst ${PACKAGEROOT}/src/cmd/INIT/mamake.rt mamake
+meta mamake.tst %.rt>%.tst mamake.rt mamake
 make mamake.rt
 done mamake.rt
 exec - if	[[ "1" || "mamake.rt" -nt "mamake.tst" ]]

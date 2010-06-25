@@ -803,30 +803,44 @@ search(const void* tab, size_t num, size_t siz, char* s)
 }
 
 /*
- * save s and return the saved pointer
+ * save ap+bp+cp and return the saved pointer
  */
 
 static char*
-save(const char* s)
+save(const char* ap, size_t az, const char* bp, size_t bz, const char* cp, size_t cz)
 {
+	char*		b;
+	char*		e;
+	const char*	ep;
 	Save_t*		p;
 	Dtdisc_t*	d;
+	char		buf[1024];
 
 	static Dt_t*	dict;
 
 	if (!dict)
 	{
 		if (!(d = newof(0, Dtdisc_t, 1, 0)))
-			return (char*)s;
+			return (char*)ap;
 		d->key = offsetof(Save_t, text);
 		if (!(dict = dtopen(d, Dthash)))
-			return (char*)s;
+			return (char*)ap;
 	}
-	if (!(p = (Save_t*)dtmatch(dict, s)))
+	b = buf;
+	e = b + sizeof(buf) - 1;
+	for (ep = ap + az; b < e && ap < ep; *b++ = *ap++);
+	if (bp)
 	{
-		if (!(p = newof(0, Save_t, 1, strlen(s))))
-			return (char*)s;
-		strcpy(p->text, s);
+		for (ep = bp + bz; b < e && bp < ep; *b++ = *bp++);
+		if (cp)
+			for (ep = cp + cz; b < e && cp < ep; *b++ = *cp++);
+	}
+	*b = 0;
+	if (!(p = (Save_t*)dtmatch(dict, buf)))
+	{
+		if (!(p = newof(0, Save_t, 1, b - buf)))
+			return (char*)ap;
+		strcpy(p->text, buf);
 		dtinsert(dict, p);
 	}
 	return p->text;
@@ -1035,9 +1049,9 @@ init(register char* s, Optpass_t* p)
 									if (*u == '-' || *u == ']')
 									{
 										if (!l)
-											p->id = save(sfprints("%-.*s", t - s, s));
+											p->id = save(s, t - s, 0, 0, 0, 0);
 										else if ((a = strlen(p->id)) <= (n = t - s) || strncmp(p->id + a - n, s, n) || *(p->id + a - n - 1) != ':')
-											p->id = save(sfprints("%s::%-.*s", p->id, t - s, s));
+											p->id = save(p->id, strlen(p->id), "::", 2, s, t - s);
 									}
 								}
 							}
@@ -1057,9 +1071,9 @@ init(register char* s, Optpass_t* p)
 			p->id = "command";
 	}
 	else if (p->id == error_info.id)
-		p->id = save(p->id);
+		p->id = save(p->id, strlen(p->id), 0, 0, 0, 0);
 	if (s = p->catalog)
-		p->catalog = ((t = strchr(s, ']')) && (!p->id || (t - s) != strlen(p->id) || !strneq(s, p->id, t - s))) ? save(sfprints("%-.*s", t - s, s)) : (char*)0;
+		p->catalog = ((t = strchr(s, ']')) && (!p->id || (t - s) != strlen(p->id) || !strneq(s, p->id, t - s))) ? save(s, t - s, 0, 0, 0, 0) : (char*)0;
 	if (!p->catalog)
 	{
 		if (opt_info.disc && opt_info.disc->catalog && (!p->id || !streq(opt_info.disc->catalog, p->id)))
@@ -4240,7 +4254,7 @@ optget(register char** argv, const char* oopts)
 			{
 				opt_info.argv = 0;
 				state.argv[0] = 0;
-				if (argv[0] && (state.argv[0] = save(argv[0])))
+				if (argv[0] && (state.argv[0] = save(argv[0], strlen(argv[0]), 0, 0, 0, 0)))
 					opt_info.argv = state.argv;
 				state.style = STYLE_short;
 			}

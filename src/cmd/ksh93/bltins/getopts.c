@@ -1,7 +1,7 @@
 /***********************************************************************
 *                                                                      *
 *               This software is part of the ast package               *
-*          Copyright (c) 1982-2008 AT&T Intellectual Property          *
+*          Copyright (c) 1982-2010 AT&T Intellectual Property          *
 *                      and is licensed under the                       *
 *                  Common Public License, Version 1.0                  *
 *                    by AT&T Intellectual Property                     *
@@ -104,11 +104,11 @@ int	b_getopts(int argc,char *argv[],void *extra)
 	if(mode= (*options==':'))
 		options++;
 	extended = *options=='\n' && *(options+1)=='[' || *options=='[' && *(options+1)=='-';
-	sh_pushcontext(&buff,1);
+	sh_pushcontext(shp,&buff,1);
 	jmpval = sigsetjmp(buff.buff,0);
 	if(jmpval)
 	{
-		sh_popcontext(&buff);
+		sh_popcontext(shp,&buff);
 		pp = (struct checkpt*)shp->jmplist;
 		pp->mode = SH_JMPERREXIT;
 		sh_exit(2);
@@ -186,7 +186,7 @@ int	b_getopts(int argc,char *argv[],void *extra)
 	else
 		nv_putval(np, opt_info.arg, NV_RDONLY);
 	nv_close(np);
-	sh_popcontext(&buff);
+	sh_popcontext(shp,&buff);
         opt_info.disc = 0;
 	return(r);
 }

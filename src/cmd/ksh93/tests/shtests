@@ -43,7 +43,7 @@ then	vmalloc_options=$VMALLOC_OPTIONS
 else	VMALLOC_OPTIONS=$vmalloc_options
 fi
 [[ $VMALLOC_OPTIONS ]] || timesensitive=.
-export LANG LC_ALL PATH PWD SHELL VMALLOC_OPTIONS
+export LANG LC_ALL PATH PWD SHCOMP SHELL VMALLOC_OPTIONS
 PWD=`pwd`
 SHELL=${SHELL-ksh}
 case $0 in
@@ -64,9 +64,18 @@ PATH=$PATH:$d
 if	[[ $INSTALLROOT && -r $INSTALLROOT/bin/.paths ]]
 then	PATH=$INSTALLROOT/bin:$PATH
 fi
+if	[[ ! $SHCOMP ]]
+then	s=${SHELL:##*sh}
+	s=${SHELL:%/*}/shcomp$s
+	if	[[ -x $s ]]
+	then	SHCOMP=$s
+	elif	[[ -x ${s%-g} ]]
+	then	SHCOMP=${s%-g}
+	else	SHCOMP=shcomp
+	fi
+fi
 if	[[ $compile ]]
-then	SHCOMP=${SHCOMP:-shcomp}
-	if	whence $SHCOMP > /dev/null
+then	if	whence $SHCOMP > /dev/null
 	then	tmp=$(mktemp -dt) || { echo mktemp -dt failed >&2; exit 1; }
 		trap "cd /; rm -rf $tmp" EXIT
 	elif	[[ $compile != 1 ]]
