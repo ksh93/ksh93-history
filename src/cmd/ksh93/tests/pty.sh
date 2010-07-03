@@ -36,6 +36,8 @@ integer Errors=0 lineno=1
 
 whence -q pty || { lineno=$LINENO; err_exit "pty command not found -- tests skipped"; exit 0; }
 
+bintrue=$(whence -p true)
+
 function tst
 {
 	integer lineno=$1 offset
@@ -48,8 +50,8 @@ function tst
 	done
 }
 
-if	! pty /bin/true < /dev/null
-then	err_exit pty command hangs -- tests skipped
+if	! pty $bintrue < /dev/null
+then	err_exit pty command hangs on $bintrue -- tests skipped
 	exit 0
 fi
 

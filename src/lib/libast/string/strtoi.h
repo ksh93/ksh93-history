@@ -479,7 +479,7 @@ S2I_function(a, e, base) const char* a; char** e; int base;
 			s--;
 		else
 		{
-			x = 1;
+			x = m != 1;
 			switch (c)
 			{
 			case 'b':

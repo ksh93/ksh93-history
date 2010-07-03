@@ -2,6 +2,7 @@ iff	AST_COMMON
 hdr	pthread,stdarg,stddef,stdint,inttypes,types,unistd
 sys	types
 typ	long.double,size_t,ssize_t
+typ	__va_list stdio.h
 
 mac	SF_APPEND,SF_CLOSE	sys/stat.h sys/socket.h
 

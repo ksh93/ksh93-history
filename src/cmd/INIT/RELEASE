@@ -1,3 +1,4 @@
+10-06-29 ratz.c: non-option sear args passed to sear_exec()
 10-06-25 iffe.sh: "api" op chanegd to not do "map-libc" type mappings
 10-06-25 package.sh: "force admin ditto" => no ditto --update option
 10-06-22 C+probe: handle cc that require .[ci] input for version info

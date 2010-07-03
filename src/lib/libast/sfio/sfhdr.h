@@ -322,6 +322,9 @@
 
 #if _hdr_wchar && _typ_mbstate_t && _lib_wcrtomb && _lib_mbrtowc
 #define _has_multibyte		1	/* Xopen-compliant	*/
+#if _typ___va_list && !defined(__va_list)
+#define __va_list	va_list
+#endif
 #include	<wchar.h>
 #define SFMBCPY(to,fr)		memcpy((to), (fr), sizeof(mbstate_t))
 #define SFMBCLR(mb)		memset((mb), 0,  sizeof(mbstate_t))

@@ -3283,7 +3283,7 @@ int sh_fun(Namval_t *np, Namval_t *nq, char *argv[])
 	long		mode;
 	char		*prefix = shp->prefix;
 	int n=0;
-	char *av[2];
+	char *av[3];
 	Fcin_t save;
 	fcsave(&save);
 	if((offset=staktell())>0)
@@ -3291,7 +3291,7 @@ int sh_fun(Namval_t *np, Namval_t *nq, char *argv[])
 	shp->prefix = 0;
 	if(!argv)
 	{
-		argv = av;
+		argv = av+1;
 		argv[1]=0;
 	}
 	argv[0] = nv_name(np);

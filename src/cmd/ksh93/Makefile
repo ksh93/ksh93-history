@@ -76,7 +76,7 @@ else
 	LIBS_req = +lshell$(RELEASE)
 end
 
-:PACKAGE: ast$(libtype):20100309 --clobber=!($(SH))
+:PACKAGE: ast$(libtype):20100309 order:coshell --clobber=!($(SH))
 
 .SOURCE : edit sh bltins data tests fun
 .SOURCE.h : include 
@@ -154,7 +154,7 @@ $(SH) :: sh.1 pmain.c $(LIBS_req)
 DATAFILES = limits.c msg.c strdata.c testops.c keywords.c options.c \
                  signals.c aliases.c builtins.c variables.c lexstates.c
 
-shell$(RELEASE) $(VERSION) :LIBRARY: shell.3 nval.3 alarm.c cd_pwd.c cflow.c deparse.c \
+shell$(RELEASE) $(VERSION) id=shell :LIBRARY: shell.3 nval.3 alarm.c cd_pwd.c cflow.c deparse.c \
 	enum.c getopts.c hist.c misc.c print.c read.c sleep.c trap.c test.c \
 	typeset.c ulimit.c umask.c whence.c main.c nvdisc.c nvtype.c \
 	arith.c args.c array.c completion.c defs.c edit.c expand.c regress.c \
@@ -237,12 +237,10 @@ test.% : %.sh COSHELL_OPTIONS=separate $(BINDIR)/$(SH) $(SH) shtests
 	cd $(*:O=4:P=L!:D)
 	SHELL=$(*:O=2:P=A) $(*:O=2:P=A) $(*:O=4:B) $(SHTESTSFLAGS) $(*:O=1:P=A)
 
+if RELEASE
+
+.INSTALL : .CLEAR $(*.INSTALL:N=*$(RELEASE)*([!/]))
+
 end
-
-if "$(RELEASE)"
-
-_BLD_shell == 1
-
-.INSTALL : .CLEAR $(*.INSTALL:N=*$(RELEASE)*:N!=*@($(CC.SUFFIX.ARCHIVE)|$(CC.SUFFIX.SHARED)))
 
 end

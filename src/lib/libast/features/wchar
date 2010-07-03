@@ -10,6 +10,9 @@ cat <<!
 	#include <ast_common.h>
 	#include <stdio.h>
 	#endif
+	#if _typ___va_list && !defined(__va_list)
+	#define __va_list	va_list
+	#endif
 	#if _hdr_wchar && defined(_nxt_wchar)
 	#include $_nxt_wchar	/* the native wchar.h */
 	#endif

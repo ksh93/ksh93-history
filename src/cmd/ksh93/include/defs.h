@@ -105,7 +105,7 @@ struct limits
 	int		open_max;	/* maximum number of file descriptors */
 	int		clk_tck;	/* number of ticks per second */
 	int		child_max;	/* maxumum number of children */
-	int		pid_max;	/* maxumum pid number */
+	pid_t		pid_max;	/* maxumum pid number */
 	int		ngroups_max;	/* maximum number of process groups */
 	unsigned char	posix_version;	/* posix version number */
 	unsigned char	posix_jobcontrol;/* non-zero for job control systems */

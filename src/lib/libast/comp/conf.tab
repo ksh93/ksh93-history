@@ -1,7 +1,7 @@
 #
 # posix { getconf limits } macro table
 #
-# @(#)conf.tab (AT&T Research) 2010-06-14
+# @(#)conf.tab (AT&T Research) 2010-06-28
 #
 # name standard section call flags [ header ... ] [ value ... ]
 #
@@ -387,12 +387,18 @@ PID_MAX				SVID	SC 1 LMU	30000	cc{
 #ifdef PID_MAX
 		v = PID_MAX;
 #else
-		v = -1;
+		v = 99999;
 #endif
 		if ((fd = open("/proc/sys/kernel/pid_max", 0)) >= 0 && (n = read(fd, buf, sizeof(buf)-1)) > 1)
 		{
 			buf[n] = 0;
 			v = strtol(buf, (char**)0, 0);
+		}
+		else
+		{
+#ifdef __sgi
+			v = 0x7fffffff;
+#endif
 		}
 		printf("%ld", v);
 		return 0;

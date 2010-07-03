@@ -37,6 +37,8 @@ then	err_exit cygwin detected - coprocess tests disabled - enable at the risk of
 	exit $((Errors))
 fi
 
+bintrue=$(whence -p true)
+
 function ping # id
 {
 	integer x=0
@@ -318,7 +320,7 @@ function mypipe
 
 mypipe |&
 print -p "hello"
-z="$( /bin/true $(/bin/true) )"
+z="$( $bintrue $($bintrue) )"
 { print -p "world";} 2> /dev/null
 read -p
 [[ $REPLY == world ]] ||  err_exit "expected 'world' got '$REPLY'"

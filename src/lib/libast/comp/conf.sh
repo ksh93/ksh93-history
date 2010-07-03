@@ -1105,6 +1105,7 @@ main()
 						;;
 					*)	cat > $tmp.c <<!
 ${head}
+#include <stdio.h>
 #include <sys/types.h>
 #include <limits.h>
 #include <unistd.h>$systeminfo$headers

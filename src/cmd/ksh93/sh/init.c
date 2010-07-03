@@ -1205,6 +1205,7 @@ Shell_t *sh_init(register int argc,register char *argv[], Shinit_f userinit)
 #endif
 	shp->cpipe[0] = -1;
 	shp->coutpipe = -1;
+	shp->pid = getpid();
 	sh.userid=getuid();
 	sh.euserid=geteuid();
 	sh.groupid=getgid();
@@ -1230,6 +1231,16 @@ Shell_t *sh_init(register int argc,register char *argv[], Shinit_f userinit)
 		sh.lim.child_max = CHILD_MAX;
 	if((v = getconf("PID_MAX")) > 0 && sh.lim.child_max > v)
 		sh.lim.child_max = v;
+	else
+		v= 1<<17;
+	while(shp->pid >v)
+	{
+		if((v<<=1) < 0)
+		{
+			v = 1 << (8*sizeof(pid_t)-2);
+			break;
+		}
+	}
 	sh.lim.pid_max = v;
 	if(sh.lim.clk_tck <=0)
 		sh.lim.clk_tck = CLK_TCK;

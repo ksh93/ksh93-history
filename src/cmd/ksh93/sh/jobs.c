@@ -1292,6 +1292,14 @@ int job_post(pid_t pid, pid_t join)
 		pw->p_cojob = ((struct cosh*)sh.coshell)->cojob;
 		pw->p_pgrp = pw->p_pid;
 	}
+	else while(pid>sh.lim.pid_max)
+	{
+		if((sh.lim.pid_max<<=1)<0)
+		{
+			sh.lim.pid_max = 1<<(8*sizeof(pid_t)-2);
+			break;
+		}
+	}
 #endif /* SHOPT_COSHELL */
 	job.pwlist = pw;
 	pw->p_env = sh.curenv;

@@ -5,7 +5,7 @@
  * _SEAR_* macros for win32 self extracting archives -- see sear(1).
  */
 
-static char id[] = "\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 1.2.3 2006-07-17 $\0\n";
+static char id[] = "\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 1.2.3 2010-07-01 $\0\n";
 
 #if _PACKAGE_ast
 
@@ -13,7 +13,7 @@ static char id[] = "\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler)
 #include <error.h>
 
 static const char usage[] =
-"[-?\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 1.2.3 2006-07-17 $\n]"
+"[-?\n@(#)$Id: ratz (Jean-loup Gailly, Mark Adler, Glenn Fowler) 1.2.3 2010-07-01 $\n]"
 "[-author?Jean-loup Gailly]"
 "[-author?Mark Adler]"
 "[-author?Glenn Fowler <gsf@research.att.com>]"
@@ -4445,7 +4445,7 @@ register char*	s;
 #define PATH_MAX	256
 #endif
 
-#define EXIT(n)	return(sear_exec((char*)0),(n))
+#define EXIT(n)	return(sear_exec((char*)0,(char**)0),(n))
 
 static int	sear_stdin;
 static char*	sear_tmp;
@@ -4563,13 +4563,31 @@ sear_system(const char* command)
 }
 
 /*
+ * copy t to f but no farther than e
+ * next t returned
+ */
+
+static char*
+copy(char* t, const char* f, char* e)
+{
+	while (t < e && *f)
+		*t++ = *f++;
+	return t;
+}
+
+/*
  * execute cmd, chdir .., and remove sear_tmp
  */
 
 static int
-sear_exec(const char* cmd)
+sear_exec(const char* cmd, char* const* arg)
 {
+	const char*	a;
+	char*		b;
+	char*		e;
 	int		r;
+	int		sh;
+	char		buf[1024];
 
 	fflush(stdout);
 	fflush(stderr);
@@ -4578,6 +4596,38 @@ sear_exec(const char* cmd)
 		close(0);
 		dup(sear_stdin);
 		close(sear_stdin);
+		if (cmd)
+		{
+			sh = 0;
+			for (a = cmd; *a && *a != ' '; a++)
+				if (a[0] == '.' && a[1] == 's' && a[2] == 'h' && (!a[3] || a[3] == ' '))
+				{
+					sh = 1;
+					break;
+				}
+			if (sh || arg && arg[0])
+			{
+				b = buf;
+				e = buf + sizeof(buf) - 1;
+				if (sh)
+				{
+					b = copy(b, "./ksh.exe ", e);
+					if (*cmd && *cmd != '/')
+						b = copy(b, "./", e);
+				}
+				b = copy(b, cmd, e);
+				while (a = *arg++)
+				{
+					if ((e - b) < 3)
+						break;
+					b = copy(b, " \"", e);
+					b = copy(b, a, e);
+					b = copy(b, "\"", e);
+				}
+				*b = 0;
+				cmd = (const char*)buf;
+			}
+		}
 		r = cmd ? sear_system(cmd) : 1;
 		sear_rm_r(sear_tmp);
 	}
@@ -5187,7 +5237,7 @@ char**	argv;
 	else if (verbose)
 		fprintf(stderr, "%lu file%s, %lu block%s\n", state.files, state.files == 1 ? "" : "s", state.blocks, state.blocks == 1 ? "" : "s");
 #if defined(_SEAR_EXEC)
-	if (sear_exec(_SEAR_EXEC))
+	if (sear_exec(_SEAR_EXEC, argv))
 	{
 		Sleep(5 * 1000);
 		return 1;
